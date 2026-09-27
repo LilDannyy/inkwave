@@ -594,35 +594,9 @@ function previewFx() {
   preview.visible = true;
 }
 
-// ---- query hook for bots (bots.js dodges / shoots enemy Waddles): one stable descriptor per bomb, getters read its
-// live state (see kits/registry.js `threats`). Read-only: nothing here changes how the bomb behaves.
-function threatOf(it) {
-  if (it.thr) return it.thr;
-  const s = it.sub, v = new V3();
-  it.thr = {
-    kind: 'waddle', obj: it, team: it.team, owner: it.owner, pos: it.pos, aimY: MID, radius: s.radius, trigger: s.triggerDist,
-    speed: s.speed, senseRadius: s.senseRadius, ground: true,
-    get live() { return it.state !== 'dead'; },
-    get state() { return it.state; },
-    get hp() { return it.hp; },
-    get shootable() { return it.state !== 'fly' && it.state !== 'dead'; },
-    get locked() { return it.state === 'wake' || it.state === 'walk'; },
-    get target() { return (it.state === 'wake' || it.state === 'walk') && alive(it.target) ? it.target : null; },
-    // walking: its heading at full speed (it lays no velocity of its own); in the air / falling: its velocity
-    get vel() {
-      if (it.state === 'walk' && !it.hop && !it.air) return v.set(Math.sin(it.heading) * s.speed, 0, Math.cos(it.heading) * s.speed);
-      return it.state === 'fly' || it.air ? v.copy(it.vel) : v.set(0, 0, 0);
-    },
-    // seconds of chase it has left before it gives up and goes off where it is (life / max travel)
-    get left() { return it.state === 'walk' ? Math.max(0, Math.min(s.life - it.walkT, (s.maxTravel - it.travel) / s.speed)) : s.life; },
-  };
-  return it.thr;
-}
-
 // ================================================================================================= registration
 SUB_KITS.waddle = {
   use,
-  threats(out) { for (const it of items) if (it.state !== 'dead') out.push(threatOf(it)); return out; },
   tick(dt) {
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];

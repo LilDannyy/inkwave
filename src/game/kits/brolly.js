@@ -563,34 +563,6 @@ const bot = {
   },
 };
 
-// ---------------------------------------------------------------------------------------------- query hook
-// Bots (bots.js) route round enemy launched canopies and flank held ones: one stable descriptor per shield, getters read
-// its live state (see kits/registry.js `shields`). Read-only: nothing here changes how a canopy behaves.
-function shieldOf(s) {
-  if (s.info) return s.info;
-  const w = W(), c = s.ref;
-  s.info = {
-    kind: 'brolly', held: s.held, owner: s.owner, C: s.C, N: s.N, R: s.R, hpMax: w.canopyHp, blocksActors: !s.held,
-    // launched: foot position (N = its travel direction), half-width it blocks players over, and the blocking plane's
-    // offset along N from pos (enemy players are held on their side of it)
-    pos: s.held ? null : c.pos, halfW: LAUNCH_R, planeOff: -DEPTH * 0.5, speed: s.held ? 0 : w.launchSpeed,
-    get team() { return s.team; },
-    get hp() { return Math.max(0, hpOf(s).hp); },
-    get live() {
-      if (!s.held) return c.alive;
-      const a = s.owner, k = s.kit;
-      return !!a && a.alive && a.form === 'kid' && a.weaponRunner?.kit === k && k.state === 'ready' && k.open >= 0.55 && k.grow >= 0.9;
-    },
-    get left() { return s.held ? 0 : Math.max(0, c.life - c.t); },   // launched: seconds until it fades
-  };
-  return s.info;
-}
-function shields(out) {
-  if (SH_T !== G.time) refreshShields();
-  for (const s of SH) out.push(shieldOf(s));
-  return out;
-}
-
 // ---------------------------------------------------------------------------------------------- registration
 MAIN_KITS.brolly = {
   update,
@@ -598,7 +570,7 @@ MAIN_KITS.brolly = {
   firingPose: (r) => !!(r.kit && r.kit.brolly && r.kit.open > 0),
   moveSpeed: (r, w) => (r.kit && r.kit.brolly && r.kit.open > 0.2 ? w.moveSpeedShield : 0),
   spreadDeg: (r, w) => (r.a.grounded ? w.spreadDeg : w.spreadAir),
-  tick, clear: clearAll, blockShot, blockRay, shields,
+  tick, clear: clearAll, blockShot, blockRay,
   bot,
   // test / tooling access
   _state: { LAUNCHED, PELLETS, SH, STATS, refreshShields, pelletDamage, kitOf },

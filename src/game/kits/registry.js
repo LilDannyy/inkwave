@@ -13,12 +13,6 @@
 //   jump?(runner, intent) → bool       claim this frame's jump press (actor.js; e.g. the mitts' leap). runner.kit.hang
 //                                      (set by the kit) holds the kid in place (wall cling)
 //   bot?: { fight?(brain, ctx) → bool fire, paint?(brain, ctx) → bool fire, paintPitch?, melee?, charges?, long?, painter? }
-//   shields?(out) → out                push a descriptor for every shield up this frame (bots.js flanks held ones and
-//                                      steers round launched ones). Stable per shield; getters read live state:
-//                                      { kind, held, team, owner, C (disc centre), N (facing / launched: travel dir), R,
-//                                        hp, hpMax, live, blocksActors, left, and launched only: pos (foot), halfW (players
-//                                        are held back over ±halfW along the wall), planeOff (the blocking plane sits
-//                                        planeOff along N from pos), speed }
 // }
 // SUB_KITS[kind] = {
 //   use(subs, actor, sub)              REQUIRED — the throw / placement on release (SubSystem.use)
@@ -30,13 +24,6 @@
 //   damageArea?(c, radius, dmg, team)  a blast went off (G.subs.damageArea): kit objects of other teams caught in it
 //   noArc?: true                       no bomb-arc preview while held (the kit draws its own aim guide)
 //   bot?: { fight?(brain, dist) → bool throw now, paint?(brain) → bool }
-//   threats?(out) → out                push a descriptor for every live object of this kind that hunts / hurts foes
-//                                      (bots.js shoots them down or evades them). Stable per object; getters read live
-//                                      state: { kind, obj, team, owner, pos (live: feet for walkers, centre for flyers),
-//                                        aimY (hit centre above pos), vel, speed, radius (blast), trigger (contact reach),
-//                                        ground (walks on the ground), live, state, hp, shootable, locked, target (the
-//                                        actor it tracks, or null) } + kind extras (waddle: senseRadius, left;
-//                                        torpedo: lockRange, hover)
 // }
 export const MAIN_KITS = {};
 export const SUB_KITS = {};

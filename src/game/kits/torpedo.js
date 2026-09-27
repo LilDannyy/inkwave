@@ -625,33 +625,11 @@ function damageArea(c, radius, dmg, team) {
   }
 }
 
-// ---- query hook for bots (bots.js shoots down / sidesteps enemy Torpedoes): one stable descriptor per torpedo, getters
-// read its live state (see kits/registry.js `threats`). Read-only: nothing here changes how the torpedo behaves.
-function threatOf(t) {
-  if (t.thr) return t.thr;
-  const s = t.sub, v = new V3();
-  t.thr = {
-    kind: 'torpedo', obj: t, team: t.team, owner: t.owner, pos: t.pos, aimY: 0, radius: s.radius, trigger: HIT_R + PLAYER.radius,
-    speed: s.launchSpeed, lockRange: s.lockRange, ground: false,
-    get live() { return live(t); },
-    get state() { return t.state; },
-    get hp() { return t.hp; },
-    get shootable() { return live(t); },
-    get locked() { return locked(t); },
-    get target() { return locked(t) && t.target && t.target.alive ? t.target : null; },
-    get vel() { return t.state === 'launch' ? v.copy(t.dir).multiplyScalar(t.speed) : t.state === 'fly' ? v.copy(t.vel) : v.set(0, 0, 0); },
-    // hovering (fins unfolding): seconds until it launches
-    get hover() { return t.state === 'unfold' ? Math.max(0, s.unfoldTime - t.t) : 0; },
-  };
-  return t.thr;
-}
-
 // =============================================================================================== register
 SUB_KITS.torpedo = {
   use,
   blocked: (a) => list.some((t) => t.owner === a && live(t)),
   tick, clear: clearAll, blockShot, blockRay, damageArea,
-  threats(out) { for (const t of list) if (live(t)) out.push(threatOf(t)); return out; },
   bot: {
     // throw it at a foe it can reach and lock onto; one out at a time
     fight(brain, dist) {

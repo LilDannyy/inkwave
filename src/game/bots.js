@@ -47,13 +47,6 @@ function lobPitch(d, dy, speed) {
   return be < 1.2 ? best : null;
 }
 export const PAINTERS = { roller: true, brush: true, bucket: true, slosher: true };
-// Counter-play vs enemy devices and shields (BotBrain "threats" section): tests flip `enabled` off for an A/B on the
-// same code; THREAT_STATS counts what the bots did (engagements, not frames — holdFire is seconds)
-export const THREAT_AI = { enabled: true };
-export const THREAT_STATS = { noticed: 0, shoot: 0, evade: 0, swim: 0, sidestep: 0, gone: 0, steer: 0, breakWall: 0, flank: 0, holdFire: 0, shieldSub: 0 };
-const _thrList = [];
-const _thrAim = { yaw: 0, pitch: 0, dist: 6 };
-const _wander = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.27 + 1.3) * 0.4;
 const _plans = new WeakMap();
 export function zonePlan() {
   const m = G.match, Z = m && m.zones;
@@ -301,12 +294,6 @@ export class BotBrain {
     // Zone Control (unused in Turf War): role + zone from the team plan, the hold timer at a guard / watch spot, and
     // the needy patch of the zone being aimed at
     this.zRole = null; this.zZone = -1; this.zHoldUntil = 0; this.zHoldDur = 0; this._zAct = null; this.zAimT = 0; this._zAim = null; this.zFail = 0; this.zFace = 0; this.zJumpAt = 0; this.zBomb = null; this.zBombScan = 0;
-    // threats (enemy Waddles / Torpedoes hunting us, enemy canopies): the device being dealt with, when each one was
-    // noticed (+ reaction time), line of sight to it, evade heading / sidestep side, canopy steering + flanking state
-    this.thr = null; this.thrCand = null; this.thrScanT = Math.random() * 0.25; this._thrMem = new Map(); this._shl = [];
-    this.thrLos = false; this.thrLosT = 0; this.thrAct = null; this.thrActs = 0; this.thrFiring = false; this.thrPulse = false;
-    this.thrEvT = 0; this.thrEvYaw = 0; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
-    this.canRef = null; this.canSide = 0; this.canT = 0; this.flankSide = 0; this.blockT = 0; this.flankT = 0;
   }
 
   update(dt) {
@@ -360,8 +347,7 @@ export class BotBrain {
     if (this.mode === 'retreat') {
       this.retreatT -= dt;
       if (hpFrac > 0.85 || this.retreatT <= 0 || (!this.target && hpFrac > 0.6)) { this.mode = 'paint'; this.path = null; this.goalTimer = 0; }
-    } else if (this.target && this.seeTimer > 0 && ((hpFrac < 0.34 && !MELEE[w.kind] && a.lastDamage < 0.8) || hpFrac < 0.2) && Math.random() < 0.6 * dt * 60 * this.diff.fireDiscipline
-      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this)) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range)
+    } else if (this.target && this.seeTimer > 0 && ((hpFrac < 0.34 && !MELEE[w.kind] && a.lastDamage < 0.8) || hpFrac < 0.2) && Math.random() < 0.6 * dt * 60 * this.diff.fireDiscipline) {
       this.mode = 'retreat'; this.retreatT = 2.2 + Math.random() * 1.4; this.repath = 0; this._pickRetreat();
     }
     if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05)) {
@@ -517,19 +503,11 @@ export class BotBrain {
           // dodge: a strafe-hop right after taking a hit (twins: a dodge roll, since they're firing and moving)
           it.jump = true; this.dodgeCd = w.kind === 'twins' ? 0.9 + Math.random() : 2 + Math.random() * 2.5;
         }
-        // an enemy canopy between us and the target: flank round it, save the shots, lob a sub over it
-        if (enemyVisible) this._shieldFight(t, dist, move, it, dt); else this.blockT = 0;
-        // kit weapons with their own fight tactics (bot.tactics, e.g. the Cutlass: flank, pre-charge, swim in, strafe):
-        // every fight frame, aimed or not, after the defaults above — may override move, fire, squid and jump
-        if (BK?.tactics) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
         // special
         if (a.specialReady() && (this._wantSpecial('fight', dist, enemyVisible) || (zp && this._zoneSpecial(zp, true)))) it.special = true;
       } else {
         // retreat: swim away through own ink, keep eyes on the threat
         it.squid = true;
-        // (kits with their own tactics run the retreat too — ctx.retreat — e.g. the Cutlass runs where there's no ink)
-        const RK = MAIN_KITS[w.kind]?.bot;
-        if (RK?.tactics) RK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed: false, canFire: false, retreat: true });
       }
     } else if (this.mode === 'paint') {
       // paint the most valuable ground in reach (unclaimed, and enemy ink even more), with a sweeping aim around it
@@ -614,12 +592,6 @@ export class BotBrain {
     }
     // ---------------- running specials (and cheering on a teammate's Cheer Orb)
     this._specialCtl(dt, it, move, fightDist, enemyVisible);
-    // ---------------- enemy Waddles / Torpedoes after us: shoot them down or get out of the way (aim + trigger + move);
-    // enemy launched canopies in the way: steer round the nearer edge (or break one we're boxed in by)
-    let thrAim = this._threatCtl(dt, it, move);
-    const canAim = this._canopyCtl(dt, it, move, !thrAim);
-    if (!thrAim && canAim) thrAim = canAim;
-    if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- wall climb (nav 'climb' edge): ink the wall column up to the top, then swim up it
     this._climbAim = this._climb(dt, move, it);
     if (this._climbAim) { wantYaw = this._climbAim.yaw; wantPitch = this._climbAim.pitch; }
@@ -629,9 +601,8 @@ export class BotBrain {
 
     // ---------------- aim: critically-damped spring with a turn-rate cap (flicks accelerate and settle; no twitch)
     const fighting = this.mode === 'fight';
-    const snappy = fighting || !!thrAim;   // duelling, or drawing a bead on a device / canopy
-    const om = snappy ? (this.diff.aimOmega ?? 13) : 8;
-    const maxRate = snappy ? (this.diff.aimTurn ?? 10) : 6;
+    const om = fighting ? (this.diff.aimOmega ?? 13) : 8;
+    const maxRate = fighting ? (this.diff.aimTurn ?? 10) : 6;
     wantPitch = clamp(wantPitch, -1.1, 1.0);
     this.aimYawV += (om * om * angleDiff(this.aimYaw, wantYaw) - 2 * om * this.aimYawV) * dt;
     this.aimYawV = clamp(this.aimYawV, -maxRate, maxRate);
@@ -644,9 +615,9 @@ export class BotBrain {
     // shots go where the bot is actually aiming (its eye ray at the target's distance), never straight to the target
     {
       const cp = Math.cos(this.aimPitch);
-      const d = this._climbAim ? this._climbAim.dist : thrAim ? thrAim.dist : fighting && this.target ? aimDist : this.mode === 'refill' ? 1.6 : 6;
+      const d = this._climbAim ? this._climbAim.dist : fighting && this.target ? aimDist : this.mode === 'refill' ? 1.6 : 6;
       a.aimPoint.set(a.pos.x + Math.sin(this.aimYaw) * cp * d, a.pos.y + 1.1 + Math.sin(this.aimPitch) * d, a.pos.z + Math.cos(this.aimYaw) * cp * d);
-      if (!fighting && !thrAim) { const gy = a.pos.y; if (a.aimPoint.y < gy) a.aimPoint.y = gy; }
+      if (!fighting) { const gy = a.pos.y; if (a.aimPoint.y < gy) a.aimPoint.y = gy; }
     }
 
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
@@ -1246,362 +1217,6 @@ export class BotBrain {
     return this.zBomb;
   }
 
-  // ============================================================================================ threats
-  // Enemy devices that hunt a player — Waddle Bombs (walk after a foe along the nav graph at 4 m/s, give up after ~9 s /
-  // 26 m) and Tide Torpedoes (lock on in mid-air, hover, then home in gently) — and enemy Brolly canopies (a held one
-  // blocks shots; a launched one is a sliding wall that blocks players too). The kits list them through
-  // SUB_KITS[k].threats(out) / MAIN_KITS[k].shields(out) (kits/registry.js), scanned a few times a second.
-  // A bot notices a device hunting it after its reaction time, then shoots it down when it has a line on it and the
-  // reach (Waddle 30 hp, Torpedo 20; melee kits flick / swipe / cut / punch at one in their window), else evades: kites a
-  // Waddle (a running kid outruns it), swims off through its own ink, steps out of a hovering Torpedo's sight,
-  // sidesteps + hops a launched one late. A duel with an enemy player close by keeps priority unless the device is
-  // about to arrive (the bot edges away from it meanwhile); far-off devices, or ones after someone else, are left alone.
-  // Launched canopies across our way: steer round the nearer edge, or shoot apart one that boxes us in. A shield between
-  // us and our target: flank round it, hold the shots unless it's nearly broken, lob a sub over it.
-  _threatScan() {
-    const a = this.a, L = _thrList, S = this._shl;
-    L.length = 0; S.length = 0;
-    for (const k in SUB_KITS) SUB_KITS[k].threats?.(L);
-    for (const k in MAIN_KITS) MAIN_KITS[k].shields?.(S);
-    for (let i = S.length - 1; i >= 0; i--) if (S[i].team === a.team) { S[i] = S[S.length - 1]; S.pop(); }
-    let best = null, bs = 0.2;
-    for (const d of L) {
-      if (d.team === a.team || !d.live) continue;
-      const s = this._threatScore(d);
-      if (s > bs) { bs = s; best = d; }
-    }
-    L.length = 0;
-    const mem = this._thrMem;
-    for (const d of mem.keys()) if (!d.live) mem.delete(d);
-    // a new one is acted on only after our reaction time (it beeps / shows its lock ring: no sight line needed)
-    if (best && !mem.has(best)) { mem.set(best, G.time + this.diff.reaction * (0.8 + Math.random() * 0.7) + 0.05); THREAT_STATS.noticed++; }
-    this.thrCand = best;
-  }
-  // how much a device matters to us right now: 0 = not at all; ~1.5+ outranks a duel in weapon range, 2.4+ one up close
-  _threatScore(d) {
-    const a = this.a, dx = d.pos.x - a.pos.x, dz = d.pos.z - a.pos.z, dh = Math.hypot(dx, dz);
-    const dy = d.pos.y + d.aimY - (a.pos.y + 0.8);
-    if (dh > 18 || Math.abs(dy) > 6) return 0;
-    const st = d.state, mine = d.target === a;
-    if (st === 'fly') {
-      // still in the air after the throw: a human sees it coming, so it's noticed now (the reaction time runs during its
-      // flight) — a walker coming down within its sensing circle of us (it'll lock on), a flyer heading our way
-      const v = d.vel;
-      if (d.ground) {
-        const t = (v.y + Math.sqrt(Math.max(0, v.y * v.y + 48 * (d.pos.y - a.pos.y)))) / 24;
-        return Math.hypot(d.pos.x + v.x * t - a.pos.x, d.pos.z + v.z * t - a.pos.z) < (d.senseRadius || 7) + 1 ? 0.6 : 0;
-      }
-      return dh < (d.lockRange || 6.5) + 3 && dx * v.x + dz * v.z < 0 ? 0.5 : 0;
-    }
-    if (!d.ground) {
-      // flyers (Torpedo): hovering on us before its launch, or darting at us (or past us close enough to catch the burst)
-      if (st === 'unfold') return mine ? 3 : dh < d.radius ? 0.8 : 0;
-      if (st !== 'launch') return 0;
-      const v = d.vel, sp = Math.max(2, v.length()), d3 = Math.hypot(dh, dy);
-      if (mine) return 4 / (0.25 + d3 / Math.max(6, sp));   // (it's only just pushing off: it'll be quick)
-      const tca = -(dx * v.x + dy * v.y + dz * v.z) / (sp * sp);
-      if (tca > 0 && tca < 1.2) { const mx = -dx - v.x * tca, my = -dy - v.y * tca, mz = -dz - v.z * tca; if (mx * mx + my * my + mz * mz < 1.6) return 2; }
-      return d3 < d.radius ? 0.8 : 0;
-    }
-    // walkers (Waddle): sitting on its sensing circle with us (nearly) inside, or walking after us / our way
-    if (st === 'sense') return dh < (d.senseRadius || 7) + 0.6 ? 0.7 : 0;
-    if (!d.locked) return 0;
-    const eta = Math.max(0, dh - (d.trigger || 1.2)) / (d.speed || 4);
-    if (mine) return (4 / (0.5 + eta)) * (d.left !== undefined && d.left < eta * 0.8 ? 0.3 : 1);   // (gives up before it gets here)
-    if (dh < d.radius + 0.8) return 1.7;                                   // after a teammate, right by us: its blast gets us too
-    const v = d.vel, vl = Math.hypot(v.x, v.z);
-    if (dh < 9 && vl > 0.5 && -(dx * v.x + dz * v.z) / (dh * vl) > 0.8) return 1.2 / (0.5 + eta);
-    return 0;
-  }
-  // per frame, after the mode's own actions: deal with the device we've noticed (aim + trigger + move). Returns the aim
-  // to hold (_thrAim, shared) or null to leave the frame as it is.
-  _threatCtl(dt, it, move) {
-    if (!THREAT_AI.enabled) return null;
-    const a = this.a;
-    if ((this.thrScanT -= dt) <= 0) { this.thrScanT = 0.2 + Math.random() * 0.1; this._threatScan(); }
-    let d = this.thr;
-    if (d && !d.live) { this._thrEnd(true); d = null; }
-    const c = this.thrCand;
-    if (c && c !== d && c.live && G.time >= (this._thrMem.get(c) ?? Infinity) && (!d || this._threatScore(c) > this._threatScore(d) * 1.3)) {
-      d = this.thr = c; this.thrAct = null; this.thrActs = 0; this.thrSide = 0; this.thrEvT = 0; this.thrAcqT = 0; this.thrLosT = 0;
-      this.thrSignY = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.5); this.thrSignP = (Math.random() - 0.5) * 1.2;
-    }
-    // a special that owns the body (a ride / transformation) plays out; others (thrown / aura / weapon specials) only
-    // get our footwork — the special keeps the trigger
-    const sp = a.specialActive, spK = sp && (sp.kind || sp.id);
-    if (!d || spK === 'kraken' || spK === 'stamp' || spK === 'crab' || spK === 'jetpack' || spK === 'zipcaster' || a.climbing || this._climbAim || a.superJumpState) return null;
-    const moveOnly = !!sp;
-    const score = this._threatScore(d);
-    if (score < 0.15) { this._thrEnd(false); return null; }   // lost interest in us / walked off after someone else
-    this.thrAcqT += dt;
-    const w = a.weapon, kind = w.kind, wr = a.weaponRunner, KB = MAIN_KITS[kind]?.bot, melee = !!(MELEE[kind] || KB?.melee);
-    // eye → the device's hit centre, led by the shot's flight time
-    const ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z, hx = d.pos.x, hy = d.pos.y + d.aimY, hz = d.pos.z;
-    let dx = hx - ex, dy = hy - ey, dz = hz - ez;
-    const dh = Math.hypot(dx, dz), d3 = Math.hypot(dh, dy), v = d.vel;
-    const lt = kind === 'charger' ? 0 : Math.min(0.5, d3 / (w.projSpeed || w.speedMax || w.throwSpeed || 30));
-    dx += v.x * lt; dy += v.y * lt; dz += v.z * lt;
-    // (a roller's flick at something on the ground: aim low — the flick's arc bottoms out there and lands 5–6.6 m out)
-    const idealYaw = Math.atan2(dx, dz), idealPitch = kind === 'roller' && d.ground ? -0.3 : Math.atan2(dy, Math.hypot(dx, dz));
-    if ((this.thrLosT -= dt) <= 0) { this.thrLosT = 0.1; this.thrLos = G.physics.los(_v.set(ex, ey + 0.1, ez), _v2.set(hx, hy + 0.05, hz)); }
-    // can we pop it? a line on it, in reach (melee: the window its flick / swipe / cut / punch lands in), ink to shoot
-    const [lo, hi] = melee ? this._meleeWindow(w, d) : [0, this._range() * (d.ground ? 0.95 : 1)];
-    const inkOk = a.ink > Math.max(2.5, w.inkPerShot || 0, (w.inkFull || 0) * 0.25);
-    const canShoot = !moveOnly && d.shootable && this.thrLos && d3 >= lo && d3 <= hi && inkOk;
-    // a walker coming at us from just out of reach: stand and let it walk into it (running only buys time)
-    const waitIn = !canShoot && !moveOnly && d.ground && d.shootable && this.thrLos && inkOk && d3 > hi && d3 < hi + 4 && hi - (d.trigger || 1.2) > 2.5;
-    const mine = d.target === a, ttl = !d.ground && d.state === 'launch' ? d3 / Math.max(2, v.length()) : 9;
-    const eta = d.ground ? Math.max(0, dh - (d.trigger || 1.2)) / (d.speed || 4) : ttl;
-    // a duel with an enemy player close by outranks a device that isn't about to arrive
-    const T = this.target;
-    if (T && this.mode === 'fight' && this.seeTimer > 0) {
-      const td = Math.hypot(T.pos.x - a.pos.x, T.pos.z - a.pos.z);
-      const pd = td < 4 ? 2.4 : td < this._range() * 0.9 || td < weaponRange(T.weapon) * 0.9 ? 1.5 : 0.5;
-      if (score < pd) { if (mine || dh < 4) this._thrDrift(d, move, 0.6); return null; }
-    }
-    // far off / out of reach and not about to arrive: carry on, edging away from it
-    const urgent = d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';
-    if (!canShoot && !waitIn && !urgent) { this._thrDrift(d, move, 0.5); return null; }
-    const act = canShoot || waitIn ? 'shoot' : 'evade', bit = act === 'shoot' ? 1 : 2;
-    if (!(this.thrActs & bit)) { this.thrActs |= bit; THREAT_STATS[act]++; }
-    this.thrAct = act;
-    let dodge = false;
-    if (canShoot || waitIn) {
-      it.squid = false;
-      a.fireFacing = Math.max(a.fireFacing, 0.25);   // square up to it (a flick / swipe leaves along the body)
-      const rx = a.pos.x - d.pos.x, rz = a.pos.z - d.pos.z, rl = Math.hypot(rx, rz) || 1;
-      // too late to count on the shot (a charge weapon a little sooner): sidestep its line, still firing if on it
-      dodge = !d.ground && d.state === 'launch' && ttl < (CHARGES[kind] ? 0.8 : 0.45);
-      if (dodge) this._thrSidestep(d, move, it, ttl < 0.3);
-      else if (waitIn || (d.ground && kind === 'roller')) move.set(0, 0, 0);                          // (a flick lands a fixed way out)
-      else if (d.ground && melee) move.set((rx / rl) * 0.35, 0, (rz / rl) * 0.35);                   // let it walk into the swing
-      else if (d.ground && dh < 4.5) move.set(rx / rl, 0, rz / rl);                                  // kite while shooting
-      else move.multiplyScalar(0.25);                                                                    // plant a moment for the shot
-      if (CHARGES[kind] && wr.charging && !dodge) move.multiplyScalar(0.4);
-    } else this._thrEvade(d, dt, move, it, ttl);
-    this.noProg = 0; this.bestD = Infinity;   // (off the route on purpose: not "stuck")
-    // aim: the usual human error, a little tighter (it's small and we're looking straight at it)
-    const e = this.diff.aimError * 0.7, acq = Math.exp(-this.thrAcqT / Math.max(0.12, this.diff.reaction * 0.9));
-    _thrAim.yaw = idealYaw + e * (0.7 * _wander(this.t * 1.7 + this.ph1) + 2.2 * acq * this.thrSignY);
-    _thrAim.pitch = idealPitch + e * 0.6 * (0.7 * _wander(this.t * 2.1 + this.ph2) + 1.5 * acq * this.thrSignP);
-    _thrAim.dist = Math.max(1, d3);
-    // trigger only with the actual aim on it (shots follow the bot's aim ray)
-    const off = Math.hypot(angleDiff(this.aimYaw, idealYaw), this.aimPitch - idealPitch);
-    const tol = Math.max(0.035, Math.atan2(d.ground ? 0.24 : 0.28, d3)) * (this.thrFiring ? 2.2 : 1.3);
-    if (moveOnly) { it.squid = false; return null; }   // (the special keeps its aim and trigger; it's used in kid form)
-    it.fire = canShoot ? this._devTrigger(d3, off < tol, off < tol * 4, lo, hi) : !!(CHARGES[kind] && wr.charging && !it.squid);
-    if (dodge && CHARGES[kind] && wr.charging && wr.charge >= 0.12) it.fire = false;   // let the charge go (roughly at it) and run
-    this.thrFiring = it.fire && off < tol;
-    if (it.fire) it.squid = false;
-    it.sub = false; this._bombAim = false;
-    return _thrAim;
-  }
-  _thrEnd(gone) {
-    if (gone && this.thrActs) THREAT_STATS.gone++;
-    const acted = !!this.thrActs;
-    this.thr = null; this.thrAct = null; this.thrActs = 0; this.thrFiring = false;
-    // back to what we were doing: re-plan the route from wherever the dodge left us
-    if (acted && G.nav) {
-      if (this.mode === 'paint' && this.goal >= 0 && this.path) { const n = G.nav.nodes[this.goal]; this._pathTo(_v3.set(n.x, n.y, n.z), 0.3); }
-      else this.repath = 0;
-    }
-  }
-  // keep doing what we're doing, but edge away from it
-  _thrDrift(d, move, k) {
-    const a = this.a, rx = a.pos.x - d.pos.x, rz = a.pos.z - d.pos.z, rl = Math.hypot(rx, rz) || 1;
-    const x = move.x + (rx / rl) * k, z = move.z + (rz / rl) * k, l = Math.hypot(x, z);
-    if (l > 1) move.set(x / l, 0, z / l); else move.set(x, 0, z);
-  }
-  // can't pop it: run (a kid outruns a Waddle; out of a hovering Torpedo's sight), swim through our own ink, or — a
-  // Torpedo about to arrive — sidestep its line and hop
-  _thrEvade(d, dt, move, it, ttl) {
-    const a = this.a;
-    if (!d.ground && d.state === 'launch' && ttl < 0.55) { this._thrSidestep(d, move, it, ttl < 0.35); return; }
-    this.thrEvT -= dt;
-    if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); }
-    move.set(Math.sin(this.thrEvYaw), 0, Math.cos(this.thrEvYaw));
-    const swim = a.groundTeam === 1 && !this._squidWouldDrop(move);
-    if (swim && !(this.thrActs & 4)) { this.thrActs |= 4; THREAT_STATS.swim++; }
-    it.squid = swim;
-    // running from a walker we can see: back off facing it, ready to shoot the moment it's in reach
-    if (!swim && d.ground && this.thrLos) a.fireFacing = Math.max(a.fireFacing, 0.25);
-  }
-  _thrSidestep(d, move, it, hop) {
-    const a = this.a, v = d.vel, vl = Math.hypot(v.x, v.z), rx = a.pos.x - d.pos.x, rz = a.pos.z - d.pos.z;
-    let px, pz;
-    if (vl > 0.3) { px = -v.z / vl; pz = v.x / vl; } else { const rl = Math.hypot(rx, rz) || 1; px = -rz / rl; pz = rx / rl; }
-    if (!this.thrSide) {
-      // step to the side of its line we're already on, unless that's a wall or the sea
-      const ok = (sg) => this._dryLine(a.pos.x, a.pos.y, a.pos.z, a.pos.x + px * sg * 2, a.pos.z + pz * sg * 2) && this._fatLos(a.pos.x, a.pos.y, a.pos.z, a.pos.x + px * sg * 2, a.pos.y, a.pos.z + pz * sg * 2);
-      let s = rx * px + rz * pz >= 0 ? 1 : -1;
-      if (!ok(s) && ok(-s)) s = -s;
-      this.thrSide = s;
-      if (!(this.thrActs & 8)) { this.thrActs |= 8; THREAT_STATS.sidestep++; }
-    }
-    move.set(px * this.thrSide, 0, pz * this.thrSide);
-    it.squid = false;
-    if (hop && a.grounded && this.jumpCd <= 0 && !this._nearWater(a, 1.4)) { it.jump = true; this.jumpCd = 0.9; }
-  }
-  // a heading to run from it: away (flyers: across its line, out of its sight), clear of walls and water, onto our ink
-  _pickEvade(d) {
-    const a = this.a, x0 = a.pos.x, y0 = a.pos.y, z0 = a.pos.z, base = Math.atan2(x0 - d.pos.x, z0 - d.pos.z);
-    const wp = this.path && this.pi < this.path.length ? G.nav.nodes[this.path[this.pi]] : null;
-    let best = base, bs = -Infinity;
-    for (const off of [0, 0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.1, -2.1]) {
-      const yw = base + off, sx = Math.sin(yw), sz = Math.cos(yw), px = x0 + sx * 3.2, pz = z0 + sz * 3.2;
-      if (!this._dryLine(x0, y0, z0, px, pz) || !this._fatLos(x0, y0, z0, px, y0, pz)) continue;
-      let sc = Math.cos(off) * (d.ground ? 2 : 1) + (d.ground ? 0 : Math.abs(Math.sin(off)) * 1.2);
-      const st = G.paint.regionStats(px, y0, pz, 1.3, a.team, _stats);
-      if (st.n) sc += st.own * 1.5;
-      if (wp) { const wx = wp.x - x0, wz = wp.z - z0, wl = Math.hypot(wx, wz) || 1; sc += (0.4 * (wx * sx + wz * sz)) / wl; }
-      if (!d.ground && !G.physics.los(_v.copy(d.pos), _v2.set(px, y0 + 1, pz))) sc += 2;
-      sc += Math.random() * 0.3;
-      if (sc > bs) { bs = sc; best = yw; }
-    }
-    return best;
-  }
-  // melee kits vs a device: the distance window their attack pops it in (a roller's flick arcs over anything close;
-  // a brush's swipe globs fly low and short; the Cutlass's cut throws droplets; a punch flies straight)
-  _meleeWindow(w, d) {
-    switch (w.kind) {
-      // (ground, aimed low: the flick comes down 5–6.6 m out ~0.6 s after the press — a walker is ~2.3 m closer by then)
-      case 'roller': return !d.ground ? [1.5, 6] : d.state === 'walk' ? [7.3, 9] : [5, 6.6];
-      case 'brush': return !d.ground ? [0.8, 4.5] : d.state === 'walk' ? [99, 99] : [0.8, 2.8];   // (a walker inside 2.8 m is too close to call: run)
-      case 'blade': return d.ground ? [0, 4] : [0, 5.5];
-      default: return [0, weaponRange(w) * 0.95];
-    }
-  }
-  // the trigger for a shot at a device dist m away (aimed: on it now; roughly: swinging onto it)
-  _devTrigger(dist, aimed, roughly, lo, hi) {
-    const a = this.a, w = a.weapon, wr = a.weaponRunner, k = w.kind, KB = MAIN_KITS[k]?.bot, inWin = dist >= lo && dist <= hi;
-    if (MELEE[k] || KB?.melee) {
-      // press, release, press… (a roller's flick / a brush's swipe goes where the body faces: wait until it's squared up)
-      const faced = (k !== 'roller' && k !== 'brush') || Math.abs(angleDiff(a.yaw, this.aimYaw)) < 0.3;
-      this.thrPulse = aimed && faced && inWin && !this.thrPulse; return this.thrPulse;
-    }
-    if (CHARGES[k] || KB?.charges) {
-      if (wr.burstT > 0 || wr.streaming) return false;                     // a spinner / splatling stream runs on by itself
-      // a short charge does it (a charger tap is 40+, bow ring 1 ~30, a short spinner burst)
-      const rel = k === 'charger' ? 0.12 : k === 'spinner' ? 0.3 : k === 'splatling' ? 0.35 : (w.ring1 ?? 0.4) + 0.06;
-      if (wr.charging) return !(aimed && wr.charge >= rel);
-      return roughly && inWin && !(wr.cooldown > 0);
-    }
-    return aimed && inWin;
-  }
-
-  // In a fight: an enemy shield (their held canopy, or a launched one) between us and the target soaks every shot —
-  // flank round to the side it doesn't cover (sticky side, flipped off walls / water), save the shots unless it's nearly
-  // broken or we can't get round, and lob a sub over it.
-  _shieldFight(t, dist, move, it, dt) {
-    if (!THREAT_AI.enabled || !this._shl.length) { this.blockT = 0; return; }
-    const a = this.a, ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z;
-    const tx = t.pos.x, ty = t.pos.y + (t.smoothY || 0) + (t.form === 'squid' ? 0.3 : 0.85), tz = t.pos.z;
-    let blk = null;
-    for (const s of this._shl) {
-      if (!s.live) continue;
-      const C = s.C, N = s.N;
-      const p0 = (ex - C.x) * N.x + (ey - C.y) * N.y + (ez - C.z) * N.z, p1 = (tx - C.x) * N.x + (ty - C.y) * N.y + (tz - C.z) * N.z;
-      if ((p0 > 0) === (p1 > 0) || p0 === p1) continue;
-      const k = p0 / (p0 - p1), qx = ex + (tx - ex) * k - C.x, qy = ey + (ty - ey) * k - C.y, qz = ez + (tz - ez) * k - C.z;
-      if (qx * qx + qy * qy + qz * qz > (s.R + 0.12) * (s.R + 0.12)) continue;
-      blk = s; break;
-    }
-    if (!blk) { if (this.blockT > 0) { this.blockT = Math.max(0, this.blockT - dt * 3); if (this.blockT === 0) this.flankSide = 0; } return; }
-    if (this.blockT === 0) THREAT_STATS.flank++;
-    this.blockT += dt;
-    // flank: across our line to the target, toward the side of the shield we're already off-centre on
-    const N = blk.N, sx = -N.z, sz = N.x, hl = Math.max(0.3, Math.hypot(tx - ex, tz - ez)), nx = (tx - ex) / hl, nz = (tz - ez) / hl;
-    if (!this.flankSide) { this.flankSide = (ex - blk.C.x) * sx + (ez - blk.C.z) * sz >= 0 ? 1 : -1; this.flankT = 0; }
-    let lx = -nz, lz = nx;
-    if ((lx * sx + lz * sz) * this.flankSide < 0) { lx = -lx; lz = -lz; }
-    if ((this.flankT -= dt) <= 0) {
-      this.flankT = 0.5;
-      const ok = this._dryLine(ex, a.pos.y, ez, ex + lx * 1.8, ez + lz * 1.8) && this._fatLos(ex, a.pos.y, ez, ex + lx * 1.8, a.pos.y, ez + lz * 1.8);
-      if (!ok) { this.flankSide = -this.flankSide; lx = -lx; lz = -lz; }
-    }
-    const inward = dist > 6 ? 0.45 : dist < 2.5 ? -0.35 : 0.1, mx = lx + nx * inward, mz = lz + nz * inward, ml = Math.hypot(mx, mz) || 1;
-    move.set(mx / ml, 0, mz / ml);
-    // shots: only into a shield we'd break in about a second (a fast shooter on a worn one), or when we can't get round
-    // it; charge weapons keep their charge for the opening
-    const w = a.weapon, wr = a.weaponRunner, dps = w.damage && w.fireInterval && !CHARGES[w.kind] ? w.damage / w.fireInterval : 120;
-    const through = blk.hp <= dps * 1.3 || this.blockT > 2.5 || (!blk.held && blk.left < 0.5) || (this.canRef === blk && this.canSide === 2);
-    if (!through && this.blockT > 0.15) {
-      if (CHARGES[w.kind] || MAIN_KITS[w.kind]?.bot?.charges) it.fire = it.fire || !!wr.charging;
-      else if (it.fire) { it.fire = false; THREAT_STATS.holdFire += dt; }
-    }
-    // a thrown sub goes over / round it
-    const sub = a.sub || SUB.bomb;
-    if (this.blockT > 0.5 && this.bombCd <= 0 && THROWN[sub.kind] && a.ink >= sub.inkCost + 8 && dist > 3 && dist < 13 && !SUB_KITS[sub.kind]?.blocked?.(a, sub) && Math.random() < dt * 2.5) {
-      it.sub = true; this._bombAim = true; this.bombCd = 5 + Math.random() * 4; THREAT_STATS.shieldSub++;
-    }
-  }
-
-  // Enemy launched canopies (sliding walls that hold enemy players back) across our way: steer round the nearer edge
-  // (then across behind it); boxed in (walls / water on both sides) or still not round after 4 s → shoot it apart.
-  // Returns the aim to hold while breaking one (only when `free`: no device being dealt with), else null.
-  _canopyCtl(dt, it, move, free) {
-    if (!THREAT_AI.enabled) return null;
-    const a = this.a, S = this._shl;
-    if (!S.length || a.climbing || a.superJumpState || a.specialActive) { this.canRef = null; return null; }
-    let ml = Math.hypot(move.x, move.z);
-    let hit = null, hAlong = 0, hSide = 1, hW = 1;
-    for (const s of S) {
-      if (!s.blocksActors || !s.live) continue;
-      const N = s.N, tx = -N.z, tz = N.x, px = a.pos.x - s.pos.x, pz = a.pos.z - s.pos.z, dy = a.pos.y - s.pos.y;
-      if (dy < -1.2 || dy > 1.6) continue;
-      const along = px * tx + pz * tz, across = px * N.x + pz * N.z - s.planeOff, W = s.halfW + PLAYER.radius * 0.6 + 0.3;
-      if (Math.abs(across) > 3 || Math.abs(along) > W + 2.5) continue;
-      const side = across >= 0 ? 1 : -1;
-      // it's sliding at us (we're in front of it, in its lane): step out of its way even if we're standing still
-      const coming = side > 0 && across < 2.2 && Math.abs(along) < W && (s.speed || 0) > 0.5;
-      if (!coming) {
-        if (ml <= 0.05) continue;
-        const mx = move.x / ml, mz = move.z / ml, mN = mx * N.x + mz * N.z, mT = mx * tx + mz * tz;
-        if (mN * side > -0.2) continue;                               // moving along it or away from it
-        const tCross = -across / mN;                                  // metres of travel to its plane
-        if (tCross > 2.5 || Math.abs(along + mT * tCross) > W) continue;   // far yet / we'd clear its edge anyway
-      }
-      hit = s; hAlong = along; hSide = side; hW = W; break;
-    }
-    if (hit && ml <= 0.05) ml = 1;
-    if (!hit) { this.canRef = null; this._canBroke = false; return null; }
-    if (this.canRef !== hit) { this.canRef = hit; this.canSide = 0; this.canT = 0; this._canBroke = false; THREAT_STATS.steer++; }
-    this.canT += dt;
-    const N = hit.N, tx = -N.z, tz = N.x;
-    // a spot beside its edge: `off` m out from its plane on our side (negative: past it)
-    const edgeX = (sg, off) => hit.pos.x + N.x * (hit.planeOff + hSide * off) + tx * sg * (hW + 0.55);
-    const edgeZ = (sg, off) => hit.pos.z + N.z * (hit.planeOff + hSide * off) + tz * sg * (hW + 0.55);
-    if (!this.canSide) {
-      const ok = (sg) => {
-        const x1 = edgeX(sg, 0.9), z1 = edgeZ(sg, 0.9), x2 = edgeX(sg, -1.4), z2 = edgeZ(sg, -1.4), y = a.pos.y;
-        return this._dryLine(a.pos.x, y, a.pos.z, x1, z1) && this._fatLos(a.pos.x, y, a.pos.z, x1, y, z1) && this._dryLine(x1, y, z1, x2, z2) && this._fatLos(x1, y, z1, x2, y, z2);
-      };
-      const pref = hAlong >= 0 ? 1 : -1;
-      this.canSide = ok(pref) ? pref : ok(-pref) ? -pref : 2;
-    }
-    if (this.canSide !== 2 && this.canT > 4) this.canSide = 2;
-    if (this.canSide === 2) {
-      if (!free) return null;
-      if (!this._canBroke) { this._canBroke = true; THREAT_STATS.breakWall++; }
-      const C = hit.C, dx = C.x - a.pos.x, dy = C.y - (a.pos.y + 1.1), dz = C.z - a.pos.z, dh = Math.hypot(dx, dz);
-      _thrAim.yaw = Math.atan2(dx, dz); _thrAim.pitch = Math.atan2(dy, dh); _thrAim.dist = Math.max(1, Math.hypot(dh, dy));
-      const off = Math.hypot(angleDiff(this.aimYaw, _thrAim.yaw), this.aimPitch - _thrAim.pitch);
-      const melee = MELEE[a.weapon.kind] || MAIN_KITS[a.weapon.kind]?.bot?.melee;
-      it.fire = a.ink > 3 && this._devTrigger(_thrAim.dist, off < 0.3, off < 0.7, 0, melee ? 3.5 : this._range());
-      if (it.fire) it.squid = false;
-      move.set(N.x * hSide * 0.3, 0, N.z * hSide * 0.3);
-      this.noProg = 0; this.bestD = Infinity;
-      return _thrAim;
-    }
-    this._canBroke = false;
-    // beside its face → out to the edge; clear of the edge → across behind it
-    const off = Math.abs(hAlong) < hW + 0.1 ? 0.9 : -1.4;
-    const gx = edgeX(this.canSide, off) - a.pos.x, gz = edgeZ(this.canSide, off) - a.pos.z, gl = Math.hypot(gx, gz);
-    if (gl > 0.05) move.set((gx / gl) * ml, 0, (gz / gl) * ml);
-    this.noProg = 0; this.bestD = Infinity;
-    return null;
-  }
-
   _range() {
     const w = this.a.weapon;
     return weaponRange(w) * (CHARGES[w.kind] ? 0.9 : 1);
@@ -1612,7 +1227,6 @@ export class BotBrain {
     const eye = _v.copy(a.pos); eye.y += 1.3;
     let best = null, bd = Infinity;
     const aw = this.diff.awareness;
-    const bias = MAIN_KITS[a.weapon.kind]?.bot?.targetBias;   // kit weapons may weigh targets (e.g. the Cutlass: busy ones)
     for (const e of G.actors) {
       if (e.team === a.team || !e.alive) continue;
       const d = e.pos.distanceTo(a.pos);
@@ -1622,7 +1236,7 @@ export class BotBrain {
       if (swimming && d > 3 && !(hs > 7 && d < 9)) continue;
       _v2.copy(e.pos); _v2.y += e.form === 'squid' ? 0.3 : 1.0;
       if (!G.physics.los(eye, _v2)) continue;
-      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0);
+      const score = d - (e === this.target ? 4 : 0);
       if (score < bd) { bd = score; best = e; }
     }
     if (best) {
