@@ -847,12 +847,13 @@ export function register(D, H) {
   // out (its track leaves the centre +Z, then runs out along the ±X boardwalks). Stage-centre coordinates (place at
   // [0, 0.08, 0], mirror: false). Two braced bents stand at the staging's ±Z edges (x ±1.25, z ±3.2) — clear of the
   // tower's sweep — and carry two stringers along Z with a plank deck in the middle; the pump stands on the stringers.
-  // Everything over the tower is ≥ 3.2 m up (the tower needs 3 m over its base).
+  // Everything over the tower is ≥ 4.0 m up: the stringers' undersides (the tower needs TOWER_HEAD, 3.72 m, over its
+  // base; the caps are lower but stand outside its sweep).
   D.saltpan_trestle = {
-    desc: 'Wind-pump trestle (Tower Command): two tarred timber bents (posts, cap beam, X-bracing, knee braces, iron straps) at z ±3.2, two stringers along Z and a plank deck at 3.5 m carrying the brine wind pump (raised), work lamps under the caps. Posts, caps, stringers and deck collide (roof); the bracing is a rail.',
-    params: { top: 'deck top m (3.5)' }, variants: 1, mount: 'ground',
+    desc: 'Wind-pump trestle (Tower Command): two tarred timber bents (posts, cap beam, X-bracing, knee braces, iron straps) at z ±3.2, two stringers along Z and a plank deck at `top` (4.3 m) carrying the brine wind pump (raised), work lamps under the caps. Posts, caps, stringers and deck collide (roof); the bracing is a rail.',
+    params: { top: 'deck top m (4.3; the caps 0.55 and the stringers 0.3 below it)' }, variants: 1, mount: 'ground',
     build(B, o) {
-      const T = o.top ?? 3.5, px = 1.25, pz = 3.2, capY = 2.95, sY = 3.2, tb = K.timberDk;
+      const T = o.top ?? 4.3, px = 1.25, pz = 3.2, capY = T - 0.55, sY = T - 0.3, tb = K.timberDk;
       for (const sz of [-1, 1]) {
         const z = sz * pz;
         // posts: tarred, salt-crusted feet, iron straps
@@ -860,7 +861,7 @@ export function register(D, H) {
           const x = sx * px;
           B.box('wood', shade(K.tar, sx * sz > 0 ? 1.05 : 1.2), 0.28, capY, 0.28, x, capY / 2, z, { r: 0.03 });
           pbox(B, NS('paint'), K.salt, 0.3, 0.08, 0.3, x, 0.04, z);
-          for (const y of [0.9, 2.2]) pbox(B, NS('metal'), K.rustDk, 0.3, 0.06, 0.3, x, y, z);
+          for (const y of [0.9, capY / 2 + 0.4, capY - 0.75]) pbox(B, NS('metal'), K.rustDk, 0.3, 0.06, 0.3, x, y, z);
           B.col(x - 0.14, 0, z - 0.14, x + 0.14, capY, z + 0.14, { roof: true });
           // knee brace post → cap (in the bent's plane)
           beam(B, 'wood', tb, [x, capY - 0.75, z], [x * 0.45, capY - 0.02, z], 0.14, 0.12);
@@ -959,10 +960,12 @@ export function register(D, H) {
   }
   D.saltpan_gantry = {
     desc: 'Conveyor gantry feeding the salt heap (stage coordinates, place at the origin): lattice trestle bents under the catwalk, head platform and incline, troughed belt carrying salt from the tail hopper up the incline and along the catwalk to the head drum, discharge chute with a salt stream onto the heap ridge, corrugated drive house on the head platform, galvanised handrails, hopper funnel with a grizzly. Legs, belt frame, drive house and funnel collide.',
-    params: {}, variants: 1, mount: 'ground',
+    params: { headBent: 'z of the open bent under the head platform (-9.8)', headEdge: 'z of the head platform\'s mid edge (-9.5; layout.js gantry-head)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = 0;
       const stl = '#8e979b', stlDk = '#6d7478', rail = '#b4babf';
+      // (Tower Command cuts the head platform's mid edge back, `headEdge`: its edge stringer and handrail come with it)
+      const dE = (o.headEdge ?? -9.5) + 9.5;
       const bent = (z, xs, top, foot = 0, open = false) => {
         for (const x of xs) {
           B.box('metal', stl, 0.16, top - foot, 0.16, x, foot + (top - foot) / 2, z, { r: 0.02 });
@@ -1003,7 +1006,7 @@ export function register(D, H) {
       rodT(B, NS('metal'), stlDk, P3(20.2, 0.2, -13.3), P3(22.3, 3.1, -13.3), 0.02, 4); rodT(B, NS('metal'), stlDk, P3(22.3, 0.2, -13.3), P3(20.2, 3.1, -13.3), 0.02, 4);
       // longitudinal stringers under the catwalk / head
       for (const x of [20.15, 22.3]) pbox(B, 'metal', stlDk, 0.1, 0.24, 13.2, x, 3.22, -19.5);
-      for (const z of [-12.9, -9.6]) pbox(B, 'metal', stlDk, 6.45, 0.24, 0.1, 19.22, 3.22, z);
+      for (const z of [-12.9, -9.6 + dE]) pbox(B, 'metal', stlDk, 6.45, 0.24, 0.1, 19.22, 3.22, z);
       for (const x of [20.15, 22.3]) { B.push(x, yInc(-30.8) - 0.3, -30.8, 0, -Math.atan2(3.6, 9.6)); pbox(B, 'metal', stlDk, 0.1, 0.22, 10.2, 0, 0, 0); B.pop(); }
       // handrails: outer edge of incline + catwalk + head platform (north + east)
       const railRun = (pts) => {
@@ -1018,14 +1021,14 @@ export function register(D, H) {
       };
       const inc = []; for (let z = -35.2; z <= -26.05; z += 1.53) inc.push([22.36, yInc(z), z]);
       inc.push([22.36, 3.6, -26]);
-      const cw = []; for (let z = -26; z <= -9.7; z += 1.63) cw.push([22.36, 3.6, z]);
-      cw.push([22.36, 3.6, -9.62]);
+      const cw = []; for (let z = -26; z <= -9.7 + dE; z += 1.63) cw.push([22.36, 3.6, z]);
+      cw.push([22.36, 3.6, -9.62 + dE]);
       railRun([...inc, ...cw.slice(1)]);
       for (const p of [...inc.filter((_, i) => i % 2), ...cw.filter((_, i) => i % 3 === 1)]) {
         pbox(B, NS('metal'), K.iron, 0.1, 0.14, 0.08, p[0] - 0.06, p[1] + 0.82, p[2]);
         B.box('glow', K.lamp, 0.02, 0.09, 0.09, p[0] - 0.115, p[1] + 0.82, p[2], { r: 0.01, glow: 1.6 });
       }
-      railRun([[22.36, 3.6, -9.62], [20.8, 3.6, -9.62], [19.3, 3.6, -9.62]]);
+      railRun([[22.36, 3.6, -9.62 + dE], [20.8, 3.6, -9.62 + dE], [19.3, 3.6, -9.62 + dE]]);
       // belt: hopper tail → incline → catwalk → head drum
       beltRun(B, -36.4, 1.05, -26.2, 4.18, 20.45);
       beltRun(B, -26.2, 4.18, -14.2, 4.18, 20.45);
@@ -1921,9 +1924,10 @@ export const PLACEMENTS = [
   // the wind pump on a timber trestle over the staging: the tower starts underneath it (the ground launder goes)
   { type: 'saltpan_trestle', pos: [0, 0.08, 0], mirror: false, onlyIn: 'tower' },
   { type: 'saltpan_staging', pos: [0, 0.08, 0], mirror: false, track: true, onlyIn: 'tower' },
-  { type: 'saltpan_gull', pos: [0.3, 12.65, -0.3], rotY: 0.9, mirror: false, onlyIn: 'tower' },
-  // the conveyor gantry with its head bent 0.7 m further back (the track turns under the head platform's edge)
-  { type: 'saltpan_gantry', pos: [0, 0, 0], headBent: -10.5, onlyIn: 'tower' },
+  { type: 'saltpan_gull', pos: [0.3, 13.45, -0.3], rotY: 0.9, mirror: false, onlyIn: 'tower' },
+  // the conveyor gantry with its head bent 0.7 m further back and the head platform's mid edge 0.9 m back over it (the
+  // track turns at checkpoint 1 beside the head platform, not under it: the tower needs 3.72 m of headroom)
+  { type: 'saltpan_gantry', pos: [0, 0, 0], headBent: -10.5, headEdge: -10.4, onlyIn: 'tower' },
   // the boardwalks the tower rides / crosses: no handrail on the ±X and back-pan boardwalks, the diagonal one's stops
   // short of the front dyke; the ±X and mid decks sit flush with the dykes, the diagonal one 8 cm down (layout.js)
   { type: 'saltpan_bwposts', pos: [-2.7, 0.08, -30.0], rotY: -H2, length: 10, width: 1.8, drop: 0.68, onlyIn: 'tower' },
