@@ -120,14 +120,23 @@ export function buildBackdrop(kit) {
 
   // ---------------------------------------------------------------------------------------------- waterline boulders
   // a skirt of granite boulders along the arena's outer deck edges (never along the brooks inside the arena)
-  const b = kit.bounds, inside = (x, z) => x > b.minX + 0.3 && x < b.maxX - 0.3 && z > b.minZ + 0.3 && z < b.maxZ - 0.3;
+  // (a brook edge has the far bank within ~5.5 m straight out from it: skip those — the props dress the brooks)
+  const segHit = (px, pz, dx, dz, L, self) => kit.runs.some((q) => {
+    if (q === self) return false;
+    const ux = (q.bx - q.ax) / q.len, uz = (q.bz - q.az) / q.len, ax = q.ax + ux * q.s0, az = q.az + uz * q.s0, bx = q.ax + ux * q.s1, bz = q.az + uz * q.s1;
+    const ex = bx - ax, ez = bz - az, den = dx * ez - dz * ex;
+    if (Math.abs(den) < 1e-6) return false;
+    const t = ((ax - px) * ez - (az - pz) * ex) / den, u = ((ax - px) * dz - (az - pz) * dx) / den;
+    return t > 0.05 && t < L && u >= 0 && u <= 1;
+  });
+  const brookEdge = (run) => { const dx = (run.bx - run.ax) / run.len, dz = (run.bz - run.az) / run.len; let hits = 0; for (const f of [0.25, 0.5, 0.75]) { const s = run.s0 + (run.s1 - run.s0) * f; if (segHit(run.ax + dx * s + run.nx * 0.02, run.az + dz * s + run.nz * 0.02, run.nx, run.nz, 5.5, run)) hits++; } return hits >= 2; };
   const rockGeoB = (seed) => {
     // a smooth-ish boulder: per-direction radius from a few sines (never spiky: shared vertices get one radius)
     const g = new THREE.IcosahedronGeometry(1, 1), P = g.attributes.position, r = mulberry(seed), ph = [r() * 6, r() * 6, r() * 6];
     for (let i = 0; i < P.count; i++) {
       const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
-      const k = 0.9 + 0.1 * Math.sin(x * 2.3 + ph[0]) * Math.sin(z * 2.1 + ph[1]) + 0.06 * Math.sin(y * 3.1 + ph[2]);
-      P.setXYZ(i, x * k * 1.15, y * k * 0.72, z * k);
+      const k = 0.86 + 0.16 * Math.sin(x * 2.3 + ph[0]) * Math.sin(z * 2.1 + ph[1]) + 0.1 * Math.sin(y * 3.1 + ph[2]) + 0.05 * Math.sin((x + z) * 4.1 + ph[0]);
+      P.setXYZ(i, x * k * 1.2, y * k * 0.7, z * k);
     }
     return g;
   };
@@ -135,20 +144,20 @@ export function buildBackdrop(kit) {
   let nb = 0;
   for (const run of kit.runs) {
     const dx = (run.bx - run.ax) / run.len, dz = (run.bz - run.az) / run.len;
-    const mx = run.ax + dx * (run.s0 + run.s1) / 2, mz = run.az + dz * (run.s0 + run.s1) / 2;
-    if (inside(mx + run.nx * 1.6, mz + run.nz * 1.6)) continue;   // a brook edge (the props dress those)
-    const L = run.s1 - run.s0, n = Math.max(1, Math.round(L / 1.25));
+    if (brookEdge(run)) continue;   // a brook edge (the props dress those)
+    const L = run.s1 - run.s0, n = Math.max(1, Math.round(L / 1.1));
     for (let i = 0; i < n; i++) {
-      const s = run.s0 + ((i + 0.3 + rnd() * 0.4) / n) * L, ex = run.ax + dx * s, ez = run.az + dz * s;
-      const r = 0.8 + rnd() * 0.9, out = 0.25 + rnd() * 0.55;
+      if (rnd() < 0.22) continue;                                   // gaps: the rock lies in clusters, not a necklace
+      const s = run.s0 + ((i + 0.2 + rnd() * 0.6) / n) * L, ex = run.ax + dx * s, ez = run.az + dz * s;
+      const big = rnd() < 0.35, r = big ? 1.0 + rnd() * 0.7 : 0.5 + rnd() * 0.5, out = 0.15 + rnd() * (big ? 0.7 : 0.9);
       const g = rockGeos[(nb++) & 3].clone();
-      xf(g, ex + run.nx * out, WATER_Y + 0.1 + (rnd() - 0.4) * 0.5, ez + run.nz * out, rnd() * 6.28, (rnd() - 0.5) * 0.3, 0, r, r * (0.8 + rnd() * 0.5), r);
+      xf(g, ex + run.nx * out, WATER_Y - 0.1 + (rnd() - 0.4) * 0.45, ez + run.nz * out, rnd() * 6.28, (rnd() - 0.5) * 0.3, 0, r, r * (0.75 + rnd() * 0.5), r * (0.8 + rnd() * 0.4));
       g.deleteAttribute('uv');
       const gp = g.index ? g.toNonIndexed() : g; gp.computeVertexNormals();
-      const cc = new Float32Array(gp.attributes.position.count * 3), tone = 0.8 + rnd() * 0.25, base = C('#8c8983');
-      for (let k = 0; k < gp.attributes.position.count; k++) { const y = gp.attributes.position.getY(k) - WATER_Y, w = y < 0.35 ? 0.62 : 1; cc[k * 3] = base.r * tone * w; cc[k * 3 + 1] = base.g * tone * w; cc[k * 3 + 2] = base.b * tone * w; }
+      const cc = new Float32Array(gp.attributes.position.count * 3), tone = 0.7 + rnd() * 0.3, base = C('#85827c');
+      for (let k = 0; k < gp.attributes.position.count; k++) { const y = gp.attributes.position.getY(k) - WATER_Y, w = y < 0.25 ? 0.55 : y < 0.45 ? 0.8 : 1; cc[k * 3] = base.r * tone * w; cc[k * 3 + 1] = base.g * tone * w; cc[k * 3 + 2] = base.b * tone * w; }
       gp.setAttribute('color', new THREE.BufferAttribute(cc, 3));
-      statics.push(gp);
+      plains.push(gp);   // (plain: the shore shader's foam band would paint rocks this small white)
     }
   }
 
