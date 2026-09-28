@@ -25,11 +25,11 @@ import { MURAL } from './murals.js';
 // ------------------------------------------------------------------------------------------------------------
 const G0 = 0, G1 = 1.3, G2 = 2.6, G3 = 3.8, FL = -2.4;
 const K = {
-  turf: '#c3c0b8', gravel: '#cfc9bb', granite: '#c9c6bf', graniteDk: '#b7b3aa', stone: '#d6d0c4', spawn: '#eae6de',
+  turf: '#c3c0b8', gravel: '#cfc9bb', graniteLt: '#d3d0c9', granite: '#c9c6bf', graniteDk: '#b7b3aa', stone: '#d6d0c4', spawn: '#eae6de',
   timber: '#b58d66', concrete: '#c8c5bd', build: '#d8d1c3',
 };
 const turf = (o = {}) => ({ color: K.turf, pattern: SURF.turf, ...o });
-const gravel = (o = {}) => ({ color: K.gravel, pattern: PATTERN.asphalt, ...o });
+const gravel = (o = {}) => ({ color: K.graniteLt, pattern: SURF.granite, ...o });   // the brook's granite shelves
 const granite = (o = {}) => ({ color: K.granite, pattern: SURF.granite, ...o });
 const timber = (o = {}) => ({ color: K.timber, pattern: PATTERN.wood, ...o });
 const ashlar = (o = {}) => ({ color: K.stone, pattern: SURF.ashlar, ...o });
@@ -90,8 +90,8 @@ const HALF = [
   ...baseCols([15, 17.5, 20, 22], -45.4, () => turf({ tag: 'shore' })),
   B(22, 24.5, FL, G0, -45.4, -38, turf({ tag: 'shore' })), B(22, 24.5, FL, G0, -30, zMin(BS, 22, 24.5) - INSET, turf({ tag: 'shore' })),
   bar(BS, -25.5, -8, -1, 1.3, 0.15, gravel({ tag: 'bar-s' })),
-  bar(BS, 12, 15, -1, 1.2, 0.15, gravel({ tag: 'bar-s' })),
-  bar(BS, 15, 24.5, -1, 2.3, 0.15, gravel({ tag: 'bar-s' })),
+  bar(BS, 12, 16.2, -1, 1.4, 0.15, gravel({ tag: 'bar-s' })),
+  bar(BS, 16.2, 24.5, -1, 2.3, 0.15, gravel({ tag: 'bar-s' })),
 
   // ---------------- spawn: the forecourt on the control building (G3), the dome behind
   B(-9, 9, G0, G3 - 0.2, -45.4, -36.5, ashlar({ color: K.graniteDk, tag: 'control-building' })),
@@ -116,7 +116,10 @@ const HALF = [
   // steps cut along the terrace wall down to the bank (the tower's bank run stays clear of them)
   R([-0.8, G0, -21.1], [3.4, G1, -21.1], 2.2, steps({ tag: 'wall-steps' })),
   // the shore trail ↔ the first terrace, and the shore's back end up to the east yard
-  R([22, G0, -26], [17.5, G1, -26], 2.4, gravel({ tag: 'switchback', pattern: PATTERN.rampboard })),
+  // the switchback path up from the shore trail: a leg along the shore to a landing, a leg back up onto the terrace
+  R([23.3, G0, -23.6], [23.3, 0.65, -26.4], 2.2, { color: K.gravel, pattern: PATTERN.rampboard, tag: 'switchback' }),
+  B(22.2, 24.4, G0, 0.65, -28.4, -26.4, ashlar({ tag: 'switchback-landing' })),
+  R([22.2, 0.65, -27.4], [17.5, G1, -27.4], 2.0, { color: K.gravel, pattern: PATTERN.rampboard, tag: 'switchback' }),
   R([21.1, G0, -37.5], [21.1, G1, -43.6], 2.2, steps({ tag: 'shore-stair' })),
   B(17.5, 22.2, G0, G1, -45.4, -43.6, ashlar({ tag: 'shore-landing' })),
 
@@ -154,8 +157,8 @@ const HALF = [
   R([0, G0, -16.8], [0, 0.8, -14.6], 4, ashlar({ tag: 'bridge-ramp' })),
   ...[-1, 1].flatMap((s) => [
     B(s > 0 ? 2 : -2.45, s > 0 ? 2.45 : -2, -0.6, 1.7, -14.6, -9.0, ashlar({ tag: 'bridge-parapet', perch: true, noNav: true })),
-    R([s * 2.225, 0.9, -6.8], [s * 2.225, 1.7, -9.0], 0.45, ashlar({ tag: 'bridge-parapet', thickness: 1.6, perch: true, noNav: true })),
-    R([s * 2.225, 0.9, -16.8], [s * 2.225, 1.7, -14.6], 0.45, ashlar({ tag: 'bridge-parapet', thickness: 1.6, perch: true, noNav: true })),
+    R([s * 2.225, 0.95, -7.3], [s * 2.225, 1.7, -9.0], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
+    R([s * 2.225, 0.95, -16.3], [s * 2.225, 1.7, -14.6], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
   ]),
   // the log bridge (E reach): two split logs, square across the reach
   O(20, -15.84, 1.6, 6.8, -0.35, 0.25, 26.7, timber({ tag: 'log-bridge' })),

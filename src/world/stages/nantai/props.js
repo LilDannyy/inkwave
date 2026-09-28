@@ -50,14 +50,14 @@ export const PLACEMENTS = [
   bank([24, zN(24)], [12, zN(12)], { bar: 1.7, seed: 7, width: 3.2 }),
   bank([-25.5, zS(-25.5)], [-8, zS(-8)], { bar: 1.3, seed: 11, stones: 0 }),
   bank([-8, -13.8], [12, -13.8], { seed: 13, stones: 0 }),
-  bank([12, -13.8], [15, zS(15)], { bar: 1.2, seed: 17, stones: 0 }),
-  bank([15, zS(15)], [24.5, zS(24.5)], { bar: 2.3, seed: 19, stones: 0 }),
+  bank([12, -13.8], [16.2, zS(16.2)], { bar: 1.4, seed: 17, stones: 0 }),
+  bank([16.2, zS(16.2)], [24.5, zS(24.5)], { bar: 2.3, seed: 19, stones: 0 }),
   { type: 'nantai_stonebridge', pos: [0, 0, -11.8], rotY: 0 },
   { type: 'nantai_weir', pos: [-22, 0, -9.6], rotY: 0 },
   { type: 'nantai_logbridge', pos: [20, 0, -15.84], rotY: (26.7 * P) / 180, oboxCols: true },
   { type: 'nantai_lookout', pos: [-18.8, 2.6, -15.2], rotY: 0 },
   { type: 'nantai_fingerpost', pos: [-3.3, 0, -7.2], rotY: P, blades: [['OBSERVATORY', -HP + 0.2], ['LOOKOUT · WEIR', P - 0.1], ['LOG BRIDGE', 0.25]] },
-  { type: 'nantai_fingerpost', pos: [22.6, 0, -21.2], rotY: 0, blades: [['SUMMIT 0.2 KM', HP + 0.3], ['OCTO VALLEY 6 KM', -0.1], ['INKOPOLIS 14 KM', P]] },
+  { type: 'nantai_fingerpost', pos: [18.9, 0, -22.4], rotY: 0, blades: [['SUMMIT 0.2 KM', HP + 0.3], ['OCTO VALLEY 6 KM', -0.1], ['INKOPOLIS 14 KM', P]] },
 
   // ================= Pearl's rock + the hollow
   { type: 'nantai_pearlsrock', pos: [-15, 1.3, -25.5], rotY: 0 },
@@ -87,9 +87,9 @@ export const PLACEMENTS = [
   { type: 'nantai_boulder', pos: [20.1, 0, -33.2], rotY: 0.4, w: 1.9, h: 1.2, d: 1.5, seed: 41 },
   { type: 'nantai_boulder', pos: [23.2, 0, -42.8], rotY: 1.9, w: 1.6, h: 1.0, d: 1.4, seed: 43 },
   { type: 'nantai_pine', pos: [23.4, 0, -37.2], rotY: -2.6, seed: 5 },
-  { type: 'nantai_pine', pos: [21.0, 0, -19.6], rotY: 2.8, seed: 6, scale2: 0.8 },
+  { type: 'nantai_pine', pos: [23.4, 0, -30.2], rotY: 2.8, seed: 6, scale2: 0.8 },
   { type: 'nantai_cairn', pos: [19.2, 0, -41.2], rotY: 0 },
-  { type: 'nantai_rowboat', pos: [23.2, 0, -26.8], rotY: HP + 0.15 },
+  { type: 'nantai_rowboat', pos: [23.3, 0, -20.9], rotY: HP + 0.2 },
   { type: 'nantai_scree', pos: [22.5, 0, -30.8], w: 2.0, d: 3.0, n: 14, seed: 7 },
 
   // ================= the bank below the ridge nose and in front of the hollow
