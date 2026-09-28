@@ -77,7 +77,7 @@ const RAW = [
   { type: 'spirhalite_driftwood', pos: [-2.3, 0, -5.2], rotY: 0.25, L: 3.0, seed: 9 },
   { type: 'spirhalite_rowboat', pos: [10.5, 0, -17.4], rotY: 1.35 },
   { type: 'spirhalite_debris', pos: [17.6, 0, -27.2], rotY: 0.4 },
-  { type: 'spirhalite_float', pos: [-21.5, 0, -5.3], rotY: 0, r: 0.42 },
+  { type: 'spirhalite_float', pos: [-21.2, 0, -5.4], rotY: 0, r: 0.42 },
   { type: 'spirhalite_buoy', pos: [22.0, 0, -28.2], rotY: 2.2, variant: 0 },
   { type: 'spirhalite_buoy', pos: [-7.4, 0, -23.0], rotY: 0.5, variant: 1 },
 
@@ -111,7 +111,7 @@ const RAW = [
   { type: 'spirhalite_grass', pos: [4.0, 0, -18.2], n: 4, r: 0.6, seed: 6 },
   { type: 'spirhalite_grass', pos: [14.8, 0, -45.1], n: 6, r: 1.0, seed: 7 },
   { type: 'spirhalite_grass', pos: [-17.2, 0, -44.3], n: 6, r: 1.0, seed: 8 },
-  { type: 'spirhalite_grass', pos: [-21.8, 0, -1.8], n: 4, r: 0.5, seed: 9 },
+  { type: 'spirhalite_grass', pos: [-21.1, 0, -4.2], n: 3, r: 0.4, seed: 9 },
   { type: 'spirhalite_grass', pos: [8.6, 0, -13.5], n: 5, r: 0.7, seed: 10 },
   { type: 'spirhalite_pompoms', pos: [16.6, 1.3, -12.4], n: 6, seed: 11 },
   { type: 'spirhalite_grass', pos: [19.8, 2.5, -15.9], n: 5, r: 0.8, seed: 11 },
@@ -132,7 +132,6 @@ const RAW = [
   { type: 'spirhalite_kelp', pos: [20.6, 0, -26.4], rotY: 1.1, seed: 2 },
   { type: 'spirhalite_kelp', pos: [-24.2, 0, -28.5], rotY: 1.5, seed: 3 },
   { type: 'spirhalite_kelp', pos: [9.6, 0, -20.0], rotY: 0.3, seed: 4, L: 1.4 },
-  { type: 'spirhalite_kelp', pos: [-21.8, 0, -1.8], rotY: -0.2, seed: 5, L: 1.5 },
   { type: 'spirhalite_kelp', pos: [5.6, 0, -24.9], rotY: 0.6, seed: 6, L: 1.6 },
 
   // ================= round the helipad: fuel drums and a cargo stack behind it, path lights along the causeway's edges
