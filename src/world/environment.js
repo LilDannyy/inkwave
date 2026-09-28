@@ -25,8 +25,8 @@
 //   theme: { all: {…}, day: {…}, sunset: {…}, golden: {…} }   per-stage overrides of THEMES keys (sea colours, fog, haze,
 //                       sky, grade …) for every time / one time of day
 //   snow: { line, cover }  snow on the backdrop terrain above `line` m (above the sea) and `cover` (0…1) everywhere
-//   weather: { snow: { count, fall, size } | true, mist: { count, height, color } | true }   falling snow round the
-//                       camera; drifting mist banks on the water round the arena
+//   weather: { snow: { count, fall, size } | true, mist: { layers, height, reach, inner, opacity, scale, color } | true }
+//                       falling snow round the camera; drifting fog banks lying on the water round the arena
 //   stars: true         a star field that comes out with the dusk themes (THEMES[*].night)
 //   edge: 'none'        no generic pier pilings along the deck edges (the stage dresses its own banks / cliffs)
 //   boats: false        no generic moored boats round the arena (like layout.envBoats === false)
@@ -1476,6 +1476,9 @@ function makeIsland(o) {
     sample: (rnd, maxF = 0.8) => { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * maxF; return toWorld(Math.cos(a) * r, Math.sin(a) * r); },
   };
 }
+
+// transparent stage looks stay out of override passes (GTAO normals / depth): see _buildStageLook
+function aoGate(renderer, scene, camera, geometry) { geometry.drawRange.count = scene.overrideMaterial ? 0 : Infinity; }
 
 // Far-scenery builders for a stage's own backdrop (layout.env.backdrop — see the top of this file). Every geometry is
 // vertex-coloured (prep) and merged by the environment into a few meshes; `glow` 1 = a lamp lit at dusk, 2 = blinking.
@@ -3059,7 +3062,15 @@ export class Environment {
     if (this.buoyInst) this.buoyInst.visible = E?.buoys !== false && this.bay.visible;
     this.U.uSnow.value.set(E?.snow?.line ?? 1e4, E?.snow?.cover ?? 0, 0, 0);
     if (!E) return;
-    const add = (o) => { if (o) { o.frustumCulled = false; this.root.add(o); this._stageObjs.push(o); } return o; };
+    const add = (o) => {
+      if (!o) return o;
+      o.frustumCulled = false;
+      // transparent looks (mist, water sheets …) sit out the GTAO normal / depth pass (scene.overrideMaterial), which
+      // would draw them as solid occluders (dark cards on the water) — the zone marks' / ribbons' gate
+      o.traverse?.((c) => { if (c.isMesh && c.onBeforeRender === THREE.Object3D.prototype.onBeforeRender && [].concat(c.material).some((m) => m && m.transparent)) c.onBeforeRender = aoGate; });
+      this.root.add(o); this._stageObjs.push(o);
+      return o;
+    };
     if (typeof E.backdrop === 'function') {
       try {
         const kit = { ...SCENERY_KIT, THREE, bounds: { ...this.bounds }, runs: this._runs || [], rnd: mulberry, U: this.U,
@@ -3123,40 +3134,46 @@ export class Environment {
     return pts;
   }
 
-  // mist: soft billboards drifting low over the water round the arena (and across its gaps), sky-tinted
-  _makeMist({ count = 70, height = 2.2, size = 26, color = null, reach = 70, opacity = 0.55 } = {}) {
-    const b = this.bounds, rnd = mulberry(271);
-    const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2, hx = (b.maxX - b.minX) / 2, hz = (b.maxZ - b.minZ) / 2;
-    const off = new Float32Array(count * 4);
-    for (let i = 0; i < count; i++) {
-      // a ring round the arena's box, out to `reach` m
-      const a = rnd() * Math.PI * 2, d = 0.9 + rnd() * (reach / Math.max(hx, hz));
-      off[i * 4] = cx + Math.cos(a) * (hx + 6) * d; off[i * 4 + 1] = WATER_Y + height * (0.4 + rnd() * 0.9);
-      off[i * 4 + 2] = cz + Math.sin(a) * (hz + 6) * d; off[i * 4 + 3] = size * (0.6 + rnd() * 0.8);
+  // mist: soft fog banks lying on the water round the arena — a few flat layers (so it reads from above and from the
+  // decks alike, never cutting into the sea) with drifting noise holes; denser at grazing angles like a real layer
+  _makeMist({ layers = 3, height = 2.4, reach = 110, inner = 5, opacity = 0.5, scale = 0.03, color = null } = {}) {
+    const b = this.bounds, cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2, hx = (b.maxX - b.minX) / 2, hz = (b.maxZ - b.minZ) / 2;
+    const parts = [];
+    for (let k = 0; k < layers; k++) {
+      const g = new THREE.PlaneGeometry(2 * (hx + reach), 2 * (hz + reach), 1, 1);
+      g.rotateX(-Math.PI / 2);
+      g.translate(cx, WATER_Y + 0.25 + (height * (k + 0.5)) / layers, cz);
+      g.setAttribute('aLayer', new THREE.BufferAttribute(new Float32Array(4).fill(k), 1));
+      g.deleteAttribute('uv'); g.deleteAttribute('normal');
+      parts.push(g);
     }
-    const g = new THREE.InstancedBufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -0.35, 0, 1, -0.35, 0, 1, 0.35, 0, -1, 0.35, 0]), 3));
-    g.setIndex([0, 1, 2, 0, 2, 3]);
-    g.setAttribute('aOff', new THREE.InstancedBufferAttribute(off, 4));
-    g.instanceCount = count;
+    const geo = mergeGeometries(parts);
     const U = this.U;
     const m = new THREE.ShaderMaterial({
-      uniforms: { uTime: U.uTime, uHorizon: U.uHorizon, uSkyMid: U.uSkyMid, uCol: { value: new THREE.Color(color || '#ffffff') }, uTint: { value: color ? 1 : 0 }, uOp: { value: opacity } },
-      vertexShader: /* glsl */`uniform float uTime; attribute vec4 aOff; varying vec2 vUv; varying float vF;
+      uniforms: { uTime: U.uTime, uHorizon: U.uHorizon, uSkyMid: U.uSkyMid, uCol: { value: new THREE.Color(color || '#ffffff') }, uTint: { value: color ? 1 : 0 },
+        uOp: { value: opacity }, uBox: { value: new THREE.Vector4(cx, cz, hx, hz) }, uReach: { value: new THREE.Vector3(inner, reach, scale) } },
+      vertexShader: /* glsl */`attribute float aLayer; varying vec3 vW; varying float vL;
+        void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vL = aLayer; gl_Position = projectionMatrix * viewMatrix * w; }`,
+      fragmentShader: /* glsl */`uniform float uTime, uTint, uOp; uniform vec3 uHorizon, uSkyMid, uCol, uReach; uniform vec4 uBox; varying vec3 vW; varying float vL;
+        float h2(vec2 p){ vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
+        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), u.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), u.x), u.y); }
         void main(){
-          vec3 c = aOff.xyz; c.x += sin(uTime * 0.03 + aOff.w) * 6.0; c.z += cos(uTime * 0.025 + aOff.w * 1.7) * 6.0;
-          vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-          vec3 wp = c + right * position.x * aOff.w + vec3(0.0, position.y * aOff.w, 0.0);
-          vUv = position.xy * vec2(1.0, 1.0 / 0.35);
-          vec4 mv = viewMatrix * vec4(wp, 1.0); vF = smoothstep(4.0, 22.0, -mv.z);
-          gl_Position = projectionMatrix * mv; }`,
-      fragmentShader: /* glsl */`uniform vec3 uHorizon, uSkyMid, uCol; uniform float uTint, uOp; varying vec2 vUv; varying float vF;
-        void main(){ float r = length(vUv * vec2(1.0, 1.0)); float a = smoothstep(1.0, 0.1, r) * smoothstep(-1.0, -0.2, vUv.y) * uOp * vF;
-          if (a < 0.004) discard; vec3 col = mix(mix(uHorizon, uSkyMid, 0.25) * 1.05, uCol, uTint);
+          vec2 q = abs(vW.xz - uBox.xy) - uBox.zw;
+          float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);           // metres outside the arena's box
+          float mask = smoothstep(uReach.x, uReach.x + 14.0, d) * (1.0 - smoothstep(uReach.y * 0.65, uReach.y, d));
+          vec2 p = vW.xz * uReach.z + vec2(uTime * 0.012, uTime * 0.007) * (1.0 + vL * 0.4) + vL * 7.3;
+          float n = vn(p) * 0.55 + vn(p * 2.3 + 4.1) * 0.3 + vn(p * 5.1 - 2.7) * 0.15;
+          float a = smoothstep(0.34, 0.78, n) * mask * uOp;
+          vec3 V = normalize(vW - cameraPosition);
+          a *= clamp(0.2 / max(abs(V.y), 0.02), 0.55, 3.0);                   // a layer seen edge-on is thicker
+          a = min(a, 0.8);
+          if (a < 0.004) discard;
+          vec3 col = mix(mix(uHorizon, uSkyMid, 0.25) * 1.05, uCol, uTint);
           gl_FragColor = vec4(col, a); }`,
-      transparent: true, depthWrite: false, fog: false,
+      transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide,
     });
-    const mesh = new THREE.Mesh(g, m);
+    const mesh = new THREE.Mesh(geo, m);
     mesh.name = 'Mist';
     mesh.renderOrder = 7990;
     return mesh;
