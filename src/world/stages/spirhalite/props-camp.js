@@ -393,6 +393,31 @@ export function registerCamp(D, H, X) {
       B.cyl('wood', K.woodDk, 0.12, 0.35, w / 2 + 0.2, 0.17, d / 2 + 0.1, { seg: 10 });
     },
   };
+  // solar path lights: little stakes with a glowing cap, a row of them from `to` (local x, z) (no collider)
+  D.spirhalite_pathlights = {
+    desc: 'solar path-light stakes (glow at dusk): a row from the origin to `to`, or at `pts`; no collider', params: { to: '[x, z]', n: 'count', pts: '[[x, z], …] (local)' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      const [tx, tz] = o.to || [4, 0], n = o.n ?? 4;
+      const pts = o.pts || Array.from({ length: n }, (_, i) => { const t = n > 1 ? i / (n - 1) : 0; return [tx * t, tz * t]; });
+      for (const [x, z] of pts) {
+        B.cyl(NS('metal'), K.steelDk, 0.018, 0.42, x, 0.21, z, { seg: 5 });
+        B.cyl(NS('metal'), K.black, 0.05, 0.03, x, 0.44, z, { seg: 8 });
+        B.cyl('glow', K.glow, 0.045, 0.07, x, 0.49, z, { glow: 1.5, seg: 8 });
+        pbox(B, NS('gloss'), K.navy, 0.1, 0.012, 0.1, x, 0.53, z);
+      }
+    },
+  };
+  // fuel drums on a pallet, a jerrycan, a coil of hose (cover: collider)
+  D.spirhalite_drums = {
+    desc: 'fuel drums (Deep Cut purple / orange) on a pallet, jerrycan, hose (collider)', params: {}, variants: 1, mount: 'ground',
+    build(B) {
+      pbox(B, 'wood', K.wood, 1.6, 0.14, 1.2, 0, 0, 0);
+      X.drum(B, -0.4, 0.14, -0.28, K.dc1); X.drum(B, 0.32, 0.14, -0.28, K.orange); X.drum(B, -0.4, 0.14, 0.32, K.orange);
+      B.box('gloss', K.red, 0.3, 0.4, 0.16, 0.45, 0.34, 0.35, { r: 0.03 });
+      B.tor(NS('rubber'), K.black, 0.28, 0.035, 0.85, 0.05, -0.6, { rx: HP, ts: 16 });
+      colBox(B, 0, 0, 0, 1.6, 1.05, 1.25);
+    },
+  };
   // the camp sign's two posts and its little shingle roof (the board itself is a level piece carrying mural 8)
   D.spirhalite_signposts = {
     desc: 'two timber posts + a shingle cap for the camp sign board (w apart)', params: { w: 'post spacing' }, variants: 1, mount: 'ground',
