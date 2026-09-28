@@ -17,6 +17,7 @@ export const TOWER_DEFS = {
     //  nearer the bandstand, clear of the fountain's basin — Tower Command's build of the stage, see its layout.js TW)
     path: [[0, 0], [-19.51, 0], [-19.51, 4.66], [-15.39, 4.66], [-15.39, 12.49], [7.11, 12.49], [7.11, 8.36], [15.55, 8.36], [15.55, 15.25], [3.53, 15.25], [3.52, 14.73], [-0.06, 14.73], [-0.06, 27.55], [-4.41, 27.55]],
     checkpoints: [[-14.97, 12.81], [-0.03, 21.38]],
+    checkpointTime: [10, 10],   // half the default 20 s each (the user, round 2)
   },
   kelpline: {
     // on the berth's 35° grid (layout.js ROT; berth-local x across the pier, z along it — corners (0, 0), (−17.9, 0),
