@@ -134,9 +134,9 @@ app.on('browser-window-created', (_, win) => {
       const setup = await js(`(async () => {
         const g = window.__inkwave, m = g.match, T = m.tower, P = T.path, THREE = await import('three');
         g.debug.freeze();
-        // everyone hidden; the others parked out of the way (the local player stays on its pad: a dead local player
-        // puts the camera into spectate, which blends over the first shot)
-        for (const a of m.actors) { a.character.setVisible(false); a.character.root.visible = false; if (!a.isLocal) a.pos.set(0, -50, 0); }
+        // everyone hidden where they stand (moving them off the stage splats them: a splatted local player puts the camera
+        // into spectate and draws the splatted-screen overlay over the pictures)
+        for (const a of m.actors) { a.character.setVisible(false); a.character.root.visible = false; }
         __G.projectiles?.clear?.(); __G.paint.clear(); __G.fx?.clear?.();
         g.hud?.setVisible(false); g.menus?.show(null);
         document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
