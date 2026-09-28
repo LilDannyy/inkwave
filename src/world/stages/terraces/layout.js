@@ -214,7 +214,7 @@ const FEATURES = [
   // (Tower Command builds the Caffè and the Ceramiche from TOWER_HALF below: the Caffè open underneath at its Salita end,
   // the Ceramiche 0.7 m shallower at the back)
   houseBlock(HOUSES.caffe, { notIn: 'tower' }), houseBlock(HOUSES.ceramiche, { notIn: 'tower' }), houseBlock(HOUSES.mare),
-  upperBlock(UPPERS.caffe, { mural: [{ n: faceN(UPPERS.caffe, -1, 0), id: MURAL.sundial }] }), upperBlock(UPPERS.ceramiche, { notIn: 'tower' }), upperBlock(UPPERS.mare, { mural: [{ n: faceN(UPPERS.mare, 0, 1), id: MURAL.ghost }] }),
+  upperBlock(UPPERS.caffe, { mural: [{ n: faceN(UPPERS.caffe, -1, 0), id: MURAL.sundial }], notIn: 'tower' }), upperBlock(UPPERS.ceramiche, { notIn: 'tower' }), upperBlock(UPPERS.mare, { mural: [{ n: faceN(UPPERS.mare, 0, 1), id: MURAL.ghost }] }),
   // roof-terrace stairs from the street behind the crescent (H2) up onto the Caffè and Ceramiche roofs (H3)
   // (not in Tower Command: both stand across the track, the Caffè's in the Salita and the Ceramiche's in the street behind)
   oRamp(-44, STREET_R1 - 0.4, H2, HOUSE_R1 + 0.02, H3, 1.8, stair({ tag: 'caffe-stair', notIn: 'tower' })),
@@ -232,12 +232,15 @@ const FEATURES = [
 // Tower Command's own takes on two houses of the crescent (TOWER_HALF, onlyIn 'tower'; the originals are notIn 'tower').
 //   • the Caffè: its Salita end stands in the way of the track up the Salita, so the ground floor there opens into a
 //     sottoportico — the roof terrace, the upper storey and the front wall stay, the side and the back open underneath
-//     (3.3 m clear): lx −w/2 … −PORTICO.um is the portico, the front wall runs on to lx −PORTICO.uf
+//     (4.3 m over the passage, so the tower — it needs 3.72 m, TOWER_HEAD — keeps 4 m even where it starts up the
+//     Salita's first flight under the portico's back edge): lx −w/2 … −PORTICO.um is the portico, the front wall runs on
+//     to lx −PORTICO.uf. For that the whole Caffè stands PORTICO.lift taller than the shared one — its roof terrace at
+//     H3 + lift, the upper storey on it
 //   • the Ceramiche: 0.7 m shallower at the back (the track runs along the street behind it), its upper storey with it
 // A piece of a house: its own frame, lx across the front (−w/2 … w/2), lz back → front (−d/2 … d/2)
 const houseSub = (h, lx0, lx1, lz0, lz1) => { const a = (h.rot * Math.PI) / 180, c = Math.cos(a), sn = Math.sin(a), lx = (lx0 + lx1) / 2, lz = (lz0 + lz1) / 2;
   return { cx: h.cx + c * lx + sn * lz, cz: h.cz - sn * lx + c * lz, w: lx1 - lx0, d: lz1 - lz0, rot: h.rot }; };
-const PORTICO = { um: 0.13, uf: 2.2, ceil: 3.3, wall: 0.4 };
+const PORTICO = { um: 0.13, uf: 2.2, ceil: 4.3, wall: 0.4, lift: 1.0 };
 const CAFFE_T = (() => {
   const h = HOUSES.caffe, hw = h.w / 2, hd = h.d / 2;
   return { main: houseSub(h, -PORTICO.um, hw, -hd, hd), front: houseSub(h, -PORTICO.uf, -PORTICO.um, hd - PORTICO.wall, hd), ceiling: houseSub(h, -hw, -PORTICO.um, -hd, hd) };
@@ -247,8 +250,10 @@ const CERAMICHE_T = { ...HOUSES.ceramiche, ...houseSub(HOUSES.ceramiche, -HOUSES
 const UPPER_CERAMICHE_T = { ...UPPERS.ceramiche, ...houseSub(UPPERS.ceramiche, -UPPERS.ceramiche.w / 2, UPPERS.ceramiche.w / 2, -UPPERS.ceramiche.d / 2 + CER_CUT, UPPERS.ceramiche.d / 2 + CER_CUT) };
 const TOWER_HALF = (() => {
   const T = { onlyIn: 'tower' }, cf = HOUSES.caffe, piece = (p, y0, y1) => O(p.cx, p.cz, p.w, p.d, y0, y1, p.rot, house(cf.color, { tag: 'caffe', ...T }));
+  const top = cf.top + PORTICO.lift, uc = UPPERS.caffe;
   return [
-    piece(CAFFE_T.main, cf.y0, cf.top), piece(CAFFE_T.front, cf.y0, PORTICO.ceil), piece(CAFFE_T.ceiling, PORTICO.ceil, cf.top),
+    piece(CAFFE_T.main, cf.y0, top), piece(CAFFE_T.front, cf.y0, PORTICO.ceil), piece(CAFFE_T.ceiling, PORTICO.ceil, top),
+    upperBlock({ ...uc, y0: uc.y0 + PORTICO.lift, top: uc.top + PORTICO.lift }, { mural: [{ n: faceN(uc, -1, 0), id: MURAL.sundial }], ...T }),
     houseBlock(CERAMICHE_T, T), upperBlock(UPPER_CERAMICHE_T, T),
   ];
 })();
@@ -701,7 +706,9 @@ export function bakeGround(list) {
 // stand on the platform, the dome above is off-limits) — and the sagrato is 2 m deeper (16 x 12), so the whole platform
 // is one open, inkable zone instead of a thin ring round an un-inkable box.
 const SAGRATO = { tag: 'sagrato', color: '#e6dccb', pattern: PATTERN.pavers };
-const SV = { y0: H1, y1: 5.8, spring: 4.6, wall: 0.8, pier: [1.8, 2.4], depth: 0.6 };   // San Vito open (Tower Command)
+// San Vito open (Tower Command): 0.6 m taller than the shared chapel (5.8), so its arcade is 4.0 m clear over the
+// sagrato (the tower needs 3.72 m, TOWER_HEAD); the block over the arches keeps its 1.2 m
+const SV = { y0: H1, y1: 6.4, spring: 5.2, wall: 0.8, pier: [1.8, 2.4], depth: 0.6 };
 const SAN_VITO_OPEN = (() => {
   const t = (o = {}) => upper(TH.white, { tag: 'chapel', onlyIn: 'tower', ...o });
   const out = [B(-5.5, 5.5, SV.spring, SV.y1, -3, 3, t({ noPaint: [...NOPAINT, [0, -1, 0]] }))];
@@ -720,7 +727,7 @@ const SINGLE = [
   B(-5.5, 5.5, H1, 5.8, -3, 3, upper(TH.white, { tag: 'chapel', notIn: ['zones', 'tower'] })),
   // Tower Command: San Vito open at the base (the tower starts under the dome and rolls out through the long sides) —
   // the same block and dome, carried on its two facade walls and four piers: an arcade of three arches along each long
-  // side (the middle one 3.6 m wide over the track), 3.4 m clear inside (props.js terraces_chapel `open` dresses it)
+  // side (the middle one 3.6 m wide over the track), 4.0 m clear inside (props.js terraces_chapel `open` dresses it)
   ...SAN_VITO_OPEN,
 ];
 const EXTRA = [
