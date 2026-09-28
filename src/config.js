@@ -546,6 +546,11 @@ export const MAPS = [
   { id: 'crossmarket', name: 'Crossroads Market', blurb: 'Narrow shop streets and an iron gallery close in on the glass Market Hall, where the No. 3 tram waits under the clock.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   { id: 'lockgate', name: 'Lockgate Canals', blurb: 'Drained locks through a brick warehouse district: the canal splits the map, so hold the bridge and the gates.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'terraces', name: 'Terrace Heights', blurb: 'A whitewashed hill village: hold the terraces, fight for the stairs and drop in on the Piazzetta.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
+  // new regions (2026-09-28): places in the Splatoon world no game has visited — built for Turf War, Zone Control and Tower Command
+  { id: 'nantai', name: 'Mount Nantai', blurb: 'The observatory grounds high on Mount Nantai, where the stream that starts Inkadia runs past the telescopes.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'craters', name: 'Turf War Craters', blurb: 'Flooded craters left by the Great Turf War, north of The Cape: trenches, bunkers and the old memorial.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'calamari', name: 'Calamari County', blurb: 'A snowy seaside village 3.5 hours up the line from Inkopolis: the station, the harbour and the cold.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'A remote archipelago raised from the sea: dunes, stone arches and ancient pillars in the mist.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];

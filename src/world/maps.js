@@ -156,4 +156,4 @@ for (const [id, z] of Object.entries(ZONE_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAY
 // Tower Command paths (tower-data.js) — likewise
 for (const [id, t] of Object.entries(TOWER_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAYOUTS[id].tower) MAP_LAYOUTS[id].tower = t;
 // stage-select order
-for (const id of ['tidewater', 'kelpline', 'halyard', 'saltpan', 'crossmarket', 'lockgate', 'terraces', 'cargo']) { const L = MAP_LAYOUTS[id]; if (L) { delete MAP_LAYOUTS[id]; MAP_LAYOUTS[id] = L; } }
+for (const id of ['tidewater', 'kelpline', 'halyard', 'saltpan', 'crossmarket', 'lockgate', 'terraces', 'nantai', 'craters', 'calamari', 'spirhalite', 'cargo']) { const L = MAP_LAYOUTS[id]; if (L) { delete MAP_LAYOUTS[id]; MAP_LAYOUTS[id] = L; } }
