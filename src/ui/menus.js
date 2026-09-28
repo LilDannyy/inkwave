@@ -2298,7 +2298,7 @@ export class Menus {
       ['penalty', 'Don’t lose it', 'If they take the zone from you, ¾ of what you counted since you took it becomes a penalty: your count won’t move until you count it off.'],
     ];
     const towerRules = [
-      ['ride', 'Ride the tower', 'Stand on the tower to take it: it rolls toward their base. More riders, more speed — up to ×1.43 with four aboard.'],
+      ['ride', 'Ride the tower', 'Ink its side and swim up onto it to take it: it rolls toward their base. More riders, more speed — up to ×1.43 with four aboard.'],
       ['checkpoint', 'Clear checkpoints', 'Checkpoints stop the tower until you clear them — cleared ones never stop it again. Lose it for 3 s and the checkpoint fills back up.'],
       ['goal', 'Push it home', 'Your count drops the further you push into their half. Reach their goal for a knockout — otherwise the furthest push wins.'],
       ['contest', 'Both on it? It stops', 'With both teams aboard the tower won’t move. Leave it empty for 5 s and it goes neutral and rolls back to the middle.'],
