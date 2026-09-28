@@ -8,29 +8,26 @@
 //     arch, tiered pillars standing in the sea as grey silhouettes (one with its own cascade)
 //   • the arena's live pieces: the two cascade pillars' water (animated sheets, splash, foam) and the drips falling from
 //     the Great Arch's underside over the centre
-import { OUTLINE, barLevel } from './outline.js';
+import { SHORES } from './outline.js';
 import { ARCH } from './props-ruins.js';
 
 // the arena's cascade pillars (Alpha's; Bravo's is the mirror) and the way each pours (toward its own base)
-export const PILLAR = { x: -12.5, z: -15, dir: [0, -1] };
+export const PILLAR = { x: 0, z: -16.5, dir: [1, 0] };
 
 export function buildBackdrop(kit) {
   const { THREE, box, cyl, sph, prep, xf, makeIsland, fbm, DEG, WATER_Y, U } = kit;
   const rnd = kit.rnd(9127);
   const out = { static: [], plain: [], terrain: [], instances: [], objects: [] };
-  const n = OUTLINE.length;
-
-
   // ============================================================================================== sandy banks
-  // outward normal per edge, averaged at the vertices; reach limited by the open water in front (ray to the outline)
-  const area = OUTLINE.reduce((a, p, i) => { const q = OUTLINE[(i + 1) % n]; return a + p[0] * q[1] - q[0] * p[1]; }, 0);
-  const sgn = area > 0 ? 1 : -1;
-  const edgeN = OUTLINE.map((p, i) => { const q = OUTLINE[(i + 1) % n], dx = q[0] - p[0], dz = q[1] - p[1], l = Math.hypot(dx, dz); return [(dz / l) * sgn, (-dx / l) * sgn]; });   // outward
-  const gapAlong = (x, z, nx, nz, skip) => {
+  // every shore (the S and the two pillar islets): outward normal per edge, averaged at the vertices; reach limited by
+  // the open water in front (a ray to any shore's edges)
+  const EDGES = [];   // [ax, az, bx, bz, shore, index]
+  SHORES.forEach(({ poly }, si) => poly.forEach((p, i) => { const q = poly[(i + 1) % poly.length]; EDGES.push([p[0], p[1], q[0], q[1], si, i]); }));
+  const gapAlong = (x, z, nx, nz, si, skip) => {
     let best = 40;
-    for (let j = 0; j < n; j++) {
-      if (skip.includes(j)) continue;
-      const [ax, az] = OUTLINE[j], [bx, bz] = OUTLINE[(j + 1) % n], ex = bx - ax, ez = bz - az;
+    for (const [ax, az, bx, bz, sj, j] of EDGES) {
+      if (sj === si && skip.includes(j)) continue;
+      const ex = bx - ax, ez = bz - az;
       const den = nx * ez - nz * ex;
       if (Math.abs(den) < 1e-9) continue;
       const t = ((ax - x) * ez - (az - z) * ex) / den, u = ((ax - x) * nz - (az - z) * nx) / den;
@@ -38,61 +35,62 @@ export function buildBackdrop(kit) {
     }
     return best;
   };
-  const bankParts = [];
-  for (let i = 0; i < n; i++) {
-    const [ax, az] = OUTLINE[i], [bx, bz] = OUTLINE[(i + 1) % n], L = Math.hypot(bx - ax, bz - az);
-    const [nx, nz] = edgeN[i], [pnx, pnz] = edgeN[(i + n - 1) % n], [qnx, qnz] = edgeN[(i + 1) % n];
-    const top = barLevel(i) - 0.04;
-    const m = Math.max(1, Math.ceil(L / 0.9)), rows = [];
-    for (let k = 0; k <= m; k++) {
-      const t = k / m, x = ax + (bx - ax) * t, z = az + (bz - az) * t;
-      // blend the normal toward the neighbours' at the ends (continuous banks round corners)
-      let ux = nx, uz = nz;
-      if (k === 0) { ux = nx + pnx; uz = nz + pnz; } else if (k === m) { ux = nx + qnx; uz = nz + qnz; }
-      const ul = Math.hypot(ux, uz); ux /= ul; uz /= ul;
-      const g = gapAlong(x, z, ux, uz, [i, (i + n - 1) % n, (i + 1) % n]);
-      const reach = Math.max(0.45, Math.min(2.3, 0.3 * g)) * (0.85 + 0.3 * fbm(x * 0.21, z * 0.21, 2));
-      const prof = [[0.02, top], [reach * 0.42, -0.95 + 0.25 * fbm(x * 0.4 + 3, z * 0.4, 2)], [reach, -1.72], [reach + 0.9, -2.7]];
-      rows.push(prof.map(([d, y]) => [x + ux * d, y, z + uz * d]));
+  const bankParts = [], rocks = [];
+  SHORES.forEach(({ poly, level }, si) => {
+    const n = poly.length;
+    const area = poly.reduce((a, p, i) => { const q = poly[(i + 1) % n]; return a + p[0] * q[1] - q[0] * p[1]; }, 0);
+    const sgn = area > 0 ? 1 : -1;
+    const edgeN = poly.map((p, i) => { const q = poly[(i + 1) % n], dx = q[0] - p[0], dz = q[1] - p[1], l = Math.hypot(dx, dz); return [(dz / l) * sgn, (-dx / l) * sgn]; });   // outward
+    for (let i = 0; i < n; i++) {
+      const [ax, az] = poly[i], [bx, bz] = poly[(i + 1) % n], L = Math.hypot(bx - ax, bz - az);
+      const [nx, nz] = edgeN[i], [pnx, pnz] = edgeN[(i + n - 1) % n], [qnx, qnz] = edgeN[(i + 1) % n];
+      const top = level(i) - 0.04;
+      const m = Math.max(1, Math.ceil(L / 0.9)), rows = [];
+      for (let k = 0; k <= m; k++) {
+        const t = k / m, x = ax + (bx - ax) * t, z = az + (bz - az) * t;
+        // blend the normal toward the neighbours' at the ends (continuous banks round corners)
+        let ux = nx, uz = nz;
+        if (k === 0) { ux = nx + pnx; uz = nz + pnz; } else if (k === m) { ux = nx + qnx; uz = nz + qnz; }
+        const ul = Math.hypot(ux, uz); ux /= ul; uz /= ul;
+        const g = gapAlong(x, z, ux, uz, si, [i, (i + n - 1) % n, (i + 1) % n]);
+        const reach = Math.max(0.45, Math.min(2.3, 0.3 * g)) * (0.85 + 0.3 * fbm(x * 0.21, z * 0.21, 2));
+        const prof = [[0.02, top], [reach * 0.42, -0.95 + 0.25 * fbm(x * 0.4 + 3, z * 0.4, 2)], [reach, -1.72], [reach + 0.9, -2.7]];
+        rows.push(prof.map(([d, y]) => [x + ux * d, y, z + uz * d]));
+      }
+      const pos = [];
+      for (let k = 0; k < m; k++) for (let r = 0; r < 3; r++) {
+        const a = rows[k][r], b = rows[k + 1][r], c = rows[k + 1][r + 1], d = rows[k][r + 1];
+        pos.push(...a, ...b, ...c, ...a, ...c, ...d);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.computeVertexNormals();
+      // make sure every triangle faces outward/up (the winding depends on the outline's direction)
+      const P = geo.attributes.position, N = geo.attributes.normal;
+      if (N.getY(0) < 0) { for (let v = 0; v < P.count; v += 3) { const x1 = P.getX(v + 1), y1 = P.getY(v + 1), z1 = P.getZ(v + 1); P.setXYZ(v + 1, P.getX(v + 2), P.getY(v + 2), P.getZ(v + 2)); P.setXYZ(v + 2, x1, y1, z1); } geo.computeVertexNormals(); }
+      const col = new Float32Array(P.count * 3), c = new THREE.Color('#e3d8c2');
+      for (let v = 0; v < P.count; v++) { const kk = 0.94 + 0.08 * fbm(P.getX(v) * 0.5, P.getZ(v) * 0.5, 2); col[v * 3] = c.r * kk; col[v * 3 + 1] = c.g * kk; col[v * 3 + 2] = c.b * kk; }
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const glow = new Float32Array(P.count).fill(1);   // (terrain: glow = baked fold AO → 1 = none)
+      geo.setAttribute('glow', new THREE.BufferAttribute(glow, 1));
+      bankParts.push(geo);
+      // shore rocks and boulders along the waterline where the water in front is wide enough
+      for (let s2 = 0.7; s2 < L; s2 += 1.6 + rnd() * 2.2) {
+        const t = s2 / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t;
+        const g = gapAlong(x, z, nx, nz, si, [i]);
+        if (g < 2.6) continue;
+        const d = 0.9 + rnd() * Math.min(1.4, g * 0.25), sc = 0.35 + rnd() * 0.75;
+        rocks.push([x + nx * d, WATER_Y - 0.25 + rnd() * 0.3, z + nz * d, sc, rnd() * 6.28, rnd() < 0.5 ? '#a7a296' : '#8f8b80']);
+      }
     }
-    const pos = [];
-    for (let k = 0; k < m; k++) for (let r = 0; r < 3; r++) {
-      const a = rows[k][r], b = rows[k + 1][r], c = rows[k + 1][r + 1], d = rows[k][r + 1];
-      pos.push(...a, ...b, ...c, ...a, ...c, ...d);
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    geo.computeVertexNormals();
-    // make sure every triangle faces outward/up (the winding depends on the outline's direction)
-    const P = geo.attributes.position, N = geo.attributes.normal;
-    if (N.getY(0) < 0) { for (let v = 0; v < P.count; v += 3) { const x1 = P.getX(v + 1), y1 = P.getY(v + 1), z1 = P.getZ(v + 1); P.setXYZ(v + 1, P.getX(v + 2), P.getY(v + 2), P.getZ(v + 2)); P.setXYZ(v + 2, x1, y1, z1); } geo.computeVertexNormals(); }
-    const col = new Float32Array(P.count * 3), c = new THREE.Color('#e3d8c2');
-    for (let v = 0; v < P.count; v++) { const k = 0.94 + 0.08 * fbm(P.getX(v) * 0.5, P.getZ(v) * 0.5, 2); col[v * 3] = c.r * k; col[v * 3 + 1] = c.g * k; col[v * 3 + 2] = c.b * k; }
-    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    const glow = new Float32Array(P.count).fill(1);   // (terrain: glow = baked fold AO → 1 = none)
-    geo.setAttribute('glow', new THREE.BufferAttribute(glow, 1));
-    bankParts.push(geo);
-  }
+  });
   out.terrain.push(...bankParts);
-
-  // ============================================================================================== shore rocks
   const rockGeo = (seed) => {
     const g = new THREE.IcosahedronGeometry(1, 1), P = g.attributes.position;
     for (let v = 0; v < P.count; v++) { const x = P.getX(v), y = P.getY(v), z = P.getZ(v), d = 1 + 0.3 * (fbm(x * 1.3 + seed, y * 1.3 + z, 3) - 0.5) * 2; P.setXYZ(v, x * d, y * d * 0.7, z * d); }
     g.computeVertexNormals();
     return prep(g, '#ffffff');
   };
-  const rocks = [];
-  for (let i = 0; i < n; i++) {
-    const [ax, az] = OUTLINE[i], [bx, bz] = OUTLINE[(i + 1) % n], L = Math.hypot(bx - ax, bz - az), [nx, nz] = edgeN[i];
-    for (let s = 0.7; s < L; s += 1.6 + rnd() * 2.2) {
-      const t = s / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t;
-      const g = gapAlong(x, z, nx, nz, [i]);
-      if (g < 2.6) continue;
-      const d = 0.9 + rnd() * Math.min(1.4, g * 0.25), sc = 0.35 + rnd() * 0.75;
-      rocks.push([x + nx * d, WATER_Y - 0.25 + rnd() * 0.3, z + nz * d, sc, rnd() * 6.28, rnd() < 0.5 ? '#a7a296' : '#8f8b80']);
-    }
-  }
   out.instances.push({ geo: rockGeo(3), list: rocks });
 
   // ============================================================================================== far archipelago
