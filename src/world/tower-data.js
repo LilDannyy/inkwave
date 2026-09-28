@@ -21,10 +21,11 @@ export const TOWER_DEFS = {
   },
   kelpline: {
     // on the berth's 35° grid (layout.js ROT; berth-local x across the pier, z along it — corners (0, 0), (−17.9, 0),
-    // (−17.9, 5.6), (−7.3, 5.6), (−7.3, 15.9), (−12.3, 15.9), (−12.3, 21.3), (−6.6, 21.3), (−6.6, 17.6), (11.68, 17.6),
-    // (11.68, 36)): out under the crane portal, back along the stack ends, up onto Block 4A, across the lane, over the
-    // reefer alley's crossover plate, along the reefer row and down onto the base apron
-    path: [[0, 0], [-14.66, 10.27], [-11.45, 14.85], [-2.77, 8.77], [3.14, 17.21], [-0.96, 20.08], [2.14, 24.5], [6.81, 21.23], [4.69, 18.2], [19.66, 7.72], [30.22, 22.79]],
+    // (−17.9, 5.6), (−7.3, 5.6), (−7.3, 15.9), (−12.3, 15.9), (−12.3, 21.3), (−6.6, 21.3), (−6.6, 17.6), (12.2, 17.6),
+    // (12.2, 36)): out under the crane portal, back along the stack ends, up onto Block 4A, down into the lane and on
+    // along the ground: through the reefer rack's aisle (layout.js AISLE; checkpoint 3 in it), down row 1's empty slot
+    // to the base apron
+    path: [[0, 0], [-14.66, 10.27], [-11.45, 14.85], [-2.77, 8.77], [3.14, 17.21], [-0.96, 20.08], [2.14, 24.5], [6.81, 21.23], [4.69, 18.2], [20.09, 7.42], [30.64, 22.49]],
     checkpoints: [[-6.92, 11.68], [-0.87, 20.02], [16.82, 9.71]],
   },
   halyard: {
