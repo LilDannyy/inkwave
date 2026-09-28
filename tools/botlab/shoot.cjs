@@ -55,7 +55,7 @@ app.on('browser-window-created', (_, win) => {
       if (spec.preset === 'play') {
         // the player's own camera at the spawn (the normal gameplay rig, the local kid standing on the pad, turned
         // toward mid by the match start): run the sim 1.5 s, then capture
-        await js(`(() => { const g = window.__inkwave; g.settings.fov = window.__fov0; g.match.local.character.root.visible = true; g.match.local.character.setVisible?.(true); g.debug.unfreeze(); return 1; })()`);
+        await js(`(() => { const g = window.__inkwave, me = g.match.local; g.settings.fov = window.__fov0; me.character.root.visible = true; me.character.setVisible?.(true); g.rig.follow(me, true); g.debug.unfreeze(); return 1; })()`);   // (back to the follow rig after any cinematic shot)
         await wait(1500);
         await js(`window.__inkwave.debug.freeze(); 0`); await wait(400);
         const f = `${OUT}/${MAP}-${MODE === 'turf' ? '' : MODE + '-'}${TIME}-play.png`;
