@@ -106,36 +106,36 @@ export function registerCrossings(D, H, T) {
   };
 
   // ------------------------------------------------------------------------------------------ the log bridge
-  // pos = the bridge's centre (world [20, 0, −15.84]), local Z along the bridge (6.8 m), turned square across the reach.
-  // Layout: the deck O-box 1.6 × 6.8 (−0.1 → 0.25). Here: two split larch logs whose cut faces are the deck (a hair under
+  // pos = the bridge's centre (world [20.6, 0, −15.39]), local Z along the bridge (5.2 m), turned square across the
+  // reach. Layout: the deck O-box 1.6 × 5.2 (−0.3 → 0.42), its ends on the bank shelves. Here: two split larch logs whose cut faces are the deck (a hair under
   // it), bark on the round, stakes at the ends, a rope rail on the downstream side (rail collider) on log posts.
   const halfLogGeo = (r, L) => tpl(['hlog', r, L].map(kf).join('|'), () => new THREE.CylinderGeometry(r, r, L, 12, 1, false, -HP, PI));
   D.nantai_logbridge = {
     desc: 'log bridge: two split logs, stakes, rope rail',
     build(B) {
-      const L = 6.8, r = 0.52, yc = 0.245;
+      const L = 5.2, r = 0.52, yc = 0.415;
       for (const sx of [-1, 1]) {
         B.add('wood', halfLogGeo(r, L), K.bark, sx * 0.42, yc, 0, { rx: HP, rz: 0 });
         // end grain rings
         for (const sz of [-1, 1]) B.add('wood', halfLogGeo(r - 0.04, 0.02), K.larchLt, sx * 0.42, yc, sz * (L / 2 + 0.005), { rx: HP });
       }
       // stakes at both ends
-      for (const sz of [-1, 1]) for (const sx of [-1.02, 1.02]) { ccyl(B, 'wood', K.barkDk, 0.08, 0.9, sx, 0.2, sz * (L / 2 - 0.5), { seg: 6 }); }
+      for (const sz of [-1, 1]) for (const sx of [-1.02, 1.02]) { ccyl(B, 'wood', K.barkDk, 0.08, 0.9, sx, 0.3, sz * (L / 2 - 0.35), { seg: 6 }); }
       // rope rail posts (downstream side = local +X) + sagging rope (rail collider along it)
-      const px = 0.98, posts = [-L / 2 + 0.4, 0, L / 2 - 0.4];
-      for (const z of posts) { ccyl(B, 'wood', K.bark, 0.07, 1.25, px, 0.62 + 0.25, z, { seg: 6 }); B.sph('wood', K.barkDk, 0.075, px, 1.52, z, { ws: 6, hs: 4 }); }
+      const px = 0.98, posts = [-L / 2 + 0.3, 0, L / 2 - 0.3];
+      for (const z of posts) { ccyl(B, 'wood', K.bark, 0.07, 1.45, px, 0.72 + 0.1, z, { seg: 6 }); B.sph('wood', K.barkDk, 0.075, px, 1.57, z, { ws: 6, hs: 4 }); }
       for (let i = 0; i < posts.length - 1; i++) {
         const a = posts[i], b = posts[i + 1], pts = [];
-        for (let k = 0; k <= 10; k++) { const t = k / 10; pts.push([px, 1.38 - 0.18 * 4 * t * (1 - t), a + (b - a) * t]); }
+        for (let k = 0; k <= 10; k++) { const t = k / 10; pts.push([px, 1.48 - 0.16 * 4 * t * (1 - t), a + (b - a) * t]); }
         B.add('rubber', H.tubeGeo(pts, 0.022, 5), K.rope, 0, 0, 0);
       }
-      B.col(px - 0.07, 0.1, -L / 2 + 0.3, px + 0.07, 1.4, L / 2 - 0.3, RAIL);
+      B.col(px - 0.07, 0.4, -L / 2 + 0.2, px + 0.07, 1.5, L / 2 - 0.2, RAIL);
     },
   };
 
   // ------------------------------------------------------------------------------------------ the lookout + boardwalk
   // pos = the viewing platform's north-east corner (world [−18.8, 2.6, −15.2]); the deck (layout, timber) spans local
-  // x −7 … 0 (west), z −4 … 0 (south). The boardwalk (layout ramp, 2.4 wide, x −4.4…−2 local) runs north from the deck's
+  // x −7.8 … 0 (west, overhanging the cliff by 0.3), z −4 … 0 (south). The boardwalk (layout ramp, 2.4 wide, x −4.4…−2 local) runs north from the deck's
   // north edge down to the weir crest (1.3 lower over 3 m). Railings: the deck's west + north edges (the boardwalk
   // opening left), both sides of the boardwalk. Coin binoculars, a bench, a sign; joists under the overhang.
   D.nantai_lookout = {
@@ -151,23 +151,25 @@ export function registerCrossings(D, H, T) {
         for (let i = 0; i < n * 2; i++) { const t0 = i / (n * 2), t1 = (i + 1) / (n * 2); B.col(Math.min(a[0] + (b[0] - a[0]) * t0, a[0] + (b[0] - a[0]) * t1) - 0.07, Math.min(y0a, y0b), Math.min(a[1] + (b[1] - a[1]) * t0, a[1] + (b[1] - a[1]) * t1) - 0.07, Math.max(a[0] + (b[0] - a[0]) * t0, a[0] + (b[0] - a[0]) * t1) + 0.07, Math.max(y0a, y0b) + 1.1, Math.max(a[1] + (b[1] - a[1]) * t0, a[1] + (b[1] - a[1]) * t1) + 0.07, RAIL); }
       };
       // deck: west edge, north edge either side of the boardwalk
-      rail([-6.93, -3.93], [-6.93, -0.07]);
-      rail([-6.93, -0.07], [-4.45, -0.07]);
+      rail([-7.73, -3.93], [-7.73, -0.07]);
+      rail([-7.73, -0.07], [-4.45, -0.07]);
       rail([-1.95, -0.07], [-0.07, -0.07]);
       // boardwalk (descends 1.3 over 3 m going +Z)
       rail([-4.45, 0.0], [-4.45, 3.0], 0, -1.3);
       rail([-1.95, 0.0], [-1.95, 3.0], 0, -1.3);
       // deck fascia + joists under the overhang (west)
-      pbox(B, 'wood', K.larchDk, 0.08, 0.22, 4.0, -7.0, -0.1, -2.0);
-      for (let i = 0; i < 5; i++) pbox(B, NS('wood'), K.timberDk, 0.34, 0.12, 0.1, -6.83, -0.22, -0.2 - i * 0.9);
+      pbox(B, 'wood', K.larchDk, 0.08, 0.22, 4.0, -7.8, -0.1, -2.0);
+      for (let i = 0; i < 5; i++) pbox(B, NS('wood'), K.timberDk, 0.34, 0.12, 0.1, -7.63, -0.22, -0.2 - i * 0.9);
+      // brackets under the overhang, down to the cliff
+      for (const z of [-0.6, -3.4]) seg(B, 'wood', K.timberDk, [-7.7, -0.2, z], [-7.4, -1.6, z], 0.12, 0.12, {});
       // coin binoculars on a post at the west rail
-      ccyl(B, 'metal', K.navy, 0.07, 1.1, -6.3, 0.55, -2.2, { seg: 8 });
-      B.push(-6.3, 1.25, -2.2, -HP, -0.12);
+      ccyl(B, 'metal', K.navy, 0.07, 1.1, -7.1, 0.55, -2.2, { seg: 8 });
+      B.push(-7.1, 1.25, -2.2, -HP, -0.12);
       B.box('metal', K.navy, 0.36, 0.26, 0.32, 0, 0, 0, { r: 0.05 });
       for (const s of [-1, 1]) B.cyl('metal', K.black, 0.06, 0.18, s * 0.09, 0.02, 0.22, { rx: HP, seg: 10 });
       B.box('metal', K.yellow, 0.14, 0.1, 0.02, 0, 0.1, -0.17, { r: 0.01 });
       B.pop();
-      colC(B, -6.3, 0, -2.2, 0.3, 1.4, 0.3);
+      colC(B, -7.1, 0, -2.2, 0.3, 1.4, 0.3);
       // bench facing west over the tarn
       B.push(-4.8, 0, -3.2, -HP);
       B.box('wood', K.larch, 1.6, 0.06, 0.4, 0, 0.45, 0, { r: 0.015 });

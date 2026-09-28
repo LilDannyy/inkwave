@@ -30,6 +30,13 @@ export function registerNature(D, H, T) {
     },
   };
 
+  // the environment's footprint under a ledge (hidden slabs: the tarn's edge rocks and foam follow the true shore). pos =
+  // the ledge's centre, local x along it (len), local z across it (w); never rendered, never touched (inside the ledge)
+  D.nantai_foot = {
+    desc: 'footprint slab under a shore ledge (collision-only, hidden)',
+    build(B, o) { B.col(-o.len / 2 + 0.04, -2.4, -o.w / 2 + 0.04, o.len / 2 - 0.04, -0.02, o.w / 2 - 0.04); },
+  };
+
   // ------------------------------------------------------------------------------------------ pines, boulders, cairns
   D.nantai_pine = {
     desc: 'wind-bent dwarf mountain pine (cover)',
