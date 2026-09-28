@@ -1,7 +1,7 @@
 // Botlab shoot: offscreen screenshots of one stage + a load / perf / sanity report.
 //   MAP=crossmarket TIME=day MODE=turf OUT=/path/dir SHOTS='top,art,spawnA,mid' tools/botlab/run.sh tools/botlab/shoot.cjs
 // MODE: turf (default) / zones / tower — the zones' marks or the tower + its rail show in the pictures.
-// SHOTS: comma list of presets (top, art, intro, spawnA, spawnB, mid, aerialA, aerialB, sideL, sideR) and/or a JSON array
+// SHOTS: comma list of presets (play = the player's own camera at spawn; top, art, intro, spawnA, spawnB, mid, aerialA, aerialB, sideL, sideR) and/or a JSON array
 //   of custom cameras [{"name":"x","from":[x,y,z],"look":[x,y,z],"fov":70}] (fov = horizontal degrees, default 70).
 // PLAY=secs lets the bot match run first (paint on the ground, shows what inks); ACTORS=1 keeps characters visible.
 // W/H set the image size (default 1600x900). Prints console errors/warnings, then REPORT {...}.
@@ -52,6 +52,17 @@ app.on('browser-window-created', (_, win) => {
     })()`);
     for (const s of SHOTS) {
       const spec = typeof s === 'string' ? { name: s, preset: s } : s;
+      if (spec.preset === 'play') {
+        // the player's own camera at the spawn (the normal gameplay rig, the local kid standing on the pad, turned
+        // toward mid by the match start): run the sim 1.5 s, then capture
+        await js(`(() => { const g = window.__inkwave; g.settings.fov = window.__fov0; g.match.local.character.root.visible = true; g.match.local.character.setVisible?.(true); g.debug.unfreeze(); return 1; })()`);
+        await wait(1500);
+        await js(`window.__inkwave.debug.freeze(); 0`); await wait(400);
+        const f = `${OUT}/${MAP}-${MODE === 'turf' ? '' : MODE + '-'}${TIME}-play.png`;
+        if (frame) fs.writeFileSync(f, frame.toPNG());
+        console.log('shot', f);
+        continue;
+      }
       const ok = await js(`(async () => {
         const g = window.__inkwave, THREE = await import('three'), L = __G.level, B = L.bounds, lay = L.layout || {};
         const W = B.maxX - B.minX, D = B.maxZ - B.minZ, sp = lay.spawnPads || [[0, 2, B.minZ + 4], [0, 2, B.maxZ - 4]];

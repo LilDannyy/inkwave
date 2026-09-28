@@ -79,5 +79,25 @@
       "sm": "assets/stages/cargo-dusk-sm.webp"
     }
   },
+  "spirhalite": {
+    "day": {
+      "src": "assets/stages/spirhalite-day.webp",
+      "sm": "assets/stages/spirhalite-day-sm.webp"
+    },
+    "dusk": {
+      "src": "assets/stages/spirhalite-dusk.webp",
+      "sm": "assets/stages/spirhalite-dusk-sm.webp"
+    }
+  },
+  "calamari": {
+    "day": {
+      "src": "assets/stages/calamari-day.webp",
+      "sm": "assets/stages/calamari-day-sm.webp"
+    },
+    "dusk": {
+      "src": "assets/stages/calamari-dusk.webp",
+      "sm": "assets/stages/calamari-dusk-sm.webp"
+    }
+  },
   "generated": "2026-09-27T20:11:01.803Z"
 }
