@@ -1,75 +1,116 @@
 // Spirhalite Islands — the ruins: the Great Arch over the central sandbar, the cascade pillars' drums and bulb, the
 // causeway's posts and fallen slabs, loose blocks and shore rocks. (Prop builders; see props.js for the contract.)
-export const ARCH = { leg: 25.35, rotY: Math.atan2(4.2, 25), y0: -3.5, rise: 17.25 };   // legs at world (±25, ∓4.2)
+export const ARCH = { leg: Math.hypot(25.5, 5.4), rotY: Math.atan2(5.4, 25.5), y0: -3.5, rise: 17.25 };   // legs in the sea at world (±25.5, ∓5.4)
 
 export function registerRuins(D, H, X) {
   const { THREE, K, PI, TAU, HP, NS, GB, meshGeo, tpl, pbox, colBox, ROOF, RAIL, noise3, fbm3, rng, lerp, clamp, sweep, rockGeo, col3 } = X;
   const sm = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
   // ============================================================================================== the Great Arch
-  // A colossal weathered sea arch spanning the central sandbar: an elliptical rib (crown intrados ≈ 11.3 m) swept with a
-  // lumpy, superelliptic section that flares at the legs, rock strata in the vertex colour, moss on its back, a dark
-  // wet underside where it drips, algae + barnacle band at the sea. Legs stand in the sea past the spits' tips.
-  function archGeo() {
+  // A colossal weathered sea arch of layered sedimentary rock spanning the central sandbar (the reference's arch): a
+  // thick, nearly level deck with a flat top and a rounder underside, legs flaring into the sea; its thickness and depth
+  // wander along the span; the rock is stacked in strata ~1.25 m thick — each layer set in or out a little, undercut at
+  // its base (the dark lines) and weathered back at its top; big lumps, vertical fissures, broken chunks on its edges,
+  // moss and palms on its back, a dark wet underside where it drips, an algae band at the sea.
+  function archFrameFn() {
     const XL = ARCH.leg, Y0 = ARCH.y0, BR = ARCH.rise;
+    const cl = (t) => { const th = (t - 0.5) * PI, c = Math.cos(th); return [XL * Math.sin(th), Y0 + BR * Math.sign(c) * Math.pow(Math.abs(c), 0.5)]; };
+    return (t) => {
+      const [x, y] = cl(t), e = 1e-3, [xa, ya] = cl(Math.max(0, t - e)), [xb, yb] = cl(Math.min(1, t + e));
+      let tx = xb - xa, ty = yb - ya; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l;
+      return { p: [x, y, 0], n: [-ty, tx, 0], b: [0, 0, 1], s: Math.abs(x) / XL };
+    };
+  }
+  const archFrame = archFrameFn();
+  const archThick = (t) => { const s = archFrame(t).s, s3 = s * s * s; return (2.7 + 1.1 * s3 + 0.7 * sm(0.86, 1, s)) * (1 + 0.24 * fbm3(t * 5.1, 1.3, 0.7, 3)); };
+  const archDepth = (t) => { const s = archFrame(t).s, s3 = s * s * s; return (3.5 + 0.6 * s3 + 0.4 * sm(0.86, 1, s)) * (1 + 0.15 * fbm3(t * 3.7 + 5, 0.2, 0.1, 3)); };
+  const LH = 1.25;
+  const stratum = (x, y, z) => { const yy = y + 0.9 * fbm3(x * 0.035, 0.5, z * 0.05 + 11, 2); const f = yy / LH; return { k: Math.floor(f), f: f - Math.floor(f) }; };
+  const hashL = (k) => { const s2 = Math.sin(k * 91.73 + 3.1) * 43758.5453; return s2 - Math.floor(s2); };
+  function archGeo() {
     const cStone = col3(K.stone), cDk = col3(K.stoneDk), cLt = col3(K.stoneLt), cWet = col3(K.stoneWet), cAlg = col3(K.algae), cMoss = col3(K.moss), cMossDk = col3(K.mossDk);
     const tmp = new THREE.Color();
-    // centreline: a flattened ellipse (a broad deck, steep legs)
-    const cl = (t) => { const th = (t - 0.5) * PI, c = Math.cos(th); return [XL * Math.sin(th), Y0 + BR * Math.sign(c) * Math.pow(Math.abs(c), 0.62)]; };
-    const frame = (t) => {
-      const [x, y] = cl(t), e = 1e-3, [xa, ya] = cl(Math.max(0, t - e)), [xb, yb] = cl(Math.min(1, t + e));
-      let tx = xb - xa, ty = yb - ya; const l = Math.hypot(tx, ty); tx /= l; ty /= l;
-      let nx = -ty, ny = tx; if (ny < 0 || (Math.abs(ny) < 1e-4 && nx * x < 0)) { nx = -nx; ny = -ny; }   // outward
-      if (x * nx < -1e-6 && ny < 0.2) { nx = -nx; ny = -ny; }
-      return { p: [x, y, 0], n: [nx, ny, 0], b: [0, 0, 1], s: Math.abs(x) / XL };
-    };
-    const NK = 36;
-    // stratified weathering: ledges every ~1.15 m (each stratum bulges at its top, undercut below), big lumps, joints
-    const strata = (y, x, z) => { const f = (y + 0.35 * fbm3(x * 0.08, 0.3, z * 0.08, 2)) / 1.15; const fr = f - Math.floor(f); return 0.42 * sm(0.0, 0.8, fr) - 0.2 * sm(0.85, 1.0, fr); };
-    const joint = (x, y, z) => { const q = x * 0.31 + 0.9 * noise3(y * 0.2, x * 0.05, z * 0.3); const fr = q - Math.floor(q); return -0.35 * (1 - sm(0.0, 0.07, Math.abs(fr - 0.5))); };
-    const ring = (t, k) => {
-      const f = frame(t), s = f.s, s3 = s * s * s;
-      const hh = 2.3 + 1.8 * s3 + 0.9 * sm(0.9, 1, s), hd = 3.1 + 0.9 * s3 + 0.7 * sm(0.9, 1, s);
-      const ph = (k / NK) * TAU, c = Math.cos(ph), sn = Math.sin(ph), q = 2 / 4.2;
-      const u0 = hh * Math.sign(c) * Math.pow(Math.abs(c), q), v0 = hd * Math.sign(sn) * Math.pow(Math.abs(sn), q);
-      const x = f.p[0] + f.n[0] * u0, y = f.p[1] + f.n[1] * u0, z = v0;
-      const d = 1.0 * fbm3(x * 0.065 + 7, y * 0.065, z * 0.065, 3) + 0.4 * fbm3(x * 0.2 + 2, y * 0.2, z * 0.2, 2) + 0.35 * strata(y, x, z) * (1 - 0.8 * s3) + joint(x, y, z) + 0.1 * noise3(x * 0.9, y * 0.9, z * 0.9);
-      const r = Math.hypot(u0, v0) || 1;
-      return [u0 + (u0 / r) * d, v0 + (v0 / r) * d];
-    };
-    const colour = (x, y, z, t, k) => {
-      const f = frame(t), ph = (k / NK) * TAU, up = Math.cos(ph) * f.n[1];
-      const fb = (y + 0.35 * fbm3(x * 0.08, 0.3, z * 0.08, 2)) / 1.15, band = fb - Math.floor(fb), layer = Math.floor(fb);
-      const tone = ((layer * 7) % 5) / 5;                                             // each stratum its own tone
-      tmp.copy(cStone).lerp(tone > 0.5 ? cLt : cDk, Math.abs(tone - 0.5) * 0.7);
-      tmp.multiplyScalar(0.95 + 0.1 * noise3(x * 0.45, y * 0.45, z * 0.45) - 0.08 * sm(0.85, 1, band));
-      if (up < -0.3) tmp.lerp(cWet, 0.4 * sm(-0.3, -0.9, up));                     // drip-darkened underside
-      if (y < 0.5) tmp.lerp(cAlg, 0.55 * sm(0.5, -1.3, y)).lerp(cWet, 0.3 * sm(-0.8, -1.6, y));
-      if (up > 0.4) tmp.lerp(noise3(x * 0.35, y * 0.3, z * 0.35) > -0.1 ? cMoss : cMossDk, 0.9 * sm(0.4, 0.75, up));
-      return [tmp.r, tmp.g, tmp.b];
-    };
-    const { pos, idx, col } = sweep(150, NK, frame, ring, colour);
+    const NT = 190, NK = 44, pos = [], col = [], idx = [];
+    for (let i = 0; i <= NT; i++) {
+      const t = i / NT, f = archFrame(t), hh = archThick(t), hd = archDepth(t);
+      for (let k = 0; k < NK; k++) {
+        const ph = (k / NK) * TAU, c = Math.cos(ph), sn = Math.sin(ph);
+        const q = c > 0 ? 2 / 7 : 2 / 3.4;                                    // flat back, rounder underside
+        const u0 = hh * Math.sign(c) * Math.pow(Math.abs(c), q), v0 = hd * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / 4.5);
+        let x = f.p[0] + f.n[0] * u0, y = f.p[1] + f.n[1] * u0, z = v0;
+        // horizontal outward direction of this ring point (strata only push the sides, never the flat back)
+        const rl = Math.hypot(u0, v0) || 1, rx = (f.n[0] * u0) / rl, ry = (f.n[1] * u0) / rl, rz = v0 / rl;
+        const hl = Math.hypot(rx, rz), hx = hl > 1e-4 ? rx / hl : 0, hz = hl > 1e-4 ? rz / hl : 0, side = hl;   // 0 on the top/bottom, 1 on the sides
+        const st = stratum(x, y, z);
+        const ledge = (hashL(st.k) - 0.5) * 0.95 + 0.22 * sm(0.15, 0.9, st.f) - 0.42 * (1 - sm(0.0, 0.13, st.f));
+        const lump = 0.95 * fbm3(x * 0.055 + 7, y * 0.055, z * 0.055, 3) + 0.28 * fbm3(x * 0.22 + 2, y * 0.22, z * 0.22, 2) + 0.1 * noise3(x * 0.9, y * 0.9, z * 0.9);
+        const fis = (() => { const q2 = x * 0.2 + 0.8 * noise3(y * 0.15, 0.3, z * 0.2); const fr = q2 - Math.floor(q2); return -0.45 * (1 - sm(0.0, 0.05, Math.abs(fr - 0.5))) * sm(0.3, 0.7, hashL(Math.floor(q2) + 40)); })();
+        const dr = lump + fis * side;
+        x += (rx) * dr + hx * ledge * side; y += ry * dr; z += rz * dr + hz * ledge * side;
+        pos.push(x, y, z);
+        // colour: each stratum its own tone, dark undercut lines, wet underside, algae at the sea, moss on its back
+        const up = ry;
+        const tone = hashL(st.k + 7);
+        tmp.copy(cStone).lerp(tone > 0.5 ? cLt : cDk, Math.abs(tone - 0.5) * 0.9);
+        tmp.multiplyScalar((0.94 + 0.12 * noise3(x * 0.4, y * 0.4, z * 0.4)) * (1 - 0.3 * (1 - sm(0.0, 0.14, st.f)) * side));
+        if (up < -0.35) tmp.lerp(cWet, 0.45 * sm(-0.35, -0.9, up));
+        if (y < 0.4) tmp.lerp(cAlg, 0.55 * sm(0.4, -1.3, y)).lerp(cWet, 0.3 * sm(-0.8, -1.6, y));
+        if (up > 0.3) tmp.lerp(noise3(x * 0.3, y * 0.3, z * 0.3) > -0.15 ? cMoss : cMossDk, 0.95 * sm(0.3, 0.62, up));
+        col.push(tmp.r, tmp.g, tmp.b);
+      }
+    }
+    for (let i = 0; i < NT; i++) for (let k = 0; k < NK; k++) { const a = i * NK + k, b = i * NK + (k + 1) % NK, c = (i + 1) * NK + (k + 1) % NK, d = (i + 1) * NK + k; idx.push(a, b, c, a, c, d); }
     return meshGeo(pos, idx, col);
   }
+  // a point on the arch's surface: along the span t, round the section ph (0 = its back, π = underside, ±π/2 = sides)
+  const archPoint = (t, ph, out = 0) => {
+    const f = archFrame(t), hh = archThick(t) + out, hd = archDepth(t) + out, c = Math.cos(ph), sn = Math.sin(ph);
+    const u = hh * Math.sign(c) * Math.pow(Math.abs(c), c > 0 ? 2 / 7 : 2 / 3.4), v = hd * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / 4.5);
+    return [f.p[0] + f.n[0] * u, f.p[1] + f.n[1] * u, v];
+  };
   D.spirhalite_arch = {
     desc: 'the Great Arch: a colossal weathered stone sea arch spanning the central sandbar, legs in the sea (roof colliders)',
     params: {}, variants: 1, mount: 'ground',
     build(B) {
       B.add('rubber', tpl('arch', archGeo), 'white', 0, 0, 0, { ao: false });
+      // broken chunks: slabs jutting from its back edges, blocks slumped on its sides, a few hanging under the deck
+      const R = rng(4077);
+      for (let i = 0; i < 22; i++) {
+        const t = 0.1 + R() * 0.8, kind = i < 5 ? 0 : i < 15 ? 1 : 2;
+        const ph = kind === 0 ? (R() < 0.5 ? 1.05 : -1.05) + (R() - 0.5) * 0.25 : kind === 1 ? (R() < 0.5 ? 1.57 : -1.57) + (R() - 0.5) * 0.6 : PI + (R() - 0.5) * 0.9;
+        const [x, y, z] = archPoint(t, ph, kind === 1 ? -0.45 : -0.35);
+        const s = kind === 2 ? 0.6 + R() * 0.5 : 0.9 + R() * 0.9;
+        // angular slabs (a low-poly, flattened, faceted rock): broken strata blocks, not boulders
+        B.add('rubber', rockGeo(300 + i, 0, 1.5, kind === 2 ? 0.9 : 0.5, 1.1, 0.35), i % 2 ? K.stone : K.stoneLt, x, y, z, { s, ry: R() * TAU, rz: (R() - 0.5) * 0.25, ao: false });
+      }
+      // life on its back: cushion shrubs and two monstera palms
+      for (let i = 0; i < 9; i++) {
+        const t = 0.2 + R() * 0.6, [x, y, z] = archPoint(t, (R() - 0.5) * 0.9, -0.35), s2 = 0.9 + R() * 1.1;
+        B.add('foliage', tpl('apuff|' + (i % 3), () => H.puffGeo(1, 21 + (i % 3))), i % 2 ? K.mossLt : K.moss, x, y, z, { sx: s2 * 1.4, sy: s2 * 0.7, sz: s2 * 1.2 });
+      }
+      for (const [t, sd, seed] of [[0.36, 0.4, 31], [0.66, -0.5, 33]]) {
+        const [x, y, z] = archPoint(t, sd, -0.3);
+        const nc = B.cols.length;   // (B.col ignores the push stack: drop the nested palm's trunk collider — nobody reaches up there)
+        B.push(x, y - 0.1, z, t * 5);
+        D.spirhalite_palm.build(B, { h: 3.4, lean: 1.1, seed });
+        B.pop();
+        B.cols.length = nc;
+      }
       // legs: off-limits rock (roof); the rib itself up high (roof boxes inside the mesh, for jetpacks and zipcasters)
       for (const sx of [-1, 1]) {
         colBox(B, sx * ARCH.leg, -2.2, 0, 7.2, 9.5, 6.6, ROOF);
-        for (let i = 0; i < 9; i++) {
-          const th0 = (i / 9) * (PI / 2) * 0.92, th1 = ((i + 1) / 9) * (PI / 2) * 0.92;
-          const x0 = ARCH.leg * Math.sin(th0), x1 = ARCH.leg * Math.sin(th1), y0 = ARCH.y0 + ARCH.rise * Math.cos(th1), y1 = ARCH.y0 + ARCH.rise * Math.cos(th0);
-          if (y1 < 6.5) continue;
-          B.col(sx > 0 ? x0 : -x1, Math.max(6.2, y0 - 1.6), -2.0, sx > 0 ? x1 : -x0, y1 + 1.6, 2.0, ROOF);
+        for (let i = 0; i < 10; i++) {
+          const t0 = sx > 0 ? 0.5 + i * 0.045 : 0.5 - (i + 1) * 0.045, t1 = t0 + 0.045;
+          const [xa, ya] = archPoint(t0, PI, -0.6), [xb, yb] = archPoint(t1, PI, -0.6), [, ta] = archPoint(t0, 0, -0.6), [, tb] = archPoint(t1, 0, -0.6);
+          const y0 = Math.min(ya, yb), y1 = Math.max(ta, tb);
+          if (y0 < 6.4) continue;
+          B.col(Math.min(xa, xb), y0, -2.4, Math.max(xa, xb), y1, 2.4, ROOF);
         }
       }
       // rubble round the legs at the waterline
-      for (const sx of [-1, 1]) for (let i = 0; i < 9; i++) {
-        const a = (i / 9) * TAU + sx, r = 4.2 + 1.3 * Math.sin(i * 2.7), s = 0.8 + 0.7 * ((i * 37) % 10) / 10;
-        B.add('rubber', rockGeo(11 + i + (sx > 0 ? 20 : 0), 1, 1.2, 0.7, 1.0), K.rock, sx * ARCH.leg + Math.cos(a) * r, -1.7, Math.sin(a) * r * 0.9, { s, ry: a, ao: false });
+      for (const sx of [-1, 1]) for (let i = 0; i < 11; i++) {
+        const a = (i / 11) * TAU + sx, r = 4.6 + 1.4 * Math.sin(i * 2.7), s2 = 0.8 + 0.8 * ((i * 37) % 10) / 10;
+        B.add('rubber', rockGeo(11 + i + (sx > 0 ? 20 : 0), 1, 1.2, 0.7, 1.0), K.rock, sx * ARCH.leg + Math.cos(a) * r, -1.7, Math.sin(a) * r * 0.9, { s: s2, ry: a, ao: false });
       }
     },
   };

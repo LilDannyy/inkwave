@@ -68,7 +68,7 @@ export function drawMurals(g, R) {
   // ---- 4: central sandbar (26 x 11 m at 40 px/m): damp marks under the arch's line, drawn point-symmetric
   {
     const r = { x: X, y: Y, w: 1040, h: 440 }, s = 40, R0 = rng(41);
-    const cx = r.x + r.w / 2, cy = r.y + r.h / 2, ang = Math.atan2(4.2, 25);   // the arch's axis on the slab (canvas: x → −x, up → +z)
+    const cx = r.x + r.w / 2, cy = r.y + r.h / 2, ang = Math.atan2(5.4, 25.5);   // the arch's axis on the slab (canvas: x → −x, up → +z)
     const blot = (u, v, rad, a) => { const gr = g.createRadialGradient(u, v, 0, u, v, rad); gr.addColorStop(0, `rgba(96,84,66,${a})`); gr.addColorStop(1, 'rgba(96,84,66,0)'); g.fillStyle = gr; g.fillRect(u - rad, v - rad, rad * 2, rad * 2); };
     for (let i = 0; i < 70; i++) {
       const t = (R0() - 0.5) * 20, off = (R0() - 0.5) * 3.4, rad = (0.2 + R0() * 0.7) * s, a = 0.08 + R0() * 0.14;
