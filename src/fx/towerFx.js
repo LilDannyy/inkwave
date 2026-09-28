@@ -44,6 +44,61 @@ const PATH_FS = `
     vec3 c = mix(mix(uBase, uCol, 0.5 * uOn), uCol * (1.25 + 0.5 * chev), run);
     gl_FragColor = vec4(c, a);
   }`;
+// checkpoint / goal pad: a square "mini zone" framing where the tower stops — a floor frame (bright rim, halftone dots
+// fading in from the edge over a dark tint) and a low light curtain of halftone dots rising off its edges
+const PAD_VS = `
+  attribute vec2 aP; attribute float aK;
+  varying vec2 vP; varying float vK;
+  void main(){ vP = aP; vK = aK; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const PAD_FS = `
+  uniform vec3 uCol; uniform float uA; uniform float uBeat; uniform float uTime; uniform float uHalf; uniform float uH;
+  varying vec2 vP; varying float vK;
+  float dots(vec2 p, float cell, float r) { vec2 c = fract(p / cell) - 0.5; return 1.0 - smoothstep(r - 0.07, r + 0.07, length(c)); }
+  void main(){
+    float a; vec3 c;
+    if (vK < 0.5) {
+      float d = uHalf - max(abs(vP.x), abs(vP.y));             // m in from the edge
+      float rim = 1.0 - smoothstep(0.09, 0.15, d);
+      float band = 1.0 - smoothstep(0.15, 1.0, d);
+      float dt = dots(vP, 0.24, mix(0.06, 0.4, band));
+      a = rim * 0.95 + dt * band * (0.5 + 0.2 * uBeat) + 0.22;
+      c = mix(uCol * 0.22, mix(uCol * 1.35, vec3(1.0), rim * 0.3), clamp(rim + dt * band, 0.0, 1.0));
+    } else {
+      float h = vP.y;                                            // 0 foot … 1 top
+      float fade = pow(1.0 - h, 1.3);
+      float dt = dots(vec2(vP.x, h * uH), 0.2, mix(0.42, 0.05, h));
+      float foot = 1.0 - smoothstep(0.0, 0.09, h);
+      float scan = smoothstep(0.42, 0.5, abs(fract(h * 2.5 - uTime * 0.5) - 0.5));
+      a = (dt * 0.85 + foot * 0.9 + scan * 0.18) * fade;
+      c = uCol * 1.35;
+    }
+    a *= uA * (0.8 + 0.2 * uBeat);
+    if (a < 0.01) discard;
+    gl_FragColor = vec4(c, clamp(a, 0.0, 1.0));
+  }`;
+// a pad `size` m square with a `ch` m curtain, as one mesh (turned to the platform's heading by its group)
+function padMesh(size, ch, uniforms) {
+  const h = size / 2, y0 = 0.045, pos = [], aP = [], aK = [], idx = [];
+  const quad = (v, p, k) => { const b = pos.length / 3; v.forEach((q) => pos.push(...q)); p.forEach((q) => aP.push(...q)); for (let i = 0; i < 4; i++) aK.push(k); idx.push(b, b + 1, b + 2, b, b + 2, b + 3); };
+  quad([[-h, y0, -h], [h, y0, -h], [h, y0, h], [-h, y0, h]], [[-h, -h], [h, -h], [h, h], [-h, h]], 0);
+  const cs = [[-h, -h], [h, -h], [h, h], [-h, h]];
+  for (let i = 0; i < 4; i++) {
+    const [ax, az] = cs[i], [bx, bz] = cs[(i + 1) % 4], i0 = i * size;
+    quad([[ax, y0, az], [bx, y0, bz], [bx, y0 + ch, bz], [ax, y0 + ch, az]], [[i0, 0], [i0 + size, 0], [i0 + size, 1], [i0, 1]], 1);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('aP', new THREE.Float32BufferAttribute(aP, 2));
+  geo.setAttribute('aK', new THREE.Float32BufferAttribute(aK, 1));
+  geo.setIndex(idx);
+  geo.computeBoundingSphere();
+  const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: PAD_VS, fragmentShader: PAD_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
+  const m = noAO(new THREE.Mesh(geo, mat));
+  m.renderOrder = 1;
+  return m;
+}
+
 
 export class TowerFx {
   constructor(scene) {
@@ -195,14 +250,16 @@ export class TowerFx {
       const colMat = glow(col(team), goal ? 0.4 : 0.32);
       const column = noAO(new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.6, h, 12, 1, true), colMat));
       column.position.y = h / 2; column.renderOrder = 1;
-      const ringMat = glow(col(team), 0.6);
-      const ring = noAO(new THREE.Mesh(new THREE.RingGeometry(goal ? 2.1 : 1.5, goal ? 2.35 : 1.66, 48), ringMat));
-      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.07; ring.renderOrder = 1;
+      // the pad: a square mini zone just bigger than the platform, square to it
+      const size = 2 * TOWER.platformR + (goal ? 1.3 : 0.7), ch = goal ? 1.25 : 0.75;
+      const padU = { uCol: { value: col(team).clone() }, uA: { value: 1 }, uBeat: { value: 0 }, uTime: { value: 0 }, uHalf: { value: size / 2 }, uH: { value: ch } };
+      const ring = padMesh(size, ch, padU);
+      ring.rotation.y = T.yaw;
       const lamp = new THREE.Mesh(new THREE.SphereGeometry(goal ? 0.34 : 0.2, 14, 10), new THREE.MeshBasicMaterial({ color: col(team), toneMapped: false }));
       lamp.position.y = goal ? 2.6 : 1.6;
       g.add(column, ring, lamp);
       root.add(g);
-      return { g, colMat, ringMat, lamp, team, goal };
+      return { g, colMat, padU, lamp, team, goal };
     };
     for (const cp of T.cps) this.cps.push({ ...stop(cp.team === 0 ? cp.d : -cp.d, cp.team, false), cp, flash: 0 });
     this.goals = [stop(T.path.len[0], 0, true), stop(-T.path.len[1], 1, true)];
@@ -259,13 +316,14 @@ export class TowerFx {
       const at = !c.cp.cleared && Math.abs(T.s - (c.cp.team === 0 ? c.cp.d : -c.cp.d)) < 0.05;
       const beat = at ? 0.6 + 0.4 * Math.abs(Math.sin(t * 6)) : 1;
       c.colMat.color.copy(base); c.colMat.opacity = (c.cp.cleared ? 0.12 : 0.3) * beat + c.flash * 0.4;
-      c.ringMat.color.copy(base); c.ringMat.opacity = (c.cp.cleared ? 0.25 : 0.6) * beat;
+      c.padU.uCol.value.copy(base); c.padU.uA.value = c.cp.cleared ? 0.3 : 1; c.padU.uBeat.value = at ? Math.abs(Math.sin(t * 6)) : c.flash; c.padU.uTime.value = t;
       c.lamp.material.color.copy(base).multiplyScalar(c.cp.cleared ? 0.7 : 1.5);
     }
     for (const gl of this.goals) {
       const b = G.teamColors ? G.teamColors[gl.team] : NEUTRAL;
       gl.colMat.color.copy(b); gl.colMat.opacity = 0.32 + 0.1 * Math.sin(t * 2 + gl.team * 3);
-      gl.ringMat.color.copy(b); gl.lamp.material.color.copy(b).multiplyScalar(1.6);
+      gl.padU.uCol.value.copy(b); gl.padU.uTime.value = t; gl.padU.uBeat.value = 0.5 + 0.5 * Math.sin(t * 2 + gl.team * 3);
+      gl.lamp.material.color.copy(b).multiplyScalar(1.6);
     }
     // the rumble of it moving (positional, near the camera only)
     const cam = G.rig?.gameCam || G.camera, near = cam && cam.position.distanceTo(T.pos) < 36;
