@@ -87,7 +87,7 @@ const t1Pieces = [];
   for (const [a, b] of segs(T1.x0, T1.x1, nGaps)) wall(a, b, T1.z1, T1.z1 + w);
   for (const [a, b] of segs(T1.x0, T1.x1, sGaps)) wall(a, b, T1.z0 - w, T1.z0);
   // (both ends are bare chalk: the tower climbs out of the east end, the right lane climbs out of the west end)
-  for (const s of T1_STAIRS) { const z = s.side > 0 ? T1.z1 : T1.z0; t1Pieces.push(R([s.x, YF, z], [s.x, 0, z + s.side * s.run], s.w, { tag: 't1-firestep', color: CO.timber, pattern: PATTERN.treads })); }
+  for (const s of T1_STAIRS) { const z = s.side > 0 ? T1.z1 : T1.z0; t1Pieces.push(R([s.x, YF, z], [s.x, 0, z + s.side * s.run], s.w, { tag: 't1-firestep', color: CO.timber, pattern: PATTERN.rampboard })); }
 }
 // T2 — the zig-zag communication trench on the left (2.25 m inside): a bay, a 45° dog-leg, a bay toward the cliff. Its
 // west end opens onto stairs up to the crossing; a fire step climbs out of the far bay's north bank; two plank bridges.
@@ -101,8 +101,8 @@ const T2_LEGS = T2B.legs;
 const t2z = { a: [T2.pts[0][1] - T2.w / 2, T2.pts[0][1] + T2.w / 2], b: [T2.pts[3][1] - T2.w / 2, T2.pts[3][1] + T2.w / 2] };
 const t2Pieces = [
   ...T2B.walls,
-  R([T2.pts[0][0] + T2_ENDSTAIR.run, YF, T2.pts[0][1]], [T2.pts[0][0], 0, T2.pts[0][1]], T2.w, { tag: 't2-stair', color: CO.timber, pattern: PATTERN.treads }),
-  R([(T2_STEP.x0 + T2_STEP.x1) / 2, YF, t2z.b[1]], [(T2_STEP.x0 + T2_STEP.x1) / 2, 0, t2z.b[1] + T2_STEP.run], T2_STEP.x1 - T2_STEP.x0, { tag: 't2-firestep', color: CO.timber, pattern: PATTERN.treads }),
+  R([T2.pts[0][0] + T2_ENDSTAIR.run, YF, T2.pts[0][1]], [T2.pts[0][0], 0, T2.pts[0][1]], T2.w, { tag: 't2-stair', color: CO.timber, pattern: PATTERN.rampboard }),
+  R([(T2_STEP.x0 + T2_STEP.x1) / 2, YF, t2z.b[1]], [(T2_STEP.x0 + T2_STEP.x1) / 2, 0, t2z.b[1] + T2_STEP.run], T2_STEP.x1 - T2_STEP.x0, { tag: 't2-firestep', color: CO.timber, pattern: PATTERN.rampboard }),
 ];
 // plank bridges over T2 (deck 0.5…0.7 on trestles, a plank ramp down each side; 1.5 m under the deck in the trench)
 export const BRIDGES = [{ x: 12.5, z: T2.pts[0][1] }, { x: 18.6, z: T2.pts[3][1] }];
