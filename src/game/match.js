@@ -60,14 +60,17 @@ export class Match {
     // (o.mannequins: idle, brainless kids for the render audits)
     const noBots = !!o.noBots;
     for (let team = 0; team < (boss || this.practice ? 1 : 2); team++) {
-      const weapons = pickTeam(team === 0 && !this.attract ? o.weapon : null);
+      // (your loadout builds your team round your weapon — but not under ?autopilot: a bot-only test match stays fair,
+      // with the local kid as random as every other bot instead of always Alpha's Splattershot + Zooka)
+      const weapons = pickTeam(team === 0 && !this.attract && !o.autopilot ? o.weapon : null);
       if (boss) weapons.push(...pickTeam(null));   // the whole squad on one side: 8 kids, every weapon kind
       for (let s = 0; s < (this.practice ? 1 : boss ? BOSS_MODE.squad : MATCH.teamSize); s++) {
         const isLocal = team === 0 && s === 0 && !this.attract;
         if (noBots && !isLocal && !(this.attract && o.mannequins)) continue;
         // subs: yours from the loadout; bots carry a random one (about half keep their weapon's default)
-        const sub = isLocal ? o.sub : Math.random() < 0.5 ? null : SUB_ORDER[(Math.random() * SUB_ORDER.length) | 0];
-        const special = isLocal ? o.special : Math.random() < 0.5 ? null : SPECIAL_ORDER[(Math.random() * SPECIAL_ORDER.length) | 0];
+        const mine = isLocal && !o.autopilot;
+        const sub = mine ? o.sub : Math.random() < 0.5 ? null : SUB_ORDER[(Math.random() * SUB_ORDER.length) | 0];
+        const special = mine ? o.special : Math.random() < 0.5 ? null : SPECIAL_ORDER[(Math.random() * SPECIAL_ORDER.length) | 0];
         const a = new Actor({
           team, slot: s, weapon: weapons[s], sub, special, isLocal, isBot: !isLocal,
           name: isLocal ? (o.playerName || 'You') : names[ni++ % names.length],
