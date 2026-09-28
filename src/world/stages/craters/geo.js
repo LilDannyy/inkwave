@@ -161,16 +161,22 @@ export function trench(pts, w, t, y0, top, opts = () => ({}), o = {}) {
 }
 
 // a band just inside each edge of a polygon (its outer face on the edge: the chalk lip along the cliff top). Edge i
-// runs pts[i] → pts[i + 1]; skip(i) leaves it bare. Neighbouring bands overlap at convex corners (top(i) must alternate)
+// runs pts[i] → pts[i + 1]; skip(i) leaves it bare. Neighbouring bands overlap at convex corners (top(i) must alternate);
+// at a reflex corner (a cove) the band runs on past the corner by as much as the wedge between the two bands needs.
 export function edgeBands(poly, width, y0, top, opts = () => ({}), skip = () => false) {
   const out = [], n = poly.length;
+  const dirOf = (i) => { const a = poly[i], b = poly[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); return [(b[0] - a[0]) / L, (b[1] - a[1]) / L, L]; };
+  const inwardOf = (i) => {
+    const a = poly[i], b = poly[(i + 1) % n], [ux, uz] = dirOf(i), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+    return inPoly(poly, mx - uz * 0.05, mz + ux * 0.05) ? [-uz, ux] : [uz, -ux];
+  };
   for (let i = 0; i < n; i++) {
     if (skip(i)) continue;
-    const a = poly[i], b = poly[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
-    let nx = -uz, nz = ux;
-    const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
-    if (!inPoly(poly, mx + nx * 0.05, mz + nz * 0.05)) { nx = -nx; nz = -nz; }
-    out.push(stripBox(strip([a[0] + nx * width / 2, a[1] + nz * width / 2], [b[0] + nx * width / 2, b[1] + nz * width / 2], width), y0, top(i), opts(i)));
+    const a = poly[i], b = poly[(i + 1) % n], [ux, uz] = dirOf(i), [nx, nz] = inwardOf(i);
+    // reflex end: the next edge heads out of the polygon (away from this edge's inside)
+    const [vx, vz] = dirOf((i + 1) % n), reflex = vx * nx + vz * nz < -1e-6 && !skip((i + 1) % n);
+    const e = reflex ? width * Math.min(1, Math.abs(ux * vz - uz * vx)) + 0.05 : 0;
+    out.push(stripBox(strip([a[0] + nx * width / 2, a[1] + nz * width / 2], [b[0] + nx * width / 2 + ux * e, b[1] + nz * width / 2 + uz * e], width), y0, top(i), opts(i)));
   }
   return out;
 }
