@@ -847,6 +847,63 @@ export function register(D, H) {
     },
   };
 
+  // lifebuoy housing on the cliff top: a red post with the orange ring in its cradle and a little instruction board
+  D.craters_lifebuoy = {
+    desc: 'Cliff-top lifebuoy post with the ring in its cradle (faces +Z).',
+    build(B) {
+      B.box('gloss', '#b8392e', 0.12, 1.5, 0.12, 0, 0.75, 0, { r: 0.02 });
+      B.box('gloss', '#b8392e', 0.62, 0.62, 0.1, 0, 1.2, 0.08, { r: 0.03 });
+      B.tor('gloss', '#e86a2c', 0.24, 0.055, 0, 1.2, 0.17, { ts: 20, rs: 8 });
+      for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU + 0.78; B.box(NS('paint'), K.white, 0.08, 0.13, 0.12, Math.cos(a) * 0.24, 1.2 + Math.sin(a) * 0.24, 0.17, { rz: a, r: 0.02 }); }
+      B.box('paint', K.white, 0.44, 0.3, 0.02, 0, 0.62, 0.07, { r: 0.01 });
+      B.push(0, 0.62, 0.082); letters(B, 'LIFEBUOY', { h: 0.055, wt: 0.24, flat: true, c: '#b8392e', mat: 'paint', y: 0.04 }); letters(B, 'IN EMERGENCY', { h: 0.035, wt: 0.24, flat: true, c: K.ink, mat: 'paint', y: -0.06 }); B.pop();
+      B.col(-0.32, 0, -0.1, 0.32, 1.55, 0.25);
+    },
+  };
+  // striped canvas deckchair (the downs' visitors), facing +Z; variant = stripe colours
+  D.craters_deckchair = {
+    desc: 'Striped deckchair facing +Z. variant 0–3 = stripe colours.',
+    build(B, o) {
+      const cols = [['#c94c3c', '#f1ebdc'], ['#3f6f9a', '#f1ebdc'], ['#d9a93c', '#f1ebdc'], ['#3f8a6a', '#f1ebdc']][(o.variant ?? 0) % 4];
+      for (const s of [-1, 1]) { rod(B, 'wood', K.timberLt, [s * 0.28, 0, 0.35], [s * 0.28, 0.78, -0.28], 0.018, 5); rod(B, 'wood', K.timberLt, [s * 0.28, 0, -0.3], [s * 0.28, 0.42, 0.2], 0.018, 5); }
+      B.push(0, 0.4, 0.03, 0, -0.95);
+      for (let k = 0; k < 5; k++) pbox(B, 'foliage', cols[k % 2], 0.11, 0.9, 0.012, -0.22 + k * 0.11, 0.05, 0);
+      B.pop();
+      B.col(-0.32, 0, -0.35, 0.32, 0.8, 0.4);
+    },
+  };
+  // viewpoint lectern on the crater's crest: an angled bronze plate on a stone block
+  D.craters_lectern = {
+    desc: 'Viewpoint lectern: stone block with an angled bronze plate (faces +Z).',
+    build(B, o) {
+      B.box('paint', K.stoneDk, 0.5, 0.85, 0.35, 0, 0.425, 0, { r: 0.03 });
+      B.push(0, 0.95, 0.02, 0, -0.7);
+      B.box('metal', K.bronze, 0.62, 0.42, 0.04, 0, 0, 0, { r: 0.015 });
+      letters(B, o.text ?? 'THE GREAT CRATER', { h: 0.045, wt: 0.24, flat: true, c: '#e0cc98', mat: 'paint', y: 0.12, z: 0.021 });
+      for (let k = 0; k < 3; k++) pbox(B, NS('paint'), '#c9b27c', 0.44 - k * 0.08, 0.012, 0.004, 0, -0.02 - k * 0.07, 0.022);
+      B.pop();
+      B.col(-0.26, 0, -0.2, 0.26, 1.1, 0.2);
+    },
+  };
+  // ice-cream cart with a striped parasol (cover): a little tricycle cart, cream and mint
+  D.craters_icecream = {
+    desc: 'Ice-cream cart with a parasol and a menu board (cover). Local +Z = serving side.',
+    build(B) {
+      B.box('gloss', '#f0e8d4', 1.4, 0.8, 0.8, 0, 0.75, 0, { round: true, r: 0.08 });
+      B.box('gloss', '#7cc4a8', 1.44, 0.14, 0.84, 0, 0.42, 0, { r: 0.04 });
+      B.box('gloss', '#7cc4a8', 1.44, 0.08, 0.84, 0, 1.18, 0, { r: 0.03 });
+      for (const [x, z] of [[-0.55, -0.35], [-0.55, 0.35], [0.7, 0]]) B.cyl('rubber', K.ink, 0.2, 0.06, x + (x > 0 ? 0.25 : 0), 0.2, z, { rx: HP, seg: 14 });
+      for (let k = 0; k < 3; k++) B.sph(NS('gloss'), ['#f2c6d0', '#f6ecc8', '#8a5a3c'][k], 0.08, -0.35 + k * 0.35, 1.3, 0.1, { ws: 8, hs: 6 });
+      rod(B, 'metal', K.galv, [0, 1.2, 0], [0, 2.3, 0], 0.02, 6);
+      const cone = tpl('parasol', () => new THREE.ConeGeometry(1.0, 0.35, 12, 1, true));
+      B.add('foliage', cone, '#e8dcc8', 0, 2.3, 0);
+      for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU; B.box(NS('foliage'), '#d9574a', 0.34, 0.02, 0.36, Math.cos(a) * 0.62, 2.28, Math.sin(a) * 0.62, { ry: -a, rz: 0.33 }); }
+      B.box('paint', K.board, 0.5, 0.65, 0.04, 0.95, 0.45, 0.55, { rx: -0.15, r: 0.01 });
+      B.push(0.95, 0.5, 0.578, 0, -0.15); letters(B, 'ICES', { h: 0.12, wt: 0.24, flat: true, c: '#f2ead4', mat: 'paint', y: 0.12 }); letters(B, '99', { h: 0.1, wt: 0.24, flat: true, c: '#e8b43a', mat: 'paint', y: -0.1 }); B.pop();
+      B.col(-0.75, 0, -0.45, 0.75, 1.35, 0.45);
+    },
+  };
+
   // ============================================================================================ trenches + bridges
   // plank bridge dressing (pos = the deck's centre at deck-top height, local +Z along the span): trestle legs down to the
   // trench floor, rope handrails on stakes along both sides (rail colliders on the deck edges)
@@ -924,7 +981,7 @@ export const PLACEMENTS = [
   // ================= the visitor pavilion (spawn)
   { type: 'craters_pavilion', pos: [0, 0, PAV.z0], rotY: 0 },
   { type: 'craters_fence', pos: [19.1, 0.25, -44.3], rotY: -Math.PI / 2, length: 7.0 },
-  { type: 'craters_fence', pos: [-19.1, 0.33, -44.3], rotY: -Math.PI / 2, length: 7.0 },
+  { type: 'craters_fence', pos: [-19.1, 0.25, -44.3], rotY: -Math.PI / 2, length: 7.0 },
   { type: 'craters_bench', pos: [12.4, 0, -42.6], rotY: 0 },
   { type: 'craters_bench', pos: [-12.4, 0, -42.6], rotY: 0 },
   { type: 'craters_sign', variant: 1, pos: [3.0, 0, -27.3], rotY: 0, arms: [['GREAT CRATER', 90], ['MEMORIAL', 180], ['VISITOR CENTRE', -90]] },
@@ -994,6 +1051,13 @@ export const PLACEMENTS = [
   { type: 'craters_sign', variant: 0, pos: [20.35, 0.25, -12.8], rotY: -Math.PI / 2 },
   { type: 'craters_lilies', pos: [POND.c[0] + 0.8, -1.545, POND.c[1] - 0.6], n: 8, r: 1.2, seed: 1 },
   { type: 'craters_lilies', pos: [POND.c[0] - 1.3, -1.545, POND.c[1] + 0.9], n: 5, r: 0.8, seed: 2 },
+  // ================= the cliff tops: lifebuoys, deckchairs, a viewpoint lectern on the crater's crest
+  { type: 'craters_lifebuoy', pos: [23.4, 0, -25.4], rotY: -Math.PI / 2 },
+  { type: 'craters_lifebuoy', pos: [-18.4, 0, -41.8], rotY: Math.PI / 2 },
+  { type: 'craters_deckchair', pos: [16.9, 0, -41.2], rotY: 0.5, variant: 0 },
+  { type: 'craters_deckchair', pos: [17.9, 0, -40.1], rotY: 0.8, variant: 1 },
+  { type: 'craters_lectern', pos: [+polar(250, 12.0)[0].toFixed(2), 0, +polar(250, 12.0)[1].toFixed(2)], rotY: Math.atan2(Math.cos(ang(250)), Math.sin(ang(250))) },
+  { type: 'craters_icecream', pos: [-16.2, 0, -36.4], rotY: 0.35 },
   // ================= the forecourt: picnic tables, bins
   { type: 'craters_picnic', pos: [-11.5, 0, -34.2], rotY: 0.2 },
   { type: 'craters_picnic', pos: [12.8, 0, -29.5], rotY: -0.35 },

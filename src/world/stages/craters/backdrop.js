@@ -191,10 +191,20 @@ export function buildBackdrop(kit, d = {}) {
     }
     if (pts.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); g.computeVertexNormals(); out.plain.push(prep(g, '#f1eee4')); }
   }
-  // distant mainland hills beyond the downs (terrain shading)
-  for (const [x, z, rx, rz, h, sd] of [[-120, 560, 260, 140, 70, 41], [160, 610, 300, 160, 95, 42], [-380, 470, 200, 130, 60, 43]]) {
-    const isl = kit.makeIsland({ x, z, rx, rz, h, seed: sd, rot: 0.2, R: 16, S: 60, grass: '#98ad70', ridge: 0.35 });
-    out.terrain.push(isl.geo);
+  // distant mainland hills beyond the downs (terrain shading), and the far side of the Cape's bay to the south-east — a
+  // green headland that stands between the park and the city's container port (its cranes would fight the place)
+  for (const [x, z, rx, rz, h, sd, rot, plateau] of [[-120, 560, 260, 140, 70, 41, 0.2], [160, 610, 300, 160, 95, 42, 0.2], [-380, 470, 200, 130, 60, 43, 0.2], [206, -262, 206, 112, 56, 44, -0.66, true]]) {
+    const isl = kit.makeIsland({ x, z, rx, rz, h, seed: sd, rot, plateau: !!plateau, R: 16, S: 60, grass: '#98ad70', ridge: 0.35 });
+    if (!plateau) { out.terrain.push(isl.geo); continue; }
+    // the flat-topped down across the bay: turf on top, white chalk cliffs all round (own vertex colours, not the
+    // terrain shader's grey rock)
+    const g = isl.geo, P = g.attributes.position, Nn = g.attributes.normal, Cc = g.attributes.color;
+    for (let i = 0; i < P.count; i++) {
+      const ny = Nn.getY(i), y = P.getY(i), n = fbm(P.getX(i) * 0.05, P.getZ(i) * 0.05, 2);
+      const c = ny > 0.8 ? COL.grass.clone().lerp(COL.grassLt, n * 0.6) : ny > 0.62 ? COL.grassDk : y < W + 1.2 ? COL.algae : (Math.abs(Math.sin(y * 0.9)) > 0.95 ? COL.flint : COL.chalk.clone().lerp(COL.chalkDk, n * 0.5));
+      Cc.setXYZ(i, c.r, c.g, c.b);
+    }
+    out.static.push(g);
   }
 
   // ------------------------------------------------------------------------------------------ car parks behind the pavilions
@@ -240,9 +250,19 @@ export function buildBackdrop(kit, d = {}) {
   out.instances.push({ geo: bushGeo, list: bushes });
 
   // ------------------------------------------------------------------------------------------ still water in the flooded craters
+  // (all the water discs in one mesh: one draw call)
   const waterMat = new THREE.MeshStandardMaterial({ color: COL.water, roughness: 0.08, metalness: 0.1, envMapIntensity: 1.0 });
-  const disc = (x, y, z, r) => { const m = new THREE.Mesh(new THREE.CircleGeometry(r, 36), waterMat); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); m.receiveShadow = true; return m; };
-  for (const p of d.ponds || []) for (const sg of [1, -1]) out.objects.push(disc(p.c[0] * sg, W + 0.05, p.c[1] * sg, p.r / Math.cos(Math.PI / 12) + 0.01));
-  for (const [x, z, r, y] of pools) out.objects.push(disc(x, y, z, r));
+  const discs = [];
+  const disc = (x, y, z, r) => { const g = new THREE.CircleGeometry(r, 36); g.rotateX(-Math.PI / 2); g.translate(x, y, z); discs.push(g); };
+  for (const p of d.ponds || []) for (const sg of [1, -1]) disc(p.c[0] * sg, W + 0.05, p.c[1] * sg, p.r / Math.cos(Math.PI / 12) + 0.01);
+  for (const [x, z, r, y] of pools) disc(x, y, z, r);
+  if (discs.length) {
+    const pos = [], nor = [], idx = [];
+    for (const g of discs) { const o = pos.length / 3, P = g.attributes.position, I = g.index.array; for (let i = 0; i < P.count; i++) { pos.push(P.getX(i), P.getY(i), P.getZ(i)); nor.push(0, 1, 0); } for (const k of I) idx.push(k + o); g.dispose(); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, waterMat); m.receiveShadow = true; m.name = 'craters:ponds';
+    out.objects.push(m);
+  }
   return out;
 }
