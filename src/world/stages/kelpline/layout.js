@@ -84,8 +84,8 @@ function slotSides(pieces) {
   }
 }
 
-// ISO box: 2.44 wide, 2.6 high (high cube ≈ 2.9, we use 2.6 so tiers stay jump-sized), 6.06 / 12.19 long
-const CW = 2.44, CH = 2.6, LEN = { 20: 6.06, 40: 12.19 };
+// ISO box: 2.44 wide, 2.6 high (high cube ≈ 2.9, we use 2.6 so tiers stay jump-sized), 6.06 / 12.19 long (a 10' 2.99)
+const CW = 2.44, CH = 2.6, LEN = { 10: 2.99, 20: 6.06, 40: 12.19 };
 // a container along z: x0 = its −X side, z0 = its −Z end, tier 0 = on the ground. o.door: 1 = doors at the +Z end
 // (0 = −Z), o.logo: 1–3 = 40' line logo (murals 9/10 on both long sides), o.reefer: machinery end.
 // The tag carries the dressing spec for props.js (container castings, doors, reefer units).
@@ -131,8 +131,12 @@ const X_ = [1, 0, 0], _X = [-1, 0, 0], Z_ = [0, 0, 1], _Z = [0, 0, -1];
 // Tower Command's own build (variants.js: a tower match builds '<id>.tower'): pieces only in it / left out of it. The
 // track (src/world/tower-data.js) is authored on Bravo's half; its mirror — Bravo's push — runs through this half.
 const towerOnly = (p) => ({ ...p, onlyIn: 'tower' }), notTower = (p) => ({ ...p, notIn: 'tower' });
-// the track crosses the reefer alley here (local z; Alpha's checkpoint 3 on the mirror): a solid crossover plate
-export const CROSSOVER = [-19.0, -16.0];
+// Tower Command's aisle through the reefer rack (the user's "GAP"): the track stays on the ground there. It comes across
+// the truck lane through a cut in row 0 and under a cut in the grate catwalk (local z gap[0] … gap[1], between the
+// rack's middle column pairs; checkpoint 3 stands in it), then turns toward the base down row 1's slot: row 1's boxes are
+// lifted out and row 2's shifted `shift` m toward the apron so the platform fits. Row 1's mid stair lands on a grate
+// landing (local z landing … −13.25) that steps across onto the catwalk.
+export const AISLE = { gap: [-19.24, -16.1], shift: 0.9, landing: -14.65 };
 
 // Local-frame pieces (exported for props.js: the container / stair dressing is generated from them)
 export const LOCAL = {
@@ -199,16 +203,21 @@ export const LOCAL = {
 
     // ================= Reefer rack (−X): reefers either side of the plug-in rack; grate catwalk over the alley
     ...stairZ(RF.row0 + CW / 2, G.zs, -25.3, 0, 2.6, 2.3),
-    box(RF.row0, -25.3, 40, 0, K.white, { reefer: 1 }), box(RF.row0, -13.01, 20, 0, K.white, { reefer: 1, door: 0 }),
+    notTower(box(RF.row0, -25.3, 40, 0, K.white, { reefer: 1 })), box(RF.row0, -13.01, 20, 0, K.white, { reefer: 1, door: 0 }),
     notTower(B(RF.alley[0], RF.alley[1], 2.45, 2.6, -25.3, -6.95, { tag: 'reefer-catwalk', color: K.steel, pattern: PATTERN.grate, grate: true })),
-    // Tower Command: the track crosses the alley on the stack tops (the user's "GAP"): the grate catwalk stops either side
-    // of a solid chequer-plate crossover flush with the reefer tops, between two of the rack's column pairs
-    ...[[-25.3, CROSSOVER[0]], [CROSSOVER[1], -6.95]].map(([z0, z1]) => towerOnly(B(RF.alley[0], RF.alley[1], 2.45, 2.6, z0, z1, { tag: 'reefer-catwalk', color: K.steel, pattern: PATTERN.grate, grate: true }))),
-    towerOnly(B(RF.alley[0], RF.alley[1], 2.45, 2.6, CROSSOVER[0], CROSSOVER[1], { tag: 'crossover', color: '#63788e', pattern: SURF.chequer })),
-    box(RF.row1, G.zs, 20, 0, K.white, { reefer: 1, door: 0 }), box(RF.row1, -25.44, 40, 0, K.cream, { reefer: 1 }),
+    notTower(box(RF.row1, G.zs, 20, 0, K.white, { reefer: 1, door: 0 })), notTower(box(RF.row1, -25.44, 40, 0, K.cream, { reefer: 1 })),
     ...stairZ(RF.row1 + CW / 2, -6.95, -13.25, 0, 2.6, 2.3),
-    box(RF.row2, G.zs, 20, 0, K.white, { reefer: 1, door: 0 }), box(RF.row2, G.zs, 20, 1, K.white, { reefer: 1, door: 0 }), box(RF.row2, -25.44, 40, 0, K.white, { reefer: 1 }),
-    box(RF.row2, -13.15, 20, 0, K.white, { reefer: 1 }), box(RF.row2, -13.15, 20, 1, K.cream, { reefer: 1 }),
+    notTower(box(RF.row2, G.zs, 20, 0, K.white, { reefer: 1, door: 0 })), notTower(box(RF.row2, G.zs, 20, 1, K.white, { reefer: 1, door: 0 })), notTower(box(RF.row2, -25.44, 40, 0, K.white, { reefer: 1 })),
+    notTower(box(RF.row2, -13.15, 20, 0, K.white, { reefer: 1 })), box(RF.row2, -13.15, 20, 1, K.cream, { reefer: 1 }),
+    // Tower Command: the aisle (AISLE above). Row 0's 40' becomes a 20' and a 10' with the aisle between them (doors on
+    // the aisle); the catwalk stops either side of it (the base half at the column pair); row 1 lifted out; row 2's three
+    // boxes along the aisle slid out toward the apron (the mid-end pair stays; its box is rebuilt only so its end — no
+    // longer in a slot — takes ink)
+    towerOnly(box(RF.row0, -25.3, 20, 0, K.white, { reefer: 1 })), towerOnly(box(RF.row0, AISLE.gap[1], 10, 0, K.white, { reefer: 1, door: 0 })),
+    ...[[-25.3, AISLE.gap[0]], [AISLE.gap[1], -6.95]].map(([z0, z1]) => towerOnly(B(RF.alley[0], RF.alley[1], 2.45, 2.6, z0, z1, { tag: 'reefer-catwalk', color: K.steel, pattern: PATTERN.grate, grate: true }))),
+    towerOnly(B(RF.row1, RF.row1 + CW, 2.45, 2.6, AISLE.landing, -13.25, { tag: 'reefer-landing', color: K.steel, pattern: PATTERN.grate, grate: true })),
+    towerOnly(box(RF.row2 - AISLE.shift, G.zs, 20, 0, K.white, { reefer: 1, door: 0 })), towerOnly(box(RF.row2 - AISLE.shift, G.zs, 20, 1, K.white, { reefer: 1, door: 0 })),
+    towerOnly(box(RF.row2 - AISLE.shift, -25.44, 40, 0, K.white, { reefer: 1 })), towerOnly(box(RF.row2, -13.15, 20, 0, K.white, { reefer: 1 })),
 
     // ================= truck lane cover: a 20' on a skeletal chassis behind its tractor (box deck at 1.35: squids slip
     // under the chassis, its top at 3.95 is squid-only), a box the reach stacker just set down
