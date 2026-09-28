@@ -37,7 +37,7 @@ export function groundAt(x, z, hint = 0) {
   for (const d of PIECES) { const y = topAt(d, x, z); if (y <= hint + 0.3 && y > best) best = y; }
   return best === -Infinity ? hint : +best.toFixed(3);
 }
-const SNAP = /^spirhalite_(palm|pompoms|grass|shrub|rock|float|buoy|debris|driftwood|rowboat|crates|table|tent|tarp|generator|mast|lantern|survey|flagpole|signposts|worklight|stakes|kelp|pathlights|drums)$/;
+const SNAP = /^spirhalite_(campfire|palm|pompoms|grass|shrub|rock|float|buoy|debris|driftwood|rowboat|crates|table|tent|tarp|generator|mast|lantern|survey|flagpole|signposts|worklight|stakes|kelp|pathlights|drums)$/;
 
 export function register(D, H) {
   const X = makeKit(H);
@@ -82,9 +82,11 @@ const RAW = [
   { type: 'spirhalite_crates', pos: [-15.6, 0, -34.2], rotY: 0.2, layout: [[0, 0, 0, 0], [1.02, 0.06, 0, 0.05]] },
   { type: 'spirhalite_crates', pos: [-18.6, 0, -38.2], rotY: -0.4, layout: [[0, 0, 0, 0]] },
   { type: 'spirhalite_drums', pos: [-30.6, 0, -33.4], rotY: 1.2 },
-  { type: 'spirhalite_generator', pos: [-20.8, 0, -35.0], rotY: 0.3, cable: [[-0.6, 0], [-1.6, -0.9], [-3.2, -2.2]] },
+  { type: 'spirhalite_generator', pos: [-17.4, 0, -35.9], rotY: 0.3, cable: [[-0.6, 0], [-2.4, -0.6], [-5.2, -1.4]] },
   { type: 'spirhalite_mast', pos: [-31.4, 0, -37.0], rotY: 0.4, h: 7.5 },
   { type: 'spirhalite_lantern', pos: [-25.4, 0, -35.9], rotY: 0.2, to: [1.2, -3.6] },
+  { type: 'spirhalite_campfire', pos: [-21.2, 0, -34.4], rotY: 0.4 },
+  { type: 'spirhalite_debris', pos: [-14.6, 0, -38.6], rotY: 2.6 },
   { type: 'spirhalite_lantern', pos: [-10.9, 1.3, -41.5], rotY: P },
   { type: 'spirhalite_flagpole', pos: [-29.8, 0, -32.9], rotY: 0, h: 4.4 },
   { type: 'spirhalite_signposts', pos: [-10.34, 0, -35], rotY: P / 2, w: 2.8 },
