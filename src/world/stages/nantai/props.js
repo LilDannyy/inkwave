@@ -64,7 +64,7 @@ export const PLACEMENTS = [
   { type: 'nantai_boulder', pos: [-18.1, 1.3, -21.2], rotY: 0.6, w: 1.3, h: 0.95, d: 1.1, seed: 31 },
 
   // ================= the ridge: pines, outcrops, a cairn
-  { type: 'nantai_pine', pos: [-23.6, 2.6, -41.8], rotY: 0.5, seed: 1 },
+  { type: 'nantai_pine', pos: [-21.0, 2.6, -43.3], rotY: 0.5, seed: 1 },
   { type: 'nantai_pine', pos: [-21.2, 2.6, -32.5], rotY: 2.2, seed: 2, scale2: 0.85 },
   { type: 'nantai_pine', pos: [-24.2, 2.6, -23.6], rotY: -0.8, seed: 4 },
   { type: 'nantai_outcrop', pos: [-20.6, 2.6, -27.0], rotY: 1.2, w: 2.4, h: 1.25, d: 1.7, seed: 33 },
@@ -96,13 +96,13 @@ export const PLACEMENTS = [
 
   // ================= the shore trail: boulders, pines, a cairn, the rowing boat
   { type: 'nantai_boulder', pos: [20.1, 0, -33.2], rotY: 0.4, w: 1.9, h: 1.2, d: 1.5, seed: 41 },
-  { type: 'nantai_boulder', pos: [23.2, 0, -42.8], rotY: 1.9, w: 1.6, h: 1.0, d: 1.4, seed: 43 },
+  { type: 'nantai_boulder', pos: [23.3, 0, -39.6], rotY: 1.9, w: 1.5, h: 1.0, d: 1.3, seed: 43 },
   { type: 'nantai_pine', pos: [23.4, 0, -37.2], rotY: -2.6, seed: 5 },
   { type: 'nantai_pine', pos: [23.4, 0, -30.2], rotY: 2.8, seed: 6, scale2: 0.8 },
   { type: 'nantai_cairn', pos: [19.2, 0, -41.2], rotY: 0 },
   { type: 'nantai_rowboat', pos: [23.3, 0, -20.9], rotY: HP + 0.2 },
   { type: 'nantai_scree', pos: [21.0, 0, -35.4], w: 1.6, d: 3.0, n: 14, seed: 7 },
-  { type: 'nantai_heath', pos: [23.4, 0, -40.0], w: 1.6, d: 2.4, n: 4, seed: 17 },
+  { type: 'nantai_heath', pos: [21.0, 0, -44.2], w: 1.6, d: 1.4, n: 4, seed: 17 },
   { type: 'nantai_heath', pos: [19.2, 0, -31.0], w: 1.2, d: 1.8, n: 3, seed: 19 },
 
   // ================= the bank below the ridge nose and in front of the hollow

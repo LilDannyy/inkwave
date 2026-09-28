@@ -73,22 +73,23 @@ const HALF = [
   ...lawnCols([-24, -20, -16, -12, -8], 0, () => turf({ tag: 'lawn-w' })),
   // dry-stone walls on the lawn (the centre zone's cover, with the Dobsonians' crates)
   B(-6.3, -2.9, G0, 0.95, -4.1, -3.4, granite({ tag: 'drystone-wall', color: K.graniteDk })),
-  ...lawnCols([12, 14, 16, 18, 20, 22], 0, () => turf({ tag: 'lawn-e' })),
+  ...lawnCols([12, 14, 16, 18, 20], 0, () => turf({ tag: 'lawn-e' })),
   // the lawn's east end: a bay of the tarn between the brook mouth and the lookout point
-  B(22, 24, FL, G0, zMax(BN, 22, 24) + INSET, -11, turf({ tag: 'lawn-e' })),
-  B(22, 24, FL, G0, -6, 0, turf({ tag: 'lawn-e' })),
+  B(20, 22, FL, G0, zMax(BN, 20, 22) + INSET, -11.5, turf({ tag: 'lawn-e' })), B(20, 22, FL, G0, -5.2, 0, turf({ tag: 'lawn-e' })),
+  B(22, 24, FL, G0, zMax(BN, 22, 24) + INSET, -11.5, turf({ tag: 'lawn-e' })), B(22, 24, FL, G0, -5.2, 0, turf({ tag: 'lawn-e' })),
   B(24, 25.6, FL, G0, -4.6, -0.8, granite({ tag: 'lookout-point' })),
   bar(BN, -24, -8, 1, 1.3, 0.15, gravel({ tag: 'bar-n' })),
   bar(BN, 12, 24, 1, 1.7, 0.15, gravel({ tag: 'bar-n' })),
 
   // ---------------- base-side ground (to the back, z −45.4): banks, the shore, and the slab under the terraces
   B(-8, 12, FL, G0, -45.4, -13.8, turf({ tag: 'bank' })),
-  ...baseCols([-23.5, -20, -16, -12, -8], -45.4, () => turf({ tag: 'bank-w' })),
-  B(-25.5, -23.5, FL, G0, -45.4, -36, turf({ tag: 'bank-w' })), B(-25.5, -23.5, FL, G0, -28, zMin(BS, -25.5, -23.5) - INSET, turf({ tag: 'bank-w' })),
+  ...baseCols([-22.5, -20, -16, -12, -8], -45.4, () => turf({ tag: 'bank-w' })),
+  B(-25.5, -22.5, FL, G0, -41, -36, turf({ tag: 'bank-w' })), B(-25.5, -22.5, FL, G0, -28, zMin(BS, -25.5, -22.5) - INSET, turf({ tag: 'bank-w' })),
+  B(-23.5, -22.5, FL, G0, -36, -28, turf({ tag: 'bank-w' })),
   // (the E reach: the bank under the tower's run, the shelf, the shore trail with a bay)
   ...baseCols([12, 14, 15], -45.4, () => turf({ tag: 'bank-e' })),
   ...baseCols([15, 17.5, 20, 22], -45.4, () => turf({ tag: 'shore' })),
-  B(22, 24.5, FL, G0, -45.4, -38, turf({ tag: 'shore' })), B(22, 24.5, FL, G0, -30, zMin(BS, 22, 24.5) - INSET, turf({ tag: 'shore' })),
+  B(22, 24.5, FL, G0, -41.5, -38, turf({ tag: 'shore' })), B(22, 24.5, FL, G0, -30, zMin(BS, 22, 24.5) - INSET, turf({ tag: 'shore' })),
   bar(BS, -25.5, -8, -1, 1.3, 0.15, gravel({ tag: 'bar-s' })),
   bar(BS, 12, 16.2, -1, 1.4, 0.15, gravel({ tag: 'bar-s' })),
   bar(BS, 16.2, 24.5, -1, 2.3, 0.15, gravel({ tag: 'bar-s' })),
@@ -121,8 +122,8 @@ const HALF = [
   R([23.3, G0, -23.6], [23.3, 0.65, -26.4], 2.2, { color: K.gravel, pattern: PATTERN.rampboard, tag: 'switchback' }),
   B(22.2, 24.4, G0, 0.65, -28.4, -26.4, ashlar({ tag: 'switchback-landing' })),
   R([22.2, 0.65, -27.4], [17.5, G1, -27.4], 2.0, { color: K.gravel, pattern: PATTERN.rampboard, tag: 'switchback' }),
-  R([21.1, G0, -37.5], [21.1, G1, -43.6], 2.2, steps({ tag: 'shore-stair' })),
-  B(17.5, 22.2, G0, G1, -45.4, -43.6, ashlar({ tag: 'shore-landing' })),
+  R([20.95, G0, -37.5], [20.95, G1, -43.6], 2.1, steps({ tag: 'shore-stair' })),
+  B(17.5, 22, G0, G1, -45.4, -43.6, ashlar({ tag: 'shore-landing' })),
 
   // ---------------- the west terrace (G2) and its long flight to the bridge head; the bastion by the hollow
   B(-11, -3, G0, G2, -36.5, -23, ashlar({ tag: 'west-terrace' })),
@@ -139,7 +140,7 @@ const HALF = [
 
   // ---------------- the ridge (G2): the spine along the tarn cliff (a bay mid-way), its root behind the hollow,
   //                  the timber viewing platform on its nose
-  B(-25.5, -19, G0, G2, -45.4, -36, granite({ tag: 'ridge' })),
+  B(-25.5, -19, G0, G2, -41, -36, granite({ tag: 'ridge' })), B(-22.5, -19, G0, G2, -45.4, -41, granite({ tag: 'ridge' })),
   B(-23.5, -19, G0, G2, -36, -28, granite({ tag: 'ridge' })),
   B(-25.5, -19, G0, G2, -28, -19.2, granite({ tag: 'ridge' })),
   B(-25.5, -19, G0, 2.45, -19.2, -15.2, granite({ tag: 'ridge-nose' })),
@@ -165,9 +166,9 @@ const HALF = [
   O(20, -15.84, 1.6, 6.8, -0.35, 0.25, 26.7, timber({ tag: 'log-bridge' })),
 
   // ---------------- the back: the summit crag behind the ridge root, the east yard and the shore (off-limits)
-  B(-25.5, -9, G2, 6.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
+  B(-22.5, -9, G2, 6.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
   B(9, 17.5, G1, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
-  B(17.5, 24.5, G0, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
+  B(17.5, 22, G0, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
 ];
 
 // ============================================================================================================
@@ -193,8 +194,15 @@ const LAYOUT_NANTAI = {
   bounds: { minX: -26, maxX: 26, minZ: -46, maxZ: 46 },
   spawnPads: [[0, G3, -41], [0, G3, 41]],
   spawnBarrier: 4.2,
+  // match intro: high over the lawn's west end (the weir behind), looking over the Old Stone Bridge at the terraces and
+  // the dome, then down onto your forecourt
+  intro: { from: [-10, 12.5, 8], lookFrom: [2, 3.5, -12], toBack: 3.0 },
+  // stage-select picture: from over the tarn by the weir, across the star party and the brook to the terraces, the
+  // observatory and the summit
+  art: { from: [-26, 10, 10], look: [4, 2.5, -18], fov: 60 },
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, stars: true,
+    weather: { mist: { count: 28, height: 1.3, size: 32, reach: 130, opacity: 0.32 } },   // a little low cloud in the valleys
     // the tarn: cold, clear, calm — deep teal-green, pale green shallows; crisp mountain air (a deeper zenith, less haze)
     theme: {
       all: { seaDeep: '#0d3a3a', seaShallow: '#2a7a70', seaCrest: '#86cbb6', foam: '#eef6f2', waveStrength: 0.32, seaAmbientK: 0.66,
