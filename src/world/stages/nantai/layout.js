@@ -153,14 +153,15 @@ const HALF = [
   // the weir across the W reach: crest (G1) bank to bank, steel stair down to the lawn
   B(-23.2, -20.8, FL, G1, -12.6, -6.6, { color: K.concrete, pattern: PATTERN.concrete, tag: 'weir' }),
   R([-22, G0, -3.5], [-22, G1, -6.6], 2.4, { color: '#8a9096', pattern: PATTERN.treads, tag: 'weir-stair' }),
-  // the Old Stone Bridge (M reach): humped, crown 0.8, parapets as cover
-  B(-2, 2, -0.6, 0.8, -14.6, -9.0, ashlar({ tag: 'bridge-crown' })),
-  R([0, G0, -6.8], [0, 0.8, -9.0], 4, ashlar({ tag: 'bridge-ramp' })),
-  R([0, G0, -16.8], [0, 0.8, -14.6], 4, ashlar({ tag: 'bridge-ramp' })),
+  // the Old Stone Bridge (M reach): humped, crown 0.8, 6 m between the parapets (room to fight round the tower as it
+  // crosses), parapets as cover
+  B(-3, 3, -0.6, 0.8, -14.6, -9.0, ashlar({ tag: 'bridge-crown' })),
+  R([0, G0, -6.8], [0, 0.8, -9.0], 6, ashlar({ tag: 'bridge-ramp' })),
+  R([0, G0, -16.8], [0, 0.8, -14.6], 6, ashlar({ tag: 'bridge-ramp' })),
   ...[-1, 1].flatMap((s) => [
-    B(s > 0 ? 2 : -2.45, s > 0 ? 2.45 : -2, -0.6, 1.7, -14.6, -9.0, ashlar({ tag: 'bridge-parapet', perch: true, noNav: true })),
-    R([s * 2.225, 0.95, -7.3], [s * 2.225, 1.7, -9.0], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
-    R([s * 2.225, 0.95, -16.3], [s * 2.225, 1.7, -14.6], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
+    B(s > 0 ? 3 : -3.45, s > 0 ? 3.45 : -3, -0.6, 1.7, -14.6, -9.0, ashlar({ tag: 'bridge-parapet', perch: true, noNav: true })),
+    R([s * 3.225, 0.95, -7.3], [s * 3.225, 1.7, -9.0], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
+    R([s * 3.225, 0.95, -16.3], [s * 3.225, 1.7, -14.6], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
   ]),
   // the log bridge (E reach): two split logs, square across the reach
   O(20, -15.84, 1.6, 6.8, -0.35, 0.25, 26.7, timber({ tag: 'log-bridge' })),
@@ -202,7 +203,7 @@ const LAYOUT_NANTAI = {
   art: { from: [-26, 10, 10], look: [4, 2.5, -18], fov: 60 },
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, stars: true,
-    weather: { mist: { count: 28, height: 1.3, size: 32, reach: 130, opacity: 0.32 } },   // a little low cloud in the valleys
+    weather: { mist: { layers: 2, height: 1.6, reach: 150, inner: 10, opacity: 0.26, scale: 0.025 } },   // thin fog lying on the tarn
     // the tarn: cold, clear, calm — deep teal-green, pale green shallows; crisp mountain air (a deeper zenith, less haze)
     theme: {
       all: { seaDeep: '#0d3a3a', seaShallow: '#2a7a70', seaCrest: '#86cbb6', foam: '#eef6f2', waveStrength: 0.32, seaAmbientK: 0.66,

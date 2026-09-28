@@ -10,7 +10,7 @@ export function makeKit(H) {
   // cold granite greys, weathered larch, observatory white + steel, Grizzco orange / brown for the party — all muted
   // below the team inks
   const K = {
-    granite: '#bdbab3', graniteLt: '#d4d1ca', graniteDk: '#8f8c86', graniteWarm: '#c7beb0', scree: '#a9a59d',
+    granite: '#aba8a1', graniteLt: '#c2bfb8', graniteDk: '#85827c', graniteWarm: '#c7beb0', scree: '#a9a59d',
     lichen: '#b9ad6a', moss: '#7f8a4a', mossDk: '#5f6a38',
     white: '#eeede8', whiteSh: '#d9d8d2', dome: '#e9eaea', domeSh: '#c9ccce', steel: '#8e969d', steelDk: '#5d646b', steelLt: '#b7bec4',
     iron: '#2e3236', ironLt: '#4a5056', black: '#232427', rubber: '#2b2c30',
@@ -305,12 +305,13 @@ export function makeKit(H) {
   }
   // a low clump of alpine heather / dwarf shrub (visual; the grass and moss round rocks), w wide
   const heathGeo = (seed) => tpl('heath|' + seed, () => H.puffGeo(1, seed));
+  const HEATH = ['#6f7d45', '#5d6b3a', '#7a6a78', '#7f8a4a', '#8a7b5c'];
   function heath(B, x, y, z, w, seed, c) {
-    const n = 3 + (seed % 3);
+    const n = 4 + (seed % 3);
     for (let i = 0; i < n; i++) {
-      const a = hash(seed + i * 3.1) * TAU, rr = w * 0.3 * hash(seed * 2 + i);
-      const s = w * (0.28 + 0.16 * hash(seed * 5 + i));
-      B.add(NS('foliage'), heathGeo((seed + i) % 6), c ?? (i % 2 ? K.moss : K.mossDk), x + Math.cos(a) * rr, y + s * 0.18, z + Math.sin(a) * rr, { sx: s, sy: s * 0.45, sz: s * 0.9 });
+      const a = hash(seed + i * 3.1) * TAU, rr = w * 0.32 * hash(seed * 2 + i);
+      const s = w * (0.2 + 0.12 * hash(seed * 5 + i));
+      B.add(NS('foliage'), heathGeo((seed + i) % 6), c ?? HEATH[(seed + i) % HEATH.length], x + Math.cos(a) * rr, y + s * 0.3, z + Math.sin(a) * rr, { sx: s, sy: s * 0.72, sz: s * 0.9 });
     }
   }
 

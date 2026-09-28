@@ -6,8 +6,8 @@ export function registerCrossings(D, H, T) {
   const WY = -1.6;
 
   // ------------------------------------------------------------------------------------------ the Old Stone Bridge
-  // pos = the bridge's centre over the water (world [0, 0, −11.8]); it crosses along local Z. Layout: crown (±2, −0.6 →
-  // 0.8) over z ±2.8, ramps down to the banks, parapets ±2…2.45 (to 1.7). The water: z ±2 under it.
+  // pos = the bridge's centre over the water (world [0, 0, −11.8]); it crosses along local Z. Layout: crown (±3, −0.6 →
+  // 0.8) over z ±2.8, ramps down to the banks, parapets ±3…3.45 (to 1.7). The water: z ±2 under it.
   // Here: the arch body (a segmental arch in an extruded granite mass under the crown), voussoirs on both faces,
   // cutwater-less abutments, coping on the parapets, end piers at the ramp feet with a carved name stone.
   const archGeo = (span, rise, top, len) => tpl(['arch', span, rise, top, len].map(kf).join('|'), () => {
@@ -22,7 +22,7 @@ export function registerCrossings(D, H, T) {
   D.nantai_stonebridge = {
     desc: 'Old Stone Bridge dressing: arch body, voussoirs, coping, end piers',
     build(B) {
-      const span = 4.0, rise = 1.0, top = -0.62, W = 4.86;
+      const span = 4.0, rise = 1.0, top = -0.62, W = 6.86;
       B.add('paint', archGeo(span, rise, top, W), K.granite, 0, 0, 0);
       // voussoirs: a ring of wedge stones proud of each face, alternating tone
       const R = (span * span / 4 + rise * rise) / (2 * rise), cy = WY + rise - R, a0 = Math.asin(span / 2 / R), nv = 11;
@@ -40,18 +40,18 @@ export function registerCrossings(D, H, T) {
       }
       // coping on the parapets (crown + ramps): a slightly wider capstone, a hair under the perch top
       for (const sx of [-1, 1]) {
-        pbox(B, 'paint', K.graniteLt, 0.6, 0.1, 5.6, sx * 2.225, 1.66, 0);
-        for (const sz of [-1, 1]) seg(B, 'paint', K.graniteLt, [sx * 2.225, 1.66, sz * 2.8], [sx * 2.225, 0.86, sz * 4.5], 0.6, 0.1, { plain: true });
+        pbox(B, 'paint', K.graniteLt, 0.6, 0.1, 5.6, sx * 3.225, 1.66, 0);
+        for (const sz of [-1, 1]) seg(B, 'paint', K.graniteLt, [sx * 3.225, 1.66, sz * 2.8], [sx * 3.225, 0.91, sz * 4.5], 0.6, 0.1, { plain: true });
       }
       // end piers at the ramp feet (cover): square granite posts with a pyramid cap; a carved name on one
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        const x = sx * 2.75, z = sz * 4.8;
+        const x = sx * 3.75, z = sz * 4.8;
         B.box('paint', K.granite, 0.62, 1.15, 0.62, x, 0.575, z, { r: 0.04 });
         B.box('paint', K.graniteLt, 0.72, 0.1, 0.72, x, 1.2, z, { r: 0.02 });
         B.add('paint', H.latheGeo([[0, 0], [0.34, 0], [0.34, 0.04], [0, 0.26]], 4), K.graniteLt, x, 1.25, z, { ry: PI / 4 });
         colC(B, x, 0, z, 0.72, 1.25, 0.72);
       }
-      B.push(2.75, 0.62, 5.12, 0);
+      B.push(3.75, 0.62, 5.12, 0);
       letters(B, 'OLD STONE BRIDGE', { h: 0.075, x: 0, y: 0.1, z: 0, c: K.graniteDk, flat: true, wt: 0.2 });
       B.pop();
       // weathered joints on the arch body's faces: a few stone courses (thin dark lines)

@@ -56,7 +56,7 @@ export const PLACEMENTS = [
   { type: 'nantai_weir', pos: [-22, 0, -9.6], rotY: 0 },
   { type: 'nantai_logbridge', pos: [20, 0, -15.84], rotY: (26.7 * P) / 180, oboxCols: true },
   { type: 'nantai_lookout', pos: [-18.8, 2.6, -15.2], rotY: 0 },
-  { type: 'nantai_fingerpost', pos: [-3.3, 0, -7.2], rotY: P, blades: [['OBSERVATORY', -HP + 0.2], ['LOOKOUT · WEIR', P - 0.1], ['LOG BRIDGE', 0.25]] },
+  { type: 'nantai_fingerpost', pos: [-4.7, 0, -7.4], rotY: P, blades: [['OBSERVATORY', -HP + 0.2], ['LOOKOUT · WEIR', P - 0.1], ['LOG BRIDGE', 0.25]] },
   { type: 'nantai_fingerpost', pos: [18.9, 0, -22.4], rotY: 0, blades: [['SUMMIT 0.2 KM', HP + 0.3], ['OCTO VALLEY 6 KM', -0.1], ['INKOPOLIS 14 KM', P]] },
 
   // ================= Pearl's rock + the hollow
@@ -79,6 +79,8 @@ export const PLACEMENTS = [
   // ================= the west terrace: a telescope pier and a bench off the tower's line
   { type: 'nantai_telepier', pos: [-9.6, 2.6, -34.2], rotY: 2.6 },
   { type: 'nantai_bench', pos: [-10.3, 2.6, -28.5], rotY: HP },
+  { type: 'nantai_infoboard', pos: [-10.1, 2.6, -32.2], rotY: HP, title: 'STARGAZING TERRACE' },
+  { type: 'nantai_planter', pos: [-9.9, 2.6, -24.1], rotY: 0, w: 1.6 },
 
   // ================= the first terrace + east yard: piers, benches, crates
   { type: 'nantai_telepier', pos: [6.2, 1.3, -22.9], rotY: 0.2 },
@@ -93,6 +95,7 @@ export const PLACEMENTS = [
   { type: 'nantai_bollard', pos: [-20.6, 0, -3.1] },
   { type: 'nantai_bollard', pos: [-14.0, 0, -14.3] },
   { type: 'nantai_crates', pos: [14.6, 1.3, -38.8], rotY: -0.2, n: 2 },
+  { type: 'nantai_dish', pos: [13.6, 1.3, -44.2], rotY: 0.6 },
 
   // ================= the shore trail: boulders, pines, a cairn, the rowing boat
   { type: 'nantai_boulder', pos: [20.1, 0, -33.2], rotY: 0.4, w: 1.9, h: 1.2, d: 1.5, seed: 41 },
@@ -110,7 +113,7 @@ export const PLACEMENTS = [
   { type: 'nantai_boulder', pos: [-11.8, 0, -16.2], rotY: 0.2, w: 1.4, h: 0.9, d: 1.1, seed: 45 },
   { type: 'nantai_heath', pos: [-17.4, 0, -14.6], w: 2.2, d: 1.0, n: 4, seed: 21 },
   { type: 'nantai_heath', pos: [-21.5, 0, -1.8], w: 2.0, d: 1.4, n: 3, seed: 23 },
-  { type: 'nantai_heath', pos: [22.6, 0, -8.6], w: 1.4, d: 2.0, n: 4, seed: 25 },
+  { type: 'nantai_heath', pos: [19.2, 0, -8.0], w: 1.2, d: 1.8, n: 4, seed: 25 },
 
   // ================= the star party on the lawn
   { type: 'nantai_marquee', pos: [10.6, 0, -4.4], rotY: -HP },
@@ -118,7 +121,10 @@ export const PLACEMENTS = [
   { type: 'nantai_screen', pos: [-13.2, 0, -3.6], rotY: HP },
   { type: 'nantai_chairs', pos: [-7.4, 0, -7.0], rotY: 0.3, n: 3 },
   { type: 'nantai_chairs', pos: [16.4, 0, -6.2], rotY: 2.2, n: 2 },
-  { type: 'nantai_refractor', pos: [-3.4, 0, -8.4], rotY: 0.2, aim: 0.4 },
+  { type: 'nantai_boulder', pos: [18.9, 0, -11.7], rotY: 0.9, w: 1.6, h: 1.0, d: 1.2, seed: 47 },
+  { type: 'nantai_refractor', pos: [-17.6, 0, -2.6], rotY: 1.2, aim: 0.8 },
+  { type: 'nantai_chairs', pos: [-18.6, 0, -5.4], rotY: -0.6, n: 2 },
+  { type: 'nantai_refractor', pos: [-10.6, 0, -6.4], rotY: 0.2, aim: 0.4 },
   { type: 'nantai_refractor', pos: [7.2, 0, -8.6], rotY: -0.4, aim: -0.3, color: '#c9a24e' },
   { type: 'nantai_generator', pos: [14.4, 0, -9.0], rotY: 0.1 },
   { type: 'nantai_crates', pos: [-9.9, 0, -1.6], rotY: -0.25, n: 2 },
