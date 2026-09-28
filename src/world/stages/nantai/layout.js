@@ -122,13 +122,13 @@ const HALF = [
   R([23.3, G0, -23.6], [23.3, 0.65, -26.4], 2.2, { color: K.gravel, pattern: PATTERN.rampboard, tag: 'switchback' }),
   B(22.2, 24.4, G0, 0.65, -28.4, -26.4, ashlar({ tag: 'switchback-landing' })),
   R([22.2, 0.65, -27.4], [17.5, G1, -27.4], 2.0, { color: K.gravel, pattern: PATTERN.rampboard, tag: 'switchback' }),
-  R([20.95, G0, -37.5], [20.95, G1, -43.6], 2.1, steps({ tag: 'shore-stair' })),
+  R([19.75, G0, -37.5], [19.75, G1, -43.6], 4.5, steps({ tag: 'shore-stair' })),   // (wall to the water's edge: no blind alley beside it)
   B(17.5, 22, G0, G1, -45.4, -43.6, ashlar({ tag: 'shore-landing' })),
 
   // ---------------- the west terrace (G2) and its long flight to the bridge head; the bastion by the hollow
   B(-11, -3, G0, G2, -36.5, -23, ashlar({ tag: 'west-terrace' })),
   B(-11, -8.7, G0, G2, -23, -19, ashlar({ tag: 'bastion', mural: [{ n: [0, 0, 1], id: MURAL.blaze }] })),
-  R([-6.5, G0, -17.1], [-6.5, G2, -23], 4.4, steps({ tag: 'west-flight' })),
+  R([-5.85, G0, -17.1], [-5.85, G2, -23], 5.7, steps({ tag: 'west-flight' })),   // (wall to wall: bastion → first terrace)
 
   // ---------------- the rehearsal hollow (G1) and Pearl's rock
   B(-19, -11, G0, G1, -31.5, -19.5, turf({ tag: 'hollow', mural: [{ n: [0, 1, 0], id: MURAL.shock }] })),

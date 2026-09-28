@@ -61,7 +61,7 @@ export const PLACEMENTS = [
 
   // ================= Pearl's rock + the hollow
   { type: 'nantai_pearlsrock', pos: [-15, 1.3, -25.5], rotY: 0 },
-  { type: 'nantai_boulder', pos: [-18.1, 1.3, -21.2], rotY: 0.6, w: 1.3, h: 0.95, d: 1.1, seed: 31 },
+  { type: 'nantai_boulder', pos: [-16.9, 1.3, -19.6], rotY: 0.6, w: 1.3, h: 0.95, d: 1.1, seed: 31 },   // (1.5 m clear of the ridge wall: nobody wedges behind it)
 
   // ================= the ridge: pines, outcrops, a cairn
   { type: 'nantai_pine', pos: [-21.0, 2.6, -43.3], rotY: 0.5, seed: 1 },
@@ -107,7 +107,7 @@ export const PLACEMENTS = [
   { type: 'nantai_boulder', pos: [23.3, 0, -39.6], rotY: 1.9, w: 1.5, h: 1.0, d: 1.3, seed: 43 },
   { type: 'nantai_pine', pos: [23.4, 0, -37.2], rotY: -2.6, seed: 5 },
   { type: 'nantai_pine', pos: [23.4, 0, -30.2], rotY: 2.8, seed: 6, scale2: 0.8 },
-  { type: 'nantai_cairn', pos: [19.2, 0, -41.2], rotY: 0 },
+  { type: 'nantai_cairn', pos: [18.6, 0, -30.6], rotY: 0 },
   { type: 'nantai_rowboat', pos: [23.3, 0, -20.9], rotY: HP + 0.2 },
   { type: 'nantai_scree', pos: [21.0, 0, -35.4], w: 1.6, d: 3.0, n: 14, seed: 7 },
   { type: 'nantai_heath', pos: [21.0, 0, -44.2], w: 1.6, d: 1.4, n: 4, seed: 17 },
@@ -138,7 +138,7 @@ export const PLACEMENTS = [
   { type: 'nantai_clutter', variant: 'bin', pos: [8.2, 0, -6.9] },
   { type: 'nantai_clutter', variant: 'cooler', pos: [15.2, 0, -5.2], rotY: 0.4 },
   { type: 'nantai_clutter', variant: 'chairstack', pos: [12.6, 0, -2.2], rotY: -HP },
-  { type: 'nantai_clutter', variant: 'bin', pos: [-3.9, 0, -15.6] },
+  { type: 'nantai_clutter', variant: 'bin', pos: [-5.2, 0, -15.1] },
   { type: 'nantai_crates', pos: [-9.9, 0, -1.6], rotY: -0.25, n: 2 },
   { type: 'nantai_banner', pos: [-6.0, 0, -9.0], rotY: P, w: 3.4 },
   { type: 'nantai_festoon', pos: [0, 0, 0], rotY: 0, pts: [[5.2, -9.2], [9.4, -8.6], [13.4, -6.9]], h: 4.3 },
