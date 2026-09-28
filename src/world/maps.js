@@ -26,7 +26,9 @@ const M = {
   spawn: '#eae6de', hut: '#f1ece2', navy: '#3f5372', ferryDeck: '#b8c3bb', cabin: '#f3f0ea', tug: '#9c4838',
   tugHouse: '#efe9dd', house: '#8fb8b4', houseTop: '#f0ebe0', steel: '#98a0a6', wood: '#c29a72', orange: '#e79a4b',
   beacon: '#e9e4d8', boat: '#4f6f96', planter: '#b9ad9a', carDeck: '#a1ada3', render: '#efe8da', office: '#e8e4dc',
+  workboat: '#2f6b62',
 };
+const SIDES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];   // hull sides: never inkable (decks are)
 const deck = (o = {}) => ({ color: M.deck, pattern: PATTERN.planks, ...o });
 export const HALYARD = {
   id: 'halyard',
@@ -43,7 +45,7 @@ export const HALYARD = {
     B(-16, 16, 1.1, 1.3, -5, 5, { tag: 'ferry-deck', color: M.carDeck, pattern: PATTERN.nonslip, mural: [{ n: [0, 1, 0], id: 4 }] }),
     // cabin (its roof is the sun deck) + wheelhouse on top
     B(-6.5, 6.5, 1.3, 3.8, -2.9, 2.9, { tag: 'ferry-cabin', color: M.cabin, pattern: PATTERN.hullpaint, mural: [{ n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 5 }, { n: [0, 0, -1], id: 5 }] }),
-    B(-1.5, 1.5, 3.8, 5.2, -1.6, 1.6, { tag: 'ferry-wheelhouse', roof: true, color: M.cabin, pattern: PATTERN.hullpaint }),
+    B(-1.5, 1.5, 3.8, 5.2, -1.6, 1.6, { tag: 'ferry-wheelhouse', roof: true, color: M.cabin, pattern: PATTERN.hullpaint, notIn: 'tower' }),
   ],
   half: [
     // ================= quay + clubhouse (solid ground behind the basin)
@@ -73,7 +75,8 @@ export const HALYARD = {
     // houseboat SEA SHANTY filling the slip: a wide floating-home pontoon (deck 0.7, kid-hoppable from the Long Pier
     // side, the finger pier and the boardwalk; porch rail on the fuel-dock side, 2.5 m of water to the fuel dock), the
     // cottage cabin toward the pier with an open sun deck on the fuel-dock side, squid-only roof garden
-    B(-17.6, -7.0, -1.8, 0.7, -23.4, -14.4, { tag: 'houseboat-hull', color: M.house, pattern: PATTERN.gelcoat }),
+    B(-17.6, -7.0, -1.8, 0.7, -23.4, -14.4, { tag: 'houseboat-hull', color: M.house, pattern: PATTERN.gelcoat, notIn: 'tower' }),
+    B(-17.6, -13.0, -1.8, 0.7, -23.4, -14.4, { tag: 'houseboat-hull', color: M.house, pattern: PATTERN.gelcoat, onlyIn: 'tower' }),   // Tower Command: its sun deck is the checkpoint float
     B(-16.2, -13.0, 0.7, 2.9, -21.4, -16.2, { tag: 'houseboat-cabin', color: M.houseTop, pattern: PATTERN.gelcoat }),
     R([-19.7, 0, -18.8], [-17.35, 0.7, -18.8], 1.6, { tag: 'houseboat-gangway', thin: true, thickness: 0.18, color: M.steel, pattern: PATTERN.gangdeck }),
     // harbour beacon where the lane meets the other team's boatyard (cover at the seam)
@@ -96,6 +99,8 @@ export const HALYARD = {
     B(18.6, 20.5, 0, 2.6, -13.45, -13, { tag: 'tug-hull', color: M.tug, pattern: PATTERN.hullpaint, onlyIn: 'zones' }),
     R([17.5, 0, -7.55], [17.5, 2.6, -13.45], 2.2, { tag: 'tug-ramp', color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'zones' }),
     R([19.0, 0, -29.95], [19.0, 2.6, -24.0], 2.2, { tag: 'tug-bow-stair', color: M.steel, pattern: PATTERN.treads, onlyIn: 'zones' }),
+    // Tower Command "RAMP ←": a timber ramp up onto the tug's bow from the quay end of the yard (Zone Control's bow stair line)
+    R([19.0, 0, -29.95], [19.0, 2.6, -24.0], 2.2, { tag: 'tug-bow-ramp', color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'tower' }),
     // plank from the boatyard onto the ferry's end deck
     R([19.7, 0, -3.6], [15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks }),
 
@@ -105,7 +110,35 @@ export const HALYARD = {
     B(1.8, 16, 1.3, 2.0, -5, -4.6, { tag: 'ferry-bulwark', color: M.navy, pattern: PATTERN.hullpaint }),
     // sun-deck stair (Alpha's, at its left end). Small cover (fuel pumps, dock box, pump-out station, crates, keel
     // blocks, dinghy, ferry locker + cargo) is set dressing with colliders — see docs/HALYARD.md
-    R([12.6, 1.3, -1.9], [6.5, 3.8, -1.9], 2.0, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads }),
+    R([12.6, 1.3, -1.9], [6.5, 3.8, -1.9], 2.0, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, notIn: 'tower' }),
+    // Tower Command: narrowed to 1.45 m (z -2.9…-1.45) so the track down the middle of the ferry (z 0, a 2.5 m platform)
+    // passes it and drops straight off the sun deck's end
+    R([12.6, 1.3, -2.175], [6.5, 3.8, -2.175], 1.45, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, onlyIn: 'tower' }),
+
+    // ================= Tower Command only (the user's notes, drawn on Bravo's half: authored at z > 0, mirrored)
+    // The track: the ferry's sun deck → its car deck → off the ferry's end onto a float → round the float to the
+    // checkpoint float by the houseboat → across the fuel dock → up onto the back of a workboat moored in the channel →
+    // down into the boatyard → the goal. Floats: slab decks (0.75 m, "deck" height 0) on float drums (dressing:
+    // floatdeck), 15 cm seams to the fixed piers; boats: hull sides never inkable, decks inkable.
+    // FLOAT (L): off the ferry's end across to the Long Pier, and down its side to the boardwalk
+    B(16.25, 19.35, -0.75, 0, -2.5, 10.25, deck({ tag: 'float', onlyIn: 'tower' })),
+    B(10.0, 16.25, -0.75, 0, 5.3, 10.25, deck({ tag: 'float', onlyIn: 'tower' })),
+    // FLOAT round checkpoint 2: where the houseboat's sun deck was, over to the fuel dock, a neck to the boardwalk
+    B(4.65, 12.8, -0.75, 0, 14.4, 23.4, deck({ tag: 'float', onlyIn: 'tower' })),
+    B(10.0, 12.8, -0.75, 0, 12.55, 14.4, deck({ tag: 'float', onlyIn: 'tower' })),
+    // FLOAT beside the workboat: the channel between the walkway and the quay
+    B(-9.85, -4.65, -0.75, 0, 26.15, 30.85, deck({ tag: 'float', onlyIn: 'tower' })),
+    // BOAT / BACK OF BOAT: workboat LIMPET moored across the channel (fuel dock ↔ boatyard), stern to the ferry; the track
+    // climbs its side, crosses the open aft deck (checkpoint 3) and drops into the boatyard. Wheelhouse = cover (roof).
+    B(-9.8, -4.8, -1.9, 1.0, 14.4, 23.4, { tag: 'workboat-hull', color: M.workboat, pattern: PATTERN.hullpaint, noPaint: SIDES, onlyIn: 'tower' }),
+    B(-9.8, -4.8, 1.0, 1.2, 14.4, 23.4, { tag: 'workboat-deck', color: M.carDeck, pattern: PATTERN.nonslip, noPaint: SIDES, onlyIn: 'tower' }),
+    B(-8.4, -6.2, 1.2, 3.5, 19.9, 22.2, { tag: 'workboat-wheelhouse', roof: true, color: M.cabin, pattern: PATTERN.hullpaint, onlyIn: 'tower' }),
+    // BOAT WITH 1 WAY DROP: water-bus PUFFIN in the slip corner, its open top deck 2.3 m up — on board by the gangway
+    // from the fuel dock (RAMP ↑), off by dropping onto the checkpoint float (the other sides are railed)
+    B(4.85, 11.5, -1.9, 0.5, 23.65, 28.35, { tag: 'waterbus-hull', color: M.navy, pattern: PATTERN.hullpaint, noPaint: SIDES, onlyIn: 'tower' }),
+    B(4.85, 11.5, 0.5, 2.15, 23.65, 28.35, { tag: 'waterbus-saloon', color: M.cabin, pattern: PATTERN.hullpaint, noPaint: SIDES, onlyIn: 'tower' }),
+    B(4.85, 11.5, 2.15, 2.3, 23.65, 28.35, { tag: 'waterbus-deck', color: M.ferryDeck, pattern: PATTERN.nonslip, noPaint: SIDES, onlyIn: 'tower' }),
+    R([-1.65, 0, 25.15], [4.85, 2.3, 25.15], 2.6, { tag: 'waterbus-gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'tower' }),
   ],
   decor: {
     lamps: [[-23.5, -32.2], [23.5, -32.2], [-23.6, -14], [23.6, -9], [-5.7, -31.8], [5.7, -31.8]],
