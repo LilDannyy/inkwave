@@ -99,5 +99,15 @@
       "sm": "assets/stages/calamari-dusk-sm.webp"
     }
   },
+  "craters": {
+    "day": {
+      "src": "assets/stages/craters-day.webp",
+      "sm": "assets/stages/craters-day-sm.webp"
+    },
+    "dusk": {
+      "src": "assets/stages/craters-dusk.webp",
+      "sm": "assets/stages/craters-dusk-sm.webp"
+    }
+  },
   "generated": "2026-09-27T20:11:01.803Z"
 }
