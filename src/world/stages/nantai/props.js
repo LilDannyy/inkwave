@@ -75,6 +75,7 @@ export const PLACEMENTS = [
   { type: 'nantai_heath', pos: [-24.8, 2.6, -18.2], w: 1.2, d: 1.4, n: 3, seed: 13 },
   { type: 'nantai_cairn', pos: [-21.0, 2.6, -39.2], rotY: 0 },
   { type: 'nantai_weatherhut', pos: [-15.2, 2.6, -44.0], rotY: 0 },
+  { type: 'nantai_clutter', variant: 'wheelbarrow', pos: [-18.2, 2.6, -41.8], rotY: 0.6 },
   { type: 'nantai_scree', pos: [-22.5, 2.6, -29.5], w: 2.5, d: 2.2, n: 16, seed: 3 },
 
   // ================= the west terrace: a telescope pier and a bench off the tower's line
@@ -97,6 +98,9 @@ export const PLACEMENTS = [
   { type: 'nantai_bollard', pos: [-14.0, 0, -14.3] },
   { type: 'nantai_crates', pos: [14.6, 1.3, -38.8], rotY: -0.2, n: 2 },
   { type: 'nantai_dish', pos: [13.6, 1.3, -44.2], rotY: 0.6 },
+  { type: 'nantai_clutter', variant: 'tarp', pos: [16.3, 1.3, -40.6], rotY: HP },
+  { type: 'nantai_clutter', variant: 'hose', pos: [11.9, 1.3, -39.4], rotY: 0.3 },
+  { type: 'nantai_clutter', variant: 'ladder', pos: [7.8, 3.8, -41.4], rotY: 0, len: 2.4 },
 
   // ================= the shore trail: boulders, pines, a cairn, the rowing boat
   { type: 'nantai_boulder', pos: [20.1, 0, -33.2], rotY: 0.4, w: 1.9, h: 1.2, d: 1.5, seed: 41 },
@@ -130,6 +134,11 @@ export const PLACEMENTS = [
   { type: 'nantai_refractor', pos: [-10.6, 0, -6.4], rotY: 0.2, aim: 0.4 },
   { type: 'nantai_refractor', pos: [7.2, 0, -8.6], rotY: -0.4, aim: -0.3, color: '#c9a24e' },
   { type: 'nantai_generator', pos: [14.4, 0, -9.0], rotY: 0.1 },
+  { type: 'nantai_clutter', variant: 'cable', pos: [0, 0, 0], rotY: 0, pts: [[13.6, -8.8], [12.6, -7.9], [12.8, -6.8], [12.3, -5.6]] },
+  { type: 'nantai_clutter', variant: 'bin', pos: [8.2, 0, -6.9] },
+  { type: 'nantai_clutter', variant: 'cooler', pos: [15.2, 0, -5.2], rotY: 0.4 },
+  { type: 'nantai_clutter', variant: 'chairstack', pos: [12.6, 0, -2.2], rotY: -HP },
+  { type: 'nantai_clutter', variant: 'bin', pos: [-3.9, 0, -15.6] },
   { type: 'nantai_crates', pos: [-9.9, 0, -1.6], rotY: -0.25, n: 2 },
   { type: 'nantai_banner', pos: [-6.0, 0, -9.0], rotY: P, w: 3.4 },
   { type: 'nantai_festoon', pos: [0, 0, 0], rotY: 0, pts: [[5.2, -9.2], [9.4, -8.6], [13.4, -6.9]], h: 4.3 },

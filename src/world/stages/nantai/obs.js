@@ -47,7 +47,7 @@ export function registerObservatory(D, H, T) {
       B.add('gloss', shellGeo(R), K.dome, 0, 0, 0);
       for (let i = 0; i < 24; i++) { const phi = HP + SLIT + 0.2 + ((TAU - 2 * SLIT - 0.4) * i) / 23; B.add('paint', ribGeo(R + 0.02, phi, HP * 0.94), K.domeSh, 0, 0, 0); }
       for (const s of [-1, 1]) { B.add('metal', leafGeo(R + 0.05, s), K.steelLt, 0, 0, 0); B.add('paint', ribGeo(R + 0.08, HP + s * (SLIT + 0.11), HP * 0.97), K.steel, 0, 0, 0); B.add('paint', ribGeo(R + 0.06, HP + s * (SLIT + 0.01), HP * 0.97), K.steelDk, 0, 0, 0); }
-      B.add('glow', innerGeo(R - 0.25), '#4a2320', 0, 0, 0, { sx: -1, glow: 1 });
+      B.add('glow', innerGeo(R - 0.25), '#5c2820', 0, 0, 0, { sx: -1, glow: 1.2 });
       B.cyl('metal', K.steelLt, 0.5, 0.35, 0, R - 0.02, 0, { seg: 16 });
       B.sph('metal', K.steel, 0.2, 0, R + 0.25, 0, { ws: 10, hs: 6 });
       // the telescope inside, pointing out through the slit at the sky over the arena

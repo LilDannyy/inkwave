@@ -6,7 +6,9 @@
 //   inscription  carved in the first terrace's front wall: NANTAI OBSERVATORY · 1962
 //   blaze        a painted trail blaze on the bastion by the hollow: red-white-red and SUMMIT ▲ 0.2 KM
 //   rose         a brass compass rose set in the first terrace's paving (face 8.5 × 14.3 m, centred; N = world −X)
-export const MURAL = { shock: 4, inscription: 5, blaze: 6, rose: 7 };
+//   paths        the lawn's centre (one slab across the centre line, 14.4 × 19.2 m): footpaths worn into the turf from
+//                one bridge to the other and out toward the two marquees (drawn 180°-symmetric, like the stage)
+export const MURAL = { shock: 4, inscription: 5, blaze: 6, rose: 7, paths: 8 };
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -98,6 +100,32 @@ export function drawMurals(g, R, kit) {
     g.font = kit.fontB(9); g.fillStyle = stone; g.fillText('NANTAI  ·  2,657 FT', cx, cy + Rr + 34);
     g.restore();
     out.push({ id: MURAL.rose, x: x0, y: y0, w: W, h: H, m: [8.5, 14.3], fx: [0.4, 1] });
+  }
+  // ---------------------------------------------------------------- worn footpaths (14.4 × 19.2 m at 24 px/m)
+  {
+    const PPM = 24, W = Math.round(14.4 * PPM), H = Math.round(19.2 * PPM), x0 = R.x + 1130, y0 = R.y, r = rng(777);
+    g.save();
+    g.clearRect(x0, y0, W, H);
+    // face coords (m, origin at the slab's min corner) → canvas: u → +x, v (world +z) → up
+    const P = (wx, wz) => [x0 + (wx + 7.2) * PPM, y0 + H - (wz + 9.6) * PPM];
+    const pathXZ = (t) => [1.1 * Math.sin(t * 0.3), t];                        // bridge to bridge, a lazy S
+    const strokeWorn = (pts, w) => {
+      for (const [a, k] of [[0.18, 1.5], [0.28, 1.0], [0.22, 0.6]]) {
+        g.strokeStyle = `rgba(122,108,82,${a})`; g.lineWidth = w * PPM * k; g.lineCap = 'round'; g.lineJoin = 'round';
+        g.beginPath(); pts.forEach(([x, z], i) => { const [cx, cy] = P(x, z); if (i) g.lineTo(cx, cy); else g.moveTo(cx, cy); }); g.stroke();
+      }
+      // grit and pebbles along the wear
+      for (let i = 0; i < pts.length * 3; i++) { const [x, z] = pts[(r() * pts.length) | 0]; const [cx, cy] = P(x + (r() - 0.5) * w * 0.8, z + (r() - 0.5) * 0.6); g.fillStyle = `rgba(${150 + r() * 40 | 0},${140 + r() * 35 | 0},${118 + r() * 30 | 0},0.7)`; g.beginPath(); g.arc(cx, cy, 1 + r() * 1.6, 0, Math.PI * 2); g.fill(); }
+    };
+    const main = []; for (let t = -9.8; t <= 9.8; t += 0.4) main.push(pathXZ(t));
+    strokeWorn(main, 1.0);
+    for (const sgn of [1, -1]) {
+      // a branch off the main path toward this half's marquee (the other half's is its 180° twin)
+      const br = []; for (let k = 0; k <= 14; k++) { const t = k / 14, z0 = -4.6 * sgn, [xs] = pathXZ(z0); br.push([xs + (7.6 * sgn - xs) * t, z0 + 0.5 * sgn * Math.sin(t * Math.PI)]); }
+      strokeWorn(br, 0.8);
+    }
+    g.restore();
+    out.push({ id: MURAL.paths, x: x0, y: y0, w: W, h: H, m: [14.4, 19.2], fx: [0.6, 1] });
   }
   return out;
 }
