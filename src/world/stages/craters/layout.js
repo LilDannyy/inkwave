@@ -23,8 +23,8 @@ import { Raster, PieceIndex, topOf, mirrorDef, coneFacets, ringSegments, trench,
 // ------------------------------------------------------------------------------------------------------------
 const FL = -2.0, YF = -1.0, YR = 1.2, YP = 2.4, YD = 3.0;
 const CO = {
-  turf: '#a9b388', chalk: '#e2ddcf', lip: '#d9d3c2', slope: '#aeb286', crest: '#b5b28c', trench: '#9d8a70', sandbag: '#bcae8c', timber: '#8d7a62',
-  concrete: '#bdb9ae', pavilion: '#d8d3c7', spawn: '#eae6de', stone: '#ece8de', ring: '#b3ab8a', flint: '#9d9a90', plank: '#a98f6e',
+  turf: '#9cab74', chalk: '#e4dfd2', lip: '#a6ab7a', slope: '#a3ad77', crest: '#aab07c', trench: '#9d8a70', sandbag: '#b9a986', timber: '#8d7a62',
+  concrete: '#bdb9ae', pavilion: '#d8d3c7', spawn: '#eae6de', stone: '#ece8de', ring: '#b3ab8a', flint: '#9d9a90', plank: '#a98f6e', path: '#cbbd9a',
 };
 const turf = (o = {}) => ({ color: CO.turf, pattern: SURF.turf ?? PATTERN.plain, ...o });
 const chalk = (o = {}) => ({ color: CO.chalk, pattern: SURF.chalk ?? PATTERN.concrete, ...o });
@@ -57,7 +57,14 @@ for (let k = 8; k < 16; k++) {
 // earth ramps up onto the crest from outside (Alpha's right-front and left-front)
 const OUTER_RAMPS = CK.outer.map((k) => { const th = k * 22.5 * DEG, u = [Math.cos(th), Math.sin(th)];
   return R([r3(u[0] * CK.outerFoot), 0, r3(u[1] * CK.outerFoot)], [r3(u[0] * CK.rc), YR, r3(u[1] * CK.rc)], 2.4, turf({ tag: 'crater-bank-ramp', color: CO.slope })); });
-const CRATER_FLOOR = B(-5.1, 5.1, FL, YF, -5.1, 5.1, chalk({ tag: 'crater-floor', color: '#d9d2bf' }));
+const CRATER_FLOOR = B(-5.1, 5.1, FL, YF, -5.1, 5.1, turf({ tag: 'crater-floor', color: '#aaa77a', mural: [{ n: [0, 1, 0], id: 7 }] }));
+// the war relics in the slope (props.js dresses them): the giant ink cannon's turret deck at θ 315° (Alpha's left-front,
+// a square steel deck at 0.9 — flush with the slope uphill, a 1.7 m armoured wall toward the floor), the shell casing
+// at θ 225° (a prop, off limits)
+export const RELICS = { cannon: { th: 315, r: 7.2, S: 3.6, top: 0.9 }, shell: { th: 225, r: 7.6 } };
+const RC_ = RELICS.cannon, rcx = r3(Math.cos(RC_.th * DEG) * RC_.r), rcz = r3(Math.sin(RC_.th * DEG) * RC_.r);
+export const CANNON_AT = [rcx, RC_.top, rcz];
+const TURRET = O(rcx, rcz, RC_.S, RC_.S, YF, RC_.top, -RC_.th, { tag: 'cannon-deck', color: '#8a6048', pattern: PATTERN.nonslip, noPaint: NOSIDES });
 
 // ============================================================================================================ trenches
 const PARAPET = 0.3;
@@ -75,9 +82,11 @@ const t1Pieces = [];
   const segs = (a0, a1, gaps) => { const out = []; let a = a0; for (const [g0, g1] of gaps) { if (g0 > a) out.push([a, g0]); a = g1; } if (a1 > a) out.push([a, a1]); return out; };
   const nGaps = [T1.dropIn, ...T1_STAIRS.filter((s) => s.side > 0).map((s) => [s.x - s.w / 2, s.x + s.w / 2])].sort((p, q) => p[0] - q[0]);
   const sGaps = T1_STAIRS.filter((s) => s.side < 0).map((s) => [s.x - s.w / 2, s.x + s.w / 2]);
-  for (const [a, b] of segs(T1.x0, T1.x1, nGaps)) t1Pieces.push(B(a, b, YF, PARAPET, T1.z1, T1.z1 + w, o));
-  for (const [a, b] of segs(T1.x0, T1.x1, sGaps)) t1Pieces.push(B(a, b, YF, PARAPET, T1.z0 - w, T1.z0, o));
-  t1Pieces.push(B(T1.x0 - w, T1.x0, YF, PARAPET, T1.z0 - w, T1.z1 + w, o));   // west end (by the pillbox)
+  // (a timber revetment up to the downs, a sandbag parapet on it)
+  const wall = (x0, x1, z0, z1) => t1Pieces.push(B(x0, x1, YF, 0, z0, z1, { tag: 't1-revetment', color: CO.timber, pattern: PATTERN.weatherboard }), B(x0, x1, 0, PARAPET, z0, z1, o));
+  for (const [a, b] of segs(T1.x0, T1.x1, nGaps)) wall(a, b, T1.z1, T1.z1 + w);
+  for (const [a, b] of segs(T1.x0, T1.x1, sGaps)) wall(a, b, T1.z0 - w, T1.z0);
+  wall(T1.x0 - w, T1.x0, T1.z0 - w, T1.z1 + w);   // west end (by the pillbox)
   for (const s of T1_STAIRS) { const z = s.side > 0 ? T1.z1 : T1.z0; t1Pieces.push(R([s.x, YF, z], [s.x, 0, z + s.side * s.run], s.w, { tag: 't1-firestep', color: CO.timber, pattern: PATTERN.treads })); }
 }
 // T2 — the zig-zag communication trench on the left (2.25 m inside): a bay, a 45° dog-leg, a bay toward the cliff. Its
@@ -107,53 +116,74 @@ const bridgePieces = BRIDGES.flatMap(({ x, z }) => [
 // ============================================================================================================ the flooded crater
 export const POND = { c: [14.0, -13.25], r: 3.2, rim: 4.0, N: 12 };
 const POND_RIM = ringSegments(POND.c[0], POND.c[1], POND.N, POND.r, POND.rim, FL, (k) => (k % 2 ? 0.3 : 0.2), {
-  outer: true, opts: () => ({ tag: 'pond-rim', color: CO.ring, pattern: SURF.turf ?? PATTERN.plain }) });
+  outer: true, opts: () => turf({ tag: 'pond-rim', color: CO.slope }) });
 
 // ============================================================================================================ buildings
 // the visitor pavilion (spawn on its observation deck), its ramp toward mid and stairs off both sides; a clerestory block
 // along the back of the deck (off limits) closes the stage's back edge, flint walls either side of it
 export const PAV = { x: 9, z0: -45, z1: -36 };
 const pavilion = [
-  B(-PAV.x, PAV.x, 0, YD - 0.2, PAV.z0, PAV.z1, { tag: 'pavilion', color: CO.pavilion, pattern: PATTERN.concrete }),
+  B(-PAV.x, PAV.x, 0, YD - 0.2, PAV.z0, PAV.z1, { tag: 'pavilion', color: CO.pavilion, pattern: PATTERN.concrete, noPaint: [[0, 0, 1]] }),
   B(-PAV.x, PAV.x, YD - 0.2, YD, PAV.z0 + 1.4, PAV.z1, { tag: 'spawn-deck', color: CO.spawn, pattern: PATTERN.spawn }),
   B(-PAV.x, PAV.x, YD - 0.2, 5.6, PAV.z0, PAV.z0 + 1.4, { tag: 'pavilion-back', color: CO.pavilion, pattern: PATTERN.concrete, roof: true, noPaint: NOSIDES }),
-  R([0, 0, -29.2], [0, YD, PAV.z1], 3.6, { tag: 'pavilion-ramp', color: '#cfc9bc', pattern: PATTERN.rampboard }),
-  R([15.8, 0, -39.4], [PAV.x, YD, -39.4], 2.2, { tag: 'pavilion-stair', color: '#cfc9bc', pattern: PATTERN.treads }),
-  R([-15.8, 0, -39.4], [-PAV.x, YD, -39.4], 2.2, { tag: 'pavilion-stair', color: '#cfc9bc', pattern: PATTERN.treads }),
+  R([0, 0, -29.2], [0, YD, PAV.z1], 3.6, { tag: 'pavilion-steps', color: '#d6d1c5', pattern: PATTERN.stonestep }),
+  R([15.8, 0, -39.4], [PAV.x, YD, -39.4], 2.2, { tag: 'pavilion-stair', color: '#d6d1c5', pattern: PATTERN.stonestep }),
+  R([-15.8, 0, -39.4], [-PAV.x, YD, -39.4], 2.2, { tag: 'pavilion-stair', color: '#d6d1c5', pattern: PATTERN.stonestep }),
   B(-19.5, -PAV.x, 0, 2.6, -45, -44.4, { tag: 'boundary-wall', color: CO.flint, pattern: PATTERN.brick, roof: true, noPaint: NOSIDES }),
   B(PAV.x, 19.5, 0, 2.6, -45, -44.4, { tag: 'boundary-wall', color: CO.flint, pattern: PATTERN.brick, roof: true, noPaint: NOSIDES }),
 ];
 // the pillbox at the fire trench's west end (roof 2.4; a stair along its back wall)
 export const PILLBOX = { x0: -24, x1: -18.6, z0: -30.5, z1: -25.5 };
+// (walls to 2.05, the roof slab overhanging the front and sides; the stair climbs west along the back wall)
 const pillbox = [
-  B(PILLBOX.x0, PILLBOX.x1, 0, YP, PILLBOX.z0, PILLBOX.z1, { tag: 'pillbox', color: CO.concrete, pattern: PATTERN.concrete }),
-  R([-13.6, 0, PILLBOX.z0 - 1.1], [-19.0, YP, PILLBOX.z0 - 1.1], 2.2, { tag: 'pillbox-stair', color: CO.concrete, pattern: PATTERN.treads }),
+  B(PILLBOX.x0, PILLBOX.x1, 0, 2.05, PILLBOX.z0, PILLBOX.z1, { tag: 'pillbox', color: CO.concrete, pattern: PATTERN.concrete, mural: NOSIDES.map((n) => ({ n, id: 8 })) }),
+  B(PILLBOX.x0 - 0.2, PILLBOX.x1 + 0.2, 2.05, YP, PILLBOX.z0, PILLBOX.z1 + 0.2, { tag: 'pillbox-roof', color: CO.concrete, pattern: PATTERN.concrete }),
+  R([PILLBOX.x1, 0, PILLBOX.z0 - 1.1], [PILLBOX.x0, YP, PILLBOX.z0 - 1.1], 2.2, { tag: 'pillbox-stair', color: CO.concrete, pattern: PATTERN.treads }),
 ];
 // the memorial: obelisk on a two-step plinth out on the promontory
 export const MEMO = { c: [-22.6, -12.25] };
 const [mx, mz] = MEMO.c;
 const memorial = [
-  B(mx - 2.5, mx + 2.5, 0, YR, mz - 2.5, mz + 2.5, { tag: 'plinth', color: CO.stone, pattern: PATTERN.stonestep }),
-  B(mx - 1.25, mx + 1.25, YR, YP, mz - 1.25, mz + 1.25, { tag: 'plinth-top', color: CO.stone, pattern: PATTERN.stonestep }),
-  B(mx - 0.45, mx + 0.45, YP, 9.8, mz - 0.45, mz + 0.45, { tag: 'obelisk', color: '#f4f2ec', pattern: PATTERN.concrete, roof: true, noPaint: NOSIDES }),
+  B(mx - 2.5, mx + 2.5, 0, YR, mz - 2.5, mz + 2.5, { tag: 'plinth', color: CO.stone, pattern: PATTERN.pavers }),
+  B(mx - 1.25, mx + 1.25, YR, YP, mz - 1.25, mz + 1.25, { tag: 'plinth-top', color: CO.stone, pattern: PATTERN.pavers, mural: [{ n: [0, 0, -1], id: 9 }] }),
   R([mx, 0, mz - 2.5 - 2.7], [mx, YR, mz - 2.5], 2.4, { tag: 'plinth-steps', color: CO.stone, pattern: PATTERN.stonestep }),
 ];
-// blockout cover on the downs
+// sandbag emplacements on the downs (cover): straight walls and U-shaped gun pits, 0.95 high
+const bagwall = (x0, x1, z0, z1) => B(x0, x1, 0, 0.95, z0, z1, bags({ tag: 'emplacement' }));
 const cover = [
-  B(-4.5, -1.5, 0, 1.0, -15.5, -14.7, bags({ tag: 'emplacement' })),
-  B(7.0, 9.5, 0, 1.0, -18.5, -17.7, bags({ tag: 'emplacement' })),
-  B(-13.5, -12.7, 0, 1.0, -9.5, -6.5, bags({ tag: 'emplacement' })),
-  B(18.5, 21, 0, 1.0, -4.6, -3.8, bags({ tag: 'emplacement' })),
+  bagwall(-4.5, -1.75, -12.5, -11.75),                                    // mid: west of the path to the cut
+  bagwall(-9.5, -8.75, -15.5, -13.0), bagwall(-11.25, -9.5, -13.0, -12.25), // a gun pit on the downs (right-centre)
+  bagwall(8.25, 10.75, -19.0, -18.25),                                   // by the crossing, north of the dog-leg
+  bagwall(-22.25, -19.75, -4.25, -3.5),                                   // right flank, mid
+  bagwall(18.25, 20.75, -4.25, -3.5),                                     // left flank, mid
+  bagwall(-23.75, -21.25, -23.0, -22.25),                                 // right lane, west of the fire trench's end
+  bagwall(11.0, 13.5, -33.0, -32.25),                                     // forecourt, east
+];
+// interpretive boards: a painted panel (layout block, murals.js) in a steel frame (props.js craters_board)
+//   deg = the way the panel faces (0 = +z, 90 = +x)
+export const BOARDS = [
+  { x: 8.75, z: -21.25, deg: -90, id: 4 },   // THE GREAT TURF WAR (battle map), by the crossing, facing the path
+  { x: -5.5, z: -19.0, deg: 180, id: 5 },    // TRENCH LINE B, on the fire trench's north bank, facing it
+  { x: 9.25, z: -11.0, deg: 90, id: 6 },     // THE FLOODED CRATERS, facing the pond
+];
+const BOARD_W = 1.6, BOARD_Y = [0.65, 1.65];
+const boards = BOARDS.map((b) => O(b.x, b.z, BOARD_W, 0.06, BOARD_Y[0], BOARD_Y[1], b.deg, { tag: 'board', color: '#e9e4d6', pattern: PATTERN.plain,
+  noPaint: [[Math.sin(b.deg * DEG), 0, Math.cos(b.deg * DEG)], [-Math.sin(b.deg * DEG), 0, -Math.cos(b.deg * DEG)], [0, 1, 0]].map((v) => v.map(r3)),
+  mural: [{ n: [r3(Math.sin(b.deg * DEG)), 0, r3(Math.cos(b.deg * DEG))], id: b.id }] }));
+// the visitor paths (hoggin): the ramp foot → the crossing → north, a jog west, on to the crater's cut; a branch west
+// along the fire trench to the memorial steps
+export const PATHS = [
+  [-1.75, 4.5, -30.25, -27.75], [4.5, 7.5, -32.5, -15.5], [-1.5, 7.5, -15.5, -13.0], [-1.5, 1.5, -13.0, -7.5], [-23.75, -1.5, -18.25, -16.75],
 ];
 
 // ============================================================================================================ the coast
 // Alpha's half of the outline (x, z): the half line z = 0 and the back edge z = −45 are open (the land runs on)
 export const COAST = [
   [25.0, 0], [25.0, -5.0], [21.0, -9.0], [21.0, -17.5], [24.5, -21.0], [24.5, -30.5], [19.5, -35.5], [19.5, -45.0],
-  [-19.5, -45.0], [-19.5, -35.5], [-24.5, -30.5], [-24.5, -18.0], [-27.5, -15.0], [-27.5, -9.5], [-25.0, -7.0], [-25.0, 0],
+  [-19.5, -45.0], [-19.5, -37.0], [-24.5, -33.0], [-24.5, -18.0], [-27.5, -15.0], [-27.5, -9.5], [-25.0, -7.0], [-25.0, 0],
 ];
 const openEdge = (i) => { const a = COAST[i], b = COAST[(i + 1) % COAST.length]; return (a[1] === 0 && b[1] === 0) || (a[1] === -45 && b[1] === -45); };
-const LIP = edgeBands(COAST, 0.7, FL, (i) => (i % 2 ? 0.33 : 0.25), () => chalk({ tag: 'cliff-lip', color: CO.lip }), openEdge);
+const LIP = edgeBands(COAST, 0.7, FL, (i) => (i % 2 ? 0.33 : 0.25), () => turf({ tag: 'cliff-lip', color: CO.lip }), openEdge);
 
 // ============================================================================================================ the ground
 const T1_HOLES = [[T1.x0, T1.x1, T1.z0, T1.z1], ...t1Pieces.filter((d) => d.kind === 'box').map((d) => [d.min[0], d.max[0], d.min[2], d.max[2]]),
@@ -162,7 +192,8 @@ const T2_HOLES = [[T2.pts[0][0], T2.pts[0][0] + T2_ENDSTAIR.run, t2z.a[0], t2z.a
 const inHole = (x, z) => T1_HOLES.some((r) => inRect(r, x, z)) || T2_HOLES.some((r) => inRect(r, x, z)) || T2_LEGS.some((L) => inStrip(L, x, z)) || Math.hypot(x - POND.c[0], z - POND.c[1]) < POND.r;
 const CUT = [CRATER_FLOOR, ...FACETS.map((f) => f.piece)];                  // surfaces below the downs (no ground where they show)
 const STANDING = [...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces.filter((d) => d.kind !== 'ramp'), ...t2Pieces.filter((d) => d.kind !== 'ramp'),
-  ...bridgePieces, ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, ...LIP];
+  ...bridgePieces, ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, ...LIP, TURRET, ...boards];
+const inPath = (x, z) => PATHS.some((r) => x >= r[0] && x <= r[1] && z >= r[2] && z <= r[3]);
 function groundCells() {
   const all = [...CUT.map((d) => ({ d, cut: true })), ...STANDING.map((d) => ({ d, cut: false }))];
   const idx = new PieceIndex([...all, ...all.map(({ d, cut }) => ({ d: mirrorDef(d), cut }))]);
@@ -177,12 +208,22 @@ function groundCells() {
   G.fill((x, z) => {
     if (![[-h, -h], [h, -h], [h, h], [-h, h]].every(([a, b]) => inPoly(COAST, x + a, z + b))) return 0;
     const s = [pt(x, z), pt(x - h, z - h), pt(x + h, z - h), pt(x + h, z + h), pt(x - h, z + h)];
-    return s.includes(0) ? 0 : s.every((v) => v === 2) ? 2 : 1;
+    return s.includes(0) ? 0 : s.every((v) => v === 2) ? 2 : inPath(x, z) ? 3 : 1;
   });
   return G;
 }
-const GROUND_RECTS = groundCells().tile();
-const GROUND = GROUND_RECTS.map((r) => B(r.x0, r.x1, FL, 0, r.z0, r.z1, turf({ tag: 'downs' })));
+// the paths are tiled first (their own slabs), then the turf round them
+const GROUND_G = groundCells();
+const PATH_RECTS = (() => { const G = new Raster(-28, 28, -45, 0, 0.25); G.s = GROUND_G.s.map((v) => (v === 3 ? 1 : v === 2 ? 2 : 0)); return G.tile(); })();
+const TURF_RECTS = (() => {
+  const G = new Raster(-28, 28, -45, 0, 0.25);
+  const inP = (x, z) => PATH_RECTS.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1);
+  G.s = GROUND_G.s.map((v, k) => { if (v !== 1 && v !== 2) return 0; const x = G.cx(k % G.nx), z = G.cz((k / G.nx) | 0); return inP(x, z) ? 0 : v; });
+  return G.tile();
+})();
+const GROUND_RECTS = [...PATH_RECTS, ...TURF_RECTS];
+const GROUND = [...PATH_RECTS.map((r) => B(r.x0, r.x1, FL, 0, r.z0, r.z1, { tag: 'path', color: CO.path, pattern: PATTERN.asphalt })),
+  ...TURF_RECTS.map((r) => B(r.x0, r.x1, FL, 0, r.z0, r.z1, turf({ tag: 'downs' })))];
 // trench floors (duckboards): the bays' interiors, run on under the revetments wherever no ground slab is
 const FLOORS = (() => {
   const G = new Raster(-28, 28, -45, 0, 0.25), h = 0.123;
@@ -218,10 +259,10 @@ const LAYOUT_CRATERS = {
   bounds: { minX: -28, maxX: 28, minZ: -45, maxZ: 45 },
   spawnPads: [[0, YD, -40.5], [0, YD, 40.5]],
   spawnBarrier: 4.2,
-  env: { backdrop: buildBackdrop, edge: 'none', boats: false },
+  env: { backdrop: (kit) => buildBackdrop(kit, { coast: COAST, ponds: [POND] }), edge: 'none', boats: false },
   single: [CRATER_FLOOR],
   half: [...GROUND, ...FLOORS, ...LIP, ...FACETS.map((f) => f.piece), ...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces, ...t2Pieces, ...bridgePieces,
-    ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover],
+    ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, TURRET, ...boards],
   zones: ZONES,
   tower: TOWER,
   intro: { from: [18, 12, 6], lookFrom: [0, 1, -4], toBack: 3.0 },
