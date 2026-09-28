@@ -547,10 +547,10 @@ export const MAPS = [
   { id: 'lockgate', name: 'Lockgate Canals', blurb: 'Drained locks through a brick warehouse district: the canal splits the map, so hold the bridge and the gates.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'terraces', name: 'Terrace Heights', blurb: 'A whitewashed hill village: hold the terraces, fight for the stairs and drop in on the Piazzetta.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   // new regions (2026-09-28): places in the Splatoon world no game has visited — built for Turf War, Zone Control and Tower Command
-  { id: 'nantai', name: 'Mount Nantai', blurb: 'The observatory grounds high on Mount Nantai, where the stream that starts Inkadia runs past the telescopes.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
-  { id: 'craters', name: 'Turf War Craters', blurb: 'Chalk downs above The Cape, still scarred by the Great Turf War: fight down into the Great Crater between two rusted ink cannons and along the old trench lines.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
-  { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowbound home village: fight over the little station, up its covered footbridges and down the snowy lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
-  { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'A remote archipelago raised from the sea: hold the sandbar under the Great Arch, climb the cascade pillars and fight along the ancient causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
+  { id: 'nantai', name: 'Mount Nantai', blurb: 'The observatory grounds on Mount Nantai: cross the brook by bridge, weir or log and take the lawn from Grizzco\'s star party.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'craters', name: 'Turf War Craters', blurb: 'Chalk downs above The Cape, scarred by the Great Turf War: fight down into the Great Crater and along the old trench lines.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowy home village: fight over the little station, up its footbridges and down the lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'A remote archipelago risen from the sea: hold the sandbar under the Great Arch and fight along the ancient causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];
