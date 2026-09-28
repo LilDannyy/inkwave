@@ -168,7 +168,7 @@ export const BOARDS = [
   { x: 9.25, z: -11.0, deg: 90, id: 6 },     // THE FLOODED CRATERS, facing the pond
 ];
 const BOARD_W = 1.6, BOARD_Y = [0.65, 1.65];
-const boards = BOARDS.map((b) => O(b.x, b.z, BOARD_W, 0.06, BOARD_Y[0], BOARD_Y[1], b.deg, { tag: 'board', color: '#e9e4d6', pattern: PATTERN.plain,
+const boards = BOARDS.map((b) => O(b.x, b.z, BOARD_W, 0.06, BOARD_Y[0], BOARD_Y[1], b.deg, { tag: 'board', color: '#e9e4d6', pattern: PATTERN.plain, roof: true,
   noPaint: [[Math.sin(b.deg * DEG), 0, Math.cos(b.deg * DEG)], [-Math.sin(b.deg * DEG), 0, -Math.cos(b.deg * DEG)], [0, 1, 0]].map((v) => v.map(r3)),
   mural: [{ n: [r3(Math.sin(b.deg * DEG)), 0, r3(Math.cos(b.deg * DEG))], id: b.id }] }));
 // the visitor paths (hoggin): the ramp foot → the crossing → north, a jog west, on to the crater's cut; a branch west
