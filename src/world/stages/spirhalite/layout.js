@@ -23,7 +23,7 @@ export { OUTLINE };
 // causeway → the mid islet's head).
 // Heights: 0 sand · 1.3 dunes / causeway / pillar plinth · 2.5 crests / pillar tier · 3.2 helipads.
 const H1 = 1.3, H2 = 2.5, HP = 3.2, BOT = -2.4;
-export const PAD = [6, -36];                                    // Alpha's helipad (deck centre)
+export const PAD = [8.5, -36];                                    // Alpha's helipad (deck centre)
 const K = { sand: '#e6dfcf', wet: '#d8cfbd', dune: '#ebe4d4', stone: '#c9c4b8', stoneDk: '#aaa498', steel: '#8d979e', steelDk: '#59626a', pad: '#dcdcd6', moss: '#9aa878' };
 const sand = (o = {}) => ({ color: K.sand, pattern: SURF.dune, ...o });
 const moss = (o = {}) => ({ color: K.dune, pattern: SURF.moss, ...o });
@@ -107,12 +107,12 @@ const SPIRHALITE = {
 
     // ================= the helipad islet (the tail): the high dune the pad stands on, its west arm down to the pinch,
     // the shoulder north of the pad down to the spit
-    B(-1.5, 15, 0, H1, -42.6, -30.6, sand({ tag: 'pad-dune', color: K.dune })),
+    B(-1.5, 16, 0, H1, -42.2, -30.6, sand({ tag: 'pad-dune', color: K.dune })),
     B(-5.2, -1.5, 0, H1, -37.5, -34.5, moss({ tag: 'pad-dune-arm' })),
     slope(-8.3, -36, 0, -5.2, -36, H1, 3),
-    B(1.6, 11, 0, H1, -30.6, -26.0, moss({ tag: 'pad-shoulder' })),
+    B(1.6, 12.6, 0, H1, -30.6, -26.0, moss({ tag: 'pad-shoulder' })),
     slope(-1.5, -29.2, 0, 1.6, -29.2, H1, 2.8),
-    slope(18.1, -36.5, 0, 15, -36.5, H1, 7),
+    slope(19.1, -36.5, 0, 16, -36.5, H1, 5.6),
     // spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune; a steel frame body R 5.75, the deck
     // plate R 5.9 overhanging it: props.js dresses both), stairs north onto the shoulder and west onto the arm
     ...OCT(PAD[0], PAD[1], 5.75, H1, 3.0, { tag: 'helipad-frame', color: K.steelDk, pattern: PATTERN.metalpanel, noPaint: OCTSIDES }),
@@ -167,15 +167,15 @@ const SPIRHALITE = {
   // Tower Command (authored on Bravo's side, z > 0: Alpha pushes along it), zig-zagging along the S: along the central
   // sandbar and the mid islet's north shore to the bend's head, CLIMB the causeway's sheer end (checkpoint 1 at its
   // foot), along the causeway over the inlet, DROP off its broken end onto the camp islet (checkpoint 2 at the corner),
-  // along the camp islet and over the pinch to the goal below the helipad's west stair
+  // along the camp islet and over the pinch to the goal below the helipad's west stair, 13 m short of the pad
   tower: {
-    path: [[0, 0], [10, 0], [10, 3], [29, 3], [29, 31], [PAD[0], 31]],
+    path: [[0, 0], [10, 0], [10, 3], [29, 3], [29, 31], [3.5, 31]],
     checkpoints: [[29, 8], [29, 31]],
   },
   // match intro: opens under the Great Arch's crown looking along it at the cascade pillar, then pulls back to your pad
   intro: { from: [-7, 6.5, 6], lookFrom: [4, 5.5, -16], toBack: 3.0 },
-  // stage-select picture: high behind Alpha's helipad and its helicopter — the S sweeping away, the arch across it
-  art: { from: [22, 24, -64], look: [-4, 2, -8], fov: 58 },
+  // stage-select picture: high over Alpha's helipad — the S sweeping away round both lagoons, the arch across it
+  art: { from: [6, 54, -72], look: [-1, 0, -8], fov: 56 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
