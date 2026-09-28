@@ -1013,7 +1013,7 @@ export const PLACEMENTS = [
   // ================= the Great Crater: the relics, rubble, poppies in the slopes
   { type: 'craters_cannon', pos: [...polar(315, 7.2).slice(0, 1), 0.9, polar(315, 7.2)[1]], rotY: Math.atan2(Math.cos(ang(315)), Math.sin(ang(315))) },
   { type: 'craters_shell', pos: [polar(225, 7.6)[0], coneY(7.6, 225) - 0.05, polar(225, 7.6)[1]], rotY: -ang(135) },
-  { type: 'craters_boulder', pos: [-3.0, -1.0, -3.0], s: 0.75, seed: 1 },
+  { type: 'craters_boulder', pos: [-4.3, -1.0, -2.2], s: 0.7, seed: 1 },
   { type: 'craters_boulder', pos: [1.6, -1.0, -3.9], s: 0.6, flat: 0.65, seed: 3 },
   ...[[255, 7.4], [200, 8.3], [345, 6.9], [282, 8.9], [238, 9.3], [300, 9.6], [192, 6.4], [330, 9.4]].map(([th, r], i) => ({ type: 'craters_poppies', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.02).toFixed(2), +polar(th, r)[1].toFixed(2)], r: 0.6 + rnd(i) * 0.4, n: 8 + (i % 4), seed: i + 1 })),
   ...[190, 205, 220, 245, 300, 320, 340, 355].map((th, i) => ({ type: 'craters_tussock', pos: [+polar(th, 10.7)[0].toFixed(2), 1.2, +polar(th, 10.7)[1].toFixed(2)], s: 0.5 + rnd(i * 5) * 0.3, seed: i })),

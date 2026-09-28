@@ -68,6 +68,9 @@ export const RELICS = { cannon: { th: 315, r: 7.2, S: 3.6, top: 0.9 }, shell: { 
 const RC_ = RELICS.cannon, rcx = r3(Math.cos(RC_.th * DEG) * RC_.r), rcz = r3(Math.sin(RC_.th * DEG) * RC_.r);
 export const CANNON_AT = [rcx, RC_.top, rcz];
 const TURRET = O(rcx, rcz, RC_.S, RC_.S, YF, RC_.top, -RC_.th, { tag: 'cannon-deck', color: '#8a6048', pattern: PATTERN.nonslip, noPaint: NOSIDES });
+// the stone bench ring round ground zero (4 Portland stone benches on the diagonals, 0.5 high): cover in the centre
+// zone, and a step for kids to hop onto the tower from (it starts here, its deck 1.6 above the floor)
+const BENCHES = [225, 315].map((th) => O(r3(Math.cos(th * DEG) * 3.5), r3(Math.sin(th * DEG) * 3.5), 0.55, 2.0, YF, YF + 0.5, -th, { tag: 'gz-bench', color: CO.stone, pattern: PATTERN.pavers }));
 
 // ============================================================================================================ trenches
 const PARAPET = 0.3;
@@ -199,7 +202,7 @@ const T2_HOLES = [[T2.pts[0][0], T2.pts[0][0] + T2_ENDSTAIR.run, t2z.a[0], t2z.a
 const inHole = (x, z) => T1_HOLES.some((r) => inRect(r, x, z)) || T2_HOLES.some((r) => inRect(r, x, z)) || T2_LEGS.some((L) => inStrip(L, x, z)) || Math.hypot(x - POND.c[0], z - POND.c[1]) < POND.r;
 const CUT = [CRATER_FLOOR, ...FACETS.map((f) => f.piece)];                  // surfaces below the downs (no ground where they show)
 const STANDING = [...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces.filter((d) => d.kind !== 'ramp'), ...t2Pieces.filter((d) => d.kind !== 'ramp'),
-  ...bridgePieces, ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, ...LIP, TURRET, ...boards];
+  ...bridgePieces, ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, ...LIP, TURRET, ...boards, ...BENCHES];
 const inPath = (x, z) => PATHS.some((r) => x >= r[0] && x <= r[1] && z >= r[2] && z <= r[3]);
 function groundCells() {
   const all = [...CUT.map((d) => ({ d, cut: true })), ...STANDING.map((d) => ({ d, cut: false }))];
@@ -273,7 +276,7 @@ const LAYOUT_CRATERS = {
   },
   single: [CRATER_FLOOR],
   half: [...GROUND, ...FLOORS, ...LIP, ...FACETS.map((f) => f.piece), ...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces, ...t2Pieces, ...bridgePieces,
-    ...POND_RIM.map((c) => c.piece), POND_STILL, ...pavilion, ...pillbox, ...memorial, ...cover, TURRET, ...boards],
+    ...POND_RIM.map((c) => c.piece), POND_STILL, ...pavilion, ...pillbox, ...memorial, ...cover, TURRET, ...boards, ...BENCHES],
   zones: ZONES,
   tower: TOWER,
   // the intro opens high over the enemy's side of the crater (the cannons, the obelisk across) and sweeps down the
