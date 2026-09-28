@@ -56,7 +56,9 @@ const _v = new V3(), _d = new V3(), _p0 = new V3();
 // a drop's edge before it comes down (it never cuts through anything). The platform keeps one heading all match
 // (a square that never swings at a corner): the stage's grid, from the path's own directions.
 const PSTEP = 0.1;                      // floor sampling along a run (m)
-const HEAD = 3.0;                       // headroom the tower needs over its base (platform + riders): lower → climbed
+// headroom the tower needs over its base (the platform, its pillar + cap, a margin; riders' heads are lower): lower → climbed
+export const TOWER_HEAD = TOWER.platformH + TOWER.pillarH + TOWER.pillarCap + 0.08;
+const HEAD = TOWER_HEAD;
 const JUMP = 0.45;                      // a height change within one sample bigger than this is a wall / drop
 const _ids = [], _hits = [];
 
