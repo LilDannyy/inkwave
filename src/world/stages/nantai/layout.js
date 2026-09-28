@@ -107,7 +107,8 @@ const HALF = [
   R([10.1, G1, -38.1], [10.1, G3, -44.4], 2.2, steps({ tag: 'east-stair' })),
 
   // ---------------- the first terrace (G1): the front of the observatory, the east yard, the shelf over the log reach
-  B(-3, 17.5, G0, G1, -36.5, -22.2, ashlar({ tag: 't1' })),
+  B(-3, 9, G0, G1, -36.5, -22.2, ashlar({ tag: 't1' })),
+  B(9, 17.5, G0, G1, -36.5, -22.2, ashlar({ tag: 't1', mural: [{ n: [0, 1, 0], id: MURAL.rose }] })),   // (split on a 2.4 m repeat: no seam; the compass rose centred on it)
   B(3.4, 17.5, G0, G1, -22.2, -20, ashlar({ tag: 't1', mural: [{ n: [0, 0, 1], id: MURAL.inscription }] })),
   B(15, 17.5, G0, G1, -20, -17.1, ashlar({ tag: 't1-shelf' })),
   B(9, 17.5, G0, G1, -45.4, -36.5, ashlar({ tag: 'east-yard' })),
@@ -188,6 +189,7 @@ const TOWER = {
 
 const LAYOUT_NANTAI = {
   id: 'nantai',
+  water: 'marina',   // the tarn: calm, glassy water that mirrors the mountain (the marina water mode: no sea spray)
   bounds: { minX: -26, maxX: 26, minZ: -46, maxZ: 46 },
   spawnPads: [[0, G3, -41], [0, G3, 41]],
   spawnBarrier: 4.2,
@@ -195,7 +197,8 @@ const LAYOUT_NANTAI = {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, stars: true,
     // the tarn: cold, clear, calm — deep teal-green, pale green shallows; crisp mountain air (a deeper zenith, less haze)
     theme: {
-      all: { seaDeep: '#0d3a3a', seaShallow: '#2a7a70', seaCrest: '#86cbb6', foam: '#eef6f2', waveStrength: 0.32, seaAmbientK: 0.66 },
+      all: { seaDeep: '#0d3a3a', seaShallow: '#2a7a70', seaCrest: '#86cbb6', foam: '#eef6f2', waveStrength: 0.32, seaAmbientK: 0.66,
+        marina: { channel: '#0e4441', shade: '#061413', calm: 0.4, lap: 0.7, caustic: 1.6, wet: 0.45 } },
       day: { zenith: '#1453c2', skyMid: '#4b97e6', horizon: '#d3e9f6', haze: [1 / 2600, 0.85, 340], fog: [30, 1300] },
     },
   },
@@ -204,7 +207,9 @@ const LAYOUT_NANTAI = {
   // the centre of the lawn: one slab across the centre line (self-symmetric), so the turf runs on without a seam
   single: [B(-7.2, 7.2, FL, G0, -9.6, 9.6, turf({ tag: 'lawn' }))],
   half: HALF,
-  decor: { lamps: [], palms: [], flags: [] },
+  // two heritage lamps per half light the paths at the bridge head and the terrace steps at dusk; the team flags fly
+  // from the forecourt's back corners
+  decor: { lamps: [[-4.4, -8.9], [4.3, -20.6]], palms: [], flags: [[-8.3, G3, -44.7], [4.7, G3, -44.7]] },
 };
 
 export const LAYOUT = LAYOUT_NANTAI;

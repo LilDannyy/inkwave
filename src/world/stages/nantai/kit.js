@@ -250,40 +250,49 @@ export function makeKit(H) {
   // ------------------------------------------------------------------------------------------ nature
   // granite boulder: a lumpy blob squashed into a rounded block, vertex-shaded darker underneath and lighter on top
   // (lichen tints added per placement); cached per seed + detail
+  // granite boulder: a lumpy icosphere pulled toward a rounded block (cleaved faces, soft arrises), longer one way,
+  // the base flattened (it sits in the ground), faceted; per-face colour: weathered grey, darker toward the ground,
+  // lichen (sulphur yellow / grey-green) on the faces that look up. Local: base at y 0, top ≈ 1.6, radius ≈ 1.
   const rockGeo = (seed, det = 1, lump = 0.22) => tpl(['rk', seed, det, lump].map(kf).join('|'), () => {
-    let g = blobGeo(1, det, seed, lump, 0.72, 1.12);
-    const P0 = g.attributes.position;
-    // cleaved granite: pull vertices toward a rounded box (flat faces, soft arrises), then facet (flat normals)
+    let g = blobGeo(1, det, seed, lump + 0.06, 0.72, 1.12);
+    const P0 = g.attributes.position, el = 1.1 + 0.35 * hash(seed * 1.3), cut = -0.35 - 0.2 * hash(seed * 2.9);
     for (let i = 0; i < P0.count; i++) {
-      const x = P0.getX(i), y = P0.getY(i), z = P0.getZ(i);
-      const k = 0.8 + 0.2 * Math.max(Math.abs(x), Math.abs(y) * 1.15, Math.abs(z));
-      P0.setXYZ(i, x / k, y / k, z / k);
+      let x = P0.getX(i), y = P0.getY(i), z = P0.getZ(i);
+      const k = 0.78 + 0.22 * Math.max(Math.abs(x), Math.abs(y) * 1.1, Math.abs(z));
+      x /= k; y /= k; z /= k;
+      if (y < cut) y = cut + (y - cut) * 0.15;                 // flat underside, just below the ground line
+      x *= el; y = (y - cut) * 0.62 / (1 - cut) * 1.62;        // base at 0, top ≈ 1
+      P0.setXYZ(i, x, y, z);
     }
     g = g.toNonIndexed();
     g.computeVertexNormals();
     const P = g.attributes.position, N = g.attributes.normal, C = new Float32Array(P.count * 3);
     for (let i = 0; i < P.count; i += 3) {
-      // per-face shade: lighter facing up, darker underneath, a little per-facet variation
-      const ny = N.getY(i), v = 0.8 + 0.22 * Math.max(0, ny) - 0.12 * Math.max(0, -ny) + 0.08 * (hash(i * 0.37 + seed) - 0.5);
-      for (let k = 0; k < 3; k++) { const y = P.getY(i + k), sh = v * (0.86 + 0.14 * Math.min(1, Math.max(0, (y + 1) / 1.6))); C[(i + k) * 3] = sh; C[(i + k) * 3 + 1] = sh; C[(i + k) * 3 + 2] = sh; }
+      const ny = N.getY(i), cx = (P.getX(i) + P.getX(i + 1) + P.getX(i + 2)) / 3, cz = (P.getZ(i) + P.getZ(i + 1) + P.getZ(i + 2)) / 3;
+      const n = Math.sin(cx * 3.1 + seed) * Math.sin(cz * 2.7 - seed * 0.7);
+      let r = 0.84 + 0.18 * Math.max(0, ny) - 0.1 * Math.max(0, -ny) + 0.07 * (hash(i * 0.37 + seed) - 0.5), gg = r, bb = r;
+      if (ny > 0.35 && n > 0.25) { const L = hash(seed + cx * 7) > 0.5; r *= L ? 1.02 : 0.9; gg *= L ? 0.95 : 0.97; bb *= L ? 0.62 : 0.84; }   // lichen
+      for (let k = 0; k < 3; k++) { const y = P.getY(i + k), sh = 0.8 + 0.2 * Math.min(1, y / 1.1); C[(i + k) * 3] = r * sh; C[(i + k) * 3 + 1] = gg * sh; C[(i + k) * 3 + 2] = bb * sh; }
     }
     g.setAttribute('color', new THREE.BufferAttribute(C, 3));
     return g;
   });
-  // a boulder: base on the ground (y), radius r, squashed by sy; roof collider on request (unreachable tops slide you off)
+  // a boulder with its base at y (sunk a little), radii rx / rz, height ry·1.62 (a squat boulder: ry ≈ 0.5·rx)
   function rock(B, x, y, z, rx, ry, rz, seed, o = {}) {
-    B.add(o.mat ?? 'paint', rockGeo(seed % 17, o.det ?? 1, o.lump ?? 0.22), o.c ?? K.granite, x, y + ry * 0.62, z, { sx: rx, sy: ry, sz: rz, ry: o.rot ?? hash(seed) * TAU, rx: o.tilt ?? 0, ao: o.ao });
+    B.add(o.mat ?? 'paint', rockGeo(seed % 23, o.det ?? 1, o.lump ?? 0.22), o.c ?? K.granite, x, y - 0.06 * ry, z, { sx: rx, sy: ry * 1.62, sz: rz, ry: o.rot ?? hash(seed) * TAU, rx: o.tilt ?? 0, ao: o.ao });
   }
-  // dwarf mountain pine, bent by the wind (local +X = downwind): a leaning trunk and flat, layered, clumped pads
+  // dwarf mountain pine, bent by the wind (local +X = downwind): a twisting trunk, clumped needle pads up it and out
+  // downwind, the lowest sweeping the ground
   const pineGeo = (seed) => tpl('pine|' + seed, () => {
     const parts = [];
     const r = (i) => hash(seed * 13.7 + i * 7.3);
-    const lean = 0.25 + 0.2 * r(1);
-    const pts = [[0, 0, 0], [0.12, 0.5, 0], [0.3 + lean * 0.4, 1.05, 0.05], [0.55 + lean, 1.55, 0.0], [0.8 + lean, 1.9, -0.05]];
-    parts.push({ g: H.tubeGeo(pts, (t) => 0.1 - 0.05 * t, 6), c: K.bark });
-    // pads: flattened puffs hugging the trunk's top half, sheared downwind
-    const pads = [[0.35, 1.0, 0.1, 0.55], [0.7 + lean, 1.45, -0.1, 0.65], [0.95 + lean, 1.85, 0.1, 0.55], [0.1, 0.62, -0.2, 0.42], [1.2 + lean, 1.62, 0.25, 0.4]];
-    pads.forEach(([x, y, z, s], i) => parts.push({ g: H.puffGeo(1, seed + i), m: [x, y, z, s * 1.35, s * 0.55, s * 1.05], c: i % 2 ? K.pine : K.pineDk }));
+    const lean = 0.35 + 0.25 * r(1), tw = (r(2) - 0.5) * 0.4;
+    const pts = [[0, 0, 0], [0.08, 0.45, tw * 0.3], [0.3 + lean * 0.3, 0.95, tw], [0.6 + lean * 0.8, 1.4, tw * 0.5], [0.95 + lean, 1.7, -tw * 0.4]];
+    parts.push({ g: H.tubeGeo(pts, (t) => 0.13 - 0.07 * t, 6), c: K.bark });
+    parts.push({ g: H.tubeGeo([[0.3 + lean * 0.3, 0.95, tw], [0.1, 1.25, 0.45 + tw], [-0.15, 1.35, 0.6]], (t) => 0.06 - 0.03 * t, 5), c: K.bark });
+    const pads = [[0.05, 0.35, 0.05, 0.62, 0.34], [0.55 + lean * 0.5, 1.05, 0.25, 0.58, 0.36], [0.85 + lean, 1.45, -0.15, 0.62, 0.38], [1.2 + lean, 1.72, 0.1, 0.5, 0.3],
+      [-0.1, 1.3, 0.62, 0.42, 0.28], [0.4 + lean * 0.4, 1.6, 0.05, 0.46, 0.34], [1.45 + lean, 1.35, -0.25, 0.38, 0.24]];
+    pads.forEach(([x, y, z, s, h], i) => parts.push({ g: H.puffGeo(1, seed * 3 + i), m: [x, y, z, s * (1.25 + 0.2 * r(i + 5)), h * 1.4, s * (0.95 + 0.2 * r(i + 9))], c: i % 3 === 0 ? K.pineDk : i % 3 === 1 ? K.pine : K.pineLt }));
     return parts;
   });
   function pine(B, x, y, z, s, seed, rotY) {
@@ -293,6 +302,16 @@ export function makeKit(H) {
       else B.add('wood', p.g, p.c, 0, 0, 0);
     }
     B.pop();
+  }
+  // a low clump of alpine heather / dwarf shrub (visual; the grass and moss round rocks), w wide
+  const heathGeo = (seed) => tpl('heath|' + seed, () => H.puffGeo(1, seed));
+  function heath(B, x, y, z, w, seed, c) {
+    const n = 3 + (seed % 3);
+    for (let i = 0; i < n; i++) {
+      const a = hash(seed + i * 3.1) * TAU, rr = w * 0.3 * hash(seed * 2 + i);
+      const s = w * (0.28 + 0.16 * hash(seed * 5 + i));
+      B.add(NS('foliage'), heathGeo((seed + i) % 6), c ?? (i % 2 ? K.moss : K.mossDk), x + Math.cos(a) * rr, y + s * 0.18, z + Math.sin(a) * rr, { sx: s, sy: s * 0.45, sz: s * 0.9 });
+    }
   }
 
   // ------------------------------------------------------------------------------------------ fittings
@@ -308,5 +327,5 @@ export function makeKit(H) {
     if (o.mid !== false) seg(B, 'metal', c, [a[0], a[1] + h * 0.5, a[2]], [b[0], b[1] + h * 0.5, b[2]], 0.03, 0.03, { round: true, seg: 6 });
   }
 
-  return { K, NS, GB, TPL, tpl, kf, hash, pbox, cylGeo, ucyl, ccyl, seg, rot, colC, colSeg, ROOF, RAIL, PERCH, EA, letters, textW, boardSign, glyph, rockGeo, rock, pine, pineGeo, railing, col, shade, mixc, latheGeo, extrudeGeo };
+  return { K, NS, GB, TPL, tpl, kf, hash, pbox, cylGeo, ucyl, ccyl, seg, rot, colC, colSeg, ROOF, RAIL, PERCH, EA, letters, textW, boardSign, glyph, rockGeo, rock, pine, pineGeo, heath, railing, col, shade, mixc, latheGeo, extrudeGeo };
 }
