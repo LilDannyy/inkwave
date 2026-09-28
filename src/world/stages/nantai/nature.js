@@ -193,16 +193,16 @@ export function registerNature(D, H, T) {
       B.cyl('metal', K.black, 0.03, 0.18, 0, 0, 0, { seg: 8 });
       B.sph('metal', K.steelLt, 0.05, 0, 0.12, 0, { ws: 10, hs: 8 });
       B.pop();
-      const cab = [[mx, top + 0.02, mz], [mx - 0.5, top + 0.02, mz + 0.4], [mx - 1.2, top + 0.02, mz + 0.1], [mx - 1.9, top + 0.02, mz + 0.6], [-2.35, top - 0.2, mz + 0.9], [-2.6, 0.02, 1.0]];
+      const cab = [[mx, top + 0.02, mz], [mx - 0.5, top + 0.02, mz + 0.4], [mx - 1.2, top + 0.02, mz + 0.9], [mx - 1.5, top + 0.02, mz + 1.6], [-1.3, top - 0.2, 2.35], [-1.6, 0.02, 2.9], [-2.9, 0.02, 3.3]];
       B.add('rubber', H.tubeGeo(cab, 0.018, 5), K.black, 0, 0, 0);
       // the crate of spare cables at the foot (cover, low)
-      B.push(-3.4, 0, 1.4, 0.3);
+      B.push(-3.45, 0, 3.6, 0);
       B.box('wood', K.timber, 1.0, 0.55, 0.7, 0, 0.275, 0, { r: 0.03 });
       for (const y of [0.12, 0.42]) pbox(B, 'wood', K.timberDk, 1.02, 0.06, 0.72, 0, y, 0);
       for (let i = 0; i < 5; i++) B.tor('rubber', i % 2 ? K.black : K.grizzBrown, 0.14, 0.025, -0.3 + i * 0.15, 0.58, (hash(i) - 0.5) * 0.3, { rx: HP + 0.3, rs: 5, ts: 14 });
       letters(B, 'MIC CABLES', { h: 0.07, x: 0, y: 0.24, z: 0.355, c: K.white, flat: true, wt: 0.22 });
       B.pop();
-      colC(B, -3.4, 0, 1.4, 1.1, 0.6, 0.85, ROOF);   // (off-limits top: bots never park on it against the ridge wall)
+      colC(B, -3.45, 0, 3.6, 1.1, 0.6, 0.7, ROOF);   // (flush with the ridge wall, off-limits top: nobody wedges or parks there)
       // the sign, hand-painted on a board on a stake, at the foot facing the brook (+Z local → the hollow's front)
       B.push(1.2, 0, 3.4, -0.25);
       pbox(B, 'wood', K.timberDk, 0.08, 1.35, 0.08, 0, 0.62, 0);
