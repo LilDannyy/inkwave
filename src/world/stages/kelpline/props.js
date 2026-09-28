@@ -7,7 +7,7 @@
 //
 // Conventions: metres, Y up, `pos` = base point, rotY turns local +Z (the "front"). Wall-mounted pieces treat local
 // z = 0 as the wall face and project toward +Z. Signage uses 3D channel / flat painted letters from a stroke font.
-import { LOCAL, ROT_RAD, toWorld, GRID, CROSSOVER } from './layout.js';
+import { LOCAL, ROT_RAD, toWorld, AISLE } from './layout.js';
 
 const P = Math.PI;
 
@@ -544,7 +544,7 @@ export function register(D, H) {
   // the door end (two leaves, four locking bars with cams + handles, hinges, CSC plate, owner code), or for reefers the
   // machinery end at −Z (grille, fan, control box, power cable). Everything hugs the block faces (≤ 4 cm proud).
   function containerBody(B, x, y, z, len, color, o = {}) {
-    const L = len === 20 ? 6.06 : 12.19, W = 2.44, Hh = o.h ?? 2.6, c = color, dk = shade(c, 0.8), dk2 = shade(c, 0.6);
+    const L = len === 20 ? 6.06 : len === 10 ? 2.99 : 12.19, W = 2.44, Hh = o.h ?? 2.6, c = color, dk = shade(c, 0.8), dk2 = shade(c, 0.6);
     B.push(x, y, z, o.ry ?? 0);
     if (o.bottom) {
       // loose box (hanging from the spreader / on a chassis): core + ribbed side sheets + cross members underneath
@@ -628,7 +628,7 @@ export function register(D, H) {
   }
   D.kelpline_box = {
     desc: 'Container dressing for a stack box (the body is a level block): corner posts + castings, rails, forklift pockets, door end (locking bars, cams, hinges, CSC plate, owner code) at +Z or a reefer machinery end — hardware only over the block face, so ink on the end shows. pos = bottom centre, local Z = length.',
-    params: { len: '20 | 40', color: 'box paint', door: '+1 door at local +Z, -1 at −Z', reefer: 'bool', code: 'owner code' }, variants: 1, mount: 'ground',
+    params: { len: '10 | 20 | 40', color: 'box paint', door: '+1 door at local +Z, -1 at −Z', reefer: 'bool', code: 'owner code' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
       containerBody(B, 0, 0, 0, o.len ?? 20, o.color ?? '#a8583f', { doorAt: o.door ?? 1, reefer: !!o.reefer, code: o.code });
@@ -787,13 +787,17 @@ export function register(D, H) {
   // between the reefer rows): column pairs every ~6 m at the alley edges (colliders), channel stringers + cross members
   // under the grate catwalk (catwalk top 2.6), top frame at 5.7 with cable trays, CEE socket boxes + plugged cables
   // to the reefers, alley lights under the catwalk, floods on the top frame, R2 end plates.
+  // Tower Command's build (layout.js AISLE) passes gap: [z0, z1] where the catwalk is cut for the tower's aisle (its
+  // stringers stop, hazard-striped ends), bare: [sx, z] — no reefer row on side sx below z (no cables to plug in) — and
+  // landing: [z0, z1], the grate landing at row 1's stair top off the −X side (the grate is a level block).
   D.kelpline_reeferrack = {
     desc: 'Reefer plug-in rack over an alley (pos = alley centre at ground, local Z along it): columns (colliders), catwalk stringers + cross members, top frame + cable trays, socket boxes + cables, lights, end plates.',
-    params: { length: 'm (18.35)', width: 'alley m (2.0)', name: 'end plate (R2)' }, variants: 1, mount: 'ground',
+    params: { length: 'm (18.35)', width: 'alley m (2.0)', name: 'end plate (R2)', gap: '[z0, z1] catwalk cut', bare: '[sx, z] no cables on side sx below z', landing: '[z0, z1] stair landing off −X' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
       const L = o.length ?? 18.35, W = o.width ?? 2.0, YC = 2.6, YT = 5.7, bl = K.blue, bd = K.blueDk;
       const n = Math.max(2, Math.round(L / 6)) + 1, cz = (i) => -L / 2 + 0.15 + ((L - 0.3) * i) / (n - 1);
+      const gap = o.gap, inGap = (zz) => !!gap && zz > gap[0] - 0.05 && zz < gap[1] + 0.05;
       for (let i = 0; i < n; i++) {
         const z = cz(i);
         for (const sx of [-1, 1]) {
@@ -811,18 +815,22 @@ export function register(D, H) {
             pbox(B, NS('glow'), '#8fe39a', 0.05, 0.03, 0.01, 0.1, 0.16, 0.145, { glow: 1.4 });
             B.pop();
           }
-          B.tube(NS('paint'), '#26282c', [P3(x + sx * 0.3, YC + 0.9, z), P3(x + sx * 0.45, YC + 0.35, z + 0.2), P3(x + sx * 0.8, YC + 0.06, z + 0.5), P3(x + sx * 1.6, YC + 0.03, z + 0.7)], 0.025, { radial: 5 });
+          if (o.bare && sx === o.bare[0] && z < o.bare[1]) continue;
+          const f = inGap(z + 0.7) ? -1 : 1;   // (a cable that would hang over the aisle droops the other way, onto the box)
+          B.tube(NS('paint'), '#26282c', [P3(x + sx * 0.3, YC + 0.9, z), P3(x + sx * 0.45, YC + 0.35, z + f * 0.2), P3(x + sx * 0.8, YC + 0.06, z + f * 0.5), P3(x + sx * 1.6, YC + 0.03, z + f * 0.7)], 0.025, { radial: 5 });
         }
         // top cross beam + catwalk cross member + lamp under the catwalk
         pbox(B, 'paint', bl, W, 0.22, 0.16, 0, YT - 0.11, z);
         pbox(B, NS('paint'), bd, W - 0.2, 0.14, 0.1, 0, YC - 0.22, z);
-        B.box(NS('paint'), K.charcoal, 0.5, 0.08, 0.18, 0, YC - 0.34, z + 0.4, { r: 0.02 });
-        pbox(B, NS('glow'), K.lampCool, 0.44, 0.012, 0.12, 0, YC - 0.385, z + 0.4, { glow: 3.2 });
+        const lz = inGap(z + 0.4) ? z - 0.4 : z + 0.4;
+        B.box(NS('paint'), K.charcoal, 0.5, 0.08, 0.18, 0, YC - 0.34, lz, { r: 0.02 });
+        pbox(B, NS('glow'), K.lampCool, 0.44, 0.012, 0.12, 0, YC - 0.385, lz, { glow: 3.2 });
       }
       // catwalk stringers along both edges + intermediate cross members every 1.2 m
+      const spans = gap ? [[-L / 2, gap[0]], [gap[1], L / 2]] : [[-L / 2, L / 2]];
       for (const sx of [-1, 1]) {
-        pbox(B, 'paint', bd, 0.08, 0.22, L, sx * (W / 2 - 0.05), YC - 0.26, 0);
-        pbox(B, NS('paint'), K.hazY, 0.085, 0.05, L, sx * (W / 2 - 0.05), YC - 0.13, 0);
+        for (const [a, b] of spans) pbox(B, 'paint', bd, 0.08, 0.22, b - a, sx * (W / 2 - 0.05), YC - 0.26, (a + b) / 2);
+        for (const [a, b] of spans) pbox(B, NS('paint'), K.hazY, 0.085, 0.05, b - a, sx * (W / 2 - 0.05), YC - 0.13, (a + b) / 2);
         // top longitudinal beams + cable trays
         pbox(B, 'paint', bl, 0.16, 0.26, L, sx * (W / 2 - 0.11), YT - 0.13, 0);
         B.push(sx * (W / 2 - 0.45), YT + 0.1, 0);
@@ -831,7 +839,25 @@ export function register(D, H) {
         for (let k = 0; k < 4; k++) B.cyl(NS('paint'), ['#26282c', '#3a3d44', '#2e4a6a', '#26282c'][k], 0.03, L, -0.15 + k * 0.1, 0.045, 0, { rx: HP, seg: 5 });
         B.pop();
       }
-      for (let z = -L / 2 + 0.6; z < L / 2 - 0.3; z += 1.2) pbox(B, NS('paint'), bd, W - 0.2, 0.08, 0.06, 0, YC - 0.2, z);
+      for (let z = -L / 2 + 0.6; z < L / 2 - 0.3; z += 1.2) if (!inGap(z)) pbox(B, NS('paint'), bd, W - 0.2, 0.08, 0.06, 0, YC - 0.2, z);
+      // the catwalk's cut ends: hazard stripes on the end faces, a cross channel under an end that's clear of a column pair
+      if (gap) for (const [ze, f] of [[gap[0], 1], [gap[1], -1]]) {
+        B.push(0, YC - 0.075, ze, f > 0 ? 0 : PI); hazard(B, W - 0.04, 0.13, 0, 0, 0.001, { pitch: 0.24 }); B.pop();
+        let near = false;
+        for (let i = 0; i < n; i++) if (Math.abs(cz(i) - ze) < 0.3) near = true;
+        if (!near) pbox(B, NS('paint'), bd, W - 0.2, 0.14, 0.1, 0, YC - 0.22, ze - f * 0.06);
+      }
+      // row 1's stair landing off the −X side: edge channels under its open sides, a post at its free corner (collider),
+      // hazard stripes along its open edge
+      if (o.landing) {
+        const [z0, z1] = o.landing, x0 = -W / 2 - 2.44, xm = (x0 - W / 2) / 2;
+        pbox(B, 'paint', bd, 2.44, 0.22, 0.08, xm, YC - 0.26, z0 + 0.04);
+        pbox(B, 'paint', bd, 0.08, 0.22, z1 - z0, x0 + 0.04, YC - 0.26, (z0 + z1) / 2);
+        B.push(xm, YC - 0.075, z0, PI); hazard(B, 2.4, 0.13, 0, 0, 0.001, { pitch: 0.24 }); B.pop();
+        pbox(B, 'paint', bl, 0.14, YC - 0.15, 0.14, x0 + 0.09, (YC - 0.15) / 2, z0 + 0.09);
+        pbox(B, NS('metal'), K.galvDk, 0.26, 0.03, 0.26, x0 + 0.09, 0.015, z0 + 0.09);
+        B.col(x0 + 0.02, 0, z0 + 0.02, x0 + 0.16, YC - 0.15, z0 + 0.16);
+      }
       // floods on the top frame over the rows, end plates
       for (let i = 0; i < n; i += 2) for (const sx of [-1, 1]) flood(B, sx * 0.4, YT + 0.35, cz(i), { rx: 0, glow: 1.5 });
       for (const sz of [-1, 1]) {
@@ -840,19 +866,6 @@ export function register(D, H) {
         letters(B, 'REEFER ' + (o.name ?? 'R2'), { h: 0.2, x: 0, y: -0.1, z: 0.03, c: bd, flat: true, wt: 0.22 });
         B.pop();
       }
-    },
-  };
-
-  // Tower Command crossover over the reefer alley (the plate itself is a layout block: layout.js CROSSOVER): hazard bands
-  // on its two ends, where the grate catwalk carries on either side. pos = the plate's top centre; w across the alley,
-  // d along it. Non-colliding.
-  D.kelpline_crossover = {
-    desc: 'Crossover plate dressing (pos = top centre of the plate block; w across the alley, d along it, t thick): hazard-striped end faces. Non-colliding.',
-    params: { w: 'm (2.0)', d: 'm (3.0)', t: 'plate thickness (0.15)' }, variants: 1, mount: 'ground',
-    build(B, o) {
-      B.aoBase = null;
-      const w = o.w ?? 2.0, d = o.d ?? 3.0, t = o.t ?? 0.15;
-      for (const sz of [-1, 1]) { B.push(0, -t / 2, (sz * d) / 2, sz > 0 ? 0 : PI); hazard(B, w - 0.04, t - 0.02, 0, 0, 0.001, { pitch: 0.24 }); B.pop(); }
     },
   };
 
@@ -1793,7 +1806,11 @@ const LOCAL_PLACEMENTS = [
   { type: 'kelpline_quayedge', pos: [-29.5, 0, -46.4], rotY: -P / 2, length: 4.4 },
   { type: 'kelpline_quayedge', pos: [-24, 0, -46.4], rotY: P, length: 5.5, bollards: [2.7] },
   // the reefer rack over the alley, hatch-cover dressing (mid landing — square to the harbour — + apron)
-  { type: 'kelpline_reeferrack', pos: [-9.44, 0, -16.125], rotY: 0, length: 18.35, width: 2.0, name: 'R2' },
+  { type: 'kelpline_reeferrack', pos: [-9.44, 0, -16.125], rotY: 0, length: 18.35, width: 2.0, name: 'R2', notIn: 'tower' },
+  // (Tower Command: the rack over its aisle — layout.js AISLE — the catwalk cut, no cables on the side where row 1 was,
+  //  row 1's stair landing; rack-local z = local z + 16.125)
+  { type: 'kelpline_reeferrack', pos: [-9.44, 0, -16.125], rotY: 0, length: 18.35, width: 2.0, name: 'R2', onlyIn: 'tower',
+    gap: AISLE.gap.map((z) => z + 16.125), bare: [-1, AISLE.landing + 16.125], landing: [AISLE.landing + 16.125, -13.25 + 16.125] },
   { type: 'kelpline_hatch', pos: [0, 0, 0], rotY: 0, w: 10.8, d: 6, h: 1.2, num: '4', mirror: false, world: true },
   { type: 'kelpline_hatch', pos: [0, 0, 0], rotY: 0, w: 4.4, d: 3.2, h: 1.2, y0: 1.2, c: '#58779a', mirror: false, world: true },
   { type: 'kelpline_hatch', pos: [18.6, 0, -23.5], rotY: P / 2, w: 7, d: 2.8, h: 1.2, num: '7' },
@@ -1807,7 +1824,8 @@ const LOCAL_PLACEMENTS = [
   { type: 'kelpline_cage', pos: [22.7, 0, -35], rotY: P / 2 },
   { type: 'kelpline_cage', pos: [-22.9, 0, -12.5], rotY: P / 2 },
   { type: 'kelpline_cage', pos: [1.2, 0, -7.6], rotY: 0.08, variant: 1 },
-  { type: 'kelpline_cage', pos: [-13.8, 0, -36.2], rotY: 0.04, variant: 1 },
+  { type: 'kelpline_cage', pos: [-13.8, 0, -36.2], rotY: 0.04, variant: 1, notIn: 'tower' },
+  { type: 'kelpline_cage', pos: [-14.5, 0, -36.2], rotY: 0.04, variant: 1, onlyIn: 'tower' },   // (Tower Command: off the goal)
   { type: 'kelpline_cage', pos: [27.2, 0, -3.2], rotY: 0.15 },
   // flat rack with crated cargo on the left apron, light towers (cover by day, the lamps at dusk)
   { type: 'kelpline_flatrack', pos: [19.2, 0, -14.0], rotY: 0, len: 20 },
@@ -1844,8 +1862,6 @@ const LOCAL_PLACEMENTS = [
   { type: 'cone', pos: [7.2, 0, -4.4], notIn: 'tower' }, { type: 'cone', pos: [8.9, 0, -0.6], notIn: 'tower' }, { type: 'cone', pos: [-6.3, 0, -5.4] },
   // (Tower Command: the track runs out from the centre and back along the stack ends — those two stand inside its bend)
   { type: 'cone', pos: [6.0, 0, -3.2], onlyIn: 'tower' }, { type: 'cone', pos: [8.6, 0, -2.6], onlyIn: 'tower' },
-  // Tower Command: the crossover plate's hazard ends (layout.js CROSSOVER)
-  { type: 'kelpline_crossover', pos: [(GRID.RF.alley[0] + GRID.RF.alley[1]) / 2, 2.6, (CROSSOVER[0] + CROSSOVER[1]) / 2], rotY: 0, w: GRID.RF.alley[1] - GRID.RF.alley[0], d: CROSSOVER[1] - CROSSOVER[0], onlyIn: 'tower' },
   // safety boards
   { type: 'kelpline_signboard', pos: [-8.1, 0, -35.0], rotY: 0.2, variant: 0 },
   { type: 'kelpline_signboard', pos: [15.5, 0, -33.6], rotY: -0.25, variant: 2 },
