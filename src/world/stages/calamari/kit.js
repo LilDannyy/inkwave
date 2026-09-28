@@ -131,11 +131,11 @@ export function makeKit(D, H) {
   }
   // icicles hanging under an edge from x0 to x1 (at height y, depth z)
   function icicles(B, x0, x1, y, z, seed = 1, max = 0.35) {
-    const n = Math.max(2, Math.round(Math.abs(x1 - x0) / 0.22));
+    const n = Math.max(2, Math.round(Math.abs(x1 - x0) / 0.32));
     for (let i = 0; i < n; i++) {
       const t = (i + 0.3 + hash(seed + i) * 0.4) / n, L = 0.06 + max * Math.pow(hash(seed * 3 + i * 7), 2.2);
       if (L < 0.08) continue;
-      B.add(NS('gloss'), cylGeo(0.001, 0.028, 1, 5), K.ice, x0 + (x1 - x0) * t, y - L / 2, z, { sy: L, ao: false });
+      B.add(NS('gloss'), cylGeo(0.001, 0.024, 1, 5), K.ice, x0 + (x1 - x0) * t, y - L / 2, z, { sy: L, ao: false });
     }
   }
 

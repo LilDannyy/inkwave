@@ -5,6 +5,7 @@
 import { PATTERN, B, R, O } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
+import { MURAL } from './murals.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Calamari County — the Squid Sisters' home village, at the far end of the line out of Inkopolis: a snowbound fishing
@@ -102,7 +103,8 @@ const SIDES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
 const FL = -1.6;   // ground slabs reach down to the sea (the environment reads their tops as the stage's footprint)
 
 const { island: I, side: S, train: TR, bridge: BR, deck: DK, dock: DO } = P;
-const bridgeRun = (z) => R([BR.foot, 1.0, z], [BR.x1, BR.y, z], BR.stairW, { tag: 'bridge-stair', color: K.timber, pattern: PATTERN.treads });
+// (the stair's sides are timber stringers with handrails on top: not inkable, so nobody plans a climb up them into the rail)
+const bridgeRun = (z) => R([BR.foot, 1.0, z], [BR.x1, BR.y, z], BR.stairW, { tag: 'bridge-stair', color: K.timber, pattern: PATTERN.treads, noPaint: [[0, 0, 1], [0, 0, -1]] });
 const bx = (r, y0, y1, o) => B(r[0], r[1], y0, y1, r[2], r[3], o);
 const bt = (b, y0, o) => turned(b[0], b[1], b[2], b[3], y0, y0 + b[5], b[4], o);
 const lerp2 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -152,8 +154,9 @@ const HALF = [
   R([S.x0 - 2.4, 0, -8.5], [S.x0, S.y, -8.5], 3.8, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
   R([-4.6, 0, -13.1], [-4.6, S.y, S.z0], 5.0, stair({ tag: 'platform-steps' })),
   // the railcar: an underframe on its bogies, the body overhanging it (the body's floor at platform height)
-  B(TR.x0 + 0.9, TR.x1 - 0.9, 0, TR.floor, TR.z0 + 0.3, TR.z1 - 0.3, { tag: 'railcar-frame', color: '#2c3850', pattern: PATTERN.metalpanel, noPaint: SIDES }),
-  B(TR.x0, TR.x1, TR.floor, TR.h, TR.z0, TR.z1, { tag: 'railcar', color: '#e8e0c9', pattern: PATTERN.hullpaint, roof: true, noPaint: SIDES }),
+  // (Boss Battle: the trains have left — HULLBREAKER has the whole railway cut to roam and charge down)
+  B(TR.x0 + 0.9, TR.x1 - 0.9, 0, TR.floor, TR.z0 + 0.3, TR.z1 - 0.3, { tag: 'railcar-frame', color: '#2c3850', pattern: PATTERN.metalpanel, noPaint: SIDES, notIn: 'boss' }),
+  B(TR.x0, TR.x1, TR.floor, TR.h, TR.z0, TR.z1, { tag: 'railcar', color: '#e8e0c9', pattern: PATTERN.hullpaint, roof: true, noPaint: SIDES, notIn: 'boss' }),
 
   // ================= Alpha's footbridge: stair up from the side platform, deck over the track, stair down to the island
   bridgeRun(BR.s1),
@@ -172,7 +175,8 @@ const HALF = [
 
   // ================= hillside: T1 (1.3) stepping along the road, T2 (2.6) by the co-op, their steps, the houses on them
   ...P.T1.map((r) => bx(r, FL, P.y1, setts({ tag: 'T1', color: K.stone }))),
-  ...P.T2.map((r) => bx(r, FL, P.y2, setts({ tag: 'T2', color: K.stone }))),
+  // (T2's long wall over the back street carries the village's painted welcome mural — murals.js)
+  ...P.T2.map((r, i) => bx(r, FL, P.y2, setts({ tag: 'T2', color: K.stone, ...(i === 0 ? { mural: [{ n: [0, 0, 1], id: MURAL.welcome }] } : {}) }))),
   R([-22, 0, -7.6], [-22, P.y1, P.strip], 2.4, stair({ tag: 'T1-steps' })),
   R([-22, P.y1, -24.8], [-22, P.y2, -28.5], 2.4, stair({ tag: 'T2-steps' })),
   bx(P.cottage, P.y1, 4.5, bldg(K.cedar, { tag: 'cottage' })),
@@ -186,7 +190,8 @@ const HALF = [
 
   // ================= the Fishermen's Co-op: warehouse behind, spawn deck, grand stair, loading dock, quay ramp
   B(-11, 11, FL, 8, -48, -45.5, bldg(K.wall, { tag: 'coop' })),
-  B(DK.x0, DK.x1, FL, DK.y - 0.2, DK.z0 - 0.1, DK.z1, { tag: 'spawn-body', color: K.timber, pattern: PATTERN.weatherboard }),
+  // (its harbour-side wall is the warehouse's boarded side: not inkable — the quay ramp is the way up from the yard)
+  B(DK.x0, DK.x1, FL, DK.y - 0.2, DK.z0 - 0.1, DK.z1, { tag: 'spawn-body', color: K.timber, pattern: PATTERN.weatherboard, noPaint: [[1, 0, 0]] }),
   B(DK.x0, DK.x1, DK.y - 0.2, DK.y, DK.z0, DK.z1, { tag: 'spawn', color: K.spawn, pattern: PATTERN.spawn }),
   R([0, 0, -29.5], [0, DK.y, DK.z1], 4.4, stair({ tag: 'grand-stair' })),
   B(DO.x0, DO.x1, 0, DO.y, DO.z0, DO.z1, timber({ tag: 'dock' })),
@@ -224,7 +229,7 @@ const CALAMARI = {
     backdrop: buildBackdrop,
     bay: false, boats: false, edge: 'none', stars: true,
     snow: { line: 9, cover: 0.72 },
-    weather: { snow: { count: 2200, fall: 0.9, size: 0.08 } },
+    weather: { snow: { count: 2000, fall: 0.85, size: 0.055 } },
     theme: {
       all: { seaCrest: '#9fbcc0', foam: '#f4f8fb' },
       day: {
@@ -239,12 +244,12 @@ const CALAMARI = {
       },
       sunset: {
         sunAz: 214, sunEl: 7, sunColor: '#ffae70', sunIntensity: 2.6, skySun: 3.2,
-        hemiSky: '#4c66b4', hemiGround: '#8f93bd', hemiGroundK: 1.6, hemiIntensity: 0.62, envK: 0.42,
-        zenith: '#141d48', skyMid: '#3b4886', horizon: '#f0a07a', ground: '#3a4270',
+        hemiSky: '#4a6cc4', hemiGround: '#7d93c8', hemiGroundK: 1.6, hemiIntensity: 0.66, envK: 0.42,
+        zenith: '#101c4a', skyMid: '#324a8c', horizon: '#e9a27e', ground: '#34426e',
         horizonGlow: '#ff9a62', horizonGlowK: 0.5, glowColor: '#ffb070',
-        cloudLit: '#ffc4a4', cloudShade: '#4f5690',
+        cloudLit: '#ffc2a0', cloudShade: '#48558f',
         seaDeep: '#101a3a', seaShallow: '#26406a', seaCrest: '#6f8fc0',
-        grade: { uExposure: 1.0, uSat: 1.0, uVib: 0.1, uContrast: 1.07, uLift: 0.0, uVignette: 0.28, uShadowTint: [0.84, 0.94, 1.22], uHighTint: [1.06, 1.0, 0.9], bloom: [0.45, 0.55, 1.7] },
+        grade: { uExposure: 1.1, uSat: 1.0, uVib: 0.1, uContrast: 1.06, uLift: 0.01, uVignette: 0.26, uShadowTint: [0.84, 0.95, 1.22], uHighTint: [1.04, 1.0, 0.94], bloom: [0.45, 0.55, 1.7] },
       },
     },
   },
