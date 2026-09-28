@@ -32,7 +32,7 @@ const SAND = /* glsl */`
 
 export const SURFACES = [
   {
-    slot: 58, name: 'dune',
+    slot: 58, name: 'dune', onWall: 59,   // (dune banks and walls: moss creeping over the sand)
     mat: {
       detail: 0.55, scale: 3.0, tint: true, mask: true, alpha: false, mode: PLAIN, sym: 0, hr: [-0.004, 0.003], ao: 0.3,
       prep: `f[0] = FB(uv, ivec2(3), 4, 0.55, 5801u); f[1] = FB(uv, ivec2(10), 3, 0.5, 5803u); f[2] = FB(uv, ivec2(96), 2, 0.5, 5807u);

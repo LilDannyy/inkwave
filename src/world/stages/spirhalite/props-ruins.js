@@ -33,7 +33,7 @@ export function registerRuins(D, H, X) {
       const ph = (k / NK) * TAU, c = Math.cos(ph), sn = Math.sin(ph), q = 2 / 4.2;
       const u0 = hh * Math.sign(c) * Math.pow(Math.abs(c), q), v0 = hd * Math.sign(sn) * Math.pow(Math.abs(sn), q);
       const x = f.p[0] + f.n[0] * u0, y = f.p[1] + f.n[1] * u0, z = v0;
-      const d = 0.8 * fbm3(x * 0.11 + 7, y * 0.11, z * 0.11, 3) + strata(y, x, z) * (1 - 0.75 * s3) + joint(x, y, z) + 0.12 * noise3(x * 0.9, y * 0.9, z * 0.9) + 0.45 * s3 * fbm3(x * 0.3, y * 0.18, z * 0.3 + 5, 2);
+      const d = 1.0 * fbm3(x * 0.065 + 7, y * 0.065, z * 0.065, 3) + 0.4 * fbm3(x * 0.2 + 2, y * 0.2, z * 0.2, 2) + 0.35 * strata(y, x, z) * (1 - 0.8 * s3) + joint(x, y, z) + 0.1 * noise3(x * 0.9, y * 0.9, z * 0.9);
       const r = Math.hypot(u0, v0) || 1;
       return [u0 + (u0 / r) * d, v0 + (v0 / r) * d];
     };

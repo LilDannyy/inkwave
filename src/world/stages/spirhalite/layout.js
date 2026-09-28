@@ -14,7 +14,7 @@ export { OUTLINE };
 // pillars with water pouring down their drums. BLOCK-OUT (v1): plain pieces, heights and lanes.
 // Heights: 0 sand · 1.3 dunes / causeway / pillar plinth · 2.5 pillar tier · 3.2 helipads.
 const H1 = 1.3, H2 = 2.5, HP = 3.2, BOT = -2.4;
-const K = { sand: '#e9e3d6', wet: '#d9d1c1', dune: '#efe9dc', stone: '#c9c4b8', stoneDk: '#aaa498', steel: '#8d979e', steelDk: '#59626a', pad: '#dcdcd6', moss: '#9aa878' };
+const K = { sand: '#e6dfcf', wet: '#d8cfbd', dune: '#ebe4d4', stone: '#c9c4b8', stoneDk: '#aaa498', steel: '#8d979e', steelDk: '#59626a', pad: '#dcdcd6', moss: '#9aa878' };
 const sand = (o = {}) => ({ color: K.sand, pattern: SURF.dune, ...o });
 const wet = (o = {}) => ({ color: K.wet, pattern: SURF.dune, ...o });
 const moss = (o = {}) => ({ color: K.dune, pattern: SURF.moss, ...o });
@@ -70,13 +70,13 @@ const SPIRHALITE = {
       sunset: {
         horizon: '#ffae8c', skyMid: '#b27aa0', zenith: '#3b3f7e', horizonGlow: '#ff9a6a', glowColor: '#ffbd86',
         seaDeep: '#243f68', seaShallow: '#4a7f98', seaCrest: '#9fb8d2', foam: '#ffe4d6',
-        haze: [1 / 520, 0.95, 170], fog: [22, 460],
+        haze: [1 / 950, 0.9, 190], fog: [30, 700],
       },
     },
   },
   single: [
     // ================= the central sandbar under the Great Arch (the arch's legs stand in the sea at x ±24)
-    ...coreBoxes(CENTRE, sand({ tag: 'sandbar' })),
+    ...coreBoxes(CENTRE, sand({ tag: 'sandbar', mural: [{ n: [0, 1, 0], id: 4 }] })),
   ],
   half: [
     // ================= base island (helipad on its high dune, the camp hollow on the right, the left islet beyond)
@@ -95,25 +95,27 @@ const SPIRHALITE = {
     R(rise(-13.6, -39.5, H1, -16.5, -39.5, H2), [-16.5, H2, -39.5], 3, sand({ tag: 'dune-slope', color: K.dune })),
     // sand slopes: off the high dune to mid (the spine); off the ridge down into the camp hollow
     R(rise(-1, -28.1, 0, -1, -31.3, H1), [-1, H1, -31.3], 8, sand({ tag: 'spine-slope', color: K.dune })),
+    R(rise(-7, -28.2, 0, -7, -31.3, H1), [-7, H1, -31.3], 3.6, sand({ tag: 'dune-slope', color: K.dune })),
+    R(rise(4.6, -28.2, 0, 4.6, -31.3, H1), [4.6, H1, -31.3], 2.8, sand({ tag: 'dune-slope', color: K.dune })),
     R(rise(-11, -33.8, 0, -11, -37, H1), [-11, H1, -37], 3, sand({ tag: 'dune-slope', color: K.dune })),
 
     // ================= spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune)
     // (a steel frame body R 5.75, the deck plate R 5.9 overhanging it: props.js dresses both)
     ...OCT(0, -42.5, 5.75, H1, 3.0, { tag: 'helipad-frame', color: K.steelDk, pattern: PATTERN.metalpanel, noPaint: OCTSIDES }),
-    ...OCT(0, -42.5, 5.9, 2.95, HP, { tag: 'helipad', color: K.pad, pattern: PATTERN.spawn, noPaint: OCTSIDES }),
+    ...OCT(0, -42.5, 5.9, 2.95, HP, { tag: 'helipad', color: K.pad, pattern: PATTERN.spawn, noPaint: OCTSIDES }).map((d, i) => (i === 1 ? { ...d, mural: [{ n: [0, 1, 0], id: 7 }] } : d)),   // (its front arm: SPIRHALITE / DC-1)
     R([0, H1, -32.6], [0, HP, -37.05], 3, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
     R([9.9, H1, -42.5], [5.45, HP, -42.5], 2.4, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
 
     // ================= right lane: the ancient causeway (stone slabs at 1.3) from the base to the sandbar's spit. Its
     // mid end is a sheer 1.3 m face (the tower climbs it); kids take the steps off the bastion beside it. Its base end is
     // broken off (a 1.3 m drop into the camp hollow), with side steps down from it
-    B(-21.1, -16.9, BOT, H1, -25, -6.5, stone({ tag: 'causeway' })),
+    B(-21.1, -16.9, BOT, H1, -25, -6.5, stone({ tag: 'causeway', mural: [{ n: [0, 1, 0], id: 5 }, { n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }] })),
     B(-16.9, -14.6, BOT, H1, -10.2, -6.5, stone({ tag: 'causeway-bastion' })),
     R(rise(-15.75, -3.3, 0, -15.75, -6.5, H1), [-15.75, H1, -6.5], 2.3, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
     R(rise(-13.9, -24.1, 0, -17, -24.1, H1), [-17, H1, -24.1], 2.0, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
 
     // ================= the cascade pillar's islet in the lagoon between the causeway and the mid sandbar
-    ...OCT(-12.5, -15, 3.2, 0, H1, stone({ tag: 'pillar-plinth' })),
+    ...OCT(-12.5, -15, 3.2, 0, H1, stone({ tag: 'pillar-plinth' })).map((d, i) => (i === 0 ? { ...d, mural: [{ n: [1, 0, 0], id: 10 }, { n: [-1, 0, 0], id: 10 }] } : i < 3 ? { ...d, mural: [{ n: [0, 0, 1], id: 10 }, { n: [0, 0, -1], id: 10 }] } : d)),
     ...OCT(-12.5, -15, 2.2, H1, H2, stone({ tag: 'pillar-tier' })),
     ...OCT(-12.5, -15, 1.2, H2, 4.4, stone({ tag: 'pillar-drum', roof: true, noPaint: OCTSIDES })),   // (the column above: props.js)
     B(-17, -15.2, 0.8, H1 - 0.2, -16.2, -13.8, stone({ tag: 'pillar-spur' })),           // broken slab: causeway ↔ plinth
@@ -137,6 +139,9 @@ const SPIRHALITE = {
     R(rise(15.5, -15.7, H1, 18.4, -15.7, H2), [18.4, H2, -15.7], 3.8, sand({ tag: 'dune-slope', color: K.dune })),
     ...dune(11.2, -10.6, 2.4, 0.8, 90),
 
+    // ================= the camp's sign board (planks on two posts, props.js): SPIRHALITE ISLANDS · DEEP CUT EXPEDITION
+    B(-16.9, -14.3, 0.7, 1.8, -28.62, -28.5, { tag: 'camp-sign', color: '#a88963', pattern: PATTERN.wood, noPaint: [...SIDES, [0, 1, 0]], mural: [{ n: [0, 0, 1], id: 8 }] }),
+
     // ================= the sandbar under the arch: blocks fallen from the arch (cover round the centre zone)
     O(-7.5, -5.0, 2.4, 1.3, 0, 1.4, 15, stone({ tag: 'arch-block' })),
     O(4.5, -3.8, 1.3, 1.1, 0, 0.9, -10, stone({ tag: 'arch-block' })),
@@ -156,8 +161,10 @@ const SPIRHALITE = {
     path: [[0, 0], [0, 2.2], [19, 2.2], [19, 26.7], [-8, 26.7], [-8, 33.5]],
     checkpoints: [[19, 2.2], [13, 26.7]],
   },
-  intro: { from: [14, 14, 6], lookFrom: [0, 3, -4], toBack: 3.0 },
-  art: { from: [34, 24, -46], look: [-4, 1, 2], fov: 58 },
+  // match intro: opens under the Great Arch's crown looking along it at the cascade pillar, then pulls back to your pad
+  intro: { from: [9, 5.5, 7], lookFrom: [-10, 6.5, -12], toBack: 3.0 },
+  // stage-select picture: high behind Alpha's helipad and its helicopter — the arch framing the centre, both cascades
+  art: { from: [-22, 21, -60], look: [2, 3, -4], fov: 56 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
