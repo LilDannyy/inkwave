@@ -14,30 +14,37 @@ export const DRESSING = {
     //      (ext -0.1); convex corners: one run wraps the corner (ext 0.1). Jump edges carry nothing on the deck.
     // quay front (basin)
     { type: 'pieredge', pos: [-19.5, 0, -31], rotY: 0, length: 15, s0: 0.75, s1: 0.75, cleats: [3.2, 8.6], fenders: [1.9, 5.3, 12] },
-    { type: 'pieredge', pos: [4.5, 0, -31], rotY: 0, length: 5.5, s0: 0.75, s1: 0.75 },
+    { type: 'pieredge', pos: [4.5, 0, -31], rotY: 0, length: 5.5, s0: 0.75, s1: 0.75, notIn: 'tower' },
     // fuel dock: west side (fuel berth, D-fender), east side (jump edge x = 4.5), mid end (gangway)
-    { type: 'pieredge', pos: [-4.5, 0, -31], rotY: -P / 2, length: 18.6, ext0: -0.1, ext1: -0.1, dfender: true, cleats: [4.2, 9.4, 14.6], ladders: [2.2] },
+    { type: 'pieredge', pos: [-4.5, 0, -31], rotY: -P / 2, length: 18.6, ext0: -0.1, ext1: -0.1, dfender: true, cleats: [4.2, 9.4, 14.6], ladders: [2.2], notIn: 'tower' },
+    { type: 'pieredge', pos: [-4.5, 0, -31], rotY: -P / 2, length: 2.65, ext0: -0.1, dfender: true, onlyIn: 'tower' },
+    { type: 'pieredge', pos: [-4.5, 0, -14.4], rotY: -P / 2, length: 2.0, ext1: -0.1, dfender: true, onlyIn: 'tower' },
     { type: 'pieredge', pos: [-4.5, 0, -10.4], rotY: -P / 2, length: 1.8, ext0: -0.1, dfender: true },
-    { type: 'pieredge', pos: [4.5, 0, -26], rotY: P / 2, length: 5, ext0: -0.1, ext1: -0.1, dfender: true },
-    { type: 'pieredge', pos: [4.5, 0, -8.6], rotY: P / 2, length: 15.4, ext1: -0.1, dfender: true },
+    { type: 'pieredge', pos: [4.5, 0, -26], rotY: P / 2, length: 5, ext0: -0.1, ext1: -0.1, dfender: true, notIn: 'tower' },
+    { type: 'pieredge', pos: [4.5, 0, -8.6], rotY: P / 2, length: 15.4, ext1: -0.1, dfender: true, notIn: 'tower' },
+    { type: 'pieredge', pos: [4.5, 0, -8.6], rotY: P / 2, length: 5.6, dfender: true, onlyIn: 'tower' },   // (the workboat lies alongside beyond)
     { type: 'pieredge', pos: [-4.5, 0, -8.6], rotY: 0, length: 9, ext0: 0.1, ext1: 0.1, skip: [[2.5, 6.5]], dfender: true },
     // long pier inner side (houseboat berth), finger pier, boardwalk
     { type: 'pieredge', pos: [-19.5, 0, -26.4], rotY: P / 2, length: 4.6, ext0: -0.1, ext1: -0.1 },
     { type: 'pieredge', pos: [-19.5, 0, -12.4], rotY: P / 2, length: 12.8, ext0: -0.1, ext1: -0.1, skip: [[5.4, 7.4]], cleats: [2.4, 10.4], fenders: [3.9, 9.2] },
-    { type: 'pieredge', pos: [-19.5, 0, 0], rotY: P / 2, length: 10.4, ext1: -0.1 },
+    { type: 'pieredge', pos: [-19.5, 0, 0], rotY: P / 2, length: 10.4, ext1: -0.1, notIn: 'tower' },
     { type: 'pieredge', pos: [-19.5, 0, -25.2], rotY: 0, length: 7, s0: 0.75, ext1: 0.1, cleats: [2.6, 5.9], fenders: [1.6, 4.3] },
     { type: 'pieredge', pos: [-12.5, 0, -26.4], rotY: P, length: 7, ext0: 0.1, s1: 0.75, cleats: [1.1, 4.4], fenders: [2.7, 5.4], ladders: [6.1] },
     { type: 'pieredge', pos: [-12.5, 0, -25.2], rotY: P / 2, length: 1.2 },
-    { type: 'pieredge', pos: [-19.5, 0, -10.4], rotY: 0, length: 15, s0: 0.75, s1: 0.75, cleats: [4.1, 10.9] },
-    { type: 'pieredge', pos: [-4.5, 0, -12.4], rotY: P, length: 15, s0: 0.75, s1: 0.75, cleats: [4.1, 10.9], fenders: [7.5] },
+    { type: 'pieredge', pos: [-19.5, 0, -10.4], rotY: 0, length: 15, s0: 0.75, s1: 0.75, cleats: [4.1, 10.9], notIn: 'tower' },
+    { type: 'pieredge', pos: [-4.5, 0, -12.4], rotY: P, length: 15, s0: 0.75, s1: 0.75, cleats: [4.1, 10.9], fenders: [7.5], notIn: 'tower' },
+    { type: 'pieredge', pos: [-10.0, 0, -10.4], rotY: 0, length: 5.5, s1: 0.75, cleats: [1.4], onlyIn: 'tower' },
+    { type: 'pieredge', pos: [-4.5, 0, -12.4], rotY: P, length: 15, s0: 0.75, s1: 0.75, skip: [[5.45, 8.4]], cleats: [4.1, 10.9], onlyIn: 'tower' },
     // boatyard: west side (jump edge z -24…-8.6), north end, strip (jump edge to the ferry, plank landing)
-    { type: 'pieredge', pos: [10, 0, -31], rotY: -P / 2, length: 5, ext0: -0.1, ext1: -0.1 },
-    { type: 'pieredge', pos: [10, 0, -24], rotY: -P / 2, length: 17, ext0: -0.1 },
+    { type: 'pieredge', pos: [10, 0, -31], rotY: -P / 2, length: 5, ext0: -0.1, ext1: -0.1, notIn: 'tower' },
+    { type: 'pieredge', pos: [10, 0, -24], rotY: -P / 2, length: 17, ext0: -0.1, notIn: 'tower' },
+    { type: 'pieredge', pos: [10, 0, -14.2], rotY: -P / 2, length: 7.2, onlyIn: 'tower' },   // (the workboat lies alongside before it)
     { type: 'pieredge', pos: [10, 0, -7], rotY: 0, length: 9.5, ext0: 0.1, s1: 0.75, cleats: [2.2] },
-    { type: 'pieredge', pos: [19.5, 0, -7], rotY: -P / 2, length: 7, ext0: -0.1, skip: [[1.9, 4.6]] },
+    { type: 'pieredge', pos: [19.5, 0, -7], rotY: -P / 2, length: 7, ext0: -0.1, skip: [[1.9, 4.6]], notIn: 'tower' },
+    { type: 'pieredge', pos: [19.5, 0, -7], rotY: -P / 2, length: 4.4, ext0: -0.1, skip: [[1.9, 4.6]], onlyIn: 'tower' },
     // walkway fuel dock ↔ yard
     { type: 'pieredge', pos: [4.5, 0, -24], rotY: 0, length: 5.5, s0: 0.75, s1: 0.75 },
-    { type: 'pieredge', pos: [10, 0, -26], rotY: P, length: 5.5, s0: 0.75, s1: 0.75 },
+    { type: 'pieredge', pos: [10, 0, -26], rotY: P, length: 5.5, s0: 0.75, s1: 0.75, notIn: 'tower' },
     // arena perimeter (outer edges): tall capped piles
     { type: 'pieredge', pos: [-24, 0, -51.95], rotY: -P / 2, length: 51.95, outer: true, cleats: [10.5, 27.5, 43.5] },
     { type: 'pieredge', pos: [24, 0, 0], rotY: P / 2, length: 51.95, outer: true, spacing: 4.0, cleats: [8.5, 24.5, 30.0] },   // 4.0: vessels' marina gangway (z -37.9) sits between the piles at z -35.85 / -39.8
@@ -71,7 +78,8 @@ export const DRESSING = {
     { type: 'bollardlight', pos: [-23.72, 0, -13.0] },
     { type: 'bollardlight', pos: [23.72, 0, -27.5] },
     { type: 'bollardlight', pos: [23.72, 0, -15.5] },
-    { type: 'bollardlight', pos: [-4.15, 0, -26.0] },
+    { type: 'bollardlight', pos: [-4.15, 0, -26.0], notIn: 'tower' },
+    { type: 'bollardlight', pos: [-4.15, 0, -27.9], onlyIn: 'tower' },   // (Tower Command: out from under the water-bus gangway)
     { type: 'lifering', pos: [-23.6, 0, -21.0], rotY: P / 2 },
     { type: 'bollard', pos: [-23.55, 0, -38.0], variant: 2 },
     { type: 'bollard', pos: [23.55, 0, -34.0], variant: 2 },
@@ -107,7 +115,17 @@ export const DRESSING = {
     { type: 'cooler', pos: [-0.85, 0, -22.9], rotY: P, variant: 1 },
     { type: 'cooler', pos: [-0.55, 0.94, -22.85], rotY: P + 0.18, variant: 0, color: 'teal' },
     { type: 'fueldocksign', pos: [-4.2, 0, -9.3], rotY: 0 },
-    { type: 'lifering', pos: [-4.12, 0, -16.6], rotY: P / 2 },
+    // ---- Tower Command cover: the user's inflatables (drawn on Bravo's half, authored there; mirrored). Nudged only to
+    //      clear the track (-10.85, 21.6: was -11.2), a deck edge (±2.85, 30.1: was ±3.3) or the tug's bow ramp (-17, 23.2)
+    { type: 'inflatable', size: 'small', pos: [20.5, 0, 13.2], onlyIn: 'tower' },
+    { type: 'inflatable', size: 'small', pos: [2.2, 0, 13.8], onlyIn: 'tower' },
+    { type: 'inflatable', size: 'small', pos: [-2.2, 0, 13.9], onlyIn: 'tower' },
+    { type: 'inflatable', size: 'small', pos: [-10.85, 0, 21.6], onlyIn: 'tower' },
+    { type: 'inflatable', size: 'small', pos: [-17.0, 2.6, 23.2], onlyIn: 'tower' },
+    { type: 'inflatable', size: 'square', pos: [2.85, 0, 30.1], onlyIn: 'tower' },
+    { type: 'inflatable', size: 'square', pos: [-2.85, 0, 30.1], onlyIn: 'tower' },
+    { type: 'lifering', pos: [-4.12, 0, -16.6], rotY: P / 2, notIn: 'tower' },
+    { type: 'lifering', pos: [-4.12, 0, -12.95], rotY: P / 2, onlyIn: 'tower' },   // (off the track: on the pocket's edge)
   ],
 };
 
