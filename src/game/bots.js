@@ -6,7 +6,7 @@
 // distance and retreat through own ink to heal when they're losing a duel.
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../core/ctx.js';
-import { PLAYER, DIFFICULTY, SUB, SPECIALS, weaponRange } from '../config.js';
+import { PLAYER, DIFFICULTY, SUB, SPECIALS, TOWER, weaponRange } from '../config.js';
 import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 
@@ -267,6 +267,156 @@ class ZonePlan {
   }
 }
 
+// ============================================================================================ Tower Command team plan
+// Shared by every bot in a tower match (one per TowerCommand): the track sampled every metre (its 3D length: climbs
+// and drops count) with the nav node by each point, and per metre the boarding spots — nav nodes round the platform
+// there whose floor a hop reaches its top from (built on first use); per-team roles re-dealt ~4×/s and on every
+// change of hands, contest, checkpoint stop or an empty held tower:
+//   ride   — get on the platform and stay on it (steer for its centre, sidestepping about it in a duel; the engine
+//            carries us, up climbs and down drops too), shooting from the top; knocked off while it's still ours →
+//            hop back on. We hold it: 1–2 of us (shooters / twins / splatlings first, rollers / brushes last,
+//            chargers never), 3 while it waits at a checkpoint or while they're two down, whoever's on it already
+//            stays on (up to 3), and the nearest one more the moment it's empty. Neutral: the nearest 2. Theirs:
+//            everyone but chargers (one of ours on it stops it; clearing theirs off takes it).
+//   escort — walk the route 3–10 m ahead of it toward the enemy goal, inking it and taking the fights there
+//   perch  — chargers, and while we hold it the other long-range kits not riding: a spot with a sightline over the
+//            tower (theirs / neutral) or the route just ahead of it (ours)
+// Getting on (BotBrain _towerBoardNav / _towerMove): the nav graph doesn't know the tower (a moving collider) — path
+// to the nearest boarding spot (up a wall / over a drop / on a box, where a hop can't reach it: a spot by the stretch
+// it rolls onto next), then from ~3 m steer straight at its centre and hop the 0.8 m when the edge is close; pressed
+// against its side for a while → come round to another side and try again.
+// kinds that ride best (lower first): steady fire from a small platform; chargers never ride
+export const RIDE_PREF = { shooter: 0, twins: 0, splatling: 0, dualies: 0.3, blaster: 0.4, brolly: 0.4, slosher: 0.5, spinner: 0.6, mitts: 0.8, bow: 0.8, bucket: 1, blade: 1.2, roller: 1.5, brush: 1.5 };
+// specials that carry the body off the platform (a rider saves them for when it's off)
+const BODY_SP = { kraken: true, stamp: true, crab: true, jetpack: true, zipcaster: true };
+export function towerPlan() {
+  const m = G.match, T = m && m.tower;
+  if (!T || m.attract || m.practice || !G.nav) return null;
+  let P = _plans.get(T);
+  if (!P) { P = new TowerPlan(T); _plans.set(T, P); }
+  P.tick();
+  return P;
+}
+
+class TowerPlan {
+  constructor(T) {
+    this.T = T;
+    const nav = G.nav;
+    // the path every metre from Bravo's goal (s0) to Alpha's: its point and the nav node on / by it (-1: none near)
+    this.s0 = -T.path.len[1];
+    this.pts = []; this.node = [];
+    for (let s = this.s0; s <= T.path.len[0] + 1e-6; s += 1) {
+      const p = T.path.at(s, new THREE.Vector3());
+      this.pts.push(p);
+      const id = nav.nearest(_v.set(p.x, p.y + 0.3, p.z), 1.0);
+      const n = id >= 0 ? nav.nodes[id] : null;
+      this.node.push(n && n.zone < 0 && Math.hypot(n.x - p.x, n.z - p.z) < 2.5 && Math.abs(n.y - p.y) < 1.5 ? id : -1);
+    }
+    this.spots = new Map();   // path metre → boarding spots (spotsAt)
+    this.t = -1; this.roleT = -1; this.sig = ''; this.atCp = false;
+    this.roles = [new Map(), new Map()];
+  }
+  idx(s) { return clamp(Math.round(s - this.s0), 0, this.pts.length - 1); }
+  at(s) { return this.pts[this.idx(s)]; }
+  // the nav node by the path nearest s (looking out along it both ways)
+  nodeAt(s) {
+    const k0 = this.idx(s), N = this.node.length;
+    for (let r = 0; r < 16; r++) {
+      if (k0 + r < N && this.node[k0 + r] >= 0) return this.node[k0 + r];
+      if (k0 - r >= 0 && this.node[k0 - r] >= 0) return this.node[k0 - r];
+    }
+    return -1;
+  }
+  dirOf(t) { return t === 0 ? 1 : -1; }   // the way team t pushes it along s
+  // boarding spots with the tower at path metre k: nav nodes 1.9–3.6 m from its centre (clear of its corners) whose
+  // floor a hop reaches its top from (or a drop onto it), with a clear walk from there to its side (built on first use)
+  spotsAt(k) {
+    let L = this.spots.get(k);
+    if (L) return L;
+    L = [];
+    const nav = G.nav, p = this.pts[k], top = p.y + TOWER.platformH, h = this._hit || (this._hit = new Hit());
+    for (const id of nav.validIds) {
+      const n = nav.nodes[id];
+      if (Math.abs(n.x - p.x) > 3.6 || Math.abs(n.z - p.z) > 3.6 || n.zone >= 0 || n.wet === 2) continue;
+      const d = Math.hypot(n.x - p.x, n.z - p.z), up = top - n.y;
+      if (d < 1.9 || d > 3.6 || up > 1.15 || up < -2.5) continue;
+      const q = 1.95 / d;
+      _v.set(n.x, n.y + 0.45, n.z); _v2.set(p.x + (n.x - p.x) * q, Math.max(n.y, p.y) + 0.45, p.z + (n.z - p.z) * q);
+      _v3.copy(_v2).sub(_v);
+      const len = _v3.length();
+      if (len > 0.05 && G.physics.raycast(_v, _v3.multiplyScalar(1 / len), len, h, false).hit) continue;
+      L.push(id);
+    }
+    this.spots.set(k, L);
+    return L;
+  }
+  // the boarding spot nearest a for the tower at s; none there (mid-climb up a wall, over a drop, up on a box) → by
+  // the next stretch it rolls onto that has some (dir: the way it's going; `far` false: a tower standing still, only
+  // right where it is), else just behind it; -1 when there's none
+  spotFor(s, a, dir, far = true) {
+    const nav = G.nav, k0 = this.idx(s), N = this.pts.length;
+    for (let r = 0; r <= (far ? 14 : 1); r++) {
+      const k = r <= 10 ? k0 + dir * r : k0 - dir * (r - 10);
+      if (k < 0 || k >= N) continue;
+      let best = -1, bs = Infinity;
+      for (const id of this.spotsAt(k)) {
+        const n = nav.nodes[id], c = Math.hypot(n.x - a.pos.x, n.z - a.pos.z) + Math.abs(n.y - a.pos.y) * 1.5;
+        if (c < bs) { bs = c; best = id; }
+      }
+      if (best >= 0) return best;
+    }
+    return -1;
+  }
+  // (x, z) in the platform's frame, and how far outside its square edge that is (negative: over it)
+  edge(x, z) {
+    const T = this.T, dx = x - T.pos.x, dz = z - T.pos.z, c = Math.cos(T.yaw), s = Math.sin(T.yaw);
+    return Math.max(Math.abs(dx * c - dz * s), Math.abs(dx * s + dz * c)) - TOWER.platformR;
+  }
+  // standing on the platform (the engine's rider test, a touch looser: a toe over the edge still counts)
+  onTower(a) {
+    const dy = a.pos.y - this.T.top;
+    return a.alive && dy > -0.35 && dy < TOWER.riderUp + 0.2 && this.edge(a.pos.x, a.pos.z) < 0.12;
+  }
+  riding(a) { return this.T.riderList.includes(a); }
+  roleOf(a) { return this.roles[a.team].get(a) || 'escort'; }
+
+  tick() {
+    const now = G.time, T = this.T;
+    if (this.t >= 0 && now - this.t < 0.25 && now >= this.t) return;
+    this.t = now;
+    const cp = T.owner >= 0 ? T._nextCp(T.owner) : null;
+    const atCp = !!(cp && Math.abs(T.s - (cp.team === 0 ? cp.d : -cp.d)) < 0.05);
+    const sig = T.owner + ':' + (T.contested ? 1 : 0) + ':' + (atCp ? 1 : 0) + ':' + (T.emptyT > 0.3 ? 1 : 0);
+    if (sig !== this.sig || now - this.roleT > 0.5 || now < this.roleT) { this.sig = sig; this.roleT = now; this.atCp = atCp; this._assign(0); this._assign(1); }
+  }
+
+  _assign(t) {
+    const T = this.T, prev = this.roles[t], out = new Map();
+    const bots = G.actors.filter((a) => a.team === t && a.bot), up = bots.filter((a) => a.alive);
+    const ours = T.owner === t, theirs = T.owner === 1 - t;
+    const dT = (a) => Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z) + Math.abs(a.pos.y - T.top) * 1.5;
+    const can = up.filter((a) => a.weapon.kind !== 'charger');
+    let riders;
+    if (theirs) riders = can;                                            // take it back: everyone on it
+    else {
+      // ours: the best riders (whoever's on it already stays on) — 3 at a checkpoint or while they're two down (push
+      // while we have the numbers); neutral: the nearest two
+      const foes = G.actors.filter((a) => a.team === 1 - t && a.alive).length;
+      const n = ours ? (this.atCp || foes <= up.length - 2 ? 3 : up.length >= 3 ? 2 : 1) : 2;
+      const key = (a) => (this.riding(a) ? -4 : 0) + (prev.get(a) === 'ride' ? -1.5 : 0) + (RIDE_PREF[a.weapon.kind] ?? 0.8) * (ours ? 1 : 0.3) + dT(a) * (ours ? 0.06 : 0.12);
+      riders = can.sort((x, y) => key(x) - key(y)).slice(0, n);
+      // (ours: one already on it stays on while there are no more than 3 — it only makes it faster)
+      if (ours) for (const a of can) if (riders.length < 3 && this.riding(a) && !riders.includes(a)) riders.push(a);
+      // held, and nobody on it (the riders splatted / knocked off): the closest one goes too (it goes neutral at 5 s)
+      if (ours && T.riders[t] === 0 && T.emptyT > 0.3) { const c = can.filter((a) => !riders.includes(a)).sort((x, y) => dT(x) - dT(y))[0]; if (c) riders.push(c); }
+    }
+    const set = new Set(riders);
+    const long = (a) => a.weapon.kind === 'charger' || ((LONG[a.weapon.kind] || a.weapon.kind === 'bow') && ours);
+    for (const a of bots) out.set(a, set.has(a) ? 'ride' : long(a) ? 'perch' : 'escort');
+    this.roles[t] = out;
+  }
+}
+
 export class BotBrain {
   constructor(actor, difficulty = 'normal') {
     this.a = actor;
@@ -302,6 +452,14 @@ export class BotBrain {
     // Zone Control (unused in Turf War): role + zone from the team plan, the hold timer at a guard / watch spot, and
     // the needy patch of the zone being aimed at
     this.zRole = null; this.zZone = -1; this.zHoldUntil = 0; this.zHoldDur = 0; this._zAct = null; this.zAimT = 0; this._zAim = null; this.zFail = 0; this.zFace = 0; this.zJumpAt = 0; this.zBomb = null; this.zBombScan = 0;
+    // Tower Command (unused elsewhere): role from the team plan, the hold at an escort / perch spot (or by an unreachable
+    // tower: tWaitT), the route point an escort's spot is by, getting on (pressed-against-its-side time, the
+    // come-round-another-side detour, the cached go-straight-for-it test), on it but held off its middle by a prop, the
+    // route move saved before a duel's footwork, their ink ahead while hurrying to it, a bomb onto the platform, the
+    // spot to face for a thrown special, out of ink on it
+    this.tRole = null; this.tHoldUntil = 0; this.tHoldDur = 0; this.tWaitT = 0; this.tGoalS = 0; this.tPickT = -9;
+    this.tSideT = 0; this.tAltT = 0; this.tAlt = new THREE.Vector3(); this._tNearT = -9; this._tNearV = false; this.tOffT = 0; this.tSkirtT = -9; this.tSkirtSg = 1;
+    this._tMv = new THREE.Vector3(); this.tInkT = 0; this.tInkAhead = 0; this.tBomb = null; this.tBombScan = 0; this.tFace = 0; this.tFaceP = new THREE.Vector3(); this.tDry = false;
     // threats (enemy Waddles / Torpedoes hunting us, enemy canopies): the device being dealt with, when each one was
     // noticed (+ reaction time), line of sight to it, evade heading / sidestep side, canopy steering + flanking state
     this.thr = null; this.thrCand = null; this.thrScanT = Math.random() * 0.25; this._thrMem = new Map(); this._shl = [];
@@ -319,8 +477,9 @@ export class BotBrain {
       // just respawned: face the way the body faces, then sometimes super jump to the teammate furthest up the field
       this._wasDead = false;
       this.aimYaw = a.yaw; this.aimPitch = 0; this.aimYawV = 0; this.aimPitchV = 0;
-      const zp0 = zonePlan();
+      const zp0 = zonePlan(), tp0 = zp0 ? null : towerPlan();
       if (zp0) this._zoneJump(zp0);
+      else if (tp0) this._towerJump(tp0);
       else if (Math.random() < 0.5) {
         const enemyPad = G.level.spawnPads[1 - a.team];
         let best = null, bd = Infinity;
@@ -355,6 +514,10 @@ export class BotBrain {
     // ---------------- Zone Control: the team plan (null in Turf War); re-target at once on a rotation or a new role
     const zp = zonePlan();
     if (zp) this._zoneSync(zp);
+    // ---------------- Tower Command: the team plan (null in every other mode); a new role re-targets at once
+    const tp = zp ? null : towerPlan();
+    if (tp) this._towerSync(tp);
+    const rider = !!tp && this.tRole === 'ride', onT = !!tp && tp.onTower(a);
 
     // ---------------- mode selection (retreat = break line of sight and heal in own ink when losing a duel)
     const inkFrac = a.ink / PLAYER.inkMax;
@@ -362,20 +525,32 @@ export class BotBrain {
     const w = a.weapon;
     if (this.mode === 'retreat') {
       this.retreatT -= dt;
-      if (hpFrac > 0.85 || this.retreatT <= 0 || (!this.target && hpFrac > 0.6)) { this.mode = 'paint'; this.path = null; this.goalTimer = 0; }
+      // (a tower rider a few metres from an empty tower takes it rather than backing off)
+      const grab = rider && tp.T.riders[0] + tp.T.riders[1] === 0 && Math.hypot(tp.T.pos.x - a.pos.x, tp.T.pos.z - a.pos.z) < 6;
+      if (hpFrac > 0.85 || this.retreatT <= 0 || (!this.target && hpFrac > 0.6) || grab) { this.mode = 'paint'; this.path = null; this.goalTimer = 0; }
     } else if (this.target && this.seeTimer > 0 && ((hpFrac < 0.34 && !MELEE[w.kind] && a.lastDamage < 0.8) || hpFrac < 0.2) && Math.random() < 0.6 * dt * 60 * this.diff.fireDiscipline
-      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this)) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range)
+      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this) && !rider) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range; tower riders hold on)
       this.mode = 'retreat'; this.retreatT = 2.2 + Math.random() * 1.4; this.repath = 0; this._pickRetreat();
     }
-    if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05)) {
+    // (a tower rider on it doesn't hop off to refill — it holds its fire while the tank tops up, and keeps it moving)
+    const stayDry = rider && onT;
+    if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05) && !stayDry) {
       this.mode = 'refill'; this.refillUntil = 0.85 + Math.random() * 0.1;
     }
     if (this.mode === 'refill' && inkFrac >= this.refillUntil) this.mode = 'paint';
+    if (tp) this.tDry = stayDry && (inkFrac < 0.1 || (this.tDry && inkFrac < 0.4));
     if (zp) {
       // the objective first: only take fights that are in range or on / by the zone (pushers fight like Turf War)
       if (this.mode !== 'refill' && this.mode !== 'retreat') {
         const m = this.target && this._zoneEngage(zp) ? 'fight' : 'paint';
         if (m === 'paint' && this.mode === 'fight') { this.goalTimer = 0; this.zHoldUntil = 0; }   // back to the zone
+        this.mode = m;
+      }
+    } else if (tp) {
+      // the tower first: fights in range, on it or round it (escorts: along the route too)
+      if (this.mode !== 'refill' && this.mode !== 'retreat') {
+        const m = this.target && this._towerEngage(tp) ? 'fight' : 'paint';
+        if (m === 'paint' && this.mode === 'fight') { this.goalTimer = 0; this.tHoldUntil = 0; }
         this.mode = m;
       }
     } else if (this.mode !== 'refill' && this.mode !== 'retreat') this.mode = this.target ? 'fight' : 'paint';
@@ -384,6 +559,7 @@ export class BotBrain {
     this.goalTimer -= dt; this.repath -= dt;
     if (this.mode === 'fight' && this.target) {
       if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
+      else if (tp && this._towerFightNav(tp)) { /* riders make for the tower; perches / escorts hold their ground */ }
       else if (this.repath <= 0) this._pathTo(this.target.pos, 0.6);
     } else if (this.mode === 'refill') {
       if (this.repath <= 0 || !this.path) this._pickRefill();
@@ -402,13 +578,15 @@ export class BotBrain {
         const arrived = !this.path || this.pi >= this.path.length;
         if (arrived && this.zHoldDur > 0) { this.zHoldUntil = this.t + this.zHoldDur; this.zHoldDur = 0; }
         if (this.wiggleT <= 0 && (this.goalTimer <= 0 || (arrived && this.t >= (this.zHoldUntil || 0)))) this._pickZoneGoal(zp);
-      } else if (this.goalTimer <= 0 || !this.path || this.pi >= this.path.length) this._pickPaintGoal();
+      } else if (tp) this._towerGoal(tp);
+      else if (this.goalTimer <= 0 || !this.path || this.pi >= this.path.length) this._pickPaintGoal();
     }
 
     // ---------------- steering along the path
     const move = this._steer(dt);
     this._unstick(dt, move);
     if (!this.path && this.wiggleT <= 0) this._backOnNav(dt, move);
+    if (tp) this._tMv.copy(move);   // (the route, before a duel's footwork: a tower rider still walking up keeps to it)
     const wantMove = move.lengthSq() > 0.01;
 
     // ---------------- actions
@@ -526,8 +704,14 @@ export class BotBrain {
         // kit weapons with their own fight tactics (bot.tactics, e.g. the Cutlass: flank, pre-charge, swim in, strafe):
         // every fight frame, aimed or not, after the defaults above — may override move, fire, squid and jump
         if (BK?.tactics) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
+        // Tower Command: lob a bomb onto their riders (turn to the platform, throw, back to the duel)
+        if (tp) {
+          const tb = this._towerBombAim(tp, dt, onT);
+          if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
+        }
         // special
-        if (a.specialReady() && (this._wantSpecial('fight', dist, enemyVisible) || (zp && this._zoneSpecial(zp, true)))) it.special = true;
+        if (a.specialReady() && (this._wantSpecial('fight', dist, enemyVisible) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT)))
+          && !(tp && !this._towerSpecialOk(onT))) it.special = true;
       } else {
         // retreat: swim away through own ink, keep eyes on the threat
         it.squid = true;
@@ -563,6 +747,8 @@ export class BotBrain {
         const c = zp.Z.zones[this.zZone]?.center;
         if (c) zAim = { x: c[0], y: c[1], z: c[2], d: Math.hypot(c[0] - a.pos.x, c[2] - a.pos.z) };
       }
+      // Tower Command: a rider inks the route ahead of the tower; about to throw a special → face where it should land
+      if (tp) zAim = this._towerAim(tp, dt, onT, !!MELEE[w.kind]);
       if (zAim) {
         wantYaw = Math.atan2(zAim.x - a.pos.x, zAim.z - a.pos.z) + Math.sin(this.sweep) * 0.22;
         if (CHARGES[w.kind] || zAim.d < 3.2) wantPitch = clamp(Math.atan2(zAim.y + 0.05 - (a.pos.y + 1.1), Math.max(0.5, zAim.d)), -0.95, 0.15);
@@ -597,7 +783,7 @@ export class BotBrain {
       }
       // travel as a squid through own ink when not painting
       if (!it.fire && this._pathRemaining() > 5 && a.groundTeam === 1) it.squid = true;
-      if (this.bombCd <= 0 && this._paintSub()) { it.sub = true; this._bombAim = true; }
+      if (this.bombCd <= 0 && !onT && this._paintSub()) { it.sub = true; this._bombAim = true; }   // (nothing planted on a moving tower)
       else if (zp) {
         // Zone Control: lob a bomb onto a patch of their ink on the zone (turn to it, then throw)
         const zb = this._zoneBombAim(zp, dt);
@@ -606,8 +792,12 @@ export class BotBrain {
           if (zb.release) this.zBomb = null;
           else if (Math.abs(angleDiff(this.aimYaw, zb.yaw)) < 0.09 && Math.abs(this.aimPitch - zb.pitch) < 0.09) { this._bombAim = true; zb.release = true; this.bombCd = 4 + Math.random() * 3; }
         }
+      } else if (tp) {
+        // Tower Command: lob a bomb onto their riders
+        const tb = this._towerBombAim(tp, dt, onT);
+        if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
       }
-      if (a.specialReady() && (zp ? this._zoneSpecial(zp) : this._wantSpecial('paint', 0, false))) it.special = true;
+      if (a.specialReady() && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : this._wantSpecial('paint', 0, false))) it.special = true;
     } else if (this.mode === 'refill') {
       it.squid = a.groundTeam === 1 || this._pathRemaining() > 2;
       if (a.groundTeam !== 1 && this._pathRemaining() < 1.5 && inkFrac > 0.03) {
@@ -624,6 +814,8 @@ export class BotBrain {
     const canAim = this._canopyCtl(dt, it, move, !thrAim);
     if (!thrAim && canAim) thrAim = canAim;
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
+    // ---------------- Tower Command: riders hold the platform's middle, or walk straight at it and hop on
+    if (tp) this._towerMove(tp, dt, move, it, thrAim, onT);
     // ---------------- wall climb (nav 'climb' edge): ink the wall column up to the top, then swim up it
     this._climbAim = this._climb(dt, move, it);
     if (this._climbAim) { wantYaw = this._climbAim.yaw; wantPitch = this._climbAim.pitch; }
@@ -874,6 +1066,12 @@ export class BotBrain {
       s._zoneAimed = true;
       const P = zonePlan(), p = P && P.hotspot(this.zZone, a.team);
       if (p) s.target.set(p.x, 0, p.z);
+    }
+    // Tower Command: onto the tower when it isn't ours, else onto the route just ahead of it
+    if (s.id === 'strike' && s.aiming && s.target && !s._zoneAimed && G.match && G.match.tower) {
+      s._zoneAimed = true;
+      const P = towerPlan();
+      if (P) { const T = P.T, p = T.owner === a.team ? P.at(T.s + P.dirOf(a.team) * 8) : T.pos; s.target.set(p.x, 0, p.z); }
     }
     const fighting = this.mode === 'fight' && !!this.target;
     const t = this.target;
@@ -1257,6 +1455,330 @@ export class BotBrain {
     return this.zBomb;
   }
 
+  // ================================================================ Tower Command (only ever called in a tower match)
+  // after respawning: super jump to a teammate riding the tower (else the one nearest it) when it's a long way off
+  _towerJump(P) {
+    const a = this.a, T = P.T;
+    if (Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z) < 26 || Math.random() > 0.8) return;
+    let best = null, bd = 14;
+    for (const o of G.actors) {
+      if (o === a || o.team !== a.team || !o.alive || o.superJumpState || o.hp < PLAYER.hp * 0.45) continue;
+      const d = Math.hypot(o.pos.x - T.pos.x, o.pos.z - T.pos.z) - (P.riding(o) ? 8 : 0);
+      if (d < bd && o.pos.distanceTo(a.pos) > 18) { bd = d; best = o; }
+    }
+    for (const b of G.subs ? G.subs.beaconsFor(a.team) : []) {
+      const d = Math.hypot(b.pos.x - T.pos.x, b.pos.z - T.pos.z);
+      if (d < bd - 2 && b.pos.distanceTo(a.pos) > 18) { bd = d; best = b; }
+    }
+    const ok = best && (best.pos && best.kind === 'beacon' ? G.subs.jumpToBeacon(a, best) : a.superJump(best));
+    if (ok) { this.path = null; this.goalTimer = 0; }
+  }
+
+  // per frame: a changed role re-targets straight away
+  _towerSync(P) {
+    const r = P.roleOf(this.a);
+    if (r !== this.tRole) {
+      this.tRole = r;
+      this.goalTimer = 0; this.repath = 0; this.tHoldUntil = 0; this.tHoldDur = 0; this.tSideT = 0; this.tAltT = 0; this.tWaitT = 0;
+    }
+  }
+
+  // take the fight? Riders: whatever's in reach of the platform (they don't chase); perches: in range or on it;
+  // escorts: in range, on it, or anywhere within ~14 m of it
+  _towerEngage(P) {
+    const a = this.a, t = this.target, T = P.T;
+    const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z), range = this._range();
+    const tOn = P.riding(t), dT = Math.hypot(t.pos.x - T.pos.x, t.pos.z - T.pos.z);
+    if (this.tRole === 'ride') return d < range * 1.2 || tOn || (dT < 8 && d < range * 1.8);
+    if (this.tRole === 'perch') return d < range * 1.05 || tOn;
+    return d < range * 1.3 || tOn || dT < 14;
+  }
+  // in a fight: riders keep making for the tower (and stay on it); perches keep their spot while the foe's in range;
+  // escorts don't chase a foe off the route (further from the tower than 16 m and further than we are)
+  _towerFightNav(P) {
+    const a = this.a, t = this.target, T = P.T;
+    if (this.tRole === 'ride') { this._towerBoardNav(P); return true; }
+    const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
+    if (this.tRole === 'perch') {
+      if (d < this._range() * 1.05 && d > 3) { this.path = null; this.repath = 0.3; return true; }
+      return false;
+    }
+    const tt = Math.hypot(t.pos.x - T.pos.x, t.pos.z - T.pos.z), st = Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z);
+    if (d > 4 && tt > 16 && tt > st + 2) { this.path = null; this.repath = 0.3; return true; }
+    return false;
+  }
+
+  // close enough to go straight for the platform? Within ~3.4 m, on a floor a hop reaches its top from (or a little
+  // above it: a drop onto it), and a body-width line to just off its corners (the platform itself would block the
+  // ray); ~6 m once the route's run out
+  _towerNear(P, d) {
+    const up = P.T.top - this.a.pos.y;
+    if (up > 1.2 || up < -3) return false;                            // (a hop won't reach its top from here)
+    const lim = !this.path || this.pi >= this.path.length ? 6 : 3.4;
+    if (d > lim) return false;
+    if (d < 2) return true;
+    if (this.t - (this._tNearT ?? -9) < 0.2) return this._tNearV;
+    const a = this.a, T = P.T, k = 1.95 / d;
+    this._tNearT = this.t;
+    this._tNearV = this._fatLos(a.pos.x, a.pos.y, a.pos.z, T.pos.x + (a.pos.x - T.pos.x) * k, Math.max(a.pos.y, T.pos.y), T.pos.z + (a.pos.z - T.pos.z) * k);
+    return this._tNearV;
+  }
+  // a rider's route: to the nearest boarding spot by the tower (where it'll be in a moment while it rolls; else the
+  // node under it), re-planned as it moves; within reach of it no route at all (_towerMove steers straight at it);
+  // a tower nobody can hop onto from anywhere near (and not moving): wait by its route
+  _towerBoardNav(P) {
+    const a = this.a, T = P.T;
+    const d = Math.hypot(T.pos.x - a.pos.x, T.pos.z - a.pos.z);
+    if (P.onTower(a) || this._towerNear(P, d)) { this.path = null; return; }
+    if ((this.repath > 0 && this.path && this.pi < this.path.length) || this.t < this.tWaitT) return;
+    // (the way it's going: rolling, else the way its holders push it, else ours)
+    const dir = T.moving || (T.owner >= 0 ? P.dirOf(T.owner) : P.dirOf(a.team));
+    const s = T.s + T.moving * 1.5, sp = P.spotFor(s, a, dir, !!T.moving);
+    if (sp < 0 && !T.moving) {
+      // nowhere a hop reaches it from, here or on the stretch it rolls onto next (up on a roof, mid-climb): keep busy
+      // by its route (ink, fight) and look again in a moment
+      const e = this._towerEscortNode(P), q = e >= 0 ? G.nav.nodes[e] : null;
+      if (q) this._pathTo(_v3.set(q.x, q.y, q.z), 0.3);
+      this.tWaitT = this.tHoldUntil = this.t + 2 + Math.random() * 1.5;
+      return;
+    }
+    const id = sp >= 0 ? sp : P.nodeAt(s), n = id >= 0 ? G.nav.nodes[id] : null;
+    if ((n && this._pathTo(_v3.set(n.x, n.y, n.z), 0.3)) || this._pathTo(T.pos, 1.0)) this.zFail = 0;
+    else if (++this.zFail >= 4) { this.zFail = 0; this._wiggle(0.8); }   // no way from here (off the nav mesh): shake loose
+    this.repath = 0.5 + Math.random() * 0.3;
+  }
+
+  // escorts / perches: arrive → hold a moment → the next spot (an escort the tower's caught up with moves on at once)
+  _towerGoal(P) {
+    if (this.tRole === 'ride') { this._towerBoardNav(P); return; }
+    const T = P.T, arrived = !this.path || this.pi >= this.path.length;
+    if (arrived && this.tHoldDur > 0) { this.tHoldUntil = this.t + this.tHoldDur; this.tHoldDur = 0; }
+    const passed = this.tRole === 'escort' && (this.tGoalS - T.s) * P.dirOf(this.a.team) < 1.5 && this.t - this.tPickT > 1;
+    if (this.wiggleT <= 0 && (this.goalTimer <= 0 || passed || (arrived && this.t >= this.tHoldUntil))) this._pickTowerGoal(P);
+  }
+  _pickTowerGoal(P) {
+    this.tPickT = this.t; this.tHoldDur = 0;
+    let id = -1, hold = 0;
+    if (this.tRole === 'perch') { id = this._towerPerchNode(P); if (id >= 0) { hold = 3 + Math.random() * 3; this.goalTimer = 10; } }
+    if (id < 0) { id = this._towerEscortNode(P); hold = 0.5 + Math.random() * 1.2; this.goalTimer = 4 + Math.random() * 2; }
+    if (id < 0) { this._pickPaintGoal(); return; }
+    const n = G.nav.nodes[id];
+    if (this._pathTo(_v3.set(n.x, n.y, n.z), 0.3)) { this.tHoldDur = hold; this.zFail = 0; }
+    else if (++this.zFail >= 3) { this.zFail = 0; this._wiggle(0.8); }
+  }
+  // a spot by the route 3–10 m ahead of the tower toward the enemy goal (unclaimed / enemy ink first, apart from the
+  // other escorts, never at their spawn)
+  _towerEscortNode(P) {
+    const a = this.a, nav = G.nav, T = P.T, dir = P.dirOf(a.team), ep = G.level.spawnPads[1 - a.team];
+    const mates = G.actors.filter((o) => o !== a && o.team === a.team && o.bot && o.alive && o.bot.goal >= 0);
+    let best = -1, bs = -Infinity, bS = T.s;
+    for (let k = 0; k < 14; k++) {
+      const s = T.s + dir * (3 + Math.random() * 7), p = P.at(s);
+      const ang = Math.random() * Math.PI * 2, r = Math.random() * 4;
+      const id = nav.nearest(_v.set(p.x + Math.cos(ang) * r, p.y + 0.3, p.z + Math.sin(ang) * r), 1.0);
+      if (id < 0) continue;
+      const n = nav.nodes[id];
+      if (n.zone >= 0 || n.wet === 2 || Math.abs(n.y - p.y) > 2 || Math.hypot(n.x - p.x, n.z - p.z) > 5 || Math.hypot(n.x - ep.x, n.z - ep.z) < 10) continue;
+      const st = G.paint.regionStats(n.x, n.y, n.z, 2.5, a.team, _stats);
+      let sc = (st.n ? st.empty + st.enemy * 1.4 : 0) * 3 - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.05 + Math.random() - (n.wet ? 1.5 : 0);
+      for (const m of mates) { const g = nav.nodes[m.bot.goal]; if (Math.hypot(g.x - n.x, g.z - n.z) < 3.5) sc -= 2; }
+      if (sc > bs) { bs = sc; best = id; bS = s; }
+    }
+    this.tGoalS = bS;
+    return best;
+  }
+  // long range: a spot 6 m – ~0.85 × range from the tower (ours: from the route just ahead of it), on our side of it,
+  // a little above it if possible, with a sightline to it
+  _towerPerchNode(P) {
+    const a = this.a, nav = G.nav, T = P.T, dir = P.dirOf(a.team), range = this._range();
+    const F = T.owner === a.team ? P.at(T.s + dir * 5) : T.pos;
+    const e = T.path.dir(T.s, _v2), ex = e.x * dir, ez = e.z * dir;                  // our push direction there
+    const mates = G.actors.filter((o) => o !== a && o.team === a.team && o.bot && o.alive && o.bot.goal >= 0);
+    const dMax = Math.min(range * 0.85, 22), dMin = Math.min(6, dMax - 2), cands = [];
+    for (let k = 0; k < 160; k++) {
+      const id = nav.validIds[(Math.random() * nav.validIds.length) | 0], n = nav.nodes[id];
+      const dx = n.x - F.x, dz = n.z - F.z, d = Math.hypot(dx, dz);
+      if (d < dMin || d > dMax || n.zone >= 0 || n.wet === 2) continue;
+      const side = (dx * ex + dz * ez) / Math.max(d, 1);
+      let sc = clamp(n.y - F.y, -2, 4) * 1.1 - side * 1.6 - Math.abs(d - range * 0.6) * 0.1 - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.04 + Math.random() * 1.2 - (n.wet ? 1.5 : 0);
+      for (const m of mates) { const g = nav.nodes[m.bot.goal]; if (Math.hypot(g.x - n.x, g.z - n.z) < 5) sc -= 4; }
+      cands.push([sc, id]);
+    }
+    cands.sort((x, y) => y[0] - x[0]);
+    const fx = F.x, fy = F.y + 1.2, fz = F.z;
+    for (let k = 0; k < Math.min(6, cands.length); k++) {
+      const n = nav.nodes[cands[k][1]];
+      if (G.physics.los(_v.set(n.x, n.y + 1.4, n.z), _v2.set(fx, fy, fz))) return cands[k][1];
+    }
+    return -1;
+  }
+
+  // paint-mode aim: where a thrown special should land (a moment, turning to it), else a rider inks the route 5–8 m
+  // ahead of the tower
+  _towerAim(P, dt, onT, melee) {
+    const a = this.a;
+    if (this.tFace > 0) { this.tFace -= dt; const f = this.tFaceP; return { x: f.x, y: f.y, z: f.z, d: Math.hypot(f.x - a.pos.x, f.z - a.pos.z) }; }
+    if (!onT || melee || this.tRole !== 'ride') return null;
+    const p = P.at(P.T.s + P.dirOf(a.team) * (6.5 + Math.sin(this.sweep * 0.37) * 1.5));
+    return { x: p.x, y: p.y, z: p.z, d: Math.hypot(p.x - a.pos.x, p.z - a.pos.z) };
+  }
+  // specials round the tower: foes on / by it and us near it (cover our riders, break theirs, take it back). Thrown
+  // ones go where we look: from the platform at the nearest foe by it, from off it onto the tower.
+  _towerSpecial(P, fighting, onT) {
+    const a = this.a, T = P.T;
+    if (Math.hypot(T.pos.x - a.pos.x, T.pos.z - a.pos.z) > 16 || !this._towerSpecialOk(onT)) return false;
+    let foes = 0, fd = Infinity;
+    for (const o of G.actors) {
+      if (o.team === a.team || !o.alive || Math.hypot(o.pos.x - T.pos.x, o.pos.z - T.pos.z) > 11) continue;
+      foes++;
+      const md = Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z);
+      if (md < fd) { fd = md; if (onT) this.tFaceP.set(o.pos.x, o.pos.y, o.pos.z); }
+    }
+    if (!foes) return false;
+    const id = SPECIALS[a.specialId]?.kind || a.specialId;
+    const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower';
+    if (thrown && !fighting) {
+      if (!onT) this.tFaceP.set(T.pos.x, T.top, T.pos.z);
+      const f = this.tFaceP;
+      if (Math.abs(angleDiff(this.aimYaw, Math.atan2(f.x - a.pos.x, f.z - a.pos.z))) > 0.6) { this.tFace = 0.8; return false; }
+    }
+    return Math.random() < (fighting ? 0.03 : 0.08);
+  }
+  // a rider on the platform never starts a special that carries the body off it
+  _towerSpecialOk(onT) {
+    return !(onT && BODY_SP[SPECIALS[this.a.specialId]?.kind || this.a.specialId]);
+  }
+  // a thrown sub onto their riders on the platform, in lobbing range (looked for twice a second); returns the aim to
+  // hold ({ yaw, pitch, release }) while it's thrown
+  _towerBombAim(P, dt, onT) {
+    if (this.tBomb) { this.tBomb.t -= dt; if (this.tBomb.t <= 0) this.tBomb = null; return this.tBomb; }
+    this.tBombScan -= dt;
+    const a = this.a, sub = a.sub || SUB.bomb, T = P.T;
+    if (this.tBombScan > 0 || this.bombCd > 0 || onT || !THROWN[sub.kind] || a.ink < sub.inkCost + 10) return null;
+    if (SUB_KITS[sub.kind]?.blocked?.(a, sub)) return null;
+    this.tBombScan = 0.5;
+    if (!T.riders[1 - a.team]) return null;
+    // (where it'll be when the bomb comes down: it rolls on meanwhile)
+    const p = T.path.at(T.s + (T.moving ? T.moving * T.speed[T.moving > 0 ? 0 : 1] * 1.3 : 0), _v);
+    const d = Math.hypot(p.x - a.pos.x, p.z - a.pos.z);
+    if (d < 4.5 || d > 12 || Math.abs(T.top - a.pos.y) > 3.5) return null;
+    const pitch = lobPitch(d, T.top - a.pos.y, sub.throwSpeed || 13.5);
+    if (pitch === null) return null;
+    this.tBomb = { yaw: Math.atan2(p.x - a.pos.x, p.z - a.pos.z), pitch, t: 1.1, release: false };
+    return this.tBomb;
+  }
+  _towerBombGo(tb) {
+    if (tb.release) { this.tBomb = null; return; }
+    if (Math.abs(angleDiff(this.aimYaw, tb.yaw)) < 0.09 && Math.abs(this.aimPitch - tb.pitch) < 0.09) { this._bombAim = true; tb.release = true; this.bombCd = 4 + Math.random() * 3; }
+  }
+
+  // our way runs into the platform's side where a hop won't clear it (it's up on steps / a box above our floor, and the
+  // nav graph doesn't know it's there): slide round its edge — the way round nearer where we were heading, kept a moment
+  _towerSkirt(move, dx, dz, d, up) {
+    const ml = Math.hypot(move.x, move.z);
+    if (up < 1.2 || up > 3.5 || d < 0.2 || ml < 0.3 || (move.x * dx + move.z * dz) / (ml * d) < 0.3) return;
+    let tx = -dz / d, tz = dx / d;
+    if (this.t - (this.tSkirtT ?? -9) > 1) this.tSkirtSg = tx * move.x + tz * move.z >= 0 ? 1 : -1;
+    this.tSkirtT = this.t;
+    tx *= this.tSkirtSg; tz *= this.tSkirtSg;
+    move.set(tx * 0.95 - (dx / d) * 0.3, 0, tz * 0.95 - (dz / d) * 0.3);
+    this.noProg = 0; this.bestD = Infinity;
+  }
+
+  // per frame, after the mode's own footwork: a rider on the platform holds its middle (the engine carries it) and
+  // stays put — no hops, rolls or dodges off the edge; a rider by it walks straight at its centre and hops on when the
+  // edge is close; pressed against its side too long (a rider in the way, a bad corner) → round to another side
+  // first. Anyone else whose way runs into its side hops over it.
+  _towerMove(P, dt, move, it, thrAim, onT) {
+    const a = this.a, T = P.T;
+    if (this.tDry) it.fire = false;                                   // on it and out of ink: hold fire, let the tank fill
+    const sp = a.specialActive;
+    if (sp && BODY_SP[sp.kind || sp.id]) return;                      // a ride / transformation drives the body
+    const dx = T.pos.x - a.pos.x, dz = T.pos.z - a.pos.z, d = Math.hypot(dx, dz), up = T.top - a.pos.y;
+    const settle = () => { this.wiggleT = 0; this._needJump = false; this.noProg = 0; this.dispT = 0; this.moveAcc = 0; this.snap.copy(a.pos); };
+    if (this.tRole !== 'ride' || this.mode === 'refill' || this.mode === 'retreat') {
+      if (!onT && a.grounded && up > 0.3 && P.edge(a.pos.x, a.pos.z) < 0.7) {
+        const ml = Math.hypot(move.x, move.z);
+        if (up < 1.2) { if (this.jumpCd <= 0 && ml > 0.3 && (move.x * dx + move.z * dz) / (ml * (d || 1)) > 0.5) { it.jump = true; it.fire = false; this.jumpCd = 0.8; } }
+        else this._towerSkirt(move, dx, dz, d, up);
+      }
+      return;
+    }
+    if (onT) {
+      // hold the middle; in a duel, sidestep about it (±0.7 m across the line to the foe: a still rider is an easy shot)
+      let gx = dx, gz = dz;
+      const tg = this.mode === 'fight' && this.target;
+      if (tg) {
+        const fx = tg.pos.x - T.pos.x, fz = tg.pos.z - T.pos.z, fl = Math.hypot(fx, fz) || 1, o = this.strafeS * 0.7;
+        gx += (-fz / fl) * o; gz += (fx / fl) * o;
+      }
+      const gl = Math.hypot(gx, gz), k = gl > 0.2 ? Math.min(1, (gl - 0.1) / 0.7) : 0;
+      if (k > 0) move.set((gx / gl) * k, 0, (gz / gl) * k); else move.set(0, 0, 0);
+      // on it but not counted (a prop in the way at its edge holds us off the middle): slide along it, then the other way
+      if (!P.riding(a) && P.edge(a.pos.x, a.pos.z) > -0.12) {
+        this.tOffT = (this.tOffT || 0) + dt;
+        if (this.tOffT > 0.4) {
+          const sg = (((this.tOffT - 0.4) / 1.2) | 0) % 2 ? -1 : 1, l = d || 1;
+          move.set((dx / l) * 0.35 - (dz / l) * sg, 0, (dz / l) * 0.35 + (dx / l) * sg);
+        }
+      } else this.tOffT = 0;
+      it.squid = false; it.jump = false; this.tSideT = 0; this.tAltT = 0;
+      settle();
+      return;
+    }
+    if (thrAim && this.thrAct === 'evade') return;                    // a device about to go off on us: dodge that first
+    if (!this._towerNear(P, d)) {
+      // still walking up: keep to the route (a duel's footwork would stall us short of it)
+      if (this.mode === 'fight' && this._tMv.lengthSq() > 0.01) move.copy(this._tMv);
+      if (a.grounded && P.edge(a.pos.x, a.pos.z) < 0.7) this._towerSkirt(move, dx, dz, d, up);
+      // none of ours on it: hurry — swim through our own ink, and no painting on the way (it slows the walk) unless it's
+      // their ink ahead
+      if (this.mode === 'paint' && this.path && T.riders[a.team] === 0) {
+        if ((this.tInkT = (this.tInkT || 0) - dt) <= 0) {
+          this.tInkT = 0.3;
+          const st = G.paint.regionStats(a.pos.x + move.x * 2, a.pos.y, a.pos.z + move.z * 2, 1.4, a.team, _stats);
+          this.tInkAhead = st.n ? st.enemy : 0;
+        }
+        if (a.groundTeam === 1 && !this._squidWouldDrop(move)) { it.squid = true; it.fire = false; }
+        else if (this.tInkAhead < 0.3) it.fire = false;
+      }
+      this.tSideT = 0;
+      return;
+    }
+    // the last few metres: straight at its centre (via a spot off another side while coming round), hop on
+    it.squid = false;
+    let gx = dx, gz = dz;
+    if (this.tAltT > 0) {
+      this.tAltT -= dt;
+      gx = T.pos.x + this.tAlt.x - a.pos.x; gz = T.pos.z + this.tAlt.z - a.pos.z;
+      if (Math.hypot(gx, gz) < 0.45) { this.tAltT = 0; gx = dx; gz = dz; }
+    }
+    const gl = Math.hypot(gx, gz) || 1, edge = P.edge(a.pos.x, a.pos.z);
+    move.set(gx / gl, 0, gz / gl);
+    // under its edge (it came down a drop onto our floor, or rolled over us from a step below): out from under first
+    if (edge < 0.05 && a.pos.y < T.top - 0.5) {
+      if (d > 0.2) move.set(-dx / d, 0, -dz / d); else T.path.dir(T.s, move);
+      settle(); return;
+    }
+    if (a.grounded && up > 0.3) {
+      // (the trigger let go for the hop: jump + fire + move is a dodge roll with twins / dualies)
+      if (this.tAltT <= 0 && edge < 0.9 && this.jumpCd <= 0) { it.jump = true; it.fire = false; this.jumpCd = 0.5; }
+      if (edge < 0.6) this.tSideT += dt;
+      if (this.tSideT > 1.6) {
+        // come round: a spot 2.5 m out, 70° round from where we stand (whichever way is open floor at our level)
+        this.tSideT = 0;
+        const b0 = Math.atan2(-dx, -dz), sg0 = Math.random() < 0.5 ? 1 : -1;
+        for (const sg of [sg0, -sg0]) {
+          const b = b0 + sg * 1.22, px = T.pos.x + Math.sin(b) * 2.5, pz = T.pos.z + Math.cos(b) * 2.5;
+          if (Math.abs(G.level.groundHeight(px, pz, a.pos.y + 0.5) - a.pos.y) > 0.5 || !this._dryLine(a.pos.x, a.pos.y, a.pos.z, px, pz)) continue;
+          this.tAlt.set(px - T.pos.x, 0, pz - T.pos.z); this.tAltT = 1.4;
+          break;
+        }
+      }
+    }
+    settle();
+  }
+
   // ============================================================================================ threats
   // Enemy devices that hunt a player — Waddle Bombs (walk after a foe along the nav graph at 4 m/s, give up after ~9 s /
   // 26 m) and Tide Torpedoes (lock on in mid-air, hover, then home in gently) — and enemy Brolly canopies (a held one
@@ -1625,6 +2147,7 @@ export class BotBrain {
     let best = null, bd = Infinity;
     const aw = this.diff.awareness;
     const bias = MAIN_KITS[a.weapon.kind]?.bot?.targetBias;   // kit weapons may weigh targets (e.g. the Cutlass: busy ones)
+    const TP = G.match && G.match.tower ? towerPlan() : null;   // Tower Command: foes riding the tower first
     for (const e of G.actors) {
       if (e.team === a.team || !e.alive) continue;
       const d = e.pos.distanceTo(a.pos);
@@ -1634,7 +2157,7 @@ export class BotBrain {
       if (swimming && d > 3 && !(hs > 7 && d < 9)) continue;
       _v2.copy(e.pos); _v2.y += e.form === 'squid' ? 0.3 : 1.0;
       if (!G.physics.los(eye, _v2)) continue;
-      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0);
+      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0);
       if (score < bd) { bd = score; best = e; }
     }
     if (best) {
