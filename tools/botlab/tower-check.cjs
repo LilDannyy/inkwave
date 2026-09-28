@@ -134,13 +134,18 @@ app.on('browser-window-created', (_, win) => {
       const setup = await js(`(async () => {
         const g = window.__inkwave, m = g.match, T = m.tower, P = T.path, THREE = await import('three');
         g.debug.freeze();
-        for (const a of m.actors) { a.character.setVisible(false); a.character.root.visible = false; a.pos.set(0, -50, 0); }
+        // everyone hidden; the others parked out of the way (the local player stays on its pad: a dead local player
+        // puts the camera into spectate, which blends over the first shot)
+        for (const a of m.actors) { a.character.setVisible(false); a.character.root.visible = false; if (!a.isLocal) a.pos.set(0, -50, 0); }
         __G.projectiles?.clear?.(); __G.paint.clear(); __G.fx?.clear?.();
         g.hud?.setVisible(false); g.menus?.show(null);
         document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
         if (__G.scene.fog) { __G.scene.fog.near = 5000; __G.scene.fog.far = 9000; }
         T.owner = 0;                                           // the rail lit in Alpha's ink from the centre to its first stop
-        window.__shot = (from, look, fov) => { g.settings.fov = fov; const f = new THREE.Vector3(...from), l = new THREE.Vector3(...look); g.rig.cinematic(f, f, l, l, 99, () => {}); for (let i = 0; i < 4; i++) g.debug.step(1000 / 60); const cam = __G.camera; cam.near = 0.2; cam.far = 4000; cam.updateProjectionMatrix(); g.debug.step(1000 / 60); return 1; };
+        // (settings.fov is the horizontal field of view)
+        window.__shot = (from, look, fov) => { g.settings.fov = fov; const f = new THREE.Vector3(...from), l = new THREE.Vector3(...look); g.rig.cinematic(f, f, l, l, 99, () => {});
+          g.rig._prevMode = 'path'; if (g.rig.blend) g.rig.blend.active = false;   // no pose blend from whatever the camera did before
+          for (let i = 0; i < 4; i++) g.debug.step(1000 / 60); const cam = __G.camera; cam.near = 0.2; cam.far = 4000; cam.updateProjectionMatrix(); g.debug.step(1000 / 60); return 1; };
         const B = __G.level.bounds, Dz = B.maxZ - B.minZ, Dx = B.maxX - B.minX, th = Math.tan(9 * Math.PI / 360), tv = th / (${W} / ${H});
         const h = Math.max((Dz / 2 + 4) / th, (Dx / 2 + 4) / tv);
         window.__shot([-0.001, h, 0], [0, 0, 0], 9); __G.camera.near = Math.max(1, h - 80); __G.camera.far = h + 80; __G.camera.updateProjectionMatrix(); g.debug.step(1000 / 60);
@@ -160,6 +165,7 @@ app.on('browser-window-created', (_, win) => {
         const h = Math.max((Dz / 2 + 4) / th, (Dx / 2 + 4) / tv); window.__shot([-0.001, h, 0], [0, 0, 0], 9);
         __G.camera.near = Math.max(1, h - 80); __G.camera.far = h + 80; __G.camera.updateProjectionMatrix(); window.__inkwave.debug.step(1000 / 60); return 1; })()`);
       await wait(500);
+      if (process.env.DEBUG_TOP) console.log('TOPCAM', JSON.stringify(await js(`(() => { const c = __G.camera, r = window.__inkwave.rig; return { pos: c.position.toArray().map((v) => +v.toFixed(1)), fov: c.fov, near: c.near, far: c.far, mode: r && (r.mode || r.state), path: !!(r && r.path), frozen: window.__inkwave.frozen, st: window.__inkwave.match.state, settingsFov: window.__inkwave.settings.fov }; })()`)));
       if (frame) { fs.writeFileSync(path.join(OUT, `${MAP}-top.png`), frame.toPNG()); shots.push(`${MAP}-top.png`); }
       win.setContentSize(1600, 900); await wait(600);
       let n = 0;
