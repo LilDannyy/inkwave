@@ -25,9 +25,10 @@ import { SURF } from './surfaces.js';
 //     rotation) — framed by out-of-play architecture (mills, terraces, ANCHOR WAREHOUSE).
 //   • off-limits (roof: true): building tops, wall tops, parapet tops, the mills. Railings are rail colliders (props).
 //   • Tower Command builds its own variant (src/world/variants.js: onlyIn / notIn 'tower'; every other mode is untouched):
-//     the humpback bridge 7.2 m wide between its parapets (the boats moored 1.3 m further along), the stables' flat loft
-//     roof in play (inkable, walkable: the one roof that is) up a horse ramp, the office a metre shallower, the towpath
-//     ending short of the office street, the lower gates' lock-side beam cranked — the tower's street kept clear.
+//     the humpback bridge 7.2 m wide between its parapets, the moored narrowboats turned across the pound beside it as a
+//     low crossing (XBOATS), the stables' flat loft roof in play (inkable, walkable: the one roof that is) up a horse ramp,
+//     with cover on it, the office a metre shallower, the towpath ending short of the office street, the lower gates'
+//     lock-side beam cranked — the tower's street kept clear.
 const LG = {
   setts: '#a9a39a', lockside: '#6a6b74', brick: '#a4563f', stone: '#d8d0c0', quay: '#bcb4a6',
   timber: '#4a3a30', leads: '#7a7d82', spawn: '#eae6de', render: '#ece4d4', hull: '#2d3440',
@@ -55,7 +56,19 @@ for (const [x0, x1] of [[-8, -4], [-4, 0], [0, 4], [4, 8], [8, 14]]) cols.push(y
 
 // ---- Tower Command only (src/world/variants.js: the tower's own build; every other mode keeps the pieces above)
 export const BRIDGE_T = 3.6;             // the humpback bridge's deck half-width in Tower Command (2.2 elsewhere)
-export const BOAT_T = 1.3;               // how far along the pound the moored boats move to clear the wider bridge
+// the two narrowboats turned across the pound beside the bridge (the user's "shortcut to the other side bypassing the
+// bridge"): breasted side by side, each spanning quay to quay — its pointed bow and counter stern down in the water, the
+// cabin roof / sheeted hold (5.8 m, top 0.25: a step up from the towpath's 0.15) in the middle, and a wide boarding plank
+// from each quay onto its roof over the bow / stern, so the whole crossing is one flat 4.25 m walk with no gap to fall
+// into. s0: the hull's side nearer the bridge (s along the pound); bow: the quay the bow points at (-1 Alpha's towpath,
+// +1 Bravo's). The props' lockgate_narrowboat dresses each one (props.js reads XBOATS for its pos / heading).
+export const XBOAT = { beam: 2.1, L: 6.5, cab: 2.9, bowOut: 1.88 };   // hull block length; bowOut: the bow shape's reach
+export const XBOATS = [
+  { s0: 7.175, bow: -1, kind: 'cabin' },      // PERSEVERANCE, the livery (bow → stern) on the side facing the bridge
+  { s0: 9.325, bow: 1, kind: 'working' },     // the working boat, turned the other way
+];
+// hull span along t (across the pound) for one of them: its bow shape ends just short of the quay it points at
+export const xboatT = (b) => { const t0 = b.bow < 0 ? -HW + XBOAT.bowOut : HW - XBOAT.bowOut - XBOAT.L; return [t0, t0 + XBOAT.L]; };
 // the humpback bridge (Alpha's half) with a deck ±bw wide: abutment, approach ramp, humped crest, brick parapets
 function wideBridge(bw) {
   const t = { onlyIn: 'tower' }, p = bw + 0.2, q = bw + 0.4;
@@ -69,6 +82,25 @@ function wideBridge(bw) {
     D(-q, -bw, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV], ...t })),
     DR([p, 3.93, -7], [p, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true, ...t })),
     DR([-p, 3.93, -7], [-p, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true, ...t })),
+  ];
+}
+// one of the narrowboats across the pound (Alpha's half; the mirror turns the other pair across on Bravo's side of the
+// bridge): hull, cabin / hold (the walk), a boarding plank from each quay (0.3 m onto the coping) to the roof's end.
+// Where the pair lie breasted the roofs and planks meet (no slot between them: the walk is one 4 m deck — a slot drops a
+// row of nav nodes and bots zig-zag across). Hull, cabin and plank sides are never inked (boat walls); roofs + planks are.
+function xboat(b, i) {
+  const t = { onlyIn: 'tower' }, s1 = b.s0 + XBOAT.beam, [h0, h1] = xboatT(b), tc = (h0 + h1) / 2;
+  const c0 = tc - XBOAT.cab, c1 = tc + XBOAT.cab, sides = [nU, neg(nU), nV, neg(nV)], q = HW + 0.3;
+  const seam = (XBOATS[0].s0 + XBOAT.beam + XBOATS[1].s0) / 2, r0 = i ? seam : b.s0 + 0.1, r1 = i ? s1 - 0.1 : seam;
+  const p0 = i ? seam : b.s0, p1 = i ? s1 : seam;
+  const plank = { tag: 'xboat-plank', color: LG.timber, pattern: PATTERN.planks, noPaint: sides, ...t };
+  return [
+    D(b.s0, s1, h0, h1, -2.6, -0.7, { tag: 'xboat-hull', color: LG.hull, pattern: PATTERN.hullpaint, noPaint: sides, ...t }),
+    b.kind === 'cabin'
+      ? D(r0, r1, c0, c1, -0.7, 0.25, { tag: 'xboat-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: neg(nU), id: 4 }], noPaint: sides, ...t })
+      : D(r0, r1, c0, c1, -0.7, 0.25, { tag: 'xboat-hold', color: '#2c3a31', pattern: PATTERN.rubber, noPaint: sides, ...t }),
+    D(p0, p1, -q, c0, 0.15, 0.25, plank),
+    D(p0, p1, c1, q, 0.15, 0.25, plank),
   ];
 }
 
@@ -106,11 +138,8 @@ const LOCKGATE = {
     D(3.3, 11.1, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: 'tower' }),
     D(4.6, 10.4, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber, notIn: 'tower' }),
     D(4.3, 10.1, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }], notIn: 'tower' }),
-    // (Tower Command: the same two boats moored BOAT_T further along the towpath, clear of the wider bridge)
-    D(3.6 + BOAT_T, 11.4 + BOAT_T, -4.72, -2.62, -2.6, -0.7, { tag: 'boat-a-hull', color: LG.hull, pattern: PATTERN.hullpaint, onlyIn: 'tower' }),
-    D(3.3 + BOAT_T, 11.1 + BOAT_T, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint, onlyIn: 'tower' }),
-    D(4.6 + BOAT_T, 10.4 + BOAT_T, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber, onlyIn: 'tower' }),
-    D(4.3 + BOAT_T, 10.1 + BOAT_T, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }], onlyIn: 'tower' }),
+    // (Tower Command: the same two boats turned across the pound as a crossing beside the bridge — XBOATS)
+    ...XBOATS.flatMap(xboat),
     // gate walkways (lower gates x 16.5, upper gates x 24.5); one broad maintenance stair fills the drained chamber from the
     // lower gate up to the upper gates (two scaffold handrails split it into three flights). Solid: a narrow pit or the
     // wedge under a free-spanning flight is somewhere bots get pinned.
