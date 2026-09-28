@@ -41,6 +41,27 @@ export const TERR = { rIn: 5.8, rOut: 8.5, n: 36, a0: 5, top: 1.0, dais: 5.8, da
 export const COLO = { front: [[18.9, -38.3], [22.5, -29], [24.5, -19], [24.5, -9]], deck: 4.5, floor: 5.1, shops: 3, deckBot: 3.35, deckTop: 3.7 };
 // the landing pier + stair (on the straight north section) and the spawn wing's threshold landing
 export const STAIR = { x: [17.5, 20], foot: -7.0, top: -15.5, landing: -18.5 };
+// Tower Command's build of the stage (pieces tagged onlyIn / notIn 'tower', see src/world/variants.js; its track is
+// src/world/tower-data.js). The tower starts inside the clock tower and rides out through it, so the tower stands on an
+// open arcade; the bandstand's roof goes up and its columns stand wider so the tower rides through under it (in by its
+// steps, off its back as a drop); the Crescent's stair is turned round (it climbs toward mid, onto a landing level with
+// the terrace walk's open end) and a few flights, beds and bits of street furniture give the track room.
+//   arcade: the clock tower's open base (half width hw, arch openings ±open, springing / crown / soffit / top, abs)
+//   band:   the bandstand's centre z (Alpha's), column-top height (prop-local, over the square), its steps' foot z
+//   flight / flightW: where the terrace's south + north / west + east flights reach down to (m from the centre; the
+//           shared build's 12.4). The west + east ones (the track goes down them) start from a landing strip at the
+//           dais's height across the ring, so the track leaves the dais level and goes straight down the flight
+//   forecourt: the pier forecourt's paving starts this far out (the shared build's 17): the square runs on under the
+//           track's loop to the pier gate, so the whole route there is on the square's level
+export const TW = {
+  arcade: { hw: 2.3, open: 1.5, spring: 3.9, crown: 5.4, soffit: 5.5, top: 6.4 },
+  band: { z: -21.8, ct: 5.4, stepFoot: -16.02 },
+  flight: 10.9, flightW: 11.5,
+  forecourt: 21,
+};
+// the Crescent's stair turned round (Tower Command): foot by the anchor, climbing toward mid onto a landing that
+// meets the terrace walk's open end (landing = the landing's far end, as in STAIR)
+export const STAIR_REV = { x: [17.5, 20], foot: -20.8, top: -12.0, landing: -9.0 };
 
 // turned segments along a circle arc (centre c, radii rIn…rOut, angles a0…a1 degrees, n pieces) meeting at their inner
 // corners (like mapkit ARC); fill: lower slabs over the outer wedges between them (and at the chain ends if `ends`)
@@ -131,8 +152,16 @@ const TIDEWATER = {
     ...arcBand([0, 0], T.rIn, T.rOut, T.a0, T.a0 + 360, T.n, -0.6, T.top, stucco(M.terrace, { tag: 'terrace-ring' }),
       { y0: -0.6, y1: T.top - 0.1, o: stucco(M.joint, { tag: 'terrace-joint' }) }, 'closed'),
     B(-T.dais, T.dais, -0.6, T.daisTop, -T.dais, T.dais, stucco(M.terrace, { tag: 'terrace-dais', mural: [{ n: [0, 1, 0], id: 5 }] })),
-    B(-1.7, 1.7, T.daisTop, 3.6, -1.7, 1.7, stucco(M.stucco, { tag: 'tower-base' })),
-    B(-1.7, 1.7, 3.6, 12.5, -1.7, 1.7, stucco(M.stucco, { tag: 'tower', noPaint: NP_ALL, roof: true })),
+    B(-1.7, 1.7, T.daisTop, 3.6, -1.7, 1.7, stucco(M.stucco, { tag: 'tower-base', notIn: 'tower' })),
+    B(-1.7, 1.7, 3.6, 12.5, -1.7, 1.7, stucco(M.stucco, { tag: 'tower', noPaint: NP_ALL, roof: true, notIn: 'tower' })),
+    // Tower Command: the tower stands on an open arcade — four corner piers (arches on all four faces, the dressing's),
+    // a soffit block over the passage, the shaft on top (the tower starts inside and rolls out through the ±X arches)
+    ...[[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sz]) => {
+      const a = TW.arcade, x0 = sx * a.open, x1 = sx * a.hw, z0 = sz * a.open, z1 = sz * a.hw;
+      return B(Math.min(x0, x1), Math.max(x0, x1), T.daisTop, a.soffit, Math.min(z0, z1), Math.max(z0, z1), stucco(M.stucco, { tag: 'tower-pier', onlyIn: 'tower' }));
+    }),
+    B(-TW.arcade.hw, TW.arcade.hw, TW.arcade.soffit, TW.arcade.top, -TW.arcade.hw, TW.arcade.hw, stucco(M.stucco, { tag: 'tower-arcade', noPaint: NP_ALL, roof: true, onlyIn: 'tower' })),
+    B(-1.7, 1.7, TW.arcade.top, 12.5, -1.7, 1.7, stucco(M.stucco, { tag: 'tower', noPaint: NP_ALL, roof: true, onlyIn: 'tower' })),
     // the terrace balustrade (collision only — the stone balustrade you see is a prop), open at the four flights
     ...arcBand([0, 0], T.rOut - 0.34, T.rOut - 0.1, T.a0, T.a0 + 360, T.n, T.top, T.top + 1.05, { rail: true, tag: 'terrace-rail' }, null, false,
       (i) => [8, 17, 26, 35].some((k) => Math.abs(((i - k + 36) % 36)) <= 1 || Math.abs(((k - i + 36) % 36)) <= 1)),
@@ -159,7 +188,10 @@ const TIDEWATER = {
       JOINT, true),
     ...arcSub(P.c, P.rIn, P.rOut, P.a0, P.a1, P.n, -2.0, PL, PLINTH),
     // the pier-gate forecourt at mid (west side; its mirror is the east side's), between the promenade and the Crescent
-    B(-27, -17, -2.0, 0, -4, 9, { tag: 'pier-forecourt', color: M.prom, pattern: SURF.terrazzo }),
+    B(-27, -17, -2.0, 0, -4, 9, { tag: 'pier-forecourt', color: M.prom, pattern: SURF.terrazzo, notIn: 'tower' }),
+    // Tower Command: the forecourt's paving cut back to x ±21 (the square, on its deck, fills in at its corner by mid)
+    B(-27, -TW.forecourt, -2.0, 0, -4, 9, { tag: 'pier-forecourt', color: M.prom, pattern: SURF.terrazzo, onlyIn: 'tower' }),
+    B(-TW.forecourt, -19.5, -2.0, SQ, -4, 0, { tag: 'square', color: M.plaza, pattern: SURF.herringbone, onlyIn: 'tower' }),
     B(-27, -24, 0, 2.6, -5.5, -2.5, stucco(M.stucco, { tag: 'pier-booth', roof: true, mural: [{ n: [0, 0, 1], id: 11 }] })),
     B(24, 27, 0, 2.6, -5.5, -2.5, stucco(M.stucco, { tag: 'pier-booth', roof: true, mural: [{ n: [0, 0, 1], id: 11 }] })),
     // sea railings (collision only; the cast iron is a prop): round the crescent, the forecourt, the tip by the hall
@@ -206,10 +238,14 @@ const TIDEWATER = {
     ...chainBand(F, 0.02, 0.3, 9.2, 10.05, { rail: true, tag: 'hotel-parapet' }, null, (i) => i === 1),
     // terrace-walk railing (collision only), on the first two sections; the north section's is split round the landing
     ...chainBand(F, -C.deck, -C.deck + 0.16, C.deckTop, C.deckTop + 1.1, { rail: true, tag: 'walk-rail' }, null, (i) => i < 2),
-    B(STAIR.x[0], 20.0, C.deckTop, C.deckTop + 1.1, STAIR.landing, STAIR.landing + 0.16, { rail: true, tag: 'walk-rail' }),
+    B(STAIR.x[0], 20.0, C.deckTop, C.deckTop + 1.1, STAIR.landing, STAIR.landing + 0.16, { rail: true, tag: 'walk-rail', notIn: 'tower' }),
     // the landing pier (squid route up: its square-side face) + the stair up from the pier forecourt
-    B(STAIR.x[0], STAIR.x[1], -1.2, C.deckTop, STAIR.landing, STAIR.top, { tag: 'colonnade-landing', color: M.colFloor, pattern: SURF.terrazzo, noPaint: [[0, 0, -1]] }),
-    R([18.75, 0, STAIR.foot], [18.75, C.deckTop, STAIR.top], 2.5, { tag: 'colonnade-stair', color: M.granite, pattern: PATTERN.stonestep }),
+    B(STAIR.x[0], STAIR.x[1], -1.2, C.deckTop, STAIR.landing, STAIR.top, { tag: 'colonnade-landing', color: M.colFloor, pattern: SURF.terrazzo, noPaint: [[0, 0, -1]], notIn: 'tower' }),
+    R([18.75, 0, STAIR.foot], [18.75, C.deckTop, STAIR.top], 2.5, { tag: 'colonnade-stair', color: M.granite, pattern: PATTERN.stonestep, notIn: 'tower' }),
+    // Tower Command: the stair turned round — from the square by the anchor up toward mid, onto a landing level with the
+    // terrace walk's open end (open like it: a drop to the square, over the track's corner by the pier gate)
+    B(STAIR_REV.x[0], STAIR_REV.x[1], -1.2, C.deckTop, STAIR_REV.top, STAIR_REV.landing, { tag: 'colonnade-landing', color: M.colFloor, pattern: SURF.terrazzo, onlyIn: 'tower' }),
+    R([18.75, 0, STAIR_REV.foot], [18.75, C.deckTop, STAIR_REV.top], 2.5, { tag: 'colonnade-stair', color: M.granite, pattern: PATTERN.stonestep, onlyIn: 'tower' }),
 
     // ================= promenade furniture blocks: cross-plan shelter screens, the ice-cream kiosk
     B(-23, -20.65, 0, 1.15, -19.15, -18.85, stucco(M.mint, { tag: 'shelter-screen' })),
@@ -218,17 +254,27 @@ const TIDEWATER = {
     B(-24.9, -22.3, 0, 2.5, -10.3, -7.7, stucco(M.mint, { tag: 'icecream-kiosk', mural: [{ n: [0, 0, 1], id: 8 }, { n: [-1, 0, 0], id: 8 }] })),
 
     // ================= the square: the bandstand (1 m stage above the paving), floral clock, border, tea rooms, anchor
-    ...OCT(0, -21, 3.8, -0.6, 0.8, stucco(M.stone, { tag: 'bandstand' })),
-    R([0, SQ, -27.2], [0, 0.8, -24.51], 2.4, { tag: 'bandstand-steps', color: M.granite, pattern: PATTERN.stonestep }),
-    R([0, SQ, -14.8], [0, 0.8, -17.49], 2.4, { tag: 'bandstand-steps', color: M.granite, pattern: PATTERN.stonestep }),
+    ...OCT(0, -21, 3.8, -0.6, 0.8, stucco(M.stone, { tag: 'bandstand', notIn: 'tower' })),
+    R([0, SQ, -27.2], [0, 0.8, -24.51], 2.4, { tag: 'bandstand-steps', color: M.granite, pattern: PATTERN.stonestep, notIn: 'tower' }),
+    R([0, SQ, -14.8], [0, 0.8, -17.49], 2.4, { tag: 'bandstand-steps', color: M.granite, pattern: PATTERN.stonestep, notIn: 'tower' }),
+    // Tower Command: the bandstand 0.8 m further out, steps (wider, a touch steeper) on its mid side only — the tower
+    // climbs them, rides under the raised roof and drops off the open back
+    ...OCT(0, TW.band.z, 3.8, -0.6, 0.8, stucco(M.stone, { tag: 'bandstand', onlyIn: 'tower' })),
+    R([0, SQ, TW.band.stepFoot], [0, 0.8, TW.band.z + 3.8 * Math.cos(Math.PI / 8)], 2.8, { tag: 'bandstand-steps', color: M.granite, pattern: PATTERN.stonestep, onlyIn: 'tower' }),
     B(-10.7, -6.3, -0.6, 0.5, -27.2, -22.8, { tag: 'floral-clock', color: M.planter, pattern: PATTERN.planter }),
-    B(-15, -9, -0.6, 0.7, -14.5, -9.5, { tag: 'border', color: M.planter, pattern: PATTERN.planter }),
+    B(-15, -9, -0.6, 0.7, -14.5, -9.5, { tag: 'border', color: M.planter, pattern: PATTERN.planter, notIn: 'tower' }),
+    B(-14.1, -9, -0.6, 0.7, -13.8, -9.8, { tag: 'border', color: M.planter, pattern: PATTERN.planter, onlyIn: 'tower' }),   // (the track rounds it)
     B(8.5, 12.5, -0.6, 2.8, -30, -26, stucco(M.butter, { tag: 'tearooms', roof: true })),
     B(11.4, 13.6, -0.6, 0.8, -18.6, -16.4, { tag: 'anchor-plinth', color: M.granite, pattern: SURF.stucco }),
 
     // ================= the terrace flights (Alpha's: south + west; the ring's other two are Bravo's)
-    R([0, SQ, -12.4], [0, T.top, -8.1], 4, { tag: 'terrace-steps', color: M.granite, pattern: PATTERN.stonestep }),
-    R([-12.4, SQ, 0], [-8.1, T.top, 0], 4, { tag: 'terrace-steps', color: M.granite, pattern: PATTERN.stonestep }),
+    R([0, SQ, -12.4], [0, T.top, -8.1], 4, { tag: 'terrace-steps', color: M.granite, pattern: PATTERN.stonestep, notIn: 'tower' }),
+    R([-12.4, SQ, 0], [-8.1, T.top, 0], 4, { tag: 'terrace-steps', color: M.granite, pattern: PATTERN.stonestep, notIn: 'tower' }),
+    // Tower Command: shorter flights (the track runs past the foot of the south one and down the west one, which starts
+    // from a landing strip across the ring at the dais's height)
+    R([0, SQ, -TW.flight], [0, T.top, -8.1], 4, { tag: 'terrace-steps', color: M.granite, pattern: PATTERN.stonestep, onlyIn: 'tower' }),
+    R([-TW.flightW, SQ, 0], [-T.rOut, T.daisTop, 0], 4, { tag: 'terrace-steps', color: M.granite, pattern: PATTERN.stonestep, onlyIn: 'tower' }),
+    B(-T.rOut, -T.dais, 0.4, T.daisTop, -2, 2, stucco(M.terrace, { tag: 'terrace-landing', onlyIn: 'tower' })),
   ],
   decor: {
     lamps: [],
