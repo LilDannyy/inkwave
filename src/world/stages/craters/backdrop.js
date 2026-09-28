@@ -139,9 +139,9 @@ export function buildBackdrop(kit, d = {}) {
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = (b[1] - a[1]) / L, nz = -(b[0] - a[0]) / L;
     // outward normal: away from the park's middle
     const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, sn = nx * mx + nz * (mz + 22) > 0 ? 1 : -1;
-    for (let t = 0.6; t < L; t += 1.4 + rnd() * 1.2) {
-      const x = a[0] + ((b[0] - a[0]) * t) / L + nx * sn * (0.7 + rnd() * 2.6), z = a[1] + ((b[1] - a[1]) * t) / L + nz * sn * (0.7 + rnd() * 2.6);
-      rocks.push([x * sg, W - 0.35 + rnd() * 0.45, z * sg, 0.45 + rnd() * 1.1, rnd() * 6]);
+    for (let t = 0.8; t < L; t += 2.2 + rnd() * 2.4) {
+      const off = 0.5 + rnd() * 1.8, x = a[0] + ((b[0] - a[0]) * t) / L + nx * sn * off, z = a[1] + ((b[1] - a[1]) * t) / L + nz * sn * off;
+      rocks.push([x * sg, W - 0.3 + rnd() * 0.3, z * sg, 0.3 + rnd() * 0.7, rnd() * 6]);
     }
   });
 
@@ -172,13 +172,14 @@ export function buildBackdrop(kit, d = {}) {
   // chalk figure: a big squid on the north hill's face toward the park (drawn as white quads just above the turf)
   {
     const fx = 24, fz = 215, pts = [];
-    const shape = (u, v) => {   // u across, v up the figure (−1 … 1): an arrowhead mantle with fins, the head, six curling tentacles
+    const shape = (u, v) => {   // u across, v up the figure (−1 … 1): the squid icon — arrowhead mantle + fins, head with two eyes, four tentacles
       const au = Math.abs(u);
-      const mantle = v > 0.18 && v < 0.98 && au < 0.34 * (0.98 - v) / 0.8;
-      const fin = v > 0.42 && v < 0.78 && au < 0.34 * (0.98 - v) / 0.8 + 0.3 * (1 - Math.abs(v - 0.55) / 0.23) && au > 0.1;
-      const head = v > -0.28 && v <= 0.2 && au < 0.3 - 0.1 * Math.max(0, -v - 0.1) * 3;
-      const tent = v < -0.24 && v > -0.96 && [-0.24, -0.14, -0.05, 0.05, 0.14, 0.24].some((c) => Math.abs(u - c * (1 + (-0.24 - v) * 0.7) - Math.sin(v * 7 + c * 11) * 0.035 * (-v)) < 0.036 * (1.1 + v * 0.4));
-      return mantle || fin || head || tent;
+      const mantle = v > 0.12 && v < 1.0 && au < Math.min(0.4, 0.5 * (1.0 - v) / 0.7);
+      const fin = v > 0.5 && v < 0.98 && au < 0.62 * (0.98 - v) / 0.48 && au > 0.1 && v > 0.5 + (au - 0.1) * 0.35;
+      const head = v > -0.3 && v <= 0.14 && au < 0.3;
+      const eye = [-0.14, 0.14].some((c) => Math.hypot(u - c, v + 0.06) < 0.075);
+      const tent = v < -0.28 && v > -0.97 && [-0.24, -0.08, 0.08, 0.24].some((c) => Math.abs(u - c * (1 + (-0.28 - v) * 0.55) - Math.sin(v * 6 + c * 10) * 0.03) < 0.05 - (-0.28 - v) * 0.02);
+      return (mantle || fin || head || tent) && !eye;
     };
     const N = 72, F = 30, hgt = (x, z) => hgtN(x, z - 45) + 0.22;
     for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
@@ -227,14 +228,14 @@ export function buildBackdrop(kit, d = {}) {
     return prep(g, '#e4e0d4');
   })();
   out.instances.push({ geo: rockGeo, list: rocks.map(([x, y, z, s, r]) => [x, y, z, s, r, rnd() < 0.3 ? '#cfcabd' : '#ecE8dc']) });
-  const bushGeo = prep(new THREE.IcosahedronGeometry(1, 1), '#ffffff');
+  const bushGeo = prep(new THREE.IcosahedronGeometry(1, 1).scale(1.3, 0.7, 1.0), '#ffffff');
   const bushes = [];
   for (let k = 0; k < 90; k++) {
     const south = k < 40, s = south ? 20 + rnd() * 90 : 20 + rnd() * 220, E = south ? SOUTH : NORTH, w = lerpTab(E.w, s) * 0.85, cx = lerpTab(E.c, s);
     const x = cx + (rnd() * 2 - 1) * w, z = E.z0 + (south ? -1 : 1) * s;
     if (inPark(x, s)) continue;
     const y = (south ? hgtS : hgtN)(x, s);
-    bushes.push([x, y + 0.2, z, 0.9 + rnd() * 1.6, rnd() * 6, rnd() < 0.4 ? '#56703f' : '#4a6238']);
+    bushes.push([x, y + 0.1, z, 0.55 + rnd() * 0.9, rnd() * 6, rnd() < 0.4 ? '#56703f' : '#4a6238']);
   }
   out.instances.push({ geo: bushGeo, list: bushes });
 

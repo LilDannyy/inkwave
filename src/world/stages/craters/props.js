@@ -299,10 +299,14 @@ export function register(D, H) {
     const w = x1 - x0, n = Math.max(1, Math.round(w / (o.pane ?? 1.1))), fc = o.frame ?? K.bronze, tr = o.transom ?? y0 + (y1 - y0) * 0.78;
     for (let i = 0; i < n; i++) {
       const a = x0 + (w * i) / n, b = x0 + (w * (i + 1)) / n, lit = o.lit ?? true;
-      pbox(B, lit ? 'glow' : 'gloss', lit ? (o.litC ?? '#b9a88a') : K.glass, b - a, tr - y0, 0.02, (a + b) / 2, (y0 + tr) / 2, z - 0.02, lit ? { glow: o.glowK ?? 0.55 } : {});
-      pbox(B, 'gloss', K.glass, b - a, y1 - tr, 0.02, (a + b) / 2, (tr + y1) / 2, z - 0.02);
-      // a reflective sheen across the lower pane
-      pbox(B, NS('gloss'), K.glassLt, (b - a) * 0.9, 0.05, 0.004, (a + b) / 2, y0 + (tr - y0) * (0.35 + 0.3 * hash(i + x0)), z - 0.005);
+      // dark glass; behind it the interior's ceiling lights (a warm band under the transom, lit at dusk) and a lit
+      // back wall low down in some bays
+      pbox(B, 'gloss', K.glass, b - a, y1 - y0, 0.02, (a + b) / 2, (y0 + y1) / 2, z - 0.02);
+      if (lit) {
+        pbox(B, 'glow', o.litC ?? '#ffe2b8', b - a - 0.04, 0.14, 0.01, (a + b) / 2, tr - 0.12, z - 0.004, { glow: o.glowK ?? 0.85 });
+      }
+      // a reflective sheen across the pane
+      pbox(B, NS('gloss'), K.glassLt, (b - a) * 0.9, 0.05, 0.004, (a + b) / 2, y0 + (tr - y0) * (0.72 + 0.12 * hash(i + x0)), z - 0.002);
     }
     for (let i = 0; i <= n; i++) pbox(B, 'metal', fc, 0.06, y1 - y0, 0.1, x0 + (w * i) / n, (y0 + y1) / 2, z);
     for (const y of [y0 + 0.03, tr, y1 - 0.03]) pbox(B, 'metal', fc, w + 0.06, 0.06, 0.1, (x0 + x1) / 2, y, z);
@@ -383,7 +387,7 @@ export function register(D, H) {
       boardMarks(B, -W, W, 3.0, 3.55, 0);
       B.pop();
       // ---- the slim cantilevered roof over the back of the deck: concrete top, timber soffit, downlights
-      const r0 = -0.25, r1 = 3.1, ry = 5.6;
+      const r0 = -0.25, r1 = 2.6, ry = 5.6;
       B.box('paint', K.concreteLt, 2 * W + 0.8, 0.24, r1 - r0, 0, ry + 0.12, (r0 + r1) / 2, { r: 0.03 });
       pbox(B, 'wood', K.timberLt, 2 * W + 0.6, 0.02, r1 - r0 - 0.2, 0, ry - 0.005, (r0 + r1) / 2 - 0.05);
       for (let x = -W + 1; x <= W - 1; x += 2) B.cyl(NS('glow'), K.lamp, 0.09, 0.012, x, ry - 0.02, 2.4, { seg: 10, glow: 1.2 });
@@ -783,6 +787,66 @@ export function register(D, H) {
     },
   };
 
+  // timber revetment frames on a trench wall (a run along local +X, the wall at local z = 0, the trench toward +Z): posts
+  // every ~1.8 m from the duckboards up to the downs, a waling beam along the top, wire ties back into the bank
+  D.craters_revetment = {
+    desc: 'Trench revetment frames along +X (posts + waling), on a wall facing +Z. params: length, h (1.0).',
+    build(B, o) {
+      const L = o.length ?? 6, h = o.h ?? 1.0, n = Math.max(1, Math.round(L / 1.8));
+      for (let i = 0; i <= n; i++) { const x = (L * i) / n; B.box('wood', shade(K.timberDk, 0.9 + 0.2 * hash(i + L)), 0.12, h - 0.04, 0.08, x, (h - 0.04) / 2, 0.04, { r: 0.015 }); }
+      B.box('wood', K.timberDk, L + 0.1, 0.1, 0.08, L / 2, h - 0.12, 0.05, { r: 0.015 });
+      for (let i = 0; i < n; i++) pbox(B, NS('metal'), K.iron, 0.02, 0.02, 0.1, (L * (i + 0.5)) / n, h - 0.05, 0.03);
+    },
+  };
+  // rubble of the war: chalk chips, a slab of shattered concrete, a twisted length of rebar (no collider)
+  D.craters_rubble = {
+    desc: 'War rubble: chalk chips, a concrete fragment, twisted rebar. No collider.',
+    build(B, o) {
+      const sd = Math.round((o.seed ?? 1) * 3);
+      for (let k = 0; k < 6; k++) { const a = k * 1.1 + sd, r = 0.2 + 0.5 * hash(k + sd); B.add(NS('rubber'), rockGeo((sd + k) % 6), shade(K.chalk, 0.88 + 0.1 * hash(k)), Math.cos(a) * r, 0.04, Math.sin(a) * r, { s: 0.1 + 0.1 * hash(k * 3 + sd), sy: 0.09 }); }
+      B.box('rubber', K.concreteDk, 0.6, 0.14, 0.45, 0.1, 0.05, -0.1, { r: 0.03, ry: sd, rz: 0.15 });
+      const pts = []; for (let k = 0; k <= 8; k++) { const t = k / 8; pts.push(P3(0.1 + t * 0.9, 0.12 + Math.sin(t * 5 + sd) * 0.18 + t * 0.35, -0.1 + Math.sin(t * 3.1) * 0.3)); }
+      B.tube(NS('rubber'), K.rustDk, pts, 0.014, { radial: 4 });
+      B.tube(NS('rubber'), K.rust, pts.slice(2).map((p) => P3(p[0] - 0.2, p[1] * 0.6, p[2] + 0.2)), 0.012, { radial: 4 });
+    },
+  };
+  // water lilies on the pond: flat pads (a notch each) and a white flower or two
+  D.craters_lilies = {
+    desc: 'Lily pads + flowers floating on still water (pos at the water surface).',
+    build(B, o) {
+      const n = o.n ?? 7, R = o.r ?? 0.9, sd = (o.seed ?? 1) * 7;
+      const pad = tpl('lilypad', () => { const g = new GB(); const N = 12, c0 = g.v(0, 0, 0, 0, 1, 0); const ring = []; for (let i = 0; i <= N; i++) { const a = 0.35 + (i / N) * (TAU - 0.5); ring.push(g.v(Math.cos(a), 0, Math.sin(a), 0, 1, 0)); } for (let i = 0; i < N; i++) g.tri(c0, ring[i], ring[i + 1]); return g.geo(); });
+      for (let k = 0; k < n; k++) {
+        const a = hash(k + sd) * TAU, r = Math.sqrt(hash(k * 3 + sd)) * R, s = 0.14 + 0.12 * hash(k * 5 + sd);
+        B.add(NS('foliage'), pad, mixc('#4f7a3e', '#6d8f48', hash(k)), Math.cos(a) * r, 0.01, Math.sin(a) * r, { s, ry: hash(k * 7) * TAU, ao: false });
+        if (k % 3 === 0) { B.sph(NS('paint'), K.white, 0.05, Math.cos(a) * r, 0.04, Math.sin(a) * r, { ws: 6, hs: 4, sy: 0.6 }); B.sph(NS('paint'), K.gorseY, 0.018, Math.cos(a) * r, 0.065, Math.sin(a) * r, { ws: 5, hs: 3 }); }
+      }
+    },
+  };
+  // a park litter bin (dark green, timber-clad) and a picnic table (cover)
+  D.craters_bin = {
+    desc: 'Park litter bin: timber-slatted with a dark green steel top.',
+    build(B) {
+      for (let k = 0; k < 12; k++) { const a = (k / 12) * TAU; B.box('wood', shade(K.timber, 0.9 + 0.15 * hash(k)), 0.1, 0.78, 0.03, Math.cos(a) * 0.25, 0.39, Math.sin(a) * 0.25, { ry: -a + HP, r: 0.01 }); }
+      B.cyl('gloss', K.signGreen, 0.29, 0.08, 0, 0.82, 0, { seg: 16 });
+      B.cyl(NS('paint'), K.ink, 0.12, 0.02, 0, 0.87, 0, { seg: 12 });
+      B.col(-0.29, 0, -0.29, 0.29, 0.86, 0.29);
+    },
+  };
+  D.craters_picnic = {
+    desc: 'Timber picnic table with attached benches (cover). Local X = along the table.',
+    build(B) {
+      const L = 1.9;
+      B.box('wood', K.timberLt, L, 0.06, 0.8, 0, 0.74, 0, { r: 0.015 });
+      for (const s of [-1, 1]) {
+        B.box('wood', K.timberLt, L, 0.05, 0.28, 0, 0.44, s * 0.62, { r: 0.015 });
+        for (const x of [-0.65, 0.65]) { B.box('wood', K.timber, 0.08, 0.95, 0.08, x, 0.4, s * 0.3, { rx: s * 0.52, r: 0.015 }); }
+      }
+      for (const x of [-0.65, 0.65]) B.box('wood', K.timber, 0.08, 0.08, 1.5, x, 0.38, 0, { r: 0.015 });
+      B.col(-L / 2, 0, -0.78, L / 2, 0.78, 0.78);
+    },
+  };
+
   // ============================================================================================ trenches + bridges
   // plank bridge dressing (pos = the deck's centre at deck-top height, local +Z along the span): trestle legs down to the
   // trench floor, rope handrails on stakes along both sides (rail colliders on the deck edges)
@@ -900,6 +964,12 @@ export const PLACEMENTS = [
   { type: 'craters_trenchkit', variant: 0, pos: [11.3, -1.0, -27.45], rotY: 0, h: 1.0 },
   { type: 'craters_trenchkit', variant: 4, pos: [9.4, 0, -29.9], rotY: 0.3 },
 
+  // T1's timber revetment frames (north + south walls, round the stairs; the bay itself stays clear for the tower)
+  ...[[-14.75, -3], [-1, T1.x1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [b, -1.0, T1.z1], rotY: Math.PI, length: b - a })),
+  ...[[T1.x0, -6], [-4, T1.x1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [a, -1.0, T1.z0], rotY: 0, length: b - a })),
+  // war rubble in the crater and round its crest
+  ...[[240, 6.2], [300, 5.9], [205, 9.0], [330, 8.6], [268, 11.9], [190, 12.2], [350, 12.0]].map(([th, r], i) => ({ type: 'craters_rubble', pos: [+polar(th, r)[0].toFixed(2), +(r > 11.2 ? 0 : coneY(r) - 0.03).toFixed(2), +polar(th, r)[1].toFixed(2)], rotY: i * 1.3, seed: i + 1 })),
+
   // ================= the downs: wire, boards, lanterns, benches, gorse, boulders
   { type: 'craters_wire', pos: [-14.5, 0, -10.6], rotY: 0, length: 4.5 },
   { type: 'craters_wire', pos: [13.2, 0, -6.9], rotY: 0, length: 4.8 },
@@ -922,6 +992,13 @@ export const PLACEMENTS = [
   ...[[30, 2.95, 1.25], [80, 2.9, 1.4], [150, 2.95, 1.2], [205, 2.9, 1.35], [262, 2.95, 1.3], [320, 2.9, 1.45]].map(([th, r, sc], i) => ({ type: 'craters_reeds', pos: [+(POND.c[0] + Math.cos(ang(th)) * r).toFixed(2), -1.62, +(POND.c[1] + Math.sin(ang(th)) * r).toFixed(2)], s: sc, n: 20 })),
   ...[[55, 3.5], [115, 3.5], [180, 3.55], [235, 3.5], [290, 3.5], [350, 3.55]].map(([th, r], i) => ({ type: i % 2 ? 'craters_reeds' : 'craters_poppies', pos: [+(POND.c[0] + Math.cos(ang(th)) * r).toFixed(2), i % 2 ? 0.3 : 0.2, +(POND.c[1] + Math.sin(ang(th)) * r).toFixed(2)], s: 0.7, n: i % 2 ? 14 : 7, r: 0.35, seed: i + 3 })),
   { type: 'craters_sign', variant: 0, pos: [20.35, 0.25, -12.8], rotY: -Math.PI / 2 },
+  { type: 'craters_lilies', pos: [POND.c[0] + 0.8, -1.545, POND.c[1] - 0.6], n: 8, r: 1.2, seed: 1 },
+  { type: 'craters_lilies', pos: [POND.c[0] - 1.3, -1.545, POND.c[1] + 0.9], n: 5, r: 0.8, seed: 2 },
+  // ================= the forecourt: picnic tables, bins
+  { type: 'craters_picnic', pos: [-11.5, 0, -34.2], rotY: 0.2 },
+  { type: 'craters_picnic', pos: [12.8, 0, -29.5], rotY: -0.35 },
+  { type: 'craters_bin', pos: [-3.3, 0, -31.2] },
+  { type: 'craters_bin', pos: [8.2, 0, -12.4] },
 
   // ================= the coast: tussocks along the chalk lip
   ...LIP_TUFTS,
