@@ -70,5 +70,13 @@
   let t = 0; for (; t < 4 && T.riderList.includes(k); t += 1 / 60) { if ((t * 60 | 0) % 7 === 0) __G.specials.filterDamage(k, 35, b0, 'test'); step(1 / 60); }
   R('a Kraken riding the tower is shot off by steady fire', onBefore && !T.riderList.includes(k), { onBefore, secs: +t.toFixed(2), kraken: !!(k.specialActive && k.specialActive.id === 'kraken') });
   if (k.specialActive) __G.specials.end(k, 'test');
+  // 8) a super jump to a teammate riding the tower lands on its deck (not off its edge), even as it moves
+  const mate = A[0], jumper = A[2];
+  mate.pos.copy(W(0.8, H + 0.05, 0)); mate.vel.set(0, 0, 0);
+  park(jumper, 0); jumper.status.shield = 0; step(0.5);
+  const js = jumper.superJump(mate, { instant: true });
+  let landed = false;
+  for (let i = 0; i < 240 && !landed; i++) { step(1 / 60); landed = !jumper.superJumpState && T.riderList.includes(jumper); }
+  R('a super jump to a teammate riding the tower lands on its deck', js && landed, { started: js, onDeck: T.riderList.includes(jumper), dy: +(jumper.pos.y - T.top).toFixed(2), dxz: +Math.hypot(jumper.pos.x - T.pos.x, jumper.pos.z - T.pos.z).toFixed(2) });
   return out;
 })()

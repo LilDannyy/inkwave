@@ -13,7 +13,7 @@
 //  · jump buffer + coyote time, apex hang, hard-landing recovery, fire buffer across form changes
 import * as THREE from 'three';
 import { G, emit, clamp, damp, angleDiff, smoothstep } from '../core/ctx.js';
-import { PLAYER, WEAPONS, SPECIALS, SUBS } from '../config.js';
+import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER } from '../config.js';
 import { makeContacts, Hit, GroundHit, WALKABLE } from './physics.js';
 import { WeaponRunner } from './weapons.js';
 import { MAIN_KITS } from './kits/registry.js';
@@ -811,6 +811,13 @@ export class Actor {
           _v2.set(tp.x + (dx / d) * 1.1, tp.y + 0.6, tp.z + (dz / d) * 1.1);
           const g = G.physics.raycast(_v2, DOWN, 2.5, this.groundHit);
           if (g.hit && g.normal.y > 0.6 && !G.level.pointInside(_v.copy(g.point).setY(g.point.y + 0.5), 0.3)) s.to.copy(g.point);
+          // a teammate riding Tower Command's tower: land on its deck beside the pillar (our side), following it as it moves
+          const T = G.match?.tower;
+          if (T && T.riderList.includes(tgt)) {
+            const ox = this.pos.x - T.pos.x, oz = this.pos.z - T.pos.z, ol = Math.hypot(ox, oz) || 1, r0 = TOWER.pillarW / 2 + PLAYER.radius + 0.2;
+            s.tower = T; s.towerOff = new THREE.Vector3((ox / ol) * r0, T.top - T.pos.y, (oz / ol) * r0);
+            s.to.copy(T.pos).add(s.towerOff);
+          }
         } else s.to.copy(tgt);
         s.phase = 'flight'; s.t = 0;
         s.dur = 1.15 + Math.min(0.6, s.from.distanceTo(s.to) / 80);
@@ -822,6 +829,7 @@ export class Actor {
       return;
     }
     if (s.phase === 'flight') {
+      if (s.tower) { if (G.match?.tower === s.tower) s.to.copy(s.tower.pos).add(s.towerOff); else s.tower = null; }
       const k = Math.min(1, s.t / s.dur);
       // horizontal: ease-in-out; vertical: a quick launch and a steeper, faster drop onto the target
       const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
