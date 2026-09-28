@@ -66,6 +66,9 @@ export const P = {
   T2: [[-20, -2.2, -37.2, -30], [-24.5, -20, -37.2, -28.5]],                            // T2 (2.6)
   y1: 1.3, y2: 2.6,
   cottage: [-26.5, -23.2, -17, -12.5],            // the Cuttlefish cottage on T1
+  // retaining walls along the hill side (x0, x1, z0, z1, top): the station corner, T1's bulge + steps, T2's end
+  hillWalls: [[-26.3, -25.5, -11, -8.5, 3.0], [-27.3, -26.5, -18.3, -11, 3.8], [-26.5, -24, -18.3, -17.5, 3.6], [-24, -23.2, -24, -17.5, 3.4],
+    [-26.3, -24, -24, -23.2, 3.6], [-26.3, -25.5, -28.5, -24, 3.8], [-26.3, -24.5, -37.2, -28.5, 5.0]],
   t2house: [-24.5, -20.6, -37.2, -33.4],          // a house on T2's west end
   // Fishermen's Co-op
   deck: { x0: -9, x1: 9, z0: -45.5, z1: -37.2, y: 3.4 },
@@ -78,7 +81,7 @@ export const P = {
   slip: { t0: 0.44, t1: 0.575 },                  // the slipway's gap along the basin edge (fractions of A → B)
   northQuay: [12, 25.5, -17, -11],
   breakwater: [[22.6, -16.6], [26.9, -21.6]],
-  southQuay: [[12, 18.6, -44.8, -38], [12, 15.4, -47, -44.8]],
+  southQuay: [[12, 18.6, -45.5, -38], [11, 15.4, -47, -45.5]],
 };
 // hillside road centre (Alpha) and the back street centre: the tower's corners
 P.roadX = (P.crossing[0] + P.crossing[1]) / 2 - 0.35;
@@ -139,7 +142,7 @@ const HALF = [
   edgeBox(P.breakwater[0], P.breakwater[1], 2.6, FL, 0.25, 1, { tag: 'breakwater', color: '#9d9a93', pattern: PATTERN.concrete }),
   ...P.southQuay.map((r) => bx(r, FL, 0, quay({ tag: 'coop-quay' }))),
   // tunnel portal capping the cut (the headland beyond is scenery)
-  B(P.cutX, 27, FL, 7.5, -8.5, 8.5, { tag: 'portal', color: K.portal, pattern: PATTERN.concrete, roof: true }),
+  B(P.cutX, 27, FL, 7.5, -8.5, 8.5, { tag: 'portal', color: K.portal, pattern: SURF.setts, roof: true }),
   // island platform end ramp (down between the tracks)
   R([I.x + 2.4, 0, 0], [I.x, I.y, 0], I.z * 2, timber({ tag: 'island-ramp', pattern: PATTERN.rampboard })),
 
@@ -174,8 +177,10 @@ const HALF = [
   R([-22, P.y1, -24.8], [-22, P.y2, -28.5], 2.4, stair({ tag: 'T2-steps' })),
   bx(P.cottage, P.y1, 4.5, bldg(K.cedar, { tag: 'cottage' })),
   bx(P.t2house, P.y2, 5.9, bldg(K.plaster, { tag: 't2-house' })),
+  // the hill's retaining walls along the terraces' outer edges (ishigaki: dry stone, snow on top; off-limits tops)
+  ...P.hillWalls.map(([x0, x1, z0, z1, y1]) => B(x0, x1, FL, y1, z0, z1, { tag: 'hill-wall', color: '#8f8a80', pattern: SURF.setts, roof: true })),
   // hill houses stepping up behind T2 and the spawn (out of play; they cut the corner behind the co-op)
-  B(-24.5, -12, FL, 5.4, -40.5, -37.2, bldg(K.plaster, { tag: 'hill-house' })),
+  B(-24.5, -9, FL, 5.4, -40.5, -37.2, bldg(K.plaster, { tag: 'hill-house' })),
   B(-17.5, -9, FL, 5.8, -44, -40.5, bldg(K.cedar, { tag: 'hill-house' })),
   B(-12.5, -9, FL, 6.2, -47, -44, bldg(K.plaster, { tag: 'hill-house' })),
 
@@ -212,11 +217,36 @@ const CALAMARI = {
   bounds: { minX: -28, maxX: 28, minZ: -48, maxZ: 48 },
   spawnPads: [P.pad, [-P.pad[0], P.pad[1], -P.pad[2]]],
   spawnBarrier: 4.2,
+  // the world round it: no Inkopolis bay; our own hills, headlands, village beyond, breakwater, mountains (backdrop.js);
+  // snow on the land (a low snow line and a heavy dusting), gentle snowfall, stars at dusk. A cold, clear winter day —
+  // a low white sun, a pale blue sky, cool shadows off the snow, a slate sea — and a deep-blue dusk with warm windows.
   env: {
     backdrop: buildBackdrop,
     bay: false, boats: false, edge: 'none', stars: true,
-    snow: { line: 40, cover: 0.55 },
+    snow: { line: 9, cover: 0.72 },
     weather: { snow: { count: 2200, fall: 0.9, size: 0.08 } },
+    theme: {
+      all: { seaCrest: '#9fbcc0', foam: '#f4f8fb' },
+      day: {
+        sunAz: 208, sunEl: 24, sunColor: '#fff6ea', sunIntensity: 3.0, skySun: 2.5,
+        hemiSky: '#bcd2f0', hemiGround: '#d6dde6', hemiGroundK: 2.0, hemiIntensity: 0.5, envK: 0.5,
+        zenith: '#3f6fae', skyMid: '#86aad2', horizon: '#dde7f0', ground: '#7f98ab',
+        horizonGlow: '#fff3e2', horizonGlowK: 0.08, glowColor: '#fff4e0',
+        cloudLit: '#ffffff', cloudShade: '#9eacc0', cloud: [0.5, 1.0, 1.0, 0.52],
+        seaDeep: '#1e3a4c', seaShallow: '#3a6a74', waveStrength: 0.9,
+        haze: [1 / 1500, 0.9, 240], fog: [25, 700],
+        grade: { uExposure: 0.9, uSat: 0.94, uVib: 0.08, uContrast: 1.07, uLift: 0.0, uVignette: 0.2, uShadowTint: [0.88, 0.96, 1.14], uHighTint: [1.0, 1.0, 1.0] },
+      },
+      sunset: {
+        sunAz: 214, sunEl: 7, sunColor: '#ffae70', sunIntensity: 2.6, skySun: 3.2,
+        hemiSky: '#4c66b4', hemiGround: '#8f93bd', hemiGroundK: 1.6, hemiIntensity: 0.62, envK: 0.42,
+        zenith: '#141d48', skyMid: '#3b4886', horizon: '#f0a07a', ground: '#3a4270',
+        horizonGlow: '#ff9a62', horizonGlowK: 0.5, glowColor: '#ffb070',
+        cloudLit: '#ffc4a4', cloudShade: '#4f5690',
+        seaDeep: '#101a3a', seaShallow: '#26406a', seaCrest: '#6f8fc0',
+        grade: { uExposure: 1.0, uSat: 1.0, uVib: 0.1, uContrast: 1.07, uLift: 0.0, uVignette: 0.28, uShadowTint: [0.84, 0.94, 1.22], uHighTint: [1.06, 1.0, 0.9], bloom: [0.45, 0.55, 1.7] },
+      },
+    },
   },
   single: SINGLE,
   half: HALF,
