@@ -218,7 +218,7 @@ const LAYOUT_NANTAI = {
   zones: ZONES,
   tower: TOWER,
   // the centre of the lawn: one slab across the centre line (self-symmetric), so the turf runs on without a seam
-  single: [B(-7.2, 7.2, FL, G0, -9.6, 9.6, turf({ tag: 'lawn' }))],
+  single: [B(-7.2, 7.2, FL, G0, -9.6, 9.6, turf({ tag: 'lawn', mural: [{ n: [0, 1, 0], id: MURAL.paths }] }))],
   half: HALF,
   // two heritage lamps per half light the paths at the bridge head and the terrace steps at dusk; the team flags fly
   // from the forecourt's back corners

@@ -67,6 +67,10 @@ export function registerParty(D, H, T) {
         B.pop();
       }
       B.cyl('metal', K.steelLt, 0.05, 0.25, 0, h + rise + 0.1, 0, { seg: 8 });
+      // a lantern hanging from the ridge over the table (warm at dusk)
+      seg(B, NS('metal'), K.black, [0, h + rise - 0.1, 0], [0, h - 0.35, -0.3], 0.012, 0.012, { round: true, seg: 4 });
+      B.cyl('metal', K.black, 0.1, 0.05, 0, h - 0.33, -0.3, { seg: 10 });
+      B.cyl(NS('glow'), '#ffcf86', 0.08, 0.2, 0, h - 0.47, -0.3, { seg: 10, glow: 1.3 });
       B.col(-W / 2 - 0.1, h - 0.3, -Dd / 2 - 0.1, W / 2 + 0.1, h + rise, Dd / 2 + 0.1, ROOF);
       // trestle table along the back, with the tea urn, flasks, mugs, charts, the sign-up book, a cash tin
       const tz = -0.6, th = 0.76;
@@ -243,6 +247,56 @@ export function registerParty(D, H, T) {
       if (n > 2) crate(0.95, 0, 0.1, -0.1);
       colC(B, 0, 0, 0, 0.95, 0.7 * Math.min(2, n), 0.75);
       if (n > 2) colC(B, 0.95, 0, 0.1, 0.95, 0.7, 0.75);
+    },
+  };
+
+
+  // ------------------------------------------------------------------------------------------ working clutter
+  // bin, cool box, wheelbarrow, tarp heap, leaning ladder, folded chairs, hose reel; and a power cable across the grass
+  D.nantai_clutter = {
+    desc: 'clutter: bin, cooler, wheelbarrow, tarp, ladder, chairstack, hose',
+    build(B, o) {
+      const v = o.variant ?? 'bin';
+      if (v === 'bin') {
+        B.cyl('metal', K.green, 0.28, 0.85, 0, 0.425, 0, { seg: 14 });
+        B.cyl('metal', K.greenLt ?? '#5f8a58', 0.3, 0.06, 0, 0.87, 0, { seg: 14 });
+        letters(B, 'LITTER', { h: 0.07, x: 0, y: 0.55, z: 0.285, c: K.white, flat: true, wt: 0.22 });
+        colC(B, 0, 0, 0, 0.6, 0.9, 0.6);
+      } else if (v === 'cooler') {
+        B.box('gloss', o.color ?? K.teal, 0.62, 0.4, 0.4, 0, 0.22, 0, { r: 0.05 });
+        B.box('gloss', K.white, 0.64, 0.08, 0.42, 0, 0.44, 0, { r: 0.03 });
+        seg(B, 'metal', K.steelLt, [-0.25, 0.49, 0], [0.25, 0.49, 0], 0.03, 0.03, { round: true });
+        colC(B, 0, 0, 0, 0.64, 0.5, 0.42);
+      } else if (v === 'wheelbarrow') {
+        B.push(0, 0, 0, 0, -0.08);
+        B.box('metal', K.grizz, 0.7, 0.32, 1.0, 0, 0.55, 0.05, { r: 0.05 });
+        B.box('paint', '#8a8578', 0.6, 0.06, 0.9, 0, 0.7, 0.05, { r: 0.03 });
+        for (const s2 of [-1, 1]) seg(B, 'metal', K.steelDk, [s2 * 0.25, 0.45, -0.3], [s2 * 0.3, 0.62, -1.05], 0.035, 0.035, { round: true });
+        B.cyl('rubber', K.rubber, 0.2, 0.09, 0, 0.2, 0.55, { rz: HP, seg: 14 });
+        for (const s2 of [-1, 1]) seg(B, 'metal', K.steelDk, [s2 * 0.2, 0.4, -0.35], [s2 * 0.2, 0, -0.45], 0.03, 0.03, { round: true });
+        B.pop();
+        colC(B, 0, 0, 0, 0.75, 0.75, 1.7);
+      } else if (v === 'tarp') {
+        B.box('wood', K.timber, 1.4, 0.5, 1.0, 0, 0.25, 0, { r: 0.03 });
+        B.sph('rubber', '#3f5c7a', 0.95, 0, 0.35, 0, { sx: 0.82, sy: 0.55, sz: 0.62, ws: 12, hs: 8 });
+        for (const s2 of [-1, 1]) seg(B, NS('rubber'), K.rope, [s2 * 0.7, 0.05, -0.55], [s2 * 0.3, 0.85, 0], 0.015, 0.015, { round: true, seg: 4 });
+        colC(B, 0, 0, 0, 1.5, 0.85, 1.1);
+      } else if (v === 'ladder') {
+        const L = o.len ?? 2.6, lean = 0.34;
+        for (const s2 of [-1, 1]) seg(B, 'metal', K.steelLt, [s2 * 0.22, 0, 0], [s2 * 0.22, L * Math.cos(lean), -L * Math.sin(lean)], 0.05, 0.03, {});
+        for (let i = 1; i < 8; i++) { const t = i / 8; seg(B, NS('metal'), K.steelLt, [-0.22, L * Math.cos(lean) * t, -L * Math.sin(lean) * t], [0.22, L * Math.cos(lean) * t, -L * Math.sin(lean) * t], 0.025, 0.025, { round: true, seg: 4 }); }
+      } else if (v === 'chairstack') {
+        for (let i = 0; i < 4; i++) { B.push(0, 0.05 + i * 0.06, i * 0.04, 0, -1.25); B.box('paint', [K.navy, K.green, K.red, K.plum][i], 0.55, 0.9, 0.05, 0, 0.45, 0, { r: 0.01 }); B.pop(); }
+      } else if (v === 'hose') {
+        B.cyl('metal', K.steelDk, 0.08, 0.5, 0, 0.3, 0, { rz: HP, seg: 10 });
+        B.tor('rubber', K.green, 0.3, 0.06, 0, 0.35, 0, { ry: HP, rs: 6, ts: 18 });
+        B.tor('rubber', K.green, 0.24, 0.06, 0, 0.35, 0, { ry: HP, rs: 6, ts: 18 });
+        for (const s2 of [-1, 1]) seg(B, 'metal', K.steelDk, [s2 * 0.2, 0, 0], [s2 * 0.2, 0.4, 0], 0.04, 0.04, {});
+        colC(B, 0, 0, 0, 0.5, 0.7, 0.7);
+      } else if (v === 'cable') {
+        const pts = (o.pts ?? [[0, 0], [2, 0.3], [4, 0]]).map(([x, z]) => [x, 0.03, z]);
+        B.add(NS('rubber'), H.tubeGeo(pts, 0.025, 5), K.black, 0, 0, 0);
+      }
     },
   };
 
