@@ -134,8 +134,8 @@ const STREET = [
   { type: 'crossmarket_bench', pos: [5.2, FL, -43.55], rotY: 0 },
   // ---- the roof terrace (café Les Halles): pergola along the tall row, tables, balustrade on the street edge
   { type: 'crossmarket_pergola', pos: [10.55, FL, -16.6], rotY: P / 2, length: 10.8, d: 1.5 },
-  { type: 'cafeset', pos: [13.2, FL, -25.4], rotY: 0.4, variant: 0, color: '#3f7a5a' },
-  { type: 'cafeset', pos: [13.1, FL, -18.6], rotY: 1.2, variant: 1, color: '#3f7a5a' },
+  { type: 'cafeset', pos: [13.2, FL, -25.4], rotY: 0.4, variant: 0, color: '#3f7a5a', notIn: TC },
+  { type: 'cafeset', pos: [13.1, FL, -18.6], rotY: 1.2, variant: 1, color: '#3f7a5a', notIn: TC },
   { type: 'crossmarket_balustrade', pos: [14.8, FL, -16.1], rotY: P / 2, length: 3.5 },
   { type: 'crossmarket_balustrade', pos: [14.8, FL, -21.9], rotY: P / 2, length: 6.0 },
   { type: 'crossmarket_passage', pos: [6, 0, -19.5], rotY: -P / 2, w: 3, depth: 9, h: FL, h2: 2.2, split: 4.5 },
@@ -184,7 +184,7 @@ const STREET = [
   { type: 'stringlights', pos: tw(-13.3, -4.1), rotY: RT - Math.atan2(7.65, 2.3), length: 8.0, height: 4.9, endHeight: 5.4, sag: 0.5, count: 13 },
   { type: 'crossmarket_bin', pos: [-7.3, 0, -12.3] },
   // ---- the plaza by the hall's east corner (left) and its twin: news kiosk, advertising column, ticket booth, crates
-  { type: 'crossmarket_kiosk', pos: [13.4, 0, -5.2], rotY: 0, notIn: TC },
+  { type: 'crossmarket_kiosk', pos: [13.4, 0, -5.2], rotY: 0 },
   { type: 'crossmarket_column', pos: [17.2, 0, -9.0], notIn: TC },
   { type: 'crossmarket_booth', pos: tw(-10.5, 5.6), rotY: RT + P },
   { type: 'crossmarket_crates', pos: tw(-12.5, 5.3), rotY: RT, kind: 'fruit', variant: 2 },
@@ -271,26 +271,18 @@ const ZONES = [
 // ================================================================================================ Tower Command only
 // (onlyIn: 'tower'; the originals they replace carry notIn: 'tower' above; layout.js has the matching level pieces).
 // The track (tower-data.js, mirrored per side) runs out of the hall along the tram line, round the florist's corner,
-// along Market Street's end of the Arcade Gallery, down Market Street, along the tall row's front, up onto the roof
-// terrace's new end and off it into the flank street, then down the flank street to the goal by the Exchange.
+// along Market Street's end of the Arcade Gallery, down Market Street, along the tall row's front, past the roof
+// terrace's end on the street (checkpoint 2), then down the flank street to the goal by the Exchange.
 const TOWER = [
-  // the roof terrace's new end (layout: terrace-C, x 10.5 … 15 × z -16 … -8.5): a blank ashlar end wall the tower climbs
-  // (two lanterns either side of the climb), shops under it on the flank street, its stair at the new end, the café's
-  // pergola, a table and the street-edge balustrade carried on; the checkpoint strip (z -11.5 … -9) is kept clear
-  house(10.5, 15, -16, -8.5, FL, { style: 'ashlar', trim: '#efe6d3', cornice: 'none', pipe: false, noBand: true }, {
-    e: { shops: [{ x0: 0.35, x1: 3.45, name: 'FLOWERS', fascia: FAS.green, rolled: '#3f7a5a', door: 'l', goods: 'flowers' }], gwin: [-2.9] },
+  // the roof terrace's hall end without its stair (the stair's foot stood on the track): a plain ashlar wall under the
+  // terrace's edge (inkable: swim up it) with the café's street door; no tables up top (the café sets are cleared off
+  // the terrace, the Exchange footbridge lands on it)
+  house(10.5, 15, -18, -16, FL, { style: 'ashlar', trim: '#efe6d3', cornice: 'none', pipe: false, noBand: true }, {
+    n: { shops: [{ x0: -1.7, x1: 1.7, name: 'CAFE', fascia: FAS.black, awn: AWN.green, door: 'c', goods: 'cups' }] },
   }, undefined, { onlyIn: TC }),
-  house(10.5, 15, -12, -8.5, FL, { style: 'ashlar', trim: '#efe6d3', cornice: 'none', pipe: false, noBand: true }, {
-    w: { lanterns: [-1.55, 1.55] },
-  }, undefined, { onlyIn: TC }),
-  { type: 'crossmarket_stonestair', pos: [12.75, 0, -2.3], rotY: P, run: 6.2, rise: FL, width: 4.5, onlyIn: TC },
-  { type: 'crossmarket_balustrade', pos: [14.8, FL, -12.0], rotY: P / 2, length: 4.0, onlyIn: TC },
-  { type: 'crossmarket_pergola', pos: [10.55, FL, -12.2], rotY: P / 2, length: 3.8, d: 1.5, onlyIn: TC },
-  { type: 'cafeset', pos: [13.3, FL, -14.1], rotY: 0.7, variant: 0, color: '#3f7a5a', onlyIn: TC },
   { ...TALL_ROW, faces: { ...TALL_ROW.faces, n: { ...TALL_ROW.faces.n, shops: TALL_ROW.faces.n.shops.map(({ awn, ...sp }) => ({ ...sp, rolled: '#3f7a5a' })) } }, onlyIn: TC },
   { ...FLORIST_HOUSE, faces: { ...FLORIST_HOUSE.faces, w: { ...FLORIST_HOUSE.faces.w, shops: FLORIST_HOUSE.faces.w.shops.map(({ awn, ...sp }) => ({ ...sp, rolled: '#3f8a85' })) } }, onlyIn: TC },
-  // the kiosk + advertising column that stood where the stair now lands / on the track's corner
-  { type: 'crossmarket_kiosk', pos: [7.8, 0, -6.4], rotY: 0.3, onlyIn: TC },
+  // the advertising column that stood on the track's corner
   { type: 'crossmarket_column', pos: [17.2, 0, -5.2], onlyIn: TC },
   // the Arcade Gallery, its Market Street end cut back to z -20.95 (a railing across the new end); the festoon moves
   // with it
