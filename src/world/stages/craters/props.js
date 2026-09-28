@@ -7,7 +7,8 @@
 //
 // Conventions: metres, Y up, `pos` = base point, rotY turns local +Z (the "front"). Runs (railings, wire, fences) extend
 // along local +X. Signage uses flat painted / raised letters from a stroke font (below).
-import { PAV, PILLBOX, MEMO, T1, T2, BRIDGES, POND, CRATER, COAST } from './layout.js';
+import { LAYOUT, PAV, PILLBOX, MEMO, T1, T2, BRIDGES, POND, CRATER, COAST } from './layout.js';
+import { topOf, mirrorDef, inPoly, PieceIndex } from './geo.js';
 
 const P = Math.PI;
 
@@ -961,7 +962,10 @@ export function register(D, H) {
 const rnd = (i) => { const s = Math.sin(i * 91.7 + 17.3) * 43758.5453; return s - Math.floor(s); };
 const ang = (deg) => (deg * Math.PI) / 180;
 const polar = (th, r) => [Math.cos(ang(th)) * r, Math.sin(ang(th)) * r];
-const coneY = (r) => -1 + Math.max(0, Math.min(5, r - CRATER.r0)) * (2.2 / 5);   // the crater's slope height at radius r
+// the stage's real floor under (x, z) (the highest layout top below yMax): props on the crater's slopes, the cliff lip
+const FLOOR_IDX = new PieceIndex([...LAYOUT.single, ...LAYOUT.half, ...LAYOUT.half.map(mirrorDef)].filter((d) => !d.rail && !d.hidden).map((d) => ({ d })));
+const groundY = (x, z, yMax = 1.3) => { let t = -Infinity; for (const { d } of FLOOR_IDX.at(x, z)) { const y = topOf(d, x, z); if (y != null && y <= yMax && y > t) t = y; } return +t.toFixed(3); };
+const coneY = (r, th) => groundY(Math.cos(ang(th)) * r, Math.sin(ang(th)) * r, 1.3);
 // tussocks + cliff-edge warning along the chalk lip (Alpha's half of the coast; the open edges skipped)
 const LIP_TUFTS = (() => {
   const out = [];
@@ -972,8 +976,9 @@ const LIP_TUFTS = (() => {
     for (let k = 0; k < n; k++) {
       const t = (k + 0.3 + rnd(i * 31 + k) * 0.4) / n, x = a[0] + (b[0] - a[0]) * t, z = a[1] + (b[1] - a[1]) * t;
       // (just inside the edge, on the lip; its top is 0.25 / 0.33)
-      const nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L, s = rnd(i * 7 + k) > 0.5 ? 1 : -1;
-      const inside = [x + nx * 0.35 * s, z + nz * 0.35 * s];
+      let nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L;
+      if (!inPoly(COAST, (a[0] + b[0]) / 2 + nx * 0.1, (a[1] + b[1]) / 2 + nz * 0.1)) { nx = -nx; nz = -nz; }
+      const d = 0.2 + rnd(i * 7 + k) * 0.3, inside = [x + nx * d, z + nz * d];
       out.push({ type: 'craters_tussock', pos: [+inside[0].toFixed(2), i % 2 ? 0.33 : 0.25, +inside[1].toFixed(2)], s: 0.45 + rnd(k * 3 + i) * 0.35, seed: (i * 13 + k) % 7, rotY: rnd(k) * 6 });
     }
   });
@@ -989,17 +994,17 @@ export const PLACEMENTS = [
   { type: 'craters_bench', pos: [-12.4, 0, -42.6], rotY: 0 },
   { type: 'craters_sign', variant: 1, pos: [3.0, 0, -27.3], rotY: 0, arms: [['GREAT CRATER', 90], ['MEMORIAL', 180], ['VISITOR CENTRE', -90]] },
   { type: 'craters_hawthorn', pos: [16.6, 0, -32.6], rotY: 0.2, s: 1.05 },
-  { type: 'craters_gorse', pos: [-22.2, 0, -35.2], s: 0.9, seed: 2 },
+  { type: 'craters_gorse', pos: [-20.3, 0, -34.4], s: 0.9, seed: 2 },
 
   // ================= the memorial (right flank)
   { type: 'craters_obelisk', pos: [MEMO.c[0], 2.4, MEMO.c[1]], rotY: P },
   { type: 'craters_wreath', pos: [MEMO.c[0] - 2.0, 0, MEMO.c[1] - 2.95], rotY: P + 0.15 },
   { type: 'craters_wreath', pos: [MEMO.c[0] + 2.05, 0, MEMO.c[1] - 2.95], rotY: P - 0.1 },
   { type: 'craters_wreath', pos: [MEMO.c[0] + 0.1, 2.4, MEMO.c[1] - 0.95], rotY: P, variant: 1, r: 0.24 },
-  { type: 'craters_lantern', pos: [MEMO.c[0] - 1.6, 0, MEMO.c[1] - 5.1] },
-  { type: 'craters_lantern', pos: [MEMO.c[0] + 1.6, 0, MEMO.c[1] - 5.1] },
+  { type: 'craters_lantern', pos: [MEMO.c[0] - 1.3, 0, MEMO.c[1] - 5.1] },
+  { type: 'craters_lantern', pos: [MEMO.c[0] + 1.3, 0, MEMO.c[1] - 5.1] },
   { type: 'craters_bench', pos: [MEMO.c[0] + 3.9, 0, MEMO.c[1] - 3.4], rotY: -P * 0.75 },
-  { type: 'craters_sign', variant: 0, pos: [-26.85, 0.33, -12.2], rotY: Math.PI / 2 },
+  { type: 'craters_sign', variant: 0, pos: [-26.85, 0.25, -12.2], rotY: Math.PI / 2 },
 
   // ================= the pillbox (right lane)
   { type: 'craters_pillbox', pos: [(PILLBOX.x0 + PILLBOX.x1) / 2, 0, (PILLBOX.z0 + PILLBOX.z1) / 2], rotY: 0, w: PILLBOX.x1 - PILLBOX.x0, d: PILLBOX.z1 - PILLBOX.z0 },
@@ -1007,11 +1012,11 @@ export const PLACEMENTS = [
 
   // ================= the Great Crater: the relics, rubble, poppies in the slopes
   { type: 'craters_cannon', pos: [...polar(315, 7.2).slice(0, 1), 0.9, polar(315, 7.2)[1]], rotY: Math.atan2(Math.cos(ang(315)), Math.sin(ang(315))) },
-  { type: 'craters_shell', pos: [polar(225, 7.6)[0], coneY(7.6) - 0.05, polar(225, 7.6)[1]], rotY: -ang(135) },
+  { type: 'craters_shell', pos: [polar(225, 7.6)[0], coneY(7.6, 225) - 0.05, polar(225, 7.6)[1]], rotY: -ang(135) },
   { type: 'craters_boulder', pos: [-3.0, -1.0, -3.0], s: 0.75, seed: 1 },
   { type: 'craters_boulder', pos: [1.6, -1.0, -3.9], s: 0.6, flat: 0.65, seed: 3 },
-  ...[[255, 7.4], [200, 8.3], [345, 6.9], [282, 8.9], [238, 9.3], [300, 9.6], [192, 6.4], [330, 9.4]].map(([th, r], i) => ({ type: 'craters_poppies', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r) - 0.02).toFixed(2), +polar(th, r)[1].toFixed(2)], r: 0.6 + rnd(i) * 0.4, n: 8 + (i % 4), seed: i + 1 })),
-  ...[190, 205, 220, 245, 262, 300, 320, 340, 355].map((th, i) => ({ type: 'craters_tussock', pos: [+polar(th, 10.7)[0].toFixed(2), 1.2, +polar(th, 10.7)[1].toFixed(2)], s: 0.5 + rnd(i * 5) * 0.3, seed: i })),
+  ...[[255, 7.4], [200, 8.3], [345, 6.9], [282, 8.9], [238, 9.3], [300, 9.6], [192, 6.4], [330, 9.4]].map(([th, r], i) => ({ type: 'craters_poppies', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.02).toFixed(2), +polar(th, r)[1].toFixed(2)], r: 0.6 + rnd(i) * 0.4, n: 8 + (i % 4), seed: i + 1 })),
+  ...[190, 205, 220, 245, 300, 320, 340, 355].map((th, i) => ({ type: 'craters_tussock', pos: [+polar(th, 10.7)[0].toFixed(2), 1.2, +polar(th, 10.7)[1].toFixed(2)], s: 0.5 + rnd(i * 5) * 0.3, seed: i })),
 
   // ================= the fire trench (T1) and the zig-zag (T2)
   { type: 'craters_sign', variant: 2, pos: [-13.6, 0, -19.3], rotY: 0, text: 'TRENCH LINE B' },
@@ -1028,7 +1033,7 @@ export const PLACEMENTS = [
   ...[[-14.75, -3], [-1, T1.x1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [b, -1.0, T1.z1], rotY: Math.PI, length: b - a })),
   ...[[T1.x0, -6], [-4, T1.x1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [a, -1.0, T1.z0], rotY: 0, length: b - a })),
   // war rubble in the crater and round its crest
-  ...[[240, 6.2], [300, 5.9], [205, 9.0], [330, 8.6], [268, 11.9], [190, 12.2], [350, 12.0]].map(([th, r], i) => ({ type: 'craters_rubble', pos: [+polar(th, r)[0].toFixed(2), +(r > 11.2 ? 0 : coneY(r) - 0.03).toFixed(2), +polar(th, r)[1].toFixed(2)], rotY: i * 1.3, seed: i + 1 })),
+  ...[[240, 6.2], [300, 5.9], [205, 9.0], [330, 8.6], [268, 11.9], [190, 12.2], [350, 12.0]].map(([th, r], i) => ({ type: 'craters_rubble', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.03).toFixed(2), +polar(th, r)[1].toFixed(2)], rotY: i * 1.3, seed: i + 1 })),
 
   // ================= the downs: wire, boards, lanterns, benches, gorse, boulders
   { type: 'craters_wire', pos: [-14.5, 0, -10.6], rotY: 0, length: 4.5 },
@@ -1040,7 +1045,7 @@ export const PLACEMENTS = [
   { type: 'craters_bench', pos: [4.6, 0, -12.55], rotY: Math.PI },
   { type: 'craters_bench', pos: [10.2, 0, -16.0], rotY: 0.9 },
   { type: 'craters_gorse', pos: [21.3, 0, -27.8], s: 1.1, seed: 1 },
-  { type: 'craters_gorse', pos: [22.3, 0, -6.9], s: 0.85, seed: 3 },
+  { type: 'craters_gorse', pos: [21.6, 0, -6.5], s: 0.85, seed: 3 },
   { type: 'craters_gorse', pos: [-13.4, 0, -26.8], s: 0.9, seed: 4 },
   { type: 'craters_boulder', pos: [-6.6, 0, -8.8], s: 0.85, seed: 2 },
   { type: 'craters_boulder', pos: [14.7, 0, -3.6], s: 0.95, seed: 4 },
@@ -1063,7 +1068,7 @@ export const PLACEMENTS = [
   { type: 'craters_icecream', pos: [-16.2, 0, -36.4], rotY: 0.35 },
   // ================= the forecourt: picnic tables, bins
   { type: 'craters_picnic', pos: [-11.5, 0, -34.2], rotY: 0.2 },
-  { type: 'craters_picnic', pos: [12.8, 0, -29.5], rotY: -0.35 },
+  { type: 'craters_picnic', pos: [14.6, 0, -31.2], rotY: -0.35 },
   { type: 'craters_bin', pos: [-3.3, 0, -31.2] },
   { type: 'craters_bin', pos: [8.2, 0, -12.4] },
 
