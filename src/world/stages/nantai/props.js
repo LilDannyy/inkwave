@@ -67,8 +67,12 @@ export const PLACEMENTS = [
   { type: 'nantai_pine', pos: [-23.6, 2.6, -41.8], rotY: 0.5, seed: 1 },
   { type: 'nantai_pine', pos: [-21.2, 2.6, -32.5], rotY: 2.2, seed: 2, scale2: 0.85 },
   { type: 'nantai_pine', pos: [-24.2, 2.6, -23.6], rotY: -0.8, seed: 4 },
-  { type: 'nantai_boulder', pos: [-20.4, 2.6, -27.2], rotY: 1.2, w: 1.7, h: 1.15, d: 1.3, seed: 33 },
-  { type: 'nantai_boulder', pos: [-23.8, 2.6, -36.6], rotY: 0.3, w: 1.5, h: 1.0, d: 1.2, seed: 35 },
+  { type: 'nantai_outcrop', pos: [-20.6, 2.6, -27.0], rotY: 1.2, w: 2.4, h: 1.25, d: 1.7, seed: 33 },
+  { type: 'nantai_outcrop', pos: [-23.6, 2.6, -37.2], rotY: 0.3, w: 2.2, h: 1.1, d: 1.6, seed: 35 },
+  { type: 'nantai_outcrop', pos: [-22.4, 2.6, -21.2], rotY: 2.1, w: 2.0, h: 1.05, d: 1.4, seed: 37 },
+  { type: 'nantai_heath', pos: [-24.4, 2.6, -29.6], w: 1.6, d: 3, n: 5, seed: 5 },
+  { type: 'nantai_heath', pos: [-20.4, 2.6, -42.6], w: 2.4, d: 1.6, n: 5, seed: 9 },
+  { type: 'nantai_heath', pos: [-24.8, 2.6, -18.2], w: 1.2, d: 1.4, n: 3, seed: 13 },
   { type: 'nantai_cairn', pos: [-21.0, 2.6, -39.2], rotY: 0 },
   { type: 'nantai_scree', pos: [-22.5, 2.6, -29.5], w: 2.5, d: 2.2, n: 16, seed: 3 },
 
@@ -81,6 +85,13 @@ export const PLACEMENTS = [
   { type: 'nantai_telepier', pos: [13.2, 1.3, -22.7], rotY: -0.3 },
   { type: 'nantai_bench', pos: [9.4, 1.3, -20.55], rotY: 0 },
   { type: 'nantai_crates', pos: [5.2, 1.3, -34.6], rotY: 0.1, n: 3 },
+  { type: 'nantai_planter', pos: [-1.4, 1.3, -23.3], rotY: 0, w: 1.8 },
+  { type: 'nantai_planter', pos: [15.9, 1.3, -30.6], rotY: HP, w: 1.4 },
+  { type: 'nantai_infoboard', pos: [3.9, 1.3, -28.8], rotY: 0 },
+  { type: 'nantai_bollard', pos: [3.6, 1.3, -30.1] },
+  { type: 'nantai_bollard', pos: [-9.1, 0, -16.6] },
+  { type: 'nantai_bollard', pos: [-20.6, 0, -3.1] },
+  { type: 'nantai_bollard', pos: [-14.0, 0, -14.3] },
   { type: 'nantai_crates', pos: [14.6, 1.3, -38.8], rotY: -0.2, n: 2 },
 
   // ================= the shore trail: boulders, pines, a cairn, the rowing boat
@@ -90,11 +101,16 @@ export const PLACEMENTS = [
   { type: 'nantai_pine', pos: [23.4, 0, -30.2], rotY: 2.8, seed: 6, scale2: 0.8 },
   { type: 'nantai_cairn', pos: [19.2, 0, -41.2], rotY: 0 },
   { type: 'nantai_rowboat', pos: [23.3, 0, -20.9], rotY: HP + 0.2 },
-  { type: 'nantai_scree', pos: [22.5, 0, -30.8], w: 2.0, d: 3.0, n: 14, seed: 7 },
+  { type: 'nantai_scree', pos: [21.0, 0, -35.4], w: 1.6, d: 3.0, n: 14, seed: 7 },
+  { type: 'nantai_heath', pos: [23.4, 0, -40.0], w: 1.6, d: 2.4, n: 4, seed: 17 },
+  { type: 'nantai_heath', pos: [19.2, 0, -31.0], w: 1.2, d: 1.8, n: 3, seed: 19 },
 
   // ================= the bank below the ridge nose and in front of the hollow
   { type: 'nantai_pine', pos: [-24.6, 0, -13.6], rotY: 1.0, seed: 7, scale2: 0.9 },
   { type: 'nantai_boulder', pos: [-11.8, 0, -16.2], rotY: 0.2, w: 1.4, h: 0.9, d: 1.1, seed: 45 },
+  { type: 'nantai_heath', pos: [-17.4, 0, -14.6], w: 2.2, d: 1.0, n: 4, seed: 21 },
+  { type: 'nantai_heath', pos: [-21.5, 0, -1.8], w: 2.0, d: 1.4, n: 3, seed: 23 },
+  { type: 'nantai_heath', pos: [22.6, 0, -8.6], w: 1.4, d: 2.0, n: 4, seed: 25 },
 
   // ================= the star party on the lawn
   { type: 'nantai_marquee', pos: [10.6, 0, -4.4], rotY: -HP },

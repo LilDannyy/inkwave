@@ -73,7 +73,9 @@ export function buildBackdrop(kit) {
   const crag = mass({ x: -6, z: -96, rx: 42, rz: 26, h: 24, seed: 7, rot: 0.15, ridge: 0.7 });
   mass({ x: 18, z: -72, rx: 26, rz: 18, h: 9, seed: 8, rot: -0.3, ridge: 0.6 });
   mass({ x: -28, z: -70, rx: 20, rz: 16, h: 8, seed: 9, rot: 0.5, ridge: 0.6 });
-  mass({ x: -40, z: -215, rx: 190, rz: 120, h: 150, seed: 10, rot: 0.25, ridge: 0.55, snow: 128 });
+  mass({ x: -40, z: -215, rx: 190, rz: 120, h: 150, seed: 10, rot: 0.25, ridge: 0.75, snow: 124 });
+  mass({ x: -130, z: -250, rx: 120, rz: 90, h: 118, seed: 18, rot: -0.4, ridge: 0.8, snow: 110 });
+  mass({ x: 40, z: -150, rx: 70, rz: 50, h: 46, seed: 19, rot: 0.6, ridge: 0.85 });
   mass({ x: 4, z: 92, rx: 38, rz: 24, h: 16, seed: 11, rot: -0.2, ridge: 0.6 });
   mass({ x: -22, z: 70, rx: 24, rz: 16, h: 7, seed: 12, rot: 0.4, ridge: 0.6 });
   mass({ x: 26, z: 72, rx: 22, rz: 16, h: 8, seed: 13, rot: -0.5, ridge: 0.6 });

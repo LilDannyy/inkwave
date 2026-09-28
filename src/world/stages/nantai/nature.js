@@ -2,7 +2,7 @@
 // granite boulders, cairns, trail signs, scree, Pearl's rehearsal rock, the rowing boat, benches. (registered by props.js)
 export function registerNature(D, H, T) {
   const { THREE, PI, TAU, HP } = H;
-  const { K, NS, tpl, kf, hash, pbox, ccyl, seg, colC, ROOF, RAIL, letters, textW, boardSign, rock, pine } = T;
+  const { K, NS, tpl, kf, hash, pbox, ccyl, seg, colC, ROOF, RAIL, letters, textW, boardSign, rock, pine, heath } = T;
   const WY = -1.6;
 
   // ------------------------------------------------------------------------------------------ brook banks
@@ -25,7 +25,6 @@ export function registerNature(D, H, T) {
       for (let i = 0; i < ns; i++) {
         const x = ((i + 0.5) / ns) * L + (hash(seed * 5 + i) - 0.5), z = 0.9 + hash(seed * 9 + i) * ((o.width ?? 2.5) - 1.6), r = 0.25 + hash(i * 3 + seed) * 0.25;
         rock(B, x, WY - 0.35, z, r, r * 0.55, r * 0.8, seed * 31 + i, { c: K.graniteLt, ao: false });
-        B.sph(NS('paint'), K.foam, r * 0.5, x + r * 0.7, WY + 0.01, z, { sx: 1.6, sy: 0.05, sz: 0.5, ws: 8, hs: 4 });
       }
       if (o.bar) B.col(0, -2.4, -o.bar, L, 0.0, 0);
     },
@@ -46,7 +45,8 @@ export function registerNature(D, H, T) {
     desc: 'granite boulder (cover)',
     build(B, o) {
       const w = o.w ?? 1.6, h = o.h ?? 1.1, d = o.d ?? 1.3, seed = o.seed ?? 5;
-      rock(B, 0, -0.08, 0, w / 2, h / 1.24, d / 2, seed, { c: o.color ?? K.granite });
+      rock(B, 0, -0.05, 0, w / 2, h / 1.62, d / 2, seed, { c: o.color ?? K.granite });
+      if (o.heath !== false) heath(B, w * 0.42, 0, d * 0.35, 0.9, seed, undefined);
       if (o.pebbles !== false) for (let i = 0; i < 3; i++) { const a = hash(seed + i) * TAU; rock(B, Math.cos(a) * (w / 2 + 0.2), -0.05, Math.sin(a) * (d / 2 + 0.2), 0.18, 0.12, 0.16, seed + i * 7, { c: K.graniteDk }); }
       if (o.lichen !== false) for (let i = 0; i < 4; i++) { const a = hash(seed * 3 + i) * TAU; B.sph(NS('paint'), i % 2 ? K.lichen : '#9aa08a', 0.16, Math.cos(a) * w * 0.3, h * 0.92, Math.sin(a) * d * 0.3, { sx: 1, sy: 0.12, sz: 0.8, ws: 8, hs: 4 }); }
       if (o.solid !== false) colC(B, 0, 0, 0, w * 0.82, h * 0.95, d * 0.82, o.roof ? ROOF : undefined);
@@ -67,6 +67,69 @@ export function registerNature(D, H, T) {
     build(B, o) {
       const w = o.w ?? 2, d = o.d ?? 2, n = o.n ?? 14, seed = o.seed ?? 9;
       for (let i = 0; i < n; i++) { const r = 0.07 + hash(seed + i * 1.7) * 0.14; rock(B, (hash(seed * 3 + i) - 0.5) * w, -0.02, (hash(seed * 7 + i) - 0.5) * d, r, r * 0.55, r * 0.85, seed + i, { c: hash(i) > 0.5 ? K.scree : K.granite, ao: false }); }
+    },
+  };
+
+
+  // an outcrop: a cluster of granite blocks round a big one (cover; one collider box over the core), heather at its foot
+  D.nantai_outcrop = {
+    desc: 'granite outcrop (cover)',
+    build(B, o) {
+      const w = o.w ?? 2.6, h = o.h ?? 1.3, d = o.d ?? 1.8, seed = o.seed ?? 7;
+      rock(B, 0, -0.05, 0, w * 0.42, h / 1.62, d * 0.45, seed, { c: K.granite, det: 1 });
+      rock(B, w * 0.32, -0.05, d * 0.2, w * 0.24, h * 0.62 / 1.62, d * 0.32, seed + 5, { c: K.graniteDk });
+      rock(B, -w * 0.34, -0.05, -d * 0.15, w * 0.22, h * 0.48 / 1.62, d * 0.3, seed + 9, { c: K.graniteLt });
+      for (let i = 0; i < 4; i++) { const a = hash(seed * 1.7 + i) * TAU; rock(B, Math.cos(a) * w * 0.55, -0.03, Math.sin(a) * d * 0.6, 0.16, 0.08, 0.14, seed + 20 + i, { c: K.scree, ao: false }); }
+      heath(B, -w * 0.45, 0, d * 0.45, 1.1, seed + 3);
+      heath(B, w * 0.5, 0, -d * 0.4, 0.8, seed + 4);
+      colC(B, 0, 0, 0, w * 0.8, h * 0.95, d * 0.8, o.roof ? ROOF : undefined);
+    },
+  };
+  // heather / grass clumps strewn over a patch (visual)
+  D.nantai_heath = {
+    desc: 'heather and grass clumps (visual)',
+    build(B, o) {
+      const w = o.w ?? 2, d = o.d ?? 2, n = o.n ?? 5, seed = o.seed ?? 3;
+      for (let i = 0; i < n; i++) heath(B, (hash(seed * 3 + i) - 0.5) * w, 0, (hash(seed * 7 + i) - 0.5) * d, 0.5 + hash(seed + i) * 0.7, seed + i, hash(seed * 11 + i) > 0.65 ? '#8a7a55' : undefined);
+    },
+  };
+  // granite planter with alpine plants (cover): w × d, 0.6 high
+  D.nantai_planter = {
+    desc: 'granite planter with alpine plants',
+    build(B, o) {
+      const w = o.w ?? 1.8, d = o.d ?? 0.8, h = 0.62;
+      B.box('paint', K.stone, w, h, d, 0, h / 2, 0, { r: 0.05 });
+      B.box('paint', K.graniteLt, w + 0.08, 0.08, d + 0.08, 0, h - 0.03, 0, { r: 0.03 });
+      B.box('paint', '#4c3e30', w - 0.16, 0.04, d - 0.16, 0, h + 0.005, 0, { r: 0.01 });
+      heath(B, -w * 0.25, h - 0.02, 0, 0.7, 11, K.moss);
+      heath(B, w * 0.22, h - 0.02, 0.05, 0.6, 13, '#6d7c46');
+      for (let i = 0; i < 7; i++) B.sph(NS('paint'), i % 3 ? '#e9e3f0' : '#e8c24a', 0.035, (hash(i * 3) - 0.5) * (w - 0.3), h + 0.1 + hash(i) * 0.08, (hash(i * 5) - 0.5) * (d - 0.3), { ws: 6, hs: 4 });
+      colC(B, 0, 0, 0, w, h + 0.1, d);
+    },
+  };
+  // interpretive board on a stand, angled (faces +Z): a title, a small star map
+  D.nantai_infoboard = {
+    desc: 'interpretive board: the night sky from Nantai',
+    build(B, o) {
+      for (const s of [-1, 1]) pbox(B, 'metal', K.steelDk, 0.07, 0.95, 0.07, s * 0.6, 0.47, 0);
+      B.push(0, 1.05, 0, 0, -0.55);
+      B.box('metal', K.steelDk, 1.46, 0.86, 0.06, 0, 0, 0, { r: 0.02 });
+      pbox(B, NS('paint'), K.navy, 1.36, 0.76, 0.01, 0, 0, 0.035);
+      letters(B, o.title ?? 'THE SKY FROM NANTAI', { h: 0.06, x: 0, y: 0.28, z: 0.042, c: K.white, flat: true, wt: 0.22 });
+      for (let i = 0; i < 26; i++) { const s = 0.012 + hash(i * 1.7) * 0.014; pbox(B, NS('paint'), '#f4ecd2', s, s, 0.004, (hash(i * 2.3) - 0.5) * 1.2, (hash(i * 3.7) - 0.5) * 0.44 - 0.06, 0.043); }
+      pbox(B, NS('paint'), K.grizz, 0.3, 0.12, 0.004, 0.46, -0.28, 0.043);
+      B.pop();
+      colC(B, 0, 0, 0, 1.4, 1.35, 0.3);
+    },
+  };
+  // path bollard with a red night light (astronomers keep their eyes dark-adapted): glows at dusk
+  D.nantai_bollard = {
+    desc: 'red path bollard light',
+    build(B) {
+      B.cyl('metal', K.iron, 0.09, 0.75, 0, 0.375, 0, { seg: 10 });
+      B.cyl('metal', K.iron, 0.11, 0.06, 0, 0.78, 0, { seg: 10 });
+      B.box('glow', '#ff4a36', 0.1, 0.07, 0.1, 0, 0.68, 0, { glow: 1.1 });
+      colC(B, 0, 0, 0, 0.2, 0.8, 0.2);
     },
   };
 

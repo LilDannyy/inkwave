@@ -5,7 +5,8 @@
 //                shows the same ring)
 //   inscription  carved in the first terrace's front wall: NANTAI OBSERVATORY · 1962
 //   blaze        a painted trail blaze on the bastion by the hollow: red-white-red and SUMMIT ▲ 0.2 KM
-export const MURAL = { shock: 4, inscription: 5, blaze: 6 };
+//   rose         a brass compass rose set in the first terrace's paving (face 8.5 × 14.3 m, centred; N = world −X)
+export const MURAL = { shock: 4, inscription: 5, blaze: 6, rose: 7 };
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -73,6 +74,30 @@ export function drawMurals(g, R, kit) {
     g.fillText('▲ 0.2 KM', x0 + W / 2, y0 + 76);
     g.restore();
     out.push({ id: MURAL.blaze, x: x0, y: y0, w: W, h: H, m: [0.9, 1.1], place: [0.7, 0.9, 0.9, 1.1], fx: [0.6, 1] });
+  }
+  // ---------------------------------------------------------------- compass rose (8.5 × 14.3 m face at 30 px/m)
+  {
+    const PPM = 30, W = Math.round(8.5 * PPM), H = Math.round(14.3 * PPM), x0 = R.x + 860, y0 = R.y, cx = x0 + W / 2, cy = y0 + H / 2;
+    g.save();
+    g.clearRect(x0, y0, W, H);
+    const brass = 'rgba(186,146,74,0.95)', brassDk = 'rgba(128,96,44,0.95)', stone = 'rgba(58,56,52,0.8)';
+    const Rr = 1.9 * PPM;
+    g.lineWidth = 3; g.strokeStyle = brass; g.beginPath(); g.arc(cx, cy, Rr, 0, Math.PI * 2); g.stroke();
+    g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, Rr - 9, 0, Math.PI * 2); g.stroke();
+    for (let i = 0; i < 72; i++) { const a = (i / 72) * Math.PI * 2, r0 = Rr - (i % 6 ? 4 : 8); g.lineWidth = i % 6 ? 1 : 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); g.lineTo(cx + Math.cos(a) * Rr, cy + Math.sin(a) * Rr); g.stroke(); }
+    // 16-point star, north (canvas −x = world −X) longest
+    for (let i = 0; i < 16; i++) {
+      const a = Math.PI + (i / 16) * Math.PI * 2, L = (i % 4 === 0 ? (i === 0 ? 1.0 : 0.82) : i % 2 === 0 ? 0.58 : 0.38) * (Rr - 12), w = i % 4 === 0 ? 0.13 : 0.1;
+      for (const [s, c] of [[1, brass], [-1, brassDk]]) {
+        g.fillStyle = c; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * L, cy + Math.sin(a) * L); g.lineTo(cx + Math.cos(a + s * w * 2.4) * L * 0.22, cy + Math.sin(a + s * w * 2.4) * L * 0.22); g.closePath(); g.fill();
+      }
+    }
+    g.fillStyle = brassDk; g.beginPath(); g.arc(cx, cy, 5, 0, Math.PI * 2); g.fill();
+    g.font = kit.fontB(15); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = stone;
+    for (const [t, a] of [['N', Math.PI], ['E', -Math.PI / 2], ['S', 0], ['W', Math.PI / 2]]) g.fillText(t, cx + Math.cos(a) * (Rr + 14), cy + Math.sin(a) * (Rr + 14));
+    g.font = kit.fontB(9); g.fillStyle = stone; g.fillText('NANTAI  ·  2,657 FT', cx, cy + Rr + 34);
+    g.restore();
+    out.push({ id: MURAL.rose, x: x0, y: y0, w: W, h: H, m: [8.5, 14.3], fx: [0.4, 1] });
   }
   return out;
 }
