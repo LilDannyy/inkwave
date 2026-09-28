@@ -203,7 +203,7 @@ export function buildBackdrop(kit) {
   });
   // a sheet swept round the pillar along its profile path (r, y), over an arc facing `dir`
   const path = [[0.7, 8.28], [0.98, 7.82], [1.12, 7.72], [1.02, 7.6], [1.02, 6.66], [1.34, 6.48], [1.2, 6.3], [1.2, 4.76], [1.54, 4.5], [1.4, 4.3], [1.4, 2.56],
-    [2.14, 2.53], [2.16, 1.34], [3.04, 1.32], [3.07, 0.03], [4.6, 0.03], [4.95, -0.08], [5.05, -1.72]];
+    [1.84, 2.53], [1.86, 1.34], [2.66, 1.32], [2.69, 0.03], [5.1, 0.03], [5.45, -0.08], [5.55, -1.72]];
   const fallSeg = path.map((p, i) => (i && Math.abs(p[1] - path[i - 1][1]) > Math.abs(p[0] - path[i - 1][0]) * 1.5 ? 1 : 0));
   const cascadeGeo = (cx, cz, dx, dz) => {
     const pos = [], uv = [], aS = [], aF = [], idx = [], NW = 10, base = Math.atan2(dz, dx);
@@ -238,7 +238,7 @@ export function buildBackdrop(kit) {
   const NP = 90, ND = 70, pp = new Float32Array((NP * 2 + ND) * 3), ph = new Float32Array(NP * 2 + ND), kind = new Float32Array(NP * 2 + ND);
   let o3 = 0;
   for (const sg of [1, -1]) for (let i = 0; i < NP; i++) {
-    const r = 5.05 + rnd() * 0.5, a = Math.atan2(sg * PILLAR.dir[1], sg * PILLAR.dir[0]) + (rnd() - 0.5) * 0.9;
+    const r = 5.55 + rnd() * 0.5, a = Math.atan2(sg * PILLAR.dir[1], sg * PILLAR.dir[0]) + (rnd() - 0.5) * 0.9;
     pp.set([sg * PILLAR.x + Math.cos(a) * r, WATER_Y + 0.05, sg * PILLAR.z + Math.sin(a) * r], o3 * 3); ph[o3] = rnd(); kind[o3] = 0; o3++;
   }
   const c0 = Math.cos(ARCH.rotY), s0 = Math.sin(ARCH.rotY);
@@ -271,7 +271,7 @@ export function buildBackdrop(kit) {
   const ring = new THREE.RingGeometry(0.2, 1.6, 24, 1);
   ring.rotateX(-Math.PI / 2);
   const rings = [];
-  for (const sg of [1, -1]) { const g = ring.clone(); g.translate(sg * (PILLAR.x + PILLAR.dir[0] * 5.3), WATER_Y + 0.03, sg * (PILLAR.z + PILLAR.dir[1] * 5.3)); rings.push(g); }
+  for (const sg of [1, -1]) { const g = ring.clone(); g.translate(sg * (PILLAR.x + PILLAR.dir[0] * 5.8), WATER_Y + 0.03, sg * (PILLAR.z + PILLAR.dir[1] * 5.8)); rings.push(g); }
   const rg = new THREE.BufferGeometry();
   { const a = rings[0].toNonIndexed(), b = rings[1].toNonIndexed(), p = new Float32Array(a.attributes.position.array.length * 2), u = new Float32Array(a.attributes.uv.array.length * 2); p.set(a.attributes.position.array); p.set(b.attributes.position.array, a.attributes.position.array.length); u.set(a.attributes.uv.array); u.set(b.attributes.uv.array, a.attributes.uv.array.length); rg.setAttribute('position', new THREE.BufferAttribute(p, 3)); rg.setAttribute('uv', new THREE.BufferAttribute(u, 2)); }
   const foam = new THREE.Mesh(rg, new THREE.ShaderMaterial({
