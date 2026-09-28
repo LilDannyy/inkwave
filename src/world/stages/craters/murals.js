@@ -11,7 +11,8 @@
 //   7  the Great Crater's floor: a bronze ring set into the turf — GROUND ZERO
 //   8  the pillbox: flaking camouflage paint and its stencilled number (every wall)
 //   9  the memorial's bronze plaque (the plinth top's front face)
-export const MURAL_IDS = { boardWar: 4, boardTrench: 5, boardPonds: 6, groundZero: 7, pillbox: 8, plaque: 9 };
+//  10  chalk scars on the Great Crater's slopes (every rim facet)
+export const MURAL_IDS = { boardWar: 4, boardTrench: 5, boardPonds: 6, groundZero: 7, pillbox: 8, plaque: 9, scar: 10 };
 
 let seed = 1;
 const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
@@ -156,6 +157,22 @@ export function drawMurals(g, R, kit) {
     text(g, 'THE DOWNS ARE SHARED NOW', r.x + r.w / 2, r.y + 140, 22, FT, '#d8c38e', r.w - 60);
     poppy(g, r.x + r.w / 2, r.y + 180, 12);
     out.push({ id: 9, ...r, place: [0.5, 1.5, 0.3, 0.62], fx: [0.35, 0] });
+  }
+  // ---- 10: chalk scars on the Great Crater's slopes (every rim facet; a ragged scree of exposed chalk round its middle,
+  // the turf showing through in holes — the face is ~4 m across, the scar 3.2 m, centred)
+  {
+    const r = { x: R.x + 1088, y: R.y + 320, w: 400, h: 400 }, cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    g.clearRect(r.x, r.y, r.w, r.h);
+    seed = 71;
+    // soft-edged patches of weathered chalk (grey-white, fading into the turf), scattered chips and flints
+    const patch = (x, y, rr, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, `rgba(214,210,196,${a})`); gr.addColorStop(0.55, `rgba(206,202,188,${a * 0.75})`); gr.addColorStop(1, 'rgba(206,202,188,0)'); g.fillStyle = gr; g.beginPath(); g.ellipse(x, y, rr, rr * (0.55 + rand() * 0.3), rand() * 3, 0, Math.PI * 2); g.fill(); };
+    for (let k = 0; k < 9; k++) { const a = rand() * Math.PI * 2, d = Math.sqrt(rand()) * 110; patch(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.7, 30 + rand() * 45, 0.55 + rand() * 0.3); }
+    g.save(); g.globalCompositeOperation = 'destination-out';
+    for (let k = 0; k < 60; k++) { g.globalAlpha = 0.5 + rand() * 0.5; g.beginPath(); g.ellipse(cx + (rand() - 0.5) * 300, cy + (rand() - 0.5) * 220, 3 + rand() * 10, 2 + rand() * 6, rand() * 3, 0, Math.PI * 2); g.fill(); }
+    g.restore();
+    g.fillStyle = 'rgba(70,72,74,0.75)'; for (let k = 0; k < 22; k++) { const a = rand() * Math.PI * 2, d = Math.sqrt(rand()) * 115; g.beginPath(); g.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.7, 1.2 + rand() * 2.2, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = 'rgba(228,225,214,0.85)'; for (let k = 0; k < 70; k++) { const a = rand() * Math.PI * 2, d = Math.sqrt(rand()) * 135; g.fillRect(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.7, 1.5 + rand() * 3, 1.5 + rand() * 2.5); }
+    out.push({ id: 10, ...r, place: [0.4, 3.2, 0.9, 3.2], fx: [0.75, 0] });
   }
   return out;
 }
