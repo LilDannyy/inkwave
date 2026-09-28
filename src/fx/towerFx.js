@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { G, on } from '../core/ctx.js';
 import { TOWER } from '../config.js';
 import { ceilingAt } from '../game/tower.js';
+import { GRATE } from '../game/towerPaint.js';
 
 const NEUTRAL = new THREE.Color('#ffd54a');
 const DIM = new THREE.Color('#7d8088');
@@ -150,14 +151,60 @@ export class TowerFx {
     const steel = new THREE.MeshStandardMaterial({ color: 0x2b2e38, roughness: 0.45, metalness: 0.55 });
     const trim = new THREE.MeshStandardMaterial({ color: 0x14151b, roughness: 0.6, metalness: 0.3 });
     this.deckMat = new THREE.MeshStandardMaterial({ color: 0x555a66, roughness: 0.7, emissive: NEUTRAL.clone(), emissiveIntensity: 0.12 });
-    // the body: a square prism (a 4-sided cylinder turned 45°), slightly tapered, sitting on a dark skirt
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(R * Math.SQRT2 * 0.97, R * Math.SQRT2, H * 0.86, 4, 1), steel);
-    body.rotation.y = Math.PI / 4; body.position.y = H * 0.43; body.castShadow = true; body.receiveShadow = true;
-    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(R * Math.SQRT2 * 1.01, R * Math.SQRT2 * 1.03, 0.12, 4, 1), trim);
-    skirt.rotation.y = Math.PI / 4; skirt.position.y = 0.06;
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(R * 1.9, 0.14, R * 1.9), this.deckMat);
+    // the body: a square block as big as its collider (its walls take ink: you swim up them), on a dark skirt
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2 * R, H - 0.14, 2 * R), steel);
+    body.position.y = (H - 0.14) / 2; body.castShadow = true; body.receiveShadow = true;
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(2 * R + 0.06, 0.1, 2 * R + 0.06), trim);
+    skirt.position.y = 0.05;
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(2 * R, 0.14, 2 * R), this.deckMat);
     deck.position.y = H - 0.07; deck.receiveShadow = true;
     g.add(body, skirt, deck);
+    // the grate rimming the top (never inked): perforated steel strips round the deck's edge
+    const gc = document.createElement('canvas'); gc.width = gc.height = 64;
+    const gx = gc.getContext('2d');
+    gx.fillStyle = '#3a3e4a'; gx.fillRect(0, 0, 64, 64);
+    gx.fillStyle = '#101117';
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { gx.beginPath(); gx.arc(8 + x * 16 + (y % 2) * 8, 8 + y * 16, 5, 0, Math.PI * 2); gx.fill(); }
+    const gtex = new THREE.CanvasTexture(gc); gtex.wrapS = gtex.wrapT = THREE.RepeatWrapping; gtex.colorSpace = THREE.SRGBColorSpace;
+    const gMat = new THREE.MeshStandardMaterial({ map: gtex, roughness: 0.55, metalness: 0.6 });
+    const G0 = GRATE, len = 2 * R;
+    for (let k = 0; k < 4; k++) {
+      const a = (k * Math.PI) / 2, w = k % 2 ? len - 2 * G0 : len;   // (two full strips, two between them)
+      const t = gtex.clone(); t.needsUpdate = true; t.repeat.set(w / 0.24, G0 / 0.24);
+      const m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.55, metalness: 0.6 });
+      const strip = new THREE.Mesh(new THREE.PlaneGeometry(w, G0), m);
+      strip.rotation.x = -Math.PI / 2; strip.rotation.z = a;
+      strip.position.set(Math.sin(a) * (R - G0 / 2), H + 0.004, Math.cos(a) * (R - G0 / 2));
+      strip.receiveShadow = true;
+      g.add(strip);
+    }
+    gMat.dispose();
+    // the ink on it: one mesh of five quads (the deck inside the grate, the four walls) drawn from TowerPaint's canvas
+    const P = this.T && this.T.paint;
+    if (P) {
+      const pos = [], uv = [], idx = [], e = 0.006;
+      const place = [
+        (a, b) => [a, H + e, b], (a, b) => [R + e, b, a], (a, b) => [-R - e, b, -a], (a, b) => [-a, b, R + e], (a, b) => [a, b, -R - e],
+      ];
+      P.surf.forEach((sf, i) => {
+        const [rx, ry, rw, rh] = sf.rect, k = pos.length / 3;
+        for (const [a, b] of [[sf.a0, sf.b0], [sf.a1, sf.b0], [sf.a1, sf.b1], [sf.a0, sf.b1]]) {
+          pos.push(...place[i](a, b));
+          const px = rx + ((a - sf.a0) / (sf.a1 - sf.a0)) * rw, py = ry + rh - ((b - sf.b0) / (sf.b1 - sf.b0)) * rh;
+          uv.push(px / P.W, 1 - py / P.Hc);
+        }
+        idx.push(k, k + 1, k + 2, k, k + 2, k + 3);
+      });
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      geo.setIndex(idx); geo.computeVertexNormals();
+      this.inkMat = new THREE.MeshStandardMaterial({ map: P.texture, transparent: true, roughness: 0.3, metalness: 0, side: THREE.DoubleSide,
+        depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+      const ink = noAO(new THREE.Mesh(geo, this.inkMat));
+      ink.renderOrder = 1;
+      g.add(ink);
+    }
     // the thin pillar in the middle (cover for the riders; its collider is tower.js's): a steel column on a collar,
     // team-lit corner strips and a pyramid cap
     const PW = TOWER.pillarW, PH = TOWER.pillarH;
@@ -177,9 +224,9 @@ export class TowerFx {
     // deck edge light bars (the team colour, brighter while it moves)
     this.edgeMat = new THREE.MeshBasicMaterial({ color: NEUTRAL.clone(), toneMapped: false });
     for (let k = 0; k < 4; k++) {
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(R * 1.96, 0.07, 0.07), this.edgeMat);
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(2 * R, 0.06, 0.06), this.edgeMat);
       const a = (k * Math.PI) / 2;
-      bar.position.set(Math.sin(a) * R * 0.98, H + 0.005, Math.cos(a) * R * 0.98);
+      bar.position.set(Math.sin(a) * (R - 0.02), H + 0.03, Math.cos(a) * (R - 0.02));
       bar.rotation.y = a;
       g.add(bar);
     }
@@ -195,7 +242,7 @@ export class TowerFx {
     const lampMats = Array.from({ length: 4 }, () => new THREE.MeshBasicMaterial({ color: 0x222228, toneMapped: false }));
     for (const end of [1, -1]) for (let k = 0; k < 4; k++) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.04), lampMats[k]);
-      m.position.set((k - 1.5) * 0.36, H * 0.52, end * R * 0.99);
+      m.position.set((k - 1.5) * 0.36, H * 0.52, end * (R + 0.02));   // (over the ink on the wall)
       g.add(m);
     }
     this.lamps = lampMats.map((material) => ({ material }));
@@ -286,6 +333,7 @@ export class TowerFx {
   update(dt) {
     const T = this.T, m = this.match;
     if (!T || !this.root || !m || G.match !== m) return;
+    if (T.paint && T.paint.dirty) { T.paint.texture.needsUpdate = true; T.paint.dirty = false; }   // (new ink on it this frame)
     const t = G.time;
     const owner = T.owner;
     const target = owner >= 0 && G.teamColors ? G.teamColors[owner] : NEUTRAL;

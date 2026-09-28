@@ -38,3 +38,10 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)
   - Equip players with `actor.setWeapon(id)` / `setSub(id)` / `setSpecial(id)`
+
+Tower Command:
+- `MAP=halyard tools/botlab/run.sh tools/botlab/tower-check.cjs` checks a track: its pieces, holes, clearance, rides at
+  real speed, and pictures.
+- `MAP=<id> tools/botlab/run.sh tools/botlab/tower-match.cjs` runs an all-bot tower match and reports the tower's numbers.
+- The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
+  tools/botlab/page.cjs`, and the same with `tower-ink.js`.

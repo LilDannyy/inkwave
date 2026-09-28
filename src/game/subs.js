@@ -168,6 +168,10 @@ export class SubSystem {
     }
   }
   _step(it, dt) {
+    if (it.ride) {
+      if (G.match?.tower !== it.ride) it.ride = null;
+      else { it.pos.copy(it.ride.pos).add(it.rideOff); it.mesh.position.copy(it.pos); }
+    }
     {
       switch (it.state) {
         case 'fly': this._fly(it, dt); break;
@@ -262,6 +266,10 @@ export class SubSystem {
     it.normal = hit.normal.clone();
     it.pos.copy(hit.point).addScaledVector(hit.normal, 0.005);
     it.face = hit.face; it.u = hit.u; it.v = hit.v;
+    // stuck to Tower Command's tower (its platform or pillar: moving blocks): ride along with it
+    const T = G.match?.tower, lb = hit.block >= 0 ? G.level.blocks[hit.block] : null;
+    it.ride = T && lb && lb.dynamic ? T : null;
+    if (it.ride) it.rideOff = it.pos.clone().sub(T.pos);
     it.hp = it.sub.hp || 1; it.born = G.time;
     it.mesh.userData.inner.position.y = 0;
     it.mesh.position.copy(it.pos);

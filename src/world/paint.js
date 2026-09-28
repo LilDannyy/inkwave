@@ -472,6 +472,8 @@ export class PaintSystem {
     }
     const seed = opts.seed ?? Math.random();
     const cosmetic = !!opts.cosmetic;
+    // Tower Command: the tower keeps its own ink (it moves; src/game/towerPaint.js)
+    if (!cosmetic) G.match?.tower?.paint?.splat(center, radius, team, { seed });
     const st = opts.stretch;
     let sAmt = st ? (opts.stretchAmt ?? 1) : 0;
     const kind = cosmetic && opts.kind === undefined ? K_SPECK : this._kind(opts, radius, st, sAmt);

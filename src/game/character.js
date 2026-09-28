@@ -1374,7 +1374,9 @@ export class Character {
     }
     this.yaw = yaw;
     if (dt > 0) {
-      _v1.subVectors(r, this.rp).divideScalar(dt);
+      _v1.subVectors(r, this.rp);
+      if (s.carry) _v1.sub(s.carry);           // (a moving platform carrying us isn't us walking)
+      _v1.divideScalar(dt);
       _v2.copy(this.rv);
       this.rv.lerp(_v1, 1 - Math.exp(-dt * 32));
       _v3.subVectors(this.rv, _v2).divideScalar(dt);

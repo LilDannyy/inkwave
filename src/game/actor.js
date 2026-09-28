@@ -67,6 +67,7 @@ export class Actor {
       time: 0, speed: 0, localMove: { x: 0, z: 0 }, grounded: true, vy: 0, aimPitch: 0, firing: false, charge: 0, rolling: false,
       form: 'kid', wallNormal: new THREE.Vector3(), ink: 1, lowInk: false, special: 0, invuln: false,
       turnRate: 0, hp: 1, inEnemyInk: false, surface: 0, subAim: false,
+      carry: new THREE.Vector3(),   // how far something carried us this frame (Tower Command's tower): not our own walking
     };
     this.reset();
   }
@@ -402,13 +403,26 @@ export class Actor {
     if (this.grounded && g.hit && g.face >= 0) {
       const t = G.paint.sample(g.face, g.u, g.v);
       this.groundTeam = t === 0 ? 0 : (t - 1 === this.team ? 1 : 2);
+    } else if (this.grounded && g.hit && this._towerAt(g.block)) {
+      const t = G.match.tower.paint.groundTeam(this.pos);   // Tower Command: ink on the tower's deck
+      this.groundTeam = t === 0 ? 0 : (t - 1 === this.team ? 1 : 2);
     } else this.groundTeam = 0;
+  }
+  // is block id Tower Command's tower (its platform: the part that takes ink)?
+  _towerAt(bid) { const T = G.match?.tower; return !!(T && T.paint && bid >= 0 && bid === T.block.id); }
+  // our ink on a wall we raycast (a level face, or the tower's wall)?
+  _wallInk(h) {
+    if (h.face >= 0) return G.paint.sample(h.face, h.u, h.v) - 1 === this.team;
+    return this._towerAt(h.block) && G.match.tower.paint.wallTeam(h.point, h.normal) - 1 === this.team;
   }
 
   // Legacy probe (super jump charge / external callers): refresh ground + surface at the current position.
   _probeGround() {
     const gh = G.physics.groundProbe(this.pos.x, this.pos.y, this.pos.z, 0.4, 0.35, PLAYER.footRadius, this.ground, this.form === 'squid');
-    if (gh.hit) { const t = G.paint.sample(gh.face, gh.u, gh.v); this.groundTeam = gh.face < 0 || t === 0 ? 0 : (t - 1 === this.team ? 1 : 2); }
+    if (gh.hit) {
+      const t = gh.face >= 0 ? G.paint.sample(gh.face, gh.u, gh.v) : this._towerAt(gh.block) ? G.match.tower.paint.groundTeam(this.pos) : 0;
+      this.groundTeam = t === 0 ? 0 : (t - 1 === this.team ? 1 : 2);
+    }
     else this.groundTeam = 0;
   }
 
@@ -686,7 +700,7 @@ export class Actor {
     _v.copy(this.pos); _v.y += 0.3;
     const h = G.physics.raycast(_v, dir, P.radius + 0.35, this.wallHit);
     const isWall = h.hit && Math.abs(h.normal.y) < 0.5;
-    const inked = isWall && h.face >= 0 && G.paint.sample(h.face, h.u, h.v) - 1 === this.team;
+    const inked = isWall && this._wallInk(h);
     const into = isWall && mh > 0.01 ? -(mv.x * h.normal.x + mv.z * h.normal.z) / mh : 0;
     if (!this.climbing) {
       if (!(inked && into > P.climbAttachDot)) return;
@@ -709,7 +723,7 @@ export class Actor {
     // is there more of our ink above? (stop at the ink line instead of flying past it)
     _v.copy(this.pos); _v.y += 0.85;
     const hu = G.physics.raycast(_v, dir, P.radius + 0.45, this._ledgeHit);
-    const capped = hu.hit && Math.abs(hu.normal.y) < 0.5 && !(hu.face >= 0 && G.paint.sample(hu.face, hu.u, hu.v) - 1 === this.team);
+    const capped = hu.hit && Math.abs(hu.normal.y) < 0.5 && !this._wallInk(hu);
     // climb speed eases in (no instant 0 → 7.5 m/s snap), cling when the stick is neutral, and eases toward the
     // ledge-pop speed as the top comes into reach (so the pop never yanks the squid's vertical speed)
     let want = capped ? 0 : P.climbSpeed * clamp(into, 0, 1) * mag;
@@ -1016,6 +1030,7 @@ export class Actor {
     ch.root.rotation.y = this.yaw;
     ch.setHurt(Math.max(this.hurtFlash, 1 - this.hp / PLAYER.hp) * (this.hp < PLAYER.hp ? 1 : 0), G.teamColors[this.enemyTeam]);
     ch.update(dt, a);
+    a.carry.set(0, 0, 0);
     this._events(a);
     // swim wake
     if (a.form === 'swim' && hs > 2 && G.fx) {

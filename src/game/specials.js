@@ -411,7 +411,9 @@ export class SpecialSystem {
   // ---------------------------------------------------------------------------------------------- damage + hits
   filterDamage(v, amount, attacker, source) {
     const s = v.specialActive;
-    if (s && s.id === 'kraken') { this._knock(v, attacker, Math.min(4, amount * s.def.knockPerDamage)); this._hitFlash(v); return 0; }
+    // riding Tower Command's tower: a Kraken can be shot off it (4× the shove), Bubble Guard's shove is doubled
+    const onTower = !!(G.match?.tower && G.match.tower.riderList.includes(v));
+    if (s && s.id === 'kraken') { this._knock(v, attacker, onTower ? Math.min(10, amount * s.def.knockPerDamage * 4) : Math.min(4, amount * s.def.knockPerDamage)); this._hitFlash(v); return 0; }
     if (s && s.id === 'crab') return IMPL.crab.hurt.call(this, v, s, amount, attacker);
     // Mega Stamp mid-swing: anything coming from the front is deflected (sides + back stay open)
     if (s && s.id === 'stamp' && s.guard > 0 && attacker && attacker !== v && stampFront(v, s, attacker.pos, s.def.deflectArc)) {
@@ -420,7 +422,8 @@ export class SpecialSystem {
     }
     if (v.status.shield > 0) {
       const d = SPECIALS.bubbler;
-      this._knock(v, attacker, Math.min(d.knockMax, amount * d.knockPerDamage));
+      const k2 = onTower ? 2 : 1;
+      this._knock(v, attacker, Math.min(d.knockMax * k2, amount * d.knockPerDamage * k2));
       const m = this.shieldMeshes.get(v); if (m) m.material.uniforms.uHit.value = 0.6;
       if (G.time - (v._shieldSnd || 0) > 0.12 && near(v.pos)) { v._shieldSnd = G.time; play('shield_hit', { pos: v.isLocal ? undefined : v.pos, volume: 0.45 }); }
       return 0;
