@@ -155,7 +155,10 @@ const SALTPAN = {
     R(rise(23.2, -16, 0, 17.5, -16, 2.4), [17.5, 2.4, -16], 6, { tag: 'heap', color: SP.heap, pattern: PATTERN.rubber }),
     R(rise(11.8, -22, 0, 17.5, -22, 2.4), [17.5, 2.4, -22], 6, { tag: 'heap-tarp', color: SP.tarp, pattern: PATTERN.rubber }),
     R(rise(23.2, -22, 0, 17.5, -22, 2.4), [17.5, 2.4, -22], 6, { tag: 'heap-tarp', color: SP.tarp, pattern: PATTERN.rubber }),
-    B(16, 22.45, 3.35, 3.6, -13, -9.5, { tag: 'gantry-head', color: SP.steel, pattern: PATTERN.metalpanel }),
+    B(16, 22.45, 3.35, 3.6, -13, -9.5, { tag: 'gantry-head', color: SP.steel, pattern: PATTERN.metalpanel, notIn: 'tower' }),
+    // Tower Command: the head platform's mid edge 0.9 m back (over its moved bent, props.js) — the track turns at
+    // checkpoint 1 on the dyke below it, and the tower needs 3.72 m over its base (the head is 3.35 m up)
+    B(16, 22.45, 3.35, 3.6, -13, -10.4, { tag: 'gantry-head', color: SP.steel, pattern: PATTERN.metalpanel, onlyIn: 'tower' }),
     B(20, 22.45, 3.35, 3.6, -26, -13, wood({ tag: 'gantry-catwalk' })),
     R([21.225, 0, -35.6], [21.225, 3.6, -26], 2.45, wood({ tag: 'gantry-incline', thin: true, thickness: 0.25 })),
   ],
