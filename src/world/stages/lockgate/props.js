@@ -7,7 +7,7 @@
 // The place: a flight of broad locks climbing out of the harbour basin through an old brick warehouse district.
 // Materials: red + blue engineering brick, sandstone copings with worn arrises, black-and-white lock timber, cast iron.
 // Signage is modelled (flat painted / raised stroke letters, cached per glyph) — never the shared sign atlas.
-import { BRIDGE_T, BOAT_T } from './layout.js';
+import { BRIDGE_T, XBOAT, XBOATS, xboatT } from './layout.js';
 const P = Math.PI;
 
 export function register(D, H) {
@@ -1204,7 +1204,7 @@ export function register(D, H) {
 
   // ---- stables with a hay loft (pos = centre of the 7 x 8 x 3.6 block; stable doors + loft door face +Z, the wharf)
   D.lockgate_stables = {
-    desc: 'Canal horse stables with a hay loft around a 7 x 8 x 3.6 brick block: Dutch stable doors, loft gablet with a hay door + hoist beam, louvred ridge vent, slate roof (collides), tack hooks, a horse trough and a hay rack on the wharf side. flat: the Tower Command version — a flat leaded loft deck in play (the level carries it), the horse ramp up the -Z side (no windows there), a louvred vent (cover) and the loft hatch on the roof.',
+    desc: 'Canal horse stables with a hay loft around a 7 x 8 x 3.6 brick block: Dutch stable doors, loft gablet with a hay door + hoist beam, louvred ridge vent, slate roof (collides), tack hooks, a horse trough and a hay rack on the wharf side. flat: the Tower Command version — a flat leaded loft deck in play (the level carries it), the horse ramp up the -Z side (no windows there), the loft hatch and cover on the roof (louvred vent, chimney stack + cast-iron water tank on the +Z edge, hay bales by the ramp; all collide, slide-off tops).',
     params: { flat: 'bool' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
@@ -1232,6 +1232,39 @@ export function register(D, H) {
         for (let k = 0; k < 4; k++) pbox(B, NS('paint'), K.slateDk, 1.22, 0.04, 0.92, vx, Hh + 0.2 + k * 0.15, vz);
         B.push(vx, Hh + 0.85, vz, HP); slateRoof(B, -0.55, 0.55, -0.7, 0.7, 0, 0.3, { ov: 0.1, noGutter: true, noGable: true, course: 0.2 }); B.pop();
         colC(B, vx, Hh, vz, 1.3, 1.15, 1.0, ROOF);
+        // more cover on the deck (the user's round-2 note), all straight-edged, colliding (never inked, slide-off tops) and
+        // clear of the lane from the ramp's top (-X, x < -0.6) straight across to the street edge: along the street edge
+        // (+Z, over the tower's street and the first checkpoint) the tack room's chimney stack at the +X corner and a
+        // cast-iron water tank with a gap between them to shoot through; a stack of hay bales by the ramp's top (-Z)
+        brickBox(B, K.brick, 0.8, 2.0, 1.2, 3.1, Hh + 1.0, 3.4, { faces: ['x', 'z'], step: 0.25 });
+        pbox(B, NS('paint'), '#7a7d82', 0.86, 0.08, 1.26, 3.1, Hh + 0.04, 3.4);                         // lead flashing
+        B.box('paint', K.brickDk, 0.92, 0.12, 1.32, 3.1, Hh + 1.8, 3.4, { r: 0.02 });
+        B.box('paint', K.brickDk, 0.96, 0.1, 1.36, 3.1, Hh + 1.95, 3.4, { r: 0.02 });
+        for (const dz of [-0.3, 0.3]) B.lathe('paint', '#a45a3c', [[0.13, 0], [0.11, 0.3], [0.13, 0.34], [0.1, 0.36], [0, 0.36]], 3.1, Hh + 2.0, 3.4 + dz, { seg: 7 });
+        colC(B, 3.1, Hh, 3.4, 0.8, 2.0, 1.2, ROOF);
+        const tx = 0.7, tz = 3.4;
+        for (const dx of [-0.55, 0.55]) B.box('wood', K.timber, 0.22, 0.28, 1.2, tx + dx, Hh + 0.14, tz, { r: 0.02 });
+        B.box('paint', K.iron, 1.6, 1.12, 1.2, tx, Hh + 0.84, tz, { r: 0.03 });
+        for (const k of [-0.4, 0, 0.4]) pbox(B, NS('metal'), K.ironLt, 0.05, 1.12, 1.24, tx + k, Hh + 0.84, tz);       // panel flanges
+        for (const k of [-0.3, 0.3]) pbox(B, NS('metal'), K.ironLt, 1.64, 1.12, 0.05, tx, Hh + 0.84, tz + k);
+        pbox(B, NS('metal'), K.ironLt, 1.64, 0.05, 1.24, tx, Hh + 0.84, tz);
+        pbox(B, 'metal', K.ironLt, 1.68, 0.07, 1.28, tx, Hh + 1.41, tz);                                          // top lip
+        B.cyl('metal', K.iron, 0.05, 0.9, tx - 0.95, Hh + 0.95, tz - 0.3, { seg: 6 });                              // feed pipe
+        B.cyl('metal', K.iron, 0.05, 0.3, tx - 0.82, Hh + 1.4, tz - 0.3, { rz: HP, seg: 6 });
+        colC(B, tx, Hh, tz, 1.6, 1.45, 1.2, ROOF);
+        // hay bales: two along Z under two across (straight-edged, twine bands)
+        const hx = 0, hz = -3.45, straw = ['#c9a857', '#bf9c4c', '#d2b163', '#c4a255'];
+        const bale = (x, y, z, alongX, k) => {
+          const w = alongX ? 1.18 : 0.58, d = alongX ? 0.54 : 1.08;
+          B.box('paint', straw[k], w, 0.44, d, x, y + 0.22, z, { r: 0.04 });
+          for (const f of [-0.27, 0.27]) {
+            if (alongX) pbox(B, NS('paint'), '#6b5a3a', 0.03, 0.448, d + 0.012, x + f * w, y + 0.22, z);
+            else pbox(B, NS('paint'), '#6b5a3a', w + 0.012, 0.448, 0.03, x, y + 0.22, z + f * d);
+          }
+        };
+        for (const [dx, k] of [[-0.3, 0], [0.3, 1]]) bale(hx + dx, Hh, hz, false, k);
+        for (const [dz, k] of [[-0.28, 2], [0.28, 3]]) bale(hx, Hh + 0.46, hz + dz, true, k);
+        colC(B, hx, Hh, hz, 1.2, 0.92, 1.1, ROOF);
         return;
       }
       onFace(B, W, Dd, 2, () => { for (const x of [-2, 0, 2]) archWin(B, x, 1.5, 0.7, 0.8, { bars: 2 }); });
@@ -2042,12 +2075,18 @@ export const PLACEMENTS = [
   { type: 'lockgate_narrowboat', pos: DW(7.2, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]], notIn: 'tower' },
   { type: 'lockgate_bollard', pos: DW(5.2, -5.25, 0.15), notIn: 'tower' },
   { type: 'lockgate_bollard', pos: DW(10.2, -5.25, 0.15), notIn: 'tower' },
-  // (Tower Command: boats + their bollards BOAT_T further along, clear of the wider bridge — layout.js moves the hulls)
-  { type: 'lockgate_narrowboat', pos: DW(7.5 + BOAT_T, -3.67, -0.7), rotY: Q, kind: 'working', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.3, -1.5, 0.9], [2.7, -1.5, 0.9]], onlyIn: 'tower' },
-  { type: 'lockgate_narrowboat', pos: DW(7.2 + BOAT_T, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]], onlyIn: 'tower' },
-  { type: 'lockgate_bollard', pos: DW(5.2 + BOAT_T, -5.25, 0.15), onlyIn: 'tower' },
-  { type: 'lockgate_bollard', pos: DW(10.2 + BOAT_T, -5.25, 0.15), onlyIn: 'tower' },
-  { type: 'lockgate_bollard', pos: DW(-9.2, -5.25, 0.15), variant: 1 },
+  // (Tower Command: the two boats turned across the pound beside the bridge — layout.js XBOATS builds the hulls, roofs
+  // and boarding planks, these dress them (bow at local -X: the heading runs from the bow's quay to the stern's); mooring
+  // bollards at the crossing's outer corners; the oak stump, the ladder and the NO MOORING post moved off the landing of
+  // the mirrored crossing, on this bank the other side of the bridge)
+  ...XBOATS.map((b) => {
+    const [h0, h1] = xboatT(b);
+    return { type: 'lockgate_narrowboat', pos: DW(b.s0 + XBOAT.beam / 2, (h0 + h1) / 2, -0.7), rotY: b.bow < 0 ? -3 * P / 4 : P / 4, kind: b.kind, L: XBOAT.L, W: 2.0, cab: XBOAT.cab, onlyIn: 'tower' };
+  }),
+  { type: 'lockgate_bollard', pos: DW(6.5, -5.25, 0.15), onlyIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(12.3, -5.25, 0.15), onlyIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(-9.2, -5.25, 0.15), variant: 1, notIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(-12.3, -5.25, 0.15), variant: 1, onlyIn: 'tower' },
   { type: 'lockgate_bollard', pos: DW(-13.8, -5.25, 0.15) },
   { type: 'lockgate_ring', pos: DW(-11.5, -4.82, 0.15), rotY: Q },
   { type: 'lockgate_ring', pos: DW(-4.0, -4.82, 0.15), rotY: Q, notIn: 'tower' },
@@ -2055,14 +2094,16 @@ export const PLACEMENTS = [
   { type: 'lockgate_ring', pos: DW(-5.6, -4.82, 0.15), rotY: Q, onlyIn: 'tower' },
   { type: 'lockgate_ring', pos: DW(5.6, -4.82, 0.15), rotY: Q, onlyIn: 'tower' },
   { type: 'lockgate_ring', pos: DW(14.5, -4.82, 0.15), rotY: Q },
-  { type: 'lockgate_ladder', pos: DW(-10.4, -4.77, 0.15), rotY: Q, depth: 2.35 },
+  { type: 'lockgate_ladder', pos: DW(-10.4, -4.77, 0.15), rotY: Q, depth: 2.35, notIn: 'tower' },
+  { type: 'lockgate_ladder', pos: DW(-13.0, -4.77, 0.15), rotY: Q, depth: 2.35, onlyIn: 'tower' },   // (the boats' hulls lie on its wall)
   { type: 'lockgate_crane', pos: DW(-6.3, -6.4, 0.15), rotY: Q },
   { type: 'lockgate_lifebuoy', pos: DW(-12.5, -8.3, 0.15), rotY: Q },
   { type: 'lockgate_bench', pos: DW(-15.2, -8.3, 0.15), rotY: Q, notIn: 'tower' },
   { type: 'lockgate_milepost', pos: DW(4.3, -8.35, 0.15), rotY: Q, notIn: 'tower' },
-  { type: 'lockgate_bench', pos: DW(-8.2, -8.3, 0.15), rotY: Q, onlyIn: 'tower' },           // (off the tower's street)
+  // (Tower Command: the bench is gone — the tower's street and the boats' landing leave it no room)
   { type: 'lockgate_milepost', pos: DW(5.4, -8.35, 0.15), rotY: Q, onlyIn: 'tower' },        // (clear of the wider bridge)
-  { type: 'lockgate_enamel', pos: DW(-9.8, -8.35, 0.15), rotY: Q, variant: 0, post: true },
+  { type: 'lockgate_enamel', pos: DW(-9.8, -8.35, 0.15), rotY: Q, variant: 0, post: true, notIn: 'tower' },
+  { type: 'lockgate_enamel', pos: DW(-5.0, -8.4, 0.15), rotY: Q, variant: 0, post: true, onlyIn: 'tower' },   // (off the boats' landing)
   { type: 'lockgate_lamp', pos: DW(-8.5, -9.5), variant: 0 },
   { type: 'lockgate_lamp', pos: DW(8.2, -9.5), variant: 0 },
 
