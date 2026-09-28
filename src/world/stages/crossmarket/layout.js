@@ -25,6 +25,7 @@ import { SURF } from './surfaces.js';
 // roof: true); every railing is a `rail` (props).
 
 const FL = 2.6;   // first-floor level: spawn terrace, veranda, roof terrace
+const TC = 'tower';   // Tower Command-only pieces (onlyIn / notIn, src/world/variants.js)
 const K = 0.15;   // pavement kerb
 const CM = {
   setts: '#a39a8e', flags: '#d3c8b3', ashlar: '#dccfb2', rose: '#d8b9a2', ochre: '#d9ae6c', blue: '#a9bcc4', cream: '#e8dfcc',
@@ -59,10 +60,11 @@ const CROSSMARKET = {
   single: [
     // the No. 3 tram standing at the Market Hall stop, right under the crossing, turned with the tramway: double-ended
     // (self-symmetric), bottle-green rocker panels under a cream saloon, rounded cab ends; its roof is squid-only
-    TB(-5, 5, 0, 1.15, -1.2, 1.2, { color: CM.tramGreen, pattern: PATTERN.hullpaint, tag: 'tram-lower' }),
-    TB(-5, 5, 1.15, 3.0, -1.2, 1.2, { color: CM.tramCream, pattern: PATTERN.hullpaint, tag: 'tram-upper' }),
-    TB(5, 5.6, 0, 3.0, -0.9, 0.9, { color: CM.tramCream, pattern: PATTERN.hullpaint, tag: 'tram-cab' }),
-    TB(-5.6, -5, 0, 3.0, -0.9, 0.9, { color: CM.tramCream, pattern: PATTERN.hullpaint, tag: 'tram-cab' }),
+    // (Tower Command: the tram has gone — the tower starts on its spot and rides the tram line out of the hall)
+    TB(-5, 5, 0, 1.15, -1.2, 1.2, { color: CM.tramGreen, pattern: PATTERN.hullpaint, tag: 'tram-lower', notIn: TC }),
+    TB(-5, 5, 1.15, 3.0, -1.2, 1.2, { color: CM.tramCream, pattern: PATTERN.hullpaint, tag: 'tram-upper', notIn: TC }),
+    TB(5, 5.6, 0, 3.0, -0.9, 0.9, { color: CM.tramCream, pattern: PATTERN.hullpaint, tag: 'tram-cab', notIn: TC }),
+    TB(-5.6, -5, 0, 3.0, -0.9, 0.9, { color: CM.tramCream, pattern: PATTERN.hullpaint, tag: 'tram-cab', notIn: TC }),
   ],
   half: [
     // ================= ground: the setts (axis blocks); a dock basin cuts in between the tramway pier and the other
@@ -90,13 +92,13 @@ const CROSSMARKET = {
     TB(13, 21, 0, 0.3, -3.9, -2.3, { color: CM.flags, pattern: SURF.ashlar, tag: 'tram-platform' }),
 
     // ================= spawn: the Corn Exchange terrace (first floor) — grand stair, side flight, the veranda
-    B(-9, 9, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body' }),
+    B(-9, 9, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body', notIn: TC }),
     B(-9, 9, 2.4, FL, -44, -36, { color: CM.spawn, pattern: PATTERN.spawn, tag: 'spawn-terrace' }),
     R([0, 0, -29.8], [0, FL, -36], 4.4, { color: CM.step, pattern: PATTERN.stonestep, tag: 'grand-stair' }),
-    R([7, 0, -29.8], [7, FL, -36], 2.8, { color: CM.step, pattern: PATTERN.stonestep, tag: 'side-flight' }),
+    R([7, 0, -29.8], [7, FL, -36], 2.8, { color: CM.step, pattern: PATTERN.stonestep, tag: 'side-flight', notIn: TC }),
 
     // ================= back corners either side of the spawn
-    ...bldg(9, 24, -44, -36, 8.6, CM.ochre, PATTERN.render, { tag: 'BL' }),
+    ...bldg(9, 24, -44, -36, 8.6, CM.ochre, PATTERN.render, { tag: 'BL' }).map((d, i) => (i === 0 ? { ...d, notIn: TC } : d)),
     ...bldg(-24, -9, -44, -36, 9.2, CM.brick, PATTERN.brick, { tag: 'BR' }),
 
     // ================= right flank (−X): Fish Lane + the arcade under the sea-front row (ends at the tramway)
@@ -112,26 +114,51 @@ const CROSSMARKET = {
     B(-15, -6, FL, 8.0, -28, -23, { color: CM.rose, pattern: SURF.ashlar, paint: false, roof: true, tag: 'R2', mural: [{ n: [-1, 0, 0], id: 5 }] }),
     TB(-19.9, -12.9, 0, FL, -9.2, -TW, { color: CM.blue, pattern: PATTERN.render, tag: 'R1' }),
     TB(-19.9, -12.9, FL, 7.6, -9.2, -TW, { color: CM.blue, pattern: PATTERN.render, paint: false, roof: true, tag: 'R1' }),
-    B(-6, -3.8, 0, K, -28, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement' }),
-    B(-6, -3.8, 2.3, FL, -36, -19, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda' }),
-    R([-4.9, 0, -12.8], [-4.9, FL, -19], 2.2, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'veranda-stair' }),
+    B(-6, -3.8, 0, K, -28, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', notIn: TC }),
+    B(-6, -3.8, 2.3, FL, -36, -19, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', notIn: TC }),
+    R([-4.9, 0, -12.8], [-4.9, FL, -19], 2.2, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'veranda-stair', notIn: TC }),
     R([-12.4, 0, -21.9], [-6, FL, -21.9], 2.0, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'court-stair' }),
 
     // ================= left block (+X): tall row on Market Street (passage through), roof terrace over the shops
     B(6, 10.5, 0, FL, -28, -21, { color: CM.cream, pattern: PATTERN.render, tag: 'LA', noPaint: [[0, 0, 1]] }),
     B(6, 10.5, 0, FL, -18, -12, { color: CM.cream, pattern: PATTERN.render, tag: 'LB', noPaint: [[0, 0, -1]] }),
     B(6, 10.5, FL, 8.4, -28, -12, { color: CM.cream, pattern: PATTERN.render, paint: false, roof: true, tag: 'L-upper', mural: [{ n: [0, 0, -1], id: 4 }, { n: [0, 0, 1], id: 6 }] }),
-    B(10.5, 15, 0, FL, -28, -21, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-A', noPaint: [[0, 0, 1]] }),
+    B(10.5, 15, 0, FL, -28, -21, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-A', noPaint: [[0, 0, 1]], notIn: TC }),
     B(10.5, 15, 0, FL, -18, -16, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-B', noPaint: [[0, 0, -1]] }),
     B(10.5, 15, 2.2, FL, -21, -18, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'passage-bridge' }),
-    R([12.75, 0, -34.2], [12.75, FL, -28], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair' }),
-    R([12.75, 0, -9.8], [12.75, FL, -16], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair' }),
+    R([12.75, 0, -34.2], [12.75, FL, -28], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair', notIn: TC }),
+    R([12.75, 0, -9.8], [12.75, FL, -16], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair', notIn: TC }),
     B(3.8, 6, 0, K, -28, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement' }),
 
     // ================= left flank (+X): the Parade (raised harbour walk) down to the dock basin
     B(19.5, 24, 0, 1.2, -30, -6, { color: CM.flags, pattern: SURF.ashlar, tag: 'parade' }),
     R([21.75, 0, -33], [21.75, 1.2, -30], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'parade-stair' }),
     R([21.75, 0, -3], [21.75, 1.2, -6], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'parade-stair' }),
+
+    // ================= TOWER COMMAND ONLY (onlyIn: 'tower', src/world/variants.js; Turf War + Zone Control untouched).
+    // The track (tower-data.js) on each side runs round the hall's corner, along the front of the tall row and climbs
+    // the café roof terrace's end, then drops into the flank street and runs down it to the goal by the Exchange.
+    // · the roof terrace is extended toward the hall (x 10.5 … 15 × z -16 … -8.5, first floor) so the track climbs its
+    //   end wall (checkpoint 2 on top); its stair moves to the new end, down toward the hall's corner
+    // · Market Street's end of the Arcade Gallery stops at z -20.95 (the track passes under where it was) and its
+    //   Market Street stair goes; the gallery is still reached from the spawn terrace and the fish court's iron stair
+    // · the Exchange footbridge (overpass): an iron deck at first floor from the spawn terrace's corner (over where the
+    //   side flight was) and on over the far terrace stair's place to the roof terrace, so the defenders walk straight
+    //   out of their spawn onto the high ground over their goal; under it the street is open (2.3 clear)
+    B(10.5, 15, 0, FL, -16, -8.5, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-C', onlyIn: TC }),
+    R([12.75, 0, -2.3], [12.75, FL, -8.5], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair', onlyIn: TC }),
+    B(-6, -3.8, 2.3, FL, -36, -20.95, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', onlyIn: TC }),
+    // (a dropped kerb in the gallery's pavement where the track crosses it)
+    B(-6, -3.8, 0, K, -28, -20.95, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', onlyIn: TC }),
+    B(-6, -3.8, 0, K, -18.05, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', onlyIn: TC }),
+    B(5.6, 10.5, 2.3, FL, -36, -31.8, { color: CM.iron, pattern: PATTERN.planks, tag: 'footbridge', onlyIn: TC }),
+    B(10.5, 15, 2.3, FL, -34.2, -28, { color: CM.iron, pattern: PATTERN.planks, tag: 'footbridge', onlyIn: TC }),
+    // walls under the footbridge take no ink (an ink-climb there only hits the deck): the podium's corner, the corner
+    // building's ground floor (its top is the upper storeys' wall anyway), the roof terrace's end
+    B(-9, 5.6, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body', onlyIn: TC }),
+    B(5.6, 9, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body', noPaint: [[0, 0, 1]], onlyIn: TC }),
+    B(9, 24, 0, FL, -44, -36, { color: CM.ochre, pattern: PATTERN.render, tag: 'BL', noPaint: [[0, 0, 1]], onlyIn: TC }),
+    B(10.5, 15, 0, FL, -28, -21, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-A', noPaint: [[0, 0, 1], [0, 0, -1]], onlyIn: TC }),
 
     // ================= ZONE CONTROL ONLY (onlyIn: 'zones', src/world/variants.js): the goods landing beside the tram
     // pier (the side zone). The market's hoist stage stands on piles in the dock basin and overhangs the pier edge by
