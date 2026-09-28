@@ -198,11 +198,14 @@ export function buildBackdrop(kit, d = {}) {
     if (!plateau) { out.terrain.push(isl.geo); continue; }
     // the flat-topped down across the bay: turf on top, white chalk cliffs all round (own vertex colours, not the
     // terrain shader's grey rock)
-    const g = isl.geo, P = g.attributes.position, Nn = g.attributes.normal, Cc = g.attributes.color;
+    // (makeIsland's `glow` attribute is its baked fold AO for the terrain shader: here it goes into the colour and the
+    // attribute is zeroed — in the plain scenery material `glow` means a lamp lit at dusk)
+    const g = isl.geo, P = g.attributes.position, Nn = g.attributes.normal, Cc = g.attributes.color, Gl = g.attributes.glow;
     for (let i = 0; i < P.count; i++) {
-      const ny = Nn.getY(i), y = P.getY(i), n = fbm(P.getX(i) * 0.05, P.getZ(i) * 0.05, 2);
-      const c = ny > 0.8 ? COL.grass.clone().lerp(COL.grassLt, n * 0.6) : ny > 0.62 ? COL.grassDk : y < W + 1.2 ? COL.algae : (Math.abs(Math.sin(y * 0.9)) > 0.95 ? COL.flint : COL.chalk.clone().lerp(COL.chalkDk, n * 0.5));
+      const ny = Nn.getY(i), y = P.getY(i), n = fbm(P.getX(i) * 0.05, P.getZ(i) * 0.05, 2), ao = Gl ? Gl.getX(i) : 1;
+      const c = (ny > 0.8 ? COL.grass.clone().lerp(COL.grassLt, n * 0.6) : ny > 0.62 ? COL.grassDk.clone() : y < W + 1.2 ? COL.algae.clone() : (Math.abs(Math.sin(y * 0.9)) > 0.95 ? COL.flint.clone() : COL.chalk.clone().lerp(COL.chalkDk, n * 0.5))).multiplyScalar(0.55 + 0.45 * ao);
       Cc.setXYZ(i, c.r, c.g, c.b);
+      if (Gl) Gl.setX(i, 0);
     }
     out.static.push(g);
   }
