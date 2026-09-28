@@ -305,7 +305,7 @@ export function makeKit(H) {
   }
   // a low clump of alpine heather / dwarf shrub (visual; the grass and moss round rocks), w wide
   const heathGeo = (seed) => tpl('heath|' + seed, () => H.puffGeo(1, seed));
-  const HEATH = ['#6f7d45', '#5d6b3a', '#7a6a78', '#7f8a4a', '#8a7b5c'];
+  const HEATH = ['#6f7d45', '#5d6b3a', '#6e6450', '#7f8a4a', '#83775a'];
   function heath(B, x, y, z, w, seed, c) {
     const n = 4 + (seed % 3);
     for (let i = 0; i < n; i++) {

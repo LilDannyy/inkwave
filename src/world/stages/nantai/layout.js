@@ -135,7 +135,9 @@ const HALF = [
   B(-19, -11, G0, G1, -19.5, -17.5, turf({ tag: 'hollow' })),
   ...OCT(-15, -25.5, 2.6, G1, 2.4, granite({ tag: 'pearls-rock' })),
   R([-15.4, G0, -14.4], [-15.4, G1, -17.5], 3, steps({ tag: 'hollow-steps' })),
-  R([-17.9, G1, -28], [-17.9, G2, -31], 2.2, steps({ tag: 'hollow-back-stair' })),
+  R([-12.3, G1, -28], [-12.3, G2, -31], 2.6, steps({ tag: 'hollow-back-stair' })),
+  // rough steps up the back of Pearl's rock (onto its flat top, 2.4)
+  R([-15, G1, -30.55], [-15, 2.4, -27.95], 1.6, steps({ tag: 'rock-steps', color: K.granite })),
   R([-14.2, G1, -20.9], [-11, G2, -20.9], 2.2, steps({ tag: 'bastion-stair' })),
 
   // ---------------- the ridge (G2): the spine along the tarn cliff (a bay mid-way), its root behind the hollow,
@@ -147,6 +149,8 @@ const HALF = [
   B(-25.8, -18.8, 2.45, G2, -19.2, -15.2, timber({ tag: 'viewing-platform' })),
   B(-19, -9, G0, G2, -45.4, -36.5, granite({ tag: 'ridge-root' })),
   B(-19, -11, G0, G2, -36.5, -31.5, granite({ tag: 'ridge-root' })),
+  // the old weather hut on the ridge root, against the summit crag (granite walls ink; its roof is off-limits)
+  B(-17, -13.4, G2, 4.9, -45.4, -42.6, granite({ tag: 'weather-hut', color: K.graniteDk, roof: true })),
   R([-22, G1, -12.2], [-22, G2, -15.2], 2.4, timber({ tag: 'boardwalk' })),
 
   // ---------------- crossings
@@ -180,7 +184,7 @@ const rect = (x0, x1, z0, z1) => [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
 const circle = (cx, cz, r, n = 16) => Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2; return [+(cx + Math.cos(a) * r).toFixed(3), +(cz + Math.sin(a) * r).toFixed(3)]; });
 const ZONES = {
   center: [{ poly: rect(-5.5, 5.5, -5, 5), y0: -0.3, y1: 0.6 }],
-  side: { polys: [circle(-15, -25.5, 2.3), rect(-19, -11, -22.9, -17.5)], y0: 1.2, y1: 2.5 },
+  side: { polys: [circle(-15, -25.5, 2.3), [[-19, -22.9], [-14.3, -22.9], [-14.3, -19.7], [-11, -19.7], [-11, -17.5], [-19, -17.5]]], y0: 1.2, y1: 2.5 },
 };
 // Tower Command (authored on Bravo's side, z > 0; Alpha pushes it there): over the Old Stone Bridge, along the bank,
 // up onto the shelf, back across the first terrace, up onto the west terrace to the goal below the forecourt

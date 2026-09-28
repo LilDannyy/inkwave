@@ -74,6 +74,7 @@ export const PLACEMENTS = [
   { type: 'nantai_heath', pos: [-20.4, 2.6, -42.6], w: 2.4, d: 1.6, n: 5, seed: 9 },
   { type: 'nantai_heath', pos: [-24.8, 2.6, -18.2], w: 1.2, d: 1.4, n: 3, seed: 13 },
   { type: 'nantai_cairn', pos: [-21.0, 2.6, -39.2], rotY: 0 },
+  { type: 'nantai_weatherhut', pos: [-15.2, 2.6, -44.0], rotY: 0 },
   { type: 'nantai_scree', pos: [-22.5, 2.6, -29.5], w: 2.5, d: 2.2, n: 16, seed: 3 },
 
   // ================= the west terrace: a telescope pier and a bench off the tower's line
@@ -111,6 +112,8 @@ export const PLACEMENTS = [
   // ================= the bank below the ridge nose and in front of the hollow
   { type: 'nantai_pine', pos: [-24.6, 0, -13.6], rotY: 1.0, seed: 7, scale2: 0.9 },
   { type: 'nantai_boulder', pos: [-11.8, 0, -16.2], rotY: 0.2, w: 1.4, h: 0.9, d: 1.1, seed: 45 },
+  { type: 'nantai_boulder', pos: [8.6, 0, -15.5], rotY: -0.4, w: 1.5, h: 0.95, d: 1.1, seed: 49 },
+  { type: 'nantai_bench', pos: [-6.4, 0, -15.1], rotY: 0 },
   { type: 'nantai_heath', pos: [-17.4, 0, -14.6], w: 2.2, d: 1.0, n: 4, seed: 21 },
   { type: 'nantai_heath', pos: [-21.5, 0, -1.8], w: 2.0, d: 1.4, n: 3, seed: 23 },
   { type: 'nantai_heath', pos: [19.2, 0, -8.0], w: 1.2, d: 1.8, n: 4, seed: 25 },
