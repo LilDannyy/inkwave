@@ -115,6 +115,9 @@ const bridgePieces = BRIDGES.flatMap(({ x, z }) => [
 
 // ============================================================================================================ the flooded crater
 export const POND = { c: [14.0, -13.25], r: 3.2, rim: 4.0, N: 12 };
+// (an invisible, non-solid slab under the pond's water: it counts the pond as deck for the sea — no surf, spray or
+// foam round a still rainwater pond — while you still fall through into the water)
+const POND_STILL = B(POND.c[0] - 3.5, POND.c[0] + 3.5, FL, -1.75, POND.c[1] - 3.5, POND.c[1] + 3.5, { tag: 'pond-still', hidden: true, solid: false, paint: false });
 const POND_RIM = ringSegments(POND.c[0], POND.c[1], POND.N, POND.r, POND.rim, FL, (k) => (k % 2 ? 0.3 : 0.2), {
   outer: true, opts: () => turf({ tag: 'pond-rim', color: CO.slope }) });
 
@@ -267,15 +270,15 @@ const LAYOUT_CRATERS = {
   },
   single: [CRATER_FLOOR],
   half: [...GROUND, ...FLOORS, ...LIP, ...FACETS.map((f) => f.piece), ...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces, ...t2Pieces, ...bridgePieces,
-    ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, TURRET, ...boards],
+    ...POND_RIM.map((c) => c.piece), POND_STILL, ...pavilion, ...pillbox, ...memorial, ...cover, TURRET, ...boards],
   zones: ZONES,
   tower: TOWER,
   // the intro opens high over the enemy's side of the crater (the cannons, the obelisk across) and sweeps down the
   // visitor path to the deck (ending just in front of the pavilion's roof)
   intro: { from: [15, 11, 15], lookFrom: [0, 0, -3], toBack: 1.0 },
-  // stage-select hero: from over Alpha's right flank, across the crater (both cannons, both shells) to Bravo's
-  // obelisk on its promontory, the pillbox and the pavilion; the bay beyond
-  art: { from: [-30, 13, -24], look: [2, 0, -4], fov: 60 },
+  // stage-select hero: from over Alpha's right flank across the Great Crater (both cannons, both shells) to Bravo's
+  // obelisk, pillbox and pavilion; the chalk cliffs and the downs (the chalk squid) beyond, Inkopolis across the bay
+  art: { from: [-24, 13, -33], look: [6, 3.5, 4], fov: 60 },
   // Victorian lamp posts along the visitor paths (dusk light pools), team flags either side of the pavilion's front
   decor: { lamps: [[8.3, -28.6], [8.3, -15.2], [-2.3, -9.8], [-9.6, -16.3], [-19.6, -18.7], [14.4, -37.4]], palms: [], flags: [[-9.7, 0, -35.4], [9.7, 0, -35.4]] },
 };
