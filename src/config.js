@@ -550,7 +550,7 @@ export const MAPS = [
   { id: 'nantai', name: 'Mount Nantai', blurb: 'The observatory grounds on Mount Nantai: cross the brook by bridge, weir or log and take the lawn from Grizzco\'s star party.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'craters', name: 'Turf War Craters', blurb: 'Chalk downs above The Cape, scarred by the Great Turf War: fight down into the Great Crater and along the old trench lines.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowy home village: fight over the little station, up its footbridges and down the lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
-  { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'A remote archipelago risen from the sea: hold the sandbar under the Great Arch and fight along the ancient causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
+  { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'An S-shaped chain of islets risen from the sea: hold the sandbar under the Great Arch, cross the lagoons or loop round by the causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];
