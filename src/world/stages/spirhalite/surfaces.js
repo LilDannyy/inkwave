@@ -83,38 +83,42 @@ export const SURFACES = [
   {
     slot: 60, name: 'ruin',
     mat: {
-      detail: 0.8, scale: 2.4, tint: true, mask: true, alpha: false, mode: GRID, sym: 1, hr: [-0.03, 0.004], ao: 0.55,
+      detail: 0.8, scale: 3.2, tint: true, mask: true, alpha: false, mode: GRID, sym: 1, hr: [-0.035, 0.006], ao: 0.5,
       prep: `f[0] = FB(uv, ivec2(3), 4, 0.55, 6001u); f[1] = FB(uv, ivec2(12), 3, 0.5, 6003u); f[2] = FB(uv, ivec2(64), 2, 0.5, 6007u);
-  f[3] = FB(uv, ivec2(2, 8), 3, 0.5, 6009u); w[0] = WO(uv, ivec2(40), 0.9, 6011u); w[1] = WO(uv, ivec2(6), 0.9, 6013u);`,
+  f[3] = FB(uv, ivec2(2, 9), 3, 0.5, 6009u); w[0] = WO(uv, ivec2(40), 0.9, 6011u); w[1] = WO(uv, ivec2(6), 0.9, 6013u);`,
       surf: /* glsl */`
-  // eroded ashlar: courses 0.6 m, blocks 1.2 m in running bond (2 x 4 per 2.4 m repeat), joints worn wide and round
-  int row = int(floor(P.y / 0.6));
-  float off = (row & 1) == 1 ? 0.6 : 0.0;
-  float bx = floor((P.x + off) / 1.2);
-  vec2 lp = vec2(P.x + off - bx * 1.2 - 0.6, P.y - float(row) * 0.6 - 0.3);
-  ivec2 bid = wrp(ivec2(int(bx), row), ivec2(2, 4));
+  // ancient ashlar, worn soft: 4 courses of 0.8 m per repeat, each split into 2–3 blocks of uneven length (per-course
+  // hashed joint positions), joints weathered wide and rounded but filled with grit (low contrast), arrises eroded,
+  // blocks sagged and tilted a little, pitted faces, lichen rosettes, water-darkened streaks
+  int row = int(floor(P.y / 0.8));
+  ivec2 rw = wrp(ivec2(0, row), ivec2(1, 4));
+  float j1 = 0.6 + 0.9 * hf(rw, 11u), j2 = j1 + 0.8 + 0.8 * hf(rw, 13u);
+  float px = P.x;
+  float a0 = px < j1 ? 0.0 : (px < j2 ? j1 : j2), a1 = px < j1 ? j1 : (px < j2 ? j2 : 3.2);
+  float bi = px < j1 ? 0.0 : (px < j2 ? 1.0 : 2.0);
+  vec2 lp = vec2(px - 0.5 * (a0 + a1), P.y - float(row) * 0.8 - 0.4);
+  ivec2 bid = ivec2(int(bi), rw.y);
   float big = n[0], mott = n[1], fine = n[2], streak = n[3];
-  float wob = 0.012 * big + 0.008 * mott;
-  float e = -sdRB(lp, vec2(0.6, 0.3) - 0.012, 0.05 + 0.03 * hf(bid, 7u)) + wob;
-  vec2 pr = edgeProf(e, 0.008, 0.05, 0.012, 0.022);
+  float wob = 0.018 * big + 0.01 * mott;
+  float e = -sdRB(lp, vec2(0.5 * (a1 - a0), 0.4) - 0.01, 0.09 + 0.05 * hf(bid, 7u)) + wob;
+  vec2 pr = edgeProf(e, 0.006, 0.08, 0.02, 0.018);
   float inJ = pr.y;
-  float tone = 0.8 * (1.0 + 0.1 * (hf(bid, 3u) - 0.5) + 0.07 * mott + 0.04 * fine);
-  // pits + erosion hollows
+  float tone = 0.8 * (1.0 + 0.12 * (hf(bid, 3u) - 0.5) + 0.08 * mott + 0.04 * fine);
+  vec2 tilt = hf2(bid, 9u) - 0.5;
   vec4 pc = c[0];
-  float pit = (1.0 - smoothstep(0.05, 0.22, pc.x)) * step(0.55, pc.z);
-  float hollow = smoothstep(0.35, 0.8, big) * smoothstep(0.02, 0.1, e);
-  // lichen rosettes (coarse worley cells, own colours) and water-dark streaks
+  float pit = (1.0 - smoothstep(0.05, 0.22, pc.x)) * step(0.5, pc.z);
+  float hollow = smoothstep(0.3, 0.8, big) * smoothstep(0.02, 0.12, e);
   vec4 lc = c[1];
-  float lich = step(0.62, lc.z) * (1.0 - smoothstep(0.12, 0.3 + 0.1 * fine, lc.x)) * smoothstep(-0.1, 0.3, mott) * (1.0 - inJ);
-  vec3 lichC = mix(lin(vec3(0.82, 0.78, 0.42)), lin(vec3(0.62, 0.67, 0.55)), step(0.8, lc.z));
-  float wetS = smoothstep(0.2, 0.6, streak) * 0.5;
+  float lich = step(0.6, lc.z) * (1.0 - smoothstep(0.1, 0.28 + 0.1 * fine, lc.x)) * smoothstep(-0.1, 0.3, mott) * (1.0 - inJ);
+  vec3 lichC = mix(lin(vec3(0.84, 0.8, 0.46)), lin(vec3(0.64, 0.69, 0.57)), step(0.8, lc.z));
+  float wetS = smoothstep(0.25, 0.65, streak) * 0.45;
   vec3 own = vec3(0.0); float cov = 1.0;
-  own = mix(own, lin(vec3(0.23, 0.23, 0.22)) * (0.9 + 0.2 * fine), inJ * 0.8); cov *= 1.0 - inJ * 0.8;
-  own = mix(own, lichC * (0.85 + 0.25 * fine), lich * 0.85); cov *= 1.0 - lich * 0.85;
-  s.alb = own; s.a = cov * tone * (1.0 - 0.28 * wetS) * (1.0 - 0.18 * pit) * (1.0 - 0.06 * hollow);
-  s.h = pr.x - 0.004 * pit - 0.006 * hollow + 0.0012 * mott + 0.0004 * fine + 0.0008 * lich;
-  s.rough = mix(0.86 + 0.05 * fine - 0.08 * wetS, 0.95, inJ);
-  s.cav = mix(1.0, 0.45, inJ) * (1.0 - 0.35 * pit);`,
+  own = mix(own, lin(vec3(0.46, 0.44, 0.41)) * (0.9 + 0.2 * fine), inJ * 0.75); cov *= 1.0 - inJ * 0.75;
+  own = mix(own, lichC * (0.85 + 0.25 * fine), lich * 0.8); cov *= 1.0 - lich * 0.8;
+  s.alb = own; s.a = cov * tone * (1.0 - 0.25 * wetS) * (1.0 - 0.15 * pit) * (1.0 - 0.06 * hollow);
+  s.h = pr.x + dot(tilt, lp) * 0.012 * (1.0 - inJ) - 0.004 * pit - 0.007 * hollow + 0.0014 * mott + 0.0004 * fine + 0.0008 * lich;
+  s.rough = mix(0.88 + 0.05 * fine - 0.08 * wetS, 0.95, inJ);
+  s.cav = mix(1.0, 0.6, inJ) * (1.0 - 0.3 * pit);`,
     },
   },
 ];

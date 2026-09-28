@@ -5,14 +5,16 @@
 import { PATTERN, B, R, O, OCT } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
-import { symOutline, shelfBars, reflexPatches, coreRects, coreBoxes, LEVELS } from './islands.js';
+import { shelfBars, reflexPatches, coreRects, coreBoxes, LEVELS } from './islands.js';
+import { CHAIN, OUTLINE, barLevel } from './outline.js';
+export { OUTLINE };
 
 // Spirhalite Islands — a remote archipelago raised out of the sea by a tectonic shift, reached only by helicopter.
 // Deep Cut's expedition camp investigates the ruins: a colossal stone arch over the central sandbar and ancient tiered
 // pillars with water pouring down their drums. BLOCK-OUT (v1): plain pieces, heights and lanes.
 // Heights: 0 sand · 1.3 dunes / causeway / pillar plinth · 2.5 pillar tier · 3.2 helipads.
 const H1 = 1.3, H2 = 2.5, HP = 3.2, BOT = -2.4;
-const K = { sand: '#e9e3d6', wet: '#d9d1c1', dune: '#efe9dc', stone: '#c9c4b8', stoneDk: '#aaa498', steel: '#8d979e', pad: '#dcdcd6', moss: '#9aa878' };
+const K = { sand: '#e9e3d6', wet: '#d9d1c1', dune: '#efe9dc', stone: '#c9c4b8', stoneDk: '#aaa498', steel: '#8d979e', steelDk: '#59626a', pad: '#dcdcd6', moss: '#9aa878' };
 const sand = (o = {}) => ({ color: K.sand, pattern: SURF.dune, ...o });
 const wet = (o = {}) => ({ color: K.wet, pattern: SURF.dune, ...o });
 const moss = (o = {}) => ({ color: K.dune, pattern: SURF.moss, ...o });
@@ -34,28 +36,9 @@ function dune(cx, cz, len, h, deg, o = {}) {
   return out;
 }
 
-// ---- the landmass: one point-symmetric outline round the whole arena (Alpha's half chain, from the west tip of its
-// sandbar spit round its half to the mirror of that point). Islands.js lays the wet-sand shelf along it and the dry
-// sand cores inside it.
-const CHAIN = [
-  [-22.5, -0.6], [-22.6, -3.6], [-21.9, -6.6],                                        // spit (under the causeway's end)
-  [-16.4, -7.2], [-13.2, -6.6], [-9.5, -6.4], [-8.2, -8.2], [-8.4, -10.8],            // north lagoon's shore
-  [-10.0, -10.6], [-12.5, -10.1], [-15.0, -10.8], [-16.6, -12.6], [-17.1, -15.0],     // the pillar islet
-  [-16.6, -17.4], [-15.0, -19.2], [-12.5, -19.9], [-10.0, -19.3], [-8.4, -19.6],
-  [-8.3, -21.8], [-10.5, -23.2], [-14.5, -22.7], [-17.5, -23.0], [-21.5, -23.6],      // south lagoon, camp hollow shore
-  [-24.0, -26.0], [-25.0, -30.5], [-24.6, -35.5], [-22.6, -40.0], [-19.0, -44.0],     // the base island's back
-  [-13.5, -46.8], [-6.5, -48.0], [4.0, -48.0], [10.5, -47.2], [15.5, -44.8],
-  [19.5, -41.5], [22.3, -37.5], [23.4, -32.0], [22.2, -27.2], [19.6, -24.4],          // left islet (L1)
-  [15.8, -23.7], [11.2, -24.0], [8.2, -25.2], [5.4, -24.4],                           // the bay at the east channel's end
-  [4.3, -22.0], [4.6, -16.5], [4.1, -11.0], [4.5, -7.0], [6.3, -6.2],                 // mid sandbar's east shore
-  [8.0, -7.4], [8.2, -9.2], [7.8, -14.0], [8.4, -19.2], [10.0, -20.8],                // islet L2
-  [13.5, -21.0], [17.5, -20.4], [21.0, -18.6], [22.6, -15.0], [22.2, -11.0],
-  [20.0, -8.6], [16.5, -7.6], [13.4, -6.8], [13.6, -4.0], [14.3, 0.2], [18.8, 0.2],   // L2 neck, the sandbar's east end
-];
-export const OUTLINE = symOutline(CHAIN);
 const NC = CHAIN.length;
 // Alpha's bars: the chain's edges (the last one wraps into the mirror chain: a third level where the count is odd)
-const BARS = shelfBars(OUTLINE, { only: (i) => i < NC, level: (i) => (NC % 2 && i === NC - 1 ? LEVELS[2] : LEVELS[i % 2]), opts: { tag: 'shore', color: K.wet, pattern: SURF.dune } });
+const BARS = shelfBars(OUTLINE, { only: (i) => i < NC, level: barLevel, opts: { tag: 'shore', color: K.wet, pattern: SURF.dune } });
 const PATCHES = reflexPatches(OUTLINE, { only: (i) => i < NC, opts: { tag: 'shore', color: K.wet, pattern: SURF.dune } });
 const ALL_BARS = [...BARS, ...PATCHES].flatMap((b) => [b, { ...b, center: [-b.center[0], b.center[1], -b.center[2]] }]);
 // the dry sand: the centre slab (single, symmetric) first, then Alpha's half (z ≤ 0) greedily
@@ -68,7 +51,29 @@ const SPIRHALITE = {
   bounds: { minX: -27, maxX: 27, minZ: -48, maxZ: 48 },
   spawnPads: [[0, HP, -42.5], [0, HP, 42.5]],
   spawnBarrier: 4.2,
-  env: { backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, buoys: false },
+  // the world round it: no Inkopolis bay — more of the archipelago in the mist (backdrop.js); a pale jade-turquoise sea,
+  // mist banks drifting between the far islets, a soft silvery late-morning light and a hazy pink-orange sunset
+  env: {
+    backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, buoys: false, gulls: true, stars: true,
+    weather: { mist: { count: 90, height: 2.6, size: 30, reach: 95, opacity: 0.5 } },
+    theme: {
+      all: { seaDeep: '#1f666c', seaShallow: '#4bb3a6', seaCrest: '#a2e3d3', foam: '#fbfffd', waveStrength: 0.7 },
+      golden: {
+        sunAz: 196, sunEl: 38, sunColor: '#fff2df', sunIntensity: 2.9, skySun: 2.6,
+        hemiSky: '#c3d4df', hemiGround: '#e6dac4', hemiGroundK: 2.0, hemiIntensity: 0.56, envK: 0.55,
+        zenith: '#5f88ad', skyMid: '#9ebccd', horizon: '#e2eaea', ground: '#7d9ba2',
+        horizonGlow: '#fff1d8', horizonGlowK: 0.16, glowColor: '#fff0d2', glow: [520, 1.2, 5.0, 0.16],
+        cloudLit: '#f7f8f6', cloudShade: '#a9b7c3', cloud: [0.46, 1.0, 0.85, 0.5], cloudCov: 0.5,
+        haze: [1 / 620, 0.95, 150], fog: [22, 520],
+        grade: { uExposure: 0.97, uSat: 0.98, uVib: 0.08, uContrast: 1.03, uLift: 0.015, uVignette: 0.2, uShadowTint: [0.95, 1.0, 1.07], uHighTint: [1.025, 1.0, 0.965] },
+      },
+      sunset: {
+        horizon: '#ffae8c', skyMid: '#b27aa0', zenith: '#3b3f7e', horizonGlow: '#ff9a6a', glowColor: '#ffbd86',
+        seaDeep: '#243f68', seaShallow: '#4a7f98', seaCrest: '#9fb8d2', foam: '#ffe4d6',
+        haze: [1 / 520, 0.95, 170], fog: [22, 460],
+      },
+    },
+  },
   single: [
     // ================= the central sandbar under the Great Arch (the arch's legs stand in the sea at x ±24)
     ...coreBoxes(CENTRE, sand({ tag: 'sandbar' })),
@@ -78,56 +83,78 @@ const SPIRHALITE = {
     ...BARS,
     ...PATCHES,
     ...coreBoxes(CORES.rects, sand({ tag: 'sand' })),
-    // the high dune the helipad stands on (1.3), and the ridge closing the camp hollow's south side
-    B(-9, 12, 0, H1, -47, -31.3, sand({ tag: 'base-dune', color: K.dune })),
-    B(-19, -9, 0, H1, -42, -37, sand({ tag: 'hollow-ridge', color: K.dune })),
-    // sand slopes off the high dune: to mid (the spine), to the left islet, into the hollow; off the ridge into the hollow
+    // ================= base island: the high dune the helipad stands on (1.3), joined on the left by the L1 dune
+    // (1.3, a 2.5 crest at its back), and the ridge closing the camp hollow's south side (1.3, a 2.5 crest at its west end)
+    B(-9, 12, 0, H1, -48, -31.3, sand({ tag: 'base-dune', color: K.dune })),
+    B(12, 19.5, 0, H1, -40.5, -33, moss({ tag: 'l1-dune' })),
+    B(16, 19, H1, H2, -40, -37, sand({ tag: 'l1-crest', color: K.dune })),
+    R(rise(17.5, -34.1, H1, 17.5, -37, H2), [17.5, H2, -37], 3, sand({ tag: 'dune-slope', color: K.dune })),
+    R(rise(15.75, -29.9, 0, 15.75, -33, H1), [15.75, H1, -33], 7.5, sand({ tag: 'dune-slope', color: K.dune })),
+    B(-20.5, -9, 0, H1, -41.5, -37, moss({ tag: 'hollow-ridge' })),
+    B(-20, -16.5, H1, H2, -41, -38, sand({ tag: 'hollow-crest', color: K.dune })),
+    R(rise(-13.6, -39.5, H1, -16.5, -39.5, H2), [-16.5, H2, -39.5], 3, sand({ tag: 'dune-slope', color: K.dune })),
+    // sand slopes: off the high dune to mid (the spine); off the ridge down into the camp hollow
     R(rise(-1, -28.1, 0, -1, -31.3, H1), [-1, H1, -31.3], 8, sand({ tag: 'spine-slope', color: K.dune })),
-    R(rise(15.2, -35, 0, 12, -35, H1), [12, H1, -35], 4, sand({ tag: 'dune-slope', color: K.dune })),
-    R(rise(-12.2, -34, 0, -9, -34, H1), [-9, H1, -34], 3, sand({ tag: 'dune-slope', color: K.dune })),
-    R(rise(-15, -33.8, 0, -15, -37, H1), [-15, H1, -37], 3, sand({ tag: 'dune-slope', color: K.dune })),
+    R(rise(-11, -33.8, 0, -11, -37, H1), [-11, H1, -37], 3, sand({ tag: 'dune-slope', color: K.dune })),
 
     // ================= spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune)
-    ...OCT(0, -42.5, 5.9, H1, HP, { tag: 'helipad', color: K.pad, pattern: PATTERN.spawn, noPaint: OCTSIDES }),
+    // (a steel frame body R 5.75, the deck plate R 5.9 overhanging it: props.js dresses both)
+    ...OCT(0, -42.5, 5.75, H1, 3.0, { tag: 'helipad-frame', color: K.steelDk, pattern: PATTERN.metalpanel, noPaint: OCTSIDES }),
+    ...OCT(0, -42.5, 5.9, 2.95, HP, { tag: 'helipad', color: K.pad, pattern: PATTERN.spawn, noPaint: OCTSIDES }),
     R([0, H1, -32.6], [0, HP, -37.05], 3, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
     R([9.9, H1, -42.5], [5.45, HP, -42.5], 2.4, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
 
-    // ================= right lane: the ancient causeway (stone slabs at 1.3) from the base to the sandbar's spit
+    // ================= right lane: the ancient causeway (stone slabs at 1.3) from the base to the sandbar's spit. Its
+    // mid end is a sheer 1.3 m face (the tower climbs it); kids take the steps off the bastion beside it. Its base end is
+    // broken off (a 1.3 m drop into the camp hollow), with side steps down from it
     B(-21.1, -16.9, BOT, H1, -25, -6.5, stone({ tag: 'causeway' })),
-    R(rise(-19, -3.3, 0, -19, -6.5, H1), [-19, H1, -6.5], 4, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
-    // side steps down from the causeway's base end into the camp hollow (its end itself is a broken 1.3 m drop)
+    B(-16.9, -14.6, BOT, H1, -10.2, -6.5, stone({ tag: 'causeway-bastion' })),
+    R(rise(-15.75, -3.3, 0, -15.75, -6.5, H1), [-15.75, H1, -6.5], 2.3, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
     R(rise(-13.9, -24.1, 0, -17, -24.1, H1), [-17, H1, -24.1], 2.0, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
 
     // ================= the cascade pillar's islet in the lagoon between the causeway and the mid sandbar
     ...OCT(-12.5, -15, 3.2, 0, H1, stone({ tag: 'pillar-plinth' })),
     ...OCT(-12.5, -15, 2.2, H1, H2, stone({ tag: 'pillar-tier' })),
-    ...OCT(-12.5, -15, 1.2, H2, 9, stone({ tag: 'pillar-drum', roof: true, noPaint: OCTSIDES })),
+    ...OCT(-12.5, -15, 1.2, H2, 4.4, stone({ tag: 'pillar-drum', roof: true, noPaint: OCTSIDES })),   // (the column above: props.js)
     B(-17, -15.2, 0.8, H1 - 0.2, -16.2, -13.8, stone({ tag: 'pillar-spur' })),           // broken slab: causeway ↔ plinth
-    B(-12.9, -11.7, H1, 1.9, -17.6, -16.6, stone({ tag: 'fallen-drum' })),              // a step up onto the tier
+    B(-11.0, -9.9, H1, 1.9, -15.6, -14.4, stone({ tag: 'fallen-drum' })),               // a step up onto the tier
     B(-9.54, -8.5, 0, 0.65, -15.6, -14.4, stone({ tag: 'fallen-drum' })),               // a step up onto the plinth
 
-    // ================= mid lane: the spine sandbar from the high dune's slope to the central sandbar
-    ...dune(-2.5, -16, 5, 1.1, 90),
-    ...dune(2.0, -10.5, 3.5, 0.8, 20),
+    // ================= mid lane: the spine sandbar, broken by the Spine Crest (a 2.5 m dune: a long slope up from the
+    // base side, a 1.3 shoulder and slope toward mid) and staggered low ridges in the lanes either side of it
+    B(-4.2, 0.2, 0, H2, -17.6, -14.4, sand({ tag: 'spine-crest', color: K.dune })),
+    R(rise(-2, -23.5, 0, -2, -17.6, H2), [-2, H2, -17.6], 4.4, sand({ tag: 'dune-slope', color: K.dune })),
+    B(-4.2, 0.2, 0, H1, -14.4, -12.2, moss({ tag: 'spine-shoulder' })),
+    R(rise(-2, -9.1, 0, -2, -12.2, H1), [-2, H1, -12.2], 4.4, sand({ tag: 'dune-slope', color: K.dune })),
+    ...dune(2.3, -19.2, 3.0, 0.8, 0),
+    ...dune(-6.3, -10.4, 2.6, 0.8, 0),
 
-    // ================= left lane: islets and a driftwood-log bridge
+    // ================= left lane: the log bridge L1 → L2; L2's dune (1.3, a 2.5 crest on its seaward side)
     B(12, 13.5, -0.3, 0.25, -25.0, -19.6, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
-    ...dune(16, -14.5, 4, 1.2, 0),
-    ...dune(11, -29.5, 3, 0.9, 90),
+    B(15, 21.2, 0, H1, -18.4, -11, moss({ tag: 'l2-dune' })),
+    R(rise(11.9, -14.7, 0, 15, -14.7, H1), [15, H1, -14.7], 7.4, sand({ tag: 'dune-slope', color: K.dune })),
+    B(18.4, 21.2, H1, H2, -17.6, -13.8, sand({ tag: 'l2-crest', color: K.dune })),
+    R(rise(15.5, -15.7, H1, 18.4, -15.7, H2), [18.4, H2, -15.7], 3.8, sand({ tag: 'dune-slope', color: K.dune })),
+    ...dune(11.2, -10.6, 2.4, 0.8, 90),
 
-    // ================= camp hollow (side zone): low cover
-    ...dune(-15.5, -33.5, 3, 0.8, 0),
+    // ================= the sandbar under the arch: blocks fallen from the arch (cover round the centre zone)
+    O(-7.5, -5.0, 2.4, 1.3, 0, 1.4, 15, stone({ tag: 'arch-block' })),
+    O(4.5, -3.8, 1.3, 1.1, 0, 0.9, -10, stone({ tag: 'arch-block' })),
+    O(9.5, -2.5, 2.2, 2.0, 0, 2.0, 35, stone({ tag: 'arch-block' })),
+    O(-13.5, -5.0, 1.2, 1.0, 0, 0.8, 20, stone({ tag: 'arch-block' })),
   ],
   // Zone Control: the sandbar under the arch; the camp hollow (Alpha's)
   zones: {
     center: [{ poly: [[-5.5, -4.5], [5.5, -4.5], [5.5, 4.5], [-5.5, 4.5]], y0: -0.3, y1: 0.3 }],
     side: { poly: [[-19, -36.5], [-10.5, -36.5], [-10.5, -29], [-19, -29]], y0: -0.3, y1: 0.3 },
   },
-  // Tower Command (authored on Bravo's side, z > 0: Alpha pushes along it): along the sandbar to the spit, up the
-  // causeway's steps, along the causeway, off its broken end into the camp hollow, across it, up the spine to the goal
+  // Tower Command (authored on Bravo's side, z > 0: Alpha pushes along it): along the sandbar under the arch to the spit,
+  // CLIMB the causeway's sheer end (checkpoint 1 at its foot), along the causeway, DROP off its broken far end into the
+  // camp hollow, across the whole front of the base past the camp (checkpoint 2) and the spine's foot, then CLIMB onto
+  // the high dune to the goal beside the helipad
   tower: {
-    path: [[0, 0], [0, 2.2], [19, 2.2], [19, 26.5], [3, 26.5], [3, 32.5]],
-    checkpoints: [[19, 2.2], [12, 26.5]],
+    path: [[0, 0], [0, 2.2], [19, 2.2], [19, 26.7], [-8, 26.7], [-8, 33.5]],
+    checkpoints: [[19, 2.2], [13, 26.7]],
   },
   intro: { from: [14, 14, 6], lookFrom: [0, 3, -4], toBack: 3.0 },
   art: { from: [34, 24, -46], look: [-4, 1, 2], fov: 58 },
