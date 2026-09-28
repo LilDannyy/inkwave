@@ -45,6 +45,7 @@
 import * as THREE from 'three';
 import { G, emit, clamp } from '../core/ctx.js';
 import { TOWER, PLAYER } from '../config.js';
+import { TowerPaint } from './towerPaint.js';
 
 const V3 = THREE.Vector3;
 const r3 = (x) => Math.round(x * 1000) / 1000;
@@ -392,12 +393,13 @@ export class TowerCommand {
     // the thin pillar in its middle: cover for the riders (never inked; a top you slide off)
     this.pillarHalf = new V3(TOWER.pillarW / 2, TOWER.pillarH / 2, TOWER.pillarW / 2);
     this.pillar = G.level.addDynamic({ tag: 'tower-pillar', roof: true });
+    this.paint = new TowerPaint(this);   // ink on its walls and deck (swim up the walls, swim on the deck)
     this._place(1);
   }
 
   get follower() { return !!this.match.follower; }
   _net(e) { if (!this.follower) G.netm?.recTower?.(e); }
-  dispose() { G.level?.clearDynamic?.(); }
+  dispose() { G.level?.clearDynamic?.(); this.paint?.dispose(); }
 
   get top() { return this.pos.y + TOWER.platformH; }
   // the team currently behind (higher count after the tie-break), or -1 when nobody has pushed at all (sudden death)
@@ -571,9 +573,18 @@ export class TowerCommand {
     if (this.s === sBefore) return;
     const p1 = this.pos;
     this.path.at(sBefore, _p0);
+    const dx = p1.x - _p0.x, dy = p1.y - _p0.y, dz = p1.z - _p0.z;
     for (const a of this.match.actors) {
-      if (a.remote || !a.alive || !a.grounded || !a.ground || a.ground.block !== this.block.id) continue;
-      a.pos.x += p1.x - _p0.x; a.pos.z += p1.z - _p0.z; a.pos.y += p1.y - _p0.y;
+      if (!a.alive) continue;
+      if (a.remote) {                                     // (moved by the network; still not walking: the animation knows)
+        if (this.riderList.includes(a) && a.anim?.carry) { a.anim.carry.x += dx; a.anim.carry.y += dy; a.anim.carry.z += dz; }
+        continue;
+      }
+      const onIt = a.grounded && a.ground && a.ground.block === this.block.id;
+      const upIt = a.climbing && a.wallHit && a.wallHit.block === this.block.id;   // swimming up its wall
+      if (!onIt && !upIt) continue;
+      a.pos.x += dx; a.pos.z += dz; a.pos.y += dy;
+      if (a.anim?.carry) { a.anim.carry.x += dx; a.anim.carry.y += dy; a.anim.carry.z += dz; }
     }
   }
 
