@@ -392,6 +392,9 @@ export function register(D, H) {
       pbox(B, 'wood', K.timberLt, 2 * W + 0.6, 0.02, r1 - r0 - 0.2, 0, ry - 0.005, (r0 + r1) / 2 - 0.05);
       for (let x = -W + 1; x <= W - 1; x += 2) B.cyl(NS('glow'), K.lamp, 0.09, 0.012, x, ry - 0.02, 2.4, { seg: 10, glow: 1.2 });
       B.col(-W - 0.4, ry, r0, W + 0.4, ry + 0.24, r1, { roof: true });
+      // a sedum roof on top of it: an aluminium upstand round the edge, low tufts of green and rust-red sedum
+      for (const [x, z, w, d] of [[0, r0 + 0.06, 2 * W + 0.8, 0.08], [0, r1 - 0.06, 2 * W + 0.8, 0.08], [-W - 0.36, (r0 + r1) / 2, 0.08, r1 - r0], [W + 0.36, (r0 + r1) / 2, 0.08, r1 - r0]]) pbox(B, NS('metal'), K.galv, w, 0.1, d, x, ry + 0.29, z);
+      for (let k = 0; k < 40; k++) { const x = -W + 0.4 + hash(k * 1.3) * (2 * W - 0.8), z = r0 + 0.3 + hash(k * 2.7) * (r1 - r0 - 0.6); tuft(B, x, ry + 0.24, z, 0.22 + 0.12 * hash(k), hash(k * 5) > 0.7 ? '#9a5a3c' : mixc(K.leaf, K.reed, hash(k * 7)), k, 10, k % 5); }
       // ---- binocular viewers at the front rail, planters with grasses in the deck's front corners
       for (const s of [-1, 1]) sub(B, 'craters_viewer', s * 5.2, YD, Z - 0.75, 0);
       for (const s of [-1, 1]) {
