@@ -24,6 +24,10 @@ import { SURF } from './surfaces.js';
 //   • outline: the zig-zag frontline, 45° quays, a chamfered + notched SW corner, a stepped SE corner (both halves by
 //     rotation) — framed by out-of-play architecture (mills, terraces, ANCHOR WAREHOUSE).
 //   • off-limits (roof: true): building tops, wall tops, parapet tops, the mills. Railings are rail colliders (props).
+//   • Tower Command builds its own variant (src/world/variants.js: onlyIn / notIn 'tower'; every other mode is untouched):
+//     the humpback bridge 7.2 m wide between its parapets (the boats moored 1.3 m further along), the stables' flat loft
+//     roof in play (inkable, walkable: the one roof that is) up a horse ramp, the office a metre shallower, the towpath
+//     ending short of the office street, the lower gates' lock-side beam cranked — the tower's street kept clear.
 const LG = {
   setts: '#a9a39a', lockside: '#6a6b74', brick: '#a4563f', stone: '#d8d0c0', quay: '#bcb4a6',
   timber: '#4a3a30', leads: '#7a7d82', spawn: '#eae6de', render: '#ece4d4', hull: '#2d3440',
@@ -49,6 +53,25 @@ const yard = (x0, x1, z0, z1) => B(x0, x1, -0.6, 0, z0, z1, { tag: 'yard', color
 const cols = [];
 for (const [x0, x1] of [[-8, -4], [-4, 0], [0, 4], [4, 8], [8, 14]]) cols.push(yard(x0, x1, -36, x0 - 7));
 
+// ---- Tower Command only (src/world/variants.js: the tower's own build; every other mode keeps the pieces above)
+export const BRIDGE_T = 3.6;             // the humpback bridge's deck half-width in Tower Command (2.2 elsewhere)
+export const BOAT_T = 1.3;               // how far along the pound the moored boats move to clear the wider bridge
+// the humpback bridge (Alpha's half) with a deck ±bw wide: abutment, approach ramp, humped crest, brick parapets
+function wideBridge(bw) {
+  const t = { onlyIn: 'tower' }, p = bw + 0.2, q = bw + 0.4;
+  return [
+    D(-bw, bw, -8.4, -7, 0, 3.0, { tag: 'bridge-abutment', color: LG.setts, pattern: SURF.setts, noPaint: [nV], ...t }),
+    DR([0, 0, -15.2], [0, 3.0, -8.4], 2 * bw, { tag: 'bridge-ramp', color: LG.setts, pattern: SURF.hoofsteps, ...t }),
+    DR([0, 3.0, -7], [0, 3.3, 0], 2 * bw, { tag: 'bridge-crest', thin: true, thickness: 0.5, color: LG.setts, pattern: SURF.setts, ...t }),
+    DR([p, 0.93, -15.2], [p, 3.93, -8.4], 0.4, brick({ tag: 'bridge-parapet', thickness: 4.1, perch: true, noNav: true, ...t })),
+    DR([-p, 0.93, -15.2], [-p, 3.93, -8.4], 0.4, brick({ tag: 'bridge-parapet', thickness: 4.1, perch: true, noNav: true, ...t })),
+    D(bw, q, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV], ...t })),
+    D(-q, -bw, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV], ...t })),
+    DR([p, 3.93, -7], [p, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true, ...t })),
+    DR([-p, 3.93, -7], [-p, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true, ...t })),
+  ];
+}
+
 const LOCKGATE = {
   id: 'lockgate',
   water: 'marina',
@@ -62,7 +85,13 @@ const LOCKGATE = {
   single: [],
   half: [
     // ================= canal: towpath quay, lock E (both sides; lock W is its twin), basins, drained chamber, boats
-    D(-16.4, 17.85, -HW - TOW, -HW, -3, 0.15, { tag: 'towpath', color: LG.lockside, pattern: PATTERN.brick }),
+    D(-16.4, 17.85, -HW - TOW, -HW, -3, 0.15, { tag: 'towpath', color: LG.lockside, pattern: PATTERN.brick, notIn: 'tower' }),
+    // (Tower Command: the towpath stops 2.3 m short at the office end, so the tower's street past the office runs level
+    // instead of grazing the quay's kerb corner; a flagged landing, a step up from the towpath, finishes it by the water,
+    // and a scrap of setts fills the stepped edge that the shorter quay uncovers)
+    D(-14.1, 17.85, -HW - TOW, -HW, -3, 0.15, { tag: 'towpath', color: LG.lockside, pattern: PATTERN.brick, onlyIn: 'tower' }),
+    D(-16.4, -14.1, -6.5, -HW, -3, 0.23, { tag: 'towpath-landing', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'tower' }),
+    B(-5.85, -4.9, -0.6, 0, -15, -14.55, { tag: 'yard', color: LG.setts, pattern: SURF.setts, onlyIn: 'tower' }),
     B(15.5, 28, -3, 1.3, -2, 9.25, { tag: 'wharf-e', color: LG.lockside, pattern: PATTERN.brick }),
     B(13, 15.5, -3, 1.3, -2, 6.25, { tag: 'wharf-e', color: LG.lockside, pattern: PATTERN.brick }),
     // stepped masonry filling the towpath's dead end under the lower gate's balance beam (no pocket to get stuck in)
@@ -73,10 +102,15 @@ const LOCKGATE = {
     B(15.5, 28, -3, 1.3, 14.75, 21, { tag: 'lockside-n', color: LG.lockside, pattern: PATTERN.brick }),
     B(8, 15.5, -3, 0, 14.75, 21, { tag: 'basin-quay', color: LG.setts, pattern: SURF.setts }),
     B(16.5, 24.5, -3, -1.9, 9.25, 14.75, { tag: 'chamber-floor', color: LG.setts, pattern: PATTERN.concrete }),
-    D(3.6, 11.4, -4.72, -2.62, -2.6, -0.7, { tag: 'boat-a-hull', color: LG.hull, pattern: PATTERN.hullpaint }),
-    D(3.3, 11.1, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint }),
-    D(4.6, 10.4, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber }),
-    D(4.3, 10.1, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }] }),
+    D(3.6, 11.4, -4.72, -2.62, -2.6, -0.7, { tag: 'boat-a-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: 'tower' }),
+    D(3.3, 11.1, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: 'tower' }),
+    D(4.6, 10.4, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber, notIn: 'tower' }),
+    D(4.3, 10.1, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }], notIn: 'tower' }),
+    // (Tower Command: the same two boats moored BOAT_T further along the towpath, clear of the wider bridge)
+    D(3.6 + BOAT_T, 11.4 + BOAT_T, -4.72, -2.62, -2.6, -0.7, { tag: 'boat-a-hull', color: LG.hull, pattern: PATTERN.hullpaint, onlyIn: 'tower' }),
+    D(3.3 + BOAT_T, 11.1 + BOAT_T, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint, onlyIn: 'tower' }),
+    D(4.6 + BOAT_T, 10.4 + BOAT_T, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber, onlyIn: 'tower' }),
+    D(4.3 + BOAT_T, 10.1 + BOAT_T, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }], onlyIn: 'tower' }),
     // gate walkways (lower gates x 16.5, upper gates x 24.5); one broad maintenance stair fills the drained chamber from the
     // lower gate up to the upper gates (two scaffold handrails split it into three flights). Solid: a narrow pit or the
     // wedge under a free-spanning flight is somewhere bots get pinned.
@@ -87,18 +121,21 @@ const LOCKGATE = {
     R([12, 0, 17.6], [15.5, 1.3, 17.6], 2.4, { tag: 'lock-steps', color: LG.stone, pattern: PATTERN.stonestep }),
 
     // ================= humpback bridge (turned 45°: its axis runs along v, Alpha's approach from the south-east)
-    D(-2.2, 2.2, -8.4, -7, 0, 3.0, { tag: 'bridge-abutment', color: LG.setts, pattern: SURF.setts, noPaint: [nV] }),
-    DR([0, 0, -15.2], [0, 3.0, -8.4], 4.4, { tag: 'bridge-ramp', color: LG.setts, pattern: SURF.hoofsteps }),
-    DR([0, 3.0, -7], [0, 3.3, 0], 4.4, { tag: 'bridge-crest', thin: true, thickness: 0.5, color: LG.setts, pattern: SURF.setts }),
+    D(-2.2, 2.2, -8.4, -7, 0, 3.0, { tag: 'bridge-abutment', color: LG.setts, pattern: SURF.setts, noPaint: [nV], notIn: 'tower' }),
+    DR([0, 0, -15.2], [0, 3.0, -8.4], 4.4, { tag: 'bridge-ramp', color: LG.setts, pattern: SURF.hoofsteps, notIn: 'tower' }),
+    DR([0, 3.0, -7], [0, 3.3, 0], 4.4, { tag: 'bridge-crest', thin: true, thickness: 0.5, color: LG.setts, pattern: SURF.setts, notIn: 'tower' }),
     // parapets: the outer brick walls are inkable (swim up them from the street onto the bridge) and reach the ground
     // along the approaches; the tops are walkable, never-inked perches (+8 cm: feet in the stone coping, the level top
     // hidden inside it) that routes never run along — nobody slides off them any more
-    DR([2.4, 0.93, -15.2], [2.4, 3.93, -8.4], 0.4, brick({ tag: 'bridge-parapet', thickness: 4.1, perch: true, noNav: true })),
-    DR([-2.4, 0.93, -15.2], [-2.4, 3.93, -8.4], 0.4, brick({ tag: 'bridge-parapet', thickness: 4.1, perch: true, noNav: true })),
-    D(2.2, 2.6, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV] })),
-    D(-2.6, -2.2, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV] })),
-    DR([2.4, 3.93, -7], [2.4, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true })),
-    DR([-2.4, 3.93, -7], [-2.4, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true })),
+    DR([2.4, 0.93, -15.2], [2.4, 3.93, -8.4], 0.4, brick({ tag: 'bridge-parapet', thickness: 4.1, perch: true, noNav: true, notIn: 'tower' })),
+    DR([-2.4, 0.93, -15.2], [-2.4, 3.93, -8.4], 0.4, brick({ tag: 'bridge-parapet', thickness: 4.1, perch: true, noNav: true, notIn: 'tower' })),
+    D(2.2, 2.6, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV], notIn: 'tower' })),
+    D(-2.6, -2.2, -8.4, -7, 0, 3.93, brick({ tag: 'bridge-parapet', perch: true, noNav: true, noPaint: [nV], notIn: 'tower' })),
+    DR([2.4, 3.93, -7], [2.4, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true, notIn: 'tower' })),
+    DR([-2.4, 3.93, -7], [-2.4, 4.23, 0], 0.4, brick({ tag: 'bridge-parapet', thin: true, thickness: 1.2, perch: true, noNav: true, notIn: 'tower' })),
+    // Tower Command: the same bridge built wider (deck ±BRIDGE_T instead of ±2.2) — the tower rides its crown, with room
+    // to fight round it on both sides (the user's "WIDER"); the props' lockgate_bridge takes the same half-width
+    ...wideBridge(BRIDGE_T),
 
     // ================= Alpha's ground: back yard (spawn), centre columns under the towpath, west land, east yards
     yard(-12, 22, -45.4, -36),
@@ -133,14 +170,27 @@ const LOCKGATE = {
     R([-24.5, 0, -27.5], [-24.5, 1.3, -21], 3, { tag: 'horse-ramp', color: LG.setts, pattern: SURF.hoofsteps }),
 
     // ================= centre-west: canal company office, roof terrace (2.6) reached by an iron stair
-    B(-8, -1.5, 0, 2.45, -26, -18, brick({ tag: 'office' })),
-    B(-8, -1.5, 2.45, 2.6, -26, -18, { tag: 'office-roof', color: LG.leads, pattern: PATTERN.asphalt }),
-    B(-8, -1.5, 2.6, 3.05, -18.3, -18, wall({ tag: 'office-parapet' })),
-    B(-1.8, -1.5, 2.6, 3.05, -26, -18.3, wall({ tag: 'office-parapet' })),
+    B(-8, -1.5, 0, 2.45, -26, -18, brick({ tag: 'office', notIn: 'tower' })),
+    B(-8, -1.5, 2.45, 2.6, -26, -18, { tag: 'office-roof', color: LG.leads, pattern: PATTERN.asphalt, notIn: 'tower' }),
+    B(-8, -1.5, 2.6, 3.05, -18.3, -18, wall({ tag: 'office-parapet', notIn: 'tower' })),
+    B(-1.8, -1.5, 2.6, 3.05, -26, -18.3, wall({ tag: 'office-parapet', notIn: 'tower' })),
+    // (Tower Command: a metre shallower on the canal side, its front in line with the stables' at z -19, so the tower
+    // passes along the street in front of both instead of riding up over the office roof)
+    B(-8, -1.5, 0, 2.45, -26, -19, brick({ tag: 'office', onlyIn: 'tower' })),
+    B(-8, -1.5, 2.45, 2.6, -26, -19, { tag: 'office-roof', color: LG.leads, pattern: PATTERN.asphalt, onlyIn: 'tower' }),
+    B(-8, -1.5, 2.6, 3.05, -19.3, -19, wall({ tag: 'office-parapet', onlyIn: 'tower' })),
+    B(-1.8, -1.5, 2.6, 3.05, -26, -19.3, wall({ tag: 'office-parapet', onlyIn: 'tower' })),
     R([-7, 0, -32], [-7, 2.6, -26], 2, { tag: 'office-stair', color: LG.stone, pattern: PATTERN.stonestep }),
 
     // ================= centre-east: stables + hay loft (the bridge street bends round it)
-    B(5.5, 12.5, 0, 3.6, -27, -19, brick({ tag: 'stables', roof: true })),
+    B(5.5, 12.5, 0, 3.6, -27, -19, brick({ tag: 'stables', roof: true, notIn: 'tower' })),
+    // Tower Command: the stables' roof is a flat leaded loft deck, inkable and walkable (the user's "INKABLE ROOF", the
+    // one roof in play: it overlooks the first checkpoint), reached by a cobbled horse ramp up the far side that rises
+    // toward the bridge street end (the user's "RAMP"; 23°) onto a brick landing flush with the roof
+    B(5.5, 12.5, 0, 3.45, -27, -19, brick({ tag: 'stables', onlyIn: 'tower' })),
+    B(5.5, 12.5, 3.45, 3.6, -27, -19, { tag: 'loft-roof', color: LG.leads, pattern: PATTERN.asphalt, onlyIn: 'tower' }),
+    R([14.9, 0, -28.25], [6.5, 3.6, -28.25], 2.5, { tag: 'loft-ramp', color: LG.setts, pattern: SURF.hoofsteps, thickness: 4.2, onlyIn: 'tower' }),
+    B(5.5, 6.5, 0, 3.6, -29.5, -27, { tag: 'loft-landing', color: LG.setts, pattern: SURF.setts, onlyIn: 'tower' }),
 
     // ================= east: loading bank (1.3) → lock-E wharf platform; transit shed (roof off-limits)
     B(14, 18, 0, 1.3, -17, -2, { tag: 'loading-bank', color: LG.setts, pattern: SURF.setts }),
