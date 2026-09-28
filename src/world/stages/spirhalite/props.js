@@ -113,6 +113,16 @@ const RAW = [
   { type: 'spirhalite_grass', pos: [-17.2, 0, -44.3], n: 6, r: 1.0, seed: 8 },
   { type: 'spirhalite_grass', pos: [-21.8, 0, -1.8], n: 4, r: 0.5, seed: 9 },
   { type: 'spirhalite_grass', pos: [8.6, 0, -13.5], n: 5, r: 0.7, seed: 10 },
+  { type: 'spirhalite_pompoms', pos: [16.6, 1.3, -12.4], n: 6, seed: 11 },
+  { type: 'spirhalite_grass', pos: [19.8, 2.5, -15.9], n: 5, r: 0.8, seed: 11 },
+  { type: 'spirhalite_grass', pos: [-13.4, 1.3, -39.4], n: 6, r: 1.0, seed: 12 },
+  { type: 'spirhalite_grass', pos: [-7.8, 1.3, -45.2], n: 5, r: 0.8, seed: 13 },
+  { type: 'spirhalite_pompoms', pos: [9.6, 1.3, -46.9], n: 7, seed: 12 },
+  { type: 'spirhalite_grass', pos: [-3.0, 1.3, -13.3], n: 4, r: 0.6, seed: 14 },
+  { type: 'spirhalite_grass', pos: [6.1, 0, -5.6], n: 4, r: 0.6, seed: 15 },
+  { type: 'spirhalite_grass', pos: [-9.7, 0, -12.1], n: 5, r: 0.7, seed: 16 },
+  { type: 'spirhalite_pompoms', pos: [-18.4, 2.5, -40.1], n: 6, seed: 13 },
+  { type: 'spirhalite_grass', pos: [17.6, 2.5, -38.6], n: 5, r: 0.8, seed: 17 },
 
   // ================= the expedition at the ruins: work lights aimed at the pillar and the arch, a pegged-out dig patch
   { type: 'spirhalite_worklight', pos: [-7.2, 0, -21.2], rotY: -0.71, h: 2.3, tilt: 0.45 },
