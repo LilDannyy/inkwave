@@ -39,8 +39,9 @@ const PATH_FS = `
     float sgn = uEnd >= uS ? 1.0 : -1.0;
     float t = fract(((vS - uS) * sgn) * 0.45 - uTime * 0.9);
     float chev = smoothstep(0.0, 0.18, t) * (1.0 - smoothstep(0.28, 0.5, t));
-    float a = 0.16 * edge + 0.1 * core + run * (0.28 + 0.5 * chev) * edge;
-    vec3 c = mix(uBase, uCol * 1.35, run);
+    // a solid line (tinted the riding team's ink), fully lit + chevrons from the tower to its next stop
+    float a = edge * (0.55 + 0.2 * core + run * (0.25 + 0.2 * chev));
+    vec3 c = mix(mix(uBase, uCol, 0.5 * uOn), uCol * (1.25 + 0.5 * chev), run);
     gl_FragColor = vec4(c, a);
   }`;
 
@@ -147,17 +148,28 @@ export class TowerFx {
     root.add(p);
   }
 
-  // ---- the path ribbon
+  // ---- the rail: a thin line on the stage along the track — over the floors, straight up a wall's face and across its
+  // top, down a drop's face (Splatoon's tower rail). One quad per straight run, each a line-width past its ends so
+  // the corners close square.
   _buildPath(root, T) {
-    const pts = T.path.line(0.5), W = 0.28;
-    const pos = [], aS = [], aSide = [], idx = [], d = new THREE.Vector3();
-    pts.forEach(({ s, p }, i) => {
-      T.path.dir(s, d);
-      const nx = -d.z, nz = d.x;
-      pos.push(p.x + nx * W, p.y + 0.05, p.z + nz * W, p.x - nx * W, p.y + 0.05, p.z - nz * W);
-      aS.push(s, s); aSide.push(1, -1);
-      if (i > 0) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    });
+    const pts = T.path.rail(), W = 0.13, LIFT = 0.04;
+    const pos = [], aS = [], aSide = [], idx = [];
+    const t = new THREE.Vector3(), n = new THREE.Vector3(), sd = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const A = pts[i], B = pts[i + 1], L = A.p.distanceTo(B.p);
+      if (L < 1e-3) continue;
+      t.subVectors(B.p, A.p).multiplyScalar(1 / L);
+      n.copy(A.wall && B.wall ? A.n : up);
+      sd.crossVectors(t, n);
+      if (sd.lengthSq() < 1e-6) sd.set(-t.z, 0, t.x);
+      sd.normalize();
+      const k = pos.length / 3;
+      for (const [P, s0, e] of [[A.p, A.s, -W], [B.p, B.s, W]]) for (const side of [1, -1]) {
+        pos.push(P.x + t.x * e + sd.x * W * side + n.x * LIFT, P.y + t.y * e + sd.y * W * side + n.y * LIFT, P.z + t.z * e + sd.z * W * side + n.z * LIFT);
+        aS.push(s0); aSide.push(side);
+      }
+      idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
+    }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geo.setAttribute('aS', new THREE.Float32BufferAttribute(aS, 1));

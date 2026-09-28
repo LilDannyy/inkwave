@@ -37,19 +37,28 @@
 //   tower:return {}                          a neutral tower started rolling back
 //   tower:overtime { losing }  ·  tower:end { winner, reason, counts }
 //
-// TOWER_FORMAT (layout.tower, src/world/tower-data.js): { path: [[x, z] | [x, y, z], …] centre → Alpha's goal,
-//   checkpoints?: [m | fraction, …], checkpointTime?: [s, …] }
+// TOWER_FORMAT (layout.tower, src/world/tower-data.js): { path: [[x, z] | [x, y, z], …] centre → Alpha's goal (the
+//   corners of straight runs; a given y forces that height there), checkpoints?: [[x, z] | m | fraction, …],
+//   checkpointTime?: [s, …], yaw?: the platform's heading (default: the runs' own grid) }
 import * as THREE from 'three';
 import { G, emit, clamp } from '../core/ctx.js';
 import { TOWER, PLAYER } from '../config.js';
 
 const V3 = THREE.Vector3;
 const r3 = (x) => Math.round(x * 1000) / 1000;
-const STEP = 0.5;                       // path resample spacing (m)
 const _v = new V3(), _d = new V3(), _p0 = new V3();
 
 // ---------------------------------------------------------------------------------------------- the path
-// One side: points from the centre outward, cumulative lengths
+// The track is straight lines only: flat runs along the floor, straight inclines over ramps / stairs, and straight up
+// (or down) wherever it meets a wall, a box or a drop — the platform rises flush against a wall it meets and goes past
+// a drop's edge before it comes down (it never cuts through anything). The platform keeps one heading all match
+// (a square that never swings at a corner): the stage's grid, from the path's own directions.
+const PSTEP = 0.1;                      // floor sampling along a run (m)
+const HEAD = 3.0;                       // headroom the tower needs over its base (platform + riders): lower → climbed
+const JUMP = 0.45;                      // a height change within one sample bigger than this is a wall / drop
+const _ids = [], _hits = [];
+
+// One side: points from the centre outward, cumulative (3D) lengths
 class Side {
   constructor(pts) {
     this.pts = pts;
@@ -70,43 +79,137 @@ class Side {
     const L = this.cum[i + 1] - this.cum[i] || 1;
     return out.copy(a).lerp(b, (d - this.cum[i]) / L);
   }
-  dir(d, out) {   // unit XZ direction of increasing d
+  // unit XZ direction of increasing d (on a climb / drop: the run it leads to, else the one it came from)
+  dir(d, out) {
     d = clamp(d, 0, this.len);
-    const i = Math.min(this._seg(d), this.pts.length - 2), a = this.pts[i], b = this.pts[i + 1];
-    out.set(b.x - a.x, 0, b.z - a.z);
-    const l = Math.hypot(out.x, out.z);
-    return l > 1e-6 ? out.multiplyScalar(1 / l) : out.set(0, 0, 1);
+    const n = this.pts.length, i0 = Math.min(this._seg(d), n - 2);
+    for (const i of [i0, i0 + 1, i0 + 2, i0 - 1, i0 - 2]) {
+      if (i < 0 || i > n - 2) continue;
+      const a = this.pts[i], b = this.pts[i + 1];
+      out.set(b.x - a.x, 0, b.z - a.z);
+      const l = Math.hypot(out.x, out.z);
+      if (l > 1e-4) return out.multiplyScalar(1 / l);
+    }
+    return out.set(0, 0, 1);
+  }
+  // unit direction of travel (outward) including its climb: +y up a wall, -y down a drop
+  dir3(d, out) {
+    d = clamp(d, 0, this.len);
+    const i = Math.min(this._seg(d), this.pts.length - 2);
+    return out.subVectors(this.pts[i + 1], this.pts[i]).normalize();
   }
 }
 
-// floor height under (x, z), nearest to yHint (a path can run under a bridge)
-function floorAt(x, z, yHint) {
-  const L = G.level;
-  let y = L.groundHeight(x, z, yHint + 1.2);
-  if (y === -Infinity || y < yHint - 3) { const y2 = L.groundHeight(x, z, yHint + 3); if (y2 !== -Infinity) y = y2; }
-  return y === -Infinity ? yHint : y;
-}
-// raw points → evenly spaced points on the floor (a step up / down becomes a short ramp)
-function resample(raw) {
-  const out = [];
-  let prevY = raw[0].y;
-  for (let i = 0; i < raw.length - 1; i++) {
-    const a = raw[i], b = raw[i + 1], L = Math.hypot(b.x - a.x, b.z - a.z), n = Math.max(1, Math.ceil(L / STEP));
-    for (let k = 0; k < n; k++) {
-      const u = k / n, x = a.x + (b.x - a.x) * u, z = a.z + (b.z - a.z) * u;
-      const yh = a.y + (b.y - a.y) * u;
-      const y = floorAt(x, z, Number.isFinite(yh) ? yh : prevY);
-      out.push(new V3(x, y, z)); prevY = y;
+// solid spans [lo, hi, …] of the level along the vertical line through (x, z) (the tower's own block excluded)
+function column(L, x, z, out) {
+  out.length = 0;
+  for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, _ids)) {
+    const b = L.blocks[id];
+    if (!b || !b.solid || b.dynamic) continue;
+    let lo = -Infinity, hi = Infinity, ok = true;
+    for (let k = 0; k < 3 && ok; k++) {
+      const a = b.axes[k], h = k === 0 ? b.half.x : k === 1 ? b.half.y : b.half.z;
+      const c = a.x * (x - b.center.x) + a.z * (z - b.center.z) - a.y * b.center.y;   // a·(p − centre) = c + a.y·y
+      if (Math.abs(a.y) < 1e-6) { if (Math.abs(c) > h) ok = false; continue; }
+      let t0 = (-h - c) / a.y, t1 = (h - c) / a.y;
+      if (t0 > t1) { const t = t0; t0 = t1; t1 = t; }
+      if (t0 > lo) lo = t0;
+      if (t1 < hi) hi = t1;
     }
-  }
-  const e = raw[raw.length - 1];
-  out.push(new V3(e.x, floorAt(e.x, e.z, Number.isFinite(e.y) ? e.y : prevY), e.z));
-  // a little vertical smoothing (curbs read as ramps; stairs stay stairs)
-  for (let pass = 0; pass < 2; pass++) for (let i = 1; i < out.length - 1; i++) {
-    const m = (out[i - 1].y + out[i + 1].y) / 2;
-    if (Math.abs(m - out[i].y) < 0.3) out[i].y = (out[i].y + m) / 2;
+    if (ok && hi > lo) out.push(lo, hi);
   }
   return out;
+}
+// the platform's footprint (a square of half-size R turned by yaw), sampled 5 × 5
+function footprint(x, z, yaw, R, fn) {
+  const c = Math.cos(yaw), s = Math.sin(yaw), r = R - 0.04;
+  for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) {
+    const lx = (i / 2) * r, lz = (j / 2) * r;
+    fn(x + lx * c + lz * s, z - lx * s + lz * c);
+  }
+}
+// where the tower's base sits at (x, z) coming from height y: on the highest floor under any part of the platform (so
+// it stays up until it's fully past an edge), then up onto anything that leaves it less than HEAD of room (so it
+// climbs a wall it meets instead of going through; a roof HEAD or more above stays overhead). NaN: no floor at all.
+function baseAt(x, z, y, yaw, R) {
+  const L = G.level;
+  let rest = -Infinity;
+  footprint(x, z, yaw, R, (px, pz) => {
+    const h = column(L, px, pz, _hits);
+    for (let k = 0; k < h.length; k += 2) if (h[k + 1] <= y + 0.5 && h[k + 1] > rest) rest = h[k + 1];
+  });
+  if (rest === -Infinity) return NaN;
+  for (let it = 0; it < 16; it++) {
+    let up = rest;
+    footprint(x, z, yaw, R, (px, pz) => {
+      const h = column(L, px, pz, _hits);
+      for (let k = 0; k < h.length; k += 2) if (h[k] < rest + HEAD && h[k + 1] > rest + 0.02 && h[k + 1] > up) up = h[k + 1];
+    });
+    if (up === rest) break;
+    rest = up;
+  }
+  return rest;
+}
+// Douglas–Peucker on (t, y) samples (a run between walls → its straight flats and inclines)
+function straighten(ts, ys, i0, i1, eps, keep) {
+  let worst = -1, wd = eps;
+  const t0 = ts[i0], y0 = ys[i0], dt = ts[i1] - t0, dy = ys[i1] - y0, L = Math.hypot(dt, dy) || 1;
+  for (let i = i0 + 1; i < i1; i++) {
+    const d = Math.abs((ts[i] - t0) * dy - (ys[i] - y0) * dt) / L;
+    if (d > wd) { wd = d; worst = i; }
+  }
+  if (worst < 0) return;
+  straighten(ts, ys, i0, worst, eps, keep); keep.add(worst); straighten(ts, ys, worst, i1, eps, keep);
+}
+// one side's drawn corners (XZ; y optional = a forced height there) → its 3D track
+function buildSide(raw, yaw, R, y0, holes) {
+  const out = [new V3(raw[0].x, y0, raw[0].z)];
+  let y = y0;
+  const push = (x, yy, z) => { const l = out[out.length - 1]; if (Math.abs(l.x - x) + Math.abs(l.y - yy) + Math.abs(l.z - z) > 1e-4) out.push(new V3(x, yy, z)); };
+  for (let i = 0; i < raw.length - 1; i++) {
+    const a = raw[i], b = raw[i + 1], ux = b.x - a.x, uz = b.z - a.z, L = Math.hypot(ux, uz);
+    if (L < 1e-4) continue;
+    const n = Math.max(1, Math.ceil(L / PSTEP));
+    const ts = [0], ys = [y];
+    for (let k = 1; k <= n; k++) {
+      const t = (L * k) / n, yy = baseAt(a.x + (ux * t) / L, a.z + (uz * t) / L, ys[k - 1], yaw, R);
+      if (!Number.isFinite(yy)) { holes.push([+(a.x + (ux * t) / L).toFixed(2), +(a.z + (uz * t) / L).toFixed(2)]); ys.push(ys[k - 1]); } else ys.push(yy);
+      ts.push(t);
+    }
+    // walls / drops: a vertical at the exact spot (bisected) — before the wall for a climb, past the edge for a drop
+    const P = (t) => [a.x + (ux * t) / L, a.z + (uz * t) / L];
+    let from = 0;
+    const emit = (i0, i1) => {   // the straight flats / inclines between two walls
+      const keep = new Set([i0, i1]);
+      straighten(ts, ys, i0, i1, 0.2, keep);
+      for (const k of [...keep].sort((p, q) => p - q)) { const [x, z] = P(ts[k]); push(x, ys[k], z); }
+    };
+    for (let k = 1; k <= n; k++) {
+      if (Math.abs(ys[k] - ys[k - 1]) <= JUMP) continue;
+      let lo = ts[k - 1], hi = ts[k];
+      for (let it = 0; it < 7; it++) {
+        const m = (lo + hi) / 2, [x, z] = P(m), yy = baseAt(x, z, ys[k - 1], yaw, R);
+        if (Number.isFinite(yy) && Math.abs(yy - ys[k - 1]) <= JUMP) lo = m; else hi = m;
+      }
+      emit(from, k - 1);
+      const tw = ys[k] > ys[k - 1] ? lo : hi, [x, z] = P(tw);   // a climb stops short of the wall, a drop goes past the edge
+      push(x, ys[k - 1], z); push(x, ys[k], z);
+      ts[k - 1] = tw; from = k - 1; ys[k - 1] = ys[k];
+    }
+    emit(from, n);
+    y = ys[n];
+    if (Number.isFinite(b.y) && Math.abs(b.y - y) > 1e-3) { push(b.x, y, b.z); push(b.x, b.y, b.z); y = b.y; }
+  }
+  return out;
+}
+// the platform's heading: the drawn runs' own grid (length-weighted, mod 90°)
+function gridYaw(raw) {
+  let sx = 0, sy = 0;
+  for (let i = 0; i < raw.length - 1; i++) {
+    const dx = raw[i + 1].x - raw[i].x, dz = raw[i + 1].z - raw[i].z, L = Math.hypot(dx, dz), th = Math.atan2(dx, dz);
+    sx += L * Math.cos(4 * th); sy += L * Math.sin(4 * th);
+  }
+  return Math.atan2(sy, sx) / 4;
 }
 
 // A stage without a drawn path: the walkable route from the centre toward Bravo's base (its goal a few metres outside
@@ -136,7 +239,8 @@ export function placeholderPath(level) {
       }
       keep.push(pts[pts.length - 1]);
       const path = keep.map((n) => [+n.x.toFixed(2), +n.y.toFixed(2), +n.z.toFixed(2)]);
-      if (Math.hypot(path[0][0], path[0][2]) > 0.5) path.unshift([0, path[0][1], 0]);
+      // start at the exact centre (a nav node right by it would leave a stub going the wrong way first)
+      if (Math.hypot(path[0][0], path[0][2]) < 1.5) path[0] = [0, path[0][1], 0]; else path.unshift([0, path[0][1], 0]);
       return { placeholder: true, path };
     }
   }
@@ -147,11 +251,16 @@ export function placeholderPath(level) {
 export class TowerPath {
   constructor(def) {
     const raw = def.path.map((p) => (p.length === 3 ? new V3(p[0], p[1], p[2]) : new V3(p[0], NaN, p[1])));
-    if (!Number.isFinite(raw[0].y)) raw[0].y = floorAt(raw[0].x, raw[0].z, 30);
-    for (let i = 1; i < raw.length; i++) if (!Number.isFinite(raw[i].y)) raw[i].y = floorAt(raw[i].x, raw[i].z, raw[i - 1].y);
-    const a = resample(raw);
-    // the mirror (180° about the vertical through the origin), floors re-read (a mirrored stage has the same heights)
-    const b = resample(raw.map((p) => new V3(-p.x, p.y, -p.z)));
+    const R = TOWER.platformR;
+    this.yaw = Number.isFinite(def.yaw) ? def.yaw : gridYaw(raw);
+    // the start: a given height, else the floor under the centre (below the spawn decks' height: never a roof over it)
+    const pad = G.level.spawnPads[0], hint = Number.isFinite(raw[0].y) ? raw[0].y : (pad ? pad.y + 1 : 4);
+    let y0 = Number.isFinite(raw[0].y) ? raw[0].y : baseAt(raw[0].x, raw[0].z, hint, this.yaw, R);
+    if (!Number.isFinite(y0)) y0 = 0;
+    this.holes = [];                   // (x, z) where a run found no floor at all (a stage to fix)
+    const a = buildSide(raw, this.yaw, R, y0, this.holes);
+    // the mirror (180° about the vertical through the origin), built on its own floors (dressing may differ)
+    const b = buildSide(raw.map((p) => new V3(-p.x, p.y, -p.z)), this.yaw, R, y0, this.holes);
     this.sides = [new Side(a), new Side(b)];   // [toward Alpha's goal (s > 0), toward Bravo's goal (s < 0)]
     this.len = [this.sides[0].len, this.sides[1].len];
   }
@@ -159,11 +268,58 @@ export class TowerPath {
   at(s, out = new V3()) { return s >= 0 ? this.sides[0].at(s, out) : this.sides[1].at(-s, out); }
   // unit XZ direction of increasing s
   dir(s, out = new V3()) { return s >= 0 ? this.sides[0].dir(s, out) : this.sides[1].dir(-s, out).negate(); }
-  // evenly spaced points from Bravo's goal (s = -len1) to Alpha's (s = +len0), for the path glow / minimap
+  // distance along side `team` of the point nearest (x, z) (a checkpoint drawn on the stage)
+  project(team, x, z) {
+    const S = this.sides[team];
+    let best = Infinity, bd = 0;
+    for (let i = 0; i < S.pts.length - 1; i++) {
+      const a = S.pts[i], b = S.pts[i + 1], dx = b.x - a.x, dz = b.z - a.z, l2 = dx * dx + dz * dz;
+      if (l2 < 1e-8) continue;
+      const u = clamp(((x - a.x) * dx + (z - a.z) * dz) / l2, 0, 1), px = a.x + dx * u, pz = a.z + dz * u;
+      const d = Math.hypot(x - px, z - pz);
+      if (d < best - 1e-6) { best = d; bd = S.cum[i] + u * (S.cum[i + 1] - S.cum[i]); }
+    }
+    return bd;
+  }
+  // evenly spaced points from Bravo's goal (s = -len1) to Alpha's (s = +len0), for the minimap
   line(step = 0.75) {
     const out = [];
     for (let s = -this.len[1]; s < this.len[0]; s += step) out.push({ s, p: this.at(s) });
     out.push({ s: this.len[0], p: this.at(this.len[0]) });
+    return out;
+  }
+  // the rail drawn on the stage: the track, but up a wall's face / down a drop's face instead of through the air in
+  // front of it (the platform climbs flush against the wall, its centre half a platform out). [{ s, p, n }] from
+  // Bravo's goal to Alpha's, n = the surface the rail lies on (up on floors; facing back along the track on a wall)
+  rail() {
+    const out = [], R = TOWER.platformR;
+    const half = (S, sign) => {
+      const pts = [];
+      for (let i = 0; i < S.pts.length; i++) pts.push({ s: sign * S.cum[i], p: S.pts[i].clone(), n: new V3(0, 1, 0) });
+      // each climb / drop: shift its vertical to the face, extend the floor before / after it up to that face
+      const segDir = (j) => {
+        const p = S.pts[j], q = S.pts[j + 1];
+        if (!p || !q) return null;
+        const d = new V3(q.x - p.x, 0, q.z - p.z), l = Math.hypot(d.x, d.z);
+        return l > 1e-4 ? d.multiplyScalar(1 / l) : null;
+      };
+      const c = Math.cos(this.yaw), sn = Math.sin(this.yaw);
+      for (let i = 0; i < S.pts.length - 1; i++) {
+        const a = S.pts[i], b = S.pts[i + 1];
+        if (Math.hypot(b.x - a.x, b.z - a.z) > 1e-4 || Math.abs(b.y - a.y) < 1e-4) continue;
+        const up = b.y > a.y, d = (up ? segDir(i + 1) || segDir(i - 1) : segDir(i - 1) || segDir(i + 1)) || new V3(0, 0, 1);
+        // centre → the platform's edge along d (a square turned by yaw)
+        const lx = d.x * c - d.z * sn, lz = d.x * sn + d.z * c, reach = R / Math.max(Math.abs(lx), Math.abs(lz), 1e-3);
+        const off = d.clone().multiplyScalar(up ? reach : -reach);
+        pts[i].p.add(off); pts[i + 1].p.add(off);
+        pts[i].n = pts[i + 1].n = d.clone().multiplyScalar(up ? -1 : 1);   // the face looks back down the climb / out over the drop
+        pts[i].wall = pts[i + 1].wall = true;
+      }
+      return pts;
+    };
+    const A = half(this.sides[0], 1), B = half(this.sides[1], -1);
+    for (let i = B.length - 1; i > 0; i--) out.push(B[i]);
+    for (const p of A) out.push(p);
     return out;
   }
 }
@@ -178,7 +334,7 @@ export class TowerCommand {
     this.path = new TowerPath(def);
     this.s = 0;                          // position along the path (m; + toward Alpha's goal)
     this.pos = this.path.at(0);          // the tower's base (on the path's floor)
-    this.yaw = Math.atan2(this.path.dir(0.01).x, this.path.dir(0.01).z);
+    this.yaw = this.path.yaw;           // fixed: the platform never turns (the track's corners are square)
     this.owner = -1;                     // team in control (-1 neutral)
     this.riders = [0, 0];
     this.riderList = [];
@@ -198,7 +354,9 @@ export class TowerCommand {
     this.speed = this.path.len.map((L) => L / (TOWER.trackPoints / TOWER.pointRate));
     this.cps = [];
     for (let team = 0; team < 2; team++) cps.forEach((c, i) => {
-      const L = this.path.len[team], d = c <= 1 ? c * L : Math.min(c, L - 1);
+      // a checkpoint: a spot on the stage [x, z] (Alpha's side; Bravo's is its mirror), metres along, or a fraction
+      const L = this.path.len[team];
+      const d = Array.isArray(c) ? Math.min(this.path.project(team, team ? -c[0] : c[0], team ? -c[1] : c[1]), L - 1) : c <= 1 ? c * L : Math.min(c, L - 1);
       const dur = def.checkpointTime ? def.checkpointTime[Math.min(i, def.checkpointTime.length - 1)] : cpPts / TOWER.pointRate;
       this.cps.push({ team, index: i, d, dur, left: dur, cleared: false, lost: 0, at: false });
     });
@@ -374,34 +532,21 @@ export class TowerCommand {
     this.moving = this.s > s0 + 1e-5 ? 1 : this.s < s0 - 1e-5 ? -1 : 0;
   }
 
-  // the tower's base, heading and collider at s
-  _place(dt) {
+  // the tower's base and collider at s (its heading never changes)
+  _place() {
     this.path.at(this.s, this.pos);
-    const d = this.path.dir(this.s, _d);
-    const want = Math.atan2(d.x, d.z);
-    // turn smoothly (the path has corners); a U-turn never flips the platform
-    let dy = want - this.yaw;
-    while (dy > Math.PI) dy -= Math.PI * 2;
-    while (dy < -Math.PI) dy += Math.PI * 2;
-    if (Math.abs(dy) > Math.PI / 2) dy -= Math.sign(dy) * Math.PI;   // a square platform: 180° is the same shape
-    this.yawPrev = this.yaw;
-    this.yaw += dy * (dt >= 1 ? 1 : 1 - Math.exp(-7 * dt));
     _v.copy(this.pos); _v.y += TOWER.platformH / 2;
     G.level.moveDynamic(this.block, _v, this.half, this.yaw);
   }
 
-  // this client's own players standing on the platform go with it (turning round its centre too)
+  // this client's own players standing on the platform go with it (along, up a wall, down a drop)
   _carry(sBefore) {
-    if (this.s === sBefore && this.yaw === this.yawPrev) return;
+    if (this.s === sBefore) return;
     const p1 = this.pos;
     this.path.at(sBefore, _p0);
-    const dyaw = this.yaw - (this.yawPrev ?? this.yaw), c = Math.cos(dyaw), sn = Math.sin(dyaw);
     for (const a of this.match.actors) {
       if (a.remote || !a.alive || !a.grounded || !a.ground || a.ground.block !== this.block.id) continue;
-      const rx = a.pos.x - _p0.x, rz = a.pos.z - _p0.z;
-      a.pos.x = p1.x + rx * c + rz * sn;
-      a.pos.z = p1.z - rx * sn + rz * c;
-      a.pos.y += p1.y - _p0.y;
+      a.pos.x += p1.x - _p0.x; a.pos.z += p1.z - _p0.z; a.pos.y += p1.y - _p0.y;
     }
   }
 
