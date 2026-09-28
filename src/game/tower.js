@@ -122,6 +122,13 @@ function column(L, x, z, out) {
   }
   return out;
 }
+// the underside of the lowest solid over (x, z) above height y (Infinity: open sky) — e.g. an arcade the tower starts in
+export function ceilingAt(x, z, y) {
+  const h = column(G.level, x, z, _hits);
+  let c = Infinity;
+  for (let k = 0; k < h.length; k += 2) if (h[k] > y && h[k] < c) c = h[k];
+  return c;
+}
 // the platform's footprint (a square of half-size R turned by yaw), sampled 5 × 5
 function footprint(x, z, yaw, R, fn) {
   const c = Math.cos(yaw), s = Math.sin(yaw), r = R - 0.04;
