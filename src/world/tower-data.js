@@ -4,7 +4,8 @@
 //   path:           [[x, z] | [x, y, z], …]   centre → goal; y is optional (the floor under each point is used)
 //   checkpoints:    [m, m]   metres along the path from the centre (or fractions of its length, ≤ 1) — default
 //                            TOWER.checkpoints
-//   checkpointTime: [s, s]   optional, per checkpoint (default TOWER.checkpointTime)
+//   checkpointTime: [s, s]   optional, per checkpoint (default: its share of TOWER.checkpointPoints at TOWER.pointRate)
+// The tower's speed on a stage comes from its path length: the whole track is TOWER.trackPoints (60) of the 100 points.
 // A stage with no entry gets a stand-in route (tower.js placeholderPath: the walkable route from the centre toward
 // Bravo's base).
 export const TOWER_DEFS = {

@@ -6,16 +6,19 @@
 // metres along the path from the centre, positive toward Alpha's goal (Bravo's half), negative toward Bravo's.
 //
 //   • riding: a player standing on the platform rides it. Riders of one team only → that team controls the tower and
-//     it moves toward that team's goal, faster with more riders (TOWER.mult: 1 / 1.2 / 1.33 / 1.43 ×). Riders of both
+//     it moves toward that team's goal, faster with more riders (TOWER.mult: 1 / 1.2 / 1.33 / 1.43 ×). Its speed on a
+//     stage comes from the points (below): the whole track is TOWER.trackPoints at TOWER.pointRate. Riders of both
 //     teams → it stops (contested). An enemy on a tower whose riders fell off / were splatted → the enemy claims it.
 //   • empty: 5 s with nobody on it and the team in control loses it (neutral); a neutral tower rolls back toward the
-//     centre (TOWER.returnSpeed).
+//     centre (TOWER.returnK × its one-rider speed).
 //   • checkpoints: each side has checkpoints (TOWER.checkpoints). Pushing into enemy territory the tower stops at the
 //     next uncleared one until its timer runs out (cleared faster by more riders); cleared ones don't stop it again.
 //     Lose control there (enemy claim, or neutral) for TOWER.checkpointGrace s and its timer refills; regain control
 //     sooner and it carries on where it was.
-//   • score: how far each team has ridden it into enemy territory (its best, ever) — shown as a count from 100 (centre)
-//     to 0 (the goal). Reaching the goal is a knockout. At time up the lower count wins; equal counts → the team that
+//   • score: 100 points to win. Riding the tower the whole track into enemy territory is TOWER.trackPoints (60) of them,
+//     in proportion to the distance; clearing that side's checkpoints the rest (TOWER.checkpointPoints, 40, split evenly,
+//     earned as each one's timer runs). A team's score is the most it has ever had, shown as a count from 100 down to 0;
+//     reaching the goal is a knockout. At time up the lower count wins; equal counts → the team that
 //     reached that count second drops a point (no draws). Nobody pushed at all → sudden death.
 //   • overtime: at time up, if the team behind controls the tower, play on until it takes the lead (it wins), the other
 //     team retakes the tower (one of theirs on it with none of the team behind), or the tower goes neutral (the team
@@ -114,13 +117,13 @@ export function placeholderPath(level) {
     let c = -1, cd = Infinity, g = -1, gd = Infinity;
     for (const id of nav.validIds) {
       const n = nav.nodes[id];
-      if (n.zone >= 0 || n.wet === 2) continue;
-      const dc = Math.hypot(n.x, n.z) + Math.abs(n.y) * 0.1;
+      if (n.zone >= 0) continue;
+      const dc = Math.hypot(n.x, n.z) + Math.max(0, n.y - 3) * 2;   // (the floor, not a crane top over the centre)
       if (dc < cd) { cd = dc; c = id; }
       const dp = Math.hypot(n.x - pad.x, n.z - pad.z);
-      if (dp >= R) { const v = dp - R + Math.abs(n.y - pad.y) * 0.5; if (v < gd) { gd = v; g = id; } }
+      if (dp >= R && n.wet !== 2) { const v = dp - R + Math.abs(n.y - pad.y) * 0.5; if (v < gd) { gd = v; g = id; } }
     }
-    const ids = c >= 0 && g >= 0 ? nav.path(c, g, 0, 30000, true) : null;
+    const ids = c >= 0 && g >= 0 ? nav.path(c, g, 0, 30000, true) || nav.path(c, g, 0, 30000, false) : null;   // (a climb if it must)
     if (ids && ids.length > 4) {
       // keep turning points only (straight runs collapse), then the exact centre in front
       const pts = ids.map((id) => nav.nodes[id]);
@@ -137,7 +140,7 @@ export function placeholderPath(level) {
       return { placeholder: true, path };
     }
   }
-  const y = level.groundHeight(0, 0, 30);
+  const y = level.groundHeight(0, 0, 4);
   return { placeholder: true, path: [[0, y === -Infinity ? 0 : y, 0], [pad.x * 0.8, pad.y, pad.z * 0.8]] };
 }
 
@@ -188,13 +191,18 @@ export class TowerCommand {
     this.reachT = [0, 0];                // match clock when each team's count last went down (the tie-break)
     this.clock = 0;
     // checkpoints: Alpha's on the + side, Bravo's (the mirror) on the − side
-    const cps = def.checkpoints || TOWER.checkpoints, times = def.checkpointTime || TOWER.checkpointTime;
+    const cps = def.checkpoints || TOWER.checkpoints;
+    // speed + checkpoint times from the points: the track = trackPoints, the checkpoints = checkpointPoints (even split)
+    const cpPts = cps.length ? TOWER.checkpointPoints / cps.length : 0;
+    this.cpPoints = cpPts;
+    this.speed = this.path.len.map((L) => L / (TOWER.trackPoints / TOWER.pointRate));
     this.cps = [];
     for (let team = 0; team < 2; team++) cps.forEach((c, i) => {
       const L = this.path.len[team], d = c <= 1 ? c * L : Math.min(c, L - 1);
-      const dur = times[Math.min(i, times.length - 1)];
+      const dur = def.checkpointTime ? def.checkpointTime[Math.min(i, def.checkpointTime.length - 1)] : cpPts / TOWER.pointRate;
       this.cps.push({ team, index: i, d, dur, left: dur, cleared: false, lost: 0, at: false });
     });
+    this.points = [0, 0];                // each team's best points so far (of 100)
     this.overtime = false; this.overtimeT = 0; this.otLosing = -1;
     this.winner = null; this.reason = null;
     this.log = [];
@@ -336,7 +344,7 @@ export class TowerCommand {
     if (push >= 0 && !hold) {
       const dir = push === 0 ? 1 : -1, cp = this._nextCp(push);
       const end = cp ? dir * cp.d : dir * this.path.len[push];
-      const step = TOWER.speed * TOWER.mult[Math.min(4, n[push])] * dt;
+      const step = this.speed[push] * TOWER.mult[Math.min(4, n[push])] * dt;
       const s1 = dir > 0 ? Math.min(end, this.s + step) : Math.max(end, this.s - step);
       if (s1 !== this.s) { this.s = s1; this.moving = dir; }
       if (cp && Math.abs(this.s - end) < 1e-6 && !cp.reached) {
@@ -347,7 +355,7 @@ export class TowerCommand {
       if (!cp && Math.abs(this.s - end) < 1e-6) return this._end(push, 'knockout');
     } else if (this.owner === -1 && this.s !== 0 && !both && !(n[0] || n[1])) {
       if (!this.returning) { this.returning = true; emit('tower:return', {}); }
-      const step = TOWER.returnSpeed * dt;
+      const step = TOWER.returnK * this.speed[this.s > 0 ? 0 : 1] * dt;
       this.s = this.s > 0 ? Math.max(0, this.s - step) : Math.min(0, this.s + step);
       this.moving = this.s > 0 ? -1 : this.s < 0 ? 1 : 0;
     }
@@ -397,12 +405,22 @@ export class TowerCommand {
     }
   }
 
+  // points now: the distance into enemy territory (trackPoints over the whole track) + that side's checkpoints (each
+  // cpPoints, earned as its timer runs); a team keeps the most it has had
+  pointsNow(t) {
+    const d = Math.max(0, t === 0 ? this.s : -this.s);
+    let p = TOWER.trackPoints * Math.min(1, d / this.path.len[t]);
+    for (const c of this.cps) if (c.team === t) p += c.cleared ? this.cpPoints : this.cpPoints * clamp(1 - c.left / (c.dur || 1), 0, 1);
+    return Math.min(TOWER.count, p);
+  }
   _score() {
     for (let t = 0; t < 2; t++) {
       const d = t === 0 ? this.s : -this.s;
-      if (d > this.best[t]) {
-        this.best[t] = d;
-        const c = Math.max(0, Math.ceil(TOWER.count * (1 - d / this.path.len[t]) - 1e-6));
+      if (d > this.best[t]) this.best[t] = d;
+      const p = this.pointsNow(t);
+      if (p > this.points[t]) {
+        this.points[t] = p;
+        const c = Math.max(0, Math.ceil(TOWER.count - p - 1e-6));
         if (c < this.count[t]) { this.count[t] = c; this.reachT[t] = this.clock; }
       }
     }

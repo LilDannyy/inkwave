@@ -2476,6 +2476,50 @@ def('boss_sunk', {
 });
 
 /* ------------------------------------------------------------------------------------------------------------ */
+// ---- Tower Command
+// the tower rolling: a low motor, a gear whine and the clatter of its treads (positional loop, src/fx/towerFx.js)
+def('tower_move', {
+  gain: 0.2, max: 2, jitter: 0, reverb: 0.06, oneShot: 1.6,
+  loop(v, p) {
+    const T = v.t;
+    const amp = v.gain(0.6, v.out), lp = v.filter('lowpass', 420 * p, 0.8, amp);
+    v.osc('sawtooth', 46 * p, T, null, lp);
+    v.osc('sawtooth', 46.7 * p, T, null, lp);
+    const whine = v.gain(0.07, v.out);
+    v.osc('triangle', 560 * p, T, null, v.filter('bandpass', 560 * p, 6, whine));
+    const clat = v.gain(0.22, v.out);
+    v.noise('white', T, null, v.filter('bandpass', 1700, 1.6, clat));
+    v.lfo(11 * p, 0.2, clat.gain, T, null, 'square');
+    v.lfo(1.3, 0.12, amp.gain, T, null);
+  },
+});
+// the tower pulled up at a checkpoint: a clunk and a two-tone alarm
+def('tower_checkpoint', {
+  gain: 0.3, max: 1, jitter: 0, reverb: 0.2, minGap: 0.4,
+  build(v, p) {
+    const T = v.t;
+    kick(v, T, 0.6, { f0: 110, f1: 45, d: 0.3 });
+    v.nz({ f: 380, q: 2, a: 0.002, d: 0.12, peak: 0.4 });
+    const pw = pulseWave(v.ctx, 0.35), lp = v.filter('lowpass', 3800, 0.8, v.out);
+    for (let i = 0; i < 3; i++) {
+      v.tone({ t: 0.12 + i * 0.26, type: pw, f: mtof(81) * p, a: 0.004, h: 0.09, d: 0.03, peak: 0.24, to: lp });
+      v.tone({ t: 0.25 + i * 0.26, type: pw, f: mtof(76) * p, a: 0.004, h: 0.09, d: 0.03, peak: 0.24, to: lp });
+    }
+  },
+});
+// a checkpoint cleared: a rising run into a bright stab and a bell
+def('tower_clear', {
+  gain: 0.32, max: 1, jitter: 0, reverb: 0.24, minGap: 0.4,
+  build(v, p) {
+    const T = v.t, lp = v.filter('lowpass', 5200, 0.8, v.out), pw = pulseWave(v.ctx, 0.25);
+    [64, 67, 71, 74, 79].forEach((m, i) => v.tone({ t: i * 0.045, type: pw, f: mtof(m) * p, a: 0.002, h: 0.03, d: 0.1, peak: 0.22, to: lp }));
+    for (const [m, pan] of [[71, -0.3], [74, 0.3], [79, 0]]) brass(v, T + 0.24, mtof(m) * p, 0.36, 0.3, { to: v.pan(pan, v.out), bright: 5200, a: 0.01, r: 0.3 });
+    kick(v, T + 0.24, 0.6);
+    bell(v, T + 0.3, mtof(91) * p, 0.18, { d: 0.8 });
+    crash(v, T + 0.24, 0.2, { d: 0.7 });
+  },
+});
+
 export const SFX_GROUPS = {
   UI: ['ui_hover', 'ui_click', 'ui_back', 'ui_confirm', 'ui_toggle', 'ui_slider', 'ui_error'],
   Weapons: ['shoot_shooter', 'shoot_blaster', 'blaster_pump', 'blaster_boom', 'charger_charge', 'charger_full', 'shoot_charger', 'roller_flick', 'roll',
@@ -2495,6 +2539,7 @@ export const SFX_GROUPS = {
   Match: ['ready', 'go_horn', 'countdown_tick', 'one_minute', 'final_count', 'times_up', 'judge_drumroll', 'judge_reveal', 'victory_fanfare', 'defeat_jingle', 'xp_tick', 'level_up'],
   Zones: ['zone_ours', 'zone_theirs', 'zone_lost', 'zone_broken', 'zone_warn', 'zone_chance', 'zone_penalty', 'zone_shift', 'zone_final',
     'zone_overtime', 'zone_tick', 'zone_flood', 'zone_wipe', 'zone_hum'],
+  Tower: ['tower_move', 'tower_checkpoint', 'tower_clear'],
   Boss: ['boss_roar', 'boss_step', 'boss_slam', 'boss_tele', 'boss_whistle', 'boss_barrel', 'boss_cannon_charge', 'boss_cannon_sweep', 'boss_gallop', 'boss_crash',
     'boss_dizzy', 'boss_frenzy', 'crablet_chitter', 'crablet_pop', 'boss_hit', 'boss_crit', 'boss_phase', 'boss_title', 'boss_defeat', 'boss_sunk'],
 };

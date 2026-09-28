@@ -504,12 +504,16 @@ export const ZONES = {
 export const TOWER = {
   duration: 300,              // 5 minutes (+ overtime)
   count: 100,                 // the score a team counts down from (100 at the centre, 0 at the enemy goal)
-  speed: 0.62,                // m/s along the path with one rider
+  // the 100 points: riding it the whole track to the enemy goal is trackPoints, clearing the checkpoints on the way the
+  // rest (split evenly between them). pointRate = points / s with one rider — it sets the tower's speed on each stage
+  // (track length ÷ (trackPoints / pointRate) m/s) and each checkpoint's time ((checkpointPoints / n) / pointRate s)
+  pointRate: 1,
+  trackPoints: 60,
+  checkpointPoints: 40,
   mult: [0, 1, 1.2, 1.33, 1.43],   // speed (and checkpoint clearing) × by riders of the pushing team: 1 / 2 / 3 / 4
-  returnSpeed: 0.5,           // m/s a neutral tower rolls back toward the centre
+  returnK: 0.6,               // a neutral tower rolls back toward the centre at this × the one-rider speed
   idleNeutral: 5,             // s with nobody on it before the team in control loses it (it goes neutral, then back)
   checkpoints: [0.42, 0.72],  // where a stage without its own sits them: fractions of each side's path to the goal
-  checkpointTime: [10, 12],   // s a checkpoint holds the tower (one rider; more riders clear it faster, × mult)
   checkpointGrace: 3,         // s of lost control before a half-cleared checkpoint's timer refills
   gaugeHeld: 4.5,             // special points / s for every player on the team in control (riding or not)
   gaugeNeutral: 2.25,         // … for the team behind while the tower is neutral

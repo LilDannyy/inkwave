@@ -110,21 +110,22 @@ export class TowerFx {
       bar.rotation.y = a;
       g.add(bar);
     }
-    // the mast, its beacon, the halo and four rider lamps
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 2.3, 10), trim);
-    mast.position.y = H + 1.15;
+    // the beacon floating well over the riders' heads (no mast: nothing stands in a rider's view) with its halo, and
+    // four rider lamps across each end face
     this.beaconMat = new THREE.MeshBasicMaterial({ color: NEUTRAL.clone(), toneMapped: false });
     const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), this.beaconMat);
-    beacon.position.y = H + 2.4;
-    this.halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 6, 36), this.beaconMat);
-    this.halo.position.y = H + 2.05; this.halo.rotation.x = Math.PI / 2;
+    beacon.position.y = H + 3.3;
+    this.halo = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.035, 6, 36), this.beaconMat);
+    this.halo.position.y = H + 3.3; this.halo.rotation.x = Math.PI / 2;
     this.lamps = [];
-    for (let k = 0; k < 4; k++) {
-      const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: 0x222228, toneMapped: false }));
-      m.position.set(0, H + 0.5 + k * 0.32, 0.1);
-      this.lamps.push(m); g.add(m);
+    const lampMats = Array.from({ length: 4 }, () => new THREE.MeshBasicMaterial({ color: 0x222228, toneMapped: false }));
+    for (const end of [1, -1]) for (let k = 0; k < 4; k++) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.04), lampMats[k]);
+      m.position.set((k - 1.5) * 0.36, H * 0.52, end * R * 0.99);
+      g.add(m);
     }
-    g.add(mast, beacon, this.halo);
+    this.lamps = lampMats.map((material) => ({ material }));
+    g.add(beacon, this.halo);
     root.add(g);
   }
 
@@ -216,16 +217,19 @@ export class TowerFx {
     const n = owner >= 0 ? (T.follower && T.hostRiders ? T.hostRiders[owner] : T.riders[owner]) : 0;
     this.lamps.forEach((l, k) => l.material.color.copy(k < n ? this.col : _c.setRGB(0.13, 0.13, 0.16)).multiplyScalar(k < n ? 1.8 : 1));
     // pillar: from the deck up
-    this.pillar.position.set(T.pos.x, T.pos.y + TOWER.platformH + 2.6, T.pos.z);
+    this.pillar.position.set(T.pos.x, T.pos.y + TOWER.platformH + 3.5, T.pos.z);
     this.beamMat.color.copy(this.col);
-    this.beamMat.opacity = 0.1 + (moving ? 0.05 : 0);
+    // it's for finding the tower from afar: close up (riding it) it fades so it never stands in the way
+    const cam0 = G.rig?.gameCam || G.camera, cd = cam0 ? Math.hypot(cam0.position.x - T.pos.x, cam0.position.z - T.pos.z) : 99;
+    const nearK = Math.min(1, Math.max(0, (cd - 5) / 9));
+    this.beamMat.opacity = (0.1 + (moving ? 0.05 : 0)) * nearK;
     const rise = moving ? 7 : 4;
     this.rings.forEach((r, i) => {
       const k = ((t * rise) / PILLAR_H + i / RINGS) % 1, y = k * PILLAR_H;
       r.position.y = y;
       r.scale.setScalar(0.7 + k * 1.3);
       r.material.color.copy(this.col);
-      r.material.opacity = 0.6 * (1 - k) * Math.min(1, k * 12);
+      r.material.opacity = 0.6 * (1 - k) * Math.min(1, k * 12) * (0.25 + 0.75 * nearK);
     });
     // path: lit from the tower to where it's heading
     const U = this.pathU;
