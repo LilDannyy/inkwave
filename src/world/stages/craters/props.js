@@ -1072,6 +1072,11 @@ export const PLACEMENTS = [
   { type: 'craters_bin', pos: [-3.3, 0, -31.2] },
   { type: 'craters_bin', pos: [8.2, 0, -12.4] },
 
+  // ================= wildflowers + tussocks across the downs, a second wind-bent hawthorn by the right flank
+  ...[[10.6, -8.3], [-8.1, -6.1], [3.6, -18.9], [19.2, -15.3], [-4.6, -27.3], [15.6, -35.1], [-14.6, -33.6], [-12.8, -19.1], [21.4, -31.5], [-22.8, -21.0]].map(([x, z], i) => ({ type: 'craters_poppies', pos: [x, 0, z], r: 0.8 + rnd(i * 3) * 0.5, n: 9 + (i % 5), seed: i + 20 })),
+  ...[[6.4, -9.9], [-10.4, -8.2], [12.2, -22.4], [-3.8, -33.8], [19.8, -12.4], [-18.8, -29.4], [9.8, -36.6], [-6.8, -25.3]].map(([x, z], i) => ({ type: 'craters_tussock', pos: [x, 0, z], s: 0.55 + rnd(i * 7) * 0.4, seed: i + 3 })),
+  { type: 'craters_hawthorn', pos: [-23.2, 0, -6.3], rotY: 0.35, s: 0.9 },
+
   // ================= the coast: tussocks along the chalk lip
   ...LIP_TUFTS,
 ];

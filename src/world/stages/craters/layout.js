@@ -39,9 +39,12 @@ const NOSIDES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
 export const CRATER = { N: 16, r0: 5.0, r1: 10.0, rc: 11.2, gap: 12, gapEnd: 7.5, gapW: 5.2, trim: 1.5, outer: [9, 15], outerFoot: 14.0 };
 const CK = CRATER, HALF_K = (k) => k >= 8;          // facets 8…15 are Alpha's half (the mirror builds 0…7)
 const isGap = (k) => k === CK.gap || k === CK.gap - 8;
+const facetN = (k) => { const th = k * 22.5 * DEG, sl = (YR - YF) / (CK.r1 - CK.r0), l = Math.hypot(sl, 1); return [r3(-sl * Math.cos(th) / l), r3(1 / l), r3(-sl * Math.sin(th) / l)]; };
 const FACETS = coneFacets(0, 0, CK.N, CK.r0, CK.r1, YF, YR, {
   only: HALF_K, narrow: { [CK.gap - 1]: [0, CK.trim], [CK.gap + 1]: [CK.trim, 0] }, end: { [CK.gap]: { r: CK.gapEnd, y: 0, w: CK.gapW } },
-  opts: (k) => ({ tag: isGap(k) ? 'crater-cut' : 'crater-slope', color: CO.slope, pattern: SURF.turf ?? PATTERN.plain }),
+  opts: (k) => ({ tag: isGap(k) ? 'crater-cut' : 'crater-slope', color: CO.slope, pattern: SURF.turf ?? PATTERN.plain,
+    // the rim facets show a scar of exposed chalk (murals.js 10) — the normal of the facet's top face
+    ...(isGap(k) ? {} : { mural: [{ n: facetN(k), id: 10 }] }) }),
 });
 const CREST = ringSegments(0, 0, CK.N, CK.r1, CK.rc, YF, YR, {
   only: (k) => HALF_K(k) && !isGap(k), cut: { [CK.gap - 1]: [0, CK.trim], [CK.gap + 1]: [CK.trim, 0] },
