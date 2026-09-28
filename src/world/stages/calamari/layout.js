@@ -23,7 +23,7 @@ import { MURAL } from './murals.js';
 //   • mid lane: the station forecourt → the village square (post box, bus shelter, the side zone) → the co-op stair
 //   • left lane (+X) HARBOUR: the basin quay along the fishing-boat basin that cuts into the village (its edge at an
 //     angle, a slipway, a timber jetty), the north quay with the breakwater, the co-op's quay behind
-//   • spawn: the covered upper deck of the Fishermen's Co-op warehouse (3.4): grand stair to the square, a timber ramp
+//   • spawn: the open upper deck of the Fishermen's Co-op warehouse (3.4): grand stair to the square, a timber ramp
 //     down to the co-op quay, drops onto T2 (0.8) and the loading dock (1.0)
 // The village grew: buildings of different sizes, several turned a few degrees off the street grid, the lanes between
 // them bending and narrowing; the outline follows the coast (the basin, the breakwater, the stepped co-op quay) and the

@@ -74,7 +74,7 @@ const BUILDINGS = [
   { type: 'calamari_house', pos: [-18.25, 2.6, -38.85], w: 12.5, d: 3.3, h: 2.8, style: 'cedar', plinth: false, faces: { 0: [{ t: 'win', x: -4, w: 1.4, h: 0.9, sill: 0.7, lit: 1 }, { t: 'door', x: 0.2, w: 1.4 }, { t: 'win', x: 3.6, w: 1.4, h: 0.9, sill: 0.7, sash: true, lit: 0.8 }, { t: 'kerosene', x: 5.3 }] }, roof: { f: 1, pitch: 0.55, alongX: true } },
   { type: 'calamari_house', pos: [-13.25, 3.4, -42.25], w: 8.5, d: 3.5, h: 2.4, style: 'plaster', plinth: false, faces: { 0: [{ t: 'win', x: -1.5, w: 1.3, h: 0.9, sill: 0.6, sash: true, lit: 1 }], 1: [{ t: 'win', x: 0, w: 1.0, h: 0.8, sill: 0.8, lit: 1 }] }, upper: { h: 2.3, inset: 0.2, faces: { 1: [{ t: 'win', x: 0, w: 1.0, h: 0.8, sill: 0.7, sash: true }] } }, roof: { f: 0.5, pitch: 0.5, alongX: true } },
   { type: 'calamari_house', pos: [-10.75, 3.4, -45.5], w: 3.5, d: 3, h: 2.8, style: 'cedar', plinth: false, faces: { 1: [{ t: 'win', x: 0, w: 1.0, h: 0.8, sill: 0.8, lit: 1 }] }, roof: { f: 1, pitch: 0.6, alongX: false } },
-  // the Fishermen's Co-op (warehouse face at z −45.5; the spawn deck + veranda in front)
+  // the Fishermen's Co-op (warehouse face at z −45.5; the spawn deck in front, a narrow awning over its back)
   { type: 'calamari_coop', pos: [0, 0, P.deck.z0], w: 22, deckD: P.deck.z1 - P.deck.z0, deckW: P.deck.x1 - P.deck.x0, deckY: P.deck.y },
 ];
 function K_INDIGO() { return '#2d3f63'; }
