@@ -690,7 +690,7 @@ class Game {
     await this._buildWorld(map, opts.mode);   // no-op when this stage (+ mode variant) is already built
     const theme = mapTheme(map, opts.time);
     this.time = opts.time === 'dusk' ? 'dusk' : 'day';
-    if (theme !== this.theme) {
+    if (theme !== this.theme || G.env.lookStale) {   // (lookStale: a stage with its own look — layout.env — came or went)
       this.theme = theme;
       G.env.setTheme?.(theme);
       if (G.env.envMap) G.scene.environment = G.env.envMap;
@@ -782,7 +782,7 @@ class Game {
     await this._buildWorld(map, cfg.mode);   // no-op when this stage (+ mode variant) is already built
     const theme = mapTheme(map, cfg.time);
     this.time = cfg.time === 'dusk' ? 'dusk' : 'day';
-    if (theme !== this.theme) {
+    if (theme !== this.theme || G.env.lookStale) {   // (lookStale: a stage with its own look — layout.env — came or went)
       this.theme = theme;
       G.env.setTheme?.(theme);
       if (G.env.envMap) G.scene.environment = G.env.envMap;

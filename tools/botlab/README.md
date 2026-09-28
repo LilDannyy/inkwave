@@ -39,6 +39,12 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
   - `window.__G` (shared systems)
   - Equip players with `actor.setWeapon(id)` / `setSub(id)` / `setSpecial(id)`
 
+Stages:
+- `MAP=<id> TIME=day MODE=turf SHOTS='top,art,spawnA,mid' tools/botlab/run.sh tools/botlab/shoot.cjs`: screenshots of a
+  stage (presets or custom JSON cameras; MODE zones / tower shows their marks) and a load / perf report.
+- `tools/botlab/run.sh tools/botlab/bake.cjs <id> [<id>.zones …]`: the AO lightmap bake (build/bake-ao.cjs) offscreen.
+- `STAGES=<id>,<id> tools/botlab/run.sh tools/botlab/stageart.cjs`: stage-select pictures from each layout's `art` camera.
+
 Tower Command:
 - `MAP=halyard tools/botlab/run.sh tools/botlab/tower-check.cjs` checks a track: its pieces, holes, clearance, rides at
   real speed, and pictures.
