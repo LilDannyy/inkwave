@@ -1705,13 +1705,18 @@ export class BotBrain {
       return;
     }
     if (onT) {
-      // hold the middle; in a duel, sidestep about it (±0.7 m across the line to the foe: a still rider is an easy shot)
-      let gx = dx, gz = dz;
+      // a spot beside the pillar in its middle (it's cover): in a duel behind it from the foe, stepping out past its
+      // edge to shoot (a still rider is an easy shot); otherwise stay where we are round it
+      const R0 = TOWER.pillarW / 2 + PLAYER.radius + 0.18;
       const tg = this.mode === 'fight' && this.target;
+      let ux = a.pos.x - T.pos.x, uz = a.pos.z - T.pos.z;
       if (tg) {
-        const fx = tg.pos.x - T.pos.x, fz = tg.pos.z - T.pos.z, fl = Math.hypot(fx, fz) || 1, o = this.strafeS * 0.7;
-        gx += (-fz / fl) * o; gz += (fx / fl) * o;
+        const fx = tg.pos.x - T.pos.x, fz = tg.pos.z - T.pos.z, fl = Math.hypot(fx, fz) || 1, o = this.strafeS * 1.1;
+        ux = (-fx / fl) * 0.55 + (-fz / fl) * o; uz = (-fz / fl) * 0.55 + (fx / fl) * o;
       }
+      const ul = Math.hypot(ux, uz);
+      if (ul < 1e-3) { ux = 1; uz = 0; }
+      const gx = T.pos.x + (ux / (ul || 1)) * R0 - a.pos.x, gz = T.pos.z + (uz / (ul || 1)) * R0 - a.pos.z;
       const gl = Math.hypot(gx, gz), k = gl > 0.2 ? Math.min(1, (gl - 0.1) / 0.7) : 0;
       if (k > 0) move.set((gx / gl) * k, 0, (gz / gl) * k); else move.set(0, 0, 0);
       // on it but not counted (a prop in the way at its edge holds us off the middle): slide along it, then the other way
