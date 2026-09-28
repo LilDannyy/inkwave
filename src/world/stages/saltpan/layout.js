@@ -26,6 +26,9 @@ import { SURF } from './surfaces.js';
 //     at the base, a sea notch runs beside the heap, the mid dyke ends in a pointed jetty with an inlet beside it, and the
 //     pans are staggered (back pan ends 2 m short of the front pan, the Great Pan runs 2 m past both)
 // Out-of-play tops (office, store gable, hopper, drive house, vents, lamps, sluices …) are roof colliders in props.js.
+// Tower Command builds its own variant (onlyIn / notIn: 'tower', src/world/variants.js): the wind pump stands on a timber
+// trestle over the staging so the tower starts underneath it, and the track (src/world/tower-data.js) runs flat along
+// the boardwalks and dykes with the clutter on it moved aside (props.js, the end of PLACEMENTS).
 const SP = {
   mud: '#cbbb9f', mudDk: '#b9a88b', salt: '#f3ebe8', saltMid: '#f1e3e2', heap: '#e3ded5', tarp: '#5f6a66', timber: '#d6cfc3', timberDk: '#a89c8a',
   store: '#9c6a5b', storeTrim: '#efe9dd', shed: '#b8bdb1', roof: '#9a6b58', office: '#e2cf9f', steel: '#8d969c', spawn: '#d9d2c6',
@@ -94,9 +97,15 @@ const SALTPAN = {
     B(-12, 11, -3, 0, -10, -8, mud({ tag: 'front-dyke' })),
     // boardwalks on posts, 8 cm proud of the dykes they land on (squids slip underneath)
     B(-3.6, -1.8, -0.08, 0.08, -30.4, -19.6, wood({ tag: 'boardwalk' })),
-    O(0.9, -13.5, 1.8, 10.6, -0.08, 0.08, -38, wood({ tag: 'boardwalk-diag' })),
-    B(1.4, 3.2, -0.08, 0.08, -8.4, -3.6, wood({ tag: 'boardwalk-mid' })),
-    B(3.6, 13.4, -0.08, 0.08, -2.6, -0.8, wood({ tag: 'boardwalk-east' })),
+    O(0.9, -13.5, 1.8, 10.6, -0.08, 0.08, -38, wood({ tag: 'boardwalk-diag', notIn: 'tower' })),
+    B(1.4, 3.2, -0.08, 0.08, -8.4, -3.6, wood({ tag: 'boardwalk-mid', notIn: 'tower' })),
+    B(3.6, 13.4, -0.08, 0.08, -2.6, -0.8, wood({ tag: 'boardwalk-east', notIn: 'tower' })),
+    // Tower Command: the three boardwalks its track rides along or crosses the landings of sit no higher than the dykes,
+    // so the tower rolls on flat — the ±X and mid ones flush with the dyke tops (ending at the dyke edges), the diagonal
+    // one 8 cm down (its ends tuck under the dykes)
+    O(0.9, -13.5, 1.8, 10.6, -0.24, -0.08, -38, wood({ tag: 'boardwalk-diag', onlyIn: 'tower' })),
+    B(1.4, 3.2, -0.16, 0, -8, -3.6, wood({ tag: 'boardwalk-mid', onlyIn: 'tower' })),
+    B(3.6, 13, -0.16, 0, -2.6, -0.8, wood({ tag: 'boardwalk-east', onlyIn: 'tower' })),
     // plank ramps down into the pans
     R([7.5, P1, -28.4], [7.5, 0, -30], 1.4, wood({ tag: 'pan-ramp', thin: true, thickness: 0.14 })),
     R([-9.5, P2, -12.3], [-9.5, 0, -10], 1.4, wood({ tag: 'pan-ramp', thin: true, thickness: 0.14 })),

@@ -29,7 +29,10 @@ export const TOWER_DEFS = {
     checkpoints: [[17.76, 2.14], [11.29, 17.8], [-6.91, 17.79]],
   },
   saltpan: {
-    path: [[0, 0], [-17.38, 0], [-17.38, 8.64], [13.03, 8.64], [13.03, 18.44], [2.87, 18.44], [2.87, 30.22]],
+    // starts on the pump staging (0.08; the wind pump stands on a trestle overhead in this mode), steps onto the ±X
+    // boardwalk's centre line (z 1.7, as drawn) and runs flat along the dykes: the mid dyke, the front dyke (its centre,
+    // z 9), the dock yard, the sluice dyke (z 18.5), then down the back-pan boardwalk (x 2.7) to the yard
+    path: [[0, 0.08, 0], [0, 1.7], [-17.38, 1.7], [-17.38, 9], [13.03, 9], [13.03, 18.5], [2.7, 18.5], [2.7, 30.22]],
     checkpoints: [[-17.37, 8.83], [13.45, 18.81]],
   },
   crossmarket: {
