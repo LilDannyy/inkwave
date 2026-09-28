@@ -20,7 +20,7 @@ export const TEAM_NAMES = ['Alpha', 'Bravo'];
 // ---- Player physics / feel (meters, seconds) ----
 export const PLAYER = {
   hp: 100,
-  specialChargeRate: 0.8,   // special meter points per m² of turf inked (0.8 = charges 20% slower); special ink never charges it
+  specialChargeRate: 0.4,   // special meter points per m² of turf inked (halved again 2026-09-28: 0.8 → 0.4); special ink never charges it
   radius: 0.38,
   height: 1.45,          // kid form standing height (feet -> top of head)
   squidHeight: 0.55,
