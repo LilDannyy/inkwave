@@ -145,7 +145,7 @@ export function registerVillage(D, H, KIT) {
       snowCap(B, 0, 0.03, d / 2, w + 0.2, d + 0.3, 0.2);
       B.pop();
       icicles(B, -w / 2, w / 2, h - 0.1, d + 0.2, 13, 0.25);
-      sub(B, 'calamari_bench', 0, 0, 0.35, 0, { length: w - 0.5 });
+      sub(B, 'calamari_bench', 0, 0, 0.35, 0, { length: w - 0.5, col: false });   // (no collider: a bench in a shelter is a pocket bots wander into)
       // the stop sign: a round plate on a pole + timetable
       B.cyl('metal', K.galv, 0.03, 2.3, w / 2 + 0.5, 1.15, d, { seg: 6 });
       B.cyl('paint', '#e8e4d8', 0.25, 0.04, w / 2 + 0.5, 2.1, d, { rx: HP, seg: 18 });

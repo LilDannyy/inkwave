@@ -136,8 +136,8 @@ export function registerRailway(D, H, KIT) {
       B.aoBase = null;
       const L = o.length ?? 10, y = o.y ?? 1.0;
       pbox(B, 'paint', K.stoneLt, L, 0.06, 0.42, L / 2, y + 0.01, -0.2);
-      pbox(B, NS('paint'), K.white, L, 0.015, 0.1, L / 2, y + 0.045, -0.55);
-      for (let x = 0.15; x < L; x += 0.3) pbox(B, NS('paint'), '#d9b53e', 0.28, 0.02, 0.28, x, y + 0.045, -0.85);
+      pbox(B, NS('paint'), K.white, L, 0.012, 0.1, L / 2, y + 0.006, -0.55);
+      for (let x = 0.15; x < L; x += 0.3) pbox(B, NS('paint'), '#d9b53e', 0.28, 0.016, 0.28, x, y + 0.008, -0.85);
       pbox(B, NS('paint'), K.stoneDk, L, y - 0.1, 0.04, L / 2, (y - 0.1) / 2, 0.005);
     },
   };
