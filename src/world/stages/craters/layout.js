@@ -69,7 +69,7 @@ const TURRET = O(rcx, rcz, RC_.S, RC_.S, YF, RC_.top, -RC_.th, { tag: 'cannon-de
 // ============================================================================================================ trenches
 const PARAPET = 0.3;
 // T1 — the fire trench (Alpha's side z −23.75…−20.25, a 3.5 m bay; the tower rides it): bare chalk where the tower drops
-// in (north side, x −18.5…−14.75) and at its east end (the tower climbs out); fire-step stairs cut into both banks
+// in (north side, x −18.5…−14.75) and at both ends (the tower climbs out of the east end); fire-step stairs in both banks
 export const T1 = { x0: -18.5, x1: 3.5, z0: -23.75, z1: -20.25, wall: 0.5, dropIn: [-18.5, -14.75] };
 const T1_STAIRS = [
   { x: -2, w: 2, side: 1, run: 2.5 },    // north bank (toward mid)
@@ -86,7 +86,7 @@ const t1Pieces = [];
   const wall = (x0, x1, z0, z1) => t1Pieces.push(B(x0, x1, YF, 0, z0, z1, { tag: 't1-revetment', color: CO.timber, pattern: PATTERN.weatherboard }), B(x0, x1, 0, PARAPET, z0, z1, o));
   for (const [a, b] of segs(T1.x0, T1.x1, nGaps)) wall(a, b, T1.z1, T1.z1 + w);
   for (const [a, b] of segs(T1.x0, T1.x1, sGaps)) wall(a, b, T1.z0 - w, T1.z0);
-  wall(T1.x0 - w, T1.x0, T1.z0 - w, T1.z1 + w);   // west end (by the pillbox)
+  // (both ends are bare chalk: the tower climbs out of the east end, the right lane climbs out of the west end)
   for (const s of T1_STAIRS) { const z = s.side > 0 ? T1.z1 : T1.z0; t1Pieces.push(R([s.x, YF, z], [s.x, 0, z + s.side * s.run], s.w, { tag: 't1-firestep', color: CO.timber, pattern: PATTERN.treads })); }
 }
 // T2 — the zig-zag communication trench on the left (2.25 m inside): a bay, a 45° dog-leg, a bay toward the cliff. Its
@@ -138,6 +138,7 @@ export const PILLBOX = { x0: -24, x1: -18.6, z0: -30.5, z1: -25.5 };
 const pillbox = [
   B(PILLBOX.x0, PILLBOX.x1, 0, 2.05, PILLBOX.z0, PILLBOX.z1, { tag: 'pillbox', color: CO.concrete, pattern: PATTERN.concrete, mural: NOSIDES.map((n) => ({ n, id: 8 })) }),
   B(PILLBOX.x0 - 0.2, PILLBOX.x1 + 0.2, 2.05, YP, PILLBOX.z0, PILLBOX.z1 + 0.2, { tag: 'pillbox-roof', color: CO.concrete, pattern: PATTERN.concrete }),
+  B(PILLBOX.x0 + 0.5, PILLBOX.x1 - 0.6, YP, YP + 0.6, PILLBOX.z1 - 0.55, PILLBOX.z1 + 0.05, bags({ tag: 'pillbox-sandbags' })),   // cover on the roof's front
   R([PILLBOX.x1, 0, PILLBOX.z0 - 1.1], [PILLBOX.x0, YP, PILLBOX.z0 - 1.1], 2.2, { tag: 'pillbox-stair', color: CO.concrete, pattern: PATTERN.treads }),
 ];
 // the memorial: obelisk on a two-step plinth out on the promontory
@@ -244,7 +245,7 @@ const FLOORS = (() => {
 const circle = (cx, cz, r, n = 16) => Array.from({ length: n }, (_, i) => { const a = ((i + 0.5) / n) * Math.PI * 2; return [r3(cx + Math.cos(a) * r), r3(cz + Math.sin(a) * r)]; });
 const ZONES = {
   center: [{ poly: circle(0, 0, 5.45), y0: -1.2, y1: -0.8 }],
-  side: { poly: [[-17, -30.25], [-6.5, -30.25], [-6.5, -24.5], [-17, -24.5]], y0: -0.3, y1: 0.4 },
+  side: { poly: [[-17, -31.75], [-6.5, -31.75], [-6.5, -24.75], [-17, -24.75]], y0: -0.3, y1: 0.4 },
 };
 // Tower Command (drawn on Bravo's half, z > 0): out of the crater east up its slope and over the crest, north along the
 // flank past the memorial, into the fire trench, along its bay, out over its end and on to the pavilion
@@ -259,15 +260,24 @@ const LAYOUT_CRATERS = {
   bounds: { minX: -28, maxX: 28, minZ: -45, maxZ: 45 },
   spawnPads: [[0, YD, -40.5], [0, YD, 40.5]],
   spawnBarrier: 4.2,
-  env: { backdrop: (kit) => buildBackdrop(kit, { coast: COAST, ponds: [POND] }), edge: 'none', boats: false },
+  // the Cape's headland round the park (backdrop.js); a chalk coast's milky green-turquoise shallows by day
+  env: {
+    backdrop: (kit) => buildBackdrop(kit, { coast: COAST, ponds: [POND] }), edge: 'none', boats: false,
+    theme: { day: { seaShallow: '#35a198', seaDeep: '#11587a', seaCrest: '#72d8c4' } },
+  },
   single: [CRATER_FLOOR],
   half: [...GROUND, ...FLOORS, ...LIP, ...FACETS.map((f) => f.piece), ...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces, ...t2Pieces, ...bridgePieces,
     ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...cover, TURRET, ...boards],
   zones: ZONES,
   tower: TOWER,
-  intro: { from: [18, 12, 6], lookFrom: [0, 1, -4], toBack: 3.0 },
-  art: { from: [30, 24, -34], look: [-2, 0, 2], fov: 58 },
-  decor: { lamps: [], palms: [], flags: [] },
+  // the intro opens high over the enemy's side of the crater (the cannons, the obelisk across) and sweeps down the
+  // visitor path to the deck (ending just in front of the pavilion's roof)
+  intro: { from: [15, 11, 15], lookFrom: [0, 0, -3], toBack: 1.0 },
+  // stage-select hero: from over Alpha's right flank, across the crater (both cannons, both shells) to Bravo's
+  // obelisk on its promontory, the pillbox and the pavilion; the bay beyond
+  art: { from: [-30, 13, -24], look: [2, 0, -4], fov: 60 },
+  // Victorian lamp posts along the visitor paths (dusk light pools), team flags either side of the pavilion's front
+  decor: { lamps: [[8.3, -28.6], [8.3, -15.2], [-2.3, -9.8], [-9.6, -16.3], [-19.6, -18.7], [14.4, -37.4]], palms: [], flags: [[-9.7, 0, -35.4], [9.7, 0, -35.4]] },
 };
 
 export const LAYOUT = LAYOUT_CRATERS;
