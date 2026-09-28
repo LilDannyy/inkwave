@@ -146,6 +146,8 @@ export class NetMatch {
   recBoss(e) { if (this.isHost && G.netm === this) this._rec(e); }
   // Zone Control: the host's rules decisions + count snapshots (zones.js netEvent), on the same timeline as its paint
   recZone(e) { if (this.isHost && G.netm === this) this._rec(['z', e]); }
+  // Tower Command likewise: control / checkpoints / position snapshots / overtime / the end (tower.js netEvent)
+  recTower(e) { if (this.isHost && G.netm === this) this._rec(['tw', e]); }
   // a guest's hit on the boss (or a crablet): shooter-authoritative, applied by the host that runs it
   sendBossHit(attacker, d, weak, w, crab = -1) {
     if (this.isHost || attacker.nid === undefined) return;
@@ -493,6 +495,7 @@ export class NetMatch {
       }
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
+      case 'tw': this.match?.tower?.netEvent(e[2]); break;
       case 'bc': { const b = this.match?.boss; if (b && !b.sim) b._crabBurst(e[2], e[3], e[4], e[5], !!e[6]); break; }
     }
   }
@@ -651,6 +654,7 @@ export class NetMatch {
     if (!this.isHost) return;
     this._sendNow({ k: 'res', cov: result.coverage, win: result.winner, mode: result.mode, bo: result.boss,
       ...(result.mode === 'zones' ? { zc: result.counts, zp: result.penalty, zr: result.reason, zo: result.overtime ? 1 : 0, zl: result.log } : {}),
+      ...(result.mode === 'tower' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),
       st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0]) });
   }
   _result(d) {
@@ -660,6 +664,7 @@ export class NetMatch {
     if (d.mode !== 'boss') m.time = 0;   // (a boss win stops the clock where it was)
     m.result = d.mode === 'boss' ? { mode: 'boss', coverage: d.cov, winner: d.win, boss: d.bo }
       : d.mode === 'zones' ? { mode: 'zones', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, penalty: d.zp, overtime: !!d.zo, log: d.zl || [] }
+        : d.mode === 'tower' ? { mode: 'tower', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo }
         : { coverage: d.cov, winner: d.win };
     m.setState('judge');
   }

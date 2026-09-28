@@ -470,6 +470,7 @@ export class TowerCommand {
 
   _end(winner, reason) {
     if (this.winner != null) return;
+    if (!this.follower) this._score();          // (a knockout lands mid-frame: count the last stretch to the goal first)
     const sc = this.scores();
     this._net(['e', winner, reason, sc[0], sc[1], r3(this.best[0]), r3(this.best[1])]);
     this.winner = winner; this.reason = reason;
