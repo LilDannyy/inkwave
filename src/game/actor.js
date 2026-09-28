@@ -307,7 +307,8 @@ export class Actor {
 
     // ---- dodge roll (twin pistols / dualies): jump pressed while firing and moving rolls instead of jumping. The
     // runner's tryDodge dispatches by weapon kind (it spends the ink, triggers the character's roll, emits the FX events)
-    if (this.jumpBuffer > 0 && !isSquid && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
+    // (not while a special holds the weapon: the runner isn't updated then, so a roll would never run out)
+    if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
     if (this.jumpBuffer > 0 && !isSquid && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
@@ -370,7 +371,9 @@ export class Actor {
     const winp = { fire, firePressed: pressed, sub: intent.sub && !isSquid, subReleased: subReleased && !isSquid };
     const inkBefore = this.ink;
     // specials that replace the main weapon (zooka, stamp, blower, crab …) take the trigger; others may take the sub
-    if (!(spx && G.specials.weapon(this, spx, dt, winp))) this.weaponRunner.update(dt, winp);
+    this._spWeapon = !!(spx && G.specials.weapon(this, spx, dt, winp));
+    if (!this._spWeapon) this.weaponRunner.update(dt, winp);
+    else if (this.weaponRunner.dodgeT > 0 || this.weaponRunner.dodge) this.weaponRunner.endDodge();   // (never a roll frozen mid-slide)
     // sonar-revealed players burn ink faster
     if (st.reveal > 0 && this.ink < inkBefore) this.ink = Math.max(0, this.ink - (inkBefore - this.ink) * (SPECIALS.sonar.inkMul - 1));
     if (this.specialActive) G.specials.tick(this, this.specialActive, dt);
