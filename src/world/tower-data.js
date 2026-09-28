@@ -29,8 +29,9 @@ export const TOWER_DEFS = {
     checkpoints: [[-17.37, 8.83], [13.45, 18.81]],
   },
   crossmarket: {
-    path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.66], [0.41, 19.66], [0.4, 10.23], [-17.39, 10.24], [-17.39, 30.86]],
+    path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.5], [0.41, 19.5], [0.4, 10.23], [-17.39, 10.24], [-17.39, 30.86]],
     checkpoints: [[21.41, 13.25], [-12.77, 9.98]],
+    yaw: 0,   // square to the streets (the drawn runs' average, -4.6°, sat skew to every street; only the first run is diagonal)
   },
   lockgate: {
     // ([-1.25, 1.25] is a straight-through point on the drawn diagonal, not a turn: it ends the level run over the
