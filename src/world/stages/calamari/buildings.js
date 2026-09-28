@@ -296,10 +296,10 @@ export function registerBuildings(D, H, KIT) {
 
   // ------------------------------------------------------------------------------------------ the co-op warehouse
   // Calamari County Fishermen's Co-op: a big two-storey timber warehouse behind the spawn (its bulk + gable roof out of
-  // play), roller doors and the co-op's sign, the covered upper-deck veranda (the spawn) on posts, the loading dock's
+  // play), roller doors and the co-op's sign, the open upper deck (the spawn) under a narrow awning, the loading dock's
   // fenders. pos = [centre x, 0, the warehouse's front face z], w = its width.
   D.calamari_coop = {
-    desc: "Calamari County Fishermen's Co-op warehouse (pos = front face centre; w, deckD, deckY): the warehouse gable (out of play) with its sign, the spawn veranda roof on posts (colliders), railings on the deck's side edges, lamps.",
+    desc: "Calamari County Fishermen's Co-op warehouse (pos = front face centre; w, deckD, deckY): the warehouse gable (out of play) with its sign, a narrow awning over the back of the spawn deck (an open roof terrace), railings on the deck's side edges, wall lanterns.",
     params: { w: 'warehouse width', deckD: 'spawn deck depth', deckW: 'spawn deck width', deckY: 'deck height' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
@@ -310,7 +310,7 @@ export function registerBuildings(D, H, KIT) {
       for (let k = 0; k <= 8; k++) pbox(B, NS('wood'), K.beam, 0.14, hW - dY - 0.2, 0.04, -W / 2 + (k * W) / 8, dY + 0.2 + (hW - dY - 0.2) / 2, 0.02);
       pbox(B, 'wood', K.beam, W, 0.22, 0.06, 0, dY + 3.0, 0.03);
       roof(B, W, 8, hW, { f: 1, pitch: 0.48, ov: 0.8, alongX: true, z: -4, col: true, seed: 3 });
-      // the sign across the front above the veranda roof
+      // the sign across the front above the awning
       B.box('wood', K.cedarDk, 12.4, 1.1, 0.1, 0, dY + 3.75, 0.02, { r: 0.03 });
       pbox(B, NS('paint'), K.cream, 12.2, 0.96, 0.01, 0, dY + 3.75, 0.08);
       letters(B, "FISHERMEN'S CO-OP", { h: 0.52, x: 0, y: dY + 3.5, z: 0.09, c: K.indigo, flat: true, wt: 0.2, track: 0.11 });
@@ -318,22 +318,19 @@ export function registerBuildings(D, H, KIT) {
       // roller doors either side below the deck level (on the warehouse face, visible from the dock and the quay ramp)
       pbox(B, NS('metal'), K.galv, 1.6, 2.6, 0.04, dW / 2 + 1.0, 1.3, 0.03);
       for (let k = 0; k < 13; k++) pbox(B, NS('metal'), K.steel, 1.6, 0.02, 0.03, dW / 2 + 1.0, 0.1 + k * 0.2, 0.06);
-      // the veranda roof over the spawn deck: posts set 0.6 m back from the deck's front edge (squids climbing up from
-      // the dock come over the edge between them), a timber soffit on rafters, a thin kawara pent roof with snow
-      const yR = dY + 2.7, zF = dD - 0.65;
-      for (const px of [-dW / 2 + 0.3, -dW / 4 - 0.6, dW / 4 + 0.6, dW / 2 - 0.3]) { B.box('wood', K.beam, 0.2, yR - dY, 0.2, px, dY + (yR - dY) / 2, zF, { r: 0.02 }); colBox(B, px, dY, zF, 0.22, yR - dY, 0.22); }
-      pbox(B, 'wood', K.beam, dW + 0.4, 0.24, 0.2, 0, yR, zF);
-      B.push(0, yR + 0.12, 0, 0, -0.2);
-      pbox(B, 'paint', K.kawara, dW + 1.0, 0.07, dD + 0.6, 0, 0.07, (dD + 0.6) / 2);
-      pbox(B, NS('wood'), '#7a5e46', dW + 0.9, 0.03, dD + 0.5, 0, -0.03, (dD + 0.6) / 2);
-      for (let x = -dW / 2; x <= dW / 2 + 0.01; x += 1.2) pbox(B, NS('wood'), K.beam, 0.1, 0.14, dD + 0.5, x, -0.1, (dD + 0.6) / 2);
-      B.add(NS('paint'), cylGeo(0.06, 0.06, dW + 1.0, 8), shade(K.kawara, 0.8), 0, 0.08, dD + 0.6, { rz: HP });
-      snowCap(B, 0, 0.1, (dD + 0.6) / 2, dW + 0.8, dD + 0.2, 0.3);
+      // a narrow pent awning against the warehouse face over the back of the spawn deck (no posts, no roof over the
+      // deck itself: an open roof terrace like Halyard's, so the player's camera at the spawn sees mid unobstructed)
+      const yA = dY + 3.02, aD = 0.9;
+      for (const px of [-dW / 2 + 0.6, -dW / 6, dW / 6, dW / 2 - 0.6]) pbox(B, 'wood', K.beam, 0.12, 0.12, aD, px, yA - 0.1, aD / 2, { rx: 0.35 });
+      B.push(0, yA, 0, -0.22, 0);
+      pbox(B, 'paint', K.kawara, dW + 0.6, 0.07, aD + 0.2, 0, 0.07, (aD + 0.2) / 2);
+      pbox(B, NS('wood'), '#7a5e46', dW + 0.5, 0.03, aD + 0.1, 0, -0.03, (aD + 0.2) / 2);
+      B.add(NS('paint'), cylGeo(0.06, 0.06, dW + 0.6, 8), shade(K.kawara, 0.8), 0, 0.08, aD + 0.2, { rz: HP });
+      snowCap(B, 0, 0.1, (aD + 0.2) / 2, dW + 0.4, aD, 0.22);
       B.pop();
-      icicles(B, -dW / 2, dW / 2, yR - 0.08, dD + 0.25, 17, 0.2);
-      colBox(B, 0, yR, (dD + 0.6) / 2, dW + 1.0, 1.0, dD + 0.6, ROOF);
-      // hanging lamps under the veranda
-      for (const px of [-5, 0, 5]) { B.cyl(NS('metal'), K.iron, 0.01, 0.6, px, yR - 0.3, zF - 1.2, { seg: 4 }); B.lathe('paint', '#3d5a52', [[0.02, 0.1], [0.08, 0.08], [0.2, -0.02], [0.21, -0.04], [0, -0.04]], px, yR - 0.62, zF - 1.2, { seg: 12 }); B.sph(NS('glow'), K.lit, 0.07, px, yR - 0.68, zF - 1.2, { ws: 8, hs: 6, glow: 1.8 }); }
+      icicles(B, -dW / 2 + 0.3, dW / 2 - 0.3, yA - 0.36, aD + 0.1, 15, 0.18);
+      // wall lanterns on the warehouse face either side of the deck's back
+      for (const px of [-5, 0, 5]) { B.box(NS('metal'), K.iron, 0.05, 0.05, 0.34, px, dY + 2.3, 0.17); B.lathe('paint', '#3d5a52', [[0.02, 0.1], [0.08, 0.08], [0.2, -0.02], [0.21, -0.04], [0, -0.04]], px, dY + 2.34, 0.36, { seg: 12 }); B.sph(NS('glow'), K.lit, 0.07, px, dY + 2.28, 0.36, { ws: 8, hs: 6, glow: 1.8 }); }
       // railings along the deck's open side edges (x ends), leaving the front open (drops) — rail colliders
       for (const sx of [-1, 1]) {
         const x = sx * (dW / 2 - 0.08);
