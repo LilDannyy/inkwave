@@ -79,5 +79,15 @@
       "sm": "assets/stages/cargo-dusk-sm.webp"
     }
   },
-  "generated": "2026-09-27T20:11:01.803Z"
+  "generated": "2026-09-27T20:11:01.803Z",
+  "spirhalite": {
+    "day": {
+      "src": "assets/stages/spirhalite-day.webp",
+      "sm": "assets/stages/spirhalite-day-sm.webp"
+    },
+    "dusk": {
+      "src": "assets/stages/spirhalite-dusk.webp",
+      "sm": "assets/stages/spirhalite-dusk-sm.webp"
+    }
+  }
 }
