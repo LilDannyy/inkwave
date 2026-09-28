@@ -110,8 +110,8 @@ const SPIRHALITE = {
     B(-1.5, 15, 0, H1, -42.6, -30.6, sand({ tag: 'pad-dune', color: K.dune })),
     B(-5.2, -1.5, 0, H1, -37.5, -34.5, moss({ tag: 'pad-dune-arm' })),
     slope(-8.3, -36, 0, -5.2, -36, H1, 3),
-    B(1, 11, 0, H1, -30.6, -25.2, moss({ tag: 'pad-shoulder' })),
-    slope(-2.1, -28.5, 0, 1, -28.5, H1, 3.6),
+    B(1.6, 11, 0, H1, -30.6, -26.0, moss({ tag: 'pad-shoulder' })),
+    slope(-1.5, -29.2, 0, 1.6, -29.2, H1, 2.8),
     slope(18.1, -36.5, 0, 15, -36.5, H1, 7),
     // spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune; a steel frame body R 5.75, the deck
     // plate R 5.9 overhanging it: props.js dresses both), stairs north onto the shoulder and west onto the arm
@@ -133,26 +133,26 @@ const SPIRHALITE = {
     // the camp islet. Its north end is a sheer 1.3 m face (the tower climbs it); kids take the steps off the bastion beside
     // it. Its south end is broken off (a 1.3 m drop onto the camp islet), with side steps down from it
     B(-31.1, -26.9, BOT, H1, -26, -10, stone({ tag: 'causeway', mural: [{ n: [0, 1, 0], id: 5 }, { n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }] })),
-    B(-26.9, -24.8, 0, H1, -14.2, -10, stone({ tag: 'causeway-bastion' })),
+    B(-26.9, -24.8, 0, H1, -12.6, -10, stone({ tag: 'causeway-bastion' })),
     R(rise(-25.85, -6.9, 0, -25.85, -10, H1), [-25.85, H1, -10], 2.1, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
     R(rise(-23.8, -24.6, 0, -26.9, -24.6, H1), [-26.9, H1, -24.6], 2.0, stone({ tag: 'causeway-steps', pattern: PATTERN.stonestep })),
 
     // ================= the mid islet: the Spine Crest (a 1.3 dune, a 2.5 crest) between the tower's run along its north
     // shore and the lagoon beach; slopes up from the centre side and down to the bend's head
-    B(-24.2, -16, 0, H1, -9.6, -5.6, moss({ tag: 'spine-dune' })),
-    B(-22.4, -19, H1, H2, -9.2, -6.0, sand({ tag: 'spine-crest', color: K.dune })),
-    slope(-12.9, -7.6, 0, -16, -7.6, H1, 4),
-    slope(-16, -7.6, H1, -19, -7.6, H2, 2.4),
-    slope(-27.2, -7.6, 0, -24.2, -7.6, H1, 4),
+    B(-24.2, -16, 0, H1, -8.7, -4.8, moss({ tag: 'spine-dune' })),
+    B(-22.4, -19, H1, H2, -8.3, -5.2, sand({ tag: 'spine-crest', color: K.dune })),
+    slope(-12.9, -6.75, 0, -16, -6.75, H1, 3.9),
+    slope(-16, -6.75, H1, -19, -6.75, H2, 2.4),
+    slope(-27.2, -6.75, 0, -24.2, -6.75, H1, 3.9),
 
     // ================= the cascade pillar's islet in the lagoon, a log bridge to the tail and one to the central sandbar
-    ...OCT(0, -16.5, 3.2, 0, H1, stone({ tag: 'pillar-plinth' })).map((d, i) => (i === 0 ? { ...d, mural: [{ n: [1, 0, 0], id: 10 }, { n: [-1, 0, 0], id: 10 }] } : i < 3 ? { ...d, mural: [{ n: [0, 0, 1], id: 10 }, { n: [0, 0, -1], id: 10 }] } : d)),
-    ...OCT(0, -16.5, 2.2, H1, H2, stone({ tag: 'pillar-tier' })),
+    ...OCT(0, -16.5, 2.8, 0, H1, stone({ tag: 'pillar-plinth' })).map((d, i) => (i === 0 ? { ...d, mural: [{ n: [1, 0, 0], id: 10 }, { n: [-1, 0, 0], id: 10 }] } : i < 3 ? { ...d, mural: [{ n: [0, 0, 1], id: 10 }, { n: [0, 0, -1], id: 10 }] } : d)),
+    ...OCT(0, -16.5, 1.9, H1, H2, stone({ tag: 'pillar-tier' })),
     ...OCT(0, -16.5, 1.2, H2, 4.4, stone({ tag: 'pillar-drum', roof: true, noPaint: OCTSIDES })),   // (the column above: props.js)
-    B(-2.6, -1.5, H1, 1.9, -17.1, -15.9, stone({ tag: 'fallen-drum' })),                  // a step up onto the tier
-    B(-4.0, -2.96, 0, 0.65, -17.1, -15.9, stone({ tag: 'fallen-drum' })),                // a step up onto the plinth
-    B(-1.2, 1.2, -0.3, 0.25, -27.2, -20.6, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
-    B(-1.2, 1.2, -0.3, 0.25, -12.2, -6.6, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
+    B(-2.3, -1.2, H1, 1.9, -17.1, -15.9, stone({ tag: 'fallen-drum' })),                  // a step up onto the tier
+    B(-3.63, -2.59, 0, 0.65, -17.1, -15.9, stone({ tag: 'fallen-drum' })),                // a step up onto the plinth
+    B(-1.5, 1.5, -0.3, 0.25, -27.2, -21.3, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
+    B(-1.5, 1.5, -0.3, 0.25, -11.5, -5.8, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
 
     // ================= the central sandbar: blocks fallen from the arch (cover round the centre zone)
     O(-4.6, -4.8, 2.4, 1.3, 0, 1.4, 20, stone({ tag: 'arch-block' })),

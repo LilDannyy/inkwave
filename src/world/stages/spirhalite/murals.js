@@ -10,7 +10,7 @@
 //   6  the causeway's long sides: a frieze of glyph roundels along the top course
 //   7  the helipad deck's front arm (4.52 x 3.19 m): SPIRHALITE / DC-1 in stencil, Deep Cut's badge
 //   8  the camp's sign board (2.6 x 1.1 m): SPIRHALITE ISLANDS · DEEP CUT EXPEDITION · BASE CAMP
-//   10 the pillar plinths' faces (2.45 x 1.3 m): a carved band of roundels and chevrons
+//   10 the pillar plinths' faces (2.14 x 1.3 m): a carved band of roundels and chevrons
 const PI = Math.PI;
 function rng(seed) { let a = seed | 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -125,15 +125,15 @@ export function drawMurals(g, R) {
     wear(g, r, 89, 500);
     out.push({ id: 8, ...r, place: [0, 2.6, 0, 1.1], fx: [0.5, 0.6] });
   }
-  // ---- 10: pillar plinth faces (2.45 x 1.3 m at 100 px/m): a carved band of roundels and chevrons
+  // ---- 10: pillar plinth faces (2.14 x 1.3 m at 100 px/m): a carved band of roundels and chevrons
   {
-    const r = { x: X + 1320, y: Y + 340, w: 245, h: 130 }, R0 = rng(101), col = 'rgba(66,62,56,0.55)';
+    const r = { x: X + 1320, y: Y + 340, w: 214, h: 130 }, R0 = rng(101), col = 'rgba(66,62,56,0.55)';
     g.strokeStyle = col; g.lineWidth = 3;
     g.beginPath(); g.moveTo(r.x, r.y + 30); g.lineTo(r.x + r.w, r.y + 30); g.moveTo(r.x, r.y + 100); g.lineTo(r.x + r.w, r.y + 100); g.stroke();
-    for (let i = 0; i < 4; i++) glyph(g, r.x + 32 + i * 60, r.y + 65, 50, R0, col);
-    for (let i = 0; i < 12; i++) { const x = r.x + 10 + i * 20; g.beginPath(); g.moveTo(x, r.y + 112); g.lineTo(x + 10, r.y + 122); g.lineTo(x + 20, r.y + 112); g.stroke(); }
+    for (let i = 0; i < 4; i++) glyph(g, r.x + 30 + i * 51, r.y + 65, 44, R0, col);
+    for (let i = 0; i < 10; i++) { const x = r.x + 7 + i * 20; g.beginPath(); g.moveTo(x, r.y + 112); g.lineTo(x + 10, r.y + 122); g.lineTo(x + 20, r.y + 112); g.stroke(); }
     wear(g, r, 103, 500);
-    out.push({ id: 10, ...r, place: [0, 2.45, 0, 1.3], fx: [0.9, 1] });
+    out.push({ id: 10, ...r, place: [0, 2.14, 0, 1.3], fx: [0.9, 1] });
   }
   return out;
 }

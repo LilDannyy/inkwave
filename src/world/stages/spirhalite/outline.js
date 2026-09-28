@@ -24,9 +24,9 @@ export const CHAIN = [
 export const OUTLINE = symOutline(CHAIN);
 // the wet-sand shelf bar's top on outline edge i (edges alternate; an odd chain wraps round on the third level)
 export const barLevel = (i) => { const n = CHAIN.length, k = i % n; return n % 2 && k === n - 1 ? LEVELS[2] : LEVELS[k % 2]; };
-// the cascade pillar's islet (Alpha's; Bravo's is the mirror): round, its east shore ~5 m out from the pillar so the
-// cascade pours off it into the lagoon
-export const ISLE = [[5.1, -16.5], [4.73, -14.22], [3.15, -12.55], [1.18, -11.33], [-1.16, -11.43], [-3.12, -12.59], [-4.73, -14.22], [-5.15, -16.5], [-4.78, -18.8], [-3.15, -20.45], [-1.16, -21.57], [1.13, -21.47], [3.27, -20.6], [4.5, -18.67]];
+// the cascade pillar's islet (Alpha's; Bravo's is the mirror): round, ~5.6 m across the radius — a 3 m sand ring round
+// the plinth (room to land off it, a rope ring on the shore) — and the cascade pours off its east shore into the lagoon
+export const ISLE = [[5.61, -16.5], [5.2, -13.99], [3.47, -12.16], [1.3, -10.81], [-1.28, -10.92], [-3.43, -12.2], [-5.2, -13.99], [-5.67, -16.5], [-5.26, -19.03], [-3.47, -20.84], [-1.28, -22.08], [1.24, -21.97], [3.6, -21.01], [4.95, -18.89]];
 export const isleLevel = (i) => (ISLE.length % 2 && i === ISLE.length - 1 ? LEVELS[2] : LEVELS[i % 2]);
 // every shore (the S and both islets) with its bar level per edge: the backdrop's banks run under all of them
 export const SHORES = [{ poly: OUTLINE, level: barLevel }, { poly: ISLE, level: isleLevel }, { poly: ISLE.map(([x, z]) => [-x, -z]), level: isleLevel }];
