@@ -87,16 +87,16 @@ const TRAIN = { L: P.train.x1 - P.train.x0, W: P.train.z1 - P.train.z0, floor: P
 const RAILWAY = [
   { type: 'calamari_track', pos: [-P.cutX, 0, TZ], length: P.cutX * 2, skip: [XR, [2 * P.cutX - XR[1], 2 * P.cutX - XR[0]]] },
   // the railcars (one-offs so each carries its own number / destination; the blocks are mirrored in the layout)
-  { type: 'calamari_railcar', pos: [(P.train.x0 + P.train.x1) / 2, 0, TZ], ...TRAIN, number: 'KIHA 101', dest: 'INKOPOLIS', mirror: false },
-  { type: 'calamari_railcar', pos: [-(P.train.x0 + P.train.x1) / 2, 0, -TZ], rotY: PI, ...TRAIN, number: 'KIHA 102', dest: 'SHIOKARA BAY', mirror: false },
+  { type: 'calamari_railcar', pos: [(P.train.x0 + P.train.x1) / 2, 0, TZ], ...TRAIN, number: 'KIHA 101', dest: 'INKOPOLIS', mirror: false, notIn: 'boss' },
+  { type: 'calamari_railcar', pos: [-(P.train.x0 + P.train.x1) / 2, 0, -TZ], rotY: PI, ...TRAIN, number: 'KIHA 102', dest: 'SHIOKARA BAY', mirror: false, notIn: 'boss' },
   // platform edges: the island's south edge (Alpha's track), the side platform's
   { type: 'calamari_platedge', pos: [P.island.x, 0, -P.island.z], rotY: PI, length: P.island.x * 2, y: P.island.y },
   { type: 'calamari_platedge', pos: [P.side.x0, 0, P.side.z1], rotY: 0, length: P.side.x1 - P.side.x0, y: P.side.y },
   // the island canopy (one piece down the platform's spine); Tower Command leaves its middle bay open over the tower
-  { type: 'calamari_canopy', pos: [0, P.island.y, 0], spans: [[-10.4, 10.4]], xs: [-10, -6.4, -2.4, 2.4, 6.4, 10], h: 2.9, clockX: 4.2, numbers: [[-8.2, '1'], [8.2, '2']], mirror: false, notIn: 'tower' },
+  { type: 'calamari_canopy', pos: [0, P.island.y, 0], spans: [[-10.4, 10.4]], xs: [-10, -6.4, -2.4, 2.4, 6.4, 10], h: 2.9, clockX: 4.2, numbers: [[-8.2, '1'], [8.2, '2']], mirror: false, notIn: ['tower', 'boss'] },
   { type: 'calamari_canopy', pos: [0, P.island.y, 0], spans: [[-10.4, -1.6], [1.6, 10.4]], xs: [-10, -6.4, -2.4, 2.4, 6.4, 10], h: 2.9, clockX: 4.2, numbers: [[-8.2, '1'], [8.2, '2']], mirror: false, onlyIn: 'tower' },
   // name boards: on the island facing Alpha's track, on Alpha's side platform facing it
-  { type: 'calamari_nameboard', pos: [11.2, P.island.y, -2.55], rotY: PI },
+  { type: 'calamari_nameboard', pos: [11.2, P.island.y, -2.55], rotY: PI, notIn: 'boss' },
   { type: 'calamari_nameboard', pos: [11.0, P.side.y, -7.45], rotY: 0, prev: 'SHIOKARA BAY →', next: '← INKOPOLIS' },
   // Alpha's footbridge
   { type: 'calamari_footbridge', pos: [BRc[0], 0, BRc[1]], w: P.bridge.x1 - P.bridge.x0, d: P.bridge.z1 - P.bridge.z0, y: P.bridge.y,
@@ -160,15 +160,15 @@ const HARBOUR = [
 // ---- the railway cut, the platforms, the station forecourt
 const STATION = [
   // snowbanks between the tracks beyond the platform ends, at the strip's corners by the portals
-  { type: 'calamari_snowbank', pos: [22.4, 0, 0], rotY: 0, length: 3.2, h: 0.95, d: 1.5, variant: 0 },
+  { type: 'calamari_snowbank', pos: [22.4, 0, 0], rotY: 0, length: 3.2, h: 0.95, d: 1.5, variant: 0, notIn: 'boss' },
   { type: 'calamari_snowbank', pos: [-24.4, 0, -8.2], rotY: Math.PI / 2, length: 2.2, h: 0.9, d: 1.3, variant: 1, shovel: true },
   { type: 'calamari_snowbank', pos: [21.6, 0, -9.3], rotY: 0.2, length: 2.4, h: 0.9, d: 1.2, variant: 2 },
-  { type: 'calamari_signal', pos: [-23.6, 0, 2.2], rotY: Math.PI / 2, aspect: 'green' },
+  { type: 'calamari_signal', pos: [-23.6, 0, 2.2], rotY: Math.PI / 2, aspect: 'green', notIn: 'boss' },
   // island platform: benches back to back between the canopy posts, a vending machine at its end
-  { type: 'calamari_bench', pos: [4.4, P.island.y, -0.3], rotY: Math.PI },
-  { type: 'calamari_bench', pos: [8.2, P.island.y, 0.3], rotY: 0 },
-  { type: 'calamari_vending', pos: [12.35, P.island.y, 2.3], rotY: -Math.PI / 2, variant: 0 },
-  { type: 'calamari_firebuckets', pos: [12.4, P.island.y, -0.6], rotY: -Math.PI / 2 },
+  { type: 'calamari_bench', pos: [4.4, P.island.y, -0.3], rotY: Math.PI, notIn: 'boss' },
+  { type: 'calamari_bench', pos: [8.2, P.island.y, 0.3], rotY: 0, notIn: 'boss' },
+  { type: 'calamari_vending', pos: [12.35, P.island.y, 2.3], rotY: -Math.PI / 2, variant: 0, notIn: 'boss' },
+  { type: 'calamari_firebuckets', pos: [12.4, P.island.y, -0.6], rotY: -Math.PI / 2, notIn: 'boss' },
   // side platform: vending machine by the steps, payphone, a parcel cart, fire buckets, lamps
   { type: 'calamari_vending', pos: [-8.3, P.side.y, -9.95], rotY: 0, variant: 1 },
   { type: 'calamari_payphone', pos: [-0.9, P.side.y, -10.0], rotY: 0 },

@@ -78,7 +78,7 @@ export function registerRailway(D, H, KIT) {
         letters(B, 'CALAMARI COUNTY RAILWAY', { h: 0.11, x: L / 2 - 4.2, y: fy + 0.56, z: 0.02, c: K.livCream, flat: true, wt: 0.2 });
         // gutter + icicles along the roof edge
         pbox(B, NS('metal'), K.galv, L, 0.05, 0.06, 0, h - 0.02, 0.03);
-        icicles(B, -L / 2 + 0.4, L / 2 - 0.4, h - 0.06, 0.05, 31 + s * 7, 0.22);
+        icicles(B, -L / 2 + 0.4, L / 2 - 0.4, h - 0.06, 0.05, 31 + s * 7, 0.1);
         B.pop();
       }
       // ---- the roof: a curved cap over the body top (its centre raised 0.3) with snow

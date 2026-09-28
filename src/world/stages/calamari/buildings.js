@@ -239,10 +239,10 @@ export function registerBuildings(D, H, KIT) {
       for (let k = 1; k < 5; k++) B.add(NS('metal'), cylGeo(0.36 + 0.06 * (1 - (k / 5)), 0.36 + 0.06 * (1 - (k / 5)), 0.06, 14, true), K.iron, cx, h + (k * ch) / 5, cz, {});
       snowCap(B, cx, h + ch, cz, 0.7, 0.3, 0.06);
       colBox(B, cx, h, cz, 1.0, ch, 1.0, ROOF);
-      // steam: soft puffs drifting up and away (static, stylised)
-      for (let k = 0; k < 9; k++) {
-        const t = k / 8, s = 0.45 + t * 1.2;
-        B.add(NS('foliage'), puff(1, k % 6), mixc('#ffffff', '#dfe6ee', t), cx + t * 2.2 + Math.sin(k * 1.7) * 0.3, h + ch + 0.4 + t * 5.5, cz - t * 1.2, { s, sy: s * 0.75, ao: false });
+      // steam: soft puffs billowing up and drifting off with the wind (static, stylised), thinning as they rise
+      for (let k = 0; k < 7; k++) {
+        const t = k / 6, sz = 0.55 + t * 1.6;
+        B.add(NS('foliage'), puff(1, (k + 2) % 6), mixc('#fbfcfd', '#d9e1ea', t * 0.8), cx + t * 3.2 + Math.sin(k * 2.1) * 0.35, h + ch + 0.5 + t * 4.2 + Math.sin(k) * 0.2, cz - t * 1.6, { s: sz, sy: sz * 0.62, sz: sz * 0.85, ry: k, ao: false });
       }
     },
   };
@@ -318,16 +318,19 @@ export function registerBuildings(D, H, KIT) {
       // roller doors either side below the deck level (on the warehouse face, visible from the dock and the quay ramp)
       pbox(B, NS('metal'), K.galv, 1.6, 2.6, 0.04, dW / 2 + 1.0, 1.3, 0.03);
       for (let k = 0; k < 13; k++) pbox(B, NS('metal'), K.steel, 1.6, 0.02, 0.03, dW / 2 + 1.0, 0.1 + k * 0.2, 0.06);
-      // the veranda roof over the spawn deck: posts on the deck's front corners + along its front, a pent roof with snow
-      const yR = dY + 2.7, zF = dD - 0.3;
+      // the veranda roof over the spawn deck: posts set 0.6 m back from the deck's front edge (squids climbing up from
+      // the dock come over the edge between them), a timber soffit on rafters, a thin kawara pent roof with snow
+      const yR = dY + 2.7, zF = dD - 0.65;
       for (const px of [-dW / 2 + 0.3, -dW / 4 - 0.6, dW / 4 + 0.6, dW / 2 - 0.3]) { B.box('wood', K.beam, 0.2, yR - dY, 0.2, px, dY + (yR - dY) / 2, zF, { r: 0.02 }); colBox(B, px, dY, zF, 0.22, yR - dY, 0.22); }
       pbox(B, 'wood', K.beam, dW + 0.4, 0.24, 0.2, 0, yR, zF);
       B.push(0, yR + 0.12, 0, 0, -0.2);
-      pbox(B, 'paint', K.kawara, dW + 1.0, 0.1, dD + 0.6, 0, 0.05, (dD + 0.6) / 2);
-      B.add(NS('paint'), cylGeo(0.07, 0.07, dW + 1.0, 8), shade(K.kawara, 0.8), 0, 0.05, dD + 0.6, { rz: HP });
+      pbox(B, 'paint', K.kawara, dW + 1.0, 0.07, dD + 0.6, 0, 0.07, (dD + 0.6) / 2);
+      pbox(B, NS('wood'), '#7a5e46', dW + 0.9, 0.03, dD + 0.5, 0, -0.03, (dD + 0.6) / 2);
+      for (let x = -dW / 2; x <= dW / 2 + 0.01; x += 1.2) pbox(B, NS('wood'), K.beam, 0.1, 0.14, dD + 0.5, x, -0.1, (dD + 0.6) / 2);
+      B.add(NS('paint'), cylGeo(0.06, 0.06, dW + 1.0, 8), shade(K.kawara, 0.8), 0, 0.08, dD + 0.6, { rz: HP });
       snowCap(B, 0, 0.1, (dD + 0.6) / 2, dW + 0.8, dD + 0.2, 0.3);
       B.pop();
-      icicles(B, -dW / 2, dW / 2, yR - 0.08, dD + 0.25, 17, 0.35);
+      icicles(B, -dW / 2, dW / 2, yR - 0.08, dD + 0.25, 17, 0.2);
       colBox(B, 0, yR, (dD + 0.6) / 2, dW + 1.0, 1.0, dD + 0.6, ROOF);
       // hanging lamps under the veranda
       for (const px of [-5, 0, 5]) { B.cyl(NS('metal'), K.iron, 0.01, 0.6, px, yR - 0.3, zF - 1.2, { seg: 4 }); B.lathe('paint', '#3d5a52', [[0.02, 0.1], [0.08, 0.08], [0.2, -0.02], [0.21, -0.04], [0, -0.04]], px, yR - 0.62, zF - 1.2, { seg: 12 }); B.sph(NS('glow'), K.lit, 0.07, px, yR - 0.68, zF - 1.2, { ws: 8, hs: 6, glow: 1.8 }); }
