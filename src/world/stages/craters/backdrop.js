@@ -6,7 +6,8 @@
 // then falling to the point with its chalk stacks, the bay's lighthouse on its islet beyond), north onto the mainland
 // (rolling downs, a farm, a chalk hill figure of a squid cut into the turf facing the park). White chalk cliffs all
 // the way round, a cliff-top fence line, fallen chalk at every cliff foot — and at the park's own cliff edges. The
-// flooded craters inside the park get still, dark water. `d` (bound in layout.js) = { coast, ponds } (Alpha's half).
+// flooded craters inside the park get still, dark water. `d` (bound in layout.js) = { coast, ponds, back, head }
+// (Alpha's half; back = the promontory's back edge z, head = its half width there).
 export function buildBackdrop(kit, d = {}) {
   const { THREE, prep, xf, box, cyl, fbm, mulberry, WATER_Y } = kit;
   const W = WATER_Y;
@@ -27,8 +28,10 @@ export function buildBackdrop(kit, d = {}) {
 
   // ------------------------------------------------------------------------------------------ the headland's outline
   // half-widths / centre lines beyond each end of the park (z from the pavilion's back edge outward), metres
-  const SOUTH = { z0: -45, zEnd: -166, c: [[0, 0], [25, -1], [55, -6], [85, -16], [105, -27], [121, -42]], w: [[0, 19.5], [8, 22], [30, 27], [60, 24], [90, 15], [110, 7], [121, 1.2]] };
-  const NORTH = { z0: 45, zEnd: 520, c: [[0, 0], [30, -3], [80, -10], [200, -30], [475, -40]], w: [[0, 19.5], [10, 23], [40, 45], [120, 150], [260, 300], [475, 420]] };
+  // (both run on from the pavilion's promontory: as wide as its headland at the park's edge, spreading out beyond)
+  const BK = Math.abs(d.back ?? -44), HW = d.head ?? 11.5;
+  const SOUTH = { z0: -BK, zEnd: -166, c: [[0, 0], [25, -1], [55, -6], [85, -16], [105, -27], [121, -42]], w: [[0, HW], [3, HW + 1], [9, 19], [30, 27], [60, 24], [90, 15], [110, 7], [121, 1.2]] };
+  const NORTH = { z0: BK, zEnd: 520, c: [[0, 0], [30, -3], [80, -10], [200, -30], [475, -40]], w: [[0, HW], [3, HW + 1], [10, 23], [40, 45], [120, 150], [260, 300], [475, 420]] };
   const hgtS = (x, s) => {   // s = metres beyond the park's south edge
     const crest = lerpTab([[0, 0], [10, 0], [45, 6], [70, 10], [95, 9], [121, 6]], s);
     const cx = lerpTab(SOUTH.c, s), w = lerpTab(SOUTH.w, s), e = Math.min(1, Math.abs(x - cx) / Math.max(1, w));
@@ -43,8 +46,9 @@ export function buildBackdrop(kit, d = {}) {
   const CR_S = [[-6, 18, 5, 0], [9, 31, 4, 1], [-13, 46, 6, 0], [4, 58, 4.5, 1], [-20, 70, 5, 0], [-9, 86, 4, 0], [-26, 100, 3.5, 1]];
   const CR_N = [[7, 16, 5, 1], [-10, 28, 4, 0], [16, 44, 6, 0], [-4, 60, 5, 1], [-28, 52, 4.5, 0], [30, 78, 5, 0], [-18, 96, 7, 1], [8, 118, 5, 0]];
   const craterAt = (list, x, s) => { let dz = 0, wet = null; for (const [cx, cs, r, f] of list) { const q = Math.hypot(x - cx, s - cs) / r; if (q < 1.35) { dz += q < 1 ? -1.6 * (1 - q * q) : 0.45 * Math.sin(((q - 1) / 0.35) * Math.PI); if (f && q < 0.62) wet = [cx, cs, r]; } } return [dz, wet]; };
-  // car parks behind the pavilions (flat, tarmac): x −15 … 15, s 1 … 16
-  const inPark = (x, s) => Math.abs(x) < 15.5 && s > 0.5 && s < 16.5;
+  // car parks behind the pavilions (flat, tarmac): x −11 … 11, s 5 … 18
+  const PK = { x: 11, s0: 5, s1: 18 };
+  const inPark = (x, s) => Math.abs(x) < PK.x && s > PK.s0 - 0.5 && s < PK.s1 + 0.5;
 
   // ------------------------------------------------------------------------------------------ land: top + cliffs
   // One ribbon grid per end (rows across the headland, columns between the two cliff edges), the cliff curtains hung
@@ -133,12 +137,13 @@ export function buildBackdrop(kit, d = {}) {
   // ------------------------------------------------------------------------------------------ the park's own cliff foot
   // (both halves: Alpha's coast from layout.js and its 180° twin) fallen chalk along the waterline
   const coast = d.coast || [];
+  const inCoast = (x, z) => { let c = false; for (let i = 0, j = coast.length - 1; i < coast.length; j = i++) { const [xi, zi] = coast[i], [xj, zj] = coast[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) c = !c; } return c; };
   for (const sg of [1, -1]) coast.forEach((a, i) => {
     const b = coast[(i + 1) % coast.length];
-    if ((a[1] === 0 && b[1] === 0) || (a[1] === -45 && b[1] === -45)) return;
+    if ((a[1] === 0 && b[1] === 0) || (a[1] === -BK && b[1] === -BK)) return;
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = (b[1] - a[1]) / L, nz = -(b[0] - a[0]) / L;
-    // outward normal: away from the park's middle
-    const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, sn = nx * mx + nz * (mz + 22) > 0 ? 1 : -1;
+    // outward normal: out of the park's outline
+    const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, sn = inCoast(mx + nx * 0.1, mz + nz * 0.1) ? -1 : 1;
     for (let t = 0.8; t < L; t += 2.2 + rnd() * 2.4) {
       const off = 0.5 + rnd() * 1.8, x = a[0] + ((b[0] - a[0]) * t) / L + nx * sn * off, z = a[1] + ((b[1] - a[1]) * t) / L + nz * sn * off;
       rocks.push([x * sg, W - 0.3 + rnd() * 0.3, z * sg, 0.3 + rnd() * 0.7, rnd() * 6]);
@@ -212,20 +217,19 @@ export function buildBackdrop(kit, d = {}) {
 
   // ------------------------------------------------------------------------------------------ car parks behind the pavilions
   for (const sg of [-1, 1]) {
-    const z0 = sg * 45.6, z1 = sg * 61;
+    const z0 = sg * (BK + PK.s0), z1 = sg * (BK + PK.s1), zr = [BK + PK.s0 + 3.2, BK + PK.s1 - 3.2];
     // white bay lines
-    for (let x = -13.5; x <= 13.5; x += 2.7) out.plain.push(xf(box(0.12, 0.02, 5.0, '#e8e5dc'), x, 0.02, sg * 50));
-    for (let x = -13.5; x <= 13.5; x += 2.7) out.plain.push(xf(box(0.12, 0.02, 5.0, '#e8e5dc'), x, 0.02, sg * 57));
+    for (const zz of zr) for (let x = -9.45; x <= 9.45; x += 2.7) out.plain.push(xf(box(0.12, 0.02, 5.0, '#e8e5dc'), x, 0.02, sg * zz));
     // a few parked cars (simple rounded bodies + cabins)
     const cols = ['#b34a3f', '#3f6f9a', '#d9d4c7', '#4a5a4f', '#c9a44a', '#2f3440'];
     for (let k = 0; k < 7; k++) {
-      const x = -12.15 + Math.floor(rnd() * 10) * 2.7, z = sg * (rnd() < 0.5 ? 50 : 57), c = cols[k % cols.length];
+      const x = -8.1 + Math.floor(rnd() * 7) * 2.7, z = sg * (rnd() < 0.5 ? zr[0] : zr[1]), c = cols[k % cols.length];
       out.static.push(xf(box(1.7, 0.7, 3.9, c), x, 0.55, z), xf(box(1.5, 0.55, 2.1, c), x, 1.15, z - sg * 0.2), xf(box(1.45, 0.4, 2.0, '#2c3b44'), x, 1.17, z - sg * 0.2));
       for (const [wx, wz] of [[-0.8, 1.2], [0.8, 1.2], [-0.8, -1.2], [0.8, -1.2]]) out.static.push(xf(cyl(0.33, 0.33, 0.24, 8, '#1c1d20'), x + wx, 0.33, z + wz, 0, 0, Math.PI / 2));
     }
     // kerbs round the car park
-    out.plain.push(xf(box(31, 0.15, 0.3, '#cfcac0'), 0, 0.075, z1));
-    for (const s of [-1, 1]) out.plain.push(xf(box(0.3, 0.15, Math.abs(z1 - z0), '#cfcac0'), s * 15.5, 0.075, (z0 + z1) / 2));
+    out.plain.push(xf(box(2 * PK.x, 0.15, 0.3, '#cfcac0'), 0, 0.075, z1), xf(box(2 * PK.x, 0.15, 0.3, '#cfcac0'), 0, 0.075, z0));
+    for (const s of [-1, 1]) out.plain.push(xf(box(0.3, 0.15, Math.abs(z1 - z0), '#cfcac0'), s * PK.x, 0.075, (z0 + z1) / 2));
     void sg;
   }
 
