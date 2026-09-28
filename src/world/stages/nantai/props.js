@@ -121,7 +121,7 @@ export const PLACEMENTS = [
   // ================= the star party on the lawn
   { type: 'nantai_marquee', pos: [10.6, 0, -4.4], rotY: -HP },
   { type: 'nantai_dobsonian', pos: [4.3, 0, -2.7], rotY: 0.35 },
-  { type: 'nantai_screen', pos: [-13.2, 0, -3.6], rotY: HP },
+  { type: 'nantai_screen', pos: [-13.2, 0, -3.6], rotY: -HP },   // faces the lawn's west end, its audience in camp chairs
   { type: 'nantai_chairs', pos: [-7.4, 0, -7.0], rotY: 0.3, n: 3 },
   { type: 'nantai_chairs', pos: [16.4, 0, -6.2], rotY: 2.2, n: 2 },
   { type: 'nantai_boulder', pos: [18.9, 0, -11.7], rotY: 0.9, w: 1.6, h: 1.0, d: 1.2, seed: 47 },
