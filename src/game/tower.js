@@ -387,6 +387,9 @@ export class TowerCommand {
     // the collider: a square platform, turned along the path (the mesh is round and a touch smaller)
     this.half = new V3(TOWER.platformR, TOWER.platformH / 2, TOWER.platformR);
     this.block = G.level.addDynamic({ tag: 'tower' });
+    // the thin pillar in its middle: cover for the riders (never inked; a top you slide off)
+    this.pillarHalf = new V3(TOWER.pillarW / 2, TOWER.pillarH / 2, TOWER.pillarW / 2);
+    this.pillar = G.level.addDynamic({ tag: 'tower-pillar', roof: true });
     this._place(1);
   }
 
@@ -557,6 +560,8 @@ export class TowerCommand {
     this.path.at(this.s, this.pos);
     _v.copy(this.pos); _v.y += TOWER.platformH / 2;
     G.level.moveDynamic(this.block, _v, this.half, this.yaw);
+    _v.copy(this.pos); _v.y += TOWER.platformH + TOWER.pillarH / 2;
+    G.level.moveDynamic(this.pillar, _v, this.pillarHalf, this.yaw);
   }
 
   // this client's own players standing on the platform go with it (along, up a wall, down a drop)

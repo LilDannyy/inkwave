@@ -158,6 +158,22 @@ export class TowerFx {
     const deck = new THREE.Mesh(new THREE.BoxGeometry(R * 1.9, 0.14, R * 1.9), this.deckMat);
     deck.position.y = H - 0.07; deck.receiveShadow = true;
     g.add(body, skirt, deck);
+    // the thin pillar in the middle (cover for the riders; its collider is tower.js's): a steel column on a collar,
+    // team-lit corner strips and a pyramid cap
+    const PW = TOWER.pillarW, PH = TOWER.pillarH;
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(PW, PH, PW), steel);
+    shaft.position.y = H + PH / 2; shaft.castShadow = true; shaft.receiveShadow = true;
+    const collar = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.16, 0.16, PW + 0.16), trim);
+    collar.position.y = H + 0.08;
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0, PW * 0.8, 0.34, 4, 1), trim);
+    cap.rotation.y = Math.PI / 4; cap.position.y = H + PH + 0.17; cap.castShadow = true;
+    g.add(shaft, collar, cap);
+    this.stripMat = new THREE.MeshBasicMaterial({ color: NEUTRAL.clone(), toneMapped: false });
+    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const st = new THREE.Mesh(new THREE.BoxGeometry(0.045, PH - 0.3, 0.045), this.stripMat);
+      st.position.set(sx * (PW / 2 + 0.005), H + 0.18 + (PH - 0.3) / 2, sz * (PW / 2 + 0.005));
+      g.add(st);
+    }
     // deck edge light bars (the team colour, brighter while it moves)
     this.edgeMat = new THREE.MeshBasicMaterial({ color: NEUTRAL.clone(), toneMapped: false });
     for (let k = 0; k < 4; k++) {
@@ -283,14 +299,18 @@ export class TowerFx {
     const pulse = moving ? 0.75 + 0.25 * Math.sin(t * 9) : T.contested ? 0.55 + 0.45 * Math.abs(Math.sin(t * 14)) : 0.85;
     this.edgeMat.color.copy(this.col).multiplyScalar(1.2 * pulse);
     this.beaconMat.color.copy(this.col).multiplyScalar(1.6);
+    this.stripMat.color.copy(this.col).multiplyScalar(1.3 * pulse);
     this.spin += dt * (moving ? 6 : 1.2);
     this.halo.rotation.z = this.spin;
     // under a roof (an arcade, a passage, a trestle) the beacon floats just below it instead of through it
     if ((this.ceilT -= dt) <= 0) {
       this.ceilT = 0.2;
       const H = TOWER.platformH, ceil = ceilingAt(T.pos.x, T.pos.z, T.pos.y + H + 0.3);
-      this.beaconWant = Math.max(H + 1.9, Math.min(H + 3.3, ceil - T.pos.y - 0.5));
+      const room = ceil - T.pos.y - 0.5;
+      this.beaconRoom = room >= H + TOWER.pillarH + 0.5;               // no room over the pillar: hidden till it rolls out
+      this.beaconWant = Math.max(H + TOWER.pillarH + 0.5, Math.min(H + 3.3, room));
     }
+    this.beacon.visible = this.halo.visible = this.beaconRoom !== false;
     this.beaconY += ((this.beaconWant ?? this.beaconY) - this.beaconY) * (dt > 0 ? 1 - Math.exp(-8 * dt) : 1);
     this.beacon.position.y = this.halo.position.y = this.beaconY;
     const n = owner >= 0 ? (T.follower && T.hostRiders ? T.hostRiders[owner] : T.riders[owner]) : 0;

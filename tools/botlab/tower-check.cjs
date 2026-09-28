@@ -101,7 +101,7 @@ app.on('browser-window-created', (_, win) => {
         const riders = m.actors.filter((a) => a.team === ${team} && !a.isLocal).slice(0, 2);
         const others = m.actors.filter((a) => !riders.includes(a));
         for (const a of others) { const p = __G.level.spawnPads[a.team]; a.pos.set(p.x, p.y + 0.3, p.z); a.vel.set(0, 0, 0); }
-        const put = (a, i) => { a.pos.set(T.pos.x + (i ? 0.5 : -0.5), T.top + 0.05, T.pos.z); a.vel.set(0, 0, 0); };
+        const put = (a, i) => { a.pos.set(T.pos.x + (i ? 0.8 : -0.8), T.top + 0.05, T.pos.z); a.vel.set(0, 0, 0); };   // (either side of the pillar)
         riders.forEach(put);
         const log = { team: ${team}, drops: [], stalls: [], t: 0, end: null, minTop: 99, maxAbove: 0 };
         let lastS = T.s, still = 0, stalled = false, t = 0;

@@ -521,6 +521,7 @@ export const TOWER = {
   platformR: 1.25,            // m: the platform's half-width (a square collider; the mesh is round)
   platformH: 0.8,             // m: its top above the path (a hop up — you can't just walk on)
   riderUp: 1.3,               // m above the top that still counts as riding (a hop on it)
+  pillarW: 0.44, pillarH: 1.9, // m: the thin pillar in the platform's middle — cover for its riders (never inked; slide off its top)
   snapHz: 10,                 // online: host snapshots a second
 };
 
