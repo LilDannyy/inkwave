@@ -355,7 +355,7 @@ export function registerBuildings(D, H, KIT) {
       for (let k = 0; k < 4; k++) pbox(B, 'wood', K.woodLt, L, 0.035, 0.09, 0, 0.43, -0.15 + k * 0.1);
       for (let k = 0; k < 2; k++) pbox(B, 'wood', K.woodLt, L, 0.09, 0.03, 0, 0.62 + k * 0.14, -0.22, { rx: -0.15 });
       snowCap(B, L / 2 - 0.35, 0.45, 0, 0.6, 0.36, 0.06);
-      colBox(B, 0, 0, 0, L, 0.5, 0.48);
+      if (o.col !== false) colBox(B, 0, 0, 0, L, 0.5, 0.48);
     },
   };
 

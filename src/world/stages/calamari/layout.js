@@ -257,8 +257,11 @@ const CALAMARI = {
   half: HALF,
   zones: ZONES,
   tower: TOWER,
+  // match intro: high over the station (the footbridges, the railcars, the canopy), then back down to the co-op deck
   intro: { from: [14, 13, 12], lookFrom: [0, 3, -2], toBack: 3.0 },
-  art: { from: [30, 24, -34], look: [-2, 1, 2], fov: 60 },
+  // stage-select picture: from Alpha's hillside across the whole village, the station and its railcars, the level
+  // crossing and the tunnel, to Bravo's snowy hillside with its houses and fire lookout tower
+  art: { from: [-27, 19, -40], look: [4, 1.5, 2], fov: 60 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
