@@ -1022,6 +1022,28 @@ body.iw-dio-on .iw-xh, body.iw-dio-on .iw-mks, body.iw-dio-on .iw-map, body.iw-d
 .iw-tw__ot .iw-display { font-size: calc(var(--u) * 1.5); letter-spacing: .06em; color: #ffe27a; -webkit-text-stroke: 0; text-shadow: none; }
 /* the pointer to the tower: over it when it's on screen, at the screen edge (with an arrow out) when it isn't */
 .iw-hud.is-tower .iw-tptr.is-on { display: block; }
+.iw-twts { position: absolute; inset: 0; pointer-events: none; z-index: 2; display: none; }
+.iw-hud.is-tower .iw-twts { display: block; }
+/* the countdown over a checkpoint: a dark disc, the seconds left, a ring sweeping clockwise in quarters (the team's ink
+   for seconds that score, grey for dummy seconds), a blinking outer ring while the grace runs */
+.iw-twt { position: absolute; left: 0; top: 0; width: 62px; height: 62px; margin: -31px 0 0 -31px; display: none; transform-origin: 50% 50%;
+  --tc: var(--enemy); opacity: .6; transition: opacity .25s; }
+.iw-twt[data-side="mine"] { --tc: var(--self); }
+.iw-twt.is-on { display: block; }
+.iw-twt.is-active { opacity: 1; }
+.iw-twt svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.iw-twt circle { fill: none; transform: rotate(-90deg); transform-origin: 28px 28px; }
+.iw-twt .iw-twt__bg { fill: rgba(21, 18, 28, .82); stroke: #15121c; stroke-width: 7.5; }
+.iw-twt__dum { stroke: rgba(210, 210, 220, .26); stroke-width: 4.6; }
+.iw-twt__done { stroke: #a3a3ae; stroke-width: 4.6; }
+.iw-twt__run { stroke: var(--tc); stroke-width: 4.6; filter: drop-shadow(0 0 2.5px var(--tc)); }
+.iw-twt__grace { stroke: #fff; stroke-width: 2.2; opacity: 0; }
+.iw-twt.is-grace .iw-twt__grace { opacity: 1; animation: iw-twt-blink .5s steps(2, jump-none) infinite; }
+@keyframes iw-twt-blink { 50% { opacity: .25; } }
+.iw-twt__tick { stroke: #15121c; stroke-width: 2.2; stroke-linecap: round; }
+.iw-twt b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 400 21px / 1 'Titan One', sans-serif; color: #fff;
+  -webkit-text-stroke: 4px #15121c; paint-order: stroke fill; letter-spacing: -.02em; }
+.iw-twt::after { content: ''; position: absolute; left: 50%; bottom: -9px; margin-left: -7px; border: 7px solid transparent; border-top-color: #15121c; border-bottom: 0; }
 .iw-tptr { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 3; --pc: #ffd54a; }
 .iw-tptr[data-side="mine"] { --pc: var(--self); }
 .iw-tptr[data-side="theirs"] { --pc: var(--enemy); }

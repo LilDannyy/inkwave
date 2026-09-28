@@ -13,8 +13,10 @@
 //     centre (TOWER.returnK × its one-rider speed).
 //   • checkpoints: each side has checkpoints (TOWER.checkpoints). Pushing into enemy territory the tower stops at the
 //     next uncleared one until its timer runs out (cleared faster by more riders); cleared ones don't stop it again.
-//     Lose control there (enemy claim, or neutral) for TOWER.checkpointGrace s and its timer refills; regain control
-//     sooner and it carries on where it was.
+//     If the tower leaves it half-cleared (the team loses control, or it's pushed / rolls off it), the team has
+//     TOWER.checkpointGrace s to bring it back under its control; then it carries on where it was. Otherwise its timer
+//     refills: the seconds already cleared stay scored (a team's score never drops), but they have to be cleared again
+//     as dummy seconds that earn nothing (c.dummy: the share of the timer that is).
 //   • score: 100 points to win. Riding the tower the whole track into enemy territory is TOWER.trackPoints (60) of them,
 //     in proportion to the distance; clearing that side's checkpoints the rest (TOWER.checkpointPoints, 40, split evenly,
 //     earned as each one's timer runs). A team's score is the most it has ever had, shown as a count from 100 down to 0;
@@ -366,7 +368,8 @@ export class TowerCommand {
       const L = this.path.len[team];
       const d = Array.isArray(c) ? Math.min(this.path.project(team, team ? -c[0] : c[0], team ? -c[1] : c[1]), L - 1) : c <= 1 ? c * L : Math.min(c, L - 1);
       const dur = def.checkpointTime ? def.checkpointTime[Math.min(i, def.checkpointTime.length - 1)] : cpPts / TOWER.pointRate;
-      this.cps.push({ team, index: i, d, dur, left: dur, cleared: false, lost: 0, at: false });
+      // best: the most of its timer ever cleared; dummy: the share of a refilled timer already scored (re-cleared for nothing)
+      this.cps.push({ team, index: i, d, dur, left: dur, cleared: false, lost: 0, at: false, best: 0, dummy: 0, pos: this.path.at(team === 0 ? d : -d) });
     });
     this.points = [0, 0];                // each team's best points so far (of 100)
     this.overtime = false; this.overtimeT = 0; this.otLosing = -1;
@@ -447,6 +450,7 @@ export class TowerCommand {
     for (const a of this.riderList) a.stats.towerRide = (a.stats.towerRide || 0) + dt;   // (results / XP)
     if (this.follower) this._follow(dt);
     else this._rules(dt, n);
+    for (const c of this.cps) { const p = c.cleared ? 1 : 1 - c.left / (c.dur || 1); if (p > c.best) c.best = p; }
     this._place(dt);
     this._carry(before);
     this._score();
@@ -455,7 +459,8 @@ export class TowerCommand {
     if (this.overtime) this._overtime(dt);
     if ((this.snapT -= dt) <= 0) {
       this.snapT = 1 / TOWER.snapHz;
-      this._net(['s', r3(this.s), this.owner, n[0], n[1], r3(this.emptyT), this.contested ? 1 : 0, ...this.cps.map((c) => (c.cleared ? -1 : r3(c.left)))]);
+      this._net(['s', r3(this.s), this.owner, n[0], n[1], r3(this.emptyT), this.contested ? 1 : 0, ...this.cps.map((c) => (c.cleared ? -1 : r3(c.left))),
+        ...this.cps.map((c) => Math.round(c.lost * 100) / 100)]);
     }
   }
 
@@ -479,9 +484,9 @@ export class TowerCommand {
       if (c.cleared) continue;
       const cs = c.team === 0 ? c.d : -c.d, here = Math.abs(this.s - cs) < 1e-3;
       c.at = here;
-      if (this.owner === c.team) {
-        c.lost = 0;
-        if (here && push === c.team) {
+      if (this.owner === c.team && here) {
+        c.lost = 0;                                       // (on it and theirs: the grace stops, even while contested)
+        if (push === c.team) {
           hold = c;
           this.s = cs;                                    // (exactly on it)
           if (!c.reached) {
@@ -499,7 +504,7 @@ export class TowerCommand {
       } else if (c.left < c.dur) {
         c.lost += dt;
         if (c.lost >= TOWER.checkpointGrace) {
-          c.left = c.dur; c.lost = 0; c.reached = false;
+          c.dummy = c.best; c.left = c.dur; c.lost = 0; c.reached = false;
           this._net(['c', this.cps.indexOf(c), 3]);
           emit('tower:checkpoint', { team: c.team, index: c.index, state: 'refill' });
         }
@@ -647,7 +652,7 @@ export class TowerCommand {
         if (!c) break;
         const st = e[2] === 1 ? 'reach' : e[2] === 2 ? 'clear' : 'refill';
         if (st === 'clear') { c.cleared = true; c.left = 0; }
-        if (st === 'refill') { c.left = c.dur; c.reached = false; }
+        if (st === 'refill') { c.dummy = c.best; c.left = c.dur; c.lost = 0; c.reached = false; }
         if (st === 'reach') c.reached = true;
         emit('tower:checkpoint', { team: c.team, index: c.index, state: st });
         break;
@@ -669,6 +674,8 @@ export class TowerCommand {
           const v2 = e[7 + i];
           if (v2 === undefined) continue;
           if (v2 < 0) { this.cps[i].cleared = true; this.cps[i].left = 0; } else this.cps[i].left = v2;
+          const g = e[7 + this.cps.length + i];                 // its grace clock (for the timer over it)
+          if (g !== undefined) this.cps[i].lost = g;
         }
         break;
       }
@@ -690,7 +697,9 @@ export class TowerCommand {
       s: this.s, len: [...this.path.len], owner: this.owner, riders: [...n], contested: this.contested,
       count: [...this.count], score: sc, best: [...this.best], emptyT: this.emptyT, returning: this.returning,
       moving: this.moving,
-      checkpoints: this.cps.map((c) => ({ team: c.team, index: c.index, d: c.d, dur: c.dur, left: c.left, cleared: c.cleared, at: !!c.at })),
+      checkpoints: this.cps.map((c) => ({ team: c.team, index: c.index, d: c.d, dur: c.dur, left: c.left, cleared: c.cleared, at: !!c.at,
+        best: c.best, dummy: c.dummy, lost: c.lost, pos: [c.pos.x, c.pos.y, c.pos.z] })),
+      grace: TOWER.checkpointGrace,
       next: next ? { team: next.team, index: next.index, d: next.d, left: next.left, dur: next.dur, at: Math.abs(this.s - (next.team === 0 ? next.d : -next.d)) < 0.05 } : null,
       pos: [this.pos.x, this.pos.y, this.pos.z], top: this.top,
       overtime: this.overtime, overtimeT: +this.overtimeT.toFixed(1), losing: this.losing(),

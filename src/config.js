@@ -514,7 +514,7 @@ export const TOWER = {
   returnK: 0.6,               // a neutral tower rolls back toward the centre at this × the one-rider speed
   idleNeutral: 5,             // s with nobody on it before the team in control loses it (it goes neutral, then back)
   checkpoints: [0.42, 0.72],  // where a stage without its own sits them: fractions of each side's path to the goal
-  checkpointGrace: 3,         // s of lost control before a half-cleared checkpoint's timer refills
+  checkpointGrace: 5,         // s a half-cleared checkpoint waits for its team to bring the tower back before it refills
   gaugeHeld: 4.5,             // special points / s for every player on the team in control (riding or not)
   gaugeNeutral: 2.25,         // … for the team behind while the tower is neutral
   overtimeMax: 300,           // overtime cap (s) — the team ahead wins

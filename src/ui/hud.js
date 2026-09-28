@@ -201,6 +201,7 @@ export class HUD {
     this.tw = h('div', { class: 'iw-tw' }, h('div', { class: 'iw-tw__ot' }, h('span', { class: 'iw-display' }, 'OVERTIME')), this.twTrack, this.twStatus);
     this.timer.appendChild(this.tw);
     this.tptr = h('div', { class: 'iw-tptr' }, h('i', { class: 'iw-tptr__arrow' }), h('span', { class: 'iw-tptr__ico', html: TOWER_ICON }), h('b', { class: 'iw-tptr__d' }));
+    this.twTimers = h('div', { class: 'iw-twts' });   // Tower Command: a countdown over each uncleared checkpoint
     this.top = h('div', { class: 'iw-hud__top' }, this.squads[0], this.zc[0], this.timer, this.zc[1], this.squads[1]);
 
     // ---- special gauge (liquid orb) + turf total
@@ -326,7 +327,7 @@ export class HUD {
     this.callouts = h('div', { class: 'iw-callouts' });
     this.zcalls = h('div', { class: 'iw-zcalls' });
 
-    el.append(this.vig, this.canvas, this.dmLayer, this.markerLayer, this.tptr, this.cheerLayer, this.ddLayer, this.top, this.sp, this.subBadge, this.turfEl, this.feedEl, this.xh,
+    el.append(this.vig, this.canvas, this.dmLayer, this.markerLayer, this.tptr, this.twTimers, this.cheerLayer, this.ddLayer, this.top, this.sp, this.subBadge, this.turfEl, this.feedEl, this.xh,
       this.kcards, this.callouts, this.zcalls, this.promptEl, this.mapDim, this.map, this.fpsEl, this.countLayer, this.bannerLayer, this.splatLayer, this.jnote, this.poisonVig, this.statusEl);
     this.root.appendChild(el);
 
@@ -1055,7 +1056,7 @@ export class HUD {
       for (const el of this.zc) { const hold = el.querySelector('.iw-zc__hold'); if (hold) hold.innerHTML = on ? TOWER_ICON : ZONE_ICON; }
       L.zc0 = L.zc1 = L.tKey = L.tCps = L.tSt = null;
     }
-    if (!on) { if (L.tpOn) { L.tpOn = false; this.tptr.classList.remove('is-on'); } return; }
+    if (!on) { if (L.tpOn) { L.tpOn = false; this.tptr.classList.remove('is-on'); } if (L.twtKey) { L.twtKey = null; this.twTimers.replaceChildren(); } return; }
     const me = z.viewer === 0 || z.viewer === 1 ? z.viewer : this._zMe(), them = 1 - me;
     // ---- score badges (your team's on the left)
     for (let t = 0; t < 2; t++) {
@@ -1125,7 +1126,61 @@ export class HUD {
     const ot = !!z.overtime;
     if (ot !== L.tOt) { L.tOt = ot; this.tw.classList.toggle('is-ot', ot); }
     this._updTowerPtr(z);
+    this._updTowerTimers(z, me);
     void dt;
+  }
+  // the countdown over each uncleared checkpoint: the seconds left in a ring that sweeps like a clock in quarters —
+  // the team's ink for seconds that score, grey for dummy seconds (a refilled timer's share already scored) — and an
+  // outer ring running down the grace while the tower is off a half-cleared one
+  _updTowerTimers(z, me) {
+    const L = this._L, box = this.twTimers, m = G.match, cps = z.checkpoints || [];
+    const key = cps.length + ':' + (m && (m.id || m.startedAt || 1));
+    if (L.twtKey !== key || !L.twt) {
+      L.twtKey = key;
+      const C = 2 * Math.PI * 19, G2 = 2 * Math.PI * 23;
+      box.replaceChildren(...cps.map(() => {
+        const e = h('div', { class: 'iw-twt' });
+        e.innerHTML = `<svg viewBox="0 0 56 56" aria-hidden="true"><circle class="iw-twt__bg" cx="28" cy="28" r="19"/>` +
+          `<circle class="iw-twt__dum" cx="28" cy="28" r="19" stroke-dasharray="0 ${C}"/><circle class="iw-twt__done" cx="28" cy="28" r="19" stroke-dasharray="0 ${C}"/>` +
+          `<circle class="iw-twt__run" cx="28" cy="28" r="19" stroke-dasharray="0 ${C}"/><circle class="iw-twt__grace" cx="28" cy="28" r="23.5" stroke-dasharray="0 ${G2}"/>` +
+          [0, 1, 2, 3].map((q) => { const a = (q * Math.PI) / 2, x = 28 + Math.sin(a) * 21.5, y = 28 - Math.cos(a) * 21.5, x2 = 28 + Math.sin(a) * 16.5, y2 = 28 - Math.cos(a) * 16.5; return `<line class="iw-twt__tick" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`; }).join('') +
+          `</svg><b></b>`;
+        return e;
+      }));
+      L.twt = [...box.children].map((e) => ({ e, dum: e.querySelector('.iw-twt__dum'), done: e.querySelector('.iw-twt__done'), run: e.querySelector('.iw-twt__run'), grace: e.querySelector('.iw-twt__grace'), num: e.lastChild, sig: '', n: -1, C, G2, on: false }));
+    }
+    const cam = G.rig?.gameCam || G.camera;
+    const live = !!cam && !!m && (m.state === 'playing' || m.state === 'intro') && z.winner == null && !this.el.classList.contains('is-mapopen');
+    const W = this.el.clientWidth || window.innerWidth, H = this.el.clientHeight || window.innerHeight;
+    cps.forEach((c, i) => {
+      const T = L.twt[i];
+      if (!T) return;
+      let show = live && !c.cleared && !!c.pos;
+      let p = null;
+      if (show) { p = this._project(cam, c.pos[0], c.pos[1] + 6.3, c.pos[2]); show = !!p && p.z < 1 && Math.abs(p.x) < 1.1 && Math.abs(p.y) < 1.1; }
+      if (show !== T.on) { T.on = show; T.e.classList.toggle('is-on', show); }
+      if (!show) return;
+      const cp = cam.position, dist = Math.hypot(cp.x - c.pos[0], cp.y - c.pos[1], cp.z - c.pos[2]);
+      const k = Math.max(0.55, Math.min(1.15, 24 / Math.max(1, dist)));
+      T.e.style.transform = `translate(${((p.x * 0.5 + 0.5) * W).toFixed(1)}px, ${((0.5 - p.y * 0.5) * H).toFixed(1)}px) scale(${k.toFixed(3)})`;
+      const prog = Math.max(0, Math.min(1, 1 - c.left / (c.dur || 1))), dum = Math.max(0, Math.min(1, c.dummy || 0));
+      const grace = !c.at && c.lost > 0 && prog > 0 ? Math.max(0, 1 - c.lost / (z.grace || 5)) : 0;
+      const active = c.at || prog > 0 || grace > 0;
+      const sig = `${c.team === me ? 'm' : 't'}|${(prog * 400) | 0}|${(dum * 400) | 0}|${(grace * 200) | 0}|${active ? 1 : 0}`;
+      if (sig !== T.sig) {
+        T.sig = sig;
+        T.e.dataset.side = c.team === me ? 'mine' : 'theirs';
+        T.e.classList.toggle('is-active', active);
+        T.e.classList.toggle('is-grace', grace > 0);
+        const C = T.C, sw = Math.min(prog, dum);
+        T.dum.setAttribute('stroke-dasharray', `${(dum * C).toFixed(2)} ${C}`);                     // the dummy share, faint
+        T.done.setAttribute('stroke-dasharray', `${(sw * C).toFixed(2)} ${C}`);                      // dummy seconds re-cleared
+        T.run.setAttribute('stroke-dasharray', prog > dum ? `0 ${(dum * C).toFixed(2)} ${((prog - dum) * C).toFixed(2)} ${C}` : `0 ${C}`);   // seconds that score
+        T.grace.setAttribute('stroke-dasharray', `${(grace * T.G2).toFixed(2)} ${T.G2}`);
+      }
+      const n = Math.max(0, Math.ceil(c.left - 1e-6));
+      if (n !== T.n) { T.n = n; T.num.textContent = String(n); }
+    });
   }
   // the pointer: over the tower when it's on screen, pinned to the screen edge (arrow out) when it isn't
   _updTowerPtr(z) {
