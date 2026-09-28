@@ -95,7 +95,7 @@ app.on('browser-window-created', (_, win) => {
       rides.push(await js(`(async () => {
         const g = window.__inkwave, m = g.match, T = m.tower, { TOWER } = await import('./src/config.js');
         g.debug.freeze();
-        const K = 8;                                     // 8× speed (the rules are the same, just quicker)
+        const K = ${+(process.env.RIDEK || 1)};   // real speed by default (RIDEK=8 for a quick look: much faster and a rider can be left behind at a drop)
         T.speed = T.speed.map((v) => v * K); for (const c of T.cps) { c.dur /= K; c.left /= K; }
         for (const a of m.actors) if (a.bot) a.bot.update = () => { a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; };
         const riders = m.actors.filter((a) => a.team === ${team} && !a.isLocal).slice(0, 2);
