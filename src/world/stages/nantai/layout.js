@@ -6,6 +6,7 @@ import { PATTERN, B, R, O, OCT } from '../../mapkit.js';
 import { SURF } from './surfaces.js';
 import { buildBackdrop } from './backdrop.js';
 import { MURAL } from './murals.js';
+import { BS, BN, zAt, LAWN_E, LAWN_W, BASE, RIDGE, RIDGE_EDGE, fill } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Mount Nantai — the Nantai Observatory grounds on the summit shoulder, a promontory of granite in the tarn below the
@@ -36,63 +37,39 @@ const ashlar = (o = {}) => ({ color: K.stone, pattern: SURF.ashlar, ...o });
 const steps = (o = {}) => ({ color: K.stone, pattern: PATTERN.stonestep, ...o });
 const DEG = 180 / Math.PI;
 
+export { BS, BN, zAt };
 // ============================================================================================================
-// The Nantai Brook (Alpha's reach; Bravo's is its twin). Its two banks as polylines, x ascending: BS = the base side,
-// BN = the lawn side. Three reaches: W (the weir reach, 4.5–5 m), M (the Old Stone Bridge, straight along x, 4 m), E (the
-// log-bridge reach, 3.6 m).
+// The ground: the promontory's regions (ground.js) filled as columns with granite ledges along every slanted edge —
+// the brook's banks (bars) and the tarn shore (the outline: bays, points, the cut corners behind the spawns)
 // ============================================================================================================
-export const BS = [[-26, -11.6], [-8, -13.8], [12, -13.8], [26, -20.84]];
-export const BN = [[-26, -6.66], [-8, -9.6], [12, -9.6], [26, -16.84]];
-export const zAt = (pl, x) => {
-  for (let i = 0; i < pl.length - 1; i++) { const [ax, az] = pl[i], [bx, bz] = pl[i + 1]; if (x <= bx || i === pl.length - 2) return az + ((bz - az) * (x - ax)) / (bx - ax); }
-  return pl[pl.length - 1][1];
-};
-// the extreme of a bank over a column [x0, x1] (vertices inside included)
-const zMax = (pl, x0, x1) => Math.max(zAt(pl, x0), zAt(pl, x1), ...pl.filter(([x]) => x > x0 && x < x1).map(([, z]) => z));
-const zMin = (pl, x0, x1) => Math.min(zAt(pl, x0), zAt(pl, x1), ...pl.filter(([x]) => x > x0 && x < x1).map(([, z]) => z));
-const INSET = 0.25;
-// ground columns on the lawn side (z from the bank to z1) / the base side (z from z0 to the bank): the stepped edge sits
-// under the gravel bar along the bank
-const lawnCols = (xs, z1, mk) => xs.slice(0, -1).map((x0, i) => B(x0, xs[i + 1], FL, G0, zMax(BN, x0, xs[i + 1]) + INSET, z1, mk()));
-const baseCols = (xs, z0, mk) => xs.slice(0, -1).map((x0, i) => B(x0, xs[i + 1], FL, G0, z0, zMin(BS, x0, xs[i + 1]) - INSET, mk()));
-// a bar along a bank segment from x0 to x1: w wide on the land side (side = +1 lawn / −1 base), top y
-function bar(pl, x0, x1, side, w, y, o) {
-  const a = [x0, zAt(pl, x0)], b = [x1, zAt(pl, x1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
-  const ux = dx / L, uz = dz / L, nx = -uz * side, nz = ux * side;   // land-side normal
-  const cx = (a[0] + b[0]) / 2 + (nx * w) / 2, cz = (a[1] + b[1]) / 2 + (nz * w) / 2;
-  return O(cx, cz, L, w, FL, y, -Math.atan2(uz, ux) * DEG, o);
+const onBank = (pl, p) => Math.abs(zAt(pl, p[0]) - p[1]) < 0.02;
+const bankW = (pl, a, b) => { const x = (a[0] + b[0]) / 2; if (x < -8) return 1.3; if (x < 19) return pl === BS ? 1.2 : 1.3; return 1.6; };
+const inRidge = (p) => RIDGE_EDGE.some((q) => Math.abs(q[0] - p[0]) < 1e-6 && Math.abs(q[1] - p[1]) < 1e-6);
+const shoreLedge = () => granite({ tag: 'shore-ledge' });
+const barLedge = () => granite({ color: K.graniteLt, tag: 'bar' });
+function ledgeFor(pl) {
+  return (i, a, b) => {
+    if (pl && onBank(pl, a) && onBank(pl, b)) return { w: bankW(pl, a, b), mk: barLedge };
+    return { w: 1.2, mk: shoreLedge };
+  };
 }
+const GROUND_LAWN_E = fill(LAWN_E, { y0: FL, top: G0, mk: () => turf({ tag: 'lawn-e' }), ledge: ledgeFor(BN) });
+const GROUND_LAWN_W = fill(LAWN_W, { y0: FL, top: G0, mk: () => turf({ tag: 'lawn-w' }), ledge: ledgeFor(BN) });
+const GROUND_BASE = fill(BASE, { y0: FL, top: G0, mk: () => turf({ tag: 'bank' }), ledge: (i, a, b) => (inRidge(a) && inRidge(b) ? { w: 1.3, skip: true } : ledgeFor(BS)(i, a, b)) });
+const GROUND_RIDGE = fill(RIDGE, { y0: G0, top: G2, mk: () => granite({ tag: 'ridge' }), ledge: () => ({ w: 1.3, mk: () => granite({ tag: 'ridge-cliff' }) }) });
+const GROUNDS = [GROUND_LAWN_E, GROUND_LAWN_W, GROUND_BASE, GROUND_RIDGE];
+// the ledges' footprints (props.js nantai_foot: hidden slabs so the environment's deck outline — the tarn's edge rocks,
+// its foam — follows the true shore, not the columns' steps under the ledges)
+export const LEDGE_FEET = GROUNDS.flatMap((g) => g.feet);
 
 // ============================================================================================================
 // Pieces (Alpha's half)
 // ============================================================================================================
 const HALF = [
-  // ---------------- the lawn (to z 0; Bravo's twin meets it on the centre line)
-  B(7.2, 12, FL, G0, -9.6, 0, turf({ tag: 'lawn' })),
-  B(-8, -7.2, FL, G0, -9.6, 0, turf({ tag: 'lawn' })),
-  ...lawnCols([-24, -20, -16, -12, -8], 0, () => turf({ tag: 'lawn-w' })),
+  // ---------------- the ground: the lawn's two ends, the base side, the ridge (columns + ledges)
+  ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]),
   // dry-stone walls on the lawn (the centre zone's cover, with the Dobsonians' crates)
   B(-6.3, -2.9, G0, 0.95, -4.1, -3.4, granite({ tag: 'drystone-wall', color: K.graniteDk })),
-  ...lawnCols([12, 14, 16, 18, 20], 0, () => turf({ tag: 'lawn-e' })),
-  // the lawn's east end: a bay of the tarn between the brook mouth and the lookout point
-  B(20, 22, FL, G0, zMax(BN, 20, 22) + INSET, -11.5, turf({ tag: 'lawn-e' })), B(20, 22, FL, G0, -5.2, 0, turf({ tag: 'lawn-e' })),
-  B(22, 24, FL, G0, zMax(BN, 22, 24) + INSET, -11.5, turf({ tag: 'lawn-e' })), B(22, 24, FL, G0, -5.2, 0, turf({ tag: 'lawn-e' })),
-  B(24, 25.6, FL, G0, -4.6, -0.8, granite({ tag: 'lookout-point' })),
-  bar(BN, -24, -8, 1, 1.3, 0.15, gravel({ tag: 'bar-n' })),
-  bar(BN, 12, 24, 1, 1.7, 0.15, gravel({ tag: 'bar-n' })),
-
-  // ---------------- base-side ground (to the back, z −45.4): banks, the shore, and the slab under the terraces
-  B(-8, 12, FL, G0, -45.4, -13.8, turf({ tag: 'bank' })),
-  ...baseCols([-22.5, -20, -16, -12, -8], -45.4, () => turf({ tag: 'bank-w' })),
-  B(-25.5, -22.5, FL, G0, -41, -36, turf({ tag: 'bank-w' })), B(-25.5, -22.5, FL, G0, -28, zMin(BS, -25.5, -22.5) - INSET, turf({ tag: 'bank-w' })),
-  B(-23.5, -22.5, FL, G0, -36, -28, turf({ tag: 'bank-w' })),
-  // (the E reach: the bank under the tower's run, the shelf, the shore trail with a bay)
-  ...baseCols([12, 14, 15], -45.4, () => turf({ tag: 'bank-e' })),
-  ...baseCols([15, 17.5, 20, 22], -45.4, () => turf({ tag: 'shore' })),
-  B(22, 24.5, FL, G0, -41.5, -38, turf({ tag: 'shore' })), B(22, 24.5, FL, G0, -30, zMin(BS, 22, 24.5) - INSET, turf({ tag: 'shore' })),
-  bar(BS, -25.5, -8, -1, 1.3, 0.15, gravel({ tag: 'bar-s' })),
-  bar(BS, 12, 16.2, -1, 1.4, 0.15, gravel({ tag: 'bar-s' })),
-  bar(BS, 16.2, 24.5, -1, 2.3, 0.15, gravel({ tag: 'bar-s' })),
 
   // ---------------- spawn: the forecourt on the control building (G3), the dome behind
   B(-9, 9, G0, G3 - 0.2, -45.4, -36.5, ashlar({ color: K.graniteDk, tag: 'control-building' })),
@@ -140,13 +117,10 @@ const HALF = [
   R([-15, G1, -30.55], [-15, 2.4, -27.95], 1.6, steps({ tag: 'rock-steps', color: K.granite })),
   R([-14.2, G1, -20.9], [-11, G2, -20.9], 2.2, steps({ tag: 'bastion-stair' })),
 
-  // ---------------- the ridge (G2): the spine along the tarn cliff (a bay mid-way), its root behind the hollow,
-  //                  the timber viewing platform on its nose
-  B(-25.5, -19, G0, G2, -41, -36, granite({ tag: 'ridge' })), B(-22.5, -19, G0, G2, -45.4, -41, granite({ tag: 'ridge' })),
-  B(-23.5, -19, G0, G2, -36, -28, granite({ tag: 'ridge' })),
-  B(-25.5, -19, G0, G2, -28, -19.2, granite({ tag: 'ridge' })),
-  B(-25.5, -19, G0, 2.45, -19.2, -15.2, granite({ tag: 'ridge-nose' })),
-  B(-25.8, -18.8, 2.45, G2, -19.2, -15.2, timber({ tag: 'viewing-platform' })),
+  // ---------------- the ridge (G2): the spine along the tarn cliff (its ground above), its root behind the hollow, the
+  //                  timber viewing platform on its nose, overhanging the cliff
+  B(-26.3, -19, G0, 2.45, -19.2, -15.2, granite({ tag: 'ridge-nose' })),
+  B(-26.6, -18.8, 2.45, G2, -19.2, -15.2, timber({ tag: 'viewing-platform' })),
   B(-19, -9, G0, G2, -45.4, -36.5, granite({ tag: 'ridge-root' })),
   B(-19, -11, G0, G2, -36.5, -31.5, granite({ tag: 'ridge-root' })),
   // the old weather hut on the ridge root, against the summit crag (granite walls ink; its roof is off-limits)
@@ -155,8 +129,8 @@ const HALF = [
 
   // ---------------- crossings
   // the weir across the W reach: crest (G1) bank to bank, steel stair down to the lawn
-  B(-23.2, -20.8, FL, G1, -12.6, -6.6, { color: K.concrete, pattern: PATTERN.concrete, tag: 'weir' }),
-  R([-22, G0, -3.5], [-22, G1, -6.6], 2.4, { color: '#8a9096', pattern: PATTERN.treads, tag: 'weir-stair' }),
+  B(-23.2, -20.8, FL, G1, -12.6, -5.6, { color: K.concrete, pattern: PATTERN.concrete, tag: 'weir' }),
+  R([-22, G0, -2.5], [-22, G1, -5.6], 2.4, { color: '#8a9096', pattern: PATTERN.treads, tag: 'weir-stair' }),
   // the Old Stone Bridge (M reach): humped, crown 0.8, 6 m between the parapets (room to fight round the tower as it
   // crosses), parapets as cover
   B(-3, 3, -0.6, 0.8, -14.6, -9.0, ashlar({ tag: 'bridge-crown' })),
@@ -167,13 +141,13 @@ const HALF = [
     R([s * 3.225, 0.95, -7.3], [s * 3.225, 1.7, -9.0], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
     R([s * 3.225, 0.95, -16.3], [s * 3.225, 1.7, -14.6], 0.45, ashlar({ tag: 'bridge-parapet', thin: true, thickness: 0.85, perch: true, noNav: true })),
   ]),
-  // the log bridge (E reach): two split logs, square across the reach
-  O(20, -15.84, 1.6, 6.8, -0.35, 0.25, 26.7, timber({ tag: 'log-bridge' })),
+  // the log bridge (E reach, past its bend): two split logs, square across the reach
+  O(20.6, -15.39, 1.6, 5.2, -0.3, 0.42, 36.6, timber({ tag: 'log-bridge' })),   // (its ends rest on the bank shelves)
 
   // ---------------- the back: the summit crag behind the ridge root, the east yard and the shore (off-limits)
-  B(-22.5, -9, G2, 6.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
+  B(-20, -9, G2, 6.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
   B(9, 17.5, G1, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
-  B(17.5, 22, G0, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
+  B(17.5, 22.4, G0, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
 ];
 
 // ============================================================================================================
@@ -196,7 +170,7 @@ const TOWER = {
 const LAYOUT_NANTAI = {
   id: 'nantai',
   water: 'marina',   // the tarn: calm, glassy water that mirrors the mountain (the marina water mode: no sea spray)
-  bounds: { minX: -26, maxX: 26, minZ: -46, maxZ: 46 },
+  bounds: { minX: -27, maxX: 27, minZ: -46, maxZ: 46 },
   spawnPads: [[0, G3, -41], [0, G3, 41]],
   spawnBarrier: 4.2,
   // match intro: high over the lawn's west end (the weir behind), looking over the Old Stone Bridge at the terraces and
