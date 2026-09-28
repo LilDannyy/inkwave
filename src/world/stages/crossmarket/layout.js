@@ -136,17 +136,16 @@ const CROSSMARKET = {
     R([21.75, 0, -3], [21.75, 1.2, -6], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'parade-stair' }),
 
     // ================= TOWER COMMAND ONLY (onlyIn: 'tower', src/world/variants.js; Turf War + Zone Control untouched).
-    // The track (tower-data.js) on each side runs round the hall's corner, along the front of the tall row and climbs
-    // the café roof terrace's end, then drops into the flank street and runs down it to the goal by the Exchange.
-    // · the roof terrace is extended toward the hall (x 10.5 … 15 × z -16 … -8.5, first floor) so the track climbs its
-    //   end wall (checkpoint 2 on top); its stair moves to the new end, down toward the hall's corner
+    // The track (tower-data.js) on each side runs round the hall's corner, along the front of the tall row, past the
+    // café roof terrace's end on the street (checkpoint 2 on the setts there) into the flank street and down it to the
+    // goal by the Exchange.
+    // · the roof terrace's stair at its hall end goes (its foot stood on the track): the terrace ends in a plain wall
+    //   the squids swim up; it is still reached dry-shod over the Exchange footbridge from the spawn terrace
     // · Market Street's end of the Arcade Gallery stops at z -20.95 (the track passes under where it was) and its
     //   Market Street stair goes; the gallery is still reached from the spawn terrace and the fish court's iron stair
     // · the Exchange footbridge (overpass): an iron deck at first floor from the spawn terrace's corner (over where the
     //   side flight was) and on over the far terrace stair's place to the roof terrace, so the defenders walk straight
     //   out of their spawn onto the high ground over their goal; under it the street is open (2.3 clear)
-    B(10.5, 15, 0, FL, -16, -8.5, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-C', onlyIn: TC }),
-    R([12.75, 0, -2.3], [12.75, FL, -8.5], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair', onlyIn: TC }),
     B(-6, -3.8, 2.3, FL, -36, -20.95, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', onlyIn: TC }),
     // (a dropped kerb in the gallery's pavement where the track crosses it)
     B(-6, -3.8, 0, K, -28, -20.95, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', onlyIn: TC }),
