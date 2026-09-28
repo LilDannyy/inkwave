@@ -90,7 +90,7 @@ export function registerNature(D, H, T) {
     desc: 'heather and grass clumps (visual)',
     build(B, o) {
       const w = o.w ?? 2, d = o.d ?? 2, n = o.n ?? 5, seed = o.seed ?? 3;
-      for (let i = 0; i < n; i++) heath(B, (hash(seed * 3 + i) - 0.5) * w, 0, (hash(seed * 7 + i) - 0.5) * d, 0.5 + hash(seed + i) * 0.7, seed + i, hash(seed * 11 + i) > 0.65 ? '#8a7a55' : undefined);
+      for (let i = 0; i < n; i++) heath(B, (hash(seed * 3 + i) - 0.5) * w, 0, (hash(seed * 7 + i) - 0.5) * d, 0.5 + hash(seed + i) * 0.6, seed + i);
     },
   };
   // granite planter with alpine plants (cover): w × d, 0.6 high

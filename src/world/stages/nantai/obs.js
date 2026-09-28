@@ -259,6 +259,22 @@ export function registerObservatory(D, H, T) {
     },
   };
 
+
+  // a small satellite dish on a post (the observatory's data link): pos = ground, it looks toward +Z and up
+  D.nantai_dish = {
+    desc: 'satellite dish on a post',
+    build(B) {
+      ccyl(B, 'metal', K.steelDk, 0.07, 1.6, 0, 0.8, 0, { seg: 8 });
+      B.box('paint', K.concrete, 0.6, 0.2, 0.6, 0, 0.1, 0, { r: 0.03 });
+      B.push(0, 1.7, 0, 0, -0.7);
+      B.lathe('metal', K.white, [[0, -0.02], [0.35, 0.04], [0.62, 0.2], [0.64, 0.22], [0.6, 0.23], [0.33, 0.07], [0, 0.01]], 0, 0, 0, { seg: 20, rx: HP });
+      for (let i = 0; i < 3; i++) { const a = (i / 3) * TAU + 0.5; seg(B, NS('metal'), K.steelLt, [Math.cos(a) * 0.55, Math.sin(a) * 0.55, 0.2], [0, 0, 0.7], 0.02, 0.02, { round: true, seg: 4 }); }
+      B.cyl('metal', K.steelDk, 0.06, 0.12, 0, 0, 0.72, { rx: HP, seg: 8 });
+      B.pop();
+      colC(B, 0, 0, 0, 0.6, 2.3, 0.6);
+    },
+  };
+
   // steel stair railing along a ramp (pos = the ramp's low end, run along local +Z, rise; side = which edge, ±X)
   D.nantai_stairrail = {
     desc: 'a steel handrail along a stair / ramp edge (rail collider)',

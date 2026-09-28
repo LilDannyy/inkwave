@@ -122,8 +122,13 @@ export function buildBackdrop(kit) {
   // a skirt of granite boulders along the arena's outer deck edges (never along the brooks inside the arena)
   const b = kit.bounds, inside = (x, z) => x > b.minX + 0.3 && x < b.maxX - 0.3 && z > b.minZ + 0.3 && z < b.maxZ - 0.3;
   const rockGeoB = (seed) => {
-    const g = new THREE.IcosahedronGeometry(1, 1), P = g.attributes.position, r = mulberry(seed);
-    for (let i = 0; i < P.count; i++) { const k = 0.78 + 0.34 * r(); P.setXYZ(i, P.getX(i) * k, P.getY(i) * k * 0.8, P.getZ(i) * k); }
+    // a smooth-ish boulder: per-direction radius from a few sines (never spiky: shared vertices get one radius)
+    const g = new THREE.IcosahedronGeometry(1, 1), P = g.attributes.position, r = mulberry(seed), ph = [r() * 6, r() * 6, r() * 6];
+    for (let i = 0; i < P.count; i++) {
+      const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+      const k = 0.9 + 0.1 * Math.sin(x * 2.3 + ph[0]) * Math.sin(z * 2.1 + ph[1]) + 0.06 * Math.sin(y * 3.1 + ph[2]);
+      P.setXYZ(i, x * k * 1.15, y * k * 0.72, z * k);
+    }
     return g;
   };
   const rockGeos = [0, 1, 2, 3].map((s) => rockGeoB(900 + s));
@@ -140,7 +145,7 @@ export function buildBackdrop(kit) {
       xf(g, ex + run.nx * out, WATER_Y + 0.1 + (rnd() - 0.4) * 0.5, ez + run.nz * out, rnd() * 6.28, (rnd() - 0.5) * 0.3, 0, r, r * (0.8 + rnd() * 0.5), r);
       g.deleteAttribute('uv');
       const gp = g.index ? g.toNonIndexed() : g; gp.computeVertexNormals();
-      const cc = new Float32Array(gp.attributes.position.count * 3), tone = 0.85 + rnd() * 0.3, base = C('#9a978f');
+      const cc = new Float32Array(gp.attributes.position.count * 3), tone = 0.8 + rnd() * 0.25, base = C('#8c8983');
       for (let k = 0; k < gp.attributes.position.count; k++) { const y = gp.attributes.position.getY(k) - WATER_Y, w = y < 0.35 ? 0.62 : 1; cc[k * 3] = base.r * tone * w; cc[k * 3 + 1] = base.g * tone * w; cc[k * 3 + 2] = base.b * tone * w; }
       gp.setAttribute('color', new THREE.BufferAttribute(cc, 3));
       statics.push(gp);
