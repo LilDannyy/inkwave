@@ -67,14 +67,14 @@ The platform never turns (fixed heading = the stage's grid). The rail is drawn o
    - Run `MAP=<id> MODE=turf SECS=120 tools/botlab/run.sh tools/botlab/match.cjs` and `MODE=zones`. They must show no console errors, and the stuck % must not jump. Compare against a run BEFORE your edits.
    - Zone Control zones (`src/world/zones-data.js`) must still sit on sensible floor. If your change breaks a zone, fix the geometry, not the zone; report if unavoidable.
    - Run `node build/check-maps.mjs`. There is a known pre-existing warning: Halyard ramp 25.7°.
-8. **Rebake ambient occlusion** after geometry changes: `npx electron build/bake-ao.cjs <id> <id>.zones`. Only `<id>.zones` stages exist for halyard, tidewater, saltpan, crossmarket and terraces; see `assets/lightmaps/`.
+8. **Rebake ambient occlusion for the tower variant only**, after geometry changes: `<id>.tower`. `<id>` and `<id>.zones` must stay byte-identical.
 
 ## Map rules (the user's standing rules)
 
 - **Roofs and unreachable tops:** non-inkable, and players slide off (`roof: true` on layout pieces, `B.col(…, { roof: true })` on props). Exception: something the user calls inkable (Lockgate's "INKABLE ROOF").
 - **Railings and grates:** use `rail: true` (block walking; shots and ink pass).
 - **Perches** reachable only by specials: `perch: true`.
-- **Modes:** changes are for ALL modes, unless the user labels them for one mode. The variants system is `src/world/variants.js`: `onlyIn` / `notIn`.
+- **Modes:** every change is for **Tower Command ONLY** (the user, 2026-09-28). Turf War and Zone Control stay byte-identical. New pieces get `onlyIn: 'tower'`. Removed or moved pieces get `notIn: 'tower'` on the original plus an `onlyIn: 'tower'` copy. A piece already tagged `notIn: 'zones'` becomes `notIn: ['zones', 'tower']` (tags take lists). Bake only `<id>.tower`. `<id>` and `<id>.zones` must not change. See `src/world/variants.js`.
 - **Git:** never touch `dist/`, never run `npm start`, never kill processes you didn't start. Commit as `-c user.name=LilDannyy -c user.email=94884334+LilDannyy@users.noreply.github.com`, message ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
 ## Report (per stage)
