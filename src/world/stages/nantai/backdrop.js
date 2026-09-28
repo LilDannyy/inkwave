@@ -137,7 +137,7 @@ export function buildBackdrop(kit) {
       const g = rockGeos[(nb++) & 3].clone();
       xf(g, ex + run.nx * out, WATER_Y + 0.1 + (rnd() - 0.4) * 0.5, ez + run.nz * out, rnd() * 6.28, (rnd() - 0.5) * 0.3, 0, r, r * (0.8 + rnd() * 0.5), r);
       g.deleteAttribute('uv');
-      const gp = g.toNonIndexed(); gp.computeVertexNormals();
+      const gp = g.index ? g.toNonIndexed() : g; gp.computeVertexNormals();
       const cc = new Float32Array(gp.attributes.position.count * 3), tone = 0.85 + rnd() * 0.3, base = C('#9a978f');
       for (let k = 0; k < gp.attributes.position.count; k++) { const y = gp.attributes.position.getY(k) - WATER_Y, w = y < 0.35 ? 0.62 : 1; cc[k * 3] = base.r * tone * w; cc[k * 3 + 1] = base.g * tone * w; cc[k * 3 + 2] = base.b * tone * w; }
       gp.setAttribute('color', new THREE.BufferAttribute(cc, 3));
@@ -187,7 +187,7 @@ export function buildBackdrop(kit) {
   const pineMerged = merge(pineGeo);
   // shade the pine: trunk stays brown (vertex colour), pads take the instance colour; pads darker underneath
   { const P = pineMerged.attributes.position, Cc = pineMerged.attributes.color; for (let i = 0; i < P.count; i++) { const y = P.getY(i); if (Cc.getX(i) > 0.9) { const k = 0.72 + 0.28 * Math.min(1, Math.max(0, (y - 0.8) / 2.6)); Cc.setXYZ(i, k, k, k); } } }
-  const bGeo = (() => { const g = rockGeoB(77); g.deleteAttribute('uv'); const gp = g.toNonIndexed(); gp.computeVertexNormals(); return prep(gp, '#ffffff'); })();
+  const bGeo = (() => { const g = rockGeoB(77); g.deleteAttribute('uv'); g.computeVertexNormals(); return prep(g, '#ffffff'); })();
 
   return {
     static: statics,

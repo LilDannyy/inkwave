@@ -25,7 +25,7 @@ export function registerNature(D, H, T) {
       for (let i = 0; i < ns; i++) {
         const x = ((i + 0.5) / ns) * L + (hash(seed * 5 + i) - 0.5), z = 0.9 + hash(seed * 9 + i) * ((o.width ?? 2.5) - 1.6), r = 0.25 + hash(i * 3 + seed) * 0.25;
         rock(B, x, WY - 0.35, z, r, r * 0.55, r * 0.8, seed * 31 + i, { c: K.graniteLt, ao: false });
-        B.sph(NS('paint'), K.foam, r * 0.9, x + r * 0.9, WY + 0.02, z, { sx: 1.8, sy: 0.08, sz: 0.6, ws: 8, hs: 4 });
+        B.sph(NS('paint'), K.foam, r * 0.5, x + r * 0.7, WY + 0.01, z, { sx: 1.6, sy: 0.05, sz: 0.5, ws: 8, hs: 4 });
       }
       if (o.bar) B.col(0, -2.4, -o.bar, L, 0.0, 0);
     },

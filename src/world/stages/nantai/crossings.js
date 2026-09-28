@@ -41,17 +41,17 @@ export function registerCrossings(D, H, T) {
       // coping on the parapets (crown + ramps): a slightly wider capstone, a hair under the perch top
       for (const sx of [-1, 1]) {
         pbox(B, 'paint', K.graniteLt, 0.6, 0.1, 5.6, sx * 2.225, 1.66, 0);
-        for (const sz of [-1, 1]) seg(B, 'paint', K.graniteLt, [sx * 2.225, 1.66, sz * 2.8], [sx * 2.225, 0.86, sz * 5.0], 0.6, 0.1, { plain: true });
+        for (const sz of [-1, 1]) seg(B, 'paint', K.graniteLt, [sx * 2.225, 1.66, sz * 2.8], [sx * 2.225, 0.86, sz * 4.5], 0.6, 0.1, { plain: true });
       }
       // end piers at the ramp feet (cover): square granite posts with a pyramid cap; a carved name on one
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        const x = sx * 2.75, z = sz * 5.3;
+        const x = sx * 2.75, z = sz * 4.8;
         B.box('paint', K.granite, 0.62, 1.15, 0.62, x, 0.575, z, { r: 0.04 });
         B.box('paint', K.graniteLt, 0.72, 0.1, 0.72, x, 1.2, z, { r: 0.02 });
         B.add('paint', H.latheGeo([[0, 0], [0.34, 0], [0.34, 0.04], [0, 0.26]], 4), K.graniteLt, x, 1.25, z, { ry: PI / 4 });
         colC(B, x, 0, z, 0.72, 1.25, 0.72);
       }
-      B.push(2.75, 0.62, 5.62, 0);
+      B.push(2.75, 0.62, 5.12, 0);
       letters(B, 'OLD STONE BRIDGE', { h: 0.075, x: 0, y: 0.1, z: 0, c: K.graniteDk, flat: true, wt: 0.2 });
       B.pop();
       // weathered joints on the arch body's faces: a few stone courses (thin dark lines)
