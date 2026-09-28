@@ -202,14 +202,22 @@ function buildSide(raw, yaw, R, y0, holes) {
   }
   return out;
 }
-// the platform's heading: the drawn runs' own grid (length-weighted, mod 90°)
+// the platform's heading: the drawn runs' own grid — the direction (mod 90°) covering the most track, averaged over the
+// runs within 3° of it (a diagonal run or two doesn't skew a square layout)
 function gridYaw(raw) {
-  let sx = 0, sy = 0;
+  const runs = [];
   for (let i = 0; i < raw.length - 1; i++) {
-    const dx = raw[i + 1].x - raw[i].x, dz = raw[i + 1].z - raw[i].z, L = Math.hypot(dx, dz), th = Math.atan2(dx, dz);
-    sx += L * Math.cos(4 * th); sy += L * Math.sin(4 * th);
+    const dx = raw[i + 1].x - raw[i].x, dz = raw[i + 1].z - raw[i].z, L = Math.hypot(dx, dz);
+    if (L > 1e-3) runs.push({ L, a: ((Math.atan2(dx, dz) % (Math.PI / 2)) + Math.PI / 2) % (Math.PI / 2) });
   }
-  return Math.atan2(sy, sx) / 4;
+  const near = (a, b) => { const d = Math.abs(a - b) % (Math.PI / 2); return Math.min(d, Math.PI / 2 - d) < (3 * Math.PI) / 180; };
+  let best = null, bl = -1;
+  for (const r of runs) { const l = runs.reduce((s2, q) => s2 + (near(q.a, r.a) ? q.L : 0), 0); if (l > bl) { bl = l; best = r; } }
+  if (!best) return 0;
+  let sx = 0, sy = 0;
+  for (const q of runs) if (near(q.a, best.a)) { sx += q.L * Math.cos(4 * q.a); sy += q.L * Math.sin(4 * q.a); }
+  const y = Math.atan2(sy, sx) / 4;
+  return Math.abs(y) < 1e-6 ? 0 : y;
 }
 
 // A stage without a drawn path: the walkable route from the centre toward Bravo's base (its goal a few metres outside
