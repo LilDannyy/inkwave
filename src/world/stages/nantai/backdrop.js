@@ -73,8 +73,8 @@ export function buildBackdrop(kit) {
   const crag = mass({ x: -6, z: -96, rx: 42, rz: 26, h: 24, seed: 7, rot: 0.15, ridge: 0.7 });
   mass({ x: 18, z: -72, rx: 26, rz: 18, h: 9, seed: 8, rot: -0.3, ridge: 0.6 });
   mass({ x: -28, z: -70, rx: 20, rz: 16, h: 8, seed: 9, rot: 0.5, ridge: 0.6 });
-  mass({ x: -40, z: -215, rx: 190, rz: 120, h: 150, seed: 10, rot: 0.25, ridge: 0.75, snow: 124 });
-  mass({ x: -130, z: -250, rx: 120, rz: 90, h: 118, seed: 18, rot: -0.4, ridge: 0.8, snow: 110 });
+  mass({ x: -50, z: -300, rx: 230, rz: 140, h: 165, seed: 10, rot: 0.25, ridge: 0.75, snow: 132 });
+  mass({ x: -170, z: -330, rx: 140, rz: 100, h: 128, seed: 18, rot: -0.4, ridge: 0.8, snow: 112 });
   mass({ x: 40, z: -150, rx: 70, rz: 50, h: 46, seed: 19, rot: 0.6, ridge: 0.85 });
   mass({ x: 4, z: 92, rx: 38, rz: 24, h: 16, seed: 11, rot: -0.2, ridge: 0.6 });
   mass({ x: -22, z: 70, rx: 24, rz: 16, h: 7, seed: 12, rot: 0.4, ridge: 0.6 });
@@ -116,7 +116,7 @@ export function buildBackdrop(kit) {
   // ---------------------------------------------------------------------------------------------- the summit crag's trig pillar
   { const x = -4, z = -96; const y = crag.heightAt(x, z); statics.push(xf(box(0.9, 1.4, 0.9, '#e8e6e0'), x, y + 0.6, z)); statics.push(xf(cyl(0.12, 0.12, 0.3, 8, '#9aa1a8'), x, y + 1.45, z)); }
   // a cairn line down the summit ridge + a few trail posts
-  for (let i = 0; i < 6; i++) { const x = -20 - i * 9, z = -118 - i * 11, y = masses[9].isl.heightAt(x, z); if (y > WATER_Y + 2) statics.push(xf(sph(0.9, 6, 4, '#a39d94'), x, y + 0.4, z, 0, 0, 0, 1, 1.4, 1)); }
+  for (let i = 0; i < 6; i++) { const x = -24 - i * 10, z = -170 - i * 14, y = masses[9].isl.heightAt(x, z); if (y > WATER_Y + 2) statics.push(xf(sph(0.9, 6, 4, '#a39d94'), x, y + 0.4, z, 0, 0, 0, 1, 1.4, 1)); }
 
   // ---------------------------------------------------------------------------------------------- waterline boulders
   // a skirt of granite boulders along the arena's outer deck edges (never along the brooks inside the arena)
@@ -150,6 +150,33 @@ export function buildBackdrop(kit) {
       gp.setAttribute('color', new THREE.BufferAttribute(cc, 3));
       statics.push(gp);
     }
+  }
+
+  // ---------------------------------------------------------------------------------------------- crags
+  // faceted granite tors on the knolls and crags close behind the domes (the finely meshed ones: the far massifs'
+  // coarse meshes sit too far under their analytic height for anything to rest on them)
+  const crags = [];
+  for (const [mi, n, lo, hi] of [[6, 9, 0.2, 0.95], [7, 3, 0.3, 0.9], [8, 3, 0.3, 0.9], [12, 6, 0.2, 0.95], [13, 3, 0.3, 0.9], [14, 3, 0.3, 0.9]]) {
+    const m = masses[mi];
+    if (!m) continue;
+    let k = 0, tries = 0;
+    while (k < n && tries++ < n * 20) {
+      const [x, z] = m.isl.sample(rnd, 0.7), y = m.isl.heightAt(x, z), f = (y - WATER_Y) / m.h;
+      if (f < lo || f > hi) continue;
+      const r = m.h * (0.06 + rnd() * 0.06);
+      crags.push([x, y - r * 0.35, z, r, rnd() * 6.28]);
+      k++;
+    }
+  }
+  for (const [x, y, z, r, a] of crags) {
+    const g = rockGeoB(300 + ((x * 7 + z) | 0));
+    g.deleteAttribute('uv'); g.deleteAttribute('normal');
+    xf(g, x, y, z, a, (rnd() - 0.5) * 0.3, 0, r * (1 + rnd() * 0.6), r * (0.7 + rnd() * 0.6), r);
+    const gp = g.index ? g.toNonIndexed() : g; gp.computeVertexNormals();
+    const cc = new Float32Array(gp.attributes.position.count * 3), tone = 0.78 + rnd() * 0.22, base = C('#8e8b85');
+    for (let i = 0; i < gp.attributes.position.count; i += 3) { const ny = gp.attributes.normal.getY(i), v = tone * (0.85 + 0.2 * Math.max(0, ny)); for (let q = 0; q < 3; q++) { cc[(i + q) * 3] = base.r * v; cc[(i + q) * 3 + 1] = base.g * v; cc[(i + q) * 3 + 2] = base.b * v; } }
+    gp.setAttribute('color', new THREE.BufferAttribute(cc, 3));
+    plains.push(gp);
   }
 
   // ---------------------------------------------------------------------------------------------- dwarf pines + boulders

@@ -275,6 +275,36 @@ export function registerObservatory(D, H, T) {
     },
   };
 
+
+  // the old weather hut (layout block 3.6 × 2.8 × 2.3 on the ridge root; pos = its floor centre, front +Z): a pitched
+  // slate roof with a stone chimney, a plank door, a small window, a rain gauge and an old barometer board by the door
+  D.nantai_weatherhut = {
+    desc: 'old stone weather hut: slate roof, chimney, door, window, rain gauge',
+    build(B) {
+      const W = 3.6, Dd = 2.8, Hh = 2.3, rise = 1.0;
+      const roofGeo = tpl('whRoof', () => { const g = new T.GB(); const e = 0.25, x0 = -W / 2 - e, x1 = W / 2 + e, z0 = -Dd / 2 - e, z1 = Dd / 2 + e;
+        for (const s of [-1, 1]) { const zs = s * (Dd / 2 + e), nz = s * 0.7, ny = 0.7; const a = g.v(x0, 0, zs, 0, ny, nz), b = g.v(x1, 0, zs, 0, ny, nz), c = g.v(x1, rise, 0, 0, ny, nz), d = g.v(x0, rise, 0, 0, ny, nz); g.quad(a, b, c, d); }
+        for (const s of [-1, 1]) { const x = s * (W / 2); const a = g.v(x, 0, z0 + e, s, 0, 0), b = g.v(x, 0, z1 - e, s, 0, 0), c = g.v(x, rise - 0.18, 0, s, 0, 0); g.tri(a, b, c); }
+        return g.geo(); });
+      B.add('paint', roofGeo, '#4f5660', 0, Hh, 0);
+      for (let i = 1; i < 5; i++) for (const s of [-1, 1]) pbox(B, NS('paint'), '#434952', W + 0.5, 0.02, 0.02, 0, Hh + (rise * i) / 5, s * (Dd / 2 + 0.25) * (1 - i / 5));
+      B.box('paint', K.graniteDk, W + 0.56, 0.08, 0.14, 0, Hh + rise + 0.02, 0, { r: 0.02 });
+      B.box('paint', K.granite, 0.55, 1.1, 0.55, W / 2 - 0.6, Hh + 0.9, -0.5, { r: 0.04 });
+      B.box('paint', K.graniteDk, 0.62, 0.08, 0.62, W / 2 - 0.6, Hh + 1.48, -0.5, { r: 0.02 });
+      // door + window on the front
+      B.box('wood', K.timberDk, 0.9, 1.9, 0.05, -0.8, 0.95, Dd / 2 + 0.03, { r: 0.015 });
+      for (let i = 0; i < 4; i++) pbox(B, NS('wood'), K.timber, 0.2, 1.8, 0.02, -1.1 + i * 0.2, 0.95, Dd / 2 + 0.06);
+      B.box('paint', K.whiteSh, 0.8, 0.7, 0.06, 0.8, 1.35, Dd / 2 + 0.03, { r: 0.015 });
+      B.box('glow', '#e7c48c', 0.66, 0.56, 0.02, 0.8, 1.35, Dd / 2 + 0.07, { glow: 0.5 });
+      pbox(B, NS('paint'), K.whiteSh, 0.04, 0.56, 0.03, 0.8, 1.35, Dd / 2 + 0.09);
+      // rain gauge on a post + a barometer board
+      pbox(B, 'wood', K.timberDk, 0.08, 0.9, 0.08, W / 2 + 0.6, 0.45, Dd / 2 + 0.3);
+      B.cyl('metal', K.copper, 0.09, 0.3, W / 2 + 0.6, 1.05, Dd / 2 + 0.3, { seg: 12 });
+      boardSign(B, ['WEATHER', 'STATION 1931'], 0.05, 2.0, { h: 0.075, z: Dd / 2, board: K.whiteSh, c: K.navy, wt: 0.2 });
+      colC(B, W / 2 + 0.6, 0, Dd / 2 + 0.3, 0.2, 1.2, 0.2);
+    },
+  };
+
   // steel stair railing along a ramp (pos = the ramp's low end, run along local +Z, rise; side = which edge, ±X)
   D.nantai_stairrail = {
     desc: 'a steel handrail along a stair / ramp edge (rail collider)',

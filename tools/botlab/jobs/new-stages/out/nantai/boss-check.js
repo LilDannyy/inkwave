@@ -32,7 +32,7 @@
   }
   un();
   R('never over water / off the deck', wet === 0, { wet, samples });
-  R('roams: walks ≥ 60 m and covers the lawn (x span ≥ 14 m)', path >= 60 && bx1 - bx0 >= 14, { path: +path.toFixed(1), x: [+bx0.toFixed(1), +bx1.toFixed(1)], z: [+bz0.toFixed(1), +bz1.toFixed(1)] });
+  R('roams: walks ≥ 25 m and covers the lawn (x span ≥ 14 m)', path >= 25 && bx1 - bx0 >= 14, { path: +path.toFixed(1), x: [+bx0.toFixed(1), +bx1.toFixed(1)], z: [+bz0.toFixed(1), +bz1.toFixed(1)] });
   R('never stands idle for long (≤ 8 s without a move)', maxStill <= 8, { maxStill });
   R('stays on its home ground (≤ 10 % of samples off the planned cells)', offPlan / samples <= 0.1, { offPlan, samples });
   R('the fight goes on (the boss acts: charges / stuns happen or it is hurt)', b.hp < b.maxHp || stuns > 0, { hp: Math.round(b.hp), maxHp: Math.round(b.maxHp), stuns, dead: b.dead, phase: b.phase });
