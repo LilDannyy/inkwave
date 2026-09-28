@@ -831,25 +831,31 @@ export function registerMarinaDock(D, H) {
     pbox(B, NS('paint'), K.white, 0.2, 0.06, 0.004, x, y + 0.075, 0.102);
     pbox(B, NS('metal'), K.stainless, 0.03, 0.08, 0.02, x + 0.12, y + 0.34, 0.105);
   }
-  // ---- fuel hut kit: dresses the `fuel-hut` block (w × d × h around pos), roof sign FUEL · ICE · BAIT with colliders
+  // ---- fuel hut kit: dresses the `fuel-hut` block (w × d × h around pos), roof sign FUEL · ICE · BAIT with colliders.
+  //      ramp (Tower Command): a timber ramp up the -Z wall onto a walkable roof ({ run, rise, w }: the ramp block's run
+  //      out from the wall, its rise = the roof, its width) — the -Z wall's fittings give way to it (the door moves round
+  //      to -X), the roof is cleared (no AC / vent) and the sign goes up on a gantry over it; the ramp gets its framing
   D.fuelhut = {
-    desc: 'Fuel-dock attendant hut dressing around a w × d × h block (pos = block base centre): door + awning (-Z), service hatch + awning (+Z), windows and FUEL PRICES boards (±X), roof trim, gutters + downpipes, double-sided FUEL · ICE · BAIT roof sign, rooftop AC and vent (roof pieces collide), extinguisher, NO SMOKING plates.',
-    params: { w: 'm (3.4)', d: 'm (3.7)', h: 'm (2.7)', diesel: '1.89', unleaded: '2.14' }, variants: 1, mount: 'ground',
+    desc: 'Fuel-dock attendant hut dressing around a w × d × h block (pos = block base centre): door + awning (-Z), service hatch + awning (+Z), windows and FUEL PRICES boards (±X), roof trim, gutters + downpipes, double-sided FUEL · ICE · BAIT roof sign, rooftop AC and vent (roof pieces collide), extinguisher, NO SMOKING plates. ramp: a lookout roof up a ramp on the -Z wall (the sign on a gantry over the roof, the door on -X, the ramp\'s cap stringers + posts).',
+    params: { w: 'm (3.4)', d: 'm (3.7)', h: 'm (2.7)', diesel: '1.89', unleaded: '2.14', ramp: '{ run, rise, w } (Tower Command lookout roof)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const W = o.w ?? 3.4, Dd = o.d ?? 3.7, Hh = o.h ?? 2.7;
+      const W = o.w ?? 3.4, Dd = o.d ?? 3.7, Hh = o.h ?? 2.7, ramp = o.ramp || null;
       const face = (side, fn) => { // side: 0 +Z, 1 +X, 2 -Z, 3 -X → local frame on that face (x along the face, z out)
         const ry = [0, HP, PI, -HP][side], off = side % 2 === 0 ? Dd / 2 : W / 2;
         B.push(Math.sin(ry) * off, 0, Math.cos(ry) * off, ry); fn(side % 2 === 0 ? W : Dd); B.pop();
       };
-      // roof trim + gutters, corner beads
+      // roof trim + gutters, corner beads (with a ramp, the -Z wall's trim stops either side of its landing)
       for (let side = 0; side < 4; side++) face(side, (L) => {
-        B.box('paint', K.fuelBlue, L + 0.12, 0.2, 0.06, 0, Hh - 0.02, 0.03, { r: 0.02 });
-        B.box('paint', K.white, L + 0.13, 0.035, 0.07, 0, Hh + 0.09, 0.03, { r: 0.012 });
+        const spans = ramp && side === 2 ? [[-(L + 0.13) / 2, -ramp.w / 2 - 0.02], [ramp.w / 2 + 0.02, (L + 0.13) / 2]] : [[-(L + 0.13) / 2, (L + 0.13) / 2]];
+        for (const [a, b] of spans) {
+          B.box('paint', K.fuelBlue, Math.min(b - a, L + 0.12), 0.2, 0.06, (a + b) / 2, Hh - 0.02, 0.03, { r: 0.02 });
+          B.box('paint', K.white, b - a, 0.035, 0.07, (a + b) / 2, Hh + 0.09, 0.03, { r: 0.012 });
+        }
         B.box('paint', mixc(K.white, K.concreteDk, 0.3), L + 0.02, 0.1, 0.04, 0, 0.05, 0.02, { r: 0.012 });
       });
       // -Z (spawn side): door with rolled awning, window, extinguisher, plates
-      face(2, (L) => {
+      if (!ramp) face(2, (L) => {
         doorUnit(B, -0.75, 0.86, 2.02, { frame: K.fuelBlueDk, leaf: K.fuelBlue });
         awningRolled(B, -0.75, 2.36, 1.1);
         windowUnit(B, 0.72, 1.0, 1.1, 0.95, { frame: K.white, mull: 1, blind: '#e6ddc8', lit: 0.8 });
@@ -865,9 +871,13 @@ export function registerMarinaDock(D, H) {
         B.decal('lb11', 0.52, 0.13, 0, 0.62, 0.012);
         B.decal('ferry', 0.45, 0.3, 1.25, 1.55, 0.012);
       });
-      // ±X: window + price board
+      // ±X: window + price board (with a ramp on -Z, the door comes round to the -X wall in the window's place)
       for (const side of [1, 3]) face(side, (L) => {
-        windowUnit(B, -0.95, 1.05, 0.9, 0.9, { frame: K.white, mull: 0, blind: '#e6ddc8', lit: 0.8 });
+        if (ramp && side === 3) {
+          doorUnit(B, -0.95, 0.86, 2.02, { frame: K.fuelBlueDk, leaf: K.fuelBlue });
+          awningRolled(B, -0.95, 2.36, 1.1);
+          B.decal('lb9', 0.3, 0.075, -0.95, 2.2, 0.075);
+        } else windowUnit(B, -0.95, 1.05, 0.9, 0.9, { frame: K.white, mull: 0, blind: '#e6ddc8', lit: 0.8 });
         B.push(0.72, 0, 0);
         B.box('gloss', K.fuelBlueDk, 1.3, 1.02, 0.05, 0, 1.52, 0.025, { round: true, r: 0.03 });
         B.box('gloss', K.white, 1.2, 0.2, 0.012, 0, 1.9, 0.052, { r: 0.01 });
@@ -885,6 +895,40 @@ export function registerMarinaDock(D, H) {
         B.cyl('paint', K.fuelBlueDk, 0.05, 0.12, L / 2 - 0.12, 0.06, 0.1, { rx: 0.9, seg: 8 });
         for (const yy of [0.7, 1.7]) pbox(B, 'metal', K.galvDk, 0.1, 0.03, 0.06, L / 2 - 0.12, yy, 0.03);
       });
+      if (ramp) {
+        // lookout roof: the double-sided sign up on a galvanised gantry over the middle of the roof (posts at the side
+        // edges, the board clear of a jumping kid's head), nothing else up there
+        const gy = Hh + 2.65, gz = 0.2;
+        for (const sx of [-1.52, 1.52]) {
+          B.box('metal', K.galvDk, 0.1, gy + 0.62 - Hh, 0.1, sx, (Hh + gy + 0.62) / 2, gz, { r: 0.02 });
+          B.box('metal', K.galvDk, 0.24, 0.02, 0.24, sx, Hh + 0.01, gz, { r: 0.006 });
+          B.col(sx - 0.07, Hh, gz - 0.07, sx + 0.07, gy + 0.62, gz + 0.07);
+        }
+        B.box('metal', K.galvDk, 3.1, 0.08, 0.08, 0, gy - 0.04, gz, { r: 0.02 });
+        B.box('gloss', K.fuelBlue, 3.2, 0.6, 0.1, 0, gy + 0.3, gz, { round: true, r: 0.04 });
+        B.box('paint', K.fuelYel, 3.2, 0.05, 0.11, 0, gy + 0.04, gz, { r: 0.015 });
+        for (const f of [1, -1]) {
+          B.push(0, 0, gz + f * 0.05, f > 0 ? 0 : PI);
+          letters(B, 'FUEL · ICE · BAIT', { h: 0.25, x: 0, y: gy + 0.18, z: 0.003, c: K.white, flat: true, wt: 0.2, track: 0.1, mat: 'glow', glow: 0.9 });
+          B.pop();
+        }
+        B.col(-1.62, gy, gz - 0.08, 1.62, gy + 0.62, gz + 0.08);
+        // the ramp's framing (outside its walking width, nothing on its surface): timber cap stringers along both top
+        // edges, framing posts down its boarded sides, a galvanised kick plate across its foot
+        const rw = ramp.w, run = ramp.run, rise = ramp.rise, z0 = -Dd / 2, L = Math.hypot(run, rise), pitch = Math.atan2(rise, run);
+        for (const sx of [-1, 1]) {
+          const x = sx * (rw / 2 + 0.05);
+          B.push(x, rise / 2, z0 - run / 2, 0, -pitch);   // (rising toward +z: the hut wall)
+          B.box('wood', '#8a6a4a', 0.1, 0.24, L + 0.06, 0, -0.12, 0, { r: 0.015 });
+          B.pop();
+          for (const t of [0.22, 0.5, 0.78]) {
+            const zz = z0 - run * t, yt = rise * (1 - t) - 0.03;
+            B.box(NS('wood'), '#7d5f42', 0.12, yt, 0.12, sx * (rw / 2 + 0.06), yt / 2, zz, { r: 0.015 });
+          }
+        }
+        pbox(B, 'metal', K.galvDk, rw, 0.012, 0.16, 0, 0.006, z0 - run + 0.06);
+        return;
+      }
       // roof: double-sided FUEL · ICE · BAIT sign on posts (collides), AC unit + vent (sub-props, collide)
       const sy = Hh, sz = -0.55;
       for (const sx of [-1.3, 1.3]) { B.box('metal', K.galvDk, 0.08, 0.36, 0.08, sx, sy + 0.18, sz, { r: 0.02 }); B.box('metal', K.galvDk, 0.2, 0.02, 0.2, sx, sy + 0.01, sz, { r: 0.006 }); }

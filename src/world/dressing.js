@@ -17,7 +17,7 @@ export const DRESSING = {
     { type: 'pieredge', pos: [4.5, 0, -31], rotY: 0, length: 5.5, s0: 0.75, s1: 0.75, notIn: 'tower' },
     // fuel dock: west side (fuel berth, D-fender), east side (jump edge x = 4.5), mid end (gangway)
     { type: 'pieredge', pos: [-4.5, 0, -31], rotY: -P / 2, length: 18.6, ext0: -0.1, ext1: -0.1, dfender: true, cleats: [4.2, 9.4, 14.6], ladders: [2.2], notIn: 'tower' },
-    { type: 'pieredge', pos: [-4.5, 0, -31], rotY: -P / 2, length: 2.65, ext0: -0.1, dfender: true, onlyIn: 'tower' },
+    { type: 'pieredge', pos: [-4.5, 0, -31], rotY: -P / 2, length: 7.6, ext0: -0.1, dfender: true, cleats: [4.2], ladders: [2.2], onlyIn: 'tower' },   // (then the checkpoint float)
     { type: 'pieredge', pos: [-4.5, 0, -14.4], rotY: -P / 2, length: 2.0, ext1: -0.1, dfender: true, onlyIn: 'tower' },
     { type: 'pieredge', pos: [-4.5, 0, -10.4], rotY: -P / 2, length: 1.8, ext0: -0.1, dfender: true },
     { type: 'pieredge', pos: [4.5, 0, -26], rotY: P / 2, length: 5, ext0: -0.1, ext1: -0.1, dfender: true, notIn: 'tower' },
@@ -62,7 +62,8 @@ export const DRESSING = {
     { type: 'aboard', pos: [-11.75, 0, -44.75], rotY: 0.25 },
     { type: 'planter', pos: [-10.0, 0, -44.95], rotY: 0, length: 1.2, width: 0.6, variant: 1, color: 'tealdark' },
     { type: 'bench', pos: [-15.4, 0, -31.75], rotY: 0 },
-    { type: 'bench', pos: [-8.9, 0, -31.75], rotY: 0 },
+    { type: 'bench', pos: [-8.9, 0, -31.75], rotY: 0, notIn: 'tower' },
+    { type: 'bench', pos: [-12.4, 0, -31.75], rotY: 0, onlyIn: 'tower' },   // (Tower Command: out from under the water-bus gangway)
     { type: 'bench', pos: [7.6, 0, -31.75], rotY: 0 },
     { type: 'trashbin', pos: [-13.95, 0, -31.95] },
     { type: 'trashbin', pos: [9.05, 0, -32.0] },
@@ -78,8 +79,7 @@ export const DRESSING = {
     { type: 'bollardlight', pos: [-23.72, 0, -13.0] },
     { type: 'bollardlight', pos: [23.72, 0, -27.5] },
     { type: 'bollardlight', pos: [23.72, 0, -15.5] },
-    { type: 'bollardlight', pos: [-4.15, 0, -26.0], notIn: 'tower' },
-    { type: 'bollardlight', pos: [-4.15, 0, -27.9], onlyIn: 'tower' },   // (Tower Command: out from under the water-bus gangway)
+    { type: 'bollardlight', pos: [-4.15, 0, -26.0] },
     { type: 'lifering', pos: [-23.6, 0, -21.0], rotY: P / 2 },
     { type: 'bollard', pos: [-23.55, 0, -38.0], variant: 2 },
     { type: 'bollard', pos: [23.55, 0, -34.0], variant: 2 },
@@ -111,9 +111,14 @@ export const DRESSING = {
     { type: 'quaycrates', pos: [-11.7, 0, -34.4], rotY: 0, variant: 0 },
     { type: 'quaycrates', pos: [11.5, 0, -35.6], rotY: 0, variant: 1 },
     // ---- fuel dock: hut kit (roof sign + roof kit collide), ice chest + bait cooler, landmark sign, life ring
-    { type: 'fuelhut', pos: [0, 0, -20.65], rotY: 0 },
-    { type: 'cooler', pos: [-0.85, 0, -22.9], rotY: P, variant: 1 },
-    { type: 'cooler', pos: [-0.55, 0.94, -22.85], rotY: P + 0.18, variant: 0, color: 'teal' },
+    { type: 'fuelhut', pos: [0, 0, -20.65], rotY: 0, notIn: 'tower' },
+    { type: 'cooler', pos: [-0.85, 0, -22.9], rotY: P, variant: 1, notIn: 'tower' },
+    { type: 'cooler', pos: [-0.55, 0.94, -22.85], rotY: P + 0.18, variant: 0, color: 'teal', notIn: 'tower' },
+    // Tower Command: the roof is a lookout up a timber ramp from the spawn side (maps.js fuel-hut-ramp) — the roof sign up on
+    // a gantry, the door round the side, the ice chest + bait cooler beside the ramp's foot
+    { type: 'fuelhut', pos: [0, 0, -20.65], rotY: 0, ramp: { run: 6.1, rise: 2.7, w: 2.4 }, onlyIn: 'tower' },
+    { type: 'cooler', pos: [-1.6, 0, -27.0], rotY: -P / 2, variant: 1, onlyIn: 'tower' },
+    { type: 'cooler', pos: [-1.62, 0.94, -26.8], rotY: -P / 2 + 0.18, variant: 0, color: 'teal', onlyIn: 'tower' },
     { type: 'fueldocksign', pos: [-4.2, 0, -9.3], rotY: 0 },
     // ---- Tower Command cover: the user's inflatables (drawn on Bravo's half, authored there; mirrored). Nudged only to
     //      clear the track (-10.85, 21.6: was -11.2), a deck edge (±2.85, 30.1: was ±3.3) or the tug's bow ramp (-17, 23.2)
