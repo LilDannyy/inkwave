@@ -359,6 +359,51 @@ export function registerCamp(D, H, X) {
       colBox(B, 0, 0, 0, 0.14, h, 0.14);
     },
   };
+  // portable work light: a tripod with a floodlight head aimed at the ruins (glows at dusk), its cable snaking off
+  D.spirhalite_worklight = {
+    desc: 'expedition work light on a tripod aimed at the ruins (glow), cable; thin collider', params: { h: 'head height', tilt: 'head tilt' },
+    variants: 1, mount: 'ground',
+    build(B, o) {
+      const h = o.h ?? 2.3, tilt = o.tilt ?? 0.35;
+      for (let i = 0; i < 3; i++) { const a = (i / 3) * TAU + 0.5; rod(B, 'metal', K.steelDk, [Math.cos(a) * 0.55, 0, Math.sin(a) * 0.55], [0, h * 0.7, 0], 0.025, 5); }
+      B.cyl('metal', K.steel, 0.03, h * 0.35, 0, h * 0.7 + h * 0.175, 0);
+      pbox(B, 'metal', K.steelDk, 0.9, 0.05, 0.08, 0, h, 0);
+      for (const sx of [-0.28, 0.28]) {
+        B.push(sx, h + 0.1, 0.05, 0, -tilt);
+        pbox(B, 'metal', K.dc2, 0.42, 0.3, 0.2, 0, -0.15, 0);
+        B.add('glow', tpl('wlface', () => { const g = new THREE.PlaneGeometry(0.34, 0.22); g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(12).fill(1), 3)); return g; }), K.glowCool, 0, 0, 0.105, { glow: 1.5 });
+        B.pop();
+      }
+      B.tube(NS('rubber'), K.black, [[0, h * 0.7, 0], [0.2, 0.05, -0.2], [0.9, 0.03, -1.0], [1.8, 0.03, -1.3]], 0.02, { radial: 4 });
+      colBox(B, 0, 0, 0, 0.3, h, 0.3);
+    },
+  };
+  // survey stakes: a string grid pegged out over a patch of sand with little marker flags (no collider)
+  D.spirhalite_stakes = {
+    desc: 'survey stakes + string grid + marker flags over a dig patch (no collider)', params: { w: 'x', d: 'z', n: 'cells x' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      const w = o.w ?? 3, d = o.d ?? 2, n = o.n ?? 3, m = Math.max(1, Math.round((n * d) / w));
+      for (let i = 0; i <= n; i++) for (let j = 0; j <= m; j++) if (i === 0 || j === 0 || i === n || j === m) { const x = -w / 2 + (i * w) / n, z = -d / 2 + (j * d) / m; B.cyl('wood', K.wood, 0.02, 0.4, x, 0.2, z, { seg: 5 }); }
+      for (let i = 0; i <= n; i++) { const x = -w / 2 + (i * w) / n; rod(B, NS('rubber'), K.white, [x, 0.36, -d / 2], [x, 0.36, d / 2], 0.006, 3); }
+      for (let j = 0; j <= m; j++) { const z = -d / 2 + (j * d) / m; rod(B, NS('rubber'), K.white, [-w / 2, 0.36, z], [w / 2, 0.36, z], 0.006, 3); }
+      for (const [x, z, c] of [[-w / 2 - 0.4, 0.2, K.red], [w / 2 + 0.3, -0.5, K.yellow], [0.2, d / 2 + 0.4, K.orange]]) {
+        B.cyl('metal', K.steelDk, 0.008, 0.7, x, 0.35, z, { seg: 4 });
+        pbox(B, NS('rubber'), c, 0.16, 0.1, 0.005, x + 0.08, 0.58, z);
+      }
+      B.cyl('wood', K.woodDk, 0.12, 0.35, w / 2 + 0.2, 0.17, d / 2 + 0.1, { seg: 10 });
+    },
+  };
+  // the camp sign's two posts and its little shingle roof (the board itself is a level piece carrying mural 8)
+  D.spirhalite_signposts = {
+    desc: 'two timber posts + a shingle cap for the camp sign board (w apart)', params: { w: 'post spacing' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      const w = o.w ?? 2.4;
+      for (const sx of [-1, 1]) { pbox(B, 'wood', K.woodDk, 0.14, 2.05, 0.14, sx * w / 2, 0, 0); colBox(B, sx * w / 2, 0, 0, 0.16, 2.05, 0.16); }
+      pbox(B, 'wood', K.woodDk, w + 0.6, 0.06, 0.34, 0, 2.02, 0, { rx: 0.12 });
+      pbox(B, 'wood', K.wood, w + 0.5, 0.05, 0.3, 0, 1.96, 0.02);
+      B.sph('glow', K.glow, 0.06, 0, 1.9, 0.14, { glow: 1.4 });
+    },
+  };
   // expedition flagpole: a banner with Deep Cut's colours (cloth instanced by the kit)
   D.spirhalite_flagpole = {
     desc: 'expedition flagpole with a Deep Cut coloured flag', params: { h: 'height', color: 'flag colour' }, variants: 1, mount: 'ground',

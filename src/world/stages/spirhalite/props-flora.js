@@ -41,7 +41,7 @@ export function registerFlora(D, H, X) {
     for (const sd of [-1, 1]) for (let j = 0; j < nf; j++) {
       const t0 = 0.26 + (j / nf) * 0.72, t1 = 0.26 + ((j + 0.86) / nf) * 0.72, tm = (t0 + t1) / 2;
       const env = Math.pow(Math.sin(clamp((tm - 0.22) / 0.8, 0, 1) * PI), 0.7) * (0.6 + 0.1 * R()) * L * 0.5;   // finger length
-      const back = 0.45 + 0.2 * R();                                                            // sweep back toward the base
+      const back = 0.3 + 0.15 * R();                                                            // sweep back toward the base
       const pts = [];
       for (const [t, w] of [[t0, 0], [t1, 0]]) { const m = mid(t); pts.push(m); void w; }
       const [ux, uy] = tan(tm), a = mid(t0), b = mid(t1);
@@ -49,7 +49,7 @@ export function registerFlora(D, H, X) {
       const dirx = -ux * back, dirz = sd, dl = Math.hypot(dirx, dirz), fx = dirx / dl, fz = dirz / dl;
       const segs = 3, ids = [];
       for (let s = 0; s <= segs; s++) {
-        const f = s / segs, w = (1 - f * 0.45), ox = fx * env * f, oz = fz * env * f, oy = -0.25 * env * f * f;
+        const f = s / segs, w = 0.92 + 0.3 * f, ox = fx * env * f, oz = fz * env * f, oy = -0.22 * env * f * f;
         const k = 0.9 + 0.2 * R();
         c.copy(cL).lerp(f > 0.7 ? cLt : cD, f > 0.7 ? 0.25 : 0.2 * (1 - f)).multiplyScalar(k);
         ids.push([gb.v(a[0] + ox, a[1] + oy, a[2] + oz * 1, 0, 1, 0, c.r, c.g, c.b), gb.v(lerp(a[0], b[0], w) + ox, lerp(a[1], b[1], w) + oy, lerp(a[2], b[2], w) + oz, 0, 1, 0, c.r, c.g, c.b)]);
@@ -71,9 +71,9 @@ export function registerFlora(D, H, X) {
       B.add('wood', tr.geo, 'white', 0, 0, 0);
       const [tx, ty, tz] = tr.top;
       // leaf crown: 8 leaves radiating, arching out and down
-      const n = 8;
+      const n = 7;
       for (let i = 0; i < n; i++) {
-        const a = (i / n) * TAU + R() * 0.4, L = 1.7 + R() * 0.6, tilt = -0.15 + R() * 0.35;
+        const a = (i / n) * TAU + R() * 0.4, L = 1.9 + R() * 0.7, tilt = -0.1 + R() * 0.3;
         B.add('foliage', tpl(`leaf|${(seed + i) % 5}|${L.toFixed(1)}`, () => leafGeo(seed + i, +L.toFixed(1))), 'white', tx, ty + 0.05, tz, { ry: a, rz: tilt });
       }
       // crown knot + fruiting spathes
@@ -252,6 +252,21 @@ export function registerFlora(D, H, X) {
       }), K.tarp, 0, 0.02, 0);
       for (const [x, z, a] of [[-0.9, 0.7, 0.4], [0.7, -0.8, -0.2]]) pbox(B, 'wood', K.drift, 1.4, 0.05, 0.18, x, 0.02, z, { ry: a });
       colBox(B, 0.1, 0, 0, 1.3, 0.85, 1.1);
+    },
+  };
+
+  // a heap of washed-up kelp and a few bleached planks on the wet-sand shelf (no collider)
+  D.spirhalite_kelp = {
+    desc: 'washed-up kelp strands and bits of plank on the shore (no collider)', params: { seed: 'layout', L: 'length' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      const R = rng((o.seed ?? 1) * 29 + 3), L = o.L ?? 2.0;
+      for (let i = 0; i < 7; i++) {
+        const x0 = (R() - 0.5) * L, z0 = (R() - 0.5) * 0.6, a = (R() - 0.5) * 1.2, len = 0.6 + R() * 1.1, pts = [];
+        for (let k = 0; k <= 5; k++) { const t = k / 5; pts.push([x0 + Math.cos(a) * len * t, 0.025 + 0.02 * Math.sin(t * 7 + i), z0 + Math.sin(a) * len * t + 0.12 * Math.sin(t * 5 + i)]); }
+        B.tube(NS('foliage'), i % 3 ? '#4f5a33' : '#6b6a3a', pts, 0.03, { radial: 4 });
+      }
+      for (let i = 0; i < 2; i++) pbox(B, NS('wood'), K.drift, 0.6 + R() * 0.6, 0.04, 0.12, (R() - 0.5) * L, 0.0, (R() - 0.5) * 0.8, { ry: R() * PI });
+      for (let i = 0; i < 5; i++) B.sph(NS('gloss'), i % 2 ? '#e9d9cf' : '#d8c4b5', 0.04, (R() - 0.5) * L * 1.2, 0.01, (R() - 0.5) * 1.0, { half: true, ws: 6, hs: 3, sy: 0.6 });
     },
   };
 
