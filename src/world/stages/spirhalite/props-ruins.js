@@ -1,6 +1,6 @@
 // Spirhalite Islands — the ruins: the Great Arch over the central sandbar, the cascade pillars' drums and bulb, the
 // causeway's posts and fallen slabs, loose blocks and shore rocks. (Prop builders; see props.js for the contract.)
-export const ARCH = { leg: Math.hypot(25.5, 5.4), rotY: Math.atan2(5.4, 25.5), y0: -3.5, rise: 17.25 };   // legs in the sea at world (±25.5, ∓5.4)
+export const ARCH = { leg: Math.hypot(21.8, 14.2), rotY: Math.atan2(14.2, 21.8), y0: -3.5, rise: 17.25 };   // legs in the lagoons' mouths at world (±21.8, ∓14.2)
 
 export function registerRuins(D, H, X) {
   const { THREE, K, PI, TAU, HP, NS, GB, meshGeo, tpl, pbox, colBox, ROOF, RAIL, noise3, fbm3, rng, lerp, clamp, sweep, rockGeo, col3 } = X;
