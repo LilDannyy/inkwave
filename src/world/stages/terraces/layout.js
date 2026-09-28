@@ -211,11 +211,14 @@ const FEATURES = [
   // the Passo: a narrow stair between the Ceramiche and the Case sul Mare
   oRamp(PAS, PIAZZA_R - 3.1, H0, PIAZZA_R + 0.02, H1, 2.2, stair({ tag: 'passo-flight-1' })),
   oRamp(PAS, STREET_R0 - 3.1, H1, STREET_R0 + 0.02, H2, 2.2, stair({ tag: 'passo-flight-2' })),
-  houseBlock(HOUSES.caffe), houseBlock(HOUSES.ceramiche), houseBlock(HOUSES.mare),
-  upperBlock(UPPERS.caffe, { mural: [{ n: faceN(UPPERS.caffe, -1, 0), id: MURAL.sundial }] }), upperBlock(UPPERS.ceramiche), upperBlock(UPPERS.mare, { mural: [{ n: faceN(UPPERS.mare, 0, 1), id: MURAL.ghost }] }),
+  // (Tower Command builds the Caffè and the Ceramiche from TOWER_HALF below: the Caffè open underneath at its Salita end,
+  // the Ceramiche 0.7 m shallower at the back)
+  houseBlock(HOUSES.caffe, { notIn: 'tower' }), houseBlock(HOUSES.ceramiche, { notIn: 'tower' }), houseBlock(HOUSES.mare),
+  upperBlock(UPPERS.caffe, { mural: [{ n: faceN(UPPERS.caffe, -1, 0), id: MURAL.sundial }] }), upperBlock(UPPERS.ceramiche, { notIn: 'tower' }), upperBlock(UPPERS.mare, { mural: [{ n: faceN(UPPERS.mare, 0, 1), id: MURAL.ghost }] }),
   // roof-terrace stairs from the street behind the crescent (H2) up onto the Caffè and Ceramiche roofs (H3)
-  oRamp(-44, STREET_R1 - 0.4, H2, HOUSE_R1 + 0.02, H3, 1.8, stair({ tag: 'caffe-stair' })),
-  oRamp(-4, STREET_R1 - 0.4, H2, HOUSE_R1 + 0.02, H3, 1.8, stair({ tag: 'ceramiche-stair' })),
+  // (not in Tower Command: both stand across the track, the Caffè's in the Salita and the Ceramiche's in the street behind)
+  oRamp(-44, STREET_R1 - 0.4, H2, HOUSE_R1 + 0.02, H3, 1.8, stair({ tag: 'caffe-stair', notIn: 'tower' })),
+  oRamp(-4, STREET_R1 - 0.4, H2, HOUSE_R1 + 0.02, H3, 1.8, stair({ tag: 'ceramiche-stair', notIn: 'tower' })),
   // the east lane
   flight([EAST.p1[0] + EAST.e1[0] * 3.1, EAST.p1[1] + EAST.e1[1] * 3.1], H2, [EAST.p1[0] - EAST.e1[0] * 0.02, EAST.p1[1] - EAST.e1[1] * 0.02], H3, 2.8, 'limonaia-stair'),
   flight([EAST.p2[0] + EAST.e2[0] * 3.1, EAST.p2[1] + EAST.e2[1] * 3.1], H1, [EAST.p2[0] - EAST.e2[0] * 0.02, EAST.p2[1] - EAST.e2[1] * 0.02], H2, 2.8, 'orto-stair'),
@@ -225,6 +228,30 @@ const FEATURES = [
   // the Salita beside the funicular
   salitaFlight(4, H3, H4), salitaFlight(3, H2, H3), salitaFlight(2, H1, H2), salitaFlight(1, H0, H1),
 ];
+
+// Tower Command's own takes on two houses of the crescent (TOWER_HALF, onlyIn 'tower'; the originals are notIn 'tower').
+//   • the Caffè: its Salita end stands in the way of the track up the Salita, so the ground floor there opens into a
+//     sottoportico — the roof terrace, the upper storey and the front wall stay, the side and the back open underneath
+//     (3.3 m clear): lx −w/2 … −PORTICO.um is the portico, the front wall runs on to lx −PORTICO.uf
+//   • the Ceramiche: 0.7 m shallower at the back (the track runs along the street behind it), its upper storey with it
+// A piece of a house: its own frame, lx across the front (−w/2 … w/2), lz back → front (−d/2 … d/2)
+const houseSub = (h, lx0, lx1, lz0, lz1) => { const a = (h.rot * Math.PI) / 180, c = Math.cos(a), sn = Math.sin(a), lx = (lx0 + lx1) / 2, lz = (lz0 + lz1) / 2;
+  return { cx: h.cx + c * lx + sn * lz, cz: h.cz - sn * lx + c * lz, w: lx1 - lx0, d: lz1 - lz0, rot: h.rot }; };
+const PORTICO = { um: 0.13, uf: 2.2, ceil: 3.3, wall: 0.4 };
+const CAFFE_T = (() => {
+  const h = HOUSES.caffe, hw = h.w / 2, hd = h.d / 2;
+  return { main: houseSub(h, -PORTICO.um, hw, -hd, hd), front: houseSub(h, -PORTICO.uf, -PORTICO.um, hd - PORTICO.wall, hd), ceiling: houseSub(h, -hw, -PORTICO.um, -hd, hd) };
+})();
+const CER_CUT = 0.7;
+const CERAMICHE_T = { ...HOUSES.ceramiche, ...houseSub(HOUSES.ceramiche, -HOUSES.ceramiche.w / 2, HOUSES.ceramiche.w / 2, -HOUSES.ceramiche.d / 2 + CER_CUT, HOUSES.ceramiche.d / 2) };
+const UPPER_CERAMICHE_T = { ...UPPERS.ceramiche, ...houseSub(UPPERS.ceramiche, -UPPERS.ceramiche.w / 2, UPPERS.ceramiche.w / 2, -UPPERS.ceramiche.d / 2 + CER_CUT, UPPERS.ceramiche.d / 2 + CER_CUT) };
+const TOWER_HALF = (() => {
+  const T = { onlyIn: 'tower' }, cf = HOUSES.caffe, piece = (p, y0, y1) => O(p.cx, p.cz, p.w, p.d, y0, y1, p.rot, house(cf.color, { tag: 'caffe', ...T }));
+  return [
+    piece(CAFFE_T.main, cf.y0, cf.top), piece(CAFFE_T.front, cf.y0, PORTICO.ceil), piece(CAFFE_T.ceiling, PORTICO.ceil, cf.top),
+    houseBlock(CERAMICHE_T, T), upperBlock(UPPER_CERAMICHE_T, T),
+  ];
+})();
 
 // ============================================================================================================
 // Ground builder (bake time only — the result is baked into GROUND_DATA below). Levels are laid top-down (H4 first):
@@ -674,12 +701,27 @@ export function bakeGround(list) {
 // stand on the platform, the dome above is off-limits) — and the sagrato is 2 m deeper (16 x 12), so the whole platform
 // is one open, inkable zone instead of a thin ring round an un-inkable box.
 const SAGRATO = { tag: 'sagrato', color: '#e6dccb', pattern: PATTERN.pavers };
+const SV = { y0: H1, y1: 5.8, spring: 4.6, wall: 0.8, pier: [1.8, 2.4], depth: 0.6 };   // San Vito open (Tower Command)
+const SAN_VITO_OPEN = (() => {
+  const t = (o = {}) => upper(TH.white, { tag: 'chapel', onlyIn: 'tower', ...o });
+  const out = [B(-5.5, 5.5, SV.spring, SV.y1, -3, 3, t({ noPaint: [...NOPAINT, [0, -1, 0]] }))];
+  for (const s of [-1, 1]) out.push(B(s < 0 ? -5.5 : 5.5 - SV.wall, s < 0 ? -5.5 + SV.wall : 5.5, SV.y0, SV.spring, -3, 3, t()));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const [a, b] = SV.pier, z0 = 3 - SV.depth;
+    out.push(B(sx < 0 ? -b : a, sx < 0 ? -a : b, SV.y0, SV.spring, sz < 0 ? -3 : z0, sz < 0 ? -z0 : 3, t()));
+  }
+  return out;
+})();
 const SINGLE = [
   B(-8, 8, H0, H1, -5, 5, { ...SAGRATO, mural: [{ n: [0, 1, 0], id: MURAL.sagrato }, { n: [0, 0, 1], id: MURAL.frieze }, { n: [0, 0, -1], id: MURAL.frieze }], notIn: 'zones' }),
   B(-8, 8, H0, H1, -6, 6, { ...SAGRATO, mural: [{ n: [0, 1, 0], id: MURAL.sagratoZ }, { n: [0, 0, 1], id: MURAL.frieze }, { n: [0, 0, -1], id: MURAL.frieze }], onlyIn: 'zones' }),
   R([11.1, H0, 0], [8, H1, 0], 6, stair({ tag: 'sagrato-steps' })),
   R([-11.1, H0, 0], [-8, H1, 0], 6, stair({ tag: 'sagrato-steps' })),
-  B(-5.5, 5.5, H1, 5.8, -3, 3, upper(TH.white, { tag: 'chapel', notIn: 'zones' })),
+  B(-5.5, 5.5, H1, 5.8, -3, 3, upper(TH.white, { tag: 'chapel', notIn: ['zones', 'tower'] })),
+  // Tower Command: San Vito open at the base (the tower starts under the dome and rolls out through the long sides) —
+  // the same block and dome, carried on its two facade walls and four piers: an arcade of three arches along each long
+  // side (the middle one 3.6 m wide over the track), 3.4 m clear inside (props.js terraces_chapel `open` dresses it)
+  ...SAN_VITO_OPEN,
 ];
 const EXTRA = [
   // belvedere bastion floors (pebble, compass rose) — one each side of the piazza, mirrored as a pair
@@ -701,6 +743,16 @@ const EXTRA = [
 // (the ground is shared by every mode: it is laid round the Turf War pieces)
 export const GROUND_FRESH = globalThis.__TERRACES_REGEN || !GROUND_DATA ? generateGround([...SINGLE.filter((d) => !d.onlyIn), ...FEATURES, ...EXTRA, ...[...FEATURES, ...EXTRA].map(mirrorDef)]) : null;
 const GROUND = GROUND_FRESH || unbake(GROUND_DATA);
+// Tower Command: the kerb of the street behind the Ceramiche (a rim the house used to stand on) gives way to a pebble
+// gutter 10 cm below the street — the house stands 0.7 m further forward (CERAMICHE_T) and the track runs along the
+// street (a 19 cm kerb under one side of the platform would tilt it); the street's slab covers all but the strip along
+// the house. [level, centre x, centre z] of the rims replaced:
+const TOWER_GUTTER = [[2, -0.2636, -18.9594]];
+const GROUND_T = GROUND.flatMap((d) => {
+  const f = TOWER_GUTTER.find(([L, x, z]) => String(d.tag).startsWith('rim-' + L + '-') && Math.abs(d.center[0] - x) < 1e-3 && Math.abs(d.center[2] - z) < 1e-3);
+  if (!f) return [d];
+  return [{ ...d, notIn: 'tower' }, O(d.center[0], d.center[2], d.size[0], d.size[2], FL, LEVEL_Y[f[0]] - GUT[0], d.rotY, { ...GUT_MAT, tag: 'gutter-t', onlyIn: 'tower' })];
+});
 
 const TERRACES = {
   id: 'terraces',
@@ -708,11 +760,11 @@ const TERRACES = {
   spawnPads: [[-12, H4, -38.4], [12, H4, 38.4]],
   spawnBarrier: 4.0,
   single: SINGLE,
-  half: [...GROUND, ...FEATURES, ...EXTRA],
+  half: [...GROUND_T, ...FEATURES, ...EXTRA, ...TOWER_HALF],
   decor: { lamps: [], palms: [], flags: [[-18.6, H4, -44.6], [-5.4, H4, -44.6]] },
   intro: { from: [26, 11, 10], lookFrom: [2, 3, -6], toBack: 3.2 },
   art: { from: [34, 26, -36], look: [-2, 1, 2], fov: 58 },
 };
 
 export const LAYOUT = TERRACES;
-export const TERRAIN = { C, R0, R1, R2, R3, R4, inside, INC, incDir, incN, incP, T_CUT, SAL_W, PIAZZA_R, BELV, BELV_D, P, rotOf, uO, HOUSES, UPPERS, GAPS, STREET_R0, STREET_R1, EAST, LARGO, HOUSE_R0, HOUSE_R1, wedge, FL, H0, H1, H2, H3, H4 };
+export const TERRAIN = { C, R0, R1, R2, R3, R4, inside, INC, incDir, incN, incP, T_CUT, SAL_W, PIAZZA_R, BELV, BELV_D, P, rotOf, uO, HOUSES, UPPERS, PORTICO, CAFFE_T, CERAMICHE_T, UPPER_CERAMICHE_T, SV, GAPS, STREET_R0, STREET_R1, EAST, LARGO, HOUSE_R0, HOUSE_R1, wedge, FL, H0, H1, H2, H3, H4 };

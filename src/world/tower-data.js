@@ -49,7 +49,11 @@ export const TOWER_DEFS = {
     checkpoints: [[-11.68, 17.81], [17.39, 17.85]],
   },
   terraces: {
-    path: [[0, 0], [0, 7.71], [12.81, 7.71], [15.63, 20.96], [10.87, 20.96], [10.87, 19.11], [6.06, 19.11], [-5.24, 22.39], [-5.23, 37.38]],
-    checkpoints: [[13.02, 8.35], [6.85, 19.89], [-5.38, 26.16]],
+    // (starts at the sagrato's top, under San Vito's dome — the chapel's roof is over it; the platform square to the
+    // stage; runs shifted ≤ 1.1 m from the drawing to clear the funicular's balustrade, the Limonaia's terrace wall and the
+    // Scalinata's foot)
+    path: [[0, 1.2, 0], [0, 7.71], [12.35, 7.71], [15.57, 20.66], [11.7, 20.66], [11.7, 19.11], [6.06, 19.11], [-6.3, 22.7], [-6.3, 37.38]],
+    checkpoints: [[13.02, 8.35], [6.85, 19.89], [-6.3, 26.16]],
+    yaw: 0,
   },
 };
