@@ -440,4 +440,36 @@ export function registerCamp(D, H, X) {
       colBox(B, 0, 0, 0, 0.12, h, 0.12);
     },
   };
+
+  // ============================================================================================== campfire
+  // The expedition's campfire: a ring of beach stones, crossed driftwood logs, glowing embers and low flames (they read
+  // at dusk), a cooking pot on a tripod, a log to sit on and a kettle. Low: its collider is a step (the logs + stones).
+  D.spirhalite_campfire = {
+    desc: 'campfire: stone ring, crossed logs, glowing embers + flames, pot on a tripod, a seat log (low step collider)',
+    params: {}, variants: 1, mount: 'ground',
+    build(B) {
+      const R0 = rng(907);
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * TAU + R0() * 0.2, r = 0.62 + R0() * 0.06;
+        B.add('rubber', rockGeo(80 + i, 0, 1.0, 0.65, 0.9, 0.3), i % 2 ? K.rock : K.rockDk, Math.cos(a) * r, 0.05, Math.sin(a) * r, { s: 0.16 + R0() * 0.05, ry: a, ao: false });
+      }
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * PI + 0.3;
+        B.cyl('wood', i % 2 ? K.driftDk : K.woodDk, 0.07, 0.95, 0, 0.13, 0, { rx: HP, rz: 0, ry: a, seg: 6 });
+      }
+      B.cyl(NS('glow'), K.orange, 0.34, 0.05, 0, 0.06, 0, { glow: 1.5, seg: 10 });
+      for (const [x, z, h, r, c] of [[0, 0, 0.55, 0.16, K.orange], [0.1, 0.06, 0.38, 0.11, K.yellow], [-0.09, -0.05, 0.42, 0.1, K.yellow]]) {
+        B.add(NS('glow'), tpl('flame', () => { const g = new THREE.ConeGeometry(1, 1, 7); g.translate(0, 0.5, 0); g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(g.attributes.position.count * 3).fill(1), 3)); return g; }), c, x, 0.08, z, { sx: r, sy: h, sz: r, glow: 1.8 });
+      }
+      // tripod + pot
+      for (let i = 0; i < 3; i++) { const a = (i / 3) * TAU; rod(B, 'metal', K.steelDk, [Math.cos(a) * 0.55, 0, Math.sin(a) * 0.55], [0, 1.05, 0], 0.018, 5); }
+      B.cyl('metal', K.black, 0.15, 0.2, 0, 0.62, 0, { r2: 0.17, seg: 10 });
+      rod(B, 'metal', K.steelDk, [0, 1.02, 0], [0, 0.74, 0], 0.008, 4);
+      // a seat log and a kettle on a stone
+      B.cyl('wood', K.drift, 0.17, 1.4, 1.35, 0.17, 0.25, { rx: HP, ry: 0.35, seg: 8 });
+      B.cyl('metal', K.steel, 0.09, 0.14, -0.95, 0.07, 0.5, { r2: 0.07, seg: 8 });
+      colBox(B, 0, 0, 0, 1.45, 0.3, 1.45);
+      colBox(B, 1.35, 0, 0.25, 1.4, 0.33, 0.5);
+    },
+  };
 }
