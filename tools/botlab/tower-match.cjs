@@ -47,6 +47,11 @@ app.on('browser-window-created', (_, win) => {
       const g = window.__inkwave, m = g.match, T = m.tower;
       const { on } = await import('./src/core/ctx.js');
       const { TOWER } = await import('./src/config.js');
+      const { towerPlan } = await import('./src/game/bots.js');
+      const X = { climbs: [0, 0], sjRider: 0, kills: 0, killsNear: [0, 0], stanceT: [[0, 0], [0, 0]], stanceSw: [0, 0], rS: [[0, 0], [0, 0]], rN: [[0, 0], [0, 0]],
+        escD: 0, escN: 0, escIn: 0, toBoard: [], nearBoard: [], aborted: 0, attempts: 0, climbMounts: 0, sjMounts: 0, lastSteam: [null, null],
+        abortWhy: {}, water: [], steamEp: [[], []], steamT0: [0, 0], rS3: [0, 0], rN3: [0, 0], upS3: [0, 0], offWhy: {}, escOnly: [], bkD: [] };
+      const bs = new Map();   // per bot boarding attempt { t0, near, lastClimb, lastSj }
       g.debug.freeze();
       const ev = { control: [], cps: [], contest: 0, overtime: null, end: null, specials: 0, jumps: 0, idleNeutral: 0, ready: 0 };
       const clock = () => +(m.duration - m.time + (T ? T.overtimeT : 0)).toFixed(1);
@@ -58,7 +63,10 @@ app.on('browser-window-created', (_, win) => {
         on('tower:end', (e) => { ev.end = { winner: e.winner, reason: e.reason }; }),
         on('special:use', () => ev.specials++),
         on('special:ready', () => ev.ready++),
-        on('superjump', (e) => { if (e.phase === 'charge') ev.jumps++; }),
+        on('superjump', (e) => { if (e.phase === 'charge') { ev.jumps++; const tg = e.actor.superJumpState && e.actor.superJumpState.target; if (tg && T.riderList.includes(tg)) { X.sjRider++; const b = bs.get(e.actor); if (b) b.lastSj = simT; } } }),
+        on('actor:climb', (e) => { if (e.on && e.actor.wallHit && e.actor.wallHit.block === T.block.id) { X.climbs[e.actor.team]++; const b = bs.get(e.actor); if (b) b.lastClimb = simT; } }),
+        on('splatted', (e) => { X.kills++; const v = e.victim; if (Math.hypot(v.pos.x - T.pos.x, v.pos.z - T.pos.z) < 15) X.killsNear[v.team]++;
+          if (e.cause === 'water' && X.water.length < 12) { const b = v.bot || {}; X.water.push({ t: +simT.toFixed(1), w: v.weaponId, role: b.tRole, mode: b.mode, rode: riding.has(v), climb: !!v.climbing, dT: +Math.hypot(v.pos.x - T.pos.x, v.pos.z - T.pos.z).toFixed(1), pos: [+v.pos.x.toFixed(1), +v.pos.y.toFixed(1), +v.pos.z.toFixed(1)], ts: +T.s.toFixed(1), near: !!b.tNear, board: b.tBoard ? b.tBoard.type + b.tBoard.f : null, hide: !!b.tHide }); } }),
       ];
       const hist = new Map(), sideH = new Map(); let samples = 0, stuckS = 0, simT = 0;
       const held = [0, 0]; let contested = 0, neutral = 0, ts = 0;
@@ -105,6 +113,35 @@ app.on('browser-window-created', (_, win) => {
             if (emptyHeldNow(a)) lastOff[why] = (lastOff[why] || 0) + 1;
           }
           if (!on) riding.delete(a);
+          // boarding attempts: a rider (role) off it → on it
+          const b = a.bot; let at = bs.get(a);
+          const trying = a.alive && !on && b.tRole === 'ride' && !a.superJumpState;
+          if (trying && !at) { at = { t0: simT, near: -1, lastClimb: -9, lastSj: -9 }; bs.set(a, at); X.attempts++; }
+          if (at && trying && b.tNear && at.near < 0) at.near = simT;
+          if (at && on) { X.toBoard.push(+(simT - at.t0).toFixed(2)); if (at.near >= 0) X.nearBoard.push(+(simT - at.near).toFixed(2)); if (simT - at.lastClimb < 2) X.climbMounts++; else if (simT - at.lastSj < 8) X.sjMounts++; bs.delete(a); }
+          else if (at && !trying && !a.superJumpState) { X.aborted++; const w = !a.alive ? 'death' : b.tRole !== 'ride' ? 'role' : 'other'; X.abortWhy[w] = (X.abortWhy[w] || 0) + 1; bs.delete(a); }
+        }
+        const P = towerPlan();
+        if (P) for (let t = 0; t < 2; t++) {
+          const st = P.steam && P.steam[t] ? 1 : 0;
+          X.stanceT[t][st] += 0.25;
+          if (X.lastSteam[t] !== null && X.lastSteam[t] !== st) { X.stanceSw[t]++; if (st) X.steamT0[t] = simT; else X.steamEp[t].push(+(simT - X.steamT0[t]).toFixed(2)); }
+          X.lastSteam[t] = st;
+          if (st && T.owner === t && simT - X.steamT0[t] >= 3) {
+            X.rS3[t] += T.riders[t]; X.rN3[t]++; X.upS3[t] += m.actors.filter((a) => a.team === t && a.alive).length;
+            // the alive ones not on it: why
+            for (const a of m.actors) {
+              if (a.team !== t || !a.alive || onTop(a) || !a.bot) continue;
+              const b = a.bot, dd = Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z);
+              const why = a.superJumpState ? 'sj' : b.tRole !== 'ride' ? 'role:' + b.tRole : b.mode !== 'paint' ? 'mode:' + b.mode : a.climbing ? 'climbing' : b.tNear ? (b.tBoard ? 'near:' + b.tBoard.type : 'near') : dd > 15 ? 'far' : b.tBoard ? 'approach' : 'noface';
+              X.offWhy[why] = (X.offWhy[why] || 0) + 1;
+            }
+          }
+          if (!st && T.owner === t) for (const a of m.actors) if (a.team === t && a.alive && a.bot && a.bot.tRole === 'escort' && !onTop(a)) { const dd = Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z); X.escOnly.push(dd); if (P.backup && P.backup[t] === a) X.bkD.push(dd); }
+          if (T.owner === t) {
+            X.rS[t][st] += T.riders[t]; X.rN[t][st]++;
+            if (!st) for (const a of m.actors) if (a.team === t && a.alive && !onTop(a) && !a.superJumpState) { const dd = Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z); X.escD += dd; X.escN++; if (dd < 12) X.escIn++; }
+          }
         }
         // --- stuck (as bots-zbot, in sim time); riders on the platform and bots holding a spot on purpose don't count
         for (const a of m.actors) {
@@ -160,6 +197,16 @@ app.on('browser-window-created', (_, win) => {
         holdPct: +(100 * holdS / botS).toFixed(1), ridePct: +(100 * rideS / botS).toFixed(1),
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / botS).toFixed(0)])),
       };
+      const q = (arr, p) => { if (!arr.length) return null; const b = [...arr].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(p * b.length))]; };
+      res.x = { climbs: X.climbs, sjRider: X.sjRider, kills: X.kills, killsNear: X.killsNear, attempts: X.attempts, boarded: X.toBoard.length, aborted: X.aborted,
+        climbMounts: X.climbMounts, sjMounts: X.sjMounts,
+        toBoard: { med: q(X.toBoard, 0.5), p80: q(X.toBoard, 0.8) }, nearBoard: { med: q(X.nearBoard, 0.5), p80: q(X.nearBoard, 0.8), under6: X.nearBoard.filter((v) => v < 6).length, n: X.nearBoard.length },
+        stanceT: X.stanceT, stanceSw: X.stanceSw,
+        ridersThreat: [0, 1].map((t) => +(X.rS[t][0] / Math.max(1, X.rN[t][0])).toFixed(2)), ridersSafe: [0, 1].map((t) => +(X.rS[t][1] / Math.max(1, X.rN[t][1])).toFixed(2)),
+        heldThreatS: [0, 1].map((t) => X.rN[t][0] * 0.25), heldSafeS: [0, 1].map((t) => X.rN[t][1] * 0.25),
+        escortDist: +(X.escD / Math.max(1, X.escN)).toFixed(1), escortWithin12: +(100 * X.escIn / Math.max(1, X.escN)).toFixed(0),
+        water: X.water, offWhy: X.offWhy, abortWhy: X.abortWhy, steamEps: X.steamEp.map((e) => e.length), steamEpMed: X.steamEp.map((e) => q(e, 0.5)), ridersSafe3s: [0, 1].map((t) => +(X.rS3[t] / Math.max(1, X.rN3[t])).toFixed(2)), aliveSafe3s: [0, 1].map((t) => +(X.upS3[t] / Math.max(1, X.rN3[t])).toFixed(2)), safe3sS: X.rN3.map((n) => n * 0.25),
+        escortMed: q(X.escOnly, 0.5), escortP80: q(X.escOnly, 0.8), backupMed: q(X.bkD, 0.5) };
       if (T) Object.assign(res, {
         held: held.map((h) => +h.toFixed(1)), contested: +contested.toFixed(1), neutral: +neutral.toFixed(1),
         controlChanges: flips.filter((c, i) => i > 0 && flips[i - 1].owner !== c.owner).length, takes: flips.length, contests: ev.contest, idleNeutral: ev.idleNeutral,
@@ -190,13 +237,14 @@ app.on('browser-window-created', (_, win) => {
     console.log(`   stuck ${r.stuckPct}% | by the tower's side ${r.sidePct}% of bot-time, stuck there ${r.sideStuckS}s (${r.sideStuckN} episodes) | splats ${r.splats} (water ${r.water}) | specials ${r.specials} (ready ${r.ready}) | super jumps ${r.jumps} | turf ${r.cov.join('/')} | sim ${r.simT}s in ${(r.simMs / 1000).toFixed(0)}s (wall ${wallS}s) | ${JSON.stringify(perf)}`);
     console.log('   control log ' + r.log);
     console.log('   checkpoint log ' + r.cplog);
+    console.log('   X ' + JSON.stringify(r.x));
     for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
     for (const e of r.sideEps) console.log('   side-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     if (OUT) require('fs').writeFileSync(OUT, JSON.stringify(r));
-    console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, counts: r.counts, best: r.best, held: r.held, controlChanges: r.controlChanges, cpClear: r.cpClear, stuckPct: r.stuckPct, console: uniq.length, frameErrors: r.frameErr.n }));
+    console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, counts: r.counts, best: r.best, held: r.held, controlChanges: r.controlChanges, cpClear: r.cpClear, stuckPct: r.stuckPct, console: uniq.length, frameErrors: r.frameErr.n, mounts: r.mounts, ridersAvg: r.ridersAvg, x: r.x, sideStuckS: r.sideStuckS, splats: r.splats }));
     app.quit();
   });
 });
