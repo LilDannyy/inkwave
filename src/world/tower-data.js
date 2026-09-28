@@ -13,7 +13,9 @@
 // Drawn by the user on the stage top-downs (2026-09-28).
 export const TOWER_DEFS = {
   tidewater: {
-    path: [[0, 0], [-19.51, 0], [-19.51, 4.66], [-15.39, 4.66], [-15.39, 12.49], [7.11, 12.49], [7.11, 8.36], [15.79, 8.36], [15.79, 15.36], [3.53, 15.36], [3.52, 14.73], [-0.06, 14.73], [-0.06, 28.44], [-4.41, 28.44]],
+    // (fitted: the loop round the flower border 0.24 / 0.11 m in, clear of the promenade's kerb; the goal run 0.89 m
+    //  nearer the bandstand, clear of the fountain's basin — Tower Command's build of the stage, see its layout.js TW)
+    path: [[0, 0], [-19.51, 0], [-19.51, 4.66], [-15.39, 4.66], [-15.39, 12.49], [7.11, 12.49], [7.11, 8.36], [15.55, 8.36], [15.55, 15.25], [3.53, 15.25], [3.52, 14.73], [-0.06, 14.73], [-0.06, 27.55], [-4.41, 27.55]],
     checkpoints: [[-14.97, 12.81], [-0.03, 21.38]],
   },
   kelpline: {
