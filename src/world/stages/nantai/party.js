@@ -146,8 +146,7 @@ export function registerParty(D, H, T) {
       B.cyl('metal', K.black, 0.03, 0.14, 0, 0.04, -0.5, { rx: HP, seg: 8 });
       B.pop();
       B.cyl('metal', K.steelLt, 0.02, 0.35, 0.22, hh + 0.05, 0, { rz: HP, seg: 6 });
-      B.box('glow', '#ff3a2a', 0.05, 0.05, 0.12, 0.1, hh * 0.45 + 0.04, 0.05, { glow: 1.0 });
-      colC(B, 0, 0, 0, 0.3, hh, 0.3);
+      B.box('glow', '#ff3a2a', 0.05, 0.05, 0.12, 0.1, hh * 0.45 + 0.04, 0.05, { glow: 1.0 });   // (no collider: a tripod you walk round, never a perch)
     },
   };
 

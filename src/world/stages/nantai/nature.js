@@ -202,7 +202,7 @@ export function registerNature(D, H, T) {
       for (let i = 0; i < 5; i++) B.tor('rubber', i % 2 ? K.black : K.grizzBrown, 0.14, 0.025, -0.3 + i * 0.15, 0.58, (hash(i) - 0.5) * 0.3, { rx: HP + 0.3, rs: 5, ts: 14 });
       letters(B, 'MIC CABLES', { h: 0.07, x: 0, y: 0.24, z: 0.355, c: K.white, flat: true, wt: 0.22 });
       B.pop();
-      colC(B, -3.4, 0, 1.4, 1.1, 0.6, 0.85);
+      colC(B, -3.4, 0, 1.4, 1.1, 0.6, 0.85, ROOF);   // (off-limits top: bots never park on it against the ridge wall)
       // the sign, hand-painted on a board on a stake, at the foot facing the brook (+Z local → the hollow's front)
       B.push(1.2, 0, 3.4, -0.25);
       pbox(B, 'wood', K.timberDk, 0.08, 1.35, 0.08, 0, 0.62, 0);

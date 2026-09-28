@@ -135,7 +135,7 @@ const HALF = [
   B(-19, -11, G0, G1, -19.5, -17.5, turf({ tag: 'hollow' })),
   ...OCT(-15, -25.5, 2.6, G1, 2.4, granite({ tag: 'pearls-rock' })),
   R([-15.4, G0, -14.4], [-15.4, G1, -17.5], 3, steps({ tag: 'hollow-steps' })),
-  R([-12.3, G1, -28], [-12.3, G2, -31], 2.6, steps({ tag: 'hollow-back-stair' })),
+  R([-12.6, G1, -28.5], [-12.6, G2, -31.5], 3.2, steps({ tag: 'hollow-back-stair' })),   // (abuts the rock steps: no slot between)
   // rough steps up the back of Pearl's rock (onto its flat top, 2.4)
   R([-15, G1, -30.55], [-15, 2.4, -27.95], 1.6, steps({ tag: 'rock-steps', color: K.granite })),
   R([-14.2, G1, -20.9], [-11, G2, -20.9], 2.2, steps({ tag: 'bastion-stair' })),
