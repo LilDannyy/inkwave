@@ -19,6 +19,13 @@ export function buildBackdrop(kit) {
   const rnd = kit.rnd(9127);
   const out = { static: [], plain: [], terrain: [], instances: [], objects: [] };
   const n = OUTLINE.length;
+  // transparent looks (water sheets, fog) are skipped in override passes: the GTAO pass draws the scene again with its
+  // own depth / normal material, and a see-through sheet drawn there shades everything behind it as if it were solid
+  const noOverride = (mesh) => {
+    const g = mesh.geometry;
+    mesh.onBeforeRender = (r, scene) => { if (scene.overrideMaterial) g.setDrawRange(0, 0); else g.setDrawRange(0, Infinity); };
+    return mesh;
+  };
 
   // ============================================================================================== sandy banks
   // outward normal per edge, averaged at the vertices; reach limited by the open water in front (ray to the outline)
@@ -232,7 +239,7 @@ export function buildBackdrop(kit) {
     const idx = []; let off = 0; for (const g of casc) { for (const v of g.index.array) idx.push(v + off); off += g.attributes.position.count; }
     cg.setIndex(idx);
   }
-  const cascade = new THREE.Mesh(cg, waterMat);
+  const cascade = noOverride(new THREE.Mesh(cg, waterMat));
   cascade.name = 'SpirhaliteCascades'; cascade.renderOrder = 5;
   out.objects.push(cascade);
   // splash mist + foam rings where each cascade meets the lagoon, and the drips under the arch: one points cloud
@@ -275,15 +282,54 @@ export function buildBackdrop(kit) {
   for (const sg of [1, -1]) { const g = ring.clone(); g.translate(sg * (PILLAR.x + PILLAR.dir[0] * 5.3), WATER_Y + 0.03, sg * (PILLAR.z + PILLAR.dir[1] * 5.3)); rings.push(g); }
   const rg = new THREE.BufferGeometry();
   { const a = rings[0].toNonIndexed(), b = rings[1].toNonIndexed(), p = new Float32Array(a.attributes.position.array.length * 2), u = new Float32Array(a.attributes.uv.array.length * 2); p.set(a.attributes.position.array); p.set(b.attributes.position.array, a.attributes.position.array.length); u.set(a.attributes.uv.array); u.set(b.attributes.uv.array, a.attributes.uv.array.length); rg.setAttribute('position', new THREE.BufferAttribute(p, 3)); rg.setAttribute('uv', new THREE.BufferAttribute(u, 2)); }
-  const foam = new THREE.Mesh(rg, new THREE.ShaderMaterial({
+  const foam = noOverride(new THREE.Mesh(rg, new THREE.ShaderMaterial({
     uniforms: { uTime, uNight: U_night },
     vertexShader: `varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: `uniform float uTime, uNight; varying vec2 vUv; varying vec3 vW;
       void main(){ float r = length(vUv - 0.5) * 2.0; float w = 0.5 + 0.5 * sin(r * 14.0 - uTime * 3.0 + sin(vW.x * 3.0) * 0.8);
         float a = smoothstep(1.0, 0.3, r) * (0.35 + 0.45 * w); gl_FragColor = vec4(vec3(0.95, 0.98, 1.0) * mix(1.0, 0.55, uNight), a); }`,
     transparent: true, depthWrite: false, fog: false,
-  }));
+  })));
   foam.name = 'SpirhaliteFoam'; foam.renderOrder = 4;
   out.objects.push(foam);
+  // ============================================================================================== low fog banks
+  // soft horizontal fog sheets lying on the sea round the islands (they read as fog on the water from the arena and as
+  // drifting banks from above; a sky-tinted, noise-shaped blob per sheet, faded near the camera and at the arena)
+  {
+    const NB = 34, pos = [], uv = [], seed = [], idx = [];
+    for (let i = 0; i < NB; i++) {
+      const a = (i / NB) * Math.PI * 2 + rnd() * 0.25, d = 70 + rnd() * 150, cx = Math.cos(a) * d * 0.8, cz = Math.sin(a) * d;
+      const w = 40 + rnd() * 70, h = 20 + rnd() * 35, rot = rnd() * Math.PI, y = WATER_Y + 0.3 + rnd() * 2.5, sd = rnd() * 100;
+      const c = Math.cos(rot), sn = Math.sin(rot), base = pos.length / 3;
+      for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { pos.push(cx + (u * w * c - v * h * sn) / 2, y, cz + (u * w * sn + v * h * c) / 2); uv.push(u, v); seed.push(sd); }
+      idx.push(base, base + 2, base + 1, base, base + 3, base + 2);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setAttribute('aSeed', new THREE.Float32BufferAttribute(seed, 1)); g.setIndex(idx);
+    const m = new THREE.ShaderMaterial({
+      uniforms: { uTime, uHorizon: U.uHorizon, uSkyMid: U.uSkyMid, uNight: U_night },
+      vertexShader: /* glsl */`attribute float aSeed; varying vec2 vUv; varying float vSeed; varying float vFade; varying vec3 vW;
+        void main(){ vUv = uv; vSeed = aSeed; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz;
+          vec4 mv = viewMatrix * w; vFade = smoothstep(8.0, 45.0, -mv.z) * smoothstep(20.0, 55.0, length(w.xz * vec2(1.3, 0.75)));
+          gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: /* glsl */`uniform float uTime, uNight; uniform vec3 uHorizon, uSkyMid; varying vec2 vUv; varying float vSeed; varying float vFade; varying vec3 vW;
+        float h2(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+        float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
+        void main(){
+          vec2 p = vW.xz * 0.035 + vec2(uTime * 0.012, uTime * 0.006) + vSeed;
+          float n = n2(p) * 0.6 + n2(p * 2.3) * 0.3 + n2(p * 5.1) * 0.1;
+          float r = length(vUv);
+          float a = smoothstep(1.0, 0.25, r + (n - 0.5) * 0.7) * vFade * 0.55;
+          if (a < 0.01) discard;
+          vec3 col = mix(uHorizon, uSkyMid, 0.2) * mix(1.04, 0.8, uNight);
+          gl_FragColor = vec4(col, a);
+        }`,
+      transparent: true, depthWrite: false, fog: false,
+    });
+    const fog = noOverride(new THREE.Mesh(g, m));
+    fog.name = 'SpirhaliteFogBanks'; fog.renderOrder = 3;
+    out.objects.push(fog);
+  }
   return out;
 }

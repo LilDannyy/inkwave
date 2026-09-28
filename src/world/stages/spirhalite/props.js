@@ -34,7 +34,7 @@ export function groundAt(x, z, hint = 0) {
   for (const d of PIECES) { const y = topAt(d, x, z); if (y <= hint + 0.3 && y > best) best = y; }
   return best === -Infinity ? hint : +best.toFixed(3);
 }
-const SNAP = /^spirhalite_(palm|pompoms|grass|shrub|rock|float|buoy|debris|driftwood|rowboat|crates|table|tent|tarp|generator|mast|lantern|survey|flagpole|signposts|worklight|stakes|kelp)$/;
+const SNAP = /^spirhalite_(palm|pompoms|grass|shrub|rock|float|buoy|debris|driftwood|rowboat|crates|table|tent|tarp|generator|mast|lantern|survey|flagpole|signposts|worklight|stakes|kelp|pathlights|drums)$/;
 
 export function register(D, H) {
   const X = makeKit(H);
@@ -124,6 +124,12 @@ const RAW = [
   { type: 'spirhalite_kelp', pos: [9.6, 0, -20.0], rotY: 0.3, seed: 4, L: 1.4 },
   { type: 'spirhalite_kelp', pos: [-21.8, 0, -1.8], rotY: -0.2, seed: 5, L: 1.5 },
   { type: 'spirhalite_kelp', pos: [5.6, 0, -24.9], rotY: 0.6, seed: 6, L: 1.6 },
+
+  // ================= round the helipad: fuel drums and a cargo stack behind it, path lights along the causeway's edges
+  { type: 'spirhalite_drums', pos: [6.8, 1.3, -46.4], rotY: 0.3 },
+  { type: 'spirhalite_crates', pos: [-7.2, 1.3, -46.6], rotY: -0.2, layout: [[0, 0, 0, 0], [1.02, 0.04, 0, 0.05], [0.5, 0.02, 1, 0.1]] },
+  { type: 'spirhalite_pathlights', pos: [-19, 1.3, -15.75], rotY: 0, nosnap: true,   // (on the causeway's edge strips, clear of the posts, the spur and the tower)
+    pts: [[-1.8, -4.75], [-1.8, -1.75], [-1.8, 1.15], [-1.8, 5.85], [1.8, -5.75], [1.8, -3.85], [1.8, 3.95], [1.8, 6.55]] },
 
   // ================= the sea round the islands: the strange vanes (out of bounds)
   { type: 'spirhalite_vane', pos: [-31.5, 0, -21], rotY: 0.4, h: 4.6, speed: 0.3 },

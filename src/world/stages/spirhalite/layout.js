@@ -52,10 +52,10 @@ const SPIRHALITE = {
   spawnPads: [[0, HP, -42.5], [0, HP, 42.5]],
   spawnBarrier: 4.2,
   // the world round it: no Inkopolis bay — more of the archipelago in the mist (backdrop.js); a pale jade-turquoise sea,
-  // mist banks drifting between the far islets, a soft silvery late-morning light and a hazy pink-orange sunset
+  // fog banks lying on the water between the far islets (backdrop.js: the engine's mist cards shade the sea behind them
+  // in the GTAO pass), a soft silvery late-morning light and a hazy pink-orange sunset
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, buoys: false, gulls: true, stars: true,
-    weather: { mist: { count: 90, height: 2.6, size: 30, reach: 95, opacity: 0.5 } },
     theme: {
       all: { seaDeep: '#1f666c', seaShallow: '#4bb3a6', seaCrest: '#a2e3d3', foam: '#fbfffd', waveStrength: 0.7 },
       golden: {
