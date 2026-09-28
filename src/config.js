@@ -519,9 +519,10 @@ export const TOWER = {
   gaugeNeutral: 2.25,         // … for the team behind while the tower is neutral
   overtimeMax: 300,           // overtime cap (s) — the team ahead wins
   platformR: 1.25,            // m: the platform's half-width (a square collider; the mesh is round)
-  platformH: 0.8,             // m: its top above the path (a hop up — you can't just walk on)
+  platformH: 1.6,             // m: its top above the path — higher than a jump (1.41 m): ink its walls and swim up
   riderUp: 1.3,               // m above the top that still counts as riding (a hop on it)
-  pillarW: 0.44, pillarH: 1.9, // m: the thin pillar in the platform's middle — cover for its riders (never inked; slide off its top)
+  pillarW: 0.44, pillarH: 1.8, // m: the thin pillar in the platform's middle — cover for its riders (never inked; slide off its top)
+  pillarCap: 0.24,            // m: the pyramid cap on it
   snapHz: 10,                 // online: host snapshots a second
 };
 

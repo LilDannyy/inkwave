@@ -165,8 +165,8 @@ export class TowerFx {
     shaft.position.y = H + PH / 2; shaft.castShadow = true; shaft.receiveShadow = true;
     const collar = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.16, 0.16, PW + 0.16), trim);
     collar.position.y = H + 0.08;
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0, PW * 0.8, 0.34, 4, 1), trim);
-    cap.rotation.y = Math.PI / 4; cap.position.y = H + PH + 0.17; cap.castShadow = true;
+    const CAP = TOWER.pillarCap, cap = new THREE.Mesh(new THREE.CylinderGeometry(0, PW * 0.8, CAP, 4, 1), trim);
+    cap.rotation.y = Math.PI / 4; cap.position.y = H + PH + CAP / 2; cap.castShadow = true;
     g.add(shaft, collar, cap);
     this.stripMat = new THREE.MeshBasicMaterial({ color: NEUTRAL.clone(), toneMapped: false });
     for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
@@ -307,8 +307,8 @@ export class TowerFx {
       this.ceilT = 0.2;
       const H = TOWER.platformH, ceil = ceilingAt(T.pos.x, T.pos.z, T.pos.y + H + 0.3);
       const room = ceil - T.pos.y - 0.5;
-      this.beaconRoom = room >= H + TOWER.pillarH + 0.5;               // no room over the pillar: hidden till it rolls out
-      this.beaconWant = Math.max(H + TOWER.pillarH + 0.5, Math.min(H + 3.3, room));
+      this.beaconRoom = room >= H + TOWER.pillarH + TOWER.pillarCap + 0.3;             // no room over the pillar: hidden till it rolls out
+      this.beaconWant = Math.max(H + TOWER.pillarH + TOWER.pillarCap + 0.3, Math.min(H + 3.3, room));
     }
     this.beacon.visible = this.halo.visible = this.beaconRoom !== false;
     this.beaconY += ((this.beaconWant ?? this.beaconY) - this.beaconY) * (dt > 0 ? 1 - Math.exp(-8 * dt) : 1);

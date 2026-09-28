@@ -42,7 +42,8 @@ app.on('browser-window-created', (_, win) => {
     const rep = await js(`(async () => {
       const g = window.__inkwave, m = g.match, T = m.tower, P = T.path, L = __G.level, { TOWER } = await import('./src/config.js');
       g.debug.freeze();
-      const R = TOWER.platformR, HEAD = 3.0, r2 = (v) => Math.round(v * 100) / 100;
+      const { TOWER_HEAD } = await import('./src/game/tower.js');
+      const R = TOWER.platformR, HEAD = TOWER_HEAD, r2 = (v) => Math.round(v * 100) / 100;
       const col = (x, z) => { const out = []; for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, [])) { const b = L.blocks[id]; if (!b || !b.solid || b.dynamic) continue;
         let lo = -Infinity, hi = Infinity, ok = true;
         for (let k = 0; k < 3 && ok; k++) { const a = b.axes[k], h = k === 0 ? b.half.x : k === 1 ? b.half.y : b.half.z, c = a.x * (x - b.center.x) + a.z * (z - b.center.z) - a.y * b.center.y;
