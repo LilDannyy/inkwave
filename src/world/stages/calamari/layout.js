@@ -4,6 +4,7 @@
 //   backdrop.js  the far scenery (snowy hills, the coves, the headlands, the village beyond)
 import { PATTERN, B, R, O } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
+import { SURF } from './surfaces.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Calamari County — the Squid Sisters' home village, at the far end of the line out of Inkopolis: a snowbound fishing
@@ -50,15 +51,15 @@ export const P = {
   strip: -11,                   // the station strip (z −11 … −6.6) runs the full width at street level
   crossing: [-20, -15.5],       // Alpha's level crossing + hillside road (x); Bravo's is the mirror (x 15.5 … 20)
   // Alpha's railcar on Alpha's track (x 1.6 … 15); Bravo's is its mirror
-  train: { x0: 1.6, x1: 15, z0: -6.45, z1: -3.55, h: 3.4 },
+  train: { x0: 1.6, x1: 15, z0: -6.45, z1: -3.55, h: 3.4, floor: 1.05 },
   // Alpha's footbridge (hillside side): deck x −11.4 … −9.0, stairs x −9.0 → −1.5 (side platform z −9.3, island z −2.3)
-  bridge: { x0: -11.4, x1: -9.0, y: 4.3, t: 0.4, z0: -10.2, z1: -1.4, foot: -1.5, stairW: 1.8, s1: -9.3, s2: -2.3 },
+  bridge: { x0: -11.4, x1: -9.0, y: 4.3, t: 0.4, z0: -8.6, z1: -1.4, foot: -1.5, stairW: 1.8, s1: -7.5, s2: -2.3 },
   // village (buildings: [cx, cz, w (x), d (z), deg, height])
-  station: [-6, 2, -14.6, -10.4],                 // station building (x0, x1, z0, z1)
+  station: [0, 7.4, -14.6, -10.4],                // station building (x0, x1, z0, z1)
   houseA: [-12.45, -12.9, 5.7, 5.0, 0, 3.5],      // the house behind the platform's west end
   bath: [-11.7, -22.1, 7.0, 7.4, 4, 3.6],         // bath house
   store: [9.05, -22.3, 5.2, 7.0, -5, 3.4],        // general store (front on the square) / fish shop (back on the quay)
-  post: [7, 11.4, -14.9, -10.4],                  // post office (x0, x1, z0, z1)
+  post: [7.4, 11.8, -15.6, -10.4],                // post office (x0, x1, z0, z1)
   square: [-7.7, 6.2, -26, -15],                  // the square (x0, x1, z0, z1)
   backSt: [-30, -26],                             // the back street (z) from the hillside road to the quay
   T1: [[-26.5, -20, -17.5, -11], [-23.2, -20, -24, -17.5], [-25.5, -20, -28.5, -24]],   // T1 (1.3) pieces (x0, x1, z0, z1)
@@ -84,14 +85,14 @@ P.roadX = (P.crossing[0] + P.crossing[1]) / 2 - 0.35;
 P.backZ = (P.backSt[0] + P.backSt[1]) / 2 + 0.25;
 
 const K = {
-  snow: '#dfe3e8', ballast: '#b9bcc0', platform: '#8a7866', timber: '#6d5543', stone: '#b7b3ab', setts: '#a9a6a0',
+  snow: '#d6dce3', ballast: '#c3c8ce', platform: '#76604d', timber: '#6d5543', stone: '#b7b3ab', setts: '#a9a6a0',
   quay: '#a7a39c', wall: '#e8e2d4', plaster: '#ece6d8', dark: '#4a3a2e', spawn: '#eae6de', train: '#d9d4c4', portal: '#8f8b84',
   cedar: '#5d4636',
 };
-const snow = (o = {}) => ({ color: K.snow, pattern: PATTERN.concrete, ...o });
-const setts = (o = {}) => ({ color: K.setts, pattern: PATTERN.pavers, ...o });
-const quay = (o = {}) => ({ color: K.quay, pattern: PATTERN.pavers, ...o });
-const timber = (o = {}) => ({ color: K.platform, pattern: PATTERN.planks, ...o });
+const snow = (o = {}) => ({ color: K.snow, pattern: SURF.snow, ...o });
+const setts = (o = {}) => ({ color: K.setts, pattern: SURF.setts, ...o });
+const quay = (o = {}) => ({ color: K.quay, pattern: SURF.setts, ...o });
+const timber = (o = {}) => ({ color: K.platform, pattern: SURF.timber, ...o });
 const bldg = (c, o = {}) => ({ color: c, pattern: PATTERN.weatherboard, roof: true, ...o });
 const stair = (o = {}) => ({ color: K.stone, pattern: PATTERN.stonestep, ...o });
 const SIDES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
@@ -125,9 +126,11 @@ const slipIn = back([(sA[0] + sB[0]) / 2, (sA[1] + sB[1]) / 2]);
 
 const HALF = [
   // ================= ground (Alpha's half)
-  B(-P.cutX, P.cutX, FL, 0, P.strip, -P.track[1], setts({ tag: 'station-strip' })),
-  B(P.crossing[0], P.kerb, FL, 0, -30, P.strip, setts({ tag: 'village' })),
-  B(-2.2, P.kerb, FL, 0, -45.5, -30, setts({ tag: 'coop-yard' })),
+  B(-P.cutX, P.cutX, FL, 0, P.strip, -P.track[1], snow({ tag: 'station-strip' })),
+  B(P.crossing[0], P.square[0], FL, 0, -30, P.strip, snow({ tag: 'village' })),
+  B(P.square[0], P.square[1], FL, 0, -30, P.strip, setts({ tag: 'square' })),
+  B(P.square[1], P.kerb, FL, 0, -30, P.strip, snow({ tag: 'village' })),
+  B(-2.2, P.kerb, FL, 0, -45.5, -30, snow({ tag: 'coop-yard' })),
   // harbour: north quay, the basin quay, the timber jetty, the breakwater, the co-op quay (stepped corner)
   bx(P.northQuay, FL, 0, quay({ tag: 'north-quay' })),
   ...BASIN,
@@ -144,9 +147,10 @@ const HALF = [
   B(S.x0, S.x1, 0, S.y, S.z0, S.z1, timber({ tag: 'side-platform' })),
   R([S.x1 + 2.4, 0, -8.5], [S.x1, S.y, -8.5], 3.8, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
   R([S.x0 - 2.4, 0, -8.5], [S.x0, S.y, -8.5], 3.8, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
-  R([-7.6, 0, -13.1], [-7.6, S.y, S.z0], 2.6, stair({ tag: 'platform-steps' })),
-  R([4.5, 0, -13.1], [4.5, S.y, S.z0], 3.4, stair({ tag: 'platform-steps' })),
-  B(TR.x0, TR.x1, 0, TR.h, TR.z0, TR.z1, { tag: 'railcar', color: K.train, pattern: PATTERN.hullpaint, roof: true, noPaint: SIDES }),
+  R([-4.6, 0, -13.1], [-4.6, S.y, S.z0], 5.0, stair({ tag: 'platform-steps' })),
+  // the railcar: an underframe on its bogies, the body overhanging it (the body's floor at platform height)
+  B(TR.x0 + 0.9, TR.x1 - 0.9, 0, TR.floor, TR.z0 + 0.3, TR.z1 - 0.3, { tag: 'railcar-frame', color: '#2c3850', pattern: PATTERN.metalpanel, noPaint: SIDES }),
+  B(TR.x0, TR.x1, TR.floor, TR.h, TR.z0, TR.z1, { tag: 'railcar', color: '#e8e0c9', pattern: PATTERN.hullpaint, roof: true, noPaint: SIDES }),
 
   // ================= Alpha's footbridge: stair up from the side platform, deck over the track, stair down to the island
   bridgeRun(BR.s1),
@@ -154,6 +158,7 @@ const HALF = [
   B(BR.x0, BR.x1, BR.y - BR.t, BR.y, BR.z0, BR.z1, timber({ tag: 'bridge-deck' })),
   B(BR.x0, BR.x0 + 0.2, BR.y, BR.y + 0.95, BR.z0, BR.z1, bldg(K.timber, { tag: 'bridge-wall', roof: false, noNav: true })),
   B(BR.x1 - 0.2, BR.x1, BR.y, BR.y + 0.95, BR.s1 + BR.stairW / 2, BR.s2 - BR.stairW / 2, bldg(K.timber, { tag: 'bridge-wall', roof: false, noNav: true })),
+  B(BR.x0 + 0.2, BR.x1, BR.y, BR.y + 0.95, BR.z0, BR.z0 + 0.2, bldg(K.timber, { tag: 'bridge-wall', roof: false, noNav: true })),
 
   // ================= village buildings (tops off-limits), some off the street grid
   B(P.station[0], P.station[1], 0, 3.2, P.station[2], P.station[3], bldg(K.wall, { tag: 'station' })),
