@@ -33,7 +33,9 @@ export const TOWER_DEFS = {
     checkpoints: [[21.41, 13.25], [-12.77, 9.98]],
   },
   lockgate: {
-    path: [[0, 0], [-11.46, 11.46], [-11.46, 17.52], [17.1, 17.52], [17.1, 22.67], [10.32, 22.67], [10.32, 30.44]],
+    // ([-1.25, 1.25] is a straight-through point on the drawn diagonal, not a turn: it ends the level run over the
+    // bridge's crown where the platform leaves it, so the track follows the hump down instead of cutting into it)
+    path: [[0, 0], [-1.25, 1.25], [-11.46, 11.46], [-11.46, 17.52], [17.1, 17.52], [17.1, 22.67], [10.32, 22.67], [10.32, 30.44]],
     checkpoints: [[-11.68, 17.81], [17.39, 17.85]],
   },
   terraces: {

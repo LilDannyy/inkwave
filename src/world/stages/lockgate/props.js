@@ -7,6 +7,7 @@
 // The place: a flight of broad locks climbing out of the harbour basin through an old brick warehouse district.
 // Materials: red + blue engineering brick, sandstone copings with worn arrises, black-and-white lock timber, cast iron.
 // Signage is modelled (flat painted / raised stroke letters, cached per glyph) — never the shared sign atlas.
+import { BRIDGE_T, BOAT_T } from './layout.js';
 const P = Math.PI;
 
 export function register(D, H) {
@@ -435,14 +436,38 @@ export function register(D, H) {
     colSeg(B, [hx, hz], [b[0], b[2]], 0.2, 0.62, 1.1, 3);   // timber cover at waist height; squids + shots pass under
     return b;
   }
+  // a cranked balance beam (where the lock side is too tight for a straight one): out from the heel post in line with
+  // the leaf for `out` m, then bent to run back downstream (local -X) for `back` m, parallel to the chamber
+  function crankedBeam(B, side, out = 0.9, back = 2.2) {
+    const hx = LOCK.heelX, hz = side * LOCK.half;
+    B.box('wood', K.black, 0.34, 1.2, 0.34, hx, 0.5, hz, { r: 0.05 });
+    B.box('wood', K.white, 0.38, 0.06, 0.38, hx, 1.12, hz, { r: 0.02 });
+    const dir = [-0.12, side * 0.993], a = [hx + dir[0] * 0.1, 0.92, hz + dir[1] * 0.1], k = [hx + dir[0] * out, 0.9, hz + dir[1] * out];
+    const b = [k[0] - back, 0.86, k[2]];
+    const cut = (t) => [k[0] + (b[0] - k[0]) * t, k[1] + (b[1] - k[1]) * t, k[2]];
+    seg(B, 'wood', K.black, a, k, 0.3, 0.32);
+    seg(B, 'wood', K.black, k, cut(0.7), 0.3, 0.32);
+    seg(B, 'wood', K.white, cut(0.7), b, 0.31, 0.33);
+    seg(B, 'wood', K.white, a, [hx + dir[0] * 0.16, 0.92, hz + dir[1] * 0.16], 0.31, 0.33);
+    // the knee: an iron strap wrapped round the bend + a diagonal brace, worn grip battens at the end
+    B.box('metal', K.iron, 0.4, 0.36, 0.4, k[0], k[1], k[2], { r: 0.02 });
+    seg(B, 'metal', K.iron, [k[0] - 0.7, 0.86, k[2]], [a[0] + dir[0] * 0.3, 0.9, a[2] + dir[1] * 0.3], 0.06, 0.08, { plain: true });
+    for (const t of [0.86, 0.93]) { const p = cut(t); pbox(B, NS('wood'), K.whiteDk, 0.06, 0.03, 0.34, p[0], p[1] + 0.17, p[2]); }
+    colSeg(B, [hx, hz], [k[0], k[2]], 0.2, 0.62, 1.1, 1);
+    colSeg(B, [k[0], k[2]], [b[0], b[2]], 0.2, 0.62, 1.1, 2);
+    return b;
+  }
   D.lockgate_gates = {
-    desc: 'A pair of black timber mitre gates with white-ended balance beams across a broad lock chamber (local +X upstream, chamber z ±2.75, origin on the gate line at coping level; the walkway on top is a level block x ±0.6). kind lower | upper (see LOCK notes in props.js). Beams, heel posts, handrail, cill (upper) collide.',
-    params: { kind: 'lower | upper' }, variants: 1, mount: 'ground',
+    desc: 'A pair of black timber mitre gates with white-ended balance beams across a broad lock chamber (local +X upstream, chamber z ±2.75, origin on the gate line at coping level; the walkway on top is a level block x ±0.6). kind lower | upper (see LOCK notes in props.js). Beams, heel posts, handrail, cill (upper) collide. crank: the +Z beam is a cranked one bent back downstream (Tower Command: it clears the track along that lock side).',
+    params: { kind: 'lower | upper', crank: 'bool' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
       const upper = o.kind === 'upper';
       const yb = upper ? -2.25 : LOCK.floor, yt = -0.25;
-      for (const side of [-1, 1]) { gateLeaf(B, side, yb, yt); balanceBeam(B, side, upper ? 4.4 : 3.6, upper ? 1.2 : 0.3); }
+      for (const side of [-1, 1]) {
+        gateLeaf(B, side, yb, yt);
+        if (o.crank && side > 0) crankedBeam(B, side); else balanceBeam(B, side, upper ? 4.4 : 3.6, upper ? 1.2 : 0.3);
+      }
       // the leaves are solid timber from the cill / chamber floor up to under the walkway: nobody walks through a gate
       B.col(-0.95, upper ? yb : LOCK.floor, -LOCK.half, 0.05, -0.25, LOCK.half);
       colC(B, LOCK.heelX, 0, -LOCK.half, 0.36, 1.15, 0.36, ROOF);
@@ -587,13 +612,14 @@ export function register(D, H) {
     });
   }
   D.lockgate_bridge = {
-    desc: 'The humpback brick bridge dressing (placed once at the origin, mirror: false): water arch + towpath arches, spandrels, barrel soffits, blue-brick voussoir rings, stone string course, saddleback parapet copings, end piers with lamps, cast-iron bridge plates, rope guards. See the BR notes in props.js.',
-    params: {}, variants: 1, mount: 'ground',
+    desc: 'The humpback brick bridge dressing (placed once at the origin, mirror: false): water arch + towpath arches, spandrels, barrel soffits, blue-brick voussoir rings, stone string course, saddleback parapet copings, end piers with lamps, cast-iron bridge plates, rope guards. See the BR notes in props.js. half: the deck half-width (2.2; Tower Command builds it wider, layout.js BRIDGE_T).',
+    params: { half: 'deck half-width (2.2)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const F = BR.face;
+      // outer faces ±F, parapet centre lines ±PX (the layout's parapets run bw … bw + 0.4)
+      const F = o.half != null ? o.half + 0.4 : BR.face, PX = o.half != null ? o.half + 0.2 : 2.4, wk = o.half != null ? '|' + kf(F) : '';
       const span = tpl('spandrel', () => extrudeGeo(spandrelProfile(), 0.36, 0.004));
-      for (const sx of [-1, 1]) B.add('paint', span, K.brickDk, sx * 2.4, 0, 0, {});
+      for (const sx of [-1, 1]) B.add('paint', span, K.brickDk, sx * PX, 0, 0, {});
       // brick courses on the spandrel faces (flush mortar lines clipped to the masonry)
       const inMasonry = (z, y) => {
         const a = Math.abs(z);
@@ -625,9 +651,9 @@ export function register(D, H) {
       B.add(NS('paint'), TPL.get('spandrelBricks'), 'white', F - 0.011, 0, 0, {});
       B.pop();
       // soffits: the water barrel + the two towpath barrels, pier faces toward the towpaths
-      B.add(NS('paint'), barrelGeo('w', -4.99, 4.99, soffitW, 2 * F - 0.06, 40, K.blueDk), 'white', 0, 0, 0, {});
+      B.add(NS('paint'), barrelGeo('w' + wk, -4.99, 4.99, soffitW, 2 * F - 0.06, 40, K.blueDk), 'white', 0, 0, 0, {});
       for (const s of [-1, 1]) {
-        B.add('paint', barrelGeo('t' + s, s * 7, s * 5, soffitT, 2 * F - 0.06, 10, K.blue), 'white', 0, 0, 0, {});
+        B.add('paint', barrelGeo('t' + s + wk, s * 7, s * 5, soffitT, 2 * F - 0.06, 10, K.blue), 'white', 0, 0, 0, {});
         pbox(B, 'paint', K.blue, 2 * F - 0.04, BR.spring + 1.7, 0.04, 0, (BR.spring - 1.7) / 2, s * 5.02);
         pbox(B, NS('paint'), K.blueDk, 2 * F - 0.06, 1.78, 0.6, 0, -0.81, s * 4.72);   // haunch fill below the soffit at the springing
       }
@@ -664,7 +690,7 @@ export function register(D, H) {
       // saddleback copings on the four parapet runs (collide), end piers with lamps
       const top = (z) => deckTop(z) + 0.85;
       for (const sx of [-1, 1]) {
-        const x = sx * 2.4;
+        const x = sx * PX;
         for (let i = 0; i < 40; i++) {
           const zA = -15.1 + i * 0.9, zB = Math.min(15.1, zA + 0.88);
           if (zA >= 15.1) break;
@@ -1119,11 +1145,13 @@ export function register(D, H) {
 
   // ---- canal company office (pos = centre of the 6.5 x 8 block, roof terrace at 2.6 with parapets N + E in the level)
   D.lockgate_office = {
-    desc: 'LOCKGATE CANAL Co. office dressing around a 6.5 x 8 x 2.45 block: sash windows, panelled door with fanlight + steps (+X), name board on the canal face, bracket clock at the NE corner, roof terrace kit (chimney stack collides, flag staff), rails for the iron stair up the south face.',
-    params: {}, variants: 1, mount: 'ground',
+    desc: 'LOCKGATE CANAL Co. office dressing around a 6.5 x 8 x 2.45 block: sash windows, panelled door with fanlight + steps (+X), name board on the canal face, bracket clock at the NE corner, roof terrace kit (chimney stack collides, flag staff), rails for the iron stair up the south face. depth: the block\'s depth (8; Tower Command: 7, pos 0.5 m further back).',
+    params: { depth: 'm (8)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const W = 6.5, Dd = 8, Hh = 2.6;
+      const W = 6.5, Dd = o.depth ?? 8, Hh = 2.6;
+      // roof kit spots (chimney near the back, flag staff by the canal-side parapet) keep their distance from the ends
+      const zChim = o.depth ? -Dd / 2 + 1.6 : -2.4, zFlag = o.depth ? Dd / 2 - 0.7 : 3.3;
       for (let side = 0; side < 4; side++) onFace(B, W, Dd, side, (L) => {
         B.box('paint', K.stone, L + 0.06, 0.12, 0.08, 0, Hh - 0.06, 0.04, { r: 0.02 });
         B.box('paint', K.blue, L + 0.02, 0.4, 0.04, 0, 0.2, 0.02, { r: 0.01 });
@@ -1155,11 +1183,11 @@ export function register(D, H) {
       B.sph('metal', K.gold, 0.06, 0.8, 0.4, 0, { ws: 6, hs: 4 });
       B.pop();
       // roof kit: chimney stack (collides), flag staff with the company pennant, skylight
-      chimney(B, -2.6, Hh, -2.4, 0.9, 1.2, 1.9, 3);
-      colC(B, -2.6, Hh, -2.4, 1.1, 2.2, 1.4, ROOF);
-      B.lathe('metal', K.white, [[0.06, 0], [0.04, 0.2], [0.035, 4.2], [0, 4.25]], -2.7, Hh, 3.3, { seg: 6 });
-      B.flag(-2.7, Hh + 4.0, 3.3, { color: K.maroon, rz: HP, s: 1.6 });
-      colC(B, -2.7, Hh, 3.3, 0.2, 4.2, 0.2, ROOF);
+      chimney(B, -2.6, Hh, zChim, 0.9, 1.2, 1.9, 3);
+      colC(B, -2.6, Hh, zChim, 1.1, 2.2, 1.4, ROOF);
+      B.lathe('metal', K.white, [[0.06, 0], [0.04, 0.2], [0.035, 4.2], [0, 4.25]], -2.7, Hh, zFlag, { seg: 6 });
+      B.flag(-2.7, Hh + 4.0, zFlag, { color: K.maroon, rz: HP, s: 1.6 });
+      colC(B, -2.7, Hh, zFlag, 0.2, 4.2, 0.2, ROOF);
       B.box('paint', K.iron, 1.3, 0.3, 1.0, 0.8, Hh + 0.15, -1.8, { r: 0.04 });
       B.push(0.8, Hh + 0.32, -1.8, 0, 0.35); pbox(B, NS('gloss'), K.glassLt, 1.2, 0.03, 0.9, 0, 0, 0); B.pop();
       colC(B, 0.8, Hh, -1.8, 1.3, 0.45, 1.0);
@@ -1176,8 +1204,8 @@ export function register(D, H) {
 
   // ---- stables with a hay loft (pos = centre of the 7 x 8 x 3.6 block; stable doors + loft door face +Z, the wharf)
   D.lockgate_stables = {
-    desc: 'Canal horse stables with a hay loft around a 7 x 8 x 3.6 brick block: Dutch stable doors, loft gablet with a hay door + hoist beam, louvred ridge vent, slate roof (collides), tack hooks, a horse trough and a hay rack on the wharf side.',
-    params: {}, variants: 1, mount: 'ground',
+    desc: 'Canal horse stables with a hay loft around a 7 x 8 x 3.6 brick block: Dutch stable doors, loft gablet with a hay door + hoist beam, louvred ridge vent, slate roof (collides), tack hooks, a horse trough and a hay rack on the wharf side. flat: the Tower Command version — a flat leaded loft deck in play (the level carries it), the horse ramp up the -Z side (no windows there), a louvred vent (cover) and the loft hatch on the roof.',
+    params: { flat: 'bool' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
       const W = 7, Dd = 8, Hh = 3.6;
@@ -1190,6 +1218,22 @@ export function register(D, H) {
         for (const x of [-1.1, 1.1]) { archWin(B, x, 1.3, 0.6, 0.7, { bars: 2 }); }
         for (const x of [-3.0, 3.0]) { B.tor(NS('metal'), K.iron, 0.07, 0.014, x, 1.4, 0.05, { rs: 4, ts: 8 }); }
       });
+      if (o.flat) {
+        // the loft deck: lead rolls across the roof (flush), the hay hatch by the ramp's landing, a louvred vent box at the
+        // far end (colliding cover, slide-off top); the ramp side keeps one high window above the ramp's low end
+        onFace(B, W, Dd, 3, () => { plankDoor(B, 0, 0, 1.4, 2.4, K.green, { frame: K.stone }); });
+        onFace(B, W, Dd, 2, () => archWin(B, -2.4, 2.35, 0.6, 0.7, { bars: 2 }));
+        for (let x = -W / 2 + 1.2; x < W / 2 - 0.5; x += 1.2) pbox(B, NS('paint'), shade(K.slate, 0.8), 0.05, 0.012, Dd - 0.1, x, Hh + 0.006, 0);
+        B.box('wood', K.timber, 1.3, 0.05, 1.0, -W / 2 + 1.0, Hh + 0.02, -Dd / 2 + 1.0, { r: 0.01 });
+        for (const dx of [-0.3, 0.3]) pbox(B, NS('metal'), K.iron, 0.08, 0.02, 0.9, -W / 2 + 1.0 + dx, Hh + 0.05, -Dd / 2 + 1.0);
+        B.cyl(NS('metal'), K.iron, 0.06, 0.03, -W / 2 + 1.0, Hh + 0.05, -Dd / 2 + 1.45, { rx: HP, seg: 8 });
+        const vx = 2.0, vz = -1.6;
+        B.box('paint', K.sash, 1.2, 0.85, 0.9, vx, Hh + 0.425, vz, { r: 0.03 });
+        for (let k = 0; k < 4; k++) pbox(B, NS('paint'), K.slateDk, 1.22, 0.04, 0.92, vx, Hh + 0.2 + k * 0.15, vz);
+        B.push(vx, Hh + 0.85, vz, HP); slateRoof(B, -0.55, 0.55, -0.7, 0.7, 0, 0.3, { ov: 0.1, noGutter: true, noGable: true, course: 0.2 }); B.pop();
+        colC(B, vx, Hh, vz, 1.3, 1.15, 1.0, ROOF);
+        return;
+      }
       onFace(B, W, Dd, 2, () => { for (const x of [-2, 0, 2]) archWin(B, x, 1.5, 0.7, 0.8, { bars: 2 }); });
       onFace(B, W, Dd, 3, () => { plankDoor(B, 0, 0, 1.4, 2.4, K.green, { frame: K.stone }); });
       slateRoof(B, -W / 2, W / 2, -Dd / 2, Dd / 2, Hh, 2.2, { ov: 0.3 });
@@ -1947,17 +1991,21 @@ const Q = -P / 4;                       // rotY that turns local +X along u (loc
 
 export const PLACEMENTS = [
   // ================= landmarks + buildings (Alpha half; each is mirrored to Bravo's)
-  { type: 'lockgate_bridge', pos: [0, 0, 0], rotY: Q, mirror: false },
+  { type: 'lockgate_bridge', pos: [0, 0, 0], rotY: Q, mirror: false, notIn: 'tower' },
+  { type: 'lockgate_bridge', pos: [0, 0, 0], rotY: Q, mirror: false, half: BRIDGE_T, onlyIn: 'tower' },
   { type: 'lockgate_warehouse', pos: [4, 0, -45.4], rotY: 0, fill: [[-26.3, -16], [18, 26.3]] },
   { type: 'lockgate_cottage', pos: [-17.75, 0, -28.75], rotY: 0 },
-  { type: 'lockgate_office', pos: [-4.75, 0, -22], rotY: 0 },
-  { type: 'lockgate_stables', pos: [9, 0, -23], rotY: 0 },
+  { type: 'lockgate_office', pos: [-4.75, 0, -22], rotY: 0, notIn: 'tower' },
+  { type: 'lockgate_office', pos: [-4.75, 0, -22.5], rotY: 0, depth: 7, onlyIn: 'tower' },
+  { type: 'lockgate_stables', pos: [9, 0, -23], rotY: 0, notIn: 'tower' },
+  { type: 'lockgate_stables', pos: [9, 0, -23], rotY: 0, flat: true, onlyIn: 'tower' },
   { type: 'lockgate_shed', pos: [23, 0, -9.5], rotY: 0 },
   { type: 'lockgate_mill', pos: [27, 0, 12], rotY: -P / 2, W: 28 },
   { type: 'lockgate_backdrop', pos: [0, 0, 0], rotY: 0 },
 
   // ================= lock E (lock W is its 180° twin): gates, upper pound + railings, drained chamber, maintenance
-  { type: 'lockgate_gates', pos: [16.5, 1.3, 12], rotY: 0, kind: 'lower' },
+  { type: 'lockgate_gates', pos: [16.5, 1.3, 12], rotY: 0, kind: 'lower', notIn: 'tower' },
+  { type: 'lockgate_gates', pos: [16.5, 1.3, 12], rotY: 0, kind: 'lower', crank: true, onlyIn: 'tower' },
   { type: 'lockgate_gates', pos: [24.5, 1.3, 12], rotY: 0, kind: 'upper' },
   { type: 'lockgate_pound', pos: [25.12, -0.3, 12], rotY: 0, length: 66, width: 5.5 },
   { type: 'lockgate_railing', pos: [25.2, 1.3, 9.2], rotY: 0, length: 1.75, height: 1.05 },
@@ -1990,43 +2038,61 @@ export const PLACEMENTS = [
   { type: 'lockgate_enamel', pos: [26.98, 3.2, 18.2], rotY: -P / 2, variant: 4 },
 
   // ================= the diagonal pound: Alpha's towpath quay, moored boats, wharf crane, ladders, rings
-  { type: 'lockgate_narrowboat', pos: DW(7.5, -3.67, -0.7), rotY: Q, kind: 'working', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.3, -1.5, 0.9], [2.7, -1.5, 0.9]] },
-  { type: 'lockgate_narrowboat', pos: DW(7.2, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]] },
-  { type: 'lockgate_bollard', pos: DW(5.2, -5.25, 0.15) },
-  { type: 'lockgate_bollard', pos: DW(10.2, -5.25, 0.15) },
+  { type: 'lockgate_narrowboat', pos: DW(7.5, -3.67, -0.7), rotY: Q, kind: 'working', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.3, -1.5, 0.9], [2.7, -1.5, 0.9]], notIn: 'tower' },
+  { type: 'lockgate_narrowboat', pos: DW(7.2, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]], notIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(5.2, -5.25, 0.15), notIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(10.2, -5.25, 0.15), notIn: 'tower' },
+  // (Tower Command: boats + their bollards BOAT_T further along, clear of the wider bridge — layout.js moves the hulls)
+  { type: 'lockgate_narrowboat', pos: DW(7.5 + BOAT_T, -3.67, -0.7), rotY: Q, kind: 'working', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.3, -1.5, 0.9], [2.7, -1.5, 0.9]], onlyIn: 'tower' },
+  { type: 'lockgate_narrowboat', pos: DW(7.2 + BOAT_T, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]], onlyIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(5.2 + BOAT_T, -5.25, 0.15), onlyIn: 'tower' },
+  { type: 'lockgate_bollard', pos: DW(10.2 + BOAT_T, -5.25, 0.15), onlyIn: 'tower' },
   { type: 'lockgate_bollard', pos: DW(-9.2, -5.25, 0.15), variant: 1 },
   { type: 'lockgate_bollard', pos: DW(-13.8, -5.25, 0.15) },
   { type: 'lockgate_ring', pos: DW(-11.5, -4.82, 0.15), rotY: Q },
-  { type: 'lockgate_ring', pos: DW(-4.0, -4.82, 0.15), rotY: Q },
-  { type: 'lockgate_ring', pos: DW(3.8, -4.82, 0.15), rotY: Q },
+  { type: 'lockgate_ring', pos: DW(-4.0, -4.82, 0.15), rotY: Q, notIn: 'tower' },
+  { type: 'lockgate_ring', pos: DW(3.8, -4.82, 0.15), rotY: Q, notIn: 'tower' },
+  { type: 'lockgate_ring', pos: DW(-5.6, -4.82, 0.15), rotY: Q, onlyIn: 'tower' },
+  { type: 'lockgate_ring', pos: DW(5.6, -4.82, 0.15), rotY: Q, onlyIn: 'tower' },
   { type: 'lockgate_ring', pos: DW(14.5, -4.82, 0.15), rotY: Q },
   { type: 'lockgate_ladder', pos: DW(-10.4, -4.77, 0.15), rotY: Q, depth: 2.35 },
   { type: 'lockgate_crane', pos: DW(-6.3, -6.4, 0.15), rotY: Q },
   { type: 'lockgate_lifebuoy', pos: DW(-12.5, -8.3, 0.15), rotY: Q },
-  { type: 'lockgate_bench', pos: DW(-15.2, -8.3, 0.15), rotY: Q },
-  { type: 'lockgate_milepost', pos: DW(4.3, -8.35, 0.15), rotY: Q },
+  { type: 'lockgate_bench', pos: DW(-15.2, -8.3, 0.15), rotY: Q, notIn: 'tower' },
+  { type: 'lockgate_milepost', pos: DW(4.3, -8.35, 0.15), rotY: Q, notIn: 'tower' },
+  { type: 'lockgate_bench', pos: DW(-8.2, -8.3, 0.15), rotY: Q, onlyIn: 'tower' },           // (off the tower's street)
+  { type: 'lockgate_milepost', pos: DW(5.4, -8.35, 0.15), rotY: Q, onlyIn: 'tower' },        // (clear of the wider bridge)
   { type: 'lockgate_enamel', pos: DW(-9.8, -8.35, 0.15), rotY: Q, variant: 0, post: true },
   { type: 'lockgate_lamp', pos: DW(-8.5, -9.5), variant: 0 },
   { type: 'lockgate_lamp', pos: DW(8.2, -9.5), variant: 0 },
 
   // ================= the bridge street + crane wharf courtyard (bends round the stables onto the bridge)
-  { type: 'lockgate_goods', pos: [12.4, 0, -15.3], rotY: 0.2, variant: 0 },
-  { type: 'lockgate_casks', pos: [7.2, 0, -16.6], rotY: -0.4, variant: 1 },
+  { type: 'lockgate_goods', pos: [12.4, 0, -15.3], rotY: 0.2, variant: 0, notIn: 'tower' },
+  { type: 'lockgate_casks', pos: [7.2, 0, -16.6], rotY: -0.4, variant: 1, notIn: 'tower' },
   { type: 'lockgate_goods', pos: [1.2, 0, -13.8], rotY: -P / 4, variant: 1 },
   { type: 'lockgate_trough', pos: [2, 0, -22.2], rotY: 0 },
-  { type: 'lockgate_pump', pos: [-0.5, 0, -16.4], rotY: P / 2 },
+  { type: 'lockgate_pump', pos: [-0.5, 0, -16.4], rotY: P / 2, notIn: 'tower' },
   { type: 'lockgate_postbox', pos: [-0.8, 0, -28.6] },
-  { type: 'lockgate_fingerpost', pos: [-6.3, 0, -16.2], rotY: 0.3 },
-  { type: 'lockgate_casks', pos: [-10.0, 0, -16.0], rotY: 0.5, variant: 2 },
+  { type: 'lockgate_fingerpost', pos: [-6.3, 0, -16.2], rotY: 0.3, notIn: 'tower' },
+  { type: 'lockgate_casks', pos: [-10.0, 0, -16.0], rotY: 0.5, variant: 2, notIn: 'tower' },
+  // (Tower Command: the tower's street along the office + stables fronts (z -18.8 … -16.3) cleared — the same street
+  // furniture a step toward the canal, the crate stack into the lee of the bridge by the loading bank)
+  { type: 'lockgate_goods', pos: [11.81, 0, -4.45], rotY: P / 4, variant: 0, onlyIn: 'tower' },
+  { type: 'lockgate_casks', pos: [7.2, 0, -15.0], rotY: -0.4, variant: 1, onlyIn: 'tower' },
+  { type: 'lockgate_pump', pos: [-0.5, 0, -15.0], rotY: P / 2, onlyIn: 'tower' },
+  { type: 'lockgate_fingerpost', pos: [-8.3, 0, -15.9], rotY: 0.3, onlyIn: 'tower' },
+  { type: 'lockgate_casks', pos: [-12.0, 0, -15.5], rotY: 0.5, variant: 2, onlyIn: 'tower' },
   { type: 'lockgate_lamp', pos: [-1.48, 2.0, -21], rotY: P / 2, variant: 1 },
   { type: 'lockgate_lamp', pos: [9, 2.7, -18.98], rotY: 0, variant: 1 },
 
   // ================= west: the lock-keeper's front garden, the horse ramp, the west yard
   { type: 'lockgate_tree', pos: [-26.2, 0, -28.6] },
   { type: 'lockgate_planter', pos: [-19.8, 0, -22.4], variant: 0 },
-  { type: 'lockgate_planter', pos: [-15.7, 0, -22.4], variant: 1 },
+  { type: 'lockgate_planter', pos: [-15.7, 0, -22.4], variant: 1, notIn: 'tower' },
+  { type: 'lockgate_planter', pos: [-15.7, 0, -24.6], variant: 1, onlyIn: 'tower' },          // (off the tower's lane)
   { type: 'lockgate_bench', pos: [-21.33, 0, -28.4], rotY: -P / 2 },
-  { type: 'lockgate_casks', pos: [-10.6, 0, -24.0], rotY: 0.3, variant: 2 },
+  { type: 'lockgate_casks', pos: [-10.6, 0, -24.0], rotY: 0.3, variant: 2, notIn: 'tower' },
+  { type: 'lockgate_casks', pos: [-13.0, 0, -24.6], rotY: 0.3, variant: 2, onlyIn: 'tower' },  // (off the tower's lane)
   { type: 'lockgate_lamp', pos: [-11.4, 0, -33.8], variant: 0 },
   { type: 'lockgate_cart', pos: [-17.2, 0, -34.2], rotY: 0.35 },
   { type: 'lockgate_goods', pos: [-22.6, 0, -31.6], rotY: P / 4, variant: 2 },
@@ -2069,7 +2135,8 @@ export const PLACEMENTS = [
   { type: 'lockgate_weeds', pos: [-1.45, 0, -19], rotY: P / 2, length: 3 },
   { type: 'lockgate_weeds', pos: [26.95, 1.3, -1.5], rotY: -P / 2, length: 1.8 },
   { type: 'lockgate_bills', pos: [-1.48, 0, -23.8], rotY: P / 2, variant: 0, count: 3 },
-  { type: 'lockgate_bills', pos: [9.0, 0, -27.02], rotY: P, variant: 2, count: 2 },
+  { type: 'lockgate_bills', pos: [9.0, 0, -27.02], rotY: P, variant: 2, count: 2, notIn: 'tower' },
+  { type: 'lockgate_bills', pos: [12.52, 0, -23], rotY: P / 2, variant: 2, count: 2, onlyIn: 'tower' },   // (the loft ramp covers that wall)
   { type: 'lockgate_bills', pos: [21.95, 0, -40.5], rotY: -P / 2, variant: 3, count: 2 },
   { type: 'lockgate_bills', pos: [-12.55, 0, -40], rotY: P / 2, variant: 1, count: 2 },
   { type: 'lockgate_enamel', pos: [-16, 1.6, -35.98], rotY: 0, variant: 3 },
