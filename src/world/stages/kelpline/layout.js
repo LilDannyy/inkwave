@@ -2,6 +2,7 @@
 //   layout.js    level geometry (this file)        props.js    prop pack + placements (set dressing)
 //   surfaces.js  stage surface materials (texlib)  murals.js   stage decals / signage (mural atlas)
 import { PATTERN, B, R, O } from '../../mapkit.js';
+import { inMode } from '../../variants.js';
 import { SURF } from './surfaces.js';
 
 // Kelpline Terminal — Berth 4 of a working container terminal at shift change. A finger pier runs diagonally out into
@@ -61,6 +62,9 @@ function slotSides(pieces) {
   const mir = (d) => ({ ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] });
   const solid = (d) => d.kind === 'box' && !d.keep && !d.rail && !d.grate;
   const all = [...pieces.single.filter(solid), ...pieces.half.filter(solid), ...pieces.half.filter(solid).map(mir)];
+  // mode pieces (variants.js): a box only counts the neighbours built with it — in Turf War for a shared box (so the
+  // shared build never changes), in its own mode for a mode-only one
+  const modeOf = (d) => (d.onlyIn ? [].concat(d.onlyIn)[0] : 'turf');
   const sides = [[0, 1], [0, -1], [2, 1], [2, -1]];   // [axis, sign]
   const cover = (p, ax, sg) => {
     const face = sg > 0 ? p.max[ax] : p.min[ax], ox = ax === 0 ? 2 : 0;   // the face's in-plane horizontal axis
@@ -68,7 +72,7 @@ function slotSides(pieces) {
     let hit = 0;
     for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) {
       const u = p.min[ox] + ((i + 0.5) / n) * (p.max[ox] - p.min[ox]), y = p.min[1] + ((j + 0.5) / m) * (p.max[1] - p.min[1]);
-      if (all.some((q) => q !== p && u > q.min[ox] && u < q.max[ox] && y > q.min[1] && y < q.max[1] &&
+      if (all.some((q) => q !== p && inMode(q, modeOf(p)) && u > q.min[ox] && u < q.max[ox] && y > q.min[1] && y < q.max[1] &&
         (sg > 0 ? q.min[ax] >= face - 0.01 && q.min[ax] < face + SLOT : q.max[ax] <= face + 0.01 && q.max[ax] > face - SLOT))) hit++;
     }
     return hit / (n * m);
@@ -124,6 +128,11 @@ const quay = (o = {}) => ({ color: K.quay, pattern: SURF.quay, ...o });
 // not inkable (sea: the local normals of the sides that face the harbour)
 const sea = (...n) => ({ noPaint: n });
 const X_ = [1, 0, 0], _X = [-1, 0, 0], Z_ = [0, 0, 1], _Z = [0, 0, -1];
+// Tower Command's own build (variants.js: a tower match builds '<id>.tower'): pieces only in it / left out of it. The
+// track (src/world/tower-data.js) is authored on Bravo's half; its mirror — Bravo's push — runs through this half.
+const towerOnly = (p) => ({ ...p, onlyIn: 'tower' }), notTower = (p) => ({ ...p, notIn: 'tower' });
+// the track crosses the reefer alley here (local z; Alpha's checkpoint 3 on the mirror): a solid crossover plate
+export const CROSSOVER = [-19.0, -16.0];
 
 // Local-frame pieces (exported for props.js: the container / stair dressing is generated from them)
 export const LOCAL = {
@@ -191,7 +200,11 @@ export const LOCAL = {
     // ================= Reefer rack (−X): reefers either side of the plug-in rack; grate catwalk over the alley
     ...stairZ(RF.row0 + CW / 2, G.zs, -25.3, 0, 2.6, 2.3),
     box(RF.row0, -25.3, 40, 0, K.white, { reefer: 1 }), box(RF.row0, -13.01, 20, 0, K.white, { reefer: 1, door: 0 }),
-    B(RF.alley[0], RF.alley[1], 2.45, 2.6, -25.3, -6.95, { tag: 'reefer-catwalk', color: K.steel, pattern: PATTERN.grate, grate: true }),
+    notTower(B(RF.alley[0], RF.alley[1], 2.45, 2.6, -25.3, -6.95, { tag: 'reefer-catwalk', color: K.steel, pattern: PATTERN.grate, grate: true })),
+    // Tower Command: the track crosses the alley on the stack tops (the user's "GAP"): the grate catwalk stops either side
+    // of a solid chequer-plate crossover flush with the reefer tops, between two of the rack's column pairs
+    ...[[-25.3, CROSSOVER[0]], [CROSSOVER[1], -6.95]].map(([z0, z1]) => towerOnly(B(RF.alley[0], RF.alley[1], 2.45, 2.6, z0, z1, { tag: 'reefer-catwalk', color: K.steel, pattern: PATTERN.grate, grate: true }))),
+    towerOnly(B(RF.alley[0], RF.alley[1], 2.45, 2.6, CROSSOVER[0], CROSSOVER[1], { tag: 'crossover', color: '#63788e', pattern: SURF.chequer })),
     box(RF.row1, G.zs, 20, 0, K.white, { reefer: 1, door: 0 }), box(RF.row1, -25.44, 40, 0, K.cream, { reefer: 1 }),
     ...stairZ(RF.row1 + CW / 2, -6.95, -13.25, 0, 2.6, 2.3),
     box(RF.row2, G.zs, 20, 0, K.white, { reefer: 1, door: 0 }), box(RF.row2, G.zs, 20, 1, K.white, { reefer: 1, door: 0 }), box(RF.row2, -25.44, 40, 0, K.white, { reefer: 1 }),
@@ -200,9 +213,13 @@ export const LOCAL = {
     // ================= truck lane cover: a 20' on a skeletal chassis behind its tractor (box deck at 1.35: squids slip
     // under the chassis, its top at 3.95 is squid-only), a box the reach stacker just set down
     B(1.6, 1.6 + CW, 1.35, 1.35 + CH, -28.6, -28.6 + LEN[20], { color: K.maroon, pattern: PATTERN.container, tag: 'trailer' }),
-    box(2.6, -15.2, 20, 0, K.orange),
-    // a 20' just landed by the crane beside the hatch covers (its twin flanks the other side of mid)
-    boxX(10.0, -3.4, 20, 0, K.blue, { door: 0 }),
+    // (Tower Command: lifted away — the user's blue X — so the lane opens beside the track along Block 4A's first row)
+    notTower(box(2.6, -15.2, 20, 0, K.orange)),
+    // a 20' just landed by the crane beside the hatch covers (its twin flanks the other side of mid). Tower Command sets
+    // it down on the other side of the portal's centre line: the track runs straight out from the centre along its side
+    // and bends back round it, and the box would otherwise stand in that bend
+    notTower(boxX(10.0, -3.4, 20, 0, K.blue, { door: 0 })),
+    towerOnly(boxX(10.0, 1.3, 20, 0, K.blue, { door: 0 })),
 
     // ================= apron cover: a hatch cover set down behind the crane (left), the straddle carrier's box (right)
     B(17.2, 20.0, 0, 1.2, -27, -20, { tag: 'apron-hatch', color: K.hatch, pattern: SURF.chequer }),

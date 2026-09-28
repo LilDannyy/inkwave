@@ -7,7 +7,7 @@
 //
 // Conventions: metres, Y up, `pos` = base point, rotY turns local +Z (the "front"). Wall-mounted pieces treat local
 // z = 0 as the wall face and project toward +Z. Signage uses 3D channel / flat painted letters from a stroke font.
-import { LOCAL, ROT_RAD, toWorld } from './layout.js';
+import { LOCAL, ROT_RAD, toWorld, GRID, CROSSOVER } from './layout.js';
 
 const P = Math.PI;
 
@@ -840,6 +840,19 @@ export function register(D, H) {
         letters(B, 'REEFER ' + (o.name ?? 'R2'), { h: 0.2, x: 0, y: -0.1, z: 0.03, c: bd, flat: true, wt: 0.22 });
         B.pop();
       }
+    },
+  };
+
+  // Tower Command crossover over the reefer alley (the plate itself is a layout block: layout.js CROSSOVER): hazard bands
+  // on its two ends, where the grate catwalk carries on either side. pos = the plate's top centre; w across the alley,
+  // d along it. Non-colliding.
+  D.kelpline_crossover = {
+    desc: 'Crossover plate dressing (pos = top centre of the plate block; w across the alley, d along it, t thick): hazard-striped end faces. Non-colliding.',
+    params: { w: 'm (2.0)', d: 'm (3.0)', t: 'plate thickness (0.15)' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      B.aoBase = null;
+      const w = o.w ?? 2.0, d = o.d ?? 3.0, t = o.t ?? 0.15;
+      for (const sz of [-1, 1]) { B.push(0, -t / 2, (sz * d) / 2, sz > 0 ? 0 : PI); hazard(B, w - 0.04, t - 0.02, 0, 0, 0.001, { pitch: 0.24 }); B.pop(); }
     },
   };
 
@@ -1718,20 +1731,21 @@ function autoDressing() {
   const out = [];
   let k = 0;
   for (const d of LOCAL.half) {
-    const tag = d.tag || '';
+    const tag = d.tag || '', mode = { ...(d.onlyIn ? { onlyIn: d.onlyIn } : {}), ...(d.notIn ? { notIn: d.notIn } : {}) };
     if (d.kind === 'box' && tag === 'trailer') {
-      out.push({ type: 'kelpline_box', pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], rotY: 0, len: 20, color: d.color, door: 1, code: 'KLPU 204816' });
+      out.push({ type: 'kelpline_box', pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], rotY: 0, len: 20, color: d.color, door: 1, code: 'KLPU 204816', ...mode });
     } else if (d.kind === 'box' && (tag.startsWith('box:') || tag.startsWith('boxx:'))) {
       const [kind, len, door, reefer] = tag.split(':');
       const alongX = kind === 'boxx', dp = door === '1';
       const rotY = alongX ? (dp ? P / 2 : -P / 2) : (dp ? 0 : P);
       const cx = (d.min[0] + d.max[0]) / 2, cz = (d.min[2] + d.max[2]) / 2;
-      const code = `${CODES[(k * 5 + 3) % CODES.length]} ${String(100000 + ((k * 7919 + 1234) % 899999)).slice(0, 6)}`;
-      out.push({ type: 'kelpline_box', pos: [cx, d.min[1], cz], rotY, len: +len, color: d.color, door: 1, reefer: reefer === '1', code });
-      k++;
+      const n = d.onlyIn ? k + 500 : k;
+      const code = `${CODES[(n * 5 + 3) % CODES.length]} ${String(100000 + ((n * 7919 + 1234) % 899999)).slice(0, 6)}`;
+      out.push({ type: 'kelpline_box', pos: [cx, d.min[1], cz], rotY, len: +len, color: d.color, door: 1, reefer: reefer === '1', code, ...mode });
+      if (!d.onlyIn) k++;
     } else if (d.kind === 'ramp' && (tag === 'stair' || tag === 'ops-stair')) {
       const dx = d.high[0] - d.low[0], dz = d.high[2] - d.low[2];
-      out.push({ type: 'kelpline_stair', pos: [...d.low], rotY: Math.atan2(dx, dz), run: Math.hypot(dx, dz), rise: d.high[1] - d.low[1], width: d.width, ...(tag === 'ops-stair' ? { c: '#2f5b8c' } : {}) });
+      out.push({ type: 'kelpline_stair', pos: [...d.low], rotY: Math.atan2(dx, dz), run: Math.hypot(dx, dz), rise: d.high[1] - d.low[1], width: d.width, ...(tag === 'ops-stair' ? { c: '#2f5b8c' } : {}), ...mode });
     }
   }
   return out;
@@ -1803,7 +1817,9 @@ const LOCAL_PLACEMENTS = [
   { type: 'barrier', pos: [-3.0, 0, -26.0], rotY: 0, worldRot: true, variant: 1, length: 3.6 },
   { type: 'barrier', pos: [-3.8, 0, -20.4], rotY: P / 2, worldRot: true, variant: 0, length: 1.8, color: '#e8a33a' },
   { type: 'cone', pos: [-1.6, 0, -19.8] }, { type: 'cone', pos: [-5.2, 0, -21.3] },
-  { type: 'cone', pos: [1.0, 0, -18.6] }, { type: 'cone', pos: [5.2, 0, -18.4] },
+  { type: 'cone', pos: [1.0, 0, -18.6], notIn: 'tower' }, { type: 'cone', pos: [5.2, 0, -18.4], notIn: 'tower' },
+  // (Tower Command: the track crosses the lane here — those two stand off it, by the tractor's nose)
+  { type: 'cone', pos: [0.6, 0, -20.4], onlyIn: 'tower' }, { type: 'cone', pos: [5.2, 0, -20.6], onlyIn: 'tower' },
   // service vehicles: pickup on the right apron by the reefer corner, a forklift with a twistlock bin by the gate
   { type: 'kelpline_pickup', pos: [-20.4, 0, -34.0], rotY: 0.12 },
   { type: 'kelpline_forklift', pos: [19.3, 0, -36.6], rotY: -1.35 },
@@ -1825,7 +1841,11 @@ const LOCAL_PLACEMENTS = [
   { type: 'kelpline_cage', pos: [-25.4, 0, -30.8], rotY: 0.2 },
   { type: 'kelpline_lighttower', pos: [-30.7, 0, -34.2], rotY: 0.4 },
   // mid landing zone: cones around the crane's working area
-  { type: 'cone', pos: [7.2, 0, -4.4] }, { type: 'cone', pos: [8.9, 0, -0.6] }, { type: 'cone', pos: [-6.3, 0, -5.4] },
+  { type: 'cone', pos: [7.2, 0, -4.4], notIn: 'tower' }, { type: 'cone', pos: [8.9, 0, -0.6], notIn: 'tower' }, { type: 'cone', pos: [-6.3, 0, -5.4] },
+  // (Tower Command: the track runs out from the centre and back along the stack ends — those two stand inside its bend)
+  { type: 'cone', pos: [6.0, 0, -3.2], onlyIn: 'tower' }, { type: 'cone', pos: [8.6, 0, -2.6], onlyIn: 'tower' },
+  // Tower Command: the crossover plate's hazard ends (layout.js CROSSOVER)
+  { type: 'kelpline_crossover', pos: [(GRID.RF.alley[0] + GRID.RF.alley[1]) / 2, 2.6, (CROSSOVER[0] + CROSSOVER[1]) / 2], rotY: 0, w: GRID.RF.alley[1] - GRID.RF.alley[0], d: CROSSOVER[1] - CROSSOVER[0], onlyIn: 'tower' },
   // safety boards
   { type: 'kelpline_signboard', pos: [-8.1, 0, -35.0], rotY: 0.2, variant: 0 },
   { type: 'kelpline_signboard', pos: [15.5, 0, -33.6], rotY: -0.25, variant: 2 },
