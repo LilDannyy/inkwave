@@ -69,24 +69,24 @@
       "sm": "assets/stages/terraces-dusk-sm.webp"
     }
   },
-  "cargo": {
+  "nantai": {
     "day": {
-      "src": "assets/stages/cargo-day.webp",
-      "sm": "assets/stages/cargo-day-sm.webp"
+      "src": "assets/stages/nantai-day.webp",
+      "sm": "assets/stages/nantai-day-sm.webp"
     },
     "dusk": {
-      "src": "assets/stages/cargo-dusk.webp",
-      "sm": "assets/stages/cargo-dusk-sm.webp"
+      "src": "assets/stages/nantai-dusk.webp",
+      "sm": "assets/stages/nantai-dusk-sm.webp"
     }
   },
-  "spirhalite": {
+  "craters": {
     "day": {
-      "src": "assets/stages/spirhalite-day.webp",
-      "sm": "assets/stages/spirhalite-day-sm.webp"
+      "src": "assets/stages/craters-day.webp",
+      "sm": "assets/stages/craters-day-sm.webp"
     },
     "dusk": {
-      "src": "assets/stages/spirhalite-dusk.webp",
-      "sm": "assets/stages/spirhalite-dusk-sm.webp"
+      "src": "assets/stages/craters-dusk.webp",
+      "sm": "assets/stages/craters-dusk-sm.webp"
     }
   },
   "calamari": {
@@ -99,14 +99,24 @@
       "sm": "assets/stages/calamari-dusk-sm.webp"
     }
   },
-  "craters": {
+  "spirhalite": {
     "day": {
-      "src": "assets/stages/craters-day.webp",
-      "sm": "assets/stages/craters-day-sm.webp"
+      "src": "assets/stages/spirhalite-day.webp",
+      "sm": "assets/stages/spirhalite-day-sm.webp"
     },
     "dusk": {
-      "src": "assets/stages/craters-dusk.webp",
-      "sm": "assets/stages/craters-dusk-sm.webp"
+      "src": "assets/stages/spirhalite-dusk.webp",
+      "sm": "assets/stages/spirhalite-dusk-sm.webp"
+    }
+  },
+  "cargo": {
+    "day": {
+      "src": "assets/stages/cargo-day.webp",
+      "sm": "assets/stages/cargo-day-sm.webp"
+    },
+    "dusk": {
+      "src": "assets/stages/cargo-dusk.webp",
+      "sm": "assets/stages/cargo-dusk-sm.webp"
     }
   },
   "generated": "2026-09-27T20:11:01.803Z"
