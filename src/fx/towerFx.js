@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { G, on } from '../core/ctx.js';
 import { TOWER } from '../config.js';
+import { ceilingAt } from '../game/tower.js';
 
 const NEUTRAL = new THREE.Color('#ffd54a');
 const DIM = new THREE.Color('#7d8088');
@@ -169,8 +170,9 @@ export class TowerFx {
     // the beacon floating well over the riders' heads (no mast: nothing stands in a rider's view) with its halo, and
     // four rider lamps across each end face
     this.beaconMat = new THREE.MeshBasicMaterial({ color: NEUTRAL.clone(), toneMapped: false });
-    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), this.beaconMat);
+    const beacon = (this.beacon = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), this.beaconMat));
     beacon.position.y = H + 3.3;
+    this.beaconY = H + 3.3; this.ceilT = 0;
     this.halo = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.035, 6, 36), this.beaconMat);
     this.halo.position.y = H + 3.3; this.halo.rotation.x = Math.PI / 2;
     this.lamps = [];
@@ -283,6 +285,14 @@ export class TowerFx {
     this.beaconMat.color.copy(this.col).multiplyScalar(1.6);
     this.spin += dt * (moving ? 6 : 1.2);
     this.halo.rotation.z = this.spin;
+    // under a roof (an arcade, a passage, a trestle) the beacon floats just below it instead of through it
+    if ((this.ceilT -= dt) <= 0) {
+      this.ceilT = 0.2;
+      const H = TOWER.platformH, ceil = ceilingAt(T.pos.x, T.pos.z, T.pos.y + H + 0.3);
+      this.beaconWant = Math.max(H + 1.9, Math.min(H + 3.3, ceil - T.pos.y - 0.5));
+    }
+    this.beaconY += ((this.beaconWant ?? this.beaconY) - this.beaconY) * (dt > 0 ? 1 - Math.exp(-8 * dt) : 1);
+    this.beacon.position.y = this.halo.position.y = this.beaconY;
     const n = owner >= 0 ? (T.follower && T.hostRiders ? T.hostRiders[owner] : T.riders[owner]) : 0;
     this.lamps.forEach((l, k) => l.material.color.copy(k < n ? this.col : _c.setRGB(0.13, 0.13, 0.16)).multiplyScalar(k < n ? 1.8 : 1));
     // pillar: from the deck up

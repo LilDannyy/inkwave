@@ -1152,10 +1152,13 @@ export class HUD {
     const cam = G.rig?.gameCam || G.camera;
     const live = !!cam && !!m && (m.state === 'playing' || m.state === 'intro') && z.winner == null && !this.el.classList.contains('is-mapopen');
     const W = this.el.clientWidth || window.innerWidth, H = this.el.clientHeight || window.innerHeight;
+    // only the checkpoint each team is heading for (its nearest uncleared one) — the rest wait their turn
+    const next = [-1, -1];
+    cps.forEach((c, i) => { if (!c.cleared && (next[c.team] < 0 || c.d < cps[next[c.team]].d)) next[c.team] = i; });
     cps.forEach((c, i) => {
       const T = L.twt[i];
       if (!T) return;
-      let show = live && !c.cleared && !!c.pos;
+      let show = live && !c.cleared && !!c.pos && next[c.team] === i;
       let p = null;
       if (show) { p = this._project(cam, c.pos[0], c.pos[1] + 6.3, c.pos[2]); show = !!p && p.z < 1 && Math.abs(p.x) < 1.1 && Math.abs(p.y) < 1.1; }
       if (show !== T.on) { T.on = show; T.e.classList.toggle('is-on', show); }
