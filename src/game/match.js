@@ -1,8 +1,9 @@
 // Match: turf-war rules, lifecycle (intro → countdown → play → time's up → judge → results), team setup.
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
-import { MATCH, PLAYER, WEAPON_ORDER, SUB_ORDER, SPECIAL_ORDER, BOT_NAMES, TEAM_NAMES, ZONES } from '../config.js';
+import { MATCH, PLAYER, WEAPON_ORDER, SUB_ORDER, SPECIAL_ORDER, BOT_NAMES, TEAM_NAMES, ZONES, TOWER } from '../config.js';
 import { ZoneControl } from './zones.js';
+import { TowerCommand } from './tower.js';
 import { randomStyle } from './character-style.js';
 import { Actor } from './actor.js';
 import { BotBrain } from './bots.js';
@@ -16,10 +17,12 @@ export class Match {
     this.opts = opts;          // { duration, difficulty, attract, practice, playerName, weapon, CharacterClass, input, rig, mode }
     this.attract = !!opts.attract;
     this.practice = !!opts.practice;   // solo on an empty stage: no enemies, no teammates, no clock
-    // turf | zones (Zone Control) | boss (one squad, team 0, vs HULLBREAKER); attract backdrops and practice are turf
-    this.mode = this.attract || this.practice ? 'turf' : opts.mode === 'boss' ? 'boss' : opts.mode === 'zones' ? 'zones' : 'turf';
-    this.duration = opts.duration || (this.mode === 'zones' ? ZONES.duration : this.mode === 'boss' ? BOSS_MODE.duration : MATCH.defaultDuration);
+    // turf | zones (Zone Control) | tower (Tower Command) | boss (one squad, team 0, vs HULLBREAKER); attract backdrops
+    // and practice are turf
+    this.mode = this.attract || this.practice ? 'turf' : ['boss', 'zones', 'tower'].includes(opts.mode) ? opts.mode : 'turf';
+    this.duration = opts.duration || (this.mode === 'zones' ? ZONES.duration : this.mode === 'tower' ? TOWER.duration : this.mode === 'boss' ? BOSS_MODE.duration : MATCH.defaultDuration);
     this.zones = null;             // ZoneControl (Zone Control mode)
+    this.tower = null;             // TowerCommand (Tower Command mode)
     this.time = this.duration;
     this.state = 'init';
     this.stateT = 0;
@@ -97,6 +100,7 @@ export class Match {
       this.zones = new ZoneControl(this);
       this.unsubs.push(on('turf', (e) => this._zoneTurf(e)));
     }
+    if (this.mode === 'tower') this.tower = new TowerCommand(this);
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
   }
 
@@ -129,6 +133,7 @@ export class Match {
       this.zones = new ZoneControl(this);
       this.unsubs.push(on('turf', (e) => this._zoneTurf(e)));
     }
+    if (this.mode === 'tower') this.tower = new TowerCommand(this);   // likewise (tower.js netEvent)
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
   }
 
@@ -145,6 +150,8 @@ export class Match {
     this.zoneResult = { winner, reason };
     if (this.state === 'playing') { this.time = Math.max(0, this.time); this.setState('finish'); }
   }
+  // Tower Command likewise (knockout at a goal / overtime result)
+  endTower(winner, reason) { this.endZones(winner, reason); }
 
   start() {
     this.setState(this.attract || this.practice ? 'playing' : 'intro');
@@ -157,6 +164,7 @@ export class Match {
 
   dispose() {
     this.bossMode?.dispose(); this.bossMode = null; this.boss = null;
+    this.tower?.dispose(); this.tower = null;
     for (const a of this.actors) { G.scene.remove(a.character.root); a.weaponRunner.reset(); a.character.dispose?.(); }
     this.unsubs?.forEach((u) => u());
     G.actors = [];
@@ -199,6 +207,11 @@ export class Match {
           if (this.state !== 'playing') break;         // knockout / overtime decided it
           if (this.zones.overtime) break;              // the clock stays at 0 through overtime
         }
+        if (this.tower) {
+          this.tower.update(dt);                       // (moves the tower + carries its riders before anyone moves)
+          if (this.state !== 'playing') break;
+          if (this.tower.overtime) break;
+        }
         this.time -= dt;
         if (!this.attract) {
           if (!this.lastMinuteFired && this.time <= 60 && this.duration > 60) { this.lastMinuteFired = true; emit('match:oneminute', {}); }
@@ -208,7 +221,8 @@ export class Match {
         if (this.time <= 0) {
           this.time = 0;
           // Zone Control may go to overtime instead; online, the host calls time
-          if (!this.follower && (!this.zones || this.zones.timeUp())) { if (this.state === 'playing') this.setState('finish'); }
+          const obj = this.zones || this.tower;
+          if (!this.follower && (!obj || obj.timeUp())) { if (this.state === 'playing') this.setState('finish'); }
         }
         break;
       }
@@ -251,6 +265,14 @@ export class Match {
   }
 
   _judge() {
+    if (this.tower) {
+      const T = this.tower;
+      this.result = { mode: 'tower', coverage: G.paint.coverage(), winner: T.winner ?? (Math.random() < 0.5 ? 0 : 1), reason: T.reason,
+        counts: T.scores(), best: T.best.map((b) => +b.toFixed(2)), len: [...T.path.len], overtime: T.overtime };
+      G.netm?.sendResult(this.result);
+      this.setState('judge');
+      return;
+    }
     if (this.zones) {
       const Z = this.zones;
       this.result = { mode: 'zones', coverage: G.paint.coverage(), winner: Z.winner ?? (Math.random() < 0.5 ? 0 : 1), reason: Z.reason,

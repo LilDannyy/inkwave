@@ -4,7 +4,7 @@ import { G, on, emit, clamp, damp } from './core/ctx.js';
 import { Renderer } from './core/renderer.js';
 import { Input } from './core/input.js';
 import { mapTheme,
-  DEFAULT_SETTINGS, QUALITY, TEAM_PALETTES, COLORBLIND_PALETTE, TEAM_NAMES, WEAPONS, WEAPON_ORDER, WEAPON_SUCCESSOR, ZONES, SUB, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER,
+  DEFAULT_SETTINGS, QUALITY, TEAM_PALETTES, COLORBLIND_PALETTE, TEAM_NAMES, WEAPONS, WEAPON_ORDER, WEAPON_SUCCESSOR, ZONES, TOWER, SUB, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER,
   MAPS, DIFFICULTY, PLAYER, PROGRESSION, VERSION, MATCH, OFFLINE_MAPS, mapOfflineOk, mapNoBots, mapBossOk,
 } from './config.js';
 import { Level } from './world/level.js';
@@ -28,6 +28,7 @@ import { Match } from './game/match.js';
 import { Minimap } from './game/minimap.js';
 import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
+import { TowerFx } from './fx/towerFx.js';
 import { BOSS_MODE } from './boss/bossMode.js';
 
 const params = new URLSearchParams(location.search);
@@ -122,6 +123,7 @@ class Game {
     } catch (e) { console.error('[inkwave] texture library failed — procedural fallback', e); this.texlib = null; }
     await this._buildWorld(map);
     this.zoneMarks = new ZoneMarks(scene);   // Zone Control ground markings: build / clear themselves on 'match:state'
+    this.towerFx = new TowerFx(scene);       // Tower Command: the tower, its light pillar, the path glow, checkpoint beacons
     await progress(0.4, 'Filling the harbor…');
     const B = G.level.bounds;
     G.env = new envMod.Environment(G.renderer, scene, { bounds: B, theme: this.theme, shadowSize: q.shadowSize, footprint: this._footprint(G.level) });
@@ -180,7 +182,7 @@ class Game {
     requestAnimationFrame((t) => this._loop(t));
     if (params.has('autostart')) {
       const pm = params.get('mode');
-      this.api.startMatch({ mapId: map.id, difficulty: params.get('difficulty') || this.settings.difficulty, duration: +params.get('autostart') || undefined, mode: pm === 'boss' || pm === 'zones' ? pm : 'turf' });
+      this.api.startMatch({ mapId: map.id, difficulty: params.get('difficulty') || this.settings.difficulty, duration: +params.get('autostart') || undefined, mode: ['boss', 'zones', 'tower'].includes(pm) ? pm : 'turf' });
     }
     this.bootMs = Math.round(performance.now() - t0);
     window.__inkwave = this; // debug/audit hook
@@ -219,6 +221,7 @@ class Game {
   }
   async _buildWorldNow(map, scene, layoutId, mode = 'turf', worldKey = layoutId) {
     this.zoneMarks?.clear();   // zone markings belong to the old stage's faces
+    this.towerFx?.clear();
     if (this.levelMesh) { scene.remove(this.levelMesh, this.grateMesh); this.levelMesh.geometry.dispose(); this.grateMesh?.geometry.dispose(); this.levelMat.dispose(); this.grateMat?.dispose(); }
     if (this.decor) { scene.remove(this.decor.group); }
     if (this.props) { this.props.dispose?.(); this.props = null; }
@@ -659,10 +662,10 @@ class Game {
       mapId: o.mapId === 'sunset' ? 'tidewater' : (o.mapId || this.mapDef.id),
       time: o.mapId === 'sunset' ? 'dusk' : (o.time || this.time || 'day'),
       difficulty: o.difficulty || this.settings.difficulty,
-      // Zone Control / Boss Battle from the stage select's MODE; practice is always turf
-      mode: o.practice ? 'turf' : o.mode === 'zones' ? 'zones' : o.mode === 'boss' ? 'boss' : 'turf',
+      // Zone Control / Tower Command / Boss Battle from the stage select's MODE; practice is always turf
+      mode: o.practice ? 'turf' : ['zones', 'tower', 'boss'].includes(o.mode) ? o.mode : 'turf',
     };
-    opts.duration = opts.mode === 'zones' ? (o.duration || ZONES.duration) : opts.mode === 'boss' ? (o.duration || BOSS_MODE.duration)
+    opts.duration = opts.mode === 'zones' ? (o.duration || ZONES.duration) : opts.mode === 'tower' ? (o.duration || TOWER.duration) : opts.mode === 'boss' ? (o.duration || BOSS_MODE.duration)
       : Math.min(MATCH.maxDuration, o.duration || this.settings.matchLength || MATCH.defaultDuration);
     if (!practice) this.lastMatchOpts = opts;
     G.audio?.init?.();
@@ -985,7 +988,15 @@ class Game {
       const zs = m.zones.state();
       zr = { counts: [...zs.count], penalty: zs.penalty.map((p) => Math.max(0, Math.ceil(p - 1e-6))), winner: m.result.winner, reason: m.result.reason || 'time', overtime: !!m.result.overtime, overtimeT: zs.overtimeT };
     }
-    const judgeP = zr
+    // Tower Command: each team's score (100 → 0 at the enemy goal), how far it got, winner and how it was won
+    let tr = null;
+    if (m.mode === 'tower' && m.tower && m.result.mode === 'tower') {
+      const R = m.result;
+      tr = { counts: [...R.counts], best: [...R.best], len: [...R.len], winner: R.winner, reason: R.reason || 'time', overtime: !!R.overtime, overtimeT: m.tower.overtimeT };
+    }
+    const judgeP = tr
+      ? this.hud?.judge({ mode: 'tower', colors: [G.teamHex[0], G.teamHex[1]], names: this.palette.names || TEAM_NAMES, counts: tr.counts, best: tr.best, len: tr.len, winner: tr.winner, reason: tr.reason, overtime: tr.overtime })
+      : zr
       ? this.hud?.judge({ mode: 'zones', colors: [G.teamHex[0], G.teamHex[1]], names: this.palette.names || TEAM_NAMES, counts: zr.counts, penalty: zr.penalty, winner: zr.winner, reason: zr.reason, overtime: zr.overtime, percents: [cov[0] * 100, cov[1] * 100] })
       : this.hud?.judge({ colors: [G.teamHex[0], G.teamHex[1]], percents: [cov[0] * 100, cov[1] * 100], names: this.palette.names || TEAM_NAMES });
     await (judgeP || new Promise((r) => setTimeout(r, 4000)));
@@ -1007,16 +1018,25 @@ class Game {
         ['ZONE INK', Math.round(zoneTurf * ZX.xpPerZoneTurfPoint)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['KNOCKOUT', won && zr.reason === 'knockout' ? ZX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
       gained = xpParts.reduce((a, [, v]) => a + v, 0);
     }
+    if (tr) {
+      // Tower Command: less per point of turf (a 5 min match), extra for time riding the tower, a knockout bonus
+      const TX = PROGRESSION.tower || { turfScale: 0.6, xpPerRideSecond: 6, xpKnockout: 300 };
+      const ride = Math.round(local.stats.towerRide || 0);
+      xpParts = [[won ? 'WIN BONUS' : 'MATCH', won ? PROGRESSION.xpWin : PROGRESSION.xpLose], ['TURF', Math.round(turf * PROGRESSION.xpPerTurfPoint * TX.turfScale)],
+        ['TOWER RIDE', Math.round(ride * TX.xpPerRideSecond)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['KNOCKOUT', won && tr.reason === 'knockout' ? TX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
+      gained = xpParts.reduce((a, [, v]) => a + v, 0);
+    }
     const before = { level: p.level, xp: p.xp, toNext: PROGRESSION.xpForLevel(p.level) };
     p.xp += gained; p.matches++; if (won) p.wins++; p.totalTurf += turf;
     while (p.xp >= PROGRESSION.xpForLevel(p.level)) { p.xp -= PROGRESSION.xpForLevel(p.level); p.level++; }
     saveJSON('inkwave.profile', p);
     const data = {
       win: won, percents: [cov[0] * 100, cov[1] * 100], colors: [G.teamHex[0], G.teamHex[1]], teamNames: this.palette.names || TEAM_NAMES,
-      players: m.actors.map((a) => ({ name: a.name, team: a.team, weapon: a.weaponId, turf: Math.round(a.stats.turf), splats: a.stats.splats, deaths: a.stats.deaths, isSelf: a.isLocal, bot: !!a.isBot, ...(zr ? { zoneTurf: Math.round(a.stats.zoneTurf || 0) } : {}) })),
+      players: m.actors.map((a) => ({ name: a.name, team: a.team, weapon: a.weaponId, turf: Math.round(a.stats.turf), splats: a.stats.splats, deaths: a.stats.deaths, isSelf: a.isLocal, bot: !!a.isBot, ...(zr ? { zoneTurf: Math.round(a.stats.zoneTurf || 0) } : {}), ...(tr ? { towerRide: Math.round(a.stats.towerRide || 0) } : {}) })),
       xp: { gained, levelBefore: before.level, levelAfter: p.level, xpBefore: before.xp, xpAfter: p.xp, xpToNextBefore: before.toNext, xpToNextAfter: PROGRESSION.xpForLevel(p.level), ...(xpParts ? { parts: xpParts } : {}) },
       mapName: this.mapDef.name,
       ...(zr ? { mode: 'zones', zones: zr } : {}),
+      ...(tr ? { mode: 'tower', tower: tr } : {}),
     };
     // your team on the podium
     const team = m.actors.filter((a) => a.team === myTeam);
@@ -1116,7 +1136,7 @@ class Game {
       m.updateController(dt);
       const sub = dt > 1 / 45 ? 2 : 1; // substep physics on slow frames
       for (let i = 0; i < sub; i++) m.update(dt / sub);
-      if (!m.paused) { G.projectiles.update(dt); G.subs.update(dt); G.specials.update(dt); }
+      if (!m.paused) { G.projectiles.update(dt); G.subs.update(dt); G.specials.update(dt); this.towerFx?.update(dt); }
       if (m.attract) this._updateAttract(dt);
       else if (m.state === 'playing' && m.local?.alive && this.rig.mode !== 'follow' && this.rig.mode !== 'path') this.rig.follow(m.local, true);
     }
@@ -1335,7 +1355,7 @@ class Game {
       else if (this._lowInkFlash > 0) { this._lowInkFlash -= dt; prompt = 'Low ink! Hold SHIFT in your ink to refill'; }
       else if (a.specialReady() && (this._hints.specialT = (this._hints.specialT || 0) + dt) > 2) prompt = `Special ready! Press F`;
       else if (inkF < 0.25 && a.form !== 'squid') prompt = 'Hold SHIFT to swim in your ink and refill';
-      else if (m.duration - m.time < 8 && !this._hints.shot) prompt = m.zones ? 'Ink the zone and hold it to count down!' : 'Paint the ground — most turf wins!';
+      else if (m.duration - m.time < 8 && !this._hints.shot) prompt = m.zones ? 'Ink the zone and hold it to count down!' : m.tower ? 'Jump on the tower and ride it into enemy territory!' : 'Paint the ground — most turf wins!';
       if (!a.specialReady()) this._hints.specialT = 0;
       if (a.intent.fire) this._hints.shot = true;
     }
@@ -1386,6 +1406,8 @@ class Game {
       fps: this.settings.showFps ? this.fps : undefined,
       // Zone Control: counts / penalties / the operational objective (HUD counters, objective chip, banners)
       zones: m.zones ? { ...m.zones.state(), viewer: a.team } : undefined,
+      // Tower Command: position / control / riders / checkpoints / scores (HUD meter, tower pointer, banners)
+      tower: m.tower ? { ...m.tower.state(), viewer: a.team, onTower: !!(m.tower.riderList && m.tower.riderList.includes(a)) } : undefined,
     };
     this.hud.update(dt, frame);
   }

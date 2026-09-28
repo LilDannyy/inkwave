@@ -500,6 +500,26 @@ export const ZONES = {
   sampleHz: 5,                // coverage checks per second
 };
 
+// Tower Command (src/game/tower.js): a tower on a mirrored path through the stage — ride it into enemy territory
+export const TOWER = {
+  duration: 300,              // 5 minutes (+ overtime)
+  count: 100,                 // the score a team counts down from (100 at the centre, 0 at the enemy goal)
+  speed: 0.62,                // m/s along the path with one rider
+  mult: [0, 1, 1.2, 1.33, 1.43],   // speed (and checkpoint clearing) × by riders of the pushing team: 1 / 2 / 3 / 4
+  returnSpeed: 0.5,           // m/s a neutral tower rolls back toward the centre
+  idleNeutral: 5,             // s with nobody on it before the team in control loses it (it goes neutral, then back)
+  checkpoints: [0.42, 0.72],  // where a stage without its own sits them: fractions of each side's path to the goal
+  checkpointTime: [10, 12],   // s a checkpoint holds the tower (one rider; more riders clear it faster, × mult)
+  checkpointGrace: 3,         // s of lost control before a half-cleared checkpoint's timer refills
+  gaugeHeld: 4.5,             // special points / s for every player on the team in control (riding or not)
+  gaugeNeutral: 2.25,         // … for the team behind while the tower is neutral
+  overtimeMax: 300,           // overtime cap (s) — the team ahead wins
+  platformR: 1.25,            // m: the platform's half-width (a square collider; the mesh is round)
+  platformH: 0.8,             // m: its top above the path (a hop up — you can't just walk on)
+  riderUp: 1.3,               // m above the top that still counts as riding (a hop on it)
+  snapHz: 10,                 // online: host snapshots a second
+};
+
 export const DIFFICULTY = {
   // aimOmega / aimTurn: bot aim spring stiffness (rad/s) and turn-rate cap (rad/s) — see bots.js
   easy:   { id: 'easy',   name: 'Chill',  reaction: 0.55, aimError: 0.11, fireDiscipline: 0.55, awareness: 16, aimOmega: 9,  aimTurn: 7 },
@@ -556,6 +576,7 @@ export const PROGRESSION = {
   // Zone Control (5 min, so more turf gets inked than in a 3 min Turf War): turf counts for less, ink laid on the live
   // zone counts extra, and a knockout win pays a flat bonus — a typical match lands close to a Turf War's XP
   zones: { turfScale: 0.6, xpPerZoneTurfPoint: 1.0, xpKnockout: 300 },
+  tower: { turfScale: 0.6, xpPerRideSecond: 6, xpKnockout: 300 },   // Tower Command: per second riding the tower
 };
 
 // ---- Settings defaults (persisted in localStorage 'inkwave.settings') ----
@@ -574,7 +595,7 @@ export const DEFAULT_SETTINGS = {
   colorblind: false,
   minimap: true,
   matchLength: 180,
-  lastMode: 'turf',         // battle mode last picked on the stage select: 'turf' | 'zones'
+  lastMode: 'turf',         // battle mode last picked on the stage select: 'turf' | 'zones' | 'tower' | 'boss'
   difficulty: 'normal',
   rumble: 1.0,              // gamepad vibration 0..1 (only while the pad is the last-used device)
   aimAssist: 1.0,           // gamepad aim assist 0..1

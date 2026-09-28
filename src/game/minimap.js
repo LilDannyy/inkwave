@@ -117,7 +117,7 @@ export class Minimap {
     const tc = { x: 0, y: 0 };
     // 1) rasterise every solid block's top surface (ramps included) → height + owning block + normal
     for (const b of lvl.blocks) {
-      if (!b.solid) continue;
+      if (!b.solid || b.dynamic) continue;   // (a moving block — the tower — is drawn as its own marker)
       if (b.hidden && (b.roof || b.perch) && b.aabbMin.y > 3) continue;   // overhead steel (crane girders, booms): not over the turf
       const n = b.axes[1];
       if (n.y < 0.45) continue;

@@ -5,6 +5,7 @@
 import { PATTERN, C, B, R, O, OCT, ARC, OCTRAMP, R_ } from './mapkit.js';
 import { STAGES } from './stages/index.js';
 import { ZONE_DEFS } from './zones-data.js';
+import { TOWER_DEFS } from './tower-data.js';
 export * from './mapkit.js';
 
 // ------------------------------------------------------------------------------------------------------------
@@ -117,5 +118,7 @@ export const MAP_LAYOUTS = { halyard: HALYARD };
 for (const [id, s] of Object.entries(STAGES)) if (s.LAYOUT) MAP_LAYOUTS[id] = s.LAYOUT;
 // Zone Control zones (zones-data.js) — a layout can also carry its own `zones`
 for (const [id, z] of Object.entries(ZONE_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAYOUTS[id].zones) MAP_LAYOUTS[id].zones = z;
+// Tower Command paths (tower-data.js) — likewise
+for (const [id, t] of Object.entries(TOWER_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAYOUTS[id].tower) MAP_LAYOUTS[id].tower = t;
 // stage-select order
 for (const id of ['tidewater', 'kelpline', 'halyard', 'saltpan', 'crossmarket', 'lockgate', 'terraces', 'cargo']) { const L = MAP_LAYOUTS[id]; if (L) { delete MAP_LAYOUTS[id]; MAP_LAYOUTS[id] = L; } }
