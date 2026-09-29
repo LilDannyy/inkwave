@@ -91,9 +91,16 @@ const PX = PILLAR.x, PZ = PILLAR.z, PA = PILLAR.plinth * Math.cos(Math.PI / 8);
 // the rope bridge from the pillar islet's south beach up onto the shelf (x, foot z0, top z1 at the shelf's north face, width)
 export const WATCH = {
   shelf: [-1.4, 6.0, -42.0, -33.9], post: [2.6, 6.0, -38.2, -34.4],
-  walls: [[2.6, 3.6, -34.9, -34.4, 3.4], [4.6, 6.0, -34.9, -34.4, 3.4], [5.5, 6.0, -38.2, -34.9, 3.4], [4.8, 5.5, -38.2, -37.7, 3.0]],
+  walls: [[2.6, 3.3, -34.9, -34.4, 3.4], [4.0, 6.0, -34.9, -34.4, 3.4], [5.5, 6.0, -38.2, -34.9, 3.4], [4.8, 5.5, -38.2, -37.7, 3.0]],
+  stub: [[4.0, 6.0, -35.0, -34.4, 3.4, 8.8], [5.4, 6.0, -37.0, -35.0, 3.4, 7.2]],
 };
 export const ROPE = { x: 1.4, z0: -26.0, z1: -33.9, w: 2.2 };
+// the dig's log bridge across the lagoon to the tide-pool islet's west beach (runs along x: z, x0 … x1, width) — the
+// slice's cross link: the bend's lane to the strategic point without going round by the camp
+export const DIGBRIDGE = { z: -42.0, x0: -19.4, x1: -7.0, w: 3.2 };
+// the east bay's log bridge from the Arch spit's bay side to the pillar islet's south-east shore (the side zone's east
+// way in: the stretch put water between the zone and the tail, this gives it back the spit lane's approach)
+export const BAYBRIDGE = { z: -23.2, x0: 4.4, x1: 11.6, w: 3.2 };
 export const BRIDGES = [
   { x: PX, z0: -12.9, z1: -6.1, w: 4.04 },      // the pillar headland → the central sandbar
   { x: 14.5, z0: -10.3, z1: -0.3, w: 4.04 },     // the Arch spit → the central sandbar's east end, under the Great Arch
@@ -201,6 +208,7 @@ const SPIRHALITE = {
     O(PX - 2.9, PZ - 5.9, 1.1, 2.1, 0, 1.1, 10, stone({ tag: 'fallen-drum' })),     // the zone's south-west (beside the steps)
     O(PX + 3.8, PZ - 5.4, 2.1, 1.1, 0, 1.1, -8, stone({ tag: 'fallen-drum' })),     // its south-east
     ...BRIDGES.map((b) => B(b.x - b.w / 2, b.x + b.w / 2, -0.3, 0.25, b.z0, b.z1, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood })),
+    ...[DIGBRIDGE, BAYBRIDGE].map((b) => B(b.x0, b.x1, -0.3, 0.25, b.z - b.w / 2, b.z + b.w / 2, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood })),
 
     // ================= the central sandbar: blocks fallen from the arch (cover round the centre zone)
     O(-4.6, -4.8, 2.4, 1.3, 0, 1.4, 20, stone({ tag: 'arch-block' })),
@@ -214,6 +222,8 @@ const SPIRHALITE = {
     B(WATCH.shelf[0], WATCH.shelf[1], 0, H1, WATCH.shelf[2], WATCH.shelf[3], stone({ tag: 'watch-shelf' })),
     B(WATCH.post[0], WATCH.post[1], H1, H2, WATCH.post[2], WATCH.post[3], stone({ tag: 'watch-post' })),
     ...WATCH.walls.map(([x0, x1, z0, z1, y1]) => B(x0, x1, H2, y1, z0, z1, stone({ tag: 'watch-wall', roof: true, noPaint: [[0, 1, 0]] }))),
+    // (the upper storey's north-east corner still stands: a broken stub over the parapet, the landmark seen from mid)
+    ...WATCH.stub.map(([x0, x1, z0, z1, y0, y1]) => B(x0, x1, y0, y1, z0, z1, stone({ tag: 'watch-stub', roof: true, noPaint: [[0, 1, 0]] }))),
     R(rise(WATCH.post[0] - 2.9, -36.4, H1, WATCH.post[0], -36.4, H2), [WATCH.post[0], H2, -36.4], 2.0, stone({ tag: 'watch-steps', pattern: PATTERN.stonestep })),
     R(rise(-4.4, -35.6, 0, WATCH.shelf[0], -35.6, H1), [WATCH.shelf[0], H1, -35.6], 2.2, stone({ tag: 'watch-steps', pattern: PATTERN.stonestep })),
     slope(1.0, WATCH.shelf[2] - 3.2, 0, 1.0, WATCH.shelf[2], H1, 3.0),
@@ -221,11 +231,16 @@ const SPIRHALITE = {
 
     // ================= the dig (the bend's new ground): Deep Cut's trench after the causeway's buried south end (floor
     // −1.0, ramps down at both ends), the spoil heap at its south-west corner (1.3; its slope down to the lagoon side)
-    B(TRENCH.x0, TRENCH.x1, BOT, TRENCH.y, TRENCH.z0 + 2.4, TRENCH.z1 - 2.4, sand({ tag: 'trench', color: K.wet })),
+    B(TRENCH.x0, TRENCH.x1, BOT, TRENCH.y, TRENCH.z0 + 2.4, TRENCH.z1 - 2.4, stone({ tag: 'trench', color: K.stoneDk })),   // (its floor: the buried causeway's paving)
     R(rise((TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z1 - 2.4, TRENCH.y, (TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z1, 0), [(TRENCH.x0 + TRENCH.x1) / 2, 0, TRENCH.z1], TRENCH.x1 - TRENCH.x0, sand({ tag: 'trench-ramp', color: K.wet })),
     R(rise((TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z0 + 2.4, TRENCH.y, (TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z0, 0), [(TRENCH.x0 + TRENCH.x1) / 2, 0, TRENCH.z0], TRENCH.x1 - TRENCH.x0, sand({ tag: 'trench-ramp', color: K.wet })),
     B(-32.4, -27.6, 0, H1, -49.6, -46.6, sand({ tag: 'spoil', color: K.dune })),
     slope(-24.5, -48.1, 0, -27.6, -48.1, H1, 3.0),
+
+    // drums fallen from the tide-pool islet's watch-post, rolled to the camp islet's north beach (cover either side of the
+    // tower's run along it)
+    O(-16.2, -50.25, 2.1, 1.1, 0, 1.1, 4, stone({ tag: 'fallen-drum' })),
+    O(-11.6, -50.4, 2.0, 1.1, 0, 1.1, -6, stone({ tag: 'fallen-drum' })),
 
     // ================= the spit's root (the stretch): a low dune along it
     ...dune(16.2, -36.4, 4.2, 0.9, 76, { crest: 0.8 }),
@@ -249,10 +264,12 @@ const SPIRHALITE = {
       [22.25, 52.41], [3, 52.41], [3, 40.3], [-4.2, 40.3], [-4.2, 47.5]],
     checkpoints: [[29, 8], [-1.5, 40.3]],
   },
-  // match intro: opens under the Great Arch's crown looking along it at the cascade pillar, then pulls back to your pad
-  intro: { from: [-7, 6.5, 6], lookFrom: [2.8, 5.5, -18.1], toBack: 3.0 },
-  // stage-select picture: high over Alpha's helipad — the S sweeping away round both lagoons, the arch across it
-  art: { from: [6, 54, -72], look: [-1, 0, -8], fov: 56 },
+  // match intro: opens over the lagoon beside the cascade pillar looking at the tide-pool islet's watch-post (its broken
+  // stub, the rope bridge, the ford), then pulls back over it to your pad
+  intro: { from: [-11, 7.5, -16], lookFrom: [3.2, 4.2, -36], toBack: 3.0 },
+  // stage-select picture: high over Alpha's helipad — the tide-pool islet and the S sweeping away round both lagoons,
+  // the arch across it
+  art: { from: [11, 46, -96], look: [0, 0, -30], fov: 60 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
