@@ -136,8 +136,10 @@ export const Q = {
   upStair: { x: -28.5, w: 2.4, z0: -34.8, z1: -38.5 },           // T1 → the upper allotments (like T1's old steps to T2)
   hillWalls: [[-33.5, -31.5, -38.5, -28.5, 3.8], [-33.5, -31.5, -49, -38.5, 5.0]],
   inn: [-18.5, -11.5, -37, -31],                  // the onsen inn (x0, x1, z0, z1), its front on the back street
+  boiler: [-20.4, -18.5, -34.6, -31.2],           // its boiler house jutting into the road (the road jogs round it)
   lane: [-42, -37],                               // the onsen lane between the inn and its garden (z)
-  garden: [-18.5, -11.5, -46, -42],               // the inn's garden (the steaming rock pool)
+  garden: [-18.5, -11.5, -46, -42],               // the inn's garden (0.9: a raised stone bed, the steaming rock pool)
+  gardenY: 0.9,
   high: [-11.5, -5],                              // the High Street (x)
   terrace: { x0: -5, x1: 5, z0: -43.5, z1: -33.5, y: 1.3 },    // the fire-watch terrace
   nStair: { x: -2.5, w: 4 },                      // up from the back street (its foot on the back street's edge)
@@ -146,7 +148,10 @@ export const Q = {
   fireLane: [5, 9.5],                             // the fire lane (x) between the terrace and the post office
   po: [9.5, 15.5, -38, -31],                      // the post office (its front on the back street)
   poDock: [10, 15.5, -40.5, -38],                 // its sorting dock (1.0) on the yard side
-  market: [19, 26, -50, -42],                     // the fish market's apron (0) jutting into the basin
+  market: [19, 26, -50, -42],                     // the fish market's apron jutting into the basin …
+  floor: [16, 26, -50, -42], floorY: 0.5,       // … and its auction floor (0.5) across the quay: a step up either end
+  chiller: [16.2, 18.9, -47.6, -44.4],            // the chiller room on the auction floor (the quay's line jogs round it)
+  notch: [-51.8, -55.4, 3.0],                     // a boat notch cut into the quay edge south of the market (z0, z1, depth)
   forecourt: [BZ, -46],                           // the co-op forecourt (z): the apron in front of the base
   // Tower Command (Alpha's frame; the track itself is drawn on Bravo's half, the mirror): the fire lane's centre, the
   // onsen lane's centre, the forecourt run
@@ -200,9 +205,15 @@ P.basinEnd = [+bE[0].toFixed(3), -59];
 const slipDir = (() => { const dx = bB[0] - bA[0], dz = bB[1] - bA[1], L = Math.hypot(dx, dz); return [-dz / L, dx / L]; })();   // outward (east, into the basin)
 const SLIP_D = 3.0;   // the slipway's notch reaches this far back into the quay
 const back = (p) => [p[0] - slipDir[0] * SLIP_D, p[1] - slipDir[1] * SLIP_D];
+// (the notch south of the fish market: the edge's points at its two ends, and the quay behind it)
+const onEdge = (z) => lerp2(bA, bB, (z - bA[1]) / (bB[1] - bA[1]));
+const nA = onEdge(Q.notch[0]), nB = onEdge(Q.notch[1]), backN = (p) => [p[0] - slipDir0()[0] * Q.notch[2], p[1] - slipDir0()[1] * Q.notch[2]];
+function slipDir0() { const dx = bB[0] - bA[0], dz = bB[1] - bA[1], L = Math.hypot(dx, dz); return [-dz / L, dx / L]; }
 const BASIN = [
   edgeBox(bA, sA, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
-  edgeBox(sB, P.basinEnd, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
+  edgeBox(sB, nA, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
+  edgeBox(backN(nA), backN(nB), 9.4 - Q.notch[2], FL, -0.1, 1, quay({ tag: 'basin-quay' })),
+  edgeBox(nB, P.basinEnd, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
   // the slipway's head: the basin quay behind its notch; the ramp runs from there down into the water
   edgeBox(back(sA), back(sB), 7.5, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
 ];
@@ -288,7 +299,8 @@ const SLICE = [
   // the fire lane, the post office's yard, the forecourt in front of the base
   B(Q.road[0], Q.road[1], FL, 0, FC[0], Q.z0, snow({ tag: 'road' })),
   B(Q.inn[0], Q.inn[1], FL, 0, Q.garden[3], Q.z0, snow({ tag: 'onsen-yard' })),
-  B(Q.garden[0], Q.garden[1], FL, 0, Q.garden[2], Q.garden[3], setts({ tag: 'onsen-garden', color: K.stone })),
+  B(Q.garden[0], Q.garden[1], FL, Q.gardenY, Q.garden[2], Q.garden[3], setts({ tag: 'onsen-garden', color: K.stone })),
+  R([Q.high[0] + 2.1, 0, -44.6], [Q.high[0], Q.gardenY, -44.6], 1.6, stair({ tag: 'garden-steps' })),
   B(Q.high[0], Q.high[1], FL, 0, FC[1], Q.z0, setts({ tag: 'high-street' })),
   B(TR.x0, TR.x1, FL, 0, TR.z1, Q.z0, setts({ tag: 'high-street' })),
   B(TR.x0, TR.x1, FL, 0, FC[1], TR.z0, setts({ tag: 'high-street' })),
@@ -304,6 +316,7 @@ const SLICE = [
   B(-31.5, -28.9, P.y2, P.y2 + 2.3, -48.4, -44.6, bldg(K.cedar, { tag: 'potting-shed' })),
   // ---- the onsen inn (Ikayu Inn: its front on the back street across from the bath house) — tops off-limits
   B(Q.inn[0], Q.inn[1], 0, 3.4, Q.inn[2], Q.inn[3], bldg(K.plaster, { tag: 'inn' })),
+  bx(Q.boiler, 0, 2.8, bldg(K.cedar, { tag: 'inn-boiler' })),
   // ---- the fire-watch terrace (1.3, dry-stone walls): stairs up from the back street, down its south corners
   B(TR.x0, TR.x1, FL, TR.y, TR.z0, TR.z1, setts({ tag: 'fire-terrace', color: K.stone })),
   R([Q.nStair.x, 0, Q.z0], [Q.nStair.x, TR.y, TR.z1], Q.nStair.w, stair({ tag: 'terrace-steps' })),
@@ -312,8 +325,12 @@ const SLICE = [
   // ---- the post office (its front on the back street) and its sorting dock on the yard side (1.0, a hop up)
   B(Q.po[0], Q.po[1], 0, 3.4, Q.po[2], Q.po[3], bldg(K.wall, { tag: 'post-office' })),
   bx(Q.poDock, 0, 1.0, timber({ tag: 'post-dock' })),
-  // ---- the fish market's apron (street level: 0.1 over the basin quay) jutting into the basin
-  bx(Q.market, FL, 0, quay({ tag: 'fish-market' })),
+  // ---- the fish market: its apron jutting into the basin and the auction floor across the quay (0.5; steps up at
+  // both ends of the quay), the chiller room on it
+  bx(Q.floor, FL, Q.floorY, quay({ tag: 'fish-market', color: '#aeaba4', pattern: PATTERN.concrete })),
+  R([18.4, -0.1, Q.floor[3] + 1.5], [18.4, Q.floorY, Q.floor[3]], 2.6, stair({ tag: 'market-steps' })),
+  R([18.4, -0.1, Q.floor[2] - 1.5], [18.4, Q.floorY, Q.floor[2]], 2.6, stair({ tag: 'market-steps' })),
+  B(Q.chiller[0], Q.chiller[1], Q.floorY, Q.floorY + 2.6, Q.chiller[2], Q.chiller[3], bldg(K.wall, { tag: 'chiller', pattern: PATTERN.metalpanel })),
 ];
 
 const HALF = [...MIDSIDE, ...SLICE, ...BASE];
