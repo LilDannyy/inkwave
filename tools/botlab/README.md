@@ -68,7 +68,7 @@ Stage set pieces:
 - Sprout pods (src/game/pods.js): `MAP=podbox MODE=turf PAGE=tools/botlab/tests/pods.js tools/botlab/run.sh
   tools/botlab/page.cjs` (meters, the calibration per weapon kind, growth and timing, blocking, tint, owner-only ink,
   climbing, carrying down, shoving, nav, the follower replay, bots), and the same with `MODE=tower` and `MODE=boss`.
-  `MAP=podbox` is the test arena with pods (page.cjs).
+  `MAP=podbox` is the test arena with pods (testmaps.cjs: page.cjs and match.cjs both take it).
 
 HUD:
 - `MAP=halyard MODE=turf SCENES=tools/botlab/tests/hud-lead-scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs`:

@@ -10,6 +10,7 @@
 // cost, and in Zone Control the objective stats. Last line: RESULT_JSON {…} (also written to OUT if set).
 const { app } = require('electron');
 require(process.env.S + '/offscreen-boot.cjs');
+const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 const MAP = process.env.MAP || 'halyard', MODE = process.env.MODE || 'zones', SECS = +(process.env.SECS || 180);
 const OUT = process.env.OUT || '';
 const WEAPONS = process.env.WEAPONS || '', SUBS = process.env.SUBS || '', TRACK = process.env.TRACK || '', TRACK_TEAM = process.env.TRACK_TEAM ?? '', TUNE = process.env.TUNE || '';
@@ -28,6 +29,7 @@ app.on('browser-window-created', (_, win) => {
     const js = (c) => win.webContents.executeJavaScript(c, true);
     for (let i = 0; i < 120; i++) { if (await js('!!window.__inkwave?.api')) break; await wait(250); }
     await js('window.__inkwave._onPointerUnlock = () => {}; 0');
+    if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));   // (MAP=testbox / podbox: test-only arenas, testmaps.cjs)
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', mode: '${MODE}', duration: ${MODE === 'zones' ? 300 : SECS} })`);
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     // what-if tuning (TUNE, see the header): patched into the live config before the loadouts
@@ -220,7 +222,9 @@ app.on('browser-window-created', (_, win) => {
           const h = hist.get(a) || []; hist.set(a, h);
           h.push({ t: simT, x: a.pos.x, z: a.pos.z });
           while (h.length && simT - h[0].t > 3) h.shift();
-          const holding = !!(a.bot.zHoldUntil > a.bot.t && (!a.bot.path || a.bot.pi >= a.bot.path.length));   // a guard / watcher holding its spot on purpose
+          // a guard / watcher holding its spot on purpose; a bot fighting from a sprout pod's hedge top, or waiting out a
+          // hedge that cuts its only route (pods.js sets perchUntil — not while it's trying to get off)
+          const holding = !!((a.bot.zHoldUntil > a.bot.t && (!a.bot.path || a.bot.pi >= a.bot.path.length)) || a.bot.perchUntil > a.bot.t);
           if (holding && a.alive) holdS += 0.25;
           if (a.alive && a.bot.zRole) roleS[a.bot.zRole] = (roleS[a.bot.zRole] || 0) + 0.25;
           const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !holding;
@@ -229,7 +233,7 @@ app.on('browser-window-created', (_, win) => {
           const stuck = wants && h.length >= 11 && span < 1.0;
           if (stuck) {
             stuckS += 0.25;
-            if (!open.has(a)) { const b = a.bot; const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role: b.zRole || '-', pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], path: !!b.path, hold: b.zHoldUntil > b.t, dur: 0 }; open.set(a, ep); eps.push(ep); }
+            if (!open.has(a)) { const b = a.bot; const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role: b.zRole || '-', pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], path: !!b.path, hold: b.zHoldUntil > b.t, pod: b.podS ? b.podS.task || (b.podS.exit ? 'exit' : '-') : '-', dur: 0 }; open.set(a, ep); eps.push(ep); }
             open.get(a).dur += 0.25;
           } else open.delete(a);
         }

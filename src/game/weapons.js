@@ -29,7 +29,7 @@ const DEG = Math.PI / 180;
 // alone would (splat opts.pod) — so one full-charge charger shot or one roller flick fills a meter (tools/botlab/tests/pods.js
 // calibration); any other thrown drop (brush swipes, cutlass crescents, sprinkler spray) a little more too.
 // charger: × (1 + charger · charge²)
-export const POD_HINT = { charger: 4.5, flick: 6, drop: 1.6 };
+export const POD_HINT = { charger: 4.5, flick: 7.5, drop: 1.6 };
 // trigger('shoot', HAND_*) arg for dual wield (character.js reads .hand; valueOf keeps numeric readers at 1)
 const HAND_R = Object.freeze({ hand: 0, valueOf() { return 1; } }), HAND_L = Object.freeze({ hand: 1, valueOf() { return 1; } });
 
