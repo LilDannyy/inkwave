@@ -3295,6 +3295,44 @@ export class PropKit {
     return { colliders: this._xfCols(B.cols, pos, rotY, scale, !!o.oboxCols) };
   }
 
+  // A prop that moves (stage movers, src/game/movers.js: Calamari County's railcars): built like add() but in its own
+  // frame (its origin = the prop's ground point), merged per material into its own group with this kit's materials
+  // (the lit-window glow follows setNight like the rest) — never part of the static dressing. The caller places and
+  // moves the group, and frees it with disposePart(). Spinners / blinkers / cloth a builder queues are dropped (they
+  // live in the static instanced meshes). Headless: an empty group. Colliders: the caller's (a dynamic level block).
+  buildPart(type, o = {}) {
+    const group = new THREE.Group();
+    group.name = 'prop-part:' + type;
+    const def = D[type];
+    if (!def) { console.warn('[props] unknown prop type', type); return group; }
+    if (this._headless) return group;
+    const saved = this._buckets, n = [this._spin.length, this._blink.length, this._flags.length, this._banners.length];
+    this._buckets = new Map();
+    const B = this._B;
+    B.begin([0, 0, 0], 0, 1, o.seed ?? 1013, def.mount !== 'wall');
+    B.tris = 0;
+    try { def.build(B, { ...o, pos: [0, 0, 0], rotY: 0 }); } finally {
+      for (const [bucket, parts] of this._buckets) {
+        if (!parts.length) continue;
+        const [key, flag] = bucket.split('~');
+        const mesh = new THREE.Mesh(mergeParts(parts), this.mat[key]);
+        mesh.name = 'prop-part:' + type + ':' + bucket;
+        mesh.castShadow = this.castShadow && CASTS[key] && flag !== 'ns';
+        mesh.receiveShadow = key !== 'glow' && key !== 'blob';
+        if (key === 'blob') mesh.renderOrder = 1;
+        group.add(mesh);
+      }
+      this._buckets = saved;
+      this._spin.length = n[0]; this._blink.length = n[1]; this._flags.length = n[2]; this._banners.length = n[3];
+    }
+    return group;
+  }
+  disposePart(group) {
+    if (!group) return;
+    group.removeFromParent();
+    group.traverse((m) => m.geometry?.dispose());
+  }
+
   // Local collider boxes → level boxes. A quarter-turned prop gives exact axis-aligned boxes; any other angle gives the
   // rotated box's world AABB — or, with `obox` (the placement asked for it: a stage laid out at an angle), the box
   // turned with the prop. Stage-pack flags (roof / rail / perch) ride along.

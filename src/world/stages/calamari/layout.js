@@ -12,13 +12,15 @@ import { MURAL } from './murals.js';
 // village on a neck of land between two coves, the railway running through the middle of it between two headland
 // tunnels. Winter: snow on every roof, rime on the quays, steam off the bath house.
 // Alpha at −Z (the half list), Bravo is the 180° twin. Plan (Alpha's half; Alpha looks toward +Z, so its left is +X):
-//   • mid, the RAILWAY CUT (|z| < 6.6, full width): Calamari County Station's island platform (1.0) under a long
-//     timber canopy between the two tracks (trackbeds at 0), a local railcar waiting at the platform on each track
-//     (Alpha's at the +x end, Bravo's at the −x end: 3.4 m of cover, roofs off-limits), a covered timber footbridge on
-//     each side (deck 4.3: the high ground over mid) from the side platform over its track onto the island platform, a
-//     level crossing at each end (|x| 18.5 … 25.5) and the tunnel portals capping the cut (|x| 31.5)
-//   • station side (z −11 … −6.6): the side platform (1.0) with the station building behind it, ramps at both ends
-//   • right lane (−X) HILLSIDE: the crossing road (0, 7 m) up past the house and the bath house, the open terrace T1
+//   • mid, the RAILWAY CUT (|z| < 6.6, full width): Calamari County Station's open island platform (1.0, 32 m long) between
+//     the two tracks (trackbeds at 0); two broad open overpasses (the station's kosen-kyō, 6 m wide at 4.3: the high
+//     ground over mid) spanning the whole cut from side platform to side platform at x ±(2.4 … 8.4), each with wide
+//     stairs down its outer edge to both side platforms and the island; the county railcars (stage movers, 3.4 m of cover,
+//     roofs off-limits) shuttling between the halves of the station on a timetable (MOVERS below); a level crossing at
+//     each end (|x| 18.5 … 25.5) and the tunnel portals capping the cut (|x| 31.5)
+//   • station side (z −12.2 … −6.6): the side platform (1.0, 5.6 m deep) with the little station building behind its
+//     middle, ramps at both ends, two flights of steps up from the forecourt
+//   • right lane (−X) HILLSIDE: the crossing road (0, 7 m) up past the bath house, the open terrace T1
 //     (1.3, 6–7 m, hop-up from the road) beside it, T2 (2.6) by the co-op overlooking the back street with the
 //     Cuttlefish cottage at its west end, houses climbing the hill behind
 //   • mid lane: the station forecourt and the village square as one open space (22 × 20 m: post box, bus shelter,
@@ -31,7 +33,7 @@ import { MURAL } from './murals.js';
 // and a 5 m back street between them; the outline follows the coast (the basin, the breakwater, the stepped co-op quay) and the
 // hill (terraces stepping in and out, the hill houses cutting the corner behind the spawn).
 // Heights: 0 streets / quays / trackbeds · −0.1 the basin quay (a kerb down from the street) · 1.0 platforms, loading
-// dock · 1.3 T1 · 2.6 T2 · 3.4 spawn, railcar tops (off-limits) · 4.3 footbridge decks.
+// dock · 1.3 T1 · 2.6 T2 · 3.4 spawn, railcar tops (off-limits) · 4.3 overpass decks.
 // ------------------------------------------------------------------------------------------------------------
 
 // an oriented box with one long side along A → B (world x, z), reaching `depth` to the left (side 1) or right (−1) of it
@@ -52,20 +54,23 @@ export const P = {
   // railway cut
   track: [3.4, 6.6],            // a track band |z| 3.4 … 6.6 (Alpha's at −z); the island platform |z| < 3.4
   cutX: 31.5,                   // the trackbed runs |x| < 31.5, the tunnel portals beyond
-  island: { x: 13, z: 3.4, y: 1.0 },
-  side: { x0: -14, x1: 14, z0: -10.4, z1: -6.6, y: 1.0 },
+  island: { x: 16.2, z: 3.4, y: 1.0 },
+  side: { x0: -16.2, x1: 16.2, z0: -12.2, z1: -6.6, y: 1.0 },
   strip: -11,                   // the station strip (z −11 … −6.6) runs the full width at street level
   crossing: [-25.5, -18.5],     // Alpha's level crossing + hillside road (x); Bravo's is the mirror (x 18.5 … 25.5)
-  // Alpha's railcar on Alpha's track (x 1.6 … 15); Bravo's is its mirror
-  train: { x0: 1.6, x1: 15, z0: -6.45, z1: -3.55, h: 3.4, floor: 1.05 },
-  // Alpha's footbridge (hillside side): deck x −11.4 … −9.0, stairs x −9.0 → −1.5 (side platform z −9.3, island z −2.3)
-  bridge: { x0: -11.4, x1: -9.0, y: 4.3, t: 0.4, z0: -8.6, z1: -1.4, foot: -1.5, stairW: 1.8, s1: -7.5, s2: -2.3 },
+  // Alpha's railcar on Alpha's track (a stage mover, src/game/movers.js): 12 m long, it shuttles between the east half
+  // of the station (centre x 11.2: x 5.2 … 17.2) and the west half (x −17.2 … −5.2) — never parked on the centre zone
+  // (|x| < 5); Bravo's does the mirror on Bravo's track
+  car: { L: 12, W: 2.9, h: 3.4, floor: 1.05, stop: 11.2 },
+  // Alpha's overpass (the +x one; the −x one is its mirror): an open deck over the whole cut, side platform to side
+  // platform, 6 m wide at 4.3 (3.9 under it: the railcars and the tower pass beneath), stairs 3.6 / 3.4 / 3.6 m wide down
+  // its outer edge to both side platforms and the island (feet at x 16), slim piers on the platforms
+  overpass: { x0: 2.4, x1: 8.4, y: 4.3, t: 0.4, z: 12.2, foot: 16.0, stairs: [[-10.2, 3.6], [0, 3.4], [10.2, 3.6]], piers: [2.95, 7.85], pierZ: [-10.4, 0, 10.4] },
   // village (buildings: [cx, cz, w (x), d (z), deg, height])
-  station: [0, 7.5, -14.6, -10.4],                // station building (x0, x1, z0, z1)
-  houseA: [-15, -12.5, 5.0, 4.2, 0, 3.5],         // the house behind the platform's west end
+  station: [-3.5, 3.5, -16.2, -12.2],             // station building (x0, x1, z0, z1), behind the side platform's middle
+  steps: [-6, 6],                                 // the steps up from the forecourt onto the side platform (x centres)
   bath: [-14.75, -22.75, 6.5, 5.5, 4, 3.6],       // bath house
   store: [13.3, -22.75, 4.8, 5.5, -5, 3.4],       // general store (front on the square) / fish shop (back on the quay)
-  post: [7.5, 11.5, -14.8, -10.4],                // post office (x0, x1, z0, z1), beside the station
   square: [-11, 11, -27, -15],                    // the square's setts column (x0, x1) and its open middle (z0, z1)
   backSt: [-30.5, -25.5],                         // the back street (z) from the hillside road to the quay
   T1: [[-32.5, -25.5, -18, -11], [-31.5, -25.5, -28.5, -18]],                          // T1 (1.3) pieces (x0, x1, z0, z1)
@@ -103,12 +108,12 @@ const quay = (o = {}) => ({ color: K.quay, pattern: SURF.setts, ...o });
 const timber = (o = {}) => ({ color: K.platform, pattern: SURF.timber, ...o });
 const bldg = (c, o = {}) => ({ color: c, pattern: PATTERN.weatherboard, roof: true, ...o });
 const stair = (o = {}) => ({ color: K.stone, pattern: PATTERN.stonestep, ...o });
-const SIDES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
 const FL = -1.6;   // ground slabs reach down to the sea (the environment reads their tops as the stage's footprint)
 
-const { island: I, side: S, train: TR, bridge: BR, deck: DK, dock: DO } = P;
-// (the stair's sides are timber stringers with handrails on top: not inkable, so nobody plans a climb up them into the rail)
-const bridgeRun = (z) => R([BR.foot, 1.0, z], [BR.x1, BR.y, z], BR.stairW, { tag: 'bridge-stair', color: K.timber, pattern: PATTERN.treads, noPaint: [[0, 0, 1], [0, 0, -1]] });
+const { island: I, side: S, overpass: OP, deck: DK, dock: DO } = P;
+// (free-spanning steel stairs: a 0.35 m flight on its stringers, open underneath — you see and shoot under them; the
+// sides are the stringers with handrails on top: not inkable, so nobody plans a climb up them into the rail)
+const opStair = ([z, w]) => R([OP.foot, S.y, z], [OP.x1, OP.y, z], w, { tag: 'overpass-stair', color: K.timber, pattern: PATTERN.treads, thin: true, thickness: 0.35, noPaint: [[0, 0, 1], [0, 0, -1]] });
 const bx = (r, y0, y1, o) => B(r[0], r[1], y0, y1, r[2], r[3], o);
 const bt = (b, y0, o) => turned(b[0], b[1], b[2], b[3], y0, y0 + b[5], b[4], o);
 const lerp2 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -150,33 +155,24 @@ const HALF = [
   ...P.southQuay.map((r) => bx(r, FL, 0, quay({ tag: 'coop-quay' }))),
   // tunnel portal capping the cut (the headland beyond is scenery)
   B(P.cutX, P.cutX + 1.5, FL, 7.5, -8.5, 8.5, { tag: 'portal', color: K.portal, pattern: SURF.setts, roof: true }),
-  // island platform end ramp (down between the tracks)
-  R([I.x + 2.4, 0, 0], [I.x, I.y, 0], I.z * 2, timber({ tag: 'island-ramp', pattern: PATTERN.rampboard })),
+  // island platform end ramp (down between the tracks, stopping short of the level crossing at x 18.5)
+  R([I.x + 2.3, 0, 0], [I.x, I.y, 0], I.z * 2, timber({ tag: 'island-ramp', pattern: PATTERN.rampboard })),
 
-  // ================= station side: side platform, ramps at both ends, steps up from the forecourt, the railcar
+  // ================= station side: the side platform (5.6 m deep), ramps at both ends, steps up from the forecourt
+  // (the railcars are stage movers now: LAYOUT.movers below, src/game/movers.js)
   B(S.x0, S.x1, 0, S.y, S.z0, S.z1, timber({ tag: 'side-platform' })),
-  R([S.x1 + 2.4, 0, -8.5], [S.x1, S.y, -8.5], 3.8, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
-  R([S.x0 - 2.4, 0, -8.5], [S.x0, S.y, -8.5], 3.8, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
-  R([-4.6, 0, -13.1], [-4.6, S.y, S.z0], 5.0, stair({ tag: 'platform-steps' })),
-  // the railcar: an underframe on its bogies, the body overhanging it (the body's floor at platform height)
-  // (Boss Battle: the trains have left — HULLBREAKER has the whole railway cut to roam and charge down)
-  B(TR.x0 + 0.9, TR.x1 - 0.9, 0, TR.floor, TR.z0 + 0.3, TR.z1 - 0.3, { tag: 'railcar-frame', color: '#2c3850', pattern: PATTERN.metalpanel, noPaint: SIDES, notIn: 'boss' }),
-  B(TR.x0, TR.x1, TR.floor, TR.h, TR.z0, TR.z1, { tag: 'railcar', color: '#e8e0c9', pattern: PATTERN.hullpaint, roof: true, noPaint: SIDES, notIn: 'boss' }),
+  R([S.x1 + 2.3, 0, -8.6], [S.x1, S.y, -8.6], 4.0, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
+  R([S.x0 - 2.3, 0, -8.6], [S.x0, S.y, -8.6], 4.0, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
+  ...P.steps.map((x) => R([x, 0, S.z0 - 2.7], [x, S.y, S.z0], 3.6, stair({ tag: 'platform-steps' }))),
 
-  // ================= Alpha's footbridge: stair up from the side platform, deck over the track, stair down to the island
-  bridgeRun(BR.s1),
-  bridgeRun(BR.s2),
-  B(BR.x0, BR.x1, BR.y - BR.t, BR.y, BR.z0, BR.z1, timber({ tag: 'bridge-deck' })),
-  B(BR.x0, BR.x0 + 0.2, BR.y, BR.y + 0.95, BR.z0, BR.z1, bldg(K.timber, { tag: 'bridge-wall', roof: false, noNav: true })),
-  B(BR.x1 - 0.2, BR.x1, BR.y, BR.y + 0.95, BR.s1 + BR.stairW / 2, BR.s2 - BR.stairW / 2, bldg(K.timber, { tag: 'bridge-wall', roof: false, noNav: true })),
-  B(BR.x0 + 0.2, BR.x1, BR.y, BR.y + 0.95, BR.z0, BR.z0 + 0.2, bldg(K.timber, { tag: 'bridge-wall', roof: false, noNav: true })),
+  // ================= Alpha's overpass (the +x one): the deck over the whole cut and its three stairs down the outer edge
+  B(OP.x0, OP.x1, OP.y - OP.t, OP.y, -OP.z, OP.z, timber({ tag: 'overpass' })),
+  ...OP.stairs.map(opStair),
 
   // ================= village buildings (tops off-limits), some off the street grid
-  B(P.station[0], P.station[1], 0, 3.2, P.station[2], P.station[3], bldg(K.wall, { tag: 'station' })),
-  bt(P.houseA, 0, bldg(K.cedar, { tag: 'house-a' })),
+  B(P.station[0], P.station[1], 0, 3.8, P.station[2], P.station[3], bldg(K.wall, { tag: 'station' })),
   bt(P.bath, 0, bldg(K.plaster, { tag: 'bathhouse' })),
   bt(P.store, 0, bldg(K.wall, { tag: 'store' })),
-  B(P.post[0], P.post[1], 0, 3.0, P.post[2], P.post[3], bldg(K.plaster, { tag: 'post-office' })),
 
   // ================= hillside: T1 (1.3) stepping along the road, T2 (2.6) by the co-op, their steps, the houses on them
   ...P.T1.map((r) => bx(r, FL, P.y1, setts({ tag: 'T1', color: K.stone }))),
@@ -221,6 +217,34 @@ const TOWER = {
   yaw: 0,
 };
 
+// ---- the stage gimmick: the county railcars (stage movers, src/game/movers.js). Alpha's car waits at the east half of
+// the station on Alpha's track, Bravo's (its twin) at the west half of Bravo's: every 25 s one of them has just pulled
+// across to the other half (a 20 s wait, a 5 s move through the middle, eased in and out). A parked car walls off its
+// half of the platform edge and trackbed — the crossings over that track there — and opens the other half; the two
+// are always each other's mirror, so both teams face the same station. Level-crossing lamps flash and the bells ring
+// from 4 s before a departure until the car stops; the horn blows 1.2 s before it moves. Tower Command: parked (the
+// tower rides the inner half of each track out to the crossings, so the cars wait at the far halves all match);
+// Boss Battle: the trains have left (HULLBREAKER roams the whole cut).
+const TZc = (P.track[0] + P.track[1]) / 2;
+const CAR = P.car;
+// the crossing's warning lamps (railway.js calamari_crossing units: at x crossing[0] − 0.7, z ±7.4, lamps ±0.3 at 2.25
+// on the face toward the road): [x, y, z, yaw, pair]
+const UX = P.crossing[0] - 0.7;
+const CROSSING_LAMPS = [[UX + 0.3, 2.25, -7.4 - 0.175, Math.PI, 0], [UX - 0.3, 2.25, -7.4 - 0.175, Math.PI, 1],
+  [UX - 0.3, 2.25, 7.4 + 0.175, 0, 0], [UX + 0.3, 2.25, 7.4 + 0.175, 0, 1]];
+const MOVERS = {
+  mirror: true,
+  modes: { tower: 'park', boss: 'off' },
+  timetable: { first: 20, dwell: 20, move: 5, warn: 4, horn: 1.2 },
+  cars: [{
+    id: 'kiha101', stops: [[CAR.stop, -TZc], [-CAR.stop, -TZc]], y: 0, size: [CAR.L, CAR.h, CAR.W], roof: true,
+    mesh: { type: 'calamari_railcar', L: CAR.L, W: CAR.W, floor: CAR.floor, h: CAR.h, number: 'KIHA 101', dest: 'INKOPOLIS' },
+    twinMesh: { number: 'KIHA 102', dest: 'SHIOKARA BAY' },
+    sounds: { horn: 'train_horn', run: 'train_run' },
+  }],
+  signals: { lamps: CROSSING_LAMPS, bells: [[P.roadX, 2.6, 0]], bell: 'crossing_bell' },
+};
+
 const CALAMARI = {
   id: 'calamari',
   bounds: { minX: -34, maxX: 34, minZ: -48, maxZ: 48 },
@@ -261,6 +285,7 @@ const CALAMARI = {
   half: HALF,
   zones: ZONES,
   tower: TOWER,
+  movers: MOVERS,
   // match intro: high over the station (the footbridges, the railcars, the canopy), then back down to the co-op deck
   intro: { from: [14, 13, 12], lookFrom: [0, 3, -2], toBack: 3.0 },
   // stage-select picture: from high on Alpha's hill across the whole village — the bath house's steaming chimney, the
