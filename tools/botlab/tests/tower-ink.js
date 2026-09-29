@@ -69,10 +69,20 @@
     const ch = me.character; hsL = Math.max(hsL, ch.hs || 0); movL = movL || !!ch.moving;
     for (const f of ch.feet) if (f.planted) driftL = Math.max(driftL, Math.hypot(f.pw.x - me.pos.x, f.pw.z - me.pos.z));
   }
+  // … through a stop and a start (one of theirs on the deck a moment: contested), and on through the moment its idle
+  // shuffle falls due (forced 0.5 s ahead): a weight-shift re-plant on a moving tower reads as a step, so none while
+  // carried
+  const sL1 = T.s, b1 = B[1] || B[0];
+  b1.pos.copy(W(0.8, H + 0.05, -0.75)); b1.vel.set(0, 0, 0);
+  let stopped = false; for (let i = 0; i < 36; i++) { step(1 / 60); stopped = stopped || (T.contested && T.moving === 0); }
+  b1.pos.copy(W(Rr + 6, 0.05, 3)); b1.vel.set(0, 0, 0);
+  let started = false; for (let i = 0; i < 60; i++) { step(1 / 60); started = started || T.moving !== 0; }
+  me.character.shufT = 0.5;
+  for (let i = 0; i < 180; i++) { step(1 / 60); movL = movL || !!me.character.moving; }
   ms.undo();
-  R('the local player standing still on the moving tower does not walk: no steps, feet planted with it (' + Math.abs(T.s - sL).toFixed(1) + ' m in 2 s)',
-    Math.abs(T.s - sL) > 0.5 && T.riderList.includes(me) && ms.n === 0 && !movL && hsL < 0.25 && driftL < 0.45,
-    { rode: +Math.abs(T.s - sL).toFixed(2), onDeck: T.riderList.includes(me), steps: ms.n, at: ms.at, moving: movL, hsMax: +hsL.toFixed(3), footDrift: +driftL.toFixed(3), t0: +__G.time.toFixed(2) });
+  R('the local player standing still on the moving tower does not walk: no steps (2 s riding, a stop and a start, 3 s more with an idle shuffle due), feet planted with it',
+    Math.abs(T.s - sL) > 3 && stopped && started && T.riderList.includes(me) && ms.n === 0 && !movL && hsL < 0.25 && driftL < 0.45,
+    { rode: +Math.abs(T.s - sL).toFixed(2), stopStart: [stopped, started], onDeck: T.riderList.includes(me), steps: ms.n, at: ms.at, moving: movL, hsMax: +hsL.toFixed(3), footDrift: +driftL.toFixed(3), s: +T.s.toFixed(2), sL1: +sL1.toFixed(2) });
   // a remote rider: a stand-in network (applyRemote) plays its owner's samples back
   const rem = A[1], netm0 = __G.netm, lat = new THREE.Vector3(-0.8, 0, 0.6);   // (its own spot)
   let smp = [], clock = 0;

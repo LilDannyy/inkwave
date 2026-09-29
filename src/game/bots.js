@@ -280,10 +280,12 @@ class ZonePlan {
 // Shared by every bot in a tower match (one per TowerCommand): the track sampled every metre (its 3D length: climbs
 // and drops count) with the nav node by each point; per team how the other team stands round the tower, and roles
 // re-dealt ~2×/s and on every change of hands, contest, empty held tower or change of stance.
-// Stance (per team, `steam`): the tower is an escort job while any of theirs is up and near it — within ~30 m of it
-// (or closing on it to within that in 1.5 s), or with a sightline to its deck from within 36 m — and full steam ahead
-// only once none is (genuinely safe: 2.5 s of quiet first). Back to escorting 0.5 s after one of theirs is within
-// ~22 m (or sees its deck from 28 m), 1.5 s after one comes within 30 m.
+// Stance (per team, `steam`): the tower is an escort job while any of theirs is up and near it as the team knows it
+// (botSight.js teamKnown: seen, located or remembered) — within ~30 m of it (or closing on it to within that in 1.5 s),
+// or with a sightline to its deck from within 36 m — and full steam ahead only once none is and every one of theirs
+// that's up is accounted for: seen in the last 4 s, or respawned at its base in the last 4 s (splats are announced).
+// Genuinely safe, 2.5 s of quiet first. Back to escorting 0.5 s after one of theirs is known within ~22 m (or seeing
+// its deck from 28 m), 1.5 s after one comes within 30 m.
 //   ride   — get on the platform and stay on it (beside the pillar in its middle), shooting from the top; knocked off
 //            while it's still ours → back on. Full steam: everyone (more riders, faster; chargers too). Escorting —
 //            ours: ONE (whoever's on it already, else shooters / twins / splatlings first, rollers / brushes last,
@@ -320,6 +322,7 @@ const TW_NEAR = 30, TW_CLOSE = 22, TW_SEE = 36, TW_SEE_IN = 28, TW_FACE = 14, TW
 // no new hop-off for TW_HOME_CD s after one; the next checkpoint gets an escort once the tower's within TW_CP_AHEAD m of it
 const TW_HOME_T = 2.5, TW_HOME_CD = 8, TW_CP_AHEAD = 35;
 const TW_KNOWN = 4;   // s: a foe the team last saw (or had located) this long ago still counts where it was
+const TW_SPAWN_KNOWN = 4;   // s: a foe that respawned this long ago is still placed by its base (the splat is public)
 const _tp = new THREE.Vector3(), _tn = new THREE.Vector3(), _tq = new THREE.Vector3();
 export function towerPlan() {
   const m = G.match, T = m && m.tower;
@@ -350,7 +353,8 @@ class TowerPlan {
     // time since the last switch; the other team round the tower ({ n, alive, near, close, closeIn }); the backup rider
     // (a hit for the wall-open test)
     this.steam = [false, false]; this.swT = [0, 0]; this.stT = [9, 9];
-    this.thr = [{ n: 0, alive: 0, near: 0, close: 0, closeIn: 0 }, { n: 0, alive: 0, near: 0, close: 0, closeIn: 0 }];
+    this.thr = [{ n: 0, alive: 0, near: 0, close: 0, closeIn: 0, unk: 0 }, { n: 0, alive: 0, near: 0, close: 0, closeIn: 0, unk: 0 }];
+    this.upAt = new Map();   // foe → when it was (re)spawned, as far as anyone can tell (splats are announced)
     this.backup = [null, null];
     // escort slots per team (bot → 'cp' | 'lead' | 'flank' | 'backup'); rolling home: riders off (per team), and when the
     // next hop-off may be
@@ -432,15 +436,25 @@ class TowerPlan {
   // how the other team stands round the tower for team t, and t's stance (with hysteresis)
   _stance(t, dt) {
     const T = this.T, o = this.thr[t];
-    o.n = 0; o.alive = 0; o.near = 0; o.close = 0; o.closeIn = 0; o.face = 0;
+    o.n = 0; o.alive = 0; o.near = 0; o.close = 0; o.closeIn = 0; o.face = 0; o.unk = 0;
     for (const e of G.actors) {
       if (e.team !== 1 - t) continue;
       o.n++;
-      if (!e.alive) continue;
+      if (!e.alive) { this.upAt.delete(e); continue; }
+      if (!this.upAt.has(e)) this.upAt.set(e, G.time);                       // (up again: at its base now)
       o.alive++;
       // (where the team knows it to be — seen, located or remembered — never where it really is)
       const k = teamKnown(t, e, TW_KNOWN);
-      if (!k) continue;
+      if (!k) {
+        // not seen lately: just respawned, it's by its base — as far out as a run since could have brought it; else
+        // it could be anywhere (unaccounted for: no piling on while one is)
+        const up = G.time - this.upAt.get(e);
+        if (up > TW_SPAWN_KNOWN) { o.unk++; continue; }
+        const pad = G.level.spawnPads[e.team], d = Math.max(0, Math.hypot(pad.x - T.pos.x, pad.z - T.pos.z) - PLAYER.runSpeed * up);
+        if (d < TW_NEAR) o.near++;
+        if (d < TW_CLOSE) { o.close++; o.closeIn++; }
+        continue;
+      }
       const kp = k.pos, kv = k.seen || G.time - k.t < 0.5 ? k.vel : _tn.set(0, 0, 0);
       const dx = kp.x - T.pos.x, dz = kp.z - T.pos.z, d = Math.hypot(dx, dz);
       // (closing on it: where it'll be in 1.5 s — no piling on just before they arrive)
@@ -453,8 +467,9 @@ class TowerPlan {
       _tp.set(kp.x, kp.y + 1.3, kp.z); _tq.set(T.pos.x + (dx / d) * 0.8, T.top + 1.0, T.pos.z + (dz / d) * 0.8);
       if (G.physics.los(_tp, _tq)) { o.close++; if (d < TW_SEE_IN) o.closeIn++; }
     }
-    // full steam only when it's genuinely safe: none of theirs up and near (however many of them are down)
-    const wantSteam = o.near === 0 && o.close === 0;
+    // full steam only when it's genuinely safe: none of theirs up and near (however many of them are down), and every one
+    // that's up accounted for — seen lately, or just respawned by its base (one that could be anywhere could be here)
+    const wantSteam = o.near === 0 && o.close === 0 && o.unk === 0;
     this.stT[t] += dt;
     const on = this.steam[t], sw = on ? o.near > 0 || o.closeIn > 0 : wantSteam;
     this.swT[t] = sw ? this.swT[t] + dt : 0;
