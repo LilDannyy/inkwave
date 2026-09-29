@@ -28,7 +28,7 @@ import { SLICE, SLICE_PIECES, SLICE_STANDING, SLICE_TRENCH_PIECES, inSliceHole, 
 // 1.7 crater crest · 2.4 pillbox roof + plinth top · 3.0 spawn deck.
 // The Long Stages stretch (2026-09-30, stretch.js + slice.js): the promontory with its neck and coves moved out 22 m
 // (the cut z −28.5 on Alpha's), and the slice between is the reserve line — the support trench with the tower's bay,
-// the communication trench back to the neck, the observation post, the regimental mound with its cross (the strategic
+// the communication trench back to the neck, the observation post, the regimental mound with its cenotaph (the strategic
 // point), two more flooded shell holes; the park's circle becomes a stadium (COAST). The numbers below are the drawing
 // before the stretch: the base's constants go through sz() (beyond the cut: moved out).
 // ------------------------------------------------------------------------------------------------------------
@@ -368,7 +368,7 @@ const ZONES = {
 // — the user's drawing, to 28.5 before the stretch. Then the slice's detour loop (two checkpoints: the track 80 of the
 // 100 points, twice the first drawing's length): out along the reserve line's front to the right-flank cliff, down the
 // support trench's bay (a drop in at its open north end, a climb out of its south end), back across the reserve line
-// over the regimental mound (a climb onto it, checkpoint 2 on its top by the cross, a drop off it), on to the goal in
+// over the regimental mound (a climb onto it, checkpoint 2 on its top by the cenotaph, a drop off it), on to the goal in
 // front of the neck (13 m short of Bravo's pad)
 const TOWER = {
   path: [[0, 0], [24.5, 0], [24.5, 19.75], [5, 19.75], [5, 28.5], ...SLICE_TOWER.path.map(([x, z]) => [-x, -z])],

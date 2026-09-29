@@ -467,34 +467,69 @@ export function register(D, H) {
       B.col(-0.42, 1.36, -0.42, 0.42, 8.4, 0.42, { roof: true });
     },
   };
-  // The Inkling Rifles' cross on the regimental mound (the Long Stages slice; pos = the mound's top at the cross's centre,
-  // local +Z = the inscription's face, toward mid): a three-step octagonal Portland base, a die with the regiment's
-  // name, a tall Latin cross with a bronze sword on its face. Solid and off limits (you slide off it).
-  D.craters_cross = {
-    desc: 'Regimental cross: octagonal steps, die, Latin cross with a bronze sword. Collider: off-limits roof.',
+  // The Inkling Rifles' cenotaph on the regimental mound (the Long Stages slice; pos = the mound's top at the cenotaph's
+  // centre, local +Z = its front, toward mid): a secular memorial — two Portland steps and a plinth course, a battered
+  // stone pylon with a band and cornice, the empty tomb-chest on top; on its front a bronze laurel wreath round the
+  // regiment's badge (a squid in a roundel), the regiment's name and THE LINE HELD; carved wreaths on the sides, the war
+  // on the back. Short and blocky: it reads apart from the crater's two tall obelisks. Solid and off limits (you slide
+  // off it).
+  const squidBadge = (B, y, z, s = 1) => {
+    // bronze roundel with a raised rim, the squid on it (mantle + fins, head with two eyes, four tentacles): the Inkling
+    // emblem — nothing on it reads as a cross
+    B.push(0, y, z);
+    B.cyl('metal', K.bronze, 0.2 * s, 0.03, 0, 0, 0.015, { rx: HP, seg: 24 });
+    B.tor('metal', K.bronzeLt, 0.2 * s, 0.014, 0, 0, 0.03, { ts: 28, rs: 5 });
+    const plate = (pts, d, c) => { const g = new GB(); g.face(pts.map(([x, yy]) => [x * s, yy * s, d]), [0, 0, 1]);
+      for (let i = 0; i < pts.length; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % pts.length]; g.face([[x0 * s, y0 * s, 0.03], [x1 * s, y1 * s, 0.03], [x1 * s, y1 * s, d], [x0 * s, y0 * s, d]], [y1 - y0, -(x1 - x0), 0]); }
+      B.add('metal', g.geo(), c, 0, 0, 0); };
+    plate([[0, 0.165], [0.07, 0.07], [0.055, -0.015], [-0.055, -0.015], [-0.07, 0.07]], 0.05, K.bronzeLt);        // mantle
+    plate([[0.07, 0.07], [0.115, 0.115], [0.045, 0.125]], 0.048, K.bronzeLt);                                     // fins
+    plate([[-0.045, 0.125], [-0.115, 0.115], [-0.07, 0.07]], 0.048, K.bronzeLt);
+    plate([[0.05, -0.015], [0.05, -0.07], [-0.05, -0.07], [-0.05, -0.015]], 0.05, K.bronzeLt);                    // head
+    for (const x of [-0.024, 0.024]) B.cyl(NS('paint'), K.stoneLt, 0.013 * s, 0.01, x * s, -0.042 * s, 0.055, { rx: HP, seg: 8 });
+    for (const x of [-0.036, -0.012, 0.012, 0.036]) rod(B, NS('metal'), K.bronzeLt, [x * s, -0.07 * s, 0.045], [x * 1.5 * s, -0.16 * s, 0.045], 0.009 * s, 4);
+    B.pop();
+  };
+  // a laurel wreath facing +Z (radius R): two rows of leaves along a slim ring, each leaf an almond lying along the ring
+  // and angled off it, a ribbon bow tied at the foot
+  const laurel = (B, R, c, mat, n = 24) => {
+    B.tor(mat, c, R, R * 0.045, 0, 0, 0, { ts: 28, rs: 5 });
+    for (let k = 0; k < n; k++) {
+      const a = -HP + 0.32 + ((TAU - 0.64) * (k + 0.5)) / n;
+      for (const sd of [-1, 1]) { const r = R * (1 + sd * 0.1); B.sph(NS(mat), c, 1, Math.cos(a) * r, Math.sin(a) * r, 0.012, { sx: R * 0.17, sy: R * 0.065, sz: 0.018, rz: a + HP + sd * 0.55, ws: 8, hs: 4 }); }
+    }
+    B.box(mat, c, R * 0.16, R * 0.12, 0.03, 0, -R, 0.02, { r: 0.01 });
+    for (const sd of [-1, 1]) B.box(NS(mat), c, R * 0.1, R * 0.42, 0.02, sd * R * 0.12, -R * 1.2, 0.015, { rz: sd * 0.35, r: 0.008 });
+  };
+  D.craters_cenotaph = {
+    desc: 'Regimental cenotaph: steps, battered pylon, cornice, tomb-chest; bronze wreath round the squid badge. Collider: off-limits roof.',
     build(B) {
-      const S = K.stone;
-      for (const [r, y0, y1, c] of [[0.95, 0, 0.16, K.stoneDk], [0.78, 0.16, 0.32, S], [0.62, 0.32, 0.46, K.stoneDk]]) B.cyl('paint', c, r, y1 - y0, 0, (y0 + y1) / 2, 0, { seg: 8, ry: PI / 8 });
-      B.box('paint', S, 0.86, 0.8, 0.86, 0, 0.86, 0, { r: 0.02 });
-      B.box('paint', K.stoneDk, 0.98, 0.1, 0.98, 0, 1.3, 0, { r: 0.03 });
-      B.add('paint', frustumGeo(0.36, 0.36, 0.28, 0.28, 3.1, false), S, 0, 1.35, 0);
-      B.box('paint', S, 1.5, 0.3, 0.28, 0, 3.55, 0, { r: 0.02 });
-      B.add('paint', pyramidGeo(0.29, 0.14), K.stoneLt, 0, 4.45, 0);
-      // the bronze sword down the cross's face, its hilt on the arms' crossing
-      B.push(0, 0, 0.16);
-      B.box('metal', K.bronze, 0.09, 2.3, 0.03, 0, 2.55, 0, { r: 0.01 });
-      B.box('metal', K.bronze, 0.5, 0.07, 0.035, 0, 3.72, 0.005, { r: 0.01 });
-      B.box('metal', K.bronze, 0.07, 0.34, 0.035, 0, 3.94, 0.005, { r: 0.01 });
-      B.sph('metal', K.bronzeLt, 0.055, 0, 4.14, 0.01, { ws: 8, hs: 6 });
-      B.pop();
-      B.push(0, 0, 0.432);
-      letters(B, 'THE INKLING', { h: 0.085, wt: 0.2, flat: true, y: 1.0, c: K.bronze, mat: 'metal', track: 0.14 });
-      letters(B, 'RIFLES', { h: 0.12, wt: 0.2, flat: true, y: 0.82, c: K.bronze, mat: 'metal', track: 0.16 });
-      letters(B, 'THE LINE HELD', { h: 0.06, wt: 0.22, flat: true, y: 0.62, c: K.bronze, mat: 'metal', track: 0.16 });
-      B.pop();
-      B.col(-0.95, 0, -0.95, 0.95, 0.46, 0.95, { roof: true });
-      B.col(-0.45, 0.46, -0.45, 0.45, 1.35, 0.45, { roof: true });
-      B.col(-0.2, 1.35, -0.2, 0.2, 4.6, 0.2, { roof: true });
+      const S = K.stone, y0 = 0.58, hB = 2.2;
+      B.box('paint', K.stoneDk, 2.1, 0.18, 1.5, 0, 0.09, 0, { r: 0.02 });
+      B.box('paint', S, 1.8, 0.18, 1.2, 0, 0.27, 0, { r: 0.02 });
+      B.box('paint', K.stoneDk, 1.5, 0.22, 0.95, 0, 0.47, 0, { r: 0.02 });
+      B.add('paint', frustumGeo(1.3, 0.8, 1.14, 0.66, hB, false), S, 0, y0, 0);
+      B.box('paint', K.stoneDk, 1.24, 0.1, 0.76, 0, y0 + hB + 0.05, 0, { r: 0.02 });
+      B.box('paint', S, 1.36, 0.1, 0.88, 0, y0 + hB + 0.15, 0, { r: 0.03 });
+      B.box('paint', K.stoneLt, 1.0, 0.3, 0.58, 0, y0 + hB + 0.35, 0, { r: 0.03 });
+      B.add('paint', frustumGeo(1.0, 0.58, 0.84, 0.42, 0.14), S, 0, y0 + hB + 0.5, 0);
+      // the front (the face leans back 0.07 over its height: every plate is set on it, tilted with it): the wreath round
+      // the badge, the regiment, the line held
+      const fz = (y) => 0.4 - (0.07 * (y - y0)) / hB, LEAN = -Math.atan(0.07 / hB);
+      const onFace = (ry, y, fn) => { B.push(0, 0, 0, ry); B.push(0, y, fz(y), 0, LEAN); fn(); B.pop(); B.pop(); };
+      onFace(0, 2.05, () => { laurel(B, 0.34, K.bronze, 'metal'); squidBadge(B, 0, 0.004, 1.15); });
+      onFace(0, 1.42, () => letters(B, 'THE INKLING RIFLES', { h: 0.09, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.14 }));
+      onFace(0, 1.16, () => letters(B, 'THE LINE HELD', { h: 0.12, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.16 }));
+      // the back: the war and the line; the sides (the face 0.65 → 0.57 out, leaning in): carved laurel wreaths
+      onFace(PI, 1.9, () => letters(B, 'THE GREAT TURF WAR', { h: 0.085, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.14 }));
+      onFace(PI, 1.7, () => letters(B, 'THE RESERVE LINE', { h: 0.085, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.14 }));
+      for (const sx of [-1, 1]) {
+        const y = 2.0, x = 0.65 - (0.08 * (y - y0)) / hB;
+        B.push(0, 0, 0, sx * HP); B.push(0, y, x, 0, -Math.atan(0.08 / hB)); laurel(B, 0.22, K.stoneDk, 'paint', 18); B.pop(); B.pop();
+      }
+      B.col(-1.05, 0, -0.75, 1.05, 0.36, 0.75, { roof: true });
+      B.col(-0.68, 0.36, -0.44, 0.68, y0 + hB + 0.2, 0.44, { roof: true });
+      B.col(-0.5, y0 + hB + 0.2, -0.3, 0.5, y0 + hB + 0.64, 0.3, { roof: true });
     },
   };
   // a gate pier's dressing on the regimental mound (pos = the pier's foot, local +Z = outward, down the steps): a moulded
@@ -1069,7 +1104,7 @@ const [mX, mZ] = MEMO.c;
 
 // the reserve line's dressing (Alpha's half; already in place — the tower's runs kept clear: z −30.5 and −43 across,
 // x −26.5 and 6.5 along, 2.5 m wide)
-const [crX, crZ] = MOUND.cross;
+const [crX, crZ] = MOUND.memorial;
 // the Long Stages stretch also took the whole stage's cover over 90 % (it was 79 %): gorse on the old downs where the
 // open ground ran longest, big chalk boulders on the Great Crater's slopes either side of each cut, one at the cut
 const COVER_MID = [
@@ -1083,8 +1118,8 @@ const COVER_MID = [
 ];
 const SLICE_DRESSING = [
   ...COVER_MID,
-  // the regimental mound: the cross, wreaths at its foot, a bench and a lantern below the south steps
-  { type: 'craters_cross', pos: [crX, MOUND.top, crZ], rotY: 0 },
+  // the regimental mound: the cenotaph, wreaths at its foot, a bench and a lantern below the south steps
+  { type: 'craters_cenotaph', pos: [crX, MOUND.top, crZ], rotY: 0 },
   ...MOUND_PIERS.map(([x, z, sg]) => ({ type: 'craters_pier', pos: [x, MOUND.top, z], rotY: sg > 0 ? 0 : Math.PI })),
   { type: 'craters_wreath', pos: [crX - 1.2, MOUND.top, crZ + 1.05], rotY: 0.12 },
   { type: 'craters_wreath', pos: [crX + 1.15, MOUND.top, crZ + 1.05], rotY: -0.1, variant: 1, r: 0.26 },

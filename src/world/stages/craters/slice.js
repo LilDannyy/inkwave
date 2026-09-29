@@ -11,7 +11,7 @@
 //   • the observation post: a concrete bunker behind the left support trench, its roof (2.4) reached by a stair at its
 //     side — high ground over the left flank
 //   • the regimental mound (the strategic point): a turf octagon (1.6) on the reserve line's axis with the Inkling
-//     Rifles' cross on its top; four ways up (the north steps, the south steps onto the neck's forecourt, ramps on its
+//     Rifles' cenotaph on its top; four ways up (the north steps, the south steps onto the neck's forecourt, ramps on its
 //     north-east and south-west shoulders); the tower climbs its west face, stops on its top (checkpoint 2) and drops off
 //     its east face
 //   • two more flooded shell holes (the right flank's route bends round one, the left cliff walk's round the other)
@@ -90,9 +90,9 @@ const bridgePieces = SLICE_BRIDGES.flatMap(({ x, z, half }) => [
 ]);
 
 // ------------------------------------------------------------------------------------------------ the regimental mound
-// a turf octagon (1.6) with the Inkling Rifles' cross on its top (props.js); the north steps toward mid, the south steps
+// a turf octagon (1.6) with the Inkling Rifles' cenotaph on its top (props.js); the north steps toward mid, the south steps
 // onto the neck's forecourt, turf ramps up its north-east and south-west shoulders
-export const MOUND = { c: [-3, -43], R: 5.2, top: YM, cross: [-3, -45.9] };
+export const MOUND = { c: [-3, -43], R: 5.2, top: YM, memorial: [-3, -45.9] };
 const [mcx, mcz] = MOUND.c, MA = MOUND.R * Math.cos(Math.PI / 8);
 export const MOUND_PIERS = [-1, 1].flatMap((sg) => [-1, 1].map((sx) => [mcx + sx * 2.1, r3(mcz + sg * (MA - 0.5)), sg]));
 const moundPieces = [
