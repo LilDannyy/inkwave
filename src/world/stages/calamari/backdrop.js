@@ -28,7 +28,7 @@ export function buildBackdrop(kit) {
       const u = HX - x, toSea = coastN(x) - z;
       let e = 4.6 + 0.5 * Math.pow(u, 1.08) + 5.5 * smooth(13, 0, Math.abs(z)) + 0.12 * Math.max(0, -z - 10);
       // (the shore slope widens with the hill's height: no sheer snow walls down to the sea at the headland's ends)
-      e *= smooth(0, 9 + 0.5 * u, toSea);
+      e *= smooth(-2, 14 + 1.1 * u, toSea);
       h = Math.max(h, e - (toSea < 0 ? 3 - toSea * 2 : 0));
     }
     // behind T2's west end and the hill houses (the hill houses stand in it)
