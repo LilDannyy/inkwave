@@ -1355,6 +1355,7 @@ class Game {
       else if (this._lowInkFlash > 0) { this._lowInkFlash -= dt; prompt = 'Low ink! Hold SHIFT in your ink to refill'; }
       else if (a.specialReady() && (this._hints.specialT = (this._hints.specialT || 0) + dt) > 2) prompt = `Special ready! Press F`;
       else if (inkF < 0.25 && a.form !== 'squid') prompt = 'Hold SHIFT to swim in your ink and refill';
+      else if (m.tower?.homing && m.tower.owner === a.team && (this._hints.homeT = (this._hints.homeT || 0) + dt) < 4) prompt = 'Your tower rolls home by itself on your half — go defend it!';
       else if (m.duration - m.time < 8 && !this._hints.shot) prompt = m.zones ? 'Ink the zone and hold it to count down!' : m.tower ? 'Ink the tower\'s side, swim up onto it and ride it into enemy territory!' : 'Paint the ground — most turf wins!';
       if (!a.specialReady()) this._hints.specialT = 0;
       if (a.intent.fire) this._hints.shot = true;

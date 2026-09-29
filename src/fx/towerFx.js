@@ -385,6 +385,7 @@ export class TowerFx {
     if (owner >= 0) {
       const cp = T._nextCp(owner), dir = owner === 0 ? 1 : -1;
       end = cp ? dir * cp.d : dir * T.path.len[owner]; lit = 1;
+      if (T.homing) { end = 0; lit = 0.8; }                       // (empty, rolling home: it stops at the centre)
     } else if (T.returning) { end = 0; lit = 0.6; }
     U.uEnd.value = end; U.uOn.value += (lit - U.uOn.value) * (dt > 0 ? 1 - Math.exp(-6 * dt) : 1);
     // checkpoints: dim once cleared, flash on a change, beat while the tower waits at one
