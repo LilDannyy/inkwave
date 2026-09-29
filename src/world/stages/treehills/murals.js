@@ -4,7 +4,8 @@
 //            beds, pollinator strips, greener / drier turf (drawn 180°-symmetric, like the stage)
 //   sign     ECO-FOREST TREEHILLS in pale stencil along the tree-hill's upper retaining wall, facing the meadow
 //   biome    BIOME 07 · COMMONS MEADOW stencilled along the band's low wall
-//   bandE/W  the bands' ground (the east band's column top, 4 × 59 m; the west one's the same picture turned 180°)
+//   bandE/W  the bands' ground (the east band's column top, 4 × 81 m: on through the nursery since the stretch; the west
+//            one's the same picture turned 180°)
 //   upperE/W the upper tiers' ground (the east upper tier's column top, 7 × 30 m; the west one's turned 180°)
 export const MURAL = { meadow: 4, sign: 5, upperE: 6, upperW: 7, biome: 8, bandE: 9, bandW: 10 };
 
@@ -133,31 +134,36 @@ export function drawMurals(g, R, kit) {
     g.restore();
     out.push({ id: MURAL.meadow, x: x0, y: y0, w: W, h: H, place: [0, 30, 0, 28], fx: [1, 0.25] });
   }
-  // ---------------------------------------------------------------- the band's ground (4 × 59.08 m, 16 px/m): the
-  // east band's column (x 15 … 19, z −21 … 38.08: u from x 19, v from z −21) — a gravel trail winding along it past the
-  // groves, needle litter under them, moss at the wall's foot, gravel landings at the band stairs, the tower's lane
-  // across it (and along Bravo's terrace at the north end), a pollinator strip along the meadow edge, a gravel yard by
-  // the nursery. The west band (its twin, a single piece of its own: a mirrored piece's decal isn't turned) takes
-  // the same picture turned 180°.
+  // ---------------------------------------------------------------- the band's ground (4 × 81.08 m, 12 px/m): the
+  // east band's column (x 15 … 19, z −21 … 60.08: u from x 19, v from z −21; the stretch made it 22 m longer: it runs on
+  // through Bravo's nursery as the strip's inner edge) — a gravel trail winding along it past the groves and on through
+  // the nursery, needle litter under the groves, moss at the wall's foot, gravel landings at the band stairs, the tower's
+  // lanes across it (the start at z 0, the nursery's front and bank lanes — twin wheel tracks like the nursery's own —
+  // and the lane along Bravo's terrace at the north end), a pollinator strip along the meadow edge and the nursery's, a
+  // gravel yard by the nursery rack. The west band (its twin, a single piece of its own: a mirrored piece's decal isn't
+  // turned) takes the same picture turned 180°.
   {
-    const PPM = 16, W = 4 * PPM, H = Math.round(59.083 * PPM), xE = R.x + 1960, xW = R.x + 1886, y0 = R.y + 40;
+    const PPM = 12, ZMAX = 60.083, LEN = ZMAX + 21, W = 4 * PPM, H = Math.round(LEN * PPM), xE = R.x + 1980, xW = R.x + 1920, y0 = R.y + 20;
     g.save(); g.beginPath(); g.rect(xE, y0, W, H); g.clip();
     g.clearRect(xE, y0, W, H);
-    const k = kitFor((x, z) => [xE + (19 - x) * PPM, y0 + (38.083 - z) * PPM], PPM, 5207);
-    for (const [z, r] of [[-19, 1.6], [-4, 1.3], [2.6, 1.2], [6.8, 1.4], [22.5, 1.5], [31, 1.3], [36, 1.6]]) k.moss(18.75, z, 0.55, r);
-    k.litter(18.45, -9.25, 0.95, 1.75); k.litter(18.45, 12.8, 0.95, 2.0); k.litter(18.1, 17.9, 1.35, 2.4);
+    const k = kitFor((x, z) => [xE + (19 - x) * PPM, y0 + (ZMAX - z) * PPM], PPM, 5207);
+    for (const [z, r] of [[-19, 1.6], [-4, 1.3], [2.6, 1.2], [6.8, 1.4], [22.5, 1.5], [33.2, 1.3], [40.6, 1.2], [53, 1.3], [58, 1.6]]) k.moss(18.75, z, 0.55, r);
+    k.litter(18.45, -9.25, 0.95, 1.75); k.litter(18.45, 12.8, 0.95, 2.0); k.litter(18.1, 17.9, 1.35, 2.4); k.litter(18.0, 49.75, 1.0, 1.6);
     k.path([[15.9, -17.0], [16.1, -14.5]], 2.4, { grit: 14 });
     k.path([[15.9, 6.1], [16.1, 8.1]], 2.6, { grit: 14 });
-    k.path([[16.3, -21.2], [16.1, -18.6], [16.2, -15.5], [16.9, -12.5], [16.4, -9.0], [16.9, -5.5], [17.0, -2.0], [16.8, 2.0], [17.2, 4.6], [16.6, 8.5], [16.3, 12.6], [16.1, 16.8], [16.7, 21.0], [16.3, 24.0], [16.1, 26.6]], 1.25);
+    k.path([[16.3, -21.2], [16.1, -18.6], [16.2, -15.5], [16.9, -12.5], [16.4, -9.0], [16.9, -5.5], [17.0, -2.0], [16.8, 2.0], [17.2, 4.6], [16.6, 8.5], [16.3, 12.6], [16.1, 16.8], [16.7, 21.0], [16.3, 24.0],
+      [16.5, 30.6], [17.3, 34.0], [16.7, 37.6], [17.2, 41.2], [16.6, 48.6], [16.4, 52.0]], 1.25);
     k.path([[15.0, 0], [19.1, 0]], 2.5);
-    k.path([[15.0, 31.0], [19.1, 31.0]], 2.3);
-    k.path([[16.4, 33.6], [17.8, 36.6]], 2.6, { grit: 16 });
+    for (const [z0, z1] of [[26, 27.2], [28.2, 29.4], [42.9, 43.8], [44.8, 46.6]]) k.path([[15.0, (z0 + z1) / 2], [19.1, (z0 + z1) / 2]], z1 - z0 + 0.1, { grit: 20 });
+    k.path([[15.0, 53.0], [19.1, 53.0]], 2.3);
+    k.path([[16.4, 55.6], [17.8, 58.6]], 2.6, { grit: 16 });
     k.flowers([[15.62, -13.7], [15.62, -2.1]], 0.55, 90); k.flowers([[15.62, 2.0], [15.62, 5.3]], 0.55, 90); k.flowers([[15.62, 8.8], [15.62, 20.5]], 0.55, 90);
+    k.flowers([[15.5, 30.2], [15.5, 42.1]], 0.5, 90);
     g.restore();
     // the west band: the same picture turned 180°
     g.save(); g.clearRect(xW, y0, W, H); g.translate(xW + W, y0 + H); g.rotate(Math.PI); g.drawImage(g.canvas, xE, y0, W, H, 0, 0, W, H); g.restore();
-    out.push({ id: MURAL.bandE, x: xE, y: y0, w: W, h: H, place: [0, 4, 0, 59.083], fx: [1, 0.25] });
-    out.push({ id: MURAL.bandW, x: xW, y: y0, w: W, h: H, place: [0, 4, 0, 59.083], fx: [1, 0.25] });
+    out.push({ id: MURAL.bandE, x: xE, y: y0, w: W, h: H, place: [0, 4, 0, LEN], fx: [1, 0.25] });
+    out.push({ id: MURAL.bandW, x: xW, y: y0, w: W, h: H, place: [0, 4, 0, LEN], fx: [1, 0.25] });
   }
   // ---------------------------------------------------------------- the upper tier's ground (7 × 30 m, 20 px/m): the
   // east hill's upper-tier column (x 19.5 … 26.5, z −10 … 20: u from x 26.5, v from z −10) — the walking strip between
