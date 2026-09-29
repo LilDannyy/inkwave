@@ -28,6 +28,7 @@ export { OUTLINE };
 // Heights: 0 sand · 1.3 dunes / causeway / pillar plinth · 2.5 crests / pillar tier · 3.2 helipads.
 const H1 = 1.3, H2 = 2.5, HP = 3.2, BOT = -2.4;
 export const PAD = [8.5, -36];                                    // Alpha's helipad (deck centre)
+export const PAD_BODY = 4.9;                                      // its frame body's circumradius (the deck plate's: 5.9)
 const K = { sand: '#e6dfcf', wet: '#d8cfbd', dune: '#ebe4d4', stone: '#c9c4b8', stoneDk: '#aaa498', steel: '#8d979e', steelDk: '#59626a', pad: '#dcdcd6', moss: '#9aa878' };
 const sand = (o = {}) => ({ color: K.sand, pattern: SURF.dune, ...o });
 const moss = (o = {}) => ({ color: K.dune, pattern: SURF.moss, ...o });
@@ -116,16 +117,20 @@ const SPIRHALITE = {
 
     // ================= the helipad islet (the tail): the high dune the pad stands on, its west arm down to the pinch,
     // the shoulder north of the pad down to the spit
-    B(-1.5, 16, 0, H1, -42.2, -30.6, sand({ tag: 'pad-dune', color: K.dune })),
+    B(-1.5, 16, 0, H1, -40.2, -30.6, sand({ tag: 'pad-dune', color: K.dune })),
+    B(0.6, 14.6, 0, H1, -41.4, -40.2, sand({ tag: 'pad-dune', color: K.dune })),   // (its back face set in, both back corners cut: a beach lane behind it, open at both ends)
     B(-5.2, -1.5, 0, H1, -37.5, -34.5, moss({ tag: 'pad-dune-arm' })),
     slope(-8.3, -36, 0, -5.2, -36, H1, 3),
     B(1.6, 12.6, 0, H1, -30.6, -26.0, moss({ tag: 'pad-shoulder' })),
     slope(-1.5, -29.2, 0, 1.6, -29.2, H1, 2.8),
     slope(15.9, -28.3, 0, 12.6, -28.3, H1, 3.2),                  // (the shoulder's east end: down to the Arch spit)
     slope(19.1, -36.5, 0, 16, -36.5, H1, 5.6),
-    // spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune; a steel frame body R 5.75, the deck
-    // plate R 5.9 overhanging it: props.js dresses both), stairs north onto the shoulder and west onto the arm
-    ...OCT(PAD[0], PAD[1], 5.75, H1, 3.0, { tag: 'helipad-frame', color: K.steelDk, pattern: PATTERN.metalpanel, noPaint: OCTSIDES }),
+    // spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune; a steel frame body R 4.9, the deck
+    // plate R 5.9 cantilevered a metre past it on brackets: props.js dresses both), stairs north onto the shoulder and
+    // west onto the arm. (The frame is set back so the dune under the deck's rim is floor: every spot on the rim outside
+    // the spawn circle has a drop to the dune — an enemy that lands on the rim, where the only way along is through
+    // the spawn circle, can always get off it.)
+    ...OCT(PAD[0], PAD[1], PAD_BODY, H1, 3.0, { tag: 'helipad-frame', color: K.steelDk, pattern: PATTERN.metalpanel, noPaint: OCTSIDES }),
     ...OCT(PAD[0], PAD[1], 5.9, 2.95, HP, { tag: 'helipad', color: K.pad, pattern: PATTERN.spawn, noPaint: OCTSIDES }).map((d, i) => (i === 1 ? { ...d, mural: [{ n: [0, 1, 0], id: 7 }] } : d)),   // (its front arm: SPIRHALITE / DC-1)
     R([PAD[0], H1, PAD[1] + 9.9], [PAD[0], HP, PAD[1] + 5.45], 3, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
     R([PAD[0] - 9.9, H1, PAD[1]], [PAD[0] - 5.45, HP, PAD[1]], 3, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
