@@ -6,8 +6,9 @@
 // then falling to the point with its chalk stacks, the bay's lighthouse on its islet beyond), north onto the mainland
 // (rolling downs, a farm, a chalk hill figure of a squid cut into the turf facing the park). White chalk cliffs all
 // the way round, a cliff-top fence line, fallen chalk at every cliff foot — and at the park's own cliff edges. The
-// flooded craters inside the park get still, dark water. `d` (bound in layout.js) = { coast, ponds, back, head }
-// (Alpha's half; back = the promontory's back edge z, head = its half width there).
+// flooded craters inside the park get still, dark water. `d` (bound in layout.js) = { coast, ponds, back, head, shelf,
+// shelfW } (Alpha's half; back = the promontory's back edge z, head = its half width there, shelf = the coast edges with
+// the undercliff shelf at their foot, shelfW its width).
 export function buildBackdrop(kit, d = {}) {
   const { THREE, prep, xf, box, cyl, fbm, mulberry, WATER_Y } = kit;
   const W = WATER_Y;
@@ -144,8 +145,9 @@ export function buildBackdrop(kit, d = {}) {
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]), nx = (b[1] - a[1]) / L, nz = -(b[0] - a[0]) / L;
     // outward normal: out of the park's outline
     const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, sn = inCoast(mx + nx * 0.1, mz + nz * 0.1) ? -1 : 1;
+    const shelf = (d.shelf || []).includes(i) ? (d.shelfW || 2.4) : 0;   // (beyond the undercliff shelf where there is one)
     for (let t = 0.8; t < L; t += 2.2 + rnd() * 2.4) {
-      const off = 0.5 + rnd() * 1.8, x = a[0] + ((b[0] - a[0]) * t) / L + nx * sn * off, z = a[1] + ((b[1] - a[1]) * t) / L + nz * sn * off;
+      const off = shelf + 0.5 + rnd() * 1.8, x = a[0] + ((b[0] - a[0]) * t) / L + nx * sn * off, z = a[1] + ((b[1] - a[1]) * t) / L + nz * sn * off;
       rocks.push([x * sg, W - 0.3 + rnd() * 0.3, z * sg, 0.3 + rnd() * 0.7, rnd() * 6]);
     }
   });
