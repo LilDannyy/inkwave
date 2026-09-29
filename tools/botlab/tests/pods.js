@@ -515,15 +515,15 @@
       const mount = (a, lx = 0.4) => { place(a, W(pt, lx, pt.h + 0.05, 0.2)); step(0.3); a.bot.reset(); a.bot.update = a.bot._up0; };
       mount(up);
       let offT = -1, pathT = -1, landT = -1, wetN = 0;
-      for (let f = 0; f < 60 * 5 && (pathT < 0 || landT < 0); f++) {
+      for (let f = 0; f < 60 * 6 && (pathT < 0 || landT < 0); f++) {
         step(1 / 60);
         if (offT < 0 && !onPlant(up, pt) && up.pos.y < pt.y + pt.h - 0.5) offT = f / 60;
         if (offT >= 0 && landT < 0 && up.grounded) landT = f / 60;
         if (offT >= 0 && pathT < 0 && up.bot.path) pathT = f / 60;
         if (up.pos.y < -0.5) wetN++;
       }
-      R('a bot on a canopy with no foe about gets off within ~3 s (a hop over the parapet, a plain drop, never into the water) and routes again',
-        offT >= 0 && offT <= 3.2 && landT <= 4 && pathT >= 0 && wetN === 0 && Math.abs(up.pos.y) < 0.2,
+      R('a bot on a canopy with no foe about gets off within ~4 s (a look round, a hop over the parapet, a plain drop, never into the water) and routes again',
+        offT >= 0 && offT <= 4.4 && landT <= 5.2 && pathT >= 0 && wetN === 0 && Math.abs(up.pos.y) < 0.2,
         { offAt: offT, landedAt: landT, pathAt: pathT, why: up.bot.podS && up.bot.podS.exit ? up.bot.podS.exit.why : null, endY: r3(up.pos.y), exits: P.stats.exits });
       const fo = B.find((a) => !a.isLocal);
       intents.set(fo, (a) => { a.hp = PLAYER.hp; a.invuln = 1; });
@@ -540,7 +540,7 @@
       let off2 = -1;
       for (let f = 0; f < 60 * 6 && off2 < 0; f++) { step(1 / 60); if (!onPlant(up, pt) && up.grounded) off2 = f / 60; }
       R('fighting from the platform: it stays, flagged as perching on purpose; the foe gone (out of sight and range) → off in ~1.5 s + the walk and hop',
-        stayed > 0.9 && perchN / Math.max(1, onN) > 0.95 && off2 >= 0 && off2 <= 4, { onTop: r3(stayed), perched: r3(perchN / Math.max(1, onN)), offAfterFoeGone: off2, left: leftAt >= 0 ? { at: leftAt, why: leftWhy } : null });
+        stayed > 0.9 && perchN / Math.max(1, onN) > 0.95 && off2 >= 0 && off2 <= 4.2, { onTop: r3(stayed), perched: r3(perchN / Math.max(1, onN)), offAfterFoeGone: off2, left: leftAt >= 0 ? { at: leftAt, why: leftWhy } : null });
       place(fo, W(pt, 0.5, 0.02, 9));
       mount(up);
       hooks.push(() => { up.hp = PLAYER.hp; up.ink = PLAYER.inkMax; });

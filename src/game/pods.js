@@ -1189,7 +1189,8 @@ export class StagePods {
     // (a fresh stay: not on this top a moment ago — a brain reset, a teleport — starts over)
     if (S.task !== 'top' || S.p !== p || !(b.t >= S.topT && b.t - S.topT < 0.5)) {
       const cross = S.cross && S.p === p;
-      S.task = 'top'; S.p = p; S.t0 = b.t; S.okT = b.t; S.exit = null; S.bad = -1; S.role = b.zRole || b.tRole || null; S.cross = cross;
+      // (just up: a look round first — 3 s before 'nothing to fight from here' rather than 1.5)
+      S.task = 'top'; S.p = p; S.t0 = b.t; S.okT = b.t + 1.5; S.exit = null; S.bad = -1; S.role = b.zRole || b.tRole || null; S.cross = cross;
     }
     S.topT = b.t;
     it.jump = false;
