@@ -246,7 +246,7 @@ const RAW = [
   { type: 'spirhalite_rock', pos: [18.4, 0, -41.7], rotY: 1.6, w: 0.8, h: 0.6, seed: 43, nocol: true },
   { type: 'spirhalite_rockpool', pos: [20.3, 0, -43.0], rotY: 0.9, w: 1.3, d: 0.9, seed: 19 },
   { type: 'spirhalite_float', pos: [13.2, 0, -26.4], rotY: 0, r: 0.4 },
-  { type: 'spirhalite_grass', pos: [16.4, 0.9, -36.2], n: 5, r: 0.6, seed: 41 },
+  { type: 'spirhalite_grass', pos: [17.0, 0.9, -36.2], n: 5, r: 0.6, seed: 41 },
   { type: 'spirhalite_pompoms', pos: [15.6, 0, -40.4], n: 6, seed: 41 },
   { type: 'spirhalite_kelp', pos: [17.9, 0, -27.8], rotY: 1.8, seed: 14, L: 1.5 },
   { type: 'spirhalite_driftwood', pos: [16.8, 0, -42.3], rotY: 1.15, L: 3.4, seed: 71, two: true },
@@ -347,14 +347,16 @@ for (const [a, b] of [
   ...pairs([[-32.6, -23.2], ...DIG_SEA, sh(-35.4, -31.4)]),
   ...pairs([TIDE_W[3], TIDE_W[4], ...DIG_LAGOON.slice(0, 3)]), ...pairs([...DIG_LAGOON.slice(4), [-17.8, -24.4]]),
   [[-6.58, -43.8], TIDE_W[3]], [DIG_LAGOON[2], [-18.4, -43.8]], [[-19.08, -40.2], DIG_LAGOON[4]],   // (parted for the dig bridge's landings, z −43.6 … −40.4)
-  [FORD_W[3], TIDE_W[0]], [TIDE_W[0], [-8.04, -40.2]],
+  [TIDE_W[0], [-8.04, -40.2]],
   [PILLAR_S[0], [0.1, -27.79]], [[2.7, -27.1], PILLAR_S[2]], [PILLAR_S[2], PILLAR_S[3]],   // (parted for the rope bridge's foot and the east bay's bridge)
   [[-1.5, -34.16], TIDE_E[6]],                                                                                   // (the notch's beach west of the shelf)
+  [sh(5.4, -22.4), TIDE_E[0]],                                                                                   // (the east bay's head, west of the old one)
+  [[10.72, -20.6], [10.84, -21.5]], [[10.94, -24.6], [11.25, -26.6]],                                           // (the spit's bay side either side of the east bay's bridge)
   ...pairs([...SPIT_BAY, sh(9.4, -22.5)]),   // (the spit's bay side from the east bay's bridge on)
   ...pairs([sh(19.0, -26.8), ...SPIT_SEA, [16.6, -24.4]]),
 ]) kerb(a, b, seedK++);
 for (const [a, b] of [
-  ...pairs([[-7.9, -26.2], ...FORD_W]), ...pairs([TIDE_E[6], ...FORD_E, PILLAR_S[0]]),
+  ...pairs([[-7.9, -26.2], ...FORD_W, TIDE_W[0]]), ...pairs([TIDE_E[6], ...FORD_E, PILLAR_S[0]]),   // (the ford's west rope carried on round the islet's north-west corner)
   ...pairs(TIDE_E.slice(0, 3)),
 ]) rope(a, b, seedK++);
 
