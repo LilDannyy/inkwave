@@ -25,6 +25,7 @@ import { SubSystem } from './game/subs.js';
 import { SpecialSystem } from './game/specials.js';
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
+import { podColliders, PodLooks } from './game/pods.js';
 import { Minimap } from './game/minimap.js';
 import { revealedTo } from './game/reveal.js';
 import { Showcase } from './game/showcase.js';
@@ -234,6 +235,7 @@ class Game {
     this.towerFx?.clear();
     if (this.levelMesh) { scene.remove(this.levelMesh, this.grateMesh); this.levelMesh.geometry.dispose(); this.grateMesh?.geometry.dispose(); this.levelMat.dispose(); this.grateMat?.dispose(); }
     if (this.decor) { scene.remove(this.decor.group); }
+    this.podLooks?.dispose(); this.podLooks = null;   // (their bulbs share the prop kit's materials: before the kit goes)
     if (this.props) { this.props.dispose?.(); this.props = null; }
     G.paint?.dispose();
     this.layoutId = layoutId; this.worldKey = worldKey;
@@ -252,7 +254,10 @@ class Game {
         this.props.build();
       } catch (e) { console.error('[inkwave] props failed', e); this.props = null; }
     }
-    const level = (G.level = new Level(layoutFor(MAP_LAYOUTS[layoutId], mode), colliders));
+    const layout = layoutFor(MAP_LAYOUTS[layoutId], mode);
+    colliders.push(...podColliders(layout));   // sprout pods' planters (src/game/pods.js)
+    const level = (G.level = new Level(layout, colliders));
+    this.podLooks = new PodLooks(layout);      // …their planters and bulbs (the match's pods drive them)
     G.physics = new Physics(level);
     const lightmap = await this._loadLightmap(level, worldKey);
     G.paint = new PaintSystem(G.renderer, level, { atlasSize: q.paintAtlas, maxDensity: q.paintAtlas >= 4096 ? 30 : 18 });
@@ -773,6 +778,7 @@ class Game {
     const a = this.match.local;
     G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks();
     if (!a) return;
+    this.match.pods?.reset();
     a.respawn();
     a.special = a.specialCost();
     a.stats.turf = 0; a.stats.splats = 0; a.stats.deaths = 0; a.stats.specials = 0;
