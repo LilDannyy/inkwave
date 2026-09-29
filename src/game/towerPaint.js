@@ -1,10 +1,11 @@
-// Tower Command: ink on the tower itself. The level's paint (src/world/paint.js) lives on static faces; the tower moves,
-// so it keeps its own: its four walls and its deck (inside the grate that rims the top, which never takes ink) each hold
-// a grid of which team's ink is where, and one canvas texture the tower's look draws them from (src/fx/towerFx.js).
-//   • every splat on the stage (Paint.splat, so online ones too) that reaches the tower paints it, in tower space: the
-//     ink rides with it
-//   • the deck in your ink is ground you swim, refill and hide in (Actor._surface); its walls in your ink are walls you
-//     swim up (Actor._updateClimb) — the platform is higher than a jump, that's the way on
+// Ink on a moving / growing box: Tower Command's tower, the sprout pods' hedges (src/game/pods.js). The level's paint
+// (src/world/paint.js) lives on static faces; these boxes move or come and go, so each keeps its own (BoxPaint): its four
+// walls and its top (inside a rim that never takes ink: the tower's grate) each hold a grid of which team's ink is
+// where, and one canvas texture its look draws them from (src/fx/towerFx.js, pods.js).
+//   • every splat on the stage (Paint.splat, so online ones too) that reaches the box paints it, in box space: the ink
+//     rides with it. `accept(team)` can refuse a team's ink (a hedge takes its grower's only)
+//   • the top in your ink is ground you swim, refill and hide in (Actor._surface); its walls in your ink are walls you
+//     swim up (Actor._updateClimb) — a dynamic level block with `inkPaint` set to its BoxPaint is all the actor needs
 import * as THREE from 'three';
 import { G } from '../core/ctx.js';
 import { TOWER } from '../config.js';
@@ -17,23 +18,27 @@ const _d = new THREE.Vector3();
 // a tiny deterministic noise for the splat edges (the same splat looks the same on every screen)
 const rnd = (s) => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-export class TowerPaint {
-  constructor(T) {
-    this.T = T;
-    const R = TOWER.platformR, H = TOWER.platformH, Ri = R - GRATE;
-    this.R = R; this.H = H; this.Ri = Ri;
-    // surfaces: the deck (a: local x, b: local z over ±Ri) and the walls +x, −x, +z, −z (a: along the wall over ±R,
-    // b: height 0…H); rect = where each sits in the canvas
-    const dw = Math.ceil(2 * Ri * PPM), ww = Math.ceil(2 * R * PPM), wh = Math.ceil(H * PPM);
+// A box's own ink. frame: anything with .pos (the base centre, a Vector3) and .yaw (its local x along (cos, 0, −sin));
+// o: { hx, hz: half sizes across (local x) and along (local z), h: height, rim: m round the top that never inks,
+//      ppm: canvas pixels per metre, accept(team) → false refuses that team's ink }
+export class BoxPaint {
+  constructor(frame, o) {
+    this.T = frame;
+    const hx = o.hx, hz = o.hz, H = o.h, rim = o.rim || 0, ppm = o.ppm || PPM;
+    this.hx = hx; this.hz = hz; this.H = H; this.rim = rim; this.accept = o.accept || null;
+    this.R = hx; this.Ri = hx - rim;     // (the tower's names: a square box)
+    // surfaces: the top (a: local x, b: local z, inside the rim) and the walls +x, −x (a: along local z), +z, −z (a: along
+    // local x) (b: height 0…H); rect = where each sits in the canvas
+    const tw = Math.ceil(2 * (hx - rim) * ppm), td = Math.ceil(2 * (hz - rim) * ppm), wx = Math.ceil(2 * hz * ppm), wz = Math.ceil(2 * hx * ppm), wh = Math.ceil(H * ppm);
     this.surf = [
-      { id: 'deck', a0: -Ri, a1: Ri, b0: -Ri, b1: Ri, rect: [0, 0, dw, dw] },
-      { id: '+x', a0: -R, a1: R, b0: 0, b1: H, rect: [dw + 2, 0, ww, wh] },
-      { id: '-x', a0: -R, a1: R, b0: 0, b1: H, rect: [dw + 2, wh + 2, ww, wh] },
-      { id: '+z', a0: -R, a1: R, b0: 0, b1: H, rect: [dw + ww + 4, 0, ww, wh] },
-      { id: '-z', a0: -R, a1: R, b0: 0, b1: H, rect: [dw + ww + 4, wh + 2, ww, wh] },
+      { id: 'deck', a0: -(hx - rim), a1: hx - rim, b0: -(hz - rim), b1: hz - rim, rect: [0, 0, tw, td] },
+      { id: '+x', a0: -hz, a1: hz, b0: 0, b1: H, rect: [tw + 2, 0, wx, wh] },
+      { id: '-x', a0: -hz, a1: hz, b0: 0, b1: H, rect: [tw + 2, wh + 2, wx, wh] },
+      { id: '+z', a0: -hx, a1: hx, b0: 0, b1: H, rect: [tw + wx + 4, 0, wz, wh] },
+      { id: '-z', a0: -hx, a1: hx, b0: 0, b1: H, rect: [tw + wx + 4, wh + 2, wz, wh] },
     ];
     for (const s of this.surf) { s.nu = Math.ceil((s.a1 - s.a0) / CELL); s.nv = Math.ceil((s.b1 - s.b0) / CELL); s.grid = new Int8Array(s.nu * s.nv); }
-    this.W = dw + 2 * ww + 6; this.Hc = Math.max(dw, 2 * wh + 2);
+    this.W = tw + wx + wz + 6; this.Hc = Math.max(td, 2 * wh + 2);
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.W; this.canvas.height = this.Hc;
     this.ctx = this.canvas.getContext('2d');
@@ -43,20 +48,27 @@ export class TowerPaint {
     this.n = 0;
   }
   dispose() { this.texture.dispose(); }
+  // wipe it (a hedge wilting away)
+  clear() {
+    for (const s of this.surf) s.grid.fill(0);
+    this.ctx.clearRect(0, 0, this.W, this.Hc);
+    this.dirty = true; this.n = 0;
+  }
 
-  // world → tower space (x across, y up from the base, z along its heading)
+  // world → box space (x across, y up from the base, z along its heading)
   _local(p, out) {
     const T = this.T, c = Math.cos(T.yaw), s = Math.sin(T.yaw);
     _d.subVectors(p, T.pos);
     return out.set(_d.x * c - _d.z * s, _d.y, _d.x * s + _d.z * c);
   }
 
-  // a splat of ink (Paint.splat forwards every one): paint whichever of the tower's surfaces its sphere reaches
+  // a splat of ink (Paint.splat forwards every one): paint whichever of the box's surfaces its sphere reaches
   splat(center, radius, team, opts = {}) {
     if (opts.cosmetic || team < 0 || team > 1) return;
-    const T = this.T, R = this.R, H = this.H, pad = radius + 0.2;
-    // quick reject against the tower's box
-    if (Math.abs(center.x - T.pos.x) > R * 1.5 + pad || Math.abs(center.z - T.pos.z) > R * 1.5 + pad || center.y < T.pos.y - pad || center.y > T.pos.y + H + pad) return;
+    if (this.accept && !this.accept(team)) return;
+    const T = this.T, hx = this.hx, hz = this.hz, H = this.H, pad = radius + 0.2, ext = Math.max(hx, hz) * 1.5;
+    // quick reject against the box
+    if (Math.abs(center.x - T.pos.x) > ext + pad || Math.abs(center.z - T.pos.z) > ext + pad || center.y < T.pos.y - pad || center.y > T.pos.y + H + pad) return;
     const L = this._local(center, _l);
     const r = radius * 1.1, seed = opts.seed ?? Math.random();
     const hit = (s, dn, a, b) => {
@@ -66,10 +78,10 @@ export class TowerPaint {
     };
     hit(this.surf[0], L.y - H, L.x, L.z);
     if (L.y > -0.2 && L.y < H + 0.2) {
-      hit(this.surf[1], L.x - R, L.z, L.y);
-      hit(this.surf[2], -R - L.x, -L.z, L.y);
-      hit(this.surf[3], L.z - R, -L.x, L.y);
-      hit(this.surf[4], -R - L.z, L.x, L.y);
+      hit(this.surf[1], L.x - hx, L.z, L.y);
+      hit(this.surf[2], -hx - L.x, -L.z, L.y);
+      hit(this.surf[3], L.z - hz, -L.x, L.y);
+      hit(this.surf[4], -hz - L.z, L.x, L.y);
     }
   }
   _paint(s, a, b, rr, team, seed) {
@@ -111,7 +123,7 @@ export class TowerPaint {
     if (i < 0 || j < 0 || i >= s.nu || j >= s.nv) return 0;
     return s.grid[j * s.nu + i];
   }
-  // the ink under feet standing on the deck (the grate rim: none)
+  // the ink under feet standing on the top (the rim: none)
   groundTeam(p) {
     const L = this._local(p, _l);
     return this._at(this.surf[0], L.x, L.z);
@@ -125,5 +137,33 @@ export class TowerPaint {
   }
   // where a surface sits in the canvas, as UVs (for the look)
   uv(i) { const [x, y, w, h] = this.surf[i].rect; return [x / this.W, 1 - (y + h) / this.Hc, (x + w) / this.W, 1 - y / this.Hc]; }
+
+  // the ink's look: one mesh of five quads (the top inside the rim, the four walls) just off the box's faces, drawn from
+  // the canvas; in box space (the caller places it at the frame)
+  inkMesh(mat) {
+    const hx = this.hx, hz = this.hz, H = this.H, pos = [], uv = [], idx = [], e = 0.006;
+    const place = [
+      (a, b) => [a, H + e, b], (a, b) => [hx + e, b, a], (a, b) => [-hx - e, b, -a], (a, b) => [-a, b, hz + e], (a, b) => [a, b, -hz - e],
+    ];
+    this.surf.forEach((sf, i) => {
+      const [rx, ry, rw, rh] = sf.rect, k = pos.length / 3;
+      for (const [a, b] of [[sf.a0, sf.b0], [sf.a1, sf.b0], [sf.a1, sf.b1], [sf.a0, sf.b1]]) {
+        pos.push(...place[i](a, b));
+        const px = rx + ((a - sf.a0) / (sf.a1 - sf.a0)) * rw, py = ry + rh - ((b - sf.b0) / (sf.b1 - sf.b0)) * rh;
+        uv.push(px / this.W, 1 - py / this.Hc);
+      }
+      idx.push(k, k + 1, k + 2, k, k + 2, k + 3);
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    return new THREE.Mesh(geo, mat);
+  }
+}
+
+// Tower Command's tower: its platform's four walls and deck, inside the grate that rims the top
+export class TowerPaint extends BoxPaint {
+  constructor(T) { super(T, { hx: TOWER.platformR, hz: TOWER.platformR, h: TOWER.platformH, rim: GRATE }); }
 }
 const _l = new THREE.Vector3();

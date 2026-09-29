@@ -990,6 +990,9 @@ export class BotBrain {
     let thrAim = this._threatCtl(dt, it, move);
     const canAim = this._canopyCtl(dt, it, move, !thrAim);
     if (!thrAim && canAim) thrAim = canAim;
+    // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
+    // behind it; our team's hedge: swim up an inked column of it and fight from its top
+    if (!thrAim && G.match?.pods) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- Tower Command: riders hold the platform's middle, or climb on (ink its wall, swim up); others off it
     const tAim = tp ? this._towerMove(tp, dt, move, it, thrAim, onT) : null;
