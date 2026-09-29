@@ -79,16 +79,16 @@ export function drawMurals(g, R, kit) {
     g.restore();
     out.push({ id: MURAL.pad, x: x0, y: y0, w: S, h: S, place: [0.3, 5, 5.5, 5], fx: [0.9, 1] });
   }
-  // ---------------------------------------------------------------- the band wall stencil (9 × 0.9 m at 60 px/m)
+  // ---------------------------------------------------------------- the band wall stencil (11.5 × 0.9 m at 60 px/m)
   {
-    const PPM = 60, W = 9 * PPM, H = Math.round(0.9 * PPM), x0 = R.x + 1180, y0 = R.y + 80;
+    const PPM = 60, W = 11.5 * PPM, H = Math.round(0.9 * PPM), x0 = R.x + 1180, y0 = R.y + 80;
     g.save();
     g.clearRect(x0, y0, W, H);
-    g.font = font(38); g.textAlign = 'left'; g.textBaseline = 'middle';
+    g.font = font(36); g.textAlign = 'left'; g.textBaseline = 'middle';
     g.fillStyle = 'rgba(236,240,230,0.9)';
     g.fillText('BIOME 07  ·  COMMONS MEADOW', x0 + 10, y0 + H / 2 + 2);
     g.restore();
-    out.push({ id: MURAL.biome, x: x0, y: y0, w: W, h: H, place: [11, 9, 2.7, 0.9], fx: [0.6, 0.8] });
+    out.push({ id: MURAL.biome, x: x0, y: y0, w: W, h: H, place: [8.4, 11.5, 2.7, 0.9], fx: [0.6, 0.8] });
   }
   return out;
 }

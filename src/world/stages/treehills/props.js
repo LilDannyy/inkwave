@@ -88,6 +88,8 @@ export const PLACEMENTS = [
   { type: 'treehills_planter', pos: [-3.2, 0, -4.3], rotY: 0, w: 2.0, d: 0.8, h: 0.6, seed: 11 },
   { type: 'treehills_clump', pos: [-12.1, 0, -4.2], seed: 9, r: 1.0 },
   { type: 'treehills_crates', pos: [3.4, 0, -10.9], rotY: -0.3, n: 3 },
+  { type: 'treehills_clump', pos: [7.6, 0, -4.5], seed: 5, r: 1.0 },
+  { type: 'treehills_crates', pos: [-4.4, 0, -10.4], rotY: 0.25, n: 2 },
   { type: 'treehills_border', pos: [14.35, 0, -12.2], rotY: -HP, L: 8.4, seed: 15 },
   { type: 'treehills_totem', pos: [-7.0, 0, -12.9], rotY: 0.4, lines: [['< BIOME 07'], ['TURBINE HILL >']] },
   { type: 'treehills_lamp', pos: [-14.2, 0, -12.6], rotY: HP },
