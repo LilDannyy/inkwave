@@ -127,7 +127,9 @@ const SALTPAN = {
     R([9.8, P3, -5.2], [13, P3 + 1.2, -5.2], 1.6, { tag: 'pan-ramp', color: SP.timber, pattern: PATTERN.rampboard, thin: true, thickness: 0.14 }),
 
     // ================= right lane: the Packing Shed (−X for Alpha)
-    B(-26, -15, 0, 3.2, -25, -18, { tag: 'shed', color: SP.shed, pattern: PATTERN.weatherboard }),
+    // (its back wall takes no ink since the stretch: it faces the intake quay now, not the creek — a squid swimming up it
+    // beside the loft stair surfaced under the stair's handrail; the loft stair is the way up at the back)
+    B(-26, -15, 0, 3.2, -25, -18, { tag: 'shed', color: SP.shed, pattern: PATTERN.weatherboard, noPaint: [[0, 0, -1]] }),
     R(rise(-20.5, -25, 3.2, -20.5, -21.5, 4.2), [-20.5, 4.2, -21.5], 11, { tag: 'shed-roof', color: SP.roof, pattern: PATTERN.container, mural: [{ n: [0, 0.962, -0.275], id: 5 }] }),
     R(rise(-20.5, -18, 3.2, -20.5, -21.5, 4.2), [-20.5, 4.2, -21.5], 11, { tag: 'shed-roof', color: SP.roof, pattern: PATTERN.container, mural: [{ n: [0, 0.962, 0.275], id: 4 }] }),
     B(-26, -16, 0, 1.1, -18, -15.4, wood({ tag: 'dock', color: SP.timberDk })),

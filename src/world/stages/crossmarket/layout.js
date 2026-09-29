@@ -48,10 +48,24 @@ const TB = (u0, u1, y0, y1, v0, v1, o) => { const [cx, cz] = T((u0 + u1) / 2, (v
 const BED = 0.1;                                         // tramway bed + hall floor sit 10 cm proud of the setts
 const TW = 4;                                            // tramway half-width (track + setts to the kerbs)
 
+// ---- the Long Stages stretch (2026-09-30): each half is D = 24 m longer along Market Street (Z). The base — the Corn
+// Exchange, its spawn terrace and stairs, the two corner buildings and Exchange Square in front of them — keeps its
+// original numbers in BASE below and is moved out as a unit by back(); the new block between it and the old square
+// (SLICE: the Butter Cross square, Herring Passage, Butter Row, the Shambles arcade on the harbour) is authored in
+// place. The cut runs straight across at z -29 (Alpha's half), between the spawn stairs' feet and the fronts of the
+// butcher's, the bakery and the roof terrace; the Fish Lane arcade, the Parade and the roof terrace stay with mid (their
+// base-side stairs now land in the slice). props.js moves its base placements with the same D.
+export const STRETCH = { axis: 'z', d: 24, cut: -29 };
+const D = STRETCH.d;
+const back = (p) => (p.kind === 'box' ? { ...p, min: [p.min[0], p.min[1], p.min[2] - D], max: [p.max[0], p.max[1], p.max[2] - D] }
+  : p.kind === 'obox' ? { ...p, center: [p.center[0], p.center[1], p.center[2] - D] }
+  : { ...p, low: [p.low[0], p.low[1], p.low[2] - D], high: [p.high[0], p.high[1], p.high[2] - D] });
+const XF = 1.2;                                          // the Butter Cross's raised floor
+
 const CROSSMARKET = {
   id: 'crossmarket',
-  bounds: { minX: -31, maxX: 31, minZ: -44, maxZ: 44 },
-  spawnPads: [[0, FL, -40.2], [0, FL, 40.2]],
+  bounds: { minX: -31, maxX: 31, minZ: -44 - D, maxZ: 44 + D },
+  spawnPads: [[0, FL, -40.2 - D], [0, FL, 40.2 + D]],
   spawnBarrier: 4.2,
   // match intro: opens over the plaza by the hall's corner, on the clock lantern, then sweeps back to your spawn
   intro: { from: [16, 14, -16], lookFrom: [0, 4, 0], toBack: 3.0 },
@@ -69,7 +83,7 @@ const CROSSMARKET = {
   half: [
     // ================= ground: the setts (axis blocks); a dock basin cuts in between the tramway pier and the other
     // team's Parade (x -24 … -15), so each flank street ends at the water and bends onto the diagonal tramway
-    B(-24, 24, -1.2, 0, -44, -20, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
+    B(-24, 24, -1.2, 0, -29, -20, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
     B(-15, 24, -1.2, 0, -20, 0, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
     B(-19.5, -15, -1.2, 0, -20, -7.05, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
     B(-24, -19.5, -1.2, 0, -20, -16.3, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
@@ -91,16 +105,6 @@ const CROSSMARKET = {
     // tram stop platform on the tramway's kerb (shelter + flag are props)
     TB(13, 21, 0, 0.3, -3.9, -2.3, { color: CM.flags, pattern: SURF.ashlar, tag: 'tram-platform' }),
 
-    // ================= spawn: the Corn Exchange terrace (first floor) — grand stair, side flight, the veranda
-    B(-9, 9, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body', notIn: TC }),
-    B(-9, 9, 2.4, FL, -44, -36, { color: CM.spawn, pattern: PATTERN.spawn, tag: 'spawn-terrace' }),
-    R([0, 0, -29.8], [0, FL, -36], 4.4, { color: CM.step, pattern: PATTERN.stonestep, tag: 'grand-stair' }),
-    R([7, 0, -29.8], [7, FL, -36], 2.8, { color: CM.step, pattern: PATTERN.stonestep, tag: 'side-flight', notIn: TC }),
-
-    // ================= back corners either side of the spawn
-    ...bldg(9, 24, -44, -36, 8.6, CM.ochre, PATTERN.render, { tag: 'BL' }).map((d, i) => (i === 0 ? { ...d, notIn: TC } : d)),
-    ...bldg(-24, -9, -44, -36, 9.2, CM.brick, PATTERN.brick, { tag: 'BR' }),
-
     // ================= right flank (−X): Fish Lane + the arcade under the sea-front row (ends at the tramway)
     B(-24, -23.2, 0, 2.8, -36, -20, { color: CM.cream, pattern: SURF.ashlar, tag: 'arcade-back' }),
     B(-23.2, -19.4, 0, K, -36, -20, { color: CM.flags, pattern: SURF.ashlar, tag: 'arcade-floor' }),
@@ -115,18 +119,24 @@ const CROSSMARKET = {
     TB(-19.9, -12.9, 0, FL, -9.2, -TW, { color: CM.blue, pattern: PATTERN.render, tag: 'R1' }),
     TB(-19.9, -12.9, FL, 7.6, -9.2, -TW, { color: CM.blue, pattern: PATTERN.render, paint: false, roof: true, tag: 'R1' }),
     B(-6, -3.8, 0, K, -28, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', notIn: TC }),
-    B(-6, -3.8, 2.3, FL, -36, -19, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', notIn: TC }),
+    // the Arcade Gallery: since the stretch it no longer reaches the spawn terrace (that would be a 40 m high road from
+    // the spawn to mid over the new block) — it runs from the butcher's corner to the hall end, with an iron stair
+    // at each end: down to the Butter Cross square (south) and to Market Street by the hall (north)
+    B(-6, -3.8, 2.3, FL, -29, -19, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', notIn: TC }),
     R([-4.9, 0, -12.8], [-4.9, FL, -19], 2.2, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'veranda-stair', notIn: TC }),
+    R([-4.9, 0, -35.2], [-4.9, FL, -29], 2.2, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'veranda-stair' }),
     R([-12.4, 0, -21.9], [-6, FL, -21.9], 2.0, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'court-stair' }),
 
     // ================= left block (+X): tall row on Market Street (passage through), roof terrace over the shops
     B(6, 10.5, 0, FL, -28, -21, { color: CM.cream, pattern: PATTERN.render, tag: 'LA', noPaint: [[0, 0, 1]] }),
     B(6, 10.5, 0, FL, -18, -12, { color: CM.cream, pattern: PATTERN.render, tag: 'LB', noPaint: [[0, 0, -1]] }),
     B(6, 10.5, FL, 8.4, -28, -12, { color: CM.cream, pattern: PATTERN.render, paint: false, roof: true, tag: 'L-upper', mural: [{ n: [0, 0, -1], id: 4 }, { n: [0, 0, 1], id: 6 }] }),
-    B(10.5, 15, 0, FL, -28, -21, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-A', noPaint: [[0, 0, 1]], notIn: TC }),
+    B(10.5, 15, 0, FL, -28, -21, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-A', noPaint: [[0, 0, 1]] }),
     B(10.5, 15, 0, FL, -18, -16, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-B', noPaint: [[0, 0, -1]] }),
     B(10.5, 15, 2.2, FL, -21, -18, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'passage-bridge' }),
-    R([12.75, 0, -34.2], [12.75, FL, -28], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair', notIn: TC }),
+    // the roof terrace's two stairs: the south one lands in the new block's square now, the hall-end one on the flank
+    // street (Tower Command: that one goes, its foot stood on the track)
+    R([12.75, 0, -34.2], [12.75, FL, -28], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair' }),
     R([12.75, 0, -9.8], [12.75, FL, -16], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'terrace-stair', notIn: TC }),
     B(3.8, 6, 0, K, -28, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement' }),
 
@@ -135,29 +145,65 @@ const CROSSMARKET = {
     R([21.75, 0, -33], [21.75, 1.2, -30], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'parade-stair' }),
     R([21.75, 0, -3], [21.75, 1.2, -6], 4.5, { color: CM.step, pattern: PATTERN.stonestep, tag: 'parade-stair' }),
 
+    // ================= SLICE (new, 2026-09-30): the next block of Market Street — the Butter Cross square
+    // Between the old square (the fountain) and Exchange Square: a band of open street along the butcher's, the bakery and
+    // the roof terrace (their stairs come down into it), then the new block — the west range with Herring Passage through
+    // it (from Fish Lane), the Butter Cross square on Market Street, the east range with Butter Row (to the flank street),
+    // the Shambles (an arcaded range on the harbour, the flank street's covered side), the net loft and a harbour gap on
+    // the Fish Lane side. The Butter Cross's raised floor (1.2, steps east and west, columns and a roof over it) is the
+    // strategic point. Routes in: Fish Lane, Market Street round the cross, the flank street; across: the open band,
+    // Herring Passage + Butter Row through the cross.
+    B(-24, 24, -1.2, 0, -53, -29, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
+    // the Butter Cross: stone floor on a plinth, steps to the east and west (the roof, columns and furniture are props)
+    B(-2.8, 2.8, 0, XF, -47.8, -42.6, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'butter-cross' }),
+    R([5.6, 0, -45.2], [2.8, XF, -45.2], 3.2, { color: CM.step, pattern: PATTERN.stonestep, tag: 'cross-steps' }),
+    R([-5.6, 0, -45.2], [-2.8, XF, -45.2], 3.2, { color: CM.step, pattern: PATTERN.stonestep, tag: 'cross-steps' }),
+    // the west range (the chandler's and the net-maker's) with Herring Passage through it at street level (4 m high: the
+    // Tower Command track runs through it), the passage vault under the upper floors
+    ...bldg(-15, -8, -53, -47.2, 8.0, CM.ochre, PATTERN.render, { tag: 'WS' }),
+    ...bldg(-15, -8, -43.2, -39, 7.8, CM.ochre, PATTERN.render, { tag: 'WN' }),
+    B(-15, -8, 4.0, 8.0, -47.2, -43.2, { color: CM.ochre, pattern: PATTERN.render, paint: false, roof: true, tag: 'passage-vault' }),
+    // the east range (the dairy and the cheesemonger's), split by the open alley of Butter Row
+    ...bldg(8, 15, -53, -47.2, 8.4, CM.blue, PATTERN.render, { tag: 'ES' }),
+    ...bldg(8, 15, -43.2, -39, 7.2, CM.rose, SURF.ashlar, { tag: 'EN' }),
+    // the Shambles: an arcaded range on the harbour (the flank street's covered side), the mirror of the Fish Lane arcade
+    B(23.2, 24, 0, 2.8, -53, -34.2, { color: CM.cream, pattern: SURF.ashlar, tag: 'shambles-back' }),
+    B(19.4, 23.2, 0, K, -53, -34.2, { color: CM.flags, pattern: SURF.ashlar, tag: 'shambles-floor' }),
+    ...[-52.95, -49.35, -45.75, -42.15, -38.55, -34.95].map((z) => B(19.4, 20.2, K, 2.8, z, z + 0.7, { color: CM.cream, pattern: SURF.ashlar, tag: 'shambles-pier' })),
+    B(19.4, 24, 2.8, 8.2, -53, -34.2, { color: CM.cream, pattern: SURF.ashlar, paint: false, roof: true, tag: 'shambles-upper' }),
+    // the Fish Lane side: the net loft and a narrow house, a gap between them onto the harbour steps
+    ...bldg(-24, -19.4, -53, -45, 8.2, CM.brick, PATTERN.brick, { tag: 'net-loft' }),
+    ...bldg(-24, -19.4, -41, -36, 7.4, CM.cream, SURF.ashlar, { tag: 'W2' }),
+
+    // ================= BASE (moved out by D, back()): Exchange Square, the spawn terrace and its three stairs, the two
+    // corner buildings
+    ...[
+      B(-24, 24, -1.2, 0, -44, -29, { color: CM.setts, pattern: SURF.setts, tag: 'streets' }),
+      // spawn: the Corn Exchange's first-floor terrace (2.6) — grand stair down to Exchange Square and a side flight each
+      // side (the west one where the Arcade Gallery used to leave the terrace)
+      B(-9, 9, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body' }),
+      B(-9, 9, 2.4, FL, -44, -36, { color: CM.spawn, pattern: PATTERN.spawn, tag: 'spawn-terrace' }),
+      R([0, 0, -29.8], [0, FL, -36], 4.4, { color: CM.step, pattern: PATTERN.stonestep, tag: 'grand-stair' }),
+      R([7, 0, -29.8], [7, FL, -36], 2.8, { color: CM.step, pattern: PATTERN.stonestep, tag: 'side-flight' }),
+      R([-7, 0, -29.8], [-7, FL, -36], 2.8, { color: CM.step, pattern: PATTERN.stonestep, tag: 'side-flight' }),
+      // back corners either side of the spawn
+      ...bldg(9, 24, -44, -36, 8.6, CM.ochre, PATTERN.render, { tag: 'BL' }),
+      ...bldg(-24, -9, -44, -36, 9.2, CM.brick, PATTERN.brick, { tag: 'BR' }),
+    ].map(back),
+
     // ================= TOWER COMMAND ONLY (onlyIn: 'tower', src/world/variants.js; Turf War + Zone Control untouched).
     // The track (tower-data.js) on each side runs round the hall's corner, along the front of the tall row, past the
-    // café roof terrace's end on the street (checkpoint 2 on the setts there) into the flank street and down it to the
-    // goal by the Exchange.
+    // café roof terrace's end on the street into the flank street, and on (since the stretch) round the new block: west
+    // along the open band to Fish Lane, back east through Herring Passage, over the Butter Cross (checkpoint 2) and
+    // along Butter Row, and down the flank street to the goal in Exchange Square.
     // · the roof terrace's stair at its hall end goes (its foot stood on the track): the terrace ends in a plain wall
-    //   the squids swim up; it is still reached dry-shod over the Exchange footbridge from the spawn terrace
+    //   the squids swim up; it is still reached by its south stair
     // · Market Street's end of the Arcade Gallery stops at z -20.95 (the track passes under where it was) and its
-    //   Market Street stair goes; the gallery is still reached from the spawn terrace and the fish court's iron stair
-    // · the Exchange footbridge (overpass): an iron deck at first floor from the spawn terrace's corner (over where the
-    //   side flight was) and on over the far terrace stair's place to the roof terrace, so the defenders walk straight
-    //   out of their spawn onto the high ground over their goal; under it the street is open (2.3 clear)
-    B(-6, -3.8, 2.3, FL, -36, -20.95, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', onlyIn: TC }),
+    //   Market Street stair goes; the gallery is still reached from the square and the fish court's iron stair
+    B(-6, -3.8, 2.3, FL, -29, -20.95, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', onlyIn: TC }),
     // (a dropped kerb in the gallery's pavement where the track crosses it)
     B(-6, -3.8, 0, K, -28, -20.95, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', onlyIn: TC }),
     B(-6, -3.8, 0, K, -18.05, -12, { color: CM.flags, pattern: SURF.ashlar, tag: 'pavement', onlyIn: TC }),
-    B(5.6, 10.5, 2.3, FL, -36, -31.8, { color: CM.iron, pattern: PATTERN.planks, tag: 'footbridge', onlyIn: TC }),
-    B(10.5, 15, 2.3, FL, -34.2, -28, { color: CM.iron, pattern: PATTERN.planks, tag: 'footbridge', onlyIn: TC }),
-    // walls under the footbridge take no ink (an ink-climb there only hits the deck): the podium's corner, the corner
-    // building's ground floor (its top is the upper storeys' wall anyway), the roof terrace's end
-    B(-9, 5.6, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body', onlyIn: TC }),
-    B(5.6, 9, 0, 2.4, -44, -36, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'spawn-terrace-body', noPaint: [[0, 0, 1]], onlyIn: TC }),
-    B(9, 24, 0, FL, -44, -36, { color: CM.ochre, pattern: PATTERN.render, tag: 'BL', noPaint: [[0, 0, 1]], onlyIn: TC }),
-    B(10.5, 15, 0, FL, -28, -21, { color: CM.ashlar, pattern: SURF.ashlar, tag: 'terrace-A', noPaint: [[0, 0, 1], [0, 0, -1]], onlyIn: TC }),
 
     // ================= ZONE CONTROL ONLY (onlyIn: 'zones', src/world/variants.js): the goods landing beside the tram
     // pier (the side zone). The market's hoist stage stands on piles in the dock basin and overhangs the pier edge by

@@ -49,8 +49,13 @@ export const TOWER_DEFS = {
     checkpoints: [[-17.37, 8.83], [7.5, 40.5]],
   },
   crossmarket: {
-    path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.5], [0.41, 19.5], [0.4, 10.23], [-17.39, 10.24], [-17.39, 30.86]],
-    checkpoints: [[21.41, 13.25], [-12.77, 9.98]],
+    // (Long Stages, 2026-09-30: two checkpoints, so twice as long.) After the drawn run down the flank street, on round
+    // the new block: back along the open band in front of the roof terrace and the butcher's to Fish Lane (z 37.4), down
+    // Fish Lane, back east through Herring Passage, over the Butter Cross (checkpoint 2) and along Butter Row (z 45.2),
+    // down the flank street into Exchange Square and along its front to the goal (13 m short of the pad)
+    path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.5], [0.41, 19.5], [0.4, 10.23], [-17.39, 10.24],
+      [-17.39, 37.4], [17.2, 37.4], [17.2, 45.2], [-17.39, 45.2], [-17.39, 55.5], [-10, 55.5]],
+    checkpoints: [[21.41, 13.25], [0, 45.2]],
     yaw: 0,   // square to the streets (the drawn runs' average, -4.6°, sat skew to every street; only the first run is diagonal)
   },
   lockgate: {
