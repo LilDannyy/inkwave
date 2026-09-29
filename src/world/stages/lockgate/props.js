@@ -468,8 +468,10 @@ export function register(D, H) {
         gateLeaf(B, side, yb, yt);
         if (o.crank && side > 0) crankedBeam(B, side); else balanceBeam(B, side, upper ? 4.4 : 3.6, upper ? 1.2 : 0.3);
       }
-      // the leaves are solid timber from the cill / chamber floor up to under the walkway: nobody walks through a gate
-      B.col(-0.95, upper ? yb : LOCK.floor, -LOCK.half, 0.05, -0.25, LOCK.half);
+      // the leaves are solid timber from the cill / chamber floor up to under the walkway: nobody walks through a gate.
+      // A lower gate's leaves stand 0.33 m proud of the walkway on the pound side, outside the handrail over the water:
+      // that sliver is off-limits (slide off), so nobody — bot or kid — ends up wedged on it
+      B.col(-0.95, upper ? yb : LOCK.floor, -LOCK.half, 0.05, -0.25, LOCK.half, upper ? undefined : ROOF);
       colC(B, LOCK.heelX, 0, -LOCK.half, 0.36, 1.15, 0.36, ROOF);
       colC(B, LOCK.heelX, 0, LOCK.half, 0.36, 1.15, 0.36, ROOF);
       // walkway edge boards, anti-slip battens, handrail on the water side (the chamber side stays open: a safe drop)
