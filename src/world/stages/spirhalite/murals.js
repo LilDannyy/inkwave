@@ -125,15 +125,15 @@ export function drawMurals(g, R) {
     wear(g, r, 89, 500);
     out.push({ id: 8, ...r, place: [0, 2.6, 0, 1.1], fx: [0.5, 0.6] });
   }
-  // ---- 10: pillar plinth faces (2.14 x 1.3 m at 100 px/m): a carved band of roundels and chevrons
+  // ---- 10: pillar plinth faces (2.91 x 1.3 m at 100 px/m: the octagon's side, R 3.8): a carved band of roundels and chevrons
   {
-    const r = { x: X + 1320, y: Y + 340, w: 214, h: 130 }, R0 = rng(101), col = 'rgba(66,62,56,0.55)';
+    const r = { x: X + 1320, y: Y + 340, w: 291, h: 130 }, R0 = rng(101), col = 'rgba(66,62,56,0.55)';
     g.strokeStyle = col; g.lineWidth = 3;
     g.beginPath(); g.moveTo(r.x, r.y + 30); g.lineTo(r.x + r.w, r.y + 30); g.moveTo(r.x, r.y + 100); g.lineTo(r.x + r.w, r.y + 100); g.stroke();
-    for (let i = 0; i < 4; i++) glyph(g, r.x + 30 + i * 51, r.y + 65, 44, R0, col);
-    for (let i = 0; i < 10; i++) { const x = r.x + 7 + i * 20; g.beginPath(); g.moveTo(x, r.y + 112); g.lineTo(x + 10, r.y + 122); g.lineTo(x + 20, r.y + 112); g.stroke(); }
+    for (let i = 0; i < 5; i++) glyph(g, r.x + 30 + i * 57.5, r.y + 65, 44, R0, col);
+    for (let i = 0; i < 14; i++) { const x = r.x + 5.5 + i * 20; g.beginPath(); g.moveTo(x, r.y + 112); g.lineTo(x + 10, r.y + 122); g.lineTo(x + 20, r.y + 112); g.stroke(); }
     wear(g, r, 103, 500);
-    out.push({ id: 10, ...r, place: [0, 2.14, 0, 1.3], fx: [0.9, 1] });
+    out.push({ id: 10, ...r, place: [0, 2.91, 0, 1.3], fx: [0.9, 1] });
   }
   return out;
 }

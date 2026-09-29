@@ -6,7 +6,7 @@ import { PATTERN, B, R, O, OCT } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { shelfBars, reflexPatches, coreRects, coreBoxes } from './islands.js';
-import { CHAIN, OUTLINE, barLevel, ISLE, isleLevel } from './outline.js';
+import { CHAIN, OUTLINE, barLevel, PILLAR } from './outline.js';
 export { OUTLINE };
 
 // Spirhalite Islands — a remote archipelago raised out of the sea by a tectonic shift, reached only by helicopter.
@@ -55,10 +55,14 @@ const ALL_BARS = [...BARS, ...PATCHES].flatMap((b) => [b, { ...b, center: [-b.ce
 // the dry sand: the centre slab under the arch (single, symmetric) first, then Alpha's half (z ≤ 0) greedily
 const CENTRE = [[-6, 6, -4, 4]];
 const CORES = coreRects(OUTLINE, ALL_BARS, { x0: -37, x1: 37, z0: -47, z1: 0 }, CENTRE);
-// the cascade pillar's islet: its own shelf and dry sand (Alpha's; the mirror builds Bravo's)
-const ISLE_BARS = [...shelfBars(ISLE, { level: isleLevel, opts: { tag: 'shore', color: K.wet, pattern: SURF.dune } }), ...reflexPatches(ISLE, { opts: { tag: 'shore', color: K.wet, pattern: SURF.dune } })];
-const ISLE_CORES = coreRects(ISLE, ISLE_BARS, { x0: -6, x1: 6, z0: -22.5, z1: -10.5 });
-export const CORE_MISS = [...CORES.miss, ...ISLE_CORES.miss];
+export const CORE_MISS = CORES.miss;
+// the cascade pillar on its headland (outline.js): the plinth's apothem (its faces), the log bridge from the headland's tip
+// to the central sandbar (4 m wide, centred on a nav column: three lanes between its side logs), the Arch spit's bridge under the arch
+const PX = PILLAR.x, PZ = PILLAR.z, PA = PILLAR.plinth * Math.cos(Math.PI / 8);
+export const BRIDGES = [
+  { x: PX, z0: -12.9, z1: -6.1, w: 4.04 },      // the pillar headland → the central sandbar
+  { x: 14.5, z0: -10.3, z1: -0.3, w: 4.04 },     // the Arch spit → the central sandbar's east end, under the Great Arch
+];
 
 // the centre zone: a 12 × 8 m rectangle under the arch, along the central sandbar (the middle stroke runs at 25°)
 const ZU = [Math.cos((25 * Math.PI) / 180), Math.sin((25 * Math.PI) / 180)], ZN = [-ZU[1], ZU[0]];
@@ -102,8 +106,6 @@ const SPIRHALITE = {
     ...BARS,
     ...PATCHES,
     ...coreBoxes(CORES.rects, sand({ tag: 'sand' })),
-    ...ISLE_BARS,
-    ...coreBoxes(ISLE_CORES.rects, sand({ tag: 'sand' })),
 
     // ================= the helipad islet (the tail): the high dune the pad stands on, its west arm down to the pinch,
     // the shoulder north of the pad down to the spit
@@ -112,6 +114,7 @@ const SPIRHALITE = {
     slope(-8.3, -36, 0, -5.2, -36, H1, 3),
     B(1.6, 12.6, 0, H1, -30.6, -26.0, moss({ tag: 'pad-shoulder' })),
     slope(-1.5, -29.2, 0, 1.6, -29.2, H1, 2.8),
+    slope(15.9, -28.3, 0, 12.6, -28.3, H1, 3.2),                  // (the shoulder's east end: down to the Arch spit)
     slope(19.1, -36.5, 0, 16, -36.5, H1, 5.6),
     // spawn: the expedition helipad (steel deck on stilts, 1.9 m over the high dune; a steel frame body R 5.75, the deck
     // plate R 5.9 overhanging it: props.js dresses both), stairs north onto the shoulder and west onto the arm
@@ -145,24 +148,29 @@ const SPIRHALITE = {
     slope(-16, -6.75, H1, -19, -6.75, H2, 2.4),
     slope(-27.2, -6.75, 0, -24.2, -6.75, H1, 3.9),
 
-    // ================= the cascade pillar's islet in the lagoon, a log bridge to the tail and one to the central sandbar
-    ...OCT(0, -16.5, 2.8, 0, H1, stone({ tag: 'pillar-plinth' })).map((d, i) => (i === 0 ? { ...d, mural: [{ n: [1, 0, 0], id: 10 }, { n: [-1, 0, 0], id: 10 }] } : i < 3 ? { ...d, mural: [{ n: [0, 0, 1], id: 10 }, { n: [0, 0, -1], id: 10 }] } : d)),
-    ...OCT(0, -16.5, 1.9, H1, H2, stone({ tag: 'pillar-tier' })),
-    ...OCT(0, -16.5, 1.2, H2, 4.4, stone({ tag: 'pillar-drum', roof: true, noPaint: OCTSIDES })),   // (the column above: props.js)
-    B(-2.3, -1.2, H1, 1.9, -17.1, -15.9, stone({ tag: 'fallen-drum' })),                  // a step up onto the tier
-    B(-3.63, -2.59, 0, 0.65, -17.1, -15.9, stone({ tag: 'fallen-drum' })),                // a step up onto the plinth
-    B(-1.5, 1.5, -0.3, 0.25, -27.2, -21.3, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
-    B(-1.5, 1.5, -0.3, 0.25, -11.5, -5.8, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood }),
+    // ================= the cascade pillar on its headland (Alpha's side zone round it): the plinth (1.3) and its tier
+    // (2.5), the drum above out of reach; stone steps up the plinth's south face from the zone (the route over the tiers:
+    // up the steps, across the plinth, off its north face to the bridge); drums fallen from the column lie round it as
+    // cover; the log bridges to the central sandbar (the headland's, the Arch spit's)
+    ...OCT(PX, PZ, PILLAR.plinth, 0, H1, stone({ tag: 'pillar-plinth' })).map((d, i) => (i === 0 ? { ...d, mural: [{ n: [1, 0, 0], id: 10 }, { n: [-1, 0, 0], id: 10 }] } : i < 3 ? { ...d, mural: [{ n: [0, 0, 1], id: 10 }, { n: [0, 0, -1], id: 10 }] } : d)),
+    ...OCT(PX, PZ, PILLAR.tier, H1, H2, stone({ tag: 'pillar-tier' })),
+    ...OCT(PX, PZ, 1.2, H2, 4.4, stone({ tag: 'pillar-drum', roof: true, noPaint: OCTSIDES })),   // (the column above: props.js)
+    R(rise(PX, PZ - PA - 3.3, 0, PX, PZ - PA, H1), [PX, H1, PZ - PA], 2.4, stone({ tag: 'pillar-steps', pattern: PATTERN.stonestep })),
+    O(PX - 2.9, PZ - 5.9, 1.1, 2.1, 0, 1.1, 10, stone({ tag: 'fallen-drum' })),     // the zone's south-west (beside the steps)
+    O(PX + 3.8, PZ - 5.4, 2.1, 1.1, 0, 1.1, -8, stone({ tag: 'fallen-drum' })),     // its south-east
+    ...BRIDGES.map((b) => B(b.x - b.w / 2, b.x + b.w / 2, -0.3, 0.25, b.z0, b.z1, { tag: 'log-bridge', color: '#a78c6c', pattern: PATTERN.wood })),
 
     // ================= the central sandbar: blocks fallen from the arch (cover round the centre zone)
     O(-4.6, -4.8, 2.4, 1.3, 0, 1.4, 20, stone({ tag: 'arch-block' })),
     O(6.2, -2.9, 1.3, 1.1, 0, 0.9, -10, stone({ tag: 'arch-block' })),
     O(-8.4, 3.4, 2.0, 1.6, 0, 1.8, 35, stone({ tag: 'arch-block' })),
   ],
-  // Zone Control: the sandbar under the arch; the camp hollow (Alpha's)
+  // Zone Control: the sandbar under the arch; the pillar headland (Alpha's): the sand round the plinth and the plinth's
+  // top (the tier above is out of the count), the tombolo to the steps' foot. ~100 m²; its floor's centroid (−1.5,
+  // −20.5) is 18.5 m from Alpha's pad and 20.5 m from the centre — halfway out, on Alpha's side of halfway
   zones: {
     center: [{ poly: zrect(6, 4), y0: -0.3, y1: 0.3 }],
-    side: { poly: [[-22.5, -39.2], [-14, -39.2], [-14, -32.6], [-22.5, -32.6]], y0: -0.3, y1: 0.3 },
+    side: { poly: [[PX - 5.3, -25.6], [PX + 5.3, -25.6], [PX + 5.3, -14.8], [PX - 5.3, -14.8]], y0: -0.4, y1: 1.45 },
   },
   // Tower Command (authored on Bravo's side, z > 0: Alpha pushes along it), zig-zagging along the S: along the central
   // sandbar and the mid islet's north shore to the bend's head, CLIMB the causeway's sheer end (checkpoint 1 at its
