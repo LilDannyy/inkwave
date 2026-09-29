@@ -20,7 +20,7 @@ export function buildBackdrop(kit) {
   const out = { static: [], plain: [], terrain: [], instances: [], objects: [] };
   const C = (h) => new THREE.Color(h);
   const COL = {
-    rock: C('#6d6a66'), rockDk: C('#55524f'), rockLt: C('#86827c'), strata: C('#7a746c'),
+    rock: C('#726b62'), rockDk: C('#534e48'), rockLt: C('#8e867b'), strata: C('#81786b'),
     lawn: C('#86a868'), lawnDk: C('#6f9058'), wall: C('#8d9a92'), wallDk: C('#6f7b74'),
     cyp: C('#2f5a3d'), cypLt: C('#46774d'), mod: C('#3d6b55'), trim: C('#e6eae4'), white: C('#eef1ec'), glass: C('#9fd4d6'),
     ring: C('#8c969a'), ringDk: C('#5d666b'),
@@ -33,17 +33,23 @@ export function buildBackdrop(kit) {
   const RIM = 190;                               // the rim's height above the water (the screens start here)
   const wallR = (a) => 1150 + 140 * (fbm(Math.cos(a) * 1.6 + 3.1, Math.sin(a) * 1.6 - 1.7, 3) - 0.5) * 2 + 60 * Math.sin(a * 5 + 0.7);
   {
-    const NA = 160, NY = 14, pos = [], col = [], idx = [];
+    const NA = 360, NY = 26, pos = [], col = [], idx = [];
     for (let j = 0; j <= NY; j++) {
       const t = j / NY, y = WATER_Y - 4 + t * (RIM + 4);
       for (let i = 0; i <= NA; i++) {
         const a = (i / NA) * Math.PI * 2;
         // the wall leans in as it rises (the cavern closing toward the dome), with rock noise
+        // rock: big bays and spurs (low-frequency), vertical ribs (columnar jointing), stepped strata (ledges every
+        // ~1/7 of the height), the wall leaning in toward the rim
         const n = fbm(Math.cos(a) * 9 + t * 3.1, Math.sin(a) * 9 - t * 2.3, 3) - 0.5;
-        const r = wallR(a) - t * t * 120 + n * 50 + Math.sin(t * 22 + a * 17) * 6;
+        const rib = Math.abs(Math.sin(a * 70 + n * 5)), rib2 = Math.abs(Math.sin(a * 23 + 1.3 + n * 2));
+        const st = (t * 7 + n * 0.8) % 1;
+        const r = wallR(a) - t * t * 120 + n * 70 - rib * 16 - rib2 * 22 - st * 10 + Math.sin(t * 22 + a * 17) * 6;
         pos.push(Math.cos(a) * r, y, Math.sin(a) * r);
         const band = 0.5 + 0.5 * Math.sin(t * 38 + n * 6);
-        tmp.copy(COL.rockDk).lerp(COL.rock, Math.min(1, t * 1.6)).lerp(COL.strata, band * 0.35).lerp(COL.rockLt, Math.max(0, n) * 0.5);
+        tmp.copy(COL.rockDk).lerp(COL.rock, Math.min(1, t * 1.6)).lerp(COL.strata, band * 0.35).lerp(COL.rockLt, Math.max(0, n) * 0.6);
+        tmp.multiplyScalar(0.8 + 0.28 * (1 - rib) * (1 - st * 0.5));
+        if (t < 0.12) tmp.lerp(COL.lawnDk, (0.12 - t) / 0.12 * 0.55 * (0.5 + n));   // moss and ferns low down, where the spray reaches
         col.push(tmp.r, tmp.g, tmp.b);
       }
     }
@@ -99,16 +105,19 @@ export function buildBackdrop(kit) {
     [58, 760, 220, 120, 80], [196, 780, 240, 130, 90], [330, 760, 220, 120, 76],
   ];
   HILLS.forEach(([a, d, rx, rz, h], k) => { const [x, z] = at(a, d); hill({ x, z, rx, rz, h, seed: 11 + k, rot: (a + 90) * DEG }); });
-  // terraced mounds (the engineered look): stacked rings, lawn on top, panel walls
+  // terraced mounds (the engineered look, like the arena's tree-hills): stacked hexagonal tiers with panel walls and
+  // lawn tops, wooded on every tier (the trees go in with the rest below)
   const terr = [];
-  for (const [a, d, r, n] of [[52, 150, 30, 3], [124, 140, 26, 3], [196, 150, 32, 4], [268, 138, 24, 3], [336, 150, 28, 3]]) {
+  for (const [a, d, r, n, tw] of [[52, 290, 26, 3, 0.2], [124, 270, 22, 3, 1.1], [196, 300, 28, 4, 0.6], [268, 275, 20, 3, 0.3], [336, 295, 24, 3, 0.9]]) {
     const [x, z] = at(a, d);
+    const tiers = [];
     for (let k = 0; k < n; k++) {
-      const rr = r * (1 - k * 0.24), y0 = WATER_Y + k * 5, h = 5;
-      terr.push(xf(cyl(rr, rr, h, 24, '#8d9a92'), x, y0 + h / 2, z));
-      terr.push(xf(cyl(rr - 0.8, rr - 0.8, 0.6, 24, '#86a868'), x, y0 + h + 0.3, z));
+      const rr = r * (1 - k * 0.26), y0 = WATER_Y + k * 4, h = 4;
+      terr.push(xf(cyl(rr, rr, h, 6, '#8d9a92'), x, y0 + h / 2, z, tw));
+      terr.push(xf(cyl(rr - 0.5, rr - 0.5, 0.4, 6, '#86a868'), x, y0 + h + 0.2, z, tw));
+      tiers.push({ r0: k < n - 1 ? r * (1 - (k + 1) * 0.26) : 0, r1: rr - 1, y: y0 + h + 0.3 });
     }
-    masses.push({ terr: true, x, z, r, top: WATER_Y + n * 5 + 0.6 });
+    masses.push({ terr: true, x, z, r, tiers });
   }
   out.plain.push(...terr);
 
@@ -122,7 +131,7 @@ export function buildBackdrop(kit) {
   const treeC = ['#2f5a3d', '#284f35', '#3b6b43', '#46774d', '#2a5134'];
   for (const m of masses) {
     if (m.terr) {
-      for (let k = 0; k < 22; k++) { const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * m.r * 0.45; trees.push([m.x + Math.cos(a) * rr, m.top - 0.3, m.z + Math.sin(a) * rr, 0.7 + rnd() * 0.6, rnd() * 6.28, treeC[(rnd() * 5) | 0]]); }
+      for (const t of m.tiers) for (let k = 0; k < 10; k++) { const a = rnd() * Math.PI * 2, rr = t.r0 + 1 + rnd() * Math.max(0.5, t.r1 - t.r0 - 1); trees.push([m.x + Math.cos(a) * rr, t.y - 0.3, m.z + Math.sin(a) * rr, 0.45 + rnd() * 0.35, rnd() * 6.28, treeC[(rnd() * 5) | 0]]); }
       continue;
     }
     const want = Math.round(Math.min(420, m.rx * m.rz * 0.05));

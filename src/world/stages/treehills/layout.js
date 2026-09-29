@@ -6,7 +6,8 @@
 import { PATTERN, B, R } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
-import { fill, FL } from './geo.js';
+import { MURAL } from './murals.js';
+import { fill, kerbs, FL } from './geo.js';
 import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN, APRON, LOBE, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds } from './plan.js';
 
 // ------------------------------------------------------------------------------------------------------------
@@ -53,6 +54,14 @@ export const GROUND = {
   crown: fill(CROWN, { y0: FL, top: T3, mk: () => lawn({ tag: 'crown', color: K.crown }), ledge: () => OUTER }),
 };
 const GROUNDS = Object.values(GROUND);
+// the signage painted on the ground's faces (murals.js): the name along the upper tier's wall over the meadow, the biome
+// stencil on the band's low wall, the floor label and the landing pad on the base terrace in front of the spawn stair
+const near = (a, b) => Math.abs(a - b) < 0.02;
+const paint = (cols, pred, m) => { const c = cols.find(pred); if (c) c.mural = [...(c.mural || []), m]; };
+paint(GROUND.upper.cols, (c) => near(c.min[0], 19.5) && c.min[2] < -9 && c.max[2] > 19, { n: [-1, 0, 0], id: MURAL.sign });
+paint(GROUND.strip.cols, (c) => near(c.min[0], 15) && c.min[2] < -20, { n: [-1, 0, 0], id: MURAL.biome });
+paint(GROUND.apron.cols, (c) => near(c.min[0], -8 / 3) && near(c.max[0], 8 / 3), { n: [0, 1, 0], id: MURAL.label });
+paint(GROUND.apron.cols, (c) => near(c.min[0], -8) && near(c.max[0], -8 / 3), { n: [0, 1, 0], id: MURAL.pad });
 // every coping's footprint (props.js treehills_foot: hidden slabs so the environment's deck outline follows the true
 // edge of the raised tiers, whose tops sit above the deck level it reads)
 export const FEET = GROUNDS.flatMap((g) => g.feet);
@@ -60,8 +69,24 @@ export const FEET = GROUNDS.flatMap((g) => g.feet);
 // ============================================================================================================
 // Pieces (Alpha's half + the whole east tree-hill)
 // ============================================================================================================
+// coping kerbs along the axis-aligned tier edges (over a lower tier or the reservoir): not at stair heads, not where
+// the tower's track climbs or drops (x 15 / 19.5 at |z| < 2, z 20 at x 21.6 … 26.4)
+const REGIONS = [[GARDEN, G0], [APRON, T1], [LOBE, T1], [STRIP, T1], [UPPER, T2], [CROWN, T3]];
+const rot = (P) => P.map(([x, z]) => [-x, -z]);
+const CORE_P = [[-CORE.x, -CORE.z], [CORE.x, -CORE.z], [CORE.x, CORE.z], [-CORE.x, CORE.z]];
+const ST_P = [[STATION.x0, STATION.z0], [STATION.x1, STATION.z0], [STATION.x1, STATION.z1], [STATION.x0, STATION.z1]];
+const ALL = [...REGIONS.flatMap(([P, top]) => [{ P, top }, { P: rot(P), top }]), { P: CORE_P, top: G0 }, { P: ST_P, top: SP }, { P: rot(ST_P), top: SP }];
+const KERB_SKIP = [
+  [-3.6, 3.6, -25.6, -24.4], [-3.2, 3.2, -38.6, -37.4], [9, 13, -47.2, -46.3],   // stair heads: garden stair, deck stairs
+  [20.3, 25.7, -10.6, -9.4], [27.8, 30.8, -10.6, -9.4], [28.1, 31.1, -4.6, -3.4], [28.0, 30.8, 13.4, 14.6], [19.6, 22.4, 19.4, 20.6],
+  [14.4, 15.6, 5.4, 8.6], [14.4, 15.6, -17.1, -13.9],   // band stairs
+  [14.4, 20.1, -2, 2], [21.6, 26.4, 19.4, 20.6],   // the tower's climbs onto the band and the upper tier, its drop onto the strip
+];
+const KERBS = kerbs(REGIONS.slice(1).map(([P, top]) => ({ P, top, mk: () => ({ color: '#c3cbc4', pattern: PATTERN.concrete, tag: 'kerb' }) })), ALL, { skip: KERB_SKIP, feet: GROUNDS.flatMap((g) => g.feet) });
+
 const HALF = [
   ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]),
+  ...KERBS,
 
   // ---------------- the research station: its roof deck is the spawn
   B(STATION.x0, STATION.x1, FL, SP - 0.2, STATION.z0, STATION.z1, { color: K.station, pattern: PATTERN.container, tag: 'station' }),
@@ -142,7 +167,7 @@ const LAYOUT_TREEHILLS = {
   zones: ZONES,
   tower: TOWER,
   pods: PODS,
-  single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow' }))],
+  single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow', mural: [{ n: [0, 1, 0], id: MURAL.emblem }] }))],
   half: HALF,
   decor: { lamps: [], palms: [], flags: [[-7.6, SP, -46.4], [7.6, SP, -46.4]] },
 };

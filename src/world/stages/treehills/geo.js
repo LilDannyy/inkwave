@@ -108,3 +108,50 @@ export function fill(P, o) {
   }
   return { cols, ledges, feet, walls };
 }
+
+// kerbs(regions, all, o): a coping kerb (W wide, H high, on top of the tier) along every axis-aligned edge of the
+// authored regions where the ground beyond is lower (another tier's wall or the reservoir) — the slanted edges have
+// their retaining-wall copings already. regions: [{ P, top, mk }] authored; all: [{ P, top }] every region incl. the
+// mirrored twins (for what lies beyond an edge); o.skip: [[x0, x1, z0, z1], …] where no kerb goes (stair heads, the
+// tower's crossings, the copings' footprints are skipped automatically via o.feet). Edges along x run full length;
+// edges along z stop W short of a corner so the kerbs never overlap.
+export function kerbs(regions, all, o = {}) {
+  const W = o.w ?? 0.3, H = o.h ?? 0.16, STEP = 0.1, out = [];
+  const heightAt = (x, z) => { let h = -1.6; for (const r of all) if (r.top > h && inPoly(r.P, x, z)) h = r.top; return h; };
+  const inRect = (x, z, r) => x > r[0] && x < r[1] && z > r[2] && z < r[3];
+  const inFoot = (x, z) => (o.feet || []).some((f) => {
+    const a = (f.rot * Math.PI) / 180, ux = Math.cos(a), uz = -Math.sin(a), dx = x - f.cx, dz = z - f.cz;
+    return Math.abs(dx * ux + dz * uz) < f.len / 2 + 0.4 && Math.abs(-dx * uz + dz * ux) < f.w / 2 + 0.4;
+  }) || (o.feet || []).some((f) => {
+    const a = (f.rot * Math.PI) / 180, ux = Math.cos(a), uz = -Math.sin(a), dx = x + f.cx, dz = z + f.cz;
+    return Math.abs(dx * ux + dz * uz) < f.len / 2 + 0.4 && Math.abs(-dx * uz + dz * ux) < f.w / 2 + 0.4;
+  });
+  for (const reg of regions) {
+    const P = reg.P, n = P.length;
+    for (let i = 0; i < n; i++) {
+      const a = P[i], b = P[(i + 1) % n];
+      if (!axial(a, b)) continue;
+      const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, nx = -uz, nz = ux;   // n inward
+      const alongX = Math.abs(uz) < 1e-6;
+      const cut0 = alongX ? 0 : W, cut1 = alongX ? 0 : W;
+      let run = null;
+      const flush = () => { if (run && run[1] - run[0] > 0.5) out.push(run); run = null; };
+      const runs = [];
+      for (let s = cut0 + STEP / 2; s < L - cut1; s += STEP) {
+        const px = a[0] + ux * s, pz = a[1] + uz * s;
+        const inside = [px + nx * W * 0.5, pz + nz * W * 0.5], outside = [px - nx * 0.25, pz - nz * 0.25];
+        const ok = heightAt(outside[0], outside[1]) < reg.top - 0.5 && !(o.skip || []).some((r) => inRect(inside[0], inside[1], r)) && !inFoot(inside[0], inside[1]);
+        if (ok) { if (!run) run = [s - STEP / 2, s + STEP / 2]; else run[1] = s + STEP / 2; } else if (run) { if (run[1] - run[0] > 0.5) runs.push(run); run = null; }
+      }
+      if (run && run[1] - run[0] > 0.5) runs.push(run);
+      for (let [s0, s1] of runs) {
+        s0 = Math.max(s0, cut0); s1 = Math.min(s1, L - cut1);
+        const x0 = a[0] + ux * s0, z0 = a[1] + uz * s0, x1 = a[0] + ux * s1, z1 = a[1] + uz * s1;
+        const xs = [x0, x1, x0 + nx * W, x1 + nx * W], zs = [z0, z1, z0 + nz * W, z1 + nz * W];
+        out.push(B(+Math.min(...xs).toFixed(4), +Math.max(...xs).toFixed(4), reg.top, +(reg.top + H).toFixed(3), +Math.min(...zs).toFixed(4), +Math.max(...zs).toFixed(4), reg.mk()));
+      }
+      void flush;
+    }
+  }
+  return out;
+}
