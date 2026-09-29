@@ -260,6 +260,8 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
         botMsPerS: +(botMs / Math.max(1, simT)).toFixed(2), seeMsPerS: +(seeMs / Math.max(1, simT)).toFixed(2),
         frameErr, eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), holdPct: +(100 * holdS / Math.max(1, samples * 0.25)).toFixed(1),
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / Math.max(1, samples * 0.25)).toFixed(0)])),
+        // sprout pods (src/game/pods.js): hedges grown per team, bot-seconds perched on tops / in cover, exits, detours, holds
+        pods: m.pods ? { ...m.pods.state().stats, perched: +(m.pods.stats.perched || 0).toFixed(1) } : null,
         track: trk ? trk.done() : undefined,
         // Boss Battle: HULLBREAKER's HP left and the squad's damage to it by weapon
         boss: m.boss ? { hpFrac: +(m.boss.hp / Math.max(1, m.boss.maxHp)).toFixed(3), maxHp: Math.round(m.boss.maxHp), dead: !!m.boss.dead, phase: m.boss.phase,
@@ -294,6 +296,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     else console.log(`== ${MAP} [turf ${SECS}s]: turf ${r.cov.join('% vs ')}%`);
     console.log(`   roles (% of bot-time) ${JSON.stringify(r.roles)} | holding on purpose ${r.holdPct}%`);
     console.log(`   per bot: turf ${r.per.turf}p, on-zone ink ${r.per.zoneTurf}p, splats ${r.per.splats} → XP beyond the win/lose base ≈ ${r.per.xpVar}`);
+    if (r.pods) console.log(`   sprout pods: ${JSON.stringify(r.pods)}`);
     console.log(`   stuck ${r.stuckPct}% | splats ${r.splats} (water ${r.water}) | specials ${r.specials} | super jumps ${r.jumps} | turf ${r.cov.join('/')} | sim ${r.simT}s in ${(r.simMs / 1000).toFixed(0)}s (wall ${wallS}s) | ${JSON.stringify(perf)}`);
     if (MODE === 'zones') { console.log('   penalties ' + JSON.stringify(r.penalties)); console.log('   control log ' + r.log); console.log('   best shares per activation ' + r.windows); console.log('   reachable cells ' + r.reach); }
     console.log('   loadouts ' + equip + (tuned ? ' | TUNE ' + tuned : ''));
