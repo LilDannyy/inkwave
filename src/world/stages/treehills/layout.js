@@ -8,7 +8,7 @@ import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { MURAL } from './murals.js';
 import { fill, kerbs, FL } from './geo.js';
-import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN_N, RILL, GARDEN_S, RILL_Y, PLAZA, MOUNDS, APRON, LOBE, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds } from './plan.js';
+import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN_N, RILL, GARDEN_S, RILL_Y, PLAZA, MOUNDS, APRON, LOBE, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds, GROVES, BED_H, TRAILS, TRAIL_H } from './plan.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Eco-Forest Treehills — a tiered forest biome under the mountain in Alterna. Alpha at −Z (the half list), Bravo is the
@@ -57,16 +57,28 @@ export const GROUND = {
 };
 const GROUNDS = Object.values(GROUND);
 // the signage painted on the ground's faces (murals.js): the name along the upper tier's wall over the meadow, the biome
-// stencil on the band's low wall, the floor label and the landing pad on the base terrace in front of the spawn stair
+// stencil on the band's low wall (walls: a mirrored wall's decal turns with it); the landing pads (below: PAD_PAIR)
 const near = (a, b) => Math.abs(a - b) < 0.02;
 const paint = (cols, pred, m) => { const c = cols.find(pred); if (c) c.mural = [...(c.mural || []), m]; };
 paint(GROUND.upper.cols, (c) => near(c.min[0], 19.5) && c.min[2] < -9 && c.max[2] > 19, { n: [-1, 0, 0], id: MURAL.sign });
 paint(GROUND.strip.cols, (c) => near(c.min[0], 15) && c.min[2] < -20, { n: [-1, 0, 0], id: MURAL.biome });
-paint(GROUND.apron.cols, (c) => near(c.min[0], -8 / 3) && near(c.max[0], 8 / 3), { n: [0, 1, 0], id: MURAL.label });
-paint(GROUND.apron.cols, (c) => near(c.min[0], -8) && near(c.max[0], -8 / 3), { n: [0, 1, 0], id: MURAL.pad });
+
 // every coping's footprint (props.js treehills_foot: hidden slabs so the environment's deck outline follows the true
 // edge of the raised tiers, whose tops sit above the deck level it reads)
 export const FEET = GROUNDS.flatMap((g) => g.feet);
+// the band's column (x 15 … 19 along the meadow's east side) carries the band's ground decal on its top. A mirrored
+// piece's top decal is moved, not turned (level.js mirrorDef), so this column leaves the half list: it and its twin go in
+// as single pieces, the twin with the decal turned 180° (murals.js bandW)
+const BAND_COL = GROUND.strip.cols.find((c) => near(c.min[0], 15) && near(c.max[0], 19));
+// the same for the base terrace's column that carries the landing pad (Alpha's Tower Command goal; Bravo's is its twin)
+const PAD_COL = GROUND.apron.cols.find((c) => near(c.min[0], -8) && near(c.max[0], -8 / 3));
+const twin = (c, murals) => ({ ...c, min: [-c.max[0], c.min[1], -c.max[2]], max: [-c.min[0], c.max[1], -c.min[2]], mural: murals });
+const PAD_PAIR = [{ ...PAD_COL, mural: [{ n: [0, 1, 0], id: MURAL.padA }] }, twin(PAD_COL, [{ n: [0, 1, 0], id: MURAL.padB }])];
+const BAND_PAIR = [
+  { ...BAND_COL, mural: [...(BAND_COL.mural || []), { n: [0, 1, 0], id: MURAL.bandE }] },
+  { ...BAND_COL, min: [-BAND_COL.max[0], BAND_COL.min[1], -BAND_COL.max[2]], max: [-BAND_COL.min[0], BAND_COL.max[1], -BAND_COL.min[2]],
+    mural: [...(BAND_COL.mural || []).map((m) => ({ ...m, n: [-m.n[0], m.n[1], -m.n[2]] })), { n: [0, 1, 0], id: MURAL.bandW }] },
+];
 
 // the Seed Vault Plaza (single: self-symmetric): stone top, green-grey panel sides with a chequer rim on the slanted
 // faces (the rim lowest at the stair heads); it sits on the meadow (from 0)
@@ -108,7 +120,7 @@ const KERB_SKIP = [
 const KERBS = kerbs(REGIONS.map(([P, top]) => ({ P, top, mk: () => ({ color: '#c3cbc4', pattern: PATTERN.concrete, tag: 'kerb' }) })), ALL, { skip: KERB_SKIP, feet: GROUNDS.flatMap((g) => g.feet) });
 
 const HALF = [
-  ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]),
+  ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]).filter((c) => c !== BAND_COL && c !== PAD_COL),
   ...KERBS,
 
   // ---------------- the research station: its roof deck is the spawn
@@ -139,6 +151,14 @@ const HALF = [
   R([21, T1, 23.1], [21, T2, 20], 2.6, steps({ tag: 'strip-stair' })),
   R([12, G0, 7], [15, T1, 7], 3, steps({ tag: 'band-stair' })),
   R([12, G0, -15.5], [15, T1, -15.5], 3, steps({ tag: 'band-stair' })),
+
+  // ---------------- the forest floor: the groves' beds (bark mulch or moss, 12 cm proud of the lawn: paintable, walkable;
+  //                  props.js plants them) and the south lobe's stepping stones (8 cm)
+  ...GROVES.filter((g) => g.bed).map((g) => O(g.x, g.z, g.w, g.d, g.y, g.y + BED_H, g.deg, g.bed === 'moss'
+    ? lawn({ tag: 'bed', color: '#7f9c5c' }) : { tag: 'bed', color: '#7c5f47', pattern: PATTERN.rubber })),
+  ...TRAILS.map((t) => O(t.x, t.z, 1.0, 0.8, t.y, t.y + TRAIL_H, t.deg, { tag: 'stone', color: '#c9c3b3', pattern: PATTERN.concrete })),
+  // the ranger shelter's clearing on the upper tier: a gravel pad (8 cm) the shelter stands on
+  O(23.2, -4.7, 4.0, 5.0, T2, T2 + TRAIL_H, 0, { tag: 'gravel', color: '#c4b797', pattern: PATTERN.asphalt }),
 ];
 
 // ============================================================================================================
@@ -210,7 +230,7 @@ const LAYOUT_TREEHILLS = {
   // Boss Battle: HULLBREAKER's floor is the meadow (0) — its home ground the whole lowland (≈ 870 m²). The terraces (1.3)
   // cover more ground than the lowland, so without the hint the boss nav's "most common ground level" would be theirs
   boss: { floorY: G0 },
-  single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow' })), ...PLAZA_G.cols, ...PLAZA_G.ledges],
+  single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow', mural: [{ n: [0, 1, 0], id: MURAL.meadow }] })), ...PLAZA_G.cols, ...PLAZA_G.ledges, ...BAND_PAIR, ...PAD_PAIR],
   half: HALF,
   decor: { lamps: [], palms: [], flags: [[-7.6, SP, -46.4], [7.6, SP, -46.4]] },
 };
