@@ -205,7 +205,7 @@ function slicePieces() {
     // (its dock side and its end on the cross aisle are dressed facades — shutters, canopy, door, windows: not inkable)
     B(S.x[0], S.x[1], 0, S.h, S.z[0], S.z[1], { tag: 'store', color: '#8fa3a8', pattern: PATTERN.metalpanel, roof: true, noPaint: [X_, Z_] }),
     B(S.x[1], S.dock, 0, 1.2, S.z[0], S.z[1], { tag: 'store-dock', color: K.kerb, pattern: PATTERN.concrete }),
-    ...stairZ((S.x[1] + S.dock) / 2, S.z[1] + 2.8, S.z[1], 0, 1.2, S.x[1] - S.dock),
+    ...stairZ((S.x[1] + S.dock) / 2, S.z[1] + 2.8, S.z[1], 0, 1.2, S.dock - S.x[1]),
 
     // ================= aprons: hatch covers stacked on the ship-side quay; folded flat racks on the reefer side
     B(16.9, 20.3, 0, 1.2, -51.2, -44.2, { tag: 'apron-hatch', color: K.hatch, pattern: SURF.chequer }),

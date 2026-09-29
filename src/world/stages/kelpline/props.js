@@ -2264,7 +2264,8 @@ const SLICE_PLACEMENTS = [
   // the lashing store + its dock, the weighbridge office in its yard facing the lane, a forklift, cages
   { type: 'kelpline_store', pos: [(ST.x[0] + ST.x[1]) / 2, 0, (ST.z[0] + ST.z[1]) / 2], rotY: 0, w: ST.x[1] - ST.x[0], d: ST.z[1] - ST.z[0], h: ST.h, dk: ST.dock - ST.x[1] },
   { type: 'kelpline_wbhut', pos: [-14.6, 0, -39.9], rotY: P / 2 },
-  { type: 'kelpline_forklift', pos: [-12.0, 0, -39.9], rotY: -2.3 },
+  { type: 'kelpline_cage', pos: [-12.0, 0, -41.7], rotY: 0.1, variant: 1 },
+  { type: 'kelpline_forklift', pos: [-20.6, 0, -45.6], rotY: 0.35 },   // (parked on the quay beside the store, clear of the dock steps)
   // the stacked hatch covers on the ship-side quay; folded flat racks + a barge on the reefer side
   { type: 'kelpline_hatch', pos: [18.6, 0, -47.7], rotY: 0, w: 3.4, d: 7.0, h: 1.2, num: '9' },
   { type: 'kelpline_hatch', pos: [18.6, 0, -48.1], rotY: 0, w: 2.2, d: 3.6, h: 1.2, y0: 1.2, c: '#58779a' },
