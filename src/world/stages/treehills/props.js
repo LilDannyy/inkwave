@@ -171,6 +171,10 @@ export const PLACEMENTS = [
   { type: 'treehills_boulder', pos: [-2.4, 0, -13.2], w: 1.2, h: 1.0, d: 1.0, seed: 6 },
   { type: 'treehills_boulder', pos: [2.5, 0, -13.7], w: 1.3, h: 1.1, d: 1.1, seed: 8 },
   { type: 'treehills_shrubs', pos: [12.3, 0.8, -11.05], w: 1.2, h: 1.2, seed: 25 },
+  // the narrow end of the V between the east mound's ramp and the band's wall (0.6 m at its tip: a bot wedged there),
+  // filled: a boulder in the tip, a shrub behind it — what's left opens south, 1.8 m and wider
+  { type: 'treehills_boulder', pos: [14.5, 0, -8.95], w: 1.1, h: 1.0, d: 1.0, seed: 21 },
+  { type: 'treehills_shrubs', pos: [14.3, 0, -10.2], w: 1.2, h: 1.1, seed: 33 },
   { type: 'treehills_boulder', pos: [-12.0, 0.6, -5.2], w: 1.1, h: 1.0, d: 0.9, seed: 14 },
   { type: 'treehills_sprinkler', pos: [-6, 0, -10.6] }, { type: 'treehills_sprinkler', pos: [7.6, 0, -2.8] },
 
