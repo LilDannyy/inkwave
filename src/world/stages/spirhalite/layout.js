@@ -96,8 +96,9 @@ export const WATCH = {
 };
 export const ROPE = { x: 1.4, z0: -26.0, z1: -33.9, w: 2.2 };
 // the dig's log bridge across the lagoon to the tide-pool islet's west beach (runs along x: z, x0 … x1, width) — the
-// slice's cross link: the bend's lane to the strategic point without going round by the camp
-export const DIGBRIDGE = { z: -42.0, x0: -19.4, x1: -7.0, w: 3.2 };
+// slice's cross link: the bend's lane to the strategic point without going round by the camp; 4 m wide like the
+// pillar's bridge (the tower crosses it: 3 m between its side logs)
+export const DIGBRIDGE = { z: -40.0, x0: -19.6, x1: -7.2, w: 4.0 };
 // the east bay's log bridge from the Arch spit's bay side to the pillar islet's south-east shore (the side zone's east
 // way in: the stretch put water between the zone and the tail, this gives it back the spit lane's approach)
 export const BAYBRIDGE = { z: -23.2, x0: 4.4, x1: 11.6, w: 3.2 };
@@ -242,8 +243,8 @@ const SPIRHALITE = {
     O(-16.2, -50.25, 2.1, 1.1, 0, 1.1, 4, stone({ tag: 'fallen-drum' })),
     O(-11.6, -50.4, 2.0, 1.1, 0, 1.1, -6, stone({ tag: 'fallen-drum' })),
 
-    // ================= the spit's root (the stretch): a low dune along it
-    ...dune(16.8, -36.4, 4.2, 0.9, 76, { crest: 0.8 }),
+    // ================= the spit's root (the stretch): a low dune across it (you walk over it; its ends at the kerbs)
+    ...dune(16.4, -37.0, 4.6, 0.9, -14, { crest: 0.8 }),
   ],
   // Zone Control: the sandbar under the arch; the pillar headland (Alpha's): the sand round the plinth and the plinth's
   // top (the tier above is out of the count), the tombolo to the steps' foot. ~100 m²; its floor's centroid (−1.5,
@@ -254,15 +255,16 @@ const SPIRHALITE = {
   },
   // Tower Command (authored on Bravo's side, z > 0: Alpha pushes along it), zig-zagging along the S: along the central
   // sandbar and the mid islet's north shore to the bend's head, CLIMB the causeway's sheer end (checkpoint 1 at its
-  // foot), along the causeway over the inlet, DROP off its broken end into the dig; then (the stretch: its detour loops)
-  // round the dig — out along the sea shore, back up the trench (down its ramp into it, up the other out), down the
-  // lagoon shore — along the camp islet's north beach to the tide-pool islet, up its west side and CLIMB onto the shelf
-  // (checkpoint 2 under the watch-post), across it and DROP off its south face to the goal at the islet's foot, 13 m
-  // short of the pad. Two checkpoints: the track is twice the first drawing's 88 m (tower.js: 80 s of it at 1.5× speed)
+  // foot), along the causeway over the inlet, DROP off its broken end into the dig; then (the stretch) down through the
+  // trench (down its ramp into it, up the other out), over the dig bridge to the tide-pool islet and CLIMB onto the
+  // shelf (checkpoint 2 under the watch-post, ~64 % of the way); then its detour loop: DROP off the shelf's south face,
+  // back west along the lagoon's south beach, round the dig's south corner and east again along the camp islet's north
+  // beach (the fallen blocks between the two runs) to the goal below the helipad's west stair, 13 m short of the pad.
+  // Two checkpoints: the track is twice the first drawing's 88 m (tower.js: 80 s of it at 1.5× speed)
   tower: {
-    path: [[0, 0], [10, 0], [10, 3], [29, 3], [29, 27.8], [32.25, 27.8], [32.25, 45], [27.25, 45], [27.25, 31], [22.25, 31],
-      [22.25, 52.41], [3, 52.41], [3, 40.3], [-4.2, 40.3], [-4.2, 47.5]],
-    checkpoints: [[29, 8], [-1.5, 40.3]],
+    path: [[0, 0], [10, 0], [10, 3], [29, 3], [29, 27.8], [27.25, 27.8], [27.25, 44], [22, 44], [22, 40], [-4.2, 40],
+      [-4.2, 47.5], [21.5, 47.5], [21.5, 52.41], [-1.56, 52.41]],
+    checkpoints: [[29, 8], [-0.3, 40]],
   },
   // match intro: opens over the lagoon beside the cascade pillar looking at the tide-pool islet's watch-post (its broken
   // stub, the rope bridge, the ford), then pulls back over it to your pad

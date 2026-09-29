@@ -182,8 +182,8 @@ const RAW = [
   { type: 'spirhalite_ropebridge', pos: [ROPE.x, 0, ROPE.z0], rotY: Math.PI, L: +(ROPE.z0 - ROPE.z1).toFixed(2), y0: 0, y1: 1.3, w: ROPE.w, seed: 61 },
   { type: 'spirhalite_watchpost', pos: [(WATCH.post[0] + WATCH.post[1]) / 2, 1.3, (WATCH.post[2] + WATCH.post[3]) / 2], rotY: 0, w: WATCH.post[1] - WATCH.post[0], d: WATCH.post[3] - WATCH.post[2], y0: 1.3, y1: 2.5,
     stub: WATCH.stub.map(([x0, x1, z0, z1, y0, y1]) => { const cx = (WATCH.post[0] + WATCH.post[1]) / 2, cz = (WATCH.post[2] + WATCH.post[3]) / 2; return [x0 - cx, x1 - cx, z0 - cz, z1 - cz, y0 - 1.3, y1 - 1.3]; }) },
-  { type: 'spirhalite_rockpool', pos: [-6.2, 0, -39.6], rotY: 0.3, w: 1.9, d: 1.2, seed: 3 },
-  { type: 'spirhalite_rockpool', pos: [-5.3, 0, -44.2], rotY: -0.5, w: 1.3, d: 0.9, seed: 7 },
+  { type: 'spirhalite_rockpool', pos: [-5.2, 0, -43.4], rotY: 0.3, w: 1.9, d: 1.2, seed: 3 },
+  { type: 'spirhalite_rockpool', pos: [-9.6, 0, -45.9], rotY: -0.5, w: 1.3, d: 0.9, seed: 7 },
   { type: 'spirhalite_rockpool', pos: [0.5, 1.3, -38.25], rotY: 0.1, w: 1.5, d: 0.95, seed: 11 },
   { type: 'spirhalite_rockpool', pos: [7.1, 0, -43.9], rotY: 1.2, w: 1.2, d: 0.8, seed: 5 },
   { type: 'spirhalite_rock', pos: [-6.0, 0, -36.9], rotY: 0.8, w: 1.5, h: 0.8, seed: 31, moss: true },
@@ -191,7 +191,7 @@ const RAW = [
   { type: 'spirhalite_stones', pos: [-5.1, 0, -29.0], rotY: 0, nosnap: true, pts: [[0, 0], [0.3, -0.9], [-0.2, -1.9], [0.2, -2.8], [-0.1, -3.8], [0.35, -4.7]] },
   { type: 'spirhalite_kelp', pos: [-4.4, 0, -33.0], rotY: 1.6, seed: 12, L: 1.4 },
   { type: 'spirhalite_grass', pos: [0.9, 1.3, -41.2], n: 4, r: 0.5, seed: 31 },
-  { type: 'spirhalite_pompoms', pos: [-6.6, 0, -42.0], n: 5, seed: 31 },
+  { type: 'spirhalite_pompoms', pos: [-6.2, 0, -44.8], n: 5, seed: 31 },
   { type: 'spirhalite_lantern', pos: [-1.0, 1.3, -34.4], rotY: -0.4 },
 
   // the shelf is the watch-post's old stone terrace on the islet's rocks: boulders along its foot at the notch and on
@@ -199,7 +199,7 @@ const RAW = [
   ...[[-0.8, -33.5, 1.3, 0.55], [1.9, -33.4, 1.0, 0.5], [3.6, -33.3, 1.5, 0.6], [5.4, -33.5, 1.2, 0.6], [6.5, -35.2, 1.1, 0.7], [6.6, -37.4, 1.4, 0.6], [6.5, -39.8, 1.0, 0.7], [6.5, -41.6, 1.2, 0.55]]
     .map(([x, z, w, h], i) => ({ type: 'spirhalite_rock', pos: [x, -0.35, z], rotY: i * 1.3, w, h, seed: 61 + i, nocol: true, nosnap: true, color: '#b5ae9f' })),
   { type: 'spirhalite_rock', pos: [-1.9, 0, -35.4], rotY: 0.4, w: 0.8, h: 0.6, seed: 71, nocol: true },
-  { type: 'spirhalite_shrub', pos: [5.2, 1.3, -41.4], rotY: 0.3, w: 1.0, h: 0.7, seed: 21, nocol: true },
+  { type: 'spirhalite_shrub', pos: [-0.9, 1.3, -41.6], rotY: 0.3, w: 1.0, h: 0.7, seed: 21, nocol: true },
   { type: 'spirhalite_grass', pos: [-0.3, 0, -45.9], n: 5, r: 0.7, seed: 33 },
   { type: 'spirhalite_pompoms', pos: [3.0, 0, -44.9], n: 5, seed: 33 },
 
@@ -212,16 +212,16 @@ const RAW = [
   { type: 'spirhalite_spoil', pos: [-30.0, 0, -40.2], rotY: Math.PI / 2 - 0.08, L: 2.3, W: 1.3, h: 1.0, seed: 5 },
   { type: 'spirhalite_spoil', pos: [-24.5, 0, -35.2], rotY: Math.PI / 2 + 0.1, L: 2.4, W: 1.3, h: 1.05, seed: 8 },
   { type: 'spirhalite_sieve', pos: [-24.5, 0, -41.2], rotY: Math.PI / 2 },
-  { type: 'spirhalite_barrow', pos: [-24.4, 0, -44.4], rotY: -Math.PI / 2 + 0.3 },
+  { type: 'spirhalite_barrow', pos: [-31.0, 0, -43.8], rotY: -Math.PI / 2 + 0.3 },
   { type: 'spirhalite_tarp', pos: [-22.6, 0, -27.7], rotY: 0.04, w: 3.2, d: 2.8, h: 2.3 },
   { type: 'spirhalite_table', pos: [-22.6, 0, -27.9], rotY: 0.04 },
   { type: 'spirhalite_crates', pos: [-20.4, 0, -29.6], rotY: 0.3, layout: [[0, 0, 0, 0], [0.05, 0, 1, 0.08]] },
-  { type: 'spirhalite_worklight', pos: [-26.8, 0, -28.9], rotY: -2.6, h: 2.3, tilt: 0.55 },
+  { type: 'spirhalite_worklight', pos: [-25.0, 0, -30.4], rotY: -2.9, h: 2.3, tilt: 0.55 },
   { type: 'spirhalite_worklight', pos: [-31.8, 1.3, -48.8], rotY: 0.2, h: 2.2, tilt: 0.5 },
   { type: 'spirhalite_survey', pos: [-20.2, 0, -36.4], rotY: 1.9 },
   { type: 'spirhalite_lantern', pos: [-30.0, 0, -37.0], rotY: 0.2 },
   { type: 'spirhalite_lantern', pos: [-24.5, 0, -38.3], rotY: 3.3 },
-  { type: 'spirhalite_pathlights', pos: [0, 0, 0], rotY: 0, nosnap: true, pts: [[-24.6, -31.4], [-24.4, -45.3], [-30.1, -30.4], [-30.1, -43.4], [-5.9, -35.0], [-5.6, -46.2], [2.4, -46.6]] },
+  { type: 'spirhalite_pathlights', pos: [0, 0, 0], rotY: 0, nosnap: true, pts: [[-24.6, -31.4], [-24.4, -45.3], [-30.1, -30.4], [-30.1, -43.4], [-5.9, -35.0], [-5.6, -45.4], [2.4, -45.6]] },
   { type: 'spirhalite_rockpool', pos: [-35.2, 0, -33.6], rotY: 1.4, w: 1.3, d: 0.9, seed: 13 },
   { type: 'spirhalite_rockpool', pos: [-35.1, 0, -41.4], rotY: 1.2, w: 1.5, d: 0.9, seed: 17 },
   { type: 'spirhalite_palm', pos: [-35.0, 0, -37.6], rotY: 0, h: 3.9, lean: 1.2, seed: 27 },
@@ -233,7 +233,7 @@ const RAW = [
   { type: 'spirhalite_grass', pos: [1.2, 0, -50.2], n: 6, r: 0.9, seed: 57 },
   { type: 'spirhalite_grass', pos: [-6.4, 0, -51.6], n: 4, r: 0.6, seed: 58 },
   { type: 'spirhalite_pompoms', pos: [-1.6, 0, -49.0], n: 5, seed: 57 },
-  { type: 'spirhalite_kelp', pos: [-9.8, 0, -49.2], rotY: 0.1, seed: 16, L: 1.8 },
+  { type: 'spirhalite_kelp', pos: [-12.6, 0, -46.0], rotY: 0.1, seed: 16, L: 1.8 },
 
   // the spoil heap's faces softened by sand slumped against them (dressing: no collider)
   { type: 'spirhalite_spoil', pos: [-30.9, 0, -49.8], rotY: 0.05, L: 2.6, W: 1.0, h: 0.8, seed: 12, nocol: true },
@@ -266,7 +266,7 @@ const RAW = [
   // and camp crates along the camp islet's north beach (the tower's run between them), a rock on the camp's crest, a
   // rock on the neck and on the spit's root
   { type: 'spirhalite_crates', pos: [-29.3, 1.3, -48.3], rotY: 0.15, layout: [[0, 0, 0, 0], [0.04, 0, 1, 0.1]] },
-  { type: 'spirhalite_rock', pos: [-13.2, -0.3, -44.5], rotY: 0.5, w: 1.9, h: 1.1, seed: 47, moss: true, nosnap: true },
+  { type: 'spirhalite_rock', pos: [-13.2, -0.3, -43.1], rotY: 0.5, w: 1.4, h: 1.4, seed: 47, moss: true, nosnap: true },
   { type: 'spirhalite_crates', pos: [-18.6, 0, -54.6], rotY: 0.08, layout: [[0, 0, 0, 0], [1.02, 0.05, 0, 0.06], [0.5, 0.02, 1, 0.1]] },
   { type: 'spirhalite_drums', pos: [-7.8, 0, -55.1], rotY: 0.4 },
   { type: 'spirhalite_rock', pos: [-16.54, 2.5, -61.2], rotY: 0.7, w: 1.3, h: 0.95, seed: 49, moss: true },
@@ -345,9 +345,9 @@ const pairs = (pts) => pts.slice(1).map((q, i) => [pts[i], q]);
 let seedK = 100;
 for (const [a, b] of [
   ...pairs([[-32.6, -23.2], ...DIG_SEA, sh(-35.4, -31.4)]),
-  ...pairs([TIDE_W[3], TIDE_W[4], ...DIG_LAGOON.slice(0, 3)]), ...pairs([...DIG_LAGOON.slice(4), [-17.8, -24.4]]),
-  [[-6.58, -43.8], TIDE_W[3]], [DIG_LAGOON[2], [-18.4, -43.8]], [[-19.08, -40.2], DIG_LAGOON[4]],   // (parted for the dig bridge's landings, z −43.6 … −40.4)
-  [TIDE_W[0], [-8.04, -40.2]],
+  ...pairs([TIDE_W[2], TIDE_W[3], ...DIG_LAGOON.slice(0, 4)]), ...pairs([...DIG_LAGOON.slice(5), [-17.8, -24.4]]),
+  [[-7.52, -42.2], TIDE_W[2]], [DIG_LAGOON[3], [-18.72, -42.1]], [[-19.27, -37.8], DIG_LAGOON[5]],   // (parted for the dig bridge's landings, z −42 … −38)
+  [TIDE_W[0], [-8.13, -37.8]],
   [PILLAR_S[0], [0.1, -27.79]], [[2.7, -27.1], PILLAR_S[2]], [PILLAR_S[2], PILLAR_S[3]],   // (parted for the rope bridge's foot and the east bay's bridge)
   [[-1.5, -34.16], TIDE_E[6]],                                                                                   // (the notch's beach west of the shelf)
   [sh(5.4, -22.4), TIDE_E[0]],                                                                                   // (the east bay's head, west of the old one)
