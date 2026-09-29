@@ -62,14 +62,19 @@ export const TOWER_DEFS = {
   lockgate: {
     // ([-1.25, 1.25] is a straight-through point on the drawn diagonal, not a turn: it ends the level run over the
     // bridge's crown where the platform leaves it, so the track follows the hump down instead of cutting into it)
-    path: [[0, 0], [-1.25, 1.25], [-11.46, 11.46], [-11.46, 17.52], [17.1, 17.52], [17.1, 22.67], [10.32, 22.67], [10.32, 30.44]],
-    checkpoints: [[-11.68, 17.81], [17.39, 17.85]],
+    // The Long Stages stretch (two checkpoints: twice the drawn length): the drawn track to [10.32, 22.67], then on down
+    // the yard past the office stair into the dry-dock slice and round the boatbuilder's shed — along the dock road,
+    // down the east lane (checkpoint 2 beside the shed), back along the back road — to the goal in front of the loading
+    // stage (layout.js LS / SHED)
+    path: [[0, 0], [-1.25, 1.25], [-11.46, 11.46], [-11.46, 17.52], [17.1, 17.52], [17.1, 22.67], [10.32, 22.67], [10.32, 35.4], [-16.6, 35.4], [-16.6, 50.2], [3, 50.2], [3, 54.6]],
+    checkpoints: [[-11.68, 17.81], [-16.6, 43]],
   },
   terraces: {
     // (starts at the sagrato's top, under San Vito's dome — the chapel's roof is over it; the platform square to the
     // stage; runs shifted ≤ 1.1 m from the drawing to clear the funicular's balustrade, the Limonaia's terrace wall and the
     // Scalinata's foot)
-    path: [[0, 1.2, 0], [0, 7.71], [12.35, 7.71], [15.57, 20.66], [11.7, 20.66], [11.7, 19.11], [6.06, 19.11], [-6.3, 22.7], [-6.3, 37.38]],
+    // (the Long Stages stretch: the last run carried on down the lemon groves to the goal moved out with the hill)
+    path: [[0, 1.2, 0], [0, 7.71], [12.35, 7.71], [15.57, 20.66], [11.7, 20.66], [11.7, 19.11], [6.06, 19.11], [-6.3, 22.7], [-6.3, 59.38]],
     checkpoints: [[13.02, 8.35], [6.85, 19.89], [-6.3, 26.16]],
     yaw: 0,
   },
