@@ -119,13 +119,15 @@ const HALF = [
 
   // ---------------- the ridge (G2): the spine along the tarn cliff (its ground above), its root behind the hollow, the
   //                  timber viewing platform on its nose, overhanging the cliff
-  B(-26.3, -19, G0, 2.45, -19.2, -15.2, granite({ tag: 'ridge-nose' })),
-  B(-26.6, -18.8, 2.45, G2, -19.2, -15.2, timber({ tag: 'viewing-platform' })),
+  // (its north face, under the platform's railing, takes no ink: nothing climbs up into the rail — the way up is the
+  // boardwalk; nor do the boardwalk's railed sides)
+  B(-26.3, -19, G0, 2.45, -19.2, -15.2, granite({ tag: 'ridge-nose', noPaint: [[0, 0, 1]] })),
+  B(-26.6, -18.8, 2.45, G2, -19.2, -15.2, timber({ tag: 'viewing-platform', noPaint: [[0, 0, 1]] })),
   B(-19, -9, G0, G2, -45.4, -36.5, granite({ tag: 'ridge-root' })),
   B(-19, -11, G0, G2, -36.5, -31.5, granite({ tag: 'ridge-root' })),
   // the old weather hut on the ridge root, against the summit crag (granite walls ink; its roof is off-limits)
   B(-17, -13.4, G2, 4.9, -45.4, -42.6, granite({ tag: 'weather-hut', color: K.graniteDk, roof: true })),
-  R([-22, G1, -12.2], [-22, G2, -15.2], 2.4, timber({ tag: 'boardwalk' })),
+  R([-22, G1, -12.2], [-22, G2, -15.2], 2.4, timber({ tag: 'boardwalk', noPaint: [[1, 0, 0], [-1, 0, 0]] })),
 
   // ---------------- crossings
   // the weir across the W reach: crest (G1) bank to bank, steel stair down to the lawn
