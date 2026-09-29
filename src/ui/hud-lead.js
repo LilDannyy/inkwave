@@ -2,8 +2,9 @@
 //
 // Each team's roster group (hud.squads: yours on the left, theirs on the right) has three sizes — grown (LEAD.grow),
 // normal, shrunk (LEAD.shrink), scaled from its inner edge so it never runs into the timer or the count badges — plus a
-// small bouncing banner hung under it (LEAD / DANGER, in that team's ink). When a team takes the lead its side flashes
-// (a burst of ink drops, the badges light up) and a short synthesized sting plays: lead_ours rising, lead_theirs falling
+// small bouncing banner hung under it (LEAD / DANGER, in that team's ink). When a team takes the lead a callout says
+// so — "WE TOOK THE LEAD!" / "WE LOST THE LEAD!" (the HUD's callout banner, in the new leader's ink) — and a short
+// synthesized sting plays: lead_ours rising, lead_theirs falling
 // (src/audio/audio.js; through the SFX bus, so the game's volume / mute apply).
 //
 //   • Turf War: the live share of the inked turf (G.paint.coverage(): O(1), sampled LEAD.turf.sampleHz times a second).
@@ -75,15 +76,11 @@ export class LeadHud {
   }
 
   _buildSide(sq, side) {
-    // the ink drops of the take-the-lead burst: fixed angles / reach so it looks the same every time
-    const drops = Array.from({ length: 10 }, (_, i) => h('i', { style: { '--a': `${i * 36 + (i % 2 ? 11 : -7)}deg`, '--s': (0.62 + ((i * 7) % 5) * 0.11).toFixed(2), '--d': (0.62 + (i % 3) * 0.12).toFixed(2) } }));
     const ico = h('i', { class: 'iw-lead__ico', html: LEAD_ICON });
     const txt = h('b', { class: 'iw-lead__txt iw-display' }, 'LEAD');
     const el = h('div', { class: `iw-lead iw-lead--${side ? 'b' : 'a'}` },
-      h('span', { class: 'iw-lead__burst' }, h('i', { class: 'iw-lead__ring' }), drops),
       h('span', { class: 'iw-lead__tag' }, h('span', { class: 'iw-lead__in' }, ico, txt)));
-    const flash = h('i', { class: 'iw-lead-flash' });
-    sq.append(flash, el);   // (after the four badges: hud._updSquads only walks children 0–3)
+    sq.append(el);   // (after the four badges: hud._updSquads only walks children 0–3)
     return { sq, el, ico, txt, size: 'norm', kind: null };
   }
 
@@ -98,7 +95,7 @@ export class LeadHud {
     this.zCon = false;                 // zones: the team behind is contesting the leader's zone
     this.sampT = 0;
     this.turf = null;
-    this.stung = -1;                   // the last team that took the lead (sting + flash)
+    this.stung = -1;                   // the last team that took the lead (callout + sting)
     this.stingT = -99;
     this.showUntil = -1;
     this.log = [];
@@ -173,18 +170,17 @@ export class LeadHud {
     this.shrink.feed(L >= 0 && z.owner === L && !this.zCon, dt, LEAD.hold.size);
   }
 
-  // a team took the lead: its side flashes + the sting (rising for us, falling for them)
+  // a team took the lead: the callout ("WE TOOK / LOST THE LEAD!", in the new leader's ink) + the sting (rising for us,
+  // falling for them) — both at most once per stingGap
   _took(t) {
     this.stung = t;
     if (this.mode === 'turf') this.showUntil = this.t + LEAD.turf.show;
-    const S = this.sides[t ^ this.me], hud = this.hud;
-    hud._restart(S.sq, 'is-leadflash');
-    hud._restart(S.el, 'is-take');
-    clearTimeout(S.flashT);
-    S.flashT = setTimeout(() => { S.sq.classList.remove('is-leadflash'); S.el.classList.remove('is-take'); }, 1400);
+    const hud = this.hud;
     if (this.t - this.stingT >= LEAD.stingGap && hud._live()) {
       this.stingT = this.t;
       this.stings++;
+      this.lastCall = t === this.me ? 'WE TOOK THE LEAD!' : 'WE LOST THE LEAD!';
+      hud._zCall(this.lastCall, { team: t, icon: LEAD_ICON });
       hud._snd(t === this.me ? 'lead_ours' : 'lead_theirs');
     }
   }
@@ -233,7 +229,7 @@ export class LeadHud {
   state() {
     return {
       mode: this.mode, me: this.me, leader: this.leader.v, slide: this.slide.v, shrink: this.shrink.v, contested: this.zCon,
-      turf: this.turf, stung: this.stung, stings: this.stings, log: this.log.slice(-20),
+      turf: this.turf, stung: this.stung, stings: this.stings, lastCall: this.lastCall || null, log: this.log.slice(-20),
       sides: this.sides.map((S) => ({ size: S.size, banner: S.kind, scale: +(getComputedStyle(S.sq).scale || 1) || 1 })),
     };
   }

@@ -61,6 +61,7 @@
     let L = look();
     R('you pull ahead (60 %): after a short hold you grow and they shrink', early === -1 && S().leader === me && L[0].grow && L[1].shrink && near(L[0].scale, LEAD.grow) && near(L[1].scale, LEAD.shrink), { early, L });
     R('taking the lead: the LEAD pop on your side + the rising sting, once', L[0].banner === 'lead' && L[0].text === 'LEAD' && !L[1].banner && snd.join() === 'lead_ours', { L, snd });
+    { const call = hud.zcalls.querySelector('.iw-zcall__txt'); R('taking the lead is called out: "WE TOOK THE LEAD!"', S().lastCall === 'WE TOOK THE LEAD!' && !!call && call.textContent === 'WE TOOK THE LEAD!', { lastCall: S().lastCall, shown: call && call.textContent }); }
     R('the banner is clear of the timer, the badges and the "you" caret', clear(), { tag: [...hud.el.querySelectorAll('.iw-lead.is-on .iw-lead__tag')].map((e) => { const r = rect(e); return [r.left, r.top, r.right, r.bottom].map(Math.round); }), timer: (() => { const r = rect(hud.timer); return [r.left, r.top, r.right, r.bottom].map(Math.round); })() });
     step(3);
     R('turf has no standing LEAD banner: the pop goes after a few seconds (sizes stay)', banners() === '-/-' && sizes() === 'grow/shrink', { banners: banners(), sizes: sizes() });
@@ -86,7 +87,7 @@
     await settle(); L = look();
     R('they take the lead: they grow, you shrink, their side pops LEAD + the falling sting', S().leader === them && L[1].grow && L[0].shrink && L[1].banner === 'lead' && snd.join() === 'lead_ours,lead_theirs',
       { st: S(), L, snd });
-    R('the take-the-lead flash ran on their side', hud.squads[1].classList.contains('is-leadflash') || hud.squads[1].querySelector('.iw-lead').classList.contains('is-take') || S().log.length >= 3, S().log);
+    { const call = hud.zcalls.querySelector('.iw-zcall__txt'); R('their taking the lead is called out: "WE LOST THE LEAD!"', S().lastCall === 'WE LOST THE LEAD!' && !!call && /LEAD/.test(call.textContent), { lastCall: S().lastCall, shown: call && call.textContent }); }
   }
 
   if (mode === 'zones') {
