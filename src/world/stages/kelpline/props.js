@@ -1876,8 +1876,10 @@ export function register(D, H) {
         B.push(rx, h, rz);
         for (const sx of [-1, 1]) for (const sz of [-1, 1]) pbox(B, 'metal', K.galvDk, 0.08, rh, 0.08, sx * (rw / 2 - 0.04), rh / 2, sz * (rd / 2 - 0.04));
         pbox(B, 'metal', K.galvDk, rw, 0.08, rd, 0, 0.1, 0);
-        for (let k = 0; k < 14; k++) { const t = k / 13; rodT(B, NS('metal'), k % 4 ? '#8a8f8a' : '#c49a3a', [-rw / 2 + 0.1 + t * (rw - 0.2), 0.15, -rd / 2 + 0.15], [-rw / 2 + 0.1 + t * (rw - 0.2) + 0.05, rh - 0.05, rd / 2 - 0.2], 0.022, 4); }
-        pbox(B, NS('metal'), '#8a8f8a', rw - 0.1, 0.14, rd - 0.1, 0, 0.3, 0);
+        // (bars lie along the stillage in layers — laid flat, so nobody reads it as a stair)
+        for (let k = 0; k < 5; k++) for (let j = 0; j < 7; j++) B.cyl(NS('metal'), (j + k) % 5 ? '#8a8f8a' : '#c49a3a', 0.035, rw - 0.12, 0, 0.24 + k * 0.16, -rd / 2 + 0.16 + j * ((rd - 0.32) / 6), { rz: HP, seg: 5 });
+        for (const sx of [-1, 1]) pbox(B, 'metal', K.galvDk, 0.06, 0.06, rd, sx * (rw / 2 - 0.04), rh - 0.03, 0);
+        pbox(B, NS('paint'), K.hazY, 0.4, 0.16, 0.01, 0, rh * 0.6, rd / 2 + 0.005);
         B.pop();
         B.col(rx - rw / 2, h, rz - rd / 2, rx + rw / 2, h + rh, rz + rd / 2);
         subNC(B, 'kelpline_cage', -2.3, h, -2.2, 0, { variant: 1 });
@@ -1996,6 +1998,23 @@ export function register(D, H) {
       B.sph(NS('glow'), '#63e08a', 0.075, 0, -0.14, 0.09, { ws: 8, hs: 6, glow: 1.8 });
       B.pop();
       B.col(px - 0.1, 0, pz - 0.1, px + 0.1, 3.4, pz + 0.1);
+    },
+  };
+
+  // Block sign at a stack block's end (pos = pole base): a galvanised pole with a terminal-blue board carrying the block
+  // id on both faces (read from the aisle), a lamp over it. Collider: the pole.
+  D.kelpline_blocksign = {
+    desc: 'Block id sign (pos = pole base): galvanised pole, blue board with the block id on both faces, a small lamp. Collider: pole.',
+    params: { text: 'block id (4B)', h: 'board centre height (3.4)' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      B.aoBase = null;
+      const h = o.h ?? 3.4, txt = o.text ?? '4B';
+      B.cyl('metal', K.galv, 0.07, h + 0.7, 0, (h + 0.7) / 2, 0, { seg: 8 });
+      pbox(B, NS('metal'), K.galvDk, 0.3, 0.04, 0.3, 0, 0.02, 0);
+      B.box('paint', K.blueDk, 1.3, 1.0, 0.08, 0, h, 0, { r: 0.03 });
+      for (const f of [1, -1]) { B.push(0, h, f * 0.045, f > 0 ? 0 : PI); letters(B, txt, { h: 0.56, x: 0, y: -0.28, z: 0, c: K.white, flat: true, wt: 0.2, track: 0.1 }); B.pop(); }
+      flood(B, 0, h + 0.75, 0.25, { rx: 0.7, c: K.charcoal, glow: 1.2 });
+      B.col(-0.08, 0, -0.08, 0.08, h + 0.7, 0.08);
     },
   };
 
@@ -2266,6 +2285,9 @@ const SLICE_PLACEMENTS = [
   { type: 'lifering', pos: [23.55, 0, -44.8], rotY: -P / 2 },
   { type: 'lifering', pos: [-23.55, 0, -26.5], rotY: P / 2 },
   { type: 'kelpline_signboard', pos: [6.9, 0, -52.9], rotY: 0.15, variant: 1 },
+  // block ids where the stacks meet cross aisle C (4A's base end, 4B's mid end), read along the aisle
+  { type: 'kelpline_blocksign', pos: [16.45, 0, -32.3], rotY: P / 2, text: '4A' },
+  { type: 'kelpline_blocksign', pos: [16.45, 0, -36.6], rotY: P / 2, text: '4B' },
 ];
 
 const LOCAL_PLACEMENTS = [...BERTH_PLACEMENTS.map(moved), ...SLICE_PLACEMENTS, ...autoDressing()];
