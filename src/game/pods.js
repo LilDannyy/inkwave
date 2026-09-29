@@ -248,12 +248,13 @@ export class StagePods {
     this.looks?.reset();
     this.pods = defs.map((d, i) => this._makePod(d, i));
     this.snapT = 0; this.sent = null;
-    this.stats = { grown: 0, held: 0, shoved: 0, trampled: 0, carried: 0 };
+    this.stats = { grown: 0, held: 0, shoved: 0, trampled: 0, carried: 0, detours: 0, waits: 0, perched: 0, exits: 0 };
     // Tower Command: pods whose hedge would stand on the track sit the mode out
     const T = match.tower;
     if (T) for (const p of this.pods) if (this._onTrack(p, T)) { p.off = 'track'; p.bulbBlock.solid = false; console.warn('[inkwave] pods:', p.id, 'would grow onto the tower track — off in Tower Command'); }
-    // nav: this set's own layer
+    // nav: this set's own layer (+ the hedges' cores: routes never enter them — _botRoute)
     this.blk = navClaim(this);
+    this.hard = G.nav ? new Uint8Array(G.nav.nodes.length) : null;
     this.navDirty = false;
     // Boss Battle: its charge stops at a hedge
     if (G.boss?.nav) { this.bossNav = G.boss.nav; this.bossNav.dynWall = (x, z, r) => this.bossWall(x, z, r); }
@@ -286,6 +287,8 @@ export class StagePods {
     }
     // nav nodes under it (+ a player's width), on its floor
     p.nav = G.nav ? navNodesInBox(d.x, d.z, d.yaw, d.w / 2, d.d / 2, PLAYER.radius + 0.25, d.y - 1.0, d.y + 0.6) : [];
+    // …and the ones a body can't stand on at all while it stands (a route through them goes through it)
+    p.core = G.nav ? navNodesInBox(d.x, d.z, d.yaw, d.w / 2, d.d / 2, PLAYER.radius - 0.05, d.y - 1.0, d.y + 0.6) : [];
     // its ink's look, drawn from the paint's canvas just off the hedge's faces (on the hedge's look: _hedge)
     if (p.paint && G.scene) {
       const mat = new THREE.MeshStandardMaterial({ map: p.paint.texture, transparent: true, roughness: 0.3, metalness: 0, side: THREE.DoubleSide,
@@ -535,8 +538,8 @@ export class StagePods {
   _navMark() {
     const blk = this.blk;
     if (!blk) return;
-    blk.fill(0);
-    for (const p of this.pods) if (p.block && p.block.solid) for (const id of p.nav) blk[id] = 1;
+    blk.fill(0); this.hard.fill(0);
+    for (const p of this.pods) if (p.block && p.block.solid) { for (const id of p.nav) blk[id] = 1; for (const id of p.core) this.hard[id] = 1; }
     navCommit(this.match.actors);
   }
 
@@ -662,12 +665,27 @@ export class StagePods {
   // Called by BotBrain.update every frame (after its own fight / paint / threat logic): may take over the move, the
   // trigger and the aim. Returns an aim ({ yaw, pitch, dist }) to hold, or null. State lives in brain.podS.
   bot(b, dt, it, move, vis) {
-    const a = b.a, S = b.podS || (b.podS = { task: null, p: null, t0: 0, next: 0, press: false, face: 1, u: 0, lostT: 0 });
-    if (!a.alive || a.superJumpState || (a.specialActive && a.specialActive.body)) { S.task = null; return null; }
-    if (this.match.tower && b.tRole === 'ride') { S.task = null; return null; }   // (a tower rider's job is the tower)
+    const a = b.a, S = b.podS || (b.podS = { task: null, p: null, t0: 0, next: 0, press: false, face: 1, u: 0, okT: 0, exit: null, bad: -1, seen: null, waitT: 0, hold: null, noClimb: null, lastT: -1 });
+    // (the brain was reset — a respawn — or we haven't run for a while: nothing carries over)
+    if (!(b.t >= S.lastT && b.t - S.lastT < 1)) { S.task = null; S.exit = null; S.hold = null; S.seen = null; S.next = b.t + 0.3; S.noClimb = null; }
+    S.lastT = b.t;
+    if (!a.alive || a.superJumpState || (a.specialActive && a.specialActive.body)) { S.task = null; S.exit = null; return null; }
     const top = this.hedgeUnder(a);
     if (top) return this._botTop(b, S, top, dt, it, move, vis);
-    if (S.task === 'top') S.task = null;
+    if (S.task === 'top') {
+      // off it (walked off, dropped): plan from down here now, and don't go straight back up it
+      S.task = null; S.exit = null; b.path = null; b.repath = 0; b.goalTimer = 0; S.next = b.t + 3;
+      S.noClimb = { p: S.p, until: b.t + 8 };
+    }
+    if (this.match.tower && b.tRole === 'ride') { S.task = null; return null; }   // (a tower rider's job is the tower)
+    // a route a standing hedge cuts: round it, else hold short of it (a fight: it's cover) until it wilts or the brain
+    // picks another goal — its route kept, the walk frozen (no re-planning churn), looked at again every 1.2 s
+    if (b.path && b.path !== S.seen) { S.seen = b.path; this._botRoute(b, S); }
+    if (S.hold) {
+      if (b.path !== S.hold) S.hold = null;
+      else if (b.t > S.waitT) { S.hold = null; S.seen = null; }
+      else if (!S.task) { move.set(0, 0, 0); b.perchUntil = b.t + 0.3; this._settle(b); }
+    }
     if (S.task && !this._botValid(b, S)) { S.task = null; S.next = b.t + 1.5; }
     if (!S.task && b.t >= S.next) { S.next = b.t + 0.45 + Math.random() * 0.2; this._botPick(b, S); }
     if (S.task === 'grow') return this._botGrow(b, S, dt, it, move);
@@ -682,7 +700,8 @@ export class StagePods {
     const p = S.p;
     if (!p || p.off || b.t - S.t0 > (S.task === 'cover' ? 12 : 10)) return false;
     if (S.task === 'grow') return p.state === 'dormant' && !!b.target && b.a.ink > PLAYER.inkMax * 0.08;
-    if (S.task === 'cover') return (p.state === 'grow' || p.state === 'stand') && !!b.target;
+    // (cover: while the foe's been seen in the last 2 s — else go and find it)
+    if (S.task === 'cover') return (p.state === 'grow' || p.state === 'stand') && !!b.target && b.t - S.t0 < 8 && !!b.tk && G.time - b.tk.t < 2;
     if (S.task === 'climb') return p.state === 'stand' && p.owner === b.a.team && (p.wiltAt - this.clock.t) > 4 && b.mode !== 'retreat';
     return false;
   }
@@ -700,8 +719,9 @@ export class StagePods {
       if (p.state === 'stand' && p.owner === a.team && p.wiltAt - this.clock.t > 6) {
         // our hedge: its top over a fight across open ground (not for close-range kits), or over the zone we guard
         const high = !melee && a.hp > PLAYER.hp * 0.45 && (fighting ? Math.hypot(tv.pos.x - p.x, tv.pos.z - p.z) > 6 && tv.pos.y < p.y + p.h - 0.3 : this._nearZone(p) < 6);
-        if (high && dp < 8) { const sc = 10 - dp + (fighting ? 0 : 2); if (sc > bs) { bs = sc; best = p; task = 'climb'; } }
-        else if (fighting && this._between(p, a.pos, tv.pos, 0.3)) { const sc = 6 - dp; if (sc > bs) { bs = sc; best = p; task = 'cover'; } }
+        const again = S.noClimb && S.noClimb.p === p && b.t < S.noClimb.until;   // (just came down it)
+        if (high && dp < 8 && !again) { const sc = 10 - dp + (fighting ? 0 : 2); if (sc > bs) { bs = sc; best = p; task = 'climb'; } }
+        else if (fighting && !melee && this._between(p, a.pos, tv.pos, 0.3)) { const sc = 6 - dp; if (sc > bs) { bs = sc; best = p; task = 'cover'; } }
         continue;
       }
       if (!fighting || p.state !== 'dormant' || p.meter[1 - a.team] >= 1) continue;
@@ -720,11 +740,11 @@ export class StagePods {
       if (sc > bs) { bs = sc; best = p; task = 'grow'; }
     }
     if (!best || (task === 'grow' && Math.random() < 0.15)) return;
-    S.task = task; S.p = best; S.t0 = b.t; S.lostT = 0;
+    S.task = task; S.p = best; S.t0 = b.t;
     if (task === 'climb') {
       // the long face toward us, the column in front of us
       const dx = a.pos.x - best.x, dz = a.pos.z - best.z, lz = dx * best.s + dz * best.c, lx = dx * best.c - dz * best.s;
-      S.face = lz >= 0 ? 1 : -1; S.u = clamp(lx, -best.w / 2 + 0.45, best.w / 2 - 0.45); S.swimT = 0; S.letGo = 0;
+      S.face = lz >= 0 ? 1 : -1; S.u = clamp(lx, -best.w / 2 + 0.45, best.w / 2 - 0.45); S.swimT = 0; S.letGo = 0; S.best = -1; S.bestT = b.t;
     }
   }
   // a clear shot at the bulb from a's eyes (whatever the ray meets within the pod's own catch doesn't count)
@@ -797,6 +817,7 @@ export class StagePods {
     const gx = sx - a.pos.x, gz = sz - a.pos.z, gl = Math.hypot(gx, gz);
     if (gl > 6 || !b._fatLos(a.pos.x, a.pos.y, a.pos.z, sx, a.pos.y, sz)) { if (gl > 1.2) return null; }
     if (gl > 0.25) { const k = Math.min(1, gl / 0.6 + 0.2); move.set((gx / gl) * k, 0, (gz / gl) * k); } else move.set(0, 0, 0);
+    if (gl < 0.4) b.perchUntil = b.t + 0.3;          // (in cover on purpose)
     this._own(b);
     return null;
   }
@@ -827,6 +848,10 @@ export class StagePods {
     const inPos = Math.abs(lat - S.u) < 0.5 && out > 0.3 && out < 2.1 && Math.abs(a.pos.y - p.y) < 0.5;
     const gap = inPos ? this._colGap(p, S, a.team) : 0;
     S.at = { gl, inPos, gap };            // (tests)
+    // no headway up the column in 3 s (ink not taking, a shot that can't reach it): give it up for a while
+    const lvl = gap === null ? 9 : gap;
+    if (!(S.best >= 0) || lvl > S.best + 0.05) { S.best = lvl; S.bestT = b.t; }
+    if (b.t - S.bestT > 3) { S.task = null; S.next = b.t + 3; S.noClimb = { p, until: b.t + 10 }; return null; }
     if (inPos && gap === null && b.t >= (S.letGo || 0)) {
       it.squid = true; it.fire = false; it.jump = false; it.sub = false; b._bombAim = false;
       move.set(-nx, 0, -nz);
@@ -839,6 +864,7 @@ export class StagePods {
     if (gl > 0.2) { const k = Math.min(1, gl / 0.8 + 0.2); move.set((gx / gl) * k, 0, (gz / gl) * k); } else move.set(0, 0, 0);
     this._own(b);
     if (!inPos || gap === null || a.ink < PLAYER.inkMax * 0.04) { it.fire = false; return null; }
+    if (out < 0.8) { move.set(nx, 0, nz); it.fire = false; return null; }   // (too close to ink it: a shot would start inside it)
     const aim = this._aimAt(a, cx, p.y + gap + 0.15, cz);
     const aimed = Math.abs(angleDiff(b.aimYaw, aim.yaw)) < 0.12 && Math.abs(b.aimPitch - aim.pitch) < 0.12;
     it.fire = this._trigger(b, S, aimed);
@@ -857,38 +883,88 @@ export class StagePods {
     }
     return null;
   }
-  // on top: hold the middle of it, strafe along it in a duel, hide in our ink on it when hurt, ink it when there's
-  // nothing to shoot; off the back when there's nothing left to do up there
+  // on top: fight from it while there's a reason to be up there — a foe in range in sight or just seen (≤ 1.5 s), or the
+  // zone below we guard / watch — holding its middle, strafing along it in a duel, hiding in our ink on it when hurt,
+  // inking it when there's nothing to shoot. The reason gone (1.5 s), low on ink or health, a new role, the hedge
+  // starting to wilt → off it: walk off the edge nearest where we're going (a plain drop) and plan again from below.
+  // Perching on purpose sets brain.perchUntil (botlab's stuck metric reads it as holding); getting off doesn't
   _botTop(b, S, p, dt, it, move, vis) {
     const a = b.a;
-    if (S.task !== 'top') { S.task = 'top'; S.p = p; S.t0 = b.t; S.lostT = 0; }
+    // (a fresh stay: not on this top a moment ago — a brain reset, a teleport — starts over)
+    if (S.task !== 'top' || S.p !== p || !(b.t >= S.topT && b.t - S.topT < 0.5)) { S.task = 'top'; S.p = p; S.t0 = b.t; S.okT = b.t; S.exit = null; S.bad = -1; S.role = b.zRole || b.tRole || null; }
+    S.topT = b.t;
     it.jump = false;
-    S.lostT = b.target ? 0 : S.lostT + dt;
+    const hp = a.hp / PLAYER.hp, ink = a.ink / PLAYER.inkMax, range = b._range() * 1.1;
+    const tk = b.tk, fresh = b.target && (vis || (tk && G.time - tk.t <= 1.5));
+    const inRange = fresh && b.tv && Math.hypot(b.tv.pos.x - a.pos.x, b.tv.pos.z - a.pos.z) < range;
+    const guard = this.match.zones && (b.zRole === 'guard' || b.zRole === 'watch') && this._nearZone(p) < 6;
+    if (inRange || guard) S.okT = b.t;
+    const why = S.exit ? S.exit.why
+      : b.t - S.okT > 1.5 ? 'no foe' : hp < 0.35 ? 'hurt' : ink < 0.08 && a.groundTeam !== 1 ? 'dry' : b.mode === 'retreat' ? 'retreat'
+      : (b.zRole || b.tRole || null) !== S.role ? 'role' : p.state !== 'stand' || p.wiltAt - this.clock.t < 0.8 ? 'wilt' : null;
+    if (why) return this._botExit(b, S, p, it, move, why, vis);
+    b.perchUntil = b.t + 0.3; this.stats.perched += dt;
     const lx = (a.pos.x - p.x) * p.c - (a.pos.z - p.z) * p.s, lz = (a.pos.x - p.x) * p.s + (a.pos.z - p.z) * p.c;
-    const leave = (S.lostT > 5 && !(this.match.zones && (b.zRole === 'guard' || b.zRole === 'watch'))) || b.mode === 'retreat' || b.mode === 'refill' && a.ink < PLAYER.inkMax * 0.05;
-    if (leave) {
-      // off the side away from the foe (or the one nearer us)
-      const tv = b.tv, fl = tv ? (tv.pos.x - p.x) * p.s + (tv.pos.z - p.z) * p.c : -lz, side = fl >= 0 ? -1 : 1;
-      move.set(side * p.s, 0, side * p.c);
-      it.squid = false;
-      this._own(b);
-      if (b.mode === 'retreat') it.fire = false;
-      return null;
-    }
     const want = clamp(lx + (vis ? b.strafeS * 0.8 : 0), -p.w / 2 + 0.4, p.w / 2 - 0.4);
     const ex = want - lx, ez = -lz;
     const gx = ex * p.c + ez * p.s, gz = -ex * p.s + ez * p.c, gl = Math.hypot(gx, gz);
     if (gl > 0.12) { const k = Math.min(0.8, gl / 0.5); move.set((gx / gl) * k, 0, (gz / gl) * k); } else move.set(0, 0, 0);
-    const hp = a.hp / PLAYER.hp;
-    it.squid = a.groundTeam === 1 && (hp < 0.45 || (!vis && a.ink < PLAYER.inkMax * 0.4));
+    it.squid = a.groundTeam === 1 && (hp < 0.45 || (!vis && ink < 0.4));
     if (it.squid) { it.fire = false; move.set(0, 0, 0); }
     this._own(b);
     // nothing to shoot: ink the top round our feet (to hide and refill in)
-    if (!vis && !it.squid && a.groundTeam !== 1 && a.ink > PLAYER.inkMax * 0.15) {
+    if (!vis && !it.squid && a.groundTeam !== 1 && ink > 0.15) {
       it.fire = true;
       return { yaw: b.aimYaw, pitch: -1.0, dist: 1.6 };
     }
     return null;
+  }
+  // off the top: the edge (either long side level with us, either end) with open floor under it — not the sea, a drop
+  // of at most ~3.4 m, room to land, the nav graph there — nearest where we're going (the route's goal, else the foe,
+  // else the enemy base), away from a foe when we're hurt; one that doesn't get us off in 2.5 s is dropped for another
+  _botExit(b, S, p, it, move, why, vis) {
+    const a = b.a, nav = G.nav, L = G.level;
+    if (!S.exit || b.t - S.exit.t0 > 2.5) {
+      if (S.exit) S.bad = S.exit.k;
+      const goal = b.goal >= 0 && nav.nodes[b.goal] ? nav.nodes[b.goal] : b.tv ? b.tv.pos : L.spawnPads[1 - a.team];
+      const lx = clamp((a.pos.x - p.x) * p.c - (a.pos.z - p.z) * p.s, -p.w / 2 + 0.3, p.w / 2 - 0.3);
+      const foe = (why === 'hurt' || why === 'dry' || why === 'retreat') && b.tv ? b.tv.pos : null;
+      let best = null, bs = Infinity;
+      [[lx, p.hd + 0.55], [lx, -p.hd - 0.55], [p.hw + 0.55, 0], [-p.hw - 0.55, 0]].forEach(([qx, qz], k) => {
+        const x = p.x + qx * p.c + qz * p.s, z = p.z - qx * p.s + qz * p.c;
+        const gy = L.groundHeight(x, z, p.y + p.h - 0.2);
+        if (!(gy > PLAYER.waterY + 0.4) || gy < p.y + p.h - 3.4) return;
+        _v.set(x, gy + 0.02, z);
+        if (G.physics && !G.physics.bodyFits(_v, PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9)) return;
+        if (nav && nav.nearest(_v, 0.8, true) < 0) return;
+        let sc = Math.hypot(goal.x - x, goal.z - z) + 2 * Math.hypot(x - a.pos.x, z - a.pos.z) + (k === S.bad ? 60 : 0);
+        if (foe) sc += Math.max(0, 8 - Math.hypot(foe.x - x, foe.z - z));
+        if (sc < bs) { bs = sc; best = { x, z, k }; }
+      });
+      S.exit = best ? { ...best, t0: b.t, why } : { x: a.pos.x + (a.pos.x - p.x), z: a.pos.z + (a.pos.z - p.z), k: -1, t0: b.t, why };
+      this.stats.exits++;
+    }
+    const gx = S.exit.x - a.pos.x, gz = S.exit.z - a.pos.z, gl = Math.hypot(gx, gz) || 1;
+    move.set(gx / gl, 0, gz / gl);
+    it.squid = false; it.jump = false;
+    if (why === 'hurt' || why === 'retreat' || !vis) it.fire = false;
+    this._settle(b); b.path = null; b.repath = Math.max(b.repath, 0.3);
+    return null;
+  }
+  // A route (the brain's, just made) through a standing hedge: the same goal with the hedges' cores off-limits, if
+  // there's a way round (however long); else there's none till it wilts — hold short of it (bot(): a fight: it's
+  // cover; otherwise the brain's next goal may lie elsewhere). Held on purpose (perchUntil) while waiting.
+  _botRoute(b, S) {
+    const path = b.path, hard = this.hard, nav = G.nav;
+    if (!hard || !nav) return;
+    let cut = false;
+    for (let i = Math.max(1, b.pi | 0); i < path.length && !cut; i++) if (hard[path[i]]) cut = true;   // (not the node we stand on)
+    if (!cut) return;
+    const a = b.a, start = nav.nearest(a.pos, 1.2, true), goal = path[path.length - 1];
+    const alt = start >= 0 && !hard[goal] ? nav.path(start, goal, a.team, 6000, b.t < b.noClimbUntil, hard) : null;
+    if (alt) { b.path = alt; b.pi = Math.min(1, alt.length - 1); b.bestD = Infinity; b.noProg = 0; S.seen = alt; this.stats.detours++; return; }
+    if (!S.hold) this.stats.waits++;
+    S.hold = path; S.waitT = b.t + 1.2;
   }
 }
 
