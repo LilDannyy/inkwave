@@ -210,14 +210,23 @@ class Game {
   // decor, navigation graph and minimap. Environment/FX/projectiles persist across stages.
   // mode: 'turf' | 'zones' — a stage with Zone Control-only pieces (variants.js) builds a separate world for that mode
   async _buildWorld(map, mode = 'turf') {
-    const scene = G.scene;
-    const layoutId = map.layout || map.id;
-    const worldKey = variantKey(layoutId, MAP_LAYOUTS[layoutId], dressingFor(layoutId), mode);
-    if (this.worldKey === worldKey) { this.mapDef = map; return; }
-    // the rebuild awaits (lightmap fetch) between swapping G.level and G.paint: hold the simulation until every
-    // stage-dependent system matches, or a frame in between raycasts the new level and samples the old paint atlas
-    this._building = true;
-    try { await this._buildWorldNow(map, scene, layoutId, mode, worldKey); } finally { this._building = false; }
+    // one build at a time: a build awaits (the lightmap fetch) midway, so two overlapping ones (a match started while the
+    // menu backdrop was still switching stage) would interleave — the slower one redrawing the stage decals (murals) or
+    // swapping the level under the other. Each waits for the one before it, then checks what's built.
+    const prev = this._buildChain || Promise.resolve();
+    let done;
+    this._buildChain = new Promise((r) => { done = r; });
+    try {
+      await prev;
+      const scene = G.scene;
+      const layoutId = map.layout || map.id;
+      const worldKey = variantKey(layoutId, MAP_LAYOUTS[layoutId], dressingFor(layoutId), mode);
+      if (this.worldKey === worldKey) { this.mapDef = map; return; }
+      // the rebuild awaits (lightmap fetch) between swapping G.level and G.paint: hold the simulation until every
+      // stage-dependent system matches, or a frame in between raycasts the new level and samples the old paint atlas
+      this._building = true;
+      try { await this._buildWorldNow(map, scene, layoutId, mode, worldKey); } finally { this._building = false; }
+    } finally { done(); }
   }
   async _buildWorldNow(map, scene, layoutId, mode = 'turf', worldKey = layoutId) {
     this.zoneMarks?.clear();   // zone markings belong to the old stage's faces
