@@ -7,15 +7,16 @@ export function registerCamp(D, H, X) {
   const OCT_A = (R) => R * Math.cos(PI / 8);
 
   // ============================================================================================== the helipad (spawn)
-  // Dresses the level's octagonal pad (body R 5.75 from the dune top up to 3.0, deck plate R 5.9 up to 3.2): steel
-  // columns at the corners with X-bracing on every face, a fascia with edge lights (glow at dusk) round the deck,
-  // safety-net frames off the faces without stairs, a windsock mast, a floodlight, handrails on both stairs (rails).
+  // Dresses the level's octagonal pad (body R `body` from the dune top up to 3.0, deck plate R 5.9 up to 3.2): steel
+  // columns at the body's corners with X-bracing on every face, cantilever brackets and edge beams carrying the deck's
+  // overhang, a fascia with edge lights (glow at dusk) round the deck, safety-net frames off the faces without stairs,
+  // a windsock mast, a floodlight, handrails on both stairs (rails).
   D.spirhalite_helipad = {
     desc: 'the expedition helipad dressing: steel frame + bracing, deck fascia with edge lights, safety nets, windsock, floodlight, stair rails',
     params: { R: 'deck circumradius', base: 'body base y', top: 'deck top y', open: 'face indices without nets (0 = +x, 1 = +x+z …)' },
     variants: 1, mount: 'ground',
     build(B, o) {
-      const R = o.R ?? 5.9, Rb = R - 0.15, y0 = o.base ?? 1.3, yt = o.top ?? 3.2, open = o.open ?? [0, 2];
+      const R = o.R ?? 5.9, Rb = o.body ?? R - 0.15, y0 = o.base ?? 1.3, yt = o.top ?? 3.2, open = o.open ?? [0, 2];
       const vtx = (r, k) => { const a = PI / 8 + (k * PI) / 4; return [Math.cos(a) * r, Math.sin(a) * r]; };
       // columns at the body's corners, X-bracing on each face (just proud of the face)
       for (let k = 0; k < 8; k++) {
@@ -26,6 +27,15 @@ export function registerCamp(D, H, X) {
         rod(B, 'metal', K.steel, [x + ox, lo, z + oz], [x2 + ox, hi, z2 + oz], 0.05);
         rod(B, 'metal', K.steel, [x + ox, hi, z + oz], [x2 + ox, lo, z2 + oz], 0.05);
         rod(B, 'metal', K.steelDk, [x + ox, lo + 0.02, z + oz], [x2 + ox, lo + 0.02, z2 + oz], 0.06);
+        // the overhang: a cantilever bracket from the column's head out under the deck's corner (a beam under the plate,
+        // a knee brace down to the column), an edge beam under each face
+        if (R - Rb > 0.3) {
+          const [cx, cz] = vtx(Rb + 0.08, k), [ex, ez] = vtx(R - 0.12, k), bl = Math.hypot(ex - cx, ez - cz), ba = -(PI / 8 + (k * PI) / 4);
+          B.add('metal', X.boxG(), K.steelDk, (cx + ex) / 2, yt - 0.37, (cz + ez) / 2, { sx: bl + 0.12, sy: 0.18, sz: 0.16, ry: ba });
+          rod(B, 'metal', K.steel, [cx, yt - 1.05, cz], [lerp(cx, ex, 0.75), yt - 0.44, lerp(cz, ez, 0.75)], 0.045);
+          const [ex2, ez2] = vtx(R - 0.12, k + 1);
+          B.add('metal', X.boxG(), K.steelDk, (ex + ex2) / 2, yt - 0.37, (ez + ez2) / 2, { sx: Math.hypot(ex2 - ex, ez2 - ez), sy: 0.16, sz: 0.12, ry: -fa + HP });
+        }
         // deck fascia (a steel channel just under the deck's edge) + edge lights at the corner and the face's middle
         const [dx, dz] = vtx(R + 0.04, k), [dx2, dz2] = vtx(R + 0.04, k + 1);
         B.add('metal', X.boxG(), K.yellow, (dx + dx2) / 2, yt - 0.13, (dz + dz2) / 2, { sx: Math.hypot(dx2 - dx, dz2 - dz), sy: 0.22, sz: 0.06, ry: -fa + HP });
