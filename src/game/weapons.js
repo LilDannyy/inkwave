@@ -29,7 +29,7 @@ const DEG = Math.PI / 180;
 // alone would (splat opts.pod) — so one full-charge charger shot or one roller flick fills a meter (tools/botlab/tests/pods.js
 // calibration); any other thrown drop (brush swipes, cutlass crescents, sprinkler spray) a little more too.
 // charger: × (1 + charger · charge²)
-export const POD_HINT = { charger: 4.5, flick: 6, drop: 1.6 };
+export const POD_HINT = { charger: 4.5, flick: 7.5, drop: 1.6 };
 // trigger('shoot', HAND_*) arg for dual wield (character.js reads .hand; valueOf keeps numeric readers at 1)
 const HAND_R = Object.freeze({ hand: 0, valueOf() { return 1; } }), HAND_L = Object.freeze({ hand: 1, valueOf() { return 1; } });
 
@@ -69,7 +69,7 @@ export class WeaponRunner {
   // cancel their own through MAIN_KITS[kind].cancel?(runner). True when anything was dropped.
   cancelForSwim() {
     let did = false;
-    if (this.charging) { this.charging = false; this.charge = 0; this.chargeT = 0; this.chargeLoop?.stop(0.05); this.chargeLoop = null; did = true; }
+    if (this.charging) { this.charging = false; this.charge = 0; this.chargeT = 0; this.chargeLoop?.stop(0.05); this.chargeLoop = null; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }   // (a splatling's charge hum is its spinLoop)
     if (this.streaming || this.burstT > 0) { this.streaming = false; this.burstT = 0; this.burstPower = 0; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }
     if (this.flick >= 0) { this.flick = -1; did = true; }
     if (this.slosh >= 0) { this.slosh = -1; did = true; }
@@ -206,6 +206,7 @@ export class WeaponRunner {
       if (!this.charging) {
         if (a.ink < w.inkFull * 0.2) { this._empty(); return; }
         this.charging = true; this.charge = 0; this.chargeT = 0; this.chargeDinged = false;
+        this.chargeLoop?.stop(0.05);
         if (a.isLocal || a._nearCamera()) this.chargeLoop = G.audio?.loop('charger_charge', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.55 : 0.35, pitch: 1 });
       }
       const maxCharge = clamp(a.ink / w.inkFull, 0, 1);
@@ -264,6 +265,7 @@ export class WeaponRunner {
     if (canRoll !== this.rolling) {
       this.rolling = canRoll;
       if (canRoll) { this.lastRollPos = a.pos.clone(); this.rollDist = 0; }
+      this.rollLoop?.stop(0.05);
       if (canRoll && (a.isLocal || a._nearCamera())) this.rollLoop = G.audio?.loop('roll', { pos: a.isLocal ? undefined : a.pos, volume: 0 });
       if (!canRoll) { this.rollLoop?.stop(0.12); this.rollLoop = null; }
     }
@@ -428,6 +430,7 @@ export class WeaponRunner {
       if (!this.charging) {
         if (a.ink < w.inkPerShot * 5) { this._empty(); return; }
         this.charging = true; this.charge = 0; this.chargeT = 0; this.chargeDinged = false;
+        this.spinLoop?.stop(0.05);   // (never start a loop over a live one: an orphaned handle hums forever)
         if (a.isLocal || a._nearCamera()) this.spinLoop = G.audio?.loop('splatling_spin', { pos, volume: a.isLocal ? 0.6 : 0.4, pitch: 0.6 });
       }
       this.chargeT += dt;
@@ -483,6 +486,7 @@ Object.assign(WeaponRunner.prototype, {
       if (!this.charging) {
         if (a.ink < w.inkFull * 0.15) { this._empty(); return; }
         this.charging = true; this.charge = 0; this.chargeT = 0; this.chargeDinged = false;
+        this.chargeLoop?.stop(0.05);
         if (a.isLocal || a._nearCamera()) this.chargeLoop = G.audio?.loop('splatling_spin', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.6 : 0.4, pitch: 0.6 });
       }
       this.chargeT = Math.min(1, this.chargeT + dt / w.chargeTime);
@@ -612,6 +616,7 @@ Object.assign(WeaponRunner.prototype, {
     if (brushing !== this.rolling) {
       this.rolling = brushing;
       if (brushing) { this.lastRollPos = a.pos.clone(); this.rollHits.clear(); }
+      this.rollLoop?.stop(0.05);
       if (brushing && (a.isLocal || a._nearCamera())) this.rollLoop = G.audio?.loop('roll', { pos: a.isLocal ? undefined : a.pos, volume: 0 });
       if (!brushing) { this.rollLoop?.stop(0.1); this.rollLoop = null; }
     }

@@ -117,6 +117,10 @@ export class AudioEngine {
     this.duckG = g(1);
     this.sfxIn = g(1);
     this.sfxIn.connect(this.sfxBus); this.sfxBus.connect(this.master);
+    // looping sounds (weapon charge / spin hums, rolls, stage machinery …) join the SFX through their own bus, so a pause
+    // can hush every one of them at once (pauseLoops) and bring them back where they were
+    this.loopIn = g(1);
+    this.loopIn.connect(this.sfxIn);
     this.musicBus.connect(this.duckG); this.duckG.connect(this.master);
     // shared plaza reverb
     this.revSend = g(1);
@@ -229,11 +233,11 @@ export class AudioEngine {
       const d = this._dist(pos) * voice.dk;
       voice.lp = ctx.createBiquadFilter(); voice.lp.type = 'lowpass'; voice.lp.Q.value = 0.5; voice.lp.frequency.value = distCut(d);
       voice.panner = this._panner(pos, def.ref || 3);
-      head.connect(voice.lp); voice.lp.connect(voice.panner); voice.panner.connect(this.sfxIn);
+      head.connect(voice.lp); voice.lp.connect(voice.panner); voice.panner.connect(withFade ? this.loopIn : this.sfxIn);
       v.nodes.push(voice.lp, voice.panner);
       voice.rev += Math.min(0.25, Math.max(0, (d - 6) / 60));
       scale = this._sendScale(d);
-    } else head.connect(this.sfxIn);
+    } else head.connect(withFade ? this.loopIn : this.sfxIn);   // (withFade: the loops)
     if (voice.rev > 0.001) {
       voice.send = ctx.createGain(); voice.send.gain.value = voice.rev * scale;
       head.connect(voice.send); voice.send.connect(this.revSend); v.nodes.push(voice.send);
@@ -375,6 +379,26 @@ export class AudioEngine {
     p.linearRampToValueAtTime(target, now + 0.08);
     p.setValueAtTime(target, until);
     p.linearRampToValueAtTime(1, until + 0.6);
+  }
+
+  // lift any duck at once (a pause's long duck ends with the pause; duck(1, …) would duck to silence, not lift it)
+  unduck(fade = 0.15) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime, p = this.duckG.gain, v = this._duckAt(now), f = Math.max(0.01, +fade || 0.01);
+    this._duck = null;
+    this._duckPts = [[now, v], [now + f, 1]];
+    p.cancelScheduledValues(now);
+    p.setValueAtTime(v, now);
+    p.linearRampToValueAtTime(1, now + f);
+  }
+  // hush (true) or restore (false) every loop — a paused match's charge hums, rolls and machinery stop sounding
+  pauseLoops(on, fade = 0.08) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime, p = this.loopIn.gain;
+    this.loopsPaused = !!on;
+    p.cancelScheduledValues(now);
+    p.setValueAtTime(p.value, now);
+    p.linearRampToValueAtTime(on ? 0 : 1, now + Math.max(0.01, fade));
   }
 
   stopAll(fade = 0.1) {
