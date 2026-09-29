@@ -12,7 +12,8 @@
 //   8  the pillbox: flaking camouflage paint and its stencilled number (every wall)
 //   9  the memorial's bronze plaque (the plinth top's front face)
 //  10  chalk scars on the Great Crater's slopes (every rim facet)
-export const MURAL_IDS = { boardWar: 4, boardTrench: 5, boardPonds: 6, groundZero: 7, pillbox: 8, plaque: 9, scar: 10 };
+//  11  interpretive board: THE RESERVE LINE — the support line behind the front, the mound (the Long Stages slice)
+export const MURAL_IDS = { boardWar: 4, boardTrench: 5, boardPonds: 6, groundZero: 7, pillbox: 8, plaque: 9, scar: 10, boardReserve: 11 };
 
 let seed = 1;
 const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
@@ -104,6 +105,25 @@ export function drawMurals(g, R, kit) {
     for (let k = 0; k < 12; k++) poppy(g, c.x - 120 + rand() * 240, c.y - 70 + rand() * 24, 5);
     lines(g, ['Rain fills the deepest', 'shell holes. Reeds and', 'newts moved in; poppies', 'love the turned chalk.', '', 'Please keep to the rim', 'path: the banks are steep.'], r.x + 290, r.y + 92, 15, 22, FT, INK, 180);
   }
+  // ---- 11: THE RESERVE LINE (the Long Stages slice: the support trench, the communication trench, the mound)
+  {
+    const r = { x: R.x, y: R.y + 548, w: 480, h: 300 };
+    panel(g, r, 'THE RESERVE LINE', kit);
+    // plan: the front trench (red), the support trench behind it, the communication trenches back, the mound + cross
+    const m = { x: r.x + 18, y: r.y + 76, w: 250, h: 200 };
+    g.fillStyle = '#b9c08e'; g.fillRect(m.x, m.y, m.w, m.h);
+    g.fillStyle = '#8e9468'; for (let k = 0; k < 10; k++) { g.beginPath(); g.arc(m.x + 16 + rand() * 218, m.y + 14 + rand() * 172, 3 + rand() * 5, 0, Math.PI * 2); g.fill(); }
+    zigzag(g, [[m.x + 10, m.y + 40], [m.x + 70, m.y + 40], [m.x + 82, m.y + 28], [m.x + 150, m.y + 28], [m.x + 162, m.y + 40], [m.x + 240, m.y + 40]], '#b3452e', 5);
+    zigzag(g, [[m.x + 10, m.y + 104], [m.x + 60, m.y + 104], [m.x + 72, m.y + 116], [m.x + 100, m.y + 116]], '#5a4a38', 6);
+    zigzag(g, [[m.x + 150, m.y + 110], [m.x + 172, m.y + 110], [m.x + 184, m.y + 122], [m.x + 240, m.y + 122]], '#5a4a38', 6);
+    zigzag(g, [[m.x + 196, m.y + 124], [m.x + 196, m.y + 150], [m.x + 184, m.y + 164], [m.x + 184, m.y + 188]], '#5a4a38', 4);
+    g.fillStyle = '#9aa66e'; g.beginPath(); g.arc(m.x + 125, m.y + 140, 20, 0, Math.PI * 2); g.fill();
+    g.fillStyle = INK; g.fillRect(m.x + 123, m.y + 128, 4, 22); g.fillRect(m.x + 117, m.y + 134, 16, 4);
+    text(g, 'FRONT', m.x + 206, m.y + 14, 11, FT, '#b3452e'); text(g, 'SUPPORT', m.x + 40, m.y + 88, 11, FT, '#5a4a38');
+    text(g, 'YOU ARE HERE', m.x + 130, m.y + 178, 11, FT, INK); g.fillStyle = '#c0392b'; g.beginPath(); g.arc(m.x + 150, m.y + 160, 5, 0, Math.PI * 2); g.fill();
+    lines(g, ['Behind the fire trench', 'ran the support line,', 'and behind that the', 'reserves. Winding saps', 'brought them up unseen.', '', 'The Inkling Rifles held', 'this line all winter.'], r.x + 282, r.y + 92, 15, 21, FT, INK, 190);
+  }
+  out.push({ id: 11, x: R.x, y: R.y + 548, w: 480, h: 300, m: [1.6, 1.0], fx: [0.3, 0] });
   out.push({ id: 4, x: R.x, y: R.y, w: 480, h: 300, m: [1.6, 1.0], fx: [0.3, 0] });
   out.push({ id: 5, x: R.x + 496, y: R.y, w: 480, h: 300, m: [1.6, 1.0], fx: [0.3, 0] });
   out.push({ id: 6, x: R.x + 992, y: R.y, w: 480, h: 300, m: [1.6, 1.0], fx: [0.3, 0] });
