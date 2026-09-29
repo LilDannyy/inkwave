@@ -258,12 +258,15 @@ export function registerBuildings(D, H, KIT) {
     params: { w: 'block width', d: 'block depth', h: 'wall top', canopy: 'canopy depth over the platform' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const W = o.w, Dd = o.d, h = o.h, cd = o.canopy ?? 2.3;
+      // platY: the platform's floor on face 0 (the building stands in the forecourt, its platform face above the
+      // platform's edge); posts: false = the eave is cantilevered (no posts on the platform)
+      const W = o.w, Dd = o.d, h = o.h, cd = o.canopy ?? 2.3, py = o.platY ?? 0, posts = o.posts !== false;
+      const up = (items) => items.map((it) => ({ ...it, y: (it.y ?? 0) + py }));
       sub(B, 'calamari_house', 0, 0, 0, 0, {
         w: W, d: Dd, h, style: 'cedar', wallC: K.cedar, roof: { f: 0.4, pitch: 0.55, ov: 0.9, alongX: true, c: K.kawara },
         faces: {
           2: [{ t: 'door', x: -0.6, w: 2.4, h: 2.05, hood: false }, { t: 'win', x: 2.5, w: 1.1, h: 0.8, sill: 1.0, sash: true, lit: 1.0 }, { t: 'poster', x: -2.7, at: 1.3 }, { t: 'poster', x: -3.3, at: 1.35, c2: K.teal }, { t: 'lamp', x: 1.2, at: 2.5 }],
-          0: [{ t: 'win', x: -2.2, w: 1.5, h: 1.1, sill: 0.95, sash: true, lit: 1.3 }, { t: 'win', x: 0.2, w: 1.5, h: 1.1, sill: 0.95, sash: true, lit: 1.3 }, { t: 'door', x: 2.4, w: 1.2, h: 2.05, hood: false }, { t: 'clock', x: -1.0, at: 2.55, r: 0.26 }],
+          0: up([{ t: 'win', x: -2.2, w: 1.5, h: 1.1, sill: 0.95, sash: true, lit: 1.3 }, { t: 'win', x: 0.2, w: 1.5, h: 1.1, sill: 0.95, sash: true, lit: 1.3 }, { t: 'door', x: 2.4, w: 1.2, h: 2.05, hood: false }, { t: 'clock', x: -1.0, at: 2.55, r: 0.26 }]),
           1: [{ t: 'win', x: 0, w: 1.0, h: 0.8, sill: 1.1, sash: true, lit: 1.0 }, { t: 'pipe', x: 1.6 }],
           3: [{ t: 'meter', x: 0.8 }, { t: 'pipe', x: -1.6 }, { t: 'ac', x: -0.4 }],
         },
@@ -279,8 +282,10 @@ export function registerBuildings(D, H, KIT) {
       // the platform canopy: the station's eaves carried out over the walkway on posts (the posts collide)
       onFace(B, W, Dd, 0, (L) => {
         const yT = h + 0.35, pz = cd - 0.25;
-        for (const px of [-L / 2 + 0.4, 0, L / 2 - 0.4]) { B.box('wood', K.beam, 0.16, yT - 0.0, 0.16, px, (yT + 0.0) / 2 - 0.5 + 0.5, pz, { r: 0.02 }); colBox(B, px, 0, pz, 0.18, yT, 0.18); }
-        pbox(B, 'wood', K.beam, L + 0.6, 0.2, 0.16, 0, yT - 0.1, pz);
+        if (posts) {
+          for (const px of [-L / 2 + 0.4, 0, L / 2 - 0.4]) { B.box('wood', K.beam, 0.16, yT - py, 0.16, px, py + (yT - py) / 2, pz, { r: 0.02 }); colBox(B, px, py, pz, 0.18, yT - py, 0.18); }
+          pbox(B, 'wood', K.beam, L + 0.6, 0.2, 0.16, 0, yT - 0.1, pz);
+        } else for (const px of [-L / 2 + 0.3, -L / 6, L / 6, L / 2 - 0.3]) pbox(B, 'wood', K.beam, 0.12, 0.12, cd + 0.2, px, yT - 0.12, (cd + 0.2) / 2, { rx: 0.16 });   // eave brackets
         B.push(0, yT, 0, 0, -0.16);
         pbox(B, 'paint', K.kawara, L + 0.9, 0.1, cd + 0.4, 0, 0.05, (cd + 0.4) / 2);
         B.add(NS('paint'), cylGeo(0.06, 0.06, L + 0.9, 8), shade(K.kawara, 0.8), 0, 0.05, cd + 0.4, { rz: HP });
@@ -289,8 +294,8 @@ export function registerBuildings(D, H, KIT) {
         icicles(B, -L / 2 - 0.3, L / 2 + 0.3, yT - 0.4, cd + 0.36, 91, 0.3);
         colBox(B, 0, yT - 0.2, cd / 2 + 0.2, L + 0.9, 0.7, cd + 0.4, ROOF);
         // a bench and the stove pipe out through the wall
-        sub(B, 'calamari_bench', -2.4, 0, 0.6, PI, {});
-        B.tube(NS('metal'), K.ironLt, [P3(1.1, 1.9, 0.02), P3(1.1, 1.9, 0.35), P3(1.1, h + 0.9, 0.35)], 0.07, { radial: 8 });
+        sub(B, 'calamari_bench', -2.4, py, 0.6, PI, {});
+        B.tube(NS('metal'), K.ironLt, [P3(1.1, py + 1.9, 0.02), P3(1.1, py + 1.9, 0.35), P3(1.1, h + 0.9, 0.35)], 0.07, { radial: 8 });
         B.cyl(NS('metal'), K.ironLt, 0.13, 0.12, 1.1, h + 0.96, 0.35, { seg: 8 });
       });
     },
