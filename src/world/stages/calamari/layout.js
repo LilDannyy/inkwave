@@ -434,7 +434,7 @@ const CALAMARI = {
   // stage-select picture: from high on Alpha's hill over the village high street — the allotments, the inn and its
   // steaming garden, the fire-watch tower on its terrace, the post office and the fish market — across the square and
   // the bath house's chimney to the station, its railcars and footbridges, the tunnel, and Bravo's co-op beyond
-  art: { from: [-38, 27, -72], look: [6, 0, -22], fov: 56 },
+  art: { from: [-38, 26, -66], look: [7, 0, -17], fov: 56 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
