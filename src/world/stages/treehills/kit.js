@@ -284,24 +284,26 @@ export function makeKit(H) {
   function evergreen(B, x, y, z, h, o = {}) {
     const kind = o.kind ?? 'hinoki', seed = (o.seed ?? 1) % 9, c = o.c ?? (kind === 'thujopsis' ? K.thu : K.cyp);
     const w = o.w ?? 1, th = kind === 'thujopsis', r = (i) => hash(seed * 13.7 + i * 7.3);
-    const det = o.det ?? (h > 5 ? 1 : 0);
+    // lite (the groves' fill trees): fewer tiers and sprays, low-detail cores — about half the triangles, same outline
+    const lite = !!o.lite, det = lite ? 0 : o.det ?? (h > 5 ? 1 : 0);
     B.push(x, y, z, o.rot ?? hash(seed * 3.3) * TAU, 0, 0);
-    ccyl(B, 'wood', K.bark, 0.06 + 0.012 * h, h * (th ? 0.34 : 0.26), 0, h * (th ? 0.17 : 0.13), 0, { seg: 7 });
-    const nT = th ? 7 : 10, base = h * w * (th ? 0.34 : 0.27);
+    ccyl(B, 'wood', K.bark, 0.06 + 0.012 * h, h * (th ? 0.34 : 0.26), 0, h * (th ? 0.17 : 0.13), 0, { seg: lite ? 5 : 7 });
+    const nT = lite ? (th ? 5 : 7) : th ? 7 : 10, base = h * w * (th ? 0.34 : 0.27);
     const cDk = mixc(c, '#1c3322', 0.35), cLt = mixc(c, th ? K.thuLt : K.cypLt, 0.5);
     for (let i = 0; i < nT; i++) {
       const t = i / (nT - 1);
       const yy = h * ((th ? 0.2 : 0.14) + t * (th ? 0.66 : 0.72));
       const R = base * (th ? 1 - t * 0.72 : Math.pow(1 - t * 0.88, 0.9)) * (0.92 + 0.16 * r(i));
-      const k = Math.max(3, Math.round((th ? 7 : 6) * (1 - t * 0.55)));
+      const k = lite ? Math.max(2, Math.round((th ? 5 : 4) * (1 - t * 0.5))) : Math.max(3, Math.round((th ? 7 : 6) * (1 - t * 0.55)));
       const ph = r(i + 20) * TAU;
       // the core of the tier
       B.add('foliage', puff(det, (seed + i) % 6), mixc(cDk, c, 0.4 + 0.3 * t), 0, yy, 0, { sx: R * 0.72, sy: R * (th ? 0.36 : 0.52), sz: R * 0.72 });
       // fan sprays round it (flattened, reaching out, tips drooping)
       for (let j = 0; j < k; j++) {
         const a = ph + (j / k) * TAU + (r(i * 9 + j) - 0.5) * 0.5, rr = R * (0.55 + 0.1 * r(i * 5 + j));
+        const sw = lite ? 1.18 : 1;   // (fewer sprays: each a little broader)
         B.add('foliage', puff(0, (seed + i + j) % 6), mixc(c, cLt, 0.2 + 0.5 * r(i * 3 + j) * (0.4 + 0.6 * t)), Math.cos(a) * rr, yy - R * 0.08, Math.sin(a) * rr,
-          { sx: R * 0.55, sy: R * (th ? 0.2 : 0.28), sz: R * 0.4, ry: -a, rz: -0.22 });
+          { sx: R * 0.55 * sw, sy: R * (th ? 0.2 : 0.28) * (lite ? 1.12 : 1), sz: R * 0.4 * sw, ry: -a, rz: -0.22 });
       }
     }
     B.add('foliage', puff(det, seed % 6), cLt, 0, h * (th ? 0.84 : 0.88), 0, { sx: base * (th ? 0.3 : 0.22), sy: h * 0.07, sz: base * (th ? 0.3 : 0.22) });
