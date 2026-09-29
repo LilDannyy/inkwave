@@ -7,7 +7,7 @@
 //
 // Conventions: metres, Y up, `pos` = base point, rotY turns local +Z (the "front"). Runs (railings, wire, fences) extend
 // along local +X. Signage uses flat painted / raised letters from a stroke font (below).
-import { LAYOUT, PAV, PILLBOX, MEMO, T1, T2, BRIDGES, POND, CRATER, COAST, BOARDS, STATIONS } from './layout.js';
+import { LAYOUT, PAV, PILLBOX, MEMO, T1, T2, T3, T4, BRIDGES, POND, CRATER, COAST, BOARDS, STATIONS, UNDERCLIFF, lipEdge } from './layout.js';
 import { topOf, mirrorDef, inPoly, PieceIndex } from './geo.js';
 
 const P = Math.PI;
@@ -354,7 +354,7 @@ export function register(D, H) {
   D.craters_pavilion = {
     desc: 'Visitor pavilion dressing (glazing, balustrades, roof canopy, sign, viewers, planters). Local +Z = the field.',
     build(B) {
-      const W = PAV.x, Z = PAV.z1 - PAV.z0, YD = 3.0, ramp = 1.8, BK = PAV.back, SX = PAV.stairX, SW = 1.8, open = 2.5;
+      const W = PAV.x, Z = PAV.z1 - PAV.z0, YD = 3.0, ramp = 1.8, BK = PAV.back, SX = PAV.stairX, SW = PAV.stairW, open = 2.5, SL = PAV.stairLow - PAV.z0;
       // ---- ground floor facade toward the field: glazing either side of the ramp, board-marked piers + fascia
       for (const s of [-1, 1]) {
         const xa = s < 0 ? -W + 0.45 : 2.4, xb = s < 0 ? -2.4 : W - 0.45;
@@ -404,8 +404,9 @@ export function register(D, H) {
       }
       // ---- the ramp's handrails (both sides) and the side stairs' (both sides of each)
       for (const s of [-1, 1]) handrail(B, [s * (ramp - 0.06), YD, Z], [s * (ramp - 0.06), 0, Z + 6.8]);
-      // (the side stairs: a handrail on their cliff side, from the deck's back corner down to the headland's front)
-      for (const s of [-1, 1]) handrail(B, [s * (SX + SW / 2 - 0.06), YD, 1.0], [s * (SX + SW / 2 - 0.06), 0, 7.8]);
+      // (the side stairs: a handrail on their cliff side, from the deck's back corner down past the headland's front to the
+      // landing in the cove)
+      for (const s of [-1, 1]) handrail(B, [s * (SX + SW / 2 - 0.06), YD, 1.0], [s * (SX + SW / 2 - 0.06), -1.1, SL]);
     },
   };
 
@@ -964,13 +965,13 @@ const polar = (th, r) => [Math.cos(ang(th)) * r, Math.sin(ang(th)) * r];
 // the stage's real floor under (x, z) (the highest layout top below yMax): props on the crater's slopes, the cliff lip
 const FLOOR_IDX = new PieceIndex([...LAYOUT.single, ...LAYOUT.half, ...LAYOUT.half.map(mirrorDef)].filter((d) => !d.rail && !d.hidden).map((d) => ({ d })));
 const groundY = (x, z, yMax = 1.3) => { let t = -Infinity; for (const { d } of FLOOR_IDX.at(x, z)) { const y = topOf(d, x, z); if (y != null && y <= yMax && y > t) t = y; } return +t.toFixed(3); };
-const coneY = (r, th) => groundY(Math.cos(ang(th)) * r, Math.sin(ang(th)) * r, 1.3);
+const coneY = (r, th) => groundY(Math.cos(ang(th)) * r, Math.sin(ang(th)) * r, 1.8);
 // tussocks + cliff-edge warning along the chalk lip (Alpha's half of the coast; the open edges skipped)
 const LIP_TUFTS = (() => {
   const out = [];
   COAST.forEach((a, i) => {
     const b = COAST[(i + 1) % COAST.length];
-    if ((a[1] === 0 && b[1] === 0) || (a[1] === PAV.z0 && b[1] === PAV.z0)) return;
+    if (!lipEdge(i)) return;
     const L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.floor(L / 1.7);
     for (let k = 0; k < n; k++) {
       const t = (k + 0.3 + rnd(i * 31 + k) * 0.4) / n, x = a[0] + (b[0] - a[0]) * t, z = a[1] + (b[1] - a[1]) * t;
@@ -982,6 +983,29 @@ const LIP_TUFTS = (() => {
     }
   });
   return out;
+})();
+
+// fallen chalk on the undercliff shelf: a boulder every ~8 m along each shelf, by turns at the cliff foot and at the
+// shelf's outer edge (cover along the low route; the shelf's own top under it)
+const SHELF_ROCKS = (() => {
+  const out = [], n = COAST.length;
+  let k = 0;
+  for (const chain of [UNDERCLIFF.right, UNDERCLIFF.left]) {
+    let cum = 0, next = 3.5;
+    for (const i of chain) {
+      const a = COAST[i], b = COAST[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
+      let ox = uz, oz = -ux;
+      if (inPoly(COAST, (a[0] + b[0]) / 2 + ox * 0.1, (a[1] + b[1]) / 2 + oz * 0.1)) { ox = -ox; oz = -oz; }
+      for (; next < cum + L - 0.6; next += 8) {
+        const t = Math.max(0.6, next - cum), d = k % 2 ? 1.75 : 0.75, x = a[0] + ux * t + ox * d, z = a[1] + uz * t + oz * d;
+        out.push({ type: 'craters_boulder', pos: [+x.toFixed(2), groundY(x, z, 0), +z.toFixed(2)], s: 0.8 + rnd(k + i) * 0.25, flat: 0.8, seed: k % 7, rotY: rnd(k * 3) * 6 });
+        k++;
+      }
+      cum += L;
+    }
+  }
+  // (the saps' mouths stay clear)
+  return out.filter((p) => Math.hypot(p.pos[0] - T3.x0, p.pos[2] - T3.z) > 3 && Math.hypot(p.pos[0] - T4.x1, p.pos[2] - T4.z) > 3);
 })();
 
 // facing helpers: rotY that turns local +Z toward (dx, dz) / toward the crater's middle / away from it
@@ -1013,51 +1037,52 @@ export const PLACEMENTS = [
 
   // ================= the pillbox on the headland at the right front (it faces the ring over the tower's track)
   { type: 'craters_pillbox', pos: [(PILLBOX.x0 + PILLBOX.x1) / 2, 0, (PILLBOX.z0 + PILLBOX.z1) / 2], rotY: 0, w: PILLBOX.x1 - PILLBOX.x0, d: PILLBOX.z1 - PILLBOX.z0 },
-  { type: 'craters_trenchkit', variant: 4, pos: [-17.9, 0, -25.0], rotY: 1.2 },
-  { type: 'craters_wire', pos: [-14.2, 0, -16.4], rotY: 0.35, length: 4.0 },
+  { type: 'craters_trenchkit', variant: 4, pos: [PILLBOX.x0 - 0.6, 0, -25.5], rotY: 1.2 },
   { type: 'craters_boulder', pos: [-8.0, 0, -27.4], s: 0.7, flat: 0.8, seed: 6 },
-  onGround('craters_sign', ...at(232, 33.2), { variant: 0, rotY: inward(...at(232, 33.2)) }),
-  { type: 'craters_hawthorn', pos: [-19.6, 0, -26.2], rotY: 2.6, s: 0.95 },
-  { type: 'craters_deckchair', pos: [-21.8, 0, -23.6], rotY: outward(-21.8, -23.6), variant: 0 },
-  { type: 'craters_deckchair', pos: [-23.2, 0, -22.2], rotY: outward(-23.2, -22.2) + 0.3, variant: 2 },
+  onGround('craters_sign', ...at(232, 34.4), { variant: 0, rotY: inward(...at(232, 34.4)) }),
+  { type: 'craters_hawthorn', pos: [-24.6, 0, -22.6], rotY: 2.6, s: 0.95 },
+  { type: 'craters_deckchair', pos: [29.2, 0, -3.0], rotY: outward(29.2, -3.0), variant: 0 },
+  { type: 'craters_deckchair', pos: [29.4, 0, -4.6], rotY: outward(29.4, -4.6) + 0.3, variant: 2 },
 
   // ================= the Great Crater: the relics, rubble, poppies in the slopes
-  { type: 'craters_cannon', pos: [...polar(315, 7.2).slice(0, 1), 0.9, polar(315, 7.2)[1]], rotY: Math.atan2(Math.cos(ang(315)), Math.sin(ang(315))) },
+  { type: 'craters_cannon', pos: [...polar(315, 7.6).slice(0, 1), 0.9, polar(315, 7.6)[1]], rotY: Math.atan2(Math.cos(ang(315)), Math.sin(ang(315))) },
   { type: 'craters_shell', pos: [polar(225, 7.6)[0], coneY(7.6, 225) - 0.05, polar(225, 7.6)[1]], rotY: -ang(135) },
-  { type: 'craters_boulder', pos: [-4.3, -1.0, -2.2], s: 0.7, seed: 1 },
-  { type: 'craters_boulder', pos: [1.6, -1.0, -3.9], s: 0.6, flat: 0.65, seed: 3 },
+  { type: 'craters_boulder', pos: [-3.8, -1.3, -2.0], s: 0.7, seed: 1 },
+  { type: 'craters_boulder', pos: [1.5, -1.3, -3.6], s: 0.6, flat: 0.65, seed: 3 },
   ...[[255, 7.4], [200, 8.3], [345, 6.9], [282, 8.9], [238, 9.3], [300, 9.6], [192, 6.4], [330, 9.4]].map(([th, r], i) => ({ type: 'craters_poppies', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.02).toFixed(2), +polar(th, r)[1].toFixed(2)], r: 0.6 + rnd(i) * 0.4, n: 8 + (i % 4), seed: i + 1 })),
-  ...[190, 205, 220, 245, 300, 320, 340, 355].map((th, i) => ({ type: 'craters_tussock', pos: [+polar(th, 10.7)[0].toFixed(2), 1.2, +polar(th, 10.7)[1].toFixed(2)], s: 0.5 + rnd(i * 5) * 0.3, seed: i })),
+  ...[190, 205, 220, 245, 300, 320, 340, 355].map((th, i) => ({ type: 'craters_tussock', pos: [+polar(th, 11.7)[0].toFixed(2), 1.7, +polar(th, 11.7)[1].toFixed(2)], s: 0.5 + rnd(i * 5) * 0.3, seed: i })),
   // war rubble in the crater and round its crest
-  ...[[240, 6.2], [300, 5.9], [205, 9.0], [330, 8.6], [262, 11.9], [190, 12.2], [350, 12.0]].map(([th, r], i) => ({ type: 'craters_rubble', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.03).toFixed(2), +polar(th, r)[1].toFixed(2)], rotY: i * 1.3, seed: i + 1 })),
-  { type: 'craters_lectern', pos: [...at(250, 12.0).slice(0, 1), 0, at(250, 12.0)[1]], rotY: inward(...at(250, 12.0)) },
-  onGround('craters_sign', ...at(222, 12.1), { variant: 3, rotY: outward(...at(222, 12.1)), text: 'KEEP OFF' }),
+  ...[[240, 6.2], [300, 5.9], [205, 9.0], [330, 8.6], [262, 13.1], [190, 13.4], [350, 13.3]].map(([th, r], i) => ({ type: 'craters_rubble', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.03).toFixed(2), +polar(th, r)[1].toFixed(2)], rotY: i * 1.3, seed: i + 1 })),
+  { type: 'craters_lectern', pos: [...at(250, 13.0).slice(0, 1), 0, at(250, 13.0)[1]], rotY: inward(...at(250, 13.0)) },
+  onGround('craters_sign', ...at(222, 12.9), { variant: 3, rotY: outward(...at(222, 12.9)), text: 'KEEP OFF' }),
 
   // ================= the fire trench's bay (T1, right flank): revetment frames on both walls (the bay stays clear for
   // the tower), a trench board, a sandbag pile on the cliff side
   ...[[T1.z0, -8], [-6, T1.z1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [T1.x1, -1.0, a], rotY: -Math.PI / 2, length: b - a })),
-  ...[[T1.z0, -5.5], [-3.5, T1.z1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [T1.x0, -1.0, b], rotY: Math.PI / 2, length: b - a })),
+  ...[[T3.z + T3.w / 2 + T3.wall, T1.z1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [T1.x0, -1.0, b], rotY: Math.PI / 2, length: b - a })),
   { type: 'craters_sign', variant: 2, pos: [-19.2, 0, -5.3], rotY: -Math.PI / 2, text: 'TRENCH LINE B' },
-  { type: 'craters_trenchkit', variant: 4, pos: [-27.0, 0, -9.8], rotY: 1.9 },
+  { type: 'craters_trenchkit', variant: 4, pos: [-28.3, 0, -4.9], rotY: 1.9 },
+  { type: 'craters_trenchkit', variant: 3, pos: [-28.6, -1.0, T3.z + T3.w / 2 - 0.05], rotY: Math.PI },
 
   // ================= the zig-zag trench (T2): bridges, trench furniture along its bays
-  ...BRIDGES.map((b) => ({ type: 'craters_bridge', pos: [b.x, 0.7, b.z], rotY: 0 })),
+  ...BRIDGES.map((b) => ({ type: 'craters_bridge', pos: [b.x, 0.7, b.z], rotY: 0, span: +(2 * b.half).toFixed(3) })),
   { type: 'craters_trenchkit', variant: 0, pos: [2.0, -1.0, T2.pts[0][1] - T2.w / 2 + 0.05], rotY: 0, h: 1.0 },
   { type: 'craters_trenchkit', variant: 1, pos: [-0.2, -1.0, T2.pts[0][1] - T2.w / 2 + 0.05], rotY: 0 },
   { type: 'craters_trenchkit', variant: 3, pos: [13.0, -1.0, T2.pts[2][1] + T2.w / 2 - 0.05], rotY: Math.PI },
-  { type: 'craters_trenchkit', variant: 2, pos: [T2.pts[4][0] + T2.w / 2 - 0.05, -1.0, -14.0], rotY: -Math.PI / 2 },
-  { type: 'craters_trenchkit', variant: 0, pos: [T2.pts[4][0] - T2.w / 2 + 0.05, -1.0, -13.0], rotY: Math.PI / 2, h: 1.0 },
+  { type: 'craters_trenchkit', variant: 2, pos: [T2.pts[4][0] - T2.w / 2 + 0.05, -1.0, -14.4], rotY: Math.PI / 2 },
+  { type: 'craters_trenchkit', variant: 0, pos: [T2.pts[4][0] - T2.w / 2 + 0.05, -1.0, -12.6], rotY: Math.PI / 2, h: 1.0 },
+  { type: 'craters_trenchkit', variant: 3, pos: [24.2, -1.0, T4.z + T4.w / 2 - 0.05], rotY: Math.PI },
   { type: 'craters_trenchkit', variant: 4, pos: [5.2, 0, -24.8], rotY: 0.3 },
 
   // ================= the ring: lanterns at the stations, benches, boards, the downs inside and out
-  ...[at(210, 15.0), at(240, 18.7), [1.6, -25.9], at(300, 15.0), at(345, 18.6), [-2.4, -31.6]].map(([x, z]) => ({ type: 'craters_lantern', pos: [x, 0, z] })),
+  ...[at(210, 15.0), at(240, 18.7), [1.6, -25.9], at(300, 15.0), at(345, 18.6), [-2.4, -31.6]].map(([x, z]) => onGround('craters_lantern', x, z)),
   { type: 'craters_bench', pos: [at(306, 14.6)[0], 0, at(306, 14.6)[1]], rotY: inward(...at(306, 14.6)) },
   ...BOARDS.map((b) => ({ type: 'craters_board', pos: [b.x, 0, b.z], rotY: +(b.deg * Math.PI / 180).toFixed(4) })),
   { type: 'craters_bin', pos: [at(290, 18.9)[0], 0, at(290, 18.9)[1]] },
   { type: 'craters_boulder', pos: [-13.2, 0, -3.0], s: 0.8, seed: 5 },
   { type: 'craters_boulder', pos: [13.6, 0, -2.7], s: 0.9, seed: 4 },
   { type: 'craters_gorse', pos: [19.4, 0, -21.4], s: 1.0, seed: 1 },
-  { type: 'craters_hawthorn', pos: [21.8, 0, -19.3], rotY: -0.6, s: 1.0 },
+  { type: 'craters_hawthorn', pos: [20.9, 0, -23.3], rotY: -0.6, s: 1.0 },
   { type: 'craters_lifebuoy', pos: [...at(306, 29.6).slice(0, 1), 0, at(306, 29.6)[1]], rotY: outward(...at(306, 29.6)) },
 
   // ================= the flooded crater: reeds, poppies, lilies, a cliff warning on the lip beyond it
@@ -1071,7 +1096,8 @@ export const PLACEMENTS = [
   ...[[9.6, -9.0], [-8.4, -5.9], [4.2, -17.3], [16.0, -21.6], [-4.9, -26.6], [-13.6, -9.4], [-19.6, -23.2], [22.8, -9.8], [-27.6, -2.6], [11.2, -26.2], [-7.9, -25.2], [27.3, -3.5]].map(([x, z], i) => onGround('craters_poppies', x, z, { r: 0.8 + rnd(i * 3) * 0.5, n: 9 + (i % 5), seed: i + 20 })),
   ...[[6.4, -9.9], [-10.4, -8.2], [12.2, -22.9], [-3.8, -33.8], [20.6, -11.0], [-18.9, -21.9], [6.6, -29.2], [-7.2, -25.3], [-28.4, -10.6], [25.8, -12.2]].map(([x, z], i) => onGround('craters_tussock', x, z, { s: 0.55 + rnd(i * 7) * 0.4, seed: i + 3 })),
 
-  // ================= the coast: tussocks along the chalk lip
+  // ================= the coast: tussocks along the chalk lip, fallen chalk on the undercliff
   ...LIP_TUFTS,
+  ...SHELF_ROCKS,
 ];
 void [T1, T2, BRIDGES, POND, CRATER, COAST, STATIONS];
