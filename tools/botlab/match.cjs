@@ -31,6 +31,7 @@ app.on('browser-window-created', (_, win) => {
     await js('window.__inkwave._onPointerUnlock = () => {}; 0');
     if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));   // (MAP=testbox / podbox: test-only arenas, testmaps.cjs)
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', mode: '${MODE}', duration: ${MODE === 'zones' ? 300 : SECS} })`);
+    { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got} (a stage missing from MAPS falls back to the first one)`); app.exit(3); return; } }   // (never test the wrong stage silently)
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     // what-if tuning (TUNE, see the header): patched into the live config before the loadouts
     const tuned = TUNE ? await js(`(async () => { const C = await import('./src/config.js'); const out = [];

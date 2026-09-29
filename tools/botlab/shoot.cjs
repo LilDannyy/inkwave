@@ -28,6 +28,7 @@ app.on('browser-window-created', (_, win) => {
     fs.mkdirSync(OUT, { recursive: true });
     const t0 = Date.now();
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', duration: 180, time: '${TIME}', mode: '${MODE}' })`);
+    { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got} (a stage missing from MAPS falls back to the first one)`); app.exit(3); return; } }   // (never test the wrong stage silently)
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     const loadMs = Date.now() - t0;
     if (PLAY) await wait(PLAY * 1000);

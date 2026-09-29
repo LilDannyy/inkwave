@@ -65,7 +65,13 @@ function K_INDIGO() { return '#2d3f63'; }
 // ---- the railway
 const TZ = -(P.track[0] + P.track[1]) / 2;                 // Alpha's track centre (z −5)
 const XR = [P.crossing[0] + P.cutX, P.crossing[1] + P.cutX];  // the crossings' spans along a track (local x from its start)
-const OP = P.overpass, OPc = (OP.x0 + OP.x1) / 2;
+const OP = P.overpass, OPc = (OP.x0 + OP.x1) / 2, OPw = OP.x1 - OP.x0;
+const overpass = (y, tag) => ({ type: 'calamari_overpass', pos: [OPc, 0, 0], w: OPw, d: OP.z * 2, y, t: OP.t, ...tag,
+  stairs: OP.stairs.map(([z, w]) => ({ z, w, xLow: OP.foot - OPc, xTop: OP.x1 - OPc, yLow: P.side.y })),
+  drops: [OP.drops], innerDrops: [OP.drops],
+  piers: OP.piers.flatMap((x) => OP.pierZ.map((z) => [x - OPc, z, P.side.y])),
+  lamps: [[-OPw / 2 + 0.08, -7.2], [-OPw / 2 + 0.08, 7.2], [OPw / 2 - 0.08, -5.2], [OPw / 2 - 0.08, 5.2]],
+  signs: [[-OPw / 2 - 0.02, -6.0, -1], [OPw / 2 + 0.02, -5.0, 1]], clock: [0, 0], numbers: [[-2.0, '2'], [2.0, '1']] });
 const RAILWAY = [
   { type: 'calamari_track', pos: [-P.cutX, 0, TZ], length: P.cutX * 2, skip: [XR, [2 * P.cutX - XR[1], 2 * P.cutX - XR[0]]] },
   // (the railcars are stage movers: layout.js MOVERS builds + moves them — src/game/movers.js)
@@ -75,12 +81,10 @@ const RAILWAY = [
   // name boards: on the island under Alpha's overpass facing Alpha's track, on Alpha's side platform facing it
   { type: 'calamari_nameboard', pos: [5.6, P.island.y, -2.75], rotY: PI, notIn: 'boss' },
   { type: 'calamari_nameboard', pos: [-5.4, P.side.y, -7.35], rotY: 0, prev: 'SHIOKARA BAY →', next: '← INKOPOLIS' },
-  // Alpha's overpass (the +x one): girders, piers, railings, its three stairs' stringers, lamps, signs, clock, numbers
-  { type: 'calamari_overpass', pos: [OPc, 0, 0], w: OP.x1 - OP.x0, d: OP.z * 2, y: OP.y, t: OP.t,
-    stairs: OP.stairs.map(([z, w]) => ({ z, w, xLow: OP.foot - OPc, xTop: OP.x1 - OPc, yLow: P.side.y })),
-    piers: OP.piers.flatMap((x) => OP.pierZ.map((z) => [x - OPc, z, P.side.y])),
-    lamps: [[-(OP.x1 - OP.x0) / 2 + 0.08, -7.2], [-(OP.x1 - OP.x0) / 2 + 0.08, 7.2], [(OP.x1 - OP.x0) / 2 - 0.08, -5.2], [(OP.x1 - OP.x0) / 2 - 0.08, 5.2]],
-    signs: [[-(OP.x1 - OP.x0) / 2 - 0.02, 0, -1], [(OP.x1 - OP.x0) / 2 + 0.02, -5.0, 1]], clock: [0, 0], numbers: [[-2.0, '2'], [2.0, '1']] },
+  // Alpha's overpass (the +x one): girders, piers, railings (open at its two stair heads and at the one-way drops over
+  // the island, both edges), the stairs' stringers, lamps, signs, clock, numbers; Tower Command's is the taller one
+  overpass(OP.y, { notIn: 'tower' }),
+  overpass(OP.towerY, { onlyIn: 'tower' }),
   // Alpha's level crossing (x −25.5 … −18.5) over both tracks; Bravo's is the mirror. Its lamps are dark lenses: the
   // stage movers flash them (and ring its bell) while a railcar is due
   { type: 'calamari_crossing', pos: [(P.crossing[0] + P.crossing[1]) / 2, 0, 0], w: P.crossing[1] - P.crossing[0], reach: P.track[1], tracks: [TZ, -TZ], lit: false,
@@ -199,8 +203,16 @@ const HILL = [
   { type: 'calamari_lamppost', pos: [-26.1, P.y1, -18.2], rotY: Math.PI / 2, h: 3.8 },
   // T2: parapet walls along its edge over the back street, a pine, lanterns, a snowman, a snowbank
   { type: 'calamari_stonewall', pos: [-22.5, P.y2, -30.8], rotY: 0, length: 3.0, h: 0.85, t: 0.5 },
-  { type: 'calamari_stonewall', pos: [-15.5, P.y2, -30.8], rotY: 0, length: 4.0, h: 0.85, t: 0.5 },
+  { type: 'calamari_stonewall', pos: [-17.6, P.y2, -30.8], rotY: 0, length: 4.0, h: 0.85, t: 0.5 },
   { type: 'calamari_stonewall', pos: [-7.8, P.y2, -30.8], rotY: 0, length: 3.0, h: 0.85, t: 0.5 },
+  // the base's approaches: cover on T2 by the spawn deck's west front, on the loading dock, in the co-op yard, and
+  // stacks on the spawn deck's front corners (breaking the pad's long sightlines down the flanks)
+  { type: 'calamari_snowbank', pos: [-6.4, P.y2, -35.9], rotY: 0.2, length: 2.2, h: 0.95, d: 1.1, variant: 2 },
+  { type: 'calamari_fishboxes', pos: [3.6, P.dock.y, -35.2], rotY: 0.05, cols: 2, rows: 3, variant: 1 },
+  { type: 'calamari_fishboxes', pos: [13.6, 0, -32.9], rotY: -0.1, cols: 2, rows: 2, variant: 0 },
+  { type: 'calamari_fishboxes', pos: [-7.6, P.deck.y, -38.3], rotY: 0.08, cols: 2, rows: 3, variant: 2 },
+  { type: 'calamari_fishboxes', pos: [5.4, P.deck.y, -38.3], rotY: -0.06, cols: 2, rows: 3, variant: 1 },
+  { type: 'calamari_lantern', pos: [-3.5, 0, -30.1], h: 1.7 },
   { type: 'calamari_tree', pos: [-18.6, P.y2, -35.0], kind: 'pine', h: 5.6, variant: 2 },
   { type: 'calamari_lantern', pos: [-11.2, P.y2, -35.2], h: 1.7 },
   { type: 'calamari_snowman', pos: [-5.0, P.y2, -34.4], rotY: 0.4 },

@@ -35,6 +35,7 @@ app.on('browser-window-created', (_, win) => {
     if (process.env.TOWER_DEF) await js(`(async () => { const { MAP_LAYOUTS } = await import('./src/world/maps.js'); MAP_LAYOUTS['${MAP}'].tower = ${process.env.TOWER_DEF}; return 1; })()`);
     const start = async () => {
       await js(`window.__inkwave.debug.unfreeze(); window.__inkwave.api.startMatch({ mapId: '${MAP}', time: 'day', mode: 'tower' })`);
+      { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got} (a stage missing from MAPS falls back to the first one)`); app.exit(3); return; } }   // (never test the wrong stage silently)
       for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing' && !!window.__inkwave.match.tower`)) break; await wait(250); }
     };
     await start();
