@@ -684,7 +684,7 @@ class Game {
       : Math.min(MATCH.maxDuration, o.duration || this.settings.matchLength || MATCH.defaultDuration);
     if (!practice) this.lastMatchOpts = opts;
     G.audio?.init?.();
-    G.audio?.duck?.(1, 0.01);   // a new stage picked from the practice pause menu starts un-ducked
+    G.audio?.unduck?.(); G.audio?.pauseLoops?.(false);   // a new stage picked from the practice pause menu starts un-ducked, loops live
     this.input.requestLock();
     this.menus?.show(null);
     await this._fade(1, 350);
@@ -752,6 +752,7 @@ class Game {
     this.input.exitLock();
     this.menus?.show('loadout', { under: ['pause'], quick: true });
     G.audio?.duck?.(0.5, 99);
+    G.audio?.pauseLoops?.(true);
     G.music?.pause?.();
   }
 
@@ -855,7 +856,8 @@ class Game {
       this._startAttract();
       this.menus?.show(this.menus?.hasScreen?.('lobby') === false ? 'main' : 'lobby');
       this._playMusic('menu');
-      G.audio?.duck?.(1, 0.01);
+      G.audio?.unduck?.();
+      G.audio?.pauseLoops?.(false);
       this._fade(0, 500);
     } finally { this._netEnding = false; }
   }
@@ -898,6 +900,7 @@ class Game {
     this.input.exitLock();
     this.menus?.show('pause');
     G.audio?.duck?.(0.5, 99);
+    G.audio?.pauseLoops?.(true);   // charge hums, rolls, machinery: silent while the match is frozen
     G.music?.pause?.(); // a recording holds its place so the final-minute song stays in step with the clock
   }
   resume() {
@@ -906,7 +909,8 @@ class Game {
     this.match.paused = false;
     if (this.match.controller) this.match.controller.enabled = true;
     this.input.requestLock();
-    G.audio?.duck?.(1, 0.01);
+    G.audio?.unduck?.();
+    G.audio?.pauseLoops?.(false);
     G.music?.resume?.();
   }
   async quitToMenu(screen = 'main') {
@@ -924,7 +928,8 @@ class Game {
     this.hud?.setPractice?.(false);
     this.menus?.show(screen);
     this._playMusic('menu');
-    G.audio?.duck?.(1, 0.01);
+    G.audio?.unduck?.();
+    G.audio?.pauseLoops?.(false);
     this._fade(0, 500);
   }
 
