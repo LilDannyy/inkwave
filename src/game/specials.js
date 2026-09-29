@@ -19,6 +19,7 @@ import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
 import { rumble } from './actor.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
 import { KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';
+import { teamKnown } from './botSight.js';
 
 // world props for the big specials (kraken, speaker, missile, jetpack, crab) — optional until they exist
 let PROPS = null;
@@ -1302,13 +1303,19 @@ const IMPL = {
       emit('special:launch', { actor: a, to: to.clone() });
       this.end(a, 'launch');
     },
-    // bots: the thickest cluster of enemies, else the most enemy ink
+    // bots: the thickest cluster of the enemies their team knows about (seen, located or seen lately — bots.js /
+    // botSight.js: never where the rest really are), else the most enemy ink
     botTarget(a, s) {
       let best = null, bs = 0;
+      const known = [];
       for (const e of G.actors) {
         if (e.team === a.team || !e.alive) continue;
-        let n = 1; for (const o of G.actors) if (o !== e && o.team === e.team && o.alive && o.pos.distanceTo(e.pos) < 5) n++;
-        if (n > bs) { bs = n; best = e.pos; }
+        const k = a.bot ? teamKnown(a.team, e, 3) : null, p = a.bot ? k && k.pos : e.pos;
+        if (p) known.push(p);
+      }
+      for (const p of known) {
+        let n = 1; for (const q of known) if (q !== p && q.distanceTo(p) < 5) n++;
+        if (n > bs) { bs = n; best = p; }
       }
       const B = bounds();
       if (!best || Math.random() < 0.35) {

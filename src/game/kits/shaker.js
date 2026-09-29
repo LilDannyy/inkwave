@@ -236,7 +236,7 @@ function botHold(a, st, inp) {
   const b = a.bot;
   if (st.botLevel == null) {
     // (Boss Battle: the target is a boss hit-shape / crablet record — its position may sit on .shape)
-    const t = b.target, tp = t && (t.pos || (t.shape && t.shape.pos)), d = tp ? Math.hypot(tp.x - a.pos.x, tp.z - a.pos.z) : 8;
+    const t = b.tv || b.target, tp = t && (t.pos || (t.shape && t.shape.pos)), d = tp ? Math.hypot(tp.x - a.pos.x, tp.z - a.pos.z) : 8;
     if (b.mode === 'fight') st.botLevel = d > 10 ? 3 : d > 6.5 ? (Math.random() < 0.6 ? 3 : 2) : (Math.random() < 0.55 ? 2 : 1);
     else st.botLevel = Math.random() < 0.5 ? 3 : 2;   // painting / a zone lob: a long ink line
     st.botMax = b.mode === 'fight' ? 3.2 : 2.2;
@@ -346,7 +346,7 @@ function lobPitch(d, dy, speed) {
   return be < 1.2 ? best : null;
 }
 function botLob(a, sub, short) {
-  const b = a.bot, t = b?.target;
+  const b = a.bot, t = b?.tv || b?.target;   // (the target as the bot knows it: out of sight, where it was — bots.js)
   if (!t || !t.alive || b.mode !== 'fight') return;
   const tx = t.pos.x + t.vel.x * 0.5, tz = t.pos.z + t.vel.z * 0.5;          // lead it by about the flight time
   const p = lobPitch(Math.max(1.5, Math.hypot(tx - a.pos.x, tz - a.pos.z) - short), t.pos.y - a.pos.y, sub.throwSpeed);
