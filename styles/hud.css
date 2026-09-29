@@ -1132,6 +1132,76 @@ body.iw-dio-on .iw-xh, body.iw-dio-on .iw-mks, body.iw-dio-on .iw-map, body.iw-d
 .iw-dio-z.is-icon .iw-dio-z__l { display: none; }
 
 
+/* ------------------------------------------------------------------ who's ahead (src/ui/hud-lead.js)
+   Each roster group grows a little (the team ahead) or shrinks a little (the team behind), scaled from its inner edge so
+   it never runs into the timer or the count badges, and hangs a small bouncing banner under itself — LEAD / DANGER in
+   that team's ink, clear of the "you" caret, the respawn numbers and everything hanging under the timer. Taking the
+   lead: a flash behind the group, its badges light up in a wave from the inner edge, a ring + ink drops burst round the
+   banner. The banner is counter-scaled so it keeps its size whatever its group's. */
+.iw-squad { position: relative; isolation: isolate; transition: scale .42s cubic-bezier(.3, 1.3, .55, 1); }
+.iw-squad--a { transform-origin: 100% 50%; }
+.iw-squad--b { transform-origin: 0 50%; }
+.iw-squad.is-grow { scale: 1.18; }
+.iw-squad.is-shrink { scale: .86; }
+.iw-squad.is-leadflash { animation: iw-lead-hop .5s cubic-bezier(.3, .7, .4, 1); }
+@keyframes iw-lead-hop { 28% { translate: 0 calc(var(--u) * -.55); } }
+.iw-lead-flash { position: absolute; left: -12%; right: -12%; top: -60%; bottom: -60%; z-index: -1; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(closest-side, #fff 0, color-mix(in srgb, var(--tc-l) 85%, transparent) 36%, color-mix(in srgb, var(--tc) 45%, transparent) 62%, transparent 100%); }
+.iw-squad.is-leadflash .iw-lead-flash { animation: iw-lead-flash .9s var(--out); }
+@keyframes iw-lead-flash { 0% { opacity: 0; scale: .5 .7; } 14% { opacity: .95; } 100% { opacity: 0; scale: 1.15 1.3; } }
+.iw-squad.is-leadflash .iw-sq__shape { animation: iw-lead-badge .6s ease-out backwards; }
+.iw-squad.is-leadflash .iw-sq:nth-child(3) .iw-sq__shape { animation-delay: .06s; }
+.iw-squad.is-leadflash .iw-sq:nth-child(2) .iw-sq__shape { animation-delay: .12s; }
+.iw-squad.is-leadflash .iw-sq:nth-child(1) .iw-sq__shape { animation-delay: .18s; }
+@keyframes iw-lead-badge { 30% { filter: brightness(1.9) drop-shadow(0 0 5px #fff); scale: 1.14; } }
+
+.iw-lead { position: absolute; left: 50%; top: calc(100% + var(--u) * 1.45); width: 0; height: 0; display: flex; justify-content: center; align-items: flex-start; z-index: 2; pointer-events: none;
+  transition: scale .42s cubic-bezier(.3, 1.3, .55, 1); }
+.iw-squad.is-grow .iw-lead { scale: .847; }     /* 1 / 1.18 */
+.iw-squad.is-shrink .iw-lead { scale: 1.163; }  /* 1 / .86 */
+.iw-lead__tag { flex: none; display: block; font-size: calc(var(--u) * 1.22); border-radius: 999px; transform-origin: 50% 100%; rotate: -4deg; opacity: 0; scale: .3;
+  box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px var(--k), 0 calc(var(--u) * .3) 0 5px rgba(0, 0, 0, .3); transition: opacity .18s, scale .25s var(--out); }
+.iw-lead--b .iw-lead__tag { rotate: 4deg; }
+.iw-lead__in { display: flex; align-items: center; gap: .3em; padding: .3em .8em .32em .5em; border-radius: 999px; white-space: nowrap;
+  background: linear-gradient(180deg, var(--tc-l) -45%, var(--tc) 45%, var(--tc-d) 150%); box-shadow: inset 0 .12em 0 rgba(255, 255, 255, .35); }
+.iw-lead__ico { display: block; flex: none; width: 1.2em; height: 1.2em; filter: drop-shadow(0 .06em 0 var(--k)); }
+.iw-lead__ico svg { display: block; width: 100%; height: 100%; }
+.iw-lead__txt { font-size: 1em; line-height: 1; letter-spacing: .06em; color: #fff; }
+.iw-lead.is-on .iw-lead__tag { opacity: 1; scale: 1; animation: iw-lead-in .55s var(--spring2) backwards, iw-lead-bounce .9s .55s infinite; }
+/* DANGER: hazard stripes (dark + the team's ink) round the pill, a quicker two-hop bounce with a tilt, a pulsing glow */
+.iw-lead.is-danger .iw-lead__tag { padding: .2em; background: repeating-linear-gradient(-45deg, var(--k) 0 .3em, var(--tc) .3em .6em); }
+.iw-lead.is-on.is-danger .iw-lead__tag { animation: iw-lead-in .55s var(--spring2) backwards, iw-lead-alarm 1.1s .55s infinite; }
+.iw-lead.is-on.is-danger .iw-lead__in { animation: iw-lead-pulse .55s ease-in-out infinite alternate; }
+@keyframes iw-lead-in { 0% { opacity: 0; scale: .2; translate: 0 calc(var(--u) * -1.4); } 55% { opacity: 1; scale: 1.22; translate: 0 0; } 100% { scale: 1; } }
+@keyframes iw-lead-bounce {
+  0% { translate: 0 0; scale: 1.1 .88; animation-timing-function: cubic-bezier(.25, .8, .4, 1); }
+  14% { scale: .95 1.06; }
+  45% { translate: 0 calc(var(--u) * -.6); scale: 1; animation-timing-function: cubic-bezier(.6, 0, .85, .35); }
+  86% { translate: 0 0; scale: 1; }
+  100% { translate: 0 0; scale: 1.1 .88; } }
+@keyframes iw-lead-alarm {
+  0% { translate: 0 0; rotate: -6deg; scale: 1.08 .9; animation-timing-function: cubic-bezier(.25, .8, .4, 1); }
+  22% { translate: 0 calc(var(--u) * -.5); rotate: 2deg; scale: 1; animation-timing-function: cubic-bezier(.6, 0, .85, .35); }
+  44% { translate: 0 0; rotate: 6deg; scale: 1.08 .9; animation-timing-function: cubic-bezier(.25, .8, .4, 1); }
+  66% { translate: 0 calc(var(--u) * -.5); rotate: -2deg; scale: 1; animation-timing-function: cubic-bezier(.6, 0, .85, .35); }
+  88%, 100% { translate: 0 0; rotate: -6deg; scale: 1.08 .9; } }
+@keyframes iw-lead-pulse { to { filter: brightness(1.22) saturate(1.15); } }
+/* the take-the-lead burst round the banner */
+.iw-lead__burst { position: absolute; left: 0; top: calc(var(--u) * 1.1); width: 0; height: 0; }
+.iw-lead__burst i { position: absolute; left: calc(var(--u) * -.5); top: calc(var(--u) * -.5); width: calc(var(--u) * 1); height: calc(var(--u) * 1); border-radius: 50% 50% 50% 0;
+  background: var(--tc); box-shadow: 0 0 0 2px var(--k); opacity: 0; }
+.iw-lead__burst .iw-lead__ring { left: calc(var(--u) * -2); top: calc(var(--u) * -2); width: calc(var(--u) * 4); height: calc(var(--u) * 4); border-radius: 50%; background: none;
+  border: 4px solid var(--tc-l); box-shadow: 0 0 0 2px var(--k), inset 0 0 0 2px var(--k); }
+.iw-lead.is-take .iw-lead__burst i { animation: iw-lead-drop calc(var(--d) * 1s) var(--out) forwards; }
+.iw-lead.is-take .iw-lead__burst .iw-lead__ring { animation: iw-lead-ring .6s var(--out) forwards; }
+@keyframes iw-lead-drop { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1.1); } 70% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(var(--u) * -6 * var(--s))) scale(.4); } }
+@keyframes iw-lead-ring { 0% { opacity: 1; scale: .25; } 100% { opacity: 0; scale: 2.3 1.5; } }
+@media (prefers-reduced-motion: reduce) {
+  .iw-lead.is-on .iw-lead__tag, .iw-lead.is-on.is-danger .iw-lead__tag { animation: iw-pop .3s ease-out backwards; }
+  .iw-lead.is-on.is-danger .iw-lead__in, .iw-squad.is-leadflash, .iw-squad.is-leadflash .iw-sq__shape { animation: none; }
+  .iw-lead__burst { display: none; }
+}
+
 /* =====================================================================================
    BOSS MODE (src/ui/hud-boss.js) — boss bar, title card, move callouts, damage numbers, phase banners, endings.
    --boss = the boss's corrupt ink (team 1), --weak = the weak-point glow (= the squad's ink).
