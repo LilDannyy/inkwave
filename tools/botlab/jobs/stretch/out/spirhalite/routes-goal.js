@@ -12,7 +12,7 @@
     'centre: pillar bridge → pillar islet → rope bridge → shelf → shoulder': [MID, [-1.5, 0, -10], [3.2, 0, -21], [1.4, 1.3, -34.6], [2.0, 0, -44.8], GOAL],
     'centre: … → the ford → tide-pool islet → shoulder': [MID, [-1.5, 0, -10], [-4.8, 0, -24], [-5.1, 0, -31], [-3.0, 0, -38], GOAL],
     'east: spit bridge → Arch spit → its root → shoulder': [MID, [14.5, 0.25, -5], [13.8, 0, -18], [16.4, 0, -33], [18.0, 0, -46.5], GOAL],
-    'west: mid islet → neck → the dig → dig bridge → tide-pool islet': [MID, [-14, 0, -10], [-20.8, 0, -20], [-22, 0, -30], [-20.5, 0, -42], [-13, 0.25, -42], [-5, 0, -44], GOAL],
+    'west: mid islet → neck → the dig → dig bridge → tide-pool islet': [MID, [-14, 0, -10], [-20.8, 0, -20], [-22, 0, -30], [-21, 0, -40], [-13, 0.25, -40], [-5, 0, -41], GOAL],
     'west (outer): causeway → the dig → camp islet → pinch → base': [MID, [-24, 0, -3], [-29, 1.3, -18], [-33, 0, -35], [-22, 0, -52], [-6, 0, -52], GOAL],
   };
   const res = {};

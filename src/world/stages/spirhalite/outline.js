@@ -37,8 +37,8 @@ export const TIDE_E = [[8.0, -42.6], [6.6, -41.4], [6.4, -38.4], [6.9, -35.6], [
 export const FORD_E = [[-3.6, -32.4], [-3.6, -29.6]];                                                                       // the ford's east edge
 export const PILLAR_S = [[-1.6, -28.0], [1.6, -27.6], [3.8, -26.6], [5.0, -24.8], [5.3, -23.0]];                           // the pillar islet's south shore
 export const FORD_W = [[-7.3, -28.4], [-6.6, -29.8], [-6.6, -32.4], [-7.4, -34.4]];                                        // the ford's west edge
-export const TIDE_W = [[-8.2, -36.6], [-8.0, -41.0], [-6.6, -43.4], [-6.4, -45.6], [-8.2, -47.6]];                         // the tide-pool islet: west shore, the tombolo
-export const DIG_LAGOON = [[-11.4, -48.4], [-14.6, -47.8], [-17.2, -46.2], [-18.6, -43.4], [-19.2, -39.4], [-19.4, -35.0], [-19.2, -31.0], [-18.6, -27.6]];   // the lagoon's south end, the dig's lagoon shore
+export const TIDE_W = [[-8.2, -36.6], [-8.0, -40.6], [-7.4, -42.6], [-8.6, -44.2]];                                         // the tide-pool islet: west shore, the tombolo
+export const DIG_LAGOON = [[-11.4, -44.8], [-14.4, -44.9], [-17.0, -44.2], [-18.6, -42.8], [-19.2, -39.4], [-19.4, -35.0], [-19.2, -31.0], [-18.6, -27.6]];   // the lagoon's south end, the dig's lagoon shore
 
 export const CHAIN = [
   [1.0, 7.6], [-4.0, 5.6], [-8.0, 3.9], [-12.0, 2.6], [-16.0, 1.4], [-20.0, 0.6], [-24.0, 0.2], [-28.0, -0.4],   // mid islet: north shore

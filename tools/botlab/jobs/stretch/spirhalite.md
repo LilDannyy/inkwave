@@ -44,8 +44,10 @@ front (the defenders re-form on the tombolo behind it).
 - the **sandbar ford** on the west, a 3 m neck of wet sand the tide runs over, with worn stepping stones and a rope on
   driftwood stakes along both edges (the low route, onto the islet's beach under the shelf).
 Plus two **log bridges** (the expedition's, like the two at mid) that I added: the **dig bridge** across the lagoon
-from the bend's lane to the islet's west beach (12 m, a mossy boulder beside its middle), and the **east bay bridge**
-from the Arch spit's bay side to the pillar islet's south-east shore (7 m).
+from the bend's lane to the islet's west beach (12.4 m, 4 m wide like the pillar's bridge — the tower crosses it — a
+mossy boulder beside it), and the **east bay bridge** from the Arch spit's bay side to the pillar islet's south-east
+shore (7 m). The lagoon ends a few metres south of the dig bridge; south of it the camp islet's north beach and the
+islet's tombolo run together (the base's front).
 
 **The dig** (the bend's new ground, between the causeway's broken end and the camp): Deep Cut follow the causeway
 under the sand — a 3.5 m trench, 1 m deep, its floor the old paving exposed, timber shoring on its walls, a ramp at
@@ -54,7 +56,7 @@ barrow, the **finds shelter** (tarp and table) at its north end by the causeway'
 lanterns and path lights; a spoil mound (1.3) at its south-west corner with crates and a work light on it; rock pools
 and a palm on its sea shore.
 
-**The spit's root**: the Arch spit carried 20 m on to the tail — a low dune, Deep Cut's **supply drop** (a pallet of
+**The spit's root**: the Arch spit carried 20 m on to the tail — a low dune across it, Deep Cut's **supply drop** (a pallet of
 crates in its cargo net, the orange-and-white parachute collapsed behind it), a mossy rock outcrop and a rock pool on
 the sea side, a palm, driftwood, a life ring.
 
@@ -83,9 +85,9 @@ grass and flowers on the tombolo.
 |---|---|---|
 | centre: pillar bridge → the pillar islet → the rope bridge → the shelf → the tombolo → the shoulder | 66.0 | 5.6 |
 | centre: … → the ford → the tide-pool islet → the shoulder | 66.9 | 5.7 |
-| east: the spit bridge → the Arch spit → its root → the shoulder's east slope | 82.8 | 7.0 |
-| west: the mid islet → the neck → the dig → the dig bridge → the tide-pool islet | 98.0 | 8.3 |
-| west, outer: the causeway → the dig → the camp islet → the pinch → the base | 124.9 | 10.6 |
+| east: the spit bridge → the Arch spit → its root → the shoulder's east slope | 83.4 | 7.1 |
+| west: the mid islet → the neck → the dig → the dig bridge → the tide-pool islet | 96.6 | 8.2 |
+| west, outer: the causeway → the dig → the camp islet → the pinch → the base | 123.3 | 10.5 |
 
 Cross links in the slice: the dig bridge (bend ↔ the islet), the east bay bridge (spit ↔ the pillar islet), the ford and
 the rope bridge (the pillar islet ↔ the islet), the camp islet's north beach (the dig ↔ the tombolo). The spawn keeps
@@ -97,21 +99,24 @@ its two stairs (north onto the shoulder, west onto the arm) and the rim's drops.
   (`water-log.js`: sporadic, mostly fights on the old middle stroke's shores; the new shores' kerb gaps it found — the
   east bay's head, the east bay bridge's landings, the ford's corner — are closed).
 - **Zone Control**: centre and side zones unchanged (the side zone round the cascade pillar, 20.5 m from mid). Final
-  full zones match: Bravo on time 74 vs 70, the side zone contested (sideA shares A 76 / B 45, A 100 / B 60,
-  A 93 / B 52), stuck 0.4 %, water 2. (Before the east bay bridge one match had a side zone nobody but its owner ever
+  full zones match: Bravo on time 66 vs 42, both side zones contested (sideB shares A 67 / B 58, sideA A 70 / B 100,
+  sideB A 23 / B 99), stuck 0.3 %, water 3 (an earlier one: Bravo on time 74 vs 70, sideA A 76 / B 45 …). (Before the east bay bridge one match had a side zone nobody but its owner ever
   entered, A 3 / B 100; see above.)
 - **Tower Command** (two checkpoints): the track keeps the user's drawing — along the central sandbar and the mid islet's
   north shore, climb the causeway's sheer end (checkpoint 1 at its foot, unchanged at 37 m), along it, drop off its
-  broken end — then its detour loops: round the dig in three legs (out along the sea shore, back up **through the
-  trench** down its ramp and up the other, down the lagoon shore), along the camp islet's north beach between the
-  fallen blocks and the camp, up the tide-pool islet's west side and **climb onto the shelf**, along it under the
-  watch-post (**checkpoint 2 on the shelf**, the strategic point) and drop off its south face to the goal at the
-  islet's foot, 13.6 m from the pad. Square corners, two climbs and two drops (the ramps into and out of the trench are
-  inclines). **174.0 m / side** (target 176.2, −1.2 %), speed 1.101 → 2.175 m/s, **100 s to the goal**; tower-check:
-  0 holes, 0 issues, both rides a knockout with nobody knocked off. Tower match: Bravo (neutralised in overtime), counts 69 vs 24, best
-  pushes A 46.5 m / B 144.9 m, both teams cleared a checkpoint, stuck 0.4 %, 0 s stuck by the tower (an earlier match:
-  Alpha on time 25 vs 42, pushes 143.1 / 105.2 m). Pictures: `tower-plan.jpg` (the loops), `tower-rail-top.jpg`,
-  `top-tower.jpg`.
+  broken end — then down **through the dig's trench** (down its ramp, up the other), across the **dig bridge** and
+  **climb onto the shelf**: **checkpoint 2 on the shelf** under the watch-post (the strategic point) at 110.9 m, 63 % of
+  the way. Then its detour loop: drop off the shelf's south face, back west along the lagoon's south beach, round the
+  dig's south corner and east again along the camp islet's north beach (the fallen blocks between the two runs) to the
+  goal below the helipad's west stair, 13 m from the pad (its old place, moved with the base). Square corners, two
+  climbs and two drops (the trench's ramps and the bridge's deck are inclines). **177.3 m / side** (target 176.2,
+  +0.6 %), speed 1.101 → 2.216 m/s, **100 s to the goal**; tower-check: 0 holes, 0 issues, both rides a knockout with
+  nobody knocked off. (The first stretched track ran the whole detour round the dig before the shelf, putting
+  checkpoint 2 at 93 %; the lead asked for it at 60–75 %: the dig bridge was widened to 4 m for it and the lagoon's
+  south tip pulled 3.5 m north so the base's front holds the two runs.) Tower matches on this track: Bravo by knockout
+  69 vs 0 (Bravo pushed all 177.3 m and cleared both checkpoints, Alpha 48.1 m), stuck 0.5 %, 0 s stuck by the tower;
+  two earlier samples Bravo on time 80 vs 31 (pushes 37 / 110.9 m, i.e. up to checkpoint 2) and 77 vs 65. Pictures:
+  `tower-plan.jpg` (the route and its loop), `tower-rail-top.jpg`, `top-tower.jpg`.
 - **Boss Battle**: HULLBREAKER's home ground 478 m² on the base islet, walked 34 m in 150 s, never stuck, never off
   its floor, plays its moves (charges included) (`out/spirhalite/boss-check.js`).
 
@@ -122,12 +127,12 @@ its two stairs (north onto the shoulder, west onto the arm) and the rim's drops.
   shelf itself), the ford (under its west face) and the dig bridge (the islet's west beach), from the base side by the
   tombolo and the shelf's south sand slope; the watch-post (2.5) and its parapet stand over it, the pillar islet and
   the notch in front of it, the view runs back to mid past the cascade pillar. Tower Command's checkpoint 2 is on the
-  same shelf, 3 m east.
+  same shelf, beside it.
 - **Goal**: the shoulder in front of the helipad's north stair, **(9.8, −49.5), y 1.3** (8.8 m from the pad's centre,
   below the deck's edge, in the defenders' view from the pad). Routes: from the tide-pool islet's tombolo up the
   shoulder's west slope; from the spit's root up its east slope; from the camp islet and the pinch along the pad dune's
   arm and round the north stair's foot.
-- **Routes mid → goal**: see the table above — 66.0 (rope bridge), 66.9 (ford), 82.8 (spit), 98.0 (dig bridge), 124.9 m
+- **Routes mid → goal**: see the table above — 66.0 (rope bridge), 66.9 (ford), 83.4 (spit), 96.6 (dig bridge), 123.3 m
   (causeway round the bend).
 - **High ground**: none a carrier can hide on out of reach. The heights are the shelf (1.3) and the watch-post's floor
   (2.5, steps from the shelf, its 1.2 m faces jumpable), the spoil mound (1.3, a sand slope), the dunes and crests
@@ -142,13 +147,13 @@ its two stairs (north onto the shoulder, west onto the arm) and the rim's drops.
 |---|---|---|
 | spawn → mid, nav (t0 / t1) | 3.88 / 4.55 s (avg 4.22) | 6.07 / 6.36 s (avg 6.22, × 1.47) |
 | straight spawn → mid | 37.0 m | 59.0 m |
-| tower track / side | 88.1 m, 1.101 m/s, cps at 37 / 62.6 m, 100 s | 174.0 m, 2.175 m/s, cps at 37 / 162.8 m, 100 s |
+| tower track / side | 88.1 m, 1.101 m/s, cps at 37 / 62.6 m (42 / 71 %), 100 s | 177.3 m, 2.216 m/s, cps at 37 / 110.9 m (21 / 63 %), 100 s |
 | tower-check | clean | 0 holes, 0 issues, rides: knockout / knockout, 0 knocked off |
-| cover (≤ 5 m, `cover-map.js`) | 81.4 % of 3104 cells (largest open 17 m: the camp's crest) | 94.9 % of 4408 cells (largest open 14.2 m: the centre zone's sandbar) |
+| cover (≤ 5 m, `cover-map.js`) | 81.4 % of 3104 cells (largest open 17 m: the camp's crest) | 94.3 % (largest open 14.2 m: the centre zone's sandbar) |
 | climb-audit | — | 265 climbs, 0 barred |
-| bots turf (stuck / water) | — | 0 % / 1–5 |
+| bots turf (stuck / water) | — | 0–0.4 % / 1–5 per 180 s |
 | boss home ground | — | 478 m², walked 34 m, never stuck |
-| lightmap rows (8 ppm / 2048) | 654 | 964 (baked, hash 3adb5294) |
+| lightmap rows (8 ppm / 2048) | 654 | 927 (baked, hash 8be33f5a) |
 | nav nodes / A* cap needed (size-budget) | 3201 / 3000 | 4445 / 6000 (the engine's cap: max(6000, 3 × nodes)) |
 | paint atlas | 27.6 ppm | 21.5 ppm |
 | perf at load (turf day, `top`) | 278 calls, 1.63 M tris, 3.26 ms cpuRender, loadMs 6181 | 297 calls (× 1.07), 1.82–1.84 M tris (× 1.13), 2.35–2.46 ms (the baseline ran under more load), loadMs 5683–5778 |
@@ -179,8 +184,8 @@ None changed. (Nothing needed: the stretch lives in the stage's own folder, its 
 
 - spawn-mid lands at × 1.47, in the band but under the 6.3 s aim: the east bay bridge (added for the side zone) gave
   Bravo a slightly shorter way in (6.66 → 6.36 s). Δ 23 would add ~0.1 s if the lead wants it higher.
-- The tower's second checkpoint sits at 162.8 of 174 m (93 %): the strategic point is the base's last stand, and the
-  detour loops (the dig) come before it. A checkpoint in the middle of the loops would split the long run after the
-  first one; I kept the brief's "on the slice's strategic point".
 - Water splats stay sporadic (1–5 a match), most on the old middle stroke's shores in fights.
+- Found and fixed with the tower rework: in dd395af the spit root's dune (shifted 0.6 m east in the last kerb pass) and
+  the shore kerbs left no walkable gap round it, so the nav's spit lane was cut at its root (mid → goal by the spit
+  read 187 m). The dune now lies across the spit (you walk over it); the lane reads 83.4 m again.
 - The mist's far banks show as pale wedges in the corners of the high art shot (as before the stretch).
