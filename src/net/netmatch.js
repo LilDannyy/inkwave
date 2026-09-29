@@ -109,8 +109,10 @@ export class NetMatch {
   recSplat(c, radius, team, o) {
     if (this.applying || this.mute > 0 || o.cosmetic) return;
     const st = o.stretch;
-    this._rec(['s', r2(c.x), r2(c.y), r2(c.z), r2(radius), team, r3(o.seed ?? Math.random()), o.kind ?? 0,
-      st ? r3(st.x) : 0, st ? r3(st.y) : 0, st ? r3(st.z) : 0, st ? r2(o.stretchAmt ?? 1) : 0]);
+    const e = ['s', r2(c.x), r2(c.y), r2(c.z), r2(radius), team, r3(o.seed ?? Math.random()), o.kind ?? 0,
+      st ? r3(st.x) : 0, st ? r3(st.y) : 0, st ? r3(st.z) : 0, st ? r2(o.stretchAmt ?? 1) : 0];
+    if (o.pod != null && o.pod !== 1) e.push(r2(o.pod));   // (a sprout pod's weight for it: pods.js)
+    this._rec(e);
   }
 
   recProj(p) {
@@ -148,6 +150,8 @@ export class NetMatch {
   recZone(e) { if (this.isHost && G.netm === this) this._rec(['z', e]); }
   // Tower Command likewise: control / checkpoints / position snapshots / overtime / the end (tower.js netEvent)
   recTower(e) { if (this.isHost && G.netm === this) this._rec(['tw', e]); }
+  // sprout pods: a hedge grown (by which team, when) / trampled, the meters' look (pods.js netEvent)
+  recPods(e) { if (this.isHost && G.netm === this) this._rec(['pd', e]); }
   // a guest's hit on the boss (or a crablet): shooter-authoritative, applied by the host that runs it
   sendBossHit(attacker, d, weak, w, crab = -1) {
     if (this.isHost || attacker.nid === undefined) return;
@@ -473,6 +477,7 @@ export class NetMatch {
         const opts = { seed: e[7] };
         if (e[8]) opts.kind = e[8];
         if (st) { opts.stretch = st; opts.stretchAmt = e[12]; }
+        if (e[13]) opts.pod = e[13];
         G.paint?.splat(_v.set(e[2], e[3], e[4]), e[5], e[6], opts);
         this.applying = false;
         break;
@@ -498,6 +503,7 @@ export class NetMatch {
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
+      case 'pd': this.match?.pods?.netEvent(e[2]); break;
       case 'bc': { const b = this.match?.boss; if (b && !b.sim) b._crabBurst(e[2], e[3], e[4], e[5], !!e[6]); break; }
     }
   }

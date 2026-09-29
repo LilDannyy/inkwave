@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { registerMarinaVessels } from './props-marina-vessels.js';
 import { registerMarinaDock } from './props-marina-dock.js';
+import { registerPods } from './props-pods.js';
 import { STAGES } from './stages/index.js';
 
 const PI = Math.PI, TAU = PI * 2, HP = PI / 2;
@@ -3209,6 +3210,7 @@ const PACK_HELPERS = {
 };
 registerMarinaVessels(D, PACK_HELPERS);
 registerMarinaDock(D, PACK_HELPERS);
+registerPods(D, PACK_HELPERS);   // sprout pods' default looks (src/game/pods.js)
 // stage-owned packs (src/world/stages/<id>/props.js, types prefixed '<id>_'), each on its own: a broken pack only loses
 // its own types (and never overrides a type that already exists)
 for (const [id, st] of Object.entries(STAGES)) {
@@ -3334,6 +3336,7 @@ export class PropKit {
     }
     return group;
   }
+  hasType(type) { return !!D[type]; }
   disposePart(group) {
     if (!group) return;
     group.removeFromParent();
