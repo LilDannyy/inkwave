@@ -8,7 +8,7 @@
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const L = __G.level, B = L.bounds, THREE = await import('three');
-  const skip = window.__openSkip || (L.layout?.id === 'treehills' ? [[-6, 6, -5.5, 5.5]] : []);
+  const skip = window.__openSkip || (L.layout?.id === 'treehills' ? [[-7.4, 7.4, -6.8, 6.8]] : []);   // (the plaza top + its zone)
   const x0 = Math.floor(B.minX), z0 = Math.floor(B.minZ), nx = Math.ceil(B.maxX) - x0, nz = Math.ceil(B.maxZ) - z0;
   const ids = [], P = new THREE.Vector3();
   // kerbs and copings along the edges are the ground's trim (a lip of 0.14–0.3 m), not a level of their own
@@ -33,8 +33,9 @@
   };
   const solidAt = (x, y, z) => {
     P.set(x, y, z);
-    // (within 0.2 m of the sample: thin walls and posts between lattice points are found)
-    for (const id of L.queryBlocks(x - 0.21, z - 0.21, x + 0.21, z + 0.21, ids)) { const b = L.blocks[id]; if (b.solid && !b.dynamic && !b.rail && L.pointInBlock(b, P, 0.2)) return true; }
+    // (within 0.15 m of the sample, so thin walls between lattice points are found; posts under 0.6 m across — lamps,
+    // bollards, pylons' bare shafts — aren't cover)
+    for (const id of L.queryBlocks(x - 0.16, z - 0.16, x + 0.16, z + 0.16, ids)) { const b = L.blocks[id]; if (b.solid && !b.dynamic && !b.rail && Math.max(b.half.x, b.half.z) >= 0.3 && L.pointInBlock(b, P, 0.15)) return true; }
     return false;
   };
   const fy = new Float32Array(nx * nz).fill(NaN);
