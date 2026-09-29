@@ -191,7 +191,9 @@ export const PODS = {
   bulbY: 0.46,
   modes: { boss: 'on' },
   list: [
-    pod('meadow-w', -6.3, G0, -7.6, 0),                 // between the plaza's climbable face and the greenhouse pod
+    // between the plaza's climbable face and the greenhouse pod: a shorter hedge (2.4 m), its ends ≥ 1.35 m from the
+    // plaza's corner and the mound's ramp (a full 3 m left 1 m slots at both ends)
+    pod('meadow-w', -6.25, G0, -7.9, 0, [2.4, 1.8, 0.9]),
     pod('meadow-e', 5.3, G0, -11.8, Math.PI / 2),       // east of the plaza's ramp, facing the mound
     pod('garden-w', -2.6, G0, -19.6, Math.PI / 2),      // the garden's central path, beside the footbridge
     pod('garden-e', 3.2, G0, -20.2, Math.PI / 2),
