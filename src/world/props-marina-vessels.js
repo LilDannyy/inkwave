@@ -1280,20 +1280,20 @@ export function registerMarinaVessels(D, H) {
     const acc = o.accent ?? pick([C.navy, C.teal, '#8a2f35', '#3b5f8a', '#b98f2f', '#4d6e8e']);
     const spec = { L, B: Bm, T: 0.55, F0: 0.72 + L * 0.018, F1: 0.95 + L * 0.03, tr: 0.64, rake: L * 0.055, chine: 0, flare: 0.04, sternRake: -0.2, keelRise: 0.75, NS: 18, NP: 6 };
     const { h, body, deckGeo } = hullOf('sail' + L.toFixed(1), spec);
-    const zt = (t) => -L / 2 + t * L;
+    const zt = (t) => -L / 2 + t * L, far = !!o.far;   // far: a boat out of the arena (no rails, lifelines, fenders)
     B.add('gloss', body, hullC, 0, 0, 0, {});
     B.add('paint', cached('sailAF' + L.toFixed(1), () => h.band(-0.2, 0.0)), dark ? '#1c2130' : '#2a3350', 0, 0, 0, {});
     B.add('paint', cached('sailBT' + L.toFixed(1), () => h.band(0.0, 0.07)), dark ? C.white : acc, 0, 0, 0, {});
     B.add('paint', cached('sailCV' + L.toFixed(1), () => h.band((t) => h.top(t) - 0.17, (t) => h.top(t) - 0.13)), dark ? '#c9a24a' : acc, 0, 0, 0, {});
     B.add('paint', deckGeo, '#e9e4d8', 0, 0, 0, {});
     // teak toe rails along the sheer
-    for (const sd of [-1, 1]) { const tp = []; for (let k = 1; k < 10; k++) { const t = k / 10, p = h.at(t * 0.985, 1, sd); tp.push(P3(p[0] * 0.985, p[1] + 0.02, p[2])); } B.tube('wood', C.teak, tp, 0.028, { radial: 4 }); }
+    if (!far) for (const sd of [-1, 1]) { const tp = []; for (let k = 1; k < 10; k++) { const t = k / 10, p = h.at(t * 0.985, 1, sd); tp.push(P3(p[0] * 0.985, p[1] + 0.02, p[2])); } B.tube('wood', C.teak, tp, 0.028, { radial: 4 }); }
     // coachroof with ports, hatch and grab rails
     const t0 = 0.34, t1 = 0.64, zc = (zt(t0) + zt(t1)) / 2, len = zt(t1) - zt(t0), wC = h.hb(0.5) * 1.18, yC = h.top(0.5) + 0.2;
     B.box('gloss', '#f1eee6', wC, 0.42, len, 0, yC, zc, { round: true, r: 0.14 });
     for (const sd of [-1, 1]) { bx(B, 'gloss', C.glass, 0.01, 0.1, len * 0.28, sd * wC / 2, yC + 0.02, zc + len * 0.18); bx(B, 'gloss', C.glass, 0.01, 0.1, len * 0.22, sd * wC / 2, yC + 0.02, zc - len * 0.2); }
     bx(B, 'gloss', C.glass, wC * 0.4, 0.01, 0.5, 0, yC + 0.212, zc + len * 0.25);
-    for (const sd of [-1, 1]) B.tube('wood', C.teak, [P3(sd * wC * 0.34, yC + 0.21, zc - len * 0.35), P3(sd * wC * 0.34, yC + 0.27, zc - len * 0.3), P3(sd * wC * 0.34, yC + 0.27, zc + len * 0.3), P3(sd * wC * 0.34, yC + 0.21, zc + len * 0.35)], 0.016, { radial: 4 });
+    if (!far) for (const sd of [-1, 1]) B.tube('wood', C.teak, [P3(sd * wC * 0.34, yC + 0.21, zc - len * 0.35), P3(sd * wC * 0.34, yC + 0.27, zc - len * 0.3), P3(sd * wC * 0.34, yC + 0.27, zc + len * 0.3), P3(sd * wC * 0.34, yC + 0.21, zc + len * 0.35)], 0.016, { radial: 4 });
     // cockpit coamings, sole, wheel or tiller, and a spray dodger over the companionway
     const tc0 = 0.07, tc1 = 0.33, zcc = (zt(tc0) + zt(tc1)) / 2, lc = zt(tc1) - zt(tc0), wc = h.hb(0.2) * 1.2, yT = h.top(0.2);
     for (const sd of [-1, 1]) B.box('gloss', '#f1eee6', 0.08, 0.26, lc, sd * wc / 2, yT + 0.1, zcc, { r: 0.03 });
@@ -1314,8 +1314,10 @@ export function registerMarinaVessels(D, H) {
     B.lathe('metal', '#d6dbe0', [[0, y0], [0.075, y0], [0.07, y0 + Hm * 0.55], [0.05, y0 + Hm], [0, y0 + Hm + 0.02]], 0, 0, zm, { seg: 8 });
     for (const [f, sp] of [[0.4, sp1], [0.72, sp2]]) bx(B, 'metal', '#d6dbe0', 2 * sp, 0.035, 0.07, 0, y0 + Hm * f, zm, { rz: 0 });
     cy(B, 'metal', C.black, 0.008, 1.0, 0.06, y0 + Hm + 0.5, zm, { seg: 4 });
-    bx(B, 'metal', C.black, 0.02, 0.02, 0.4, 0, y0 + Hm + 0.1, zm - 0.1, { rx: 0.3 });                     // windex
-    cy(B, 'metal', '#e8ecef', 0.09, 0.4, 0, y0 + Hm * 0.55, zm + 0.12, { seg: 6 });                         // radar reflector
+    if (!far) {
+      bx(B, 'metal', C.black, 0.02, 0.02, 0.4, 0, y0 + Hm + 0.1, zm - 0.1, { rx: 0.3 });                   // windex
+      cy(B, 'metal', '#e8ecef', 0.09, 0.4, 0, y0 + Hm * 0.55, zm + 0.12, { seg: 6 });                       // radar reflector
+    }
     B.blink('#fff6e0', 0, y0 + Hm + 0.06, zm, { size: 0.035, rate: 0.1, lo: 1.6, hi: 1.9 });
     // standing rigging (forestay, backstay, cap shrouds over the spreaders, lowers)
     const stem = h.at(0.995, 1, 1), tr0 = h.at(0.004, 1, 1), mh = [0, y0 + Hm * 0.985, zm];
@@ -1335,7 +1337,7 @@ export function registerMarinaVessels(D, H) {
     for (let k = 0; k <= nC; k++) { const t = k / nC; cover.push(P3(0, 0.18 * (1 - t * 0.55) + t * 0.08, bz0 - 0.1 + (bz1 + 0.35 - bz0) * t)); }
     B.tube('paint', acc, cover, (t) => 0.2 * (1 - t * 0.45), { radial: 7, y: by, sx: 0.8, sy: 1.25 });
     bx(B, 'paint', shade(acc, 0.7), 0.02, 0.02, (bz0 - bz1) * 0.9, 0, by + 0.43, (bz0 + bz1) / 2 + 0.2);
-    for (const sd of [-1, 1]) rig([[0, y0 + Hm * 0.55, zm], [sd * 0.16, by + 0.3, (bz0 + bz1) / 2 + 0.3]], 0.006);
+    if (!far) for (const sd of [-1, 1]) rig([[0, y0 + Hm * 0.55, zm], [sd * 0.16, by + 0.3, (bz0 + bz1) / 2 + 0.3]], 0.006);
     rig([[0, by, bz1 + 0.35], [0, yT + 0.15, zt(0.03)]], 0.008);
     // furled genoa on the forestay (UV strip in the accent colour) + furling drum
     const fs = [];
@@ -1352,8 +1354,8 @@ export function registerMarinaVessels(D, H) {
       for (const q of pts) B.tube('metal', C.galv, [q, P3(q[0], q[1] - up + 0.02, q[2])], 0.016, { radial: 4 });
       return pts;
     };
-    const bp = pul(0.9, 0.62, true), sp = pul(0.05, 0.66, false);
-    for (const sd of [0, 1]) {
+    const bp = far ? null : pul(0.9, 0.62, true), sp = far ? null : pul(0.05, 0.66, false);
+    if (!far) for (const sd of [0, 1]) {
       const side = sd ? 1 : -1, tops = [bp[sd]];
       for (const t of [0.72, 0.52, 0.32]) { const p = h.at(t, 1, side); const q = P3(p[0] * 0.94, p[1] + 0.62, p[2]); B.tube('metal', C.galv, [P3(p[0] * 0.94, p[1], p[2]), q], 0.014, { radial: 4 }); tops.push(q); }
       tops.push(sp[sd]);
@@ -1361,7 +1363,7 @@ export function registerMarinaVessels(D, H) {
     }
     // fenders on the side facing the neighbouring finger, ensign on the backstay, transom name
     const fs0 = o.fenderSide ?? 1;
-    for (const t of [0.3, 0.62]) { const p = h.at(t, 1, fs0); B.lathe('gloss', t > 0.5 ? C.white : '#2f3a57', [[0, -0.28], [0.07, -0.26], [0.1, -0.18], [0.1, 0.18], [0.07, 0.26], [0, 0.28]], p[0] * 1.02 + fs0 * 0.1, p[1] - 0.55, p[2], { seg: 8 }); B.tube('rubber', C.white, [P3(p[0] * 0.96, p[1] + 0.3, p[2]), P3(p[0] * 1.02 + fs0 * 0.1, p[1] - 0.26, p[2])], 0.007, { radial: 3 }); }
+    if (!far) for (const t of [0.3, 0.62]) { const p = h.at(t, 1, fs0); B.lathe('gloss', t > 0.5 ? C.white : '#2f3a57', [[0, -0.28], [0.07, -0.26], [0.1, -0.18], [0.1, 0.18], [0.07, 0.26], [0, 0.28]], p[0] * 1.02 + fs0 * 0.1, p[1] - 0.55, p[2], { seg: 8 }); B.tube('rubber', C.white, [P3(p[0] * 0.96, p[1] + 0.3, p[2]), P3(p[0] * 1.02 + fs0 * 0.1, p[1] - 0.26, p[2])], 0.007, { radial: 3 }); }
     const bsp = [0, tr0[1] + 0.2 + (mh[1] - tr0[1]) * 0.12, tr0[2] + 0.05 + (mh[2] - tr0[2]) * 0.12];
     B.flag(bsp[0], bsp[1], bsp[2], { color: o.flag ?? pick(['#2f3a57', '#c8473d', '#3f9f97', '#f2eee6']), s: 1.3, ry: HP });
     if (o.name) { const tp = h.at(0.004, 0.55, 1); text(B, o.name, 0.13, dark ? C.white : C.navy, 0, tp[1] + 0.02, tp[2] - 0.03, { ry: PI, weight: 0.18, depth: 0.004 }); }
@@ -1382,17 +1384,17 @@ export function registerMarinaVessels(D, H) {
     const acc = o.accent ?? pick(['#2f3a57', '#3f9f97', '#6b7280', '#3b5f8a']);
     const spec = { L, B: Bm, T: 0.6, F0: 1.05 + L * 0.02, F1: 1.45 + L * 0.03, tr: 0.92, rake: L * 0.05, chine: 0.75, flare: 0.12, sternRake: 0.05, keelRise: 0.55, NS: 18, NP: 6 };
     const { h, body, deckGeo } = hullOf('motor' + L.toFixed(1), spec);
-    const zt = (t) => -L / 2 + t * L;
+    const zt = (t) => -L / 2 + t * L, far = !!o.far;   // far: a boat out of the arena (no rails, fenders, ladder)
     B.add('gloss', body, hullC, 0, 0, 0, {});
     B.add('paint', cached('myAF' + L.toFixed(1), () => h.band(-0.2, 0.0)), '#26314a', 0, 0, 0, {});
     B.add('paint', cached('myBT' + L.toFixed(1), () => h.band(0.0, 0.1)), dark ? C.white : acc, 0, 0, 0, {});
     B.add('paint', cached('myHW' + L.toFixed(1), () => h.band((t) => h.top(t) - 0.62, (t) => h.top(t) - 0.5)), C.glass, 0, 0, 0, {});   // hull windows
     B.add('paint', deckGeo, '#ece8de', 0, 0, 0, {});
-    { const tp = []; for (let k = 1; k < 16; k++) { const t = k / 16, p = h.at(t, 1, 1); tp.push(P3(p[0] * 1.01, p[1] - 0.04, p[2])); } B.tube('metal', C.galv, tp, 0.03, { radial: 4 }); B.tube('metal', C.galv, tp.map((p) => P3(-p[0], p[1], p[2])), 0.03, { radial: 4 }); }
+    if (!far) { const tp = []; for (let k = 1; k < 16; k++) { const t = k / 16, p = h.at(t, 1, 1); tp.push(P3(p[0] * 1.01, p[1] - 0.04, p[2])); } B.tube('metal', C.galv, tp, 0.03, { radial: 4 }); B.tube('metal', C.galv, tp.map((p) => P3(-p[0], p[1], p[2])), 0.03, { radial: 4 }); }
     // swim platform + boarding ladder
     const tr0 = h.at(0.003, 1, 1);
     bx(B, 'wood', C.teak, h.hb(0) * 2 - 0.1, 0.06, 0.9, 0, 0.32, tr0[2] - 0.45);
-    for (const sd of [-1, 1]) cy(B, 'metal', C.galv, 0.015, 0.5, sd * 0.2, 0.1, tr0[2] - 0.86, { seg: 5 });
+    if (!far) for (const sd of [-1, 1]) cy(B, 'metal', C.galv, 0.015, 0.5, sd * 0.2, 0.1, tr0[2] - 0.86, { seg: 5 });
     // saloon deckhouse (dark window band, raked front), flybridge + helm, bimini, radar arch
     const ts0 = 0.14, ts1 = 0.64, zs = (zt(ts0) + zt(ts1)) / 2, ls = zt(ts1) - zt(ts0), ws = h.hb(0.4) * 1.56, ys = h.top(0.4) + 0.42;
     B.box('gloss', hullC === '#1f2a40' ? '#f1eee6' : '#f4f1ea', ws, 0.84, ls, 0, ys, zs, { round: true, r: 0.18 });
@@ -1413,14 +1415,14 @@ export function registerMarinaVessels(D, H) {
     const bpts = [];
     for (let k = 0; k <= 8; k++) { const t = 0.62 + 0.36 * (k / 8), p = h.at(t, 1, -1); bpts.push(P3(p[0] * 0.9, p[1] + 0.55, p[2])); }
     for (let k = 8; k >= 0; k--) { const t = 0.62 + 0.36 * (k / 8), p = h.at(t, 1, 1); bpts.push(P3(p[0] * 0.9, p[1] + 0.55, p[2])); }
-    B.tube('metal', C.galv, bpts, 0.022, { radial: 5 });
-    for (const t of [0.66, 0.8, 0.92]) for (const sd of [-1, 1]) { const p = h.at(t, 1, sd); B.tube('metal', C.galv, [P3(p[0] * 0.9, p[1], p[2]), P3(p[0] * 0.9, p[1] + 0.55, p[2])], 0.016, { radial: 4 }); }
+    if (!far) B.tube('metal', C.galv, bpts, 0.022, { radial: 5 });
+    if (!far) for (const t of [0.66, 0.8, 0.92]) for (const sd of [-1, 1]) { const p = h.at(t, 1, sd); B.tube('metal', C.galv, [P3(p[0] * 0.9, p[1], p[2]), P3(p[0] * 0.9, p[1] + 0.55, p[2])], 0.016, { radial: 4 }); }
     const st = h.at(0.998, 1, 1);
     B.box('metal', C.galv, 0.14, 0.12, 0.5, 0, st[1] + 0.05, st[2] - 0.1, { r: 0.03 });
     B.push(0, st[1] - 0.05, st[2] + 0.12, 0, 0.3); B.add('metal', cached('anchorS', () => extrudeGeo(ANCHOR, 0.08, 0.02)), C.steel, 0, 0, 0, { ry: -HP, s: 0.45 }); B.pop();
     if (o.name) { const tp = h.at(0.003, 0.5, 1); text(B, o.name, 0.15, dark ? C.white : C.navy, 0, tp[1] + 0.05, tp[2] - 0.03, { ry: PI, weight: 0.18, depth: 0.004 }); }
     const fs0 = o.fenderSide ?? 1;
-    for (const t of [0.3, 0.55]) { const p = h.at(t, 1, fs0); B.lathe('gloss', C.white, [[0, -0.3], [0.08, -0.28], [0.11, -0.2], [0.11, 0.2], [0.08, 0.28], [0, 0.3]], p[0] + fs0 * 0.12, p[1] - 0.7, p[2], { seg: 8 }); }
+    if (!far) for (const t of [0.3, 0.55]) { const p = h.at(t, 1, fs0); B.lathe('gloss', C.white, [[0, -0.3], [0.08, -0.28], [0.11, -0.2], [0.11, 0.2], [0.08, 0.28], [0, 0.3]], p[0] + fs0 * 0.12, p[1] - 0.7, p[2], { seg: 8 }); }
     B.flag(0, tr0[1] + 0.9, tr0[2] + 0.15, { color: o.flag ?? '#2f3a57', s: 1.3, ry: HP });
     cy(B, 'metal', C.teak, 0.012, 0.9, 0, tr0[1] + 0.5, tr0[2] + 0.15, { seg: 4 });
     // berthed in the arena (col: true): hull, saloon + flybridge collide (cover); col: 'roof': the same, off limits
@@ -2154,7 +2156,7 @@ export function registerMarinaVessels(D, H) {
 
   // ================================================================================================ marina prop types
   // Moored boats sit with their waterline at the prop's y (place at y -1.6), bow toward local +Z. Non-colliding.
-  const boatType = (desc, fn) => ({ desc, params: { length: 'm', color: 'hull', accent: 'stripe / canvas', name: 'transom name', fenderSide: '±1', col: "true: hull + deckhouse colliders (a berth in the arena), 'roof': off limits" }, variants: 1, mount: 'ground', build(B, o) { B.aoBase = null; noShadow(B, () => fn(B, o)); } });
+  const boatType = (desc, fn) => ({ desc, params: { length: 'm', color: 'hull', accent: 'stripe / canvas', name: 'transom name', fenderSide: '±1', col: "true: hull + deckhouse colliders (a berth in the arena), 'roof': off limits", far: 'yachts out of the arena: no rails, lifelines or fenders' }, variants: 1, mount: 'ground', build(B, o) { B.aoBase = null; noShadow(B, () => fn(B, o)); } });
   D.yacht_sail = boatType('Masthead cruising yacht: lofted hull with antifouling, boot + cove stripes, teak toe rails, coachroof with ports, cockpit (wheel or tiller), spray dodger, mast with spreaders + standing rigging, boom with stack-pack cover and lazy jacks, furled genoa, pulpits + lifelines, fenders, ensign, transom name.', sailboat);
   D.yacht_motor = boatType('Motor cruiser: hard-chine hull with window band, swim platform, saloon with raked glazing, flybridge with helm seats + bimini, radar arch, bow rail + anchor, fenders, ensign, transom name.', motorYacht);
   D.boat_fishing = boatType('Inshore fishing boat: high-bowed hull with bulwark stripe, tyre fenders, forward wheelhouse with mast, radar + lights, outrigger booms, A-frame gantry, net drum, fish boxes and marker buoys.', fishingBoat);
@@ -2295,7 +2297,7 @@ export function registerMarinaVessels(D, H) {
   // frame). Non-colliding.
   D.floatdeck = {
     desc: 'Modular floating-dock section dressing (Tower Command): galvanised frame channel round a composite-deck section, black rubber rub rails, corner bumpers and deck-edge cleats on open water, connector plates across the joins to the next section, stringers and grey poly float tubs at the waterline, guide piles with pile hoops, hung fenders toward moored boats. Non-colliding.',
-    params: { w: 'section x size', d: 'section z size', y0: 'frame bottom (-0.4)', sea: 'sea level, prop-local (-1.6: a deck at pier level)', sides: "{ side: [[kind 'w'|'j'|'s'|'b', a, b]] }", piles: '[[x, z]]' },
+    params: { w: 'section x size', d: 'section z size', y0: 'frame bottom (-0.4)', sea: 'sea level, prop-local (-1.6: a deck at pier level)', lite: 'no bolt heads', sides: "{ side: [[kind 'w'|'j'|'s'|'b', a, b]] }", piles: '[[x, z]]' },
     variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
@@ -2321,8 +2323,8 @@ export function registerMarinaVessels(D, H) {
           noShadow(B, () => {
             run(sd, a + 0.01, b - 0.01, 0.042, -0.02, 0.035, 0.012, 'metal', shade(galv, 1.1));
             run(sd, a + 0.01, b - 0.01, 0.042, y0 + 0.02, 0.035, 0.012, 'metal', galvDk);
-            // bolt heads along the channel every 0.6 m
-            for (let u = a + 0.3; u < b - 0.15; u += 0.6) { const [x, z] = at(sd, u, 0.045); B.cyl('metal', galvDk, 0.018, 0.012, x, y0 / 2, z, SIDE[sd][0] ? { rz: HP, seg: 6 } : { rx: HP, seg: 6 }); }
+            // bolt heads along the channel every 0.6 m (lite: none — the visitor pontoons, low by the water)
+            if (!o.lite) for (let u = a + 0.3; u < b - 0.15; u += 0.6) { const [x, z] = at(sd, u, 0.045); B.cyl('metal', galvDk, 0.018, 0.012, x, y0 / 2, z, SIDE[sd][0] ? { rz: HP, seg: 6 } : { rx: HP, seg: 6 }); }
           });
           if (k === 'w') {
             // black rubber rub rail (D-section) along the channel, broken 12 cm short of each end: the joins read
@@ -2806,7 +2808,7 @@ export const HALYARD_VESSELS = [
 // gated gangway from the quay at z -37.9, fingers off its outer side every 4.2 m, boats in the berths (sterns to the
 // walkway, bows toward the breakwater, ≤ 8.6 m so they clear the rocks), a RIB + kayaks alongside its inner side.
 // Also clear of the environment's moored boats (+X fishing boat at z 20…29; the mirror side's rowboat at x -26.4…-25.1).
-// (the Long Stages stretch: the quay moved out 22 m, hq(); the walkway runs on to it, five more berths)
+// (the Long Stages stretch: the quay moved out 24 m, hq(); the walkway runs on to it, five more berths — two of them free)
 function marina() {
   const P = Math.PI, out = [], SEA = -1.6, WX = 27.6, WW = 1.8, Z0 = hq(-38.8), Z1 = 4.0;
   out.push({ type: 'marina_gate', pos: [24.0, 0, hq(-37.9)], run: 3.3, width: 1.4 });
@@ -2817,16 +2819,16 @@ function marina() {
   for (let k = 0; k <= 14; k++) fingers.push(hq(-35.5) + k * 4.2);
   for (const z of fingers) out.push({ type: 'marina_pontoon', pos: [WX + WW / 2, 0, z], length: 4.8, width: 0.7, unit: 2.4, cleatSides: [-1, 1], piles: [{ s: 4.95, side: 0, h: 2.8 }] });
   const berths = [
-    ['yacht_sail', 7.6, 'CURLEW'], ['yacht_motor', 7.8, 'BLUE MOON'], ['yacht_sail', 7.9, 'SEA HOLLY'], ['boat_fishing', 7.4, 'GOOD INTENT'], ['yacht_sail', 7.3, 'WHIMBREL'],
+    ['yacht_sail', 7.6, 'CURLEW'], [null], ['yacht_sail', 7.9, 'SEA HOLLY'], [null], ['yacht_sail', 7.3, 'WHIMBREL'],
     ['yacht_sail', 7.8, 'SALT SPRAY'], ['yacht_sail', 7.4, 'KITTIWAKE'], ['yacht_motor', 7.6, 'REEL TIME'], ['yacht_sail', 7.8, 'HALCYON'], ['yacht_sail', 7.6, 'PIPIT'],
     ['boat_fishing', 7.6, 'MARY ANN'], ['yacht_sail', 7.2, 'TERN'], ['yacht_sail', 7.9, 'MARGUERITE'], ['yacht_motor', 7.4, 'SEA BISCUIT'],
   ];
   berths.forEach(([type, L, name], k) => {
+    if (!type) return;   // (a visitors' berth left free)
     const z = hq(-33.4) + k * 4.2;
-    out.push({ type, pos: [WX + WW / 2 + 0.5 + L / 2, SEA, z + (k % 2 ? 0.12 : -0.12)], rotY: P / 2 + ((k % 3) - 1) * 0.015, length: L, name, fenderSide: k % 2 ? -1 : 1 });
+    out.push({ type, pos: [WX + WW / 2 + 0.5 + L / 2, SEA, z + (k % 2 ? 0.12 : -0.12)], rotY: P / 2 + ((k % 3) - 1) * 0.015, length: L, name, fenderSide: k % 2 ? -1 : 1, far: true });
   });
   // alongside the inner side of the walkway (broadside to the arena)
-  out.push({ type: 'boat_rib', pos: [25.58, SEA, -45.2], rotY: 0.03, length: 3.8, color: '#3f9f97' });
   out.push({ type: 'boat_rib', pos: [25.58, SEA, -24.6], rotY: 0.02, length: 4.0 });
   out.push({ type: 'boat_rib', pos: [25.58, SEA, -9.8], rotY: P - 0.02, length: 4.0, color: '#e9703a' });
   return out;

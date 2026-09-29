@@ -117,8 +117,8 @@ export const HALYARD = {
     // ramp up from the fuel dock, a ramp up from the hardstanding
     B(SL.store[0], SL.store[1], -1.2, SL.storeTop, SL.store[2], SL.store[3], { tag: 'chandlery', roof: true, color: M.store, pattern: PATTERN.weatherboard }),
     B(SL.deck[0], SL.deck[1], -1.2, SL.deckY, SL.deck[2], SL.deck[3], deck({ tag: 'loading-deck' })),
-    R([1.4, 0, -46.4], [SL.deck[0], SL.deckY, -46.4], 2.4, { tag: 'deck-ramp', color: M.wood, pattern: PATTERN.rampboard }),
-    R([SL.deck[1] + 3.1, 0, -46.4], [SL.deck[1], SL.deckY, -46.4], 2.4, { tag: 'deck-ramp', color: M.wood, pattern: PATTERN.rampboard }),
+    R([1.4, 0, (SL.deck[2] + SL.deck[3]) / 2], [SL.deck[0], SL.deckY, (SL.deck[2] + SL.deck[3]) / 2], SL.rampW, { tag: 'deck-ramp', color: M.wood, pattern: PATTERN.rampboard }),
+    R([SL.deck[1] + 3.1, 0, (SL.deck[2] + SL.deck[3]) / 2], [SL.deck[1], SL.deckY, (SL.deck[2] + SL.deck[3]) / 2], SL.rampW, { tag: 'deck-ramp', color: M.wood, pattern: PATTERN.rampboard }),
     // the visitors' berthing booth on the fuel dock (roof off limits)
     B(SL.booth[0], SL.booth[1], 0, SL.boothTop, SL.booth[2], SL.booth[3], { tag: 'visitor-booth', roof: true, color: M.office, pattern: PATTERN.render }),
     // the plank across the slip's mouth
@@ -178,7 +178,7 @@ export const HALYARD = {
   ],
   decor: {
     lamps: [[-23.5, hq(-32.2)], [23.5, hq(-32.2)], [-23.6, -14], [23.6, -9], [-5.7, hq(-31.8)], [5.7, hq(-31.8)],
-      [-23.6, -39.2], [4.15, -43.6], [-4.15, -52.6], [23.6, -44.2]],   // (the slice)
+      [-23.6, -39.2], [4.15, -43.6]],   // (the slice)
     palms: [[-15.5, hq(-38.5)], [15.5, hq(-38)]],
     flags: [[-8, 2.4, hq(-44.6)], [8, 2.4, hq(-44.6)]],
   },
