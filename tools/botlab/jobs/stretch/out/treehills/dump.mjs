@@ -1,4 +1,4 @@
-// Eco-Forest Treehills — dump the layout (pieces mirrored) + placements + zones + tower + pods as JSON for plan.py
+// Eco-Forest Treehills (stretch copy) — dump the layout (pieces mirrored) + placements + zones + tower + pods as JSON for plan.py
 //   node dump.mjs <repo root> [mode] <out.json>
 import fs from 'node:fs';
 const root = process.argv[2], mode = process.argv[3] || 'turf', out = process.argv[4];
@@ -22,6 +22,10 @@ const FP = {
   totem: () => ({ w: 0.62, d: 0.2 }), turbine: () => ({ r: 1.55 }), ranger: () => ({ w: 3.2, d: 3.6 }), hut: (p) => ({ w: p.w ?? 2.2, d: p.d ?? 2 }), mast: () => ({ r: 0.45 }),
   dronepad: () => ({ r: 1.3 }), weather: () => ({ r: 0.35 }), nursery: (p) => ({ w: p.w ?? 2.2, d: 0.7 }), footbridge: (p) => ({ w: p.L ?? 2.6, d: 1.4 }),
   stones: (p) => ({ w: (p.n ?? 3) * (p.gap ?? 0.55), d: 0.5 }), pod: () => ({ r: 0.45 }), solarrow: (p) => ({ w: p.w ?? 5, d: 1.2 }),
+  // the nursery (the stretch)
+  seedbed: (p) => ({ w: p.w ?? 4, d: p.d ?? 1.2 }), cloches: (p) => ({ w: ((p.n ?? 4) - 1) * (p.gap ?? 1) + 1, d: 1 }), pottingshed: (p) => ({ w: p.w ?? 3, d: p.d ?? 2.2 }),
+  pbench: (p) => ({ w: p.w ?? 2, d: 0.7 }), potstack: () => ({ w: 1.2, d: 1 }), pumphouse: (p) => ({ w: p.w ?? 2.6, d: p.d ?? 2.2 }), transformer: () => ({ w: 1.6, d: 1.1 }),
+  trellis: (p) => ({ w: p.w ?? 3, d: 0.36 }), saplings: (p) => ({ w: p.w ?? 3, d: p.d ?? 2 }), trolley: () => ({ w: 1.35, d: 0.56 }),
 };
 const pl = [];
 for (const p of PLACEMENTS) {

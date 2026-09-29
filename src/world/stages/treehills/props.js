@@ -121,33 +121,32 @@ const DY = T2 + 0.02;   // (the potting deck's decking)
 const NURSERY_PLACEMENTS = [
   // ---- the potting deck (T2): the potting shed on its south-west corner (its glazed lean-to and bench face mid), a
   //      potting bench along its east edge; the service lane over it (x 0.1 … 3.9) and the stairs' landings stay open
-  { type: 'treehills_pottingshed', pos: [-1.45, DY, -39.72], rotY: 0, seed: 3 },
-  { type: 'treehills_pbench', pos: [5.8, DY, -35.6], rotY: -HP, w: 2.0, seed: 5 },
-  { type: 'treehills_totem', pos: [7.7, T1, -32.6], rotY: -HP, num: 'N-7', lines: [['POTTING DECK'], ['v STATION 07']] },
+  { type: 'treehills_pottingshed', pos: [-2.45, DY, -39.72], rotY: 0, seed: 3 },
+  { type: 'treehills_pbench', pos: [0.6, DY, -40.55], rotY: 0, w: 2.4, seed: 5 },
+  { type: 'treehills_planter', pos: [1.4, DY, -33.5], rotY: 0, w: 1.3, d: 0.8, h: 1.0, seed: 43, tree: 0.2 },
+  { type: 'treehills_potstack', pos: [7.2, DY, -35.2], rotY: HP, seed: 4 },
+  { type: 'treehills_totem', pos: [8.6, T1, -32.4], rotY: -HP, num: 'N-7', lines: [['POTTING DECK'], ['v STATION 07']] },
   // ---- the seedbed terrace (NT): raised beds along its front and back either side of the stairs, a long bed down its
   //      middle (the aisle round it from the side stair to the deck's flight)
-  { type: 'treehills_seedbed', pos: [-12.7, NT, -33.85], rotY: 0, w: 2.2, d: 1.1, kind: 'frame', seed: 11 },
-  { type: 'treehills_seedbed', pos: [-6.5, NT, -33.85], rotY: 0, w: 1.8, d: 1.1, seed: 12 },
-  { type: 'treehills_seedbed', pos: [-9.5, NT, -37.4], rotY: 0, w: 6.2, d: 1.2, kind: 'hoops', seed: 13 },
-  { type: 'treehills_seedbed', pos: [-13.0, NT, -40.3], rotY: P, w: 1.8, d: 1.1, seed: 14 },
-  { type: 'treehills_seedbed', pos: [-4.9, NT, -40.3], rotY: P, w: 3.8, d: 1.1, kind: 'hoops', seed: 15 },
+  { type: 'treehills_seedbed', pos: [-13.25, NT, -33.85], rotY: 0, w: 1.3, d: 1.1, kind: 'frame', seed: 11 },
+  { type: 'treehills_seedbed', pos: [-9.9, NT, -37.4], rotY: 0, w: 5.4, d: 1.2, kind: 'hoops', seed: 13 },
+  { type: 'treehills_seedbed', pos: [-6.15, NT, -40.3], rotY: P, w: 4.3, d: 1.1, seed: 15 },
   // ---- the nursery floor in front (mid side): cloches along the terrace's front, a lamp by its stair, saplings by the
   //      deck's east stair
-  { type: 'treehills_cloches', pos: [-13.6, T1, -32.45], rotY: 0, n: 3, seed: 3 },
-  { type: 'treehills_lamp', pos: [-7.6, T1, -32.6], rotY: 0 },
-  { type: 'treehills_saplings', pos: [5.9, T1, -27.3], rotY: 0, w: 3.0, d: 1.8, num: 'C-11', seed: 4 },
+  { type: 'treehills_cloches', pos: [-14.1, T1, -32.45], rotY: 0, n: 2, seed: 3 },
+  { type: 'treehills_lamp', pos: [-8.3, T1, -32.6], rotY: 0 },
+  { type: 'treehills_saplings', pos: [8.4, T1, -27.2], rotY: 0, w: 2.6, d: 1.6, num: 'C-11', seed: 4 },
   // ---- the zone (x 8 … 18.5, z −26.5 … −36.5): a seedbed down its middle, a plant trolley, a water tank on the lobe's
   //      lane; the cloche row along its south edge
   { type: 'treehills_seedbed', pos: [12.2, T1, -31.5], rotY: HP, w: 4.0, d: 1.2, seed: 21 },
-  { type: 'treehills_trolley', pos: [9.6, T1, -28.6], rotY: 0.3, seed: 2 },
+  { type: 'treehills_trolley', pos: [10.6, T1, -30.4], rotY: 0.3, seed: 2 },
   { type: 'treehills_tank', pos: [17.0, T1, -28.4], r: 0.8, h: 1.8 },
-  { type: 'treehills_cloches', pos: [13.5, T1, -37.5], rotY: 0, n: 4, seed: 7 },
+  { type: 'treehills_cloches', pos: [14.5, T1, -37.5], rotY: 0, n: 4, seed: 7 },
   // ---- south-east: the propagation tunnel by the channel, saplings by the lobe, the nursery's turbine in the lobe's
   //      bay and its transformer
-  { type: 'treehills_polytunnel', pos: [11.4, T1, -44.2], rotY: 0, L: 5, R: 1.3 },
-  { type: 'treehills_saplings', pos: [16.4, T1, -44.6], rotY: HP, w: 3.2, d: 2.0, num: 'C-14', seed: 9 },
+  { type: 'treehills_polytunnel', pos: [12.0, T1, -44.2], rotY: 0, L: 5, R: 1.3 },
   { type: 'treehills_turbine', pos: [NTURBINE.x, T1, NTURBINE.z], rotY: -HP, hub: NTURBINE.hub },
-  { type: 'treehills_transformer', pos: [21.3, T1, -42.6], rotY: -HP },
+  { type: 'treehills_transformer', pos: [20.2, T1, -41.2], rotY: -HP },
   // ---- the irrigation channel along the base terrace's front: the footbridge on the axis, stepping stones either side,
   //      the intake pump house at its west end, a sluice at its east end, the coping along both banks
   { type: 'treehills_footbridge', pos: [0, T1, -47.3], rotY: HP, L: 2.6, w: 3.0 },
@@ -157,31 +156,36 @@ const NURSERY_PLACEMENTS = [
   { type: 'treehills_sluice', pos: [13.6, T1, -47.3], rotY: HP, w: 1.4, y0: CH_Y - T1 },
   { type: 'treehills_chanedge', pos: [1, T1, -46.49], rotY: 0, L: 26 },
   { type: 'treehills_chanedge', pos: [1, T1, -48.11], rotY: 0, L: 26 },
-  // ---- the west strip's stretch (authored on the north strip, x 15 … 28, z 26 … 48; Alpha's is its twin): a grove
-  //      along the reservoir's edge (plan.js), the long propagation tunnel down the lane, a trolley, compost bays by the
-  //      back lane
-  { type: 'treehills_polytunnel', pos: [19.8, T1, 36.0], rotY: HP, L: 7, R: 1.4 },
-  { type: 'treehills_trolley', pos: [23.4, T1, 31.2], rotY: 1.4, seed: 6 },
-  { type: 'treehills_compost', pos: [17.0, T1, 41.2], rotY: P },
+  // ---- the west strip's stretch (authored on the north strip, x 15 … 28, z 26 … 57; Alpha's is its twin): the orchard
+  //      bank (NT) against the reservoir edge — its groves (plan.js), a water tank, saplings, beehives — the strip's lane
+  //      between it and the nursery (its trail: plan.js), saplings by the tower's lane down to the base terrace
+  { type: 'treehills_tank', pos: [20.6, NT, 31.2], r: 0.6, h: 1.6 },
+  { type: 'treehills_saplings', pos: [23.6, NT, 31.6], rotY: P, w: 2.0, d: 1.4, num: 'B-03', seed: 17 },
+  { type: 'treehills_hives', pos: [21.0, NT, 36.9], rotY: HP, n: 3 },
+  { type: 'treehills_saplings', pos: [17.0, T1, 49.0], rotY: P, w: 2.0, d: 1.6, num: 'C-21', seed: 19 },
   // ---- the service lanes' timber edging (the gravel against the lawn), flower strips along the terrace's back and the
   //      lanes, lamps at the lanes' corners, a staked young tree by the channel, crates by the garden's west corner
-  { type: 'treehills_edging', pos: [-7.2, T1, -29.4], rotY: 0, L: 15.6 },
-  { type: 'treehills_edging', pos: [0.6, T1, -31.2], rotY: HP, L: 3.6 },
-  { type: 'treehills_edging', pos: [3.4, T1, -31.2], rotY: HP, L: 3.6 },
-  { type: 'treehills_edging', pos: [3.4, T1, -27.7], rotY: HP, L: 3.4 },
-  { type: 'treehills_edging', pos: [0.6, T1, -41.95], rotY: HP, L: 1.9 },
-  { type: 'treehills_edging', pos: [3.4, T1, -44.75], rotY: HP, L: 3.7 },
-  { type: 'treehills_edging', pos: [-7.2, T1, -42.9], rotY: 0, L: 15.6 },
+  { type: 'treehills_edging', pos: [-6.2, T1, -29.4], rotY: 0, L: 17.6 },
+  { type: 'treehills_edging', pos: [2.6, T1, -31.2], rotY: HP, L: 3.6 },
+  { type: 'treehills_edging', pos: [5.4, T1, -31.2], rotY: HP, L: 3.6 },
+  { type: 'treehills_edging', pos: [5.4, T1, -27.7], rotY: HP, L: 3.4 },
+  { type: 'treehills_edging', pos: [2.6, T1, -41.95], rotY: HP, L: 1.9 },
+  { type: 'treehills_edging', pos: [5.4, T1, -44.75], rotY: HP, L: 3.7 },
+  { type: 'treehills_edging', pos: [-6.2, T1, -42.9], rotY: 0, L: 17.6 },
   { type: 'treehills_border', pos: [-14, T1, -41.45], rotY: 0, L: 2.9, d: 0.7, seed: 21 },
   { type: 'treehills_border', pos: [-7.9, T1, -41.45], rotY: 0, L: 4.8, d: 0.7, seed: 23 },
   { type: 'treehills_border', pos: [-15, T1, -29.85], rotY: 0, L: 5.6, d: 0.7, seed: 25 },
   { type: 'treehills_lamp', pos: [-14.6, T1, -30.2], rotY: 0 },
   { type: 'treehills_lamp', pos: [-2.4, T1, -42.2], rotY: P },
-  { type: 'treehills_lamp', pos: [8.2, T1, -41.3], rotY: P },
-  tree(5.6, T1, -45.6, 4.4, { seed: 5, w: 0.7, core: 0.8 }),
+  { type: 'treehills_lamp', pos: [9.2, T1, -41.4], rotY: P },
+  tree(6.8, T1, -45.8, 4.4, { seed: 5, w: 0.7, core: 0.8 }),
   { type: 'treehills_crates', pos: [-11.8, T1, -24.4], rotY: 0.12, n: 3 },
   { type: 'treehills_saplings', pos: [11.8, T1, -50.2], rotY: 0, w: 3.0, d: 1.6, num: 'C-02', seed: 13 },
   { type: 'treehills_trolley', pos: [15.6, T1, -34.4], rotY: -0.4, seed: 8 },
+  // ---- the station's forecourt (the goal-ready spot in front of the deck stair: kept open, a little cover to re-form
+  //      behind) — a planter and a plant trolley either side of the footbridge's landing
+  { type: 'treehills_planter', pos: [-2.6, T1, -51.0], rotY: 0, w: 1.6, d: 0.8, h: 1.0, seed: 41 },
+  { type: 'treehills_trolley', pos: [3.2, T1, -51.6], rotY: 0.2, seed: 11 },
 ];
 
 export const PLACEMENTS = [
@@ -265,7 +269,6 @@ export const PLACEMENTS = [
   //                   array and the turbine
   // ---- the south lobe (T1, Alpha's left lane)
   // a tree line along the lobe's water edge (on the coping: the lane stays inside), the corner grove's flank
-  tree(19.51, T1, -27.29, 6.6, { seed: 4, w: 0.8, core: 1.0 }),
   tree(21.9, T1, -24.57, 7.4, { kind: 'thujopsis', seed: 7, w: 0.74, core: 1.0 }),
   tree(23.72, T1, -23.51, 6.2, { seed: 1, w: 0.82, core: 1.0 }),
   tree(26.21, T1, -20.3, 7.8, { seed: 6, w: 0.8, core: 1.0 }),
@@ -308,20 +311,16 @@ export const PLACEMENTS = [
   { type: 'treehills_hut', pos: [28.2, T3, 7.6], rotY: 0 },
   rail(Array.from({ length: 9 }, (_, k) => { const a = (k / 8) * Math.PI * 2 + Math.PI / 8; return [TURBINE.x + Math.cos(a) * 2.25, TURBINE.z + Math.sin(a) * 2.25]; }), T3, { h: 0.95 }),
   { type: 'treehills_hatch', pos: [26.5, 3.25, 1.2], rotY: -HP, r: 0.38, num: 'C-1' },
-  // ---- the north strip (T1, Bravo's right lane: the service route down to Bravo's terrace)
-  tree(27.0, T1, 26.8, 5.2, { seed: 2, w: 0.75 }),
-  tree(27.35, T1, 28.2, 5.8, { kind: 'thujopsis', seed: 8, w: 0.72, core: 1.0 }),
-  { type: 'treehills_lamp', pos: [26.4, T1, 29.4], rotY: HP },
-  { type: 'treehills_compost', pos: [20.9, T1, 34.3], rotY: 0 },
-  { type: 'treehills_boulder', pos: [26.6, T1, 31.2], w: 1.1, h: 1.2, d: 1.0, seed: 16 },
+  // ---- the north strip (T1, Bravo's right lane: the service route down to Bravo's terrace; since the stretch its end is
+  //      the base terrace's corner, 22 m on — the seedling rack moves with it)
   { type: 'treehills_nursery', pos: [17.2, T1, 34.0], rotY: 0, w: 2.2 },
-  tree(23.5, T1, 35.0, 5.0, { kind: 'thujopsis', seed: 5, w: 0.7 }),
   { type: 'treehills_sprinkler', pos: [21.4, T1, 25.6] },
   { type: 'treehills_ferns', pos: [22.6, T1, 24.6], r: 0.5, seed: 9 },
   ].map(mv),
   // ================= the nursery (the stretch's new land, z −26 … −48 on Alpha's half; not moved: it is where the move
   //                   opened the ground). Kept clear of the tower's service lanes (plan.js TRACK, on Bravo's half: here
-  //                   their twins — z −28 and −44.3 from the strip to x 2, x 2 between them over the deck: 1.9 m either
-  //                   side of each line) and of the zone's floor (plan.js ZONE_S) but for its own cover
+  //                   their twins — z −28 from the strip, x 4 down over the deck, z −44.3 back to x −20.5 and down to
+  //                   the base terrace: 1.9 m either side of each line) and of the zone's floor (plan.js ZONE_S) but for
+  //                   its own cover
   ...NURSERY_PLACEMENTS,
 ];

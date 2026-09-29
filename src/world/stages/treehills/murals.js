@@ -4,7 +4,7 @@
 //            beds, pollinator strips, greener / drier turf (drawn 180°-symmetric, like the stage)
 //   sign     ECO-FOREST TREEHILLS in pale stencil along the tree-hill's upper retaining wall, facing the meadow
 //   biome    BIOME 07 · COMMONS MEADOW stencilled along the band's low wall
-//   bandE/W  the bands' ground (the east band's column top, 4 × 81 m: on through the nursery since the stretch; the west
+//   bandE/W  the bands' ground (the east band's column top, 4 × 78 m: on through the nursery since the stretch; the west
 //            one's the same picture turned 180°)
 //   upperE/W the upper tiers' ground (the east upper tier's column top, 7 × 30 m; the west one's turned 180°)
 export const MURAL = { meadow: 4, sign: 5, upperE: 6, upperW: 7, biome: 8, bandE: 9, bandW: 10 };
@@ -143,7 +143,7 @@ export function drawMurals(g, R, kit) {
   // gravel yard by the nursery rack. The west band (its twin, a single piece of its own: a mirrored piece's decal isn't
   // turned) takes the same picture turned 180°.
   {
-    const PPM = 12, ZMAX = 60.083, LEN = ZMAX + 21, W = 4 * PPM, H = Math.round(LEN * PPM), xE = R.x + 1980, xW = R.x + 1920, y0 = R.y + 20;
+    const PPM = 12, ZMAX = 57.309, LEN = ZMAX + 21, W = 4 * PPM, H = Math.round(LEN * PPM), xE = R.x + 1980, xW = R.x + 1920, y0 = R.y + 20;
     g.save(); g.beginPath(); g.rect(xE, y0, W, H); g.clip();
     g.clearRect(xE, y0, W, H);
     const k = kitFor((x, z) => [xE + (19 - x) * PPM, y0 + (ZMAX - z) * PPM], PPM, 5207);
