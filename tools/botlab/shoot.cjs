@@ -5,9 +5,13 @@
 //   of custom cameras [{"name":"x","from":[x,y,z],"look":[x,y,z],"fov":70}] (fov = horizontal degrees, default 70).
 // PLAY=secs lets the bot match run first (paint on the ground, shows what inks); ACTORS=1 keeps characters visible.
 // W/H set the image size (default 1600x900). Prints console errors/warnings, then REPORT {...}.
+// PRE=path/to/script.js: evaluated in the game page once the match is playing (after PLAY), before the pictures — set a
+// scene up (grow sprout pods, pose characters …); it may step the sim itself (window.__inkwave.debug.step).
+// MAP=testbox / podbox: the botlab's test-only arenas (testmaps.cjs).
 const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
+const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 const MAP = process.env.MAP || 'halyard', TIME = process.env.TIME || 'day', MODE = process.env.MODE || 'turf';
 const OUT = process.env.OUT || (process.env.BOTLAB_ROOT || '.') + '/.botlab/shots';
 const W = +(process.env.W || 1600), H = +(process.env.H || 900), PLAY = +(process.env.PLAY || 0);
@@ -27,12 +31,14 @@ app.on('browser-window-created', (_, win) => {
     await js('window.__inkwave._onPointerUnlock = () => {}; 0');
     fs.mkdirSync(OUT, { recursive: true });
     const t0 = Date.now();
+    if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));   // (a test-only arena)
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', duration: 180, time: '${TIME}', mode: '${MODE}' })`);
     { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got} (a stage missing from MAPS falls back to the first one)`); app.exit(3); return; } }   // (never test the wrong stage silently)
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     const loadMs = Date.now() - t0;
     if (PLAY) await wait(PLAY * 1000);
     else await wait(3000);
+    if (process.env.PRE) { try { const r = await js(fs.readFileSync(process.env.PRE, 'utf8')); console.log('PRE', JSON.stringify(r)); } catch (e) { console.log('PRE ERROR', e.message); } }
     const rep = await js(`(() => {
       const g = window.__inkwave, L = __G.level, B = L.bounds;
       let top = 0, wall = 0; for (const f of L.faces) { if (f.noPaint) continue; const a = (f.w || 0) * (f.h || 0); }
