@@ -5,7 +5,7 @@ const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
 const IDS = (process.env.STAGES || 'halyard').split(',');
-setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, 180000 + IDS.length * 150000);
+setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, 180000 + IDS.length * 330000);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let claimed = false;
 app.on('browser-window-created', (_, win) => {
@@ -20,8 +20,10 @@ app.on('browser-window-created', (_, win) => {
     fs.mkdirSync(out, { recursive: true });
     for (const id of IDS) for (const time of ['day', 'dusk']) {
       await js(`window.__inkwave.api.startMatch({ mapId: '${id}', duration: 180, time: '${time}' })`);
-      for (let i = 0; i < 200; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
-      await wait(4000);   // let the intro fly-in finish before taking the camera
+      // (a loaded machine can take a minute to build a long stage: wait for the round, and for the intro's fly-in to hand
+      //  the camera back, before taking it — a shot taken early is the gameplay camera with the HUD up)
+      for (let i = 0; i < 600; i++) { if (await js(`window.__inkwave.match?.state === 'playing' && window.__inkwave.rig?.mode !== 'path'`)) break; await wait(250); }
+      await wait(2000);
       await js(`(async () => {
         const g = window.__inkwave, THREE = await import('three');
         g.debug.freeze();
