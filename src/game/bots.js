@@ -271,25 +271,29 @@ class ZonePlan {
 // Shared by every bot in a tower match (one per TowerCommand): the track sampled every metre (its 3D length: climbs
 // and drops count) with the nav node by each point; per team how the other team stands round the tower, and roles
 // re-dealt ~2×/s and on every change of hands, contest, empty held tower or change of stance.
-// Stance (per team, `steam`): the tower is an escort job while it's threatened — foes up within ~22 m of it, or ~28 m
-// with a sightline to its deck — and full steam ahead once nobody's near (none up within 30 m, or closing on it to
-// within that in 1.5 s, and no sightline from within 36 m) or they're down to one (3 of 4 splatted). The two sets of
-// thresholds and dwells keep it from flapping: 2.5 s of quiet to pile on (0.5 s when they're down to one), then 3 s
-// at least to get on before taking cover again (0.5 s of a threat; sooner with one of theirs within 14 m of it).
-//   ride   — get on the platform and stay on it (beside the pillar in its middle, stepping out of its cover to shoot;
-//            the engine carries us, up climbs and down drops too), shooting from the top; knocked off while it's still
-//            ours → back on. Full steam: everyone (more riders, faster; chargers too). Threatened — ours: ONE (whoever's
-//            on it already, else shooters / twins / splatlings first, rollers / brushes last, chargers only if nobody
-//            else is up; two while we outnumber them), plus the nearest one more the moment it's left empty; neutral:
-//            the nearest 2; theirs: 2 to get on it (one of ours on it stops it) while the rest shoot theirs off it.
-//            Humans of ours riding it count. On it, in our ink on its deck: dive to heal / refill / hide when hurt or
-//            dry (a rider submerged there is still riding), up again to shoot.
-//   escort — on the ground by it: 1–7 m ahead of it or beside it (never under its front), inking the route and taking
-//            the fights round it — close enough to climb back on when the stance turns. While it's ours and
-//            threatened, the next best rider is the backup: it keeps 3–4.5 m from it, beside or just behind, so it's
-//            on again in a couple of seconds when the rider's splatted
-//   perch  — chargers, and while we hold it the other long-range kits not riding: a spot with a sightline over the
-//            tower (theirs / neutral) or the route just ahead of it (ours)
+// Stance (per team, `steam`): the tower is an escort job while any of theirs is up and near it — within ~30 m of it
+// (or closing on it to within that in 1.5 s), or with a sightline to its deck from within 36 m — and full steam ahead
+// only once none is (genuinely safe: 2.5 s of quiet first). Back to escorting 0.5 s after one of theirs is within
+// ~22 m (or sees its deck from 28 m), 1.5 s after one comes within 30 m.
+//   ride   — get on the platform and stay on it (beside the pillar in its middle), shooting from the top; knocked off
+//            while it's still ours → back on. Full steam: everyone (more riders, faster; chargers too). Escorting —
+//            ours: ONE (whoever's on it already, else shooters / twins / splatlings first, rollers / brushes last,
+//            chargers only if nobody else is up; a second only while we're 2 up on them, or 1 up with two on it
+//            already), plus the backup the moment it's left empty; neutral: the nearest 2; theirs: 2 to get on it (one
+//            of ours on it stops it) while the rest shoot theirs off it. Humans of ours riding it count. On it while
+//            escorted: under in our ink on its deck (dodging, healing, refilling — a rider submerged there is still
+//            riding), up to shoot when there's a foe in range or one climbing on, down again after; the deck kept
+//            inked for it. Rolling home (ours, on our half, one of theirs within 14 m, 7 m or more to the centre): the
+//            rider hops off to fight while the one of ours right by it climbs on in its place — it rolls on by itself
+//            meanwhile (tower.js); anyone near gets on at 2.5 s empty if that hasn't worked.
+//   escort — on the ground with it, each in a slot along the track (the way it's heading: ours / neutral → our push,
+//            theirs → their push, toward our goal): `cp` holds the next checkpoint's pad before it gets there (when
+//            it's within 35 m), `lead` walks the route 6–14 m ahead inking it, `flank` 1–7 m ahead and 3–7 m off to the
+//            side, `backup` (held and escorted: the next best rider) 0–3 m ahead, 2–4 m off it, ready to climb on. All
+//            take the fights round it (peeling off for one within 18 m of it, never chasing past 20 m) and go back to
+//            their slot after; while painting they ink the route ahead of it (the long-range painters from afar)
+//   perch  — chargers: a spot with a sightline over the tower (theirs / neutral) or over the route ahead of it (ours),
+//            off to its side (not trailing it: a new one once it's rolled 3 m past)
 // Getting on (BotBrain _towerBoardNav / _towerMove / _towerClimb): its deck is higher than a jump, so — as a player
 // does — ink a column of one of its walls in our ink and swim up it (the actor's own wall climb; the engine carries
 // climbers with it). The nav graph doesn't know the tower (a moving collider): pick a wall — open to a floor at its
@@ -302,7 +306,10 @@ export const RIDE_PREF = { shooter: 0, twins: 0, splatling: 0, dualies: 0.3, bla
 // specials that carry the body off the platform (a rider saves them for when it's off)
 const BODY_SP = { kraken: true, stamp: true, crab: true, jetpack: true, zipcaster: true };
 // stance thresholds (m from the tower, s of dwell)
-const TW_NEAR = 30, TW_CLOSE = 22, TW_SEE = 36, TW_SEE_IN = 28, TW_FACE = 14, TW_COVER_T = 0.5, TW_STEAM_T = 2.5, TW_STEAM_MIN = 3;
+const TW_NEAR = 30, TW_CLOSE = 22, TW_SEE = 36, TW_SEE_IN = 28, TW_FACE = 14, TW_COVER_T = 0.5, TW_NEAR_T = 1.5, TW_STEAM_T = 2.5;
+// rolling home: a rider swap that hasn't worked by this much empty time is off (it goes neutral at TOWER.idleNeutral),
+// no new hop-off for TW_HOME_CD s after one; the next checkpoint gets an escort once the tower's within TW_CP_AHEAD m of it
+const TW_HOME_T = 2.5, TW_HOME_CD = 8, TW_CP_AHEAD = 35;
 const _tp = new THREE.Vector3(), _tn = new THREE.Vector3(), _tq = new THREE.Vector3();
 export function towerPlan() {
   const m = G.match, T = m && m.tower;
@@ -335,6 +342,10 @@ class TowerPlan {
     this.steam = [false, false]; this.swT = [0, 0]; this.stT = [9, 9];
     this.thr = [{ n: 0, alive: 0, near: 0, close: 0, closeIn: 0 }, { n: 0, alive: 0, near: 0, close: 0, closeIn: 0 }];
     this.backup = [null, null];
+    // escort slots per team (bot → 'cp' | 'lead' | 'flank' | 'backup'); rolling home: riders off (per team), and when the
+    // next hop-off may be
+    this.slots = [new Map(), new Map()];
+    this.homeOff = [false, false]; this.homeCd = [0, 0]; this.homeRider = [null, null]; this.homeIn = [null, null];
     this._h = new Hit();
   }
   idx(s) { return clamp(Math.round(s - this.s0), 0, this.pts.length - 1); }
@@ -349,6 +360,18 @@ class TowerPlan {
     return -1;
   }
   dirOf(t) { return t === 0 ? 1 : -1; }   // the way team t pushes it along s
+  // where (x, y, z) is along the track: the nearest of its metre points within 40 m of s0 (round its corners) → into
+  // out { s, off: m off the track there }
+  proj(x, y, z, s0, out) {
+    const k0 = this.idx(s0), P = this.pts;
+    let bk = k0, bd = Infinity;
+    for (let k = Math.max(0, k0 - 40), k1 = Math.min(P.length - 1, k0 + 40); k <= k1; k++) {
+      const q = P[k], d = Math.hypot(q.x - x, q.z - z) + Math.abs(q.y - y) * 0.5;
+      if (d < bd) { bd = d; bk = k; }
+    }
+    out.s = this.s0 + bk; out.off = bd;
+    return out;
+  }
   // (x, z) in the platform's frame, and how far outside its square edge that is (negative: over it)
   edge(x, z) {
     const T = this.T, dx = x - T.pos.x, dz = z - T.pos.z, c = Math.cos(T.yaw), s = Math.sin(T.yaw);
@@ -362,7 +385,9 @@ class TowerPlan {
   riding(a) { return this.T.riderList.includes(a); }
   // swimming up one of its walls
   climbing(a) { return !!(a.alive && a.climbing && a.wallHit && a.wallHit.block === this.T.block.id); }
-  roleOf(a) { return this.roles[a.team].get(a) || 'escort'; }
+  // (a brain flagged `human` — a test stand-in for a player — is left out of the plan like a player, playing its own
+  // role: that string, else escort)
+  roleOf(a) { return this.roles[a.team].get(a) || (a.bot && typeof a.bot.human === 'string' ? a.bot.human : 'escort'); }
 
   // wall f of the platform (0 +x, 1 −x, 2 +z, 3 −z in its own frame): its outward normal (nx, nz) and the way along it
   // (tx, tz), in the world, into F
@@ -414,45 +439,99 @@ class TowerPlan {
       _tp.set(e.pos.x, e.pos.y + 1.3, e.pos.z); _tq.set(T.pos.x + (dx / d) * 0.8, T.top + 1.0, T.pos.z + (dz / d) * 0.8);
       if (G.physics.los(_tp, _tq)) { o.close++; if (d < TW_SEE_IN) o.closeIn++; }
     }
-    const few = o.alive <= Math.max(0, o.n - 3);              // 3 of 4 splatted
-    const wantSteam = few || (o.near === 0 && o.close === 0);
-    const wantCover = !few && o.closeIn > 0;                  // (a sightline from nearer in: 28 m, not 36)
+    // full steam only when it's genuinely safe: none of theirs up and near (however many of them are down)
+    const wantSteam = o.near === 0 && o.close === 0;
     this.stT[t] += dt;
-    const on = this.steam[t], sw = on ? wantCover : wantSteam;
+    const on = this.steam[t], sw = on ? o.near > 0 || o.closeIn > 0 : wantSteam;
     this.swT[t] = sw ? this.swT[t] + dt : 0;
-    // piling on: a moment of quiet first (at once when they're down to one); taking cover: once it's had a few seconds to
-    // get us on it — sooner with one of theirs right on it
-    const go = on ? (this.swT[t] >= TW_COVER_T && (this.stT[t] >= TW_STEAM_MIN || o.face > 0)) : this.swT[t] >= (few ? 0.5 : TW_STEAM_T) && this.stT[t] >= 1.5;
+    // piling on: a moment of quiet first; escorting again: at once for one of theirs close (or seeing its deck from 28 m),
+    // after a moment for one coming within 30 m
+    const go = on ? this.swT[t] >= (o.closeIn > 0 ? TW_COVER_T : TW_NEAR_T) : this.swT[t] >= TW_STEAM_T && this.stT[t] >= 1.5;
     if (go) { this.steam[t] = !on; this.swT[t] = 0; this.stT[t] = 0; }
   }
 
   _assign(t) {
-    const T = this.T, prev = this.roles[t], out = new Map();
-    const bots = G.actors.filter((a) => a.team === t && a.bot), up = bots.filter((a) => a.alive);
+    const T = this.T, prev = this.roles[t], out = new Map(), o = this.thr[t];
+    const bots = G.actors.filter((a) => a.team === t && a.bot && !a.bot.human), up = bots.filter((a) => a.alive);
     const ours = T.owner === t, steam = this.steam[t];
     const dT = (a) => Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z) + Math.abs(a.pos.y - T.top) * 1.5;
     // (a human of ours on it already does the job)
-    const humans = G.actors.filter((a) => a.team === t && !a.bot && this.riding(a)).length;
-    // (threatened and ours: one — two once we outnumber them, a spare gun on it and it carries on if one's splatted;
-    // a second one on it already stays on till they outnumber us)
-    const foes = this.thr[t].alive, on2 = up.filter((a) => this.riding(a) || this.climbing(a)).length >= 2;
-    const n = Math.max(0, (steam ? 4 : ours ? (up.length > foes || (on2 && up.length >= foes) ? 2 : 1) : 2) - humans);
+    const humans = G.actors.filter((a) => a.team === t && !(a.bot && !a.bot.human) && this.riding(a)).length;
+    // rolling home (tower.js: ours, on our half, it rolls on to the centre with nobody on it): with one of theirs within
+    // 14 m of it, 7 m or more still to go and one of ours right by it (6 m) to take its place, the rider hops off to fight
+    // while that one climbs on — it rolls on home by itself meanwhile. Over once the new rider's on, after TW_HOME_T s
+    // empty (then anyone near gets on, before it goes neutral), within 4 m of the centre, or once none of theirs is
+    // within 22 m; not again for TW_HOME_CD s
+    const homeOk = ours && !steam && T.homeSide?.(t, T.s + this.dirOf(t) * 4);
+    let hr = this.homeRider[t], hi = this.homeIn[t];
+    if (hr) {
+      if (!homeOk || T.emptyT >= TW_HOME_T || o.close === 0 || !hi || !hi.alive || T.riderList.some((a) => a.team === t && a !== hr)) {
+        hr = hi = this.homeRider[t] = this.homeIn[t] = null; this.homeCd[t] = this.t + TW_HOME_CD;
+      }
+    } else if (homeOk && T.homeSide(t, T.s + this.dirOf(t) * 7) && o.face > 0 && T.riders[t] === 1 && this.t >= this.homeCd[t]) {
+      const r = up.find((a) => this.riding(a));
+      const inn = r && up.filter((a) => a !== r && !this.riding(a) && a.weapon.kind !== 'charger' && dT(a) < 6).sort((x, y) => dT(x) - dT(y))[0];
+      if (inn) { hr = this.homeRider[t] = r; hi = this.homeIn[t] = inn; }
+    }
+    this.homeOff[t] = !!hr;
+    // (escorting ours: one — a second only while we're 2 up on them, or 1 up with two on it already: a spare gun on it)
+    const foes = o.alive, on2 = up.filter((a) => this.riding(a) || this.climbing(a)).length >= 2;
+    const two = up.length >= foes + 2 || (on2 && up.length > foes);
+    const n = Math.max(0, (steam ? 4 : ours ? (two ? 2 : 1) : 2) - humans);
     let can = steam ? up : up.filter((a) => a.weapon.kind !== 'charger');
     if (!can.length && ours) can = up;
-    const key = (a) => (this.riding(a) ? -4 : this.climbing(a) ? -3 : 0) + (prev.get(a) === 'ride' ? -1.5 : 0)
+    if (hr) can = can.filter((a) => a !== hr);
+    const key = (a) => (a === hi ? -9 : 0) + (this.riding(a) ? -4 : this.climbing(a) ? -3 : 0) + (prev.get(a) === 'ride' ? -1.5 : 0)
       + (RIDE_PREF[a.weapon.kind] ?? 0.8) * (ours ? 1 : 0.3) + dT(a) * (ours ? 0.06 : 0.12);
     const riders = can.sort((x, y) => key(x) - key(y)).slice(0, n);
-    // held, and nobody on it (the rider splatted / knocked off): the closest one more goes too (it goes neutral at 5 s)
-    if (ours && T.riders[t] === 0 && T.emptyT > 0.3) {
-      const c = can.filter((a) => !riders.includes(a)).sort((x, y) => dT(x) - dT(y))[0];
+    // held, and nobody on it (the rider splatted / knocked off): the backup goes too, else the closest (it goes neutral
+    // at 5 s; a rider taking the place of one who hopped off gets a moment first)
+    if (ours && T.riders[t] === 0 && T.emptyT > (hr ? 1.2 : 0.3)) {
+      const bk = this.backup[t];
+      const c = bk && bk.alive && can.includes(bk) && !riders.includes(bk) && dT(bk) < 14 ? bk : can.filter((a) => !riders.includes(a)).sort((x, y) => dT(x) - dT(y))[0];
       if (c) riders.push(c);
     }
     const set = new Set(riders);
-    const long = (a) => a.weapon.kind === 'charger' || ((LONG[a.weapon.kind] || a.weapon.kind === 'bow') && ours);
+    // (chargers perch; every other kit escorts — the long-range painters ink the route ahead from their slot)
+    const long = (a) => a.weapon.kind === 'charger';
     for (const a of bots) out.set(a, set.has(a) ? 'ride' : long(a) ? 'perch' : 'escort');
     this.roles[t] = out;
-    // the backup (held and threatened): the next best rider escorts it from right beside it, ready to climb back on
-    this.backup[t] = ours && !steam ? can.find((a) => !set.has(a) && !long(a)) || null : null;
+    // the backup (held and escorted): the next best rider keeps right by it, ready to climb back on (the same one while
+    // it's up for it and near: slots don't change hands on a whim — each change sends a bot somewhere new)
+    const pb = this.backup[t], okBk = (a) => a && a.alive && can.includes(a) && !set.has(a) && !long(a);
+    this.backup[t] = ours && !steam ? (okBk(pb) && dT(pb) < 25 ? pb : can.find(okBk) || null) : null;
+    // escort slots, along the way it's heading: the next checkpoint's pad first (the one nearest it; it keeps it), then
+    // the lead (the one furthest ahead; it keeps it unless another is 6 m further on), the rest flank
+    const sl = new Map(), ps = this.slots[t], fwd = this.fwdOf(t);
+    if (this.backup[t]) sl.set(this.backup[t], 'backup');
+    let rest = up.filter((a) => out.get(a) === 'escort' && !sl.has(a));
+    const e = T.path.dir(T.s, _tq), ex = e.x * fwd, ez = e.z * fwd;
+    const along = (a) => (a.pos.x - T.pos.x) * ex + (a.pos.z - T.pos.z) * ez;
+    const cp = this.cpAhead(t);
+    if (cp && cp.dist > 3 && (cp.dist < 18 || (cp.dist < TW_CP_AHEAD && rest.length >= 2))) {
+      const cd = (a) => Math.hypot(a.pos.x - cp.c.pos.x, a.pos.z - cp.c.pos.z) - (ps.get(a) === 'cp' ? 15 : 0);
+      const c = rest.sort((x, y) => cd(x) - cd(y))[0];
+      if (c) { sl.set(c, 'cp'); rest = rest.filter((a) => a !== c); }
+    }
+    if (rest.length) {
+      const al = (a) => along(a) + (ps.get(a) === 'lead' ? 6 : 0);
+      const L = rest.sort((x, y) => al(y) - al(x))[0];
+      sl.set(L, 'lead'); rest = rest.filter((a) => a !== L);
+    }
+    for (const a of rest) sl.set(a, 'flank');
+    this.slots[t] = sl;
+  }
+  // an escort's slot (see _assign); the way the tower's heading for team t's escorts (+1 / −1 along s): ours / neutral
+  // → our push, theirs → theirs (toward our goal)
+  slotOf(a) { return this.slots[a.team].get(a) || 'flank'; }
+  fwdOf(t) { return this.T.owner === 1 - t ? -this.dirOf(t) : this.dirOf(t); }
+  // the next checkpoint it's heading for (ours / neutral: ours ahead of it; theirs: theirs ahead of it, on our half):
+  // { c, s: its place along the track, dist: m from the tower along it } or null
+  cpAhead(t) {
+    const T = this.T, pt = T.owner === 1 - t ? 1 - t : t, c = T._nextCp(pt);
+    if (!c) return null;
+    const s = pt === 0 ? c.d : -c.d;
+    return { c, s, dist: Math.abs(s - T.s) };
   }
 }
 
@@ -505,6 +584,9 @@ export class BotBrain {
     // diving in our ink on its deck; scratch wall frames
     this.tBoard = null; this.tFaceT = 0; this.tNear = false; this.tBoardT = 0; this.tSwimT = 0; this.tStallT = 0; this.tLetGo = 0;
     this.tBadF = -1; this.tBadT = 0; this.tSjT = 0; this.tPress = false; this.tBk = false; this.tHide = false;
+    // an escort's slot now (TowerPlan.slots), the route patch it's inking (re-picked at tRAimT); a rider's hide / pop-up
+    // clock (it keeps a pop-up or a dive a moment), inking its deck (tDeckT: next look, tDeck: the spot)
+    this.tSlot = null; this.tRAimT = 0; this.tRAim = null; this.tUpT = 0; this.tDeckT = 0; this.tDeck = null;
     this._tF = {}; this._tF2 = {};
     // threats (enemy Waddles / Torpedoes hunting us, enemy canopies): the device being dealt with, when each one was
     // noticed (+ reaction time), line of sight to it, evade heading / sidestep side, canopy steering + flanking state
@@ -614,7 +696,7 @@ export class BotBrain {
     } else {
       // our team has already covered the goal area: move on instead of walking over our own ink
       this.goalCheckT -= dt;
-      if (this.goalCheckT <= 0 && this.goal >= 0 && this.path) {
+      if (this.goalCheckT <= 0 && this.goal >= 0 && this.path && !tp) {   // (tower escorts keep to their slot, inked or not)
         this.goalCheckT = 1;
         const g = G.nav.nodes[this.goal], st = G.paint.regionStats(g.x, g.y, g.z, 3, a.team, _stats);
         if (st.n && st.own > 0.85) this.goalTimer = 0;
@@ -1503,18 +1585,21 @@ export class BotBrain {
   }
 
   // ================================================================ Tower Command (only ever called in a tower match)
-  // after respawning: super jump to a teammate riding the tower (else the one nearest it) when it's a long way off
+  // after respawning, when it's a long way off: a rider-to-be super jumps to a teammate riding the tower (else the one
+  // nearest it); an escort to the teammate nearest the stretch 6 m ahead of it (landing where the escorting is, not on
+  // its deck to walk off it again)
   _towerJump(P) {
     const a = this.a, T = P.T;
-    if (Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z) < 26 || Math.random() > 0.8) return;
+    if (Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z) < 22 || Math.random() > 0.8) return;
+    const ride = P.roleOf(a) === 'ride', F = ride ? T.pos : P.at(T.s + P.fwdOf(a.team) * 6);
     let best = null, bd = 14;
     for (const o of G.actors) {
       if (o === a || o.team !== a.team || !o.alive || o.superJumpState || o.hp < PLAYER.hp * 0.45) continue;
-      const d = Math.hypot(o.pos.x - T.pos.x, o.pos.z - T.pos.z) - (P.riding(o) ? 8 : 0);
+      const d = Math.hypot(o.pos.x - F.x, o.pos.z - F.z) + (P.riding(o) ? (ride ? -8 : 4) : 0);
       if (d < bd && o.pos.distanceTo(a.pos) > 18) { bd = d; best = o; }
     }
     for (const b of G.subs ? G.subs.beaconsFor(a.team) : []) {
-      const d = Math.hypot(b.pos.x - T.pos.x, b.pos.z - T.pos.z);
+      const d = Math.hypot(b.pos.x - F.x, b.pos.z - F.z);
       if (d < bd - 2 && b.pos.distanceTo(a.pos) > 18) { bd = d; best = b; }
     }
     const ok = best && (best.pos && best.kind === 'beacon' ? G.subs.jumpToBeacon(a, best) : a.superJump(best));
@@ -1532,17 +1617,17 @@ export class BotBrain {
   }
 
   // take the fight? Riders: whatever's in reach of the platform (they don't chase); perches: in range or on it;
-  // escorts: in range, on it, or anywhere within ~14 m of it
+  // escorts: in range, on it, or anywhere within ~18 m of it (peeling off their slot for it; back to it after)
   _towerEngage(P) {
     const a = this.a, t = this.target, T = P.T;
     const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z), range = this._range();
     const tOn = P.riding(t), dT = Math.hypot(t.pos.x - T.pos.x, t.pos.z - T.pos.z);
     if (this.tRole === 'ride') return d < range * 1.2 || tOn || (dT < 8 && d < range * 1.8);
     if (this.tRole === 'perch') return d < range * 1.05 || tOn;
-    return d < range * 1.3 || tOn || dT < 14;
+    return d < range * 1.3 || tOn || dT < 18;
   }
   // in a fight: riders keep making for the tower (and stay on it); perches keep their spot while the foe's in range;
-  // escorts don't chase a foe off the route (further from the tower than 16 m and further than we are)
+  // escorts don't chase a foe off the route (further from the tower than 20 m and further than we are)
   _towerFightNav(P) {
     const a = this.a, t = this.target, T = P.T;
     if (this.tRole === 'ride') { this._towerBoardNav(P); return true; }
@@ -1552,7 +1637,7 @@ export class BotBrain {
       return false;
     }
     const tt = Math.hypot(t.pos.x - T.pos.x, t.pos.z - T.pos.z), st = Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z);
-    if (d > 4 && tt > 16 && tt > st + 2) { this.path = null; this.repath = 0.3; return true; }
+    if (d > 4 && tt > 20 && tt > st + 2) { this.path = null; this.repath = 0.3; return true; }
     return false;
   }
 
@@ -1653,58 +1738,76 @@ export class BotBrain {
     this.tWaitT = this.tHoldUntil = this.t + 1.2 + Math.random();
   }
 
-  // escorts / perches: arrive → hold a moment → the next spot (an escort the tower's caught up with moves on at once)
+  // escorts / perches: arrive → hold a moment → the next spot in the slot (an escort the tower's caught up with moves
+  // on at once: the lead keeps 3 m ahead of it, a flank level with it, the backup no more than 1.5 m behind; the one
+  // at the checkpoint holds it)
   _towerGoal(P) {
     if (this.tRole === 'ride') { this._towerBoardNav(P); return; }
-    const bk = P.backup[this.a.team] === this.a;
-    if (bk !== this.tBk) { this.tBk = bk; this.goalTimer = 0; this.tHoldUntil = 0; }   // (just made the backup / not any more)
+    const slot = this.tRole === 'escort' ? P.slotOf(this.a) : this.tRole;
+    if (slot !== this.tSlot) { this.tSlot = slot; this.goalTimer = 0; this.tHoldUntil = 0; }   // (a new slot: go now)
     const T = P.T, arrived = !this.path || this.pi >= this.path.length;
     if (arrived && this.tHoldDur > 0) { this.tHoldUntil = this.t + this.tHoldDur; this.tHoldDur = 0; }
-    const passed = this.tRole === 'escort' && (this.tGoalS - T.s) * P.dirOf(this.a.team) < (P.backup[this.a.team] === this.a ? -2 : 0.5) && this.t - this.tPickT > 1;
+    const lag = slot === 'lead' ? 3 : slot === 'backup' ? -0.5 : slot === 'flank' ? 0.5 : slot === 'perch' && T.owner === this.a.team ? -3 : -Infinity;
+    const passed = (this.tGoalS - T.s) * P.fwdOf(this.a.team) < lag && this.t - this.tPickT > 1;
     if (this.wiggleT <= 0 && (this.goalTimer <= 0 || passed || (arrived && this.t >= this.tHoldUntil))) this._pickTowerGoal(P);
   }
   _pickTowerGoal(P) {
     this.tPickT = this.t; this.tHoldDur = 0;
     let id = -1, hold = 0;
     if (this.tRole === 'perch') { id = this._towerPerchNode(P); if (id >= 0) { hold = 3 + Math.random() * 3; this.goalTimer = 10; } }
-    if (id < 0) { id = this._towerEscortNode(P); hold = 0.5 + Math.random() * 1.2; this.goalTimer = 4 + Math.random() * 2; }
+    if (id < 0) {
+      id = this._towerEscortNode(P);
+      const cp = this.tSlot === 'cp';
+      hold = cp ? 2 + Math.random() * 2 : 0.3 + Math.random() * 0.6; this.goalTimer = cp ? 7 : 4 + Math.random() * 2;
+    }
     if (id < 0) { this._pickPaintGoal(); return; }
     const n = G.nav.nodes[id];
     if (this._pathTo(_v3.set(n.x, n.y, n.z), 0.3)) { this.tHoldDur = hold; this.zFail = 0; }
     else if (++this.zFail >= 3) { this.zFail = 0; this._wiggle(0.8); }
   }
-  // a spot by it on the ground: 1–7 m ahead of it toward the enemy goal or beside it, 1.5–5 m off the route and never
-  // under the platform or in front of it where it rolls (unclaimed / enemy ink first, apart from the other escorts,
-  // never at their spawn)
+  // a spot on the ground for our escort slot, along the way the tower's heading (P.fwdOf): `cp` round the next
+  // checkpoint's pad (up to 4 m past it), `lead` on / by the route 6–14 m ahead, `flank` 1–7 m ahead and 3–7 m off to
+  // the side, `backup` 0–3 m ahead and 2–4 m off it at its floor's height. Never under the platform or in front of it
+  // where it rolls, never by their spawn; unclaimed / enemy ink first (the lead above all: it inks the way), apart
+  // from the other escorts. (A perch with nowhere to perch, a rider waiting by an unreachable tower: flank.)
   _towerEscortNode(P) {
-    const a = this.a, nav = G.nav, T = P.T, dir = P.dirOf(a.team), ep = G.level.spawnPads[1 - a.team];
+    const a = this.a, nav = G.nav, T = P.T, ep = G.level.spawnPads[1 - a.team];
+    const slot = this.tRole === 'escort' ? P.slotOf(a) : 'flank', fwd = P.fwdOf(a.team);
     const mates = G.actors.filter((o) => o !== a && o.team === a.team && o.bot && o.alive && o.bot.goal >= 0);
-    const e = T.path.dir(T.s, _v2), ex = e.x * dir, ez = e.z * dir;                  // our push direction here
-    const bk = P.backup[a.team] === a;
+    const e = T.path.dir(T.s, _v2), ex = e.x * fwd, ez = e.z * fwd;                  // the way it's heading here
+    const bk = slot === 'backup', cp = slot === 'cp' ? P.cpAhead(a.team) : null, lead = slot === 'lead';
     let best = -1, bs = -Infinity, bS = T.s;
-    for (let k = 0; k < 14; k++) {
-      const s = T.s + dir * (bk ? -1 + Math.random() * 2.5 : 1 + Math.random() * 6), p = P.at(s);
-      const ang = Math.random() * Math.PI * 2, r = bk ? 3 + Math.random() * 1.5 : 1.5 + Math.random() * 3.5;
-      const id = nav.nearest(_v.set(p.x + Math.cos(ang) * r, p.y + 0.3, p.z + Math.sin(ang) * r), 1.0);
+    for (let k = 0; k < 16; k++) {
+      const s = cp ? cp.s + fwd * (-1 + Math.random() * 5) : T.s + fwd * (bk ? 0.5 + Math.random() * 3.5 : lead ? 6 + Math.random() * 8 : 1 + Math.random() * 6);
+      const p = P.at(s);
+      // off to the side of the track there (square to it: the backup / flanks level with that point, not behind it)
+      const q = T.path.dir(s, _v3), sd = Math.random() < 0.5 ? -1 : 1;
+      const r = cp ? (Math.random() * 2 - 1) * 4 : bk ? sd * (2.2 + Math.random() * 1.8) : lead ? (Math.random() * 2 - 1) * 3 : sd * (3 + Math.random() * 4);
+      const id = nav.nearest(_v.set(p.x - q.z * r, p.y + 0.3, p.z + q.x * r), 1.0);
       if (id < 0) continue;
       const n = nav.nodes[id];
-      if (n.zone >= 0 || n.wet === 2 || Math.abs(n.y - p.y) > 2 || Math.hypot(n.x - p.x, n.z - p.z) > 5.5 || Math.hypot(n.x - ep.x, n.z - ep.z) < 10) continue;
+      if (n.zone >= 0 || n.wet === 2 || Math.abs(n.y - p.y) > 2 || Math.hypot(n.x - p.x, n.z - p.z) > 7.5 || Math.hypot(n.x - ep.x, n.z - ep.z) < 10) continue;
       const rx = n.x - T.pos.x, rz = n.z - T.pos.z, along = rx * ex + rz * ez, side = Math.abs(rx * ez - rz * ex);
       if (Math.hypot(rx, rz) < 2.8 || (along > -1 && along < 4.5 && side < 1.9)) continue;
+      // (the spot itself — not just the point it was looked for by — in the slot's stretch of track: the nearest node
+      // can be back round a corner)
+      const J = P.proj(n.x, n.y, n.z, T.s, this._tJ || (this._tJ = {})), ja = (J.s - T.s) * fwd;
+      const out = cp ? Math.abs(J.s - cp.s) > 6 : bk ? ja < -0.5 || ja > 5 : lead ? ja < 4 || ja > 16 : ja < 0 || ja > 9;
       const st = G.paint.regionStats(n.x, n.y, n.z, 2.5, a.team, _stats);
-      let sc = (st.n ? st.empty + st.enemy * 1.4 : 0) * 3 - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.05 - Math.abs(Math.hypot(rx, rz) - (bk ? 3.6 : 4)) * (bk ? 1 : 0.25)
-        + Math.random() - (n.wet ? 1.5 : 0) - (bk && Math.abs(n.y - T.pos.y) > 0.5 ? 2 : 0);
+      const off = J.off;                                                               // (off the route)
+      let sc = (st.n ? st.empty + st.enemy * 1.4 : 0) * (lead ? 4 : 2.5) - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.05 + Math.random() - (n.wet ? 1.5 : 0)
+        - (bk ? Math.abs(Math.hypot(rx, rz) - 3.2) + (Math.abs(n.y - T.pos.y) > 0.5 ? 2 : 0) : 0) - (lead ? off * 0.3 : 0) - (out ? 8 : 0);   // (outside it: a last resort)
       for (const m of mates) { const g = nav.nodes[m.bot.goal]; if (Math.hypot(g.x - n.x, g.z - n.z) < 3.5) sc -= 2; }
-      if (sc > bs) { bs = sc; best = id; bS = s; }
+      if (sc > bs) { bs = sc; best = id; bS = J.s; }
     }
     this.tGoalS = bS;
     return best;
   }
-  // long range: a spot 6 m – ~0.85 × range from the tower (ours: from the route just ahead of it), on our side of it,
-  // a little above it if possible, with a sightline to it
+  // long range: a spot 6 m – ~0.85 × range from the tower (ours: from the route 8 m ahead of it, off to its side;
+  // theirs / neutral: on our side of it), a little above it if possible, with a sightline to it
   _towerPerchNode(P) {
-    const a = this.a, nav = G.nav, T = P.T, dir = P.dirOf(a.team), range = this._range();
-    const F = T.owner === a.team ? P.at(T.s + dir * 5) : T.pos;
+    const a = this.a, nav = G.nav, T = P.T, dir = P.dirOf(a.team), range = this._range(), ours = T.owner === a.team;
+    const F = ours ? P.at(T.s + dir * 8) : T.pos;
     const e = T.path.dir(T.s, _v2), ex = e.x * dir, ez = e.z * dir;                  // our push direction there
     const mates = G.actors.filter((o) => o !== a && o.team === a.team && o.bot && o.alive && o.bot.goal >= 0);
     const dMax = Math.min(range * 0.85, 22), dMin = Math.min(6, dMax - 2), cands = [];
@@ -1713,7 +1816,8 @@ export class BotBrain {
       const dx = n.x - F.x, dz = n.z - F.z, d = Math.hypot(dx, dz);
       if (d < dMin || d > dMax || n.zone >= 0 || n.wet === 2) continue;
       const side = (dx * ex + dz * ez) / Math.max(d, 1);
-      let sc = clamp(n.y - F.y, -2, 4) * 1.1 - side * 1.6 - Math.abs(d - range * 0.6) * 0.1 - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.04 + Math.random() * 1.2 - (n.wet ? 1.5 : 0);
+      // (ours: off to the side of the route ahead — not trailing it; theirs / neutral: on our side of it)
+      let sc = clamp(n.y - F.y, -2, 4) * 1.1 - (ours ? Math.abs(side) * 1.4 : side * 1.6) - Math.abs(d - range * 0.6) * 0.1 - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.04 + Math.random() * 1.2 - (n.wet ? 1.5 : 0);
       for (const m of mates) { const g = nav.nodes[m.bot.goal]; if (Math.hypot(g.x - n.x, g.z - n.z) < 5) sc -= 4; }
       cands.push([sc, id]);
     }
@@ -1721,19 +1825,38 @@ export class BotBrain {
     const fx = F.x, fy = F.y + 1.2, fz = F.z;
     for (let k = 0; k < Math.min(6, cands.length); k++) {
       const n = nav.nodes[cands[k][1]];
-      if (G.physics.los(_v.set(n.x, n.y + 1.4, n.z), _v2.set(fx, fy, fz))) return cands[k][1];
+      if (!G.physics.los(_v.set(n.x, n.y + 1.4, n.z), _v2.set(fx, fy, fz))) continue;
+      this.tGoalS = T.s + dir * ((n.x - T.pos.x) * ex + (n.z - T.pos.z) * ez);   // (how far along the track it stands: _towerGoal)
+      return cands[k][1];
     }
     return -1;
   }
 
   // paint-mode aim: where a thrown special should land (a moment, turning to it), else a rider inks the route 5–8 m
-  // ahead of the tower
+  // ahead of the tower, and escorts / perches the nearest patch of the route ahead of it (2–14 m) that isn't ours yet,
+  // in their reach (melee kits ink it walking it: the lead's spots are on it)
   _towerAim(P, dt, onT, melee) {
     const a = this.a;
     if (this.tFace > 0) { this.tFace -= dt; const f = this.tFaceP; return { x: f.x, y: f.y, z: f.z, d: Math.hypot(f.x - a.pos.x, f.z - a.pos.z) }; }
-    if (!onT || melee || this.tRole !== 'ride') return null;
-    const p = P.at(P.T.s + P.dirOf(a.team) * (6.5 + Math.sin(this.sweep * 0.37) * 1.5));
-    return { x: p.x, y: p.y, z: p.z, d: Math.hypot(p.x - a.pos.x, p.z - a.pos.z) };
+    if (melee) return null;
+    if (onT) {
+      if (this.tRole !== 'ride') return null;
+      const p = P.at(P.T.s + P.dirOf(a.team) * (6.5 + Math.sin(this.sweep * 0.37) * 1.5));
+      return { x: p.x, y: p.y, z: p.z, d: Math.hypot(p.x - a.pos.x, p.z - a.pos.z) };
+    }
+    if (this.tRole === 'ride') return null;
+    if ((this.tRAimT -= dt) <= 0) {
+      this.tRAimT = 0.4 + Math.random() * 0.2; this.tRAim = null;
+      const reach = Math.min(this._range() * 1.1, 16), fwd = P.fwdOf(a.team);
+      for (let k = 1; k <= 7; k++) {
+        const p = P.at(P.T.s + fwd * k * 2), d = Math.hypot(p.x - a.pos.x, p.z - a.pos.z);
+        if (d > reach || d < 1.5 || Math.abs(p.y - a.pos.y) > 3) continue;
+        const st = G.paint.regionStats(p.x, p.y, p.z, 1.3, a.team, _stats);
+        if (st.n && st.own < 0.7) { this.tRAim = (this._tRAimV || (this._tRAimV = new THREE.Vector3())).set(p.x, p.y, p.z); break; }
+      }
+    }
+    const q = this.tRAim;
+    return q ? { x: q.x, y: q.y, z: q.z, d: Math.hypot(q.x - a.pos.x, q.z - a.pos.z) } : null;
   }
   // specials round the tower: foes on / by it and us near it (cover our riders, break theirs, take it back). Thrown
   // ones go where we look: from the platform at the nearest foe by it, from off it onto the tower.
@@ -1796,6 +1919,42 @@ export class BotBrain {
     tx *= this.tSkirtSg; tz *= this.tSkirtSg;
     move.set(tx * 0.95 - (dx / d) * 0.3, 0, tz * 0.95 - (dz / d) * 0.3);
     this.noProg = 0; this.bestD = Infinity;
+  }
+
+  // one of theirs getting on: swimming up its wall, or at its foot inking it
+  _towerBoarder(P) {
+    const T = P.T, t = this.a.team;
+    for (const e of G.actors) {
+      if (e.team === t || !e.alive || e.superJumpState) continue;
+      if (P.climbing(e) || (P.edge(e.pos.x, e.pos.z) < 1.3 && e.pos.y < T.top - 0.2 && e.pos.y > T.pos.y - 0.5)) return e;
+    }
+    return null;
+  }
+  // a rider inking its deck: the nearest spot of it within ~1.1 m (under us first) that isn't our ink — looked for 3× a
+  // second — shot at in the weapon's own rhythm; returns the aim ({ yaw, pitch, dist }) or null (all ours)
+  _towerDeckInk(P, dt, it) {
+    const a = this.a, T = P.T, D = this.tDeck || (this.tDeck = new THREE.Vector3());
+    if ((this.tDeckT -= dt) <= 0) {
+      this.tDeckT = 0.3;
+      let bd = Infinity; D.y = NaN;
+      const c = Math.cos(T.yaw), sn = Math.sin(T.yaw), r = TOWER.platformR - 0.45;
+      for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) {
+        const lx = (i / 2) * r, lz = (j / 2) * r;
+        if (Math.abs(lx) < 0.35 && Math.abs(lz) < 0.35) continue;                    // (the pillar)
+        _tp.set(T.pos.x + lx * c + lz * sn, T.top, T.pos.z - lx * sn + lz * c);
+        const d = Math.hypot(_tp.x - a.pos.x, _tp.z - a.pos.z);
+        if (d > 1.1 || d >= bd || T.paint.groundTeam(_tp) === a.team + 1) continue;
+        bd = d; D.copy(_tp);
+      }
+    }
+    if (!Number.isFinite(D.y)) return null;
+    const w = a.weapon, wr = a.weaponRunner;
+    if (CHARGES[w.kind]) it.fire = wr.burstT <= 0 && !wr.streaming && !(wr.charging && wr.charge >= 0.45);
+    else if (MELEE[w.kind]) { this.tPress = !this.tPress; it.fire = this.tPress; }
+    else it.fire = true;
+    it.squid = false;
+    const hd = Math.max(0.35, Math.hypot(D.x - a.pos.x, D.z - a.pos.z)), dy = D.y + 0.02 - (a.pos.y + 1.1);
+    return { yaw: Math.atan2(D.x - a.pos.x, D.z - a.pos.z), pitch: Math.atan2(dy, hd), dist: Math.hypot(hd, dy) };
   }
 
   // per frame, after the mode's own footwork: a rider on the platform holds its middle (the engine carries it) and
@@ -1862,15 +2021,25 @@ export class BotBrain {
           move.set((dx / l) * 0.35 - (dz / l) * sg, 0, (dz / l) * 0.35 + (dx / l) * sg);
         }
       } else this.tOffT = 0;
-      // on our ink on its deck: dive in it when dry, hurt (heals 3× as fast; stay down till mostly mended) or, with
-      // nobody in sight, a little hurt or low — hidden, still riding — and up again to shoot
-      const idle = !(this.mode === 'fight' && this.target && this.seeTimer > 0), hp = a.hp / PLAYER.hp, ink = a.ink / PLAYER.inkMax;
-      this.tHide = a.groundTeam === 1 && (this.tDry || hp < 0.5 || (this.tHide && hp < 0.85) || (idle && (hp < 0.9 || ink < 0.5)));
+      // in our ink on its deck (a rider under in it still rides): escorted, stay under it — dodging, healing 3× as fast,
+      // refilling — and come up to shoot when there's a foe in range or one of theirs climbing on and we're fit for it
+      // (up a moment at least, then under again); full steam, stay up inking and shooting, under only when hurt or dry
+      const hp = a.hp / PLAYER.hp, ink = a.ink / PLAYER.inkMax, tgt = this.target;
+      const seen = this.mode === 'fight' && tgt && this.seeTimer > 0;
+      const shot = seen && Math.hypot(tgt.pos.x - a.pos.x, tgt.pos.z - a.pos.z) < this._range() * 1.1;
+      let hide;
+      if (!P.steam[a.team]) {
+        const fit = hp >= 0.3 && !this.tDry && ink >= 0.06;
+        if (fit && (shot || this._towerBoarder(P))) this.tUpT = this.t + 0.8;
+        hide = !fit || this.t >= this.tUpT;
+      } else hide = this.tDry || hp < 0.5 || (this.tHide && hp < 0.85) || (!seen && (hp < 0.9 || ink < 0.5));
+      this.tHide = a.groundTeam === 1 && hide;
       it.squid = this.tHide;
       if (it.squid) { it.fire = false; it.sub = false; this._bombAim = false; move.set(0, 0, 0); }   // (a swim would carry us off its small deck)
       it.jump = false; this.tSideT = 0; this.tAltT = 0;
       settle();
-      return null;
+      // the deck kept inked: no shot to take and its deck by us bare / theirs → ink it (to hide in, and refill)
+      return !it.squid && !shot && ink > 0.05 && !this.tDry ? this._towerDeckInk(P, dt, it) : null;
     }
     if (thrAim && this.thrAct === 'evade') return null;               // a device about to go off on us: dodge that first
     const B = this.tBoard;

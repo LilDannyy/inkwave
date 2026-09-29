@@ -79,8 +79,9 @@ const TIPS = [
   'Zone Control: lose the zone to the other team and you get a penalty to count off before your count moves again.',
   'Zone Control: while they hold the zone your special charges fast. Team up and break their hold!',
   'Tower Command: stand on the tower to push it toward their goal — four riders roll it 43% faster than one.',
-  'Tower Command: checkpoints stop the tower until it clears them. Lose it for 3 s and the checkpoint fills back up.',
+  'Tower Command: checkpoints stop the tower until it clears them. Lose it for 5 s and the checkpoint fills back up.',
   'Tower Command: both teams on the tower stops it dead. Clear them off to keep it rolling.',
+  'Tower Command: take the tower back on your own half and it rolls home to the middle even with nobody on — hop off and defend it.',
 ];
 // Battle modes offered on the stage select (Zone Control: see src/game/zones.js)
 const ZONE_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 21 V12 Q8 8 12 8 H21 M43 8 H52 Q56 8 56 12 V21 M56 43 V52 Q56 56 52 56 H43 M21 56 H12 Q8 56 8 52 V43" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="19" y="19" width="26" height="26" rx="5" fill="currentColor"/></svg>';
@@ -2299,9 +2300,9 @@ export class Menus {
     ];
     const towerRules = [
       ['ride', 'Ride the tower', 'Ink its side and swim up onto it to take it: it rolls toward their base. More riders, more speed — up to ×1.43 with four aboard.'],
-      ['checkpoint', 'Clear checkpoints', 'Checkpoints stop the tower until you clear them — cleared ones never stop it again. Lose it for 3 s and the checkpoint fills back up.'],
+      ['checkpoint', 'Clear checkpoints', 'Checkpoints stop the tower until you clear them — cleared ones never stop it again. Lose it for 5 s and the checkpoint fills back up.'],
       ['goal', 'Push it home', 'Your count drops the further you push into their half. Reach their goal for a knockout — otherwise the furthest push wins.'],
-      ['contest', 'Both on it? It stops', 'With both teams aboard the tower won’t move. Leave it empty for 5 s and it goes neutral and rolls back to the middle.'],
+      ['contest', 'Both on it? It stops', 'With both teams aboard the tower won’t move. Leave it empty for 5 s and it goes neutral and rolls back to the middle — on your own half, yours rolls home by itself meanwhile.'],
     ];
     const card = ([art, title, text], i, mode) => h('div', { class: 'iw-rule iw-in iw-in--pop', style: { '--tilt': `${[-1.2, 1, 0.8, -1][i]}deg` } },
       h('div', { class: 'iw-rule__art' + (mode !== 'turf' ? ' is-zone' : ''), html: (mode === 'tower' ? TOWER_RULE_ART : mode === 'zones' ? ZONE_RULE_ART : RULE_ART)[art] }),
@@ -3718,7 +3719,7 @@ export class Menus {
         let tower = null;
         if (m.mode === 'tower' && m.tower && m.tower.state) {
           const t = m.tower.state();
-          tower = { count: t.count.map((c) => Math.max(0, Math.ceil(c - 1e-6))), penalty: [0, 0], owner: t.owner, contested: !!t.contested, returning: !!t.returning,
+          tower = { count: t.count.map((c) => Math.max(0, Math.ceil(c - 1e-6))), penalty: [0, 0], owner: t.owner, contested: !!t.contested, returning: !!t.returning, homing: !!t.homing,
             riders: t.riders, next: t.next, emptyT: t.emptyT, overtime: !!t.overtime, overtimeT: t.overtimeT };
         }
         return {
@@ -3811,7 +3812,7 @@ export class Menus {
         if (towerMode) {
           objName.textContent = z.contested ? 'CONTESTED' : z.owner >= 0 ? `${tn(z.owner)} RIDING` : 'TOWER';
           objState.textContent = z.contested ? 'BOTH TEAMS ABOARD' : z.owner < 0 ? (z.returning ? 'ROLLING BACK' : 'NEUTRAL')
-            : z.next && z.next.at ? `CHECKPOINT · ${Math.max(0, Math.ceil(z.next.left - 1e-6))}` : z.riders[z.owner] > 0 ? `${z.riders[z.owner]} ABOARD` : 'EMPTY';
+            : z.next && z.next.at ? `CHECKPOINT · ${Math.max(0, Math.ceil(z.next.left - 1e-6))}` : z.riders[z.owner] > 0 ? `${z.riders[z.owner]} ABOARD` : z.homing ? 'ROLLING HOME' : 'EMPTY';
         } else {
           objName.textContent = z.active === 'center' ? 'CENTRE ZONE' : `${tn(z.active === 'sideA' ? 0 : 1)} SIDE`;
           objState.textContent = z.owner >= 0 ? `HELD BY ${tn(z.owner)}` : 'NEUTRAL';

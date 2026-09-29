@@ -51,6 +51,55 @@
   const rider = A[1];
   let hsMax = 0; for (let i = 0; i < 60; i++) { A.slice(1, 3).forEach((r) => { r.vel.x = r.vel.z = 0; }); step(1 / 60); hsMax = Math.max(hsMax, rider.character.hs || 0); }
   R('a rider standing still while the tower carries them does not walk (animation)', T.moving !== 0 && hsMax < 0.25, { hsMax: +hsMax.toFixed(3), towerMoving: T.moving });
+  // 5b) the local player (no brain, as a player's kid) standing still on the deck while two riders push it: nothing
+  // zeroed by hand — its feet stay planted (no steps), its gait reads still; and a remote player (moved by its owner's
+  // samples: 0.1 s late, 20 a second, uneven in between, its own velocity 0) likewise
+  const steps = (a) => { const ch = a.character, o = { n: 0, at: [] }; const td = ch._touchDown, ss = ch._startSettle, lo = ch._liftOff;
+    const note = (k, x) => { o.n++; if (o.at.length < 6) o.at.push([k, +__G.time.toFixed(2), x && x[1] !== undefined ? +(+x[1]).toFixed(3) : null, +ch.yawRate.toFixed(2)]); };
+    ch._touchDown = function (...x) { note('td', x); return td.apply(this, x); }; ch._startSettle = function (...x) { note('settle', x); return ss.apply(this, x); }; ch._liftOff = function (...x) { note('lift', x); return lo.apply(this, x); };
+    o.undo = () => { ch._touchDown = td; ch._startSettle = ss; ch._liftOff = lo; }; return o; };
+  const me = m.local;
+  me.bot = null; me.intent.move.set(0, 0, 0); me.intent.fire = me.intent.squid = me.intent.jump = false;
+  me.pos.copy(W(-0.75, H + 0.05, -0.75)); me.vel.set(0, 0, 0); me.yaw = 0;
+  A.slice(1, 3).forEach((r, i) => { r.pos.copy(W(i ? 0.8 : -0.8, H + 0.05, 0.6)); r.vel.set(0, 0, 0); });
+  step(0.6);                                                               // (landed, settled)
+  const ms = steps(me), sL = T.s; let hsL = 0, movL = false, driftL = 0;
+  for (let i = 0; i < 120; i++) {
+    step(1 / 60);
+    const ch = me.character; hsL = Math.max(hsL, ch.hs || 0); movL = movL || !!ch.moving;
+    for (const f of ch.feet) if (f.planted) driftL = Math.max(driftL, Math.hypot(f.pw.x - me.pos.x, f.pw.z - me.pos.z));
+  }
+  ms.undo();
+  R('the local player standing still on the moving tower does not walk: no steps, feet planted with it (' + Math.abs(T.s - sL).toFixed(1) + ' m in 2 s)',
+    Math.abs(T.s - sL) > 0.5 && T.riderList.includes(me) && ms.n === 0 && !movL && hsL < 0.25 && driftL < 0.45,
+    { rode: +Math.abs(T.s - sL).toFixed(2), onDeck: T.riderList.includes(me), steps: ms.n, at: ms.at, moving: movL, hsMax: +hsL.toFixed(3), footDrift: +driftL.toFixed(3), t0: +__G.time.toFixed(2) });
+  // a remote rider: a stand-in network (applyRemote) plays its owner's samples back
+  const rem = A[1], netm0 = __G.netm, lat = new THREE.Vector3(-0.8, 0, 0.6);   // (its own spot)
+  let smp = [], clock = 0;
+  const own = () => { const c2 = Math.cos(T.yaw), s2 = Math.sin(T.yaw); return new THREE.Vector3(T.pos.x + c2 * lat.x + s2 * lat.z, T.top + 0.001, T.pos.z - s2 * lat.x + c2 * lat.z); };
+  __G.netm = { applyRemote(a, dt) {
+    clock += dt;
+    if (!smp.length || clock - smp[smp.length - 1].t >= 0.05) smp.push({ t: clock, p: own() });      // the owner's 20 Hz samples
+    const tr = clock - 0.1; let i = smp.length - 1; while (i > 0 && smp[i - 1].t > tr) i--;
+    const p0 = smp[Math.max(0, i - 1)], p1 = smp[i], u = p1 === p0 ? 1 : Math.min(1, Math.max(0, (tr - p0.t) / (p1.t - p0.t))), e = u * u * (3 - 2 * u);   // Hermite, zero tangents
+    const x0 = a.pos.x, y0 = a.pos.y, z0 = a.pos.z;
+    a.pos.copy(p0.p).lerp(p1.p, e); a.vel.set(0, 0, 0); a.grounded = true; a.climbing = false;
+    T.carryRemote?.(a, x0, y0, z0, dt);
+    a._finishFrame(dt);
+  } };
+  rem.remote = true;
+  const rs = steps(rem), sR = T.s; let hsR = 0, movR = false;
+  try {
+    for (let i = 0; i < 120; i++) { step(1 / 60); hsR = Math.max(hsR, rem.character.hs || 0); movR = movR || !!rem.character.moving; }
+  } finally { __G.netm = netm0; rem.remote = false; rs.undo(); }
+  R('a remote player standing still on the moving tower (its owner\'s uneven samples) does not walk either',
+    Math.abs(T.s - sR) > 0.5 && rs.n === 0 && !movR && hsR < 0.25, { rode: +Math.abs(T.s - sR).toFixed(2), steps: rs.n, moving: movR, hsMax: +hsR.toFixed(3) });
+  // stepping off the moving tower and back on: the feet re-plant on landing (no stray steps once standing again)
+  me.pos.copy(W(Rr + 1.5, 0.05, 0)); me.vel.set(0, 0, 0); step(0.8);
+  me.pos.copy(W(-0.75, H + 0.3, -0.75)); me.vel.set(0, 0, 0); step(0.6);
+  const ms2 = steps(me); for (let i = 0; i < 60; i++) step(1 / 60); ms2.undo();
+  R('off the moving tower and back on: standing still again, no stray steps', T.riderList.includes(me) && ms2.n === 0, { onDeck: T.riderList.includes(me), steps: ms2.n });
+  me.pos.copy(W(Rr + 6, 0.05, -3)); me.vel.set(0, 0, 0);
   // 6) Bubble Guard on the tower: double the shove
   const q = A[2];
   q.status.shield = 5; q.vel.set(0, 0, 0);
