@@ -4,7 +4,7 @@
 // { id, x, y, w, h, place: [x0, xLen, y0, yLen], fx } (place in metres on the face: u along the face, v up from the
 // face's bottom edge). A layout box shows one with `mural: [{ n: [nx, ny, nz], id }]`. Murals sit UNDER the ink.
 //
-//   4  the village's welcome mural along T2's retaining wall over the back street (23.3 m face, its bottom at y −1.6):
+//   4  the village's welcome mural along T2's retaining wall over the back street (12.3 m face, its bottom at y −1.6):
 //      a hand-painted winter panorama — the snowy hills, the cove, the little red-and-cream railcar on the coast line,
 //      CALAMARI COUNTY in big friendly letters, two squid mascots, weathered by the winters
 export const MURAL = { welcome: 4 };
@@ -88,8 +88,10 @@ export function drawMurals(g, R, kit) {
     kit.squid(g, bx + 620, by + 10, 1.05, '#a3372f', '#f4f1e8');
     g.restore();
     weather(g, X, Y, w, h, 17, 1.4);
-    // placed on T2's +Z face (23.3 m; its bottom edge is the slab's foot at y −1.6): centred, u 3.15 … 20.15, y 0.15 … 2.45
-    out.push({ id: MURAL.welcome, x: X, y: Y, w, h, place: [3.15, Wm, 1.75, Hm], fx: [0.9, 1] });
+    // placed on the +Z face of T2's front run west of its stair (12.3 m; its bottom edge is the slab's foot at y −1.6):
+    // scaled to 12 m (aspect kept), centred, y 0.35 … 1.97 above the back street
+    const sc = 12 / Wm;
+    out.push({ id: MURAL.welcome, x: X, y: Y, w, h, place: [0.15, Wm * sc, 1.95, Hm * sc], fx: [0.9, 1] });
   }
   return out;
 }
