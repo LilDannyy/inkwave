@@ -9,7 +9,7 @@
   const MID = [0, -1.3, 0], GOAL = [3.5, 0, -51], CP = [-3, 1.6, -43];
   const routes = {
     'the central path (the crater cut, the zig-zag bridge, the path past the mound)': [[0, -0.5, -9], [0, 0.7, -22.1], [3.7, 0, -31], [3.7, 0, -45]],
-    'over the mound (its north steps, the top by the cross, the south steps)': [[0, -0.5, -9], [0, 0.7, -22.1], [-3, 0, -33.5], [-3, 1.6, -41], [-3, 0, -50.8]],
+    'over the mound (its north steps, the top by the cenotaph, the south steps)': [[0, -0.5, -9], [0, 0.7, -22.1], [-3, 0, -33.5], [-3, 1.6, -41], [-3, 0, -50.8]],
     'right flank (the ring, past the pillbox, down the support trench bay)': [[-8, 0.1, -14.5], [-22, 0, -24], [-26.5, -1, -36], [-22, 0, -44.5], [-8.6, 0, -50]],
     'left flank (the pond rim, the cliff walk, the bridge, the communication trench)': [[14, 0.1, -9], [26, 0, -18], [25.3, 0.7, -35.5], [16.75, -1, -43], [13.25, -1, -48.5]],
   };

@@ -38,17 +38,21 @@ The Great Turf War's second line, kept like the first.
 - **The observation post**: a concrete bunker behind the left support trench (camouflage, slits, sandbagged roof at
   2.4, reached by a stair up its side against the communication trench's wall) — high ground over the left flank.
 - **The regimental mound — the strategic point.** A turf octagon (1.6) on the reserve line's axis with **the Inkling
-  Rifles' cross** on its top (three-step base, bronze sword, "THE LINE HELD"), wreaths and poppies, stone gate piers
-  with ball finials at the heads of its steps. Four ways up: the north steps (toward mid), the south steps (onto the
-  neck's forecourt), turf ramps up its north-east and south-west shoulders. The tower climbs its west face, stops on
-  its top (checkpoint 2) and drops off its east face.
+  Rifles' cenotaph** on its top: a short, blocky Portland memorial (two steps, a battered pylon, a cornice, the empty
+  tomb-chest on top, 3.4 m) with a bronze laurel wreath round the regiment's badge (a squid in a roundel), "THE INKLING
+  RIFLES · THE LINE HELD" on its front, carved laurel wreaths on its sides, "THE GREAT TURF WAR · THE RESERVE LINE" on
+  its back; wreaths and poppies at its foot, stone gate piers with ball finials at the heads of its steps. Secular (no
+  religious symbols on INKWAVE's stages — the lead's call; it replaced a cross), and it reads apart from the crater's two
+  tall obelisks. Four ways up: the north steps (toward mid), the south steps (onto the neck's forecourt), turf ramps up
+  its north-east and south-west shoulders. The tower climbs its west face, stops on its top (checkpoint 2) and drops off
+  its east face.
 - **Two flooded shell holes** (the right flank's route bends round one, the left cliff walk's round the other), reeds,
   lilies, poppies.
 - The central **hoggin path** from the neck's forecourt past the mound's east face back onto the old path's line;
-  **a RESERVE LINE board** (mural 11: a plan of the support line, the saps and the mound), lanterns, a bench, gorse,
+  **a RESERVE LINE board** (mural 11: a plan of the support line, the saps and the mound with the cenotaph), lanterns, a bench, gorse,
   a hawthorn, chalk boulders, sandbag emplacements, barbed wire in front of the left support trench.
 - Heights: −1.0 trenches · 0 downs · 0.5–0.7 plank bridges · 1.6 the mound (+ gate piers) · 2.4 the observation post's
-  roof · off limits: the cross, the piers' caps.
+  roof · off limits: the cenotaph, the piers' caps.
 
 ### Routes through the slice (Alpha's half)
 
@@ -76,7 +80,7 @@ observation post's). **79.2 → 92.1 %.**
 - **Tower Command** (two checkpoints): 79.2 → **159.4 m** (target 158.4 ± 4 %: +0.6 %). The user's drawing is kept to
   its old goal in front of the neck (z 28.5); from there the loop: out along the reserve line's front to the right-flank
   cliff, down the support trench's bay (a drop in, a climb out), back east across the reserve line over the regimental
-  mound (**checkpoint 2 on its top by the cross**), on to the goal in front of the neck (13.7 m short of the pad).
+  mound (**checkpoint 2 on its top by the cenotaph**), on to the goal in front of the neck (13.7 m short of the pad).
   Checkpoint 1 stays by the fire trench.
 - **Boss Battle**: works — home ground 1866 m² (the whole stadium's downs), never idle more than 8 s, every move played.
   The check's "roams ≥ 50 m" bar (last round's) now reads 19–49 m over five runs; the same check on the pre-stretch
@@ -87,20 +91,20 @@ observation post's). **79.2 → 92.1 %.**
 
 - **Checkpoint in the slice: the regimental mound's top, (−3, −43, 1.6).** On the axis between the Great Crater and the
   pavilion; the centre path runs past its east face, the support trench's two zig-zags end at its shoulders, the
-  observation post and the pavilion's deck both see it. Four ways up, cover on it (the cross, the gate piers) and round
+  observation post and the pavilion's deck both see it. Four ways up, cover on it (the cenotaph, the gate piers) and round
   it (emplacements, the zig-zags' parapets).
 - **Goal in front of the spawn: the neck's forecourt, (3.5, −51, 0)** — a level below the pavilion's deck (3.0), in
   front of its steps, seen from the whole deck edge. Reached by the centre path, the mound's south steps, the
   communication trench's stair and the right flank past the shell hole.
 - **Routes mid → goal** (nav, metres, each forced through its waypoints; `out/craters/routes.js`):
   - the central path (the crater's cut, the zig-zag's bridge, the path past the mound): **60.4**
-  - over the mound (its north steps, the top by the cross, the south steps): **70.2**
+  - over the mound (its north steps, the top by the cenotaph, the south steps): **70.2**
   - the right flank (the ring, past the pillbox, down the support trench's bay, round the shell hole): **104.8**
   - the left flank (the pond's rim, the cliff walk, the bridge, the communication trench): **111.9**
   - the shortest nav path mid → goal is 57.5; mid → the checkpoint on the mound 46.5.
 - **High ground a carrier could hide on:** the observation post's roof (2.4, a stair) and the pillbox's (2.4) are
   reachable, sandbagged and in view of the ground round them and of the pavilion — no hiding place (a "no carrier" rule
-  for bunker roofs could come later if Bazookarp testing says so). The cross and the pier caps are off limits.
+  for bunker roofs could come later if Bazookarp testing says so). The cenotaph and the pier caps are off limits.
 
 ## Numbers (before = `new-stages` 0cd3945 as measured today; after = this branch)
 
@@ -137,3 +141,13 @@ reserve line), `slice-from-mid.jpg`, `slice-from-spawn.jpg`, `slice-west.jpg` (t
 (the left support trench, the communication trench, the observation post), `strategic-point.jpg` (from the mound's top
 toward mid), `mound.jpg`, `spawn-play.jpg` / `spawn-play-dusk.jpg`, `cover-before.jpg` / `cover-after.jpg`. Stage art:
 `assets/stages/craters-{day,dusk}{,-sm}.webp` from the reframed `art` camera.
+
+## Revision (the lead's review): the cenotaph
+
+The mound's centrepiece was a Latin cross; INKWAVE keeps religious symbols off its stages, so it is now the Inkling
+Rifles' cenotaph (above; `props.js` `craters_cenotaph`), and the RESERVE LINE board's plan marks it with a cenotaph
+glyph. Same spot on the mound (−3, −45.9), footprint 2.1 × 1.5 (was 1.9 × 1.9), 3.4 m tall (was 4.6), off limits; the
+gate piers and the four ways up unchanged. Checked after: check-maps ok; the craters lightmap rebaked (1124 rows;
+Tower Command uses the same bake, the stage has no `craters.tower`); tower-len 159.4 m, checkpoints at 34.3 / 142.3 m,
+100 s to the goal; tower-check 0 holes, clearance clean; a 180 s turf match 0.0 % stuck (longest 0.25 s); the
+pictures `strategic-point.jpg`, `mound.jpg`, `slice-from-spawn.jpg` and the stage art (day + dusk) re-shot.

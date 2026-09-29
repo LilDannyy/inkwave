@@ -109,7 +109,7 @@ export function drawMurals(g, R, kit) {
   {
     const r = { x: R.x, y: R.y + 548, w: 480, h: 300 };
     panel(g, r, 'THE RESERVE LINE', kit);
-    // plan: the front trench (red), the support trench behind it, the communication trenches back, the mound + cross
+    // plan: the front trench (red), the support trench behind it, the communication trenches back, the mound + cenotaph
     const m = { x: r.x + 18, y: r.y + 76, w: 250, h: 200 };
     g.fillStyle = '#b9c08e'; g.fillRect(m.x, m.y, m.w, m.h);
     g.fillStyle = '#8e9468'; for (let k = 0; k < 10; k++) { g.beginPath(); g.arc(m.x + 16 + rand() * 218, m.y + 14 + rand() * 172, 3 + rand() * 5, 0, Math.PI * 2); g.fill(); }
@@ -118,7 +118,7 @@ export function drawMurals(g, R, kit) {
     zigzag(g, [[m.x + 150, m.y + 110], [m.x + 172, m.y + 110], [m.x + 184, m.y + 122], [m.x + 240, m.y + 122]], '#5a4a38', 6);
     zigzag(g, [[m.x + 196, m.y + 124], [m.x + 196, m.y + 150], [m.x + 184, m.y + 164], [m.x + 184, m.y + 188]], '#5a4a38', 4);
     g.fillStyle = '#9aa66e'; g.beginPath(); g.arc(m.x + 125, m.y + 140, 20, 0, Math.PI * 2); g.fill();
-    g.fillStyle = INK; g.fillRect(m.x + 123, m.y + 128, 4, 22); g.fillRect(m.x + 117, m.y + 134, 16, 4);
+    g.fillStyle = INK; g.fillRect(m.x + 118, m.y + 134, 14, 14); g.fillRect(m.x + 120, m.y + 129, 10, 5); g.fillRect(m.x + 115, m.y + 147, 20, 3);   // (the cenotaph)
     text(g, 'FRONT', m.x + 206, m.y + 14, 11, FT, '#b3452e'); text(g, 'SUPPORT', m.x + 40, m.y + 88, 11, FT, '#5a4a38');
     text(g, 'YOU ARE HERE', m.x + 130, m.y + 178, 11, FT, INK); g.fillStyle = '#c0392b'; g.beginPath(); g.arc(m.x + 150, m.y + 160, 5, 0, Math.PI * 2); g.fill();
     lines(g, ['Behind the fire trench', 'ran the support line,', 'and behind that the', 'reserves. Winding saps', 'brought them up unseen.', '', 'The Inkling Rifles held', 'this line all winter.'], r.x + 282, r.y + 92, 15, 21, FT, INK, 190);
