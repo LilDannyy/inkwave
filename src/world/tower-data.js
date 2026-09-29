@@ -59,7 +59,8 @@ export const TOWER_DEFS = {
     // (starts at the sagrato's top, under San Vito's dome — the chapel's roof is over it; the platform square to the
     // stage; runs shifted ≤ 1.1 m from the drawing to clear the funicular's balustrade, the Limonaia's terrace wall and the
     // Scalinata's foot)
-    path: [[0, 1.2, 0], [0, 7.71], [12.35, 7.71], [15.57, 20.66], [11.7, 20.66], [11.7, 19.11], [6.06, 19.11], [-6.3, 22.7], [-6.3, 37.38]],
+    // (the Long Stages stretch: the last run carried on down the lemon groves to the goal moved out with the hill)
+    path: [[0, 1.2, 0], [0, 7.71], [12.35, 7.71], [15.57, 20.66], [11.7, 20.66], [11.7, 19.11], [6.06, 19.11], [-6.3, 22.7], [-6.3, 59.38]],
     checkpoints: [[13.02, 8.35], [6.85, 19.89], [-6.3, 26.16]],
     yaw: 0,
   },
