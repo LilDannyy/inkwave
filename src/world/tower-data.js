@@ -17,8 +17,14 @@ export const TOWER_DEFS = {
   tidewater: {
     // (fitted: the loop round the flower border 0.24 / 0.11 m in, clear of the promenade's kerb; the goal run 0.89 m
     //  nearer the bandstand, clear of the fountain's basin — Tower Command's build of the stage, see its layout.js TW)
-    path: [[0, 0], [-19.51, 0], [-19.51, 4.66], [-15.39, 4.66], [-15.39, 12.49], [7.11, 12.49], [7.11, 8.36], [15.55, 8.36], [15.55, 15.25], [3.53, 15.25], [3.52, 14.73], [-0.06, 14.73], [-0.06, 27.55], [-4.41, 27.55]],
-    checkpoints: [[-14.97, 12.81], [-0.03, 21.38]],
+    // (the Long Stages stretch, two checkpoints: the track twice as long. Out of the loop it now winds through the Winter
+    //  Gardens: west along the north walk, out onto the esplanade and down it, back into the garden's west walk, east up
+    //  the Palm House terrace's end wall and along the terrace — checkpoint 2, the slice's strategic point — off its far
+    //  end, a jog up the east walk and back down it, west along the south walk to the bandstand, then the drawn run
+    //  through the bandstand to the goal by the fountain, 19.2 m further out like the spawn)
+    path: [[0, 0], [-19.51, 0], [-19.51, 4.66], [-15.39, 4.66], [-15.39, 12.49], [7.11, 12.49], [7.11, 8.36], [15.55, 8.36], [15.55, 15.25], [3.53, 15.25], [3.52, 14.73], [-0.06, 14.73],
+      [-0.06, 18.0], [23.3, 18.0], [23.3, 27.0], [17.5, 27.0], [17.5, 24.3], [-13.2, 24.3], [-13.2, 21.5], [-16.0, 21.5], [-16.0, 33.7], [-0.06, 33.7], [-0.06, 46.75], [-4.41, 46.75]],
+    checkpoints: [[-14.97, 12.81], [0, 24.3]],
   },
   kelpline: {
     // on the berth's 35° grid (layout.js ROT; berth-local x across the pier, z along it — corners (0, 0), (−17.9, 0),
