@@ -6,6 +6,8 @@ import { PATTERN, B, R, O } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { Raster, PieceIndex, topOf, mirrorDef, coneFacets, ringSegments, trench, edgeBands, outerBands, inPoly, inRect, inStrip, DEG, r3 } from './geo.js';
+import { ST, sz } from './stretch.js';
+import { SLICE, SLICE_PIECES, SLICE_STANDING, SLICE_TRENCH_PIECES, inSliceHole, inSliceTrench, SLICE_PATHS, SLICE_TOWER } from './slice.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Turf War Craters — the memorial park on the Round Down, a near-circular chalk tableland beside The Cape (north shore of
@@ -24,6 +26,11 @@ import { Raster, PieceIndex, topOf, mirrorDef, coneFacets, ringSegments, trench,
 //     stairs (the neck, or on down to the undercliff), the cliff walks, the bastion (pillbox, rampart, memorial)
 // Heights: −1.3 crater floor · −1.1 undercliff · −1.0 trenches · 0 downs · 0.1 ring · 1.2 rampart + plinth ·
 // 1.7 crater crest · 2.4 pillbox roof + plinth top · 3.0 spawn deck.
+// The Long Stages stretch (2026-09-30, stretch.js + slice.js): the promontory with its neck and coves moved out 22 m
+// (the cut z −28.5 on Alpha's), and the slice between is the reserve line — the support trench with the tower's bay,
+// the communication trench back to the neck, the observation post, the regimental mound with its cross (the strategic
+// point), two more flooded shell holes; the park's circle becomes a stadium (COAST). The numbers below are the drawing
+// before the stretch: the base's constants go through sz() (beyond the cut: moved out).
 // ------------------------------------------------------------------------------------------------------------
 const FL = -2.0, YF = -1.0, YC = -1.3, YR = 1.7, YP = 2.4, YD = 3.0, YL = -1.1, YB = 1.2;
 const CO = {
@@ -175,7 +182,7 @@ const POND_RIM = ringSegments(POND.c[0], POND.c[1], POND.N, POND.r, POND.rim, FL
 // down each side wall: past the headland's front (step off it there for the neck) on down to a landing in the cove at
 // the cliff foot, the start of the undercliff; a clerestory block along the back of the deck (off limits) closes the
 // stage's back edge, flint walls either side of it
-export const PAV = { x: 8.5, z0: -44, z1: -36.5, back: 0.8, stairX: 9.5, stairW: 2.0, stairLow: -33.7, neck: 7.0, neckZ: -35.0, head: 11.5 };
+export const PAV = { x: 8.5, z0: sz(-44), z1: sz(-36.5), back: 0.8, stairX: 9.5, stairW: 2.0, stairLow: sz(-33.7), neck: 7.0, neckZ: sz(-35.0), head: 11.5, neck0: sz(-30.2) };
 const STAIR_X = [PAV.stairX - PAV.stairW / 2, PAV.stairX + PAV.stairW / 2];     // 8.5 … 10.5 (and the twin)
 const pavilion = [
   B(-PAV.x, PAV.x, 0, YD - 0.2, PAV.z0, PAV.z1, { tag: 'pavilion', color: CO.pavilion, pattern: PATTERN.concrete, noPaint: [[0, 0, 1]] }),
@@ -187,15 +194,16 @@ const pavilion = [
 ];
 // the cove landings at the stairs' feet (the neck's side cliff to the stair's far side, from the headland's cliff out to
 // the circle's; a step below the shelf): the undercliff shelf starts here
-const LANDINGS = [-1, 1].map((s) => B(s < 0 ? -STAIR_X[1] : PAV.neck, s < 0 ? -PAV.neck : STAIR_X[1], FL, YL - 0.08, PAV.neckZ, -30.2, chalk({ tag: 'undercliff', color: '#d9d3c4' })));
+const LANDINGS = [-1, 1].map((s) => B(s < 0 ? -STAIR_X[1] : PAV.neck, s < 0 ? -PAV.neck : STAIR_X[1], FL, YL - 0.08, PAV.neckZ, PAV.neck0, chalk({ tag: 'undercliff', color: '#d9d3c4' })));
 // the pillbox on the headland at the right front (roof 2.4; it faces the ring over the tower's track, a stair climbs its
 // east wall from the front to the back; sandbag cover on the roof's front corners, the middle left open to the rampart)
 export const PILLBOX = { x0: -20.0, x1: -15.0, z0: -26.8, z1: -21.8 };
 const pillbox = [
   B(PILLBOX.x0, PILLBOX.x1, 0, 2.05, PILLBOX.z0, PILLBOX.z1, { tag: 'pillbox', color: CO.concrete, pattern: PATTERN.concrete, mural: NOSIDES.map((n) => ({ n, id: 8 })) }),
   B(PILLBOX.x0 - 0.2, PILLBOX.x1 + 0.2, 2.05, YP, PILLBOX.z0, PILLBOX.z1 + 0.2, { tag: 'pillbox-roof', color: CO.concrete, pattern: PATTERN.concrete }),
-  B(PILLBOX.x1 - 1.6, PILLBOX.x1 - 0.3, YP, YP + 0.6, PILLBOX.z1 - 0.55, PILLBOX.z1 + 0.05, bags({ tag: 'pillbox-sandbags' })),
-  B(PILLBOX.x0 + 0.25, PILLBOX.x0 + 0.8, YP, YP + 0.6, PILLBOX.z1 - 1.6, PILLBOX.z1 + 0.05, bags({ tag: 'pillbox-sandbags' })),
+  // (the Long Stages stretch: the roof's sandbags raised to 0.95 — cover for whoever holds the roof, like the ground's)
+  B(PILLBOX.x1 - 1.6, PILLBOX.x1 - 0.3, YP, YP + 0.95, PILLBOX.z1 - 0.55, PILLBOX.z1 + 0.05, bags({ tag: 'pillbox-sandbags' })),
+  B(PILLBOX.x0 + 0.25, PILLBOX.x0 + 0.8, YP, YP + 0.95, PILLBOX.z1 - 1.6, PILLBOX.z1 + 0.05, bags({ tag: 'pillbox-sandbags' })),
   R([PILLBOX.x1 + 1.1, 0, PILLBOX.z1 + 0.2], [PILLBOX.x1 + 1.1, YP, PILLBOX.z0 - 0.2], 2.2, { tag: 'pillbox-stair', color: CO.concrete, pattern: PATTERN.treads }),
 ];
 // the memorial: obelisk on a two-step plinth between the fire trench and the ring (right flank), steps up from the north
@@ -228,11 +236,14 @@ const cover = [
   bagwall(-27.9, -26.4, -16.4, -15.65),           // right cliff walk: south of the sap, by the tower's corner
   bagwall(-24.0, -22.0, -24.6, -23.85),           // right cliff walk: on the headland, west of the pillbox
   bagwall(21.0, 23.0, -19.6, -18.85),             // left cliff walk: south of the sap
+  // (the Long Stages stretch: sandbag breastworks on the Great Crater's crest — the rim's defenders get cover, and the
+  // stage's cover goes over 90 %; on the crest segments away from the cuts, the outer ramps and the tower's crossing)
+  ...[223, 243, 297, 317].map((th) => O(r3(Math.cos(th * DEG) * 11.7), r3(Math.sin(th * DEG) * 11.7), 0.6, 2.2, YR, YR + 0.95, -th, bags({ tag: 'crest-sandbags' }))),
 ];
 // interpretive boards: a painted panel (layout block, murals.js) in a steel frame (props.js craters_board)
 //   deg = the way the panel faces (0 = +z, 90 = +x)
 export const BOARDS = [
-  { x: 4.6, z: -29.3, deg: -90, id: 4 },    // THE GREAT TURF WAR (battle map), on the neck, facing the path
+  { x: 4.6, z: sz(-29.3), deg: -90, id: 4 },    // THE GREAT TURF WAR (battle map), on the neck, facing the path
   { x: -21.1, z: -3.9, deg: -90, id: 5 },   // TRENCH LINE B, on the fire trench's east bank, facing it
   { x: 27.6, z: -2.4, deg: -130, id: 6 },  // THE FLOODED CRATERS, beyond the pond on the cliff walk, facing it
 ];
@@ -243,7 +254,7 @@ const boards = BOARDS.map((b) => O(b.x, b.z, BOARD_W, 0.06, BOARD_Y[0], BOARD_Y[
 // the flush hoggin paths: the forecourt on the neck; the path from the ramp's foot over the bridge, through the ring's
 // gap and on into the crater's cut; the ring's gaps on the half line (the tower's crossing, and its twin's)
 export const PATHS = [
-  [-6.3, 6.3, -36.5, -29.7], [-RING.gap270, RING.gap270, -29.7, -7.5], [-RB, -RA, -RING.gap180, 0], [RA, RB, -RING.gap180, 0],
+  [-6.3, 6.3, PAV.z1, sz(-29.7)], [-RING.gap270, RING.gap270, ST.cut, -7.5], [-RB, -RA, -RING.gap180, 0], [RA, RB, -RING.gap180, 0], ...SLICE_PATHS,
 ];
 
 // ============================================================================================================ the coast
@@ -252,12 +263,15 @@ export const PATHS = [
 // on its neck (the side stairs cut down through its front). The half line z = 0 and the back edge z = −44 are open.
 const polar = (th, r) => [r3(Math.cos(th * DEG) * r), r3(Math.sin(th * DEG) * r)];
 const pl = (list) => list.map(([t, r]) => polar(t, r));
+// (the Long Stages stretch: the circle's cap round the neck moved out with the promontory, and the cliffs run on down
+// both sides of the slice — the park's circle becomes a stadium, its sides bowed a little: SLICE.coastL / coastR; the
+// pillbox's headland (228°) is taken into the right side's line)
 export const COAST = [
   [32.0, 0], ...pl([[350, 32.4], [341, 32.2]]), [T4.x1, T4W[1]], [T4.x1, T4W[0]],
-  ...pl([[325, 32.6], [316, 33.0], [305, 32.6], [296, 32.0], [288, 31.0]]),
-  [PAV.neck, -30.2], [PAV.neck, PAV.neckZ], [STAIR_X[0], PAV.neckZ], [STAIR_X[1], PAV.neckZ], [PAV.head, PAV.neckZ], [PAV.head, PAV.z0],
-  [-PAV.head, PAV.z0], [-PAV.head, PAV.neckZ], [-STAIR_X[1], PAV.neckZ], [-STAIR_X[0], PAV.neckZ], [-PAV.neck, PAV.neckZ], [-PAV.neck, -30.2],
-  ...pl([[252, 31.0], [244, 33.0], [236, 35.2], [228, 35.6], [220, 35.2], [212, 33.6], [205, 32.6]]), [T3.x0, T3W[0]], [T3.x0, T3W[1]],
+  ...pl([[325, 32.6]]), ...SLICE.coastL,
+  [PAV.neck, PAV.neck0], [PAV.neck, PAV.neckZ], [STAIR_X[0], PAV.neckZ], [STAIR_X[1], PAV.neckZ], [PAV.head, PAV.neckZ], [PAV.head, PAV.z0],
+  [-PAV.head, PAV.z0], [-PAV.head, PAV.neckZ], [-STAIR_X[1], PAV.neckZ], [-STAIR_X[0], PAV.neckZ], [-PAV.neck, PAV.neckZ], [-PAV.neck, PAV.neck0],
+  ...SLICE.coastR, ...pl([[220, 35.2], [212, 33.6], [205, 32.6]]), [T3.x0, T3W[0]], [T3.x0, T3W[1]],
   ...pl([[188, 31.8]]), [-32.0, 0],
 ];
 const edgeIs = (i, a, b) => { const p = COAST[i], q = COAST[(i + 1) % COAST.length]; return p[0] === a[0] && p[1] === a[1] && q[0] === b[0] && q[1] === b[1]; };
@@ -271,8 +285,8 @@ const LIP = edgeBands(COAST, 0.7, FL, (i) => (i % 2 ? 0.33 : 0.25), () => turf({
 // circle's cliffs to the sap's mouth — the right one round the pillbox's headland to T3, the left one to T4
 const rangeIdx = (a, b) => { const out = []; for (let i = a; i !== b; i = (i + 1) % COAST.length) out.push(i); return out; };
 export const UNDERCLIFF = {
-  right: rangeIdx(findEdge([-PAV.neck, -30.2], polar(252, 31.0)), findEdge([T3.x0, T3W[1]], polar(188, 31.8))),
-  left: rangeIdx(findEdge([T4.x1, T4W[1]], [T4.x1, T4W[0]]), findEdge([PAV.neck, -30.2], [PAV.neck, PAV.neckZ])),
+  right: rangeIdx(findEdge([-PAV.neck, PAV.neck0], SLICE.coastR[0]), findEdge([T3.x0, T3W[1]], polar(188, 31.8))),
+  left: rangeIdx(findEdge([T4.x1, T4W[1]], [T4.x1, T4W[0]]), findEdge([PAV.neck, PAV.neck0], [PAV.neck, PAV.neckZ])),
   w: 2.4,
 };
 const SHELF = [...UNDERCLIFF.right, ...UNDERCLIFF.left];
@@ -283,13 +297,13 @@ const GX = [-36, 36], GZ = [PAV.z0, 0];
 const T1_HOLES = [[T1.x0, T1.x1, T1.z0, T1.z1], ...t1Pieces.filter((d) => d.kind === 'box').map((d) => [d.min[0], d.max[0], d.min[2], d.max[2]]), ...T1_STAIRS.map(t1StairRect)];
 const T2_HOLES = [[t2a[0] - T2_WEST.run, t2a[0], t2z0[0], t2z0[1]], [T2_STEP.x0, T2_STEP.x1, t2z0[1], t2z0[1] + T2_STEP.run]];
 const SAP_HOLES = [[T3.x0, T3.x1, T3W[0], T3W[1]], [T4.x0, T4.x1, T4W[0], T4W[1]], [T4_STEP.x0, T4_STEP.x1, T4Z[0] - T4_STEP.run, T4W[0]],
-  [STAIR_X[0], STAIR_X[1], -36.25, PAV.neckZ], [-STAIR_X[1], -STAIR_X[0], -36.25, PAV.neckZ]];
+  [STAIR_X[0], STAIR_X[1], sz(-36.25), PAV.neckZ], [-STAIR_X[1], -STAIR_X[0], sz(-36.25), PAV.neckZ]];
 const inHole = (x, z) => T1_HOLES.some((r) => inRect(r, x, z)) || T2_HOLES.some((r) => inRect(r, x, z)) || SAP_HOLES.some((r) => inRect(r, x, z))
-  || T2_LEGS.some((L) => inStrip(L, x, z)) || Math.hypot(x - POND.c[0], z - POND.c[1]) < POND.r;
+  || T2_LEGS.some((L) => inStrip(L, x, z)) || Math.hypot(x - POND.c[0], z - POND.c[1]) < POND.r || inSliceHole(x, z);
 const CUT = [CRATER_FLOOR, ...FACETS.map((f) => f.piece)];                  // surfaces below the downs (no ground where they show)
 const STANDING = [...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS, ...t1Pieces.filter((d) => d.kind !== 'ramp'), ...t2Pieces.filter((d) => d.kind !== 'ramp'),
   ...t3Pieces, ...t4Pieces.filter((d) => d.kind !== 'ramp'), ...bridgePieces, ...POND_RIM.map((c) => c.piece), ...pavilion, ...pillbox, ...memorial, ...rampart,
-  ...cover, ...LIP, TURRET, ...boards, ...BENCHES, ...RING_RUNS, ...STATION_PIECES];
+  ...cover, ...LIP, TURRET, ...boards, ...BENCHES, ...RING_RUNS, ...STATION_PIECES, ...SLICE_STANDING];
 const inPath = (x, z) => PATHS.some((r) => x >= r[0] && x <= r[1] && z >= r[2] && z <= r[3]);
 function groundCells() {
   const all = [...CUT.map((d) => ({ d, cut: true })), ...STANDING.map((d) => ({ d, cut: false }))];
@@ -326,8 +340,8 @@ const FLOORS = (() => {
   const G = new Raster(GX[0], GX[1], GZ[0], GZ[1], 0.25), h = 0.123;
   const covered = (x, z) => GROUND_RECTS.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1);
   const inside = (x, z) => inRect([T1.x0, T1.x1, T1.z0, T1.z1], x, z) || inRect([T3.x0, T3.x1, T3Z[0], T3Z[1]], x, z) || inRect([T4.x0, T4.x1, T4Z[0], T4Z[1]], x, z)
-    || T2_LEGS.some((L) => inStrip(L, x, z));
-  const walls = [...t1Pieces, ...t2Pieces, ...t3Pieces, ...t4Pieces].filter((d) => d.kind !== 'ramp');
+    || T2_LEGS.some((L) => inStrip(L, x, z)) || inSliceTrench(x, z);
+  const walls = [...t1Pieces, ...t2Pieces, ...t3Pieces, ...t4Pieces, ...SLICE_TRENCH_PIECES].filter((d) => d.kind !== 'ramp');
   G.fill((x, z) => {
     const P = [[x, z], [x - h, z - h], [x + h, z - h], [x + h, z + h], [x - h, z + h]];
     if (P.some(([a, b]) => covered(a, b))) return 0;
@@ -351,16 +365,21 @@ const ZONES = {
 // on past the memorial, then west round the outside of the ring over the old rampart (a climb and a drop) between the
 // memorial and the pillbox; north past the zig-zag's end, over the forecourt to the foot of the pavilion's ramp (13 m
 // short of Bravo's pad)
+// — the user's drawing, to 28.5 before the stretch. Then the slice's detour loop (two checkpoints: the track 80 of the
+// 100 points, twice the first drawing's length): out along the reserve line's front to the right-flank cliff, down the
+// support trench's bay (a drop in at its open north end, a climb out of its south end), back across the reserve line
+// over the regimental mound (a climb onto it, checkpoint 2 on its top by the cross, a drop off it), on to the goal in
+// front of the neck (13 m short of Bravo's pad)
 const TOWER = {
-  path: [[0, 0], [24.5, 0], [24.5, 19.75], [5, 19.75], [5, 28.5]],
-  checkpoints: [[24.5, 6.5], [10, 19.75]],
+  path: [[0, 0], [24.5, 0], [24.5, 19.75], [5, 19.75], [5, 28.5], ...SLICE_TOWER.path.map(([x, z]) => [-x, -z])],
+  checkpoints: [[24.5, 6.5], SLICE_TOWER.cp2.map((v) => -v)],
   yaw: 0,
 };
 
 const LAYOUT_CRATERS = {
   id: 'craters',
-  bounds: { minX: -36, maxX: 36, minZ: -44, maxZ: 44 },
-  spawnPads: [[0, YD, -40.5], [0, YD, 40.5]],
+  bounds: { minX: -36, maxX: 36, minZ: PAV.z0, maxZ: -PAV.z0 },
+  spawnPads: [[0, YD, sz(-40.5)], [0, YD, -sz(-40.5)]],
   spawnBarrier: 4.2,
   // the Cape's headland round the park (backdrop.js); a chalk coast's milky green-turquoise shallows by day
   env: {
@@ -370,17 +389,17 @@ const LAYOUT_CRATERS = {
   single: [CRATER_FLOOR],
   half: [...GROUND, ...FLOORS, ...LIP, ...LEDGES, ...LANDINGS, ...FACETS.map((f) => f.piece), ...CREST.map((c) => c.piece), ...FILLERS, ...OUTER_RAMPS,
     ...t1Pieces, ...t2Pieces, ...t3Pieces, ...t4Pieces, ...bridgePieces, ...POND_RIM.map((c) => c.piece), POND_STILL, ...pavilion, ...pillbox, ...memorial,
-    ...rampart, ...cover, TURRET, ...boards, ...BENCHES, ...RING_RUNS, ...STATION_PIECES],
+    ...rampart, ...cover, TURRET, ...boards, ...BENCHES, ...RING_RUNS, ...STATION_PIECES, ...SLICE_PIECES],
   zones: ZONES,
   tower: TOWER,
   // the intro opens high over the enemy's side of the crater and sweeps down the neck to the deck
   intro: { from: [15, 11, 15], lookFrom: [0, 0, -3], toBack: 1.0 },
-  // stage-select hero: from high over Alpha's promontory across the ring round the Great Crater to Bravo's pavilion on
-  // its promontory; the chalk cliffs and the downs beyond, Inkopolis across the bay
-  art: { from: [-26, 28, -50], look: [2, -2, 4], fov: 55 },
+  // stage-select hero: from high over Alpha's promontory across the reserve line (the mound and its cross in front),
+  // the ring round the Great Crater, to Bravo's pavilion on its promontory; the chalk cliffs, Inkopolis across the bay
+  art: { from: [-30, 30, -76], look: [2, -2, -12], fov: 55 },
   // Victorian lamp posts on the neck, by the bridge, behind the memorial, out on the cliff walks (dusk light pools; none
   // on the ring itself: HULLBREAKER's round), team flags either side of the pavilion's front
-  decor: { lamps: [[-2.0, -25.9], [-21.2, -17.0], [16.6, -23.4], [-5.6, -32.0], [-11.9, -26.6], [27.9, -9.9]], palms: [], flags: [[-6.0, 0, -35.3], [6.0, 0, -35.3]] },
+  decor: { lamps: [[-2.0, -25.9], [-21.2, -17.0], [16.6, -23.4], [-5.6, sz(-32.0)], [-11.9, -26.6], [27.9, -9.9]], palms: [], flags: [[-6.0, 0, sz(-35.3)], [6.0, 0, sz(-35.3)]] },
 };
 
 export const LAYOUT = LAYOUT_CRATERS;
