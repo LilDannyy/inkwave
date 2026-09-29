@@ -48,7 +48,7 @@ export class Actor {
     this.aimPoint = new THREE.Vector3();
     this.intent = { move: new THREE.Vector3(), jump: false, squid: false, fire: false, sub: false, special: false };
     this._prevIntent = { fire: false, sub: false, jump: false, special: false, squid: false };
-    this._squidPressT = -1; this._firePressT = -1;
+    this._squidPressT = -1; this._firePressT = -1; this._subPressT = -1;
     this.contacts = makeContacts();
     this.groundHit = new Hit();
     this.wallHit = new Hit();
@@ -257,6 +257,7 @@ export class Actor {
     const specialPressed = intent.special && !prev.special;
     if (intent.squid && !prev.squid) this._squidPressT = G.time;
     if (firePressed) this._firePressT = G.time;
+    if (intent.sub && !prev.sub) this._subPressT = G.time;
     prev.fire = intent.fire; prev.jump = intent.jump; prev.sub = intent.sub; prev.special = intent.special; prev.squid = intent.squid;
 
     this.invuln = Math.max(0, this.invuln - dt);
@@ -277,10 +278,15 @@ export class Actor {
     if (spx && spx.body) { this._updateSpecial(dt); if (this.alive) this._finishFrame(dt); return; }
     if (specialPressed && this.specialReady()) { this._startSpecial(); this._finishFrame(dt); return; }
 
-    // ---- form: squid while the swim button is held. Swim + fire both held → the most recent press wins, so diving
-    // mid-spray and popping out of the ink to shoot both work instantly (the pop-out shot is buffered, never lost).
+    // ---- form: squid while the swim button is held. Swim + fire / sub held together → the most recent press wins, so
+    // diving mid-spray and popping out of the ink to shoot or throw both work instantly (the pop-out shot is buffered,
+    // never lost). Swim pressed over a busy weapon — charging, a stream, a wind-up, a sub held to throw — drops it and
+    // dives (a dodge roll / the post-roll turret still finish first).
     const fireWins = (intent.fire || this.fireBuffer > 0) && this._firePressT >= this._squidPressT;
-    const wantSquid = intent.squid && !fireWins && !this.weaponRunner.busy() && !(spx && spx.noSquid);
+    const subWins = (intent.sub || subReleased) && this._subPressT >= this._squidPressT;   // (the release frame throws, then dives)
+    const swimWins = intent.squid && !fireWins && !subWins && !(spx && spx.noSquid);
+    if (swimWins && this.form !== 'squid') this.weaponRunner.cancelForSwim();
+    const wantSquid = swimWins && !this.weaponRunner.busy();
     if (wantSquid !== (this.form === 'squid')) {
       this.form = wantSquid ? 'squid' : 'kid';
       if (!wantSquid) this.kidT = 0;
