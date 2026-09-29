@@ -6,6 +6,7 @@ import { PATTERN, B, R, O } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { MURAL } from './murals.js';
+import { STRETCH as ST, moveOut } from './stretch.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Calamari County — the Squid Sisters' home village, at the far end of the line out of Inkopolis: a snowbound fishing
@@ -34,6 +35,23 @@ import { MURAL } from './murals.js';
 // hill (terraces stepping in and out, the hill houses cutting the corner behind the spawn).
 // Heights: 0 streets / quays / trackbeds · −0.1 the basin quay (a kerb down from the street) · 1.0 platforms, loading
 // dock · 1.3 T1 · 2.6 T2 · 3.4 spawn, railcar tops (off-limits) · 4.3 overpass decks.
+//
+// THE LONG STAGES STRETCH (2026-09-30, stretch.js): every half 20.5 m longer. The base side (the co-op, T2 and the
+// cottage, the dock, the net store, the co-op quay, the hill houses) moves out by ST.d (drawn with P's original numbers
+// and moved as a unit: BASE below); the gap between the back street and the base is new land, the VILLAGE HIGH STREET
+// (SLICE below, numbers in Q): Alpha's side, from the hill to the harbour —
+//   • the allotments: T1 carried on (1.3, the lower beds), stone steps up to the upper allotments (2.6, a potting shed)
+//     running into T2's west end — the hillside flank
+//   • the hillside road carried on (0) to the co-op forecourt
+//   • the onsen inn (Ikayu Inn: the bath house's inn across the back street) and its garden, the onsen lane between them
+//   • the High Street (setts) between the inn and the fire-watch terrace
+//   • THE FIRE-WATCH TERRACE (1.3, 10 × 10 m, dry-stone walls): the village's hanshō tower (the steel fire lookout with
+//     its alarm bell) on a raised stone terrace in the middle of the slice, the fire brigade's pump cart, buckets, the
+//     "mind the fire" stone — the slice's strategic point (stairs from the back street, down to the High Street and to
+//     the fire lane; a hop-up from anywhere)
+//   • the fire lane, the post office (its sorting dock at 1.0, the post van), the basin quay carried on with the fish
+//     market's apron and auction shed jutting into the basin
+//   • the co-op forecourt in front of the base (the apron: the grand stair's foot, T2's welcome mural)
 // ------------------------------------------------------------------------------------------------------------
 
 // an oriented box with one long side along A → B (world x, z), reaching `depth` to the left (side 1) or right (−1) of it
@@ -107,6 +125,39 @@ export const P = {
 P.roadX = (P.crossing[0] + P.crossing[1]) / 2;
 P.backZ = (P.backSt[0] + P.backSt[1]) / 2 + 0.1;
 
+// ---- the village high street: the new land between the back street (z −30.5) and the moved base (its front at
+// z −51: T2's wall, the dock), world numbers (Alpha's half; shared with props.js)
+const BZ = P.backSt[0] - ST.d;                    // −51: the base's front after the move
+export const Q = {
+  z0: P.backSt[0], z1: BZ,
+  road: [P.crossing[0], P.crossing[1]],           // the hillside road carried on (x −25.5 … −18.5)
+  T1: [-31.5, -25.5, -38.5, P.T1[1][2]],          // the lower allotments (1.3): T1 carried on from its end at −28.5
+  up: [-31.5, -25.5, P.T2[1][3] - ST.d, -38.5],  // the upper allotments (2.6), running into T2's west end (moved to −57.7 … −49)
+  upStair: { x: -28.5, w: 2.4, z0: -34.8, z1: -38.5 },           // T1 → the upper allotments (like T1's old steps to T2)
+  hillWalls: [[-33.5, -31.5, -38.5, -28.5, 3.8], [-33.5, -31.5, -49, -38.5, 5.0]],
+  inn: [-18.5, -11.5, -37, -31],                  // the onsen inn (x0, x1, z0, z1), its front on the back street
+  boiler: [-20.4, -18.5, -34.6, -31.2],           // its boiler house jutting into the road (the road jogs round it)
+  lane: [-42, -37],                               // the onsen lane between the inn and its garden (z)
+  garden: [-18.5, -11.5, -46, -42],               // the inn's garden (0.9: a raised stone bed, the steaming rock pool)
+  gardenY: 0.9,
+  high: [-11.5, -5],                              // the High Street (x)
+  terrace: { x0: -5, x1: 5, z0: -43.5, z1: -33.5, y: 1.3 },    // the fire-watch terrace
+  nStair: { x: -2.5, w: 4 },                      // up from the back street (its foot on the back street's edge)
+  sStairs: { z: -42.25, w: 2.5, run: 3.5 },       // down its south corners: west into the High Street, east into the fire lane
+  firetower: [3.0, -35.5],                        // the hanshō tower on the terrace's north-east corner
+  fireLane: [5, 9.5],                             // the fire lane (x) between the terrace and the post office
+  po: [9.5, 15.5, -38, -31],                      // the post office (its front on the back street)
+  poDock: [10, 15.5, -40.5, -38],                 // its sorting dock (1.0) on the yard side
+  market: [19, 26, -50, -42],                     // the fish market's apron jutting into the basin …
+  floor: [16, 26, -50, -42], floorY: 0.5,       // … and its auction floor (0.5) across the quay: a step up either end
+  chiller: [16.2, 19.0, -47.6, -44.4],            // the chiller room on the auction floor (the quay's line jogs round it)
+  notch: [-51.8, -55.4, 3.0],                     // a boat notch cut into the quay edge south of the market (z0, z1, depth)
+  forecourt: [BZ, -46],                           // the co-op forecourt (z): the apron in front of the base
+  // Tower Command (Alpha's frame; the track itself is drawn on Bravo's half, the mirror): the fire lane's centre, the
+  // onsen lane's centre, the forecourt run
+  tower: { laneX: 7.25, midZ: -39.5, foreZ: -48 },
+};
+
 const K = {
   snow: '#d6dce3', ballast: '#c3c8ce', platform: '#76604d', timber: '#6d5543', stone: '#b7b3ab', setts: '#a9a6a0',
   quay: '#a7a39c', wall: '#e8e2d4', plaster: '#ece6d8', dark: '#4a3a2e', spawn: '#eae6de', train: '#d9d4c4', portal: '#8f8b84',
@@ -146,74 +197,90 @@ const SINGLE = [
 ];
 
 // the basin quay (0.1 below the street, tucked under the village, the north quay and the co-op quay): its water edge
-// runs at an angle along the basin, broken by the slipway
+// runs at an angle along the basin, broken by the slipway. Stretched: the basin runs on south along the same line to the
+// moved co-op quay (P.basinEnd), so the quay's edge stays one straight run past the fish market
 const [bA, bB] = P.basinEdge, sA = lerp2(bA, bB, P.slip.t0), sB = lerp2(bA, bB, P.slip.t1);
+const bE = lerp2(bA, bB, (-59 - bA[1]) / (bB[1] - bA[1]));   // (19.70, −59): the edge's line carried on to the co-op quay
+P.basinEnd = [+bE[0].toFixed(3), -59];
 const slipDir = (() => { const dx = bB[0] - bA[0], dz = bB[1] - bA[1], L = Math.hypot(dx, dz); return [-dz / L, dx / L]; })();   // outward (east, into the basin)
 const SLIP_D = 3.0;   // the slipway's notch reaches this far back into the quay
 const back = (p) => [p[0] - slipDir[0] * SLIP_D, p[1] - slipDir[1] * SLIP_D];
+// (the notch south of the fish market: the edge's points at its two ends, and the quay behind it)
+const onEdge = (z) => lerp2(bA, bB, (z - bA[1]) / (bB[1] - bA[1]));
+const nA = onEdge(Q.notch[0]), nB = onEdge(Q.notch[1]), backN = (p) => [p[0] - slipDir0()[0] * Q.notch[2], p[1] - slipDir0()[1] * Q.notch[2]];
+function slipDir0() { const dx = bB[0] - bA[0], dz = bB[1] - bA[1], L = Math.hypot(dx, dz); return [-dz / L, dx / L]; }
 const BASIN = [
   edgeBox(bA, sA, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
-  edgeBox(sB, bB, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
+  edgeBox(sB, nA, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
+  edgeBox(backN(nA), backN(nB), 9.4 - Q.notch[2], FL, -0.1, 1, quay({ tag: 'basin-quay' })),
+  edgeBox(nB, P.basinEnd, 9.4, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
   // the slipway's head: the basin quay behind its notch; the ramp runs from there down into the water
   edgeBox(back(sA), back(sB), 7.5, FL, -0.1, 1, quay({ tag: 'basin-quay' })),
 ];
 const slipIn = back([(sA[0] + sB[0]) / 2, (sA[1] + sB[1]) / 2]);
 
-const HALF = [
-  // ================= ground (Alpha's half)
+// ================= the mid side of Alpha's half (unchanged by the stretch)
+const MIDSIDE = [
+  // ---- ground
   B(-P.cutX, P.cutX, FL, 0, P.strip, -P.track[1], snow({ tag: 'station-strip' })),
   B(P.crossing[0], P.square[0], FL, 0, P.backSt[0], P.strip, snow({ tag: 'village' })),
   B(P.square[0], P.square[1], FL, 0, P.backSt[0], P.strip, setts({ tag: 'square' })),
   B(P.square[1], P.kerb, FL, 0, P.backSt[0], P.northQuay[2], snow({ tag: 'village' })),
-  B(-2.2, P.southQuay[0][0], FL, 0, -45.5, P.backSt[0], snow({ tag: 'coop-yard' })),
-  B(P.southQuay[0][0], P.kerb, FL, 0, P.southQuay[0][3], P.backSt[0], snow({ tag: 'coop-yard' })),
-  // harbour: north quay, the basin quay, the timber jetty, the breakwater, the co-op quay (stepped corner)
+  // harbour: north quay, the basin quay (carried on past the cut), the slipway, the breakwater
   bx(P.northQuay, FL, 0, quay({ tag: 'north-quay' })),
   ...BASIN,
   R([slipIn[0] + slipDir[0] * 6.4, -1.25, slipIn[1] + slipDir[1] * 6.4], [slipIn[0], -0.1, slipIn[1]], 2.8,
     { tag: 'slipway', color: '#8f918f', pattern: PATTERN.concrete }),
   edgeBox(P.breakwater[0], P.breakwater[1], 2.6, FL, 0.25, 1, { tag: 'breakwater', color: '#9d9a93', pattern: PATTERN.concrete }),
-  ...P.southQuay.map((r) => bx(r, FL, 0, quay({ tag: 'coop-quay' }))),
   // tunnel portal capping the cut (the headland beyond is scenery)
   B(P.cutX, P.cutX + 1.5, FL, 7.5, -8.5, 8.5, { tag: 'portal', color: K.portal, pattern: SURF.setts, roof: true }),
   // island platform end ramp (down between the tracks, stopping short of the level crossing at x 18.5)
   R([I.x + 2.3, 0, 0], [I.x, I.y, 0], I.z * 2, timber({ tag: 'island-ramp', pattern: PATTERN.rampboard })),
 
-  // ================= station side: the side platform (5.6 m deep), ramps at both ends, steps up from the forecourt
+  // ---- station side: the side platform (5.6 m deep), ramps at both ends, steps up from the forecourt
   // (the railcars are stage movers now: LAYOUT.movers below, src/game/movers.js)
   B(S.x0, S.x1, 0, S.y, S.z0, S.z1, timber({ tag: 'side-platform' })),
   R([S.x1 + 2.3, 0, -8.6], [S.x1, S.y, -8.6], 4.0, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
   R([S.x0 - 2.3, 0, -8.6], [S.x0, S.y, -8.6], 4.0, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
   ...P.steps.map((x) => R([x, 0, S.z0 - 2.7], [x, S.y, S.z0], 3.6, stair({ tag: 'platform-steps' }))),
 
-  // ================= Alpha's overpass (the +x one): the deck over the whole cut, its stairs down the outer edge to both
-  // side platforms (Tower Command: taller, with real steps)
+  // ---- Alpha's overpass (the +x one): the deck over the whole cut, its stairs down the outer edge to both side
+  // platforms (Tower Command: taller, with real steps)
   B(OP.x0, OP.x1, OP.y - OP.t, OP.y, -OP.z, OP.z, timber({ tag: 'overpass', notIn: 'tower' })),
   ...OP.stairs.map(opStair),
   B(OP.x0, OP.x1, OP.towerY - OP.t, OP.towerY, -OP.z, OP.z, timber({ tag: 'overpass', onlyIn: 'tower' })),
   ...OP.stairs.flatMap(opSteps),
 
-  // ================= village buildings (tops off-limits), some off the street grid
+  // ---- village buildings (tops off-limits), some off the street grid
   B(P.station[0], P.station[1], 0, 3.8, P.station[2], P.station[3], bldg(K.wall, { tag: 'station' })),
   bt(P.bath, 0, bldg(K.plaster, { tag: 'bathhouse' })),
   bt(P.store, 0, bldg(K.wall, { tag: 'store' })),
 
-  // ================= hillside: T1 (1.3) stepping along the road, T2 (2.6) by the co-op, their steps, the houses on them
+  // ---- hillside: T1 (1.3) stepping along the road (its steps up from the station corner); the hill's retaining walls
+  // along the terraces' outer edges (ishigaki: dry stone, snow on top; off-limits tops)
   ...P.T1.map((r) => bx(r, FL, P.y1, setts({ tag: 'T1', color: K.stone }))),
-  // (T2's long wall over the back street carries the village's painted welcome mural — murals.js)
-  ...P.T2.map((r, i) => bx(r, FL, P.y2, setts({ tag: 'T2', color: K.stone, ...(i === 0 ? { mural: [{ n: [0, 0, 1], id: MURAL.welcome }] } : {}) }))),
   R([-29.5, 0, -7.6], [-29.5, P.y1, P.strip], 2.4, stair({ tag: 'T1-steps' })),
-  R([-28.5, P.y1, -24.8], [-28.5, P.y2, P.T2[1][3]], 2.4, stair({ tag: 'T2-steps' })),
+  ...P.hillWalls.slice(0, 3).map(hillWall),
+];
+function hillWall([x0, x1, z0, z1, y1]) { return B(x0, x1, FL, y1, z0, z1, { tag: 'hill-wall', color: '#8f8a80', pattern: SURF.setts, roof: true }); }
+
+// ================= the base side of Alpha's half: drawn with the original numbers, moved out by ST.d as a unit
+// (T2 with its welcome mural and its stair from the street, the Cuttlefish cottage, the hill walls and houses behind,
+// the Fishermen's Co-op with the spawn deck, the grand stair, the loading dock, the net store, the co-op yard and quay)
+const BASE = moveOut([
+  B(-2.2, P.southQuay[0][0], FL, 0, -45.5, P.backSt[0], snow({ tag: 'coop-yard' })),
+  B(P.southQuay[0][0], P.kerb, FL, 0, P.southQuay[0][3], P.backSt[0], snow({ tag: 'coop-yard' })),
+  ...P.southQuay.map((r) => bx(r, FL, 0, quay({ tag: 'coop-quay' }))),
+  // T2 (2.6) by the co-op (its long wall over the forecourt carries the village's painted welcome mural — murals.js)
+  ...P.T2.map((r, i) => bx(r, FL, P.y2, setts({ tag: 'T2', color: K.stone, ...(i === 0 ? { mural: [{ n: [0, 0, 1], id: MURAL.welcome }] } : {}) }))),
   R([P.t2stair.x, 0, P.t2stair.z0], [P.t2stair.x, P.y2, P.t2stair.z1], P.t2stair.w, stair({ tag: 'T2-stair' })),
   bx(P.cottage, P.y2, P.y2 + 3.2, bldg(K.cedar, { tag: 'cottage' })),
-  // the hill's retaining walls along the terraces' outer edges (ishigaki: dry stone, snow on top; off-limits tops)
-  ...P.hillWalls.map(([x0, x1, z0, z1, y1]) => B(x0, x1, FL, y1, z0, z1, { tag: 'hill-wall', color: '#8f8a80', pattern: SURF.setts, roof: true })),
+  ...P.hillWalls.slice(3).map(hillWall),
   // hill houses stepping up behind T2 and the spawn (out of play; they cut the corner behind the co-op)
   B(-33.5, -9, FL, 5.4, -40.5, -37.2, bldg(K.plaster, { tag: 'hill-house' })),
   B(-17.5, -9, FL, 5.8, -44, -40.5, bldg(K.cedar, { tag: 'hill-house' })),
   B(-12.5, -9, FL, 6.2, -47, -44, bldg(K.plaster, { tag: 'hill-house' })),
-
-  // ================= the Fishermen's Co-op: warehouse behind, spawn deck, grand stair, loading dock, quay ramp
+  // the Fishermen's Co-op: warehouse behind, spawn deck, grand stair, loading dock, quay ramp
   B(-11, 11, FL, 8, -48, -45.5, bldg(K.wall, { tag: 'coop' })),
   // (its harbour-side wall is the warehouse's boarded side: not inkable — the quay ramp is the way up from the yard)
   B(DK.x0, DK.x1, FL, DK.y - 0.2, DK.z0 - 0.1, DK.z1, { tag: 'spawn-body', color: K.timber, pattern: PATTERN.weatherboard, noPaint: [[1, 0, 0]] }),
@@ -223,7 +290,50 @@ const HALF = [
   R([P.dockStair.x, DO.y, P.dockStair.z0], [P.dockStair.x, DK.y, DK.z1], P.dockStair.w, stair({ tag: 'dock-stair' })),
   B(P.netStore[0], P.netStore[1], 0, 3.2, P.netStore[2], P.netStore[3], bldg(K.wall, { tag: 'net-store' })),
   R([16.9, 0, -42.4], [DK.x1, DK.y, -42.4], 3.0, timber({ tag: 'quay-ramp', pattern: PATTERN.rampboard })),
+]);
+
+// ================= the new land: the village high street (Q), z −30.5 … −51 (the hillside column from −28.5)
+const { terrace: TR, forecourt: FC } = Q;
+const SLICE = [
+  // ---- ground: the hillside road, the onsen's yard and garden, the High Street's setts, round the fire-watch terrace,
+  // the fire lane, the post office's yard, the forecourt in front of the base
+  B(Q.road[0], Q.road[1], FL, 0, FC[0], Q.z0, snow({ tag: 'road' })),
+  B(Q.inn[0], Q.inn[1], FL, 0, Q.garden[3], Q.z0, snow({ tag: 'onsen-yard' })),
+  B(Q.garden[0], Q.garden[1], FL, Q.gardenY, Q.garden[2], Q.garden[3], setts({ tag: 'onsen-garden', color: K.stone })),
+  R([Q.high[0] + 2.1, 0, -44.6], [Q.high[0], Q.gardenY, -44.6], 1.6, stair({ tag: 'garden-steps' })),
+  B(Q.high[0], Q.high[1], FL, 0, FC[1], Q.z0, setts({ tag: 'high-street' })),
+  B(TR.x0, TR.x1, FL, 0, TR.z1, Q.z0, setts({ tag: 'high-street' })),
+  B(TR.x0, TR.x1, FL, 0, FC[1], TR.z0, setts({ tag: 'high-street' })),
+  B(Q.fireLane[0], Q.fireLane[1], FL, 0, FC[1], Q.z0, snow({ tag: 'fire-lane' })),
+  B(Q.po[0], P.kerb, FL, 0, FC[1], Q.z0, snow({ tag: 'post-yard' })),
+  B(Q.road[1], P.kerb, FL, 0, FC[0], FC[1], setts({ tag: 'forecourt' })),
+  // ---- the allotments: T1 carried on (1.3), stone steps up to the upper allotments (2.6) that run into T2's west end;
+  // the hill walls behind; the potting shed on the upper terrace (its roof off-limits)
+  bx(Q.T1, FL, P.y1, setts({ tag: 'T1', color: K.stone })),
+  R([Q.upStair.x, P.y1, Q.upStair.z0], [Q.upStair.x, P.y2, Q.upStair.z1], Q.upStair.w, stair({ tag: 'allotment-steps' })),
+  bx(Q.up, FL, P.y2, setts({ tag: 'T2', color: K.stone })),
+  ...Q.hillWalls.map(hillWall),
+  B(-31.5, -28.9, P.y2, P.y2 + 2.3, -48.4, -44.6, bldg(K.cedar, { tag: 'potting-shed' })),
+  // ---- the onsen inn (Ikayu Inn: its front on the back street across from the bath house) — tops off-limits
+  B(Q.inn[0], Q.inn[1], 0, 3.4, Q.inn[2], Q.inn[3], bldg(K.plaster, { tag: 'inn' })),
+  bx(Q.boiler, 0, 2.8, bldg(K.cedar, { tag: 'inn-boiler' })),
+  // ---- the fire-watch terrace (1.3, dry-stone walls): stairs up from the back street, down its south corners
+  B(TR.x0, TR.x1, FL, TR.y, TR.z0, TR.z1, setts({ tag: 'fire-terrace', color: K.stone })),
+  R([Q.nStair.x, 0, Q.z0], [Q.nStair.x, TR.y, TR.z1], Q.nStair.w, stair({ tag: 'terrace-steps' })),
+  R([TR.x0 - Q.sStairs.run, 0, Q.sStairs.z], [TR.x0, TR.y, Q.sStairs.z], Q.sStairs.w, stair({ tag: 'terrace-steps' })),
+  R([TR.x1 + Q.sStairs.run, 0, Q.sStairs.z], [TR.x1, TR.y, Q.sStairs.z], Q.sStairs.w, stair({ tag: 'terrace-steps' })),
+  // ---- the post office (its front on the back street) and its sorting dock on the yard side (1.0, a hop up)
+  B(Q.po[0], Q.po[1], 0, 3.4, Q.po[2], Q.po[3], bldg(K.wall, { tag: 'post-office' })),
+  bx(Q.poDock, 0, 1.0, timber({ tag: 'post-dock' })),
+  // ---- the fish market: its apron jutting into the basin and the auction floor across the quay (0.5; steps up at
+  // both ends of the quay), the chiller room on it
+  bx(Q.floor, FL, Q.floorY, quay({ tag: 'fish-market', color: '#aeaba4', pattern: PATTERN.concrete })),
+  R([18.4, -0.1, Q.floor[3] + 1.5], [18.4, Q.floorY, Q.floor[3]], 2.6, stair({ tag: 'market-steps' })),
+  R([18.4, -0.1, Q.floor[2] - 1.5], [18.4, Q.floorY, Q.floor[2]], 2.6, stair({ tag: 'market-steps' })),
+  B(Q.chiller[0], Q.chiller[1], Q.floorY, Q.floorY + 2.6, Q.chiller[2], Q.chiller[3], bldg(K.wall, { tag: 'chiller', pattern: PATTERN.metalpanel })),
 ];
+
+const HALF = [...MIDSIDE, ...SLICE, ...BASE];
 
 // ---- Zone Control: the centre = the middle of the island platform and both trackbeds beside it; the side zone = the
 // village square (Alpha's; Bravo's is the mirror)
@@ -237,11 +347,16 @@ const ZONES = {
 
 // ---- Tower Command: "the tower rides the railway" (drawn on Bravo's half, Alpha's goal): off the island platform onto
 // Bravo's track, along the rails to the level crossing (checkpoint 1), up the hillside road, back along the back street
-// past the square (checkpoint 2 at its corner), up onto the co-op's loading dock
-const TX = -P.roadX, TZ = -P.backZ, GX = -4.2;
+// — the user's drawing, kept — then (the stretch: a two-checkpoint stage's track is twice as long, 164 m, with detour
+// loops; 2026-09-30) a loop through the village high street: down the fire lane beside the fire-watch terrace, back
+// across the terrace along the onsen lane (up its wall, checkpoint 2 on top, down into the High Street) and past the
+// inn to the hillside road, down the road to the co-op forecourt, along it to the loading dock (the goal: moved out
+// with the base). Mirrored (Bravo's frame): the fire lane at x −7.25, the onsen lane at z 39.5, the forecourt at z 48
+const TX = -P.roadX, TZ = -P.backZ, GX = -4.2, GZ = 31.8 + ST.d;
+const LX = -Q.tower.laneX, MZ = -Q.tower.midZ, FZ = -Q.tower.foreZ;
 const TOWER = {
-  path: [[0, I.y, 0], [0, 5.0], [TX, 5.0], [TX, TZ], [GX, TZ], [GX, 31.8]],
-  checkpoints: [[TX, 5.0], [8, TZ]],
+  path: [[0, I.y, 0], [0, 5.0], [TX, 5.0], [TX, TZ], [LX, TZ], [LX, MZ], [TX, MZ], [TX, FZ], [GX, FZ], [GX, GZ]],
+  checkpoints: [[TX, 5.0], [0, MZ]],
   yaw: 0,
 };
 
@@ -275,8 +390,8 @@ const MOVERS = {
 
 const CALAMARI = {
   id: 'calamari',
-  bounds: { minX: -34, maxX: 34, minZ: -48, maxZ: 48 },
-  spawnPads: [P.pad, [-P.pad[0], P.pad[1], -P.pad[2]]],
+  bounds: { minX: -34, maxX: 34, minZ: -48 - ST.d, maxZ: 48 + ST.d },
+  spawnPads: [[P.pad[0], P.pad[1], P.pad[2] - ST.d], [-P.pad[0], P.pad[1], -(P.pad[2] - ST.d)]],
   spawnBarrier: 4.2,
   // the world round it: no Inkopolis bay; our own hills, headlands, village beyond, breakwater, mountains (backdrop.js);
   // snow on the land (a low snow line and a heavy dusting), gentle snowfall, stars at dusk. A cold, clear winter day —
@@ -315,10 +430,11 @@ const CALAMARI = {
   tower: TOWER,
   movers: MOVERS,
   // match intro: high over the station (the footbridges, the railcars, the canopy), then back down to the co-op deck
-  intro: { from: [14, 13, 12], lookFrom: [0, 3, -2], toBack: 3.0 },
-  // stage-select picture: from high on Alpha's hill across the whole village — the bath house's steaming chimney, the
-  // square, the station and its railcars, the footbridges, the level crossing and the tunnel — to Bravo's co-op and hill
-  art: { from: [-40, 22, -46], look: [2, 1.5, 0], fov: 58 },
+  intro: { from: [16, 14, 10], lookFrom: [0, 3, -2], toBack: 3.0 },
+  // stage-select picture: from high on Alpha's hill over the village high street — the allotments, the inn and its
+  // steaming garden, the fire-watch tower on its terrace, the post office and the fish market — across the square and
+  // the bath house's chimney to the station, its railcars and footbridges, the tunnel, and Bravo's co-op beyond
+  art: { from: [-38, 26, -66], look: [7, 0, -17], fov: 56 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
