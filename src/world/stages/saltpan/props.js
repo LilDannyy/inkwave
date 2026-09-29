@@ -918,7 +918,7 @@ export function register(D, H) {
     },
   };
   D.saltpan_tank = {
-    desc: 'Brine header tank: corrugated-iron round tank (1.9 m) with a conical lid and hatch on a timber stand (1.2 m), outlet pipe and valve wheel, a ladder, salt-crusted drips. Collides.',
+    desc: 'Brine header tank: corrugated-iron round tank (1.9 m) with a conical lid and hatch on a timber stand (1.2 m), outlet pipe and valve wheel, a ladder, salt-crusted drips. Collides (roof-flagged: nobody stands on the tank).',
     params: {}, variants: 1, mount: 'ground',
     build(B, o) {
       const R = 0.95, y0 = 1.25, Ht = 1.3;
@@ -935,7 +935,7 @@ export function register(D, H) {
       B.tor(NS('metal'), K.red, 0.1, 0.012, 0.12, 0.8, R + 0.28, { ry: HP, rs: 3, ts: 12 });
       for (const k of [-0.18, 0.18]) pbeam(B, NS('metal'), K.iron, [-R - 0.1, 0.0, k], [-R - 0.05, y0 + Ht + 0.1, k], 0.03, 0.03);
       for (let y = 0.3; y < y0 + Ht; y += 0.3) pbox(B, NS('metal'), K.iron, 0.03, 0.02, 0.36, -R - 0.08, y, 0);
-      B.col(-1.0, 0, -1.0, 1.0, y0 + Ht + 0.3, 1.0); B.blob(2.4, 2.4);
+      B.col(-1.0, 0, -1.0, 1.0, y0 + Ht + 0.3, 1.0, { roof: true }); B.blob(2.4, 2.4);   // (nobody stands on the tank)
     },
   };
 

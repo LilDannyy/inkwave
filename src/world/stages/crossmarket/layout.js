@@ -124,7 +124,10 @@ const CROSSMARKET = {
     // at each end: down to the Butter Cross square (south) and to Market Street by the hall (north)
     B(-6, -3.8, 2.3, FL, -29, -19, { color: CM.iron, pattern: PATTERN.planks, tag: 'veranda', notIn: TC }),
     R([-4.9, 0, -12.8], [-4.9, FL, -19], 2.2, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'veranda-stair', notIn: TC }),
+    // (the space under it is a boarded store, stepped up under the treads: a bot wedged itself 14 s in the open wedge)
+    ...[[-19, -18.1], [-18.1, -17.2], [-17.2, -16.3], [-16.3, -15.4], [-15.4, -14.5]].map(([z0, z1]) => B(-5.95, -3.85, K, (FL * (-12.8 - z1)) / 6.2 - 0.26, z0, z1, { color: CM.timber, pattern: PATTERN.planks, paint: false, tag: 'understair', notIn: TC })),
     R([-4.9, 0, -35.2], [-4.9, FL, -29], 2.2, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'veranda-stair' }),
+    ...[[-29.9, -29], [-30.8, -29.9], [-31.7, -30.8], [-32.6, -31.7], [-33.5, -32.6]].map(([z0, z1]) => B(-5.95, -3.85, 0, (FL * (z0 + 35.2)) / 6.2 - 0.26, z0, z1, { color: CM.timber, pattern: PATTERN.planks, paint: false, tag: 'understair' })),
     R([-12.4, 0, -21.9], [-6, FL, -21.9], 2.0, { color: CM.iron, pattern: PATTERN.treads, thin: true, thickness: 0.22, tag: 'court-stair' }),
 
     // ================= left block (+X): tall row on Market Street (passage through), roof terrace over the shops

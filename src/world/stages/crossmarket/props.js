@@ -336,7 +336,7 @@ const SLICE = [
   { type: 'crossmarket_barrow', pos: [-3.0, 0, -37.0], rotY: 0.3, kind: 'veg', notIn: TC },
   { type: 'crossmarket_crates', pos: [11.2, 0, -37.6], rotY: 0.2, kind: 'fruit', variant: 2, notIn: TC },
   { type: 'crossmarket_lamp', pos: [-7.6, 0, -35.6] },
-  { type: 'crossmarket_lamp', pos: [15.3, 0, -31.2] },
+  { type: 'crossmarket_lamp', pos: [15.6, 0, -35.3] },
   { type: 'crossmarket_bin', pos: [-8.4, 0, -29.8] },
   { type: 'crossmarket_manhole', pos: [2.6, 0, -30.6], rotY: 0.4 },
   { type: 'stringlights', pos: [-3.7, 0, -31.4], rotY: 0, length: 9.7, height: 5.25, sag: 0.55, count: 16 },
@@ -345,8 +345,7 @@ const SLICE = [
   { type: 'crossmarket_stall', pos: [5.6, 0, -40.7], rotY: 0, w: 2.6, d: 1.2, kind: 'bread' },
   { type: 'crossmarket_stall', pos: [-5.0, 0, -50.8], rotY: P, w: 2.6, d: 1.2, kind: 'flowers' },
   { type: 'crossmarket_casks', pos: [5.2, 0, -51.2], rotY: 0.2 },
-  { type: 'crossmarket_lamp', pos: [-7.3, 0, -52.4] },
-  { type: 'crossmarket_lamp', pos: [7.3, 0, -39.6] },
+  { type: 'crossmarket_lamp', pos: [-6.2, 0, -52.5] },
   { type: 'crossmarket_bollard', pos: [-1.2, 0, -52.2], rotY: 0, count: 2, spacing: 2.4 },
   { type: 'crossmarket_bench', pos: [0, 0, -49.3], rotY: P },
   { type: 'crossmarket_aboard', pos: [7.4, 0, -46.9], rotY: -P / 2 + 0.3, text: 'FRESH BUTTER' },
@@ -356,11 +355,10 @@ const SLICE = [
   { type: 'crossmarket_crates', pos: [-18.7, 0, -47.3], rotY: 0.3, kind: 'fish', variant: 1 },
   { type: 'crossmarket_bin', pos: [11.6, 0, -46.85] },
   { type: 'crossmarket_casks', pos: [17.4, 0, -41.2], rotY: 0 },
-  { type: 'crossmarket_crates', pos: [15.7, 0, -35.2], rotY: 0.2, kind: 'veg', variant: 1, notIn: TC },
-  { type: 'crossmarket_lamp', pos: [15.6, 0, -52.4] },
+  { type: 'crossmarket_crates', pos: [14.0, 0, -37.2], rotY: 0.2, kind: 'veg', variant: 1, notIn: TC },
   { type: 'bunting', pos: [15.05, 0, -41.0], rotY: 0, length: 4.3, height: 4.3, posts: false },
   { type: 'bunting', pos: [-19.3, 0, -48.2], rotY: 0, length: 4.2, height: 4.7, posts: false },
-  { type: 'crossmarket_fingerpost', pos: [15.6, 0, -39.4], rotY: 0, arms: [[-90, 'BUTTER CROSS'], [180, 'CORN EXCHANGE'], [0, 'THE PARADE']] },
+  { type: 'crossmarket_fingerpost', pos: [8.6, 0, -34.8], rotY: 0, arms: [[-90, 'BUTTER CROSS'], [180, 'CORN EXCHANGE'], [0, 'MARKET HALL']] },
 ];
 
 // ================================================================================================ Zone Control only
