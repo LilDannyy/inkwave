@@ -1117,6 +1117,7 @@ export class HUD {
     if (nx) st = `CHECKPOINT ${Math.max(0, Math.ceil(nx.left - 1e-6))}`;
     else if (z.contested) st = 'CONTESTED';
     else if (z.returning) st = 'ROLLING BACK';
+    else if (z.homing) st = `ROLLING HOME · ${Math.max(0, Math.ceil(TOWER.idleNeutral - z.emptyT))}`;
     else if (z.owner >= 0 && n === 0 && z.emptyT > 0.3) st = `EMPTY · ${Math.max(0, Math.ceil(TOWER.idleNeutral - z.emptyT))}`;
     if (st !== L.tSt) {
       L.tSt = st;
