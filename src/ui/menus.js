@@ -947,6 +947,16 @@ export class Menus {
       { id: 'howto', label: 'HOW TO PLAY', icon: GLYPHS.question, cls: 'iw-btn--menu', accept: () => this._go('howto') },
       { id: 'credits', label: 'CREDITS', icon: GLYPHS.star, cls: 'iw-btn--menu', accept: () => this._go('credits') },
     ];
+    // the desktop app (electron/preload.cjs exposes inkwaveNative.quit) can close from here — never in a browser tab
+    const native = typeof window !== 'undefined' && window.inkwaveNative && typeof window.inkwaveNative.quit === 'function' ? window.inkwaveNative : null;
+    const quitBtn = native ? this._btn({ id: 'quitgame', label: 'QUIT GAME', icon: GLYPHS.exit || GLYPHS.close, cls: 'iw-btn--quitgame', sound: 'ui_click', accept: () => this._openModal({
+      title: 'QUIT INKWAVE?', danger: true,
+      text: 'Close the game and head back to your desktop?',
+      buttons: [
+        { label: 'KEEP PLAYING', accept: () => this._closeModal(), sound: null },
+        { label: 'QUIT', cls: 'iw-btn--danger', sound: 'ui_confirm', accept: () => { this._closeModal(true); safeCall(() => native.quit()); } },
+      ],
+    }) }) : null;
     const tilts = [-2.2, 1.3, 1.4, -1.1, 1.6, -1.3, 1.1];
     const btns = items.map((it, i) => { const b = this._btn({ ...it, tilt: tilts[i % tilts.length] }); b.classList.add('iw-in', 'iw-in--left'); return b; });
     const descText = h('span', { class: 'iw-main__desctext' });
@@ -986,7 +996,7 @@ export class Menus {
       desc,
       h('div', { class: 'iw-main__side' }, profile, kit),
       h('div', { class: 'iw-corner iw-corner--bl iw-in' }, `v${this._version()}`),
-      this._prompts([['Enter', 'A', 'Select'], ['Esc', 'B', 'Title']]));
+      (() => { const pr = this._prompts([['Enter', 'A', 'Select'], ['Esc', 'B', 'Title']]); if (quitBtn) pr.prepend(quitBtn); return pr; })());   // (QUIT GAME leads the prompt row, bottom right)
     return {
       el, wrap: true, initial: btns[0],
       onFocus: (f) => {

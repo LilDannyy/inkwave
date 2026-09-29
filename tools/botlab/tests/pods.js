@@ -21,7 +21,7 @@
   const P = m.pods;
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) { hooks.forEach((f) => f()); dbg.step(1000 / 60); } };
   const hooks = [];
-  R('pods on this stage and mode (6 listed, mirrored: 12)', !!P && P.pods.length === 12, { n: P && P.pods.length, mode: m.mode });
+  R('pods on this stage and mode (7 listed, mirrored: 14)', !!P && P.pods.length === 14, { n: P && P.pods.length, mode: m.mode });
   if (!P) return out;
   // a long clock (the stage clock follows duration − time)
   m.duration = 99999; m.time = m.duration - P.t;
@@ -30,7 +30,7 @@
   const byId = (id) => P.pods.find((p) => p.id === id);
   // brains off: scripted intents (a function per actor, run every frame)
   const intents = new Map();
-  for (const a of m.actors) if (a.bot) { a.bot._up0 = a.bot.update; a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.sub = it.special = false; const f = intents.get(a); if (f) f(a, it); }; }
+  for (const a of m.actors) if (a.bot) { a.bot._up0 = a.bot.update; a.bot.update = a.bot._stub = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.sub = it.special = false; const f = intents.get(a); if (f) f(a, it); }; }
   const A = m.actors.filter((a) => a.team === 0), B = m.actors.filter((a) => a.team === 1);
   const home = (a, i) => { const pd = L.spawnPads[a.team]; a.pos.set(pd.x + (i % 4) - 1.5, pd.y + 0.1, pd.z); a.vel.set(0, 0, 0); a.grounded = false; };
   const homeAll = () => { m.actors.forEach(home); intents.clear(); };
@@ -52,10 +52,10 @@
   const looks = g.podLooks;
   R('the planters are the stage\'s (static, uninked): the engine adds no collider and draws no planter', own.every((b) => !b) && stage.every((b) => b && b.solid) && looks.items.every((it) => !it.planter),
     { engineColliders: own.filter(Boolean).length, stagePlanters: stage.filter(Boolean).length });
-  R('each pod has its bulb (built with the stage), anchored on its planter at bulbY', looks && looks.items.length === 12 && looks.items.every((it) => it.root.parent && it.bulb.children.length > 0 && Math.abs(it.pivot.position.y - it.def.bulbY) < 1e-6),
+  R('each pod has its bulb (built with the stage), anchored on its planter at bulbY', looks && looks.items.length === P.pods.length && looks.items.every((it) => it.root.parent && it.bulb.children.length > 0 && Math.abs(it.pivot.position.y - it.def.bulbY) < 1e-6),
     { items: looks && looks.items.length, bulbY: P.pods[0].def.bulbY });
   let mir = true;
-  for (let i = 0; i < 12; i += 2) {
+  for (let i = 0; i < P.pods.length; i += 2) {
     const a = P.pods[i], b = P.pods[i + 1];
     if (Math.abs(a.x + b.x) > 1e-6 || Math.abs(a.z + b.z) > 1e-6 || Math.abs(Math.cos(a.yaw) + Math.cos(b.yaw)) > 1e-6 || Math.abs(Math.sin(a.yaw) + Math.sin(b.yaw)) > 1e-6 || a.w !== b.w) mir = false;
   }
@@ -300,7 +300,7 @@
     const fs1 = { st: pf.state, k: r3(pf.k), t0: r3(pf.t0) };
     fill(pf2, 0, 1.2); step(0.3);
     const noGrow = pf2.state === 'dormant';
-    const q = new Array(24).fill(0); q[pf2.i * 2 + 1] = 40;
+    const q = new Array(P.pods.length * 2).fill(0); q[pf2.i * 2 + 1] = 40;
     P.netEvent(['m', ...q]);
     const snap = r3(pf2.meter[1]);
     m.follower = false;
@@ -332,7 +332,86 @@
     }
     R('bots: in a fight, a bot inks the pod between it and its foe to grow cover (its team\'s hedge)', grewT >= 0 && grewBy === 0 && tasks.has('grow'), { grewAt: grewT, by: grewBy, tasks: [...tasks] });
     R('bots: …then inks a column of its own hedge, swims up and fights from the top', topT >= 0 && (tasks.has('climb') || tasks.has('top')), { topAt: topT, tasks: [...tasks], log });
-    hooks.length = 0; bot.bot.update = () => {};
+    hooks.length = 0; bot.bot.update = bot.bot._stub;
+
+    // ---- 10) off the top: nothing to fight from up there → off within ~2 s (the edge toward where it's going, a plain
+    // drop), a route again; fighting from it → perching on purpose (botlab's stuck metric reads perchUntil); the foe
+    // gone → off; the hedge starting to wilt → off
+    P.reset(); homeAll(); step(0.2);
+    const pt = byId('mid'), up = A.find((a) => !a.isLocal);
+    fill(pt, 0); step(0.7);
+    const onTopOf = (a) => P.hedgeUnder(a) === pt;
+    const perch = (a) => a.bot.perchUntil > a.bot.t;
+    const mount = (a, lx = 0.6) => { place(a, W(pt, lx, pt.h + 0.05, 0)); step(0.3); mt.push([pt.state, pt.block.solid, onTopOf(a), r3(a.pos.y)]); a.bot.reset(); a.bot.update = a.bot._up0; };
+    const mt = [];
+    // (every foe far off at its spawn, out of sight and range)
+    mount(up);
+    let offT = -1, pathT = -1, wetN = 0;
+    let landT = -1; const tr0 = [];
+    for (let f = 0; f < 60 * 4 && (pathT < 0 || landT < 0); f++) {
+      step(1 / 60);
+      if (f % 10 === 0 && tr0.length < 12) tr0.push([f, r3(up.pos.x), r3(up.pos.y), up.grounded, up.ground.block, onTopOf(up), up.bot.podS && up.bot.podS.task, pt.state, pt.block.solid, r3(pt.k), r3(P.t - pt.t0)]);
+      if (offT < 0 && !onTopOf(up)) offT = f / 60;
+      if (offT >= 0 && landT < 0 && up.grounded) landT = f / 60;
+      if (offT >= 0 && pathT < 0 && up.bot.path) pathT = f / 60;
+      if (up.pos.y < -0.5) wetN++;
+    }
+    R('a bot on a hedge top with no foe about gets off within ~2 s (a plain drop, never into the water) and routes again', offT >= 0 && offT <= 2.2 && landT <= 3 && pathT >= 0 && wetN === 0 && Math.abs(up.pos.y) < 0.2,
+      { offAt: offT, landedAt: landT, pathAt: pathT, trace: tr0, why: up.bot.podS && up.bot.podS.exit ? up.bot.podS.exit.why : P.stats.exits && 'exit', endY: r3(up.pos.y), exits: P.stats.exits });
+    // fighting from it: perching (flagged); then the foe gone → off
+    const fo = B.find((a) => !a.isLocal);
+    intents.set(fo, (a) => { a.hp = PLAYER.hp; a.invuln = 1; });
+    up.setWeapon('shooter');
+    place(fo, W(pt, 0.5, 0.02, 9));
+    mount(up);
+    let perchN = 0, onN = 0, fr = 0;
+    for (let f = 0; f < 60 * 3; f++) { up.hp = PLAYER.hp; up.ink = PLAYER.inkMax; step(1 / 60); fr++; if (onTopOf(up)) { onN++; if (perch(up)) perchN++; } }
+    const stayed = onN / fr;
+    home(fo, 0);
+    let off2 = -1;
+    for (let f = 0; f < 60 * 5 && off2 < 0; f++) { step(1 / 60); if (!onTopOf(up) && up.grounded) off2 = f / 60; }
+    R('fighting from the top: it stays and is flagged as perching on purpose; the foe gone (out of sight and range) → off in ~1.5 s + the walk',
+      stayed > 0.9 && perchN / Math.max(1, onN) > 0.95 && off2 >= 0 && off2 <= 3.2, { onTop: r3(stayed), perched: r3(perchN / Math.max(1, onN)), offAfterFoeGone: off2, mounts: mt });
+    // the hedge starting to wilt → off (the foe back in range)
+    place(fo, W(pt, 0.5, 0.02, 9));
+    mount(up);
+    hooks.push(() => { up.hp = PLAYER.hp; up.ink = PLAYER.inkMax; });
+    step(0.8);
+    const wasOn = onTopOf(up);
+    setClock(pt.wiltAt - 0.9);
+    let off3 = -1;
+    for (let f = 0; f < 60 * 2.5 && off3 < 0; f++) { step(1 / 60); if (!onTopOf(up)) off3 = f / 60; }
+    R('the hedge about to wilt: a bot fighting from it gets off', wasOn && off3 >= 0 && off3 <= 2.0, { wasOn, offIn: off3, why: up.bot.podS && up.bot.podS.exit && up.bot.podS.exit.why });
+    hooks.length = 0; up.bot.update = up.bot._stub; intents.clear(); homeAll(); P.reset(); step(0.3);
+
+    // ---- 11) a route a standing hedge cuts: round it when there's a way; the dead-end lane it seals: hold, no jitter
+    const pl = byId('lane'), pr = byId('mid'), rb = A.find((a) => !a.isLocal), S0 = () => rb.bot.podS || (rb.bot.podS = {});
+    fill(pr, 1); fill(pl, 1); step(0.7);
+    place(rb, W(pr, 0.3, 0.02, -3.2)); step(0.3);
+    const q1 = nav.nearest(rb.pos, 1.2, true), q2 = nav.nearest(W(pr, 0.3, 0, 3.2), 0.5);
+    // (a route made before it grew: straight through)
+    const blk0 = nav.blocked; nav.blocked = null; rb.bot.path = nav.path(q1, q2, 0); nav.blocked = blk0; rb.bot.pi = 1;
+    const crossed = rb.bot.path.some((id) => P.hard[id]);
+    P._botRoute(rb.bot, S0());
+    const round = rb.bot.path && rb.bot.path.length > 1 && !rb.bot.path.some((id) => P.hard[id]) && rb.bot.path[rb.bot.path.length - 1] === q2;
+    R('a route a standing hedge cuts goes round it (the same goal, its core off-limits)', crossed && round, { crossedBefore: crossed, round, detours: P.stats.detours });
+    // the lane: a bot at its mouth whose only goal is inside (every pick is in there); it holds instead of pushing in
+    const goalIn = new THREE.Vector3(22, 0.02, -33);
+    place(rb, new THREE.Vector3(22, 0.02, -23.2)); step(0.3);
+    rb.bot.reset(); rb.bot.update = rb.bot._up0;
+    rb.bot._pickPaintGoal = function () { this.goalTimer = 4; this._pathTo(goalIn, 0.3); };
+    let pushed = 0, perchL = 0, nf = 0; const trace = [];
+    for (let f = 0; f < 60 * 4; f++) {
+      step(1 / 60); nf++;
+      if (perch(rb)) perchL++;
+      const [lx, lz] = loc(pl, rb.pos); if (Math.abs(lx) < pl.hw + PLAYER.radius - 0.05 && Math.abs(lz) < pl.hd + PLAYER.radius - 0.05) pushed++;
+      if (f % 20 === 0) trace.push([r3(rb.pos.x), r3(rb.pos.z)]);
+    }
+    const span = Math.max(...trace.map((q) => Math.hypot(q[0] - trace[trace.length - 1][0], q[1] - trace[trace.length - 1][1])));
+    let flips = 0; for (let k = 2; k < trace.length; k++) { const d1 = trace[k - 1][1] - trace[k - 2][1], d2 = trace[k][1] - trace[k - 1][1]; if (d1 * d2 < -1e-3 && Math.abs(d2) > 0.15) flips++; }
+    R('a hedge sealing a dead-end lane (no way round): the bot holds (flagged, not stuck) — never pushing into it, no jitter', pushed === 0 && P.stats.waits > 0 && perchL / nf > 0.5 && flips <= 1,
+      { waits: P.stats.waits, held: r3(perchL / nf), pushedIn: pushed, flips, trace: trace.slice(-6) });
+    rb.bot.update = rb.bot._stub;
   }
 
   // ---- Tower Command: pods on the track sit it out; one beside it waits (meter full) while the tower's there
