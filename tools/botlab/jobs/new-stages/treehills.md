@@ -175,3 +175,73 @@ The engine side:
 - bots using pods.
 
 When it lands, the lead merges it into your branch (or tells you to merge a branch); then test pods on the stage.
+
+## REWORK (the user, 2026-09-29): the stage is empty. This is the priority now.
+
+The user looked at the finished pictures: "does the terrain not look... empty to you? besides some trees theres no
+environment, its just a bowl. no where to hide, no landmarks, nothing to fight over. this is not up to our standards".
+They are right. The meadow is a flat lawn with scattered small trees, and the hill terraces are bare lawns. Keep the
+shape, the heights, the stations, the sky, the turbines and the pods, and fill the playable space with a real
+environment. Concretely:
+
+1. **Mid gets a landmark to fight over: the Seed Vault Plaza.**
+   - A raised hexagonal plaza at the centre: top at 1.3, about 13–14 m across.
+   - Engineered stone and green-grey panel sides, a chequer-plate rim.
+   - Four or more ways up: two broad ramps (≤ 24°) and two wide stair flights, plus a squid-climbable inked wall face or
+     two.
+   - Cover on it: planter boxes with cypress at its corners (tree colliders), a couple of low seed-bank consoles
+     (1.0–1.2 m).
+   - The centre zone moves onto the plaza top.
+   - The tower starts on the plaza: path `[0, 1.3, 0]` first, then a drop off its east edge onto the meadow.
+   - Its middle stays clear for the tower.
+2. **A landmark over mid: the Solar Canopy.**
+   - A big hexagonal solar-leaf shade roof hovering over the plaza on four to six slim pylons at its edge, underside at
+     about 7 m.
+   - Clear of the tower's headroom: 1.3 + 3.72 = 5.02, keep a margin.
+   - Panels with light glinting through, maybe vines.
+   - The roof is off-limits (roof, slide-off); the pylons are cover.
+   - Visible from both spawns: the meadow's icon.
+3. **Two Alterna greenhouse pods flanking the plaza.**
+   - Mirrored, e.g. about 8–10 m long along x at z ≈ ±9, offset from the tower's lane at z 0.
+   - Half-cylinder glass tubes like the reference: 2.4–2.6 m tall, plants inside, glass roofs off-limits.
+   - Hard cover that splits the meadow into lanes round the plaza.
+   - A squid can climb their end walls (panel ends) to reach the top? No: roofs stay off-limits. They're walls.
+4. **The meadow floor rolls.**
+   - Grass mounds 0.6–1.2 m with ramped sides (the "artificial hills" in miniature) where the open lawn is.
+   - Granite boulders (1.2–1.8 m).
+   - A fallen log or two (0.8 m).
+   - Raised flower and pollinator beds with 0.5–0.7 m edges.
+   - Shrub clumps (1.0–1.4 m) under the young cypress, and a shallow decorative rill (floor −0.3, not water death) with
+     stepping stones or a little footbridge.
+   - Pods stay where they are, or move to spots where a hedge matters most.
+5. **The hills are forests, not lawns.**
+   - Every terrace gets groves: clusters of 3–5 cypress / thujopsis with shrub underplanting (colliders at trunks and
+     shrubs), boulders, and gravel trails winding between them.
+   - Also on the terraces:
+     - solar-panel arrays (tilted panel rows about 1.2 m, great line cover);
+     - a small ranger shelter / weather station on the upper tier;
+     - beehive boxes, compost bays, irrigation tanks and pipes;
+     - on the crowns, a maintenance hut and railings round the turbine base.
+   - The tower's route (band → upper tier → strip) keeps its 2.5 m floor and headroom; groves sit beside it.
+6. **The gardens and the base terrace are working spaces.**
+   - Raised beds (0.6 m), a polytunnel or two (greenhouse tunnels as cover), a tool shed, water tanks.
+   - Seed-bank crate stacks, a drone landing pad, Alterna cargo modules, an antenna mast.
+   - A reason for every corner.
+7. **Density check (required, include the picture).**
+   - Make a top-down cover map: for every 1 m floor cell, the distance to the nearest cover at least 0.9 m tall (solid
+     colliders, trees, hedges not counted).
+   - Targets:
+     - at least 90 % of the floor is within 5 m of cover;
+     - no open circle larger than about 6 m radius anywhere except the plaza top and the zone.
+   - Show the map before and after.
+   - Also measure Halyard with the same script and include its numbers.
+
+Keep all the modes working: zones (the centre zone on the plaza), the tower (re-check the track with the plaza start, the
+drop, groves beside the route), boss (the plaza is a wall to it, and its ground is the meadow ring round the plaza,
+still large; re-check), bots (stuck ≤ 3 %, no long episodes), the climb audit, the `play` spawn view, perf vs Halyard,
+rebake, stage art, and pictures:
+- the meadow from both spawns;
+- the plaza with the canopy;
+- a hill grove;
+- the garden;
+- the cover maps.
