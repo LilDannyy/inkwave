@@ -139,7 +139,7 @@ function slicePlacements() {
   out.push({ type: 'bollard', pos: [-3.9, 0, -48.4], variant: 1 });
   out.push({ type: 'quaycrates', pos: [-2.0, 0, -51.2], rotY: 0.1, variant: 1 });
   out.push({ type: 'vending', pos: [-3.75, 0, -29.6], rotY: P / 2, variant: 1, color: 'teal' });
-  out.push({ type: 'cabinet', pos: [3.85, 0, -30.4], rotY: -P / 2, color: 'sage' });
+  out.push({ type: 'cabinet', pos: [3.85, 0, -30.4], rotY: -P / 2 });
   // ---- the Long Pier's new stretch: shore power at ORCA BAY, a dock box, the pump-out station, crab pots, a bench
   //      facing the berths, bollard lights, a life ring, the pontoon sign at the gangway head
   out.push({ type: 'shorepower', pos: [-19.88, 0, -35.2], rotY: P / 2, berth: 'V1' });
