@@ -11,7 +11,10 @@
 //   • at the waterline round the arena's outer edges: a skirt of granite boulders (the deck never meets the water bare)
 // Vertex colours are the scenery's own (the terrain shader's sandy beaches would read as seaside), baked per vertex
 // from height, slope and noise; glow stays 0 except on the city's lit windows.
-export function buildBackdrop(kit) {
+// o.d: the Long Stages stretch (layout.js ST.d) — the arena's ends moved out by d, so the summit crag, Little Nantai
+// and the knolls behind the domes move out with them (the tarn's sides, the islets and the far world stay put)
+export function buildBackdrop(kit, o = {}) {
+  const D = o.d ?? 0, E = (z) => z + Math.sign(z) * D;
   const { THREE, box, cyl, sph, prep, xf, triGeo, makeIsland, mulberry, fbm, polar, DEG, WATER_Y } = kit;
   const rnd = mulberry(2657);
   const statics = [], plains = [];
@@ -61,7 +64,7 @@ export function buildBackdrop(kit) {
     return isl;
   }
   const at = (a, d) => polar(a, d);
-  // --- the tarn's shores (the basin round the arena; x ±26, z ±46)
+  // --- the tarn's shores (the basin round the arena; x ±26, z ±(46 + D))
   //     −X: the forested ridge (the path to Octo Valley); +X: the low lip with the view down the mountain
   mass({ x: -175, z: 10, rx: 95, rz: 210, h: 48, seed: 1, rot: 0.08, ridge: 0.45 });
   mass({ x: -118, z: -120, rx: 70, rz: 60, h: 30, seed: 2, rot: 0.6 });
@@ -70,15 +73,15 @@ export function buildBackdrop(kit) {
   mass({ x: 160, z: 130, rx: 90, rz: 70, h: 28, seed: 5, rot: -0.2 });
   mass({ x: 180, z: 10, rx: 55, rz: 80, h: 5.5, seed: 6, rot: 0.1, ridge: 0.1 });            // the lip (low: the view)
   // --- the ends: the summit crag behind Alpha's dome (−Z) with the massif beyond; Little Nantai behind Bravo's (+Z)
-  const crag = mass({ x: -6, z: -96, rx: 42, rz: 26, h: 24, seed: 7, rot: 0.15, ridge: 0.7 });
-  mass({ x: 18, z: -72, rx: 26, rz: 18, h: 9, seed: 8, rot: -0.3, ridge: 0.6 });
-  mass({ x: -28, z: -70, rx: 20, rz: 16, h: 8, seed: 9, rot: 0.5, ridge: 0.6 });
+  const crag = mass({ x: -6, z: E(-96), rx: 42, rz: 26, h: 24, seed: 7, rot: 0.15, ridge: 0.7 });
+  mass({ x: 18, z: E(-72), rx: 26, rz: 18, h: 9, seed: 8, rot: -0.3, ridge: 0.6 });
+  mass({ x: -28, z: E(-70), rx: 20, rz: 16, h: 8, seed: 9, rot: 0.5, ridge: 0.6 });
   mass({ x: -50, z: -300, rx: 230, rz: 140, h: 165, seed: 10, rot: 0.25, ridge: 0.75, snow: 132 });
   mass({ x: -170, z: -330, rx: 140, rz: 100, h: 128, seed: 18, rot: -0.4, ridge: 0.8, snow: 112 });
-  mass({ x: 40, z: -150, rx: 70, rz: 50, h: 46, seed: 19, rot: 0.6, ridge: 0.85 });
-  mass({ x: 4, z: 92, rx: 38, rz: 24, h: 16, seed: 11, rot: -0.2, ridge: 0.6 });
-  mass({ x: -22, z: 70, rx: 24, rz: 16, h: 7, seed: 12, rot: 0.4, ridge: 0.6 });
-  mass({ x: 26, z: 72, rx: 22, rz: 16, h: 8, seed: 13, rot: -0.5, ridge: 0.6 });
+  mass({ x: 40, z: E(-150), rx: 70, rz: 50, h: 46, seed: 19, rot: 0.6, ridge: 0.85 });
+  mass({ x: 4, z: E(92), rx: 38, rz: 24, h: 16, seed: 11, rot: -0.2, ridge: 0.6 });
+  mass({ x: -22, z: E(70), rx: 24, rz: 16, h: 7, seed: 12, rot: 0.4, ridge: 0.6 });
+  mass({ x: 26, z: E(72), rx: 22, rz: 16, h: 8, seed: 13, rot: -0.5, ridge: 0.6 });
   mass({ x: 60, z: 230, rx: 160, rz: 110, h: 92, seed: 14, rot: -0.3, ridge: 0.5 });
   // --- islets in the tarn
   mass({ x: 62, z: -28, rx: 9, rz: 6, h: 3.2, seed: 15, rot: 0.4, R: 8, S: 28 });
@@ -114,7 +117,7 @@ export function buildBackdrop(kit) {
   plains.push(...city);
 
   // ---------------------------------------------------------------------------------------------- the summit crag's trig pillar
-  { const x = -4, z = -96; const y = crag.heightAt(x, z); statics.push(xf(box(0.9, 1.4, 0.9, '#e8e6e0'), x, y + 0.6, z)); statics.push(xf(cyl(0.12, 0.12, 0.3, 8, '#9aa1a8'), x, y + 1.45, z)); }
+  { const x = -4, z = E(-96); const y = crag.heightAt(x, z); statics.push(xf(box(0.9, 1.4, 0.9, '#e8e6e0'), x, y + 0.6, z)); statics.push(xf(cyl(0.12, 0.12, 0.3, 8, '#9aa1a8'), x, y + 1.45, z)); }
   // a cairn line down the summit ridge + a few trail posts
   for (let i = 0; i < 6; i++) { const x = -24 - i * 10, z = -170 - i * 14, y = masses[9].isl.heightAt(x, z); if (y > WATER_Y + 2) statics.push(xf(sph(0.9, 6, 4, '#a39d94'), x, y + 0.4, z, 0, 0, 0, 1, 1.4, 1)); }
 
@@ -203,7 +206,7 @@ export function buildBackdrop(kit) {
     let placed = 0, tries = 0;
     while (placed < want && tries++ < want * 8) {
       const [x, z] = m.isl.sample(rnd, 0.85);
-      if (Math.abs(x) < 30 && Math.abs(z) < 50) continue;
+      if (Math.abs(x) < 30 && Math.abs(z) < 50 + D) continue;
       const y = m.isl.heightAt(x, z);
       if (y < WATER_Y + 1.4 || y > WATER_Y + 60) continue;
       const sl = Math.abs(m.isl.heightAt(x + 2, z) - m.isl.heightAt(x - 2, z)) + Math.abs(m.isl.heightAt(x, z + 2) - m.isl.heightAt(x, z - 2));
