@@ -109,6 +109,16 @@
       "sm": "assets/stages/spirhalite-dusk-sm.webp"
     }
   },
+  "treehills": {
+    "day": {
+      "src": "assets/stages/treehills-day.webp",
+      "sm": "assets/stages/treehills-day-sm.webp"
+    },
+    "dusk": {
+      "src": "assets/stages/treehills-dusk.webp",
+      "sm": "assets/stages/treehills-dusk-sm.webp"
+    }
+  },
   "cargo": {
     "day": {
       "src": "assets/stages/cargo-day.webp",
