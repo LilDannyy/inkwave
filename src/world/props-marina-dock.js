@@ -1950,7 +1950,7 @@ export function registerMarinaDock(D, H) {
   //      doors at deck level on the front (+Z) under a hoist beam, a shopfront to the quay (-Z), painted trade lettering
   //      over the chandlery's berth (-X), a side door + the gas cage wall (+X)
   D.chandlery = {
-    desc: 'Chandlery store dressing around a W × D × H block (pos = block base centre at pier level): weatherboard trim + corner boards, pitched slate roof with a louvred ventilator (roof collides, off limits), front (+Z) sliding timber loading doors at deck height (one slid open), pedestrian door, CHANDLERY gable sign + SHIP\'S STORES board, cathead hoist beam with a block and hook; back (-Z) shopfront with two display windows (coils of rope, lifejackets, fenders), shop door + fanlight, HALYARD CHANDLERY fascia; west (-X) ROPE · PAINT · CHARTS painted lettering + windows; east (+X) side door, window, hose reel.',
+    desc: 'Chandlery store dressing around a W × D × H block (pos = block base centre at pier level): weatherboard trim + corner boards, pitched slate roof with a louvred ventilator (roof collides, off limits), front (+Z) sliding timber loading doors at deck height (one slid open), pedestrian door, CHANDLERY gable sign + SHIP\'S STORES board, cathead hoist beam with a block and hook; back (-Z) shopfront with two display windows (coils of rope, lifejackets, fenders), shop door + fanlight, HALYARD CHANDLERY fascia; west (-X) CHANDLERY painted lettering + windows; east (+X) side door, window, notice board.',
     params: { w: 'm (6)', d: 'm (6.5)', h: 'm (4.2)', deck: 'loading-deck height along the front (1.3)', wall: 'the block\'s weatherboard colour (for the gables)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
@@ -1995,15 +1995,14 @@ export function registerMarinaDock(D, H) {
         doorUnit(B, 2.05, 0.9, 2.05, { frame: trim, leaf: navy, glassH: 0.34 });
         B.push(0, y0, 0); lantern(B, 1.35, 2.25); B.pop();
         B.box('wood', 'woodlight', 0.62, 0.22, 0.03, 2.05, y0 + 2.35, 0.03, { r: 0.01 });
-        letters(B, 'STORES', { h: 0.09, x: 2.05, y: y0 + 2.31, z: 0.048, c: navy, flat: true, wt: 0.22, track: 0.14 });
-        // gable: CHANDLERY letters on a cream board, SHIP'S STORES under the eaves, a round date plaque
+        letters(B, 'STORES', { h: 0.09, x: 2.05, y: y0 + 2.31, z: 0.048, c: navy, flat: true, ds: 4, wt: 0.22, track: 0.14 });
+        // gable: CHANDLERY letters on a cream board, a round date plaque
         B.box('paint', trim, 3.7, 0.6, 0.05, 0, Hh + 0.62, 0.03, { r: 0.02 });
         B.box('paint', navy, 3.6, 0.5, 0.02, 0, Hh + 0.62, 0.06, { r: 0.015 });
-        letters(B, 'CHANDLERY', { h: 0.32, x: 0, y: Hh + 0.46, z: 0.07, c: gold, dep: 0.1, wt: 0.2, track: 0.13 });
-        letters(B, "SHIP'S STORES · CHARTS · ROPE", { h: 0.12, x: 0, y: Hh - 0.32, z: 0.03, c: trim, flat: true, wt: 0.2, track: 0.14 });
+        letters(B, 'CHANDLERY', { h: 0.32, x: 0, y: Hh + 0.46, z: 0.07, c: gold, flat: true, ds: 4, wt: 0.2, track: 0.13 });
         B.cyl('paint', trim, 0.22, 0.04, 0, Hh + 1.35, 0.03, { rx: HP, seg: 16 });
         B.cyl('paint', navy, 0.18, 0.02, 0, Hh + 1.35, 0.055, { rx: HP, seg: 16 });
-        letters(B, '1897', { h: 0.09, x: 0, y: Hh + 1.305, z: 0.068, c: gold, flat: true, wt: 0.2, track: 0.1 });
+        letters(B, '1897', { h: 0.09, x: 0, y: Hh + 1.305, z: 0.068, c: gold, flat: true, ds: 4, wt: 0.2, track: 0.1 });
         // cathead hoist beam out of the gable peak: timber beam, brace, a block and a rope down to a hook
         const hy = Hh + 1.72;
         B.box('wood', 'wooddark', 0.22, 0.24, 1.35, dx, hy, 0.66, { r: 0.02 });
@@ -2034,26 +2033,24 @@ export function registerMarinaDock(D, H) {
         }
         doorUnit(B, 0, 1.0, 2.2, { frame: navy, leaf: navy, glassH: 0.6, pushbar: false });
         B.box('paint', navy, 1.3, 0.34, 0.06, 0, 2.48, 0.03, { r: 0.02 });                                 // fanlight board
-        letters(B, 'NO. 3', { h: 0.12, x: 0, y: 2.42, z: 0.065, c: gold, flat: true, wt: 0.2, track: 0.1 });
+        letters(B, 'NO. 3', { h: 0.12, x: 0, y: 2.42, z: 0.065, c: gold, flat: true, ds: 4, wt: 0.2, track: 0.1 });
         B.box('paint', navy, L - 0.3, 0.52, 0.08, 0, 3.1, 0.04, { r: 0.03 });                             // fascia
         pbox(B, 'paint', gold, L - 0.44, 0.03, 0.01, 0, 3.32, 0.085);
         pbox(B, 'paint', gold, L - 0.44, 0.03, 0.01, 0, 2.88, 0.085);
-        letters(B, 'HALYARD CHANDLERY', { h: 0.24, x: 0, y: 2.98, z: 0.085, c: trim, dep: 0.1, wt: 0.2, track: 0.13 });
+        letters(B, 'HALYARD CHANDLERY', { h: 0.24, x: 0, y: 2.98, z: 0.085, c: trim, flat: true, ds: 4, wt: 0.2, track: 0.13 });
         awningRolled(B, 0, 3.52, L - 0.6, navy, trim);
         downpipe(B, -L / 2 + 0.2, Hh, trim);
       });
-      // ---- west (-X, over the chandlery's berth): painted trade lettering, windows, a hung life ring
+      // ---- west (-X, over the chandlery's berth): painted lettering, windows, a hung life ring
       onFace(B, W, Dd, 3, (L) => {
-        letters(B, 'ROPE · PAINT · CHARTS', { h: 0.34, x: 0, y: 3.1, z: 0.01, c: trim, flat: true, wt: 0.22, track: 0.14 });
-        letters(B, 'CHANDLERY', { h: 0.5, x: 0, y: 2.25, z: 0.01, c: gold, flat: true, wt: 0.22, track: 0.14 });
+        letters(B, 'CHANDLERY', { h: 0.5, x: 0, y: 2.6, z: 0.01, c: gold, flat: true, ds: 4, wt: 0.22, track: 0.14 });
         for (const wx of [-1.7, 1.7]) windowUnit(B, wx, 0.9, 0.9, 1.0, { frame: trim, mull: 1, blind: '#e6ddc8' });
         B.push(0, 0.2, 0.06, 0, 0, 0); B.tor('gloss', '#e45a3a', 0.3, 0.07, 0, 1.25, 0.04, { rs: 6, ts: 16 }); B.pop();
       });
-      // ---- east (+X, the hardstanding): side door, window, wash-down hose reel, a notice board
+      // ---- east (+X, the hardstanding): side door, window, a notice board
       onFace(B, W, Dd, 1, (L) => {
         doorUnit(B, -1.9, 0.9, 2.05, { frame: trim, leaf: door, glassH: 0.3 });
         windowUnit(B, 0.2, 1.1, 1.1, 1.0, { frame: trim, mull: 1 });
-        sub(B, 'hosereel', 1.9, 0.9, 0, 0, {});
         B.box('wood', 'wooddark', 0.8, 0.6, 0.04, 0.2, 2.75, 0.02, { r: 0.012 });
         pbox(B, 'paint', '#b98f62', 0.72, 0.52, 0.01, 0.2, 2.75, 0.042);
         B.decal('pst9', 0.2, 0.3, 0.02, 2.78, 0.05, { rz: 0.04 });

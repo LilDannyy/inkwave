@@ -34,7 +34,7 @@ export const SLICE = {
   // the chandlery: its store (a timber shed on the hardstanding's edge) and the loading deck across the channel
   store: [9.5, 15.5, QUAY_FRONT, -48.5], storeTop: 4.2,
   booth: [-4.5, -1.7, -40.2, -37.4], boothTop: 2.6,      // the visitors' berthing booth on the fuel dock (roof off limits)
-  deck: [4.5, 15.5, -48.5, -44.3], deckY: 1.3,
+  deck: [4.5, 15.5, -48.5, -44.3], deckY: 1.3, rampW: 4.0,   // (the ramps as wide as the deck is deep: no pockets at its corners)
   // the travel-lift dock: a slip cut into the hardstanding from the channel (water), the plank across its mouth
   slip: [10, 20, -40.5, -35.5], plank: [10.4, 11.6],
   lift: { x: 15.6, w: 6.6, l: 5.2 },                   // the hoist over the slip (centre x; leg span across / along the slip)
@@ -107,7 +107,7 @@ function slicePlacements() {
   for (const [list, nb, tag] of [[rects, near, { notIn: 'tower' }], [rectsT, nearT, { onlyIn: 'tower' }]]) for (const r of list) {
     const shared = r !== S.fingers[1] && r !== S.towerFinger;
     if (shared && tag.onlyIn) continue;   // (the shared sections are placed once, with the Turf War build's sides)
-    out.push({ type: 'floatdeck', pos: [(r[0] + r[1]) / 2, S.pontoonY, (r[2] + r[3]) / 2], w: r[1] - r[0], d: r[3] - r[2], y0: -S.pontoonDepth, sea: -1.6 - S.pontoonY, sides: pontoonSides(r, list, nb), piles: [], ...(shared ? {} : tag) });
+    out.push({ type: 'floatdeck', pos: [(r[0] + r[1]) / 2, S.pontoonY, (r[2] + r[3]) / 2], w: r[1] - r[0], d: r[3] - r[2], y0: -S.pontoonDepth, sea: -1.6 - S.pontoonY, sides: pontoonSides(r, list, nb), piles: [], lite: true, ...(shared ? {} : tag) });
   }
   // ---- the visiting yachts (hull + deckhouse colliders: the cover along the pontoons)
   // (Tower Command: SANDPIPER's berth is kept clear for the water-bus PUFFIN's gangway down onto the moved short finger)
@@ -128,25 +128,22 @@ function slicePlacements() {
   out.push({ type: 'gascage', pos: [st[1] + 0.45, 0, -52.6], rotY: P / 2, count: 5 });
   out.push({ type: 'pallet', pos: [st[1] + 0.75, 0, -50.2], rotY: 0.2, variant: 2 });
   // ---- the fuel dock's shore end: the visitors' berthing booth (dresses the booth block), an ICE chest and fish boxes,
-  //      a lifebuoy, a trolley at the quay end
+  //      a trolley at the quay end
   const bo = S.booth;
   // (turned so its door faces the lane and its service hatch + VISITORS fascia face the quay and the spawn)
   out.push({ type: 'harbouroffice', pos: [(bo[0] + bo[1]) / 2, 0, (bo[2] + bo[3]) / 2], rotY: P / 2, w: bo[3] - bo[2], d: bo[1] - bo[0], h: S.boothTop, label: 'VISITORS' });
   out.push({ type: 'cooler', pos: [3.55, 0, -40.8], rotY: -P / 2, variant: 1 });
   out.push({ type: 'crates', pos: [3.4, 0, -35.6], rotY: 0.15, variant: 1, color: '#3f6fb0' });
-  out.push({ type: 'lifering', pos: [-4.12, 0, -34.4], rotY: P / 2 });
   out.push({ type: 'palletjack', pos: [2.6, 0, -51.8], rotY: 0.4 });
-  out.push({ type: 'bollard', pos: [3.9, 0, -49.6], variant: 1 });
   out.push({ type: 'bollard', pos: [-3.9, 0, -48.4], variant: 1 });
   out.push({ type: 'quaycrates', pos: [-3.25, 0, -50.2], rotY: P / 2 + 0.06, variant: 1 });
   out.push({ type: 'vending', pos: [-3.75, 0, -29.6], rotY: P / 2, variant: 1, color: 'teal' });
   out.push({ type: 'cabinet', pos: [3.85, 0, -30.4], rotY: -P / 2 });
-  // ---- the Long Pier's new stretch: shore power at ORCA BAY, a dock box, the pump-out station, crab pots, a bench
+  // ---- the Long Pier's new stretch: shore power at ORCA BAY, a dock box, a crate stack, crab pots, a bench
   //      facing the berths, bollard lights, a life ring, the pontoon sign at the gangway head
   out.push({ type: 'shorepower', pos: [-19.88, 0, -35.2], rotY: P / 2, berth: 'V1' });
-  out.push({ type: 'shorepower', pos: [-19.88, 0, -40.6], rotY: P / 2, berth: 'V2' });
   out.push({ type: 'dockbox', pos: [-23.1, 0, -37.4], rotY: P / 2 });
-  out.push({ type: 'pumpout', pos: [-22.7, 0, -50.4], rotY: P / 2 });
+  out.push({ type: 'crates', pos: [-22.75, 0, -50.4], rotY: P / 2 + 0.1, variant: 0 });
   out.push({ type: 'crabtrap', pos: [-22.9, 0, -43.0], rotY: 0.3, variant: 1 });
   out.push({ type: 'bench', pos: [-23.3, 0, -46.2], rotY: P / 2 });
   out.push({ type: 'kayakrack', pos: [-23.25, 0, -29.6], rotY: P / 2 });
@@ -154,22 +151,18 @@ function slicePlacements() {
   out.push({ type: 'bollardlight', pos: [-23.72, 0, -54.0] });
   out.push({ type: 'lifering', pos: [-23.6, 0, -41.0], rotY: P / 2 });
   out.push({ type: 'pontoonsign', pos: [-20.15, 0, -46.3], rotY: -P / 2, text: 'VISITORS', sub: 'PONTOON V · 1-6' });
-  // ---- the pontoons: gangway trusses (rail colliders), shore power + a dock box on the spine, a life ring post
+  // ---- the pontoons: gangway trusses (rail colliders), shore power + a dock box on the spine
   out.push({ type: 'gangwayrails', pos: [S.spine[0], S.pontoonY, -44.3], rotY: -P / 2, run: S.spine[0] + 19.5, rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3 });
   out.push({ type: 'gangwayrails', pos: [S.spine[1], S.pontoonY, -44.3], rotY: P / 2, run: -4.5 - S.spine[1], rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3 });
   out.push({ type: 'gangwayrails', pos: [-13.1, S.pontoonY, -28.75], rotY: 0, run: 2.35, rise: -S.pontoonY, width: 1.2, thick: 0.2, posts: 3 });
   out.push({ type: 'gangwayrails', pos: [-12.1, S.pontoonY, S.fingers[2][2]], rotY: P, run: S.fingers[2][2] - QF, rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3 });
-  out.push({ type: 'shorepower', pos: [-14.9, S.pontoonY, -43.6], rotY: 0, berth: 'V3' });
-  out.push({ type: 'shorepower', pos: [-9.9, S.pontoonY, -43.6], rotY: 0, berth: 'V4' });
+  out.push({ type: 'shorepower', pos: [-9.9, S.pontoonY, -43.6], rotY: 0, berth: 'V2' });
   out.push({ type: 'dockbox', pos: [-15.6, S.pontoonY, -44.95], rotY: P });
-  out.push({ type: 'lifering', pos: [-6.95, S.pontoonY, -45.0], rotY: P });
-  out.push({ type: 'shorepower', pos: [-11.4, S.pontoonY, -47.5], rotY: -P / 2, berth: 'V5' });
-  // ---- the hardstanding: a yacht laid up on stands by the quay, the mast rack, a trailer, drums, a scaffold tower
-  out.push({ type: 'yardyacht', pos: [17.6, 0, -51.0], rotY: 0, length: 8.0, name: 'OYSTERCATCHER', color: '#2f3a57', accent: '#c9a24a' });
+  // ---- the hardstanding: a yacht laid up on stands by the quay, the mast rack, a trailer, drums
+  out.push({ type: 'yardyacht', pos: [17.6, 0, -51.5], rotY: 0, length: 8.0, name: 'OYSTERCATCHER', color: '#2f3a57', accent: '#c9a24a' });
   out.push({ type: 'mastrack', pos: [22.35, 0, -47.4], rotY: 0, length: 8, notIn: 'tower' });
   out.push({ type: 'barrel', pos: [23.2, 0, -37.2], rotY: 0.4, variant: 1, color: '#2f6b62', notIn: 'tower' });
   out.push({ type: 'dinghy_trailer', pos: [22.2, 0, -33.6], rotY: P / 2 - 0.05, notIn: 'tower' });
-  out.push({ type: 'keelblocks', pos: [13.2, 0, -43.2], rotY: 0 });
   return out;
 }
 export const SLICE_PLACEMENTS = slicePlacements();
