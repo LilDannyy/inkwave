@@ -58,6 +58,20 @@ export class WeaponRunner {
     MAIN_KITS[this.a?.weapon?.kind]?.reset?.(this);
   }
   onDeath() { this.reset(); }
+  // Swim pressed over the weapon (actor.js: the latest press of swim / fire / sub wins): let go of what the weapon is
+  // doing — a charge (no shot, no ink spent), a splatling / spinner stream, a flick / swing / slosh wind-up, the sub held
+  // ready to throw (not thrown). Dodge rolls and the post-roll turret keep the body (brief, committed moves); kit weapons
+  // cancel their own through MAIN_KITS[kind].cancel?(runner). True when anything was dropped.
+  cancelForSwim() {
+    let did = false;
+    if (this.charging) { this.charging = false; this.charge = 0; this.chargeT = 0; this.chargeLoop?.stop(0.05); this.chargeLoop = null; did = true; }
+    if (this.streaming || this.burstT > 0) { this.streaming = false; this.burstT = 0; this.burstPower = 0; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }
+    if (this.flick >= 0) { this.flick = -1; did = true; }
+    if (this.slosh >= 0) { this.slosh = -1; did = true; }
+    if (this.aimingSub) { this.aimingSub = false; did = true; }
+    if (MAIN_KITS[this.a.weapon?.kind]?.cancel?.(this)) did = true;
+    return did;
+  }
   busy() { return this.charging || this.flick >= 0 || this.burstT > 0 || this.dodgeT > 0 || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.busy?.(this); }
   firingPose() { return this.firingT > 0 || this.charging || this.flick >= 0 || this.rolling || this.burstT > 0 || this.turret || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.firingPose?.(this); }
   moveSpeed() {
