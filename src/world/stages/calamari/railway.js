@@ -1,7 +1,8 @@
-// Calamari County — the railway (owner: the calamari stage): track, the county's railcars, the island platform's
-// canopy + name boards, platform edges, the covered footbridges, the level crossings, the tunnel portals, signals.
+// Calamari County — the railway (owner: the calamari stage): track, the county's railcars + two-car trains (stage
+// movers' looks), name boards, platform edges, the open station overpasses, the level crossings, the tunnel portals,
+// signals.
 export function registerRailway(D, H, KIT) {
-  const { K, NS, pbox, cylGeo, colBox, colRun, ROOF, RAIL, onFace, snowCap, drift, icicles, roof, letters, sign, textW, hash, shade, mixc, extr, pillowGeo, HP, PI, P3, TAU } = KIT;
+  const { K, NS, pbox, cylGeo, colBox, colRun, ROOF, RAIL, onFace, snowCap, drift, icicles, roof, letters, sign, textW, hash, shade, mixc, extr, pillowGeo, sub, HP, PI, P3, TAU } = KIT;
 
   // ------------------------------------------------------------------------------------------ track
   // one track along local +X from pos (length L): 1067 mm gauge rails on timber sleepers in snowy ballast; skip = [[x0,
@@ -44,6 +45,12 @@ export function registerRailway(D, H, KIT) {
     build(B, o) {
       B.aoBase = null;
       const L = o.L ?? 13.4, W = o.W ?? 2.9, fy = o.floor ?? 1.05, h = o.h ?? 3.4, hw = W / 2 + 0.012;
+      // ---- the body shell + underframe (solid: the car's own walls — as a stage mover its level block is only a
+      // collider, never drawn; the livery, windows and doors below dress this shell)
+      if (o.body !== false) {
+        B.box('paint', K.livCream, L, h - fy, W, 0, fy + (h - fy) / 2, 0, { r: 0.05 });
+        B.box('metal', '#2c3850', L - 1.6, fy - 0.28, W - 0.5, 0, 0.28 + (fy - 0.28) / 2, 0, { r: 0.03 });
+      }
       // ---- sides
       for (const s of [-1, 1]) {
         B.push(0, 0, s * hw, s > 0 ? 0 : PI);
@@ -122,6 +129,31 @@ export function registerRailway(D, H, KIT) {
       for (const s of [-1, 1]) {
         B.box(NS('metal'), K.iron, 2.2, 0.55, 0.12, 0, 0.62, s * (W / 2 - 0.2), { r: 0.04 });   // fuel tank / equipment boxes
         B.box(NS('metal'), K.ironLt, 1.1, 0.45, 0.12, 2.1, 0.66, s * (W / 2 - 0.2), { r: 0.04 });
+      }
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ the train
+  // A two-car county train (pos = its centre on the trackbed, along local X): two railcars (their own shells: a stage
+  // mover's block is never drawn) coupled with a rubber gangway between them. cars: [{ number, dest }, …]; L = one car's
+  // length, gap = the coupling gap.
+  D.calamari_train = {
+    desc: 'Two-car county train (pos = centre on the trackbed; L per car, gap, W, floor, h, cars: [{ number, dest }]): two railcars coupled by a gangway. Non-colliding (a stage mover block collides).',
+    params: { L: 'one car\'s length', gap: 'coupling gap', cars: '[{ number, dest }]' }, variants: 1, mount: 'ground',
+    build(B, o) {
+      B.aoBase = null;
+      const L = o.L ?? 9, gap = o.gap ?? 0.3, W = o.W ?? 2.9, fy = o.floor ?? 1.05, h = o.h ?? 3.4, cars = o.cars ?? [{}, {}];
+      const n = cars.length, total = n * L + (n - 1) * gap;
+      cars.forEach((c, i) => {
+        const x = -total / 2 + L / 2 + i * (L + gap);
+        sub(B, 'calamari_railcar', x, 0, 0, i % 2 ? PI : 0, { L, W, floor: fy, h, number: c.number, dest: c.dest });
+      });
+      // gangways: dark rubber bellows between the cars, the coupler under them
+      for (let i = 1; i < n; i++) {
+        const x = -total / 2 + i * (L + gap) - gap / 2;
+        B.box('rubber', '#26282c', gap + 0.1, h - fy - 0.35, W - 1.3, x, fy + (h - fy - 0.35) / 2, 0, { r: 0.04 });
+        for (let k = 0; k < 4; k++) pbox(B, NS('rubber'), '#34363b', gap + 0.14, 0.05, W - 1.28, x, fy + 0.3 + k * 0.55, 0);
+        B.box('metal', K.iron, gap + 0.3, 0.2, 0.4, x, 0.62, 0, { r: 0.03 });
       }
     },
   };
@@ -210,13 +242,21 @@ export function registerRailway(D, H, KIT) {
         colRun(B, x0, z0, x1, z1, y, rH + 0.05, 0.12, RAIL);
       };
       const ex = w / 2 - 0.08, ez = d / 2 - 0.08;
-      railRun(-ex, -ez, -ex, ez);                                  // the inner edge (over the gap between the overpasses)
+      // a long edge's railing with openings: the stair heads, and the one-way drops (drops / innerDrops: [[z0, z1]])
+      const edgeRail = (x, open) => {
+        let z = -ez;
+        for (const [g0, g1] of [...open].sort((a, b) => a[0] - b[0])) { if (g0 > z) railRun(x, z, x, g0); z = Math.max(z, g1); }
+        if (z < ez) railRun(x, z, x, ez);
+        // (bollard posts either side of each drop opening, a painted edge line)
+        for (const [g0, g1] of o.dropMarks ? open : []) for (const gz of [g0, g1]) if (Math.abs(gz) < ez) B.box(NS('metal'), '#e0b43a', 0.12, 0.5, 0.12, x, y + 0.25, gz, { r: 0.03 });
+      };
+      edgeRail(-ex, o.innerDrops ?? []);                             // the inner edge (over the gap between the overpasses)
       railRun(-ex, -ez, ex, -ez); railRun(-ex, ez, ex, ez);          // the ends, over the forecourts
-      // the outer edge: open where the stairs come up
-      const gaps = stairs.map((st) => [st.z - st.w / 2 - 0.05, st.z + st.w / 2 + 0.05]).sort((a, b) => a[0] - b[0]);
-      let z = -ez;
-      for (const [g0, g1] of gaps) { if (g0 > z) railRun(ex, z, ex, g0); z = Math.max(z, g1); }
-      if (z < ez) railRun(ex, z, ex, ez);
+      edgeRail(ex, [...stairs.map((st) => [st.z - st.w / 2 - 0.05, st.z + st.w / 2 + 0.05]), ...(o.drops ?? [])]);   // the outer edge
+      for (const [g0, g1] of [...(o.drops ?? []).map((g) => [ex, g]), ...(o.innerDrops ?? []).map((g) => [-ex, g])]) {
+        // the drop's lip: a yellow-and-black warning edge on the deck
+        for (let k = 0; k < Math.round((g1[1] - g1[0]) / 0.3); k++) pbox(B, NS('paint'), k % 2 ? '#1f2124' : '#e0b43a', 0.12, 0.012, 0.3, g0 - Math.sign(g0) * 0.1, y + 0.006, g1[0] + 0.15 + k * 0.3);
+      }
       // stairs: side stringers + handrails (rail colliders in three steps up the slope), posts
       for (const st of stairs) {
         const { z: sz, xLow, xTop, yLow, w: sw } = st, run = xTop - xLow, rise = y - yLow, ang = Math.atan2(rise, Math.abs(run)), len = Math.hypot(run, rise), dir = Math.sign(run);

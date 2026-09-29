@@ -58,14 +58,19 @@ export const P = {
   side: { x0: -16.2, x1: 16.2, z0: -12.2, z1: -6.6, y: 1.0 },
   strip: -11,                   // the station strip (z −11 … −6.6) runs the full width at street level
   crossing: [-25.5, -18.5],     // Alpha's level crossing + hillside road (x); Bravo's is the mirror (x 18.5 … 25.5)
-  // Alpha's railcar on Alpha's track (a stage mover, src/game/movers.js): 12 m long, it shuttles between the east half
-  // of the station (centre x 11.2: x 5.2 … 17.2) and the west half (x −17.2 … −5.2) — never parked on the centre zone
-  // (|x| < 5); Bravo's does the mirror on Bravo's track
-  car: { L: 12, W: 2.9, h: 3.4, floor: 1.05, stop: 11.2 },
+  // Alpha's train on Alpha's track (a stage mover, src/game/movers.js): two 9 m cars coupled (18.3 m), it shuttles
+  // between the east half of the corridor (centre x 14.35: x 5.2 … 23.5, over the east level crossing) and the west half
+  // (x −23.5 … −5.2) — walling off that whole half of its track, never parked on the centre (|x| < 5); Bravo's does the
+  // mirror on Bravo's track
+  car: { L: 9, gap: 0.3, W: 2.9, h: 3.4, floor: 1.05, stop: 14.35 },
   // Alpha's overpass (the +x one; the −x one is its mirror): an open deck over the whole cut, side platform to side
-  // platform, 6 m wide at 4.3 (3.9 under it: the railcars and the tower pass beneath), stairs 3.6 / 3.4 / 3.6 m wide down
-  // its outer edge to both side platforms and the island (feet at x 16), slim piers on the platforms
-  overpass: { x0: 2.4, x1: 8.4, y: 4.3, t: 0.4, z: 12.2, foot: 16.0, stairs: [[-10.2, 3.6], [0, 3.4], [10.2, 3.6]], piers: [2.95, 7.85], pierZ: [-10.4, 0, 10.4] },
+  // platform, 6 m wide at 4.3 (3.9 under it: the trains and the tower pass beneath), a 3.6 m stair down its outer edge to
+  // each side platform (feet at x 16), slim piers on the platforms. No stair to the island: the island is reached from
+  // the deck by the ONE-WAY DROPS — openings in the railings over the island (drops) — so the team whose side
+  // platform is walled off by a parked train climbs its own stair and drops over the train onto the island, and
+  // nobody climbs back up from the island. Tower Command: the deck at 6.3 (towerY; 5.9 under it: riders + their
+  // camera stay clear), its stairs real stepped stairs (18 × 0.29 m risers) on the same footprint.
+  overpass: { x0: 2.4, x1: 8.4, y: 4.3, t: 0.4, z: 12.2, foot: 16.0, stairs: [[-10.2, 3.6], [10.2, 3.6]], drops: [-2.6, 2.6], piers: [2.95, 7.85], pierZ: [-10.4, 0, 10.4], towerY: 6.3, towerSteps: 18 },
   // village (buildings: [cx, cz, w (x), d (z), deg, height])
   station: [-3.5, 3.5, -16.2, -12.2],             // station building (x0, x1, z0, z1), behind the side platform's middle
   steps: [-6, 6],                                 // the steps up from the forecourt onto the side platform (x centres)
@@ -74,7 +79,10 @@ export const P = {
   square: [-11, 11, -27, -15],                    // the square's setts column (x0, x1) and its open middle (z0, z1)
   backSt: [-30.5, -25.5],                         // the back street (z) from the hillside road to the quay
   T1: [[-32.5, -25.5, -18, -11], [-31.5, -25.5, -28.5, -18]],                          // T1 (1.3) pieces (x0, x1, z0, z1)
-  T2: [[-25.5, -2.2, -37.2, -30.5], [-31.5, -25.5, -37.2, -28.5]],                     // T2 (2.6)
+  // T2 (2.6): its front run (the welcome mural), the west end, the east run by the spawn deck, the landing behind its
+  // stair (a notch in the front: the stair from the back street up onto T2 — one of the base's three ways in)
+  T2: [[-25.5, -13.2, -37.2, -30.5], [-31.5, -25.5, -37.2, -28.5], [-9.8, -2.2, -37.2, -30.5], [-13.2, -9.8, -37.2, -36.4]],
+  t2stair: { x: -11.5, w: 3.4, z0: -30.5, z1: -36.4 },
   y1: 1.3, y2: 2.6,
   cottage: [-31.5, -25.5, -37.2, -33.2],          // the Cuttlefish cottage at T2's west end, above the village
   // retaining walls along the hill side (x0, x1, z0, z1, top, dressed?): the station corner, behind T1 (a jog), behind
@@ -83,8 +91,10 @@ export const P = {
   // Fishermen's Co-op
   deck: { x0: -9, x1: 9, z0: -45.5, z1: -37.2, y: 3.4 },
   pad: [0, 3.4, -41.3],
-  dock: { x0: 2.2, x1: 10, z0: -37.2, z1: -30.5, y: 1.0 },
-  netStore: [10, 12, -37.2, -30.5],
+  dock: { x0: 2.2, x1: 9, z0: -37.2, z1: -30.5, y: 1.0 },
+  // from the loading dock up onto the spawn deck's east front, flush against the net store (no slot beside it)
+  dockStair: { x: 7.7, w: 2.6, z0: -31.8 },
+  netStore: [9, 12, -37.2, -30.5],
   // harbour (Alpha's cove side): the basin quay's water edge runs A → B at an angle; the slipway cuts it
   kerb: 16,                                       // the village street ends at x 16; the basin quay is 0.1 lower
   basinEdge: [[24.5, -16.4], [22, -38.6]],
@@ -113,7 +123,18 @@ const FL = -1.6;   // ground slabs reach down to the sea (the environment reads 
 const { island: I, side: S, overpass: OP, deck: DK, dock: DO } = P;
 // (free-spanning steel stairs: a 0.35 m flight on its stringers, open underneath — you see and shoot under them; the
 // sides are the stringers with handrails on top: not inkable, so nobody plans a climb up them into the rail)
-const opStair = ([z, w]) => R([OP.foot, S.y, z], [OP.x1, OP.y, z], w, { tag: 'overpass-stair', color: K.timber, pattern: PATTERN.treads, thin: true, thickness: 0.35, noPaint: [[0, 0, 1], [0, 0, -1]] });
+const opStair = ([z, w]) => R([OP.foot, S.y, z], [OP.x1, OP.y, z], w, { tag: 'overpass-stair', color: K.timber, pattern: PATTERN.treads, thin: true, thickness: 0.35, noPaint: [[0, 0, 1], [0, 0, -1]], notIn: 'tower' });
+// Tower Command: the same stair to the taller deck as real steps (risers of 0.29 m: walked up like any step)
+const opSteps = ([z, w]) => {
+  const n = OP.towerSteps, run = OP.foot - OP.x1, rise = OP.towerY - S.y, out = [];
+  for (let i = 0; i < n; i++) {
+    // (each step a 0.35 m slab on the stringers — open underneath, like the free-spanning stairs)
+    const top = +(S.y + ((i + 1) * rise) / n).toFixed(4);
+    out.push(B(+(OP.foot - ((i + 1) * run) / n).toFixed(4), +(OP.foot - (i * run) / n).toFixed(4), top - 0.35 < S.y + 0.05 ? S.y - 0.3 : +(top - 0.35).toFixed(4), top, z - w / 2, z + w / 2,
+      { tag: 'overpass-step', color: K.timber, pattern: PATTERN.treads, noPaint: [[0, 0, 1], [0, 0, -1]], onlyIn: 'tower' }));
+  }
+  return out;
+};
 const bx = (r, y0, y1, o) => B(r[0], r[1], y0, y1, r[2], r[3], o);
 const bt = (b, y0, o) => turned(b[0], b[1], b[2], b[3], y0, y0 + b[5], b[4], o);
 const lerp2 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -165,9 +186,12 @@ const HALF = [
   R([S.x0 - 2.3, 0, -8.6], [S.x0, S.y, -8.6], 4.0, timber({ tag: 'side-ramp', pattern: PATTERN.rampboard })),
   ...P.steps.map((x) => R([x, 0, S.z0 - 2.7], [x, S.y, S.z0], 3.6, stair({ tag: 'platform-steps' }))),
 
-  // ================= Alpha's overpass (the +x one): the deck over the whole cut and its three stairs down the outer edge
-  B(OP.x0, OP.x1, OP.y - OP.t, OP.y, -OP.z, OP.z, timber({ tag: 'overpass' })),
+  // ================= Alpha's overpass (the +x one): the deck over the whole cut, its stairs down the outer edge to both
+  // side platforms (Tower Command: taller, with real steps)
+  B(OP.x0, OP.x1, OP.y - OP.t, OP.y, -OP.z, OP.z, timber({ tag: 'overpass', notIn: 'tower' })),
   ...OP.stairs.map(opStair),
+  B(OP.x0, OP.x1, OP.towerY - OP.t, OP.towerY, -OP.z, OP.z, timber({ tag: 'overpass', onlyIn: 'tower' })),
+  ...OP.stairs.flatMap(opSteps),
 
   // ================= village buildings (tops off-limits), some off the street grid
   B(P.station[0], P.station[1], 0, 3.8, P.station[2], P.station[3], bldg(K.wall, { tag: 'station' })),
@@ -180,6 +204,7 @@ const HALF = [
   ...P.T2.map((r, i) => bx(r, FL, P.y2, setts({ tag: 'T2', color: K.stone, ...(i === 0 ? { mural: [{ n: [0, 0, 1], id: MURAL.welcome }] } : {}) }))),
   R([-29.5, 0, -7.6], [-29.5, P.y1, P.strip], 2.4, stair({ tag: 'T1-steps' })),
   R([-28.5, P.y1, -24.8], [-28.5, P.y2, P.T2[1][3]], 2.4, stair({ tag: 'T2-steps' })),
+  R([P.t2stair.x, 0, P.t2stair.z0], [P.t2stair.x, P.y2, P.t2stair.z1], P.t2stair.w, stair({ tag: 'T2-stair' })),
   bx(P.cottage, P.y2, P.y2 + 3.2, bldg(K.cedar, { tag: 'cottage' })),
   // the hill's retaining walls along the terraces' outer edges (ishigaki: dry stone, snow on top; off-limits tops)
   ...P.hillWalls.map(([x0, x1, z0, z1, y1]) => B(x0, x1, FL, y1, z0, z1, { tag: 'hill-wall', color: '#8f8a80', pattern: SURF.setts, roof: true })),
@@ -195,6 +220,7 @@ const HALF = [
   B(DK.x0, DK.x1, DK.y - 0.2, DK.y, DK.z0, DK.z1, { tag: 'spawn', color: K.spawn, pattern: PATTERN.spawn }),
   R([0, 0, -29.5], [0, DK.y, DK.z1], 4.4, stair({ tag: 'grand-stair' })),
   B(DO.x0, DO.x1, 0, DO.y, DO.z0, DO.z1, timber({ tag: 'dock' })),
+  R([P.dockStair.x, DO.y, P.dockStair.z0], [P.dockStair.x, DK.y, DK.z1], P.dockStair.w, stair({ tag: 'dock-stair' })),
   B(P.netStore[0], P.netStore[1], 0, 3.2, P.netStore[2], P.netStore[3], bldg(K.wall, { tag: 'net-store' })),
   R([16.9, 0, -42.4], [DK.x1, DK.y, -42.4], 3.0, timber({ tag: 'quay-ramp', pattern: PATTERN.rampboard })),
 ];
@@ -203,14 +229,16 @@ const HALF = [
 // village square (Alpha's; Bravo's is the mirror)
 const rect = (x0, x1, z0, z1) => [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
 const ZONES = {
-  center: [{ poly: rect(-5, 5, -P.track[1], P.track[1]), y0: -0.2, y1: 1.2 }],
+  // the centre: the island platform between the tracks under the two overpasses (flat, inkable, never on a track: the
+  // trains pass either side of it)
+  center: [{ poly: rect(-7.6, 7.6, -P.track[0] + 0.2, P.track[0] - 0.2), y0: 0.8, y1: 1.4 }],
   side: { poly: rect(-5, 5, -27, -18), y0: -0.2, y1: 0.4 },
 };
 
 // ---- Tower Command: "the tower rides the railway" (drawn on Bravo's half, Alpha's goal): off the island platform onto
 // Bravo's track, along the rails to the level crossing (checkpoint 1), up the hillside road, back along the back street
 // past the square (checkpoint 2 at its corner), up onto the co-op's loading dock
-const TX = -P.roadX, TZ = -P.backZ, GX = -7.5;
+const TX = -P.roadX, TZ = -P.backZ, GX = -4.2;
 const TOWER = {
   path: [[0, I.y, 0], [0, 5.0], [TX, 5.0], [TX, TZ], [GX, TZ], [GX, 31.8]],
   checkpoints: [[TX, 5.0], [8, TZ]],
@@ -235,11 +263,11 @@ const CROSSING_LAMPS = [[UX + 0.3, 2.25, -7.4 - 0.175, Math.PI, 0], [UX - 0.3, 2
 const MOVERS = {
   mirror: true,
   modes: { tower: 'park', boss: 'off' },
-  timetable: { first: 20, dwell: 20, move: 5, warn: 4, horn: 1.2 },
+  timetable: { first: 20, dwell: 20, move: 6, warn: 4, horn: 1.2 },
   cars: [{
-    id: 'kiha101', stops: [[CAR.stop, -TZc], [-CAR.stop, -TZc]], y: 0, size: [CAR.L, CAR.h, CAR.W], roof: true,
-    mesh: { type: 'calamari_railcar', L: CAR.L, W: CAR.W, floor: CAR.floor, h: CAR.h, number: 'KIHA 101', dest: 'INKOPOLIS' },
-    twinMesh: { number: 'KIHA 102', dest: 'SHIOKARA BAY' },
+    id: 'kiha101', stops: [[CAR.stop, -TZc], [-CAR.stop, -TZc]], y: 0, size: [2 * CAR.L + CAR.gap, CAR.h, CAR.W], roof: true,
+    mesh: { type: 'calamari_train', L: CAR.L, gap: CAR.gap, W: CAR.W, floor: CAR.floor, h: CAR.h, cars: [{ number: 'KIHA 101', dest: 'INKOPOLIS' }, { number: 'KIHA 111', dest: 'INKOPOLIS' }] },
+    twinMesh: { cars: [{ number: 'KIHA 102', dest: 'SHIOKARA BAY' }, { number: 'KIHA 112', dest: 'SHIOKARA BAY' }] },
     sounds: { horn: 'train_horn', run: 'train_run' },
   }],
   signals: { lamps: CROSSING_LAMPS, bells: [[P.roadX, 2.6, 0]], bell: 'crossing_bell' },

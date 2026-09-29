@@ -23,6 +23,7 @@ let claimed = false; app.on('browser-window-created', (_, win) => { if (claimed)
     await js('window.__inkwave._onPointerUnlock = () => {}; 0');
     if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));   // (a test-only arena: testmaps.cjs)
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', duration: 180, mode: '${MODE}' })`);
+    { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got} (a stage missing from MAPS falls back to the first one)`); app.exit(3); return; } }   // (never test the wrong stage silently)
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     try {
       const out = await js(fs.readFileSync(process.env.PAGE, 'utf8'));

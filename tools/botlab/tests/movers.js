@@ -29,6 +29,32 @@
   R('dynamic blocks live in play: one per car, an off-limits roof, never inked', M.live && M.cars.every((c) => c.block && c.block.dynamic && c.block.roof && !c.block.paint && L.dyn.includes(c.block)),
     { blocks: M.cars.map((c) => c.block && c.block.id), dyn: L.dyn.length });
 
+  // ---- 0) the cars are solid: rays at each side of a car (along its length, floor to roof) hit its own mesh before its
+  // centre line, and none of its materials is see-through (a mover's level block is never drawn: its mesh is its body)
+  {
+    const rc = new THREE.Raycaster(), o = new THREE.Vector3(), d = new THREE.Vector3();
+    let rays = 0, miss = 0; const missAt = [];
+    for (const c of M.cars) {
+      if (!c.mesh || !c.mesh.children.length) continue;
+      c.mesh.updateMatrixWorld(true);
+      for (const side of [-1, 1]) for (let i = 0; i <= 16; i++) {
+        const along = -c.len / 2 + 0.4 + (i / 16) * (c.len - 0.8);
+        if (Math.abs(along) < 0.6) continue;                            // (the coupling between two cars)
+        for (const hy of [1.3, 1.9, 2.6, 3.1]) {
+          const px = -c.u.z * side, pz = c.u.x * side;                   // out of the car's side
+          o.set(c.pos.x + c.u.x * along + px * (c.wid / 2 + 2), c.pos.y + hy, c.pos.z + c.u.z * along + pz * (c.wid / 2 + 2));
+          d.set(-px, 0, -pz);
+          rc.set(o, d); rc.far = c.wid / 2 + 2;
+          const hit = rc.intersectObject(c.mesh, true);
+          rays++; if (!hit.length) { miss++; if (missAt.length < 4) missAt.push([+along.toFixed(2), hy, side]); }
+        }
+      }
+    }
+    const see = [];
+    for (const c of M.cars) c.mesh && c.mesh.traverse((m) => { if (m.isMesh && (m.material.transparent || m.material.opacity < 1 || m.material.depthWrite === false)) see.push(m.name); });
+    R('the cars are solid: rays at their sides hit their bodies; no car material is transparent', rays > 0 && miss === 0 && see.length === 0, { rays, miss, missAt, transparent: see, parts: M.cars.map((c) => c.mesh ? c.mesh.children.length : 0) });
+  }
+
   // ---- 1) the timetable (pure)
   const F = (t) => moverPhase(t, T);
   const mono = []; for (let k = 0; k <= 50; k++) mono.push(F(T.first + (k / 50) * T.move).f);
@@ -116,7 +142,7 @@
   // ---- 7) nav: the footprint while parked, the whole sweep during the warning + move
   step(0.1);
   const blocked = () => { const ids = []; nav.blocked.forEach((v, i) => { if (v) ids.push(i); }); return ids; };
-  const within = (n, c, extra) => { const px = n.x - c.pos.x, pz = n.z - c.pos.z, la = Math.abs(px * c.u.x + pz * c.u.z), lp = Math.abs(-px * c.u.z + pz * c.u.x); return la <= c.len / 2 + extra && lp <= c.wid / 2 + 1.2; };
+  const within = (n, c, extra) => { const px = n.x - c.pos.x, pz = n.z - c.pos.z, la = Math.abs(px * c.u.x + pz * c.u.z), lp = Math.abs(-px * c.u.z + pz * c.u.x); return la <= c.len / 2 + extra && lp <= c.wid / 2 + (extra < 0 ? 0.6 : 1.2); };   // (under it: a kid's width off its sides)
   const parkedIds = blocked();
   const parkedOk = parkedIds.length > 0 && parkedIds.every((id) => M.cars.some((c) => within(nav.nodes[id], c, 1.3)));
   const under = M.cars.map((c) => nav.nodes.filter((n) => n.y < 0.5 && within(n, c, -0.3)).map((n) => n.id));
@@ -148,10 +174,19 @@
   const quiet = !M.warning;
   const offLamps = M.lampMesh ? Array.from({ length: M.lamps.length }, (_, i) => lamp(i)) : [];
   setClock(T.first + leg - 1);
+  // the sounds (loops through the audio engine's loop bus): the bells ring, the horn blew, the rumble while it moves
+  const A = __G.audio, live = (name) => (A && A.loops ? [...A.loops].filter((h) => h.name === name && h.playing).length : -1);
+  const bellsNow = live(M.def.signals?.bell || 'crossing_bell'), hornAt = A && A.last ? A.last.get(M.cars[0].def.sounds?.horn || 'train_horn') : undefined;
   let flashes = 0, prev = null;
   for (let i = 0; i < 90; i++) { step(1 / 60); const v = M.lampMesh ? lamp(0) > 1 : false; if (prev !== null && v !== prev) flashes++; prev = v; }
   const warnOn = M.warning;
-  setClock(T.first + leg + T.move + 1);
+  step(T.move / 2);
+  const runNow = live(M.cars[0].def.sounds?.run || 'train_run');
+  setClock(T.first + leg + T.move + 1); step(0.5);
+  const bellsAfter = live(M.def.signals?.bell || 'crossing_bell');
+  R('sounds: the bells ring through the warning (loop bus), the horn blows before it pulls out, the rumble while it moves, the bells stop when it parks',
+    !A || !A.ctx || (bellsNow === M.bellAt.length && hornAt !== undefined && runNow === M.cars.length && bellsAfter === 0),
+    { audio: !!(A && A.ctx), bellsNow, hornPlayedAt: hornAt, runNow, bellsAfter, loopBus: !!(A && A.loopIn) });
   R('warnings: quiet while waiting, lamps flash in turn from the warning until the car stops',
     quiet && offLamps.every((v) => v < 1) && warnOn && flashes >= 2 && !M.warning && (M.lamps.length === 0 || M.lamps.length % 2 === 0),
     { lamps: M.lamps.length, bells: M.bellAt.length, flashesIn1_5s: flashes, warnAfterArrival: M.warning });
