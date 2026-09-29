@@ -10,7 +10,7 @@ import { registerRuins, ARCH } from './props-ruins.js';
 import { registerCamp } from './props-camp.js';
 import { registerFlora } from './props-flora.js';
 import { registerBridges } from './props-bridges.js';
-import { LAYOUT, BRIDGES } from './layout.js';
+import { LAYOUT, BRIDGES, PAD_BODY } from './layout.js';
 import { OUTLINE, PILLAR } from './outline.js';
 import { inPoly } from './islands.js';
 
@@ -66,7 +66,7 @@ const RAW = [
   { type: 'spirhalite_ropefence', pos: [11.75, -0.12, -9.7], rotY: Math.atan2(0.75, 0.62), L: 0.97, seed: 20 },
 
   // ================= spawn: the helipad (dressing for the level's pad; stairs: foot → top, width), the helicopter behind
-  { type: 'spirhalite_helipad', pos: [8.5, 0, -36], rotY: 0, R: 5.9, base: 1.3, top: 3.2, open: [1, 3],
+  { type: 'spirhalite_helipad', pos: [8.5, 0, -36], rotY: 0, R: 5.9, body: PAD_BODY, base: 1.3, top: 3.2, open: [1, 3],
     stairs: [[0, 9.9, 0, 5.45, 3], [-9.9, 0, -5.45, 0, 3]] },
   { type: 'spirhalite_rearpad', pos: [10.5, 0, -51.8], rotY: 0.12, w: 12, d: 10, y: 1.0 },
   { type: 'spirhalite_helicopter', pos: [11.0, 1.0, -52.0], rotY: 0.2 },
@@ -111,8 +111,8 @@ const RAW = [
   { type: 'spirhalite_crates', pos: [14.9, 1.3, -32.0], rotY: -0.2, layout: [[0, 0, 0, 0], [1.02, 0.04, 0, 0.05], [0.5, 0.02, 1, 0.1]] },
   { type: 'spirhalite_palm', pos: [18.0, 0, -28.6], rotY: 0, h: 4.2, lean: 1.2, seed: 8 },
   { type: 'spirhalite_palm', pos: [11.6, 1.3, -28.2], rotY: 0, h: 3.4, lean: 0.9, seed: 17 },
-  { type: 'spirhalite_shrub', pos: [16.4, 0, -41.4], rotY: 0.5, w: 1.8, h: 1.0, seed: 6 },
-  { type: 'spirhalite_shrub', pos: [0.7, 1.3, -41.9], rotY: 0.2, w: 1.2, h: 0.8, seed: 3, nocol: true },
+  { type: 'spirhalite_shrub', pos: [2.1, 1.3, -40.5], rotY: 0, w: 1.3, h: 0.9, seed: 6 },   // (moved off the back beach's east end)
+  { type: 'spirhalite_shrub', pos: [0.95, 1.3, -40.75], rotY: 0.2, w: 1.0, h: 0.7, seed: 3, nocol: true },
   { type: 'spirhalite_float', pos: [19.6, 0, -32.0], rotY: 0, r: 0.42 },
   { type: 'spirhalite_pathlights', pos: [0, 1.3, 0], rotY: 0, nosnap: true, pts: [[2.4, -27.0], [4.2, -28.6], [6.2, -29.4], [11.0, -26.6]] },
 
@@ -210,15 +210,17 @@ for (const [a, b, seed, o] of [
   [[16.8, -11.4], [16.76, -10.25], 57, { k: 1.0 }],        // (up to the bridge's side log)
   [[19.0, -26.8], [16.6, -24.4], 56],                 // the tail's beach at the spit's root
   [[-31.1, -14.7], [-34.6, -13.2], 43],                // the bend's head over the inlet, west of the causeway
-  [[10.0, -44.6], [15.6, -43.0], 34],                  // the tail's back beach under the high dune
-  [[15.6, -43.0], [19.4, -39.8], 35],
+  [[10.0, -44.6], [16.6, -43.6], 34],                  // the tail's back beach under the high dune
+  [[16.6, -43.6], [19.8, -39.6], 35],
+  [[19.8, -39.6], [21.0, -35.4], 58],                  // the tail's east beach at the foot of the pad dune's slope
+  [[21.0, -35.4], [20.8, -30.6], 59],
   [[-8.0, 3.9], [-12.0, 2.6], 36],                     // the middle stroke's north shore (the other lagoon's mouth)
   [[-16.0, 1.4], [-20.0, 0.6], 38],
   [[-9.4, -42.4], [-8.4, -39.8], 28],                  // round the pinch inlet
-  [[-8.4, -39.8], [-7.0, -38.6], 29, { k: 1.1 }],
-  [[-7.0, -38.6], [-5.0, -39.4], 30, { k: 1.1 }],
-  [[-5.0, -39.4], [-3.8, -41.8], 31],
-  [[-3.8, -41.8], [-2.2, -44.0], 32],
+  [[-8.4, -39.8], [-7.0, -39.3], 29, { k: 1.1 }],
+  [[-7.0, -39.3], [-5.2, -40.3], 30, { k: 1.1 }],
+  [[-5.2, -40.3], [-4.2, -42.4], 31],
+  [[-4.2, -42.4], [-2.2, -44.0], 32],
   [[-23.8, -43.4], [-17.0, -44.6], 24],              // the camp's south beach under the crest
   [[-17.0, -44.6], [-11.6, -44.2], 26],
 ]) kerb(a, b, seed, o);
