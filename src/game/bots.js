@@ -935,7 +935,7 @@ export class BotBrain {
 
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
     this._avoidWater(move);
-    if (it.squid && this._squidWouldDrop(move)) it.squid = false;
+    if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
     // ---------------- smooth the move command: heading slews (no twitch at waypoint switches / strafe flips)
     const ml = Math.min(1, move.length());
@@ -1078,7 +1078,22 @@ export class BotBrain {
     const a = this.a, L = G.level;
     if (L.groundHeight(a.pos.x, a.pos.z, 50, true) === -Infinity) return true;
     const l = Math.hypot(move.x, move.z);
-    return l > 0.05 && L.groundHeight(a.pos.x + (move.x / l) * 1.2, a.pos.z + (move.z / l) * 1.2, 50, true) === -Infinity;
+    if (l <= 0.05) return false;
+    // (a swimmer carries on a couple of metres after it surfaces: the faster it goes, the further ahead it looks)
+    const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.22;
+    for (const d of look > 1.5 ? [1.2, look] : [1.2]) if (L.groundHeight(a.pos.x + (move.x / l) * d, a.pos.z + (move.z / l) * d, 50, true) === -Infinity) return true;
+    return false;
+  }
+
+  // a swimming squid leaves a ledge at swim speed and flies on 3–5 m before it lands (a kid just steps off it): with the
+  // sea close past the drop, surface and walk off instead
+  _swimDrop(move) {
+    const a = this.a, l = Math.hypot(move.x, move.z);
+    if (l < 0.05) return false;
+    const ux = move.x / l, uz = move.z / l, gy = G.level.groundHeight(a.pos.x + ux * 1.1, a.pos.z + uz * 1.1, a.pos.y + 0.6);
+    if (gy === -Infinity || gy > a.pos.y - 0.5) return false;   // level ahead (the open sea ahead: _avoidWater / _squidWouldDrop)
+    for (const d of [2.2, 3.4, 4.6]) if (this._wet(a.pos.x + ux * d, a.pos.z + uz * d, gy)) return true;
+    return false;
   }
 
   // Low on health mid-duel: head for own ink away from the threat (swim = heal + hard to spot), then come back.
