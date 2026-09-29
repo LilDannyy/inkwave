@@ -7,6 +7,8 @@ import { SURF } from './surfaces.js';
 import { buildBackdrop } from './backdrop.js';
 import { MURAL } from './murals.js';
 import { BS, BN, zAt, LAWN_E, LAWN_W, BASE, RIDGE, RIDGE_EDGE, fill } from './ground.js';
+import { ST, sz, shiftDef } from './stretch.js';
+import { SLICE_PIECES } from './slice.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Mount Nantai — the Nantai Observatory grounds on the summit shoulder, a promontory of granite in the tarn below the
@@ -14,6 +16,11 @@ import { BS, BN, zAt, LAWN_E, LAWN_W, BASE, RIDGE, RIDGE_EDGE, fill } from './gr
 // crossing. Alpha at −Z (the half list), Bravo is the 180° twin.
 // Levels: G0 lawn / banks / shore 0 · bridge crown 0.8 · G1 first terrace, weir crest, rehearsal hollow 1.3 ·
 //         G2 west terrace + ridge 2.6 · G3 spawn (the forecourt on the control building's roof) 3.8.
+// The Long Stages stretch (2026-09-30, stretch.js + slice.js): the base side of each half moved out 24 m past the
+// rehearsal hollow (the cut, z −31.5 on Alpha's), and the slice between is the observatory's shoulder — the Solar Tower,
+// the Dish Knoll with the radio dish (the strategic point), the receiver hut, the alpine garden; the ridge, the
+// stargazing terrace, the first terrace and the shore trail carried on through it. The numbers below are the drawing
+// before the stretch: every piece whose centre lies beyond the cut is moved by shiftDef at the end of the half list.
 //   • spawn: the dome's forecourt on the control building (G3). Exits: the grand stair (mid), a drop onto the west
 //     terrace (right), the side stair down the building's east face to the east yard (left).
 //   • right lane (−X for Alpha) "the Ridge": a granite spine (G2) along the tarn cliff to the viewing platform at its
@@ -65,9 +72,9 @@ export const LEDGE_FEET = GROUNDS.flatMap((g) => g.feet);
 // ============================================================================================================
 // Pieces (Alpha's half)
 // ============================================================================================================
+// the ground: the lawn's two ends, the base side, the ridge (columns + ledges; their outlines are stretched in ground.js)
+const GROUND = GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]);
 const HALF = [
-  // ---------------- the ground: the lawn's two ends, the base side, the ridge (columns + ledges)
-  ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]),
   // dry-stone walls on the lawn (the centre zone's cover, with the Dobsonians' crates)
   B(-6.3, -2.9, G0, 0.95, -4.1, -3.4, granite({ tag: 'drystone-wall', color: K.graniteDk })),
 
@@ -85,8 +92,12 @@ const HALF = [
   R([10.1, G1, -38.1], [10.1, G3, -44.4], 2.2, steps({ tag: 'east-stair' })),
 
   // ---------------- the first terrace (G1): the front of the observatory, the east yard, the shelf over the log reach
-  B(-3, 9, G0, G1, -36.5, -22.2, ashlar({ tag: 't1' })),
-  B(9, 17.5, G0, G1, -36.5, -22.2, ashlar({ tag: 't1', mural: [{ n: [0, 1, 0], id: MURAL.rose }] })),   // (split on a 2.4 m repeat: no seam; the compass rose centred on it)
+  // (split on the cut: the fronts stay, the backs go with the building; x split on a 2.4 m repeat: no seam; the compass
+  // rose centred on the east front — murals.js places it on the 9.3 m face)
+  B(-3, 9, G0, G1, ST.cut, -22.2, ashlar({ tag: 't1' })),
+  B(-3, 9, G0, G1, -36.5, ST.cut, ashlar({ tag: 't1' })),
+  B(9, 17.5, G0, G1, ST.cut, -22.2, ashlar({ tag: 't1', mural: [{ n: [0, 1, 0], id: MURAL.rose }] })),
+  B(9, 17.5, G0, G1, -36.5, ST.cut, ashlar({ tag: 't1' })),
   B(3.4, 17.5, G0, G1, -22.2, -20, ashlar({ tag: 't1', mural: [{ n: [0, 0, 1], id: MURAL.inscription }] })),
   B(15, 17.5, G0, G1, -20, -17.1, ashlar({ tag: 't1-shelf' })),
   B(9, 17.5, G0, G1, -45.4, -36.5, ashlar({ tag: 'east-yard' })),
@@ -103,7 +114,8 @@ const HALF = [
   B(17.5, 22, G0, G1, -45.4, -43.6, ashlar({ tag: 'shore-landing' })),
 
   // ---------------- the west terrace (G2) and its long flight to the bridge head; the bastion by the hollow
-  B(-11, -3, G0, G2, -36.5, -23, ashlar({ tag: 'west-terrace' })),
+  B(-11, -3, G0, G2, ST.cut, -23, ashlar({ tag: 'west-terrace' })),
+  B(-11, -3, G0, G2, -36.5, ST.cut, ashlar({ tag: 'west-terrace' })),   // (its back, with the building: split on the cut)
   B(-11, -8.7, G0, G2, -23, -19, ashlar({ tag: 'bastion', mural: [{ n: [0, 0, 1], id: MURAL.blaze }] })),
   R([-5.85, G0, -17.1], [-5.85, G2, -23], 5.7, steps({ tag: 'west-flight' })),   // (wall to wall: bastion → first terrace)
 
@@ -150,7 +162,7 @@ const HALF = [
   B(-20, -9, G2, 6.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
   B(9, 17.5, G1, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
   B(17.5, 22.4, G0, 5.5, -46, -45.4, granite({ tag: 'crag', roof: true })),
-];
+].map(shiftDef);   // (the stretch: the base side moves out)
 
 // ============================================================================================================
 // Modes
@@ -163,26 +175,31 @@ const ZONES = {
   side: { polys: [circle(-15, -25.5, 2.3), [[-19, -22.9], [-14.3, -22.9], [-14.3, -19.7], [-11, -19.7], [-11, -17.5], [-19, -17.5]]], y0: 1.2, y1: 2.5 },
 };
 // Tower Command (authored on Bravo's side, z > 0; Alpha pushes it there): over the Old Stone Bridge, along the bank,
-// up onto the shelf, back across the first terrace, up onto the west terrace to the goal below the forecourt
+// up onto the shelf, back across the first terrace, up onto the west terrace (the user's drawing, to 31 before the
+// stretch) — then the slice's detour loop (two checkpoints: the track 80 of the 100 points, twice the first drawing's
+// length): on along the stargazing terrace, down onto the first terrace and east across it past the knoll's front
+// steps, south along its edge past the receiver hut, back west up onto the Dish Knoll (checkpoint 2 on its top, by the
+// dish) and across it onto the stargazing terrace, down it to the goal below the forecourt (10 m short of the pad, as
+// before the stretch)
 const TOWER = {
-  path: [[0, 0], [0, 18.5], [-16.25, 18.5], [-16.25, 26], [5.75, 26], [5.75, 31]],
-  checkpoints: [[-6, 18.5], [-10, 26]],
+  path: [[0, 0], [0, 18.5], [-16.25, 18.5], [-16.25, 26], [5.75, 26], [5.75, 34], [-15, 34], [-15, 43.5], [5.75, 43.5], [5.75, 55]],
+  checkpoints: [[-6, 18.5], [-3, 43.5]],
 };
 
 const LAYOUT_NANTAI = {
   id: 'nantai',
   water: 'marina',   // the tarn: calm, glassy water that mirrors the mountain (the marina water mode: no sea spray)
-  bounds: { minX: -27, maxX: 27, minZ: -46, maxZ: 46 },
-  spawnPads: [[0, G3, -41], [0, G3, 41]],
+  bounds: { minX: -27, maxX: 27, minZ: -46 - ST.d, maxZ: 46 + ST.d },
+  spawnPads: [[0, G3, sz(-41)], [0, G3, -sz(-41)]],
   spawnBarrier: 4.2,
   // match intro: high over the lawn's west end (the weir behind), looking over the Old Stone Bridge at the terraces and
   // the dome, then down onto your forecourt
   intro: { from: [-10, 12.5, 8], lookFrom: [2, 3.5, -12], toBack: 3.0 },
-  // stage-select picture: from over the tarn by the weir, across the star party and the brook to the terraces, the
-  // observatory and the summit
-  art: { from: [-26, 10, 10], look: [4, 2.5, -18], fov: 60 },
+  // stage-select picture: from high over the tarn by the weir, across the brook and Pearl's rock to the terraces, the
+  // Solar Tower and the dish on its knoll, the observatory and the summit (since the stretch: the whole climb to the dome)
+  art: { from: [-21, 15, 12], look: [2, 1, -28], fov: 66 },
   env: {
-    backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, stars: true,
+    backdrop: (kit) => buildBackdrop(kit, { d: ST.d }), bay: false, edge: 'none', boats: false, gulls: false, buoys: false, stars: true,
     weather: { mist: { layers: 2, height: 1.6, reach: 150, inner: 10, opacity: 0.26, scale: 0.025 } },   // thin fog lying on the tarn
     // the tarn: cold, clear, calm — deep teal-green, pale green shallows; crisp mountain air (a deeper zenith, less haze)
     theme: {
@@ -193,12 +210,15 @@ const LAYOUT_NANTAI = {
   },
   zones: ZONES,
   tower: TOWER,
+  // Boss Battle: HULLBREAKER's floor is the lawn (0) — since the stretch the shoulder and the terraces (2.6) out-cover it
+  boss: { floorY: 0 },
   // the centre of the lawn: one slab across the centre line (self-symmetric), so the turf runs on without a seam
   single: [B(-7.2, 7.2, FL, G0, -9.6, 9.6, turf({ tag: 'lawn', mural: [{ n: [0, 1, 0], id: MURAL.paths }] }))],
-  half: HALF,
+  half: [...GROUND, ...HALF, ...SLICE_PIECES],
   // two heritage lamps per half light the paths at the bridge head and the terrace steps at dusk; the team flags fly
   // from the forecourt's back corners
-  decor: { lamps: [[-4.4, -8.9], [4.3, -20.6]], palms: [], flags: [[-8.3, G3, -44.7], [4.7, G3, -44.7]] },
+  // (the slice adds two: on the stargazing terrace by the Solar Tower's forecourt, on the apron below the knoll)
+  decor: { lamps: [[-4.4, -8.9], [4.3, -20.6], [-8.0, -33.4], [8.4, -49.6]], palms: [], flags: [[-8.3, G3, sz(-44.7)], [4.7, G3, sz(-44.7)]] },
 };
 
 export const LAYOUT = LAYOUT_NANTAI;

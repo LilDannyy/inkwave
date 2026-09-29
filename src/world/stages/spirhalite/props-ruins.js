@@ -177,10 +177,10 @@ export function registerRuins(D, H, X) {
       // posts: [z, side]
       for (const [z, sd] of o.posts || []) {
         const x = sd * (W / 2 - 0.3);
-        pbox(B, 'rubber', K.stone, 0.5, 0.95, 0.5, x, top, z);
-        B.add('rubber', tpl('postcap', () => new THREE.CylinderGeometry(0.18, 0.3, 0.22, 8)), K.stoneLt, x, top + 1.06, z);
-        pbox(B, 'rubber', K.stoneDk, 0.52, 0.08, 0.52, x, top + 0.62, z);
-        colBox(B, x, top, z, 0.5, 1.0, 0.5);
+        pbox(B, 'rubber', K.stone, 0.62, 0.95, 0.62, x, top, z);
+        B.add('rubber', tpl('postcap', () => new THREE.CylinderGeometry(0.2, 0.34, 0.22, 8)), K.stoneLt, x, top + 1.06, z);
+        pbox(B, 'rubber', K.stoneDk, 0.64, 0.08, 0.64, x, top + 0.62, z);
+        colBox(B, x, top, z, 0.62, 1.0, 0.62);
       }
       // fallen slabs in the water beside it (tilted, half sunk)
       for (const [z, sd, ry, rz] of o.slabs || []) {

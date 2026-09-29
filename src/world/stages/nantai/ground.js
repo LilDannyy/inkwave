@@ -8,6 +8,7 @@
 // Overlapping ledges step between three lips (0.12 / 0.21 / 0.3 over the region, coloured so no two that overlap share
 // one), so where they meet at a corner their tops never z-fight; a ledge reaches past a reflex corner to close the wedge between it and its neighbour.
 import { B, O } from '../../mapkit.js';
+import { sxz } from './stretch.js';
 
 const FL = -2.4, INSET = 0.18, LIPS = [0.12, 0.21, 0.3], DEG = 180 / Math.PI;
 
@@ -43,14 +44,21 @@ export const LAWN_W = [
 // cut behind the spawn, the back, the corner cut, the shore trail's bent shoreline (a deep bay, the switchback point)
 const M_SE = on(BS, 24.6), S1 = [+(M_SE[0] - 0.596 * 1.8).toFixed(3), +(M_SE[1] - 0.803 * 1.8).toFixed(3)];
 const M_SW = on(BS, -25.9);
-export const RIDGE_EDGE = [[-26.3, -19.2], [-26.5, -21.6], [-24.3, -24.2], [-22.6, -27.6], [-22.7, -31.0], [-24.6, -33.6], [-26.2, -36.6], [-25.9, -39.4], [-20, -45.4]];
-export const SHORE_EDGE = [[22.4, -45.4], [24.3, -41.6], [24.6, -39.8], [23.6, -37.6], [21.9, -35.8], [21.5, -33.0], [22.8, -30.4], [25.6, -28.2], [26.3, -25.0], S1];
+// (the Long Stages stretch, stretch.js: the points beyond the cut move out with the base; the slice's own stretch of
+// cliff and shore is drawn in between — the ridge's cliff bulges out to a point under the solar tower's shoulder and
+// falls back into a bay; the shore trail narrows past the terrace, then opens out round the rock garden's point)
+const RIDGE_SLICE = [[-24.0, -34.2], [-26.3, -37.6], [-26.7, -41.2], [-25.3, -44.6], [-23.5, -47.8], [-23.3, -51.4], [-24.1, -54.6]];
+const SHORE_SLICE = [[22.6, -54.4], [24.8, -51.8], [25.8, -48.4], [25.2, -45.0], [23.2, -42.4], [21.8, -39.4], [21.6, -36.0], [22.0, -33.2]];
+export const RIDGE_EDGE = [[-26.3, -19.2], [-26.5, -21.6], [-24.3, -24.2], [-22.6, -27.6], [-22.7, -31.0], ...RIDGE_SLICE,
+  ...[[-24.6, -33.6], [-26.2, -36.6], [-25.9, -39.4], [-20, -45.4]].map(sxz)];
+export const SHORE_EDGE = [...[[22.4, -45.4], [24.3, -41.6], [24.6, -39.8], [23.6, -37.6], [21.9, -35.8], [21.5, -33.0]].map(sxz), ...SHORE_SLICE,
+  [22.8, -30.4], [25.6, -28.2], [26.3, -25.0], S1];
 export const BASE = [
   M_SE, [19, -16.2], [12, -13.8], [-8, -13.8], [-16, -11.8], M_SW, [-26.3, -15.2],
   ...RIDGE_EDGE, ...SHORE_EDGE,
 ];
 // the ridge (2.6): its cliff is the outline from the nose to the corner cut
-export const RIDGE = [[-19, -19.2], ...RIDGE_EDGE, [-19, -45.4]];
+export const RIDGE = [[-19, -19.2], ...RIDGE_EDGE, sxz([-19, -45.4])];
 
 // ============================================================================================================
 // The kit

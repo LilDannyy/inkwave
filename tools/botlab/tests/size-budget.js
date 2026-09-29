@@ -1,6 +1,6 @@
 // Size budgets that grow with a stage's area: the baked lightmap atlas (rows used of 2048 at 8 ppm — bake.cjs),
 // the paint atlas density (texels per metre at this quality), the nav node count and how far A* has to search
-// from each spawn to the other side. Any stage:
+// from each spawn to the other side (against nav.path's default cap: 3 × the nodes, at least 6000). Any stage:
 //   MAP=<id> PAGE=tools/botlab/tests/size-budget.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -25,6 +25,7 @@
     for (const cap of [1500, 3000, 6000, 9000, 12000, 18000, 30000, 60000]) { if (nav.path(a, g, t, cap)) { need = cap; break; } }
     reach.push(need);
   }
-  R('A* reach spawn to far side', reach.every((n) => n && n <= 6000), { nodes: nav.nodes.length, capNeeded: reach });
+  const cap = Math.max(6000, nav.nodes.length * 3);   // (nav.path's default search cap, the one bots plan with)
+  R('A* reach spawn to far side (within the bots\' search cap)', reach.every((n) => n && n <= cap), { nodes: nav.nodes.length, cap, capNeeded: reach });
   return out;
 })()
