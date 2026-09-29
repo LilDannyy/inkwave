@@ -180,6 +180,10 @@ const NURSERY_PLACEMENTS = [
   { type: 'treehills_lamp', pos: [9.2, T1, -41.4], rotY: P },
   tree(6.8, T1, -45.8, 4.4, { seed: 5, w: 0.7, core: 0.8 }),
   { type: 'treehills_crates', pos: [-11.8, T1, -24.4], rotY: 0.12, n: 3 },
+  // planters flanking the garden stair's head on the hardstanding (the old base terrace had two here before the stretch
+  // moved it out: the stair's top was open)
+  { type: 'treehills_planter', pos: [5.6, T1, -25.4], rotY: 0, w: 1.8, d: 0.8, h: 1.0, seed: 45 },
+  { type: 'treehills_planter', pos: [-6.6, T1, -25.4], rotY: 0, w: 1.6, d: 0.8, h: 1.0, seed: 47, tree: -0.2 },
   { type: 'treehills_saplings', pos: [11.8, T1, -50.2], rotY: 0, w: 3.0, d: 1.6, num: 'C-02', seed: 13 },
   { type: 'treehills_trolley', pos: [15.6, T1, -34.4], rotY: -0.4, seed: 8 },
   // ---- the station's forecourt (the goal-ready spot in front of the deck stair: kept open, a little cover to re-form
