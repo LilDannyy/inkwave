@@ -26,6 +26,7 @@ import { SpecialSystem } from './game/specials.js';
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { Minimap } from './game/minimap.js';
+import { revealedTo } from './game/reveal.js';
 import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
 import { TowerFx } from './fx/towerFx.js';
@@ -1323,11 +1324,11 @@ class Game {
     const t = { x: 0, y: 0 };
     for (const o of m.actors) {
       if (!o.alive) continue;
-      const tracked = o.team !== a.team && o.status.track > 0 && o.status.trackTeam === a.team;
-      if (o.team !== a.team && !o.isLocal) {
-        // enemies only show on the map when visible to your team (not submerged far away) — tracked ones always do
-        if (o.anim.form === 'swim' && !tracked) continue;
-      }
+      // enemies show on the map only while something reveals them to your team (game/reveal.js: located, standing in
+      // your ink, hurt by your ink and not in their own …); the ring marks the located ones
+      const why = o.team !== a.team ? revealedTo(o, a.team) : null;
+      if (o.team !== a.team && !why) continue;
+      const tracked = why === 'located';
       this.minimap.toCanvas(o.pos.x, o.pos.z, t);
       players.push({ x: t.x / this.minimap.w, y: t.y / this.minimap.h, team: o.team, isSelf: o.isLocal, yaw: -o.yaw + (this.minimap.flip ? Math.PI : 0), alive: o.alive, color: G.teamHex[o.team], tracked });
     }
