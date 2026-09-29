@@ -32,7 +32,7 @@ app.on('browser-window-created', (_, win) => {
         document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
         const B = __G.level.bounds, W = B.maxX - B.minX, D = B.maxZ - B.minZ;
         // an elevated three-quarter view across the stage, like the upstream stage art
-        const CAMS = { halyard: { from: [-41, 16, -43], look: [-0.55, 6.92, 0.38], fov: 58 } };   // upstream stage-shots.mjs camera (keeps the original framing)
+        const CAMS = {};   // (per-stage overrides; Halyard's upstream framing moved into its layout's art camera with the Long Stages stretch)
         const { TEAM_PALETTES } = await import('./src/config.js'); const pal = TEAM_PALETTES.find((p) => p.id === 'tangerine-cobalt'); if (pal) g._setPalette(pal);
         const art = CAMS['${id}'] || (__G.level.layout && __G.level.layout.art);
         const from = art ? new THREE.Vector3(...art.from) : new THREE.Vector3(B.maxX + W * 0.08, Math.max(15, D * 0.2), B.minZ + D * 0.2);

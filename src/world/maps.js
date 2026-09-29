@@ -45,6 +45,9 @@ export const HALYARD = {
   // match intro opens high over the ferry's sun deck, then sweeps back down the fuel dock to your spawn (ending in
   // front of the clubhouse wall, not inside the building behind it)
   intro: { from: [7, 12.5, 11], lookFrom: [0, 2.8, -1], toBack: 3.0 },
+  // stage-select hero shot (the Long Stages slice): from off the Long Pier's end over the visitor pontoons and the
+  // chandlery, across the ferry to the far clubhouse with the city behind (the upstream framing, 24 m further out)
+  art: { from: [-44, 18, -70], look: [-1, 5.5, -24], fov: 58 },
   single: [
     // ---- the ferry: navy hull, light non-slip deck plate (its 0.2 m edge reads as the sheer stripe)
     B(-16, 16, -1.9, 1.1, -5, 5, { color: M.navy, tag: 'ferry-hull', pattern: PATTERN.hullpaint }),

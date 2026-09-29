@@ -130,14 +130,15 @@ function slicePlacements() {
   // ---- the fuel dock's shore end: the visitors' berthing booth (dresses the booth block), an ICE chest and fish boxes,
   //      a lifebuoy, a trolley at the quay end
   const bo = S.booth;
-  out.push({ type: 'harbouroffice', pos: [(bo[0] + bo[1]) / 2, 0, (bo[2] + bo[3]) / 2], rotY: 0, w: bo[1] - bo[0], d: bo[3] - bo[2], h: S.boothTop, label: 'VISITORS' });
+  // (turned so its door faces the lane and its service hatch + VISITORS fascia face the quay and the spawn)
+  out.push({ type: 'harbouroffice', pos: [(bo[0] + bo[1]) / 2, 0, (bo[2] + bo[3]) / 2], rotY: P / 2, w: bo[3] - bo[2], d: bo[1] - bo[0], h: S.boothTop, label: 'VISITORS' });
   out.push({ type: 'cooler', pos: [3.55, 0, -40.8], rotY: -P / 2, variant: 1 });
   out.push({ type: 'crates', pos: [3.4, 0, -35.6], rotY: 0.15, variant: 1, color: '#3f6fb0' });
   out.push({ type: 'lifering', pos: [-4.12, 0, -34.4], rotY: P / 2 });
   out.push({ type: 'palletjack', pos: [2.6, 0, -51.8], rotY: 0.4 });
   out.push({ type: 'bollard', pos: [3.9, 0, -49.6], variant: 1 });
   out.push({ type: 'bollard', pos: [-3.9, 0, -48.4], variant: 1 });
-  out.push({ type: 'quaycrates', pos: [-2.0, 0, -51.2], rotY: 0.1, variant: 1 });
+  out.push({ type: 'quaycrates', pos: [-3.25, 0, -50.2], rotY: P / 2 + 0.06, variant: 1 });
   out.push({ type: 'vending', pos: [-3.75, 0, -29.6], rotY: P / 2, variant: 1, color: 'teal' });
   out.push({ type: 'cabinet', pos: [3.85, 0, -30.4], rotY: -P / 2 });
   // ---- the Long Pier's new stretch: shore power at ORCA BAY, a dock box, the pump-out station, crab pots, a bench

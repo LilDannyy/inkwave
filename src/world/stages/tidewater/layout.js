@@ -175,9 +175,9 @@ const TIDEWATER = {
   spawnBarrier: 4.2,
   // match intro: opens high beside the clock tower's dials, then sweeps back down the square to your loggia
   intro: { from: [11, 16.5, 12], lookFrom: [0, 10.5, 0], toBack: 3.0 },
-  // stage-select hero shot: from out over the bay off the promenade crescent, across the round terrace and its tower
-  // to the Town Hall, the bandstand and the bent Crescent
-  art: { from: [-32, 19.5, 9], look: [3.5, 0.5, -15.5], fov: 64 },
+  // stage-select hero shot: from out over the bay off the esplanade, past the clock tower across the Winter Gardens'
+  // Palm House to the Town Hall, the bandstand and the Crescent with the Assembly Rooms
+  art: { from: [-34, 21, 4], look: [4, 0, -24], fov: 64 },
   single: [
     // ---- the round Jubilee terrace: ring of slabs (1.0) with granite joints, the square dais (1.1), the tower
     ...arcBand([0, 0], T.rIn, T.rOut, T.a0, T.a0 + 360, T.n, -0.6, T.top, stucco(M.terrace, { tag: 'terrace-ring' }),

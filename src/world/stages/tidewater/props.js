@@ -2138,7 +2138,7 @@ export function register(D, H) {
       for (const y of [0.95, 1.9]) B.tor(NS('paint'), iron, DR * (y < 1.5 ? 0.965 : 0.84), 0.025, 0, DY + 0.5 + y, 0, { rx: HP, rs: 3, ts: 28 });
       const LY = DY + 0.5 + 3.09;
       B.cyl('paint', iron, 0.62, 0.85, 0, LY + 0.42, 0, { seg: 10 });
-      B.cyl('gloss', glass, 0.55, 0.66, 0, LY + 0.42, 0, { seg: 10 });
+      B.cyl(NS('glow'), K.lamp, 0.55, 0.66, 0, LY + 0.42, 0, { seg: 10, glow: 0.75 });   // (the lantern lit: it glows at dusk)
       for (let k = 0; k < 10; k++) { const a = (k / 10) * TAU; B.cyl(NS('paint'), iron, 0.03, 0.76, Math.cos(a) * 0.59, LY + 0.42, Math.sin(a) * 0.59, { seg: 4 }); }
       B.lathe('paint', iron, [[0, 0], [0.78, 0], [0.46, 0.33], [0.11, 0.56], [0, 0.58]], 0, LY + 0.85, 0, { seg: 10 });
       B.lathe('metal', K.gold, [[0, 0], [0.08, 0], [0.05, 0.4], [0.12, 0.5], [0, 0.7]], 0, LY + 1.4, 0, { seg: 8 });
@@ -2153,10 +2153,11 @@ export function register(D, H) {
       fpush(B, 0, 0, hd + 0.08, 0);
       for (const sx of [-1, 1]) { B.box('paint', K.ironDk, 0.9, 2.3, 0.06, sx * 0.47, TT + 1.15, 0.02, { r: 0.015 }); pbox(B, NS('gloss'), glassDk, 0.7, 1.9, 0.02, sx * 0.47, TT + 1.2, 0.06); pbox(B, NS('metal'), K.gold, 0.03, 0.2, 0.03, sx * 0.08, TT + 1.05, 0.07); }
       B.add('paint', archPanelGeo(1.95, 0.02, 12), K.ironDk, 0, TT + 2.32, 0.03, {});
+      for (const sx of [-1, 1]) { pbox(B, 'gloss', K.ironDk, 0.06, 0.36, 0.22, sx * 1.4, TT + 2.35, 0.1); lantern(B, sx * 1.4, TT + 2.0, 0.3, 0.85); }
       fpop(B);
-      for (const s of [-1, 1]) { fpush(B, s * (hw + 0.06), 0, 0, s * HP); B.box('paint', K.ironDk, 1.4, 2.1, 0.05, 0, WY + 1.05, 0.02, { r: 0.015 }); pbox(B, NS('gloss'), glassDk, 1.2, 1.7, 0.02, 0, WY + 1.1, 0.05); fpop(B); }
-      // ---- the stove stack at the back (brick, off limits)
-      const sx0 = 4.3;
+      for (const s of [-1, 1]) { fpush(B, s * (hw + 0.06), 0, 0, s * HP); B.box('paint', K.ironDk, 1.4, 2.1, 0.05, 0, WY + 1.05, 0.02, { r: 0.015 }); pbox(B, NS('gloss'), glassDk, 1.2, 1.7, 0.02, 0, WY + 1.1, 0.05); pbox(B, 'gloss', K.ironDk, 0.06, 0.36, 0.22, 0, WY + 2.5, 0.1); lantern(B, 0, WY + 2.15, 0.3, 0.8); fpop(B); }
+      // ---- the stove stack at the back (brick, off limits; west of centre, clear of Tower Command's south-walk leg)
+      const sx0 = -4.3;
       B.box('paint', K.brick, 0.8, CT + 0.8, 0.6, sx0, (CT + 0.8) / 2, -hd - 0.33, { r: 0.03 });
       pbox(B, 'paint', K.stone, 0.95, 0.15, 0.75, sx0, CT + 0.85, -hd - 0.33);
       for (const dx of [-0.18, 0.18]) B.cyl('paint', K.pot, 0.09, 0.4, sx0 + dx, CT + 1.1, -hd - 0.33, { seg: 8 });
@@ -2446,6 +2447,8 @@ const SQL = (x, z, o) => ({ pos: [x, SQ, z], ...o });
   }
   // tub palms at the side beds' inner corners, beside the walks along the Palm House
   for (const sx of [-1, 1]) out.push({ type: 'tidewater_palmtub', pos: [sx * 10.1, SQ, -34.2], ...(sx > 0 ? NT : {}) });
+  // lamp standards at the terrace flights' feet
+  for (const sx of [-1, 1]) out.push({ type: 'tidewater_lamp', ...SQL(sx * 7.0, -19.9), variant: 0, baskets: true, rotY: sx > 0 ? P : 0 });
   // the west walk: the drinking fountain, lamps, a bench; the coxswain's statue at the south walk's west end
   out.push({ type: 'tidewater_drinkfountain', ...SQL(-13.2, -21.2) });
   out.push({ type: 'tidewater_statue', ...SQL(-12.4, -35.0), rotY: P * 0.15 });
@@ -2460,6 +2463,7 @@ const SQL = (x, z, o) => ({ pos: [x, SQ, z], ...o });
   // Tower Command), a bench facing the Palm House
   out.push({ type: 'tidewater_fingerpost', ...SQL(18.5, -24.6), arms: [['PALM HOUSE', -90], ['ASSEMBLY ROOMS', 10], ['PROMENADE', 180], ['TOWN HALL', -120]] });
   out.push({ type: 'tidewater_lamp', ...SQL(18.6, -20.8), variant: 0 });
+  out.push({ type: 'tidewater_urn', ...SQL(16.9, STAIR_AR.foot - 1.1), color: '#9a6ac2' });   // (by the Assembly Rooms' stair foot)
   for (const z of [-26.2, -32.4]) out.push({ type: 'tidewater_topiary', ...SQL(16.0, z), variant: 1, ...NT });
   out.push({ type: 'tidewater_bench', ...SQL(15.9, -30.0), rotY: -P / 2, ...NT });
   out.push({ type: 'tidewater_lamp', ...SQL(9.4, -26.8), variant: 0, baskets: true });
@@ -2583,7 +2587,6 @@ export const PLACEMENTS = [
   // Tower Command: the fountain band's lamp pair set wider (the goal run passes between them), one lamp off the track
   { type: 'tidewater_lamp', ...SQL(-6.4, tq(-26.6)), variant: 0, baskets: true, onlyIn: 'tower' },
   { type: 'tidewater_lamp', ...SQL(6.4, tq(-26.6)), variant: 0, baskets: true, rotY: P, onlyIn: 'tower' },
-  { type: 'tidewater_lamp', ...SQL(-6.4, -20.1), variant: 0, onlyIn: 'tower' },   // (the stretch: off the track's garden leg)
   { type: 'bunting', ...SQL(-6.4, tq(-26.6)), rotY: 0, length: 12.8, height: 4.5, posts: false, onlyIn: 'tower' },
   { type: 'bunting', ...SQL(-6.5, tq(-35.2)), rotY: 0, length: 13, height: 4.4, posts: false },
   { type: 'tidewater_bench', ...SQL(-6.5, tq(-20.5)), rotY: P / 2 },
