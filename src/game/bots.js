@@ -4,11 +4,18 @@
 // acquisition over/undershoot that settles), shots follow the bot's *actual* aim ray, the move command slews its
 // heading (no twitch at waypoint switches / strafe flips), strafes ease, bots dodge-hop when hit, swim in to close
 // distance and retreat through own ink to heal when they're losing a duel.
+// Perception (botSight.js): a bot knows where a foe is only while it sees it (a sight line, in its view cone and range;
+// squids under their own ink are hard to spot) or has it located (tracked, a super jump's landing marker). Out of sight
+// the foe is a memory — the last place / time / heading it was seen — that the bot may pre-aim, spray briefly, lob a sub
+// at, go and check, or give up on; it never follows the foe's real position through walls. The fight code reads the
+// target through its view (this.tv: the actor in sight, the memory out of it). Team plans use teamKnown().
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../core/ctx.js';
 import { PLAYER, DIFFICULTY, SUB, SPECIALS, TOWER, weaponRange } from '../config.js';
 import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
+import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
+export { SIGHT, SIGHT_STATS, teamKnown };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
 const _walkHit = new Hit();
@@ -47,6 +54,8 @@ function lobPitch(d, dy, speed) {
   return be < 1.2 ? best : null;
 }
 export const PAINTERS = { roller: true, brush: true, bucket: true, slosher: true };
+// steady-trigger weapons that may spray a spot a foe just went out of sight at (BotBrain._spray)
+const SPRAY = { shooter: true, blaster: true, dualies: true, twins: true, slosher: true, bucket: true };
 // Counter-play vs enemy devices and shields (BotBrain "threats" section): tests flip `enabled` off for an A/B on the
 // same code; THREAT_STATS counts what the bots did (engagements, not frames — holdFire is seconds)
 export const THREAT_AI = { enabled: true };
@@ -303,6 +312,7 @@ export const RIDE_PREF = { shooter: 0, twins: 0, splatling: 0, dualies: 0.3, bla
 const BODY_SP = { kraken: true, stamp: true, crab: true, jetpack: true, zipcaster: true };
 // stance thresholds (m from the tower, s of dwell)
 const TW_NEAR = 30, TW_CLOSE = 22, TW_SEE = 36, TW_SEE_IN = 28, TW_FACE = 14, TW_COVER_T = 0.5, TW_STEAM_T = 2.5, TW_STEAM_MIN = 3;
+const TW_KNOWN = 4;   // s: a foe the team last saw (or had located) this long ago still counts where it was
 const _tp = new THREE.Vector3(), _tn = new THREE.Vector3(), _tq = new THREE.Vector3();
 export function towerPlan() {
   const m = G.match, T = m && m.tower;
@@ -403,15 +413,19 @@ class TowerPlan {
       o.n++;
       if (!e.alive) continue;
       o.alive++;
-      const dx = e.pos.x - T.pos.x, dz = e.pos.z - T.pos.z, d = Math.hypot(dx, dz);
+      // (where the team knows it to be — seen, located or remembered — never where it really is)
+      const k = teamKnown(t, e, TW_KNOWN);
+      if (!k) continue;
+      const kp = k.pos, kv = k.seen || G.time - k.t < 0.5 ? k.vel : _tn.set(0, 0, 0);
+      const dx = kp.x - T.pos.x, dz = kp.z - T.pos.z, d = Math.hypot(dx, dz);
       // (closing on it: where it'll be in 1.5 s — no piling on just before they arrive)
-      const dp = d - Math.max(0, -(e.vel.x * dx + e.vel.z * dz) / Math.max(d, 0.1)) * 1.5;
+      const dp = d - Math.max(0, -(kv.x * dx + kv.z * dz) / Math.max(d, 0.1)) * 1.5;
       if (Math.min(d, dp) < TW_NEAR) o.near++;
       if (d < TW_FACE) o.face++;
       if (d < TW_CLOSE) { o.close++; o.closeIn++; continue; }
       if (d > TW_SEE) continue;
       // a sightline from their eyes to a rider's body on the near half of the deck (the pillar would block its middle)
-      _tp.set(e.pos.x, e.pos.y + 1.3, e.pos.z); _tq.set(T.pos.x + (dx / d) * 0.8, T.top + 1.0, T.pos.z + (dz / d) * 0.8);
+      _tp.set(kp.x, kp.y + 1.3, kp.z); _tq.set(T.pos.x + (dx / d) * 0.8, T.top + 1.0, T.pos.z + (dz / d) * 0.8);
       if (G.physics.los(_tp, _tq)) { o.close++; if (d < TW_SEE_IN) o.closeIn++; }
     }
     const few = o.alive <= Math.max(0, o.n - 3);              // 3 of 4 splatted
@@ -466,6 +480,12 @@ export class BotBrain {
   reset() {
     this.path = null; this.pi = 0; this.goal = -1; this.repath = 0; this.goalTimer = 0;
     this.target = null; this.seeTimer = 0; this.react = 0; this.lostTimer = 0;
+    // perception (botSight.js): what we know of each foe; the target's memory entry (tk) and view (tv: the actor while
+    // in sight, the memory out of it — what the fight code reads); out of sight: how long we keep after it (huntFor),
+    // whether we go and look (huntSeek), spray the spot, lob a sub there
+    if (this.sight) this.sight.reset(); else this.sight = new Sight(this);
+    this.tk = null; this.tv = null; this._tgtSeen = false; this._pT = -1;
+    this.huntFor = 0; this.huntSeek = false; this.sprayOn = false; this.sprayed = false; this.memBombOn = false; this.mBomb = null;
     this.stuck = 0; this.lastPos = new THREE.Vector3(); this.jumpCd = 0; this.bestD = Infinity; this.noProg = 0;
     this.mode = 'paint';
     this.sweep = Math.random() * 10;
@@ -518,7 +538,11 @@ export class BotBrain {
   update(dt) {
     const a = this.a;
     const it = a.intent;
-    if (!a.alive) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.path = null; this.target = null; this._wasDead = true; this.mvMag = 0; this.navBack = null; this.navBackT = 0; return; }
+    if (!a.alive) {
+      it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.path = null; this._wasDead = true; this.mvMag = 0; this.navBack = null; this.navBackT = 0;
+      if (this.target || this.sight.mem.size) { this._dropTarget(); this.sight.reset(); }   // (what it knew is stale by the respawn)
+      return;
+    }
     if (this._wasDead && G.match && G.match.playing()) {
       // just respawned: face the way the body faces, then sometimes super jump to the teammate furthest up the field
       this._wasDead = false;
@@ -555,7 +579,9 @@ export class BotBrain {
       this._perceive();
     }
     const tgt = this.target;
-    if (tgt && !tgt.alive) { this.target = null; }
+    if (tgt && !tgt.alive) this._dropTarget();
+    // the foe we're fighting, between looks: still in sight? (a duck behind cover is noticed within ~0.1 s)
+    else if (tgt && this.seeTimer > 0 && !this.sight.recheck(tgt)) { this.seeTimer = 0; this._tgtSeen = false; this._onLost(this.tk); }
 
     // ---------------- Zone Control: the team plan (null in Turf War); re-target at once on a rotation or a new role
     const zp = zonePlan();
@@ -606,7 +632,7 @@ export class BotBrain {
     if (this.mode === 'fight' && this.target) {
       if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
       else if (tp && this._towerFightNav(tp)) { /* riders make for the tower; perches / escorts hold their ground */ }
-      else if (this.repath <= 0) this._pathTo(this.target.pos, 0.6);
+      else if (this.repath <= 0) this._pathTo(this.tv.pos, 0.6);   // (out of sight: where we think it is)
     } else if (this.mode === 'refill') {
       if (this.repath <= 0 || !this.path) this._pickRefill();
     } else if (this.mode === 'retreat') {
@@ -640,10 +666,12 @@ export class BotBrain {
     let wantYaw = wantMove ? Math.atan2(move.x, move.z) : a.yaw;
     let wantPitch = -0.1;
     const enemyVisible = this.target && this.seeTimer > 0;
+    // (out of sight: how old what we know of it is — seen / located / shot at by)
+    const kAge = this.tk && !enemyVisible ? G.time - this.tk.t : 0;
     let fightDist = 0, idealYaw = 0, idealPitch = 0, aimDist = 6;
 
     if ((this.mode === 'fight' || this.mode === 'retreat') && this.target) {
-      const t = this.target;
+      const t = this.tv;   // (in sight: the foe; out of sight: our memory of it — see botSight.js)
       const dx = t.pos.x - a.pos.x, dz = t.pos.z - a.pos.z;
       const dist = Math.hypot(dx, dz);
       fightDist = dist;
@@ -669,10 +697,14 @@ export class BotBrain {
         this.strafeS += (this.strafe * this.strafeAmp - this.strafeS) * (1 - Math.exp(-5 * dt));
         const nx = dx / Math.max(dist, 0.01), nz = dz / Math.max(dist, 0.01);
         let mvx = 0, mvz = 0;
-        if (dist > pref + 1.2 && wantMove) { mvx = move.x; mvz = move.z; }
+        // out of sight and going to look (after a moment holding the angle where it went; located: straight away):
+        // walk up to the spot along the route, aim on it, no duelling distance
+        const seek = !enemyVisible && this.huntSeek && (kAge > 0.4 || (this.tk && this.tk.src !== 'sight'));
+        if (seek) { if (dist > 1.2 && wantMove) { mvx = move.x; mvz = move.z; } }
+        else if (dist > pref + 1.2 && wantMove) { mvx = move.x; mvz = move.z; }
         else if (dist < pref - 1.5 && !MELEE[w.kind]) { mvx = -nx; mvz = -nz; }
-        if (!(CHARGES[w.kind] && a.weaponRunner.charging)) { mvx += -nz * this.strafeS * 0.9; mvz += nx * this.strafeS * 0.9; }
-        if (MELEE[w.kind] && dist < 7) { mvx = nx; mvz = nz; }
+        if (!(CHARGES[w.kind] && a.weaponRunner.charging)) { const k = seek ? 0.3 : 0.9; mvx += -nz * this.strafeS * k; mvz += nx * this.strafeS * k; }
+        if (MELEE[w.kind] && dist < 7 && enemyVisible) { mvx = nx; mvz = nz; }   // (out of sight: along the route — a wall may be in the way)
         // twin pistols: after a roll, stand planted for a moment in rapid mode (moving would drop back to dual mode)
         if (w.kind === 'twins') {
           const planted = a.weaponRunner.turret;
@@ -729,7 +761,7 @@ export class BotBrain {
           if (this.bombCd <= 0 && this._fightSub(dist)) { it.sub = true; this._bombAim = true; }
         } else if (CHARGES[w.kind] && a.weaponRunner.charging && !enemyVisible) {
           it.fire = true; // keep charge while target briefly hidden
-        }
+        } else if (!enemyVisible && this._spray(dist, range, aimed, inkFrac)) it.fire = true;   // a short spray where it went
         // out of range with own ink underfoot: swim in (fast, hard to hit) instead of walking
         if (!it.fire && !a.weaponRunner.charging && dist > range * 1.15 && a.groundTeam === 1) it.squid = true;
         if (w.kind === 'dualies') {
@@ -750,13 +782,15 @@ export class BotBrain {
         // kit weapons with their own fight tactics (bot.tactics, e.g. the Cutlass: flank, pre-charge, swim in, strafe):
         // every fight frame, aimed or not, after the defaults above — may override move, fire, squid and jump
         if (BK?.tactics) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
+        // out of sight: now and then a sub lobbed where it went (once per loss; turn to it, throw)
+        if (!enemyVisible) { const mb = this._memBombAim(dt); if (mb) { wantYaw = mb.yaw; wantPitch = mb.pitch; } }
         // Tower Command: lob a bomb onto their riders (turn to the platform, throw, back to the duel)
         if (tp) {
           const tb = this._towerBombAim(tp, dt, onT);
           if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
         }
         // special
-        if (a.specialReady() && (this._wantSpecial('fight', dist, enemyVisible) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT)))
+        if (a.specialReady() && (((enemyVisible || kAge < SIGHT.fresh) && this._wantSpecial('fight', dist, enemyVisible)) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT)))
           && !(tp && !this._towerSpecialOk(onT))) it.special = true;
       } else {
         // retreat: swim away through own ink, keep eyes on the threat
@@ -1049,7 +1083,7 @@ export class BotBrain {
 
   // Low on health mid-duel: head for own ink away from the threat (swim = heal + hard to spot), then come back.
   _pickRetreat() {
-    const a = this.a, t = this.target;
+    const a = this.a, t = this.tv;
     let bestP = null, bs = -Infinity;
     for (let i = 0; i < 16; i++) {
       const ang = Math.random() * Math.PI * 2, r = 3 + Math.random() * 8;
@@ -1102,7 +1136,7 @@ export class BotBrain {
       for (const o of G.actors) { const os = o.specialActive; if (o !== a && o.team === a.team && os && os.id === 'booyah' && !os.thrown) { it.cheer = true; break; } }
     }
     // don't waste shots or bombs into a Mega Stamp's swing from the front (its guard deflects them)
-    const ts = this.target && this.target.specialActive;
+    const ts = this.target && this.seeTimer > 0 && this.target.specialActive;
     if (ts && ts.id === 'stamp' && ts.guard > 0) {
       const T = this.target, fy = ts.bodyYaw ?? T.yaw, rx = a.pos.x - T.pos.x, rz = a.pos.z - T.pos.z, rl = Math.hypot(rx, rz) || 1;
       if ((rx * Math.sin(fy) + rz * Math.cos(fy)) / rl > Math.cos(1.2)) { it.fire = false; it.sub = false; }
@@ -1121,7 +1155,7 @@ export class BotBrain {
       if (P) { const T = P.T, p = T.owner === a.team ? P.at(T.s + P.dirOf(a.team) * 8) : T.pos; s.target.set(p.x, 0, p.z); }
     }
     const fighting = this.mode === 'fight' && !!this.target;
-    const t = this.target;
+    const t = this.tv;
     // charge straight at the target only when it's close (further out the nav path + water avoidance steer)
     const toward = () => {
       if (!t || dist > 5 || Math.abs(t.pos.y - a.pos.y) > 1.2) return;
@@ -1279,7 +1313,7 @@ export class BotBrain {
 
   // take the fight? In range, or the foe is on / by our zone; otherwise keep inking the objective
   _zoneEngage(P) {
-    const a = this.a, t = this.target;
+    const a = this.a, t = this.tv;
     if (!t) return false;
     if (this.zRole === 'push') return true;
     const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z), range = this._range();
@@ -1290,7 +1324,7 @@ export class BotBrain {
   }
   // in a fight: watchers keep their perch while the foe is in range; guards don't chase more than ~10 m off the zone
   _zoneHoldGround(P) {
-    const a = this.a, t = this.target, range = this._range();
+    const a = this.a, t = this.tv, range = this._range();
     const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
     if (this.zRole === 'watch') return d < range * 1.05 && d > 3;
     if (this.zRole === 'stage') return d > 4;                          // hold the staging spot: shoot, don't chase
@@ -1460,8 +1494,8 @@ export class BotBrain {
     const dz = Math.hypot(a.pos.x - c[0], a.pos.z - c[2]);
     if (dz > I.R + 12) return false;
     const ours = P.Z.owner === t;
-    let foes = 0;
-    for (const o of G.actors) if (o.team !== t && o.alive && Math.hypot(o.pos.x - c[0], o.pos.z - c[2]) < I.R + 8) foes++;
+    let foes = 0;   // (foes the team knows are on / by it: seen, located or seen there lately)
+    for (const o of G.actors) { if (o.team === t || !o.alive) continue; const k = teamKnown(t, o, 3); if (k && Math.hypot(k.pos.x - c[0], k.pos.z - c[2]) < I.R + 8) foes++; }
     if (ours && !foes) return false;                                 // holding it quietly: keep it for the push-back
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
     if ((id === 'sonar' || id === 'bubbler' || id === 'wail' || id === 'zooka' || id === 'stamp' || id === 'crab') && !foes) return false;
@@ -1534,9 +1568,9 @@ export class BotBrain {
   // take the fight? Riders: whatever's in reach of the platform (they don't chase); perches: in range or on it;
   // escorts: in range, on it, or anywhere within ~14 m of it
   _towerEngage(P) {
-    const a = this.a, t = this.target, T = P.T;
+    const a = this.a, t = this.tv, T = P.T;
     const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z), range = this._range();
-    const tOn = P.riding(t), dT = Math.hypot(t.pos.x - T.pos.x, t.pos.z - T.pos.z);
+    const tOn = this.seeTimer > 0 && P.riding(this.target), dT = Math.hypot(t.pos.x - T.pos.x, t.pos.z - T.pos.z);
     if (this.tRole === 'ride') return d < range * 1.2 || tOn || (dT < 8 && d < range * 1.8);
     if (this.tRole === 'perch') return d < range * 1.05 || tOn;
     return d < range * 1.3 || tOn || dT < 14;
@@ -1544,7 +1578,7 @@ export class BotBrain {
   // in a fight: riders keep making for the tower (and stay on it); perches keep their spot while the foe's in range;
   // escorts don't chase a foe off the route (further from the tower than 16 m and further than we are)
   _towerFightNav(P) {
-    const a = this.a, t = this.target, T = P.T;
+    const a = this.a, t = this.tv, T = P.T;
     if (this.tRole === 'ride') { this._towerBoardNav(P); return true; }
     const d = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
     if (this.tRole === 'perch') {
@@ -1740,12 +1774,14 @@ export class BotBrain {
   _towerSpecial(P, fighting, onT) {
     const a = this.a, T = P.T;
     if (Math.hypot(T.pos.x - a.pos.x, T.pos.z - a.pos.z) > 16 || !this._towerSpecialOk(onT)) return false;
-    let foes = 0, fd = Infinity;
+    let foes = 0, fd = Infinity;   // (foes the team knows are by it: seen, located or seen there lately)
     for (const o of G.actors) {
-      if (o.team === a.team || !o.alive || Math.hypot(o.pos.x - T.pos.x, o.pos.z - T.pos.z) > 11) continue;
+      if (o.team === a.team || !o.alive) continue;
+      const k = teamKnown(a.team, o, 3), p = k && k.pos;
+      if (!p || Math.hypot(p.x - T.pos.x, p.z - T.pos.z) > 11) continue;
       foes++;
-      const md = Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z);
-      if (md < fd) { fd = md; if (onT) this.tFaceP.set(o.pos.x, o.pos.y, o.pos.z); }
+      const md = Math.hypot(p.x - a.pos.x, p.z - a.pos.z);
+      if (md < fd) { fd = md; if (onT) this.tFaceP.set(p.x, p.y, p.z); }
     }
     if (!foes) return false;
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
@@ -1770,7 +1806,7 @@ export class BotBrain {
     if (this.tBombScan > 0 || this.bombCd > 0 || onT || !THROWN[sub.kind] || a.ink < sub.inkCost + 10) return null;
     if (SUB_KITS[sub.kind]?.blocked?.(a, sub)) return null;
     this.tBombScan = 0.5;
-    if (!T.riders[1 - a.team]) return null;
+    if (!this._foeOnTower(P)) return null;
     // (where it'll be when the bomb comes down: it rolls on meanwhile)
     const p = T.path.at(T.s + (T.moving ? T.moving * T.speed[T.moving > 0 ? 0 : 1] * 1.3 : 0), _v);
     const d = Math.hypot(p.x - a.pos.x, p.z - a.pos.z);
@@ -1779,6 +1815,16 @@ export class BotBrain {
     if (pitch === null) return null;
     this.tBomb = { yaw: Math.atan2(p.x - a.pos.x, p.z - a.pos.z), pitch, t: 1.1, release: false };
     return this.tBomb;
+  }
+  // one of theirs on the platform, as far as the team knows (seen / located there within the last 1.5 s)
+  _foeOnTower(P) {
+    const T = P.T, t = this.a.team;
+    for (const e of G.actors) {
+      if (e.team === t || !e.alive) continue;
+      const k = teamKnown(t, e, 1.5);
+      if (k && Math.abs(k.pos.y - T.top) < 0.9 && P.edge(k.pos.x, k.pos.z) < 0.3) return true;
+    }
+    return false;
   }
   _towerBombGo(tb) {
     if (tb.release) { this.tBomb = null; return; }
@@ -1817,7 +1863,7 @@ export class BotBrain {
         let gx = 0, gz = 0;
         const g = this.path && this.path.length ? G.nav.nodes[this.path[this.path.length - 1]] : null;
         if (g) { gx = g.x - T.pos.x; gz = g.z - T.pos.z; }
-        else if (this.target) { gx = this.target.pos.x - T.pos.x; gz = this.target.pos.z - T.pos.z; }
+        else if (this.tv) { gx = this.tv.pos.x - T.pos.x; gz = this.tv.pos.z - T.pos.z; }
         if (Math.hypot(gx, gz) < 0.5) { T.path.dir(T.s, _tq); gx = _tq.x * P.dirOf(a.team); gz = _tq.z * P.dirOf(a.team); }
         let gl = Math.hypot(gx, gz) || 1; gx /= gl; gz /= gl;
         const rx = -dx, rz = -dz;                                        // (us from its centre)
@@ -1843,7 +1889,7 @@ export class BotBrain {
       // a spot beside the pillar in its middle (it's cover): in a duel behind it from the foe, stepping out past its
       // edge to shoot (a still rider is an easy shot); otherwise stay where we are round it
       const R0 = TOWER.pillarW / 2 + PLAYER.radius + 0.18;
-      const tg = this.mode === 'fight' && this.target;
+      const tg = this.mode === 'fight' && this.tv;
       let ux = a.pos.x - T.pos.x, uz = a.pos.z - T.pos.z;
       if (tg) {
         const fx = tg.pos.x - T.pos.x, fz = tg.pos.z - T.pos.z, fl = Math.hypot(fx, fz) || 1, o = this.strafeS * 1.1;
@@ -2360,41 +2406,103 @@ export class BotBrain {
     return weaponRange(w) * (CHARGES[w.kind] ? 0.9 : 1);
   }
 
+  // one look round (every ~0.2 s): what we can see and what we remember (botSight.js), then the target — the best foe
+  // in sight (nearest; the current one, a kit's bias and a tower rider first); none in sight: keep after the one we
+  // lost for a while (huntFor), or turn to a foe we know is close without seeing it (tracked, landing from a super
+  // jump, shooting at us)
   _perceive() {
-    const a = this.a;
-    const eye = _v.copy(a.pos); eye.y += 1.3;
+    const a = this.a, S = this.sight, now = G.time;
+    if (!S.check()) { this.think = 0; return; }        // over this frame's sight-line budget: next frame
+    const dtc = this._pT >= 0 && now > this._pT ? Math.min(0.5, now - this._pT) : 0.2;
+    this._pT = now;
     let best = null, bd = Infinity;
-    const aw = this.diff.awareness;
     const bias = MAIN_KITS[a.weapon.kind]?.bot?.targetBias;   // kit weapons may weigh targets (e.g. the Cutlass: busy ones)
     const TP = G.match && G.match.tower ? towerPlan() : null;   // Tower Command: foes riding the tower first
-    for (const e of G.actors) {
-      if (e.team === a.team || !e.alive) continue;
+    for (const [e, k] of S.mem) {
+      if (!k.seen) continue;
       const d = e.pos.distanceTo(a.pos);
-      if (d > aw) continue;
-      const swimming = e.anim.form === 'swim';
-      const hs = Math.hypot(e.vel.x, e.vel.z);
-      if (swimming && d > 3 && !(hs > 7 && d < 9)) continue;
-      _v2.copy(e.pos); _v2.y += e.form === 'squid' ? 0.3 : 1.0;
-      if (!G.physics.los(eye, _v2)) continue;
       const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0);
       if (score < bd) { bd = score; best = e; }
     }
     if (best) {
-      if (best !== this.target) {
-        this.target = best; this.react = this.diff.reaction * (0.7 + Math.random() * 0.6); this.repath = 0;
-        // first look lands a little off (over- or under-shoot) and settles — like a human flick
-        this.acqT = 0; this.acqSignY = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.5); this.acqSignP = (Math.random() - 0.5) * 1.2;
-      }
-      this.seeTimer = 1.2;
+      if (best !== this.target) this._acquire(best);
+      this.seeTimer = 1;
       this.lostTimer = 0;
     } else {
-      this.seeTimer -= 0.2;
+      this.seeTimer = 0;
       if (this.target) {
-        this.lostTimer += 0.2;
-        if (this.lostTimer > 2.5 || this.target.pos.distanceTo(a.pos) > aw + 6) this.target = null;
+        const k = S.get(this.target);
+        if (!k) this._dropTarget();                                         // looked: gone (or forgotten / splatted)
+        else {
+          if (this._tgtSeen) this._onLost(k);                                // just lost sight of it
+          // (located: we know where it is, so the hunt doesn't run down)
+          this.lostTimer = k.src === 'track' || k.src === 'jump' ? 0 : this.lostTimer + dtc;
+          if (this.lostTimer > this.huntFor || k.pos.distanceTo(a.pos) > this.diff.awareness + 8) { k.dropped = true; this._dropTarget(); }
+        }
+      }
+      if (!this.target) {
+        let bk = null, bkd = Infinity;
+        for (const [e, k] of S.mem) {
+          if (k.seen || k.dropped || now - k.t > 0.6 || k.src === 'sight') continue;
+          const d = k.pos.distanceTo(a.pos);
+          if (d < this.diff.awareness + 4 && d < bkd) { bkd = d; bk = e; }
+        }
+        if (bk) { this._acquire(bk); this._onLost(S.get(bk)); SIGHT_STATS.hunts++; }
       }
     }
-    this.react -= 0.2;
+    this._tgtSeen = this.seeTimer > 0;
+    this.tk = this.target ? S.get(this.target) : null;
+    this.tv = this.tk ? this.tk.viewed : null;
+    if (this.target && !this.tv) this._dropTarget();
+    this.react -= dtc;
+  }
+  _acquire(e) {
+    this.target = e; this.react = this.diff.reaction * (0.7 + Math.random() * 0.6); this.repath = 0; this.lostTimer = 0;
+    // first look lands a little off (over- or under-shoot) and settles — like a human flick
+    this.acqT = 0; this.acqSignY = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.5); this.acqSignP = (Math.random() - 0.5) * 1.2;
+  }
+  _dropTarget() { this.target = null; this.tk = null; this.tv = null; this.lostTimer = 0; this._tgtSeen = false; this.mBomb = null; }
+  // out of sight: hold the angle for a moment (pre-aim where it went), then either go and look (most of the time, not
+  // when hurt) or give up and go back to the job; maybe a short spray at the spot, maybe a sub lobbed there
+  _onLost(k) {
+    const hurt = this.a.hp < PLAYER.hp * 0.45;
+    const located = k.src === 'track' || k.src === 'jump';
+    this.huntSeek = !hurt && (located || Math.random() < 0.65);
+    this.huntFor = SIGHT.fresh + (this.huntSeek ? 1.2 + Math.random() * 2.6 : 0.2);
+    this.sprayOn = k.src === 'sight' && Math.random() < 0.6; this.sprayed = false;
+    this.memBombOn = Math.random() < 0.4; this.mBomb = null;
+    this.lostTimer = 0;
+  }
+  // a short spray at the spot a foe went out of sight (the pre-aim is on it): steady-trigger weapons only, for a moment
+  _spray(dist, range, aimed, inkFrac) {
+    const k = this.tk, w = this.a.weapon;
+    if (!this.sprayOn || !k || k.src !== 'sight' || G.time - k.seenT > SIGHT.spray || !aimed || inkFrac < 0.15 || dist > range || !SPRAY[w.kind]) return false;
+    if (!this.sprayed) { this.sprayed = true; SIGHT_STATS.sprays++; }
+    return true;
+  }
+  // a thrown sub where the foe went (0.3–3 s after, 4.5–12 m off, once per loss) or where it's located; returns the aim
+  // to hold while it's thrown ({ yaw, pitch, release }), else null
+  _memBombAim(dt) {
+    const mb = this.mBomb;
+    if (mb) {
+      if (mb.release) { this.mBomb = null; return mb; }
+      if ((mb.t -= dt) <= 0) { this.mBomb = null; return null; }
+      if (Math.abs(angleDiff(this.aimYaw, mb.yaw)) < 0.09 && Math.abs(this.aimPitch - mb.pitch) < 0.09) { this._bombAim = true; mb.release = true; this.bombCd = 5 + Math.random() * 4; }
+      return mb;
+    }
+    const a = this.a, k = this.tk, sub = a.sub || SUB.bomb;
+    // (an Echo Orb there finds out where they went)
+    if (!this.memBombOn || !k || this.bombCd > 0 || !(THROWN[sub.kind] || sub.kind === 'scan') || a.ink < sub.inkCost + 10 || SUB_KITS[sub.kind]?.blocked?.(a, sub)) return null;
+    // (lost from sight: a moment after, while it could still be there; located: where it is)
+    const age = G.time - k.t;
+    if (k.src === 'sight' ? age < 0.3 || age > 3 : age > 1 || (sub.kind === 'scan' && k.src === 'track')) return null;
+    const p = k.guess, d = Math.hypot(p.x - a.pos.x, p.z - a.pos.z);
+    if (d < 4.5 || d > 12 || Math.abs(p.y - a.pos.y) > 3) return null;
+    const pitch = lobPitch(d, p.y - a.pos.y, sub.throwSpeed || 13.5);
+    if (pitch === null) return null;
+    this.memBombOn = false; SIGHT_STATS.memBombs++;
+    this.mBomb = { yaw: Math.atan2(p.x - a.pos.x, p.z - a.pos.z), pitch, t: 1.1, release: false };
+    return this.mBomb;
   }
 
   _pathTo(pos, maxUp = 0.8) {
