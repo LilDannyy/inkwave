@@ -188,7 +188,7 @@ const SPIRHALITE = {
     checkpoints: [[29, 8], [29, 31]],
   },
   // match intro: opens under the Great Arch's crown looking along it at the cascade pillar, then pulls back to your pad
-  intro: { from: [-7, 6.5, 6], lookFrom: [4, 5.5, -16], toBack: 3.0 },
+  intro: { from: [-7, 6.5, 6], lookFrom: [2.8, 5.5, -18.1], toBack: 3.0 },
   // stage-select picture: high over Alpha's helipad — the S sweeping away round both lagoons, the arch across it
   art: { from: [6, 54, -72], look: [-1, 0, -8], fov: 56 },
   decor: { lamps: [], palms: [], flags: [] },
