@@ -86,6 +86,21 @@ Pod placement rules:
 - Never on a spawn exit or narrow stair.
 - A fully grown hedge must not seal a route completely: every area keeps another way round.
 
+### Change from the user (2026-09-29): team-owned hedges you can climb
+
+"Can you make it so the sprout pods are slightly hued to the colour of the team who shoots it and only they can ink the
+sprout to climb up it to get more high ground or block off paths?"
+- **Growing.** Each team fills its own meter on a pod; the first to fill it grows the hedge, and the hedge is that
+  team's. While filling, the dormant pod blushes toward the team that's ahead on it.
+- **Look.** The grown hedge is tinted in the owner's ink colour: leaves with a clear team-colour sheen or blossoms, not
+  a flat recolour.
+- **Ink.** The hedge takes ink from its owner's team only: the other team's shots don't stick (they still hit it as
+  cover). Its walls in the owner's ink can be swum up, like any inked wall.
+- **Top.** The top is standable (not slide-off) and takes the owner's ink: high ground for the team that grew it, and
+  a wall that blocks a path for everyone.
+- **Placement.** Place pods where a hedge top gives useful but fair high ground: over the meadow, at lane corners. A
+  1.8 m top is higher than a jump, so kids get up only by swimming up the owner's ink. Mirror them as before.
+
 ## Modes
 
 - **Zone Control.**
@@ -148,7 +163,9 @@ You register the two prop types in `props.js`:
 - `treehills_pod`: the dormant seed bulb in its planter (about 0.9 × 0.7 × 0.9 m), with a swelling part the engine can
   scale as the meter fills.
 - `treehills_hedge`: the grown hedge, built at the size it's given (w × h × d, origin at its base centre); leafy,
-  flowered, no colliders (the engine makes the collision block).
+  flowered, no colliders (the engine makes the collision block). It is tinted to the owner's team colour by the engine
+  (a `team` / `tint` option, or a colour the engine multiplies in: agree the mechanism in the engine's report). Leave
+  the leaf material light enough that a tint reads, and give it a flat-ish top the engine's ink overlay can sit on.
 
 The engine side:
 - the meter and growth;
