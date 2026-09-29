@@ -51,3 +51,10 @@ Tower Command:
 - `MAP=<id> tools/botlab/run.sh tools/botlab/tower-match.cjs` runs an all-bot tower match and reports the tower's numbers.
 - The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `tower-ink.js`.
+
+HUD:
+- `MAP=halyard MODE=turf SCENES=tools/botlab/tests/hud-lead-scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs`:
+  pictures of a match with the HUD up (shoot.cjs hides it): the SCENES script drives each state, and each is saved as the
+  full frame + a crop of the top bar.
+- The who's-ahead HUD (roster sizes, LEAD / DANGER banners, the take-the-lead sting): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/hud-lead.js
+  tools/botlab/run.sh tools/botlab/page.cjs`, and the same with `MODE=zones` and `MODE=tower`.

@@ -28,12 +28,15 @@
 //   percents            accepted as 0..100 or 0..1.
 // Boss mode (docs/BOSS.md): src/ui/hud-boss.js (hud.boss) adds the boss bar / title card / callouts / damage numbers and
 // the endings; the roster slots show the 8-kid squad in squad ink. It switches on match.mode === 'boss' or boss:spawn.
+// Who's ahead: src/ui/hud-lead.js (hud.lead) grows / shrinks each team's roster group, hangs a bouncing LEAD / DANGER
+// banner under it and flashes + stings when a team takes the lead (Turf War, Zone Control, Tower Command).
 import { h, clamp, colorVars, toHex, fmtTime, fmtInt, splatSVG, splatShape, pct, shade, lerp, easeOutBack, easeOutCubic, restartAnim, prefersReducedMotion } from './ui-util.js';
 import { SQUID, SPLAT_ICON, DEATH_ICON, GLYPHS, SUB_ICONS, WEAPON_ICONS, richText, keycap, specialIcon, weaponIcon } from './ui-icons.js';
 import { WEAPONS, SPECIALS, TEAM_NAMES, SUB, PLAYER, MATCH, ZONES, TOWER } from '../config.js';
 import { on, G } from '../core/ctx.js';
 import { SFX } from '../audio/audio.js';
 import { BossHud } from './hud-boss.js';
+import { LeadHud } from './hud-lead.js';
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -141,6 +144,7 @@ export class HUD {
     addEventListener('resize', this._onResize);
     this._bindBus();
     this.boss = new BossHud(this);
+    this.lead = new LeadHud(this);   // (after the build: it hangs its banners on the roster groups)
     installBossAudio();   // boss-mode sfx + music director (idle outside boss matches)
   }
 
@@ -397,6 +401,7 @@ export class HUD {
     this._updFps(f.fps, dt);
     this._updZones(f.zones, dt);
     this._updTower(f.tower, dt);
+    this.lead.update(dt, f);
     this.boss.update(dt);
   }
 

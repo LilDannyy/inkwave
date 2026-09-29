@@ -2519,6 +2519,30 @@ def('tower_clear', {
     crash(v, T + 0.24, 0.2, { d: 0.7 });
   },
 });
+// a team takes the lead (the top bar's LEAD flash, src/ui/hud-lead.js) — a short sting, smaller than a capture's fanfare.
+// Ours: a quick rising pulse run (C E G) with an upward swoosh into a bright fifth, a bell on top.
+def('lead_ours', {
+  gain: 0.4, max: 1, jitter: 0, reverb: 0.18, minGap: 1,
+  build(v, p) {
+    const T = v.t, lp = v.filter('lowpass', 5200, 0.8, v.out), pw = pulseWave(v.ctx, 0.25);
+    [72, 76, 79].forEach((m, i) => v.tone({ t: i * 0.06, type: pw, f: mtof(m) * p, a: 0.002, h: 0.03, d: 0.09, peak: 0.26, to: lp }));
+    v.nz({ t: 0.02, f: 900, f1: 5600, sw: 0.17, q: 1.4, a: 0.08, d: 0.1, peak: 0.16 });
+    for (const [m, pan] of [[79, -0.25], [84, 0.25]]) brass(v, T + 0.18, mtof(m) * p, 0.2, 0.26, { to: v.pan(pan, v.out), bright: 5200, a: 0.008, r: 0.28 });
+    kick(v, T + 0.18, 0.35);
+    bell(v, T + 0.2, mtof(96) * p, 0.15, { d: 0.6 });
+  },
+});
+// theirs: the same shape turned down — a falling run (D B♭ F) sagging into a dark, low minor third with a thud
+def('lead_theirs', {
+  gain: 0.4, max: 1, jitter: 0, reverb: 0.16, minGap: 1,
+  build(v, p) {
+    const T = v.t, lp = v.filter('lowpass', 2600, 0.9, v.out), pw = pulseWave(v.ctx, 0.3);
+    [74, 70, 65].forEach((m, i) => v.tone({ t: i * 0.07, type: pw, f: mtof(m) * p, a: 0.002, h: 0.035, d: 0.1, peak: 0.24, to: lp }));
+    v.tone({ t: 0.2, type: 'sawtooth', f: 262 * p, f1: 131 * p, sw: 0.35, a: 0.01, d: 0.35, peak: 0.1, to: v.filter('lowpass', 1200, 2, v.out) });
+    for (const [m, pan] of [[58, -0.25], [61, 0.25]]) brass(v, T + 0.21, mtof(m) * p, 0.24, 0.26, { to: v.pan(pan, v.out), bright: 1800, a: 0.015, r: 0.3 });
+    tom(v, T + 0.21, 70, 0.5);
+  },
+});
 
 export const SFX_GROUPS = {
   UI: ['ui_hover', 'ui_click', 'ui_back', 'ui_confirm', 'ui_toggle', 'ui_slider', 'ui_error'],
@@ -2540,6 +2564,7 @@ export const SFX_GROUPS = {
   Zones: ['zone_ours', 'zone_theirs', 'zone_lost', 'zone_broken', 'zone_warn', 'zone_chance', 'zone_penalty', 'zone_shift', 'zone_final',
     'zone_overtime', 'zone_tick', 'zone_flood', 'zone_wipe', 'zone_hum'],
   Tower: ['tower_move', 'tower_checkpoint', 'tower_clear'],
+  Lead: ['lead_ours', 'lead_theirs'],
   Boss: ['boss_roar', 'boss_step', 'boss_slam', 'boss_tele', 'boss_whistle', 'boss_barrel', 'boss_cannon_charge', 'boss_cannon_sweep', 'boss_gallop', 'boss_crash',
     'boss_dizzy', 'boss_frenzy', 'crablet_chitter', 'crablet_pop', 'boss_hit', 'boss_crit', 'boss_phase', 'boss_title', 'boss_defeat', 'boss_sunk'],
 };
