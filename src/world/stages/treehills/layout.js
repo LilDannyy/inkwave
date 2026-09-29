@@ -27,7 +27,7 @@ import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN_N, RILL, GARDEN_S, RILL_
 // ------------------------------------------------------------------------------------------------------------
 const K = {
   lawn: '#98b381', hill: '#a2b47e', upper: '#91ad7a', crown: '#88a773', apron: '#9fb0a6', wall: '#95a29a', spawn: '#e1e6d8',
-  station: '#56806a', stair: '#a9b3ad', ramp: '#98a99f',
+  station: '#56806a', stair: '#a9b3ad',
 };
 const lawn = (o = {}) => ({ color: K.lawn, pattern: SURF.lawn, ...o });
 const deck = (o = {}) => ({ color: K.apron, pattern: SURF.chequer, ...o });
@@ -125,14 +125,14 @@ const HALF = [
   // ---------------- centre: the central stair down into the seed-bank garden; the Seed Vault Plaza's broad ramp (its
   //                  south face, straight up from the garden) and its stair (the south-east face)
   R([0, G0, -21.9], [0, T1, -25], 7, steps({ tag: 'garden-stair' })),
-  R([0, G0, -10.95], [0, T1, -6.75], 6, deck({ tag: 'plaza-ramp', color: K.ramp })),
+  R([0, G0, -10.95], [0, T1, -6.75], 6, { color: '#bfc3b8', pattern: PATTERN.pavers, tag: 'plaza-ramp' }),
   R([8.02, G0, -6.2], [5.6, T1, -4.425], 4, steps({ tag: 'plaza-stair' })),
   // ---------------- the meadow rolls: grass mounds with ramps all round (octagons, eight ramps each)
   ...MOUNDS.flatMap((m) => mound(m)),
 
   // ---------------- the east tree-hill: the hill ramp (south lobe → upper tier), stairs round the crown, the north
   //                  strip's stair up to the upper tier (beside the tower's route), the band's stairs from the meadow
-  R([23, T1, -16], [23, T2, -10], 5, deck({ tag: 'hill-ramp', color: K.ramp })),
+  R([23, T1, -16], [23, T2, -10], 5, lawn({ tag: 'hill-ramp', color: '#9db27c' })),
   R([29.3, T1, -13.1], [29.3, T2, -10], 2.8, steps({ tag: 'lobe-stair' })),
   R([29.6, T2, -7.1], [29.6, T3, -4], 2.8, steps({ tag: 'crown-stair' })),
   R([29.4, T2, 17.1], [29.4, T3, 14], 2.6, steps({ tag: 'crown-stair' })),

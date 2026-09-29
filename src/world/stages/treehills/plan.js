@@ -56,3 +56,59 @@ export const ZONE_S = [3.5, 14, -36.5, -26.5];
 // the reservoir's outline (the playable ground's outer edge), for checks and the backdrop: Alpha's half, from the west
 // end of the station's back round the east side to the north; the full ring is this + its twin
 export const bounds = { minX: -35.5, maxX: 35.5, minZ: -47, maxZ: 47 };
+
+// ---------------------------------------------------------------------------------------------------------------------
+// The forest: groves on every terrace of the east tree-hill (authored whole; the west hill is its twin). Each grove is a
+// bed (an O-box: centre x, z on tier y, w × d turned deg — the mapkit O convention) of bark mulch or moss 12 cm proud of
+// the lawn (layout.js lays it: paintable, walkable), planted as one solid clump (props.js: groveParts) — trees on a
+// 1.45 m hex lattice nearest the bed's middle (their cores touch: no pockets between them), shrubs on the next lattice
+// points out, ferns round the rim. bed: null = no bed (the band and the upper tier's meadow edge: their ground is the
+// stage's murals). n trees, m shrubs, hmax the tallest (in the middle).
+export const BED_H = 0.12;
+export const GROVES = [
+  // the south lobe (T1, Alpha's left lane): along the tip's outer edge (beside the side zone), the corner grove short
+  // of the hill ramp, the pocket between the hill ramp and the lobe stair against the upper tier's wall
+  { id: 'lobe-tip', x: 16.37, z: -29.63, y: T1, w: 4.0, d: 2.6, deg: -60, n: 4, m: 1, hmax: 7.6, bed: 'mulch', seed: 1 },
+  { id: 'lobe-corner', x: 23.4, z: -20.2, y: T1, w: 4.0, d: 2.4, deg: -45, n: 4, m: 2, hmax: 8.0, bed: 'moss', seed: 2 },
+  { id: 'lobe-wall', x: 26.7, z: -11.33, y: T1, w: 2.3, d: 2.55, deg: 0, n: 2, m: 1, hmax: 6.4, bed: 'mulch', seed: 3 },
+  // the upper tier (T2): the forest round the ranger's clearing (between it and the stairs), the meadow edge (the
+  // track's west side: three stands with gaps to shoot through), the north corner beside the crown stair
+  { id: 'upper-ranger', x: 26.85, z: -6.65, y: T2, w: 1.5, d: 5.1, deg: 0, n: 3, m: 1, hmax: 6.6, bed: 'mulch', seed: 4 },
+  { id: 'upper-edge-s', x: 20.65, z: 4.8, y: T2, w: 1.5, d: 3.4, deg: 0, n: 2, m: 1, hmax: 5.4, bed: null, seed: 5 },
+  { id: 'upper-edge-m', x: 20.65, z: 10.5, y: T2, w: 1.5, d: 3.0, deg: 0, n: 2, m: 0, hmax: 4.8, bed: null, seed: 6 },
+  { id: 'upper-edge-n', x: 20.65, z: 15.8, y: T2, w: 1.5, d: 3.4, deg: 0, n: 2, m: 1, hmax: 5.6, bed: null, seed: 7 },
+  { id: 'upper-north', x: 27.25, z: 15.35, y: T2, w: 1.3, d: 2.5, deg: 0, n: 2, m: 0, hmax: 6.0, bed: 'moss', seed: 8 },
+  { id: 'upper-prow', x: 31.4, z: 14.9, y: T2, w: 1.2, d: 1.6, deg: 0, n: 1, m: 1, hmax: 5.0, bed: 'mulch', seed: 9 },
+  // the crown (T3): trees round the turbine's clearing — both prows and both corners over the upper tier (the stair
+  // heads and the overlook over the meadow stay open)
+  { id: 'crown-ne', x: 33.2, z: 11.1, y: T3, w: 1.8, d: 2.6, deg: 0, n: 2, m: 1, hmax: 7.0, bed: 'mulch', seed: 10 },
+  { id: 'crown-se', x: 33.1, z: -0.2, y: T3, w: 1.6, d: 2.4, deg: 0, n: 2, m: 0, hmax: 6.2, bed: 'moss', seed: 11 },
+  { id: 'crown-nw', x: 27.45, z: 12.05, y: T3, w: 1.1, d: 3.5, deg: 0, n: 2, m: 1, hmax: 7.2, bed: 'mulch', seed: 12 },
+  { id: 'crown-sw', x: 27.5, z: -2.1, y: T3, w: 1.2, d: 3.0, deg: 0, n: 2, m: 0, hmax: 6.4, bed: 'moss', seed: 13 },
+  // the band (T1) along the meadow: stands against the upper tier's wall, the lane open beside them
+  { id: 'band-s', x: 18.68, z: -9.25, y: T1, w: 1.55, d: 2.7, deg: 0, n: 2, m: 1, hmax: 5.2, bed: null, seed: 14 },
+  { id: 'band-m', x: 18.68, z: 12.8, y: T1, w: 1.55, d: 3.2, deg: 0, n: 2, m: 1, hmax: 5.4, bed: null, seed: 15 },
+  { id: 'band-n', x: 18.2, z: 17.9, y: T1, w: 2.45, d: 4.0, deg: 0, n: 3, m: 1, hmax: 6.0, bed: null, seed: 16 },
+  // the north strip (T1, Bravo's right lane): the corner under the upper tier's wall east of the track, the stand
+  // north of the strip pod (clear of the track and the pod's hedge)
+  { id: 'strip-ne', x: 27.25, z: 22.25, y: T1, w: 1.7, d: 3.9, deg: 0, n: 3, m: 1, hmax: 7.0, bed: 'mulch', seed: 17 },
+  { id: 'strip-nw', x: 18.0, z: 27.75, y: T1, w: 4.8, d: 1.7, deg: 0, n: 3, m: 1, hmax: 6.2, bed: 'moss', seed: 18 },
+];
+// stepping-stone trails (level pads 8 cm proud of the lawn, 1.0 × 0.8 m, every 1.35 m along a polyline) — the south
+// lobe: from the band's junction to the hill ramp's foot, and on past the corner grove to the lobe stair
+export const TRAIL_H = 0.08;
+function pads(pts, y, step = 1.35) {
+  const out = [];
+  let carry = step / 2;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const [ax, az] = pts[i], [bx, bz] = pts[i + 1], L = Math.hypot(bx - ax, bz - az), deg = (Math.atan2(-(bz - az), bx - ax) * 180) / Math.PI;
+    let s = carry;
+    for (; s <= L; s += step) out.push({ x: +(ax + ((bx - ax) * s) / L).toFixed(3), z: +(az + ((bz - az) * s) / L).toFixed(3), y, deg: +deg.toFixed(2) });
+    carry = s - L;
+  }
+  return out;
+}
+export const TRAILS = [
+  ...pads([[17.2, -21.9], [19.6, -19.9], [22.2, -18.4], [23.0, -16.6]], T1),
+  ...pads([[24.9, -16.9], [27.0, -15.2], [28.9, -14.0]], T1),
+];

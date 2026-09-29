@@ -123,10 +123,11 @@ export function buildBackdrop(kit) {
   }
   out.plain.push(...terr);
 
-  // cypress cones over the hills (instanced): a trunk and three stacked cones
+  // cypress cones over the hills (instanced): a trunk and three stacked cones (the trunk and the upper two cones
+  // open-ended: their ends are always inside the next piece up or the ground — half the triangles of thousands of trees)
   const treeGeo = (() => {
-    const parts = [xf(cyl(0.3, 0.45, 3, 5, '#5b4636'), 0, 1.5, 0)];
-    for (const [y, r, h] of [[2, 2.6, 5], [4.4, 2.0, 4.4], [6.6, 1.3, 3.8]]) parts.push(xf(cyl(0, r, h, 7, '#ffffff'), 0, y + h / 2, 0));
+    const parts = [xf(cyl(0.3, 0.45, 3, 5, '#5b4636', 0, true), 0, 1.5, 0)];
+    for (const [y, r, h, k] of [[2, 2.6, 5, 0], [4.4, 2.0, 4.4, 1], [6.6, 1.3, 3.8, 2]]) parts.push(xf(cyl(0, r, h, 7, '#ffffff', 0, k > 0), 0, y + h / 2, 0));
     return merge(parts);
   })();
   const trees = [];

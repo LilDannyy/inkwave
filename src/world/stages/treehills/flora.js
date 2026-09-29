@@ -15,10 +15,25 @@ export function registerFlora(D, H, T) {
     build(B, o) {
       const h = o.h ?? 7, w = o.w ?? 0.8, kind = o.kind ?? 'hinoki';
       const tone = o.c ?? mixc(kind === 'thujopsis' ? K.thu : K.cyp, kind === 'thujopsis' ? K.thuLt : K.cypLt, (hash((o.seed ?? 1) * 1.7) - 0.3) * 0.4);
-      evergreen(B, 0, 0, 0, h, { kind, seed: o.seed ?? 1, w, c: tone, rot: o.rot });
-      // a mulch ring at the foot
-      B.cyl(NS('paint'), '#6b5a45', Math.min(0.75, h * 0.1), 0.03, 0, 0.015, 0, { seg: 12 });
+      evergreen(B, 0, 0, 0, h, { kind, seed: o.seed ?? 1, w, c: tone, rot: o.rot, lite: o.lite });
+      // a mulch ring at the foot (not in a grove: its bed is the mulch)
+      if (o.mulch !== false) B.cyl(NS('paint'), '#6b5a45', Math.min(0.75, h * 0.1), 0.03, 0, 0.015, 0, { seg: 12 });
       if (o.solid !== false) { const cw = o.core ?? Math.min(1.8, h * w * 0.3); colC(B, 0, 0, 0, cw, Math.min(3.2, h * 0.45), cw, ROOF); }
+    },
+  };
+  // ferns (the groves' underplanting, visual only): a low clump of arching fronds (r across), a few curled fiddleheads
+  D.treehills_ferns = {
+    desc: 'fern clump (visual, knee-high): arching fronds round a crown',
+    build(B, o) {
+      const r = o.r ?? 0.6, s = o.seed ?? 3, n = o.n ?? 7;
+      for (let k = 0; k < n; k++) {
+        const a = (k / n) * TAU + hash(s + k) * 0.6, L = r * (0.75 + 0.35 * hash(s * 3 + k)), tilt = 0.5 + 0.35 * hash(s + k * 7);
+        const c = mixc('#3f6e3a', '#7fae5a', 0.25 + 0.55 * hash(s * 5 + k));
+        B.push(Math.cos(a) * L * 0.45, 0.16 + 0.12 * hash(k + s), Math.sin(a) * L * 0.45, -a, 0, tilt * 0.6);
+        B.add(NS('foliage'), blob(0, (s + k) % 8), c, 0, 0, 0, { sx: L * 0.55, sy: 0.035, sz: 0.11 + 0.05 * hash(k * 3 + s), ao: false });
+        B.pop();
+      }
+      B.add(NS('foliage'), blob(0, s % 8), '#35572f', 0, 0.08, 0, { sx: 0.16, sy: 0.08, sz: 0.16, ao: false });
     },
   };
   // young cypress clump: three young Hinoki in a round steel planter (cover in the meadow)
@@ -115,10 +130,11 @@ export function registerFlora(D, H, T) {
         B.add('gloss', bulbGeo(), '#d8eebb', 0, y0, 0, {});
         for (let k = 0; k < 7; k++) B.add('gloss', veinGeo(), '#b3d692', 0, y0, 0, { ry: (k / 7) * TAU, sx: 0.12, sz: 1.02 });
         // the sprout on top: a curled shoot and two first leaves
-        seg(B, 'foliage', '#8fbf62', [0, y0 + 0.62, 0], [0.04, y0 + 0.8, 0.02], 0.035, 0.035, { round: true });
-        for (const s of [-1, 1]) B.add('foliage', blob(0, s > 0 ? 2 : 5), '#a8d47a', s * 0.1, y0 + 0.82, 0.02, { sx: 0.12, sy: 0.03, sz: 0.07, rz: s * 0.4 });
+        // (the bulb is one material — each bulb is its own moving part with its own material copies, so one draw a bulb)
+        seg(B, 'gloss', '#8fbf62', [0, y0 + 0.62, 0], [0.04, y0 + 0.8, 0.02], 0.035, 0.035, { round: true });
+        for (const s of [-1, 1]) B.add('gloss', blob(0, s > 0 ? 2 : 5), '#a8d47a', s * 0.1, y0 + 0.82, 0.02, { sx: 0.12, sy: 0.03, sz: 0.07, rz: s * 0.4 });
         // roots gripping the soil
-        for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU + 0.3; seg(B, NS('wood'), '#8a7a52', [Math.cos(a) * 0.18, y0 + 0.05, Math.sin(a) * 0.18], [Math.cos(a) * 0.33, y0 + 0.005, Math.sin(a) * 0.33], 0.025, 0.02, { round: true, seg: 4 }); }
+        for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU + 0.3; seg(B, 'gloss', '#8a7a52', [Math.cos(a) * 0.18, y0 + 0.05, Math.sin(a) * 0.18], [Math.cos(a) * 0.33, y0 + 0.005, Math.sin(a) * 0.33], 0.025, 0.02, { round: true, seg: 4 }); }
       }
     },
   };
