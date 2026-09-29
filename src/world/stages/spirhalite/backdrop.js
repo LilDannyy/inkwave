@@ -8,11 +8,13 @@
 //     arch, tiered pillars standing in the sea as grey silhouettes (one with its own cascade)
 //   • the arena's live pieces: the two cascade pillars' water (animated sheets, splash, foam) and the drips falling from
 //     the Great Arch's underside over the centre
-import { SHORES } from './outline.js';
+import { SHORES, PILLAR as PILLAR_AT } from './outline.js';
 import { ARCH } from './props-ruins.js';
 
-// the arena's cascade pillars (Alpha's; Bravo's is the mirror) and the way each pours (toward its own base)
-export const PILLAR = { x: 0, z: -16.5, dir: [1, 0] };
+// the arena's cascade pillars (Alpha's; Bravo's is the mirror) and the way each pours (east, into the bay beside it);
+// the plinth's and tier's faces (apothems) and the headland's shore that the water runs over
+const AP = Math.cos(Math.PI / 8);
+export const PILLAR = { x: PILLAR_AT.x, z: PILLAR_AT.z, dir: [1, 0], tier: PILLAR_AT.tier * AP, plinth: PILLAR_AT.plinth * AP, shore: PILLAR_AT.isle };
 
 export function buildBackdrop(kit) {
   const { THREE, box, cyl, sph, prep, xf, makeIsland, fbm, DEG, WATER_Y, U } = kit;
@@ -202,8 +204,9 @@ export function buildBackdrop(kit) {
     transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false,
   });
   // a sheet swept round the pillar along its profile path (r, y), over an arc facing `dir`
+  const T = PILLAR.tier, PL = PILLAR.plinth, SH = PILLAR.shore;
   const path = [[0.7, 8.28], [0.98, 7.82], [1.12, 7.72], [1.02, 7.6], [1.02, 6.66], [1.34, 6.48], [1.2, 6.3], [1.2, 4.76], [1.54, 4.5], [1.4, 4.3], [1.4, 2.56],
-    [1.84, 2.53], [1.86, 1.34], [2.66, 1.32], [2.69, 0.03], [5.1, 0.03], [5.45, -0.08], [5.55, -1.72]];
+    [T + 0.08, 2.53], [T + 0.1, 1.34], [PL + 0.07, 1.32], [PL + 0.1, 0.03], [SH - 0.5, 0.03], [SH - 0.15, -0.08], [SH - 0.05, -1.72]];
   const fallSeg = path.map((p, i) => (i && Math.abs(p[1] - path[i - 1][1]) > Math.abs(p[0] - path[i - 1][0]) * 1.5 ? 1 : 0));
   const cascadeGeo = (cx, cz, dx, dz) => {
     const pos = [], uv = [], aS = [], aF = [], idx = [], NW = 10, base = Math.atan2(dz, dx);
@@ -238,7 +241,7 @@ export function buildBackdrop(kit) {
   const NP = 90, ND = 70, pp = new Float32Array((NP * 2 + ND) * 3), ph = new Float32Array(NP * 2 + ND), kind = new Float32Array(NP * 2 + ND);
   let o3 = 0;
   for (const sg of [1, -1]) for (let i = 0; i < NP; i++) {
-    const r = 5.55 + rnd() * 0.5, a = Math.atan2(sg * PILLAR.dir[1], sg * PILLAR.dir[0]) + (rnd() - 0.5) * 0.9;
+    const r = PILLAR.shore - 0.05 + rnd() * 0.5, a = Math.atan2(sg * PILLAR.dir[1], sg * PILLAR.dir[0]) + (rnd() - 0.5) * 0.9;
     pp.set([sg * PILLAR.x + Math.cos(a) * r, WATER_Y + 0.05, sg * PILLAR.z + Math.sin(a) * r], o3 * 3); ph[o3] = rnd(); kind[o3] = 0; o3++;
   }
   const c0 = Math.cos(ARCH.rotY), s0 = Math.sin(ARCH.rotY);
@@ -271,7 +274,7 @@ export function buildBackdrop(kit) {
   const ring = new THREE.RingGeometry(0.2, 1.6, 24, 1);
   ring.rotateX(-Math.PI / 2);
   const rings = [];
-  for (const sg of [1, -1]) { const g = ring.clone(); g.translate(sg * (PILLAR.x + PILLAR.dir[0] * 5.8), WATER_Y + 0.03, sg * (PILLAR.z + PILLAR.dir[1] * 5.8)); rings.push(g); }
+  for (const sg of [1, -1]) { const g = ring.clone(); g.translate(sg * (PILLAR.x + PILLAR.dir[0] * (PILLAR.shore + 0.25)), WATER_Y + 0.03, sg * (PILLAR.z + PILLAR.dir[1] * (PILLAR.shore + 0.25))); rings.push(g); }
   const rg = new THREE.BufferGeometry();
   { const a = rings[0].toNonIndexed(), b = rings[1].toNonIndexed(), p = new Float32Array(a.attributes.position.array.length * 2), u = new Float32Array(a.attributes.uv.array.length * 2); p.set(a.attributes.position.array); p.set(b.attributes.position.array, a.attributes.position.array.length); u.set(a.attributes.uv.array); u.set(b.attributes.uv.array, a.attributes.uv.array.length); rg.setAttribute('position', new THREE.BufferAttribute(p, 3)); rg.setAttribute('uv', new THREE.BufferAttribute(u, 2)); }
   const foam = new THREE.Mesh(rg, new THREE.ShaderMaterial({
