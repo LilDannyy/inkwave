@@ -5,12 +5,16 @@
 // houses, the bath house, the station building, the co-op), railway.js, harbour.js, village.js.
 // PLACEMENTS: the half list (Alpha's side, z < 0) — every entry is mirrored (x, z) → (−x, −z), rotY + π, unless it
 // says `mirror: false` (one-offs that never change play: the Cuttlefish nameplate …).
+// The Long Stages stretch (stretch.js): the base side's dressing is placed with the original numbers and moved out by
+// ST.d with its pieces (moveOut); the new land's dressing is HIGH_STREET (the village high street, numbers in Q).
 import { makeKit } from './kit.js';
 import { registerBuildings } from './buildings.js';
 import { registerRailway } from './railway.js';
 import { registerHarbour } from './harbour.js';
 import { registerVillage } from './village.js';
-import { P } from './layout.js';
+import { registerHighStreet } from './highstreet.js';
+import { P, Q } from './layout.js';
+import { STRETCH as ST, moveOut } from './stretch.js';
 
 const PI = Math.PI, HP = PI / 2, DEG = PI / 180;
 
@@ -20,6 +24,7 @@ export function register(D, H) {
   registerRailway(D, H, KIT);
   registerHarbour(D, H, KIT);
   registerVillage(D, H, KIT);
+  registerHighStreet(D, H, KIT);
 }
 
 // ================================================================================================ placements
@@ -43,6 +48,9 @@ const BUILDINGS = [
     },
     upper: { h: 2.5, inset: 0.3, faces: { 3: [{ t: 'win', x: -1.3, w: 1.3, h: 0.9, sill: 0.8, sash: true, lit: 1.1 }, { t: 'win', x: 1.4, w: 1.3, h: 0.9, sill: 0.8, sash: true }], 1: [{ t: 'win', x: 0, w: 1.6, h: 0.9, sill: 0.8, sash: true, lit: 0.9 }], 0: [{ t: 'win', x: 0, w: 1.0, h: 0.9, sill: 0.8, sash: true }] } },
     hisashi: [1, 3], roof: { f: 0.5, pitch: 0.5, alongX: false }, snow: [0] },
+];
+// (the base side: moved out with the co-op)
+const BASE_BUILDINGS = [
   // the co-op's net store beside the loading dock
   { type: 'calamari_house', ...box4(P.netStore), h: 3.2, style: 'cedar', plinth: false,
     faces: { 1: [{ t: 'win', x: -1.6, w: 1.0, h: 0.8, sill: 1.4 }, { t: 'pipe', x: 3.0 }], 3: [{ t: 'sign', text: 'NETS', x: 1.3, at: 2.4, h: 0.2 }] },
@@ -106,20 +114,17 @@ const basinRot = Math.atan2(-(bB[1] - bA[1]), bB[0] - bA[0]);   // (the basin qu
 const bwA = P.breakwater[0], bwB = P.breakwater[1], bwL = Math.hypot(bwB[0] - bwA[0], bwB[1] - bwA[1]);
 const bwU = [(bwB[0] - bwA[0]) / bwL, (bwB[1] - bwA[1]) / bwL], bwN = [bwU[1], -bwU[0]];   // along the arm, and across it (inward)
 const bwTip = [bwB[0] + bwN[0] * 1.3 - bwU[0] * 1.1, bwB[1] + bwN[1] * 1.3 - bwU[1] * 1.1];
+const onEdge = (z) => lerp2(bA, bB, (z - bA[1]) / (bB[1] - bA[1]));   // the basin edge's point at z (its line carried on south)
 const onBasin = (t, off, y = -0.1) => { const p = lerp2(bA, bB, t); return [p[0] - Math.cos(basinRot) * 0 + off * Math.sin(basinRot) * 0 - off * 0.99, y, p[1] + off * 0.14]; };
 
 const NQ = P.northQuay, SQ = P.southQuay;
 const HARBOUR = [
-  // quay edges: the basin quay (both sides of the slipway), the north quay's shore + east end, the co-op quay's
+  // quay edges: the basin quay (both sides of the slipway; carried on south past the fish market to the co-op quay),
+  // the north quay's shore + east end
   edge('calamari_quayedge', bA, sA, { y: -0.1, bollards: [2.5, 7.0], ladders: [5.2], drop: 1.5 }),
-  edge('calamari_quayedge', sB, bB, { y: -0.1, bollards: [2.0, 7.5], fenders: 3.0, drop: 1.5 }),
+  edge('calamari_quayedge', sB, onEdge(Q.floor[3]), { y: -0.1, bollards: [2.0, 7.5], fenders: 3.0, drop: 1.5 }),
   edge('calamari_quayedge', [NQ[1], NQ[2]], [bA[0] + 0.9, NQ[2]], { bollards: [1.6], ladders: [4.2] }),
   edge('calamari_quayedge', [NQ[1], -8.5], [NQ[1], NQ[2]], { bollards: [3.0, 7.0] }),
-  edge('calamari_quayedge', [bB[0] - 0.05, SQ[0][3]], [SQ[0][1], SQ[0][3]], { fenders: 0 }),
-  edge('calamari_quayedge', [SQ[0][1], SQ[0][3]], [SQ[0][1], SQ[0][2]], { bollards: [1.5, 5.5], ladders: [3.4] }),
-  edge('calamari_quayedge', [SQ[0][1], SQ[0][2]], [SQ[1][1], SQ[0][2]], { bollards: [3.2] }),
-  edge('calamari_quayedge', [SQ[1][1], SQ[1][3]], [SQ[1][1], SQ[1][2]], { fenders: 0 }),
-  edge('calamari_quayedge', [SQ[1][1], SQ[1][2]], [SQ[1][0], SQ[1][2]], { fenders: 0 }),
   // the breakwater's light on its head; bollards along it
   { type: 'calamari_harbourlight', pos: [bwTip[0], 0.25, bwTip[1]] },
   { type: 'calamari_quayedge', pos: [bwA[0] + bwN[0] * 2.4, 0.25, bwA[1] + bwN[1] * 2.4], rotY: Math.atan2(-bwU[1], bwU[0]), length: bwL - 2.4, fenders: 0, bollards: [1.5], drop: 1.85 },
@@ -132,8 +137,6 @@ const HARBOUR = [
   // the basin quay (8 m between the store and the water): fish boxes and nets staggered either side, lamps on the kerb
   { type: 'calamari_fishboxes', pos: [22.0, -0.1, -20.6], rotY: basinRot, cols: 2, rows: 3, variant: 0 },
   { type: 'calamari_nets', pos: [17.3, -0.1, -24.6], r: 0.8, variant: 0 },
-  { type: 'calamari_fishboxes', pos: [20.9, -0.1, -33.4], rotY: basinRot + 0.1, cols: 2, rows: 2, depth: 2, variant: 1 },
-  { type: 'calamari_nets', pos: [14.6, 0, -36.2], r: 0.7, variant: 1 },
   { type: 'calamari_lamppost', pos: [16.5, -0.1, -18.6], rotY: -Math.PI / 2 },
   { type: 'calamari_lamppost', pos: [16.4, -0.1, -29.8], rotY: -Math.PI / 2 },
   // the north quay apron (20 × 6 m): a boat hauled up on blocks, the seaweed drying rack, fish boxes, a snowbank
@@ -141,6 +144,14 @@ const HARBOUR = [
   { type: 'calamari_rack', pos: [14.2, 0, -13.0], rotY: 0, length: 4.2 },
   { type: 'calamari_fishboxes', pos: [21.0, 0, -15.4], rotY: 0.1, cols: 2, rows: 2, variant: 2 },
   { type: 'calamari_lamppost', pos: [30.6, 0, -11.6], rotY: Math.PI },
+];
+// the base side's harbour: the co-op quay (stepped corner) with its edges and clutter, the co-op yard's nets
+const BASE_HARBOUR = [
+  edge('calamari_quayedge', [SQ[0][1], SQ[0][3]], [SQ[0][1], SQ[0][2]], { bollards: [1.5, 5.5], ladders: [3.4] }),
+  edge('calamari_quayedge', [SQ[0][1], SQ[0][2]], [SQ[1][1], SQ[0][2]], { bollards: [3.2] }),
+  edge('calamari_quayedge', [SQ[1][1], SQ[1][3]], [SQ[1][1], SQ[1][2]], { fenders: 0 }),
+  edge('calamari_quayedge', [SQ[1][1], SQ[1][2]], [SQ[1][0], SQ[1][2]], { fenders: 0 }),
+  { type: 'calamari_nets', pos: [14.6, 0, -36.2], r: 0.7, variant: 1 },
   // the co-op quay (12 × 7.5 m) below the spawn's quay ramp: fish boxes, a snowbank, nets
   { type: 'calamari_fishboxes', pos: [20.2, 0, -41.0], rotY: 0.05, cols: 3, rows: 2, variant: 2 },
   { type: 'calamari_snowbank', pos: [14.6, 0, -39.6], rotY: 0.1, length: 2.2, h: 0.9, d: 1.1, variant: 0 },
@@ -188,7 +199,7 @@ const STATION = [
   { type: 'calamari_bike', pos: [-5.3, 0, -17.1], rotY: 0.25, variant: 2 },
 ];
 
-// ---- the hillside: road, terraces, T2 by the co-op with the Cuttlefish cottage, the landmark tower
+// ---- the hillside: road, T1 (the mid side)
 const HILL = [
   // the hillside road (7 m): snowbanks + a lamp along the houses' side, the terrace's low wall on the other
   { type: 'calamari_snowbank', pos: [-18.3, 0, -13.4], rotY: Math.PI / 2, length: 2.2, h: 0.9, d: 0.9, variant: 2 },
@@ -201,7 +212,19 @@ const HILL = [
   { type: 'calamari_bench', pos: [-26.6, P.y1, -21.6], rotY: Math.PI / 2 },
   { type: 'calamari_snowbank', pos: [-26.4, P.y1, -26.6], rotY: Math.PI / 2, length: 2.2, h: 0.9, d: 1.1, variant: 1 },
   { type: 'calamari_lamppost', pos: [-26.1, P.y1, -18.2], rotY: Math.PI / 2, h: 3.8 },
-  // T2: parapet walls along its edge over the back street, a pine, lanterns, a snowman, a snowbank
+  ...P.hillWalls.slice(0, 3).map(ishigaki),
+];
+// the hill walls' snowy tops (no stones: their faces stay inkable)
+function ishigaki([x0, x1, z0, z1, y1, dressed]) {
+  if (dressed === false) return null;
+  const alongX = x1 - x0 > z1 - z0;
+  return alongX ? { type: 'calamari_ishigaki', pos: [x0, 0, z1 - 0.15], rotY: 0, length: x1 - x0, y0: 0, y1, stones: false }
+    : { type: 'calamari_ishigaki', pos: [x1 - 0.15, 0, z1], rotY: Math.PI / 2, length: z1 - z0, y0: 0, y1, stones: false };
+}
+
+// ---- the base side: T2 by the co-op with the Cuttlefish cottage, the base's approaches (moved out with the base)
+const BASE_HILL = [
+  // T2: parapet walls along its edge over the forecourt, a pine, lanterns, a snowman, a snowbank
   { type: 'calamari_stonewall', pos: [-22.5, P.y2, -30.8], rotY: 0, length: 3.0, h: 0.85, t: 0.5 },
   { type: 'calamari_stonewall', pos: [-17.6, P.y2, -30.8], rotY: 0, length: 4.0, h: 0.85, t: 0.5 },
   { type: 'calamari_stonewall', pos: [-7.8, P.y2, -30.8], rotY: 0, length: 3.0, h: 0.85, t: 0.5 },
@@ -217,19 +240,143 @@ const HILL = [
   { type: 'calamari_lantern', pos: [-11.2, P.y2, -35.2], h: 1.7 },
   { type: 'calamari_snowman', pos: [-5.0, P.y2, -34.4], rotY: 0.4 },
   { type: 'calamari_snowbank', pos: [-24.0, P.y2, -35.4], rotY: 0, length: 2.2, h: 0.85, d: 1.1, variant: 0 },
-  // the hill walls' snowy tops (no stones: their faces stay inkable)
-  ...P.hillWalls.filter((w) => w[5] !== false).map(([x0, x1, z0, z1, y1]) => {
-    const alongX = x1 - x0 > z1 - z0;
-    return alongX ? { type: 'calamari_ishigaki', pos: [x0, 0, z1 - 0.15], rotY: 0, length: x1 - x0, y0: 0, y1, stones: false }
-      : { type: 'calamari_ishigaki', pos: [x1 - 0.15, 0, z1], rotY: Math.PI / 2, length: z1 - z0, y0: 0, y1, stones: false };
-  }),
-  // the fire lookout tower on the hill behind the terraces (the landmark; out of play)
-  { type: 'calamari_firetower', pos: [-37.4, 3.4, -27.5], rotY: 0.3, h: 13 },
-];
-
-const ONE_OFFS = [
+  ...P.hillWalls.slice(3).map(ishigaki).filter(Boolean),
   // Cap'n Cuttlefish's cottage at T2's west end (Alpha's side only): nameplate, anchor, sea chest, by its door
   { type: 'calamari_cuttlefish', pos: [(P.cottage[0] + P.cottage[1]) / 2 - 0.25, P.y2, P.cottage[3]], rotY: 0, mirror: false },
 ];
 
-export const PLACEMENTS = [...BUILDINGS, ...RAILWAY, ...HARBOUR, ...STATION, ...HILL, ...ONE_OFFS];
+// ---- the village high street (the new land, Q): the allotments, the hillside road, the onsen inn and its garden, the
+// High Street, the fire-watch terrace, the fire lane, the post office and its yard, the basin quay with the fish
+// market, the co-op forecourt. The Tower Command track rides the back street, the fire lane, the onsen lane (across
+// the terrace), the road's south half and the forecourt: that clutter stays off those lanes (layout.js TOWER)
+const TR = Q.terrace, GY = Q.gardenY, FY = Q.floorY;
+const slipN = (() => { const dx = bB[0] - bA[0], dz = bB[1] - bA[1], L = Math.hypot(dx, dz); return [-dz / L, dx / L]; })();
+const nA = onEdge(Q.notch[0]), nB = onEdge(Q.notch[1]), backN = (p) => [p[0] - slipN[0] * Q.notch[2], p[1] - slipN[1] * Q.notch[2]];
+const cope = (x0, z0, x1, z1, y, o = {}) => ({ ...edge('calamari_coping', [x0, z0], [x1, z1], { y }), ...o });
+const HIGH_STREET = [
+  // ================= buildings: the onsen inn (Ikayu Inn: noren with the hot-spring mark, its souvenir shop on the High
+  // Street), its boiler house on the road, the post office (its sign, its sorting dock's door), the potting shed
+  { type: 'calamari_house', ...box4(Q.inn), h: 3.4, style: 'plaster',
+    faces: {
+      0: [{ t: 'door', x: 0, w: 2.0, noren: { c: '#6b2f3a', n: 3, L: 0.8, mark: 'onsen' } }, { t: 'sign', text: 'IKAYU INN', x: 0, at: 2.62, h: 0.26 }, { t: 'chochin', x: -1.5, at: 2.2 }, { t: 'chochin', x: 1.5, at: 2.2 }, { t: 'win', x: -2.7, w: 0.9, h: 0.9, sill: 1.1, lit: 1.1 }, { t: 'win', x: 2.7, w: 0.9, h: 0.9, sill: 1.1, lit: 1.1 }],
+      1: [{ t: 'shop', x: 0.2, w: 3.4, h: 2.2, goods: 'sundry', noren: { c: '#2f5d6b', n: 4, L: 0.55 } }, { t: 'sign', text: 'SOUVENIRS', x: 0.2, at: 2.4, h: 0.2 }, { t: 'lamp', x: -2.3, at: 2.5 }],
+      2: [{ t: 'win', x: -2.2, w: 1.5, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'wood', x: 0.4, w: 2.2 }, { t: 'win', x: 2.4, w: 1.2, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }],
+      3: [{ t: 'win', x: -2.1, w: 1.1, h: 0.9, sill: 1.0, lit: 1.0 }],
+    },
+    upper: { h: 2.5, inset: 0.3, faces: { 0: [{ t: 'win', x: -2.0, w: 1.4, h: 0.9, sill: 0.8, lit: 1.1 }, { t: 'win', x: 0, w: 1.4, h: 0.9, sill: 0.8, lit: 1.1 }, { t: 'win', x: 2.0, w: 1.4, h: 0.9, sill: 0.8, lit: 1.1 }], 1: [{ t: 'win', x: 0, w: 1.4, h: 0.9, sill: 0.8, sash: true, lit: 1 }], 2: [{ t: 'win', x: -1.5, w: 1.4, h: 0.9, sill: 0.8, lit: 1.1 }, { t: 'win', x: 1.5, w: 1.4, h: 0.9, sill: 0.8, lit: 1.1 }], 3: [{ t: 'win', x: 0, w: 1.2, h: 0.9, sill: 0.8, lit: 1 }] } },
+    hisashi: [0], roof: { f: 0.45, pitch: 0.55, ov: 0.8, alongX: true } },
+  { type: 'calamari_house', ...box4(Q.boiler), h: 2.8, style: 'cedar', plinth: false,
+    faces: { 3: [{ t: 'wood', x: 0.2, w: 2.4 }], 0: [{ t: 'pipe', x: -0.5 }, { t: 'meter', x: 0.4 }], 2: [{ t: 'door', x: 0, w: 1.0, hood: false }] },
+    roof: { f: 1, pitch: 0.5, alongX: false, ov: 0.4 }, chimney: [0.3, -0.7, 2.6], snow: [3] },
+  { type: 'calamari_house', ...box4(Q.po), h: 3.4, style: 'plaster', wallC: '#e3ddd0',
+    faces: {
+      0: [{ t: 'door', x: -1.3, w: 1.6 }, { t: 'sign', text: 'POST OFFICE', x: 0.4, at: 2.62, h: 0.24, board: '#8e2f2a' }, { t: 'win', x: 1.8, w: 1.3, h: 1.0, sill: 0.95, sash: true, lit: 1.2 }],
+      1: [{ t: 'win', x: -1.8, w: 1.3, h: 0.9, sill: 1.0, sash: true, lit: 1 }, { t: 'win', x: 1.2, w: 1.3, h: 0.9, sill: 1.0, sash: true }, { t: 'pipe', x: 3.1 }],
+      2: [{ t: 'door', x: 0.8, y: 1.0, w: 2.2, hood: false }, { t: 'lamp', x: -1.4, y: 1.0, at: 2.2 }, { t: 'meter', x: -2.3, y: 0.6 }],
+      3: [{ t: 'win', x: -1.5, w: 1.3, h: 0.9, sill: 1.0, sash: true, lit: 1 }, { t: 'poster', x: 0.6, at: 1.5 }, { t: 'win', x: 2.2, w: 1.0, h: 0.9, sill: 1.0, sash: true }],
+    },
+    upper: { h: 2.4, inset: 0.25, faces: { 0: [{ t: 'win', x: -1.3, w: 1.3, h: 0.9, sill: 0.8, sash: true, lit: 1 }, { t: 'win', x: 1.3, w: 1.3, h: 0.9, sill: 0.8, sash: true }], 1: [{ t: 'win', x: 0, w: 1.4, h: 0.9, sill: 0.8, sash: true, lit: 0.9 }], 3: [{ t: 'win', x: 0, w: 1.4, h: 0.9, sill: 0.8, sash: true }] } },
+    hisashi: [0], roof: { f: 0.5, pitch: 0.5, ov: 0.6, alongX: false }, snow: [1] },
+  { type: 'calamari_postsign', pos: [Q.po[1] - 0.6, 2.95, Q.po[3]], rotY: 0 },
+  { type: 'calamari_house', pos: [-30.2, P.y2, -46.5], w: 2.6, d: 3.8, h: 2.3, style: 'cedar', plinth: false,
+    faces: { 1: [{ t: 'door', x: 0.4, w: 1.1, hood: false }], 0: [{ t: 'win', x: 0, w: 0.9, h: 0.6, sill: 1.1 }] }, roof: { f: 1, pitch: 0.45, alongX: false, ov: 0.4 } },
+
+  // ================= the fire-watch terrace (1.3): the hanshō tower on its north-east corner, the "mind the fire" stone
+  // by the steps, the fire brigade's pump cart and buckets on its south side (the tower's track crosses its middle,
+  // z −38 … −41: kept clear), granite coping round its edges
+  { type: 'calamari_hansho', pos: [Q.firetower[0], TR.y, Q.firetower[1]], rotY: 0, h: 12 },
+  { type: 'calamari_firestone', pos: [-3.0, TR.y, -36.3], rotY: 0.12 },
+  { type: 'calamari_pumpcart', pos: [-1.9, TR.y, -42.3], rotY: 0.05 },
+  { type: 'calamari_firebuckets', pos: [2.2, TR.y, -43.05], rotY: 0 },
+  { type: 'calamari_bench', pos: [0.6, TR.y, -34.1], rotY: 0 },
+  cope(TR.x0, TR.z1, TR.x1, TR.z1, TR.y), cope(TR.x1, TR.z1, TR.x1, TR.z0, TR.y), cope(TR.x1, TR.z0, TR.x0, TR.z0, TR.y), cope(TR.x0, TR.z0, TR.x0, TR.z1, TR.y),
+
+  // ================= the hillside road carried on: the inn's boiler house juts into it, a kei truck parked across its
+  // west half, the yaki-imo cart by the inn's corner (a chicane: the road's long view is broken), a vending machine on
+  // the allotments' wall, the curve mirror at the onsen lane, snowbanks along the garden's wall, a lamp
+  { type: 'calamari_kei', pos: [-23.5, 0, -32.9], rotY: Math.PI / 2 + 0.1 },
+  { type: 'calamari_yatai', pos: [-20.75, 0, -36.6], rotY: 0 },
+  { type: 'calamari_vending', pos: [-25.1, 0, -35.8], rotY: Math.PI / 2, variant: 0 },
+  { type: 'calamari_mirror', pos: [-18.9, 0, -37.6], rotY: -Math.PI * 0.75 },
+  { type: 'calamari_snowbank', pos: [-19.1, 0, -44.2], rotY: Math.PI / 2, length: 2.4, h: 0.9, d: 0.9, variant: 2, shovel: true },
+  { type: 'calamari_lamppost', pos: [-25.0, 0, -42.5], rotY: Math.PI / 2 },
+  { type: 'calamari_snowbank', pos: [-23.8, 0, -50.4], rotY: 0, length: 2.4, h: 0.9, d: 1.0, variant: 0 },
+  { type: 'calamari_fingerpost', pos: [-24.9, 0, -30.9], arms: [{ text: 'STATION', yaw: -Math.PI / 2, y: 2.25 }, { text: 'CO-OP', yaw: Math.PI / 2, y: 1.95 }] },
+
+  // ================= the allotments: the lower beds on T1 carried on (1.3), stone steps up to the upper allotments (2.6)
+  // with the potting shed, compost bays, straw stooks, a scarecrow, bamboo frames
+  { type: 'calamari_bed', pos: [-30.4, P.y1, -31.3], rotY: Math.PI / 2, length: 3.4, w: 1.1, crop: 'leek' },
+  { type: 'calamari_bed', pos: [-26.8, P.y1, -31.3], rotY: Math.PI / 2, length: 3.4, w: 1.1, crop: 'daikon' },
+  { type: 'calamari_straw', pos: [-30.5, P.y1, -36.6], rotY: Math.PI / 2, length: 1.8, variant: 0 },
+  { type: 'calamari_scarecrow', pos: [-26.4, P.y1, -34.0], rotY: 0.4 },
+  { type: 'calamari_frame', pos: [-26.2, P.y1, -35.4], rotY: Math.PI / 2, length: 2.7 },
+  { type: 'calamari_compost', pos: [-30.6, P.y2, -40.7], rotY: Math.PI / 2 },
+  { type: 'calamari_bed', pos: [-27.0, P.y2, -42.4], rotY: Math.PI / 2, length: 3.2, w: 1.2, crop: 'cabbage' },
+  { type: 'calamari_straw', pos: [-26.9, P.y2, -47.3], rotY: Math.PI / 2, length: 1.8, variant: 1 },
+  { type: 'calamari_snowbank', pos: [-30.0, P.y2, -43.2], rotY: 0, length: 1.8, h: 0.85, d: 0.9, variant: 1 },
+  ...Q.hillWalls.map(ishigaki),
+
+  // ================= the onsen lane and the inn's garden (0.9, a raised stone bed): the steaming rock pool, a bamboo
+  // screen along its lane and road sides, a stone parapet over the forecourt, a lantern and a pine; its steps down
+  // to the High Street
+  { type: 'calamari_pool', pos: [-15.5, GY, -44.3], length: 3.0, w: 1.8 },
+  { type: 'calamari_screen', pos: [-18.3, GY, -42.2], rotY: 0, length: 3.6, h: 1.3 },
+  { type: 'calamari_screen', pos: [-18.25, GY, -45.6], rotY: -Math.PI / 2, length: 3.2, h: 1.3 },
+  { type: 'calamari_stonewall', pos: [-17.9, GY, -45.75], rotY: 0, length: 4.6, h: 0.85, t: 0.45 },
+  { type: 'calamari_lantern', pos: [-12.3, GY, -42.8], h: 1.5 },
+  { type: 'calamari_tree', pos: [-13.1, GY, -45.3], kind: 'pine', h: 3.8, variant: 1 },
+  cope(Q.garden[0], Q.garden[3], Q.garden[1], Q.garden[3], GY), cope(Q.garden[1], Q.garden[3], Q.garden[1], Q.garden[2], GY, { ice: false }),
+  cope(Q.garden[1], Q.garden[2], Q.garden[0], Q.garden[2], GY), cope(Q.garden[0], Q.garden[2], Q.garden[0], Q.garden[3], GY),
+
+  // ================= the High Street: the souvenir shop's banners, a vending machine on the terrace's wall, snowbanks,
+  // a lamp, bicycles
+  { type: 'calamari_nobori', pos: [-11.1, 0, -32.6], rotY: -Math.PI / 2, text: 'ONSEN', c: '#6b2f3a' },
+  { type: 'calamari_nobori', pos: [-11.1, 0, -35.4], rotY: -Math.PI / 2, text: 'GIFTS', c: '#2f5d6b' },
+  { type: 'calamari_vending', pos: [-5.45, 0, -35.8], rotY: -Math.PI / 2, variant: 1 },
+  { type: 'calamari_snowbank', pos: [-6.3, 0, -32.3], rotY: Math.PI / 2, length: 2.0, h: 0.9, d: 1.0, variant: 2 },
+  { type: 'calamari_lamppost', pos: [-11.1, 0, -37.1], rotY: Math.PI / 2 },
+  { type: 'calamari_bike', pos: [-8.9, 0, -36.8], rotY: 0.2, variant: 1 },
+  { type: 'calamari_snowbank', pos: [-7.0, 0, -45.2], rotY: 0.05, length: 2.2, h: 0.9, d: 1.0, variant: 0 },
+
+  // ================= the fire lane, the post office's sorting dock (parcel cages) and yard (the post van), the hydrant
+  { type: 'calamari_hydrant', pos: [9.1, 0, -44.6], rotY: -Math.PI / 2 },
+  { type: 'calamari_snowbank', pos: [7.2, 0, -45.4], rotY: 0, length: 2.2, h: 0.9, d: 1.0, variant: 1 },
+  { type: 'calamari_cages', pos: [12.1, 1.0, -39.3], rotY: 0 },
+  { type: 'calamari_postvan', pos: [12.9, 0, -44.3], rotY: 0.05 },
+  { type: 'calamari_snowbank', pos: [15.3, 0, -47.6], rotY: Math.PI / 2, length: 2.2, h: 0.9, d: 1.0, variant: 2 },
+  { type: 'calamari_bike', pos: [10.2, 0, -41.3], rotY: Math.PI / 2, variant: 0, c: '#b8413a' },
+
+  // ================= the basin quay carried on: fish boxes and nets, the fish market (its auction floor across the quay,
+  // the shed, the chiller room, the boxes stacked for the morning's sale), the boat notch south of it, boats
+  { type: 'calamari_fishboxes', pos: [20.2, -0.1, -34.2], rotY: basinRot + 0.1, cols: 2, rows: 3, depth: 2, variant: 1 },
+  { type: 'calamari_nets', pos: [17.4, -0.1, -37.8], r: 0.8, variant: 1 },
+  { type: 'calamari_lamppost', pos: [16.35, -0.1, -40.6], rotY: -Math.PI / 2 },
+  { type: 'calamari_market', pos: [(Q.floor[0] + Q.floor[1]) / 2, FY, (Q.floor[2] + Q.floor[3]) / 2], w: Q.floor[1] - Q.floor[0] - 0.2, d: 7.6, h: 3.4 },
+  { type: 'calamari_chiller', pos: [(Q.chiller[0] + Q.chiller[1]) / 2, FY, (Q.chiller[2] + Q.chiller[3]) / 2], w: Q.chiller[1] - Q.chiller[0], d: Q.chiller[3] - Q.chiller[2], h: 2.6, face: 0 },
+  { type: 'calamari_fishboxes', pos: [19.98, FY, -46.0], rotY: 0, cols: 3, rows: 3, variant: 2 },
+  { type: 'calamari_fishboxes', pos: [23.2, FY, -43.3], rotY: 0.05, cols: 3, rows: 2, variant: 1 },
+  { type: 'calamari_fishboxes', pos: [24.4, FY, -48.1], rotY: -0.1, cols: 2, rows: 3, variant: 0 },
+  { type: 'calamari_nets', pos: [21.6, FY, -49.0], r: 0.6, variant: 0 },
+  edge('calamari_quayedge', onEdge(Q.floor[3]), [Q.floor[1], Q.floor[3]], { y: FY, bollards: [2.5], fenders: 2.2, drop: 2.1 }),
+  edge('calamari_quayedge', [Q.floor[1], Q.floor[3]], [Q.floor[1], Q.floor[2]], { y: FY, bollards: [1.4, 6.6], ladders: [4.0], drop: 2.1 }),
+  edge('calamari_quayedge', [Q.floor[1], Q.floor[2]], onEdge(Q.floor[2]), { y: FY, bollards: [3.0], fenders: 2.2, drop: 2.1 }),
+  edge('calamari_quayedge', onEdge(Q.floor[2]), nA, { y: -0.1, fenders: 0, drop: 1.5 }),
+  edge('calamari_quayedge', nA, backN(nA), { y: -0.1, fenders: 0, drop: 1.5 }),
+  edge('calamari_quayedge', backN(nA), backN(nB), { y: -0.1, ladders: [1.8], fenders: 1.8, drop: 1.5 }),
+  edge('calamari_quayedge', backN(nB), nB, { y: -0.1, fenders: 0, drop: 1.5 }),
+  edge('calamari_quayedge', nB, onEdge(SQ[0][3] - ST.d), { y: -0.1, bollards: [1.6], fenders: 0, drop: 1.5 }),
+  edge('calamari_quayedge', [onEdge(SQ[0][3] - ST.d)[0] - 0.05, SQ[0][3] - ST.d], [SQ[0][1], SQ[0][3] - ST.d], { fenders: 0 }),
+  { type: 'calamari_boat', pos: [(nA[0] + backN(nA)[0]) / 2 + 0.2, -1.62, (Q.notch[0] + Q.notch[1]) / 2], rotY: Math.PI + 0.05, L: 3.3, beam: 1.5, name: 'IKA MARU', c: '#8e5a3c' },
+  { type: 'calamari_boat', pos: [25.2, -1.62, -38.2], rotY: 0.1, L: 5.6, name: 'TAKO MARU', c: '#5f8f86' },
+  { type: 'calamari_nets', pos: [17.0, -0.1, -56.8], r: 0.7, variant: 0 },
+  { type: 'calamari_lamppost', pos: [16.35, -0.1, -53.6], rotY: -Math.PI / 2 },
+
+  // ================= the co-op forecourt (the apron in front of the base: the Bazookarp goal's spot at the grand stair's
+  // foot): snowbanks shovelled against T2's wall, fish boxes by the dock
+  { type: 'calamari_snowbank', pos: [-16.5, 0, -50.4], rotY: 0, length: 2.6, h: 0.95, d: 1.0, variant: 1 },
+  { type: 'calamari_snowbank', pos: [-7.0, 0, -50.4], rotY: 0, length: 2.2, h: 0.9, d: 1.0, variant: 2, shovel: true },
+  { type: 'calamari_fishboxes', pos: [8.0, 0, -48.6], rotY: 0.05, cols: 2, rows: 3, variant: 1 },
+];
+
+export const PLACEMENTS = [...BUILDINGS, ...RAILWAY, ...HARBOUR, ...STATION, ...HILL, ...HIGH_STREET,
+  ...moveOut([...BASE_BUILDINGS, ...BASE_HARBOUR, ...BASE_HILL])];

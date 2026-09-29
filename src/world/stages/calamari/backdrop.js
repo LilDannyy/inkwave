@@ -7,6 +7,12 @@
 // headland over the tunnel portal, snow-laden pines, the rest of the village's houses climbing the slope (snow on the
 // roofs, lit windows at dusk), telegraph poles along the coast road; out at sea the outer breakwater with its white
 // light, drifting ice floes, and snowy mountains inland on the horizon.
+//
+// The Long Stages stretch (stretch.js): the co-op and the hill behind it moved out by D with the base; the land behind
+// the co-op, the hill houses' slope and the village beyond follow it (ZB, the co-op's back), the hill runs on beside
+// the new land (the high street's allotments).
+import { STRETCH } from './stretch.js';
+
 export function buildBackdrop(kit) {
   const { THREE, box, cyl, prep, xf, triGeo, makeIsland, fbm, smooth, WATER_Y, rnd } = kit;
   const R = rnd(4242);
@@ -14,9 +20,9 @@ export function buildBackdrop(kit) {
 
   // ------------------------------------------------------------------------------------------ the land (SW frame)
   // coast lines (Alpha's frame: the hill + west headland at x < −33.9, the co-op's back at z < −48.2)
-  const HX = -33.9;
+  const HX = -33.9, D = STRETCH.d, ZB = -48.2 - D;   // the hill's foot; the co-op's back (z −68.7)
   const coastN = (x) => 9.4 + 0.3 * (HX - x) + 2.2 * Math.sin(x * 0.13) + 1.2 * Math.sin(x * 0.41);   // headland's north shore (z)
-  const coastS = (z) => 11.2 + 0.62 * (-48.2 - z) + 1.8 * Math.sin(z * 0.17);                            // the south-east shore (x)
+  const coastS = (z) => 11.2 + 0.62 * (ZB - z) + 1.8 * Math.sin(z * 0.17);                            // the south-east shore (x)
   // the land, as (height above the sea, or null = water / the stage): hard-clipped at the stage's walls, sloping into
   // the sea along the coves
   function landH(x, z) {
@@ -31,11 +37,11 @@ export function buildBackdrop(kit) {
       h = Math.max(h, e - (toSea < 0 ? 3 - toSea * 2 : 0));
     }
     // behind T2's west end and the hill houses (the hill houses stand in it)
-    if (x <= HX && z <= -37.3) h = Math.max(h, 5.8 + 0.35 * (-37.3 - z) + 0.4 * (HX - x));
-    if (x <= -9.1 && z <= -40.6) h = Math.max(h, 4.2 + 0.4 * (-40.6 - z) + 0.12 * (-9.1 - x));
+    if (x <= HX && z <= -37.3 - D) h = Math.max(h, 5.8 + 0.35 * (-37.3 - D - z) + 0.4 * (HX - x));
+    if (x <= -9.1 && z <= -40.6 - D) h = Math.max(h, 4.2 + 0.4 * (-40.6 - D - z) + 0.12 * (-9.1 - x));
     // behind the co-op (low first — the warehouse's back yard — then climbing), sloping into the south-east cove
-    if (z <= -48.2 && x <= coastS(z) + 6) {
-      const v = -48.2 - z, toSea = coastS(z) - x;
+    if (z <= ZB && x <= coastS(z) + 6) {
+      const v = ZB - z, toSea = coastS(z) - x;
       let e = 1.8 + (v > 7 ? 0.62 * Math.pow(v - 7, 1.05) : 0) + 0.05 * Math.max(0, -x);
       e *= smooth(-2, 8 + 1.1 * e, toSea);   // (a shore slope as wide as the hill is high: no snow cliff in the spawn's view)
       h = Math.max(h, e - (toSea < 0 ? 3 - toSea * 2 : 0));
@@ -80,7 +86,7 @@ export function buildBackdrop(kit) {
   const mirror = (g) => xf(g, 0, 0, 0, Math.PI);
   const winter = '#7b8466';
   // near land (fine) + far land (coarse), for both halves
-  const nearA = heightfield(-72, 16, -96, 30, 1.6, winter), farA = heightfield(-200, 40, -220, 60, 6, winter);
+  const nearA = heightfield(-72, 16, -96 - D, 30, 1.6, winter), farA = heightfield(-200, 40, -220, 60, 6, winter);
   // the far grid skips the near window (no double surfaces): punch it out by culling triangles inside it
   const cull = (g, x0, x1, z0, z1) => {
     const p = g.attributes.position.array, nr = g.attributes.normal.array, keep = [], cols = g.attributes.color.array, keepC = [], keepN = [], gl = [];
@@ -97,7 +103,7 @@ export function buildBackdrop(kit) {
     ng.setAttribute('glow', new THREE.Float32BufferAttribute(gl, 1));
     return ng;
   };
-  const farA2 = cull(farA, -72 + 3, 16 - 3, -96 + 3, 30 - 3);
+  const farA2 = cull(farA, -72 + 3, 16 - 3, -96 - D + 3, 30 - 3);
   out.terrain.push(nearA, farA2, mirror(nearA.clone()), mirror(farA2.clone()));
 
   // ------------------------------------------------------------------------------------------ pines + bare trees
@@ -127,8 +133,8 @@ export function buildBackdrop(kit) {
       const x = x0 + R() * (x1 - x0), z = z0 + R() * (z1 - z0), h = landH(x, z);
       if (h == null || h < minH || h > maxH) continue;
       // keep clear of the stage (the walls) and steep cliff edges
-      if (x > HX - 1.6 && z > -40) continue;
-      if (z > -50 && x > -11) continue;
+      if (x > HX - 1.6 && z > -40 - D) continue;
+      if (z > -50 - D && x > -11) continue;
       const hx = landH(x + 1.5, z), hz = landH(x, z + 1.5);
       if (hx == null || hz == null || Math.abs(hx - h) > 1.6 || Math.abs(hz - h) > 1.6) continue;
       const s = scale[0] + R() * (scale[1] - scale[0]);
@@ -136,7 +142,7 @@ export function buildBackdrop(kit) {
       list.push(item); if (fn) fn(item); k++;
     }
   };
-  place(trees, 170, -95, 8, -110, 22, 3, 60, [0.8, 1.5]);
+  place(trees, 190, -95, 8, -110 - D, 22, 3, 60, [0.8, 1.5]);
   const treesAll = [...trees, ...trees.map(([x, y, z, s, r]) => [-x, y, -z, s, r])];
   out.instances.push({ geo: pine, list: treesAll });
 
@@ -165,8 +171,8 @@ export function buildBackdrop(kit) {
   const houses = [];
   const houseSpots = [];
   for (let k = 0, tries = 0; k < 34 && tries < 2000; tries++) {
-    const x = -62 + R() * 72, z = -92 + R() * 56;
-    if (!(z < -51 || x < HX - 3.5)) continue;
+    const x = -62 + R() * 72, z = -92 - D + R() * 56;
+    if (!(z < -51 - D || x < HX - 3.5)) continue;
     const h = landH(x, z);
     if (h == null || h < 2 || h > 26) continue;
     if (houseSpots.some(([a, b]) => Math.hypot(a - x, b - z) < 7.5)) continue;
@@ -223,7 +229,7 @@ export function buildBackdrop(kit) {
   const floes = [];
   for (let k = 0; k < 60; k++) {
     const a = -0.9 + R() * 1.4, r = 36 + R() * 70, x = Math.cos(a) * r + 6, z = -Math.sin(a) * r * 0.9 - 30;
-    if ((x < 38 && z > -60) || z > -14) continue;
+    if ((x < 38 && z > -60 - D) || z > -14) continue;
     floes.push([x, WATER_Y + 0.02, z, 1.2 + R() * 3.5, R() * 6.28]);
   }
   out.instances.push({ geo: floe, list: [...floes, ...floes.map(([x, y, z, s, r]) => [-x, y, -z, s, r])] });
