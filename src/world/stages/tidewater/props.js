@@ -2447,8 +2447,6 @@ const SQL = (x, z, o) => ({ pos: [x, SQ, z], ...o });
   }
   // tub palms at the side beds' inner corners, beside the walks along the Palm House
   for (const sx of [-1, 1]) out.push({ type: 'tidewater_palmtub', pos: [sx * 10.1, SQ, -34.2], ...(sx > 0 ? NT : {}) });
-  // lamp standards at the terrace flights' feet
-  for (const sx of [-1, 1]) out.push({ type: 'tidewater_lamp', ...SQL(sx * 7.0, -19.9), variant: 0, baskets: true, rotY: sx > 0 ? P : 0 });
   // the west walk: the drinking fountain, lamps, a bench; the coxswain's statue at the south walk's west end
   out.push({ type: 'tidewater_drinkfountain', ...SQL(-13.2, -21.2) });
   out.push({ type: 'tidewater_statue', ...SQL(-12.4, -35.0), rotY: P * 0.15 });
