@@ -45,6 +45,10 @@ import * as spirhaliteLayout from './spirhalite/layout.js';
 import * as spirhaliteProps from './spirhalite/props.js';
 import * as spirhaliteSurfaces from './spirhalite/surfaces.js';
 import * as spirhaliteMurals from './spirhalite/murals.js';
+import * as treehillsLayout from './treehills/layout.js';
+import * as treehillsProps from './treehills/props.js';
+import * as treehillsSurfaces from './treehills/surfaces.js';
+import * as treehillsMurals from './treehills/murals.js';
 
 // STAGES[id] = { LAYOUT, register, PLACEMENTS, SURF, SURFACES, drawMurals } (missing pieces are simply absent)
 export const STAGES = {
@@ -59,5 +63,6 @@ export const STAGES = {
   craters: { ...cratersLayout, ...cratersProps, ...cratersSurfaces, ...cratersMurals },
   calamari: { ...calamariLayout, ...calamariProps, ...calamariSurfaces, ...calamariMurals },
   spirhalite: { ...spirhaliteLayout, ...spirhaliteProps, ...spirhaliteSurfaces, ...spirhaliteMurals },
+  treehills: { ...treehillsLayout, ...treehillsProps, ...treehillsSurfaces, ...treehillsMurals },
 };
 export const STAGE_IDS = Object.keys(STAGES);
