@@ -49,8 +49,8 @@ export function registerFittings(D, H, T) {
       B.cyl('gloss', K.modDk, 0.12, 0.3, 0, 0.15, 0, { seg: 10 });
       seg(B, 'gloss', K.trim, [0, h - 0.1, 0], [0, h - 0.1, 0.55], 0.06, 0.06);
       B.tor('gloss', K.trim, 0.22, 0.04, 0, h - 0.18, 0.62, { rx: HP, rs: 4, ts: 20 });
-      B.tor(NS('glow'), K.lamp, 0.22, 0.028, 0, h - 0.22, 0.62, { rx: HP, rs: 4, ts: 20, glow: 1.6 });
-      B.cyl(NS('glow'), K.lamp, 0.18, 0.02, 0, h - 0.24, 0.62, { seg: 16, glow: 1.2 });
+      B.tor(NS('glow'), K.lamp, 0.22, 0.03, 0, h - 0.22, 0.62, { rx: HP, rs: 4, ts: 20, glow: 2.4 });
+      B.cyl(NS('glow'), K.lamp, 0.19, 0.02, 0, h - 0.24, 0.62, { seg: 16, glow: 2.0 });
       pbox(B, 'gloss', '#2a3a5c', 0.42, 0.03, 0.3, 0, h + 0.05, 0, { rx: 0.25 });
       B.col(-0.1, 0, -0.1, 0.1, h, 0.1, ROOF);
     },
@@ -60,7 +60,7 @@ export function registerFittings(D, H, T) {
     desc: 'bollard light (0.85 m, glowing band at dusk)',
     build(B) {
       B.cyl('gloss', K.trim, 0.11, 0.85, 0, 0.425, 0, { seg: 12 });
-      B.cyl(NS('glow'), K.lamp, 0.113, 0.1, 0, 0.7, 0, { seg: 12, glow: 1.3, open: true });
+      B.cyl(NS('glow'), K.lamp, 0.113, 0.1, 0, 0.7, 0, { seg: 12, glow: 2.2, open: true });
       B.cyl('gloss', K.modDk, 0.13, 0.06, 0, 0.87, 0, { seg: 12 });
       B.col(-0.12, 0, -0.12, 0.12, 0.9, 0.12, ROOF);
     },
