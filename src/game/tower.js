@@ -23,7 +23,7 @@
 //     as dummy seconds that earn nothing (c.dummy: the share of the timer that is).
 //   • score: 100 points to win. Riding the tower the whole track into enemy territory is TOWER.trackPoints (60) of them,
 //     in proportion to the distance; clearing that side's checkpoints the rest (TOWER.checkpointPoints, 40, split evenly,
-//     earned as each one's timer runs). A team's score is the most it has ever had, shown as a count from 100 down to 0;
+//     earned as each one's timer runs). A stage with two checkpoints splits them 80 / 20 (TOWER.twoCheckpoints). A team's score is the most it has ever had, shown as a count from 100 down to 0;
 //     reaching the goal is a knockout. At time up the lower count wins; equal counts → the team that
 //     reached that count second drops a point (no draws). Nobody pushed at all → sudden death.
 //   • overtime: at time up, if the team behind controls the tower, play on until it takes the lead (it wins), the other
@@ -374,10 +374,13 @@ export class TowerCommand {
     this.clock = 0;
     // checkpoints: Alpha's on the + side, Bravo's (the mirror) on the − side
     const cps = def.checkpoints || TOWER.checkpoints;
-    // speed + checkpoint times from the points: the track = trackPoints, the checkpoints = checkpointPoints (even split)
-    const cpPts = cps.length ? TOWER.checkpointPoints / cps.length : 0;
+    // speed + checkpoint times from the points: the track = trackPoints, the checkpoints = checkpointPoints (even split;
+    // a stage with two checkpoints splits the 100 as TOWER.twoCheckpoints)
+    const pts = cps.length === 2 ? TOWER.twoCheckpoints : TOWER;
+    this.trackPoints = pts.trackPoints;
+    const cpPts = cps.length ? pts.checkpointPoints / cps.length : 0;
     this.cpPoints = cpPts;
-    this.speed = this.path.len.map((L) => L / (TOWER.trackPoints / TOWER.pointRate));
+    this.speed = this.path.len.map((L) => L / (this.trackPoints / TOWER.pointRate));
     this.cps = [];
     for (let team = 0; team < 2; team++) cps.forEach((c, i) => {
       // a checkpoint: a spot on the stage [x, z] (Alpha's side; Bravo's is its mirror), metres along, or a fraction
@@ -629,7 +632,7 @@ export class TowerCommand {
   // cpPoints, earned as its timer runs); a team keeps the most it has had
   pointsNow(t) {
     const d = Math.max(0, t === 0 ? this.s : -this.s);
-    let p = TOWER.trackPoints * Math.min(1, d / this.path.len[t]);
+    let p = this.trackPoints * Math.min(1, d / this.path.len[t]);
     for (const c of this.cps) if (c.team === t) p += c.cleared ? this.cpPoints : this.cpPoints * clamp(1 - c.left / (c.dur || 1), 0, 1);
     return Math.min(TOWER.count, p);
   }

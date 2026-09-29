@@ -6,8 +6,10 @@
 //                            drop — tower.js builds that). A y forces that height at that corner.
 //   checkpoints:    [[x, z] | m, …]   spots on Alpha's side (Bravo's are the mirror), or metres from the centre (or
 //                            fractions of the length, ≤ 1) — default TOWER.checkpoints
-//   checkpointTime: [s, s]   optional, per checkpoint (default: its share of TOWER.checkpointPoints at TOWER.pointRate)
-// The tower's speed on a stage comes from its path length: the whole track is TOWER.trackPoints (60) of the 100 points.
+//   checkpointTime: [s, s]   optional, per checkpoint (default: its share of the checkpoint points at TOWER.pointRate)
+// The tower's speed on a stage comes from its path length: the whole track is TOWER.trackPoints (60) of the 100 points,
+// or 80 on a stage with two checkpoints (TOWER.twoCheckpoints: 10 s each; its track is twice as long as the first
+// drawing, with detour loops, so the tower runs 1.5× as fast and still takes 100 s to the goal — the user, 2026-09-30).
 // A stage with no entry gets a stand-in route (tower.js placeholderPath: the walkable route from the centre toward
 // Bravo's base).
 // Drawn by the user on the stage top-downs (2026-09-28).
@@ -17,7 +19,6 @@ export const TOWER_DEFS = {
     //  nearer the bandstand, clear of the fountain's basin — Tower Command's build of the stage, see its layout.js TW)
     path: [[0, 0], [-19.51, 0], [-19.51, 4.66], [-15.39, 4.66], [-15.39, 12.49], [7.11, 12.49], [7.11, 8.36], [15.55, 8.36], [15.55, 15.25], [3.53, 15.25], [3.52, 14.73], [-0.06, 14.73], [-0.06, 27.55], [-4.41, 27.55]],
     checkpoints: [[-14.97, 12.81], [-0.03, 21.38]],
-    checkpointTime: [10, 10],   // half the default 20 s each (the user, round 2)
   },
   kelpline: {
     // on the berth's 35° grid (layout.js ROT; berth-local x across the pier, z along it — corners (0, 0), (−17.9, 0),
