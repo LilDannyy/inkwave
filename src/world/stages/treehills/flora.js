@@ -132,27 +132,39 @@ export function registerFlora(D, H, T) {
     build(B, o) {
       const [w, h, d] = o.size || [3, 1.8, 0.9];
       const t = o.tint ?? null, s = o.seed ?? 21;
-      const leaf = t ? mixc(K.leafLt, t, 0.32) : col(K.leafMid);
-      const leafDk = t ? mixc('#86b36d', t, 0.28) : col('#86b36d');
-      const bloom = t ? mixc(t, '#ffffff', 0.25) : null;
+      // tinted: the leaves keep their green with a sheen of the owner's colour; its blossoms carry the colour itself
+      const leaf = t ? mixc('#b4dc98', t, 0.24) : col(K.leafMid);
+      const leafDk = t ? mixc('#86b36d', t, 0.2) : col('#86b36d');
+      const bloom = t ? mixc(t, '#ffffff', 0.18) : null;
       // the clipped core (flat top) and a darker skirt of stems at the base
       B.box('foliage', leaf, w - 0.12, h - 0.06, d - 0.12, 0, (h - 0.06) / 2 + 0.02, 0, { round: true, r: 0.12 });
       pbox(B, NS('wood'), '#6b5a3e', w - 0.3, 0.12, d - 0.3, 0, 0.06, 0);
-      // bulges along both faces and the ends (leafy clumps, lighter up top)
-      const nx = Math.max(3, Math.round(w / 0.45)), ny = Math.max(2, Math.round(h / 0.5));
-      for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) for (const sz of [-1, 1]) {
-        const k = hash(s + i * 7 + j * 13 + sz), x = -w / 2 + ((i + 0.5) * w) / nx + (k - 0.5) * 0.15, y = 0.2 + ((j + 0.5) * (h - 0.35)) / ny;
-        const r = 0.2 + 0.07 * k;
-        B.add('foliage', puff(0, (i + j) % 6), j === ny - 1 ? leaf : mixc(leafDk, leaf, 0.3 + 0.5 * k), x, y, sz * (d / 2 - 0.08), { sx: r, sy: r * 0.9, sz: r * 0.55 });
+      // leafy clumps scattered over both faces and the ends (a jittered grid, random sizes and depths: never a
+      // regular quilt), lighter toward the top; sprigs along the top edges break the silhouette (the top stays flat)
+      const rnd = (i) => hash(s * 1.37 + i * 0.731);
+      let q = 0;
+      const clumps = (nx, ny, place) => {
+        for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+          const u = (i + 0.2 + 0.6 * rnd(q++)) / nx, v = (j + 0.2 + 0.6 * rnd(q++)) / ny, r = 0.15 + 0.14 * rnd(q++);
+          const c = mixc(leafDk, leaf, Math.min(1, 0.25 + v * 0.6 + 0.3 * rnd(q++)));
+          place(u, v, r, c, (i * 7 + j) % 6);
+        }
+      };
+      for (const sz of [-1, 1]) clumps(Math.max(3, Math.round(w / 0.42)), Math.max(2, Math.round(h / 0.45)), (u, v, r, c, k) =>
+        B.add('foliage', puff(0, k), c, -w / 2 + 0.1 + u * (w - 0.2), 0.15 + v * (h - 0.4), sz * (d / 2 - 0.1 + 0.08 * rnd(q++)), { sx: r * 1.1, sy: r, sz: r * 0.6, ry: rnd(q++) * 3 }));
+      for (const sx of [-1, 1]) clumps(Math.max(2, Math.round(d / 0.4)), Math.max(2, Math.round(h / 0.45)), (u, v, r, c, k) =>
+        B.add('foliage', puff(0, k), c, sx * (w / 2 - 0.1 + 0.06 * rnd(q++)), 0.15 + v * (h - 0.4), -d / 2 + 0.12 + u * (d - 0.24), { sx: r * 0.6, sy: r, sz: r * 1.1 }));
+      const ns = Math.round(w / 0.3);
+      for (const sz of [-1, 1]) for (let i = 0; i < ns; i++) {
+        const x = -w / 2 + 0.15 + ((i + rnd(q++)) / ns) * (w - 0.3), r = 0.1 + 0.08 * rnd(q++);
+        B.add('foliage', puff(0, i % 6), leaf, x, h - 0.08 + r * 0.3, sz * (d / 2 - 0.12), { sx: r * 1.3, sy: r * 0.7, sz: r });
       }
-      for (const sx of [-1, 1]) for (let j = 0; j < ny; j++) B.add('foliage', puff(0, j % 6), leafDk, sx * (w / 2 - 0.06), 0.25 + ((j + 0.5) * (h - 0.35)) / ny, 0, { sx: 0.16, sy: 0.24, sz: d * 0.42 });
-      // blossoms on the faces and along the top edges (never on the flat top itself)
-      const nb = Math.round(w * h * 7);
+      // blossoms in little clusters on the faces (the owner's colour when tinted)
+      const nb = Math.round(w * h * (t ? 4.2 : 2.2));
       for (let i = 0; i < nb; i++) {
-        const k1 = hash(s * 3 + i * 1.3), k2 = hash(s * 5 + i * 2.1), k3 = hash(s * 7 + i * 3.7);
-        const side = k3 < 0.5 ? -1 : 1, x = (k1 - 0.5) * (w - 0.2), y = 0.3 + k2 * (h - 0.35);
+        const side = rnd(q++) < 0.5 ? -1 : 1, x = (rnd(q++) - 0.5) * (w - 0.3), y = 0.35 + rnd(q++) * (h - 0.55);
         const c = bloom ?? K.flowers[i % K.flowers.length];
-        B.add(NS('foliage'), blob(0, i % 8), c, x, y, side * (d / 2 + 0.02), { s: 0.06 + 0.03 * k3, ao: false });
+        for (let k = 0; k < 3; k++) B.add(NS('foliage'), blob(0, (i + k) % 8), c, x + (k - 1) * 0.07, y + (k % 2) * 0.06, side * (d / 2 + 0.04), { s: 0.055 + 0.03 * rnd(q++), ao: false });
       }
     },
   };
