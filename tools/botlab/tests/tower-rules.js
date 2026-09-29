@@ -150,6 +150,34 @@
       && T.points.every((p, i) => p === pts0[i]) && T.best.every((b, i) => b === best0[i]) && T.count.every((c, i) => c === cnt0[i]),
     { s: +T.s.toFixed(2), cpAt: -cpB.d, cp: { left: cpB.left, reached: !!cpB.reached, lost: cpB.lost }, cpB0, pts: T.points.map((p) => +p.toFixed(2)), pts0: pts0.map((p) => +p.toFixed(2)) });
   offAll(); step(0.2);
+  // ---- 6c) the bots know it: on their own half with one of theirs close, their rider hops off to fight while the one
+  // of theirs right by it climbs on in its place — the tower rolling home by itself meanwhile; on the other team's half
+  // the rider stays on
+  {
+    const { towerPlan } = await import('./src/game/bots.js');
+    const plan = () => towerPlan();
+    A[0].setWeapon('shooter'); A[1].setWeapon('shooter');                    // (neither a charger: they perch)
+    const near = (a, dx, dz) => { a.pos.set(T.pos.x + dx, T.pos.y + 0.05, T.pos.z + dz); a.vel.set(0, 0, 0); };
+    const setup = (s) => {
+      offAll(); T.s = s; T.owner = 1; T._place(1); step(0.1); onTop(A[0]); step(0.3);
+      near(A[1], 3.5, 0); near(B[0], -8, 3); step(0.3);
+      for (let i = 0; i < 4; i++) { plan(); step(0.26); }                     // (the plan looks ~4× a second)
+    };
+    setup(-14);
+    let P = plan();
+    const hop = P.homeOff[0] && P.roleOf(A[0]) !== 'ride' && P.roleOf(A[1]) === 'ride' && T.owner === 0;
+    A[0].pos.set(T.pos.x + 3.5, T.pos.y + 0.05, T.pos.z - 2); A[0].vel.set(0, 0, 0);   // (it walks off …)
+    const s1 = T.s; step(1.2); P = plan();
+    const rolled = T.homing && T.owner === 0 && T.s > s1 + 0.5;
+    onTop(A[1]); step(0.4); P = plan(); step(0.3); P = plan();                  // (… and the other one's climbed on)
+    const swapped = !P.homeOff[0] && T.riders[0] === 1 && T.riderList.includes(A[1]) && T.owner === 0 && P.roleOf(A[1]) === 'ride';
+    setup(10);
+    P = plan();
+    const stays = !P.homeOff[0] && P.roleOf(A[0]) === 'ride';
+    R('bots: on their half with one of theirs close their rider hops off to fight while a teammate right by it takes its place, the tower rolling home meanwhile; on the other half the rider stays on',
+      hop && rolled && swapped && stays, { hop, rolled, swapped, stays, roles: [P.roleOf(A[0]), P.roleOf(A[1])] });
+    offAll(); step(0.2);
+  }
   // ---- 7) knockout: to Alpha's goal
   for (const c of T.cps) if (c.team === 0) c.cleared = true;
   T.s = T.path.len[0] - 0.6; T._place(1);
