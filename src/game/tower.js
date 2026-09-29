@@ -11,6 +11,10 @@
 //     teams → it stops (contested). An enemy on a tower whose riders fell off / were splatted → the enemy claims it.
 //   • empty: 5 s with nobody on it and the team in control loses it (neutral); a neutral tower rolls back toward the
 //     centre (TOWER.returnK × its one-rider speed).
+//   • rolling home: a team in control of the tower on its own half (the other team had pushed it there) can get off it —
+//     it rolls on toward the centre at the one-rider speed, still theirs, and stops there. The 5 s rule still runs
+//     (then it's neutral and does what neutral does); anyone boarding it claims / contests it as usual. It scores
+//     nothing and never touches a checkpoint.
 //   • checkpoints: each side has checkpoints (TOWER.checkpoints). Pushing into enemy territory the tower stops at the
 //     next uncleared one until its timer runs out (cleared faster by more riders); cleared ones don't stop it again.
 //     If the tower leaves it half-cleared (the team loses control, or it's pushed / rolls off it), the team has
@@ -37,6 +41,7 @@
 //   tower:contest { on }                     riders of both teams on it (it stopped) / not any more
 //   tower:checkpoint { team, index, state }  state 'reach' | 'clear' | 'refill'
 //   tower:return {}                          a neutral tower started rolling back
+//   tower:home { team }                      an empty tower started rolling home for the team holding it
 //   tower:overtime { losing }  ·  tower:end { winner, reason, counts }
 //
 // TOWER_FORMAT (layout.tower, src/world/tower-data.js): { path: [[x, z] | [x, y, z], …] centre → Alpha's goal (the
@@ -362,6 +367,7 @@ export class TowerCommand {
     this.emptyT = 0;                     // s with nobody on it
     this.moving = 0;                     // this frame: -1 / 0 / 1 (toward Bravo's goal / stopped / toward Alpha's)
     this.returning = false;              // a neutral tower rolling back
+    this.homing = false;                 // an empty tower rolling home (to the centre) for the team holding it
     this.best = [0, 0];                  // furthest each team has ridden it (m into enemy territory)
     this.count = [TOWER.count, TOWER.count];
     this.reachT = [0, 0];                // match clock when each team's count last went down (the tie-break)
@@ -447,6 +453,9 @@ export class TowerCommand {
     emit('tower:control', { owner: o, prev });
   }
 
+  // is the tower on team t's own half (pushed there by the other team; the centre itself is nobody's)?
+  homeSide(t, s = this.s) { return (t === 0 ? s : -s) < -1e-6; }
+
   // the next uncleared checkpoint ahead for a team pushing into enemy territory
   _nextCp(team) {
     const dir = team === 0 ? 1 : -1, here = this.s * dir;
@@ -526,6 +535,8 @@ export class TowerCommand {
     }
     // movement
     this.moving = 0;
+    const homing = this.homing;
+    this.homing = false;
     if (push >= 0 && !hold) {
       const dir = push === 0 ? 1 : -1, cp = this._nextCp(push);
       const end = cp ? dir * cp.d : dir * this.path.len[push];
@@ -538,6 +549,15 @@ export class TowerCommand {
         emit('tower:checkpoint', { team: cp.team, index: cp.index, state: 'reach' });
       }
       if (!cp && Math.abs(this.s - end) < 1e-6) return this._end(push, 'knockout');
+    } else if (this.owner >= 0 && this.homeSide(this.owner) && !both && !(n[0] || n[1])) {
+      // held and empty on the holders' own half: it rolls on home to the centre at the one-rider speed and stops there
+      // (nothing scored, no checkpoints: those on this half are the other team's)
+      this.homing = true;
+      if (!homing) { this._net(['h', this.owner]); emit('tower:home', { team: this.owner }); }
+      const step = this.speed[this.owner] * TOWER.mult[1] * dt;
+      this.s = this.s > 0 ? Math.max(0, this.s - step) : Math.min(0, this.s + step);
+      if (Math.abs(this.s) < 1e-6) this.s = 0;
+      this.moving = this.owner === 0 ? 1 : -1;
     } else if (this.owner === -1 && this.s !== 0 && !both && !(n[0] || n[1])) {
       if (!this.returning) { this.returning = true; emit('tower:return', {}); }
       const step = TOWER.returnK * this.speed[this.s > 0 ? 0 : 1] * dt;
@@ -551,8 +571,10 @@ export class TowerCommand {
     const N = this.net;
     if (!N) return;
     N.age += dt;
-    // dead-reckon between snapshots (the tower moves at a steady speed), then ease
-    const target = N.s + N.v * Math.min(N.age, 0.25);
+    // dead-reckon between snapshots (the tower moves at a steady speed), then ease; rolling back / home it stops at the
+    // centre (never guessed past it)
+    let target = N.s + N.v * Math.min(N.age, 0.25);
+    if ((this.returning || this.homing) && target * N.s < 0) target = 0;
     const k = 1 - Math.exp(-10 * dt);
     const s0 = this.s;
     this.s += (target - this.s) * k;
@@ -575,17 +597,31 @@ export class TowerCommand {
     this.path.at(sBefore, _p0);
     const dx = p1.x - _p0.x, dy = p1.y - _p0.y, dz = p1.z - _p0.z;
     for (const a of this.match.actors) {
-      if (!a.alive) continue;
-      if (a.remote) {                                     // (moved by the network; still not walking: the animation knows)
-        if (this.riderList.includes(a) && a.anim?.carry) { a.anim.carry.x += dx; a.anim.carry.y += dy; a.anim.carry.z += dz; }
-        continue;
-      }
+      if (!a.alive || a.remote) continue;                 // (remote players move by the network: carryRemote)
       const onIt = a.grounded && a.ground && a.ground.block === this.block.id;
       const upIt = a.climbing && a.wallHit && a.wallHit.block === this.block.id;   // swimming up its wall
       if (!onIt && !upIt) continue;
       a.pos.x += dx; a.pos.z += dz; a.pos.y += dy;
       if (a.anim?.carry) { a.anim.carry.x += dx; a.anim.carry.y += dy; a.anim.carry.z += dz; }
     }
+  }
+
+  // online (netmatch applyRemote): a remote player on the platform moves by its owner's samples — its own walking plus
+  // the ride, a touch late and not quite even between samples. All of this frame's move but its own walking (the
+  // owner's velocity: the ride isn't in it) is the ride, so its gait and planted feet go by its walking alone.
+  carryRemote(a, x0, y0, z0, dt) {
+    if (!a.alive || a.superJumpState || !a.anim?.carry) return;
+    if (!this.riderList.includes(a) && !(a.climbing && this._byWall(a))) return;   // (on its deck, or swimming up its wall)
+    const dx = a.pos.x - x0, dy = a.pos.y - y0, dz = a.pos.z - z0;
+    if (dx * dx + dy * dy + dz * dz > 4) return;          // (a snap: not a ride)
+    a.anim.carry.set(dx - a.vel.x * dt, dy - a.vel.y * dt, dz - a.vel.z * dt);
+  }
+
+  // right against one of its walls, below its top (a climber on it)
+  _byWall(a) {
+    const dx = a.pos.x - this.pos.x, dz = a.pos.z - this.pos.z, c = Math.cos(this.yaw), s = Math.sin(this.yaw);
+    const e = Math.max(Math.abs(dx * c - dz * s), Math.abs(dx * s + dz * c)) - TOWER.platformR;
+    return e > -0.2 && e < 0.7 && a.pos.y > this.pos.y - 0.3 && a.pos.y < this.top + 0.2;
   }
 
   // points now: the distance into enemy territory (trackPoints over the whole track) + that side's checkpoints (each
@@ -668,10 +704,11 @@ export class TowerCommand {
       case 'o': {
         const o = e[1], prev = this.owner;
         if (o === prev) break;
-        this.owner = o; this.returning = false;
+        this.owner = o; this.returning = false; this.homing = false;
         emit('tower:control', { owner: o, prev });
         break;
       }
+      case 'h': if (!this.homing) { this.homing = true; emit('tower:home', { team: e[1] }); } break;
       case 'c': {
         const c = this.cps[e[1]];
         if (!c) break;
@@ -686,7 +723,9 @@ export class TowerCommand {
         const [, s, owner, n0, n1, emptyT, contested] = e;
         const N = this.net;
         const v = N && N.age > 0 ? clamp((s - N.s) / Math.max(0.05, N.age), -2, 2) : 0;
-        this.net = { s, v: Math.abs(s - (N ? N.s : s)) < 1e-4 ? 0 : v, age: 0 };
+        // (rolled back / home onto the centre: it stops there — no dead-reckoning on past it)
+        const stop = Math.abs(s - (N ? N.s : s)) < 1e-4 || (s === 0 && (this.returning || this.homing));
+        this.net = { s, v: stop ? 0 : v, age: 0 };
         if (!N) { this.s = s; }
         this.owner = owner; this.emptyT = emptyT;
         this.hostRiders = [n0, n1];
@@ -695,6 +734,10 @@ export class TowerCommand {
         const ret = owner === -1 && Math.abs(s) > 1e-3 && !n0 && !n1;
         if (ret && !this.returning) emit('tower:return', {});
         this.returning = ret;
+        // (rolling home: held, empty, on the holders' half — the 'h' record marks its start, this keeps it in step)
+        const home = owner >= 0 && !n0 && !n1 && this.homeSide(owner, s);
+        if (home && !this.homing) emit('tower:home', { team: owner });
+        this.homing = home;
         for (let i = 0; i < this.cps.length; i++) {
           const v2 = e[7 + i];
           if (v2 === undefined) continue;
@@ -721,7 +764,7 @@ export class TowerCommand {
     return {
       s: this.s, len: [...this.path.len], owner: this.owner, riders: [...n], contested: this.contested,
       count: [...this.count], score: sc, best: [...this.best], emptyT: this.emptyT, returning: this.returning,
-      moving: this.moving,
+      homing: this.homing, moving: this.moving,
       checkpoints: this.cps.map((c) => ({ team: c.team, index: c.index, d: c.d, dur: c.dur, left: c.left, cleared: c.cleared, at: !!c.at,
         best: c.best, dummy: c.dummy, lost: c.lost, pos: [c.pos.x, c.pos.y, c.pos.z] })),
       grace: TOWER.checkpointGrace,

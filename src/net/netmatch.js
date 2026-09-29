@@ -355,8 +355,10 @@ export class NetMatch {
     const S = n.cur;
     if (!a.alive) { a.respawnTimer -= dt; return; }
     // position = sampled path + decaying correction; velocity drives the gait
+    const x0 = a.pos.x, y0 = a.pos.y, z0 = a.pos.z;
     a.pos.set(S.x + n.err.x, S.y + n.err.y, S.z + n.err.z);
     a.vel.set(S.vx, S.vy, S.vz);
+    this.match?.tower?.carryRemote?.(a, x0, y0, z0, dt);   // (Tower Command: riding the tower isn't walking)
     const dy = angDiff(a.yaw, S.yaw);
     a.netTurnRate = dt > 0 ? dy / dt : 0;
     a.yaw = S.yaw;

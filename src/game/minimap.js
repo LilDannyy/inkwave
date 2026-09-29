@@ -559,7 +559,7 @@ export class Minimap {
     c.globalAlpha = 0.7; c.lineWidth = 0.55 * s; c.strokeStyle = '#f4f0e6'; c.stroke(this._twPath);
     // the stretch it's heading down: from the tower to its next stop, in the controlling team's ink, marching its way
     let end = null;
-    if (T.owner >= 0) { const cp = T._nextCp(T.owner), dir = T.owner === 0 ? 1 : -1; end = cp ? dir * cp.d : dir * T.path.len[T.owner]; }
+    if (T.owner >= 0) { const cp = T._nextCp(T.owner), dir = T.owner === 0 ? 1 : -1; end = T.homing ? 0 : cp ? dir * cp.d : dir * T.path.len[T.owner]; }
     else if (T.returning) end = 0;
     if (end != null && Math.abs(end - T.s) > 0.1) {
       const lo = Math.min(T.s, end), hi = Math.max(T.s, end), seg = new Path2D();
