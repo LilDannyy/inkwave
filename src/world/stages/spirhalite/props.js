@@ -10,7 +10,8 @@ import { registerRuins, ARCH } from './props-ruins.js';
 import { registerCamp } from './props-camp.js';
 import { registerFlora } from './props-flora.js';
 import { registerBridges } from './props-bridges.js';
-import { LAYOUT, BRIDGES, PAD, PAD_BODY } from './layout.js';
+import { registerSlice } from './props-slice.js';
+import { LAYOUT, BRIDGES, DIGBRIDGE, BAYBRIDGE, PAD, PAD_BODY, WATCH, ROPE, TRENCH } from './layout.js';
 import { OUTLINE, PILLAR, SHIFT, sh, DIG_SEA, DIG_LAGOON, SPIT_SEA, SPIT_BAY, TIDE_E, TIDE_W, FORD_E, FORD_W, PILLAR_S } from './outline.js';
 import { inPoly } from './islands.js';
 
@@ -37,7 +38,7 @@ export function groundAt(x, z, hint = 0) {
   for (const d of PIECES) { const y = topAt(d, x, z); if (y <= hint + 0.3 && y > best) best = y; }
   return best === -Infinity ? hint : +best.toFixed(3);
 }
-const SNAP = /^spirhalite_(campfire|palm|pompoms|grass|shrub|rock|float|buoy|debris|driftwood|rowboat|crates|table|tent|tarp|generator|mast|lantern|survey|flagpole|signposts|worklight|stakes|kelp|pathlights|drums)$/;
+const SNAP = /^spirhalite_(campfire|palm|pompoms|grass|shrub|rock|float|buoy|debris|driftwood|rowboat|crates|table|tent|tarp|generator|mast|lantern|survey|flagpole|signposts|worklight|stakes|kelp|pathlights|drums|rockpool|spoil|sieve|barrow|supplydrop|stones)$/;
 
 export function register(D, H) {
   const X = makeKit(H);
@@ -45,6 +46,7 @@ export function register(D, H) {
   registerCamp(D, H, X);
   registerFlora(D, H, X);
   registerBridges(D, H, X);
+  registerSlice(D, H, X);
 }
 
 // the stretch: placements of the base (the bottom stroke, the tail), authored where they stood before, moved out by
@@ -55,7 +57,7 @@ const RAW = [
   // ================= the ruins
   { type: 'spirhalite_arch', pos: [0, 0, 0], rotY: ARCH.rotY, mirror: false, oboxCols: true },
   { type: 'spirhalite_pillar', pos: [PILLAR.x, 0, PILLAR.z], rotY: -Math.PI / 2 },
-  { type: 'spirhalite_causeway', pos: [-29, 0, -18], rotY: 0, len: 16, w: 4.2, top: 1.3,
+  { type: 'spirhalite_causeway', pos: [-29, 0, -18.1], rotY: 0, len: 16.2, w: 4.2, top: 1.3,
     posts: [[-4.8, -1], [-4.8, 1], [3.4, -1], [3.4, 1], [6.9, -1]], slabs: [[-1.0, -1, 0.3, 0.25], [1.8, 1, -0.4, -0.3]],
     rubble: [] },
   // the expedition's ropes on a kerb of fallen blocks along both edges over the inlet, between the carved posts
@@ -67,6 +69,7 @@ const RAW = [
   // ================= the log bridges across the lagoon (dressing for the level's decks: the pillar headland's, the Arch
   // spit's under the arch); the shore kerbs run up to their side logs (and a short rope closes the spit's tip beside it)
   ...BRIDGES.map((b, i) => ({ type: 'spirhalite_logbridge', pos: [b.x, 0, (b.z0 + b.z1) / 2], rotY: 0, len: b.z1 - b.z0, w: b.w, top: 0.25, seed: 11 + i * 2 })),
+  ...[DIGBRIDGE, BAYBRIDGE].map((b, i) => ({ type: 'spirhalite_logbridge', pos: [(b.x0 + b.x1) / 2, 0, b.z], rotY: Math.PI / 2, len: b.x1 - b.x0, w: b.w, top: 0.25, seed: 17 + i * 2 })),   // (the dig's, the east bay's: the stretch)
   { type: 'spirhalite_ropefence', pos: [11.75, -0.12, -9.7], rotY: Math.atan2(0.75, 0.62), L: 0.97, seed: 20 },
 
   // ================= spawn: the helipad (dressing for the level's pad; stairs: foot → top, width), the helicopter behind
@@ -173,6 +176,98 @@ const RAW = [
     { type: 'spirhalite_kelp', pos: [7.0, 0, -24.4], rotY: 0.3, seed: 4, L: 1.4 },
   ]),
 
+  // ================= the slice (the stretch). The tide-pool islet: the rope bridge up onto the shelf, the watch-post's
+  // dressing, rock pools on the west beach, on the shelf and by the bay head, a boulder and driftwood on the beach, the
+  // ford's stepping stones
+  { type: 'spirhalite_ropebridge', pos: [ROPE.x, 0, ROPE.z0], rotY: Math.PI, L: +(ROPE.z0 - ROPE.z1).toFixed(2), y0: 0, y1: 1.3, w: ROPE.w, seed: 61 },
+  { type: 'spirhalite_watchpost', pos: [(WATCH.post[0] + WATCH.post[1]) / 2, 1.3, (WATCH.post[2] + WATCH.post[3]) / 2], rotY: 0, w: WATCH.post[1] - WATCH.post[0], d: WATCH.post[3] - WATCH.post[2], y0: 1.3, y1: 2.5,
+    stub: WATCH.stub.map(([x0, x1, z0, z1, y0, y1]) => { const cx = (WATCH.post[0] + WATCH.post[1]) / 2, cz = (WATCH.post[2] + WATCH.post[3]) / 2; return [x0 - cx, x1 - cx, z0 - cz, z1 - cz, y0 - 1.3, y1 - 1.3]; }) },
+  { type: 'spirhalite_rockpool', pos: [-6.2, 0, -39.6], rotY: 0.3, w: 1.9, d: 1.2, seed: 3 },
+  { type: 'spirhalite_rockpool', pos: [-5.3, 0, -44.2], rotY: -0.5, w: 1.3, d: 0.9, seed: 7 },
+  { type: 'spirhalite_rockpool', pos: [0.5, 1.3, -38.25], rotY: 0.1, w: 1.5, d: 0.95, seed: 11 },
+  { type: 'spirhalite_rockpool', pos: [7.1, 0, -43.9], rotY: 1.2, w: 1.2, d: 0.8, seed: 5 },
+  { type: 'spirhalite_rock', pos: [-6.0, 0, -36.9], rotY: 0.8, w: 1.5, h: 0.8, seed: 31, moss: true },
+  { type: 'spirhalite_rock', pos: [-2.4, -0.9, -30.8], rotY: 0.2, w: 1.1, h: 0.8, seed: 33, nocol: true, nosnap: true, color: '#b5ae9f' },   // (in the notch)
+  { type: 'spirhalite_stones', pos: [-5.1, 0, -29.0], rotY: 0, nosnap: true, pts: [[0, 0], [0.3, -0.9], [-0.2, -1.9], [0.2, -2.8], [-0.1, -3.8], [0.35, -4.7]] },
+  { type: 'spirhalite_kelp', pos: [-4.4, 0, -33.0], rotY: 1.6, seed: 12, L: 1.4 },
+  { type: 'spirhalite_grass', pos: [0.9, 1.3, -41.2], n: 4, r: 0.5, seed: 31 },
+  { type: 'spirhalite_pompoms', pos: [-6.6, 0, -42.0], n: 5, seed: 31 },
+  { type: 'spirhalite_lantern', pos: [-1.0, 1.3, -34.4], rotY: -0.4 },
+
+  // the shelf is the watch-post's old stone terrace on the islet's rocks: boulders along its foot at the notch and on
+  // the east shore (clear of the tower's climb onto its west face and its drop off the south face)
+  ...[[-0.8, -33.5, 1.3, 0.55], [1.9, -33.4, 1.0, 0.5], [3.6, -33.3, 1.5, 0.6], [5.4, -33.5, 1.2, 0.6], [6.5, -35.2, 1.1, 0.7], [6.6, -37.4, 1.4, 0.6], [6.5, -39.8, 1.0, 0.7], [6.5, -41.6, 1.2, 0.55]]
+    .map(([x, z, w, h], i) => ({ type: 'spirhalite_rock', pos: [x, -0.35, z], rotY: i * 1.3, w, h, seed: 61 + i, nocol: true, nosnap: true, color: '#b5ae9f' })),
+  { type: 'spirhalite_rock', pos: [-1.9, 0, -35.4], rotY: 0.4, w: 0.8, h: 0.6, seed: 71, nocol: true },
+  { type: 'spirhalite_shrub', pos: [5.2, 1.3, -41.4], rotY: 0.3, w: 1.0, h: 0.7, seed: 21, nocol: true },
+  { type: 'spirhalite_grass', pos: [-0.3, 0, -45.9], n: 5, r: 0.7, seed: 33 },
+  { type: 'spirhalite_pompoms', pos: [3.0, 0, -44.9], n: 5, seed: 33 },
+
+  // the dig: timber shoring along the trench's walls, spoil heaps and the sieve on the strips between the tower's legs,
+  // the finds shelter (tarp + table) at its north end by the causeway's landing, work lights, a barrow, survey kit,
+  // rock pools on the sea shore, a palm, flora
+  { type: 'spirhalite_shoring', pos: [TRENCH.x0, 0, TRENCH.z1 - 2.4], rotY: Math.PI / 2, L: TRENCH.z1 - TRENCH.z0 - 4.8, h: 1.0, seed: 31 },
+  { type: 'spirhalite_shoring', pos: [TRENCH.x1, 0, TRENCH.z0 + 2.4], rotY: -Math.PI / 2, L: TRENCH.z1 - TRENCH.z0 - 4.8, h: 1.0, seed: 32 },
+  { type: 'spirhalite_spoil', pos: [-30.0, 0, -33.6], rotY: Math.PI / 2 + 0.05, L: 2.6, W: 1.3, h: 1.05, seed: 3 },
+  { type: 'spirhalite_spoil', pos: [-30.0, 0, -40.2], rotY: Math.PI / 2 - 0.08, L: 2.3, W: 1.3, h: 1.0, seed: 5 },
+  { type: 'spirhalite_spoil', pos: [-24.5, 0, -35.2], rotY: Math.PI / 2 + 0.1, L: 2.4, W: 1.3, h: 1.05, seed: 8 },
+  { type: 'spirhalite_sieve', pos: [-24.5, 0, -41.2], rotY: Math.PI / 2 },
+  { type: 'spirhalite_barrow', pos: [-24.4, 0, -44.4], rotY: -Math.PI / 2 + 0.3 },
+  { type: 'spirhalite_tarp', pos: [-22.6, 0, -27.7], rotY: 0.04, w: 3.2, d: 2.8, h: 2.3 },
+  { type: 'spirhalite_table', pos: [-22.6, 0, -27.9], rotY: 0.04 },
+  { type: 'spirhalite_crates', pos: [-20.4, 0, -29.6], rotY: 0.3, layout: [[0, 0, 0, 0], [0.05, 0, 1, 0.08]] },
+  { type: 'spirhalite_worklight', pos: [-26.8, 0, -28.9], rotY: -2.6, h: 2.3, tilt: 0.55 },
+  { type: 'spirhalite_worklight', pos: [-31.8, 1.3, -48.8], rotY: 0.2, h: 2.2, tilt: 0.5 },
+  { type: 'spirhalite_survey', pos: [-20.2, 0, -36.4], rotY: 1.9 },
+  { type: 'spirhalite_lantern', pos: [-30.0, 0, -37.0], rotY: 0.2 },
+  { type: 'spirhalite_lantern', pos: [-24.5, 0, -38.3], rotY: 3.3 },
+  { type: 'spirhalite_pathlights', pos: [0, 0, 0], rotY: 0, nosnap: true, pts: [[-24.6, -31.4], [-24.4, -45.3], [-30.1, -30.4], [-30.1, -43.4], [-5.9, -35.0], [-5.6, -46.2], [2.4, -46.6]] },
+  { type: 'spirhalite_rockpool', pos: [-35.2, 0, -33.6], rotY: 1.4, w: 1.3, d: 0.9, seed: 13 },
+  { type: 'spirhalite_rockpool', pos: [-35.1, 0, -41.4], rotY: 1.2, w: 1.5, d: 0.9, seed: 17 },
+  { type: 'spirhalite_palm', pos: [-35.0, 0, -37.6], rotY: 0, h: 3.9, lean: 1.2, seed: 27 },
+  { type: 'spirhalite_grass', pos: [-30.2, 1.3, -48.0], n: 5, r: 0.8, seed: 32 },
+  { type: 'spirhalite_pompoms', pos: [-20.4, 0, -44.0], n: 6, seed: 32 },
+  { type: 'spirhalite_kelp', pos: [-20.2, 0, -32.2], rotY: 1.5, seed: 13, L: 1.6 },
+
+  // the spoil heap's faces softened by sand slumped against them (dressing: no collider)
+  { type: 'spirhalite_spoil', pos: [-30.9, 0, -49.8], rotY: 0.05, L: 2.6, W: 1.0, h: 0.8, seed: 12, nocol: true },
+  { type: 'spirhalite_spoil', pos: [-32.5, 0, -48.2], rotY: Math.PI / 2, L: 2.4, W: 0.9, h: 0.9, seed: 14, nocol: true },
+
+  // the spit's root: the supply drop at the dune's foot (its parachute trailing north), a rock outcrop on the sea side,
+  // a rock pool, driftwood, flora
+  { type: 'spirhalite_supplydrop', pos: [15.3, 0, -31.0], rotY: Math.PI + 0.25, seed: 5 },
+  { type: 'spirhalite_rock', pos: [19.4, 0, -40.6], rotY: 0.6, w: 1.5, h: 0.8, seed: 41, moss: true },
+  { type: 'spirhalite_rock', pos: [18.4, 0, -41.7], rotY: 1.6, w: 0.8, h: 0.6, seed: 43, nocol: true },
+  { type: 'spirhalite_rockpool', pos: [20.3, 0, -43.0], rotY: 0.9, w: 1.3, d: 0.9, seed: 19 },
+  { type: 'spirhalite_float', pos: [13.2, 0, -26.4], rotY: 0, r: 0.4 },
+  { type: 'spirhalite_grass', pos: [16.4, 0.9, -36.2], n: 5, r: 0.6, seed: 41 },
+  { type: 'spirhalite_pompoms', pos: [15.6, 0, -40.4], n: 6, seed: 41 },
+  { type: 'spirhalite_kelp', pos: [17.9, 0, -27.8], rotY: 1.8, seed: 14, L: 1.5 },
+  { type: 'spirhalite_driftwood', pos: [16.8, 0, -42.3], rotY: 1.15, L: 3.4, seed: 71, two: true },
+  { type: 'spirhalite_shrub', pos: [17.2, 0, -33.6], rotY: 0.5, w: 1.4, h: 0.9, seed: 23 },
+  { type: 'spirhalite_palm', pos: [18.5, 0, -38.6], rotY: 0, h: 3.6, lean: 1.1, seed: 29 },
+  { type: 'spirhalite_buoy', pos: [21.0, 0, -44.2], rotY: 0.8, variant: 1 },
+
+  // the helipad's deck: Deep Cut's cargo lashed down round its rim, clear of the spawn circle and the two stairs (fuel
+  // drums at the east and north-west, crate stacks at the back corners, a netted crate at the north-east)
+  { type: 'spirhalite_drums', pos: [PAD[0] + 4.95, 3.2, PAD[1] + 0.3], rotY: Math.PI / 2 },
+  { type: 'spirhalite_drums', pos: [PAD[0] - 3.5, 3.2, PAD[1] + 3.4], rotY: Math.PI / 4 },
+  { type: 'spirhalite_crates', pos: [PAD[0] + 3.3, 3.2, PAD[1] - 3.5], rotY: -Math.PI / 4, layout: [[0, 0, 0, 0], [0.05, 0, 1, 0.06]] },
+  { type: 'spirhalite_crates', pos: [PAD[0] - 3.7, 3.2, PAD[1] - 3.1], rotY: Math.PI / 4, layout: [[0, 0, 0, 0], [0.02, 0.03, 1, -0.05]] },
+  { type: 'spirhalite_crates', pos: [PAD[0] + 3.4, 3.2, PAD[1] + 3.4], rotY: -Math.PI / 4, layout: [[0, 0, 0, 0], [0.03, 0, 1, 0.04]] },
+
+  // cover on the new ground: crates on the spoil heap, a boulder beside the dig bridge's middle, fallen column drums
+  // and camp crates along the camp islet's north beach (the tower's run between them), a rock on the camp's crest, a
+  // rock on the neck and on the spit's root
+  { type: 'spirhalite_crates', pos: [-29.3, 1.3, -48.3], rotY: 0.15, layout: [[0, 0, 0, 0], [0.04, 0, 1, 0.1]] },
+  { type: 'spirhalite_rock', pos: [-13.2, -0.3, -44.5], rotY: 0.5, w: 1.9, h: 1.1, seed: 47, moss: true, nosnap: true },
+  { type: 'spirhalite_crates', pos: [-18.6, 0, -54.6], rotY: 0.08, layout: [[0, 0, 0, 0], [1.02, 0.05, 0, 0.06], [0.5, 0.02, 1, 0.1]] },
+  { type: 'spirhalite_drums', pos: [-7.8, 0, -55.1], rotY: 0.4 },
+  { type: 'spirhalite_rock', pos: [-16.54, 2.5, -61.2], rotY: 0.7, w: 1.3, h: 0.95, seed: 49, moss: true },
+  { type: 'spirhalite_rock', pos: [-21.0, 0, -18.2], rotY: 1.1, w: 1.3, h: 0.9, seed: 51, moss: true },
+  { type: 'spirhalite_rock', pos: [-19.9, 2.5, -6.4], rotY: 0.3, w: 1.2, h: 0.95, seed: 55, moss: true },   // (the Spine Crest's top)
+  { type: 'spirhalite_rock', pos: [14.4, 0, -25.8], rotY: 2.1, w: 1.3, h: 0.9, seed: 53, moss: true },
+
   // ================= the sea round the islands: the strange vanes (out of bounds)
   { type: 'spirhalite_vane', pos: [-41, 0, -21], rotY: 0.4, h: 4.6, speed: 0.3 },
   { type: 'spirhalite_vane', pos: [34, 0, -44], rotY: -0.3, h: 5.2, speed: 0.22 },
@@ -244,11 +339,12 @@ const pairs = (pts) => pts.slice(1).map((q, i) => [pts[i], q]);
 let seedK = 100;
 for (const [a, b] of [
   ...pairs([[-32.6, -23.2], ...DIG_SEA, sh(-35.4, -31.4)]),
-  ...pairs([...TIDE_W.slice(1), ...DIG_LAGOON, [-17.8, -24.4]]),
-  ...pairs([FORD_W[3], TIDE_W[0], TIDE_W[1]]),
-  [PILLAR_S[0], [0.1, -27.79]], [[2.7, -27.1], PILLAR_S[2]], ...pairs([...PILLAR_S.slice(2), [4.48, -21.39]]),   // (parted for the rope bridge's foot)
+  ...pairs([TIDE_W[3], TIDE_W[4], ...DIG_LAGOON.slice(0, 3)]), ...pairs([...DIG_LAGOON.slice(4), [-17.8, -24.4]]),
+  [[-6.58, -43.8], TIDE_W[3]], [DIG_LAGOON[2], [-18.4, -43.8]], [[-19.08, -40.2], DIG_LAGOON[4]],   // (parted for the dig bridge's landings, z −43.6 … −40.4)
+  [FORD_W[3], TIDE_W[0]], [TIDE_W[0], [-8.04, -40.2]],
+  [PILLAR_S[0], [0.1, -27.79]], [[2.7, -27.1], PILLAR_S[2]], [PILLAR_S[2], PILLAR_S[3]],   // (parted for the rope bridge's foot and the east bay's bridge)
   [[-1.5, -34.16], TIDE_E[6]],                                                                                   // (the notch's beach west of the shelf)
-  ...pairs([[10.7, -20.4], ...SPIT_BAY, sh(9.4, -22.5)]),
+  ...pairs([...SPIT_BAY, sh(9.4, -22.5)]),   // (the spit's bay side from the east bay's bridge on)
   ...pairs([sh(19.0, -26.8), ...SPIT_SEA, [16.6, -24.4]]),
 ]) kerb(a, b, seedK++);
 for (const [a, b] of [
