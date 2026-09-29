@@ -40,6 +40,9 @@ export class BossNav {
     }
     let best = 0, bn = -1;
     for (const [k, n] of hist) if (n > bn) { bn = n; best = k / 4; }
+    // a stage can name its boss floor (layout.boss.floorY) when its biggest level isn't the arena it wants — e.g.
+    // Treehills, whose 1.3 m terraces out-cover the meadow the boss belongs on
+    if (Number.isFinite(L.layout?.boss?.floorY)) best = L.layout.boss.floorY;
     this.floorY = best;
     for (let i = 0; i < N; i++) {
       const [x, z] = this.xz(i);
