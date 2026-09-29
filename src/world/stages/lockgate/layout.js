@@ -35,8 +35,8 @@ import { SURF } from './surfaces.js';
 //     coordinates) — is moved out by LS.d along -Z (base()). The 22 m it leaves is new land, THE DRY DOCK (DOCK below):
 //       - the canal company's dry dock across the west of the slice, fed from the upper pound by a dock arm through an
 //         arch in the west wall: a drained brick chamber (floor -1.9, an altar ledge -0.95 along each side, head steps
-//         the floor's width down at its east end) with a working boat up on keel blocks, mitre gates + balance beams at the mouth
-//         (their walkway flush with the docksides: the west flank crossing);
+//         the floor's width down at its east end) with a working boat up on keel blocks, mitre gates + balance beams
+//         at the mouth (their walkway flush with the docksides: the west flank crossing);
 //       - the CRANE STAGING over the dock (1.3, stairs from both docksides, a hand crane on it): the slice's strategic
 //         point, over the dock floor route and the boat, looking up the yard between the cottage and the office to mid;
 //       - the boatbuilder's shed with its loading bay (1.3, two flights down to the lane by the dock head) in the east of
