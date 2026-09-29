@@ -251,6 +251,14 @@ export function buildBackdrop(kit) {
     works.push(xf(box(5, 18, 1, '#eef6f6'), x - cx * 7, WATER_Y + 9, z - cz * 7, rot, -0.25));
     works.push(xf(sph(4, 8, 5, '#f4fbfb'), x - cx * 10, WATER_Y, z - cz * 10, 0, 0, 0, 1, 0.4, 1));
   }
+  // service galleries cut into the rock: a concrete balcony slab with a row of lit windows (glow at dusk), here and there
+  for (const [a0, a1, y] of [[40, 52, 46], [128, 136, 62], [168, 182, 38], [300, 311, 54], [340, 346, 70]]) {
+    for (let a = a0; a < a1; a += 0.7) {
+      const r = wallR(a * DEG) - 70 * Math.pow(y / RIM, 2) - 4, [x, z] = at(a, r), rot = -a * DEG + Math.PI / 2;
+      works.push(xf(box(12, 1.2, 5, '#a9aea7'), x, WATER_Y + y, z, rot));
+      works.push(xf(box(9, 3, 1, '#ffe7b8', 1), x + Math.cos(a * DEG) * 1.5, WATER_Y + y + 2.2, z + Math.sin(a * DEG) * 1.5, rot));
+    }
+  }
   out.plain.push(...works);
 
   // ---------------------------------------------------------------------------------------------- the dome's grid
