@@ -23,10 +23,11 @@ export const TOWER_DEFS = {
   kelpline: {
     // on the berth's 35° grid (layout.js ROT; berth-local x across the pier, z along it — corners (0, 0), (−17.9, 0),
     // (−17.9, 5.6), (−7.3, 5.6), (−7.3, 15.9), (−12.3, 15.9), (−12.3, 21.3), (−6.6, 21.3), (−6.6, 17.6), (12.2, 17.6),
-    // (12.2, 36)): out under the crane portal, back along the stack ends, up onto Block 4A, down into the lane and on
-    // along the ground: through the reefer rack's aisle (layout.js AISLE; checkpoint 3 in it), down row 1's empty slot
-    // to the base apron
-    path: [[0, 0], [-14.66, 10.27], [-11.45, 14.85], [-2.77, 8.77], [3.14, 17.21], [-0.96, 20.08], [2.14, 24.5], [6.81, 21.23], [4.69, 18.2], [20.09, 7.42], [30.64, 22.49]],
+    // (12.2, 34.4), (5.2, 34.4), (5.2, 55.5)): out under the crane portal, back along the stack ends, up onto Block 4A,
+    // down into the lane and on along the ground: through the reefer rack's aisle (layout.js AISLE; checkpoint 3 in it),
+    // down row 1's empty slot into cross aisle C (the Long Stages slice, layout.js SLICE), along it into the RTG lane and
+    // down the lane past the transfer platform (between its deck and RTG 41's sill) to the goal at the forecourt's edge
+    path: [[0, 0], [-14.66, 10.27], [-11.45, 14.85], [-2.77, 8.77], [3.14, 17.21], [-0.96, 20.08], [2.14, 24.5], [6.81, 21.23], [4.69, 18.2], [20.09, 7.42], [29.72, 21.18], [23.99, 25.2], [36.09, 42.48]],
     checkpoints: [[-6.92, 11.68], [-0.87, 20.02], [16.82, 9.71]],
   },
   halyard: {
