@@ -181,7 +181,7 @@ for (const [a, b, seed, o] of [
   [[-15.0, -12.7], [-11.0, -11.5], 9],
   [[-11.0, -11.5], [-7.0, -9.9], 14],
   [[-7.0, -9.9], [-3.95, -8.68], 15, { k: 1.0 }],  // … to the pillar bridge; the central sandbar's shore past it
-  [[0.95, -6.82], [4.0, -5.6], 16, { k: 1.0 }],
+  [[0.72, -6.91], [4.0, -5.6], 16, { k: 1.0 }],
   [[4.0, -5.6], [8.0, -3.9], 18],
   [[-18.2, -17.0], [-17.4, -13.8], 5],             // the neck: its lagoon side …
   [[-18.4, -21.0], [-18.2, -17.0], 6],
@@ -207,6 +207,7 @@ for (const [a, b, seed, o] of [
   [[16.6, -24.4], [15.9, -20.0], 53],                 // … and its sea side along the arch's leg
   [[15.9, -20.0], [15.9, -14.2], 54],
   [[15.9, -14.2], [16.8, -11.4], 55],
+  [[16.8, -11.4], [16.76, -10.25], 57, { k: 1.0 }],        // (up to the bridge's side log)
   [[19.0, -26.8], [16.6, -24.4], 56],                 // the tail's beach at the spit's root
   [[-31.1, -14.7], [-34.6, -13.2], 43],                // the bend's head over the inlet, west of the causeway
   [[10.0, -44.6], [15.6, -43.0], 34],                  // the tail's back beach under the high dune
