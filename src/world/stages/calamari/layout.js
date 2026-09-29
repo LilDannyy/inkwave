@@ -16,17 +16,19 @@ import { MURAL } from './murals.js';
 //     timber canopy between the two tracks (trackbeds at 0), a local railcar waiting at the platform on each track
 //     (Alpha's at the +x end, Bravo's at the −x end: 3.4 m of cover, roofs off-limits), a covered timber footbridge on
 //     each side (deck 4.3: the high ground over mid) from the side platform over its track onto the island platform, a
-//     level crossing at each end (|x| 15.5 … 20) and the tunnel portals capping the cut (|x| 25.5)
+//     level crossing at each end (|x| 18.5 … 25.5) and the tunnel portals capping the cut (|x| 31.5)
 //   • station side (z −11 … −6.6): the side platform (1.0) with the station building behind it, ramps at both ends
-//   • right lane (−X) HILLSIDE: the crossing road (0) up past the bath house, the hillside terraces stepping up beside
-//     it (T1 1.3 with the Cuttlefish cottage; T2 2.6 by the co-op, overlooking the square), houses climbing the hill
-//   • mid lane: the station forecourt → the village square (post box, bus shelter, the side zone) → the co-op stair
-//   • left lane (+X) HARBOUR: the basin quay along the fishing-boat basin that cuts into the village (its edge at an
-//     angle, a slipway, a timber jetty), the north quay with the breakwater, the co-op's quay behind
+//   • right lane (−X) HILLSIDE: the crossing road (0, 7 m) up past the house and the bath house, the open terrace T1
+//     (1.3, 6–7 m, hop-up from the road) beside it, T2 (2.6) by the co-op overlooking the back street with the
+//     Cuttlefish cottage at its west end, houses climbing the hill behind
+//   • mid lane: the station forecourt and the village square as one open space (22 × 20 m: post box, bus shelter,
+//     the pine, snowbanks, the side zone) → the co-op stair
+//   • left lane (+X) HARBOUR: the basin quay (8–10 m) along the fishing-boat basin that cuts into the village (its edge
+//     at an angle, a slipway), the north quay apron (20 × 6 m) with the breakwater, the co-op's quay behind
 //   • spawn: the open upper deck of the Fishermen's Co-op warehouse (3.4): grand stair to the square, a timber ramp
 //     down to the co-op quay, drops onto T2 (0.8) and the loading dock (1.0)
-// The village grew: buildings of different sizes, several turned a few degrees off the street grid, the lanes between
-// them bending and narrowing; the outline follows the coast (the basin, the breakwater, the stepped co-op quay) and the
+// The village grew: buildings of different sizes, several turned a few degrees off the street grid, 5 m cross streets
+// and a 5 m back street between them; the outline follows the coast (the basin, the breakwater, the stepped co-op quay) and the
 // hill (terraces stepping in and out, the hill houses cutting the corner behind the spawn).
 // Heights: 0 streets / quays / trackbeds · −0.1 the basin quay (a kerb down from the street) · 1.0 platforms, loading
 // dock · 1.3 T1 · 2.6 T2 · 3.4 spawn, railcar tops (off-limits) · 4.3 footbridge decks.
@@ -212,7 +214,7 @@ const ZONES = {
 // ---- Tower Command: "the tower rides the railway" (drawn on Bravo's half, Alpha's goal): off the island platform onto
 // Bravo's track, along the rails to the level crossing (checkpoint 1), up the hillside road, back along the back street
 // past the square (checkpoint 2 at its corner), up onto the co-op's loading dock
-const TX = -P.roadX, TZ = -P.backZ, GX = -6;
+const TX = -P.roadX, TZ = -P.backZ, GX = -7.5;
 const TOWER = {
   path: [[0, I.y, 0], [0, 5.0], [TX, 5.0], [TX, TZ], [GX, TZ], [GX, 31.8]],
   checkpoints: [[TX, 5.0], [8, TZ]],
@@ -261,9 +263,9 @@ const CALAMARI = {
   tower: TOWER,
   // match intro: high over the station (the footbridges, the railcars, the canopy), then back down to the co-op deck
   intro: { from: [14, 13, 12], lookFrom: [0, 3, -2], toBack: 3.0 },
-  // stage-select picture: from Alpha's hillside across the whole village, the station and its railcars, the level
-  // crossing and the tunnel, to Bravo's snowy hillside with its houses and fire lookout tower
-  art: { from: [-27, 19, -40], look: [4, 1.5, 2], fov: 60 },
+  // stage-select picture: from high on Alpha's hill across the whole village — the bath house's steaming chimney, the
+  // square, the station and its railcars, the footbridges, the level crossing and the tunnel — to Bravo's co-op and hill
+  art: { from: [-40, 22, -46], look: [2, 1.5, 0], fov: 58 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 
