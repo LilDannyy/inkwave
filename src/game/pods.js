@@ -65,8 +65,8 @@ export const PODS = {
   towerMargin: 0.6,       // m round the tower's platform a hedge won't grow into
   bossMargin: 0.5,
   swell: 0.55,            // the bulb's scale-up at a full meter
-  sheen: 0.07,            // the hedge's leaves (foliage) get this much of its team's ink as a sheen; blossoms (gloss) more
-  blush: 0.55,            // a dormant bulb blushes up to this far toward the team that's ahead on it
+  sheen: 0.035,           // the hedge's leaves (foliage) get this much of its team's ink as a sheen; blossoms (gloss) more
+  blush: 0.35,            // a dormant bulb blushes up to this far toward the team that's ahead on it (its glow says the rest)
 };
 const TAU = Math.PI * 2, DEG = Math.PI / 180;
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _c = new THREE.Color(), _c2 = new THREE.Color();

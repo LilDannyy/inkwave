@@ -16,7 +16,7 @@
 //     browns them as it wilts. Keep the outside within ~5 cm of the w × h × d box and the top flat-ish: the team's ink
 //     is drawn on the box's faces (swimmable walls, a standable top).
 export function registerPods(D, H) {
-  const { THREE, PALETTE, TAU, col, mixc, blobGeo, puffGeo, roundBox } = H;
+  const { THREE, PALETTE, TAU, HP, col, mixc, blobGeo, roundBox } = H;
   const cache = new Map();
   const once = (k, fn) => { let g = cache.get(k); if (!g) { g = fn(); cache.set(k, g); } return g; };
 
@@ -55,37 +55,37 @@ export function registerPods(D, H) {
 
   D.sprout_hedge = {
     desc: 'Sprout pod hedge (the pods engine\'s default look): a clipped boxwood wall (o.size = [w, h, d], default 3 × 1.8 × 0.9) with a flat top, '
-      + 'leafy tufts along its sides and small blossoms; o.tint (the grower\'s ink) tints the leaves and colours the blossoms.',
+      + 'its faces covered in small leaf sprays; o.tint (the grower\'s ink) lightly tints the leaves and colours its blossoms.',
     params: { size: '[w, h, d] (m): width (local x), height, depth (local z)', tint: 'THREE.Color | null: the grower\'s ink' },
     variants: 1, mount: 'ground',
     build(B, o) {
-      const [w, h, d] = o.size || [o.w ?? 3, o.h ?? 1.8, o.d ?? 0.9];
+      const [w0, h, d0] = o.size || [o.w ?? 3, o.h ?? 1.8, o.d ?? 0.9];
+      const w = w0 + 0.03, d = d0 + 0.04;                 // (a touch over its size: it covers the planter it grows from)
       const tint = o.tint ? col(o.tint) : null;
-      const leaf = (base, k = 0.4) => (tint ? mixc(base, tint, k) : base);
-      // the clipped body (flat top: the ink sits on it), a darker skirt of older growth at its foot
-      B.add('foliage', roundBox(w - 0.04, h - 0.02, d - 0.04, 0.09), leaf(mixc('leaf', 'leaflight', 0.25)), 0, (h - 0.02) / 2, 0);
-      B.box('foliage', leaf('leafdark', 0.3), w - 0.02, 0.22, d - 0.02, 0, 0.11, 0, { r: 0.05 });
-      // tufts breaking up the sides (sunk into the body: at most ~4 cm proud)
-      const n = Math.max(3, Math.round(w / 0.42)), rows = Math.max(2, Math.round(h / 0.5));
-      for (let j = 0; j < rows; j++) for (let i = 0; i < n; i++) for (const sd of [1, -1]) {
-        if (B.r() < 0.35) continue;
-        const x = -w / 2 + ((i + 0.5 + B.r(-0.25, 0.25)) / n) * w, y = 0.25 + ((j + 0.5) / rows) * (h - 0.45);
-        B.add('foliage', once('puff' + ((i + j) % 6), () => puffGeo(1, (i + j) % 6)), leaf(mixc('leaf', 'leaflight', B.r(0.1, 0.5))),
-          x, y, sd * (d / 2 - 0.12), { s: 0.2, sz: 0.16, ry: B.r(0, TAU), ao: false });
+      const leaf = (c, k = 0.06) => (tint ? mixc(c, tint, k) : col(c));
+      // the clipped body: dark inner growth, just inside the sprays (and all round the planter)
+      B.add('foliage', roundBox(w - 0.04, h - 0.03, d - 0.02, 0.05), leaf(mixc('leafdark', 'leaf', 0.3), 0.04), 0, (h - 0.03) / 2, 0);
+      // leaf sprays over every face (flattened clusters, ~3 cm proud of the body): the sides, the ends, the top
+      const spray = (x, y, z, rx, ry, s) => B.add('foliage', once('spray' + ((x * 7 + y * 13 + z * 5) & 7), () => blobGeo(1, 0, ((x * 7 + y * 13 + z * 5) & 7) + 1)),
+        leaf(mixc('leaf', 'leaflight', B.r(0, 0.55))), x, y, z, { sx: s, sy: s * 0.85, sz: 0.045, rx, ry, rz: B.r(0, TAU), ao: false });
+      const cell = 0.19;
+      for (const sd of [1, -1]) {
+        for (let y = 0.12; y < h - 0.08; y += cell) for (let x = -w / 2 + 0.1; x < w / 2 - 0.05; x += cell)
+          spray(x + B.r(-0.05, 0.05), y + B.r(-0.04, 0.04), sd * (d / 2 - 0.035), 0, sd > 0 ? 0 : Math.PI, B.r(0.1, 0.14));
+        for (let y = 0.12; y < h - 0.08; y += cell) for (let z = -d / 2 + 0.1; z < d / 2 - 0.05; z += cell)
+          spray(sd * (w / 2 - 0.035), y + B.r(-0.04, 0.04), z + B.r(-0.04, 0.04), 0, sd * HP, B.r(0.1, 0.14));
       }
-      for (const sx of [1, -1]) for (let j = 0; j < rows; j++) {
-        B.add('foliage', once('puff2', () => puffGeo(1, 2)), leaf(mixc('leaf', 'leaflight', B.r(0.1, 0.4))),
-          sx * (w / 2 - 0.12), 0.25 + ((j + 0.5) / rows) * (h - 0.45), B.r(-0.15, 0.15), { s: 0.18, sx: 0.16, ry: B.r(0, TAU), ao: false });
-      }
-      // blossoms in the grower's ink (white untinted)
-      const bl = once('blossom', () => new THREE.IcosahedronGeometry(1, 0)), bc = tint ? mixc(tint, 'white', 0.15) : 'white';
-      const nb = Math.round(w * h * 5);
+      for (let x = -w / 2 + 0.1; x < w / 2 - 0.05; x += cell) for (let z = -d / 2 + 0.1; z < d / 2 - 0.05; z += cell)
+        spray(x + B.r(-0.05, 0.05), h - 0.03, z + B.r(-0.04, 0.04), -HP, 0, B.r(0.11, 0.15));
+      // blossoms in the grower's ink (white untinted), on the sides and the top
+      const bl = once('blossom', () => new THREE.IcosahedronGeometry(1, 1)), bc = tint || 'white';
+      const nb = Math.round(w * h * 7);
       for (let k = 0; k < nb; k++) {
-        const face = B.r(), s = 0.035 + B.r(0, 0.025);
-        if (face < 0.8) {
-          const sd = face < 0.4 ? 1 : -1;
-          B.add('gloss', bl, bc, B.r(-w / 2 + 0.12, w / 2 - 0.12), B.r(0.35, h - 0.12), sd * (d / 2 + 0.01), { s, ao: false });
-        } else B.add('gloss', bl, bc, B.r(-w / 2 + 0.1, w / 2 - 0.1), h + 0.005, B.r(-d / 2 + 0.1, d / 2 - 0.1), { s: s * 0.8, sy: s * 0.5, ao: false });
+        const face = B.r(), s = 0.045 + B.r(0, 0.03);
+        if (face < 0.85) {
+          const sd = face < 0.425 ? 1 : -1;
+          B.add('gloss', bl, bc, B.r(-w / 2 + 0.12, w / 2 - 0.12), B.r(0.3, h - 0.1), sd * (d / 2 + 0.005), { s, sz: s * 0.6, ao: false });
+        } else B.add('gloss', bl, bc, B.r(-w / 2 + 0.1, w / 2 - 0.1), h + 0.01, B.r(-d / 2 + 0.1, d / 2 - 0.1), { s: s * 0.8, sy: s * 0.4, ao: false });
       }
     },
   };

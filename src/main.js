@@ -235,7 +235,7 @@ class Game {
     this.towerFx?.clear();
     if (this.levelMesh) { scene.remove(this.levelMesh, this.grateMesh); this.levelMesh.geometry.dispose(); this.grateMesh?.geometry.dispose(); this.levelMat.dispose(); this.grateMat?.dispose(); }
     if (this.decor) { scene.remove(this.decor.group); }
-    this.podLooks?.dispose(); this.podLooks = null;   // (their bulbs share the prop kit's materials: before the kit goes)
+    this.podLooks?.dispose(); this.podLooks = null;   // (built with the prop kit: gone before the kit goes)
     if (this.props) { this.props.dispose?.(); this.props = null; }
     G.paint?.dispose();
     this.layoutId = layoutId; this.worldKey = worldKey;
@@ -255,9 +255,9 @@ class Game {
       } catch (e) { console.error('[inkwave] props failed', e); this.props = null; }
     }
     const layout = layoutFor(MAP_LAYOUTS[layoutId], mode);
-    colliders.push(...podColliders(layout));   // sprout pods' planters (src/game/pods.js)
+    colliders.push(...podColliders(layout));   // sprout pods: the engine's planters, only when the layout asks (pods.js)
     const level = (G.level = new Level(layout, colliders));
-    this.podLooks = new PodLooks(layout);      // …their planters and bulbs (the match's pods drive them)
+    this.podLooks = new PodLooks(layout);      // the pods' bulbs and hedges (the match's StagePods drives them)
     G.physics = new Physics(level);
     const lightmap = await this._loadLightmap(level, worldKey);
     G.paint = new PaintSystem(G.renderer, level, { atlasSize: q.paintAtlas, maxDensity: q.paintAtlas >= 4096 ? 30 : 18 });
