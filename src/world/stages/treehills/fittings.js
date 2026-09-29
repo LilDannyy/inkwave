@@ -212,4 +212,35 @@ export function registerFittings(D, H, T) {
       if (o.label) letters(B, o.label, { h: 0.06, y: 0.2, z: 0.112, c: K.modDk });
     },
   };
+
+  // ------------------------------------------------------------------------------------------ the landing pads, a birdhouse
+  // the base terrace's landing-pad marking (the Tower Command goal sits on it), laid on the deck 1.5 cm proud: an amber
+  // ring, a pale inner ring, twelve ticks, the biome number (read from the spawn side). A prop, not a floor decal: a
+  // prop's twin turns with the stage (a mirrored floor decal is only moved). Visual only.
+  D.treehills_padring = {
+    desc: 'landing-pad marking on the deck (visual): amber ring, inner ring, ticks, number',
+    build(B, o) {
+      const y = 0.015, R0 = o.r ?? 2.2, G = H.THREE;
+      const ring = (r0, r1, c) => B.add(NS('paint'), tpl('pad-ring|' + r0 + '|' + r1, () => new G.RingGeometry(r0, r1, 48, 1)), c, 0, y, 0, { rx: -HP, ao: false });
+      ring(R0 - 0.11, R0 + 0.11, K.yellow);
+      ring(R0 * 0.82 - 0.05, R0 * 0.82 + 0.05, K.label);
+      for (let k = 0; k < 12; k++) { const a = (k / 12) * TAU, r = R0 * 0.9; pbox(B, NS('paint'), K.label, 0.05, 0.004, 0.16, Math.cos(a) * r, y, Math.sin(a) * r, { ry: -a + HP }); }
+      B.push(0, y + 0.003, 0, PI, -HP);
+      letters(B, o.num ?? '07', { h: 0.62, y: -0.31, z: 0, c: K.label, wt: 0.22 });
+      B.pop();
+    },
+  };
+  // a birdhouse on a post: a little timber house (pitched roof, round door, a perch) — 1.9 m
+  D.treehills_birdhouse = {
+    desc: 'birdhouse on a slim post (1.9 m)',
+    build(B, o) {
+      const h = o.h ?? 1.6;
+      pbox(B, 'wood', K.timberDk, 0.07, h, 0.07, 0, h / 2, 0);
+      pbox(B, 'wood', K.timber, 0.26, 0.28, 0.24, 0, h + 0.14, 0);
+      for (const s of [-1, 1]) pbox(B, 'paint', K.mod, 0.2, 0.02, 0.3, s * 0.085, h + 0.33, 0, { rz: s * 0.7 });
+      B.cyl(NS('paint'), '#2b2419', 0.045, 0.01, 0, h + 0.17, 0.121, { rx: HP, seg: 10 });
+      seg(B, NS('wood'), K.timberDk, [0, h + 0.08, 0.12], [0, h + 0.08, 0.2], 0.015, 0.015, { round: true, seg: 4 });
+      B.col(-0.05, 0, -0.05, 0.05, h + 0.3, 0.05, ROOF);
+    },
+  };
 }

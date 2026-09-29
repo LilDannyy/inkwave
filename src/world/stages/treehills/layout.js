@@ -52,12 +52,12 @@ export const GROUND = {
   apron: fill(APRON, { y0: FL, top: T1, mk: () => deck({ tag: 'apron' }), ledge: byEdge((a, b) => !isInner(a, b)) }),
   lobe: fill(LOBE, { y0: FL, top: T1, mk: () => lawn({ tag: 'lobe', color: K.hill }), ledge: () => OUTER }),
   strip: fill(STRIP, { y0: FL, top: T1, mk: () => lawn({ tag: 'strip', color: K.hill }), ledge: () => OUTER }),
-  upper: fill(UPPER, { y0: FL, top: T2, mk: () => lawn({ tag: 'upper', color: K.upper }), ledge: () => OUTER }),
+  upper: fill(UPPER, { y0: FL, top: T2, colMax: 7.5, mk: () => lawn({ tag: 'upper', color: K.upper }), ledge: () => OUTER }),
   crown: fill(CROWN, { y0: FL, top: T3, mk: () => lawn({ tag: 'crown', color: K.crown }), ledge: () => OUTER }),
 };
 const GROUNDS = Object.values(GROUND);
 // the signage painted on the ground's faces (murals.js): the name along the upper tier's wall over the meadow, the biome
-// stencil on the band's low wall (walls: a mirrored wall's decal turns with it); the landing pads (below: PAD_PAIR)
+// stencil on the band's low wall (walls: a mirrored wall's decal turns with it)
 const near = (a, b) => Math.abs(a - b) < 0.02;
 const paint = (cols, pred, m) => { const c = cols.find(pred); if (c) c.mural = [...(c.mural || []), m]; };
 paint(GROUND.upper.cols, (c) => near(c.min[0], 19.5) && c.min[2] < -9 && c.max[2] > 19, { n: [-1, 0, 0], id: MURAL.sign });
@@ -70,10 +70,11 @@ export const FEET = GROUNDS.flatMap((g) => g.feet);
 // piece's top decal is moved, not turned (level.js mirrorDef), so this column leaves the half list: it and its twin go in
 // as single pieces, the twin with the decal turned 180° (murals.js bandW)
 const BAND_COL = GROUND.strip.cols.find((c) => near(c.min[0], 15) && near(c.max[0], 19));
-// the same for the base terrace's column that carries the landing pad (Alpha's Tower Command goal; Bravo's is its twin)
-const PAD_COL = GROUND.apron.cols.find((c) => near(c.min[0], -8) && near(c.max[0], -8 / 3));
+// the same for the upper tier's column (x 19.5 … 26.5: its walking strip and the Tower Command route)
 const twin = (c, murals) => ({ ...c, min: [-c.max[0], c.min[1], -c.max[2]], max: [-c.min[0], c.max[1], -c.min[2]], mural: murals });
-const PAD_PAIR = [{ ...PAD_COL, mural: [{ n: [0, 1, 0], id: MURAL.padA }] }, twin(PAD_COL, [{ n: [0, 1, 0], id: MURAL.padB }])];
+const flip = (ms) => (ms || []).map((m) => ({ ...m, n: [-m.n[0], m.n[1], -m.n[2]] }));
+const UPPER_COL = GROUND.upper.cols.find((c) => near(c.min[0], 19.5) && near(c.max[0], 26.5));
+const UPPER_PAIR = [{ ...UPPER_COL, mural: [...(UPPER_COL.mural || []), { n: [0, 1, 0], id: MURAL.upperE }] }, twin(UPPER_COL, [...flip(UPPER_COL.mural), { n: [0, 1, 0], id: MURAL.upperW }])];
 const BAND_PAIR = [
   { ...BAND_COL, mural: [...(BAND_COL.mural || []), { n: [0, 1, 0], id: MURAL.bandE }] },
   { ...BAND_COL, min: [-BAND_COL.max[0], BAND_COL.min[1], -BAND_COL.max[2]], max: [-BAND_COL.min[0], BAND_COL.max[1], -BAND_COL.min[2]],
@@ -120,7 +121,7 @@ const KERB_SKIP = [
 const KERBS = kerbs(REGIONS.map(([P, top]) => ({ P, top, mk: () => ({ color: '#c3cbc4', pattern: PATTERN.concrete, tag: 'kerb' }) })), ALL, { skip: KERB_SKIP, feet: GROUNDS.flatMap((g) => g.feet) });
 
 const HALF = [
-  ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]).filter((c) => c !== BAND_COL && c !== PAD_COL),
+  ...GROUNDS.flatMap((g) => [...g.cols, ...g.ledges]).filter((c) => c !== BAND_COL && c !== UPPER_COL),
   ...KERBS,
 
   // ---------------- the research station: its roof deck is the spawn
@@ -230,7 +231,7 @@ const LAYOUT_TREEHILLS = {
   // Boss Battle: HULLBREAKER's floor is the meadow (0) — its home ground the whole lowland (≈ 870 m²). The terraces (1.3)
   // cover more ground than the lowland, so without the hint the boss nav's "most common ground level" would be theirs
   boss: { floorY: G0 },
-  single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow', mural: [{ n: [0, 1, 0], id: MURAL.meadow }] })), ...PLAZA_G.cols, ...PLAZA_G.ledges, ...BAND_PAIR, ...PAD_PAIR],
+  single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow', mural: [{ n: [0, 1, 0], id: MURAL.meadow }] })), ...PLAZA_G.cols, ...PLAZA_G.ledges, ...BAND_PAIR, ...UPPER_PAIR],
   half: HALF,
   decor: { lamps: [], palms: [], flags: [[-7.6, SP, -46.4], [7.6, SP, -46.4]] },
 };

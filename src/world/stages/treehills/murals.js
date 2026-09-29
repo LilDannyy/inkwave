@@ -3,10 +3,10 @@
 //   meadow   the Commons Meadow's ground (its core slab's top, 30 × 28 m): gravel spokes, stepping stones, moss, bark
 //            beds, pollinator strips, greener / drier turf (drawn 180°-symmetric, like the stage)
 //   sign     ECO-FOREST TREEHILLS in pale stencil along the tree-hill's upper retaining wall, facing the meadow
-//   padA/B   a landing-pad circle on each base terrace (the Tower Command goals sit on them; Bravo's turned 180°)
 //   biome    BIOME 07 · COMMONS MEADOW stencilled along the band's low wall
 //   bandE/W  the bands' ground (the east band's column top, 4 × 59 m; the west one's the same picture turned 180°)
-export const MURAL = { meadow: 4, sign: 5, padB: 6, padA: 7, biome: 8, bandE: 9, bandW: 10 };
+//   upperE/W the upper tiers' ground (the east upper tier's column top, 7 × 30 m; the west one's turned 180°)
+export const MURAL = { meadow: 4, sign: 5, upperE: 6, upperW: 7, biome: 8, bandE: 9, bandW: 10 };
 
 export function drawMurals(g, R, kit) {
   const out = [];
@@ -159,6 +159,30 @@ export function drawMurals(g, R, kit) {
     out.push({ id: MURAL.bandE, x: xE, y: y0, w: W, h: H, place: [0, 4, 0, 59.083], fx: [1, 0.25] });
     out.push({ id: MURAL.bandW, x: xW, y: y0, w: W, h: H, place: [0, 4, 0, 59.083], fx: [1, 0.25] });
   }
+  // ---------------------------------------------------------------- the upper tier's ground (7 × 30 m, 20 px/m): the
+  // east hill's upper-tier column (x 19.5 … 26.5, z −10 … 20: u from x 26.5, v from z −10) — the walking strip between
+  // the meadow-edge stands and the crown's wall, the Tower Command route down its middle (flat: paint only). A gravel
+  // trail winding from the hill ramp's top round the ranger's clearing and north along the strip, the tower's lane
+  // across from the band, needle litter spilling from the stands, moss and pollinator strips at the crown wall's foot,
+  // flowers in the gaps between the stands. The west hill's is the same picture turned 180°.
+  {
+    const PPM = 20, W = 7 * PPM, H = 30 * PPM, xE = R.x + 740, xW = R.x + 900, y0 = R.y + 340;
+    g.save(); g.beginPath(); g.rect(xE, y0, W, H); g.clip();
+    g.clearRect(xE, y0, W, H);
+    const k = kitFor((x, z) => [xE + (26.5 - x) * PPM, y0 + (20 - z) * PPM], PPM, 6311);
+    for (const [x, z, r, d] of [[24, 7, 2.6, 1], [23.2, 14.5, 2.2, 0], [24.6, -6, 2.4, 1], [22.6, 2.8, 2.0, 0]]) k.tint(x, z, r, d);
+    k.moss(26.2, 5.2, 0.45, 3.4); k.moss(26.2, -1.2, 0.4, 1.6); k.moss(21.9, 9.6, 0.5, 0.9); k.moss(22.0, 15.1, 0.5, 1.0);
+    k.litter(21.75, 4.5, 0.5, 2.1); k.litter(21.75, 10.5, 0.45, 1.8); k.litter(21.8, 16.0, 0.5, 2.0); k.litter(26.2, -6.6, 0.45, 2.4);
+    k.path([[20.8, -9.5], [25.4, -9.4]], 1.6, { grit: 14 });
+    k.path([[19.4, 0], [25.9, 0]], 2.4);
+    k.path([[23.0, -9.4], [24.4, -8.0], [25.65, -6.6], [25.7, -3.3], [24.7, -1.4], [23.5, 1.6], [24.4, 5.0], [23.6, 9.0], [24.5, 13.0], [23.7, 16.5], [24.1, 20.2]], 1.3);
+    k.flowers([[26.2, -3.7], [26.2, 1.4]], 0.5, 90); k.flowers([[26.2, 9.2], [26.2, 13.7]], 0.5, 90);
+    k.flowers([[21.75, 6.9], [21.75, 8.4]], 0.6, 90); k.flowers([[21.75, 12.6], [21.75, 13.8]], 0.6, 90);
+    g.restore();
+    g.save(); g.clearRect(xW, y0, W, H); g.translate(xW + W, y0 + H); g.rotate(Math.PI); g.drawImage(g.canvas, xE, y0, W, H, 0, 0, W, H); g.restore();
+    out.push({ id: MURAL.upperE, x: xE, y: y0, w: W, h: H, place: [0, 7, 0, 30], fx: [1, 0.25] });
+    out.push({ id: MURAL.upperW, x: xW, y: y0, w: W, h: H, place: [0, 7, 0, 30], fx: [1, 0.25] });
+  }
   // ---------------------------------------------------------------- the sign on the upper tier's wall (18 × 1.1 m)
   {
     const PPM = 60, W = 18 * PPM, H = Math.round(1.1 * PPM), x0 = R.x + 736, y0 = R.y;
@@ -175,27 +199,6 @@ export function drawMurals(g, R, kit) {
     g.strokeStyle = 'rgba(238,242,232,0.95)'; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.arc(bx, by, 12, 0.5, 4.8); g.stroke();
     g.restore();
     out.push({ id: MURAL.sign, x: x0, y: y0, w: W, h: H, place: [6, 18, 3.85, 1.1], fx: [0.5, 0.8] });
-  }
-  // ---------------------------------------------------------------- the landing-pad circle (5 × 5 m at 40 px/m)
-  {
-    const PPM = 40, S = 5 * PPM, x0 = R.x + 960, y0 = R.y + 80, cx = x0 + S / 2, cy = y0 + S / 2;
-    g.save();
-    g.clearRect(x0, y0, S, S);
-    g.strokeStyle = 'rgba(232,184,74,0.85)'; g.lineWidth = 0.22 * PPM;
-    g.beginPath(); g.arc(cx, cy, 2.2 * PPM, 0, Math.PI * 2); g.stroke();
-    g.strokeStyle = 'rgba(238,241,232,0.8)'; g.lineWidth = 0.1 * PPM;
-    g.beginPath(); g.arc(cx, cy, 1.8 * PPM, 0, Math.PI * 2); g.stroke();
-    // ticks round the ring, the pad's number
-    for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 1.9 * PPM, cy + Math.sin(a) * 1.9 * PPM); g.lineTo(cx + Math.cos(a) * 2.05 * PPM, cy + Math.sin(a) * 2.05 * PPM); g.stroke(); }
-    g.fillStyle = 'rgba(238,241,232,0.8)'; g.font = font(40); g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText('07', cx, cy + 2);
-    g.restore();
-    // Bravo's (its column is a single piece of its own: a mirrored piece's decal isn't turned): the same pad turned
-    // 180°, placed where the turn puts it on that column (5.33 × 13 m: u 0.03, v 2.5)
-    const xb = R.x + 736;
-    g.save(); g.clearRect(xb, y0, S, S); g.translate(xb + S, y0 + S); g.rotate(Math.PI); g.drawImage(g.canvas, x0, y0, S, S, 0, 0, S, S); g.restore();
-    out.push({ id: MURAL.padA, x: x0, y: y0, w: S, h: S, place: [0.3, 5, 5.5, 5], fx: [0.9, 1] });
-    out.push({ id: MURAL.padB, x: xb, y: y0, w: S, h: S, place: [0.0333, 5, 2.5, 5], fx: [0.9, 1] });
   }
   // ---------------------------------------------------------------- the band wall stencil (11.5 × 0.9 m at 60 px/m)
   {
