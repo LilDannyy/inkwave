@@ -20,7 +20,7 @@ export function buildBackdrop(kit) {
   const out = { static: [], plain: [], terrain: [], instances: [], objects: [] };
   const C = (h) => new THREE.Color(h);
   const COL = {
-    rock: C('#726b62'), rockDk: C('#534e48'), rockLt: C('#8e867b'), strata: C('#81786b'),
+    rock: C('#6a6259'), rockDk: C('#463f39'), rockLt: C('#958b7e'), strata: C('#7c7265'),
     lawn: C('#86a868'), lawnDk: C('#6f9058'), wall: C('#8d9a92'), wallDk: C('#6f7b74'),
     cyp: C('#2f5a3d'), cypLt: C('#46774d'), mod: C('#3d6b55'), trim: C('#e6eae4'), white: C('#eef1ec'), glass: C('#9fd4d6'),
     ring: C('#8c969a'), ringDk: C('#5d666b'),
@@ -30,8 +30,8 @@ export function buildBackdrop(kit) {
   // ---------------------------------------------------------------------------------------------- cavern walls
   // a ring of rock rising from the reservoir to the dome's rim: an irregular radius (bays, buttresses), faceted strata
   // bands, darker low down; the rim ring beam along the top with its lights (glow at dusk)
-  const RIM = 190;                               // the rim's height above the water (the screens start here)
-  const wallR = (a) => 1150 + 140 * (fbm(Math.cos(a) * 1.6 + 3.1, Math.sin(a) * 1.6 - 1.7, 3) - 0.5) * 2 + 60 * Math.sin(a * 5 + 0.7);
+  const RIM = 118;                               // the rim's height above the water (the screens start here)
+  const wallR = (a) => 980 + 120 * (fbm(Math.cos(a) * 1.6 + 3.1, Math.sin(a) * 1.6 - 1.7, 3) - 0.5) * 2 + 50 * Math.sin(a * 5 + 0.7);
   {
     const NA = 360, NY = 26, pos = [], col = [], idx = [];
     for (let j = 0; j <= NY; j++) {
@@ -44,11 +44,13 @@ export function buildBackdrop(kit) {
         const n = fbm(Math.cos(a) * 9 + t * 3.1, Math.sin(a) * 9 - t * 2.3, 3) - 0.5;
         const rib = Math.abs(Math.sin(a * 70 + n * 5)), rib2 = Math.abs(Math.sin(a * 23 + 1.3 + n * 2));
         const st = (t * 7 + n * 0.8) % 1;
-        const r = wallR(a) - t * t * 120 + n * 70 - rib * 16 - rib2 * 22 - st * 10 + Math.sin(t * 22 + a * 17) * 6;
+        const r = wallR(a) - t * t * 70 + n * 70 - rib * 16 - rib2 * 22 - st * 10 + Math.sin(t * 22 + a * 17) * 6;
         pos.push(Math.cos(a) * r, y, Math.sin(a) * r);
         const band = 0.5 + 0.5 * Math.sin(t * 38 + n * 6);
         tmp.copy(COL.rockDk).lerp(COL.rock, Math.min(1, t * 1.6)).lerp(COL.strata, band * 0.35).lerp(COL.rockLt, Math.max(0, n) * 0.6);
-        tmp.multiplyScalar(0.8 + 0.28 * (1 - rib) * (1 - st * 0.5));
+        tmp.multiplyScalar(0.62 + 0.5 * (1 - rib) * (1 - st * 0.6));
+        // hanging greenery on the strata ledges (the biome creeping up its own walls)
+        if (st > 0.82 && n > -0.1 && t < 0.8) tmp.lerp(COL.cyp, 0.55);
         if (t < 0.12) tmp.lerp(COL.lawnDk, (0.12 - t) / 0.12 * 0.55 * (0.5 + n));   // moss and ferns low down, where the spray reaches
         col.push(tmp.r, tmp.g, tmp.b);
       }
@@ -66,7 +68,7 @@ export function buildBackdrop(kit) {
     // the rim ring beam + its lights
     const ring = [];
     for (let i = 0; i < 96; i++) {
-      const a0 = (i / 96) * Math.PI * 2, a1 = ((i + 1) / 96) * Math.PI * 2, r0 = wallR(a0) - 120 - 8, r1 = wallR(a1) - 120 - 8;
+      const a0 = (i / 96) * Math.PI * 2, a1 = ((i + 1) / 96) * Math.PI * 2, r0 = wallR(a0) - 70 - 8, r1 = wallR(a1) - 70 - 8;
       const x0 = Math.cos(a0) * r0, z0 = Math.sin(a0) * r0, x1 = Math.cos(a1) * r1, z1 = Math.sin(a1) * r1;
       ring.push(kit.beam(x0, RIM + WATER_Y, z0, x1, RIM + WATER_Y, z1, 12, '#8c969a'));
       ring.push(kit.beam(x0, RIM + WATER_Y - 9, z0, x1, RIM + WATER_Y - 9, z1, 4, '#5d666b'));
@@ -102,7 +104,7 @@ export function buildBackdrop(kit) {
     [172, 260, 80, 50, 19], [204, 210, 60, 42, 12], [234, 245, 75, 50, 18], [264, 200, 55, 42, 11], [294, 240, 70, 50, 17],
     [324, 210, 60, 44, 13], [352, 265, 80, 52, 20],
     [22, 480, 140, 90, 44], [92, 520, 150, 100, 54], [158, 470, 130, 90, 40], [228, 530, 160, 100, 58], [298, 490, 140, 90, 48],
-    [58, 760, 220, 120, 80], [196, 780, 240, 130, 90], [330, 760, 220, 120, 76],
+    [58, 640, 170, 90, 70], [196, 650, 180, 100, 78], [330, 640, 170, 90, 66],
   ];
   HILLS.forEach(([a, d, rx, rz, h], k) => { const [x, z] = at(a, d); hill({ x, z, rx, rz, h, seed: 11 + k, rot: (a + 90) * DEG }); });
   // terraced mounds (the engineered look, like the arena's tree-hills): stacked hexagonal tiers with panel walls and

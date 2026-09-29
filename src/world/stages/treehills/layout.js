@@ -151,8 +151,12 @@ const LAYOUT_TREEHILLS = {
   bounds,
   spawnPads: [PAD, [-PAD[0], PAD[1], -PAD[2]]],
   spawnBarrier: 4.2,
-  intro: { from: [-12, 12, 9], lookFrom: [4, 2.5, -10], toBack: 3.0 },
-  art: { from: [-30, 14, -30], look: [6, 1, 0], fov: 62 },
+  // match intro: high over the meadow's far side, looking at the east tree-hill (its name along the wall, the turbine on
+  // the crown), then down onto your deck
+  intro: { from: [-10, 12, 12], lookFrom: [22, 6, 2], toBack: 3.0 },
+  // stage-select picture: from over Alpha's west terrace across the meadow to the tree-hill, Bravo's station and the
+  // dome's grid over the simulated sky
+  art: { from: [-21, 10, -41], look: [9, 5.5, 4], fov: 64 },
   water: 'marina',   // the reservoir: calm, clean engineered water (the marina water mode: no sea spray)
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false,
@@ -167,6 +171,10 @@ const LAYOUT_TREEHILLS = {
   zones: ZONES,
   tower: TOWER,
   pods: PODS,
+  // Boss Battle: HULLBREAKER's floor is the meadow (0). The terraces (1.3) cover more ground than the lowland, so the
+  // boss nav's "most common ground level" would put it on Bravo's base terrace instead; this hint needs the one-line
+  // bossNav.js change requested in the report (until then the boss roams Bravo's base terrace, which also works)
+  boss: { floorY: G0 },
   single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow', mural: [{ n: [0, 1, 0], id: MURAL.emblem }] }))],
   half: HALF,
   decor: { lamps: [], palms: [], flags: [[-7.6, SP, -46.4], [7.6, SP, -46.4]] },
