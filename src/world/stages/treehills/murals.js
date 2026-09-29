@@ -1,7 +1,8 @@
 // Eco-Forest Treehills — stage decals / signage for the mural atlas (mural ids 4…11; see src/world/murals.js). Drawn into
 // the stage region R of the atlas; each entry: its canvas rect, where it sits on its face (metres).
-//   emblem   the Commons Meadow's centre slab (30 × 28 m): the biome's round badge mown into the lawn (lighter and
-//            darker stripes in rings, the swirl), the mowers' turning circles round it (drawn 180°-symmetric)
+//   emblem   the Commons Meadow's centre slab (30 × 28 m): a ring mown into the lawn (lighter and darker stripes) with
+//            the dome's geodesic node inside (a hexagon of six triangles), the mowers' turning circles round it (drawn
+//            180°-symmetric, like the stage)
 //   sign     ECO-FOREST TREEHILLS in pale stencil along the tree-hill's upper retaining wall, facing the meadow
 //   label    the base terrace in front of the spawn stair: a painted floor label (BIOME 07, a big arrow to the meadow)
 //   pad      a landing-pad circle on the base terrace (the Tower Command goal sits on it)
@@ -20,9 +21,12 @@ export function drawMurals(g, R, kit) {
     ring(4.6, 5.4, 0.2);
     ring(5.4, 5.8, -0.12);
     ring(0, 4.6, -0.06);
-    // the swirl (the badge's mark): an arc and a dot, mown light, 180°-symmetric pair
-    g.lineCap = 'round'; g.strokeStyle = 'rgba(236,248,214,0.18)'; g.lineWidth = 0.9 * PPM;
-    for (const s of [0, Math.PI]) { g.beginPath(); g.arc(cx, cy, 2.7 * PPM, s + 0.3, s + 2.4); g.stroke(); g.fillStyle = 'rgba(236,248,214,0.18)'; g.beginPath(); g.arc(cx + Math.cos(s + 2.9) * 1.6 * PPM, cy + Math.sin(s + 2.9) * 1.6 * PPM, 0.55 * PPM, 0, Math.PI * 2); g.fill(); }
+    // the dome's geodesic node mown inside it: a hexagon of six triangles meeting at the centre (like the grid's nodes)
+    g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = 'rgba(236,248,214,0.2)'; g.lineWidth = 0.5 * PPM;
+    const hx = (k) => [cx + Math.cos((k / 6) * Math.PI * 2) * 3.9 * PPM, cy + Math.sin((k / 6) * Math.PI * 2) * 3.9 * PPM];
+    g.beginPath(); for (let k = 0; k <= 6; k++) { const [px, py] = hx(k); if (k) g.lineTo(px, py); else g.moveTo(px, py); } g.stroke();
+    for (let k = 0; k < 3; k++) { const [ax, ay] = hx(k), [bx, by] = hx(k + 3); g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); }
+    g.fillStyle = 'rgba(236,248,214,0.2)'; g.beginPath(); g.arc(cx, cy, 0.7 * PPM, 0, Math.PI * 2); g.fill();
     // mowers' turning circles: faint scuffs round the emblem and at the slab's ends
     g.strokeStyle = 'rgba(40,60,26,0.07)'; g.lineWidth = 0.7 * PPM;
     for (const [dx, dy, r] of [[-9, -8, 2.2], [9, 8, 2.2], [-11, 7, 1.8], [11, -7, 1.8]]) { g.beginPath(); g.arc(cx + dx * PPM, cy + dy * PPM, r * PPM, 0, Math.PI * 2); g.stroke(); }
