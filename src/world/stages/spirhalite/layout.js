@@ -234,11 +234,11 @@ const SPIRHALITE = {
     B(TRENCH.x0, TRENCH.x1, BOT, TRENCH.y, TRENCH.z0 + 2.4, TRENCH.z1 - 2.4, stone({ tag: 'trench', color: K.stoneDk })),   // (its floor: the buried causeway's paving)
     R(rise((TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z1 - 2.4, TRENCH.y, (TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z1, 0), [(TRENCH.x0 + TRENCH.x1) / 2, 0, TRENCH.z1], TRENCH.x1 - TRENCH.x0, sand({ tag: 'trench-ramp', color: K.wet })),
     R(rise((TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z0 + 2.4, TRENCH.y, (TRENCH.x0 + TRENCH.x1) / 2, TRENCH.z0, 0), [(TRENCH.x0 + TRENCH.x1) / 2, 0, TRENCH.z0], TRENCH.x1 - TRENCH.x0, sand({ tag: 'trench-ramp', color: K.wet })),
-    B(-32.4, -27.6, 0, H1, -49.6, -46.6, sand({ tag: 'spoil', color: K.dune })),
-    slope(-24.5, -48.1, 0, -27.6, -48.1, H1, 3.0),
+    B(-32.4, -27.6, 0, H1, -49.6, -46.6, moss({ tag: 'spoil' })),
+    slope(-24.5, -48.1, 0, -27.6, -48.1, H1, 3.0, { color: K.sand }),
 
-    // drums fallen from the tide-pool islet's watch-post, rolled to the camp islet's north beach (cover either side of the
-    // tower's run along it)
+    // blocks fallen from the tide-pool islet's watch-post, dragged to the camp islet's north beach by the expedition (cover
+    // along the tower's run there)
     O(-16.2, -50.25, 2.1, 1.1, 0, 1.1, 4, stone({ tag: 'fallen-drum' })),
     O(-11.6, -50.4, 2.0, 1.1, 0, 1.1, -6, stone({ tag: 'fallen-drum' })),
 

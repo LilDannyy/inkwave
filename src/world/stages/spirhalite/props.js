@@ -229,6 +229,12 @@ const RAW = [
   { type: 'spirhalite_pompoms', pos: [-20.4, 0, -44.0], n: 6, seed: 32 },
   { type: 'spirhalite_kelp', pos: [-20.2, 0, -32.2], rotY: 1.5, seed: 13, L: 1.6 },
 
+  // the base's front (the tombolo, the shoulder's foot): dune grass and flowers, kelp at the lagoon's south end
+  { type: 'spirhalite_grass', pos: [1.2, 0, -50.2], n: 6, r: 0.9, seed: 57 },
+  { type: 'spirhalite_grass', pos: [-6.4, 0, -51.6], n: 4, r: 0.6, seed: 58 },
+  { type: 'spirhalite_pompoms', pos: [-1.6, 0, -49.0], n: 5, seed: 57 },
+  { type: 'spirhalite_kelp', pos: [-9.8, 0, -49.2], rotY: 0.1, seed: 16, L: 1.8 },
+
   // the spoil heap's faces softened by sand slumped against them (dressing: no collider)
   { type: 'spirhalite_spoil', pos: [-30.9, 0, -49.8], rotY: 0.05, L: 2.6, W: 1.0, h: 0.8, seed: 12, nocol: true },
   { type: 'spirhalite_spoil', pos: [-32.5, 0, -48.2], rotY: Math.PI / 2, L: 2.4, W: 0.9, h: 0.9, seed: 14, nocol: true },
