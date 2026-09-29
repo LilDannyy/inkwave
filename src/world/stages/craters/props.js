@@ -1052,8 +1052,10 @@ const SHELF_ROCKS = (() => {
       cum += L;
     }
   }
-  // (the saps' mouths stay clear)
-  return out.filter((p) => Math.hypot(p.pos[0] - T3.x0, p.pos[2] - T3.z) > 3 && Math.hypot(p.pos[0] - T4.x1, p.pos[2] - T4.z) > 3);
+  // (the saps' mouths stay clear; and the corners where the shelf wraps round a point of the cliff — a rock there left a
+  // one-metre squeeze by the water that bots wedged in, the Long Stages stretch's new sides)
+  return out.filter((p) => Math.hypot(p.pos[0] - T3.x0, p.pos[2] - T3.z) > 3 && Math.hypot(p.pos[0] - T4.x1, p.pos[2] - T4.z) > 3
+    && !COAST.some((c) => Math.hypot(p.pos[0] - c[0], p.pos[2] - c[1]) < 1.6));
 })();
 
 // facing helpers: rotY that turns local +Z toward (dx, dz) / toward the crater's middle / away from it
