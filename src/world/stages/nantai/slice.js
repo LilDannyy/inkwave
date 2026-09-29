@@ -26,6 +26,7 @@ export const SOLAR = { x0: -19, x1: -15, z0: -39, z1: -33.2, h: 3.4 };
 export const DELL = { x0: -19, x1: -8.6, z0: -50.7, z1: -41.1 };
 export const HUT = { x0: 9, x1: 12.6, z0: -41.6, z1: -36.4, h: 2.6 };
 export const PEDESTAL = { x0: 3.5, x1: 6.5, z0: -48.6, z1: -45.6, h: 2.2 };
+export const ROLL1 = { x0: 5.0, z0: -31.6 };   // roll-off hut no. 1 (3.6 × 3.2, its frame 3.4 m out to the east)
 export const GARDEN = { x0: 15, z0: -55.5, z1: -45.5 };   // the shore meadow (0): x 15 … the shore, z −55.5 … −45.5
 const K = { turf: '#c3c0b8', granite: '#c9c6bf', graniteDk: '#b7b3aa', stone: '#d6d0c4', concrete: '#c8c5bd', render: '#e8e4da', gravel: '#cfc9bb' };
 const turf = (o = {}) => ({ color: K.turf, pattern: SURF.turf, ...o });
@@ -79,6 +80,9 @@ export const SLICE_PIECES = [
   R([16.25, G0, -48.7], [16.25, G1, GARDEN.z1], 2.5, steps({ tag: 'garden-stair' })),
   R([18.4, G0, -51.6], [GARDEN.x0, G1, -51.6], 2.6, gravel({ tag: 'garden-ramp' })),
   B(19.2, 23.0, G0, 0.65, -54.6, -51.2, turf({ tag: 'meadow-knoll' })),
+  // ---------------- on the first terrace's front (between the tower's two runs across it): roll-off hut no. 1, where the
+  //                  terrace lost no. 2 to the base's move (its walls ink, its roof is off limits)
+  B(ROLL1.x0, ROLL1.x0 + 3.6, G1, 3.9, ROLL1.z0, ROLL1.z0 + 3.2, { color: '#e8e2d4', pattern: PATTERN.weatherboard, tag: 'rolloff-hut', roof: true }),
   // ---------------- the shore trail ↔ the first terrace: a stair up from the trail's narrows past the hut
   R([20.6, G0, -40.2], [17.5, G1, -40.2], 2.6, steps({ tag: 'shore-steps' })),
 ];
