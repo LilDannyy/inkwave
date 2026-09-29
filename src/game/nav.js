@@ -255,6 +255,23 @@ export class NavGraph {
   // Climb edges: an inkable wall right in front of a node, whose block top holds a node 1.3–5.5 m higher. Bots
   // ink the wall up to the top and swim up it (the same squid wall-climb players use). They make pits escapable
   // without a ramp and raised perches reachable for long-range weapons.
+  _climbBarred(wx, wz, m, topY, wallBlock) {
+    const L = this.level, ids = [];
+    for (const h of [0.3, 0.7, 1.1]) {
+      for (let t = 0; t <= 1.0001; t += 0.05) {
+        const x = wx + (m.x - wx) * t, z = wz + (m.z - wz) * t;
+        _cb.set(x, topY + h, z);
+        ids.length = 0;
+        for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, ids)) {
+          const b = L.blocks[id];
+          if (id === wallBlock || b.dynamic || (b.grate && !b.rail)) continue;   // (railings carry the grate flag too: they count)
+          if ((b.rail || b.solid) && L.pointInBlock(b, _cb, 0.02)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   _climbEdges() {
     const L = this.level, P = this.physics, hit = new Hit(), o = new THREE.Vector3(), d = new THREE.Vector3();
     for (const n of this.nodes) {
@@ -278,8 +295,12 @@ export class NavGraph {
         let top = -1;
         for (const id of this.cells[iz * this.nx + ix]) if (Math.abs(this.nodes[id].y - topY) < 0.25) top = id;
         if (top < 0 || seenTop.has(top)) continue;
+        const m = this.nodes[top];
+        // the way over the top must be open: a railing (or a solid prop / wall) along the edge between the wall and the
+        // node above stops a climbing squid there — it hangs on the wall under it (the bots' "stuck on the wall" spots)
+        if (this._climbBarred(hit.point.x, hit.point.z, m, topY, f.block)) continue;
         seenTop.add(top);
-        const m = this.nodes[top], rise = m.y - n.y;
+        const rise = m.y - n.y;
         n.nb.push({ to: top, cost: Math.hypot(m.x - n.x, m.z - n.z) + 3.5 + rise * 1.5, type: 'climb',
           wallP: [hit.point.x, hit.point.y, hit.point.z], wallN: [hit.normal.x, hit.normal.z], topY });
       }
@@ -287,6 +308,7 @@ export class NavGraph {
   }
 }
 
+const _cb = new THREE.Vector3();
 class Heap {
   constructor() { this.ids = []; this.pr = []; }
   get size() { return this.ids.length; }
