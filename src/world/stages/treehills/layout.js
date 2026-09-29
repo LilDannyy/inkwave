@@ -8,7 +8,7 @@ import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { MURAL } from './murals.js';
 import { fill, kerbs, FL } from './geo.js';
-import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN_N, RILL, GARDEN_S, RILL_Y, PLAZA, MOUNDS, HARD, NURSERY_GRAVEL, NURSERY_GRASS, NURSERY_LAWN, CHANNEL, BASE, NT, CH_Y, TERRACE, DECK, LOBE, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds, GROVES, BED_H, TRAILS, TRAIL_H, mz } from './plan.js';
+import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN_N, RILL, GARDEN_S, RILL_Y, PLAZA, MOUNDS, HARD, NURSERY_GRAVEL, NURSERY_GRASS, NURSERY_LAWN, CHANNEL, BASE, BANK, NT, CH_Y, TERRACE, DECK, LOBE, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds, GROVES, BED_H, TRAILS, TRAIL_H, mz } from './plan.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Eco-Forest Treehills — a tiered forest biome under the mountain in Alterna. Alpha at −Z (the half list), Bravo is the
@@ -58,6 +58,7 @@ export const GROUND = {
   ...Object.fromEntries(NURSERY_LAWN.map((P, i) => ['nurseryL' + i, fill(P, { y0: FL, top: T1, mk: () => lawn({ tag: 'nursery', color: K.nursery }), ledge: () => OUTER })])),
   channel: fill(CHANNEL, { y0: FL, top: CH_Y, mk: () => ({ color: K.channel, pattern: PATTERN.glasstile, tag: 'channel' }), ledge: () => OUTER }),
   base: fill(BASE, { y0: FL, top: T1, mk: () => deck({ tag: 'apron' }), ledge: () => OUTER }),
+  bank: fill(BANK, { y0: T1, top: NT, mk: () => lawn({ tag: 'bank', color: K.hill }), ledge: () => OUTER }),
   lobe: fill(LOBE, { y0: FL, top: T1, mk: () => lawn({ tag: 'lobe', color: K.hill }), ledge: () => OUTER }),
   strip: fill(STRIP, { y0: FL, top: T1, mk: () => lawn({ tag: 'strip', color: K.hill }), ledge: () => OUTER }),
   upper: fill(UPPER, { y0: FL, top: T2, colMax: 7.5, mk: () => lawn({ tag: 'upper', color: K.upper }), ledge: () => OUTER }),
@@ -114,7 +115,7 @@ function mound(m) {
 // ============================================================================================================
 // coping kerbs along the axis-aligned tier edges (over a lower tier or the reservoir): not at stair heads, not where
 // the tower's track climbs or drops (x 15 / 19.5 at |z| < 2, z 20 at x 21.6 … 26.4)
-const LOW = [[GARDEN_N, G0], [RILL, RILL_Y], [GARDEN_S, G0], [CHANNEL, CH_Y]];
+const LOW = [[GARDEN_N, G0], [RILL, RILL_Y], [GARDEN_S, G0], [CHANNEL, CH_Y], [BANK, NT]];   // (the bank: no kerbs of its own)
 const REGIONS = [[HARD, T1], ...[...NURSERY_GRAVEL, ...NURSERY_GRASS, ...NURSERY_LAWN].map((P) => [P, T1]), [BASE, T1], [LOBE, T1], [STRIP, T1], [UPPER, T2], [CROWN, T3]];
 const rot = (P) => P.map(([x, z]) => [-x, -z]);
 const CORE_P = [[-CORE.x, -CORE.z], [CORE.x, -CORE.z], [CORE.x, CORE.z], [-CORE.x, CORE.z]];
@@ -125,6 +126,7 @@ const KERB_SKIP = [
   [20.3, 25.7, -10.6, -9.4], [27.8, 30.8, -10.6, -9.4], [28.1, 31.1, -4.6, -3.4], [28.0, 30.8, 13.4, 14.6], [19.6, 22.4, 19.4, 20.6],
   [14.4, 15.6, 5.4, 8.6], [14.4, 15.6, -17.1, -13.9],   // band stairs
   [14.4, 20.1, -2, 2], [21.6, 26.4, 19.4, 20.6],   // the tower's climbs onto the band and the upper tier, its drop onto the strip
+  [27.3, 28.1, 30.3, 34.1],   // the strip's edge under the orchard bank
 ];
 const KERBS = kerbs(REGIONS.map(([P, top]) => ({ P, top, mk: () => ({ color: '#c3cbc4', pattern: PATTERN.concrete, tag: 'kerb' }) })), ALL, { skip: KERB_SKIP, feet: GROUNDS.flatMap((g) => g.feet) });
 
@@ -158,18 +160,21 @@ const HALF = [
   // (the deck's frame reaches T2 and its decking lies on top, 2 cm: a 1.32 m face — a squid climbs it, a kid just
   //  jumps it; the lift gates, where the tower climbs its front and drops off its back, are steel shutters that take no
   //  ink: no climbing there)
-  B(DECK.x0, 0, FL, T2, DECK.z0, DECK.z1, { color: K.station, pattern: PATTERN.container, tag: 'deck' }),
-  B(0, 4, FL, T2, DECK.z0, DECK.z1, { color: '#7d8a86', pattern: PATTERN.metalpanel, paint: false, tag: 'deck-lift' }),
-  B(4, DECK.x1, FL, T2, DECK.z0, DECK.z1, { color: K.station, pattern: PATTERN.container, tag: 'deck' }),
+  B(DECK.x0, -TRACK.loopX - 1.75, FL, T2, DECK.z0, DECK.z1, { color: K.station, pattern: PATTERN.container, tag: 'deck' }),
+  B(-TRACK.loopX - 1.75, -TRACK.loopX + 1.75, FL, T2, DECK.z0, DECK.z1, { color: '#7d8a86', pattern: PATTERN.metalpanel, paint: false, tag: 'deck-lift' }),
+  B(-TRACK.loopX + 1.75, DECK.x1, FL, T2, DECK.z0, DECK.z1, { color: K.station, pattern: PATTERN.container, tag: 'deck' }),
   B(DECK.x0, DECK.x1, T2, T2 + 0.02, DECK.z0, DECK.z1, { color: K.planks, pattern: PATTERN.planks, tag: 'deck-top' }),
-  R([-1.35, T1, DECK.z1 + 3], [-1.35, T2, DECK.z1], 2.7, steps({ tag: 'deck-front-stair' })),
-  R([5.35, T1, DECK.z1 + 3], [5.35, T2, DECK.z1], 2.7, steps({ tag: 'deck-front-stair' })),
+  // its broad front steps toward mid (beside the lift gate), a narrow back stair and a side stair down to the zone
+  R([-1.6, T1, DECK.z1 + 3], [-1.6, T2, DECK.z1], 4.4, steps({ tag: 'deck-front-stair' })),
+  R([7.0, T1, DECK.z0 - 3], [7.0, T2, DECK.z0], 2.0, steps({ tag: 'deck-back-stair' })),
   R([DECK.x1 + 3, T1, -38.4], [DECK.x1, T2, -38.4], 3, steps({ tag: 'deck-side-stair' })),
-  R([5.65, T1, DECK.z0 - 3], [5.65, T2, DECK.z0], 2.7, steps({ tag: 'deck-back-stair' })),
-  R([-9.5, T1, TERRACE.z1 + 1.6], [-9.5, NT, TERRACE.z1], 3, steps({ tag: 'terrace-stair' })),
-  R([-9.5, T1, TERRACE.z0 - 1.5], [-9.5, NT, TERRACE.z0], 3, steps({ tag: 'terrace-stair' })),
+  R([-10.25, T1, TERRACE.z1 + 1.6], [-10.25, NT, TERRACE.z1], 2.5, steps({ tag: 'terrace-stair' })),
+  R([-11, T1, TERRACE.z0 - 1.5], [-11, NT, TERRACE.z0], 3, steps({ tag: 'terrace-stair' })),
   R([TERRACE.x0 - 1.6, T1, -37], [TERRACE.x0, NT, -37], 3, steps({ tag: 'terrace-stair' })),
   R([DECK.x0 - 1.6, NT, -35.5], [DECK.x0, T2, -35.5], 3, steps({ tag: 'terrace-deck-stair' })),
+  // the strip's orchard bank (NT; authored on the north strip, the west one is its twin): two flights down its inner side
+  R([17.9, T1, 34.1], [19.5, NT, 34.1], 2.6, steps({ tag: 'bank-stair' })),
+  R([17.9, T1, 39.4], [19.5, NT, 39.4], 2.6, steps({ tag: 'bank-stair' })),
 
   // ---------------- the meadow rolls: grass mounds with ramps all round (octagons, eight ramps each)
   ...MOUNDS.flatMap((m) => mound(m)),
@@ -206,7 +211,7 @@ const ZONES = {
 // (the stretch: twice as long, with the loop through the nursery — along its front, down its middle walk and over the
 // potting deck (the second checkpoint), back along the channel's bank — before the strip and the terrace)
 const TOWER = {
-  path: [[0, T1, 0], [TRACK.x, 0], [TRACK.x, TRACK.loopN], [TRACK.loopX, TRACK.loopN], [TRACK.loopX, TRACK.loopS], [TRACK.x, TRACK.loopS], [TRACK.x, TRACK.z], [TRACK.goalX, TRACK.z]],
+  path: [[0, T1, 0], [TRACK.x, 0], [TRACK.x, TRACK.loopN], [TRACK.loopX, TRACK.loopN], [TRACK.loopX, TRACK.loopS], [TRACK.backX, TRACK.loopS], [TRACK.backX, TRACK.z], [TRACK.goalX, TRACK.z]],
   checkpoints: [[TRACK.x, 8], [TRACK.loopX, 37]],
 };
 
@@ -236,8 +241,8 @@ export const PODS = {
     // the nursery (the stretch): before the seedbed terrace between its stair and the deck's (a hedge across the way up
     // to the deck from mid); between the zone's cloche row and the propagation tunnel (a hedge across the corridor from
     // the deck's side stair to the lobe)
-    pod('nursery-w', -5.4, T1, -31.2, 0),
-    pod('nursery-e', 12.6, T1, -40.4, 0),
+    pod('nursery-w', -6.3, T1, -31.2, 0, [2.4, 1.8, 0.9]),
+    pod('nursery-e', 13.4, T1, -40.6, 0),
   ],
 };
 
