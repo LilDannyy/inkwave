@@ -254,10 +254,11 @@ const LAYOUT_TREEHILLS = {
   // match intro: high over the meadow, looking at the east tree-hill (its name along the wall, the turbine on the crown),
   // then back over your nursery and down onto your deck (it starts on your side of mid since the stretch: the sweep home
   // is 22 m longer)
-  intro: { from: [-9, 13, -4], lookFrom: [22, 6, 2], toBack: 3.0 },
-  // stage-select picture: from over Alpha's west terrace across the meadow to the tree-hill, Bravo's station and the
-  // dome's grid over the simulated sky
-  art: { from: [-21, 10, -41], look: [9, 5.5, 4], fov: 64 },
+  intro: { from: [-15, 15, -8], lookFrom: [22, 6, 2], toBack: 3.0 },
+  // stage-select picture: from over Alpha's nursery corner (the orchard bank below, the seedbed terrace and the potting
+  // deck in front) across the garden and the meadow to the Solar Canopy, the tree-hill with its turbine, Bravo's station
+  // and the dome's grid over the simulated sky
+  art: { from: [-24, 12, -52], look: [6, 3, -10], fov: 64 },
   water: 'marina',   // the reservoir: calm, clean engineered water (the marina water mode: no sea spray)
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false,
