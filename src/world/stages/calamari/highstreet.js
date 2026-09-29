@@ -121,13 +121,13 @@ export function registerHighStreet(D, H, KIT) {
     build(B, o) {
       B.box('paint', K.stoneDk, 1.4, 0.2, 0.9, 0, 0.1, 0, { r: 0.03 });
       B.box('paint', K.granite, 1.15, 0.2, 0.7, 0, 0.3, 0, { r: 0.03 });
-      // the stone: a lumpy slab
-      B.add('paint', driftGeo(5), '#8d8a83', 0, 0.4, 0, { sx: 0.5, sy: 1.5, sz: 0.24 });
-      B.box('paint', '#96938b', 0.78, 1.25, 0.34, 0, 1.0, 0, { r: 0.12 });
+      // the stone: a rough slab, a little narrower at its shoulders
+      B.box('paint', '#96938b', 0.8, 0.8, 0.36, 0, 0.8, 0, { r: 0.1 });
+      B.box('paint', '#8f8c85', 0.7, 0.5, 0.33, 0.02, 1.4, 0, { r: 0.12, rz: 0.04 });
       letters(B, 'MIND', { h: 0.13, x: 0, y: 1.25, z: 0.176, c: '#f1ede2', flat: true, wt: 0.2 });
       letters(B, 'THE FIRE', { h: 0.13, x: 0, y: 1.02, z: 0.176, c: '#f1ede2', flat: true, wt: 0.2 });
       B.box(NS('paint'), K.red, 0.5, 0.05, 0.01, 0, 0.88, 0.172, { r: 0.004 });
-      snowCap(B, 0, 1.62, 0, 0.7, 0.3, 0.1);
+      snowCap(B, 0.02, 1.64, 0, 0.6, 0.26, 0.1);
       snowCap(B, 0, 0.4, 0.28, 1.05, 0.14, 0.06);
       colBox(B, 0, 0, 0, 1.2, 1.7, 0.8);
     },
@@ -142,8 +142,8 @@ export function registerHighStreet(D, H, KIT) {
     build(B, o) {
       B.aoBase = null;
       const L = o.length ?? 5, y = o.y ?? 1.3, n = Math.max(1, Math.round(L / 0.9));
-      for (let i = 0; i < n; i++) B.box(i % 2 ? NS('paint') : 'paint', mixc(K.granite, K.stoneLt, hash(i * 3 + L)), L / n - 0.02, 0.1, 0.24, (i + 0.5) * (L / n), y - 0.03, 0.0, { r: 0.025 });
-      if (o.ice !== false) icicles(B, 0.2, L - 0.2, y - 0.08, 0.1, Math.round(L * 11 + y * 7), 0.22);
+      for (let i = 0; i < n; i++) pbox(B, i % 2 ? NS('paint') : 'paint', mixc(K.granite, K.stoneLt, hash(i * 3 + L)), L / n - 0.03, 0.09, 0.32, (i + 0.5) * (L / n), y - 0.025, -0.06);
+      if (o.ice !== false) icicles(B, 0.2, L - 0.2, y - 0.07, 0.1, Math.round(L * 11 + y * 7), 0.2);
     },
   };
 
@@ -160,12 +160,12 @@ export function registerHighStreet(D, H, KIT) {
       B.box('paint', K.soil, L - 0.1, 0.1, W - 0.1, 0, h - 0.07, 0, { r: 0.02 });
       B.add('paint', pillowGeo(W - 0.14, 0.16), K.snow, 0, h - 0.04, 0, { sx: L - 0.16, ry: HP, ao: false });
       for (const s of [-1, 1]) snowCap(B, 0, h, s * (W / 2 - 0.03), L, 0.08, 0.05);
-      const rows = Math.max(1, Math.round(W / 0.45)), per = Math.max(2, Math.round(L / 0.4));
+      const rows = Math.max(1, Math.round(W / 0.5)), per = Math.max(2, Math.round(L / 0.55));
       for (let r = 0; r < rows; r++) for (let i = 0; i < per; i++) {
         const x = -L / 2 + 0.25 + (i * (L - 0.5)) / (per - 1), z = -W / 2 + (r + 0.5) * (W / rows), t = hash(i * 7 + r * 13 + L);
-        if (crop === 'leek') { B.cyl(NS('paint'), '#e9ecdf', 0.03, 0.2, x, h + 0.08, z, { seg: 5 }); for (let k = 0; k < 3; k++) pbox(B, NS('foliage'), mixc('#4f7a4a', '#6f9460', t), 0.05, 0.36, 0.01, x, h + 0.34, z, { ry: k * 1.05 + t, rz: (k - 1) * 0.25 }); }
-        else if (crop === 'daikon') { B.cyl(NS('paint'), K.white, 0.05, 0.12, x, h + 0.05, z, { seg: 6 }); for (let k = 0; k < 4; k++) pbox(B, NS('foliage'), mixc('#4a6e40', '#6d8d58', t), 0.09, 0.3, 0.012, x, h + 0.2, z, { ry: k * 0.8 + t, rx: 0.4 }); }
-        else { B.sph('foliage', mixc('#6e8f5a', '#8aa870', t), 0.13, x, h + 0.06, z, { ws: 8, hs: 5, sy: 0.75 }); B.add(NS('paint'), driftGeo(t > 0.5 ? 1 : 2), K.snow, x, h + 0.13, z, { sx: 0.1, sy: 0.05, sz: 0.1, ao: false }); }
+        if (crop === 'leek') { B.cyl(NS('paint'), '#e9ecdf', 0.03, 0.2, x, h + 0.08, z, { seg: 4 }); for (let k = 0; k < 2; k++) pbox(B, NS('foliage'), mixc('#4f7a4a', '#6f9460', t), 0.05, 0.36, 0.01, x, h + 0.34, z, { ry: k * 1.6 + t, rz: (k - 0.5) * 0.4 }); }
+        else if (crop === 'daikon') { B.cyl(NS('paint'), K.white, 0.05, 0.12, x, h + 0.05, z, { seg: 5 }); for (let k = 0; k < 3; k++) pbox(B, NS('foliage'), mixc('#4a6e40', '#6d8d58', t), 0.09, 0.3, 0.012, x, h + 0.2, z, { ry: k * 1.05 + t, rx: 0.4 }); }
+        else { B.sph('foliage', mixc('#6e8f5a', '#8aa870', t), 0.13, x, h + 0.06, z, { ws: 7, hs: 4, sy: 0.75 }); }
       }
       // straw mulch heaped at one end, the label
       B.add('paint', driftGeo(4), '#c9ad6a', L / 2 - 0.3, h - 0.02, 0, { sx: 0.24, sy: 0.12, sz: W / 2 - 0.12 });
@@ -246,14 +246,14 @@ export function registerHighStreet(D, H, KIT) {
       B.box('paint', '#4c5a5c', L - 0.3, 0.2, W - 0.3, 0, 0.1, 0, { r: 0.05 });
       B.box('gloss', '#5f9c9a', L - 0.35, 0.02, W - 0.35, 0, 0.36, 0, { r: 0.005 });
       // the rocks round the rim
-      const per = Math.round((2 * (L + W)) / 0.55);
+      const per = Math.round((2 * (L + W)) / 0.7);
       for (let i = 0; i < per; i++) {
         const t = i / per, P = 2 * (L + W), d = t * P;
         let x, z;
         if (d < L) { x = -L / 2 + d; z = -W / 2; } else if (d < L + W) { x = L / 2; z = -W / 2 + (d - L); } else if (d < 2 * L + W) { x = L / 2 - (d - L - W); z = W / 2; } else { x = -L / 2; z = W / 2 - (d - 2 * L - W); }
         const s = rr * (0.8 + 0.45 * hash(i * 3.3)), g = driftGeo(i % 6);
         B.add('paint', g, mixc(K.granite, K.stoneDk, hash(i * 7)), x, 0, z, { sx: s * 1.2, sy: s * 1.4, sz: s, ry: hash(i) * 3 });
-        if (hash(i * 11) > 0.45) B.add(NS('paint'), driftGeo((i + 2) % 6), K.snow, x, s * 1.25, z, { sx: s * 0.8, sy: s * 0.3, sz: s * 0.7, ao: false });
+        if (hash(i * 11) > 0.6) B.add(NS('paint'), driftGeo((i + 2) % 6), K.snow, x, s * 1.25, z, { sx: s * 0.8, sy: s * 0.3, sz: s * 0.7, ao: false });
       }
       // the bamboo spout on a post at one end, water falling
       B.cyl('wood', K.woodDk, 0.06, 1.0, -L / 2 - 0.1, 0.5, 0, { seg: 6 });

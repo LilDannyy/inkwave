@@ -150,7 +150,7 @@ export const Q = {
   poDock: [10, 15.5, -40.5, -38],                 // its sorting dock (1.0) on the yard side
   market: [19, 26, -50, -42],                     // the fish market's apron jutting into the basin …
   floor: [16, 26, -50, -42], floorY: 0.5,       // … and its auction floor (0.5) across the quay: a step up either end
-  chiller: [16.2, 18.9, -47.6, -44.4],            // the chiller room on the auction floor (the quay's line jogs round it)
+  chiller: [16.2, 19.0, -47.6, -44.4],            // the chiller room on the auction floor (the quay's line jogs round it)
   notch: [-51.8, -55.4, 3.0],                     // a boat notch cut into the quay edge south of the market (z0, z1, depth)
   forecourt: [BZ, -46],                           // the co-op forecourt (z): the apron in front of the base
   // Tower Command (Alpha's frame; the track itself is drawn on Bravo's half, the mirror): the fire lane's centre, the
@@ -430,10 +430,11 @@ const CALAMARI = {
   tower: TOWER,
   movers: MOVERS,
   // match intro: high over the station (the footbridges, the railcars, the canopy), then back down to the co-op deck
-  intro: { from: [14, 13, 12], lookFrom: [0, 3, -2], toBack: 3.0 },
-  // stage-select picture: from high on Alpha's hill across the whole village — the bath house's steaming chimney, the
-  // square, the station and its railcars, the footbridges, the level crossing and the tunnel — to Bravo's co-op and hill
-  art: { from: [-40, 22, -46], look: [2, 1.5, 0], fov: 58 },
+  intro: { from: [16, 14, 10], lookFrom: [0, 3, -2], toBack: 3.0 },
+  // stage-select picture: from high on Alpha's hill over the village high street — the allotments, the inn and its
+  // steaming garden, the fire-watch tower on its terrace, the post office and the fish market — across the square and
+  // the bath house's chimney to the station, its railcars and footbridges, the tunnel, and Bravo's co-op beyond
+  art: { from: [-38, 27, -72], look: [6, 0, -22], fov: 56 },
   decor: { lamps: [], palms: [], flags: [] },
 };
 

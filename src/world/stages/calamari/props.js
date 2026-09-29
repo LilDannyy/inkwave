@@ -353,7 +353,7 @@ const HIGH_STREET = [
   { type: 'calamari_lamppost', pos: [16.35, -0.1, -40.6], rotY: -Math.PI / 2 },
   { type: 'calamari_market', pos: [(Q.floor[0] + Q.floor[1]) / 2, FY, (Q.floor[2] + Q.floor[3]) / 2], w: Q.floor[1] - Q.floor[0] - 0.2, d: 7.6, h: 3.4 },
   { type: 'calamari_chiller', pos: [(Q.chiller[0] + Q.chiller[1]) / 2, FY, (Q.chiller[2] + Q.chiller[3]) / 2], w: Q.chiller[1] - Q.chiller[0], d: Q.chiller[3] - Q.chiller[2], h: 2.6, face: 0 },
-  { type: 'calamari_fishboxes', pos: [20.2, FY, -46.0], rotY: 0, cols: 3, rows: 3, variant: 2 },
+  { type: 'calamari_fishboxes', pos: [19.98, FY, -46.0], rotY: 0, cols: 3, rows: 3, variant: 2 },
   { type: 'calamari_fishboxes', pos: [23.2, FY, -43.3], rotY: 0.05, cols: 3, rows: 2, variant: 1 },
   { type: 'calamari_fishboxes', pos: [24.4, FY, -48.1], rotY: -0.1, cols: 2, rows: 3, variant: 0 },
   { type: 'calamari_nets', pos: [21.6, FY, -49.0], r: 0.6, variant: 0 },
