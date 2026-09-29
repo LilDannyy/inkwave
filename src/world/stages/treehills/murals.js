@@ -112,7 +112,7 @@ export function drawMurals(g, R, kit) {
       for (const [x, z, r, d] of [[-10, -2, 3.5, 1], [6, -10.5, 3, 1], [-3, -12, 2.5, 1], [12, -6, 2.8, 1], [-13, -11, 2.5, 1], [9, -8.5, 2.6, 0], [-8.5, -3, 3, 0], [1, -11.5, 2.2, 0], [13.5, -12, 2, 0], [-12.5, 3.2, 2.4, 0]]) k.tint(x, z, r, d);
       k.moss(4.7, -8.0, 1.5, 1.3); k.moss(-2.4, -13.2, 1.3, 1.0); k.moss(2.5, -13.7, 1.4, 0.9); k.moss(10.8, -3.4, 2.3, 0.9);
       // bark beds under the pods' hedges
-      k.litter(-6.3, -7.6, 1.9, 0.75); k.litter(5.3, -11.8, 0.75, 1.9);
+      k.litter(-6.25, -7.9, 1.6, 0.75); k.litter(5.3, -11.8, 0.75, 1.9);
       // the greenhouse's mulch border
       k.litter(-9, -12, 4.6, 2.55);
       // gravel: the ramp's funnel, the tower's lane, the stair's path, the band stair's foot
