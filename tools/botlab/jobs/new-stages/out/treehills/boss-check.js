@@ -1,6 +1,7 @@
 // Eco-Forest Treehills — Boss Battle check (page script for tools/botlab/page.cjs, MODE=boss): HULLBREAKER's home ground on the
-// stage, its spawn, whether it roams the whole Commons Meadow (into both gardens), and a stepped fight (bots vs the boss) watching its
-// positions: never over water, never stuck, roams the meadow.
+// stage (after the rework: the lowland — the meadow round the Seed Vault Plaza, which is a wall to it, and the seed-bank garden;
+// the meadow's cover breaks it up, so it is the biggest open stretch of it), its spawn, and a stepped fight (bots vs the boss)
+// watching its positions: never over water, never stuck, stays on its ground.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -10,7 +11,8 @@
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
   for (const i of nav.planIds) { const [x, z] = nav.xz(i); x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
   R('home ground: one open region big enough to roam (≥ 150 m² of plannable cells)', nav.area >= 150, { area: nav.area, floorY: nav.floorY, bbox: [+x0.toFixed(1), +x1.toFixed(1), +z0.toFixed(1), +z1.toFixed(1)] });
-  R('it reaches both ends of the meadow (its home ground runs into both seed-bank gardens, |z| > 14)', z0 < -14 && z1 > 14 && x0 < -10 && x1 > 10, { x0, x1, z0, z1 });
+  let low = 0; for (const i of nav.planIds) { const [x, z] = nav.xz(i); if (Math.abs(x) <= 15.5 && Math.abs(z) <= 25.5) low++; }
+  R('its home ground is the lowland (the meadow and the garden, floor 0: ≥ 90 % of its cells)', low / nav.planIds.length >= 0.9, { lowland: low, cells: nav.planIds.length });
   R('spawn on the home ground, on the floor', nav.isPlan(b.pos.x, b.pos.z), { pos: [+b.pos.x.toFixed(2), +b.pos.y.toFixed(2), +b.pos.z.toFixed(2)] });
   // fight for 150 s (bots attack it), sampling its position
   dbg.freeze();

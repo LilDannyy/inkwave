@@ -36,7 +36,7 @@
 
   if (m.mode === 'turf' || m.mode === 'zones') {
     // ---- a hedge of each team on the meadow
-    const pa = byId('meadow-sw'), pb = byId('meadow-sw~');
+    const pa = byId('meadow-w'), pb = byId('meadow-w~');
     fill(pa, 0); fill(pb, 1); step(0.8);
     const tintA = pa.look && pa.look.team && pa.look.team[0]?.userData?.tint, tintB = pb.look && pb.look.team && pb.look.team[1]?.userData?.tint;
     R('a hedge of each team grows (the first full meter): standing, solid, its look in the grower\'s ink',
@@ -83,7 +83,12 @@
     }
     R('a clear charge lane at a pod on the boss\'s ground', !!lane, lane && { pod: lane.p.id, from: [r2(lane.st.x), r2(lane.st.z)], dist: lane.dd, before: r2(lane.before.dist) });
     if (lane) {
+      // (the boss spawns on the meadow's north-west, beside a pod: a hedge never grows into it — step it away first)
+      let far = null, fd = -1;
+      for (const i of nv.planIds) { const [x, z] = nv.xz(i), d = Math.hypot(x - lane.p.x, z - lane.p.z); if (d > fd) { fd = d; far = [x, z]; } }
+      const bp0 = Bs.pos.clone(); Bs.pos.set(far[0], Bs.pos.y, far[1]);
       fill(lane.p, 0); step(0.8);
+      Bs.pos.copy(bp0);
       const after = nv.cast(lane.st.x, lane.st.z, lane.yaw, lane.dd + 4);
       R('Boss Battle: a grown hedge stops HULLBREAKER\'s charge like a wall', lane.p.state === 'stand' && after.wall && after.dist < lane.before.dist - 2,
         { before: { d: r2(lane.before.dist), wall: lane.before.wall }, after: { d: r2(after.dist), wall: after.wall } });
