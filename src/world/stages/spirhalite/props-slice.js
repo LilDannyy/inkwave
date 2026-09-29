@@ -192,8 +192,8 @@ export function registerSlice(D, H, X) {
     variants: 1, mount: 'ground',
     build(B, o) {
       const L = o.L ?? 2.6, W = o.W ?? 1.5, h = o.h ?? 1.05, seed = o.seed ?? 9, R0 = rng(seed * 5 + 1);
-      B.add('rubber', rockGeo(700 + seed, 2, L * 0.5, h, W * 0.5, 0.16), K.sandDk, 0, -0.02, 0, { ao: false });
-      B.add(NS('rubber'), rockGeo(710 + seed, 1, L * 0.36, h * 0.35, W * 0.4, 0.3), K.sand, R0() * 0.3, h * 0.72, 0, { ao: false });
+      B.add('rubber', rockGeo(700 + seed, 2, L * 0.5, h, W * 0.5, 0.16), '#c7b492', 0, -0.02, 0, { ao: false });   // (dug sand: darker and damper than the dunes)
+      B.add(NS('rubber'), rockGeo(710 + seed, 1, L * 0.36, h * 0.35, W * 0.4, 0.3), '#b8a483', R0() * 0.3, h * 0.72, 0, { ao: false });
       for (let i = 0; i < 4; i++) B.add('rubber', rockGeo(720 + i, 0, 1.3, 0.6, 1.0, 0.3), i % 2 ? K.stone : K.stoneDk, (R0() - 0.5) * L * 0.8, 0.02, (R0() < 0.5 ? -1 : 1) * W * (0.35 + R0() * 0.15), { s: 0.16 + R0() * 0.14, ry: R0() * TAU, ao: false });
       // the shovel: a handle leaning out of the heap's shoulder, its blade buried
       const sx = L * 0.18, sz = W * 0.1;
