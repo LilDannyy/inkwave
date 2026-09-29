@@ -400,6 +400,7 @@ export class TowerCommand {
     this.pillarHalf = new V3(TOWER.pillarW / 2, TOWER.pillarH / 2, TOWER.pillarW / 2);
     this.pillar = G.level.addDynamic({ tag: 'tower-pillar', roof: true });
     this.paint = new TowerPaint(this);   // ink on its walls and deck (swim up the walls, swim on the deck)
+    this.block.inkPaint = this.paint;    // (Actor._surface / _wallInk read a dynamic block's own ink through this)
     this._place(1);
   }
 

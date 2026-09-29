@@ -5,6 +5,7 @@ import { MATCH, PLAYER, WEAPON_ORDER, SUB_ORDER, SPECIAL_ORDER, BOT_NAMES, TEAM_
 import { ZoneControl } from './zones.js';
 import { TowerCommand } from './tower.js';
 import { StageMovers } from './movers.js';
+import { StagePods } from './pods.js';
 import { randomStyle } from './character-style.js';
 import { Actor } from './actor.js';
 import { BotBrain } from './bots.js';
@@ -107,6 +108,7 @@ export class Match {
     if (this.mode === 'tower') this.tower = new TowerCommand(this);
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
     this.movers = StageMovers.create(this);   // stage set pieces on a timetable (movers.js), when the stage has any
+    this.pods = StagePods.create(this);       // sprout pods: growable cover (pods.js), when the stage has any
   }
 
   // Online: the host's roster — who owns which squidkid (players their own, the host the bots).
@@ -141,6 +143,7 @@ export class Match {
     if (this.mode === 'tower') this.tower = new TowerCommand(this);   // likewise (tower.js netEvent)
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
     this.movers = StageMovers.create(this);   // (a pure function of the synced match clock: nothing on the wire)
+    this.pods = StagePods.create(this);       // (the host grows them: pods.js netEvent)
   }
 
   // Zone Control: ink laid while standing on (or aiming into) the live zone counts as objective play (results / XP)
@@ -170,6 +173,7 @@ export class Match {
 
   dispose() {
     this.movers?.dispose(); this.movers = null;
+    this.pods?.dispose(); this.pods = null;
     this.bossMode?.dispose(); this.bossMode = null; this.boss = null;
     this.tower?.dispose(); this.tower = null;
     for (const a of this.actors) { G.scene.remove(a.character.root); a.weaponRunner.reset(); a.character.dispose?.(); }
@@ -239,6 +243,8 @@ export class Match {
     }
     // stage movers (a railcar pulling out) move — and shove anyone in their way — before anyone else moves
     this.movers?.update(dt);
+    // sprout pods: meters, hedges growing (shoving anyone where they grow) / wilting (carrying their riders down)
+    this.pods?.update(dt);
     // actors (the local controller runs once per rendered frame via updateController)
     const live = this.state === 'playing';
     for (const a of this.actors) {
