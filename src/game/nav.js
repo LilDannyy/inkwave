@@ -11,6 +11,10 @@ export class NavGraph {
     this.level = level; this.physics = physics;
     this.step = 1.0;
     this.nodes = [];
+    // stage movers (src/game/movers.js): nodes a moving set piece covers or is about to sweep (Uint8Array, or null).
+    // Routes pay heavily to enter one (never forbidden: a bot standing in one still walks out the shortest way); goals
+    // skip them (nearest() without `start`)
+    this.blocked = null;
     this._build();
   }
 
@@ -190,6 +194,7 @@ export class NavGraph {
         if (jx < 0 || jz < 0 || jx >= this.nx || jz >= this.nz) continue;
         for (const id of this.cells[jz * this.nx + jx]) {
           if (!this.valid[id] && !(start && this.exitable[id])) continue;
+          if (!start && this.blocked && this.blocked[id]) continue;
           const n = this.nodes[id];
           if (n.y > pos.y + maxUp) continue;
           const d = (n.x - pos.x) ** 2 + (n.z - pos.z) ** 2 + ((n.y - pos.y) * 2.5) ** 2;
@@ -209,7 +214,7 @@ export class NavGraph {
     if (!this._g || this._g.length !== N) { this._g = new Float32Array(N); this._from = new Int32Array(N); this._seen = new Uint32Array(N); this._closed = new Uint32Array(N); this._stamp = 0; }
     const g = this._g, from = this._from, seen = this._seen, closed = this._closed;
     const st = ++this._stamp;
-    const nodes = this.nodes, goal = nodes[b];
+    const nodes = this.nodes, goal = nodes[b], blk = this.blocked;
     const h = (n) => Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5;
     const heap = new Heap();
     g[a] = 0; from[a] = -1; seen[a] = st;
@@ -225,7 +230,7 @@ export class NavGraph {
         if (noClimb && e.type === 'climb') continue;
         const m = nodes[e.to];
         if (m.zone >= 0 && m.zone !== team) continue;
-        const ng = g[cur] + e.cost + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0);
+        const ng = g[cur] + e.cost + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0);
         if (seen[e.to] !== st || ng < g[e.to]) {
           seen[e.to] = st; g[e.to] = ng; from[e.to] = cur;
           heap.push(e.to, ng + h(m));
