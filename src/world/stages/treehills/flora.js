@@ -17,7 +17,7 @@ export function registerFlora(D, H, T) {
       const tone = o.c ?? mixc(kind === 'thujopsis' ? K.thu : K.cyp, kind === 'thujopsis' ? K.thuLt : K.cypLt, (hash((o.seed ?? 1) * 1.7) - 0.3) * 0.4);
       evergreen(B, 0, 0, 0, h, { kind, seed: o.seed ?? 1, w, c: tone, rot: o.rot });
       // a mulch ring at the foot
-      B.cyl(NS('paint'), K.soilDk, Math.min(1.1, h * 0.13), 0.04, 0, 0.02, 0, { seg: 12 });
+      B.cyl(NS('paint'), '#6b5a45', Math.min(0.75, h * 0.1), 0.03, 0, 0.015, 0, { seg: 12 });
       if (o.solid !== false) { const cw = o.core ?? Math.min(1.8, h * w * 0.3); colC(B, 0, 0, 0, cw, Math.min(3.2, h * 0.45), cw, ROOF); }
     },
   };
