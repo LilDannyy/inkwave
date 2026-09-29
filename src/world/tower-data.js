@@ -37,13 +37,26 @@ export const TOWER_DEFS = {
   saltpan: {
     // starts on the pump staging (0.08; the wind pump stands on a trestle overhead in this mode), steps onto the ±X
     // boardwalk's centre line (z 1.7, as drawn) and runs flat along the dykes: the mid dyke, the front dyke (its centre,
-    // z 9), the dock yard, the sluice dyke (z 18.5), then down the back-pan boardwalk (x 2.7) to the yard
-    path: [[0, 0.08, 0], [0, 1.7], [-17.38, 1.7], [-17.38, 9], [13.03, 9], [13.03, 18.5], [2.7, 18.5], [2.7, 30.22]],
-    checkpoints: [[-17.37, 8.83], [13.45, 18.81]],
+    // z 9), the dock yard, the sluice dyke (z 18.5), then down the back-pan boardwalk (x 2.7) onto the pump dyke.
+    // (Long Stages, 2026-09-30: two checkpoints, so twice as long.) On through the new slice, switchbacking
+    // up the evaporation terraces one step at a time: along the lowest terrace (z 35.5), up a step and back along the
+    // next (z 40.5) across the causeway and up onto the pump house's loading platform (checkpoint 2), off its base-side
+    // edge and back along the third (z 45.5), up onto the top one (z 51), and down the causeway to the goal in the store
+    // yard (12 m short of the pad)
+    // ([1.3, 45.5] is a straight-through point, not a turn: it ends the flat run where the platform reaches the third
+    //  terrace's 0.3 m step, so the track steps up there instead of ramping the whole run)
+    path: [[0, 0.08, 0], [0, 1.7], [-17.38, 1.7], [-17.38, 9], [13.03, 9], [13.03, 18.5], [2.7, 18.5], [2.7, 35.5],
+      [-10, 35.5], [-10, 40.5], [8.5, 40.5], [8.5, 45.5], [1.3, 45.5], [-10, 45.5], [-10, 51], [2.7, 51], [2.7, 54.22]],
+    checkpoints: [[-17.37, 8.83], [7.5, 40.5]],
   },
   crossmarket: {
-    path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.5], [0.41, 19.5], [0.4, 10.23], [-17.39, 10.24], [-17.39, 30.86]],
-    checkpoints: [[21.41, 13.25], [-12.77, 9.98]],
+    // (Long Stages, 2026-09-30: two checkpoints, so twice as long.) After the drawn run down the flank street, on round
+    // the new block: back along the open band in front of the roof terrace and the butcher's to Fish Lane (z 37.4), down
+    // Fish Lane, back east through Herring Passage, over the Butter Cross (checkpoint 2) and along Butter Row (z 45.2),
+    // down the flank street into Exchange Square and along its front to the goal (13 m short of the pad)
+    path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.5], [0.41, 19.5], [0.4, 10.23], [-17.39, 10.24],
+      [-17.39, 37.4], [17.2, 37.4], [17.2, 45.2], [-17.39, 45.2], [-17.39, 55.5], [-10, 55.5]],
+    checkpoints: [[21.41, 13.25], [0, 45.2]],
     yaw: 0,   // square to the streets (the drawn runs' average, -4.6°, sat skew to every street; only the first run is diagonal)
   },
   lockgate: {
