@@ -181,7 +181,8 @@ const STATION = [
   { type: 'calamari_lamppost', pos: [13.2, P.side.y, -10.0], rotY: Math.PI / 2, h: 3.6, arm: 0.6 },
   { type: 'calamari_fence', pos: [11.8, P.side.y, -10.32], rotY: 0, length: 2.2, h: 1.0 },
   // the forecourt + square (one open space, 22 × 20 m): bus shelter, kei truck, post box, the pine in its planter,
-  // snowbanks, lanterns, a snowman, the notice board — low cover every 6–8 m, lanes 5 m+ between them
+  // snowbanks, lanterns, a snowman, the notice board — low cover every 6–8 m, lanes 5 m+ between them (the back
+  // street's middle, z −29.2 … −26.6, stays clear: the tower rides it)
   { type: 'calamari_busstop', pos: [-8.4, 0, -17.2], rotY: 0, w: 2.8 },
   { type: 'calamari_kei', pos: [-1.9, 0, -15.8], rotY: Math.PI / 2 },
   { type: 'calamari_postbox', pos: [2.2, 0, -17.6] },
@@ -192,8 +193,8 @@ const STATION = [
   { type: 'calamari_vending', pos: [6.6, 0, -15.0], rotY: Math.PI, variant: 0 },
   { type: 'calamari_snowbank', pos: [-8.3, 0, -23.4], rotY: Math.PI / 2 - 0.15, length: 2.6, h: 0.95, d: 1.2, variant: 2 },
   { type: 'calamari_snowbank', pos: [8.6, 0, -19.2], rotY: Math.PI / 2 + 0.2, length: 2.2, h: 0.9, d: 1.1, variant: 0 },
-  { type: 'calamari_lantern', pos: [7.6, 0, -26.6], h: 1.6 },
-  { type: 'calamari_noticeboard', pos: [-10.1, 0, -27.6], rotY: Math.PI / 2 + 0.07 },
+  { type: 'calamari_lantern', pos: [7.6, 0, -25.6], h: 1.6 },
+  { type: 'calamari_noticeboard', pos: [-9.3, 0, -25.6], rotY: 0.05 },
   { type: 'calamari_lamppost', pos: [-11.0, 0, -15.6], rotY: Math.PI / 2 },
   { type: 'calamari_lamppost', pos: [10.4, 0, -27.8], rotY: -Math.PI / 2 },
   { type: 'calamari_bike', pos: [-2.9, 0, -13.9], rotY: 0.3, variant: 0 },
