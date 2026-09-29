@@ -338,9 +338,10 @@ const KELPLINE = {
   bounds,
   spawnPads: [pad, [-pad[0], pad[1], -pad[2]]],
   spawnBarrier: 4.2,
-  // fly in low over the TIDEBANK's bow and the mid bulge, across Block 4A, down onto the ops roof
-  intro: { from: W(40, 22, -8), lookFrom: W(0, 4, -12), toBack: 3.0 },
-  art: { from: W(46, 26, -46), look: W(-4, 4, 4), fov: 55 },   // over the gate-side shoulder: K7's portal, the Landing, CORAL MAXIMA's bow
+  // fly in low over the TIDEBANK's deck cargo, across Block 4B and RTG 41's portal, down onto the ops roof
+  intro: { from: W(38, 22, -28), lookFrom: W(0, 4, -34), toBack: 3.0 },
+  // over the gate-side quay behind Block 4B: RTG 41 over the transfer platform, the lashing store, K7's portal beyond
+  art: { from: W(34, 22, -72), look: W(0, 2, -20), fov: 60 },
   single,
   half,
   decor: {
