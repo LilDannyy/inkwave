@@ -166,6 +166,8 @@ const LAYOUT_TREEHILLS = {
       all: { seaDeep: '#0e4744', seaShallow: '#2b8a7a', seaCrest: '#8fd6c2', foam: '#eef8f3', waveStrength: 0.28, seaAmbientK: 0.64,
         marina: { channel: '#0f4c46', shade: '#061714', calm: 0.35, lap: 0.6, caustic: 1.7, wet: 0.45 } },
       day: { zenith: '#2474d6', skyMid: '#62aef0', horizon: '#cde9f8', haze: [1 / 2400, 0.85, 300], fog: [30, 1400], sunIntensity: 3.1 },
+      // the dome plays a warm sunset: a little more fill than an open-air dusk (the cavern's screens light it)
+      sunset: { hemiIntensity: 0.74, envK: 0.5, grade: { uExposure: 1.07, uSat: 1.07 } },
     },
   },
   zones: ZONES,
