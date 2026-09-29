@@ -3,7 +3,8 @@
 //   · sees them — a sight line (physics.los: solid blocks and prop colliders block it; grates, rails and ink don't)
 //     from its eyes to their chest or head, within its view range (difficulty awareness: 16 / 21 / 26 m) and inside
 //     its view cone (±80° round where it's looking), or anywhere within 4 m of it (footsteps, splashes, a shove);
-//   · or has them located — tracked for its team (Echo Orb, Lurk Mine, Tracer, Deep Sonar: status.track; a tracked foe
+//   · or has them located — what the team's map shows (game/reveal.js: tracked by the Echo Orb, Lurk Mine, Tracer, Deep
+//     Sonar; standing in our ink; hurt by our ink and not in their own; anything registered there) — (a tracked foe
 //     in plain sight is seen whatever it's doing), or a super jump's landing marker (the spot, until they're down).
 // Squids in their own ink: a still one is noticed only from within 2 m; a swimmer's ripples show within 1–9 m (the
 // faster, the further) and only after 0.45 s of looking; a swimmer already in sight is followed out to 15 m while it
@@ -23,6 +24,7 @@ import * as THREE from 'three';
 import { G, on } from '../core/ctx.js';
 import { SUBS, SPECIALS, weaponRange } from '../config.js';
 import { Hit } from './physics.js';
+import { revealedTo } from './reveal.js';
 
 export const SIGHT = {
   fov: 1.4,            // half-angle (rad) of the view cone round the bot's aim yaw
@@ -125,7 +127,7 @@ export class Sight {
       if (e.team === a.team) continue;
       let k = this.mem.get(e);
       if (!e.alive) { if (k) this.mem.delete(e); this.glim.delete(e); continue; }   // splatted: its splat is announced
-      const located = !!(e.status && e.status.track > 0 && e.status.trackTeam === a.team);
+      const located = !!revealedTo(e, a.team);   // (what the team's map shows — game/reveal.js)
       const sj = e.superJumpState;
       if (sj && sj.phase === 'flight') {
         // in the sky (and untouchable): the landing marker says where it'll be
@@ -189,7 +191,7 @@ export class Sight {
     if (_frameT !== now) { _frameT = now; _frameRays = 0; }
     if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return true; }
     const a = this.a, b = this.b, eye = _eye.set(a.pos.x, a.pos.y + 1.3, a.pos.z);
-    const located = !!(e.status && e.status.track > 0 && e.status.trackTeam === a.team);
+    const located = !!revealedTo(e, a.team);
     if (!(e.superJumpState && e.superJumpState.phase === 'flight') && this._look(e, k, eye, Math.sin(b.aimYaw), Math.cos(b.aimYaw), Math.cos(SIGHT.fov), b.diff.awareness, located, now - k.seenT)) {
       k.seenT = now; k.t = now; k.pos.copy(e.pos); k.vel.copy(e.vel); k.guess.copy(e.pos); k.dove = e.form === 'squid';
       return true;
