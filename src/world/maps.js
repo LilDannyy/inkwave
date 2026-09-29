@@ -7,6 +7,7 @@ import { STAGES } from './stages/index.js';
 import { ZONE_DEFS } from './zones-data.js';
 import { TOWER_DEFS } from './tower-data.js';
 import { floatSections, FLOAT_Y0 } from './props-marina-vessels.js';
+import { hq, QUAY_FRONT as QF, SLICE as SL } from './props-marina-slice.js';
 export * from './mapkit.js';
 
 // ------------------------------------------------------------------------------------------------------------
@@ -22,20 +23,24 @@ export * from './mapkit.js';
 //     stair is at its own left end), a wheelhouse to fight around up there
 //   • squid-only gaps (~3.5–5.5 m of water): fuel dock ↔ boatyard, side lanes ↔ ferry ends. Ink a runway, swim,
 //     dolphin-jump across. Kids take the gangways.
+//   • the Long Stages slice (2026-09-30, props-marina-slice.js): the base (the quay, the clubhouse, everything on them)
+//     stands 24 m further out than the first build — hq(z) is a base-side z of the first build, moved out — and the lanes
+//     run on across the new land: the visitor pontoons beside the Long Pier, the chandlery's loading deck between the
+//     fuel dock and the yard (the slice's strategic point), the travel-lift dock in the boatyard
 const M = {
   pavers: '#dccbb0', stone: '#cfc6b6', deck: '#cdb89a', finger: '#c7ae8c', yard: '#bdb8af', clubhouse: '#efe8da',
   spawn: '#eae6de', hut: '#f1ece2', navy: '#3f5372', ferryDeck: '#b8c3bb', cabin: '#f3f0ea', tug: '#9c4838',
   tugHouse: '#efe9dd', house: '#8fb8b4', houseTop: '#f0ebe0', steel: '#98a0a6', wood: '#c29a72', orange: '#e79a4b',
   beacon: '#e9e4d8', boat: '#4f6f96', planter: '#b9ad9a', carDeck: '#a1ada3', render: '#efe8da', office: '#e8e4dc',
-  workboat: '#2f6b62', float: '#c3c6c0',
+  workboat: '#2f6b62', float: '#c3c6c0', store: '#566b80',
 };
 const SIDES = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];   // hull sides: never inkable (decks are)
 const deck = (o = {}) => ({ color: M.deck, pattern: PATTERN.planks, ...o });
 export const HALYARD = {
   id: 'halyard',
   water: 'marina',   // sheltered marina water (environment.js keys the sea look on this)
-  bounds: { minX: -24, maxX: 24, minZ: -46, maxZ: 46 },
-  spawnPads: [[0, 2.4, -42], [0, 2.4, 42]],
+  bounds: { minX: -24, maxX: 24, minZ: hq(-46), maxZ: -hq(-46) },
+  spawnPads: [[0, 2.4, hq(-42)], [0, 2.4, -hq(-42)]],
   spawnBarrier: 4.2,
   // match intro opens high over the ferry's sun deck, then sweeps back down the fuel dock to your spawn (ending in
   // front of the clubhouse wall, not inside the building behind it)
@@ -50,21 +55,21 @@ export const HALYARD = {
   ],
   half: [
     // ================= quay + clubhouse (solid ground behind the basin)
-    B(-24, 24, -1.2, 0, -46, -31, { tag: 'quay', color: M.pavers, pattern: PATTERN.pavers }),
-    B(-24, 24, 0, 4.6, -46, -45.4, { tag: 'backwall', roof: true, color: M.clubhouse, pattern: PATTERN.render }),
+    B(-24, 24, -1.2, 0, hq(-46), hq(-31), { tag: 'quay', color: M.pavers, pattern: PATTERN.pavers }),
+    B(-24, 24, 0, 4.6, hq(-46), hq(-45.4), { tag: 'backwall', roof: true, color: M.clubhouse, pattern: PATTERN.render }),
     // spawn terrace on the clubhouse roof: grand stair to the fuel dock, open 2.4 m drops on both sides
     // (body in the clubhouse's render so the terrace reads as part of the building; spawn tiles only on the deck + lip)
-    B(-8.5, 8.5, 0, 2.2, -45.4, -38.5, { tag: 'spawn-terrace-body', color: M.render, pattern: PATTERN.render }),
-    B(-8.5, 8.5, 2.2, 2.4, -45.4, -38.5, { tag: 'spawn-terrace', color: M.spawn, pattern: PATTERN.spawn }),
-    R([0, 0, -32.4], [0, 2.4, -38.5], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
-    B(-8.5, -4.6, 2.4, 3.15, -39.1, -38.5, { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
-    B(4.6, 8.5, 2.4, 3.15, -39.1, -38.5, { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
+    B(-8.5, 8.5, 0, 2.2, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace-body', color: M.render, pattern: PATTERN.render }),
+    B(-8.5, 8.5, 2.2, 2.4, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace', color: M.spawn, pattern: PATTERN.spawn }),
+    R([0, 0, hq(-32.4)], [0, 2.4, hq(-38.5)], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
+    B(-8.5, -4.6, 2.4, 3.15, hq(-39.1), hq(-38.5), { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
+    B(4.6, 8.5, 2.4, 3.15, hq(-39.1), hq(-38.5), { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
     // quay corners: boathouse (left) and a harbour-office kiosk (right) — cover + landmarks, out of the lanes
-    B(14.5, 22.5, 0, 3.2, -45.4, -40.6, { tag: 'boathouse', roof: true, color: M.house, pattern: PATTERN.weatherboard }),
-    B(-22.2, -17.4, 0, 2.8, -44.6, -41.2, { tag: 'kiosk', roof: true, color: M.office, pattern: PATTERN.render }),
+    B(14.5, 22.5, 0, 3.2, hq(-45.4), hq(-40.6), { tag: 'boathouse', roof: true, color: M.house, pattern: PATTERN.weatherboard }),
+    B(-22.2, -17.4, 0, 2.8, hq(-44.6), hq(-41.2), { tag: 'kiosk', roof: true, color: M.office, pattern: PATTERN.render }),
 
     // ================= centre: the fuel dock
-    B(-4.5, 4.5, -1.2, 0, -31, -8.6, deck({ tag: 'fuel-dock' })),
+    B(-4.5, 4.5, -1.2, 0, QF, -8.6, deck({ tag: 'fuel-dock' })),
     B(-1.7, 1.7, 0, 2.7, -22.5, -18.8, { tag: 'fuel-hut', roof: true, color: M.hut, pattern: PATTERN.render, notIn: 'tower' }),
     // Tower Command: the hut's flat roof is a lookout over the track, up a timber ramp from the spawn side ("RAMP ↑"):
     // walkable and inkable (a perch you reach on foot, not an off-limits roof)
@@ -73,7 +78,7 @@ export const HALYARD = {
     R([0, 0, -8.8], [0, 1.3, -4.95], 3.4, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck }),
 
     // ================= right lane: the Long Pier (−X for Alpha)
-    B(-24, -19.5, -1.2, 0, -31, 0, deck({ tag: 'long-pier' })),
+    B(-24, -19.5, -1.2, 0, QF, 0, deck({ tag: 'long-pier' })),
     B(-19.5, -12.5, -1.2, 0, -26.4, -25.2, deck({ tag: 'finger-pier', color: M.finger })),
     B(-19.5, -4.5, -1.2, 0, -12.4, -10.4, deck({ tag: 'boardwalk', color: M.finger })),          // boardwalk to the fuel dock
     // houseboat SEA SHANTY filling the slip: a wide floating-home pontoon (deck 0.7, kid-hoppable from the Long Pier
@@ -87,9 +92,34 @@ export const HALYARD = {
     B(-23.8, -21.4, 0, 2.4, -1.2, 1.2, { tag: 'beacon', color: M.beacon, pattern: PATTERN.render }),
 
     // ================= left lane: the Boatyard (+X for Alpha)
-    B(10, 24, -1.2, 0, -31, -7, { tag: 'yard', color: M.yard, pattern: PATTERN.yard }),
+    // (the slice: the hardstanding runs on round the travel-lift slip, and past the chandlery to the quay)
+    B(10, 24, -1.2, 0, SL.slip[3], -7, { tag: 'yard', color: M.yard, pattern: PATTERN.yard }),
+    B(SL.slip[1], 24, -1.2, 0, SL.slip[2], SL.slip[3], { tag: 'yard', color: M.yard, pattern: PATTERN.yard }),
+    B(10, SL.deck[1], -1.2, 0, SL.deck[3], SL.slip[2], { tag: 'yard', color: M.yard, pattern: PATTERN.yard }),
+    B(SL.deck[1], 24, -1.2, 0, QF, SL.slip[2], { tag: 'yard', color: M.yard, pattern: PATTERN.yard }),
     B(19.5, 24, -1.2, 0, -7, 0, { tag: 'yard-strip', color: M.yard, pattern: PATTERN.yard }),
     B(4.5, 10, -1.2, 0, -26, -24, deck({ tag: 'yard-walkway', color: M.finger })),                   // walkway from the fuel dock (near base)
+    // ================= the slice (props-marina-slice.js SLICE): visitor pontoons, the chandlery, the travel-lift dock
+    // visitor pontoons 0.9 m below the piers: the spine from the Long Pier to the fuel dock (a gangway down at each end),
+    // the long finger north to the finger pier (a gangway up onto it), a short finger, the access pontoon to the quay
+    B(SL.spine[0], SL.spine[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, SL.spine[2], SL.spine[3], { tag: 'visitor-pontoon', color: M.float, pattern: PATTERN.rubber }),
+    ...SL.fingers.map((f, i) => B(f[0], f[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, f[2], f[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, notIn: i === 1 ? 'tower' : undefined })),
+    // Tower Command: the short finger moved under the water-bus PUFFIN's gangway (its berth kept clear)
+    B(SL.towerFinger[0], SL.towerFinger[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, SL.towerFinger[2], SL.towerFinger[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, onlyIn: 'tower' }),
+    R([SL.spine[0], SL.pontoonY, -44.3], [-19.5, 0, -44.3], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([SL.spine[1], SL.pontoonY, -44.3], [-4.5, 0, -44.3], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([-13.1, SL.pontoonY, -28.75], [-13.1, 0, -26.4], 1.2, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([-12.1, SL.pontoonY, SL.fingers[2][2]], [-12.1, 0, QF], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
+    // the chandlery's store (roof off limits) and its loading deck (the strategic point) on piles across the channel, a
+    // ramp up from the fuel dock, a ramp up from the hardstanding
+    B(SL.store[0], SL.store[1], -1.2, SL.storeTop, SL.store[2], SL.store[3], { tag: 'chandlery', roof: true, color: M.store, pattern: PATTERN.weatherboard }),
+    B(SL.deck[0], SL.deck[1], -1.2, SL.deckY, SL.deck[2], SL.deck[3], deck({ tag: 'loading-deck' })),
+    R([1.4, 0, -46.4], [SL.deck[0], SL.deckY, -46.4], 2.4, { tag: 'deck-ramp', color: M.wood, pattern: PATTERN.rampboard }),
+    R([SL.deck[1] + 3.1, 0, -46.4], [SL.deck[1], SL.deckY, -46.4], 2.4, { tag: 'deck-ramp', color: M.wood, pattern: PATTERN.rampboard }),
+    // the visitors' berthing booth on the fuel dock (roof off limits)
+    B(SL.booth[0], SL.booth[1], 0, SL.boothTop, SL.booth[2], SL.booth[3], { tag: 'visitor-booth', roof: true, color: M.office, pattern: PATTERN.render }),
+    // the plank across the slip's mouth
+    B(SL.plank[0], SL.plank[1], -0.2, 0, SL.slip[2], SL.slip[3], { tag: 'slip-plank', color: M.wood, pattern: PATTERN.planks }),
     // tug up on blocks: deck = flank high ground, ramp up from the mid end, wheelhouse for cover
     B(14.5, 20.5, 0, 2.6, -24, -13, { tag: 'tug-hull', color: M.tug, pattern: PATTERN.hullpaint, notIn: 'zones' }),
     B(15.8, 19.2, 2.6, 4.3, -20.4, -17.4, { tag: 'tug-house', roof: true, color: M.tugHouse, pattern: PATTERN.hullpaint }),
@@ -138,14 +168,16 @@ export const HALYARD = {
     B(7.1, 11.8, -1.9, 0.5, 23.7, 30.35, { tag: 'waterbus-hull', color: M.navy, pattern: PATTERN.hullpaint, noPaint: SIDES, onlyIn: 'tower' }),
     B(7.1, 11.8, 0.5, 2.15, 23.7, 30.35, { tag: 'waterbus-saloon', color: M.cabin, pattern: PATTERN.hullpaint, noPaint: SIDES, onlyIn: 'tower' }),
     B(7.1, 11.8, 2.15, 2.3, 23.7, 30.35, { tag: 'waterbus-deck', color: M.ferryDeck, pattern: PATTERN.nonslip, noPaint: SIDES, onlyIn: 'tower' }),
-    R([9.45, 0, 35.65], [9.45, 2.3, 30.35], 1.8, { tag: 'waterbus-gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'tower' }),
+    // (the Long Stages slice: the quay moved out, so the gangway comes up from the visitor pontoons' finger beside the berth)
+    R([9.45, SL.pontoonY, 37.55], [9.45, 2.3, 30.35], 1.8, { tag: 'waterbus-gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'tower' }),
     // RAMP ↑: a boarded timber ramp up the fuel hut's spawn-side wall onto its roof (23.9°; a solid wedge: no den under it)
     R([0, 0, 28.6], [0, 2.7, 22.5], 2.4, { tag: 'fuel-hut-ramp', thickness: 2.5, color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'tower' }),
   ],
   decor: {
-    lamps: [[-23.5, -32.2], [23.5, -32.2], [-23.6, -14], [23.6, -9], [-5.7, -31.8], [5.7, -31.8]],
-    palms: [[-15.5, -38.5], [15.5, -38]],
-    flags: [[-8, 2.4, -44.6], [8, 2.4, -44.6]],
+    lamps: [[-23.5, hq(-32.2)], [23.5, hq(-32.2)], [-23.6, -14], [23.6, -9], [-5.7, hq(-31.8)], [5.7, hq(-31.8)],
+      [-23.6, -39.2], [4.15, -43.6], [-4.15, -52.6], [23.6, -44.2]],   // (the slice)
+    palms: [[-15.5, hq(-38.5)], [15.5, hq(-38)]],
+    flags: [[-8, 2.4, hq(-44.6)], [8, 2.4, hq(-44.6)]],
   },
 };
 
