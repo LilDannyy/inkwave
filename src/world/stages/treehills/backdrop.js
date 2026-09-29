@@ -230,6 +230,27 @@ export function buildBackdrop(kit) {
     works.push(xf(box(14, RIM + 10, 12, '#5d666b'), x, WATER_Y + RIM / 2, z, -a * DEG));
     for (let y = 20; y < RIM; y += 24) works.push(xf(box(15, 1.2, 13, '#fff1cf', 1), x, WATER_Y + y, z, -a * DEG));
   }
+  // the reservoir's weirs: two concrete spillways set into the cavern wall (behind each station, far off), the water
+  // falling in a white sheet into a foam apron, and small sluice outlets spouting from the rock between them
+  for (const a of [90, 270]) {
+    const r = wallR(a * DEG) - 30, [x, z] = at(a, r), rot = -a * DEG + Math.PI / 2;
+    const cx = Math.cos(a * DEG), cz = Math.sin(a * DEG);
+    works.push(xf(box(70, 42, 16, '#b9bdb6'), x, WATER_Y + 21, z, rot));
+    works.push(xf(box(56, 3, 20, '#9ea39c'), x - cx * 2, WATER_Y + 41, z - cz * 2, rot));
+    for (let k = -2; k <= 2; k++) works.push(xf(box(3, 46, 20, '#a9aea7'), x - cx * 3 + Math.sin(a * DEG) * k * 13, WATER_Y + 23, z - cz * 3 - Math.cos(a * DEG) * k * 13, rot));
+    // the falling sheet (a slab leaning out from the crest, streaked) and the foam at its foot
+    const sheet = xf(box(52, 40, 1.2, '#eef6f6'), x - cx * 11, WATER_Y + 20, z - cz * 11, rot, -0.16);
+    kit.vcolorBy(sheet, (px, py, pzz) => new THREE.Color().setScalar(0.8 + 0.2 * Math.abs(Math.sin(px * 0.9 + pzz * 0.9))));
+    works.push(sheet);
+    for (let k = 0; k < 9; k++) works.push(xf(sph(5 + rnd() * 3, 8, 5, '#f4fbfb'), x - cx * (15 + rnd() * 6) + Math.sin(a * DEG) * (k - 4) * 6, WATER_Y, z - cz * (15 + rnd() * 6) - Math.cos(a * DEG) * (k - 4) * 6, 0, 0, 0, 1, 0.45, 1));
+  }
+  for (const a of [18, 150, 206, 330]) {
+    const r = wallR(a * DEG) - 26, [x, z] = at(a, r), rot = -a * DEG + Math.PI / 2, cx = Math.cos(a * DEG), cz = Math.sin(a * DEG);
+    works.push(xf(box(12, 12, 6, '#b9bdb6'), x, WATER_Y + 18, z, rot));
+    works.push(xf(cyl(3.2, 3.2, 4, 12, '#2f3a38'), x - cx * 3.2, WATER_Y + 18, z - cz * 3.2, rot, Math.PI / 2));
+    works.push(xf(box(5, 18, 1, '#eef6f6'), x - cx * 7, WATER_Y + 9, z - cz * 7, rot, -0.25));
+    works.push(xf(sph(4, 8, 5, '#f4fbfb'), x - cx * 10, WATER_Y, z - cz * 10, 0, 0, 0, 1, 0.4, 1));
+  }
   out.plain.push(...works);
 
   // ---------------------------------------------------------------------------------------------- the dome's grid

@@ -304,8 +304,8 @@ export function makeKit(H) {
           { sx: R * 0.55, sy: R * (th ? 0.2 : 0.28), sz: R * 0.4, ry: -a, rz: -0.22 });
       }
     }
-    B.add('foliage', puff(det, seed % 6), cLt, 0, h * (th ? 0.88 : 0.9), 0, { sx: base * 0.22, sy: h * 0.07, sz: base * 0.22 });
-    B.add('foliage', puff(0, (seed + 3) % 6), cLt, 0, h * (th ? 0.94 : 0.97), 0, { sx: base * 0.1, sy: h * 0.05, sz: base * 0.1 });
+    B.add('foliage', puff(det, seed % 6), cLt, 0, h * (th ? 0.84 : 0.88), 0, { sx: base * (th ? 0.3 : 0.22), sy: h * 0.07, sz: base * (th ? 0.3 : 0.22) });
+    if (!th) B.add('foliage', puff(0, (seed + 3) % 6), cLt, 0, h * 0.94, 0, { sx: base * 0.1, sy: h * 0.05, sz: base * 0.1 });
     B.pop();
   }
   // a clump of shrub puffs (visual) of width w at (x, y, z)
