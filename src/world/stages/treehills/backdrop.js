@@ -12,7 +12,7 @@
 //   • distant Alterna works: clusters of green modules, greenhouse domes, a lift shaft and a pipe bundle climbing the
 //     cavern wall to the rim, sluices and a weir in the reservoir's walls
 //   • the live rotors of every turbine (the arena's two on the crowns included), one instanced mesh turning slowly
-import { TURBINE, T3 } from './plan.js';
+import { TURBINE, NTURBINE, T1, T3 } from './plan.js';
 
 export function buildBackdrop(kit) {
   const { THREE, box, cyl, sph, prep, xf, makeIsland, mulberry, fbm, polar, DEG, WATER_Y } = kit;
@@ -171,6 +171,8 @@ export function buildBackdrop(kit) {
   // the arena's crown turbines (props.js treehills_turbine builds the tower; the rotor turns here): the hub at the
   // nacelle's front, the rotor facing the meadow (−X on the east crown, +X on the west)
   for (const s of [1, -1]) rotorAt.push({ x: s * (TURBINE.x - 2.15), y: T3 + TURBINE.hub + 0.55, z: s * TURBINE.z, yaw: s > 0 ? -Math.PI / 2 : Math.PI / 2, s: 1, near: true });
+  // (and the nurseries' two, in the lobes' bays: facing the nursery like the crown's, −X on Alpha's, +X on Bravo's)
+  for (const s of [1, -1]) rotorAt.push({ x: s * (NTURBINE.x - 2.15), y: T1 + NTURBINE.hub + 0.55, z: s * NTURBINE.z, yaw: s > 0 ? -Math.PI / 2 : Math.PI / 2, s: 1, near: true });
 
   // rotors: one instanced mesh (three tapered blades + the spinner), turning slowly with a per-rotor phase
   {

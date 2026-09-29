@@ -73,9 +73,9 @@ export function registerWorks(D, H, T) {
   };
   // footbridge over the rill: a timber deck (local x along it, L long, 1.4 wide) on two steel beams, low rails
   D.treehills_footbridge = {
-    desc: 'little footbridge over the rill (local x along it)',
+    desc: 'little footbridge over the rill / the channel (local x along it; w wide, default 1.4)',
     build(B, o) {
-      const L = o.L ?? 2.6, w = 1.4, y = o.y ?? 0.08;
+      const L = o.L ?? 2.6, w = o.w ?? 1.4, y = o.y ?? 0.08;
       for (const z of [-w / 2 + 0.12, w / 2 - 0.12]) pbox(B, 'metal', K.steelDk, L, 0.12, 0.1, 0, y - 0.1, z);
       const nb = Math.round(L / 0.2);
       for (let i = 0; i < nb; i++) pbox(B, 'wood', i % 2 ? K.timber : shade(K.timber, 0.92), L / nb - 0.02, 0.05, w, -L / 2 + ((i + 0.5) * L) / nb, y - 0.025, 0);
