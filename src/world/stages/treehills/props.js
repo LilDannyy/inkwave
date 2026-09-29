@@ -65,6 +65,7 @@ export const PLACEMENTS = [
   { type: 'treehills_greenhouse', pos: [-8.5, T1, -34.8], rotY: 0, L: 6, R: 1.55, num: 'G-2', seed: 3 },
   { type: 'treehills_crates', pos: [10.2, T1, -31.4], rotY: 0.18, n: 3 },
   { type: 'treehills_solar', pos: [6.2, T1, -35.6], rotY: 0, w: 3.0 },
+  { type: 'treehills_planter', pos: [7.4, T1, -37.4], rotY: 0, w: 2.6, d: 0.7, h: 0.55, seed: 19 },
   { type: 'treehills_crates', pos: [-12.6, T1, -39.6], rotY: HP, n: 2 },
   { type: 'treehills_bench', pos: [-14.2, T1, -35.4], rotY: HP },
   { type: 'treehills_lamp', pos: [-14.3, T1, -26.6], rotY: HP },

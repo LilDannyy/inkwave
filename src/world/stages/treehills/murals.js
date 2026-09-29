@@ -58,7 +58,7 @@ export function drawMurals(g, R, kit) {
     g.lineTo(ax - 0.6 * PPM, y0 + 2.6 * PPM); g.lineTo(ax - 0.6 * PPM, y0 + 1.7 * PPM); g.lineTo(ax - 1.5 * PPM, y0 + 1.7 * PPM); g.closePath(); g.fill();
     g.font = font(46); g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText('BIOME 07', ax, y0 + 3.5 * PPM);
-    g.font = font(22); g.fillText('COMMONS MEADOW', ax, y0 + 4.4 * PPM);
+    g.font = font(18); g.fillText('COMMONS MEADOW', ax, y0 + 4.4 * PPM);
     g.fillRect(x0 + 0.4 * PPM, y0 + 5.0 * PPM, W - 0.8 * PPM, 0.08 * PPM);
     g.restore();
     out.push({ id: MURAL.label, x: x0, y: y0, w: W, h: H, place: [0.17, 5, 6.9, 6], fx: [0.9, 1] });
