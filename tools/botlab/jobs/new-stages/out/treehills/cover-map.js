@@ -1,4 +1,4 @@
-// Cover map (page script for tools/botlab/page.cjs, any stage): for every 1 m floor cell, the distance to the nearest
+// Cover map (page script for tools/botlab/page.cjs, any stage): for every 1 m floor cell, the distance to the nearest (on a 0.5 m lattice)
 // cover at least 0.9 m tall over that floor (solid level blocks and prop colliders incl. trees; railings — see-through —
 // and the pods' hedges — dynamic — don't count). Floor: a cell whose highest surface is the stage's own walkable
 // ground (a layout block that isn't a roof), above the water. Reports the share within 5 m of cover and the largest open
@@ -11,11 +11,15 @@
   const skip = window.__openSkip || (L.layout?.id === 'treehills' ? [[-6, 6, -5.5, 5.5]] : []);
   const x0 = Math.floor(B.minX), z0 = Math.floor(B.minZ), nx = Math.ceil(B.maxX) - x0, nz = Math.ceil(B.maxZ) - z0;
   const ids = [], P = new THREE.Vector3();
+  // kerbs and copings along the edges are the ground's trim (a lip of 0.14–0.3 m), not a level of their own
+  const EDGE = new Set(['kerb', 'coping', 'retaining', 'plaza-rim']);
+  // the ground: the highest top of the stage's own (drawn, non-roof) blocks; a cell is floor when nothing solid stands
+  // in the 0.3 m just above it (a prop, a roof's body) — overhead things (the canopy) don't count
   const floorAt = (x, z) => {
     let best = -Infinity, bb = null;
     for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, ids)) {
       const b = L.blocks[id];
-      if (!b.solid || b.dynamic || b.rail) continue;
+      if (!b.solid || b.dynamic || b.rail || b.hidden || b.roof || EDGE.has(b.tag)) continue;
       const n = b.axes[1]; if (n.y < 0.5) continue;
       const tx = b.center.x + n.x * b.half.y, ty = b.center.y + n.y * b.half.y, tz = b.center.z + n.z * b.half.y;
       const y = ty - (n.x * (x - tx) + n.z * (z - tz)) / n.y;
@@ -23,18 +27,21 @@
       P.set(x, y - 0.01, z);
       if (L.pointInBlock(b, P, 0.001)) { best = y; bb = b; }
     }
-    if (!bb || best < -1 || bb.hidden || bb.roof) return null;   // water, a prop's top, a roof: not floor
+    if (!bb || best < -1) return null;   // water
+    if (solidAt(x, best + 0.3, z)) return null;   // something stands on it here (a prop, a building): not floor
     return best;
   };
   const solidAt = (x, y, z) => {
     P.set(x, y, z);
-    for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, ids)) { const b = L.blocks[id]; if (b.solid && !b.dynamic && !b.rail && L.pointInBlock(b, P, 0)) return true; }
+    // (within 0.2 m of the sample: thin walls and posts between lattice points are found)
+    for (const id of L.queryBlocks(x - 0.21, z - 0.21, x + 0.21, z + 0.21, ids)) { const b = L.blocks[id]; if (b.solid && !b.dynamic && !b.rail && L.pointInBlock(b, P, 0.2)) return true; }
     return false;
   };
   const fy = new Float32Array(nx * nz).fill(NaN);
   for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const y = floorAt(x0 + i + 0.5, z0 + j + 0.5); if (y != null) fy[j * nx + i] = y; }
+  // cover is looked for on a 0.5 m lattice (thin walls and posts are found), out to RMAX
   const RMAX = 16, offs = [];
-  for (let dj = -RMAX; dj <= RMAX; dj++) for (let di = -RMAX; di <= RMAX; di++) { const d = Math.hypot(di, dj); if (d <= RMAX) offs.push([di, dj, d]); }
+  for (let dj = -2 * RMAX; dj <= 2 * RMAX; dj++) for (let di = -2 * RMAX; di <= 2 * RMAX; di++) { const d = Math.hypot(di, dj) / 2; if (d <= RMAX) offs.push([di / 2, dj / 2, d]); }
   offs.sort((a, b) => a[2] - b[2]);
   const bytes = new Uint8Array(nx * nz).fill(255);
   let n = 0, within5 = 0, maxOpen = 0, maxAt = null;

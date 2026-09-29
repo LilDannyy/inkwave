@@ -64,11 +64,19 @@ for sg in (1, -1):
         q = [(x + ux * w / 2 * i + vx * dd / 2 * k, z + uz * w / 2 * i + vz * dd / 2 * k) for i, k in [(-1, -1), (1, -1), (1, 1), (-1, 1)]]
         d.polygon([P(*a) for a in q], fill=(90, 170, 60, 120), outline=(40, 110, 30))
         d.ellipse([P(x + 0.45, z + 0.45), P(x - 0.45, z - 0.45)], fill=(40, 90, 40))
-# props (footprints as small dots / boxes)
+# props: their collision footprints (dump.mjs FP), trees' canopies outlined
+TC = {'tree': (40, 90, 50), 'clump': (50, 110, 60), 'shrubs': (60, 120, 60), 'boulder': (120, 118, 110), 'log': (120, 90, 60)}
 for p in J['pl']:
-    if p['type'] == 'pod': continue
-    x, y, z = p['pos']
-    d.rectangle([P(x + 0.3, z + 0.3), P(x - 0.3, z - 0.3)], fill=(60, 60, 70))
+    if p['type'] == 'pod' or not p.get('fp'): continue
+    x, y, z = p['pos']; f = p['fp']; c = TC.get(p['type'], (70, 72, 85))
+    if 'r' in f:
+        r = f['r']; d.ellipse([P(x + r, z + r), P(x - r, z - r)], fill=c)
+    else:
+        r = p['rotY']; ux, uz = math.cos(r), -math.sin(r); vx, vz = math.sin(r), math.cos(r); w, dd = f['w'], f['d']
+        q = [(x + ux * w / 2 * i + vx * dd / 2 * k, z + uz * w / 2 * i + vz * dd / 2 * k) for i, k in [(-1, -1), (1, -1), (1, 1), (-1, 1)]]
+        d.polygon([P(*a) for a in q], fill=c)
+    if f.get('canopy'):
+        rr = f['canopy']; d.ellipse([P(x + rr, z + rr), P(x - rr, z - rr)], outline=(30, 70, 40))
 for sp in J['pads']:
     x, y, z = sp; d.ellipse([P(x + 1.2, z + 1.2), P(x - 1.2, z - 1.2)], outline=(255, 255, 255), width=2)
     d.ellipse([P(x + 4.2, z + 4.2), P(x - 4.2, z - 4.2)], outline=(255, 255, 255, 120), width=1)
