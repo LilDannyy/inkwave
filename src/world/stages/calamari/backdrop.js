@@ -11,11 +11,11 @@ export function buildBackdrop(kit) {
   const { THREE, box, cyl, prep, xf, triGeo, makeIsland, fbm, smooth, WATER_Y, rnd } = kit;
   const R = rnd(4242);
   const out = { static: [], plain: [], terrain: [], instances: [], objects: [] };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ------------------------------------------------------------------------------------------ the land (SW frame)
-  // coast lines (Alpha's frame: the hill + west headland at x < −26.4, the co-op's back at z < −48.2)
-  const coastN = (x) => 9.4 + 0.3 * (-26.4 - x) + 2.2 * Math.sin(x * 0.13) + 1.2 * Math.sin(x * 0.41);   // headland's north shore (z)
+  // coast lines (Alpha's frame: the hill + west headland at x < −33.9, the co-op's back at z < −48.2)
+  const HX = -33.9;
+  const coastN = (x) => 9.4 + 0.3 * (HX - x) + 2.2 * Math.sin(x * 0.13) + 1.2 * Math.sin(x * 0.41);   // headland's north shore (z)
   const coastS = (z) => 11.2 + 0.62 * (-48.2 - z) + 1.8 * Math.sin(z * 0.17);                            // the south-east shore (x)
   // the land, as (height above the sea, or null = water / the stage): hard-clipped at the stage's walls, sloping into
   // the sea along the coves
@@ -23,26 +23,31 @@ export function buildBackdrop(kit) {
     let h = -Infinity;
     const n = fbm(x * 0.045 + 3.1, z * 0.045 - 1.7, 4), n2 = fbm(x * 0.11 - 7.0, z * 0.11 + 2.0, 3);
     // the hill + the west headland over the tunnel
-    if (x <= -26.4 && z <= coastN(x) + 6) {
-      const u = -26.4 - x, toSea = coastN(x) - z;
+    if (x <= HX && z <= coastN(x) + 6) {
+      const u = HX - x, toSea = coastN(x) - z;
       let e = 4.6 + 0.5 * Math.pow(u, 1.08) + 5.5 * smooth(13, 0, Math.abs(z)) + 0.12 * Math.max(0, -z - 10);
-      e *= clamp(toSea / 9, 0, 1) ** 0.8;
+      // (the shore slope widens with the hill's height: no sheer snow walls down to the sea at the headland's ends)
+      e *= smooth(-2, 14 + 1.1 * u, toSea);
       h = Math.max(h, e - (toSea < 0 ? 3 - toSea * 2 : 0));
     }
     // behind T2's west end and the hill houses (the hill houses stand in it)
-    if (x <= -24.4 && z <= -37.3) h = Math.max(h, 5.8 + 0.35 * (-37.3 - z) + 0.4 * (-24.4 - x));
+    if (x <= HX && z <= -37.3) h = Math.max(h, 5.8 + 0.35 * (-37.3 - z) + 0.4 * (HX - x));
     if (x <= -9.1 && z <= -40.6) h = Math.max(h, 4.2 + 0.4 * (-40.6 - z) + 0.12 * (-9.1 - x));
     // behind the co-op (low first — the warehouse's back yard — then climbing), sloping into the south-east cove
     if (z <= -48.2 && x <= coastS(z) + 6) {
       const v = -48.2 - z, toSea = coastS(z) - x;
       let e = 1.8 + (v > 7 ? 0.62 * Math.pow(v - 7, 1.05) : 0) + 0.05 * Math.max(0, -x);
-      e *= clamp(toSea / 8, 0, 1) ** 0.8;
+      e *= smooth(-2, 8 + 1.1 * e, toSea);   // (a shore slope as wide as the hill is high: no snow cliff in the spawn's view)
       h = Math.max(h, e - (toSea < 0 ? 3 - toSea * 2 : 0));
     }
     if (!Number.isFinite(h)) return null;
     const far = Math.hypot(x + 20, z + 30);
     h += (n - 0.5) * 5 * smooth(8, 30, far) + (n2 - 0.5) * 1.6 + 0.08 * Math.max(0, far - 60);
-    return Math.min(h, 62);
+    // far out: a soft cap (no flat table-top) and the land sinking into the sea before the far grid's outer edges
+    // (x −200, z −220), so no square-cut plateau shows through the haze behind the hills
+    if (h > 38) h = 38 + (h - 38) * 0.4;
+    const fade = smooth(0, 70, Math.min(x + 200, z + 220));
+    return Math.min(h * fade - 5 * (1 - fade), 62);
   }
   // heightfield mesh over a rectangle (grid step s), clipped to the land; vertex colour = winter meadow tint
   function heightfield(x0, x1, z0, z1, s, tint) {
@@ -122,7 +127,7 @@ export function buildBackdrop(kit) {
       const x = x0 + R() * (x1 - x0), z = z0 + R() * (z1 - z0), h = landH(x, z);
       if (h == null || h < minH || h > maxH) continue;
       // keep clear of the stage (the walls) and steep cliff edges
-      if (x > -28.5 && z > -40) continue;
+      if (x > HX - 1.6 && z > -40) continue;
       if (z > -50 && x > -11) continue;
       const hx = landH(x + 1.5, z), hz = landH(x, z + 1.5);
       if (hx == null || hz == null || Math.abs(hx - h) > 1.6 || Math.abs(hz - h) > 1.6) continue;
@@ -161,7 +166,7 @@ export function buildBackdrop(kit) {
   const houseSpots = [];
   for (let k = 0, tries = 0; k < 34 && tries < 2000; tries++) {
     const x = -62 + R() * 72, z = -92 + R() * 56;
-    if (!(z < -51 || x < -30)) continue;
+    if (!(z < -51 || x < HX - 3.5)) continue;
     const h = landH(x, z);
     if (h == null || h < 2 || h > 26) continue;
     if (houseSpots.some(([a, b]) => Math.hypot(a - x, b - z) < 7.5)) continue;
@@ -179,7 +184,7 @@ export function buildBackdrop(kit) {
   // along the coast road over the headland (the line of poles tells the road)
   const poleGeo = mergeGeos([xf(cyl(0.12, 0.16, 8, 6, '#5d4a3c'), 0, 4, 0), xf(box(1.6, 0.14, 0.14, '#5d4a3c'), 0, 7.4, 0), xf(box(1.2, 0.12, 0.12, '#5d4a3c'), 0, 6.8, 0), xf(box(0.3, 0.1, 0.3, '#eef3f8'), 0, 8.05, 0)]);
   const poles = [];
-  for (let k = 0; k < 9; k++) { const x = -34 - k * 9, z = coastN(x) - 6 - Math.sin(k) * 1.5, h = landH(x, z); if (h != null) poles.push([x, WATER_Y + h - 0.3, z, 1, 0.4]); }
+  for (let k = 0; k < 8; k++) { const x = HX - 7.5 - k * 9, z = coastN(x) - 6 - Math.sin(k) * 1.5, h = landH(x, z); if (h != null) poles.push([x, WATER_Y + h - 0.3, z, 1, 0.4]); }
   out.instances.push({ geo: poleGeo, list: [...poles, ...poles.map(([x, y, z, s, r]) => [-x, y, -z, s, r + Math.PI])] });
   // wires between the poles
   for (const sg of [1, -1]) for (let k = 0; k < poles.length - 1; k++) {
@@ -193,7 +198,7 @@ export function buildBackdrop(kit) {
   // ------------------------------------------------------------------------------------------ the outer breakwater
   // a long concrete-block breakwater guarding the cove, with a white harbour light at its head (blinks at dusk)
   const bw = [];
-  const A = [30, -16], Bp = [46, -40], L = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]), ang = Math.atan2(Bp[0] - A[0], Bp[1] - A[1]);
+  const A = [38, -19], Bp = [53, -43], L = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]), ang = Math.atan2(Bp[0] - A[0], Bp[1] - A[1]);
   bw.push(xf(box(3.4, 3.0, L, '#9a978f'), (A[0] + Bp[0]) / 2, WATER_Y + 1.2, (A[1] + Bp[1]) / 2, ang));
   for (let k = 0; k < 26; k++) {
     const t = R(), x = A[0] + (Bp[0] - A[0]) * t, z = A[1] + (Bp[1] - A[1]) * t, s = 0.8 + R() * 0.6, side = R() > 0.5 ? 1 : -1;
@@ -218,7 +223,7 @@ export function buildBackdrop(kit) {
   const floes = [];
   for (let k = 0; k < 60; k++) {
     const a = -0.9 + R() * 1.4, r = 36 + R() * 70, x = Math.cos(a) * r + 6, z = -Math.sin(a) * r * 0.9 - 30;
-    if ((x < 30 && z > -60) || z > -14) continue;
+    if ((x < 38 && z > -60) || z > -14) continue;
     floes.push([x, WATER_Y + 0.02, z, 1.2 + R() * 3.5, R() * 6.28]);
   }
   out.instances.push({ geo: floe, list: [...floes, ...floes.map(([x, y, z, s, r]) => [-x, y, -z, s, r])] });

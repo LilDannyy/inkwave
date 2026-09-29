@@ -223,13 +223,15 @@ export function registerBuildings(D, H, KIT) {
     build(B, o) {
       B.aoBase = null;
       const W = o.w, Dd = o.d, h = o.h, ds = o.door ?? 1;
+      // face lengths: the entrance face, the one after it (clockwise) … (items keep ~0.3 m off the corner posts)
+      const fl = (side) => (side % 2 === 0 ? W : Dd), L0 = fl(ds) / 2, L1 = fl((ds + 1) % 4) / 2, L2 = fl((ds + 2) % 4) / 2, L3 = fl((ds + 3) % 4) / 2;
       sub(B, 'calamari_house', 0, 0, 0, 0, {
         w: W, d: Dd, h, style: 'plaster', roof: { f: 0.45, pitch: 0.62, ov: 0.9, alongX: false },
         faces: {
-          [ds]: [{ t: 'door', x: 0, w: 1.8, noren: { c: K.indigo, n: 3, L: 0.8, mark: 'onsen' } }, { t: 'sign', text: 'BATHS', x: 0, at: 2.62, h: 0.26, board: K.cedarDk, c: K.cream }, { t: 'chochin', x: -1.5, at: 2.2 }, { t: 'chochin', x: 1.5, at: 2.2 }, { t: 'win', x: -2.6, w: 0.9, h: 0.9, sill: 1.2 }, { t: 'win', x: 2.6, w: 0.9, h: 0.9, sill: 1.2 }],
-          [(ds + 1) % 4]: [{ t: 'win', x: -2, w: 1.6, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'win', x: 1.2, w: 1.6, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'kerosene', x: 3.0 }],
-          [(ds + 2) % 4]: [{ t: 'wood', x: -1.2, w: 2.4 }, { t: 'pipe', x: 2.8 }, { t: 'meter', x: 1.6 }],
-          [(ds + 3) % 4]: [{ t: 'win', x: -2, w: 1.6, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'win', x: 1.2, w: 1.6, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'pipe', x: -3.1 }],
+          [ds]: [{ t: 'door', x: 0, w: 1.8, noren: { c: K.indigo, n: 3, L: 0.8, mark: 'onsen' } }, { t: 'sign', text: 'BATHS', x: 0, at: 2.62, h: 0.26, board: K.cedarDk, c: K.cream }, { t: 'chochin', x: -1.35, at: 2.2 }, { t: 'chochin', x: 1.35, at: 2.2 }, { t: 'win', x: -(L0 - 0.75), w: 0.8, h: 0.9, sill: 1.2 }, { t: 'win', x: L0 - 0.75, w: 0.8, h: 0.9, sill: 1.2 }],
+          [(ds + 1) % 4]: [{ t: 'win', x: -L1 * 0.55, w: 1.5, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'win', x: L1 * 0.3, w: 1.5, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'kerosene', x: L1 - 0.65 }],
+          [(ds + 2) % 4]: [{ t: 'wood', x: -L2 * 0.45, w: 2.2 }, { t: 'pipe', x: L2 - 0.4 }, { t: 'meter', x: L2 * 0.55 }],
+          [(ds + 3) % 4]: [{ t: 'win', x: -L3 * 0.55, w: 1.5, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'win', x: L3 * 0.3, w: 1.5, h: 0.8, sill: 1.9, sash: true, lit: 0.9 }, { t: 'pipe', x: -(L3 - 0.3) }],
         },
         snow: [(ds + 1) % 4, (ds + 3) % 4],
       });
