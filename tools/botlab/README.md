@@ -31,6 +31,10 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
   - per weapon: players, splats dealt, deaths, average turf
   - specials and super jumps
   - Zone Control: objective stats
+  - sight honesty (ground truth, sampled every 0.25 s while a bot fights): how much of the fight its foe is out of sight
+    (a wall between the bot's eyes and the foe's chest and head), how much of that its aim is still on the foe
+    (tracking through walls), how much trigger time goes at a foe out of sight (shooting at nothing); the bots' own
+    cost (BotBrain.update ms per simulated second) and their perception counters (`SIGHT_STATS`, src/game/botSight.js)
   - console warnings/errors
   - a final `RESULT_JSON {…}` line for scripts
 - **Scratch files** (profiles, locks) go to `.botlab/` (git-ignored); set `BOTLAB_OUT` to move them.
