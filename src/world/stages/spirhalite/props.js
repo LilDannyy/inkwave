@@ -71,25 +71,40 @@ const RAW = [
   { type: 'spirhalite_rearpad', pos: [10.5, 0, -51.8], rotY: 0.12, w: 12, d: 10, y: 1.0 },
   { type: 'spirhalite_helicopter', pos: [11.0, 1.0, -52.0], rotY: 0.2 },
 
-  // ================= Deep Cut's camp in the camp islet's dune hollow (Alpha's side zone: x −22.5…−14, z −39.2…−32.6)
+  // ================= Deep Cut's camp in the camp islet's dune hollow
   { type: 'spirhalite_tent', pos: [-27.4, 0, -35.2], rotY: P / 2, w: 2.6, d: 3.4, h: 2.0 },
   { type: 'spirhalite_tent', pos: [-27.0, 0, -39.3], rotY: P / 2 - 0.3, w: 2.2, d: 2.8, h: 1.7, variant: 1 },
   { type: 'spirhalite_tarp', pos: [-24.3, 0, -37.7], rotY: 0.05, w: 3.4, d: 3.0, h: 2.35 },
   { type: 'spirhalite_table', pos: [-24.3, 0, -37.8], rotY: 0.05 },
   { type: 'spirhalite_crates', pos: [-15.6, 0, -34.2], rotY: 0.2, layout: [[0, 0, 0, 0], [1.02, 0.06, 0, 0.05]] },
-  { type: 'spirhalite_crates', pos: [-18.6, 0, -38.2], rotY: -0.4, layout: [[0, 0, 0, 0]] },
+  { type: 'spirhalite_crates', pos: [-18.6, 0, -37.5], rotY: -0.4, layout: [[0, 0, 0, 0]] },
   { type: 'spirhalite_drums', pos: [-30.6, 0, -33.4], rotY: 1.2 },
   { type: 'spirhalite_generator', pos: [-17.4, 0, -35.9], rotY: 0.3, cable: [[-0.6, 0], [-2.4, -0.6], [-5.2, -1.4]] },
   { type: 'spirhalite_mast', pos: [-31.4, 0, -37.0], rotY: 0.4, h: 7.5 },
   { type: 'spirhalite_lantern', pos: [-25.4, 0, -35.9], rotY: 0.2, to: [1.2, -3.6] },
   { type: 'spirhalite_campfire', pos: [-21.2, 0, -34.4], rotY: 0.4 },
-  { type: 'spirhalite_debris', pos: [-14.6, 0, -38.6], rotY: 2.6 },
-  { type: 'spirhalite_lantern', pos: [-10.9, 1.3, -41.5], rotY: P },
+  { type: 'spirhalite_debris', pos: [-14.6, 0, -37.4], rotY: 2.6 },
+  { type: 'spirhalite_lantern', pos: [-10.9, 1.3, -40.5], rotY: P },
   { type: 'spirhalite_flagpole', pos: [-29.8, 0, -32.9], rotY: 0, h: 4.4 },
   { type: 'spirhalite_signposts', pos: [-10.34, 0, -35], rotY: P / 2, w: 2.8 },
   { type: 'spirhalite_survey', pos: [-24.6, 0, -27.9], rotY: 0.7 },
   { type: 'spirhalite_stakes', pos: [-21.2, 0, -26.1], rotY: 0.1, w: 2.4, d: 1.4, n: 3 },
   { type: 'spirhalite_worklight', pos: [-32.0, 0, -27.0], rotY: 0.3, h: 2.3, tilt: 0.45 },
+
+  // ================= the pillar headland (Alpha's side zone): Deep Cut's dig at the pillar's foot — survey stakes and
+  // a theodolite on the tombolo, a lantern by the west pool
+  { type: 'spirhalite_stakes', pos: [-4.6, 0, -27.0], rotY: 0.2, w: 2.4, d: 1.4, n: 3 },
+  { type: 'spirhalite_survey', pos: [3.5, 0, -25.3], rotY: 2.6 },
+  { type: 'spirhalite_lantern', pos: [-6.3, 0, -26.1], rotY: 0.6 },
+  { type: 'spirhalite_grass', pos: [4.1, 0, -19.6], n: 4, r: 0.6, seed: 19 },
+
+  // ================= the Arch spit: a boulder and a washed-up tarp heap as cover along its edges, a glass float, flora
+  { type: 'spirhalite_rock', pos: [15.25, 0, -17.6], rotY: 0.4, w: 1.1, h: 0.8, seed: 7, moss: true },
+  { type: 'spirhalite_debris', pos: [12.0, 0, -13.0], rotY: 1.62 },
+  { type: 'spirhalite_float', pos: [15.3, 0, -11.9], rotY: 0, r: 0.42 },
+  { type: 'spirhalite_grass', pos: [12.1, 0, -20.2], n: 5, r: 0.8, seed: 22 },
+  { type: 'spirhalite_pompoms', pos: [15.0, 0, -22.4], n: 5, seed: 23 },
+  { type: 'spirhalite_kelp', pos: [11.2, 0, -16.6], rotY: 1.5, seed: 7, L: 1.3 },
 
   // ================= the helipad islet: fuel drums and a cargo stack on the high dune, palms and shrubs on the tail
   { type: 'spirhalite_drums', pos: [15.0, 1.3, -39.6], rotY: 0.3 },
@@ -112,7 +127,7 @@ const RAW = [
   // ================= the camp islet's corners: palms, a shrub, washed-up debris
   { type: 'spirhalite_palm', pos: [-33.2, 0, -28.8], rotY: 0, h: 3.8, lean: 1.0, seed: 12 },
   { type: 'spirhalite_palm', pos: [-20.9, 0, -22.4], rotY: 0, h: 3.6, lean: 0.9, seed: 21 },   // (the neck's mouth)
-  { type: 'spirhalite_palm', pos: [-15.4, 1.3, -41.0], rotY: 0, h: 3.2, lean: 0.8, seed: 5 },
+  { type: 'spirhalite_palm', pos: [-15.4, 1.3, -40.1], rotY: 0, h: 3.2, lean: 0.8, seed: 5 },
   { type: 'spirhalite_shrub', pos: [-29.2, 0, -38.6], rotY: 0.5, w: 1.5, h: 0.9, seed: 4 },
   { type: 'spirhalite_debris', pos: [-33.6, 0, -33.2], rotY: 1.5 },
   { type: 'spirhalite_buoy', pos: [-24.9, 0, -42.2], rotY: 2.2, variant: 0 },
@@ -123,8 +138,8 @@ const RAW = [
   { type: 'spirhalite_stakes', pos: [4.0, 0, 3.0], rotY: -0.44, w: 2.4, d: 1.4, n: 3 },
 
   // ================= flora on the sand and the dunes: pompom flowers, dune grass, kelp on the beaches
-  { type: 'spirhalite_pompoms', pos: [-21.4, 2.5, -41.2], n: 6, seed: 13 },
-  { type: 'spirhalite_grass', pos: [-13.4, 1.3, -41.0], n: 6, r: 1.0, seed: 12 },
+  { type: 'spirhalite_pompoms', pos: [-21.4, 2.5, -40.1], n: 6, seed: 13 },
+  { type: 'spirhalite_grass', pos: [-13.4, 1.3, -39.9], n: 6, r: 1.0, seed: 12 },
   { type: 'spirhalite_grass', pos: [-22.0, 1.3, -7.4], n: 5, r: 0.8, seed: 14 },
   { type: 'spirhalite_pompoms', pos: [-20.8, 2.5, -6.6], n: 6, seed: 11 },
   { type: 'spirhalite_pompoms', pos: [5.2, 1.3, -28.6], n: 7, seed: 8 },

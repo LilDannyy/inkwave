@@ -85,6 +85,18 @@
   const tC = nav.nearest(V(0, 0, 0), 0.8), per = {};
   const ROUTES = window.__NAV_ROUTES || { 'Arch spit': ['bridgeN', 'neck', 'causeway'], 'pillar headland': ['eastBridge', 'neck', 'causeway'], 'neck (inner bend)': ['eastBridge', 'bridgeN', 'causeway'], 'causeway (outer bend)': ['eastBridge', 'bridgeN', 'neck'] };
   for (const [nm, sh] of Object.entries(ROUTES)) { const p = dijkstra(s, tC, 2.0, shut(...sh)); per[nm] = p ? measure(p) : 'NO PATH'; }
+  // over the pillar's tiers: via a node on the plinth's top (1.3) and one on the tier (2.5)
+  {
+    const onTop = (lo, hi) => nodes.filter((n) => nav.valid[n.id] && Math.hypot(n.x - PX, n.z - PZ) < 4.2 && n.y > lo && n.y < hi).map((n) => n.id);
+    let best = null;
+    for (const mid of [...onTop(1.1, 1.5), ...onTop(2.3, 2.7)]) {
+      const a = dijkstra(s, mid, 2.0, shut('eastBridge', 'neck', 'causeway')), b = a && dijkstra(mid, tC, 2.0, shut('eastBridge', 'neck', 'causeway'));
+      if (!a || !b) continue;
+      const p = [...a, ...b.slice(1)], m = measure(p);
+      if (!best || m.cost < best.cost) best = { ...m, via: [nodes[mid].x, +nodes[mid].y.toFixed(1), nodes[mid].z] };
+    }
+    per['over the pillar tiers (via its top)'] = best || 'NO PATH';
+  }
   out.push({ name: 'Alpha pad → centre, one route at a time (costs as the bots see them)', ok: Object.values(per).every((v) => v !== 'NO PATH'), info: per });
   window.__navSummary = { s };
 
