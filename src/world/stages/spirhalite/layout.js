@@ -243,7 +243,7 @@ const SPIRHALITE = {
     O(-11.6, -50.4, 2.0, 1.1, 0, 1.1, -6, stone({ tag: 'fallen-drum' })),
 
     // ================= the spit's root (the stretch): a low dune along it
-    ...dune(16.2, -36.4, 4.2, 0.9, 76, { crest: 0.8 }),
+    ...dune(16.8, -36.4, 4.2, 0.9, 76, { crest: 0.8 }),
   ],
   // Zone Control: the sandbar under the arch; the pillar headland (Alpha's): the sand round the plinth and the plinth's
   // top (the tier above is out of the count), the tombolo to the steps' foot. ~100 m²; its floor's centroid (−1.5,
