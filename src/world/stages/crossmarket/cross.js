@@ -12,7 +12,7 @@ export function registerCross(D, H, KIT) {
   function column(B, x, z, y0, y1) {
     const H = y1 - y0;
     B.box('paint', STD, 0.52, 0.14, 0.52, x, y0 + 0.07, z, { r: 0.02 });
-    B.lathe('paint', ST, [[0.25, 0], [0.26, 0.06], [0.22, 0.14], [0.2, 0.2], [0.19, H - 0.36], [0.17, H - 0.3], [0.22, H - 0.2], [0.24, H - 0.16], [0.0, H - 0.16]], x, y0 + 0.14, z, { seg: 12 });
+    B.lathe('paint', ST, [[0.25, 0], [0.26, 0.06], [0.22, 0.14], [0.2, 0.2], [0.19, H - 0.36], [0.17, H - 0.3], [0.22, H - 0.2], [0.24, H - 0.16], [0.0, H - 0.16]], x, y0 + 0.14, z, { seg: 10 });
     B.box('paint', STL, 0.54, 0.14, 0.54, x, y1 - 0.07, z, { r: 0.02 });
   }
 
@@ -46,10 +46,10 @@ export function registerCross(D, H, KIT) {
       }
       for (const s of [-1, 1]) {
         B.push(0, T + 0.38, s * (hd + 0.1), s > 0 ? 0 : PI);
-        letters(B, 'BUTTER CROSS', { h: 0.17, x: 0, y: -0.085, z: 0.012, c: K.goldDk, dep: 0.02, wt: 0.2, track: 0.16, mat: 'paint' });
+        letters(B, 'BUTTER CROSS', { h: 0.17, x: 0, y: -0.085, z: 0.012, c: K.goldDk, flat: true, wt: 0.2, track: 0.16 });
         B.pop();
         B.push(s * (hw + 0.1), T + 0.38, 0, s > 0 ? HP : -HP);
-        letters(B, 'A.D. 1683', { h: 0.15, x: 0, y: -0.075, z: 0.012, c: K.goldDk, dep: 0.02, wt: 0.2, track: 0.14, mat: 'paint' });
+        letters(B, 'A.D. 1683', { h: 0.15, x: 0, y: -0.075, z: 0.012, c: K.goldDk, flat: true, wt: 0.2, track: 0.14 });
         B.pop();
       }
       // ---- the ceiling: boarded soffit on joists, a hanging iron ring for the market scales

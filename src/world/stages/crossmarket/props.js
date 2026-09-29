@@ -267,7 +267,7 @@ const SLICE = [
   //      on Exchange Square; Herring Passage through it under the upper floors (a 4 m vault: the tower's way)
   house(-15, -8, -53, -47.2, 8.0, { style: 'render', trim: '#efe6d3', shut: '#5d7f9c', boxes: true }, {
     e: { shops: [{ x0: -2.6, x1: 2.6, name: 'APOTHECARY', fascia: FAS.teal, awn: AWN.teal, door: 'l', goods: 'tins', sign: 'key' }], balc: [1] },
-    w: { shops: [{ x0: -2.6, x1: 2.6, name: 'ROPE & NETS', fascia: FAS.brown, rolled: '#8a6340', door: 'c', goods: 'tins' }] },
+    w: { door: [-1.2, 1.0], gwin: [1.2], plaque: [2.6, 3.05, 'FISH LANE'] },
     s: { shops: [{ x0: -3.0, x1: 3.0, name: 'CLOCKMAKER', fascia: FAS.black, awn: AWN.plum, door: 'r', goods: 'tins' }], plaque: [3.2, 3.05, 'EXCHANGE SQUARE'] },
   }, { kind: 'gable', ry: Math.PI / 2, c: '#5b646e', pitch: 0.6, wall: '#d9ae6c', chimneys: [[-1.8, 0, 2]], dormers: [[0, 1]] }),
   house(-15, -8, -43.2, -39, 7.8, { style: 'render', trim: '#efe6d3', shut: '#5d7f9c' }, {
@@ -286,42 +286,42 @@ const SLICE = [
   //      street, the tea merchant on Exchange Square; Butter Row open between them
   house(8, 15, -53, -47.2, 8.4, { style: 'render', trim: '#f1ebdf', shut: '#4f7a5a', boxes: true }, {
     w: { shops: [{ x0: -2.6, x1: 2.6, name: 'BUTTER & EGGS', fascia: FAS.green, awn: AWN.green, door: 'r', goods: 'bread' }], balc: [0] },
-    e: { shops: [{ x0: -2.4, x1: 2.4, name: 'POULTERER', fascia: FAS.wine, awn: AWN.red, door: 'l', goods: 'tins' }] },
+    e: { door: [1.4, 1.0], gwin: [-1.2] },
     s: { shops: [{ x0: -3.0, x1: 3.0, name: 'TEA & COFFEE', fascia: FAS.black, awn: AWN.ochre, door: 'c', goods: 'cups', sign: 'cup' }] },
-    n: { door: [-1.6, 1.0], gwin: [1.4], plaque: [2.8, 3.05, 'BUTTER ROW'] },
+    n: { door: [-1.6, 1.0], gwin: [1.4], floors: [2.6], plaque: [2.8, 3.05, 'BUTTER ROW'] },
   }, { kind: 'hip', c: '#b0634a', pitch: 0.55, chimneys: [[1.5, 1.0, 2]] }),
   house(8, 15, -43.2, -39, 7.2, { style: 'ashlar', trim: '#efe6d3' }, {
     w: { shops: [{ x0: -1.7, x1: 1.7, name: 'CHEESE', fascia: FAS.brown, awn: AWN.ochre, door: 'c', goods: 'tins' }] },
     n: { shops: [{ x0: -3.0, x1: 3.0, name: 'DAIRY', fascia: FAS.navy, awn: AWN.blue, door: 'l', goods: 'bread' }] },
-    e: { gwin: [0] },
-    s: { gwin: [-1.8, 1.8] },
+    e: { gwin: [0], floors: [2.6] },
+    s: { gwin: [-1.8, 1.8], floors: [2.6] },
   }, { kind: 'hip', c: '#5b646e', pitch: 0.58, chimneys: [[-2.0, 0.4, 2]] }),
   // ---- the Butter Market: the arcaded range on the harbour (the flank street's covered side), the mirror of the Fish
   //      Lane arcade: dairy counters under the arches, the provision shops along its back wall
   house(19.4, 24, -53, -34.2, 8.2, { style: 'ashlar', trim: '#efe6d3', shut: '#8a948f' }, {
-    w: { floors: [3.1, 5.8], plinth: false, pipe: false, bays: 7, balc: [1, 3, 5], noBand: true },
-    e: { floors: [3.1, 5.8], plinth: false, bays: 6 },
-    n: { floors: [3.1, 5.8], plinth: false, plaque: [0, 3.0, 'THE BUTTER MARKET'] },
-    s: { floors: [3.1, 5.8], plinth: false },
+    w: { floors: [3.1, 5.8], plinth: false, pipe: false, bays: 6, balc: [1, 4], noBand: true },
+    e: { floors: [3.1], plinth: false, bays: 4 },
+    n: { floors: [3.1], plinth: false, plaque: [0, 3.0, 'THE BUTTER MARKET'] },
+    s: { floors: [3.1], plinth: false },
   }, { kind: 'gable', ry: Math.PI / 2, c: '#5b646e', pitch: 0.58, wall: '#e8dfcc', chimneys: [[-6, 0, 2], [5, 0, 3]] }),
   house(23.2, 24, -53, -34.2, 2.8, { style: 'ashlar', cornice: 'none', plinth: false, pipe: false, noBand: true }, {
-    w: { shops: [{ x0: -8.4, x1: -2.2, name: 'CREAMERY', fascia: FAS.green, door: 'c', goods: 'bread' }, { x0: 1.8, x1: 8.4, name: 'PROVISIONS', fascia: FAS.wine, door: 'l', goods: 'tins' }] },
+    w: { shops: [{ x0: -8.4, x1: -2.2, name: 'CREAMERY', fascia: FAS.green, door: 'c', goods: 'bread' }], door: [5.0, 1.1], gwin: [2.4, 7.4] },
   }),
   { type: 'crossmarket_arcade', pos: [19.8, 0, -43.6], rotY: P, n: 6, pitch: 3.6, depth: 3.8, name: 'BUTTER MARKET' },
   { type: 'crossmarket_stall', pos: [22.5, 0.15, -49.6], rotY: -P / 2, w: 2.4, d: 0.95, kind: 'cheese', canopy: false },
-  { type: 'crossmarket_stall', pos: [22.5, 0.15, -42.4], rotY: -P / 2, w: 2.4, d: 0.95, kind: 'bread', canopy: false },
+  { type: 'crossmarket_casks', pos: [22.3, 0.15, -42.4], rotY: P / 2 },
   { type: 'crossmarket_crates', pos: [22.6, 0.15, -37.2], rotY: 0.1, kind: 'veg', variant: 0 },
   // ---- the Fish Lane side: the net loft, the smoked-fish shop, the harbour steps in the gap between them
   house(-24, -19.4, -53, -45, 8.2, { style: 'brick', trim: '#e4d7bd', archC: '#8e5641' }, {
     e: { shops: [{ x0: -3.4, x1: 3.4, name: 'NETS & TACKLE', fascia: FAS.navy, rolled: '#3f5f86', door: 'r', goods: 'fish', sign: 'fish' }], floors: [3.1, 5.8] },
-    n: { gwin: [0], floors: [3.1, 5.8] },
-    s: { shops: [{ x0: -1.9, x1: 1.9, name: 'SAILMAKER', fascia: FAS.black, door: 'c', goods: 'tins' }] },
-    w: { floors: [3.1, 5.8], plinth: false },
+    n: { gwin: [0], floors: [3.1] },
+    s: { door: [0, 1.4] },
+    w: { floors: [3.1], plinth: false, bays: 2 },
   }, { kind: 'gable', ry: Math.PI / 2, c: '#5b646e', pitch: 0.6, wall: '#b8765c', chimneys: [[-3, 0, 2]] }),
   house(-24, -19.4, -41, -36, 7.4, { style: 'ashlar', trim: '#efe6d3', shut: '#8a948f' }, {
     e: { shops: [{ x0: -1.9, x1: 1.9, name: 'SMOKED FISH', fascia: FAS.black, awn: AWN.red, door: 'l', goods: 'fish' }] },
     s: { gwin: [0] },
-    w: { floors: [3.1, 5.8], plinth: false },
+    w: { floors: [3.1], plinth: false, bays: 1 },
   }, { kind: 'gable', ry: Math.PI / 2, c: '#b0634a', pitch: 0.6, wall: '#e8dfcc', chimneys: [[1.2, 0, 2]] }),
   { type: 'crossmarket_railing', pos: [-23.9, 0, -45], rotY: -P / 2, length: 1.4 },
   { type: 'crossmarket_railing', pos: [-23.9, 0, -42.4], rotY: -P / 2, length: 1.4 },
@@ -329,9 +329,11 @@ const SLICE = [
   { type: 'crossmarket_pots', pos: [-21.2, 0, -44.2], rotY: 0.3, variant: 0 },
   { type: 'crossmarket_pots', pos: [-20.4, 0, -41.8], rotY: -0.5, variant: 1 },
   // ---- the open band along the butcher's, the bakery and the roof terrace: stalls, the kiosk, tables
-  { type: 'crossmarket_stall', pos: [-11.6, 0, -32.8], rotY: 0, w: 3.0, d: 1.3, kind: 'cheese' },
+  { type: 'crossmarket_crates', pos: [-11.6, 0, -32.8], rotY: 0.1, kind: 'veg', variant: 2 },
+  { type: 'crossmarket_sacks', pos: [-10.2, 0, -33.4], rotY: 0.5, variant: 1 },
   { type: 'crossmarket_stall', pos: [6.8, 0, -32.4], rotY: P / 2, w: 3.0, d: 1.3, kind: 'fruit' },
-  { type: 'crossmarket_kiosk', pos: [1.6, 0, -33.4], rotY: P },
+  { type: 'crossmarket_bench', pos: [1.6, 0, -33.4], rotY: P },
+  { type: 'crossmarket_tubs', pos: [0.2, 0, -33.6], rotY: 0, count: 1, variant: 1 },
   { type: 'cafeset', pos: [-15.4, 0, -34.2], rotY: 0.6, variant: 0, color: '#3f5f86' },
   { type: 'crossmarket_barrow', pos: [-3.0, 0, -37.0], rotY: 0.3, kind: 'veg', notIn: TC },
   { type: 'crossmarket_crates', pos: [11.2, 0, -37.6], rotY: 0.2, kind: 'fruit', variant: 2, notIn: TC },
@@ -342,7 +344,7 @@ const SLICE = [
   { type: 'stringlights', pos: [-3.7, 0, -31.4], rotY: 0, length: 9.7, height: 5.25, sag: 0.55, count: 16 },
   // ---- the square round the cross: dairy stalls, lamps, bollards, a bench
   { type: 'crossmarket_stall', pos: [-5.6, 0, -40.7], rotY: 0, w: 2.6, d: 1.2, kind: 'cheese' },
-  { type: 'crossmarket_stall', pos: [5.6, 0, -40.7], rotY: 0, w: 2.6, d: 1.2, kind: 'bread' },
+  { type: 'crossmarket_crates', pos: [5.4, 0, -40.8], rotY: 0.2, kind: 'fruit', variant: 0 },
   { type: 'crossmarket_stall', pos: [-5.0, 0, -50.8], rotY: P, w: 2.6, d: 1.2, kind: 'flowers' },
   { type: 'crossmarket_casks', pos: [5.2, 0, -51.2], rotY: 0.2 },
   { type: 'crossmarket_lamp', pos: [-6.2, 0, -52.5] },
@@ -350,15 +352,14 @@ const SLICE = [
   { type: 'crossmarket_bench', pos: [0, 0, -49.3], rotY: P },
   { type: 'crossmarket_aboard', pos: [7.4, 0, -46.9], rotY: -P / 2 + 0.3, text: 'FRESH BUTTER' },
   // ---- Fish Lane, Butter Row, the flank street
-  { type: 'crossmarket_stall', pos: [-17.2, 0, -50.4], rotY: P / 2, w: 2.4, d: 1.1, kind: 'fish' },
-  { type: 'crossmarket_barrow', pos: [-16.2, 0, -39.4], rotY: -P / 2, kind: 'fish', variant: 1, notIn: TC },
+  { type: 'crossmarket_crates', pos: [-17.4, 0, -50.4], rotY: 0.3, kind: 'fish', variant: 0 },
+  { type: 'crossmarket_pots', pos: [-15.8, 0, -39.6], rotY: 0.4, variant: 0, notIn: TC },
   { type: 'crossmarket_crates', pos: [-18.7, 0, -47.3], rotY: 0.3, kind: 'fish', variant: 1 },
   { type: 'crossmarket_bin', pos: [11.6, 0, -46.85] },
   { type: 'crossmarket_casks', pos: [17.4, 0, -41.2], rotY: 0 },
   { type: 'crossmarket_crates', pos: [14.0, 0, -37.2], rotY: 0.2, kind: 'veg', variant: 1, notIn: TC },
   { type: 'bunting', pos: [15.05, 0, -41.0], rotY: 0, length: 4.3, height: 4.3, posts: false },
   { type: 'bunting', pos: [-19.3, 0, -48.2], rotY: 0, length: 4.2, height: 4.7, posts: false },
-  { type: 'crossmarket_fingerpost', pos: [8.6, 0, -34.8], rotY: 0, arms: [[-90, 'BUTTER CROSS'], [180, 'CORN EXCHANGE'], [0, 'MARKET HALL']] },
 ];
 
 // ================================================================================================ Zone Control only

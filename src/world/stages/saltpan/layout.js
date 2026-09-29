@@ -21,6 +21,11 @@ import { SURF } from './surfaces.js';
 //     the head platform over the heap's mid end (kids jump up to it from the ridge). The strip under the catwalk is
 //     braced off (prop colliders), so nobody — bot or kid — ends up underneath the deck
 //   • mid: the Great Pan (−1.2) with the wind pump on its timber staging, boardwalks in from each side
+//   • the slice (Long Stages, 2026-09-30: 24 m of new land between the pans and the store yard on each half): the
+//     brine pump house (No. 2 Pumping Station) and its loading platform (1.5, the strategic point) on the rail spur,
+//     the evaporation terraces (four ponds in 0.3 m steps, walkable, up toward the base), the pump dyke along the back
+//     pan, the intake quay with its intake bay and salt cones (west), the hopper yard with the tipping siding and weigh
+//     house and the cone yard with a stacker (east)
 //   • outline: a jagged tidal-flat edge, not a box — a creek cuts in between the office quay and the shed quay (crossed
 //     by a diagonal railed causeway), the shed quay juts out past the shed with a 45° cut, the conveyor stage steps out
 //     at the base, a sea notch runs beside the heap, the mid dyke ends in a pointed jetty with an inlet beside it, and the
