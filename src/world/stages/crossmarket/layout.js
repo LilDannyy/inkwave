@@ -10,8 +10,9 @@ import { SURF } from './surfaces.js';
 // the No. 3 tram standing under its clock lantern; the blocks either side are cut into wedges by the diagonal, leaving
 // small wedge plazas; the tramway runs out onto a pier at each end over the harbour, and a dock basin cuts in beside it.
 // The CLOSE-QUARTERS map: short sightlines, corners, alleys and covered ways, height from a gallery and a roof terrace.
-//   • spawn: the Corn Exchange's first-floor terrace (2.6) — grand stair down to Exchange Square, a side flight on the
-//     left, and the Arcade Gallery (an iron veranda at first floor) straight off the right end of the terrace
+//   • spawn: the Corn Exchange's first-floor terrace (2.6) — grand stair down to Exchange Square and a side flight on
+//     either hand (the Arcade Gallery, an iron veranda at first floor, used to leave the terrace's right end: since the
+//     stretch it runs from the butcher's corner to the hall end)
 //   • centre lane: Market Street — the fountain, an island row of stalls, then the hall's corner: the street splits
 //     round it, into the hall (stalls, the tram as cover; its roof is squid-only high ground) or along the tramway
 //   • right lane (−X for Alpha): Fish Lane beside the covered fish-market arcade, out to the tramway where it runs
@@ -20,7 +21,12 @@ import { SURF } from './surfaces.js';
 //   • left lane (+X for Alpha): the flank street under the café roof terrace (2.6, stairs at both ends, a bridge over
 //     the Market Passage) and the Parade (1.2) along the harbour, down to the dock basin; the flank street runs on
 //     past the half line to cross the tramway
-// Heights: 0 (setts) · 0.1 (tramway bed + hall floor) · 0.15 (pavements, arcade) · 0.3 (tram stop) · 1.2 (Parade)
+//   • the new block (Long Stages, 2026-09-30: 24 m of Market Street between the old square and Exchange Square on each
+//     half): the Butter Cross square (the market cross's raised floor, 1.2, is the strategic point), Herring Passage
+//     through the west range from Fish Lane, Butter Row through the east range to the flank street, the Butter Market
+//     arcade on the harbour, the net loft and the harbour steps on Fish Lane, an open band of stalls in front of the
+//     butcher's, the bakery and the roof terrace; the Arcade Gallery now comes down into the square
+// Heights: 0 (setts) · 0.1 (tramway bed + hall floor) · 0.15 (pavements, arcade) · 0.3 (tram stop) · 1.2 (Parade, cross)
 // · 2.6 (spawn, gallery, terrace) · 3.0 (tram roof). Buildings above their ground floors are out of play (paint: false,
 // roof: true); every railing is a `rail` (props).
 
