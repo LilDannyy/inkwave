@@ -108,7 +108,7 @@ export function drawMurals(g, R, kit) {
   out.push({ id: 5, x: R.x + 496, y: R.y, w: 480, h: 300, m: [1.6, 1.0], fx: [0.3, 0] });
   out.push({ id: 6, x: R.x + 992, y: R.y, w: 480, h: 300, m: [1.6, 1.0], fx: [0.3, 0] });
 
-  // ---- 7: GROUND ZERO ring on the crater floor (the floor block's top face, 10.2 x 10.2 m; the ring 2.6 m across)
+  // ---- 7: GROUND ZERO ring on the crater floor (the floor block's top face, 9.2 x 9.2 m; the ring 2.6 m across)
   {
     const r = { x: R.x + 1488, y: R.y, w: 520, h: 520 }, cx = r.x + r.w / 2, cy = r.y + r.h / 2, k = r.w / 2.6;
     g.save(); g.translate(cx, cy);
@@ -125,8 +125,8 @@ export function drawMurals(g, R, kit) {
     for (let i = 0; i < 4; i++) { g.save(); g.rotate((i * Math.PI) / 2); g.beginPath(); g.moveTo(0, -0.66 * k); g.lineTo(0.08 * k, -0.2 * k); g.lineTo(-0.08 * k, -0.2 * k); g.closePath(); g.fill(); g.restore(); }
     poppy(g, 0, 0, 0.16 * k);
     g.restore();
-    // floor top face: u runs −x, v runs +z; the ring at the centre of the 10.2 m face
-    out.push({ id: 7, ...r, place: [5.1 - 1.3, 2.6, 5.1 - 1.3, 2.6], fx: [0.6, 0] });
+    // floor top face: u runs −x, v runs +z; the ring at the centre of the 9.2 m face
+    out.push({ id: 7, ...r, place: [4.6 - 1.3, 2.6, 4.6 - 1.3, 2.6], fx: [0.6, 0] });
   }
   // ---- 8: pillbox camouflage + stencil (5.4 x 2.05 m walls, 100 px/m)
   {

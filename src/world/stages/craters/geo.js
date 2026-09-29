@@ -181,6 +181,26 @@ export function edgeBands(poly, width, y0, top, opts = () => ({}), skip = () => 
   return out;
 }
 
+// bands just outside a chain of polygon edges (the shelf at a cliff's foot): edge i runs pts[i] → pts[i + 1], for each
+// i in idx. At a convex corner (seen from inside) two outside bands fan apart: the first runs on past the corner by as
+// much as the wedge between them needs (neighbours overlap there: top(i) must alternate along the chain).
+export function outerBands(poly, idx, width, y0, top, opts = () => ({})) {
+  const n = poly.length, set = new Set(idx), out = [];
+  const dirOf = (i) => { const a = poly[i], b = poly[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); return [(b[0] - a[0]) / L, (b[1] - a[1]) / L]; };
+  const inwardOf = (i) => {
+    const a = poly[i], b = poly[(i + 1) % n], [ux, uz] = dirOf(i), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+    return inPoly(poly, mx - uz * 0.05, mz + ux * 0.05) ? [-uz, ux] : [uz, -ux];
+  };
+  for (const i of idx) {
+    const a = poly[i], b = poly[(i + 1) % n], [ux, uz] = dirOf(i), [ix, iz] = inwardOf(i), ox = -ix, oz = -iz;
+    const j = (i + 1) % n, [vx, vz] = dirOf(j);
+    const convex = set.has(j) && vx * ix + vz * iz > 1e-6;
+    const e = convex ? width * Math.min(1, Math.abs(ux * vz - uz * vx)) + 0.05 : 0;
+    out.push(stripBox(strip([a[0] + ox * width / 2, a[1] + oz * width / 2], [b[0] + ox * width / 2 + ux * e, b[1] + oz * width / 2 + uz * e], width), y0, top(i), opts(i)));
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------------------------------- craters
 // A bowl of N radial ramp facets (facet k centred on θ = k·360/N, 0 = +x, 90 = +z): floor at yF inside apothem r0,
 // rising to yR at apothem r1. Each facet is exactly as wide as its sector at r1, so the facets meet at the crest and
