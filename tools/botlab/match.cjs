@@ -143,6 +143,37 @@ app.on('browser-window-created', (_, win) => {
         });
         return { sample, done };
       })() : null;
+      // sight honesty (per 0.25 s, every bot in a fight): its target in plain sight (a ray from its eyes to the foe's
+      // chest or head, through grates and rails), the trigger held at a foe out of sight ("shooting at nothing"), and its
+      // aim still on a foe out of sight (tracking through walls) — ground truth, whatever the bot believes
+      const SG = { fight: 0, fire: 0, hid: 0, blind: 0, onHid: 0, blindHid: 0, bBel: 0, bChg: 0 };
+      const V = () => ({ x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } }), _e = V(), _t = V();
+      const sightSample = () => {
+        for (const a of m.actors) {
+          const b = a.bot, t = b && b.target;
+          if (!a.alive || !b || b.mode !== 'fight' || !t || !t.alive || !t.pos || t.team === a.team) continue;
+          SG.fight += 0.25;
+          _e.set(a.pos.x, a.pos.y + 1.3, a.pos.z);
+          const sq = t.form === 'squid';
+          const vis = __G.physics.los(_e, _t.set(t.pos.x, t.pos.y + (sq ? 0.3 : 1.0), t.pos.z)) || (!sq && __G.physics.los(_e, _t.set(t.pos.x, t.pos.y + 1.6, t.pos.z)));
+          const fire = !!a.intent.fire;
+          if (fire) SG.fire += 0.25;
+          if (vis) continue;
+          SG.hid += 0.25;
+          // (why: the bot still believes it's in sight — its last look; holding a charge — not a shot; else a shot)
+          if (fire) { SG.blind += 0.25; if (b.seeTimer > 0) SG.bBel += 0.25; else if (a.weaponRunner && a.weaponRunner.charging) SG.bChg += 0.25; }
+          let d = Math.atan2(t.pos.x - a.pos.x, t.pos.z - a.pos.z) - b.aimYaw; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;
+          if (Math.abs(d) < 0.2) { SG.onHid += 0.25; if (fire) SG.blindHid += 0.25; }
+        }
+      };
+      // the bots' own cost: BotBrain.update wall time (ms per simulated second)
+      const BM = await import('./src/game/bots.js'), BP = BM.BotBrain.prototype, bUpd = BP.update; let botMs = 0;
+      BP.update = function (dt) { const q = performance.now(); try { return bUpd.call(this, dt); } finally { botMs += performance.now() - q; } };
+      // (and the part of it spent looking: _perceive, plus botSight's between-looks target re-check where there is one)
+      let seeMs = 0; const bPer = BP._perceive, SP = await import('./src/game/botSight.js').then((m) => m.Sight.prototype).catch(() => null), bRe = SP && SP.recheck;
+      BP._perceive = function () { const q = performance.now(); try { return bPer.call(this); } finally { seeMs += performance.now() - q; } };
+      if (bRe) SP.recheck = function (e) { const q = performance.now(); try { return bRe.call(this, e); } finally { seeMs += performance.now() - q; } };
+      if (BM.SIGHT_STATS) for (const k in BM.SIGHT_STATS) BM.SIGHT_STATS[k] = 0;   // (this match only, not the menu's)
       const DT = 1 / 60, CH = 15;           // 0.25 s per chunk
       // per activation of an objective: the best ink share each team reached on each of its zones
       const wins = []; let curW = null;
@@ -160,6 +191,7 @@ app.on('browser-window-created', (_, win) => {
         g._skipRender = false;
         simT += CH * DT;
         if (trk && m.state === 'playing') trk.sample();
+        if (m.state === 'playing') sightSample();
         // --- zone metrics
         if (Z && m.state === 'playing') {
           noteShares();
@@ -204,6 +236,7 @@ app.on('browser-window-created', (_, win) => {
         if (chunk % 40 === 0) await new Promise((r) => setTimeout(r, 0));
       }
       const simMs = performance.now() - tSim0;
+      BP.update = bUpd; BP._perceive = bPer; if (bRe) SP.recheck = bRe;
       offs.forEach((f) => f());
       const st = Z ? Z.state() : null;
       const flips = ev.control.filter((c) => c.owner >= 0).length;
@@ -216,6 +249,11 @@ app.on('browser-window-created', (_, win) => {
           for (const w in out) { const o = out[w]; o.splats = (W[w] || {}).splats || 0; o.deaths = (W[w] || {}).deaths || 0; o.turf = Math.round(o.turf / o.n); } return out; })(),
 per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a) => s + a.stats.turf, 0) / n, zt = A.reduce((s, a) => s + (a.stats.zoneTurf || 0), 0) / n, sp = A.reduce((s, a) => s + a.stats.splats, 0) / n;
           return { turf: Math.round(turf), zoneTurf: Math.round(zt), splats: +sp.toFixed(1), xpVar: Z ? Math.round(turf * 0.6 + zt + sp * 40) : Math.round(turf + sp * 40) }; })(),
+        sight: { fightS: Math.round(SG.fight), fireS: Math.round(SG.fire), hidPct: +(100 * SG.hid / Math.max(1, SG.fight)).toFixed(1),
+          blindPct: +(100 * SG.blind / Math.max(1, SG.fire)).toFixed(1), trackPct: +(100 * SG.onHid / Math.max(1, SG.hid)).toFixed(1),
+          blindTrackPct: +(100 * SG.blindHid / Math.max(1, SG.fire)).toFixed(1), blindBelievedPct: +(100 * SG.bBel / Math.max(1, SG.fire)).toFixed(1),
+          blindChargePct: +(100 * SG.bChg / Math.max(1, SG.fire)).toFixed(1), blindShotPct: +(100 * (SG.blind - SG.bBel - SG.bChg) / Math.max(1, SG.fire)).toFixed(1), stats: BM.SIGHT_STATS ? { ...BM.SIGHT_STATS } : null },
+        botMsPerS: +(botMs / Math.max(1, simT)).toFixed(2), seeMsPerS: +(seeMs / Math.max(1, simT)).toFixed(2),
         frameErr, eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), holdPct: +(100 * holdS / Math.max(1, samples * 0.25)).toFixed(1),
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / Math.max(1, samples * 0.25)).toFixed(0)])),
         track: trk ? trk.done() : undefined,
@@ -257,6 +295,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log('   loadouts ' + equip + (tuned ? ' | TUNE ' + tuned : ''));
     console.log('   by weapon (players, splats dealt, deaths, avg turf) ' + Object.entries(r.byWeapon).map(([w, o]) => `${w}×${o.n} ${o.splats}/${o.deaths} ${o.turf}p`).join(' · '));
     console.log('   splats by cause ' + JSON.stringify(r.byCause));
+    { const s = r.sight; console.log(`   sight: fighting ${s.fightS} bot-s, trigger held ${s.fireS} s | foe out of sight ${s.hidPct}% of fight time, aim still on it ${s.trackPct}% of that | shooting at nothing ${s.blindPct}% of trigger time (${s.blindTrackPct}% straight at the hidden foe; ${s.blindBelievedPct}% while it still thinks it sees it, ${s.blindChargePct}% a charge held, ${s.blindShotPct}% shots) | bots ${r.botMsPerS} ms per sim s (looking ${r.seeMsPerS})${s.stats ? ' | ' + JSON.stringify(s.stats) : ''}`); }
     for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
     if (r.track) { const t = r.track; console.log(`   TRACK ${t.weapon}×${t.n} (team ${t.team}): ${t.kills} splats / ${t.deaths} deaths | damage out ${JSON.stringify(t.dmgOut)} in ${t.dmgIn} (armour saved ${t.armour}) | median dist: hits out ${t.distOut} m, hits in ${t.distIn} m, kills ${t.killDist} m, deaths ${t.deathDist} m`);
       console.log(`         died while ${JSON.stringify(t.deathState)} | by ${JSON.stringify(t.deathBy)} | ${t.deathClean} deaths without touching the killer | nearest enemy <4.5/<8/<14/far m: ${t.reach.join('/')}% | fighting ${t.fightS}s of ${t.aliveS}s alive | fired ${t.fired}${t.leaps ? ` | leaps ${t.leaps} ${JSON.stringify(t.leapKind)}, hit on landing ${t.leapHits}, landing kills ${t.leapKills}, clings ${t.clings}` : ''}`); }

@@ -753,13 +753,14 @@ SUB_KITS.waddle = {
       if (go) brain.bombCd = 6 + Math.random() * 5;
       return go;
     },
-    // scouting: a foe we can't see is lurking near where the throw would land — send it to flush them out
+    // scouting: a foe we saw go out of sight (bots.js / botSight.js memory, a few seconds old at most) near where the
+    // throw would land — send it to flush them out
     paint(brain) {
-      if (Math.random() > 0.03) return false;
+      if (Math.random() > 0.03 || !brain.sight) return false;
       const a = brain.a, lx = a.pos.x + Math.sin(a.aimYaw) * 7.5, lz = a.pos.z + Math.cos(a.aimYaw) * 7.5;
-      for (const e of G.actors) {
-        if (e.team === a.team || !e.alive || brain.target === e) continue;
-        if (Math.hypot(e.pos.x - lx, e.pos.z - lz) < 6.5 && Math.abs(e.pos.y - a.pos.y) < 3) { brain.bombCd = 9 + Math.random() * 6; return true; }
+      for (const [e, k] of brain.sight.mem) {
+        if (k.seen || brain.target === e || G.time - k.t > 4) continue;
+        if (Math.hypot(k.pos.x - lx, k.pos.z - lz) < 6.5 && Math.abs(k.pos.y - a.pos.y) < 3) { brain.bombCd = 9 + Math.random() * 6; return true; }
       }
       return false;
     },
