@@ -11,7 +11,6 @@ export function buildBackdrop(kit) {
   const { THREE, box, cyl, prep, xf, triGeo, makeIsland, fbm, smooth, WATER_Y, rnd } = kit;
   const R = rnd(4242);
   const out = { static: [], plain: [], terrain: [], instances: [], objects: [] };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   // ------------------------------------------------------------------------------------------ the land (SW frame)
   // coast lines (Alpha's frame: the hill + west headland at x < −33.9, the co-op's back at z < −48.2)
@@ -38,7 +37,7 @@ export function buildBackdrop(kit) {
     if (z <= -48.2 && x <= coastS(z) + 6) {
       const v = -48.2 - z, toSea = coastS(z) - x;
       let e = 1.8 + (v > 7 ? 0.62 * Math.pow(v - 7, 1.05) : 0) + 0.05 * Math.max(0, -x);
-      e *= clamp(toSea / 8, 0, 1) ** 0.8;
+      e *= smooth(-2, 8 + 1.1 * e, toSea);   // (a shore slope as wide as the hill is high: no snow cliff in the spawn's view)
       h = Math.max(h, e - (toSea < 0 ? 3 - toSea * 2 : 0));
     }
     if (!Number.isFinite(h)) return null;
