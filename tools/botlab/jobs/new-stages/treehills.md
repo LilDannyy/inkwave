@@ -204,8 +204,8 @@ environment. Concretely:
 3. **Two Alterna greenhouse pods flanking the plaza.**
    - Mirrored, e.g. about 8–10 m long along x at z ≈ ±9, offset from the tower's lane at z 0.
    - Half-cylinder glass tubes like the reference: 2.4–2.6 m tall, plants inside, glass roofs off-limits.
-   - Hard cover that splits the meadow into lanes round the plaza.
-   - A squid can climb their end walls (panel ends) to reach the top? No: roofs stay off-limits. They're walls.
+   - Hard cover that splits the meadow into lanes round the plaza. They're walls, not perches: their glass roofs are
+     off-limits.
 4. **The meadow floor rolls.**
    - Grass mounds 0.6–1.2 m with ramped sides (the "artificial hills" in miniature) where the open lawn is.
    - Granite boulders (1.2–1.8 m).
