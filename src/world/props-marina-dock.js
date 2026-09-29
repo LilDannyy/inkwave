@@ -1515,7 +1515,7 @@ export function registerMarinaDock(D, H) {
       B.pop();
       B.blink('#ffb347', W / 2, BY + BH + 0.12, L / 2 + 0.3, { size: 0.05, rate: 0.8, lo: 0.2, hi: 5 });
       B.cyl('metal', 'charcoal', 0.06, 0.1, W / 2, BY + BH + 0.05, L / 2 + 0.3, { seg: 8 });
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) B.col(sx * W / 2 - (sx < 0 && sz < 0 ? 0.5 : 0.3), 0, sz * L / 2 - 0.66, sx * W / 2 + 0.3, BY, sz * L / 2 + 0.66);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) B.col(sx * W / 2 - (sx < 0 && sz < 0 ? 0.5 : 0.3), 0, sz * L / 2 - 0.66, sx * W / 2 + 0.3, BY, sz * L / 2 + 0.66, { roof: true });   // (leg tops: out of reach but a special's, so off-limits)
     },
   };
 
