@@ -152,7 +152,7 @@ const NURSERY_PLACEMENTS = [
   { type: 'treehills_footbridge', pos: [0, T1, -47.3], rotY: HP, L: 2.6, w: 3.0 },
   { type: 'treehills_stones', pos: [-7.2, T1, -47.3], rotY: HP, n: 3, y0: CH_Y - T1, seed: 3 },
   { type: 'treehills_stones', pos: [8.6, T1, -47.3], rotY: HP, n: 3, y0: CH_Y - T1, seed: 6 },
-  { type: 'treehills_pumphouse', pos: [-13.6, T1, -47.6], rotY: 0 },
+  { type: 'treehills_pumphouse', pos: [-13.6, T1, -47.6], rotY: 0, chan: T1 - CH_Y },
   { type: 'treehills_sluice', pos: [13.6, T1, -47.3], rotY: HP, w: 1.4, y0: CH_Y - T1 },
   { type: 'treehills_chanedge', pos: [1, T1, -46.49], rotY: 0, L: 26 },
   { type: 'treehills_chanedge', pos: [1, T1, -48.11], rotY: 0, L: 26 },

@@ -205,9 +205,16 @@ export function registerNursery(D, H, T) {
       for (let k = 0; k < 4; k++) pbox(B, NS('metal'), K.steelDk, 0.5, 0.03, 0.06, 0.75, 1.38 + k * 0.11, 0.04, { rx: 0.5 });
       B.pop();
       // the pipe out of its side into the channel, with a flange and the red sluice wheel on a post
+      // (o.chan: how far below the pump house's floor the channel's bed lies — the outlet spouts into it)
       B.push(w / 2 + 0.02, 0, 0, HP);
       seg(B, 'metal', K.steelLt, [0, 0.6, 0.1], [0, 0.6, 0.9], 0.3, 0.3, { round: true, seg: 12 });
       B.cyl('metal', K.steel, 0.22, 0.08, 0, 0.6, 0.92, { rx: HP, seg: 12 });
+      if (o.chan) {
+        const yb = -o.chan;
+        seg(B, NS('gloss'), '#cfeef0', [0, 0.52, 0.97], [0, yb + 0.02, 1.25], 0.2, 0.08);
+        B.cyl(NS('gloss'), '#e8f8f8', 0.3, 0.015, 0, yb + 0.01, 1.3, { seg: 14 });
+        B.tor(NS('gloss'), '#f4fbfb', 0.4, 0.02, 0, yb + 0.02, 1.3, { rx: HP, rs: 3, ts: 16 });
+      }
       B.pop();
       pbox(B, 'metal', K.steelDk, 0.12, 1.0, 0.12, w / 2 + 0.4, 0.5, d / 2 - 0.2);
       B.push(w / 2 + 0.4, 1.0, d / 2 - 0.13); valve(B, 0, 0, 0, 0.18); B.pop();
