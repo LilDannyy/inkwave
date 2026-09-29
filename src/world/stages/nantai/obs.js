@@ -239,7 +239,7 @@ export function registerObservatory(D, H, T) {
   // panel, the steel frame it rolls out onto (east, +X), a door, a small sign
   D.nantai_rolloff = {
     desc: 'roll-off-roof observatory hut dressing',
-    build(B) {
+    build(B, o = {}) {
       const W = 3.6, Dd = 3.2, Hh = 2.6;
       // roof panel (low-pitched, overhanging), its wheels on the rails
       B.box('metal', K.steelLt, W + 0.3, 0.12, Dd + 0.36, 0, Hh + 0.1, 0, { r: 0.03 });
@@ -253,7 +253,7 @@ export function registerObservatory(D, H, T) {
       // door (front) + sign
       B.box('paint', K.larchDk, 0.9, 2.0, 0.05, -0.8, 1.0, Dd / 2 + 0.03, { r: 0.015 });
       pbox(B, NS('metal'), K.steel, 0.04, 0.22, 0.05, -0.45, 1.0, Dd / 2 + 0.07);
-      boardSign(B, 'ROLL-OFF 2', 0.8, 1.9, { h: 0.1, z: Dd / 2, board: K.navy, c: K.white, wt: 0.2 });
+      boardSign(B, o.label ?? 'ROLL-OFF 2', 0.8, 1.9, { h: 0.1, z: Dd / 2, board: K.navy, c: K.white, wt: 0.2 });
       // a corner trim
       for (const [x, z] of [[-W / 2, -Dd / 2], [W / 2, -Dd / 2], [-W / 2, Dd / 2], [W / 2, Dd / 2]]) pbox(B, 'paint', K.whiteSh, 0.1, Hh, 0.1, x, Hh / 2, z);
     },

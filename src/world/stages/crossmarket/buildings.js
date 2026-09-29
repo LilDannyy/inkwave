@@ -390,7 +390,7 @@ export function registerCivic(D, H, KIT) {
   // beams, hanging lamps. pos = the pier line's centre (x of the pier centres, z centre), piers every `pitch` along Z.
   D.crossmarket_arcade = {
     desc: 'Arcade dressing (pos = centre of the pier row at floor level; piers 0.8 × 0.7 every `pitch` m along local Z, `n` piers): segmental arches + spandrels between the piers facing ±X, pier caps and bases, the ceiling (joists, iron beams), pendant lamps, a lettered FISH MARKET frieze. Non-colliding.',
-    params: { n: 'piers (7)', pitch: 'm (4.6)', depth: 'arcade depth toward -X (3.8)', y0: 'floor (0.15)', top: 'soffit (2.8)' }, variants: 1, mount: 'ground',
+    params: { n: 'piers (7)', pitch: 'm (4.6)', depth: 'arcade depth toward -X (3.8)', y0: 'floor (0.15)', top: 'soffit (2.8)', name: 'frieze lettering (FISH MARKET)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
       const n = o.n ?? 7, pitch = o.pitch ?? 4.6, dep = o.depth ?? 3.8, y0 = o.y0 ?? 0.15, top = o.top ?? 2.8, st = K.stoneLt;
@@ -426,7 +426,7 @@ export function registerCivic(D, H, KIT) {
       pbox(B, NS('metal'), K.iron, 0.2, 0.18, (n - 1) * pitch, -dep / 2 + 0.2, top - 0.12, 0);
       // frieze letters over the arches (street face)
       B.push(0.41, 0, 0, HP);
-      letters(B, 'FISH MARKET', { h: 0.28, x: 0, y: top + 0.12, z: 0, c: K.goldDk, flat: true, wt: 0.18, track: 0.24 });
+      letters(B, o.name ?? 'FISH MARKET', { h: 0.28, x: 0, y: top + 0.12, z: 0, c: K.goldDk, flat: true, wt: 0.18, track: 0.24 });
       B.pop();
     },
   };
@@ -436,10 +436,10 @@ export function registerCivic(D, H, KIT) {
   // posters on the walls, a side door, a bicycle. Non-colliding except the bicycle stand.
   D.crossmarket_passage = {
     desc: 'Market Passage dressing (pos = west mouth centre at street level; local +Z out, passage toward -Z, width w, depth): stone portals with MARKET PASSAGE lintels at both mouths, hanging lanterns, bill posters, a side door. Non-colliding.',
-    params: { w: 'm opening (3)', depth: 'm (9)', h: 'm (2.6)', h2: 'm soffit over the far part (2.2)', split: 'm where the soffit drops (4.5)' }, variants: 1, mount: 'ground',
+    params: { w: 'm opening (3)', depth: 'm (9)', h: 'm (2.6)', h2: 'm soffit over the far part (2.2)', split: 'm where the soffit drops (4.5)', name: 'lintel lettering (MARKET PASSAGE)', lampX: 'lanterns off the centre line (0)' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const w = o.w ?? 3, dep = o.depth ?? 9, h = o.h ?? 2.6, h2 = o.h2 ?? 2.2, split = o.split ?? 4.5;
+      const w = o.w ?? 3, dep = o.depth ?? 9, h = o.h ?? 2.6, h2 = o.h2 ?? 2.2, split = o.split ?? 4.5, lx = o.lampX ?? 0;
       const portal = (z, ry, hh, name) => {
         B.push(0, 0, z, ry);
         for (const sx of [-1, 1]) { B.box('paint', ST, 0.34, hh, 0.14, sx * (w / 2 + 0.17), hh / 2, 0.07, { r: 0.02 }); for (let y = 0.4; y < hh - 0.2; y += 0.4) pbox(B, NS('paint'), STD, 0.36, 0.03, 0.15, sx * (w / 2 + 0.17), y, 0.075); }
@@ -448,13 +448,14 @@ export function registerCivic(D, H, KIT) {
         B.box('paint', shade(ST, 1.04), 0.26, 0.2, 0.22, 0, hh + 0.56, 0.11, { r: 0.015 });
         letters(B, name, { h: 0.15, x: 0, y: hh + 0.16, z: 0.185, c: K.ironDk, flat: true, wt: 0.2, track: 0.12 });
         // lantern hung from the lintel
-        rod(B, NS('metal'), IRDK, P3(0, hh - 0.02, -0.25), P3(0, hh - 0.3, -0.25), 0.01, 3);
-        B.lathe('metal', IRON, [[0, 0.2], [0.05, 0.19], [0.15, 0.08], [0.16, 0.06], [0.1, 0.06]], 0, hh - 0.52, -0.25, { seg: 6 });
-        B.lathe(NS('glow'), K.lit, [[0.001, -0.12], [0.09, -0.1], [0.11, 0.06], [0.001, 0.06]], 0, hh - 0.52, -0.25, { seg: 6, glow: 1.9 });
+        rod(B, NS('metal'), IRDK, P3(lx, hh - 0.02, -0.25), P3(lx, hh - 0.3, -0.25), 0.01, 3);
+        B.lathe('metal', IRON, [[0, 0.2], [0.05, 0.19], [0.15, 0.08], [0.16, 0.06], [0.1, 0.06]], lx, hh - 0.52, -0.25, { seg: 6 });
+        B.lathe(NS('glow'), K.lit, [[0.001, -0.12], [0.09, -0.1], [0.11, 0.06], [0.001, 0.06]], lx, hh - 0.52, -0.25, { seg: 6, glow: 1.9 });
         B.pop();
       };
-      portal(0, 0, h, 'MARKET PASSAGE');
-      portal(-dep, PI, h2, 'MARKET PASSAGE');
+      const name = o.name ?? 'MARKET PASSAGE';
+      portal(0, 0, h, name);
+      portal(-dep, PI, h2, name);
       // walls: posters, a side door into the bakery, a bench, a lantern mid-way
       for (const sx of [-1, 1]) {
         B.push(sx * w / 2, 0, 0, -sx * HP);
@@ -466,9 +467,9 @@ export function registerCivic(D, H, KIT) {
       }
       B.push(-w / 2, 0, -3.4, HP); KIT.frontDoor(B, 0, 0.95, 2.1, { door: '#4a3222', surC: ST }); B.pop();
       B.push(0, 0, 0, 0);
-      rod(B, NS('metal'), IRDK, P3(0, h, -split + 1.2), P3(0, h - 0.35, -split + 1.2), 0.01, 3);
-      B.lathe('metal', IRON, [[0, 0.3], [0.06, 0.28], [0.22, 0.12], [0.24, 0.1], [0.15, 0.1]], 0, h - 0.65, -split + 1.2, { seg: 8 });
-      B.lathe(NS('glow'), K.lit, [[0.001, -0.1], [0.12, -0.06], [0.14, 0.1], [0.001, 0.1]], 0, h - 0.65, -split + 1.2, { seg: 8, glow: 1.9 });
+      rod(B, NS('metal'), IRDK, P3(lx, h, -split + 1.2), P3(lx, h - 0.35, -split + 1.2), 0.01, 3);
+      B.lathe('metal', IRON, [[0, 0.3], [0.06, 0.28], [0.22, 0.12], [0.24, 0.1], [0.15, 0.1]], lx, h - 0.65, -split + 1.2, { seg: 8 });
+      B.lathe(NS('glow'), K.lit, [[0.001, -0.1], [0.12, -0.06], [0.14, 0.1], [0.001, 0.1]], lx, h - 0.65, -split + 1.2, { seg: 8, glow: 1.9 });
       B.pop();
     },
   };
