@@ -91,9 +91,10 @@ export const P = {
   // Fishermen's Co-op
   deck: { x0: -9, x1: 9, z0: -45.5, z1: -37.2, y: 3.4 },
   pad: [0, 3.4, -41.3],
-  dock: { x0: 2.2, x1: 10, z0: -37.2, z1: -30.5, y: 1.0 },
-  dockStair: { x: 7.6, w: 2.8, z0: -31.8 },       // from the loading dock up onto the spawn deck's east front
-  netStore: [10, 12, -37.2, -30.5],
+  dock: { x0: 2.2, x1: 9, z0: -37.2, z1: -30.5, y: 1.0 },
+  // from the loading dock up onto the spawn deck's east front, flush against the net store (no slot beside it)
+  dockStair: { x: 7.7, w: 2.6, z0: -31.8 },
+  netStore: [9, 12, -37.2, -30.5],
   // harbour (Alpha's cove side): the basin quay's water edge runs A → B at an angle; the slipway cuts it
   kerb: 16,                                       // the village street ends at x 16; the basin quay is 0.1 lower
   basinEdge: [[24.5, -16.4], [22, -38.6]],
