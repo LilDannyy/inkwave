@@ -409,24 +409,26 @@ export class Actor {
     if (this.grounded && g.hit && g.face >= 0) {
       const t = G.paint.sample(g.face, g.u, g.v);
       this.groundTeam = t === 0 ? 0 : (t - 1 === this.team ? 1 : 2);
-    } else if (this.grounded && g.hit && this._towerAt(g.block)) {
-      const t = G.match.tower.paint.groundTeam(this.pos);   // Tower Command: ink on the tower's deck
+    } else if (this.grounded && g.hit && this._dynPaint(g.block)) {
+      const t = this._dynPaint(g.block).groundTeam(this.pos);   // a moving block's own ink: the tower's deck, a hedge top
       this.groundTeam = t === 0 ? 0 : (t - 1 === this.team ? 1 : 2);
     } else this.groundTeam = 0;
   }
-  // is block id Tower Command's tower (its platform: the part that takes ink)?
-  _towerAt(bid) { const T = G.match?.tower; return !!(T && T.paint && bid >= 0 && bid === T.block.id); }
-  // our ink on a wall we raycast (a level face, or the tower's wall)?
+  // the ink of block id when it's a dynamic block that keeps its own (towerPaint.js BoxPaint: Tower Command's platform,
+  // a sprout pod's hedge), else null
+  _dynPaint(bid) { const b = bid >= 0 ? G.level?.blocks[bid] : null; return (b && b.dynamic && b.inkPaint) || null; }
+  // our ink on a wall we raycast (a level face, or a moving block's wall)?
   _wallInk(h) {
     if (h.face >= 0) return G.paint.sample(h.face, h.u, h.v) - 1 === this.team;
-    return this._towerAt(h.block) && G.match.tower.paint.wallTeam(h.point, h.normal) - 1 === this.team;
+    const P = this._dynPaint(h.block);
+    return !!P && P.wallTeam(h.point, h.normal) - 1 === this.team;
   }
 
   // Legacy probe (super jump charge / external callers): refresh ground + surface at the current position.
   _probeGround() {
     const gh = G.physics.groundProbe(this.pos.x, this.pos.y, this.pos.z, 0.4, 0.35, PLAYER.footRadius, this.ground, this.form === 'squid');
     if (gh.hit) {
-      const t = gh.face >= 0 ? G.paint.sample(gh.face, gh.u, gh.v) : this._towerAt(gh.block) ? G.match.tower.paint.groundTeam(this.pos) : 0;
+      const t = gh.face >= 0 ? G.paint.sample(gh.face, gh.u, gh.v) : this._dynPaint(gh.block) ? this._dynPaint(gh.block).groundTeam(this.pos) : 0;
       this.groundTeam = t === 0 ? 0 : (t - 1 === this.team ? 1 : 2);
     }
     else this.groundTeam = 0;
