@@ -48,6 +48,9 @@ Stages:
 Tower Command:
 - `MAP=halyard tools/botlab/run.sh tools/botlab/tower-check.cjs` checks a track: its pieces, holes, clearance, rides at
   real speed, and pictures.
-- `MAP=<id> tools/botlab/run.sh tools/botlab/tower-match.cjs` runs an all-bot tower match and reports the tower's numbers.
+- `MAP=<id> tools/botlab/run.sh tools/botlab/tower-match.cjs` runs an all-bot tower match and reports the tower's numbers
+  and the escort trace (riders and escorts' places by the real threat round the tower, full steam, route ink, riders
+  hiding in the deck's ink, rolling home, a role timeline). `HUMAN=still|ride|escort` plays Alpha's first kid as a
+  human would (outside the bots' team plan): AFK at spawn, or its own brain always riding / always escorting.
 - The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `tower-ink.js`.
