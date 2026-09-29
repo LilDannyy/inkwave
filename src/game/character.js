@@ -1634,6 +1634,10 @@ export class Character {
     const plantOK = this.kidForm && this.grounded && !this.dance && this.tr[T_LEAP] > 1.9 && this.tr[T_SLAM] > 1.4 && this.tr[T_DODGE] > this.dodgeDur * 0.86;
     // treadmill: the ground (and everything planted on it) slides back under a stationary root
     if (this.tread) for (let i = 0; i < 2; i++) { const f = F[i]; f.pw.x -= this.tvx * dt; f.pw.z -= this.tvz * dt; f.from.x -= this.tvx * dt; f.from.z -= this.tvz * dt; f.disp.x -= this.tvx * dt; f.disp.z -= this.tvz * dt; }
+    // carried (Tower Command's moving tower): what's planted rides along with the root — else a kid standing still on
+    // it keeps stepping after its body (the feet left behind read as a walk)
+    const cv = s.carry;
+    if (cv && (cv.x || cv.y || cv.z)) for (let i = 0; i < 2; i++) { const f = F[i]; f.pw.add(cv); f.from.add(cv); f.to.add(cv); f.disp.add(cv); f.cw.add(cv); }
     if (!plantOK) {
       this.moving = false; this.replant = true;
       for (let i = 0; i < 2; i++) F[i].sw = false;
