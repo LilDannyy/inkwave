@@ -87,17 +87,19 @@ export function registerFlora(D, H, T) {
   };
 
   // ------------------------------------------------------------------------------------------ sprout pods
-  // The pod: a low round planter (0.9 across, 0.5 high: green steel, a pale rim, dark soil) holding a seed bulb.
-  //   part 'planter' — the planter only (the stage's static prop; collider 0.9 × 0.5 × 0.9, never inked)
-  //   part 'bulb'    — the bulb only (the pods engine's moving part): origin at the pod's floor point, the bulb sits on
-  //                    the soil at y 0.46; scale it about (0, 0.46, 0). o.tint (a colour) blushes it toward a team.
-  //   (no part)      — both
+  // The pod (src/game/pods.js draws the bulbs; the stage places the planters):
+  //   part 'planter' — the low round planter (0.9 across, 0.5 high: green steel, a pale rim, dark soil at 0.46); the
+  //                    stage's static prop, collider 0.9 × 0.5 × 0.9 (never inked)
+  //   part 'bulb'    — the seed bulb, origin at its own base: the engine anchors it on the soil (LAYOUT.pods.bulbY 0.46),
+  //                    scales it from there as the meters fill and blushes / lights it through its own material copies,
+  //                    so it is built pale
+  //   (no part)      — both (the bulb set on the soil)
   const PH = 0.5, SOIL = 0.46;
   const bulbGeo = () => tpl('thbulb', () => latheGeo([[0, 0], [0.12, 0.01], [0.24, 0.07], [0.3, 0.17], [0.29, 0.28], [0.22, 0.39], [0.13, 0.47], [0.06, 0.54], [0.03, 0.62], [0, 0.64]], 14));
   const veinGeo = () => tpl('thvein', () => latheGeo([[0, 0.005], [0.125, 0.015], [0.245, 0.075], [0.305, 0.17], [0.295, 0.28], [0.225, 0.39], [0.135, 0.47], [0.062, 0.54], [0, 0.56]], 7));
   D.treehills_pod = {
-    desc: "sprout pod: a dormant seed bulb in its low round planter (part 'planter' | 'bulb' | both)",
-    params: { part: "'planter' (static, collides) | 'bulb' (moving part; origin at the floor, bulb on the soil at y 0.46) | undefined", tint: 'optional colour the bulb blushes toward' },
+    desc: "sprout pod: a pale seed bulb (origin at its base) in its low round planter (part 'planter' | 'bulb' | both)",
+    params: { part: "'planter' (static, collides) | 'bulb' (the engine's moving part, origin at its base) | undefined (both)" },
     build(B, o) {
       if (o.part !== 'bulb') {
         B.cyl('paint', K.modDk, 0.45, PH - 0.05, 0, (PH - 0.05) / 2, 0, { seg: 12 });
@@ -105,66 +107,66 @@ export function registerFlora(D, H, T) {
         B.tor('gloss', K.trim, 0.45, 0.04, 0, PH - 0.03, 0, { rx: HP, rs: 4, ts: 20 });
         B.cyl(NS('paint'), K.soil, 0.41, 0.03, 0, SOIL, 0, { seg: 12 });
         for (let k = 0; k < 5; k++) { const a = (k / 5) * TAU + 0.4; B.add(NS('foliage'), blob(0, k), '#6f9a4e', Math.cos(a) * 0.3, SOIL + 0.03, Math.sin(a) * 0.3, { sx: 0.08, sy: 0.04, sz: 0.08, ao: false }); }
-        // a stencilled pod number on the rim band
         pbox(B, NS('paint'), K.label, 0.16, 0.1, 0.01, 0, 0.3, 0.452);
         if (o.part === 'planter') B.col(-0.45, 0, -0.45, 0.45, PH, 0.45);
       }
       if (o.part !== 'planter') {
-        const base = o.tint ? mixc('#b9d98f', o.tint, 0.35) : col('#b9d98f');
-        const vein = o.tint ? mixc('#7fae5e', o.tint, 0.45) : col('#7fae5e');
-        B.add('gloss', bulbGeo(), base, 0, SOIL, 0, {});
-        for (let k = 0; k < 7; k++) B.add(NS('gloss'), veinGeo(), vein, 0, SOIL, 0, { ry: (k / 7) * TAU, sx: 0.12, sz: 1.02 });
+        const y0 = o.part === 'bulb' ? 0 : SOIL;
+        B.add('gloss', bulbGeo(), '#d8eebb', 0, y0, 0, {});
+        for (let k = 0; k < 7; k++) B.add('gloss', veinGeo(), '#b3d692', 0, y0, 0, { ry: (k / 7) * TAU, sx: 0.12, sz: 1.02 });
         // the sprout on top: a curled shoot and two first leaves
-        seg(B, 'foliage', '#6fa24a', [0, SOIL + 0.62, 0], [0.04, SOIL + 0.8, 0.02], 0.035, 0.035, { round: true });
-        for (const s of [-1, 1]) B.add('foliage', blob(0, s > 0 ? 2 : 5), '#8cc25a', s * 0.1, SOIL + 0.82, 0.02, { sx: 0.12, sy: 0.03, sz: 0.07, rz: s * 0.4 });
+        seg(B, 'foliage', '#8fbf62', [0, y0 + 0.62, 0], [0.04, y0 + 0.8, 0.02], 0.035, 0.035, { round: true });
+        for (const s of [-1, 1]) B.add('foliage', blob(0, s > 0 ? 2 : 5), '#a8d47a', s * 0.1, y0 + 0.82, 0.02, { sx: 0.12, sy: 0.03, sz: 0.07, rz: s * 0.4 });
         // roots gripping the soil
-        for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU + 0.3; seg(B, NS('wood'), '#8a7a52', [Math.cos(a) * 0.18, SOIL + 0.05, Math.sin(a) * 0.18], [Math.cos(a) * 0.33, SOIL + 0.005, Math.sin(a) * 0.33], 0.025, 0.02, { round: true, seg: 4 }); }
+        for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU + 0.3; seg(B, NS('wood'), '#8a7a52', [Math.cos(a) * 0.18, y0 + 0.05, Math.sin(a) * 0.18], [Math.cos(a) * 0.33, y0 + 0.005, Math.sin(a) * 0.33], 0.025, 0.02, { round: true, seg: 4 }); }
       }
     },
   };
-  // The hedge a pod grows: w (across, local x) × h × d, origin at its base centre. A dense clipped boxwood wall with a
-  // flat top (the engine's ink overlay sits on it), leafy bulges along the faces and blossoms; light leaves so the owner
-  // team's tint (o.tint, a colour) reads as a sheen through the foliage and in the blossoms. No colliders (the engine
-  // makes the collision block).
+  // The hedge a pod grows: w (across, local x) × h × d, origin at its base centre, no colliders (the engine's block is
+  // the size + 2 cm). A dense clipped boxwood wall: a flat top (the owner's ink is drawn on the block's faces), leafy
+  // clumps flush with the faces (the look stays within a few cm of the box, a little deeper than the 0.9 m planter it
+  // bursts from). o.tint (THREE.Color: the grower's ink): a light touch in the leaves ('foliage', the engine adds a
+  // faint sheen); the full colour in its blossoms ('gloss', a stronger sheen); the stems ('wood') never glow.
   D.treehills_hedge = {
     desc: 'grown sprout hedge (w × h × d from `size`, origin at its base centre, tinted by `tint`; no colliders)',
     params: { size: '[w, h, d] (m)', tint: 'owner team colour (optional)' },
     build(B, o) {
-      const [w, h, d] = o.size || [3, 1.8, 0.9];
-      const t = o.tint ?? null, s = o.seed ?? 21;
-      // tinted: the leaves keep their green with a sheen of the owner's colour; its blossoms carry the colour itself
-      const leaf = t ? mixc('#b4dc98', t, 0.24) : col(K.leafMid);
-      const leafDk = t ? mixc('#86b36d', t, 0.2) : col('#86b36d');
-      const bloom = t ? mixc(t, '#ffffff', 0.18) : null;
-      // the clipped core (flat top) and a darker skirt of stems at the base
-      B.box('foliage', leaf, w - 0.12, h - 0.06, d - 0.12, 0, (h - 0.06) / 2 + 0.02, 0, { round: true, r: 0.12 });
-      pbox(B, NS('wood'), '#6b5a3e', w - 0.3, 0.12, d - 0.3, 0, 0.06, 0);
-      // leafy clumps scattered over both faces and the ends (a jittered grid, random sizes and depths: never a
-      // regular quilt), lighter toward the top; sprigs along the top edges break the silhouette (the top stays flat)
+      const [w0, h, d0] = o.size || [o.w ?? 3, o.h ?? 1.8, o.d ?? 0.9];
+      const w = w0 + 0.03, d = d0 + 0.04, t = o.tint ?? null, s = o.seed ?? 21;
+      // tinted: the leaves keep their green with a touch of the owner's colour; its blossoms carry the colour itself
+      const leaf = t ? mixc('#b4dc98', t, 0.2) : col(K.leafMid);
+      const leafDk = t ? mixc('#86b36d', t, 0.16) : col('#86b36d');
+      const bloom = t ? mixc(t, '#ffffff', 0.12) : null;
+      // the clipped body (flat top) just inside the faces, and a darker skirt of stems at the base
+      B.box('foliage', mixc(leafDk, leaf, 0.35), w - 0.05, h - 0.03, d - 0.05, 0, (h - 0.03) / 2, 0, { round: true, r: 0.06 });
+      pbox(B, NS('wood'), '#6b5a3e', w - 0.3, 0.12, d - 0.2, 0, 0.06, 0);
+      // leafy clumps on both faces and the ends (a jittered grid, random sizes, lighter toward the top), each one flush:
+      // its outer side ≤ ~3 cm past the face; sprigs along the top edges (≤ 4 cm over the top)
       const rnd = (i) => hash(s * 1.37 + i * 0.731);
       let q = 0;
       const clumps = (nx, ny, place) => {
         for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
-          const u = (i + 0.2 + 0.6 * rnd(q++)) / nx, v = (j + 0.2 + 0.6 * rnd(q++)) / ny, r = 0.15 + 0.14 * rnd(q++);
+          const u = (i + 0.2 + 0.6 * rnd(q++)) / nx, v = (j + 0.2 + 0.6 * rnd(q++)) / ny, r = 0.15 + 0.12 * rnd(q++);
           const c = mixc(leafDk, leaf, Math.min(1, 0.25 + v * 0.6 + 0.3 * rnd(q++)));
           place(u, v, r, c, (i * 7 + j) % 6);
         }
       };
-      for (const sz of [-1, 1]) clumps(Math.max(3, Math.round(w / 0.42)), Math.max(2, Math.round(h / 0.45)), (u, v, r, c, k) =>
-        B.add('foliage', puff(0, k), c, -w / 2 + 0.1 + u * (w - 0.2), 0.15 + v * (h - 0.4), sz * (d / 2 - 0.1 + 0.08 * rnd(q++)), { sx: r * 1.1, sy: r, sz: r * 0.6, ry: rnd(q++) * 3 }));
-      for (const sx of [-1, 1]) clumps(Math.max(2, Math.round(d / 0.4)), Math.max(2, Math.round(h / 0.45)), (u, v, r, c, k) =>
-        B.add('foliage', puff(0, k), c, sx * (w / 2 - 0.1 + 0.06 * rnd(q++)), 0.15 + v * (h - 0.4), -d / 2 + 0.12 + u * (d - 0.24), { sx: r * 0.6, sy: r, sz: r * 1.1 }));
-      const ns = Math.round(w / 0.3);
+      const flat = 0.09;
+      for (const sz of [-1, 1]) clumps(Math.max(3, Math.round(w / 0.4)), Math.max(2, Math.round(h / 0.42)), (u, v, r, c, k) =>
+        B.add('foliage', puff(0, k), c, -w / 2 + r * 0.9 + u * (w - r * 1.8), 0.1 + r * 0.8 + v * (h - r * 1.8 - 0.14), sz * (d / 2 - flat * 0.7), { sx: r, sy: r * 0.92, sz: flat, ry: (rnd(q++) - 0.5) * 0.4 }));
+      for (const sx of [-1, 1]) clumps(Math.max(2, Math.round(d / 0.36)), Math.max(2, Math.round(h / 0.42)), (u, v, r, c, k) =>
+        B.add('foliage', puff(0, k), c, sx * (w / 2 - flat * 0.7), 0.1 + r * 0.8 + v * (h - r * 1.8 - 0.14), -d / 2 + r * 0.8 + u * (d - r * 1.6), { sx: flat, sy: r * 0.92, sz: r }));
+      const ns = Math.round(w / 0.28);
       for (const sz of [-1, 1]) for (let i = 0; i < ns; i++) {
-        const x = -w / 2 + 0.15 + ((i + rnd(q++)) / ns) * (w - 0.3), r = 0.1 + 0.08 * rnd(q++);
-        B.add('foliage', puff(0, i % 6), leaf, x, h - 0.08 + r * 0.3, sz * (d / 2 - 0.12), { sx: r * 1.3, sy: r * 0.7, sz: r });
+        const x = -w / 2 + 0.15 + ((i + rnd(q++)) / ns) * (w - 0.3), r = 0.09 + 0.06 * rnd(q++);
+        B.add('foliage', puff(0, i % 6), leaf, x, h - 0.02, sz * (d / 2 - 0.06), { sx: r * 1.3, sy: 0.05, sz: r * 0.7 });
       }
-      // blossoms in little clusters on the faces (the owner's colour when tinted)
+      // blossoms in little clusters on the faces (the owner's colour when tinted; mixed flowers otherwise)
       const nb = Math.round(w * h * (t ? 4.2 : 2.2));
       for (let i = 0; i < nb; i++) {
         const side = rnd(q++) < 0.5 ? -1 : 1, x = (rnd(q++) - 0.5) * (w - 0.3), y = 0.35 + rnd(q++) * (h - 0.55);
         const c = bloom ?? K.flowers[i % K.flowers.length];
-        for (let k = 0; k < 3; k++) B.add(NS('foliage'), blob(0, (i + k) % 8), c, x + (k - 1) * 0.07, y + (k % 2) * 0.06, side * (d / 2 + 0.04), { s: 0.055 + 0.03 * rnd(q++), ao: false });
+        for (let k = 0; k < 3; k++) B.add('gloss', blob(0, (i + k) % 8), c, x + (k - 1) * 0.07, y + (k % 2) * 0.06, side * (d / 2 + 0.015), { s: 0.05 + 0.025 * rnd(q++), sz: 0.03, ao: false });
       }
     },
   };

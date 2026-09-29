@@ -126,14 +126,17 @@ const TOWER = {
 };
 
 // ============================================================================================================
-// The sprout pods (the stage's gimmick; src/game/pods.js reads them): seed bulbs in low planters that grow a hedge
-// when inked (the team that fills the meter owns it: tinted, climbable in its ink). Alpha's half, mirrored.
+// The sprout pods (the stage's gimmick; src/game/pods.js runs them): seed bulbs in low planters that grow a hedge when
+// inked — the team that fills its meter first owns it: tinted in its ink, climbable in that ink, high ground on top,
+// a wall across the lane for everyone. Alpha's half, mirrored. The planters (0.9 × 0.5 × 0.9, the engine's default
+// `col`) are the stage's props; the engine draws the bulbs (on the soil: bulbY 0.46) and the hedges (props.js types).
 // ============================================================================================================
 const HEDGE = [3.0, 1.8, 0.9];
 const pod = (id, x, y, z, rotY, size = HEDGE) => ({ id, pos: [x, y, z], rotY, size, pod: { type: 'treehills_pod' }, hedge: { type: 'treehills_hedge' } });
 export const PODS = {
   mirror: true,
   timing: { last: 20, wilt: 1.0, recharge: 6 },
+  bulbY: 0.46,
   modes: { boss: 'on' },
   list: [
     pod('meadow-sw', -9, G0, -7.5, 0),

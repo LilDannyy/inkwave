@@ -55,10 +55,9 @@ export const PLACEMENTS = [
   ...FEET.map((f) => ({ type: 'treehills_foot', pos: [f.cx, 0, f.cz], rotY: (f.rot * P) / 180, len: f.len, w: f.w, oboxCols: true })),
   { type: 'treehills_foot', pos: [0, 0, -42.5], rotY: 0, len: 18, w: 9 },
 
-  // ================= the sprout pods: the planters are the stage's (static colliders, baked); the bulbs are stand-ins
-  //                   until the pods engine draws them (then only these bulb entries go)
-  ...PODS.list.map((p) => ({ type: 'treehills_pod', part: 'planter', pos: p.pos, rotY: p.rotY })),
-  ...PODS.list.map((p) => ({ type: 'treehills_pod', part: 'bulb', pos: p.pos, rotY: p.rotY, standin: true })),
+  // ================= the sprout pods: the planters are the stage's (static colliders, baked, turned ones kept turned);
+  //                   the bulbs and hedges are the pods engine's (src/game/pods.js)
+  ...PODS.list.map((p) => ({ type: 'treehills_pod', part: 'planter', pos: p.pos, rotY: p.rotY, oboxCols: true })),
 
   // ================= the research station (spawn) and the base terrace (T1)
   { type: 'treehills_station', pos: [0, 0, -42.5], rotY: 0 },
