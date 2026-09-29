@@ -575,17 +575,31 @@ export class TowerCommand {
     this.path.at(sBefore, _p0);
     const dx = p1.x - _p0.x, dy = p1.y - _p0.y, dz = p1.z - _p0.z;
     for (const a of this.match.actors) {
-      if (!a.alive) continue;
-      if (a.remote) {                                     // (moved by the network; still not walking: the animation knows)
-        if (this.riderList.includes(a) && a.anim?.carry) { a.anim.carry.x += dx; a.anim.carry.y += dy; a.anim.carry.z += dz; }
-        continue;
-      }
+      if (!a.alive || a.remote) continue;                 // (remote players move by the network: carryRemote)
       const onIt = a.grounded && a.ground && a.ground.block === this.block.id;
       const upIt = a.climbing && a.wallHit && a.wallHit.block === this.block.id;   // swimming up its wall
       if (!onIt && !upIt) continue;
       a.pos.x += dx; a.pos.z += dz; a.pos.y += dy;
       if (a.anim?.carry) { a.anim.carry.x += dx; a.anim.carry.y += dy; a.anim.carry.z += dz; }
     }
+  }
+
+  // online (netmatch applyRemote): a remote player on the platform moves by its owner's samples — its own walking plus
+  // the ride, a touch late and not quite even between samples. All of this frame's move but its own walking (the
+  // owner's velocity: the ride isn't in it) is the ride, so its gait and planted feet go by its walking alone.
+  carryRemote(a, x0, y0, z0, dt) {
+    if (!a.alive || a.superJumpState || !a.anim?.carry) return;
+    if (!this.riderList.includes(a) && !(a.climbing && this._byWall(a))) return;   // (on its deck, or swimming up its wall)
+    const dx = a.pos.x - x0, dy = a.pos.y - y0, dz = a.pos.z - z0;
+    if (dx * dx + dy * dy + dz * dz > 4) return;          // (a snap: not a ride)
+    a.anim.carry.set(dx - a.vel.x * dt, dy - a.vel.y * dt, dz - a.vel.z * dt);
+  }
+
+  // right against one of its walls, below its top (a climber on it)
+  _byWall(a) {
+    const dx = a.pos.x - this.pos.x, dz = a.pos.z - this.pos.z, c = Math.cos(this.yaw), s = Math.sin(this.yaw);
+    const e = Math.max(Math.abs(dx * c - dz * s), Math.abs(dx * s + dz * c)) - TOWER.platformR;
+    return e > -0.2 && e < 0.7 && a.pos.y > this.pos.y - 0.3 && a.pos.y < this.top + 0.2;
   }
 
   // points now: the distance into enemy territory (trackPoints over the whole track) + that side's checkpoints (each
