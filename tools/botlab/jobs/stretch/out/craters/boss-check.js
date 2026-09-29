@@ -26,7 +26,9 @@
     if (boss.dead) break;
   }
   const played = boss.log.moves.reduce((o, mv) => { o[mv[1]] = (o[mv[1]] || 0) + 1; return o; }, {});
-  R('it roams (distance walked, 4 m cells visited)', dist > 50 && seen.size > 8, { dist_m: Math.round(dist), cells4m: seen.size, trail });
+  // (the stretch: the squad now fights it on the reserve line and the neck's forecourt, a short walk from where it
+  // starts — it closes on its targets rather than patrolling; 30 m / 6 cells, and never idle, is "it moves about")
+  R('it roams (distance walked, 4 m cells visited)', dist > 30 && seen.size >= 6, { dist_m: Math.round(dist), cells4m: seen.size, trail });
   R('it never stands idle for long (outside a move)', maxStill < 12, { maxIdle_s: maxStill });
   R('it plays its moves (charges included)', Object.keys(played).length >= 3, { played, stuns, hp: +(boss.hp / boss.maxHp).toFixed(2), dead: boss.dead });
   return out;

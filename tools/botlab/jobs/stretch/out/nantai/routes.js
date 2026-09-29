@@ -11,7 +11,7 @@
     'knoll (front steps, over the knoll, back steps)': [[0, 0, -12], [3, 1.3, -33], [3, 2.6, -42], [0, 2.6, -48.6]],
     'east terrace (past the hut, the strip by the knoll)': [[0, 0, -12], [12, 1.3, -30], [14.5, 1.3, -38], [12.5, 1.3, -48]],
     'stargazing terrace (west flight, the terrace, the drop to the apron)': [[-5.8, 2.6, -24], [-6, 2.6, -40], [-4.5, 2.6, -52]],
-    'shore trail (log bridge, the meadow, the garden ramp)': [[20.6, 0, -15.4], [20, 0, -34], [19, 0, -48], [17.2, 0.4, -51.6]],
+    'shore trail (log bridge, the meadow, the garden ramp)': [[18.6, 0, -11.5], [22.4, 0, -19.4], [20, 0, -34], [19, 0, -48], [18.9, 0, -51.3]],
     'ridge (the boardwalk, the ridge past the Solar Tower)': [[-22, 1.3, -10], [-22, 2.6, -17], [-22, 2.6, -40], [-17, 2.6, -53], [-5, 2.6, -55]],
   };
   const res = {};
