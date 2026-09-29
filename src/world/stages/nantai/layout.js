@@ -195,9 +195,9 @@ const LAYOUT_NANTAI = {
   // match intro: high over the lawn's west end (the weir behind), looking over the Old Stone Bridge at the terraces and
   // the dome, then down onto your forecourt
   intro: { from: [-10, 12.5, 8], lookFrom: [2, 3.5, -12], toBack: 3.0 },
-  // stage-select picture: from over the tarn by the weir, across the star party and the brook to the terraces, the
-  // observatory and the summit
-  art: { from: [-26, 10, 10], look: [4, 2.5, -18], fov: 60 },
+  // stage-select picture: from high over the tarn by the weir, across the brook and Pearl's rock to the terraces, the
+  // Solar Tower and the dish on its knoll, the observatory and the summit (since the stretch: the whole climb to the dome)
+  art: { from: [-21, 15, 12], look: [2, 1, -28], fov: 66 },
   env: {
     backdrop: (kit) => buildBackdrop(kit, { d: ST.d }), bay: false, edge: 'none', boats: false, gulls: false, buoys: false, stars: true,
     weather: { mist: { layers: 2, height: 1.6, reach: 150, inner: 10, opacity: 0.26, scale: 0.025 } },   // thin fog lying on the tarn
@@ -217,7 +217,8 @@ const LAYOUT_NANTAI = {
   half: [...GROUND, ...HALF, ...SLICE_PIECES],
   // two heritage lamps per half light the paths at the bridge head and the terrace steps at dusk; the team flags fly
   // from the forecourt's back corners
-  decor: { lamps: [[-4.4, -8.9], [4.3, -20.6]], palms: [], flags: [[-8.3, G3, sz(-44.7)], [4.7, G3, sz(-44.7)]] },
+  // (the slice adds two: on the stargazing terrace by the Solar Tower's forecourt, on the apron below the knoll)
+  decor: { lamps: [[-4.4, -8.9], [4.3, -20.6], [-8.0, -33.4], [8.4, -49.6]], palms: [], flags: [[-8.3, G3, sz(-44.7)], [4.7, G3, sz(-44.7)]] },
 };
 
 export const LAYOUT = LAYOUT_NANTAI;

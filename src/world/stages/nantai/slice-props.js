@@ -11,7 +11,7 @@
 //   nantai_sundial      a granite pedestal sundial (cover)
 //   nantai_cabinet      the dish's control cabinets / cable drums (cover)
 //   nantai_knollrock    granite blocks along a knoll face (visual)
-import { SOLAR, HUT, PEDESTAL, KNOLL, DELL } from './slice.js';
+import { SOLAR, HUT, PEDESTAL, KNOLL, DELL, ROLL1 } from './slice.js';
 
 export function registerSlice(D, H, T) {
   const { PI, TAU, HP } = H;
@@ -268,6 +268,20 @@ export function registerSlice(D, H, T) {
       colC(B, 0.2, 0, 0, 1.9, 1.56, 0.72);
     },
   };
+  // a square granite planter with a dwarf pine in it (the terraces' trees; pos = ground, w square): cover
+  D.nantai_treeplanter = {
+    desc: 'granite planter with a dwarf pine (cover)',
+    build(B, o) {
+      const w = o.w ?? 1.4, h = 0.66, seed = o.seed ?? 3;
+      B.box('paint', K.stone, w, h, w, 0, h / 2, 0, { r: 0.05 });
+      B.box('paint', K.graniteLt, w + 0.1, 0.09, w + 0.1, 0, h - 0.03, 0, { r: 0.03 });
+      B.box('paint', '#4c3e30', w - 0.18, 0.04, w - 0.18, 0, h + 0.005, 0, { r: 0.01 });
+      pine(B, -0.35, h, -0.05, 0.62, seed, o.lean ?? 0.4);
+      heath(B, w * 0.22, h, w * 0.2, 0.5, seed + 2, K.moss);
+      colC(B, 0, 0, 0, w, h + 0.05, w);
+      colC(B, 0, h, 0, w * 0.7, 1.25, w * 0.7);
+    },
+  };
   // granite blocks set along a knoll or bed face (pos = the face's foot at its middle; the face runs `length` along
   // local x, the blocks just in front of it, +Z) — visual only
   D.nantai_knollrock = {
@@ -291,12 +305,13 @@ export function registerSlice(D, H, T) {
 const P = Math.PI, HP = P / 2;
 const G1 = 1.3, G2 = 2.6;
 export const SLICE_PLACEMENTS = [
-  // ================= at the cut: the terraces' fronts lost the roll-off hut and a pier to the base's move — a pier on the
-  //                   stargazing terrace's front, a pier and a Grizzco crate stack on the first terrace's (between the
-  //                   tower's runs)
+  // ================= at the cut: the terraces' fronts lost roll-off hut no. 2 and a pier to the base's move — a pier on
+  //                   the stargazing terrace's front; roll-off hut no. 1 (slice.js), a planter and a Grizzco crate stack
+  //                   on the first terrace's (between the tower's runs)
   { type: 'nantai_telepier', pos: [-9.6, G2, -30.4], rotY: 2.6 },
-  { type: 'nantai_telepier', pos: [6.0, G1, -30.3], rotY: -0.2 },
-  { type: 'nantai_crates', pos: [11.6, G1, -29.9], rotY: 0.15, n: 3 },
+  { type: 'nantai_rolloff', pos: [ROLL1.x0 + 1.8, G1, ROLL1.z0 + 1.6], rotY: 0, label: 'ROLL-OFF 1' },
+  { type: 'nantai_crates', pos: [14.6, G1, -29.9], rotY: 0.15, n: 3 },
+  { type: 'nantai_treeplanter', pos: [0.6, G1, -30.1], rotY: 0.3, seed: 4 },
   // ================= the Solar Tower on the shoulder, its forecourt: telescope piers, the sundial, a board, crates
   { type: 'nantai_solartower', pos: [(SOLAR.x0 + SOLAR.x1) / 2, G2, (SOLAR.z0 + SOLAR.z1) / 2], rotY: HP },
   { type: 'nantai_telepier', pos: [-12.6, G2, -35.4], rotY: 2.3 },
@@ -338,7 +353,7 @@ export const SLICE_PLACEMENTS = [
   { type: 'nantai_knollrock', pos: [5.4, G1, KNOLL.z0 - 0.05], rotY: P, length: 5.2, h: 0.8, seed: 17 },
   // ================= the first terrace round it: piers, crates, the receiver hut
   { type: 'nantai_dishhut', pos: [(HUT.x0 + HUT.x1) / 2, G1, (HUT.z0 + HUT.z1) / 2], rotY: 0 },
-  { type: 'nantai_telepier', pos: [-1.4, G1, -37.4], rotY: 0.4 },
+  { type: 'nantai_treeplanter', pos: [-1.5, G1, -37.5], rotY: 1.1, seed: 6 },
   { type: 'nantai_crates', pos: [7.6, G1, -37.6], rotY: 0.2, n: 2 },
   { type: 'nantai_bollard', pos: [8.6, G1, -35.9] },
   // ================= the apron in front of the grand stair (the goal's spot stays open), the strip by the knoll
