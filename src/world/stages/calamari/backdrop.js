@@ -43,7 +43,11 @@ export function buildBackdrop(kit) {
     if (!Number.isFinite(h)) return null;
     const far = Math.hypot(x + 20, z + 30);
     h += (n - 0.5) * 5 * smooth(8, 30, far) + (n2 - 0.5) * 1.6 + 0.08 * Math.max(0, far - 60);
-    return Math.min(h, 62);
+    // far out: a soft cap (no flat table-top) and the land sinking into the sea before the far grid's outer edges
+    // (x −200, z −220), so no square-cut plateau shows through the haze behind the hills
+    if (h > 38) h = 38 + (h - 38) * 0.4;
+    const fade = smooth(0, 70, Math.min(x + 200, z + 220));
+    return Math.min(h * fade - 5 * (1 - fade), 62);
   }
   // heightfield mesh over a rectangle (grid step s), clipped to the land; vertex colour = winter meadow tint
   function heightfield(x0, x1, z0, z1, s, tint) {
