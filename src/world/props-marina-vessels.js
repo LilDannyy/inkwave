@@ -8,6 +8,8 @@
 // playable walls stands off the face by ≤ 0.12 m, never covers floors, and colliders exist only where listed in
 // docs/HALYARD.md (cover pieces) or where a prop is genuinely solid and out of the lanes.
 
+import { hq, QUAY_FRONT, SLICE } from './props-marina-slice.js';
+
 export function registerMarinaVessels(D, H) {
   const { THREE, PI, TAU, HP, P3, col, shade, mixc, extrudeGeo, TIRE, LIFERING } = H;
 
@@ -1363,6 +1365,14 @@ export function registerMarinaVessels(D, H) {
     const bsp = [0, tr0[1] + 0.2 + (mh[1] - tr0[1]) * 0.12, tr0[2] + 0.05 + (mh[2] - tr0[2]) * 0.12];
     B.flag(bsp[0], bsp[1], bsp[2], { color: o.flag ?? pick(['#2f3a57', '#c8473d', '#3f9f97', '#f2eee6']), s: 1.3, ry: HP });
     if (o.name) { const tp = h.at(0.004, 0.55, 1); text(B, o.name, 0.13, dark ? C.white : C.navy, 0, tp[1] + 0.02, tp[2] - 0.03, { ry: PI, weight: 0.18, depth: 0.004 }); }
+    // berthed in the arena (col: true): the hull, the coachroof and the spray dodger collide (a pontoon's cover); col: 'roof'
+    // (a boat out of reach, e.g. hanging in the travel lift): the same, off limits
+    if (o.col) {
+      const f = o.col === 'roof' ? { roof: true } : undefined, hbC = h.hb(0.45) * 0.9, yd = Math.min(h.top(0.15), h.top(0.5));
+      B.col(-hbC, -0.3, zt(0.04), hbC, yd, zt(0.86), f);
+      B.col(-wC / 2, yd, zt(t0), wC / 2, yC + 0.21, zt(t1), f);
+      B.col(-wC * 0.46, yC + 0.21, dz0 - 0.55, wC * 0.46, yC + 0.21 + 0.6, dz0 + 0.05, f);
+    }
   }
 
   // ------------------------------------------------------------------------------------------------ MOTOR YACHT
@@ -1413,6 +1423,13 @@ export function registerMarinaVessels(D, H) {
     for (const t of [0.3, 0.55]) { const p = h.at(t, 1, fs0); B.lathe('gloss', C.white, [[0, -0.3], [0.08, -0.28], [0.11, -0.2], [0.11, 0.2], [0.08, 0.28], [0, 0.3]], p[0] + fs0 * 0.12, p[1] - 0.7, p[2], { seg: 8 }); }
     B.flag(0, tr0[1] + 0.9, tr0[2] + 0.15, { color: o.flag ?? '#2f3a57', s: 1.3, ry: HP });
     cy(B, 'metal', C.teak, 0.012, 0.9, 0, tr0[1] + 0.5, tr0[2] + 0.15, { seg: 4 });
+    // berthed in the arena (col: true): hull, saloon + flybridge collide (cover); col: 'roof': the same, off limits
+    if (o.col) {
+      const f = o.col === 'roof' ? { roof: true } : undefined, hbC = h.hb(0.45) * 0.9, yd = Math.min(h.top(0.1), h.top(0.5));
+      B.col(-hbC, -0.3, zt(0.03), hbC, yd, zt(0.88), f);
+      B.col(-ws / 2, yd, zt(ts0), ws / 2, ys + 0.42, zt(ts1), f);
+      B.col(-ws * 0.42, ys + 0.42, zt(tf0), ws * 0.42, yf + 0.3, zt(tf1), f);
+    }
   }
 
   // ------------------------------------------------------------------------------------------------ FISHING BOAT
@@ -2137,7 +2154,7 @@ export function registerMarinaVessels(D, H) {
 
   // ================================================================================================ marina prop types
   // Moored boats sit with their waterline at the prop's y (place at y -1.6), bow toward local +Z. Non-colliding.
-  const boatType = (desc, fn) => ({ desc, params: { length: 'm', color: 'hull', accent: 'stripe / canvas', name: 'transom name', fenderSide: '±1' }, variants: 1, mount: 'ground', build(B, o) { B.aoBase = null; noShadow(B, () => fn(B, o)); } });
+  const boatType = (desc, fn) => ({ desc, params: { length: 'm', color: 'hull', accent: 'stripe / canvas', name: 'transom name', fenderSide: '±1', col: "true: hull + deckhouse colliders (a berth in the arena), 'roof': off limits" }, variants: 1, mount: 'ground', build(B, o) { B.aoBase = null; noShadow(B, () => fn(B, o)); } });
   D.yacht_sail = boatType('Masthead cruising yacht: lofted hull with antifouling, boot + cove stripes, teak toe rails, coachroof with ports, cockpit (wheel or tiller), spray dodger, mast with spreaders + standing rigging, boom with stack-pack cover and lazy jacks, furled genoa, pulpits + lifelines, fenders, ensign, transom name.', sailboat);
   D.yacht_motor = boatType('Motor cruiser: hard-chine hull with window band, swim platform, saloon with raked glazing, flybridge with helm seats + bimini, radar arch, bow rail + anchor, fenders, ensign, transom name.', motorYacht);
   D.boat_fishing = boatType('Inshore fishing boat: high-bowed hull with bulwark stripe, tyre fenders, forward wheelhouse with mast, radar + lights, outrigger booms, A-frame gantry, net drum, fish boxes and marker buoys.', fishingBoat);
@@ -2278,11 +2295,11 @@ export function registerMarinaVessels(D, H) {
   // frame). Non-colliding.
   D.floatdeck = {
     desc: 'Modular floating-dock section dressing (Tower Command): galvanised frame channel round a composite-deck section, black rubber rub rails, corner bumpers and deck-edge cleats on open water, connector plates across the joins to the next section, stringers and grey poly float tubs at the waterline, guide piles with pile hoops, hung fenders toward moored boats. Non-colliding.',
-    params: { w: 'section x size', d: 'section z size', y0: 'frame bottom (-0.4)', sides: "{ side: [[kind 'w'|'j'|'s'|'b', a, b]] }", piles: '[[x, z]]' },
+    params: { w: 'section x size', d: 'section z size', y0: 'frame bottom (-0.4)', sea: 'sea level, prop-local (-1.6: a deck at pier level)', sides: "{ side: [[kind 'w'|'j'|'s'|'b', a, b]] }", piles: '[[x, z]]' },
     variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const w = o.w ?? 3, d = o.d ?? 3, y0 = o.y0 ?? -0.4, hw = w / 2, hd = d / 2, fh = -y0;
+      const w = o.w ?? 3, d = o.d ?? 3, y0 = o.y0 ?? -0.4, hw = w / 2, hd = d / 2, fh = -y0, SEA = o.sea ?? -1.6;   // (a lower deck: the visitor pontoons)
       const galv = C.galv, galvDk = shade(C.galv, 0.72), rub = '#1d2025', tub = '#8d949a', tubDk = shade('#8d949a', 0.8);
       // side frame: n = outward normal, u runs along the side (local x for ±z sides, local z for ±x sides)
       const SIDE = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
@@ -2674,14 +2691,15 @@ export const HALYARD_FLOATS = [
   { x: [-9.85, -4.65], z: [26.15, 30.85], cx: [-7.0] },                                            // FLOAT beside LIMPET, walkway ↔ quay
 ];
 // what lies round the floats (Bravo's half): a float side within 0.35 m of one of these is a seam ('s'; 'b' a boat: fenders)
+// (the Long Stages slice moved the quay out to z ±QUAY_FRONT: the piers and the yard run on to it)
 const FLOAT_NEIGHBOURS = [
   [-16, 16, -5, 5, 'b'],                            // the ferry
-  [19.5, 24, -7, 0, 's'], [19.5, 24, 0, 31, 's'],   // Alpha's yard strip, the Long Pier
+  [19.5, 24, -7, 0, 's'], [19.5, 24, 0, -QUAY_FRONT, 's'],   // Alpha's yard strip, the Long Pier
   [4.5, 19.5, 10.4, 12.4, 's'],                     // the boardwalk
-  [-4.5, 4.5, 8.6, 31, 's'],                        // the fuel dock
+  [-4.5, 4.5, 8.6, -QUAY_FRONT, 's'],               // the fuel dock
   [13, 17.6, 14.4, 23.4, 'b'],                      // the houseboat (Tower Command's trimmed hull)
-  [-24, 24, 31, 46, 's'],                           // the quay
-  [-24, -10, 7, 31, 's'], [-10, -4.5, 24, 26, 's'], // the boatyard, its walkway
+  [-24, 24, -QUAY_FRONT, -hq(-46), 's'],            // the quay
+  [-24, -10, 7, 35.5, 's'], [-10, -4.5, 24, 26, 's'], // the boatyard (to the travel-lift slip), its walkway
   [-9.8, -4.8, 14.4, 23.4, 'b'],                    // workboat LIMPET
   [7.1, 11.8, 23.7, 30.35, 'b'],                    // water-bus PUFFIN
   [12.5, 19.5, 25.2, 26.4, 's'],                    // the finger pier
@@ -2768,8 +2786,8 @@ export const HALYARD_VESSELS = [
   //      bow, so the trailer is parked out on the quay by the boathouse instead (keeps the lane east of the stair open
   //      from the quay — no dead-end alley beside the tug)
   { type: 'dinghy_trailer', pos: [22.1, 0, -27.7], notIn: ['zones', 'tower'] },
-  { type: 'dinghy_trailer', pos: [20.4, 0, -35.3], rotY: 0.12, onlyIn: 'tower' },   // (Tower Command: clear of the bow ramp, as in Zone Control)
-  { type: 'dinghy_trailer', pos: [20.4, 0, -35.3], rotY: 0.12, onlyIn: 'zones' },
+  { type: 'dinghy_trailer', pos: [20.4, 0, hq(-35.3)], rotY: 0.12, onlyIn: 'tower' },   // (Tower Command: clear of the bow ramp, as in Zone Control)
+  { type: 'dinghy_trailer', pos: [20.4, 0, hq(-35.3)], rotY: 0.12, onlyIn: 'zones' },
   // ---- Tower Command (the user's notes; authored on Bravo's half where they drew them, mirrored): the floating docks'
   //      sections (floatSections, below), workboat LIMPET across the channel ("BOAT / BACK OF BOAT"), water-bus PUFFIN
   //      moored bow-in between the quay and checkpoint 2's float ("BOAT WITH 1 WAY DROP", a vantage point for the
@@ -2777,7 +2795,7 @@ export const HALYARD_VESSELS = [
   ...floatSections().map((q) => ({ type: 'floatdeck', pos: [(q.x0 + q.x1) / 2, 0, (q.z0 + q.z1) / 2], w: q.x1 - q.x0, d: q.z1 - q.z0, y0: FLOAT_Y0, sides: q.sides, piles: q.piles, onlyIn: 'tower' })),
   { type: 'workboat', pos: [-7.3, 0, 18.9], onlyIn: 'tower' },
   { type: 'waterbus', pos: [9.45, 0, 27.025], rotY: Math.PI / 2, onlyIn: 'tower' },
-  { type: 'gangwayrails', pos: [9.45, 0, 35.65], rotY: Math.PI, run: 5.3, rise: 2.3, width: 1.8, thick: 0.22, posts: 5, land0: 0, onlyIn: 'tower' },
+  { type: 'gangwayrails', pos: [9.45, SLICE.pontoonY, 37.55], rotY: Math.PI, run: 7.2, rise: 2.3 - SLICE.pontoonY, width: 1.8, thick: 0.22, posts: 6, land0: 0, onlyIn: 'tower' },   // (up from the visitor pontoons' finger: the Long Stages slice)
   { type: 'crate_step', pos: [-2.75, 1.3, 3.375], onlyIn: 'tower' },
   // ---- the marina beyond the boatyard (mirrored beyond the Long Pier): quay gate + gangway, walkway, fingers, boats
   ...marina(),
@@ -2788,24 +2806,27 @@ export const HALYARD_VESSELS = [
 // gated gangway from the quay at z -37.9, fingers off its outer side every 4.2 m, boats in the berths (sterns to the
 // walkway, bows toward the breakwater, ≤ 8.6 m so they clear the rocks), a RIB + kayaks alongside its inner side.
 // Also clear of the environment's moored boats (+X fishing boat at z 20…29; the mirror side's rowboat at x -26.4…-25.1).
+// (the Long Stages stretch: the quay moved out 22 m, hq(); the walkway runs on to it, five more berths)
 function marina() {
-  const P = Math.PI, out = [], SEA = -1.6, WX = 27.6, WW = 1.8, Z0 = -38.8, Z1 = 4.0;
-  out.push({ type: 'marina_gate', pos: [24.0, 0, -37.9], run: 3.3, width: 1.4 });
+  const P = Math.PI, out = [], SEA = -1.6, WX = 27.6, WW = 1.8, Z0 = hq(-38.8), Z1 = 4.0;
+  out.push({ type: 'marina_gate', pos: [24.0, 0, hq(-37.9)], run: 3.3, width: 1.4 });
   out.push({ type: 'marina_pontoon', pos: [WX, 0, Z0], rotY: -P / 2, length: Z1 - Z0, width: WW, unit: 4.3,
-    piles: [{ s: 3.4, side: 1 }, { s: 20.5, side: 1 }, { s: 33.2, side: 1 }, { s: 42.2, side: 1 }],
-    pedestals: [7.5, 15.9, 24.3, 32.7], boxes: [12.0, 29.0], rings: [5.0, 38.2], kayaks: 36.2 });
+    piles: [{ s: 3.4, side: 1 }, { s: 20.5, side: 1 }, { s: 33.2, side: 1 }, { s: 42.2, side: 1 }, { s: 51.9, side: 1 }, { s: 61.6, side: 1 }],
+    pedestals: [7.5, 15.9, 24.3, 32.7, 41.1, 49.5, 57.9], boxes: [12.0, 29.0, 46.0], rings: [5.0, 38.2, 60.2], kayaks: 36.2 });
   const fingers = [];
-  for (let k = 0; k <= 9; k++) fingers.push(-35.5 + k * 4.2);
+  for (let k = 0; k <= 14; k++) fingers.push(hq(-35.5) + k * 4.2);
   for (const z of fingers) out.push({ type: 'marina_pontoon', pos: [WX + WW / 2, 0, z], length: 4.8, width: 0.7, unit: 2.4, cleatSides: [-1, 1], piles: [{ s: 4.95, side: 0, h: 2.8 }] });
   const berths = [
+    ['yacht_sail', 7.6, 'CURLEW'], ['yacht_motor', 7.8, 'BLUE MOON'], ['yacht_sail', 7.9, 'SEA HOLLY'], ['boat_fishing', 7.4, 'GOOD INTENT'], ['yacht_sail', 7.3, 'WHIMBREL'],
     ['yacht_sail', 7.8, 'SALT SPRAY'], ['yacht_sail', 7.4, 'KITTIWAKE'], ['yacht_motor', 7.6, 'REEL TIME'], ['yacht_sail', 7.8, 'HALCYON'], ['yacht_sail', 7.6, 'PIPIT'],
     ['boat_fishing', 7.6, 'MARY ANN'], ['yacht_sail', 7.2, 'TERN'], ['yacht_sail', 7.9, 'MARGUERITE'], ['yacht_motor', 7.4, 'SEA BISCUIT'],
   ];
   berths.forEach(([type, L, name], k) => {
-    const z = -33.4 + k * 4.2;
+    const z = hq(-33.4) + k * 4.2;
     out.push({ type, pos: [WX + WW / 2 + 0.5 + L / 2, SEA, z + (k % 2 ? 0.12 : -0.12)], rotY: P / 2 + ((k % 3) - 1) * 0.015, length: L, name, fenderSide: k % 2 ? -1 : 1 });
   });
   // alongside the inner side of the walkway (broadside to the arena)
+  out.push({ type: 'boat_rib', pos: [25.58, SEA, -45.2], rotY: 0.03, length: 3.8, color: '#3f9f97' });
   out.push({ type: 'boat_rib', pos: [25.58, SEA, -24.6], rotY: 0.02, length: 4.0 });
   out.push({ type: 'boat_rib', pos: [25.58, SEA, -9.8], rotY: P - 0.02, length: 4.0, color: '#e9703a' });
   return out;

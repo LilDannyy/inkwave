@@ -30,7 +30,10 @@ export const TOWER_DEFS = {
     checkpoints: [[-6.92, 11.68], [-0.87, 20.02], [16.82, 9.71]],
   },
   halyard: {
-    path: [[0, 0], [17.64, 0], [17.64, 7.85], [11.68, 7.85], [11.68, 17.4], [-12.9, 17.4], [-12.9, 30.4]],
+    // (the Long Stages stretch: from the boatyard the track carries on through the slice — east along the yard's front
+    //  between the tug's bow ramp and the travel-lift dock's hoist, round the slip's head and down the hardstanding past
+    //  the laid-up yacht to the goal by the quay, 24 m further out like the spawn; props-marina-slice.js)
+    path: [[0, 0], [17.64, 0], [17.64, 7.85], [11.68, 7.85], [11.68, 17.4], [-12.9, 17.4], [-12.9, 32.2], [-21.9, 32.2], [-21.9, 54.4]],
     checkpoints: [[17.76, 2.14], [11.29, 17.8], [-6.91, 17.79]],
   },
   saltpan: {
