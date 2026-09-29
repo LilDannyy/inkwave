@@ -1,0 +1,160 @@
+# Eco-Forest Treehills (`treehills`): design
+
+**Name:** Eco-Forest Treehills. **Times:** day (the dome's simulated noon: bright, clean) / dusk (the dome screens play
+a sunset; windows and path lights on).
+
+Read `BRIEF.md` first (the rules, tools and report), including its **Addendum (2026-09-29)**: the user's newer rules.
+
+## The place (the user's words)
+
+"It is a massive, tiered biome engineered with lush greenery, cypress/thujopsis-style evergreen trees, and rolling
+artificial hills mixed with eco friendly buildings and windmills. Like the rest of Alterna, it was built by humanity to
+preserve and recreate natural terrestrial ecosystems beneath the mountain. The skybox is a simulation of the sky on
+screens."
+
+References, in this folder:
+- `treehills-sky-ref.webp`: the Alterna sky. A normal blue sky with clouds, crossed by a geodesic grid of thin, pale
+  blue glowing lines (triangles meeting at nodes): the seams between the dome's screens. Under it, a space-centre
+  skyline (a rocket, gantries). That skyline is a different Alterna site: don't copy it, but distant Alterna structures
+  on the horizon are welcome.
+- `treehills-buildings-ref.webp`: Alterna architecture.
+  - Modular container-like buildings in deep green with chequer-plate roofs and edges.
+  - Half-cylinder glass greenhouse pods with plants inside.
+  - A white satellite dish with a round blue logo.
+  - Red valve fixtures, round hatches, landing-pad circles, painted floor labels, a pale-cyan float-balloon.
+  - It's clean, engineered and slightly retro-futurist. Use this language for every building on the stage.
+
+What the players should read from any camera:
+- **The sky dome.** The geodesic grid over the sky (backdrop `objects`: a huge icosphere of thin, glowing, additive
+  lines, fog off, drawn over the sky), and at the horizon the cavern's rock walls rising into the dome's rim. It is an
+  indoor sky: no sea horizon.
+- **Tiered tree-hills.** Artificial hills built in terraces, with retaining walls in green-grey panels, lawn tops and
+  dense cypress / thujopsis evergreens (tall dark-green cones and layered sprays, instanced). Two big ones form the
+  flanks.
+- **Wind turbines.** One modern three-blade turbine on each flank hill (mirrored), blades turning slowly (a backdrop
+  `objects` mesh, or a prop plus an animated part). More turbines on the far hills.
+- **Eco buildings.** Each base is an Alterna research-station block: green modular units, a greenhouse pod or two, the
+  satellite dish, solar panels, seed-bank crates. Each spawn is a roof deck on it.
+- **Reservoir water.** The stage sits in a calm engineered reservoir (the death plane): `water: 'marina'` calm mode or a
+  calm sea look, clean teal-green. Small sluices and a weir on the far walls.
+- **Signage.** Alterna stencils ("ECO-FOREST TREEHILLS", biome numbers, "SEED BANK 05", arrows, pad circles) as
+  murals.
+
+## Layout (world metres; Alpha at −Z, Bravo at +Z)
+
+A **diamond**: widest across the middle (x ≈ ±34) and narrowing toward each base (x ≈ ±12 at the spawn buildings). The
+edges are terraced and faceted: straight segments at the geodesic 30° / 60° angles, stepped where the tiers meet the
+water. This silhouette is different from the other four new stages (a jagged band, round, a band and an S) and puts the
+most room at mid.
+
+- **Mid, "the Commons Meadow": the priority.** A broad, open lawn across the widest part of the diamond (roughly
+  30 × 22 m of floor at y 0). Its cover:
+  - low planters and seed-bank crates;
+  - a pollinator border;
+  - a couple of young cypress clumps (tree colliders);
+  - above all, the **sprout pods** (the gimmick, below), so the cover changes during the match.
+
+  At least five ways in from each half: both hill ramps, the central path, and two terrace stairs. Never cramped.
+- **The flank tree-hills** (the diamond's east and west corners, mirrored):
+  - terraces at 1.3 / 2.6 / 3.9 m with broad ramps (≤ 24°) and wide stairs;
+  - dense evergreens on the tiers as cover and shade;
+  - the wind turbine on top, out of play (its base is a roof);
+  - they look down on the meadow: the high ground over mid, reachable from both halves, so they are contested too.
+- **Each half's approach:** from the base forecourt, three lanes fan out: left hill, centre path, right hill. A mid-tier
+  terrace (1.3 m) crosses in front of the base, with a greenhouse pod on it as big cover.
+- **Base:** the research-station block; the spawn deck at about 3.2 m on its roof, with wide stairs down both sides and
+  a ramp.
+- **Heights:** 0 meadow · 1.3 / 2.6 / 3.9 hill tiers · 1.3 base terrace · about 3.2 spawn deck.
+
+## The gimmick: sprout pods (growable cover)
+
+Pods are seed bulbs in low planters, placed around mid and along the lanes (6–8 per half, mirrored).
+- **Growing:** ink a pod (either team; shots, rollers, bombs all count) until its meter fills, and a hedge bursts out
+  of it: a dense boxwood / cypress hedge wall about 2.6–3.2 m wide, 0.9 m deep and 1.8 m tall.
+- **Timing:** the hedge lasts about 20 s, wilts back into the pod, and the pod recharges for a few seconds.
+- **Physics:** hedges block movement and shots and are not inkable; their tops are slide-off.
+- **Shoving:** players standing where a hedge grows are shoved aside, never into walls or water.
+- **Ownership:** the cover is team-neutral; whoever grows it, it shields anyone.
+
+So cover appears where the fight is: shoot a pod to block a sightline, cut off a flank or wall in a zone. The engine
+side of this is being built in parallel by another agent (see "Contract" below). You place and dress the pods.
+
+Pod placement rules:
+- Mirrored.
+- Never inside a zone polygon (next to zones is good).
+- Never on the tower track's footprint (2.5 m platform plus margin) or its headroom.
+- Never on a spawn exit or narrow stair.
+- A fully grown hedge must not seal a route completely: every area keeps another way round.
+
+## Modes
+
+- **Zone Control.**
+  - Centre: the meadow middle, one zone of about 12 × 11 m (or two zones either side of a central planter), with pods
+    round it but not in it.
+  - Side: the base terrace (1.3) in front of each spawn building, closer to its spawn than to the centre.
+- **Tower Command.** "Across the meadow and up the hill." Straight lines and square corners:
+  - from the centre across the meadow;
+  - **climbs** up the first hill tier (1.3), then along the tier;
+  - a **climb** to 2.6;
+  - along the upper tier past the turbine base;
+  - a **drop** back down to the base terrace;
+  - the goal about 12 m short of the pad.
+  - About 80–90 m, 2 checkpoints; clearance under any trees and structures (3.72 m).
+- **Boss Battle.** The meadow suits HULLBREAKER; check it can roam and charge across it (pods and hedges: see the
+  contract).
+
+## The world round it (env)
+
+- `bay: false`.
+- Backdrop:
+  - the geodesic sky grid;
+  - cavern walls on every side, blending into the dome rim;
+  - rolling artificial forest hills beyond the reservoir (terrain with dark-green forest; instanced cypress), turbines
+    on them;
+  - distant Alterna buildings;
+  - maybe a lift shaft or pipe bundle running up a cavern wall.
+- Water: calm, clean reservoir colours (theme overrides). No gulls (it's indoors); `boats: false`, `buoys: false`.
+  Mist: none, or very light.
+- Theme overrides: a slightly too-perfect sky (the dome's rendering): clean blue, soft sun. At dusk the dome plays a warm
+  sunset with the grid lines glowing a little brighter.
+
+## Surfaces (your 3 slots: 61–63)
+
+Suggestions:
+- manicured artificial turf / meadow lawn;
+- green-grey engineered retaining panels (hex / triangle panel seams, bolts);
+- Alterna chequer-plate deck (green-tinted steel with worn chequer, for roofs, decks and stairs).
+
+## Contract with the pods engine (src/game/pods.js, being built now)
+
+The layout carries the pods; the engine reads them. Until the engine is merged into your branch, the pods simply do
+nothing (keep them as placed props so the stage looks right). The format:
+
+```js
+LAYOUT.pods = {
+  mirror: true,                                   // each listed pod gets its 180° twin
+  timing: { last: 20, wilt: 1.0, recharge: 6 },   // optional overrides (s)
+  modes: { boss: 'on' },                          // per mode 'on' (default) / 'off'
+  list: [
+    { id: 'meadow-w', pos: [x, y, z], rotY: 0,     // the pod on the floor at pos (y = floor height); rotY turns the hedge
+      size: [3.0, 1.8, 0.9],                       // the hedge it grows: width (across rotY), height, depth
+      pod: { type: 'treehills_pod' },              // PropKit types for the looks (the engine falls back to a default)
+      hedge: { type: 'treehills_hedge' } },
+  ],
+};
+```
+
+You register the two prop types in `props.js`:
+- `treehills_pod`: the dormant seed bulb in its planter (about 0.9 × 0.7 × 0.9 m), with a swelling part the engine can
+  scale as the meter fills.
+- `treehills_hedge`: the grown hedge, built at the size it's given (w × h × d, origin at its base centre); leafy,
+  flowered, no colliders (the engine makes the collision block).
+
+The engine side:
+- the meter and growth;
+- collision, shoving and nav blocking;
+- sounds;
+- online sync;
+- bots using pods.
+
+When it lands, the lead merges it into your branch (or tells you to merge a branch); then test pods on the stage.

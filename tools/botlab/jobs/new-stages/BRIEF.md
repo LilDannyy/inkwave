@@ -209,3 +209,20 @@ once more to confirm it applies.
    (zones), top (tower), art day + dusk, spawnA, mid, 2–4 of your favourite spots.
 5. A one-sentence stage-select blurb, the theme / times you want, and `noBoss` yes/no.
 6. Shared-file changes you'd want, and known issues.
+
+## Addendum (2026-09-29): the user's newer rules, from playing the first four stages
+
+- **Mid matters most.** "regardless of the mode, mid is the most important part where most battles will be." Mid must
+  feel spacious: wide stairs and bridges, open floor, several ways in, never cramped corridors. Give it the most care.
+- **Vary the overall silhouette across a set of maps.** "they're all glorified rectangles." Jagged edges on a long band
+  still read as the same rectangle. Each stage gets its own macro shape (the design gives yours).
+- **Flank routes.** Each side needs several real flank routes (2–4) besides mid, meeting mid at different points.
+- **Check the player's own camera at the spawn:** `SHOTS='play'` in `tools/botlab/shoot.cjs`. A roof beam across the
+  player's view at spawn was a real bug.
+- **Bots:** run `tools/botlab/tests/climb-audit.js` on your stage (no wall-climb whose way over the top is barred). Watch
+  for long stuck episodes, not just the %; a bot wedged for 40 s in one spot must be fixed (look at the nav: a pocket
+  with no way out, or a bot on an enemy spawn edge with no route off).
+- **Stage movers exist:** `src/game/movers.js` (Calamari's timetabled trains: moving blocks, shoving, nav blocking).
+  Reuse it if you need something that moves on a timetable.
+- **New HUD, bots and rules** from this round are live: lead indicators, bot perception (line of sight / located),
+  the Tower rolling-home rule. Tests are in `tools/botlab/tests/`.
