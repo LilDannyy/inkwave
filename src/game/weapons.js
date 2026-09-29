@@ -25,6 +25,11 @@ const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0), ZAX =
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
 const DEG = Math.PI / 180;
+// sprout pods (src/game/pods.js): how much more a heavy single shot's splat counts toward a pod's meter than its ink
+// alone would (splat opts.pod) — so one full-charge charger shot or one roller flick fills a meter (tools/botlab/tests/pods.js
+// calibration); any other thrown drop (brush swipes, cutlass crescents, sprinkler spray) a little more too.
+// charger: × (1 + charger · charge²)
+export const POD_HINT = { charger: 4.5, flick: 6, drop: 1.6 };
 // trigger('shoot', HAND_*) arg for dual wield (character.js reads .hand; valueOf keeps numeric readers at 1)
 const HAND_R = Object.freeze({ hand: 0, valueOf() { return 1; } }), HAND_L = Object.freeze({ hand: 1, valueOf() { return 1; } });
 
@@ -863,6 +868,7 @@ export class Projectiles {
     // pooled: clear the per-kind optional fields so nothing leaks from the projectile's previous life
     p.volley = null; p.belowFalloff = 0; p.belowFalloffMax = 0; p.burst = null; p.weaponId = null;
     p.delay = 0; p.head = false; p.wid = null; p.dmgFar = undefined; p.vol = null; p.sp = undefined; p.ghost = false;
+    p.pod = undefined;   // (a sprout pod's meter: how much this round's splat counts for — src/game/pods.js)
     // look (visual only; _draw falls back to size / defaults for anything left unset)
     p.vis = 0; p.tail0 = undefined; p.tailK = undefined; p.wob = undefined; p.wobF = 0; p.nose = 0; p.sats = 0;
     return p;
@@ -1237,7 +1243,7 @@ export class Projectiles {
       const p = this._new();
       // big globs in the middle of the sheet, smaller beads toward the edges (visual only: the hit size is unchanged)
       const mid = 1 - Math.abs(t);
-      Object.assign(p, { type: 'drop', owner: a, team: a.team, age: 0, life: 1.4, straight: 0, radius: 0.85 + Math.random() * 0.3, damage: w.flickDamageNear, dmgFar: w.flickDamageFar, size: 0.15, trail: 0, trailEvery: 1.8, trailRadius: 0.45, grav: 26, drag: 0.4, seed: Math.random(),
+      Object.assign(p, { type: 'drop', owner: a, team: a.team, age: 0, life: 1.4, straight: 0, radius: 0.85 + Math.random() * 0.3, damage: w.flickDamageNear, dmgFar: w.flickDamageFar, size: 0.15, trail: 0, trailEvery: 1.8, trailRadius: 0.45, grav: 26, drag: 0.4, seed: Math.random(), pod: POD_HINT.flick,
         vis: 0.1 + 0.085 * mid + Math.random() * 0.03, tail0: 0.4, tailK: 1.0, wob: 0.1, wobF: 19, nose: 0, sats: mid > 0.45 ? 2 : 1 });
       p.pos.set(m.x + fx * 0.6, m.y + 0.3, m.z + fz * 0.6); p.prev.copy(p.pos); p.start.copy(p.pos);
       const cu = Math.cos(up + (Math.random() - 0.5) * 0.12);
@@ -1286,7 +1292,7 @@ export class Projectiles {
     }
     if (hit.hit && !victim && !bossHit) {
       _v2.copy(hit.point).addScaledVector(hit.normal, 0.12);
-      area += G.paint.splat(_v2, w.impactRadius * (0.6 + 0.4 * charge), a.team, { seed: Math.random(), stretch: dir, stretchAmt: 0.6 });
+      area += G.paint.splat(_v2, w.impactRadius * (0.6 + 0.4 * charge), a.team, { seed: Math.random(), stretch: dir, stretchAmt: 0.6, pod: 1 + POD_HINT.charger * charge * charge });
       G.fx?.burst(hit.point, hit.normal, a.color, { count: 10, speed: 4, size: 0.09, paint: false });
       if (a.isLocal || a._nearCamera()) G.audio?.play('ink_hit_wall', { pos: hit.point, volume: 0.6 });
     }
@@ -1687,9 +1693,9 @@ export class Projectiles {
     if (sloshr) {
       // the wave lands as a thick stripe along its travel: stretched along the horizontal heading
       _dir.y = 0; if (_dir.lengthSq() < 1e-4) _dir.set(0, 0, 1); _dir.normalize();
-      area = G.paint.splat(_v, rad * 1.12, p.team, { seed: p.seed, stretch: _dir, stretchAmt: 1.25 });
+      area = G.paint.splat(_v, rad * 1.12, p.team, { seed: p.seed, stretch: _dir, stretchAmt: 1.25, pod: p.pod });
       if (p.head) this._sloshSplash(p, hit.point, null);
-    } else area = G.paint.splat(_v, rad, p.team, { seed: p.seed, stretch: _dir, stretchAmt: 0.7 });
+    } else area = G.paint.splat(_v, rad, p.team, { seed: p.seed, stretch: _dir, stretchAmt: 0.7, pod: p.pod ?? (p.type === 'drop' ? POD_HINT.drop : undefined) });
     this._credit(p, area);
     if (p.type !== 'blast') emit('weapon:impact', { pos: hit.point.clone(), normal: hit.normal.clone(), team: p.team, kind: p.type === 'drop' || sloshr ? 'drop' : 'shot', radius: rad });
     const near = p.owner.isLocal || G.camera.position.distanceToSquared(hit.point) < 22 * 22;

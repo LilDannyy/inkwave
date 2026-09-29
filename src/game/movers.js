@@ -16,8 +16,8 @@
 //
 // Sync: the timetable is a pure function of the match clock — the playing time since the start (duration − time: the
 // host's clock, which every follower already runs in step with, ±0.2 s), carried on through overtime by frame time — so
-// online every client computes the same car positions with no extra network records. Each client moves its own
-// squidkids out of a car's way (the owner's position is what the others see).
+// online every client computes the same car positions with no extra network records (stageKit.js StageClock). Each
+// client moves its own squidkids out of a car's way (the owner's position is what the others see).
 //
 // A car is a moving level block (G.level.addDynamic / moveDynamic, off-limits roof, never inked; the floor under it
 // keeps its ink) with its own mesh (PropKit.buildPart). Its current footprint — plus, from the warning until it parks,
@@ -29,8 +29,9 @@ import { G } from '../core/ctx.js';
 import { PLAYER } from '../config.js';
 import { SFX } from '../audio/audio.js';
 import { bell } from '../audio/music.js';
+import { StageClock, navClaim, navCommit, navRelease, shovable, shoveActor, buildLook, disposeLook } from './stageKit.js';
 
-const _v = new THREE.Vector3(), _h = new THREE.Vector3(), _p = new THREE.Vector3();
+const _v = new THREE.Vector3(), _p = new THREE.Vector3();
 const smooth = (s) => s * s * (3 - 2 * s);
 
 // ---- the timetable: where a mover is at timetable time tt (s of play). f = 0 at its first stop, 1 at the second.
@@ -60,7 +61,7 @@ export class StageMovers {
     this.def = def;
     this.mode = mode;                    // 'run' | 'park'
     this.T = { first: 20, dwell: 20, move: 5, warn: 4, horn: 1.2, ...(def.timetable || {}) };
-    this.t = 0;                          // timetable clock (s of play)
+    this.clock = new StageClock();       // timetable clock (s of play: this.t)
     this.live = false;                   // blocks in the level (from the first playing frame)
     this.warning = false;
     this.cars = [];
@@ -82,6 +83,8 @@ export class StageMovers {
     this._place(0);
   }
 
+  get t() { return this.clock.t; }
+
   _makeCar(c, twin) {
     const s = twin ? -1 : 1;
     const A = new THREE.Vector3(s * c.stops[0][0], c.y ?? 0, s * c.stops[0][1]), B = new THREE.Vector3(s * c.stops[1][0], c.y ?? 0, s * c.stops[1][1]);
@@ -91,12 +94,9 @@ export class StageMovers {
     const car = { id: c.id + (twin ? '~' : ''), def: c, twin, A, B, u, span, yaw: Math.atan2(-u.z, u.x),
       half: new THREE.Vector3(len / 2, ht / 2, wid / 2), len, ht, wid, pos: A.clone(), vel: 0, block: null, mesh: null, run: null, horned: -1 };
     // the mesh (a prop built along local +X; the twin turned half round like every mirrored placement)
-    const kit = G.game?.props;
-    if (kit?.buildPart && c.mesh) {
-      const o = { ...c.mesh, ...(twin ? c.twinMesh || {} : {}) };
-      car.mesh = kit.buildPart(o.type, o);
+    if (G.game?.props?.buildPart && c.mesh) {
+      car.mesh = buildLook({ ...c.mesh, ...(twin ? c.twinMesh || {} : {}) });
       car.mesh.name = 'mover:' + car.id;
-      G.scene?.add(car.mesh);
     }
     return car;
   }
@@ -106,10 +106,7 @@ export class StageMovers {
     const nav = G.nav;
     this.nav = nav || null;
     if (!nav) return;
-    if (!nav.blocked || nav.blocked.length !== nav.nodes.length) nav.blocked = new Uint8Array(nav.nodes.length);
-    else nav.blocked.fill(0);
-    this.blk = nav.blocked;
-    this.prevBlk = new Uint8Array(nav.nodes.length);
+    this.blk = navClaim(this);           // this set's own layer of nav.blocked (stageKit.js)
     const R = PLAYER.radius + 0.25;
     for (const car of this.cars) {
       const list = [], lo = -car.len / 2 - R - 1, hi = car.span + car.len / 2 + R + 1;
@@ -128,15 +125,8 @@ export class StageMovers {
   // ---- per frame (Match.update, before bots and actors move)
   update(dt) {
     const m = this.match;
-    if (m.state === 'playing') {
-      if (!this.live) this._goLive();
-      this.t += dt;
-      // the host's clock: duration − time (followers track it); overtime / practice / attract keep counting frame time
-      if (!m.practice && m.time > 0 && Number.isFinite(m.duration)) {
-        const want = m.duration - m.time, d = want - this.t;
-        if (Math.abs(d) > 1.5) this.t = want; else this.t += d * Math.min(1, dt * 3);
-      }
-    }
+    if (m.state === 'playing' && !this.live) this._goLive();
+    this.clock.tick(m, dt);
     const tt = this.mode === 'park' ? 0 : this.t;
     const ph = (this.phase = moverPhase(tt, this.T));
     this.warning = this.mode === 'run' && (ph.moving || (ph.leg >= -1 && ph.toGo <= this.T.warn && tt > 0));
@@ -180,26 +170,22 @@ export class StageMovers {
   // capsule resolution (Physics.collideBody, this frame) mops up anything left. This client's own kids only: a remote
   // one is where its owner puts it (its owner shoves it).
   _shove(car, dx, dz) {
-    const P = G.physics, r = PLAYER.radius + 0.02;
+    const r = PLAYER.radius + 0.02;
     const ux = car.u.x, uz = car.u.z, dir = Math.sign(dx * ux + dz * uz);
     const hx = car.len / 2 + r, hz = car.wid / 2 + r, y0 = car.pos.y, y1 = car.pos.y + car.ht;
     for (const a of this.match.actors) {
-      if (!a.alive || a.remote || a.superJumpState) continue;
+      if (!shovable(a)) continue;
       if (a.pos.y > y1 - 0.05 || a.pos.y + PLAYER.height < y0) continue;       // on its roof (slides off) / below it
       const px = a.pos.x - car.pos.x, pz = a.pos.z - car.pos.z;
       const la = px * ux + pz * uz, lp = -px * uz + pz * ux;
       if (Math.abs(la) >= hx || Math.abs(lp) >= hz) continue;
       const front = dir ? hx - dir * la : Infinity, side = hz - Math.abs(lp), ss = lp >= 0 ? 1 : -1;
       const tries = front <= side ? [[dir * front, 0], [0, ss * side]] : [[0, ss * side], [dir * front, 0]];
-      for (const [ma, mp] of tries) {
-        if (!Number.isFinite(ma)) continue;
-        _h.set(a.pos.x + ux * ma - uz * mp, a.pos.y, a.pos.z + uz * ma + ux * mp);
-        if (!P || P.bodyFits(_h, PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9, a.form === 'squid')) {
-          a.pos.x = _h.x; a.pos.z = _h.z;
-          if (ma && a.vel) { const va = a.vel.x * ux + a.vel.z * uz; if (va * dir < Math.abs(car.vel)) { a.vel.x += ux * (dir * Math.abs(car.vel) - va); a.vel.z += uz * (dir * Math.abs(car.vel) - va); } }
-          a.stats && (a.stats.shoved = (a.stats.shoved || 0) + 1);
-          break;
-        }
+      const spot = ([ma, mp]) => [a.pos.x + ux * ma - uz * mp, a.pos.z + uz * ma + ux * mp];
+      const used = shoveActor(a, tries.map(spot));
+      if (used >= 0 && tries[used][0] && a.vel) {
+        const va = a.vel.x * ux + a.vel.z * uz;
+        if (va * dir < Math.abs(car.vel)) { a.vel.x += ux * (dir * Math.abs(car.vel) - va); a.vel.z += uz * (dir * Math.abs(car.vel) - va); }
       }
     }
   }
@@ -220,18 +206,9 @@ export class StageMovers {
       changed = true;
     }
     if (!changed) return;
-    this.prevBlk.set(blk);
     blk.fill(0);
     for (const car of this.cars) for (const [along, id] of car.nodes) if (along >= car.navSpan[0] && along <= car.navSpan[1]) blk[id] = 1;
-    // routes into newly marked nodes: replan now
-    for (const a of this.match.actors) {
-      const b = a.bot;
-      if (!b || !b.path) continue;
-      for (let i = Math.max(0, (b.pi | 0) - 1); i < b.path.length; i++) {
-        const id = b.path[i];
-        if (blk[id] && !this.prevBlk[id]) { b.path = null; b.repath = 0; break; }
-      }
-    }
+    navCommit(this.match.actors);        // (the union with any other layer; routes into newly marked nodes replan now)
   }
 
   // ---- warnings: crossing lamps flash in turn and the bells ring from the warning until the car stops; the horn
@@ -295,12 +272,11 @@ export class StageMovers {
 
   dispose() {
     this._stopSounds();
-    const kit = G.game?.props;
-    for (const car of this.cars) { if (car.mesh) { if (kit?.disposePart) kit.disposePart(car.mesh); else car.mesh.removeFromParent(); } car.mesh = null; }
+    for (const car of this.cars) { disposeLook(car.mesh); car.mesh = null; }
     if (this.lampMesh) { this.lampMesh.removeFromParent(); this.lampMesh.geometry.dispose(); this.lampMesh.material.dispose(); this.lampMesh.dispose?.(); this.lampMesh = null; }
     if (this.live) G.level?.clearDynamic?.();
     this.live = false;
-    if (this.nav && this.nav.blocked === this.blk) this.nav.blocked = null;
+    if (this.nav) navRelease(this);
   }
 }
 
