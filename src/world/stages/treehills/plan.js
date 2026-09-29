@@ -4,8 +4,9 @@
 // whole (it spans both halves); the west one is its twin. Regions share their edges exactly (no gaps, no overlaps).
 //
 //   heights: G0 the lowland (meadow + gardens) 0 · T1 the terraces 1.3 · T2 the hill's upper tier 2.6 ·
-//            T3 the hill's crown 3.9 · SP the spawn deck (the research station's roof) 3.2
-export const G0 = 0, T1 = 1.3, T2 = 2.6, T3 = 3.9, SP = 3.2;
+//            T3 the hill's crown 3.9 · SP the spawn deck (the research station's roof: one storey of modules on the
+//            base terrace) 3.9
+export const G0 = 0, T1 = 1.3, T2 = 2.6, T3 = 3.9, SP = 3.9;
 
 // the station (spawn building): its roof deck is the spawn
 export const STATION = { x0: -9, x1: 9, z0: -47, z1: -38 };
@@ -15,12 +16,11 @@ export const PAD = [0, SP, -42.5];
 export const CORE = { x: 15, z: 14 };
 export const GARDEN = [[-15, -14], [-8, -25], [8, -25], [15, -21], [15, -14]];
 
-// Alpha's terrace plateau (T1): the base terrace round the station's front, its west side up to x −15, and the east
-// tree-hill's south lobe (the left lane) up to the hill's upper tier (z −10)
-export const PLATEAU = [
-  [-9, -42], [-9, -38], [9, -38], [9, -42], [15, -42], [15, -36], [21, -25.608], [25, -23.299], [31.5, -12.041], [31.5, -10],
-  [19.5, -10], [19.5, -21], [15, -21], [8, -25], [-8, -25], [-15, -14], [-15, -42],
-];
+// Alpha's base terrace (T1): the station's apron (chequer plate) round its front, its west side up to x −15; and the
+// east tree-hill's south lobe (lawn, the left lane) up to the hill's upper tier (z −10), meeting it along x 15
+export const APRON = [[-9, -38], [9, -38], [9, -47], [13, -47], [13, -41.547], [15, -38.083], [15, -21], [8, -25], [-8, -25], [-15, -14],
+  [-15, -38.083], [-13, -41.547], [-13, -47], [-9, -47]];
+export const LOBE = [[15, -36], [21, -25.608], [25, -23.299], [31.5, -12.041], [31.5, -10], [19.5, -10], [19.5, -21], [15, -21]];
 // the east tree-hill (authored whole). T1: the band along the lowland + the north strip (Bravo's right lane: the Tower
 // Command route down to Bravo's plateau); T2 the upper tier (a C round the crown, open to the reservoir); T3 the crown
 export const STRIP = [[15, -21], [19.5, -21], [19.5, 20], [31, 20], [28, 25.196], [28, 30], [25.5, 34.33], [19, 38.083], [15, 38.083]];

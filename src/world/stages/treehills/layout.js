@@ -5,17 +5,18 @@
 //   murals.js    stage decals / signage (mural atlas)         backdrop.js  the far scenery (the dome, the cavern, the forest)
 import { PATTERN, B, R } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
+import { SURF } from './surfaces.js';
 import { fill, FL } from './geo.js';
-import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN, PLATEAU, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds } from './plan.js';
+import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN, APRON, LOBE, STRIP, UPPER, CROWN, TRACK, ZONE_C, ZONE_S, bounds } from './plan.js';
 
 // ------------------------------------------------------------------------------------------------------------
 // Eco-Forest Treehills — a tiered forest biome under the mountain in Alterna. Alpha at −Z (the half list), Bravo is the
 // 180° twin. The playable ground is a pinwheel diamond in the biome's reservoir: widest across the middle (the two
 // tree-hills' crowns, x ±34.5), narrowing to the research stations at the ends (x ±9 … 15).
 // Heights: 0 the lowland (meadow + gardens) · 1.3 the terraces · 2.6 the hills' upper tiers · 3.9 their crowns ·
-//          3.2 the spawn deck (the station's roof).
-//   • spawn: the roof deck of the research station (3.2): the front stair to the base terrace, side stairs down both
-//     ends, drops over the front parapet
+//          3.9 the spawn deck (the station's roof).
+//   • spawn: the roof deck of the research station (3.9: one storey of modules on the base terrace): the front stair to
+//     the base terrace, side stairs down both ends from the back corners, a drop over the front edge
 //   • base terrace (1.3) across the station's front: the greenhouse pod, the side zone east of the stair
 //   • centre: the central stair down into the seed-bank garden (0) → the Commons Meadow (30 × 28 m of open lawn)
 //   • left lane (+X for Alpha): the east tree-hill's south lobe (1.3, evergreens) → the hill ramp up to its upper tier
@@ -24,19 +25,19 @@ import { G0, T1, T2, T3, SP, STATION, PAD, CORE, GARDEN, PLATEAU, STRIP, UPPER, 
 //     Command route; or the band along the meadow's west side
 // ------------------------------------------------------------------------------------------------------------
 const K = {
-  lawn: '#a7bb8e', terrace: '#b7c1a8', upper: '#aebb9f', crown: '#a9b69b', wall: '#9aa7a0', spawn: '#e1e6d8',
-  station: '#5f8a70', stair: '#b9beb6',
+  lawn: '#98b381', hill: '#a2b47e', upper: '#91ad7a', crown: '#88a773', apron: '#9fb0a6', wall: '#95a29a', spawn: '#e1e6d8',
+  station: '#56806a', stair: '#a9b3ad', ramp: '#98a99f',
 };
-const lawn = (o = {}) => ({ color: K.lawn, pattern: PATTERN.planter, ...o });
-const terrace = (o = {}) => ({ color: K.terrace, pattern: PATTERN.pavers, ...o });
-const wall = (o = {}) => ({ color: K.wall, pattern: PATTERN.metalpanel, ...o });
+const lawn = (o = {}) => ({ color: K.lawn, pattern: SURF.lawn, ...o });
+const deck = (o = {}) => ({ color: K.apron, pattern: SURF.chequer, ...o });
+const wall = (o = {}) => ({ color: K.wall, pattern: SURF.panels, ...o });
 const steps = (o = {}) => ({ color: K.stair, pattern: PATTERN.treads, ...o });
 
 // ============================================================================================================
 // The ground: the tier regions (plan.js) filled as columns with a retaining wall + coping along every slanted edge
 // ============================================================================================================
-const OUTER = { w: 1.0, outer: true, mk: () => wall({ tag: 'retaining' }) };
-const INNER = { w: 0.8, extend: true, mk: () => wall({ tag: 'coping' }) };
+const OUTER = { w: 0.8, outer: true, mk: () => wall({ tag: 'retaining' }) };
+const INNER = { w: 0.7, extend: true, mk: () => wall({ tag: 'coping' }) };
 const byEdge = (outer) => (i, a, b) => (outer(a, b) ? OUTER : INNER);
 const same = (p, q) => Math.abs(p[0] - q[0]) < 1e-6 && Math.abs(p[1] - q[1]) < 1e-6;
 // edges shared with another region (the rest face the reservoir)
@@ -45,8 +46,9 @@ const isInner = (a, b) => INNER_EDGES.some(([p, q]) => (same(a, p) && same(b, q)
 
 export const GROUND = {
   garden: fill(GARDEN, { y0: FL, top: G0, mk: () => lawn({ tag: 'garden' }), ledge: () => INNER }),
-  plateau: fill(PLATEAU, { y0: FL, top: T1, mk: () => terrace({ tag: 'plateau' }), ledge: byEdge((a, b) => !isInner(a, b)) }),
-  strip: fill(STRIP, { y0: FL, top: T1, mk: () => terrace({ tag: 'strip' }), ledge: () => OUTER }),
+  apron: fill(APRON, { y0: FL, top: T1, mk: () => deck({ tag: 'apron' }), ledge: byEdge((a, b) => !isInner(a, b)) }),
+  lobe: fill(LOBE, { y0: FL, top: T1, mk: () => lawn({ tag: 'lobe', color: K.hill }), ledge: () => OUTER }),
+  strip: fill(STRIP, { y0: FL, top: T1, mk: () => lawn({ tag: 'strip', color: K.hill }), ledge: () => OUTER }),
   upper: fill(UPPER, { y0: FL, top: T2, mk: () => lawn({ tag: 'upper', color: K.upper }), ledge: () => OUTER }),
   crown: fill(CROWN, { y0: FL, top: T3, mk: () => lawn({ tag: 'crown', color: K.crown }), ledge: () => OUTER }),
 };
@@ -64,16 +66,17 @@ const HALF = [
   // ---------------- the research station: its roof deck is the spawn
   B(STATION.x0, STATION.x1, FL, SP - 0.2, STATION.z0, STATION.z1, { color: K.station, pattern: PATTERN.container, tag: 'station' }),
   B(STATION.x0, STATION.x1, SP - 0.2, SP, STATION.z0, STATION.z1, { color: K.spawn, pattern: PATTERN.spawn, tag: 'spawn-deck' }),
-  R([0, T1, -33.6], [0, SP, -38], 6, steps({ tag: 'deck-stair' })),
-  R([13.4, T1, -40], [9, SP, -40], 3.6, steps({ tag: 'deck-side-stair' })),
-  R([-13.4, T1, -40], [-9, SP, -40], 3.6, steps({ tag: 'deck-side-stair' })),
+  R([0, T1, -32.1], [0, SP, -38], 6, steps({ tag: 'deck-stair' })),
+  // side stairs down both ends of the station, from the deck's back corners forward to the base terrace
+  R([11, T1, -40.7], [11, SP, -46.9], 3.6, steps({ tag: 'deck-side-stair' })),
+  R([-11, T1, -40.7], [-11, SP, -46.9], 3.6, steps({ tag: 'deck-side-stair' })),
 
   // ---------------- centre: the central stair down into the seed-bank garden
   R([0, G0, -21.9], [0, T1, -25], 7, steps({ tag: 'garden-stair' })),
 
   // ---------------- the east tree-hill: the hill ramp (south lobe → upper tier), stairs round the crown, the north
   //                  strip's stair up to the upper tier (beside the tower's route), the band's stairs from the meadow
-  R([23, T1, -16], [23, T2, -10], 5, steps({ tag: 'hill-ramp', pattern: PATTERN.rampboard })),
+  R([23, T1, -16], [23, T2, -10], 5, deck({ tag: 'hill-ramp', color: K.ramp })),
   R([29.3, T1, -13.1], [29.3, T2, -10], 2.8, steps({ tag: 'lobe-stair' })),
   R([29.6, T2, -7.1], [29.6, T3, -4], 2.8, steps({ tag: 'crown-stair' })),
   R([29.4, T2, 17.1], [29.4, T3, 14], 2.6, steps({ tag: 'crown-stair' })),
@@ -125,7 +128,17 @@ const LAYOUT_TREEHILLS = {
   spawnBarrier: 4.2,
   intro: { from: [-12, 12, 9], lookFrom: [4, 2.5, -10], toBack: 3.0 },
   art: { from: [-30, 14, -30], look: [6, 1, 0], fov: 62 },
-  env: { backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false },
+  water: 'marina',   // the reservoir: calm, clean engineered water (the marina water mode: no sea spray)
+  env: {
+    backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false,
+    // the reservoir: clean teal-green, glass-calm; the dome's simulated sky: a slightly too-perfect clean blue with a
+    // soft sun, the cavern's air a touch hazy toward the rock walls
+    theme: {
+      all: { seaDeep: '#0e4744', seaShallow: '#2b8a7a', seaCrest: '#8fd6c2', foam: '#eef8f3', waveStrength: 0.28, seaAmbientK: 0.64,
+        marina: { channel: '#0f4c46', shade: '#061714', calm: 0.35, lap: 0.6, caustic: 1.7, wet: 0.45 } },
+      day: { zenith: '#2474d6', skyMid: '#62aef0', horizon: '#cde9f8', haze: [1 / 2400, 0.85, 300], fog: [30, 1400], sunIntensity: 3.1 },
+    },
+  },
   zones: ZONES,
   tower: TOWER,
   pods: PODS,
