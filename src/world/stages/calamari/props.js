@@ -28,17 +28,9 @@ const turned = (b) => ({ pos: [b[0], 0, b[1]], rotY: b[4] * DEG, w: b[2], d: b[3
 const at = (o, y) => ({ ...o, pos: [o.pos[0], y, o.pos[2]] });
 
 const BUILDINGS = [
-  // Calamari County Station (south exit): forecourt face −Z, platform face +Z
-  { type: 'calamari_station', ...box4(P.station), h: 3.2 },
-  // the house behind the platform's west end (two storeys, cedar below)
-  { type: 'calamari_house', ...turned(P.houseA), style: 'cedar',
-    faces: {
-      2: [{ t: 'door', x: 1.1, w: 1.4 }, { t: 'win', x: -1.1, w: 1.2, h: 0.9 }, { t: 'kerosene', x: -2.0 }, { t: 'plate', x: 2.2, text: 'ISOBE' }],
-      1: [{ t: 'win', x: -1.0, w: 1.2, h: 0.9, sash: true, lit: 1 }, { t: 'meter', x: 1.0 }, { t: 'pipe', x: 1.8 }],
-      3: [{ t: 'win', x: 0.5, w: 1.6, h: 0.9 }, { t: 'ac', x: -1.6 }],
-    },
-    upper: { h: 2.4, inset: 0.25, c: '#e9e3d6', faces: { 2: [{ t: 'win', x: -1, w: 1.4, h: 0.9, sill: 0.8, sash: true, lit: 1.1 }, { t: 'win', x: 1.3, w: 0.9, h: 0.9, sill: 0.8, sash: true }], 1: [{ t: 'win', x: 0, w: 1.4, h: 0.9, sill: 0.8, sash: true }], 3: [{ t: 'win', x: 0, w: 1.2, h: 0.9, sill: 0.8, sash: true, lit: 0.9 }] } },
-    hisashi: [2], roof: { f: 1, pitch: 0.55, alongX: true }, snow: [3] },
+  // Calamari County Station (south exit): forecourt face −Z; its platform face +Z over the side platform's back edge
+  // (the platform face's windows + door at platform height; a cantilevered eave, no posts on the platform)
+  { type: 'calamari_station', ...box4(P.station), h: 3.8, platY: P.side.y, posts: false, canopy: 1.6 },
   // the bath house (sento), entrance on the square
   { type: 'calamari_bathhouse', ...turned(P.bath), door: 1 },
   // the general store (noren on the square) / fish shop (open front on the harbour lane)
@@ -51,13 +43,6 @@ const BUILDINGS = [
     },
     upper: { h: 2.5, inset: 0.3, faces: { 3: [{ t: 'win', x: -1.3, w: 1.3, h: 0.9, sill: 0.8, sash: true, lit: 1.1 }, { t: 'win', x: 1.4, w: 1.3, h: 0.9, sill: 0.8, sash: true }], 1: [{ t: 'win', x: 0, w: 1.6, h: 0.9, sill: 0.8, sash: true, lit: 0.9 }], 0: [{ t: 'win', x: 0, w: 1.0, h: 0.9, sill: 0.8, sash: true }] } },
     hisashi: [1, 3], roof: { f: 0.5, pitch: 0.5, alongX: false }, snow: [0] },
-  // the post office, front on the cross lane
-  { type: 'calamari_house', ...box4(P.post), h: 3.0, style: 'plaster',
-    faces: {
-      2: [{ t: 'door', x: -0.9, w: 1.6, h: 2.1, lit: 1.3 }, { t: 'win', x: 1.2, w: 1.1, h: 1.0, sash: true, lit: 1.2 }, { t: 'sign', text: 'POST OFFICE', x: 0, at: 2.35, h: 0.2, board: '#a63a32', c: '#f3f1ec' }],
-      1: [{ t: 'win', x: 0.2, w: 1.3, h: 0.9, sash: true }, { t: 'pipe', x: 1.9 }, { t: 'kerosene', x: -1.5 }],
-    },
-    roof: { f: 0, pitch: 0.45, ov: 0.7 }, snow: [1] },
   // the co-op's net store beside the loading dock
   { type: 'calamari_house', ...box4(P.netStore), h: 3.2, style: 'cedar', plinth: false,
     faces: { 1: [{ t: 'win', x: -1.6, w: 1.0, h: 0.8, sill: 1.4 }, { t: 'pipe', x: 3.0 }], 3: [{ t: 'sign', text: 'NETS', x: 1.3, at: 2.4, h: 0.2 }] },
@@ -80,28 +65,25 @@ function K_INDIGO() { return '#2d3f63'; }
 // ---- the railway
 const TZ = -(P.track[0] + P.track[1]) / 2;                 // Alpha's track centre (z −5)
 const XR = [P.crossing[0] + P.cutX, P.crossing[1] + P.cutX];  // the crossings' spans along a track (local x from its start)
-const BRc = [(P.bridge.x0 + P.bridge.x1) / 2, (P.bridge.z0 + P.bridge.z1) / 2];
-const TRAIN = { L: P.train.x1 - P.train.x0, W: P.train.z1 - P.train.z0, floor: P.train.floor, h: P.train.h };
+const OP = P.overpass, OPc = (OP.x0 + OP.x1) / 2;
 const RAILWAY = [
   { type: 'calamari_track', pos: [-P.cutX, 0, TZ], length: P.cutX * 2, skip: [XR, [2 * P.cutX - XR[1], 2 * P.cutX - XR[0]]] },
-  // the railcars (one-offs so each carries its own number / destination; the blocks are mirrored in the layout)
-  { type: 'calamari_railcar', pos: [(P.train.x0 + P.train.x1) / 2, 0, TZ], ...TRAIN, number: 'KIHA 101', dest: 'INKOPOLIS', mirror: false, notIn: 'boss' },
-  { type: 'calamari_railcar', pos: [-(P.train.x0 + P.train.x1) / 2, 0, -TZ], rotY: PI, ...TRAIN, number: 'KIHA 102', dest: 'SHIOKARA BAY', mirror: false, notIn: 'boss' },
+  // (the railcars are stage movers: layout.js MOVERS builds + moves them — src/game/movers.js)
   // platform edges: the island's south edge (Alpha's track), the side platform's
   { type: 'calamari_platedge', pos: [P.island.x, 0, -P.island.z], rotY: PI, length: P.island.x * 2, y: P.island.y },
   { type: 'calamari_platedge', pos: [P.side.x0, 0, P.side.z1], rotY: 0, length: P.side.x1 - P.side.x0, y: P.side.y },
-  // the island canopy (one piece down the platform's spine); Tower Command leaves its middle bay open over the tower
-  { type: 'calamari_canopy', pos: [0, P.island.y, 0], spans: [[-10.4, 10.4]], xs: [-10, -6.4, -2.4, 2.4, 6.4, 10], h: 2.9, clockX: 4.2, numbers: [[-8.2, '1'], [8.2, '2']], mirror: false, notIn: ['tower', 'boss'] },
-  { type: 'calamari_canopy', pos: [0, P.island.y, 0], spans: [[-10.4, -1.6], [1.6, 10.4]], xs: [-10, -6.4, -2.4, 2.4, 6.4, 10], h: 2.9, clockX: 4.2, numbers: [[-8.2, '1'], [8.2, '2']], mirror: false, onlyIn: 'tower' },
-  // name boards: on the island facing Alpha's track, on Alpha's side platform facing it
-  { type: 'calamari_nameboard', pos: [11.2, P.island.y, -2.55], rotY: PI, notIn: 'boss' },
-  { type: 'calamari_nameboard', pos: [11.0, P.side.y, -7.45], rotY: 0, prev: 'SHIOKARA BAY →', next: '← INKOPOLIS' },
-  // Alpha's footbridge
-  { type: 'calamari_footbridge', pos: [BRc[0], 0, BRc[1]], w: P.bridge.x1 - P.bridge.x0, d: P.bridge.z1 - P.bridge.z0, y: P.bridge.y,
-    stairs: [P.bridge.s1, P.bridge.s2].map((z) => ({ z: z - BRc[1], xLow: P.bridge.foot - BRc[0], xTop: P.bridge.x1 - BRc[0], yLow: 1.0, w: P.bridge.stairW })),
-    posts: [[-1.3, -3.7, 1.0], [1.3, -3.7, 1.0], [-1.3, 3.7, 1.0], [1.3, 3.7, 1.0], [-1.3, -1.65, 1.0], [-1.3, 1.65, 1.0]] },
-  // Alpha's level crossing (x −20 … −15.5) over both tracks; Bravo's is the mirror
-  { type: 'calamari_crossing', pos: [(P.crossing[0] + P.crossing[1]) / 2, 0, 0], w: P.crossing[1] - P.crossing[0], reach: P.track[1], tracks: [TZ, -TZ],
+  // name boards: on the island under Alpha's overpass facing Alpha's track, on Alpha's side platform facing it
+  { type: 'calamari_nameboard', pos: [5.6, P.island.y, -2.75], rotY: PI, notIn: 'boss' },
+  { type: 'calamari_nameboard', pos: [-5.4, P.side.y, -7.35], rotY: 0, prev: 'SHIOKARA BAY →', next: '← INKOPOLIS' },
+  // Alpha's overpass (the +x one): girders, piers, railings, its three stairs' stringers, lamps, signs, clock, numbers
+  { type: 'calamari_overpass', pos: [OPc, 0, 0], w: OP.x1 - OP.x0, d: OP.z * 2, y: OP.y, t: OP.t,
+    stairs: OP.stairs.map(([z, w]) => ({ z, w, xLow: OP.foot - OPc, xTop: OP.x1 - OPc, yLow: P.side.y })),
+    piers: OP.piers.flatMap((x) => OP.pierZ.map((z) => [x - OPc, z, P.side.y])),
+    lamps: [[-(OP.x1 - OP.x0) / 2 + 0.08, -7.2], [-(OP.x1 - OP.x0) / 2 + 0.08, 7.2], [(OP.x1 - OP.x0) / 2 - 0.08, -5.2], [(OP.x1 - OP.x0) / 2 - 0.08, 5.2]],
+    signs: [[-(OP.x1 - OP.x0) / 2 - 0.02, 0, -1], [(OP.x1 - OP.x0) / 2 + 0.02, -5.0, 1]], clock: [0, 0], numbers: [[-2.0, '2'], [2.0, '1']] },
+  // Alpha's level crossing (x −25.5 … −18.5) over both tracks; Bravo's is the mirror. Its lamps are dark lenses: the
+  // stage movers flash them (and ring its bell) while a railcar is due
+  { type: 'calamari_crossing', pos: [(P.crossing[0] + P.crossing[1]) / 2, 0, 0], w: P.crossing[1] - P.crossing[0], reach: P.track[1], tracks: [TZ, -TZ], lit: false,
     units: [[P.crossing[0] - (P.crossing[0] + P.crossing[1]) / 2 - 0.7, -7.4, PI, -1], [P.crossing[0] - (P.crossing[0] + P.crossing[1]) / 2 - 0.7, 7.4, 0, 1]] },
   // tunnel portals (one-offs: each has its own name)
   { type: 'calamari_portal', pos: [P.cutX, 0, 0], rotY: -HP, w: 17, h: 7.5, bores: [-5, 5], name: 'CAPE TUNNEL', year: '1931', mirror: false },
@@ -167,38 +149,39 @@ const STATION = [
   { type: 'calamari_snowbank', pos: [28.2, 0, 0], rotY: 0, length: 3.2, h: 0.95, d: 1.5, variant: 0, notIn: 'boss' },
   { type: 'calamari_snowbank', pos: [22.0, 0, -10.2], rotY: 0, length: 2.4, h: 0.9, d: 1.1, variant: 2 },
   { type: 'calamari_signal', pos: [-29.8, 0, 2.2], rotY: Math.PI / 2, aspect: 'green', notIn: 'boss' },
-  // island platform: benches back to back between the canopy posts, a vending machine at its end
-  { type: 'calamari_bench', pos: [4.4, P.island.y, -0.3], rotY: Math.PI, notIn: 'boss' },
-  { type: 'calamari_bench', pos: [8.2, P.island.y, 0.3], rotY: 0, notIn: 'boss' },
-  { type: 'calamari_vending', pos: [12.35, P.island.y, 2.3], rotY: -Math.PI / 2, variant: 0, notIn: 'boss' },
-  { type: 'calamari_firebuckets', pos: [12.4, P.island.y, -0.6], rotY: -Math.PI / 2, notIn: 'boss' },
-  // side platform: vending machine by the steps, payphone, a parcel cart, fire buckets, lamps
-  { type: 'calamari_vending', pos: [-8.3, P.side.y, -9.95], rotY: 0, variant: 1 },
-  { type: 'calamari_payphone', pos: [-0.9, P.side.y, -10.0], rotY: 0 },
-  { type: 'calamari_cart', pos: [10.2, P.side.y, -9.3], rotY: 0.08 },
-  { type: 'calamari_firebuckets', pos: [-13.2, P.side.y, -10.1], rotY: 0 },
+  // island platform (open floor now: no canopy; the overpass decks shelter it): benches back to back between the
+  // overpass piers, a vending machine at its edge
+  { type: 'calamari_bench', pos: [5.4, P.island.y, -0.36], rotY: Math.PI, notIn: 'boss' },
+  { type: 'calamari_bench', pos: [5.4, P.island.y, 0.36], rotY: 0, notIn: 'boss' },
+  { type: 'calamari_vending', pos: [7.2, P.island.y, 2.95], rotY: Math.PI, variant: 0, notIn: 'boss' },
+  // side platform (5.6 m deep): vending machine + payphone against the station's platform face, a parcel cart under
+  // the overpass, lamps along the edge
+  { type: 'calamari_vending', pos: [-2.8, P.side.y, -11.72], rotY: 0, variant: 1 },
+  { type: 'calamari_payphone', pos: [0.9, P.side.y, -11.85], rotY: 0 },
+  { type: 'calamari_cart', pos: [6.4, P.side.y, -9.3], rotY: 0.08 },
   { type: 'calamari_lamppost', pos: [-12.8, P.side.y, -7.1], rotY: 0, h: 3.6, arm: 0.6 },
-  { type: 'calamari_lamppost', pos: [13.2, P.side.y, -10.0], rotY: Math.PI / 2, h: 3.6, arm: 0.6 },
-  { type: 'calamari_fence', pos: [11.8, P.side.y, -10.32], rotY: 0, length: 2.2, h: 1.0 },
-  // the forecourt + square (one open space, 22 × 20 m): bus shelter, kei truck, post box, the pine in its planter,
-  // snowbanks, lanterns, a snowman, the notice board — low cover every 6–8 m, lanes 5 m+ between them (the back
-  // street's middle, z −29.2 … −26.6, stays clear: the tower rides it)
-  { type: 'calamari_busstop', pos: [-8.4, 0, -17.2], rotY: 0, w: 2.8 },
-  { type: 'calamari_kei', pos: [-1.9, 0, -15.8], rotY: Math.PI / 2 },
+  { type: 'calamari_lamppost', pos: [12.6, P.side.y, -7.1], rotY: 0, h: 3.6, arm: 0.6 },
+  // the forecourt + square (one open space, 22 × 18 m, the station building on its north edge): bus shelter, kei truck,
+  // post box, the pine in its planter, snowbanks, lanterns, a snowman, the notice board — low cover every 6–8 m, lanes
+  // 5 m+ between them (the back street's middle, z −29.2 … −26.6, stays clear: the tower rides it)
+  { type: 'calamari_busstop', pos: [-14.4, 0, -16.9], rotY: 0, w: 2.8 },
+  { type: 'calamari_snowbank', pos: [-12.4, 0, -13.2], rotY: 0.1, length: 2.4, h: 0.9, d: 1.1, variant: 1 },
+  { type: 'calamari_snowbank', pos: [10.6, 0, -13.3], rotY: -0.1, length: 2.2, h: 0.9, d: 1.1, variant: 2, shovel: true },
+  { type: 'calamari_kei', pos: [-8.2, 0, -17.6], rotY: Math.PI / 2 + 0.08 },
   { type: 'calamari_postbox', pos: [2.2, 0, -17.6] },
   { type: 'calamari_tree', pos: [-3.9, 0, -21.3], kind: 'pine', h: 5.2, planter: 1.2, variant: 0 },
   { type: 'calamari_snowbank', pos: [3.5, 0, -23.8], rotY: 0.35, length: 2.6, h: 1.0, d: 1.3, variant: 1, shovel: true },
   { type: 'calamari_lantern', pos: [-1.2, 0, -25.2], h: 1.7 },
   { type: 'calamari_snowman', pos: [4.8, 0, -19.9], rotY: -0.6 },
-  { type: 'calamari_vending', pos: [6.6, 0, -15.0], rotY: Math.PI, variant: 0 },
+  { type: 'calamari_vending', pos: [4.5, 0, -16.8], rotY: Math.PI, variant: 0 },
   { type: 'calamari_snowbank', pos: [-8.3, 0, -23.4], rotY: Math.PI / 2 - 0.15, length: 2.6, h: 0.95, d: 1.2, variant: 2 },
   { type: 'calamari_snowbank', pos: [8.6, 0, -19.2], rotY: Math.PI / 2 + 0.2, length: 2.2, h: 0.9, d: 1.1, variant: 0 },
   { type: 'calamari_lantern', pos: [7.6, 0, -25.6], h: 1.6 },
   { type: 'calamari_noticeboard', pos: [-9.3, 0, -25.6], rotY: 0.05 },
   { type: 'calamari_lamppost', pos: [-11.0, 0, -15.6], rotY: Math.PI / 2 },
   { type: 'calamari_lamppost', pos: [10.4, 0, -27.8], rotY: -Math.PI / 2 },
-  { type: 'calamari_bike', pos: [-2.9, 0, -13.9], rotY: 0.3, variant: 0 },
-  { type: 'calamari_bike', pos: [-4.0, 0, -14.1], rotY: 0.25, variant: 2 },
+  { type: 'calamari_bike', pos: [-4.3, 0, -16.9], rotY: 0.3, variant: 0 },
+  { type: 'calamari_bike', pos: [-5.3, 0, -17.1], rotY: 0.25, variant: 2 },
 ];
 
 // ---- the hillside: road, terraces, T2 by the co-op with the Cuttlefish cottage, the landmark tower

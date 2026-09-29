@@ -27,6 +27,7 @@ app.on('browser-window-created', (_, win) => {
         g.debug.freeze();
         for (const a of g.match.actors) { a.character.setVisible(false); a.character.root.visible = false; }
         __G.projectiles.clear(); __G.paint.clear();
+        __G.fx?.clear?.(); g.swimWake?.reset?.();   // (ink droplets / squid wakes from the intro: no stray specks in the art)
         g.hud?.setVisible(false); g.menus?.show(null);
         document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
         const B = __G.level.bounds, W = B.maxX - B.minX, D = B.maxZ - B.minZ;

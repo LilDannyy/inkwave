@@ -84,9 +84,9 @@ export function registerRailway(D, H, KIT) {
       // ---- the roof: a curved cap over the body top (its centre raised 0.3) with snow
       B.add('paint', extr('rcroof' + W, (() => { const p = []; for (let i = 0; i <= 10; i++) { const a = PI * (i / 10); p.push([Math.cos(a) * (W / 2 + 0.02), Math.sin(a) * 0.32]); } p.push([-(W / 2 + 0.02), -0.02], [W / 2 + 0.02, -0.02]); return p.reverse(); })(), 1, 0.02), shade(K.livCream, 0.95), 0, h - 0.02, 0, { sx: L });
       B.add('paint', pillowGeo(W - 0.5, 0.22), K.snow, 0, h + 0.18, 0, { sx: L - 0.5, ao: false });
-      // exhaust stack + horn + roof vents poking through the snow
-      B.box('metal', K.ironLt, 0.3, 0.5, 0.3, L / 2 - 3.2, h + 0.4, 0.5, { r: 0.04 });
-      for (const vx of [-3, -0.5, 2]) B.box('paint', K.galv, 0.8, 0.22, 0.6, vx, h + 0.38, -0.2, { r: 0.05 });
+      // exhaust stack + roof vents poking through the snow (all under h + 0.42: it runs under the station overpass)
+      B.box('metal', K.ironLt, 0.3, 0.34, 0.3, L / 2 - 3.2, h + 0.25, 0.5, { r: 0.04 });
+      for (const vx of [-3, -0.5, 2]) B.box('paint', K.galv, 0.8, 0.16, 0.6, vx, h + 0.3, -0.2, { r: 0.05 });
       // ---- cab ends
       for (const e of [-1, 1]) {
         B.push(e * (L / 2 + 0.012), 0, 0, e > 0 ? HP : -HP);
@@ -142,54 +142,6 @@ export function registerRailway(D, H, KIT) {
     },
   };
 
-  // ------------------------------------------------------------------------------------------ the island canopy
-  // A long timber canopy down the island platform's spine: posts on the centre line with Y brackets, a low gable roof
-  // (snow on it), fluorescent lamps, a hanging clock, platform number signs. pos = the platform top centre; spans
-  // x0 … x1 (local), posts at xs, underside at h above the platform. Colliders: posts + the roof (off-limits).
-  D.calamari_canopy = {
-    desc: 'Island-platform canopy (pos = platform top centre): centre posts with Y brackets, low gable roof with snow (off-limits), lamps, hanging clock + platform signs. Spans [x0, x1]; posts at xs; underside h.',
-    params: { spans: '[[x0, x1], …]', xs: 'post x list', h: 'underside above the platform', w: 'roof width' }, variants: 1, mount: 'ground',
-    build(B, o) {
-      B.aoBase = null;
-      const h = o.h ?? 2.9, w = o.w ?? 2.6;
-      for (const x of o.xs ?? []) {
-        B.box('wood', K.beam, 0.2, h, 0.2, x, h / 2, 0, { r: 0.02 });
-        for (const s of [-1, 1]) { B.push(x, h - 0.45, 0, 0, s * 0.7); pbox(B, 'wood', K.beam, 0.12, 0.12, 1.0, 0, 0, s * 0.35); B.pop(); }
-        colBox(B, x, 0, 0, 0.24, h, 0.24);
-        snowCap(B, x, 0.0, 0, 0.5, 0.5, 0.05);
-      }
-      for (const [x0, x1] of o.spans ?? [[-10, 10]]) {
-        const L = x1 - x0, cx = (x0 + x1) / 2;
-        pbox(B, 'wood', K.beam, L, 0.2, 0.2, cx, h - 0.1, 0);
-        for (const s of [-1, 1]) pbox(B, 'wood', K.beam, L, 0.14, 0.14, cx, h - 0.07, s * (w / 2 - 0.15));
-        roof(B, L - 0.6, w - 1.0, h + 0.05, { f: 1, pitch: 0.28, ov: 0.5, ovg: 0.3, x: cx, z: 0, alongX: true, wall: K.beam, seed: Math.round(cx) + 40, icicles: true });
-        colBox(B, cx, h - 0.2, 0, L, 0.9, w, ROOF);
-        // fluorescent lamps under the ridge
-        for (let x = x0 + 1.2; x < x1 - 0.6; x += 2.4) { pbox(B, NS('paint'), K.galv, 1.25, 0.06, 0.14, x, h - 0.26, 0); pbox(B, NS('glow'), '#f4f7ff', 1.15, 0.03, 0.08, x, h - 0.3, 0, { glow: 1.4 }); }
-      }
-      // hanging clock + platform number signs
-      if (o.clock !== false) {
-        const cx = o.clockX ?? 0.9;
-        B.cyl(NS('metal'), K.iron, 0.012, 0.5, cx, h - 0.35, 0, { seg: 4 });
-        for (const s of [-1, 1]) {
-          B.push(cx, h - 0.85, 0, s > 0 ? 0 : PI);
-          B.cyl('paint', K.white, 0.26, 0.1, 0, 0, 0, { rx: HP, seg: 20 });
-          B.add(NS('paint'), H.tubeGeo(Array.from({ length: 25 }, (_, i) => { const a = (i / 24) * TAU; return [Math.cos(a) * 0.26, Math.sin(a) * 0.26, 0]; }), 0.03, 6, true), K.iron, 0, 0, 0.05, {});
-          pbox(B, NS('paint'), K.dark, 0.02, 0.13, 0.005, 0.03, 0.05, 0.054, { rz: -0.9 });
-          pbox(B, NS('paint'), K.dark, 0.016, 0.2, 0.005, -0.02, 0.08, 0.056, { rz: 0.2 });
-          B.pop();
-        }
-      }
-      for (const [x, n] of o.numbers ?? []) {
-        B.cyl(NS('metal'), K.iron, 0.01, 0.4, x, h - 0.3, 0, { seg: 4 });
-        B.push(x, h - 0.72, 0);
-        B.box('paint', K.indigo, 1.1, 0.36, 0.05, 0, 0, 0, { r: 0.02 });
-        for (const s of [-1, 1]) { B.push(0, 0, 0, s > 0 ? 0 : PI); letters(B, n, { h: 0.18, x: 0, y: -0.09, z: 0.028, c: K.white, flat: true, wt: 0.2 }); B.pop(); }
-        B.pop();
-      }
-    },
-  };
-
   // the station name board (ekimeihyō) on two posts, facing local +Z: CALAMARI COUNTY, the stops either side
   D.calamari_nameboard = {
     desc: 'Station name board on two posts facing local +Z: CALAMARI COUNTY, previous / next stops beneath. Posts collide.',
@@ -212,52 +164,116 @@ export function registerRailway(D, H, KIT) {
     },
   };
 
-  // ------------------------------------------------------------------------------------------ the footbridge
-  // Covered timber footbridge over one track (pos = [deck centre x, 0, deck centre z]; w along x, d along z; y = deck
-  // top; the parapet walls are level blocks): corner + edge posts down to the platforms, fascia boards, window frames
-  // above the parapets (open: shots pass), the gable roof over the deck (snow, off-limits), lamps; the two stairs' side
-  // stringers and handrails (rail colliders). stairs: [{ z, xLow, xTop, yLow, w }] (world-relative to pos).
-  D.calamari_footbridge = {
-    desc: 'Covered timber footbridge dressing (pos = deck centre at y 0; w, d, y; stairs): posts, fascias, window frames over the parapet walls, roof with snow (off-limits collider), lamps, stair stringers + handrails (rail colliders), posts collide.',
-    params: { w: 'deck width (x)', d: 'deck length (z)', y: 'deck top', stairs: '[{ z, xLow, xTop, yLow, w }]', posts: '[[x, z, yBase]]' }, variants: 1, mount: 'ground',
+  // ------------------------------------------------------------------------------------------ the overpass
+  // The station's open overpass (kosen-kyō) spanning the whole railway cut from one side platform over both tracks and
+  // the island to the other (pos = [deck centre x, 0, 0]; w along x, d along z; y = deck top, t = its thickness; the
+  // deck and its stairs are level pieces): green-painted steel edge girders, slim steel piers down to the platforms
+  // (colliders), railings along every edge with a timber handrail and snow on it (rail colliders: shots, ink and
+  // squids pass) — open at the stair heads on the outer edge — the stairs' stringers + handrails (rail colliders),
+  // lamp posts, the station name on the railings, a clock and the platform numbers hung under the deck.
+  // stairs: [{ z, w, xLow, xTop, yLow }] (local); piers: [[x, z, yBase]]; signs: [[x, z, facing]]; numbers: [[z, text]].
+  D.calamari_overpass = {
+    desc: 'Open station overpass over the railway cut (pos = deck centre; w, d, y, t; stairs, piers): steel edge girders, piers (collide), railings with snowy handrails (rail colliders, open at the stair heads), stair stringers + handrails (rail), lamps, name signs, a hanging clock and platform numbers.',
+    params: { w: 'deck width (x)', d: 'deck length (z)', y: 'deck top', t: 'deck thickness', stairs: '[{ z, w, xLow, xTop, yLow }]', piers: '[[x, z, yBase]]' }, variants: 1, mount: 'ground',
     build(B, o) {
       B.aoBase = null;
-      const w = o.w, d = o.d, y = o.y, wallH = 0.95, rH = 2.3;
-      // deck fascia boards + a beam under each side
-      for (const s of [-1, 1]) { pbox(B, 'wood', K.cedarDk, 0.08, 0.5, d + 0.1, s * (w / 2 + 0.04), y - 0.25, 0); pbox(B, NS('wood'), K.beam, 0.2, 0.25, d, s * (w / 2 - 0.1), y - 0.52, 0); }
-      for (const s of [-1, 1]) pbox(B, 'wood', K.cedarDk, w + 0.16, 0.5, 0.08, 0, y - 0.25, s * (d / 2 + 0.04));
-      // posts down to the platforms
-      for (const [px, pz, yb] of o.posts ?? []) { B.box('wood', K.beam, 0.24, y - yb, 0.24, px, yb + (y - yb) / 2, pz, { r: 0.02 }); colBox(B, px, yb, pz, 0.26, y - 0.4 - yb, 0.26); snowCap(B, px, yb, pz, 0.46, 0.46, 0.06); }
-      // the house on the deck: posts every ~1.7 m along both sides from the parapet to the roof, window frames between
+      const w = o.w, d = o.d, y = o.y, t = o.t ?? 0.4, yb = y - t, green = '#4f6e5c', greenDk = '#3c5647', rH = 1.05;
+      const stairs = o.stairs ?? [];
+      // edge girders (the slab's edge dressed as a steel plate girder) + the end girders
       for (const s of [-1, 1]) {
-        const n = Math.max(2, Math.round(d / 1.7));
-        for (let i = 0; i <= n; i++) { const z = -d / 2 + (i * d) / n; pbox(B, 'wood', K.beam, 0.14, rH, 0.14, s * (w / 2 - 0.1), y + rH / 2, z); }
-        pbox(B, 'wood', K.beam, 0.16, 0.12, d, s * (w / 2 - 0.1), y + wallH + 0.06, 0);
-        pbox(B, 'wood', K.beam, 0.16, 0.16, d + 0.2, s * (w / 2 - 0.1), y + rH - 0.08, 0);
-        for (let i = 0; i < n; i++) { const z = -d / 2 + ((i + 0.5) * d) / n; pbox(B, NS('wood'), K.beam, 0.06, 0.05, d / n - 0.14, s * (w / 2 - 0.1), y + wallH + 0.7, z); }
-        snowCap(B, s * (w / 2 - 0.1), y + wallH + 0.12, 0, 0.16, d, 0.05);
+        pbox(B, 'metal', green, 0.1, t + 0.1, d + 0.1, s * (w / 2 + 0.03), y - t / 2 + 0.03, 0);
+        pbox(B, NS('metal'), greenDk, 0.16, 0.06, d + 0.1, s * (w / 2 + 0.03), y + 0.06, 0);
+        for (let z = -d / 2 + 0.9; z < d / 2 - 0.5; z += 1.8) pbox(B, NS('metal'), greenDk, 0.04, t + 0.06, 0.08, s * (w / 2 + 0.09), y - t / 2 + 0.02, z);
+        pbox(B, 'metal', green, w + 0.2, t + 0.1, 0.1, 0, y - t / 2 + 0.03, s * (d / 2 + 0.03));
       }
-      roof(B, d, w - 0.1, y + rH, { f: 1, pitch: 0.55, ov: 0.45, ovg: 0.35, alongX: false, wall: K.cedar, seed: 61 });
-      colBox(B, 0, y + rH - 0.2, 0, w + 0.9, 1.6, d + 0.7, ROOF);
-      for (let z = -d / 2 + 1.2; z < d / 2 - 0.5; z += 2.4) { pbox(B, NS('paint'), K.galv, 0.14, 0.06, 1.1, 0, y + rH - 0.14, z); pbox(B, NS('glow'), '#f4f7ff', 0.08, 0.03, 1.0, 0, y + rH - 0.18, z, { glow: 1.3 }); }
-      // stairs: stringers + handrails (rail colliders in three steps up the slope)
-      for (const st of o.stairs ?? []) {
-        const { z, xLow, xTop, yLow, w: sw } = st, run = xTop - xLow, rise = y - yLow, ang = Math.atan2(rise, Math.abs(run)), len = Math.hypot(run, rise), dir = Math.sign(run);
+      // piers: slim steel columns with cap and base plates
+      for (const [px, pz, py] of o.piers ?? []) {
+        const hgt = yb - py;
+        B.box('metal', green, 0.3, hgt, 0.3, px, py + hgt / 2, pz, { r: 0.02 });
+        pbox(B, NS('metal'), greenDk, 0.5, 0.06, 0.5, px, yb - 0.03, pz);
+        pbox(B, NS('metal'), greenDk, 0.46, 0.08, 0.46, px, py + 0.04, pz);
+        snowCap(B, px, py + 0.08, pz, 0.62, 0.62, 0.05);
+        colBox(B, px, py, pz, 0.34, hgt - 0.05, 0.34);
+      }
+      // railings: posts, a steel mid rail, the timber handrail with snow; rail colliders along each run
+      const railRun = (x0, z0, x1, z1) => {
+        const L = Math.hypot(x1 - x0, z1 - z0);
+        if (L < 0.3) return;
+        const n = Math.max(1, Math.round(L / 1.5)), ang = Math.atan2(z1 - z0, x1 - x0);
+        for (let i = 0; i <= n; i++) { const k = i / n; B.box(NS('metal'), green, 0.07, rH, 0.07, x0 + (x1 - x0) * k, y + rH / 2, z0 + (z1 - z0) * k, { r: 0.01 }); }
+        B.push((x0 + x1) / 2, y, (z0 + z1) / 2, -ang);
+        pbox(B, 'wood', K.woodLt, L, 0.07, 0.11, 0, rH, 0);
+        pbox(B, NS('metal'), green, L, 0.045, 0.045, 0, rH * 0.5, 0);
+        pbox(B, NS('metal'), green, L, 0.04, 0.04, 0, 0.12, 0);
+        snowCap(B, 0, rH + 0.035, 0, L, 0.12, 0.05);
+        B.pop();
+        colRun(B, x0, z0, x1, z1, y, rH + 0.05, 0.12, RAIL);
+      };
+      const ex = w / 2 - 0.08, ez = d / 2 - 0.08;
+      railRun(-ex, -ez, -ex, ez);                                  // the inner edge (over the gap between the overpasses)
+      railRun(-ex, -ez, ex, -ez); railRun(-ex, ez, ex, ez);          // the ends, over the forecourts
+      // the outer edge: open where the stairs come up
+      const gaps = stairs.map((st) => [st.z - st.w / 2 - 0.05, st.z + st.w / 2 + 0.05]).sort((a, b) => a[0] - b[0]);
+      let z = -ez;
+      for (const [g0, g1] of gaps) { if (g0 > z) railRun(ex, z, ex, g0); z = Math.max(z, g1); }
+      if (z < ez) railRun(ex, z, ex, ez);
+      // stairs: side stringers + handrails (rail colliders in three steps up the slope), posts
+      for (const st of stairs) {
+        const { z: sz, xLow, xTop, yLow, w: sw } = st, run = xTop - xLow, rise = y - yLow, ang = Math.atan2(rise, Math.abs(run)), len = Math.hypot(run, rise), dir = Math.sign(run);
         for (const s of [-1, 1]) {
-          const zz = z + s * (sw / 2 + 0.05);
+          const zz = sz + s * (sw / 2 + 0.05);
           B.push((xLow + xTop) / 2, (yLow + y) / 2, zz, dir > 0 ? 0 : PI, 0, ang);
-          pbox(B, 'wood', K.cedarDk, len + 0.1, 0.34, 0.08, 0, -0.18, 0);
-          pbox(B, 'wood', K.beam, len, 0.07, 0.08, 0, 0.92, 0);
-          pbox(B, NS('wood'), K.beam, len, 0.05, 0.05, 0, 0.5, 0);
-          snowCap(B, 0, 0.955, 0, len, 0.09, 0.04);
+          pbox(B, 'metal', green, len + 0.1, 0.34, 0.08, 0, -0.18, 0);
+          pbox(B, 'wood', K.woodLt, len, 0.07, 0.1, 0, 0.92, 0);
+          pbox(B, NS('metal'), green, len, 0.045, 0.045, 0, 0.5, 0);
+          snowCap(B, 0, 0.955, 0, len, 0.1, 0.04);
           B.pop();
           const np = Math.max(3, Math.round(Math.abs(run) / 1.4));
-          for (let i = 0; i <= np; i++) { const t = i / np; B.box(NS('wood'), K.beam, 0.08, 1.0, 0.08, xLow + run * t, yLow + rise * t + 0.45, zz, { r: 0.01 }); }
-          for (let k = 0; k < 3; k++) {
-            const xa = xLow + (run * k) / 3, xb = xLow + (run * (k + 1)) / 3, top = yLow + (rise * (k + 1)) / 3 + 0.95;
-            B.col(Math.min(xa, xb), yLow + (rise * k) / 3 - 0.05, zz - 0.06, Math.max(xa, xb), top, zz + 0.06, RAIL);
+          for (let i = 0; i <= np; i++) { const k = i / np; B.box(NS('metal'), green, 0.07, 1.0, 0.07, xLow + run * k, yLow + rise * k + 0.45, zz, { r: 0.01 }); }
+          // (the handrail's collider follows the slope in 8 steps: nobody stands on air above the handrail)
+          for (let k = 0; k < 8; k++) {
+            const xa = xLow + (run * k) / 8, xb = xLow + (run * (k + 1)) / 8, top = yLow + (rise * (k + 1)) / 8 + 0.95;
+            B.col(Math.min(xa, xb), yLow + (rise * k) / 8 - 0.05, zz - 0.06, Math.max(xa, xb), top, zz + 0.06, RAIL);
           }
         }
+      }
+      // lamp posts on the railings (enamel shades, lit at dusk)
+      for (const [lx, lz] of o.lamps ?? []) {
+        B.cyl(NS('metal'), green, 0.045, 2.1, lx, y + 1.05, lz, { seg: 8 });
+        B.push(lx, y + 2.1, lz);
+        B.lathe('paint', '#e9ece7', [[0.02, 0.08], [0.1, 0.05], [0.24, -0.08], [0.25, -0.1], [0, -0.1]], 0, 0, 0, { seg: 14 });
+        B.sph(NS('glow'), K.lit, 0.08, 0, -0.1, 0, { ws: 10, hs: 8, glow: 1.6 });
+        snowCap(B, 0, 0.06, 0, 0.36, 0.36, 0.05);
+        B.pop();
+      }
+      // the station name on the railings (both faces), facing ±x
+      for (const [nx, nz, face] of o.signs ?? []) {
+        B.push(nx, y + 0.55, nz, face > 0 ? HP : -HP);
+        B.box('wood', K.cedarDk, 4.6, 0.62, 0.06, 0, 0, 0.1, { r: 0.02 });
+        pbox(B, NS('paint'), K.cream, 4.48, 0.5, 0.01, 0, 0, 0.135);
+        letters(B, 'CALAMARI COUNTY', { h: 0.26, x: 0, y: -0.02, z: 0.14, c: K.indigo, flat: true, wt: 0.2, track: 0.12 });
+        pbox(B, NS('paint'), K.teal, 4.4, 0.05, 0.01, 0, -0.2, 0.14);
+        B.pop();
+      }
+      // under the deck: a clock over the island, the platform numbers over each side of it
+      if (o.clock) {
+        const [cx, cz] = o.clock;
+        B.cyl(NS('metal'), K.iron, 0.012, 0.4, cx, yb - 0.2, cz, { seg: 4 });
+        for (const s of [-1, 1]) {
+          B.push(cx, yb - 0.66, cz, s > 0 ? HP : -HP);
+          B.cyl('paint', K.white, 0.26, 0.1, 0, 0, 0, { rx: HP, seg: 20 });
+          B.add(NS('paint'), H.tubeGeo(Array.from({ length: 25 }, (_, i) => { const a = (i / 24) * TAU; return [Math.cos(a) * 0.26, Math.sin(a) * 0.26, 0]; }), 0.03, 6, true), K.iron, 0, 0, 0.05, {});
+          pbox(B, NS('paint'), K.dark, 0.02, 0.13, 0.005, 0.03, 0.05, 0.054, { rz: -0.9 });
+          pbox(B, NS('paint'), K.dark, 0.016, 0.2, 0.005, -0.02, 0.08, 0.056, { rz: 0.2 });
+          B.pop();
+        }
+      }
+      for (const [nz, n] of o.numbers ?? []) {
+        B.cyl(NS('metal'), K.iron, 0.01, 0.3, 0, yb - 0.15, nz, { seg: 4 });
+        B.push(0, yb - 0.5, nz);
+        B.box('paint', K.indigo, 0.05, 0.36, 1.1, 0, 0, 0, { r: 0.02 });
+        for (const s of [-1, 1]) { B.push(0, 0, 0, s > 0 ? HP : -HP); letters(B, n, { h: 0.18, x: 0, y: -0.09, z: 0.028, c: K.white, flat: true, wt: 0.2 }); B.pop(); }
+        B.pop();
       }
     },
   };
@@ -292,7 +308,9 @@ export function registerRailway(D, H, KIT) {
         for (const a of [0.62, -0.62]) { B.push(0, ph - 0.1, 0.06, 0, 0, a); pbox(B, 'paint', '#e0b43a', 1.0, 0.16, 0.03, 0, 0, 0); pbox(B, NS('paint'), '#1f2124', 0.96, 0.05, 0.035, 0, 0, 0.002); B.pop(); }
         for (const sx of [-1, 1]) {
           B.box('paint', K.black, 0.34, 0.34, 0.1, sx * 0.3, ph - 0.75, 0.08, { r: 0.05 });
-          B.cyl(NS('glow'), '#ff4a3a', 0.12, 0.04, sx * 0.3, ph - 0.75, 0.14, { rx: HP, seg: 14, glow: 1.0 });
+          // (lenses dark: the stage movers flash them in turn while a railcar is due — movers.js signals.lamps)
+          if (o.lit === false) B.cyl(NS('paint'), '#4a1410', 0.12, 0.04, sx * 0.3, ph - 0.75, 0.14, { rx: HP, seg: 14 });
+          else B.cyl(NS('glow'), '#ff4a3a', 0.12, 0.04, sx * 0.3, ph - 0.75, 0.14, { rx: HP, seg: 14, glow: 1.0 });
           B.cyl(NS('paint'), K.black, 0.17, 0.02, sx * 0.3, ph - 0.62, 0.13, { rx: HP + 0.5, seg: 12, open: true });
         }
         B.box('paint', K.black, 0.3, 0.26, 0.16, 0, ph - 1.2, 0.06, { r: 0.04 });

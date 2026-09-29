@@ -4,6 +4,7 @@ import { G, emit, on, clamp } from '../core/ctx.js';
 import { MATCH, PLAYER, WEAPON_ORDER, SUB_ORDER, SPECIAL_ORDER, BOT_NAMES, TEAM_NAMES, ZONES, TOWER } from '../config.js';
 import { ZoneControl } from './zones.js';
 import { TowerCommand } from './tower.js';
+import { StageMovers } from './movers.js';
 import { randomStyle } from './character-style.js';
 import { Actor } from './actor.js';
 import { BotBrain } from './bots.js';
@@ -105,6 +106,7 @@ export class Match {
     }
     if (this.mode === 'tower') this.tower = new TowerCommand(this);
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
+    this.movers = StageMovers.create(this);   // stage set pieces on a timetable (movers.js), when the stage has any
   }
 
   // Online: the host's roster — who owns which squidkid (players their own, the host the bots).
@@ -138,6 +140,7 @@ export class Match {
     }
     if (this.mode === 'tower') this.tower = new TowerCommand(this);   // likewise (tower.js netEvent)
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
+    this.movers = StageMovers.create(this);   // (a pure function of the synced match clock: nothing on the wire)
   }
 
   // Zone Control: ink laid while standing on (or aiming into) the live zone counts as objective play (results / XP)
@@ -166,6 +169,7 @@ export class Match {
   }
 
   dispose() {
+    this.movers?.dispose(); this.movers = null;
     this.bossMode?.dispose(); this.bossMode = null; this.boss = null;
     this.tower?.dispose(); this.tower = null;
     for (const a of this.actors) { G.scene.remove(a.character.root); a.weaponRunner.reset(); a.character.dispose?.(); }
@@ -233,6 +237,8 @@ export class Match {
         if (this.stateT > (this.bossMode ? (this.bossMode.boss.dead ? BOSS_MODE.finishWin : BOSS_MODE.finishLose) : 2.6) && !this.follower && !this.result) this._judge();
         break;
     }
+    // stage movers (a railcar pulling out) move — and shove anyone in their way — before anyone else moves
+    this.movers?.update(dt);
     // actors (the local controller runs once per rendered frame via updateController)
     const live = this.state === 'playing';
     for (const a of this.actors) {
