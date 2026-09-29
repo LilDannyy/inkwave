@@ -17,10 +17,14 @@ export { OUTLINE };
 // crosses it, a leg standing in each lagoon's mouth). Each half: the mid islet (the Spine Crest) runs out to the bend;
 // the bend wraps the half's lagoon — the ancient causeway across the inlet on its outside, a sandbar neck along the
 // lagoon; the bottom stroke comes back as the camp islet (Deep Cut's camp in its dune hollow), a sandbar pinch and the
-// helipad islet at the tail; a spit runs from the tail into the lagoon to the cascade pillar's islet, and a log bridge
-// from there back to the central sandbar. Routes from each pad: across the lagoon (spit → pillar islet → log bridge),
-// along its inside shore (the lagoon beach → the neck → the mid islet), round the outside of the bend (the camp → the
-// causeway → the mid islet's head).
+// helipad islet at the tail. From the tail two arms reach back into the lagoon: the pillar headland (the cascade
+// pillar's islet on a sand tombolo; the side zone) with a log bridge from its tip to the central sandbar, and the Arch
+// spit along the lagoon's mouth inside the arch's leg, a second log bridge from its tip under the arch.
+// Routes from each pad to the centre (lengths: nav-check.js): the Arch spit → its bridge → the sandbar's east end
+// (≈ 54 m); the pillar headland round the plinth → its bridge → the sandbar's south edge (≈ 44 m), or over the tiers
+// (the steps up its south face, across the plinth, off its north face); the lagoon shore → the neck → the mid islet's
+// lagoon beach → the sandbar's west end (≈ 71 m); the camp → the causeway round the outside of the bend → the Spine
+// Crest or the mid islet's north shore (≈ 90 m).
 // Heights: 0 sand · 1.3 dunes / causeway / pillar plinth · 2.5 crests / pillar tier · 3.2 helipads.
 const H1 = 1.3, H2 = 2.5, HP = 3.2, BOT = -2.4;
 export const PAD = [8.5, -36];                                    // Alpha's helipad (deck centre)
@@ -56,6 +60,8 @@ const ALL_BARS = [...BARS, ...PATCHES].flatMap((b) => [b, { ...b, center: [-b.ce
 const CENTRE = [[-6, 6, -4, 4]];
 const CORES = coreRects(OUTLINE, ALL_BARS, { x0: -37, x1: 37, z0: -47, z1: 0 }, CENTRE);
 export const CORE_MISS = CORES.miss;
+// the Arch spit's dry sand (its cores) is wet-sand coloured: a shallow sandbar across the lagoon's mouth, not another stroke
+const onSpit = ([x0, x1, z0, z1]) => (x0 + x1) / 2 > 10.4 && (x0 + x1) / 2 < 17.2 && (z0 + z1) / 2 > -24.4 && (z0 + z1) / 2 < -8;
 // the cascade pillar on its headland (outline.js): the plinth's apothem (its faces), the log bridge from the headland's tip
 // to the central sandbar (4 m wide, centred on a nav column: three lanes between its side logs), the Arch spit's bridge under the arch
 const PX = PILLAR.x, PZ = PILLAR.z, PA = PILLAR.plinth * Math.cos(Math.PI / 8);
@@ -105,7 +111,8 @@ const SPIRHALITE = {
     // ================= the ground: the wet-sand shelf round every shore, the dry sand inside it
     ...BARS,
     ...PATCHES,
-    ...coreBoxes(CORES.rects, sand({ tag: 'sand' })),
+    ...coreBoxes(CORES.rects.filter((r) => !onSpit(r)), sand({ tag: 'sand' })),
+    ...coreBoxes(CORES.rects.filter(onSpit), sand({ tag: 'sandbar', color: K.wet })),   // (the Arch spit: a low, wet sandbar)
 
     // ================= the helipad islet (the tail): the high dune the pad stands on, its west arm down to the pinch,
     // the shoulder north of the pad down to the spit
@@ -123,12 +130,12 @@ const SPIRHALITE = {
     R([PAD[0], H1, PAD[1] + 9.9], [PAD[0], HP, PAD[1] + 5.45], 3, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
     R([PAD[0] - 9.9, H1, PAD[1]], [PAD[0] - 5.45, HP, PAD[1]], 3, { tag: 'helipad-stair', color: K.steel, pattern: PATTERN.treads }),
 
-    // ================= the camp islet: Deep Cut's camp in the dune hollow (Alpha's side zone), the south ridge (1.3,
-    // a 2.5 crest at its west end)
-    B(-24, -10.2, 0, H1, -42.2, -39.8, moss({ tag: 'camp-ridge' })),
-    B(-23.6, -19.6, H1, H2, -42.2, -40.2, sand({ tag: 'camp-crest', color: K.dune })),
-    slope(-16.5, -41.2, H1, -19.6, -41.2, H2, 2.0),
-    slope(-12.1, -36.7, 0, -12.1, -39.8, H1, 3),
+    // ================= the camp islet: Deep Cut's camp in the dune hollow, the south ridge (1.3, a 2.5 crest at its west
+    // end; set back 2.5 m off the south beach so the beach under it is a lane, not a pocket)
+    B(-24, -10.2, 0, H1, -41.0, -38.6, moss({ tag: 'camp-ridge' })),
+    B(-23.6, -19.6, H1, H2, -41.0, -39.0, sand({ tag: 'camp-crest', color: K.dune })),
+    slope(-16.5, -40.0, H1, -19.6, -40.0, H2, 2.0),
+    slope(-12.1, -35.5, 0, -12.1, -38.6, H1, 3),
     // the camp's sign board (planks on two posts, props.js): SPIRHALITE ISLANDS · DEEP CUT EXPEDITION
     B(-10.4, -10.28, 0.7, 1.8, -36.3, -33.7, { tag: 'camp-sign', color: '#a88963', pattern: PATTERN.wood, noPaint: [...SIDES, [0, 1, 0]], mural: [{ n: [1, 0, 0], id: 8 }] }),
 
