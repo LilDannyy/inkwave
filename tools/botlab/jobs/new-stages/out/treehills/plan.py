@@ -13,6 +13,7 @@ def col(y1, dd):
     if dd.get('roof'): return (120, 120, 128)
     t = dd.get('tag') or ''
     if t in ('retaining', 'coping'): base = (150, 160, 150)
+    elif t == 'kerb': base = (235, 235, 225)
     elif y1 < 0.5: base = (170, 200, 140)
     elif y1 < 1.8: base = (196, 190, 150)
     elif y1 < 3.0: base = (206, 170, 110)

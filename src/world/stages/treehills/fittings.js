@@ -142,6 +142,63 @@ export function registerFittings(D, H, T) {
       B.cyl(NS('gloss'), K.modDk, 0.03, 0.05, 0, 0.1, 0, { seg: 8 });
     },
   };
+  // round service hatch in a retaining wall (wall-mounted, local z = 0 on the wall): a pale ring frame, the door with
+  // its locking wheel, a number plate, a drain lip below
+  D.treehills_hatch = {
+    desc: 'round service hatch in a retaining wall (wall-mounted)',
+    mount: 'wall',
+    build(B, o) {
+      const r = o.r ?? 0.45;
+      B.cyl('gloss', K.trim, r + 0.08, 0.06, 0, 0, 0.03, { rx: HP, seg: 20 });
+      B.cyl('gloss', o.c ?? K.modDk, r, 0.05, 0, 0, 0.07, { rx: HP, seg: 20 });
+      B.tor(NS('metal'), K.steelLt, r * 0.42, 0.02, 0, 0, 0.1, { rs: 4, ts: 14 });
+      for (let k = 0; k < 4; k++) seg(B, NS('metal'), K.steelLt, [0, 0, 0.1], [Math.cos((k / 4) * TAU) * r * 0.42, Math.sin((k / 4) * TAU) * r * 0.42, 0.1], 0.02, 0.02);
+      for (let k = 0; k < 8; k++) { const a = (k / 8) * TAU; B.cyl(NS('metal'), K.steelDk, 0.025, 0.03, Math.cos(a) * (r + 0.04), Math.sin(a) * (r + 0.04), 0.07, { rx: HP, seg: 6 }); }
+      if (o.num) { pbox(B, NS('paint'), K.label, 0.3, 0.12, 0.01, 0, r + 0.2, 0.01); letters(B, o.num, { h: 0.08, y: r + 0.16, z: 0.017, c: K.modDk }); }
+      pbox(B, NS('metal'), K.steel, 0.3, 0.04, 0.12, 0, -r - 0.12, 0.06);
+    },
+  };
+  // the crown's weather station: a lattice mast with an anemometer (cups), a wind vane, a sensor box and a solar
+  // panel, on a small plinth (thin: its plinth collides)
+  D.treehills_weather = {
+    desc: 'weather station: mast, anemometer, vane, sensor box, solar panel',
+    build(B) {
+      pbox(B, 'paint', K.modDk, 0.7, 0.3, 0.7, 0, 0.15, 0);
+      for (const [x, z] of [[-0.12, -0.12], [0.12, -0.12], [0, 0.14]]) seg(B, 'metal', K.steelLt, [x, 0.3, z], [x * 0.3, 3.2, z * 0.3], 0.035, 0.035, { round: true });
+      for (let y = 0.8; y < 3.1; y += 0.6) B.tor(NS('metal'), K.steelLt, 0.1 * (1 - y / 4.5) + 0.03, 0.012, 0, y, 0, { rx: HP, rs: 3, ts: 8 });
+      seg(B, 'metal', K.steel, [-0.5, 3.2, 0], [0.5, 3.2, 0], 0.03, 0.03, { round: true });
+      ccyl(B, 'metal', K.steel, 0.02, 0.3, -0.5, 3.35, 0, { seg: 6 });
+      for (let k = 0; k < 3; k++) { const a = (k / 3) * TAU; seg(B, NS('metal'), K.steel, [-0.5, 3.5, 0], [-0.5 + Math.cos(a) * 0.16, 3.5, Math.sin(a) * 0.16], 0.012, 0.012); B.sph(NS('gloss'), K.white, 0.045, -0.5 + Math.cos(a) * 0.18, 3.5, Math.sin(a) * 0.18, { ws: 8, hs: 5 }); }
+      ccyl(B, 'metal', K.steel, 0.02, 0.3, 0.5, 3.35, 0, { seg: 6 });
+      pbox(B, 'gloss', K.red, 0.34, 0.12, 0.02, 0.55, 3.5, 0);
+      pbox(B, 'gloss', K.white, 0.28, 0.36, 0.18, 0, 1.4, 0.16);
+      pbox(B, NS('paint'), K.label, 0.16, 0.06, 0.01, 0, 1.46, 0.256);
+      B.push(0, 2.2, -0.2, 0, -0.6);
+      pbox(B, 'gloss', '#24365a', 0.5, 0.03, 0.36, 0, 0, 0);
+      B.pop();
+      B.blink('#ff4a3a', 0, 3.28, 0, { size: 0.04, rate: 0.4, lo: 0.3, hi: 5 });
+      B.col(-0.35, 0, -0.35, 0.35, 0.3, 0.35);
+      B.col(-0.12, 0.3, -0.12, 0.12, 3.2, 0.12, ROOF);
+    },
+  };
+  // seedling nursery: a low steel rack of seed trays (two shelves of little sprouts), low cover
+  D.treehills_nursery = {
+    desc: 'seedling nursery rack: two shelves of seed trays with sprouts (low cover)',
+    build(B, o) {
+      const w = o.w ?? 2.2, d = 0.7;
+      for (const x of [-w / 2 + 0.05, w / 2 - 0.05]) for (const z of [-d / 2 + 0.05, d / 2 - 0.05]) pbox(B, 'metal', K.steel, 0.05, 0.95, 0.05, x, 0.475, z);
+      for (const y of [0.35, 0.9]) {
+        pbox(B, 'metal', K.steelLt, w, 0.04, d, 0, y, 0);
+        const n = Math.round(w / 0.5);
+        for (let i = 0; i < n; i++) {
+          const x = -w / 2 + ((i + 0.5) * w) / n;
+          pbox(B, NS('paint'), i % 2 ? K.modDk : '#2b2f2c', w / n - 0.06, 0.07, d - 0.1, x, y + 0.055, 0);
+          for (let k = 0; k < 6; k++) B.add(NS('foliage'), T.blob(0, k), '#7fb35a', x + ((k % 3) - 1) * 0.12, y + 0.12, (Math.floor(k / 3) - 0.5) * 0.25, { s: 0.05 + 0.02 * hash(i * 7 + k), ao: false });
+        }
+      }
+      B.col(-w / 2, 0, -d / 2, w / 2, 0.98, d / 2);
+    },
+  };
   // wall valve box (wall-mounted, local z = 0 on the wall): a pipe stub, a red valve wheel, a gauge and a label plate
   D.treehills_wallvalve = {
     desc: 'wall valve box: pipe stub, red valve wheel, gauge, label (wall-mounted)',

@@ -122,8 +122,10 @@ export function registerStation(D, H, T) {
       unit(B, bx, 3.8, bz, 8.4, 3.4, 2.6, { c: K.mod });
       B.col(bx - 4.2, -1.6, bz - 1.7, bx + 4.2, 6.5, bz + 1.7, ROOF);
       B.push(bx, 3.8, bz + 1.72);
-      for (const x of [-3, 0, 3]) windowPane(B, x, 1.4, 0, 1.6, 0.7);
-      numberPlate(B, '05', 3.3, 1.8, 0.02, 0.42);
+      // the station's name board, read from across the meadow over the spawn deck
+      boardSign(B, ['ECO-FOREST', 'TREEHILLS'], -0.35, 1.3, { h: 0.62, lead: 1.35, z: 0.02, board: K.modDk, c: K.label, border: K.trim, wt: 0.2, track: 0.14, w: 6.6 });
+      badge(B, 3.55, 1.3, 0.04, 0.42);
+      pbox(B, 'glow', K.lamp, 6.4, 0.04, 0.04, -0.35, 2.34, 0.1, { glow: 1.2 });
       B.pop();
       // solar panels on its roof (two tilted rows), a hatch, the mast with its blinking tip
       for (const k of [-1, 1]) {
