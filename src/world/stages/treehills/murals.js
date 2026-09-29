@@ -1,37 +1,163 @@
 // Eco-Forest Treehills — stage decals / signage for the mural atlas (mural ids 4…11; see src/world/murals.js). Drawn into
 // the stage region R of the atlas; each entry: its canvas rect, where it sits on its face (metres).
-//   emblem   the Commons Meadow's centre slab (30 × 28 m): a ring mown into the lawn (lighter and darker stripes) with
-//            the dome's geodesic node inside (a hexagon of six triangles), the mowers' turning circles round it (drawn
-//            180°-symmetric, like the stage)
+//   meadow   the Commons Meadow's ground (its core slab's top, 30 × 28 m): gravel spokes, stepping stones, moss, bark
+//            beds, pollinator strips, greener / drier turf (drawn 180°-symmetric, like the stage)
 //   sign     ECO-FOREST TREEHILLS in pale stencil along the tree-hill's upper retaining wall, facing the meadow
-//   label    the base terrace in front of the spawn stair: a painted floor label (BIOME 07, a big arrow to the meadow)
-//   pad      a landing-pad circle on the base terrace (the Tower Command goal sits on it)
+//   padA/B   a landing-pad circle on each base terrace (the Tower Command goals sit on them; Bravo's turned 180°)
 //   biome    BIOME 07 · COMMONS MEADOW stencilled along the band's low wall
-export const MURAL = { emblem: 4, sign: 5, label: 6, pad: 7, biome: 8 };
+//   bandE/W  the bands' ground (the east band's column top, 4 × 59 m; the west one's the same picture turned 180°)
+export const MURAL = { meadow: 4, sign: 5, padB: 6, padA: 7, biome: 8, bandE: 9, bandW: 10 };
 
 export function drawMurals(g, R, kit) {
   const out = [];
   const font = (px) => `800 ${px}px Rubik, "Arial Black", sans-serif`;
-  // ---------------------------------------------------------------- the mown emblem (30 × 28 m at 24 px/m)
+  // ---------------------------------------------------------------- the ground: soft painted patches over the lawn
+  // (the surface's own blades show through: fx weather 1). World → canvas through T(x, z); every shape takes world
+  // metres. rnd: a seeded generator, so the pictures never change between loads.
+  const rng = (seed) => { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; };
+  const TAU = Math.PI * 2;
+  function kitFor(T, PPM, seed) {
+    const rnd = rng(seed);
+    const P = (x, z) => T(x, z);
+    // a smooth irregular blob (k lobes) of radius rx × rz
+    const blobPath = (x, z, rx, rz, j = 0.28, k = 9) => {
+      const pts = [];
+      for (let i = 0; i < k; i++) { const a = (i / k) * TAU, f = 1 - j / 2 + j * rnd(); pts.push(P(x + Math.cos(a) * rx * f, z + Math.sin(a) * rz * f)); }
+      g.beginPath();
+      const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      let m = mid(pts[k - 1], pts[0]); g.moveTo(m[0], m[1]);
+      for (let i = 0; i < k; i++) { const n = mid(pts[i], pts[(i + 1) % k]); g.quadraticCurveTo(pts[i][0], pts[i][1], n[0], n[1]); }
+      g.closePath();
+    };
+    const blob = (x, z, rx, rz, fill, blur = 3, j) => { g.filter = `blur(${blur}px)`; g.fillStyle = fill; blobPath(x, z, rx, rz, j); g.fill(); g.filter = 'none'; };
+    // speckles scattered inside an ellipse (grit, needles, petals)
+    const specks = (x, z, rx, rz, n, cols, size = 1.6, needle = false) => {
+      for (let i = 0; i < n; i++) {
+        const a = rnd() * TAU, r = Math.sqrt(rnd()), [px, py] = P(x + Math.cos(a) * rx * r, z + Math.sin(a) * rz * r);
+        g.fillStyle = g.strokeStyle = cols[(rnd() * cols.length) | 0];
+        if (needle) { const b = rnd() * TAU, L = size * (1.5 + rnd()); g.lineWidth = 1; g.beginPath(); g.moveTo(px - Math.cos(b) * L, py - Math.sin(b) * L); g.lineTo(px + Math.cos(b) * L, py + Math.sin(b) * L); g.stroke(); }
+        else { const s = size * (0.6 + 0.8 * rnd()); g.fillRect(px - s / 2, py - s / 2, s, s); }
+      }
+    };
+    // a gravel path along a polyline (w wide): a darker worn margin, the pale gravel, grit
+    const path = (pts, w, o = {}) => {
+      const line = (width, style, blur) => {
+        g.filter = `blur(${blur}px)`; g.strokeStyle = style; g.lineWidth = width * PPM; g.lineCap = 'round'; g.lineJoin = 'round';
+        g.beginPath(); pts.forEach(([x, z], i) => { const [px, py] = P(x, z); if (i) g.lineTo(px, py); else g.moveTo(px, py); }); g.stroke(); g.filter = 'none';
+      };
+      line(w + 0.35, o.edge ?? 'rgba(122,110,78,0.32)', 3);
+      line(w, o.fill ?? 'rgba(206,193,164,0.9)', 1.2);
+      // grit along it
+      let L = 0; const seg = [];
+      for (let i = 0; i + 1 < pts.length; i++) { const l = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); seg.push([L, l, i]); L += l; }
+      const n = Math.round(L * w * (o.grit ?? 26));
+      for (let q = 0; q < n; q++) {
+        const s = rnd() * L, [s0, l, i] = seg.find(([a, b]) => s >= a && s <= a + b) || seg[seg.length - 1], t = (s - s0) / l;
+        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], dx = (bx - ax) / l, dz = (bz - az) / l, off = (rnd() - 0.5) * w * 0.9;
+        const [px, py] = P(ax + (bx - ax) * t - dz * off, az + (bz - az) * t + dx * off);
+        g.fillStyle = rnd() < 0.5 ? 'rgba(236,228,208,0.9)' : 'rgba(128,116,92,0.75)';
+        const sz = 1 + rnd() * 1.4; g.fillRect(px - sz / 2, py - sz / 2, sz, sz);
+      }
+    };
+    // stepping stones along a polyline, every `step` m
+    const stones = (pts, step = 0.8) => {
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], l = Math.hypot(bx - ax, bz - az);
+        for (let s = step / 2; s < l; s += step) {
+          const x = ax + ((bx - ax) * s) / l + (rnd() - 0.5) * 0.12, z = az + ((bz - az) * s) / l + (rnd() - 0.5) * 0.12;
+          blob(x, z - 0.03, 0.34, 0.27, 'rgba(60,58,40,0.35)', 2, 0.2);
+          blob(x, z, 0.31, 0.24, 'rgba(196,190,174,0.95)', 0.6, 0.18);
+        }
+      }
+    };
+    // a pollinator strip along a polyline (w wide): lush darker base, flower heads
+    const flowers = (pts, w, dens = 70) => {
+      path(pts, w, { edge: 'rgba(40,70,30,0.18)', fill: 'rgba(78,118,52,0.5)', grit: 0 });
+      const cols = ['rgba(242,212,90,0.95)', 'rgba(233,138,176,0.95)', 'rgba(183,154,230,0.95)', 'rgba(250,250,244,0.95)', 'rgba(240,138,93,0.9)'];
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], l = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / l, dz = (bz - az) / l;
+        for (let q = 0; q < l * w * dens; q++) {
+          const s = rnd() * l, off = (rnd() - 0.5) * w * 0.85, [px, py] = P(ax + dx * s - dz * off, az + dz * s + dx * off);
+          g.fillStyle = cols[(rnd() * cols.length) | 0]; const r = 0.9 + rnd() * 1.3;
+          g.beginPath(); g.arc(px, py, r, 0, TAU); g.fill();
+        }
+      }
+    };
+    // needle litter / bark mulch under trees
+    const litter = (x, z, rx, rz) => {
+      blob(x, z, rx, rz, 'rgba(104,84,56,0.62)', 4);
+      specks(x, z, rx * 0.9, rz * 0.9, Math.round(rx * rz * 60), ['rgba(70,52,34,0.8)', 'rgba(150,118,78,0.75)', 'rgba(92,110,58,0.6)'], 1.4, true);
+    };
+    const moss = (x, z, rx, rz) => { blob(x, z, rx, rz, 'rgba(62,104,48,0.36)', 5); specks(x, z, rx * 0.8, rz * 0.8, Math.round(rx * rz * 25), ['rgba(88,132,62,0.55)', 'rgba(52,86,40,0.5)'], 1.8); };
+    const tint = (x, z, r, dark) => {
+      const [px, py] = P(x, z), rr = r * PPM, gr = g.createRadialGradient(px, py, 0, px, py, rr);
+      gr.addColorStop(0, dark ? 'rgba(52,88,40,0.16)' : 'rgba(226,244,196,0.13)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr; g.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+    };
+    return { blob, specks, path, stones, flowers, litter, moss, tint };
+  }
+  // ---------------------------------------------------------------- the Commons Meadow's ground (30 × 28 m, 24 px/m):
+  // the meadow's core slab is one self-symmetric piece, so its decal is drawn for Alpha's half and again turned 180°.
+  // Gravel spokes to the plaza (the ramp's funnel from the footbridge, the stair's path round the mound to the band
+  // stair, the tower's service lane off the plaza's flat to the band), stepping stones between the pod and the
+  // greenhouse, moss round the boulders and the log, bark beds under the pods, pollinator strips at the foot of the
+  // band walls and the plaza's climbable faces, broad patches of greener / drier turf
   {
-    const PPM = 24, W = 30 * PPM, H = 28 * PPM, x0 = R.x, y0 = R.y, cx = x0 + W / 2, cy = y0 + H / 2;
-    g.save();
-    g.beginPath(); g.rect(x0, y0, W, H); g.clip();
-    const ring = (r0, r1, a) => { g.fillStyle = a > 0 ? `rgba(236,248,214,${a})` : `rgba(28,52,20,${-a})`; g.beginPath(); g.arc(cx, cy, r1 * PPM, 0, Math.PI * 2); g.arc(cx, cy, r0 * PPM, 0, Math.PI * 2, true); g.fill(); };
-    ring(4.6, 5.4, 0.2);
-    ring(5.4, 5.8, -0.12);
-    ring(0, 4.6, -0.06);
-    // the dome's geodesic node mown inside it: a hexagon of six triangles meeting at the centre (like the grid's nodes)
-    g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = 'rgba(236,248,214,0.2)'; g.lineWidth = 0.5 * PPM;
-    const hx = (k) => [cx + Math.cos((k / 6) * Math.PI * 2) * 3.9 * PPM, cy + Math.sin((k / 6) * Math.PI * 2) * 3.9 * PPM];
-    g.beginPath(); for (let k = 0; k <= 6; k++) { const [px, py] = hx(k); if (k) g.lineTo(px, py); else g.moveTo(px, py); } g.stroke();
-    for (let k = 0; k < 3; k++) { const [ax, ay] = hx(k), [bx, by] = hx(k + 3); g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke(); }
-    g.fillStyle = 'rgba(236,248,214,0.2)'; g.beginPath(); g.arc(cx, cy, 0.7 * PPM, 0, Math.PI * 2); g.fill();
-    // mowers' turning circles: faint scuffs round the emblem and at the slab's ends
-    g.strokeStyle = 'rgba(40,60,26,0.07)'; g.lineWidth = 0.7 * PPM;
-    for (const [dx, dy, r] of [[-9, -8, 2.2], [9, 8, 2.2], [-11, 7, 1.8], [11, -7, 1.8]]) { g.beginPath(); g.arc(cx + dx * PPM, cy + dy * PPM, r * PPM, 0, Math.PI * 2); g.stroke(); }
+    const PPM = 24, W = 30 * PPM, H = 28 * PPM, x0 = R.x, y0 = R.y;
+    g.save(); g.beginPath(); g.rect(x0, y0, W, H); g.clip();
+    g.clearRect(x0, y0, W, H);
+    for (const turn of [0, 1]) {
+      const T = (x, z) => (turn ? [x0 + (15 + x) * PPM, y0 + (14 + z) * PPM] : [x0 + (15 - x) * PPM, y0 + (14 - z) * PPM]);
+      const k = kitFor(T, PPM, 4101 + turn * 17);
+      for (const [x, z, r, d] of [[-10, -2, 3.5, 1], [6, -10.5, 3, 1], [-3, -12, 2.5, 1], [12, -6, 2.8, 1], [-13, -11, 2.5, 1], [9, -8.5, 2.6, 0], [-8.5, -3, 3, 0], [1, -11.5, 2.2, 0], [13.5, -12, 2, 0], [-12.5, 3.2, 2.4, 0]]) k.tint(x, z, r, d);
+      k.moss(4.7, -8.0, 1.5, 1.3); k.moss(-2.4, -13.2, 1.3, 1.0); k.moss(2.5, -13.7, 1.4, 0.9); k.moss(10.8, -3.4, 2.3, 0.9);
+      // bark beds under the pods' hedges
+      k.litter(-6.3, -7.6, 1.9, 0.75); k.litter(5.3, -11.8, 0.75, 1.9);
+      // the greenhouse's mulch border
+      k.litter(-9, -12, 4.6, 2.55);
+      // gravel: the ramp's funnel, the tower's lane, the stair's path, the band stair's foot
+      k.path([[0, -14.4], [0, -12.6], [0, -11.1]], 2.4);
+      k.path([[-0.2, -12.2], [0.2, -11.1]], 5.0, { grit: 10 });
+      k.path([[7.0, 0.05], [11.0, -0.1], [15.2, 0.05]], 2.5);
+      k.path([[8.0, -7.7], [6.9, -9.7], [7.1, -12.4], [8.7, -13.6], [10.4, -14.4]], 1.25);
+      k.path([[11.5, 6.4], [11.3, 7.6]], 1.9);
+      // stepping stones from the west band stair past the pod to the ramp's foot
+      k.path([[-11.4, -8.6], [-9.4, -9.0], [-7.2, -8.95], [-5.0, -9.35], [-3.4, -10.4]], 0.9, { edge: 'rgba(0,0,0,0)', fill: 'rgba(196,186,150,0.22)', grit: 0 });
+      k.stones([[-11.4, -8.6], [-9.4, -9.0], [-7.2, -8.95], [-5.0, -9.35], [-3.4, -10.4]], 0.78);
+      // pollinator strips: the band walls' foot (either side of the lane and the band stair), the plaza's climbable face
+      k.flowers([[14.2, -13.6], [14.25, -8.0], [14.2, -2.2]], 1.2);
+      k.flowers([[14.2, 1.9], [14.25, 5.0]], 1.2);
+      k.flowers([[14.2, 9.0], [14.25, 13.6]], 1.2);
+      k.flowers([[-7.25, -2.95], [-4.35, -6.9]], 0.8, 90);
+    }
     g.restore();
-    out.push({ id: MURAL.emblem, x: x0, y: y0, w: W, h: H, place: [0, 30, 0, 28], fx: [1, 0.6] });
+    out.push({ id: MURAL.meadow, x: x0, y: y0, w: W, h: H, place: [0, 30, 0, 28], fx: [1, 0.25] });
+  }
+  // ---------------------------------------------------------------- the band's ground (4 × 59.08 m, 16 px/m): the
+  // east band's column (x 15 … 19, z −21 … 38.08: u from x 19, v from z −21) — a gravel trail winding along it past the
+  // groves, needle litter under them, moss at the wall's foot, gravel landings at the band stairs, the tower's lane
+  // across it (and along Bravo's terrace at the north end), a pollinator strip along the meadow edge, a gravel yard by
+  // the nursery. The west band (its twin, a single piece of its own: a mirrored piece's decal isn't turned) takes
+  // the same picture turned 180°.
+  {
+    const PPM = 16, W = 4 * PPM, H = Math.round(59.083 * PPM), xE = R.x + 1960, xW = R.x + 1886, y0 = R.y + 40;
+    g.save(); g.beginPath(); g.rect(xE, y0, W, H); g.clip();
+    g.clearRect(xE, y0, W, H);
+    const k = kitFor((x, z) => [xE + (19 - x) * PPM, y0 + (38.083 - z) * PPM], PPM, 5207);
+    for (const [z, r] of [[-19, 1.6], [-4, 1.3], [2.6, 1.2], [6.8, 1.4], [22.5, 1.5], [31, 1.3], [36, 1.6]]) k.moss(18.75, z, 0.55, r);
+    k.litter(18.45, -9.25, 0.95, 1.75); k.litter(18.45, 12.8, 0.95, 2.0); k.litter(18.1, 17.9, 1.35, 2.4);
+    k.path([[15.9, -17.0], [16.1, -14.5]], 2.4, { grit: 14 });
+    k.path([[15.9, 6.1], [16.1, 8.1]], 2.6, { grit: 14 });
+    k.path([[16.3, -21.2], [16.1, -18.6], [16.2, -15.5], [16.9, -12.5], [16.4, -9.0], [16.9, -5.5], [17.0, -2.0], [16.8, 2.0], [17.2, 4.6], [16.6, 8.5], [16.3, 12.6], [16.1, 16.8], [16.7, 21.0], [16.3, 24.0], [16.1, 26.6]], 1.25);
+    k.path([[15.0, 0], [19.1, 0]], 2.5);
+    k.path([[15.0, 31.0], [19.1, 31.0]], 2.3);
+    k.path([[16.4, 33.6], [17.8, 36.6]], 2.6, { grit: 16 });
+    k.flowers([[15.62, -13.7], [15.62, -2.1]], 0.55, 90); k.flowers([[15.62, 2.0], [15.62, 5.3]], 0.55, 90); k.flowers([[15.62, 8.8], [15.62, 20.5]], 0.55, 90);
+    g.restore();
+    // the west band: the same picture turned 180°
+    g.save(); g.clearRect(xW, y0, W, H); g.translate(xW + W, y0 + H); g.rotate(Math.PI); g.drawImage(g.canvas, xE, y0, W, H, 0, 0, W, H); g.restore();
+    out.push({ id: MURAL.bandE, x: xE, y: y0, w: W, h: H, place: [0, 4, 0, 59.083], fx: [1, 0.25] });
+    out.push({ id: MURAL.bandW, x: xW, y: y0, w: W, h: H, place: [0, 4, 0, 59.083], fx: [1, 0.25] });
   }
   // ---------------------------------------------------------------- the sign on the upper tier's wall (18 × 1.1 m)
   {
@@ -50,23 +176,6 @@ export function drawMurals(g, R, kit) {
     g.restore();
     out.push({ id: MURAL.sign, x: x0, y: y0, w: W, h: H, place: [6, 18, 3.85, 1.1], fx: [0.5, 0.8] });
   }
-  // ---------------------------------------------------------------- the floor label (5 × 6 m at 40 px/m)
-  {
-    const PPM = 40, W = 5 * PPM, H = 6 * PPM, x0 = R.x + 736, y0 = R.y + 80;
-    g.save();
-    g.clearRect(x0, y0, W, H);
-    g.fillStyle = 'rgba(238,241,232,0.82)';
-    // a big chevron arrow toward the meadow (up the canvas = +z for Alpha)
-    const ax = x0 + W / 2;
-    g.beginPath(); g.moveTo(ax, y0 + 0.2 * PPM); g.lineTo(ax + 1.5 * PPM, y0 + 1.7 * PPM); g.lineTo(ax + 0.6 * PPM, y0 + 1.7 * PPM); g.lineTo(ax + 0.6 * PPM, y0 + 2.6 * PPM);
-    g.lineTo(ax - 0.6 * PPM, y0 + 2.6 * PPM); g.lineTo(ax - 0.6 * PPM, y0 + 1.7 * PPM); g.lineTo(ax - 1.5 * PPM, y0 + 1.7 * PPM); g.closePath(); g.fill();
-    g.font = font(46); g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText('BIOME 07', ax, y0 + 3.5 * PPM);
-    g.font = font(18); g.fillText('COMMONS MEADOW', ax, y0 + 4.4 * PPM);
-    g.fillRect(x0 + 0.4 * PPM, y0 + 5.0 * PPM, W - 0.8 * PPM, 0.08 * PPM);
-    g.restore();
-    out.push({ id: MURAL.label, x: x0, y: y0, w: W, h: H, place: [0.17, 5, 6.9, 6], fx: [0.9, 1] });
-  }
   // ---------------------------------------------------------------- the landing-pad circle (5 × 5 m at 40 px/m)
   {
     const PPM = 40, S = 5 * PPM, x0 = R.x + 960, y0 = R.y + 80, cx = x0 + S / 2, cy = y0 + S / 2;
@@ -81,7 +190,12 @@ export function drawMurals(g, R, kit) {
     g.fillStyle = 'rgba(238,241,232,0.8)'; g.font = font(40); g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText('07', cx, cy + 2);
     g.restore();
-    out.push({ id: MURAL.pad, x: x0, y: y0, w: S, h: S, place: [0.3, 5, 5.5, 5], fx: [0.9, 1] });
+    // Bravo's (its column is a single piece of its own: a mirrored piece's decal isn't turned): the same pad turned
+    // 180°, placed where the turn puts it on that column (5.33 × 13 m: u 0.03, v 2.5)
+    const xb = R.x + 736;
+    g.save(); g.clearRect(xb, y0, S, S); g.translate(xb + S, y0 + S); g.rotate(Math.PI); g.drawImage(g.canvas, x0, y0, S, S, 0, 0, S, S); g.restore();
+    out.push({ id: MURAL.padA, x: x0, y: y0, w: S, h: S, place: [0.3, 5, 5.5, 5], fx: [0.9, 1] });
+    out.push({ id: MURAL.padB, x: xb, y: y0, w: S, h: S, place: [0.0333, 5, 2.5, 5], fx: [0.9, 1] });
   }
   // ---------------------------------------------------------------- the band wall stencil (11.5 × 0.9 m at 60 px/m)
   {

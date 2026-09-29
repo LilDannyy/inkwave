@@ -18,7 +18,7 @@ import { registerFittings } from './fittings.js';
 import { registerPlaza } from './plaza.js';
 import { registerWorks } from './works.js';
 import { FEET, GROUND, PODS } from './layout.js';
-import { T1, T2, T3, SP, TURBINE, GREENHOUSE, RILL_Y } from './plan.js';
+import { T1, T2, T3, SP, TURBINE, GREENHOUSE, RILL_Y, GROVES, BED_H } from './plan.js';
 
 const P = Math.PI, HP = P / 2;
 
@@ -48,10 +48,64 @@ function footOf(cols) {
   }
   return out.map(([x0, x1, z0, z1]) => ({ type: 'treehills_foot', pos: [(x0 + x1) / 2, 0, (z0 + z1) / 2], rotY: 0, len: x1 - x0, w: z1 - z0 }));
 }
-const tree = (x, y, z, h, o = {}) => ({ type: 'treehills_tree', pos: [x, y, z], h, kind: o.kind ?? 'hinoki', seed: o.seed ?? Math.round(Math.abs(x * 7 + z * 3)) % 9, w: o.w ?? 0.8, ...o });
+// (lite below 6.8 m: the forest's fill trees — the tall ones keep every tier)
+const tree = (x, y, z, h, o = {}) => ({ type: 'treehills_tree', pos: [x, y, z], h, kind: o.kind ?? 'hinoki', seed: o.seed ?? Math.round(Math.abs(x * 7 + z * 3)) % 9, w: o.w ?? 0.8, lite: h < 6.8, ...o });
 const rail = (pts, y, o = {}) => ({ type: 'treehills_rail', pos: [0, 0, 0], rotY: 0, pts: pts.map(([x, z]) => [x, y, z]), ...o });
 // a point pulled 0.35 m in from an outline corner toward a reference point (railings stand just inside the coping)
 const inset = (p, c, d = 0.4) => { const dx = c[0] - p[0], dz = c[1] - p[1], L = Math.hypot(dx, dz); return [p[0] + (dx / L) * d, p[1] + (dz / L) * d]; };
+
+// a grove (plan.js GROVES) → its plants: trees on a 1.45 m hex lattice (rows 1.256 m apart) inside the bed (0.55 m in
+// from its edge; a narrow bed: one file), the lattice's phase chosen to fit the most points; the n nearest the bed's middle are trees (the
+// tallest in the middle; cores 1.1 m, so neighbours' cores stand 0.35 m apart: one solid clump, no pockets), the next m
+// shrubs; ferns round the rim. The bed's lift (BED_H) under them; no mulch rings of their own (the bed is the mulch).
+const hs = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+export function groveParts(g) {
+  const a = (g.deg * P) / 180, ux = [Math.cos(a), -Math.sin(a)], uz = [Math.sin(a), Math.cos(a)];
+  const W = (lx, lz) => [+(g.x + lx * ux[0] + lz * uz[0]).toFixed(3), +(g.z + lx * ux[1] + lz * uz[1]).toFixed(3)];
+  const S = 1.45, RS = S * 0.866, ix = g.w / 2 - 0.55, iz = g.d / 2 - 0.55;
+  let best = [];
+  // or (a narrow bed, when it fits more) one file along its long side, 1.3 m apart (cores overlapping), zigzagging a little
+  {
+    const lim = Math.max(ix, iz), zig = Math.max(0, Math.min(0.15, Math.min(ix, iz)));
+    for (const f of [0, 0.5]) {
+      const pts = [];
+      for (let k = -8; k <= 8; k++) { const s = (k + f) * 1.3; if (Math.abs(s) <= lim + 1e-6) pts.push(ix >= iz ? [s, (k % 2 ? 1 : -1) * zig] : [(k % 2 ? 1 : -1) * zig, s]); }
+      if (pts.length > best.length) best = pts;
+    }
+  }
+  for (const fz of [0, 0.5]) for (const fx of [0, 0.5]) {
+    const pts = [];
+    for (let k = -6; k <= 6; k++) for (let j = -6; j <= 6; j++) {
+      const lz = (k + fz) * RS, lx = (j + fx + (Math.abs(k) % 2) * 0.5) * S;
+      if (Math.abs(lx) <= ix + 1e-6 && Math.abs(lz) <= iz + 1e-6) pts.push([lx, lz]);
+    }
+    if (pts.length >= best.length) best = pts;
+  }
+  best.sort((p, q) => Math.hypot(p[0], p[1]) - Math.hypot(q[0], q[1]) || p[0] - q[0] || p[1] - q[1]);
+  const tp = g.pts || best.slice(0, g.n), sp = g.spts || (g.pts ? [] : best.slice(g.n, g.n + g.m));
+  const y = g.y + (g.bed ? BED_H : 0), out = [];
+  tp.forEach(([lx, lz], i) => {
+    const r = hs(g.seed * 7 + i), h = i === 0 ? g.hmax : g.hmax * (0.72 + 0.22 * r), kind = hs(g.seed * 3 + i * 5) < 0.62 ? 'hinoki' : 'thujopsis';
+    const [x, z] = W(lx + (hs(g.seed + i * 11) - 0.5) * 0.16, lz + (hs(g.seed * 5 + i) - 0.5) * 0.16);
+    out.push(tree(x, y, z, +h.toFixed(2), { kind, seed: (g.seed * 3 + i) % 9, w: kind === 'hinoki' ? 0.8 + 0.1 * r : 0.72, core: 1.1, mulch: false }));
+  });
+  sp.forEach(([lx, lz], i) => {
+    const [x, z] = W(lx, lz);
+    out.push({ type: 'treehills_shrubs', pos: [x, y, z], w: 1.15, h: 1.05 + 0.2 * hs(g.seed + i), seed: g.seed * 2 + i });
+  });
+  // ferns: round the rim, every ~1.3 m, 0.35 m in from the bed's edge
+  const per = 2 * (g.w + g.d), nf = Math.max(3, Math.round(per / 1.6));
+  for (let f = 0; f < nf; f++) {
+    let t = ((f + 0.5) / nf) * per, lx, lz;
+    const ex = g.w / 2 - 0.4, ez = g.d / 2 - 0.4;
+    if (t < g.w) { lx = -g.w / 2 + t; lz = -ez; } else if ((t -= g.w) < g.d) { lx = ex; lz = -g.d / 2 + t; } else if ((t -= g.d) < g.w) { lx = g.w / 2 - t; lz = ez; } else { t -= g.w; lx = -ex; lz = g.d / 2 - t; }
+    lx = Math.max(-ex, Math.min(ex, lx)); lz = Math.max(-ez, Math.min(ez, lz));
+    if (hs(g.seed * 13 + f) < 0.3) continue;
+    const [x, z] = W(lx, lz);
+    out.push({ type: 'treehills_ferns', pos: [x, y, z], r: 0.42 + 0.2 * hs(g.seed + f * 3), seed: (g.seed + f) % 9 });
+  }
+  return out;
+}
 
 export const PLACEMENTS = [
   // ================= the environment's footprint under the raised tiers (their columns and copings) and the station
@@ -119,72 +173,59 @@ export const PLACEMENTS = [
   { type: 'treehills_boulder', pos: [-12.0, 0.6, -5.2], w: 1.1, h: 1.0, d: 0.9, seed: 14 },
   { type: 'treehills_sprinkler', pos: [-6, 0, -10.6] }, { type: 'treehills_sprinkler', pos: [7.6, 0, -2.8] },
 
-  // ================= the east tree-hill (authored whole; the west hill is its twin)
-  // ---- the south lobe (T1, Alpha's left lane): evergreens round the hill ramp and the lobe stair
-  tree(18.4, T1, -29.0, 7.5, { seed: 1 }),
-  tree(22.9, T1, -23.4, 6.4, { kind: 'thujopsis', seed: 2 }),
-  tree(27.6, T1, -19.0, 8.2, { seed: 3 }),
-  tree(30.3, T1, -14.4, 5.2, { kind: 'thujopsis', seed: 4, w: 0.7 }),
-  tree(20.2, T1, -24.8, 5.8, { seed: 5, w: 0.75 }),
-  tree(24.6, T1, -19.6, 5.2, { kind: 'thujopsis', seed: 6, w: 0.7 }),
-  { type: 'treehills_shrubs', pos: [19.8, T1, -27.2], w: 1.2, h: 1.1, seed: 11 },
-  { type: 'treehills_shrubs', pos: [26.0, T1, -21.6], w: 1.4, h: 1.2, seed: 13 },
-  { type: 'treehills_boulder', pos: [25.8, T1, -17.6], w: 1.4, h: 1.2, d: 1.2, seed: 9 },
-  { type: 'treehills_solar', pos: [18.3, T1, -21.8], rotY: 0, w: 3.4 },
+  // ================= the east tree-hill (authored whole; the west hill is its twin): a forest — the groves (plan.js
+  //                   GROVES: a bed each, planted as one solid clump) on every terrace, winding trails between them
+  //                   (the lobe's stepping stones, the murals' gravel), clearings for the ranger shelter, the solar
+  //                   array and the turbine
+  ...GROVES.flatMap(groveParts),
+  // ---- the south lobe (T1, Alpha's left lane)
+  // a tree line along the lobe's water edge (on the coping: the lane stays inside), the corner grove's flank
+  tree(19.51, T1, -27.29, 6.6, { seed: 4, w: 0.8, core: 1.0 }),
+  tree(21.9, T1, -24.57, 7.4, { kind: 'thujopsis', seed: 7, w: 0.74, core: 1.0 }),
+  tree(23.72, T1, -23.51, 6.2, { seed: 1, w: 0.82, core: 1.0 }),
+  tree(26.21, T1, -20.3, 7.8, { seed: 6, w: 0.8, core: 1.0 }),
+  tree(28.61, T1, -16.15, 6.0, { kind: 'thujopsis', seed: 3, w: 0.74, core: 1.0 }),
+  { type: 'treehills_boulder', pos: [27.9, T1, -17.9], w: 1.3, h: 1.1, d: 1.1, seed: 9 },
   { type: 'treehills_lamp', pos: [19.9, T1, -17.4], rotY: -HP },
   { type: 'treehills_shrubs', pos: [19.0, T1, -15.2], w: 1.0, h: 1.1, seed: 27 },
-  { type: 'treehills_fringe', pos: [25.8, T1, -10.35], rotY: 0, L: 1.9, seed: 3 },
-  { type: 'treehills_totem', pos: [26.3, T1, -13.4], rotY: 0, lines: [['^ TURBINE HILL'], ['< MEADOW']] },
-  { type: 'treehills_hatch', pos: [26.7, 1.95, -10], rotY: P, num: 'T-2' },
-  { type: 'treehills_sprinkler', pos: [23.4, T1, -21] }, { type: 'treehills_sprinkler', pos: [29.2, T1, -16.8] },
-  // ---- the band (T1) along the meadow: a lamp by the upper tier's wall, shrubs at its foot
+  { type: 'treehills_totem', pos: [26.5, T1, -13.9], rotY: 0, lines: [['^ TURBINE HILL'], ['< MEADOW']] },
+  { type: 'treehills_ferns', pos: [21.2, T1, -24.4], r: 0.6, seed: 4 }, { type: 'treehills_ferns', pos: [17.6, T1, -24.9], r: 0.5, seed: 8 },
+  // ---- the band (T1) along the meadow: lamps by the upper tier's wall, shrubs at its foot, the groves between
   { type: 'treehills_lamp', pos: [19.05, T1, -6.2], rotY: -HP },
   { type: 'treehills_lamp', pos: [19.05, T1, 9.6], rotY: -HP },
-  tree(17.5, T1, 16.6, 5.0, { kind: 'thujopsis', seed: 8, w: 0.7 }),
   { type: 'treehills_hives', pos: [18.8, T1, -12.6], rotY: HP, n: 3 },
   { type: 'treehills_shrubs', pos: [18.9, T1, 4.2], w: 1.2, h: 1.1, seed: 15 },
   { type: 'treehills_shrubs', pos: [18.9, T1, -4.5], w: 1.2, h: 1.1, seed: 17 },
-  { type: 'treehills_boulder', pos: [16.2, T1, 12.3], w: 1.2, h: 1.1, d: 1.0, seed: 10 },
-  { type: 'treehills_fringe', pos: [19.2, T1, -9.6], rotY: -HP, L: 5.2, seed: 7 },
-  { type: 'treehills_fringe', pos: [19.2, T1, 11.2], rotY: -HP, L: 6.4, seed: 9 },
+  { type: 'treehills_fringe', pos: [19.2, T1, 9.1], rotY: -HP, L: 2.6, seed: 9 },
+  { type: 'treehills_fringe', pos: [19.2, T1, 6.1], rotY: -HP, L: 2.4, seed: 5 },
   { type: 'treehills_hatch', pos: [19.5, 1.95, -7.2], rotY: -HP, num: 'T-1' },
-  { type: 'treehills_wallvalve', pos: [19.5, 1.9, 17.2], rotY: -HP, label: 'IRR 4' },
+  { type: 'treehills_wallvalve', pos: [19.5, 1.9, 15.2], rotY: -HP, label: 'IRR 4' },
   { type: 'treehills_hatch', pos: [15, 0.62, -19.2], rotY: -HP, r: 0.4, num: 'B-3' },
   { type: 'treehills_wallvalve', pos: [15, 0.7, 11.6], rotY: -HP, label: 'IRR 2' },
-  // ---- the upper tier (T2): young trees on its meadow edge (off the track), evergreens on the outer parts, railings
-  tree(20.6, T2, 5.6, 4.6, { seed: 5, w: 0.62 }),
-  tree(20.6, T2, 15.4, 4.2, { seed: 6, w: 0.62 }),
-  { type: 'treehills_ranger', pos: [23.2, T2, -4.6], rotY: 0 },
-  { type: 'treehills_boulder', pos: [21.0, T2, -8.6], w: 1.0, h: 1.0, d: 0.9, seed: 18 },
-  tree(27.0, T2, -8.4, 4.4, { seed: 8, w: 0.6 }),
-  { type: 'treehills_solar', pos: [29.6, T2, -9.1], rotY: 0, w: 2.8 },
-  { type: 'treehills_shrubs', pos: [20.4, T2, 10.4], w: 1.0, h: 1.0, seed: 19 },
-  { type: 'treehills_boulder', pos: [20.5, T2, 2.9], w: 1.1, h: 0.95, d: 1.0, seed: 12 },
+  // ---- the upper tier (T2): the ranger shelter's clearing, the solar array in the south prow, the hives
+  { type: 'treehills_ranger', pos: [23.2, T2 + 0.08, -4.6], rotY: 0 },
+  { type: 'treehills_solar', pos: [31.7, T2, -5.9], rotY: HP, w: 2.8 },
   { type: 'treehills_hives', pos: [29.6, T2, 18.9], rotY: 0, n: 2 },
-  tree(27.6, T2, 18.4, 5.0, { kind: 'thujopsis', seed: 0, w: 0.7 }),
+  { type: 'treehills_ferns', pos: [20.3, T2, 8.0], r: 0.5, seed: 3 }, { type: 'treehills_ferns', pos: [20.2, T2, 13.1], r: 0.55, seed: 6 },
   rail([inset([31.5, -10], [28, -6]), inset([33, -7.402], [28, -6]), inset([33, -4], [28, -6])], T2),
   rail([inset([33, 14], [28, 16]), inset([31, 17.464], [28, 16]), inset([31, 20], [28, 16])], T2),
-  // ---- the crown (T3): the turbine, evergreens, the railing round its prow, a bench over the meadow
+  // ---- the crown (T3): the turbine in its clearing, the hut, the weather mast, a bench over the meadow
   { type: 'treehills_turbine', pos: [TURBINE.x, T3, TURBINE.z], rotY: -HP, hub: TURBINE.hub },
-  tree(28.6, T3, 11.4, 7.0, { seed: 2 }),
-  tree(28.3, T3, -1.4, 6.0, { kind: 'thujopsis', seed: 6 }),
   rail([inset([33, -4], [30, 5]), inset([35.5, 0.33], [30, 5]), inset([35.5, 9.67], [30, 5]), inset([33, 14], [30, 5])], T3),
   { type: 'treehills_bench', pos: [27.3, T3, 4.6], rotY: -HP },
   { type: 'treehills_lamp', pos: [30.1, T3, 9.2], rotY: 0 },
   { type: 'treehills_weather', pos: [31.3, T3, -1.0], rotY: 0.3 },
   { type: 'treehills_hut', pos: [28.2, T3, 7.6], rotY: 0 },
-  { type: 'treehills_shrubs', pos: [29.8, T3, -2.9], w: 1.1, h: 1.0, seed: 21 },
   rail(Array.from({ length: 9 }, (_, k) => { const a = (k / 8) * Math.PI * 2 + Math.PI / 8; return [TURBINE.x + Math.cos(a) * 2.25, TURBINE.z + Math.sin(a) * 2.25]; }), T3, { h: 0.95 }),
   { type: 'treehills_hatch', pos: [26.5, 3.25, 1.2], rotY: -HP, r: 0.38, num: 'C-1' },
   // ---- the north strip (T1, Bravo's right lane: the service route down to Bravo's terrace)
-  tree(27.2, T1, 23.2, 6.2, { seed: 4, w: 0.7 }),
-  tree(16.8, T1, 27.9, 5.0, { kind: 'thujopsis', seed: 3, w: 0.7 }),
-  tree(19.9, T1, 27.4, 4.2, { seed: 7, w: 0.6 }),
-  tree(27.0, T1, 26.8, 4.5, { seed: 2, w: 0.65 }),
+  tree(27.0, T1, 26.8, 5.2, { seed: 2, w: 0.75 }),
+  tree(27.35, T1, 28.2, 5.8, { kind: 'thujopsis', seed: 8, w: 0.72, core: 1.0 }),
   { type: 'treehills_lamp', pos: [26.4, T1, 29.4], rotY: HP },
   { type: 'treehills_compost', pos: [20.9, T1, 34.3], rotY: 0 },
   { type: 'treehills_boulder', pos: [26.6, T1, 31.2], w: 1.1, h: 1.2, d: 1.0, seed: 16 },
   { type: 'treehills_nursery', pos: [17.2, T1, 34.0], rotY: 0, w: 2.2 },
+  tree(23.5, T1, 35.0, 5.0, { kind: 'thujopsis', seed: 5, w: 0.7 }),
   { type: 'treehills_sprinkler', pos: [21.4, T1, 25.6] },
-  { type: 'treehills_fringe', pos: [19.7, T1, 23.4], rotY: -HP, L: 2.4, seed: 11, flowers: false },
+  { type: 'treehills_ferns', pos: [22.6, T1, 24.6], r: 0.5, seed: 9 },
 ];
