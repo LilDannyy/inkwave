@@ -171,9 +171,8 @@ const LAYOUT_TREEHILLS = {
   zones: ZONES,
   tower: TOWER,
   pods: PODS,
-  // Boss Battle: HULLBREAKER's floor is the meadow (0). The terraces (1.3) cover more ground than the lowland, so the
-  // boss nav's "most common ground level" would put it on Bravo's base terrace instead; this hint needs the one-line
-  // bossNav.js change requested in the report (until then the boss roams Bravo's base terrace, which also works)
+  // Boss Battle: HULLBREAKER's floor is the meadow (0) — its home ground the whole lowland (≈ 870 m²). The terraces (1.3)
+  // cover more ground than the lowland, so without the hint the boss nav's "most common ground level" would be theirs
   boss: { floorY: G0 },
   single: [B(-CORE.x, CORE.x, FL, G0, -CORE.z, CORE.z, lawn({ tag: 'meadow', mural: [{ n: [0, 1, 0], id: MURAL.emblem }] }))],
   half: HALF,
