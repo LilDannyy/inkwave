@@ -5,7 +5,7 @@
 //                shows the same ring)
 //   inscription  carved in the first terrace's front wall: NANTAI OBSERVATORY · 1962
 //   blaze        a painted trail blaze on the bastion by the hollow: red-white-red and SUMMIT ▲ 0.2 KM
-//   rose         a brass compass rose set in the first terrace's paving (face 8.5 × 14.3 m, centred; N = world −X)
+//   rose         a brass compass rose set in the first terrace's paving (face 8.5 × 9.3 m since the stretch, centred; N = world −X)
 //   paths        the lawn's centre (one slab across the centre line, 14.4 × 19.2 m): footpaths worn into the turf from
 //                one bridge to the other and out toward the two marquees (drawn 180°-symmetric, like the stage)
 export const MURAL = { shock: 4, inscription: 5, blaze: 6, rose: 7, paths: 8 };
@@ -99,7 +99,8 @@ export function drawMurals(g, R, kit) {
     for (const [t, a] of [['N', Math.PI], ['E', -Math.PI / 2], ['S', 0], ['W', Math.PI / 2]]) g.fillText(t, cx + Math.cos(a) * (Rr + 14), cy + Math.sin(a) * (Rr + 14));
     g.font = kit.fontB(9); g.fillStyle = stone; g.fillText('NANTAI  ·  2,657 FT', cx, cy + Rr + 34);
     g.restore();
-    out.push({ id: MURAL.rose, x: x0, y: y0, w: W, h: H, m: [8.5, 14.3], fx: [0.4, 1] });
+    // (since the stretch the rose sits on the terrace's front, a 9.3 m face: drawn for 14.3, lifted 2.5 m to centre on it)
+    out.push({ id: MURAL.rose, x: x0, y: y0, w: W, h: H, m: [8.5, 14.3], place: [0, 8.5, -2.5, 14.3], fx: [0.4, 1] });
   }
   // ---------------------------------------------------------------- worn footpaths (14.4 × 19.2 m at 24 px/m)
   {

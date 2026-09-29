@@ -9,6 +9,8 @@
 // along local +X. Signage uses flat painted / raised letters from a stroke font (below).
 import { LAYOUT, PAV, PILLBOX, MEMO, T1, T2, T3, T4, BRIDGES, POND, CRATER, COAST, BOARDS, STATIONS, UNDERCLIFF, lipEdge } from './layout.js';
 import { topOf, mirrorDef, inPoly, PieceIndex } from './geo.js';
+import { sz } from './stretch.js';
+import { T5, T6, T7, T8, MOUND, MOUND_PIERS, OP, PONDS, SLICE_BRIDGES, SLICE_BOARDS } from './slice.js';
 
 const P = Math.PI;
 
@@ -465,6 +467,87 @@ export function register(D, H) {
       B.col(-0.42, 1.36, -0.42, 0.42, 8.4, 0.42, { roof: true });
     },
   };
+  // The Inkling Rifles' cenotaph on the regimental mound (the Long Stages slice; pos = the mound's top at the cenotaph's
+  // centre, local +Z = its front, toward mid): a secular memorial — two Portland steps and a plinth course, a battered
+  // stone pylon with a band and cornice, the empty tomb-chest on top; on its front a bronze laurel wreath round the
+  // regiment's badge (a squid in a roundel), the regiment's name and THE LINE HELD; carved wreaths on the sides, the war
+  // on the back. Short and blocky: it reads apart from the crater's two tall obelisks. Solid and off limits (you slide
+  // off it).
+  const squidBadge = (B, y, z, s = 1) => {
+    // bronze roundel with a raised rim, the squid on it (mantle + fins, head with two eyes, four tentacles): the Inkling
+    // emblem — nothing on it reads as a cross
+    B.push(0, y, z);
+    B.cyl('metal', K.bronze, 0.2 * s, 0.03, 0, 0, 0.015, { rx: HP, seg: 24 });
+    B.tor('metal', K.bronzeLt, 0.2 * s, 0.014, 0, 0, 0.03, { ts: 28, rs: 5 });
+    const plate = (pts, d, c) => { const g = new GB(); g.face(pts.map(([x, yy]) => [x * s, yy * s, d]), [0, 0, 1]);
+      for (let i = 0; i < pts.length; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % pts.length]; g.face([[x0 * s, y0 * s, 0.03], [x1 * s, y1 * s, 0.03], [x1 * s, y1 * s, d], [x0 * s, y0 * s, d]], [y1 - y0, -(x1 - x0), 0]); }
+      B.add('metal', g.geo(), c, 0, 0, 0); };
+    plate([[0, 0.165], [0.07, 0.07], [0.055, -0.015], [-0.055, -0.015], [-0.07, 0.07]], 0.05, K.bronzeLt);        // mantle
+    plate([[0.07, 0.07], [0.115, 0.115], [0.045, 0.125]], 0.048, K.bronzeLt);                                     // fins
+    plate([[-0.045, 0.125], [-0.115, 0.115], [-0.07, 0.07]], 0.048, K.bronzeLt);
+    plate([[0.05, -0.015], [0.05, -0.07], [-0.05, -0.07], [-0.05, -0.015]], 0.05, K.bronzeLt);                    // head
+    for (const x of [-0.024, 0.024]) B.cyl(NS('paint'), K.stoneLt, 0.013 * s, 0.01, x * s, -0.042 * s, 0.055, { rx: HP, seg: 8 });
+    for (const x of [-0.036, -0.012, 0.012, 0.036]) rod(B, NS('metal'), K.bronzeLt, [x * s, -0.07 * s, 0.045], [x * 1.5 * s, -0.16 * s, 0.045], 0.009 * s, 4);
+    B.pop();
+  };
+  // a laurel wreath facing +Z (radius R): two rows of leaves along a slim ring, each leaf an almond lying along the ring
+  // and angled off it, a ribbon bow tied at the foot
+  const laurel = (B, R, c, mat, n = 24) => {
+    B.tor(mat, c, R, R * 0.045, 0, 0, 0, { ts: 28, rs: 5 });
+    for (let k = 0; k < n; k++) {
+      const a = -HP + 0.32 + ((TAU - 0.64) * (k + 0.5)) / n;
+      for (const sd of [-1, 1]) { const r = R * (1 + sd * 0.1); B.sph(NS(mat), c, 1, Math.cos(a) * r, Math.sin(a) * r, 0.012, { sx: R * 0.17, sy: R * 0.065, sz: 0.018, rz: a + HP + sd * 0.55, ws: 8, hs: 4 }); }
+    }
+    B.box(mat, c, R * 0.16, R * 0.12, 0.03, 0, -R, 0.02, { r: 0.01 });
+    for (const sd of [-1, 1]) B.box(NS(mat), c, R * 0.1, R * 0.42, 0.02, sd * R * 0.12, -R * 1.2, 0.015, { rz: sd * 0.35, r: 0.008 });
+  };
+  D.craters_cenotaph = {
+    desc: 'Regimental cenotaph: steps, battered pylon, cornice, tomb-chest; bronze wreath round the squid badge. Collider: off-limits roof.',
+    build(B) {
+      const S = K.stone, y0 = 0.58, hB = 2.2;
+      B.box('paint', K.stoneDk, 2.1, 0.18, 1.5, 0, 0.09, 0, { r: 0.02 });
+      B.box('paint', S, 1.8, 0.18, 1.2, 0, 0.27, 0, { r: 0.02 });
+      B.box('paint', K.stoneDk, 1.5, 0.22, 0.95, 0, 0.47, 0, { r: 0.02 });
+      B.add('paint', frustumGeo(1.3, 0.8, 1.14, 0.66, hB, false), S, 0, y0, 0);
+      B.box('paint', K.stoneDk, 1.24, 0.1, 0.76, 0, y0 + hB + 0.05, 0, { r: 0.02 });
+      B.box('paint', S, 1.36, 0.1, 0.88, 0, y0 + hB + 0.15, 0, { r: 0.03 });
+      B.box('paint', K.stoneLt, 1.0, 0.3, 0.58, 0, y0 + hB + 0.35, 0, { r: 0.03 });
+      B.add('paint', frustumGeo(1.0, 0.58, 0.84, 0.42, 0.14), S, 0, y0 + hB + 0.5, 0);
+      // the front (the face leans back 0.07 over its height: every plate is set on it, tilted with it): the wreath round
+      // the badge, the regiment, the line held
+      const fz = (y) => 0.4 - (0.07 * (y - y0)) / hB, LEAN = -Math.atan(0.07 / hB);
+      const onFace = (ry, y, fn) => { B.push(0, 0, 0, ry); B.push(0, y, fz(y), 0, LEAN); fn(); B.pop(); B.pop(); };
+      onFace(0, 2.05, () => { laurel(B, 0.34, K.bronze, 'metal'); squidBadge(B, 0, 0.004, 1.15); });
+      onFace(0, 1.42, () => letters(B, 'THE INKLING RIFLES', { h: 0.09, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.14 }));
+      onFace(0, 1.16, () => letters(B, 'THE LINE HELD', { h: 0.12, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.16 }));
+      // the back: the war and the line; the sides (the face 0.65 → 0.57 out, leaning in): carved laurel wreaths
+      onFace(PI, 1.9, () => letters(B, 'THE GREAT TURF WAR', { h: 0.085, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.14 }));
+      onFace(PI, 1.7, () => letters(B, 'THE RESERVE LINE', { h: 0.085, wt: 0.2, flat: true, z: 0.004, c: K.bronze, mat: 'metal', track: 0.14 }));
+      for (const sx of [-1, 1]) {
+        const y = 2.0, x = 0.65 - (0.08 * (y - y0)) / hB;
+        B.push(0, 0, 0, sx * HP); B.push(0, y, x, 0, -Math.atan(0.08 / hB)); laurel(B, 0.22, K.stoneDk, 'paint', 18); B.pop(); B.pop();
+      }
+      B.col(-1.05, 0, -0.75, 1.05, 0.36, 0.75, { roof: true });
+      B.col(-0.68, 0.36, -0.44, 0.68, y0 + hB + 0.2, 0.44, { roof: true });
+      B.col(-0.5, y0 + hB + 0.2, -0.3, 0.5, y0 + hB + 0.64, 0.3, { roof: true });
+    },
+  };
+  // a gate pier's dressing on the regimental mound (pos = the pier's foot, local +Z = outward, down the steps): a moulded
+  // plinth course, a cap with a ball finial, a small bronze poppy wreath on its face (the pier is the layout block)
+  D.craters_pier = {
+    desc: 'Memorial gate pier dressing: plinth course, cap, ball finial, bronze wreath (the pier is a layout block).',
+    build(B) {
+      B.box('paint', K.stoneDk, 0.9, 0.16, 0.9, 0, 0.08, 0, { r: 0.02 });
+      B.box('paint', K.stoneDk, 0.96, 0.1, 0.96, 0, 1.25, 0, { r: 0.03 });
+      B.box('paint', K.stone, 0.86, 0.1, 0.86, 0, 1.35, 0, { r: 0.03 });
+      B.sph('paint', K.stoneLt, 0.2, 0, 1.58, 0, { ws: 12, hs: 8 });
+      B.push(0, 0.78, 0.402);
+      B.tor('metal', K.bronze, 0.14, 0.025, 0, 0, 0, { ts: 16, rs: 5 });
+      B.cyl(NS('paint'), K.poppy, 0.04, 0.02, 0, -0.14, 0.02, { rx: HP, seg: 8 });
+      B.pop();
+      B.col(-0.2, 1.3, -0.2, 0.2, 1.8, 0.2, { roof: true });
+    },
+  };
   // laurel wreath with red poppies on a little easel stand (faces +Z)
   D.craters_wreath = {
     desc: 'Remembrance wreath (laurel + poppies) on an easel, facing +Z. variant 1 = laid flat.',
@@ -531,8 +614,8 @@ export function register(D, H) {
       for (const y of [0.3, 1.4]) pbox(B, NS('metal'), K.iron, 0.9, 0.06, 0.04, 0, y, 0.08);
       pbox(B, NS('metal'), K.bronzeLt, 0.42, 0.28, 0.02, -1.0, 1.35, 0.01);
       B.push(-1.0, 1.35, 0.022);
-      letters(B, 'PILLBOX', { h: 0.05, wt: 0.22, flat: true, y: 0.05, c: K.ink, mat: 'paint', track: 0.16 });
-      letters(B, 'No 7', { h: 0.07, wt: 0.22, flat: true, y: -0.07, c: K.ink, mat: 'paint', track: 0.16 });
+      letters(B, o.label ?? 'PILLBOX', { h: 0.05, wt: 0.22, flat: true, y: 0.05, c: K.ink, mat: 'paint', track: 0.16 });
+      letters(B, o.no ?? 'No 7', { h: 0.07, wt: 0.22, flat: true, y: -0.07, c: K.ink, mat: 'paint', track: 0.16 });
       B.pop();
       B.pop();
       // a stubby vent pipe + a periscope cap on the roof
@@ -1004,24 +1087,94 @@ const SHELF_ROCKS = (() => {
       cum += L;
     }
   }
-  // (the saps' mouths stay clear)
-  return out.filter((p) => Math.hypot(p.pos[0] - T3.x0, p.pos[2] - T3.z) > 3 && Math.hypot(p.pos[0] - T4.x1, p.pos[2] - T4.z) > 3);
+  // (the saps' mouths stay clear; and the corners where the shelf wraps round a point of the cliff — a rock there left a
+  // one-metre squeeze by the water that bots wedged in, the Long Stages stretch's new sides)
+  return out.filter((p) => Math.hypot(p.pos[0] - T3.x0, p.pos[2] - T3.z) > 3 && Math.hypot(p.pos[0] - T4.x1, p.pos[2] - T4.z) > 3
+    && !COAST.some((c) => Math.hypot(p.pos[0] - c[0], p.pos[2] - c[1]) < 1.6));
 })();
 
 // facing helpers: rotY that turns local +Z toward (dx, dz) / toward the crater's middle / away from it
 const face = (dx, dz) => +Math.atan2(dx, dz).toFixed(3);
 const inward = (x, z) => face(-x, -z), outward = (x, z) => face(x, z);
 const at = (th, r) => polar(th, r).map((v) => +v.toFixed(2));
-const onGround = (type, x, z, o = {}) => ({ type, pos: [x, groundY(x, z), z], ...o });
+// (onGround takes the drawing's coordinates, before the stretch: beyond the cut they move out with the base, stretch.js)
+const onGround = (type, x, z, o = {}) => ({ type, pos: [x, groundY(x, sz(z)), sz(z)], ...o });
+const onSlice = (type, x, z, o = {}) => ({ type, pos: [x, groundY(x, z), z], ...o });   // (the slice: already in place)
 const [mX, mZ] = MEMO.c;
+
+// the reserve line's dressing (Alpha's half; already in place — the tower's runs kept clear: z −30.5 and −43 across,
+// x −26.5 and 6.5 along, 2.5 m wide)
+const [crX, crZ] = MOUND.memorial;
+// the Long Stages stretch also took the whole stage's cover over 90 % (it was 79 %): gorse on the old downs where the
+// open ground ran longest, big chalk boulders on the Great Crater's slopes either side of each cut, one at the cut
+const COVER_MID = [
+  { type: 'craters_gorse', pos: [-2.3, 0, -19.4], s: 0.95, seed: 7 },
+  { type: 'craters_gorse', pos: [-9.8, 0, -16.6], s: 0.95, seed: 8 },
+  { type: 'craters_gorse', pos: [12.0, 0, -15.8], s: 0.95, seed: 9 },
+  { type: 'craters_gorse', pos: [27.6, 0, -24.2], s: 1.2, seed: 10 },
+  { type: 'craters_gorse', pos: [-9.8, 0, -28.1], s: 0.95, seed: 11 },
+  // (on the slopes: sunk into the slope so the downhill side doesn't float; clear of the relics, the cuts and the tower)
+  ...[[200, 8.8, 1.3], [222, 10.0, 1.15], [246, 8.6, 1.2], [294, 8.6, 1.2], [336, 9.8, 1.2]].map(([th, r, sc], i) => ({ type: 'craters_boulder', pos: [+polar(th, r)[0].toFixed(2), +(coneY(r, th) - 0.28).toFixed(2), +polar(th, r)[1].toFixed(2)], s: sc, flat: 0.9, seed: 11 + i, rotY: i * 2.1 })),
+];
+const SLICE_DRESSING = [
+  ...COVER_MID,
+  // the regimental mound: the cenotaph, wreaths at its foot, a bench and a lantern below the south steps
+  { type: 'craters_cenotaph', pos: [crX, MOUND.top, crZ], rotY: 0 },
+  ...MOUND_PIERS.map(([x, z, sg]) => ({ type: 'craters_pier', pos: [x, MOUND.top, z], rotY: sg > 0 ? 0 : Math.PI })),
+  { type: 'craters_wreath', pos: [crX - 1.2, MOUND.top, crZ + 1.05], rotY: 0.12 },
+  { type: 'craters_wreath', pos: [crX + 1.15, MOUND.top, crZ + 1.05], rotY: -0.1, variant: 1, r: 0.26 },
+  { type: 'craters_poppies', pos: [crX, MOUND.top, crZ - 1.2], r: 0.7, n: 9, seed: 61 },
+  { type: 'craters_bench', pos: [-8.2, 0, -50.2], rotY: 0.6 },
+  onSlice('craters_lantern', 1.9, -49.8), onSlice('craters_lantern', 1.8, -33.2), onSlice('craters_lantern', -8.4, -47.9),
+  // the support trench's bay (the tower's): revetment frames on its walls, the floor left clear; the zig-zag's furniture
+  ...[[T8.z0, T5.pts[0][1] - T5.w / 2], [T5.pts[0][1] + T5.w / 2, T8.z1]].map(([a, b]) => ({ type: 'craters_revetment', pos: [T8.x1, -1.0, a], rotY: -Math.PI / 2, length: +(b - a).toFixed(3) })),
+  { type: 'craters_revetment', pos: [T8.x0, -1.0, T8.z1], rotY: Math.PI / 2, length: +(T8.z1 - T8.z0).toFixed(3) },
+  { type: 'craters_sign', variant: 2, pos: [-22.6, 0, -39.0], rotY: Math.PI, text: 'SUPPORT TRENCH' },
+  { type: 'craters_trenchkit', variant: 3, pos: [-19.6, -1.0, T5.pts[0][1] + T5.w / 2 - 0.05], rotY: Math.PI },
+  { type: 'craters_trenchkit', variant: 2, pos: [-12.6, -1.0, T5.pts[3][1] - T5.w / 2 + 0.05], rotY: 0 },
+  { type: 'craters_trenchkit', variant: 0, pos: [-21.2, -1.0, T5.pts[0][1] - T5.w / 2 + 0.05], rotY: 0, h: 1.0 },
+  // the left support trench, the communication trench: furniture, a board by the path
+  { type: 'craters_trenchkit', variant: 1, pos: [16.9, -1.0, T6.pts[3][1] + T6.w / 2 - 0.05], rotY: Math.PI },
+  { type: 'craters_trenchkit', variant: 4, pos: [25.8, -1.0, T6.pts[4][1] - T6.w / 2 + 0.2], rotY: 0.1 },
+  { type: 'craters_trenchkit', variant: 0, pos: [12.2, -1.0, T6.pts[1][1] + T6.w / 2 - 0.05], rotY: Math.PI, h: 1.0 },
+  { type: 'craters_trenchkit', variant: 2, pos: [T7.pts[1][0] + T7.w / 2 - 0.05, -1.0, -42.6], rotY: -Math.PI / 2 },
+  { type: 'craters_trenchkit', variant: 3, pos: [T7.pts[1][0] - T7.w / 2 + 0.05, -1.0, -43.6], rotY: Math.PI / 2 },
+  { type: 'craters_sign', variant: 2, pos: [T7.pts[3][0] + 2.2, 0, -50.9], rotY: -0.4, text: 'TO THE LINE' },
+  ...SLICE_BRIDGES.map((b) => ({ type: 'craters_bridge', pos: [b.x, 0.7, b.z], rotY: 0, span: +(2 * b.half).toFixed(3) })),
+  ...SLICE_BOARDS.map((b) => ({ type: 'craters_board', pos: [b.x, 0, b.z], rotY: +(b.deg * Math.PI / 180).toFixed(4) })),
+  { type: 'craters_wire', pos: [11.6, 0, -32.3], rotY: 0, length: 4.4 },
+  // the observation post
+  { type: 'craters_pillbox', pos: [(OP.x0 + OP.x1) / 2, 0, (OP.z0 + OP.z1) / 2], rotY: 0, w: OP.x1 - OP.x0, d: OP.z1 - OP.z0, label: 'OBSERVATION', no: 'POST 3' },
+  { type: 'craters_trenchkit', variant: 4, pos: [OP.x1 + 0.7, 0, -46.9], rotY: 2.2 },
+  // the shell holes: reeds and lilies in the water, poppies on the rims
+  ...PONDS.flatMap((pd, j) => [
+    ...[[40, 1.3], [150, 1.2], [260, 1.35]].map(([th, sc]) => ({ type: 'craters_reeds', pos: [+(pd.c[0] + Math.cos(ang(th + j * 30)) * (pd.r - 0.25)).toFixed(2), -1.62, +(pd.c[1] + Math.sin(ang(th + j * 30)) * (pd.r - 0.25)).toFixed(2)], s: sc, n: 18 })),
+    ...[95, 210, 330].map((th, i) => onSlice('craters_poppies', +(pd.c[0] + Math.cos(ang(th + j * 20)) * (pd.rim - 0.35)).toFixed(2), +(pd.c[1] + Math.sin(ang(th + j * 20)) * (pd.rim - 0.35)).toFixed(2), { r: 0.35, n: 7, seed: 70 + i + j * 5 })),
+    { type: 'craters_lilies', pos: [pd.c[0] + 0.5, -1.545, pd.c[1] - 0.4], n: 6, r: 0.9, seed: 5 + j },
+  ]),
+  // the downs round it all: gorse, a hawthorn, wildflowers, tussocks, chalk boulders
+  // (gorse ≥ 0.95 tall is cover; by the cliffs 1.2, over the chalk lip too)
+  { type: 'craters_gorse', pos: [-30.2, 0, -31.5], s: 1.15, seed: 4 },
+  { type: 'craters_gorse', pos: [29.3, 0, -32.6], s: 1.15, seed: 5 },
+  { type: 'craters_gorse', pos: [-14.2, 0, -50.6], s: 1.1, seed: 6 },
+  { type: 'craters_gorse', pos: [21.2, 0, -32.4], s: 1.0, seed: 12 },
+  { type: 'craters_hawthorn', pos: [-20.5, 0, -33.4], rotY: 0.5, s: 0.95 },
+  { type: 'craters_gorse', pos: [-29.2, 0, -42.2], s: 1.0, seed: 13 },
+  { type: 'craters_gorse', pos: [9.8, 0, -50.8], s: 0.9, seed: 3 },
+  { type: 'craters_hawthorn', pos: [-24.8, 0, -47.8], rotY: 1.1, s: 0.9 },
+  { type: 'craters_boulder', pos: [29.0, 0, -40.5], s: 1.35, flat: 0.9, seed: 2 },
+  { type: 'craters_boulder', pos: [-9.6, 0, -39.0], s: 0.75, seed: 4 },
+  ...[[-17.5, -43.0], [-6.5, -36.0], [12.5, -41.5], [4.0, -39.5], [-22.5, -35.0], [27.5, -45.5], [-12.0, -49.5], [21.8, -32.5]].map(([x, z], i) => onSlice('craters_poppies', x, z, { r: 0.8 + rnd(i * 5) * 0.4, n: 8 + (i % 4), seed: i + 80 })),
+  ...[[-20.5, -45.8], [-1.0, -35.5], [10.8, -48.8], [28.3, -36.5], [-29.6, -29.4], [18.6, -33.6], [-13.0, -37.5], [6.2, -39.2]].map(([x, z], i) => onSlice('craters_tussock', x, z, { s: 0.55 + rnd(i * 9) * 0.4, seed: i + 11 })),
+];
 
 export const PLACEMENTS = [
   // ================= the visitor pavilion (spawn) on its headland, the neck in front of it
   { type: 'craters_pavilion', pos: [0, 0, PAV.z0], rotY: 0 },
   ...[-1, 1].map((sg) => ({ type: 'craters_fence', pos: [sg * (PAV.head - 0.4), 0.25, PAV.z0 + 0.7], rotY: -Math.PI / 2, length: 6.4 })),
   { type: 'craters_sign', variant: 1, pos: [2.3, 0, -28.4], rotY: 0, arms: [['GREAT CRATER', 90], ['MEMORIAL', 160], ['VISITOR CENTRE', -90]] },
-  { type: 'craters_icecream', pos: [5.2, 0, -33.2], rotY: -Math.PI / 2 },
-  { type: 'craters_bin', pos: [2.4, 0, -31.8] },
+  { type: 'craters_icecream', pos: [5.2, 0, sz(-33.2)], rotY: -Math.PI / 2 },
+  { type: 'craters_bin', pos: [2.4, 0, sz(-31.8)] },
   onGround('craters_lifebuoy', -6.6, -33.6, { rotY: Math.PI / 2 }),
   { type: 'craters_picnic', pos: [7.2, 0, -26.2], rotY: -0.5 },
   { type: 'craters_gorse', pos: [9.6, 0, -27.9], s: 0.85, seed: 2 },
@@ -1095,6 +1248,9 @@ export const PLACEMENTS = [
   // ================= wildflowers + tussocks across the downs
   ...[[9.6, -9.0], [-8.4, -5.9], [4.2, -17.3], [16.0, -21.6], [-4.9, -26.6], [-13.6, -9.4], [-19.6, -23.2], [22.8, -9.8], [-27.6, -2.6], [11.2, -26.2], [-7.9, -25.2], [27.3, -3.5]].map(([x, z], i) => onGround('craters_poppies', x, z, { r: 0.8 + rnd(i * 3) * 0.5, n: 9 + (i % 5), seed: i + 20 })),
   ...[[6.4, -9.9], [-10.4, -8.2], [12.2, -22.9], [-3.8, -33.8], [20.6, -11.0], [-18.9, -21.9], [6.6, -29.2], [-7.2, -25.3], [-28.4, -10.6], [25.8, -12.2]].map(([x, z], i) => onGround('craters_tussock', x, z, { s: 0.55 + rnd(i * 7) * 0.4, seed: i + 3 })),
+
+  // ================= the reserve line (the Long Stages slice, slice.js)
+  ...SLICE_DRESSING,
 
   // ================= the coast: tussocks along the chalk lip, fallen chalk on the undercliff
   ...LIP_TUFTS,

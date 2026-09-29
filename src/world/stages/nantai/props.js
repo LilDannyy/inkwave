@@ -14,7 +14,10 @@ import { registerObservatory } from './obs.js';
 import { registerCrossings } from './crossings.js';
 import { registerNature } from './nature.js';
 import { registerParty } from './party.js';
+import { registerSlice } from './slice-props.js';
 import { BS, BN, zAt, LEDGE_FEET } from './layout.js';
+import { shiftPlacement } from './stretch.js';
+import { SLICE_PLACEMENTS } from './slice-props.js';
 
 const P = Math.PI, HP = P / 2;
 
@@ -24,6 +27,7 @@ export function register(D, H) {
   registerCrossings(D, H, T);
   registerNature(D, H, T);
   registerParty(D, H, T);
+  registerSlice(D, H, T);
 }
 
 // a brook bank dressing from world point a to b (the water on the run's right-hand side → local +Z), stones = stones in
@@ -34,7 +38,9 @@ function bank(a, b, o = {}) {
 }
 const zN = (x) => zAt(BN, x), zS = (x) => zAt(BS, x);
 
-export const PLACEMENTS = [
+// (the Long Stages stretch: the list below is the drawing before the stretch — every placement beyond the cut moves out
+// with the base, stretch.js; the ledge footprints are already stretched; the slice's own dressing is slice-props.js)
+const DRAWN = [
   // ================= the observatory (behind the forecourt), the control building, the control room
   { type: 'nantai_observatory', pos: [0, 0, -45.4], rotY: 0 },
   { type: 'nantai_controlbuilding', pos: [9, 1.3, -36.5], rotY: 0 },
@@ -150,3 +156,5 @@ export const PLACEMENTS = [
   { type: 'nantai_bench', pos: [24.4, 0, -3.1], rotY: HP, plaque: 'WHERE IT ALL BEGAN · P + M', mirror: false },
   { type: 'nantai_bench', pos: [-24.4, 0, 3.1], rotY: -HP, mirror: false },
 ];
+
+export const PLACEMENTS = [...DRAWN.map((p) => (p.type === 'nantai_foot' ? p : shiftPlacement(p))), ...SLICE_PLACEMENTS];
