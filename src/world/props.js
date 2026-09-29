@@ -3312,12 +3312,19 @@ export class PropKit {
     B.begin([0, 0, 0], 0, 1, o.seed ?? 1013, def.mount !== 'wall');
     B.tris = 0;
     try { def.build(B, { ...o, pos: [0, 0, 0], rotY: 0 }); } finally {
+      // one mesh per material (a moving part is a handful of draws: its no-shadow details ride with their material's
+      // shadow-casting mesh; glass + glow never cast)
+      const byKey = new Map();
       for (const [bucket, parts] of this._buckets) {
         if (!parts.length) continue;
         const [key, flag] = bucket.split('~');
-        const mesh = new THREE.Mesh(mergeParts(parts), this.mat[key]);
-        mesh.name = 'prop-part:' + type + ':' + bucket;
-        mesh.castShadow = this.castShadow && CASTS[key] && flag !== 'ns';
+        let e = byKey.get(key); if (!e) byKey.set(key, (e = { parts: [], cast: false }));
+        e.parts.push(...parts); if (flag !== 'ns') e.cast = true;
+      }
+      for (const [key, e] of byKey) {
+        const mesh = new THREE.Mesh(mergeParts(e.parts), this.mat[key]);
+        mesh.name = 'prop-part:' + type + ':' + key;
+        mesh.castShadow = this.castShadow && CASTS[key] && e.cast && key !== 'gloss';
         mesh.receiveShadow = key !== 'glow' && key !== 'blob';
         if (key === 'blob') mesh.renderOrder = 1;
         group.add(mesh);
