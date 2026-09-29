@@ -1873,9 +1873,9 @@ export function register(D, H) {
         rodT(B, 'wood', K.timberLt, P3(R * 0.45, Hh * 0.52, 0.3), P3(R * 0.95, Hh * 0.52 + 0.9, 0.55), 0.02, 5);
         B.box('metal', K.galvDk, 0.3, 0.02, 0.26, R * 0.42, Hh * 0.5, 0.28, { r: 0.008, rz: 0.9 });
       } else {
-        const prof = []; for (let k = 0; k <= 8; k++) { const t = k / 8; prof.push([R * 1.02 * (1 - t) + 0.05, Hh * (1 - (1 - t) * (1 - t)) * 1.02 + 0.02]); } prof.push([0, Hh + 0.06]);
+        const prof = []; for (let k = 0; k <= 8; k++) { const t = k / 8; prof.push([R * 1.02 * (1 - t) + 0.05, Hh * (0.6 * t + 0.4 * (1 - (1 - t) * (1 - t))) * 1.02 + 0.02]); } prof.push([0, Hh + 0.06]);
         B.lathe('rubber', '#5a6560', prof, 0, 0, 0, { seg: 14 });
-        for (let k = 0; k < 7; k++) { const a = (k / 7) * TAU + 0.3, rr = R * 0.62, h = Hh * (1 - (rr / R) * (rr / R)) * 0.98; B.lathe('rubber', '#2d2e31', H.TIRE, Math.cos(a) * rr, h, Math.sin(a) * rr, { seg: 12, closed: true, rz: Math.cos(a) * 0.7, rx: -Math.sin(a) * 0.7 }); }
+        for (let k = 0; k < 7; k++) { const a = (k / 7) * TAU + 0.3, rr = R * 0.62, t = 1 - (rr - 0.05) / (R * 1.02), h = Hh * (0.6 * t + 0.4 * (1 - (1 - t) * (1 - t))) * 1.02 + 0.04; B.lathe('rubber', '#2d2e31', H.TIRE, Math.cos(a) * rr, h, Math.sin(a) * rr, { seg: 12, closed: true, rz: Math.cos(a) * 0.7, rx: -Math.sin(a) * 0.7 }); }
         B.lathe('rubber', '#2d2e31', H.TIRE, 0, Hh + 0.02, 0, { seg: 12, closed: true });
       }
       // tarred heap boards round the foot
