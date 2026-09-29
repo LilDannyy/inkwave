@@ -5,7 +5,7 @@ const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
 const IDS = (process.env.STAGES || 'halyard').split(',');
-setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, 180000 + IDS.length * 150000);
+setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, 180000 + IDS.length * 330000);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let claimed = false;
 app.on('browser-window-created', (_, win) => {
@@ -20,8 +20,10 @@ app.on('browser-window-created', (_, win) => {
     fs.mkdirSync(out, { recursive: true });
     for (const id of IDS) for (const time of ['day', 'dusk']) {
       await js(`window.__inkwave.api.startMatch({ mapId: '${id}', duration: 180, time: '${time}' })`);
-      for (let i = 0; i < 200; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
-      await wait(4000);   // let the intro fly-in finish before taking the camera
+      // (a loaded machine can take a minute to build a long stage: wait for the round, and for the intro's fly-in to hand
+      //  the camera back, before taking it — a shot taken early is the gameplay camera with the HUD up)
+      for (let i = 0; i < 600; i++) { if (await js(`window.__inkwave.match?.state === 'playing' && window.__inkwave.rig?.mode !== 'path'`)) break; await wait(250); }
+      await wait(2000);
       await js(`(async () => {
         const g = window.__inkwave, THREE = await import('three');
         g.debug.freeze();
@@ -32,7 +34,7 @@ app.on('browser-window-created', (_, win) => {
         document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
         const B = __G.level.bounds, W = B.maxX - B.minX, D = B.maxZ - B.minZ;
         // an elevated three-quarter view across the stage, like the upstream stage art
-        const CAMS = { halyard: { from: [-41, 16, -43], look: [-0.55, 6.92, 0.38], fov: 58 } };   // upstream stage-shots.mjs camera (keeps the original framing)
+        const CAMS = {};   // (per-stage overrides; Halyard's upstream framing moved into its layout's art camera with the Long Stages stretch)
         const { TEAM_PALETTES } = await import('./src/config.js'); const pal = TEAM_PALETTES.find((p) => p.id === 'tangerine-cobalt'); if (pal) g._setPalette(pal);
         const art = CAMS['${id}'] || (__G.level.layout && __G.level.layout.art);
         const from = art ? new THREE.Vector3(...art.from) : new THREE.Vector3(B.maxX + W * 0.08, Math.max(15, D * 0.2), B.minZ + D * 0.2);
