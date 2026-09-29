@@ -11,7 +11,10 @@
   const w = me.weapon;
   for (let i = 0; i < 30; i++) me.weaponRunner.update(1 / 60, { fire: true, firePressed: i === 0, sub: false, subReleased: false });
   const spin = me.weaponRunner.spinLoop;
-  const live = () => [...A.loops].filter((h) => h.playing !== false && h.name === 'splatling_spin').length;
+  // our hums: the spin loops that aren't another kid's (a bot charging a splatling nearby has its own) — ours or orphans
+  const theirs = (h) => m.actors.some((o) => o !== me && o.weaponRunner && (o.weaponRunner.spinLoop === h || o.weaponRunner.chargeLoop === h));
+  const live = () => [...A.loops].filter((h) => h.playing !== false && h.name === 'splatling_spin' && !theirs(h)).length;
+  for (const o of m.actors) if (o !== me && o.bot) o.bot.update = () => { const it = o.intent; it.move.set(0, 0, 0); it.fire = it.jump = it.squid = it.sub = it.special = false; };   // (the bots stand still: no charges of their own)
   R('charging: the spin loop is playing', !!spin && live() >= 1, { loops: A.loops.size, spin: !!spin });
   g.pause(); await wait(300);
   const loopGain = A.loopIn ? A.loopIn.gain.value : null;
