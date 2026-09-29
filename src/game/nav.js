@@ -206,10 +206,10 @@ export class NavGraph {
     return best;
   }
 
-  // A* from node a to node b; `team` blocks the enemy spawn zone. Returns array of node ids (incl. a and b) or null.
+  // A* from node a to node b; `team` blocks the enemy spawn zone. The search cap grows with the stage (3 × its nodes). Returns array of node ids (incl. a and b) or null.
   // noClimb: plan without climb edges (a bot that just failed a climb); avoid: nodes never entered (Uint8Array — e.g.
   // where a sprout pod's hedge stands: pods.js routes round it)
-  path(a, b, team, maxIter = 6000, noClimb = false, avoid = null) {
+  path(a, b, team, maxIter = Math.max(6000, this.nodes.length * 3), noClimb = false, avoid = null) {
     if (a < 0 || b < 0) return null;
     const N = this.nodes.length;
     if (!this._g || this._g.length !== N) { this._g = new Float32Array(N); this._from = new Int32Array(N); this._seen = new Uint32Array(N); this._closed = new Uint32Array(N); this._stamp = 0; }

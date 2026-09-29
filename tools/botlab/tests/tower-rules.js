@@ -11,7 +11,7 @@
   for (const a of m.actors) { a.intent.move.set(0, 0, 0); a.intent.fire = false; a.intent.squid = false; }
   const T = m.tower;
   const cpA = T.cps.filter((c) => c.team === 0);
-  R('points: the whole track is 60 points (60 s with one rider), each of the 2 checkpoints 20 (20 s)', Math.abs(T.speed[0] * 60 - T.path.len[0]) < 1e-6 && cpA.every((c) => Math.abs(c.dur - 20) < 1e-6) && Math.abs(T.cpPoints - 20) < 1e-6,
+  R('points: two checkpoints, so the whole track is 80 points (80 s with one rider), each checkpoint 10 (10 s)', cpA.length === 2 && Math.abs(T.speed[0] * 80 - T.path.len[0]) < 1e-6 && cpA.every((c) => Math.abs(c.dur - 10) < 1e-6) && Math.abs(T.cpPoints - 10) < 1e-6,
     { speed: T.speed, len: T.path.len, durs: cpA.map((c) => c.dur), cpPoints: T.cpPoints });
   R('Tower Command match: mode, engine, collider (platform + pillar)', m.mode === 'tower' && !!T && __G.level.dyn.length === 2 && T.block.dynamic && T.pillar.dynamic && T.pillar.roof && !T.pillar.paint, { mode: m.mode, dyn: __G.level.dyn.length, len: T && T.path.len, placeholder: T && T.placeholder });
   if (!T) return out;
@@ -31,7 +31,7 @@
   step(3);
   const moved = T.s - s0, want = T.speed[0] * 3;
   R('one rider: Alpha controls it and it rolls toward Alpha\'s goal at the base speed', T.owner === 0 && Math.abs(moved - want) < 0.08, { owner: T.owner, moved: +moved.toFixed(3), want });
-  R('the rider rides along (carried, still on the platform, still counted)', T.riders[0] === 1 && a0.pos.distanceTo(p0) > 1.5 && Math.abs(a0.pos.y - T.top) < 0.15, { riders: T.riders, rode: +a0.pos.distanceTo(p0).toFixed(2), dy: +(a0.pos.y - T.top).toFixed(3) });
+  R('the rider rides along (carried, still on the platform, still counted)', T.riders[0] === 1 && a0.pos.distanceTo(p0) > want * 0.8 && Math.abs(a0.pos.y - T.top) < 0.15, { riders: T.riders, rode: +a0.pos.distanceTo(p0).toFixed(2), dy: +(a0.pos.y - T.top).toFixed(3) });
   // ---- 2) speed by riders: 2 / 3 / 4
   const speeds = [];
   for (let n = 2; n <= 4; n++) {
@@ -51,7 +51,7 @@
   A.forEach((a, i) => park(a, i));
   step(0.3);
   const sB = T.s; step(2);
-  R('Alpha off, a Bravo player on → Bravo claims it and it heads back toward Bravo\'s goal', T.owner === 1 && T.s < sB - 1, { owner: T.owner, ds: +(T.s - sB).toFixed(3) });
+  R('Alpha off, a Bravo player on → Bravo claims it and it heads back toward Bravo\'s goal', T.owner === 1 && T.s < sB - T.speed[1] * 2 * 0.6, { owner: T.owner, ds: +(T.s - sB).toFixed(3) });
   // ---- 5) empty: control holds 5 s, then neutral, then it rolls back to the centre
   B.forEach((a, i) => park(a, i));
   step(4.5);
@@ -96,9 +96,10 @@
   step(cp.dur / 1.2 + 0.3);
   const cleared = cp.cleared;
   const sP = T.s; step(1);
-  const ptsAfter = T.points[0], wantPts = 60 * (sP / T.path.len[0]) + 20;
+  const TP = T.trackPoints, CP = T.cpPoints;
+  const ptsAfter = T.points[0], wantPts = TP * (sP / T.path.len[0]) + CP;
   R('the checkpoint clears (two riders: its time ÷ 1.2) and the tower carries on', cleared && T.s > sP + 0.5, { cleared, ds: +(T.s - sP).toFixed(2) });
-  R('points so far = 60 × the distance share + the 20 of the cleared checkpoint', Math.abs(T.pointsNow(0) - (60 * (T.s / T.path.len[0]) + 20)) < 0.05 && ptsAfter >= wantPts - 0.1, { now: +T.pointsNow(0).toFixed(2), best: +ptsAfter.toFixed(2), count: T.count[0] });
+  R('points so far = the track points × the distance share + the cleared checkpoint\'s points', Math.abs(T.pointsNow(0) - (TP * (T.s / T.path.len[0]) + CP)) < 0.05 && ptsAfter >= wantPts - 0.1, { now: +T.pointsNow(0).toFixed(2), best: +ptsAfter.toFixed(2), count: T.count[0] });
   // cleared ones don't stop it again: roll it back past it and forward again
   T.s = cp.d - 0.5; T._place(1);
   onTop(A[0], 0); onTop(A[1], 1);

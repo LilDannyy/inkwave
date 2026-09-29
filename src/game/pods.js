@@ -961,7 +961,7 @@ export class StagePods {
     for (let i = Math.max(1, b.pi | 0); i < path.length && !cut; i++) if (hard[path[i]]) cut = true;   // (not the node we stand on)
     if (!cut) return;
     const a = b.a, start = nav.nearest(a.pos, 1.2, true), goal = path[path.length - 1];
-    const alt = start >= 0 && !hard[goal] ? nav.path(start, goal, a.team, 6000, b.t < b.noClimbUntil, hard) : null;
+    const alt = start >= 0 && !hard[goal] ? nav.path(start, goal, a.team, undefined, b.t < b.noClimbUntil, hard) : null;
     if (alt) { b.path = alt; b.pi = Math.min(1, alt.length - 1); b.bestD = Infinity; b.noProg = 0; S.seen = alt; this.stats.detours++; return; }
     if (!S.hold) this.stats.waits++;
     S.hold = path; S.waitT = b.t + 1.2;

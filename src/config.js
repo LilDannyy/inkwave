@@ -510,6 +510,9 @@ export const TOWER = {
   pointRate: 1,
   trackPoints: 60,
   checkpointPoints: 40,
+  // a stage with two checkpoints (the user, 2026-09-30): 10 s each, the track (twice as long as it was, detour loops)
+  // worth the other 80 — the tower runs 1.5× as fast and still takes 100 s from the centre to the goal with one rider
+  twoCheckpoints: { trackPoints: 80, checkpointPoints: 20 },
   mult: [0, 1, 1.2, 1.33, 1.43],   // speed (and checkpoint clearing) × by riders of the pushing team: 1 / 2 / 3 / 4
   returnK: 0.6,               // a neutral tower rolls back toward the centre at this × the one-rider speed
   idleNeutral: 5,             // s with nobody on it before the team in control loses it (it goes neutral, then back)
