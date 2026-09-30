@@ -20,6 +20,15 @@ for (const mode of ['turf', 'zones']) {
     console.log(`  ${name.padEnd(26)} off ${ma.toFixed(d).padStart(7)} ±${sd(a).toFixed(d).padEnd(6)} on ${mb.toFixed(d).padStart(7)} ±${sd(b).toFixed(d).padEnd(6)} ${ma ? ((mb / ma - 1) * 100).toFixed(0).padStart(4) + '%' : ''}`); };
   row('splats by specials', spOf);
   for (const s of SP) { const t = [...G[0], ...G[1]].reduce((a, x) => a + byOf(x.r, s), 0); if (t) row('  ' + s, (r) => byOf(r, s)); }
+  // per use (the random loadouts roll some specials more often on one side: splats per 10 uses takes that out)
+  const usesOf = (r, s) => (r.spUses ? (r.spUses[0][s] || 0) + (r.spUses[1][s] || 0) : 0);
+  if ([...G[0], ...G[1]].some((x) => x.r.spUses)) {
+    const per = (g, s) => { const k = g.reduce((a, x) => a + byOf(x.r, s), 0), u = g.reduce((a, x) => a + usesOf(x.r, s), 0); return { k, u, v: u ? (10 * k) / u : 0 }; };
+    const all = (g) => SP.reduce((a, s) => { const p = per(g, s); return { k: a.k + p.k, u: a.u + p.u }; }, { k: 0, u: 0 });
+    const A0 = all(G[0]), A1 = all(G[1]);
+    console.log(`  splats per 10 uses        off ${f1((10 * A0.k) / Math.max(1, A0.u)).padStart(7)} (${A0.k}/${A0.u})      on ${f1((10 * A1.k) / Math.max(1, A1.u)).padStart(7)} (${A1.k}/${A1.u})`);
+    for (const s of SP) { const a = per(G[0], s), b = per(G[1], s); if (a.u + b.u) console.log(`    ${s.padEnd(24)} off ${f1(a.v).padStart(7)} (${a.k}/${a.u})${' '.repeat(Math.max(1, 6 - String(a.k + '/' + a.u).length))}on ${f1(b.v).padStart(7)} (${b.k}/${b.u})`); }
+  }
   row('all splats', (r) => r.splats);
   row('  of which water', (r) => r.water);
   row('specials used', (r) => r.specials);
@@ -48,5 +57,11 @@ if (H.length) {
   console.log(`\n=== head to head (turf, one team aware, the other not): n=${H.length}`);
   console.log(`  aware team: K ${k} / D ${d} → K/D ${f1(k / Math.max(1, d))} (per-match mean ${f1(mean(per))} ±${f1(sd(per))}) · old-behaviour team K ${kO} / D ${dO}`);
   console.log(`  splatted by specials: aware ${spOn} (${f1(spOn / H.length)} / match) · old ${spOff} (${f1(spOff / H.length)} / match)`);
+  if (H.some((x) => x.r.spUses)) {
+    // each team's special deaths per 10 specials the other team used
+    let uOn = 0, uOff = 0;
+    for (const x of H) { if (!x.r.spUses) continue; const on = x.ai === 'team0' ? 0 : 1; for (const s of SP) { uOff += x.r.spUses[1 - on][s] || 0; uOn += x.r.spUses[on][s] || 0; } }
+    console.log(`  per 10 specials the other side used: aware ${f1((10 * spOn) / Math.max(1, uOff))} (${spOn}/${uOff}) · old ${f1((10 * spOff) / Math.max(1, uOn))} (${spOff}/${uOn})`);
+  }
   console.log(`  turf inked: aware ${f1(tOn / H.length)} % · old ${f1(tOff / H.length)} % · aware team wins ${wins}/${H.length}${ties ? ` (${ties} ties)` : ''}`);
 }

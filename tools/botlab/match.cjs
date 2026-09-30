@@ -69,7 +69,7 @@ app.on('browser-window-created', (_, win) => {
         on('zones:active', (e) => ev.active.push(e.objective)),
         on('zones:overtime', (e) => { ev.overtime = e.losing; }),
         on('zones:end', (e) => { ev.end = { winner: e.winner, reason: e.reason }; }),
-        on('special:use', () => ev.specials++),
+        on('special:use', (e) => { ev.specials++; const U = ev.uses || (ev.uses = [{}, {}]), id = /^barrage/.test(String(e.id)) ? 'barrage' : String(e.id); if (e.actor) U[e.actor.team][id] = (U[e.actor.team][id] || 0) + 1; }),
         on('superjump', (e) => { if (e.phase === 'charge') ev.jumps++; }),
         on('special:end', (e) => { if (/^barrage/.test(String(e.id))) (ev.barEnd || (ev.barEnd = new Map())).set(e.actor, simT); }),
         on('splatted', (e) => {
@@ -269,6 +269,7 @@ app.on('browser-window-created', (_, win) => {
         simT: +simT.toFixed(1), simMs: Math.round(simMs), state: m.state, stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(1),
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, jumps: ev.jumps, cov,
         teamKD: ev.team || [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }],
+        spUses: ev.uses || [{}, {}],   // (specials used, per team, by special)
         spStats: await (async () => { try { const M = await import('./src/game/botSpecials.js'); return JSON.parse(JSON.stringify(M.SPECIAL_STATS)); } catch (e) { return null; } })(),
         byCause: ev.byCause || {},
         byWeapon: (() => { const W = ev.byW || {}, out = {}; for (const a of m.actors) { const w = a.weaponId, o = out[w] || (out[w] = { n: 0, splats: 0, deaths: 0, turf: 0 }); o.n++; o.turf += a.stats.turf; }
