@@ -628,7 +628,9 @@ export class SpecialSense {
     if (d.shot) return d.delay + r.jit < 0.4;   // (a zooka's line: out of it just before the shot, at any range)
     if (d.dodge && tIn > d.dodge) return false;
     if (tIn > 3.2) return false;
-    if (d.lethal === 0) return !obj || this.a.hp < PLAYER.hp * 0.45;
+    // (a light area on the objective: taken while healthy — at half health, off: under 45 % a tower rider still on the
+    // deck was splatted in the rain now and then (~1 in 20) before it was clear of the cloud)
+    if (d.lethal === 0) return !obj || this.a.hp < PLAYER.hp * 0.5;
     if (d.pop && !(d.obj && d.obj.charge > 0) && !this._popper(d.x, d.z)) return false;
     return true;
   }
