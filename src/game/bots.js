@@ -32,9 +32,10 @@ export const CHARGES = { charger: true, spinner: true, splatling: true };
 // counts the attempts at a wall: done (on top), stalled, dry (no ink for the rest of it), long (over `max` s)
 // `reach`: per weapon kind, the walls it can ink a column up (m of rise), where that's not every one: the brush's swipes
 // fly low and short (nothing over 2 m, even from a hop's top); a roller's flick leaves at head height rising, so over a
-// wall much under 1.8 m it just sails onto the top. Routes plan no other climbs for it (tools/botlab/tests/bot-climb.js,
-// forced climbs)
-export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
+// wall much under 1.8 m it just sails onto the top (tools/botlab/tests/bot-climb.js, forced climbs). Routes take another
+// climb — or the one that just failed — only with no way round within `unreach` m more (a pit whose only way out is up
+// a wall: a try beats standing there)
+export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach: 150, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
 export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
 
 // ============================================================================================ Zone Control team plan
@@ -614,7 +615,7 @@ export class BotBrain {
     this.retreatT = 0; this._firing = false;
     this.strikes = 0; this.strikeT = 0; this.wiggleT = 0; this.wiggleYaw = 0; this.airStill = 0;
     this.dispT = 0; this.moveAcc = 0; this.snap = new THREE.Vector3(); this.paintYawOff = 0; this.paintScanT = 0; this.goalCheckT = 0;
-    this.climbT = 0; this.noClimbUntil = 0; this._climbAim = null; this._clE = null; this._clPress = false;
+    this.climbT = 0; this.noClimbUntil = 0; this._climbAim = null; this._clE = null; this._clPress = false; this._clBad = null;
     // Zone Control (unused in Turf War): role + zone from the team plan, the hold timer at a guard / watch spot, and
     // the needy patch of the zone being aimed at
     this.zRole = null; this.zZone = -1; this.zHoldUntil = 0; this.zHoldDur = 0; this._zAct = null; this.zAimT = 0; this._zAim = null; this.zFail = 0; this.zFace = 0; this.zJumpAt = 0; this.zBomb = null; this.zBombScan = 0;
@@ -1121,6 +1122,7 @@ export class BotBrain {
   _climb(dt, move, it) {
     const a = this.a, e = this._climbEdge();
     this._clMove = false;
+    if (this._clE && e !== this._clE && a.pos.y > this._clTop - 0.5) CLIMB_STATS.done++;   // (up: the route's moved on)
     if (!e) { this._clEnd(); return null; }
     const top = G.nav.nodes[this.path[this.pi]];
     if (a.grounded && a.pos.y > top.y - 0.4) {                                          // on top: normal steering finishes
@@ -1131,7 +1133,7 @@ export class BotBrain {
     const dist = (a.pos.x - wx) * nx + (a.pos.z - wz) * nz;                            // distance out from the wall
     if (!a.climbing && (dist > 2.4 || Math.hypot(a.pos.x - wx, a.pos.z - wz) > 2.8)) return null; // still walking up to it
     if (this._clE !== e) {
-      this._clE = e; this.climbT = 0; this._clG = -Infinity; this._clH = a.pos.y; this._clT = this._clGT = this.t; this._clY = a.pos.y;
+      this._clE = e; this._clTop = top.y; this.climbT = 0; this._clG = -Infinity; this._clH = a.pos.y; this._clT = this._clGT = this.t; this._clY = a.pos.y;
       this._clD = this._standOff(wx, wz, nx, nz, a.pos.y); this._clHole = null; this._clWas = false; this._clRel = false; this._clCling = 0; this._clHop = false;
       CLIMB_STATS.tries++;
     }
@@ -1159,7 +1161,8 @@ export class BotBrain {
     const dry = gap !== null && a.ink < this._shotInk();
     if (dry || this.t - this._clT > CLIMB.stall || this.climbT > CLIMB.max) {
       CLIMB_STATS[dry ? 'dry' : this.climbT > CLIMB.max ? 'long' : 'stalled']++;
-      this.noClimbUntil = this.t + CLIMB.off; this.path = null; this.repath = 0; this.goalTimer = 0;
+      this.noClimbUntil = this.t + CLIMB.off; this._clBad = { e, until: this.t + CLIMB.off };
+      this.path = null; this.repath = 0; this.goalTimer = 0;
       this._clEnd(); return null;
     }
     this.noProg = 0; this.bestD = Infinity; this._skipped = false;
@@ -1227,12 +1230,14 @@ export class BotBrain {
   }
   // how routes may use wall climbs now (nav.path's noClimb): true = not at all (one just failed here); a number = only
   // where there's no way round within that many metres more (it can't ink a column now: refilling, or under CLIMB.ink of
-  // its tank — it would only stand at the wall); { add, minRise, maxRise }: that, and only walls its weapon can ink
-  // (CLIMB.reach); false = as the nav graph costs them
-  _climbRule() {
-    if (this.t < this.noClimbUntil) return true;
+  // its tank — it would only stand at the wall); an object: that, and walls its weapon can't ink (CLIMB.reach) or the
+  // one that just failed only where there's no way round at all; false = as the nav graph costs them
+  // (force: as if no climb had failed — the one that did, dearest)
+  _climbRule(force = false) {
+    if (this.t < this.noClimbUntil && !force) return true;
     const add = this.mode === 'refill' || this.a.ink < PLAYER.inkMax * CLIMB.ink ? CLIMB.dry : 0, reach = CLIMB.reach[this.a.weapon.kind];
-    return reach ? { add, minRise: reach.min, maxRise: reach.max } : add || false;
+    const bad = this._clBad && this.t < this._clBad.until ? this._clBad.e : null;
+    return reach || bad ? { add, minRise: reach?.min, maxRise: reach?.max, out: CLIMB.unreach, bad } : add || false;
   }
   // Lowest height on the wall column in front of the climb spot that isn't our ink yet (null = inked to the top): every
   // 0.45 m from `from` m over our feet (a squid hopping into the wall takes hold above the knee-high strip), then every
@@ -2868,7 +2873,11 @@ export class BotBrain {
     const g = this.sp.goalOk(nav.nearest(pos, maxUp));   // (enemy specials: a goal inside an area we know hurts → just outside it)
     this.repath = 0.8 + Math.random() * 0.4;
     if (s < 0 || g < 0) { this.path = null; return false; }
-    const p = nav.path(s, g, this.a.team, undefined, this._climbRule(), null, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
+    const rule = this._climbRule();
+    let p = nav.path(s, g, this.a.team, undefined, rule, null, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
+    // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
+    // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
+    if (!p && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), null, this.sp.cost());
     if (!p) { this.path = null; return false; }
     this.path = p; this.pi = Math.min(1, p.length - 1); this.goal = g; this.bestD = Infinity; this.noProg = 0;
     return true;
