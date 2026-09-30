@@ -479,12 +479,17 @@
     step(0.8); tank(E2); E.hp = 1e6;
     let onJet = 0, onOther = 0;
     step(1.5, () => { if (X.bot.target === E) onJet++; else if (X.bot.target === E2) onOther++; });
-    return { framesOnJetpacker: onJet, framesOnCloserFoe: onOther, hunted: SP.SPECIAL_STATS.hunted };
+    // out of its reach (17 m off, the other foe 9 m): not lured out toward it — the reachable foe, and never under it
+    place(X, 0, -10); place(E2, -3, -2); tank(E2); place(E, 9, 4); E.pos.y = 4; face(X, 2, -2);
+    let farJet = 0, farOther = 0, minUnder = 99;
+    step(2.5, () => { if (X.bot.target === E) farJet++; else if (X.bot.target === E2) farOther++; minUnder = Math.min(minUnder, flat(X.pos, E.pos.x, E.pos.z)); });
+    return { framesOnJetpacker: onJet, framesOnCloserFoe: onOther, hunted: SP.SPECIAL_STATS.hunted, outOfReach: { framesOnJetpacker: farJet, framesOnReachableFoe: farOther, closestToUnderIt: r1(minUnder) } };
   };
   if (want('jet')) {
     const a = jet(true), b = jet(false), t = jetTarget();
     R('Ink Jet: a hard charger mid-charge gets out of a blast\'s path and splash seen coming from ~28 m (avg damage on well under off)', a < b * 0.6, { avgDmgOn: a, avgDmgOff: b });
-    R('Ink Jet: a jetpacker in reach is taken before a closer foe (floating, in the open)', t.framesOnJetpacker > t.framesOnCloserFoe, t);
+    R('Ink Jet: a jetpacker in reach is taken before a closer foe (floating, in the open); one out of reach doesn\'t lure the bot out (the foe it can reach, and never under it)',
+      t.framesOnJetpacker > t.framesOnCloserFoe && t.outOfReach.framesOnReachableFoe > t.outOfReach.framesOnJetpacker && t.outOfReach.closestToUnderIt > 6, t);
   }
 
   // ================================================================ 14) the sight rule: nothing that can't be known

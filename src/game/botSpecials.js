@@ -18,7 +18,8 @@
 //   Howl Box         the placed speaker's beam (a line through walls: 1.3 s charge, 3.2 s blast) — map
 //   Kraken           invulnerable: its reach (5.5 m: it outruns a kid) and where an attack jump lands — big (heard 10 m)
 //   Bubble Blower    an enemy bubble's blast (1.9 × its size) while one of theirs is near enough to set it off — map
-//   Ink Jet          each blast in flight (where it splashes, r 2.4) — near
+//   Ink Jet          each blast in flight (its path and splash, r 2.4) — big; the ground under the jetpacker (6 m: a
+//                    blast from right above can't be seen coming) — big (heard 12 m), a wall between is cover
 //   Mega Stamp       the lane in front of it (swing + lunge + its charge), and a thrown stamp's blast — big / near
 //   Cheer Orb        the orb's blast (r 8.4, lethal nearly all of it) where it will land and while it swells — map
 //   Crab Rig         its gun lane (22 m along the hull, when it's firing or about to) and each cannon shell — big
@@ -49,7 +50,8 @@
 //            of); back in the moment it's over. An enemy bubble in the line of fire soaks the shots: held.
 //   counter-play: shoot what can be shot — our own team's bubble with one of theirs inside its blast (our shots set it
 //            off; theirs only soak ours); the Crab Rig's rider from behind; the defenceless (a Cheer Orb holder, a Howl
-//            Box being aimed, a Vortex Strike being aimed, a Bubble Blower, a floating Ink Jet in reach) first.
+//            Box being aimed, a Vortex Strike being aimed, a Bubble Blower) first, a floating Ink Jet first once it's in
+//            reach (from the edge of our reach, never from under it).
 // SPECIAL_AI.enabled (or .teams [bool, bool]) switches it all off for an A/B on the same code; SPECIAL_STATS counts.
 import * as THREE from 'three';
 import { G, on, clamp, angleDiff } from '../core/ctx.js';
@@ -328,6 +330,15 @@ export function specialDangers() {
         d.back = 0.6; d.imm = 'stamp'; d.actor = e; d.vis = 'big'; d.hear = 9; d.linger = true; see(d, e.pos.x, e.pos.y + 1, e.pos.z);
         break;
       }
+      case 'jetpack': {
+        // floating 3.8 m up and firing down: right under it a blast can't be seen coming or stepped out of — keep out
+        // from under it (a wall between is cover); shoot it from the edge of our reach
+        const d = D(keyOf(s, 0), 'jetpack', e.team, e), gy0 = G.level.groundHeight(e.pos.x, e.pos.z, e.pos.y + 0.2), gy = gy0 === -Infinity ? e.pos.y - 4 : gy0;
+        disc(d, e.pos.x, gy, e.pos.z, 6, 6);
+        d.lethal = 1; d.vx = e.vel.x; d.vz = e.vel.z; d.vt = 0.6; d.tOut = Math.max(0, s.dur - s.t); d.actor = e; d.vis = 'big'; d.hear = 12;
+        d.los = true; d.losY = e.pos.y - gy; d.linger = true; d.yLo = gy - 2; d.yHi = e.pos.y; see(d, e.pos.x, e.pos.y, e.pos.z);
+        break;
+      }
       case 'zooka': {
         // its aim lane in the moment before the next twister (a player sees the bazooka pointing at them)
         const Z = SPECIALS.zooka, d = D(keyOf(s, 0), 'zooka', e.team, e), fx = Math.sin(e.aimYaw), fz = Math.cos(e.aimYaw);
@@ -368,7 +379,7 @@ export function immunity(e, ax, ay, az) {
   }
   return 1;
 }
-// busy with a special that leaves them defenceless (or floating in the open): worth going for first
+// busy with a special that leaves them defenceless (or floating in the open): worth taking first (targetBias)
 export function vulnerable(e) {
   const s = e && e.specialActive;
   if (!s) return false;
@@ -872,7 +883,10 @@ export class SpecialSense {
     if (!this.on()) return 0;
     const a = this.a;
     if (immunity(e, a.pos.x, a.pos.y, a.pos.z) < 0.3) return this._knock(e) || this._crabFar(e) ? 0 : 30;
-    return vulnerable(e) && dist < this.b._range() * 1.2 + 4 ? -5 : 0;
+    if (!vulnerable(e)) return 0;
+    // (a jetpacker only once it's in reach — walking out under one is how bots got splatted by it; the defenceless ones
+    // are worth a few steps)
+    return e.specialActive.kind === 'jetpack' ? (dist < this.b._range() ? -5 : 0) : dist < this.b._range() * 1.2 + 4 ? -5 : 0;
   }
   // the route costs this bot plans with (null: nothing known)
   cost() { return this.on() ? dangerCost(this.a.team, this._objective()) : null; }
