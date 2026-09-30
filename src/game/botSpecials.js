@@ -279,6 +279,7 @@ export function specialDangers() {
       const r = clamp(weaponRange(e.weapon || {}) + 1.5, 5, 14);
       disc(d, e.pos.x, e.pos.y, e.pos.z, r, r);
       d.lethal = 1; d.vx = e.vel.x; d.vz = e.vel.z; d.vt = 1; d.tOut = e.status.shield; d.imm = 'bubble'; d.actor = e; d.vis = 'actor';
+      d.los = true; d.losY = 1.1;   // (out of its sight behind a wall is as good as out of its reach)
       d.linger = true; d.yLo = e.pos.y - 3; d.yHi = e.pos.y + 3; see(d, e.pos.x, e.pos.y + 1, e.pos.z);
     }
     if (!s) continue;
@@ -609,7 +610,7 @@ export class SpecialSense {
   }
   // does d count right now, here (tIn: when it hurts here)? obj: holding the objective
   _urgent(d, r, tIn, obj) {
-    if (r.cover && tIn > 0.05) return false;
+    if (r.cover) return false;   // (a wall between us and its centre / its gun: cover)
     if (d.dodge && tIn > d.dodge) return false;
     if (tIn > 3.2) return false;
     if (d.lethal === 0) return !obj || this.a.hp < PLAYER.hp * 0.45;

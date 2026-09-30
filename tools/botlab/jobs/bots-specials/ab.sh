@@ -3,7 +3,8 @@
 # vs on, random loadouts, Turf War (180 s) and full Zone Control matches on four stages; and head to head in Turf War
 # (SPECIAL_AI=team0 / team1: one team on, the other off — the on team's K/D and turf against the old behaviour).
 #   tools/botlab/jobs/bots-specials/ab.sh <outdir> [N_TURF=8] [N_ZONES=4] [N_H2H=4]      (per stage and side)
-# Env: BOTLAB_OUT / SLOTS (run.sh's lock), PAR (matches at once, default 3), STAGES (default below).
+# Env: BOTLAB_OUT / SLOTS (run.sh's lock), PAR (matches at once, default 3), STAGES (default below), SPCHARGE (match.cjs:
+# the special gauge ×; e.g. 3 for a special-heavy batch — use its own <outdir>).
 # Resumable: a match whose JSON is already in <outdir> is skipped. Summary: node tools/botlab/jobs/bots-specials/agg.cjs <outdir>
 set -u
 OUT=${1:?usage: ab.sh <outdir> [N_TURF] [N_ZONES] [N_H2H]}; NT=${2:-8}; NZ=${3:-4}; NH=${4:-4}; PAR=${PAR:-3}
@@ -21,6 +22,6 @@ run_one() {
   MAP=$S MODE=$MODE SECS=180 SPECIAL_AI=$AI OUT="$f.json" WATCHDOG=1200000 "$ROOT/tools/botlab/run.sh" "$ROOT/tools/botlab/match.cjs" > "$f.log" 2>&1
   echo "$(date +%H:%M:%S) $MODE $S $AI $I $([ -s "$f.json" ] && echo ok || echo FAILED)"
 }
-export -f run_one; export OUT ROOT
+export -f run_one; export OUT ROOT; [ -n "${SPCHARGE:-}" ] && export SPCHARGE
 list | xargs -P "$PAR" -L 1 bash -c 'run_one "$0" "$1" "$2" "$3"'
 node "$ROOT/tools/botlab/jobs/bots-specials/agg.cjs" "$OUT"
