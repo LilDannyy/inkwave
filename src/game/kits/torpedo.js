@@ -375,7 +375,7 @@ function startLock(t, e) {
   t.vel.set(0, 0, 0); t.hover.copy(t.pos);
   t.ring = makeRing(t.team); t.ringT = 0;
   t.scene.add(t.ring);
-  if (nearCam(t.pos, 40)) G.audio?.play('torpedo_transform', { pos: t.pos, volume: 0.8 });
+  G.cues?.one('torpedo_transform', { at: t.pos, owner: t.owner, team: t.team, kind: 'land', vol: 0.8 });   // sfx-cues: through the cue mix
   if (e?.isLocal || t.owner.isLocal) G.audio?.play('torpedo_lock', { volume: e?.isLocal ? 0.7 : 0.45 });
   if (e) emit('sub:arm', { kind: 'torpedo', pos: t.pos.clone(), team: t.team, radius: t.sub.radius, target: e, actor: t.owner });
 }
