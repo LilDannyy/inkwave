@@ -901,13 +901,13 @@ export class SpecialSense {
     if (!W || b.mode === 'refill' || a.climbing || a.specialActive || !POP[a.weapon.kind] || a.ink < 4) { this.pop = null; return null; }
     const range = b._range(), ey = a.pos.y + 1.1;
     // (one of theirs in the lethal part of its blast: ≤ 0.85 of it — seen, or just ducked out of sight there)
-    const foeIn = (w) => { const R = w.r * SPECIALS.blower.blastMul * 0.85; for (const [e, k] of b.sight.mem) if (e.alive && (k.seen || G.time - k.t < 1) && Math.hypot(k.pos.x - w.pos.x, k.pos.y + 0.8 - w.pos.y, k.pos.z - w.pos.z) < R) return e; return null; };
+    const foeIn = (w) => { const R = w.r * SPECIALS.blower.blastMul * 0.85; for (const [e, k] of b.sight.mem) if (e.alive && (k.seen || G.time - k.t < 1.5) && Math.hypot(k.pos.x - w.pos.x, k.pos.y + 0.8 - w.pos.y, k.pos.z - w.pos.z) < R) return e; return null; };
     let w = this.pop;
     if (w && (w.dead || w.held || !foeIn(w))) w = this.pop = null;
     if (!w) {
       if ((this.popT -= dt) > 0) return null;
       this.popT = 0.3;
-      let bd = range * 1.15;
+      let bd = range * 0.95;   // (its shots have to carry to a bubble floating 1.3 m up)
       for (const o of W) {
         if (o.kind !== 'bubble' || o.dead || o.held || o.team !== a.team) continue;
         const dd = Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z);

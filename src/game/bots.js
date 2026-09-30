@@ -1272,11 +1272,25 @@ export class BotBrain {
       const P = zonePlan(), p = P && P.hotspot(this.zZone, a.team);
       if (p) s.target.set(p.x, 0, p.z);
     }
-    // Tower Command: onto the tower when it isn't ours, else onto the route just ahead of it
+    // Tower Command: onto the tower when it isn't ours, else onto the route just ahead of it. (Not its exact centre: the
+    // missile lands on the pillar's top there, 3.6 m up, and a vortex hurts only from 1.5 m below its centre — never the
+    // riders on the deck. On the ground beside the platform it covers the deck and the escorts round it.)
     if (s.id === 'strike' && s.aiming && s.target && !s._zoneAimed && G.match && G.match.tower) {
       s._zoneAimed = true;
       const P = towerPlan();
-      if (P) { const T = P.T, p = T.owner === a.team ? P.at(T.s + P.dirOf(a.team) * 8) : T.pos; s.target.set(p.x, 0, p.z); }
+      if (P) {
+        const T = P.T;
+        if (T.owner === a.team) { const p = P.at(T.s + P.dirOf(a.team) * 8); s.target.set(p.x, 0, p.z); }
+        else {
+          T.path.dir(T.s, _tq);
+          let bx = T.pos.x, bz = T.pos.z;
+          for (const sg of [1, -1]) {
+            const x = T.pos.x - _tq.z * sg * 2.2, z = T.pos.z + _tq.x * sg * 2.2;
+            if (G.level.groundHeight(x, z, T.pos.y + 0.8) > -Infinity) { bx = x; bz = z; break; }
+          }
+          s.target.set(bx, 0, bz);
+        }
+      }
     }
     const fighting = this.mode === 'fight' && !!this.target;
     const t = this.tv;
