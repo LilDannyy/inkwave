@@ -13,7 +13,7 @@
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G;
   const SP = await import('./src/game/botSpecials.js');
   const { SPECIALS, PLAYER } = await import('./src/config.js');
-  const { on } = await import('./src/core/ctx.js');
+  const { on, angleDiff } = await import('./src/core/ctx.js');
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   dbg.freeze();
   const V3 = m.actors[0].pos.constructor;
@@ -22,7 +22,7 @@
   const A = m.actors.filter((a) => a.team === 0 && a.bot && !a.isLocal), B = m.actors.filter((a) => a.team === 1);
   const idle = () => {};
   const flat = (p, x, z) => Math.hypot(p.x - x, p.z - z);
-  const r1 = (v) => Math.round(v * 10) / 10;
+  const r1 = (v) => Math.round(v * 10) / 10, r2 = (v) => Math.round(v * 100) / 100;
   const place = (a, x, z, y = 0.05) => { a.pos.set(x, y, z); a.vel.set(0, 0, 0); a.grounded = false; };
   const face = (a, x, z) => { const y = Math.atan2(x - a.pos.x, z - a.pos.z); a.yaw = a.aimYaw = y; a.aimPitch = 0; if (a.bot) { a.bot.aimYaw = y; a.bot.mvYaw = y; a.bot.aimPitch = 0; } };
   const tank = (e) => { e.hp = 1e6; };   // (a dummy that can be hurt but never goes down)
@@ -35,10 +35,11 @@
   const scene = (ai, live, foes, opts = {}) => {
     G.specials.clear(); G.projectiles.clear(); G.subs.clear(); G.paint.clear();
     SP.SPECIAL_AI.enabled = ai; SP.SPECIAL_AI.teams = null; SP.resetSpecialStats();
-    m.time = Math.max(m.time, 170);
+    m.time = 170;
     m.actors.forEach((a, i) => {
       if (!a.alive) a.respawn();
       if (a.specialActive) { try { G.specials.end(a, 'test'); } catch (e) { /* */ } a.specialActive = null; }
+      a.reset();   // (every timer too — how long since it was hit, fired, landed …: nothing carried over from the last scene)
       a.status.shield = 0; a.status.track = 0; a.status.reveal = 0; a.hp = PLAYER.hp; a.invuln = 0; a.ink = PLAYER.inkMax; a.special = 0;
       a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.sub = a.intent.jump = a.intent.special = false;
       a.form = 'kid'; a.vel.set(0, 0, 0); a.superJumpState = null; a.climbing = false;
@@ -82,10 +83,15 @@
     return { at, dead: dead(ours), st: { ...SP.SPECIAL_STATS } };
   };
   if (want('slam')) {
-    const a = slam(true, 'hard'), n = slam(true, 'normal'), n2 = slam(true, 'normal'), b = slam(false);
-    R('Tidal Slam: rollers brawling the jumper — hard bots all get out of its kill ring (3.2 m) before it lands; normal bots (slower to react) lose fewer than the old behaviour, which loses them all',
-      a.dead === 0 && a.at && a.at.every((d) => d > SPECIALS.slam.killRadius) && n.dead + n2.dead <= 3 && b.dead >= 2,
-      { hard: { distAtImpact: a.at, dead: a.dead, escapes: a.st.escapes, hops: a.st.hops }, normal: [{ distAtImpact: n.at, dead: n.dead }, { distAtImpact: n2.at, dead: n2.dead }], off: { distAtImpact: b.at, dead: b.dead } });
+    // (3 scenes of each: brawling right under the jumper leaves ~0.8 s to cover 3.2 m after noticing it — a hard bot is
+    // caught ~1 time in 30 (a late look, a teammate in the way), a normal one ~1 in 3; the old behaviour, every time.
+    // One scene's "all 3 hard bots out" was missed ~1 run in 8 by that chance alone. Caught: splatted by it — a bot at
+    // 3.2 m on the rounded distance may be just clear of it)
+    const hs = [0, 1, 2].map(() => slam(true, 'hard')), ns = [0, 1, 2].map(() => slam(true, 'normal')), b = slam(false);
+    const hc = hs.reduce((t, x) => t + x.dead, 0), nc = ns.reduce((t, x) => t + x.dead, 0);
+    R('Tidal Slam: rollers brawling the jumper get out of its kill ring (3.2 m) before it lands — hard bots nearly all (at most 2 of 9 caught over 3 scenes), normal bots (slower to react) fewer (at most 6 of 9, and no fewer caught than hard ones); the old behaviour loses them all',
+      hc <= 2 && nc <= 6 && hc <= nc && b.dead >= 2,
+      { hard: { caught: hc, scenes: hs.map((x) => ({ distAtImpact: x.at, dead: x.dead, hops: x.st.hops })) }, normal: { caught: nc, scenes: ns.map((x) => ({ distAtImpact: x.at, dead: x.dead })) }, off: { distAtImpact: b.at, dead: b.dead } });
   }
 
   // ================================================================ 2) Bomb Barrage: bombs armed at their feet
@@ -142,9 +148,12 @@
     return { inRing, dead: dead(ours), through, walkIn, st: { ...SP.SPECIAL_STATS } };
   };
   if (want('strike')) {
-    const a = strike(true), b = strike(false);
-    R('Vortex Strike: chargers in a fight under the ring are out of it when the missile lands — on: none in it; off: most stay',
-      a.inRing === 0 && b.inRing >= 2, { on: { inRing: a.inRing, dead: a.dead, escapes: a.st.escapes, evaded: a.st.evaded }, off: { inRing: b.inRing, dead: b.dead } });
+    // (off, 3 scenes: a charger planted in a duel stays under the ring ~4 times in 5 — the odd one steps out by chance,
+    // so one scene's "2 of 3 stay" was missed now and then)
+    const as = [strike(true), strike(true)], bs = [strike(false), strike(false), strike(false)], a = as[0], b = bs[0];
+    const onIn = as.reduce((t, x) => t + x.inRing, 0), offIn = bs.reduce((t, x) => t + x.inRing, 0);
+    R('Vortex Strike: chargers in a fight under the ring are out of it when the missile lands — on: none in it (2 scenes); off: many stay (at least 4 of 9 over 3 scenes)',
+      as.every((x) => x.inRing === 0) && offIn >= 4, { on: { inRing: onIn, dead: as.reduce((t, x) => t + x.dead, 0), escapes: a.st.escapes, evaded: a.st.evaded }, off: { inRing: offIn, perScene: bs.map((x) => x.inRing), dead: bs.reduce((t, x) => t + x.dead, 0) } });
     R('Vortex Strike: a route past the standing vortex goes round it and the bot never walks in (off: straight through)',
       a.through === 0 && a.walkIn === 0 && b.through > 0, { on: { nodesInside: a.through, framesInside: a.walkIn }, off: { nodesInside: b.through } });
   }
@@ -213,22 +222,25 @@
       formed += 1 / 60;
       for (const a of ours) if (a.alive && flat(a.pos, cl.group.position.x, cl.group.position.z) < SPECIALS.storm.radius) inRain += 1 / 60;
     });
-    return { inRain: r1(inRain / 3), formed: r1(formed), dmg: ours.map((a) => (a.alive ? r1(PLAYER.hp - a.hp) : 'dead')), st: { ...SP.SPECIAL_STATS } };
+    return { inRain: inRain / 3, formed: r1(formed), dmg: ours.map((a) => (a.alive ? r1(PLAYER.hp - a.hp) : 'dead')), st: { ...SP.SPECIAL_STATS } };
   };
   if (want('storm')) {
-    const a = storm(true), b = storm(false);
-    R('Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: ≤ 1 s each in it; off: most of it',
-      a.formed > 2 && a.inRain < 0.8 && b.inRain >= 1.0, { on: { sInRainEach: a.inRain, dmg: a.dmg, escapes: a.st.escapes }, off: { sInRainEach: b.inRain, dmg: b.dmg }, cloudS: a.formed });
+    // (3 scenes on, 2 off: a bot's time in the rain runs 0–1.5 s on, 0–2.8 off — one scene's average sat right on the bar)
+    const as = [storm(true), storm(true), storm(true)], bs = [storm(false), storm(false)];
+    const avg = (xs) => xs.reduce((t, x) => t + x.inRain, 0) / xs.length, on = avg(as), off = avg(bs);
+    R('Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: under 0.8 s each in it on average (3 scenes); off: a second or more (2 scenes)',
+      as.every((a) => a.formed > 2) && on < 0.8 && off >= 1.0,
+      { on: { sInRainEach: r2(on), scenes: as.map((a) => ({ sInRainEach: r1(a.inRain), dmg: a.dmg, escapes: a.st.escapes })) }, off: { sInRainEach: r2(off), scenes: bs.map((b) => ({ sInRainEach: r1(b.inRain), dmg: b.dmg })) }, cloudS: as[0].formed });
   }
 
-  // ================================================================ 7) Twister Zooka: sidestep a twister seen coming (hard bots; 3 shots)
+  // ================================================================ 7) Twister Zooka: sidestep a twister seen coming
   const zooka = (ai, diff) => {
     const E = B[0], X = A[0];
     let hits = 0, noticed = 0;
-    for (let k = 0; k < 5; k++) {
+    for (let k = 0; k < 10; k++) {
       // (a shooter that has spotted the zooka user 25 m off walks in toward its range, straight down the lane)
       scene(ai, [X], [E], { diff });
-      place(X, -2 + k * 1.3, -15); place(E, 0, 10); tank(E); face(X, 0, 10);
+      place(X, -2 + (k % 5) * 1.3 + (k >= 5 ? 0.65 : 0), -15); place(E, 0, 10); tank(E); face(X, 0, 10);
       settle([X], 0.3); tank(E);
       start(E, 'zooka');
       step(0.45);
@@ -262,15 +274,19 @@
     return { hits, shots };
   };
   if (want('zooka')) {
-    const sum = (x, y) => ({ hits: x.hits + y.hits, shots: x.shots + y.shots });
-    const r0 = sum(zookaRain(false, 'normal'), zookaRain(false, 'normal')), r1n = sum(zookaRain(true, 'normal'), zookaRain(true, 'normal')), r1h = sum(zookaRain(true, 'hard'), zookaRain(true, 'hard'));
-    R('Twister Zooka, sustained (2 × 6 shots): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time',
-      r1n.hits < r0.hits && r1h.hits <= r1n.hits, { off: r0, normalOn: r1n, hardOn: r1h });
+    // (per 6-shot round the old behaviour takes ~4.6 hits, a normal bot ~3.8 — 0 to 6: 20 m off is at the edge of what
+    // it sees and reacts to in time — and a hard one ~2.6. A normal bot's edge is small next to a round's luck: 30 rounds
+    // of it and of the old behaviour (12 of the hard bot's) make the ordering hold — 2 rounds' worth missed it 1 run in 3)
+    const rounds = (ai, diff, n) => { const t = { hits: 0, shots: 0, perRound: [] }; for (let i = 0; i < n; i++) { const r = zookaRain(ai, diff); t.hits += r.hits; t.shots += r.shots; t.perRound.push(r.hits); } return t; };
+    const rate = (t) => t.hits / t.shots;
+    const r0 = rounds(false, 'normal', 30), r1n = rounds(true, 'normal', 30), r1h = rounds(true, 'hard', 12);
+    R('Twister Zooka, sustained (6 shots a round: 30 rounds off, 30 on for a normal bot, 12 for a hard one): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time',
+      rate(r1n) < rate(r0) && rate(r1h) <= rate(r1n), { hitRate: { off: r2(rate(r0)), normalOn: r2(rate(r1n)), hardOn: r2(rate(r1h)) }, off: r0, normalOn: r1n, hardOn: r1h });
   }
   if (want('zooka')) {
     const a = zooka(true, 'hard'), b = zooka(false, 'hard'), n = zooka(true, 'normal');
-    R('Twister Zooka: a hard bot walking in on the zooka user sidesteps a twister led at it from ~25 m (on: most of 5 dodged; off: most hit) — a normal bot, slower, dodges fewer',
-      a.hits <= 1 && b.hits >= 3, { hardOn: a, hardOff: b, normalOn: n });
+    R('Twister Zooka: a hard bot walking in on the zooka user sidesteps a twister led at it from ~25 m (on: at most 3 of 10 hit; off: 6+) — a normal bot, slower, dodges fewer',
+      a.hits <= 3 && b.hits >= 6 && a.hits < n.hits, { hardOn: a, hardOff: b, normalOn: n });
   }
 
   // ================================================================ 8) Kraken: keep out of its reach, don't shoot it (a hurtable foe instead), back on it when it's over
@@ -300,8 +316,11 @@
       for (const a of ours) {
         if (!a.alive) continue;
         if (flat(a.pos, E.pos.x, E.pos.z) < 3) near += 1 / 60;
-        if (a.intent.fire && a.bot.target === E) shotsAtK++;
-        if (a.intent.fire && a.bot.target === E2) shotsAtE2++;
+        // (a shot at it: the trigger held with the aim on it, as botSpecials judges one — a roller rolling away from it
+        // with it still its target is no shot at it)
+        const aimedAt = (T) => Math.abs(angleDiff(a.bot.aimYaw, Math.atan2(T.pos.x - a.pos.x, T.pos.z - a.pos.z))) < 0.45;
+        if (a.intent.fire && a.bot.target === E && aimedAt(E)) shotsAtK++;
+        if (a.intent.fire && a.bot.target === E2 && aimedAt(E2)) shotsAtE2++;
       }
     });
     const res = { dead: dead(ours), sWithin3m: r1(near), shotsAtKraken: shotsAtK, shotsAtOther: shotsAtE2, st: { ...SP.SPECIAL_STATS } };
@@ -420,8 +439,10 @@
     const E = B[0], E2 = B[1], X = A[0], Y = A[1];
     scene(ai, [X, Y], [E, E2], { weapon: 'charger', foeWeapon: 'charger' });
     // X fights E (a charger 19 m off: close enough to shoot a bubble by X), Y fights E2 with a bubble on its line of fire
+    // (Y's duel 7 m clear of the deck's wall at x 14…15 — at 10 its strafing took it out of sight behind the wall's end
+    // — and over 22 m from E: nearer, it could see the bubble blower, defenceless while it blows, and go for that)
     place(X, -8, -10); place(E, -8, 9); tank(E); face(X, -8, 9);
-    place(Y, 10, -10); place(E2, 10, 9); tank(E2); face(Y, 10, 9);
+    place(Y, 7, -10); place(E2, 7, 9); tank(E2); face(Y, 7, 9);
     settle([X, Y], 1.0); tank(E); tank(E2);
     start(E, 'blower'); E.bot.update = idle;
     blow(E, 2);
@@ -435,11 +456,14 @@
       const vx = bu2.pos.x - m0.x, vy = bu2.pos.y - m0.y, vz = bu2.pos.z - m0.z, u = Math.max(0, Math.min(1, (vx * tx + vy * ty + vz * tz) / L2));
       if (Math.hypot(vx - tx * u, vy - ty * u, vz - tz * u) < bu2.r * 0.95) soaked++;
     });
+    // (bu2 stays on Y's line of fire, 6 m out, however Y strafes: the situation the check is about — a charge held, no
+    // shot soaked — every frame, rather than now and then)
+    const onLine = () => { const ex = Y.pos.x, ey = Y.pos.y + 1.1, ez = Y.pos.z, tx = E2.pos.x - ex, ty = E2.pos.y + 0.85 - ey, tz = E2.pos.z - ez, k = 6 / (Math.hypot(tx, ty, tz) || 1); bu2.pos.set(ex + tx * k, ey + ty * k, ez + tz * k); };
     if (bu) {
       bu.pos.set(X.pos.x + 1.6, 1.3, X.pos.z); bu.vel.set(0, 0, 0); bu.life = 9;
-      if (bu2) { bu2.pos.set(10, 1.2, -4); bu2.vel.set(0, 0, 0); bu2.life = 9; }
+      if (bu2) { onLine(); bu2.vel.set(0, 0, 0); bu2.life = 9; }
       step(4, (t) => {
-        bu.vel.set(0, 0, 0); if (bu2) bu2.vel.set(0, 0, 0);
+        bu.vel.set(0, 0, 0); if (bu2) { bu2.vel.set(0, 0, 0); onLine(); }
         if (t > 0.9 && flat(X.pos, bu.pos.x, bu.pos.z) < bu.r * SPECIALS.blower.blastMul) inside += 1 / 60;
         if (bu2 && Y.bot.target === E2) blocked++;
       });
@@ -462,6 +486,9 @@
     step(0.5, () => bu.vel.set(0, 0, 0));
     const seen = X.bot.target === E2 && X.bot.seeTimer > 0;
     // it ducks behind the wall (x 14…15, z −8…8) next to our bubble at the wall's end: out of sight, in the blast
+    // (X's shots still in the air at where it stood are gone: one flying on into the bubble set it off ~1 run in 4 —
+    // not the bot's doing, and the check is about the bot choosing to)
+    G.projectiles.clear();
     place(E2, 16.5, -5.5); tank(E2);
     bu.pos.set(17.3, 1.3, -7.9);   // (off the line of its spray at the spot where it ducked out)
     const hidden = !G.physics.los(new V3(X.pos.x, X.pos.y + 1.3, X.pos.z), new V3(16.5, 1, -5.5)) && !G.physics.los(new V3(X.pos.x, X.pos.y + 1.3, X.pos.z), new V3(16.5, 1.6, -5.5));
