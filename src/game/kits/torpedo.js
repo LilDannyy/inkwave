@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { G, emit, clamp, lerp } from '../../core/ctx.js';
-import { PLAYER, SUBS } from '../../config.js';
+import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { Physics, Hit } from '../physics.js';
 import { SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './registry.js';
 import { registerSubModel, getSubDef, GEO_KIT } from '../character-weapons.js';
@@ -31,8 +31,8 @@ const V3 = THREE.Vector3;
 const UP = new V3(0, 1, 0), DOWN = new V3(0, -1, 0), ZAX = new V3(0, 0, 1);
 const r2 = (x) => Math.round(x * 100) / 100;
 const GRAV = 24;                 // same as every thrown sub (and the throw-arc preview)
-const SCALE = 1.9;               // prop models are built at hand scale (SubSystem's SUB_SCALE)
-const HIT_R = 0.3;               // shot-down / contact radius of the torpedo in the world (m)
+const SCALE = 1.9;               // prop models are built at hand scale (SubSystem's SUB_SCALE) — [sub-view] drawn × t.vs
+const HIT_R = 0.3;               // shot-down / contact radius of the torpedo in the world (m): NOT the drawn size ([sub-view])
 const _v = new V3(), _v2 = new V3(), _v3 = new V3(), _q = new THREE.Quaternion(), _m = new THREE.Matrix4();
 const _hit = new Hit(), _res = { t: 0, dist: 0 };
 const nearCam = (p, r = 34) => !!G.camera && G.camera.position.distanceToSquared(p) < r * r;
@@ -151,11 +151,11 @@ function finAt(fin, k) {
 // =============================================================================================== world rig
 // per torpedo (its lens brightens as it locks and launches)
 function glowMat(team) { return new THREE.MeshStandardMaterial({ color: 0x111111, emissive: G.teamColors[team].clone(), emissiveIntensity: 1.2, roughness: 0.3 }); }
-function buildRig(team) {
+function buildRig(team, vs = 1) {   // ([sub-view] vs: SUB_VIEW_SCALE.torpedo — drawn that much bigger, visual only)
   const d = getSubDef('torpedo');
   const col = G.teamColors[team];
   const outer = new THREE.Group(), model = new THREE.Group();
-  model.scale.setScalar(SCALE); model.position.y = -d.yc * SCALE;          // the hull axis runs through the outer origin
+  model.scale.setScalar(SCALE * vs); model.position.y = -d.yc * SCALE * vs;          // the hull axis runs through the outer origin
   const body = new THREE.Mesh(d.hullBody, getPlasticMaterial()); body.castShadow = true;
   const ink = new THREE.Mesh(d.hullInk, getInkMaterial(col)); ink.castShadow = true;
   const gm = glowMat(team);
@@ -259,14 +259,15 @@ function use(subs, a, sub) {
 // [3, gid, foe nid, x, y, z] the lock, [4, gid, x, y, z, dx, dy, dz, speed] its swim (10 a second, dead-reckoned in
 // between), [1, gid, x, y, z, full] the burst, [2, gid, shot] an end without one. Hits on a ghost go to its owner.
 function spawn(subs, a, sub, pos, vel, ghost, gid) {
-  const mesh = buildRig(a.team);
+  const vs = subViewScale('torpedo');   // [sub-view]
+  const mesh = buildRig(a.team, vs);
   const scene = sceneOf(subs);
   scene.add(mesh);
   const t = {
     kind: 'torpedo', sub, owner: a, team: a.team, pos, prev: pos.clone(), vel, dir: vel.clone().normalize(), speed: 0,
     state: 'fly', t: 0, age: 0, hp: sub.hp, target: null, mesh, scene, ring: null, sp: !!a.specialActive,
     fin: 0, propOpen: 0, propA: 0, roll: Math.random() * 6, glowI: 0.5, hover: new V3(), whirr: null, flash: 0,
-    ghost, gid, net: null, sendT: 0, burst: false,
+    ghost, gid, net: null, sendT: 0, burst: false, vs,
   };
   list.push(t);
   if (nearCam(pos, 40)) t.whirr = G.audio?.loop?.('torpedo_whirr', { pos, volume: 0.35, pitch: 0.8 }) || null;

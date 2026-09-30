@@ -7,7 +7,7 @@
 // Numbers: SUBS.boomerang in config.js. Registers the model, icon, sounds and bot use; see kits/registry.js.
 import * as THREE from 'three';
 import { G, emit, on, clamp, lerp, angleDiff } from '../../core/ctx.js';
-import { SUBS, PLAYER } from '../../config.js';
+import { SUBS, PLAYER, subViewScale } from '../../config.js';
 import { Physics, Hit } from '../physics.js';
 import { SUB_KITS, netRec, netId, ghostMute } from './registry.js';
 const r3 = (x) => Math.round(x * 1000) / 1000;
@@ -21,6 +21,7 @@ import { THROWN } from '../bots.js';
 
 const KIND = 'boomerang';
 const WORLD_SCALE = 2.5;            // the prop is modelled at hand size; in the air it reads bigger (~0.75 m across)
+                                    // [sub-view] and is drawn × SUB_VIEW_SCALE.boomerang on top (visual only)
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _v4 = new THREE.Vector3();
 const _hit = new Hit(), _hit2 = new Hit();
@@ -120,11 +121,11 @@ const BLUR_FS = `
     al += uAlpha * 0.5 * smoothstep(0.86, 0.95, r) * smoothstep(1.0, 0.95, r);   // the tips' bright rim
     gl_FragColor = vec4(c, al);
   }`;
-function makeMesh(team) {
+function makeMesh(team, vs = 1) {   // ([sub-view] vs: SUB_VIEW_SCALE.boomerang)
   const P = proto(), col = G.teamColors[team];
   const outer = new THREE.Group(), tilt = new THREE.Group(), spin = new THREE.Group(), model = new THREE.Group();
-  model.scale.setScalar(WORLD_SCALE);
-  model.position.set(-P.center.x * WORLD_SCALE, 0, -P.center.z * WORLD_SCALE);
+  model.scale.setScalar(WORLD_SCALE * vs);
+  model.position.set(-P.center.x * WORLD_SCALE * vs, 0, -P.center.z * WORLD_SCALE * vs);
   const body = new THREE.Mesh(P.d.body, getPlasticMaterial()); body.castShadow = true;
   const ink = new THREE.Mesh(P.d.ink, getInkMaterial(col)); ink.castShadow = true;
   model.add(body, ink);
@@ -133,9 +134,9 @@ function makeMesh(team) {
     uniforms: { uColor: { value: col.clone() }, uAlpha: { value: 0 }, uAng: { value: 0 } },
     vertexShader: BLUR_VS, fragmentShader: BLUR_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide,
   }));
-  blur.renderOrder = 3; blur.visible = false;
+  blur.renderOrder = 3; blur.visible = false; blur.scale.setScalar(vs);
   tilt.add(blur);
-  outer.userData = { tilt, spin, blur };
+  outer.userData = { tilt, spin, blur, r: P.radius * vs };   // (r: the drawn blade's reach from its middle)
   return outer;
 }
 
@@ -183,7 +184,7 @@ function use(subs, a, sub) {
 // send, its hits are dropped), but its owner decides how it ends: [3, gid, x, y, z] it caught a foe (armed there),
 // [1, gid, x, y, z, big] the burst, [2, gid] it fizzled
 function spawn(subs, a, s, P, ghost, gid) {
-  const mesh = makeMesh(a.team);
+  const mesh = makeMesh(a.team, subViewScale(KIND));   // [sub-view]
   mesh.position.copy(P.start);
   (G.scene || subs.scene).add(mesh);
   const it = {
@@ -468,6 +469,11 @@ function streak(it, r) {
 function draw(it, dt) {
   const m = it.mesh, U = m.userData, col = color(it);
   m.position.copy(it.pos);
+  // [sub-view] stopped short of a wall (0.4 m, as built): the drawn blade, if it reaches further, is held off the wall
+  if (it.fromWall && U.r > proto().radius) {
+    const P = it.plan, gap = _v4.copy(it.pos).sub(P.wallPoint).dot(P.wallNormal), want = U.r + 0.03;
+    if (gap < want && gap > -0.5) m.position.addScaledVector(P.wallNormal, Math.min(want - gap, U.r - proto().radius + 0.03));
+  }
   it.spinA = (it.spinA + it.spinW * dt) % (Math.PI * 2);
   U.spin.rotation.y = it.spinA;
   // bank: tilted into the throw while flying, wobbling level while it hovers, tipped in toward you as it circles
@@ -495,7 +501,7 @@ function draw(it, dt) {
     it.fxT -= dt;
     if (it.fxT <= 0) {
       it.fxT = it.state === 'orbit' ? 0.09 : 0.045;
-      const a = Math.random() * Math.PI * 2, r = proto().radius * 0.92, sp = 4 + Math.random() * 3;
+      const a = Math.random() * Math.PI * 2, r = proto().radius * 0.92, sp = 4 + Math.random() * 3;   // ([sub-view] the built reach: these droplets ink where they land)
       _v.set(it.pos.x + Math.cos(a) * r, it.pos.y, it.pos.z + Math.sin(a) * r);
       _v2.set(-Math.sin(a) * sp, 0.6 + Math.random(), Math.cos(a) * sp);
       G.fx.drop(_v, _v2, col, { size: 0.035 + Math.random() * 0.025, life: 0.5, quiet: true });
