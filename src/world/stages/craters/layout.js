@@ -243,7 +243,7 @@ const cover = [
 // interpretive boards: a painted panel (layout block, murals.js) in a steel frame (props.js craters_board)
 //   deg = the way the panel faces (0 = +z, 90 = +x)
 export const BOARDS = [
-  { x: 4.6, z: sz(-29.3), deg: -90, id: 4 },    // THE GREAT TURF WAR (battle map), on the neck, facing the path
+  { x: 3.7, z: sz(-29.3), deg: -90, id: 4 },    // THE GREAT TURF WAR (battle map), on the neck, facing the path (clear of the tower's goal)
   { x: -21.1, z: -3.9, deg: -90, id: 5 },   // TRENCH LINE B, on the fire trench's east bank, facing it
   { x: 27.6, z: -2.4, deg: -130, id: 6 },  // THE FLOODED CRATERS, beyond the pond on the cliff walk, facing it
 ];
