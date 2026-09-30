@@ -79,8 +79,8 @@ block adds the harbour gap on Fish Lane.
 - **Tower Command.** The track is 99.9 → 201.6 m; the target was 199.8 ± 4 %.
   - It keeps every drawn run to the flank street, then goes round the new block:
     - back along the open band (z −37.4 in Alpha's half) to Fish Lane, and down Fish Lane;
-    - back east through Herring Passage, up the cross's west steps, across the floor (checkpoint 2), down its east
-      steps and along Butter Row;
+    - back east through Herring Passage, up the cross's west steps, across the floor (checkpoint 2 until the
+      revision below: now on the band in front of the cross, 61 %), down its east steps and along Butter Row;
     - down the flank street and along Exchange Square to the goal, 13 m short of the pad.
   - Tower-only changes:
     - The Exchange footbridge is gone. It only made sense with the old goal, and the terrace stairs, side flight and
@@ -147,3 +147,33 @@ Before = `new-stages` 0cd3945 (a scratch worktree of it, same harnesses); after 
 - `cross.js`: new, the Butter Cross.
 - `buildings.js`: `name` and `lampX` on the passage, `name` on the arcade.
 - `src/world/tower-data.js` (crossmarket), `assets/lightmaps/crossmarket*`, `assets/stages/crossmarket-*`.
+
+## Revision (the lead's review): checkpoint 2 earlier
+
+Checkpoint 2 on the cross's floor sat at 82 % of the track (166.3 of 201.6 m). It can't come earlier on the cross, so
+it moved to the nearest good spot: **the open band where Market Street enters the Butter Cross square, 5 m in front of
+the cross's north colonnade, (0, 37.4) on Bravo's side: 123.8 m, 61 %** (`tower-data.js` crossmarket). The track is
+unchanged (201.6 m, +0.9 %, 100 s). The user's drawn section and checkpoint 1 are untouched.
+
+Why not the cross:
+- The tower only reaches the cross's floor along Herring Passage / Butter Row, between Fish Lane and the flank street.
+  The Butter Cross square round the cross is 2.3 m wide between the ranges and the steps' balustrades, and the
+  columns bar its north and south faces.
+- The drawn track arrives down the flank street. The only other link between the flank street and Fish Lane is the
+  open band: Exchange Square is split by the Corn Exchange's three stairs, and the Butter Market arcade is 2.8 m high.
+- So either the band's run to Fish Lane comes first and the cross after it (at least 166 m in), or the cross comes
+  first and only Fish Lane and the square's far corner are left after it: about 180 m in all, 10 % short.
+
+The new spot is on the square's axis, looking at the cross. Its floor (1.2), columns and butter tables overlook it,
+and so does the gallery overhead to the north. The attackers arrive from the flank street; the defenders come up
+Market Street past either side of the cross, or round by Fish Lane.
+
+| | before | after |
+|---|---|---|
+| checkpoints | 25.3 / 166.3 m (13 / 82 %) | 25.3 / **123.8 m (13 / 61 %)**, 10 s each; **100 s** to the goal |
+| stage-audit (tower) | — | 4/4: lightmap applied (crossmarket.tower, 784 rows; no geometry change, no rebake), spawn → mid 6.13 / 6.38 s, 100 s |
+| tower-check | 0 holes, clean, rides knockout | 201.6 m; 0 holes, clearance clean; rides: both a knockout after 83.3 s, nobody knocked off, no stalls |
+| tower-match | Bravo by knockout at 2:35 | Alpha by knockout at 3:44, both checkpoints cleared (the band at 1:37), stuck 0 % |
+
+Picture: `out/crossmarket/tower-top.jpg`.
+

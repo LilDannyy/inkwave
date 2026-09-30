@@ -61,22 +61,31 @@ export const TOWER_DEFS = {
   crossmarket: {
     // (Long Stages, 2026-09-30: two checkpoints, so twice as long.) After the drawn run down the flank street, on round
     // the new block: back along the open band in front of the roof terrace and the butcher's to Fish Lane (z 37.4), down
-    // Fish Lane, back east through Herring Passage, over the Butter Cross (checkpoint 2) and along Butter Row (z 45.2),
-    // down the flank street into Exchange Square and along its front to the goal (13 m short of the pad)
+    // Fish Lane, back east through Herring Passage, over the Butter Cross and along Butter Row (z 45.2), down the flank
+    // street into Exchange Square and along its front to the goal (13 m short of the pad)
+    // (Checkpoint 2 is on the open band where Market Street enters the Butter Cross square, 5 m in front of the cross:
+    //  61 % of the way. On the cross's floor it was 82 %, and it can't come earlier there: the cross is only reached along
+    //  Herring Passage / Butter Row, between Fish Lane and the flank street, and the drawn track arrives down the flank
+    //  street, so the band's run to Fish Lane must come first; crossing the cross first leaves only Fish Lane and the
+    //  square's far corner for the rest (Exchange Square is split by the Corn Exchange's three stairs).)
     path: [[0, 0], [21.06, 12.32], [21.06, 17.77], [16.21, 17.77], [16.21, 19.5], [0.41, 19.5], [0.4, 10.23], [-17.39, 10.24],
       [-17.39, 37.4], [17.2, 37.4], [17.2, 45.2], [-17.39, 45.2], [-17.39, 55.5], [-10, 55.5]],
-    checkpoints: [[21.41, 13.25], [0, 45.2]],
+    checkpoints: [[21.41, 13.25], [0, 37.4]],
     yaw: 0,   // square to the streets (the drawn runs' average, -4.6°, sat skew to every street; only the first run is diagonal)
   },
   lockgate: {
     // ([-1.25, 1.25] is a straight-through point on the drawn diagonal, not a turn: it ends the level run over the
     // bridge's crown where the platform leaves it, so the track follows the hump down instead of cutting into it)
     // The Long Stages stretch (two checkpoints: twice the drawn length): the drawn track to [10.32, 22.67], then on down
-    // the yard past the office stair into the dry-dock slice and round the boatbuilder's shed — along the dock road,
-    // down the east lane (checkpoint 2 beside the shed), back along the back road — to the goal in front of the loading
-    // stage (layout.js LS / SHED)
+    // the yard past the office stair into the dry-dock slice and round the boatbuilder's shed — along the dock road
+    // (checkpoint 2 where the lane to the dock head leaves it, in front of the loading bay's north flight), down the east
+    // lane, back along the back road — to the goal in front of the loading stage (layout.js LS / SHED)
+    // (Checkpoint 2 was on the east lane beside the shed, 78 % of the way; it is at 61 % now. The crane staging, the
+    //  slice's strategic point, can't take the track: its flights are offset and the north one is boxed in by the
+    //  cottage, so this is the nearest spot to it, 13 m off its north flight. The loop round the shed can't be turned
+    //  the other way: it must end on the back road for the goal.)
     path: [[0, 0], [-1.25, 1.25], [-11.46, 11.46], [-11.46, 17.52], [17.1, 17.52], [17.1, 22.67], [10.32, 22.67], [10.32, 35.4], [-16.6, 35.4], [-16.6, 50.2], [3, 50.2], [3, 54.6]],
-    checkpoints: [[-11.68, 17.81], [-16.6, 43]],
+    checkpoints: [[-11.68, 17.81], [0, 35.4]],
   },
   terraces: {
     // (starts at the sagrato's top, under San Vito's dome — the chapel's roof is over it; the platform square to the
