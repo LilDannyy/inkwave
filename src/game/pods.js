@@ -1303,7 +1303,7 @@ export class StagePods {
     const path = b.path, hard = this.hard, nav = G.nav;
     if (!hard || !nav || !path.length) return;
     const a = b.a, team = a.team, start = nav.nearest(a.pos, 1.2, true), goal = path[path.length - 1];
-    const noClimb = b.t < b.noClimbUntil;
+    const noClimb = b._climbRule ? b._climbRule() : b.t < b.noClimbUntil;   // (the brain's own rule for climbs: bots.js)
     // (the lengths: from where we stand, along the route)
     const len = (q, i0) => { let s = 0; for (let i = Math.max(1, i0); i < q.length; i++) { const m = nav.nodes[q[i - 1]], n = nav.nodes[q[i]]; s += Math.hypot(n.x - m.x, n.z - m.z); } return s; };
     const pi = clamp(b.pi | 0, 0, path.length - 1), n0 = nav.nodes[path[pi]];
