@@ -119,7 +119,10 @@
       return Object.fromEntries(Object.entries(sweep).map(([k, v]) => [k, v === 'arc' ? 12 - 24 * u : v === 0 ? 1 - u : v * u]));
     };
     ctx.suspend(T0).then(() => { h = eng.loop(name, { volume: 1, pitch: P * (pass ? dop(T0) : 1), pos: pass ? pos(T0) : undefined, params: par(0) || undefined }); ctx.resume(); });
-    for (let t = T0 + 0.05; t < 3.05; t += 0.05) {
+    // a warning runs its real length (its fuse / charge / flight) and stops, as the blast would cut it; a mover passes by;
+    // anything else plays 2.2 s
+    const stopAt = T0 + (DUR[name] != null ? DUR[name] + 0.05 : pass ? 2.9 : 2.2);
+    for (let t = T0 + 0.05; t < stopAt - 0.02; t += 0.05) {
       const tt = +t.toFixed(4);
       ctx.suspend(tt).then(() => {
         const o = {};
@@ -128,7 +131,7 @@
         h?.set(o); ctx.resume();
       });
     }
-    ctx.suspend(3.1).then(() => { h?.stop(0.15); ctx.resume(); });
+    ctx.suspend(+stopAt.toFixed(4)).then(() => { h?.stop(DUR[name] != null ? 0.03 : 0.15); ctx.resume(); });
     return { buf: await ctx.startRendering(), mode: pass ? 'loop pass-by' : sweep ? 'loop sweep' : 'loop' };
   }
   // every sub and special, its sounds in the order you'd hear them (throw → flight → landing / arming → warning → blast / end)
