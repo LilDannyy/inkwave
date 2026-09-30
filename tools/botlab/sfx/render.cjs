@@ -1,7 +1,7 @@
 // sfx-cues listening sheet: renders every sub's and special's sounds offline in the game page (the game's own engine and
 // master chain), writes WAVs and measures them.
-//   BOTLAB_OUT=… SLOTS=4 tools/botlab/run.sh tools/botlab/jobs/sfx-cues/render.cjs
-//   ONLY=fuse_bomb,twister …   just those (no sheet);  OUT=dir   (default tools/botlab/jobs/sfx-cues/out)
+//   BOTLAB_OUT=… SLOTS=4 tools/botlab/run.sh tools/botlab/sfx/render.cjs
+//   ONLY=fuse_bomb,twister …   just those (no sheet);  OUT=dir   (default tools/botlab/sfx/out)
 // Writes out/<sound>.wav for each (sub_fly@0.85 → sub_fly_0.85.wav), out/cues.wav (the whole sheet: each sub / special
 // in turn, its sounds in phase order, 0.5 s apart, 1.2 s between them), out/cues.txt (what starts when) and
 // out/metrics.json (peak / raw peak dBFS, LUFS-M max, clicks, NaNs, and a fingerprint — the spectrum in 8 bands, the

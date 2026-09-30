@@ -1,4 +1,4 @@
-// Summary of tools/botlab/jobs/bots-specials/ab.sh: node agg.cjs <outdir>
+// Summary of tools/botlab/specials-ab/ab.sh: node agg.cjs <outdir>
 // Per mode, awareness off vs on (means per match): splats caused by each special (both teams' bots), all splats, water,
 // turf inked, stuck %, Zone Control captures; the bots' SPECIAL_STATS; head to head: the aware team's K/D, special
 // deaths, turf and wins against the old behaviour.

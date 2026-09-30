@@ -1,6 +1,6 @@
 // Eco-Forest Treehills — the sprout pods on the stage (page script for tools/botlab/page.cjs; the engine's own tests run
 // on the podbox arena, tools/botlab/tests/pods.js — this checks the stage's pods, placements and looks):
-//   MAP=treehills MODE=turf|tower|boss PAGE=tools/botlab/jobs/new-stages/out/pods/treehills-pods.js tools/botlab/run.sh tools/botlab/page.cjs
+//   MAP=treehills MODE=turf|tower|boss PAGE=tools/botlab/tests/treehills-pods.js tools/botlab/run.sh tools/botlab/page.cjs
 // (turf runs ~2 min: give it WATCHDOG=420000)
 // turf: the layout (8 listed → 16: a half's 2 rill gates, 2 flank gates, 2 zone bulwarks and 2 canopies; the stage's
 // planters by kind, the seeds on the soil, mirror twins; the rill hedge and the flank gates' hedgerows). Each gate
