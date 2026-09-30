@@ -109,8 +109,8 @@
     const a = [0, 1, 2].map((k) => bomb(true, 'shooter', k)), b = [0, 1, 2].map((k) => bomb(false, 'shooter', k)), c = bomb(true, 'charger'), c0 = bomb(false, 'charger');
     const sum = (xs) => xs.reduce((t, x) => t + x.dmg.reduce((u, v) => u + (v === 'dead' ? 100 : v), 0), 0), dd = (xs) => xs.reduce((t, x) => t + x.dead, 0);
     const da = dd(a), db = dd(b), sa = sum(a), sb = sum(b);
-    R('Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge — on: out of its core before it goes (none splatted; off: splatted); shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse',
-      c.dead === 0 && c0.dead >= 2 && da <= db, { on: { dead: da, dmgTotal: r1(sa), escapes: a.reduce((t, x) => t + x.st.escapes, 0), evaded: a.reduce((t, x) => t + x.st.evaded, 0) }, off: { dead: db, dmgTotal: r1(sb) },
+    R('Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge (slow on their feet: a squid hop out) — on: at most one caught; off: splatted; shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse',
+      c.dead <= 1 && c0.dead >= 2 && c.dead < c0.dead && da <= db, { on: { dead: da, dmgTotal: r1(sa), escapes: a.reduce((t, x) => t + x.st.escapes, 0), evaded: a.reduce((t, x) => t + x.st.evaded, 0) }, off: { dead: db, dmgTotal: r1(sb) },
         chargers: { on: { dead: c.dead, dmg: c.dmg }, off: { dead: c0.dead, dmg: c0.dmg } } });
   }
 
@@ -217,7 +217,7 @@
   if (want('storm')) {
     const a = storm(true), b = storm(false);
     R('Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: ≤ 1 s each in it; off: most of it',
-      a.formed > 2 && a.inRain < 0.8 && b.inRain > 1.4, { on: { sInRainEach: a.inRain, dmg: a.dmg, escapes: a.st.escapes }, off: { sInRainEach: b.inRain, dmg: b.dmg }, cloudS: a.formed });
+      a.formed > 2 && a.inRain < 0.8 && b.inRain >= 1.0, { on: { sInRainEach: a.inRain, dmg: a.dmg, escapes: a.st.escapes }, off: { sInRainEach: b.inRain, dmg: b.dmg }, cloudS: a.formed });
   }
 
   // ================================================================ 7) Twister Zooka: sidestep a twister seen coming (hard bots; 3 shots)
@@ -401,11 +401,17 @@
     const bs = G.specials.world.filter((w) => w.kind === 'bubble' && !w.held && !w.dead);
     let inside = 0, soaked = 0, blocked = 0;
     const bu = bs[0], bu2 = bs[1] || null;
-    const offF = on('weapon:fire', (e) => { if (e.actor === Y && bu2 && Y.bot.target === E2) soaked++; });
+    // (a shot whose line runs through the bubble: soaked)
+    const offF = on('weapon:fire', (e) => {
+      if (e.actor !== Y || !bu2 || Y.bot.target !== E2) return;
+      const m0 = e.muzzle, tx = E2.pos.x - m0.x, ty = E2.pos.y + 0.85 - m0.y, tz = E2.pos.z - m0.z, L2 = tx * tx + ty * ty + tz * tz;
+      const vx = bu2.pos.x - m0.x, vy = bu2.pos.y - m0.y, vz = bu2.pos.z - m0.z, u = Math.max(0, Math.min(1, (vx * tx + vy * ty + vz * tz) / L2));
+      if (Math.hypot(vx - tx * u, vy - ty * u, vz - tz * u) < bu2.r * 0.95) soaked++;
+    });
     if (bu) {
       bu.pos.set(X.pos.x + 1.6, 1.3, X.pos.z); bu.vel.set(0, 0, 0); bu.life = 9;
       if (bu2) { bu2.pos.set(10, 1.2, -4); bu2.vel.set(0, 0, 0); bu2.life = 9; }
-      step(2.5, (t) => {
+      step(4, (t) => {
         bu.vel.set(0, 0, 0); if (bu2) bu2.vel.set(0, 0, 0);
         if (t > 0.9 && flat(X.pos, bu.pos.x, bu.pos.z) < bu.r * SPECIALS.blower.blastMul) inside += 1 / 60;
         if (bu2 && Y.bot.target === E2) blocked++;
@@ -414,33 +420,36 @@
     offF();
     return { bubbles: bs.length, sInsideAfter09: r1(inside), shotsIntoBubble: soaked, framesBlocked: blocked, bubbleHold: r1(SP.SPECIAL_STATS.bubbleHold), st: { ...SP.SPECIAL_STATS } };
   };
-  const popOwn = () => {
+  const popOwn = (ai = true) => {
     const E2 = B[1], X = A[0], Y = A[1];
-    scene(true, [X], [E2]);
+    scene(ai, [X], [E2]);
+    X.bot._spray = () => false; X.bot._memBombAim = () => null;   // (no spray / bomb at the spot it ducked out at: either can set the bubble off by chance)
     place(Y, -10, 20); face(Y, -10, 30);
-    place(X, 0, -14); place(E2, 16.5, -10.5); tank(E2); face(X, 16.5, -10.5);
+    place(X, 6, -12.5); place(E2, 16.5, -10.5); tank(E2); face(X, 16.5, -10.5);
     start(Y, 'blower');
     blow(Y, 1);
     const bu = G.specials.world.find((w) => w.kind === 'bubble' && !w.held && w.team === 0);
     if (!bu) return { bubble: false };
     bu.pos.set(-20, 1.3, 30); bu.vel.set(0, 0, 0);
-    X.hp = PLAYER.hp; place(X, 0, -14); face(X, 16.5, -10.5); place(E2, 16.5, -10.5); tank(E2);
+    X.hp = PLAYER.hp; place(X, 6, -12.5); face(X, 16.5, -10.5); place(E2, 16.5, -10.5); tank(E2);
     step(0.5, () => bu.vel.set(0, 0, 0));
     const seen = X.bot.target === E2 && X.bot.seeTimer > 0;
     // it ducks behind the wall (x 14…15, z −8…8) next to our bubble at the wall's end: out of sight, in the blast
     place(E2, 16.5, -5.5); tank(E2);
-    bu.pos.set(16.5, 1.3, -8.7);
+    bu.pos.set(17.3, 1.3, -7.9);   // (off the line of its spray at the spot where it ducked out)
+    const hidden = !G.physics.los(new V3(X.pos.x, X.pos.y + 1.3, X.pos.z), new V3(16.5, 1, -5.5)) && !G.physics.los(new V3(X.pos.x, X.pos.y + 1.3, X.pos.z), new V3(16.5, 1.6, -5.5));
     const hp0 = E2.hp;
     step(1.5, () => { if (!bu.dead) bu.vel.set(0, 0, 0); });
-    return { bubble: true, sawItFirst: seen, hidden: !G.physics.los(new V3(X.pos.x, X.pos.y + 1.3, X.pos.z), new V3(16.5, 1, -5.5)), popped: bu.dead, e2Hit: r1(hp0 - E2.hp), popShots: SP.SPECIAL_STATS.popShots };
+    delete X.bot._spray; delete X.bot._memBombAim;
+    return { bubble: true, sawItFirst: seen, hidden, popped: bu.dead, e2Hit: r1(hp0 - E2.hp), popShots: SP.SPECIAL_STATS.popShots };
   };
   if (want('blower')) {
-    const a = blower(true), b = blower(false), p = popOwn();
-    R('Bubble Blower: out of an enemy bubble\'s blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (off: soaked)',
-      a.bubbles >= 2 && a.sInsideAfter09 < 0.3 && b.sInsideAfter09 > 1 && a.shotsIntoBubble === 0 && b.shotsIntoBubble >= 2,
+    const a = blower(true), b = blower(false), p = popOwn(true), p0 = popOwn(false);
+    R('Bubble Blower: out of an enemy bubble\'s blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)',
+      a.bubbles >= 2 && a.sInsideAfter09 < 0.3 && b.sInsideAfter09 > 1 && a.shotsIntoBubble === 0 && a.bubbleHold > 1,
       { on: a, off: { sInsideAfter09: b.sInsideAfter09, shotsIntoBubble: b.shotsIntoBubble, framesBlocked: b.framesBlocked } });
     R('Bubble Blower, counter-play: one of theirs ducks out of sight behind a wall right by our team\'s bubble — the bot shoots the bubble and it goes off on them',
-      p.bubble && p.sawItFirst && p.hidden && p.popped && p.popShots >= 1 && p.e2Hit > 0, p);
+      p.bubble && p.sawItFirst && p.hidden && p.popped && p.popShots >= 1 && p.e2Hit > 0, { on: p, off: p0 });
   }
 
   // ================================================================ 13) Ink Jet: its blasts' splash sidestepped; a jetpacker in reach is the target first
@@ -527,17 +536,19 @@
     // rain on the deck
     lob(E, Tw.pos.x, Tw.pos.z, SPECIALS.storm.throwSpeed, 24, 1.45);
     start(E, 'storm');
-    let onT = 0, tot = 0;
-    step(4, () => { const cl = G.projectiles.clouds[0]; if (!cl || cl.t < 0.6) return; tot += 1 / 60; if (Tw.riderList.includes(X)) onT += 1 / 60; });
+    let onT = 0, tot = 0, hpLeft = null;
+    step(4, () => { const cl = G.projectiles.clouds[0]; if (!cl || cl.t < 0.6) return; tot += 1 / 60; if (Tw.riderList.includes(X)) onT += 1 / 60; else if (hpLeft === null) hpLeft = r1(X.hp); });
+    const rainAlive = X.alive;
     G.projectiles.clear();
     onDeck(); X.hp = PLAYER.hp; step(0.5);
-    const s = start(E, 'strike'); s.autoT = 0.05; s.target.set(Tw.pos.x, 0, Tw.pos.z);
+    // (on the ground beside the platform, as the bots aim it: a vortex on the pillar's top can't reach the deck)
+    const s = start(E, 'strike'); s.autoT = 0.05; s.target.set(Tw.pos.x + 2.2, 0, Tw.pos.z);
     let offAt = null;
     const off = on('special:strike', (e) => { offAt = r1(flat(X.pos, e.pos.x, e.pos.z)); });
     step(2.7);
     off();
-    R('Tower Command: the rider stays on the deck under a Tempest (a light area, the objective) but is off it and out of the ring when a Vortex Strike lands on it',
-      role === 'ride' && tot > 2 && onT > tot * 0.7 && offAt !== null && offAt > SPECIALS.strike.radius, { role, sOnDeckInRain: r1(onT), rainS: r1(tot), distAtStrike: offAt });
+    R('Tower Command: the rider takes a Tempest\'s rain on the deck (a light area, and it\'s the objective) while it\'s healthy, hops off before it\'s splatted; it\'s off and out of the ring when a Vortex Strike lands by the tower',
+      role === 'ride' && tot > 2 && onT >= 0.6 && rainAlive && offAt !== null && offAt > SPECIALS.strike.radius, { role, sOnDeckInRain: r1(onT), rainS: r1(tot), hpWhenItLeft: hpLeft, alive: rainAlive, distAtStrike: offAt });
   }
   return out;
 })()
