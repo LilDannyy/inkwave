@@ -177,13 +177,16 @@ const ZONES = {
 // Tower Command (authored on Bravo's side, z > 0; Alpha pushes it there): over the Old Stone Bridge, along the bank,
 // up onto the shelf, back across the first terrace, up onto the west terrace (the user's drawing, to 31 before the
 // stretch) — then the slice's detour loop (two checkpoints: the track 80 of the 100 points, twice the first drawing's
-// length): on along the stargazing terrace, down onto the first terrace and east across it past the knoll's front
-// steps, south along its edge past the receiver hut, back west up onto the Dish Knoll (checkpoint 2 on its top, by the
-// dish) and across it onto the stargazing terrace, down it to the goal below the forecourt (10 m short of the pad, as
-// before the stretch)
+// length): on along the stargazing terrace, down onto the first terrace and east across it to the Dish Knoll's front
+// steps, up them onto the knoll (checkpoint 2 on its top, by the dish: two thirds of the way), back west across the
+// knoll onto the stargazing terrace and down it past the rock garden, then round the shoulder: west along its front
+// (z 52.25), down past the Solar Tower's garden stair to the terrace's back (z 59) under the control building, east
+// along it and up to the goal below the forecourt (11 m short of the pad; 1 m further out than before the loop was
+// turned round). The telescope piers on the terrace's back stand inside the loop in this mode (slice-props.js).
 const TOWER = {
-  path: [[0, 0], [0, 18.5], [-16.25, 18.5], [-16.25, 26], [5.75, 26], [5.75, 34], [-15, 34], [-15, 43.5], [5.75, 43.5], [5.75, 55]],
-  checkpoints: [[-6, 18.5], [-3, 43.5]],
+  path: [[0, 0], [0, 18.5], [-16.25, 18.5], [-16.25, 26], [5.75, 26], [5.75, 34], [-3, 34], [-3, 43.5], [5.75, 43.5], [5.75, 52.25],
+    [16, 52.25], [16, 59], [5.75, 59], [5.75, 56]],
+  checkpoints: [[-6, 18.5], [-2, 43.5]],
 };
 
 const LAYOUT_NANTAI = {
