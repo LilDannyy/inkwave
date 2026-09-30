@@ -36,7 +36,8 @@
   await g.quitToMenu(); await wait(1500);
   // (the menu's backdrop match has bots of its own, whose charges may hum near the camera: those are owned. An orphan is
   // a loop no current kid's weapon holds — it would hum forever)
-  const owned = (h) => (g.match?.actors || []).some((o) => { const r = o.weaponRunner; return r && (r.spinLoop === h || r.chargeLoop === h || r.rollLoop === h); });
+  // (a backdrop kid charging a Brine Cutlass holds its hum in the blade kit's own store, keyed by runner: owned while it charges)
+  const owned = (h) => (g.match?.actors || []).some((o) => { const r = o.weaponRunner; return r && (r.spinLoop === h || r.chargeLoop === h || r.rollLoop === h || (h.name === 'blade_charge' && o.alive && o.weapon?.kind === 'blade' && r.kit?.charging)); });
   const orphans = () => [...A.loops].filter((h) => h.playing && /splatling|charge|draw|roll|spin/.test(h.name) && !owned(h)).map((h) => h.name);
   R('after leaving the match: no orphaned weapon hum (every live one belongs to a backdrop kid)', orphans().length === 0, { orphans: orphans(), loops: [...A.loops].map((h) => h.name) });
   await wait(3000);

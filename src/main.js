@@ -31,6 +31,7 @@ import { revealedTo } from './game/reveal.js';
 import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
 import { TowerFx } from './fx/towerFx.js';
+import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
 import { BOSS_MODE } from './boss/bossMode.js';
 
 const params = new URLSearchParams(location.search);
@@ -108,6 +109,7 @@ class Game {
     this.CharacterClass = charMod.Character;
     try { this.PropKit = (await import('./world/props.js')).PropKit; } catch (e) { console.error('[inkwave] prop kit failed to load', e); this.PropKit = null; }
     G.audio = audioMod.audio; G.music = musicMod.music;
+    G.cues = cues;   // sfx-cues
     await progress(0.15, 'Building the plaza…');
 
     // world
@@ -1219,6 +1221,8 @@ class Game {
       const cam = this.rig.gameCam || G.camera;   // the player's ears stay with the player while the map is up
       G.audio.setListener(cam.position, cam.getWorldDirection(this._lf || (this._lf = new THREE.Vector3())), cam.up);
     }
+    // sfx-cues: every sub / special's positional loops and warnings follow the world (src/audio/cues.js)
+    G.cues?.update(dt, { quiet: setUp });
     // post uniforms (low-hp vignette)
     const g = this.R.grade.uniforms;
     const hpK = loc && m && !m.attract && loc.alive ? clamp(1 - loc.hp / 55, 0, 1) : 0;
@@ -1249,7 +1253,7 @@ class Game {
   // harbour soundscape: continuous sea wash + occasional gull cries out over the water
   _updateAmbience(dt) {
     if (!this._audioOn || !G.audio?.loop) return;
-    if (!this._amb) this._amb = G.audio.loop('harbor_ambience', { volume: 0.55 });
+    if (!this._amb || !this._amb.playing) this._amb = G.audio.loop('harbor_ambience', { volume: this._ambV ?? 0.55 });   // sfx-cues: (back if the engine ever had to drop it)
     // in the lobby's alley the harbour is only a distant wash (and no gulls overhead)
     const inSet = !!this.showcase?.fullFrame;
     this._ambV = damp(this._ambV ?? 0.55, inSet ? 0.12 : 0.55, 2, dt);

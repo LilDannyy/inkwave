@@ -269,7 +269,7 @@ function use(subs, a, sub) {
   const vel = G.projectiles.throwVelocity(a, sub.throwSpeed, new V3());
   const it = spawn(a, sub, pos, vel, false, netId(a));
   netRec(a, 'waddle', [0, it.gid, r2(pos.x), r2(pos.y), r2(pos.z), r2(vel.x), r2(vel.y), r2(vel.z)]);
-  if (a.isLocal || a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.6, pitch: 1.08 });
+  G.cues?.sub('waddle', 'throw', { owner: a, at: a.pos });   // sfx-cues: its own throw (src/audio/cues.js)
   emit('sub:use', { actor: a, kind: 'waddle' });
 }
 // Online, a remote player's Waddle is a ghost: it flies and lands the same, but it never picks a foe, walks or goes
@@ -296,7 +296,7 @@ function ghost(a, d) {
   if (op === 0) {
     if (items.some((x) => x.gid === gid)) return;
     spawn(a, SUBS.waddle, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), true, gid);
-    if (a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.pos, volume: 0.6, pitch: 1.08 });
+    G.cues?.sub('waddle', 'throw', { owner: a, at: a.pos });   // sfx-cues
     return;
   }
   const it = items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
@@ -377,7 +377,7 @@ function sense(it, dt) {
   M_.outer.rotation.y = it.heading + Math.sin(it.t * 5) * 0.55 * (1 - k * 0.5);
   M_.rock.rotation.z = k > 0.6 ? (Math.random() * 2 - 1) * 0.06 * k : 0;
   blinkLamp(it, dt, lerp(0.45, 0.1, k), 2.5 + 3 * k);
-  if (it.blinked && near(it.pos, 30)) G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.3 + 0.35 * k, pitch: 1.05 + 0.3 * k });
+  if (it.blinked) G.cues?.sub('waddle', 'beep', { owner: it.owner, team: it.team, at: it.pos, vol: 0.45 + 0.5 * k, pitch: 1 + 0.25 * k });   // sfx-cues: its own sensing bip
   if (it.t >= s.fuse && !it.ghost) { it.why = 'fuse'; blast(it); }
 }
 function lock(it, tgt) {
@@ -566,10 +566,7 @@ function blinkLamp(it, dt, period, bright) {
 }
 function noise(it, pitch) {
   it.noisy = true;
-  if (near(it.pos, 42) && G.audio) {
-    if (!it.loop) it.loop = G.audio.loop('waddle_walk', { pos: it.pos, volume: 0.9, pitch });
-    it.loop.set({ pos: it.pos, pitch });
-  } else if (it.loop) { it.loop.stop(0.15); it.loop = null; }
+  it.noisePitch = pitch;   // sfx-cues: the walk loop (and the hunt alarm on its target) come from src/audio/cues.js
 }
 function hush(it) { it.noisy = false; if (it.loop) { it.loop.stop(0.1); it.loop = null; } }
 
@@ -586,7 +583,7 @@ function blast(it) {
   }
   credit(it, area);
   G.fx?.explosion(c, col, s.radius);
-  G.audio?.play('bomb_explode', { pos: c });
+  G.cues?.sub('waddle', 'boom', { owner: a, team, at: c });   // sfx-cues: its own boing-boom
   emit('shake', { pos: c.clone(), amount: 0.6 });
   emit('bomb:explode', { actor: a, pos: c.clone(), team, radius: s.radius, kind: 'waddle' });
   const loc = G.local;
@@ -618,7 +615,7 @@ function pop(it) {
   _c.copy(it.pos); _c.y += 0.22;
   if (near(_c, 40)) {
     G.fx?.burst?.(_c, UP, G.teamColors[it.team], { count: 12, speed: 3.5, size: 0.07 });
-    G.audio?.play('splat_small', { pos: _c, volume: 0.8, pitch: 1.3 });
+    G.cues?.sub('waddle', 'end', { owner: it.owner, team: it.team, at: _c.clone() });   // sfx-cues: a squeaky deflate
   }
   emit('sub:destroyed', { kind: 'waddle', pos: _c.clone(), team: it.team });
   it.why = 'popped'; it.state = 'dead';

@@ -249,10 +249,7 @@ function use(subs, a, sub) {
   // the throw inks a patch under the thrower's feet
   const g = G.physics.raycast(_v.copy(a.pos).setY(a.pos.y + 0.4), DOWN, 2.5, _hit);
   if (g.hit) { const b = G.level.blocks[g.block]; if (!(b && (b.roof || b.rail || b.perch))) credit(t, G.paint.splat(_v2.copy(g.point).addScaledVector(g.normal, 0.1), sub.feetPaint, a.team, { seed: Math.random() })); }
-  if (a.isLocal || a._nearCamera?.()) {
-    G.audio?.play('bomb_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.6, pitch: 0.92 });
-    G.audio?.play('torpedo_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.7 });
-  }
+  G.cues?.sub('torpedo', 'throw', { owner: a, at: a.pos });   // sfx-cues: its own motor-start throw (src/audio/cues.js)
   emit('sub:use', { actor: a, kind: 'torpedo' });
 }
 // Online, a remote player's torpedo is a ghost: it flies the same arc, but its owner decides the rest — records
@@ -270,7 +267,7 @@ function spawn(subs, a, sub, pos, vel, ghost, gid) {
     ghost, gid, net: null, sendT: 0, burst: false, vs,
   };
   list.push(t);
-  if (nearCam(pos, 40)) t.whirr = G.audio?.loop?.('torpedo_whirr', { pos, volume: 0.35, pitch: 0.8 }) || null;
+  t.whirr = null;   // sfx-cues: the whirr (and the lock tone on its target) come from src/audio/cues.js
   orient(t, t.dir);
   mesh.position.copy(pos);
   return t;
@@ -283,7 +280,7 @@ function ghost(a, d) {
   if (op === 0) {
     if (list.some((x) => x.gid === gid)) return;
     spawn(G.subs, a, SUBS.torpedo, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), true, gid);
-    if (a._nearCamera?.()) { G.audio?.play('bomb_throw', { pos: a.pos, volume: 0.6, pitch: 0.92 }); G.audio?.play('torpedo_throw', { pos: a.pos, volume: 0.7 }); }
+    G.cues?.sub('torpedo', 'throw', { owner: a, at: a.pos });   // sfx-cues
     return;
   }
   const t = list.find((x) => x.ghost && x.gid === gid && live(x));
@@ -494,8 +491,7 @@ function burst(t, full) {
     credit(t, area);
   } else credit(t, G.paint.splat(pc, s.fallbackPaint, t.team, { seed: Math.random() }));
   G.fx?.explosion(c, col, full ? s.radius : s.radius * 0.8);
-  G.audio?.play('bomb_explode', { pos: c, volume: full ? 0.75 : 0.6, pitch: full ? 1.08 : 1.15 });
-  G.audio?.play('torpedo_pop', { pos: c, volume: full ? 0.9 : 0.6, pitch: full ? 1 : 1.12 });
+  G.cues?.sub('torpedo', 'boom', { owner: t.owner, team: t.team, at: c, vol: full ? 1 : 0.75, pitch: full ? 0.95 : 1.12 });   // sfx-cues: its own burst
   emit('shake', { pos: c.clone(), amount: full ? 0.55 : 0.45 });
   emit('bomb:explode', { actor: t.owner, pos: c.clone(), team: t.team, radius: s.radius, kind: 'torpedo' });
   for (const e of G.actors) {

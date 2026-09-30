@@ -218,7 +218,7 @@ function ghost(a, d) {
 function setLoop(it, name, vol, pitch) {
   if (it.loopName === name) { it.loop?.set({ volume: vol, pitch, pos: it.pos }); return; }
   it.loop?.stop(0.12); it.loop = null; it.loopName = name;
-  if (name && G.audio && nearCam(it.pos, 45)) it.loop = G.audio.loop(name, { pos: it.pos, volume: vol, pitch });
+  // sfx-cues: the whirr / orbit loops follow it by state from src/audio/cues.js
 }
 
 function tick(dt) {
@@ -389,7 +389,8 @@ function arm(it, e) {
   {
     it.state = 'armed'; it.t = 0; it.tickT = 1 / s.tickRate; it.paintT = 0; it.beepT = 0; it.victim = e;
     it.vel.set(0, 0, 0);
-    if (nearCam(it.pos, 40)) { G.fx?.burst(it.pos, UP, color(it), { count: 10, speed: 3.5, size: 0.08 }); G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.8, pitch: 1.2 }); }
+    if (nearCam(it.pos, 40)) G.fx?.burst(it.pos, UP, color(it), { count: 10, speed: 3.5, size: 0.08 });
+    G.cues?.sub(KIND, 'beep', { owner: it.owner, team: it.team, at: it.pos, target: e, radius: s.hitRadius, pitch: 0.9 });   // sfx-cues: caught one
     setLoop(it, 'boomerang_whirr', 0.85, 1.6);
     emit('sub:arm', { kind: KIND, pos: it.pos.clone(), team: it.team, radius: s.hitRadius });
   }
@@ -399,7 +400,7 @@ function armed(it, dt) {
   it.spinW = lerp(it.spinW, 44, 1 - Math.exp(-6 * dt));
   shred(it, dt, 0);
   it.beepT -= dt;
-  if (it.beepT <= 0) { it.beepT = lerp(0.2, 0.08, k); if (nearCam(it.pos, 40)) G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.5 + 0.4 * k, pitch: 1.1 + 0.4 * k }); }
+  if (it.beepT <= 0) { it.beepT = lerp(0.2, 0.08, k); G.cues?.sub(KIND, 'beep', { owner: it.owner, team: it.team, at: it.pos, target: it.victim, radius: s.hitRadius, vol: 0.6 + 0.4 * k, pitch: 1 + 0.35 * k }); }   // sfx-cues
   if (it.t >= s.hitFuse && !it.ghost) blast(it, s.hitRadius, s.hitDamageMax, s.hitDamageMin, s.hitPaintRadius, true);
 }
 
@@ -442,7 +443,7 @@ function blast(it, radius, dmgMax, dmgMin, paintR, big) {
   if (!g.hit || c.y - g.point.y > 1.2) area += G.paint.splat(c, paintR * 0.6, it.team, { seed: Math.random() });
   credit(it, area);
   G.fx?.explosion(c, color(it), big ? radius : radius * 0.85);
-  G.audio?.play(big ? 'bomb_explode' : 'boomerang_burst', { pos: c });
+  if (big) G.cues?.sub(KIND, 'boom', { owner: it.owner, team: it.team, at: c }); else G.audio?.play('boomerang_burst', { pos: c });   // sfx-cues: the big one's own blast
   emit('shake', { pos: c.clone(), amount: big ? 0.6 : 0.4 });
   emit('bomb:explode', { actor: it.owner, pos: c.clone(), team: it.team, radius });
   for (const e of G.actors) {
