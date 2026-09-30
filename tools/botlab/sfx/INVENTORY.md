@@ -121,12 +121,19 @@ then its own sounds:
 
 - **One loop per object and channel**, gathered from the world every frame and reconciled: gone from the world → its
   loop stops that frame. A pause hushes them (the loop bus); the end of the round (time's up) and a quit stop them.
-- **Friend / foe**: yours and your team's are quieter (move 0.65 / 0.6, warnings 0.45 / 0.4 of the enemy's) and their
-  warnings use the soft timbre (params.foe 0); the enemy's warnings use the harsh one and get up to ×1.55 when you're
-  inside ~2 × their blast radius (and when it's after you: a Waddle's target, a Torpedo's lock, a Howl Box's line) —
-  never louder than the blast. Your own throws and starts, and your own transformation's body loop, have no position.
+- **Friend / foe**: yours and your team's are a little quieter (moving 1 / 0.9 of 1.05, warnings 0.75 / 0.7 of 1.15)
+  and their warnings use the soft timbre (params.foe 0); the enemy's warnings use the harsh one and get up to ×1.55 when
+  you're inside ~2 × their blast radius (and when it's after you: a Waddle's target, a Torpedo's lock, a Howl Box's
+  line) — never louder than the blast. Your own throws and starts, and your own transformation's body loop, have no
+  position.
+- **Audible in a fight** (fixed 2026-10-01, after "I hear no sound cues"): the cues had been mixed by their own level
+  offline and landed 8–18 dB under your own weapon fire and the music in a real match — playing, but masked. Now they
+  carry further (the panner's reference distance 5 m, warnings 6, instead of 3), the mix is higher (above), and
+  `LEVEL` (dB per sound, in cues.js) lifts the ones that measured weak. `tools/botlab/sfx/realflow.cjs` measures it
+  through the real menus with an analyser on every voice and holds the bars (per family, against your weapon fire and
+  the music).
 - **Doppler-ish**: pitch × 1 / (1 − v_r / 55) (0.84 … 1.22) and level × (1 + v_r / 40) (0.85 … 1.25), v_r = the
   object's own speed toward the camera; the camera's own movement doesn't count (a standing sprinkler never warbles).
 - **Caps**: 8 moving + 5 warning loops at once (the menus' backdrop match: 3 + 2); warnings rank first, the enemy's
   first, then the closest. A big enemy threat (Slam, Strike, Cheer Orb, Howl Box line, Stamp, Kraken dive) with you
-  inside its reach dips the music (audio.duck 0.3).
+  inside its reach dips the music (audio.duck 0.35); any enemy warning with you close to it dips it a little (0.2).
