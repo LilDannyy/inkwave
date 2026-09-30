@@ -49,6 +49,12 @@ screen-FX modules should subscribe to these instead of editing gameplay code.
 - Extra SFX names available to everyone via `G.audio.play(name, { pos, volume, pitch })`: `step_dry`, `step_ink`,
   `step_enemy`, `ink_drip`, `gull`, `harbor_ambience` (loop) — plus the full list in docs/CONTRACTS.md §2.
 - Need a new sound? Add a def in src/audio/audio.js and list it in SFX_GROUPS.
+- Subs and specials play through the cue director, `G.cues` (src/audio/cues.js; sounds in src/audio/sfx-cues.js):
+  `G.cues.sub(kind, phase, { owner, team, at })` for a sub's one-shots (phase: throw · land · warn · boom · end · beep ·
+  use) and `G.cues.one(name, { at, owner, kind })` for any other cue — both apply the own / ally / foe mix (your own
+  throws have no position). The loops of anything moving or live (a sub in the air, a fuse, a Kraken, a Crab, a
+  twister, a Tempest cloud …) are the director's: it reads them off the world every frame, so a new sub or special
+  adds its loop in `Cues._gather` rather than calling `G.audio.loop` itself.
 
 ## Added since upstream 1.0 (this fork)
 Specials, subs and Zone Control emit these on top of the table above. `actor:dive`, `footstep` and `handplant` are no
