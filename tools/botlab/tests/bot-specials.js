@@ -241,6 +241,32 @@
     }
     return { hits, noticed };
   };
+  // sustained: a bot duelling a foe while a zooka user 20 m off to one side fires at it (led) once a second for 6 s
+  const zookaRain = (ai, diff) => {
+    const E = B[0], E2 = B[1], X = A[0];
+    scene(ai, [X], [E, E2], { diff });
+    place(X, 0, -12); place(E2, 0, -3); tank(E2); face(X, 0, -3);
+    place(E, 12, 4); tank(E);   // (20 m off, 37° to its right: in view)
+    settle([X], 0.6); tank(E2);
+    start(E, 'zooka');
+    let hits = 0, shots = 0, hp0 = X.hp;
+    step(6, () => {
+      if (!X.alive || X.hp < hp0 - 100) hits++;
+      if (!X.alive) { X.respawn(); X.bot._wasDead = false; place(X, 0, -12); X.hp = PLAYER.hp; X.invuln = 0; }
+      if (X.hp < PLAYER.hp) X.hp = PLAYER.hp;   // (keep it in the fight: count the hits)
+      hp0 = X.hp;
+      const s = E.specialActive;
+      E.intent.fire = false;
+      if (s && s.cd <= 0) { const tl = Math.hypot(X.pos.x - E.pos.x, X.pos.z - E.pos.z) / SPECIALS.zooka.speed; aimAt(E, X.pos.x + X.vel.x * tl, X.pos.y + 0.8, X.pos.z + X.vel.z * tl); E.intent.fire = true; shots++; }
+    });
+    return { hits, shots };
+  };
+  if (want('zooka')) {
+    const sum = (x, y) => ({ hits: x.hits + y.hits, shots: x.shots + y.shots });
+    const r0 = sum(zookaRain(false, 'normal'), zookaRain(false, 'normal')), r1n = sum(zookaRain(true, 'normal'), zookaRain(true, 'normal')), r1h = sum(zookaRain(true, 'hard'), zookaRain(true, 'hard'));
+    R('Twister Zooka, sustained (2 × 6 shots): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time',
+      r1n.hits < r0.hits && r1h.hits <= r1n.hits, { off: r0, normalOn: r1n, hardOn: r1h });
+  }
   if (want('zooka')) {
     const a = zooka(true, 'hard'), b = zooka(false, 'hard'), n = zooka(true, 'normal');
     R('Twister Zooka: a hard bot walking in on the zooka user sidesteps a twister led at it from ~25 m (on: most of 5 dodged; off: most hit) — a normal bot, slower, dodges fewer',

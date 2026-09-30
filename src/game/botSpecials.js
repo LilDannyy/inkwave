@@ -13,8 +13,8 @@
 //                    mist, so all of them): an armed one's blast and fuse, one in flight's landing, a Skitter Bomb on
 //                    the run, a mist — near (seen, or within ~5 m: they beep)
 //   Vortex Strike    the ring where the missile lands (r 5.5, its 2.2 s flight) and the vortex (4.5 s, 62 dps) — map
-//   Twister Zooka    each twister in flight (a line to where it ends, one-shot) — near; the holder's aim lane in the
-//                    moment before its next shot — actor
+//   Twister Zooka    each twister in flight (a line to where it ends, one-shot) — big; the holder's aim lane in the
+//                    moment before its next shot (once a second; judged roughly, by difficulty), at any range — actor
 //   Howl Box         the placed speaker's beam (a line through walls: 1.3 s charge, 3.2 s blast) — map
 //   Kraken           invulnerable: its reach (5.5 m: it outruns a kid) and where an attack jump lands — big (heard 10 m)
 //   Bubble Blower    an enemy bubble's blast (1.9 × its size) while one of theirs is near enough to set it off — map
@@ -100,7 +100,7 @@ function D(key, src, team, owner) {
   d.shape = 0; d.x = 0; d.y = 0; d.z = 0; d.dx = 0; d.dz = 1; d.len = 0; d.d3 = false; d.ux = 0; d.uy = 0; d.uz = 1; d.back = 0.4;
   d.r = 1; d.core = 1; d.yLo = -1e9; d.yHi = 1e9; d.vx = 0; d.vz = 0; d.vt = 0; d.tIn = 0; d.tOut = 60; d.lethal = 2;
   d.los = false; d.losY = 0.35; d.vis = 'near'; d.sx = 0; d.sy = 0; d.sz = 0; d.linger = false; d.actor = null;
-  d.speed = 0; d.delay = 0; d.dodge = 0; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false;
+  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false;
   _list.push(d);
   return d;
 }
@@ -344,7 +344,8 @@ export function specialDangers() {
         const Z = SPECIALS.zooka, d = D(keyOf(s, 0), 'zooka', e.team, e), fx = Math.sin(e.aimYaw), fz = Math.cos(e.aimYaw);
         if (now - d.pT >= 0.15 || now < d.pT) { d.pT = now; d.cLen = reach(e.pos.x, e.pos.y + 1.3, e.pos.z, fx, fz, Z.range); }
         line(d, e.pos.x, e.pos.y, e.pos.z, fx, fz, d.cLen, Z.radius + PLAYER.radius + 0.35);
-        d.back = 0; d.speed = Z.speed; d.delay = Math.max(0, s.cd || 0); d.dodge = 0.45; d.actor = e; d.vis = 'actor'; see(d, e.pos.x, e.pos.y + 1, e.pos.z);
+        d.back = 0; d.speed = Z.speed; d.delay = Math.max(0, s.cd || 0); d.dodge = 0.45; d.shot = true; d.actor = e; d.vis = 'actor';
+        d.los = true; d.losY = 1.3; see(d, e.pos.x, e.pos.y + 1, e.pos.z);   // (a twister stops at a wall: cover)
         break;
       }
     }
@@ -565,7 +566,9 @@ export class SpecialSense {
       for (const q of this.gone) if (q.src === d.src && now - q.t < 1 && Math.hypot(q.x - d.x, q.z - d.z) < 2.5) { at2 = Math.min(at, Math.max(now, q.at)); break; }
       const miss = at2 === at && d.fast && Math.random() < (MISS[b.diff.id] ?? 0.18);
       if (miss) SPECIAL_STATS.missed++;
-      this.recs.set(d.key, { key: d.key, d, at: at2, miss, lastT: now, live: true, t0: now, noted: false, wasIn: false, cover: false, backed: false, rayT: -9 });
+      // (jit: how far off its read of a zooka's rhythm is — a hard bot within ~0.05 s, an easy one ~0.2 s)
+      const jit = (Math.random() - 0.5) * 0.9 * (1.05 - b.diff.fireDiscipline);
+      this.recs.set(d.key, { key: d.key, d, at: at2, miss, lastT: now, live: true, t0: now, noted: false, wasIn: false, cover: false, backed: false, rayT: -9, jit });
     }
     // (what's over: scored, and kept a moment — the vortex a missile turns into is the same danger)
     for (let i = this.gone.length - 1; i >= 0; i--) if (now - this.gone[i].t > 1) this.gone.splice(i, 1);
@@ -622,6 +625,7 @@ export class SpecialSense {
   // does d count right now, here (tIn: when it hurts here)? obj: holding the objective
   _urgent(d, r, tIn, obj) {
     if (r.cover) return false;   // (a wall between us and its centre / its gun: cover)
+    if (d.shot) return d.delay + r.jit < 0.4;   // (a zooka's line: out of it just before the shot, at any range)
     if (d.dodge && tIn > d.dodge) return false;
     if (tIn > 3.2) return false;
     if (d.lethal === 0) return !obj || this.a.hp < PLAYER.hp * 0.45;
@@ -787,7 +791,7 @@ export class SpecialSense {
           const px = x0 + sx * s, pz = z0 + sz * s, tA = s / PLAYER.runSpeed;
           if (!inside(d, px, y0, pz, tA)) continue;
           const tI = tInAt(d, px, pz) - tA;
-          if ((d.linger || tI < 2.2) && !(d.dodge && tI > d.dodge)) return true;
+          if (d.shot ? d.delay < 0.5 : (d.linger || tI < 2.2) && !(d.dodge && tI > d.dodge)) return true;
         }
       }
       return false;
