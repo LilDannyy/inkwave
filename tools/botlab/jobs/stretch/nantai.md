@@ -167,4 +167,3 @@ front by the garden). In Tower Command they stand inside the loop instead, besid
 | tower-match | Alpha on time, pushes 92.3 / 24.8 m | (1) Bravo on time 80 : 46, pushes 79.9 / 24.8 m, stuck 0.4 %; (2) Alpha by knockout at 4:20, both checkpoints cleared (the knoll at 1:34), stuck 0.1 % |
 
 Picture: `out/nantai/tower-top.jpg` (Alpha's track runs into Bravo's half, on the right; the loop is round the dish).
-
