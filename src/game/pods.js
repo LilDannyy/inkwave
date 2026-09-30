@@ -1002,7 +1002,7 @@ export class StagePods {
         else if (fighting && !melee && p.kind === 'wall' && this._between(p, a.pos, tv.pos, 0.3)) { const sc = 6 - dp; if (sc > bs) { bs = sc; best = p; task = 'cover'; } }
         continue;
       }
-      if (p.state !== 'dormant' || p.meter[1 - a.team] >= 1) continue;
+      if (p.state !== 'dormant' || p.meter[1 - a.team] >= 1 || (S.noGrow && S.noGrow.p === p && b.t < S.noGrow.until)) continue;
       if (dp < 1.6 || dp > Math.min(Math.max(range * 0.95, a.weapon.kind === 'roller' ? 6.5 : 0), 10) || this._inBox(p, p.ground.box, a, 0.3)) continue;
       let sc = -Infinity, w = null;
       if (p.kind === 'canopy') {
@@ -1022,13 +1022,29 @@ export class StagePods {
       if (sc > bs) { bs = sc; best = p; task = 'grow'; why = w; }
     }
     if (!best || (task === 'grow' && Math.random() < 0.15)) return;
-    S.task = task; S.p = best; S.t0 = b.t; S.why = why; S.cross = false; this._tally(best, task);
+    S.task = task; S.p = best; S.t0 = b.t; S.why = why; S.cross = false; S.gT = undefined; this._tally(best, task);
     if (task === 'climb') this._climbStart(b, S, best);
   }
-  // a climb: the climb face toward us (±z), the column in front of us
+  // a climb: the climb face toward us (±z), the column in front of us — the nearest one with room to stand in front of
+  // it (the spot 1.2 m out clear, on the plant's floor: a neighbouring hedge, a tree or a bed can crowd a wall's end)
   _climbStart(b, S, p, lx0) {
     const a = b.a, [lx, lz] = this._loc(p, a.pos.x, a.pos.z), half = p.climbHalf;
     S.face = lz >= 0 ? 1 : -1; S.u = clamp(lx0 ?? lx, -half, half); S.swimT = 0; S.letGo = 0; S.best = -1; S.bestT = b.t;
+    if (!G.physics || !G.level) return;
+    const f = S.face, at = (u, o, y) => _v.set(p.x + u * p.c + f * (p.hd + o) * p.s, p.y + y, p.z - u * p.s + f * (p.hd + o) * p.c);
+    const room = (u) => {
+      at(u, 1.2, 0.02);
+      if (Math.abs(G.level.groundHeight(_v.x, _v.z, p.y + 0.5) - p.y) >= 0.4 || !G.physics.bodyFits(_v, PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9)) return false;
+      // …and the swim up the column clear of anything else (a hedge or a tree against the plant's end)
+      for (const y of [0.4, 1.2, 2.0]) if (y < p.h && !G.physics.bodyFits(at(u, 0.4, y), 0.3, 0, 0.6)) return false;
+      return true;
+    };
+    if (room(S.u)) return;
+    for (let k = 1; k <= 14; k++) {
+      const d = k * 0.3;
+      if (S.u - d >= -half && room(S.u - d)) { S.u -= d; return; }
+      if (S.u + d <= half && room(S.u + d)) { S.u += d; return; }
+    }
   }
   // a clear shot at the bulb from a's eyes (whatever the ray meets within the pod's own catch doesn't count)
   _seesPod(a, p) {
@@ -1075,6 +1091,11 @@ export class StagePods {
   // grow it: stand off, aim at the bulb, ink it full
   _botGrow(b, S, dt, it, move) {
     const a = b.a, p = S.p, dp = Math.hypot(p.x - a.pos.x, p.z - a.pos.z), range = b._range();
+    // no headway in 3 s — its meter not filling and us not getting anywhere (a shot that can't reach its bulb, a way to
+    // it we can't walk): give it up for a while (the task owns the move, so the bot's own unsticking can't step in)
+    const mt = p.meter[a.team];
+    if (S.gT === undefined || mt > S.gm + 0.02 || Math.hypot(a.pos.x - S.gx, a.pos.z - S.gz) > 0.6) { S.gm = mt; S.gx = a.pos.x; S.gz = a.pos.z; S.gT = b.t; }
+    if (b.t - S.gT > 3) { S.task = null; S.next = b.t + 3; S.noGrow = { p, until: b.t + 12 }; return null; }
     // (a roller flicks at the planter's foot: the sheet comes down flat on it)
     const aim = this._aimAt(a, p.x, p.y + (a.weapon.kind === 'roller' ? 0.1 : p.def.bulbY + 0.15), p.z);
     const aimed = Math.abs(angleDiff(b.aimYaw, aim.yaw)) < Math.max(0.05, Math.atan2(0.3, dp)) && Math.abs(b.aimPitch - aim.pitch) < 0.12;
