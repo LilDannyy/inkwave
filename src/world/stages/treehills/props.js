@@ -20,7 +20,7 @@ import { registerFittings } from './fittings.js';
 import { registerPlaza } from './plaza.js';
 import { registerWorks } from './works.js';
 import { registerNursery } from './nursery.js';
-import { FEET, GROUND, PODS } from './layout.js';
+import { FEET, GROUND, PODS, GATES } from './layout.js';
 import { T1, T2, T3, SP, NT, CH_Y, TURBINE, NTURBINE, GREENHOUSE, RILL_Y, GROVES, BED_H, TERRACE, DECK, mz } from './plan.js';
 
 const P = Math.PI, HP = P / 2;
@@ -200,7 +200,12 @@ export const PLACEMENTS = [
 
   // ================= the sprout pods: the planters are the stage's (static colliders, baked, turned ones kept turned);
   //                   the bulbs and hedges are the pods engine's (src/game/pods.js)
-  ...PODS.list.map((p) => ({ type: 'treehills_pod', part: 'planter', pos: p.pos, rotY: p.rotY, oboxCols: true })),
+  ...PODS.list.map((p) => ({ type: 'treehills_pod', part: 'planter', kind: p.kind || null, col: p.col, pos: p.pos, rotY: p.rotY, oboxCols: true })),
+  // the gateways' permanent bramble hedgerows (layout.js GATES): each wing along its gate's line, its gate post at the gap
+  ...Object.entries(GATES).flatMap(([id, g]) => g.wings.map(([u0, u1], k) => {
+    const r = g.deg * Math.PI / 180, u = (u0 + u1) / 2;
+    return { type: 'treehills_hedgerow', pos: [g.x + u * Math.cos(r), id === 'band' ? 1.3 : 0, g.z - u * Math.sin(r)], rotY: r, w: u1 - u0, h: g.h ?? 2.4, d: 1.0, post: u < 0 ? 'b' : 'a', seed: 7 + k, oboxCols: true };
+  })),
   // ================= the forest's groves (plan.js GROVES: already where the stretch puts them)
   ...GROVES.flatMap(groveParts),
   // ================= the hand placements

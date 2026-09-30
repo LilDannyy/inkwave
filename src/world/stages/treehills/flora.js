@@ -102,30 +102,54 @@ export function registerFlora(D, H, T) {
   };
 
   // ------------------------------------------------------------------------------------------ sprout pods
-  // The pod (src/game/pods.js draws the bulbs; the stage places the planters):
-  //   part 'planter' — the low round planter (0.9 across, 0.5 high: green steel, a pale rim, dark soil at 0.46); the
-  //                    stage's static prop, collider 0.9 × 0.5 × 0.9 (never inked)
-  //   part 'bulb'    — the seed bulb, origin at its own base: the engine anchors it on the soil (LAYOUT.pods.bulbY 0.46),
+  // The pod (src/game/pods.js draws the bulbs; the stage places the planters). o.kind says which plant it grows (the
+  // pods engine's two kinds; none: old pod data, a hedge), o.col its planter's size:
+  //   part 'planter' — the station's green-steel planter, 0.5 high (dark soil at 0.46): for a bramble wall a long trough
+  //                    (1.6 × 0.7: pale ribs, a pale rim, bramble runners on the soil), for a canopy a round tub (1.1
+  //                    across: ribs, a pale rolled rim, moss and leaves), for old data the 0.9 round planter; the stage's
+  //                    static prop, its collider the planter's size (never inked)
+  //   part 'bulb'    — the seed, origin at its own base: the engine anchors it on the soil (LAYOUT.pods.bulbY 0.46),
   //                    scales it from there as the meters fill and blushes / lights it through its own material copies,
-  //                    so it is built pale
+  //                    so it is built pale (the two kinds: the engine's own seeds — a row of thorny buds / one big seed
+  //                    crowned with leaves — so they read the same on every stage)
   //   (no part)      — both (the bulb set on the soil)
   const PH = 0.5, SOIL = 0.46;
   const bulbGeo = () => tpl('thbulb', () => latheGeo([[0, 0], [0.12, 0.01], [0.24, 0.07], [0.3, 0.17], [0.29, 0.28], [0.22, 0.39], [0.13, 0.47], [0.06, 0.54], [0.03, 0.62], [0, 0.64]], 14));
   const veinGeo = () => tpl('thvein', () => latheGeo([[0, 0.005], [0.125, 0.015], [0.245, 0.075], [0.305, 0.17], [0.295, 0.28], [0.225, 0.39], [0.135, 0.47], [0.062, 0.54], [0, 0.56]], 7));
   D.treehills_pod = {
-    desc: "sprout pod: a pale seed bulb (origin at its base) in its low round planter (part 'planter' | 'bulb' | both)",
-    params: { part: "'planter' (static, collides) | 'bulb' (the engine's moving part, origin at its base) | undefined (both)" },
+    desc: "sprout pod: a pale seed (origin at its base) in the station's green-steel planter — a trough (bramble wall), a round tub (canopy) or the old round planter (part 'planter' | 'bulb' | both)",
+    params: { part: "'planter' (static, collides) | 'bulb' (the engine's moving part, origin at its base) | undefined (both)", kind: "'wall' | 'canopy' | null (old data)", col: '[w, h, d]: the planter' },
     build(B, o) {
+      const kind = o.kind || null;
       if (o.part !== 'bulb') {
-        B.cyl('paint', K.modDk, 0.45, PH - 0.05, 0, (PH - 0.05) / 2, 0, { seg: 12 });
-        for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU; pbox(B, NS('paint'), K.mod, 0.08, PH - 0.14, 0.03, Math.cos(a) * 0.452, (PH - 0.05) / 2, Math.sin(a) * 0.452, { ry: -a + HP }); }
-        B.tor('gloss', K.trim, 0.45, 0.04, 0, PH - 0.03, 0, { rx: HP, rs: 4, ts: 20 });
-        B.cyl(NS('paint'), K.soil, 0.41, 0.03, 0, SOIL, 0, { seg: 12 });
-        for (let k = 0; k < 5; k++) { const a = (k / 5) * TAU + 0.4; B.add(NS('foliage'), blob(0, k), '#6f9a4e', Math.cos(a) * 0.3, SOIL + 0.03, Math.sin(a) * 0.3, { sx: 0.08, sy: 0.04, sz: 0.08, ao: false }); }
-        pbox(B, NS('paint'), K.label, 0.16, 0.1, 0.01, 0, 0.3, 0.452);
-        if (o.part === 'planter') B.col(-0.45, 0, -0.45, 0.45, PH, 0.45);
+        if (kind === 'wall') {
+          const [cw, , cd] = o.col || [1.6, PH, 0.7];
+          pbox(B, 'paint', K.modDk, cw - 0.04, PH - 0.05, cd - 0.04, 0, (PH - 0.05) / 2, 0);
+          for (let x = -cw / 2 + 0.18; x < cw / 2 - 0.1; x += 0.36) for (const sz of [-1, 1]) pbox(B, NS('paint'), K.mod, 0.06, PH - 0.14, 0.02, x, (PH - 0.05) / 2, sz * (cd / 2 - 0.01));
+          for (const sz of [-1, 1]) { pbox(B, 'gloss', K.trim, cw, 0.05, 0.06, 0, PH - 0.025, sz * (cd / 2 - 0.03)); pbox(B, 'gloss', K.trim, 0.06, 0.05, cd - 0.08, sz * (cw / 2 - 0.03), PH - 0.025, 0); }
+          pbox(B, NS('paint'), K.soil, cw - 0.12, 0.03, cd - 0.12, 0, SOIL, 0);
+          for (let i = 0; i < 5; i++) {
+            const x0 = -cw / 2 + 0.22 + (i / 4) * (cw - 0.44), z0 = (i % 2 ? 1 : -1) * 0.1;
+            seg(B, NS('wood'), '#6b3f3a', [x0 - 0.13, SOIL + 0.01, z0], [x0 + 0.12, SOIL + 0.04, -z0 * 0.5], 0.014, 0.012, { round: true, seg: 4 });
+            B.add(NS('foliage'), blob(0, i), '#6f9a4e', x0 + 0.08, SOIL + 0.03, z0 * 0.3, { sx: 0.07, sy: 0.02, sz: 0.05, ry: i, ao: false });
+          }
+          pbox(B, NS('paint'), K.label, 0.22, 0.1, 0.01, cw / 4, 0.3, cd / 2 + 0.002);
+          if (o.part === 'planter') B.col(-cw / 2, 0, -cd / 2, cw / 2, PH, cd / 2);
+        } else {
+          const R = kind === 'canopy' ? (o.col ? o.col[0] / 2 : 0.55) : 0.45, nr = kind === 'canopy' ? 8 : 6;
+          B.cyl('paint', K.modDk, R, PH - 0.05, 0, (PH - 0.05) / 2, 0, { seg: kind === 'canopy' ? 16 : 12 });
+          for (let k = 0; k < nr; k++) { const a = (k / nr) * TAU; pbox(B, NS('paint'), K.mod, 0.08, PH - 0.14, 0.03, Math.cos(a) * (R + 0.002), (PH - 0.05) / 2, Math.sin(a) * (R + 0.002), { ry: -a + HP }); }
+          B.tor('gloss', K.trim, R, 0.04, 0, PH - 0.03, 0, { rx: HP, rs: 4, ts: kind === 'canopy' ? 24 : 20 });
+          B.cyl(NS('paint'), K.soil, R - 0.04, 0.03, 0, SOIL, 0, { seg: 12 });
+          const nl = kind === 'canopy' ? 8 : 5;
+          for (let k = 0; k < nl; k++) { const a = (k / nl) * TAU + 0.4; B.add(NS('foliage'), blob(0, k), '#6f9a4e', Math.cos(a) * (R - 0.15), SOIL + 0.03, Math.sin(a) * (R - 0.15), { sx: 0.08, sy: 0.04, sz: 0.08, ao: false }); }
+          pbox(B, NS('paint'), K.label, 0.16, 0.1, 0.01, 0, 0.3, R + 0.002);
+          if (o.part === 'planter') B.col(-R, 0, -R, R, PH, R);
+        }
       }
       if (o.part !== 'planter') {
+        // the two kinds: the engine's seeds (a row of thorny buds / one big leaf-crowned seed)
+        if (kind && D.sprout_pod) { if (o.part === 'bulb') D.sprout_pod.build(B, { ...o, part: 'bulb' }); else { B.push(0, SOIL, 0); D.sprout_pod.build(B, { ...o, part: 'bulb' }); B.pop(); } return; }
         const y0 = o.part === 'bulb' ? 0 : SOIL;
         B.add('gloss', bulbGeo(), '#d8eebb', 0, y0, 0, {});
         for (let k = 0; k < 7; k++) B.add('gloss', veinGeo(), '#b3d692', 0, y0, 0, { ry: (k / 7) * TAU, sx: 0.12, sz: 1.02 });
@@ -138,6 +162,65 @@ export function registerFlora(D, H, T) {
       }
     },
   };
+  // ------------------------------------------------------------------------------------------ the bramble hedgerows
+  // The gateways' permanent hedgerows: a managed bramble hedge (the gardeners keep it clipped: a flat top, straight
+  // faces; arching thorny canes and three-leaflet leaves in it, dark berries and white blossom, untinted — it's nobody's)
+  // on a timber edging board. w along local x, h tall (2.4), d deep (1.0); its top is off-limits (roof: nobody walks it
+  // round a gate), never inked. o.post: 'a' | 'b' | 'both' — a clipped topiary post (1.1 across, 2.9 tall, a ball on
+  // top) at its −x ('a') / +x ('b') end: the posts frame a gateway, where a sprout pod grows its wall across the gap
+  D.treehills_hedgerow = {
+    desc: 'clipped permanent bramble hedgerow (w × h × d, top off-limits) with optional topiary gate posts at its ends',
+    params: { w: 'length (local x)', h: 'height (2.4)', d: 'depth (1.0)', post: "'a' | 'b' | 'both' | undefined" },
+    build(B, o) {
+      const w = o.w ?? 4, h = o.h ?? 2.4, d = o.d ?? 1.0, s = o.seed ?? 5, rnd = (i) => hash(s * 1.91 + i * 0.617);
+      const leaf = (k) => mixc('#2c5f30', '#78b356', Math.min(1, k));
+      let q = 0;
+      // the clipped body, a skirt of stems at its foot, the edging board
+      B.add(NS('foliage'), tpl('thhedge' + [w, h, d].map((v) => v.toFixed(2)).join(), () => H.roundBox(w - 0.06, h - 0.02, d - 0.06, 0.08)), '#1f4626', 0, (h - 0.02) / 2, 0);
+      pbox(B, 'wood', '#6b5a3e', w - 0.1, 0.16, d + 0.06, 0, 0.08, 0);
+      // leafy masses over the faces and ends, flush (clipped), lighter toward the top
+      for (const sz of [-1, 1]) {
+        const nx = Math.max(2, Math.round(w / 0.5)), ny = Math.max(3, Math.round(h / 0.5));
+        for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+          const r = 0.22 + 0.08 * rnd(q++), x = -w / 2 + r * 0.8 + ((i + 0.2 + 0.6 * rnd(q++)) / nx) * (w - r * 1.6), y = 0.2 + r * 0.6 + ((j + 0.2 + 0.6 * rnd(q++)) / ny) * (h - r * 1.3 - 0.2);
+          B.add(NS('foliage'), puff(0, q % 6), leaf(0.15 + 0.5 * (y / h) + 0.2 * rnd(q++)), x, y, sz * (d / 2 - 0.05), { sx: r, sy: r * 0.9, sz: 0.08 });
+        }
+        // arching canes (a handful) and their trefoil leaves, a few berries and blossoms
+        for (let k = 0; k < Math.max(2, Math.round(w / 1.2)); k++) {
+          const x0 = -w / 2 + rnd(q++) * w, dir = rnd(q++) < 0.5 ? -1 : 1, span = 1.2 + rnd(q++) * 1.2, rise = h * (0.5 + 0.4 * rnd(q++)), pts = [];
+          for (let u = 0; u <= 1.0001; u += 1 / 8) { const x = x0 + dir * u * span; if (x < -w / 2 + 0.05 || x > w / 2 - 0.05) break; pts.push([x, 0.1 + rise * Math.sin(Math.PI * Math.pow(u, 0.8)), sz * (d / 2 - 0.01)]); }
+          if (pts.length >= 3) B.tube(NS('wood'), '#6b3f3a', pts, 0.028, { radial: 5 });
+        }
+        for (let k = 0; k < Math.round(w * 1.6); k++) {
+          const x = -w / 2 + 0.2 + rnd(q++) * (w - 0.4), y = 0.4 + rnd(q++) * (h - 0.6), zf = sz * (d / 2 + 0.01);
+          if (rnd(q++) < 0.5) for (let i = 0; i < 6; i++) B.add(NS('gloss'), blob(0, i), '#3a1f4a', x + Math.cos(i * 2.4) * 0.03, y + Math.sin(i * 2.4) * 0.03, zf, { s: 0.028, sz: 0.018, ao: false });
+          else for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; B.add(NS('gloss'), blob(0, i), '#f6f0f2', x + Math.cos(a) * 0.04, y + Math.sin(a) * 0.04, zf, { sx: 0.035, sy: 0.025, sz: 0.008, rz: a, ao: false }); }
+        }
+      }
+      for (const sx of [-1, 1]) {
+        const nz = Math.max(2, Math.round(d / 0.45)), ny = Math.max(3, Math.round(h / 0.5));
+        for (let i = 0; i < nz; i++) for (let j = 0; j < ny; j++) {
+          const r = 0.2 + 0.06 * rnd(q++), z = -d / 2 + r * 0.7 + ((i + 0.5) / nz) * (d - r * 1.4), y = 0.2 + r * 0.6 + ((j + 0.2 + 0.6 * rnd(q++)) / ny) * (h - r * 1.3 - 0.2);
+          B.add(NS('foliage'), puff(0, q % 6), leaf(0.2 + 0.5 * (y / h)), sx * (w / 2 - 0.05), y, z, { sx: 0.08, sy: r * 0.9, sz: r });
+        }
+      }
+      // the clipped top: flat, a mat of small sprays
+      for (let i = 0; i < Math.round((w * d) / 0.12); i++) B.add(NS('foliage'), puff(0, i % 6), leaf(0.55 + 0.3 * rnd(q++)), -w / 2 + 0.15 + rnd(q++) * (w - 0.3), h - 0.04, -d / 2 + 0.12 + rnd(q++) * (d - 0.24), { sx: 0.18, sy: 0.05, sz: 0.14 });
+      B.col(-w / 2, 0, -d / 2, w / 2, h, d / 2, ROOF);
+      // the gate posts: clipped columns, taller, a ball on top
+      const post = (x) => {
+        const pw = 1.1, ph = h + 0.5;
+        B.add(NS('foliage'), blob(1, 3), '#244f2b', x, ph / 2 - 0.1, 0, { sx: pw / 2, sy: ph / 2, sz: Math.max(pw, d + 0.1) / 2 });
+        for (let j = 0; j < 6; j++) for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU + j * 0.5, y = 0.3 + j * 0.42; B.add(NS('foliage'), puff(0, (j + k) % 6), leaf(0.2 + 0.1 * j), x + Math.cos(a) * pw * 0.45, y, Math.sin(a) * Math.max(pw, d + 0.1) * 0.45, { sx: 0.26, sy: 0.24, sz: 0.26 }); }
+        B.add(NS('foliage'), puff(1, 2), leaf(0.7), x, ph + 0.18, 0, { s: 0.36 });
+        pbox(B, 'wood', '#6b5a3e', pw + 0.1, 0.16, Math.max(pw, d + 0.1) + 0.1, x, 0.08, 0);
+        B.col(x - pw / 2, 0, -Math.max(pw, d + 0.1) / 2, x + pw / 2, ph, Math.max(pw, d + 0.1) / 2, ROOF);
+      };
+      if (o.post === 'a' || o.post === 'both') post(-w / 2 + 0.45);
+      if (o.post === 'b' || o.post === 'both') post(w / 2 - 0.45);
+    },
+  };
+
   // The hedge a pod grows: w (across, local x) × h × d, origin at its base centre, no colliders (the engine's block is
   // the size + 2 cm). A dense clipped boxwood wall: a flat top (the owner's ink is drawn on the block's faces), leafy
   // clumps flush with the faces (the look stays within a few cm of the box, a little deeper than the 0.9 m planter it

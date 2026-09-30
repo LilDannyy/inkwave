@@ -216,33 +216,48 @@ const TOWER = {
 };
 
 // ============================================================================================================
-// The sprout pods (the stage's gimmick; src/game/pods.js runs them): seed bulbs in low planters that grow a hedge when
-// inked — the team that fills its meter first owns it: tinted in its ink, climbable in that ink, high ground on top,
-// a wall across the lane for everyone. Alpha's half, mirrored. The planters (0.9 × 0.5 × 0.9, the engine's default
-// `col`) are the stage's props; the engine draws the bulbs (on the soil: bulbY 0.46) and the hedges (props.js types).
+// The sprout pods (the stage's gimmick; src/game/pods.js runs them): seeds in the station's green-steel planters that
+// grow a plant when inked — the team that fills its meter first owns it (tinted in its ink; only its ink sticks). Two
+// kinds (the engine's), Alpha's half, mirrored:
+//   • bramble walls, each laid across a real route with its ends against things you can't get past or hop (a wall, a
+//     building, a grove, a drop): grown, the route is closed — the owners swim up it and walk over (a gate), the enemy
+//     detours or cuts it down
+//   • canopies in open ground, each overlooking something worth holding: a 3 m platform its owners climb to
+// The planters are the stage's props (a trough 1.6 × 0.7 for a wall, a tub 1.1 across for a canopy; bulbY 0.46: the
+// soil); the engine draws the seeds and the plants (its default looks: sprout_bramble, sprout_canopy).
 // ============================================================================================================
-const HEDGE = [3.0, 1.8, 0.9];
-const pod = (id, x, y, z, rotY, size = HEDGE) => ({ id, pos: [x, y, z], rotY, size, pod: { type: 'treehills_pod' }, hedge: { type: 'treehills_hedge' } });
+// the gateways (Alpha's; Bravo's are their twins): each gate's centre, heading (deg), its wall's length, and its hedge's
+// wings along the same line (from the gate's end out: [from, to] in m along it) — props.js places the hedgerows
+export const GATES = {
+  // (the garden's: 3.1 m, the hedge too — the garden stair's top steps (1.3) come within 1.5 m of it: a 2.7 m wall they'd
+  // jump onto)
+  garden: { x: 0.25, z: -22.25, deg: -11.31, gate: 5.0, h: 3.1, wings: [[-6.6, -2.5], [2.5, 6.2]] },
+  band: { x: -15.5, z: -17.5, deg: -14.04, gate: 4.72, wings: [] },
+};
+const DEG = Math.PI / 180;
+const wallPod = (id, x, y, z, rotDeg, L, h = 2.7) => ({ id, kind: 'wall', pos: [x, y, z], rotY: rotDeg * DEG, size: [L, h, 1.2], pod: { type: 'treehills_pod' } });
+const canopyPod = (id, x, y, z, rotDeg) => ({ id, kind: 'canopy', pos: [x, y, z], rotY: rotDeg * DEG, pod: { type: 'treehills_pod' } });
 export const PODS = {
   mirror: true,
-  timing: { last: 20, wilt: 1.0, recharge: 6 },
   bulbY: 0.46,
   modes: { boss: 'on' },
   list: [
-    // between the plaza's climbable face and the greenhouse pod: a shorter hedge (2.4 m), its ends ≥ 1.35 m from the
-    // plaza's corner and the mound's ramp (a full 3 m left 1 m slots at both ends)
-    pod('meadow-w', -6.25, G0, -7.9, 0, [2.4, 1.8, 0.9]),
-    pod('meadow-e', 5.3, G0, -11.8, Math.PI / 2),       // east of the plaza's ramp, facing the mound
-    pod('garden-w', -2.6, G0, -19.6, Math.PI / 2),      // the garden's central path, beside the footbridge
-    pod('garden-e', 3.2, G0, -20.2, Math.PI / 2),
-    pod('band-e', 17.25, T1, -17, Math.PI / 2),         // the east band, over the meadow
-    pod('terrace-e', 15.5, T1, -25.5, Math.PI / 6),     // the base terrace, beside the side zone
-    pod('strip-w', -18, T1, -25, 0),                    // the west strip (off the tower's route)
-    // the nursery (the stretch): before the seedbed terrace between its stair and the deck's (a hedge across the way up
-    // to the deck from mid); between the zone's cloche row and the propagation tunnel (a hedge across the corridor from
-    // the deck's side stair to the lobe)
-    pod('nursery-w', -6.3, T1, -31.2, 0, [2.4, 1.8, 0.9]),
-    pod('nursery-e', 13.4, T1, -40.6, 0),
+    // two gateways (their hedgerows and posts: props.js GATEWAYS): a sprout pod's bramble wall grows across the gap in
+    // a permanent hedge; grown, the route through is closed and the way round is long (tools/botlab/jobs/new-stages/
+    // out/pods/treehills-pods.js measures both). On Treehills every tier step is 1.3 m (a kid hops it), so a wall only
+    // closes a route where hard things meet its ends: here the garden's hedge (tank → polytunnel) and the band's grove
+    //   the garden gate: across the garden's central path between the garden stair and the rill's footbridge (the centre
+    //   route from the nursery to mid)
+    wallPod('garden-gate', GATES.garden.x, G0, GATES.garden.z, GATES.garden.deg, GATES.garden.gate, GATES.garden.h),
+    //   the band gate: across the west band's lane between its grove and the band's corner over the garden (the west
+    //   flank, mid ↔ the strip and the nursery)
+    wallPod('band-gate', GATES.band.x, T1, GATES.band.z, GATES.band.deg, GATES.band.gate),
+    // canopies (open ground; nothing near high enough to hop over the parapet from):
+    //   the meadow south-east of the plaza: its platform (3 m) looks down on the centre zone on the plaza (1.3) and the
+    //   ramp and stair up to it
+    canopyPod('meadow', 6, G0, -10.5, 0),
+    //   the nursery by the zone's cloche row: over the side zone (4 m off) and the tower's bank lane (the loop's return)
+    canopyPod('nursery', 13, T1, -40.5, 90),
   ],
 };
 
