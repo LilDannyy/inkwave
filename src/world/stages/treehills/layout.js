@@ -219,9 +219,9 @@ const TOWER = {
 // The sprout pods (the stage's gimmick; src/game/pods.js runs them): seeds in the station's green-steel planters that
 // grow a plant when inked — the team that fills its meter first owns it (tinted in its ink; only its ink sticks). Two
 // kinds (the engine's), Alpha's half, mirrored:
-//   • bramble walls, each laid across a real route with its ends against things you can't get past or hop (a wall, a
-//     building, a grove, a drop): grown, the route is closed — the owners swim up it and walk over (a gate), the enemy
-//     detours or cuts it down
+//   • bramble walls, each grown across a gateway in a permanent hedge (a kid climbs anything ~1.8 m up, so on this
+//     stage's 1.3 m tiers only a hedge line makes a route a wall can close): grown, the gateway is shut — the owners
+//     swim up it and walk over (a gate), the enemy takes the other gateway, goes round the hedge's ends or cuts it down
 //   • canopies in open ground, each overlooking something worth holding: a 3 m platform its owners climb to
 // The planters are the stage's props (a trough 1.6 × 0.7 for a wall, a tub 1.1 across for a canopy; bulbY 0.46: the
 // soil); the engine draws the seeds and the plants (its default looks: sprout_bramble, sprout_canopy).
@@ -231,8 +231,8 @@ const TOWER = {
 // the rill's head (x −13) to past the polytunnel (x 11.5: the east path round its end, past the band stair, stays open),
 // with two gateways in it, at the footbridge and at the west stepping stones, where the sprout pods grow their walls
 // (props.js places the hedge's lengths and the gate posts). 2.6 m tall, the gates too: a kid's hop tops out 1.41 m up
-// and ledgeAssist still lands it on a ledge 0.35 m above that — the tallest standable thing beside the line is a raised
-// bed (0.6 m); roofs (the shed, the polytunnel) are no ground to jump from. The potting deck sees mid over it. Each
+// and ledgeAssist still lands it on a ledge 0.35 m above that (≈ 1.8 m in all) — the tallest standable thing beside
+// the line is a raised bed (0.6 m); roofs (the shed, the polytunnel) are no ground to jump from. The potting deck sees mid over it. Each
 // gate is 5 m: its trough in the middle leaves a 1.7 m way either side (the nav's 1 m grid fits a node in each, so
 // bots use them; x 1 and −5.5 put the grid's lines there — the footbridge lands in the first gate's west way, the
 // west stepping stones in the second's). The stones gate stays 3.5 m clear of the band's rim coping (1.6 m), from
