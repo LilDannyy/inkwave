@@ -255,8 +255,9 @@ export class NavGraph {
   // A* from node a to node b; `team` blocks the enemy spawn zone. The search cap grows with the stage (3 × its nodes). Returns array of node ids (incl. a and b) or null.
   // noClimb: true = plan without climb edges (a bot that just failed a climb); a number = every climb edge costs that
   // much more (a bot that can't ink a wall column now — dry, refilling: a climb only where there's no way round);
-  // { add, minRise, maxRise } = that much more, and only climbs that rise between those (a weapon that can't ink so
-  // high — the brush — or so low: the roller);
+  // { add, minRise, maxRise, out, bad } = `add` more each, and `out` more still (none at all without `out`) for one that
+  // rises outside minRise…maxRise (a weapon that can't ink so high — the brush — or so low: the roller) or is the edge
+  // `bad` (the one that just failed);
   // avoid: nodes never entered (Uint8Array — e.g. where a sprout pod's hedge stands: pods.js routes round it); cost:
   // extra cost to enter a node (Uint8Array or null — e.g. the enemy specials a bot knows about, botSpecials.js: routes
   // go round a Vortex Strike, a Tempest's rain …)
@@ -269,8 +270,9 @@ export class NavGraph {
     const nodes = this.nodes, goal = nodes[b], blk = this.blocked;
     const h = (n) => Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5;
     const heap = new Heap();
-    const skipClimb = noClimb === true, climbX = typeof noClimb === 'number' ? noClimb : (noClimb && noClimb.add) || 0;
-    const maxRise = (noClimb && noClimb.maxRise) || Infinity, minRise = (noClimb && noClimb.minRise) || 0;
+    const skipClimb = noClimb === true, CO = noClimb && typeof noClimb === 'object' ? noClimb : null;
+    const climbX = typeof noClimb === 'number' ? noClimb : (CO && CO.add) || 0, outX = CO && CO.out !== undefined ? CO.out : Infinity;
+    const minRise = (CO && CO.minRise) || 0, maxRise = (CO && CO.maxRise) || Infinity, bad = (CO && CO.bad) || null;
     g[a] = 0; from[a] = -1; seen[a] = st;
     heap.push(a, h(nodes[a]));
     let it = 0;
@@ -281,12 +283,16 @@ export class NavGraph {
       closed[cur] = st;
       const n = nodes[cur];
       for (const e of n.nb) {
-        const climb = e.type === 'climb';
-        if (climb && (skipClimb || e.rise > maxRise || e.rise < minRise)) continue;
+        let cx = 0;
+        if (e.type === 'climb') {
+          if (skipClimb) continue;
+          cx = climbX;
+          if (e.rise < minRise || e.rise > maxRise || e === bad) { if (outX === Infinity) continue; cx += outX; }
+        }
         if (avoid && avoid[e.to]) continue;
         const m = nodes[e.to];
         if (m.zone >= 0 && m.zone !== team) continue;
-        const ng = g[cur] + e.cost + (climb ? climbX : 0) + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0) + (cost ? cost[e.to] : 0);
+        const ng = g[cur] + e.cost + cx + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0) + (cost ? cost[e.to] : 0);
         if (seen[e.to] !== st || ng < g[e.to]) {
           seen[e.to] = st; g[e.to] = ng; from[e.to] = cur;
           heap.push(e.to, ng + h(m));
