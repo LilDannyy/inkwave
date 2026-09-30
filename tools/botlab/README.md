@@ -25,9 +25,14 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
   - `TUNE='mitts.punchInterval=0.12,mitts.fistRange=4.6'`: what-if tuning for this run only (patched into the live
     `WEAPONS` / `SUBS` config; nothing in the repo changes)
   - keep `SLOTS` at 4 or less for full Zone Control matches: 8 at once crashed the GPU process on a 16 GB Mac
+  - `SPECIAL_AI=0` turns the bots' awareness of enemy specials off (src/game/botSpecials.js: the old behaviour on the
+    same code, for an A/B); `team0` / `team1`: on for that team only (head to head). `SPCHARGE=3`: special gauges fill
+    3× as fast (more specials per match; a what-if)
 - **match.cjs output:**
   - stuck % and the longest stuck episodes
-  - splats by cause
+  - splats by cause; splats caused by each special per team (Bomb Barrage: its thrower's bombs during it or within 3.5 s
+    after), K/D per team, and the bots' `SPECIAL_STATS` (noticed / escapes / evaded / caught / avoided routes / backed
+    off / retargeted / held fire …)
   - per weapon: players, splats dealt, deaths, average turf
   - specials and super jumps
   - Zone Control: objective stats
@@ -54,6 +59,12 @@ Stages:
 
 Bot perception (what a bot can know about a foe: sight lines, view cone, ink, located foes, memory):
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/bot-sight.js tools/botlab/run.sh tools/botlab/page.cjs`.
+
+Bots vs enemy specials (src/game/botSpecials.js: danger areas, escapes, routes round them, the untouchable, counter-play,
+the sight rule), each scene with the awareness on and off:
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/bot-specials.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
+with `MODE=tower` for the tower rider (add `PAGE_ARGS='only=tower'` for just that; `PAGE_ARGS` reaches any page test
+as `window.__pageArgs`). The A/B in matches: `tools/botlab/jobs/bots-specials/ab.sh` (see its README).
 
 Tower Command:
 - `MAP=halyard tools/botlab/run.sh tools/botlab/tower-check.cjs` checks a track: its pieces, holes, clearance, rides at

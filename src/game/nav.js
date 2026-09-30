@@ -208,8 +208,9 @@ export class NavGraph {
 
   // A* from node a to node b; `team` blocks the enemy spawn zone. The search cap grows with the stage (3 × its nodes). Returns array of node ids (incl. a and b) or null.
   // noClimb: plan without climb edges (a bot that just failed a climb); avoid: nodes never entered (Uint8Array — e.g.
-  // where a sprout pod's hedge stands: pods.js routes round it)
-  path(a, b, team, maxIter = Math.max(6000, this.nodes.length * 3), noClimb = false, avoid = null) {
+  // where a sprout pod's hedge stands: pods.js routes round it); cost: extra cost to enter a node (Uint8Array or null —
+  // e.g. the enemy specials a bot knows about, botSpecials.js: routes go round a Vortex Strike, a Tempest's rain …)
+  path(a, b, team, maxIter = Math.max(6000, this.nodes.length * 3), noClimb = false, avoid = null, cost = null) {
     if (a < 0 || b < 0) return null;
     const N = this.nodes.length;
     if (!this._g || this._g.length !== N) { this._g = new Float32Array(N); this._from = new Int32Array(N); this._seen = new Uint32Array(N); this._closed = new Uint32Array(N); this._stamp = 0; }
@@ -232,7 +233,7 @@ export class NavGraph {
         if (avoid && avoid[e.to]) continue;
         const m = nodes[e.to];
         if (m.zone >= 0 && m.zone !== team) continue;
-        const ng = g[cur] + e.cost + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0);
+        const ng = g[cur] + e.cost + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0) + (cost ? cost[e.to] : 0);
         if (seen[e.to] !== st || ng < g[e.to]) {
           seen[e.to] = st; g[e.to] = ng; from[e.to] = cur;
           heap.push(e.to, ng + h(m));
