@@ -89,7 +89,7 @@ export const PODS = {
   // per kind: the default size, planter (the plant bursts out of it) and life, the default look
   kinds: {
     wall: { size: [5, 2.7, 1.2], col: [1.6, 0.5, 0.7], life: 29, look: 'sprout_bramble' },
-    canopy: { size: [3.2, 3.0, 3.2], col: [1.1, 0.5, 1.1], life: 24.5, look: 'sprout_canopy', trunk: 1.3, deck: 0.45, rail: 0.4, railW: 0.25, roots: 1.3, rootsD: 0.28 },
+    canopy: { size: [3.2, 3.0, 3.2], col: [1.1, 0.5, 1.1], life: 21.5, look: 'sprout_canopy', trunk: 1.3, deck: 0.45, rail: 0.4, railW: 0.25, roots: 1.3, rootsD: 0.28 },
   },
   legacyCol: [0.9, 0.5, 0.9],   // old pod data (no kind): its planter
   bulbY: 0.5,             // the bulb's base over the pod's floor (its planter's height), unless the layout says
