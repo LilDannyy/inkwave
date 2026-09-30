@@ -367,9 +367,9 @@ const ZONES = {
 // short of Bravo's pad)
 // — the user's drawing, to 28.5 before the stretch. Then the slice's detour loop (two checkpoints: the track 80 of the
 // 100 points, twice the first drawing's length): out along the reserve line's front to the right-flank cliff, down the
-// support trench's bay (a drop in at its open north end, a climb out of its south end), back across the reserve line
-// over the regimental mound (a climb onto it, checkpoint 2 on its top by the cenotaph, a drop off it), on to the goal in
-// front of the neck (13 m short of Bravo's pad)
+// support trench's bay (a drop in at its open north end, checkpoint 2 in it opposite the zig-zag's mouth, a climb out
+// of its south end), back across the reserve line over the regimental mound (a climb onto it, a drop off it), on to
+// the goal in front of the neck (13 m short of Bravo's pad)
 const TOWER = {
   path: [[0, 0], [24.5, 0], [24.5, 19.75], [5, 19.75], [5, 28.5], ...SLICE_TOWER.path.map(([x, z]) => [-x, -z])],
   checkpoints: [[24.5, 6.5], SLICE_TOWER.cp2.map((v) => -v)],

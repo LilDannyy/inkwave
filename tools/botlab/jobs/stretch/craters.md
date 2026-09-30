@@ -81,7 +81,8 @@ observation post's). **79.2 → 92.1 %.**
   its old goal in front of the neck (z 28.5); from there the loop: out along the reserve line's front to the right-flank
   cliff, down the support trench's bay (a drop in, a climb out), back east across the reserve line over the regimental
   mound (**checkpoint 2 on its top by the cenotaph**), on to the goal in front of the neck (13.7 m short of the pad).
-  Checkpoint 1 stays by the fire trench.
+  Checkpoint 1 stays by the fire trench. (Revised: checkpoint 2 moved into the bay, 69 %; see "Revision: checkpoint 2
+  earlier" at the end.)
 - **Boss Battle**: works — home ground 1866 m² (the whole stadium's downs), never idle more than 8 s, every move played.
   The check's "roams ≥ 50 m" bar (last round's) now reads 19–49 m over five runs; the same check on the pre-stretch
   stage gives 24 and 33 m today, so it's the boss closing on the squad and barraging, not the stretch. The copied check
@@ -151,3 +152,32 @@ gate piers and the four ways up unchanged. Checked after: check-maps ok; the cra
 Tower Command uses the same bake, the stage has no `craters.tower`); tower-len 159.4 m, checkpoints at 34.3 / 142.3 m,
 100 s to the goal; tower-check 0 holes, clearance clean; a 180 s turf match 0.0 % stuck (longest 0.25 s); the
 pictures `strategic-point.jpg`, `mound.jpg`, `slice-from-spawn.jpg` and the stage art (day + dusk) re-shot.
+
+## Revision (the lead's review): checkpoint 2 earlier
+
+Checkpoint 2 on the mound sat at 89 % of the track (142.3 of 159.4 m), the last stop just before the goal. It can't
+come earlier on the mound, so it moved to the nearest good spot on the loop: **the support trench's bay, opposite the
+mouth of the zig-zag (T5) that leads off to the mound, (26.5, −1, 36.8) on Bravo's side: 110.0 m, 69 %**
+(`slice.js` SLICE_TOWER.cp2). The track itself is unchanged (159.4 m, +0.6 %, 100 s).
+
+Why not the mound: the tower can only get from the reserve line's front to the base side through the bay.
+- Down the centre, the mound's north-east ramp and the left support trench's stair hole leave no 2.5 m lane
+  (they overlap from z 36.4 to 37.9; the lane needs x ≥ −4.25 past the stair and x ≤ −5.3 past the ramp's foot).
+- The mound's north steps do lead onto its top from the reserve line, but the cenotaph bars the way on south, and
+  east or west off the top leads only to the ground by the neck (about 28 m of track at most to the goal) or back to
+  the bay.
+- So the mound always comes after the bay's loop (at least 142 m in), with only the short run to the goal behind it.
+  A mound checkpoint at 75 % would need a 190 m track.
+- The other spots in the 60–75 % window are the reserve line's front (20–22 m from the mound) and the bay. The bay's
+  zig-zag mouth is the reserve line's hinge on the right flank: the trench to the mound starts there. The tower
+  stands 1 m down, its deck 0.6 m above the ground, so it is easy to board from the parapets. The defenders reach it
+  through the zig-zag and across the ground behind the bay; the mound, 24 m off, overlooks it.
+
+| | before | after |
+|---|---|---|
+| checkpoints | 34.3 / 142.3 m (22 / 89 %) | 34.3 / **110.0 m (22 / 69 %)**, 10 s each; **100 s** to the goal |
+| stage-audit (tower) | — | 4/4: lightmap applied (craters, 1124 rows; no Tower-only geometry, no rebake), spawn → mid 5.85 / 6.17 s, 100 s |
+| tower-check | clean | 159.4 m; 0 holes, clearance clean; rides: both a knockout after 83.4 s, nobody knocked off, no stalls |
+| tower-match | Alpha on time, pushes 130.9 / 72.5 m | (1) Bravo on time 48 : 37, pushes 107.6 / 85.1 m (each cleared checkpoint 1), stuck 0.7 % (the old fire-trench spot at mid); (2) Bravo by knockout at 2:18, both checkpoints cleared (the bay at 1:50), stuck 0.1 % |
+
+Picture: `out/craters/tower-top.jpg` (Alpha's checkpoint 2 is the square in the bay at the top right).

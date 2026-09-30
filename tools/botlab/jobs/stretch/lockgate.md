@@ -63,7 +63,7 @@ defenders' apron.
 **Tower Command** (`tower-data.js`): the drawn track is kept to [10.32, 22.67]. It then runs on down the yard past the
 office stair and goes round the shed: along the dock road, down the east lane, back along the back road. It ends at a
 goal in front of the loading stage (Alpha's goal at (3, 54.6) on Bravo's side, 11.6 m from the pad). Checkpoint 2 is
-on the east lane beside the shed. The track doesn't cross the staging, which is too narrow once its flights are
+on the east lane beside the shed (revised: now on the dock road in front of the loading bay, 61 %; see the end). The track doesn't cross the staging, which is too narrow once its flights are
 counted. Every prop keeps off the track's lanes, so all modes share one dressing: no new Tower-only pieces.
 
 ## Bazookarp notes (Alpha's half; Bravo's is the mirror)
@@ -116,3 +116,29 @@ STORES now fills the skyline behind the mill). Checked by day and at dusk.
 
 Pictures (`out/lockgate/`): `top-before`, `top-after`, `tower-top`, `play` (spawn), `slice-aerial`, `slice-dock`,
 `slice-staging`, `slice-frommid`, `slice-flank`.
+
+## Revision (the lead's review): checkpoint 2 earlier
+
+Checkpoint 2 on the east lane sat at 78 % of the track (112.2 of 143.4 m). It moved back along the loop to **the dock
+road where the lane to the dock head leaves it, in front of the loading bay's north flight, (0, 35.4) on Bravo's
+side: 88.0 m, 61 %** (`tower-data.js` lockgate). The track is unchanged (143.4 m, −1.4 %, 100 s). The user's drawn
+section and checkpoint 1 are untouched.
+
+- **The crane staging (the strategic point) still can't take the track.** Its two flights are offset (north x 12–15,
+  south x 10–13, Bravo's side), and a lane onto the north one would clip the cottage's corner.
+- **The loop round the shed can't be turned the other way.** It must end on the back road for the goal. Any loop
+  that goes down the dock-head lane first comes back up it or shuts itself in north of the shed.
+- **So the checkpoint moves along the loop, to the stretch of it nearest the staging.** The spot is 13 m off the
+  staging's north flight, at the crossroads of the yard, the dock road and the lane to the dock head. The loading
+  bay (1.3) is right beside it, the weigh house is behind it and the staging is across the dock head. Defenders reach
+  it up that lane from the back yard or along the dock road; attackers come down the yard.
+
+| | before | after |
+|---|---|---|
+| checkpoints | 22.9 / 112.2 m (16 / 78 %) | 22.9 / **88.0 m (16 / 61 %)**, 10 s each; **100 s** to the goal |
+| stage-audit (tower) | — | 4/4: lightmap applied (lockgate.tower, 910 rows; no geometry change, no rebake), spawn → mid 6.50 / 6.71 s, 100 s |
+| tower-check | 0 holes, clean, rides knockout | 143.4 m; 0 holes, clearance clean (1 drop, the drawn one); rides: both a knockout after 83.3 s, nobody knocked off, no stalls |
+| tower-match | Bravo 27 : 23 on time | Bravo by a retake in overtime, 41 : 38; both teams pushed to checkpoint 2 (88 m), Bravo cleared checkpoint 1 and half of checkpoint 2 (it refilled), Alpha cleared checkpoint 1; stuck 0 % |
+
+Picture: `out/lockgate/tower-top.jpg` (re-shot).
+

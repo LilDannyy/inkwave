@@ -12,8 +12,8 @@
 //     side — high ground over the left flank
 //   • the regimental mound (the strategic point): a turf octagon (1.6) on the reserve line's axis with the Inkling
 //     Rifles' cenotaph on its top; four ways up (the north steps, the south steps onto the neck's forecourt, ramps on its
-//     north-east and south-west shoulders); the tower climbs its west face, stops on its top (checkpoint 2) and drops off
-//     its east face
+//     north-east and south-west shoulders); the tower climbs its west face, crosses its top and drops off its east face
+//     (its checkpoint 2 is in the support trench's bay, where the zig-zag to the mound leaves it: see SLICE_TOWER)
 //   • two more flooded shell holes (the right flank's route bends round one, the left cliff walk's round the other)
 //   • the cliffs run on down both sides (the park's circle becomes a stadium: coastL / coastR), the undercliff shelf at
 //     their foot from the coves by the neck to the saps' mouths (layout.js)
@@ -160,5 +160,10 @@ export const SLICE_TRENCH_PIECES = trenchPieces;
 export const SLICE_STANDING = [...trenchPieces, ...bridgePieces, ...moundPieces, ...opPieces, ...pondPieces.filter((d) => !d.hidden), ...coverPieces, ...boardPieces];
 export const SLICE_PIECES = [...trenchPieces, ...STAIRS, ...bridgePieces, ...moundPieces, ...opPieces, ...pondPieces, ...coverPieces, ...boardPieces];
 // the tower's loop through the slice (Alpha's side; layout.js turns it to Bravo's for the track): on from the old goal
-// (−5, −28.5) along the reserve line's front, down the bay, back over the mound, to the goal before the neck
-export const SLICE_TOWER = { path: [[-5, -30.5], [-26.5, -30.5], [-26.5, -43], [5.5, -43], [5.5, -50]], cp2: [mcx, mcz] };
+// (−5, −28.5) along the reserve line's front, down the bay, back over the mound, to the goal before the neck.
+// Checkpoint 2 is in the bay, opposite the mouth of the zig-zag (T5) that leads off to the mound: 69 % of the way. On
+// the mound it was 89 %, the last stop before the goal, and it can't come earlier there: the tower only gets from the
+// reserve line's front to the base side through the bay (the mound's north-east ramp and the left trench's stair leave
+// no 2.5 m lane down the centre, the mound's top is barred north–south by the cenotaph), so the mound always comes
+// after the bay's loop, with only the short run to the goal behind it.
+export const SLICE_TOWER = { path: [[-5, -30.5], [-26.5, -30.5], [-26.5, -43], [5.5, -43], [5.5, -50]], cp2: [(T8.x0 + T8.x1) / 2, T5.pts[0][1]] };

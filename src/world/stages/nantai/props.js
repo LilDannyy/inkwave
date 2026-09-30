@@ -88,7 +88,7 @@ const DRAWN = [
   { type: 'nantai_scree', pos: [-20.6, 2.6, -25.6], w: 1.6, d: 2.0, n: 14, seed: 3 },
 
   // ================= the west terrace: a telescope pier and a bench off the tower's line
-  { type: 'nantai_telepier', pos: [-9.6, 2.6, -34.2], rotY: 2.6 },
+  { type: 'nantai_telepier', pos: [-9.6, 2.6, -34.2], rotY: 2.6, notIn: 'tower' },   // (Tower Command: inside the loop, slice-props.js)
   { type: 'nantai_bench', pos: [-10.3, 2.6, -28.5], rotY: HP },
   { type: 'nantai_infoboard', pos: [-10.1, 2.6, -32.2], rotY: HP, title: 'STARGAZING TERRACE' },
   { type: 'nantai_planter', pos: [-9.9, 2.6, -24.1], rotY: 0, w: 1.6 },
