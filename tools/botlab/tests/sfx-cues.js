@@ -538,7 +538,7 @@
     }
     start(foes[0], 'jetpack'); start(foes[1], 'crab'); start(mates[0], 'kraken');
     step(2.5, tick);
-    R(`a crowd (4 foes throwing 12 subs, 2 mates bombing, a Jet, a Crab, a Kraken): at most ${MAX.move} moving + ${MAX.warn} warning cue loops at once, the engine under its caps (24 loops, 48 voices)`,
+    R(`a crowd (4 foes throwing 12 subs, 2 mates bombing, a Jet, a Crab, a Kraken): at most ${MAX.move} moving + ${MAX.warn} warning cue loops at once, the engine's live loops within 24 (its cap is 32) and its voices within 48`,
       maxWarn <= MAX.warn && maxMove <= MAX.move && maxEngine <= 24 && maxVoices <= 48 && C.stats.capped > 0,
       { maxLive, maxWarn, maxMove, maxEngine, maxVoices, capped: C.stats.capped });
     // nothing painful: every level the director asked for stays in bounds

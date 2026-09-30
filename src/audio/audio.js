@@ -25,7 +25,7 @@ import {
 import { defineCueSounds, CUE_GROUPS } from './sfx-cues.js';   // sfx-cues: every sub / special's own sounds (src/audio/cues.js plays them)
 
 const MAX_VOICES = 48;   // one-shots alive at once (oldest stolen beyond this)
-const MAX_LOOPS = 24;
+const MAX_LOOPS = 32;   // sfx-cues: the cue director keeps up to 13 of its own (src/audio/cues.js) beside the weapons', zones' and ambience's
 const taper = (v) => Math.pow(Math.min(1, Math.max(0, +v || 0)), 1.5);
 const validPos = (p) => !!p && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z);
 const distCut = (d) => (d < 10 ? 22000 : Math.max(900, 22000 * Math.pow(0.5, (d - 10) / 13)));
