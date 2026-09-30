@@ -406,6 +406,18 @@ export const SUBS = {
 };
 export const SUB_ORDER = ['bomb', 'sticky', 'burst', 'shaker', 'seeker', 'waddle', 'torpedo', 'tracer', 'boomerang', 'scan', 'curtain', 'sprinkler', 'mine', 'beacon', 'mist'];
 export const SUB = SUBS; // older code reads SUB.bomb
+// ---- [sub-view] Sub weapons' world models: how many times bigger than before each one is drawn in the world — what
+// flies, lands, sticks, rolls, walks, hovers or stands there (the Bomb Barrage's Splat Bombs too). VISUAL ONLY: every
+// blast / trigger / sense / spray radius, collider, physics radius, damage, speed and timing is in SUBS above and doesn't
+// read this; where gameplay used to read a model's size (a sprinkler's / beacon's shot hitbox) it keeps the old number
+// (src/game/subs.js hitH). The prop held in the hand while aiming and the HUD icons stay the built size. Read when an
+// object is made, so a change here shows on the next throw. Tuned by eye (visibility pass 2026-09-30; before / after
+// pictures: tools/botlab/jobs/subs-visible/out/, the check: tools/botlab/tests/sub-scale.js).
+export const SUB_VIEW_SCALE = {
+  bomb: 2, sticky: 2.5, burst: 3, seeker: 2, scan: 2, curtain: 1.5, sprinkler: 2.5, mine: 2, beacon: 2, mist: 2,
+  shaker: 2, waddle: 2, torpedo: 2, tracer: 2.5, boomerang: 1.5,
+};
+export const subViewScale = (kind) => SUB_VIEW_SCALE[kind] ?? 1;
 
 // Specials. Every special refills your ink tank when it starts. `duration` = how long a timed special lasts (s).
 export const SPECIALS = {

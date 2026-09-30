@@ -14,7 +14,7 @@
 // Props come from getSubDef(kind) (origin at the bottom centre, +Y away from the surface, +Z forward).
 import * as THREE from 'three';
 import { G, emit, on, clamp, lerp } from '../core/ctx.js';
-import { SUBS, PLAYER } from '../config.js';
+import { SUBS, PLAYER, subViewScale } from '../config.js';
 import { Physics, Hit } from './physics.js';
 import { getSubDef } from './character-weapons.js';
 import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
@@ -27,6 +27,7 @@ const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
 const GRAV = 24;
 const SUB_SCALE = 1.9;         // prop models are built at hand scale; in the world they read at the splat bomb's size
+                               // [sub-view] × SUB_VIEW_SCALE[kind] (config.js): drawn bigger, visual only
 
 function nearCam(p, r = 30) { return G.camera && G.camera.position.distanceToSquared(p) < r * r; }
 
@@ -119,11 +120,13 @@ export class SubSystem {
   }
 
   // prop meshes: an outer node (world transform) → inner (offset while flying so it tumbles about its middle) → model
+  // (origin at the model's base: a stuck / planted / landed one sits on its surface at any drawn size)
   _prop(kind, team) {
     const d = getSubDef(kind);
     if (d._top == null) { d.body.computeBoundingBox(); d._top = d.body.boundingBox.max.y; }
+    const vs = subViewScale(kind);   // [sub-view] drawn bigger than the built size (visual only)
     const outer = new THREE.Group(), inner = new THREE.Group(), model = new THREE.Group();
-    model.scale.setScalar(SUB_SCALE);
+    model.scale.setScalar(SUB_SCALE * vs);
     const col = G.teamColors[team];
     const body = new THREE.Mesh(d.body, getPlasticMaterial()); body.castShadow = true;
     const ink = new THREE.Mesh(d.ink, getInkMaterial(col)); ink.castShadow = true;
@@ -138,7 +141,9 @@ export class SubSystem {
     }
     inner.add(model);
     outer.add(inner);
-    outer.userData = { inner, spin, def: d, lift: d._top * SUB_SCALE * 0.5 };
+    // [sub-view] lift: half the drawn model's height (it tumbles about its middle in flight: visual); hitH: the height of
+    // a sprinkler's / beacon's shot hitbox (blockShot) — the built model's, as always: the bigger look is no bigger target
+    outer.userData = { inner, spin, def: d, vs, lift: d._top * SUB_SCALE * vs * 0.5, hitH: d._top * SUB_SCALE };
     return outer;
   }
   // lit parts (scan orb band, beacon lamp): team colour that glows a little
@@ -350,7 +355,7 @@ export class SubSystem {
     }
     it.mesh.position.copy(it.pos);
     it.mesh.rotation.set(0, it.heading, 0);
-    it.mesh.userData.inner.position.y = Math.abs(Math.sin(it.t * 26)) * 0.025;
+    it.mesh.userData.inner.position.y = Math.abs(Math.sin(it.t * 26)) * 0.025 * it.mesh.userData.vs;   // (scuttle bob, drawn size)
     const reached = it.target && it.target.pos.distanceTo(it.pos) < s.triggerDist;
     if (reached || it.t > s.life || it.stuckT > 0.6) {
       this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), s.radius, s.damageMax, s.damageMin, s.paintRadius, UP);
@@ -630,7 +635,7 @@ export class SubSystem {
         return true;
       }
       if (it.state === 'spray' || it.state === 'beacon') {
-        const h = it.mesh.userData.lift * 2;                // model height
+        const h = it.mesh.userData.hitH;                    // model height (the built size's: [sub-view] _prop)
         _v.copy(it.pos).addScaledVector(it.normal || UP, h * 0.5);
         Physics.segmentCapsuleDist(prev, pos, _v2.copy(_v).setY(_v.y - h * 0.5), 0.3, h, _res);
         if (_res.dist < 0.34) { this._hurt(it, dmg); return true; }

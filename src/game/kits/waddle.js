@@ -14,7 +14,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { G, emit, clamp, lerp, angleDiff } from '../../core/ctx.js';
-import { PLAYER, SUBS } from '../../config.js';
+import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { SUB_KITS, netRec, netId, netHurt, netMuted, ghostMute } from './registry.js';
 import { registerSubModel, GEO_KIT } from '../character-weapons.js';
 import { superEllipsoid, lathe, smoothProfile, sweep } from '../character-geo.js';
@@ -31,8 +31,9 @@ const _v = new V3(), _v2 = new V3(), _v3 = new V3(), _goal = new V3(), _c = new 
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
 const GRAV = 24;
-const WSCALE = 1.8;               // hand-scale model → world (≈0.4 m tall with its antenna)
-const MID = 0.11 * WSCALE;        // world height of the body's middle (it tumbles about it in flight)
+const WSCALE = 1.8;               // hand-scale model → world (≈0.4 m tall with its antenna) — [sub-view] drawn × it.vs
+const MID = 0.11 * WSCALE;        // world height of the body's middle (it tumbles about it in flight); the bots' aim point
+                                  // (threatOf aimY) and the shot hitbox keep this built size: the drawn middle is MID × vs
 const r2 = (x) => Math.round(x * 100) / 100;
 const STRIDE = 5.5;               // stride cycles per second at full walking speed (two steps each)
 
@@ -104,10 +105,11 @@ function worldGeo() {
   return WG;
 }
 // outer (at the feet, yaw = heading) → rock (waddle roll about the feet) → tilt (tumble about the middle) → model
-function makeMesh(team) {
+// ([sub-view] vs: SUB_VIEW_SCALE.waddle — the model and its middle drawn that much bigger, feet still on the floor)
+function makeMesh(team, vs = 1) {
   const g = worldGeo(), col = G.teamColors[team];
   const outer = new THREE.Group(), rock = new THREE.Group(), tilt = new THREE.Group(), model = new THREE.Group();
-  tilt.position.y = MID; model.position.y = -MID; model.scale.setScalar(WSCALE);
+  tilt.position.y = MID * vs; model.position.y = -MID * vs; model.scale.setScalar(WSCALE * vs);
   const body = new THREE.Mesh(g.body, getPlasticMaterial()); body.castShadow = true;
   const ink = new THREE.Mesh(g.ink, getInkMaterial(col)); ink.castShadow = true;
   const legs = g.legs.map((geo, i) => { const pv = new THREE.Group(); pv.position.copy(HIP[i]); const m = new THREE.Mesh(geo, getPlasticMaterial()); m.castShadow = true; pv.add(m); model.add(pv); return pv; });
@@ -275,14 +277,15 @@ function use(subs, a, sub) {
 // its walk (10 a second), [1, gid, x, y, z] the blast, [2, gid, popped] an end without one. Hits on a ghost go to the
 // owner (netHurt).
 function spawn(a, sub, pos, vel, ghost, gid) {
-  const m = makeMesh(a.team);
-  m.outer.position.copy(pos).setY(pos.y - MID);
+  const vs = subViewScale('waddle');   // [sub-view]
+  const m = makeMesh(a.team, vs);
+  m.outer.position.copy(pos).setY(pos.y - MID * vs);
   m.outer.rotation.y = a.aimYaw;
   G.scene.add(m.outer);
   const it = { owner: a, team: a.team, sub, m, pos, vel, state: 'fly', t: 0, age: 0, hp: sub.hp, sp: !!a.specialActive,
     heading: a.aimYaw, target: null, path: null, pi: 0, repath: 0, travel: 0, walkT: 0, lostT: 0, air: false, hop: null, phase: 0,
     prog: { t: 0, x: 0, z: 0 }, ring: null, ringT: 0, loop: null, noisy: false, blink: 0, spin: new V3(2 + Math.random() * 3, 0, 2 + Math.random() * 3),
-    ghost, gid, net: null, sendT: 0 };
+    ghost, gid, net: null, sendT: 0, vs };
   items.push(it);
   return it;
 }
@@ -338,7 +341,7 @@ function fly(it, dt) {
     it.vel.addScaledVector(n, -vn * 1.45).multiplyScalar(0.55);
   }
   if (it.pos.y < PLAYER.waterY - 1.8) { it.why = 'sea'; plop(it); return; }
-  it.m.outer.position.copy(it.pos).setY(it.pos.y - MID);
+  it.m.outer.position.copy(it.pos).setY(it.pos.y - MID * it.vs);   // (the drawn middle on the flight path)
   it.m.tilt.rotation.x += it.spin.x * dt; it.m.tilt.rotation.z += it.spin.z * dt;
 }
 function plop(it) {
@@ -383,7 +386,7 @@ function lock(it, tgt) {
   it.heading = it.m.outer.rotation.y;
   if (near(it.pos, 40)) {
     G.audio?.play('waddle_lock', { pos: it.pos });
-    G.fx?.glint?.(_v.copy(it.pos).setY(it.pos.y + 0.55), G.teamColors[it.team], 0.3);
+    G.fx?.glint?.(_v.copy(it.pos).setY(it.pos.y + 0.55 * it.vs), G.teamColors[it.team], 0.3);   // (over the drawn head)
   }
   emit('sub:lock', { kind: 'waddle', pos: it.pos.clone(), team: it.team, actor: it.owner, target: tgt });
 }
@@ -393,7 +396,7 @@ function wake(it, dt) {
   if (alive(T)) it.heading += clamp(angleDiff(it.heading, Math.atan2(T.pos.x - it.pos.x, T.pos.z - it.pos.z)), -14 * dt, 14 * dt);
   else if (it.net) it.heading += clamp(angleDiff(it.heading, it.net.h), -14 * dt, 14 * dt);
   const u = clamp(it.t / 0.32, 0, 1);
-  M_.outer.position.copy(it.pos); M_.outer.position.y += Math.sin(u * Math.PI) * 0.16;
+  M_.outer.position.copy(it.pos); M_.outer.position.y += Math.sin(u * Math.PI) * 0.16 * it.vs;
   M_.outer.rotation.y = it.heading;
   M_.lampMat.emissiveIntensity = 4;
   it.noisy = true;
@@ -492,7 +495,7 @@ function look(it, dt, moved, T) {
   M_.legs[0].rotation.x = 0.6 * sw * k; M_.legs[1].rotation.x = -0.6 * sw * k;
   M_.legs[0].position.y = HIP[0].y + Math.max(0, -sw) * 0.009 * k; M_.legs[1].position.y = HIP[1].y + Math.max(0, sw) * 0.009 * k;
   M_.rock.rotation.set(-0.1 * k, 0, 0.17 * sw * k);
-  M_.model.position.y = -MID + Math.abs(sw) * 0.012 * k;
+  M_.model.position.y = (-MID + Math.abs(sw) * 0.012 * k) * it.vs;
   if (!it.hop && !it.air) M_.outer.position.copy(it.pos);
   M_.outer.rotation.y = it.heading + 0.1 * sw * k;
   const close = T ? clamp(1 - Math.hypot(T.pos.x - it.pos.x, T.pos.z - it.pos.z) / s.senseRadius, 0, 1) : 0;

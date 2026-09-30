@@ -8,7 +8,7 @@
 // blooms with sustained fire, recovers when you let go). Hit tests use the victim's visual (smoothed) body.
 import * as THREE from 'three';
 import { G, emit, clamp, lerp, smoothstep } from '../core/ctx.js';
-import { WEAPONS, SUB, SPECIALS, PLAYER } from '../config.js';
+import { WEAPONS, SUB, SPECIALS, PLAYER, subViewScale } from '../config.js';
 import { Physics, Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 
@@ -1474,16 +1474,19 @@ export class Projectiles {
   throwBomb(a) {
     const b = SUB.bomb;
     const group = new THREE.Group();
+    // [sub-view] the ball is drawn SUB_VIEW_SCALE.bomb × bigger (visual only: its pos, bounce, rest height and blast are
+    // the physics bomb's) — `look` holds the model, `group` tumbles and pulses it; _updateBombs sits it on its surface
+    const vs = subViewScale('bomb'), look = new THREE.Group(); look.scale.setScalar(vs);
     const body = new THREE.Mesh(this.bombGeo, this._bombMat(a.team).clone());
     body.castShadow = true;
     const cap = new THREE.Mesh(this.bombCapGeo, new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.4, metalness: 0.6 }));
     cap.position.y = 0.2;
-    group.add(body, cap);
+    look.add(body, cap); group.add(look);
     const pos = _v.copy(a.pos); pos.y += 1.35;
     group.position.copy(pos);
     this.scene.add(group);
     const vel = this.throwVelocity(a, b.throwSpeed, new THREE.Vector3());
-    this.bombs.push({ kind: 'bomb', owner: a, team: a.team, mesh: group, body, pos: pos.clone(), vel, fuse: -1, age: 0, spin: new THREE.Vector3(Math.random() * 8, Math.random() * 8, 0), beepT: 0, sp: !!a.specialActive });
+    this.bombs.push({ kind: 'bomb', owner: a, team: a.team, mesh: group, body, pos: pos.clone(), vel, fuse: -1, age: 0, spin: new THREE.Vector3(Math.random() * 8, Math.random() * 8, 0), beepT: 0, sp: !!a.specialActive, vs });
     if (G.netm && !a.remote) G.netm.recBomb(this.bombs[this.bombs.length - 1]);
     if (a.isLocal || a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.7 });
     emit('bomb:throw', { actor: a, pos: pos.clone(), team: a.team, radius: SUB.bomb.radius });
@@ -1777,8 +1780,22 @@ export class Projectiles {
       }
       if (b.pos.y < PLAYER.waterY - 1.8) { this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }
       b.mesh.position.copy(b.pos);
-      b.mesh.rotation.x += b.spin.x * dt * (b.fuse < 0 ? 1 : 0.2);
-      b.mesh.rotation.z += b.spin.y * dt * (b.fuse < 0 ? 1 : 0.2);
+      // [sub-view] armed (it has landed), the drawn ball — radius 0.2 × vs × the fuse pulse — sits ON the floor under it:
+      // its centre that far up (the physics centre sits 0.21 up and, resting, bobs 0.03–0.21 as it settles: the drawn
+      // one doesn't), and resting it stands cap-up rather than rolling on the spot (the bigger cap would dip into the floor)
+      let rest = false;
+      if (b.vs && b.fuse >= 0) {
+        const br = 0.2 * b.vs * b.mesh.scale.x, g = G.physics.raycast(b.pos, DOWN, br * 2 + 0.25, _hit2);
+        if (g.hit && g.normal.y > 0.6) {
+          const want = br / g.normal.y;
+          if (g.dist < want) b.mesh.position.y += want - g.dist;
+          if ((rest = g.dist < 0.3)) { _q.setFromUnitVectors(UP, g.normal); b.mesh.quaternion.slerp(_q, 1 - Math.exp(-10 * dt)); }
+        }
+      }
+      if (!rest) {
+        b.mesh.rotation.x += b.spin.x * dt * (b.fuse < 0 ? 1 : 0.2);
+        b.mesh.rotation.z += b.spin.y * dt * (b.fuse < 0 ? 1 : 0.2);
+      }
     }
   }
 
