@@ -16,10 +16,14 @@
 // Mix rules:
 //   - relation to you: own (you threw / started it) · ally (your team) · foe · none (the menus' backdrop match).
 //     Your own throws and starts come from you (no position); your own transformation specials' body loops too.
-//   - gains (MIX): foe 1, ally ~0.6, own ~0.65 (warnings: own 0.45, ally 0.4), backdrop ~0.4. Warnings carry
-//     params.foe (1 = the harsher, brighter timbre for the enemy's) and, for the enemy's, a boost up to ×1.55 the closer
-//     you are to its blast (and when it's after you) — never louder than the blast it warns of; a big one (Slam, Strike, Cheer Orb, Howl Box, Stamp, Kraken dive)
-//     inside its reach ducks the music a little.
+//   - gains (MIX): foe ~1.1, ally ~0.8, own ~0.85 (warnings: foe 1.15, own 0.6, ally 0.55), backdrop ~0.4. Warnings
+//     carry params.foe (1 = the harsher, brighter timbre for the enemy's) and, for the enemy's, a boost up to ×1.55 the
+//     closer you are to its blast (and when it's after you) — never louder than the blast it warns of. An enemy warning
+//     with you close to it dips the music a little (a big one — Slam, Strike, Cheer Orb, Howl Box, Stamp, Kraken dive —
+//     a little more), so it stands out.
+//   - audible in a fight (the realflow measurement, tools/botlab/sfx/realflow.cjs): cues carry further than ordinary
+//     sounds (REF: the panner's reference distance, 5–6 m instead of 3), and LEVEL lifts the cues that measured weak
+//     against the weapon fire and the music in a real match (dB per sound).
 //   - caps: at most MAX.move moving loops and MAX.warn warning loops at once (the backdrop: fewer); the rest wait,
 //     ranked warnings first, the enemy's first, then by closeness (distance to the listener, and to you for threats).
 //   - Doppler-ish: each positional loop's pitch × 1 / (1 − v_r / 55) (clamped 0.84 … 1.22) and level × (1 + v_r / 40)
@@ -33,16 +37,32 @@ export const MAX = { move: 8, warn: 5, moveMenu: 3, warnMenu: 2 };
 const C_EFF = 55;                // m/s: the "speed of sound" the Doppler factor uses (exaggerated so a pass-by reads)
 const RANGE = { move: 42, warn: 55, one: { throw: 40, land: 40, warn: 55, boom: Infinity, end: 40, start: 45, beep: 32, use: 30 } };
 export const MIX = {
-  throw: { own: 0.8, ally: 0.6, foe: 0.95, none: 0.4 },
-  start: { own: 0.85, ally: 0.7, foe: 1, none: 0.45 },
-  land: { own: 0.6, ally: 0.55, foe: 0.9, none: 0.4 },
-  beep: { own: 0.5, ally: 0.45, foe: 1, none: 0.35 },
-  use: { own: 0.7, ally: 0.7, foe: 0.5, none: 0.4 },
+  throw: { own: 0.75, ally: 0.8, foe: 1.1, none: 0.45 },
+  start: { own: 0.9, ally: 0.8, foe: 1.1, none: 0.5 },
+  land: { own: 0.85, ally: 0.8, foe: 1.1, none: 0.45 },
+  beep: { own: 0.85, ally: 0.8, foe: 1.2, none: 0.4 },
+  use: { own: 0.8, ally: 0.8, foe: 0.6, none: 0.4 },
   boom: { own: 0.85, ally: 0.75, foe: 1, none: 0.5 },
-  end: { own: 0.65, ally: 0.65, foe: 0.8, none: 0.4 },
-  move: { own: 0.65, ally: 0.6, foe: 1, none: 0.4 },
-  warn: { own: 0.45, ally: 0.4, foe: 1, none: 0.3 },
+  end: { own: 0.8, ally: 0.8, foe: 0.9, none: 0.45 },
+  move: { own: 1, ally: 0.9, foe: 1.05, none: 0.45 },
+  warn: { own: 0.75, ally: 0.7, foe: 1.15, none: 0.35 },
 };
+// the panner's reference distance per cue class (m): full level inside it, the inverse roll-off beyond. Ordinary sounds
+// use 3; cues carry further so a throw 10 m off, a fuse 6 m off, a jet across the lane are heard over a fight and the
+// music (blasts keep their own: they're loud already)
+export const REF = { throw: 5, start: 5, land: 5, beep: 5, use: 5, end: 5, move: 5, warn: 6 };
+// per-sound level (dB) on top of the mix: measured in a real match from the local player's view (realflow.cjs) —
+// each cue against the weapon fire and the music around it, lifted where it was buried, trimmed where it was harsh
+export const LEVEL = {
+  bomb_throw: 2, throw_burst: 9, throw_seeker: 10.5, throw_scan: 7, throw_sprinkler: 6, throw_shaker: 15, throw_waddle: 8, torpedo_throw: 2, tracer_zap: 3,
+  boomerang_throw: 10, sub_fly: 2.5, bomb_beep: 4.5, seeker_land: 7.5, waddle_land: 2.5, waddle_beep: 10, boomerang_tick: 3, orb_land: -4.5, torpedo_transform: 3,
+  fuse_sticky: -4.5, lock_tone: 1.5, seeker_run: 2, shaker_rattle: 5, torpedo_whirr: 3, boomerang_whirr: 5.5, boomerang_orbit: 4, slam_warn: 1.5,
+  strike_mark: -4, orb_fuse: -1.5, orb_fly: 1.5, twister: 5, beam_lock: 1, curtain_drip: 8, tracer_hum: 4, strike_arm: 11, zooka_arm: 1.5,
+  shell_whistle: 5, kraken_dive: 4, storm_rain: 6,
+  crab_boot: 4.5, crab_move: 2, crab_roll: 2, zip_whizz: 3, zip_aura: 2, wail_hold: 4, strike_aim: 3, barrage_drum: 3, shield_hum: 2,
+  sonar_blip: 6, blower_start: 1, jet_ignite: 1, kraken_off: 3, storm_fade: 2, vortex_end: 6, jet_boost: 2,
+};
+const lv = (name) => { const d = LEVEL[name]; return d ? Math.pow(10, d / 20) : 1; };
 // a sub's one-shots by phase: [sound, volume]
 export const SUB_CUE = {
   bomb: { throw: ['bomb_throw', 0.8], land: ['bomb_beep', 0.7], boom: ['bomb_explode', 1] },
@@ -116,8 +136,11 @@ export class Cues {
     if ((kind === 'throw' || kind === 'start') && rel === 'own') pos = undefined;   // your own throw / start comes from you
     if (pos && A.L) { const r = o.range ?? RANGE.one[kind] ?? 40; if (r !== Infinity && dist(A.L, pos) > r) return null; }
     let g = (o.vol ?? 1) * (MIX[kind] || MIX.boom)[rel];
-    if ((kind === 'warn' || kind === 'beep') && rel === 'foe') g *= this.boost(o.at, o.radius, o.target);
-    return A.play(name, { pos, volume: g, pitch: o.pitch });
+    if ((kind === 'warn' || kind === 'beep') && rel === 'foe') {
+      g *= this.boost(o.at, o.radius, o.target);
+      if (kind === 'warn' && this.close(o.at, o.radius) > 0.35) this._dip(0.25);
+    }
+    return A.play(name, { pos, volume: g * lv(name), pitch: o.pitch, ref: pos ? REF[kind] : undefined });
   }
   sub(kind, phase, o = {}) {
     const c = SUB_CUE[kind]?.[phase] || (phase === 'end' ? SUB_CUE.smash.end : null);
@@ -374,19 +397,20 @@ export class Cues {
       let vol = w.vol * MIX[w.warn ? 'warn' : 'move'][w.rel] * dv;
       if (w.warn && w.rel === 'foe') vol *= 1 + 0.35 * w.cl + (w.target && w.target === me ? 0.2 : 0);
       vol = Math.min(vol, 1.6);
+      const gain = vol * lv(w.sound);
       const params = w.params ? (w.warn ? { ...w.params, foe: w.rel === 'foe' || w.rel === 'none' ? 1 : 0 } : w.params) : (w.warn ? { foe: w.rel === 'foe' ? 1 : 0 } : null);
       const pitch = w.pitch * dop, pos = w.twoD ? undefined : w.pos;
       let s = this.slots.get(w.key);
       if (s && (!s.h.playing || s.sound !== w.sound || s.twoD !== w.twoD)) { s.h.stop(0.08); this.stats.stopped++; this.slots.delete(w.key); s = null; }
       if (!s) {
-        const h = A.loop(w.sound, { pos, volume: vol, pitch, params });
+        const h = A.loop(w.sound, { pos, volume: gain, pitch, params, ref: pos ? (w.warn ? REF.warn : REF.move) : undefined });
         if (!h || !h.playing) continue;
         s = { key: w.key, sound: w.sound, h, twoD: w.twoD, born: G.time };
         this.slots.set(w.key, s); this.stats.made++;
-      } else s.h.set({ pos, volume: vol, pitch, params });
-      Object.assign(s, { obj: w.obj, ch: w.ch, warn: w.warn, rel: w.rel, vol, pitch, dop, params, pos: w.pos, d: w.d, cl: w.cl, seen: G.time });
+      } else s.h.set({ pos, volume: gain, pitch, params });
+      Object.assign(s, { obj: w.obj, ch: w.ch, warn: w.warn, rel: w.rel, vol, gain, pitch, dop, params, pos: w.pos, d: w.d, cl: w.cl, seen: G.time });
       // a big threat of the enemy's, inside its reach: the music dips a little while it lasts
-      if (w.big && w.rel === 'foe' && w.cl > 0.5 && !m?.paused && G.time - this._duckT > 0.45) { this._duckT = G.time; A.duck?.(0.3, 0.5); }
+      if (w.warn && w.rel === 'foe' && w.cl > 0.35) this._dip(w.big && w.cl > 0.5 ? 0.35 : 0.2);
     }
     this.stats.maxMove = Math.max(this.stats.maxMove, nm); this.stats.maxWarn = Math.max(this.stats.maxWarn, nw);
     for (const [k, s] of this.slots) if (!keep.has(k)) { s.h.stop(s.warn ? 0.06 : 0.15); this.slots.delete(k); this.stats.stopped++; }
@@ -407,8 +431,14 @@ export class Cues {
   _sonar(dt) {
     const me = this._me(), st = me?.status;
     if (me && me.alive && st && st.reveal > 0 && st.revealTeam !== me.team && !G.match?.paused) {
-      if ((this._sonarT -= dt) <= 0) { this._sonarT = 2; G.audio.play('sonar_blip', { volume: 0.8 }); }
+      if ((this._sonarT -= dt) <= 0) { this._sonarT = 2; G.audio.play('sonar_blip', { volume: 0.8 * lv('sonar_blip') }); }
     } else this._sonarT = 1.2;
+  }
+
+  // an enemy warning close to you: the music dips a little (rate-limited; a pause's own duck is never lifted by it)
+  _dip(amount) {
+    if (G.match?.paused || G.time - this._duckT < 0.3) return;
+    this._duckT = G.time; G.audio?.duck?.(amount, 0.35);
   }
 
   clear() {
