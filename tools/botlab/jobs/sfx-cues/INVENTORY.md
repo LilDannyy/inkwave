@@ -63,3 +63,70 @@ transformations, the shared `special_ending` 2 s before the end and `special_end
 - **Orphan risk:** `storm_rain` survives a quit mid-storm (Projectiles.clear removes the cloud but not its loop), and
   `jet_loop` / `crab_move` / `crab_roll` / `booyah_charge` / `blower_inflate` survive a quit mid-special
   (Match.dispose never ends a running special, so its `end()` never stops the loop).
+
+---
+
+# After (branch `sfx-cues`)
+
+Every sound below is procedural (new ones in `src/audio/sfx-cues.js`, the rest already in audio.js or the kit
+modules). **Loop** = one positional loop per object and channel, played by the director (`src/audio/cues.js`), that
+follows the object every frame and stops the frame it's gone. **Warn** = a warning (loop or one-shot): louder and
+harsher when it's the enemy's, boosted the closer you are. `sub_fly@k` = the shared in-flight whoosh at pitch k (each
+kind its own pitch). Listen: `out/cues.wav` (index `out/cues.txt`).
+
+## Subs
+
+| Sub | Throw / deploy | Flight | Landing / arming | Active / moving | Warning | Blast | End |
+|---|---|---|---|---|---|---|---|
+| Splat Bomb | `bomb_throw` (plastic tok) | loop `sub_fly@1` | `bomb_beep` | the fuse loop's plastic rattle while it still rolls | loop `fuse_bomb` 0.95 s: bips 4 → 18 a second, climbing, a whine at the end | `bomb_explode` | — |
+| Cling Charge | `throw_sticky` (wet schlup) | loop `sub_fly@0.85` | `sticky_stick` (suction thwuck, clamp ring) | — | loop `fuse_sticky` 2.4 s: a deep "bwom" pulse 1.6 → 10 a second (the enemy's a sour tritone, yours a fifth) | `sticky_explode` (deep, wide, long rumble, splorch) | — |
+| Pop Pellet | `throw_burst` (quick high pip) | loop `sub_fly@1.5` | pops on impact (it never rolls) | — | — | `pellet_pop` (bright POK and spray) | — |
+| Skitter Bomb | `throw_seeker` (ratchet wind-up) | loop `sub_fly@1.15` | `seeker_land` (clatter, motor revving) | warn loop `seeker_run`: clicky feet, servo whine; faster when it dashes; a beeping on top when it's after you | the run loop itself | `seeker_explode` (crunch, parts, motor dying) | — |
+| Echo Orb | `throw_scan` (glassy ting) | loop `sub_fly@1.35` | — | — | — | `scan_burst` (sonar vwoom and ping, no blast) | — |
+| Drip Curtain | `throw_curtain` (sloshing bag) | loop `sub_fly@0.7` | `curtain_up` (sheet whooshing down, splash) | loop `curtain_drip` (falling sheet, drips; thinner as it fades) | — | — | `curtain_down` (draining gurgle) |
+| Twirl Sprinkler | `throw_sprinkler` (metal zing) | loop `sub_fly@1.25` | `sprinkler_stick` (clamp, spin-up) | loop `sprinkler_spin` (rotor, "tsh … tsh" pulses; half speed once tired) | — | — | `sprinkler_break` (sputter, clunk, spin-down) |
+| Lurk Mine | `place_mine` (soft thunk, three quiet arming pips; 14 m) | — | — | silent while hidden | `mine_trip` (click and rising alarm, 0.35 s before) | `mine_explode` (dry snap, electric zap) | — |
+| Hop Beacon | `place_beacon` (clunk, power-up chime) | — | — | loop `beacon_hum` (a soft boop every 1.2 s; 16 m); `beacon_use` when jumped to | — | — | `beacon_break` (power-down, crack) |
+| Murk Bomb | `throw_mist` (squishy fwomp) | loop `sub_fly@0.8` | `mist_burst` (gassy pfoomph) | loop `mist_hiss` (murky bubbling, hiss, the enemy's low beating drone) | — | — | fades with the cloud |
+| Shaker Bomb | hold: `shaker_clink`, `shaker_fizz`; `throw_shaker` (can shake, hiss) | warn loop `shaker_rattle` from the throw | `shaker_land` (clonk, fizz) | the rattle speeds up and hisses higher toward each blast; `shaker_hop` | the rattle loop (from the throw) | `shaker_blast` ×1–3 (soda-can pssh-BANG, each a step higher) | — |
+| Waddle Bomb | `throw_waddle` (wind-up key, "wee!") | loop `sub_fly@1.05` | `waddle_land`; sensing `waddle_beep` toy bips speeding up; `waddle_lock` | warn loop `waddle_walk` (feet, servo, bip; faster as it closes) | warn loop `hunt_alarm` on its target (toy siren, louder and faster as it closes) | `waddle_explode` (spring boing, boom) | shot down: `waddle_pop` (squeaky deflate) |
+| Tide Torpedo | `torpedo_throw` (motor start) | loop `torpedo_whirr` (warn once locked; climbs as it swims) | `torpedo_transform`, `torpedo_lock` | `torpedo_launch` | warn loop `lock_tone` on its target (missile-lock pips 4 → 18 a second) | `torpedo_burst` (wet crack, thump, droplets) | shot down: `splat_small` + `torpedo_pop` |
+| Tracer Bolt | `tracer_zap` | loop `tracer_hum` (then its trail's, fading) | `tracer_bounce` per ricochet | — | — | `tracer_hit` ("marked" chime) | — |
+| Whirl Boomerang | `boomerang_throw` | loop `boomerang_whirr` (out, hovering higher, back) | `boomerang_return`, `boomerang_shred` | loop `boomerang_orbit` round you | caught a foe: warn whirr + `boomerang_tick` tinks quickening (0.6 s) | `boomerang_blast` (blades spinning down, clang, boom); end: `boomerang_burst` | fizzle: `splat_small` |
+
+## Specials
+
+Each still starts with the shared `special_activate` jingle (and a transformation's `special_ending` / `special_end`),
+then its own sounds:
+
+| Special | Start | Travel / carried | Landing / arming | Active / moving | Warning | Blast | End |
+|---|---|---|---|---|---|---|---|
+| Tidal Slam | `slam_leap` (rush up) | — | — | — | warn loop `slam_warn` leap → landing: rising wind-up, quiver at the top, falling whistle (~0.9 s) | `special_slam` | — |
+| Ink Tempest | `storm_throw` (heavy lob, thunder inside) | loop `sub_fly@0.6` | `storm_thunder` | loop `storm_rain` drifting with the cloud | — | rain | `storm_fade` (last drizzle, far rumble) |
+| Bomb Barrage | `barrage_start` (bandolier rattle, snare fill) | each bomb as its sub | as the sub | loop `barrage_drum` (marching snare) on the thrower | every bomb's own fuse | as the sub | `special_end` |
+| Bubble Guard | `shield_up` | — | — | loop `shield_hum` on every shielded kid | — | `shield_hit` | `shield_pop` |
+| Deep Sonar | `sonar_ping`; `sonar_mark` for the revealed | — | — | `sonar_blip` every 2 s while you're revealed | — | — | — |
+| Vortex Strike | `strike_arm`; you aiming: loop `strike_aim` (2D) | `strike_launch` | — | loop `tornado` (vortex) | warn loop `strike_mark` at the landing spot the whole 2.2 s flight (two-tone pulse speeding up, rumble swelling) + `strike_whistle` | `strike_impact` | `vortex_end` (suction spinning down) |
+| Twister Zooka | `zooka_arm` (clunk, wind whirling up) | `zooka_fire` (heard to 50 m) | — | warn loop `twister` on each twister (a fast whirl: the Doppler makes the pass-by) | the twister loop | `twister_burst` | `special_end` |
+| Howl Box | `wail_up` (amp powering on) | loop `wail_hold` while carried | set down: `wail_charge` (1.3 s) | warn loop `wail_blast` | warn loop `beam_lock` when you're in its line (an electric crescendo) | the beam | — |
+| Kraken | `kraken_on` | loop `kraken_move` (slither, gallop with its speed, gargling growl) | `kraken_jump` | — | warn loop `kraken_dive` in the jump attack (falling whistle, ~0.67 s) | `kraken_slam` | `kraken_off` (squelchy pop) |
+| Bubble Blower | `blower_start` | loop `blower_inflate` while blowing | `bubble_release` | loop `bubble_drift` per bubble | the drift loop strains (higher, faster wobble, a creak) as its team charges it | `bubble_blast`; timed out `bubble_pop` | `special_end` |
+| Ink Jet | `jet_ignite` | loop `jet_loop` (yours from you) | — | `jet_boost`, `jet_fire` | — | `jet_boom` (its shots landing) | `jet_end` |
+| Mega Stamp | `stamp_start` (rubber boing, clank) | loop `stamp_carry` (creak, stomp in step) | — | `stamp_swing`, `stamp_slam` | thrown: `stamp_throw` + warn loop `stamp_fly` (heavy spinning whoosh) | `stamp_crash` | `special_end` |
+| Cheer Orb | loop `booyah_charge` (climbs an octave with the charge); `booyah_cheer` | `booyah_throw` + warn loop `orb_fly` (choir whoosh) | `orb_land` (thud, choir "hup!") | — | warn loop `orb_fuse` 1.5 s (choir crescendo, racing heartbeat) | `booyah_blast` | — |
+| Zipline | `zip_cloak` (shimmering swell) | loop `zip_aura` on its wearer (a whisper) | `zip_fire`, `zip_latch`, `zip_pull` | loop `zip_whizz` while zipping | — | `zip_impact` (twang, thump) | `special_end` |
+| Crab Rig | `crab_boot` (servos, clanks, ready beep) | loop `crab_move` / `crab_roll` (one at a time) | — | `crab_gatling`, `crab_cannon`; `crab_reload` when the mortar's loaded again | warn loop `shell_whistle` on each shell (climbs, then falls) | `shell_boom` | `crab_break` |
+
+## Rules (src/audio/cues.js)
+
+- **One loop per object and channel**, gathered from the world every frame and reconciled: gone from the world → its
+  loop stops that frame. A pause hushes them (the loop bus); the end of the round (time's up) and a quit stop them.
+- **Friend / foe**: yours and your team's are quieter (move 0.65 / 0.6, warnings 0.45 / 0.4 of the enemy's) and their
+  warnings use the soft timbre (params.foe 0); the enemy's warnings use the harsh one and get up to ×1.55 when you're
+  inside ~2 × their blast radius (and when it's after you: a Waddle's target, a Torpedo's lock, a Howl Box's line) —
+  never louder than the blast. Your own throws and starts, and your own transformation's body loop, have no position.
+- **Doppler-ish**: pitch × 1 / (1 − v_r / 55) (0.84 … 1.22) and level × (1 + v_r / 40) (0.85 … 1.25), v_r = the
+  object's own speed toward the camera; the camera's own movement doesn't count (a standing sprinkler never warbles).
+- **Caps**: 8 moving + 5 warning loops at once (the menus' backdrop match: 3 + 2); warnings rank first, the enemy's
+  first, then the closest. A big enemy threat (Slam, Strike, Cheer Orb, Howl Box line, Stamp, Kraken dive) with you
+  inside its reach dips the music (audio.duck 0.3).

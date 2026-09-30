@@ -90,3 +90,12 @@ HUD:
   full frame + a crop of the top bar.
 - The who's-ahead HUD (roster sizes, LEAD / DANGER banners, the take-the-lead sting): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/hud-lead.js
   tools/botlab/run.sh tools/botlab/page.cjs`, and the same with `MODE=zones` and `MODE=tower`.
+
+Audio cues (src/audio/cues.js, src/audio/sfx-cues.js — every sub and special by ear: its sound at each phase, one
+positional loop per moving thing, warnings before the big blasts, the enemy's louder than yours):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sfx-cues.js tools/botlab/run.sh tools/botlab/page.cjs` (records every
+  audio.play / audio.loop; `PAGE_ARGS='only=subs'`, `'only=specials'`, `'only=bomb,crab'` for a part)
+- the listening sheet: `tools/botlab/run.sh tools/botlab/jobs/sfx-cues/render.cjs` renders every sub's and special's
+  sounds offline to `tools/botlab/jobs/sfx-cues/out/` (git-ignored WAVs; `cues.wav` is the whole sheet, `cues.txt` its
+  index, `metrics.json` levels and how alike the sounds are). The before / after inventory:
+  `tools/botlab/jobs/sfx-cues/INVENTORY.md`.
