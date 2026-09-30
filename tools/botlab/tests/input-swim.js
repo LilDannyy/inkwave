@@ -74,6 +74,31 @@
   const kidWhileFire = a.form === 'kid';
   want = { squid: true }; step(0.2);
   R('swim held + fire pressed later: shoots while fire is held, dives when it is let go', kidWhileFire && a.form === 'squid', { kidWhileFire, form: a.form });
+  want = {}; step(0.3);
+
+  // 7) jumping off what you stand on (collision-only blocks placed for the test, away from the ink): a roof (an
+  //    off-limits top) is no ground to jump from — the kid slides off it, jump held all the way, and no coyote jump
+  //    carries off its edge (2 m up: a jump from the floor below never reaches its top); a perch and a railing are
+  //    ground: the jump fires
+  {
+    const L = __G.level, V = (x, y, z) => new THREE.Vector3(x, y, z);
+    setup('shooter');
+    const put = (flags, x, top, hx, hz) => { const b = L.addDynamic(flags); L.moveDynamic(b, V(x, top / 2, -20), V(hx, top / 2, hz), 0); return b; };
+    const blocks = [put({ roof: true }, -10, 2.0, 1.5, 1.5), put({ perch: true }, 0, 1.0, 1.5, 1.5), put({ rail: true }, 10, 1.0, 0.06, 1.5)];
+    const tryOn = (x, top, off = 0.4) => {
+      a.pos.set(x + off, top + 0.05, -20); a.vel.set(0, 0, 0); a.grounded = false; want = {};
+      let landed = false; for (let i = 0; i < 30 && !landed; i++) { step(1 / 60); landed = a.grounded && a.pos.y > top - 0.05; }
+      let jumpV = 0, maxY = a.pos.y, t = 0, onTop = 0;
+      want = { jump: true };
+      for (let i = 0; i < 60; i++) { want = { jump: i % 6 < 3 }; const y0 = a.pos.y; step(1 / 60); t += 1 / 60; if (y0 > top - 0.3) jumpV = Math.max(jumpV, a.vel.y); maxY = Math.max(maxY, a.pos.y); if (a.grounded && a.pos.y > top - 0.05) onTop += 1 / 60; }
+      want = {}; step(0.3);
+      return { landed, jumpV: +jumpV.toFixed(2), rise: +(maxY - top).toFixed(2), secondsOnTop: +onTop.toFixed(2) };
+    };
+    const roof = tryOn(-10, 2.0), perch = tryOn(0, 1.0), rail = tryOn(10, 1.0, 0);
+    for (const b of blocks) L.moveDynamic(b, V(0, -500, 0), V(0.1, 0.1, 0.1), 0);
+    R('a kid on a roof slides off it and can\'t jump from it (jump pressed over and over, no coyote jump off its edge)', roof.landed && roof.jumpV < 3 && roof.rise < 0.3, roof);
+    R('…a kid on a perch and on a railing jumps as usual', perch.landed && perch.jumpV > 7 && perch.rise > 1.0 && rail.landed && rail.jumpV > 7 && rail.rise > 1.0, { perch, rail });
+  }
   void shots;
   return out;
 })()
