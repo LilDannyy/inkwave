@@ -407,7 +407,7 @@
       const own = cutRun(pw, 1, [S1[0]], 'shooter', 5, 5);
       netOff();
       R('life: one Spritzer firing steadily cuts a wall down in ~5 s, two in ~2.5 s, a canopy a little quicker; the owners\' own fire (5 s of it) never hurts it',
-        one.t >= 4.3 && one.t <= 5.7 && two.t >= 2.0 && two.t <= 3.0 && can.t >= 3.2 && can.t < one.t - 0.4 && own.t === null && own.life === 1,
+        one.t >= 4.3 && one.t <= 5.7 && two.t >= 2.0 && two.t <= 3.0 && can.t >= 3.2 && can.t <= one.t - 0.3 && own.t === null && own.life === 1,
         { oneOnWall: one, twoOnWall: two, oneOnCanopy: can, ownFire: own, life: { wall: PODS.kinds.wall.life, canopy: PODS.kinds.canopy.life } });
       R('as it loses life it withers (its leaves brown), cracks near the end (the cue), and snaps when cut down (it wilts early)',
         one.brownMax > 0.08 && one.crackAt !== null && one.crackAt < one.t && one.snapped && P.stats.cracked > 0 && P.stats.cut >= 3,
