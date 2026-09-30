@@ -201,11 +201,17 @@ export const PLACEMENTS = [
   // ================= the sprout pods: the planters are the stage's (static colliders, baked, turned ones kept turned);
   //                   the bulbs and hedges are the pods engine's (src/game/pods.js)
   ...PODS.list.map((p) => ({ type: 'treehills_pod', part: 'planter', kind: p.kind || null, col: p.col, pos: p.pos, rotY: p.rotY, oboxCols: true })),
-  // the gateways' permanent bramble hedgerows (layout.js GATES): each wing along its gate's line, its gate post at the gap
-  ...Object.entries(GATES).flatMap(([id, g]) => g.wings.map(([u0, u1], k) => {
-    const r = g.deg * Math.PI / 180, u = (u0 + u1) / 2;
-    return { type: 'treehills_hedgerow', pos: [g.x + u * Math.cos(r), id === 'band' ? 1.3 : 0, g.z - u * Math.sin(r)], rotY: r, w: u1 - u0, h: g.h ?? 2.4, d: 1.0, post: u < 0 ? 'b' : 'a', seed: 7 + k, oboxCols: true };
-  })),
+  // the rill hedge (layout.js GATES): its lengths between the gateways, a topiary gate post either side of each gap
+  ...(() => {
+    const R = GATES.rill, cuts = R.gates.map((g) => [g.x - g.len / 2, g.x + g.len / 2]).sort((p, q) => p[0] - q[0]), out = [];
+    let a = R.x0;
+    for (let k = 0; k <= cuts.length; k++) {
+      const b = k < cuts.length ? cuts[k][0] : R.x1;
+      if (b - a > 0.3) out.push({ type: 'treehills_hedgerow', pos: [(a + b) / 2, 0, R.z], rotY: 0, w: b - a, h: R.h, d: R.d, post: k === 0 ? 'b' : k === cuts.length ? 'a' : 'both', seed: 7 + k, oboxCols: true });
+      if (k < cuts.length) a = cuts[k][1];
+    }
+    return out;
+  })(),
   // ================= the forest's groves (plan.js GROVES: already where the stretch puts them)
   ...GROVES.flatMap(groveParts),
   // ================= the hand placements
@@ -238,14 +244,14 @@ export const PLACEMENTS = [
 
   // ================= the working garden (0): the rill (footbridge, stepping stones), a polytunnel, the tool shed, a
   //                   water tank, raised beds; the central path stair → footbridge → the plaza's ramp stays open
-  { type: 'treehills_footbridge', pos: [0, 0, -16.8], rotY: HP, L: 2.8 },
+  { type: 'treehills_footbridge', pos: [-0.6, 0, -16.7], rotY: HP, L: 1.8 },   // (just the rill, landing in the footbridge gate's west way)
   { type: 'treehills_stones', pos: [-7.2, 0, -16.8], rotY: HP, n: 3, y0: RILL_Y, seed: 2 },
   { type: 'treehills_stones', pos: [8.4, 0, -16.8], rotY: HP, n: 3, y0: RILL_Y, seed: 5 },
   { type: 'treehills_polytunnel', pos: [9.2, 0, -20.0], rotY: 0, L: 6, R: 1.4 },
-  { type: 'treehills_shed', pos: [-9.4, 0, -19.9], rotY: 0 },
+  { type: 'treehills_shed', pos: [-8.4, 0, -21.4], rotY: 0 },   // (1.8 m back from the stones gate: sliding off its roof you drop short of the gate's top)
   // the tank tucked into the garden's south-west corner (against the wall, its coping alongside: no slot behind it)
   { type: 'treehills_tank', pos: [-6.71, 0, -24.05], r: 0.9, h: 2.0 },
-  { type: 'treehills_planter', pos: [-5.6, 0, -19.4], rotY: 0, w: 2.6, d: 1.1, h: 0.6, seed: 23 },
+  { type: 'treehills_planter', pos: [-5.6, 0, -20.4], rotY: 0, w: 2.6, d: 1.1, h: 0.6, seed: 23 },   // (1.3 m back from the stones gate)
   { type: 'treehills_planter', pos: [5.8, 0, -23.3], rotY: 0, w: 2.6, d: 1.1, h: 0.6, seed: 29, flowers: ['#f2d45a', '#e98ab0', '#b79ae6'] },
   { type: 'treehills_shrubs', pos: [-4.5, 0, -15.2], w: 1.2, h: 1.0, seed: 3, flowers: true },
   { type: 'treehills_shrubs', pos: [9.6, 0, -15.1], w: 1.2, h: 1.0, seed: 9, flowers: true },
