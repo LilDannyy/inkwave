@@ -1253,7 +1253,7 @@ class Game {
   // harbour soundscape: continuous sea wash + occasional gull cries out over the water
   _updateAmbience(dt) {
     if (!this._audioOn || !G.audio?.loop) return;
-    if (!this._amb) this._amb = G.audio.loop('harbor_ambience', { volume: 0.55 });
+    if (!this._amb || !this._amb.playing) this._amb = G.audio.loop('harbor_ambience', { volume: this._ambV ?? 0.55 });   // sfx-cues: (back if the engine ever had to drop it)
     // in the lobby's alley the harbour is only a distant wash (and no gulls overhead)
     const inSet = !!this.showcase?.fullFrame;
     this._ambV = damp(this._ambV ?? 0.55, inSet ? 0.12 : 0.55, 2, dt);
