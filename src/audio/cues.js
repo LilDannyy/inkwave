@@ -17,13 +17,14 @@
 //   - relation to you: own (you threw / started it) · ally (your team) · foe · none (the menus' backdrop match).
 //     Your own throws and starts come from you (no position); your own transformation specials' body loops too.
 //   - gains (MIX): foe 1, ally ~0.6, own ~0.65 (warnings: own 0.45, ally 0.4), backdrop ~0.4. Warnings carry
-//     params.foe (1 = the harsher, brighter timbre for the enemy's) and, for the enemy's, a boost up to ×1.9 the closer
-//     you are to its blast (and when it's after you); a big one (Slam, Strike, Cheer Orb, Howl Box, Stamp, Kraken dive)
+//     params.foe (1 = the harsher, brighter timbre for the enemy's) and, for the enemy's, a boost up to ×1.55 the closer
+//     you are to its blast (and when it's after you) — never louder than the blast it warns of; a big one (Slam, Strike, Cheer Orb, Howl Box, Stamp, Kraken dive)
 //     inside its reach ducks the music a little.
 //   - caps: at most MAX.move moving loops and MAX.warn warning loops at once (the backdrop: fewer); the rest wait,
 //     ranked warnings first, the enemy's first, then by closeness (distance to the listener, and to you for threats).
 //   - Doppler-ish: each positional loop's pitch × 1 / (1 − v_r / 55) (clamped 0.84 … 1.22) and level × (1 + v_r / 40)
-//     (0.85 … 1.25), v_r = its speed toward the listener (the camera), smoothed.
+//     (0.85 … 1.25), v_r = its own speed toward the listener (the camera), smoothed. Only the source's motion counts:
+//     swinging the camera round (the listener moving) never makes a standing sprinkler warble.
 import { G, on, clamp } from '../core/ctx.js';
 import { SUBS, SPECIALS } from '../config.js';
 import { SUB_KITS } from '../game/kits/registry.js';
@@ -78,7 +79,6 @@ export class Cues {
     this.want = [];
     this._keep = new Set();
     this._m = null;
-    this._L = null; this._Lv = { x: 0, y: 0, z: 0 };
     this._ccd = new WeakMap();   // Crab Rig specials → their mortar cooldown last frame (the reload cue)
     this._tracerEnd = new WeakMap();
     this._vanish = new Map();    // world objects whose disappearance has a sound (the vortex spinning down)
@@ -105,7 +105,7 @@ export class Cues {
     const d = dist(me.pos, pos);
     return clamp((2.2 * R + 2 - d) / (1.6 * R + 2), 0, 1);
   }
-  boost(pos, R, target) { return 1 + 0.55 * this.close(pos, R) + (target && target === this._me() ? 0.35 : 0); }
+  boost(pos, R, target) { return 1 + 0.35 * this.close(pos, R) + (target && target === this._me() ? 0.2 : 0); }
 
   // ------------------------------------------------------------------------------------------------ one-shots
   one(name, o = {}) {
@@ -155,20 +155,9 @@ export class Cues {
     // is over — time's up, the judge, the results — its devices go silent with it)
     if (m && !opts.quiet && (m.attract || m.state === 'playing' || m.state === 'intro')) this._gather(m, dt);
     this.want.length = this._n;
-    this._listener(dt);
     this._reconcile(dt, m);
     this._vanished(m);
     this._sonar(dt);
-  }
-
-  _listener(dt) {
-    const L = G.audio.L, P = this._L;
-    if (P && dt > 0) {
-      const vx = (L.x - P.x) / dt, vy = (L.y - P.y) / dt, vz = (L.z - P.z) / dt, sp = Math.hypot(vx, vy, vz);
-      const k = sp > 40 ? 0 : 1 - Math.exp(-10 * dt);   // (a camera cut is not a speed)
-      this._Lv.x += ((sp > 40 ? 0 : vx) - this._Lv.x) * (k || 1); this._Lv.y += ((sp > 40 ? 0 : vy) - this._Lv.y) * (k || 1); this._Lv.z += ((sp > 40 ? 0 : vz) - this._Lv.z) * (k || 1);
-    }
-    this._L = { x: L.x, y: L.y, z: L.z };
   }
 
   // what the world holds now → this.want
@@ -362,7 +351,7 @@ export class Cues {
       if (w.warn ? nw >= capW : nm >= capM) { this.stats.capped++; continue; }
       if (w.warn) nw++; else nm++;
       keep.add(w.key);
-      // Doppler: the emitter's velocity (smoothed) against the listener's, along the line between them
+      // Doppler: the emitter's own velocity (smoothed), along the line from it to the listener
       let dop = 1, dv = 1;
       if (!w.twoD && w.pos) {
         let tr = this.tracks.get(w.key);
@@ -377,14 +366,14 @@ export class Cues {
         }
         const dx = L.x - w.pos.x, dy = L.y - w.pos.y, dz = L.z - w.pos.z, dl = Math.hypot(dx, dy, dz);
         if (dl > 0.5) {
-          const Lv = this._Lv, vr = ((tr.vx - Lv.x) * dx + (tr.vy - Lv.y) * dy + (tr.vz - Lv.z) * dz) / dl;   // + = coming closer
+          const vr = (tr.vx * dx + tr.vy * dy + tr.vz * dz) / dl;   // + = coming closer
           dop = clamp(1 / (1 - clamp(vr, -40, 40) / C_EFF), 0.84, 1.22);
           dv = clamp(1 + vr / 40, 0.85, 1.25);
         }
       }
       let vol = w.vol * MIX[w.warn ? 'warn' : 'move'][w.rel] * dv;
-      if (w.warn && w.rel === 'foe') vol *= 1 + 0.55 * w.cl + (w.target && w.target === me ? 0.35 : 0);
-      vol = Math.min(vol, 1.9);
+      if (w.warn && w.rel === 'foe') vol *= 1 + 0.35 * w.cl + (w.target && w.target === me ? 0.2 : 0);
+      vol = Math.min(vol, 1.6);
       const params = w.params ? (w.warn ? { ...w.params, foe: w.rel === 'foe' || w.rel === 'none' ? 1 : 0 } : w.params) : (w.warn ? { foe: w.rel === 'foe' ? 1 : 0 } : null);
       const pitch = w.pitch * dop, pos = w.twoD ? undefined : w.pos;
       let s = this.slots.get(w.key);

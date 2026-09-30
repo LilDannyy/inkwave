@@ -543,8 +543,8 @@
       { maxLive, maxWarn, maxMove, maxEngine, maxVoices, capped: C.stats.capped });
     // nothing painful: every level the director asked for stays in bounds
     const loud = rec.filter((r) => r.vol > 2);
-    const loudLoops = C.live().filter((s) => s.vol > 1.9);
-    R('no cue asks for more than 2× a sound\'s level (loops ≤ 1.9×)', !loud.length && !loudLoops.length, { loud: loud.slice(0, 5).map((r) => [r.n, r2(r.vol)]) });
+    const loudLoops = C.live().filter((s) => s.vol > 1.6);
+    R('no cue asks for more than 2× a sound\'s level (loops ≤ 1.6×)', !loud.length && !loudLoops.length, { loud: loud.slice(0, 5).map((r) => [r.n, r2(r.vol)]) });
   }
 
   // ================================================================================== pause / the end / a quit
@@ -552,10 +552,12 @@
     reset(); place(E, 0, 3); E.setSub('sprinkler'); lob(E, 0, -4, SUBS.sprinkler.throwSpeed); G.subs.use(E, SUBS.sprinkler);
     step(1.2);
     const before = C.live().map((s) => s.key).sort().join();
-    g.pause(); step(0.5); await wait(400);
-    const dbg = { paused: m.paused, state: m.state, ctx: A.ctx.state, loopsPaused: A.loopsPaused, gain: r2(A.loopIn.gain.value), menu: g.menus?.current };
+    // (the audio clock can lag real time under load: wait until it has run the 0.08 s fade)
+    const settle = async () => { const c0 = A.ctx.currentTime; for (let i = 0; i < 80 && A.ctx.currentTime - c0 < 0.25; i++) await wait(50); };
+    g.pause(); step(0.5); await settle();
+    const dbg = { paused: m.paused, loopsPaused: A.loopsPaused, gain: r2(A.loopIn.gain.value) };
     const hushed = A.loopIn.gain.value < 0.05, same = C.live().map((s) => s.key).sort().join() === before && before.length > 0;
-    g.resume(); step(0.1); await wait(400);
+    g.resume(); step(0.1); await settle();
     R('a pause hushes the cue loops (the loop bus), keeps them (no orphan, no duplicate) and they come back on resume',
       hushed && same && A.loopIn.gain.value > 0.95 && C.live().length > 0, { before, hushed, same, after: r2(A.loopIn.gain.value), dbg });
   }

@@ -287,7 +287,7 @@ export function defineCueSounds(def, L) {
   // Splat Bomb fuse (0.95 s): bright "bip"s from 4 to 18 a second, climbing, a rising whine at the very end, and a
   // plastic rattle while it's still rolling. params { k: 0..1 through the fuse, roll: 0..1 speed, foe }
   def('fuse_bomb', {
-    gain: 0.24, max: 8, jitter: 0, reverb: 0.05, oneShot: 1.0,
+    gain: 0.18, max: 8, jitter: 0, reverb: 0.05, oneShot: 1.0,
     loop(v, p, o) {
       const T = v.t, st = { k: 0, roll: 0, foe: 1, q: p, ...(o?.params || {}) };
       const tk = v.gain(0, v.out);
@@ -314,7 +314,7 @@ export function defineCueSounds(def, L) {
   // Cling Charge fuse (2.4 s): a deep two-note "bwom" pulse, 1.6 → 10 a second, climbing a fifth; foe: a tritone
   // (sour, alarming), ally: a fifth. params { k, foe }
   def('fuse_sticky', {
-    gain: 0.26, max: 6, jitter: 0, reverb: 0.06, oneShot: 1.2,
+    gain: 0.2, max: 6, jitter: 0, reverb: 0.06, oneShot: 1.2,
     loop(v, p, o) {
       const T = v.t, st = { k: 0, foe: 1, q: p, ...(o?.params || {}) };
       const pg = v.gain(0, v.out), lp = v.filter('lowpass', 1100, 1.2, pg);
@@ -525,9 +525,11 @@ export function defineCueSounds(def, L) {
   def('seeker_explode', {
     gain: 0.56, max: 3, jitter: 0.05, reverb: 0.26,
     build(v, p) {
-      clank(v, 0, 1700, 0.4, 0.12, p, 3); clank(v, 0.018, 2350, 0.3, 0.1, p, 3);
-      for (let i = 0; i < 6; i++) v.nz({ t: 0.03 + v.r(0, 0.22), f: v.r(2000, 4200), q: 7, a: 0.0005, d: v.r(0.01, 0.03), peak: v.r(0.2, 0.4) });   // parts
-      inkBoom(v, 0.01, p * 1.05, 0.85, { f: 98, f1: 32, len: 0.8, bright: 5200, bloops: 5, plips: 4 });
+      clank(v, 0, 1700, 0.75, 0.2, p, 4); clank(v, 0.018, 2350, 0.6, 0.16, p, 4); clank(v, 0.05, 1230, 0.45, 0.3, p, 3);   // its shell bursting
+      for (let i = 0; i < 12; i++) v.nz({ t: 0.03 + v.r(0, 0.45), f: v.r(1800, 4600), q: 7, a: 0.0005, d: v.r(0.01, 0.03), peak: v.r(0.25, 0.5) });   // parts clattering down
+      const T = v.t, g = v.gain(0, v.out), bp = v.filter('bandpass', 1400, 4, g);                                   // its motor dying
+      const o = v.osc('sawtooth', 760 * p, T, T + 0.3, bp); sweep(o.frequency, T, 760 * p, 120 * p, 0.28); pts(g.gain, T, [[0, 0], [0.01, 0.2], [0.28, 0]]);
+      inkBoom(v, 0.01, p * 1.1, 0.7, { f: 105, f1: 34, len: 0.7, bright: 5200, bloops: 4, plips: 3 });
     },
   });
   // Echo Orb: a sonar "vwoom" rolling out and a ping (no blast: it only marks)
@@ -580,10 +582,12 @@ export function defineCueSounds(def, L) {
   def('waddle_explode', {
     gain: 0.58, max: 3, jitter: 0.04, reverb: 0.26,
     build(v, p) {
-      const T = v.t, g = v.gain(0, v.out), end = perc(g.gain, T, 0.004, 0.5, 0.28);
-      const o = v.osc('sine', 180 * p, T, end + 0.01, g); sweep(o.frequency, T, 180 * p, 520 * p, 0.2);
-      const w = v.lfo(18, 0, o.detune, T, end); pts(w.depth.gain, T, [[0, 220], [0.28, 0]]);
-      inkBoom(v, 0.03, p, 1, { f: 90, f1: 28, len: 0.9, bright: 5400 });
+      const T = v.t, g = v.gain(0, v.out), end = perc(g.gain, T, 0.004, 0.9, 0.42);
+      const o = v.osc('sine', 170 * p, T, end + 0.01, g); sweep(o.frequency, T, 170 * p, 560 * p, 0.3);
+      const o2 = v.osc('triangle', 340 * p, T, end + 0.01, v.gain(0.35, g)); sweep(o2.frequency, T, 340 * p, 1120 * p, 0.3);
+      const w = v.lfo(17, 0, o.detune, T, end); w.depth.connect(o2.detune); pts(w.depth.gain, T, [[0, 260], [0.4, 0]]);   // the spring
+      v.nz({ ft: 'highpass', f: 3800, a: 0.0004, d: 0.012, peak: 0.4 });                                           // its lid popping
+      inkBoom(v, 0.05, p * 1.05, 0.85, { f: 96, f1: 30, len: 0.75, bright: 5400, bloops: 5 });
     },
   });
   // Waddle Bomb popped by fire: a squeaky toy deflating (harmless)
@@ -613,10 +617,12 @@ export function defineCueSounds(def, L) {
   def('boomerang_blast', {
     gain: 0.58, max: 3, jitter: 0.04, reverb: 0.28,
     build(v, p) {
-      const T = v.t, g = v.gain(0, v.out), bp = v.filter('bandpass', 1400, 3, g);
-      const o = v.osc('sawtooth', 900 * p, T, T + 0.16, bp); sweep(o.frequency, T, 900 * p, 240 * p, 0.14);
-      pts(g.gain, T, [[0, 0], [0.01, 0.3], [0.15, 0]]);
-      inkBoom(v, 0.04, p, 1, { f: 88, f1: 28, len: 1, bright: 5600 });
+      const T = v.t, g = v.gain(0, v.out), bp = v.filter('bandpass', 1400, 3, g), am = v.gain(0.6, bp);
+      const o = v.osc('sawtooth', 1100 * p, T, T + 0.34, am); sweep(o.frequency, T, 1100 * p, 200 * p, 0.3);
+      const l = v.lfo(34, 0.4, am.gain, T, T + 0.34); sweep(l.osc.frequency, T, 34, 8, 0.3);                     // the blades spinning down
+      pts(g.gain, T, [[0, 0], [0.01, 0.55], [0.26, 0.3], [0.33, 0]]);
+      clank(v, 0.06, 1100, 0.4, 0.3, p);                                                                            // a metal clang
+      inkBoom(v, 0.1, p * 0.95, 0.9, { f: 84, f1: 26, len: 0.95, bright: 5000, bloops: 6 });
     },
   });
   // Drip Curtain gone: the sheet draining away (a falling gurgle)
@@ -863,7 +869,7 @@ export function defineCueSounds(def, L) {
   // Vortex Strike: a target alarm at the landing spot for the whole flight — a two-tone pulse speeding up (k: 0..1 of
   // the flight) and a rumble swelling in; the enemy's is a harsh square, a friendly one soft pings. params { k, foe }
   def('strike_mark', {
-    gain: 0.22, max: 3, jitter: 0, reverb: 0.1, oneShot: 1.2,
+    gain: 0.16, max: 3, jitter: 0, reverb: 0.1, oneShot: 1.2,
     loop(v, p, o) {
       const T = v.t, st = { k: 0, foe: 1, q: p, ...(o?.params || {}) };
       const pg = v.gain(0, v.out), lp = v.filter('lowpass', 2600, 0.9, pg);
