@@ -1485,7 +1485,7 @@ export class Projectiles {
     const vel = this.throwVelocity(a, b.throwSpeed, new THREE.Vector3());
     this.bombs.push({ kind: 'bomb', owner: a, team: a.team, mesh: group, body, pos: pos.clone(), vel, fuse: -1, age: 0, spin: new THREE.Vector3(Math.random() * 8, Math.random() * 8, 0), beepT: 0, sp: !!a.specialActive });
     if (G.netm && !a.remote) G.netm.recBomb(this.bombs[this.bombs.length - 1]);
-    if (a.isLocal || a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.7 });
+    G.cues?.sub('bomb', 'throw', { owner: a, at: a.pos });   // sfx-cues (src/audio/cues.js: yours from you, theirs where they are)
     emit('bomb:throw', { actor: a, pos: pos.clone(), team: a.team, radius: SUB.bomb.radius });
   }
 
@@ -1514,7 +1514,7 @@ export class Projectiles {
     this._credit(b, area);
     G.subs?.damageArea(c, s.radius, 60, b.team);
     G.fx?.explosion(c, G.teamColors[b.team], s.radius);
-    G.audio?.play('bomb_explode', { pos: c });
+    G.cues?.sub('bomb', 'boom', { owner: b.owner, team: b.team, at: c });   // sfx-cues
     emit('shake', { pos: c.clone(), amount: 0.6 });
     emit('bomb:explode', { actor: b.owner, pos: c.clone(), team: b.team, radius: s.radius });
     const loc = G.local;
@@ -1560,7 +1560,7 @@ export class Projectiles {
     group.position.set(b.pos.x, groundY + 4.6, b.pos.z);
     group.scale.setScalar(0.01);
     this.scene.add(group);
-    const loop = G.audio?.loop('storm_rain', { pos: group.position, volume: 0.6 });
+    const loop = null;   // sfx-cues: the rain loop follows the cloud from src/audio/cues.js (it never outlives it)
     this.clouds.push({ owner: b.owner, team: b.team, group, t: 0, dur: sp.duration, dir: b.dir, rainT: 0, loop, groundY });
     G.audio?.play('storm_thunder', { pos: group.position });
     emit('storm:start', { pos: group.position.clone(), team: b.team, actor: b.owner, radius: sp.radius });
@@ -1716,7 +1716,7 @@ export class Projectiles {
     const w = b ? { burstRadius: b.radius, impactRadius: b.paint ?? b.radius * 0.6, splashRadius: b.splashRadius, splashDamageMax: b.dmgMax, splashDamageMin: b.dmgMin } : WEAPONS.blaster;
     const c = at.clone();
     G.fx?.explosion(c, p.owner.color, w.burstRadius);
-    G.audio?.play('blaster_boom', { pos: c, volume: 0.7 });
+    G.audio?.play(p.weaponId === 'jetpack' ? 'jet_boom' : 'blaster_boom', { pos: c, volume: 0.7 });   // sfx-cues: the Ink Jet's shots land with their own boom
     emit('weapon:impact', { pos: c.clone(), normal: new THREE.Vector3(0, 1, 0), team: p.team, kind: 'blast', radius: w.burstRadius });
     // paint under the burst
     const g = G.physics.raycast(_v2.copy(c).setY(c.y + 0.2), DOWN, 3.5, _hit2);
@@ -1758,7 +1758,7 @@ export class Projectiles {
         b.vel.multiplyScalar(hit.normal.y > 0.6 ? 0.45 : 0.6);
         if (hit.normal.y > 0.6 && b.fuse < 0) {
           b.fuse = SUB.bomb.fuse;
-          G.audio?.play('bomb_beep', { pos: b.pos, volume: 0.6 });
+          G.cues?.sub('bomb', 'land', { owner: b.owner, team: b.team, at: b.pos });   // sfx-cues: armed (the fuse loop: src/audio/cues.js)
           emit('bomb:arm', { actor: b.owner, pos: b.pos.clone(), team: b.team, radius: SUB.bomb.radius });
         }
       }
@@ -1769,10 +1769,7 @@ export class Projectiles {
         const k = 1 - b.fuse / SUB.bomb.fuse;
         b.body.material.emissiveIntensity = (Math.sin(b.age * (10 + k * 30)) * 0.5 + 0.5) * (0.4 + k * 1.8);
         b.mesh.scale.setScalar(1 + k * 0.35 + Math.sin(b.age * 40) * 0.03 * k);
-        if (b.beepT <= 0) {
-          b.beepT = 0.3 - k * 0.2;
-          if (G.camera.position.distanceToSquared(b.pos) < 30 * 30) G.audio?.play('bomb_beep', { pos: b.pos, volume: 0.35 + k * 0.4, pitch: 1 + k * 0.25 });
-        }
+        if (b.beepT <= 0) b.beepT = 0.3 - k * 0.2;   // sfx-cues: the fuse ticks are the fuse_bomb loop now (src/audio/cues.js)
         if (b.fuse <= 0) { const nm = G.netm; if (b.ghost && nm) nm.mute++; try { this._explodeBomb(b); } finally { if (b.ghost && nm) nm.mute--; } this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }
       }
       if (b.pos.y < PLAYER.waterY - 1.8) { this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }

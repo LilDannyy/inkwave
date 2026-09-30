@@ -211,7 +211,7 @@ function spawn(subs, a, sub, from, dir, ghost, gid) {
   scene.add(b.head, b.rib);
   addPoint(b);
   bolts.push(b);
-  if (nearCam(from, 40)) b.hum = G.audio?.loop?.('tracer_hum', { pos: from, volume: 0.4 }) || null;
+  b.hum = null;   // sfx-cues: the hum follows the bolt (then its trail) from src/audio/cues.js
   if (nearCam(from, 30)) G.fx?.muzzle?.(from, dir, G.teamColors[a.team], 'shooter');
   poseHead(b);
   return b;

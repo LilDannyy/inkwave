@@ -364,7 +364,7 @@ function use(subs, a, sub) {
   const vel = G.projectiles.throwVelocity(a, sub.throwSpeed, new V3());
   const it = spawn(a, sub, pos, vel, level, false, netId(a));
   netRec(a, 'shaker', [0, it.gid, r2(pos.x), r2(pos.y), r2(pos.z), r2(vel.x), r2(vel.y), r2(vel.z), level]);
-  if (a.isLocal || a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.65, pitch: 0.95 + 0.06 * level });
+  G.cues?.sub('shaker', 'throw', { owner: a, at: a.pos, pitch: 0.95 + 0.06 * level });   // sfx-cues: its own throw (src/audio/cues.js)
   emit('sub:use', { actor: a, kind: 'shaker', level });
 }
 // the can in flight (ghost: a remote player's, online — it flies and hops the same, but blasts only when its owner's
@@ -390,7 +390,7 @@ function ghost(a, d) {
   if (op === 0) {
     if (items.some((x) => x.gid === gid)) return;
     spawn(a, SUBS.shaker, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), clamp(d[8] | 0, 1, 3), true, gid);
-    if (a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.pos, volume: 0.65, pitch: 0.95 + 0.06 * d[8] });
+    G.cues?.sub('shaker', 'throw', { owner: a, at: a.pos, pitch: 0.95 + 0.06 * d[8] });   // sfx-cues
     return;
   }
   const it = items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
@@ -474,7 +474,7 @@ function contactFloor(it, n, dt) {
 function arm(it) {
   it.armed = true; it.fuse = it.sub.fuse;
   groundUnder(it);
-  if (near(it.pos, 30)) G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.55, pitch: 1.25 });
+  G.cues?.sub('shaker', 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues: armed (its rattle loop speeds to each blast)
   emit('bomb:arm', { actor: it.owner, pos: it.pos.clone(), team: it.team, radius: it.sub.radius, kind: 'shaker' });
 }
 function groundUnder(it) {
@@ -506,7 +506,7 @@ function blast(it) {
   }
   credit(it, area);
   G.fx?.explosion(c, col, s.radius * 0.95);
-  G.audio?.play('bomb_explode', { pos: c, volume: 0.62, pitch: 1.1 + 0.06 * it.blasts });
+  G.cues?.sub('shaker', 'boom', { owner: a, team, at: c, pitch: 1 + 0.06 * it.blasts });   // sfx-cues: its own fizzy blast, a step up each time
   emit('shake', { pos: c.clone(), amount: 0.45 });
   emit('bomb:explode', { actor: a, pos: c.clone(), team, radius: s.radius, kind: 'shaker', n: it.blasts });
   const loc = G.local;
