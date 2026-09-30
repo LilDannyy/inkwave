@@ -74,7 +74,8 @@ cable drums, roll-off hut no. 2).
   down the stargazing terrace, down onto the first terrace and east across it past the knoll's front steps, south along
   the terrace's edge past the receiver hut, back west up onto the Dish Knoll (**checkpoint 2 on its top, by the dish**)
   and across it onto the stargazing terrace, down it to the goal below the forecourt (10 m short of the pad, as
-  before). Checkpoint 1 stays at the bank after the Old Stone Bridge.
+  before). Checkpoint 1 stays at the bank after the Old Stone Bridge. (Revised: the loop turned round so checkpoint 2
+  comes at 67 %; see "Revision: checkpoint 2 earlier" below.)
 - **Boss Battle**: the stretch's 2.6 m ground out-covers the lawn, so HULLBREAKER picked a home on the shoulder near
   Bravo's spawn; `LAYOUT.boss = { floorY: 0 }` pins it back to the lawn (as Treehills does). Check passes.
 
@@ -137,3 +138,33 @@ fit, as the brief expected).
 (the receiver hut, the shore meadow), `strategic-point.jpg` (from the knoll toward mid), `rock-garden.jpg`,
 `spawn-play.jpg` / `spawn-play-dusk.jpg` (the player's camera at the spawn), `cover-before.jpg` / `cover-after.jpg`.
 Stage art: `assets/stages/nantai-{day,dusk}{,-sm}.webp` from the reframed `art` camera.
+
+## Revision (the lead's review): checkpoint 2 earlier
+
+Checkpoint 2 on the knoll sat at 86 % of the track (120.0 of 140.2 m): a long run without a stop, then one just
+before the goal. The loop is turned round so the knoll comes first and part of the detour runs after it
+(`layout.js` TOWER, Bravo's side):
+- the drawn track to the stargazing terrace (z 31) and on to z 34, as before;
+- east down onto the first terrace, only as far as the knoll's front steps (x −3), then **up the front steps** (5 m
+  wide: an 18° incline for the 2.5 m platform) onto the knoll: **checkpoint 2 on its top by the dish, (−2, 2.6, 43.5)**;
+- back west across the knoll onto the stargazing terrace and down it past the rock garden (the old goal run);
+- then round the shoulder: west along its front (z 52.25), south past the Solar Tower garden's stair, east along the
+  terrace's back under the control building (z 59), and north to the **goal at (5.75, 56)**, 1 m further out than
+  before, 11 m from the pad, still below the forecourt's west drop.
+The old runs along the first terrace's east edge (past the receiver hut) and across the knoll's east half are gone.
+Square corners, straight runs; 2 climbs and 1 drop (the drawn ones), 3 inclines (the bridge's two, the front steps).
+
+Tower-only: the loop's front and back runs pass through two telescope piers (the stargazing terrace's back and its
+front by the garden). In Tower Command they stand inside the loop instead, beside the STARGAZING TERRACE board
+(`slice-props.js`, `props.js`: `notIn` / `onlyIn: 'tower'`). That gives Nantai a Tower build: `nantai.tower` baked
+(hash c5d9b1b, 1150 of 2048 rows). Turf and zones are untouched (same bake).
+
+| | before | after |
+|---|---|---|
+| tower track | 140.2 m, checkpoints 24.8 / 120.0 m (18 / 86 %) | **142.6 m** (target 144.2: −1.1 %), 1.78 m/s, checkpoints 24.8 / 95.9 m (**17 / 67 %**), **100 s** to the goal |
+| stage-audit (tower) | — | 4/4: lightmap applied (nantai.tower, 1150 rows), spawn → mid 5.68 / 6.02 s, no barred climbs, 100 s |
+| tower-check | clean | 0 holes, clearance clean; rides: both a knockout after 83.4 s, nobody knocked off, no stalls |
+| tower-match | Alpha on time, pushes 92.3 / 24.8 m | (1) Bravo on time 80 : 46, pushes 79.9 / 24.8 m, stuck 0.4 %; (2) Alpha by knockout at 4:20, both checkpoints cleared (the knoll at 1:34), stuck 0.1 % |
+
+Picture: `out/nantai/tower-top.jpg` (Alpha's track runs into Bravo's half, on the right; the loop is round the dish).
+
