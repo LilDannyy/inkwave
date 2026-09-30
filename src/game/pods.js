@@ -343,7 +343,7 @@ export class StagePods {
     this.looks?.reset();
     this.pods = defs.map((d, i) => this._makePod(d, i));
     this.snapT = 0; this.sent = null;
-    this.stats = { grown: 0, held: 0, shoved: 0, trampled: 0, cut: 0, cracked: 0, carried: 0, detours: 0, waits: 0, perched: 0, exits: 0, cuts: 0, crossings: 0 };
+    this.stats = { grown: 0, held: 0, shoved: 0, trampled: 0, cut: 0, cracked: 0, carried: 0, detours: 0, waits: 0, perched: 0, exits: 0, cuts: 0, crossings: 0, byPod: {} };
     // Tower Command: pods whose plant would stand on the track sit the mode out
     const T = match.tower;
     if (T) for (const p of this.pods) if (this._onTrack(p, T)) { p.off = 'track'; p.bulbBlock.solid = false; console.warn('[inkwave] pods:', p.id, 'would grow onto the tower track — off in Tower Command'); }
@@ -567,7 +567,7 @@ export class StagePods {
     p.meter[0] = p.meter[1] = 0; p.fullT[0] = p.fullT[1] = -1; p.held = '';
     p.life = p.life0; p.cracked = false; p.shake = 0;
     p.state = 'dormant';                  // (_enter('grow') runs on the next update: the phase decides)
-    this.stats.grown++;
+    this.stats.grown++; this._tally(p, 'grown');
     this._net(['g', p.i, team, +t0.toFixed(3)]);
     const ph = this._phase(p, this.clock.t);
     this._enter(p, ph.st, this.clock.t);
@@ -577,7 +577,7 @@ export class StagePods {
   wilt(p, tw, cut = false) {
     if (p.state !== 'grow' && p.state !== 'stand') return;
     p.wiltAt = tw; p.cutBy = cut;
-    if (cut) this.stats.cut++; else this.stats.trampled++;
+    if (cut) { this.stats.cut++; this._tally(p, 'cutDown'); } else this.stats.trampled++;
     this._net(['w', p.i, +tw.toFixed(3), cut ? 1 : 0]);
   }
 
@@ -885,6 +885,9 @@ export class StagePods {
   }
 
   // snapshot for tests / the HUD
+  // per-pod tallies for the botlab (stats.byPod[id]: grown, the bot tasks picked on it — grow / climb / cover / cut —,
+  // seconds perched on it, crossings over it, detours round it, times cut down)
+  _tally(p, k, v = 1) { const o = this.stats.byPod[p.id] || (this.stats.byPod[p.id] = {}); o[k] = Math.round(((o[k] || 0) + v) * 1000) / 1000; }
   state() {
     return { t: +this.clock.t.toFixed(3), pods: this.pods.map((p) => ({ id: p.id, kind: p.kind, state: p.state, owner: p.owner, meter: [+p.meter[0].toFixed(3), +p.meter[1].toFixed(3)],
       life: +(p.life / p.life0).toFixed(3), held: p.held, off: p.off, k: +p.k.toFixed(3), top: +p.top.toFixed(3), solid: !!(p.block && p.block.solid), t0: +p.t0.toFixed(3), wiltAt: +p.wiltAt.toFixed(3) })),
@@ -983,7 +986,7 @@ export class StagePods {
     if (fighting && !vis && b.target) {
       const tp = this.hedgeUnder(b.target);
       if (tp && tp.owner !== a.team && tp.state === 'stand' && this._rectDist(tp, a.pos.x, a.pos.z) < Math.max(3, range * 0.9) && Math.abs(tp.y - a.pos.y) < 1.5) {
-        S.task = 'cut'; S.p = tp; S.t0 = b.t; this.stats.cuts++; return;
+        S.task = 'cut'; S.p = tp; S.t0 = b.t; this.stats.cuts++; this._tally(tp, 'cut'); return;
       }
     }
     let best = null, bs = -Infinity, task = null, why = null;
@@ -1019,7 +1022,7 @@ export class StagePods {
       if (sc > bs) { bs = sc; best = p; task = 'grow'; why = w; }
     }
     if (!best || (task === 'grow' && Math.random() < 0.15)) return;
-    S.task = task; S.p = best; S.t0 = b.t; S.why = why; S.cross = false;
+    S.task = task; S.p = best; S.t0 = b.t; S.why = why; S.cross = false; this._tally(best, task);
     if (task === 'climb') this._climbStart(b, S, best);
   }
   // a climb: the climb face toward us (±z), the column in front of us
@@ -1203,7 +1206,7 @@ export class StagePods {
       : b.t - S.okT > 1.5 ? 'no foe' : hp < 0.35 ? 'hurt' : ink < 0.08 && a.groundTeam !== 1 ? 'dry' : b.mode === 'retreat' ? 'retreat'
       : (b.zRole || b.tRole || null) !== S.role ? 'role' : p.state !== 'stand' || p.wiltAt - this.clock.t < 0.8 ? 'wilt' : p.life < p.life0 * 0.15 ? 'cut' : null;
     if (why) return this._botExit(b, S, p, it, move, why, vis);
-    b.perchUntil = b.t + 0.3; this.stats.perched += dt;
+    b.perchUntil = b.t + 0.3; this.stats.perched += dt; this._tally(p, 'perchS', dt);
     const [lx, lz] = this._loc(p, a.pos.x, a.pos.z);
     let wx, wz;
     if (p.kind === 'canopy') {
@@ -1255,7 +1258,7 @@ export class StagePods {
       });
       S.exit = best ? { ...best, t0: b.t, why } : { x: a.pos.x + (a.pos.x - p.x), z: a.pos.z + (a.pos.z - p.z), k: -1, t0: b.t, why };
       this.stats.exits++;
-      if (why === 'cross') this.stats.crossings++;
+      if (why === 'cross') { this.stats.crossings++; this._tally(p, 'crossed'); }
     }
     const gx = S.exit.x - a.pos.x, gz = S.exit.z - a.pos.z, gl = Math.hypot(gx, gz) || 1;
     move.set(gx / gl, 0, gz / gl);
@@ -1313,7 +1316,7 @@ export class StagePods {
     const alt = start >= 0 && !hard[goal] ? nav.path(start, goal, team, undefined, noClimb, hard) : null;
     const altLen = alt ? len(alt, 1) : Infinity;
     S.route = { direct: +here.toFixed(1), alt: alt ? +altLen.toFixed(1) : null, pod: p ? p.id : null };   // (tests)
-    const useAlt = () => { b.path = alt; b.pi = Math.min(1, alt.length - 1); b.bestD = Infinity; b.noProg = 0; S.seen = alt; this.stats.detours++; };
+    const useAlt = () => { b.path = alt; b.pi = Math.min(1, alt.length - 1); b.bestD = Infinity; b.noProg = 0; S.seen = alt; this.stats.detours++; if (p) this._tally(p, 'detour'); };
     if (alt && (altLen <= 1.6 * here + 2 || !gateOk(p))) { useAlt(); return; }
     // the long way round (or none), through a wall: up to it — theirs to cut down, ours to climb over
     if (gateOk(p)) { S.gate = { p, path, i: cut, own: p.owner === team, t0: b.t }; return; }
@@ -1336,7 +1339,7 @@ export class StagePods {
       return;
     }
     const reach = Math.max(2.4, Math.min(b._range() * 0.85, 8));
-    if (dist < reach && this._seesPlant(a, p)) { S.task = 'cut'; S.p = p; S.t0 = b.t; S.gate = null; this.stats.cuts++; }
+    if (dist < reach && this._seesPlant(a, p)) { S.task = 'cut'; S.p = p; S.t0 = b.t; S.gate = null; this.stats.cuts++; this._tally(p, 'cut'); }
   }
   // the nearest point of the plant's ground blocks to a, at chest height (a wall's face; a canopy's root curtain or
   // trunk) — seen clear?
