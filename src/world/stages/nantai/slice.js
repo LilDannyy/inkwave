@@ -10,7 +10,8 @@
 //   • the Dish Knoll (the strategic point): a granite knoll (2.6) in the middle of the slice, joined to the stargazing
 //     terrace, with the 5.6 m radio dish on its concrete pedestal (the dish and the pedestal off limits). Four ways up:
 //     the front steps (north, toward mid), the terrace (level, west), the gravel ramp (east), the back steps (south,
-//     onto the apron in front of the grand stair). The tower's track crosses its top (its second checkpoint)
+//     onto the apron in front of the grand stair). The tower's track climbs the front steps onto its top (its second
+//     checkpoint) and leaves it west onto the stargazing terrace
 //   • the dish's receiver hut on the first terrace beside the knoll (off-limits roof)
 //   • the shore meadow (0) where the first terrace falls to the shore trail: a knoll of turf, boulders, a stair and a ramp
 //   • the ridge (2.6), the shoulder (2.6), the stargazing terrace (2.6), the first terrace (1.3), the shore trail (0)
@@ -63,8 +64,8 @@ export const SLICE_PIECES = [
   B(9, GARDEN.x0, G0, G1, Z0, GARDEN.z1, ashlar({ tag: 't1' })),
   // ---------------- the Dish Knoll (2.6) on the terrace: granite, joined to the stargazing terrace on its west
   B(KNOLL.x0, KNOLL.x1, G1, G2, KNOLL.z0, KNOLL.z1, granite({ tag: 'knoll', color: K.graniteDk })),
-  // its front steps (toward mid: clear of the tower's run along the terrace), its back steps (onto the apron in front of
-  // the grand stair), the gravel ramp up its east side (clear of the tower's climb onto it)
+  // its front steps (toward mid: the tower's way up, 5 m wide for its 2.5 m platform), its back steps (onto the apron in
+  // front of the grand stair), the gravel ramp up its east side
   R([3, G1, -35.6], [3, G2, KNOLL.z1], 5, steps({ tag: 'knoll-steps' })),
   R([0, G1, -52.2], [0, G2, KNOLL.z0], 4.4, steps({ tag: 'knoll-steps' })),
   R([12.5, G1, -47.3], [KNOLL.x1, G2, -47.3], 3.4, gravel({ tag: 'knoll-ramp' })),
@@ -80,7 +81,7 @@ export const SLICE_PIECES = [
   R([16.25, G0, -48.7], [16.25, G1, GARDEN.z1], 2.5, steps({ tag: 'garden-stair' })),
   R([18.4, G0, -51.6], [GARDEN.x0, G1, -51.6], 2.6, gravel({ tag: 'garden-ramp' })),
   B(19.2, 23.0, G0, 0.65, -54.6, -51.2, turf({ tag: 'meadow-knoll' })),
-  // ---------------- on the first terrace's front (between the tower's two runs across it): roll-off hut no. 1, where the
+  // ---------------- on the first terrace's front (beside the tower's runs across it): roll-off hut no. 1, where the
   //                  terrace lost no. 2 to the base's move (its walls ink, its roof is off limits)
   B(ROLL1.x0, ROLL1.x0 + 3.6, G1, 3.9, ROLL1.z0, ROLL1.z0 + 3.2, { color: '#e8e2d4', pattern: PATTERN.weatherboard, tag: 'rolloff-hut', roof: true }),
   // ---------------- the shore trail ↔ the first terrace: a stair up from the trail's narrows past the hut

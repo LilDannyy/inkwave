@@ -299,8 +299,8 @@ export function registerSlice(D, H, T) {
 }
 
 // ============================================================================================================
-// The slice's dressing (Alpha's half, in the stretched frame). Kept off the tower's runs (2.5 m bands: z −34 and
-// −43.5 across, x 15 and −5.75 along; see layout.js TOWER).
+// The slice's dressing (Alpha's half, in the stretched frame). Kept off the tower's runs (2.5 m bands: z −34, −43.5,
+// −52.25 and −59 across, x 3, −5.75 and −16 along; see layout.js TOWER).
 // ============================================================================================================
 const P = Math.PI, HP = P / 2;
 const G1 = 1.3, G2 = 2.6;
@@ -342,7 +342,11 @@ export const SLICE_PLACEMENTS = [
   { type: 'nantai_planter', pos: [-7.9, G2, -44.2], rotY: HP, w: 1.3, d: 0.7 },
   { type: 'nantai_planter', pos: [-7.9, G2, -49.6], rotY: HP, w: 1.3, d: 0.7 },
   { type: 'nantai_bollard', pos: [-3.5, G2, -52.4] },
-  { type: 'nantai_telepier', pos: [-9.4, G2, -53.4], rotY: 2.0 },
+  { type: 'nantai_telepier', pos: [-9.4, G2, -53.4], rotY: 2.0, notIn: 'tower' },
+  // (Tower Command: the track's loop runs along the terrace's front and back here (z −52.25 and −59), so this pier and
+  //  the one at the terrace's back (props.js) stand inside the loop, beside the stargazing board)
+  { type: 'nantai_telepier', pos: [-13.0, G2, -55.6], rotY: 2.0, onlyIn: 'tower' },
+  { type: 'nantai_telepier', pos: [-8.3, G2, -55.5], rotY: 2.6, onlyIn: 'tower' },
   // ================= the Dish Knoll: the dish, the control cabinets, cable drums, the granite round its foot
   { type: 'nantai_radiodish', pos: [(PEDESTAL.x0 + PEDESTAL.x1) / 2, G2, (PEDESTAL.z0 + PEDESTAL.z1) / 2], rotY: 0 },
   { type: 'nantai_cabinet', pos: [-1.8, G2, -45.6], rotY: 0 },
