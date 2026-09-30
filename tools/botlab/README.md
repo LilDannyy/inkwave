@@ -28,8 +28,12 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
   - `SPECIAL_AI=0` turns the bots' awareness of enemy specials off (src/game/botSpecials.js: the old behaviour on the
     same code, for an A/B); `team0` / `team1`: on for that team only (head to head). `SPCHARGE=3`: special gauges fill
     3× as fast (more specials per match; a what-if)
+  - `DIAG=1`: every stuck episode also records the bot's nav plan at its start and every 5 s after (mode, route length,
+    pi, the next two route nodes, the edge into the next one — `none` when there's no such edge, e.g. after the stuck
+    recovery skipped a waypoint — the goal node, noProg, the nearest nav node, climbs off, the wall climb it's at);
+    every episode of 2 s or more is printed with them and listed in `RESULT_JSON.diagEps`
 - **match.cjs output:**
-  - stuck % and the longest stuck episodes
+  - stuck % and the longest stuck episodes; wall climbs at a wall (`CLIMB_STATS`: tries, done, stalled, dry, long)
   - splats by cause; splats caused by each special per team (Bomb Barrage: its thrower's bombs during it or within 3.5 s
     after), K/D per team, and the bots' `SPECIAL_STATS` (noticed / escapes / evaded / caught / avoided routes / backed
     off / retargeted / held fire …)
@@ -64,7 +68,15 @@ Bots vs enemy specials (src/game/botSpecials.js: danger areas, escapes, routes r
 the sight rule), each scene with the awareness on and off:
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/bot-specials.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
 with `MODE=tower` for the tower rider (add `PAGE_ARGS='only=tower'` for just that; `PAGE_ARGS` reaches any page test
-as `window.__pageArgs`). The A/B in matches: `tools/botlab/jobs/bots-specials/ab.sh` (see its README).
+as `window.__pageArgs`). The scenes are small duels whose outcome varies run to run (the sim isn't bit-for-bit
+repeatable): each check runs enough rounds that its bar holds on the behaviour, not on luck (the Twister Zooka's most —
+~3 min a run in all). The A/B in matches: `tools/botlab/jobs/bots-specials/ab.sh` (see its README).
+
+Bot wall climbs (src/game/bots.js `_climb`, nav climb edges) on Lockgate's drained lock chambers — the chamber stair's nav
+(a node row up each flight), the climb costs, every main off the chamber floor with ink (a climb or the stair) and dry
+(the stair), a climb that makes no headway given up, forced climbs up three walls weapon by weapon (seconds and ink):
+`MAP=lockgate MODE=turf PAGE=tools/botlab/tests/bot-climb.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=ink,forced'`: just those parts).
 
 Tower Command:
 - `MAP=halyard tools/botlab/run.sh tools/botlab/tower-check.cjs` checks a track: its pieces, holes, clearance, rides at

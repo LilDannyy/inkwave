@@ -5,6 +5,17 @@ import { PLAYER } from '../config.js';
 import { Hit } from './physics.js';
 
 const _p = new THREE.Vector3(), _d = new THREE.Vector3();
+// where a cell's node may move to when its centre doesn't fit a body (_build: lanes the grid misses), nearest first
+const NUDGE = [[0, 0.25], [0, -0.25], [0.25, 0], [-0.25, 0], [0, 0.45], [0, -0.45], [0.45, 0], [-0.45, 0]];
+// build options (botlab A/Bs build a second graph with one off): nudge = fill the lanes the grid misses (_build)
+export const NAV_OPTS = { nudge: true };
+// A climb edge's cost (metres of running it's worth): the run to the node on top + `base` + `perM` per metre of rise, +
+// `tallPerM` per metre above `tall`. Measured with bots (tools/botlab/tests/bot-climb.js, forced climbs, all 15 mains):
+// a 1.3 m wall takes ~1.2–2 s from its foot, a 2.8 m one ~2–3.3 s (the column's top strip wants a hop or two, and a
+// squid's more likely to slip at a bare patch) — a tall climb is dearer per metre than a short one. So from the foot of
+// Lockgate's lock-chamber stair (~2 s to the top) the 2.8 m side wall costs ~17.5 (it was 9.7: bots stood inking it
+// while the stair was the quicker way up), and the 1.3 m loading bank still ~6.5 (a shortcut).
+export const CLIMB_COST = { base: 3.5, perM: 1.5, tall: 1.5, tallPerM: 3.5 };
 
 export class NavGraph {
   constructor(level, physics) {
@@ -23,8 +34,7 @@ export class NavGraph {
     this.x0 = B.minX + st / 2; this.z0 = B.minZ + st / 2;
     this.nx = Math.floor((B.maxX - B.minX) / st); this.nz = Math.floor((B.maxZ - B.minZ) / st);
     this.cells = new Array(this.nx * this.nz);
-    const topBlocks = L.blocks.filter((b) => b.solid && b.axes[1].y > 0.6);
-    const ids = [];
+    const ids = [], fails = [];
     for (let iz = 0; iz < this.nz; iz++) {
       for (let ix = 0; ix < this.nx; ix++) {
         const x = this.x0 + ix * st, z = this.z0 + iz * st;
@@ -33,27 +43,33 @@ export class NavGraph {
         for (const id of ids) {
           const b = L.blocks[id];
           if (!b.solid || b.axes[1].y < 0.6 || b.roof || b.rail || b.noNav) continue;   // (roofs: off limits; rail tops / noNav walls: no route runs along them)
-          const n = b.axes[1];
-          const top = _p.copy(b.center).addScaledVector(n, b.half.y);
-          const y = top.y - (n.x * (x - top.x) + n.z * (z - top.z)) / n.y;
-          _d.set(x, y - 0.02, z);
-          if (!L.pointInBlock(b, _d, 0.001)) continue;
-          if (heights.some((h) => Math.abs(h - y) < 0.15)) continue;
-          heights.push(y);
+          const y = this._topAt(b, x, z);
+          if (y === null) continue;
+          if (heights.some((h) => Math.abs(h.y - y) < 0.15)) continue;
+          heights.push({ y, b });
         }
         const list = [];
-        for (const y of heights) {
+        for (const { y, b } of heights) {
           // headroom + clearance (not inside geometry, not hugging walls)
-          if (!this._clear(x, y, z)) continue;
-          const node = { id: this.nodes.length, x, y, z, ix, iz, nb: [], zone: -1 };
-          for (let t = 0; t < 2; t++) {
-            const pad = L.spawnPads[t];
-            if (Math.hypot(x - pad.x, z - pad.z) < L.spawnBarrier + 0.6 && y > pad.y - 1) node.zone = t;
-          }
-          this.nodes.push(node);
-          list.push(node.id);
+          if (!this._clear(x, y, z)) { fails.push({ ix, iz, x, z, b }); continue; }
+          list.push(this._addNode(x, y, z, ix, iz).id);
         }
         this.cells[iz * this.nx + ix] = list;
+      }
+    }
+    // Lanes the 1 m grid misses: a cell centre too close to a rail or wall on both sides of a narrow lane (e.g. Lockgate's
+    // lock-chamber stair, three flights 1.7 m wide split by handrails — the grid rows land 0.37 m from the rails, so the
+    // middle flight had no node at all, and a bot that ended up in it could only head for a node across a handrail). Such
+    // a cell gets its node nudged up to half a cell off its centre to where the body fits — only where no node already
+    // stands within 0.9 m at that level (a hole in the graph, never a second row along a wall).
+    for (const f of NAV_OPTS.nudge ? fails : []) {
+      for (const [ox, oz] of NUDGE) {
+        const x = f.x + ox, z = f.z + oz, y = this._topAt(f.b, x, z);
+        if (y === null || this._near(f.ix, f.iz, x, y, z, 0.9) || !this._clear(x, y, z)) continue;
+        const node = this._addNode(x, y, z, f.ix, f.iz);
+        node.nudged = true;
+        this.cells[f.iz * this.nx + f.ix].push(node.id);
+        break;
       }
     }
     // water proximity: wet = 2 with open water within ~1.2 m, 1 within ~2.2 m (paths pay extra to hug such edges);
@@ -98,6 +114,36 @@ export class NavGraph {
     this._climbEdges();
     // keep nodes connected to the spawn both ways (see _prune)
     this._prune();
+  }
+
+  // the height of block b's top face at (x, z), or null where (x, z) is off that face
+  _topAt(b, x, z) {
+    const n = b.axes[1];
+    const top = _p.copy(b.center).addScaledVector(n, b.half.y);
+    const y = top.y - (n.x * (x - top.x) + n.z * (z - top.z)) / n.y;
+    _d.set(x, y - 0.02, z);
+    return this.level.pointInBlock(b, _d, 0.001) ? y : null;
+  }
+  _addNode(x, y, z, ix, iz) {
+    const L = this.level, node = { id: this.nodes.length, x, y, z, ix, iz, nb: [], zone: -1 };
+    for (let t = 0; t < 2; t++) {
+      const pad = L.spawnPads[t];
+      if (Math.hypot(x - pad.x, z - pad.z) < L.spawnBarrier + 0.6 && y > pad.y - 1) node.zone = t;
+    }
+    this.nodes.push(node);
+    return node;
+  }
+  // a node already within r m of (x, y, z) (level with it: ±0.6 m) in cell (ix, iz) or its neighbours
+  _near(ix, iz, x, y, z, r) {
+    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+      const jx = ix + dx, jz = iz + dz;
+      if (jx < 0 || jz < 0 || jx >= this.nx || jz >= this.nz) continue;
+      for (const id of this.cells[jz * this.nx + jx] || []) {
+        const m = this.nodes[id];
+        if (Math.abs(m.y - y) < 0.6 && Math.hypot(m.x - x, m.z - z) < r) return true;
+      }
+    }
+    return false;
   }
 
   // is the walk between two neighbouring cells cut by something solid at waist height — a railing, fence or thin wall
@@ -207,9 +253,14 @@ export class NavGraph {
   }
 
   // A* from node a to node b; `team` blocks the enemy spawn zone. The search cap grows with the stage (3 × its nodes). Returns array of node ids (incl. a and b) or null.
-  // noClimb: plan without climb edges (a bot that just failed a climb); avoid: nodes never entered (Uint8Array — e.g.
-  // where a sprout pod's hedge stands: pods.js routes round it); cost: extra cost to enter a node (Uint8Array or null —
-  // e.g. the enemy specials a bot knows about, botSpecials.js: routes go round a Vortex Strike, a Tempest's rain …)
+  // noClimb: true = plan without climb edges (a bot that just failed a climb); a number = every climb edge costs that
+  // much more (a bot that can't ink a wall column now — dry, refilling: a climb only where there's no way round);
+  // { add, minRise, maxRise, out, bad } = `add` more each, and `out` more still (none at all without `out`) for one that
+  // rises outside minRise…maxRise (a weapon that can't ink so high — the brush — or so low: the roller) or is the edge
+  // `bad` (the one that just failed);
+  // avoid: nodes never entered (Uint8Array — e.g. where a sprout pod's hedge stands: pods.js routes round it); cost:
+  // extra cost to enter a node (Uint8Array or null — e.g. the enemy specials a bot knows about, botSpecials.js: routes
+  // go round a Vortex Strike, a Tempest's rain …)
   path(a, b, team, maxIter = Math.max(6000, this.nodes.length * 3), noClimb = false, avoid = null, cost = null) {
     if (a < 0 || b < 0) return null;
     const N = this.nodes.length;
@@ -219,6 +270,9 @@ export class NavGraph {
     const nodes = this.nodes, goal = nodes[b], blk = this.blocked;
     const h = (n) => Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5;
     const heap = new Heap();
+    const skipClimb = noClimb === true, CO = noClimb && typeof noClimb === 'object' ? noClimb : null;
+    const climbX = typeof noClimb === 'number' ? noClimb : (CO && CO.add) || 0, outX = CO && CO.out !== undefined ? CO.out : Infinity;
+    const minRise = (CO && CO.minRise) || 0, maxRise = (CO && CO.maxRise) || Infinity, bad = (CO && CO.bad) || null;
     g[a] = 0; from[a] = -1; seen[a] = st;
     heap.push(a, h(nodes[a]));
     let it = 0;
@@ -229,11 +283,16 @@ export class NavGraph {
       closed[cur] = st;
       const n = nodes[cur];
       for (const e of n.nb) {
-        if (noClimb && e.type === 'climb') continue;
+        let cx = 0;
+        if (e.type === 'climb') {
+          if (skipClimb) continue;
+          cx = climbX;
+          if (e.rise < minRise || e.rise > maxRise || e === bad) { if (outX === Infinity) continue; cx += outX; }
+        }
         if (avoid && avoid[e.to]) continue;
         const m = nodes[e.to];
         if (m.zone >= 0 && m.zone !== team) continue;
-        const ng = g[cur] + e.cost + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0) + (cost ? cost[e.to] : 0);
+        const ng = g[cur] + e.cost + cx + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0) + (cost ? cost[e.to] : 0);
         if (seen[e.to] !== st || ng < g[e.to]) {
           seen[e.to] = st; g[e.to] = ng; from[e.to] = cur;
           heap.push(e.to, ng + h(m));
@@ -303,8 +362,8 @@ export class NavGraph {
         // node above stops a climbing squid there — it hangs on the wall under it (the bots' "stuck on the wall" spots)
         if (this._climbBarred(hit.point.x, hit.point.z, m, topY, f.block)) continue;
         seenTop.add(top);
-        const rise = m.y - n.y;
-        n.nb.push({ to: top, cost: Math.hypot(m.x - n.x, m.z - n.z) + 3.5 + rise * 1.5, type: 'climb',
+        const rise = m.y - n.y, C = CLIMB_COST;
+        n.nb.push({ to: top, cost: Math.hypot(m.x - n.x, m.z - n.z) + C.base + rise * C.perM + Math.max(0, rise - C.tall) * C.tallPerM, type: 'climb', rise,
           wallP: [hit.point.x, hit.point.y, hit.point.z], wallN: [hit.normal.x, hit.normal.z], topY });
       }
     }
