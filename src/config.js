@@ -411,11 +411,11 @@ export const SUB = SUBS; // older code reads SUB.bomb
 // blast / trigger / sense / spray radius, collider, physics radius, damage, speed and timing is in SUBS above and doesn't
 // read this; where gameplay used to read a model's size (a sprinkler's / beacon's shot hitbox) it keeps the old number
 // (src/game/subs.js hitH). The prop held in the hand while aiming and the HUD icons stay the built size. Read when an
-// object is made, so a change here shows on the next throw. Tuned by eye (visibility pass 2026-09-30; before / after
-// the check: tools/botlab/tests/sub-scale.js).
+// object is made, so a change here shows on the next throw. Tuned by eye (visibility pass 2026-09-30), then capped at
+// 2x after play (the user: "make the subs 2x not 3x, theyre too big"). The check: tools/botlab/tests/sub-scale.js.
 export const SUB_VIEW_SCALE = {
-  bomb: 2, sticky: 2.5, burst: 3, seeker: 2, scan: 2, curtain: 1.5, sprinkler: 2.5, mine: 2, beacon: 2, mist: 2,
-  shaker: 2, waddle: 2, torpedo: 2, tracer: 2.5, boomerang: 1.5,
+  bomb: 2, sticky: 2, burst: 2, seeker: 2, scan: 2, curtain: 1.5, sprinkler: 2, mine: 2, beacon: 2, mist: 2,
+  shaker: 2, waddle: 2, torpedo: 2, tracer: 2, boomerang: 1.5,
 };
 export const subViewScale = (kind) => SUB_VIEW_SCALE[kind] ?? 1;
 
