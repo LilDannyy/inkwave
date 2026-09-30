@@ -275,7 +275,7 @@ export const PODS = {
   bulbY: 0.46,
   modes: { boss: 'on' },
   list: [
-    // the two gateways in the rill hedge (GATES; tools/botlab/jobs/new-stages/out/pods/treehills-pods.js measures the
+    // the two gateways in the rill hedge (GATES; tools/botlab/tests/treehills-pods.js measures the
     // way through and round): a pod's bramble wall grows across the gap. Every tier step on Treehills is 1.3 m (a kid
     // climbs it), so a gate only closes a route in a line whose ends are a long way round — here the hedge spans
     // the garden from the west rim to past the polytunnel
@@ -285,7 +285,7 @@ export const PODS = {
     // the flank gates (GATES.strip, GATES.lobe; their hedgerows HEDGES)
     ...[GATES.strip, GATES.lobe].map((g) => wallPod(g.id, g.x, g.y, g.z, g.deg, g.len, g.h)),
     // the zone bulwarks: short walls at a zone's edge facing its main approach — grown, cover for its holders; they
-    // never close a way in (tools/botlab/jobs/new-stages/out/pods/treehills-pods.js: every way in stays)
+    // never close a way in (tools/botlab/tests/treehills-pods.js: every way in stays)
     //   the centre zone's: at the foot of the plaza's south-west face, on the meadow (the plaza's rim round the zone is only
     //   0.9 m, its south-west edge holds the conifer tub, the south one the ramp's head, the south-east one the stair's):
     //   1.4 m over the plaza's floor, chest-high cover for its holders against the meadow's west side and the garden

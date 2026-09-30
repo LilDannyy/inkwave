@@ -70,7 +70,7 @@ the sight rule), each scene with the awareness on and off:
 with `MODE=tower` for the tower rider (add `PAGE_ARGS='only=tower'` for just that; `PAGE_ARGS` reaches any page test
 as `window.__pageArgs`). The scenes are small duels whose outcome varies run to run (the sim isn't bit-for-bit
 repeatable): each check runs enough rounds that its bar holds on the behaviour, not on luck (the Twister Zooka's most —
-~3 min a run in all). The A/B in matches: `tools/botlab/jobs/bots-specials/ab.sh` (see its README).
+~3 min a run in all). The A/B in matches: `tools/botlab/specials-ab/ab.sh` (see its README).
 
 Bot wall climbs (src/game/bots.js `_climb`, nav climb edges) on Lockgate's drained lock chambers — the chamber stair's nav
 (a node row up each flight), the climb costs, every main off the chamber floor with ink (a climb or the stair) and dry
@@ -107,7 +107,7 @@ Audio cues (src/audio/cues.js, src/audio/sfx-cues.js — every sub and special b
 positional loop per moving thing, warnings before the big blasts, the enemy's louder than yours):
 - `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sfx-cues.js tools/botlab/run.sh tools/botlab/page.cjs` (records every
   audio.play / audio.loop; `PAGE_ARGS='only=subs'`, `'only=specials'`, `'only=bomb,crab'` for a part)
-- the listening sheet: `tools/botlab/run.sh tools/botlab/jobs/sfx-cues/render.cjs` renders every sub's and special's
-  sounds offline to `tools/botlab/jobs/sfx-cues/out/` (git-ignored WAVs; `cues.wav` is the whole sheet, `cues.txt` its
+- the listening sheet: `tools/botlab/run.sh tools/botlab/sfx/render.cjs` renders every sub's and special's
+  sounds offline to `tools/botlab/sfx/out/` (git-ignored WAVs; `cues.wav` is the whole sheet, `cues.txt` its
   index, `metrics.json` levels and how alike the sounds are). The before / after inventory:
-  `tools/botlab/jobs/sfx-cues/INVENTORY.md`.
+  `tools/botlab/sfx/INVENTORY.md`.
