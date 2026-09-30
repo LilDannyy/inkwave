@@ -216,33 +216,51 @@ const TOWER = {
 };
 
 // ============================================================================================================
-// The sprout pods (the stage's gimmick; src/game/pods.js runs them): seed bulbs in low planters that grow a hedge when
-// inked — the team that fills its meter first owns it: tinted in its ink, climbable in that ink, high ground on top,
-// a wall across the lane for everyone. Alpha's half, mirrored. The planters (0.9 × 0.5 × 0.9, the engine's default
-// `col`) are the stage's props; the engine draws the bulbs (on the soil: bulbY 0.46) and the hedges (props.js types).
+// The sprout pods (the stage's gimmick; src/game/pods.js runs them): seeds in the station's green-steel planters that
+// grow a plant when inked — the team that fills its meter first owns it (tinted in its ink; only its ink sticks). Two
+// kinds (the engine's), Alpha's half, mirrored:
+//   • bramble walls, each grown across a gateway in a permanent hedge (a kid climbs anything ~1.8 m up, so on this
+//     stage's 1.3 m tiers only a hedge line makes a route a wall can close): grown, the gateway is shut — the owners
+//     swim up it and walk over (a gate), the enemy takes the other gateway, goes round the hedge's ends or cuts it down
+//   • canopies in open ground, each overlooking something worth holding: a 3 m platform its owners climb to
+// The planters are the stage's props (a trough 1.6 × 0.7 for a wall, a tub 1.1 across for a canopy; bulbY 0.46: the
+// soil); the engine draws the seeds and the plants (its default looks: sprout_bramble, sprout_canopy).
 // ============================================================================================================
-const HEDGE = [3.0, 1.8, 0.9];
-const pod = (id, x, y, z, rotY, size = HEDGE) => ({ id, pos: [x, y, z], rotY, size, pod: { type: 'treehills_pod' }, hedge: { type: 'treehills_hedge' } });
+// the rill hedge (Alpha's; Bravo's is its twin): a permanent clipped bramble hedge along the garden's rill (on its south
+// bank) — the garden's field boundary between the meadow side and the stair up to the nursery — from the band's rim at
+// the rill's head (x −13) to past the polytunnel (x 11.5: the east path round its end, past the band stair, stays open),
+// with two gateways in it, at the footbridge and at the west stepping stones, where the sprout pods grow their walls
+// (props.js places the hedge's lengths and the gate posts). 2.6 m tall, the gates too: a kid's hop tops out 1.41 m up
+// and ledgeAssist still lands it on a ledge 0.35 m above that (≈ 1.8 m in all) — the tallest standable thing beside
+// the line is a raised bed (0.6 m); roofs (the shed, the polytunnel) are no ground to jump from. The potting deck sees mid over it. Each
+// gate is 5 m: its trough in the middle leaves a 1.7 m way either side (the nav's 1 m grid fits a node in each, so
+// bots use them; x 1 and −5.5 put the grid's lines there — the footbridge lands in the first gate's west way, the
+// west stepping stones in the second's). The stones gate stays 3.5 m clear of the band's rim coping (1.6 m), from
+// which a kid would reach a gate's top
+export const GATES = {
+  rill: { z: -17.9, x0: -13.0, x1: 11.5, h: 2.6, d: 1.0, gates: [{ id: 'stones-gate', x: -5.5, len: 5.0 }, { id: 'footbridge-gate', x: 1.0, len: 5.0 }] },
+};
+const DEG = Math.PI / 180;
+const wallPod = (id, x, y, z, rotDeg, L, h = 2.7) => ({ id, kind: 'wall', pos: [x, y, z], rotY: rotDeg * DEG, size: [L, h, 1.2], pod: { type: 'treehills_pod' } });
+const canopyPod = (id, x, y, z, rotDeg) => ({ id, kind: 'canopy', pos: [x, y, z], rotY: rotDeg * DEG, pod: { type: 'treehills_pod' } });
 export const PODS = {
   mirror: true,
-  timing: { last: 20, wilt: 1.0, recharge: 6 },
   bulbY: 0.46,
   modes: { boss: 'on' },
   list: [
-    // between the plaza's climbable face and the greenhouse pod: a shorter hedge (2.4 m), its ends ≥ 1.35 m from the
-    // plaza's corner and the mound's ramp (a full 3 m left 1 m slots at both ends)
-    pod('meadow-w', -6.25, G0, -7.9, 0, [2.4, 1.8, 0.9]),
-    pod('meadow-e', 5.3, G0, -11.8, Math.PI / 2),       // east of the plaza's ramp, facing the mound
-    pod('garden-w', -2.6, G0, -19.6, Math.PI / 2),      // the garden's central path, beside the footbridge
-    pod('garden-e', 3.2, G0, -20.2, Math.PI / 2),
-    pod('band-e', 17.25, T1, -17, Math.PI / 2),         // the east band, over the meadow
-    pod('terrace-e', 15.5, T1, -25.5, Math.PI / 6),     // the base terrace, beside the side zone
-    pod('strip-w', -18, T1, -25, 0),                    // the west strip (off the tower's route)
-    // the nursery (the stretch): before the seedbed terrace between its stair and the deck's (a hedge across the way up
-    // to the deck from mid); between the zone's cloche row and the propagation tunnel (a hedge across the corridor from
-    // the deck's side stair to the lobe)
-    pod('nursery-w', -6.3, T1, -31.2, 0, [2.4, 1.8, 0.9]),
-    pod('nursery-e', 13.4, T1, -40.6, 0),
+    // the two gateways in the rill hedge (GATES; tools/botlab/jobs/new-stages/out/pods/treehills-pods.js measures the
+    // way through and round): a pod's bramble wall grows across the gap. Every tier step on Treehills is 1.3 m (a kid
+    // climbs it), so a gate only closes a route in a line whose ends are a long way round — here the hedge spans
+    // the garden from the west rim to past the polytunnel
+    //   the stones gate: the west path (the shed and the beds → the west stepping stones → the meadow's west side)
+    //   the footbridge gate: the garden's central path (the nursery stair → the footbridge → the plaza's ramp)
+    ...GATES.rill.gates.map((g) => wallPod(g.id, g.x, G0, GATES.rill.z, 0, g.len, GATES.rill.h)),
+    // canopies (open ground; nothing near high enough to hop over the parapet from):
+    //   the meadow south-east of the plaza: its platform (3 m) looks down on the centre zone on the plaza (1.3) and the
+    //   ramp and stair up to it
+    canopyPod('meadow', 6, G0, -10.5, 0),
+    //   the nursery by the zone's cloche row: over the side zone (4 m off) and the tower's bank lane (the loop's return)
+    canopyPod('nursery', 13, T1, -40.5, 90),
   ],
 };
 
