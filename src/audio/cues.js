@@ -386,7 +386,7 @@ export class Cues {
       } else s.h.set({ pos, volume: vol, pitch, params });
       Object.assign(s, { obj: w.obj, ch: w.ch, warn: w.warn, rel: w.rel, vol, pitch, dop, params, pos: w.pos, d: w.d, cl: w.cl, seen: G.time });
       // a big threat of the enemy's, inside its reach: the music dips a little while it lasts
-      if (w.big && w.rel === 'foe' && w.cl > 0.5 && G.time - this._duckT > 0.45) { this._duckT = G.time; A.duck?.(0.3, 0.5); }
+      if (w.big && w.rel === 'foe' && w.cl > 0.5 && !m?.paused && G.time - this._duckT > 0.45) { this._duckT = G.time; A.duck?.(0.3, 0.5); }
     }
     this.stats.maxMove = Math.max(this.stats.maxMove, nm); this.stats.maxWarn = Math.max(this.stats.maxWarn, nw);
     for (const [k, s] of this.slots) if (!keep.has(k)) { s.h.stop(s.warn ? 0.06 : 0.15); this.slots.delete(k); this.stats.stopped++; }
