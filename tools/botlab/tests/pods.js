@@ -622,9 +622,14 @@
       intents.set(foe, (a) => { a.hp = PLAYER.hp; a.invuln = 1; });
       botOn(bot);
       hooks.push(() => { bot.special = 0; bot.hp = Math.max(bot.hp, PLAYER.hp * 0.9); });
-      let climbTask = 0, onIt = 0, climbing = 0;
-      for (let f = 0; f < 60 * 5; f++) { step(1 / 60); const S = bot.bot.podS; if (S && (S.task === 'climb' || S.task === 'top') && S.p === pb) climbTask++; if (onPlant(bot, pb)) onIt++; if (bot.climbing) climbing++; }
-      R('bots never try to climb an enemy plant (an enemy canopy right beside a fight)', climbTask === 0 && onIt === 0 && climbing === 0, { climbTask, onIt, climbing });
+      // (climbing: up this plant's sides — its own canopy, grown near the fight, it may climb: that's allowed)
+      let climbTask = 0, onIt = 0, climbing = 0; const cl = [];
+      for (let f = 0; f < 60 * 5; f++) {
+        step(1 / 60); const S = bot.bot.podS; if (S && (S.task === 'climb' || S.task === 'top') && S.p === pb) climbTask++; if (onPlant(bot, pb)) onIt++;
+        const [lx, lz] = loc(pb, bot.pos);
+        if (bot.climbing && Math.abs(lx) < pb.hw + 0.8 && Math.abs(lz) < pb.hd + 0.8) { climbing++; if (cl.length < 6) cl.push([f, r3(bot.pos.x), r3(bot.pos.y), r3(bot.pos.z), S && S.task, S && S.p && S.p.id]); }
+      }
+      R('bots never try to climb an enemy plant (an enemy canopy right beside a fight)', climbTask === 0 && onIt === 0 && climbing === 0, { climbTask, onIt, climbing, cl, plant: [pb.x, pb.z, pb.state] });
       hooks.length = 0; botOff(bot); intents.clear(); homeAll(); P.reset(); step(0.2);
     }
   }
