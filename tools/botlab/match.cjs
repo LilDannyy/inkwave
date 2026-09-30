@@ -8,6 +8,7 @@
 //   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS values).
 //   SPECIAL_AI=0 turns the bots' awareness of enemy specials off (src/game/botSpecials.js; an A/B on the same code),
 //   team0 / team1: on for that team only (head to head); unset: as shipped.
+//   SPCHARGE=3: the special gauge fills 3× as fast (PLAYER.specialChargeRate; this run only) — more specials per match.
 // Reports: stuck %, splats (by cause), per-weapon splats / deaths / turf, specials, super jumps, console errors, sim
 // cost, and in Zone Control the objective stats. Last line: RESULT_JSON {…} (also written to OUT if set).
 const { app } = require('electron');
@@ -16,7 +17,7 @@ const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 const MAP = process.env.MAP || 'halyard', MODE = process.env.MODE || 'zones', SECS = +(process.env.SECS || 180);
 const OUT = process.env.OUT || '';
 const WEAPONS = process.env.WEAPONS || '', SUBS = process.env.SUBS || '', TRACK = process.env.TRACK || '', TRACK_TEAM = process.env.TRACK_TEAM ?? '', TUNE = process.env.TUNE || '';
-const SPECIAL_AI = process.env.SPECIAL_AI || '';
+const SPECIAL_AI = process.env.SPECIAL_AI || '', SPCHARGE = +(process.env.SPCHARGE || 1);
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); setTimeout(() => process.exit(1), 3000); }, +(process.env.WATCHDOG || 900000));   // (hard exit if a hung page blocks quitting)
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let claimed = false;
@@ -55,6 +56,7 @@ app.on('browser-window-created', (_, win) => {
     const spAI = await js(`(async () => { try { const M = await import('./src/game/botSpecials.js'), S = M.SPECIAL_AI, v = ${JSON.stringify(SPECIAL_AI)};
       if (v === '0') S.enabled = false; else if (v === 'team0') S.teams = [true, false]; else if (v === 'team1') S.teams = [false, true];
       M.resetSpecialStats(); return S.enabled ? (S.teams ? 'team' + S.teams.indexOf(true) : 'on') : 'off'; } catch (e) { return 'n/a'; } })()`);
+    if (SPCHARGE !== 1) await js(`(async () => { const C = await import('./src/config.js'); C.PLAYER.specialChargeRate *= ${SPCHARGE}; return 0; })()`);
     const t0 = Date.now();
     const r = await js(`(async () => {
       const g = window.__inkwave, m = g.match, Z = m.zones, N = __G.nav;
@@ -330,7 +332,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
-    r.map = MAP; r.mode = MODE; r.loadouts = equip; r.tune = tuned; r.consoleLines = uniq.length; r.specialAI = spAI;
+    r.map = MAP; r.mode = MODE; r.loadouts = equip; r.tune = tuned; r.consoleLines = uniq.length; r.specialAI = spAI; r.spCharge = SPCHARGE;
     console.log('RESULT_JSON ' + JSON.stringify(r));
     if (OUT) require('fs').writeFileSync(OUT, JSON.stringify(r));
     app.quit();
