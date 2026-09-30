@@ -28,7 +28,8 @@
   const tank = (e) => { e.hp = 1e6; };   // (a dummy that can be hurt but never goes down)
   const TOWER = m.mode === 'tower';
   // PAGE_ARGS='only=slam,crab': just those scenes (keys: slam bomb strike wail orb storm zooka kraken bubbler crab stamp blower jet sight tower)
-  const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
+  // (Tower Command: the tower's roles take over the staged bots, so there only the tower scene runs unless asked)
+  const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1] || (TOWER ? 'tower' : null);
   const want = (k) => !ONLY || ONLY.split(',').includes(k);
   // a fresh scene: world and ink cleared, everyone healed and parked; `live` Alpha bots run their brains
   const scene = (ai, live, foes, opts = {}) => {
@@ -457,9 +458,10 @@
     const E = B[0], E2 = B[1], X = A[0];
     let dmg = 0;
     for (let k = 0; k < 4; k++) {
-      scene(ai, [X], [E, E2], { diff: 'hard' });
-      place(X, -2 + k, -14); place(E2, -2 + k, -5); tank(E2); face(X, -2 + k, -5);
-      place(E, 6, 15); tank(E);
+      // (a charger planted mid-charge in a fight 19 m off: the old behaviour stays put)
+      scene(ai, [X], [E, E2], { diff: 'hard', weapon: 'charger' });
+      chargers([X], [[-2 + k, -14]], E2, -2 + k, 5.5);
+      place(E, 8, 12); tank(E);
       settle([X], 0.8); tank(E2);
       const J = SPECIALS.jetpack, from = new V3(E.pos.x, E.pos.y + 4.8, E.pos.z), dir = new V3(X.pos.x - from.x, X.pos.y + 0.05 - from.y, X.pos.z - from.z).normalize();
       G.projectiles.fireCustom(E, from, dir, { type: 'blast', speed: J.projSpeed, damage: J.directDamage, range: J.range, weaponId: 'jetpack', burst: { radius: J.splashRadius, splashRadius: J.splashRadius, dmgMax: J.splashMax, dmgMin: J.splashMin, paint: J.paintRadius } });
@@ -481,7 +483,7 @@
   };
   if (want('jet')) {
     const a = jet(true), b = jet(false), t = jetTarget();
-    R('Ink Jet: a hard bot mid-duel steps out of a blast\'s path and splash seen coming from 30 m (avg damage on well under off)', a < b * 0.6, { avgDmgOn: a, avgDmgOff: b });
+    R('Ink Jet: a hard charger mid-charge gets out of a blast\'s path and splash seen coming from ~28 m (avg damage on well under off)', a < b * 0.6, { avgDmgOn: a, avgDmgOff: b });
     R('Ink Jet: a jetpacker in reach is taken before a closer foe (floating, in the open)', t.framesOnJetpacker > t.framesOnCloserFoe, t);
   }
 

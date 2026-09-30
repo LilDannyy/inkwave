@@ -344,11 +344,11 @@ export function specialDangers() {
 }
 
 // how much of a hit on e (from a shooter at ax, ay, az) gets through: 1 all · 0.25 a Tidal Slam's armoured leap · 0
-// nothing (Bubble Guard, Kraken, a Crab Rig's hull from its front / sides, a Mega Stamp's guarded front, spawn /
-// landing invulnerability)
+// nothing (Bubble Guard, Kraken, a Crab Rig's hull from its front / sides, a Mega Stamp's guarded front, a fresh
+// respawn's protection — more than a second of it left; a slam's 0.3 s landing grace is gone before a shot gets there)
 export function immunity(e, ax, ay, az) {
   if (!e || !e.alive) return 1;
-  if (e.invuln > 0.3) return 0;
+  if (e.invuln > 1) return 0;
   if (e.status && e.status.shield > 0.15) return 0;
   const s = e.specialActive;
   if (!s) return 1;
@@ -792,11 +792,13 @@ export class SpecialSense {
     const b = this.b;
     if (G.time - this.guardT > 1) { this.guardT = G.time; SPECIAL_STATS.guard++; if (b.path) { b.path = null; b.repath = 0; } }
   }
-  // no shots / subs into the untouchable (unless the shove pays), none into an enemy bubble in the way
+  // no shots / subs into the untouchable (unless the shove pays), none into an enemy bubble in the way — only when the
+  // aim is on the target (a sprout pod, a device, a wall column, the tower's deck … are other systems' shots)
   _fire(it, dt) {
     const a = this.a, b = this.b, T = b.target;
     if (!T || b.mode !== 'fight' || !(b.seeTimer > 0) || !T.alive) return;
     if (!it.fire && !it.sub && !b._bombAim && !a.weaponRunner.charging) return;
+    if (Math.abs(angleDiff(b.aimYaw, Math.atan2(T.pos.x - a.pos.x, T.pos.z - a.pos.z))) > 0.45) return;
     if (immunity(T, a.pos.x, a.pos.y, a.pos.z) < 0.3) {
       if (this._knock(T) || this._crabFar(T)) { if (this.knockOn !== T) { this.knockOn = T; SPECIAL_STATS.knockShots++; } return; }
       this._hold(it);
