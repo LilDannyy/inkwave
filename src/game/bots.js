@@ -15,7 +15,8 @@ import { PLAYER, DIFFICULTY, SUB, SPECIALS, TOWER, weaponRange } from '../config
 import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
-export { SIGHT, SIGHT_STATS, teamKnown };
+import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
+export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
 const _walkHit = new Hit();
@@ -578,6 +579,7 @@ export class BotBrain {
     // in sight, the memory out of it — what the fight code reads); out of sight: how long we keep after it (huntFor),
     // whether we go and look (huntSeek), spray the spot, lob a sub there
     if (this.sight) this.sight.reset(); else this.sight = new Sight(this);
+    if (this.sp) this.sp.reset(); else this.sp = new SpecialSense(this);   // enemy specials (botSpecials.js)
     this.tk = null; this.tv = null; this._tgtSeen = false; this._pT = -1;
     this.huntFor = 0; this.huntSeek = false; this.sprayOn = false; this.sprayed = false; this.memBombOn = false; this.mBomb = null;
     this.stuck = 0; this.lastPos = new THREE.Vector3(); this.jumpCd = 0; this.bestD = Infinity; this.noProg = 0;
@@ -638,6 +640,7 @@ export class BotBrain {
     if (!a.alive) {
       it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.path = null; this._wasDead = true; this.mvMag = 0; this.navBack = null; this.navBackT = 0;
       if (this.target || this.sight.mem.size) { this._dropTarget(); this.sight.reset(); }   // (what it knew is stale by the respawn)
+      this.sp.dead();
       return;
     }
     if (this._wasDead && G.match && G.match.playing()) {
@@ -679,6 +682,8 @@ export class BotBrain {
     if (tgt && !tgt.alive) this._dropTarget();
     // the foe we're fighting, between looks: still in sight? (a duck behind cover is noticed within ~0.1 s)
     else if (tgt && this.seeTimer > 0 && !this.sight.recheck(tgt)) { this.seeTimer = 0; this._tgtSeen = false; this._onLost(this.tk); }
+    // ---------------- enemy specials (botSpecials.js): the dangers it has noticed (as a player could, after its reaction)
+    this.sp.tick(dt);
 
     // ---------------- Zone Control: the team plan (null in Turf War); re-target at once on a rotation or a new role
     const zp = zonePlan();
@@ -1000,6 +1005,10 @@ export class BotBrain {
     // wall too: tAim, inking it on the way onto its deck)
     this._climbAim = this._climb(dt, move, it) || tAim;
     if (this._climbAim) { wantYaw = this._climbAim.yaw; wantPitch = this._climbAim.pitch; }
+    // ---------------- enemy specials (botSpecials.js), after everything else: out of a danger area it's in, never a
+    // step into one, no shots into the untouchable; popping our team's bubble on one of theirs (an aim to hold)
+    const spAim = this.sp.act(dt, it, move);
+    if (spAim) { wantYaw = spAim.yaw; wantPitch = spAim.pitch; if (!thrAim) thrAim = spAim; }
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim, enemyVisible);
   }
 
@@ -1263,11 +1272,25 @@ export class BotBrain {
       const P = zonePlan(), p = P && P.hotspot(this.zZone, a.team);
       if (p) s.target.set(p.x, 0, p.z);
     }
-    // Tower Command: onto the tower when it isn't ours, else onto the route just ahead of it
+    // Tower Command: onto the tower when it isn't ours, else onto the route just ahead of it. (Not its exact centre: the
+    // missile lands on the pillar's top there, 3.6 m up, and a vortex hurts only from 1.5 m below its centre — never the
+    // riders on the deck. On the ground beside the platform it covers the deck and the escorts round it.)
     if (s.id === 'strike' && s.aiming && s.target && !s._zoneAimed && G.match && G.match.tower) {
       s._zoneAimed = true;
       const P = towerPlan();
-      if (P) { const T = P.T, p = T.owner === a.team ? P.at(T.s + P.dirOf(a.team) * 8) : T.pos; s.target.set(p.x, 0, p.z); }
+      if (P) {
+        const T = P.T;
+        if (T.owner === a.team) { const p = P.at(T.s + P.dirOf(a.team) * 8); s.target.set(p.x, 0, p.z); }
+        else {
+          T.path.dir(T.s, _tq);
+          let bx = T.pos.x, bz = T.pos.z;
+          for (const sg of [1, -1]) {
+            const x = T.pos.x - _tq.z * sg * 2.2, z = T.pos.z + _tq.x * sg * 2.2;
+            if (G.level.groundHeight(x, z, T.pos.y + 0.8) > -Infinity) { bx = x; bz = z; break; }
+          }
+          s.target.set(bx, 0, bz);
+        }
+      }
     }
     const fighting = this.mode === 'fight' && !!this.target;
     const t = this.tv;
@@ -2623,7 +2646,7 @@ export class BotBrain {
     for (const [e, k] of S.mem) {
       if (!k.seen) continue;
       const d = e.pos.distanceTo(a.pos);
-      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0);
+      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0) + this.sp.targetBias(e, d);   // (enemy specials: the untouchable last)
       if (score < bd) { bd = score; best = e; }
     }
     if (best) {
@@ -2712,10 +2735,10 @@ export class BotBrain {
     let s = nav.nearest(this.a.pos, 1.2, true);
     // standing at the foot of a step: don't start the route from the ledge above (we can't get up there from here)
     if (s >= 0 && this.a.grounded && nav.nodes[s].y - this.a.pos.y > 0.5) { const s2 = nav.nearest(this.a.pos, 0.45, true); if (s2 >= 0) s = s2; }
-    const g = nav.nearest(pos, maxUp);
+    const g = this.sp.goalOk(nav.nearest(pos, maxUp));   // (enemy specials: a goal inside an area we know hurts → just outside it)
     this.repath = 0.8 + Math.random() * 0.4;
     if (s < 0 || g < 0) { this.path = null; return false; }
-    const p = nav.path(s, g, this.a.team, undefined, this.t < this.noClimbUntil);
+    const p = nav.path(s, g, this.a.team, undefined, this.t < this.noClimbUntil, null, this.sp.cost());   // (… and round those areas)
     if (!p) { this.path = null; return false; }
     this.path = p; this.pi = Math.min(1, p.length - 1); this.goal = g; this.bestD = Infinity; this.noProg = 0;
     return true;
