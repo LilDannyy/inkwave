@@ -207,17 +207,21 @@ export function registerFlora(D, H, T) {
       // the clipped top: flat, a mat of small sprays
       for (let i = 0; i < Math.round((w * d) / 0.12); i++) B.add(NS('foliage'), puff(0, i % 6), leaf(0.55 + 0.3 * rnd(q++)), -w / 2 + 0.15 + rnd(q++) * (w - 0.3), h - 0.04, -d / 2 + 0.12 + rnd(q++) * (d - 0.24), { sx: 0.18, sy: 0.05, sz: 0.14 });
       B.col(-w / 2, 0, -d / 2, w / 2, h, d / 2, ROOF);
-      // the gate posts: clipped columns, taller, a ball on top
-      const post = (x) => {
-        const pw = 1.1, ph = h + 0.5;
+      // the gate posts: clipped columns, taller, a ball on top, flush with the hedge's end (a length too short for two
+      // is one post, as wide as it)
+      const post = (x, pw = 1.1) => {
+        const ph = h + 0.3;   // (2.9 m on the rill hedge: nothing on the line above 3 m)
         B.add(NS('foliage'), blob(1, 3), '#244f2b', x, ph / 2 - 0.1, 0, { sx: pw / 2, sy: ph / 2, sz: Math.max(pw, d + 0.1) / 2 });
         for (let j = 0; j < 6; j++) for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU + j * 0.5, y = 0.3 + j * 0.42; B.add(NS('foliage'), puff(0, (j + k) % 6), leaf(0.2 + 0.1 * j), x + Math.cos(a) * pw * 0.45, y, Math.sin(a) * Math.max(pw, d + 0.1) * 0.45, { sx: 0.26, sy: 0.24, sz: 0.26 }); }
         B.add(NS('foliage'), puff(1, 2), leaf(0.7), x, ph + 0.18, 0, { s: 0.36 });
         pbox(B, 'wood', '#6b5a3e', pw + 0.1, 0.16, Math.max(pw, d + 0.1) + 0.1, x, 0.08, 0);
         B.col(x - pw / 2, 0, -Math.max(pw, d + 0.1) / 2, x + pw / 2, ph, Math.max(pw, d + 0.1) / 2, ROOF);
       };
-      if (o.post === 'a' || o.post === 'both') post(-w / 2 + 0.45);
-      if (o.post === 'b' || o.post === 'both') post(w / 2 - 0.45);
+      if (o.post === 'both' && w < 2.4) post(0, w);
+      else {
+        if (o.post === 'a' || o.post === 'both') post(-w / 2 + 0.55);
+        if (o.post === 'b' || o.post === 'both') post(w / 2 - 0.55);
+      }
     },
   };
 

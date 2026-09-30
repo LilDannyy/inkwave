@@ -226,13 +226,19 @@ const TOWER = {
 // The planters are the stage's props (a trough 1.6 × 0.7 for a wall, a tub 1.1 across for a canopy; bulbY 0.46: the
 // soil); the engine draws the seeds and the plants (its default looks: sprout_bramble, sprout_canopy).
 // ============================================================================================================
-// the gateways (Alpha's; Bravo's are their twins): each gate's centre, heading (deg), its wall's length, and its hedge's
-// wings along the same line (from the gate's end out: [from, to] in m along it) — props.js places the hedgerows
+// the rill hedge (Alpha's; Bravo's is its twin): a permanent clipped bramble hedge along the garden's rill (on its south
+// bank) — the garden's field boundary between the meadow side and the stair up to the nursery — from the band's rim at
+// the rill's head (x −13) to past the polytunnel (x 11.5: the east path round its end, past the band stair, stays open),
+// with two gateways in it, at the footbridge and at the west stepping stones, where the sprout pods grow their walls
+// (props.js places the hedge's lengths and the gate posts). 2.6 m tall, the gates too: a kid's hop tops out 1.41 m up
+// and ledgeAssist still lands it on a ledge 0.35 m above that — the tallest standable thing beside the line is a raised
+// bed (0.6 m); roofs (the shed, the polytunnel) are no ground to jump from. The potting deck sees mid over it. Each
+// gate is 5 m: its trough in the middle leaves a 1.7 m way either side (the nav's 1 m grid fits a node in each, so
+// bots use them; x 1 and −5.5 put the grid's lines there — the footbridge lands in the first gate's west way, the
+// west stepping stones in the second's). The stones gate stays 3.5 m clear of the band's rim coping (1.6 m), from
+// which a kid would reach a gate's top
 export const GATES = {
-  // (the garden's: 3.1 m, the hedge too — the garden stair's top steps (1.3) come within 1.5 m of it: a 2.7 m wall they'd
-  // jump onto)
-  garden: { x: 0.25, z: -22.25, deg: -11.31, gate: 5.0, h: 3.1, wings: [[-6.6, -2.5], [2.5, 6.2]] },
-  band: { x: -15.5, z: -17.5, deg: -14.04, gate: 4.72, wings: [] },
+  rill: { z: -17.9, x0: -13.0, x1: 11.5, h: 2.6, d: 1.0, gates: [{ id: 'stones-gate', x: -5.5, len: 5.0 }, { id: 'footbridge-gate', x: 1.0, len: 5.0 }] },
 };
 const DEG = Math.PI / 180;
 const wallPod = (id, x, y, z, rotDeg, L, h = 2.7) => ({ id, kind: 'wall', pos: [x, y, z], rotY: rotDeg * DEG, size: [L, h, 1.2], pod: { type: 'treehills_pod' } });
@@ -242,16 +248,13 @@ export const PODS = {
   bulbY: 0.46,
   modes: { boss: 'on' },
   list: [
-    // two gateways (their hedgerows and posts: props.js GATEWAYS): a sprout pod's bramble wall grows across the gap in
-    // a permanent hedge; grown, the route through is closed and the way round is long (tools/botlab/jobs/new-stages/
-    // out/pods/treehills-pods.js measures both). On Treehills every tier step is 1.3 m (a kid hops it), so a wall only
-    // closes a route where hard things meet its ends: here the garden's hedge (tank → polytunnel) and the band's grove
-    //   the garden gate: across the garden's central path between the garden stair and the rill's footbridge (the centre
-    //   route from the nursery to mid)
-    wallPod('garden-gate', GATES.garden.x, G0, GATES.garden.z, GATES.garden.deg, GATES.garden.gate, GATES.garden.h),
-    //   the band gate: across the west band's lane between its grove and the band's corner over the garden (the west
-    //   flank, mid ↔ the strip and the nursery)
-    wallPod('band-gate', GATES.band.x, T1, GATES.band.z, GATES.band.deg, GATES.band.gate),
+    // the two gateways in the rill hedge (GATES; tools/botlab/jobs/new-stages/out/pods/treehills-pods.js measures the
+    // way through and round): a pod's bramble wall grows across the gap. Every tier step on Treehills is 1.3 m (a kid
+    // climbs it), so a gate only closes a route in a line whose ends are a long way round — here the hedge spans
+    // the garden from the west rim to past the polytunnel
+    //   the stones gate: the west path (the shed and the beds → the west stepping stones → the meadow's west side)
+    //   the footbridge gate: the garden's central path (the nursery stair → the footbridge → the plaza's ramp)
+    ...GATES.rill.gates.map((g) => wallPod(g.id, g.x, G0, GATES.rill.z, 0, g.len, GATES.rill.h)),
     // canopies (open ground; nothing near high enough to hop over the parapet from):
     //   the meadow south-east of the plaza: its platform (3 m) looks down on the centre zone on the plaza (1.3) and the
     //   ramp and stair up to it
