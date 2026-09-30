@@ -11,7 +11,7 @@
 // first rebound (dashed), so the low angle is learnable.
 import * as THREE from 'three';
 import { G, emit, clamp } from '../../core/ctx.js';
-import { PLAYER, SUBS } from '../../config.js';
+import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { Physics, Hit } from '../physics.js';
 import { SUB_KITS, netRec, netId, ghostMute } from './registry.js';
 const r3 = (x) => Math.round(x * 1000) / 1000;
@@ -25,7 +25,8 @@ import { pts, sweep } from '../../audio/music.js';
 const V3 = THREE.Vector3;
 const DEG = Math.PI / 180;
 const UP = new V3(0, 1, 0), ZAX = new V3(0, 0, 1);
-const SCALE = 1.9;
+const SCALE = 1.9;               // hand-scale prop → world — [sub-view] drawn × SUB_VIEW_SCALE.tracer (visual only: s.size stays)
+const HEAD_R = 0.0425;           // [sub-view] the bolt's half thickness in the world at SCALE (m)
 const _v = new V3(), _v2 = new V3(), _v3 = new V3(), _end = new V3(), _q = new THREE.Quaternion();
 const _hit = new Hit(), _hit2 = new Hit(), _res = { t: 0, dist: 0 };
 const nearCam = (p, r = 34) => !!G.camera && G.camera.position.distanceToSquared(p) < r * r;
@@ -142,19 +143,19 @@ function drawRibbon(b) {
 
 // =============================================================================================== bolt head
 function buildHead(team) {
-  const d = getSubDef('tracer');
+  const d = getSubDef('tracer'), vs = subViewScale('tracer');   // [sub-view]
   const col = G.teamColors[team];
   const outer = new THREE.Group(), model = new THREE.Group();
-  model.scale.setScalar(SCALE); model.position.y = -d.yc * SCALE;
+  model.scale.setScalar(SCALE * vs); model.position.y = -d.yc * SCALE * vs;
   const body = new THREE.Mesh(d.body, getPlasticMaterial());
   const ink = new THREE.Mesh(d.ink, getInkMaterial(col));
   const gm = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: col.clone(), emissiveIntensity: 2.4, roughness: 0.3 });
   model.add(body, ink, new THREE.Mesh(d.glow, gm));
   // a hot glowing streak round it (reads at speed)
   const streak = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: col.clone().multiplyScalar(2.2).addScalar(0.25), transparent: true, opacity: 0.55, depthWrite: false }));
-  streak.scale.set(0.075, 0.075, 0.42); streak.position.z = -0.12;
+  streak.scale.set(0.075 * vs, 0.075 * vs, 0.42 * vs); streak.position.z = -0.12 * vs;
   outer.add(model, streak);
-  outer.userData = { glow: gm, streak };
+  outer.userData = { glow: gm, streak, r: HEAD_R * vs };   // (r: the drawn bolt's half thickness)
   return outer;
 }
 
@@ -315,6 +316,7 @@ function bounce(b, w) {
   }
   rebound(b.dir, n, s);
   b.pos.copy(w.point).addScaledVector(n, 0.03);
+  if (n.y > 0.6) b.fy = w.point.y;   // ([sub-view] the floor it skims: poseHead keeps the drawn bolt above it)
   b.bounces++;
   if (nearCam(w.point, 30)) {
     G.fx?.burst(w.point, n, col, { count: 7, speed: 3.5, size: 0.07, ring: true });
@@ -376,6 +378,8 @@ function poseHead(b) {
   const H = b.head;
   if (!H.visible) return;
   H.position.copy(b.pos);
+  // [sub-view] skimming off a floor (the bolt's line runs 0.03 m over it at the bounce), the drawn bolt rides on it
+  if (b.fy !== undefined) { const up = H.userData.r - (b.pos.y - b.fy); if (up > 0 && up < H.userData.r + 0.05) H.position.y += up; }
   _q.setFromUnitVectors(ZAX, b.dir);
   H.quaternion.copy(_q);
   H.rotateZ(b.age * 26);

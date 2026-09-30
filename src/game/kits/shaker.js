@@ -13,7 +13,7 @@
 // 'bomb:arm' / 'bomb:explode' { actor, pos, team, radius, kind: 'shaker', n } per blast.
 import * as THREE from 'three';
 import { G, emit, on, clamp, lerp, angleDiff } from '../../core/ctx.js';
-import { PLAYER, SUBS } from '../../config.js';
+import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { SUB_KITS, netRec, netId, ghostMute } from './registry.js';
 const r2 = (x) => Math.round(x * 100) / 100;
 import { registerSubModel, getSubDef, GEO_KIT } from '../character-weapons.js';
@@ -30,9 +30,11 @@ const UP = new V3(0, 1, 0), DOWN = new V3(0, -1, 0);
 const _v = new V3(), _v2 = new V3(), _v3 = new V3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _qI = new THREE.Quaternion();
 const _hit = new Hit(), _hit2 = new Hit();
 const GRAV = 24;
-const SCALE = 1.9;                 // hand-scale model → world (the other sub props read at this size too)
+const SCALE = 1.9;                 // hand-scale model → world (the other sub props read at this size too) — [sub-view]
+                                   // × SUB_VIEW_SCALE.shaker (config.js): drawn bigger, visual only (RAD etc. unchanged)
 const CY = 0.107;                  // model-space height of the can's middle (the thrown can tumbles about it)
 const RAD = 0.19;                  // world contact radius (the centre rests this far off a surface)
+const CAN_R = 0.049;               // [sub-view] the can's foot radius (model space): it rattles on its rim
 
 // ================================================================================================= model
 // Prop space: origin at the bottom centre, +Y up, +Z front. A cream can, Ø 0.10 × 0.21 at hand scale, with an ink window
@@ -76,10 +78,10 @@ const LAMP_GEO = superEllipsoid(0.0057, 0.0057, 0.0034, 1, 1, 12, 6);   // a lam
 function lampMat(color) { return new THREE.MeshStandardMaterial({ color: 0x141418, emissive: color.clone(), emissiveIntensity: 0.05, roughness: 0.3 }); }
 
 // the thrown can: outer (world position = the can's middle) → inner (tumble) → model (scaled prop, lifted by CY)
-function makeMesh(team) {
+function makeMesh(team, vs = 1) {
   const d = getSubDef('shaker'), col = G.teamColors[team];
   const outer = new THREE.Group(), inner = new THREE.Group(), model = new THREE.Group();
-  model.scale.setScalar(SCALE); model.position.y = -CY * SCALE;
+  model.scale.setScalar(SCALE * vs); model.position.y = -CY * SCALE * vs;
   const body = new THREE.Mesh(d.body, getPlasticMaterial()); body.castShadow = true;
   const ink = new THREE.Mesh(d.ink, getInkMaterial(col)); ink.castShadow = true;
   model.add(body, ink);
@@ -373,13 +375,14 @@ function spawn(a, sub, pos, vel, level, ghost, gid) {
   const dir = new V3(vel.x, 0, vel.z);
   if (dir.lengthSq() < 1e-6) dir.set(Math.sin(a.aimYaw), 0, Math.cos(a.aimYaw));
   dir.normalize();
-  const m = makeMesh(a.team);
+  const vs = subViewScale('shaker');   // [sub-view]
+  const m = makeMesh(a.team, vs);
   m.outer.position.copy(pos);
   m.inner.rotation.set(Math.random() * 6, Math.random() * 6, 0);
   G.scene.add(m.outer);
   const it = { owner: a, team: a.team, sub, level, left: level, blasts: 0, pos, vel, dir, m, state: 'fly', age: 0, fuse: -1, next: 0, trail: 0,
     ground: 0, armed: false, sp: !!a.specialActive, spin: new V3(4 + Math.random() * 5, 0, 3 + Math.random() * 5), gp: new V3(), gn: new V3(0, 1, 0), gOk: false,
-    ghost, gid };
+    ghost, gid, vs, stand: 0 };
   items.push(it);
   lamps(it);
   return it;
@@ -447,14 +450,19 @@ function update(it, dt) {
   // ---- look: tumbles in the air; once armed it stands up and rattles; the danger ring shows the next blast
   const M_ = it.m;
   M_.outer.position.copy(it.pos);
+  // [sub-view] armed, the drawn can stands with its foot on the floor: its middle CY·SCALE·vs up, where the physics
+  // centre sits RAD up (eased in as it stands up after landing; kept through its hops so it never tumbles into the floor)
+  it.stand += ((it.armed ? 1 : 0) - it.stand) * (1 - Math.exp(-24 * dt));
+  M_.outer.position.y += (CY * SCALE * it.vs - RAD) * it.stand;
   if (it.ground && it.armed) {
     M_.inner.quaternion.slerp(_qI, 1 - Math.exp(-14 * dt));
     const k = it.fuse >= 0 ? 1 - it.fuse / s.fuse : 1 - it.next / s.gap;
-    const j = 0.05 + 0.1 * k;
-    M_.model.rotation.set((Math.random() * 2 - 1) * j, 0, (Math.random() * 2 - 1) * j);
+    const j = 0.05 + 0.1 * k, rx = (Math.random() * 2 - 1) * j, rz = (Math.random() * 2 - 1) * j;
+    M_.model.rotation.set(rx, 0, rz);
+    M_.model.position.y = (-CY + CAN_R * Math.max(Math.abs(rx), Math.abs(rz))) * SCALE * it.vs;   // [sub-view] (rattling on its rim, not into the floor)
   } else {
     M_.inner.rotation.x += it.spin.x * dt; M_.inner.rotation.z += it.spin.z * dt;
-    M_.model.rotation.set(0, 0, 0);
+    M_.model.rotation.set(0, 0, 0); M_.model.position.y = -CY * SCALE * it.vs;
   }
   if (it.armed && G.fx && near(it.pos, 40)) {
     if (!it.gOk || it.ground) groundUnder(it);
