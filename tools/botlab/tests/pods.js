@@ -647,14 +647,16 @@
   // ---- Boss Battle: walls and canopies stop the charge like a wall; walking into one tramples it
   if (MODE === 'boss') {
     const Bs = __G.boss, nv = Bs && Bs.nav, pb = byId('mid'), pw = byId('gate');
+    // (the boss parked and still, away from the pods, while they grow: roaming, it would walk into the canopy first)
+    const bm0 = Bs.move, bp0 = Bs.pos.clone(); Bs.move = null; Bs.pos.set(0, Bs.pos.y, 34);
     // (the gate's gap is too narrow for the boss's body anyway: its wall is checked as the charge's dynWall asks)
     const before = nv && nv.cast(pb.x, pb.z - 18, 0, 34), wBefore = nv && nv.dynWall && nv.dynWall(pw.x, pw.z - pw.hd - 1.5, 2);
     fill(pb, 0); fill(pw, 1); step(0.8);
     const after = nv && nv.cast(pb.x, pb.z - 18, 0, 34), wAfter = nv && nv.dynWall && nv.dynWall(pw.x, pw.z - pw.hd - 1.5, 2);
     R('Boss Battle: a grown canopy and a grown wall stop HULLBREAKER\'s charge like a wall', !!nv && !!nv.dynWall && pb.state === 'stand' && after.dist < before.dist - 3 && after.wall && !wBefore && wAfter,
       { canopy: { before: before && before.dist, after: after && after.dist, wall: after && after.wall }, gateWall: { before: wBefore, after: wAfter } });
-    const bm = Bs.move; Bs.move = null;
-    const bp = Bs.pos.clone(), by0 = Bs.yaw;
+    const bm = bm0;
+    const bp = bp0, by0 = Bs.yaw;
     Bs.pos.set(pb.x, Bs.pos.y, pb.z - 3.2); Bs.yaw = 0;
     P.bossStep();
     const tr = pb.wiltAt <= now() + 1e-3;
