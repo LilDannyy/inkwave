@@ -20,7 +20,7 @@ import { registerFittings } from './fittings.js';
 import { registerPlaza } from './plaza.js';
 import { registerWorks } from './works.js';
 import { registerNursery } from './nursery.js';
-import { FEET, GROUND, PODS, GATES } from './layout.js';
+import { FEET, GROUND, PODS, GATES, HEDGES } from './layout.js';
 import { T1, T2, T3, SP, NT, CH_Y, TURBINE, NTURBINE, GREENHOUSE, RILL_Y, GROVES, BED_H, TERRACE, DECK, mz } from './plan.js';
 
 const P = Math.PI, HP = P / 2;
@@ -212,6 +212,8 @@ export const PLACEMENTS = [
     }
     return out;
   })(),
+  // the flank gates' hedgerows (layout.js HEDGES)
+  ...HEDGES.map((hd, k) => ({ type: 'treehills_hedgerow', pos: [hd.x, hd.y, hd.z], rotY: hd.deg * Math.PI / 180, w: hd.w, h: hd.h, d: hd.d, post: hd.post, seed: 21 + k, oboxCols: true })),
   // ================= the forest's groves (plan.js GROVES: already where the stretch puts them)
   ...GROVES.flatMap(groveParts),
   // ================= the hand placements
@@ -231,7 +233,7 @@ export const PLACEMENTS = [
   { type: 'treehills_solar', pos: [6.2, T1, -35.6], rotY: 0, w: 3.0 },
   { type: 'treehills_planter', pos: [7.4, T1, -37.4], rotY: 0, w: 2.6, d: 0.7, h: 0.55, seed: 19 },
   { type: 'treehills_crates', pos: [-12.6, T1, -39.6], rotY: HP, n: 2 },
-  { type: 'treehills_dronepad', pos: [12.6, T1, -24.6], rotY: 0.3 },
+  { type: 'treehills_dronepad', pos: [17.6, T1, -42.4], rotY: 0.3 },   // (off the garden's south-east rim: its hedge runs there)
   { type: 'treehills_mast', pos: [13.9, T1, -39.4], rotY: 0.5, h: 8 },
   { type: 'treehills_bench', pos: [-14.2, T1, -35.4], rotY: HP },
   { type: 'treehills_lamp', pos: [-14.3, T1, -24.8], rotY: HP },

@@ -239,7 +239,34 @@ const TOWER = {
 // which a kid would reach a gate's top
 export const GATES = {
   rill: { z: -17.9, x0: -13.0, x1: 11.5, h: 2.6, d: 1.0, gates: [{ id: 'stones-gate', x: -5.5, len: 5.0 }, { id: 'footbridge-gate', x: 1.0, len: 5.0 }] },
+  // the flank gates (Alpha's; Bravo's are their twins): 5 m walls across each band, 2.6 m like the rill's
+  //   the strip gate: across the west band's strip (T1) between two of its grove trees, from the upper tier's edge to
+  //   the garden's rim — the west band route from mid down to the nursery's west
+  strip: { id: 'strip-gate', x: -17.0, y: 1.3, z: -15.6, deg: 0, len: 5.0, h: 2.6 },
+  //   the lobe gate: across the east band where it runs into the lobe's grove (T1), the band's kerb to the grove — the
+  //   east band / lobe route from mid down to the side zone and the turbine
+  lobe: { id: 'lobe-gate', x: 18.0, y: 1.3, z: -20.5, deg: 0, len: 5.0, h: 2.6 },
 };
+// the flank gates' permanent hedgerows (Alpha's; props.js places them and their mirror twins): each on the HIGHER side of
+// a tier step (a hedge's top is out of reach from both levels there: 2.6 m over its own floor, 3.9 m over the lower one;
+// a hedge on the lower side of a step is 1.3 m under the upper floor — a kid climbs onto it and slides off either side),
+// and over the step's coping, so no ledge runs along it. x, y (base), z: the centre; deg: heading; w × h × d; post: the
+// gate post's end ('a' −x, 'b' +x)
+export const HEDGES = [
+  // the strip gate: the upper tier's edge above the strip from 4 m north of the gate (nowhere on the tier's edge within
+  // reach of the gate's top) south to where the tier ends (its south stair): a kid can't climb from the strip onto the
+  // tier beside the gate (or down from it) — the way round is along the tier to its end and back up the strip
+  { x: -20.0, y: 2.6, z: -15.5, deg: 90, w: 8.0, h: 2.6, d: 1.0 },
+  //   …and the garden's rim coping (the band's corner) from the gate past the rill hedge's head: no climb from the garden
+  //   onto the strip beside the gate, and the rill hedge's top out of reach from the corner
+  { x: -13.33, y: 1.3, z: -17.55, deg: -122.5, w: 6.3, h: 2.6, d: 1.0, post: 'b' },
+  // the lobe gate: its wing through the grove to the reservoir's edge
+  { x: 23.5, y: 1.3, z: -20.5, deg: 0, w: 6.0, h: 2.6, d: 1.0, post: 'a' },
+  //   …the band's kerb from the gate to the garden's south-east corner, and the south-east rim coping from there (the
+  //   garden's east path comes out onto the nursery at the garden's south edge, beyond it)
+  { x: 15.5, y: 1.3, z: -20.975, deg: 90, w: 2.15, h: 2.6, d: 1.0 },
+  { x: 11.64, y: 1.3, z: -23.49, deg: 150.2, w: 8.3, h: 2.6, d: 1.0 },
+];
 const DEG = Math.PI / 180;
 const wallPod = (id, x, y, z, rotDeg, L, h = 2.7) => ({ id, kind: 'wall', pos: [x, y, z], rotY: rotDeg * DEG, size: [L, h, 1.2], pod: { type: 'treehills_pod' } });
 const canopyPod = (id, x, y, z, rotDeg) => ({ id, kind: 'canopy', pos: [x, y, z], rotY: rotDeg * DEG, pod: { type: 'treehills_pod' } });
@@ -255,6 +282,17 @@ export const PODS = {
     //   the stones gate: the west path (the shed and the beds → the west stepping stones → the meadow's west side)
     //   the footbridge gate: the garden's central path (the nursery stair → the footbridge → the plaza's ramp)
     ...GATES.rill.gates.map((g) => wallPod(g.id, g.x, G0, GATES.rill.z, 0, g.len, GATES.rill.h)),
+    // the flank gates (GATES.strip, GATES.lobe; their hedgerows HEDGES)
+    ...[GATES.strip, GATES.lobe].map((g) => wallPod(g.id, g.x, g.y, g.z, g.deg, g.len, g.h)),
+    // the zone bulwarks: short walls at a zone's edge facing its main approach — grown, cover for its holders; they
+    // never close a way in (tools/botlab/jobs/new-stages/out/pods/treehills-pods.js: every way in stays)
+    //   the centre zone's: at the foot of the plaza's south-west face, on the meadow (the plaza's rim round the zone is only
+    //   0.9 m, its south-west edge holds the conifer tub, the south one the ramp's head, the south-east one the stair's):
+    //   1.4 m over the plaza's floor, chest-high cover for its holders against the meadow's west side and the garden
+    wallPod('plaza-bulwark', -6.1, G0, -4.79, 54.8, 3.5),
+    //   the side zone's: along its west edge, facing the middle walk and the potting deck's front (the long sightline
+    //   down onto it from the deck and the front lane)
+    wallPod('zone-bulwark', 7.6, T1, -30.75, 90, 3.5),
     // canopies (open ground; nothing near high enough to hop over the parapet from):
     //   the meadow south-east of the plaza: its platform (3 m) looks down on the centre zone on the plaza (1.3) and the
     //   ramp and stair up to it
