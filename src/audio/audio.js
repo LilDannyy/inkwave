@@ -22,6 +22,7 @@ import {
   V, music as musicSingleton, makeImpulse, mulberry32, mtof, perc, ahr, adsr, pts, sweep, strokeWave, pulseWave,
   kick, snare, crash, tom, brass, bell, pad, bass,
 } from './music.js';
+import { defineCueSounds, CUE_GROUPS } from './sfx-cues.js';   // sfx-cues: every sub / special's own sounds (src/audio/cues.js plays them)
 
 const MAX_VOICES = 48;   // one-shots alive at once (oldest stolen beyond this)
 const MAX_LOOPS = 24;
@@ -2568,6 +2569,9 @@ def('lead_theirs', {
   },
 });
 
+// sfx-cues: the sub and special cue sounds (src/audio/sfx-cues.js), built with this file's shared layers
+defineCueSounds(def, { texture, bloops, plips, bigSplat, inkBoom, clank, whoosh, vox });
+
 export const SFX_GROUPS = {
   UI: ['ui_hover', 'ui_click', 'ui_back', 'ui_confirm', 'ui_toggle', 'ui_slider', 'ui_error'],
   Weapons: ['shoot_shooter', 'shoot_blaster', 'blaster_pump', 'blaster_boom', 'charger_charge', 'charger_full', 'shoot_charger', 'roller_flick', 'roll',
@@ -2583,7 +2587,9 @@ export const SFX_GROUPS = {
     'bubble_pop', 'bubble_blast', 'jet_loop', 'jet_fire', 'jet_end', 'stamp_swing', 'stamp_slam', 'stamp_throw', 'booyah_charge',
     'booyah_cheer', 'booyah_throw', 'booyah_blast', 'zip_fire', 'zip_latch', 'zip_pull', 'crab_move', 'crab_gatling', 'crab_cannon',
     'crab_roll', 'crab_hit', 'crab_break',
+    ...CUE_GROUPS.Specials,   // sfx-cues
   ],
+  Subs: CUE_GROUPS.Subs,      // sfx-cues: throws, landings, fuses, loops and blasts of every sub
   Match: ['ready', 'go_horn', 'countdown_tick', 'one_minute', 'final_count', 'times_up', 'judge_drumroll', 'judge_reveal', 'victory_fanfare', 'defeat_jingle', 'xp_tick', 'level_up'],
   Zones: ['zone_ours', 'zone_theirs', 'zone_lost', 'zone_broken', 'zone_warn', 'zone_chance', 'zone_penalty', 'zone_shift', 'zone_final',
     'zone_overtime', 'zone_tick', 'zone_flood', 'zone_wipe', 'zone_hum'],

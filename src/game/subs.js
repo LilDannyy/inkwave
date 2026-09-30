@@ -89,7 +89,7 @@ export class SubSystem {
       dir: new THREE.Vector3(vel.x, 0, vel.z).normalize(), ghost, gid: gid || netId(a),
     };
     this.items.push(it);
-    if (a.isLocal || a._nearCamera()) G.audio?.play('bomb_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.65, pitch: sub.kind === 'burst' ? 1.2 : 1 });
+    G.cues?.sub(sub.kind, 'throw', { owner: a, at: a.pos });   // sfx-cues: each sub's own throw (src/audio/cues.js SUB_CUE)
     return it;
   }
 
@@ -114,7 +114,7 @@ export class SubSystem {
       face: g ? g.face : -1, u: g ? g.u : 0, v: g ? g.v : 0, hp: sub.hp || 1, uses: sub.uses || 0, ghost, gid: gid || netId(a) };
     this.items.push(it);
     if (sub.kind === 'mine') this._paintUnder(it, 1.1);
-    if (a.isLocal || a._nearCamera()) G.audio?.play('bomb_beep', { pos: a.isLocal ? undefined : a.pos, volume: 0.5, pitch: sub.kind === 'beacon' ? 1.3 : 0.8 });
+    G.cues?.sub(sub.kind, 'throw', { owner: a, at: pos, range: sub.kind === 'mine' ? 14 : 30 });   // sfx-cues: placed (a mine is heard only close by)
     return it;
   }
 
@@ -279,7 +279,7 @@ export class SubSystem {
       for (const o of this.items) if (o !== it && o.owner === it.owner && o.kind === 'sprinkler' && o.state === 'spray') this._destroy(o);
       it.pulseT = 0; it.spin = 0;
     }
-    if (nearCam(it.pos)) G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.55, pitch: state === 'spray' ? 1.4 : 1 });
+    G.cues?.sub(it.kind, 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues: stuck (the fuse / spin loops: src/audio/cues.js)
     emit('sub:land', { kind: it.kind, pos: it.pos.clone(), team: it.team, radius: it.sub.radius || 0 });
   }
 
@@ -288,7 +288,7 @@ export class SubSystem {
     it.beepT -= dt;
     const k = clamp(it.t / it.fuse, 0, 1);
     it.mesh.scale.setScalar(1 + k * 0.3 + Math.sin(it.t * 40) * 0.025 * k);
-    if (it.beepT <= 0) { it.beepT = lerp(0.45, 0.1, k); if (nearCam(it.pos)) G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.3 + 0.4 * k, pitch: 1 + 0.3 * k }); }
+    if (it.beepT <= 0) it.beepT = lerp(0.45, 0.1, k);   // sfx-cues: the fuse is the fuse_sticky loop now (src/audio/cues.js)
     if (it.t >= it.fuse) {
       const s = it.sub;
       this._blast(it, it.pos, s.radius, s.damageMax, s.damageMin, s.paintRadius, it.normal);
@@ -304,6 +304,7 @@ export class SubSystem {
     it.trail = 0; it.stuckT = 0; it.target = null; it.dash = false;
     it.mesh.userData.inner.position.y = 0;
     it.mesh.rotation.set(0, it.heading, 0);
+    G.cues?.sub('seeker', 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues (then the seeker_run loop)
   }
   _run(it, dt) {
     const s = it.sub;
@@ -367,7 +368,7 @@ export class SubSystem {
     it.cloud.position.copy(it.pos); it.cloud.scale.setScalar(0.2);
     this.scene.add(it.cloud);
     it.tagged = new Set();
-    if (nearCam(it.pos, 40)) G.audio?.play('special_activate', { pos: it.pos, volume: 0.45, pitch: 1.6 });
+    G.cues?.sub('scan', 'boom', { owner: it.owner, team: it.team, at: it.pos, range: 40 });   // sfx-cues
     emit('sub:cloud', { kind: 'scan', pos: it.pos.clone(), team: it.team, radius: it.sub.radius });
   }
   _cloud(it, dt) {
@@ -402,7 +403,7 @@ export class SubSystem {
     it.cloud.scale.setScalar(0.3);
     this.scene.add(it.cloud);
     if (it.direct) this.poison(it.direct, it.sub.mistTime);
-    if (nearCam(it.pos, 40)) G.audio?.play('enemy_ink_sizzle', { pos: it.pos, volume: 0.7, pitch: 0.7 });
+    G.cues?.sub('mist', 'boom', { owner: it.owner, team: it.team, at: it.pos, range: 40 });   // sfx-cues (its cloud's hiss: the mist_hiss loop)
     emit('sub:cloud', { kind: 'mist', pos: it.pos.clone(), team: it.team, radius: it.sub.radius });
   }
   _mist(it, dt) {
@@ -439,7 +440,7 @@ export class SubSystem {
     it.sheet.position.set(0, s.height / 2 + 0.05, 0);
     it.mesh.add(it.sheet);
     this._paintUnder(it, 1.4);
-    if (nearCam(it.pos, 40)) G.audio?.play('swim_splash', { pos: it.pos, volume: 0.8, pitch: 0.8 });
+    G.cues?.sub('curtain', 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues
     emit('sub:land', { kind: 'curtain', pos: it.pos.clone(), team: it.team, radius: s.width / 2 });
   }
   _curtain(it, dt) {
@@ -496,7 +497,7 @@ export class SubSystem {
       if (e.team === it.team || !e.alive) continue;
       if (e.pos.distanceTo(it.pos) < s.triggerRadius) {
         it.fuse = s.delay;
-        if (nearCam(it.pos, 40)) G.audio?.play('bomb_beep', { pos: it.pos, volume: 0.8, pitch: 1.5 });
+        G.cues?.sub('mine', 'warn', { owner: it.owner, team: it.team, at: it.pos, target: e });   // sfx-cues: tripped (0.35 s to go)
         emit('sub:arm', { kind: 'mine', pos: it.pos.clone(), team: it.team, radius: s.radius });
         return;
       }
@@ -507,7 +508,7 @@ export class SubSystem {
     const s = it.sub, c = _v.copy(it.pos).setY(it.pos.y + 0.3).clone();
     this._paint(it, c, s.paintRadius);
     G.fx?.explosion(c, G.teamColors[it.team], s.radius * 0.8);
-    G.audio?.play('bomb_explode', { pos: c, volume: 0.7, pitch: 1.2 });
+    G.cues?.sub('mine', 'boom', { owner: it.owner, team: it.team, at: c });   // sfx-cues
     emit('bomb:explode', { actor: it.owner, pos: c.clone(), team: it.team, radius: s.radius });
     for (const e of G.actors) {
       if (e.team === it.team || !e.alive) continue;
@@ -537,6 +538,7 @@ export class SubSystem {
     actor._jumpBeacon = null;
     if (b.state !== 'beacon') return;
     b.uses--;
+    G.cues?.sub('beacon', 'use', { owner: b.owner, team: b.team, at: b.pos });   // sfx-cues
     // a jumper who carries beacons themselves uses it up on landing
     if (b.uses <= 0 || actor.sub?.kind === 'beacon') this._destroy(b);
   }
@@ -559,7 +561,7 @@ export class SubSystem {
     const center = c.clone();
     this._paint(it, _v2.copy(center).addScaledVector(n || UP, 0.2), paintRadius);
     G.fx?.explosion(center, G.teamColors[it.team], radius);
-    G.audio?.play('bomb_explode', { pos: center });
+    G.cues?.sub(it.kind, 'boom', { owner: it.owner, team: it.team, at: center });   // sfx-cues: each kind's own blast
     emit('shake', { pos: center.clone(), amount: 0.6 });
     emit('bomb:explode', { actor: it.owner, pos: center.clone(), team: it.team, radius });
     for (const e of G.actors) {
@@ -577,7 +579,7 @@ export class SubSystem {
     const s = it.sub, c = (at || it.pos).clone();
     this._paint(it, _v2.copy(c).setY(c.y + 0.2), s.paintRadius);
     G.fx?.explosion(c, G.teamColors[it.team], s.radius * 0.8);
-    G.audio?.play('blaster_boom', { pos: c, volume: 0.6, pitch: 1.2 });
+    G.cues?.sub('burst', 'boom', { owner: it.owner, team: it.team, at: c });   // sfx-cues: the Pop Pellet's own pop
     emit('bomb:explode', { actor: it.owner, pos: c.clone(), team: it.team, radius: s.radius });
     if (direct) G.projectiles.applyHit(it.owner, direct, s.directDamage, 'burst');
     for (const e of G.actors) {
@@ -684,7 +686,7 @@ export class SubSystem {
     const c = _v.copy(it.pos).addScaledVector(it.normal || UP, 0.2);
     if (nearCam(c, 40)) {
       G.fx?.burst(c, it.normal || UP, G.teamColors[it.team], { count: 12, speed: 4, size: 0.08 });
-      G.audio?.play('splat_small', { pos: c, volume: 0.7, pitch: 0.8 });
+      G.cues?.sub(it.kind, 'end', { owner: it.owner, team: it.team, at: c.clone() });   // sfx-cues: curtain / sprinkler / beacon own ends, else a smash
     }
     emit('sub:destroyed', { kind: it.kind, pos: c.clone(), team: it.team });
     it.state = 'dead';
