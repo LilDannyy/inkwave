@@ -25,6 +25,18 @@ const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
 // (exported so kit weapons / subs (src/game/kits/*.js) can add their kinds to these tables)
 export const MELEE = { roller: true, brush: true };
 export const CHARGES = { charger: true, spinner: true, splatling: true };
+// Wall climbs (nav 'climb' edges, BotBrain._climb): at the wall, a column that makes no headway for `stall` s — no new
+// strip of our ink up it, no height gained swimming up it — or that it has no ink left to finish is given up, and routes
+// plan round climbs for `off` s (noClimbUntil). A bot that can't ink a column now — under `ink` of its tank, or
+// refilling — plans a climb only where there's no way round within `dry` m more (BotBrain._climbRule). CLIMB_STATS
+// counts the attempts at a wall: done (on top), stalled, dry (no ink for the rest of it), long (over `max` s)
+// `reach`: per weapon kind, the walls it can ink a column up (m of rise), where that's not every one: the brush's swipes
+// fly low and short (nothing over 2 m, even from a hop's top); a roller's flick leaves at head height rising, so over a
+// wall much under 1.8 m it just sails onto the top (tools/botlab/tests/bot-climb.js, forced climbs). Routes take another
+// climb — or the one that just failed — only with no way round within `unreach` m more (a pit whose only way out is up
+// a wall: a try beats standing there)
+export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach: 150, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
+export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
 
 // ============================================================================================ Zone Control team plan
 // Shared by every bot in a zones match (one per ZoneControl): each zone's paint cells mapped to the nav nodes you'd
@@ -603,7 +615,7 @@ export class BotBrain {
     this.retreatT = 0; this._firing = false;
     this.strikes = 0; this.strikeT = 0; this.wiggleT = 0; this.wiggleYaw = 0; this.airStill = 0;
     this.dispT = 0; this.moveAcc = 0; this.snap = new THREE.Vector3(); this.paintYawOff = 0; this.paintScanT = 0; this.goalCheckT = 0;
-    this.climbT = 0; this.noClimbUntil = 0; this._climbAim = null;
+    this.climbT = 0; this.noClimbUntil = 0; this._climbAim = null; this._clE = null; this._clPress = false; this._clBad = null;
     // Zone Control (unused in Turf War): role + zone from the team plan, the hold timer at a guard / watch spot, and
     // the needy patch of the zone being aimed at
     this.zRole = null; this.zZone = -1; this.zHoldUntil = 0; this.zHoldDur = 0; this._zAct = null; this.zAimT = 0; this._zAim = null; this.zFail = 0; this.zFace = 0; this.zJumpAt = 0; this.zBomb = null; this.zBombScan = 0;
@@ -1043,7 +1055,7 @@ export class BotBrain {
     }
 
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
-    this._avoidWater(move);
+    if (!this._clMove) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
     if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
     // ---------------- smooth the move command: heading slews (no twitch at waypoint switches / strafe flips)
@@ -1095,44 +1107,167 @@ export class BotBrain {
     const e = G.nav.edge(this.path[this.pi - 1], this.path[this.pi]);
     return e && e.type === 'climb' ? e : null;
   }
-  // Drives a climb edge once we're at its wall. Returns the aim to hold ({ yaw, pitch, dist }) or null.
+  // Drives a climb edge once we're at its wall: stand out in front of the column (the wall point the edge was built
+  // from: 1.25 m out, closer where the sea's behind), ink it from a metre up to its very top edge in the weapon's own
+  // rhythm (hops to reach the top strip when the shots stop gaining height), then swim up it (a squid hop into the wall
+  // takes hold above the knee-high strip). A squid lets go / stops where the ink under it ends: that bare patch is inked
+  // next, then up again. Returns the aim to hold ({ yaw, pitch, dist }) or null.
+  // It keeps its own watchdog — headway is a new strip of our ink up the column, a bare patch inked, or height gained
+  // swimming up — and while there's headway the route's stuck recovery stays out of it (that hopped mid-inking, skipped
+  // the top waypoint at 1.5 s and replanned onto the same wall: the 3–5 s stalls at a wall, and the 'walk' edge "from the
+  // floor to the top" in stall logs was the waypoint after the skipped one); botlab's stuck metric reads it as held on
+  // purpose (perchUntil) only while the headway is recent. No headway for CLIMB.stall s, or no ink for the rest of the
+  // column (a dry bot used to stand there for good: the refill route led back up the same wall) → give it up: routes go
+  // round climbs for CLIMB.off s and it replans now.
   _climb(dt, move, it) {
     const a = this.a, e = this._climbEdge();
-    if (!e) { this.climbT = 0; return null; }
+    this._clMove = false;
+    if (this._clE && e !== this._clE && a.pos.y > this._clTop - 0.5) CLIMB_STATS.done++;   // (up: the route's moved on)
+    if (!e) { this._clEnd(); return null; }
     const top = G.nav.nodes[this.path[this.pi]];
-    if (a.grounded && a.pos.y > top.y - 0.4) { this.climbT = 0; return null; }       // on top: normal steering finishes
-    const [wx, , wz] = e.wallP, [nx, nz] = e.wallN;
+    if (a.grounded && a.pos.y > top.y - 0.4) {                                          // on top: normal steering finishes
+      if (this._clE === e) CLIMB_STATS.done++;
+      this._clEnd(); return null;
+    }
+    const [wx, , wz] = e.wallP, [nx, nz] = e.wallN, topY = e.topY;
     const dist = (a.pos.x - wx) * nx + (a.pos.z - wz) * nz;                            // distance out from the wall
     if (!a.climbing && (dist > 2.4 || Math.hypot(a.pos.x - wx, a.pos.z - wz) > 2.8)) return null; // still walking up to it
+    if (this._clE !== e) {
+      this._clE = e; this._clTop = top.y; this.climbT = 0; this._clG = -Infinity; this._clH = a.pos.y; this._clT = this._clGT = this.t; this._clY = a.pos.y;
+      this._clD = this._standOff(wx, wz, nx, nz, a.pos.y); this._clHole = null; this._clWas = false; this._clRel = false; this._clCling = 0; this._clHop = false;
+      CLIMB_STATS.tries++;
+    }
     this.climbT += dt;
-    if (this.climbT > 7) {                                                              // not working: plan around climbs for a while
-      this.climbT = 0; this.noClimbUntil = this.t + 12; this.path = null; this.repath = 0; this.goalTimer = 0;
-      return null;
+    if (a.grounded) this._clY = a.pos.y;                                                // (the column's scanned from our feet on the ground, not mid-hop)
+    const lat = (a.pos.x - wx) * -nz + (a.pos.z - wz) * nx;                            // how far along the wall we're off the column
+    // a bare patch the squid found (let go below the top: the attach ray at +0.3 ran off our ink; or stopped rising: the
+    // one at +0.85 did) — on the wall in front of it, at that height
+    const hole = (y) => { this._clHole = { y: Math.min(y, topY - 0.05), x: wx - nz * lat, z: wz + nx * lat, t: 0 }; };
+    if (this._clWas && !a.climbing && !this._clRel && this._clLY + 0.3 < topY - 0.1) hole(this._clLY + 0.35);
+    this._clWas = a.climbing; this._clRel = false;
+    if (a.climbing) this._clLY = a.pos.y;
+    this._clCling = a.climbing && a.vel.y < 0.3 ? this._clCling + dt : 0;
+    const cling = this._clCling > 0.3;
+    if (cling) hole(a.pos.y + 0.85);
+    // what to ink: the patch, till it's ours; else the column's lowest bare strip (from knee height at first; a column
+    // whose knee-high strip won't take our ink after a moment — a roller's flick flies over a low wall's foot — is enough
+    // from a metre up); null: ours to the top
+    let H = a.climbing ? null : this._clHole;
+    if (H && (this._inkAt(H.x, H.z, nx, nz, H.y) !== false || H.t > 0.8)) { this._clHole = H = null; this._clT = this.t; }
+    const gap = a.climbing ? null : H ? H.y : this._wallInkGap(wx, wz, nx, nz, this._clY, topY, this.t - this._clGT > 0.5 ? 1.05 : 0.75);
+    const lvl = gap === null ? topY : gap;
+    if (!H && lvl > this._clG + 0.1) { this._clG = lvl; this._clT = this._clGT = this.t; }
+    if (a.pos.y > this._clH + 0.25) { this._clH = a.pos.y; this._clT = this.t; }
+    const dry = gap !== null && a.ink < this._shotInk();
+    if (dry || this.t - this._clT > CLIMB.stall || this.climbT > CLIMB.max) {
+      CLIMB_STATS[dry ? 'dry' : this.climbT > CLIMB.max ? 'long' : 'stalled']++;
+      this.noClimbUntil = this.t + CLIMB.off; this._clBad = { e, until: this.t + CLIMB.off };
+      this.path = null; this.repath = 0; this.goalTimer = 0;
+      this._clEnd(); return null;
     }
-    const yaw = Math.atan2(-nx, -nz);
-    const swim = () => { it.squid = true; it.fire = false; move.set(-nx, 0, -nz); return { yaw, pitch: 0.5, dist: 2 }; };
-    if (a.climbing) return swim();
-    const gap = this._wallInkGap(wx, wz, nx, nz, a.pos.y, e.topY);
-    if (gap === null) return swim();                                                    // column is ours: swim up
-    if (a.ink < PLAYER.inkMax * 0.05) return null;                                      // out of ink: refill logic takes over
-    // stand ~1–1.6 m off the wall and paint the lowest un-inked strip, working upward
-    if (dist < 0.9) move.set(nx * 0.6, 0, nz * 0.6); else if (dist > 1.6) move.set(-nx * 0.6, 0, -nz * 0.6); else move.set(0, 0, 0);
+    this.noProg = 0; this.bestD = Infinity; this._skipped = false;
+    if (this.t - this._clT < 1) this.perchUntil = this.t + 0.3;
+    it.jump = false;
+    if (a.climbing || gap === null) {
+      const yaw = Math.atan2(wx - a.pos.x, wz - a.pos.z);
+      // ours to the top: swim into it (a squid only takes hold of a wall it's pushing into), edging onto the column's
+      // line (a squid slides downhill: a stair's foot beside the wall) — never so sideways that a side wall at a corner
+      // beside the column reads as pushed into (a squid takes hold past 60° off its face); holding on to another wall, or
+      // stopped at an ink line → let go and come in again
+      if (a.climbing && (cling || a.wallN.x * nx + a.wallN.z * nz < 0.7)) { it.squid = false; it.fire = false; this._clRel = true; this._clCling = 0; move.set(nx * 0.5, 0, nz * 0.5); return { yaw, pitch: 0.5, dist: 2 }; }
+      it.squid = true; it.fire = false;
+      const c = a.climbing ? 0 : clamp(-lat * 1.5, -0.45, 0.45), mx = -nx - nz * c, mz = -nz + nx * c, ml = Math.hypot(mx, mz);
+      move.set(mx / ml, 0, mz / ml);
+      if (!a.climbing && a.grounded && dist < 0.9 && this.jumpCd <= 0) { it.jump = true; this.jumpCd = 0.6; }
+      return { yaw, pitch: 0.5, dist: 2 };
+    }
+    // stand square in front of the column, _clD out (a small step: the sea check was done picking the spot)
     it.squid = false;
-    const w = a.weapon;
-    if (CHARGES[w.kind]) it.fire = a.weaponRunner.burstT <= 0 && !(a.weaponRunner.charging && a.weaponRunner.charge >= 0.45);
-    else it.fire = true;
-    const hd = Math.max(0.5, dist), dy = gap + 0.3 - (a.pos.y + 1.1);
-    return { yaw, pitch: Math.atan2(dy, hd), dist: Math.hypot(hd, dy) };
+    const sx = wx + nx * this._clD, sz = wz + nz * this._clD;
+    const gx = sx - a.pos.x, gz = sz - a.pos.z, gl = Math.hypot(gx, gz);
+    const placed = Math.abs(lat) < 0.35 && Math.abs(dist - this._clD) < 0.35;
+    if (a.grounded && !placed) { const k = Math.min(1, gl / 0.8 + 0.2); move.set((gx / gl) * k, 0, (gz / gl) * k); this._clMove = true; }
+    else move.set(0, 0, 0);
+    // the shots have stopped gaining height with the top strip (or a patch) still over them: fire from a hop's top (a
+    // charge weapon charges first, holds it through the hop and lets go at its top)
+    if (a.grounded) this._clHop = false;
+    const wr = a.weaponRunner, charge = CHARGES[a.weapon.kind] || a.weapon.kind === 'bow' || !!MAIN_KITS[a.weapon.kind]?.bot?.charges;
+    const hopFor = placed && (this.t - this._clGT > 0.5 || !!H) && gap - this._clY > 1.4;
+    if (a.grounded && hopFor && this.jumpCd <= 0 && (!charge || (wr.charging && wr.charge >= 0.4))) { it.jump = true; this.jumpCd = 0.8; this._clHop = true; }
+    // aim: at the patch, or the column a little above its bare strip (the splash covers it) but never over the wall's
+    // top (the shot would sail past); mid-hop, from the hop's top, where the shots that reach it leave from
+    const tx = H ? H.x : wx, tz = H ? H.z : wz, ty = H ? H.y : Math.min(gap + 0.3, topY - 0.08);
+    const eyeY = (a.grounded || a.vel.y <= 0 ? a.pos.y : a.pos.y + (a.vel.y * a.vel.y) / (2 * PLAYER.gravity)) + 1.1;
+    const yaw = Math.atan2(tx - a.pos.x, tz - a.pos.z), hd = Math.max(0.5, Math.hypot(tx - a.pos.x, tz - a.pos.z)), dy = ty - eyeY, pitch = Math.atan2(dy, hd);
+    const aimed = Math.abs(angleDiff(this.aimYaw, yaw)) < 0.2 && Math.abs(this.aimPitch - pitch) < 0.25;
+    it.fire = dist >= 0.75 && this._climbFire(aimed, charge && hopFor && (a.grounded || a.vel.y > 1.5));   // (closer, a shot would start inside it)
+    if (this._clHop && a.vel.y > 1.5 && !wr.charging) it.fire = false;                 // (a hop for the top strip: shots from its top)
+    if (H && it.fire) H.t += dt;
+    return { yaw, pitch, dist: Math.hypot(hd, dy) };
   }
-  // Lowest height on the wall column in front of the climb spot that isn't our ink yet (null = inked to the top).
-  _wallInkGap(wx, wz, nx, nz, y0, topY) {
-    const P = G.physics, h = this._wh || (this._wh = new Hit()), o = _v, d = _v2.set(-nx, 0, -nz);
-    for (let y = y0 + 0.3; y < topY - 0.1; y += 0.45) {
-      o.set(wx + nx * 0.6, y, wz + nz * 0.6);
-      if (!P.raycast(o, d, 1.2, h, true).hit) return null;                               // wall ended below the top
-      if (h.face < 0 || G.paint.sample(h.face, h.u, h.v) - 1 !== this.a.team) return y;
+  // how far out from a climb wall to stand inking it: 1.25 m, or closer where the sea's just behind that
+  _standOff(wx, wz, nx, nz, y) {
+    for (const d of [1.25, 1.05, 0.9]) if (!this._wet(wx + nx * d, wz + nz * d, y) && !this._wet(wx + nx * (d + 0.6), wz + nz * (d + 0.6), y)) return d;
+    return 0.9;
+  }
+  _clEnd() { this._clE = null; this.climbT = 0; }
+  // the trigger while inking a climb column, in the weapon's own rhythm (as pods.js _trigger): a held trigger would roll
+  // a roller or charge a Cutlass instead of flicking / cutting, and charge weapons want short charges
+  // (hold: keep a charge — a hop for the top strip lets it go at its top)
+  _climbFire(aimed, hold = false) {
+    const a = this.a, w = a.weapon, wr = a.weaponRunner, k = w.kind, KB = MAIN_KITS[k]?.bot;
+    if (hold && (wr.charging || (wr.burstT <= 0 && !wr.streaming))) return true;
+    if (!aimed) return !!wr.charging;                                                   // (keep a charge while turning onto it)
+    if (k === 'charger' || k === 'bow') return !(wr.charging && wr.charge >= (k === 'bow' ? (w.ring1 ?? 0.4) + 0.06 : 0.45));
+    if (CHARGES[k] || KB?.charges) return wr.burstT <= 0 && !wr.streaming && !(wr.charging && wr.charge >= 0.45);
+    if (k === 'roller' || k === 'brush' || k === 'blade') { this._clPress = !this._clPress; return this._clPress; }
+    return true;
+  }
+  // the least ink one shot at a wall takes (below it the column can't be inked any further)
+  _shotInk() {
+    const w = this.a.weapon;
+    return w.inkPerShot ?? w.flickInk ?? w.swipeInk ?? w.inkPerPunch ?? w.tapInk ?? (w.inkFull ? w.inkFull * (w.inkMin ?? 0.45) : 2);
+  }
+  // how routes may use wall climbs now (nav.path's noClimb): true = not at all (one just failed here); a number = only
+  // where there's no way round within that many metres more (it can't ink a column now: refilling, or under CLIMB.ink of
+  // its tank — it would only stand at the wall); an object: that, and walls its weapon can't ink (CLIMB.reach) or the
+  // one that just failed only where there's no way round at all; false = as the nav graph costs them
+  // (force: as if no climb had failed — the one that did, dearest)
+  _climbRule(force = false) {
+    if (this.t < this.noClimbUntil && !force) return true;
+    const add = this.mode === 'refill' || this.a.ink < PLAYER.inkMax * CLIMB.ink ? CLIMB.dry : 0, reach = CLIMB.reach[this.a.weapon.kind];
+    const bad = this._clBad && this.t < this._clBad.until ? this._clBad.e : null;
+    return reach || bad ? { add, minRise: reach?.min, maxRise: reach?.max, out: CLIMB.unreach, bad } : add || false;
+  }
+  // Lowest height on the wall column in front of the climb spot that isn't our ink yet (null = inked to the top): every
+  // 0.45 m from `from` m over our feet (a squid hopping into the wall takes hold above the knee-high strip), then every
+  // 0.1 m over the top half metre, up to its very edge (the squid stops at the ink line: a bare sliver just under the top
+  // holds it on the wall — it never pops over); 0.15 m either side of the column's line too (a squid drifts a little off
+  // it). Re-scanned every ~0.1 s (the ink changes no faster than the shots land).
+  _wallInkGap(wx, wz, nx, nz, y0, topY, from = 0.75) {
+    const C = this._clScan || (this._clScan = { t: -9, key: '', gap: null });
+    const key = wx + ',' + wz + ',' + (y0 + from).toFixed(2);
+    if (this.t - C.t < 0.1 && C.key === key) return C.gap;
+    const bare = (y) => {
+      const k = this._inkAt(wx, wz, nx, nz, y);
+      if (k === null) return null;
+      return !k || this._inkAt(wx - nz * 0.15, wz + nx * 0.15, nx, nz, y) === false || this._inkAt(wx + nz * 0.15, wz - nx * 0.15, nx, nz, y) === false;
+    };
+    let gap = null;
+    const y1 = Math.max(y0 + from, topY - 0.45);
+    scan: {
+      for (let y = y0 + from; y < y1 - 0.05; y += 0.45) { const k = bare(y); if (k === null) break scan; if (k) { gap = y; break scan; } }
+      for (let y = y1; y < topY - 0.01; y += 0.1) { const yy = Math.min(y, topY - 0.04), k = bare(yy); if (k === null) break scan; if (k) { gap = yy; break scan; } }
     }
-    return null;
+    C.t = this.t; C.key = key; C.gap = gap;
+    return gap;
+  }
+  // is the wall at (x, y, z) (facing n) our ink? null: no wall there
+  _inkAt(x, z, nx, nz, y) {
+    const h = this._wh || (this._wh = new Hit());
+    _v.set(x + nx * 0.6, y, z + nz * 0.6); _v2.set(-nx, 0, -nz);
+    if (!G.physics.raycast(_v, _v2, 1.2, h, true).hit) return null;
+    return h.face >= 0 && G.paint.sample(h.face, h.u, h.v) - 1 === this.a.team;
   }
 
   // Remove any heading that would put us over open water: try the nearest safe heading, else stand still.
@@ -2738,7 +2873,11 @@ export class BotBrain {
     const g = this.sp.goalOk(nav.nearest(pos, maxUp));   // (enemy specials: a goal inside an area we know hurts → just outside it)
     this.repath = 0.8 + Math.random() * 0.4;
     if (s < 0 || g < 0) { this.path = null; return false; }
-    const p = nav.path(s, g, this.a.team, undefined, this.t < this.noClimbUntil, null, this.sp.cost());   // (… and round those areas)
+    const rule = this._climbRule();
+    let p = nav.path(s, g, this.a.team, undefined, rule, null, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
+    // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
+    // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
+    if (!p && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), null, this.sp.cost());
     if (!p) { this.path = null; return false; }
     this.path = p; this.pi = Math.min(1, p.length - 1); this.goal = g; this.bestD = Infinity; this.noProg = 0;
     return true;
@@ -2876,7 +3015,8 @@ export class BotBrain {
     while (this.pi < this.path.length) {
       const n = nav.nodes[this.path[this.pi]];
       const dx = n.x - a.pos.x, dz = n.z - a.pos.z, dy = n.y - a.pos.y;
-      if (dx * dx + dz * dz < 0.6 * 0.6 && dy < 0.9 && dy > -1.8) { this.pi++; this.bestD = Infinity; this.noProg = 0; }
+      // (the top of a climb only once we're up on it: a squid popping over the ledge is under it yet — the climb isn't done)
+      if (dx * dx + dz * dz < 0.6 * 0.6 && dy < 0.9 && dy > -1.8 && !(dy > 0.35 && this.pi > 0 && nav.edge(this.path[this.pi - 1], this.path[this.pi])?.type === 'climb')) { this.pi++; this.bestD = Infinity; this.noProg = 0; }
       else break;
     }
     if (this.pi >= this.path.length) return out;
