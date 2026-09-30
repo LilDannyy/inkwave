@@ -4,7 +4,8 @@
 //   audio.init()                                   // idempotent; call from a user gesture (also inits music)
 //   audio.setVolumes({ master, music, sfx })       // 0..1 each (perceptual taper)
 //   audio.setListener(pos, forward, up)            // THREE.Vector3-like {x,y,z}; every frame
-//   audio.play(name, { pos, volume = 1, pitch = 1 })   // one-shot; pos → 3D (HRTF, inverse distance) else 2D
+//   audio.play(name, { pos, volume = 1, pitch = 1, ref })   // one-shot; pos → 3D (HRTF, inverse distance from `ref` m,
+//                                                  default the def's ref or 3) else 2D
 //   const h = audio.loop(name, { pos, volume, pitch }); h.set({ volume, pitch, pos, params }); h.stop(fade = 0.15)
 //                                                  (params: loops with extra controls, e.g. zone_hum { mode, tension })
 //   audio.duck(amount = 0.5, seconds = 1.2)        // temporarily lowers the music bus
@@ -220,7 +221,8 @@ export class AudioEngine {
 
   _sendScale(d) { return Math.sqrt(3 / (3 + 1.2 * Math.max(0, d - 3))); }
 
-  _voice(def, t, pos, vol, withFade) {
+  // refO: a per-call reference distance (sfx-cues: the cue director lets its cues carry further than their def says)
+  _voice(def, t, pos, vol, withFade, refO) {
     const ctx = this.ctx;
     const out = ctx.createGain(); out.gain.value = vol;
     const v = new V(ctx, out, t, this.rng);
@@ -230,10 +232,11 @@ export class AudioEngine {
     if (withFade) { voice.fade = ctx.createGain(); out.connect(voice.fade); head = voice.fade; v.nodes.push(voice.fade); }
     let scale = 1;
     if (validPos(pos)) {
-      voice.dk = 3 / (def.ref || 3);                  // big sources: distance air-absorption / reverb scale with their size
+      const ref = refO > 0 ? refO : (def.ref || 3);
+      voice.dk = 3 / ref;                             // big sources: distance air-absorption / reverb scale with their size
       const d = this._dist(pos) * voice.dk;
       voice.lp = ctx.createBiquadFilter(); voice.lp.type = 'lowpass'; voice.lp.Q.value = 0.5; voice.lp.frequency.value = distCut(d);
-      voice.panner = this._panner(pos, def.ref || 3);
+      voice.panner = this._panner(pos, ref);
       head.connect(voice.lp); voice.lp.connect(voice.panner); voice.panner.connect(withFade ? this.loopIn : this.sfxIn);
       v.nodes.push(voice.lp, voice.panner);
       voice.rev += Math.min(0.25, Math.max(0, (d - 6) / 60));
@@ -283,7 +286,7 @@ export class AudioEngine {
       while (this.voices.length >= MAX_VOICES) this._steal(this.voices.shift(), now);
     }
     const pitch = Math.max(0.05, o.pitch ?? 1) * (1 + (this.rng() * 2 - 1) * (d.jitter ?? 0.06));
-    const voice = this._voice(d, t, o.pos, vol);
+    const voice = this._voice(d, t, o.pos, vol, false, o.ref);
     const v = voice.v;
     try {
       if (d.build) d.build(v, pitch, o);
@@ -317,7 +320,7 @@ export class AudioEngine {
     if (this.loops.size >= MAX_LOOPS) this.loops.values().next().value.stop(0.05);
     const t = this.ctx.currentTime;
     const gain = d.gain ?? 0.5;
-    const voice = this._voice(d, t, o.pos, Math.max(0, +(o.volume ?? 1) || 0) * gain, true);
+    const voice = this._voice(d, t, o.pos, Math.max(0, +(o.volume ?? 1) || 0) * gain, true, o.ref);
     const v = voice.v, outG = voice.out.gain, fadeG = voice.fade.gain;
     fadeG.setValueAtTime(0, t);
     fadeG.linearRampToValueAtTime(1, t + 0.06);

@@ -14,7 +14,8 @@
 (async () => {
   const g = window.__inkwave, m = g.match, G = __G, A = G.audio, C = G.cues;
   const { SUBS, SPECIALS, PLAYER } = await import('./src/config.js');
-  const { SUB_CUE, SPECIAL_START, MAX } = await import('./src/audio/cues.js');
+  const { SUB_CUE, SPECIAL_START, MAX, LEVEL } = await import('./src/audio/cues.js');
+  const lvOf = (n) => Math.pow(10, ((LEVEL && LEVEL[n]) || 0) / 20);   // (a cue's calibrated level: realflow.cjs measures the audible result)
   const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const { on } = await import('./src/core/ctx.js');
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -542,9 +543,9 @@
       maxWarn <= MAX.warn && maxMove <= MAX.move && maxEngine <= 24 && maxVoices <= 48 && C.stats.capped > 0,
       { maxLive, maxWarn, maxMove, maxEngine, maxVoices, capped: C.stats.capped });
     // nothing painful: every level the director asked for stays in bounds
-    const loud = rec.filter((r) => r.vol > 2);
+    const loud = rec.filter((r) => r.vol / lvOf(r.n) > 2);
     const loudLoops = C.live().filter((s) => s.vol > 1.6);
-    R('no cue asks for more than 2× a sound\'s level (loops ≤ 1.6×)', !loud.length && !loudLoops.length, { loud: loud.slice(0, 5).map((r) => [r.n, r2(r.vol)]) });
+    R('no cue\'s mix asks for more than 2× on top of its calibrated level (loops ≤ 1.6×)', !loud.length && !loudLoops.length, { loud: loud.slice(0, 5).map((r) => [r.n, r2(r.vol)]) });
   }
 
   // ================================================================================== pause / the end / a quit

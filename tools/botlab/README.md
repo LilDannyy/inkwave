@@ -111,3 +111,8 @@ positional loop per moving thing, warnings before the big blasts, the enemy's lo
   sounds offline to `tools/botlab/sfx/out/` (git-ignored WAVs; `cues.wav` is the whole sheet, `cues.txt` its
   index, `metrics.json` levels and how alike the sounds are). The before / after inventory:
   `tools/botlab/sfx/INVENTORY.md`.
+- what the player actually hears: `tools/botlab/run.sh tools/botlab/sfx/realflow.cjs` (`OUT=file.json` for the raw
+  numbers) goes title → PLAY → TURF WAR → START! with trusted key / mouse input, taps the master and every voice with
+  an AnalyserNode, stages each sub and special from the local player's view over a busy fight, and holds each cue
+  family's audible level against your weapon fire and the music; then pause / resume, quit, a second match, the
+  loadout screen, practice and its loadout (the cue director running, the loop bus open, the listener set).

@@ -361,7 +361,7 @@ function land(it, h) {
   it.ring.scale.setScalar(s.senseRadius);
   G.scene.add(it.ring);
   if (near(it.pos, 40)) {
-    G.audio?.play('waddle_land', { pos: it.pos, volume: 0.8 });
+    G.cues?.one('waddle_land', { at: it.pos, owner: it.owner, team: it.team, kind: 'land', vol: 0.8 });   // sfx-cues: through the cue mix
     G.fx?.ring?.(it.pos, h.normal, col, { radius: 0.55, life: 0.3 });
   }
   emit('sub:land', { kind: 'waddle', pos: it.pos.clone(), team: it.team, radius: s.senseRadius });
