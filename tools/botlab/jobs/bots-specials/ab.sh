@@ -11,10 +11,11 @@ OUT=${1:?usage: ab.sh <outdir> [N_TURF] [N_ZONES] [N_H2H]}; NT=${2:-8}; NZ=${3:-
 STAGES=${STAGES:-halyard crossmarket craters spirhalite}
 ROOT=$(cd "$(dirname "$0")/../../../.." && pwd)
 mkdir -p "$OUT"; OUT=$(cd "$OUT" && pwd)
+count() { local i=1; while [ "$i" -le "$1" ]; do echo "$i"; i=$((i + 1)); done; }   # (1…n; none for 0 — seq 1 0 counts down)
 list() {
-  for i in $(seq 1 "$NT"); do for S in $STAGES; do for AI in 0 1; do echo "turf $S $AI $i"; done; done; done
-  for i in $(seq 1 "$NZ"); do for S in $STAGES; do for AI in 0 1; do echo "zones $S $AI $i"; done; done; done
-  for i in $(seq 1 "$NH"); do for S in $STAGES; do for AI in team0 team1; do echo "turf $S $AI h$i"; done; done; done
+  for i in $(count "$NT"); do for S in $STAGES; do for AI in 0 1; do echo "turf $S $AI $i"; done; done; done
+  for i in $(count "$NZ"); do for S in $STAGES; do for AI in 0 1; do echo "zones $S $AI $i"; done; done; done
+  for i in $(count "$NH"); do for S in $STAGES; do for AI in team0 team1; do echo "turf $S $AI h$i"; done; done; done
 }
 run_one() {
   local MODE=$1 S=$2 AI=$3 I=$4 f="$OUT/$1-$2-$3-$4"
