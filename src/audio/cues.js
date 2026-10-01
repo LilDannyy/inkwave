@@ -29,6 +29,13 @@
 //     sounds (REF: the panner's reference distance, 5–6 m instead of 3; alerts 10, stings 12), and LEVEL sets each one
 //     against your own weapon fire in a real match (dB per sound): the enemy's throws and landings ≥ 0 dB over it, its
 //     devices' and specials' loops ~+2, its warnings, alerts and alarms +8 … +12.
+//   - your teammates' subs (2026-10-01, the user: "dont give throw/warning sounds of teammates bombs, but do play their
+//     explosion sound a bit fainter than normal"): a teammate's thrown or placed sub — a Bomb Barrage's bombs too — makes
+//     no throw, flight, landing / arming, fuse, windup or warning sound for you (MIX[…].allySub 0), its blast plays at
+//     0.6 × the enemy's (MIX.boom.allySub / foe, applied after the cue compressor: audio.js cuePost — as you hear it),
+//     and its devices' own loops (a sprinkler spinning, a curtain dripping, a
+//     beacon's hum, a murk cloud's hiss), ends and uses stay as a teammate's. Specials, their stings and alerts are
+//     unchanged. (Cue calls from a sub carry o.sub: sub() sets it; kits' own one() calls and the loops below pass it.)
 //   - caps: at most MAX.move moving loops and MAX.warn warning loops at once (the backdrop: fewer); the rest wait,
 //     ranked warnings first, the enemy's first, then by closeness (distance to the listener, and to you for threats).
 //   - Doppler-ish: each positional loop's pitch × 1 / (1 − v_r / 55) (clamped 0.84 … 1.22) and level × (1 + v_r / 40)
@@ -47,18 +54,22 @@ const RANGE = { move: 42, warn: 55, one: { throw: 40, land: 40, warn: 55, boom: 
 // as you hear them: your own throws and starts come from you, not from across the lane, so they're mixed down to land
 // ~3 dB under an enemy's thrown 7 m in front of you (they stay as loud as they were; the enemy's went up); the launch
 // alerts are the enemy's only, the stings the enemy's and — softer, −6 dB — your team's)
+// allySub: a teammate's SUB (see the header: no throw / flight / landing / fuse / warning sounds; its blast at 0.6 × the
+// enemy's — 0.45 vs 0.75, −4.4 dB; its devices' loops, ends and uses as a teammate's). fly: a thrown thing in the air
+// (the move loop's gains, its own row so a teammate's flight can be silent)
 export const MIX = {
-  throw: { own: 0.38, ally: 0.87, foe: 1.23, none: 0.45 },
-  start: { own: 0.45, ally: 0.78, foe: 1.1, none: 0.5 },
-  land: { own: 0.78, ally: 0.78, foe: 1.1, none: 0.45 },
-  beep: { own: 0.85, ally: 0.85, foe: 1.2, none: 0.4 },
-  use: { own: 0.8, ally: 0.8, foe: 0.6, none: 0.4 },
-  boom: { own: 0.56, ally: 0.54, foe: 0.75, none: 0.5 },   // (blasts were loud already: +3.5 dB net over the cue bus)
-  end: { own: 0.64, ally: 0.64, foe: 0.9, none: 0.45 },
-  move: { own: 0.74, ally: 0.74, foe: 1.05, none: 0.45 },
-  warn: { own: 0.91, ally: 0.91, foe: 1.29, none: 0.35 },
-  alert: { own: 0, ally: 0, foe: 1.2, none: 0 },
-  sting: { own: 0, ally: 0.5, foe: 1, none: 0 },
+  throw: { own: 0.38, ally: 0.87, foe: 1.23, none: 0.45, allySub: 0 },
+  start: { own: 0.45, ally: 0.78, foe: 1.1, none: 0.5, allySub: 0 },
+  land: { own: 0.78, ally: 0.78, foe: 1.1, none: 0.45, allySub: 0 },
+  beep: { own: 0.85, ally: 0.85, foe: 1.2, none: 0.4, allySub: 0 },
+  use: { own: 0.8, ally: 0.8, foe: 0.6, none: 0.4, allySub: 0.8 },
+  boom: { own: 0.56, ally: 0.54, foe: 0.75, none: 0.5, allySub: 0.45 },   // (blasts were loud already: +3.5 dB net over the cue bus)
+  end: { own: 0.64, ally: 0.64, foe: 0.9, none: 0.45, allySub: 0.64 },
+  move: { own: 0.74, ally: 0.74, foe: 1.05, none: 0.45, allySub: 0.74 },
+  fly: { own: 0.74, ally: 0.74, foe: 1.05, none: 0.45, allySub: 0 },
+  warn: { own: 0.91, ally: 0.91, foe: 1.29, none: 0.35, allySub: 0 },
+  alert: { own: 0, ally: 0, foe: 1.2, none: 0, allySub: 0 },
+  sting: { own: 0, ally: 0.5, foe: 1, none: 0, allySub: 0 },
 };
 // the panner's reference distance per cue class (m): full level inside it, the inverse roll-off beyond. Ordinary sounds
 // use 3; cues carry further so a throw 10 m off, a fuse 6 m off, a jet across the lane are heard over a fight and the
@@ -90,7 +101,7 @@ export const SUB_CUE = {
   bomb: { throw: ['bomb_throw', 0.8], land: ['bomb_beep', 0.7], boom: ['bomb_explode', 1] },
   sticky: { throw: ['throw_sticky', 0.9], land: ['sticky_stick', 0.9], boom: ['sticky_explode', 1] },
   burst: { throw: ['throw_burst', 0.9], boom: ['pellet_pop', 1] },
-  seeker: { throw: ['throw_seeker', 0.9], land: ['seeker_land', 0.9], boom: ['seeker_explode', 1] },
+  seeker: { throw: ['throw_seeker', 0.9], land: ['seeker_land', 0.9], warn: ['seeker_prime', 1], boom: ['seeker_explode', 1] },
   scan: { throw: ['throw_scan', 0.9], boom: ['scan_burst', 0.9] },
   curtain: { throw: ['throw_curtain', 0.9], land: ['curtain_up', 0.9], end: ['curtain_down', 0.9] },
   sprinkler: { throw: ['throw_sprinkler', 0.9], land: ['sprinkler_stick', 0.9], end: ['sprinkler_break', 0.9] },
@@ -98,7 +109,7 @@ export const SUB_CUE = {
   beacon: { throw: ['place_beacon', 0.85], end: ['beacon_break', 0.9], use: ['beacon_use', 0.8] },
   mist: { throw: ['throw_mist', 0.9], boom: ['mist_burst', 0.9] },
   shaker: { throw: ['throw_shaker', 0.9], land: ['shaker_land', 0.9], boom: ['shaker_blast', 0.95] },
-  waddle: { throw: ['throw_waddle', 0.9], beep: ['waddle_beep', 0.8], boom: ['waddle_explode', 1], end: ['waddle_pop', 0.9] },
+  waddle: { throw: ['throw_waddle', 0.9], beep: ['waddle_beep', 0.8], warn: ['waddle_prime', 1], boom: ['waddle_explode', 1], end: ['waddle_pop', 0.9] },
   torpedo: { throw: ['torpedo_throw', 1], boom: ['torpedo_burst', 1] },
   boomerang: { beep: ['boomerang_tick', 0.8], boom: ['boomerang_blast', 1] },
   smash: { end: ['sub_smash', 0.9] },   // a device the Mega Stamp's guard smashed before it went off
@@ -214,6 +225,8 @@ export class Cues {
     if (owner && owner === me) return 'own';
     return (team ?? owner?.team) === me.team ? 'ally' : 'foe';
   }
+  // a teammate's sub (not yours, not the enemy's): the allySub mix — kits ask before an ordinary arming sound of their own
+  allySub(owner, team) { return this.rel(owner, team ?? owner?.team) === 'ally'; }
   // how close YOU are to a threat's blast (0 … 1): full inside ~1.4 m of its middle, fading out ~2.2 × its radius away
   close(pos, R = 3) {
     const me = this._me();
@@ -231,7 +244,11 @@ export class Cues {
     let pos = o.at;
     if ((kind === 'throw' || kind === 'start') && rel === 'own') pos = undefined;   // your own throw / start comes from you
     if (pos && A.L) { const r = o.range ?? RANGE.one[kind] ?? 40; if (r !== Infinity && dist(A.L, pos) > r) return null; }
-    let g = (o.vol ?? 1) * (MIX[kind] || MIX.boom)[rel];
+    const row = MIX[kind] || MIX.boom, ar = o.sub && rel === 'ally';   // (a teammate's sub: allySub)
+    let g = (o.vol ?? 1) * row[ar ? 'allySub' : rel], post = 1;
+    // a teammate's blast: mixed as the enemy's into the cue bus's twin and scaled by allySub / foe AFTER its compressor
+    // (audio.js cuePost) — heard at that share of the enemy's near or far, not evened out by the compression
+    if (ar && kind === 'boom' && g > 0) { post = row.allySub / row.foe; g = (o.vol ?? 1) * row.foe; }
     if (!(g > 0)) return null;
     if ((kind === 'warn' || kind === 'beep' || kind === 'alert') && rel === 'foe') {
       g *= this.boost(o.at, o.radius, o.target);
@@ -239,13 +256,13 @@ export class Cues {
     }
     g = Math.min(g, 1.9);   // (never more than ~2× its calibrated level, boosts and all)
     if (this.log && (kind === 'alert' || kind === 'sting')) this.log.push({ t: G.time, name, kind, rel });
-    return A.play(name, { pos, volume: g * lv(name), pitch: o.pitch, ref: pos ? o.ref ?? REF[kind] : undefined, cue: true });
+    return A.play(name, { pos, volume: g * lv(name), pitch: o.pitch, ref: pos ? o.ref ?? REF[kind] : undefined, cue: true, post });
   }
   sub(kind, phase, o = {}) {
     const c = SUB_CUE[kind]?.[phase] || (phase === 'end' ? SUB_CUE.smash.end : null);
     if (!c) return null;
     const k = phase === 'use' ? 'use' : phase === 'beep' ? 'beep' : phase;
-    return this.one(c[0], { ...o, kind: k, vol: (o.vol ?? 1) * c[1], radius: o.radius ?? SUBS[kind]?.radius });
+    return this.one(c[0], { ...o, kind: k, sub: true, vol: (o.vol ?? 1) * c[1], radius: o.radius ?? SUBS[kind]?.radius });
   }
   _start(a, id) {
     if (!a) return;
@@ -281,6 +298,7 @@ export class Cues {
     w.warn = !!o.warn; w.vol = o.vol ?? 1; w.pitch = o.pitch ?? 1; w.params = o.params || null;
     w.radius = o.radius || 3; w.target = o.target || null; w.big = !!o.big; w.range = o.range || (w.warn ? RANGE.warn : RANGE.move);
     w.prio = o.prio || 1; w.ref = o.ref || 0; w.glide = o.glide ?? null;
+    w.sub = !!o.sub; w.fly = !!o.fly;   // (a sub's loop: a teammate's takes the allySub mix; a flight: the fly row)
     return w;
   }
 
@@ -306,7 +324,7 @@ export class Cues {
     for (const b of P?.bombs || []) {
       const o = { pos: b.pos, team: b.team, owner: b.owner };
       if (b.kind === 'storm' || !(b.fuse >= 0)) { this._fly(b, b.kind === 'storm' ? 'storm' : 'bomb', o, b.kind === 'storm' ? 1 : 0.9); continue; }
-      this._want(b, 'fuse', 'fuse_bomb', { ...o, warn: true, radius: SUBS.bomb.radius,
+      this._want(b, 'fuse', 'fuse_bomb', { ...o, sub: true, warn: true, radius: SUBS.bomb.radius,
         params: { k: clamp(1 - b.fuse / SUBS.bomb.fuse, 0, 1), roll: clamp((hs(b.vel) - 0.3) / 3.5, 0, 1) } });
     }
     // ---- Ink Tempest clouds
@@ -316,7 +334,7 @@ export class Cues {
     }
     // ---- the built-in subs — subs.js
     for (const it of S?.items || []) {
-      const o = { pos: it.pos, team: it.team, owner: it.owner };
+      const o = { pos: it.pos, team: it.team, owner: it.owner, sub: true };
       switch (it.state) {
         case 'fly': this._fly(it, FLIGHT_KIND[it.kind] || 'bomb', o, 0.85); break;
         case 'stuck': this._want(it, 'fuse', 'fuse_sticky', { ...o, warn: true, radius: it.sub.radius, params: { k: clamp(it.t / (it.fuse || 1), 0, 1) } }); break;
@@ -326,7 +344,8 @@ export class Cues {
         case 'curtain': this._want(it, 'curtain', 'curtain_drip', { ...o, range: 26, params: { life: clamp(it.hp / it.sub.hp, 0, 1) } }); break;
         case 'spray': this._want(it, 'spray', 'sprinkler_spin', { ...o, range: 26, params: { fast: it.t < it.sub.sprayFade ? 1 : 0 } }); break;
         case 'beacon': this._want(it, 'beacon', 'beacon_hum', { ...o, range: 16 }); break;
-        // (the Lurk Mine is silent while it lurks — hidden; tripped, it plays mine_trip; the Echo Orb's cloud is a one-shot)
+        // (the Lurk Mine is silent while it lurks — hidden; tripped, it plays mine_trip; a Skitter Bomb winding up plays
+        // seeker_prime — one-shots, SUB_CUE …warn; the Echo Orb's cloud is a one-shot)
       }
     }
     // ---- kit subs — kits/*.js
@@ -336,11 +355,11 @@ export class Cues {
       // (a warning from the throw on: its first blast is only half a second after it lands; in the air — thrown, or
       // hopping between blasts — its rattle glides along the arc)
       const gl = !it.ground && !it.armed ? this._glide(it, it.pos, it.vel) : null;
-      this._want(it, 'rattle', 'shaker_rattle', { pos: it.pos, team: it.team, owner: it.owner, warn: true, radius: it.sub.radius,
+      this._want(it, 'rattle', 'shaker_rattle', { pos: it.pos, team: it.team, owner: it.owner, sub: true, warn: true, radius: it.sub.radius,
         pitch: gl ? gl.q : 1, glide: gl ? gl.st : null, params: { k: clamp(k, 0, 1), armed: it.armed ? 1 : 0 } });
     }
     for (const it of K.waddle?.items || []) {
-      const o = { pos: it.pos, team: it.team, owner: it.owner };
+      const o = { pos: it.pos, team: it.team, owner: it.owner, sub: true };
       if (it.state === 'fly') this._fly(it, 'waddle', o, 0.85);
       else if (it.state === 'wake' || it.state === 'walk') {
         const T = it.target && it.target.alive ? it.target : null;
@@ -351,19 +370,19 @@ export class Cues {
     }
     for (const t of K.torpedo?._list || []) {
       if (t.state === 'dead') continue;
-      const s = t.sub, o = { pos: t.pos, team: t.team, owner: t.owner };
+      const s = t.sub, o = { pos: t.pos, team: t.team, owner: t.owner, sub: true };
       const lk = t.state === 'unfold' || t.state === 'launch';
       // (thrown, before it locks on: its whirr glides along the arc)
       const gl = t.state === 'fly' && t.vel ? this._glide(t, t.pos, t.vel) : null;
       const p = t.state === 'launch' ? 1 + t.speed / 10 : t.state === 'unfold' ? 0.8 + 0.6 * clamp(t.t / s.unfoldTime, 0, 1) : 0.8 * (gl ? gl.q : 1);
-      this._want(t, 'whirr', 'torpedo_whirr', { ...o, warn: lk, radius: s.radius, target: t.target, vol: lk ? 0.85 : gl ? 0.75 : 0.5, pitch: p, glide: gl ? gl.st : null });
+      this._want(t, 'whirr', 'torpedo_whirr', { ...o, warn: lk, fly: !lk, radius: s.radius, target: t.target, vol: lk ? 0.85 : gl ? 0.75 : 0.5, pitch: p, glide: gl ? gl.st : null });
       if (lk && me && t.target === me) {
         const k = t.state === 'unfold' ? 0.3 * clamp(t.t / s.unfoldTime, 0, 1) : 0.3 + 0.7 * clamp(1 - dist(t.pos, me.pos) / s.lockRange, 0, 1);
         this._want(t, 'lock', 'lock_tone', { ...o, warn: true, radius: s.radius, target: me, params: { k } });
       }
     }
     for (const b of K.tracer?._bolts || []) {
-      const o = { team: b.team, owner: b.owner };
+      const o = { team: b.team, owner: b.owner, sub: true, fly: true };
       if (b.state === 'fly') {
         // (a straight, fast bolt: its hum falls from +3 to −6 semitones over its range)
         const st = 3 - 9 * clamp((b.travel || 0) / (b.sub.range || 30), 0, 1);
@@ -376,12 +395,12 @@ export class Cues {
       }
     }
     for (const it of K.boomerang?._items || []) {
-      const o = { pos: it.pos, team: it.team, owner: it.owner, radius: it.sub.radius };
+      const o = { pos: it.pos, team: it.team, owner: it.owner, radius: it.sub.radius, sub: true };
       switch (it.state) {
         // (going out it slows to a stop: its whirr falls +2 → −4 semitones; coming home it climbs back −4 → +3)
-        case 'out': { const st = 2 - 6 * clamp(it.t / (it.outT || 0.6), 0, 1); this._want(it, 'spin', 'boomerang_whirr', { ...o, vol: 0.7, pitch: 1.15 * Math.pow(2, st / 12), glide: st }); break; }
+        case 'out': { const st = 2 - 6 * clamp(it.t / (it.outT || 0.6), 0, 1); this._want(it, 'spin', 'boomerang_whirr', { ...o, fly: true, vol: 0.7, pitch: 1.15 * Math.pow(2, st / 12), glide: st }); break; }
         case 'hover': this._want(it, 'spin', 'boomerang_whirr', { ...o, vol: 0.75, pitch: 1.35 }); break;
-        case 'back': { const st = -4 + 7 * clamp(it.t / 1.1, 0, 1); this._want(it, 'spin', 'boomerang_whirr', { ...o, vol: 0.7, pitch: 1.15 * Math.pow(2, st / 12), glide: st }); break; }
+        case 'back': { const st = -4 + 7 * clamp(it.t / 1.1, 0, 1); this._want(it, 'spin', 'boomerang_whirr', { ...o, fly: true, vol: 0.7, pitch: 1.15 * Math.pow(2, st / 12), glide: st }); break; }
         case 'orbit': this._want(it, 'spin', 'boomerang_orbit', { ...o, vol: 0.7, pitch: 1 }); break;
         case 'armed': this._want(it, 'spin', 'boomerang_whirr', { ...o, warn: true, radius: it.sub.hitRadius, target: it.victim, vol: 0.85, pitch: 1.6 }); break;
       }
@@ -482,7 +501,7 @@ export class Cues {
   // a thrown thing in the air: sub_flight in its kind's voice, gliding along its arc
   _fly(obj, kind, o, vol) {
     const gl = this._glide(obj, obj.pos, obj.vel);
-    this._want(obj, 'fly', 'sub_flight', { ...o, vol: vol * Math.pow(10, (FLIGHT_DB[kind] || 0) / 20), pitch: gl.q, glide: gl.st, params: { kind, arc: gl.arc } });
+    this._want(obj, 'fly', 'sub_flight', { ...o, sub: kind !== 'storm', fly: true, vol: vol * Math.pow(10, (FLIGHT_DB[kind] || 0) / 20), pitch: gl.q, glide: gl.st, params: { kind, arc: gl.arc } });
   }
   // where along its arc a thrown thing is → { arc (0 thrown … 0.5 the top … 1 landing), st (semitones), q (pitch) }
   _glide(obj, pos, vel, g = 24) {
@@ -618,8 +637,10 @@ export class Cues {
       w.rel = this.rel(w.owner, w.team);
       w.d = w.twoD || !w.pos ? 0 : dist(L, w.pos);
       w.cl = w.warn && w.rel === 'foe' ? this.close(w.pos, w.radius) : 0;
+      w.mix = MIX[w.warn ? 'warn' : w.fly ? 'fly' : 'move'][w.sub && w.rel === 'ally' ? 'allySub' : w.rel];
       const had = this.slots.has(w.key) ? 1.25 : 1;
-      w.score = w.d > w.range ? -1 : (w.warn ? 4 : 1) * (w.rel === 'foe' ? 2 : 1) * (1 + 2 * w.cl) * w.prio * had * (w.twoD ? 10 : 1) / (1 + w.d / 12);
+      // (silent in this mix — a teammate's sub's flight or fuse: no loop at all, nor a place under the caps)
+      w.score = w.d > w.range || !(w.mix > 0) ? -1 : (w.warn ? 4 : 1) * (w.rel === 'foe' ? 2 : 1) * (1 + 2 * w.cl) * w.prio * had * (w.twoD ? 10 : 1) / (1 + w.d / 12);
     }
     want.sort((a, b) => b.score - a.score);
     const keep = this._keep; keep.clear();
@@ -649,7 +670,7 @@ export class Cues {
           dv = clamp(1 + vr / 40, 0.85, 1.25);
         }
       }
-      let vol = w.vol * MIX[w.warn ? 'warn' : 'move'][w.rel] * dv;
+      let vol = w.vol * w.mix * dv;
       if (w.warn && w.rel === 'foe') vol *= 1 + 0.35 * w.cl + (w.target && w.target === me ? 0.2 : 0);
       vol = Math.min(vol, 1.6);
       const gain = vol * lv(w.sound);

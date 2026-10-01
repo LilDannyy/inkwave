@@ -24,7 +24,7 @@ const FAMILY = {
   blasts: (n) => /(_explode|_pop|_boom|_burst|_crash|_blast|_impact|^special_slam|^kraken_slam|^stamp_slam)$/.test(n) || /^(pellet_pop|special_slam|kraken_slam|stamp_slam|strike_impact)$/.test(n),
   // (sfx-loud: every warning — the subs', the specials', the launch alerts and the "you're in it" alarms — against
   // every other: none may sound like another)
-  warnings: (n) => /^(fuse_|mine_trip|hunt_alarm|lock_tone|slam_warn|strike_mark|beam_lock|kraken_dive|orb_fuse|shell_whistle|bomb_beep|waddle_beep|boomerang_tick|wail_charge|strike_whistle|alert_|danger~)/.test(n),
+  warnings: (n) => /^(fuse_|mine_trip|seeker_prime|waddle_prime|hunt_alarm|lock_tone|slam_warn|strike_mark|beam_lock|kraken_dive|orb_fuse|shell_whistle|bomb_beep|waddle_beep|boomerang_tick|wail_charge|strike_whistle|alert_|danger~)/.test(n),
   alerts: (n) => /^alert_/.test(n),
   alarms: (n) => /^(danger~|beam_lock$)/.test(n),
   stings: (n) => /^sting_/.test(n),

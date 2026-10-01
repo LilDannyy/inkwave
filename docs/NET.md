@@ -88,6 +88,11 @@ result on every screen.
 sub, a Waddle …) is recorded by its owner as `['k', nid, kind, data]` and replayed by the kit's `ghost(actor, data)`:
 visual-only (paint muted, hits dropped) and never deciding for itself — its owner's end / lock / path records drive it.
 A hit on a ghost device (curtain, beacon, Waddle, Torpedo …) goes to its owner (`{k:'dh'}` → the kit's `netHurt`).
+The built-in subs (subs.js) add an update record `[3, gid, …]` from the owner: a Lurk Mine tripped (it pops up on every
+screen — it's invisible to the other team until then, on theirs too), a Skitter Bomb stopping to wind up (ghost Skitters
+never trigger themselves), a Hop Beacon's jumps left, a Drip Curtain's ink after hits (its decay runs everywhere); a
+super jump onto a remote player's beacon goes to its owner through the same device-hit channel (`beaconUse`). The
+Waddle's windup is its `[5, gid, x, y, z]`.
 A kit's pose state (a Mitts leap, a held Brolly canopy) rides the actor tick (`netState` / `netApply`).
 
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end

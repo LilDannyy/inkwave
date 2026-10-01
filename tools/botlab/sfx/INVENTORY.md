@@ -81,15 +81,15 @@ kind its own pitch). Listen: `out/cues.wav` (index `out/cues.txt`).
 | Splat Bomb | `bomb_throw` (plastic tok) | loop `sub_fly@1` | `bomb_beep` | the fuse loop's plastic rattle while it still rolls | loop `fuse_bomb` 0.95 s: bips 4 → 18 a second, climbing, a whine at the end | `bomb_explode` | — |
 | Cling Charge | `throw_sticky` (wet schlup) | loop `sub_fly@0.85` | `sticky_stick` (suction thwuck, clamp ring) | — | loop `fuse_sticky` 2.4 s: a deep "bwom" pulse 1.6 → 10 a second (the enemy's a sour tritone, yours a fifth) | `sticky_explode` (deep, wide, long rumble, splorch) | — |
 | Pop Pellet | `throw_burst` (quick high pip) | loop `sub_fly@1.5` | pops on impact (it never rolls) | — | — | `pellet_pop` (bright POK and spray) | — |
-| Skitter Bomb | `throw_seeker` (ratchet wind-up) | loop `sub_fly@1.15` | `seeker_land` (clatter, motor revving) | warn loop `seeker_run`: clicky feet, servo whine; faster when it dashes; a beeping on top when it's after you | the run loop itself | `seeker_explode` (crunch, parts, motor dying) | — |
+| Skitter Bomb | `throw_seeker` (ratchet wind-up) | loop `sub_fly@1.15` | `seeker_land` (clatter, motor revving) | warn loop `seeker_run`: clicky feet, servo whine; faster when it dashes; a beeping on top when it's after you | the run loop itself; reached (sub-tweaks): it stops and winds up 0.45 s — `seeker_prime` (ratchet cranking, motor whine climbing, a clack) | `seeker_explode` (crunch, parts, motor dying) | — |
 | Echo Orb | `throw_scan` (glassy ting) | loop `sub_fly@1.35` | — | — | — | `scan_burst` (sonar vwoom and ping, no blast) | — |
 | Drip Curtain | `throw_curtain` (sloshing bag) | loop `sub_fly@0.7` | `curtain_up` (sheet whooshing down, splash) | loop `curtain_drip` (falling sheet, drips; thinner as it fades) | — | — | `curtain_down` (draining gurgle) |
 | Twirl Sprinkler | `throw_sprinkler` (metal zing) | loop `sub_fly@1.25` | `sprinkler_stick` (clamp, spin-up) | loop `sprinkler_spin` (rotor, "tsh … tsh" pulses; half speed once tired) | — | — | `sprinkler_break` (sputter, clunk, spin-down) |
-| Lurk Mine | `place_mine` (soft thunk, three quiet arming pips; 14 m) | — | — | silent while hidden | `mine_trip` (click and rising alarm, 0.35 s before) | `mine_explode` (dry snap, electric zap) | — |
+| Lurk Mine | `place_mine` (soft thunk, three quiet arming pips; 14 m) | — | — | silent while hidden | `mine_trip` (click and rising alarm, 0.45 s before — sub-tweaks: was 0.35) | `mine_explode` (dry snap, electric zap) | — |
 | Hop Beacon | `place_beacon` (clunk, power-up chime) | — | — | loop `beacon_hum` (a soft boop every 1.2 s; 16 m); `beacon_use` when jumped to | — | — | `beacon_break` (power-down, crack) |
 | Murk Bomb | `throw_mist` (squishy fwomp) | loop `sub_fly@0.8` | `mist_burst` (gassy pfoomph) | loop `mist_hiss` (murky bubbling, hiss, the enemy's low beating drone) | — | — | fades with the cloud |
 | Shaker Bomb | hold: `shaker_clink`, `shaker_fizz`; `throw_shaker` (can shake, hiss) | warn loop `shaker_rattle` from the throw | `shaker_land` (clonk, fizz) | the rattle speeds up and hisses higher toward each blast; `shaker_hop` | the rattle loop (from the throw) | `shaker_blast` ×1–3 (soda-can pssh-BANG, each a step higher) | — |
-| Waddle Bomb | `throw_waddle` (wind-up key, "wee!") | loop `sub_fly@1.05` | `waddle_land`; sensing `waddle_beep` toy bips speeding up; `waddle_lock` | warn loop `waddle_walk` (feet, servo, bip; faster as it closes) | warn loop `hunt_alarm` on its target (toy siren, louder and faster as it closes) | `waddle_explode` (spring boing, boom) | shot down: `waddle_pop` (squeaky deflate) |
+| Waddle Bomb | `throw_waddle` (wind-up key, "wee!") | loop `sub_fly@1.05` | `waddle_land`; sensing `waddle_beep` toy bips speeding up; `waddle_lock` | warn loop `waddle_walk` (feet, servo, bip; faster as it closes) | warn loop `hunt_alarm` on its target (toy siren, louder and faster as it closes); reached (sub-tweaks): it stops and winds up 0.45 s — `waddle_prime` (racing toy bips, a springy wobble) | `waddle_explode` (spring boing, boom) | shot down: `waddle_pop` (squeaky deflate) |
 | Tide Torpedo | `torpedo_throw` (motor start) | loop `torpedo_whirr` (warn once locked; climbs as it swims) | `torpedo_transform`, `torpedo_lock` | `torpedo_launch` | warn loop `lock_tone` on its target (missile-lock pips 4 → 18 a second) | `torpedo_burst` (wet crack, thump, droplets) | shot down: `splat_small` + `torpedo_pop` |
 | Tracer Bolt | `tracer_zap` | loop `tracer_hum` (then its trail's, fading) | `tracer_bounce` per ricochet | — | — | `tracer_hit` ("marked" chime) | — |
 | Whirl Boomerang | `boomerang_throw` | loop `boomerang_whirr` (out, hovering higher, back) | `boomerang_return`, `boomerang_shred` | loop `boomerang_orbit` round you | caught a foe: warn whirr + `boomerang_tick` tinks quickening (0.6 s) | `boomerang_blast` (blades spinning down, clang, boom); end: `boomerang_burst` | fizzle: `splat_small` |
@@ -259,3 +259,11 @@ the specials', the alerts, the alarms) against every other ≥ 2.27.
 - `tools/botlab/sfx/render.cjs`: the listening sheet at the in-game levels (default settings, the cue bus, each cue at
   the enemy's mix from its reference distance); flights glide along a lob landing in front of you, alarms sweep their
   urgency over their real lead; the similarity report per family.
+
+**Teammates' subs (2026-10-01, the user: "dont give throw/warning sounds of teammates bombs, but do play their explosion
+sound a bit fainter than normal").** A teammate's thrown or placed sub (a Bomb Barrage's bombs too) makes no throw,
+flight, landing / arming, fuse, windup or warning sound for you; its blast plays at 0.6 × the enemy's (cues.js
+`MIX.boom.allySub` 0.45 vs `foe` 0.75), applied after the cue compressor (audio.js `cuePost`, the cue bus's twin) so the
+compression doesn't even it back out (scaled before it, a blast 1.5 m away came out only 0.3 dB under the enemy's; now
+−2 … −3 dB there, −4.4 dB wherever the compressor is idle); its devices' own loops, ends and uses stay as a teammate's.
+Yours and the enemy's are unchanged, and so are specials (stings, alerts).
