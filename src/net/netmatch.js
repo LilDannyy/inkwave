@@ -43,7 +43,8 @@ const F = {
   alive: 1, squid: 2, sub: 4, climb: 8, grounded: 16, gt1: 32, gt2: 64, charging: 128, rolling: 256, streaming: 512,
   dodge: 1024, subAim: 2048, firing: 4096, special: 8192, sjCharge: 16384, sjFlight: 32768, flick: 65536, slosh: 131072,
   invuln: 262144, enemy: 524288,
-  tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks)
+  tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks;
+                                          // two teams, so tracked = by the other one: the ring's colour and who gets lines)
 };
 // events forwarded from owners (actor-bearing payloads; vectors/actors are packed)
 const FORWARD = ['actor:jump', 'superjump', 'superjump:land', 'special:use', 'special:slam', 'weapon:dodge', 'weapon:fire', 'splatted', 'respawn'];

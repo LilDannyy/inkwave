@@ -18,7 +18,9 @@
 // windup; a Skitter Bomb winds up (`delay`) before it bursts; a Hop Beacon shows its jumps left and pings a sonar; a
 // Drip Curtain carries an ink meter. Online, the owner's update record ([3, gid, …]: netGhost) keeps the ghosts in step.
 // sub-tweaks2 (2026-10-02): the Twirl Sprinkler throws further (15.8) and splats an ink patch where it sticks (_patch);
-// tracked / poisoned players show it (statusFx.js: a sonar shell in the tracker's colour, murky bubbles), for everyone.
+// tracked / poisoned players show it (statusFx.js: murky bubbles for the poisoned), for everyone.
+// track-arrows (2026-10-02): a tracked player wears a ring of arrows in the tracking team's colour, and everyone on that
+// team gets a thin line to them; both through walls for that team only (statusFx.js).
 //
 // Props come from getSubDef(kind) (origin at the bottom centre, +Y away from the surface, +Z forward).
 import * as THREE from 'three';

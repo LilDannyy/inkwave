@@ -1,13 +1,13 @@
 // sub-tweaks2 pictures: staged views of the changes, for tools/botlab/shoot.cjs (PRE=this file, PRE_ARGS=<scene>; PLAY=1
-// so shoot.cjs keeps the paint, ACTORS=1 where the kids are in it). SubSystem.update is wrapped to hold a moment (a ping
-// half way out, a sprinkler that hasn't sprayed yet) while the camera moves to each picture. Scenes (testbox unless said):
+// so shoot.cjs keeps the paint, ACTORS=1 where the kids are in it). SubSystem.update is wrapped to hold a moment (a
+// sprinkler that hasn't sprayed yet) while the camera moves to each picture. Scenes (testbox unless said):
 //   bow-old / bow-new   a full-draw volley's trail alone (its stick and burst paint off) along z from (0, 0, −32): the old
 //                       drip rule replayed over the same flights / the new trail       bow-full   the new one with its bursts
 //   wail-ledge          a Howl Box used at the spawn deck's edge (2.4 m up), charging: on the deck by the kid
 //   wail-ledge-old      the same use, the speaker where the old rule put it (the floor below)
 //   wail-map            on any stage (MAP=halyard …): at its biggest ledge drop (as the test's 'wailmap' finds them)
 //   sprinkler-patch     two sprinklers just stuck, before any spray: one on the floor, one on the wall (x = 14)
-//   tracked             a foe marked by an Echo Orb, the ping half way out        tracked-self   you, marked (play preset)
+//   (the tracked look — once a sonar shell here — is now tools/botlab/scenes/track-arrows.js)
 //   poisoned            a foe hit by a Murk Bomb                                   poisoned-self  you, poisoned (play preset)
 // The pictures (PNG → JPEG q78 in tools/botlab/jobs/sub-tweaks2/out/): see that folder's shots.sh.
 (async () => {
@@ -15,8 +15,7 @@
   const { SUBS, WEAPONS, PLAYER } = await import('./src/config.js');
   const { MAIN_KITS } = await import('./src/game/kits/registry.js');
   const BOW = await import('./src/game/kits/bow.js');
-  const SF = await import('./src/game/statusFx.js');
-  const G = window.__G, S = G.subs, FX = S.statusFx, SC = window.__preArgs || 'tracked';
+  const G = window.__G, S = G.subs, FX = S.statusFx, SC = window.__preArgs || 'poisoned';
   dbg.freeze();
   const V = (x, y, z) => new THREE.Vector3(x, y, z), DOWN = V(0, -1, 0);
   let hook = null, after = null;
@@ -41,8 +40,6 @@
   const start = (e, id) => { e.specialId = id; e.special = e.specialCost(); e._startSpecial(); return e.specialActive; };
   // a speaker held charging (its beam a pulsing guide line, the box full size) once it's down
   const holdSpeaker = (E) => holds.push(() => { for (const w of G.specials.world) if (w.kind === 'speaker' && w.owner === E && w.phase === 'charge' && w.t > 0.6) w.t = 0.6; });
-  // a ping held at phase k on a's look
-  const holdPing = (a, k) => holds.push((dt) => { const r = FX.recs.get(a); if (r && r.on) r.t0 = FX.time + dt - k * SF.PULSE; });
 
   if (SC.startsWith('bow')) {
     const W = WEAPONS.bow, E = mates[0];
@@ -104,16 +101,6 @@
     step(0.5);
     for (let i = 0; i < 30; i++) G.paint.flush(DT);
     info.at = S.items.filter((x) => x.kind === 'sprinkler').map((x) => [x.pos.x, x.pos.y, x.pos.z, x.state]);
-  } else if (SC.startsWith('tracked')) {
-    const self = SC === 'tracked-self', T = self ? me : foes[0];
-    show(T, V(0, 0, -6), self ? 0 : Math.PI - 0.5);
-    if (self) { g.rig.follow(me, true); g.rig.yaw = 0; g.rig.pitch = -0.12; }
-    S._throw(self ? foes[0] : me, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false);
-    step(1.5);   // (its cloud gone)
-    T.status.track = 99;
-    if (!self) holdPing(T, 0.42);
-    step(0.3);
-    info.track = T.status.track; info.on = !!FX.recs.get(T)?.on;
   } else if (SC.startsWith('poisoned')) {
     const self = SC === 'poisoned-self', T = self ? me : foes[0];
     show(T, V(0, 0, -6), self ? 0 : Math.PI - 0.5);
