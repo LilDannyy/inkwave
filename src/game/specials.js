@@ -31,6 +31,7 @@ const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
 const TAU = Math.PI * 2;
+const WAIL_STEPS = [1.3, 1.0, 0.7, 0.4];   // Howl Box: how far in front of you it tries to stand (m), nearest last (IMPL.wail.spot)
 
 // ---- online (see SpecialSystem.netGhost): the owner records its special as ['k', nid, 'sp', data] —
 //   [0, index in SPECIAL_ORDER] start · [1, reason] end · [2, kind, gid, …] a world object (missile, twister, speaker,
@@ -1391,19 +1392,48 @@ const IMPL = {
       const f = this._fwd(a), rx = -f.z, rz = f.x;   // the kid's right
       s.heldG.position.set(a.pos.x + rx * 0.24 + f.x * 0.06, a.pos.y + (a.smoothY || 0) + 1.06 + Math.sin(s.t * 9) * 0.01, a.pos.z + rz * 0.24 + f.z * 0.06);
       s.heldG.rotation.y = a.aimYaw;
-      // guide: where the beam will go once the speaker is down
+      // guide: where the beam will go once the speaker is down (from its mouth, set where IMPL.wail.spot puts it)
       const dir = IMPL.wail.dirOf(a);
-      s.guide.position.set(a.pos.x + f.x * 1.3, a.pos.y + 0.85, a.pos.z + f.z * 1.3);
+      if (!s.ghost) {
+        const at = IMPL.wail.spot(a, s.spot || (s.spot = new THREE.Vector3()));
+        s.guide.position.copy(IMPL.wail.mouthAt(at, a.aimYaw, _v4));
+      }
       s.guide.lookAt(_v.copy(s.guide.position).add(dir));
       s.guide.scale.set(0.07, 0.07, s.def.range);
       const u = s.guide.material.uniforms;
       u.uTime.value = s.t; u.uCharge.value = 0; u.uAlpha.value = 0.3 + 0.15 * Math.sin(s.t * 6);
     },
+    // Where the speaker goes: on the surface you're standing on, at its height — never down a level. 2026-10-02 (the
+    // user: "lock the howl box to where you use it so it wont snap down below you"): it used to drop a ray from 1.3 m in
+    // front of you and land on whatever that hit up to 2.8 m below your feet, so used at a ledge's edge (a raised
+    // platform, a pod top, a tower) it set itself down on the floor underneath and fired from there. Now, standing: 1.3 m
+    // in front when the same surface runs on there (a floor within 0.35 m of your feet's height, with room for the box
+    // before any wall), else closer — down to right where you stand. In the air: right where you are, on the floor under
+    // your feet if that's within 0.5 m, else at your feet (it hovers there).
+    spot(a, out) {
+      const x0 = a.pos.x, z0 = a.pos.z;
+      if (!a.grounded) {
+        const g = G.physics.raycast(_v.set(x0, a.pos.y + 0.05, z0), DOWN, 0.55, _hit, true);
+        return out.set(x0, g.hit && g.normal.y > 0.6 ? g.point.y : a.pos.y, z0);
+      }
+      let y = a.pos.y;
+      { const g = G.physics.raycast(_v.set(x0, a.pos.y + 0.3, z0), DOWN, 0.6, _hit, true); if (g.hit && g.normal.y > 0.6) y = g.point.y; }
+      const fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
+      for (const k of WAIL_STEPS) {
+        const x = x0 + fx * k, z = z0 + fz * k;
+        if (!G.physics.los(_v.set(x0, y + 0.6, z0), _v2.set(x + fx * 0.45, y + 0.6, z + fz * 0.45))) continue;   // (a wall: no room)
+        const g = G.physics.raycast(_v.set(x, y + 0.6, z), DOWN, 0.95, _hit, true);
+        if (g.hit && g.normal.y > 0.6 && Math.abs(g.point.y - y) <= 0.35) return out.set(x, g.point.y, z);
+      }
+      return out.set(x0, y, z0);
+    },
+    // the beam's start (the speaker's mouth) for a speaker set down at `at` facing `yaw`
+    mouthAt(at, yaw, out) {
+      const m = prop('speaker')?.mouth, my = m ? m.y : 0.8, mz = m ? m.z : 0.5;
+      return out.set(at.x + Math.sin(yaw) * mz, at.y + my, at.z + Math.cos(yaw) * mz);
+    },
     place(a, s) {
-      const f = this._fwd(a, new THREE.Vector3());
-      const at = _v.copy(a.pos).addScaledVector(f, 1.3);
-      const g = G.physics.raycast(_v2.copy(at).setY(a.pos.y + 1.2), DOWN, 4, _hit, true);
-      const pos = g.hit && g.normal.y > 0.6 ? g.point.clone() : a.pos.clone();
+      const pos = IMPL.wail.spot(a, new THREE.Vector3());
       a.character.trigger('throw');
       const dir = IMPL.wail.dirOf(a);
       this._spawn(a, new Speaker(this, a, pos, dir), 'sk', [...v3(pos), ...v3(dir)]);
