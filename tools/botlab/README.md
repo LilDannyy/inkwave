@@ -112,12 +112,19 @@ Waddle / Mine windups — online records and the bots' danger areas included):
 through shoot.cjs (`PRE=…/sub-tweaks.js PRE_ARGS=<scene>`, see its header).
 
 Sub tweaks 2 (2026-10-02: the Tideline Bow's trail a swimmable line ×~1.9 ink, the Howl Box set down on the surface you
-use it from, the Twirl Sprinkler's longer throw and landing patch, the Tracer Bolt at the crosshair, the tracked sonar
-shell and the poison bubbles on players — src/game/statusFx.js, online through the actor tick's flags):
+use it from, the Twirl Sprinkler's longer throw and landing patch, the Tracer Bolt at the crosshair, the poison bubbles
+on players — src/game/statusFx.js, online through the actor tick's flags):
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-tweaks2.js tools/botlab/run.sh tools/botlab/page.cjs`
-(`PAGE_ARGS='only=bow,wail,sprinkler,tracer,tracked,poison'`); on any other stage it checks the Howl Box at that stage's
+(`PAGE_ARGS='only=bow,wail,sprinkler,tracer,poison'`); on any other stage it checks the Howl Box at that stage's
 own ledges (`MAP=halyard` / `MAP=calamari`: 'wailmap'). Its pictures: `tools/botlab/scenes/sub-tweaks2.js` through
 shoot.cjs (`PRE=…/sub-tweaks2.js PRE_ARGS=<scene>`, see its header).
+
+Tracked look (2026-10-02, track-arrows: one arrow wrapped round a tracked player in the tracking team's colour, turning
+round them; the tracking team sees it and a thin line from each of their own kids through walls, the tracked player and
+their teammates see it depth-tested with no line; no name tag — src/game/statusFx.js):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/track-arrows.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=arrow,sources,walls,clamp,line,net,names,poison'`). Its pictures: `tools/botlab/scenes/track-arrows.js`
+through shoot.cjs (`tools/botlab/jobs/track-arrows/shots.sh`).
 
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big

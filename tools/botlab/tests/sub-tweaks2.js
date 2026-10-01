@@ -4,7 +4,7 @@
 // effect on the player so it's more obvious youre being tracked, as well as some sort of particle on you if you're
 // poisoned").
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-tweaks2.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=bow,wail,sprinkler,tracer,tracked,poison' for a part
+//   PAGE_ARGS='only=bow,wail,sprinkler,tracer,poison' for a part
 //   on a real stage, the Howl Box at its ledges: MAP=halyard (or calamari …) PAGE_ARGS='only=wailmap'
 // Staged on testbox (a flat deck, top y 0; the spawn deck A at z −48…−40 stands 2.4 m over it; a wall x 14…15, z ±8,
 // 4 m tall); everyone else parked far off, brains stubbed. Hits are logged, not dealt. Checks:
@@ -21,10 +21,8 @@
 //    ghost paints nothing; the aim arc's ring is where it lands; a painting bot's turf check is where its lob lands;
 //  - Tracer Bolt: fired at a wall point under the crosshair 10 / 20 / 30 m off, its first strike is that point (≤ 6 cm);
 //    its launch direction lies on the line to it; (the old 9° drop would have struck the floor short of it);
-//  - tracked: an Echo Orb / Lurk Mine / Tracer / Deep Sonar mark puts the sonar shell on the foe in the tracker's colour,
-//    pinging every ~0.9 s (a shell swelling out, a ring on the ground), gone when the tracking ends; on your own kid it's
-//    milder; online a remote player's owner's flag shows it (net/netmatch.js applyRemote), and a remote player's own
-//    timers run out here (they used to stick);
+//  - tracked: the sonar shell is gone — the tracked look is now one arrow wrapped round the player and the tracking
+//    team's lines (track-arrows, 2026-10-02): tools/botlab/tests/track-arrows.js;
 //  - poison: a Murk Bomb hit sends up murky bubbles and wisps (rising, a few a second), they stop with the poison and
 //    fade; capped (everyone poisoned at once stays ≤ 220, one draw); in your own view they cover little of the screen;
 //    online from the owner's flag.
@@ -380,63 +378,6 @@
       R('Tracer Bolt: fired at a wall point under the crosshair 10 / 20 / 30 m off it strikes that point (≤ 6 cm), sent along the line to it (< 0.1°); the crosshair point is on the camera\'s centre ray — the old 9° drop struck 1.5 m low or the floor short of it',
         shots.every((x) => x.miss != null && x.miss <= 0.06 && x.angleDeg < 0.1 && x.offRay < 0.02 && x.oldMiss > 1), shots);
       R('…its config has no downward offset any more (no pitchDown); the blurb says it flies at the crosshair', SUBS.tracer.pitchDown === undefined && /crosshair/.test(SUBS.tracer.blurb), { blurb: SUBS.tracer.blurb });
-    }
-
-    // ============================================================================================ tracked
-    if (want('tracked')) {
-      reset();
-      const F0 = V(0, 0, -6);
-      put(foe, F0, Math.PI); step(0.1);
-      // an Echo Orb onto the foe
-      S._throw(me, SUBS.scan, V(F0.x, 1.6, F0.z), V(0, -1, 0), false);
-      step(0.6);
-      const r = FX.recs.get(foe), col = G.teamColors[me.team];
-      const p0 = foe.visualPos(V(0, 0, 0));
-      const on1 = { track: r2(foe.status.track), shell: !!(r && r.shell.visible), colour: r && r.shell.material.uniforms.uColor.value.getHex() === col.getHex(), at: r && r.group.position.distanceTo(p0) < 0.01, transparent: r && r.shell.material.transparent && !r.shell.material.depthWrite };
-      // its pings over 2.7 s (a ping = the phase wrapping round), how far the shell swells and the ground ring runs
-      let pings = 0, lastK = r ? r.ping.material.uniforms.uK.value : 0, swell = 0, ringR = 0, shellA = 0;
-      step(2.7, () => { const k = r.ping.material.uniforms.uK.value; if (k < lastK) pings++; lastK = k; swell = Math.max(swell, r.ping.scale.x); ringR = Math.max(ringR, r.ring.material.uniforms.uR.value * r.ring.scale.x); shellA = Math.max(shellA, r.shell.material.uniforms.uAlpha.value); });
-      R(`tracked (Echo Orb): a translucent sonar shell on the foe in the tracker's colour, pinging every ${SF.PULSE} s (a ringed shell swelling out ~1.85× and a ring out along the ground ~1.9 m)`,
-        on1.shell && on1.colour && on1.at && on1.transparent && pings >= 2 && pings <= 3 && swell > 1.7 && ringR > 1.7 && shellA > 0.9, { ...on1, pings, swell: r2(swell), ringR: r2(ringR), shellAlpha: r2(shellA) });
-      foe.status.track = 0.3; step(0.5);
-      R('…it ends with the tracking (no shell, no ping, no ring)', !r.on && !r.shell.visible && !r.ping.visible && !r.ring.visible && foe.status.track === 0, { on: r.on });
-      // every source of tracking shows it: a Lurk Mine's blast, a Tracer Bolt hit, Deep Sonar
-      const shown = (a) => { const x = FX.recs.get(a); return !!(x && x.on && x.shell.visible); };
-      reset();
-      put(me, V(-6, 0, -6), 0); step(0.05); S.use(me, SUBS.mine); put(me, HOME, Math.PI); step(1);
-      put(foe, V(-4.6, 0, -6), 0); step(1.2);
-      const mine = { track: r2(foe.status.track), shown: shown(foe) };
-      reset();
-      put(me, V(0, 0, -14), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
-      me.aimYaw = me.yaw = 0; me.aimPitch = 0; me.aimDir.set(0, 0, 1); me.aimPoint.set(0, 1.0, -6);
-      K.tracer.use(G.subs, me, SUBS.tracer); step(0.5);
-      const tracer = { track: r2(foe.status.track), shown: shown(foe) };
-      reset();
-      start(me, 'sonar'); step(0.8);
-      const sonar = { tracked: foes.filter((a) => a.status.track > 0).length, shown: foes.filter(shown).length, of: foes.length };
-      R('…every source shows it: a Lurk Mine\'s blast, a Tracer Bolt hit, Deep Sonar (every foe)', mine.track > 0 && mine.shown && tracer.track > 0 && tracer.shown && sonar.shown === sonar.of && sonar.tracked === sonar.of, { mine, tracer, sonar });
-      // on your own kid (the follow view): milder
-      reset();
-      put(me, V(0, 0, -6), 0); step(0.1);
-      S._throw(foe, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false); step(0.5);
-      const rm = FX.recs.get(me), selfA = rm ? rm.shell.material.uniforms.uAlpha.value : 0, selfRing = rm ? rm.ring.material.uniforms.uAlpha.value : 0;
-      R(`…on your own kid it shows too, milder (shell ${SF.PULSE ? '×0.4' : ''}: it never gets in your view)`, G.local === me && rm && rm.shell.visible && rm.shell.material.uniforms.uColor.value.getHex() === G.teamColors[foe.team].getHex() && selfA > 0.2 && selfA <= 0.45,
-        { selfAlpha: r2(selfA), ringAlpha: r2(selfRing) });
-      // online: a remote player (another screen's) — its owner's tick says it's tracked (applyRemote: a.netStatus)
-      reset();
-      const X = foes[1] || foe; put(X, V(4, 0, -6), Math.PI); step(0.1);
-      const net = remote(X);
-      try {
-        const f1 = net.owner(8, 0); step(0.3);
-        const rx = FX.recs.get(X), ghostOn = { flag: (f1 & NM.NET_FLAGS.tracked) !== 0, netStatus: X.netStatus, localTrack: X.status.track, shown: shown(X), colour: rx && rx.shell.material.uniforms.uColor.value.getHex() === G.teamColors[1 - X.team].getHex() };
-        net.owner(0, 0); step(0.2);
-        const ghostOff = { netStatus: X.netStatus, shown: shown(X) };
-        // a ghost sub on this screen marked it here (its own timer): it runs out here too (Actor.update doesn't run for it)
-        X.status.track = 0.4; X.status.trackTeam = me.team; step(0.2); const mid = shown(X); step(0.4);
-        const timer = { mid, after: r2(X.status.track), shown: shown(X) };
-        R('online: a remote player\'s owner\'s tick (its tracked flag) puts the shell on it here, and its going takes it off; a mark made here runs out here too (it used to stick)',
-          ghostOn.flag && ghostOn.netStatus === SF.NET_TRACKED && ghostOn.localTrack === 0 && ghostOn.shown && ghostOn.colour && !ghostOff.shown && timer.mid && timer.after === 0 && !timer.shown, { ghostOn, ghostOff, timer });
-      } finally { net.done(); }
     }
 
     // ============================================================================================ poison
