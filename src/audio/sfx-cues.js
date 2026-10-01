@@ -11,7 +11,7 @@
 //   fuse_* / *_warn / *_mark / *_alarm / lock_tone / beam_lock   warnings (loops with params { k: 0..1 progress,
 //              foe: 0 | 1 }): ticking that speeds up and climbs; foe = the brighter, harder timbre
 //   *_explode / *_pop / *_boom / *_burst / *_crash   the blasts, each with its own body and tail
-//   loops: sub_fly (anything thrown, pitch per kind), seeker_run, shaker_rattle, curtain_drip, sprinkler_spin,
+//   loops: seeker_run, shaker_rattle, curtain_drip, sprinkler_spin,   (anything thrown, in the air: sub_flight, sfx-alerts.js)
 //          mist_hiss, beacon_hum, twister, kraken_move, bubble_drift, stamp_carry, stamp_fly, orb_fly, zip_aura,
 //          zip_whizz, shell_whistle, shield_hum, barrage_drum, wail_hold, strike_aim
 // Loop pitch = the director's Doppler factor (≈0.84 receding … 1.22 approaching) times each loop's own rate.
@@ -54,7 +54,7 @@ export const CUE_GROUPS = {
     // warnings
     'fuse_bomb', 'fuse_sticky', 'hunt_alarm', 'lock_tone',
     // loops
-    'sub_fly', 'seeker_run', 'shaker_rattle', 'curtain_drip', 'sprinkler_spin', 'mist_hiss', 'beacon_hum',
+    'seeker_run', 'shaker_rattle', 'curtain_drip', 'sprinkler_spin', 'mist_hiss', 'beacon_hum',
     // blasts / ends
     'sticky_explode', 'pellet_pop', 'seeker_explode', 'scan_burst', 'mist_burst', 'mine_explode', 'shaker_blast', 'waddle_explode',
     'waddle_pop', 'torpedo_burst', 'boomerang_blast', 'curtain_down', 'sprinkler_break', 'beacon_break', 'beacon_use', 'sub_smash',
@@ -372,24 +372,6 @@ export function defineCueSounds(def, L) {
   });
 
   /* ================================================================================================ sub loops */
-  // anything thrown, in the air: a tumbling whoosh (spin-rate AM) with a thin whistle; the director sets the pitch per
-  // kind (bomb 1, pellet 1.5, Murk 0.8, Tempest ball 0.6 …) times the Doppler factor
-  def('sub_fly', {
-    gain: 0.3, max: 10, jitter: 0, reverb: 0.03, oneShot: 0.8,
-    loop(v, p) {
-      const T = v.t;
-      const am = v.gain(0.6, v.out), bp = v.filter('bandpass', 950 * p, 1.3, am);
-      v.noise('pink', T, null, bp);
-      const spin = v.lfo(8 * p, 0.45, am.gain, T, null);
-      const wg = v.gain(0.07, v.out), w = v.osc('sine', 1500 * p, T, null, wg);
-      v.lfo(8 * p, 30, w.detune, T, null);
-      return {
-        pitch(q, now) {
-          bp.frequency.setTargetAtTime(950 * q, now, K); spin.osc.frequency.setTargetAtTime(8 * q, now, K); w.frequency.setTargetAtTime(1500 * q, now, K);
-        },
-      };
-    },
-  });
   // Skitter Bomb scuttling: fast clicky feet, a servo whine, a low motor buzz; dash (committed, straight at a foe):
   // faster and higher; hunt (it's after YOU): a beeping on top. params { speed: 0..1, dash: 0|1, hunt: 0|1 }
   def('seeker_run', {
