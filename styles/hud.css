@@ -323,8 +323,6 @@
 /* sub picker in the loadout */
 .iw-kit--pick { cursor: pointer; }
 .iw-kit__hint { font-style: normal; opacity: .55; margin-left: 6px; letter-spacing: .06em; }
-/* an enemy the team has tagged: their name tag gets a dashed ring */
-.iw-mk.is-tracked .iw-mk__tag { outline: 2px dashed rgba(255, 255, 255, .9); outline-offset: 2px; }
 .iw-subaim i { display: block; width: 22px; height: 22px; color: var(--self); }
 .iw-subaim i svg { width: 100%; height: 100%; }
 .iw-subaim__bar { position: relative; width: 46px; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, .15); overflow: hidden; }

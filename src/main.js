@@ -1348,13 +1348,13 @@ class Game {
       this.minimap.toCanvas(o.pos.x, o.pos.z, t);
       players.push({ x: t.x / this.minimap.w, y: t.y / this.minimap.h, team: o.team, isSelf: o.isLocal, yaw: -o.yaw + (this.minimap.flip ? Math.PI : 0), alive: o.alive, color: G.teamHex[o.team], tracked });
     }
-    // ally markers
+    // ally markers (allies only: a tracked enemy wears its ring of arrows in the world instead, and no name — the user,
+    // 2026-10-02: "dont show their name"; game/statusFx.js)
     const markers = [];
     const v = this._mv || (this._mv = new THREE.Vector3());
     const W = innerWidth, H = innerHeight;
     for (const o of m.actors) {
-      const tracked = o.team !== a.team && o.alive && o.status.track > 0 && o.status.trackTeam === a.team;
-      if (!tracked && (o.isLocal || o.team !== a.team || !o.alive)) continue;
+      if (o.isLocal || o.team !== a.team || !o.alive) continue;
       if (o.character.getHeadPosition && o.form !== 'squid') { o.character.getHeadPosition(v); v.y += 0.45; }
       else { if (o.visualPos) o.visualPos(v); else v.copy(o.pos); v.y += o.form === 'squid' ? 1.0 : 1.9; }
       v.project(cam);
@@ -1369,7 +1369,7 @@ class Game {
         const k = Math.min((W / 2 - 40) / Math.max(1e-3, Math.abs(Math.cos(angle))), (H / 2 - 40) / Math.max(1e-3, Math.abs(Math.sin(angle))));
         x = W / 2 + Math.cos(angle) * k; y = H / 2 + Math.sin(angle) * k;
       }
-      markers.push({ x, y, name: o.name, color: G.teamHex[o.team], onScreen, angle, dist: o.pos.distanceTo(a.pos), tracked });
+      markers.push({ x, y, name: o.name, color: G.teamHex[o.team], onScreen, angle, dist: o.pos.distanceTo(a.pos) });
     }
     // contextual prompts (light tutorial)
     this._hintT += dt;
