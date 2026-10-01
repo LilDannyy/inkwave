@@ -213,7 +213,13 @@ export const WEAPONS = {
     fuseRing: 0.7, fuseFull: 0.55,                          // lodged arrow → burst (s)
     burstRadius: [1.35, 1.8], burstInner: 0.6,              // [ring, full] (m); full damage inside burstInner
     burstDamage: [30, 45], burstEdge: [12, 15],
-    paintTap: 0.55, paintStick: 0.42, burstPaint: [1.2, 1.55], trailEvery: 2.4, trailRadius: 0.32,
+    paintTap: 0.55, paintStick: 0.42, burstPaint: [1.2, 1.55],
+    // trail drips under a lodging arrow's flight (kits/bow.js), one every `…Every` m of it. 2026-10-02 ("buff the ink
+    // that comes out of the trail from the bow"): the centre arrow's drips (trailEvery / trailRadius, stretched along the
+    // flight by trailStretch) run together into a swimmable line, two ink cells (0.5 m) wide; the side arrows keep a
+    // dotted line either side of it, sparser (a 0.32 m drip every 4.4 m; was every 2.4 m — 2.9 at a frame's step). Full
+    // draw over flat ground: ~6.8 → ~13.7 m² of trail ink a volley, ×~1.9 (tools/botlab/tests/sub-tweaks2.js)
+    trailEvery: 1.1, trailRadius: 0.3, trailStretch: 2, trailSideEvery: 4.4, trailSideRadius: 0.32,
     cooldown: 0.22, moveSpeedDrawing: 2.6, moveSpeedFiring: 4.2,
     special: 'strike', specialCost: 190, sub: 'waddle',
   },

@@ -32,6 +32,7 @@ const LIFE = 3;              // a flying arrow gives up after this long (s)
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _dir = new THREE.Vector3(), _ax = new THREE.Vector3();
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _c = new THREE.Color();
+const _tp = new THREE.Vector3(), _td = new THREE.Vector3();   // (trail drips)
 const _hit = new Hit(), _hit2 = new Hit(), _res = { t: 0, dist: 0 };
 
 function rumble(a, strong, weak, ms) { if (a && a.isLocal && !a.isBot) G.input?.rumble?.(strong, weak, ms); }
@@ -248,14 +249,24 @@ function stepArrow(p, i, dt) {
     }
     return;
   }
-  // trail drips (lodging arrows only: a dotted ink line under the flight)
+  // trail drips (lodging arrows only): ink under the flight, a drip every `every` m of it — placed where the arrow was
+  // at that distance (between frames too: a full-draw arrow covers ~1 m a frame), each stretched along the flight. The
+  // centre arrow's drips run together into a swimmable line; the side arrows' stay a dotted line either side of it
   if (p.lodge && !p.noHit) {
+    const every = p.center ? W.trailEvery : W.trailSideEvery, rad = p.center ? W.trailRadius : W.trailSideRadius;
     p.trail += sp * dt;
-    if (p.trail > W.trailEvery) {
-      p.trail = 0;
-      const g = G.physics.raycast(p.pos, DOWN, 4, _hit2, true);
-      if (g.hit) credit(p.owner, G.paint.splat(_v.copy(g.point).addScaledVector(g.normal, 0.1), W.trailRadius * (0.8 + Math.random() * 0.4), p.team, { seed: Math.random() }));
+    for (let n = 0; p.trail >= every && n < 4; n++) {
+      p.trail -= every;
+      _tp.copy(p.pos).addScaledVector(p.dir, -p.trail);
+      const g = G.physics.raycast(_tp, DOWN, 4, _hit2, true);
+      if (!g.hit) continue;
+      _tp.copy(g.point).addScaledVector(g.normal, 0.1);
+      if (p.center) {
+        _td.set(p.dir.x, 0, p.dir.z); if (_td.lengthSq() < 1e-6) _td.set(0, 0, 1); _td.normalize();
+        credit(p.owner, G.paint.splat(_tp, rad * (0.94 + Math.random() * 0.12), p.team, { seed: Math.random(), stretch: _td, stretchAmt: W.trailStretch }));
+      } else credit(p.owner, G.paint.splat(_tp, rad * (0.8 + Math.random() * 0.4), p.team, { seed: Math.random() }));
     }
+    if (p.trail >= every) p.trail = 0;
   }
   if (p.age > LIFE || p.pos.y < PLAYER.waterY - 1.2) {
     if (p.pos.y < PLAYER.waterY - 1.2 && near(p.pos, 30)) G.fx?.waterPlop?.(_v.copy(p.pos).setY(PLAYER.waterY), 0.5);
