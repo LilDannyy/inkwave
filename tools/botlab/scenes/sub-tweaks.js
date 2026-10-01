@@ -9,9 +9,9 @@
 //   beacon         two Hop Beacons, 2 jumps left and 1 jump left, a sonar ping half way out
 //   curtain        two Drip Curtains, full and half ink (meter), seen from the front and the back
 //   windup         a Skitter Bomb, a Waddle Bomb and a Lurk Mine mid-windup by their targets
-// The pictures in tools/botlab/subs-tweaks-out/ (PNG → JPEG q78), each scene staged round (-10, 0, -14):
+// The pictures in <OUT>/ (PNG → JPEG q78), each scene staged round (-10, 0, -14):
 //   S='[{"name":"mine-owner","from":[-7.4,1.8,-10.8],"look":[-10,0.1,-14],"fov":50}]'
-//   MAP=testbox MODE=turf PLAY=1 PRE=tools/botlab/jobs/subs-tweaks/scenes.js PRE_ARGS=mine-owner SHOTS="$S" \
+//   MAP=testbox MODE=turf PLAY=1 PRE=tools/botlab/scenes/sub-tweaks.js PRE_ARGS=mine-owner SHOTS="$S" \
 //     tools/botlab/run.sh tools/botlab/shoot.cjs                     (ACTORS=1 for mine-reveal and windup: the targets)
 //   sprinkler: [-2,10,-4] → [-10,0,-14] fov 55, top [-10.02,17,-14] fov 50 · mine-*: as above (reveal [-6.6,2.6,-9.6] fov 55)
 //   beacon: [-10,2.6,-6.5] → [-10,0.7,-14] fov 55, 10 m [-9,1.7,-4] → [-10,0.9,-14] fov 60
