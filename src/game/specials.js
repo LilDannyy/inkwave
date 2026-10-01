@@ -805,7 +805,8 @@ class Missile {
       const u = (k - 0.35) / 0.65;
       p.set(this.to.x, this.to.y + 34 * (1 - u) * (1 - u) + 0.3, this.to.z);
       this.mesh.lookAt(p.x, p.y - 1, p.z);
-      if (!this.whistled && near(this.to, 40)) { this.whistled = true; play('strike_whistle', { pos: this.to, volume: 0.9 }); }
+      // sfx-loud: the whistle down onto the ring through the cue mix (the enemy's louder, boosted when you're in it)
+      if (!this.whistled && near(this.to, 40)) { this.whistled = true; if (G.cues) G.cues.one('strike_whistle', { at: this.to, owner: this.owner, kind: 'warn', radius: SPECIALS.strike.radius, range: 40 }); else play('strike_whistle', { pos: this.to, volume: 0.9 }); }
     }
     if (this.t % 0.05 < dt && near(p, 45)) G.fx?.burst(p, UP, this.owner.color, { count: 2, speed: 1.5, size: 0.08, ring: false, mist: false });
     this.ring.material.opacity = 0.35 + 0.35 * Math.abs(Math.sin(this.t * 9));
@@ -1115,7 +1116,8 @@ class ThrownStamp {
     this.mesh = partMesh(wd.body, wd.ink, a.team);
     this.mesh.scale.setScalar(1.6);
     sys.scene.add(this.mesh);
-    if (hearable(a)) play('stamp_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.9 });
+    // sfx-loud: the throw through the cue mix (the enemy's carries across the lane; yours from you)
+    if (G.cues) G.cues.one('stamp_throw', { at: a.pos, owner: a, kind: 'throw', vol: 0.9 }); else if (hearable(a)) play('stamp_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.9 });
   }
   update(dt) {
     this.t += dt;

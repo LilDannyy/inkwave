@@ -2,7 +2,9 @@
 // master chain), writes WAVs and measures them.
 //   BOTLAB_OUT=… SLOTS=4 tools/botlab/run.sh tools/botlab/sfx/render.cjs
 //   ONLY=fuse_bomb,twister …   just those (no sheet);  OUT=dir   (default tools/botlab/sfx/out)
-// Writes out/<sound>.wav for each (sub_fly@0.85 → sub_fly_0.85.wav), out/cues.wav (the whole sheet: each sub / special
+// sfx-loud: at the in-game levels (render-page.js: the default settings, the Cues bus, each cue at the enemy's mix).
+// Writes out/<sound>.wav for each (shaker_blast@1.06 → shaker_blast_1.06.wav, sub_flight~bomb → sub_flight_bomb.wav),
+// out/cues.wav (the whole sheet: each sub / special
 // in turn, its sounds in phase order, 0.5 s apart, 1.2 s between them), out/cues.txt (what starts when) and
 // out/metrics.json (peak / raw peak dBFS, LUFS-M max, clicks, NaNs, and a fingerprint — the spectrum in 8 bands, the
 // length, the attack, the rhythm, the level over 12 slices — with the closest pairs in each family: how alike they are).
@@ -15,13 +17,19 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const OUT = process.env.OUT || path.join(__dirname, 'out');
 const ONLY = (process.env.ONLY || '').split(',').filter(Boolean);
 const SR = 48000, BPF = 4;   // 16-bit stereo
-const fileOf = (e) => e.replace('@', '_') + '.wav';
+const fileOf = (e) => e.replace('@', '_').replace('~', '_') + '.wav';
 // families that must not sound alike (by name)
 const FAMILY = {
   throws: (n) => /^(throw_|place_)|^(bomb_throw|torpedo_throw|tracer_zap|boomerang_throw|storm_throw)$/.test(n),
   blasts: (n) => /(_explode|_pop|_boom|_burst|_crash|_blast|_impact|^special_slam|^kraken_slam|^stamp_slam)$/.test(n) || /^(pellet_pop|special_slam|kraken_slam|stamp_slam|strike_impact)$/.test(n),
-  warnings: (n) => /^(fuse_|mine_trip|hunt_alarm|lock_tone|slam_warn|strike_mark|beam_lock|kraken_dive|orb_fuse|shell_whistle|bomb_beep|waddle_beep|boomerang_tick|wail_charge|strike_whistle)/.test(n),
-  loops: (n, m) => /^loop/.test(m.mode) && !/^(fuse_|hunt_alarm|lock_tone|slam_warn|strike_mark|beam_lock|kraken_dive|orb_fuse|shell_whistle)/.test(n),
+  // (sfx-loud: every warning — the subs', the specials', the launch alerts and the "you're in it" alarms — against
+  // every other: none may sound like another)
+  warnings: (n) => /^(fuse_|mine_trip|hunt_alarm|lock_tone|slam_warn|strike_mark|beam_lock|kraken_dive|orb_fuse|shell_whistle|bomb_beep|waddle_beep|boomerang_tick|wail_charge|strike_whistle|alert_|danger~)/.test(n),
+  alerts: (n) => /^alert_/.test(n),
+  alarms: (n) => /^(danger~|beam_lock$)/.test(n),
+  stings: (n) => /^sting_/.test(n),
+  flights: (n) => /^sub_flight~|~arc$/.test(n),
+  loops: (n, m) => m.mode === 'loop' || m.mode === 'loop pass-by' || m.mode === 'loop sweep' ? !/^(fuse_|hunt_alarm|lock_tone|slam_warn|strike_mark|beam_lock|kraken_dive|orb_fuse|shell_whistle)/.test(n) : false,
 };
 // a sound's fingerprint: its spectrum (8 bands, dB, so the quiet bands count too), its length, its attack, its rhythm
 // (the strongest level-modulation rate and depth) and its level shape over 12 slices

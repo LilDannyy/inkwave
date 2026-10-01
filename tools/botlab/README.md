@@ -103,8 +103,9 @@ HUD:
 - The who's-ahead HUD (roster sizes, LEAD / DANGER banners, the take-the-lead sting): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/hud-lead.js
   tools/botlab/run.sh tools/botlab/page.cjs`, and the same with `MODE=zones` and `MODE=tower`.
 
-Audio cues (src/audio/cues.js, src/audio/sfx-cues.js — every sub and special by ear: its sound at each phase, one
-positional loop per moving thing, warnings before the big blasts, the enemy's louder than yours):
+Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
+sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
+blasts, launch alerts / "you're in it" alarms / stings for the enemy's specials, the enemy's louder than yours):
 - `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sfx-cues.js tools/botlab/run.sh tools/botlab/page.cjs` (records every
   audio.play / audio.loop; `PAGE_ARGS='only=subs'`, `'only=specials'`, `'only=bomb,crab'` for a part)
 - the listening sheet: `tools/botlab/run.sh tools/botlab/sfx/render.cjs` renders every sub's and special's
@@ -113,6 +114,10 @@ positional loop per moving thing, warnings before the big blasts, the enemy's lo
   `tools/botlab/sfx/INVENTORY.md`.
 - what the player actually hears: `tools/botlab/run.sh tools/botlab/sfx/realflow.cjs` (`OUT=file.json` for the raw
   numbers) goes title → PLAY → TURF WAR → START! with trusted key / mouse input, taps the master and every voice with
-  an AnalyserNode, stages each sub and special from the local player's view over a busy fight, and holds each cue
-  family's audible level against your weapon fire and the music; then pause / resume, quit, a second match, the
-  loadout screen, practice and its loadout (the cue director running, the loop bus open, the listener set).
+  an AnalyserNode (a cue's × the cue bus's gain and compressor at that moment), stages each sub and special from the
+  local player's view over a busy fight, and holds each cue family's audible level against your weapon fire and the
+  music (prints `FAMILY …` lines: the before / after table); every thrown sub's flight glide over its airtime
+  (`GLIDE …`); every enemy special's launch alert and "you're in it" alarm and their lead before it hits you
+  (`SPECIAL …`); the stings; the busy fight's sample peak and K-weighted loudness (`LOUDNESS …`); then pause / resume,
+  quit, the Cues slider in SETTINGS → Audio (trusted clicks), a second match, the loadout screen, practice and its
+  loadout (the cue director running, the loop bus open, the listener set).

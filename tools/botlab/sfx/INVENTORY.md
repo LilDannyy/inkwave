@@ -137,3 +137,125 @@ then its own sounds:
 - **Caps**: 8 moving + 5 warning loops at once (the menus' backdrop match: 3 + 2); warnings rank first, the enemy's
   first, then the closest. A big enemy threat (Slam, Strike, Cheer Orb, Howl Box line, Stamp, Kraken dive) with you
   inside its reach dips the music (audio.duck 0.35); any enemy warning with you close to it dips it a little (0.2).
+
+---
+
+# Round 3 (branch `sfx-loud`, 2026-10-01): louder, flights that glide, alerts for the enemy's specials
+
+The user, after the fix above: "i heard them now but theyre still too quiet. they all need to be louder. and can you
+give every throwable sub a throw sound that changes pitch based on how long its been thrown. you also need a lot of
+warning special sounds, like if a vortex or cheer bomb is coming."
+
+## Louder
+
+- **The cue bus** (audio.js): every sub's and special's sound (`isCue`: the Subs / Specials / Flight / Special alerts /
+  Special stings groups, the Splat Bomb's, the kit subs' `torpedo_` `tracer_` `boomerang_` `waddle_` `shaker_` sounds;
+  not the Crab Rig's gatling) runs through its own bus: **+6 dB** (`CUE_BOOST` 2) over the other sound effects at 100 %,
+  then a gentle compressor (threshold −10 dB, knee 8, 4 : 1, attack 4 ms, release 200 ms) so a pile of
+  cues stays clean, then Sound effects → Master → the master's glue compressor and limiter as before.
+- **The Cues slider**: SETTINGS → Audio → **Cues**, under Sound effects: 0 … 150 %, default 100 % (= the new mix), saved
+  with the other settings (`cues` in `inkwave.settings`); its gain follows the same taper (150 % ≈ +5.3 dB, 50 % ≈ −9 dB).
+  Dragging it plays a bomb beep at the new level; the preview card shows the level after Sound effects and Master.
+- **The mix** (cues.js `MIX`, `LEVEL`): set against your own weapon fire in a real match (realflow.cjs) to the brief's
+  targets — the enemy's throws and landings ≥ 0 dB, its devices' and specials' loops ≈ +2, its warnings, alerts and
+  alarms +8 … +12; yours and your team's ~3 dB under the enemy's (your own throws, heard from you, stay where they were:
+  the enemy's went up instead). The blasts were already the loudest family (+9.5 dB): held there, so the warnings before
+  them stand out and a pile of them doesn't get painful.
+
+Median audible level per family, dB over your own weapon fire (realflow.cjs, Turf War on Tidewater, the local player's
+view, the camera behind you; an enemy 7 m in front throwing at you, its specials aimed at you):
+
+| Family | Before (c17ffa3) | After | Target |
+|---|---|---|---|
+| enemy throws / placings | −3.0 | +3.9 | ≥ 0 |
+| enemy subs in the air (the flight) | −5.3 | +4.1 | heard: ~+2 … +4 |
+| enemy landings / arming | −0.8 | +4.0 | ≥ 0 |
+| enemy sub warnings (fuses, the Skitter's run, the Waddle's hunt …) | +5.1 | +10.5 | +8 … +12 |
+| enemy device loops (curtain, sprinkler, beacon, mist, tracer) | −4.4 | +2.1 | ≈ +2 |
+| enemy sub blasts | +9.5 | +9.8 | (held) |
+| enemy special starts | −2.8 | +2.0 | ≥ 0 |
+| enemy special stings | — | +4.2 | new |
+| enemy special warnings (slam_warn, strike_mark, orb_fuse, kraken_dive …) | +9.1 | +10.6 | +8 … +12 |
+| enemy launch alerts + "you're in it" alarms | — (beam_lock −7.5) | +10.7 | +8 … +12 |
+| enemy special body loops (kraken, vortex, rain, jet …) | −2.0 | +3.9 | ≈ +2 |
+| your throws (from you) | +2.1 | +2.1 | ~3 under the enemy's (−2.3 measured) |
+| your devices, fuses and flights | −7.1 | −2.0 | under the enemy's |
+
+Loudness (the master, K-weighted, L + R): a plain fight (you and an enemy firing) −17.9 → −17.5 LUFS-S; **the busy
+fight** (a Vortex Strike and a Cheer Orb on you, five subs at your feet, two guns) −14.8 → **−9.3 LUFS-S** (−8.3
+LUFS-M), sample peak −5.1 → **−1.0 dBFS** (never clips), the cue compressor taking up to 6.8 dB off the pile.
+
+## Every thrown sub's flight glides
+
+`sub_flight` (src/audio/sfx-alerts.js) replaces `sub_fly`: one loop per thrown thing, in its own voice
+(`params.kind`), its pitch following the arc (cues.js `_glide`) — **up to +4 semitones as it climbs** (1 − vy / vy₀),
+then **the falling "incoming" whistle down to −9 at the landing** (|vy| / √(vy² + 2 g h): its share of the speed it
+will land with). On a lob both halves are linear in the time since the throw; `params.arc` (0 thrown, 0.5 the top,
+1 landing) swells the whistle and a narrow band of rushing air as it comes down. Doppler on top, the enemy's louder.
+Thrown subs (all of these glide); placed ones (**Lurk Mine, Hop Beacon**) have no flight.
+
+| Sub | Its flight |
+|---|---|
+| Splat Bomb | clean sine whistle (1.25 kHz) over a tumbling air band |
+| Cling Charge | low, wobbly whistle (760 Hz, wide vibrato) with a wet gloop |
+| Pop Pellet | bright, high triangle whistle (2.1 kHz), fast tumble |
+| Skitter Bomb | buzzy sawtooth whistle over a little motor's whirr |
+| Echo Orb | glassy whistle with a bell-like overtone, slow spin |
+| Drip Curtain | soft low whistle with water sloshing inside |
+| Twirl Sprinkler | zinging rotor whistle, very fast spin |
+| Murk Bomb | breathy whistle and bubbling |
+| Shaker Bomb | its rattle loop glides (in the air: thrown, and each hop between blasts) |
+| Waddle Bomb | toy whistle with a squeaky warble |
+| Tide Torpedo | its whirr glides until it locks on |
+| Tracer Bolt | (straight and fast) its hum falls +3 → −6 semitones over its range |
+| Whirl Boomerang | (no arc) its whirr falls +2 → −4 going out as it slows, climbs −4 → +3 coming home |
+| Bomb Barrage's bombs | each its own kind's flight (above) |
+| (Ink Tempest's ball) | dark low whistle with thunder rolling inside |
+| (Cheer Orb) | its choir whoosh (`orb_fly`) glides the same way |
+
+## The enemy's specials: launch alerts, "you're in it" alarms, stings
+
+Where each threat is comes from the bots' danger model (src/game/botSpecials.js `specialDangers`: the area, where a
+thrown one lands, the time until it hurts) — what the bots dodge is what you hear; a mortar shell or a thrown stamp is
+followed along its whole arc (cues.js `_shots`: one thrown straight at you hits you before it lands).
+
+- **Launch alert** (`alert_<kind>`, once per threat, the enemy's only): the moment it's fired / aimed, at its target
+  spot (brought in to 7 m of you along the same line when it's further, so you hear which way it comes from).
+- **"You're in it" alarm** (`danger`, one loop per kind, the enemy's only): while you stand in its area, until it hits —
+  a two-tone pulse in its own voice that climbs and speeds up as the moment comes (`params.k`, 1 − time left / its
+  lead), a frantic hiss over the last 40 %. The music dips under it.
+- **Sting** (`sting_<id>`): when anyone on the other team pops a special — positional, quieter the further off but never
+  cut (−15 dB at 60 m: team-wide, softly); a teammate's −6 dB; yours none (you hear your own activation).
+
+| Special | Sting | Launch alert | "You're in it" alarm | Lead (realflow) |
+|---|---|---|---|---|
+| Vortex Strike | two-tone klaxon, twice | air-raid siren rising twice, at the ring, the moment the missile launches (anyone within 120 m) — then the `strike_mark` siren there the whole flight and the whistle down onto it | klaxon pulse (1.3 / 1.0 kHz square, 5 → 14 a second) while you're in the ring | 2.2 s |
+| Cheer Orb | choir "boo-YAH!" | "bomb incoming": three falling bells and a whoosh, at where it will land (anyone within 60 m) | racing heartbeat (double pulse, 1.6 → 7 a second) in its 8.4 m blast through the flight and the 1.5 s fuse | 1.9 s |
+| Tidal Slam | low brass hit dropping a fifth, thump | bright "da-da-DAA" brass call climbing, at the landing spot as it leaps — `slam_warn` (its falling whistle) now plays from the landing spot too | low brassy honk (392 / 294 Hz) | 0.9 s |
+| Ink Tempest | thunder crack, a high minor arpeggio falling like rain | thunder crack and rain, at where the cloud will form over you (or when one forms on you) | slow soft pips while it's coming; climbing the longer you stand in the rain | 1.1 s (from 14 m) |
+| Bomb Barrage | snare roll, three rising pulses | snare roll swelling into a cymbal, at the thrower as it starts (60 m) | each bomb's own flight and fuse | 2.0 s |
+| Twister Zooka | whoosh into a chord stab | rising wind scream and whistle, per twister whose path comes within 1.5 m of you, from its direction | fast up-down warble while you're in its aim lane (before the shot) and in a twister's path | 1.2 s (the aim lane; a twister at 34 m/s from 16 m: 0.4 s) |
+| Crab Rig | two mech horn honks, a servo | triple pip and a falling tone, per shell landing within ~6 m of you (or coming straight at you), at where it lands | very fast high pip in its blast | 1.4 s |
+| Mega Stamp | rubber boing, timpani | heavy "bwomp-bwomp" under a whoosh, when a thrown stamp is coming at you / landing near | heavy, slow thud-thud | 0.42 s (thrown at 25 m/s from ~10 m) |
+| Howl Box | distorted power chord | feedback screech climbing, when it's set down with you in its line | its own `beam_lock` (louder now, carries like the others) through the 1.3 s charge | 1.3 s |
+| Kraken | low growl sliding down | roar, then two rising whistles, when its jump attack will come down on you | snarling double pulse until it lands | 0.67 s (its jump's air time) |
+| Ink Jet | burner swelling into a fanfare | short incoming whistle per blast heading at you (at most one per 0.3 s), and when you get under it | bright trill: low under it, high for a blast in flight | 0.95 s (alert) / 0.22 s (a blast at 30 m/s) |
+| Bubble Guard, Deep Sonar, Bubble Blower, Zipline | bubbly arpeggio · two sonar pings · soapy blips · shimmer and pluck | — (nothing to dodge: Deep Sonar's reveal already blips, a charged bubble's drift strains) | — | — |
+
+The voices are kept apart (render.cjs, the fingerprint distance — larger is less alike; the subs' throws, kept apart in
+round 1, are ≥ 2.06): launch alerts closest 2.65, alarms 2.35, stings 1.94, flights 1.89, every warning (the subs',
+the specials', the alerts, the alarms) against every other ≥ 2.27.
+
+## Tests
+
+- `tools/botlab/sfx/realflow.cjs` (trusted input through the real menus): the families above with their bars; every
+  thrown sub's flight glide over its airtime (`GLIDE` lines); every enemy special's launch alert and alarm with their
+  lead before it first hurts you (≥ 0.6 s where its speed allows) and their level (`SPECIAL` lines); the stings (every
+  special, an enemy's / a teammate's / none for yours); yours ~3 dB under the enemy's; nothing painful (`LOUDNESS`); the
+  Cues slider by trusted clicks (120 % → the engine and the saved settings; back to 100 %).
+- `tools/botlab/tests/sfx-cues.js`: the flights glide (each sub, its own voice, none for the placed ones); every
+  special aimed at you plays its launch alert and, where you stand in it, its alarm; every special's sting; the mix
+  table (yours / your team's −3 dB, the enemy's alerts only).
+- `tools/botlab/sfx/render.cjs`: the listening sheet at the in-game levels (default settings, the cue bus, each cue at
+  the enemy's mix from its reference distance); flights glide along a lob landing in front of you, alarms sweep their
+  urgency over their real lead; the similarity report per family.
