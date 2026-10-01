@@ -57,7 +57,8 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
 
 Stages:
 - `MAP=<id> TIME=day MODE=turf SHOTS='top,art,spawnA,mid' tools/botlab/run.sh tools/botlab/shoot.cjs`: screenshots of a
-  stage (presets or custom JSON cameras; MODE zones / tower shows their marks) and a load / perf report.
+  stage (presets or custom JSON cameras; MODE zones / tower shows their marks) and a load / perf report. `PRE=script.js`
+  stages a scene first (`PRE_ARGS` reaches it as `window.__preArgs`; `PLAY=1` keeps the paint).
 - `tools/botlab/run.sh tools/botlab/bake.cjs <id> [<id>.zones …]`: the AO lightmap bake (build/bake-ao.cjs) offscreen.
 - `STAGES=<id>,<id> tools/botlab/run.sh tools/botlab/stageart.cjs`: stage-select pictures from each layout's `art` camera.
 
@@ -102,6 +103,13 @@ HUD:
   full frame + a crop of the top bar.
 - The who's-ahead HUD (roster sizes, LEAD / DANGER banners, the take-the-lead sting): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/hud-lead.js
   tools/botlab/run.sh tools/botlab/page.cjs`, and the same with `MODE=zones` and `MODE=tower`.
+
+Sub tweaks (2026-10-01: the Twirl Sprinkler's 5.5 m reach, the Lurk Mine invisible to the other team / a ghost to its
+own / popping up on its windup, the Hop Beacon's jump lights and sonar, the Drip Curtain's ink meter, the Skitter /
+Waddle / Mine windups — online records and the bots' danger areas included):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-tweaks.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=sprinkler,mine,beacon,curtain,windup'`). Its pictures: `tools/botlab/jobs/subs-tweaks/scenes.js`
+through shoot.cjs (`PRE_ARGS=<scene>`, see its header) → `tools/botlab/subs-tweaks-out/`.
 
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
