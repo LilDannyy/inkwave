@@ -706,6 +706,11 @@ export class SpecialSense {
   _escape(r, dt, it, move) {
     const a = this.a, b = this.b, now = G.time, d = r.d;
     let E = this.esc;
+    // (sub-tweaks) a fresh way out at once when the area changed under us: it stopped (a Skitter Bomb stopping to wind
+    // up — its way out was picked from where it was heading), or a still one's middle shifted (moving ones re-pick on
+    // their usual beat)
+    const mv = d.vt > 0 && Math.hypot(d.vx, d.vz) > 0.5;
+    if (E && E.r === r && ((E.mv && !mv) || (!mv && Math.hypot(d.x - E.cx, d.z - E.cz) > 0.75))) E.reT = now;
     if (!E || E.r !== r || now >= E.reT) {
       const fresh = !E || E.r !== r;
       const pk = this._pick(r);
@@ -713,7 +718,7 @@ export class SpecialSense {
         SPECIAL_STATS.escapes++;
         if (d.imm && !r.backed) { r.backed = true; SPECIAL_STATS.backedOff++; }
       }
-      E = this.esc = { r, yaw: pk.yaw, swim: pk.swim, spare: pk.spare, reT: now + 0.28 + (1 - b.diff.fireDiscipline) * 0.5 };
+      E = this.esc = { r, yaw: pk.yaw, swim: pk.swim, spare: pk.spare, reT: now + 0.28 + (1 - b.diff.fireDiscipline) * 0.5, mv, cx: d.x, cz: d.z };
     }
     move.set(Math.sin(E.yaw), 0, Math.cos(E.yaw));
     // shooting (and charging, rolling, brushing) slows a kid down: none while getting out of a blast, unless there's
