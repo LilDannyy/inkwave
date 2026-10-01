@@ -8,13 +8,17 @@
 //   - the warnings start ahead of the blast (≥ 0.6 s where the mechanics give that long);
 //   - the enemy's is louder (and harsher: params.foe) than your own or an ally's; your own throw comes from you;
 //   - a twister passing you rises then falls in pitch (the Doppler); the caps hold in a crowd;
-//   - no cue loop survives the object, a pause (they're hushed and come back), the end of the round, or a quit.
+//   - no cue loop survives the object, a pause (they're hushed and come back), the end of the round, or a quit;
+//   - sfx-loud: every thrown sub's flight glides with its arc (up with the climb, the falling whistle to the landing),
+//     in its own voice; the placed ones have none; every enemy special that can hit you plays its launch alert (and
+//     the "you're in it" alarm when you stand in it) before it hits, every special popped by an enemy its own sting;
+//     yours and your team's mix ~3 dB under the enemy's.
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sfx-cues.js tools/botlab/run.sh tools/botlab/page.cjs
 //   PAGE_ARGS='only=subs' | 'only=specials' | 'only=bomb,crab,…' (scene keys) to run a part
 (async () => {
   const g = window.__inkwave, m = g.match, G = __G, A = G.audio, C = G.cues;
   const { SUBS, SPECIALS, PLAYER } = await import('./src/config.js');
-  const { SUB_CUE, SPECIAL_START, MAX, LEVEL } = await import('./src/audio/cues.js');
+  const { SUB_CUE, SPECIAL_START, MAX, LEVEL, MIX, FLIGHT_KIND, THROWN_SUBS, PLACED_SUBS, FLY_UP, FLY_DOWN } = await import('./src/audio/cues.js');
   const lvOf = (n) => Math.pow(10, ((LEVEL && LEVEL[n]) || 0) / 20);   // (a cue's calibrated level: realflow.cjs measures the audible result)
   const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const { on } = await import('./src/core/ctx.js');
@@ -104,18 +108,18 @@
   // ================================================================================== sub scenes
   // expected loop(s) by state, per kind (primary channel first)
   const LOOPS = {
-    bomb: (o) => (o.fuse >= 0 ? 'fuse_bomb' : 'sub_fly'),
-    sticky: (o) => ({ fly: 'sub_fly', stuck: 'fuse_sticky' })[o.state],
-    burst: (o) => ({ fly: 'sub_fly' })[o.state],
-    seeker: (o) => ({ fly: 'sub_fly', run: 'seeker_run' })[o.state],
-    scan: (o) => ({ fly: 'sub_fly' })[o.state],
-    curtain: (o) => ({ fly: 'sub_fly', curtain: 'curtain_drip' })[o.state],
-    sprinkler: (o) => ({ fly: 'sub_fly', spray: 'sprinkler_spin' })[o.state],
+    bomb: (o) => (o.fuse >= 0 ? 'fuse_bomb' : 'sub_flight'),
+    sticky: (o) => ({ fly: 'sub_flight', stuck: 'fuse_sticky' })[o.state],
+    burst: (o) => ({ fly: 'sub_flight' })[o.state],
+    seeker: (o) => ({ fly: 'sub_flight', run: 'seeker_run' })[o.state],
+    scan: (o) => ({ fly: 'sub_flight' })[o.state],
+    curtain: (o) => ({ fly: 'sub_flight', curtain: 'curtain_drip' })[o.state],
+    sprinkler: (o) => ({ fly: 'sub_flight', spray: 'sprinkler_spin' })[o.state],
     mine: () => null,
     beacon: (o) => ({ beacon: 'beacon_hum' })[o.state],
-    mist: (o) => ({ fly: 'sub_fly', mist: 'mist_hiss' })[o.state],
+    mist: (o) => ({ fly: 'sub_flight', mist: 'mist_hiss' })[o.state],
     shaker: () => 'shaker_rattle',
-    waddle: (o) => ({ fly: 'sub_fly', wake: 'waddle_walk', walk: 'waddle_walk' })[o.state],
+    waddle: (o) => ({ fly: 'sub_flight', wake: 'waddle_walk', walk: 'waddle_walk' })[o.state],
     torpedo: () => 'torpedo_whirr',
     tracer: (o) => (o.state === 'fly' ? 'tracer_hum' : null),   // (then the trail's hum, fading, at its middle)
     boomerang: (o) => ({ out: 'boomerang_whirr', hover: 'boomerang_whirr', back: 'boomerang_whirr', orbit: 'boomerang_orbit', armed: 'boomerang_whirr' })[o.state],
@@ -146,7 +150,7 @@
     if (kind === 'bomb') G.projectiles.throwBomb(T); else G.subs.use(T, SUBS[kind]);
     const obj = newObj(kind, before);
     let deadAt = null, boomT = null, warnT = null;
-    const bad = { multi: 0, follow: 0, missing: 0, afterDeath: 0, engineAfter: 0 }, seen = new Set(), sample = [];
+    const bad = { multi: 0, follow: 0, missing: 0, afterDeath: 0, engineAfter: 0 }, seen = new Set(), sample = [], glide = [];
     const hs = new Set();
     const n = Math.round((o.secs || 4) * 60);
     for (let i = 0; i < n; i++) {
@@ -162,7 +166,7 @@
         const main = sl.filter((s) => s.sound === ex);
         if (ex && main.length !== 1) { bad.missing++; if (sample.length < 3) sample.push({ t: r2(G.time - t0), state: obj.state, ex, got: sl.map((s) => s.sound) }); }
         for (const s of main) { if (!s.twoD && d3(s.h._pos, obj.pos) > 1e-3 && kind !== 'tracer') bad.follow++; }
-        for (const s of sl) { seen.add(s.sound); if (s.warn && warnT == null) warnT = G.time; }
+        for (const s of sl) { seen.add(s.sound); if (s.warn && warnT == null) warnT = G.time; if (s.glide != null) glide.push({ t: G.time, st: s.glide, sound: s.sound, kind: s.params && s.params.kind }); }
       } else {
         if (deadAt == null) deadAt = G.time;
         if (sl.length) bad.afterDeath++;
@@ -176,7 +180,7 @@
     // tracer: the trail's hum outlives the bolt by its trail (≤ 1 s), then goes
     const lingering = [...hs].filter((h) => h.playing).length;
     const th = THROW[kind] || SUB_CUE[kind]?.throw?.[0], tp = th && firstPlay(t0, th);
-    return { obj, t0, deadAt, boomT, warnT, bad, seen: [...seen], sample, lingering, throwPlay: tp, rec: plays(t0).map((r) => r.n) };
+    return { obj, t0, deadAt, boomT, warnT, bad, seen: [...seen], sample, lingering, throwPlay: tp, rec: plays(t0).map((r) => r.n), glide };
   };
   const SUB_STAGE = {
     bomb: { aim: (T) => lob(T, 0.4, -6.6, SUBS.bomb.throwSpeed), secs: 3 },
@@ -211,6 +215,26 @@
     R(`${SUBS[kind].name}: its own sounds at each phase, one loop per channel following it, gone with it${WARN_MIN[kind] ? `, warning ≥ ${WARN_MIN[kind]} s ahead` : ''}`,
       ok, { phases, loops: s.seen, warnLead: lead, bad: s.bad, sample: s.sample, lingering: s.lingering, throwAt: s.throwPlay && !!s.throwPlay.pos, sounds: [...new Set(s.rec)].slice(0, 16) });
   }
+  // sfx-loud: every thrown sub's flight glides along its arc, in its own voice; the placed ones have no flight
+  if (want('glide', 'subs') && Object.keys(subRes).length >= 13) {
+    const res = {}, bad = [];
+    for (const k of THROWN_SUBS) {
+      const g2 = (subRes[k] && subRes[k].glide) || [], st = g2.map((x) => x.st);
+      if (!st.length) { bad.push([k, 'no glide']); continue; }
+      const first = st[0], last = st[st.length - 1], top = Math.max(...st), lo = Math.min(...st);
+      res[k] = { n: st.length, sound: g2[0].sound, voice: g2[0].kind || null, first: r2(first), top: r2(top), last: r2(last) };
+      // (a Torpedo locks on to you while it's still climbing here: its whirr only rose; a Boomerang thrown at you arms on
+      // you before it slows to a stop: its whirr only fell a little)
+      // (a short throw aimed down — the Skitter Bomb's at the floor 3 m off — has no climb: it starts at the top)
+      const ok = k === 'tracer' ? first - last >= 1.5 : k === 'boomerang' ? first - lo >= 1.5 : k === 'torpedo' ? top - lo >= 2.5
+        : (top >= first + 0.5 || first >= FLY_UP - 1) && last <= first - 3 && lo >= FLY_DOWN - 0.01 && top <= FLY_UP + 0.01;
+      if (!ok) bad.push([k, res[k]]);
+      if (FLIGHT_KIND[k] && g2[0].sound === 'sub_flight' && g2[0].kind !== FLIGHT_KIND[k]) bad.push([k, 'voice ' + g2[0].kind]);
+    }
+    for (const k of PLACED_SUBS) if (subRes[k] && subRes[k].glide.length) bad.push([k, 'a placed sub with a flight']);
+    R(`every thrown sub's flight changes pitch with its time in the air (a lob: up to +${FLY_UP} st with the climb, the falling whistle to ${FLY_DOWN} st at the landing; the Tracer falls over its range; the Boomerang out and home), each in its own voice; the placed ones (${PLACED_SUBS.join(', ')}) none`,
+      !bad.length, { bad, res });
+  }
   // a Waddle Bomb shot down: a squeaky deflate (harmless), its loops gone with it
   if (want('waddle', 'subs')) {
     reset(); place(E, 0, 6); E.setSub('waddle'); lob(E, 0, -3, SUBS.waddle.throwSpeed); step(0.05); rec.length = 0;
@@ -230,7 +254,17 @@
 
   // ================================================================================== specials
   const spRes = {};
-  const specialScene = (key, fn) => { if (!want(key, 'specials')) return; try { fn(); } catch (e) { R(`${key}: scene error`, false, String(e && e.stack || e).slice(0, 400)); } };
+  // (sfx-loud: what each scene's special sounded for you — the director's alert / sting log, its alarm loops)
+  const warned = {};
+  const specialScene = (key, fn) => {
+    if (!want(key, 'specials')) return;
+    C.log = []; const alarms = new Set();
+    const _f = g._frame; g._frame = (dt) => { _f.call(g, dt); for (const s of C.live()) if (s.sound === 'danger' && s.rel === 'foe') alarms.add(s.params.kind); else if (s.sound === 'beam_lock' && s.rel === 'foe') alarms.add('wail'); };
+    try { fn(); } catch (e) { R(`${key}: scene error`, false, String(e && e.stack || e).slice(0, 400)); }
+    g._frame = _f;
+    warned[key] = { alerts: [...new Set(C.log.filter((x) => x.kind === 'alert' && x.rel === 'foe').map((x) => x.name))], stings: [...new Set(C.log.filter((x) => x.kind === 'sting').map((x) => x.name + ':' + x.rel))], alarms: [...alarms] };
+    C.log = null;
+  };
   const loopLife = (frames, obj, sound) => {   // first / last time a sound's loop was on this object
     let a = null, b = null, n = 0, follow = 0, multi = 0;
     for (const f of frames) for (const w of f.objs) if (w.o === obj) {
@@ -260,14 +294,14 @@
 
   // ---- Ink Tempest: the throw, the ball's whoosh, the rain loop drifting with the cloud, the fade at the end
   specialScene('storm', () => {
-    reset(); place(E, 0, 4); lob(E, 0, -4, SPECIALS.storm.throwSpeed, 24, 1.45); step(0.05); rec.length = 0;
+    reset(); place(E, 0, 4); lob(E, 0, -6.5, SPECIALS.storm.throwSpeed, 24, 1.45); step(0.05); rec.length = 0;
     const t0 = G.time; start(E, 'storm');
     const ball = G.projectiles.bombs.find((b) => b.kind === 'storm');
     let cloud = null;
     const fr = watch(1.6, () => [ball, cloud].filter(Boolean), () => { if (!cloud && G.projectiles.clouds.length) { cloud = G.projectiles.clouds[0]; cloud.dur = cloud.t + 1.5; } });
     const fr2 = watch(1.2, () => [cloud].filter(Boolean));
     const all = fr.concat(fr2);
-    const Lb = loopLife(all, ball, 'sub_fly'), Lc = loopLife(all, cloud, 'storm_rain');
+    const Lb = loopLife(all, ball, 'sub_flight'), Lc = loopLife(all, cloud, 'storm_rain');
     // the rain's position follows the cloud's drift
     let follow = 0, moved = 0, p0 = null;
     for (const f of all) for (const w of f.objs) if (w.o === cloud) { const s = w.sl.find((x) => x.sound === 'storm_rain'); if (s) { if (d3(s.hpos, w.gp) > 1e-3) follow++; if (!p0) p0 = { ...s.hpos }; else moved = Math.max(moved, d3(p0, s.hpos)); } }
@@ -419,7 +453,8 @@
     let ts = null;
     const fr = watch(2.2, () => [E, ts].filter(Boolean), (i) => {
       E.intent.move.set(0, 0, i < 50 ? -1 : 0); aimAt(E, me.pos.x, me.pos.y + 0.8, me.pos.z);
-      if (i === 60) E.intent.sub = true; if (i === 61) E.intent.sub = false;
+      // (a Mega Stamp charges on its own: thrown early, from ~9 m, so it's seen coming — sfx-loud's alert and alarm)
+      if (i === 14) E.intent.sub = true; if (i === 15) E.intent.sub = false;
       ts = ts || G.specials.world.find((w) => w.kind === 'stamp');
     });
     const carry = loopLife(fr, E, 'stamp_carry'), fly = loopLife(fr, ts, 'stamp_fly');
@@ -470,7 +505,9 @@
     const fr = watch(3.2, () => [E, shell].filter(Boolean), (i) => {
       E.intent.move.set(0, 0, i < 100 ? -0.6 : 0);
       E.intent.squid = i >= 40 && i < 70;
-      if (i === 80) { E.aimPitch = 0.1; E.intent.sub = true; } if (i === 81) E.intent.sub = false;
+      // (aimed to land at you: the lowest lob that reaches — sfx-loud's alert and alarm)
+      if (i === 80) { const D = Math.hypot(me.pos.x - E.pos.x, me.pos.z - E.pos.z); let lp = 0.1, be = 1e9; for (let q = 0.1; q <= 0.6; q += 0.005) { const vx = Math.cos(q) * 17, vy = Math.sin(q) * 17, d = vx * (vy + Math.sqrt(vy * vy + 40 * 1.8)) / 20; if (Math.abs(d - D) < be) { be = Math.abs(d - D); lp = q; } } E.aimPitch = lp - 0.45; E.intent.sub = true; }
+      if (i === 81) E.intent.sub = false;
       shell = shell || G.specials.world.find((w) => w.kind === 'shell');
       if (slotsOf(E).filter((x) => x.ch === 'crab').length > 1) multi++;
     });
@@ -487,6 +524,24 @@
   if (want('starts', 'specials')) {
     const miss = Object.keys(SPECIALS).filter((id) => { const k = SPECIALS[id].kind || id; return !SPECIAL_START[k] && !['bubbler', 'sonar', 'kraken', 'booyah'].includes(k); });
     R('every special has its own start sound (the four that don\'t start through cues start with shield_up / sonar_ping / kraken_on / the booyah_charge loop)', !miss.length, { missing: miss });
+  }
+
+  // sfx-loud: the launch alerts, the in-zone alarms, the stings
+  if (want('starts', 'specials') && Object.keys(warned).length >= 12) {
+    const ALERT = { slam: 'alert_slam', strike: 'alert_strike', booyah: 'alert_orb', storm: 'alert_storm', barrage: 'alert_barrage', zooka: 'alert_twister', wail: 'alert_wail', kraken: 'alert_kraken', crab: 'alert_shell', stamp: 'alert_stamp' };
+    const ALARM = { slam: 'slam', strike: 'strike', booyah: 'orb', storm: 'storm', wail: 'wail', stamp: 'stamp', crab: 'shell' };   // (the scenes that put you in it)
+    const bad = [];
+    for (const [k, a] of Object.entries(ALERT)) if (warned[k] && !warned[k].alerts.includes(a)) bad.push([k, 'no ' + a, warned[k]]);
+    for (const [k, a] of Object.entries(ALARM)) if (warned[k] && !warned[k].alarms.includes(a)) bad.push([k, 'no ' + a + ' alarm', warned[k]]);
+    R('every enemy special aimed at you plays its own launch alert (Slam, Strike, Cheer Orb, Tempest, Barrage, Zooka, Howl Box, Kraken, Crab Rig shell, Mega Stamp), and the "you\'re in it" alarm where you stand in its area',
+      !bad.length, { bad, warned });
+    const noSting = Object.entries(warned).filter(([k, w]) => !w.stings.some((x) => x === 'sting_' + (SPECIALS[k] ? SPECIALS[k].kind || k : k) + ':foe'));
+    R('every special an enemy pops plays its own sting', !noSting.length, { noSting: noSting.map(([k, w]) => [k, w.stings]) });
+    // (your own throws and starts come from you, not from across the lane: mixed further down — realflow.cjs holds
+    // them ~3 dB under an enemy's as you hear them)
+    const r3 = ['throw', 'start', 'land', 'move', 'warn', 'end'].map((c) => [c, r2(20 * Math.log10(MIX[c].own / MIX[c].foe)), r2(20 * Math.log10(MIX[c].ally / MIX[c].foe))]);
+    R('the mix: yours and your team\'s ~3 dB under the enemy\'s (landings, loops, warnings, ends −3 ± 0.5 dB; your own throws and starts, heard from you, further down); launch alerts the enemy\'s only; stings the enemy\'s, your team\'s −6 dB, none for yours',
+      r3.every(([c, o, a]) => (c === 'throw' || c === 'start' ? o <= -6 : Math.abs(o + 3) <= 0.5) && Math.abs(a + 3) <= 0.5) && MIX.alert.own === 0 && MIX.alert.ally === 0 && MIX.sting.own === 0 && Math.abs(20 * Math.log10(MIX.sting.ally / MIX.sting.foe) + 6) < 0.5, { r3 });
   }
 
   // ================================================================================== friend vs foe
@@ -554,13 +609,15 @@
     step(1.2);
     const before = C.live().map((s) => s.key).sort().join();
     // (the audio clock can lag real time under load: wait until it has run the 0.08 s fade)
-    const settle = async () => { const c0 = A.ctx.currentTime; for (let i = 0; i < 80 && A.ctx.currentTime - c0 < 0.25; i++) await wait(50); };
-    g.pause(); step(0.5); await settle();
-    const dbg = { paused: m.paused, loopsPaused: A.loopsPaused, gain: r2(A.loopIn.gain.value) };
-    const hushed = A.loopIn.gain.value < 0.05, same = C.live().map((s) => s.key).sort().join() === before && before.length > 0;
+    const settle = async () => { const c0 = A.ctx.currentTime, w0 = performance.now(); for (let i = 0; i < 80 && A.ctx.currentTime - c0 < 0.25; i++) await wait(50); return { audio: r2(A.ctx.currentTime - c0), real: r2((performance.now() - w0) / 1000), state: A.ctx.state }; };
+    g.pause(); step(0.5); const st1 = await settle();
+    // (the cue loops run through the cue loop bus — sfx-loud; a bus with nothing playing through it isn't processed, so
+    // its gain reads stale: the one carrying the sprinkler is the one to read)
+    const dbg = { paused: m.paused, loopsPaused: A.loopsPaused, gain: r2(A.cueLoopIn.gain.value), st1, voices: A.stats().voices, loops: [...A.loops].filter((h) => h.playing).length };
+    const hushed = A.loopsPaused && A.cueLoopIn.gain.value < 0.05, same = C.live().map((s) => s.key).sort().join() === before && before.length > 0;
     g.resume(); step(0.1); await settle();
-    R('a pause hushes the cue loops (the loop bus), keeps them (no orphan, no duplicate) and they come back on resume',
-      hushed && same && A.loopIn.gain.value > 0.95 && C.live().length > 0, { before, hushed, same, after: r2(A.loopIn.gain.value), dbg });
+    R('a pause hushes the cue loops (the cue loop bus), keeps them (no orphan, no duplicate) and they come back on resume',
+      hushed && same && !A.loopsPaused && A.cueLoopIn.gain.value > 0.95 && C.live().length > 0, { before, hushed, same, after: r2(A.cueLoopIn.gain.value), dbg });
   }
   if (want('quit', 'life')) {
     // quitting mid-special (a jet running, a Tempest raining, a sprinkler spinning): nothing of the match keeps sounding
