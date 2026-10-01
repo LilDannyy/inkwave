@@ -67,8 +67,25 @@ function sprayLaunch(d) {
 }
 
 // ------------------------------------------------------------------------------------------------ windup + device looks
-// [sub-tweaks] the windup tell (a tripped Lurk Mine, a Skitter Bomb about to burst): a team-tinted flash round it that
-// blinks faster and grows toward the blast
+// transparent overlays stay out of the GTAO normal / depth pass (scene.overrideMaterial: it would draw them as solid,
+// darkening the floor round them) — like towerFx.js noAO; only on geometry these overlays alone use
+const noAO = (mesh) => { mesh.onBeforeRender = (r, scene, c, geo) => { geo.drawRange.count = scene.overrideMaterial ? 0 : Infinity; }; return mesh; };
+// a ghost-look Lurk Mine draws its body / ink through geometries of its own that share the model's buffers, so its gate
+// never touches the opaque mines' (or the hand-held prop's) geometry
+const _ghostGeo = new WeakMap();
+function ghostGeo(src) {
+  let g = _ghostGeo.get(src);
+  if (!g) {
+    g = new THREE.BufferGeometry();
+    for (const k in src.attributes) g.setAttribute(k, src.attributes[k]);
+    if (src.index) g.setIndex(src.index);
+    for (const gr of src.groups) g.addGroup(gr.start, gr.count, gr.materialIndex);
+    g.boundingBox = src.boundingBox; g.boundingSphere = src.boundingSphere;
+    _ghostGeo.set(src, g);
+  }
+  return g;
+}
+// [sub-tweaks] the sonar's air shell
 const FLASH_GEO = new THREE.SphereGeometry(1, 20, 14);
 // the Hop Beacon's jumps-left lights: two lamps on a dark pill, over its own lamp, turned to the camera
 const PIP_GEO = new THREE.SphereGeometry(0.078, 18, 12), PIP_BAR_GEO = new THREE.CapsuleGeometry(0.105, 0.25, 4, 14).rotateZ(Math.PI / 2).scale(1, 1, 0.45);
@@ -95,9 +112,9 @@ const SONAR_AIR_VS = `varying vec3 vN; varying vec3 vV;
 const SONAR_AIR_FS = `
   uniform vec3 uColor; uniform float uK; uniform float uAlpha; varying vec3 vN; varying vec3 vV;
   void main(){
-    float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.6);
+    float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 3.4);
     float fade = (1.0 - uK) * smoothstep(0.0, 0.08, uK);
-    gl_FragColor = vec4(mix(uColor, vec3(1.0), rim * 0.35), rim * fade * uAlpha * 0.75);
+    gl_FragColor = vec4(mix(uColor, vec3(1.0), rim * 0.35), rim * fade * uAlpha * 0.5);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }`;
@@ -119,7 +136,7 @@ const METER_FS = `
     vec3 c = mix(vec3(0.07, 0.06, 0.09), ink, fill);
     c = mix(c, vec3(0.02), tick * 0.6);
     c = mix(vec3(0.94, 0.95, 0.97), c, inside);
-    gl_FragColor = vec4(c, inside > 0.5 ? (fill > 0.5 ? 0.96 : 0.62) : 0.92);
+    gl_FragColor = vec4(c, inside > 0.5 ? (fill > 0.5 ? 0.96 : 0.8) : 0.92);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }`;
@@ -510,26 +527,22 @@ export class SubSystem {
     ud.inner.position.y = 0.16 * Math.sin(u * Math.PI) * ud.vs * 0.5;                   // a hop off its wheels
     ud.inner.scale.setScalar(1 + 0.32 * k + 0.05 * k * Math.sin(it.t * 70));           // swelling, shuddering
     it.mesh.rotation.set(-0.22 * Math.min(1, it.t / 0.1), it.heading, 0);              // nose up
-    this._windupFlash(it, k, ud.lift, 0.55 * ud.vs, dt);
+    this._windupTell(it, k, ud.lift * (1 + 0.32 * k), dt);
     if (it.fuse > 1e-4) return;   // (to the frame: 0.45 s is 27 of them)
     if (it.ghost) { if (it.fuse < -2) it.state = 'dead'; return; }                     // (its owner's end record bursts it)
     this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), s.radius, s.damageMax, s.damageMin, s.paintRadius, UP);
     it.state = 'dead';
   }
-  // the windup tell's flash: blinks 7 → 20 times a second as k (0 … 1 through the windup) climbs, growing to the blast
-  _windupFlash(it, k, y, r, dt) {
-    if (!it.flash) {
-      const c = G.teamColors[it.team].clone().lerp(new THREE.Color(1, 1, 1), 0.5);
-      it.flash = new THREE.Mesh(FLASH_GEO, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
-      it.flash.renderOrder = 4; it.flash.frustumCulled = false;
-      it.mesh.add(it.flash);
-      it.flashT = 0;
-    }
-    it.flashT += dt * (7 + 13 * k);
-    const on = (it.flashT % 1) < 0.5;
-    it.flash.position.set(0, y, 0);
-    it.flash.scale.setScalar(r * (0.75 + 0.55 * k) * (on ? 1 : 0.85));
-    it.flash.material.opacity = on ? 0.42 + 0.3 * k : 0.06;
+  // the windup tell, in the Splat Bomb's own language (fx.js): its blast radius as a danger ring on the floor, every frame,
+  // and a beep pulse glowing on it 7 → 20 times a second as k (0 … 1 through the windup) climbs. y: its middle (drawn).
+  _windupTell(it, k, y, dt) {
+    it.flashT = (it.flashT || 0) + dt * (7 + 13 * k);
+    const blink = it.flashT >= 1;
+    if (blink) { it.flashT -= 1; it.blinks = (it.blinks || 0) + 1; }
+    if (!G.fx || !nearCam(it.pos, 55)) return;
+    const n = it.normal || UP, col = G.teamColors[it.team], R = it.sub.radius;
+    G.fx.dangerRing?.(_v2.copy(it.pos).addScaledVector(n, 0.02), n, col, R, k);
+    if (blink) G.fx.beepPulse?.(_v3.copy(it.pos).addScaledVector(n, y), it.pos, n, col, R, k);
   }
 
   // ---- echo orb: a sensing cloud that tags enemies it touches (tracked for the thrower's team)
@@ -609,16 +622,16 @@ export class SubSystem {
       uniforms: { uColor: { value: G.teamColors[it.team].clone() }, uTime: { value: 0 }, uLife: { value: 1 } },
       vertexShader: CURTAIN_VS, fragmentShader: CURTAIN_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide,
     });
-    it.sheet = new THREE.Mesh(new THREE.PlaneGeometry(s.width, s.height), mat);
+    it.sheet = noAO(new THREE.Mesh(new THREE.PlaneGeometry(s.width, s.height), mat));
     it.sheet.position.set(0, s.height / 2 + 0.05, 0);
     it.mesh.add(it.sheet);
     // [sub-tweaks] its ink (hp) on a meter along the top, both faces, for everyone (the other team sees how close it is
     // to breaking): team ink shrinking from both ends toward the middle
     const mw = s.width * 0.92;
-    it.meter = new THREE.Mesh(new THREE.PlaneGeometry(mw, METER_H), new THREE.ShaderMaterial({
+    it.meter = noAO(new THREE.Mesh(new THREE.PlaneGeometry(mw, METER_H), new THREE.ShaderMaterial({
       uniforms: { uColor: { value: G.teamColors[it.team].clone() }, uFill: { value: 1 }, uTime: { value: 0 }, uAspect: { value: mw / METER_H } },
       vertexShader: METER_VS, fragmentShader: METER_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    }));
+    })));
     it.meter.renderOrder = 3;
     it.mesh.add(it.meter);
     this._paintUnder(it, 1.4);
@@ -711,18 +724,23 @@ export class SubSystem {
     if (look !== it.look) {
       it.look = look;
       m.visible = look !== 'hidden';
-      const ghost = look === 'ghost';
+      const ghost = look === 'ghost', d = ud.def;
       ud.body.material = ghost ? this._mineGhostMat(it.team, 0) : getPlasticMaterial();
       ud.ink.material = ghost ? this._mineGhostMat(it.team, 1) : getInkMaterial(G.teamColors[it.team]);
       ud.body.castShadow = ud.ink.castShadow = !ghost;
+      // (the see-through ghost stays out of the GTAO pass: its own gated geometries; the real thing is solid there)
+      ud.body.geometry = ghost ? ghostGeo(d.body) : d.body; ud.ink.geometry = ghost ? ghostGeo(d.ink) : d.ink;
+      if (ghost && !ud.body._gated) { noAO(ud.body); noAO(ud.ink); ud.body._gated = true; }
+      if (!ghost && ud.body._gated) { ud.body.onBeforeRender = ud.ink.onBeforeRender = () => {}; ud.body._gated = false; }
       if (!ghost && look === 'hidden') { ud.inner.position.y = 0; ud.inner.scale.setScalar(1); }
     }
     if (look !== 'reveal') return;
-    // popped up off the floor (an overshooting spring), swelling and shuddering toward the blast, the flash blinking
+    // popped up off the floor (an overshooting spring), swelling and shuddering toward the blast; its blast radius on the
+    // floor, a beep pulse quickening (_windupTell)
     const k = clamp(1 - it.fuse / it.sub.delay, 0, 1), u = clamp(it.tripT / 0.12, 0, 1);
     ud.inner.position.y = 0.2 * ud.vs * 0.5 * easeOutBack(u);
     ud.inner.scale.setScalar(1 + 0.12 * u + 0.18 * k + 0.04 * k * Math.sin(it.tripT * 70));
-    this._windupFlash(it, k, ud.lift + 0.2 * ud.vs * 0.5, 0.62 * ud.vs, dt);
+    this._windupTell(it, k, ud.lift * (1 + 0.3 * k) + 0.2 * ud.vs * 0.5, dt);
   }
   // the ghost look: the mine's body and ink in see-through team tints (opacity pulsed in _pulse)
   _mineGhostMat(team, ink) {
@@ -769,11 +787,11 @@ export class SubSystem {
     for (let i = 0; i < 2; i++) { const l = new THREE.Mesh(PIP_GEO, this._pipMat(it.team, 'on')); l.position.x = (i - 0.5) * PIP_GAP; fx.pips.add(l); fx.lights.push(l); }
     it.mesh.add(fx.pips);
     const col = G.teamColors[it.team].clone();
-    fx.ring = new THREE.Mesh(RING_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: col }, uR: { value: 0 }, uAlpha: { value: 0 } },
-      vertexShader: SONAR_RING_VS, fragmentShader: SONAR_RING_FS, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }));
+    fx.ring = noAO(new THREE.Mesh(RING_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: col }, uR: { value: 0 }, uAlpha: { value: 0 } },
+      vertexShader: SONAR_RING_VS, fragmentShader: SONAR_RING_FS, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 })));
     fx.ring.renderOrder = 3; fx.ring.frustumCulled = false; fx.ring.position.y = 0.03; fx.ring.scale.setScalar(SONAR_R);
-    fx.air = new THREE.Mesh(FLASH_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: col.clone() }, uK: { value: 0 }, uAlpha: { value: 0 } },
-      vertexShader: SONAR_AIR_VS, fragmentShader: SONAR_AIR_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    fx.air = noAO(new THREE.Mesh(FLASH_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: col.clone() }, uK: { value: 0 }, uAlpha: { value: 0 } },
+      vertexShader: SONAR_AIR_VS, fragmentShader: SONAR_AIR_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })));
     fx.air.renderOrder = 4; fx.air.frustumCulled = false; fx.air.position.y = ud.top * 0.88;
     it.mesh.add(fx.ring, fx.air);
     fx.ring.visible = fx.air.visible = false;
@@ -996,7 +1014,6 @@ export class SubSystem {
     }
     if (it.sheet) { it.sheet.geometry.dispose(); it.sheet.material.dispose(); }
     if (it.meter) { it.meter.geometry.dispose(); it.meter.material.dispose(); }
-    if (it.flash) it.flash.material.dispose();
     if (it.fx) { it.fx.ring.material.dispose(); it.fx.air.material.dispose(); }
   }
 }

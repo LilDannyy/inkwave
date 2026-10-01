@@ -9,7 +9,8 @@
 // positional loop), so its foe hears it coming, and the path it takes gives away where they're hiding. Enemy fire or
 // an enemy blast pops it harmlessly (`hp`).
 // [sub-tweaks] Reaching its foe (or giving up) it doesn't burst at once: it stops and winds up for `delay` s — rocks,
-// swells, its lamp strobing, a flash round it, its own alarm (cues.js SUB_CUE.waddle.warn) — so a foe who reacts can get
+// swells, its lamp strobing, its blast radius on the floor with a beep pulse quickening (the Splat Bomb's danger ring), its
+// own alarm (cues.js SUB_CUE.waddle.warn) — so a foe who reacts can get
 // clear; the blast then hits whoever is still in it. (Still shoot-able while it winds up.)
 //
 // Events: 'sub:use' { actor, kind }, 'sub:land' { kind, pos, team, radius }, 'sub:lock' { kind, pos, team, actor, target },
@@ -563,8 +564,8 @@ function hopStep(it, dt) {
   return Math.hypot(it.pos.x - x0, it.pos.z - z0);
 }
 
-// ---- the windup: it stops where it is (feet on the floor), rocks and swells, the lamp strobing, a flash round it
-// blinking faster, then bursts (s.delay later). A ghost waits for its owner's blast record.
+// ---- the windup: it stops where it is (feet on the floor), rocks and swells, the lamp strobing, its blast radius shown
+// on the floor with a beep pulse quickening, then bursts (s.delay later). A ghost waits for its owner's blast record.
 function prime(it, why) {
   const s = it.sub;
   if (!it.ghost) netRec(it.owner, 'waddle', [5, it.gid, r2(it.pos.x), r2(it.pos.y), r2(it.pos.z)]);
@@ -575,7 +576,6 @@ function prime(it, why) {
   if (near(it.pos, 45)) G.fx?.glint?.(_v.copy(it.pos).setY(it.pos.y + 0.55 * it.vs), G.teamColors[it.team], 0.35);
   emit('sub:arm', { kind: 'waddle', pos: it.pos.clone(), team: it.team, radius: s.radius });
 }
-const FLASH_GEO = new THREE.SphereGeometry(1, 20, 14);
 function primed(it, dt) {
   const s = it.sub, M_ = it.m;
   it.fuse -= dt;
@@ -586,17 +586,15 @@ function primed(it, dt) {
   M_.model.position.y = -MID * it.vs;                                                  // (swells about its feet: they stay down)
   for (const L of M_.legs) L.rotation.x *= 0.8;
   M_.lampMat.emissiveIntensity = (Math.floor(it.t * (10 + 16 * k)) % 2) ? 6 : 0.4;
-  if (!it.flash) {
-    const c = G.teamColors[it.team].clone().lerp(new THREE.Color(1, 1, 1), 0.5);
-    it.flash = new THREE.Mesh(FLASH_GEO, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
-    it.flash.renderOrder = 4; it.flash.frustumCulled = false;
-    M_.outer.add(it.flash);
-  }
+  // the tell, in the Splat Bomb's language (fx.js): its blast radius as a danger ring, a beep pulse quickening 7 → 20 a second
   it.flashT += dt * (7 + 13 * k);
-  const on = (it.flashT % 1) < 0.5;
-  it.flash.position.set(0, MID * it.vs * (1 + 0.3 * k), 0);
-  it.flash.scale.setScalar(0.5 * it.vs * (0.75 + 0.55 * k) * (on ? 1 : 0.85));
-  it.flash.material.opacity = on ? 0.42 + 0.3 * k : 0.06;
+  const blink = it.flashT >= 1;
+  if (blink) { it.flashT -= 1; it.blinks = (it.blinks || 0) + 1; }
+  if (G.fx && near(it.pos, 55)) {
+    const col = G.teamColors[it.team];
+    G.fx.dangerRing?.(_v.copy(it.pos).setY(it.pos.y + 0.02), UP, col, s.radius, k);
+    if (blink) G.fx.beepPulse?.(_v2.copy(it.pos).setY(it.pos.y + MID * it.vs * (1 + 0.3 * k)), it.pos, UP, col, s.radius, k);
+  }
   if (it.fuse > 1e-4) return;   // (to the frame: 0.45 s is 27 of them)
   if (it.ghost) { if (it.fuse < -2) it.state = 'dead'; return; }
   blast(it);
@@ -669,7 +667,6 @@ function dispose(it) {
   hush(it);
   G.scene?.remove(it.m.outer);
   it.m.lampMat.dispose();
-  if (it.flash) it.flash.material.dispose();
   if (it.ring) { G.scene?.remove(it.ring); it.ring.material.dispose(); it.ring = null; }
 }
 
