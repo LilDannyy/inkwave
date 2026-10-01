@@ -7,6 +7,7 @@
 // W/H set the image size (default 1600x900). Prints console errors/warnings, then REPORT {...}.
 // PRE=path/to/script.js: evaluated in the game page once the match is playing (after PLAY), before the pictures — set a
 // scene up (grow sprout pods, pose characters …); it may step the sim itself (window.__inkwave.debug.step).
+// PRE_ARGS (a string) reaches it as window.__preArgs (which view of a scene to stage, say).
 // MAP=testbox / podbox: the botlab's test-only arenas (testmaps.cjs).
 const { app } = require('electron');
 const fs = require('fs');
@@ -38,7 +39,7 @@ app.on('browser-window-created', (_, win) => {
     const loadMs = Date.now() - t0;
     if (PLAY) await wait(PLAY * 1000);
     else await wait(3000);
-    if (process.env.PRE) { try { const r = await js(fs.readFileSync(process.env.PRE, 'utf8')); console.log('PRE', JSON.stringify(r)); } catch (e) { console.log('PRE ERROR', e.message); } }
+    if (process.env.PRE) { try { await js(`window.__preArgs = ${JSON.stringify(process.env.PRE_ARGS || '')}; 0`); const r = await js(fs.readFileSync(process.env.PRE, 'utf8')); console.log('PRE', JSON.stringify(r)); } catch (e) { console.log('PRE ERROR', e.message); } }
     const rep = await js(`(() => {
       const g = window.__inkwave, L = __G.level, B = L.bounds;
       let top = 0, wall = 0; for (const f of L.faces) { if (f.noPaint) continue; const a = (f.w || 0) * (f.h || 0); }

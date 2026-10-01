@@ -16,7 +16,8 @@
 //    the owner's record, a jump onto a ghost goes to the owner;
 //  - Drip Curtain: its meter tracks hp (decay and hits), on both faces, above the sheet; online: hits reach the ghost;
 //  - Skitter Bomb / Waddle Bomb / Lurk Mine: each waits its windup (`delay`) between triggering and the blast, with its
-//    tell (swelling / pop-up, the flash, its warning cue) and a danger area the bots read; no damage before the blast;
+//    tell (swelling / pop-up, its blast radius as a danger ring + beep pulses — the Splat Bomb's look — and its warning
+//    cue) and a danger area the bots read; no damage before the blast;
 //    a target who walks out during the windup takes none; a bot in it notices and runs its escape.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
@@ -49,6 +50,12 @@
   // what the cue director was asked to play (one-shots), before any audio-context check
   const one0 = C.one, cues = [];
   C.one = function (name, o) { cues.push({ t: G.time, name, kind: o && o.kind }); return one0.call(this, name, o); };
+  // the windup tells drawn (fx.js: the danger ring at the blast radius every frame, the beep pulses)
+  const fxLog = [], ring0 = G.fx?.dangerRing, beep0 = G.fx?.beepPulse;
+  if (G.fx) {
+    G.fx.dangerRing = function (pos, n, col, r, k) { fxLog.push({ t: G.time, f: 'ring', r: r2(r) }); return ring0.apply(this, arguments); };
+    G.fx.beepPulse = function (bp, gp, n, col, r, k) { fxLog.push({ t: G.time, f: 'beep', r: r2(r) }); return beep0.apply(this, arguments); };
+  }
   const evs = [];
   const offs = ['sub:arm', 'bomb:explode'].map((n) => on(n, (e) => evs.push({ t: G.time, n, kind: e.kind || null, team: e.team, pos: e.pos && { x: e.pos.x, y: e.pos.y, z: e.pos.z } })));
   const reset = () => {
@@ -57,7 +64,7 @@
     for (const a of m.actors) { if (!a.alive) a.respawn(); a.hp = PLAYER.hp; a.invuln = 0; a.status.track = 0; zero(a); a.form = 'kid'; a.superJumpState = null; stub(a); }
     parkAll(); put(me, V(0, 0, -14), 0); me.ink = PLAYER.inkMax;
     step(0.1);
-    hits.length = 0; cues.length = 0; evs.length = 0;
+    hits.length = 0; cues.length = 0; evs.length = 0; fxLog.length = 0;
   };
   const items = (kind) => S.items.filter((it) => it.kind === kind && it.state !== 'dead');
   const last = (a) => a[a.length - 1];
@@ -154,17 +161,19 @@
       // tripped: everyone sees it pop up through its windup
       S.viewer = foe.team;
       put(foe, V(M.x + 1.6, 0, M.z), -Math.PI / 2);
-      let trip = null, pk = { y: 0, sc: 0, fl: 0 }, opaque = null, shown = true, danger = null;
+      let trip = null, pk = { y: 0, sc: 0 }, opaque = null, shown = true, danger = null;
       step(1.2, () => {
         if (it.fuse != null && !trip) { trip = G.time; opaque = !ud.body.material.transparent && ud.body.material === getPlasticMaterial() && ud.body.castShadow; danger = specialDangers().find((d) => d.hit === 'mine') || null; danger = danger && { tIn: r3(danger.tIn), r: r2(danger.r) }; }
-        if (it.fuse != null && it.state !== 'dead') { shown = shown && it.mesh.visible && it.look === 'reveal'; pk.y = Math.max(pk.y, ud.inner.position.y); pk.sc = Math.max(pk.sc, ud.inner.scale.x); if (it.flash) pk.fl = Math.max(pk.fl, it.flash.material.opacity); }
+        if (it.fuse != null && it.state !== 'dead') { shown = shown && it.mesh.visible && it.look === 'reveal'; pk.y = Math.max(pk.y, ud.inner.position.y); pk.sc = Math.max(pk.sc, ud.inner.scale.x); }
         return it.state !== 'dead';
       });
       const arm = evs.find((e) => e.n === 'sub:arm' && e.kind === 'mine'), boom = evs.find((e) => e.n === 'bomb:explode' && e.t >= (arm?.t ?? 0));
       const wait = arm && boom ? r3(boom.t - arm.t) : null;
       const firstHit = hits.find((h) => h.vic === foe);
-      R(`Lurk Mine tripped: it pops up for everyone — the enemy's eyes included — opaque, swelling, the flash blinking; ${s.delay} s later it blows (was 0.35)`,
-        trip && opaque && shown && pk.y > 0.1 && pk.sc > 1.15 && pk.fl > 0.4 && wait != null && Math.abs(wait - s.delay) < 0.02, { opaque, shown, popUp: r2(pk.y), swell: r2(pk.sc), flash: r2(pk.fl), wait });
+      const rings = fxLog.filter((x) => x.f === 'ring' && x.t > trip - 1e-6 && x.t <= boom.t + 1e-6), beeps = fxLog.filter((x) => x.f === 'beep' && x.t > trip - 1e-6 && x.t <= boom.t + 1e-6);
+      pk.ringFrames = rings.length; pk.ringR = rings[0] && rings[0].r; pk.beeps = beeps.length;
+      R(`Lurk Mine tripped: it pops up for everyone — the enemy's eyes included — opaque and swelling, its blast radius (${s.radius} m) on the floor every frame and a beep pulse quickening; ${s.delay} s later it blows (was 0.35)`,
+        trip && opaque && shown && pk.y > 0.1 && pk.sc > 1.15 && pk.ringFrames >= 25 && pk.ringR === s.radius && pk.beeps >= 4 && wait != null && Math.abs(wait - s.delay) < 0.02, { opaque, shown, popUp: r2(pk.y), swell: r2(pk.sc), ring: [pk.ringFrames, pk.ringR], beeps: pk.beeps, wait });
       R('…its trip alarm plays at the trip (cues: mine_trip), a danger area for the enemy\'s bots from the trip (the blast where it stands, until it blows), and no damage before the blast',
         cues.some((c) => c.name === 'mine_trip' && Math.abs(c.t - trip) < 0.02) && danger && danger.tIn > 0.3 && danger.tIn <= s.delay + 1e-6 && firstHit && firstHit.t >= boom.t - 1e-6,
         { cue: cues.filter((c) => /mine/.test(c.name)).map((c) => c.name), danger, firstHit: firstHit && { dmg: firstHit.dmg, after: r3(firstHit.t - trip) } });
@@ -303,8 +312,7 @@
         else { put(me, V(0, 0, 2.5), 0); step(0.05); S.use(me, SUBS.mine); obj = last(items('mine')); put(me, away, 0); step(1); put(foe, V(0, 0, 4.2), Math.PI); }
         if (kind === 'seeker') put(me, away, 0);
         if (opt.bot) { delete foe.bot.update; foe.bot.setDifficulty('hard'); foe.bot.sp.reset(); }
-        let armT = null, armPos = null, tell = { sc: 0, fl: 0, lamp: 0 }, danger = null, esc = null, d0 = null, dEnd = null, dEsc = null;
-        const flashOf = () => obj.flash ? obj.flash.material.opacity : 0;
+        let armT = null, armPos = null, tell = { sc: 0, lamp: 0 }, danger = null, esc = null, d0 = null, dEnd = null, dEsc = null;
         hook = () => {
           if (armT == null) return;
           if (mode === 'out') { const dx = foe.pos.x - armPos.x, dz = foe.pos.z - armPos.z, l = Math.hypot(dx, dz) || 1; foe.pos.x += (dx / l) * PLAYER.runSpeed * DT; foe.pos.z += (dz / l) * PLAYER.runSpeed * DT; foe.vel.set((dx / l) * PLAYER.runSpeed, 0, (dz / l) * PLAYER.runSpeed); }
@@ -314,7 +322,7 @@
           if (arm && armT == null) { armT = arm.t; armPos = arm.pos; d0 = Math.hypot(foe.pos.x - armPos.x, foe.pos.z - armPos.z); const dz = specialDangers().find((d) => d.hit === kind); danger = dz && { tIn: r3(dz.tIn), r: r2(dz.r), lethal: dz.lethal }; }
           if (armT != null) {
             const sc = kind === 'waddle' ? obj.m.model.scale.x / (1.8 * obj.vs) : obj.mesh.userData.inner.scale.x;   // (waddle.js WSCALE 1.8)
-            tell.sc = Math.max(tell.sc, sc); tell.fl = Math.max(tell.fl, flashOf()); if (kind === 'waddle') tell.lamp = Math.max(tell.lamp, obj.m.lampMat.emissiveIntensity);
+            tell.sc = Math.max(tell.sc, sc); if (kind === 'waddle') tell.lamp = Math.max(tell.lamp, obj.m.lampMat.emissiveIntensity);
             if (opt.bot && foe.bot.sp.esc && !esc) { esc = { hit: foe.bot.sp.esc.r.d.hit, t: r3(G.time - armT) }; dEsc = Math.hypot(foe.pos.x - armPos.x, foe.pos.z - armPos.z); }
           }
           const done = obj.state === 'dead';
@@ -323,17 +331,19 @@
         });
         hook = null;
         const boom = evs.find((e) => e.n === 'bomb:explode' && armT != null && e.t >= armT);
+        const inW = (x) => armT != null && boom && x.t > armT - 1e-6 && x.t <= boom.t + 1e-6;
+        const rings = fxLog.filter((x) => x.f === 'ring' && inW(x)), beeps = fxLog.filter((x) => x.f === 'beep' && inW(x));
         const fh = hits.filter((h) => h.vic === foe && (h.wid === kind));
         const cue = cues.find((c) => c.name === { seeker: 'seeker_prime', waddle: 'waddle_prime', mine: 'mine_trip' }[kind]);
         if (opt.bot) { stub(foe); foe.bot.setDifficulty(diff0); }
         return { armed: armT != null, wait: armT != null && boom ? r3(boom.t - armT) : null, firstHitAfterBoom: fh.length ? r3(fh[0].t - (boom ? boom.t : 0)) : null, dmg: r2(fh.reduce((a, h) => a + h.dmg, 0)),
-          tell: { swell: r2(tell.sc), flash: r2(tell.fl), lamp: r2(tell.lamp) }, cue: cue ? r3(cue.t - (armT ?? 0)) : null, danger, esc, d0: d0 != null ? r2(d0) : null, dEsc: dEsc != null ? r2(dEsc) : null, dEnd: dEnd != null ? r2(dEnd) : null, frames: n };
+          tell: { swell: r2(tell.sc), lamp: r2(tell.lamp), ringFrames: rings.length, ringR: rings[0] ? rings[0].r : null, beeps: beeps.length }, cue: cue ? r3(cue.t - (armT ?? 0)) : null, danger, esc, d0: d0 != null ? r2(d0) : null, dEsc: dEsc != null ? r2(dEsc) : null, dEnd: dEnd != null ? r2(dEnd) : null, frames: n };
       };
       for (const kind of ['seeker', 'waddle', 'mine']) {
         const D = SUBS[kind].delay, name = SUBS[kind].name;
         const st = scene(kind, 'stay'), ou = scene(kind, 'out');
-        R(`${name}: it waits its ${D} s windup between reaching / tripping on its target and the blast (the tell: ${kind === 'mine' ? 'popped up, ' : ''}swelling, the flash blinking${kind === 'waddle' ? ', its lamp strobing' : ''}; its warning cue at the windup's start) — no damage before the blast; the target who stays is hit`,
-          st.armed && Math.abs(st.wait - D) < 0.02 && st.firstHitAfterBoom != null && st.firstHitAfterBoom >= -1e-6 && st.dmg > 0 && st.tell.swell > 1.15 && st.tell.flash > 0.4 && (kind !== 'waddle' || st.tell.lamp > 5) && st.cue != null && Math.abs(st.cue) < 0.02, st);
+        R(`${name}: it waits its ${D} s windup between reaching / tripping on its target and the blast (the tell: ${kind === 'mine' ? 'popped up, ' : ''}swelling${kind === 'waddle' ? ', its lamp strobing' : ''}, its blast radius on the floor every frame and a beep pulse quickening — the Splat Bomb's look; its warning cue at the windup's start) — no damage before the blast; the target who stays is hit`,
+          st.armed && Math.abs(st.wait - D) < 0.02 && st.firstHitAfterBoom != null && st.firstHitAfterBoom >= -1e-6 && st.dmg > 0 && st.tell.swell > 1.15 && st.tell.ringFrames >= 25 && st.tell.ringR === SUBS[kind].radius && st.tell.beeps >= 4 && (kind !== 'waddle' || st.tell.lamp > 5) && st.cue != null && Math.abs(st.cue) < 0.02, st);
         R(`${name}: a target who walks out during the windup (run speed, from its start) takes none`, ou.armed && Math.abs(ou.wait - D) < 0.02 && ou.dmg === 0, ou);
         R(`${name}: its windup is a danger area for the other team's bots (the blast where it stands, until it goes off)`, st.danger && st.danger.tIn > D - 0.05 && st.danger.tIn <= D + 1e-6 && st.danger.r > SUBS[kind].radius, st.danger);
       }
@@ -356,6 +366,7 @@
     hook = null; S.viewer = null; netOff();
     delete P.applyHit; if (P.applyHit !== hit0) P.applyHit = hit0;
     delete C.one; if (C.one !== one0) C.one = one0;
+    if (G.fx) { delete G.fx.dangerRing; delete G.fx.beepPulse; if (G.fx.dangerRing !== ring0) G.fx.dangerRing = ring0; if (G.fx.beepPulse !== beep0) G.fx.beepPulse = beep0; }
     offs.forEach((f) => f());
     for (const a of m.actors) if (a.bot) delete a.bot.update;
     S.clear(); P.clear();
