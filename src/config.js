@@ -352,7 +352,7 @@ export const SUBS = {
   sprinkler: {
     id: 'sprinkler', name: 'Twirl Sprinkler', kind: 'sprinkler', blurb: 'Sticks to any surface and sprays ink around it in pulses, until it is shot or you get splatted.',
     // sprayRadius: the outer edge of its ink (m). 2026-10-01 ("make the sprinkler work further away"): 3.2 → 5.5 — each
-    // drop's launch speed is solved for a landing distance picked evenly over the disc's AREA (0.5 m … sprayRadius − 0.6,
+    // drop's launch speed is solved for a landing distance picked evenly over the disc's AREA (0.5 m … sprayRadius − 0.75,
     // the drop's own splat reaching the rest), so the far ring gets as much ink per m² as the middle instead of
     // thinning out; drops 6 → 7 a pulse (+17 % ink a second for ~3× the area); dropDamage unchanged
     inkCost: 60, throwSpeed: 12, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,

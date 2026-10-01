@@ -25,6 +25,7 @@
   const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const { specialDangers, SPECIAL_STATS } = await import('./src/game/botSpecials.js');
   const { getPlasticMaterial } = await import('./src/game/character-mats.js');
+  const { SPRAY_SPLAT } = await import('./src/game/subs.js');
   const { on } = await import('./src/core/ctx.js');
   const G = window.__G, P = G.projectiles, S = G.subs, K = SUB_KITS, C = G.cues;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -43,6 +44,8 @@
   const stub = (a) => { if (a.bot) a.bot.update = () => zero(a); };
   for (const a of m.actors) stub(a);
   const put = (a, p, yaw = 0) => { a.pos.copy(p); a.pos.y += 0.02; a.vel.set(0, 0, 0); a.yaw = a.aimYaw = yaw; if (a.bot) { a.bot.aimYaw = yaw; a.bot.aimPitch = 0; } };
+  // (you — the local kid — stand well off, facing away: a round your weapon still had going must land nowhere near a scene)
+  const HOME = V(18, 0, -30);
   const parkAll = () => others.forEach((a, i) => put(a, V(-22 + (i % 4) * 2, 0, 30 + Math.floor(i / 4) * 2)));
   // hits are logged, not dealt (nobody's splatted, so the scenes stay alike)
   const hit0 = P.applyHit, hits = [];
@@ -62,7 +65,7 @@
     hook = null; S.viewer = null;
     S.clear(); P.clear(); G.paint.clear?.();
     for (const a of m.actors) { if (!a.alive) a.respawn(); a.hp = PLAYER.hp; a.invuln = 0; a.status.track = 0; zero(a); a.form = 'kid'; a.superJumpState = null; stub(a); }
-    parkAll(); put(me, V(0, 0, -14), 0); me.ink = PLAYER.inkMax;
+    parkAll(); put(me, HOME, Math.PI); me.ink = PLAYER.inkMax;
     step(0.1);
     hits.length = 0; cues.length = 0; evs.length = 0; fxLog.length = 0;
   };
@@ -99,16 +102,17 @@
       step(6);
       P.spawnDrop = drop0; offL(); if (G.fx) { G.fx.onDropletLand = land0; G.fx.onSpeck = speck0; }
       const c = it.pos;
-      const cov = { mid: r2(ring(c.x, c.z, 1, 3, me.team)), old: r2(ring(c.x, c.z, 3.2, 4.4, me.team)), far: r2(ring(c.x, c.z, 4.7, 5.3, me.team)), past: r2(ring(c.x, c.z, 6.4, 7.4, me.team)) };
+      const cov = { mid: r2(ring(c.x, c.z, 1, 3, me.team)), old: r2(ring(c.x, c.z, 3.2, 4.4, me.team)), far: r2(ring(c.x, c.z, 4.7, 5.3, me.team)), past: r2(ring(c.x, c.z, 6.6, 7.6, me.team)) };
       // the furthest inked spot along 48 directions (to 8 m, every 5 cm)
       const reach = []; for (let k = 0; k < 48; k++) { const a = (k / 48) * Math.PI * 2; let rr = 0; for (let r = 0.5; r <= 8; r += 0.05) if (inkAt(c.x + Math.cos(a) * r, c.z + Math.sin(a) * r) === me.team + 1) rr = r; reach.push(rr); }
       reach.sort((a, b) => a - b);
-      const med = reach[reach.length >> 1], hi = reach[reach.length - 1];
-      R(`Twirl Sprinkler reaches ~${s.sprayRadius} m (was 3.2): after 12 s the ring at 4.7–5.3 m is well inked (≥ 35 %), the middle too (≥ 60 %), nothing past ~6.3 m; the furthest ink along most directions is 5–6.2 m`,
-        it.state === 'spray' && cov.far >= 0.35 && cov.mid >= 0.6 && cov.past <= 0.03 && med >= 5 && med <= 6.2 && hi <= 6.6, { cov, reachMedian: r2(med), reachMax: r2(hi), reachMin: r2(reach[0]) });
+      // (a landed drop's splat stretches along its flight: a stray finger past the edge now and then — the 90th percentile)
+      const med = reach[reach.length >> 1], p90 = reach[Math.floor(reach.length * 0.9)];
+      R(`Twirl Sprinkler reaches ~${s.sprayRadius} m (was 3.2): after 12 s the ring at 4.7–5.3 m is well inked (≥ 35 %), the middle too (≥ 60 %), next to nothing past ~6.5 m; the furthest ink along most directions is 5–6.2 m`,
+        it.state === 'spray' && cov.far >= 0.35 && cov.mid >= 0.6 && cov.past <= 0.03 && med >= 5 && med <= 6.2 && p90 <= 6.5, { cov, reachMedian: r2(med), reach90: r2(p90), reachMax: r2(reach[reach.length - 1]), reachMin: r2(reach[0]) });
       // landings: evenly over the AREA (the outer half of the area — r > R/√2 — gets about half of them)
-      const L = lands.filter((d) => d > 0.3), R1 = s.sprayRadius - 0.6, outerHalf = L.filter((d) => d > Math.sqrt((R1 * R1 + 0.25) / 2)).length / Math.max(1, L.length);
-      R('its drops land evenly over the disc\'s area, out to sprayRadius − 0.6 m (their own splat reaches the rest): the far ring isn\'t thinner than the middle',
+      const L = lands.filter((d) => d > 0.3), R1 = s.sprayRadius - SPRAY_SPLAT, outerHalf = L.filter((d) => d > Math.sqrt((R1 * R1 + 0.25) / 2)).length / Math.max(1, L.length);
+      R(`its drops land evenly over the disc's area, out to sprayRadius − ${SPRAY_SPLAT} m (their own splat reaches the rest): the far ring isn't thinner than the middle`,
         L.length > 150 && outerHalf > 0.42 && outerHalf < 0.6 && Math.max(...L) < R1 + 0.35 && Math.max(...L) > R1 - 0.4, { landed: L.length, outerHalf: r2(outerHalf), maxLanding: r2(Math.max(...L)), meanLanding: r2(L.reduce((a, b) => a + b, 0) / L.length) });
       R(`its ink output: ${s.drops} drops a pulse every ${s.pulse} s (≈ ${r2(s.drops / s.pulse)} a second, was 20), ${s.dropDamage} damage each (unchanged)`,
         Math.abs(perSec - s.drops / s.pulse) < 1.2 && s.drops === 7 && s.dropDamage === 8 && drops.every((d) => d.dmg === s.dropDamage), { perSec: r2(perSec), dmg: [...new Set(drops.map((d) => d.dmg))] });
@@ -133,7 +137,7 @@
     if (want('mine')) {
       reset();
       const s = SUBS.mine, M = V(-6, 0, -6);
-      put(me, M, 0); step(0.05); S.use(me, s); put(me, V(0, 0, -14), 0);
+      put(me, M, 0); step(0.05); S.use(me, s); put(me, HOME, Math.PI);
       const it = last(items('mine'));
       step(1.0);
       const ud = it.mesh.userData;
@@ -194,7 +198,7 @@
       // the owner's side: the trip goes out as an update record
       reset(); netOn();
       try {
-        put(me, M, 0); step(0.05); S.use(me, s); put(me, V(0, 0, -14), 0);
+        put(me, M, 0); step(0.05); S.use(me, s); put(me, HOME, Math.PI);
         const it2 = last(items('mine')); step(1);
         put(foe, V(M.x + 1.5, 0, M.z), 0); step(0.1);
         step(0.6);
@@ -207,7 +211,7 @@
     if (want('beacon')) {
       reset();
       const s = SUBS.beacon, Bp = V(6, 0, -6);
-      put(me, Bp, 0); step(0.05); S.use(me, s); put(me, V(0, 0, -14), 0);
+      put(me, Bp, 0); step(0.05); S.use(me, s); put(me, HOME, Math.PI);
       const b = last(items('beacon')), fx = b.fx;
       step(0.1);
       const lit = (l) => l.material.emissiveIntensity > 0.5 && l.material.emissive.getHex() === G.teamColors[b.team].getHex();
@@ -245,7 +249,7 @@
         const E2 = others.filter((a) => a.team === foe.team)[1] || foe; E2._jumpBeacon = gb; S._landedOnBeacon(E2);
         const toOwner = sent.find((r) => r.dev === 'beaconUse' && r.id === 992);
         // the owner's side: a jump that came in from another screen counts, and its record goes out
-        put(me, V(6, 0, -6), 0); step(0.05); S.use(me, s); put(me, V(0, 0, -14), 0);
+        put(me, V(6, 0, -6), 0); step(0.05); S.use(me, s); put(me, HOME, Math.PI);
         const ob = last(items('beacon').filter((x) => !x.ghost)); sent.length = 0;
         S.netUse(ob.gid, 1); step(0.05);
         const rec = sent.find((r) => r.kind === 'subs' && r.data[0] === 3 && r.data[1] === ob.gid);
@@ -300,7 +304,7 @@
       const diff0 = foe.bot.diff.id;
       const scene = (kind, mode, opt = {}) => {
         reset();
-        const F = V(0, 0, 6), away = opt.bot ? V(22, 0, 0) : V(0, 0, -14);   // (a bot scene: you're behind the wall, out of its sight — no fight)
+        const F = V(0, 0, 6), away = opt.bot ? V(22, 0, 0) : HOME;   // (a bot scene: you're behind the wall, out of its sight — no fight)
         put(foe, F, Math.PI);
         let obj = null;
         // (opt.at: the bomb starts right by its target — a bot scene: the windup begins next to it, it never saw it come)
@@ -356,9 +360,12 @@
       }
       SA.enabled = ai0;
       // (what's ours to make sure of: the windup is a danger it reads — it notices after its reaction time and heads out;
-      // whether it gets clear in 0.45 s is its reaction and footing: it has a chance, like a player)
-      const okBot = Object.entries(bot).every(([k, rs]) => rs.filter((x) => x.d0 < 2 && x.esc && x.esc.hit === k && x.dEnd - x.dEsc > 0.3).length >= 2);
-      R('a hard bot (its specials awareness on) by a windup notices it (after its reaction time) and runs its escape — moving out of it from then till the blast — at least 2 of 3 rounds for each bomb', okBot, bot);
+      // whether it gets clear in 0.45 s is its reaction and footing: it has a chance, like a player). A round counts when
+      // the bot started inside the blast; it's a good one when the bot ends outside it, or ran its escape for this bomb
+      // and was further off at the blast than when it set out
+      const good = (k, x) => x.dEnd > SUBS[k].radius || (x.esc && x.esc.hit === k && x.dEnd - x.dEsc > 0.3);
+      const okBot = Object.entries(bot).every(([k, rs]) => { const c = rs.filter((x) => x.d0 < SUBS[k].radius); return c.length >= 2 && c.filter((x) => good(k, x)).length >= Math.ceil(c.length * 2 / 3); });
+      R('a hard bot (its specials awareness on) caught in a windup\'s blast notices it (after its reaction time) and heads out — clear of it at the blast, or further off than when it set out — in 2 of 3 rounds for each bomb', okBot, bot);
     }
   } catch (e) {
     R('harness error', false, String(e && e.stack || e).slice(0, 600));

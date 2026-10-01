@@ -43,7 +43,8 @@ const easeOutBack = (u) => { const c = 1.9; return 1 + (c + 1) * Math.pow(u - 1,
 // [sub-tweaks] Each drop flies along its fan direction (unit, in the mounting surface) + SPRAY_UP × the surface normal,
 // times a launch speed sp, from 0.2 m off the surface. SPRAY_TAB holds where that lands on a floor for sp = 0, 0.1 …
 // (the projectile integrator's own steps — weapons.js _step: gravity 22, drag 0.4, 60 Hz); sprayLaunch(d) inverts it.
-const SPRAY_UP = 0.75, SPRAY_SPLAT = 0.6;   // (SPRAY_SPLAT: how far a landed drop's own ink reaches past where it lands)
+// SPRAY_SPLAT: how far a landed drop's own ink reaches past where it lands (its splat, stretched along its flight)
+export const SPRAY_UP = 0.75, SPRAY_SPLAT = 0.75;
 const SPRAY_TAB = (() => {
   const t = [];
   for (let i = 0; i <= 160; i++) {
