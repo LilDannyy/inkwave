@@ -6,8 +6,10 @@
 //     carries came from the other team's ink, shots or floor)
 //   • anything registered later: registerReveal(id, (actor, team) => bool) — a stage gimmick or new mechanic that gives
 //     a player's position away adds its own test here and the map and the bots both follow it
-// Everything read is synced for remote players too (status, groundTeam, hp: net/netmatch.js), so online guests see
-// the same map.
+// Everything read is synced for remote players too (groundTeam, hp: net/netmatch.js; status: each screen's own ghost
+// subs track / poison remote players there as well, and the timers run out there too), so online guests see the same
+// map. (The owner's word on a remote player's tracked / poisoned status rides the actor tick too — a.netStatus — for
+// the looks: game/statusFx.js.)
 import { PLAYER } from '../config.js';
 
 const REVEALS = [

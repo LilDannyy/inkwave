@@ -17,6 +17,8 @@
 // invisible to the other team (a translucent ghost to its own) until it trips, then pops up for everyone through its
 // windup; a Skitter Bomb winds up (`delay`) before it bursts; a Hop Beacon shows its jumps left and pings a sonar; a
 // Drip Curtain carries an ink meter. Online, the owner's update record ([3, gid, …]: netGhost) keeps the ghosts in step.
+// sub-tweaks2 (2026-10-02): the Twirl Sprinkler throws further (15.8) and splats an ink patch where it sticks (_patch);
+// tracked / poisoned players show it (statusFx.js: a sonar shell in the tracker's colour, murky bubbles), for everyone.
 //
 // Props come from getSubDef(kind) (origin at the bottom centre, +Y away from the surface, +Z forward).
 import * as THREE from 'three';
@@ -26,6 +28,7 @@ import { Physics, Hit } from './physics.js';
 import { getSubDef } from './character-weapons.js';
 import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
 import { MAIN_KITS, SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted } from './kits/registry.js';
+import { StatusFx } from './statusFx.js';
 const r2 = (x) => Math.round(x * 100) / 100;
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _patchC = new THREE.Vector3(), _patchQ = new THREE.Vector3();
@@ -173,6 +176,7 @@ export class SubSystem {
     this.cloudGeo = new THREE.IcosahedronGeometry(1, 3);
     this.viewer = null;          // (tests / pictures) whose eyes the team-only looks follow: a team, or null = the local player's
     this._mats = new Map();      // per-team looks (ghost mine, beacon lights), keyed by colour
+    this.statusFx = new StatusFx(scene);   // [sub-tweaks2] the tracked / poisoned looks on the players (statusFx.js)
     // a splatted owner loses their sprinkler; a super jump that lands on a beacon uses it up
     on('splatted', ({ victim }) => { for (const it of this.items) if (it.owner === victim && it.kind === 'sprinkler' && it.state === 'spray') this._destroy(it); });
     on('superjump:land', ({ actor }) => this._landedOnBeacon(actor));
@@ -182,6 +186,7 @@ export class SubSystem {
     for (const it of this.items) this._dispose(it);
     this.items.length = 0;
     for (const k in SUB_KITS) SUB_KITS[k].clear?.();
+    this.statusFx.clear();
   }
 
   // ---------------------------------------------------------------------------------------------- deploy
@@ -298,6 +303,7 @@ export class SubSystem {
         this._dispose(it); items.splice(i, 1);
       }
     }
+    this.statusFx.update(dt);   // (after everyone moved: the looks sit on them this frame)
   }
   _step(it, dt) {
     if (it.ride) {
