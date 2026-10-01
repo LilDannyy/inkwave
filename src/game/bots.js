@@ -1526,8 +1526,11 @@ export class BotBrain {
     const progress = 1 - Math.hypot(a.pos.x - pads[1 - a.team].x, a.pos.z - pads[1 - a.team].z) / total;
     let go = false;
     if (k === 'sprinkler') {
-      const st = G.paint.regionStats(a.pos.x + Math.sin(a.aimYaw) * 5, a.pos.y, a.pos.z + Math.cos(a.aimYaw) * 5, 3, a.team, _stats);
-      go = st.n > 0 && st.own < 0.4;
+      // (sub-tweaks: it sprays out to sprayRadius, 5.5 m) a paint-mode lob lands ~5.5 m ahead: mostly unclaimed turf over
+      // most of its disc, and no teammate's sprinkler already covering that spot
+      const R = sub.sprayRadius || 5.5, cx = a.pos.x + Math.sin(a.aimYaw) * 5.5, cz = a.pos.z + Math.cos(a.aimYaw) * 5.5;
+      const st = G.paint.regionStats(cx, a.pos.y, cz, R * 0.8, a.team, _stats);
+      go = st.n > 0 && st.own < 0.4 && !G.subs.items.some((o) => o.state === 'spray' && o.team === a.team && o.owner !== a && Math.hypot(o.pos.x - cx, o.pos.z - cz) < R * 1.2);
     } else if (k === 'mine') go = progress > 0.3 && progress < 0.7;
     else if (k === 'beacon') go = progress > 0.4 && !G.subs.beaconsFor(a.team).some((b) => b.pos.distanceTo(a.pos) < 12);
     if (go) this.bombCd = 8 + Math.random() * 8;

@@ -196,7 +196,7 @@ function use(subs, a, sub) {
   launch(a, sub, from, dir);
   const b = spawn(subs, a, sub, from, dir, false, netId(a));
   netRec(a, 'tracer', [0, b.gid, r3(from.x), r3(from.y), r3(from.z), r3(dir.x), r3(dir.y), r3(dir.z)]);
-  G.cues?.one('tracer_zap', { at: from, owner: a, kind: 'throw', vol: 0.8 });   // sfx-cues: through the cue mix
+  G.cues?.one('tracer_zap', { at: from, owner: a, kind: 'throw', sub: true, vol: 0.8 });   // sfx-cues: through the cue mix
   emit('sub:use', { actor: a, kind: 'tracer' });
 }
 // Online, a remote player's bolt is a ghost: it flies and ricochets the same (its puddles are its owner's to send, its
@@ -224,7 +224,7 @@ function ghost(a, d) {
     if (bolts.some((x) => x.gid === gid)) return;
     const from = new V3(d[2], d[3], d[4]);
     spawn(G.subs, a, SUBS.tracer, from, new V3(d[5], d[6], d[7]).normalize(), true, gid);
-    G.cues?.one('tracer_zap', { at: from, owner: a, kind: 'throw', vol: 0.8 });   // sfx-cues
+    G.cues?.one('tracer_zap', { at: from, owner: a, kind: 'throw', sub: true, vol: 0.8 });   // sfx-cues
     return;
   }
   const b = bolts.find((x) => x.ghost && x.gid === gid);

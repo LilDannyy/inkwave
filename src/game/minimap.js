@@ -476,6 +476,15 @@ export class Minimap {
       else c.arc(tc.x, tc.y, r, 0, TAU);
       c.fillStyle = col; c.fill();
       if (st === 'spray') { c.lineWidth = 1.5; c.strokeStyle = col; c.globalAlpha = 0.5; c.beginPath(); c.arc(tc.x, tc.y, it.sub.sprayRadius * s * 0.8, 0, TAU); c.stroke(); c.globalAlpha = 1; }
+      // a beacon's jumps left: a dot under it per jump (lit) out of its two (dark: used) — the last one stands alone
+      if (st === 'beacon') {
+        const n = it.sub.uses || 2, pr = Math.max(1.2, s * 0.22);
+        for (let i = 0; i < n; i++) {
+          const px = tc.x + (i - (n - 1) / 2) * pr * 2.6, py = tc.y + r * 1.25 + pr * 1.6;
+          c.beginPath(); c.arc(px, py, pr + 1, 0, TAU); c.fillStyle = '#15121c'; c.fill();
+          c.beginPath(); c.arc(px, py, pr, 0, TAU); c.fillStyle = i < it.uses ? col : '#4a4458'; c.fill();
+        }
+      }
     }
     // specials: vortex targets + funnels, sound beams, bubbles, cheer orbs, the local strike cursor
     G.specials?.drawMap(c, this, tc, s, hex, t);
