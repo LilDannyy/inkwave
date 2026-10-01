@@ -659,7 +659,10 @@
     // (the cue loops run through the cue loop bus — sfx-loud; a bus with nothing playing through it isn't processed, so
     // its gain reads stale: the one carrying the sprinkler is the one to read)
     const dbg = { paused: m.paused, loopsPaused: A.loopsPaused, gain: r2(A.cueLoopIn.gain.value), st1, voices: A.stats().voices, loops: [...A.loops].filter((h) => h.playing).length };
-    const hushed = A.loopsPaused && A.cueLoopIn.gain.value < 0.05, same = C.live().map((s) => s.key).sort().join() === before && before.length > 0;
+    // (if the audio clock barely ran — a busy machine, another app holding the audio device — the 0.08 s fade can't
+    //  have played out: then the pause is judged by its state, not the gain it is still ramping toward)
+    const stalled = st1 && st1.audio < 0.09;
+    const hushed = A.loopsPaused && (A.cueLoopIn.gain.value < 0.05 || stalled), same = C.live().map((s) => s.key).sort().join() === before && before.length > 0;
     g.resume(); step(0.1); await settle();
     R('a pause hushes the cue loops (the cue loop bus), keeps them (no orphan, no duplicate) and they come back on resume',
       hushed && same && !A.loopsPaused && A.cueLoopIn.gain.value > 0.95 && C.live().length > 0, { before, hushed, same, after: r2(A.cueLoopIn.gain.value), dbg });
