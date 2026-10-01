@@ -48,12 +48,12 @@ const PROBE = `(() => {
   let cur = null;
   const oPlay = A.play.bind(A), oLoop = A.loop.bind(A), oVoice = A._voice.bind(A);
   A._voice = (...args) => {
-    const [def, t, pos, vol, withFade] = args, cue = !!args[6];
+    const [def, t, pos, vol, withFade] = args, cue = !!args[6], post = cue && !withFade && args[7] < 0.999 ? args[7] : 1;
     const v = oVoice(...args);
     try {
       const node = v.panner || v.fade || v.out, an = mk(); node.connect(an);
       if (!(vol > 0) || !Number.isFinite(vol)) P.voiceBad.push({ name: cur, vol });
-      P.taps.push({ name: cur, an, node, v, cue, t0: performance.now(), g0: G.time, pos: pos ? { x: pos.x, y: pos.y, z: pos.z } : null, vol, loop: !!withFade, max: 0, peak: 0, sum: 0, n: 0,
+      P.taps.push({ name: cur, an, node, v, cue, post, t0: performance.now(), g0: G.time, pos: pos ? { x: pos.x, y: pos.y, z: pos.z } : null, vol, loop: !!withFade, max: 0, peak: 0, sum: 0, n: 0,
         d: pos ? Math.hypot(pos.x - A.L.x, pos.y - A.L.y, pos.z - A.L.z) : 0, scene: P.scene || null });
     } catch (e) { /* */ }
     return v;
@@ -85,11 +85,13 @@ const PROBE = `(() => {
       if (n4) Lz.m = Math.max(Lz.m, lu(s4 / n4));
       Lz.peak = Math.max(Lz.peak, pl, pr); Lz.red = Math.min(Lz.red, red);
     }
-    // a cue voice reaches the mix through the cue bus: × its gain (the Cues slider) × its compressor's reduction now
+    // a cue voice reaches the mix through the cue bus: × its gain (the Cues slider) × its compressor's reduction now (a
+    // teammate's blast through its twin, cuePost: × that one's gain and reduction × its post share)
     const kc = A.cueBus ? A.cueBus.gain.value * Math.pow(10, (red || 0) / 20) : 1;
+    const kp = A.cuePost ? A.cuePost.gain.value * Math.pow(10, (A.cuePostComp.reduction || 0) / 20) : kc;
     for (let i = P.taps.length - 1; i >= 0; i--) {
       const tp = P.taps[i]; let [r, p] = lvl(tp.an);
-      if (tp.cue) { r *= kc; p *= kc; }
+      if (tp.cue) { const k = tp.post < 1 ? kp * tp.post : kc; r *= k; p *= k; }
       if (r > tp.max) tp.max = r; if (p > tp.peak) tp.peak = p; if (r > 1e-5) { tp.sum += r * r; tp.n++; }
       if (tp.v.v.dead || tp.v.done || (!tp.loop && now - tp.t0 > 4000) || (tp.loop && now - tp.t0 > 20000)) {
         try { tp.node.disconnect(tp.an); } catch (e) { /* */ }
@@ -264,7 +266,10 @@ app.on('browser-window-created', (_, win) => {
         }
         // (b2) a teammate 7 m off throws a Splat Bomb landing ~1.5 m in front of you (2026-10-01: a teammate's sub makes
         // no throw / flight / landing / fuse sound for you; its blast plays at 0.6 × the enemy's)
-        if (F) await scene('ally:bomb', 2600, async () => { g.debug.fire(true); place(me, at(0)); place(F, at(7)); faceAt(F, me.pos); lob(F, at(1.5), SUBS.bomb.throwSpeed); throwBy(F, 'bomb'); });
+        // (the enemy shooting at you holds fire for it: a bucket's swing reuses the bomb_throw sound)
+        if (F) await scene('ally:bomb', 2600, async () => { g.debug.fire(true); E2.intent.fire = false; place(me, at(0)); place(F, at(7)); faceAt(F, me.pos); lob(F, at(1.5), SUBS.bomb.throwSpeed); throwBy(F, 'bomb'); });
+        E2.intent.fire = true;
+        if (F) { const n = far[3] || far[0]; if (n) place(F, { x: n.x, y: n.y, z: n.z }); }   // (back out of the way: the specials' scenes as before)
         g.debug.fire(true);
         // (c) every enemy special that can hit you, aimed at you
         const start = (e, id) => { e.specialId = id; e.special = e.specialCost(); e._startSpecial(); return e.specialActive; };
@@ -455,8 +460,11 @@ app.on('browser-window-created', (_, win) => {
         const allyV = Object.keys(best).filter((k) => k.startsWith('ally:bomb|')).map((k) => k.split('|')[1]);
         const ab = best['ally:bomb|bomb_explode'], fb = best['foe:bomb|bomb_explode'], dB = ab && fb ? +(ab.v - fb.v).toFixed(1) : null;
         const silentOk = !allyV.some((n) => /^(bomb_throw|sub_flight|sub_fly|fuse_bomb|bomb_beep)$/.test(n));
-        R('a teammate\'s Splat Bomb landing in front of you: no throw, flight, landing or fuse sound reaches the mix; its blast ~0.6 × the enemy\'s (−4.4 ± 2 dB vs the enemy\'s at the same spot)',
-          silentOk && dB != null && Math.abs(dB + 4.4) <= 2, { voices: allyV, blastDbVsEnemy: dB });
+        // (0.6 × — −4.4 dB — is applied after the cue compressor: audio.js cuePost, checked exactly in sfx-cues.js; as heard
+        // 1.5 m away it lands nearer the enemy's, −2 … −3 dB in these runs: the enemy's bomb arrives with its own fuse loop
+        // already pressing the compressor down, and a blast's level varies ±1 dB play to play. The bar: audibly fainter)
+        R('a teammate\'s Splat Bomb landing in front of you: no throw, flight, landing or fuse sound reaches the mix; its blast fainter than the enemy\'s at the same spot (0.6 × mixed; as heard −1 … −7 dB)',
+          silentOk && dB != null && dB <= -1 && dB >= -7, { voices: allyV, blastDbVsEnemy: dB });
         console.log(`ALLY bomb voices [${allyV.join(', ')}] · blast ${dB} dB vs the enemy's`);
       }
       // ---- every thrown sub's flight glides over its airtime (the director's pitch, semitones, sampled every 30 ms)

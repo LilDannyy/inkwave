@@ -6,7 +6,8 @@
 //                                                  bus: 1 = the default cue mix, CUE_BOOST over the other SFX)
 //   audio.setListener(pos, forward, up)            // THREE.Vector3-like {x,y,z}; every frame
 //   audio.play(name, { pos, volume = 1, pitch = 1, ref })   // one-shot; pos → 3D (HRTF, inverse distance from `ref` m,
-//                                                  default the def's ref or 3) else 2D
+//                                                  default the def's ref or 3) else 2D; { cue: true, post } — a cue one-shot
+//                                                  scaled by post (0 … 1) AFTER the cue compressor (a teammate's sub blast)
 //   const h = audio.loop(name, { pos, volume, pitch }); h.set({ volume, pitch, pos, params }); h.stop(fade = 0.15)
 //                                                  (params: loops with extra controls, e.g. zone_hum { mode, tension })
 //   audio.duck(amount = 0.5, seconds = 1.2)        // temporarily lowers the music bus
@@ -16,6 +17,7 @@
 //
 // Graph: voices → [lowpass(distance) → panner] → sfxIn → sfxBus ─┐
 //        cue voices (isCue) → cueBus (the Cues slider) → cueComp ─→ sfxIn   (loops: → loopIn / cueLoopIn first)
+//        cue one-shots with post < 1 → cuePost (its twin) → cuePostComp → cuePostOut (× post) → sfxIn
 //        voices → reverb send → convolver (plaza IR) → sfxBus     ├→ master → glue comp → limiter → destination
 //        music.js → musicBus → duck ─────────────────────────────┘
 // Every builder works on any BaseAudioContext so tools/audio-test.mjs renders them through OfflineAudioContext.
@@ -149,6 +151,14 @@ export class AudioEngine {
     this.cueComp.threshold.value = -10; this.cueComp.knee.value = 8; this.cueComp.ratio.value = 4; this.cueComp.attack.value = 0.004; this.cueComp.release.value = 0.2;
     this.cueBus.connect(this.cueComp); this.cueComp.connect(this.sfxIn);
     this.cueLoopIn = g(1); this.cueLoopIn.connect(this.cueBus);
+    // its twin for a cue one-shot scaled AFTER the compressor (o.post: a teammate's sub blast at 0.6 × the enemy's —
+    // cues.js MIX.boom.allySub): scaled before it, a close blast's compression all but evened the two out (−0.3 dB at 1.5 m
+    // for 0.6 ×, measured in realflow.cjs); scaled after, it's that share of the enemy's as you hear it, near or far
+    this.cuePost = g(cueGain(this.vol.cues));
+    this.cuePostComp = ctx.createDynamicsCompressor();
+    for (const k of ['threshold', 'knee', 'ratio', 'attack', 'release']) this.cuePostComp[k].value = this.cueComp[k].value;
+    this.cuePostOut = g(1);
+    this.cuePost.connect(this.cuePostComp); this.cuePostComp.connect(this.cuePostOut); this.cuePostOut.connect(this.sfxIn);
     // shared plaza reverb (the loops' sends pause with them: loopRev; the cues' follow the Cues slider: cueRev)
     this.revSend = g(1);
     this.loopRev = g(1); this.loopRev.connect(this.revSend);
@@ -202,6 +212,7 @@ export class AudioEngine {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.cueBus.gain.setTargetAtTime(cueGain(this.vol.cues), t, 0.04);
+    this.cuePost.gain.setTargetAtTime(cueGain(this.vol.cues), t, 0.04);
     this.cueRev.gain.setTargetAtTime(cueGain(this.vol.cues), t, 0.04);
     this.master.gain.setTargetAtTime(taper(this.vol.master), t, 0.04);
     this.musicBus.gain.setTargetAtTime(taper(this.vol.music), t, 0.04);
@@ -254,7 +265,7 @@ export class AudioEngine {
 
   // refO: a per-call reference distance (sfx-cues: the cue director lets its cues carry further than their def says);
   // cue: through the cue bus (the Cues slider, its compressor)
-  _voice(def, t, pos, vol, withFade, refO, cue) {
+  _voice(def, t, pos, vol, withFade, refO, cue, post = 1) {
     const ctx = this.ctx;
     const out = ctx.createGain(); out.gain.value = vol;
     const v = new V(ctx, out, t, this.rng);
@@ -263,7 +274,9 @@ export class AudioEngine {
     let head = out;
     if (withFade) { voice.fade = ctx.createGain(); out.connect(voice.fade); head = voice.fade; v.nodes.push(voice.fade); }
     let scale = 1;
-    const dest = cue ? (withFade ? this.cueLoopIn : this.cueBus) : withFade ? this.loopIn : this.sfxIn;
+    const toPost = cue && !withFade && post < 0.999;
+    if (toPost) this.cuePostOut.gain.setValueAtTime(Math.max(0, post), t);
+    const dest = toPost ? this.cuePost : cue ? (withFade ? this.cueLoopIn : this.cueBus) : withFade ? this.loopIn : this.sfxIn;
     if (validPos(pos)) {
       const ref = refO > 0 ? refO : (def.ref || 3);
       voice.dk = 3 / ref;                             // big sources: distance air-absorption / reverb scale with their size
@@ -276,7 +289,7 @@ export class AudioEngine {
       scale = this._sendScale(d);
     } else head.connect(dest);   // (withFade: the loops)
     if (voice.rev > 0.001) {
-      voice.send = ctx.createGain(); voice.send.gain.value = voice.rev * scale;
+      voice.send = ctx.createGain(); voice.send.gain.value = voice.rev * scale * (toPost ? post : 1);
       head.connect(voice.send); voice.send.connect(cue ? (withFade ? this.cueLoopRev : this.cueRev) : withFade ? this.loopRev : this.revSend); v.nodes.push(voice.send);
     }
     return voice;
@@ -319,7 +332,7 @@ export class AudioEngine {
       while (this.voices.length >= MAX_VOICES) this._steal(this.voices.shift(), now);
     }
     const pitch = Math.max(0.05, o.pitch ?? 1) * (1 + (this.rng() * 2 - 1) * (d.jitter ?? 0.06));
-    const voice = this._voice(d, t, o.pos, vol, false, o.ref, o.cue ?? isCue(name));
+    const voice = this._voice(d, t, o.pos, vol, false, o.ref, o.cue ?? isCue(name), o.post ?? 1);
     const v = voice.v;
     try {
       if (d.build) d.build(v, pitch, o);

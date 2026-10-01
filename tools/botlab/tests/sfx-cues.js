@@ -44,7 +44,8 @@
   const rec = [];
   const _play = A.play.bind(A), _loop = A.loop.bind(A);
   const P3 = (p) => (p ? { x: p.x, y: p.y, z: p.z } : null);
-  A.play = (n, o) => { const v = _play(n, o); rec.push({ t: G.time, n, pos: P3(o && o.pos), vol: o && o.volume != null ? o.volume : 1, ok: !!v }); return v; };
+  // (vol: what the director asked for — × post, a teammate's blast's share applied after the cue compressor: audio.js cuePost)
+  A.play = (n, o) => { const v = _play(n, o); rec.push({ t: G.time, n, pos: P3(o && o.pos), vol: (o && o.volume != null ? o.volume : 1) * (o && o.post != null ? o.post : 1), post: o && o.post, ok: !!v }); return v; };
   A.loop = (n, o) => {
     const h = _loop(n, o);
     h._pos = P3(o && o.pos);
