@@ -12,7 +12,10 @@
 //    widest blocked miss), the curtain's width; the bots' aim point on a waddle;
 //  - the drawn model sits right: a resting Splat Bomb's bottom within 3 cm of the floor (every frame of its rest), a
 //    Cling Charge flush on its wall (3 cm), and the other resting ones on their floor;
-//  - the Lurk Mine is still hidden from an enemy while it sits in its owner's ink, and shown to its own team.
+//  - the Lurk Mine is hidden from an enemy (sub-tweaks: always, in ink or not) and shown to its own team (a ghost);
+//  - sub-tweaks' deliberate gameplay changes, against config: the Twirl Sprinkler's drops land out to sprayRadius − 0.6 m
+//    (5.5 m of ink; was 3.2), and the Skitter Bomb / Waddle Bomb / Lurk Mine wait their `delay` (0.45 s) between their
+//    windup ('sub:arm') and the blast, to the frame.
 // Damage is logged, not dealt (the foe is never splatted, so the two runs stay alike).
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
@@ -236,7 +239,22 @@
           R(`${kind}: the drawn model rests on the floor (bottom within 3 cm)`, Math.abs(bx.min.y) <= 0.03, { floorY: 0, modelMinY: +bx.min.y.toFixed(4), modelTopY: +bx.max.y.toFixed(3) });
         }
       }
-      if (kind === 'mine' && B.mine) R('mine: still hidden from an enemy in its owner\'s ink, shown to its own team', B.mine.hidden && B.mine.shown && B.mine.inOwnInk && A.mine.hidden && A.mine.shown, { big: B.mine, one: A.mine });
+      if (kind === 'mine' && B.mine) R('mine: hidden from an enemy (in its owner\'s ink or not), shown to its own team', B.mine.hidden && B.mine.shown && B.mine.inOwnInk && A.mine.hidden && A.mine.shown, { big: B.mine, one: A.mine });
+      // 5) sub-tweaks, the deliberate changes against config
+      if (kind === 'sprinkler') {
+        // its drops' landings (the drop impacts round it in the trace): out to sprayRadius − 0.6 m, the far ring reached
+        const sp = B.trace.find((x) => x[0] === 'f' && x[2].some((it) => it[0] === 'sprinkler' && it[1] === 'spray'));
+        const at = sp && sp[2].find((it) => it[0] === 'sprinkler')[2];
+        const ds = B.trace.filter((x) => x[0] === 'ev' && x[1] === 'weapon:impact' && x[3] && at).map((x) => Math.hypot(x[3][0] - at[0], x[3][2] - at[2]));
+        const R1 = s.sprayRadius - 0.6, far = ds.length ? Math.max(...ds) : 0;
+        R(`sprinkler: its drops land out to sprayRadius − 0.6 m (${r4(R1)}; ink to ${s.sprayRadius} m, was 3.2), the far ring reached`, ds.length >= 8 && far <= R1 + 0.3 && far >= R1 - 1, { landings: ds.length, furthest: r4(far), config: { sprayRadius: s.sprayRadius, drops: s.drops, dropDamage: s.dropDamage } });
+      }
+      if (kind === 'seeker' || kind === 'waddle' || kind === 'mine') {
+        // frames from its windup (sub:arm) to the blast (bomb:explode): `delay` s, to the frame
+        let ia = -1, ie = -1; B.trace.forEach((x, i) => { if (x[0] === 'ev' && x[1] === 'sub:arm' && ia < 0) ia = i; if (x[0] === 'ev' && x[1] === 'bomb:explode' && ia >= 0 && ie < 0) ie = i; });
+        const frames = ia >= 0 && ie >= 0 ? B.trace.slice(ia, ie).filter((x) => x[0] === 'f').length : -1;
+        R(`${kind}: its windup lasts its config delay (${s.delay} s = ${Math.round(s.delay * 60)} frames) from the trigger to the blast`, ia >= 0 && ie > ia && Math.abs(frames / 60 - s.delay) <= 1 / 60 + 1e-9, { frames, secs: r4(frames / 60), delay: s.delay });
+      }
     }
     // the resting Splat Bomb, frame by frame: its physics centre bobs 0.03–0.21 m; the drawn ball stays on the floor
     {

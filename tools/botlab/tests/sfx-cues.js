@@ -12,7 +12,11 @@
 //   - sfx-loud: every thrown sub's flight glides with its arc (up with the climb, the falling whistle to the landing),
 //     in its own voice; the placed ones have none; every enemy special that can hit you plays its launch alert (and
 //     the "you're in it" alarm when you stand in it) before it hits, every special popped by an enemy its own sting;
-//     yours and your team's mix ~3 dB under the enemy's.
+//     yours and your team's mix ~3 dB under the enemy's;
+//   - sub-tweaks: the Skitter / Waddle wind up before they burst (their own warning at the windup: seeker_prime /
+//     waddle_prime), the Lurk Mine's trip alarm leads its blast by its 0.45 s windup;
+//   - teammates' subs (2026-10-01): a teammate's thrown Splat Bomb / Skitter Bomb makes no throw, flight, landing, fuse
+//     or windup sound, its blast at 0.6 × the enemy's; its devices' own loops (a sprinkler spinning) stay.
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sfx-cues.js tools/botlab/run.sh tools/botlab/page.cjs
 //   PAGE_ARGS='only=subs' | 'only=specials' | 'only=bomb,crab,…' (scene keys) to run a part
 (async () => {
@@ -125,10 +129,10 @@
     boomerang: (o) => ({ out: 'boomerang_whirr', hover: 'boomerang_whirr', back: 'boomerang_whirr', orbit: 'boomerang_orbit', armed: 'boomerang_whirr' })[o.state],
   };
   // the phases each staged throw goes through (what must sound)
-  const PHASES = { bomb: ['throw', 'land', 'boom'], sticky: ['throw', 'land', 'boom'], burst: ['throw', 'boom'], seeker: ['throw', 'land', 'boom'], scan: ['throw', 'boom'],
+  const PHASES = { bomb: ['throw', 'land', 'boom'], sticky: ['throw', 'land', 'boom'], burst: ['throw', 'boom'], seeker: ['throw', 'land', 'warn', 'boom'], scan: ['throw', 'boom'],
     curtain: ['throw', 'land', 'end'], sprinkler: ['throw', 'land', 'end'], mine: ['throw', 'warn', 'boom'], beacon: ['throw', 'end'], mist: ['throw', 'boom'],
-    shaker: ['throw', 'land', 'boom'], waddle: ['throw', 'beep', 'boom'], torpedo: ['throw', 'boom'], tracer: ['hit'], boomerang: ['beep', 'boom'] };
-  const WARN_MIN = { bomb: 0.6, sticky: 0.6, seeker: 0.6, shaker: 0.6, waddle: 0.6, torpedo: 0.6, mine: 0.3, boomerang: 0.55 };   // (mine: its 0.35 s delay; boomerang: its 0.6 s fuse)
+    shaker: ['throw', 'land', 'boom'], waddle: ['throw', 'beep', 'warn', 'boom'], torpedo: ['throw', 'boom'], tracer: ['hit'], boomerang: ['beep', 'boom'] };
+  const WARN_MIN = { bomb: 0.6, sticky: 0.6, seeker: 0.6, shaker: 0.6, waddle: 0.6, torpedo: 0.6, mine: 0.4, boomerang: 0.55 };   // (mine: its 0.45 s windup; boomerang: its 0.6 s fuse)
   const THROW = { tracer: 'tracer_zap', boomerang: 'boomerang_throw' };
   const newObj = (kind, before) => {
     if (kind === 'bomb') return G.projectiles.bombs[G.projectiles.bombs.length - 1];
@@ -214,6 +218,11 @@
       && (!s.throwPlay || s.throwPlay.pos);   // an enemy's throw is heard where they are
     R(`${SUBS[kind].name}: its own sounds at each phase, one loop per channel following it, gone with it${WARN_MIN[kind] ? `, warning ≥ ${WARN_MIN[kind]} s ahead` : ''}`,
       ok, { phases, loops: s.seen, warnLead: lead, bad: s.bad, sample: s.sample, lingering: s.lingering, throwAt: s.throwPlay && !!s.throwPlay.pos, sounds: [...new Set(s.rec)].slice(0, 16) });
+    // (sub-tweaks) the windup's own warning, played as it stops to burst: its lead over the blast is the windup
+    if (kind === 'seeker' || kind === 'waddle' || kind === 'mine') {
+      const wp = firstPlay(s.t0, cue.warn[0]), wl = wp && s.boomT != null ? r2(s.boomT - wp.t) : null, D = SUBS[kind].delay;
+      R(`${SUBS[kind].name}: its windup warning (${cue.warn[0]}) plays as it stops to burst, ${D} s before the blast (the enemy's positional)`, wl != null && Math.abs(wl - D) < 0.04 && !!wp.pos, { lead: wl, delay: D });
+    }
   }
   // sfx-loud: every thrown sub's flight glides along its arc, in its own voice; the placed ones have no flight
   if (want('glide', 'subs') && Object.keys(subRes).length >= 13) {
@@ -557,8 +566,8 @@
       return { vol: v, foe: par, throwPos: !!(th && th.pos), throwVol: th ? th.vol : null };
     };
     const own = fuseOf(me), ally = fuseOf(F[0]), foe = fuseOf(E);
-    R('friend vs foe: the enemy\'s fuse is the loud, harsh one (params.foe 1); your own and an ally\'s are quieter and softer (foe 0); your own throw comes from you (no position), the enemy\'s from them',
-      foe.vol > own.vol * 1.6 && foe.vol > ally.vol * 1.6 && foe.foe === 1 && own.foe === 0 && ally.foe === 0 && !own.throwPos && foe.throwPos,
+    R('friend vs foe: the enemy\'s fuse is the loud, harsh one (params.foe 1); your own is quieter and softer (foe 0) — a teammate\'s none at all (sub-tweaks); your own throw comes from you (no position), the enemy\'s from them',
+      foe.vol > own.vol * 1.6 && ally.vol == null && ally.throwVol == null && foe.foe === 1 && own.foe === 0 && !own.throwPos && foe.throwPos,
       { own, ally, foe });
     // your own transformation's body loop has no position (it's you)
     reset(); step(0.05);
@@ -566,6 +575,41 @@
     const js = slotsOf(me).find((s) => s.sound === 'jet_loop');
     G.specials.end(me, 'time'); step(0.2);
     R('your own Ink Jet\'s loop plays from you (no position); an enemy\'s is positional (Ink Jet scene)', js && js.twoD && js.h._pos == null, { twoD: js && js.twoD });
+  }
+
+  // ================================================================================== teammates' subs (2026-10-01)
+  // the user: "dont give throw/warning sounds of teammates bombs, but do play their explosion sound a bit fainter than
+  // normal" — a teammate's thrown sub makes no throw / flight / landing / fuse / windup sound; its blast plays at
+  // MIX.boom.allySub (0.6 × the enemy's); its devices' own loops stay; yours and the enemy's unchanged
+  if (want('ally', 'mix')) {
+    const runBy = (T, kind, secs, at = [0.3, -6.4]) => {
+      reset(); place(T, 0, -4.5); T.setSub(kind); T.ink = PLAYER.inkMax; lob(T, at[0], at[1], SUBS[kind].throwSpeed || 13); step(0.05); rec.length = 0;
+      const t0 = G.time, loops = new Set();
+      if (kind === 'bomb') G.projectiles.throwBomb(T); else G.subs.use(T, SUBS[kind]);
+      step(secs, () => { for (const s2 of C.live()) loops.add(s2.sound); });
+      const ps = plays(t0);
+      return { names: [...new Set(ps.map((r) => r.n))], loops: [...loops], vol: (n) => { const r = ps.find((x) => x.n === n); return r ? r.vol : null; } };
+    };
+    const SILENT = { bomb: ['bomb_throw', 'bomb_beep', 'sub_flight', 'fuse_bomb'], seeker: ['throw_seeker', 'seeker_land', 'seeker_prime', 'sub_flight', 'seeker_run'] };
+    const BOOM = { bomb: 'bomb_explode', seeker: 'seeker_explode' };
+    const res = {}, bad = [];
+    for (const k of ['bomb', 'seeker']) {
+      const al = runBy(F[0], k, k === 'bomb' ? 2.2 : 6), fo = runBy(E, k, k === 'bomb' ? 2.2 : 6);
+      const heard = SILENT[k].filter((n) => al.names.includes(n) || al.loops.includes(n));
+      const ratio = al.vol(BOOM[k]) != null && fo.vol(BOOM[k]) ? r2(al.vol(BOOM[k]) / fo.vol(BOOM[k])) : null;
+      const foeHas = SILENT[k].filter((n) => fo.names.includes(n) || fo.loops.includes(n));
+      res[k] = { allyHeard: heard, foeHas, ratio };
+      if (heard.length || ratio == null || Math.abs(ratio - 0.6) > 0.02 || foeHas.length < SILENT[k].length - 1) bad.push(k);
+    }
+    R('a teammate\'s thrown Splat Bomb: no throw, flight, landing beep or fuse sound for you; its blast at 0.6 × the enemy\'s (the enemy\'s bomb: every one of them)', !bad.includes('bomb'), res.bomb);
+    R('…a teammate\'s Skitter Bomb likewise: no throw, flight, landing, run or windup sound; its blast at 0.6 × the enemy\'s', !bad.includes('seeker'), res.seeker);
+    // a teammate's device keeps its own loop (a sprinkler spinning), only its throw / flight / landing go
+    const sp = runBy(F[0], 'sprinkler', 1.6, [0, -4]);
+    R('…a teammate\'s sprinkler still spins (its device loop, as a teammate\'s), with no throw, flight or landing sound',
+      sp.loops.includes('sprinkler_spin') && !sp.loops.includes('sub_flight') && !sp.names.includes('throw_sprinkler') && !sp.names.includes('sprinkler_stick'), sp);
+    R('the mix: MIX.boom.allySub is 0.6 × MIX.boom.foe; a teammate\'s throw / landing / beep / fuse / warning / flight 0; its device loops, ends and uses as a teammate\'s',
+      Math.abs(MIX.boom.allySub / MIX.boom.foe - 0.6) < 1e-9 && ['throw', 'land', 'beep', 'warn', 'fly'].every((c) => MIX[c].allySub === 0) && MIX.move.allySub === MIX.move.ally && MIX.end.allySub === MIX.end.ally && MIX.use.allySub === MIX.use.ally,
+      { boom: [MIX.boom.allySub, MIX.boom.foe] });
   }
 
   // ================================================================================== the mix in a crowd
