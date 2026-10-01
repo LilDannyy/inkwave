@@ -108,8 +108,8 @@ Sub tweaks (2026-10-01: the Twirl Sprinkler's 5.5 m reach, the Lurk Mine invisib
 own / popping up on its windup, the Hop Beacon's jump lights and sonar, the Drip Curtain's ink meter, the Skitter /
 Waddle / Mine windups — online records and the bots' danger areas included):
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-tweaks.js tools/botlab/run.sh tools/botlab/page.cjs`
-(`PAGE_ARGS='only=sprinkler,mine,beacon,curtain,windup'`). Its pictures: `tools/botlab/jobs/subs-tweaks/scenes.js`
-through shoot.cjs (`PRE_ARGS=<scene>`, see its header) → `tools/botlab/subs-tweaks-out/`.
+(`PAGE_ARGS='only=sprinkler,mine,beacon,curtain,windup'`). Its pictures: `tools/botlab/scenes/sub-tweaks.js`
+through shoot.cjs (`PRE=…/sub-tweaks.js PRE_ARGS=<scene>`, see its header).
 
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
