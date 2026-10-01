@@ -6,7 +6,8 @@
 //   BOTLAB_OUT=… SLOTS=4 tools/botlab/run.sh tools/botlab/sfx/realflow.cjs            (OUT=file.json: the numbers)
 // Flow: title → (a key: the first gesture starts the audio) → main → PLAY → TURF WAR → START! → the match; staged
 // scenes from the local player's view (you throw each sub; an enemy 7 m off throws each sub at you; every enemy special
-// that can hit you, aimed at you; every special popped by an enemy / a teammate / you; a busy fight with a pile of them
+// that can hit you, aimed at you; a teammate's Splat Bomb landing in front of you (silent till its quieter blast: the
+// teammates'-subs rule); every special popped by an enemy / a teammate / you; a busy fight with a pile of them
 // at once), each over a busy fight (you firing, an enemy firing at you); then pause / resume, quit to the menu, the
 // Cues slider in the audio settings (trusted clicks), a second match, practice and its loadout screen — in each: the
 // cue director updating (not quiet), the loop bus open, the listener set, the cue voices' gains live.
@@ -261,6 +262,9 @@ app.on('browser-window-created', (_, win) => {
             if (k === 'mine') setTimeout(() => place(me, at(2.4)), 1200);   // walk onto it
           });
         }
+        // (b2) a teammate 7 m off throws a Splat Bomb landing ~1.5 m in front of you (2026-10-01: a teammate's sub makes
+        // no throw / flight / landing / fuse sound for you; its blast plays at 0.6 × the enemy's)
+        if (F) await scene('ally:bomb', 2600, async () => { g.debug.fire(true); place(me, at(0)); place(F, at(7)); faceAt(F, me.pos); lob(F, at(1.5), SUBS.bomb.throwSpeed); throwBy(F, 'bomb'); });
         g.debug.fire(true);
         // (c) every enemy special that can hit you, aimed at you
         const start = (e, id) => { e.specialId = id; e.special = e.specialCost(); e._startSpecial(); return e.specialActive; };
@@ -388,9 +392,9 @@ app.on('browser-window-created', (_, win) => {
       // code before sfx-loud)
       const FL = 'sub_flight sub_fly';
       const OWN = { bomb: `bomb_throw ${FL} bomb_beep fuse_bomb bomb_explode`, sticky: `throw_sticky ${FL} sticky_stick fuse_sticky sticky_explode`, burst: `throw_burst ${FL} pellet_pop`,
-        seeker: `throw_seeker ${FL} seeker_land seeker_run seeker_explode`, scan: `throw_scan ${FL} scan_burst`, curtain: `throw_curtain ${FL} curtain_up curtain_drip curtain_down`,
+        seeker: `throw_seeker ${FL} seeker_land seeker_run seeker_prime seeker_explode`, scan: `throw_scan ${FL} scan_burst`, curtain: `throw_curtain ${FL} curtain_up curtain_drip curtain_down`,
         sprinkler: `throw_sprinkler ${FL} sprinkler_stick sprinkler_spin`, mine: 'place_mine mine_trip mine_explode', beacon: 'place_beacon beacon_hum', mist: `throw_mist ${FL} mist_burst mist_hiss`,
-        shaker: 'throw_shaker shaker_rattle shaker_land shaker_blast', waddle: `throw_waddle ${FL} waddle_land waddle_beep waddle_walk hunt_alarm waddle_explode`,
+        shaker: 'throw_shaker shaker_rattle shaker_land shaker_blast', waddle: `throw_waddle ${FL} waddle_land waddle_beep waddle_walk hunt_alarm waddle_prime waddle_explode`,
         torpedo: 'torpedo_throw torpedo_whirr torpedo_transform lock_tone torpedo_burst', tracer: 'tracer_zap tracer_hum tracer_hit', boomerang: 'boomerang_throw boomerang_whirr boomerang_tick boomerang_blast',
         slam: 'slam_leap slam_warn special_slam alert_slam danger sting_slam', strike: 'strike_arm strike_launch strike_mark strike_whistle strike_impact tornado alert_strike danger sting_strike',
         booyah: 'booyah_charge booyah_throw orb_fly orb_land orb_fuse booyah_blast alert_orb danger sting_booyah',
@@ -403,7 +407,7 @@ app.on('browser-window-created', (_, win) => {
         ['enemy throws / placings (~7 m)', 'foe', /^(bomb_throw|throw_\w+|torpedo_throw|boomerang_throw|place_\w+|tracer_zap)$/, 0, -6, 99],
         ['enemy subs in the air', 'foe', /^(sub_flight|sub_fly)$/, 0, -4, 6],
         ['enemy landings / arming', 'foe', /^(bomb_beep|sticky_stick|seeker_land|shaker_land|curtain_up|sprinkler_stick|waddle_land|waddle_beep|boomerang_tick|torpedo_transform)$/, 0, -6, 99],
-        ['enemy sub warnings', 'foe', /^(fuse_bomb|fuse_sticky|mine_trip|hunt_alarm|lock_tone|seeker_run|shaker_rattle|waddle_walk|torpedo_whirr|boomerang_whirr)$/, 8, 3, 13],
+        ['enemy sub warnings', 'foe', /^(fuse_bomb|fuse_sticky|mine_trip|seeker_prime|waddle_prime|hunt_alarm|lock_tone|seeker_run|shaker_rattle|waddle_walk|torpedo_whirr|boomerang_whirr)$/, 8, 3, 13],
         ['enemy device loops', 'foe', /^(curtain_drip|sprinkler_spin|beacon_hum|mist_hiss|tracer_hum)$/, 0, -5, 6],
         ['enemy sub blasts', 'foe', /^(bomb_explode|sticky_explode|pellet_pop|seeker_explode|scan_burst|mist_burst|mine_explode|shaker_blast|waddle_explode|torpedo_burst|boomerang_blast|tracer_hit)$/, 2, -6, 99],
         ['enemy special starts', 'sp', /^(slam_leap|storm_throw|strike_arm|zooka_arm|crab_boot|crab_reload|zooka_fire|kraken_on|booyah_throw|strike_launch|wail_up|stamp_start|stamp_throw|jet_ignite|barrage_start)$/, 0, -8, 99],
@@ -444,6 +448,17 @@ app.on('browser-window-created', (_, win) => {
       const fo = Object.entries(TH).map(([k, n]) => [n, +(heard('own', { k, n }) - heard('foe', { k, n })).toFixed(1)]).filter((x) => Number.isFinite(x[1]));
       R('yours ~3 dB under the enemy\'s, as you hear them: each sub\'s throw from you vs an enemy\'s 7 m off, median −3 ± 2 dB', fo.length >= 8 && Math.abs(med(fo.map((x) => x[1])) + 3) <= 2, { median: med(fo.map((x) => x[1])), each: fo });
 
+      // ---- teammates' subs (2026-10-01, "dont give throw/warning sounds of teammates bombs, but do play their explosion
+      // sound a bit fainter than normal"): a teammate's Splat Bomb landing in front of you — none of its throw, flight,
+      // landing or fuse voices reach the mix; its blast ~0.6 × the enemy's at the same spot (−4.4 dB)
+      {
+        const allyV = Object.keys(best).filter((k) => k.startsWith('ally:bomb|')).map((k) => k.split('|')[1]);
+        const ab = best['ally:bomb|bomb_explode'], fb = best['foe:bomb|bomb_explode'], dB = ab && fb ? +(ab.v - fb.v).toFixed(1) : null;
+        const silentOk = !allyV.some((n) => /^(bomb_throw|sub_flight|sub_fly|fuse_bomb|bomb_beep)$/.test(n));
+        R('a teammate\'s Splat Bomb landing in front of you: no throw, flight, landing or fuse sound reaches the mix; its blast ~0.6 × the enemy\'s (−4.4 ± 2 dB vs the enemy\'s at the same spot)',
+          silentOk && dB != null && Math.abs(dB + 4.4) <= 2, { voices: allyV, blastDbVsEnemy: dB });
+        console.log(`ALLY bomb voices [${allyV.join(', ')}] · blast ${dB} dB vs the enemy's`);
+      }
       // ---- every thrown sub's flight glides over its airtime (the director's pitch, semitones, sampled every 30 ms)
       const GL = scenes.gl || {}, glRes = {};
       for (const grp of ['own', 'foe']) for (const k of ['bomb', 'sticky', 'burst', 'seeker', 'scan', 'curtain', 'sprinkler', 'mist', 'shaker', 'waddle', 'torpedo', 'tracer', 'boomerang']) {
