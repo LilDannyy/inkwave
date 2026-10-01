@@ -32,7 +32,8 @@
 //   - your teammates' subs (2026-10-01, the user: "dont give throw/warning sounds of teammates bombs, but do play their
 //     explosion sound a bit fainter than normal"): a teammate's thrown or placed sub — a Bomb Barrage's bombs too — makes
 //     no throw, flight, landing / arming, fuse, windup or warning sound for you (MIX[…].allySub 0), its blast plays at
-//     0.6 × the enemy's (MIX.boom.allySub), and its devices' own loops (a sprinkler spinning, a curtain dripping, a
+//     0.6 × the enemy's (MIX.boom.allySub / foe, applied after the cue compressor: audio.js cuePost — as you hear it),
+//     and its devices' own loops (a sprinkler spinning, a curtain dripping, a
 //     beacon's hum, a murk cloud's hiss), ends and uses stay as a teammate's. Specials, their stings and alerts are
 //     unchanged. (Cue calls from a sub carry o.sub: sub() sets it; kits' own one() calls and the loops below pass it.)
 //   - caps: at most MAX.move moving loops and MAX.warn warning loops at once (the backdrop: fewer); the rest wait,
@@ -243,7 +244,11 @@ export class Cues {
     let pos = o.at;
     if ((kind === 'throw' || kind === 'start') && rel === 'own') pos = undefined;   // your own throw / start comes from you
     if (pos && A.L) { const r = o.range ?? RANGE.one[kind] ?? 40; if (r !== Infinity && dist(A.L, pos) > r) return null; }
-    let g = (o.vol ?? 1) * (MIX[kind] || MIX.boom)[o.sub && rel === 'ally' ? 'allySub' : rel];   // (a teammate's sub: allySub)
+    const row = MIX[kind] || MIX.boom, ar = o.sub && rel === 'ally';   // (a teammate's sub: allySub)
+    let g = (o.vol ?? 1) * row[ar ? 'allySub' : rel], post = 1;
+    // a teammate's blast: mixed as the enemy's into the cue bus's twin and scaled by allySub / foe AFTER its compressor
+    // (audio.js cuePost) — heard at that share of the enemy's near or far, not evened out by the compression
+    if (ar && kind === 'boom' && g > 0) { post = row.allySub / row.foe; g = (o.vol ?? 1) * row.foe; }
     if (!(g > 0)) return null;
     if ((kind === 'warn' || kind === 'beep' || kind === 'alert') && rel === 'foe') {
       g *= this.boost(o.at, o.radius, o.target);
@@ -251,7 +256,7 @@ export class Cues {
     }
     g = Math.min(g, 1.9);   // (never more than ~2× its calibrated level, boosts and all)
     if (this.log && (kind === 'alert' || kind === 'sting')) this.log.push({ t: G.time, name, kind, rel });
-    return A.play(name, { pos, volume: g * lv(name), pitch: o.pitch, ref: pos ? o.ref ?? REF[kind] : undefined, cue: true });
+    return A.play(name, { pos, volume: g * lv(name), pitch: o.pitch, ref: pos ? o.ref ?? REF[kind] : undefined, cue: true, post });
   }
   sub(kind, phase, o = {}) {
     const c = SUB_CUE[kind]?.[phase] || (phase === 'end' ? SUB_CUE.smash.end : null);

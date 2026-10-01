@@ -263,5 +263,7 @@ the specials', the alerts, the alarms) against every other ≥ 2.27.
 **Teammates' subs (2026-10-01, the user: "dont give throw/warning sounds of teammates bombs, but do play their explosion
 sound a bit fainter than normal").** A teammate's thrown or placed sub (a Bomb Barrage's bombs too) makes no throw,
 flight, landing / arming, fuse, windup or warning sound for you; its blast plays at 0.6 × the enemy's (cues.js
-`MIX.boom.allySub` 0.45 vs `foe` 0.75); its devices' own loops, ends and uses stay as a teammate's. Yours and the
-enemy's are unchanged, and so are specials (stings, alerts).
+`MIX.boom.allySub` 0.45 vs `foe` 0.75), applied after the cue compressor (audio.js `cuePost`, the cue bus's twin) so the
+compression doesn't even it back out (scaled before it, a blast 1.5 m away came out only 0.3 dB under the enemy's; now
+−2 … −3 dB there, −4.4 dB wherever the compressor is idle); its devices' own loops, ends and uses stay as a teammate's.
+Yours and the enemy's are unchanged, and so are specials (stings, alerts).
