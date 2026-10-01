@@ -12,6 +12,9 @@
 //   Bomb Barrage     every enemy bomb (the barrage's are ordinary Splat Bombs / Cling Charges / Skitter Bombs / Murk
 //                    mist, so all of them): an armed one's blast and fuse, one in flight's landing, a Skitter Bomb on
 //                    the run, a mist — near (seen, or within ~5 m: they beep)
+//   sub windups      (sub-tweaks) a Skitter Bomb / Waddle Bomb stopped and winding up to burst (its `delay`), a Lurk Mine
+//                    tripped (popped up, blowing `delay` later): the blast where it stands — near. A Lurk Mine that
+//                    hasn't tripped is in nobody's list: it's invisible to the other team (the sight rule)
 //   Vortex Strike    the ring where the missile lands (r 5.5, its 2.2 s flight) and the vortex (4.5 s, 62 dps) — map
 //   Twister Zooka    each twister in flight (a line to where it ends, one-shot) — big; the holder's aim lane in the
 //                    moment before its next shot (once a second; judged roughly, by difficulty), at any range — actor
@@ -57,7 +60,7 @@ import * as THREE from 'three';
 import { G, on, clamp, angleDiff } from '../core/ctx.js';
 import { PLAYER, SPECIALS, SUBS, weaponRange } from '../config.js';
 import { Hit } from './physics.js';
-import { MAIN_KITS } from './kits/registry.js';
+import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { SIGHT } from './botSight.js';
 
 export const SPECIAL_AI = { enabled: true, teams: null };
@@ -253,6 +256,15 @@ export function specialDangers() {
   for (const it of G.subs?.items || []) {
     if (it.state === 'dead') continue;
     const S = it.sub, k = it.kind;
+    // (sub-tweaks) a windup to get out of: a Skitter Bomb stopped to burst, a Lurk Mine tripped — never one still lurking
+    if ((k === 'seeker' && it.state === 'prime') || (k === 'mine' && it.fuse != null)) {
+      const d = D(keyOf(it), it.sp || barrage(it.owner) ? 'barrage' : 'sub', it.team, it.owner);
+      d.hit = k;
+      disc(d, it.pos.x, it.pos.y, it.pos.z, S.radius + 0.3, k === 'mine' ? S.radius : 1.5);
+      d.tIn = Math.max(0, it.fuse); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.3; d.lethal = k === 'mine' ? 1 : 2;
+      see(d, it.pos.x, it.pos.y + 0.3, it.pos.z);
+      continue;
+    }
     if (k !== 'sticky' && k !== 'seeker' && k !== 'mist') continue;
     let x = it.pos.x, y = it.pos.y, z = it.pos.z, tIn = 0;
     if (k === 'sticky') {
@@ -270,6 +282,15 @@ export function specialDangers() {
       d.tIn = 0.35; d.tOut = Math.max(0, S.life - it.t); d.los = true; d.losY = 0.5;
     } else { disc(d, x, y, z, S.radius + 0.3, 1.9); d.tIn = tIn; d.tOut = tIn + 0.1; d.los = true; d.losY = 0.3; }
     see(d, it.pos.x, it.pos.y, it.pos.z);
+  }
+  // ---- (sub-tweaks) a Waddle Bomb winding up to burst where it stands
+  for (const it of SUB_KITS.waddle?.items || []) {
+    if (it.state !== 'prime') continue;
+    const S = it.sub, d = D(keyOf(it), 'sub', it.team, it.owner);
+    d.hit = 'waddle';
+    disc(d, it.pos.x, it.pos.y, it.pos.z, S.radius + 0.3, 1.6);
+    d.tIn = Math.max(0, it.fuse); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.3;
+    see(d, it.pos.x, it.pos.y + 0.3, it.pos.z);
   }
   // ---- specials on players (and the untouchable)
   for (const e of G.actors) {

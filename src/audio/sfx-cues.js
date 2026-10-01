@@ -51,6 +51,8 @@ export const CUE_GROUPS = {
     'place_mine', 'place_beacon',
     // landing / arming
     'sticky_stick', 'seeker_land', 'shaker_land', 'curtain_up', 'sprinkler_stick', 'mine_trip', 'waddle_beep', 'boomerang_tick',
+    // windups (sub-tweaks: the Skitter / Waddle stop and wind up before they burst)
+    'seeker_prime', 'waddle_prime',
     // warnings
     'fuse_bomb', 'fuse_sticky', 'hunt_alarm', 'lock_tone',
     // loops
@@ -249,20 +251,60 @@ export function defineCueSounds(def, L) {
       pts(g.gain, T, [[0, 0], [0.05, 0.3], [0.3, 0.25], [0.42, 0]]);
     },
   });
-  // Lurk Mine tripped: a sharp click and a rising alarm, 0.35 s before it goes
+  // Lurk Mine tripped: a sharp click and a rising alarm, its 0.45 s windup before it goes (sub-tweaks: was 0.35 s)
   def('mine_trip', {
     gain: 0.4, max: 3, jitter: 0, reverb: 0.05,
     build(v, p) {
       v.nz({ ft: 'highpass', f: 2800, a: 0.0003, d: 0.015, peak: 0.9 });
       v.tone({ f: 420 * p, f1: 180 * p, sw: 0.02, a: 0.0005, d: 0.03, peak: 0.5 });
       const T = v.t + 0.02, g = v.gain(0, v.out), bp = v.filter('bandpass', 1400, 2, g);
-      const o = v.osc('square', 900 * p, T, T + 0.36, bp);
-      sweep(o.frequency, T, 900 * p, 2400 * p, 0.33); sweep(bp.frequency, T, 1200 * p, 3000 * p, 0.33);
-      pts(g.gain, T, [[0, 0], [0.02, 0.22], [0.3, 0.35], [0.34, 0]]);
+      const o = v.osc('square', 900 * p, T, T + 0.46, bp);
+      sweep(o.frequency, T, 900 * p, 2400 * p, 0.42); sweep(bp.frequency, T, 1200 * p, 3000 * p, 0.42);
+      pts(g.gain, T, [[0, 0], [0.02, 0.22], [0.39, 0.35], [0.43, 0]]);
       const s = v.gain(0, v.out), am = v.gain(0.5, s);
-      const o2 = v.osc('sine', 1800 * p, T, T + 0.36, am); sweep(o2.frequency, T, 1800 * p, 3600 * p, 0.33);
-      v.lfo(16, 0.5, am.gain, T, T + 0.36, 'square');
-      pts(s.gain, T, [[0, 0], [0.02, 0.18], [0.33, 0.26], [0.35, 0]]);
+      const o2 = v.osc('sine', 1800 * p, T, T + 0.46, am); sweep(o2.frequency, T, 1800 * p, 3600 * p, 0.42);
+      const l = v.lfo(14, 0.5, am.gain, T, T + 0.46, 'square'); sweep(l.osc.frequency, T, 14, 26, 0.42);
+      pts(s.gain, T, [[0, 0], [0.02, 0.18], [0.42, 0.26], [0.44, 0]]);
+    },
+  });
+  // Skitter Bomb winding up (0.45 s, then it bursts): its wind-up key cranking — ratchet clicks speeding up — under a
+  // motor whine climbing an octave and a half, a hard "clack" as it locks
+  def('seeker_prime', {
+    gain: 0.42, max: 3, jitter: 0, reverb: 0.05,
+    build(v, p) {
+      v.nz({ ft: 'highpass', f: 3200, a: 0.0003, d: 0.014, peak: 0.85 });
+      v.tone({ f: 520 * p, f1: 240 * p, sw: 0.02, a: 0.0005, d: 0.03, peak: 0.45 });
+      let t = 0.03;
+      for (let i = 0; i < 11 && t < 0.42; i++) {   // ratchet: 11 clicks, closer and higher
+        v.nz({ t, f: (2400 + i * 260) * p, q: 6, a: 0.0004, d: 0.011, peak: 0.55 + 0.03 * i });
+        v.tone({ t, f: (380 + i * 30) * p, f1: 260 * p, sw: 0.01, a: 0.0005, d: 0.012, peak: 0.16 });
+        t += Math.max(0.022, 0.06 - i * 0.0045);
+      }
+      const T = v.t + 0.02, g = v.gain(0, v.out), bp = v.filter('bandpass', 900, 3.5, g);
+      const o = v.osc('sawtooth', 300 * p, T, T + 0.46, bp);
+      sweep(o.frequency, T, 300 * p, 860 * p, 0.42); sweep(bp.frequency, T, 800 * p, 2600 * p, 0.42);
+      pts(g.gain, T, [[0, 0], [0.04, 0.14], [0.4, 0.3], [0.44, 0]]);
+      v.nz({ t: 0.41, ft: 'highpass', f: 1800, a: 0.0004, d: 0.025, peak: 0.7 });
+      v.tone({ t: 0.41, f: 300 * p, f1: 150 * p, sw: 0.03, a: 0.0005, d: 0.04, peak: 0.4 });
+    },
+  });
+  // Waddle Bomb winding up (0.45 s): a toy alarm — a two-tone "bip-bip-bip" racing faster and climbing, a springy
+  // wobble under it, a squeak as it puffs up
+  def('waddle_prime', {
+    gain: 0.36, max: 3, jitter: 0, reverb: 0.05,
+    build(v, p) {
+      v.tone({ f: 660 * p, f1: 1320 * p, sw: 0.06, a: 0.002, d: 0.07, peak: 0.4 });           // the squeak
+      let t = 0.05;
+      for (let i = 0; i < 9 && t < 0.43; i++) {
+        const f = (i % 2 ? 1760 : 1480) * p * (1 + i * 0.035);
+        v.tone({ t, type: 'square', f, a: 0.002, h: 0.012, d: 0.018, peak: 0.16, to: v.filter('lowpass', 4600, 0.8, v.out) });
+        v.tone({ t, f, a: 0.002, h: 0.01, d: 0.02, peak: 0.24 });
+        t += Math.max(0.03, 0.07 - i * 0.006);
+      }
+      const T = v.t + 0.02, g = v.gain(0, v.out), am = v.gain(0.5, g), lp = v.filter('lowpass', 900, 1.2, am);
+      const o = v.osc('triangle', 180 * p, T, T + 0.45, lp); sweep(o.frequency, T, 180 * p, 360 * p, 0.42);
+      const l = v.lfo(9, 0.5, am.gain, T, T + 0.45); sweep(l.osc.frequency, T, 9, 22, 0.42);
+      pts(g.gain, T, [[0, 0], [0.04, 0.18], [0.4, 0.26], [0.44, 0]]);
     },
   });
   // the Waddle's lamp while it senses (a toy "bip", higher and rounder than the Splat Bomb's)

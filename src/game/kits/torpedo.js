@@ -375,7 +375,7 @@ function startLock(t, e) {
   t.vel.set(0, 0, 0); t.hover.copy(t.pos);
   t.ring = makeRing(t.team); t.ringT = 0;
   t.scene.add(t.ring);
-  G.cues?.one('torpedo_transform', { at: t.pos, owner: t.owner, team: t.team, kind: 'land', vol: 0.8 });   // sfx-cues: through the cue mix
+  G.cues?.one('torpedo_transform', { at: t.pos, owner: t.owner, team: t.team, kind: 'land', sub: true, vol: 0.8 });   // sfx-cues: through the cue mix
   if (e?.isLocal || t.owner.isLocal) G.audio?.play('torpedo_lock', { volume: e?.isLocal ? 0.7 : 0.45 });
   if (e) emit('sub:arm', { kind: 'torpedo', pos: t.pos.clone(), team: t.team, radius: t.sub.radius, target: e, actor: t.owner });
 }
@@ -392,7 +392,7 @@ function unfold(t, h) {
   t.pos.set(t.hover.x + (Math.random() - 0.5) * shake, t.hover.y + Math.sin(t.t * 13) * 0.025 + 0.06 * backOut(k, 1.5) * 0.4, t.hover.z + (Math.random() - 0.5) * shake);
   if (t.t >= s.unfoldTime) {
     t.state = 'launch'; t.t = 0; t.speed = s.launchSpeed0;
-    if (nearCam(t.pos, 40)) G.audio?.play('torpedo_launch', { pos: t.pos, volume: 0.8 });
+    if (nearCam(t.pos, 40) && !G.cues?.allySub(t.owner, t.team)) G.audio?.play('torpedo_launch', { pos: t.pos, volume: 0.8 });   // (a teammate's: none — cues.js allySub)
     if (nearCam(t.pos, 30)) G.fx?.burst(_v.copy(t.pos).addScaledVector(t.dir, -0.4), _v2.copy(t.dir).negate(), G.teamColors[t.team], { count: 4, speed: 1.8, size: 0.04, sheet: false });
   }
 }
