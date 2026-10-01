@@ -31,7 +31,9 @@ const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
 const TAU = Math.PI * 2;
-const WAIL_STEPS = [1.3, 1.0, 0.7, 0.4];   // Howl Box: how far in front of you it tries to stand (m), nearest last (IMPL.wail.spot)
+// Howl Box: where along your facing it tries to stand (m; − = behind you), in order (IMPL.wail.spot): in front, then
+// behind you rather than in your way at a ledge's edge, then right where you are
+const WAIL_STEPS = [1.3, 1.0, 0.75, 0.5, -0.8, -1.05];
 
 // ---- online (see SpecialSystem.netGhost): the owner records its special as ['k', nid, 'sp', data] —
 //   [0, index in SPECIAL_ORDER] start · [1, reason] end · [2, kind, gid, …] a world object (missile, twister, speaker,
@@ -1408,8 +1410,9 @@ const IMPL = {
     // front of you and land on whatever that hit up to 2.8 m below your feet, so used at a ledge's edge (a raised
     // platform, a pod top, a tower) it set itself down on the floor underneath and fired from there. Now, standing: 1.3 m
     // in front when the same surface runs on there (a floor within 0.35 m of your feet's height, with room for the box
-    // before any wall), else closer — down to right where you stand. In the air: right where you are, on the floor under
-    // your feet if that's within 0.5 m, else at your feet (it hovers there).
+    // before any wall), else closer; at a ledge's edge facing out, just behind you on it; else right where you stand.
+    // In the air: right where you are, on the floor under your feet if that's within 0.5 m, else at your feet (it
+    // hovers there).
     spot(a, out) {
       const x0 = a.pos.x, z0 = a.pos.z;
       if (!a.grounded) {
@@ -1420,8 +1423,8 @@ const IMPL = {
       { const g = G.physics.raycast(_v.set(x0, a.pos.y + 0.3, z0), DOWN, 0.6, _hit, true); if (g.hit && g.normal.y > 0.6) y = g.point.y; }
       const fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
       for (const k of WAIL_STEPS) {
-        const x = x0 + fx * k, z = z0 + fz * k;
-        if (!G.physics.los(_v.set(x0, y + 0.6, z0), _v2.set(x + fx * 0.45, y + 0.6, z + fz * 0.45))) continue;   // (a wall: no room)
+        const x = x0 + fx * k, z = z0 + fz * k, e = k > 0 ? 0.45 : -0.45;   // (e: to the box's far end)
+        if (!G.physics.los(_v.set(x0, y + 0.6, z0), _v2.set(x + fx * e, y + 0.6, z + fz * e))) continue;   // (a wall: no room)
         const g = G.physics.raycast(_v.set(x, y + 0.6, z), DOWN, 0.95, _hit, true);
         if (g.hit && g.normal.y > 0.6 && Math.abs(g.point.y - y) <= 0.35) return out.set(x, g.point.y, z);
       }
