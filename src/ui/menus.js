@@ -243,6 +243,7 @@ const SETTINGS_TABS = [
     { key: 'master', label: 'Master volume', type: 'slider', min: 0, max: 1, step: 0.05, fmt: pctFmt, help: 'Overall loudness of everything.' },
     { key: 'music', label: 'Music', type: 'slider', min: 0, max: 1, step: 0.05, fmt: pctFmt, help: 'Menu and battle soundtrack.' },
     { key: 'sfx', label: 'Sound effects', type: 'slider', min: 0, max: 1, step: 0.05, fmt: pctFmt, help: 'Weapons, splats, voices and menu sounds.' },
+    { key: 'cues', label: 'Cues', type: 'slider', min: 0, max: 1.5, step: 0.05, fmt: pctFmt, help: 'The sounds that tell you what a sub or special is doing — throws, fuses, warnings, alerts — on top of Sound effects. 100 % is the standard mix; turn it up to hear them over a busy fight.' },
   ] },
   { id: 'gameplay', label: 'Gameplay', icon: 'swords', rows: [
     { key: 'cameraShake', label: 'Camera shake', type: 'slider', min: 0, max: 1, step: 0.05, fmt: pctFmt, help: 'Screen shake from explosions, slams and hits.' },
@@ -2061,6 +2062,7 @@ export class Menus {
       if (nv === v) { if (src === 'key') { this._sfx('ui_error', 0.2); restartAnim(el, 'is-edge'); } return; }
       v = nv; render();
       this._setSetting(key, v);
+      if (key === 'cues') safeCall(() => this.api.cuePreview && this.api.cuePreview());   // (hear the cue level you picked)
       this._sfx('ui_slider', 0.05);
       bump();
       if (src === 'key') restartAnim(knob, 'is-bump');
@@ -2252,7 +2254,7 @@ export class Menus {
           safeCall(() => P.cur.set(value, s));
           pvVal.textContent = fmtVal(rowDef(key), value);
           if (pvVal.animate && !prefersReducedMotion()) pvVal.animate([{ scale: 1.2 }, { scale: 1 }], { duration: 260, easing: 'cubic-bezier(.34,1.56,.64,1)' });
-        } else if (P.cur && (key === 'master') && (P.key === 'music' || P.key === 'sfx')) safeCall(() => P.cur.set(this._settings()[P.key], this._settings()));
+        } else if (P.cur && (key === 'master' || key === 'sfx') && (P.key === 'music' || P.key === 'sfx' || P.key === 'cues')) safeCall(() => P.cur.set(this._settings()[P.key], this._settings()));
       },
       onNav: (dir) => {
         if (dir === 'tab_prev' || dir === 'tab_next') {
