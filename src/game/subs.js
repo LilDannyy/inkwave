@@ -9,7 +9,14 @@
 //   G.subs.damageArea(center, radius, dmg, team)  blasts hurt enemy devices
 //   G.subs.beaconsFor(team)               live jump beacons, for the super-jump map
 //   G.subs.jumpToBeacon(actor, beacon)
+//   G.subs.mineLook(mine, team)           'hidden' | 'ghost' | 'reveal': how a Lurk Mine looks to that team
+//   G.subs.viewer                         (tests / pictures) the team whose eyes the team-only looks follow (null: yours)
 //   G.subs.clear()
+//
+// sub-tweaks (2026-10-01): the Twirl Sprinkler sprays out to sprayRadius (5.5 m), evenly over its disc; a Lurk Mine is
+// invisible to the other team (a translucent ghost to its own) until it trips, then pops up for everyone through its
+// windup; a Skitter Bomb winds up (`delay`) before it bursts; a Hop Beacon shows its jumps left and pings a sonar; a
+// Drip Curtain carries an ink meter. Online, the owner's update record ([3, gid, …]: netGhost) keeps the ghosts in step.
 //
 // Props come from getSubDef(kind) (origin at the bottom centre, +Y away from the surface, +Z forward).
 import * as THREE from 'three';
@@ -30,6 +37,92 @@ const SUB_SCALE = 1.9;         // prop models are built at hand scale; in the wo
                                // [sub-view] × SUB_VIEW_SCALE[kind] (config.js): drawn bigger, visual only
 
 function nearCam(p, r = 30) { return G.camera && G.camera.position.distanceToSquared(p) < r * r; }
+const easeOutBack = (u) => { const c = 1.9; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+
+// ------------------------------------------------------------------------------------------------ sprinkler drops
+// [sub-tweaks] Each drop flies along its fan direction (unit, in the mounting surface) + SPRAY_UP × the surface normal,
+// times a launch speed sp, from 0.2 m off the surface. SPRAY_TAB holds where that lands on a floor for sp = 0, 0.1 …
+// (the projectile integrator's own steps — weapons.js _step: gravity 22, drag 0.4, 60 Hz); sprayLaunch(d) inverts it.
+const SPRAY_UP = 0.75, SPRAY_SPLAT = 0.6;   // (SPRAY_SPLAT: how far a landed drop's own ink reaches past where it lands)
+const SPRAY_TAB = (() => {
+  const t = [];
+  for (let i = 0; i <= 160; i++) {
+    const sp = i * 0.1, dt = 1 / 60;
+    let x = 0, y = 0.2, vx = sp, vy = sp * SPRAY_UP, d = 0;
+    for (let n = 0; n < 120; n++) {
+      vy -= 22 * dt; const k = 1 - 0.4 * dt; vx *= k; vy *= k;
+      const nx = x + vx * dt, ny = y + vy * dt;
+      if (ny <= 0) { d = x + (nx - x) * (y / Math.max(1e-6, y - ny)); break; }
+      x = nx; y = ny; d = x;
+    }
+    t.push(d);
+  }
+  return t;
+})();
+function sprayLaunch(d) {
+  const T = SPRAY_TAB;
+  if (d <= T[0]) return 0;
+  for (let i = 1; i < T.length; i++) if (T[i] >= d) return (i - 1 + (d - T[i - 1]) / Math.max(1e-6, T[i] - T[i - 1])) * 0.1;
+  return (T.length - 1) * 0.1;
+}
+
+// ------------------------------------------------------------------------------------------------ windup + device looks
+// [sub-tweaks] the windup tell (a tripped Lurk Mine, a Skitter Bomb about to burst): a team-tinted flash round it that
+// blinks faster and grows toward the blast
+const FLASH_GEO = new THREE.SphereGeometry(1, 20, 14);
+// the Hop Beacon's jumps-left lights: two lamps on a dark pill, over its own lamp, turned to the camera
+const PIP_GEO = new THREE.SphereGeometry(0.078, 18, 12), PIP_BAR_GEO = new THREE.CapsuleGeometry(0.105, 0.25, 4, 14).rotateZ(Math.PI / 2).scale(1, 1, 0.45);
+const PIP_GAP = 0.25, PIP_UP = 0.24;   // (m between the two lights; how far over the beacon's drawn top they float)
+// its sonar: a ring running out along the ground and a shell swelling in the air, every SUBS.beacon.sonar s
+const SONAR_DUR = 1.3, SONAR_R = 7, SONAR_AIR = 3.6, SONAR_FOE = 0.18;   // (s a ping lasts, its reach on the ground / in the air, the other team's share)
+const RING_GEO = new THREE.PlaneGeometry(2, 2).rotateX(-Math.PI / 2);
+const SONAR_RING_FS = `
+  uniform vec3 uColor; uniform float uR; uniform float uAlpha; varying vec2 vUv;
+  void main(){
+    float r = length(vUv);
+    if (r > 1.0) discard;
+    float band = smoothstep(0.045, 0.0, abs(r - uR));
+    float wake = smoothstep(uR, uR - 0.22, r) * step(r, uR) * 0.22;
+    float fade = 1.0 - smoothstep(0.55, 1.0, uR);
+    vec3 c = mix(uColor, vec3(1.0), band * 0.45);
+    gl_FragColor = vec4(c, (band * 0.9 + wake) * fade * uAlpha);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }`;
+const SONAR_RING_VS = `varying vec2 vUv; void main(){ vUv = uv * 2.0 - 1.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const SONAR_AIR_VS = `varying vec3 vN; varying vec3 vV;
+  void main(){ vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position, 1.0); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`;
+const SONAR_AIR_FS = `
+  uniform vec3 uColor; uniform float uK; uniform float uAlpha; varying vec3 vN; varying vec3 vV;
+  void main(){
+    float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.6);
+    float fade = (1.0 - uK) * smoothstep(0.0, 0.08, uK);
+    gl_FragColor = vec4(mix(uColor, vec3(1.0), rim * 0.35), rim * fade * uAlpha * 0.75);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }`;
+// the Drip Curtain's ink meter: a bar along its top (both faces), team ink shrinking from both ends toward the middle
+// (it reads the same from either side), ticks every 10 %, blinking under 30 %
+const METER_H = 0.2, METER_UP = 0.3;
+const METER_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const METER_FS = `
+  uniform vec3 uColor; uniform float uFill; uniform float uTime; uniform float uAspect; varying vec2 vUv;
+  void main(){
+    float bx = 0.045 / uAspect, by = 0.2;
+    float inX = step(bx, vUv.x) * step(vUv.x, 1.0 - bx), inY = step(by, vUv.y) * step(vUv.y, 1.0 - by), inside = inX * inY;
+    float x = abs(vUv.x - 0.5) * 2.0 / (1.0 - 2.0 * bx);
+    float fill = step(x, uFill) * inside;
+    float tick = step(abs(fract(x * 10.0 + 0.5) - 0.5) * 0.1, 0.006) * step(0.05, x) * step(x, 0.95) * inside;
+    float edge = smoothstep(0.03, 0.0, abs(x - uFill)) * inside * step(0.001, uFill);
+    float low = step(uFill, 0.3) * (0.5 + 0.5 * sin(uTime * 14.0));
+    vec3 ink = mix(uColor * 1.1 + 0.04, vec3(1.0), low * 0.45 + edge * 0.5);
+    vec3 c = mix(vec3(0.07, 0.06, 0.09), ink, fill);
+    c = mix(c, vec3(0.02), tick * 0.6);
+    c = mix(vec3(0.94, 0.95, 0.97), c, inside);
+    gl_FragColor = vec4(c, inside > 0.5 ? (fill > 0.5 ? 0.96 : 0.62) : 0.92);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }`;
 
 // ------------------------------------------------------------------------------------------------ curtain shader
 // A sheet of falling ink: scrolling vertical streaks, thicker at the top where it pours from, ragged bottom edge.
@@ -51,12 +144,17 @@ const CURTAIN_FS = `
   }`;
 
 KIT_GHOSTS.subs = { ghost: (a, d) => G.subs?.netGhost(a, d) };
+// a super jump that landed on a remote player's Hop Beacon, on the jumper's screen: the owner's copy counts the jump
+// (netHurt's channel: [id, jumps used]) and its record updates the lights everywhere
+KIT_GHOSTS.beaconUse = { netHurt: (gid, n) => G.subs?.netUse(gid, n) };
 
 export class SubSystem {
   constructor(scene) {
     this.scene = scene;
     this.items = [];
     this.cloudGeo = new THREE.IcosahedronGeometry(1, 3);
+    this.viewer = null;          // (tests / pictures) whose eyes the team-only looks follow: a team, or null = the local player's
+    this._mats = new Map();      // per-team looks (ghost mine, beacon lights), keyed by colour
     // a splatted owner loses their sprinkler; a super jump that lands on a beacon uses it up
     on('splatted', ({ victim }) => { for (const it of this.items) if (it.owner === victim && it.kind === 'sprinkler' && it.state === 'spray') this._destroy(it); });
     on('superjump:land', ({ actor }) => this._landedOnBeacon(actor));
@@ -98,7 +196,8 @@ export class SubSystem {
     const g = G.physics.raycast(_v.copy(a.pos).setY(a.pos.y + 0.4), DOWN, 3, _hit);
     if (!g.hit) return; { const gb = G.level.blocks[g.block]; if (gb && (gb.roof || gb.rail || gb.perch)) return; }   // nothing gets planted on an off-limits roof, a railing or a crane perch
     // per-player limits: mines — the oldest beyond the limit goes off; beacons — the oldest is removed
-    const mine = this.items.filter((it) => it.owner === a && it.kind === sub.kind && it.state !== 'dead').sort((x, y) => x.born - y.born);
+    // (a tripped mine is on its way out: it doesn't count, and its windup runs on)
+    const mine = this.items.filter((it) => it.owner === a && it.kind === sub.kind && it.state !== 'dead' && it.fuse == null).sort((x, y) => x.born - y.born);
     while (mine.length >= sub.max) { const old = mine.shift(); if (sub.kind === 'mine') this._mineBlast(old); else this._destroy(old); }
     const it = this._plant(a, sub, g.point, g.normal, a.yaw, g, false);
     netRec(a, 'subs', [1, it.gid, sub.kind, r2(it.pos.x), r2(it.pos.y), r2(it.pos.z), r2(g.normal.x), r2(g.normal.y), r2(g.normal.z), r2(a.yaw)]);
@@ -114,7 +213,8 @@ export class SubSystem {
     const it = { kind: sub.kind, sub, owner: a, team: a.team, mesh, pos: pos.clone(), state: sub.kind, age: 0, t: 0, born: G.time, normal: normal.clone(), sp: !!a.specialActive,
       face: g ? g.face : -1, u: g ? g.u : 0, v: g ? g.v : 0, hp: sub.hp || 1, uses: sub.uses || 0, ghost, gid: gid || netId(a) };
     this.items.push(it);
-    if (sub.kind === 'mine') this._paintUnder(it, 1.1);
+    if (sub.kind === 'mine') { this._paintUnder(it, 1.1); this._mineLook(it); }   // (hidden from the other team from its first frame)
+    if (sub.kind === 'beacon') this._beaconFx(it);
     G.cues?.sub(sub.kind, 'throw', { owner: a, at: pos, range: sub.kind === 'mine' ? 14 : 30 });   // sfx-cues: placed (a mine is heard only close by)
     return it;
   }
@@ -131,7 +231,8 @@ export class SubSystem {
     const body = new THREE.Mesh(d.body, getPlasticMaterial()); body.castShadow = true;
     const ink = new THREE.Mesh(d.ink, getInkMaterial(col)); ink.castShadow = true;
     model.add(body, ink);
-    if (d.glow) model.add(new THREE.Mesh(d.glow, this._glowMat(team)));
+    const glow = d.glow ? new THREE.Mesh(d.glow, this._glowMat(team)) : null;
+    if (glow) model.add(glow);
     let spin = null;
     if (d.spin) {
       spin = new THREE.Group(); spin.position.copy(d.spinAt);
@@ -143,8 +244,15 @@ export class SubSystem {
     outer.add(inner);
     // [sub-view] lift: half the drawn model's height (it tumbles about its middle in flight: visual); hitH: the height of
     // a sprinkler's / beacon's shot hitbox (blockShot) — the built model's, as always: the bigger look is no bigger target
-    outer.userData = { inner, spin, def: d, vs, lift: d._top * SUB_SCALE * vs * 0.5, hitH: d._top * SUB_SCALE };
+    outer.userData = { inner, spin, def: d, vs, lift: d._top * SUB_SCALE * vs * 0.5, hitH: d._top * SUB_SCALE, body, ink, glow, top: d._top * SUB_SCALE * vs };
     return outer;
+  }
+  // [sub-tweaks] a per-team material made once per team colour (key: what it is)
+  _teamMat(key, team, make) {
+    const c = G.teamColors[team], k = key + ':' + c.getHexString();
+    let m = this._mats.get(k);
+    if (!m) this._mats.set(k, (m = make(c)));
+    return m;
   }
   // lit parts (scan orb band, beacon lamp): team colour that glows a little
   _glowMat(team) {
@@ -159,6 +267,7 @@ export class SubSystem {
   // ---------------------------------------------------------------------------------------------- per frame
   update(dt) {
     for (const k in SUB_KITS) SUB_KITS[k].tick?.(dt);   // kit subs' own objects
+    this._pulse();
     const items = this.items, nm = G.netm;
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
@@ -182,6 +291,7 @@ export class SubSystem {
         case 'fly': this._fly(it, dt); break;
         case 'stuck': this._stuck(it, dt); break;
         case 'run': this._run(it, dt); break;
+        case 'prime': this._primed(it, dt); break;
         case 'cloud': this._cloud(it, dt); break;
         case 'mist': this._mist(it, dt); break;
         case 'curtain': this._curtain(it, dt); break;
@@ -198,6 +308,10 @@ export class SubSystem {
   // kid back), sprinklers, beacons (a teammate can jump to one) — with paint muted and hits dropped (the owner's arrive
   // apart). A ghost mine never goes off by itself: its owner decides (the end record). Damage the local player does to
   // a ghost device goes to its owner (netHurt); the owner's end record ends a ghost still standing.
+  // [sub-tweaks] the owner's update record [3, gid, …] keeps every screen's ghost in step: a Lurk Mine tripped (it pops
+  // up for everyone: [3, gid]); a Skitter Bomb winding up to burst, where it stopped ([3, gid, x, y, z] — a ghost
+  // Skitter never triggers by itself); a Hop Beacon's jumps left ([3, gid, uses]); a Drip Curtain's ink after hits
+  // ([3, gid, hp]: its decay runs on every screen, the hits arrive here).
   netGhost(a, d) {
     if (!Array.isArray(d)) return;
     const [op, gid] = d;
@@ -205,9 +319,18 @@ export class SubSystem {
       const it = this.items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
       if (!it) return;
       if (it.kind === 'mine') this._mineBlast(it);
-      else if (it.state === 'stuck' || it.state === 'run') this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), it.sub.radius, it.sub.damageMax, it.sub.damageMin, it.sub.paintRadius, it.normal || UP);
+      else if (it.state === 'stuck' || it.state === 'run' || it.state === 'prime') this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), it.sub.radius, it.sub.damageMax, it.sub.damageMin, it.sub.paintRadius, it.normal || UP);
       else this._destroy(it);
       it.state = 'dead';
+      return;
+    }
+    if (op === 3) {
+      const it = this.items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
+      if (!it) return;
+      if (it.kind === 'mine') { if (it.fuse == null) this._mineTrip(it, null); }
+      else if (it.kind === 'seeker') { if (it.state !== 'prime') { it.pos.set(d[2], d[3], d[4]); this._prime(it); } }
+      else if (it.kind === 'beacon') it.uses = d[2];
+      else if (it.kind === 'curtain' && it.state === 'curtain') it.hp = Math.min(it.hp, d[2]);   // (its own decay runs here too)
       return;
     }
     const sub = SUBS[d[2]];
@@ -223,6 +346,11 @@ export class SubSystem {
   netHurt(gid, dmg) {
     const it = this.items.find((x) => !x.ghost && x.gid === gid && x.state !== 'dead');
     if (it) this._hurt(it, dmg);
+  }
+  // … and of a jump onto one of its Hop Beacons (n: the jumps it used up)
+  netUse(gid, n) {
+    const b = this.items.find((x) => !x.ghost && x.gid === gid && x.kind === 'beacon' && x.state === 'beacon');
+    if (b) this._useBeacon(b, Math.max(1, Math.round(n)));
   }
 
   _fly(it, dt) {
@@ -357,11 +485,51 @@ export class SubSystem {
     it.mesh.position.copy(it.pos);
     it.mesh.rotation.set(0, it.heading, 0);
     it.mesh.userData.inner.position.y = Math.abs(Math.sin(it.t * 26)) * 0.025 * it.mesh.userData.vs;   // (scuttle bob, drawn size)
+    // reached its foe, ran out of time or got stuck: it stops and winds up (s.delay) before it bursts — a foe who reacts
+    // can still get clear. (A ghost — a remote player's, online — waits for its owner's word: the update record.)
+    if (it.ghost) { if (it.t > s.life + 3) it.state = 'dead'; return; }
     const reached = it.target && it.target.pos.distanceTo(it.pos) < s.triggerDist;
-    if (reached || it.t > s.life || it.stuckT > 0.6) {
-      this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), s.radius, s.damageMax, s.damageMin, s.paintRadius, UP);
-      it.state = 'dead';
+    if (reached || it.t > s.life || it.stuckT > 0.6) this._prime(it);
+  }
+  // ---- the windup (a Skitter Bomb): it pops up off its wheels, swells and blinks faster and faster, then bursts where it
+  // stopped — the damage is decided at the burst, on whoever is still in the blast then
+  _prime(it) {
+    const s = it.sub;
+    if (!it.ghost) netRec(it.owner, 'subs', [3, it.gid, r2(it.pos.x), r2(it.pos.y), r2(it.pos.z)]);
+    it.state = 'prime'; it.t = 0; it.fuse = s.delay;
+    if (it.heading == null) it.heading = Math.atan2(it.dir.x, it.dir.z);
+    it.mesh.position.copy(it.pos);
+    G.cues?.sub(it.kind, 'warn', { owner: it.owner, team: it.team, at: it.pos, target: it.target, radius: s.radius });   // sfx-cues: its windup alarm
+    if (nearCam(it.pos, 45)) G.fx?.glint?.(_v.copy(it.pos).setY(it.pos.y + it.mesh.userData.lift * 2.2), G.teamColors[it.team], 0.35);
+    emit('sub:arm', { kind: it.kind, pos: it.pos.clone(), team: it.team, radius: s.radius });
+  }
+  _primed(it, dt) {
+    const s = it.sub, ud = it.mesh.userData;
+    it.fuse -= dt;
+    const k = clamp(1 - it.fuse / s.delay, 0, 1), u = clamp(it.t / 0.14, 0, 1);
+    ud.inner.position.y = 0.16 * Math.sin(u * Math.PI) * ud.vs * 0.5;                   // a hop off its wheels
+    ud.inner.scale.setScalar(1 + 0.32 * k + 0.05 * k * Math.sin(it.t * 70));           // swelling, shuddering
+    it.mesh.rotation.set(-0.22 * Math.min(1, it.t / 0.1), it.heading, 0);              // nose up
+    this._windupFlash(it, k, ud.lift, 0.55 * ud.vs, dt);
+    if (it.fuse > 1e-4) return;   // (to the frame: 0.45 s is 27 of them)
+    if (it.ghost) { if (it.fuse < -2) it.state = 'dead'; return; }                     // (its owner's end record bursts it)
+    this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), s.radius, s.damageMax, s.damageMin, s.paintRadius, UP);
+    it.state = 'dead';
+  }
+  // the windup tell's flash: blinks 7 → 20 times a second as k (0 … 1 through the windup) climbs, growing to the blast
+  _windupFlash(it, k, y, r, dt) {
+    if (!it.flash) {
+      const c = G.teamColors[it.team].clone().lerp(new THREE.Color(1, 1, 1), 0.5);
+      it.flash = new THREE.Mesh(FLASH_GEO, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+      it.flash.renderOrder = 4; it.flash.frustumCulled = false;
+      it.mesh.add(it.flash);
+      it.flashT = 0;
     }
+    it.flashT += dt * (7 + 13 * k);
+    const on = (it.flashT % 1) < 0.5;
+    it.flash.position.set(0, y, 0);
+    it.flash.scale.setScalar(r * (0.75 + 0.55 * k) * (on ? 1 : 0.85));
+    it.flash.material.opacity = on ? 0.42 + 0.3 * k : 0.06;
   }
 
   // ---- echo orb: a sensing cloud that tags enemies it touches (tracked for the thrower's team)
@@ -444,6 +612,15 @@ export class SubSystem {
     it.sheet = new THREE.Mesh(new THREE.PlaneGeometry(s.width, s.height), mat);
     it.sheet.position.set(0, s.height / 2 + 0.05, 0);
     it.mesh.add(it.sheet);
+    // [sub-tweaks] its ink (hp) on a meter along the top, both faces, for everyone (the other team sees how close it is
+    // to breaking): team ink shrinking from both ends toward the middle
+    const mw = s.width * 0.92;
+    it.meter = new THREE.Mesh(new THREE.PlaneGeometry(mw, METER_H), new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: G.teamColors[it.team].clone() }, uFill: { value: 1 }, uTime: { value: 0 }, uAspect: { value: mw / METER_H } },
+      vertexShader: METER_VS, fragmentShader: METER_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    }));
+    it.meter.renderOrder = 3;
+    it.mesh.add(it.meter);
     this._paintUnder(it, 1.4);
     G.cues?.sub('curtain', 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues
     emit('sub:land', { kind: 'curtain', pos: it.pos.clone(), team: it.team, radius: s.width / 2 });
@@ -455,10 +632,18 @@ export class SubSystem {
     it.sheet.material.uniforms.uLife.value = clamp(it.hp / s.hp, 0, 1);
     const k = it.t < 0.25 ? it.t / 0.25 : 1;
     it.sheet.scale.set(1, k, 1); it.sheet.position.y = (s.height * k) / 2 + 0.05;
+    // the meter rides the sheet's top edge
+    const mu = it.meter.material.uniforms;
+    mu.uFill.value = clamp(it.hp / s.hp, 0, 1); mu.uTime.value = it.t;
+    it.meter.position.y = s.height * k + 0.05 + METER_UP; it.meter.scale.y = k;
+    // online: the owner tells every screen what hits took (rate-limited; the decay runs everywhere)
+    if (!it.ghost && it.hpDirty && G.time - (it.hpSent ?? -9) > 0.1) { it.hpDirty = false; it.hpSent = G.time; netRec(it.owner, 'subs', [3, it.gid, Math.round(it.hp * 10) / 10]); }
     if (it.hp <= 0) this._destroy(it);
   }
 
-  // ---- twirl sprinkler: stuck to a surface, spraying pulses of droplets around itself (weaker after a while)
+  // ---- twirl sprinkler: stuck to a surface, spraying pulses of droplets around itself (weaker after a while). Each drop
+  // is aimed at a landing distance picked evenly over the AREA of its disc (0.5 m … sprayRadius − the drop's own splat):
+  // the far ring gets as much ink per m² as the middle (sprayLaunch: the launch speed that lands it there on a floor)
   _spray(it, dt) {
     const s = it.sub;
     it.pulseT -= dt;
@@ -473,39 +658,86 @@ export class SubSystem {
     t1.addScaledVector(n, -t1.dot(n)).normalize();
     const t2 = _v3.crossVectors(n, t1);
     const base = _v.copy(it.pos).addScaledVector(n, 0.2);
+    const r1 = Math.max(0.8, s.sprayRadius - SPRAY_SPLAT), r0 = Math.min(0.5, r1 * 0.5);
     for (let k = 0; k < s.drops; k++) {
       const a = it.spin * 1.7 + (k / s.drops) * Math.PI * 2 + Math.random() * 0.4;
-      const out = Math.random() * 0.4 + 0.6, sp = 3.2 + Math.random() * 2.6;
-      const vx = (Math.cos(a) * t1.x + Math.sin(a) * t2.x) * out + n.x * 0.75;
-      const vy = (Math.cos(a) * t1.y + Math.sin(a) * t2.y) * out + n.y * 0.75;
-      const vz = (Math.cos(a) * t1.z + Math.sin(a) * t2.z) * out + n.z * 0.75;
+      const d = Math.sqrt(r0 * r0 + Math.random() * (r1 * r1 - r0 * r0)), sp = sprayLaunch(d);
+      const vx = Math.cos(a) * t1.x + Math.sin(a) * t2.x + n.x * SPRAY_UP;
+      const vy = Math.cos(a) * t1.y + Math.sin(a) * t2.y + n.y * SPRAY_UP;
+      const vz = Math.cos(a) * t1.z + Math.sin(a) * t2.z + n.z * SPRAY_UP;
       G.projectiles.spawnDrop(it.owner, base, vx * sp, vy * sp, vz * sp, { damage: s.dropDamage, radius: 0.5 + Math.random() * 0.25, size: 0.08, weaponId: 'sprinkler' });
     }
   }
 
-  // ---- lurk mine: hidden in its owner's ink; an enemy coming close sets it off (damage + tracking)
+  // ---- lurk mine: invisible to the other team; an enemy coming close trips it — it pops up for everyone, blinking, and
+  // blows s.delay later (damage + tracking for whoever is still in the blast then)
   _mine(it, dt) {
-    if (it.ghost) return;   // (a remote player's mine goes off when its owner says: netGhost)
     const s = it.sub;
-    const loc = G.local;
-    const inOwnInk = it.face >= 0 && G.paint.sample(it.face, it.u, it.v) - 1 === it.team;
-    it.mesh.visible = !loc || loc.team === it.team || !inOwnInk;
     if (it.fuse != null) {
-      it.fuse -= dt;
-      it.mesh.visible = true;
-      it.mesh.scale.setScalar(1 + Math.sin(it.t * 50) * 0.08);
-      if (it.fuse <= 0) this._mineBlast(it);
+      it.fuse -= dt; it.tripT += dt;
+      this._mineLook(it, dt);
+      if (it.fuse > 1e-4) return;
+      if (!it.ghost) this._mineBlast(it);
+      else if (it.fuse < -2) it.state = 'dead';   // (a remote player's mine goes off when its owner says: netGhost; never came)
       return;
     }
-    if (it.t < s.armTime) return;
+    this._mineLook(it, dt);
+    if (it.ghost || it.t < s.armTime) return;   // (a remote player's mine trips when its owner says: the update record)
     for (const e of G.actors) {
       if (e.team === it.team || !e.alive) continue;
-      if (e.pos.distanceTo(it.pos) < s.triggerRadius) {
-        it.fuse = s.delay;
-        G.cues?.sub('mine', 'warn', { owner: it.owner, team: it.team, at: it.pos, target: e });   // sfx-cues: tripped (0.35 s to go)
-        emit('sub:arm', { kind: 'mine', pos: it.pos.clone(), team: it.team, radius: s.radius });
-        return;
-      }
+      if (e.pos.distanceTo(it.pos) < s.triggerRadius) { this._mineTrip(it, e); return; }
+    }
+  }
+  _mineTrip(it, e) {
+    const s = it.sub;
+    it.fuse = s.delay; it.tripT = 0;
+    if (!it.ghost) netRec(it.owner, 'subs', [3, it.gid]);   // (every screen shows it popping up)
+    G.cues?.sub('mine', 'warn', { owner: it.owner, team: it.team, at: it.pos, target: e });   // sfx-cues: tripped (the windup to go)
+    if (nearCam(it.pos, 45)) G.fx?.glint?.(_v.copy(it.pos).addScaledVector(it.normal || UP, 0.5), G.teamColors[it.team], 0.4);
+    emit('sub:arm', { kind: 'mine', pos: it.pos.clone(), team: it.team, radius: s.radius });
+    this._mineLook(it, 0);
+  }
+  // whose eyes the team-only looks follow: SubSystem.viewer (tests, pictures) or the local player's team; -1: nobody's
+  // (the menus' backdrop match, a spectator) — they see what a team sees
+  viewTeam() { return this.viewer ?? (G.local ? G.local.team : -1); }
+  // how a Lurk Mine looks to a team: 'hidden' to the other team until it trips (no mesh — so no shadow — nor a map mark:
+  // minimap.js), a translucent pulsing 'ghost' to its own, and once tripped the real thing ('reveal') for everyone
+  mineLook(it, team = this.viewTeam()) {
+    if (it.fuse != null) return 'reveal';
+    return team < 0 || team === it.team ? 'ghost' : 'hidden';
+  }
+  _mineLook(it, dt = 0) {
+    const look = this.mineLook(it), m = it.mesh, ud = m.userData;
+    if (look !== it.look) {
+      it.look = look;
+      m.visible = look !== 'hidden';
+      const ghost = look === 'ghost';
+      ud.body.material = ghost ? this._mineGhostMat(it.team, 0) : getPlasticMaterial();
+      ud.ink.material = ghost ? this._mineGhostMat(it.team, 1) : getInkMaterial(G.teamColors[it.team]);
+      ud.body.castShadow = ud.ink.castShadow = !ghost;
+      if (!ghost && look === 'hidden') { ud.inner.position.y = 0; ud.inner.scale.setScalar(1); }
+    }
+    if (look !== 'reveal') return;
+    // popped up off the floor (an overshooting spring), swelling and shuddering toward the blast, the flash blinking
+    const k = clamp(1 - it.fuse / it.sub.delay, 0, 1), u = clamp(it.tripT / 0.12, 0, 1);
+    ud.inner.position.y = 0.2 * ud.vs * 0.5 * easeOutBack(u);
+    ud.inner.scale.setScalar(1 + 0.12 * u + 0.18 * k + 0.04 * k * Math.sin(it.tripT * 70));
+    this._windupFlash(it, k, ud.lift + 0.2 * ud.vs * 0.5, 0.62 * ud.vs, dt);
+  }
+  // the ghost look: the mine's body and ink in see-through team tints (opacity pulsed in _pulse)
+  _mineGhostMat(team, ink) {
+    return this._teamMat(ink ? 'mineInk' : 'mineBody', team, (c) => new THREE.MeshStandardMaterial({
+      color: ink ? c.clone() : c.clone().lerp(new THREE.Color(1, 1, 1), 0.6), emissive: c.clone(), emissiveIntensity: ink ? 0.55 : 0.2,
+      roughness: 0.45, transparent: true, opacity: 0.4, depthWrite: false,
+    }));
+  }
+  // per frame: the shared looks that breathe (ghost mines 0.35 … 0.45 opacity; a beacon's last light and its lamp)
+  _pulse() {
+    const t = G.time, w = 0.5 + 0.5 * Math.sin(t * 3.4), b = 0.5 + 0.5 * Math.sin(t * 7);
+    for (const [k, m] of this._mats) {
+      if (k.startsWith('mineBody') || k.startsWith('mineInk')) { m.opacity = 0.35 + 0.1 * w; m.emissiveIntensity = (k.startsWith('mineInk') ? 0.4 : 0.12) + 0.35 * w; }
+      else if (k.startsWith('pipLast')) m.emissiveIntensity = 0.9 + 1.8 * b;
+      else if (k.startsWith('glowLow')) m.emissiveIntensity = 0.25 + 0.75 * b;
     }
   }
   _mineBlast(it) {
@@ -525,10 +757,63 @@ export class SubSystem {
     it.state = 'dead';
   }
 
-  // ---- hop beacon: a super-jump point for the team (two uses)
+  // ---- hop beacon: a super-jump point for the team (two uses). [sub-tweaks] Its jumps left show as two lights floating
+  // over it (lit / dark; the last one blinks, and its lamp dims and pulses), turned to whoever looks; every
+  // SUBS.beacon.sonar s a sonar ping runs out from it — a ring along the ground and a shell in the air — its team's to
+  // see (the other team's faint: SONAR_FOE)
+  _beaconFx(it) {
+    const ud = it.mesh.userData, fx = { pips: new THREE.Group(), lights: [] };
+    fx.pips.position.set(0, ud.top + PIP_UP, 0);
+    const bar = new THREE.Mesh(PIP_BAR_GEO, this._teamMat('pipBar', it.team, () => new THREE.MeshStandardMaterial({ color: 0x1c1924, roughness: 0.5, metalness: 0.2 })));
+    bar.position.z = -0.03; fx.pips.add(bar);
+    for (let i = 0; i < 2; i++) { const l = new THREE.Mesh(PIP_GEO, this._pipMat(it.team, 'on')); l.position.x = (i - 0.5) * PIP_GAP; fx.pips.add(l); fx.lights.push(l); }
+    it.mesh.add(fx.pips);
+    const col = G.teamColors[it.team].clone();
+    fx.ring = new THREE.Mesh(RING_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: col }, uR: { value: 0 }, uAlpha: { value: 0 } },
+      vertexShader: SONAR_RING_VS, fragmentShader: SONAR_RING_FS, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }));
+    fx.ring.renderOrder = 3; fx.ring.frustumCulled = false; fx.ring.position.y = 0.03; fx.ring.scale.setScalar(SONAR_R);
+    fx.air = new THREE.Mesh(FLASH_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: col.clone() }, uK: { value: 0 }, uAlpha: { value: 0 } },
+      vertexShader: SONAR_AIR_VS, fragmentShader: SONAR_AIR_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    fx.air.renderOrder = 4; fx.air.frustumCulled = false; fx.air.position.y = ud.top * 0.88;
+    it.mesh.add(fx.ring, fx.air);
+    fx.ring.visible = fx.air.visible = false;
+    it.fx = fx; it.pipUses = -1;
+    this._beaconLook(it);
+  }
+  _pipMat(team, kind) {
+    if (kind === 'off') return this._teamMat('pipOff', team, () => new THREE.MeshStandardMaterial({ color: 0x3a3546, roughness: 0.55, emissive: 0x000000 }));
+    return this._teamMat(kind === 'last' ? 'pipLast' : 'pipOn', team, (c) => new THREE.MeshStandardMaterial({ color: c.clone().lerp(new THREE.Color(1, 1, 1), 0.35), emissive: c.clone(), emissiveIntensity: 2.2, roughness: 0.3 }));
+  }
+  // the lights and the lamp for the jumps it has left (1: the last light blinks, the lamp dims and pulses)
+  _beaconLook(it) {
+    const fx = it.fx, n = it.uses, max = it.sub.uses || 2;
+    if (!fx || it.pipUses === n) return;
+    it.pipUses = n;
+    fx.lights.forEach((l, i) => { l.material = i < n ? this._pipMat(it.team, n === 1 && max > 1 ? 'last' : 'on') : this._pipMat(it.team, 'off'); l.scale.setScalar(i < n ? 1 : 0.82); });
+    const g = it.mesh.userData.glow;
+    if (g) g.material = n === 1 && max > 1 ? this._teamMat('glowLow', it.team, (c) => new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.3), emissive: c.clone(), emissiveIntensity: 0.6, roughness: 0.35 })) : this._glowMat(it.team);
+  }
   _beacon(it, dt) {
-    const spin = it.mesh.userData.spin;
+    const ud = it.mesh.userData, spin = ud.spin, fx = it.fx;
     if (spin) spin.rotation.y += dt * 1.5;
+    if (!fx) return;
+    this._beaconLook(it);
+    // the lights face the camera (about the beacon's own up)
+    const cam = G.camera;
+    if (cam) {
+      it.mesh.updateWorldMatrix(false, false);
+      _v.copy(cam.position); it.mesh.worldToLocal(_v);
+      fx.pips.rotation.y = Math.atan2(_v.x, _v.z);
+      fx.pips.position.y = ud.top + PIP_UP + 0.025 * Math.sin(G.time * 2.4 + it.gid);
+    }
+    // the sonar: a ping every `sonar` s from when it was planted
+    const per = it.sub.sonar || 1.75, ph = (G.time - it.born) % per, on = ph < SONAR_DUR, vt = this.viewTeam();
+    fx.ring.visible = fx.air.visible = on;
+    if (!on) return;
+    const k = ph / SONAR_DUR, a = vt < 0 || vt === it.team ? 1 : SONAR_FOE;
+    fx.ring.material.uniforms.uR.value = 0.05 + 0.95 * (1 - Math.pow(1 - k, 1.6)); fx.ring.material.uniforms.uAlpha.value = a;
+    fx.air.material.uniforms.uK.value = k; fx.air.material.uniforms.uAlpha.value = a;
+    fx.air.scale.setScalar(0.3 + SONAR_AIR * (1 - Math.pow(1 - k, 2)));
   }
   beaconsFor(team) { return this.items.filter((it) => it.kind === 'beacon' && it.state === 'beacon' && it.team === team); }
   jumpToBeacon(actor, b) {
@@ -542,10 +827,16 @@ export class SubSystem {
     if (!b) return;
     actor._jumpBeacon = null;
     if (b.state !== 'beacon') return;
-    b.uses--;
-    G.cues?.sub('beacon', 'use', { owner: b.owner, team: b.team, at: b.pos });   // sfx-cues
     // a jumper who carries beacons themselves uses it up on landing
-    if (b.uses <= 0 || actor.sub?.kind === 'beacon') this._destroy(b);
+    const n = actor.sub?.kind === 'beacon' ? Math.max(1, b.uses) : 1;
+    if (b.ghost) netHurt(b.owner, 'beaconUse', b.gid, n);   // (a remote player's: its owner's copy counts it and tells everyone)
+    this._useBeacon(b, n);
+  }
+  _useBeacon(b, n) {
+    b.uses -= n;
+    G.cues?.sub('beacon', 'use', { owner: b.owner, team: b.team, at: b.pos });   // sfx-cues
+    if (b.uses <= 0) this._destroy(b);
+    else { this._beaconLook(b); if (!b.ghost) netRec(b.owner, 'subs', [3, b.gid, b.uses]); }
   }
 
   // ---------------------------------------------------------------------------------------------- effects
@@ -617,7 +908,7 @@ export class SubSystem {
       return;
     }
     it.hp -= dmg;
-    if (it.state === 'curtain') return;               // curtains fade instead; _curtain removes them at 0
+    if (it.state === 'curtain') { it.hpDirty = true; return; }   // curtains fade instead; _curtain removes them at 0
     if (it.hp <= 0) this._destroy(it);
   }
   // an enemy shot segment: curtains absorb it (and lose hp); devices it touches are damaged
@@ -704,5 +995,8 @@ export class SubSystem {
       it.cloud.material?.dispose();
     }
     if (it.sheet) { it.sheet.geometry.dispose(); it.sheet.material.dispose(); }
+    if (it.meter) { it.meter.geometry.dispose(); it.meter.material.dispose(); }
+    if (it.flash) it.flash.material.dispose();
+    if (it.fx) { it.fx.ring.material.dispose(); it.fx.air.material.dispose(); }
   }
 }

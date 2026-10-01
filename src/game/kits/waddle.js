@@ -8,9 +8,12 @@
 // It lays no ink while walking and pays no mind to enemy ink. It patters and beeps the whole time it tracks (a
 // positional loop), so its foe hears it coming, and the path it takes gives away where they're hiding. Enemy fire or
 // an enemy blast pops it harmlessly (`hp`).
+// [sub-tweaks] Reaching its foe (or giving up) it doesn't burst at once: it stops and winds up for `delay` s — rocks,
+// swells, its lamp strobing, a flash round it, its own alarm (cues.js SUB_CUE.waddle.warn) — so a foe who reacts can get
+// clear; the blast then hits whoever is still in it. (Still shoot-able while it winds up.)
 //
 // Events: 'sub:use' { actor, kind }, 'sub:land' { kind, pos, team, radius }, 'sub:lock' { kind, pos, team, actor, target },
-// 'bomb:explode' { actor, pos, team, radius, kind }, 'sub:destroyed' { kind, pos, team }.
+// 'sub:arm' { kind, pos, team, radius } (its windup), 'bomb:explode' { actor, pos, team, radius, kind }, 'sub:destroyed' { kind, pos, team }.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { G, emit, clamp, lerp, angleDiff } from '../../core/ctx.js';
@@ -274,8 +277,8 @@ function use(subs, a, sub) {
 }
 // Online, a remote player's Waddle is a ghost: it flies and lands the same, but it never picks a foe, walks or goes
 // off by itself — its owner's records drive it: [3, gid, foe nid, x, y, z] a lock, [4, gid, x, y, z, heading, foe nid]
-// its walk (10 a second), [1, gid, x, y, z] the blast, [2, gid, popped] an end without one. Hits on a ghost go to the
-// owner (netHurt).
+// its walk (10 a second), [5, gid, x, y, z] its windup, [1, gid, x, y, z] the blast, [2, gid, popped] an end without
+// one. Hits on a ghost go to the owner (netHurt).
 function spawn(a, sub, pos, vel, ghost, gid) {
   const vs = subViewScale('waddle');   // [sub-view]
   const m = makeMesh(a.team, vs);
@@ -308,7 +311,8 @@ function ghost(a, d) {
     if (it.state === 'sense') lock(it, byNid(d[6]));
     it.net = { x, y, z, h: d[5] };
     const T = byNid(d[6]); if (T) it.target = T;
-  } else if (op === 1) { it.pos.set(d[2], d[3], d[4]); it.why = 'net'; blast(it); }
+  } else if (op === 5) { if (it.state !== 'prime') { it.pos.set(d[2], d[3], d[4]); prime(it, 'net'); } }
+  else if (op === 1) { it.pos.set(d[2], d[3], d[4]); it.why = 'net'; blast(it); }
   else if (op === 2) { if (d[2]) pop(it); else it.state = 'dead'; }
 }
 
@@ -361,7 +365,7 @@ function land(it, h) {
   it.ring.scale.setScalar(s.senseRadius);
   G.scene.add(it.ring);
   if (near(it.pos, 40)) {
-    G.cues?.one('waddle_land', { at: it.pos, owner: it.owner, team: it.team, kind: 'land', vol: 0.8 });   // sfx-cues: through the cue mix
+    G.cues?.one('waddle_land', { at: it.pos, owner: it.owner, team: it.team, kind: 'land', sub: true, vol: 0.8 });   // sfx-cues: through the cue mix
     G.fx?.ring?.(it.pos, h.normal, col, { radius: 0.55, life: 0.3 });
   }
   emit('sub:land', { kind: 'waddle', pos: it.pos.clone(), team: it.team, radius: s.senseRadius });
@@ -385,7 +389,7 @@ function lock(it, tgt) {
   it.target = tgt; it.state = 'wake'; it.t = 0; it.ringT = 0; it.repath = 0;
   it.heading = it.m.outer.rotation.y;
   if (near(it.pos, 40)) {
-    G.audio?.play('waddle_lock', { pos: it.pos });
+    if (!G.cues?.allySub(it.owner, it.team)) G.audio?.play('waddle_lock', { pos: it.pos });   // (a teammate's: no arming sound — cues.js MIX allySub)
     G.fx?.glint?.(_v.copy(it.pos).setY(it.pos.y + 0.55 * it.vs), G.teamColors[it.team], 0.3);   // (over the drawn head)
   }
   emit('sub:lock', { kind: 'waddle', pos: it.pos.clone(), team: it.team, actor: it.owner, target: tgt });
@@ -435,7 +439,7 @@ function walk(it, dt) {
   if (!alive(it.target)) {
     const nt = scan(it, s.senseRadius);
     if (nt) { it.target = nt; it.repath = 0; it.lostT = 0; }
-    else if ((it.lostT += dt) > 0.5) { it.why = 'lost'; return blast(it); }
+    else if ((it.lostT += dt) > 0.5) return prime(it, 'lost');
   }
   const T = alive(it.target) ? it.target : null;
   // reached a foe (any foe) → boom
@@ -443,9 +447,9 @@ function walk(it, dt) {
   for (const e of G.actors) {
     if (e.team === it.team || !e.alive) continue;
     _v.copy(e.pos); _v.y += e.form === 'squid' ? 0.25 : 0.7;
-    if (_v.distanceTo(_c) < s.triggerDist) { it.why = 'reached'; return blast(it); }
+    if (_v.distanceTo(_c) < s.triggerDist) return prime(it, 'reached');
   }
-  if (it.walkT > s.life || it.travel > s.maxTravel) { it.why = it.travel > s.maxTravel ? 'travel' : 'life'; return blast(it); }
+  if (it.walkT > s.life || it.travel > s.maxTravel) return prime(it, it.travel > s.maxTravel ? 'travel' : 'life');
   let moved = 0;
   if (it.hop) moved = hopStep(it, dt);
   else if (it.air) moved = fallStep(it, dt);
@@ -464,7 +468,7 @@ function walk(it, dt) {
   it.prog.t += dt;
   if (it.prog.t > 1.4) {
     const pd = Math.hypot(it.pos.x - it.prog.x, it.pos.z - it.prog.z);
-    if (pd < 0.4 && !it.hop && !it.air) { it.why = 'stuck'; return blast(it); }
+    if (pd < 0.4 && !it.hop && !it.air) return prime(it, 'stuck');
     it.prog.t = 0; it.prog.x = it.pos.x; it.prog.z = it.pos.z;
   }
   if ((it.sendT -= dt) <= 0) {   // online: where it is, for the ghosts on other screens
@@ -559,6 +563,45 @@ function hopStep(it, dt) {
   return Math.hypot(it.pos.x - x0, it.pos.z - z0);
 }
 
+// ---- the windup: it stops where it is (feet on the floor), rocks and swells, the lamp strobing, a flash round it
+// blinking faster, then bursts (s.delay later). A ghost waits for its owner's blast record.
+function prime(it, why) {
+  const s = it.sub;
+  if (!it.ghost) netRec(it.owner, 'waddle', [5, it.gid, r2(it.pos.x), r2(it.pos.y), r2(it.pos.z)]);
+  it.why = why; it.state = 'prime'; it.t = 0; it.fuse = s.delay; it.hop = null; it.air = false; it.flashT = 0;
+  it.m.outer.position.copy(it.pos);
+  hush(it);
+  G.cues?.sub('waddle', 'warn', { owner: it.owner, team: it.team, at: it.pos, target: alive(it.target) ? it.target : null, radius: s.radius });   // sfx-cues: its windup alarm
+  if (near(it.pos, 45)) G.fx?.glint?.(_v.copy(it.pos).setY(it.pos.y + 0.55 * it.vs), G.teamColors[it.team], 0.35);
+  emit('sub:arm', { kind: 'waddle', pos: it.pos.clone(), team: it.team, radius: s.radius });
+}
+const FLASH_GEO = new THREE.SphereGeometry(1, 20, 14);
+function primed(it, dt) {
+  const s = it.sub, M_ = it.m;
+  it.fuse -= dt;
+  const k = clamp(1 - it.fuse / s.delay, 0, 1);
+  M_.outer.position.copy(it.pos);
+  M_.rock.rotation.set(-0.12 * k, 0, Math.sin(it.t * 38) * (0.08 + 0.1 * k));        // rocking, faster and wider
+  M_.model.scale.setScalar(WSCALE * it.vs * (1 + 0.3 * k + 0.04 * k * Math.sin(it.t * 70)));
+  M_.model.position.y = -MID * it.vs;                                                  // (swells about its feet: they stay down)
+  for (const L of M_.legs) L.rotation.x *= 0.8;
+  M_.lampMat.emissiveIntensity = (Math.floor(it.t * (10 + 16 * k)) % 2) ? 6 : 0.4;
+  if (!it.flash) {
+    const c = G.teamColors[it.team].clone().lerp(new THREE.Color(1, 1, 1), 0.5);
+    it.flash = new THREE.Mesh(FLASH_GEO, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    it.flash.renderOrder = 4; it.flash.frustumCulled = false;
+    M_.outer.add(it.flash);
+  }
+  it.flashT += dt * (7 + 13 * k);
+  const on = (it.flashT % 1) < 0.5;
+  it.flash.position.set(0, MID * it.vs * (1 + 0.3 * k), 0);
+  it.flash.scale.setScalar(0.5 * it.vs * (0.75 + 0.55 * k) * (on ? 1 : 0.85));
+  it.flash.material.opacity = on ? 0.42 + 0.3 * k : 0.06;
+  if (it.fuse > 1e-4) return;   // (to the frame: 0.45 s is 27 of them)
+  if (it.ghost) { if (it.fuse < -2) it.state = 'dead'; return; }
+  blast(it);
+}
+
 function blinkLamp(it, dt, period, bright) {
   it.blink -= dt; it.blinked = false;
   if (it.blink <= 0) { it.blink = period; it.blinked = true; }
@@ -626,6 +669,7 @@ function dispose(it) {
   hush(it);
   G.scene?.remove(it.m.outer);
   it.m.lampMat.dispose();
+  if (it.flash) it.flash.material.dispose();
   if (it.ring) { G.scene?.remove(it.ring); it.ring.material.dispose(); it.ring = null; }
 }
 
@@ -672,6 +716,9 @@ function threatOf(it) {
     get hp() { return it.hp; },
     get shootable() { return it.state !== 'fly' && it.state !== 'dead'; },
     get locked() { return it.state === 'wake' || it.state === 'walk'; },
+    // winding up to burst where it stands (s until it does): botSpecials.js makes it a danger area to get out of
+    get priming() { return it.state === 'prime'; },
+    get fuse() { return it.state === 'prime' ? Math.max(0, it.fuse) : Infinity; },
     get target() { return (it.state === 'wake' || it.state === 'walk') && alive(it.target) ? it.target : null; },
     // walking: its heading at full speed (it lays no velocity of its own); in the air / falling: its velocity
     get vel() {
@@ -700,6 +747,7 @@ SUB_KITS.waddle = {
           case 'sense': sense(it, dt); break;
           case 'wake': wake(it, dt); break;
           case 'walk': walk(it, dt); break;
+          case 'prime': primed(it, dt); break;
         }
       });
       if (it.ghost && it.age > 40) it.state = 'dead';   // (its owner left)

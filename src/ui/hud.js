@@ -2018,7 +2018,9 @@ export class HUD {
     const bs = G.subs && mm ? G.subs.beaconsFor(me.team).sort((x, y) => x.born - y.born).slice(0, NB - 4) : [];
     bs.forEach((b, k) => {
       mm.toCanvas(b.pos.x, b.pos.z, tc);
-      out[4 + k] = { x: tc.x / mm.w, y: tc.y / mm.h, name: `${b.owner === me ? 'Your' : b.owner.name + "'s"} beacon · ${b.uses}`, ok: true, dev: true, beacon: b };
+      // (its jumps left as lights: ●● a fresh one, ●○ its last jump)
+      const left = '●'.repeat(Math.max(0, b.uses)) + '○'.repeat(Math.max(0, (b.sub?.uses || 2) - b.uses));
+      out[4 + k] = { x: tc.x / mm.w, y: tc.y / mm.h, name: `${b.owner === me ? 'Your' : b.owner.name + "'s"} beacon ${left}`, ok: true, dev: true, beacon: b };
     });
     return out;
   }

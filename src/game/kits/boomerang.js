@@ -177,7 +177,7 @@ function use(subs, a, sub) {
   const P = plan(a, sub, newPlan());
   const it = spawn(subs, a, sub, P, false, netId(a));
   netRec(a, KIND, [0, it.gid, r3(P.start.x), r3(P.start.y), r3(P.start.z), r3(P.dir.x), r3(P.dir.y), r3(P.dir.z)]);
-  G.cues?.one('boomerang_throw', { at: a.pos, owner: a, kind: 'throw', vol: 0.8 });   // sfx-cues: through the cue mix (heard over a fight)
+  G.cues?.one('boomerang_throw', { at: a.pos, owner: a, kind: 'throw', sub: true, vol: 0.8 });   // sfx-cues: through the cue mix (heard over a fight)
   emit('sub:use', { actor: a, kind: KIND });
 }
 // Online, a remote player's boomerang is a ghost: out, hover, home and orbit play the same (its ink is its owner's to
@@ -205,7 +205,7 @@ function ghost(a, d) {
     if (items.some((x) => x.gid === gid)) return;
     const P = newPlan(); P.start.set(d[2], d[3], d[4]); P.dir.set(d[5], d[6], d[7]).normalize();
     spawn(G.subs, a, SUBS[KIND], planFrom(SUBS[KIND], P), true, gid);
-    G.cues?.one('boomerang_throw', { at: a.pos, owner: a, kind: 'throw', vol: 0.8 });   // sfx-cues
+    G.cues?.one('boomerang_throw', { at: a.pos, owner: a, kind: 'throw', sub: true, vol: 0.8 });   // sfx-cues
     return;
   }
   const it = items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');

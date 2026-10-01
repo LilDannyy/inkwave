@@ -329,33 +329,45 @@ export const SUBS = {
     inkCost: 40, throwSpeed: 16, radius: 2.1, directDamage: 60, splashDamage: 35, paintRadius: 1.8,
   },
   seeker: {
-    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts when it reaches them. It turns wide: sidestep it late.',
+    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late.',
     // turnRate: rad/s (1.75 ≈ 100°/s: a ~3.6 m turning circle at full speed; was 5); commitDist: dashes straight (no
     // steering) once this close and lined up; creep: how much it slows turning onto a slow / standing target.
     // speed 6.3 (was 7): only just faster than a run (6), so a foe who sidesteps and keeps running gets away instead
     // of being run down from behind; one who stands, walks or shoots while strafing is still caught
+    // delay: on reaching its foe (or running out) it stops and winds up for this long — swelling, blinking, its own
+    // alarm — before it bursts, so a foe who reacts can still get out of the blast (2026-10-01: "a short delay explosion
+    // for skitter / waddle / mine bombs"; the same windup on all three)
     inkCost: 65, throwSpeed: 9, speed: 6.3, seekRange: 15, life: 4.5, trailRadius: 0.6, triggerDist: 1.2, turnRate: 1.75, commitDist: 2.5, creep: 0.6,
-    radius: 2.8, damageMax: 180, damageMin: 35, paintRadius: 2.4,
+    delay: 0.45, radius: 2.8, damageMax: 180, damageMin: 35, paintRadius: 2.4,
   },
   scan: {
     id: 'scan', name: 'Echo Orb', kind: 'scan', blurb: 'Bursts into a sensing cloud. Foes it touches are tracked for your whole team. No damage.',
     inkCost: 55, throwSpeed: 14, fuse: 1.1, radius: 4.2, cloudTime: 0.9, trackTime: 8,
   },
   curtain: {
-    id: 'curtain', name: 'Drip Curtain', kind: 'curtain', blurb: 'Drops a wall of falling ink that stops enemy players and shots. It fades over time, faster when shot.',
+    id: 'curtain', name: 'Drip Curtain', kind: 'curtain', blurb: 'Drops a wall of falling ink that stops enemy players and shots. It fades over time, faster when shot: the meter on top shows what\'s left.',
+    // (its ink — hp — shows on a meter along its top, both sides, for everyone: src/game/subs.js _curtainMeter)
     inkCost: 55, throwSpeed: 9, width: 3.4, height: 2.7, hp: 170, decay: 19, shotMul: 0.5,
   },
   sprinkler: {
     id: 'sprinkler', name: 'Twirl Sprinkler', kind: 'sprinkler', blurb: 'Sticks to any surface and sprays ink around it in pulses, until it is shot or you get splatted.',
-    inkCost: 60, throwSpeed: 12, hp: 70, pulse: 0.3, drops: 6, sprayRadius: 3.2, sprayFade: 12, dropDamage: 8,
+    // sprayRadius: the outer edge of its ink (m). 2026-10-01 ("make the sprinkler work further away"): 3.2 → 5.5 — each
+    // drop's launch speed is solved for a landing distance picked evenly over the disc's AREA (0.5 m … sprayRadius − 0.6,
+    // the drop's own splat reaching the rest), so the far ring gets as much ink per m² as the middle instead of
+    // thinning out; drops 6 → 7 a pulse (+17 % ink a second for ~3× the area); dropDamage unchanged
+    inkCost: 60, throwSpeed: 12, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
   },
   mine: {
-    id: 'mine', name: 'Lurk Mine', kind: 'mine', blurb: 'Planted at your feet and hidden in your ink. Foes who come close are hit and tracked. Two at a time.',
-    inkCost: 55, placed: true, max: 2, triggerRadius: 2.1, armTime: 0.9, delay: 0.35, radius: 2.6, damage: 45, trackTime: 8, paintRadius: 2.0,
+    id: 'mine', name: 'Lurk Mine', kind: 'mine', blurb: 'Planted at your feet, invisible to the other team. Foes who come close set it off: it pops up and blows a moment later, hitting and tracking them. Two at a time.',
+    // 2026-10-01: invisible to the enemy at all times (no mesh, shadow or map mark), a translucent ghost to its own team;
+    // tripped, it pops up for everyone and blows `delay` s later (0.35 → 0.45: the same windup as the Skitter / Waddle)
+    inkCost: 55, placed: true, max: 2, triggerRadius: 2.1, armTime: 0.9, delay: 0.45, radius: 2.6, damage: 45, trackTime: 8, paintRadius: 2.0,
   },
   beacon: {
-    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps.',
-    inkCost: 70, placed: true, max: 3, uses: 2, hp: 50,
+    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left).',
+    // sonar: a ring pulse every `sonar` s from it (ground + air; its team's to see — the other team's faint); the jumps
+    // left show as lights over it (and on the jump map's pins)
+    inkCost: 70, placed: true, max: 3, uses: 2, hp: 50, sonar: 1.75,
   },
   mist: {
     id: 'mist', name: 'Murk Bomb', kind: 'mist', blurb: 'Releases a poison mist that slows foes and drains their ink. A direct hit keeps them poisoned until the mist fades.',
@@ -373,10 +385,11 @@ export const SUBS = {
     trailEvery: 0.38, trailRadius: 0.3,                       // thin ink trail sprayed while it travels
   },
   waddle: {
-    id: 'waddle', name: 'Waddle Bomb', kind: 'waddle', blurb: 'Waddles after foes it senses near where it lands, noisily. Blows up where it lands if nobody is near.',
+    id: 'waddle', name: 'Waddle Bomb', kind: 'waddle', blurb: 'Waddles after foes it senses near where it lands, noisily, and bursts a moment after it reaches one. Blows up where it lands if nobody is near.',
     inkCost: 65, throwSpeed: 12,
     senseRadius: 7.5, senseUp: 4, fuse: 1.1,                  // sensing circle on landing; nobody inside → blows after fuse
     speed: 4.0, turnRate: 8, life: 9, maxTravel: 26, triggerDist: 1.2,   // tracks its foe (nav paths, hops up steps)
+    delay: 0.45,                                              // reached its foe (or gave up): stops and winds up this long
     radius: 3.0, damageMax: 180, damageMin: 35, paintRadius: 2.6, hp: 30,  // Splat Bomb blast; shoot-able (30 hp)
   },
   torpedo: {

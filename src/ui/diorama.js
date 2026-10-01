@@ -147,7 +147,8 @@ export class DioramaOverlay {
       let tgt = null, ok = false, label = '', st = '', dead = false, weapon = null;
       if (i >= 5) {
         const b = beacons[i - 5];
-        if (b) { tgt = b.pos; ok = true; label = 'BEACON'; st = b.uses > 1 ? '×' + b.uses : ''; }
+        // (its jumps left as lights, like the ones over the beacon: ●● fresh, ●○ its last jump)
+        if (b) { tgt = b.pos; ok = true; label = 'BEACON'; st = '●'.repeat(Math.max(0, b.uses)) + '○'.repeat(Math.max(0, (b.sub?.uses || 2) - b.uses)); }
         p.target = b || null;
         p.queued = !!(q && b && q.kind === 'beacon' && q.target === b);
       } else if (i < 3) {
