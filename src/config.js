@@ -213,7 +213,13 @@ export const WEAPONS = {
     fuseRing: 0.7, fuseFull: 0.55,                          // lodged arrow → burst (s)
     burstRadius: [1.35, 1.8], burstInner: 0.6,              // [ring, full] (m); full damage inside burstInner
     burstDamage: [30, 45], burstEdge: [12, 15],
-    paintTap: 0.55, paintStick: 0.42, burstPaint: [1.2, 1.55], trailEvery: 2.4, trailRadius: 0.32,
+    paintTap: 0.55, paintStick: 0.42, burstPaint: [1.2, 1.55],
+    // trail drips under a lodging arrow's flight (kits/bow.js), one every `…Every` m of it. 2026-10-02 ("buff the ink
+    // that comes out of the trail from the bow"): the centre arrow's drips (trailEvery / trailRadius, stretched along the
+    // flight by trailStretch) run together into a swimmable line, two ink cells (0.5 m) wide; the side arrows keep a
+    // dotted line either side of it, sparser (a 0.32 m drip every 4.4 m; was every 2.4 m — 2.9 at a frame's step). Full
+    // draw over flat ground: ~6.8 → ~13.7 m² of trail ink a volley, ×~1.9 (tools/botlab/tests/sub-tweaks2.js)
+    trailEvery: 1.1, trailRadius: 0.3, trailStretch: 2, trailSideEvery: 4.4, trailSideRadius: 0.32,
     cooldown: 0.22, moveSpeedDrawing: 2.6, moveSpeedFiring: 4.2,
     special: 'strike', specialCost: 190, sub: 'waddle',
   },
@@ -350,12 +356,15 @@ export const SUBS = {
     inkCost: 55, throwSpeed: 9, width: 3.4, height: 2.7, hp: 170, decay: 19, shotMul: 0.5,
   },
   sprinkler: {
-    id: 'sprinkler', name: 'Twirl Sprinkler', kind: 'sprinkler', blurb: 'Sticks to any surface and sprays ink around it in pulses, until it is shot or you get splatted.',
+    id: 'sprinkler', name: 'Twirl Sprinkler', kind: 'sprinkler', blurb: 'A long throw that sticks to any surface with a splat of ink, then sprays ink around it in pulses, until it is shot or you get splatted.',
     // sprayRadius: the outer edge of its ink (m). 2026-10-01 ("make the sprinkler work further away"): 3.2 → 5.5 — each
     // drop's launch speed is solved for a landing distance picked evenly over the disc's AREA (0.5 m … sprayRadius − 0.75,
     // the drop's own splat reaching the rest), so the far ring gets as much ink per m² as the middle instead of
     // thinning out; drops 6 → 7 a pulse (+17 % ink a second for ~3× the area); dropDamage unchanged
-    inkCost: 60, throwSpeed: 12, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
+    // 2026-10-02 ("let you throw the sprinkler further and applies an ink patch on landing"): throwSpeed 12 → 15.8, a
+    // flat throw (aim level) carries ~1.47× as far (6.7 → 9.8 m; the Pop Pellet's 16, ~10 m, stays the longest); where it
+    // sticks it splats an ink patch of landPaint m (subs.js _patch: on the floor, wall or ceiling it lands on)
+    inkCost: 60, throwSpeed: 15.8, landPaint: 1.7, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
   },
   mine: {
     id: 'mine', name: 'Lurk Mine', kind: 'mine', blurb: 'Planted at your feet, invisible to the other team. Foes who come close set it off: it pops up and blows a moment later, hitting and tracking them. Two at a time.',
@@ -403,8 +412,9 @@ export const SUBS = {
     drops: 10, dropDamage: 12, dropHits: 3, dropPaint: 0.65,        // locked burst only: 60 + 3 × 12 = 96 max
   },
   tracer: {
-    id: 'tracer', name: 'Tracer Bolt', kind: 'tracer', blurb: 'A fast bolt fired a little low that skims and ricochets, puddling ink on every bounce. Hits and its trail mark foes for your team.',
-    inkCost: 40, speed: 40, range: 32, pitchDown: 9, floorExit: 0.3, maxBounces: 12, size: 0.16,
+    id: 'tracer', name: 'Tracer Bolt', kind: 'tracer', blurb: 'A fast bolt fired straight at your crosshair that ricochets and skims, puddling ink on every bounce. Hits and its trail mark foes for your team.',
+    // (kits/tracer.js) 2026-10-02: it flies straight at the point under the crosshair (was pitchDown 9° below that line)
+    inkCost: 40, speed: 40, range: 32, floorExit: 0.3, maxBounces: 12, size: 0.16,
     puddleRadius: 1.35, directDamage: 35, directMark: 9, trailLife: 1.0, trailRadius: 0.42, trailDamage: 22, trailMark: 3,
   },
   boomerang: {

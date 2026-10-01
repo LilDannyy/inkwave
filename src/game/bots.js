@@ -59,12 +59,17 @@ export const THROWN = { bomb: true, sticky: true, burst: true, mist: true, seeke
 function lobPitch(d, dy, speed) {
   let best = null, be = Infinity;
   for (let p = -0.5; p <= 0.75; p += 0.025) {
-    const tp = clamp(p + 0.28, -0.3, 1.1), vx = Math.cos(tp) * speed, vy = Math.sin(tp) * speed + 1.5, disc = vy * vy + 48 * (1.35 - dy);
-    if (disc < 0) continue;
-    const e = Math.abs((vx * (vy + Math.sqrt(disc))) / 24 - d);
+    const l = lobDist(p, dy, speed);
+    if (l === null) continue;
+    const e = Math.abs(l - d);
     if (e < be) { be = e; best = p; }
   }
   return be < 1.2 ? best : null;
+}
+// … and the other way round: how far out (m) a throw at aim pitch p comes down to dy above our feet (null: never)
+function lobDist(p, dy, speed) {
+  const tp = clamp(p + 0.28, -0.3, 1.1), vx = Math.cos(tp) * speed, vy = Math.sin(tp) * speed + 1.5, disc = vy * vy + 48 * (1.35 - dy);
+  return disc < 0 ? null : (vx * (vy + Math.sqrt(disc))) / 24;
 }
 export const PAINTERS = { roller: true, brush: true, bucket: true, slosher: true };
 // steady-trigger weapons that may spray a spot a foe just went out of sight at (BotBrain._spray)
@@ -1526,9 +1531,11 @@ export class BotBrain {
     const progress = 1 - Math.hypot(a.pos.x - pads[1 - a.team].x, a.pos.z - pads[1 - a.team].z) / total;
     let go = false;
     if (k === 'sprinkler') {
-      // (sub-tweaks: it sprays out to sprayRadius, 5.5 m) a paint-mode lob lands ~5.5 m ahead: mostly unclaimed turf over
-      // most of its disc, and no teammate's sprinkler already covering that spot
-      const R = sub.sprayRadius || 5.5, cx = a.pos.x + Math.sin(a.aimYaw) * 5.5, cz = a.pos.z + Math.cos(a.aimYaw) * 5.5;
+      // (sub-tweaks: it sprays out to sprayRadius, 5.5 m) where a lob at our paint-mode aim comes down (sub-tweaks2: thrown
+      // at 15.8, ~4.5–6 m out at the usual paint pitches): mostly unclaimed turf over most of its disc, and no teammate's
+      // sprinkler already covering that spot
+      const L = clamp(lobDist(a.aimPitch, 0, sub.throwSpeed || 13.5) ?? 5.5, 2, 12);
+      const R = sub.sprayRadius || 5.5, cx = a.pos.x + Math.sin(a.aimYaw) * L, cz = a.pos.z + Math.cos(a.aimYaw) * L;
       const st = G.paint.regionStats(cx, a.pos.y, cz, R * 0.8, a.team, _stats);
       go = st.n > 0 && st.own < 0.4 && !G.subs.items.some((o) => o.state === 'spray' && o.team === a.team && o.owner !== a && Math.hypot(o.pos.x - cx, o.pos.z - cz) < R * 1.2);
     } else if (k === 'mine') go = progress > 0.3 && progress < 0.7;

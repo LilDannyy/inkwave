@@ -111,6 +111,14 @@ Waddle / Mine windups — online records and the bots' danger areas included):
 (`PAGE_ARGS='only=sprinkler,mine,beacon,curtain,windup'`). Its pictures: `tools/botlab/scenes/sub-tweaks.js`
 through shoot.cjs (`PRE=…/sub-tweaks.js PRE_ARGS=<scene>`, see its header).
 
+Sub tweaks 2 (2026-10-02: the Tideline Bow's trail a swimmable line ×~1.9 ink, the Howl Box set down on the surface you
+use it from, the Twirl Sprinkler's longer throw and landing patch, the Tracer Bolt at the crosshair, the tracked sonar
+shell and the poison bubbles on players — src/game/statusFx.js, online through the actor tick's flags):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-tweaks2.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=bow,wail,sprinkler,tracer,tracked,poison'`); on any other stage it checks the Howl Box at that stage's
+own ledges (`MAP=halyard` / `MAP=calamari`: 'wailmap'). Its pictures: `tools/botlab/scenes/sub-tweaks2.js` through
+shoot.cjs (`PRE=…/sub-tweaks2.js PRE_ARGS=<scene>`, see its header).
+
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
 blasts, launch alerts / "you're in it" alarms / stings for the enemy's specials, the enemy's louder than yours):

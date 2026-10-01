@@ -25,6 +25,7 @@ import { PLAYER, WEAPONS, SPECIAL_ORDER, mapNoBots } from '../config.js';
 import { MAIN_KITS, SUB_KITS, KIT_GHOSTS } from '../game/kits/registry.js';
 import { specialNetState, specialNetApply } from '../game/specials.js';
 import { BotBrain } from '../game/bots.js';
+import { statusBits, NET_TRACKED, NET_POISONED } from '../game/statusFx.js';
 import { Boss } from '../boss/boss.js';
 
 const TICK = 1 / 20;
@@ -42,6 +43,7 @@ const F = {
   alive: 1, squid: 2, sub: 4, climb: 8, grounded: 16, gt1: 32, gt2: 64, charging: 128, rolling: 256, streaming: 512,
   dodge: 1024, subAim: 2048, firing: 4096, special: 8192, sjCharge: 16384, sjFlight: 32768, flick: 65536, slosh: 131072,
   invuln: 262144, enemy: 524288,
+  tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks)
 };
 // events forwarded from owners (actor-bearing payloads; vectors/actors are packed)
 const FORWARD = ['actor:jump', 'superjump', 'superjump:land', 'special:use', 'special:slam', 'weapon:dodge', 'weapon:fire', 'splatted', 'respawn'];
@@ -383,6 +385,10 @@ export class NetMatch {
     a.hurtFlash = Math.max(0, a.hurtFlash - dt * 0.6);
     a.hp = S.hp; a.ink = S.ink; a.special = S.sp;
     a.invuln = f & F.invuln ? 0.1 : 0;
+    // statuses: the owner's word (the tracked / poisoned looks: game/statusFx.js), and what this screen's own ghost subs
+    // put on them runs out on time here too (Actor.update, which counts them down, doesn't run for a remote player)
+    a.netStatus = (f & F.tracked ? NET_TRACKED : 0) | (f & F.poisoned ? NET_POISONED : 0);
+    { const st = a.status; if (st.track > 0) st.track = Math.max(0, st.track - dt); if (st.reveal > 0) st.reveal = Math.max(0, st.reveal - dt); if (st.poison > 0) st.poison = Math.max(0, st.poison - dt); }
     a.stats.turf = Math.max(a.stats.turf, S.turf);
     if (S.spx && SPECIAL_ORDER[S.spx - 1]) a.specialId = SPECIAL_ORDER[S.spx - 1];   // their loadout's special
     // a special: its owner's records run a ghost of it here (specials.js netGhost); the flag alone is the fallback, and a
@@ -754,6 +760,7 @@ function packActor(a) {
   if (wr.slosh >= 0) f |= F.slosh;
   if (a.invuln > 0) f |= F.invuln;
   if (a.onEnemy) f |= F.enemy;
+  { const sb = statusBits(a); if (sb & NET_TRACKED) f |= F.tracked; if (sb & NET_POISONED) f |= F.poisoned; }
   // the visual position (the owner's step smoothing included) — that's what the owner sees
   const y = a.pos.y + (a.smoothY || 0);
   const n = a.climbing ? a.wallN : null;
@@ -835,4 +842,4 @@ function unpackEvent(d, nm) {
   return e;
 }
 
-export { F as NET_FLAGS, WEAPONS as _W };
+export { F as NET_FLAGS, WEAPONS as _W, packActor as _packActor, unpackActor as _unpackActor };   // (_: tests)
