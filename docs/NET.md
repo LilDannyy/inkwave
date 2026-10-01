@@ -96,8 +96,10 @@ Waddle's windup is its `[5, gid, x, y, z]`.
 A kit's pose state (a Mitts leap, a held Brolly canopy) rides the actor tick (`netState` / `netApply`).
 Statuses: every screen's ghost subs track / poison the players they touch there too (the timers run out on remote
 players as well); the owner's own word — tracked, poisoned — rides the actor tick's flags (`F.tracked`, `F.poisoned` →
-`a.netStatus`), so the tracked sonar shell and the poison bubbles (src/game/statusFx.js) show on every screen while
-they last.
+`a.netStatus`), so the tracked look and the poison bubbles (src/game/statusFx.js) show on every screen while they last.
+The tracked look needs nothing more: with two teams, tracked means tracked by the *other* team, which gives the wrapped
+arrow's colour, who sees it through walls (that team) and who gets a line to them (everyone on that team, each from
+their own kid) — so no tracker id rides the tick (it stays 24 fields).
 
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
