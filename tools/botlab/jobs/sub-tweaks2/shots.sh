@@ -20,9 +20,7 @@ PATCH='[{"name":"floor","from":[-6,5.2,-0.6],"look":[-6,0,-6],"fov":55},{"name":
 { want wail-ledge && shoot wail-ledge testbox 1 "$WAIL"
   want wail-ledge-old && shoot wail-ledge-old testbox 1 "$WAIL"
   want sprinkler-patch && shoot sprinkler-patch testbox "" "$PATCH"; } &
-{ want tracked && shoot tracked testbox 1 "$TRK"
-  want tracked-self && shoot tracked-self testbox 1 'play'
-  want poisoned && shoot poisoned testbox 1 "$TRK"
+{ want poisoned && shoot poisoned testbox 1 "$TRK"
   want poisoned-self && shoot poisoned-self testbox 1 'play'; } &
 wait
 # halyard / calamari ledges: the camera from the spot the scene finds (first pass prints it)
