@@ -406,6 +406,7 @@ class Game {
       toMainMenu: () => self.quitToMenu(),
       onScreenChange: (s) => self._onScreen(s),
       playSound: (n) => { G.audio?.init?.(); G.audio?.play(n); },
+      cuePreview: () => { G.audio?.init?.(); G.cues?.preview?.(); },   // sfx-loud: the Cues slider plays a cue at its new level
     });
     return api;
   }
@@ -420,10 +421,10 @@ class Game {
     saveJSON('inkwave.settings', this.settings);
     if ('quality' in partial || 'shadows' in partial || 'bloom' in partial) this.R?.applySettings(this.settings);
     if ('fullscreen' in partial && window.inkwaveNative) window.inkwaveNative.setFullScreen(!!partial.fullscreen);
-    if ('master' in partial || 'music' in partial || 'sfx' in partial) this._applyAudioVolumes();
+    if ('master' in partial || 'music' in partial || 'sfx' in partial || 'cues' in partial) this._applyAudioVolumes();
     if ('colorblind' in partial && G.mode !== 'match') this._setPalette(this._pickPalette());
   }
-  _applyAudioVolumes() { G.audio?.setVolumes?.({ master: this.settings.master, music: this.settings.music, sfx: this.settings.sfx }); }
+  _applyAudioVolumes() { G.audio?.setVolumes?.({ master: this.settings.master, music: this.settings.music, sfx: this.settings.sfx, cues: this.settings.cues ?? 1 }); }
 
   _onScreen(s) {
     // the loadout opened mid-practice sits over the live stage: tuck the HUD away while it's up

@@ -619,6 +619,7 @@ export const DEFAULT_SETTINGS = {
   showFps: false,
   fpsCap: 0,                // frame rate limit: 0 = match the display (120 on ProMotion Macs), else 60 / 30
   master: 0.8, music: 0.6, sfx: 0.85,
+  cues: 1,                  // sfx-loud: the sub / special cue volume 0..1.5 (1 = the default cue mix; under Sound effects)
   colorblind: false,
   minimap: true,
   matchLength: 180,

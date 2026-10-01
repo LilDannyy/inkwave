@@ -2,12 +2,39 @@
 // AudioEngine and master chain) and measures them.
 //   window.__R.sheet()        → [[label, [entry …]] …]: every sub and special, its sounds in phase order
 //   window.__R.render(entry)  → { name, mode, dur, peak, rawPeak, lufsM, clicks, nan, bands, env, wav (base64 PCM) }
-// An entry is a sound name, or 'name@pitch' (the in-flight whoosh runs at each kind's pitch). Loops are rendered ~3.2 s:
-// warnings with their progress param swept 0 → 1 (the enemy's timbre), movers passing the listener left → right 3 m in
-// front (the Doppler as src/audio/cues.js computes it), the rest standing still.
+// An entry is a sound name, 'name@pitch', or 'name~variant': sub_flight~<kind> (that sub's voice, gliding along a lob
+// that lands 1.5 m in front of you, as src/audio/cues.js glides it), <loop>~arc (a loop with a flight of its own,
+// gliding the same way), danger~<kind> (the "you're in it" alarm, its urgency swept 0 → 1 over its real lead). Loops are
+// rendered ~3.2 s: warnings with their progress param swept 0 → 1 (the enemy's timbre), movers passing the listener
+// left → right 3 m in front (the Doppler as src/audio/cues.js computes it), the rest standing still.
+// sfx-loud: at the in-game levels — the default settings (master 80 %, sound effects 85 %, Cues 100 %: the cue bus,
+// +6 dB, and its compressor), each cue at the enemy's mix (cues.js MIX × LEVEL) as heard from its reference distance.
 (async () => {
   const A = await import('./src/audio/audio.js');
+  const C = await import('./src/audio/cues.js');
   const SR = 48000;
+  // ---- the in-game level of each cue: its class (→ the enemy's MIX gain), its share, its LEVEL lift
+  const CLASS = {};
+  for (const ph of Object.values(C.SUB_CUE)) for (const [p, [n, v]] of Object.entries(ph)) CLASS[n] = [p, v];
+  for (const n of Object.values(C.SPECIAL_START)) CLASS[n] = ['start', 1];
+  Object.assign(CLASS, { tracer_zap: ['throw', 1], boomerang_throw: ['throw', 1], torpedo_throw: ['throw', 1], waddle_land: ['land', 0.9], torpedo_transform: ['land', 1], boomerang_tick: ['beep', 0.8],
+    orb_land: ['warn', 1], crab_reload: ['warn', 1], mine_trip: ['warn', 1], twister_burst: ['boom', 0.6], shell_boom: ['boom', 0.9], stamp_crash: ['boom', 1], kraken_off: ['end', 1], storm_fade: ['end', 1],
+    vortex_end: ['end', 1], zooka_fire: ['start', 0.8], jet_boost: ['start', 0.7] });
+  for (const n of ['fuse_bomb', 'fuse_sticky', 'seeker_run', 'shaker_rattle', 'waddle_walk', 'hunt_alarm', 'torpedo_whirr', 'lock_tone', 'boomerang_whirr', 'slam_warn', 'strike_mark', 'twister', 'beam_lock',
+    'wail_blast', 'bubble_drift', 'stamp_fly', 'shell_whistle', 'orb_fly', 'orb_fuse', 'kraken_dive', 'danger']) CLASS[n] = ['warn', 1];
+  for (const n of ['sub_flight', 'mist_hiss', 'curtain_drip', 'sprinkler_spin', 'beacon_hum', 'tracer_hum', 'boomerang_orbit', 'storm_rain', 'tornado', 'kraken_move', 'blower_inflate', 'jet_loop',
+    'stamp_carry', 'booyah_charge', 'zip_aura', 'zip_whizz', 'crab_move', 'crab_roll', 'barrage_drum', 'wail_hold', 'strike_aim', 'shield_hum']) CLASS[n] = ['move', n === 'sub_flight' ? 0.9 : 1];
+  const levelOf = (name) => {
+    const c = name.startsWith('alert_') ? ['alert', 1] : name.startsWith('sting_') ? ['sting', 1] : CLASS[name];
+    const lv = Math.pow(10, (C.LEVEL[name] || 0) / 20);
+    return c ? C.MIX[c[0]].foe * c[1] * lv : lv;
+  };
+  // a lob landing 1.5 m in front of you (vy₀ 9 m/s, g 24, from 1.35 m up, 12 m off): where, and the glide on it
+  const LOB = { vy0: 9, g: 24, h0: 1.35, T: (9 + Math.sqrt(81 + 4 * 12 * 1.35)) / 24 };
+  const lobAt = (u) => { const t = u * LOB.T, vy = LOB.vy0 - LOB.g * t, h = Math.max(0, LOB.h0 + LOB.vy0 * t - 0.5 * LOB.g * t * t);
+    const st = vy > 0 ? C.FLY_UP * (1 - vy / LOB.vy0) : C.FLY_UP + (C.FLY_DOWN - C.FLY_UP) * Math.min(1, -vy / Math.sqrt(vy * vy + 2 * LOB.g * h + 1e-6));
+    const arc = vy > 0 ? 0.5 * (1 - vy / LOB.vy0) : 0.5 + 0.5 * Math.min(1, -vy / Math.sqrt(vy * vy + 2 * LOB.g * h + 1e-6));
+    return { pos: { x: -1.5 + 1.5 * u, y: h, z: -12 + 10.5 * u }, q: Math.pow(2, st / 12), arc }; };
   const db = (x) => (x > 0 ? 20 * Math.log10(x) : -Infinity);
   const K1 = { b: [1.53512485958697, -2.69169618940638, 1.19839281085285], a: [-1.69065929318241, 0.73248077421585] };
   const K2 = { b: [1, -2, 1], a: [-1.99004745483398, 0.99007225036621] };
@@ -92,11 +119,11 @@
   const SWEEP = { fuse_bomb: { k: 1, roll: 0 }, fuse_sticky: { k: 1 }, hunt_alarm: { close: 1 }, lock_tone: { k: 1 }, shaker_rattle: { k: 1, armed: 1 },
     slam_warn: 'slam', strike_mark: { k: 1 }, beam_lock: { k: 1 }, kraken_dive: { k: 1 }, orb_fuse: { k: 1 }, bubble_drift: { charge: 1 },
     curtain_drip: { life: 0 }, mist_hiss: { life: 0.2 }, kraken_move: { speed: 1 }, stamp_carry: { speed: 1 }, seeker_run: { speed: 1, dash: 1 }, shell_whistle: { vy: 'arc' } };
-  const PASS = new Set(['sub_fly', 'seeker_run', 'twister', 'stamp_fly', 'orb_fly', 'zip_whizz', 'kraken_move', 'shaker_rattle', 'torpedo_whirr', 'tracer_hum', 'waddle_walk',
+  const PASS = new Set(['seeker_run', 'twister', 'stamp_fly', 'orb_fly', 'zip_whizz', 'kraken_move', 'shaker_rattle', 'torpedo_whirr', 'tracer_hum', 'waddle_walk',
     'boomerang_whirr', 'shell_whistle', 'jet_loop', 'crab_move', 'crab_roll', 'storm_rain']);
   const DUR = { fuse_bomb: 0.95, fuse_sticky: 2.4, orb_fuse: 1.5, beam_lock: 1.3, strike_mark: 2.2, slam_warn: 1.1, kraken_dive: 0.7, lock_tone: 1.5, shell_whistle: 1.4 };
   async function render(entry, raw) {
-    const [name, ps] = String(entry).split('@'), P = ps ? +ps : 1;
+    const [head, variant] = String(entry).split('~'), [name, ps] = head.split('@'), P = ps ? +ps : 1;
     const d = A.SFX[name];
     if (!d) return null;
     const isLoop = !d.build && !!d.loop;
@@ -104,11 +131,35 @@
     const ctx = new OfflineAudioContext(2, Math.floor(SR * secs), SR);
     const eng = new A.AudioEngine({ context: ctx, seed: 77, music: false, raw });
     eng.init();
-    eng.setVolumes({ master: 1, music: 1, sfx: 1 });
-    eng.master.gain.value = 1; eng.sfxBus.gain.value = 1;
-    if (!isLoop) { eng.play(name, { at: 0.1, pitch: P }); return { buf: await ctx.startRendering(), mode: 'shot' }; }
+    eng.setVolumes({ master: 0.8, music: 0.6, sfx: 0.85, cues: 1 });   // (the defaults: as the game starts)
+    const vol = levelOf(name);
+    if (!isLoop) { eng.play(name, { at: 0.1, pitch: P, volume: vol }); return { buf: await ctx.startRendering(), mode: 'shot' }; }
     eng.setListener({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 });
-    const sweep = SWEEP[name], pass = PASS.has(name), T0 = 0.1, span = DUR[name] || 2.6;
+    const T0 = 0.1;
+    // a flight: along the lob, gliding, its Doppler from its own velocity; it stops as it lands (the director's 0.15 s)
+    if (variant && (name === 'sub_flight' || variant === 'arc')) {
+      const base = name === 'torpedo_whirr' ? 0.8 : 1, par0 = name === 'sub_flight' ? { kind: variant, arc: 0 } : null;
+      const dopAt = (u) => { const a = lobAt(u), b = lobAt(Math.min(1, u + 0.02)), dt = 0.02 * LOB.T, vx = (b.pos.x - a.pos.x) / dt, vy = (b.pos.y - a.pos.y) / dt, vz = (b.pos.z - a.pos.z) / dt, L = Math.hypot(a.pos.x, a.pos.y, a.pos.z) || 1;
+        const vr = -(a.pos.x * vx + a.pos.y * vy + a.pos.z * vz) / L; return Math.min(1.22, Math.max(0.84, 1 / (1 - Math.max(-40, Math.min(40, vr)) / 55))); };
+      let h = null; const L0 = lobAt(0);
+      ctx.suspend(T0).then(() => { h = eng.loop(name, { volume: vol, pitch: base * L0.q * dopAt(0), pos: L0.pos, params: par0 || undefined }); ctx.resume(); });
+      for (let t = T0 + 0.02; t < T0 + LOB.T; t += 0.02) {
+        const tt = +t.toFixed(4), u = (tt - T0) / LOB.T, Lu = lobAt(u);
+        ctx.suspend(tt).then(() => { h?.set({ pos: Lu.pos, pitch: base * Lu.q * dopAt(u), params: par0 ? { arc: Lu.arc } : undefined }); ctx.resume(); });
+      }
+      ctx.suspend(+(T0 + LOB.T).toFixed(4)).then(() => { h?.stop(0.15); ctx.resume(); });
+      return { buf: await ctx.startRendering(), mode: 'loop flight' };
+    }
+    // the alarm: its urgency 0 → 1 over its real lead, then it stops (the impact)
+    if (name === 'danger') {
+      const span = C.ALARM_T[variant] || 1.5;
+      let h = null;
+      ctx.suspend(T0).then(() => { h = eng.loop(name, { volume: vol, params: { kind: variant, k: 0 } }); ctx.resume(); });
+      for (let t = T0 + 0.05; t < T0 + span; t += 0.05) { const tt = +t.toFixed(4); ctx.suspend(tt).then(() => { h?.set({ params: { k: Math.min(1, (tt - T0) / span) } }); ctx.resume(); }); }
+      ctx.suspend(+(T0 + span).toFixed(4)).then(() => { h?.stop(0.06); ctx.resume(); });
+      return { buf: await ctx.startRendering(), mode: 'loop alarm' };
+    }
+    const sweep = SWEEP[name], pass = PASS.has(name), span = DUR[name] || 2.6;
     let h = null;
     const pos = (t) => ({ x: -14 + 28 * Math.min(1, Math.max(0, (t - T0) / 2.8)), y: 0.5, z: -3 });
     // the director's Doppler: the source's radial speed toward the listener → pitch (c_eff 55 m/s, clamped)
@@ -118,7 +169,7 @@
       if (!sweep) return null;
       return Object.fromEntries(Object.entries(sweep).map(([k, v]) => [k, v === 'arc' ? 12 - 24 * u : v === 0 ? 1 - u : v * u]));
     };
-    ctx.suspend(T0).then(() => { h = eng.loop(name, { volume: 1, pitch: P * (pass ? dop(T0) : 1), pos: pass ? pos(T0) : undefined, params: par(0) || undefined }); ctx.resume(); });
+    ctx.suspend(T0).then(() => { h = eng.loop(name, { volume: vol, pitch: P * (pass ? dop(T0) : 1), pos: pass ? pos(T0) : undefined, params: par(0) || undefined }); ctx.resume(); });
     // a warning runs its real length (its fuse / charge / flight) and stops, as the blast would cut it; a mover passes by;
     // anything else plays 2.2 s
     const stopAt = T0 + (DUR[name] != null ? DUR[name] + 0.05 : pass ? 2.9 : 2.2);
@@ -136,36 +187,36 @@
   }
   // every sub and special, its sounds in the order you'd hear them (throw → flight → landing / arming → warning → blast / end)
   const SHEET = [
-    ['Splat Bomb', ['bomb_throw', 'sub_fly@1', 'bomb_beep', 'fuse_bomb', 'bomb_explode']],
-    ['Cling Charge', ['throw_sticky', 'sub_fly@0.85', 'sticky_stick', 'fuse_sticky', 'sticky_explode']],
-    ['Pop Pellet', ['throw_burst', 'sub_fly@1.5', 'pellet_pop']],
-    ['Skitter Bomb', ['throw_seeker', 'sub_fly@1.15', 'seeker_land', 'seeker_run', 'seeker_explode']],
-    ['Echo Orb', ['throw_scan', 'sub_fly@1.35', 'scan_burst']],
-    ['Drip Curtain', ['throw_curtain', 'sub_fly@0.7', 'curtain_up', 'curtain_drip', 'curtain_down']],
-    ['Twirl Sprinkler', ['throw_sprinkler', 'sub_fly@1.25', 'sprinkler_stick', 'sprinkler_spin', 'sprinkler_break']],
+    ['Splat Bomb', ['bomb_throw', 'sub_flight~bomb', 'bomb_beep', 'fuse_bomb', 'bomb_explode']],
+    ['Cling Charge', ['throw_sticky', 'sub_flight~sticky', 'sticky_stick', 'fuse_sticky', 'sticky_explode']],
+    ['Pop Pellet', ['throw_burst', 'sub_flight~burst', 'pellet_pop']],
+    ['Skitter Bomb', ['throw_seeker', 'sub_flight~seeker', 'seeker_land', 'seeker_run', 'seeker_explode']],
+    ['Echo Orb', ['throw_scan', 'sub_flight~scan', 'scan_burst']],
+    ['Drip Curtain', ['throw_curtain', 'sub_flight~curtain', 'curtain_up', 'curtain_drip', 'curtain_down']],
+    ['Twirl Sprinkler', ['throw_sprinkler', 'sub_flight~sprinkler', 'sprinkler_stick', 'sprinkler_spin', 'sprinkler_break']],
     ['Lurk Mine', ['place_mine', 'mine_trip', 'mine_explode']],
     ['Hop Beacon', ['place_beacon', 'beacon_hum', 'beacon_use', 'beacon_break']],
-    ['Murk Bomb', ['throw_mist', 'sub_fly@0.8', 'mist_burst', 'mist_hiss']],
-    ['Shaker Bomb', ['throw_shaker', 'shaker_rattle', 'shaker_land', 'shaker_blast@1.06', 'shaker_blast@1.12', 'shaker_blast@1.18']],
-    ['Waddle Bomb', ['throw_waddle', 'sub_fly@1.05', 'waddle_land', 'waddle_beep', 'waddle_lock', 'waddle_walk', 'hunt_alarm', 'waddle_explode', 'waddle_pop']],
-    ['Tide Torpedo', ['torpedo_throw', 'torpedo_whirr', 'torpedo_transform', 'lock_tone', 'torpedo_launch', 'torpedo_burst']],
+    ['Murk Bomb', ['throw_mist', 'sub_flight~mist', 'mist_burst', 'mist_hiss']],
+    ['Shaker Bomb', ['throw_shaker', 'shaker_rattle~arc', 'shaker_rattle', 'shaker_land', 'shaker_blast@1.06', 'shaker_blast@1.12', 'shaker_blast@1.18']],
+    ['Waddle Bomb', ['throw_waddle', 'sub_flight~waddle', 'waddle_land', 'waddle_beep', 'waddle_lock', 'waddle_walk', 'hunt_alarm', 'waddle_explode', 'waddle_pop']],
+    ['Tide Torpedo', ['torpedo_throw', 'torpedo_whirr~arc', 'torpedo_whirr', 'torpedo_transform', 'lock_tone', 'torpedo_launch', 'torpedo_burst']],
     ['Tracer Bolt', ['tracer_zap', 'tracer_hum', 'tracer_bounce', 'tracer_hit']],
     ['Whirl Boomerang', ['boomerang_throw', 'boomerang_whirr', 'boomerang_return', 'boomerang_orbit', 'boomerang_tick', 'boomerang_blast', 'boomerang_burst']],
-    ['Tidal Slam', ['special_activate', 'slam_leap', 'slam_warn', 'special_slam']],
-    ['Ink Tempest', ['storm_throw', 'sub_fly@0.6', 'storm_thunder', 'storm_rain', 'storm_fade']],
-    ['Bomb Barrage', ['barrage_start', 'barrage_drum']],
-    ['Bubble Guard', ['shield_up', 'shield_hum', 'shield_hit', 'shield_pop']],
-    ['Deep Sonar', ['sonar_ping', 'sonar_mark', 'sonar_blip']],
-    ['Vortex Strike', ['strike_arm', 'strike_aim', 'strike_launch', 'strike_mark', 'strike_whistle', 'strike_impact', 'tornado', 'vortex_end']],
-    ['Twister Zooka', ['zooka_arm', 'zooka_fire', 'twister', 'twister_burst']],
-    ['Howl Box', ['wail_up', 'wail_hold', 'wail_charge', 'beam_lock', 'wail_blast']],
-    ['Kraken', ['kraken_on', 'kraken_move', 'kraken_jump', 'kraken_dive', 'kraken_slam', 'kraken_off']],
-    ['Bubble Blower', ['blower_start', 'blower_inflate', 'bubble_release', 'bubble_drift', 'bubble_blast', 'bubble_pop']],
-    ['Ink Jet', ['jet_ignite', 'jet_loop', 'jet_boost', 'jet_fire', 'jet_boom', 'jet_end']],
-    ['Mega Stamp', ['stamp_start', 'stamp_carry', 'stamp_swing', 'stamp_slam', 'stamp_throw', 'stamp_fly', 'stamp_crash']],
-    ['Cheer Orb', ['booyah_charge', 'booyah_cheer', 'booyah_throw', 'orb_fly', 'orb_land', 'orb_fuse', 'booyah_blast']],
-    ['Zipline', ['zip_cloak', 'zip_aura', 'zip_fire', 'zip_latch', 'zip_pull', 'zip_whizz', 'zip_impact']],
-    ['Crab Rig', ['crab_boot', 'crab_move', 'crab_roll', 'crab_gatling', 'crab_cannon', 'shell_whistle', 'shell_boom', 'crab_reload', 'crab_hit', 'crab_break']],
+    ['Tidal Slam', ['special_activate', 'sting_slam', 'alert_slam', 'slam_leap', 'slam_warn', 'danger~slam', 'special_slam']],
+    ['Ink Tempest', ['sting_storm', 'storm_throw', 'sub_flight~storm', 'alert_storm', 'danger~storm', 'storm_thunder', 'storm_rain', 'storm_fade']],
+    ['Bomb Barrage', ['sting_barrage', 'alert_barrage', 'barrage_start', 'barrage_drum']],
+    ['Bubble Guard', ['sting_bubbler', 'shield_up', 'shield_hum', 'shield_hit', 'shield_pop']],
+    ['Deep Sonar', ['sting_sonar', 'sonar_ping', 'sonar_mark', 'sonar_blip']],
+    ['Vortex Strike', ['sting_strike', 'strike_arm', 'strike_aim', 'strike_launch', 'alert_strike', 'strike_mark', 'danger~strike', 'strike_whistle', 'strike_impact', 'tornado', 'vortex_end']],
+    ['Twister Zooka', ['sting_zooka', 'zooka_arm', 'danger~zooka', 'zooka_fire', 'alert_twister', 'twister', 'twister_burst']],
+    ['Howl Box', ['sting_wail', 'wail_up', 'wail_hold', 'wail_charge', 'alert_wail', 'beam_lock', 'wail_blast']],
+    ['Kraken', ['sting_kraken', 'kraken_on', 'kraken_move', 'kraken_jump', 'alert_kraken', 'kraken_dive', 'danger~kraken', 'kraken_slam', 'kraken_off']],
+    ['Bubble Blower', ['sting_blower', 'blower_start', 'blower_inflate', 'bubble_release', 'bubble_drift', 'bubble_blast', 'bubble_pop']],
+    ['Ink Jet', ['sting_jetpack', 'jet_ignite', 'jet_loop', 'jet_boost', 'jet_fire', 'alert_jet', 'danger~jet', 'jet_boom', 'jet_end']],
+    ['Mega Stamp', ['sting_stamp', 'stamp_start', 'stamp_carry', 'stamp_swing', 'stamp_slam', 'stamp_throw', 'alert_stamp', 'stamp_fly', 'danger~stamp', 'stamp_crash']],
+    ['Cheer Orb', ['sting_booyah', 'booyah_charge', 'booyah_cheer', 'booyah_throw', 'alert_orb', 'orb_fly~arc', 'orb_land', 'orb_fuse', 'danger~orb', 'booyah_blast']],
+    ['Zipline', ['sting_zipcaster', 'zip_cloak', 'zip_aura', 'zip_fire', 'zip_latch', 'zip_pull', 'zip_whizz', 'zip_impact']],
+    ['Crab Rig', ['sting_crab', 'crab_boot', 'crab_move', 'crab_roll', 'crab_gatling', 'crab_cannon', 'alert_shell', 'shell_whistle', 'danger~shell', 'shell_boom', 'crab_reload', 'crab_hit', 'crab_break']],
     ['(every special)', ['special_ending', 'special_end']],
   ];
   window.__R = {
