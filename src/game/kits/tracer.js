@@ -1,14 +1,16 @@
 // Tracer Bolt (sub kind 'tracer') — see kits/registry.js.
 //
-// Fired the instant the sub button is released: a fast bolt (no gravity) sent a few degrees BELOW the crosshair line.
-// It ricochets off every surface except grates (it flies straight through those), leaving a big ink puddle at each
-// bounce; off a floor the exit angle is flattened (the bounce's vertical speed is scaled down), so after hitting the
-// ground it skims along close to it — which is how it usually finds feet, and why firing it from high up is easy.
+// Fired the instant the sub button is released: a fast bolt (no gravity) sent straight along the crosshair — from the
+// launch point (chest height, a little in front) to the point under the crosshair (aimPoint), so it hits what you aim
+// at. (2026-10-02, the user: "have the tracing bolt go at your crosshair not below it"; it used to leave `pitchDown` 9°
+// below that line.) It ricochets off every surface except grates (it flies straight through those), leaving a big ink
+// puddle at each bounce; off a floor the exit angle is flattened (the bounce's vertical speed is scaled down), so after
+// hitting the ground it skims along close to it — aim at someone's feet and it skids on into them.
 // It flies until its total travel reaches `range` or it hits a foe. A direct hit damages and marks the foe for a long
 // time; the bolt also leaves a team-coloured trail that lingers about a second, and a foe touching it is damaged and
 // marked for a short time (once per bolt; a direct hit takes the place of the trail hit).
-// While the button is held the local player sees a thin guide: the true launch line to the first bounce, then the
-// first rebound (dashed), so the low angle is learnable.
+// While the button is held the local player sees a thin guide: the true launch line to the first surface (on the
+// crosshair), then the first rebound (dashed).
 import * as THREE from 'three';
 import { G, emit, clamp } from '../../core/ctx.js';
 import { PLAYER, SUBS, subViewScale } from '../../config.js';
@@ -23,7 +25,6 @@ import { SFX } from '../../audio/audio.js';
 import { pts, sweep } from '../../audio/music.js';
 
 const V3 = THREE.Vector3;
-const DEG = Math.PI / 180;
 const UP = new V3(0, 1, 0), ZAX = new V3(0, 0, 1);
 const SCALE = 1.9;               // hand-scale prop → world — [sub-view] drawn × SUB_VIEW_SCALE.tracer (visual only: s.size stays)
 const HEAD_R = 0.0425;           // [sub-view] the bolt's half thickness in the world at SCALE (m)
@@ -165,7 +166,9 @@ let clock = 0;
 function credit(b, area) { if (!area) return; if (b.sp) b.owner.addTurfNoSpecial(area); else b.owner.addTurf(area); }
 function sceneOf(subs) { return subs?.scene || G.scene; }
 
-// launch point (chest height, a little in front; never inside a wall) and direction (the crosshair line, lowered)
+// launch point (chest height, a little in front; never inside a wall) and direction: straight at the point under the
+// crosshair (aimPoint) — the bolt flies straight (no gravity), so it lands on it. (An aim point closer than 2 m or behind
+// the launch point: the aim direction itself.)
 function launch(a, sub, from, dir) {
   const sy = a.smoothY || 0;
   _v.set(a.pos.x, a.pos.y + sy + 1.0, a.pos.z);
@@ -175,9 +178,7 @@ function launch(a, sub, from, dir) {
   dir.copy(a.aimPoint).sub(from);
   const d = dir.length();
   if (!(d > 2) || dir.dot(a.aimDir) < 0) dir.copy(a.aimDir); else dir.multiplyScalar(1 / d);
-  const pitch = clamp(Math.asin(clamp(dir.y, -1, 1)) - sub.pitchDown * DEG, -1.5, 1.45), yaw = Math.atan2(dir.x, dir.z);
-  const cp = Math.cos(pitch);
-  return dir.set(Math.sin(yaw) * cp, Math.sin(pitch), Math.cos(yaw) * cp);
+  return dir.normalize();
 }
 // the bounce rule: mirror off the surface; off a floor the vertical part of the rebound is scaled down (skims low)
 function rebound(dir, n, sub) {
@@ -399,6 +400,8 @@ function clearAll() {
 }
 
 // =============================================================================================== aim guide (local player)
+// While the button is held: the launch line straight to the first surface on the crosshair line (launch(): the bolt's own
+// line, so the ring sits under the crosshair), then the first rebound off it (dashed).
 let guide = null, guideSeen = false;
 const _gFrom = new V3(), _gDir = new V3();
 function guideMeshes() {

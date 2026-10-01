@@ -412,8 +412,9 @@ export const SUBS = {
     drops: 10, dropDamage: 12, dropHits: 3, dropPaint: 0.65,        // locked burst only: 60 + 3 × 12 = 96 max
   },
   tracer: {
-    id: 'tracer', name: 'Tracer Bolt', kind: 'tracer', blurb: 'A fast bolt fired a little low that skims and ricochets, puddling ink on every bounce. Hits and its trail mark foes for your team.',
-    inkCost: 40, speed: 40, range: 32, pitchDown: 9, floorExit: 0.3, maxBounces: 12, size: 0.16,
+    id: 'tracer', name: 'Tracer Bolt', kind: 'tracer', blurb: 'A fast bolt fired straight at your crosshair that ricochets and skims, puddling ink on every bounce. Hits and its trail mark foes for your team.',
+    // (kits/tracer.js) 2026-10-02: it flies straight at the point under the crosshair (was pitchDown 9° below that line)
+    inkCost: 40, speed: 40, range: 32, floorExit: 0.3, maxBounces: 12, size: 0.16,
     puddleRadius: 1.35, directDamage: 35, directMark: 9, trailLife: 1.0, trailRadius: 0.42, trailDamage: 22, trailMark: 3,
   },
   boomerang: {
