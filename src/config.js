@@ -356,12 +356,15 @@ export const SUBS = {
     inkCost: 55, throwSpeed: 9, width: 3.4, height: 2.7, hp: 170, decay: 19, shotMul: 0.5,
   },
   sprinkler: {
-    id: 'sprinkler', name: 'Twirl Sprinkler', kind: 'sprinkler', blurb: 'Sticks to any surface and sprays ink around it in pulses, until it is shot or you get splatted.',
+    id: 'sprinkler', name: 'Twirl Sprinkler', kind: 'sprinkler', blurb: 'A long throw that sticks to any surface with a splat of ink, then sprays ink around it in pulses, until it is shot or you get splatted.',
     // sprayRadius: the outer edge of its ink (m). 2026-10-01 ("make the sprinkler work further away"): 3.2 → 5.5 — each
     // drop's launch speed is solved for a landing distance picked evenly over the disc's AREA (0.5 m … sprayRadius − 0.75,
     // the drop's own splat reaching the rest), so the far ring gets as much ink per m² as the middle instead of
     // thinning out; drops 6 → 7 a pulse (+17 % ink a second for ~3× the area); dropDamage unchanged
-    inkCost: 60, throwSpeed: 12, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
+    // 2026-10-02 ("let you throw the sprinkler further and applies an ink patch on landing"): throwSpeed 12 → 15.8, a
+    // flat throw (aim level) carries ~1.47× as far (6.7 → 9.8 m; the Pop Pellet's 16, ~10 m, stays the longest); where it
+    // sticks it splats an ink patch of landPaint m (subs.js _patch: on the floor, wall or ceiling it lands on)
+    inkCost: 60, throwSpeed: 15.8, landPaint: 1.7, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
   },
   mine: {
     id: 'mine', name: 'Lurk Mine', kind: 'mine', blurb: 'Planted at your feet, invisible to the other team. Foes who come close set it off: it pops up and blows a moment later, hitting and tracking them. Two at a time.',

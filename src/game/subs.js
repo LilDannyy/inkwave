@@ -28,7 +28,7 @@ import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
 import { MAIN_KITS, SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted } from './kits/registry.js';
 const r2 = (x) => Math.round(x * 100) / 100;
 
-const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _patchC = new THREE.Vector3(), _patchQ = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
@@ -429,6 +429,9 @@ export class SubSystem {
       // one sprinkler per player: a new one replaces the old
       for (const o of this.items) if (o !== it && o.owner === it.owner && o.kind === 'sprinkler' && o.state === 'spray') this._destroy(o);
       it.pulseT = 0; it.spin = 0;
+      // [sub-tweaks2] it lands with a splat: an ink patch where it sticks (floor, wall or ceiling), the way a Splat Bomb's
+      // blast paints — a body and a few blobs round it, in the surface it's on
+      this._patch(it, it.pos, hit.normal, it.sub.landPaint || 0);
     }
     G.cues?.sub(it.kind, 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues: stuck (the fuse / spin loops: src/audio/cues.js)
     emit('sub:land', { kind: it.kind, pos: it.pos.clone(), team: it.team, radius: it.sub.radius || 0 });
@@ -915,6 +918,21 @@ export class SubSystem {
     this._credit(it, area);
   }
   _paintUnder(it, r) { this._credit(it, G.paint.splat(_v3.copy(it.pos).setY(it.pos.y + 0.2), r, it.team, { seed: Math.random() })); }
+  // an ink patch of radius r on the surface at p (normal n): the body, then four blobs round its rim laid in that surface
+  // (so on a wall they stay on the wall)
+  _patch(it, p, n, r) {
+    if (!(r > 0)) return;
+    const t1 = _v2.set(1, 0, 0); if (Math.abs(n.x) > 0.9) t1.set(0, 0, 1);
+    t1.addScaledVector(n, -t1.dot(n)).normalize();
+    const t2 = _v3.crossVectors(n, t1), c = _patchC.copy(p).addScaledVector(n, 0.2), q = _patchQ;
+    let area = G.paint.splat(c, r, it.team, { seed: Math.random() });
+    for (let k = 0; k < 4; k++) {
+      const a = (k / 4) * Math.PI * 2 + Math.random() * 1.2, rr = r * (0.62 + Math.random() * 0.3);
+      q.copy(c).addScaledVector(t1, Math.cos(a) * rr).addScaledVector(t2, Math.sin(a) * rr);
+      area += G.paint.splat(q, r * (0.3 + Math.random() * 0.12), it.team, { seed: Math.random() });
+    }
+    this._credit(it, area);
+  }
   // turf for the thrower; ink from a special (Bomb Barrage throws) never charges the special meter
   _credit(it, area) { if (it.sp) it.owner.addTurfNoSpecial(area); else it.owner.addTurf(area); }
 
