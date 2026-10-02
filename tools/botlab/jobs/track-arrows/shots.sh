@@ -11,9 +11,12 @@ shoot() {   # scene shots-json
 want() { [ ${#ARGS[@]} -eq 0 ] && return 0; for a in "${ARGS[@]}"; do [ "$a" = "$1" ] && return 0; done; return 1; }
 ARGS=("$@")
 { want close && shoot close '[{"name":"view","from":[1.9,1.6,-9.6],"look":[0,0.85,-6],"fov":55}]'
-  want far && shoot far '[{"name":"view","from":[0.8,2.2,-19.2],"look":[0,0.9,-6],"fov":60}]'; } &
+  want far && shoot far '[{"name":"view","from":[0.8,2.2,-19.2],"look":[0,0.9,-6],"fov":60}]'
+  want straight && shoot straight '[{"name":"view","from":[0,0.95,-3.9],"look":[0,0.85,-6],"fov":50}]'
+  want head && shoot head '[{"name":"view","from":[0,0.9,-3.5],"look":[0,0.85,-6],"fov":40}]'; } &
 { want wall && shoot wall '[{"name":"view","from":[4.4,2.4,-3.8],"look":[17,1.0,0.3],"fov":60}]'
-  want mate && shoot mate '[{"name":"view","from":[4.2,2.4,4.6],"look":[17,1.0,0.3],"fov":60}]'; } &
+  want mate && shoot mate '[{"name":"view","from":[4.2,2.4,4.6],"look":[17,1.0,0.3],"fov":60}]'
+  want charger && shoot charger '[{"name":"view","from":[3.6,2.0,-3.2],"look":[0,0.9,-6.4],"fov":50}]'; } &
 { want self && shoot self 'play'
   want behind && shoot behind '[{"name":"view","from":[11.8,2.3,5.6],"look":[4,0.9,0],"fov":60}]'
   want foemate && shoot foemate '[{"name":"view","from":[11.8,2.3,5.6],"look":[4,0.9,0],"fov":60}]'; } &
