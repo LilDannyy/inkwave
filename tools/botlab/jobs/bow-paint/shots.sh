@@ -8,8 +8,8 @@
 HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/../../../.." && pwd)"; cd "$ROOT"
 PNG="${PNG:-$ROOT/.botlab/shots-bow-paint}"; DEST="${DEST:-$HERE/out}"; TAG="${TAG:-after}"; mkdir -p "$PNG" "$DEST"
 PRE=tools/botlab/scenes/bow-paint.js
-CAMS='[{"name":"archer","from":[0,1.5,-35],"look":[0,0.5,-20],"fov":60},{"name":"top","from":[0.01,28,-18.5],"look":[0,0,-18.5],"fov":55},{"name":"view","from":[6,8,-37],"look":[0,0,-20],"fov":60}]'
-WIDE='[{"name":"top","from":[0.01,30,-20],"look":[0,0,-20],"fov":60},{"name":"view","from":[16,11,-38],"look":[0,0,-19],"fov":62}]'
+CAMS='[{"name":"archer","from":[0,1.5,-35],"look":[0,0.5,-20],"fov":60},{"name":"top","from":[0.01,30,-18],"look":[0,0,-18],"fov":55},{"name":"view","from":[6,8,-37],"look":[0,0,-20],"fov":60}]'
+WIDE='[{"name":"top","from":[0.01,30,-18],"look":[0,0,-18],"fov":55},{"name":"archer","from":[0,1.8,-36],"look":[0,0.4,-20],"fov":60},{"name":"view","from":[9,9,-38],"look":[0,0,-19],"fov":60}]'
 shoot() {   # scene shots-json
   local sc=$1 shots=$2
   rm -rf "$PNG/$sc-$TAG"

@@ -9,8 +9,8 @@
 //             air — and at full draw three PARALLEL arrows 0.4 m apart (side by side on the ground, one over another in
 //             the air: Splatoon 3's Tri-Stringer). A tap (< ring 1) = short, weak arrows that just splat. Ring 1+ = the
 //             arrows LODGE where they land (or at a victim's feet on a direct hit), glow and tick, then burst after a
-//             short fuse. Full draw = full reach, top damage and a bigger burst. Centre + side direct hits, or a direct
-//             hit + its burst, splat. Drawing in the air runs at a third of the speed (W.airDraw).
+//             short fuse. Full draw = full reach and a bigger burst; all three of its arrows splat (35 each), two need
+//             a burst to finish. Drawing in the air runs at a third of the speed (W.airDraw).
 //   ink       falling spray: each arrow lets fall a few big droplets on its way (every dropEvery m, the first just in
 //             front of you), each stretched along the flight when it falls from low; the three arrows' droplets are
 //             staggered a third of the spacing apart, so a full draw's parallel arrows lay one unbroken band from your
@@ -115,7 +115,7 @@ function volley(a, S, m, dir, air, ghost = false) {
   // fill each other's gaps)
   const hd = Math.hypot(dir.x, dir.z) || 1;
   const d0 = clamp(((m.x - a.pos.x) * dir.x + (m.z - a.pos.z) * dir.z) / hd, 0, 1);
-  const every = W.dropEvery * S.dk;
+  const every = Math.max(W.dropEvery * S.dk, W.dropGapMin);   // (tiny droplets — a tap's — spread out: a dotted line, few records)
   for (let i = -1; i <= 1; i++) {
     if (arrows.length >= MAX) kill(0);
     const p = newArrow();
@@ -313,7 +313,7 @@ function stepArrow(p, i, dt) {
   // more when the droplets are scaled down closer together — the same reach), let fall from where the arrow was at that
   // point (between frames: a full-draw arrow covers ~1 m a frame)
   if (!p.noHit) {
-    const cap = Math.ceil(W.dropMax / Math.max(0.2, p.dk) - 1e-6);
+    const cap = Math.ceil((W.dropMax * W.dropEvery) / p.every - 1e-6);
     for (let n = 0; n < 3 && p.drops < cap && p.dist >= p.drop; n++) {
       drip(p, _tp.copy(p.pos).addScaledVector(p.dir, -(p.dist - p.drop)));
       p.drops++; p.drop += p.every;

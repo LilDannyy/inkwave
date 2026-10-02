@@ -5,7 +5,7 @@
 // file, PRE_ARGS=<scene>, PLAY=1 so the paint stays). Scenes:
 //   full       one full-draw volley from (0, 0, −32), level along +z (the default)
 //   ring       the same at ring 1 (charge 0.6)          tap   a tap (charge 0.3)
-//   three      three full-draw volleys side by side from x = −9, 0, 9 (three kids, one each)
+//   three      three full-draw volleys side by side from x = −1.6, 0, 1.6 (three kids, one each)
 // The cameras (tools/botlab/jobs/bow-paint/shots.sh): 'archer' just behind and above the kid, 'top' straight down over
 // the flight, 'view' from the side — the same as the lead's tools/botlab/jobs/bow-paint/ref/bow-now-*.jpg.
 (async () => {
@@ -14,8 +14,8 @@
   const { MAIN_KITS } = await import('./src/game/kits/registry.js');
   const G = window.__G, ARGS = (window.__preArgs || 'full').split(' '), SC = ARGS[0];
   // what-ifs: PRE_ARGS='full tune=dropScale:0.6' sets those WEAPONS.bow values for the picture
-  const TUNE = (/tune=([\w.:,-]+)/.exec(ARGS.slice(1).join(' ')) || [])[1];
-  if (TUNE) for (const kv of TUNE.split(',')) { const [k, v] = kv.split(':'); if (k in WEAPONS.bow) WEAPONS.bow[k] = +v; }
+  const TUNE = (/tune=([\w.:,\/-]+)/.exec(ARGS.slice(1).join(' ')) || [])[1];
+  if (TUNE) for (const kv of TUNE.split(',')) { const [k, v] = kv.split(':'); if (k in WEAPONS.bow) WEAPONS.bow[k] = v.includes('/') ? v.split('/').map(Number) : +v; }
   dbg.freeze();
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const DT = 1 / 60, frame = () => { g._skipRender = true; g._frame(DT); g._skipRender = false; };
@@ -33,7 +33,7 @@
   // the same colours every time: the archer's team lemon, the other grape
   { const L = TEAM_PALETTES.find((p) => p.id === 'lemon-grape'); if (L && g._setPalette) g._setPalette(me.team === 0 ? L : { ...L, a: L.b, b: L.a }); }
   step(0.2);
-  const xs = SC === 'three' ? [-9, 0, 9] : [0];
+  const xs = SC === 'three' ? [-1.6, 0, 1.6] : [0];   // (three: side by side, as you'd lay lines to cover a floor)
   const charge = SC === 'ring' ? 0.6 : SC === 'tap' ? 0.3 : 1;
   const kids = xs.map((x, i) => mates[i]);
   kids.forEach((E, i) => { put(E, V(xs[i], 0, -32), 0); E.setWeapon('bow'); E.character.root.visible = true; E.character.setVisible?.(true); });

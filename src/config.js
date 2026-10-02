@@ -198,7 +198,7 @@ export const WEAPONS = {
   },
   bow: {
     id: 'bow', name: 'Tideline Bow', kind: 'bow', class: 'Bow', anim: 'charger',
-    blurb: 'Draw to fill two rings, then loose three arrows at once: a flat fan on the ground, an upright one in the air. Past the first ring the arrows stick where they land and burst.',
+    blurb: 'Draw to fill two rings, then loose three arrows at once: a fan before full draw, three side by side at full draw, raining a band of ink as they fly. Past the first ring the arrows stick where they land and burst.',
     stats: { range: 0.85, damage: 0.6, rate: 0.45, mobility: 0.5, paint: 0.6 },
     // (kits/bow.js) draw time to full; ring 1 is this share of it. Charge < ring1 = a tap: short, weak, no lodge
     chargeTime: 1.0, ring1: 0.45,
@@ -207,29 +207,35 @@ export const WEAPONS = {
     flightTap: [5, 7.5], flightRing: [12.5, 16.5], flightFull: 21,   // straight flight per tier (m), then the arrow dives
     speedTap: 32, speedRing: [42, 48], speedFull: 58,       // arrow speed (m/s): fast, with a light arc
     straight: 0.05, grav: 6, diveGrav: 140, diveDrag: 6,    // past its flight an arrow noses down into the ground (~3-4 m)
-    damageTap: [14, 20], damageRing: [30, 38], damageFull: 55,   // direct hit, centre arrow
-    sideMul: 0.8, sideFull: 45,                             // side arrows (full draw: centre + side = a splat)
+    damageTap: [14, 20], damageRing: [30, 38], damageFull: 35,   // direct hit, centre arrow
+    // side arrows. Full draw: 35 each, all three to splat (Splatoon's Tri-Stringer) — 2026-10-02, with the arrows
+    // parallel (was 55 + 45: centre + side splatted, the 4.5° fan keeping that to ~12 m; parallel it'd be any range)
+    sideMul: 0.8, sideFull: 35,
     // degrees between neighbouring arrows; full draw: parallel arrows fanGap m apart (Splatoon 3's Tri-Stringer: 8° / 8° /
     // 0°, 0.4 apart — side by side on the ground, one over another in the air). 2026-10-02 (was 8 / 6 / 4.5°)
     fanTap: 8, fanRing: 8, fanFull: 0, fanGap: 0.4,
     fuseRing: 0.7, fuseFull: 0.55,                          // lodged arrow → burst (s)
     burstRadius: [1.35, 1.8], burstInner: 0.6,              // [ring, full] (m); full damage inside burstInner
     burstDamage: [30, 45], burstEdge: [12, 15],
-    burstPaint: [1.2, 1.55],                                // a lodged arrow's burst ink [ring, full] (m)
+    burstPaint: [0.75, 0.9],                                // a lodged arrow's burst ink [ring, full] (m; was 1.2 / 1.55)
     // ink (kits/bow.js), 2026-10-02 (the user: "the bow needs to cover ink a bit better … an uninterrupted straight line";
     // modelled on the Tri-Stringer's data, 1 unit ≈ 1 m): FALLING SPRAY — each arrow lets fall up to dropMax droplets, the
     // first dropFirst m in front of the archer, then one every dropEvery m; radius dropRadius (dropFeet: the centre
     // arrow's first, at your feet), stretched along the flight dropLen × in length when it falls from under dropLow m,
     // easing to round at dropHigh m. The three arrows' droplets are staggered a third of the spacing apart, so a full
     // draw's parallel arrows lay one unbroken band. dropScale scales a droplet's radius and spacing together (the band
-    // narrows, never breaks); dropRing / dropTap on top of it for ring 1 / a tap. LANDING — the patch where an arrow lands: landWidth wide
-    // (tap / ring 1; landWidthFull at full draw; landTap × for a tap), on a floor stretched landLenFlat × in length
-    // skimming in under landFlat°, easing to landLenSteep × past landSteep°. Replaces the drip trail (trailEvery 1.1 m,
-    // 0.3 m stretched ×2 under the centre arrow; a 0.32 m dot every 4.4 m under each side one), paintTap 0.55 and
-    // paintStick 0.42 (tools/botlab/tests/bow-paint.js)
+    // narrows, never breaks; the spacing never under dropGapMin m — a tap's tiny droplets make a dotted line — and the
+    // reach of dropMax × dropEvery stays); dropRing / dropTap on top of it for ring 1 / a tap. LANDING — the patch where
+    // an arrow lands: landWidth wide (tap / ring 1; landWidthFull at full draw; landTap × for a tap), on a floor
+    // stretched landLenFlat × in length skimming in under landFlat°, easing to landLenSteep × past landSteep°. Replaces
+    // the drip trail (trailEvery 1.1 m, 0.3 m stretched ×2 under the centre arrow; a 0.32 m dot every 4.4 m under each
+    // side one), paintTap 0.55 and paintStick 0.42 (tools/botlab/tests/bow-paint.js)
     dropEvery: 10, dropFirst: 1.25, dropMax: 5, dropRadius: 1.39, dropFeet: 1.683, dropLen: 2.7, dropLow: 3, dropHigh: 10,
-    dropScale: 1, dropRing: 1, dropTap: 1,
-    landWidth: 2.5, landWidthFull: 3.0, landTap: 1, landLenFlat: 2.4, landLenSteep: 1.4, landFlat: 10, landSteep: 35,
+    // The balance pass (botlab Turf War, the roster mirrored): the Tri-Stringer's own sizes (dropScale 1, landings 2.5 /
+    // 3.0, the old bursts) painted ~2.4× the roster median a minute; these land it at ~0.9× — a band ~1.25 m wide
+    // (droplets at 35 % of the Tri-Stringer's radius and spacing), landings at 80 %, smaller bursts
+    dropScale: 0.35, dropRing: 0.85, dropTap: 0.5, dropGapMin: 2.5,
+    landWidth: 2.0, landWidthFull: 2.4, landTap: 0.4, landLenFlat: 2.4, landLenSteep: 1.4, landFlat: 10, landSteep: 35,
     airDraw: 1 / 3,                                         // the draw's speed while airborne (× ; Splatoon: 3× as long)
     inkRecoveryDelay: 0.33,                                 // s after a shot with no ink refill at all, any form (actor.js)
     cooldown: 0.22, moveSpeedDrawing: 2.6, moveSpeedFiring: 4.2,

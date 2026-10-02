@@ -49,9 +49,9 @@
   if (G.fx) { G.fx.onDropletLand = null; G.fx.onSpeck = null; }   // (the FX droplets' own random ink: off)
   const W = WEAPONS.bow;
   const NEW = W.dropEvery !== undefined;   // (this file also measures the old bow, before 2026-10-02's change)
-  // what-ifs: PAGE_ARGS='… tune=dropScale:0.6,dropTap:0.4' sets those WEAPONS.bow values for this run
-  const TUNE = (/tune=([\w.:,-]+)/.exec(window.__pageArgs || '') || [])[1];
-  if (TUNE) for (const kv of TUNE.split(',')) { const [k, v] = kv.split(':'); if (k in W) W[k] = +v; }
+  // what-ifs: PAGE_ARGS='… tune=dropScale:0.6,burstPaint:1/1.2' sets those WEAPONS.bow values for this run
+  const TUNE = (/tune=([\w.:,\/-]+)/.exec(window.__pageArgs || '') || [])[1];
+  if (TUNE) for (const kv of TUNE.split(',')) { const [k, v] = kv.split(':'); if (k in W) W[k] = v.includes('/') ? v.split('/').map(Number) : +v; }
   const reset = () => {
     hook = null; after = null; ctl.clear();
     S.clear(); P.clear(); MAIN_KITS.bow?.clear?.(); G.paint.clear?.();
@@ -110,26 +110,30 @@
     }
     return { L: r2(L), dx, dz, cover: r2(on / Math.max(1, tot)), maxGap: r2(maxGap), first };
   };
-  // the inked run across the axis (o, dx, dz) at d: contiguous through the axis point (≤ ±4 m)
-  const across = (o, dx, dz, d) => {
-    const at = (s) => inkAt(o.x + dx * d - dz * s, o.z + dz * d + dx * s) === team;
-    if (!at(0)) return 0;
-    let a = 0, b = 0;
-    while (a < 4 && at(-(a + 0.05))) a += 0.05;
-    while (b < 4 && at(b + 0.05)) b += 0.05;
-    return a + b + 0.05;
+  // the band at d along the axis (o, dx, dz): the longest inked run across it within ±1.2 m of the axis (the band
+  // wanders: the three arrows' droplets sit 0.4 m either side of it) — what a squid swims along
+  const across = (o, dx, dz, d, w = 1.2) => {
+    let best = 0, run = 0;
+    for (let s = -w; s <= w + 1e-6; s += 0.05) {
+      if (inkAt(o.x + dx * d - dz * s, o.z + dz * d + dx * s) === team) { run += 0.05; best = Math.max(best, run); } else run = 0;
+    }
+    return best;
   };
+  const SQUID = 0.4;   // (a band narrower than a swimming squid at some point is a break in it)
   const lineStats = (v) => {
-    // the axis: from the archer through the centre arrow's landing
+    // the axis: from the archer through the centre arrow's landing; every 0.1 m from 0 to there, the band's width
     const c = v.tracks.find((t) => t.center);
     const al = along(v.o, c, 1.5);
-    const widths = [];
-    for (let d = 2; d <= al.L - 1; d += 0.5) widths.push(r2(across(v.o, al.dx, al.dz, d)));
-    const ws = [...widths].sort((a, b) => a - b);
-    // the line's start: the nearest d from which the axis stays inked ≥ 95 % to the landing
+    const prof = [];
+    for (let d = 0; d <= al.L + 1e-6; d += 0.1) prof.push(across(v.o, al.dx, al.dz, d));
+    const from = (d0) => { let on = 0, tot = 0, gap = 0, maxGap = 0; prof.forEach((w, i) => { if (i * 0.1 < d0 - 1e-6) return; tot++; if (w >= SQUID) { on++; gap = 0; } else { gap += 0.1; maxGap = Math.max(maxGap, gap); } }); return { cover: on / Math.max(1, tot), maxGap }; };
+    const b = from(1.5);
+    const ws = prof.filter((w, i) => i * 0.1 >= 2 && i * 0.1 <= al.L - 1).map(r2).sort((x, y) => x - y);
+    // the band's start: the nearest d from which it holds (≥ 95 % of the way, swimmable) to the landing
     let startD = null;
-    for (let d = 0; d <= al.L; d += 0.25) { if (along(v.o, c, d).cover >= 0.95) { startD = r2(d); break; } }
-    return { L: al.L, cover: al.cover, maxGap: al.maxGap, first: al.first, start: startD, widthMed: ws[ws.length >> 1] ?? 0, width10: ws[Math.floor(ws.length * 0.1)] ?? 0, widthMin: ws[0] ?? 0, widthMax: ws[ws.length - 1] ?? 0 };
+    for (let d = 0; d <= al.L; d += 0.25) { if (from(d).cover >= 0.95) { startD = r2(d); break; } }
+    return { L: al.L, cover: r2(b.cover), maxGap: r2(b.maxGap), axisCover: al.cover, axisGap: al.maxGap, first: al.first, start: startD,
+      widthMed: ws[ws.length >> 1] ?? 0, width10: ws[Math.floor(ws.length * 0.1)] ?? 0, widthMin: ws[0] ?? 0, widthMax: ws[ws.length - 1] ?? 0 };
   };
   const avg = (xs, k) => r2(xs.reduce((t, x) => t + x[k], 0) / xs.length);
 
@@ -154,7 +158,7 @@
         const v = all[0];
         rep[name] = {
           c, total: avg(all, 'turf'), trail: avg(trail, 'turf'), landBurst: avg(lb, 'turf'), recs: Math.max(...all.map((x) => x.recs)),
-          line: { cover: avg(lines, 'cover'), maxGap: Math.max(...lines.map((x) => x.maxGap)), start: avg(lines, 'start'), widthMed: avg(lines, 'widthMed'), width10: avg(lines, 'width10'), widthMin: Math.min(...lines.map((x) => x.widthMin)), widthMax: Math.max(...lines.map((x) => x.widthMax)), L: avg(lines, 'L') },
+          line: { cover: avg(lines, 'cover'), maxGap: Math.max(...lines.map((x) => x.maxGap)), axisCover: avg(lines, 'axisCover'), axisGap: Math.max(...lines.map((x) => x.axisGap)), start: avg(lines, 'start'), widthMed: avg(lines, 'widthMed'), width10: avg(lines, 'width10'), widthMin: Math.min(...lines.map((x) => x.widthMin)), widthMax: Math.max(...lines.map((x) => x.widthMax)), L: avg(lines, 'L') },
           trailLine: { cover: avg(tl, 'cover'), maxGap: Math.max(...tl.map((x) => x.maxGap)), start: avg(tl, 'start'), widthMed: avg(tl, 'widthMed'), width10: avg(tl, 'width10') },
           arrowsCover: arrowsCover[0], landD: landD[0],
           spread: v.start.map((p) => [r2(p.x - v.start[1].x), r2(p.y - v.start[1].y)]), dirs: v.vel.map((u) => r2(Math.atan2(u.x, u.z) * 180 / Math.PI)),
@@ -162,13 +166,13 @@
       }
       R('per-shot ink (m² of turf, clean flat floor; line = along the full draw\'s axis from 1.5 m to the centre arrow\'s landing)', true, rep);
       const F = rep.full, Rg = rep.ring;
-      R(`full draw: the line is unbroken — inked ${F.line.cover} along the axis from 1.5 m to the landing (≥ 0.95), longest bare run ${F.line.maxGap} m (≤ 0.5)`,
-        F.line.cover >= 0.95 && F.line.maxGap <= 0.5, F.line);
+      R(`full draw: the band is unbroken — swimmable (≥ ${SQUID} m of ink across it) ${F.line.cover} of the way from 1.5 m to the landing (≥ 0.95), longest break ${F.line.maxGap} m (≤ 0.3)`,
+        F.line.cover >= 0.95 && F.line.maxGap <= 0.3, F.line);
       R(`…it starts within 1.5 m of the archer (${F.line.start} m) and runs to where the arrow lands (${F.line.L} m)`, F.line.start !== null && F.line.start <= 1.5, { start: F.line.start, L: F.line.L, first: F.line.first });
-      R(`…a band: its width (the inked run across the axis, every 0.5 m) ${F.line.widthMed} m at the median (1.8…2.8), ≥ 1.2 m at the 10th percentile (${F.line.width10})`,
-        F.line.widthMed >= 1.8 && F.line.widthMed <= 2.8 && F.line.width10 >= 1.2, F.line);
-      R(`ring 1: three lines in an 8° fan — each arrow's own track inked ≥ 60 % from 1.5 m to its landing (${Rg.arrowsCover.map(r2).join(' / ')})`,
-        Rg.arrowsCover.every((x) => x >= 0.6), { cover: Rg.arrowsCover, dirs: Rg.dirs });
+      R(`…a band: its width (the longest inked run across it, every 0.1 m from 2 m out to 1 m short of the landing) ${F.line.widthMed} m at the median (1.0…1.8), ≥ 0.8 m at the 10th percentile (${F.line.width10})`,
+        F.line.widthMed >= 1.0 && F.line.widthMed <= 1.8 && F.line.width10 >= 0.8, F.line);
+      R(`ring 1: three lines in an 8° fan — each arrow's own track inked ≥ 55 % from 1.5 m to its landing (${Rg.arrowsCover.map(r2).join(' / ')}); a full draw inks more (${F.total} vs ${Rg.total} m²)`,
+        Rg.arrowsCover.every((x) => x >= 0.55) && F.total > Rg.total, { cover: Rg.arrowsCover, dirs: Rg.dirs });
       R(`paint records per volley ≤ 40 (tap ${rep.tap.recs}, ring ${Rg.recs}, full ${F.recs}; each splat is one record online, + 1 for the volley itself)`,
         Math.max(rep.tap.recs, Rg.recs, F.recs) + 1 <= 40, { tap: rep.tap.recs, ring: Rg.recs, full: F.recs });
       // ---- spread: parallel at full draw (ground: side by side, 0.4 m; air: stacked), 8° fans otherwise
@@ -273,7 +277,9 @@
         return hits.filter((h) => h.vic === foes[0] && h.wid === 'bow').map((h) => h.dmg);
       };
       const res = { d10: shot(10, 0), d20: shot(20, 0), d10off: shot(10, 0.3), d20off: shot(20, 0.3), ring10: shot(10, 0, 0.6) };
-      R(`full-draw direct hits on a foe 10 / 20 m off (dead centre; 0.3 m off the aim) — config damageFull ${W.damageFull}, sideFull ${W.sideFull}`, true, res);
+      const sum = (a) => a.reduce((t, x) => t + x, 0);
+      R(`full-draw direct hits: dead centre on a foe 10 / 20 m off all three arrows hit (${sum(res.d10)} / ${sum(res.d20)}: a splat); 0.3 m off, two (${sum(res.d10off)} / ${sum(res.d20off)}: the burst has to finish) — damageFull ${W.damageFull}, sideFull ${W.sideFull}`,
+        res.d10.length === 3 && res.d20.length === 3 && sum(res.d10) >= 100 && sum(res.d20) >= 100 && res.d10off.length === 2 && res.d20off.length === 2 && sum(res.d10off) < 100, res);
       if (w0) me.setWeapon(w0);
     }
   } catch (e) {
