@@ -135,6 +135,12 @@
     place(E1, 0, -11); place(M2, 0, 2); place(M1, -2, -9); step(0.05);
     const outOf = hpLost(M2, () => shoot(E1, V(0, 0.9, -10.4), chestOf(M2)), 0.8);
     R('shots: an enemy firing from inside out: half', Math.abs(outOf - 20) < 0.6, { outOf });
+    // (assists, src/game/assists.js: a halved hit still counts — E1 chips M2 through the film, E2 splats M2)
+    { place(M2, 0, -8.6); place(E1, 0, -22); place(M1, -2.5, -10); step(0.05);
+      const as0 = E1.stats.assists || 0, chip = hpLost(M2, () => shoot(E1, V(0, 0.9, -21.4), chestOf(M2)));
+      G.projectiles.applyHit(E2, M2, 500, 'shooter'); step(0.1);
+      R('shots: a halved hit still earns its shooter the assist when a teammate splats that player', chip > 0 && chip < 25 && (E1.stats.assists || 0) === as0 + 1 && !M2.alive, { chip, assists: [as0, E1.stats.assists] });
+      M2.respawn(); step(0.05); }
     R('shots: every halved shot fizzled at the film (passes / fizzles counted)', DB.stats.passes >= 3 && DB.stats.fizzles >= 3, { passes: DB.stats.passes, fizzles: DB.stats.fizzles, cuts: DB.stats.cuts });
     void b;
   }
