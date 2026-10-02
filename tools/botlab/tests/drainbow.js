@@ -14,7 +14,9 @@
 //              own team's: none
 //   cross      walking through the film ripples it (a ripple slot) and counts a crossing
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/drainbow.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=place,shots,drain,gain,meter,view,cross,end'
+//   bots       a bot dropped inside an enemy's walks out (its danger area); a bot with it ready, a foe close and a
+//              teammate beside it sets it down
+//   PAGE_ARGS='only=place,shots,drain,gain,meter,view,cross,bots'
 (async () => {
   const g = window.__inkwave, m = g.match, G = __G, A = G.audio, dbg = g.debug;
   const THREE = await import('three');
@@ -247,6 +249,32 @@
     E1._go = { move: V(1, 0, 0) }; step(1.6); E1._go = null;
     R('cross: walking in and out through the film: two crossings, each a ripple on the film (a dimple in, a bulge out)', c1 - c0 === 1 && DB.stats.crossings - c0 === 2 && b.look.ripN - rip0 >= 2,
       { crossings: DB.stats.crossings - c0, ripples: b.look.ripN - rip0, signs: b.look.U.uRipK.value.slice(0, 3).map((v) => v.y) });
+  }
+
+  // ======================================================================================== bots
+  if (want('bots')) {
+    reset();
+    const { SPECIAL_STATS } = await import('./src/game/botSpecials.js');
+    place(E1, 0, -10); step(0.05); start(E1); step(D.inflate + 0.2);
+    // a teammate of yours with its real brain, dropped inside the enemy's bubble: it notices (it's on the map) and leaves
+    const brain = M1.bot, Brain = brain.constructor;
+    M1.bot = new Brain(M1, 'normal'); M1.bot.aimYaw = M1.yaw;
+    place(M1, 1, -10); step(0.05);
+    const esc0 = SPECIAL_STATS.escapes;
+    let outAt = null;
+    step(4, (i) => { if (outAt == null && !DB.inEnemy(M1)) outAt = r2(i / 60); });
+    R('bots: a bot inside an enemy Drainbow notices it and walks out (an escape)', outAt != null && outAt < 3 && SPECIAL_STATS.escapes > esc0,
+      { outAt, escapes: SPECIAL_STATS.escapes - esc0 });
+    M1.bot = brain;
+    // a bot with the Drainbow ready, a foe close and a teammate beside it: it sets it down
+    reset();
+    const b2 = M2.bot; M2.bot = new Brain(M2, 'normal');
+    place(M2, 0, -10); place(M1, 1.5, -10); place(E2, 0, -3); E2.hp = 1e6; M2.hp = 1e6; M1.hp = 1e6;
+    M2.specialId = 'drainbow'; M2.special = M2.specialCost();
+    let used = null;
+    step(6, (i) => { if (used == null && M2.specialActive?.id === 'drainbow') used = r2(i / 60); });
+    R('bots: with a foe close and a teammate beside it, a bot sets its Drainbow down', used != null, { used });
+    M2.bot = b2;
   }
 
   PLAYER.inkRefillKid = savedRefill[0]; PLAYER.inkRefillSwim = savedRefill[1];

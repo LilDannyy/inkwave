@@ -165,6 +165,8 @@ class Drainbow {
       }
     }
     if (extending) this.boostT = 0.5;
+    // (the last bit of a growth the throttle held back: sent once it stops growing)
+    else if (this.gid && !this.ghost && this.life !== this.sentLife && G.time - this.sentT > 0.25) { rec(this.owner, [4, 'x', r2(this.life)]); this.sentLife = this.life; this.sentT = G.time; }
     this.boostT -= dt; this.extT -= dt;
     // ---- the streams (every screen: drained foes' ink pulled to the middle, flowing on to the team inside)
     if (near(this.pos, 45)) {
