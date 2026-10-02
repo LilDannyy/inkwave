@@ -8,7 +8,7 @@
 //              else (melee, rollers, devices …) when the line from the attacker does; and whatever reaches someone
 //              INSIDE the bubble came through the film: always halved. The shot fizzles at the film (sparks, a fizz, a
 //              small ripple). The shooter's screen decides, like every hit (netmatch: the halved damage is what's sent).
-//   inside     foes inside are drained — ink inkDrain / s, special specialDrain × a full meter / s — by their own screen
+//   inside     foes inside are drained — ink inkDrain / s (and no refill), special specialDrain × a full meter / s — by their own screen
 //              (each player owns their ink and meter; the host its bots), and you and your teammates inside gain: ink
 //              and special at drain × (foes inside) / (your team inside), every screen from its own view of where
 //              everyone is (synced positions). None in it: nobody gains.
@@ -143,7 +143,10 @@ class Drainbow {
     for (const e of foes) {
       e._dbT = G.time;
       if (e.remote) continue;
+      // (no refill in there: whatever the tank gained since the drain last frame goes too — a special's own refill aside)
+      if (e._dbInk !== undefined && G.time - e._dbInkT < 0.1 && e.ink > e._dbInk && !e.specialActive) e.ink = e._dbInk;
       e.ink = Math.max(0, e.ink - d.inkDrain * dt);
+      e._dbInk = e.ink; e._dbInkT = G.time;
       if (!e.specialActive) e.special = Math.max(0, e.special - d.specialDrain * e.specialCost() * dt);
     }
     if (share > 0) {
@@ -165,8 +168,8 @@ class Drainbow {
     this.boostT -= dt; this.extT -= dt;
     // ---- the streams (every screen: drained foes' ink pulled to the middle, flowing on to the team inside)
     if (near(this.pos, 45)) {
-      for (const e of foes) drainStream(chest(e, _p), this.pos, e.color || G.teamColors[e.team], 15, dt);
-      if (share > 0) for (const g of mates) inflow(this.pos, chest(g, _p), g.color || G.teamColors[g.team], 9 * Math.min(2, share), dt, this.t);
+      for (const e of foes) drainStream(chest(e, _p), this.pos, e.color || G.teamColors[e.team], 22, dt);
+      if (share > 0) for (const g of mates) inflow(this.pos, chest(g, _p), g.color || G.teamColors[g.team], 18 * Math.min(2, share), dt, this.t);
     }
     this._draw(dt);
     return true;

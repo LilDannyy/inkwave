@@ -174,6 +174,18 @@ screen hears only as the owner's flag (its own ghost missed, or it joined mid-ma
 (the marking team's chime, the marked player's evil one and its end) play from each screen's own mark:on / mark:off
 (src/game/statusFx.js → src/audio/cues.js).
 
+**Drainbow** (src/game/sp-drainbow.js). The owner's special records (`['k', nid, 'sp', …]`): the start `[0, index]`
+then the bubble `[4, 'p', x, y, z, radius, life]`, its longer life `[4, 'x', life]` while its owner is fed (a few
+times a second, ≥ 0.2 s at a time), and the end `[1, reason]`, which pops it. Every other screen builds a ghost bubble
+from those (it pops on its own only if no end ever arrives, 3 s past its life). The rest is each screen's own, from
+the positions it shows: who's inside (crossing ripples, the drain streams); the drain of the players it owns (their
+ink and special meter — the host's screen does its bots) and their gains (teammates' ink and meter; the owner's share
+becomes bubble time on the owner's screen only, which is why the life rides the record); the grey view and muffle of
+its own player. Shots: like every hit, the shooter's screen decides — its copy of the bubble (ghost or not) halves a
+shot whose path touched it (or that reaches someone inside it), and the halved damage is what `{k:'hit'}` carries; the
+victim's owner applies it as it comes (applyHit doesn't halve again while `_applyingHit`). Tested by
+`tools/botlab/tests/net-drainbow.cjs` (`CLIENTS=2`).
+
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
 step with the paint that caused them. Guests follow (zones.js `netEvent`): they only predict the count between

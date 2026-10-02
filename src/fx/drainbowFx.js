@@ -35,7 +35,7 @@ float dbN(vec3 x) {
 const FILM_VS = /* glsl */`
 uniform float uTime; uniform float uR; uniform float uPop; uniform float uWob;
 uniform vec4 uRip[${RIPS}]; uniform vec2 uRipK[${RIPS}];
-varying vec3 vN; varying vec3 vV; varying vec3 vP; varying float vRing;
+varying vec3 vN; varying vec3 vV; varying vec3 vP; varying float vRing; varying float vD;
 void main() {
   vec3 n = normalize(position);
   float disp = 0.0, ring = 0.0;
@@ -54,16 +54,16 @@ void main() {
   disp += uWob * 0.05 * sin(uTime * 2.1 + n.y * 3.1 + n.x * 1.7) + uPop * 0.25;
   vec3 p = n * (1.0 + disp / max(uR, 0.5));
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  vN = normalize(normalMatrix * n); vV = normalize(-mv.xyz); vP = n; vRing = ring;
+  vN = normalize(normalMatrix * n); vV = normalize(-mv.xyz); vP = n; vRing = ring; vD = -mv.z;
   gl_Position = projectionMatrix * mv;
 }`;
 const FILM_FS = /* glsl */`
 uniform vec3 uColor; uniform float uTime; uniform float uSwirl; uniform float uAlpha; uniform float uBoost; uniform float uDrain;
-uniform float uPop; uniform vec3 uSun; uniform float uBack;
-varying vec3 vN; varying vec3 vV; varying vec3 vP; varying float vRing;
+uniform float uPop; uniform vec3 uSun; uniform float uBack; uniform float uCamIn;
+varying vec3 vN; varying vec3 vV; varying vec3 vP; varying float vRing; varying float vD;
 ${NOISE}
 void main() {
-  vec3 N = normalize(vN), V = normalize(vV);
+  vec3 N = normalize(vN) * (uBack > 0.5 ? -1.0 : 1.0), V = normalize(vV);   // (the far side: its inner face toward you)
   float c = abs(dot(N, V)), f = 1.0 - c;
   // film thickness: a slow swirl round the bubble (uSwirl integrates its speed), bands draining down the sides
   float ang = uSwirl * 0.3 + vP.y * 1.4;
@@ -79,15 +79,18 @@ void main() {
   float rim = pow(f, 2.3);
   vec3 R = reflect(-V, N);
   float sd = max(dot(R, uSun), 0.0);
-  float spec = pow(sd, 140.0) * 3.2 + pow(sd, 14.0) * 0.22;
-  float win = smoothstep(0.6, 0.85, R.y) * 0.16 * (1.0 - uBack * 0.6);
+  float spec = (pow(sd, 140.0) * 3.2 + pow(sd, 14.0) * 0.22) * (1.0 - uBack * 0.75);
+  float win = smoothstep(0.6, 0.85, R.y) * 0.16 * (1.0 - uBack * 0.8);
   float a = 0.04 + 0.46 * rim + 0.05 * smoothstep(0.45, 0.95, th) + vRing * 0.4 + uBoost * (0.05 + 0.2 * rim) + uDrain * 0.03;
   vec3 col = tint * (0.5 + 0.95 * rim + vRing * 1.1 + uBoost * 0.5 + uDrain * 0.15);
   // the pop: the film tears open from holes that spread, their edges flaring white
   float tearN = dbN(vP * 4.5 + 7.0);
   float keep = uPop > 0.001 ? smoothstep(uPop * 1.3 - 0.12, uPop * 1.3 + 0.04, tearN) : 1.0;
   float edge = uPop > 0.001 ? (1.0 - smoothstep(0.0, 0.08, abs(tearN - uPop * 1.3))) : 0.0;
-  a = clamp(a * keep, 0.0, 0.85) * uAlpha;
+  // (seen from inside: a lighter veil, its rim far softer; the film right at the camera fades out)
+  float veil = (1.0 - uBack * 0.35) * mix(1.0, 0.45 + 0.4 * (1.0 - rim), uCamIn) * smoothstep(0.8, 3.0, vD);
+  a = clamp(a * keep * veil, 0.0, 0.85) * uAlpha;
+  spec *= smoothstep(0.8, 3.0, vD);
   vec3 light = col * a + vec3(spec + win) * uAlpha * keep + vec3(1.6, 1.7, 1.8) * edge * uAlpha * 0.8;
   gl_FragColor = vec4(light, a * 0.75);
 }`;
@@ -130,7 +133,7 @@ export class BubbleLook {
     const U = this.U = {
       uTime: { value: 0 }, uR: { value: 4 }, uPop: { value: 0 }, uWob: { value: 1 }, uSwirl: { value: 0 },
       uColor: { value: new THREE.Color().copy(color) }, uAlpha: { value: 0 }, uBoost: { value: 0 }, uDrain: { value: 0 },
-      uSun: { value: new THREE.Vector3(-0.4, 0.75, 0.5).normalize() }, uBack: { value: 0 },
+      uSun: { value: new THREE.Vector3(-0.4, 0.75, 0.5).normalize() }, uBack: { value: 0 }, uCamIn: { value: 0 },
       uRip: { value: Array.from({ length: RIPS }, () => new THREE.Vector4(0, 1, 0, -99)) },
       uRipK: { value: Array.from({ length: RIPS }, () => new THREE.Vector2(0, 0)) },
     };
@@ -162,6 +165,7 @@ export class BubbleLook {
     const U = this.U;
     U.uTime.value = o.t; U.uR.value = o.r; U.uAlpha.value = o.alpha; U.uPop.value = o.pop || 0; U.uWob.value = o.wob ?? 1;
     U.uBoost.value = o.boost || 0; U.uDrain.value = o.drain || 0;
+    U.uCamIn.value = G.camera && G.camera.position.distanceTo(o.c) < o.r ? 1 : 0;
     U.uSwirl.value += dt * (0.9 + 2.4 * (o.boost || 0) + 0.8 * (o.drain || 0));
     for (const m of [this.back, this.front]) { m.position.copy(o.c); m.scale.setScalar(Math.max(0.01, o.r)); }
     const show = o.foot > 0.3 && o.groundY > -Infinity;
@@ -189,8 +193,9 @@ export function drainStream(from, to, color, rate, dt) {
   for (let k = n + rand(); k >= 1; k--) {
     _v.set(from.x + (rand() - 0.5) * 0.45, from.y + (rand() - 0.4) * 0.7, from.z + (rand() - 0.5) * 0.45);
     const d = _v.distanceTo(to), life = clamp(d / 3.6, 0.25, 1.4);
-    _c.copy(color).lerp(WHITE, 0.25).multiplyScalar(1.7);
-    flyGlow(fx, _v, to, _c, 0.06 + rand() * 0.05, life, 0.6);
+    _c.copy(color).lerp(WHITE, 0.2).multiplyScalar(3.0);
+    flyGlow(fx, _v, to, _c, 0.11 + rand() * 0.08, life, 0.45);
+    if (rand() < 0.3) { _c2.copy(color).lerp(WHITE, 0.3); fx.mist?.(_v, null, _c2, 0.16, 0.18); }
   }
 }
 // gaining: the drained ink (rainbow-shifted, then in their colour) flowing in round them from the bubble's middle
@@ -206,10 +211,10 @@ export function inflow(from, to, color, rate, dt, t) {
     } else {
       const a = rand() * TAU, r = 0.7 + rand() * 0.35;
       _v.set(to.x + Math.cos(a) * r, to.y + (rand() - 0.3) * 0.9, to.z + Math.sin(a) * r);
-      _c.copy(color).lerp(WHITE, 0.4).multiplyScalar(2.0);
+      _c.copy(color).lerp(WHITE, 0.35).multiplyScalar(2.6);
     }
     const d = _v.distanceTo(to), life = clamp(d / 3.2, 0.18, 1.2);
-    flyGlow(fx, _v, to, _c, 0.05 + rand() * 0.04, life, 0.3);
+    flyGlow(fx, _v, to, _c, 0.07 + rand() * 0.05, life, 0.3);
   }
 }
 // an enemy shot losing half its ink at the film: a fizz of pale rainbow sparks off the film point, outward n
@@ -253,7 +258,7 @@ varying vec2 vUv;
 ${NOISE}
 float luma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
 void main() {
-  float mono = uAfter, dW = 1e4, d = 0.0;
+  float mono = uAfter, dW = 1e4, d = 0.0, sheet = 0.0, sheetT = 1e4;
   vec3 wp = vec3(0.0);
   if (uDepthOn > 0.5) {
     float z = texture2D(tDepth, vUv).x;
@@ -261,24 +266,46 @@ void main() {
     vp /= vp.w;
     wp = (uCamWorld * vp).xyz;
     d = z >= 0.99999 ? uSkyD : distance(wp, uFrom);
+    // the front in the air: the view ray through the expanding sphere of radius uR round uFrom (a pearly sheet
+    // standing between you and whatever it hasn't reached yet — the clear-ink wave's curtain, as a sphere)
+    vec3 cam = uCamWorld[3].xyz, rd = normalize(wp - cam), oc = cam - uFrom;
+    float sd = z >= 0.99999 ? 1e5 : distance(wp, cam);
+    float bb = dot(oc, rd), cc = dot(oc, oc) - uR * uR, disc = bb * bb - cc;
+    if (disc > 0.0 && uR > 0.3) {
+      float sq = sqrt(disc);
+      for (int k = 0; k < 2; k++) {
+        float t = k == 0 ? -bb - sq : -bb + sq;
+        if (t > 0.25 && t < sd) {
+          vec3 hp = cam + rd * t, nn = normalize(hp - uFrom);
+          float gz = 1.0 - abs(dot(nn, rd));
+          float ripple = 0.55 + 0.45 * sin(hp.y * 6.0 + atan(nn.z, nn.x) * 23.0 - uTime * 9.0 + dbN(hp * 1.7) * 6.0);
+          sheet += (0.3 + 0.7 * pow(gz, 2.5)) * ripple * smoothstep(0.25, 2.0, t);
+          sheetT = min(sheetT, t);
+        }
+      }
+    }
     float wn = dbN(wp * 1.3 + vec3(0.0, uTime * 1.1, 0.0)) * 0.7 + dbN(wp * 4.1 - uTime * 2.0) * 0.3;
     dW = d - uR + (wn - 0.5) * 0.9;                                    // > 0: ahead of the front (a ragged, shimmering edge)
     mono = mix(uBefore, uAfter, smoothstep(0.45, -0.45, dW));
   }
   // near the front the view wobbles as if seen through the film
-  float band = exp(-dW * dW * 0.6);
+  float band = exp(-dW * dW * 0.35);
   vec2 uv = vUv + (vec2(dbN(vec3(vUv * 40.0, uTime * 3.0)), dbN(vec3(vUv * 40.0 + 7.0, uTime * 3.0))) - 0.5) * 0.007 * band * uFrontA;
   vec3 col = texture2D(tDiffuse, uv).rgb;
   vec3 g = vec3(luma(col)) * vec3(0.95, 1.0, 1.07);
   col = mix(col, g, mono * uMono);
   // the front: a bright pearly line with a shimmering glow round it, a soft sheen trailing behind
   if (uDepthOn > 0.5 && uFrontA > 0.001) {
-    float core = exp(-dW * dW * 14.0);
-    float sheen = dW < 0.0 ? exp(dW * 1.2) * 0.35 : 0.0;
-    float sh = 0.6 + 0.4 * sin(wp.y * 5.0 + d * 1.7 - uTime * 11.0);
-    vec3 pearl = mix(vec3(0.45, 0.95, 1.0), 0.6 + 0.4 * cos(6.2831 * (d * 0.05 + wp.y * 0.13 + uTime * 0.3 + vec3(0.0, 0.33, 0.67))), 0.5);
-    float lum = 0.35 + luma(col) * 0.65;
-    col += pearl * (core * 2.4 + band * 0.75 * sh + sheen) * uFrontA * lum;
+    float core = exp(-dW * dW * 6.0);
+    float sheen = dW < 0.0 ? exp(dW * 0.9) * 0.45 : 0.0;
+    float sh = 0.55 + 0.45 * sin(wp.y * 5.0 + d * 1.7 - uTime * 11.0);
+    vec3 pearl = mix(vec3(0.5, 0.95, 1.0), 0.55 + 0.45 * cos(6.2831 * (d * 0.05 + wp.y * 0.13 + uTime * 0.3 + vec3(0.0, 0.33, 0.67))), 0.6);
+    float lum = 0.45 + luma(col) * 0.55;
+    col += pearl * (core * 4.0 + band * 1.2 * sh + sheen) * uFrontA * lum;
+    if (sheet > 0.0) {
+      vec3 sp = mix(vec3(0.6, 0.95, 1.0), 0.6 + 0.4 * cos(6.2831 * (sheetT * 0.04 + uTime * 0.25 + vUv.y * 0.6 + vec3(0.0, 0.33, 0.67))), 0.55);
+      col = mix(col, col * 0.85 + sp * 0.3, clamp(sheet * 0.5, 0.0, 0.6) * uFrontA) + sp * sheet * 0.32 * uFrontA;
+    }
   }
   gl_FragColor = vec4(col, 1.0);
 }`;

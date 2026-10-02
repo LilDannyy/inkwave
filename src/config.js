@@ -529,7 +529,7 @@ export const SPECIALS = {
   // time runs out or its owner is splatted (popOnOwnerSplat).
   drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'Set down a shimmering rainbow bubble. Enemy ink passing through it loses half its punch, and foes inside see the world drain to grey, hear it muffled, and leak ink and special to you and your teammates inside. While it\'s up your own meter rests, but what it drains for you keeps the bubble going longer.',
     duration: 8.5, radius: 4.3, lift: 1.0, inflate: 0.55, shotMul: 0.5,
-    inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100); share of a full meter
+    inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
     extendPerMeter: 10, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
     popOnOwnerSplat: true,
     // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
