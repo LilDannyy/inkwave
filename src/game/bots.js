@@ -21,6 +21,7 @@ export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
 const _walkHit = new Hit();
 const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
+const _down = new THREE.Vector3(0, -1, 0), _stepHit = new Hit();
 // weapon families the brain treats alike: close-range pushers, and charge-then-release weapons
 // (exported so kit weapons / subs (src/game/kits/*.js) can add their kinds to these tables)
 export const MELEE = { roller: true, brush: true };
@@ -1004,10 +1005,19 @@ export class BotBrain {
       if (a.specialReady() && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : this._wantSpecial('paint', 0, false))) it.special = true;
     } else if (this.mode === 'refill') {
       it.squid = a.groundTeam === 1 || this._pathRemaining() > 2;
-      if (a.groundTeam !== 1 && this._pathRemaining() < 1.5 && inkFrac > 0.03) {
-        // no ink here: paint a puddle to swim in
-        it.squid = false; it.fire = true;
-        wantPitch = -1.0;
+      if (a.groundTeam !== 1 && this._pathRemaining() < 1.5) {
+        // arrived, but not on our ink: our ink right by us (the patch it was sent to, the puddle it just painted —
+        // a weapon's puddle lands a step ahead of the feet) → step onto it; none → paint a puddle to swim in. A charging
+        // weapon starts its draw only once it's aimed at the floor (a draw begun level looses a long shot instead)
+        const step = this._inkStep(dt);
+        if (step) {
+          move.set(step.x - a.pos.x, 0, step.z - a.pos.z);
+          if (move.lengthSq() > 1e-4) { move.normalize(); wantYaw = Math.atan2(move.x, move.z); }
+          it.squid = false;
+        } else if (inkFrac > 0.03) {
+          it.squid = false; it.fire = !CHARGES[w.kind] || a.weaponRunner.charging || this.aimPitch < -0.7;
+          wantPitch = -1.0;
+        }
       }
     }
     // ---------------- running specials (and cheering on a teammate's Cheer Orb)
@@ -2951,6 +2961,33 @@ export class BotBrain {
     }
     if (!bestP || !this._pathTo(bestP, 0.4)) this._pathTo(G.level.spawnPads[a.team], 1.2);
     this.repath = 1.2;
+  }
+
+  // Our own ink within a couple of metres, on our level, nothing in the way: the nearest such spot well inside it (two
+  // samples deep along the way there), or null. Re-checked every 0.2 s. (Refill: a spot that isn't quite under us.)
+  _inkStep(dt) {
+    const a = this.a;
+    this.inkStepT = (this.inkStepT || 0) - dt;
+    if (this.inkStepT > 0) return this.inkStepOk ? this.inkStepP : null;
+    this.inkStepT = 0.2; this.inkStepOk = false;
+    const P = this.inkStepP || (this.inkStepP = new THREE.Vector3()), own = a.team + 1;
+    const inkAt = (x, z) => {
+      const h = G.physics.raycast(_v3.set(x, a.pos.y + 0.6, z), _down, 1.3, _stepHit, true);
+      return h.hit && h.normal.y > 0.7 && Math.abs(h.point.y - a.pos.y) < 0.5 && G.paint.sample(h.face, h.u, h.v) === own ? h.point.y : null;
+    };
+    for (const r of [0.55, 0.95, 1.45, 2.05]) {
+      for (let k = 0; k < 8; k++) {
+        const ang = (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
+        const x = a.pos.x + sx * r, z = a.pos.z + sz * r;
+        const y = inkAt(x, z);
+        if (y === null || inkAt(x + sx * 0.25, z + sz * 0.25) === null) continue;
+        _v.set(a.pos.x, a.pos.y + 0.4, a.pos.z); _v2.set(x, y + 0.4, z);
+        if (G.physics.segment(_v, _v2, _stepHit, true).hit) continue;
+        P.set(x + sx * 0.15, y, z + sz * 0.15); this.inkStepOk = true;
+        return P;
+      }
+    }
+    return null;
   }
 
   // Escape move: steer a fixed random heading for a moment (hopping if on the ground), then re-plan from wherever
