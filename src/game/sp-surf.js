@@ -41,6 +41,7 @@ import { KIT_GHOSTS, netRec, netId, netHurt, netMuted } from './kits/registry.js
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
 import { makeBuoy, disposeBuoy, BUOY, RingRibbon, RING_N } from '../fx/surfFx.js';
 import '../audio/sfx-surf.js';
+import { SPECIAL_START } from '../audio/cues.js';
 
 const D = SPECIALS.surf;
 const TAU = Math.PI * 2;
@@ -504,8 +505,7 @@ export const IMPL = {
     Object.assign(s, { speed: D.moveSpeed, noSquid: true, aimFace: true, raise: true, showArc: true, bomb: { kind: 'surf', throwSpeed: D.throwSpeed, inkCost: 0 }, dur: 0, thrown: false });
     a.character.subPropHidden = true;
     heldOn(a, s);
-    SURF_STATS.uses++;
-    if (a.isLocal) play('surf_ready', { volume: 0.7 }); else if (near(a.pos, 30)) play('surf_ready', { pos: a.pos.clone(), volume: 0.45 });
+    SURF_STATS.uses++;   // (its start sound, surf_ready, comes from the cue director: SPECIAL_START below)
   },
   // click to throw (bots: when their aim is on the spot they picked — sp-surf-bots.js surfOwnAim sets botGo / botVel)
   weapon(a, s, dt, inp) {
@@ -542,6 +542,9 @@ const GHOST = {
   tick(a, s, dt) { heldTick(a, s, dt); },
 };
 registerSpecial('surf', IMPL, GHOST);
+// its start sound through the cue director (src/audio/cues.js: yours from you, theirs where they are, on top of the
+// shared special_activate)
+SPECIAL_START.surf = 'surf_ready';
 
 // ------------------------------------------------------------------------------------------------ online
 const findBuoy = (gid, ghost) => (G.specials?.world || []).find((w) => w.kind === 'surf' && w.gid === gid && (ghost === undefined || !!w.ghost === ghost));
