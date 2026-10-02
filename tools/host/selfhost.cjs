@@ -76,6 +76,21 @@ function serve(ROOT, req, res, url) {
       });
       return;
     }
+    // byte ranges: the music streams through <audio> elements, and Safari won't play media without 206 answers
+    headers['Accept-Ranges'] = 'bytes';
+    const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || '').trim());
+    if (range && (range[1] || range[2])) {
+      let start, end;
+      if (range[1]) { start = +range[1]; end = range[2] ? Math.min(+range[2], st.size - 1) : st.size - 1; }
+      else { start = Math.max(0, st.size - +range[2]); end = st.size - 1; }   // "bytes=-N": the last N bytes
+      if (start > end || start >= st.size) {
+        res.writeHead(416, { ...headers, 'Content-Range': `bytes */${st.size}` }); res.end(); return;
+      }
+      res.writeHead(206, { ...headers, 'Content-Range': `bytes ${start}-${end}/${st.size}`, 'Content-Length': end - start + 1 });
+      if (req.method === 'HEAD') { res.end(); return; }
+      fs.createReadStream(file, { start, end }).on('error', () => res.destroy()).pipe(res);
+      return;
+    }
     res.writeHead(200, { ...headers, 'Content-Length': st.size });
     if (req.method === 'HEAD') { res.end(); return; }
     fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);
