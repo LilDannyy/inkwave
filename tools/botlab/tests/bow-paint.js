@@ -4,7 +4,7 @@
 // (0.4 m apart; 8° fans at a tap / ring 1), the falling spray is a few big stretched droplets per arrow, staggered across
 // the three so a full draw lays one unbroken band, the landings ink wider; "do the mid air slow charge and ink delay").
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/bow-paint.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=shots,air,ink,damage,net' for a part ('shots' also prints the per-shot numbers as info)
+//   PAGE_ARGS='only=shots,air,ink,net,damage' for a part ('shots' also prints the per-shot numbers as info)
 // Staged on testbox (a flat deck, top y 0); everyone else parked far off, brains stubbed; hits logged, not dealt. The
 // archer stands at (0, 0, −32) and looses level along +z. Checks:
 //  - shots: per tier (tap 0.3 / ring 1 at 0.6 / full) the ink a volley lays on clean floor — trail alone, landing +
@@ -18,7 +18,8 @@
 //    the rate; standing on the tower's deck (Tower Command) draws at the full rate (testbox MODE=tower only);
 //  - ink: after a bow shot the tank refills not at all for 0.33 s, in any form (swimming included), then at the normal
 //    rate; a Spritzer swimming right after a shot refills at once;
-//  - damage: a full-draw direct hit's numbers (as configured) and how many of the three arrows hit a foe 10 / 20 m off.
+//  - net: paint records a second firing flat out (bow full draws, bow taps) stay within a Spritzer's (trigger held);
+//  - damage: a full-draw volley dead centre on a foe 10 / 20 m off lands all three arrows (a splat), 0.3 m off two.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { WEAPONS, PLAYER } = await import('./src/config.js');
@@ -263,6 +264,33 @@
         b.ink0 !== null && Math.abs(at(b, 0.3) - b.ink0) < 0.01 && subAt(b, 0.3) && at(b, 0.6) > b.ink0 + 5, { ink0: b.ink0, t03: at(b, 0.3), t045: at(b, 0.45), t06: at(b, 0.6), sub: subAt(b, 0.3) });
       const s = swimAfterShot(E, 'shooter');
       R(`…a Spritzer swimming right after a shot refills at once (0.3 s: ${s.ink0} → ${at(s, 0.3)})`, s.ink0 !== null && at(s, 0.3) > s.ink0 + 3, { ink0: s.ink0, t03: at(s, 0.3), sub: subAt(s, 0.3), cfg: { bow: W.inkRecoveryDelay, shooter: WEAPONS.shooter.inkRecoveryDelay ?? 0 } });
+    }
+
+    // ============================================================================================ records a second
+    // online cost in a sustained stream: a bot kid firing as fast as it can for 3 s (the bow: full draws back to back /
+    // taps back to back; the Spritzer: the trigger held) — each paint splat it makes is one record on the wire
+    if (want('net')) {
+      const E = mates[0];
+      const stream = (wid, pattern) => {
+        reset(); E.setWeapon(wid); step(0.3);
+        put(E, V(0, 0, -32), 0); E.ink = 1e9;
+        let recs = 0, shots = 0, other = 0; const by = {};
+        const sp0 = G.paint.splat; G.paint.splat = function (cc, r, t, o) {
+          if (r > 0 && !o?.cosmetic) {
+            // (only E's own: its team, in the lane it fires down — not a stray sub's or anyone else's)
+            if (t === E.team && Math.abs(cc.x) < 8 && cc.z > -36 && cc.z < 4) { recs++; const k = ((new Error().stack.split('\n')[2] || '').match(/(\w+\.js):(\d+)/) || [])[0]; by[k] = (by[k] || 0) + 1; } else other++;
+          }
+          return sp0.call(this, cc, r, t, o);
+        };
+        let f = 0, lastFire = E.lastFire;
+        hook = () => { E.ink = 100; E.aimYaw = E.yaw = 0; E.aimPitch = 0; E.aimDir.set(0, 0, 1); E.aimPoint.set(0, 1.2, 80); ctl.set(E, { fire: pattern(f++, E) }); };
+        after = () => { if (E.lastFire < lastFire) shots++; lastFire = E.lastFire; };
+        step(3); hook = null; ctl.delete(E); step(1.5); after = null; G.paint.splat = sp0;
+        return { recs, shots, perS: r2(recs / 3), by, other };
+      };
+      const full = stream('bow', (f, E) => !(E.weaponRunner.charge >= 0.999)), taps = stream('bow', (f) => f % 4 < 1), spritzer = stream('shooter', () => true);
+      R(`paint records a second, firing flat out for 3 s: bow full draws ${full.perS}/s (${full.shots} volleys), bow taps ${taps.perS}/s (${taps.shots}), Spritzer ${spritzer.perS}/s — the bow's within the Spritzer's`,
+        full.perS <= spritzer.perS && taps.perS <= spritzer.perS * 1.2, { full, taps, spritzer });
     }
 
     // ============================================================================================ damage
