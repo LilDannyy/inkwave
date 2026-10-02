@@ -128,7 +128,7 @@ function gloveMuzzle(a, hand, out) {
 function spawnFist(a, w, hand, m, dir, ghost = false) {
   const f = fistPool.pop() || { pos: new THREE.Vector3(), prev: new THREE.Vector3(), start: new THREE.Vector3(), vel: new THREE.Vector3(), dir: new THREE.Vector3() };
   f.owner = a; f.team = a.team; f.age = 0; f.life = w.fistRange / w.fistSpeed; f.hand = hand; f.seed = Math.random();
-  f.sp = !!a.specialActive; f.trail = -0.8; f.spin = (Math.random() - 0.5) * 0.6; f.ghost = ghost;
+  f.sp = !!a.specialActive; f.trail = -0.8; f.spin = (Math.random() - 0.5) * 0.6; f.ghost = ghost; f.dbw = 0;
   f.pos.copy(m); f.prev.copy(m); f.start.copy(m); f.dir.copy(dir); f.vel.copy(dir).multiplyScalar(w.fistSpeed);
   fists.push(f);
   if (a.isLocal || near(m)) G.audio?.play('mitts_punch', { pos: a.isLocal ? undefined : m, volume: a.isLocal ? 0.6 : 0.45, pitch: hand ? 1.06 : 0.97 });
@@ -166,7 +166,7 @@ function burstFist(f, at, direct, normal) {
     _v2.copy(e.pos); _v2.y += (e.smoothY || 0) + (e.form === 'squid' ? 0.3 : 0.7);
     const d = _v2.distanceTo(c);
     if (d > w.splashRadius || !G.physics.los(c, _v2)) continue;
-    G.projectiles.applyHit(o, e, lerp(w.splashMax, w.splashMin, clamp(d / w.splashRadius, 0, 1)), 'mitts');
+    G.projectiles.applyHit(o, e, lerp(w.splashMax, w.splashMin, clamp(d / w.splashRadius, 0, 1)), 'mitts', f.dbw ? f : null, c);   // [drainbow]
   }
   G.specials?.areaHit?.(c, w.splashRadius, w.splashMin, f.team, o);
   if (direct !== 'boss') G.boss?.splash(o, c, w.splashRadius, w.splashMax, w.splashMin, 'mitts');   // Boss Battle
@@ -200,6 +200,7 @@ function stepFist(f, i, w, dt) {
     f.age += dt;
     f.prev.copy(f.pos);
     f.pos.addScaledVector(f.vel, dt);
+    if (G.drainbow?.live && !f.dbw) G.drainbow.pass(f, f.prev, f.pos, f.team);   // [drainbow]
     const hr0 = w.fistSize;
     // bodies (a ghost fist bursts on them for the eye; the owner's client decides the hit)
     if (!dead) for (const e of G.actors) {
@@ -209,7 +210,7 @@ function stepFist(f, i, w, dt) {
       Physics.segmentCapsuleDist(f.prev, f.pos, hitBase(e), hr, h, _res);
       if (_res.dist < hr * 0.95 + hr0) {
         _v.copy(f.prev).lerp(f.pos, _res.t);
-        if (!f.ghost) G.projectiles.applyHit(f.owner, e, w.punchDamage, 'mitts');
+        if (!f.ghost) G.projectiles.applyHit(f.owner, e, w.punchDamage, 'mitts', f);
         G.fx?.burst(_v, _v2.copy(f.dir).negate(), f.owner.color, { count: 7, speed: 3.2, size: 0.08 });
         burstFist(f, _v, e, null);
         dead = true; break;

@@ -679,7 +679,7 @@ export class Actor {
       this.character.trigger('land', speed);
       this.grounded = true; this._surface();
       const swim = isSquid && this.groundTeam === 1;
-      if (!this.specialActive && (this.isLocal || this._nearCamera())) G.audio?.play(swim ? 'swim_splash' : 'land', { pos: this.pos, volume: clamp(speed / 14, 0.25, 0.9) });
+      if ((!this.specialActive || this.specialActive.free) && (this.isLocal || this._nearCamera())) G.audio?.play(swim ? 'swim_splash' : 'land', { pos: this.pos, volume: clamp(speed / 14, 0.25, 0.9) });
       emit('actor:land', { actor: this, speed, surface: this.groundTeam, pos: this.pos.clone() });
       if (this.isLocal && speed > 7) rumble(this, clamp((speed - 7) / 14, 0.05, 0.5), clamp(speed / 22, 0.1, 0.55), 70 + Math.min(90, speed * 4));
     }
@@ -787,7 +787,7 @@ export class Actor {
     const j = this.superJumpState;
     return j && j.phase === 'flight' ? j.to : this.pos;
   }
-  canSuperJump() { return this.alive && !this.superJumpState && !this.specialActive && G.match?.playing(); }
+  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing(); }   // ([drainbow] free: a special that leaves you be)
 
   // Launch toward an ally (or a fixed point). Charge in place as a glowing squid, then arc through the sky.
   // opts.instant: skip the ~0.75 s crouch charge and launch on the next frame; opts.home: an Ink Jet / Zipline jump

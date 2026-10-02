@@ -316,6 +316,7 @@ function stepWave(W, i, dt) {
     W.prev.copy(W.pos);
     W.pos.addScaledVector(W.dir, step);
     W.dist += step;
+    if (G.drainbow?.live && !W.dbw) G.drainbow.pass(W, W.prev, W.pos, W.team);   // [drainbow]
     // enemies inside the crescent's sweep (a tall, narrow slab moving along dir); each is hit once
     const hx = W.dir.x, hz = W.dir.z, hl = Math.hypot(hx, hz) || 1, ux = hx / hl, uz = hz / hl;
     const dmg = lerp(w.waveDamage, w.waveDamageFar, clamp(W.dist / w.waveRange, 0, 1));
@@ -330,7 +331,7 @@ function stepWave(W, i, dt) {
       const y0 = e.pos.y + (e.smoothY || 0);
       if (y0 + h < cy - w.waveHeight * 0.55 || y0 > cy + w.waveHeight * 0.45) continue;
       W.hits.add(e);
-      if (!W.ghost) G.projectiles.applyHit(W.owner, e, dmg, 'blade');
+      if (!W.ghost) G.projectiles.applyHit(W.owner, e, dmg, 'blade', W);
       if (G.camera && G.camera.position.distanceToSquared(e.pos) < 30 * 30) {
         _v.set(e.pos.x, y0 + Math.min(h * 0.6, 0.9), e.pos.z);
         G.fx?.burst(_v, _v2.copy(W.dir).negate(), W.col, { count: 12, speed: 4.5, size: 0.09 });

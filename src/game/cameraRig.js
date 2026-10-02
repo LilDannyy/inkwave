@@ -305,7 +305,7 @@ export class CameraRig {
     const swim = af === 'swim' || af === 'climb';
     const sj = a.superJumpState;
     const flying = !!(sj && sj.phase === 'flight');
-    const special = !!a.specialActive;
+    const special = !!a.specialActive && !a.specialActive.free;   // ([drainbow] free: a special that leaves you be)
     const p = a.visualPos ? a.visualPos(_v3) : _v3.copy(a.pos);
     // ---- pivot height above the feet (form changes glide)
     const hT = swim ? 1.15 : squid ? 1.3 : 1.85;

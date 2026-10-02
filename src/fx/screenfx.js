@@ -963,7 +963,7 @@ export class ScreenFX {
     } else s.heart = damp(s.heart, 0, 6, dt);
 
     // --- special aura (active special) + super-jump charge build-up
-    const special = alive && !!a.specialActive;
+    const special = alive && !!a.specialActive && !a.specialActive.free;   // ([drainbow] free: no aura for a bubble standing on its own)
     s.auraPulse = Math.max(0, s.auraPulse - dt * 1.4);
     const auraT = Math.max(special ? 0.75 : 0, s.jumpCharge * 0.9, s.auraPulse * 0.9);
     s.aura = damp(s.aura, auraT, auraT > s.aura ? 10 : 2.5, dt);

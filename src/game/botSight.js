@@ -206,6 +206,10 @@ export class Sight {
   // can we see e now? (ink hiding, range, cone, then the sight line to its chest, or its head)
   _look(e, k, eye, fx, fz, cone, range, located, dtc) {
     const a = this.a, dx = e.pos.x - a.pos.x, dz = e.pos.z - a.pos.z, hd = Math.hypot(dx, dz), d = Math.hypot(hd, e.pos.y - a.pos.y);
+    // [drainbow] inside an enemy Drainbow (src/game/sp-drainbow.js: a._dbT — a player there sees grey and hears it
+    // muffled): footsteps / splashes reach a bot from half as far, and it sees 15 % less far
+    const drained = G.time - (a._dbT ?? -9) < 0.2, nearR = drained ? SIGHT.near * 0.5 : SIGHT.near;
+    if (drained) range *= 0.85;
     let reach = range, notice = 0;
     // (a tracked foe shows through its ink and anywhere on screen; the HUD marks it)
     const sub = !located && e.anim && e.anim.form === 'swim';
@@ -217,7 +221,7 @@ export class Sight {
       reach = Math.min(reach, range);
     }
     if (d > reach) { this.glim.delete(e); return false; }
-    if (!located && d > SIGHT.near && hd > 0.3 && (dx * fx + dz * fz) / hd < cone) { this.glim.delete(e); return false; }
+    if (!located && d > nearR && hd > 0.3 && (dx * fx + dz * fz) / hd < cone) { this.glim.delete(e); return false; }
     const sq = e.form === 'squid';
     let vis = ray(eye, _p.set(e.pos.x, e.pos.y + (sq ? 0.3 : 1.0), e.pos.z));
     if (!vis && !sq) vis = ray(eye, _p.set(e.pos.x, e.pos.y + 1.6, e.pos.z));

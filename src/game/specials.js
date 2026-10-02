@@ -75,7 +75,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
     if (d > radius + 0.3) continue;
     if (!G.physics.los(_v2.copy(c).setY(c.y + 0.35), _v)) continue;
     const k = d <= killRadius ? 0 : clamp((d - killRadius) / Math.max(0.01, radius - killRadius), 0, 1);
-    G.projectiles.applyHit(owner, e, lerp(dmgMax, dmgMin, k * k), weaponId);
+    G.projectiles.applyHit(owner, e, lerp(dmgMax, dmgMin, k * k), weaponId, null, c);   // ([drainbow] c: the blast's way to them)
   }
   G.subs?.damageArea(c, radius, 60, team);
   G.boss?.splash(owner, c, radius, dmgMax, dmgMin, weaponId);   // Boss Battle
@@ -84,6 +84,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
 // (online: each client applies it to its own players — from a ghost's tornado / speaker too, as the Ink Tempest does)
 function tickDamage(owner, e, dmg, weaponId) {
   if (!e.alive || e.team === owner.team || e.remote) return;
+  if (G.drainbow?.live) dmg = G.drainbow.cut(owner, e, dmg);   // [drainbow]
   const killed = e.damage(dmg, owner, weaponId);
   if (killed) emit('hit', { attacker: owner, victim: e, damage: dmg, killed: true, weaponId });
 }
@@ -409,7 +410,7 @@ export class SpecialSystem {
       case 'zipcaster': return s.hang > 0 ? 'Clinging — SPACE to jump off' : 'RMB / E to zip to a wall';
       case 'crab': return s.roll ? 'Rolling (release SHIFT to stop)' : 'LMB gatling · RMB cannon · hold SHIFT to roll';
     }
-    return null;
+    return IMPL[s.kind]?.prompt?.call(this, a, s) ?? null;   // (registered specials: registerSpecial)
   }
 
   // ---------------------------------------------------------------------------------------------- damage + hits
@@ -619,7 +620,7 @@ export class SpecialSystem {
         const r = (w.phase === 'fuse' ? SPECIALS.booyah.radius * clamp(w.t / SPECIALS.booyah.fuse, 0.2, 1) : 1) * s;
         c.globalAlpha = 0.35; c.fillStyle = col; c.beginPath(); c.arc(tc.x, tc.y, r, 0, TAU); c.fill(); c.globalAlpha = 1;
         c.lineWidth = 2; c.strokeStyle = '#ffffff'; c.stroke();
-      }
+      } else if (w.drawMap) w.drawMap(c, mm, tc, s, hex, t, me);   // (registered specials' objects draw themselves)
     }
     // the local player's strike cursor
     const a = G.local;
@@ -903,6 +904,7 @@ class Twister {
     if (hit.hit) { this._burst(hit.point, hit.normal); return false; }
     if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120)) { this._burst(this.pos, UP); return false; }
     if (this.sys.shotHit(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }
+    if (G.drainbow?.live && !this.dbw) G.drainbow.pass(this, this.prev, this.pos, this.team);   // [drainbow] (once a twister)
     // players inside the column
     for (const e of G.actors) {
       if (e.team === this.team || !e.alive || this.hit.has(e)) continue;
@@ -913,7 +915,7 @@ class Twister {
       Physics.segmentCapsuleDist(_v2.copy(this.prev), _v3.copy(this.pos).setY(this.prev.y), _v.setY(this.prev.y - 0.5), 0.01, 1, _res);
       if (_res.dist < d.radius + (e.hitR || PLAYER.radius)) {
         this.hit.add(e);
-        G.projectiles.applyHit(this.owner, e, d.damage, 'zooka');
+        G.projectiles.applyHit(this.owner, e, d.damage, 'zooka', this);
         G.fx?.burst(_v.copy(e.pos).setY(e.pos.y + 0.8), UP, this.owner.color, { count: 10, speed: 4, size: 0.09 });
       }
     }
@@ -2162,6 +2164,12 @@ const GHOST = {
     },
   },
 };
+
+// A special that lives in its own module (e.g. src/game/sp-drainbow.js) registers its behaviour here: impl — the IMPL
+// hooks (start, tick, body, move, weapon, end, prompt); ghost — the GHOST hooks for other players' screens (start,
+// tick, event: its [4, …] records). Its world objects go in SpecialSystem.world like the built-in ones (update(dt) →
+// false when done, dispose(), optional drawMap(c, mm, tc, s, hex, t, viewerTeam)).
+export function registerSpecial(kind, impl, ghost) { IMPL[kind] = impl; if (ghost) GHOST[kind] = ghost; }
 
 // the owner's special pose state beyond the actor tick (packActor) → the ghost's (applyRemote)
 export function specialNetState(a) {

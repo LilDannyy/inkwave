@@ -470,6 +470,7 @@ export class Cues {
           else if (w.phase === 'fuse') this._want(w, 'fuse', 'orb_fuse', { ...o, pos: w.pos, warn: true, big: true, radius: SPECIALS.booyah.radius, range: 70, prio: 1.5,
             params: { k: clamp(w.t / SPECIALS.booyah.fuse, 0, 1) } });
           break;
+        default: w.cueLoops?.(this, o, me);   // (a registered special's object asks for its own loops: _want)
       }
     }
     this._vanishSeen = vanish;

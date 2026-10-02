@@ -874,6 +874,7 @@ export class Projectiles {
     p.volley = null; p.belowFalloff = 0; p.belowFalloffMax = 0; p.burst = null; p.weaponId = null;
     p.delay = 0; p.head = false; p.wid = null; p.dmgFar = undefined; p.vol = null; p.sp = undefined; p.ghost = false;
     p.pod = undefined;   // (a sprout pod's meter: how much this round's splat counts for — src/game/pods.js)
+    p.dbw = 0;           // [drainbow] crossed a Drainbow (src/game/sp-drainbow.js)
     // look (visual only; _draw falls back to size / defaults for anything left unset)
     p.vis = 0; p.tail0 = undefined; p.tailK = undefined; p.wob = undefined; p.wobF = 0; p.nose = 0; p.sats = 0;
     return p;
@@ -1182,7 +1183,7 @@ export class Projectiles {
       if (_v3.distanceTo(at) > w.splashRadius + 0.3) continue;
       if (!G.physics.los(_v2.copy(at).setY(at.y + 0.25), _v3)) continue;
       if (p.vol) p.vol.hits.push(e);
-      this.applyHit(p.owner, e, w.splashDamage, p.wid || 'slosher');
+      this.applyHit(p.owner, e, w.splashDamage, p.wid || 'slosher', p.dbw ? p : null, at);
     }
     // special objects (bubbles, tanks …) caught in the splash, like a blaster burst
     G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
@@ -1286,7 +1287,7 @@ export class Projectiles {
       const bh = G.boss.segHit(m, _v2.copy(m).addScaledVector(dir, len), 0.1);
       if (bh && (!victim || bh.dist < victim.d)) { victim = null; len = bh.dist; bossHit = true; G.boss.hit(a, dmg, bh.target, 'charger', bh.point.clone()); }
     }
-    if (victim) { len = victim.d; this.applyHit(a, victim.e, dmg, 'charger'); }
+    if (victim) { len = victim.d; this.applyHit(a, victim.e, dmg, 'charger', G.drainbow?.live ? G.drainbow.rayShot(m, dir, victim.d, a.team) : null); }   // [drainbow]
     // paint along the line (projected to the ground)
     let area = 0;
     const step = w.lineSplatEvery;
@@ -1529,7 +1530,7 @@ export class Projectiles {
       if (d > s.radius) continue;
       if (!G.physics.los(_v2.copy(c).setY(c.y + 0.3), _v)) continue;
       const k = 1 - clamp((d - 0.8) / (s.radius - 0.8), 0, 1);
-      this.applyHit(b.owner, e, lerp(s.damageMin, s.damageMax, k * k), 'bomb');
+      this.applyHit(b.owner, e, lerp(s.damageMin, s.damageMax, k * k), 'bomb', b.dbw ? b : null, c);
     }
     G.boss?.splash(b.owner, c, s.radius, s.damageMax, s.damageMin, 'bomb');
   }
@@ -1570,12 +1571,16 @@ export class Projectiles {
   }
 
   // ---- damage routing
-  applyHit(attacker, victim, dmg, weaponId) {
+  // [drainbow] shot: the projectile / beam that landed it (its own path decides: shot.dbw — it crossed a Drainbow);
+  // from: where a blast came from (its way to the victim decides); neither: the line from the attacker. The shooter's
+  // screen decides (a hit arriving from another screen — nm._applyingHit — was halved there already).
+  applyHit(attacker, victim, dmg, weaponId, shot, from) {
     if (!victim.alive || victim.team === attacker.team) return;
     const nm = G.netm;
     let killed = false;
     const route = nm ? nm.shouldApplyHit(attacker, victim) : 'local';
     if (route === 'drop') return;
+    if (G.drainbow?.live && !nm?._applyingHit) dmg = G.drainbow.cut(attacker, victim, dmg, shot, from);   // [drainbow]
     if (route === 'send') nm.sendHit(attacker, victim, dmg, weaponId);   // the kill confirm arrives with their splat
     else killed = victim.damage(dmg, attacker, weaponId);
     emit('hit', { attacker, victim, damage: dmg, killed, weaponId });
@@ -1616,6 +1621,7 @@ export class Projectiles {
       if (p.drag) p.vel.multiplyScalar(1 - p.drag * dt * (p.age > p.straight ? 1 : 0));
       p.pos.addScaledVector(p.vel, dt);
       let dead = false;
+      if (G.drainbow?.live && !p.dbw) G.drainbow.pass(p, p.prev, p.pos, p.team);   // [drainbow]
       // actors
       for (const e of G.actors) {
         if (e.team === p.team || !e.alive) continue;
@@ -1633,7 +1639,7 @@ export class Projectiles {
           if (p.belowFalloff) dmg *= 1 - clamp((p.start.y - (e.pos.y + 0.8) - 0.5) * p.belowFalloff, 0, p.belowFalloffMax);
           // slosher: one direct hit per throw per victim (the rest of the wave still splashes on them, harmlessly)
           if (p.vol) { if (p.vol.hits.includes(e)) dmg = 0; else p.vol.hits.push(e); }
-          if (dmg > 0) this.applyHit(p.owner, e, dmg, p.weaponId || p.wid || p.type);
+          if (dmg > 0) this.applyHit(p.owner, e, dmg, p.weaponId || p.wid || p.type, p);
           G.fx?.burst(_v, _v2.copy(p.vel).normalize().negate(), p.owner.color, { count: 6, speed: 3, size: 0.07 });
           if (p.type !== 'blast') emit('weapon:impact', { pos: _v.clone(), normal: _v2.clone(), team: p.team, kind: p.type === 'drop' || (p.type === 'slosh' && p.vol) ? 'drop' : 'shot', radius: p.radius * 0.5, victim: e });
           if (p.type === 'blast') this._blastBurst(p, _v, e);
@@ -1730,7 +1736,7 @@ export class Projectiles {
       const d = _v.distanceTo(c);
       if (d > w.splashRadius) continue;
       if (!G.physics.los(c, _v)) continue;
-      this.applyHit(p.owner, e, lerp(w.splashDamageMax, w.splashDamageMin, d / w.splashRadius), p.weaponId || 'blaster');
+      this.applyHit(p.owner, e, lerp(w.splashDamageMax, w.splashDamageMin, d / w.splashRadius), p.weaponId || 'blaster', p.dbw ? p : null, c);
     }
     G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
     if (direct !== 'boss') G.boss?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, 'blaster');
@@ -1743,6 +1749,7 @@ export class Projectiles {
       b.vel.y -= 24 * dt;
       _v.copy(b.pos);
       b.pos.addScaledVector(b.vel, dt);
+      if (G.drainbow?.live && !b.dbw) G.drainbow.pass(b, _v, b.pos, b.team);   // [drainbow] (a thrown one, in flight)
       const hit = G.physics.segment(_v, b.pos, _hit);
       // boss mode: bombs glance off HULLBREAKER's shell (they'd otherwise sail through it)
       if (!hit.hit && G.boss && b.kind === 'bomb') {
@@ -1825,7 +1832,7 @@ export class Projectiles {
           _v.copy(e.pos); _v.y += 1.2;
           _v2.set(e.pos.x, c.group.position.y - 0.6, e.pos.z);
           if (!G.physics.los(_v, _v2)) continue;
-          const killed = e.damage(sp.dps * dt, c.owner, 'storm');
+          const killed = e.damage(G.drainbow?.live ? G.drainbow.cut(c.owner, e, sp.dps * dt, null, _v2) : sp.dps * dt, c.owner, 'storm');   // [drainbow] (_v2: the rain above them)
           if (killed) emit('hit', { attacker: c.owner, victim: e, damage: 0, killed: true, weaponId: 'storm' });
         }
       }

@@ -520,8 +520,23 @@ export const SPECIALS = {
   crab: { id: 'crab', name: 'Crab Rig', blurb: 'Ride a crab tank: gatling on fire, mortar on sub, roll into an armoured ball with swim. The tank can be shot down, and you\'re exposed from above and behind.',
     duration: 9, hp: 460, speed: 3.0, rollSpeed: 9.5, turnRate: 1.5, gunInterval: 0.075, gunDamage: 18, gunSpeed: 36, gunRange: 22, gunSpread: 3.5,
     cannonGap: 1.15, cannonSpeed: 17, cannonRadius: 3.0, cannonDamageMax: 150, cannonDamageMin: 40, rollArmor: 0.35 },
+  // ---- [drainbow] Drainbow (src/game/sp-drainbow.js, src/fx/drainbowFx.js): a big soap-film bubble set down at your
+  // feet; you're free at once. Enemy shots whose path crosses it lose shotMul of their damage (once a shot); foes inside
+  // are drained (ink / s and a share of a full special meter / s — their screen drains to grey and their hearing goes
+  // muffled) and you and your teammates inside gain it: total = drain × foes inside, split across your team inside.
+  // While it's up your own meter doesn't charge (it's your running special); your share of the drained special turns
+  // into bubble time instead (extendPerMeter s per full meter, total life ≤ maxLife). No hit points: it pops when its
+  // time runs out or its owner is splatted (popOnOwnerSplat).
+  drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'Set down a shimmering rainbow bubble. Enemy ink passing through it loses half its punch, and foes inside see the world drain to grey, hear it muffled, and leak ink and special to you and your teammates inside. While it\'s up your own meter rests, but what it drains for you keeps the bubble going longer.',
+    duration: 8.5, radius: 4.3, lift: 1.0, inflate: 0.55, shotMul: 0.5,
+    inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100); share of a full meter
+    extendPerMeter: 10, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
+    popOnOwnerSplat: true,
+    // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
+    // the muffle (master low-pass to dampCut Hz and dampGain of the level at full)
+    waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },
 };
-export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab'];
+export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'drainbow'];
 
 // ---- Match ----
 export const MATCH = {

@@ -29,6 +29,7 @@ import {
 } from './music.js';
 import { defineCueSounds, CUE_GROUPS } from './sfx-cues.js';   // sfx-cues: every sub / special's own sounds (src/audio/cues.js plays them)
 import { defineAlertSounds, ALERT_GROUPS } from './sfx-alerts.js';   // sfx-loud: the flight glides, the special alerts / alarms / stings
+import { defineDrainbowSounds, DRAINBOW_SOUNDS } from './sfx-drainbow.js';   // [drainbow] the Drainbow's own sounds
 
 const MAX_VOICES = 48;   // one-shots alive at once (oldest stolen beyond this)
 const MAX_LOOPS = 32;   // sfx-cues: the cue director keeps up to 13 of its own (src/audio/cues.js) beside the weapons', zones' and ambience's
@@ -171,7 +172,11 @@ export class AudioEngine {
     // master dynamics: gentle glue then a safety limiter
     // sub-sonic / DC safety high-pass on everything
     const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 25; hp.Q.value = 0.707;
-    this.master.connect(hp);
+    // [drainbow] the drained player's hearing (setDamp): a low-pass and a dip on everything; at rest the filter sits at
+    // Nyquist (a biquad low-pass there passes everything unchanged) and the gain at 1
+    this.dampLP = ctx.createBiquadFilter(); this.dampLP.type = 'lowpass'; this.dampLP.Q.value = 0.5; this.dampLP.frequency.value = ctx.sampleRate / 2;
+    this.dampG = g(1); this.damp = 0;
+    this.master.connect(this.dampLP); this.dampLP.connect(this.dampG); this.dampG.connect(hp);
     if (this.opts.raw) hp.connect(ctx.destination);
     else {
       const glue = ctx.createDynamicsCompressor();
@@ -204,6 +209,18 @@ export class AudioEngine {
     const kinds = Object.keys(TEX);
     const step = () => { const k = kinds.shift(); if (!k || !this.ctx) return; texture(this.ctx, k); setTimeout(step, 40); };
     setTimeout(step, 60);
+  }
+
+  // [drainbow] muffle everything (k 0 … 1: cut = Hz at full, gain = level at full) — src/fx/drainbowFx.js eases k with
+  // the grey wave; k 0 puts the filter back at Nyquist (transparent)
+  setDamp(k, cut = 950, gain = 0.6) {
+    k = Math.min(1, Math.max(0, +k || 0));
+    if (!this.ctx || !this.dampLP || Math.abs(k - this.damp) < 1e-4) { this.damp = k; return; }
+    this.damp = k;
+    const t = this.ctx.currentTime, ny = this.ctx.sampleRate / 2, f = k < 1e-3 ? ny : Math.min(ny, cut * Math.pow(ny / cut, Math.pow(1 - k, 1.6)));
+    this.dampLP.frequency.cancelScheduledValues(t); this.dampG.gain.cancelScheduledValues(t);
+    if (k < 1e-3) { this.dampLP.frequency.setValueAtTime(ny, t); this.dampG.gain.setValueAtTime(1, t); }
+    else { this.dampLP.frequency.setTargetAtTime(f, t, 0.03); this.dampG.gain.setTargetAtTime(1 - (1 - gain) * k, t, 0.03); }
   }
 
   setVolumes(v = {}) {
@@ -2664,6 +2681,7 @@ def('lead_theirs', {
 // sfx-cues: the sub and special cue sounds (src/audio/sfx-cues.js), built with this file's shared layers
 defineCueSounds(def, { texture, bloops, plips, bigSplat, inkBoom, clank, whoosh, vox });
 defineAlertSounds(def, { texture, bloops, whoosh, vox, clank });
+defineDrainbowSounds(def, { texture, bloops, plips, whoosh });   // [drainbow]
 
 export const SFX_GROUPS = {
   UI: ['ui_hover', 'ui_click', 'ui_back', 'ui_confirm', 'ui_toggle', 'ui_slider', 'ui_error'],
@@ -2681,6 +2699,7 @@ export const SFX_GROUPS = {
     'booyah_cheer', 'booyah_throw', 'booyah_blast', 'zip_fire', 'zip_latch', 'zip_pull', 'crab_move', 'crab_gatling', 'crab_cannon',
     'crab_roll', 'crab_hit', 'crab_break',
     ...CUE_GROUPS.Specials,   // sfx-cues
+    ...DRAINBOW_SOUNDS,       // [drainbow]
   ],
   Subs: CUE_GROUPS.Subs,      // sfx-cues: throws, landings, fuses, loops and blasts of every sub
   Flight: ALERT_GROUPS.Flight,          // sfx-loud: every thrown sub in the air (one def, a voice per kind: params.kind)

@@ -1398,6 +1398,7 @@ export class BotBrain {
         case 'booyah': return dist > 9 && dist < 26 && r < 0.03;
         case 'zipcaster': return dist < 16;
         case 'crab': return dist < 20;
+        case 'drainbow': return !!G.drainbow?.botWants(a, dist);   // [drainbow] (src/game/sp-drainbow.js)
       }
       return false;
     }
@@ -1605,7 +1606,7 @@ export class BotBrain {
     // (after a rotation, a bot far from the new zone and not in a fight super jumps to a teammate already on it)
     if (this.zJumpAt && this.t >= this.zJumpAt) {
       this.zJumpAt = 0;
-      if (this.mode === 'paint' && !this.target && this.a.alive && !this.a.specialActive) this._zoneJump(P, 34, 0.5);
+      if (this.mode === 'paint' && !this.target && this.a.alive && (!this.a.specialActive || this.a.specialActive.free)) this._zoneJump(P, 34, 0.5);
     }
   }
 
@@ -1796,7 +1797,7 @@ export class BotBrain {
     for (const o of G.actors) { if (o.team === t || !o.alive) continue; const k = teamKnown(t, o, 3); if (k && Math.hypot(k.pos.x - c[0], k.pos.z - c[2]) < I.R + 8) foes++; }
     if (ours && !foes) return false;                                 // holding it quietly: keep it for the push-back
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
-    if ((id === 'sonar' || id === 'bubbler' || id === 'wail' || id === 'zooka' || id === 'stamp' || id === 'crab') && !foes) return false;
+    if ((id === 'sonar' || id === 'bubbler' || id === 'wail' || id === 'zooka' || id === 'stamp' || id === 'crab' || id === 'drainbow') && !foes) return false;
     // thrown / aimed ones go where we look: only while facing the zone or standing on it (fights: _wantSpecial's aim)
     const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower';
     if (thrown && !fighting && dz > I.R * 0.7 && Math.abs(angleDiff(this.aimYaw, Math.atan2(c[0] - a.pos.x, c[2] - a.pos.z))) > 0.6) { this.zFace = 0.8; return false; }
@@ -2513,7 +2514,7 @@ export class BotBrain {
     // get our footwork — the special keeps the trigger
     const sp = a.specialActive, spK = sp && (sp.kind || sp.id);
     if (!d || spK === 'kraken' || spK === 'stamp' || spK === 'crab' || spK === 'jetpack' || spK === 'zipcaster' || a.climbing || this._climbAim || a.superJumpState) return null;
-    const moveOnly = !!sp;
+    const moveOnly = !!sp && !sp.free;   // ([drainbow] free: a special that leaves the bot be)
     const score = this._threatScore(d);
     if (score < 0.15) { this._thrEnd(false); return null; }   // lost interest in us / walked off after someone else
     this.thrAcqT += dt;
@@ -2726,7 +2727,7 @@ export class BotBrain {
   _canopyCtl(dt, it, move, free) {
     if (!THREAT_AI.enabled) return null;
     const a = this.a, S = this._shl;
-    if (!S.length || a.climbing || a.superJumpState || a.specialActive) { this.canRef = null; return null; }
+    if (!S.length || a.climbing || a.superJumpState || (a.specialActive && !a.specialActive.free)) { this.canRef = null; return null; }
     let ml = Math.hypot(move.x, move.z);
     let hit = null, hAlong = 0, hSide = 1, hW = 1;
     for (const s of S) {
