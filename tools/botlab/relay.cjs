@@ -184,15 +184,19 @@ class Room {
 }
 
 // ------------------------------------------------------------------ the Worker's fetch() + the upgrade
-function startRelay(port = 8788, host = '127.0.0.1') {
+// attachRelay(server, { originOk, onRequest }): the relay on an existing Node http server — its /room/<CODE> upgrades
+// (and /health); every other plain request goes to onRequest (tools/host/selfhost.cjs serves the game from it) or
+// gets the Worker's 404. originOk(origin, req) replaces the deployed relay's origin rule.
+function attachRelay(server, opts = {}) {
+  const originOk = opts.originOk || ((o) => ORIGIN_OK(o));
   const rooms = new Map();
   const relay = { rooms, stats: { dropped: 0, rateKicks: 0, peakRate: 0, maxMsg: 0 } };
   const room = (code) => { let r = rooms.get(code); if (!r) rooms.set(code, (r = new Room(code, relay))); return r; };
-  const server = http.createServer((req, res) => {
+  server.on('request', (req, res) => {
     const url = new URL(req.url, 'http://x');
     if (url.pathname === '/health') { res.writeHead(200, { 'access-control-allow-origin': '*' }); res.end('ok'); return; }
     const m = url.pathname.match(/^\/room\/([A-Za-z0-9]+)$/);
-    if (!m) { res.writeHead(404); res.end('INKWAVE relay'); return; }
+    if (!m) { if (opts.onRequest) opts.onRequest(req, res, url); else { res.writeHead(404); res.end('INKWAVE relay'); } return; }
     if (!CODE.test(m[1].toUpperCase())) { res.writeHead(400); res.end('bad code'); return; }
     res.writeHead(426); res.end('expected websocket');
   });
@@ -204,7 +208,7 @@ function startRelay(port = 8788, host = '127.0.0.1') {
     const code = m[1].toUpperCase();
     if (!CODE.test(code)) return deny('400 Bad Request', 'bad code');
     if (String(req.headers.upgrade || '').toLowerCase() !== 'websocket') return deny('426 Upgrade Required', 'expected websocket');
-    if (!ORIGIN_OK(req.headers.origin || '')) return deny('403 Forbidden', 'forbidden');
+    if (!originOk(req.headers.origin || '', req)) return deny('403 Forbidden', 'forbidden');
     const key = req.headers['sec-websocket-key'];
     if (!key) return deny('400 Bad Request', 'no key');
     const accept = crypto.createHash('sha1').update(key + GUID).digest('base64');
@@ -213,6 +217,13 @@ function startRelay(port = 8788, host = '127.0.0.1') {
     const r = room(code);
     r.accept(new Sock(socket, r), url);
   });
+  return relay;
+}
+
+function startRelay(port = 8788, host = '127.0.0.1') {
+  const server = http.createServer();
+  const relay = attachRelay(server);
+  const { rooms } = relay;
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, host, () => {
@@ -224,7 +235,7 @@ function startRelay(port = 8788, host = '127.0.0.1') {
   });
 }
 
-module.exports = { startRelay, PROTO, MAX, MSG_MAX, RATE };
+module.exports = { startRelay, attachRelay, ORIGIN_OK, PROTO, MAX, MSG_MAX, RATE };
 
 if (require.main === module) {
   startRelay(+(process.argv[2] || 8788)).then((r) => console.log(`RELAY ${r.url}`), (e) => { console.error('relay:', e.message); process.exit(1); });

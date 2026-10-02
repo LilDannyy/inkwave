@@ -4,12 +4,16 @@
 
 export const PROTO = 1;
 
-// Where the relay lives: ?relay=… wins; a page served from this machine or the LAN talks to a local `wrangler dev`
-// relay on :8787; the public site talks to the deployed Worker.
+// Where the relay lives: ?relay=… wins; a self-hosted copy (tools/host/selfhost.cjs marks its index.html with
+// <meta name="inkwave-relay" content="same-origin">) talks to the relay on its own host; a page served from this
+// machine or the LAN talks to a local `wrangler dev` relay on :8787; the public site talks to the deployed Worker.
 export const PROD_RELAY = 'wss://inkwave-net.inkwave.workers.dev';
 export function relayURL() {
   const q = new URLSearchParams(location.search).get('relay');
   if (q) return q.replace(/\/$/, '');
+  if (typeof document !== 'undefined' && document.querySelector('meta[name="inkwave-relay"]')?.content === 'same-origin') {
+    return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
+  }
   const h = location.hostname;
   const local = h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(h) || h.endsWith('.local');
   return local ? `ws://${h}:8787` : PROD_RELAY;
