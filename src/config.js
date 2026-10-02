@@ -677,6 +677,8 @@ export const PROGRESSION = {
 };
 
 // ---- Settings defaults (persisted in localStorage 'inkwave.settings') ----
+// (also saved there, outside the defaults so RESET TO DEFAULTS keeps them: server 'official' | 'friend' and serverLink —
+// ONLINE › SERVER, read by src/net/transport.js relayInfo)
 export const DEFAULT_SETTINGS = {
   sensitivity: 1.0,         // mouse multiplier 0.2..3
   padSensitivity: 1.0,

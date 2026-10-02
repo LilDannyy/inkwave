@@ -4,11 +4,17 @@
 //   NET=tools/botlab/tests/net-practice.cjs CLIENTS=2 tools/botlab/run.sh tools/botlab/netpage.cjs
 // env: CLIENTS (2), W / H (client size, 1280×800), QUALITY (low), FPS (offscreen frame rate, 30), NET_ARGS (→ ctx.args),
 //      OUT (pictures; default <BOTLAB_OUT>/net), URLQ (extra page query, e.g. "netlag=40&netjitter=20"), WATCHDOG (ms).
+//      APP_CSP=1 (offscreen-boot.cjs): app:// pages get the desktop app's own Content-Security-Policy.
 // The script: module.exports = async (ctx) => [{ name, ok, info }]. ctx:
 //   clients[i] = { i, win, js(code) → value, until(code, ms, poll) → value, shot(file, { w, q }), log: [] (console
-//                  errors / warnings), url }
+//                  errors / warnings), url, ses (its Electron session) }
 //   relay ({ url, rooms, stats }), wait(ms), say(...), out (dir), args, R(name, ok, info) (record a check), results
-//   open(i, query?) — open / reopen client i (a late joiner, say); close(i) — kill a client's window (a dropped player)
+//   open(i, query?, { base }?) — open / reopen client i (a late joiner, say); a query with relay=none leaves ?relay=
+//                  out (the page then picks its relay itself); base: load the game from there instead of app://inkwave/
+//                  (e.g. a tools/host/selfhost.cjs URL — the browser build); close(i) — kill a client's window
+//   guard ({ blocked: [urls], healthTo }) — every client's session refuses the deployed relay, the official site and
+//                  any Cloudflare quick tunnel (tests never reach them); healthTo (a URL) answers the deployed relay's
+//                  /health from there instead
 const { app, BrowserWindow, session } = require('electron');
 const fs = require('fs');
 const path = require('path');
@@ -26,6 +32,19 @@ setTimeout(() => { console.log('WATCHDOG'); app.exit(1); setTimeout(() => proces
 
 const clients = [];
 let relay = null;
+// nothing a test does may reach the deployed relay, the official site or a live tunnel link
+const guard = { blocked: [], healthTo: null };
+const OUTSIDE = /^(wss?|https?):\/\/([^/?#]+\.)?(workers\.dev|pages\.dev|trycloudflare\.com)(:\d+)?([/?#]|$)/i;
+function guardSession(ses) {
+  if (!ses || ses._iwGuard) return;
+  ses._iwGuard = true;
+  ses.webRequest.onBeforeRequest((d, cb) => {
+    if (!OUTSIDE.test(d.url)) { cb({}); return; }
+    if (guard.healthTo && /^https:\/\/inkwave-net\.inkwave\.workers\.dev\/health$/.test(d.url)) { guard.blocked.push('(redirected) ' + d.url); cb({ redirectURL: guard.healthTo }); return; }
+    guard.blocked.push(d.url);
+    cb({ cancel: true });
+  });
+}
 
 function attach(i, win) {
   const c = clients[i] || (clients[i] = { i, log: [], frame: null });
@@ -42,6 +61,8 @@ function attach(i, win) {
     if (process.env.ALLLOGS) console.log(`c${i} ${m.slice(0, 300)}`);
   });
   wc.on('render-process-gone', (_e, d) => { c.log.push(`[gone] ${d.reason}`); });
+  c.ses = wc.session;
+  guardSession(wc.session);
   c.js = (code) => wc.executeJavaScript(code, true);
   c.until = async (code, ms = 30000, poll = 150) => {
     const t0 = Date.now();
@@ -69,22 +90,24 @@ function attach(i, win) {
   return c;
 }
 
-function query(i, extra) {
+function query(i, extra, base = 'app://inkwave/') {
   const q = new URLSearchParams();
   q.set('skipTitle', '');
   q.set('relay', relay.url);
   if (process.env.URLQ) for (const [k, v] of new URLSearchParams(process.env.URLQ)) q.set(k, v);
   if (extra) for (const [k, v] of new URLSearchParams(extra)) q.set(k, v);
-  return 'app://inkwave/index.html?' + q.toString().replace(/=(&|$)/g, '$1');
+  if (q.get('relay') === 'none') q.delete('relay');
+  return base + 'index.html?' + q.toString().replace(/=(&|$)/g, '$1');
 }
 
 // a fresh page: settings first (low quality: several full games share one GPU), then the game with its query
 async function load(c, extra) {
   const wc = c.win.webContents;
-  await c.win.loadURL('app://inkwave/assets/stages/manifest.json');   // (a light page on the game's origin: its localStorage)
+  const base = c.base || 'app://inkwave/';
+  await c.win.loadURL(base + 'assets/stages/manifest.json');   // (a light page on the game's origin: its localStorage)
   await c.js(`(() => { try { const k = 'inkwave.settings'; const s = JSON.parse(localStorage.getItem(k) || '{}'); s.quality = ${JSON.stringify(QUALITY)}; s.minimap = true; localStorage.setItem(k, JSON.stringify(s));
     const p = JSON.parse(localStorage.getItem('inkwave.profile') || '{}'); p.name = ${JSON.stringify('P' + (c.i + 1))}; localStorage.setItem('inkwave.profile', JSON.stringify(p)); } catch (e) {} return 1; })()`).catch(() => 0);
-  c.url = query(c.i, extra);
+  c.url = query(c.i, extra, base);
   await c.win.loadURL(c.url);
   await c.until(`!!(window.__inkwave && window.__inkwave.api && window.__G && __G.net && __G.mode === 'menu')`, 240000, 300);
   await c.js(`window.__inkwave._onPointerUnlock = () => {}; (() => { const L = (window.__netlog = []), t0 = performance.now(), T = () => ((performance.now() - t0) / 1000).toFixed(1);
@@ -92,15 +115,17 @@ async function load(c, extra) {
   void wc;
 }
 
-async function open(i, extra) {
+async function open(i, extra, { base } = {}) {
   let c = clients[i];
   if (!c || c.closed) {
     const part = 'netc' + i + '-' + Date.now();
     const ses = session.fromPartition(part);
     ses.protocol.handle('app', boot.fsHandler);
+    guardSession(ses);
     const win = new BrowserWindow({ show: false, width: W, height: H, webPreferences: { offscreen: true, partition: part, contextIsolation: true, sandbox: true } });
     c = attach(i, win);
   }
+  if (base !== undefined) c.base = base;
   await load(c, extra);
   return c;
 }
@@ -116,6 +141,7 @@ let claimed = false;
 app.on('browser-window-created', (_, win) => {
   if (claimed) return; claimed = true;
   // the app's own window (electron/main.cjs) is client 0
+  guardSession(win.webContents.session);
   win.setContentSize(W, H);
   const c0 = attach(0, win);
   let started = false;
@@ -131,7 +157,7 @@ app.on('browser-window-created', (_, win) => {
       for (let i = 1; i < N; i++) await open(i, process.env['Q' + i] || '');
       say(`${N} clients up in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
       const script = require(path.resolve(process.env.NET));
-      const ctx = { clients, relay, wait, say, out: OUT, args: process.env.NET_ARGS || '', R, results, open, close };
+      const ctx = { clients, relay, wait, say, out: OUT, args: process.env.NET_ARGS || '', R, results, open, close, guard };
       fs.mkdirSync(OUT, { recursive: true });
       const extra = await script(ctx);
       if (Array.isArray(extra)) for (const r of extra) R(r.name, r.ok, r.info);
@@ -144,6 +170,7 @@ app.on('browser-window-created', (_, win) => {
     console.log(`RESULT ${pass}/${results.length}`);
     for (const c of clients) if (c) console.log(`c${c.i} console:`, c.log.length ? [...new Set(c.log)].slice(0, 6).join(' || ') : 'none');
     if (relay) console.log('relay stats', JSON.stringify(relay.stats));
+    console.log('outside requests refused:', guard.blocked.length ? [...new Set(guard.blocked)].slice(0, 8).join(' · ') : 'none');
     try { await relay?.close(); } catch { /* */ }
     app.quit();
   });

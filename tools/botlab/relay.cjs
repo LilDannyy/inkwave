@@ -17,8 +17,8 @@
 //   'Room is full' (8), 'Match in progress' (locked); MSG_MAX 65536 chars (bigger messages are dropped, never fanned
 //   out); RATE 90 msgs/s with BURST_STRIKES 4 (and > 3×RATE in one second) → close 4008 'Too many messages'; the
 //   liveness sweep every 4 s drops a socket silent for 20 s while the room is locked (150 s otherwise) → close 4001.
-// One deliberate difference: the browser origin. The deployed relay only admits the game's site and local / LAN pages;
-// this one also admits the desktop app's own origin (app://inkwave), which is how the botlab's Electron clients load.
+// The origin rule too: the game's site, local / LAN pages and the desktop app's own origin (app://inkwave — how the
+// botlab's Electron clients load). tools/host/selfhost.cjs swaps in its own rule (attachRelay's originOk).
 'use strict';
 const http = require('http');
 const crypto = require('crypto');
@@ -26,7 +26,7 @@ const crypto = require('crypto');
 const PROTO = 1, MAX = 8;
 const ORIGIN_OK = (o) => /^https:\/\/([a-z0-9-]+\.)?inkwave-aah\.pages\.dev$/.test(o)
   || /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|[a-z0-9-]+\.local)(:\d+)?$/.test(o)
-  || o === 'app://inkwave';   // (test-only: the botlab's Electron clients)
+  || o === 'app://inkwave';   // the desktop app (and the botlab's Electron clients)
 const MSG_MAX = 65536, RATE = 90, BURST_STRIKES = 4;
 const SILENT_MATCH = 20000, SILENT_LOBBY = 150000, SWEEP = 4000;
 const CODE = /^[A-Z0-9]{4,8}$/;

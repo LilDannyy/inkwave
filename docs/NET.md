@@ -10,6 +10,17 @@ screen shows the same turf.
 
 Transport: one WebSocket per player to a Cloudflare Durable Object relay (`server/`), one room object per code.
 
+**Which relay** (src/net/transport.js `relayInfo`, first match wins): `?relay=…` (dev / tests) · a page served by
+`tools/host/selfhost.cjs` (its `<meta name="inkwave-relay" content="same-origin">`: the relay on the page's own host) ·
+the player's choice on **ONLINE › SERVER** — *Official* or *Friend's server* plus a pasted link (settings `server` /
+`serverLink`; `parseServerLink` turns https / http / bare hosts into `wss://` / `ws://` host[:port]) · a page from this
+machine or the LAN: `wrangler dev` on :8787 · the deployed Worker. The SERVER chip checks the relay's `/health` once
+when the screen opens and after a change. A refused handshake whose relay still answers `/health` is reported as
+"turned this game away" (e.g. the official relay and the desktop app's `app://inkwave` until its origin rule is
+deployed), apart from "can't reach". The desktop app's page CSP (electron/main.cjs) allows ws / wss / http / https
+connections for this. A self-hosted server admits the desktop app, its own pages, `*.trycloudflare.com`, localhost
+and the LAN; players on different game versions are turned away by the relay's protocol check (`v=`).
+
 ## `G.net` — the session (src/net/session.js)
 
 ```js
@@ -179,12 +190,14 @@ without waking the room; a sweep drops sockets silent for 10 s during a match (1
 
 **Testing without wrangler.** `tools/botlab/relay.cjs` is the relay's protocol on plain Node `http` (the WebSocket
 handshake and framing by hand: welcome / join / leave / err, `b|` / `s|`, lock, `ping` → `pong`, MSG_MAX, the rate limit,
-the liveness sweep — it also admits the desktop app's own origin, app://inkwave). `tools/botlab/netpage.cjs` runs several
+the liveness sweep — and the desktop app's own origin, app://inkwave). `tools/botlab/netpage.cjs` runs several
 game clients as offscreen windows of one Electron instance (each its own session / profile) against it, driven by a test
 script: `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-practice.cjs tools/botlab/run.sh
 tools/botlab/netpage.cjs` (Practice end to end: settings, start, loadouts, the wave, swaps, a late joiner, a guest
 leaving, host migration, the end), `…/net-turf.cjs` (a match with a bot count through results back to the lobby),
-`…/net-mock.cjs` with `CLIENTS=1 Q0='netmock=1&mockauto=0'` (the offline stand-in). Nothing touches the deployed relay.
+`…/net-mock.cjs` with `CLIENTS=1 Q0='netmock=1&mockauto=0'` (the offline stand-in), `CLIENTS=1 APP_CSP=1 …/net-server.cjs`
+(ONLINE › SERVER: the app on a friend's `selfhost.cjs` with the app's own CSP, a browser client from that server, the
+refusals, Practice). Nothing touches the deployed relay: netpage refuses it (and any tunnel) in every client's session.
 
 `node tools/net-test.mjs` (game on :8490, `cd server && npx wrangler dev --port 8787`) plays real headless
 clients against the local relay and reports consistency (clock, coverage, rosters, results) and what is drawn:

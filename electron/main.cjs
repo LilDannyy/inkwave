@@ -20,7 +20,9 @@ const CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "media-src 'self' data: blob:",
-  "connect-src 'self' data: blob:",
+  // online rooms: the relay's WebSocket and its /health check — the official relay, or a friend's server the player
+  // picks on ONLINE › SERVER (any host: a tunnel link, a LAN address). Data only: scripts still come from the app alone.
+  "connect-src 'self' data: blob: wss: ws: https: http:",
   "worker-src 'self' blob:",
 ].join('; ');
 
@@ -121,6 +123,9 @@ async function rangeResponse(file, header) {
 function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { role: 'appMenu' },
+    // Cut / Copy / Paste / Select All: on macOS text fields only get ⌘X / ⌘C / ⌘V / ⌘A through these menu items
+    // (the name field, the room code, a friend's server link on ONLINE › SERVER)
+    { role: 'editMenu' },
     {
       label: 'View',
       submenu: [
@@ -159,3 +164,6 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => app.quit());
+
+// (the botlab applies the same page policy to its app:// pages — tools/botlab/offscreen-boot.cjs, APP_CSP=1)
+module.exports = { CSP };

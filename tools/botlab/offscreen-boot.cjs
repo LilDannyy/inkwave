@@ -51,13 +51,18 @@ async function fsHandler(req) {
     if (start >= size || start > end) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
     return new Response(buf.subarray(start, end + 1), { status: 206, headers: { 'Content-Type': type, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1), 'Accept-Ranges': 'bytes' } });
   }
-  return new Response(buf, { status: 200, headers: { 'Content-Type': type, 'Content-Length': String(buf.length) } });
+  const headers = { 'Content-Type': type, 'Content-Length': String(buf.length) };
+  // APP_CSP=1: pages get the desktop app's own Content-Security-Policy (electron/main.cjs), as in the real app
+  if (APP_CSP && type === 'text/html' && appMain.CSP) headers['Content-Security-Policy'] = appMain.CSP;
+  return new Response(buf, { status: 200, headers });
 }
+const APP_CSP = process.env.APP_CSP === '1';
+let appMain = {};
 const protoProxy = new Proxy(electron.protocol, { get: (t, k) => (k === 'handle' ? (scheme, fn) => t.handle(scheme, scheme === 'app' ? fsHandler : fn) : (typeof t[k] === 'function' ? t[k].bind(t) : t[k])) });
 const patched = new Proxy(electron, { get: (t, k) => (k === 'BrowserWindow' ? OffscreenBW : k === 'protocol' ? protoProxy : t[k]) });
 const load = Module._load;
 Module._load = function (req) { return req === 'electron' ? patched : load.apply(this, arguments); };
-require(path.join(ROOT, 'electron', 'main.cjs'));
+appMain = require(path.join(ROOT, 'electron', 'main.cjs')) || {};
 Module._load = load;
 // for harnesses that open more game windows of their own (netpage.cjs: one per online client, each in its own session)
 module.exports = { fsHandler, OffscreenBW, ROOT };

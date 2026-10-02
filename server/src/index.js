@@ -20,7 +20,10 @@ const PROTO = 1, MAX = 8;
 // Public relay hygiene: only the game's own site may open rooms (plus local dev), each socket gets a message budget
 // (the game sends ~25/s; a runaway or hostile client is cut off before it can eat the account's quota) and a size cap.
 const ORIGIN_OK = (o) => /^https:\/\/([a-z0-9-]+\.)?inkwave-aah\.pages\.dev$/.test(o)
-  || /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|[a-z0-9-]+\.local)(:\d+)?$/.test(o);   // dev + LAN play
+  || /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|[a-z0-9-]+\.local)(:\d+)?$/.test(o)   // dev + LAN play
+  // the desktop app: electron/main.cjs serves the game on its privileged app:// scheme (standard + secure), so its
+  // pages' Origin is exactly this. It takes a deploy to reach the live relay; until then the app plays on friends' servers.
+  || o === 'app://inkwave';
 const MSG_MAX = 65536, RATE = 90, BURST_STRIKES = 4;
 // A socket whose "ping"s stop is a player whose connection died without closing (Wi-Fi gone, laptop lid shut): drop
 // them so their squidkid is handed to a bot instead of standing frozen. Clients ping every 2 s; a hidden tab still

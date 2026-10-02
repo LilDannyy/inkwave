@@ -25,6 +25,7 @@ import {
 } from './menu-art.js';
 import { bossSilhouette, bossEmblem, BOSS_GLYPH, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 import { WhatsNew } from './news.js';
+import { relayInfo, serverChoice, parseServerLink, pingRelay, isDesktopApp, NO_LINK, REFUSED } from '../net/transport.js';
 
 const SCREENS = ['loading', 'title', 'main', 'mode', 'loadout', 'setup', 'locker', 'settings', 'howto', 'credits', 'pause', 'results', 'online', 'lobby'];
 // Transitions that get the full-screen ink wipe (the rest use staggered pop-ins).
@@ -52,7 +53,31 @@ const JOIN_ERR = {
   'Could not connect': { title: 'CAN\u2019T CONNECT', text: 'The INKWAVE servers didn\u2019t answer. Check your connection, then try again.', icon: 'signal' },
   'Room code taken': { title: 'TRY AGAIN', text: 'That room code was just taken. Give it another go.', icon: 'reset' },
   'Lost connection to the room': { title: 'CONNECTION LOST', text: 'The link to the room dropped. Check your connection and join again.', icon: 'signal' },
+  [NO_LINK]: { title: 'NO SERVER LINK', text: 'Paste your friend\u2019s server link under SERVER (top of this screen), or switch back to Official.', icon: 'server' },
 };
+// the relay's refusal of an older / newer client (server/src/index.js, PROTO)
+const VERSION_ERR = 'Please refresh the page \u2014 the game was updated';
+/** A connect / room error → { title, text, icon } for the player, worded for where they play (the server they picked,
+ *  the desktop app or a browser); null for an unknown message. */
+function joinErr(msg) {
+  const app = isDesktopApp(), src = relayInfo().source;
+  if (msg === VERSION_ERR) {
+    return { title: 'GAME VERSIONS DIFFER', icon: 'reset', text: app
+      ? `${VERSION_ERR}. This server runs a different version of INKWAVE than this app \u2014 you both need the same version (update the app, or ask whoever runs the server to update it).`
+      : `${VERSION_ERR}. This server runs a different version of INKWAVE than this page.` };
+  }
+  if (msg === REFUSED) {
+    if (src === 'official' && app) return { title: 'NOT ON THIS SERVER YET', icon: 'lock', text: 'The official server doesn\u2019t accept the desktop app yet; use a friend\u2019s server link (SERVER, top of this screen).' };
+    if (src === 'friend' && app) return { title: 'SERVER SAID NO', icon: 'lock', text: 'Your friend\u2019s server is up but turned the desktop app away \u2014 it needs the latest INKWAVE self-host (tools/host/selfhost.cjs).' };
+    if (src === 'friend') return { title: 'SERVER SAID NO', icon: 'lock', text: 'Your friend\u2019s server is up but doesn\u2019t take players from this page. Open the link your friend sent in your browser and play there.' };
+    return { title: 'SERVER SAID NO', icon: 'lock', text: 'The server is up but turned this game away.' };
+  }
+  if (msg === 'Could not connect') {
+    if (src === 'friend') return { title: 'CAN\u2019T CONNECT', icon: 'signal', text: 'Your friend\u2019s server didn\u2019t answer. Check the link under SERVER and that their server is running.' };
+    if (src === 'official' && app) return { title: 'CAN\u2019T CONNECT', icon: 'signal', text: 'The official server didn\u2019t answer. Check your connection \u2014 and if it keeps happening: the official server doesn\u2019t accept the desktop app yet; use a friend\u2019s server link (SERVER, top of this screen).' };
+  }
+  return JOIN_ERR[msg] || null;
+}
 // Stage art rendered from the real game by tools/stage-shots.mjs: <id>-<day|dusk>[-sm].webp (resolved against this
 // module so the UI lab in tools/ finds them too). Missing art falls back to the layout thumbnail.
 const STAGE_DIR = new URL('../../assets/stages/', import.meta.url).href;
@@ -2536,7 +2561,7 @@ export class Menus {
     safeCall(() => sc && sc.leaveLobby && sc.leaveLobby());
     if (this._modal) this._closeModal(true);
     this.show('online', { wipe: true, back: true });
-    const E = JOIN_ERR[msg];
+    const E = joinErr(msg);
     this.toast(E ? `${E.title[0]}${E.title.slice(1).toLowerCase()} — ${E.text.split('.')[0]}.` : msg, { kind: 'error', icon: GLYPHS[(E && E.icon) || 'exit'], ms: 5200 });
   }
 
@@ -2557,6 +2582,167 @@ export class Menus {
     const a = me.style || {}, keys = new Set([...Object.keys(a), ...Object.keys(style)]);
     for (const k of keys) if (a[k] !== style[k]) { ch.style = { ...style }; break; }
     if (Object.keys(ch).length) safeCall(() => net.setMe(ch));
+  }
+
+  // ================================================================ ONLINE › SERVER (where rooms live)
+  /** The server chip on the online hub and its picker (src/net/transport.js relayInfo): Official (the deployed relay) or
+   *  Friend's server (a link to a friend's self-hosted server — tools/host/selfhost.cjs — saved in settings.server /
+   *  settings.serverLink). The chip shows the server and one /health check (when the screen opens and after a change —
+   *  never in a loop). Read-only on a page a server hosts itself (it already knows its server) and with ?relay=.
+   *  → { el, editable(), check(), render(), open(), isOpen(), paste(text), dispose() } */
+  _serverChip({ canOpen = () => true, onOpen = null } = {}) {
+    const S = { tok: 0, res: null, busy: false, alive: true, modal: null, api: null };
+    const info = () => relayInfo();
+    const editable = () => { const src = info().source; return src !== 'hosted' && src !== 'query'; };
+    const label = (R) => (R.source === 'hosted' ? 'This site\u2019s server' : R.source === 'query' ? 'Test relay' : R.source === 'local' ? 'Local dev relay'
+      : R.source === 'friend' ? (R.host || 'Friend\u2019s server') : 'Official');
+    // what to show: [state, text] — state ok | down | warn | busy
+    const status = () => {
+      const R = info();
+      if (!R.url) return ['warn', R.error && !/^Paste/.test(R.error) ? 'Check the link' : 'Paste a link'];
+      // (an https page may not open a plain ws:// socket to another machine: the browser blocks it as mixed content)
+      if (location.protocol === 'https:' && /^ws:\/\/(?!localhost|127\.|\[::1\])/.test(R.url)) return ['warn', 'Needs an https:// link here'];
+      if (S.busy) return ['busy', 'Checking'];
+      const r = S.res;
+      if (!r || r.url !== R.url) return ['busy', 'Checking'];
+      if (r.ok && this._srvRefused === R.url) return ['warn', 'Turns the app away'];
+      if (r.ok) return ['ok', 'Connected'];
+      return ['down', r.why === 'not-inkwave' ? 'Not an INKWAVE server' : 'Can\u2019t reach'];
+    };
+    const nameEl = h('b', { class: 'iw-srvchip__name' });
+    const stTxt = h('span');
+    const stEl = h('span', { class: 'iw-srvst' }, h('i', { class: 'iw-srvst__dot' }), stTxt);
+    const edit = h('span', { class: 'iw-wchip__edit' }, h('i', { html: GLYPHS.pencil }));
+    const lockI = h('span', { class: 'iw-srvchip__lock', html: GLYPHS.lock });
+    const chip = h('button', { class: 'iw-wchip iw-srvchip' },
+      h('span', { class: 'iw-srvchip__icon', html: GLYPHS.server }),
+      h('span', { class: 'iw-wchip__text' }, h('span', { class: 'iw-srvchip__top' }, h('small', null, 'SERVER'), stEl), nameEl),
+      edit, lockI);
+    this._fx(chip);
+    const render = () => {
+      const R = info(), [st, txt] = status();
+      nameEl.textContent = label(R);
+      chip.title = R.url ? R.url.replace(/^ws(s?):/, 'http$1:') : '';
+      stTxt.textContent = txt;
+      stEl.dataset.st = st;
+      chip.classList.toggle('is-ro', !editable());
+      if (S.api && S.api.render) S.api.render(R, st, txt);
+    };
+    // one /health check of the server rooms would use now (a newer check makes an older answer moot)
+    const check = () => {
+      const R = info(), tok = ++S.tok;
+      S.busy = !!R.url;
+      render();
+      if (!R.url) return;
+      pingRelay(R.url, 5000).then((r) => {
+        if (!S.alive || tok !== S.tok) return;
+        S.busy = false; S.res = { ...r, url: R.url };
+        render();
+      });
+    };
+
+    // ---- the picker: OFFICIAL | FRIEND'S SERVER, the link (type it, paste it, or the PASTE button), the status, DONE
+    const open = () => {
+      if (!editable() || this._modal || !canOpen()) return;
+      if (onOpen) onOpen();
+      let choice = serverChoice().server;
+      const seg = this._seg([
+        ['official', h('span', { class: 'iw-segico' }, h('i', { html: GLYPHS.star }), 'OFFICIAL')],
+        ['friend', h('span', { class: 'iw-segico' }, h('i', { html: GLYPHS.users }), 'FRIEND\u2019S SERVER')],
+      ], choice, (v) => { choice = v; this._setSetting('server', v); card.classList.toggle('is-friend', v === 'friend'); check(); });
+      const segRow = h('div', { class: 'iw-row iw-srvm__choice' }, h('div', { class: 'iw-row__label' }, h('i', { class: 'iw-row__pip' }), 'PLAY ON'), h('div', { class: 'iw-row__ctrl' }, seg.el));
+      this._bind(segRow, { id: 'srv-choice', type: 'row', adjust: seg.adjust, accept: seg.cycle });
+
+      const input = h('input', { class: 'iw-srvm__input', type: 'text', maxlength: '300', spellcheck: 'false', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', inputmode: 'url', placeholder: 'https://xyz.trycloudflare.com', 'aria-label': 'Friend\u2019s server link', value: serverChoice().link });
+      const field = h('div', { class: 'iw-srvm__field' }, h('i', { class: 'iw-srvm__fieldico', html: GLYPHS.server }), input, h('i', { class: 'iw-srvm__pen', html: GLYPHS.pencil }));
+      this._bind(field, { id: 'srv-link', accept: () => { this._sfx('ui_click'); input.focus(); } });
+      input.addEventListener('pointerdown', () => this._setFocus(field));
+      const pasteB = h('button', { class: 'iw-minibtn iw-srvm__paste' }, h('i', { html: GLYPHS.paste }), 'PASTE');
+      this._bind(pasteB, { id: 'srv-paste', accept: () => readClip() });
+      const linkErr = h('div', { class: 'iw-srvm__err' });
+      const stDot = h('i', { class: 'iw-srvst__dot' }), stLine = h('span'), stHost = h('small');
+      const stBox = h('div', { class: 'iw-srvst iw-srvm__st' }, stDot, stLine, stHost);
+      const note = h('p', { class: 'iw-srvm__note' });
+      const done = this._btn({ id: 'srv-done', label: 'DONE', icon: GLYPHS.check, cls: 'iw-btn--modal', sound: 'ui_confirm', accept: () => close(false) });
+      const card = h('div', { class: 'iw-modal__card iw-srvm' + (choice === 'friend' ? ' is-friend' : '') },
+        h('div', { class: 'iw-modal__splat', html: splatSVG({ seed: 9, cls: 'iw-fa' }) }),
+        h('div', { class: 'iw-modal__title iw-display' }, 'SERVER'),
+        h('p', { class: 'iw-srvm__lead' }, 'Where your rooms live. Everyone in a room picks the same server.'),
+        segRow,
+        h('div', { class: 'iw-srvm__friend' },
+          h('div', { class: 'iw-srvm__label iw-tape' }, h('i', { html: GLYPHS.users }), 'YOUR FRIEND\u2019S SERVER LINK'),
+          h('div', { class: 'iw-srvm__linkrow' }, field, pasteB),
+          linkErr,
+          h('p', { class: 'iw-srvm__help' }, 'Your friend runs an INKWAVE server and sends you its link \u2014 like ', h('b', null, 'https://xyz.trycloudflare.com'), ', or on the same Wi-Fi ', h('b', null, 'http://192.168.1.50:8090'), '.')),
+        stBox, note,
+        h('div', { class: 'iw-modal__btns' }, done));
+      const m = h('div', { class: 'iw-modal iw-srvmodal' }, card);
+      m.addEventListener('pointerdown', (e) => { if (e.target === m) close(); });
+
+      const showErr = (t) => { linkErr.textContent = t || ''; field.classList.toggle('is-err', !!t); };
+      // the link as typed / pasted → saved (normalised) or a reason why not; a friend's link picks Friend's server
+      const commit = (text) => {
+        const p = parseServerLink(text);
+        if (p.empty) { input.value = ''; showErr(''); if (serverChoice().link) { this._setSetting('serverLink', ''); check(); } else render(); return; }
+        if (!p.ok) { showErr(p.error); restartAnim(field, 'is-shake'); this._sfx('ui_error'); render(); return; }
+        input.value = p.http;
+        showErr('');
+        const changed = p.http !== serverChoice().link || choice !== 'friend';
+        if (p.http !== serverChoice().link) this._setSetting('serverLink', p.http);
+        if (choice !== 'friend') { choice = 'friend'; seg.refresh('friend'); this._setSetting('server', 'friend'); card.classList.add('is-friend'); }
+        if (changed) { this._sfx('ui_confirm'); restartAnim(field, 'is-saved'); check(); }
+      };
+      input.addEventListener('focus', () => { field.classList.add('is-editing'); input.dataset.orig = input.value; this._setFocus(field); });
+      input.addEventListener('blur', () => {
+        field.classList.remove('is-editing');
+        if (input.dataset.cancel) { delete input.dataset.cancel; input.value = input.dataset.orig || ''; return; }
+        commit(input.value);
+      });
+      // a paste into the field is the whole job: check it straight away
+      input.addEventListener('paste', () => setTimeout(() => { if (S.modal === m && document.activeElement === input) { input.dataset.orig = input.value; commit(input.value); } }, 0));
+      const pasteText = (t) => { input.value = String(t || '').trim(); commit(input.value); };
+      const readClip = () => {
+        const manual = () => { input.focus(); showErr(''); linkErr.textContent = 'Press \u2318V (Ctrl+V) to paste the link'; };
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then((t) => { if (S.modal !== m) return; if (t && t.trim()) pasteText(t); else { manual(); linkErr.textContent = 'The clipboard is empty \u2014 copy your friend\u2019s link first'; } }, () => { if (S.modal === m) manual(); });
+        } else manual();
+      };
+      S.api = {
+        paste: pasteText,
+        render: (R, st, txt) => {
+          stDot.parentElement.dataset.st = st;
+          stLine.textContent = txt;
+          stHost.textContent = R.url ? R.url.replace(/^wss?:\/\//, '') : '';
+          const officialNo = R.source === 'official' && isDesktopApp() && this._srvRefused === R.url;
+          note.textContent = officialNo ? 'The official server doesn\u2019t accept the desktop app yet \u2014 pick Friend\u2019s server and paste their link.' : '';
+        },
+      };
+      const close = (sound = true) => {
+        if (S.modal !== m) return;
+        if (document.activeElement === input) input.blur();
+        S.modal = null; S.api = null;
+        this._closeModal(true);
+        if (sound) this._sfx('ui_back');
+        render();
+      };
+      m._onBack = () => close();
+      this._scr.el.appendChild(m);
+      this._modalPrev = chip;
+      this._modal = m;
+      S.modal = m;
+      this._setFocus(choice === 'friend' ? field : segRow, { snap: true });
+      this._sfx('ui_click');
+      check();
+    };
+    if (editable()) this._bind(chip, { id: 'server', accept: () => open() });
+    else chip.tabIndex = -1;   // (read-only: no cursor stop)
+    render();
+    return {
+      el: chip, editable, check, render, open,
+      isOpen: () => !!S.modal,
+      paste: (t) => { if (S.modal && S.api) S.api.paste(t); },
+      dispose: () => { S.alive = false; S.tok++; },
+    };
   }
 
   // ================================================================ SCREEN: online (hub — create / join)
@@ -2621,6 +2807,8 @@ export class Menus {
         h('div', { class: 'iw-hubstep', style: { '--tilt': `${[-2, 1.5, -1][i]}deg` } }, h('b', { html: splatSVG({ seed: 30 + i * 7, cls: 'iw-fa', r: 56, arms: 8, drops: 2 }) }, h('span', null, n)), h('i', { html: ic }), h('span', null, t))));
 
     const body = h('div', { class: 'iw-hub__body' }, create, join, steps);
+    // ---- SERVER (in the header, after the title — up to your splashtag): the official relay or a friend's server
+    const srv = this._serverChip({ canOpen: () => !st.busy, onOpen: () => { if (st.mode !== 'idle') { clearTimeout(st.autoT); clearError(); setMode('idle'); } } });
 
     // ---- you: your splashtag (the name on it is editable) + weapon + look (the kid stands on the pedestal to the right)
     const nameRow = this._nameRow();
@@ -2663,7 +2851,7 @@ export class Menus {
     promptsBusy.classList.add('is-busy');
     const el = h('div', { class: 'iw-screen iw-online' },
       h('div', { class: 'iw-scrim-left' }),
-      this._header('ONLINE', { sub: 'Private rooms · 4 v 4 · up to 8 squidkids' }),
+      (() => { const head = this._header('ONLINE', { sub: 'Private rooms · 4 v 4 · up to 8 squidkids' }); head.appendChild(srv.el); return head; })(),
       body, me, promptsIdle, promptsEntry, promptsBusy);
 
     // ---- code entry
@@ -2767,7 +2955,9 @@ export class Menus {
       } else { enterEntry(firstEmpty()); hintEl.textContent = 'Press Ctrl+V (⌘V) to paste'; }
     };
     const showError = (msg) => {
-      const E = JOIN_ERR[msg] || { title: 'COULDN’T JOIN', text: msg || 'Something went wrong. Try again.', icon: 'close' };
+      const E = joinErr(msg) || { title: 'COULDN’T JOIN', text: msg || 'Something went wrong. Try again.', icon: 'close' };
+      if (msg === REFUSED) this._srvRefused = relayInfo().url;
+      srv.render();
       errIcon.innerHTML = GLYPHS[E.icon] || GLYPHS.close;
       errTitle.textContent = E.title; errText.textContent = E.text;
       jstat.classList.add('is-on'); restartAnim(jstat, 'is-in');
@@ -2838,7 +3028,9 @@ export class Menus {
         create.classList.remove('is-busy');
         el.classList.remove('is-connecting');
         create.classList.add('is-err');
-        const E = JOIN_ERR[e && e.message];
+        const E = joinErr(e && e.message);
+        if (e && e.message === REFUSED) this._srvRefused = relayInfo().url;
+        srv.render();
         createStatus.textContent = E ? `${E.title} — ${E.text}` : (e && e.message) || 'Couldn’t open a room';
         restartAnim(create, 'is-shake');
         this._sfx('ui_error');
@@ -2856,9 +3048,10 @@ export class Menus {
 
     const onPaste = (e) => {
       const ae = document.activeElement;
-      if (ae && ae.tagName === 'INPUT') return; // pasting into the name field
+      if (ae && ae.tagName === 'INPUT') return; // pasting into the name field (or the server link)
       const text = e.clipboardData && e.clipboardData.getData('text');
       if (!text) return;
+      if (this._modal) { if (srv.isOpen()) { e.preventDefault(); srv.paste(text); } return; }   // the server picker: its link
       e.preventDefault();
       this._setFocus(join);
       pasteCode(text);
@@ -2868,17 +3061,21 @@ export class Menus {
 
     // explicit focus graph: cards on the left, you on the right
     const graph = new Map();
-    graph.set(create, { down: join, up: null, right: () => nameRow });
+    // (the server chip sits on top, between the title and your splashtag — a cursor stop unless it's read-only)
+    const srvEl = () => (srv.editable() ? srv.el : null);
+    graph.set(create, { down: join, up: srvEl, right: () => nameRow });
     graph.set(join, { up: create, down: null, right: () => wChip });
     graph.set(wChip, { left: join, right: lChip, up: () => nameRow, down: null });
     graph.set(lChip, { left: wChip, right: null, up: () => nameRow, down: null });
-    graph.set(nameRow, { down: wChip, left: create, up: null, right: null });
+    graph.set(nameRow, { down: wChip, left: () => srvEl() || create, up: null, right: null });
+    graph.set(srv.el, { down: create, left: null, right: () => nameRow, up: null });
 
     return {
       el,
       initial: create,
       afterMount: () => {
         if (sc && sc.showHub) safeCall(() => sc.showHub(this._style(), (G.teamColors && G.teamColors[0]) || this._accent()[0], this._loadout().weapon));
+        srv.check();   // (once per visit; again after a change in the picker)
       },
       onInputMode: (m) => { st.input = m; render(); },
       onKey: (e) => {
@@ -2907,6 +3104,7 @@ export class Menus {
         return false;
       },
       onNav: (dir) => {
+        if (this._modal) return false;   // (the server picker: plain nav inside it, back closes it)
         if (st.busy) { if (dir === 'back') cancelConnect(); return true; }
         if (st.mode === 'entry' || st.mode === 'error') {
           if (this._focus !== join) { if (dir === 'back') { exitEntry(); return true; } return false; }
@@ -2922,6 +3120,7 @@ export class Menus {
       tick: () => {},
       destroy: () => {
         st.alive = false;
+        srv.dispose();
         clearTimeout(st.autoT);
         if (st.busy) { st.token++; st.busy = false; safeCall(() => this._net() && this._net().leave()); } // left mid-connect
         document.removeEventListener('paste', onPaste);
@@ -2968,7 +3167,13 @@ export class Menus {
         h('span', { class: 'iw-rc__back' }, h('i')),
         h('div', { class: 'iw-rc__label iw-tape' }, h('i', { html: GLYPHS.key }), 'ROOM CODE'),
         h('div', { class: 'iw-rc__row' }, h('div', { class: 'iw-rc__tiles' }, tiles), copyBtn, copied)),
-      h('div', { class: 'iw-rc__share' }, 'Friends join from ', h('b', null, 'ONLINE › JOIN A ROOM')));
+      (() => {
+        // which server the room is on, when it isn't the official one: friends have to be on the same one
+        const R = relayInfo();
+        if (R.source === 'friend') return h('div', { class: 'iw-rc__share' }, 'On ', h('b', null, R.host), ' \u00b7 friends pick it under ', h('b', null, 'ONLINE › SERVER'));
+        if (R.source === 'hosted') return h('div', { class: 'iw-rc__share' }, 'Friends open ', h('b', null, R.host), ' › ', h('b', null, 'ONLINE › JOIN A ROOM'));
+        return h('div', { class: 'iw-rc__share' }, 'Friends join from ', h('b', null, 'ONLINE › JOIN A ROOM'));
+      })());
     const top = h('div', { class: 'iw-lob__top iw-in iw-in--down' }, leaveBtn, roomCode);
 
     // ---- room status (top-right): count, team pips, what we're waiting for
