@@ -865,7 +865,7 @@ class Game {
     this.match.pods?.reset();
     a.respawn();
     a.special = a.specialCost();
-    a.stats.turf = 0; a.stats.splats = 0; a.stats.deaths = 0; a.stats.specials = 0;
+    a.stats.turf = 0; a.stats.splats = 0; a.stats.deaths = 0; a.stats.specials = 0; a.stats.assists = 0;
   }
 
   // ---- online (src/net/session.js drives these) -----------------------------------------------------------------

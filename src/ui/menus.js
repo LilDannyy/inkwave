@@ -4076,7 +4076,7 @@ export class Menus {
             try { sp = !!x.specialReady(); spf = x.specialFrac ? x.specialFrac() : 0; } catch (e) { /* optional */ }
             return {
               name: x.name, team: x.team | 0, weapon: x.weaponId, alive: x.alive !== false, respawn: x.alive === false ? Math.max(0, +x.respawnTimer || 0) : 0,
-              special: sp, specialFrac: spf, isSelf: !!x.isLocal, turf: (x.stats && x.stats.turf) || 0, splats: (x.stats && x.stats.splats) || 0, deaths: (x.stats && x.stats.deaths) || 0,
+              special: sp, specialFrac: spf, isSelf: !!x.isLocal, turf: (x.stats && x.stats.turf) || 0, splats: (x.stats && x.stats.splats) || 0, deaths: (x.stats && x.stats.deaths) || 0, assists: (x.stats && x.stats.assists) || 0,
             };
           }),
         };
@@ -4216,6 +4216,7 @@ export class Menus {
       const me = s.players.find((p) => p.isSelf) || selfP;
       sTurf.b.innerHTML = `${fmtInt(me.turf || 0)}<small>p</small>`;
       sSplat.b.textContent = String(me.splats || 0);
+      if (me.assists) sSplat.b.appendChild(h('small', { class: 'iw-prow__as' }, '+' + me.assists));   // (assists, in small type: assists.js)
       sDeath.b.textContent = String(me.deaths || 0);
       sSp.b.textContent = me.special ? 'READY' : `${Math.round(clamp(me.specialFrac || 0) * 100)}%`;
       sSp.el.classList.toggle('is-ready', !!me.special);

@@ -1,6 +1,6 @@
 // surf (2026-10-02): Surf N' Turf — src/game/sp-surf.js (+ src/fx/surfFx.js, src/game/assists.js, sp-surf-bots.js).
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/surf.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=throw,pulses,hit,dodge,assist,turf,buoy,walls,results,net,bots'
+//   PAGE_ARGS='only=throw,pulses,hit,dodge,assist,turf,buoy,walls,results,net,bots,sounds'; MAP=podbox PAGE_ARGS='only=roof'
 // Staged on testbox (a flat deck, top y 0; the spawn deck A at z −48…−40 stands 2.4 m over it; a wall x 14…15, z ±8,
 // 4 m tall); everyone else parked far off, brains stubbed (bots' own parts: 'bots'). Checks:
 //  - throw: the special holds the buoy (the sub-throw pose, the arc preview's numbers), a click throws it, it flies and
@@ -459,6 +459,17 @@
       step(4, () => bb.phase === 'live');
       stub(Sh); if (Sh.weaponId !== w0) Sh.setWeapon(w0);
       R(`with no foe in sight a bot shoots an enemy buoy down (hp ${hp0} → ${Math.max(0, bb.hp)})`, bb.hp < hp0, { hp: bb.hp, phase: bb.phase, weapon: Sh.weaponId });
+    }
+    // ============================================================================================ roof (MAP=podbox)
+    // an off-limits top (a roof: the dead-end lane's walls, x 19.5…20 / 24…24.5, z −36.5…−22, 2.6 m, roof) is no place to
+    // anchor: dropped onto one, the buoy slides off it and anchors on the floor beside it
+    if (want('roof') && g.mapDef?.id === 'podbox') {
+      reset();
+      const b = new SURF.Buoy(me, V(19.75, 4, -29), V(0, -2, 0), false, 0);
+      G.specials.world.push(b);
+      let onTop = false;
+      step(3, () => { if (b.phase === 'fly' && b.pos.y > 2.55 && b.pos.y < 2.7) onTop = true; return b.phase === 'fly'; });
+      R('a buoy dropped onto an off-limits roof (a lane wall\'s top) slides off it and anchors on the floor beside it', onTop && b.phase === 'live' && b.pos.y < 0.1 && (b.pos.x < 19.5 || b.pos.x > 20), { at: v2(b.pos), phase: b.phase, slid: onTop });
     }
     // ============================================================================================ sounds
     if (want('sounds')) {

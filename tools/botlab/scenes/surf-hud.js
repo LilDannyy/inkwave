@@ -2,6 +2,7 @@
 //   MAP=halyard MODE=turf PLAY=4 SCENES=tools/botlab/scenes/surf-hud.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
 //   hud      you holding the buoy: the special gauge's icon, the hint line ("Aim · click to throw the buoy"), the arc
 //   live     thrown: the buoy anchored ahead, its rings going out (and on the minimap)
+//   pause    the pause menu's YOUR MATCH stats: splats with your assists after them
 //   loadout  the loadout picker (the setup screen) with Surf N' Turf picked: its icon, name and blurb
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug;
@@ -21,6 +22,14 @@
       for (let i = 0; i < 60 * 2.6; i++) dbg.step(1000 / 60);
       const b = __G.specials.world.find((w) => w.kind === 'surf');
       return { phase: b && b.phase, rings: b && b.rings.map((r) => r.state + ':' + r.r.toFixed(1)) };
+    } },
+    { name: 'pause', wait: 900, set: async () => {
+      // the pause menu's YOUR MATCH: the splats with your assists after them
+      me.stats.splats = 4; me.stats.assists = 2;
+      g.hud?.setVisible(false);
+      g.menus.show('pause');
+      await new Promise((r) => setTimeout(r, 1200));
+      return { screen: g.menus.current, stat: [...document.querySelectorAll('.iw-pstat')].map((e) => e.textContent) };
     } },
     { name: 'loadout', wait: 900, set: async () => {
       try { g.api.setLoadout?.({ special: 'surf' }); } catch (e) { /* */ }
