@@ -2663,7 +2663,7 @@ export class Menus {
       const stDot = h('i', { class: 'iw-srvst__dot' }), stLine = h('span'), stHost = h('small');
       const stBox = h('div', { class: 'iw-srvst iw-srvm__st' }, stDot, stLine, stHost);
       const note = h('p', { class: 'iw-srvm__note' });
-      const done = this._btn({ id: 'srv-done', label: 'DONE', icon: GLYPHS.check, cls: 'iw-btn--modal', sound: 'ui_confirm', accept: () => close() });
+      const done = this._btn({ id: 'srv-done', label: 'DONE', icon: GLYPHS.check, cls: 'iw-btn--modal', sound: 'ui_confirm', accept: () => close(false) });
       const card = h('div', { class: 'iw-modal__card iw-srvm' + (choice === 'friend' ? ' is-friend' : '') },
         h('div', { class: 'iw-modal__splat', html: splatSVG({ seed: 9, cls: 'iw-fa' }) }),
         h('div', { class: 'iw-modal__title iw-display' }, 'SERVER'),
@@ -2717,15 +2717,15 @@ export class Menus {
           note.textContent = officialNo ? 'The official server doesn\u2019t accept the desktop app yet \u2014 pick Friend\u2019s server and paste their link.' : '';
         },
       };
-      const close = () => {
+      const close = (sound = true) => {
         if (S.modal !== m) return;
         if (document.activeElement === input) input.blur();
         S.modal = null; S.api = null;
         this._closeModal(true);
-        this._sfx('ui_back');
+        if (sound) this._sfx('ui_back');
         render();
       };
-      m._onBack = close;
+      m._onBack = () => close();
       this._scr.el.appendChild(m);
       this._modalPrev = chip;
       this._modal = m;
