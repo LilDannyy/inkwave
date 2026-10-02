@@ -62,6 +62,7 @@ import { PLAYER, SPECIALS, SUBS, weaponRange } from '../config.js';
 import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { SIGHT } from './botSight.js';
+import { surfDanger, surfDodge, surfOwnAim, surfShootAim } from './sp-surf-bots.js';   // Surf N' Turf (sp-surf.js): its rings, our own throw
 
 export const SPECIAL_AI = { enabled: true, teams: null };
 // engagements, not frames (heldFire / bubbleHold are seconds); splattedBy: bots splatted per special (Bomb Barrage:
@@ -103,7 +104,7 @@ function D(key, src, team, owner) {
   d.shape = 0; d.x = 0; d.y = 0; d.z = 0; d.dx = 0; d.dz = 1; d.len = 0; d.d3 = false; d.ux = 0; d.uy = 0; d.uz = 1; d.back = 0.4;
   d.r = 1; d.core = 1; d.yLo = -1e9; d.yHi = 1e9; d.vx = 0; d.vz = 0; d.vt = 0; d.tIn = 0; d.tOut = 60; d.lethal = 2;
   d.los = false; d.losY = 0.35; d.vis = 'near'; d.sx = 0; d.sy = 0; d.sz = 0; d.linger = false; d.actor = null;
-  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false;
+  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false;
   _list.push(d);
   return d;
 }
@@ -194,6 +195,16 @@ export function specialDangers() {
         disc(d, d.px, d.py, d.pz, R + 0.3, stamp ? 2.5 : 2.3);
         d.tIn = Math.max(0, d.pAt - now); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.35; d.fast = true;
         see(d, w.pos.x, w.pos.y, w.pos.z);
+        break;
+      }
+      case 'surf': {
+        // Surf N' Turf: its rings' reach while any are left — light (the answer to a ring is a jump: surfDodge; `jump`
+        // keeps the escape out of it) and lingering (routes go round it when they can) — map (big, loud, on the map)
+        const S = surfDanger(w); if (!S) break;
+        const d = D(w, 'surf', w.team, w.owner);
+        disc(d, w.pos.x, w.pos.y, w.pos.z, S.R + 0.4, S.R);
+        d.lethal = 0; d.jump = true; d.tIn = S.tIn; d.tOut = S.tOut; d.yLo = w.pos.y - 3; d.yHi = w.pos.y + 3; d.vis = 'map'; d.linger = true;
+        see(d, w.pos.x, w.pos.y + 1, w.pos.z);
         break;
       }
       case 'orb': {
@@ -646,6 +657,7 @@ export class SpecialSense {
   // does d count right now, here (tIn: when it hurts here)? obj: holding the objective
   _urgent(d, r, tIn, obj) {
     if (r.cover) return false;   // (a wall between us and its centre / its gun: cover)
+    if (d.jump) return false;    // (Surf N' Turf's rings: jumped, not run from — surfDodge)
     if (d.shot) return d.delay + r.jit < 0.4;   // (a zooka's line: out of it just before the shot, at any range)
     if (d.dodge && tIn > d.dodge) return false;
     if (tIn > 3.2) return false;
@@ -673,7 +685,7 @@ export class SpecialSense {
   // per frame, after every other system has had its say (fight footwork, devices, the tower, climbing): get out of a
   // noticed danger, don't step into one, hold fire on the untouchable; returns an aim to hold (popping our bubble) or null
   act(dt, it, move) {
-    if (!this.on()) return null;
+    if (!this.on()) return surfOwnAim(this.b);   // (our own Surf N' Turf throw isn't awareness: always)
     const a = this.a;
     this._watchTarget();
     if (!a.alive || a.superJumpState) { this.esc = null; return null; }
@@ -685,8 +697,9 @@ export class SpecialSense {
       if (this.esc) this._endEsc();
       if (!safe) this._guard(move);
     }
+    if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);
-    return r ? null : this._popAim(dt, it);
+    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b) || surfShootAim(this, dt, it);
   }
   // the worst noticed danger we're standing in that counts now
   _here() {

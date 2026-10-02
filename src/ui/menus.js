@@ -4548,12 +4548,14 @@ export class Menus {
         h('div', { class: 'iw-ttable__head iw-in' },
           h('span', { class: 'iw-ttable__team' }, h('i', { class: 'iw-ttable__dot' }), names[team] || TEAM_NAMES[team], isWin ? h('em', { class: 'iw-ttable__win' }, h('i', { html: GLYPHS.crown }), 'WIN') : null),
           h('span', { class: 'iw-ttable__col', title: 'Turf inked' }, h('i', { html: GLYPHS.drop }), 'TURF'),
-          h('span', { class: 'iw-ttable__col', title: 'Splats' }, h('i', { html: SPLAT_ICON })),
+          h('span', { class: 'iw-ttable__col', title: 'Splats (+ assists)' }, h('i', { html: SPLAT_ICON })),
           h('span', { class: 'iw-ttable__col', title: 'Times splatted' }, h('i', { html: DEATH_ICON }))),
         rows.map((p, ri) => {
           const turfNum = h('b', null, '0');
           const turfBar = h('i', { class: 'iw-prow__turfbar' });
-          const nSplat = h('span', { class: 'iw-prow__n is-wait' }, String(p.splats || 0));
+          // splats, and the assists in small type after them, the Splatoon way ("5 +3": src/game/assists.js)
+          const nSplat = h('span', { class: 'iw-prow__n is-wait' + (p.assists ? ' has-as' : ''), title: p.assists ? `${p.splats || 0} splats, ${p.assists} assist${p.assists === 1 ? '' : 's'}` : null },
+            String(p.splats || 0), p.assists ? h('small', { class: 'iw-prow__as' }, '+' + p.assists) : null);
           const nDeath = h('span', { class: 'iw-prow__n is-wait' }, String(p.deaths || 0));
           const badges = h('span', { class: 'iw-prow__aw' });
           const isMvp = p._aw.some((a) => a.id === 'mvp');
@@ -4614,11 +4616,13 @@ export class Menus {
       const base = win ? PROGRESSION.xpWin : PROGRESSION.xpLose;
       const tx = Math.round((self.turf || 0) * PROGRESSION.xpPerTurfPoint), sx = Math.round((self.splats || 0) * PROGRESSION.xpPerSplat);
       const dx = boss ? Math.round((self.damage || 0) * 0.04) : 0;   // main.js _bossResults: damage × 0.04 XP
-      if (xp.gained > 0 && Math.abs(base + tx + sx + dx - xp.gained) <= 2) {
+      const ax = boss ? 0 : Math.round((self.assists || 0) * (PROGRESSION.xpPerAssist || 0));   // (main.js _judge: assists)
+      if (xp.gained > 0 && Math.abs(base + tx + sx + dx + ax - xp.gained) <= 2) {
         bd.push([win ? 'WIN BONUS' : 'MATCH', base]);
         if (dx) bd.push(['DAMAGE', dx]);
         bd.push([`TURF`, tx]);
         if (sx) bd.push(['SPLATS', sx]);
+        if (ax) bd.push(['ASSISTS', ax]);
       }
     }
     let acc = 0;

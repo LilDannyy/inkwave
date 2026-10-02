@@ -520,8 +520,24 @@ export const SPECIALS = {
   crab: { id: 'crab', name: 'Crab Rig', blurb: 'Ride a crab tank: gatling on fire, mortar on sub, roll into an armoured ball with swim. The tank can be shot down, and you\'re exposed from above and behind.',
     duration: 9, hp: 460, speed: 3.0, rollSpeed: 9.5, turnRate: 1.5, gunInterval: 0.075, gunDamage: 18, gunSpeed: 36, gunRange: 22, gunSpread: 3.5,
     cannonGap: 1.15, cannonSpeed: 17, cannonRadius: 3.0, cannonDamageMax: 150, cannonDamageMin: 40, rollArmor: 0.35 },
+  // ---- Surf N' Turf (src/game/sp-surf.js): hold out a buoy machine, click to throw it down; anchored, it sends out
+  // pulsing rings (the mark ribbon's look) that reach further each time — a foe the front passes takes `damage` and is
+  // marked, unless they're in the air over its `height`; each ring inks the ground (solid near the buoy, sparser out)
+  surf: { id: 'surf', name: 'Surf N\' Turf', blurb: 'Hold out a souped-up buoy and throw it down. It sends out pulsing rings of ink, each reaching further than the last: foes caught by a ring take damage and get marked — jump it to dodge. Every ring inks the ground (solid near the buoy). The buoy can be shot down.',
+    moveSpeed: 4.6, holdTime: 6, throwSpeed: 15,
+    hp: 350,                              // the anchored buoy: enemy fire / blasts break it (stops the rings)
+    anchor: 0.55,                         // s from landing to the first ring (it rights itself, the beacon lights)
+    pulses: 6, gap: 1.1, r0: 0.6, rMin: 4, rMax: 16, speed: 9.5,   // rings: count, s apart, from r0 out to 4 … 16 m at speed m/s
+    height: 0.55,                         // m: the ribbon's top over the ground it runs on — feet above it dodge
+    damage: 40, markTime: 4,              // per ring hit (once per ring) + the mark (s)
+    stepUp: 0.6, stepDown: 2.6,           // m the ribbon climbs / drops between samples (more: a wall / a drop ends it)
+    solid: 3.2, paintFar: 0.2, paintFall: 4,      // ink once every ring has been by: all of it to `solid` m, then falling
+                                          // off (e-fold paintFall m) toward paintFar at the last ring's reach (sp-surf.js inkCover)
+    paintStep: 1.45, paintR: 1.2,         // ink candidates every paintStep m (radially and round), splat radius
+    jumpAssist: 3.5 },                    // s: a foe forced to jump a ring — their splat by your team then is your assist
 };
-export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab'];
+// (append-only: online records carry the index — keep new specials at the end)
+export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf'];
 
 // ---- Match ----
 export const MATCH = {
@@ -670,6 +686,7 @@ export const BOT_NAMES = [
 export const PROGRESSION = {
   xpForLevel: (lvl) => 800 + lvl * 350,
   xpWin: 1200, xpLose: 500, xpPerTurfPoint: 1.0, xpPerSplat: 40,
+  xpPerAssist: 15,   // assists (src/game/assists.js): damaged / forced off the ground just before a teammate's splat
   // Zone Control (5 min, so more turf gets inked than in a 3 min Turf War): turf counts for less, ink laid on the live
   // zone counts extra, and a knockout win pays a flat bonus — a typical match lands close to a Turf War's XP
   zones: { turfScale: 0.6, xpPerZoneTurfPoint: 1.0, xpKnockout: 300 },

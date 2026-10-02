@@ -23,6 +23,8 @@ import { NavGraph } from './game/nav.js';
 import { Projectiles } from './game/weapons.js';
 import { SubSystem } from './game/subs.js';
 import { SpecialSystem } from './game/specials.js';
+import './game/sp-surf.js';   // Surf N' Turf registers itself (specials.js registerSpecial)
+import './game/assists.js';   // assists: G.assists (actor.splat asks it; the results show it)
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { podColliders, PodLooks } from './game/pods.js';
@@ -1160,14 +1162,15 @@ class Game {
     const local = m.local;
     const p = this.profile;
     const turf = Math.round(local.stats.turf);
-    let gained = Math.round((won ? PROGRESSION.xpWin : PROGRESSION.xpLose) + turf * PROGRESSION.xpPerTurfPoint + local.stats.splats * PROGRESSION.xpPerSplat);
+    const assistXp = Math.round((local.stats.assists || 0) * (PROGRESSION.xpPerAssist || 0));   // (assists: src/game/assists.js)
+    let gained = Math.round((won ? PROGRESSION.xpWin : PROGRESSION.xpLose) + turf * PROGRESSION.xpPerTurfPoint + local.stats.splats * PROGRESSION.xpPerSplat) + assistXp;
     let xpParts = null;
     if (zr) {
       // Zone Control: less per point of turf (a 5 min match), extra for ink laid on the live zone, a knockout bonus
       const ZX = PROGRESSION.zones || { turfScale: 0.6, xpPerZoneTurfPoint: 1, xpKnockout: 300 };
       const zoneTurf = Math.round(local.stats.zoneTurf || 0);
       xpParts = [[won ? 'WIN BONUS' : 'MATCH', won ? PROGRESSION.xpWin : PROGRESSION.xpLose], ['TURF', Math.round(turf * PROGRESSION.xpPerTurfPoint * ZX.turfScale)],
-        ['ZONE INK', Math.round(zoneTurf * ZX.xpPerZoneTurfPoint)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['KNOCKOUT', won && zr.reason === 'knockout' ? ZX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
+        ['ZONE INK', Math.round(zoneTurf * ZX.xpPerZoneTurfPoint)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['ASSISTS', assistXp], ['KNOCKOUT', won && zr.reason === 'knockout' ? ZX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
       gained = xpParts.reduce((a, [, v]) => a + v, 0);
     }
     if (tr) {
@@ -1175,7 +1178,7 @@ class Game {
       const TX = PROGRESSION.tower || { turfScale: 0.6, xpPerRideSecond: 6, xpKnockout: 300 };
       const ride = Math.round(local.stats.towerRide || 0);
       xpParts = [[won ? 'WIN BONUS' : 'MATCH', won ? PROGRESSION.xpWin : PROGRESSION.xpLose], ['TURF', Math.round(turf * PROGRESSION.xpPerTurfPoint * TX.turfScale)],
-        ['TOWER RIDE', Math.round(ride * TX.xpPerRideSecond)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['KNOCKOUT', won && tr.reason === 'knockout' ? TX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
+        ['TOWER RIDE', Math.round(ride * TX.xpPerRideSecond)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['ASSISTS', assistXp], ['KNOCKOUT', won && tr.reason === 'knockout' ? TX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
       gained = xpParts.reduce((a, [, v]) => a + v, 0);
     }
     const before = { level: p.level, xp: p.xp, toNext: PROGRESSION.xpForLevel(p.level) };
@@ -1184,7 +1187,7 @@ class Game {
     saveJSON('inkwave.profile', p);
     const data = {
       win: won, percents: [cov[0] * 100, cov[1] * 100], colors: [G.teamHex[0], G.teamHex[1]], teamNames: this.palette.names || TEAM_NAMES,
-      players: m.actors.map((a) => ({ name: a.name, team: a.team, weapon: a.weaponId, turf: Math.round(a.stats.turf), splats: a.stats.splats, deaths: a.stats.deaths, isSelf: a.isLocal, bot: !!a.isBot, ...(zr ? { zoneTurf: Math.round(a.stats.zoneTurf || 0) } : {}), ...(tr ? { towerRide: Math.round(a.stats.towerRide || 0) } : {}) })),
+      players: m.actors.map((a) => ({ name: a.name, team: a.team, weapon: a.weaponId, turf: Math.round(a.stats.turf), splats: a.stats.splats, assists: a.stats.assists || 0, deaths: a.stats.deaths, isSelf: a.isLocal, bot: !!a.isBot, ...(zr ? { zoneTurf: Math.round(a.stats.zoneTurf || 0) } : {}), ...(tr ? { towerRide: Math.round(a.stats.towerRide || 0) } : {}) })),
       xp: { gained, levelBefore: before.level, levelAfter: p.level, xpBefore: before.xp, xpAfter: p.xp, xpToNextBefore: before.toNext, xpToNextAfter: PROGRESSION.xpForLevel(p.level), ...(xpParts ? { parts: xpParts } : {}) },
       mapName: this.mapDef.name,
       ...(zr ? { mode: 'zones', zones: zr } : {}),
@@ -1318,7 +1321,7 @@ class Game {
     if (m && m.controller && m.state === 'playing') m.controller.computeAim?.();
     // bomb arc preview
     const loc = m?.local;
-    const orbReady = !!(loc && loc.specialActive && loc.specialActive.id === 'booyah' && loc.specialActive.charge >= 1);
+    const orbReady = !!(loc && loc.specialActive && ((loc.specialActive.id === 'booyah' && loc.specialActive.charge >= 1) || (loc.specialActive.showArc && !loc.specialActive.thrown)));   // (showArc: a held special thrown on click — Surf N' Turf)
     G.projectiles.updateArc(loc, !!(loc && loc.alive && (loc.weaponRunner.aimingSub || orbReady) && m.state === 'playing' && !m.paused));
     const tB = performance.now();
     // paint → atlas, shader uniforms
