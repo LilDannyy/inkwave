@@ -61,6 +61,18 @@
   const clearAll = () => { keepAlive(); G.specials.clear(); for (const a of m.actors) { if (a.specialActive) a.specialActive = null; a._go = null; zero(a); } m.actors.forEach((a, i) => park(a, i)); step(0.05); keepAlive(); };
   const start = (a) => { a.specialId = 'drainbow'; a.special = a.specialCost(); a._startSpecial(); return a.specialActive; };
   const face = (a, x, z) => Math.atan2(x - a.pos.x, z - a.pos.z);
+  // a camera dist m out at height h, looking at `look`, from the clear direction nearest `pref` (rad): nothing between
+  // it and the look point, nor between it and its ray to the bubble's middle
+  const clearCam = (dist, h, look, pref, fov = 60) => {
+    let best = null, bd = 1e9;
+    for (let k = 0; k < 36; k++) {
+      const a = (k / 36) * Math.PI * 2, x = cx + Math.sin(a) * dist, z = cz + Math.cos(a) * dist, p = V(x, cy + h, z);
+      if (!G.physics.los(p, V(...look)) || !G.physics.los(p, V(cx, cy + 1.2, cz))) continue;
+      const da = Math.abs(Math.atan2(Math.sin(a - pref), Math.cos(a - pref)));
+      if (da < bd) { bd = da; best = [x, cy + h, z]; }
+    }
+    cine(best || [cx + Math.sin(pref) * dist, cy + h, cz + Math.cos(pref) * dist], look, fov);
+  };
   const cine = (from, look, fov = 60) => { g.settings.fov = fov; g.rig.cinematic(V(...from), V(...from), V(...look), V(...look), 99, () => {}); };
   const follow = (yaw, pitch = -0.1) => { g.settings.fov = window.__fov0 || 75; g.rig.follow(me, true); g.rig.yaw = yaw; g.rig.pitch = pitch; me.yaw = me.aimYaw = yaw; };
   window.__fov0 = window.__fov0 || g.settings.fov;
@@ -74,12 +86,12 @@
     put(M1, cx, cz, 0); start(M1); step(0.1);
     put(E1, cx - wz * 1.8, cz + wx * 1.8, way + Math.PI); put(M2, cx + wz * 1.6, cz - wx * 1.2, way); put(me, cx + wx * 8 - wz * 3, cz + wz * 8 + wx * 3, way + Math.PI);
     step(1.6);
-    cine([cx + wx * 9.5 + wz * 2, cy + 3.4, cz + wz * 9.5 - wx * 2], [cx, cy + 1.4, cz]);
+    clearCam(9.8, 3.4, [cx, cy + 1.4, cz], way + 0.2);
     step(0.05);
   });
   add('drain', () => {
     step(0.4);
-    cine([cx + wx * 5.6 - wz * 1.5, cy + 1.9, cz + wz * 5.6 + wx * 1.5], [cx - wz * 0.6, cy + 1.0, cz + wx * 0.6]);
+    clearCam(9.8, 2.6, [cx - wz * 0.7, cy + 1.0, cz + wx * 0.7], way + 0.2, 30);   // (the outside shot's camera, zoomed in)
     step(0.05);
   });
   // ---- a foe walking out through the film
@@ -89,7 +101,7 @@
     put(E1, cx + wx * 2.8, cz + wz * 2.8, way); E1._go = V(wx, 0, wz);
     let n = 0; while (Math.hypot(E1.pos.x - cx, E1.pos.z - cz) < D.radius - 0.05 && n++ < 120) step(1 / 60);
     step(0.1);
-    cine([cx + wx * 8.8 - wz * 2.2, cy + 1.7, cz + wz * 8.8 + wx * 2.2], [cx + wx * 3.9, cy + 1.3, cz + wz * 3.9], 55);
+    clearCam(9.0, 1.7, [cx + wx * 3.9, cy + 1.3, cz + wz * 3.9], way - 0.25, 55);
     step(1 / 60);
   });
   add('ripple-2', () => { step(0.2); });
@@ -122,6 +134,15 @@
     put(E1, cx - wx * 2.2 + wz * 1.6, cz - wz * 2.2 - wx * 1.6, way); put(E2, cx - wx * 1.6 - wz * 2.0, cz - wz * 1.6 + wx * 2.0, way);
     put(me, cx + wx * 1.2, cz + wz * 1.2, way + Math.PI); const yaw = Math.atan2(-wx, -wz); follow(yaw + 0.2, -0.16); step(1.4);
   });
+  // ---- the loadout picker with the Drainbow (its icon, name and blurb)
+  add('loadout', () => {
+    clearAll();
+    g.api.setLoadout?.({ special: 'drainbow' });
+    g.menus?.show('loadout');
+    step(0.1);
+    const t = document.querySelector('.iw-kit--pick b')?.textContent;
+    return { picker: [...document.querySelectorAll('.iw-kit--pick b')].map((e) => e.textContent) , t };
+  }, 400);
   window.__hudScenes = scenes;
   return scenes.map((s) => ({ name: s.name }));
 })()

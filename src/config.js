@@ -527,7 +527,7 @@ export const SPECIALS = {
   // While it's up your own meter doesn't charge (it's your running special); your share of the drained special turns
   // into bubble time instead (extendPerMeter s per full meter, total life ≤ maxLife). No hit points: it pops when its
   // time runs out or its owner is splatted (popOnOwnerSplat).
-  drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'Set down a shimmering rainbow bubble. Enemy ink passing through it loses half its punch, and foes inside see the world drain to grey, hear it muffled, and leak ink and special to you and your teammates inside. While it\'s up your own meter rests, but what it drains for you keeps the bubble going longer.',
+  drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'A rainbow bubble at your feet. Enemy ink through it does half damage. Foes inside go grey and muffled as their ink and special drain to your team inside — your share keeps it up longer.',
     duration: 8.5, radius: 4.3, lift: 1.0, inflate: 0.55, shotMul: 0.5,
     inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
     extendPerMeter: 10, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
