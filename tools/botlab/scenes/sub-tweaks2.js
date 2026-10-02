@@ -46,12 +46,12 @@
     show(E, V(0, 0, -32), 0); E.setWeapon('bow'); step(0.4);
     E.aimYaw = E.yaw = 0; E.aimPitch = 0; E.aimDir.set(0, 0, 1); E.aimPoint.set(E.pos.x, 1.2, 80);
     G.paint.clear();
-    const ps0 = W.paintStick, bp0 = W.burstPaint;
-    if (SC !== 'bow-full') { W.paintStick = 0; W.burstPaint = [0, 0]; }
+    const keep = { landWidth: W.landWidth, landWidthFull: W.landWidthFull, burstPaint: W.burstPaint };
+    if (SC !== 'bow-full') { W.landWidth = W.landWidthFull = 0; W.burstPaint = [0, 0]; }
     BOW.looseVolley(E, 1);
     const arr = BOW.BOW_DEBUG.arrows.slice(-3), tracks = arr.map((p) => [p.pos.clone()]);
     after = () => arr.forEach((p, i) => { if (BOW.BOW_DEBUG.arrows.includes(p) && p.st === 0 && !p.noHit) tracks[i].push(p.pos.clone()); });
-    step(1.8); after = null; W.paintStick = ps0; W.burstPaint = bp0;
+    step(1.8); after = null; Object.assign(W, keep);
     if (SC === 'bow-old') {
       // the old rule over the same flights: a 0.32 m drip every 2.4 m of flight, counted a frame at a time
       G.paint.clear();

@@ -5,7 +5,8 @@
 //   WEAPONS / SUBS equip the 8 players (slot order = team 0 first): 'all=bow' · 'team0=blade;team1=shooter' ·
 //   'blade,blade,shooter,…' (per slot, blank = keep) · unset = the usual random loadouts.
 //   TRACK=<weapon> (+ TRACK_TEAM=0|1): a closer look at the players on that weapon (see trk below).
-//   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS values).
+//   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS values;
+//   an array as 'bow.burstPaint=1/1.2').
 //   SPECIAL_AI=0 turns the bots' awareness of enemy specials off (src/game/botSpecials.js; an A/B on the same code),
 //   team0 / team1: on for that team only (head to head); unset: as shipped.
 //   SPCHARGE=3: the special gauge fills 3× as fast (PLAYER.specialChargeRate; this run only) — more specials per match.
@@ -44,7 +45,7 @@ app.on('browser-window-created', (_, win) => {
     // what-if tuning (TUNE, see the header): patched into the live config before the loadouts
     const tuned = TUNE ? await js(`(async () => { const C = await import('./src/config.js'); const out = [];
       for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id];
-        if (!o || !(key in o)) { out.push('?' + path); continue; } o[key] = isNaN(+v) ? v : +v; out.push(path + '=' + o[key]); }
+        if (!o || !(key in o)) { out.push('?' + path); continue; } o[key] = v.includes('/') ? v.split('/').map(Number) : isNaN(+v) ? v : +v; out.push(path + '=' + o[key]); }
       return out.join(','); })()`) : '';
     // loadouts: WEAPONS / SUBS (see the header)
     const equip = await js(`(() => {

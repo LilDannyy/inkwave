@@ -5,10 +5,18 @@
 //
 //   draw      charge 0..1 builds linearly over chargeTime; ring 1 at `ring1` (0.45 s), ring 2 = full draw (1.0 s).
 //             Slow walk while drawing; the draw holds at full like a charger's. The tank caps how far you can draw.
-//   loose     three arrows: a flat (horizontal) fan when you're on the ground, an upright (vertical) one in the air.
-//             A tap (< ring 1) = short, weak arrows that just splat. Ring 1+ = the arrows LODGE where they land (or at
-//             a victim's feet on a direct hit), glow and tick, then burst after a short fuse. Full draw = full reach,
-//             top damage and a bigger burst. Centre + side direct hits, or a direct hit + its burst, splat.
+//   loose     three arrows: an 8° fan at a tap / ring 1 — flat (horizontal) on the ground, upright (vertical) in the
+//             air — and at full draw three PARALLEL arrows 0.4 m apart (side by side on the ground, one over another in
+//             the air: Splatoon 3's Tri-Stringer). A tap (< ring 1) = short, weak arrows that just splat. Ring 1+ = the
+//             arrows LODGE where they land (or at a victim's feet on a direct hit), glow and tick, then burst after a
+//             short fuse. Full draw = full reach and a bigger burst; all three of its arrows splat (35 each), two need
+//             a burst to finish. Drawing in the air runs at a third of the speed (W.airDraw).
+//   ink       falling spray: each arrow lets fall a few big droplets on its way (every dropEvery m, the first just in
+//             front of you), each stretched along the flight when it falls from low; the three arrows' droplets are
+//             staggered a third of the spacing apart, so a full draw's parallel arrows lay one unbroken band from your
+//             feet to the landing, and a fanned shot three lines. Where an arrow lands it inks a patch (wider at full
+//             draw, stretched by how flat it skims in); lodged ones burst on top of it. After a shot the tank doesn't
+//             refill for W.inkRecoveryDelay (actor.js).
 //   arrows    this module's own projectiles (not G.projectiles.list): fast with a light arc, the same flight model
 //             Projectiles uses (straight phase → gravity) so its ballistic solver lands them on the crosshair; past
 //             their reach they nose down into the ground. Drawn as instanced meshes + additive streaks and glows.
@@ -32,7 +40,7 @@ const LIFE = 3;              // a flying arrow gives up after this long (s)
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _dir = new THREE.Vector3(), _ax = new THREE.Vector3();
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _c = new THREE.Color();
-const _tp = new THREE.Vector3(), _td = new THREE.Vector3();   // (trail drips)
+const _tp = new THREE.Vector3(), _td = new THREE.Vector3(), _side = new THREE.Vector3(), _o = new THREE.Vector3();   // (falling spray, the parallel volley)
 const _hit = new Hit(), _hit2 = new Hit(), _res = { t: 0, dist: 0 };
 
 function rumble(a, strong, weak, ms) { if (a && a.isLocal && !a.isBot) G.input?.rumble?.(strong, weak, ms); }
@@ -42,21 +50,22 @@ function kitOf(r) { return r.kit || (r.kit = { ring: 0, stall: 0, lastC: 0, botY
 
 // ---------------------------------------------------------------------------------------------- shot tiers
 // charge → { tier 0 tap | 1 ring | 2 full, range (straight flight before the dive), speed, damage (centre / side), fan
-// (deg), lodge + burst }
+// (deg) / gap (m: parallel arrows that far apart), lodge + burst, land (the landing patch's radius), dk (droplet scale) }
 const _shot = {};
 export function bowShot(c) {
   const S = _shot;
   if (c >= 0.999) {
-    Object.assign(S, { tier: 2, range: W.flightFull, speed: W.speedFull, dmg: W.damageFull, side: W.sideFull, fan: W.fanFull, lodge: true,
-      fuse: W.fuseFull, br: W.burstRadius[1], bd: W.burstDamage[1], be: W.burstEdge[1], bp: W.burstPaint[1] });
+    Object.assign(S, { tier: 2, range: W.flightFull, speed: W.speedFull, dmg: W.damageFull, side: W.sideFull, fan: W.fanFull, gap: W.fanGap, lodge: true,
+      fuse: W.fuseFull, br: W.burstRadius[1], bd: W.burstDamage[1], be: W.burstEdge[1], bp: W.burstPaint[1], land: W.landWidthFull / 2, dk: W.dropScale });
   } else if (c >= W.ring1) {
     const u = (c - W.ring1) / (1 - W.ring1), d = lerp(W.damageRing[0], W.damageRing[1], u);
     Object.assign(S, { tier: 1, range: lerp(W.flightRing[0], W.flightRing[1], u), speed: lerp(W.speedRing[0], W.speedRing[1], u), dmg: d, side: d * W.sideMul,
-      fan: W.fanRing, lodge: true, fuse: W.fuseRing, br: W.burstRadius[0], bd: W.burstDamage[0], be: W.burstEdge[0], bp: W.burstPaint[0] });
+      fan: W.fanRing, gap: 0, lodge: true, fuse: W.fuseRing, br: W.burstRadius[0], bd: W.burstDamage[0], be: W.burstEdge[0], bp: W.burstPaint[0],
+      land: W.landWidth / 2, dk: W.dropScale * W.dropRing });
   } else {
     const u = clamp(c / W.ring1, 0, 1), d = lerp(W.damageTap[0], W.damageTap[1], u);
-    Object.assign(S, { tier: 0, range: lerp(W.flightTap[0], W.flightTap[1], u), speed: W.speedTap, dmg: d, side: d * W.sideMul, fan: W.fanTap, lodge: false,
-      fuse: 0, br: 0, bd: 0, be: 0, bp: 0 });
+    Object.assign(S, { tier: 0, range: lerp(W.flightTap[0], W.flightTap[1], u), speed: W.speedTap, dmg: d, side: d * W.sideMul, fan: W.fanTap, gap: 0, lodge: false,
+      fuse: 0, br: 0, bd: 0, be: 0, bp: 0, land: W.landWidth / 2 * W.landTap, dk: W.dropScale * W.dropTap });
   }
   return S;
 }
@@ -93,18 +102,35 @@ export function looseVolley(a, c) {
   return S;
 }
 
-// the three arrows of a volley from m along dir (the fan: about the vertical on the ground, about the aim's right axis
-// in the air). ghost: a remote player's volley (online) — the arrows fly, lodge and burst for the eye only
+// the three arrows of a volley from m along dir. A fan: about the vertical on the ground, about the aim's right axis in
+// the air; a full draw (S.gap): parallel, S.gap apart across the aim — side by side on the ground (the flat right), one
+// over another in the air (the aim's own up) — each starting from the muzzle moved over (never through a wall).
+// ghost: a remote player's volley (online) — the arrows fly, lodge and burst for the eye only
 function volley(a, S, m, dir, air, ghost = false) {
   if (air) { _ax.crossVectors(dir, UP); if (_ax.lengthSq() < 1e-4) _ax.set(1, 0, 0); _ax.normalize(); } else _ax.copy(UP);
+  if (air) _side.crossVectors(_ax, dir).normalize(); else { _side.set(-dir.z, 0, dir.x); if (_side.lengthSq() < 1e-6) _side.set(1, 0, 0); _side.normalize(); }
   const col = G.teamColors[a.team];
+  // falling spray: the first droplet dropFirst m in front of the archer (the muzzle is already d0 out), then one every
+  // `every` m; the centre arrow first, the others a third / two thirds of the spacing later (staggered: their droplets
+  // fill each other's gaps)
+  const hd = Math.hypot(dir.x, dir.z) || 1;
+  const d0 = clamp(((m.x - a.pos.x) * dir.x + (m.z - a.pos.z) * dir.z) / hd, 0, 1);
+  const every = Math.max(W.dropEvery * S.dk, W.dropGapMin);   // (tiny droplets — a tap's — spread out: a dotted line, few records)
   for (let i = -1; i <= 1; i++) {
     if (arrows.length >= MAX) kill(0);
     const p = newArrow();
-    const d = _v2.copy(dir); if (i) d.applyAxisAngle(_ax, i * S.fan * DEG);
-    p.pos.copy(m); p.prev.copy(m); p.vel.copy(d).multiplyScalar(S.speed); p.dir.copy(d); p.fdir.copy(d);
+    const d = _v2.copy(dir); if (i && S.fan) d.applyAxisAngle(_ax, i * S.fan * DEG);
+    p.pos.copy(m);
+    if (i && S.gap) {
+      _o.copy(m).addScaledVector(_side, i * S.gap);
+      const h = G.physics.segment(m, _o, _hit2, true);
+      p.pos.copy(h.hit ? m : _o);
+    }
+    p.prev.copy(p.pos); p.vel.copy(d).multiplyScalar(S.speed); p.dir.copy(d); p.fdir.copy(d);
+    const phase = i === 0 ? 0 : i === 1 ? 1 / 3 : 2 / 3;
     Object.assign(p, { owner: a, team: a.team, st: 0, age: 0, dist: 0, t: 0, range: S.range, speed: S.speed, tier: S.tier, dmg: i ? S.side : S.dmg, lodge: S.lodge, fuse: S.fuse,
-      br: S.br, bd: S.bd, be: S.be, bp: S.bp, trail: -1.8, seed: Math.random(), noHit: false, ticks: 0, spawnT: G.time, center: i === 0, ghost });
+      br: S.br, bd: S.bd, be: S.be, bp: S.bp, land: S.land, dk: S.dk, every, drop: W.dropFirst - d0 + phase * every, drops: 0,
+      seed: Math.random(), noHit: false, ticks: 0, spawnT: G.time, center: i === 0, ghost });
     arrows.push(p);
   }
   if (a.isLocal || a._nearCamera?.()) {
@@ -124,12 +150,47 @@ function lodge(p, point, n, d) {
   // (point / n / d may be shared temporaries: copy them first, then only read the arrow's own fields)
   p.st = 1; p.t = 0; p.hitP.copy(point); p.nrm.copy(n); p.dir.copy(d).normalize();
   p.pos.copy(p.hitP).addScaledVector(p.dir, 0.12);      // tip buried; the shaft sticks out behind it
-  _v.copy(p.hitP).addScaledVector(p.nrm, 0.08);
-  credit(p.owner, G.paint.splat(_v, W.paintStick, p.team, { seed: p.seed, stretch: p.dir, stretchAmt: 0.5 }));
+  landPaint(p, p.hitP, p.nrm, p.dir);
   if (p.owner.isLocal || near(p.hitP, 26)) {
     G.audio?.play('bow_thunk', { pos: p.hitP, volume: 0.5 + 0.15 * p.tier, pitch: p.center ? 1 : 1.07 });
     G.fx?.burst(p.hitP, p.nrm, G.teamColors[p.team], { count: 5, speed: 2.4, size: 0.06, paint: false });
   }
+}
+
+// where an arrow lands it inks a patch p.land in radius: on a floor stretched along the flight by how flat it came in
+// (× landLenFlat in length skimming in under landFlat°, easing to × landLenSteep past landSteep°); on a wall / ceiling
+// round. (A splat's length grows by 0.625 × stretchAmt: paint.js smears 1 + s ahead of the centre, 1 + s / 4 behind.)
+function landPaint(p, point, n, d) {
+  const r = p.land;
+  if (!(r > 0)) return;
+  _v.copy(point).addScaledVector(n, 0.1);
+  let opts = { seed: p.seed };
+  if (n.y > 0.6) {
+    _td.set(d.x, 0, d.z);
+    const hl = _td.length();
+    if (hl > 1e-4) {
+      const ang = Math.atan2(Math.max(0, -d.y), hl) / DEG;
+      const len = ang <= W.landFlat ? W.landLenFlat : ang >= W.landSteep ? W.landLenSteep : lerp(W.landLenFlat, W.landLenSteep, (ang - W.landFlat) / (W.landSteep - W.landFlat));
+      opts = { seed: p.seed, stretch: _td.multiplyScalar(1 / hl), stretchAmt: (len - 1) / 0.625 };
+    }
+  }
+  credit(p.owner, G.paint.splat(_v, r, p.team, opts));
+}
+
+// one falling-spray droplet from arrow p, let fall from `at` onto what's below: dropRadius (dropFeet for the first
+// one, in front of your feet) × the shot's droplet scale, stretched along the flight dropLen × in length when it falls
+// from under dropLow m, easing to round from dropHigh m up. Nothing below within 14 m (the sea, a pit): lost
+function drip(p, at) {
+  const g = G.physics.raycast(at, DOWN, 14, _hit2, true);
+  if (!g.hit) return;
+  const h = at.y - g.point.y;
+  const len = h <= W.dropLow ? W.dropLen : h >= W.dropHigh ? 1 : lerp(W.dropLen, 1, (h - W.dropLow) / (W.dropHigh - W.dropLow));
+  const r = (p.drops === 0 && p.center ? W.dropFeet : W.dropRadius) * p.dk * (0.96 + Math.random() * 0.08);
+  if (!(r > 0)) return;
+  _td.set(p.fdir.x, 0, p.fdir.z); if (_td.lengthSq() < 1e-6) _td.set(0, 0, 1); _td.normalize();
+  _tp.copy(g.point).addScaledVector(g.normal, 0.1);
+  const opts = len > 1.01 ? { seed: Math.random(), stretch: _td, stretchAmt: (len - 1) / 0.625 } : { seed: Math.random() };
+  credit(p.owner, G.paint.splat(_tp, r, p.team, opts));
 }
 
 // the lodged arrow bursts: paint, splash damage (falloff past burstInner, needs line of sight), devices, fx
@@ -238,9 +299,8 @@ function stepArrow(p, i, dt) {
       if (p.noHit) _dir.set(p.fdir.x * 0.55, -1, p.fdir.z * 0.55).normalize(); else _dir.copy(p.dir);
       lodge(p, hit.point, hit.normal, _dir);
     } else {
-      _v.copy(hit.point).addScaledVector(hit.normal, 0.12);
-      credit(p.owner, G.paint.splat(_v, W.paintTap * (0.85 + 0.3 * p.seed), p.team, { seed: p.seed, stretch: p.dir, stretchAmt: 0.7 }));
-      emit('weapon:impact', { pos: hit.point.clone(), normal: hit.normal.clone(), team: p.team, kind: 'shot', radius: W.paintTap });
+      landPaint(p, hit.point, hit.normal, p.dir);
+      emit('weapon:impact', { pos: hit.point.clone(), normal: hit.normal.clone(), team: p.team, kind: 'shot', radius: p.land });
       if (p.owner.isLocal || near(hit.point, 22)) {
         G.fx?.burst(hit.point, hit.normal, G.teamColors[p.team], { count: 5, speed: 3, size: 0.07, paint: false });
         if (p.center) G.audio?.play('splat_small', { pos: hit.point, volume: 0.35 });
@@ -249,24 +309,15 @@ function stepArrow(p, i, dt) {
     }
     return;
   }
-  // trail drips (lodging arrows only): ink under the flight, a drip every `every` m of it — placed where the arrow was
-  // at that distance (between frames too: a full-draw arrow covers ~1 m a frame), each stretched along the flight. The
-  // centre arrow's drips run together into a swimmable line; the side arrows' stay a dotted line either side of it
-  if (p.lodge && !p.noHit) {
-    const every = p.center ? W.trailEvery : W.trailSideEvery, rad = p.center ? W.trailRadius : W.trailSideRadius;
-    p.trail += sp * dt;
-    for (let n = 0; p.trail >= every && n < 4; n++) {
-      p.trail -= every;
-      _tp.copy(p.pos).addScaledVector(p.dir, -p.trail);
-      const g = G.physics.raycast(_tp, DOWN, 4, _hit2, true);
-      if (!g.hit) continue;
-      _tp.copy(g.point).addScaledVector(g.normal, 0.1);
-      if (p.center) {
-        _td.set(p.dir.x, 0, p.dir.z); if (_td.lengthSq() < 1e-6) _td.set(0, 0, 1); _td.normalize();
-        credit(p.owner, G.paint.splat(_tp, rad * (0.94 + Math.random() * 0.12), p.team, { seed: Math.random(), stretch: _td, stretchAmt: W.trailStretch }));
-      } else credit(p.owner, G.paint.splat(_tp, rad * (0.8 + Math.random() * 0.4), p.team, { seed: Math.random() }));
+  // falling spray: a droplet each time the arrow passes its next drop point (none after a direct hit; dropMax at most,
+  // more when the droplets are scaled down closer together — the same reach), let fall from where the arrow was at that
+  // point (between frames: a full-draw arrow covers ~1 m a frame)
+  if (!p.noHit) {
+    const cap = Math.ceil((W.dropMax * W.dropEvery) / p.every - 1e-6);
+    for (let n = 0; n < 3 && p.drops < cap && p.dist >= p.drop; n++) {
+      drip(p, _tp.copy(p.pos).addScaledVector(p.dir, -(p.dist - p.drop)));
+      p.drops++; p.drop += p.every;
     }
-    if (p.trail >= every) p.trail = 0;
   }
   if (p.age > LIFE || p.pos.y < PLAYER.waterY - 1.2) {
     if (p.pos.y < PLAYER.waterY - 1.2 && near(p.pos, 30)) G.fx?.waterPlop?.(_v.copy(p.pos).setY(PLAYER.waterY), 0.5);
@@ -407,9 +458,10 @@ function update(runner, dt, inp, w) {
       runner.charging = true; runner.charge = 0; runner.chargeT = 0; k.ring = 0; k.stall = 0; k.lastC = 0;
       if (a.isLocal || a._nearCamera()) runner.chargeLoop = G.audio?.loop('bow_draw', { pos, volume: a.isLocal ? 0.5 : 0.32, pitch: 0.6 });
     }
-    // the draw builds linearly (ring 1 at w.ring1 of the way); the tank caps it
+    // the draw builds linearly (ring 1 at w.ring1 of the way); the tank caps it; in the air it runs at w.airDraw (a
+    // third: off the ground — jumping, falling, launched — it takes 3× as long, and speeds back up when you land)
     const maxC = clamp(a.ink / w.inkFull, 0, 1);
-    runner.chargeT = Math.min(1, runner.chargeT + dt / w.chargeTime);
+    runner.chargeT = Math.min(1, runner.chargeT + (dt / w.chargeTime) * (a.grounded ? 1 : (w.airDraw ?? 1)));
     runner.charge = Math.min(maxC, runner.chargeT);
     a.fireFacing = 0.4;
     runner.chargeLoop?.set({ pitch: 0.6 + 0.9 * runner.charge, pos });
@@ -461,7 +513,7 @@ function groupYaw(brain, a, t, fanRad) {
   return clamp(angleDiff(y1, y2) * 0.5, -fanRad, fanRad);
 }
 const bot = {
-  paintPitch: -0.18,
+  paintPitch: -0.18,   // (in paint mode paintAim's level lane shot or a zone / tower spot's own pitch takes over)
   fight(brain, ctx) {
     const { a, w, dist, range, it, move, target } = ctx;
     const wr = a.weaponRunner, k = kitOf(wr);
@@ -485,6 +537,34 @@ const bot = {
     if (a.grounded) k.botYaw = groupYaw(brain, a, target, bowShot(wr.charge).fan * DEG);
     return false;
   },
+  // paint aim (bots.js, paint mode, unless a zone / tower spot is the target): a level shot down the emptiest clear lane —
+  // candidates fanned round the way it's going, each scored by the unclaimed (enemy: more) floor under its flight, as far
+  // as the flight's clear; picked again every ~0.5 s, held while drawing (one straight line per shot)
+  paintAim(brain, ctx) {
+    const { a, dt } = ctx;
+    const wr = a.weaponRunner, k = kitOf(wr);
+    k.laneT = (k.laneT ?? 0) - dt;
+    if (k.laneYaw === undefined || (!wr.charging && k.laneT <= 0)) {
+      k.laneT = 0.45 + Math.random() * 0.2;
+      const base = ctx.wantMove ? Math.atan2(ctx.move.x, ctx.move.z) : brain.aimYaw;
+      let best = base, bv = -1, bl = 0;
+      _lo.set(a.pos.x, a.pos.y + 1.1, a.pos.z);
+      for (const off of LANES) {
+        const yw = base + off, sx = Math.sin(yw), sz = Math.cos(yw);
+        const h = G.physics.segment(_lo, _lv.set(_lo.x + sx * LANE_LEN, _lo.y, _lo.z + sz * LANE_LEN), _hitL, true);
+        const clear = h.hit ? h.dist : LANE_LEN;
+        let v = 0;
+        for (let d = 3; d <= Math.min(clear, 20) + 0.01; d += 4) {
+          const st = G.paint.regionStats(a.pos.x + sx * d, a.pos.y, a.pos.z + sz * d, 1.8, a.team, _ls);
+          if (st.n) v += st.empty + st.enemy * 1.4;   // (no floor there at this height — a drop, the sea — scores nothing)
+        }
+        const score = v / 5 - Math.abs(off) * 0.06;   // (5 samples make a full lane; a short one scores less)
+        if (score > bv) { bv = score; best = yw; bl = clear; }
+      }
+      k.laneYaw = best; k.laneV = bv; k.laneLen = bl;
+    }
+    return { yaw: k.laneYaw, pitch: 0, need: k.laneV >= 0.5 };
+  },
   paint(brain, ctx) {
     const { a, w, needPaint, inkFrac } = ctx;
     const wr = a.weaponRunner, k = kitOf(wr);
@@ -497,10 +577,13 @@ const bot = {
     // not getting anywhere on its path: hold off the next draw (drawing resets the unstick timer) so the brain's
     // hop / skip / replan recovery gets its turn
     if ((brain.noProg || 0) > 0.25) return false;
-    k.botPaint = Math.random() < 0.3 ? 1 : w.ring1 + 0.05;
+    // a long clear lane: a full draw lays the band all the way down it; a short one: ring 1
+    k.botPaint = (k.laneLen ?? 0) >= 17 && Math.random() < 0.7 ? 1 : w.ring1 + 0.05;
     return true;
   },
 };
+const LANES = [0, -0.45, 0.45, -0.9, 0.9, -1.35, 1.35], LANE_LEN = 22;
+const _lo = new THREE.Vector3(), _lv = new THREE.Vector3(), _hitL = new Hit(), _ls = { own: 0, enemy: 0, empty: 0, n: 0 };
 CHARGES.bow = true;
 LONG.bow = true;
 

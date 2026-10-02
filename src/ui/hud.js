@@ -1624,14 +1624,14 @@ export class HUD {
       if (roll !== L.roll) { L.roll = roll; this.ret.classList.toggle('is-roll', roll); }
     }
     if (L.kind === 'bow') {
-      // the rings fill with the draw (ring 1 / full flash the reticle); the fan pips tighten with the charge and turn
-      // upright while airborne (the volley fans vertically in the air)
+      // the rings fill with the draw (ring 1 / full flash the reticle); the fan pips close in at full draw (the arrows fly
+      // parallel then) and turn upright while airborne (the volley fans vertically in the air)
       const c = clamp(+f.charge || 0), r1 = WEAPONS.bow?.ring1 ?? 0.45;
       if (L.charge == null || Math.abs(c - L.charge) > 0.004) {
         L.charge = c;
         this._bowIn.style.strokeDashoffset = (100 * (1 - clamp(c / r1))).toFixed(2);
         this._bowOut.style.strokeDashoffset = (100 * (1 - clamp((c - r1) / (1 - r1)))).toFixed(2);
-        this.ret.style.setProperty('--fan', (9 - 3 * c).toFixed(2));
+        this.ret.style.setProperty('--fan', c >= 0.999 ? '3.5' : '9');   // (an 8° fan until full draw; then parallel, close)
       }
       const ring = c >= 0.999 ? 2 : c >= r1 ? 1 : 0;
       if (ring !== L.ring) {

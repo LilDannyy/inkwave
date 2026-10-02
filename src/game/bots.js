@@ -952,8 +952,13 @@ export class BotBrain {
         wantYaw = Math.atan2(zAim.x - a.pos.x, zAim.z - a.pos.z) + Math.sin(this.sweep) * 0.22;
         if (CHARGES[w.kind] || zAim.d < 3.2) wantPitch = clamp(Math.atan2(zAim.y + 0.05 - (a.pos.y + 1.1), Math.max(0.5, zAim.d)), -0.95, 0.15);
       }
+      // a kit's own paint aim (kits/*.js bot.paintAim → { yaw, pitch, need } or null; e.g. the Tideline Bow: a level shot
+      // down the emptiest clear lane) — not while a zone / tower spot is the target
+      const PKa = !zAim && MAIN_KITS[w.kind]?.bot?.paintAim;
+      const lane = PKa ? PKa(this, { a, w, dt, wantYaw, wantMove, move }) : null;
+      if (lane) { wantYaw = lane.yaw; wantPitch = lane.pitch; }
       const aheadStats = G.paint.regionStats(a.pos.x + Math.sin(wantYaw) * 4, a.pos.y, a.pos.z + Math.cos(wantYaw) * 4, 3, a.team, _stats);
-      const needPaint = aheadStats.n === 0 || aheadStats.own < 0.75 || !!zAim;
+      const needPaint = aheadStats.n === 0 || aheadStats.own < 0.75 || !!zAim || !!lane?.need;
       const PK = MAIN_KITS[w.kind]?.bot;
       if (PK?.paint) {
         it.fire = PK.paint(this, { a, w, dt, it, move, needPaint, inkFrac, wantMove });

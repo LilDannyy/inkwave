@@ -8,9 +8,11 @@
 //   on a real stage, the Howl Box at its ledges: MAP=halyard (or calamari …) PAGE_ARGS='only=wailmap'
 // Staged on testbox (a flat deck, top y 0; the spawn deck A at z −48…−40 stands 2.4 m over it; a wall x 14…15, z ±8,
 // 4 m tall); everyone else parked far off, brains stubbed. Hits are logged, not dealt. Checks:
-//  - Tideline Bow: a full-draw volley's trail inks ≥ 1.6× (and ≤ 2.3×) what the old drip rule (a 0.32 m drip every
-//    2.4 m of flight, counted a frame at a time) inks over the very same flights; the centre arrow's ink is a line (its
-//    ground track ≥ 95 % inked, two ink cells wide); a direct hit still does 55;
+//  - Tideline Bow: a full-draw volley's trail inks ≥ 1.6× what the old drip rule (a 0.32 m drip every 2.4 m of flight,
+//    counted a frame at a time) inks over the very same flights; the centre arrow's ink is a line (its ground track
+//    ≥ 95 % inked, ≥ two ink cells wide); a direct hit does the configured damage. (Its 2026-10-02 rework — parallel
+//    arrows, the falling-spray band, the landings — is checked in full by tools/botlab/tests/bow-paint.js: the upper
+//    bound this file once held, ≤ 2.3×, belonged to the drip trail it replaced);
 //  - Howl Box: used on a raised deck its speaker stands on that deck at its height — in the middle, at the ledge's edge
 //    (the old rule set it down on the floor 2.4 m below), in the air just over the edge (onto the deck under the feet),
 //    higher in the air (hovering at the feet, never lower); on flat ground 1.3 m in front as before; at a wall, clear of
@@ -114,7 +116,7 @@
     if (want('bow')) {
       reset();
       const w0 = me.weaponId; me.setWeapon('bow'); step(0.4);   // (the bow in hand: its own muzzle, so its own flights)
-      const W = WEAPONS.bow, ps0 = W.paintStick, bp0 = W.burstPaint, team = me.team + 1;
+      const W = WEAPONS.bow, keep = { landWidth: W.landWidth, landWidthFull: W.landWidthFull, burstPaint: W.burstPaint }, team = me.team + 1;
       // the trail's ink alone (its stick and burst paint off for the measurement), in the corridor it flies over
       const area = () => { let n = 0; for (let x = -4; x <= 4 + 1e-6; x += 0.1) for (let z = -33; z <= 0 + 1e-6; z += 0.1) if (inkAt(x, z) === team) n++; return n * 0.01; };
       const volley = () => {
@@ -122,14 +124,14 @@
         put(me, V(0, 0, -32), 0); step(0.15);
         me.aimYaw = me.yaw = 0; me.aimPitch = 0; me.aimDir.set(0, 0, 1); me.aimPoint.set(me.pos.x, 1.2, 80);   // (aim level, far off)
         G.paint.clear();
-        W.paintStick = 0; W.burstPaint = [0, 0];
+        W.landWidth = W.landWidthFull = 0; W.burstPaint = [0, 0];
         let n = 0; const sp0 = G.paint.splat; G.paint.splat = function (c, r, t, o) { if (r > 0 && !o?.cosmetic) n++; return sp0.call(this, c, r, t, o); };
         BOW.looseVolley(me, 1);
         const arr = BOW.BOW_DEBUG.arrows.slice(-3);
         const tracks = arr.map((p) => ({ center: p.center, pts: [p.pos.clone()] }));
         after = () => arr.forEach((p, i) => { if (BOW.BOW_DEBUG.arrows.includes(p) && p.st === 0 && !p.noHit) tracks[i].pts.push(p.pos.clone()); });
         step(1.6);
-        after = null; G.paint.splat = sp0; W.paintStick = ps0; W.burstPaint = bp0;
+        after = null; G.paint.splat = sp0; Object.assign(W, keep);
         const now = area();
         // the centre arrow's line: its ground track from 4 m out to the end of its flight, every 10 cm; its width (the
         // inked run across the track, ±0.7 m) every 0.5 m from 6 to 18 m out
@@ -158,8 +160,8 @@
       const vs = [volley(), volley(), volley()];
       const avg = (k) => r2(vs.reduce((t, x) => t + x[k], 0) / vs.length);
       const now = avg('now'), old = avg('old'), ratio = r2(now / old);
-      R(`Tideline Bow: a full-draw volley's trail inks ${now} m² over flat ground (the old drip rule over the same flights: ${old} m²) — ×${ratio}, ≥ 1.6 and ≤ 2.3`,
-        ratio >= 1.6 && ratio <= 2.3, { now, old, ratio, volleys: vs });
+      R(`Tideline Bow: a full-draw volley's trail inks ${now} m² over flat ground (the old drip rule over the same flights: ${old} m²) — ×${ratio}, ≥ 1.6 (bow-paint.js has the rest)`,
+        ratio >= 1.6, { now, old, ratio, volleys: vs });
       R('…the centre arrow\'s trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median',
         vs.every((x) => x.line >= 0.95) && vs.every((x) => x.widthMed >= 0.45), vs.map((x) => ({ line: x.line, widthMed: x.widthMed, width10: x.width10 })));
       // its direct damage is unchanged: a foe 10 m ahead takes the centre arrow's 55
@@ -168,7 +170,7 @@
       me.aimYaw = me.yaw = 0; me.aimPitch = 0; me.aimDir.set(0, 0, 1); me.aimPoint.set(me.pos.x, 1.0, -22);
       hits.length = 0; BOW.looseVolley(me, 1); step(0.4);
       const direct = hits.filter((h) => h.vic === foe && h.wid === 'bow').map((h) => h.dmg);
-      R('…its direct damage is unchanged: a full-draw centre arrow hits for 55 (config: damageFull 55, sideFull 45)', direct[0] === 55 && W.damageFull === 55 && W.sideFull === 45, { hits: direct });
+      R(`…its direct damage is as configured: a full-draw centre arrow hits for ${W.damageFull}, the side ones ${W.sideFull}`, direct.includes(W.damageFull) && direct.every((d) => d === W.damageFull || d === W.sideFull), { hits: direct });
       if (w0) me.setWeapon(w0);
     }
 
