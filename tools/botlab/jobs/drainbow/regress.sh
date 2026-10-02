@@ -22,6 +22,7 @@ printf '%s\n' \
   "tower-rules MAP=testbox MODE=tower PAGE=$T/tower-rules.js $RUN tools/botlab/page.cjs" \
   "bot-sight MAP=testbox MODE=turf PAGE=$T/bot-sight.js $RUN tools/botlab/page.cjs" \
   "world-build MAP=halyard PAGE=$T/world-build.js $RUN tools/botlab/page.cjs" \
+  "surf MAP=testbox MODE=turf PAGE=$T/surf.js $RUN tools/botlab/page.cjs" \
   | xargs -P "$PAR" -L 1 bash -c 'one "$@"' _
 # alone
 one sfx-cues MAP=testbox MODE=turf PAGE=$T/sfx-cues.js $RUN tools/botlab/page.cjs
@@ -29,3 +30,4 @@ one audio-pause MAP=testbox MODE=turf PAGE=$T/audio-pause.js $RUN tools/botlab/p
 # online
 one net-practice CLIENTS=2 Q0=autopilot Q1=autopilot APP_CSP=1 NET=$T/net-practice.cjs $RUN tools/botlab/netpage.cjs
 one net-drainbow CLIENTS=2 NET=$T/net-drainbow.cjs $RUN tools/botlab/netpage.cjs
+one net-surf CLIENTS=2 NET=$T/net-surf.cjs $RUN tools/botlab/netpage.cjs

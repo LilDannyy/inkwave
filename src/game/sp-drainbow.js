@@ -35,7 +35,7 @@
 // sees a little less far (botSight.js — its own screen goes grey for nobody); botWants() decides when to pop one.
 import * as THREE from 'three';
 import { G, emit, clamp } from '../core/ctx.js';
-import { SPECIALS, PLAYER } from '../config.js';
+import { SPECIALS, PLAYER, weaponRange } from '../config.js';
 import { registerSpecial } from './specials.js';
 import { netRec, netId } from './kits/registry.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
@@ -55,7 +55,7 @@ const _hit = new Hit();
 const near = (p, r = 34) => !!G.camera && G.camera.position.distanceToSquared(p) < r * r;
 
 // counters (tests / botlab)
-export const DRAIN_STATS = { placed: 0, passes: 0, cuts: 0, crossings: 0, fizzles: 0, pops: 0, extended: 0 };
+export const DRAIN_STATS = { placed: 0, passes: 0, cuts: 0, crossings: 0, fizzles: 0, pops: 0, extended: 0, holds: 0 };   // (holds: bot-frames held inside)
 
 // where a squidkid's body is (its middle): what's inside / outside a bubble
 function chest(a, out) { return out.set(a.pos.x, a.pos.y + (a.smoothY || 0) + (a.form === 'squid' ? 0.35 : 0.9), a.pos.z); }
@@ -79,7 +79,7 @@ const API = {
   bubbles: B,
   stats: DRAIN_STATS,
   view: null,
-  pass, rayShot, cut, botWants: (a, dist) => botWants(a, dist),
+  pass, rayShot, cut, botWants: (a, dist) => botWants(a, dist), botHold: (b, move) => botHold(b, move),
   // the enemy bubble a is inside (null: none) — bots, tests
   inEnemy(a) { for (const b of B) if (b.live && b.team !== a.team && b.in.get(a)) return b; return null; },
   // a's own team's bubble a is inside
@@ -136,6 +136,9 @@ class Drainbow {
       this.in.set(a, now);
       if (now) (a.team === this.team ? mates : foes).push(a);
     }
+    // (the owner close outside the film still takes its share: its life grows while it fights by it)
+    const o = this.owner;
+    if (!this.ghost && d.ownerNear > 0 && o.alive && !mates.includes(o) && this.owned() && chest(o, _p).distanceTo(this.pos) < R + d.ownerNear) mates.push(o);
     this.nE = foes.length; this.nG = mates.length;
     const share = this.share = this.nE && this.nG ? this.nE / this.nG : 0;
     // ---- the drain (the players this screen owns), the gain (split across the team inside)
@@ -361,6 +364,7 @@ registerSpecial('drainbow', {
     const d = s.def, c = placeAt(a);
     const b = build(this, a, s, c, d.radius, d.duration, false);
     b.gid = netId(a);
+    if (d.paintFoot > 0) inkFoot(a, b, d.paintFoot);
     rec(a, [4, 'p', r2(c.x), r2(c.y), r2(c.z), r2(b.r), r2(b.life)]);
   },
   tick(a, s) { if (s.bubble) s.dur = s.bubble.life; },
@@ -388,13 +392,50 @@ registerSpecial('drainbow', {
 // ================================================================================================ bots
 // pop it now? fight: a foe close with a teammate near (or ourselves low), a duel at mid range now and then;
 // an objective: the zone / tower plans ask with fighting = true there (bots.js)
-function botWants(a, dist, near2 = 0) {
-  const d = D();
-  if (!(dist < d.radius * 3)) return false;
-  let mates = 0;
-  for (const o of G.actors) if (o !== a && o.alive && o.team === a.team && o.pos.distanceToSquared(a.pos) < 81) mates++;
-  if (mates >= 1 || near2 >= 2) return dist < d.radius * 2.6;
-  return a.hp < 70 || a.ink < 25 || Math.random() < 0.02;
+function botWants(a, dist) {
+  const d = D(), reach = Math.min(13, Math.max(d.radius + 1.5, weaponRange(a.weapon || {}) + 1.5));
+  if (!(dist < reach + 3)) return false;
+  // (the fight is here: the target within its weapon's reach — it'll fight from inside; or low on ink / hurt and close)
+  return dist < reach || a.ink < 25 || a.hp < 60;
+}
+
+// set down with a splash of the owner's ink over `k` of its footprint (special ink: turf, never meter)
+function inkFoot(a, b, k) {
+  if (!(b.ground > -Infinity) || !G.paint) return;
+  const hy = b.pos.y - b.ground, foot = Math.sqrt(Math.max(0, b.r * b.r - hy * hy)) * k;
+  if (foot < 0.5) return;
+  let area = G.paint.splat(_p.set(b.pos.x, b.ground + 0.1, b.pos.z), foot * 0.55, b.team, { seed: Math.random() });
+  for (let i = 0; i < 7; i++) {
+    const ang = (i / 7) * TAU + Math.random() * 0.4, r = foot * (0.55 + Math.random() * 0.3);
+    const g = G.physics.raycast(_p.set(b.pos.x + Math.cos(ang) * r, b.pos.y, b.pos.z + Math.sin(ang) * r), DOWN, b.r + 2, _hit, true);
+    if (g.hit) area += G.paint.splat(_q.copy(g.point).setY(g.point.y + 0.1), foot * (0.3 + Math.random() * 0.12), b.team, { seed: Math.random() });
+  }
+  a.addTurfNoSpecial?.(area);
+}
+
+// a bot fighting near its team's bubble: hold inside it (slide along the film rather than step out; come back in from
+// just outside) while its target is within its reach of the bubble — enemy fire from outside is halved in there
+// (botSpecials.js SpecialSense.act, after the danger checks; move is the bot's wanted step)
+function botHold(b, move) {
+  const a = b.a, d = D(), T = b.target;
+  if (!d.botHold || !a.alive || b.mode !== 'fight' || !T || !T.alive) return;
+  let w = null, bd = 1e9;
+  for (const x of B) { if (!x.live || x.team !== a.team) continue; const h = Math.hypot(a.pos.x - x.pos.x, a.pos.z - x.pos.z); if (h < bd) { bd = h; w = x; } }
+  if (!w) return;
+  const R = w.radius(), dy = a.pos.y + 0.9 - w.pos.y;
+  if (Math.abs(dy) > R - 0.5) return;
+  const foot = Math.sqrt(R * R - dy * dy);
+  if (bd > foot + 4) return;
+  if (Math.hypot(T.pos.x - w.pos.x, T.pos.z - w.pos.z) > foot + weaponRange(a.weapon || {}) + 1) return;   // (the fight's out of reach from in there)
+  const ux = bd > 1e-3 ? (a.pos.x - w.pos.x) / bd : 0, uz = bd > 1e-3 ? (a.pos.z - w.pos.z) / bd : 0;
+  const out = move.x * ux + move.z * uz;
+  if (bd < foot - 0.9) {
+    if (out > 0 && bd > foot - 1.8) { move.x -= ux * out; move.z -= uz * out; }   // (along the film, not out of it)
+  } else {
+    move.x -= ux * (Math.max(0, out) + 0.8); move.z -= uz * (Math.max(0, out) + 0.8);   // (back in)
+    const l = Math.hypot(move.x, move.z); if (l > 1) { move.x /= l; move.z /= l; }
+  }
+  DRAIN_STATS.holds++;
 }
 
 // ================================================================================================ registration

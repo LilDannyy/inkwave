@@ -547,6 +547,10 @@ export const SPECIALS = {
     inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
     extendPerMeter: 10, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
     popOnOwnerSplat: true,
+    // balance (2026-10-03, the bots' first batch had it far behind the other specials — tools/botlab/jobs/drainbow):
+    ownerNear: 6,                             // the owner within this many m outside the film still takes its share
+    paintFoot: 0.75,                          // set down with a splash of your ink over this share of its footprint (0: none)
+    botHold: 1,                               // bots fight from inside their team's bubble (1) / pay it no mind (0)
     // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
     // the muffle (master low-pass to dampCut Hz and dampGain of the level at full)
     waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },

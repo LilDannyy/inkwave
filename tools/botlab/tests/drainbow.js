@@ -83,7 +83,7 @@
     step(1.5);
     R('end: nothing left — no bubble objects, no film meshes in the scene, nothing halving shots', world() === 0 && !sceneLeft.length && DB.bubbles.length === 0 && !DB.live, { world: world(), meshes: sceneLeft.length, bubbles: DB.bubbles.length });
     // a bot owner walks on and keeps firing (the special holds neither body nor trigger)
-    reset(); place(M1, 0, -10); step(0.1); start(M1); step(0.2);
+    reset(); M1.setWeapon('shooter'); place(M1, 0, -10); step(0.1); start(M1); step(0.2);
     const p0 = M1.pos.clone(), ink0 = M1.ink;
     M1._go = { move: V(0, 0, 1), fire: true }; step(0.8); M1._go = null; step(0.05);
     R('place: the owner walks on and fires its weapon (its special holds neither body nor weapon)', M1.pos.distanceTo(p0) > 2 && M1.ink < ink0 - 2 && !!bubble(), { moved: r2(M1.pos.distanceTo(p0)), ink: [r2(ink0), r2(M1.ink)] });

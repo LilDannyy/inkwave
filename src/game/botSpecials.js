@@ -706,6 +706,7 @@ export class SpecialSense {
     else {
       if (this.esc) this._endEsc();
       if (!safe) this._guard(move);
+      if (G.drainbow?.live) G.drainbow.botHold(this.b, move);   // [drainbow] fight from inside our team's bubble
     }
     if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);

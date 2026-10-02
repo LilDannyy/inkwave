@@ -1801,6 +1801,7 @@ export class BotBrain {
     if (ours && !foes) return false;                                 // holding it quietly: keep it for the push-back
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
     if ((id === 'sonar' || id === 'bubbler' || id === 'wail' || id === 'zooka' || id === 'stamp' || id === 'crab' || id === 'drainbow') && !foes) return false;
+    if (id === 'drainbow' && dz > I.R * 0.85) return false;   // [drainbow] set down ON the zone, not beside it
     // thrown / aimed ones go where we look: only while facing the zone or standing on it (fights: _wantSpecial's aim)
     const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower' || id === 'surf';
     if (thrown && !fighting && dz > I.R * 0.7 && Math.abs(angleDiff(this.aimYaw, Math.atan2(c[0] - a.pos.x, c[2] - a.pos.z))) > 0.6) { this.zFace = 0.8; return false; }
@@ -2128,6 +2129,7 @@ export class BotBrain {
     }
     if (!foes) return false;
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
+    if (id === 'drainbow' && Math.hypot(T.pos.x - a.pos.x, T.pos.z - a.pos.z) > 4.5) return false;   // [drainbow] by the tower, over it
     const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower' || id === 'surf';
     if (thrown && !fighting) {
       if (!onT) this.tFaceP.set(T.pos.x, T.top, T.pos.z);
