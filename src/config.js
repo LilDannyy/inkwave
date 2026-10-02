@@ -523,7 +523,7 @@ export const SPECIALS = {
   // ---- Surf N' Turf (src/game/sp-surf.js): hold out a buoy machine, click to throw it down; anchored, it sends out
   // pulsing rings (the mark ribbon's look) that reach further each time — a foe the front passes takes `damage` and is
   // marked, unless they're in the air over its `height`; each ring inks the ground (solid near the buoy, sparser out)
-  surf: { id: 'surf', name: 'Surf N\' Turf', blurb: 'Hold out a souped-up buoy and throw it down. It sends out pulsing rings of ink, each reaching further than the last: foes caught by a ring take damage and get marked — jump it to dodge. Every ring inks the ground (solid near the buoy). The buoy can be shot down.',
+  surf: { id: 'surf', name: 'Surf N\' Turf', blurb: 'Throw down a buoy that sends out ever-wider pulsing rings. A ring hurts and marks the foes it catches — unless they jump it — and inks the ground. Foes can shoot the buoy down.',
     moveSpeed: 4.6, holdTime: 6, throwSpeed: 15,
     hp: 350,                              // the anchored buoy: enemy fire / blasts break it (stops the rings)
     anchor: 0.55,                         // s from landing to the first ring (it rights itself, the beacon lights)

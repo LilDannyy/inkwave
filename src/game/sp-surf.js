@@ -451,9 +451,8 @@ function heldOn(a, s) {
   const look = makeBuoy(a.team);
   look.group.scale.setScalar(HELD_SCALE);
   const g = new THREE.Group();
-  g.position.set(-0.02, -0.07, 0.02);
-  g.rotation.set(0, 0, Math.PI);   // (the hand points down the arm: the buoy stands up out of the fist)
-  look.group.position.set(0, -0.2, 0);
+  g.position.set(-0.02, -0.05, 0.02);
+  look.group.position.set(0, -0.19, 0);   // (its middle in the palm; heldTick keeps it upright, facing the aim)
   g.add(look.group);
   if (hand) hand.add(g); else G.specials.scene.add(g);
   g.visible = false;
@@ -465,16 +464,24 @@ function heldOff(a, s) {
   disposeBuoy(H.look);
   s.held = null;
 }
+const _hq = new THREE.Quaternion(), _wq = new THREE.Quaternion(), _we = new THREE.Euler();
 function heldTick(a, s, dt) {
   const H = s.held; if (!H) return;
   const ch = a.character;
   H.g.visible = !s.thrown && a.alive && a.form !== 'squid' && (ch.wSub === undefined || ch.wSub > 0.2);
+  // upright in the world, its control panel toward the aim, whatever the hand's own turn (the hand's world turn as
+  // last drawn: one frame behind, unseen)
+  if (H.hand) {
+    H.hand.getWorldQuaternion(_hq);
+    _wq.setFromEuler(_we.set(0.18 * Math.sin(s.t * 5), a.aimYaw, 0));
+    H.g.quaternion.copy(_hq.invert()).multiply(_wq);
+  }
   H.look.emitter.rotation.y += dt * 4;
   H.look.lampMat.emissiveIntensity = 0.8 + 0.8 * (0.5 + 0.5 * Math.sin(s.t * 7));
 }
 export const IMPL = {
   start(a, s) {
-    Object.assign(s, { speed: D.moveSpeed, noSquid: true, aimFace: true, raise: true, showArc: true, bomb: { kind: 'surf', throwSpeed: D.throwSpeed }, dur: 0, thrown: false });
+    Object.assign(s, { speed: D.moveSpeed, noSquid: true, aimFace: true, raise: true, showArc: true, bomb: { kind: 'surf', throwSpeed: D.throwSpeed, inkCost: 0 }, dur: 0, thrown: false });
     a.character.subPropHidden = true;
     heldOn(a, s);
     SURF_STATS.uses++;
