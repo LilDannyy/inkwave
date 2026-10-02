@@ -174,6 +174,30 @@ screen hears only as the owner's flag (its own ghost missed, or it joined mid-ma
 (the marking team's chime, the marked player's evil one and its end) play from each screen's own mark:on / mark:off
 (src/game/statusFx.js → src/audio/cues.js).
 
+**Surf N' Turf (src/game/sp-surf.js).** The special itself (holding the buoy machine) is an ordinary special record
+(`['k', nid, 'sp', [0, index]]` … `[1, 'throw']`: the buoy in the ghost's hand). The buoy travels as its own kit kind
+`surf` (`KIT_GHOSTS.surf`): the owner records `[0, gid, from, vel]` when it's thrown (every screen flies a copy),
+`[3, gid, x, y, z]` where it anchored — the owner's word: each screen's copy snaps there and runs its rings from that
+moment, so the six rings leave on the same beats of the owner's timeline everywhere (the polar map they run on is built
+from the same anchor on every screen) — and `[4, gid]` when it's shot down or lost. Its ink is the owner's copy's splats,
+replicated as usual (ghost copies paint nothing). **Hits and dodges follow the victim's owner**, like every other remote
+hazard that hurts (the tornado, the speaker): each screen judges only the players it owns (its own squidkid, the host
+its bots) against its own copy of the rings, where their position is exact — "jumped over it" (feet over the ribbon's
+top as its front passes) is decided there. A hit is applied there (`damage(40, owner, 'surf')`, the mark through
+`subs.track` → the actor tick's tracked flag) and recorded on the victim: `['k', victimNid, 'surf', [1, gid, ring]]`;
+every other screen marks that player from the buoy's beacon (the ribbon flies in from there too) and plays the hit (the
+owner's hit marker: an `'hit'` event with the owner as attacker). A dodge records `[2, gid, ring]` (the whoosh, the
+dodge event elsewhere) and opens the owner's assist window on the victim's owner's screen. A shot / beam / blast on a
+remote player's buoy goes to its owner as a device hit (`{k:'dh', kind:'surf'}` → `KIT_GHOSTS.surf.netHurt`); the
+owner's copy loses the hp and, at 0, records `[4]`. tools/botlab/tests/net-surf.cjs plays it out on two real clients.
+
+**Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
+on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
+ring (the forced-jump rule, ≤ 3.5 s). `actor.splat()` asks the judge before it emits `'splatted'`; the forwarded event
+carries the helpers' net ids as `as: "3,5"` (a string: the event packer drops arrays), and `NetMatch._remoteSplat`
+credits them on every other screen. The host's final count (`{k:'res'}` `st` rows) carries each player's assists as a
+seventh field, so every results screen shows the host's numbers.
+
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
 step with the paint that caused them. Guests follow (zones.js `netEvent`): they only predict the count between

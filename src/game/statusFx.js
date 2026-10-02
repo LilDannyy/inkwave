@@ -73,7 +73,7 @@ export function statusBits(a) {
 }
 
 // the wrapped arrow (the band). Its shape comes from the game's squid icon (64-unit box), U metres a unit
-const U = 0.0098;
+export const U = 0.0098;
 export const BAND_R = 0.46, BAND_Y = 0.85;  // round a kid (m): the cylinder's radius (the body's reach at its height, idle or
                                             // walking, any kit: ≤ 0.43 — tools/botlab/tests/track-arrows.js 'clear'), its
                                             // middle over the feet (a kid is 1.45 tall)
@@ -132,7 +132,7 @@ const HEAD_ICON = (() => {
 })();
 const HEAD_PTS = [...HEAD_ICON.map(([x, y]) => [-(y - 3) * U, (x - 32) * U]), [-(HEAD_CUT - 3) * U, -0.05], [0, -0.05]];
 export const HEAD_H = 2 * Math.max(...HEAD_PTS.map((p) => p[1]));   // the head's height (m): the fins, ~1.8× the shaft's
-const HEAD_LEN = (HEAD_CUT - 3) * U;        // tip → where the shaft takes over (m)
+export const HEAD_LEN = (HEAD_CUT - 3) * U; // tip → where the shaft takes over (m)
 
 // the arrow, one piece: a strip of upright cylinder wall (unit radius: the mesh's scale puts it at the band's radius)
 // from just behind the tentacles round ARC to just past the tip, facing out, as tall as the head and tentacles only at
@@ -207,14 +207,9 @@ const BAND_VS = /* glsl */`
     }
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
   }`;
-// the squid arrow as a distance field (metres along × up; q mirrors it about the middle line): the mantle polygon, the
-// round-ended shaft, four tentacles (tapered, round-tipped, the outer pair swept out) smoothly joined on. Unlit: the
-// team colour darker toward the top, a gloss streak under the middle, a lighter rim, the mantle's highlight near the
-// tip; the eyes (white, a dark rim, a dark pupil looking ahead) stacked in the head with a clear gap; crisp at any
-// size (each edge smoothed over a pixel, fwidth); its inside (the far side) darker
-const BAND_FS = /* glsl */`
-  uniform vec3 uColor; uniform float uAlpha; uniform float uXray; uniform float uR;
-  varying vec2 vSY; varying float vHide;
+// the squid arrow's shape as GLSL (its head polygon and the distance-field helpers BAND_FS builds it from) — shared:
+// Surf N' Turf's rings (src/fx/surfFx.js) are drawn as the same ribbon
+export const ARROW_GLSL = /* glsl */`
   const vec2 HEAD[${HEAD_PTS.length}] = vec2[${HEAD_PTS.length}](${HEAD_PTS.map(v2s).join(', ')});
   float sdHead(vec2 p){
     float d = dot(p - HEAD[0], p - HEAD[0]), s = 1.0;
@@ -231,7 +226,16 @@ const BAND_FS = /* glsl */`
   float sdEll(vec2 p, vec2 c, vec2 r){ return (length((p - c) / r) - 1.0) * min(r.x, r.y); }
   float smin(float a, float b, float k){ float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
   float fill(float d){ float aa = max(fwidth(d), 1e-4); return 1.0 - smoothstep(-aa, aa, d); }
-  void main(){
+`;
+// the squid arrow as a distance field (metres along × up; q mirrors it about the middle line): the mantle polygon, the
+// round-ended shaft, four tentacles (tapered, round-tipped, the outer pair swept out) smoothly joined on. Unlit: the
+// team colour darker toward the top, a gloss streak under the middle, a lighter rim, the mantle's highlight near the
+// tip; the eyes (white, a dark rim, a dark pupil looking ahead) stacked in the head with a clear gap; crisp at any
+// size (each edge smoothed over a pixel, fwidth); its inside (the far side) darker
+const BAND_FS = /* glsl */`
+  uniform vec3 uColor; uniform float uAlpha; uniform float uXray; uniform float uR;
+  varying vec2 vSY; varying float vHide;
+${ARROW_GLSL}  void main(){
     const float U = ${f4(U)}, SH = ${f4(SHAFT_H / 2)}, HH = ${f4(HEAD_H / 2)}, HL = ${f4(HEAD_LEN)};
     if (vHide > 0.5) discard;   // (the arrival: still inside the source)
     vec2 p = vSY, q = vec2(p.x, abs(p.y));

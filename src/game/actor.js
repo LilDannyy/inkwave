@@ -62,7 +62,7 @@ export class Actor {
     // re-emitted as 'actor:<name>' with the actor and the surface under it (0 dry, 1 own ink, 2 enemy ink). See docs/EVENTS.md.
     this.character.onEvent = (name, data) => emit('actor:' + name, { actor: this, surface: this.groundTeam, ...(data || {}) });
     this.weaponRunner = new WeaponRunner(this);
-    this.stats = { turf: 0, splats: 0, deaths: 0, specials: 0 };
+    this.stats = { turf: 0, splats: 0, deaths: 0, specials: 0, assists: 0 };   // (assists: src/game/assists.js)
     this.anim = {
       time: 0, speed: 0, localMove: { x: 0, z: 0 }, grounded: true, vy: 0, aimPitch: 0, firing: false, charge: 0, rolling: false,
       form: 'kid', wallNormal: new THREE.Vector3(), ink: 1, lowInk: false, special: 0, invuln: false,
@@ -231,7 +231,11 @@ export class Actor {
     }
     this.character.setVisible(false);
     if (this.isLocal) rumble(this, 0.8, 0.6, 260);
-    emit('splatted', { victim: this, attacker, cause });
+    // assists (src/game/assists.js): judged here, where the splat is; the event carries the helpers (online `as`: their
+    // net ids, so every screen credits the same players)
+    const assists = G.assists ? G.assists.judge(this, attacker) : null;
+    if (assists && assists.length) emit('splatted', { victim: this, attacker, cause, assists, as: G.assists.pack(assists) });
+    else emit('splatted', { victim: this, attacker, cause });
   }
 
   // ------------------------------------------------------------------ update

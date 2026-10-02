@@ -16,6 +16,7 @@ import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
 import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
+import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
@@ -1398,9 +1399,11 @@ export class BotBrain {
         case 'booyah': return dist > 9 && dist < 26 && r < 0.03;
         case 'zipcaster': return dist < 16;
         case 'crab': return dist < 20;
+        case 'surf': return surfWant(this, mode, dist, vis);   // Surf N' Turf (sp-surf-bots.js)
       }
       return false;
     }
+    if (id === 'surf') return r < 0.02 && surfWant(this, mode, dist, vis);   // Surf N' Turf: on foes the team knows of (sp-surf-bots.js)
     const turf = { storm: 1, strike: 1, booyah: 1, barrage: 1, sonar: 1, kraken: 1, crab: 1, zooka: 1, blower: 1, stamp: 1 };
     if (!turf[id] || r > 0.012) return false;
     const st = G.paint.regionStats(a.pos.x, a.pos.y, a.pos.z, 6, a.team, _stats);
@@ -1798,7 +1801,7 @@ export class BotBrain {
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
     if ((id === 'sonar' || id === 'bubbler' || id === 'wail' || id === 'zooka' || id === 'stamp' || id === 'crab') && !foes) return false;
     // thrown / aimed ones go where we look: only while facing the zone or standing on it (fights: _wantSpecial's aim)
-    const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower';
+    const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower' || id === 'surf';
     if (thrown && !fighting && dz > I.R * 0.7 && Math.abs(angleDiff(this.aimYaw, Math.atan2(c[0] - a.pos.x, c[2] - a.pos.z))) > 0.6) { this.zFace = 0.8; return false; }
     const go = Math.random() < (fighting ? 0.03 : W.state === 'push' ? 0.2 : 0.08);
     if (go && W.state === 'push') P.spNext[t] = G.time + 2.2 + Math.random() * 0.8;
@@ -2124,7 +2127,7 @@ export class BotBrain {
     }
     if (!foes) return false;
     const id = SPECIALS[a.specialId]?.kind || a.specialId;
-    const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower';
+    const thrown = id === 'storm' || id === 'barrage' || id === 'booyah' || id === 'zooka' || id === 'wail' || id === 'blower' || id === 'surf';
     if (thrown && !fighting) {
       if (!onT) this.tFaceP.set(T.pos.x, T.top, T.pos.z);
       const f = this.tFaceP;
