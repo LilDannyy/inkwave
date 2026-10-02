@@ -88,7 +88,7 @@ module.exports = async (ctx) => {
   // ---------------------------------------------------------------- 4. clear all ink (quiet stage → nothing left)
   await wait(2500);   // (paint something)
   for (const c of [A, B]) await stopPaint(c);
-  await wait(2500);
+  await wait(8000);   // (kit devices still out — a launched Brolly canopy, a bow's arrows — run their course and stop painting)
   const before = [await gridOf(A), await gridOf(B)];
   say('ink before', before.map((g) => g.inked));
   const ok1 = await A.js(`__inkwave.api.practiceClearInk()`);
@@ -153,6 +153,19 @@ module.exports = async (ctx) => {
   let diff3 = 0; for (let i = 0; i < n3; i++) if (da[i] !== dc[i]) diff3++;
   R('…and gets the host\'s turf (the snapshot; ≤ 1 % of inked cells differ)', inkC.inkOk && diff3 <= Math.max(5, g3[0].inked * 0.01), { inkIn: inkC.inkIn, ok: inkC.inkOk, diff3, inked: [g3[0].inked, g3[1].inked] });
 
+  // ---------------------------------------------------------------- 7b. a guest leaves the room (pause → LEAVE ROOM), then comes back
+  for (const c of [A, B, C]) await goPaint(c);
+  await C.js(`__inkwave.api.leaveRoom(); 1`);
+  await C.until(`__G.net.state === 'offline' && __G.mode === 'menu' && __inkwave.menus.current === 'online'`, 20000, 250);
+  await A.until(`!__G.match.actors.some((a) => a.owner === ${JSON.stringify(idC)})`, 10000, 250);
+  await B.until(`!__G.match.actors.some((a) => a.owner === ${JSON.stringify(idC)})`, 10000, 250);
+  R('a guest leaves (LEAVE ROOM): back on the online hub, gone from everyone\'s session', true);
+  await C.js(`__G.net.join(${JSON.stringify(code)}, 'Latey').then(() => 1)`);
+  await C.until(`__G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing' && __G.netm && !__G.netm.inkWait`, 90000, 250);
+  const idC2 = await C.js('__G.net.myId');
+  await B.until(`__G.match.actors.some((a) => a.owner === ${JSON.stringify(idC2)})`, 10000, 250);
+  R('…and can drop back in', true, { n: (await info(B)).actors.length });
+
   // ---------------------------------------------------------------- 8. the host leaves: the guest takes over
   close(0);
   await B.until(`__G.net.isHost`, 30000, 250);
@@ -164,6 +177,14 @@ module.exports = async (ctx) => {
   const ok3 = await B.js(`__inkwave.api.practiceClearInk()`);
   await B.until(`!__G.paint.wiping`, 10000).catch(() => 0);
   R('…and can clear the ink', ok3 === true);
+
+  // ---------------------------------------------------------------- 8b. a humans-only stage: the bots stay behind
+  await wait(3200);
+  await B.js(`__inkwave.api.practiceSwapStage('cargo', 'day')`);
+  for (const c of [B, C]) await c.until(`__inkwave.mapDef.id === 'cargo' && __G.match && __G.match.practice && __G.match.state === 'playing' && __G.netm && __G.netm.gen === 2`, 60000, 250);
+  await wait(1500);
+  const cb = await info(B), cc = await info(C);
+  R('swap to a humans-only stage: the bots are dropped on every screen', cb.actors.length === 2 && !cb.actors.some((x) => x[4]) && cc.actors.length === 2 && cb.theme === 'day', { b: cb.actors, c: cc.actors.length });
 
   // ---------------------------------------------------------------- 9. End Practice → everyone back in the lobby
   await wait(3200);
