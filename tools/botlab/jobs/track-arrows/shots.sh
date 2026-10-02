@@ -21,6 +21,12 @@ ARGS=("$@")
   want behind && shoot behind '[{"name":"view","from":[11.8,2.3,5.6],"look":[4,0.9,0],"fov":60}]'
   want foemate && shoot foemate '[{"name":"view","from":[11.8,2.3,5.6],"look":[4,0.9,0],"fov":60}]'; } &
 wait
+{ want fly-orb && shoot fly-orb '[{"name":"f1","from":[5.5,2.4,-10.5],"look":[0.6,1.1,-6.6],"fov":55},{"name":"f2","from":[5.5,2.4,-10.5],"look":[0.6,1.1,-6.6],"fov":55},{"name":"f3","from":[5.5,2.4,-10.5],"look":[0.6,1.1,-6.6],"fov":55},{"name":"f4","from":[5.5,2.4,-10.5],"look":[0.6,1.1,-6.6],"fov":55},{"name":"f5","from":[5.5,2.4,-10.5],"look":[0.6,1.1,-6.6],"fov":55}]'
+  want fly-tracer && shoot fly-tracer '[{"name":"f1","from":[4.6,2.0,-10.6],"look":[0,1.0,-8],"fov":55},{"name":"f2","from":[4.6,2.0,-10.6],"look":[0,1.0,-8],"fov":55},{"name":"f3","from":[4.6,2.0,-10.6],"look":[0,1.0,-8],"fov":55},{"name":"f4","from":[4.6,2.0,-10.6],"look":[0,1.0,-8],"fov":55},{"name":"f5","from":[4.6,2.0,-10.6],"look":[0,1.0,-8],"fov":55}]'; } &
+{ want fly-mine && shoot fly-mine '[{"name":"f1","from":[-1.4,2.3,-1.8],"look":[-5.4,0.8,-6.6],"fov":58},{"name":"f2","from":[-1.4,2.3,-1.8],"look":[-5.4,0.8,-6.6],"fov":58},{"name":"f3","from":[-1.4,2.3,-1.8],"look":[-5.4,0.8,-6.6],"fov":58},{"name":"f4","from":[-1.4,2.3,-1.8],"look":[-5.4,0.8,-6.6],"fov":58},{"name":"f5","from":[-1.4,2.3,-1.8],"look":[-5.4,0.8,-6.6],"fov":58}]'
+  want fly-sonar && shoot fly-sonar '[{"name":"f1","from":[0,5.5,-21],"look":[0,0.6,-6],"fov":60},{"name":"f2","from":[0,5.5,-21],"look":[0,0.6,-6],"fov":60},{"name":"f3","from":[0,5.5,-21],"look":[0,0.6,-6],"fov":60},{"name":"f4","from":[0,5.5,-21],"look":[0,0.6,-6],"fov":60},{"name":"f5","from":[0,5.5,-21],"look":[0,0.6,-6],"fov":60}]'; } &
+{ want exit && shoot exit '[{"name":"f1","from":[2.6,1.9,-10.4],"look":[0,1.6,-6.2],"fov":60},{"name":"f2","from":[2.6,1.9,-10.4],"look":[0,1.6,-6.2],"fov":60},{"name":"f3","from":[2.6,1.9,-10.4],"look":[0,1.6,-6.2],"fov":60},{"name":"f4","from":[2.6,1.9,-10.4],"look":[0,1.6,-6.2],"fov":60}]'; } &
+wait
 # PNG → JPEG q78 (kept under 300 KB)
 for f in "$PNG"/*/*.png; do
   sc=$(basename "$(dirname "$f")"); [ ${#ARGS[@]} -gt 0 ] && ! want "$sc" && continue
@@ -28,5 +34,20 @@ for f in "$PNG"/*/*.png; do
   o="$HERE/out/$sc-$n.jpg"
   sips -s format jpeg -s formatOptions 78 "$f" --out "$o" >/dev/null 2>&1
   [ "$(stat -f %z "$o")" -gt 290000 ] && sips -Z 1280 -s format jpeg -s formatOptions 70 "$f" --out "$o" >/dev/null 2>&1
+done
+# a contact strip per sequence (its frames side by side)
+for sc in fly-orb fly-tracer fly-mine fly-sonar exit; do
+  ls "$HERE/out/$sc-f"*.jpg >/dev/null 2>&1 || continue
+  python3 - "$HERE/out" "$sc" <<'PY'
+import sys, glob
+from PIL import Image
+d, sc = sys.argv[1], sys.argv[2]
+fs = sorted(glob.glob(f'{d}/{sc}-f*.jpg'))
+ims = [Image.open(f).convert('RGB') for f in fs]
+w = 520; ims = [im.resize((w, round(im.height * w / im.width))) for im in ims]
+strip = Image.new('RGB', (w * len(ims) + 6 * (len(ims) - 1), ims[0].height), (20, 20, 24))
+for i, im in enumerate(ims): strip.paste(im, (i * (w + 6), 0))
+strip.save(f'{d}/{sc}-strip.jpg', quality=80)
+PY
 done
 ls -la "$HERE/out"

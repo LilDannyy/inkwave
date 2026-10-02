@@ -25,8 +25,11 @@
   for (const n of ['sub_flight', 'mist_hiss', 'curtain_drip', 'sprinkler_spin', 'beacon_hum', 'tracer_hum', 'boomerang_orbit', 'storm_rain', 'tornado', 'kraken_move', 'blower_inflate', 'jet_loop',
     'stamp_carry', 'booyah_charge', 'zip_aura', 'zip_whizz', 'crab_move', 'crab_roll', 'barrage_drum', 'wail_hold', 'strike_aim', 'shield_hum']) CLASS[n] = ['move', n === 'sub_flight' ? 0.9 : 1];
   const levelOf = (name) => {
-    const c = name.startsWith('alert_') ? ['alert', 1] : name.startsWith('sting_') ? ['sting', 1] : CLASS[name];
     const lv = Math.pow(10, (C.LEVEL[name] || 0) / 20);
+    // (track-ribbons: the mark's sounds at their MIX.mark gains — the marking team's chime / chirp, the marked player's two)
+    const mk = { mark_team: 'team', mark_chirp: 'chirp', mark_you: 'you', mark_over: 'over' }[name];
+    if (mk) return C.MIX.mark[mk] * lv;
+    const c = name.startsWith('alert_') ? ['alert', 1] : name.startsWith('sting_') ? ['sting', 1] : CLASS[name];
     return c ? C.MIX[c[0]].foe * c[1] * lv : lv;
   };
   // a lob landing 1.5 m in front of you (vy₀ 9 m/s, g 24, from 1.35 m up, 12 m off): where, and the glide on it
@@ -218,6 +221,7 @@
     ['Zipline', ['sting_zipcaster', 'zip_cloak', 'zip_aura', 'zip_fire', 'zip_latch', 'zip_pull', 'zip_whizz', 'zip_impact']],
     ['Crab Rig', ['sting_crab', 'crab_boot', 'crab_move', 'crab_roll', 'crab_gatling', 'crab_cannon', 'alert_shell', 'shell_whistle', 'danger~shell', 'shell_boom', 'crab_reload', 'crab_hit', 'crab_break']],
     ['(every special)', ['special_ending', 'special_end']],
+    ['The mark (track-ribbons)', ['mark_team', 'mark_chirp', 'mark_you', 'mark_over']],
   ];
   window.__R = {
     sheet: () => SHEET,

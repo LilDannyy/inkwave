@@ -5,10 +5,11 @@
 // walls. if im tracked then i just see arrow on me. if my teammates is getting tracked, i see the arrow but not through
 // walls") — src/game/statusFx.js
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/track-arrows.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=arrow,clear,sources,walls,clamp,line,net,names,poison' for a part
+//   PAGE_ARGS='only=arrow,clear,grow,fly,end,netsrc,sources,walls,line,net,names,poison' for a part
 // Staged on testbox (a flat deck, top y 0; a wall x 14…15, z ±8, 4 m tall); everyone else parked far off, brains
 // stubbed, hits not dealt. StatusFx.viewer stands in for whose screen it is (null: yours). Checks:
 //  - the old sonar shell (and its ground ping ring) is gone;
+//  - (every arrow below arrives by its flight first: the checks wait for it to settle into the band)
 //  - arrow: an Echo Orb on a foe puts ONE arrow round it — one strip mesh (drawn depth-tested, and for the trackers once
 //    more where it's hidden), the arrow cut from it: an upright cylinder band ~1 m round, facing out, at waist / chest
 //    height, spanning ~312°, its shaft 0.22–0.3 m tall, its head ~1.8× that; both sides drawn (inside first) — in the
@@ -18,8 +19,16 @@
 //    threw it and your teammate who didn't — see the arrow and each their own line through the wall (an occluded
 //    GreaterDepth pass, a line with no depth test); the tracked player's teammate sees none of it through the wall and
 //    no line, in the open the arrow (depth-tested); the tracked player: the arrow on their kid, no line;
-//  - clamp: the arrow's head on screen stays between MIN_F and MAX_F of the screen's height, far off and up close (never
-//    shrinking below S_MIN round the kid);
+//  - grow: its size holds within GROW_FROM m of the camera; beyond it grows gently, × GROW_MAX at most;
+//  - fly (track-ribbons: "have the ribbons fly out of the source … quickly fly to the enemy and then wrap around them"):
+//    an Echo Orb, a Lurk Mine, a Tracer hit, Deep Sonar — the ribbon leaves from that source (the burst, the mine, the
+//    hit, the user's chest), flies within FLY_MIN … FLY_MAX s and wraps (WRAP_T) into the band round the target; the
+//    mark itself (the status, the reveal, the line) is on from the first frame; Deep Sonar flies one ribbon per foe; a
+//    refresh doesn't fly again (a pulse);
+//  - end ("ripple out then fly away"): the ripple (growing), then the fly-away (the tail leading off, up and out,
+//    fading), within RIPPLE_T + EXIT_T; splatted: a short ripple and gone (DIE_T);
+//  - netsrc: online the sources ride the records that already make the marks on every screen (the Tracer's hit record,
+//    a ghost Echo Orb's burst, a ghost Deep Sonar's user): replayed, they fly the ribbon from the same place;
 //  - line: on every tracking-team screen whoever threw (one per tracked enemy: Deep Sonar → four), from that player's
 //    chest to the middle of the tracked one's (a squid's too), in their colour, ~3.5 px, translucent, through walls;
 //    none for the tracked player or their teammates, none after the track ends, none while you're splatted;
@@ -35,6 +44,7 @@
   const { SUB_KITS, MAIN_KITS } = await import('./src/game/kits/registry.js');
   const SF = await import('./src/game/statusFx.js');
   const NM = await import('./src/net/netmatch.js');
+  const { on } = await import('./src/core/ctx.js');
   const G = window.__G, P = G.projectiles, S = G.subs, K = SUB_KITS, FX = S.statusFx;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
@@ -75,6 +85,9 @@
     step(0.1);
   };
   const rec = (a) => FX.recs.get(a);
+  // until its arrow has arrived (flown in and wrapped: the band) / is gone (rippled and flown off)
+  const settle = (a, max = 1.5) => step(max, () => !(rec(a) && rec(a).phase === 'band'));
+  const gone = (a, max = 1.5) => step(max, () => !(!rec(a) || rec(a).phase === 'off'));
   const arrowOn = (a) => { const r = rec(a); return !!(r && r.on && r.band.visible); };
   const lineOn = (a) => { const r = rec(a); return !!(r && r.line && r.line.visible); };
   const hex = (c) => c.getHex();
@@ -121,7 +134,7 @@
       put(foe, F0, Math.PI); put(me, V(0, 0, -14), 0); foe.setWeapon('shooter'); step(0.1);   // (a compact kit: the band at its own radius)
       // an Echo Orb onto the foe
       S._throw(me, SUBS.scan, V(F0.x, 1.6, F0.z), V(0, -1, 0), false);
-      step(0.6);
+      step(0.3); settle(foe);
       const r = rec(foe), p0 = foe.visualPos(V(0, 0, 0));
       const mine = []; G.scene.traverse((o) => { if (o.isMesh && (o === r.band || o === r.bandX || o.geometry === r.band.geometry)) mine.push(o); });
       R('the old sonar shell is gone (no shell / ping / ground ring, no capsule shell mesh) and so are the chevrons: ONE arrow — one strip geometry, drawn by a depth-tested mesh (+ the trackers\' hidden-part pass on the same strip)',
@@ -139,16 +152,16 @@
       }
       let tall = 0, cols = 0; for (let k = 0; k < PY.length; k += 4) { cols++; if (Math.abs(PY[k + 1]) > SF.SHAFT_H / 2 + 0.05) tall++; }
       const mats = r.band.material, deg = (x) => r2(x * 180 / Math.PI);
-      const shape = { BAND_R: SF.BAND_R, R: r3(r.R), worldR: r3(r.band.scale.x), unit: [r3(rmin), r3(rmax)], outward: r3(out), height: [r2(ymin), r2(ymax)], shaft: r3(SF.SHAFT_H), head: r3(SF.HEAD_H), ratio: r2(SF.HEAD_H / SF.SHAFT_H), arcDeg: deg(SF.ARC), stripDeg: deg(amax - amin),
-        sides: mats.map((m) => m.side), groups: geo.groups.length, uR: mats.every((m) => m.uniforms.uR.value === r.R), tallShare: r2(tall / cols) };
+      const shape = { BAND_R: SF.BAND_R, worldR: r3(r.band.scale.x), size: r.size, unit: [r3(rmin), r3(rmax)], outward: r3(out), height: [r2(ymin), r2(ymax)], shaft: r3(SF.SHAFT_H), head: r3(SF.HEAD_H), ratio: r2(SF.HEAD_H / SF.SHAFT_H), arcDeg: deg(SF.ARC), stripDeg: deg(amax - amin),
+        sides: mats.map((m) => m.side), groups: geo.groups.length, uR: mats.every((m) => m.uniforms.uR.value === SF.BAND_R), tallShare: r2(tall / cols) };
       R(`…its shape: an upright cylinder band ${SF.BAND_R} m round (hugging the kid), facing out, spanning ${shape.arcDeg}° (its head nearly meets its tail); shaft ${shape.shaft} m, head ${shape.ratio}× that; both sides drawn, its inside first; the strip hugs it (head-tall only at the ends)`,
-        SF.BAND_R >= 0.6 && SF.BAND_R <= 0.65 && shape.R === SF.BAND_R && shape.uR && Math.abs(rmin - 1) < 1e-3 && Math.abs(rmax - 1) < 1e-3 && out > 0.999 && SF.SHAFT_H >= 0.22 && SF.SHAFT_H <= 0.3 && shape.ratio >= 1.7 && shape.ratio <= 1.9
+        SF.BAND_R >= 0.42 && SF.BAND_R <= 0.48 && shape.size === 1 && shape.worldR === r3(SF.BAND_R) && shape.uR && Math.abs(rmin - 1) < 1e-3 && Math.abs(rmax - 1) < 1e-3 && out > 0.999 && SF.SHAFT_H >= 0.22 && SF.SHAFT_H <= 0.3 && shape.ratio >= 1.7 && shape.ratio <= 1.9
         && shape.arcDeg >= 300 && shape.arcDeg <= 320 && shape.stripDeg >= shape.arcDeg && shape.stripDeg < shape.arcDeg + 15 && ymax >= SF.HEAD_H / 2 && ymax < SF.HEAD_H / 2 + 0.08 && ymin === -ymax
         && shape.groups === 2 && shape.sides[0] === THREE.BackSide && shape.sides[1] === THREE.FrontSide && shape.tallShare > 0.1 && shape.tallShare < 0.35, shape);
       // the squid's eyes in its head: rendered straight on (the camera square to the head, the arrow on / off), two
       // separate white eyes, one above the other with a clear gap, each with a dark pupil
       {
-        const eyeAng = SF.ARC - 33 * 0.0098 / r.R;   // (the eyes sit 33 icon units back from the tip)
+        const eyeAng = SF.ARC - 33 * 0.0098 / SF.BAND_R;   // (the eyes sit 33 icon units back from the tip)
         r.band.updateMatrixWorld();
         const eye = V(Math.sin(eyeAng), 0, Math.cos(eyeAng)).applyMatrix4(r.band.matrixWorld);   // (the strip is unit-radius: the mesh's scale is the band's)
         const outw = eye.clone().sub(r.band.position).setY(0).normalize();
@@ -203,60 +216,198 @@
       // the tracking team sees it through walls: the hidden-part pass (GreaterDepth, drawn first), the depth-tested one over it
       const xr = { xray: r.bandX.visible, depthFunc: r.bandX.material.every((m) => m.depthFunc === THREE.GreaterDepth), base: r.band.material.every((m) => m.depthFunc === THREE.LessEqualDepth && m.depthTest), first: r.bandX.renderOrder < r.band.renderOrder, statsX: FX.stats.xray };
       foe.status.track = 0.3; step(0.5);
-      const off = { on: r.on, band: r.band.visible, xray: r.bandX.visible, line: lineOn(foe), track: foe.status.track, bands: FX.stats.bands, lines: FX.stats.lines };
-      R('…and it ends with the tracking (no arrow, no hidden-part pass, no line)', xr.xray && xr.depthFunc && xr.base && xr.first && !off.on && !off.band && !off.xray && !off.line && off.track === 0 && off.bands === 0 && off.lines === 0, { off, xr });
+      const off = { on: r.on, phase: r.phase, track: foe.status.track, bands: FX.stats.bands, lines: FX.stats.lines };
+      gone(foe);
+      off.after = { band: r.band.visible, xray: r.bandX.visible, line: lineOn(foe), phase: r.phase };
+      R('…and it ends with the tracking (the mark at once: no line, not counted; the arrow\'s going — the ripple, the fly-away — then nothing)', xr.xray && xr.depthFunc && xr.base && xr.first && !off.on && ['rip', 'exit'].includes(off.phase) && off.track === 0 && off.bands === 0 && off.lines === 0
+        && !off.after.band && !off.after.xray && !off.after.line && off.after.phase === 'off', { off, xr });
       // on your own kid (the follow view): fainter, depth-tested, the tracking team's (the foes') colour, no line
       reset();
       put(me, V(0, 0, -6), 0); step(0.1);
-      S._throw(foe, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false); step(0.6);
+      S._throw(foe, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false); step(0.3); settle(me);
       const rm = rec(me), self = rm && { on: arrowOn(me), alpha: r2(rm.band.material[0].uniforms.uAlpha.value), xray: rm.bandX.visible, colour: hex(rm.band.material[0].uniforms.uColor.value) === hex(G.teamColors[foe.team]), line: lineOn(me), lines: FX.stats.lines };
       R(`…round your own kid it shows too, fainter (×${SF.SELF_A}), depth-tested, in the colour of the team that tracked you; no line`,
         G.local === me && self && self.on && self.alpha === SF.SELF_A && !self.xray && self.colour && !self.line && self.lines === 0, self);
     }
 
-    // ============================================================================================ clear of the kid
+    // ============================================================================================ clear of the body
     if (want('clear')) {
-      // three kits — a compact one (the Spritzer), a long one (the charger's barrel), the widest (an open brolly) — idle,
-      // walking and shooting, through more than a whole turn of the arrow: nothing of the kid (body or weapon: every
-      // vertex) within the band's height reaches the band
+      // three kits whose arms sit widest at rest (the Splatling's, the Bucket's) and a compact one, idle and walking,
+      // through more than a whole turn: nothing of the kid's BODY (the torso, the arms, the ink tank — every vertex, all
+      // but what's in their hands) within the band's height reaches it. What's held may poke through now (info)
       const v = V(0, 0, 0), c = V(0, 0, 0), res = {};
-      const kidReach = (a, y0, y1) => {
-        a.character.root.updateMatrixWorld(true); a.visualPos(c); let best = 0;
+      const under = (o, root) => { for (let q = o; q; q = q.parent) if (q === root) return true; return false; };
+      const reach = (a, y0, y1, held) => {
+        const B = a.character.bones; a.character.root.updateMatrixWorld(true); a.visualPos(c); let best = 0;
         a.character.root.traverseVisible((o) => {
           if (!o.isMesh || !o.geometry?.attributes?.position) return;
+          if ((under(o, B.handR) || under(o, B.handL)) !== held) return;
           const n = o.geometry.attributes.position.count, stp = o.isSkinnedMesh ? Math.max(1, Math.floor(n / 3000)) : 1;
           for (let i = 0; i < n; i += stp) { o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld); if (v.y < y0 || v.y > y1) continue; best = Math.max(best, Math.hypot(v.x - c.x, v.z - c.z)); }
         });
         return best;
       };
-      for (const wid of ['shooter', 'charger', 'brolly']) {
+      for (const wid of ['splatling', 'bucket', 'shooter']) {
         reset();
         put(foe, V(0, 0, -6), Math.PI); put(me, V(0, 0, -11), 0); step(0.05);
         foe.setWeapon(wid); step(0.3);
         S.track(foe, me.team, 99); step(0.3);
-        const r = rec(foe), o = { worst: 9, maxR: 0, minR: 9, samples: 0, maxReach: 0, maxRl: 0, maxS: 0 };
-        for (const pose of ['idle', 'walk', 'shoot']) {
+        const r = rec(foe), o = { worst: 9, held: 0, samples: 0, R: 0 };
+        for (const pose of ['idle', 'walk']) {
           put(foe, V(0, 0, -6), Math.PI);
-          foe.bot.update = () => { zero(foe); foe.ink = PLAYER.inkMax; foe.aimYaw = foe.bot.aimYaw = Math.PI; foe.aimPitch = foe.bot.aimPitch = 0; if (pose === 'walk') foe.intent.move.set(0.7, 0, -0.7); if (pose === 'shoot') foe.intent.fire = true; };
+          foe.bot.update = () => { zero(foe); foe.aimYaw = foe.bot.aimYaw = Math.PI; foe.aimPitch = foe.bot.aimPitch = 0; if (pose === 'walk') foe.intent.move.set(0.7, 0, -0.7); };
           step(2.8, (i) => {
             if (i % 4) return;
-            const sc = r.band.scale.y, y = r.band.position.y, hh = (SF.HEAD_H / 2) * sc;
-            const reach = kidReach(foe, y - hh, y + hh), Rw = r.band.scale.x;
-            o.worst = Math.min(o.worst, Rw - reach); o.maxR = Math.max(o.maxR, Rw); o.minR = Math.min(o.minR, Rw); o.maxReach = Math.max(o.maxReach, reach); o.maxRl = Math.max(o.maxRl, r.R); o.maxS = Math.max(o.maxS, r.size); o.samples++;
+            const sc = r.band.scale.y, y = r.band.position.y, hh = (SF.HEAD_H / 2) * sc, Rw = r.band.scale.x;
+            o.worst = Math.min(o.worst, Rw - reach(foe, y - hh, y + hh, false)); o.held = Math.max(o.held, reach(foe, y - hh, y + hh, true)); o.R = Math.max(o.R, Rw); o.samples++;
           });
           stub(foe);
         }
-        res[wid] = { gapCm: r2(o.worst * 100), reachM: r3(o.maxReach), radius: [r3(o.minR), r3(o.maxR)], ownRadius: r3(o.maxRl), size: r2(o.maxS), samples: o.samples };
+        res[wid] = { bodyGapCm: r2(o.worst * 100), heldReachM: r3(o.held), radius: r3(o.R), samples: o.samples };
       }
-      // what it costs: every other player tracked at once (seven arrows, each measuring its kid's hands), a frame's update
+      // what it costs: every other player marked at once (seven arrows), a frame's update
       reset();
       others.forEach((a, i) => { put(a, V(-9 + i * 3, 0, -4), Math.PI); S.track(a, 1 - a.team, 99); });
       step(0.3);
       const t0 = performance.now(); for (let i = 0; i < 240; i++) FX.update(1 / 60); const perFrame = (performance.now() - t0) / 240;
       res.cost = { bands: FX.stats.bands, msPerFrame: r3(perFrame) };
       const turn = 2 * 2.8 * SF.SPIN > 2 * Math.PI;
-      R(`clear: the band never cuts the kid or their weapon — a Spritzer (it stays ${SF.BAND_R} m round), a charger and an open brolly (it opens out round them), idle / walking / shooting through more than a whole turn; seven at once cost under 1 ms a frame`,
-        turn && ['shooter', 'charger', 'brolly'].every((k) => res[k].gapCm > 0.5 && res[k].samples > 100) && res.cost.bands === others.length && res.cost.msPerFrame < 1 && res.shooter.ownRadius === SF.BAND_R && res.shooter.size === 1 && res.charger.ownRadius > SF.BAND_R && res.brolly.ownRadius > SF.BAND_R, res);
+      R(`clear: the band (${SF.BAND_R} m round) never cuts the kid's body — torso, arms at rest, ink tank — idle or walking, through more than a whole turn (a held weapon may poke through); seven at once cost under 1 ms a frame`,
+        turn && ['splatling', 'bucket', 'shooter'].every((k) => res[k].bodyGapCm > 1 && res[k].samples > 60 && res[k].radius === r3(SF.BAND_R)) && res.cost.bands === others.length && res.cost.msPerFrame < 1, res);
+    }
+
+    // ============================================================================================ size by distance
+    if (want('grow')) {
+      reset();
+      put(foe, V(0, 0, 10), Math.PI); step(0.1); S.track(foe, me.team, 99); step(0.3);
+      const r = rec(foe), sizes = {};
+      for (const d of [3, 8, 13, 19.5, 30, 45, 90]) { shotCam(V(0, 2, 10 - d), V(0, 0.85, 10)); sizes[d] = { size: r3(r.size), worldR: r3(r.band.scale.x) }; }
+      g.rig.follow(me, true);
+      R(`grow: within ${SF.GROW_FROM} m of the camera it keeps its own size (radius ${SF.BAND_R} m); beyond it grows gently, × ${SF.GROW_MAX} at most`,
+        [3, 8, 13, 19.5].every((d) => sizes[d].size === 1 && sizes[d].worldR === r3(SF.BAND_R)) && sizes[30].size > 1 && sizes[30].size < 1.15 && sizes[45].size > sizes[30].size && sizes[90].size === SF.GROW_MAX, sizes);
+    }
+
+    // ============================================================================================ the flight in
+    if (want('fly')) {
+      // watch a mark land: the frame it lands, where the ribbon leaves from, how long until it's the band
+      const watchFly = (target, act, src) => {
+        let o = null, t0 = null;
+        const L0 = { phase: null };
+        act();
+        step(2, (i) => {
+          const r = rec(target);
+          if (!o && r && r.on) {
+            t0 = i;
+            const s0 = typeof src === 'function' ? src() : src;
+            o = { firstPhase: r.phase, srcGap: r.fly ? r2(r.fly.src.distanceTo(s0)) : null, headGap: r2(r.head.distanceTo(s0)), markNow: target.status.track > 0, lineNow: lineOn(target), T: null };
+          }
+          if (o && r.fly && r.fly.T && !o.T) o.T = r3(r.fly.T);
+          if (o && r.phase === 'band' && o.wrapped == null) {
+            o.wrapped = r3((i - t0) / 60);
+            const c = target.visualPos(V(0, 0, 0)); o.centreGap = r2(Math.hypot(r.band.position.x - c.x, r.band.position.z - c.z));
+            return false;
+          }
+        });
+        return o;
+      };
+      const ok = (o) => o && o.firstPhase === 'fly' && o.srcGap < 0.05 && o.headGap < 1.2 && o.markNow && o.lineNow && o.T >= SF.FLY_MIN - 1e-6 && o.T <= SF.FLY_MAX + 1e-6 && o.wrapped <= o.T + SF.WRAP_T + 0.05 && o.centreGap < 0.01;
+      const res = {};
+      // an Echo Orb: from its burst
+      reset(); put(me, V(0, 0, -16), 0); put(foe, V(1, 0, -6), Math.PI); step(0.1);
+      { let burst = null; res.orb = watchFly(foe, () => S._throw(me, SUBS.scan, V(1, 1.6, -6), V(0, -1, 0), false), () => (burst = burst || S.items.find((it) => it.kind === 'scan' && it.cloud)?.pos.clone() || V(0, 0, 0))); }
+      // a Lurk Mine: from the mine
+      reset(); put(me, V(-6, 0, -6), 0); step(0.05); S.use(me, SUBS.mine); const mp = S.items.find((it) => it.kind === 'mine')?.pos.clone(); put(me, V(-6, 0, -16), 0); step(1);
+      res.mine = watchFly(foe, () => put(foe, V(-4.6, 0, -6), 0), () => mp.clone().setY(mp.y + 0.3));
+      // a Tracer hit: from where it hit
+      reset(); put(me, V(0, 0, -14), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
+      { let hitAt = null; const off = on('tracer:hit', (e) => { if (!hitAt) hitAt = e.pos.clone(); });
+        me.aimYaw = me.yaw = 0; me.aimPitch = 0; me.aimDir.set(0, 0, 1); me.aimPoint.set(0, 1.0, -6);
+        res.tracer = watchFly(foe, () => K.tracer.use(G.subs, me, SUBS.tracer), () => hitAt || V(0, 0, 0)); off(); }
+      // Deep Sonar: from the user, one ribbon to each foe, all at once, fanning out
+      reset(); foes.forEach((f, i) => put(f, V(-9 + i * 6, 0, -2 - (i % 2) * 5), Math.PI)); put(me, V(0, 0, -14), 0); step(0.1);
+      let fan = null;
+      const chest = () => me.visualPos(V(0, 0, 0)).setY(me.pos.y + SF.CHEST);
+      res.sonar = watchFly(foe, () => { start(me, 'sonar'); }, chest);
+      { const rs = foes.map(rec); fan = { flying: rs.filter((r) => r && r.fly).length, entries: rs.map((r) => r && r.fly ? r2(r.fly.aE) : null), from: rs.map((r) => r && r.fly ? r2(r.fly.src.distanceTo(chest())) : null) }; }
+      res.sonarAll = fan;
+      R('fly: the ribbon leaves from the source — an Echo Orb\'s burst, the Lurk Mine, the Tracer\'s hit, the Deep Sonar user — flies within FLY_MIN … FLY_MAX s and wraps into the band round the target (WRAP_T); the mark itself (status, line) is on from the first frame',
+        ['orb', 'mine', 'tracer', 'sonar'].every((k) => ok(res[k])), res);
+      R(`…Deep Sonar flies one ribbon per foe (${foes.length}), each from the user, each its own way`,
+        fan.flying === foes.length && fan.from.every((d) => d !== null && d < 0.3) && new Set(fan.entries.map((x) => Math.round(x * 10))).size === foes.length, fan);
+      // a refresh while the band's up: no second flight (a pulse)
+      reset(); put(me, V(0, 0, -16), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
+      S._throw(me, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false); step(0.3); settle(foe);
+      const r = rec(foe), fly0 = r.fly; let flew = false, pulse = 0;
+      S.track(foe, me.team, 9, V(5, 1, 5));
+      step(0.6, () => { if (r.phase === 'fly' || r.fly !== fly0) flew = true; pulse = Math.max(pulse, r.pulse); });
+      R('…a refresh while the band is up doesn\'t fly it in again (a small pulse)', !flew && r.phase === 'band' && pulse > 0.5, { flew, phase: r.phase, pulse: r2(pulse) });
+    }
+
+    // ============================================================================================ the going
+    if (want('end')) {
+      reset(); put(me, V(0, 0, -16), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
+      S.track(foe, me.team, 0.9, V(0, 1, -9)); settle(foe);
+      const r = rec(foe), seen = { rip: 0, exit: 0, ripMax: 0, upY: -9, alphaEnd: 1, path: 0 }; let tEnd = null, tGone = null, lineAt = null;
+      const y0 = r.band.position.y;
+      step(2.5, (i) => {
+        if (tEnd == null && !r.on) { tEnd = i; lineAt = { line: lineOn(foe), lines: FX.stats.lines, track: foe.status.track }; }
+        if (r.phase === 'rip') { seen.rip++; seen.ripMax = Math.max(seen.ripMax, r.U.uRip.value); }
+        if (r.phase === 'exit') { seen.exit++; seen.path = r.U.uPath.value; seen.upY = Math.max(seen.upY, r.head.y - y0); seen.alphaEnd = r.U.uAlpha.value; }
+        if (tEnd != null && r.phase === 'off' && tGone == null) { tGone = i; return false; }
+      });
+      const t = { ripple: r3(seen.rip / 60), exit: r3(seen.exit / 60), total: tGone != null ? r3((tGone - tEnd) / 60) : null };
+      R(`end: the band ripples (${SF.RIPPLE_T} s, growing), then unwinds from its tail and flies off up and out, fading (${SF.EXIT_T} s); the mark's line goes with the ripple`,
+        Math.abs(t.ripple - SF.RIPPLE_T) < 0.04 && Math.abs(t.exit - SF.EXIT_T) < 0.04 && t.total <= SF.RIPPLE_T + SF.EXIT_T + 0.05 && seen.ripMax > 0.1 && seen.path === -1 && seen.upY > 1 && seen.alphaEnd < 0.1
+        && lineAt && lineAt.lines === 0 && lineAt.track === 0 && !lineOn(foe), { t, seen: { ripMax: r2(seen.ripMax), upY: r2(seen.upY), alphaEnd: r2(seen.alphaEnd) }, lineAt });
+      // splatted while marked: a short ripple and gone
+      reset(); put(me, V(0, 0, -16), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
+      S.track(foe, me.team, 9, V(0, 1, -9)); settle(foe);
+      const r2_ = rec(foe); let tDie = null, ph = null;
+      foe.splat(me, 'weapon');
+      step(1, (i) => { if (ph == null) ph = r2_.phase; if (r2_.phase === 'off') { tDie = i; return false; } });
+      R(`…splatted while marked: a short ripple and gone (≤ ${SF.DIE_T} s, no fly-away)`, ph === 'die' && tDie != null && tDie / 60 <= SF.DIE_T + 0.04, { first: ph, gone: tDie != null ? r3(tDie / 60) : null });
+    }
+
+    // ============================================================================================ online: the sources
+    if (want('netsrc')) {
+      // the Tracer: its owner's hit record ([1, gid, x, y, z, victim]) replayed into a ghost bolt marks the victim with
+      // the ribbon flying from the record's hit point
+      reset(); put(me, V(0, 0, -14), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
+      const recs = []; netOn({ recKit: (a, kind, data) => recs.push({ a, kind, data: JSON.parse(JSON.stringify(data)) }) });
+      me.aimYaw = me.yaw = 0; me.aimPitch = 0; me.aimDir.set(0, 0, 1); me.aimPoint.set(0, 1.0, -6);
+      K.tracer.use(G.subs, me, SUBS.tracer); step(0.6);
+      const tr = recs.filter((x) => x.kind === 'tracer'), spawn = tr.find((x) => x.data[0] === 0), hit = tr.find((x) => x.data[0] === 1);
+      netOff();
+      reset(); put(me, V(0, 0, -14), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
+      let tracer = { records: tr.length };
+      if (spawn && hit) {
+        const gid = spawn.data[1] + 1000; netOn();
+        K.tracer.ghost(me, [0, gid, ...spawn.data.slice(2)]);
+        step(0.05);
+        K.tracer.ghost(me, [1, gid, ...hit.data.slice(2)]);
+        step(0.05);
+        const r = rec(foe), at = V(hit.data[2], hit.data[3], hit.data[4]);
+        tracer = { ...tracer, marked: foe.status.track > 0, phase: r?.phase, srcGap: r?.fly ? r2(r.fly.src.distanceTo(at)) : null };
+        netOff();
+      }
+      // Deep Sonar used by a remote player (its owner's start record → the ghost special): one ribbon to each foe, from them
+      reset(); foes.forEach((f, i) => put(f, V(-9 + i * 6, 0, -2), Math.PI)); put(mate, V(0, 0, -12), 0); step(0.1);
+      netOn(); mate.remote = true;
+      const { SPECIAL_ORDER } = await import('./src/config.js');
+      G.specials.netGhost(mate, [0, SPECIAL_ORDER.indexOf('sonar')]); step(0.05);
+      const mc = mate.visualPos(V(0, 0, 0)).setY(mate.pos.y + SF.CHEST);
+      const sonar = { flying: foes.filter((f) => rec(f)?.fly).length, from: foes.map((f) => (rec(f)?.fly ? r2(rec(f).fly.src.distanceTo(mc)) : null)) };
+      mate.remote = false; try { G.specials.end(mate, 'test'); } catch (e) { /* */ } netOff();
+      // an Echo Orb thrown by a remote player (its throw record → a ghost orb): the ribbon from the ghost's burst
+      reset(); put(foe, V(2, 0, -6), Math.PI); step(0.1);
+      netOn();
+      S._throw(mate, SUBS.scan, V(2, 1.6, -6), V(0, -1, 0), true, 4242);
+      let gb = null; step(1, () => { const it = S.items.find((x) => x.ghost && x.kind === 'scan' && x.cloud); if (it && !gb) gb = it.pos.clone(); return !(rec(foe)?.fly); });
+      const orb = { ghost: !!gb, srcGap: rec(foe)?.fly && gb ? r2(rec(foe).fly.src.distanceTo(gb)) : null };
+      netOff();
+      R('netsrc: online the sources ride the records that already make the marks on every screen — the Tracer\'s hit record (its hit point), a ghost Deep Sonar (its user, one ribbon per foe), a ghost Echo Orb (its burst) — no new field',
+        tracer.marked && tracer.phase === 'fly' && tracer.srcGap !== null && tracer.srcGap < 0.6 && sonar.flying === foes.length && sonar.from.every((d) => d !== null && d < 0.3) && orb.ghost && orb.srcGap !== null && orb.srcGap < 0.05,
+        { tracer, sonar, orb });
     }
 
     // ============================================================================================ every source
@@ -288,7 +439,7 @@
       // the foe behind the wall (x 14…15, 4 m tall); you 9 m off in front of it (you threw it), your teammate beside you
       // (didn't), the foe's teammate further along; each camera over that player's shoulder
       put(foe, V(18, 0, 0), -Math.PI / 2); put(me, V(9, 0, 0), Math.PI / 2); put(mate, V(9, 0, -4), Math.PI / 2); put(foe2, V(9, 0, 4), Math.PI / 2); step(0.1);
-      S._throw(me, SUBS.scan, V(18, 1.6, 0), V(0, -1, 0), false); step(0.6);
+      S._throw(me, SUBS.scan, V(18, 1.6, 0), V(0, -1, 0), false); step(0.3); settle(foe);
       const r = rec(foe);
       const chestOf = (a) => a.visualPos(V(0, 0, 0)).add(V(0, SF.CHEST, 0));
       const view = (who, from) => {
@@ -310,33 +461,10 @@
       const open = { px: pixels([r.band, r.bandX]), xray: r.bandX.visible, alpha: r2(r.band.material[0].uniforms.uAlpha.value), line: lineOn(foe) };
       FX.viewer = null;
       R('walls: the tracking team sees the foe\'s arrow through the wall (an occluded GreaterDepth pass) and each their own line through it from their own chest, in their colour — you who threw it and your teammate who didn\'t',
-        [you, yourMate].every((v) => v.blocked && v.xray && v.px > 60 && v.line && v.lines === 1 && v.linePx > 15 && v.fromChest !== null && v.fromChest < 0.35 && v.colour), { you, yourMate });
+        [you, yourMate].every((v) => v.blocked && v.xray && v.px > 30 && v.line && v.lines === 1 && v.linePx > 15 && v.fromChest !== null && v.fromChest < 0.35 && v.colour), { you, yourMate });
       R('…the tracked player\'s teammate: depth-tested (none of it through the wall), no line; in the open the arrow. The tracked player: the arrow on their own kid (fainter), no line',
         theirMate.blocked && !theirMate.xray && theirMate.depthTest && theirMate.px < 4 && !theirMate.line && theirMate.lines === 0 && open.px > 60 && !open.xray && open.alpha >= 0.9 && !open.line
         && tracked.arrow && tracked.alpha === SF.SELF_A && !tracked.xray && !tracked.line && tracked.lines === 0, { theirMate, open, tracked });
-      g.rig.follow(me, true);
-    }
-
-    // ============================================================================================ size on screen
-    if (want('clamp')) {
-      reset();
-      put(foe, V(0, 0, 10), Math.PI); step(0.1); S.track(foe, me.team, 99); step(0.3);
-      const r = rec(foe);
-      // the arrow's head height on screen, as a share of the screen's height (its drawn height at the band's depth)
-      const onScreen = () => {
-        const cam = G.camera; cam.updateMatrixWorld(); const fw = cam.getWorldDirection(V(0, 0, 0)), th = Math.tan((cam.fov * Math.PI) / 360);
-        const z = r.band.position.clone().sub(cam.position).dot(fw);
-        return r3((SF.HEAD_H * r.band.scale.y) / (2 * z * th));
-      };
-      shotCam(V(0, 22, -60), V(0, 0.8, 10));
-      const far = { share: onScreen(), size: r2(r.size), R: r3(r.R), worldR: r3(r.band.scale.x), dist: r2(G.camera.position.distanceTo(foe.pos)) };
-      shotCam(V(0.5, 1.3, 8.4), V(0, 0.85, 10));
-      const near = { share: onScreen(), size: r2(r.size), R: r3(r.R), worldR: r3(r.band.scale.x) };
-      shotCam(V(4, 2.4, 2), V(0, 0.8, 10));
-      const mid = { share: onScreen(), size: r2(r.size), worldR: r3(r.band.scale.x) };
-      R(`clamp: far off (${far.dist} m) the arrow grows (its head at least ${r2(SF.MIN_F * 100)} % of the screen\'s height); up close and in between it keeps its own size — its radius never under ${SF.BAND_R} m`,
-        far.share >= SF.MIN_F * 0.99 && far.size > 1 && far.worldR > SF.BAND_R && near.size === 1 && near.worldR >= SF.BAND_R && mid.size === 1 && mid.worldR >= SF.BAND_R,
-        { far, near, mid, MIN_F: SF.MIN_F });
       g.rig.follow(me, true);
     }
 
@@ -344,7 +472,7 @@
     if (want('line')) {
       reset();
       put(me, V(0, 0, -14), 0); put(foe, V(1.5, 0, -6), Math.PI); put(mate, V(-6, 0, -12), 0.4); step(0.1);
-      S._throw(me, SUBS.scan, V(1.5, 1.6, -6), V(0, -1, 0), false); step(0.6);
+      S._throw(me, SUBS.scan, V(1.5, 1.6, -6), V(0, -1, 0), false); step(0.3); settle(foe);
       const r = rec(foe), l = r.line;
       const chest = foe.visualPos(V(0, 0, 0)); chest.y += SF.CHEST;
       const mine = me.visualPos(V(0, 0, 0)); mine.y += SF.CHEST;
@@ -383,7 +511,7 @@
       reset();
       put(me, V(0, 0, -14), 0); put(foe, V(0, 0, -6), Math.PI); step(0.1);
       S._throw(me, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false); step(0.6);
-      const was = lineOn(foe); foe.status.track = 0.2; step(0.4);
+      const was = lineOn(foe); foe.status.track = 0.2; step(0.6);   // (its line fades with the ripple)
       const ended = { was, line: lineOn(foe), lines: FX.stats.lines };
       // splatted: your lines go while you're down
       S.track(foe, me.team, 99); step(0.1); const up = lineOn(foe); me.alive = false; FX.update(0); const down = lineOn(foe); me.alive = true; FX.update(0);
@@ -408,7 +536,7 @@
         const theirs = { arrow: arrowOn(X), xray: r.bandX.visible, line: lineOn(X), lines: FX.stats.lines };
         FX.viewer = null; step(0.05);
         // … not tracked
-        const pk0 = net.owner(false); step(0.2);
+        const pk0 = net.owner(false); step(0.4);   // (its line fades with the ripple)
         const none = { flag: (pk0[10] & NM.NET_FLAGS.tracked) !== 0, netStatus: X.netStatus, arrow: arrowOn(X), line: lineOn(X), fields: pk0.length };
         // a mark this screen's own (ghost) subs put on a remote player runs out here too (Actor.update doesn't run for it)
         X.status.track = 0.4; X.status.trackTeam = me.team; step(0.2); const mid = arrowOn(X); step(0.4);

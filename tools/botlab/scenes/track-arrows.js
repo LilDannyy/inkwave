@@ -12,12 +12,17 @@
 //   straight  close up, straight on, the arrow held still with the gap between its head and tail facing you: the
 //             squid's head and eyes, the tentacle tail (from the foe's teammate's screen: no line, depth-tested)
 //   head      the same with its eyes square to you
-//   charger   a foe holding a charger aimed: the band opened out round the barrel (it never cuts through a weapon)
+//   charger   a foe holding a charger aimed: the barrel through the band (it hugs the body; what's held may poke through)
+//   fly-orb · fly-tracer · fly-mine · fly-sonar   a mark landing — an Echo Orb bursting on a foe, a Tracer hitting one,
+//             a foe walking onto your Lurk Mine, your Deep Sonar (four foes, a ribbon to each): the ribbon's flight
+//             from the source and its wrap, slowed (SLOW) so the shots that follow, 5 frames apart, make a sequence
+//   exit      a mark running out: the ripple, then the fly-away (slowed the same way)
 // The tracked foe holds a Spritzer (a compact kit: the band at its own radius) unless said.
 // The pictures (PNG → JPEG q78 in tools/botlab/jobs/track-arrows/out/): that folder's shots.sh.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { SUBS } = await import('./src/config.js');
+  const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const SF = await import('./src/game/statusFx.js');
   const G = window.__G, S = G.subs, FX = S.statusFx, SC = window.__preArgs || 'close';
   dbg.freeze();
@@ -40,6 +45,7 @@
   FX.viewer = null;
   step(0.2);
   const info = { scene: SC };
+  const start = (e, id) => { e.specialId = id; e.special = e.specialCost(); e._startSpecial(); return e.specialActive; };
   if (SC === 'close' || SC === 'far') {
     show(me, V(0, 0, -16), 0); show(foe, V(0, 0, -6), Math.PI - 0.45);
     S._throw(me, SUBS.scan, V(0, 1.6, -6), V(0, -1, 0), false);
@@ -70,13 +76,43 @@
     foe.bot.update = () => { zero(foe); foe.intent.fire = true; foe.ink = 100; };   // (charging: the barrel up and out)
     S.track(foe, me.team, 99);
     step(0.8);
+  } else if (SC.startsWith('fly-') || SC === 'exit') {
+    const rec = () => FX.recs.get(foe), until = (fn, max = 4) => { for (let i = 0; i < max * 60 && !fn(); i++) frame(); };
+    if (SC === 'fly-orb') {
+      show(me, V(0, 0, -16), 0); show(foe, V(1, 0, -6), Math.PI - 0.4);
+      S._throw(me, SUBS.scan, V(1, 1.6, -6), V(0, -1, 0), false);
+      // (the orb's cloud swells round the camera: hidden for the pictures — the ribbon's the subject)
+      const u1 = S.update.bind(S); S.update = (dt) => { u1(dt); for (const it of S.items) if (it.kind === 'scan' && it.cloud) it.cloud.visible = false; };
+    } else if (SC === 'fly-tracer') {
+      show(me, V(0, 0, -12), 0); show(foe, V(0, 0, -6), Math.PI - 0.3); step(0.1);
+      me.aimYaw = me.yaw = 0; me.aimPitch = 0; me.aimDir.set(0, 0, 1); me.aimPoint.set(0, 1.0, -6);
+      SUB_KITS.tracer.use(S, me, SUBS.tracer);
+    } else if (SC === 'fly-mine') {
+      show(me, V(-6, 0, -6), 0); step(0.05); S.use(me, SUBS.mine); put(me, V(-7.5, 0, -12), 0.3); step(1);
+      show(foe, V(-4.5, 0, -6), -Math.PI / 2 - 0.3);
+    } else if (SC === 'fly-sonar') {
+      show(me, V(0, 0, -14), 0); foes.forEach((f, i) => show(f, V(-7.5 + i * 5, 0, -3 - (i % 2) * 3), Math.PI)); step(0.1);
+      const ring0 = G.fx?.ring; if (G.fx) G.fx.ring = () => {};   // (its ground rings, right under the camera: off for the pictures)
+      start(me, 'sonar');
+      if (G.fx) G.fx.ring = ring0;
+    } else {
+      show(me, V(0, 0, -16), 0); show(foe, V(0, 0, -6), Math.PI - 0.4);
+      S.track(foe, me.team, 99, V(0, 1, -10)); step(1.2);
+      foe.status.track = 0.01;
+    }
+    until(() => (SC === 'exit' ? rec() && rec().phase === 'rip' : rec() && rec().phase === 'fly'));
+    info.phase = rec()?.phase; info.T = rec()?.fly?.T;
+    const SLOW = { 'fly-orb': 1, 'fly-tracer': 0.8, 'fly-mine': 1, 'fly-sonar': 1.8, exit: 1.75 }[SC];
+    const u0 = FX.update.bind(FX); FX.update = (dt) => u0(dt * SLOW);
   } else if (SC === 'foemate') {
     show(foe, V(4, 0, 0), Math.PI / 2 + 0.5); show(foe2, V(9, 0, 3.4), -Math.PI / 2 - 0.4); show(me, V(-7, 0, -9), 0.6);
     FX.viewer = foe2;
     S.track(foe, me.team, 99);
   }
-  step(0.4);
-  G.projectiles.clear(); G.paint.clear();   // (no stray shots in the picture)
+  if (!SC.startsWith('fly-') && SC !== 'exit') {
+    step(0.4);
+    G.projectiles.clear(); G.paint.clear();   // (no stray shots in the picture)
+  }
   const r = FX.recs.get(SC === 'self' ? me : foe);
   info.band = !!(r && r.on && r.band.visible); info.xray = !!(r && r.bandX.visible); info.lines = FX.stats.lines; info.viewer = FX.viewer ? FX.viewer.name : 'you';
   info.alpha = r && Math.round(r.band.material[0].uniforms.uAlpha.value * 100) / 100; info.R = r && Math.round(r.R * 1000) / 1000;

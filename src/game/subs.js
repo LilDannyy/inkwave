@@ -20,7 +20,8 @@
 // sub-tweaks2 (2026-10-02): the Twirl Sprinkler throws further (15.8) and splats an ink patch where it sticks (_patch);
 // tracked / poisoned players show it (statusFx.js: murky bubbles for the poisoned), for everyone.
 // track-arrows (2026-10-02): a tracked player wears a ring of arrows in the tracking team's colour, and everyone on that
-// team gets a thin line to them; both through walls for that team only (statusFx.js).
+// team gets a thin line to them; both through walls for that team only (statusFx.js). track-ribbons: track() takes the
+// mark's source (the arrow flies in from it) and every mark is heard as actor:marked.
 //
 // Props come from getSubDef(kind) (origin at the bottom centre, +Y away from the surface, +Z forward).
 import * as THREE from 'three';
@@ -578,7 +579,7 @@ export class SubSystem {
       if (e.team === it.team || !e.alive || it.tagged.has(e)) continue;
       if (_v.copy(e.pos).setY(e.pos.y + 0.7).distanceTo(it.pos) < s.radius * grow) {
         it.tagged.add(e);
-        this.track(e, it.team, s.trackTime);
+        this.track(e, it.team, s.trackTime, it.pos);   // (from the burst)
       }
     }
     if (it.t >= s.cloudTime) it.state = 'dead';
@@ -781,7 +782,7 @@ export class SubSystem {
       if (e.team === it.team || !e.alive) continue;
       if (_v2.copy(e.pos).setY(e.pos.y + 0.7).distanceTo(c) > s.radius || !G.physics.los(c, _v2)) continue;
       G.projectiles.applyHit(it.owner, e, s.damage, 'mine');
-      this.track(e, it.team, s.trackTime);
+      this.track(e, it.team, s.trackTime, c);   // (from the mine)
     }
     this.damageArea(c, s.radius, 30, it.team);
     it.state = 'dead';
@@ -870,11 +871,15 @@ export class SubSystem {
   }
 
   // ---------------------------------------------------------------------------------------------- effects
-  track(e, team, time) {
+  // `from`: where the mark came from — a point (an Echo Orb's burst, a Lurk Mine, a Tracer's hit) or the actor who
+  // used a special (Deep Sonar) — for the arrow's flight in (statusFx.js; cosmetic: the mark is on at once). Every
+  // mark is heard as actor:marked (fresh, or a refresh of one already on)
+  track(e, team, time, from = null) {
     const st = e.status;
     const fresh = !(st.track > 0 && st.trackTeam === team);
     st.track = Math.max(st.trackTeam === team ? st.track : 0, time); st.trackTeam = team;
     if (fresh) emit('actor:tracked', { actor: e, team });
+    emit('actor:marked', { actor: e, team, from, fresh });
   }
   poison(e, time) {
     const fresh = !(e.status.poison > 0);

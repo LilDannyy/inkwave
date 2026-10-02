@@ -2646,6 +2646,7 @@ export const SFX_GROUPS = {
   Flight: ALERT_GROUPS.Flight,          // sfx-loud: every thrown sub in the air (one def, a voice per kind: params.kind)
   'Special alerts': ALERT_GROUPS.Alerts,   // sfx-loud: launch alerts + the "you're in it" alarm (params.kind)
   'Special stings': ALERT_GROUPS.Stings,   // sfx-loud: someone popped a special
+  Marks: ALERT_GROUPS.Marks,               // track-ribbons: a mark landing (the marking team's chime / chirp), the marked player's evil one, its end
   Match: ['ready', 'go_horn', 'countdown_tick', 'one_minute', 'final_count', 'times_up', 'judge_drumroll', 'judge_reveal', 'victory_fanfare', 'defeat_jingle', 'xp_tick', 'level_up'],
   Zones: ['zone_ours', 'zone_theirs', 'zone_lost', 'zone_broken', 'zone_warn', 'zone_chance', 'zone_penalty', 'zone_shift', 'zone_final',
     'zone_overtime', 'zone_tick', 'zone_flood', 'zone_wipe', 'zone_hum'],
