@@ -68,6 +68,8 @@ export function credit(list, victim = null) {
     a.stats.assists = (a.stats.assists || 0) + 1;
     ASSIST_STATS.credited++;
     emit('assist', { actor: a, victim });
+    // yours: a line in the feed ("Assist on Moxie")
+    if (a.isLocal && victim && G.match && !G.match.attract) G.game?.hud?.feed?.({ text: `Assist on ${victim.name}`, color: G.teamHex?.[a.team] || '#ffffff', kind: 'ally' });
   }
 }
 /** another screen's splat event (net/netmatch.js): its `as` field → this screen's actors */

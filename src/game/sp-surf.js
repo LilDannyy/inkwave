@@ -186,6 +186,22 @@ export class Buoy {
     this.pos.addScaledVector(this.vel, dt);
     const h = G.physics.segment(this.prev, this.pos, _h, true);
     if (h.hit) {
+      const blk = h.block >= 0 ? G.level.blocks[h.block] : null;
+      if (h.normal.y > 0.6 && blk && blk.roof) {
+        // an off-limits top (a roof: nobody stands there) — it slides off toward the nearest edge, as a kid would
+        const n = blk.axes[1], d = _d;
+        if (n.y < 0.995) d.set(n.x, 0, n.z).normalize();
+        else {
+          const ax = blk.axes[0], az = blk.axes[2], dx = h.point.x - blk.center.x, dz = h.point.z - blk.center.z;
+          const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z;
+          if (blk.half.x - Math.abs(lx) < blk.half.z - Math.abs(lz)) d.set(ax.x, 0, ax.z).multiplyScalar(Math.sign(lx) || 1); else d.set(az.x, 0, az.z).multiplyScalar(Math.sign(lz) || 1);
+        }
+        this.pos.copy(h.point).addScaledVector(h.normal, 0.03);
+        const along = this.vel.x * d.x + this.vel.z * d.z;
+        this.vel.set(d.x * Math.max(6, along), 0, d.z * Math.max(6, along));
+        this.look.group.position.copy(this.pos);
+        return true;
+      }
       if (h.normal.y > 0.6) {
         this.pos.copy(h.point);
         if (this.ghost) { this.phase = 'rest'; this.vel.set(0, 0, 0); this.restT = 0; }

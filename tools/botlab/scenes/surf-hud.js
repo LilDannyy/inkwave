@@ -1,6 +1,7 @@
 // Surf N' Turf on the HUD and in the loadout picker, for tools/botlab/hud-shots.cjs:
 //   MAP=halyard MODE=turf PLAY=4 SCENES=tools/botlab/scenes/surf-hud.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
 //   hud      you holding the buoy: the special gauge's icon, the hint line ("Aim · click to throw the buoy"), the arc
+//   live     thrown: the buoy anchored ahead, its rings going out (and on the minimap)
 //   loadout  the loadout picker (the setup screen) with Surf N' Turf picked: its icon, name and blurb
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug;
@@ -12,6 +13,14 @@
       me.specialId = 'surf'; me.special = me.specialCost(); me._startSpecial(); me.aimPitch = 0.2;
       for (let i = 0; i < 40; i++) dbg.step(1000 / 60);
       return { prompt: document.querySelector('.iw-prompt')?.textContent || null, special: me.specialActive?.id };
+    } },
+    { name: 'live', wait: 300, set: async () => {
+      // thrown: the buoy anchored ahead, its rings going out — on screen and on the minimap (both teams see it)
+      const S = await import('./src/game/sp-surf.js');
+      const s = me.specialActive; if (s && s.kind === 'surf') S.IMPL.throwIt(me, s);
+      for (let i = 0; i < 60 * 2.6; i++) dbg.step(1000 / 60);
+      const b = __G.specials.world.find((w) => w.kind === 'surf');
+      return { phase: b && b.phase, rings: b && b.rings.map((r) => r.state + ':' + r.r.toFixed(1)) };
     } },
     { name: 'loadout', wait: 900, set: async () => {
       try { g.api.setLoadout?.({ special: 'surf' }); } catch (e) { /* */ }
