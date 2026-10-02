@@ -870,6 +870,7 @@ class Game {
   // Build the host's match: same stage / time / palette / roster on every client; the intro starts on netMatchGo.
   async startNetMatch(cfg, nm) {
     G.audio?.init?.();
+    this.fadeEl?.querySelector('.iw-swapcard')?.remove();
     this.menus?.show(null);
     await this._fade(1, 350);
     G.music?.stop?.(0.3); this._musicTrack = null;
@@ -923,8 +924,7 @@ class Game {
     const tok = (this._swapTok = (this._swapTok || 0) + 1);
     const card = this.menus?.stageSwapCard?.({ mapId: cfg.map, time: cfg.time, by: (G.net?.lobby?.players || []).find((p) => p.host)?.name });
     if (card && this.fadeEl) { this.fadeEl.querySelector('.iw-swapcard')?.remove(); this.fadeEl.appendChild(card); }
-    const resumeAfter = this.menus?.current === 'pause' || this.menus?.current === 'loadout';
-    if (resumeAfter) this.menus.show(null);
+    if (this.menus?.current === 'pause' || this.menus?.current === 'loadout') this.menus.show(null);   // (everyone heads there now)
     G.audio?.play?.('ui_confirm');
     await this._fade(1, 300);
     if (tok !== this._swapTok || G.net?.match !== nm) return;
@@ -1045,6 +1045,7 @@ class Game {
     this._swapTok = (this._swapTok || 0) + 1;
     this._startTok = (this._startTok || 0) + 1;
     this.inkWipe?.clear(this);
+    this.fadeEl?.querySelector('.iw-swapcard')?.remove();   // (a stage swap cut short)
     if (G.net && G.net.state !== 'offline' && G.net.state !== 'error') G.net.leave();
     this.input.exitLock();
     this.menus?.show(null);

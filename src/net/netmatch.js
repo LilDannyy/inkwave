@@ -90,6 +90,9 @@ export class NetMatch {
     // humans-only stage: anyone who left while the match was loading (no NetMatch yet to hear it) is dropped now
     if (mapNoBots(this.cfg.map)) for (const a of [...this.byNid.values()]) if (a.owner !== this.myId && !this.s._members.has(a.owner)) this._remove(a);
     this.unsubs.push(on('match:state', ({ state, match: m }) => { if (m === this.match && this.isHost) this._sendNow({ k: 'st', s: state, t: r2(m.time) }); }));
+    // (Practice: anyone who dropped in / a bot that made room while this screen was building the stage)
+    for (const d of this._rosterQ || []) { if (d.k === 'pj') this.addActor(d.r); else { const a = this.byNid.get(d.nid); if (a) this._remove(a); } }
+    this._rosterQ = null;
   }
 
   _setupActor(a) {
@@ -253,8 +256,12 @@ export class NetMatch {
       case 'end': if (from === this.s.hostId) G.game?.netMatchEnd?.(); break;
       case 'own': if (from === this.s.hostId) this._ownership(d.map); break;
       // Practice: someone joined mid-session / a bot made room for them (the host's word)
-      case 'pj': if (from === this.s.hostId && (d.g | 0) === this.gen) this.addActor(d.r); break;
-      case 'pr': if (from === this.s.hostId && (d.g | 0) === this.gen) { const a = this.byNid.get(d.nid); if (a) this._remove(a); } break;
+      // (still building this stage: they wait for bind)
+      case 'pj': case 'pr':
+        if (from !== this.s.hostId || (d.g | 0) !== this.gen) break;
+        if (!this.match) { (this._rosterQ || (this._rosterQ = [])).push(d); break; }
+        if (d.k === 'pj') this.addActor(d.r); else { const a = this.byNid.get(d.nid); if (a) this._remove(a); }
+        break;
       // Practice: a late joiner asks the host for the turf; the host's copy arrives in pieces
       case 'inkreq': if (this.isHost) this._sendInk(from, d); break;
       case 'ink': if (from === this.s.hostId) this._gotInk(d); break;
@@ -791,7 +798,9 @@ export class NetMatch {
     this.s.tr.sendTo(this.s.hostId, { k: 'inkreq', g: this.gen });
   }
   _sendInk(to, d) {
-    if ((d.g | 0) !== this.gen || !G.paint?.exportGrid) return;
+    if ((d.g | 0) !== this.gen || !G.paint?.exportGrid || G.netm !== this) return;
+    // (mid-wave the copy would keep ink still ahead of the front: it goes once the wave is over)
+    if (G.paint.wiping) { setTimeout(() => this._sendInk(to, d), 150); return; }
     const x = G.paint.exportGrid(), C = 48000, n = Math.max(1, Math.ceil(x.d.length / C)), id = Math.random().toString(36).slice(2, 8);
     const wc = G.paint._wipeC;
     const head = { k: 'ink', id, n, cells: x.n, g: this.gen, map: this.cfg.map, wipe: [G.paint.wipeK | 0, wc ? r2(wc.cx) : 0, wc ? r2(wc.cz) : 0] };

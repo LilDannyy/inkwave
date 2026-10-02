@@ -170,6 +170,11 @@ export class NetSession {
       this.lobby.players = this.lobby.players.filter((p) => p.id !== o.id);
       for (const p of this.lobby.players) p.host = p.id === this.hostId;
       this.match?.onLeave(o.id, hostChanged);
+      // a new host keeps the room's bot count (for the mode in play; the other kind starts at its default)
+      if (hostChanged && this.isHost && !this._botsPref) {
+        const bc = Number.isInteger(this.lobby.botCount) ? this.lobby.botCount : this.lobby.bots === false ? 0 : -1, pr = this.lobby.mode === 'practice';
+        this._botsPref = { match: pr ? -1 : bc, practice: pr ? bc : 0 };
+      }
       if (hostChanged) this._emit('host', { hostId: this.hostId });
       if (this.isHost) { this._fixTeams(); this._broadcastLobby(); }
       this._emit('leave', { player: gone, reason: 'left' });
