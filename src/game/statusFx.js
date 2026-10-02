@@ -5,19 +5,21 @@
 //              the middle of the player. dont show their name." — then: "everyone on the tracking team should get a line
 //              not just the user. anyone on the tracking team sees the line and the arrow through walls. if im tracked
 //              then i just see arrow on me. if my teammates is getting tracked, i see the arrow but not through walls". So:
-//                · ONE arrow wrapped round them like a label round a can (the user, on the first try's ring of
-//                  chevrons: "its one arrow that is long enough to become a circle around the player. its a 2D arrow
-//                  cylindrical around the player", and after it, with Splatoon 3's Wave Breaker ring for its style: "one
-//                  continuous arrow, but its flat, rolled up like a cylinder, and rotates around the player"): a flat
-//                  ribbon SHAFT_H tall with crisp edges and a lighter rim, a broad barbed head HEAD_H (1.8×) tall with a
-//                  little "8" knocked out of it, a fletched tail (three swept-back feathers a side, a notch in its end) —
-//                  rolled onto an upright cylinder BAND_R round them at waist / chest height, facing out, spanning ARC
-//                  (~312°) so its head nearly meets its own tail; both sides drawn, its inside (the far side) darker;
-//                  unlit, in the TRACKING team's colour (the tracked player's enemy); where it's hidden (the trackers
-//                  see it through walls) it's a see-through fill inside a firm rim. It turns round them the way it
-//                  points (a turn every 2π/SPIN ≈ 2.6 s) and bobs a little. Its size on screen is held: its head at
-//                  least MIN_F of the screen's height far off (it grows), at most MAX_F up close (it shrinks, never
-//                  below S_MIN round the kid);
+//                · ONE arrow wrapped round them like a label round a can — the game's own squid icon (ui-icons.js
+//                  SQUID) turned on its side and stretched out (the user, with Splatoon 3's Wave Breaker ring: "one
+//                  continuous arrow, but its flat, rolled up like a cylinder, and rotates around the player", "make the
+//                  circle closer to the player … notice how its more rounded in Splatoon", "those are eyes of the squid
+//                  icon rotated 90 degrees and lengthened into an arrow"): the squid's mantle is the arrowhead (its
+//                  rounded point the tip, its fins the plump barbs, their backs curving into the shaft), its two eyes
+//                  sit in the head one above the other, its body is the long shaft (round-ended), its four tentacles
+//                  the rounded lobes of the tail. Rolled onto an upright cylinder hugging them at waist / chest height
+//                  (BAND_R, opened out just enough round a long or wide weapon so it never cuts through it), spanning
+//                  ARC (~312°) so the head nearly meets the tail; a soft gradient across its height (darker up top), a
+//                  gloss streak, a lighter rim; both sides drawn, its inside (the far side) darker; unlit, in the
+//                  TRACKING team's colour (the tracked player's enemy); where it's hidden (the trackers see it through
+//                  walls) a see-through fill inside a firm rim. It turns round them the way it points (a turn every
+//                  2π/SPIN ≈ 2.6 s) and bobs a little. Far off it grows (its head at least MIN_F of the screen's
+//                  height); up close it never shrinks;
 //                · who sees what, on each screen (the local player's — StatusFx.viewer in tests / pictures):
 //                    on the TRACKING team   the arrow through walls (a second, occluded pass: GreaterDepth) and a thin
 //                                           line (Line2, LINE_PX screen px) from your chest to the middle of theirs,
@@ -57,18 +59,19 @@ export function statusBits(a) {
   return st ? ((st.track > 0 || st.reveal > 0) ? NET_TRACKED : 0) | (st.poison > 0 ? NET_POISONED : 0) : 0;
 }
 
-// the wrapped arrow (the band)
-export const BAND_R = 1.0, BAND_Y = 0.85;   // round a kid (m): the cylinder's radius, its middle over the feet (a kid is 1.45 tall)
-const SQUID_K = 0.8, BAND_Y_SQ = 0.42;      // … round a squid: that × 0.8, lower
-export const SHAFT_H = 0.26, HEAD_H = 0.47; // the arrow (m): its shaft's height, its head's (1.8×)
-export const ARC = 5.45;                    // rad round the cylinder it spans, notch to tip (~312°)
-const HEAD_LEN = 0.5, NOTCH = 0.1;          // its head's length along the band (barb to tip), its tail's notch (m)
+// the wrapped arrow (the band). Its shape comes from the game's squid icon (64-unit box), U metres a unit
+const U = 0.0098;
+export const BAND_R = 0.62, BAND_Y = 0.85;  // round a kid (m): the cylinder's least radius, its middle over the feet (a kid is 1.45 tall)
+export const ROOM = 0.06;                   // … opened out to a held weapon's reach (within its height) + this
+const RELAX = 4;                            // 1/s: and back in once the weapon's in again
+const SQUID_K = 0.8, BAND_Y_SQ = 0.42;      // round a squid: × 0.8, lower
+export const SHAFT_H = 28 * U;              // the arrow (m): its shaft's height (the icon's body); its head's: HEAD_H, below
+export const ARC = 5.45;                    // rad round the cylinder it spans, tentacle tips to the head's tip (~312°)
 export const SPIN = (2 * Math.PI) / 2.6;    // rad/s round them, the way it points (a turn every 2.6 s)
 const BOB = 0.03, BOB_W = 2.2;              // its bob (m, rad/s)
-export const MIN_F = 0.016, MAX_F = 0.11;   // its head's height on screen, as a share of the screen's height: at least / at most
-export const S_MIN = 0.6;                   // … but up close it never shrinks below this (it stays round the kid)
+export const MIN_F = 0.016;                 // far off: its head's height on screen at least this share of the screen's height
 export const SELF_A = 0.55;                 // on your own kid (the follow view): a little fainter
-const MATE_A = 0.95, XRAY_A = 0.9;          // depth-tested for the tracked player's teammates; its hidden parts for the trackers
+const MATE_A = 1, XRAY_A = 0.9;             // depth-tested for the tracked player's teammates; its hidden parts for the trackers
 const POP = 0.22;                           // s: a fresh one pops in
 // the line (the tracking team's view)
 export const LINE_PX = 1.75, LINE_A = 0.72; // width (screen px), opacity
@@ -86,67 +89,114 @@ const TAU = Math.PI * 2;
 // noAO; on geometry only these use)
 const noAO = (mesh) => { mesh.onBeforeRender = (r, scene, c, geo) => { geo.drawRange.count = scene.overrideMaterial ? 0 : Infinity; }; return mesh; };
 
-// the arrow, one piece: a strip of upright cylinder wall (radius BAND_R, the head's height + a margin) from just behind
-// its tail round ARC to just past its tip, facing out; aSY: metres along it from the tail, metres up from its middle —
-// the shader cuts the arrow out of it. Two groups over the same triangles: its inside (the far side) is drawn first,
-// then its outside, so the near side always lies over the far one
-const BAND_L = ARC * BAND_R, BAND_PAD = 0.04, BAND_N = 120;
+// the arrowhead: the squid icon's mantle — its rounded point, a fin with a round end, the fin's back curving into the body
+// (a fillet), the body down to where the shaft takes over — sampled from the icon's own curves (src/ui/ui-icons.js
+// SQUID), right half (y ≥ 0; the shader mirrors it), turned on its side: metres back from the tip × metres up, closed
+// just under the middle line (so the halves meet without a seam)
+const bz = (pts, n, out) => {
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, u = 1 - t;
+    const w = pts.length === 4 ? [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t] : [u * u, 2 * u * t, t * t];
+    out.push([w.reduce((a, k, j) => a + k * pts[j][0], 0), w.reduce((a, k, j) => a + k * pts[j][1], 0)]);
+  }
+};
+const HEAD_CUT = 40;                        // icon y where the body becomes the shaft (the tip is at y 3)
+const HEAD_ICON = (() => {
+  const o = [[32, 3]];
+  bz([[32, 3], [38.5, 3], [53.5, 13.5], [56.5, 23.5]], 18, o);              // the mantle's side, out to the fin (a little plumper than the icon's)
+  bz([[56.5, 23.5], [58.5, 28], [55.5, 32], [51, 31]], 10, o);              // the fin's round end
+  const c = [46, 29.6], f = [51 - 46, 31 - 29.6], fl = Math.hypot(f[0], f[1]);
+  bz([[c[0] + (f[0] / fl) * 5, c[1] + (f[1] / fl) * 5], c, [46, 34.6]], 9, o);   // the fin's back curving into the body
+  o.push([46, HEAD_CUT]);
+  return o;
+})();
+const HEAD_PTS = [...HEAD_ICON.map(([x, y]) => [-(y - 3) * U, (x - 32) * U]), [-(HEAD_CUT - 3) * U, -0.05], [0, -0.05]];
+export const HEAD_H = 2 * Math.max(...HEAD_PTS.map((p) => p[1]));   // the head's height (m): the fins, ~1.8× the shaft's
+const HEAD_LEN = (HEAD_CUT - 3) * U;        // tip → where the shaft takes over (m)
+
+// the arrow, one piece: a strip of upright cylinder wall (unit radius: the mesh's scale puts it at the band's radius)
+// from just behind the tentacles round ARC to just past the tip, facing out, as tall as the head and tentacles only at
+// the ends (the shaft's height + a margin elsewhere, so it hugs the arrow); aPY: its angle round, metres up from its
+// middle — the shader cuts the arrow out of it (in metres along it: the angle × the radius, so a wider band only
+// lengthens the shaft). Two groups over the same triangles: its inside (the far side) is drawn first, then its outside,
+// so the near side always lies over the far one
+const BAND_PAD = 0.1, BAND_N = 160;
+const TALL_TAIL = 0.42, TALL_HEAD = 0.72;   // rad from each end the strip stands the head's height (the head and tentacles at BAND_R)
 export function bandGeometry() {
-  const H = HEAD_H / 2 + BAND_PAD, s0 = -BAND_PAD, s1 = BAND_L + BAND_PAD;
-  const pos = [], nor = [], sy = [], idx = [];
+  const HT = HEAD_H / 2 + 0.02, HS = SHAFT_H / 2 + 0.02, p0 = -BAND_PAD, p1 = ARC + BAND_PAD;
+  const pos = [], nor = [], py = [], idx = [];
   for (let i = 0; i <= BAND_N; i++) {
-    const sv = s0 + ((s1 - s0) * i) / BAND_N, phi = sv / BAND_R, x = Math.sin(phi), z = Math.cos(phi);
-    for (const y of [-H, H]) { pos.push(x * BAND_R, y, z * BAND_R); nor.push(x, 0, z); sy.push(sv, y); }
+    const phi = p0 + ((p1 - p0) * i) / BAND_N, x = Math.sin(phi), z = Math.cos(phi);
+    const H = phi < TALL_TAIL || phi > ARC - TALL_HEAD ? HT : HS;
+    for (const y of [-H, H]) { pos.push(x, y, z); nor.push(x, 0, z); py.push(phi, y); }
   }
   // (seen from outside, along increases to the right: counter-clockwise from outside)
   for (let i = 0; i < BAND_N; i++) { const b0 = i * 2; idx.push(b0, b0 + 2, b0 + 3, b0, b0 + 3, b0 + 1); }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  g.setAttribute('aSY', new THREE.Float32BufferAttribute(sy, 2));
+  g.setAttribute('aPY', new THREE.Float32BufferAttribute(py, 2));
   g.setIndex(idx);
   g.addGroup(0, idx.length, 0); g.addGroup(0, idx.length, 1);
   return g;
 }
-const f3 = (x) => x.toFixed(4);
+const f4 = (x) => x.toFixed(4), v2s = (p) => `vec2(${f4(p[0])}, ${f4(p[1])})`;
 const BAND_VS = /* glsl */`
-  attribute vec2 aSY; varying vec2 vSY;
-  void main(){ vSY = aSY; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-// the arrow as a distance field (metres along × up): its body one polygon — a notched tail, the shaft, the barbed head —
-// with three feathers a side swept back off the tail and a little "8" knocked out of the head. Unlit: the team colour,
-// a lighter rim along its edges, crisp (smoothed only over a pixel), its inside (the far side) darker
+  attribute vec2 aPY; uniform float uR; varying vec2 vSY;
+  void main(){
+    vSY = vec2(aPY.x * uR, aPY.y);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }`;
+// the squid arrow as a distance field (metres along × up; q mirrors it about the middle line): the mantle polygon, the
+// round-ended shaft, four tentacles (tapered, round-tipped, the outer pair swept out) smoothly joined on. Unlit: the
+// team colour darker toward the top, a gloss streak under the middle, a lighter rim, the mantle's highlight near the
+// tip; the eyes (white, a dark rim, a dark pupil looking ahead) stacked in the head with a clear gap; crisp at any
+// size (each edge smoothed over a pixel, fwidth); its inside (the far side) darker
 const BAND_FS = /* glsl */`
-  uniform vec3 uColor; uniform float uAlpha; uniform float uXray;
+  uniform vec3 uColor; uniform float uAlpha; uniform float uXray; uniform float uR;
   varying vec2 vSY;
-  float sdSeg(vec2 p, vec2 a, vec2 b){ vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)); }
-  float sdPoly(vec2 p, vec2 v[8]){
-    float d = dot(p - v[0], p - v[0]), s = 1.0;
-    for (int i = 0, j = 7; i < 8; j = i, i++) {
-      vec2 e = v[j] - v[i], w = p - v[i], b = w - e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
+  const vec2 HEAD[${HEAD_PTS.length}] = vec2[${HEAD_PTS.length}](${HEAD_PTS.map(v2s).join(', ')});
+  float sdHead(vec2 p){
+    float d = dot(p - HEAD[0], p - HEAD[0]), s = 1.0;
+    for (int i = 0, j = ${HEAD_PTS.length - 1}; i < ${HEAD_PTS.length}; j = i, i++) {
+      vec2 e = HEAD[j] - HEAD[i], w = p - HEAD[i], b = w - e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
       d = min(d, dot(b, b));
-      bvec3 c = bvec3(p.y >= v[i].y, p.y < v[j].y, e.x * w.y > e.y * w.x);
+      bvec3 c = bvec3(p.y >= HEAD[i].y, p.y < HEAD[j].y, e.x * w.y > e.y * w.x);
       if (all(c) || all(not(c))) s *= -1.0;
     }
     return s * sqrt(d);
   }
+  float sdRBox(vec2 p, vec2 c, vec2 h, float r){ vec2 q = abs(p - c) - h + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+  float sdTaper(vec2 p, vec2 a, vec2 b, float ra, float rb){ vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h) - mix(ra, rb, h); }
+  float sdEll(vec2 p, vec2 c, vec2 r){ return (length((p - c) / r) - 1.0) * min(r.x, r.y); }
+  float smin(float a, float b, float k){ float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
+  float fill(float d){ float aa = max(fwidth(d), 1e-4); return 1.0 - smoothstep(-aa, aa, d); }
   void main(){
+    const float U = ${f4(U)}, SH = ${f4(SHAFT_H / 2)}, HH = ${f4(HEAD_H / 2)}, HL = ${f4(HEAD_LEN)};
     vec2 p = vSY, q = vec2(p.x, abs(p.y));
-    const float L = ${f3(BAND_L)}, HB = ${f3(BAND_L - HEAD_LEN)}, SH = ${f3(SHAFT_H / 2)}, HH = ${f3(HEAD_H / 2)};
-    // the body: notch → tail corner → along the shaft → barb → tip → barb → back along the shaft → tail corner
-    vec2 v[8];
-    v[0] = vec2(${f3(NOTCH)}, 0.0); v[1] = vec2(0.0, -SH); v[2] = vec2(HB + 0.04, -SH); v[3] = vec2(HB - 0.07, -HH);
-    v[4] = vec2(L, 0.0); v[5] = vec2(HB - 0.07, HH); v[6] = vec2(HB + 0.04, SH); v[7] = vec2(0.0, SH);
-    float d = sdPoly(p, v);
-    // the fletching: three feathers a side, swept back and out off the tail
-    for (int k = 0; k < 3; k++) { float a = 0.13 + 0.12 * float(k); d = min(d, sdSeg(q, vec2(a, SH * 0.4), vec2(a - 0.1, HH - 0.045)) - 0.034); }
-    // the "8" knocked out of the head
-    vec2 e = p - vec2(HB + 0.13, 0.0);
-    d = max(d, -(min(abs(length(e - vec2(0.0, 0.044)) - 0.036), abs(length(e + vec2(0.0, 0.044)) - 0.036)) - 0.011));
-    float aa = max(fwidth(d), 1e-4);
-    float a = 1.0 - smoothstep(-aa, aa, d);
+    float L = ${f4(ARC)} * uR;                                      // the tip
+    // the shaft (the squid's body, stretched; round-ended), on under the head; the head where it is
+    float d = sdRBox(p, vec2((0.1 + L - HL + 0.25) * 0.5, 0.0), vec2((L - HL + 0.25 - 0.1) * 0.5, SH), 0.06);
+    if (p.x > L - HL - 0.06) d = min(d, sdHead(vec2(p.x - L, q.y)));
+    // the tentacles: the inner pair straight back, the outer pair swept out; tapered, round-tipped
+    float t = min(sdTaper(q, vec2(0.17, 3.2 * U), vec2(0.17 - 14.0 * U, 4.4 * U), 4.0 * U, 3.3 * U),
+                  sdTaper(q, vec2(0.17, 9.0 * U), vec2(0.17 - 12.0 * U, 13.5 * U), 4.2 * U, 3.4 * U));
+    d = smin(d, t, 0.025);
+    float a = fill(d);
     if (a < 0.004) discard;
-    float rim = 1.0 - smoothstep(0.0, 0.03, -d);
-    vec3 c = mix(uColor, mix(uColor, vec3(1.0), 0.42), rim) * (0.9 + 0.1 * smoothstep(-HH, HH, p.y));
+    // its colour: darker toward the top, a gloss streak under the middle, a lighter rim, the mantle's highlight
+    vec3 c = uColor * (1.12 - 0.5 * clamp((p.y + HH) / (2.0 * HH), 0.0, 1.0));
+    c += 0.16 * exp(-pow((p.y + 0.32 * SH) / (0.3 * SH), 2.0));
+    float rim = 1.0 - smoothstep(0.0, 0.022, -d);
+    c = mix(c, vec3(1.0), 0.4 * rim);
+    vec2 hp = vec2(p.x - L, p.y);
+    float hs = length(hp - vec2(-10.0 * U, -7.0 * U) - clamp(dot(hp - vec2(-10.0 * U, -7.0 * U), vec2(4.8, 6.5) * U) / dot(vec2(4.8, 6.5) * U, vec2(4.8, 6.5) * U), 0.0, 1.0) * vec2(4.8, 6.5) * U);
+    c = mix(c, vec3(1.0), 0.35 * (1.0 - smoothstep(0.6 * U, 2.0 * U, hs)));
+    // the eyes: white, a dark rim, a dark pupil looking ahead; one above the other with a clear gap
+    vec2 ec = vec2(L - 33.0 * U, 6.6 * U);
+    float eo = sdEll(q, ec, vec2(5.4, 4.3) * U), ew = eo + 0.9 * U, ep = sdEll(q, ec + vec2(1.1, -0.7) * U, vec2(3.0, 2.4) * U);
+    vec3 ink = vec3(0.007, 0.006, 0.011);
+    c = mix(c, ink, fill(eo)); c = mix(c, vec3(0.93, 0.94, 0.97), fill(ew)); c = mix(c, ink, fill(ep));
     if (!gl_FrontFacing) c *= 0.6;   // its inside: the far side, darker
     // seen through something (the trackers' hidden-part pass): a see-through fill inside a firm rim
     a *= mix(1.0, mix(0.45, 1.0, 1.0 - smoothstep(0.0, 0.05, -d)), uXray);
@@ -195,6 +245,49 @@ const PART_FS = /* glsl */`
 let _seed = 0x2f6b1a3;
 const rnd = () => ((_seed = (Math.imul(_seed, 1664525) + 1013904223) >>> 0) / 4294967296);
 const _p = new THREE.Vector3(), _c = new THREE.Vector3(), _f = new THREE.Vector3(), _s = new THREE.Vector3(), _e = new THREE.Vector3();
+// a sample of a geometry's vertices (local: every few, and its extremes along each axis — a barrel's muzzle, a
+// canopy's rim), cached per geometry (made again if its positions change)
+const _samples = new WeakMap(), _stack = [];
+function samplesOf(geo) {
+  const P = geo.attributes.position;
+  let e = _samples.get(geo);
+  if (e && e.ver === P.version) return e.v;
+  const n = P.count, keep = new Set(), step = Math.max(1, Math.floor(n / 256));
+  for (let i = 0; i < n; i += step) keep.add(i);
+  for (let k = 0; k < 3; k++) {
+    let lo = 0, hi = 0;
+    for (let i = 1; i < n; i++) { const x = P.getComponent(i, k); if (x < P.getComponent(lo, k)) lo = i; if (x > P.getComponent(hi, k)) hi = i; }
+    keep.add(lo); keep.add(hi);
+  }
+  const v = new Float32Array(keep.size * 3);
+  let j = 0;
+  for (const i of keep) { v[j++] = P.getX(i); v[j++] = P.getY(i); v[j++] = P.getZ(i); }
+  _samples.set(geo, (e = { v, ver: P.version }));
+  return v;
+}
+// the furthest (squared, horizontally from cx, cz) any visible rigid mesh under `root` reaches between heights y0 … y1
+function reachUnder(root, cx, cz, y0, y1) {
+  if (!root) return 0;
+  root.updateWorldMatrix(true, true);
+  let best = 0;
+  const st = _stack;
+  st.length = 0;
+  for (const o of root.children) st.push(o);
+  while (st.length) {
+    const o = st.pop();
+    if (!o.visible) continue;
+    for (const k of o.children) st.push(k);
+    if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || !o.geometry?.attributes?.position) continue;
+    const v = samplesOf(o.geometry), m = o.matrixWorld.elements;
+    for (let i = 0; i < v.length; i += 3) {
+      const x = v[i], y = v[i + 1], z = v[i + 2], wy = m[1] * x + m[5] * y + m[9] * z + m[13];
+      if (wy < y0 || wy > y1) continue;
+      const wx = m[0] * x + m[4] * y + m[8] * z + m[12] - cx, wz = m[2] * x + m[6] * y + m[10] * z + m[14] - cz;
+      if (wx * wx + wz * wz > best) best = wx * wx + wz * wz;
+    }
+  }
+  return best;
+}
 const easeOutBack = (x) => { const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
 
 export class StatusFx {
@@ -227,17 +320,22 @@ export class StatusFx {
     // the arrow: one strip, drawn depth-tested — and for the trackers once more where something stands in front of it
     // (first, so the depth-tested draw lies over it where it's in sight)
     const geo = this.bandGeo || (this.bandGeo = bandGeometry());
-    const col = { value: new THREE.Color() };
+    const col = { value: new THREE.Color() }, rad = { value: BAND_R };
     const mk = (xray) => {
-      const u = { uColor: col, uAlpha: { value: 0 }, uXray: { value: xray ? 1 : 0 } };
+      const u = { uColor: col, uAlpha: { value: 0 }, uXray: { value: xray ? 1 : 0 }, uR: rad };
       const mat = (side) => new THREE.ShaderMaterial({ uniforms: u, vertexShader: BAND_VS, fragmentShader: BAND_FS, transparent: true, depthWrite: false, side, depthFunc: xray ? THREE.GreaterDepth : THREE.LessEqualDepth });
-      const m = noAO(new THREE.Mesh(geo, [mat(THREE.BackSide), mat(THREE.FrontSide)]));
+      // (the depth-tested arrow's near side stands in the GTAO normal / depth pass — the strip hugs the arrow — so its
+      // pixels take their ambient occlusion from it, none, not from whatever's behind it: a wall's edge, the kid's body
+      // would darken across it. The far side, the strip's inside facing away, is culled there; the hidden-part pass
+      // stays out: noAO)
+      const m = new THREE.Mesh(geo, [mat(THREE.BackSide), mat(THREE.FrontSide)]);
+      if (xray) noAO(m);
       m.frustumCulled = false; m.visible = false; m.renderOrder = xray ? 6 : 7;
       return m;
     };
     const band = mk(false), bandX = mk(true);
     this.scene.add(band, bandX);
-    r = { a, band, bandX, line: null, on: false, t0: 0, team: -1, form: 0, spin: 0, size: 1, from: new THREE.Vector3(), to: new THREE.Vector3(), emit: 0, poisoned: false };
+    r = { a, band, bandX, line: null, on: false, t0: 0, team: -1, form: 0, spin: 0, size: 1, R: BAND_R, reach: 0, from: new THREE.Vector3(), to: new THREE.Vector3(), emit: 0, poisoned: false };
     this.recs.set(a, r);
     return r;
   }
@@ -258,7 +356,7 @@ export class StatusFx {
       let r = this.recs.get(a);
       if (team >= 0) {
         r = r || this._rec(a);
-        if (!r.on || r.team !== team) { r.on = true; r.t0 = this.time; r.team = team; r.band.material[0].uniforms.uColor.value.copy(G.teamColors[team]); }
+        if (!r.on || r.team !== team) { r.on = true; r.t0 = this.time; r.team = team; r.R = BAND_R; r.band.material[0].uniforms.uColor.value.copy(G.teamColors[team]); }
         this._band(r, a, dt, me, vt, cam);
         bands++; if (r.bandX.visible) xray++;
         // the line: on the tracking team's screens (whoever threw), from your kid while you're up
@@ -290,25 +388,40 @@ export class StatusFx {
     r.spin = (r.spin + SPIN * dt) % TAU;
     const age = this.time - r.t0, pop = Math.min(1, age / POP);
     _c.set(_p.x, _p.y + Y, _p.z);
-    const s = cam ? this._clamp(_c, cam, HEAD_H * k0) : 1;
+    const s = cam ? this._grow(_c, cam, HEAD_H * k0) : 1;   // (far off it grows; up close it never shrinks)
     r.size = s;
-    const sc = k0 * s * (0.6 + 0.4 * easeOutBack(pop));
-    const y = _c.y + Math.sin(this.time * BOB_W) * BOB * Math.min(s, 1.5);
-    for (const m of [r.band, r.bandX]) { m.position.set(_c.x, y, _c.z); m.rotation.y = r.spin; m.scale.setScalar(sc); }
+    const sc = k0 * s, y = _c.y + Math.sin(this.time * BOB_W) * BOB * Math.min(s, 1.5);
+    // its radius: BAND_R round the kid, or out past whatever's in their hands within the band's height (a charger's
+    // barrel, an open brolly, a blade's swing) by ROOM — at once — and back in when it's in again
+    const hh = (HEAD_H / 2) * sc + 0.02;
+    r.reach = this._reach(a, _c.x, _c.z, y - hh, y + hh);
+    const want = Math.max(BAND_R, (r.reach + ROOM) / sc);
+    r.R = want > r.R ? want : r.R + (want - r.R) * Math.min(1, dt * RELAX);
+    const sy = sc * (0.35 + 0.65 * easeOutBack(pop));   // (popping in: it grows to its height)
+    for (const m of [r.band, r.bandX]) { m.position.set(_c.x, y, _c.z); m.rotation.y = r.spin; m.scale.set(r.R * sc, sy, r.R * sc); }
+    const u = r.band.material[0].uniforms;
+    u.uR.value = r.R;
     const fade = Math.min(1, age / (POP * 0.6));
     r.band.visible = true;
-    r.band.material[0].uniforms.uAlpha.value = fade * (self ? SELF_A : xray ? 1 : MATE_A);
+    u.uAlpha.value = fade * (self ? SELF_A : xray ? 1 : MATE_A);
     r.bandX.visible = xray;
     r.bandX.material[0].uniforms.uAlpha.value = fade * XRAY_A;
   }
-  // the scale that holds something `h` tall at `c` between MIN_F and MAX_F of the screen's height (its depth along the
-  // view), never below S_MIN
-  _clamp(c, cam, h) {
+  // far off: the scale that keeps something `h` tall at `c` at least MIN_F of the screen's height (its depth along the
+  // view); up close nothing shrinks
+  _grow(c, cam, h) {
     cam.getWorldDirection(_f);
     const th = Math.tan((cam.fov * Math.PI) / 360) / (cam.zoom || 1);
     const z = Math.max(cam.near || 0.1, (c.x - cam.position.x) * _f.x + (c.y - cam.position.y) * _f.y + (c.z - cam.position.z) * _f.z);
     const f = h / (2 * z * th);
-    return Math.max(S_MIN, f < MIN_F ? MIN_F / f : f > MAX_F ? MAX_F / f : 1);
+    return f < MIN_F ? MIN_F / f : 1;
+  }
+  // how far from (cx, cz) whatever's in their hands reaches between the heights y0 … y1 (a sample of each mesh's
+  // vertices, their extremes among them: samplesOf)
+  _reach(a, cx, cz, y0, y1) {
+    const b = a.form === 'squid' ? null : a.character?.bones;
+    if (!b) return 0;
+    return Math.sqrt(Math.max(reachUnder(b.handR, cx, cz, y0, y1), reachUnder(b.handL, cx, cz, y0, y1)));
   }
   // the tracking team's line: your chest → theirs, through walls, in your colour
   _line(r, a, me) {
