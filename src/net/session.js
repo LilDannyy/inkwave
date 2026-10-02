@@ -426,7 +426,7 @@ export class NetSession {
     while (used.has(slot)) slot++;
     const r = { nid: nm.nextNid(), owner: id, bot: false, team, slot, name: p.name, weapon: WEAPONS[p.weapon] ? p.weapon : 'shooter', sub: subOf(p.sub), special: specialOf(p.special), style: p.style || null };
     nm.addActorNet(r);
-    this.tr?.sendTo(id, { ...this._startCfg, k: 'start', roster: nm.liveRoster(), late: 1 });
+    this.tr?.sendTo(id, { ...this._startCfg, k: 'start', roster: nm.liveRoster(), late: 1, pods: m.pods?.netSnapshot?.() || undefined });
     if (p.team !== team) { p.team = team; this._broadcastLobby(); }
     this._emit('practice', { phase: 'join', id, name: p.name });
   }

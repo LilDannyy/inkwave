@@ -70,6 +70,8 @@ export class NetMatch {
     this.gen = cfg.gen | 0;
     this.inkWait = 0;
     this._ink = null;
+    this.stageSync = null;                       // Practice: the host's stage clock ({ t, at }: stageKit StageClock)
+    this.podsPending = cfg.late && Array.isArray(cfg.pods) ? cfg.pods : null;   // a late joiner's copy of the pods
   }
 
   get isHost() { return this.s.isHost; }
@@ -224,7 +226,12 @@ export class NetMatch {
     if (this.isHost && boss && boss.sim) { this.bossN = (this.bossN || 0) + 1; msg.B = boss.pack(this.bossN % 10 === 0); }
     if (this.isHost && this.match) {
       this.clockT -= TICK;
-      if (this.clockT <= 0) { this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time)]; }
+      if (this.clockT <= 0) {
+        this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time)];
+        // (Practice: no match clock — the stage clock instead: movers' timetables, pods' growth)
+        const st = this.practice ? (this.match.movers?.clock?.t ?? this.match.pods?.clock?.t) : undefined;
+        if (st !== undefined) msg.c.push(r3(st));
+      }
     }
     this.stats.out++;
     this.s.tr?.broadcast(msg);
@@ -684,9 +691,18 @@ export class NetMatch {
   }
 
   // ---- host clock / state / result --------------------------------------------------------------------------------------
-  _hostClock([state, time]) {
+  _hostClock([state, time, st]) {
     const m = this.match;
     if (!m || this.isHost) return;
+    if (this.practice && st !== undefined) {
+      this.stageSync = { t: st, at: now() };
+      // a late joiner: the pods the session has grown so far, replayed once our stage clock is the host's
+      if (this.podsPending && m.pods) {
+        for (const c of [m.movers?.clock, m.pods?.clock]) if (c) c.t = st;
+        for (const e of this.podsPending) { try { m.pods.netEvent(e); } catch (err) { console.warn('[net] pods snapshot', err); } }
+        this.podsPending = null;
+      }
+    }
     if (state === 'playing' && m.state === 'playing' && Math.abs(m.time - time) > 0.2) m.time += (time - m.time) * 0.5;
   }
   _hostState(d) {
