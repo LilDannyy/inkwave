@@ -62,8 +62,10 @@ export const DANGER = {
 };
 export const STING_IDS = ['slam', 'storm', 'barrage', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab'];
 export const ALERT_IDS = ['strike', 'orb', 'slam', 'storm', 'barrage', 'twister', 'shell', 'stamp', 'wail', 'kraken', 'jet'];
+export const MARK_IDS = ['mark_team', 'mark_chirp', 'mark_you', 'mark_over'];
 export const ALERT_GROUPS = {
   Flight: ['sub_flight'],
+  Marks: MARK_IDS,
   Alerts: [...ALERT_IDS.map((k) => 'alert_' + k), 'danger'],
   Stings: STING_IDS.map((k) => 'sting_' + k),
 };
@@ -244,6 +246,50 @@ export function defineAlertSounds(def, L) {
       v.nz({ f: 2400 * p, f1: 1300 * p, sw: 0.3, q: 5, a: 0.02, d: 0.25, peak: 0.25 });
     },
   });
+
+  /* ================================================================================================ the mark */
+  // track-ribbons (2026-10-02, the user: "when you mark an user, play a quick audible sound for the whole team. if you
+  // get marked, play that noise but an evil version of it, and a similar distorted out when it's over"). One motif — a
+  // quick zip up into two chime notes a fifth apart — three ways: mark_team (the marking team's: bright, glassy),
+  // mark_you (the marked player's: down an octave and more, a tritone for the fifth, detuned saws through a drive, a
+  // growl under it, darker and longer), mark_over (theirs when it ends: the same grit winding down, falling notes, the
+  // last one sagging like a tape stopping). mark_chirp: one more target in the same go, a quick bright blip.
+  def('mark_team', { gain: 0.9, max: 3, jitter: 0, reverb: 0.22, build(v, p) {
+    const T = v.t, out = v.filter('lowpass', 7000, 0.7, v.out);
+    v.tone({ f: 900 * p, f1: 2300 * p, sw: 0.06, a: 0.002, d: 0.07, peak: 0.24, to: out });   // the zip
+    v.nz({ ft: 'bandpass', f: 3000, f1: 6500, q: 2.5, a: 0.002, d: 0.06, peak: 0.1, to: out });
+    for (const [t, m, pk] of [[0.06, 88, 0.42], [0.14, 95, 0.36]]) {   // E6 → B6
+      bell(v, T + t, mtof(m) * p, pk, { d: 0.3, ratio: 2, index: 0.45 });
+      v.tone({ t, type: 'triangle', f: mtof(m) * p, a: 0.002, d: 0.16, peak: pk * 0.45, to: out });
+    }
+  } });
+  def('mark_chirp', { gain: 1.1, max: 6, jitter: 0, reverb: 0.2, minGap: 0.01, build(v, p) {
+    v.tone({ f: 1600 * p, f1: 2800 * p, sw: 0.035, a: 0.002, d: 0.05, peak: 0.24 });
+    bell(v, v.t + 0.03, mtof(100) * p, 0.26, { d: 0.14, ratio: 2, index: 0.4 });   // E7
+  } });
+  def('mark_you', { gain: 0.24, max: 2, jitter: 0, reverb: 0.3, build(v, p) {
+    const T = v.t, lp = v.filter('lowpass', 1500, 1.2, v.out), bus = v.gain(0.5, v.shaper(4, lp));
+    // the zip, low and gritty
+    const zg = v.gain(0, bus); pts(zg.gain, T, [[0, 0], [0.01, 0.5], [0.09, 0.3], [0.12, 0]]);
+    for (const dt of [-14, 14]) { const o = v.osc('sawtooth', 160 * p, T, T + 0.13, zg); o.detune.value = dt; sweep(o.frequency, T, 160 * p, 330 * p, 0.1); }
+    // E4 → A#4 (a tritone): detuned saw triples, a slow swell, longer
+    for (const [t, m, d] of [[0.1, 64, 0.22], [0.24, 70, 0.42]]) {
+      const g = v.gain(0, bus); pts(g.gain, T + t, [[0, 0], [0.012, 0.55], [d * 0.6, 0.4], [d, 0]]);
+      for (const dt of [-17, 0, 19]) { const o = v.osc('sawtooth', mtof(m) * p, T + t, T + t + d + 0.02, g); o.detune.value = dt; }
+    }
+    // a growl under it
+    v.tone({ t: 0.1, f: 82 * p, f1: 62 * p, sw: 0.5, a: 0.01, d: 0.5, peak: 0.35 });
+    v.nz({ kind: 'brown', ft: 'lowpass', f: 500, a: 0.01, d: 0.4, peak: 0.15 });
+  } });
+  def('mark_over', { gain: 0.28, max: 2, jitter: 0, reverb: 0.3, build(v, p) {
+    const T = v.t, lp = v.filter('lowpass', 1700, 1.1, v.out), bus = v.gain(0.5, v.shaper(3.5, lp));
+    // B4 → G4 → D#4, each droopier; the last sags like a tape stopping
+    for (const [t, m, d, sag] of [[0, 71, 0.13, 0.97], [0.12, 67, 0.14, 0.95], [0.25, 63, 0.45, 0.5]]) {
+      const g = v.gain(0, bus); pts(g.gain, T + t, [[0, 0], [0.01, 0.5], [d * 0.7, 0.35], [d, 0]]);
+      for (const dt of [-15, 15]) { const o = v.osc('sawtooth', mtof(m) * p, T + t, T + t + d + 0.02, g); o.detune.value = dt; sweep(o.frequency, T + t, mtof(m) * p, mtof(m) * p * sag, d); }
+    }
+    v.nz({ t: 0.25, kind: 'brown', ft: 'lowpass', f: 400, f1: 120, sw: 0.4, a: 0.02, d: 0.4, peak: 0.12 });
+  } });
 
   /* ================================================================================================ activation stings */
   const motif = (v, notes, o = {}) => {

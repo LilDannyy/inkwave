@@ -36,6 +36,14 @@
 //     and its devices' own loops (a sprinkler spinning, a curtain dripping, a
 //     beacon's hum, a murk cloud's hiss), ends and uses stay as a teammate's. Specials, their stings and alerts are
 //     unchanged. (Cue calls from a sub carry o.sub: sub() sets it; kits' own one() calls and the loops below pass it.)
+//   - the mark (track-ribbons, 2026-10-02, the user: "when you mark an user, play a quick audible sound for the whole
+//     team. if you get marked, play that noise but an evil version of it, and a similar distorted out when it's over"):
+//     statusFx.js's mark:on / mark:off (a player marked / no longer, alive — every screen's own, online too: each one
+//     marks the players its subs touch, and the owner's word comes in with the actor tick). Everyone on the marking team
+//     hears mark_team the moment it lands (yours or a teammate's: the one exception to the teammates'-subs rule above),
+//     once a go — more targets within MARK_GO s (a Deep Sonar, an Echo Orb catching three) add mark_chirp, layered tight,
+//     not more chimes; a refresh of a mark that's on is no new mark (no sound). The marked player hears mark_you (the
+//     same motif made evil) and, when it ends (not splatted), mark_over. 2D, through the cue bus (MIX.mark).
 //   - caps: at most MAX.move moving loops and MAX.warn warning loops at once (the backdrop: fewer); the rest wait,
 //     ranked warnings first, the enemy's first, then by closeness (distance to the listener, and to you for threats).
 //   - Doppler-ish: each positional loop's pitch × 1 / (1 − v_r / 55) (clamped 0.84 … 1.22) and level × (1 + v_r / 40)
@@ -70,7 +78,11 @@ export const MIX = {
   warn: { own: 0.91, ally: 0.91, foe: 1.29, none: 0.35, allySub: 0 },
   alert: { own: 0, ally: 0, foe: 1.2, none: 0, allySub: 0 },
   sting: { own: 0, ally: 0.5, foe: 1, none: 0, allySub: 0 },
+  // the mark (track-ribbons): heard from you (UI-level, 2D), under the enemy's special warnings and alerts — the marking
+  // team's chime (and a chirp for each more target in the same go), the marked player's evil one, theirs when it's over
+  mark: { team: 0.85, chirp: 0.95, you: 0.95, over: 0.85 },
 };
+export const MARK_GO = 0.5;      // s: marks this close together are one go (one chime, then chirps)
 // the panner's reference distance per cue class (m): full level inside it, the inverse roll-off beyond. Ordinary sounds
 // use 3; cues carry further so a throw 10 m off, a fuse 6 m off, a jet across the lane are heard over a fight and the
 // music (blasts keep their own: they're loud already). A launch alert carries across the lane; a sting across the map
@@ -215,6 +227,26 @@ export class Cues {
     on('special:use', ({ actor, id }) => { this._sting(actor, id); if (id === 'slam' || id === 'storm') this._start(actor, id); });
     on('special:end', ({ actor, id, reason }) => { if (id === 'kraken' && actor?.alive && reason !== 'splat') this.one('kraken_off', { at: actor.pos, owner: actor, kind: 'end' }); });
     on('storm:end', ({ pos, team, actor }) => this.one('storm_fade', { at: pos, team, owner: actor, kind: 'end', range: 50 }));
+    this._markT = -9; this._markN = 0;
+    on('mark:on', ({ actor, team }) => this._mark(actor, team));
+    on('mark:off', ({ actor, splat }) => { const me = this._me(); if (me && actor === me && !splat && me.alive) this._markPlay('mark_over', MIX.mark.over); });
+  }
+
+  // ------------------------------------------------------------------------------------------------ the mark
+  _mark(actor, team) {
+    const me = this._me();
+    if (!me) return;
+    if (actor === me) this._markPlay('mark_you', MIX.mark.you);
+    if (team === me.team && actor.team !== me.team) {
+      if (G.time - this._markT > MARK_GO) { this._markT = G.time; this._markN = 0; this._markPlay('mark_team', MIX.mark.team); }
+      else if (this._markN < 4) { this._markN++; this._markPlay('mark_chirp', MIX.mark.chirp, 1 + 0.07 * this._markN, 0.06 * this._markN); }
+    }
+  }
+  _markPlay(name, vol, pitch = 1, delay = 0) {
+    const A = G.audio;
+    if (!A || !A.ctx) return null;
+    if (this.log) this.log.push({ t: G.time, name, kind: 'mark', rel: 'you' });
+    return A.play(name, { volume: vol * lv(name), pitch, delay, cue: true });
   }
 
   // ------------------------------------------------------------------------------------------------ mix helpers

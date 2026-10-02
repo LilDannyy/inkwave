@@ -246,6 +246,24 @@ The voices are kept apart (render.cjs, the fingerprint distance — larger is le
 round 1, are ≥ 2.06): launch alerts closest 2.65, alarms 2.35, stings 1.94, flights 1.89, every warning (the subs',
 the specials', the alerts, the alarms) against every other ≥ 2.27.
 
+## The mark (track-ribbons, 2026-10-02)
+
+The user: "when you mark an user, play a quick audible sound for the whole team. if you get marked, play that noise but
+an evil version of it, and a similar distorted out when it's over". One motif — a quick zip up into two chime notes a
+fifth apart — three ways, 2D, through the cue bus (src/audio/cues.js `MIX.mark`, from statusFx.js's mark:on / mark:off):
+
+| Sound | Who hears it | What it is | In-game level (render.cjs, LUFS-M) |
+|---|---|---|---|
+| `mark_team` | everyone on the marking team, whoever threw it, once a go | the zip and the chime, E6 → B6, bright, glassy | −17.3 |
+| `mark_chirp` | the same, for each more target in the go (≤ 4), 60 ms apart, rising | a quick bright blip | −24 |
+| `mark_you` | the marked player | down an octave and more, a tritone for the fifth, detuned saws through a drive, a growl | −15.5 |
+| `mark_over` | the marked player, when it ends (not splatted) | the same grit winding down, the last note sagging | −17.9 |
+
+(For comparison at the same levels: the Vortex Strike's launch alert −7.9, the Cheer Orb's −12.5, Deep Sonar's sting
+−16.7, the Echo Orb's burst −16.1.) A refresh of a mark that's on plays nothing. The listening file: render.cjs with
+`ONLY=mark_team,mark_chirp@1.07,…` — `tools/botlab/sfx/out/marks.wav` (git-ignored) has the chime, a Deep Sonar's go
+(the chime + three chirps), the evil one and "over".
+
 ## Tests
 
 - `tools/botlab/sfx/realflow.cjs` (trusted input through the real menus): the families above with their bars; every
