@@ -413,8 +413,8 @@ class Game {
       // the clear-all-ink wave (offline practice, or the host of an online one): false when it can't go now
       practiceClearInk: () => self.practiceClearInk(),
       // online Practice (the host): another stage without going back to the lobby / back to the lobby for everyone
-      practiceSwapStage: (map, time) => !!(self._inPractice() && G.netm && G.net?.isHost && G.net.practiceSwap?.({ map, time })),
-      practiceEnd: () => { if (self._inPractice() && G.netm && G.net?.isHost) { G.netm.sendEnd(); self.netMatchEnd(); } },
+      practiceSwapStage: (map, time) => !!(self._inPractice() && self._roomPractice() && G.net?.isHost && G.net.practiceSwap?.({ map, time })),
+      practiceEnd: () => { if (self._inPractice() && self._roomPractice() && G.net?.isHost) { G.netm?.sendEnd(); self.netMatchEnd(); } },
       leaveRoom: () => self.quitToMenu('online'),
       resumeMatch: () => self.resume(),
       // online results: the host can take the room back to the lobby without waiting out the timer
@@ -705,11 +705,13 @@ class Game {
     opts.duration = opts.mode === 'zones' ? (o.duration || ZONES.duration) : opts.mode === 'tower' ? (o.duration || TOWER.duration) : opts.mode === 'boss' ? (o.duration || BOSS_MODE.duration)
       : Math.min(MATCH.maxDuration, o.duration || this.settings.matchLength || MATCH.defaultDuration);
     if (!practice) this.lastMatchOpts = opts;
+    const tok = (this._startTok = (this._startTok || 0) + 1);   // (a later start / quit while this one builds wins)
     G.audio?.init?.();
     G.audio?.unduck?.(); G.audio?.pauseLoops?.(false);   // a new stage picked from the practice pause menu starts un-ducked, loops live
     this.input.requestLock();
     this.menus?.show(null);
     await this._fade(1, 350);
+    if (tok !== this._startTok) return;
     G.music?.stop?.(0.3); this._musicTrack = null;
     // start buffering this round's match song and the final-minute song while the world loads
     G.music?.preload?.('battle'); if (!practice) G.music?.preload?.('battle_final');
@@ -725,8 +727,10 @@ class Game {
     }
     if (opts.mode === 'boss' && !mapBossOk(map.id)) opts.mode = 'turf';
     await this._buildWorld(map, opts.mode);   // no-op when this stage (+ mode variant) is already built
-    const theme = mapTheme(map, opts.time);
-    this.time = opts.time === 'dusk' ? 'dusk' : 'day';
+    if (tok !== this._startTok) return;
+    // (a mock room's practice picks the look itself, like a real room: roomTheme)
+    const theme = o.mockRoom ? roomTheme(map, opts.time) : mapTheme(map, opts.time);
+    this.time = opts.time === 'dusk' || opts.time === 'sunset' ? 'dusk' : 'day';
     if (theme !== this.theme || G.env.lookStale) {   // (lookStale: a stage with its own look — layout.env — came or went)
       this.theme = theme;
       G.env.setTheme?.(theme);
@@ -740,14 +744,16 @@ class Game {
       attract: false, practice, duration: opts.duration, mode: opts.mode, difficulty: opts.difficulty, weapon: this.profile.weapon || 'shooter', sub: this._subFor(this.profile.weapon), special: this._specialFor(this.profile.weapon),
       playerName: this.profile.name || 'Player', CharacterClass: this.CharacterClass, rig: this.rig, input: this.input,
       autopilot: params.has('autopilot'), style: this.profile.style || null, noBots: mapNoBots(map.id),   // (devstage: a solo walk)
+      mockRoom: !!o.mockRoom,
     }));
     m.setup();
     await this._warmCharacters(m);
+    if (tok !== this._startTok) { if (this.match === m) { m.dispose(); this.match = G.match = null; this._startAttract(); } return; }
     this.minimap.setViewerTeam(0);
     G.mode = 'match';
     this.hud?.setVisible(false);
     this.hudPrompt = null; this._hintT = 0; this._hints = {};
-    this.hud?.setPractice?.(practice);
+    this.hud?.setPractice?.(practice && o.mockRoom ? { online: true, code: G.net?.code } : practice);
     m.start();
     if (practice) {
       // no intro fly-over: straight in, special charged so it can be tried right away
@@ -758,13 +764,22 @@ class Game {
   }
 
   _inPractice() { return !!(this.match && this.match.practice && G.mode === 'match'); }
+  // a room's Practice: 'net' (online), 'mock' (?netmock=1: a solo practice dressed as the room's), else null (offline)
+  _roomPractice() { return !this._inPractice() ? null : G.netm ? 'net' : this.match.opts.mockRoom && G.net?.isMock ? 'mock' : null; }
   _practiceInfo() {
     if (!this._inPractice()) return null;
-    const a = this.match.local, n = G.net, online = !!G.netm;
-    return { map: this.mapDef.name, mapId: this.mapDef.id, time: online ? G.netm.cfg.time : this.time, weapon: a?.weaponId, sub: a?.subId, special: a?.specialId,
-      online, host: online ? !!n?.isHost : true, code: online ? n?.code : null, wiping: !!G.paint?.wiping,
-      players: online ? this.match.actors.map((x) => ({ name: x.name, team: x.team, weapon: x.weaponId, bot: !!x.isBot, isSelf: !!x.isLocal, alive: x.alive, host: !x.isBot && x.owner === n?.hostId,
-        ping: (n?.lobby?.players || []).find((p) => p.id === x.owner && !x.isBot)?.ping || 0 })) : null };
+    const a = this.match.local, n = G.net, kind = this._roomPractice(), online = !!kind;
+    const players = kind === 'net'
+      ? this.match.actors.map((x) => ({ name: x.name, team: x.team, weapon: x.weaponId, bot: !!x.isBot, isSelf: !!x.isLocal, alive: x.alive, host: !x.isBot && x.owner === n?.hostId,
+        ping: (n?.lobby?.players || []).find((p) => p.id === x.owner && !x.isBot)?.ping || 0 }))
+      : kind === 'mock' ? (n.lobby?.players || []).map((p) => ({ name: p.name, team: p.team | 0, weapon: p.you ? a?.weaponId : p.weapon, bot: false, isSelf: !!p.you, alive: true, host: !!p.host, ping: p.ping || 0 })) : null;
+    return { map: this.mapDef.name, mapId: this.mapDef.id, time: kind === 'net' ? G.netm.cfg.time : kind === 'mock' ? n.lobby?.live?.time : this.time, weapon: a?.weaponId, sub: a?.subId, special: a?.specialId,
+      online, host: online ? !!n?.isHost : true, code: online ? n?.code : null, wiping: !!G.paint?.wiping, players };
+  }
+  // ?netmock=1: the mock room's Practice — your own practice on the room's stage, shown as the room's
+  startMockPractice(live) {
+    if (!G.net?.isMock || !live) return null;
+    return this.startMatch({ mapId: live.map, time: live.time, practice: true, mockRoom: true });
   }
 
   // Practice: the clear-all-ink wave, from where you stand (the stage's centre while you're splatted). Offline it's just
@@ -773,7 +788,7 @@ class Game {
   practiceClearInk() {
     const P = G.paint;
     if (!this._inPractice() || !P || P.wiping || this.match.state !== 'playing') return false;
-    if (G.netm && !G.net?.isHost) return false;
+    if (this._roomPractice() && !G.net?.isHost) return false;   // (a room's: the host's call)
     const now = performance.now();
     if (now < (this._wipeCdT || 0)) return false;
     const a = this.match.local, B = G.level.bounds;
@@ -796,7 +811,7 @@ class Game {
   }
   _clearInkKey() {
     if (this.practiceClearInk()) return;
-    const why = G.netm && !G.net?.isHost ? 'Only the host can clear the ink' : G.paint?.wiping ? null : 'Clear ink is recharging';
+    const why = this._roomPractice() && !G.net?.isHost ? 'Only the host can clear the ink' : G.paint?.wiping ? null : 'Clear ink is recharging';
     if (why) this.menus?.toast?.(why, { icon: null });
   }
 
@@ -868,7 +883,9 @@ class Game {
     if (this.match) this.match.dispose();
     G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks(); this.inkWipe?.clear(this);
     const map = MAPS.find((m) => m.id === cfg.map) || MAPS[0];
+    const gone = () => !!G.net && G.net.match !== nm;   // (the room ended / moved on while this stage was building)
     await this._buildWorld(map, cfg.mode);   // no-op when this stage (+ mode variant) is already built
+    if (gone()) return null;
     // (a room picks the look itself: day / golden hour / sunset — 'dusk' from older clients is sunset)
     const theme = roomTheme(map, cfg.time);
     this.time = cfg.time === 'dusk' || cfg.time === 'sunset' ? 'dusk' : 'day';
@@ -887,6 +904,7 @@ class Game {
     }));
     m.setup();
     await this._warmCharacters(m);   // before 'ready': nobody starts until every shader a squidkid can use is compiled
+    if (gone()) { if (this.match === m) { m.dispose(); this.match = G.match = null; this._startAttract(); } return null; }
     nm.bind(m);
     this.lastMatchOpts = null;
     this.minimap.setViewerTeam(m.local ? m.local.team : 0);
@@ -911,9 +929,8 @@ class Game {
     await this._fade(1, 300);
     if (tok !== this._swapTok || G.net?.match !== nm) return;
     const t0 = performance.now();
-    await this._netStage(cfg, nm);
-    if (tok !== this._swapTok || G.net?.match !== nm) return;
-    const m = this.match;
+    const m = await this._netStage(cfg, nm);
+    if (!m || tok !== this._swapTok || G.net?.match !== nm) return;
     m.start();                                   // (Practice: straight to playing)
     if (m.local) m.local.special = m.local.specialCost();
     this.hud?.setVisible(true);
@@ -957,6 +974,7 @@ class Game {
       this.hud?.hideSplatted?.();
       this.showcase.hide();
       G.mode = 'menu';
+      this._startTok = (this._startTok || 0) + 1;
       G.net?.endMatch();
       this.inkWipe?.clear(this);
       this.hud?.setPractice?.(false);
@@ -1025,6 +1043,7 @@ class Game {
   async quitToMenu(screen = 'main') {
     clearTimeout(this._netEndT);
     this._swapTok = (this._swapTok || 0) + 1;
+    this._startTok = (this._startTok || 0) + 1;
     this.inkWipe?.clear(this);
     if (G.net && G.net.state !== 'offline' && G.net.state !== 'error') G.net.leave();
     this.input.exitLock();
