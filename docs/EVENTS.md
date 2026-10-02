@@ -19,6 +19,8 @@ screen-FX modules should subscribe to these instead of editing gameplay code.
 | `match:state` | `{ state, match }` ('intro','playing','finish','judge','results') | match.js |
 | `match:oneminute` / `match:count` | `{}` / `{ n }` | match.js |
 | `actor:<name>` | `{ actor, surface, ...data }` — re-emitted from `character.onEvent(name, data)`; surface 0 dry · 1 own ink · 2 enemy ink | actor.js wiring |
+| `actor:added` | `{ actor }` — online Practice: someone dropped into the running session (`{k:'pj'}`) | net/netmatch.js addActor |
+| `actor:loadout` | `{ actor }` — online Practice: a remote squidkid's new loadout landed (`['lo' …]`) | net/netmatch.js |
 
 ## To add
 | event | payload |

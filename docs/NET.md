@@ -1,7 +1,9 @@
 # Online play — session contract (`G.net`)
 
-Private rooms with a 5-character code, up to 8 players (4 v 4, empty slots optionally filled with bots). The room
-creator is the **host**: their browser runs the bots, the match clock and the final judge. Every player simulates their
+Private rooms with a 5-character code, up to 8 players (4 v 4, as many bots as the host asks for in the empty slots). The
+room creator is the **host**: their browser runs the bots, the match clock and the final judge. Besides the four match
+modes a room can play **Practice**: no clock, no score — everyone plays on the host's stage until the host ends it,
+swapping loadouts, clearing the ink and changing stage as they go (see *Practice* below). Every player simulates their
 own squidkid locally (instant controls) and streams it to the others, who render it through the same animation system
 as a local character, interpolated ~100 ms behind. Ink is replicated splat-for-splat from whoever painted it, so every
 screen shows the same turf.
@@ -18,7 +20,13 @@ G.net.hostId
 G.net.isHost     // boolean
 G.net.error      // last error message (string) or null
 G.net.lobby = {
-  map: 'tidewater', time: 'day' | 'dusk', duration: 180, bots: true, difficulty: 'normal', mode: 'turf' | 'zones' | 'tower' | 'boss',
+  map: 'tidewater' | 'random',                 // 'random': the host rolls one from the mode's stages at the start
+  time: 'day' | 'golden' | 'sunset' | 'random', // the look itself (config roomTheme); 'dusk' from older clients = 'sunset'
+  duration: 180, difficulty: 'normal',
+  mode: 'turf' | 'zones' | 'tower' | 'boss' | 'practice',
+  botCount: -1 | 0..7,                          // -1 = fill every empty spot (a match's default; Practice starts at 0)
+  bots: true,                                   // (older clients) true when there will be any bots
+  live: null | { mode: 'practice', map, time, gen },   // the Practice session running right now (joiners drop in)
   players: [{ id, name, team: 0 | 1, weapon, sub, special, style, ready, host, you, ping }],   // stable order: join order
   maxPlayers: 8,
 }
@@ -28,21 +36,30 @@ await G.net.create(name)          // → code; state goes connecting → lobby (
 await G.net.join(code, name)      // rejects with Error('Room not found' | 'Room is full' | 'Match in progress' | 'Could not connect')
 G.net.leave()                     // back to 'offline'
 G.net.setMe({ name, weapon, sub, special, style, ready, team })   // any subset; team: 0 | 1 | 'auto'
-G.net.setSettings({ map, time, duration, bots, difficulty, mode })   // host only (Zone Control always runs 5:00 + overtime)
-G.net.canStart()                  // host: true when everyone present is ready (host counts as ready)
+G.net.setSettings({ map, time, duration, botCount, difficulty, mode })   // host only (Zone Control always runs 5:00 + overtime)
+                                  //   botCount: -1 | 'fill' | 0..7; `bots: true | false` (older clients) = fill / none
+G.net.botPlan()                   // → { total, team: [onA, onB], free }: the bots the room gets as it stands (config roomBotPlan)
+G.net.canStart()                  // host: true when everyone present is ready (host counts as ready; Practice: no ready-up)
 G.net.start()                     // host only → state 'starting' for everyone, then 'match'
+G.net.practiceSwap({ map, time }) // host, mid-Practice: everyone moves to another stage / look in place ('random' allowed)
+G.net.practicing                  // a Practice session is running (state 'match', cfg.practice)
 G.net.emote(name)                 // 'booyah' | 'wave' | 'dance' | 'flex' — shown on your lobby character for everyone
 G.net.on(event, fn) → unsubscribe
 //   'state'  { state }                 any state change
 //   'lobby'  { lobby }                 settings / players changed (fires after join / leave / setMe / setSettings)
 //   'join'   { player }                'leave' { player, reason }       'host' { hostId }   (host migrated)
 //   'emote'  { id, name }              'error'  { message }
-//   'match'  { phase: 'start' | 'end' }  match launched / ended (results shown, then everyone returns to 'lobby')
+//   'match'  { phase: 'start' | 'end', late }  match launched / ended (results shown, then everyone returns to 'lobby')
+//   'practice' { phase: 'join' | 'swap', … }  host: someone dropped into the session / everyone: a stage swap began
 ```
 
 Rules the UI can rely on:
 - `lobby.players` always contains you (`you: true`) while in a room; the host is `host: true`.
 - Teams are kept balanced by the host (≤ 4 per team). `setMe({ team })` is a request; the host may refuse.
+- Bots: `botCount` of them (all the free spots for -1), split so the teams come out as even as they can (≤ 4 a side);
+  Boss Battle is one squad of up to 8. A humans-only stage (config `noBots`) forces 0 (the host's own count comes back
+  on the next stage); 'random' never rolls a humans-only stage the room couldn't start on or that would turn away the
+  bots asked for.
 - `start()` launches the match on every client; the menus should hide themselves when `state === 'match'` (main.js
   also does it). When the match's results finish, everyone returns to the lobby screen with `state === 'lobby'`.
 - A player leaving mid-match is replaced by a bot on the same actor; if the host leaves, the room migrates to the next
@@ -50,6 +67,44 @@ Rules the UI can rely on:
 - Your locker look (`profile.style`) and loadout (`profile.weapon`, `.sub`, `.special`; a null sub / special means the
   weapon's own) are sent automatically on join; call `setMe` again when they change in the lobby. Bots get a random sub /
   special about half the time, as offline.
+
+## Practice
+
+`mode: 'practice'` in the lobby. The start config is a turf stage with `practice: 1` and `gen: 0` (Match `practice`: no
+intro, no clock, no judge, no results); the teams come from the lobby, the host's bots are normal bots, and the relay
+room is **not** locked. The session runs until the host ends it (`{k:'end'}`, the same as after a match's results →
+everyone back in the lobby; the room stays). Pausing never freezes anything (as in any online match): the pause menu,
+and the `L` loadout overlay, just take your hands off the controls while they're up.
+- **Loadouts** (`L`, or the pause menu): applied at once (main.js `_applyPracticeLoadout`), recorded on the owner's
+  timeline as `['lo', nid, weapon, sub, special]` — every screen swaps the kit in that squidkid's hands — and sent to the
+  lobby (`setMe`), so a late joiner and the next match see it.
+- **Clear all ink** (host: pause menu or `K`): the host numbers the wave (`paint.wipeK + 1`) and records
+  `['w', k, cx, cz, dur, reach]` on its timeline (from where it stands, ≈ 1.2–2 s to cross the stage); every screen runs
+  `paint.startWipe` with those numbers: a front sweeping out flat from (cx, cz) that clears every grid cell / atlas texel it
+  passes (src/world/paint.js), dressed by src/fx/inkWipeFx.js and the level shader (a shimmering front and curtain, the
+  old ink boiling off behind it, steam, the whoosh-and-fizz). Ink painted behind the front stays; ink ahead goes when the
+  front gets there. Splat records carry their painter's **wave tag** (`[wave, its front radius then]`, 9999 once over:
+  record fields 14–15); a screen replaying one holds it until its own front has got as far (or its wave has started),
+  then draws it with the ring between the painter's front and its own masked off (the wave already passed there for
+  the painter); a splat from before a wave its painter hadn't heard of is "before" it. So each cell is cleared or inked
+  by the same rule everywhere, whatever order the wave and the splats arrive in (tools/botlab/tests/ink-wipe.js: three
+  screens with their waves behind / ahead of the painter's end with its exact grid).
+- **Swap stage** (host, pause menu): `practiceSwap` broadcasts `{k:'pswap', …cfg, map, time, roster, gen: gen + 1}`:
+  the live roster (current loadouts, owners after any handoff; bots dropped on a humans-only stage). Every screen
+  disposes its NetMatch, makes the new generation's (so the others' first ticks there queue), and rebuilds in place
+  behind a stage card (main.js `practiceSwapStage`, the world build is serialised); everyone starts at their team's pad.
+  Ticks carry `g` (the generation): a peer's ticks from the stage before are ignored.
+- **Joining mid-session**: the relay lets anyone in (not locked). The host, on the joiner's first `me`, drops it in on
+  the side with fewer players (a full side's bot makes room: `{k:'pr', nid, g}` to everyone), tells everyone
+  `{k:'pj', r, g}` (its roster entry: it spawns at its pad) and sends the joiner `{…cfg, k:'start', roster: live roster,
+  late: 1}` — no countdown, straight in. Once its stage is built the joiner asks for the turf (`{k:'inkreq', g}`); the
+  host answers with `paint.exportGrid()` — the gameplay grid run-length encoded, a few KB — in `{k:'ink', id, i, n,
+  cells, g, map, wipe: [k, cx, cz], d}` pieces of ≤ 48 000 chars (well under the relay's 64 KB cap, ≤ 4 per 120 ms: its
+  rate limit). The joiner's event playback waits for it (≤ 8 s), `importGrid` takes the grid and stamps it into the atlas
+  (a rounded box per run of cells: the gameplay edge exact, the drawn one a little blockier than a live splat's) along
+  with the wave count, then everything painted since plays on top.
+- **Leaving**: a player who leaves mid-practice is gone (not handed to a bot); the host's bots move to the new host, who
+  gets the host's controls (clear ink, swap stage, end practice) — the pause menu rebuilds itself when that happens.
 
 ## How the netcode works (src/net/netmatch.js)
 
@@ -122,7 +177,16 @@ and fills its own players' gauges. The start config carries `mode: 'tower'` and 
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime
 without waking the room; a sweep drops sockets silent for 10 s during a match (150 s in the lobby).
 
-**Testing.** `node tools/net-test.mjs` (game on :8490, `cd server && npx wrangler dev --port 8787`) plays real headless
+**Testing without wrangler.** `tools/botlab/relay.cjs` is the relay's protocol on plain Node `http` (the WebSocket
+handshake and framing by hand: welcome / join / leave / err, `b|` / `s|`, lock, `ping` → `pong`, MSG_MAX, the rate limit,
+the liveness sweep — it also admits the desktop app's own origin, app://inkwave). `tools/botlab/netpage.cjs` runs several
+game clients as offscreen windows of one Electron instance (each its own session / profile) against it, driven by a test
+script: `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-practice.cjs tools/botlab/run.sh
+tools/botlab/netpage.cjs` (Practice end to end: settings, start, loadouts, the wave, swaps, a late joiner, a guest
+leaving, host migration, the end), `…/net-turf.cjs` (a match with a bot count through results back to the lobby),
+`…/net-mock.cjs` with `CLIENTS=1 Q0='netmock=1&mockauto=0'` (the offline stand-in). Nothing touches the deployed relay.
+
+`node tools/net-test.mjs` (game on :8490, `cd server && npx wrangler dev --port 8787`) plays real headless
 clients against the local relay and reports consistency (clock, coverage, rosters, results) and what is drawn:
 per-frame "kink" and path error of every remote squidkid against its owner's own frames.
 `--clients 3 --leave host --drop kill|freeze` tests migration, `--full` plays through results back to the lobby,
