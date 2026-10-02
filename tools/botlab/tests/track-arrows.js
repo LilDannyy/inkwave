@@ -163,7 +163,8 @@
           if (!ch) continue;
           if (on[i] > 200 && on[i + 1] > 200 && on[i + 2] > 200) white[k] = 1; else if (on[i] < 25 && on[i + 1] < 25 && on[i + 2] < 25) dark[k] = 1;
         }
-        // connected white blobs (4-neighbour flood fill), biggest two
+        // connected white blobs (4-neighbour flood fill), biggest two (a third white blob only counts against it in the
+        //  eyes' column: the gloss streak and its sparkle can catch a few white pixels elsewhere on the head)
         const lab = new Int32Array(Wd * Hd), blobs = [];
         for (let k = 0; k < Wd * Hd; k++) {
           if (!white[k] || lab[k]) continue;
@@ -178,7 +179,7 @@
         const eyes = { blobs: blobs.length, sizes: blobs.slice(0, 3).map((b2) => b2.n), stacked: !!(e1 && e2) && Math.abs((e1.x0 + e1.x1) - (e2.x0 + e2.x1)) / 2 < 6, gapPx: e1 && e2 ? Math.max(e1.y0, e2.y0) - Math.min(e1.y1, e2.y1) - 1 : null, pupils: e1 && e2 ? [pupil(e1), pupil(e2)] : null };
         cam.position.copy(keep.p); cam.quaternion.copy(keep.q); cam.fov = keep.fov; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
         R('…the squid\'s eyes sit in its head: straight on, two white eyes one above the other with a clear gap (not an 8), each with a dark pupil',
-          e1 && e2 && e2.n > e1.n * 0.6 && e2.n > 40 && (blobs[2] ? blobs[2].n < e2.n * 0.2 : true) && eyes.stacked && eyes.gapPx >= 3 && eyes.pupils[0] > 5 && eyes.pupils[1] > 5, eyes);
+          e1 && e2 && e2.n > e1.n * 0.6 && e2.n > 40 && !blobs.slice(2).some((b2) => b2.n >= e2.n * 0.2 && Math.abs((b2.x0 + b2.x1) - (e1.x0 + e1.x1)) / 2 < 6) && eyes.stacked && eyes.gapPx >= 3 && eyes.pupils[0] > 5 && eyes.pupils[1] > 5, eyes);
       }
       // where it sits: round the foe at waist / chest height, the tracking team's colour, near-opaque
       const at = { dx: r3(r.band.position.x - p0.x), dz: r3(r.band.position.z - p0.z), y: r2(r.band.position.y - p0.y), scale: r3(r.band.scale.y), size: r3(r.size), team: r.team,
