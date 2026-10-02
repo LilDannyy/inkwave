@@ -15,6 +15,10 @@
 //     yours and your team's mix ~3 dB under the enemy's;
 //   - sub-tweaks: the Skitter / Waddle wind up before they burst (their own warning at the windup: seeker_prime /
 //     waddle_prime), the Lurk Mine's trip alarm leads its blast by its 0.45 s windup;
+//   - the mark (track-ribbons, 2026-10-02): everyone on the marking team — whoever threw it — hears mark_team once a go
+//     (2D, under the special alerts' level; more targets in the go: mark_chirp, not more chimes), the marked player
+//     mark_you and, when it ends (not splatted), mark_over; the marked player's teammates hear none of them; a refresh
+//     of a mark that's on is silent;
 //   - teammates' subs (2026-10-01): a teammate's thrown Splat Bomb / Skitter Bomb makes no throw, flight, landing, fuse
 //     or windup sound, its blast at 0.6 × the enemy's; its devices' own loops (a sprinkler spinning) stay.
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sfx-cues.js tools/botlab/run.sh tools/botlab/page.cjs
@@ -649,6 +653,50 @@
   }
 
   // ================================================================================== pause / the end / a quit
+  if (want('marks', 'marks')) {
+    // each screen as one player: the local player swapped in (the director hears with G.match.local's ears)
+    const as = (who, fn) => { const m0 = m.local, g0 = G.local; m.local = who; G.local = who; try { return fn(); } finally { m.local = m0; G.local = g0; } };
+    const names = ['mark_team', 'mark_chirp', 'mark_you', 'mark_over'];
+    const heard = (t0) => { const o = {}; for (const r of plays(t0)) if (names.includes(r.n)) (o[r.n] = o[r.n] || []).push(r); return o; };
+    const count = (h) => Object.fromEntries(names.map((n) => [n, (h[n] || []).length]));
+    const M = F[0], E3 = B[2];
+    // one mark (your Echo Orb on E), heard on four screens: yours (you threw it), your teammate's (didn't), E's (marked),
+    // E2's (E's teammate)
+    const res = {};
+    for (const [who, label] of [[me, 'thrower'], [M, 'teammate'], [E, 'marked'], [E2, 'markedMate']]) {
+      reset(); place(E, 0, 2); place(E2, 6, 8); place(M, -6, -6);
+      as(who, () => {
+        const t0 = G.time;
+        G.subs._throw(me, SUBS.scan, new (me.pos.constructor)(0, 1.6, 2), new (me.pos.constructor)(0, -1, 0), false);
+        step(1.2);
+        const h = heard(t0);
+        res[label] = { ...count(h), twoD: (h.mark_team || h.mark_you || []).every((r) => r.pos === null), vol: r2(((h.mark_team || h.mark_you || [])[0] || {}).vol || 0) };
+        // a refresh while it's on: silent
+        const t1 = G.time; G.subs.track(E, me.team, 6, E.pos.clone()); step(0.3); res[label].refresh = Object.values(count(heard(t1))).reduce((a, b) => a + b, 0);
+        // it runs out: the marked player hears it go
+        const t2 = G.time; E.status.track = 0.05; E.status.reveal = 0; step(0.5); res[label].over = count(heard(t2)).mark_over;
+      });
+    }
+    R('marks: your Echo Orb marks a foe — you and your teammate (who didn\'t throw it) each hear the chime once (2D); the marked foe hears the evil version, its teammate nothing; a refresh is silent; the mark running out plays "over" for the marked foe only',
+      res.thrower.mark_team === 1 && res.teammate.mark_team === 1 && res.thrower.mark_you === 0 && res.teammate.mark_you === 0 && res.thrower.twoD && res.teammate.twoD
+      && res.marked.mark_you === 1 && res.marked.mark_team === 0 && res.marked.twoD && res.markedMate.mark_team + res.markedMate.mark_you + res.markedMate.mark_over === 0
+      && [res.thrower, res.teammate, res.marked, res.markedMate].every((x) => x.refresh === 0) && res.marked.over === 1 && res.thrower.over === 0 && res.teammate.over === 0 && res.markedMate.over === 0, res);
+    // one go, several marks: Deep Sonar (all four foes at once) and an Echo Orb catching three — one chime, a chirp per extra target
+    reset(); B.forEach((b, i) => place(b, -6 + i * 4, 4));
+    let t0 = G.time; start(me, 'sonar'); step(0.5);
+    const sonar = count(heard(t0));
+    reset(); place(E, -0.8, 2); place(E2, 0.8, 2.4); place(E3, 0, 3.2);
+    t0 = G.time; G.subs._throw(me, SUBS.scan, new (me.pos.constructor)(0, 1.6, 2.5), new (me.pos.constructor)(0, -1, 0), false); step(1.2);
+    const orb3 = { ...count(heard(t0)), marked: [E, E2, E3].filter((x) => x.status.track > 0).length };
+    R(`…one go marking several plays the chime once with a chirp per extra target: Deep Sonar on ${B.length} (1 + ${B.length - 1}), an Echo Orb catching three (1 + 2)`,
+      sonar.mark_team === 1 && sonar.mark_chirp === B.length - 1 && orb3.marked === 3 && orb3.mark_team === 1 && orb3.mark_chirp === 2, { sonar, orb3 });
+    // the marked player splatted: no "over"; and the levels: under the enemy's special alerts
+    reset(); place(E, 0, 2);
+    const sp = as(E, () => { G.subs.track(E, me.team, 6, E.pos.clone()); step(0.2); const t = G.time; E.splat(me, 'weapon'); step(0.6); const h = count(heard(t)); E.respawn(); return h; });
+    const lvl = { team: r2(MIX.mark.team * lvOf('mark_team')), you: r2(MIX.mark.you * lvOf('mark_you')), over: r2(MIX.mark.over * lvOf('mark_over')), alert: r2(MIX.alert.foe), warn: r2(MIX.warn.foe) };
+    R('…splatted while marked: no "over"; and the mark sounds sit under the enemy\'s special alerts and warnings (the cue bus)',
+      sp.mark_over === 0 && Math.max(lvl.team, lvl.you, lvl.over) < Math.min(lvl.alert, lvl.warn), { splatted: sp, lvl });
+  }
   if (want('pause', 'life')) {
     reset(); place(E, 0, 3); E.setSub('sprinkler'); lob(E, 0, -4, SUBS.sprinkler.throwSpeed); G.subs.use(E, SUBS.sprinkler);
     step(1.2);
