@@ -682,6 +682,9 @@
 .iw-prow__turf small { font: 800 var(--fs-xs) / 1 'Rubik', sans-serif; opacity: .7; }
 .iw-prow__turfbar { position: absolute; right: 0; bottom: calc(var(--u) * -.45); width: 100%; height: calc(var(--u) * .28); border-radius: 999px; background: var(--tc); transform-origin: right; transform: scaleX(var(--t)); opacity: .75; }
 .iw-prow__n { text-align: center; font: 400 calc(var(--u) * 1.35) / 1 'Titan One', sans-serif; }
+/* assists after the splats in small type ("5 +3": src/game/assists.js), kept inside the splats column */
+.iw-prow__n.has-as { white-space: nowrap; letter-spacing: -.02em; }
+.iw-prow__as { margin-left: .1em; font: 800 calc(var(--u) * .74) / 1 'Rubik', sans-serif; opacity: .8; vertical-align: .22em; }
 .iw-prow.is-self { background: rgba(var(--tc-rgb), .3); box-shadow: inset 0 0 0 2px var(--tc), 0 3px 0 rgba(0, 0, 0, .3); }
 .iw-res__foot { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 2); margin-top: auto; }
 .iw-xp { display: flex; align-items: center; gap: calc(var(--u) * 1.4); width: min(calc(var(--u) * 50), 48vw); padding: calc(var(--u) * .85) calc(var(--u) * 1.5); }

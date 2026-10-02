@@ -639,7 +639,7 @@ export class NetMatch {
     if (!a || !a.remote) return;
     const near = a._nearCamera();
     switch (name) {
-      case 'splatted': this._remoteSplat(e.victim, e.attacker, e.cause); return;
+      case 'splatted': this._remoteSplat(e.victim, e.attacker, e.cause, e.as); return;
       case 'respawn': this._remoteRespawn(a); return;
       case 'actor:jump':
         if (near) G.audio?.play(e.swim ? 'swim_splash' : 'jump', { pos: a.pos, volume: 0.6 });
@@ -662,8 +662,9 @@ export class NetMatch {
     emit(name, e);
   }
 
-  _remoteSplat(victim, attacker, cause) {
+  _remoteSplat(victim, attacker, cause, as) {
     if (!victim || !victim.alive) return;
+    G.assists?.creditPacked(as, this.byNid, victim);   // (assists: judged by the victim's owner — src/game/assists.js)
     victim.alive = false; victim.hp = 0;
     victim.respawnTimer = PLAYER.respawnTime;
     victim.stats.deaths++;
@@ -723,12 +724,12 @@ export class NetMatch {
     this._sendNow({ k: 'res', cov: result.coverage, win: result.winner, mode: result.mode, bo: result.boss,
       ...(result.mode === 'zones' ? { zc: result.counts, zp: result.penalty, zr: result.reason, zo: result.overtime ? 1 : 0, zl: result.log } : {}),
       ...(result.mode === 'tower' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),
-      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0]) });
+      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0]) });
   }
   _result(d) {
     const m = this.match;
     if (!m || this.isHost) return;
-    for (const [nid, turf, splats, deaths, bossDmg, weakHits] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } } }
+    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; } }
     if (d.mode !== 'boss') m.time = 0;   // (a boss win stops the clock where it was)
     m.result = d.mode === 'boss' ? { mode: 'boss', coverage: d.cov, winner: d.win, boss: d.bo }
       : d.mode === 'zones' ? { mode: 'zones', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, penalty: d.zp, overtime: !!d.zo, log: d.zl || [] }

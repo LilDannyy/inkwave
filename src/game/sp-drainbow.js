@@ -238,11 +238,12 @@ class Drainbow {
     this.look.dispose();
     this.in.clear();
   }
-  // the minimap (specials.js drawMap): its footprint in its team's colour, a rainbow rim turning
-  drawMap(c, mm, tc, s, hex, t) {
+  // the minimap (specials.js drawMap: col its team's colour): its footprint in that colour, a rainbow rim turning
+  drawMap(c, mm, tc, s, col, t) {
     if (this.popT >= 0) return;
     mm.toCanvas(this.pos.x, this.pos.z, tc);
-    const r = Math.max(2, this.radius() * s), col = hex[this.team] || '#fff';
+    const r = Math.max(2, this.radius() * s);
+    col = col || '#fff';
     c.globalAlpha = 0.24; c.fillStyle = col; c.beginPath(); c.arc(tc.x, tc.y, r, 0, TAU); c.fill(); c.globalAlpha = 1;
     c.lineWidth = 2.5;
     for (let k = 0; k < 6; k++) {

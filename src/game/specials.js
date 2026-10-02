@@ -397,6 +397,7 @@ export class SpecialSystem {
   prompt(a) {
     const s = a.specialActive;
     if (!s) return null;
+    { const f = IMPL[s.kind]?.prompt; if (f) return f.call(this, a, s); }   // (registered specials: registerSpecial)
     switch (s.kind) {
       case 'barrage': return `${s.def.name}! Throw ${s.bomb.name}s with RMB / E — no ink needed`;
       case 'strike': return s.aiming ? 'Move the mouse to pick a spot · click to launch' : null;
@@ -410,7 +411,7 @@ export class SpecialSystem {
       case 'zipcaster': return s.hang > 0 ? 'Clinging — SPACE to jump off' : 'RMB / E to zip to a wall';
       case 'crab': return s.roll ? 'Rolling (release SHIFT to stop)' : 'LMB gatling · RMB cannon · hold SHIFT to roll';
     }
-    return IMPL[s.kind]?.prompt?.call(this, a, s) ?? null;   // (registered specials: registerSpecial)
+    return null;
   }
 
   // ---------------------------------------------------------------------------------------------- damage + hits
@@ -449,6 +450,7 @@ export class SpecialSystem {
   // projectile segment against special objects (bubbles: any team). true = absorbed
   shotHit(prev, pos, team, dmg, owner) {
     for (const w of this.world) {
+      if (w.hitShot) { if (!w.dead && w.hitShot(prev, pos, team, dmg, owner)) return true; continue; }   // (own hit tests: sp-surf's buoy)
       if (w.kind !== 'bubble' || w.dead) continue;
       Physics.segmentCapsuleDist(prev, pos, _v.copy(w.pos).setY(w.pos.y - w.r * 0.5), w.r * 0.5, w.r, _res);
       if (_res.dist < w.r * 0.95) { this._bubbleHit(w, team, dmg, owner); return true; }
@@ -458,6 +460,7 @@ export class SpecialSystem {
   rayHit(from, dir, len, team, dmg, owner) {
     let best = len, hitB = null;
     for (const w of this.world) {
+      if (w.hitRay) { if (!w.dead) best = Math.min(best, w.hitRay(from, dir, best, team, dmg, owner)); continue; }   // (own hit tests)
       if (w.kind !== 'bubble' || w.dead) continue;
       _v.copy(w.pos).sub(from);
       const t = _v.dot(dir);
@@ -472,6 +475,7 @@ export class SpecialSystem {
   }
   areaHit(c, radius, dmg, team, owner) {
     for (const w of this.world) {
+      if (w.hitArea) { if (!w.dead) w.hitArea(c, radius, dmg, team, owner); continue; }   // (own hit tests)
       if (w.kind !== 'bubble' || w.dead) continue;
       if (w.pos.distanceTo(c) < radius + w.r * 0.8) this._bubbleHit(w, team, dmg * 1.5, owner || null);
     }
@@ -620,7 +624,7 @@ export class SpecialSystem {
         const r = (w.phase === 'fuse' ? SPECIALS.booyah.radius * clamp(w.t / SPECIALS.booyah.fuse, 0.2, 1) : 1) * s;
         c.globalAlpha = 0.35; c.fillStyle = col; c.beginPath(); c.arc(tc.x, tc.y, r, 0, TAU); c.fill(); c.globalAlpha = 1;
         c.lineWidth = 2; c.strokeStyle = '#ffffff'; c.stroke();
-      } else if (w.drawMap) w.drawMap(c, mm, tc, s, hex, t, me);   // (registered specials' objects draw themselves)
+      } else w.drawMap?.(c, mm, tc, s, col, t, me);   // (registered specials' world objects draw themselves)
     }
     // the local player's strike cursor
     const a = G.local;
@@ -2165,11 +2169,11 @@ const GHOST = {
   },
 };
 
-// A special that lives in its own module (e.g. src/game/sp-drainbow.js) registers its behaviour here: impl — the IMPL
-// hooks (start, tick, body, move, weapon, end, prompt); ghost — the GHOST hooks for other players' screens (start,
-// tick, event: its [4, …] records). Its world objects go in SpecialSystem.world like the built-in ones (update(dt) →
-// false when done, dispose(), optional drawMap(c, mm, tc, s, hex, t, viewerTeam)).
-export function registerSpecial(kind, impl, ghost) { IMPL[kind] = impl; if (ghost) GHOST[kind] = ghost; }
+// Specials living in modules of their own (src/game/sp-*.js: Surf N' Turf, Drainbow) register their IMPL hooks (start,
+// tick, weapon, end, prompt …) and their GHOST ones (start, tick, event: their [4, …] moments) here; their world objects
+// go in SpecialSystem.world (update / dispose, and optional hitShot / hitRay / hitArea / drawMap hooks) and travel online
+// through their special's records or their own kit records (kits/registry.js KIT_GHOSTS)
+export function registerSpecial(kind, impl, ghost = null) { IMPL[kind] = impl; if (ghost) GHOST[kind] = ghost; }
 
 // the owner's special pose state beyond the actor tick (packActor) → the ghost's (applyRemote)
 export function specialNetState(a) {
