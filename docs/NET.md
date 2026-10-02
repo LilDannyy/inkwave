@@ -100,6 +100,13 @@ players as well); the owner's own word — tracked, poisoned — rides the actor
 The tracked look needs nothing more: with two teams, tracked means tracked by the *other* team, which gives the wrapped
 arrow's colour, who sees it through walls (that team) and who gets a line to them (everyone on that team, each from
 their own kid) — so no tracker id rides the tick (it stays 24 fields).
+The arrow's arrival (track-ribbons: it flies in from the mark's source) needs no field either: the source rides the
+records that already make the mark on every screen — a ghost Echo Orb bursts and a ghost Lurk Mine blows where the
+owner's did (the throw / place records), the Tracer's hit record carries its hit point (`[1, gid, x, y, z, victim]`),
+a ghost special's start record brings Deep Sonar's user — so each screen flies the ribbon from the same place. A mark a
+screen hears only as the owner's flag (its own ghost missed, or it joined mid-mark) pops the band in. The mark's sounds
+(the marking team's chime, the marked player's evil one and its end) play from each screen's own mark:on / mark:off
+(src/game/statusFx.js → src/audio/cues.js).
 
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in

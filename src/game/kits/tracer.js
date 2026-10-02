@@ -331,7 +331,7 @@ function directHit(b, e) {
   const s = b.sub, col = G.teamColors[b.team];
   b.hitSet.add(e); b.direct = e;
   G.projectiles.applyHit(b.owner, e, s.directDamage, 'tracer');
-  G.subs.track(e, b.team, s.directMark);
+  G.subs.track(e, b.team, s.directMark, b.pos);   // (the arrow flies in from where it hit)
   if (nearCam(b.pos, 34)) {
     G.fx?.burst(b.pos, _v.copy(b.dir).negate(), col, { count: 12, speed: 4.5, size: 0.08, ring: true });
     G.fx?.glint?.(b.pos, col, 0.5);
@@ -366,8 +366,8 @@ function trailTouch(b) {
       if (_res.dist >= reach) continue;
       b.hitSet.add(e);
       G.projectiles.applyHit(b.owner, e, s.trailDamage, 'tracer');
-      G.subs.track(e, b.team, s.trailMark);
       _v.lerpVectors(a.p, c.p, _res.t);
+      G.subs.track(e, b.team, s.trailMark, _v);   // (… from where it touched the trail)
       if (nearCam(_v, 30)) G.fx?.burst(_v, UP, G.teamColors[b.team], { count: 6, speed: 2.6, size: 0.06 });
       if (b.owner.isLocal || e.isLocal) G.audio?.play('tracer_hit', { pos: e.isLocal ? undefined : _v, volume: 0.55, pitch: 1.3 });
       emit('tracer:hit', { actor: b.owner, victim: e, direct: false, pos: _v.clone() });

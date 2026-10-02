@@ -1275,7 +1275,7 @@ const IMPL = {
       for (const e of G.actors) {
         if (e.team === a.team) continue;
         e.status.reveal = s.def.duration; e.status.revealTeam = a.team;
-        G.subs?.track(e, a.team, s.def.duration);
+        G.subs?.track(e, a.team, s.def.duration, a);   // (the arrows fly out of the user, one to each foe)
         if (e.isLocal) play('sonar_mark', { volume: 0.8 });
       }
       play('sonar_ping', { volume: 0.9 });

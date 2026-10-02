@@ -74,6 +74,8 @@ longer emitted.
 | `actor:cheer` | `{ actor, helped }` | specials.js (Cheer Orb) |
 | `actor:dodge` / `weapon:dodge` | `{ actor, dir }` / `{ actor, pos, dir }` | weapons.js (Twins dodge roll) |
 | `actor:poisoned` / `actor:tracked` | `{ actor }` / `{ actor, team }` | subs.js (poison / point sensor) |
+| `actor:marked` | `{ actor, team, from, fresh }` | subs.js track() — every mark, fresh or a refresh; `from` its source (a point, or the special's user) |
+| `mark:on` / `mark:off` | `{ actor, team }` / `{ actor, team, splat }` | statusFx.js — a player marked / no longer (alive); the mark's sounds (cues.js) |
 | `bomb:arm` / `bomb:explode` | `{ actor, pos, team, radius }` | subs.js |
 | `match:count` | `{ n }` (final countdown) | match.js |
 | `special:start` / `special:end` | `{ actor, id }` / `{ actor, id, reason }` | specials.js |
