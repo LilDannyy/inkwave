@@ -1,5 +1,5 @@
 // INKWAVE — host the web game and its online relay yourself, on one port, so friends can play from a browser link
-// (e.g. through a Cloudflare quick tunnel: `cloudflared tunnel --url http://localhost:8090`).
+// (e.g. through a Cloudflare quick tunnel: `cloudflared tunnel --url http://localhost:8090`) or from the desktop app.
 //
 //   node tools/host/selfhost.cjs [--root <dir>] [--port 8090] [--host 0.0.0.0]
 //
@@ -9,19 +9,21 @@
 // What it does:
 //   - serves the game's files (read-only; no directory listings, no dotfiles, nothing outside --root);
 //   - adds <meta name="inkwave-relay" content="same-origin"> to index.html, so the game's rooms use the relay on this
-//     same host (src/net/transport.js relayURL) instead of the deployed one — which only admits the official site;
+//     same host (src/net/transport.js relayInfo) instead of the deployed one — which only admits the official site;
 //   - runs the relay (tools/botlab/relay.cjs: the deployed relay's protocol, room rules and limits) on /room/<CODE>,
-//     admitting pages from this host, a *.trycloudflare.com tunnel, localhost and the LAN.
+//     admitting pages from this host, a *.trycloudflare.com tunnel, localhost, the LAN and the desktop app.
+// Desktop app players: ONLINE › SERVER › Friend's server, then paste this server's link (the tunnel link, or
+// http://<this Mac's LAN address>:8090). Everyone must run the same game version (the relay turns older / newer
+// clients away: "Please refresh the page — the game was updated").
 // Music: songs/ only holds what you put there (see songs/README.md) — none ships with the game.
+//
+// From Node (the botlab's tests): const { startSelfhost } = require('./selfhost.cjs');
+//   const s = await startSelfhost({ root, port: 0, host: '127.0.0.1', onOrigin(origin, ok) {} });   // s.url, s.port, s.relay, s.close()
 'use strict';
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { attachRelay } = require('../botlab/relay.cjs');
-
-const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
-const ROOT = path.resolve(arg('root', path.join(__dirname, '..', '..')));
-const PORT = +arg('port', 8090), HOST = arg('host', '0.0.0.0');
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -35,18 +37,21 @@ const TYPES = {
 };
 const META = '<meta name="inkwave-relay" content="same-origin">';
 
-// the relay admits pages from this host (whatever name it was reached by), a quick tunnel, localhost and the LAN
+// the relay admits pages from this host (whatever name it was reached by), a quick tunnel, localhost, the LAN and the
+// desktop app (electron/main.cjs serves the game on its privileged app:// scheme — standard + secure — so its pages'
+// Origin is exactly app://inkwave)
 const LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|[a-z0-9-]+\.local)(:\d+)?$/i;
 const TUNNEL = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i;
+const APP = 'app://inkwave';
 function originOk(origin, req) {
   if (!origin) return false;
-  if (LOCAL.test(origin) || TUNNEL.test(origin)) return true;
+  if (origin === APP || LOCAL.test(origin) || TUNNEL.test(origin)) return true;
   let o; try { o = new URL(origin); } catch { return false; }
   const hosts = [req.headers.host, req.headers['x-forwarded-host']].filter(Boolean).map((h) => String(h).split(',')[0].trim().toLowerCase());
   return hosts.includes(o.host.toLowerCase());
 }
 
-function serve(req, res, url) {
+function serve(ROOT, req, res, url) {
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); res.end(); return; }
   let rel;
   try { rel = decodeURIComponent(url.pathname); } catch { res.writeHead(400); res.end('bad path'); return; }
@@ -77,14 +82,44 @@ function serve(req, res, url) {
   });
 }
 
-const server = http.createServer();
-const relay = attachRelay(server, { originOk, onRequest: serve });
-server.listen(PORT, HOST, () => {
-  console.log(`INKWAVE self-host: serving ${ROOT}`);
-  console.log(`  game + relay on http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}  (rooms: /room/<CODE>)`);
-});
-// a line a minute while anyone's playing (rooms and players), so a log shows the server's alive
-setInterval(() => {
-  const n = relay.rooms.size;
-  if (n) console.log(`${new Date().toISOString()} rooms ${n}, players ${[...relay.rooms.values()].reduce((a, r) => a + (r.socks?.size ?? r.socks?.length ?? 0), 0)}`);
-}, 60000).unref();
+function startSelfhost({ root = path.join(__dirname, '..', '..'), port = 8090, host = '0.0.0.0', onOrigin = null, log = console.log } = {}) {
+  const ROOT = path.resolve(root);
+  const server = http.createServer();
+  const refused = new Set();
+  const relay = attachRelay(server, {
+    originOk: (origin, req) => {
+      const ok = originOk(origin, req);
+      if (onOrigin) onOrigin(origin, ok);
+      // (once per origin: a friend who can't get in shows up in the log with where they came from)
+      if (!ok && !refused.has(origin) && refused.size < 50) { refused.add(origin); log(`${new Date().toISOString()} refused a room connection from origin ${JSON.stringify(origin || '(none)')}`); }
+      return ok;
+    },
+    onRequest: (req, res, url) => serve(ROOT, req, res, url),
+  });
+  // a line a minute while anyone's playing (rooms and players), so a log shows the server's alive
+  const tick = setInterval(() => {
+    const live = [...relay.rooms.values()].filter((r) => r.members().length);
+    if (live.length) log(`${new Date().toISOString()} rooms ${live.length}, players ${live.reduce((a, r) => a + r.members().length, 0)}`);
+  }, 60000);
+  tick.unref();
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, host, () => {
+      const p = server.address().port, shown = host === '0.0.0.0' || host === '::' ? 'localhost' : host;
+      resolve({
+        server, relay, root: ROOT, port: p, url: `http://${shown}:${p}`,
+        close: () => new Promise((r) => { clearInterval(tick); for (const rm of relay.rooms.values()) for (const s of rm.socks) { try { s.s.destroy(); } catch { /* gone */ } } server.close(() => r()); }),
+      });
+    });
+  });
+}
+
+module.exports = { startSelfhost, originOk };
+
+if (require.main === module) {
+  const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
+  startSelfhost({ root: arg('root', path.join(__dirname, '..', '..')), port: +arg('port', 8090), host: arg('host', '0.0.0.0') }).then((s) => {
+    console.log(`INKWAVE self-host: serving ${s.root}`);
+    console.log(`  game + relay on ${s.url}  (rooms: /room/<CODE>)`);
+  }, (e) => { console.error('selfhost:', e.message); process.exit(1); });
+}
