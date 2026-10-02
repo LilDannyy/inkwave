@@ -74,7 +74,7 @@ export const SELF_A = 0.55;                 // on your own kid (the follow view)
 const MATE_A = 1, XRAY_A = 0.9;             // depth-tested for the tracked player's teammates; its hidden parts for the trackers
 const POP = 0.22;                           // s: a fresh one pops in
 // the line (the tracking team's view)
-export const LINE_PX = 1.75, LINE_A = 0.72; // width (screen px), opacity
+export const LINE_PX = 3.5, LINE_A = 0.8;   // width (screen px; 1.75 read too thin in play), opacity
 export const CHEST = 0.95, CHEST_SQ = 0.3;  // the middle of a kid / a squid over its feet (m)
 const LINE_OFF = 0.3;                       // it leaves your chest this far toward them (not from inside your own kid)
 // poison

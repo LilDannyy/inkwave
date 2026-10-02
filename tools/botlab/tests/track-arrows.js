@@ -21,7 +21,7 @@
 //  - clamp: the arrow's head on screen stays between MIN_F and MAX_F of the screen's height, far off and up close (never
 //    shrinking below S_MIN round the kid);
 //  - line: on every tracking-team screen whoever threw (one per tracked enemy: Deep Sonar → four), from that player's
-//    chest to the middle of the tracked one's (a squid's too), in their colour, ~1.75 px, translucent, through walls;
+//    chest to the middle of the tracked one's (a squid's too), in their colour, ~3.5 px, translucent, through walls;
 //    none for the tracked player or their teammates, none after the track ends, none while you're splatted;
 //  - net: the tick's tracked flag is all it takes (two teams: tracked = by the other one) — no extra field; a remote
 //    player its owner says is tracked wears the arrow in your colour, through walls, with your line, on your screen; on
@@ -353,7 +353,7 @@
         toward: r3(((r.from.x - mine.x) * (chest.x - mine.x) + (r.from.z - mine.z) * (chest.z - mine.z)) / (Math.hypot(r.from.x - mine.x, r.from.z - mine.z) * Math.hypot(chest.x - mine.x, chest.z - mine.z))),
         colour: mm && hex(mm.color) === hex(G.teamColors[me.team]), px: mm && mm.linewidth, worldUnits: mm && mm.worldUnits, depthTest: mm && mm.depthTest, opacity: mm && r2(mm.opacity), transparent: mm && mm.transparent, isLine2: !!(l && l.isLine2) };
       R(`line: on your team's screen a thin line (Line2, ${SF.LINE_PX} px on screen) from your chest (${SF.CHEST} m up, a step toward them) to the middle of theirs, in your colour, translucent, through walls`,
-        yours.line && yours.lines === 1 && yours.toChest < 0.01 && Math.abs(yours.fromY) < 0.01 && Math.abs(yours.fromOff - 0.3) < 0.01 && yours.toward > 0.999 && yours.colour && yours.px >= 1.5 && yours.px <= 2 && !yours.worldUnits && yours.depthTest === false && yours.opacity > 0.5 && yours.opacity < 0.9 && yours.transparent && yours.isLine2, yours);
+        yours.line && yours.lines === 1 && yours.toChest < 0.01 && Math.abs(yours.fromY) < 0.01 && Math.abs(yours.fromOff - 0.3) < 0.01 && yours.toward > 0.999 && yours.colour && yours.px >= 3 && yours.px <= 4 && !yours.worldUnits && yours.depthTest === false && yours.opacity > 0.5 && yours.opacity < 0.9 && yours.transparent && yours.isLine2, yours);
       // it follows them: they walk and turn squid → it ends at the squid's middle
       put(foe, V(4, 0, -4), Math.PI); foe.bot.update = () => { zero(foe); foe.intent.squid = true; }; step(0.4);
       const sq = foe.visualPos(V(0, 0, 0)); sq.y += SF.CHEST_SQ;
