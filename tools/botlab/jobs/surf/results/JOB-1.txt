@@ -1,0 +1,79 @@
+JOB-1 results — Surf N' Turf, run on the Mac mini (botlab helper), SLOTS=3, caffeinate, 2026-10-03 02:00 AEST
+Commit: cea2997 (the branch head; the lead said it supersedes the job file's 7812731). job1.sh generates 144 matches (per stage: 10 base + 10 surf + 4 mirror turf, 6 base + 6 surf zones), not 176.
+
+## 1. Regressions @ cea2997 (job1.sh regress) — all full passes
+[sfx-cues] RESULT 54/54
+[audio-pause] RESULT 10/10
+[track-arrows] RESULT 24/24
+[world-build] RESULT 5/5
+[surf] RESULT 42/42
+[tower-rules] RESULT 26/26
+[bot-sight] RESULT 13/13
+[hud-lead-turf] RESULT 22/22
+[hud-lead-zones] RESULT 14/14
+[hud-lead-tower] RESULT 12/12
+[bot-specials] RESULT 19/19
+[bot-specials-tower] RESULT 1/1
+[net-practice] RESULT 29/29
+[net-turf] RESULT 9/9
+[net-surf] RESULT 12/12
+
+Earlier run at 7812731 (for reference): sfx-cues 53/54 ('every special has its own start sound' → missing ["surf"]; 54/54 at base aee9469, fixed by 7d856d9), surf 38/39 ('hard bots jump rings ≥ 75 %' got 0.72; 39/39 on two reruns), net-practice 28/29 (wave-sync; 29/29 on rerun and at base). All else passed.
+
+## 2. node tools/botlab/jobs/surf/agg.cjs $BOTLAB_OUT/surf-job1/m
+
+### Turf War 180 s — all stages
+base                   n  40 | A wins 47.5% | K/D A 1.02 B 0.94 | turf A 34.7% B 34.8% | splats/match 40.5 | assists/match A 3.2 B 3.3 (by jump 0, by damage 260)
+                       SURF uses/match 0.1 (anchored 2, lost 1, shot down 0) | per buoy: hits 0.00 marks 0.00 ring splats 0.00 dodged 0.00 ink 218.0 m² in 61.0 splats | A's turf from it 0.3% | bots: rings jumped 1 / missed 0 of 1 noticed, buoys shot at 0, thrown at foes 3 / objective 0 / turf 0
+surf                   n  40 | A wins 47.5% | K/D A 0.89 B 1.10 | turf A 34.6% B 36.0% | splats/match 40.2 | assists/match A 3.8 B 3.2 (by jump 1, by damage 276)
+                       SURF uses/match 2.4 (anchored 87, lost 2, shot down 7) | per buoy: hits 0.46 marks 0.29 ring splats 0.16 dodged 0.10 ink 152.8 m² in 42.9 splats | A's turf from it 7.6% | bots: rings jumped 18 / missed 11 of 67 noticed, buoys shot at 25, thrown at foes 94 / objective 0 / turf 0
+mirror                 n  16 | A wins 37.5% | K/D A 1.01 B 0.95 | turf A 33.6% B 36.7% | splats/match 38.4 | assists/match A 3.4 B 3.4 (by jump 2, by damage 108)
+                       SURF uses/match 5.4 (anchored 75, lost 5, shot down 4) | per buoy: hits 0.67 marks 0.40 ring splats 0.25 dodged 0.15 ink 164.3 m² in 45.3 splats | A's turf from it 9.4% | bots: rings jumped 23 / missed 9 of 59 noticed, buoys shot at 15, thrown at foes 86 / objective 0 / turf 0
+--- per stage
+base craters           n  10 | A wins 40.0% | K/D A 1.07 B 0.93 | turf A 31.7% B 31.8% | splats/match 39.6 | assists/match A 3.4 B 2.9 (by jump 0, by damage 63)
+                       SURF uses/match 0.2 (anchored 2, lost 0, shot down 0) | per buoy: hits 0.00 marks 0.00 ring splats 0.00 dodged 0.00 ink 218.0 m² in 61.0 splats | A's turf from it 0.8% | bots: rings jumped 1 / missed 0 of 1 noticed, buoys shot at 0, thrown at foes 2 / objective 0 / turf 0
+surf craters           n  10 | A wins 70.0% | K/D A 1.10 B 0.91 | turf A 35.1% B 28.4% | splats/match 42.4 | assists/match A 4.1 B 2.7 (by jump 1, by damage 67)
+                       SURF uses/match 4.4 (anchored 40, lost 0, shot down 1) | per buoy: hits 0.42 marks 0.25 ring splats 0.17 dodged 0.13 ink 206.9 m² in 54.5 splats | A's turf from it 13.4% | bots: rings jumped 10 / missed 5 of 30 noticed, buoys shot at 11, thrown at foes 44 / objective 0 / turf 0
+mirror craters         n   4 | A wins 50.0% | K/D A 1.19 B 0.83 | turf A 29.7% B 28.8% | splats/match 37.5 | assists/match A 2.8 B 4.8 (by jump 0, by damage 30)
+                       SURF uses/match 7.8 (anchored 28, lost 0, shot down 1) | per buoy: hits 0.43 marks 0.29 ring splats 0.14 dodged 0.14 ink 193.8 m² in 52.3 splats | A's turf from it 14.6% | bots: rings jumped 9 / missed 2 of 18 noticed, buoys shot at 2, thrown at foes 31 / objective 0 / turf 0
+base crossmarket       n  10 | A wins 30.0% | K/D A 1.11 B 0.90 | turf A 32.3% B 36.5% | splats/match 44.0 | assists/match A 4.1 B 4.2 (by jump 0, by damage 83)
+surf crossmarket       n  10 | A wins 50.0% | K/D A 0.85 B 1.18 | turf A 34.3% B 37.8% | splats/match 43.8 | assists/match A 5.3 B 4.0 (by jump 0, by damage 93)
+                       SURF uses/match 1.7 (anchored 16, lost 0, shot down 2) | per buoy: hits 0.44 marks 0.25 ring splats 0.19 dodged 0.06 ink 137.9 m² in 37.2 splats | A's turf from it 5.4% | bots: rings jumped 3 / missed 3 of 10 noticed, buoys shot at 4, thrown at foes 17 / objective 0 / turf 0
+mirror crossmarket     n   4 | A wins 25.0% | K/D A 0.84 B 1.19 | turf A 35.9% B 37.9% | splats/match 42.8 | assists/match A 4.0 B 3.8 (by jump 0, by damage 31)
+                       SURF uses/match 4.8 (anchored 18, lost 0, shot down 1) | per buoy: hits 1.00 marks 0.56 ring splats 0.39 dodged 0.06 ink 196.0 m² in 44.6 splats | A's turf from it 8.7% | bots: rings jumped 3 / missed 2 of 10 noticed, buoys shot at 2, thrown at foes 19 / objective 0 / turf 0
+base halyard           n  10 | A wins 60.0% | K/D A 1.07 B 0.85 | turf A 38.3% B 34.8% | splats/match 40.5 | assists/match A 2.6 B 2.8 (by jump 0, by damage 54)
+surf halyard           n  10 | A wins 50.0% | K/D A 0.86 B 1.08 | turf A 36.1% B 37.6% | splats/match 41.5 | assists/match A 3.3 B 4.4 (by jump 0, by damage 77)
+                       SURF uses/match 1.0 (anchored 9, lost 1, shot down 1) | per buoy: hits 0.89 marks 0.56 ring splats 0.33 dodged 0.11 ink 71.6 m² in 30.2 splats | A's turf from it 2.0% | bots: rings jumped 2 / missed 1 of 7 noticed, buoys shot at 4, thrown at foes 10 / objective 0 / turf 0
+mirror halyard         n   4 | A wins 25.0% | K/D A 0.94 B 0.97 | turf A 32.8% B 42.9% | splats/match 38.3 | assists/match A 2.8 B 3.8 (by jump 0, by damage 26)
+                       SURF uses/match 3.0 (anchored 11, lost 0, shot down 1) | per buoy: hits 0.82 marks 0.55 ring splats 0.27 dodged 0.09 ink 67.9 m² in 26.5 splats | A's turf from it 2.3% | bots: rings jumped 4 / missed 2 of 15 noticed, buoys shot at 5, thrown at foes 12 / objective 0 / turf 0
+base spirhalite        n  10 | A wins 60.0% | K/D A 0.83 B 1.11 | turf A 36.5% B 36.0% | splats/match 37.8 | assists/match A 2.7 B 3.3 (by jump 0, by damage 60)
+surf spirhalite        n  10 | A wins 20.0% | K/D A 0.73 B 1.29 | turf A 32.7% B 40.2% | splats/match 33.0 | assists/match A 2.3 B 1.6 (by jump 0, by damage 39)
+                       SURF uses/match 2.3 (anchored 22, lost 1, shot down 3) | per buoy: hits 0.36 marks 0.27 ring splats 0.05 dodged 0.09 ink 98.5 m² in 31.2 splats | A's turf from it 5.3% | bots: rings jumped 3 / missed 2 of 20 noticed, buoys shot at 6, thrown at foes 23 / objective 0 / turf 0
+mirror spirhalite      n   4 | A wins 50.0% | K/D A 1.17 B 0.83 | turf A 36.0% B 37.2% | splats/match 35.0 | assists/match A 4.3 B 1.5 (by jump 2, by damage 21)
+                       SURF uses/match 6.0 (anchored 18, lost 5, shot down 1) | per buoy: hits 0.61 marks 0.33 ring splats 0.28 dodged 0.28 ink 145.6 m² in 46.5 splats | A's turf from it 8.7% | bots: rings jumped 7 / missed 3 of 16 noticed, buoys shot at 6, thrown at foes 24 / objective 0 / turf 0
+
+### Zone Control — all stages
+base                   n  24 | A wins 54.2% | K/D A 0.98 B 0.99 | turf A 24.6% B 22.5% | splats/match 80.7 | assists/match A 11.0 B 10.2 (by jump 0, by damage 508)
+                       SURF uses/match 0.4 (anchored 8, lost 0, shot down 0) | per buoy: hits 0.88 marks 0.75 ring splats 0.13 dodged 0.25 ink 125.5 m² in 40.0 splats | A's turf from it 0.5% | bots: rings jumped 6 / missed 7 of 19 noticed, buoys shot at 0, thrown at foes 7 / objective 2 / turf 0
+surf                   n  24 | A wins 54.2% | K/D A 0.85 B 1.14 | turf A 24.1% B 24.1% | splats/match 76.5 | assists/match A 9.9 B 10.0 (by jump 3, by damage 475)
+                       SURF uses/match 5.3 (anchored 119, lost 2, shot down 7) | per buoy: hits 0.72 marks 0.53 ring splats 0.18 dodged 0.34 ink 111.9 m² in 35.9 splats | A's turf from it 10.0% | bots: rings jumped 66 / missed 55 of 252 noticed, buoys shot at 36, thrown at foes 102 / objective 20 / turf 5
+--- per stage
+base craters           n   6 | A wins 50.0% | K/D A 0.98 B 1.02 | turf A 20.6% B 18.0% | splats/match 74.8 | assists/match A 8.7 B 12.5 (by jump 0, by damage 127)
+                       SURF uses/match 0.5 (anchored 3, lost 0, shot down 0) | per buoy: hits 0.00 marks 0.00 ring splats 0.00 dodged 0.00 ink 100.0 m² in 35.0 splats | A's turf from it 0.3% | bots: rings jumped 1 / missed 0 of 3 noticed, buoys shot at 0, thrown at foes 2 / objective 1 / turf 0
+surf craters           n   6 | A wins 83.3% | K/D A 0.96 B 1.04 | turf A 21.3% B 18.4% | splats/match 67.3 | assists/match A 13.2 B 8.7 (by jump 1, by damage 130)
+                       SURF uses/match 6.0 (anchored 33, lost 0, shot down 1) | per buoy: hits 0.76 marks 0.58 ring splats 0.15 dodged 0.61 ink 181.4 m² in 53.4 splats | A's turf from it 14.9% | bots: rings jumped 33 / missed 15 of 76 noticed, buoys shot at 7, thrown at foes 34 / objective 2 / turf 0
+base crossmarket       n   6 | A wins 50.0% | K/D A 0.93 B 1.06 | turf A 27.2% B 27.0% | splats/match 82.7 | assists/match A 12.7 B 10.7 (by jump 0, by damage 140)
+                       SURF uses/match 0.5 (anchored 3, lost 0, shot down 0) | per buoy: hits 1.67 marks 1.67 ring splats 0.00 dodged 0.67 ink 161.7 m² in 45.0 splats | A's turf from it 1.4% | bots: rings jumped 5 / missed 3 of 8 noticed, buoys shot at 0, thrown at foes 3 / objective 0 / turf 0
+surf crossmarket       n   6 | A wins 50.0% | K/D A 0.90 B 1.09 | turf A 28.2% B 27.4% | splats/match 72.3 | assists/match A 6.2 B 7.5 (by jump 0, by damage 82)
+                       SURF uses/match 7.3 (anchored 41, lost 0, shot down 1) | per buoy: hits 0.41 marks 0.27 ring splats 0.15 dodged 0.17 ink 105.2 m² in 31.1 splats | A's turf from it 11.8% | bots: rings jumped 10 / missed 12 of 57 noticed, buoys shot at 4, thrown at foes 30 / objective 11 / turf 3
+base halyard           n   6 | A wins 66.7% | K/D A 1.30 B 0.73 | turf A 28.4% B 22.4% | splats/match 78.2 | assists/match A 9.5 B 9.0 (by jump 0, by damage 111)
+surf halyard           n   6 | A wins 33.3% | K/D A 0.78 B 1.23 | turf A 25.6% B 28.1% | splats/match 80.8 | assists/match A 7.8 B 9.7 (by jump 1, by damage 104)
+                       SURF uses/match 4.0 (anchored 23, lost 1, shot down 1) | per buoy: hits 0.70 marks 0.48 ring splats 0.17 dodged 0.17 ink 56.3 m² in 27.0 splats | A's turf from it 4.8% | bots: rings jumped 9 / missed 15 of 72 noticed, buoys shot at 8, thrown at foes 18 / objective 6 / turf 0
+base spirhalite        n   6 | A wins 50.0% | K/D A 0.81 B 1.18 | turf A 22.1% B 22.7% | splats/match 87.0 | assists/match A 13.0 B 8.7 (by jump 0, by damage 130)
+                       SURF uses/match 0.5 (anchored 2, lost 0, shot down 0) | per buoy: hits 1.00 marks 0.50 ring splats 0.50 dodged 0.00 ink 109.5 m² in 40.0 splats | A's turf from it 0.0% | bots: rings jumped 0 / missed 4 of 8 noticed, buoys shot at 0, thrown at foes 2 / objective 1 / turf 0
+surf spirhalite        n   6 | A wins 50.0% | K/D A 0.79 B 1.18 | turf A 21.2% B 22.4% | splats/match 85.5 | assists/match A 12.5 B 14.2 (by jump 1, by damage 159)
+                       SURF uses/match 3.8 (anchored 22, lost 1, shot down 4) | per buoy: hits 1.27 marks 1.00 ring splats 0.27 dodged 0.41 ink 78.5 m² in 28.0 splats | A's turf from it 5.9% | bots: rings jumped 14 / missed 13 of 47 noticed, buoys shot at 17, thrown at foes 20 / objective 1 / turf 2
+
+runs 144
+
+## 3. CONSOLE warnings/errors in the match runs: none (every run CONSOLE 0, no FRAME ERRORS, no WATCHDOG).
