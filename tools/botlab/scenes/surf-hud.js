@@ -7,6 +7,7 @@
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug;
   const me = m.local;
+  dbg.freeze();   // (nothing moves between the scenes: only their own steps)
   for (const a of m.actors) if (a.bot) a.bot.update = () => { a.intent.move.set(0, 0, 0); a.intent.fire = false; a.intent.special = false; };
   window.__hudScenes = [
     { name: 'hud', wait: 400, set: async () => {
@@ -18,8 +19,16 @@
     { name: 'live', wait: 300, set: async () => {
       // thrown: the buoy anchored ahead, its rings going out — on screen and on the minimap (both teams see it)
       const S = await import('./src/game/sp-surf.js');
-      const s = me.specialActive; if (s && s.kind === 'surf') S.IMPL.throwIt(me, s);
-      for (let i = 0; i < 60 * 2.6; i++) dbg.step(1000 / 60);
+      // (from your spawn deck's front, toward the middle — open ground ahead)
+      const pad = __G.level.spawnPads[me.team];
+      if (!me.alive) me.respawn();
+      me.pos.set(pad.x, pad.y + 0.02, pad.z + (me.team ? -3 : 3)); me.vel.set(0, 0, 0); me.yaw = me.aimYaw = me.team ? Math.PI : 0; me.aimPitch = 0.15;
+      g.rig.follow?.(me, true); g.rig.yaw = me.yaw; g.rig.pitch = -0.18;
+      for (let i = 0; i < 20; i++) dbg.step(1000 / 60);
+      let s = me.specialActive;
+      if (!s || s.kind !== 'surf') { me.specialId = 'surf'; me.special = me.specialCost(); me._startSpecial(); s = me.specialActive; for (let i = 0; i < 20; i++) dbg.step(1000 / 60); }
+      S.IMPL.throwIt(me, s);
+      for (let i = 0; i < 60 * 3.4; i++) dbg.step(1000 / 60);
       const b = __G.specials.world.find((w) => w.kind === 'surf');
       return { phase: b && b.phase, rings: b && b.rings.map((r) => r.state + ':' + r.r.toFixed(1)) };
     } },

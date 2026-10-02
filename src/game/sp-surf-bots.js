@@ -92,11 +92,15 @@ function pickSpot(a) {
     }
   }
   if (!best) { const y = a.aimYaw; best = { x: a.pos.x + Math.sin(y) * 9, y: a.pos.y, z: a.pos.z + Math.cos(y) * 9, why: 'turf' }; }
-  // (out of reach: as far as it goes that way)
+  // (out of reach: as far as it goes that way; and onto ground — never into the sea or off an edge: back along the
+  // line toward us to the first floor near our height)
   const dx = best.x - a.pos.x, dz = best.z - a.pos.z, d = Math.hypot(dx, dz) || 1;
-  if (d > R) { best.x = a.pos.x + (dx / d) * R; best.z = a.pos.z + (dz / d) * R; }
-  const gy = G.level.groundHeight(best.x, best.z, best.y + 3);
-  if (gy > -Infinity) best.y = gy;
+  let r = Math.min(d, R);
+  for (; r > 1.5; r -= 0.75) {
+    const x = a.pos.x + (dx / d) * r, z = a.pos.z + (dz / d) * r, gy = G.level.groundHeight(x, z, Math.max(best.y, a.pos.y) + 3);
+    if (gy > -Infinity && gy > a.pos.y - 4 && gy < a.pos.y + 4) { best.x = x; best.z = z; best.y = gy; return best; }
+  }
+  best.x = a.pos.x + (dx / d) * 2; best.z = a.pos.z + (dz / d) * 2; best.y = a.pos.y;   // (nothing better: at our feet)
   return best;
 }
 // holding our own buoy: the aim to hold ({ yaw, pitch, dist }) and, once it's on the spot, the throw (s.botGo / botVel)
