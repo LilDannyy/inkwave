@@ -298,8 +298,12 @@ export class Buoy {
   }
   _cross(R, e, d, th) {
     const what = this.judgeAt(e, d, th);
-    if (what === 'hit') this._hit(R, e);
-    else if (what === 'dodge') this._dodge(R, e);
+    if (!what) return;
+    // (a ghost's update runs with paint muted; what it does to this screen's own player is this screen's real word —
+    // a splat's burst of ink included: unmuted for it)
+    const nm = G.netm, m0 = nm ? nm.mute : 0;
+    if (nm) nm.mute = 0;
+    try { if (what === 'hit') this._hit(R, e); else this._dodge(R, e); } finally { if (nm) nm.mute = m0; }
   }
   _hit(R, e) {
     const hurtable = !(e.invuln > 0);

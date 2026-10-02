@@ -19,7 +19,7 @@ ARGS=("$@")
 { want rings && shoot rings-top "$(seq5 4 '[0,15,-26]' '[0,0,-4]' 62)" 'rings fast=3.2'
   want rings && shoot rings-ground "$(seq5 4 '[7.5,0.85,-0.5]' '[0,0.45,-6]' 62)" 'rings fast=3.2'; } &
 { want mark && shoot mark "$(seq5 5 '[3.4,1.8,2.4]' '[0.1,1.0,-2.2]' 55)"
-  want dodge && shoot dodge '[{"name":"view","from":[4.4,1.25,1.4],"look":[0.3,0.95,-1.8],"fov":55}]'
+  want dodge && shoot dodge '[{"name":"view","from":[4.2,1.3,2.6],"look":[0.2,1.3,-2.2],"fov":62}]'
   want wall && shoot wall '[{"name":"view","from":[3.2,3.4,-7.5],"look":[13,0.3,0],"fov":62}]'; } &
 wait
 for f in "$PNG"/*/*.png; do

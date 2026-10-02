@@ -460,6 +460,35 @@
       stub(Sh); if (Sh.weaponId !== w0) Sh.setWeapon(w0);
       R(`with no foe in sight a bot shoots an enemy buoy down (hp ${hp0} → ${Math.max(0, bb.hp)})`, bb.hp < hp0, { hp: bb.hp, phase: bb.phase, weapon: Sh.weaponId });
     }
+    // ============================================================================================ sounds
+    if (want('sounds')) {
+      const A = G.audio; if (!A.ctx) A.init();
+      const { SURF_SOUNDS } = await import('./src/audio/sfx-surf.js');
+      const built = SURF_SOUNDS.map((n) => [n, !!A.play(n, { volume: 0.01 })]);
+      R('every Surf N\' Turf sound builds and plays (synthesized: ' + SURF_SOUNDS.join(', ') + ')', built.every((x) => x[1]), built);
+      // the special's own moments: its sounds as it goes (the enemy's ring in your face, your dodge)
+      const rec = []; const p0 = A.play.bind(A);
+      A.play = (n, o) => { const v = p0(n, o); if (/^surf_|^sting_surf/.test(n)) rec.push({ n, k: o?.params?.n, local: !o?.pos }); return v; };
+      reset();
+      put(me, V(0, 0, -12), 0); step(0.1);
+      const s = start(me, 'surf'); step(0.2); me.aimPitch = 0.1;
+      SURF.IMPL.throwIt(me, s);
+      const b = buoys()[0];
+      step(1.5, () => b.phase !== 'live');
+      put(foe, V(b.pos.x, 0, b.pos.z + 3), Math.PI); hook = pin(foe);
+      step(D.anchor + D.gap * 5 + 2.2);
+      hook = null;
+      A.play = p0;
+      const names = rec.map((x) => x.n), pulses = rec.filter((x) => x.n === 'surf_pulse').map((x) => x.k);
+      R('…heard in play: the machine powering up, the throw, the deploy clunk + bell, a "whoom" per ring growing with each (params.n 0 … 5), the hit',
+        ['surf_ready', 'surf_throw', 'surf_deploy', 'surf_hit'].every((n) => names.includes(n)) && JSON.stringify(pulses) === JSON.stringify([0, 1, 2, 3, 4, 5]), { names: [...new Set(names)], pulses });
+      // the sting an enemy's Surf N' Turf gets (the cue director: sting_<kind>)
+      reset();
+      const st = []; const p1 = A.play.bind(A); A.play = (n, o) => { if (n === 'sting_surf') st.push(1); return p1(n, o); };
+      start(foe, 'surf'); step(0.2);
+      A.play = p1;
+      R('…an enemy popping it plays its sting (sting_surf)', st.length === 1, { stings: st.length });
+    }
   } catch (e) {
     R('HARNESS ERROR ' + e.message, false, String(e.stack).split('\n').slice(0, 6));
   }

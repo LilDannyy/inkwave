@@ -17,7 +17,7 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
   instances alive and queues the rest.
 - **match.cjs env:**
   - `MAP` (stage id), `MODE` (`turf` / `zones`), `SECS` (turf length)
-  - `WEAPONS` / `SUBS`: `all=<id>`, `team0=<id>;team1=<id>`, or a comma list per slot (team 0 first)
+  - `WEAPONS` / `SUBS` / `SPECIALS`: `all=<id>`, `team0=<id>;team1=<id>`, or a comma list per slot (team 0 first)
   - `OUT` (write the result JSON), `WATCHDOG` (ms)
   - `TRACK=<weapon>` (+ `TRACK_TEAM=0|1`): a closer look at the players on that weapon — damage dealt / taken and from
     how far, what they were doing when splatted, deaths without touching the killer, nearest-enemy distance; the Sponge
@@ -157,6 +157,18 @@ marked player and their teammates see it depth-tested with no line; no name tag 
 the kid's body; 'fly': each source's flight and wrap; 'end': the ripple and fly-away). Its sounds: sfx-cues.js
 `PAGE_ARGS='only=marks'` (run it alone). Its pictures: `tools/botlab/scenes/track-arrows.js` through shoot.cjs
 (`tools/botlab/jobs/track-arrows/shots.sh`: the fly-in sequences, the going, each with a contact strip).
+
+Surf N' Turf (2026-10-02: the special `surf` — src/game/sp-surf.js, its looks src/fx/surfFx.js, its sounds
+src/audio/sfx-surf.js, its bots src/game/sp-surf-bots.js — and the assist stat, src/game/assists.js): the throw and anchor,
+the rings (count, timing, reach, speed), a hit (40 + the mark from the beacon), a jump over a ring (nothing, the owner's
+assist window), the assist rules, the ink by band from the buoy, the buoy's hp, walls, the results data, the online
+records and judging, bots (throwing, jumping rings, shooting buoys), its sounds:
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/surf.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=throw,pulses,hit,dodge,assist,turf,buoy,walls,results,net,bots,sounds'`). Online on two clients:
+`CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-surf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (12).
+Matches: match.cjs `SPECIALS='all=surf'` / `'team0=surf'` (and a `SURF` line: uses, hits, marks, dodges, ink, assists, the
+bots' jumps). Pictures: `tools/botlab/jobs/surf/shots.sh` (scenes/surf.js), the results screen with assists
+(scenes/surf-results.js) and the HUD / loadout (scenes/surf-hud.js) through hud-shots.cjs.
 
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
