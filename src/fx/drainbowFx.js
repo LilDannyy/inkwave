@@ -290,7 +290,8 @@ void main() {
   }
   // near the front the view wobbles as if seen through the film
   float band = exp(-dW * dW * 0.35);
-  vec2 uv = vUv + (vec2(dbN(vec3(vUv * 40.0, uTime * 3.0)), dbN(vec3(vUv * 40.0 + 7.0, uTime * 3.0))) - 0.5) * 0.007 * band * uFrontA;
+  vec2 uv = vUv;
+  if (band * uFrontA > 0.002) uv += (vec2(dbN(vec3(vUv * 40.0, uTime * 3.0)), dbN(vec3(vUv * 40.0 + 7.0, uTime * 3.0))) - 0.5) * 0.007 * band * uFrontA;
   vec3 col = texture2D(tDiffuse, uv).rgb;
   vec3 g = vec3(luma(col)) * vec3(0.95, 1.0, 1.07);
   col = mix(col, g, mono * uMono);

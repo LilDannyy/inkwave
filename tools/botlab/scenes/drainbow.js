@@ -16,6 +16,8 @@
   const { SPECIALS, PLAYER } = await import('./src/config.js');
   const D = SPECIALS.drainbow, DB = G.drainbow;
   dbg.freeze();
+  // (the game's default quality, whatever an earlier harness left in this slot's profile — netpage.cjs saves 'low')
+  if (g.settings.quality !== 'high') { g._setSettings({ quality: 'high' }); for (let i = 0; i < 3; i++) dbg.step(1000 / 60); }
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const me = m.local, foes = m.actors.filter((a) => a.team !== me.team), mates = m.actors.filter((a) => a.team === me.team && a !== me);
