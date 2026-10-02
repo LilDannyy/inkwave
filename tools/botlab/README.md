@@ -71,6 +71,12 @@ Online (private rooms) — real clients on this machine, never the deployed rela
   - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-practice.cjs` — online Practice end to end (29)
   - `… NET=tools/botlab/tests/net-turf.cjs` — a Turf War with a bot count through results back to the lobby (9)
   - `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/tests/net-mock.cjs` — the offline stand-in (9)
+  - `CLIENTS=1 APP_CSP=1 NET=tools/botlab/tests/net-server.cjs` — ONLINE › SERVER: the desktop app (app://, its own CSP,
+    no `?relay=`) picks a friend's server (`tools/host/selfhost.cjs` on a free localhost port) in the picker, creates a
+    room; the browser build from that server and a second app client join; Practice; the links, the refusals (official
+    / version), a reload, a LAN address (`NET_ARGS=nolan` skips it; `shots` saves pictures)
+  - every client's session refuses the deployed relay, the official site and `*.trycloudflare.com`; `open(i, 'relay=none',
+    { base })` leaves `?relay=` out and/or loads the game from another base URL (the browser build)
 - The clear-all-ink wave's sync rule, deterministically on one page: `MAP=halyard PAGE=tools/botlab/tests/ink-wipe.js
   tools/botlab/run.sh tools/botlab/page.cjs` (8). Pictures: `tools/botlab/jobs/private-rooms/` (lobby-shots.cjs,
   session-shots.cjs).
