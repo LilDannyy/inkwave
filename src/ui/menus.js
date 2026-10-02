@@ -4315,11 +4315,11 @@ export class Menus {
       roster.innerHTML = '';
       for (const p of [...ps].sort((x, y) => x.team - y.team || x.bot - y.bot)) {
         const q = p.ping > 0 ? (p.ping < 70 ? 3 : p.ping < 140 ? 2 : 1) : 0;
-        roster.appendChild(h('div', { class: `iw-prow is-t${p.team}` + (p.isSelf ? ' is-self' : '') + (p.alive ? '' : ' is-dead') },
+        roster.appendChild(h('div', { class: `iw-prr is-t${p.team}` + (p.isSelf ? ' is-self' : '') + (p.alive ? '' : ' is-dead') },
           h('i', { class: 'iw-roster__dot' }),
-          h('span', { class: 'iw-prow__w', html: weaponIcon((this._weapons()[p.weapon] || {}).kind || p.weapon) }),
-          h('span', { class: 'iw-prow__name' }, p.name, p.isSelf ? h('em', null, 'YOU') : null, p.host ? h('i', { class: 'iw-prow__crown', html: GLYPHS.crown }) : null),
-          p.bot ? h('span', { class: 'iw-prow__bot', html: GLYPHS.bot }) : h('span', { class: 'iw-plate__ping iw-prow__ping', 'data-q': q, title: p.ping ? `${Math.round(p.ping)} ms` : '' }, h('i'), h('i'), h('i'))));
+          h('span', { class: 'iw-prr__w', html: weaponIcon((this._weapons()[p.weapon] || {}).kind || p.weapon) }),
+          h('span', { class: 'iw-prr__name' }, p.name, p.isSelf ? h('em', null, 'YOU') : null, p.host ? h('i', { class: 'iw-prr__crown', html: GLYPHS.crown }) : null),
+          p.bot ? h('span', { class: 'iw-prr__bot', html: GLYPHS.bot }) : h('span', { class: 'iw-plate__ping iw-prr__ping', 'data-q': q, title: p.ping ? `${Math.round(p.ping)} ms` : '' }, h('i'), h('i'), h('i'))));
       }
     };
     if (online) { roster = h('div', { class: 'iw-proster' }); renderRoster(info.players || []); }
