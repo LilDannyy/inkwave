@@ -181,7 +181,7 @@ class Drainbow {
     const s = this.owner.specialActive;
     if (s && s.bubble === this) s.dur = this.life;
     if (this.life <= before + 1e-7) return false;
-    DRAIN_STATS.extended += this.life - before;
+    DRAIN_STATS.extended = Math.round((DRAIN_STATS.extended + this.life - before) * 100) / 100;
     // (others' screens: its new life, a few times a second while it grows)
     if (this.gid && (this.life - this.sentLife >= 0.2 || this.life >= d.maxLife) && G.time - this.sentT > 0.25) { rec(this.owner, [4, 'x', r2(this.life)]); this.sentLife = this.life; this.sentT = G.time; }
     if (this.owner.isLocal && this.extT <= 0) { this.extT = 0.9; G.audio?.play('drainbow_extend', { volume: 0.7, pitch: 0.9 + 0.3 * clamp((this.life - d.duration) / Math.max(1, d.maxLife - d.duration), 0, 1) }); }

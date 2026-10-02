@@ -3,9 +3,10 @@
 //   MAP=halyard MODE=turf SECS=180 tools/botlab/run.sh tools/botlab/match.cjs
 //   MODE=zones plays a full 5:00 (+ overtime) Zone Control match; MODE=turf plays SECS seconds of Turf War.
 //   WEAPONS / SUBS equip the 8 players (slot order = team 0 first): 'all=bow' · 'team0=blade;team1=shooter' ·
-//   'blade,blade,shooter,…' (per slot, blank = keep) · unset = the usual random loadouts.
+//   'blade,blade,shooter,…' (per slot, blank = keep) · unset = the usual random loadouts. SPECIALS likewise
+//   ('all=drainbow', 'team0=drainbow;team1=bubbler', per slot) sets the players' specials (unset: as rolled).
 //   TRACK=<weapon> (+ TRACK_TEAM=0|1): a closer look at the players on that weapon (see trk below).
-//   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS values;
+//   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS / SPECIALS values;
 //   an array as 'bow.burstPaint=1/1.2').
 //   SPECIAL_AI=0 turns the bots' awareness of enemy specials off (src/game/botSpecials.js; an A/B on the same code),
 //   team0 / team1: on for that team only (head to head); unset: as shipped.
@@ -21,7 +22,7 @@ require(process.env.S + '/offscreen-boot.cjs');
 const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 const MAP = process.env.MAP || 'halyard', MODE = process.env.MODE || 'zones', SECS = +(process.env.SECS || 180);
 const OUT = process.env.OUT || '';
-const WEAPONS = process.env.WEAPONS || '', SUBS = process.env.SUBS || '', TRACK = process.env.TRACK || '', TRACK_TEAM = process.env.TRACK_TEAM ?? '', TUNE = process.env.TUNE || '';
+const WEAPONS = process.env.WEAPONS || '', SUBS = process.env.SUBS || '', SPECIALS = process.env.SPECIALS || '', TRACK = process.env.TRACK || '', TRACK_TEAM = process.env.TRACK_TEAM ?? '', TUNE = process.env.TUNE || '';
 const SPECIAL_AI = process.env.SPECIAL_AI || '', SPCHARGE = +(process.env.SPCHARGE || 1), DIAG = process.env.DIAG === '1';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); setTimeout(() => process.exit(1), 3000); }, +(process.env.WATCHDOG || 900000));   // (hard exit if a hung page blocks quitting)
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -44,7 +45,7 @@ app.on('browser-window-created', (_, win) => {
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     // what-if tuning (TUNE, see the header): patched into the live config before the loadouts
     const tuned = TUNE ? await js(`(async () => { const C = await import('./src/config.js'); const out = [];
-      for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id];
+      for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id] || C.SPECIALS[id];
         if (!o || !(key in o)) { out.push('?' + path); continue; } o[key] = v.includes('/') ? v.split('/').map(Number) : isNaN(+v) ? v : +v; out.push(path + '=' + o[key]); }
       return out.join(','); })()`) : '';
     // loadouts: WEAPONS / SUBS (see the header)
@@ -53,9 +54,9 @@ app.on('browser-window-created', (_, win) => {
       const plan = (spec) => { if (!spec) return A.map(() => null); if (spec.startsWith('all=')) return A.map(() => spec.slice(4));
         if (spec.includes('team')) { const t = {}; for (const p of spec.split(';')) { const [k, v] = p.split('='); t[+k.replace('team', '')] = v; } return A.map((a) => t[a.team] || null); }
         const l = spec.split(','); return A.map((a, i) => l[i] || null); };
-      const W = plan(${JSON.stringify(WEAPONS)}), S = plan(${JSON.stringify(SUBS)});
-      A.forEach((a, i) => { if (W[i]) a.setWeapon(W[i]); if (S[i]) a.setSub(S[i]); });
-      return A.map((a) => 'AB'[a.team] + ':' + a.weaponId + '+' + (a.subId || '-')).join(' ');
+      const W = plan(${JSON.stringify(WEAPONS)}), S = plan(${JSON.stringify(SUBS)}), P = plan(${JSON.stringify(SPECIALS)});
+      A.forEach((a, i) => { if (W[i]) a.setWeapon(W[i]); if (S[i]) a.setSub(S[i]); if (P[i]) a.setSpecial(P[i]); });
+      return A.map((a) => 'AB'[a.team] + ':' + a.weaponId + '+' + (a.subId || '-') + '+' + a.specialId).join(' ');
     })()`);
     // enemy-specials awareness switch (SPECIAL_AI, see the header; a checkout without it just reports 'n/a')
     const spAI = await js(`(async () => { try { const M = await import('./src/game/botSpecials.js'), S = M.SPECIAL_AI, v = ${JSON.stringify(SPECIAL_AI)};
@@ -287,6 +288,7 @@ app.on('browser-window-created', (_, win) => {
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, jumps: ev.jumps, cov,
         teamKD: ev.team || [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }],
         spUses: ev.uses || [{}, {}],   // (specials used, per team, by special)
+        drainbow: __G.drainbow ? { ...__G.drainbow.stats } : null,   // (src/game/sp-drainbow.js: placed, shots halved, crossings, life added …)
         spStats: await (async () => { try { const M = await import('./src/game/botSpecials.js'); return JSON.parse(JSON.stringify(M.SPECIAL_STATS)); } catch (e) { return null; } })(),
         byCause: ev.byCause || {},
         byWeapon: (() => { const W = ev.byW || {}, out = {}; for (const a of m.actors) { const w = a.weaponId, o = out[w] || (out[w] = { n: 0, splats: 0, deaths: 0, turf: 0 }); o.n++; o.turf += a.stats.turf; }
@@ -343,6 +345,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log('   loadouts ' + equip + (tuned ? ' | TUNE ' + tuned : ''));
     console.log('   by weapon (players, splats dealt, deaths, avg turf) ' + Object.entries(r.byWeapon).map(([w, o]) => `${w}×${o.n} ${o.splats}/${o.deaths} ${o.turf}p`).join(' · '));
     console.log('   splats by cause ' + JSON.stringify(r.byCause));
+    console.log('   special uses A ' + JSON.stringify(r.spUses[0]) + ' B ' + JSON.stringify(r.spUses[1]) + (r.drainbow && r.drainbow.placed ? ' | drainbow ' + JSON.stringify(r.drainbow) : ''));
     { const T = r.teamKD; console.log(`   enemy specials AI ${spAI} | splatted by specials: A ${T[0].sp} ${JSON.stringify(T[0].by)} · B ${T[1].sp} ${JSON.stringify(T[1].by)} | K/D A ${T[0].k}/${T[0].d} B ${T[1].k}/${T[1].d}${r.spStats ? ' | ' + JSON.stringify(r.spStats) : ''}`); }
     { const s = r.sight; console.log(`   sight: fighting ${s.fightS} bot-s, trigger held ${s.fireS} s | foe out of sight ${s.hidPct}% of fight time, aim still on it ${s.trackPct}% of that | shooting at nothing ${s.blindPct}% of trigger time (${s.blindTrackPct}% straight at the hidden foe; ${s.blindBelievedPct}% while it still thinks it sees it, ${s.blindChargePct}% a charge held, ${s.blindShotPct}% shots) | bots ${r.botMsPerS} ms per sim s (looking ${r.seeMsPerS})${s.stats ? ' | ' + JSON.stringify(s.stats) : ''}`); }
     if (r.climbs) console.log('   wall climbs (at the wall): ' + JSON.stringify(r.climbs));
