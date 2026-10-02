@@ -1,0 +1,48 @@
+JOB-1 results — Drainbow, run on the Mac mini (botlab helper) at 6dedca2, SLOTS=3 PAR=3, caffeinate, 2026-10-03 02:43 AEST
+
+## 1. Balance: SLOTS=3 PAR=3 tools/botlab/jobs/drainbow/balance.sh <out> 3 2  (92 matches: 60 turf + 32 zones)
+FAILED lines: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+node tools/botlab/jobs/drainbow/agg.cjs <out>:
+
+=== turf (60 matches; the forced team vs the other, means per match ± sd)
+  drainbow (db0+db1) n=24
+    wins 21% | turf share Δ -6.9 ±8.4 pts | K/D 0.99 ±0.29 (splats 18.2 / deaths 19.1)
+    its special used 11.63 / match (the other team's specials 14.46) | splats it caused directly 0.00
+    per match: placed 11.75, shots it halved 17.8, crossings 26.8, life added 0.4 s
+    per bubble: shots halved 1.5, crossings 2.3, life added 0.03 s
+    (as A: n=12, wins 25%)
+    (as B: n=12, wins 17%)
+  bubble guard (bub0+bub1) n=24
+    wins 46% | turf share Δ -0.7 ±10.7 pts | K/D 1.25 ±0.42 (splats 19.5 / deaths 16.3)
+    its special used 10.29 / match (the other team's specials 12.75) | splats it caused directly 0.00
+  random rolls (base, Alpha) n=12
+    wins 42% | turf share Δ -2.9 ±12.1 pts | K/D 1.03 ±0.36 (splats 18.5 / deaths 19.1)
+    its special used 13.33 / match (the other team's specials 14.75) | splats it caused directly 0.00
+  all: stuck 0.09% | splats 37.2 | specials 25.3 | matches with console warnings 0 · frame errors 0
+
+=== zones (32 matches; the forced team vs the other, means per match ± sd)
+  drainbow (db0+db1) n=16
+    wins 6% | turf share Δ -5.2 ±5.1 pts | K/D 0.84 ±0.24 (splats 34.4 / deaths 42.6)
+    its special used 24.69 / match (the other team's specials 20.81) | splats it caused directly 0.00
+    per match: placed 24.69, shots it halved 30.5, crossings 81.5, life added 1.2 s
+    per bubble: shots halved 1.2, crossings 3.3, life added 0.05 s
+    (as A: n=8, wins 13%)
+    (as B: n=8, wins 0%)
+  bubble guard (bub0+bub1) n=16
+    wins 81% | turf share Δ 1.4 ±4.5 pts | K/D 1.13 ±0.40 (splats 35.4 / deaths 34.3)
+    its special used 20.25 / match (the other team's specials 23.88) | splats it caused directly 0.00
+  all: stuck 0.41% | splats 74.2 | specials 44.8 | matches with console warnings 0 · frame errors 0
+
+## 2. Regressions: SLOTS=3 PAR=3 tools/botlab/jobs/drainbow/regress.sh (all full passes, so no base reruns were needed)
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== drainbow: RESULT 31/31 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-drainbow: RESULT 10/10 0 FAIL
