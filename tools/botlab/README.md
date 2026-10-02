@@ -123,8 +123,8 @@ Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart a
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
 no ink refill for 0.33 s after a shot — src/game/kits/bow.js, config WEAPONS.bow, actor.js; the bots' level lane shots):
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/bow-paint.js tools/botlab/run.sh tools/botlab/page.cjs`
-(`PAGE_ARGS='only=shots,air,ink,damage'`; `tune=dropScale:0.6,…` a what-if; `MODE=tower PAGE_ARGS='only=tower'` the draw on
-the tower's deck). Its pictures: a dummy kid draws for real and looses one volley on the clean deck —
+(`PAGE_ARGS='only=shots,air,ink,net,damage'`; `tune=dropScale:0.6,burstPaint:1/1.2` a what-if; `MODE=tower
+PAGE_ARGS='only=tower'` the draw on the tower's deck). Its pictures: a dummy kid draws for real and looses one volley on the clean deck —
 `tools/botlab/jobs/bow-paint/shots.sh [full ring tap three]` (`tools/botlab/scenes/bow-paint.js`; the lead's reference
 cameras).
 

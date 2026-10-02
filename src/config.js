@@ -216,7 +216,9 @@ export const WEAPONS = {
     fanTap: 8, fanRing: 8, fanFull: 0, fanGap: 0.4,
     fuseRing: 0.7, fuseFull: 0.55,                          // lodged arrow → burst (s)
     burstRadius: [1.35, 1.8], burstInner: 0.6,              // [ring, full] (m); full damage inside burstInner
-    burstDamage: [30, 45], burstEdge: [12, 15],
+    // full draw 30 (Splatoon's explosion; was 45): the parallel arrows lodge side by side and burst together, so three
+    // at 45 stacked to 135 — a near miss splatted on its own; at 30 they make 90, and two arrows + one burst splat
+    burstDamage: [30, 30], burstEdge: [12, 15],
     burstPaint: [0.75, 0.9],                                // a lodged arrow's burst ink [ring, full] (m; was 1.2 / 1.55)
     // ink (kits/bow.js), 2026-10-02 (the user: "the bow needs to cover ink a bit better … an uninterrupted straight line";
     // modelled on the Tri-Stringer's data, 1 unit ≈ 1 m): FALLING SPRAY — each arrow lets fall up to dropMax droplets, the

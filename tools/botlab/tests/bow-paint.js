@@ -305,9 +305,18 @@
         return hits.filter((h) => h.vic === foes[0] && h.wid === 'bow').map((h) => h.dmg);
       };
       const res = { d10: shot(10, 0), d20: shot(20, 0), d10off: shot(10, 0.3), d20off: shot(20, 0.3), ring10: shot(10, 0, 0.6) };
+      // a near miss: the full volley aimed at the floor 1 m short of a foe 12 m off — the three arrows lodge side by side
+      // there and burst together (the bursts: the hits after the fuse; any arrow grazing the foe on the way is left out)
+      reset(); me.setWeapon('bow'); step(0.1);
+      put(me, V(0, 0, -32), 0); put(foes[0], V(0, 0, -20), Math.PI); step(0.15);
+      me.aimYaw = me.yaw = 0; me.aimPitch = -0.1; me.aimDir.set(0, -0.1, 1).normalize(); me.aimPoint.set(0, 0, -21);
+      hits.length = 0; const t0 = G.time; BOW.looseVolley(me, 1); step(1.2);
+      const nearMiss = hits.filter((h) => h.vic === foes[0] && h.wid === 'bow' && h.t - t0 > 0.45).map((h) => h.dmg);
       const sum = (a) => a.reduce((t, x) => t + x, 0);
       R(`full-draw direct hits: dead centre on a foe 10 / 20 m off all three arrows hit (${sum(res.d10)} / ${sum(res.d20)}: a splat); 0.3 m off, two (${sum(res.d10off)} / ${sum(res.d20off)}: the burst has to finish) — damageFull ${W.damageFull}, sideFull ${W.sideFull}`,
         res.d10.length === 3 && res.d20.length === 3 && sum(res.d10) >= 100 && sum(res.d20) >= 100 && res.d10off.length === 2 && res.d20off.length === 2 && sum(res.d10off) < 100, res);
+      R(`…a near miss (the volley lodged 1 m short of the foe): its three bursts together hit for ${r2(sum(nearMiss))} — not a splat on their own (burstDamage full ${W.burstDamage[1]}; at 45 they stacked past 100)`,
+        nearMiss.length === 3 && sum(nearMiss) > 0 && sum(nearMiss) < 100, { hits: nearMiss });
       if (w0) me.setWeapon(w0);
     }
   } catch (e) {
