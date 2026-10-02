@@ -209,17 +209,29 @@ export const WEAPONS = {
     straight: 0.05, grav: 6, diveGrav: 140, diveDrag: 6,    // past its flight an arrow noses down into the ground (~3-4 m)
     damageTap: [14, 20], damageRing: [30, 38], damageFull: 55,   // direct hit, centre arrow
     sideMul: 0.8, sideFull: 45,                             // side arrows (full draw: centre + side = a splat)
-    fanTap: 8, fanRing: 6, fanFull: 4.5,                    // degrees between neighbouring arrows
+    // degrees between neighbouring arrows; full draw: parallel arrows fanGap m apart (Splatoon 3's Tri-Stringer: 8° / 8° /
+    // 0°, 0.4 apart — side by side on the ground, one over another in the air). 2026-10-02 (was 8 / 6 / 4.5°)
+    fanTap: 8, fanRing: 8, fanFull: 0, fanGap: 0.4,
     fuseRing: 0.7, fuseFull: 0.55,                          // lodged arrow → burst (s)
     burstRadius: [1.35, 1.8], burstInner: 0.6,              // [ring, full] (m); full damage inside burstInner
     burstDamage: [30, 45], burstEdge: [12, 15],
-    paintTap: 0.55, paintStick: 0.42, burstPaint: [1.2, 1.55],
-    // trail drips under a lodging arrow's flight (kits/bow.js), one every `…Every` m of it. 2026-10-02 ("buff the ink
-    // that comes out of the trail from the bow"): the centre arrow's drips (trailEvery / trailRadius, stretched along the
-    // flight by trailStretch) run together into a swimmable line, two ink cells (0.5 m) wide; the side arrows keep a
-    // dotted line either side of it, sparser (a 0.32 m drip every 4.4 m; was every 2.4 m — 2.9 at a frame's step). Full
-    // draw over flat ground: ~6.8 → ~13.7 m² of trail ink a volley, ×~1.9 (tools/botlab/tests/sub-tweaks2.js)
-    trailEvery: 1.1, trailRadius: 0.3, trailStretch: 2, trailSideEvery: 4.4, trailSideRadius: 0.32,
+    burstPaint: [1.2, 1.55],                                // a lodged arrow's burst ink [ring, full] (m)
+    // ink (kits/bow.js), 2026-10-02 (the user: "the bow needs to cover ink a bit better … an uninterrupted straight line";
+    // modelled on the Tri-Stringer's data, 1 unit ≈ 1 m): FALLING SPRAY — each arrow lets fall up to dropMax droplets, the
+    // first dropFirst m in front of the archer, then one every dropEvery m; radius dropRadius (dropFeet: the centre
+    // arrow's first, at your feet), stretched along the flight dropLen × in length when it falls from under dropLow m,
+    // easing to round at dropHigh m. The three arrows' droplets are staggered a third of the spacing apart, so a full
+    // draw's parallel arrows lay one unbroken band. dropScale scales a droplet's radius and spacing together (the band
+    // narrows, never breaks); dropRing / dropTap on top of it for ring 1 / a tap. LANDING — the patch where an arrow lands: landWidth wide
+    // (tap / ring 1; landWidthFull at full draw; landTap × for a tap), on a floor stretched landLenFlat × in length
+    // skimming in under landFlat°, easing to landLenSteep × past landSteep°. Replaces the drip trail (trailEvery 1.1 m,
+    // 0.3 m stretched ×2 under the centre arrow; a 0.32 m dot every 4.4 m under each side one), paintTap 0.55 and
+    // paintStick 0.42 (tools/botlab/tests/bow-paint.js)
+    dropEvery: 10, dropFirst: 1.25, dropMax: 5, dropRadius: 1.39, dropFeet: 1.683, dropLen: 2.7, dropLow: 3, dropHigh: 10,
+    dropScale: 1, dropRing: 1, dropTap: 1,
+    landWidth: 2.5, landWidthFull: 3.0, landTap: 1, landLenFlat: 2.4, landLenSteep: 1.4, landFlat: 10, landSteep: 35,
+    airDraw: 1 / 3,                                         // the draw's speed while airborne (× ; Splatoon: 3× as long)
+    inkRecoveryDelay: 0.33,                                 // s after a shot with no ink refill at all, any form (actor.js)
     cooldown: 0.22, moveSpeedDrawing: 2.6, moveSpeedFiring: 4.2,
     special: 'strike', specialCost: 190, sub: 'waddle',
   },

@@ -119,6 +119,15 @@ on players — src/game/statusFx.js, online through the actor tick's flags):
 own ledges (`MAP=halyard` / `MAP=calamari`: 'wailmap'). Its pictures: `tools/botlab/scenes/sub-tweaks2.js` through
 shoot.cjs (`PRE=…/sub-tweaks2.js PRE_ARGS=<scene>`, see its header).
 
+Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
+falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
+no ink refill for 0.33 s after a shot — src/game/kits/bow.js, config WEAPONS.bow, actor.js; the bots' level lane shots):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/bow-paint.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=shots,air,ink,damage'`; `tune=dropScale:0.6,…` a what-if; `MODE=tower PAGE_ARGS='only=tower'` the draw on
+the tower's deck). Its pictures: a dummy kid draws for real and looses one volley on the clean deck —
+`tools/botlab/jobs/bow-paint/shots.sh [full ring tap three]` (`tools/botlab/scenes/bow-paint.js`; the lead's reference
+cameras).
+
 Tracked look (2026-10-02, track-arrows / track-ribbons: one arrow wrapped round a marked player in the marking team's
 colour — the game's squid icon on its side, its head the arrowhead with the eyes in it, its tentacles the tail —
 hugging the body at 0.46 m, turning round them; it flies in as a ribbon from the mark's source and wraps, ripples and

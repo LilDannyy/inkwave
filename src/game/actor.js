@@ -362,8 +362,11 @@ export class Actor {
     if (st.track > 0) st.track = Math.max(0, st.track - dt);
     if (st.reveal > 0) st.reveal = Math.max(0, st.reveal - dt);
     if (st.poison > 0) { st.poison = Math.max(0, st.poison - dt); this.ink = Math.max(0, this.ink - SUBS.mist.inkDrain * dt); }
+    // a weapon's ink recovery delay (the Tideline Bow's 0.33 s): that long after a shot the tank doesn't refill at all,
+    // in any form (swimming too); then the usual rules (the kid's idle delay still counts from the shot).
     // poisoned: no idle refill at all and half-speed refill while swimming, so the drain is felt
-    if (this.submerged || this.climbing) this.ink = Math.min(P.inkMax, this.ink + P.inkRefillSwim * (st.poison > 0 ? 0.5 : 1) * dt);
+    if (this.lastFire < (this.weapon?.inkRecoveryDelay || 0)) { /* the tank waits */ }
+    else if (this.submerged || this.climbing) this.ink = Math.min(P.inkMax, this.ink + P.inkRefillSwim * (st.poison > 0 ? 0.5 : 1) * dt);
     else if (st.poison > 0) { /* drain only */ }
     else if (!isSquid && this.lastFire > P.inkRefillDelay && !this.weaponRunner.busy()) this.ink = Math.min(P.inkMax, this.ink + P.inkRefillKid * dt);
     else if (isSquid) this.ink = Math.min(P.inkMax, this.ink + P.inkRefillKid * 0.5 * dt);
