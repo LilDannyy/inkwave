@@ -161,6 +161,15 @@ class Game {
     // online session (G.net) — the menus' online screens and startNetMatch/netMatchGo/netMatchEnd below drive it
     try { (await import('./net/session.js')).installNet(); } catch (e) { console.error('[inkwave] net', e); }
     G.net?.on?.('lobby', ({ lobby }) => this._roomPalette(lobby));
+    // online Practice: who comes and goes mid-session, and who's running it
+    const inNetPractice = () => !!(G.netm && this._inPractice());
+    on('actor:added', ({ actor }) => { if (inNetPractice() && actor && !actor.isBot && !actor.isLocal) this.menus?.toast?.(`${actor.name} joined the practice`, { kind: 'join', color: G.teamHex[actor.team] }); });
+    G.net?.on?.('leave', ({ player }) => { if (inNetPractice() && player) this.menus?.toast?.(`${player.name} left the practice`, { kind: 'leave' }); });
+    G.net?.on?.('host', ({ hostId }) => {
+      if (!inNetPractice()) return;
+      if (hostId === G.net.myId) this.menus?.toast?.('You’re the host now — you can clear the ink, swap the stage or end the practice', { kind: 'good', ms: 5200 });
+      else { const p = (G.net.lobby?.players || []).find((x) => x.id === hostId); if (p) this.menus?.toast?.(`${p.name} is the host now`, { kind: 'good' }); }
+    });
     await progress(0.7, 'Tuning the tentacles…');
 
     this._setPalette(this._pickPalette());

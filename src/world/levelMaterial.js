@@ -68,13 +68,15 @@ if (uWaveT.y > 0.5) {
       outgoingLight += vec3(0.95, 1.0, 1.0) * rim * ga * 1.4 * uWaveT.w;
     }
   }
-  // the front: a shimmering band of light, a sheen behind it
-  float band = exp(-dW * dW * 3.2);
-  float sheen = age > 0.0 ? exp(-age * 5.0) * 0.35 : 0.0;
-  if (band + sheen > 0.004) {
+  // the front: a bright line with a shimmering glow round it, a sheen trailing behind
+  float core = exp(-dW * dW * 16.0);
+  float band = exp(-dW * dW * 0.7);
+  float sheen = age > 0.0 ? exp(-age * 4.0) * 0.5 : 0.0;
+  if (core + band + sheen > 0.004) {
     float sh = 0.6 + 0.4 * sin(vWPos.y * 5.0 + wd * 1.7 - uTime * 11.0 + wn * 7.0);
-    vec3 pearl = mix(vec3(0.82, 1.0, 1.0), 0.6 + 0.4 * cos(6.2831 * (wn * 1.3 + wd * 0.04 + vec3(0.0, 0.33, 0.67))), 0.35);
-    outgoingLight += pearl * (band * 1.7 * sh + sheen) * uWaveT.w;
+    vec3 pearl = mix(vec3(0.45, 0.95, 1.0), 0.6 + 0.4 * cos(6.2831 * (wn * 1.3 + wd * 0.05 + vec3(0.0, 0.33, 0.67))), 0.45);
+    outgoingLight = mix(outgoingLight, outgoingLight * vec3(0.55, 0.85, 1.0), clamp(band * 0.55, 0.0, 1.0));   // (tints a bright floor too)
+    outgoingLight += pearl * (core * 2.6 + band * 1.1 * sh + sheen) * uWaveT.w;
   }
 }
 `;

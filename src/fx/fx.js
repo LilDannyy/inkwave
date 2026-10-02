@@ -1672,13 +1672,13 @@ export class FX {
   // swelling and drifting — and now and then a bright bubble glint popping off the surface
   inkSteam(pos, color, k = 1) {
     const col = this._color(color, this._col);
-    this._colB.copy(col).lerp(_white, 0.5);
-    this._sprite(this.puffs, pos.x + (rand() - 0.5) * 0.35, pos.y + 0.04, pos.z + (rand() - 0.5) * 0.35, (rand() - 0.5) * 0.5, 0.7 + rand() * 0.9, (rand() - 0.5) * 0.5,
-      this._colB, 0.16 + rand() * 0.12, 0.75 + rand() * 0.6, 0.65 + rand() * 0.55, 0.34 * k, 1.5, 0.8, 4, 0.05, 1.4, 0.35, 0.3);
-    if (rand() < 0.4) {
+    this._colB.copy(col).lerp(_white, 0.62);
+    this._sprite(this.puffs, pos.x + (rand() - 0.5) * 0.35, pos.y + 0.04, pos.z + (rand() - 0.5) * 0.35, (rand() - 0.5) * 0.6, 1.0 + rand() * 1.2, (rand() - 0.5) * 0.6,
+      this._colB, 0.22 + rand() * 0.15, 1.1 + rand() * 0.8, 0.8 + rand() * 0.6, 0.42 * k, 1.4, 0.9, 4, 0.05, 1.4, 0.35, 0.35);
+    if (rand() < 0.25) {
       this._colB.copy(col).lerp(_white, 0.65).multiplyScalar(1.3);
-      this._sprite(this.glows, pos.x + (rand() - 0.5) * 0.4, pos.y + 0.03, pos.z + (rand() - 0.5) * 0.4, 0, 0.4 + rand() * 0.5, 0, this._colB,
-        0.035 + rand() * 0.04, 0.07 + rand() * 0.04, 0.22 + rand() * 0.2, 0.85, 1, 0, G_BUBBLE + 1, 0.03, 0);
+      this._sprite(this.glows, pos.x + (rand() - 0.5) * 0.4, pos.y + 0.03, pos.z + (rand() - 0.5) * 0.4, 0, 0.35 + rand() * 0.35, 0, this._colB,
+        0.025 + rand() * 0.025, 0.045 + rand() * 0.025, 0.2 + rand() * 0.15, 0.85, 1, 0, G_BUBBLE + 1, 0.03, 0);
     }
   }
   // one mist puff (shot trails, spray)
