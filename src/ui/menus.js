@@ -15,7 +15,7 @@ import {
 import {
   GAME_TITLE, GAME_SUBTITLE, VERSION, WEAPONS, WEAPON_ORDER, SPECIALS, SUB, MAPS, DIFFICULTY, MATCH, QUALITY,
   DEFAULT_SETTINGS, TEAM_PALETTES, COLORBLIND_PALETTE, PROGRESSION, BOT_NAMES, TEAM_NAMES, ZONES, TOWER,
-  mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock,
+  mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, roomTime, roomBotPlan,
 } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 import { G } from '../core/ctx.js';
@@ -92,8 +92,20 @@ const MODE_INFO = {
   zones: { id: 'zones', label: 'ZONE CONTROL', name: 'Zone Control', icon: ZONE_GLYPH, text: 'Hold the live zone to count down from 100 — first to 0 wins.' },
   tower: { id: 'tower', label: 'TOWER COMMAND', name: 'Tower Command', icon: TOWER_GLYPH, text: 'Ride the tower into their base — furthest push wins, reach their goal to knock out.' },
   boss: { id: 'boss', label: 'BOSS BATTLE', name: 'Boss Battle', icon: BOSS_GLYPH, text: `Your squad of 8 against ${BOSS_NAME}.` },
+  // (online rooms only: no clock, no score — the room plays on the host's stage until the host ends it)
+  practice: { id: 'practice', label: 'PRACTICE', name: 'Practice', icon: GLYPHS.infinity, text: 'No clock, no score: swap loadouts, clear the ink, change stage — play on together.' },
 };
 const modeOf = (m) => (m === 'zones' || m === 'tower' || m === 'boss' ? m : 'turf');
+// a room's mode (the lobby): the four match modes and Practice
+const roomModeOf = (m) => (m === 'practice' ? 'practice' : modeOf(m));
+// a room's time of day: the look itself (config roomTime — 'dusk' from older clients is sunset)
+const ROOM_TIME_INFO = {
+  day: { label: 'DAY', name: 'by day', icon: GLYPHS.sun },
+  golden: { label: 'GOLDEN', name: 'at golden hour', icon: GLYPHS.golden },
+  sunset: { label: 'SUNSET', name: 'at sunset', icon: GLYPHS.sunset },
+  random: { label: 'RANDOM', name: 'at a random time', icon: GLYPHS.dice },
+};
+const RANDOM_STAGE = { id: 'random', name: 'Random stage' };
 // the modes with a fixed 5:00 + overtime length (the length is locked on the stage select and in the lobby)
 const fixedLen = (m) => m === 'zones' || m === 'tower';
 const fixedDur = (m) => (m === 'tower' ? TOWER.duration : ZONES.duration) || 300;
@@ -2041,6 +2053,76 @@ export class Menus {
     };
   }
 
+  // A count picker for the lobby's bots: ◀ n ▶ from 0 up to the free spots, the top step being FILL (every empty
+  // spot, however many turn up). get() → { n: bots that will join, fill, free }; set(-1 = fill | n).
+  _stepper({ get, set, locked = () => false, onLocked = () => {} }) {
+    const num = h('b', { class: 'iw-step__num' }), sub = h('small', { class: 'iw-step__sub' });
+    const l = h('i', { class: 'iw-step__btn is-l', html: GLYPHS.back }), r = h('i', { class: 'iw-step__btn is-r', html: GLYPHS.next });
+    const el = h('span', { class: 'iw-step' }, l, h('span', { class: 'iw-step__val' }, h('i', { class: 'iw-step__ico', html: GLYPHS.bot }), num, sub), r);
+    const render = () => {
+      const v = get();
+      num.textContent = v.fill ? 'FILL' : String(v.n);
+      sub.textContent = v.fill ? `· ${v.n}` : '';
+      el.classList.toggle('is-fill', !!v.fill); el.classList.toggle('is-zero', !v.n);
+      l.classList.toggle('is-dim', locked() || (!v.fill && v.n <= 0) || (v.fill && v.free <= 0));
+      r.classList.toggle('is-dim', locked() || !!v.fill || v.free <= 0);
+    };
+    const edge = (d) => { this._sfx('ui_error', 0.15); restartAnim(el, d < 0 ? 'is-edge-l' : 'is-edge-r'); return false; };
+    const step = (d, wrap) => {
+      if (locked()) { onLocked(); return false; }
+      const v = get();
+      let next;
+      if (d > 0) {
+        if (v.fill || v.free <= 0) { if (!wrap) return edge(d); next = 0; }
+        else next = v.n + 1 >= v.free ? -1 : v.n + 1;
+      } else {
+        if (v.fill) { if (v.free <= 0) return edge(d); next = Math.max(0, v.free - 1); }
+        else if (v.n <= 0) return edge(d);
+        else next = v.n - 1;
+      }
+      set(next);
+      this._sfx('ui_toggle');
+      restartAnim(el, 'is-change');
+      render();
+      return true;
+    };
+    l.addEventListener('click', (e) => { e.stopPropagation(); step(-1); });
+    r.addEventListener('click', (e) => { e.stopPropagation(); step(1); });
+    render();
+    return { el, adjust: (d) => step(d), cycle: () => step(1, true), refresh: render };
+  }
+
+  // the lobby ticket's RANDOM stage: a fan of three of the mode's stages under a big "?" splat
+  _randomStageArt(list, time) {
+    const pick = [...list].sort(() => Math.random() - 0.5).slice(0, 3);
+    const cards = pick.map((m, i) => {
+      const im = h('img', { class: 'iw-lrnd__card', alt: '', draggable: 'false', style: { '--i': i } });
+      im.addEventListener('error', () => im.remove(), { once: true });
+      im.src = stageArt(m.id, time === 'sunset' ? 'dusk' : 'day', true);
+      return im;
+    });
+    return h('span', { class: 'iw-lstage__img iw-lrnd' }, cards, h('span', { class: 'iw-lrnd__q', html: splatSVG({ seed: 21, cls: 'iw-fa', r: 56, arms: 9, drops: 3 }) }, h('b', null, '?')));
+  }
+
+  /** Practice stage swap (main.js): the card shown over the fade while everyone's stage builds. */
+  stageSwapCard({ mapId, time, by } = {}) {
+    const m = this._maps().find((x) => x.id === mapId) || this._maps()[0], T = ROOM_TIME_INFO[roomTime(time)] || ROOM_TIME_INFO.day;
+    const img = h('img', { class: 'iw-swapcard__art', alt: '', draggable: 'false' });
+    img.addEventListener('error', () => img.remove(), { once: true });
+    img.src = stageArt(m.id, roomTime(time) === 'sunset' ? 'dusk' : 'day', false);
+    const [a, b] = this._accent();
+    const el = h('div', { class: 'iw-swapcard' },
+      h('div', { class: 'iw-swapcard__card' }, img, h('span', { class: 'iw-swapcard__shade' }),
+        h('span', { class: 'iw-swapcard__tag' }, h('i', { html: GLYPHS.map }), 'NEW STAGE'),
+        h('span', { class: 'iw-swapcard__name iw-display' }, m.name),
+        h('span', { class: 'iw-swapcard__time' }, h('i', { html: T.icon }), T.label === 'GOLDEN' ? 'GOLDEN HOUR' : T.label),
+        by ? h('span', { class: 'iw-swapcard__by' }, `picked by ${by}`) : null),
+      h('span', { class: 'iw-swapcard__squid', html: SQUID }));
+    colorVars(el, 'a', toHex(a)); colorVars(el, 'b', toHex(b));
+    if (roomTime(time) === 'golden' && ((m.times && m.times.day) || m.theme) !== 'golden') el.dataset.look = 'golden';
+    return el;
+  }
+
   _slider(row, value) {
     const { key, min, max, step, fmt } = row;
     let v = +value;
@@ -2438,7 +2520,8 @@ export class Menus {
   _onNetState(state) {
     const n = this._netBound, cur = this.current;
     if (!n) return;
-    if (state === 'starting') { if (cur === 'lobby') this.launchLobby(); return; }
+    // (a late joiner of a running Practice session drops straight in: no countdown)
+    if (state === 'starting') { if (cur === 'lobby' && !(n._startCfg && n._startCfg.late)) this.launchLobby(); return; }
     // the real flow is main.js' (startNetMatch hides us, netMatchEnd brings the lobby back); the mock has no match
     if (state === 'match') { if (n.isMock && cur === 'lobby') this.show(null, { instantLeave: true }); return; }
     if (state === 'lobby') { if (n.isMock && (cur === null || cur === 'results')) this.show('lobby'); return; }
@@ -2854,7 +2937,7 @@ export class Menus {
     const reduced = prefersReducedMotion();
     const sc = this._sc();
     const net = this._net();
-    const blank = { map: this._maps()[0].id, time: 'day', duration: 180, bots: true, difficulty: 'normal', mode: 'turf', players: [], maxPlayers: 8 };
+    const blank = { map: this._maps()[0].id, time: 'day', duration: 180, bots: true, botCount: -1, difficulty: 'normal', mode: 'turf', players: [], maxPlayers: 8 };
     let lob = (net && net.lobby) || blank;
     const maps = this._maps(), diffs = this._diffs(), durations = MATCH.durations || [90, 180];
     const code = String((net && net.code) || '').toUpperCase().padEnd(5, '•').slice(0, 8);
@@ -2864,8 +2947,10 @@ export class Menus {
     const teamOf = (p) => (p && p.team === 1 ? 1 : 0);
     const colors = () => this._teamColors();
     const bossMode = () => lob.mode === 'boss';   // Boss Battle: one squad (team 0) vs HULLBREAKER (the session carries lobby.mode)
-    const lobMode = () => modeOf(lob.mode);       // turf | zones | tower | boss
-    const LOB_MODES = ['turf', 'zones', 'tower', 'boss'];
+    const lobMode = () => roomModeOf(lob.mode);   // turf | zones | tower | boss | practice
+    const practiceMode = () => lob.mode === 'practice';
+    const LOB_MODES = ['turf', 'zones', 'tower', 'boss', 'practice'];
+    const plan = () => roomBotPlan(lob);          // the bots this room will get as it stands (how many, which side)
     const S = { launching: null, pendingTeam: null, teamPref: 'auto', emoteCd: 0, lastLobby: null, alive: true, copied: 0, subs: [], age: 0, joins: [], leaves: [], batchT: 0 };
 
     // ---- room code (top-left, big and proud)
@@ -2911,21 +2996,31 @@ export class Menus {
     const stImgs = h('span', { class: 'iw-lstage__imgs' });
     const stName = h('span', { class: 'iw-lstage__name' });
     const stNum = h('span', { class: 'iw-lstage__num' });
-    const stTime = h('span', { class: 'iw-lstage__time' }, h('i', { class: 'is-sun', html: GLYPHS.sun }), h('i', { class: 'is-moon', html: GLYPHS.moon }));
+    const stTime = h('span', { class: 'iw-lstage__time' }, h('i', { class: 'is-sun', html: GLYPHS.sun }), h('i', { class: 'is-golden', html: GLYPHS.golden }), h('i', { class: 'is-moon', html: GLYPHS.sunset }), h('i', { class: 'is-random', html: GLYPHS.dice }));
     const stArrows = h('span', { class: 'iw-lstage__arrows' }, h('i', { class: 'is-l', html: GLYPHS.back }), h('i', { class: 'is-r', html: GLYPHS.next }));
     const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, h('span', { class: 'iw-lstage__tape' }, stName), stTime, stArrows);
     stArrows.children[0].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(-1); });
     stArrows.children[1].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(1); });
-    const timeSeg = this._seg([['day', h('span', { class: 'iw-segico' }, h('i', { html: GLYPHS.sun }), 'DAY')], ['dusk', h('span', { class: 'iw-segico' }, h('i', { html: GLYPHS.moon }), 'DUSK')]], lob.time === 'dusk' ? 'dusk' : 'day', (v) => hostSet({ time: v }));
+    // TIME: day · golden hour · sunset · random (the host rolls one at the start)
+    const timeSeg = this._seg(Object.entries(ROOM_TIME_INFO).map(([v, T]) => [v, h('span', { class: 'iw-segico' }, h('i', { html: T.icon }), T.label)]), roomTime(lob.time), (v) => hostSet({ time: v }));
     const lenSegT = this._seg(durations.map((d) => [d, durLabel(d)]), lob.duration, (v) => hostSet({ duration: v }));
     const lenSegB = this._seg(BOSS_DURATIONS.map((d) => [d, durLabel(d)]), BOSS_DURATIONS.includes(lob.duration) ? lob.duration : 240, (v) => hostSet({ duration: v }));
     // Zone Control / Tower Command: a fixed 5:00 + overtime (as offline)
     const lenLockZB = h('b', null, `${Math.round(fixedDur(lobMode()) / 60)}:00`);
     const lenLockZ = h('div', { class: 'iw-lenlock' }, lenLockZB, h('span', null, '+ OVERTIME'));
-    const lenZ = () => { if (fixedLen(lobMode())) { restartAnim(rLen, 'is-shake'); this._sfx('ui_error', 0.15); return true; } return false; };
-    const lenSeg = { el: h('span', { class: 'iw-lob__lensegs' }, lenSegT.el, lenSegB.el, lenLockZ), adjust: (d) => lenZ() || (bossMode() ? lenSegB : lenSegT).adjust(d), cycle: () => lenZ() || (bossMode() ? lenSegB : lenSegT).cycle(),
+    // Practice: no clock at all
+    const lenLockP = h('div', { class: 'iw-lenlock iw-lenlock--p' }, h('i', { html: GLYPHS.infinity }), h('span', null, 'NO CLOCK'));
+    const lenZ = () => { if (fixedLen(lobMode()) || practiceMode()) { restartAnim(rLen, 'is-shake'); this._sfx('ui_error', 0.15); return true; } return false; };
+    const lenSeg = { el: h('span', { class: 'iw-lob__lensegs' }, lenSegT.el, lenSegB.el, lenLockZ, lenLockP), adjust: (d) => lenZ() || (bossMode() ? lenSegB : lenSegT).adjust(d), cycle: () => lenZ() || (bossMode() ? lenSegB : lenSegT).cycle(),
       refresh: (v) => (bossMode() ? lenSegB : lenSegT).refresh(v) };
-    const botTgl = this._toggle({ key: '_bots', onChange: (v) => hostSet({ bots: v }) }, lob.bots !== false);
+    // BOTS: a count, ◀ ▶ — 0 up to the free spots, and FILL (every empty spot, however many turn up: the match default;
+    // Practice starts at 0). The session splits them to even the teams.
+    const botStep = this._stepper({
+      get: () => ({ n: plan().total, fill: lob.botCount == null ? lob.bots !== false : lob.botCount < 0, free: plan().free }),
+      set: (v) => hostSet({ botCount: v }),
+      locked: () => mapNoBots(lob.map),   // (a humans-only stage)
+      onLocked: () => lockedBots(),
+    });
     const dOpts = Object.values(diffs).map((d) => [d.id, h('span', { class: 'iw-diffopt' }, h('span', { class: 'iw-pips' }, Array.from({ length: 3 }, (_, k) => h('i', { class: k < (DIFF_INFO[d.id]?.pips || 2) ? 'on' : '' }))), d.name)]);
     const diffSeg = this._seg(dOpts, diffs[lob.difficulty] ? lob.difficulty : 'normal', (v) => hostSet({ difficulty: v }));
     const srow = (id, icon, label, ctl, extra) => {
@@ -2937,16 +3032,17 @@ export class Menus {
     // stage rules sticker (config onlineOnly / noBots — Cargo Terminal), slapped across the ticket's top edge
     const stRules = h('span', { class: 'iw-lstage__rules' }, h('i', { html: GLYPHS.users }), h('b'));
     rStage.querySelector('.iw-lset__label').appendChild(stRules);
-    const rTime = srow('time', GLYPHS.sun, 'TIME', timeSeg.el);
+    const rTime = srow('time', GLYPHS.sun, 'TIME OF DAY', timeSeg.el);
     const rLen = srow('len', GLYPHS.clock, 'LENGTH', lenSeg.el);
-    const rPair = h('div', { class: 'iw-lset__pair' }, rTime, rLen);
     // the room's ink colours (host picks; everyone's lobby and the match use them)
     const palIdx = () => (Number.isInteger(lob.palette) && TEAM_PALETTES[lob.palette] ? lob.palette : Math.max(0, TEAM_PALETTES.findIndex((p) => p.a.toLowerCase() === String(colors()[0]).toLowerCase())));
     const palSeg = this._seg(TEAM_PALETTES.map((p, i) => [i, h('span', { class: 'iw-palopt', title: p.names.join(' vs ') }, h('i', { style: { background: p.a } }), h('i', { style: { background: p.b } }))]), palIdx(), (v) => hostSet({ palette: v }));
     const palName = h('small', { class: 'iw-lset__note' });
     const rPal = srow('pal', GLYPHS.palette, 'INK', palSeg.el, palName);
-    const botsNote = h('small', { class: 'iw-lset__note' });
-    const rBots = srow('bots', GLYPHS.bot, 'FILL WITH BOTS', botTgl.el, botsNote);
+    const botsNote = h('small', { class: 'iw-lset__note iw-lset__split' });
+    const rBots = srow('bots', GLYPHS.bot, 'BOTS', botStep.el);
+    rBots.appendChild(botsNote);
+    const rPair = h('div', { class: 'iw-lset__pair' }, rLen, rBots);
     const rDiff = srow('diff', GLYPHS.swords, 'BOT SKILL', diffSeg.el);
     const diffLbl = rDiff.querySelector('.iw-lset__label');
     diffLbl.lastChild.textContent = '';   // label text lives in its own span so boss mode can rename it
@@ -2962,11 +3058,11 @@ export class Menus {
     rMode._id = 'mode';
     modeArrows.children[0].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(rMode); setMode(-1); });
     modeArrows.children[1].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(rMode); setMode(1); });
-    const setRows = [rMode, rStage, rTime, rLen, rPal, rBots, rDiff];
+    const setRows = [rMode, rStage, rTime, rLen, rBots, rPal, rDiff];
     for (const r of setRows) r.dataset.curPad = '2';   // the rail is dense: a tight ring that never covers the next label
     const side = h('div', { class: 'iw-lob__side iw-in iw-in--left' },
       h('div', { class: 'iw-lob__sidehead' }, rMode, lock, hostChip),
-      h('div', { class: 'iw-lset__panel' }, rStage, rPair, rPal, rBots, rDiff,
+      h('div', { class: 'iw-lset__panel' }, rStage, rTime, rPair, rPal, rDiff,
         h('span', { class: 'iw-lset__drips', html: dripsSVG([[40, 1.2], [92, 0.7], [250, 1.6], [330, 0.9]], 'iw-fa') })));
 
     // ---- your controls (bottom bar)
@@ -3025,17 +3121,18 @@ export class Menus {
       if (!isHost() || S.launching) return;
       safeCall(() => net.setSettings(o));
       // remember the host's picks for the next room they open
-      if (o.map) this._setSetting('lastStage', o.map);
-      if (o.time) this._setSetting('stageTimes', { ...(this._settings().stageTimes || {}), [lob.map]: o.time });
+      if (o.map && o.map !== 'random') this._setSetting('lastStage', o.map);
+      if (o.time && lob.map !== 'random') this._setSetting('stageTimes', { ...(this._settings().stageTimes || {}), [lob.map]: o.time });
     };
     // the stages this room's mode can use: Boss Battle never lists a noBoss stage
-    const stageList = () => (bossMode() ? maps.filter((m) => mapBossOk(m.id)) : maps);
+    // (RANDOM first: the host rolls a stage from the mode's list at the start)
+    const stageList = () => [RANDOM_STAGE, ...(bossMode() ? maps.filter((m) => mapBossOk(m.id)) : maps)];
     const setMap = (d) => {
       if (!isHost()) { this._bump(stage, 'left'); this._sfx('ui_error', 0.15); return; }
       const list = stageList();
       const i = list.findIndex((m) => m.id === lob.map);
       const n = list[(i + d + list.length) % list.length];
-      lob = { ...lob, map: n.id, bots: mapNoBots(n.id) ? false : lob.bots };
+      lob = { ...lob, map: n.id, bots: mapNoBots(n.id) ? false : lob.bots, botCount: mapNoBots(n.id) ? 0 : lob.botCount };
       renderStage(d);
       this._sfx('ui_toggle'); this._sfx('splat_small', 0.06);
       hostSet({ map: n.id });
@@ -3047,32 +3144,42 @@ export class Menus {
       const dur = next === 'boss' ? 240 : fixedLen(next) ? fixedDur(next) : (durations.includes(lob.duration) ? lob.duration : (MATCH.defaultDuration || 180));
       // a stage with no Boss Battle (Cargo Terminal) hands the room to a boss-eligible one (the session does the same)
       const was = maps.find((m) => m.id === lob.map);
-      const map = next === 'boss' && !mapBossOk(lob.map) ? bossFallbackMap(lob.map) : lob.map;
+      const map = next === 'boss' && lob.map !== 'random' && !mapBossOk(lob.map) ? bossFallbackMap(lob.map) : lob.map;
       lob = { ...lob, mode: next, duration: dur, map };
       this._sfx('ui_toggle'); this._sfx(next === 'boss' ? 'splat_big' : 'splat_small', 0.06);
       restartAnim(rMode, 'is-hit');
       render(false);
-      hostSet(map !== (was && was.id) ? { mode: next, duration: dur, map } : { mode: next, duration: dur });
-      if (map !== (was && was.id)) { const n = maps.find((m) => m.id === map); this.toast(`${was ? was.name : 'That stage'} has no Boss Battle — switched to ${n ? n.name : 'another stage'}`, { icon: GLYPHS.map }); }
+      hostSet(map !== lob.map || (was && map !== was.id) ? { mode: next, duration: dur, map } : { mode: next, duration: dur });
+      if (was && map !== was.id) { const n = maps.find((m) => m.id === map); this.toast(`${was.name} has no Boss Battle — switched to ${n ? n.name : 'another stage'}`, { icon: GLYPHS.map }); }
     };
     let shownMap = null, shownTime = null;
     const renderStage = (dir = 0) => {
-      const m = maps.find((x) => x.id === lob.map) || maps[0], time = lob.time === 'dusk' ? 'dusk' : 'day';
+      const rnd = lob.map === 'random';
+      const m = rnd ? RANDOM_STAGE : maps.find((x) => x.id === lob.map) || maps[0], time = roomTime(lob.time);
       // (the count follows the mode's stage list, so it refreshes on a mode switch too)
-      const list = stageList(), k = list.indexOf(m);
-      stNum.innerHTML = `STAGE <b>${String((k < 0 ? maps.indexOf(m) : k) + 1).padStart(2, '0')}</b><em>/ ${String(list.length).padStart(2, '0')}</em>`;
+      const list = stageList(), k = list.findIndex((x) => x.id === m.id);
+      stNum.innerHTML = rnd ? `STAGE <b>??</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>` : `STAGE <b>${String(Math.max(1, k)).padStart(2, '0')}</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>`;
       if (m.id === shownMap && time === shownTime) return;
       const first = shownMap === null;
       shownMap = m.id; shownTime = time;
-      const img = h('img', { class: 'iw-lstage__img', alt: '', draggable: 'false' });
-      img.addEventListener('error', () => { img.replaceWith(h('span', { class: 'iw-lstage__img iw-lstage__fb', html: m.thumb || mapThumb(m, 3) })); }, { once: true });
-      img.src = stageArt(m.id, time, true);
+      // the ticket's picture: the stage's art at that time of day (golden hour / day on a stage whose own day look is the
+      // other one: the day art, tinted); RANDOM: a fan of the mode's stages under a big "?"
+      let img;
+      if (rnd) img = this._randomStageArt(list.slice(1), time);
+      else {
+        img = h('img', { class: 'iw-lstage__img', alt: '', draggable: 'false' });
+        img.addEventListener('error', () => { img.replaceWith(h('span', { class: 'iw-lstage__img iw-lstage__fb', html: m.thumb || mapThumb(m, 3) })); }, { once: true });
+        img.src = stageArt(m.id, time === 'sunset' ? 'dusk' : 'day', true);
+      }
+      const dayLook = (m.times && m.times.day) || m.theme || 'day';
+      stage.dataset.look = time === 'golden' && dayLook !== 'golden' ? 'golden' : time === 'day' && dayLook === 'golden' ? 'noon' : '';
       const olds = [...stImgs.children];
       if (!first && !reduced) img.style.setProperty('--dir', dir < 0 ? -1 : 1), img.classList.add(dir ? 'is-slide' : 'is-fade');
       stImgs.appendChild(img);
       setTimeout(() => olds.forEach((o) => o.remove()), first ? 0 : 520);
-      stName.textContent = m.name;
+      stName.textContent = rnd ? 'RANDOM STAGE' : m.name;
       stage.dataset.time = time;
+      stage.classList.toggle('is-random', rnd);
       const rules = [m.onlineOnly ? 'ONLINE ONLY' : '', m.noBots ? 'NO BOTS' : ''].filter(Boolean).join(' · ');
       stRules.lastChild.textContent = rules;
       rStage.classList.toggle('has-rules', !!rules);
@@ -3271,13 +3378,13 @@ export class Menus {
           else if (r === rTime) this._bind(r, { id: 'set-time', type: 'row', adjust: timeSeg.adjust, accept: timeSeg.cycle });
           else if (r === rPal) this._bind(r, { id: 'set-pal', type: 'row', adjust: palSeg.adjust, accept: palSeg.cycle });
           else if (r === rLen) this._bind(r, { id: 'set-len', type: 'row', adjust: lenSeg.adjust, accept: lenSeg.cycle });
-          else if (r === rBots) this._bind(r, { id: 'set-bots', type: 'row', adjust: (d) => (botsLocked() ? lockedBots() : botTgl.adjust(d)), accept: () => (botsLocked() ? lockedBots() : botTgl.accept()) });
-          else if (r === rDiff) this._bind(r, { id: 'set-diff', type: 'row', adjust: (d) => { if (lob.bots === false) { this._sfx('ui_error', 0.15); return; } diffSeg.adjust(d); }, accept: () => { if (lob.bots !== false) diffSeg.cycle(); } });
+          else if (r === rBots) this._bind(r, { id: 'set-bots', type: 'row', adjust: (d) => botStep.adjust(d), accept: () => botStep.cycle() });
+          else if (r === rDiff) this._bind(r, { id: 'set-diff', type: 'row', adjust: (d) => { if (!plan().total) { this._sfx('ui_error', 0.15); return; } diffSeg.adjust(d); }, accept: () => { if (plan().total) diffSeg.cycle(); } });
         } else if (!host && r.dataset.nav) { delete r.dataset.nav; if (this._focus === r) this._setFocus(wChip); }
       }
     };
 
-    // humans-only stage (config noBots): the bots switch is locked off
+    // humans-only stage (config noBots): the bot count is locked at 0
     const botsLocked = () => mapNoBots(lob.map);
     const lockedBots = () => { this._sfx('ui_error', 0.15); restartAnim(rBots, 'is-shake'); this.toast('No bots on this stage — it’s humans only', { icon: GLYPHS.bot }); };
 
@@ -3339,9 +3446,10 @@ export class Menus {
       countEl.textContent = String(ps.length);
       const pip = (host, n, t) => {
         if (host.childElementCount !== 4) { host.innerHTML = ''; for (let k = 0; k < 4; k++) host.appendChild(h('i', { html: GLYPHS.squidlet })); }
+        const humans = ps.filter((p) => teamOf(p) === t), bots = plan().team[t];
         [...host.children].forEach((c, k) => {
-          const pl = ps.filter((p) => teamOf(p) === t)[k];
-          const cls = pl ? (pl.ready || pl.host ? 'is-on is-ready' : 'is-on') : lob.bots !== false ? 'is-bot' : '';
+          const pl = humans[k];
+          const cls = pl ? (pl.ready || pl.host ? 'is-on is-ready' : 'is-on') : k < humans.length + bots ? 'is-bot' : '';
           if (c._c === cls) return;
           const pop = c._c !== undefined && pl && !String(c._c).startsWith('is-on');   // a squidkid just took this spot
           c._c = cls; c.className = cls;
@@ -3350,12 +3458,14 @@ export class Menus {
         void n;
       };
       pip(pipsA, na, 0); pip(pipsB, nb, 1);
+      void na; void nb;
       if (bossMode()) {
         // one squad of 8: filled by the room's kids first, bots take the rest
         if (squadPips.childElementCount !== 8) { squadPips.innerHTML = ''; for (let k = 0; k < 8; k++) squadPips.appendChild(h('i', { html: GLYPHS.squidlet })); }
+        const sb = plan().total;
         [...squadPips.children].forEach((c, k) => {
           const pl = ps[k];
-          const cls = pl ? (pl.ready || pl.host ? 'is-on is-ready' : 'is-on') : lob.bots !== false ? 'is-bot' : '';
+          const cls = pl ? (pl.ready || pl.host ? 'is-on is-ready' : 'is-on') : k < ps.length + sb ? 'is-bot' : '';
           if (c._c === cls) return;
           const pop = c._c !== undefined && pl && !String(c._c).startsWith('is-on');
           c._c = cls; c.className = cls;
@@ -3366,7 +3476,8 @@ export class Menus {
       const waiting = ps.filter((p) => !p.ready && !p.host);
       const host = ps.find((p) => p.host);
       let txt;
-      if (ps.length >= (lob.maxPlayers || 8)) txt = waiting.length ? `Room full · ${waiting.length} not ready` : 'Room full · everyone’s ready!';
+      if (practiceMode() && ps.length > 1) txt = isHost() ? 'Practice — start whenever you like' : `Practice — waiting for ${host ? host.name : 'the host'} to start`;
+      else if (ps.length >= (lob.maxPlayers || 8)) txt = waiting.length ? `Room full · ${waiting.length} not ready` : 'Room full · everyone’s ready!';
       else if (ps.length <= 1) txt = 'Share the code to fill the room';
       else if (!waiting.length) txt = isHost() ? 'Everyone’s ready — start when you like!' : `Everyone’s ready — waiting for ${host ? host.name : 'the host'}`;
       else txt = `${ps.length - waiting.length} of ${ps.length} ready`;
@@ -3375,12 +3486,12 @@ export class Menus {
       el.classList.toggle('is-alone', ps.length <= 1);
     };
     const renderSettings = (prev) => {
-      renderStage(prev && prev.map !== lob.map ? (maps.findIndex((m) => m.id === lob.map) > maps.findIndex((m) => m.id === prev.map) ? 1 : -1) : 0);
-      timeSeg.refresh(lob.time === 'dusk' ? 'dusk' : 'day');
+      { const L = stageList(), at = (id) => L.findIndex((m) => m.id === id); renderStage(prev && prev.map !== lob.map ? (at(lob.map) > at(prev.map) ? 1 : -1) : 0); }
+      timeSeg.refresh(roomTime(lob.time));
       lenSeg.refresh(lob.duration);
       palSeg.refresh(palIdx());
       { const P0 = TEAM_PALETTES[palIdx()]; palName.textContent = P0 ? P0.names.join(' vs ') : ''; }
-      botTgl.refresh(lob.bots !== false);
+      botStep.refresh();
       diffSeg.refresh(diffs[lob.difficulty] ? lob.difficulty : 'normal');
       const bm = bossMode(), md = lobMode(), zm = fixedLen(md);
       if (rMode._shown !== md) {
@@ -3391,17 +3502,22 @@ export class Menus {
         el.classList.toggle('is-bossmode', bm);
         el.classList.toggle('is-zonemode', zm);   // (the fixed-length modes: Zone Control, Tower Command)
         el.classList.toggle('is-towermode', md === 'tower');
+        el.classList.toggle('is-practicemode', md === 'practice');
         lenLockZB.textContent = `${Math.round(fixedDur(md) / 60)}:00`;
         diffLbl.querySelector('.iw-lset__lbltxt').textContent = bm ? 'DIFFICULTY' : 'BOT SKILL';
-        hostChip.lastChild.textContent = bm || zm ? 'HOST' : 'YOU’RE THE HOST';   // the longer headlines need the room
-        lenSegT.el.style.display = bm || zm ? 'none' : ''; lenSegB.el.style.display = bm ? '' : 'none';
+        hostChip.lastChild.textContent = bm || zm || md === 'practice' ? 'HOST' : 'YOU’RE THE HOST';   // the longer headlines need the room
+        lenSegT.el.style.display = bm || zm || md === 'practice' ? 'none' : ''; lenSegB.el.style.display = bm ? '' : 'none';
         rLen.classList.toggle('is-locked', zm);
+        rLen.classList.toggle('is-noclock', md === 'practice');
         if (!first) { restartAnim(rMode, 'is-swap'); restartAnim(status, 'is-swap'); }
       }
       lenSeg.refresh(lob.duration);
-      rDiff.classList.toggle('is-off', lob.bots === false);
-      const humans = players().length;
-      botsNote.textContent = botsLocked() ? 'No bots on this stage' : lob.bots !== false ? (humans < 8 ? `${8 - humans} bot${8 - humans === 1 ? '' : 's'} join ${bossMode() ? 'the squad' : 'in'}` : 'Room is full') : 'Empty spots stay empty';
+      const pl = plan();
+      rDiff.classList.toggle('is-off', !pl.total);
+      // where the bots go: the session evens the teams with them (Boss Battle: one squad)
+      botsNote.textContent = botsLocked() ? 'HUMANS ONLY ON THIS STAGE' : !pl.free ? 'ROOM IS FULL'
+        : !pl.total ? (practiceMode() ? 'JUST YOU AND YOUR FRIENDS' : 'EMPTY SPOTS STAY EMPTY')
+        : bossMode() ? `+${pl.total} IN THE SQUAD` : [pl.team[0] ? `+${pl.team[0]} ${TEAM_LABEL[0]}` : '', pl.team[1] ? `+${pl.team[1]} ${TEAM_LABEL[1]}` : ''].filter(Boolean).join(' · ');
       rBots.classList.toggle('is-locked', botsLocked());
       if (bossMode()) { const P1 = TEAM_PALETTES[palIdx()]; if (P1) palName.textContent = `${P1.names[0]} squad · ${P1.names[1]} boss`; }
       const host = players().find((p) => p.host);
@@ -3411,15 +3527,15 @@ export class Menus {
         if (prev.time !== lob.time) flash(rTime);
         if (prev.duration !== lob.duration) flash(rLen);
         if (prev.palette !== lob.palette) flash(rPal);
-        if (prev.bots !== lob.bots) flash(rBots);
+        if (prev.bots !== lob.bots || prev.botCount !== lob.botCount) flash(rBots);
         if (prev.difficulty !== lob.difficulty) flash(rDiff);
         if ((prev.mode || 'turf') !== (lob.mode || 'turf')) {
           flash(rMode);
-          if (!isHost()) this.toast(`${host ? host.name : 'The host'} picked ${bossMode() ? `BOSS BATTLE — everyone vs ${BOSS_NAME}!` : MODE_INFO[lobMode()].label}`, { icon: bossMode() ? BOSS_GLYPH : MODE_INFO[lobMode()].icon === GLYPHS.drop ? GLYPHS.flag : MODE_INFO[lobMode()].icon });
+          if (!isHost()) this.toast(`${host ? host.name : 'The host'} picked ${bossMode() ? `BOSS BATTLE — everyone vs ${BOSS_NAME}!` : practiceMode() ? 'PRACTICE — no clock, just play' : MODE_INFO[lobMode()].label}`, { icon: bossMode() ? BOSS_GLYPH : MODE_INFO[lobMode()].icon === GLYPHS.drop ? GLYPHS.flag : MODE_INFO[lobMode()].icon });
         }
         if (!isHost() && (prev.map !== lob.map || prev.time !== lob.time)) {
-          const m = maps.find((x) => x.id === lob.map);
-          this.toast(`${host ? host.name : 'The host'} picked ${m ? m.name : 'a stage'}${lob.time === 'dusk' ? ' at dusk' : ''}`, { icon: GLYPHS.map });
+          const m = lob.map === 'random' ? null : maps.find((x) => x.id === lob.map), T = ROOM_TIME_INFO[roomTime(lob.time)];
+          this.toast(`${host ? host.name : 'The host'} picked ${lob.map === 'random' ? 'a random stage' : m ? m.name : 'a stage'} ${T ? T.name : ''}`.trim(), { icon: GLYPHS.map });
         }
       }
     };
@@ -3440,7 +3556,10 @@ export class Menus {
       const waiting = players().filter((p) => !p.you && !p.ready && !p.host);
       const humans = players().length;
       const block = (net && net.startBlock ? net.startBlock() : noBotsStartBlock(lob)) || null;   // humans-only stage: 2+ players, one per side
-      startSub.textContent = ok ? (humans <= 1 && lob.bots !== false ? 'Just you and the bots' : humans <= 1 ? 'Nobody to play against yet!' : 'Everyone’s ready — let’s ink!') : block || (waiting.length ? `Waiting for ${listNames(waiting)}` : 'Getting ready…');
+      const nb = plan().total;
+      startSub.textContent = ok ? (practiceMode() ? (humans <= 1 ? (nb ? 'Practice with the bots — no clock' : 'Practice on your own — no clock') : 'Practice together — no clock')
+        : humans <= 1 && nb ? 'Just you and the bots' : humans <= 1 ? 'Nobody to play against yet!' : 'Everyone’s ready — let’s ink!') : block || (waiting.length ? `Waiting for ${listNames(waiting)}` : 'Getting ready…');
+      startBtn.querySelector('.iw-btn__label').textContent = practiceMode() ? 'PRACTICE!' : 'START!';
       // team seg follows your actual side unless a request is pending
       if (me && !S.pendingTeam) teamSeg.refresh(S.teamPref === 'auto' ? 'auto' : teamOf(me));
       teamRow.dataset.pick = S.teamPref === 'auto' ? 'auto' : String(S.pendingTeam ? S.pendingTeam.team : teamOf(me));
@@ -3464,7 +3583,7 @@ export class Menus {
       renderSettings(fromEvent ? prev : null);
       renderBar();
       bindRows();
-      S.lastLobby = { map: lob.map, time: lob.time, duration: lob.duration, bots: lob.bots, difficulty: lob.difficulty, palette: lob.palette, mode: lob.mode };
+      S.lastLobby = { map: lob.map, time: lob.time, duration: lob.duration, bots: lob.bots, botCount: lob.botCount, difficulty: lob.difficulty, palette: lob.palette, mode: lob.mode };
       if (sc && sc.updateLobby) safeCall(() => sc.updateLobby(...lineup()));
       const me = meP();
       if (S.pendingTeam && me && teamOf(me) === S.pendingTeam.team) S.pendingTeam = null;
@@ -3551,11 +3670,13 @@ export class Menus {
     const sideNav = (f, dir) => {
       const rows = hostRows(), i = rows.indexOf(f);
       if (i < 0) return undefined;
-      if (f === rTime && dir === 'right') return rLen;
-      if (f === rLen && dir === 'left') return rTime;
-      if ((f === rTime || f === rLen) && dir === 'up') return rStage;
-      if ((f === rTime || f === rLen) && dir === 'down') return rPal;
-      if (f === rPal && dir === 'up') return rTime;
+      // (LENGTH and BOTS share a line under TIME OF DAY)
+      if (f === rLen && dir === 'right') return rBots;
+      if (f === rBots && dir === 'left') return rLen;
+      if ((f === rLen || f === rBots) && dir === 'up') return rTime;
+      if ((f === rLen || f === rBots) && dir === 'down') return rPal;
+      if (f === rPal && dir === 'up') return rLen;
+      if (f === rTime && dir === 'down') return rLen;
       if (f === rStage && dir === 'down') return rTime;
       if (dir === 'up') return rows[i - 1] || copyBtn;
       if (dir === 'down') return rows[i + 1] || wChip;
@@ -3595,9 +3716,11 @@ export class Menus {
           const f = this._focus;
           // rows with a control: ←/→ adjust it; TIME and LENGTH share a line, so pushing past the edge crosses over
           if ((dir === 'left' || dir === 'right') && f && setRows.includes(f) && (this._binds.get(f) || {}).adjust) {
-            const edgeR = f === rTime && dir === 'right' && lob.time === 'dusk', edgeL = f === rLen && dir === 'left' && lob.duration === durations[0];
-            if (edgeR) { this._moveFocus(rLen, dir); return true; }
-            if (edgeL) { this._moveFocus(rTime, dir); return true; }
+            const lenFixed = fixedLen(lobMode()) || practiceMode();
+            const edgeR = f === rLen && dir === 'right' && (lenFixed || lob.duration === (bossMode() ? BOSS_DURATIONS : durations).slice(-1)[0]);
+            const edgeL = f === rBots && dir === 'left' && (botsLocked() || plan().total === 0);
+            if (edgeR) { this._moveFocus(rBots, dir); return true; }
+            if (edgeL) { this._moveFocus(rLen, dir); return true; }
             return false;
           }
           let t = f ? barNav(f, dir) : undefined;
@@ -3653,12 +3776,16 @@ export class Menus {
               P.x = x; P.y = y; P.s = s; P.el.style.transform = `translate3d(${x}px,${y}px,0) scale(${s.toFixed(3)})`;
             }
           }
-          const bots = lob.bots !== false;
+          // the open spots the bots will take: the first free ones in your team's row (front) and the rivals' (back) — in
+          // boss mode the squad's, front first
+          const P = plan(), myT = teamOf(meP()), left = bossMode() ? [P.total, 0] : [P.team[myT], P.team[1 - myT]];
           for (const O of open) {
             const a = sc.lobbySlotAnchor ? sc.lobbySlotAnchor(O.row, O.i, A) : null;
             const on = !!(a && a.vis > 0.5 && !S.launching);
             if (on !== O.on) { O.on = on; O.el.classList.toggle('is-on', on); }
             if (a) O.el.style.transform = `translate3d(${Math.round(a.x)}px,${Math.round(a.y)}px,0) scale(${clamp(a.s || 1, 0.6, 1.25).toFixed(3)})`;
+            const r = bossMode() ? 0 : O.row, bots = on && left[r] > 0;
+            if (bots) left[r]--;
             const sig = bots ? 'bot' : 'open';
             if (O.sig !== sig) { O.sig = sig; O.txt.textContent = bots ? 'BOT' : 'OPEN'; O.el.classList.toggle('is-bot', bots); O.el.querySelector('.iw-plate__plus').innerHTML = bots ? GLYPHS.bot : GLYPHS.plus; }
           }
@@ -3925,57 +4052,171 @@ export class Menus {
     };
   }
 
-  // Practice pause: loadout swaps, a clean stage, a new stage — never a trip back to the lobby
+  // Practice pause: loadout swaps, a clean stage, a new stage — never a trip back to the lobby. Online (a room's
+  // Practice) the session carries on underneath; the host also gets CLEAR ALL INK, SWAP STAGE and END PRACTICE (all
+  // of them for everyone in the room), guests LEAVE ROOM. Host migration while it's open: the menu rebuilds itself.
   _scr_pausePractice() {
     const info = safeCall(() => this.api.practiceInfo && this.api.practiceInfo()) || {};
+    const online = !!info.online, host = !online || !!info.host;
+    const clearInk = () => {
+      const ok = safeCall(() => this.api.practiceClearInk && this.api.practiceClearInk());
+      if (ok) { this._sfx('ui_confirm'); this._resume(); }
+      else { this._sfx('ui_error'); this.toast(info.wiping ? 'The ink is already going' : 'Clear ink is recharging — try again in a moment', { icon: GLYPHS.wave }); }
+    };
     const items = [
-      { id: 'resume', label: 'RESUME', icon: GLYPHS.play, cls: 'iw-btn--menu iw-btn--primary', accept: () => this._resume(), sound: null },
+      { id: 'resume', label: online ? 'BACK TO PRACTICE' : 'RESUME', icon: GLYPHS.play, cls: 'iw-btn--menu iw-btn--primary', accept: () => this._resume(), sound: null },
       { id: 'loadout', label: 'CHANGE LOADOUT', icon: weaponIcon((this._weapons()[info.weapon] || {}).kind || info.weapon || 'shooter'), cls: 'iw-btn--menu', accept: () => this._go('loadout') },
-      { id: 'reset', label: 'RESET STAGE', icon: GLYPHS.reset, cls: 'iw-btn--menu', accept: () => { safeCall(() => this.api.practiceReset && this.api.practiceReset()); this._resume(); } },
-      { id: 'stage', label: 'NEW STAGE', icon: GLYPHS.map, cls: 'iw-btn--menu', accept: () => {
+      host ? { id: 'wipe', label: 'CLEAR ALL INK', sub: online ? 'For everyone · K' : 'K', icon: GLYPHS.wave, cls: 'iw-btn--menu', accept: clearInk } : null,
+      !online ? { id: 'reset', label: 'RESET STAGE', icon: GLYPHS.reset, cls: 'iw-btn--menu', accept: () => { safeCall(() => this.api.practiceReset && this.api.practiceReset()); this._resume(); } } : null,
+      !online ? { id: 'stage', label: 'NEW STAGE', icon: GLYPHS.map, cls: 'iw-btn--menu', accept: () => {
         if (this._starting) return;
         this._starting = true;
         this._runWipe(() => { this._starting = false; safeCall(() => this.api.practiceNewStage && this.api.practiceNewStage()); if (this.current === 'pause') this.show(null, { instantLeave: true }); });
-      } },
+      } } : host ? { id: 'swap', label: 'SWAP STAGE', sub: 'Everyone moves with you', icon: GLYPHS.map, cls: 'iw-btn--menu', accept: () => this._openStageSwap(info) } : null,
       { id: 'settings', label: 'SETTINGS', icon: GLYPHS.gear, cls: 'iw-btn--menu', accept: () => this._go('settings') },
-      { id: 'quit', label: 'END PRACTICE', icon: GLYPHS.close, cls: 'iw-btn--menu iw-btn--danger', accept: () => { safeCall(() => this.api.quitPractice && this.api.quitPractice()); } },
-    ];
-    const tilts = [-1.8, 1.2, -1, 1.4, -1.2, 1];
-    const btns = items.map((it, i) => { const b = this._btn({ ...it, tilt: tilts[i] }); b.classList.add('iw-in', 'iw-in--left'); return b; });
+      online && host ? { id: 'end', label: 'END PRACTICE', sub: 'Everyone back to the lobby', icon: GLYPHS.flag, cls: 'iw-btn--menu iw-btn--danger', accept: () => this._openModal({
+        title: 'END PRACTICE?', danger: true, text: 'Everyone in the room heads back to the lobby together. The room stays open.',
+        buttons: [
+          { label: 'KEEP PLAYING', accept: () => this._closeModal(), sound: null },
+          { label: 'BACK TO LOBBY', cls: 'iw-btn--danger', sound: 'ui_confirm', accept: () => { this._closeModal(true); safeCall(() => this.api.practiceEnd && this.api.practiceEnd()); } },
+        ],
+      }) } : null,
+      online ? { id: 'leave', label: 'LEAVE ROOM', icon: GLYPHS.exit, cls: 'iw-btn--menu iw-btn--danger', accept: () => this._openModal({
+        title: 'LEAVE ROOM?', danger: true,
+        text: host ? 'You’re the host — the next player takes over the room and the practice carries on without you.' : 'You’ll leave the practice and the room. Rejoin any time with the code while it’s open.',
+        buttons: [
+          { label: 'STAY', accept: () => this._closeModal(), sound: null },
+          { label: 'LEAVE', cls: 'iw-btn--danger', sound: 'ui_confirm', accept: () => { this._closeModal(true); safeCall(() => this.api.leaveRoom && this.api.leaveRoom()); } },
+        ],
+      }) } : { id: 'quit', label: 'END PRACTICE', icon: GLYPHS.close, cls: 'iw-btn--menu iw-btn--danger', accept: () => { safeCall(() => this.api.quitPractice && this.api.quitPractice()); } },
+    ].filter(Boolean);
+    const tilts = [-1.8, 1.2, -1, 1.4, -1.2, 1, -1.4, 1.1];
+    const btns = items.map((it, i) => { const b = this._btn({ ...it, tilt: tilts[i % tilts.length] }); b.classList.add('iw-in', 'iw-in--left'); return b; });
 
     const W = this._weapons()[info.weapon] || {};
     const S = (this.api.subs || {})[info.sub] || this._sub();
     const sp = this._specials()[info.special] || this._specials()[W.special] || {};
     const kit = (label, icon, name, blurb) => h('div', { class: 'iw-kit' }, h('span', { class: 'iw-kit__icon', html: icon }), h('div', null, h('small', null, label), h('b', null, name || ''), h('span', null, blurb || '')));
-    const [a] = this._accent();
+    const [a, b] = this._accent();
     const hex = (G.teamHex || [])[0];
+    const T = ROOM_TIME_INFO[roomTime(info.time)] || null;
     const ctlWrap = h('div', { class: 'iw-pctl' }, h('div', { class: 'iw-seclabel' }, h('i', { html: GLYPHS.gamepad }), 'QUICK CONTROLS'), this._controlsList(this._input, true));
-    const panel = this._panel('iw-pmatch iw-ppractice iw-panel--flat iw-in iw-in--right',
+    // online: who's here (team, weapon, host crown, ping) — refreshed while the menu is up
+    let roster = null, rosterSig = '';
+    const renderRoster = (ps) => {
+      const sig = JSON.stringify(ps.map((p) => [p.name, p.team, p.weapon, p.bot, p.host, p.alive, p.ping > 0 ? (p.ping < 70 ? 3 : p.ping < 140 ? 2 : 1) : 0]));
+      if (sig === rosterSig) return;
+      rosterSig = sig;
+      roster.innerHTML = '';
+      for (const p of [...ps].sort((x, y) => x.team - y.team || x.bot - y.bot)) {
+        const q = p.ping > 0 ? (p.ping < 70 ? 3 : p.ping < 140 ? 2 : 1) : 0;
+        roster.appendChild(h('div', { class: `iw-prow is-t${p.team}` + (p.isSelf ? ' is-self' : '') + (p.alive ? '' : ' is-dead') },
+          h('i', { class: 'iw-roster__dot' }),
+          h('span', { class: 'iw-prow__w', html: weaponIcon((this._weapons()[p.weapon] || {}).kind || p.weapon) }),
+          h('span', { class: 'iw-prow__name' }, p.name, p.isSelf ? h('em', null, 'YOU') : null, p.host ? h('i', { class: 'iw-prow__crown', html: GLYPHS.crown }) : null),
+          p.bot ? h('span', { class: 'iw-prow__bot', html: GLYPHS.bot }) : h('span', { class: 'iw-plate__ping iw-prow__ping', 'data-q': q, title: p.ping ? `${Math.round(p.ping)} ms` : '' }, h('i'), h('i'), h('i'))));
+      }
+    };
+    if (online) { roster = h('div', { class: 'iw-proster' }); renderRoster(info.players || []); }
+    const tip = online
+      ? (host ? [h('b', null, 'L'), ' swaps your loadout · ', h('b', null, 'K'), ' clears all ink for everyone · the clock never runs out']
+        : [h('b', null, 'L'), ' swaps your loadout any time · the host can clear the ink, swap the stage or end the practice'])
+      : [h('b', null, 'L'), ' swaps your loadout any time · ', h('b', null, 'K'), ' clears the ink · ', h('b', null, 'Reset stage'), ' also refills your special'];
+    const panel = this._panel('iw-pmatch iw-ppractice iw-panel--flat iw-in iw-in--right' + (online ? ' is-online' : ''),
       h('div', { class: 'iw-pmatch__top' },
         h('div', { class: 'iw-pmatch__info' },
-          h('div', { class: 'iw-pmatch__mode' }, h('span', { class: 'iw-pmatch__tag' }, 'PRACTICE'), h('span', { class: 'iw-pmatch__diff' }, 'No enemies · no clock')),
-          h('div', { class: 'iw-pmatch__map' }, h('i', { html: GLYPHS.map }), info.map || 'Practice'))),
+          h('div', { class: 'iw-pmatch__mode' }, h('span', { class: 'iw-pmatch__tag' }, online ? `PRACTICE · ${String(info.code || '').toUpperCase()}` : 'PRACTICE'),
+            h('span', { class: 'iw-pmatch__diff' }, online ? (host ? 'You’re the host · no clock' : 'No clock · play on together') : 'No enemies · no clock')),
+          h('div', { class: 'iw-pmatch__map' }, h('i', { html: GLYPHS.map }), info.map || 'Practice', online && T ? h('span', { class: 'iw-pmatch__time' }, h('i', { html: T.icon }), T.label === 'GOLDEN' ? 'GOLDEN HOUR' : T.label) : null))),
+      online ? h('div', { class: 'iw-seclabel' }, h('i', { html: GLYPHS.users }), 'IN THIS PRACTICE') : null,
+      roster,
       h('div', { class: 'iw-seclabel' }, h('i', { html: WEAPON_ICONS.shooter }), 'YOUR LOADOUT'),
       h('div', { class: 'iw-wd__kits' },
         kit('WEAPON', weaponIcon(W.kind || info.weapon || 'shooter'), W.name, W.blurb),
         kit('SUB', SUB_ICONS[S.id] || SUB_ICONS.bomb, S.name, S.blurb),
         kit('SPECIAL', specialIcon(sp.id || W.special), sp.name, sp.blurb)),
-      h('p', { class: 'iw-ppractice__tip' }, h('b', null, 'L'), ' swaps your loadout any time · ', h('b', null, 'Reset stage'), ' wipes the ink and refills your special'),
-      ctlWrap);
+      h('p', { class: 'iw-ppractice__tip' }, ...tip),
+      online ? null : ctlWrap);
     colorVars(panel, 'self', toHex(hex || a));
+    colorVars(panel, 'ta', toHex((G.teamHex || [])[0] || a)); colorVars(panel, 'tb', toHex((G.teamHex || [])[1] || b));
 
-    const el = h('div', { class: 'iw-screen iw-pause' },
+    const el = h('div', { class: 'iw-screen iw-pause' + (online ? ' is-netpractice' : '') },
       h('div', { class: 'iw-pause__dim' }),
       h('div', { class: 'iw-pause__col' },
-        h('div', { class: 'iw-pause__title iw-in iw-in--down' }, h('span', { class: 'iw-pause__blob', html: splatSVG({ seed: 5, cls: 'iw-fa', r: 60, arms: 8, drops: 4 }) }), h('span', { class: 'iw-display' }, 'PRACTICE')),
+        h('div', { class: 'iw-pause__title iw-in iw-in--down' }, h('span', { class: 'iw-pause__blob', html: splatSVG({ seed: 5, cls: 'iw-fa', r: 60, arms: 8, drops: 4 }) }), h('span', { class: 'iw-display' }, 'PRACTICE'),
+          online ? h('span', { class: 'iw-pause__live' }, h('i'), 'STILL PLAYING') : null),
         h('nav', { class: 'iw-pause__menu' }, btns)),
       panel,
       this._prompts([['Enter', 'A', 'Select'], ['Esc', 'Start', 'Resume']]));
+    let acc = 0;
     return {
       el, wrap: true, initial: btns[0],
       onBack: () => { if (performance.now() - this._shownAt > 200) this._resume(); },
       onInputMode: (mode) => { const old = ctlWrap.querySelector('.iw-ctl'); if (old) old.replaceWith(this._controlsList(mode, true)); },
+      tick: (dt) => {
+        if (!online || (acc += dt) < 0.4) return;
+        acc = 0;
+        const now = safeCall(() => this.api.practiceInfo && this.api.practiceInfo());
+        if (!now) return;
+        // the room changed hands (or the stage did): rebuild with the right buttons
+        if (!!now.host !== host || now.map !== info.map) { if (!this._modal) this.show('pause', { force: true }); return; }
+        renderRoster(now.players || []);
+      },
     };
+  }
+
+  // Practice, the host: pick another stage (and look) for everyone — ◀ ▶ through the stages (RANDOM first), the time of
+  // day, then SWAP. The session moves the whole room there in place.
+  _openStageSwap(info = {}) {
+    if (this._modal) return;
+    const maps = [RANDOM_STAGE, ...this._maps()];
+    let i = Math.max(0, maps.findIndex((m) => m.id === info.mapId));
+    let time = roomTime(info.time || 'day');
+    const stImgs = h('span', { class: 'iw-lstage__imgs' });
+    const stName = h('span', { class: 'iw-lstage__name' });
+    const stRules = h('span', { class: 'iw-swap__rules' });
+    const stArrows = h('span', { class: 'iw-lstage__arrows' }, h('i', { class: 'is-l', html: GLYPHS.back }), h('i', { class: 'is-r', html: GLYPHS.next }));
+    const stage = h('div', { class: 'iw-lstage iw-swap__stage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), h('span', { class: 'iw-lstage__tape' }, stName), stArrows);
+    const render = (dir = 0) => {
+      const m = maps[i], rnd = m.id === 'random';
+      const img = rnd ? this._randomStageArt(maps.slice(1), time) : h('img', { class: 'iw-lstage__img', alt: '', draggable: 'false', src: stageArt(m.id, time === 'sunset' ? 'dusk' : 'day', true) });
+      if (dir && !prefersReducedMotion()) { img.style.setProperty('--dir', dir); img.classList.add('is-slide'); }
+      const olds = [...stImgs.children];
+      stImgs.appendChild(img);
+      setTimeout(() => olds.forEach((o) => o.remove()), dir ? 520 : 0);
+      stName.textContent = rnd ? 'RANDOM STAGE' : m.name + (m.id === info.mapId ? ' · NOW' : '');
+      const dayLook = (m.times && m.times.day) || m.theme || 'day';
+      stage.dataset.look = time === 'golden' && dayLook !== 'golden' ? 'golden' : time === 'day' && dayLook === 'golden' ? 'noon' : '';
+      stRules.textContent = m.noBots ? 'Humans only — any bots leave the practice' : rnd ? 'Rolled when you swap' : '';
+    };
+    const move = (d) => { i = (i + d + maps.length) % maps.length; this._sfx('ui_toggle'); render(d); };
+    stArrows.children[0].addEventListener('click', (e) => { e.stopPropagation(); move(-1); });
+    stArrows.children[1].addEventListener('click', (e) => { e.stopPropagation(); move(1); });
+    const timeSeg = this._seg(Object.entries(ROOM_TIME_INFO).map(([v, T]) => [v, h('span', { class: 'iw-segico' }, h('i', { html: T.icon }), T.label)]), time, (v) => { time = v; render(0); });
+    const rowStage = h('div', { class: 'iw-lset iw-lset--stage iw-swap__row' }, h('div', { class: 'iw-lset__label' }, h('i', { html: GLYPHS.map }), 'STAGE'), stage, stRules);
+    const rowTime = h('div', { class: 'iw-lset iw-swap__row' }, h('div', { class: 'iw-lset__label' }, h('i', { html: GLYPHS.sun }), 'TIME OF DAY'), timeSeg.el);
+    this._bind(rowStage, { id: 'swap-stage', type: 'row', adjust: (d) => move(d), accept: () => move(1) });
+    this._bind(rowTime, { id: 'swap-time', type: 'row', adjust: timeSeg.adjust, accept: timeSeg.cycle });
+    const go = this._btn({ id: 'swap-go', label: 'SWAP!', icon: GLYPHS.play, cls: 'iw-btn--modal iw-btn--primary', sound: 'ui_confirm', accept: () => {
+      const m = maps[i];
+      this._closeModal(true);
+      const ok = safeCall(() => this.api.practiceSwapStage && this.api.practiceSwapStage(m.id, time));
+      if (!ok) this.toast('Couldn’t swap the stage right now', { kind: 'error', icon: GLYPHS.map });
+    } });
+    const cancel = this._btn({ id: 'swap-cancel', label: 'CANCEL', cls: 'iw-btn--modal', accept: () => this._closeModal() });
+    const m = h('div', { class: 'iw-modal iw-swap' },
+      h('div', { class: 'iw-modal__card iw-swap__card' },
+        h('div', { class: 'iw-modal__splat', html: splatSVG({ seed: 9, cls: 'iw-fa' }) }),
+        h('div', { class: 'iw-modal__title iw-display' }, 'SWAP STAGE'),
+        h('p', { class: 'iw-modal__text' }, 'Everyone moves there with you — same teams, same loadouts, back at your pads.'),
+        rowStage, rowTime,
+        h('div', { class: 'iw-modal__btns' }, go, cancel)));
+    render(0);
+    this._scr.el.appendChild(m);
+    this._modalPrev = this._focus;
+    this._modal = m;
+    this._setFocus(rowStage, { snap: true });
+    this._sfx('ui_click');
   }
 
   // ================================================================ SCREEN: results

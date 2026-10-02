@@ -532,6 +532,14 @@ export const GLYPHS = {
   signal: svg(`<rect x="8" y="40" width="10" height="16" rx="3" fill="currentColor"/><rect x="27" y="28" width="10" height="28" rx="3" fill="currentColor"/><rect x="46" y="12" width="10" height="44" rx="3" fill="currentColor"/>`),
   // squid silhouette (lobby head-count pips, splashtag patterns): outlined in ink, eyes cut out
   squidlet: svg(`<path d="${SQUID_PATH}" fill="currentColor" stroke="var(--k, #15121c)" stroke-width="4" stroke-linejoin="round"/><circle cx="26.5" cy="36" r="3.4" fill="var(--k, #15121c)"/><circle cx="37.5" cy="36" r="3.4" fill="var(--k, #15121c)"/>`),
+  // golden hour: a low sun on the horizon, long rays
+  golden: svg(`<path d="M14 42 A18 18 0 0 1 50 42 Z" fill="currentColor"/><g ${G} stroke-width="5">${[-60, -30, 0, 30, 60].map((d) => { const a = (d - 90) * Math.PI / 180; return `<path d="M${(32 + Math.cos(a) * 23).toFixed(1)} ${(42 + Math.sin(a) * 23).toFixed(1)} L${(32 + Math.cos(a) * 29).toFixed(1)} ${(42 + Math.sin(a) * 29).toFixed(1)}"/>`; }).join('')}<path d="M6 50 L58 50"/></g>`),
+  // sunset: the sun half down behind the sea, a few lines of water
+  sunset: svg(`<path d="M16 38 A16 16 0 0 1 48 38 Z" fill="currentColor"/><g ${G} stroke-width="5"><path d="M6 38 L58 38"/><path d="M14 47 L50 47" opacity=".7"/><path d="M22 55 L42 55" opacity=".45"/></g>`),
+  // clear-all-ink: a curling wave
+  wave: svg(`<path d="M6 46 Q14 30 26 30 Q38 30 38 42 Q38 50 31 50 Q25 50 25 44 Q25 39 30 39" ${G}/><path d="M38 42 Q44 24 58 22" ${G}/><path d="M6 56 L58 56" ${G} stroke-width="4" opacity=".55"/>`),
+  // no clock (Practice): a looped infinity
+  infinity: svg(`<path d="M32 32 C26 22 12 22 12 32 C12 42 26 42 32 32 C38 22 52 22 52 32 C52 42 38 42 32 32 Z" ${G}/>`),
 };
 
 /** Kill-feed / stat glyphs */

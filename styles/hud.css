@@ -74,6 +74,9 @@
 .iw-hud.is-practice .iw-squad { visibility: hidden; }
 .iw-hud.is-practice .iw-timer { width: auto; padding: 0 calc(var(--u) * 2); }
 .iw-hud.is-practice .iw-timer__txt { font-size: calc(var(--u) * 1.9); letter-spacing: .06em; }
+/* online Practice: the rosters stay (who's where, who's splatted), the clock is a PRACTICE · <code> tag */
+.iw-hud.is-netpractice .iw-timer { width: auto; padding: 0 calc(var(--u) * 1.6); }
+.iw-hud.is-netpractice .iw-timer__txt { font-size: calc(var(--u) * 1.35); letter-spacing: .06em; white-space: nowrap; }
 .iw-timer.is-last .iw-timer__blob, .iw-timer.is-last .iw-timer__drip { background: #3a1a4f; }
 .iw-timer.is-last .iw-timer__txt { color: #ffe27a; }
 .iw-timer.is-final .iw-timer__blob, .iw-timer.is-final .iw-timer__drip { background: #c8173a; }

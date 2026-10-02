@@ -59,3 +59,5 @@ const load = Module._load;
 Module._load = function (req) { return req === 'electron' ? patched : load.apply(this, arguments); };
 require(path.join(ROOT, 'electron', 'main.cjs'));
 Module._load = load;
+// for harnesses that open more game windows of their own (netpage.cjs: one per online client, each in its own session)
+module.exports = { fsHandler, OffscreenBW, ROOT };

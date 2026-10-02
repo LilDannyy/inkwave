@@ -21,7 +21,7 @@
 // shooter's client (what you see is what you hit) and applied by the victim's owner.
 import * as THREE from 'three';
 import { G, emit, on } from '../core/ctx.js';
-import { PLAYER, WEAPONS, SPECIAL_ORDER, mapNoBots } from '../config.js';
+import { PLAYER, WEAPONS, SUBS, SPECIALS, SPECIAL_ORDER, mapNoBots } from '../config.js';
 import { MAIN_KITS, SUB_KITS, KIT_GHOSTS } from '../game/kits/registry.js';
 import { specialNetState, specialNetApply } from '../game/specials.js';
 import { BotBrain } from '../game/bots.js';
@@ -64,9 +64,18 @@ export class NetMatch {
     this.clockT = 0;
     this.unsubs = [];
     this.stats = { in: 0, out: 0, extrap: 0, snaps: 0 };
+    // Practice (cfg.practice): gen = the session's stage generation (bumped by every stage swap; ticks from another
+    // generation are ignored — a peer still on the old stage), inkWait = a late joiner holds the event playback until
+    // the host's copy of the turf has landed (importGrid), so nothing painted since is buried under it
+    this.gen = cfg.gen | 0;
+    this.inkWait = 0;
+    this._ink = null;
+    this.stageSync = null;                       // Practice: the host's stage clock ({ t, at }: stageKit StageClock)
+    this.podsPending = cfg.late && Array.isArray(cfg.pods) ? cfg.pods : null;   // a late joiner's copy of the pods
   }
 
   get isHost() { return this.s.isHost; }
+  get practice() { return !!this.cfg.practice; }
 
   // ---------------------------------------------------------------------------------------------- setup
   /** Called by main.js once the Match built its actors from the roster. */
@@ -81,6 +90,9 @@ export class NetMatch {
     // humans-only stage: anyone who left while the match was loading (no NetMatch yet to hear it) is dropped now
     if (mapNoBots(this.cfg.map)) for (const a of [...this.byNid.values()]) if (a.owner !== this.myId && !this.s._members.has(a.owner)) this._remove(a);
     this.unsubs.push(on('match:state', ({ state, match: m }) => { if (m === this.match && this.isHost) this._sendNow({ k: 'st', s: state, t: r2(m.time) }); }));
+    // (Practice: anyone who dropped in / a bot that made room while this screen was building the stage)
+    for (const d of this._rosterQ || []) { if (d.k === 'pj') this.addActor(d.r); else { const a = this.byNid.get(d.nid); if (a) this._remove(a); } }
+    this._rosterQ = null;
   }
 
   _setupActor(a) {
@@ -115,6 +127,8 @@ export class NetMatch {
     const e = ['s', r2(c.x), r2(c.y), r2(c.z), r2(radius), team, r3(o.seed ?? Math.random()), o.kind ?? 0,
       st ? r3(st.x) : 0, st ? r3(st.y) : 0, st ? r3(st.z) : 0, st ? r2(o.stretchAmt ?? 1) : 0];
     if (o.pod != null && o.pod !== 1) e.push(r2(o.pod));   // (a sprout pod's weight for it: pods.js)
+    const wt = G.paint?.wipeTag?.();                        // the clear-all-ink wave: [wave, front] (paint.js _wipeGate)
+    if (wt) { if (e.length < 13) e.push(0); e.push(wt[0], r2(wt[1])); }
     this._rec(e);
   }
 
@@ -155,6 +169,14 @@ export class NetMatch {
   recTower(e) { if (this.isHost && G.netm === this) this._rec(['tw', e]); }
   // sprout pods: a hedge grown (by which team, when) / trampled, the meters' look (pods.js netEvent)
   recPods(e) { if (this.isHost && G.netm === this) this._rec(['pd', e]); }
+  // Practice: the host's clear-all-ink wave (number, centre, length, reach) — on its timeline, so it lands in step with
+  // its own splats; each screen runs it from this record (main.js netWipe → paint.startWipe + the look)
+  recWipe(w) { if (this.isHost && G.netm === this) this._rec(['w', w.k, r2(w.cx), r2(w.cz), r2(w.dur), r2(w.reach)]); }
+  // Practice: a squidkid's new loadout (the L overlay mid-session) — its owner's word, played on its timeline
+  recLoadout(a) {
+    if (!a || a.remote || a.nid === undefined || G.netm !== this) return;
+    this._rec(['lo', a.nid, a.weaponId, a.subId, a.specialId]);
+  }
   // a guest's hit on the boss (or a crablet): shooter-authoritative, applied by the host that runs it
   sendBossHit(attacker, d, weak, w, crab = -1) {
     if (this.isHost || attacker.nid === undefined) return;
@@ -185,6 +207,7 @@ export class NetMatch {
     for (const p of this.peers.values()) this._advance(p, dt);
     for (const a of this.byNid.values()) if (a.remote) this._sample(a, t, dt);
     this._sampleBoss(dt);
+    if (this.inkWait > 0 && (this.inkWait -= dt) <= 0) { this.inkWait = 0; console.warn('[net] no turf from the host — playing on without it'); }
     this._playEvents(t);
     this._voices(dt);
     // outgoing tick
@@ -200,12 +223,18 @@ export class NetMatch {
     const a = [];
     for (const x of this.byNid.values()) if (!x.remote) a.push(packActor(x));
     const msg = { k: 't', ts: r3(now()), a };
+    if (this.gen) msg.g = this.gen;
     if (this.out.length) { msg.e = this.out; this.out = []; }
     const boss = this.match?.boss;
     if (this.isHost && boss && boss.sim) { this.bossN = (this.bossN || 0) + 1; msg.B = boss.pack(this.bossN % 10 === 0); }
     if (this.isHost && this.match) {
       this.clockT -= TICK;
-      if (this.clockT <= 0) { this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time)]; }
+      if (this.clockT <= 0) {
+        this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time)];
+        // (Practice: no match clock — the stage clock instead: movers' timetables, pods' growth)
+        const st = this.practice ? (this.match.movers?.clock?.t ?? this.match.pods?.clock?.t) : undefined;
+        if (st !== undefined) msg.c.push(r3(st));
+      }
     }
     this.stats.out++;
     this.s.tr?.broadcast(msg);
@@ -226,6 +255,16 @@ export class NetMatch {
       case 'res': if (from === this.s.hostId) this._result(d); break;
       case 'end': if (from === this.s.hostId) G.game?.netMatchEnd?.(); break;
       case 'own': if (from === this.s.hostId) this._ownership(d.map); break;
+      // Practice: someone joined mid-session / a bot made room for them (the host's word)
+      // (still building this stage: they wait for bind)
+      case 'pj': case 'pr':
+        if (from !== this.s.hostId || (d.g | 0) !== this.gen) break;
+        if (!this.match) { (this._rosterQ || (this._rosterQ = [])).push(d); break; }
+        if (d.k === 'pj') this.addActor(d.r); else { const a = this.byNid.get(d.nid); if (a) this._remove(a); }
+        break;
+      // Practice: a late joiner asks the host for the turf; the host's copy arrives in pieces
+      case 'inkreq': if (this.isHost) this._sendInk(from, d); break;
+      case 'ink': if (from === this.s.hostId) this._gotInk(d); break;
     }
   }
 
@@ -236,6 +275,7 @@ export class NetMatch {
   }
 
   _tick(from, d) {
+    if ((d.g | 0) !== this.gen) return;   // (Practice: a peer still on the stage before a swap)
     this.stats.in++;
     const p = this._peer(from);
     const t = now();
@@ -465,6 +505,7 @@ export class NetMatch {
 
   // ---- event playback -----------------------------------------------------------------------------------------------
   _playEvents() {
+    if (this.inkWait > 0) return;   // (a late joiner: the host's turf first)
     for (const [id, p] of this.peers) {
       if (!p.events.length || p.tr === undefined) continue;
       const tr = p.tr;
@@ -481,10 +522,11 @@ export class NetMatch {
       case 's': {
         this.applying = true;
         const st = e[9] || e[10] || e[11] ? _v2.set(e[9], e[10], e[11]) : undefined;
-        const opts = { seed: e[7] };
+        const opts = { seed: e[7], replay: 1 };
         if (e[8]) opts.kind = e[8];
         if (st) { opts.stretch = st; opts.stretchAmt = e[12]; }
         if (e[13]) opts.pod = e[13];
+        if (e[14] !== undefined) { opts.wk = e[14]; opts.wr = e[15]; }   // (its painter's wave tag)
         G.paint?.splat(_v.set(e[2], e[3], e[4]), e[5], e[6], opts);
         this.applying = false;
         break;
@@ -511,6 +553,8 @@ export class NetMatch {
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
+      case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
+      case 'lo': { const a = this.byNid.get(e[2]); if (a && a.remote) applyLoadout(a, e[3], e[4], e[5]); break; }
       case 'bc': { const b = this.match?.boss; if (b && !b.sim) b._crabBurst(e[2], e[3], e[4], e[5], !!e[6]); break; }
     }
   }
@@ -654,9 +698,18 @@ export class NetMatch {
   }
 
   // ---- host clock / state / result --------------------------------------------------------------------------------------
-  _hostClock([state, time]) {
+  _hostClock([state, time, st]) {
     const m = this.match;
     if (!m || this.isHost) return;
+    if (this.practice && st !== undefined) {
+      this.stageSync = { t: st, at: now() };
+      // a late joiner: the pods the session has grown so far, replayed once our stage clock is the host's
+      if (this.podsPending && m.pods) {
+        for (const c of [m.movers?.clock, m.pods?.clock]) if (c) c.t = st;
+        for (const e of this.podsPending) { try { m.pods.netEvent(e); } catch (err) { console.warn('[net] pods snapshot', err); } }
+        this.podsPending = null;
+      }
+    }
     if (state === 'playing' && m.state === 'playing' && Math.abs(m.time - time) > 0.2) m.time += (time - m.time) * 0.5;
   }
   _hostState(d) {
@@ -693,7 +746,8 @@ export class NetMatch {
     const drop = mapNoBots(this.cfg.map);
     for (const a of [...this.byNid.values()]) {
       if (a.owner !== id) continue;
-      if (drop) { this._remove(a); continue; }
+      // (Practice: a player who leaves is gone — nobody plays on in their place; the host's bots move to the new host)
+      if (drop || (this.practice && !a.isBot)) { this._remove(a); continue; }
       a.owner = this.s.hostId;
       if (a.owner === this.myId) this._adopt(a);
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
@@ -707,6 +761,69 @@ export class NetMatch {
     this.byNid.delete(a.nid);
     this._stopLoops(a);
     this.match.removeActor(a);
+  }
+
+  // ---- Practice: the session's roster changes while it runs -----------------------------------------------------------
+  /** A squidkid joins the running session (the host's roster entry): it drops in at its team's pad on this screen. */
+  addActor(r) {
+    if (!this.match || !r || this.byNid.has(r.nid)) return null;
+    const a = this.match.addRosterActor(r);
+    if (!a) return null;
+    this.byNid.set(a.nid, a);
+    this.nidHi = Math.max(this.nidHi ?? -1, a.nid);
+    this._setupActor(a);
+    if (a.character?.warmAll) Promise.resolve(a.character.warmAll()).catch(() => {});
+    emit('actor:added', { actor: a });
+    return a;
+  }
+  /** host: a new squidkid id (never one used before in this session) */
+  nextNid() { let m = this.nidHi ?? -1; for (const k of this.byNid.keys()) m = Math.max(m, k); this.nidHi = m + 1; return m + 1; }
+  /** host: add / remove a squidkid on every screen */
+  addActorNet(r) { const a = this.addActor(r); if (a) this._sendNow({ k: 'pj', r, g: this.gen }); return a; }
+  removeActorNet(a) { if (!a || !this.byNid.has(a.nid)) return; this._sendNow({ k: 'pr', nid: a.nid, g: this.gen }); this._remove(a); }
+  /** Everyone in the session as a roster (current loadouts, owners after any handoff): a joiner's or a new stage's. */
+  liveRoster() {
+    return (this.match ? this.match.actors : []).filter((a) => a.nid !== undefined).map((a) => ({ nid: a.nid, owner: a.owner, bot: !!a.isBot, team: a.team, slot: a.slot, name: a.name,
+      weapon: a.weaponId, sub: a.subId || null, special: a.specialId || null, style: a.character?.style || null }));
+  }
+  hasOwner(id) { for (const a of this.byNid.values()) if (a.owner === id && !a.isBot) return true; return false; }
+
+  // ---- Practice: a late joiner's copy of the turf ---------------------------------------------------------------------
+  // The joiner asks once its stage is built (anything the host painted before then is in the copy); its event playback
+  // waits for the copy (inkWait), so splats that arrive meanwhile land on top of it, not under it. The grid travels as
+  // paint.exportGrid()'s RLE in pieces well under the relay's 64 KB message cap, a few per tick (its rate limit).
+  requestInk() {
+    if (this.isHost || !this.s.tr) return;
+    this.inkWait = 8;
+    this.s.tr.sendTo(this.s.hostId, { k: 'inkreq', g: this.gen });
+  }
+  _sendInk(to, d) {
+    if ((d.g | 0) !== this.gen || !G.paint?.exportGrid || G.netm !== this) return;
+    // (mid-wave the copy would keep ink still ahead of the front: it goes once the wave is over)
+    if (G.paint.wiping) { setTimeout(() => this._sendInk(to, d), 150); return; }
+    const x = G.paint.exportGrid(), C = 48000, n = Math.max(1, Math.ceil(x.d.length / C)), id = Math.random().toString(36).slice(2, 8);
+    const wc = G.paint._wipeC;
+    const head = { k: 'ink', id, n, cells: x.n, g: this.gen, map: this.cfg.map, wipe: [G.paint.wipeK | 0, wc ? r2(wc.cx) : 0, wc ? r2(wc.cz) : 0] };
+    let i = 0;
+    const send = () => {
+      if (G.netm !== this || !this.s.tr) return;
+      for (let k = 0; k < 4 && i < n; k++, i++) this.s.tr.sendTo(to, { ...head, i, d: x.d.slice(i * C, (i + 1) * C) });
+      if (i < n) setTimeout(send, 120);
+    };
+    send();
+    this.stats.inkOut = (this.stats.inkOut || 0) + x.d.length;
+  }
+  _gotInk(d) {
+    if ((d.g | 0) !== this.gen || !this.inkWait) return;
+    const I = this._ink && this._ink.id === d.id ? this._ink : (this._ink = { id: d.id, n: d.n, parts: [], got: 0 });
+    if (I.parts[d.i] === undefined) { I.parts[d.i] = d.d; I.got++; }
+    if (I.got < I.n) return;
+    const ok = G.paint?.importGrid?.({ v: 1, n: d.cells, d: I.parts.join('') });
+    if (ok && d.wipe) G.paint.setWipeState(d.wipe[0], d.wipe[1], d.wipe[2]);
+    this.stats.inkIn = I.parts.join('').length; this.stats.inkOk = !!ok;
+    if (!ok) console.warn('[net] the host\'s turf did not fit this stage — playing on without it');
+    this._ink = null;
+    this.inkWait = 0;
   }
 
   _adopt(a) {
@@ -739,6 +856,17 @@ export class NetMatch {
 
 // ---------------------------------------------------------------------------------------------- packing helpers
 const UPV = new THREE.Vector3(0, 1, 0);
+
+// Practice: a remote squidkid's new loadout (its owner's 'lo' record) — the weapon in its hands, its sub and special
+function applyLoadout(a, w, sub, sp) {
+  if (WEAPONS[w] && a.weaponId !== w) {
+    if (a.specialActive) { try { G.specials?.end?.(a, 'swap'); } catch { /* */ } a.specialActive = null; }
+    a.setWeapon(w);
+  }
+  if (SUBS[sub] && a.subId !== sub) a.setSub(sub);
+  if (SPECIALS[sp] && a.specialId !== sp) a.setSpecial(sp);
+  emit('actor:loadout', { actor: a });
+}
 
 function packActor(a) {
   const wr = a.weaponRunner;

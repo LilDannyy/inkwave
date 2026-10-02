@@ -62,6 +62,19 @@ Stages:
 - `tools/botlab/run.sh tools/botlab/bake.cjs <id> [<id>.zones …]`: the AO lightmap bake (build/bake-ao.cjs) offscreen.
 - `STAGES=<id>,<id> tools/botlab/run.sh tools/botlab/stageart.cjs`: stage-select pictures from each layout's `art` camera.
 
+Online (private rooms) — real clients on this machine, never the deployed relay:
+- `tools/botlab/relay.cjs`: the relay's protocol (server/src/index.js) on Node `http`, WebSocket by hand
+  (`node tools/botlab/relay.cjs 8788` standalone; `?relay=ws://127.0.0.1:8788` points a page at it).
+- `tools/botlab/netpage.cjs`: `CLIENTS` game clients as offscreen windows of one Electron instance (each its own
+  session), the relay started inside it, a Node-side script driving them (`NET=…`, returns `[{ name, ok, info }]`;
+  `Q0` / `Q1` … extra page query per client, `QUALITY`, `W` / `H`, `FPS`, `OUT`, `NET_ARGS`):
+  - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-practice.cjs` — online Practice end to end (29)
+  - `… NET=tools/botlab/tests/net-turf.cjs` — a Turf War with a bot count through results back to the lobby (9)
+  - `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/tests/net-mock.cjs` — the offline stand-in (9)
+- The clear-all-ink wave's sync rule, deterministically on one page: `MAP=halyard PAGE=tools/botlab/tests/ink-wipe.js
+  tools/botlab/run.sh tools/botlab/page.cjs` (8). Pictures: `tools/botlab/jobs/private-rooms/` (lobby-shots.cjs,
+  session-shots.cjs).
+
 Bot perception (what a bot can know about a foe: sight lines, view cone, ink, located foes, memory):
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/bot-sight.js tools/botlab/run.sh tools/botlab/page.cjs`.
 

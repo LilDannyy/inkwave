@@ -5,7 +5,8 @@
 // sends one roster to everyone; every client builds the stage, reports ready, and the host says go — so intros start
 // together. In the match NetMatch (netmatch.js) does the replication.
 import { G, emit } from '../core/ctx.js';
-import { MAPS, WEAPONS, WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MATCH, ZONES, TOWER, BOT_NAMES, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock } from '../config.js';
+import { MAPS, WEAPONS, WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MATCH, ZONES, TOWER, BOT_NAMES, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock,
+  ROOM_TIMES, roomTime, roomBotPlan } from '../config.js';
 import { randomStyle } from '../game/character-style.js';
 import { Transport } from './transport.js';
 import { NetMatch } from './netmatch.js';
@@ -16,6 +17,13 @@ const CODE_CHARS = 'BCEFGHJKLMNPQRTUVXYZ23456789';
 const TEAM = 4;
 // a loadout's sub / special: a known id, or null (= the weapon's own)
 const subOf = (id) => (SUBS[id] ? id : null), specialOf = (id) => (SPECIALS[id] ? id : null);
+// lobby modes: the four match modes, and Practice (no clock, no judge: the room plays on the host's stage until the
+// host ends it — docs/NET.md)
+export const ROOM_MODES = ['turf', 'zones', 'tower', 'boss', 'practice'];
+const modeOk = (m) => (ROOM_MODES.includes(m) ? m : 'turf');
+// the stages a mode can use (Boss Battle: never a noBoss stage)
+export const roomStages = (mode) => (mode === 'boss' ? MAPS.filter((m) => mapBossOk(m.id)) : MAPS);
+const pick = (a) => a[(Math.random() * a.length) | 0];
 
 export class NetSession {
   constructor() {
@@ -30,7 +38,9 @@ export class NetSession {
     this.match = null;          // NetMatch while playing
     this._members = new Map();  // relay membership (id → name), authoritative for who is connected
     this._startCfg = null;
-    this._botsPref = null;      // host: the "fill with bots" choice, kept while a humans-only stage forces bots off
+    // host: the bot count picked for matches and for Practice (-1 = fill the room), kept while a humans-only stage
+    // forces bots off
+    this._botsPref = null;
   }
 
   get isHost() { return !!this.myId && this.myId === this.hostId; }
@@ -58,8 +68,10 @@ export class NetSession {
     // palette: the room's team colours (index into TEAM_PALETTES) — the host's current menu colours carry into the room
     // mode: 'turf' | 'zones' (Zone Control: the host runs the rules — zones.js) | 'tower' (Tower Command: likewise —
     // tower.js) | 'boss' (Boss Battle: everyone is one squad vs HULLBREAKER — docs/BOSS.md)
+    // botCount: -1 = fill every empty spot, else that many (bots: true when there will be any — older clients read it);
+    // live: the Practice session running right now ({ mode, map, time, gen }) — a joiner drops straight into it
     const map = g?.mapDef?.id || MAPS[0].id;
-    return { map, time: g?.time || 'day', duration: g?.settings?.matchLength || MATCH.defaultDuration, bots: !mapNoBots(map), difficulty: g?.settings?.difficulty || 'normal', palette: g?.paletteIndex?.() ?? 0, mode: 'turf', players: [], maxPlayers: TEAM * 2 };
+    return { map, time: roomTime(g?.time || 'day'), duration: g?.settings?.matchLength || MATCH.defaultDuration, bots: !mapNoBots(map), botCount: mapNoBots(map) ? 0 : -1, difficulty: g?.settings?.difficulty || 'normal', palette: g?.paletteIndex?.() ?? 0, mode: 'turf', live: null, players: [], maxPlayers: TEAM * 2 };
   }
 
   _profile() {
@@ -100,7 +112,7 @@ export class NetSession {
     this._members.clear();
     for (const m of welcome.members) this._members.set(m.id, m.name);
     this.lobby = this._blankLobby();
-    this._botsPref = this.isHost ? true : null;   // a new room fills with bots unless its stage forbids them
+    this._botsPref = this.isHost ? { match: -1, practice: 0 } : null;   // a new room fills with bots unless its stage forbids them
     if (this.isHost) {
       this.lobby.players = [this._newPlayer(this.myId, name || me.name, { weapon: me.weapon, sub: me.sub, special: me.special, style: me.style })];
       this._fixTeams();
@@ -158,6 +170,11 @@ export class NetSession {
       this.lobby.players = this.lobby.players.filter((p) => p.id !== o.id);
       for (const p of this.lobby.players) p.host = p.id === this.hostId;
       this.match?.onLeave(o.id, hostChanged);
+      // a new host keeps the room's bot count (for the mode in play; the other kind starts at its default)
+      if (hostChanged && this.isHost && !this._botsPref) {
+        const bc = Number.isInteger(this.lobby.botCount) ? this.lobby.botCount : this.lobby.bots === false ? 0 : -1, pr = this.lobby.mode === 'practice';
+        this._botsPref = { match: pr ? -1 : bc, practice: pr ? bc : 0 };
+      }
       if (hostChanged) this._emit('host', { hostId: this.hostId });
       if (this.isHost) { this._fixTeams(); this._broadcastLobby(); }
       this._emit('leave', { player: gone, reason: 'left' });
@@ -185,7 +202,8 @@ export class NetSession {
   }
   _wireLobby() {
     const l = this.lobby;
-    return { map: l.map, time: l.time, duration: l.duration, bots: l.bots, difficulty: l.difficulty, palette: l.palette, mode: l.mode, players: l.players.map(({ id, name, team, weapon, sub, special, style, ready, ping }) => ({ id, name, team, weapon, sub, special, style, ready, ping })) };
+    return { map: l.map, time: l.time, duration: l.duration, bots: l.bots, botCount: l.botCount, difficulty: l.difficulty, palette: l.palette, mode: l.mode, live: l.live || null,
+      players: l.players.map(({ id, name, team, weapon, sub, special, style, ready, ping }) => ({ id, name, team, weapon, sub, special, style, ready, ping })) };
   }
   // local view: mark you + host
   _pushLobby() {
@@ -235,24 +253,48 @@ export class NetSession {
   setSettings(s = {}) {
     if (!this.isHost) return;
     const l = this.lobby, wasMap = l.map;
-    if (s.map && MAPS.some((m) => m.id === s.map)) l.map = s.map;
-    if (s.time === 'day' || s.time === 'dusk') l.time = s.time;
+    if (s.map === 'random' || (s.map && MAPS.some((m) => m.id === s.map))) l.map = s.map;
+    if (s.time) { const t = roomTime(s.time); if (t === s.time || s.time === 'dusk') l.time = t; }
     if (s.duration) l.duration = Math.max(60, Math.min(600, +s.duration | 0));
-    if (s.bots != null) this._botsPref = !!s.bots;
     if (s.difficulty && ['easy', 'normal', 'hard'].includes(s.difficulty)) l.difficulty = s.difficulty;
     if (Number.isInteger(s.palette) && s.palette >= 0 && s.palette < TEAM_PALETTES.length) l.palette = s.palette;
-    if (s.mode === 'turf' || s.mode === 'zones' || s.mode === 'tower' || s.mode === 'boss') l.mode = s.mode;
+    if (ROOM_MODES.includes(s.mode)) l.mode = s.mode;
+    // bots: a count for the mode's kind (matches fill by default, Practice starts empty); `bots: true | false` from an
+    // older client = fill / none
+    const kind = l.mode === 'practice' ? 'practice' : 'match';
+    const pref = this._botsPref || (this._botsPref = { match: -1, practice: 0 });
+    if (s.botCount != null) pref[kind] = s.botCount === 'fill' ? -1 : Math.max(-1, Math.min(TEAM * 2 - 1, +s.botCount | 0));
+    else if (s.bots != null) pref[kind] = s.bots ? -1 : 0;
     // stage rules (config MAPS flags): a Boss Battle never runs on a noBoss stage — picking one in boss mode is refused,
     // switching a room on one to boss mode moves it to a boss-eligible stage; a noBots stage forces bots off (the host's
     // own choice comes back on the next stage)
-    if (l.mode === 'boss' && !mapBossOk(l.map)) l.map = bossFallbackMap(wasMap);
-    l.bots = mapNoBots(l.map) ? false : (this._botsPref ?? l.bots);
+    if (l.mode === 'boss' && l.map !== 'random' && !mapBossOk(l.map)) l.map = bossFallbackMap(wasMap === 'random' ? MAPS[0].id : wasMap);
+    l.botCount = mapNoBots(l.map) ? 0 : pref[kind];
+    l.bots = roomBotPlan(l).total > 0 || (l.botCount < 0 && !mapNoBots(l.map));
     this._broadcastLobby();
+  }
+
+  /** The bots the room will get as it stands: { total, team: [a, b], free } (config roomBotPlan). */
+  botPlan() { return roomBotPlan(this.lobby); }
+
+  // host: a stage for 'random' — from the mode's list, never a humans-only stage the room can't start on or one that
+  // would turn away the bots asked for, and (a swap) a different one from the stage being left
+  _randomMap(mode, except) {
+    const l = this.lobby;
+    const ok = (m) => {
+      if (!mapNoBots(m.id)) return true;
+      if (mode === 'practice') return (l.botCount | 0) === 0;
+      return roomBotPlan({ ...l, map: MAPS[0].id }).total === 0 && !noBotsStartBlock({ ...l, map: m.id, mode });
+    };
+    const pool = roomStages(mode).filter(ok);
+    const fresh = pool.filter((m) => m.id !== except);
+    return (pick(fresh.length ? fresh : pool.length ? pool : MAPS) || MAPS[0]).id;
   }
 
   canStart() {
     if (!this.isHost || this.state !== 'lobby') return false;
-    return !this.startBlock() && this.lobby.players.every((p) => p.ready || p.id === this.myId);
+    // (Practice is for warming up together: nobody has to ready up)
+    return !this.startBlock() && (this.lobby.mode === 'practice' || this.lobby.players.every((p) => p.ready || p.id === this.myId));
   }
   // why the room can't start regardless of ready-ups (a humans-only stage without 2+ players, one per side), else null
   startBlock() { return noBotsStartBlock(this.lobby); }
@@ -267,18 +309,23 @@ export class NetSession {
   start() {
     if (!this.isHost || this.state !== 'lobby' || !this.tr || this.startBlock()) return false;
     const l = this.lobby;
-    const bots = l.bots && !mapNoBots(l.map);   // (a humans-only stage never gets bots, whatever the setting says)
+    const practice = l.mode === 'practice';
+    // 'random' stage / time: rolled now, the same for everyone (the lobby keeps saying random for next time)
+    const map = l.map === 'random' ? this._randomMap(l.mode) : l.map;
+    const time = l.time === 'random' ? pick(ROOM_TIMES) : roomTime(l.time);
+    // the bots: how many the host asked for, split to even the teams (a humans-only stage never gets any)
+    const plan = roomBotPlan({ ...l, map });
     const roster = [];
     let nid = 0;
     const names = [...BOT_NAMES].sort(() => Math.random() - 0.5);
-    const boss = l.mode === 'boss' && mapBossOk(l.map);   // one squad of up to 8 (all team 0), bots fill the rest
+    const boss = l.mode === 'boss' && mapBossOk(map);   // one squad of up to 8 (all team 0), bots fill the rest
     for (let team = 0; team < (boss ? 1 : 2); team++) {
       const humans = boss ? l.players : l.players.filter((p) => p.team === team);
       const weapons = [...WEAPON_ORDER].sort(() => Math.random() - 0.5);
       let slot = 0;
       for (const p of humans) roster.push({ nid: nid++, owner: p.id, bot: false, team, slot: slot++, name: p.name, weapon: p.weapon, sub: subOf(p.sub), special: specialOf(p.special), style: p.style });
-      if (bots) {
-        while (slot < (boss ? TEAM * 2 : TEAM)) {
+      for (let b = 0; b < plan.team[team]; b++) {
+        {
           const used = new Set(roster.filter((r) => r.team === team).map((r) => r.weapon));
           const wpn = weapons.find((w) => !used.has(w)) || weapons[slot % weapons.length];
           // bots carry a random sub / special about half the time, as offline (else their weapon's own)
@@ -288,10 +335,12 @@ export class NetSession {
         }
       }
     }
-    // (Zone Control and Tower Command always run their own 5:00 + overtime, as offline)
+    // (Zone Control and Tower Command always run their own 5:00 + overtime, as offline; Practice is a turf stage with no
+    // clock — cfg.practice — and gen 0, its first stage)
     const mode = boss ? 'boss' : l.mode === 'zones' || l.mode === 'tower' ? l.mode : 'turf';
-    const cfg = { k: 'start', roster, map: l.map, time: l.time, duration: mode === 'zones' ? ZONES.duration : mode === 'tower' ? TOWER.duration : l.duration, difficulty: l.difficulty, palette: l.palette, mode, host: this.myId, id: Math.random().toString(36).slice(2, 8) };
-    this.tr.lock(true);
+    const cfg = { k: 'start', roster, map, time, duration: mode === 'zones' ? ZONES.duration : mode === 'tower' ? TOWER.duration : l.duration, difficulty: l.difficulty, palette: l.palette, mode, host: this.myId, id: Math.random().toString(36).slice(2, 8) };
+    if (practice) { cfg.practice = 1; cfg.gen = 0; }
+    this.tr.lock(!practice);   // (a match turns joiners away; a Practice session lets them drop in)
     this.tr.broadcast(cfg);
     this._begin(cfg);
     return true;
@@ -302,18 +351,22 @@ export class NetSession {
     this._ready = new Set();
     for (const p of this.lobby.players) p.ready = false;
     this._setState('starting');
-    this._emit('match', { phase: 'start' });
-    // the lobby plays its 3·2·1 + super-jump launch first (resolves at once when the lobby isn't on screen)
-    try { await G.game?.menus?.launchLobby?.(); } catch (e) { console.warn('[net] launch', e); }
+    this._emit('match', { phase: 'start', late: !!cfg.late });
+    // the lobby plays its 3·2·1 + super-jump launch first (resolves at once when the lobby isn't on screen); a late
+    // joiner of a running Practice session drops straight in
+    if (!cfg.late) { try { await G.game?.menus?.launchLobby?.(); } catch (e) { console.warn('[net] launch', e); } }
     if (this.state !== 'starting' || this._startCfg !== cfg) return;
-    this.match = new NetMatch(this, cfg);
+    // (created before the stage builds: whatever the others send meanwhile queues on its timelines)
+    const nm = (this.match = new NetMatch(this, cfg));
     try {
-      await G.game.startNetMatch(cfg, this.match);
+      await G.game.startNetMatch(cfg, nm);
     } catch (e) {
       console.error('[net] match start failed', e);
       this._fail(new Error('Could not start the match'));
       return;
     }
+    if (this.match !== nm) return;
+    if (cfg.late) { this._launch(); nm.requestInk(); return; }
     if (this.isHost) this._markReady(this.myId);
     else this.tr?.sendTo(this.hostId, { k: 'ready', id: cfg.id });
   }
@@ -339,14 +392,84 @@ export class NetSession {
     this._setState('match');
     this.match?.go();
     G.game.netMatchGo?.();
+    const cfg = this._startCfg;
+    if (cfg && cfg.practice) {
+      if (this.isHost) {
+        this._setLive(cfg);
+        // anyone who joined while the session was loading drops in now
+        const late = [...(this._lateJoins || [])]; this._lateJoins = null;
+        for (const id of late) this._practiceJoin(id);
+      }
+      const sw = this._pendingSwap; this._pendingSwap = null;
+      if (sw && sw.gen > (cfg.gen | 0)) this._swap(sw);
+    }
+  }
+
+  // ------------------------------------------------------------------ Practice (docs/NET.md)
+  get practicing() { return !!(this._startCfg && this._startCfg.practice && (this.state === 'match' || this.state === 'starting')); }
+  _setLive(cfg) { if (!this.isHost) return; this.lobby.live = cfg ? { mode: 'practice', map: cfg.map, time: cfg.time, gen: cfg.gen | 0 } : null; this._broadcastLobby(); }
+
+  // host: someone is in the room who has no squidkid in the running session — they drop in on the side with fewer
+  // players (a side that's full makes room: one of its bots goes); they get the session as it stands
+  _practiceJoin(id) {
+    if (!this.isHost || !this._startCfg?.practice || id === this.myId) return;
+    if (this.state === 'starting') { (this._lateJoins || (this._lateJoins = new Set())).add(id); return; }
+    const nm = this.match, m = nm && nm.match;
+    if (this.state !== 'match' || !m || nm.hasOwner(id)) return;
+    const p = this.lobby.players.find((x) => x.id === id);
+    if (!p || !this._members.has(id)) return;
+    let team = p.team === 1 ? 1 : 0;
+    const count = (t) => m.actors.filter((a) => a.team === t).length;
+    if (count(team) >= TEAM) {
+      const bot = m.actors.find((a) => a.team === team && a.isBot && a.owner === this.myId);
+      if (bot) nm.removeActorNet(bot);
+      else if (count(1 - team) < TEAM) team = 1 - team;
+      else return;
+    }
+    const used = new Set(m.actors.filter((a) => a.team === team).map((a) => a.slot));
+    let slot = 0;
+    while (used.has(slot)) slot++;
+    const r = { nid: nm.nextNid(), owner: id, bot: false, team, slot, name: p.name, weapon: WEAPONS[p.weapon] ? p.weapon : 'shooter', sub: subOf(p.sub), special: specialOf(p.special), style: p.style || null };
+    nm.addActorNet(r);
+    this.tr?.sendTo(id, { ...this._startCfg, k: 'start', roster: nm.liveRoster(), late: 1, pods: m.pods?.netSnapshot?.() || undefined });
+    if (p.team !== team) { p.team = team; this._broadcastLobby(); }
+    this._emit('practice', { phase: 'join', id, name: p.name });
+  }
+
+  /** host, mid-Practice: everyone moves to another stage (and look) without going back to the lobby — same room, teams,
+   *  loadouts and bots (a humans-only stage drops the bots). map / time may be 'random'. */
+  practiceSwap({ map, time } = {}) {
+    const cfg0 = this._startCfg;
+    if (!this.isHost || this.state !== 'match' || !cfg0 || !cfg0.practice || !this.match) return false;
+    const mapId = map === 'random' ? this._randomMap('practice', cfg0.map) : MAPS.some((m) => m.id === map) ? map : cfg0.map;
+    const t = time === 'random' ? pick(ROOM_TIMES) : roomTime(time || cfg0.time);
+    let roster = this.match.liveRoster();
+    if (mapNoBots(mapId)) roster = roster.filter((r) => !r.bot);
+    const cfg = { ...cfg0, k: 'pswap', map: mapId, time: t, roster, gen: (cfg0.gen | 0) + 1, id: Math.random().toString(36).slice(2, 8) };
+    delete cfg.late;
+    this.tr.broadcast(cfg);
+    this._swap(cfg);
+    return true;
+  }
+
+  async _swap(cfg) {
+    if (this.state === 'starting') { this._pendingSwap = cfg; return; }
+    if (this.state !== 'match') return;
+    this._startCfg = { ...cfg, k: 'start' };
+    this.match?.dispose();
+    // (the new stage's NetMatch exists before the stage builds: the others' first ticks there queue up)
+    const nm = (this.match = new NetMatch(this, this._startCfg));
+    this._setLive(this._startCfg);
+    this._emit('practice', { phase: 'swap', map: cfg.map, time: cfg.time });
+    try { await G.game.practiceSwapStage(this._startCfg, nm); } catch (e) { console.error('[net] stage swap failed', e); }
   }
 
   // the match's results have been shown: everyone back to the lobby (the room stays)
   endMatch() {
     this.match?.dispose(); this.match = null;
-    this._startCfg = null;
+    this._startCfg = null; this._lateJoins = null; this._pendingSwap = null;
     if (!this.tr) return;
-    if (this.isHost) { this.tr.lock(false); for (const p of this.lobby.players) p.ready = false; this._broadcastLobby(); }
+    if (this.isHost) { this.tr.lock(false); this.lobby.live = null; for (const p of this.lobby.players) p.ready = false; this._broadcastLobby(); }
     this._setState('lobby');
     this._emit('match', { phase: 'end' });
     this._pushLobby();
@@ -360,18 +483,24 @@ export class NetSession {
         if (from !== this.hostId) return;
         {
           const l = d.l;
-          this.lobby.map = l.map; this.lobby.time = l.time; this.lobby.duration = l.duration; this.lobby.bots = l.bots; this.lobby.difficulty = l.difficulty;
+          this.lobby.map = l.map; this.lobby.time = roomTime(l.time); this.lobby.duration = l.duration; this.lobby.bots = l.bots; this.lobby.difficulty = l.difficulty;
+          // (an older host sends only bots: true | false — fill / none)
+          this.lobby.botCount = Number.isInteger(l.botCount) ? l.botCount : l.bots === false ? 0 : -1;
+          this.lobby.live = l.live || null;
           if (Number.isInteger(l.palette)) this.lobby.palette = l.palette;
-          this.lobby.mode = l.mode === 'boss' || l.mode === 'zones' || l.mode === 'tower' ? l.mode : 'turf';
+          this.lobby.mode = modeOk(l.mode);
           const prev = new Map(this.lobby.players.map((p) => [p.id, p]));
           this.lobby.players = l.players.map((p) => ({ ...p, host: p.id === this.hostId }));
           for (const p of this.lobby.players) if (!prev.has(p.id)) this._emit('join', { player: p });
           this._pushLobby();
         }
         break;
-      case 'me': if (this.isHost) this._applyMe(from, d); break;
+      case 'me':
+        if (this.isHost) { this._applyMe(from, d); if (this._startCfg?.practice && d.weapon) this._practiceJoin(from); }   // (a joiner's first 'me' carries its loadout)
+        break;
       case 'emote': this._emit('emote', { id: from, name: d.n }); break;
       case 'start': if (from === this.hostId && this.state === 'lobby') this._begin(d); break;
+      case 'pswap': if (from === this.hostId && this._startCfg?.practice && d.gen > (this._startCfg.gen | 0)) this._swap(d); break;
       case 'ready': if (this.isHost && this._startCfg && d.id === this._startCfg.id) this._markReady(from); break;
       case 'go': if (from === this.hostId && this.state === 'starting') this._launch(); break;
       default: this.match?.onMessage(from, d);
@@ -380,7 +509,7 @@ export class NetSession {
 
   // ------------------------------------------------------------------ per frame
   update(dt) {
-    if (this.tr && this.state === 'lobby') {
+    if (this.tr && (this.state === 'lobby' || this.practicing)) {   // (Practice shows everyone's ping too)
       this._pingT = (this._pingT || 0) - dt;
       if (this._pingT <= 0) {
         this._pingT = 2;

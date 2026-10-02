@@ -1005,6 +1005,46 @@ def('enemy_ink_sizzle', {
   },
 });
 
+/* ---- Practice: the clear-all-ink wave (main.js netWipe, src/fx/inkWipeFx.js) ---- */
+// The wave leaving: a deep swell under a big band-passed whoosh that sweeps up as the shimmering front shoots out and
+// down as it rolls away across the stage, a glassy shimmer gliding up with it, then the stage's ink fizzing off — a
+// steam hiss and a rush of bubbles popping — dying out as the front reaches the far end (≈ 2 s; heard by everyone).
+def('ink_wipe', {
+  gain: 0.62, max: 1, jitter: 0, reverb: 0.32, minGap: 0.6,
+  build(v, p) {
+    const T = v.t;
+    v.tone({ f: 82 * p, f1: 46 * p, sw: 0.6, a: 0.03, d: 0.8, peak: 0.7 });                                   // swell
+    v.nz({ kind: 'brown', ft: 'lowpass', f: 300, f1: 900, sw: 0.25, q: 1.2, a: 0.03, d: 0.6, peak: 0.6 });
+    const g = v.gain(0, v.out), bp = v.filter('bandpass', 280 * p, 1.05, g);                                 // whoosh
+    sweep(bp.frequency, T, 280 * p, 3000 * p, 0.32);
+    sweep(bp.frequency, T + 0.32, 3000 * p, 650 * p, 1.35);
+    pts(g.gain, T, [[0, 0], [0.16, 0.95], [0.55, 0.6], [1.7, 0]]);
+    v.noise('pink', T, T + 1.75, bp);
+    for (const [f, d] of [[1240, 0], [1860, 0.05], [2480, 0.1], [3300, 0.16]]) {                         // glassy shimmer
+      v.tone({ t: d, f: f * 0.78 * p, f1: f * 1.3 * p, sw: 0.95, a: 0.09, d: 0.85, peak: 0.1 });
+    }
+    const fz = v.gain(0, v.out), hp = v.filter('highpass', 3000, 0.7, fz);                                   // fizz
+    v.buffer(texture(v.ctx, 'sizzle'), T + 0.18, T + 2.15, hp, p);
+    v.buffer(texture(v.ctx, 'bubbles_bright'), T + 0.25, T + 2.0, v.filter('bandpass', 2600, 0.9, fz), p);
+    pts(fz.gain, T, [[0, 0], [0.22, 0], [0.5, 0.6], [1.3, 0.42], [2.1, 0]]);
+    let t = 0.28;
+    for (let i = 0; i < 28; i++) { t += v.r(0.02, 0.065); v.bub(T + t, v.r(600, 2500) * p, 0.17 * (1 - i / 34), v.r(0.012, 0.03), v.r(1.4, 2.2)); }
+  },
+});
+// …and up close: where the front is passing you, the ink boiling off underfoot (positional loop; inkWipeFx drives its
+// volume by how much ink the front is clearing near you)
+def('ink_wipe_fizz', {
+  gain: 0.34, max: 1, jitter: 0, reverb: 0.06,
+  loop(v, p) {
+    const T = v.t;
+    const hp = v.filter('highpass', 2400, 0.7, v.out);
+    const tex = v.buffer(texture(v.ctx, 'sizzle'), T, null, v.gain(1, hp), p);
+    v.buffer(texture(v.ctx, 'bubbles_bright'), T, null, v.filter('bandpass', 2200, 0.8, v.gain(0.6, v.out)), p);
+    v.noise('pink', T, null, v.filter('bandpass', 6000, 0.8, v.gain(0.08, v.out)));
+    return { pitch(q, now) { tex.playbackRate.setTargetAtTime(q, now, 0.05); } };
+  },
+});
+
 /* ---- Status / specials ---- */
 def('low_ink', {
   gain: 0.38, max: 1, jitter: 0, reverb: 0.04, minGap: 0.4,
@@ -2648,6 +2688,7 @@ export const SFX_GROUPS = {
   'Special stings': ALERT_GROUPS.Stings,   // sfx-loud: someone popped a special
   Marks: ALERT_GROUPS.Marks,               // track-ribbons: a mark landing (the marking team's chime / chirp), the marked player's evil one, its end
   Match: ['ready', 'go_horn', 'countdown_tick', 'one_minute', 'final_count', 'times_up', 'judge_drumroll', 'judge_reveal', 'victory_fanfare', 'defeat_jingle', 'xp_tick', 'level_up'],
+  Practice: ['ink_wipe', 'ink_wipe_fizz'],
   Zones: ['zone_ours', 'zone_theirs', 'zone_lost', 'zone_broken', 'zone_warn', 'zone_chance', 'zone_penalty', 'zone_shift', 'zone_final',
     'zone_overtime', 'zone_tick', 'zone_flood', 'zone_wipe', 'zone_hum'],
   Tower: ['tower_move', 'tower_checkpoint', 'tower_clear'],

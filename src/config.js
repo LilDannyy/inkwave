@@ -595,6 +595,12 @@ export const DIFFICULTY = {
 // stage's day look, kept for older callers). Pick with mapTheme(map, time).
 export const TIMES = ['day', 'dusk'];
 export const mapTheme = (map, time = 'day') => (map && map.times && map.times[time]) || (map && map.theme) || 'day';
+// Online rooms pick the look itself: 'day' | 'golden' (golden hour) | 'sunset' — a lobby can also say 'random' (the
+// host rolls one at the start). 'dusk' (older clients) is sunset. (The offline stage select keeps day / dusk, where
+// day is the stage's own day look.)
+export const ROOM_TIMES = ['day', 'golden', 'sunset'];
+export const roomTime = (t) => (t === 'dusk' ? 'sunset' : ROOM_TIMES.includes(t) || t === 'random' ? t : 'day');
+export const roomTheme = (map, time) => (time === 'golden' ? 'golden' : time === 'sunset' || time === 'dusk' ? ((map && map.times && map.times.dusk) || 'sunset') : 'day');
 
 export const MAPS = [
   { id: 'tidewater', name: 'Tidewater Plaza', blurb: 'A Victorian seaside square: fight round the Jubilee clock tower, under the colonnade and along the promenade.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
@@ -627,11 +633,32 @@ export const OFFLINE_MAPS = MAPS.filter((m) => !m.onlineOnly);
 export const bossFallbackMap = (prefer) => (mapBossOk(prefer) ? prefer : (MAPS.find((m) => !m.noBoss && !m.onlineOnly) || MAPS[0]).id);
 // Why a humans-only room can't start yet (null when it can, or when the stage allows bots): lobby = { map, players }
 export function noBotsStartBlock(lobby) {
-  if (!lobby || !mapNoBots(lobby.map)) return null;
+  if (!lobby || !mapNoBots(lobby.map) || lobby.mode === 'practice') return null;   // (Practice: play on your own if you like)
   const ps = lobby.players || [];
   if (ps.length < 2) return 'Needs 2+ players — no bots on this stage';
   if (!ps.some((p) => p.team === 0) || !ps.some((p) => p.team === 1)) return 'Needs a player on each team';
   return null;
+}
+
+// A room's bots (lobby = { map, mode, players, botCount, bots }): botCount -1 = fill every empty spot (the default for a
+// match), else that many (0 … the free spots; Practice starts at 0); a humans-only stage has none. They're split so the
+// teams come out as even as they can (each team ≤ 4); Boss Battle is one squad of up to 8.
+//   → { total, team: [onA, onB], free }
+export function roomBotPlan(lobby) {
+  const ps = (lobby && lobby.players) || [];
+  const free = Math.max(0, 8 - ps.length);
+  if (!lobby || mapNoBots(lobby.map)) return { total: 0, team: [0, 0], free };
+  let want = Number.isInteger(lobby.botCount) ? lobby.botCount : lobby.bots === false ? 0 : -1;
+  want = want < 0 ? free : Math.min(want, free);
+  if (lobby.mode === 'boss') return { total: want, team: [want, 0], free };
+  const n = [ps.filter((p) => p.team !== 1).length, ps.filter((p) => p.team === 1).length], b = [0, 0];
+  for (let i = 0; i < want; i++) {
+    let t = n[0] + b[0] <= n[1] + b[1] ? 0 : 1;
+    if (n[t] + b[t] >= 4) t = 1 - t;
+    if (n[t] + b[t] >= 4) break;
+    b[t]++;
+  }
+  return { total: b[0] + b[1], team: b, free };
 }
 
 export const BOT_NAMES = [

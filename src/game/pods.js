@@ -871,6 +871,17 @@ export class StagePods {
     }
   }
 
+  // online Practice: the pods as records (what a late joiner replays through netEvent once its stage clock is the host's)
+  netSnapshot() {
+    const out = [], m = ['m'];
+    for (const p of this.pods) {
+      if (p.state === 'grow' || p.state === 'stand' || p.state === 'wilt') out.push(['g', p.i, p.owner, +p.t0.toFixed(3)], ['w', p.i, +p.wiltAt.toFixed(3), p.cutBy ? 1 : 0]);
+      m.push(Math.round(p.meter[0] * 100), Math.round(p.meter[1] * 100));
+    }
+    out.push(m);
+    return out;
+  }
+
   // practice: start over
   reset() {
     for (const p of this.pods) { p.owner = -1; p.meter[0] = p.meter[1] = 0; p.fullT[0] = p.fullT[1] = -1; p.held = ''; p.life = p.life0; p.cracked = false; this._enter(p, 'dormant', this.clock.t); }

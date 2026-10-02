@@ -35,6 +35,57 @@ export function setLevelLamps(mat, level, k = 0) {
   u.uLampCol.value.set(LAMP_HEX).multiplyScalar(LAMP_I * k);
 }
 
+// ---- the clear-all-ink wave (Practice — src/fx/inkWipeFx.js, paint.startWipe). A front runs out flat from (x, z):
+// radius = reach · (1 − (1 − t / len)^1.7), the same curve the paint system clears cells / texels by. On every surface:
+//   · ahead of it, the ink heats up — brighter and a little paler the closer the front gets;
+//   · the front itself: a shimmering band of pearly light (a touch of rainbow in it) sweeping over floors and walls,
+//     with a soft sheen trailing it;
+//   · behind it, the old ink (uGhost: the atlas when the wave started) boils away where nothing new has been painted:
+//     paling toward white, fizzing holes eating in from bright rims, gone uWaveT.z seconds after the front passed.
+const WAVE_FRAGMENT = /* glsl */`
+if (uWaveT.y > 0.5) {
+  float wR = max(uWave.z, 1.0), wL = max(uWave.w, 0.05), wt = uWaveT.x;
+  float wd = length(vWPos.xz - uWave.xy);
+  float wf = wR * (1.0 - pow(1.0 - clamp(wt / wL, 0.0, 1.0), 1.7));
+  float dW = wd - wf;                                              // > 0: ahead of the front
+  float tPass = wL * (1.0 - pow(max(1.0 - wd / wR, 0.0), 1.0 / 1.7));
+  float age = wt - tPass;                                          // > 0: s since the front passed here
+  float wn = vnoise(vWPos.xz * 1.7 + vec2(uTime * 0.9, -uTime * 0.6)) * 0.65 + vnoise(vWPos.xz * 5.3 - uTime * 2.1) * 0.35;
+  // ahead: the ink heats up
+  if (dW > 0.0 && dW < 4.0) outgoingLight += gInkCol * gInk * (1.0 - dW / 4.0) * (0.55 + 0.45 * wn) * 0.9 * uWaveT.w;
+  // behind: the old ink boils off (only where no new ink has gone down since)
+  if (age > 0.0 && age < uWaveT.z && vFaceData.y > 0.5) {
+    vec4 gp = texture2D(uGhost, vPaintUv);
+    float ga = smoothstep(0.32, 0.62, gp.a) * (1.0 - gInk);
+    if (ga > 0.003) {
+      float k = age / uWaveT.z;
+      float hole = wn * 0.8 + 0.2 * vnoise(vWPos.xz * 11.0 + uTime * 4.0);
+      float keep = smoothstep(k * 1.15 - 0.08, k * 1.15 + 0.08, hole);
+      float rim = (1.0 - smoothstep(0.0, 0.07, abs(hole - k * 1.15))) * (1.0 - k);
+      vec3 tc = mix(uTeamA, uTeamB, clamp(gp.r / max(gp.a, 1e-3), 0.0, 1.0));
+      vec3 boil = mix(tc * (1.25 - 0.4 * k), vec3(1.0), 0.18 + 0.55 * k);
+      outgoingLight = mix(outgoingLight, boil, ga * keep * (1.0 - k * k) * 0.9);
+      outgoingLight += vec3(0.95, 1.0, 1.0) * rim * ga * 1.4 * uWaveT.w;
+    }
+  }
+  // the front: a bright line with a shimmering glow round it, a sheen trailing behind
+  float core = exp(-dW * dW * 16.0);
+  float band = exp(-dW * dW * 0.7);
+  float sheen = age > 0.0 ? exp(-age * 4.0) * 0.5 : 0.0;
+  if (core + band + sheen > 0.004) {
+    float sh = 0.6 + 0.4 * sin(vWPos.y * 5.0 + wd * 1.7 - uTime * 11.0 + wn * 7.0);
+    vec3 pearl = mix(vec3(0.45, 0.95, 1.0), 0.6 + 0.4 * cos(6.2831 * (wn * 1.3 + wd * 0.05 + vec3(0.0, 0.33, 0.67))), 0.45);
+    outgoingLight = mix(outgoingLight, outgoingLight * vec3(0.55, 0.85, 1.0), clamp(band * 0.55, 0.0, 1.0));   // (tints a bright floor too)
+    outgoingLight += pearl * (core * 2.6 + band * 1.1 * sh + sheen) * uWaveT.w;
+  }
+}
+`;
+let _blankGhost = null;
+function blankGhost() {
+  if (!_blankGhost) { _blankGhost = new THREE.DataTexture(new Uint8Array(4), 1, 1); _blankGhost.needsUpdate = true; }
+  return _blankGhost;
+}
+
 export function createLevelMaterial(paintTexture, atlasSize, muralTexture = null, opts = {}) {
   const mat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff, vertexColors: true, roughness: 0.82, metalness: 0.0,
@@ -56,6 +107,10 @@ export function createLevelMaterial(paintTexture, atlasSize, muralTexture = null
     uSeeFeet: { value: 0 },                  // local player's feet height (set per draw below)
     uSeeA2C: { value: 0 },                   // 1 when drawing into a multisampled target (alpha-to-coverage fade)
     uAO: { value: opts.lightmap ? 1.0 : 0.0 },
+    // the clear-all-ink wave (src/fx/inkWipeFx.js drives these): uWave = centre x, z, reach, length (s); uWaveT = time
+    // since it started, on (0 / 1), how long the old ink takes to boil off behind the front (s), glow strength; uGhost =
+    // the paint atlas as it was when the wave started (the ink you watch fizz away)
+    uWave: { value: new THREE.Vector4(0, 0, 1, 1) }, uWaveT: { value: new THREE.Vector4(0, 0, 0.6, 1) }, uGhost: { value: blankGhost() },
     // dusk lamp pools (setLevelLamps, driven by main._applyNight): bulb positions (world) + warm colour × strength
     uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector3()) }, uLampN: { value: 0 }, uLampCol: { value: new THREE.Color(0, 0, 0) },
     uAtlasSize: { value: atlasSize },
@@ -168,6 +223,9 @@ uniform vec3 uSeeB;
 uniform float uSeeOn;
 uniform float uSeeFeet;
 uniform float uSeeA2C;
+uniform vec4 uWave;
+uniform vec4 uWaveT;
+uniform sampler2D uGhost;
 uniform float uAtlasSize;
 uniform float uPpm;
 uniform float uGel;
@@ -707,13 +765,14 @@ clearcoatNormal = normal;`)
 ${INK_EMISSIVE}`)
       .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>${INK_LIGHTS}`)
       .replace('#include <lights_fragment_maps>', `#include <lights_fragment_maps>${INK_LIGHT_MAPS}`)
-      .replace('#include <opaque_fragment>', `outgoingLight = min(outgoingLight, vec3(5.0));
+      .replace('#include <opaque_fragment>', `${WAVE_FRAGMENT}
+outgoingLight = min(outgoingLight, vec3(5.0));
 #include <opaque_fragment>`);
   };
   if (opts.grate) {
     mat.side = THREE.DoubleSide;
     mat.defines = { ...(mat.defines || {}), GRATE: 1 };
   }
-  mat.customProgramCacheKey = () => 'inkwave-level-v6' + (opts.grate ? '-grate' : '');
+  mat.customProgramCacheKey = () => 'inkwave-level-v7' + (opts.grate ? '-grate' : '');
   return mat;
 }

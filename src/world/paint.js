@@ -23,6 +23,9 @@
 //      speck(center, radius, team, seed)  — cosmetic micro-splat (landing droplets), GPU only
 //      flood(region, team, { center, y, reach, dur, ease }) — ink a whole region (Zone Control), or wipe it (team -1)
 //      ripple(pos, amp, wavelength, speed, life) · setView(camPos) · flush(dt) · sample/sampleWorld/coverage/regionStats
+//      startWipe({ k, cx, cz, dur, reach }) — the clear-all-ink wave (practice): a front runs out from (cx, cz) and clears
+//      every cell / texel it passes; wipeTag() / splat opts { wk, wr } keep it in step across online clients (see there)
+//      exportGrid() / importGrid(data) — the gameplay grid as compact RLE (a late joiner's copy of the turf)
 // kind: 'shot' 'line' 'blast' 'bomb' 'trail' 'drop' 'roll' 'speck' (inferred from radius/stretch when omitted;
 //       'roll' needs `stretch` = the roll direction and paints a straight-edged band segment instead of a blob)
 import * as THREE from 'three';
@@ -33,9 +36,13 @@ const RIP_N = 24;
 const _rel = new THREE.Vector3();
 
 const K = { shot: 0, line: 1, blast: 2, bomb: 3, trail: 4, drop: 5, roll: 6, speck: 7 };
-const K_SHOT = 0, K_LINE = 1, K_BLAST = 2, K_BOMB = 3, K_TRAIL = 4, K_DROP = 5, K_ROLL = 6, K_SPECK = 7;
+const K_SHOT = 0, K_LINE = 1, K_BLAST = 2, K_BOMB = 3, K_TRAIL = 4, K_DROP = 5, K_ROLL = 6, K_SPECK = 7, K_RECT = 8;   // (rect: importGrid's stamps)
 // quad half-extent in footprint radii (satellites / spatter reach) and the extra reach below wall splats (drips)
-const REACH = [2.45, 2.1, 2.7, 2.75, 2.3, 1.9, 1.25, 1.35];
+const REACH = [2.45, 2.1, 2.7, 2.75, 2.3, 1.9, 1.25, 1.35, 1.0];
+// The clear-all-ink wave (startWipe): its front radius in a splat's wave tag once the wave has finished (JSON has no
+// Infinity); the sweep visits the cells in 0.25 m distance buckets.
+export const WIPE_DONE = 9999;
+const WIPE_BUCKET = 0.25;
 const DRIP_REACH = 3.9;
 
 // Main-blob outline: organic lobes + two narrow "fingers" thrown out by the impact. The GPU splat shader evaluates the
@@ -55,12 +62,16 @@ attribute vec3 aLocal;
 attribute vec4 aSplat;
 attribute vec3 aStretch;
 attribute vec4 aGrow;
+attribute vec3 aW;
+attribute vec4 aMask;
 varying vec3 vLocal;
 varying vec4 vSplat;
 varying vec3 vStretch;
 varying vec4 vGrow;
+varying vec3 vW;
+varying vec4 vMask;
 void main() {
-  vLocal = aLocal; vSplat = aSplat; vStretch = aStretch; vGrow = aGrow;
+  vLocal = aLocal; vSplat = aSplat; vStretch = aStretch; vGrow = aGrow; vW = aW; vMask = aMask;
   gl_Position = vec4(aPos, 0.0, 1.0);
 }`;
 
@@ -70,6 +81,8 @@ varying vec3 vLocal;     // metres from the splat centre in face space; z = cent
 varying vec4 vSplat;     // final radius, team, seed, flags (isWall + 2 × kind)
 varying vec3 vStretch;   // travel direction in face space, smear amount (0 = none)
 varying vec4 vGrow;      // x: age / spread time (runs on past 1) · y: drip progress 0..1 · z: 1 = drips only
+varying vec3 vW;         // world position of this texel
+varying vec4 vMask;      // the wipe wave's mask: never draw where r0 < |xz − c| <= r1 (c = xy, r0 = z, r1 = w)
 float hsh(float n) { return fract(sin(n) * 43758.5453123); }
 float wob(float a, float s) {
   return 1.0 + 0.12 * sin(3.0 * a + s * 6.2831) + 0.08 * sin(5.0 * a + s * 17.0) + 0.05 * sin(7.0 * a + s * 41.0)
@@ -94,6 +107,7 @@ vec4 kindShape(float k) {
   return vec4(0.0);                                  // roller band, speck
 }
 void main() {
+  if (vMask.w > vMask.z) { float mr = length(vW.xz - vMask.xy); if (mr > vMask.z && mr <= vMask.w) discard; }
   float R = vSplat.x, team = vSplat.y, seed = vSplat.z;
   float isWall = mod(vSplat.w, 2.0);
   float kind = floor(vSplat.w * 0.5 + 0.01);
@@ -104,7 +118,7 @@ void main() {
   float fall = clamp(r / max(R, 1e-3), 0.0, 1.0);        // 1 on the face the blob hit, smaller on faces it grazes
   vec2 p0 = vLocal.xy;
   float tx = max(max(abs(dFdx(p0.x)), abs(dFdy(p0.x))), max(abs(dFdx(p0.y)), abs(dFdy(p0.y))));   // metres per texel
-  vec2 dir = vStretch.xy; float sa = vStretch.z;
+  vec2 dir = vStretch.xy; float sa = kind > 7.5 ? 0.0 : vStretch.z;
   vec2 p = p0;
   if (sa > 0.0) {                                        // shots: smeared forward along the travel direction
     float a = dot(p, dir); vec2 perp = p - a * dir;
@@ -118,7 +132,11 @@ void main() {
     // ---- body: floods out from ~40 % with a strong ease-out; its final edge is the CPU gameplay edge
     float tb = 1.0 - pow(1.0 - clamp(tn, 0.0, 1.0), 4.0);
     float grow = mix(0.4, 1.0, tb);
-    if (kind > 5.5 && kind < 6.5) {
+    if (kind > 7.5) {
+      // importGrid's stamp: a rounded box over a run of grid cells (half extents in vStretch.xy, corner radius z)
+      vec2 dq = abs(p0) - vStretch.xy;
+      sd = length(max(dq, 0.0)) + min(max(dq.x, dq.y), 0.0) - vStretch.z;
+    } else if (kind > 5.5 && kind < 6.5) {
       // roller band: a straight-edged segment across the drum, edges gently wavy
       vec2 bx = vec2(-dir.y, dir.x);
       vec2 q = vec2(dot(p0, dir), dot(p0, bx));
@@ -285,6 +303,12 @@ export class PaintSystem {
     this._dryAcc = 0;
     this._floods = [];         // region floods in progress (flood())
     this._floodPrep = new Map();   // region → its cells sorted by distance from the front's centre + atlas quads
+    // the clear-all-ink wave (startWipe): wipeK = the last wave started here (0 = none yet), _wipe = the one running,
+    // _wipeC = the last wave's centre, _held = replayed splats waiting for this screen's front (see _wipeGate),
+    // wipeFx = this frame's sample of inked cells the front cleared (main.js puffs steam off them)
+    this.wipeK = 0; this._wipe = null; this._wipeC = null; this._held = [];
+    this.wipeFx = { n: 0, pos: new Float32Array(96 * 3), team: new Uint8Array(96), cleared: 0 };
+    this._mk = null;           // the mask the splat being drawn carries (cx, cz, r0, r1) — see splat()
     this._initGPU();
   }
 
@@ -332,6 +356,7 @@ export class PaintSystem {
     }
     this.grid = new Uint8Array(total);      // 0 none, 1 team0, 2 team1
     this.dead = new Uint8Array(total);      // cells buried inside other geometry
+    this.live = new Uint8Array(total);      // 1: a live turf cell (counted in `counts`)
     this.turfTotal = 0;
     this.turfArea = 0;
     this.counts = [0, 0];                   // live turf cells per team
@@ -340,7 +365,7 @@ export class PaintSystem {
         p.copy(f.origin).addScaledVector(f.u, (i + 0.5) * f.cu).addScaledVector(f.v, (j + 0.5) * f.cv).addScaledVector(f.n, 0.06);
         const k = f.grid + j * f.nu + i;
         if (lvl.pointInside(p, 0, f.block)) this.dead[k] = 1;
-        else if (f.turf) { this.turfTotal++; this.turfArea += f.cu * f.cv; }
+        else if (f.turf) { this.turfTotal++; this.turfArea += f.cu * f.cv; this.live[k] = 1; }
       }
     }
   }
@@ -361,6 +386,8 @@ export class PaintSystem {
     this.aSplat = new Float32Array(MAX_QUADS * 4 * 4);
     this.aStretch = new Float32Array(MAX_QUADS * 4 * 3);
     this.aGrow = new Float32Array(MAX_QUADS * 4 * 4);
+    this.aW = new Float32Array(MAX_QUADS * 4 * 3);      // world position (the wipe mask is a world-space ring)
+    this.aMask = new Float32Array(MAX_QUADS * 4 * 4);
     const idx = new Uint32Array(MAX_QUADS * 6);
     for (let i = 0; i < MAX_QUADS; i++) idx.set([i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3], i * 6);
     const mk = (arr, n) => { const a = new THREE.BufferAttribute(arr, n); a.setUsage(THREE.DynamicDrawUsage); return a; };
@@ -369,6 +396,8 @@ export class PaintSystem {
     g.setAttribute('aSplat', mk(this.aSplat, 4));
     g.setAttribute('aStretch', mk(this.aStretch, 3));
     g.setAttribute('aGrow', mk(this.aGrow, 4));
+    g.setAttribute('aW', mk(this.aW, 3));
+    g.setAttribute('aMask', mk(this.aMask, 4));
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_QUADS * 4 * 3), 3));
     g.setIndex(new THREE.BufferAttribute(idx, 1));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e9);
@@ -445,6 +474,9 @@ export class PaintSystem {
     this._floods.length = 0;
     for (const p of this._floodPrep.values()) p.geo.dispose();
     this._floodPrep.clear();
+    // a fresh stage: no wave running, none held, the wave count starts over (every client clears at the same moments:
+    // a match start, a practice stage swap)
+    this.wipeK = 0; this._wipe = null; this._wipeC = null; this._held.length = 0; this.wipeFx.n = 0;
     this.version++;
   }
 
@@ -466,12 +498,26 @@ export class PaintSystem {
   splat(center, radius, team, opts = {}) {
     // online: other players' ghost rounds never paint (their owner's splats arrive instead); yours are recorded
     const nm = G.netm;
+    const replay = !!(opts.replay || (nm && nm.applying));
     if (nm && !opts.cosmetic) {
       if (nm.mute > 0) return 0;
-      if (!nm.applying) { if (opts.seed === undefined) opts.seed = Math.random(); nm.recSplat(center, radius, team, opts); }
+      if (!replay) { if (opts.seed === undefined) opts.seed = Math.random(); nm.recSplat(center, radius, team, opts); }
     }
     const seed = opts.seed ?? Math.random();
     const cosmetic = !!opts.cosmetic;
+    // the clear-all-ink wave: which wave (wk) this splat comes after and where its front was (wr) when it was painted —
+    // our own now, a replayed one's from its painter (_wipeGate may hold it back until our front gets there). Cells /
+    // texels between wr and the front (now, and as it moves on while the splat spreads) are never drawn: the wave
+    // already went over them for its painter.
+    let wk = 0, wr = WIPE_DONE;
+    if (!cosmetic && (this.wipeK || opts.wk)) {
+      if (replay) {
+        const gt = this._wipeGate(opts.wk | 0, opts.wr ?? WIPE_DONE);
+        if (gt.hold) { this._hold(center, radius, team, opts); return 0; }
+        wk = gt.wk; wr = gt.wr;
+      } else { wk = this.wipeK; wr = this._wipe ? this._wipe.r : WIPE_DONE; }
+    }
+    this._mk = wk ? this._maskFor(wk, wr, this._mkBuf || (this._mkBuf = [0, 0, 0, 0])) : null;
     // Tower Command: the tower keeps its own ink (it moves; src/game/towerPaint.js)
     if (!cosmetic) G.match?.tower?.paint?.splat(center, radius, team, { seed });
     // sprout pods: their meters and their hedges' own ink (src/game/pods.js)
@@ -530,7 +576,7 @@ export class PaintSystem {
       }
       const drips = wall && kind !== K_SPECK && kind !== K_ROLL ? 1 : 0;
       const g = {
-        entries, R: radius, team, seed, kind, age: 0,
+        entries, R: radius, team, seed, kind, age: 0, wk, wr, wcx: this._wipeC ? this._wipeC.cx : 0, wcz: this._wipeC ? this._wipeC.cz : 0,
         // the body floods out in ≈ 0.1–0.3 s (bigger = heavier), droplets land up to ~1.3× that later; drips run on
         dur: kind === K_SPECK ? 0.05 : 0.085 + Math.min(0.22, radius * 0.075),
         dripDur: drips ? 1.1 + Math.min(2.2, radius * 1.5) : 0,
@@ -538,12 +584,14 @@ export class PaintSystem {
       };
       if (opts.instant) this._emitGrowth(g, 3, 1, false);
       else this.growing.push(g);
+      this._mk = null;
       if (!cosmetic && radius >= 0.15 && !this._rippledNear(center, radius)) {
         // a ripple runs out across the wet ink from the impact (one per cluster: a roller stroke or a burst of trail
         // drips does not turn the ink into rain)
         this.ripple(center, 0.0038 + 0.0036 * Math.min(radius, 3), 0.1 + 0.05 * Math.min(radius, 3), 0.85 + 0.35 * Math.min(radius, 3), 0.55 + 0.2 * Math.min(radius, 3));
       }
     }
+    this._mk = null;
     return claimed;
   }
 
@@ -596,6 +644,8 @@ export class PaintSystem {
   _emitGrowth(g, tn, dT, dripOnly) {
     const E = g.entries, R = g.R, kind = g.kind;
     const reachK = REACH[kind];
+    // (a splat spreading while a wave runs: never redraw what the front has passed since it was painted)
+    this._mk = g.wk ? this._maskFor(g.wk, g.wr, this._mkBuf || (this._mkBuf = [0, 0, 0, 0]), g.wcx, g.wcz) : null;
     for (let i = 0; i < E.length; i += 7) {
       const f = E[i], lu = E[i + 1], lv = E[i + 2], dn = E[i + 3], sdu = E[i + 4], sdv = E[i + 5], sa = E[i + 6];
       if (dn >= R) continue;
@@ -609,6 +659,7 @@ export class PaintSystem {
         this._pushQuad(f, lu - ext, lu + ext, lv - Math.max(ext, down), lv + ext, lu, lv, dn, R, g.team, g.seed, kind, sdu, sdv, sa, tn, dT, 0);
       }
     }
+    this._mk = null;
   }
 
   _cpuSplat(f, lu, lv, r, team, seed, sdu, sdv, sa, kind) {
@@ -621,8 +672,14 @@ export class PaintSystem {
     if (i1 < i0 || j1 < j0) return 0;
     let claimed = 0;
     const cellA = f.cu * f.cv;
+    const mk = this._mk && this._mk[3] > this._mk[2] ? this._mk : null;   // (the wipe wave already went over (r0, r1])
     for (let j = j0; j <= j1; j++) {
       for (let i = i0; i <= i1; i++) {
+        if (mk) {
+          const s = (i + 0.5) * f.cu, t = (j + 0.5) * f.cv;
+          const d = Math.hypot(f.origin.x + f.u.x * s + f.v.x * t - mk[0], f.origin.z + f.u.z * s + f.v.z * t - mk[1]);
+          if (d > mk[2] && d <= mk[3]) continue;
+        }
         let px = (i + 0.5) * f.cu - lu, py = (j + 0.5) * f.cv - lv;
         if (roll) {
           const qa = Math.abs(px * sdu + py * sdv) - r * BAND_L, qb = Math.abs(-px * sdv + py * sdu) - r * BAND_W;
@@ -663,9 +720,13 @@ export class PaintSystem {
     if (u1 <= u0 || v1 <= v0) return;
     const q = this.quads++;
     const flags = (f.wall ? 1 : 0) + 2 * kind;
+    const mk = this._mk;
     for (let c = 0; c < 4; c++) {
       const cu = c === 1 || c === 2 ? u1 : u0, cv = c >= 2 ? v1 : v0;
       const vi = q * 4 + c;
+      this.aW[vi * 3] = f.origin.x + f.u.x * cu + f.v.x * cv; this.aW[vi * 3 + 1] = f.origin.y + f.u.y * cu + f.v.y * cv; this.aW[vi * 3 + 2] = f.origin.z + f.u.z * cu + f.v.z * cv;
+      if (mk) { this.aMask[vi * 4] = mk[0]; this.aMask[vi * 4 + 1] = mk[1]; this.aMask[vi * 4 + 2] = mk[2]; this.aMask[vi * 4 + 3] = mk[3]; }
+      else { this.aMask[vi * 4 + 2] = 0; this.aMask[vi * 4 + 3] = 0; }
       const px = a.x + a.pad + cu * a.ppm, py = a.y + a.pad + cv * a.ppm;
       this.aPos[vi * 2] = (px / S) * 2 - 1;
       this.aPos[vi * 2 + 1] = (py / S) * 2 - 1;
@@ -703,11 +764,14 @@ export class PaintSystem {
       this._dryU.uDry.value = k / 255;
       this.dryMesh.visible = true;
     }
-    const floods = this._floods.length > 0;
-    if (floods) { this._floodSettle(); this.texture.generateMipmaps = false; }   // (one mip rebuild: after the floods)
+    const floods = this._floods.length > 0, wipe = !!this._wipe;
+    if (floods || wipe) { if (floods) this._floodSettle(); this.texture.generateMipmaps = false; }   // (one mip rebuild: after the floods / the wave)
     this._drawQuads();
     this.dryMesh.visible = false;
-    if (floods) { this.texture.generateMipmaps = true; this._floodStep(dt); }
+    if (floods) { this.texture.generateMipmaps = !wipe; this._floodStep(dt); }
+    if (wipe) { this.texture.generateMipmaps = true; this._wipeStep(dt); }
+    else this.wipeFx.n = 0;
+    if (this._held.length) this._releaseHeld();
   }
 
   // ------------------------------------------------------------ region floods (Zone Control)
@@ -849,7 +913,7 @@ export class PaintSystem {
     if (!this.quads && !this.dryMesh.visible) return;
     const g = this.geo, n = this.quads * 4;
     if (n) {
-      for (const name of ['aPos', 'aLocal', 'aSplat', 'aStretch', 'aGrow']) {
+      for (const name of ['aPos', 'aLocal', 'aSplat', 'aStretch', 'aGrow', 'aW', 'aMask']) {
         const at = g.attributes[name];
         at.clearUpdateRanges(); at.addUpdateRange(0, n * at.itemSize); at.needsUpdate = true;
       }
@@ -866,6 +930,255 @@ export class PaintSystem {
     r.autoClear = ac;
     this.quads = 0;
     this.dryMesh.visible = false;
+  }
+
+  // ------------------------------------------------------------ the clear-all-ink wave (practice)
+  // startWipe({ k, cx, cz, dur = 1.6, reach }): wave number k (each client counts the same waves: the host numbers them)
+  // runs a front out from (cx, cz) over every paintable surface, radius = reach · ease(t / dur) measured flat (xz), and
+  // everything it passes is wiped: the gameplay grid cell by cell (cell centre inside the front) and the atlas texel by
+  // texel, so what you see and what you swim in agree. Ink painted behind the front stays; ink ahead of it goes when
+  // the front gets there. reach defaults to the farthest cell + 0.5 m (the whole stage).
+  //
+  // Online, every splat record carries its painter's wave tag (wipeTag(): [wave, front radius then], WIPE_DONE once
+  // over). Replaying it here (_wipeGate): if our own front for that wave hasn't got as far yet (or the wave hasn't
+  // started here), the splat waits (_held) until it has; then it is drawn with the ring between its painter's front and
+  // ours masked off (the wave already passed there for the painter). A splat from before a wave its painter hadn't heard
+  // of yet is "before" it. So each cell ends up cleared or inked by the same rule on every screen, whatever order the
+  // wave and the splats arrive in.
+  startWipe({ k, cx = 0, cz = 0, dur = 1.6, reach } = {}) {
+    k = k | 0;
+    if (!(k > this.wipeK)) return null;
+    if (this._wipe) this._wipeFinish();
+    const P = this._wipePrep(cx, cz);
+    this.wipeK = k;
+    this._wipeC = { k, cx, cz };
+    const W = this._wipe = { k, cx, cz, dur: Math.max(0.05, +dur || 1.6), reach: Math.max(1, reach ?? P.maxD + 0.5), t: 0, r: -1e-3, b: 0, prep: P };
+    return W;
+  }
+  /** This screen's front for wave k: -1 not started here, its radius while running, WIPE_DONE once over. */
+  wipeFront(k) {
+    if (k > this.wipeK) return -1;
+    if (this._wipe && this._wipe.k === k) return this._wipe.r;
+    return WIPE_DONE;
+  }
+  /** The tag a splat painted here now carries: [wave, front] (null before any wave). */
+  wipeTag() { return this.wipeK ? [this.wipeK, this._wipe ? this._wipe.r : WIPE_DONE] : null; }
+  /** A late joiner takes the host's wave count (and the last wave's centre) with its copy of the turf. */
+  setWipeState(k, cx = 0, cz = 0) { this.wipeK = Math.max(0, k | 0); this._wipe = null; this._wipeC = this.wipeK ? { k: this.wipeK, cx, cz } : null; }
+  get wiping() { return !!this._wipe; }
+
+  _wipeGate(K, rk) {
+    const L = this.wipeK;
+    if (K > L) return { hold: true };          // its painter saw a wave start that hasn't started here yet
+    if (K < L || !K) { K = L; rk = -1; }        // painted before our latest wave: everything it covers goes
+    if (!K) return { wk: 0, wr: WIPE_DONE };
+    if (this.wipeFront(K) < rk) return { hold: true };   // our front hasn't reached where its painter's was
+    return { wk: K, wr: rk };
+  }
+  _maskFor(wk, wr, out, cx, cz) {
+    const f = this.wipeFront(wk);
+    if (!(f > wr) || f < 0) return null;
+    out[0] = cx ?? (this._wipeC ? this._wipeC.cx : 0); out[1] = cz ?? (this._wipeC ? this._wipeC.cz : 0); out[2] = wr; out[3] = f;
+    return out;
+  }
+  _hold(c, radius, team, opts) {
+    if (this._held.length >= 600) this._held.shift();   // (never pile up)
+    const o = { ...opts, replay: 1 };
+    if (o.stretch) o.stretch = o.stretch.clone();
+    this._held.push({ c: c.clone(), radius, team, opts: o, t: this.clock });
+  }
+  _releaseHeld() {
+    const H = this._held;
+    this._held = [];
+    for (const h of H) {
+      // waited 4 s for a wave that never started here (its event was lost): paint it as it stands
+      if (this.clock - h.t > 4 && (h.opts.wk | 0) > this.wipeK) { h.opts.wk = this.wipeK; h.opts.wr = WIPE_DONE; }
+      this.splat(h.c, h.radius, h.team, h.opts);   // (holds again if it still isn't due)
+    }
+  }
+
+  // every cell's flat distance from the centre, and the cells counting-sorted into 0.25 m distance buckets
+  _wipePrep(cx, cz) {
+    const n = this.grid.length, dist = new Float32Array(n);
+    let maxD = 0;
+    for (const f of this.paintFaces) {
+      const ox = f.origin.x - cx, oz = f.origin.z - cz;
+      for (let j = 0; j < f.nv; j++) {
+        const t = (j + 0.5) * f.cv, bx = ox + f.v.x * t, bz = oz + f.v.z * t;
+        let k = f.grid + j * f.nu;
+        for (let i = 0; i < f.nu; i++, k++) {
+          const s = (i + 0.5) * f.cu, d = Math.hypot(bx + f.u.x * s, bz + f.u.z * s);
+          dist[k] = d;
+          if (d > maxD) maxD = d;
+        }
+      }
+    }
+    const nb = Math.ceil(maxD / WIPE_BUCKET) + 2;
+    const start = new Uint32Array(nb + 1);
+    for (let k = 0; k < n; k++) start[((dist[k] / WIPE_BUCKET) | 0) + 1]++;
+    for (let b = 1; b <= nb; b++) start[b] += start[b - 1];
+    const at = start.slice(0, nb), order = new Uint32Array(n);
+    for (let k = 0; k < n; k++) order[at[(dist[k] / WIPE_BUCKET) | 0]++] = k;
+    return { dist, order, start, nb, maxD };
+  }
+
+  // advance the front: clear the cells it reached (grid + counts), sample some inked ones for the steam, then draw the
+  // band it crossed this frame into the atlas
+  _wipeStep(dt) {
+    const W = this._wipe;
+    if (!W) return;
+    W.t += dt;
+    const x = Math.min(1, W.t / W.dur);
+    const r1 = x >= 1 ? WIPE_DONE : W.reach * (1 - Math.pow(1 - x, 1.7));
+    const r0 = W.r;
+    const P = W.prep, grid = this.grid, live = this.live, dist = P.dist, order = P.order, start = P.start;
+    const fx = this.wipeFx, cap = fx.team.length;
+    fx.n = 0;
+    let seen = 0, changed = false;
+    const clearCell = (k) => {
+      const v = grid[k];
+      if (!v) return;
+      grid[k] = 0;
+      if (live[k]) this.counts[v - 1]--;
+      changed = true;
+      // reservoir sample of this frame's inked cells (positions are worked out below, only for the ones kept)
+      seen++;
+      const slot = fx.n < cap ? fx.n++ : (Math.random() * seen) | 0;
+      if (slot < cap) { fx.pos[slot * 3] = k; fx.team[slot] = v - 1; }
+    };
+    for (; W.b < P.nb; W.b++) {
+      const lo = W.b * WIPE_BUCKET;
+      if (lo > r1) break;
+      const a = start[W.b], z = start[W.b + 1];
+      if ((W.b + 1) * WIPE_BUCKET <= r1) { for (let q = a; q < z; q++) clearCell(order[q]); continue; }
+      for (let q = a; q < z; q++) { const k = order[q]; if (dist[k] <= r1) clearCell(k); }   // the bucket the front is in
+      break;
+    }
+    fx.cleared = seen;
+    // the sampled cells' world positions (just off the surface)
+    for (let q = 0; q < fx.n; q++) {
+      const k = fx.pos[q * 3], f = this._faceOfCell(k);
+      if (!f) { fx.pos[q * 3] = fx.pos[q * 3 + 1] = fx.pos[q * 3 + 2] = 0; continue; }
+      const l = k - f.grid, i = l % f.nu, j = (l - i) / f.nu, s = (i + 0.5) * f.cu, t = (j + 0.5) * f.cv;
+      fx.pos[q * 3] = f.origin.x + f.u.x * s + f.v.x * t + f.n.x * 0.05;
+      fx.pos[q * 3 + 1] = f.origin.y + f.u.y * s + f.v.y * t + f.n.y * 0.05;
+      fx.pos[q * 3 + 2] = f.origin.z + f.u.z * s + f.v.z * t + f.n.z * 0.05;
+    }
+    // GPU: wipe the band (r0, r1] on every face's atlas rect
+    this._wipeBand(W.cx, W.cz, r0, r1);
+    W.r = r1;
+    if (changed) this.version++;
+    if (x >= 1) this._wipe = null;
+  }
+  // a wave still running when another starts (or the stage is cleared) finishes at once
+  _wipeFinish() { const W = this._wipe; if (!W) return; W.t = W.dur; this._wipeStep(0); this._wipe = null; }
+
+  _faceOfCell(k) {
+    const faces = this.paintFaces;
+    let a = 0, b = faces.length - 1;
+    while (a < b) { const m = (a + b + 1) >> 1; if (faces[m].grid <= k) a = m; else b = m - 1; }
+    const f = faces[a];
+    return f && k >= f.grid && k < f.grid + f.nu * f.nv ? f : null;
+  }
+
+  _wipeBand(cx, cz, r0, r1) {
+    if (!this._wipeMesh) {
+      // every paintable face's whole atlas rect (padding included) as one quad, carrying its world position
+      const pos = [], w = [], index = [], S = this.size;
+      for (const f of this.paintFaces) {
+        const a = f.atlas;
+        if (!a) continue;
+        const padM = (a.pad - 0.5) / a.ppm, base = pos.length / 2;
+        for (const [u, v] of [[-padM, -padM], [f.su + padM, -padM], [f.su + padM, f.sv + padM], [-padM, f.sv + padM]]) {
+          pos.push(((a.x + a.pad + u * a.ppm) / S) * 2 - 1, ((a.y + a.pad + v * a.ppm) / S) * 2 - 1);
+          w.push(f.origin.x + f.u.x * u + f.v.x * v, f.origin.y + f.u.y * u + f.v.y * v, f.origin.z + f.u.z * u + f.v.z * v);
+        }
+        index.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('aPos', new THREE.Float32BufferAttribute(pos, 2));
+      geo.setAttribute('aW', new THREE.Float32BufferAttribute(w, 3));
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((pos.length / 2) * 3), 3));
+      geo.setIndex(index);
+      geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e9);
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { uC: { value: new THREE.Vector2() }, uR: { value: new THREE.Vector2() } },
+        vertexShader: 'attribute vec2 aPos; attribute vec3 aW; varying vec3 vW; void main() { vW = aW; gl_Position = vec4(aPos, 0.0, 1.0); }',
+        fragmentShader: 'precision highp float; uniform vec2 uC; uniform vec2 uR; varying vec3 vW; void main() { float r = length(vW.xz - uC); if (r <= uR.x || r > uR.y) discard; gl_FragColor = vec4(0.0); }',
+        transparent: true, depthTest: false, depthWrite: false, toneMapped: false, blending: THREE.NoBlending,
+      });
+      this._wipeMesh = new THREE.Mesh(geo, mat);
+      this._wipeMesh.frustumCulled = false;
+      this._wipeScene = new THREE.Scene();
+      this._wipeScene.add(this._wipeMesh);
+    }
+    const U = this._wipeMesh.material.uniforms;
+    U.uC.value.set(cx, cz); U.uR.value.set(r0, Math.min(r1, 1e6));
+    const r = this.renderer, prev = r.getRenderTarget(), ac = r.autoClear;
+    r.autoClear = false;
+    r.setRenderTarget(this.rt);
+    r.render(this._wipeScene, this.cam);
+    r.setRenderTarget(prev);
+    r.autoClear = ac;
+  }
+
+  // ------------------------------------------------------------ the turf as data (a late joiner's copy)
+  // exportGrid() → { n, v: 1, d: base64 } — the gameplay grid run-length encoded: each run a varint (length << 2 | value)
+  // importGrid(data) → bool: replaces this grid (and the counts) with it and stamps it into the atlas — a rounded box
+  // over each run of a row, a little oversized so neighbouring rows merge into one sheet of ink (it reads as ink laid
+  // a while ago: the gameplay edge is exact, the drawn one blockier than a live splat's)
+  exportGrid() {
+    const g = this.grid, n = g.length, bytes = [];
+    const put = (x) => { while (x >= 0x80) { bytes.push((x & 0x7f) | 0x80); x = Math.floor(x / 128); } bytes.push(x); };
+    for (let k = 0; k < n;) {
+      const v = g[k];
+      let e = k + 1;
+      while (e < n && g[e] === v) e++;
+      put((e - k) * 4 + v);
+      k = e;
+    }
+    let bin = '';
+    const u8 = Uint8Array.from(bytes);
+    for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+    return { v: 1, n, d: btoa(bin) };
+  }
+  importGrid(data) {
+    if (!data || data.v !== 1 || data.n !== this.grid.length || typeof data.d !== 'string') return false;
+    const bin = atob(data.d), g = this.grid, n = g.length;
+    let k = 0, x = 0, mul = 1;
+    for (let i = 0; i < bin.length && k <= n; i++) {
+      const b = bin.charCodeAt(i);
+      x += (b & 0x7f) * mul;
+      if (b & 0x80) { mul *= 128; continue; }
+      const v = x % 4, len = Math.floor(x / 4);
+      if (k + len > n || v > 2) return false;
+      g.fill(v, k, k + len);
+      k += len; x = 0; mul = 1;
+    }
+    if (k !== n) return false;
+    this.counts[0] = this.counts[1] = 0;
+    for (let i = 0; i < n; i++) if (g[i] && this.live[i]) this.counts[g[i] - 1]++;
+    this.version++;
+    // the atlas: one stamp per run of inked cells along a row
+    const ex = 0.07, rr = 0.09;
+    for (const f of this.paintFaces) {
+      if (!f.atlas) continue;
+      for (let j = 0; j < f.nv; j++) {
+        const row = f.grid + j * f.nu;
+        for (let i = 0; i < f.nu;) {
+          const v = g[row + i];
+          if (!v) { i++; continue; }
+          let e = i + 1;
+          while (e < f.nu && g[row + e] === v) e++;
+          const u0 = i * f.cu - ex, u1 = e * f.cu + ex, v0 = j * f.cv - ex, v1 = (j + 1) * f.cv + ex;
+          const lu = (u0 + u1) / 2, lv = (v0 + v1) / 2;
+          this._pushQuad(f, u0 - rr, u1 + rr, v0 - rr, v1 + rr, lu, lv, 0, 1, v - 1, ((row + i) * 0.6180339) % 1, K_RECT, (u1 - u0) / 2 - rr, (v1 - v0) / 2 - rr, rr, 3, 1, 0);
+          i = e;
+        }
+      }
+    }
+    this._drawQuads();
+    return true;
   }
 
   // ------------------------------------------------------------ queries
@@ -929,5 +1242,6 @@ export class PaintSystem {
     for (const p of this._floodPrep.values()) p.geo.dispose();
     this._floodPrep.clear(); this._floods.length = 0;
     this._floodInk.dispose(); this._floodWipe.dispose();
+    if (this._wipeMesh) { this._wipeMesh.geometry.dispose(); this._wipeMesh.material.dispose(); this._wipeMesh = null; }
   }
 }

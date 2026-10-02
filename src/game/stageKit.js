@@ -26,6 +26,11 @@ export class StageClock {
     if (!m.practice && m.time > 0 && Number.isFinite(m.duration)) {
       const want = m.duration - m.time, d = want - this.t;
       if (Math.abs(d) > 1.5) this.t = want; else this.t += d * Math.min(1, dt * 3);
+    } else if (m.practice && m.follower && G.netm?.stageSync) {
+      // online Practice has no match clock: the host's stage clock rides its ticks (netmatch stageSync) — a late joiner,
+      // or a screen that finished building a swapped-in stage later than the host, starts its own late
+      const S = G.netm.stageSync, want = S.t + (performance.now() / 1000 - S.at), d = want - this.t;
+      if (Math.abs(d) > 1.5) this.t = want; else this.t += d * Math.min(1, dt * 3);
     }
     return this.t;
   }

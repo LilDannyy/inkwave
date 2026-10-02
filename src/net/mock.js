@@ -4,7 +4,10 @@
 //
 // Simulated room life: squidkids join / leave / ready up / swap weapons and looks / emote on timers, pings jitter,
 // a simulated host starts the match once everyone is ready (when you are a guest), matches "run" for a few seconds
-// and everyone comes back to the lobby.
+// and everyone comes back to the lobby. The host's settings follow session.js (mode incl. Practice, stage incl.
+// 'random', time day / golden / sunset / random, botCount with the bot plan). Practice runs for real, offline: your own
+// solo practice on the room's stage (main.js startMockPractice) dressed as the room's — the online Practice HUD tag and
+// pause menu (clear all ink, swap stage, end practice for the host; leave room for a guest) — until the host ends it.
 //
 // Magic codes for join():  ZZZZZ → 'Room not found' · FULLY → 'Room is full' · BUZYY → 'Match in progress' ·
 // NETXX → 'Could not connect'. Any other valid code joins someone else's room as a guest.
@@ -14,7 +17,7 @@
 // Debug handle (G.net.mock): auto(on) · add({ name, team, weapon, style, ready }) → id · drop(id) · ready(id, v) ·
 // emote(id, name) · swap(id, { weapon, style }) · fill(n) · clear() · host(id) · startMatch() · endMatch() · lose(msg)
 import { G } from '../core/ctx.js';
-import { WEAPON_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock } from '../config.js';
+import { WEAPON_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 
 const q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
@@ -83,13 +86,13 @@ export class MockNet {
     const s = G.settings || {};
     this.lobby = {
       map: MAPS.some((m) => m.id === s.lastStage) ? s.lastStage : MAPS[0].id,
-      time: (s.stageTimes && s.stageTimes[s.lastStage]) === 'dusk' ? 'dusk' : 'day',
-      duration: s.matchLength === 90 ? 90 : 180, bots: true, difficulty: s.difficulty || 'normal',
+      time: roomTime((s.stageTimes && s.stageTimes[s.lastStage]) || 'day'),
+      duration: s.matchLength === 90 ? 90 : 180, bots: true, botCount: -1, difficulty: s.difficulty || 'normal', mode: 'turf', live: null,
       palette: G.game && G.game.paletteIndex ? G.game.paletteIndex() : 0,
       players: [this._me(name, 0, true)], maxPlayers: 8,
     };
-    this._botsPref = true;
-    if (mapNoBots(this.lobby.map)) this.lobby.bots = false;
+    this._botsPref = { match: -1, practice: 0 };
+    if (mapNoBots(this.lobby.map)) { this.lobby.bots = false; this.lobby.botCount = 0; }
     this._setState('lobby');
     this._emit('lobby', { lobby: this.lobby });
     const n = this._fill ?? 0;
@@ -116,11 +119,13 @@ export class MockNet {
     this.code = code;
     const hostId = this._id();
     const host = this._bot({ id: hostId, team: 0, host: true, ready: true });
+    const mode = q.get('mockmode') || pick(['turf', 'turf', 'practice', 'zones']);
     this.lobby = {
-      map: pick(MAPS).id, time: rnd() < 0.4 ? 'dusk' : 'day', duration: rnd() < 0.3 ? 90 : 180, bots: rnd() < 0.8,
-      difficulty: pick(['easy', 'normal', 'normal', 'hard']), palette: (rnd() * TEAM_PALETTES.length) | 0, players: [host], maxPlayers: 8,
+      map: rnd() < 0.15 ? 'random' : pick(MAPS).id, time: pick([...ROOM_TIMES, 'random']), duration: rnd() < 0.3 ? 90 : 180, botCount: mode === 'practice' ? pick([0, 0, 2]) : pick([-1, -1, 2, 0]),
+      difficulty: pick(['easy', 'normal', 'normal', 'hard']), palette: (rnd() * TEAM_PALETTES.length) | 0, mode, live: null, players: [host], maxPlayers: 8,
     };
-    if (mapNoBots(this.lobby.map)) this.lobby.bots = false;   // (the stage rules, as a real host applies them)
+    if (mapNoBots(this.lobby.map)) this.lobby.botCount = 0;   // (the stage rules, as a real host applies them)
+    this.lobby.bots = this.lobby.botCount !== 0;
     const others = this._fill ?? (2 + ((rnd() * 3) | 0));
     for (let i = 1; i < others; i++) this.lobby.players.push(this._bot({ team: this._teamFor(), ready: rnd() < 0.45 }));
     this.hostId = hostId;
@@ -160,22 +165,39 @@ export class MockNet {
   setSettings(o = {}) {
     if (!this.isHost || !this.lobby || this.state !== 'lobby') return;
     const L = this.lobby, wasMap = L.map;
-    if (o.map && MAPS.some((m) => m.id === o.map)) L.map = o.map;
-    if (o.time === 'day' || o.time === 'dusk') L.time = o.time;
+    if (o.map === 'random' || (o.map && MAPS.some((m) => m.id === o.map))) L.map = o.map;
+    if (o.time) { const t = roomTime(o.time); if (t === o.time || o.time === 'dusk') L.time = t; }
     if (o.duration) L.duration = +o.duration;
-    if (o.bots != null) this._botsPref = !!o.bots;
     if (o.difficulty) L.difficulty = o.difficulty;
-    if (o.mode === 'turf' || o.mode === 'boss') L.mode = o.mode;   // Boss Battle lobby setting (UI testing)
+    if (['turf', 'zones', 'tower', 'boss', 'practice'].includes(o.mode)) L.mode = o.mode;
     if (Number.isInteger(o.palette) && TEAM_PALETTES[o.palette]) L.palette = o.palette;
+    const kind = L.mode === 'practice' ? 'practice' : 'match';
+    const pref = this._botsPref || (this._botsPref = { match: -1, practice: 0 });
+    if (o.botCount != null) pref[kind] = o.botCount === 'fill' ? -1 : Math.max(-1, Math.min(7, +o.botCount | 0));
+    else if (o.bots != null) pref[kind] = o.bots ? -1 : 0;
     // stage rules, exactly as session.js applies them (no Boss Battle on a noBoss stage, no bots on a noBots one)
-    if (L.mode === 'boss' && !mapBossOk(L.map)) L.map = bossFallbackMap(wasMap);
-    L.bots = mapNoBots(L.map) ? false : (this._botsPref ?? L.bots);
+    if (L.mode === 'boss' && L.map !== 'random' && !mapBossOk(L.map)) L.map = bossFallbackMap(wasMap === 'random' ? MAPS[0].id : wasMap);
+    L.botCount = mapNoBots(L.map) ? 0 : pref[kind];
+    L.bots = roomBotPlan(L).total > 0 || (L.botCount < 0 && !mapNoBots(L.map));
     this._emit('lobby', { lobby: this.lobby });
   }
+  botPlan() { return roomBotPlan(this.lobby || {}); }
 
   canStart() {
     if (!this.isHost || !this.lobby || this.state !== 'lobby') return false;
-    return !this.startBlock() && this.lobby.players.every((p) => p.host || p.ready);
+    return !this.startBlock() && (this.lobby.mode === 'practice' || this.lobby.players.every((p) => p.host || p.ready));
+  }
+  get practicing() { return this.state === 'match' && !!(this.lobby && this.lobby.live); }
+
+  // Practice (offline stand-in): the host swaps the stage — your solo practice moves there
+  practiceSwap({ map, time } = {}) {
+    if (!this.isHost || !this.practicing) return false;
+    const L = this.lobby, ids = MAPS.filter((m) => mapOfflineOk(m.id)).map((m) => m.id);
+    const mapId = map === 'random' || !ids.includes(map) ? pick(ids.filter((id) => id !== L.live.map)) : map;
+    L.live = { ...L.live, map: mapId, time: time === 'random' ? pick(ROOM_TIMES) : roomTime(time || L.live.time), gen: (L.live.gen | 0) + 1 };
+    this._emit('lobby', { lobby: L });
+    G.game?.startMockPractice?.(L.live);
+    return true;
   }
   startBlock() { return noBotsStartBlock(this.lobby); }
 
@@ -201,6 +223,15 @@ export class MockNet {
     const beat = G.menus && G.menus.launchLobby ? G.menus.launchLobby() : null;
     await Promise.race([beat || this._sleep(3600), this._sleep(8000)]);
     if (this.state !== 'starting' || this.lobby !== L) return;
+    if (L.mode === 'practice' && G.game?.startMockPractice) {
+      // Practice: no clock — it runs (for real, solo, offline) until the host ends it
+      const ids = MAPS.filter((m) => mapOfflineOk(m.id)).map((m) => m.id);
+      L.live = { mode: 'practice', map: ids.includes(L.map) ? L.map : pick(ids), time: L.time === 'random' ? pick(ROOM_TIMES) : roomTime(L.time), gen: 0 };
+      this._setState('match');
+      this._emit('lobby', { lobby: L });
+      G.game.startMockPractice(L.live);
+      return;
+    }
     this._setState('match');
     this._later(this._matchS * 1000, () => this._endMatch());
   }
@@ -210,6 +241,7 @@ export class MockNet {
 
   _endMatch(now = false) {
     if (this.state !== 'match' && this.state !== 'starting') return;
+    if (this.lobby) this.lobby.live = null;
     this._emit('match', { phase: 'end' });
     this._later(now ? 0 : 1200, () => {
       if (!this.lobby) return;
