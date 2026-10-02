@@ -1,5 +1,5 @@
-// track-arrows pictures: the tracked look (src/game/statusFx.js — one arrow wrapped round the tracked player in the
-// tracking team's colour, the tracking team's thin lines, no name) staged on testbox for tools/botlab/shoot.cjs (PRE=this
+// track-arrows pictures: the tracked look (src/game/statusFx.js — one squid arrow wrapped round the tracked player in
+// the tracking team's colour, the tracking team's thin lines, no name) staged on testbox for tools/botlab/shoot.cjs (PRE=this
 // file, PRE_ARGS=<scene>, ACTORS=1, PLAY=1). You (the local player) are on the tracking team unless said;
 // StatusFx.viewer stands in for whose screen it is. Scenes:
 //   close     a foe you tracked (an Echo Orb), close up from your side: the arrow round it, your line coming in to its chest
@@ -9,10 +9,16 @@
 //   mate      the wall scene from your teammate's screen (beside you; you threw it): their own line, the arrow, through it
 //   self      you, tracked by a foe: your own follow view (shoot.cjs 'play'), the arrow round your kid, fainter
 //   foemate   the tracked foe from its own teammate's screen (the user's screenshot's camera): depth-tested, no line
+//   straight  close up, straight on, the arrow held still with the gap between its head and tail facing you: the
+//             squid's head and eyes, the tentacle tail (from the foe's teammate's screen: no line, depth-tested)
+//   head      the same with its eyes square to you
+//   charger   a foe holding a charger aimed: the band opened out round the barrel (it never cuts through a weapon)
+// The tracked foe holds a Spritzer (a compact kit: the band at its own radius) unless said.
 // The pictures (PNG → JPEG q78 in tools/botlab/jobs/track-arrows/out/): that folder's shots.sh.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { SUBS } = await import('./src/config.js');
+  const SF = await import('./src/game/statusFx.js');
   const G = window.__G, S = G.subs, FX = S.statusFx, SC = window.__preArgs || 'close';
   dbg.freeze();
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -24,10 +30,12 @@
   for (const a of m.actors) if (a.bot) a.bot.update = () => zero(a);
   const put = (a, p, yaw = 0) => { a.pos.copy(p); a.pos.y += 0.02; a.vel.set(0, 0, 0); a.yaw = a.aimYaw = yaw; a.aimPitch = 0; if (a.bot) { a.bot.aimYaw = yaw; a.bot.aimPitch = 0; } };
   const hide = (a, i) => { put(a, V(-24 + (i % 4) * 1.5, 0, 36 + Math.floor(i / 4) * 1.5)); a.character.setVisible?.(false); a.character.root.visible = false; };
-  const show = (a, p, yaw) => { put(a, p, yaw); a.weaponRunner?.reset?.(); a.character.setVisible?.(true); a.character.root.visible = true; };   // (a weapon mid-burst stops)
+  const show = (a, p, yaw, w = 'shooter') => { put(a, p, yaw); a.setWeapon?.(w); a.weaponRunner?.reset?.(); a.character.setVisible?.(true); a.character.root.visible = true; };   // (a weapon mid-burst stops)
   if (G.fx) { G.fx.onDropletLand = null; G.fx.onSpeck = null; }
+  // (no lens ink / edge effects from the bot match before the scene: the pictures are of the arrow)
+  if (g.screenfx) { g.screenfx.reset?.(); g.screenfx.update = () => { if (g.screenfx.pass) g.screenfx.pass.enabled = false; }; }
   S.clear(); G.projectiles.clear(); G.paint.clear();
-  for (const a of m.actors) { if (!a.alive) a.respawn(); a.hp = 1e6; a.invuln = 0; zero(a); a.status.track = a.status.reveal = a.status.poison = 0; a.status.trackBy = a.status.revealBy = null; }
+  for (const a of m.actors) { if (!a.alive) a.respawn(); a.hp = 1e6; a.invuln = 0; zero(a); a.status.track = a.status.reveal = a.status.poison = 0; }
   others.forEach(hide); hide(me, 7);
   FX.viewer = null;
   step(0.2);
@@ -50,6 +58,18 @@
   } else if (SC === 'behind') {
     show(me, V(9, 0, 3.4), -Math.PI / 2 - 0.4); show(foe, V(4, 0, 0), Math.PI / 2 + 0.5);
     S.track(foe, me.team, 99);
+  } else if (SC === 'straight' || SC === 'head') {
+    show(foe, V(0, 0, -6), Math.PI - 0.5);
+    S.track(foe, me.team, 99);
+    FX.viewer = foe2;   // (seen by the foe's teammate: depth-tested, and no line from a kid out of the picture)
+    // its spin held so the gap between the head (its tip at ARC) and the tentacles (at 0) faces the camera (+z of the foe)
+    const u0 = S.update.bind(S), hold = SC === 'head' ? -(SF.ARC - (33 * 0.0098) / SF.BAND_R) : -(SF.ARC + 0.45);   // ('head': its eyes square to you)
+    S.update = (dt) => { u0(dt); const r = FX.recs.get(foe); if (r) { r.spin = hold; r.band.rotation.y = r.bandX.rotation.y = hold; } };
+  } else if (SC === 'charger') {
+    show(me, V(-6, 0, -12), 0.5); show(foe, V(0, 0, -6), Math.PI - 0.6, 'charger');
+    foe.bot.update = () => { zero(foe); foe.intent.fire = true; foe.ink = 100; };   // (charging: the barrel up and out)
+    S.track(foe, me.team, 99);
+    step(0.8);
   } else if (SC === 'foemate') {
     show(foe, V(4, 0, 0), Math.PI / 2 + 0.5); show(foe2, V(9, 0, 3.4), -Math.PI / 2 - 0.4); show(me, V(-7, 0, -9), 0.6);
     FX.viewer = foe2;
@@ -59,6 +79,6 @@
   G.projectiles.clear(); G.paint.clear();   // (no stray shots in the picture)
   const r = FX.recs.get(SC === 'self' ? me : foe);
   info.band = !!(r && r.on && r.band.visible); info.xray = !!(r && r.bandX.visible); info.lines = FX.stats.lines; info.viewer = FX.viewer ? FX.viewer.name : 'you';
-  info.alpha = r && Math.round(r.band.material[0].uniforms.uAlpha.value * 100) / 100;
+  info.alpha = r && Math.round(r.band.material[0].uniforms.uAlpha.value * 100) / 100; info.R = r && Math.round(r.R * 1000) / 1000;
   return info;
 })()

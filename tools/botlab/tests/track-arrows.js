@@ -5,7 +5,7 @@
 // walls. if im tracked then i just see arrow on me. if my teammates is getting tracked, i see the arrow but not through
 // walls") — src/game/statusFx.js
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/track-arrows.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=arrow,sources,walls,clamp,line,net,names,poison' for a part
+//   PAGE_ARGS='only=arrow,clear,sources,walls,clamp,line,net,names,poison' for a part
 // Staged on testbox (a flat deck, top y 0; a wall x 14…15, z ±8, 4 m tall); everyone else parked far off, brains
 // stubbed, hits not dealt. StatusFx.viewer stands in for whose screen it is (null: yours). Checks:
 //  - the old sonar shell (and its ground ping ring) is gone;
@@ -118,7 +118,7 @@
       const capsules = () => { let n = 0; G.scene.traverse((o) => { if (o.isMesh && o.geometry?.type === 'CapsuleGeometry' && o.material?.isShaderMaterial) n++; }); return n; };
       const caps0 = capsules();
       const F0 = V(0, 0, -6);
-      put(foe, F0, Math.PI); put(me, V(0, 0, -14), 0); step(0.1);
+      put(foe, F0, Math.PI); put(me, V(0, 0, -14), 0); foe.setWeapon('shooter'); step(0.1);   // (a compact kit: the band at its own radius)
       // an Echo Orb onto the foe
       S._throw(me, SUBS.scan, V(F0.x, 1.6, F0.z), V(0, -1, 0), false);
       step(0.6);
@@ -127,30 +127,68 @@
       R('the old sonar shell is gone (no shell / ping / ground ring, no capsule shell mesh) and so are the chevrons: ONE arrow — one strip geometry, drawn by a depth-tested mesh (+ the trackers\' hidden-part pass on the same strip)',
         r && !('shell' in r) && !('ping' in r) && !('ring' in r) && !('arrows' in r) && !('pts' in r) && SF.PULSE === undefined && SF.ARROWS === undefined && capsules() === caps0
         && r.band.geometry === r.bandX.geometry && mine.length === 2 && r.band.geometry.index.count / 3 === SF.bandGeometry().index.count / 3, { keys: r && Object.keys(r), caps: [caps0, capsules()], meshesOnTheStrip: mine.length });
-      // its shape: the strip is a piece of upright cylinder wall ~BAND_R round, facing out, spanning ~ARC, the head's height
-      const geo = r.band.geometry, P = geo.attributes.position.array, N = geo.attributes.normal.array;
+      // its shape: the strip is a piece of upright cylinder wall (unit radius, put at r.R by the shader: BAND_R round a kid
+      // with a compact weapon), facing out, spanning ~ARC, the head's height; the arrow cut from it is the game's squid
+      // icon on its side — its head (the mantle and fins) ~1.8× the shaft (its body)
+      const geo = r.band.geometry, P = geo.attributes.position.array, N = geo.attributes.normal.array, PY = geo.attributes.aPY.array;
       let rmin = 9, rmax = 0, out = 1, ymin = 9, ymax = -9, amin = 9, amax = -9;
-      for (let i = 0; i < P.length; i += 3) {
+      for (let i = 0, k = 0; i < P.length; i += 3, k += 2) {
         const rr = Math.hypot(P[i], P[i + 2]); rmin = Math.min(rmin, rr); rmax = Math.max(rmax, rr); ymin = Math.min(ymin, P[i + 1]); ymax = Math.max(ymax, P[i + 1]);
         out = Math.min(out, (N[i] * P[i] + N[i + 2] * P[i + 2]) / rr - Math.abs(N[i + 1]));
-        const an = Math.atan2(P[i], P[i + 2]); const u = an < -0.05 ? an + 2 * Math.PI : an; amin = Math.min(amin, u); amax = Math.max(amax, u);
+        amin = Math.min(amin, PY[k]); amax = Math.max(amax, PY[k]);
       }
+      let tall = 0, cols = 0; for (let k = 0; k < PY.length; k += 4) { cols++; if (Math.abs(PY[k + 1]) > SF.SHAFT_H / 2 + 0.05) tall++; }
       const mats = r.band.material, deg = (x) => r2(x * 180 / Math.PI);
-      const shape = { R: SF.BAND_R, radius: [r3(rmin), r3(rmax)], outward: r3(out), height: [r2(ymin), r2(ymax)], shaft: SF.SHAFT_H, head: SF.HEAD_H, ratio: r2(SF.HEAD_H / SF.SHAFT_H), arcDeg: deg(SF.ARC), stripDeg: deg(amax - amin),
-        sides: mats.map((m) => m.side), groups: geo.groups.length };
-      R(`…its shape: an upright cylinder band ${SF.BAND_R} m round, facing out, spanning ${shape.arcDeg}° (its head nearly meets its tail); shaft ${SF.SHAFT_H} m, head ${shape.ratio}× that; both sides drawn, its inside first`,
-        SF.BAND_R >= 0.9 && SF.BAND_R <= 1.1 && Math.abs(rmin - SF.BAND_R) < 1e-3 && Math.abs(rmax - SF.BAND_R) < 1e-3 && out > 0.999 && SF.SHAFT_H >= 0.22 && SF.SHAFT_H <= 0.3 && shape.ratio >= 1.7 && shape.ratio <= 1.9
-        && shape.arcDeg >= 300 && shape.arcDeg <= 320 && shape.stripDeg >= shape.arcDeg && shape.stripDeg < shape.arcDeg + 8 && ymax >= SF.HEAD_H / 2 && ymax < SF.HEAD_H / 2 + 0.08 && ymin === -ymax
-        && shape.groups === 2 && shape.sides[0] === THREE.BackSide && shape.sides[1] === THREE.FrontSide, shape);
+      const shape = { BAND_R: SF.BAND_R, R: r3(r.R), worldR: r3(r.band.scale.x), unit: [r3(rmin), r3(rmax)], outward: r3(out), height: [r2(ymin), r2(ymax)], shaft: r3(SF.SHAFT_H), head: r3(SF.HEAD_H), ratio: r2(SF.HEAD_H / SF.SHAFT_H), arcDeg: deg(SF.ARC), stripDeg: deg(amax - amin),
+        sides: mats.map((m) => m.side), groups: geo.groups.length, uR: mats.every((m) => m.uniforms.uR.value === r.R), tallShare: r2(tall / cols) };
+      R(`…its shape: an upright cylinder band ${SF.BAND_R} m round (hugging the kid), facing out, spanning ${shape.arcDeg}° (its head nearly meets its tail); shaft ${shape.shaft} m, head ${shape.ratio}× that; both sides drawn, its inside first; the strip hugs it (head-tall only at the ends)`,
+        SF.BAND_R >= 0.6 && SF.BAND_R <= 0.65 && shape.R === SF.BAND_R && shape.uR && Math.abs(rmin - 1) < 1e-3 && Math.abs(rmax - 1) < 1e-3 && out > 0.999 && SF.SHAFT_H >= 0.22 && SF.SHAFT_H <= 0.3 && shape.ratio >= 1.7 && shape.ratio <= 1.9
+        && shape.arcDeg >= 300 && shape.arcDeg <= 320 && shape.stripDeg >= shape.arcDeg && shape.stripDeg < shape.arcDeg + 15 && ymax >= SF.HEAD_H / 2 && ymax < SF.HEAD_H / 2 + 0.08 && ymin === -ymax
+        && shape.groups === 2 && shape.sides[0] === THREE.BackSide && shape.sides[1] === THREE.FrontSide && shape.tallShare > 0.1 && shape.tallShare < 0.35, shape);
+      // the squid's eyes in its head: rendered straight on (the camera square to the head, the arrow on / off), two
+      // separate white eyes, one above the other with a clear gap, each with a dark pupil
+      {
+        const eyeAng = SF.ARC - 33 * 0.0098 / r.R;   // (the eyes sit 33 icon units back from the tip)
+        r.band.updateMatrixWorld();
+        const eye = V(Math.sin(eyeAng), 0, Math.cos(eyeAng)).applyMatrix4(r.band.matrixWorld);   // (the strip is unit-radius: the mesh's scale is the band's)
+        const outw = eye.clone().sub(r.band.position).setY(0).normalize();
+        const cam = G.camera, keep = { p: cam.position.clone(), q: cam.quaternion.clone(), fov: cam.fov };
+        cam.position.copy(eye).addScaledVector(outw, 0.9); cam.fov = 40; cam.updateProjectionMatrix(); cam.lookAt(eye); cam.updateMatrixWorld();
+        FX.update(0);
+        const on = shot(); const vis = [r.band.visible, r.bandX.visible]; r.band.visible = r.bandX.visible = false; const off = shot(); r.band.visible = vis[0]; r.bandX.visible = vis[1];
+        // bright (eye white) and dark (pupil / rim) pixels the arrow adds, as rows of the image: the white rows in runs
+        const Wd = 320, Hd = 180, white = new Uint8Array(Wd * Hd), dark = new Uint8Array(Wd * Hd);
+        for (let i = 0, k = 0; i < on.length; i += 4, k++) {
+          const ch = Math.abs(on[i] - off[i]) + Math.abs(on[i + 1] - off[i + 1]) + Math.abs(on[i + 2] - off[i + 2]) > 24;
+          if (!ch) continue;
+          if (on[i] > 200 && on[i + 1] > 200 && on[i + 2] > 200) white[k] = 1; else if (on[i] < 25 && on[i + 1] < 25 && on[i + 2] < 25) dark[k] = 1;
+        }
+        // connected white blobs (4-neighbour flood fill), biggest two
+        const lab = new Int32Array(Wd * Hd), blobs = [];
+        for (let k = 0; k < Wd * Hd; k++) {
+          if (!white[k] || lab[k]) continue;
+          const id = blobs.length + 1, st = [k]; lab[k] = id; let n = 0, y0 = Hd, y1 = 0, x0 = Wd, x1 = 0;
+          while (st.length) { const j = st.pop(), x = j % Wd, y = (j / Wd) | 0; n++; y0 = Math.min(y0, y); y1 = Math.max(y1, y); x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+            for (const nb of [j - 1, j + 1, j - Wd, j + Wd]) if (nb >= 0 && nb < Wd * Hd && white[nb] && !lab[nb] && Math.abs((nb % Wd) - x) <= 1) { lab[nb] = id; st.push(nb); } }
+          blobs.push({ n, y0, y1, x0, x1 });
+        }
+        blobs.sort((a2, b2) => b2.n - a2.n);
+        const [e1, e2] = blobs;
+        const pupil = (b2) => { let n = 0; for (let y = b2.y0; y <= b2.y1; y++) for (let x = b2.x0; x <= b2.x1; x++) if (dark[y * Wd + x]) n++; return n; };
+        const eyes = { blobs: blobs.length, sizes: blobs.slice(0, 3).map((b2) => b2.n), stacked: !!(e1 && e2) && Math.abs((e1.x0 + e1.x1) - (e2.x0 + e2.x1)) / 2 < 6, gapPx: e1 && e2 ? Math.max(e1.y0, e2.y0) - Math.min(e1.y1, e2.y1) - 1 : null, pupils: e1 && e2 ? [pupil(e1), pupil(e2)] : null };
+        cam.position.copy(keep.p); cam.quaternion.copy(keep.q); cam.fov = keep.fov; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+        R('…the squid\'s eyes sit in its head: straight on, two white eyes one above the other with a clear gap (not an 8), each with a dark pupil',
+          e1 && e2 && e2.n > e1.n * 0.6 && e2.n > 40 && (blobs[2] ? blobs[2].n < e2.n * 0.2 : true) && eyes.stacked && eyes.gapPx >= 3 && eyes.pupils[0] > 5 && eyes.pupils[1] > 5, eyes);
+      }
       // where it sits: round the foe at waist / chest height, the tracking team's colour, near-opaque
-      const at = { dx: r3(r.band.position.x - p0.x), dz: r3(r.band.position.z - p0.z), y: r2(r.band.position.y - p0.y), scale: r3(r.band.scale.x), size: r3(r.size), team: r.team,
+      const at = { dx: r3(r.band.position.x - p0.x), dz: r3(r.band.position.z - p0.z), y: r2(r.band.position.y - p0.y), scale: r3(r.band.scale.y), size: r3(r.size), team: r.team,
         colour: hex(mats[0].uniforms.uColor.value) === hex(G.teamColors[me.team]), notFoeColour: hex(mats[0].uniforms.uColor.value) !== hex(G.teamColors[foe.team]), alpha: r2(mats[0].uniforms.uAlpha.value) };
       R(`…round the foe (centred on it, ${SF.BAND_Y} m up: waist / chest), in the tracking team's colour (the foe's enemy), near-opaque`,
         Math.abs(at.dx) < 1e-3 && Math.abs(at.dz) < 1e-3 && Math.abs(at.y - SF.BAND_Y) < 0.05 && at.y > 0.7 && at.y < 1.1 && at.scale === at.size && at.team === me.team && at.colour && at.notFoeColour && at.alpha >= 0.95, at);
       // it turns round them the way it points (the camera still, so its size holds): a turn every 2π/SPIN; the head's tip
       // moves along the arrow's own heading; it bobs a little
       shotCam(V(F0.x, 6, F0.z - 6), V(F0.x, 0.8, F0.z));
-      const tipW = (phi) => V(Math.sin(phi) * SF.BAND_R, 0, Math.cos(phi) * SF.BAND_R).applyMatrix4(r.band.matrixWorld);
+      const tipW = (phi) => V(Math.sin(phi), 0, Math.cos(phi)).applyMatrix4(r.band.matrixWorld);
       r.band.updateMatrixWorld(); const rot0 = r.band.rotation.y, tip0 = tipW(SF.ARC), heading = tip0.clone().sub(tipW(SF.ARC - 0.05)).setY(0).normalize();
       step(1 / 60); r.band.updateMatrixWorld(); const moved = tipW(SF.ARC).sub(tip0).setY(0).normalize();
       let bmin = 9, bmax = -9; const rotA = r.band.rotation.y;
@@ -173,6 +211,51 @@
       const rm = rec(me), self = rm && { on: arrowOn(me), alpha: r2(rm.band.material[0].uniforms.uAlpha.value), xray: rm.bandX.visible, colour: hex(rm.band.material[0].uniforms.uColor.value) === hex(G.teamColors[foe.team]), line: lineOn(me), lines: FX.stats.lines };
       R(`…round your own kid it shows too, fainter (×${SF.SELF_A}), depth-tested, in the colour of the team that tracked you; no line`,
         G.local === me && self && self.on && self.alpha === SF.SELF_A && !self.xray && self.colour && !self.line && self.lines === 0, self);
+    }
+
+    // ============================================================================================ clear of the kid
+    if (want('clear')) {
+      // three kits — a compact one (the Spritzer), a long one (the charger's barrel), the widest (an open brolly) — idle,
+      // walking and shooting, through more than a whole turn of the arrow: nothing of the kid (body or weapon: every
+      // vertex) within the band's height reaches the band
+      const v = V(0, 0, 0), c = V(0, 0, 0), res = {};
+      const kidReach = (a, y0, y1) => {
+        a.character.root.updateMatrixWorld(true); a.visualPos(c); let best = 0;
+        a.character.root.traverseVisible((o) => {
+          if (!o.isMesh || !o.geometry?.attributes?.position) return;
+          const n = o.geometry.attributes.position.count, stp = o.isSkinnedMesh ? Math.max(1, Math.floor(n / 3000)) : 1;
+          for (let i = 0; i < n; i += stp) { o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld); if (v.y < y0 || v.y > y1) continue; best = Math.max(best, Math.hypot(v.x - c.x, v.z - c.z)); }
+        });
+        return best;
+      };
+      for (const wid of ['shooter', 'charger', 'brolly']) {
+        reset();
+        put(foe, V(0, 0, -6), Math.PI); put(me, V(0, 0, -11), 0); step(0.05);
+        foe.setWeapon(wid); step(0.3);
+        S.track(foe, me.team, 99); step(0.3);
+        const r = rec(foe), o = { worst: 9, maxR: 0, minR: 9, samples: 0, maxReach: 0, maxRl: 0, maxS: 0 };
+        for (const pose of ['idle', 'walk', 'shoot']) {
+          put(foe, V(0, 0, -6), Math.PI);
+          foe.bot.update = () => { zero(foe); foe.ink = PLAYER.inkMax; foe.aimYaw = foe.bot.aimYaw = Math.PI; foe.aimPitch = foe.bot.aimPitch = 0; if (pose === 'walk') foe.intent.move.set(0.7, 0, -0.7); if (pose === 'shoot') foe.intent.fire = true; };
+          step(2.8, (i) => {
+            if (i % 4) return;
+            const sc = r.band.scale.y, y = r.band.position.y, hh = (SF.HEAD_H / 2) * sc;
+            const reach = kidReach(foe, y - hh, y + hh), Rw = r.band.scale.x;
+            o.worst = Math.min(o.worst, Rw - reach); o.maxR = Math.max(o.maxR, Rw); o.minR = Math.min(o.minR, Rw); o.maxReach = Math.max(o.maxReach, reach); o.maxRl = Math.max(o.maxRl, r.R); o.maxS = Math.max(o.maxS, r.size); o.samples++;
+          });
+          stub(foe);
+        }
+        res[wid] = { gapCm: r2(o.worst * 100), reachM: r3(o.maxReach), radius: [r3(o.minR), r3(o.maxR)], ownRadius: r3(o.maxRl), size: r2(o.maxS), samples: o.samples };
+      }
+      // what it costs: every other player tracked at once (seven arrows, each measuring its kid's hands), a frame's update
+      reset();
+      others.forEach((a, i) => { put(a, V(-9 + i * 3, 0, -4), Math.PI); S.track(a, 1 - a.team, 99); });
+      step(0.3);
+      const t0 = performance.now(); for (let i = 0; i < 240; i++) FX.update(1 / 60); const perFrame = (performance.now() - t0) / 240;
+      res.cost = { bands: FX.stats.bands, msPerFrame: r3(perFrame) };
+      const turn = 2 * 2.8 * SF.SPIN > 2 * Math.PI;
+      R(`clear: the band never cuts the kid or their weapon — a Spritzer (it stays ${SF.BAND_R} m round), a charger and an open brolly (it opens out round them), idle / walking / shooting through more than a whole turn; seven at once cost under 1 ms a frame`,
+        turn && ['shooter', 'charger', 'brolly'].every((k) => res[k].gapCm > 0.5 && res[k].samples > 100) && res.cost.bands === others.length && res.cost.msPerFrame < 1 && res.shooter.ownRadius === SF.BAND_R && res.shooter.size === 1 && res.charger.ownRadius > SF.BAND_R && res.brolly.ownRadius > SF.BAND_R, res);
     }
 
     // ============================================================================================ every source
@@ -226,9 +309,9 @@
       const open = { px: pixels([r.band, r.bandX]), xray: r.bandX.visible, alpha: r2(r.band.material[0].uniforms.uAlpha.value), line: lineOn(foe) };
       FX.viewer = null;
       R('walls: the tracking team sees the foe\'s arrow through the wall (an occluded GreaterDepth pass) and each their own line through it from their own chest, in their colour — you who threw it and your teammate who didn\'t',
-        [you, yourMate].every((v) => v.blocked && v.xray && v.px > 150 && v.line && v.lines === 1 && v.linePx > 15 && v.fromChest !== null && v.fromChest < 0.35 && v.colour), { you, yourMate });
+        [you, yourMate].every((v) => v.blocked && v.xray && v.px > 60 && v.line && v.lines === 1 && v.linePx > 15 && v.fromChest !== null && v.fromChest < 0.35 && v.colour), { you, yourMate });
       R('…the tracked player\'s teammate: depth-tested (none of it through the wall), no line; in the open the arrow. The tracked player: the arrow on their own kid (fainter), no line',
-        theirMate.blocked && !theirMate.xray && theirMate.depthTest && theirMate.px < 4 && !theirMate.line && theirMate.lines === 0 && open.px > 150 && !open.xray && open.alpha >= 0.9 && !open.line
+        theirMate.blocked && !theirMate.xray && theirMate.depthTest && theirMate.px < 4 && !theirMate.line && theirMate.lines === 0 && open.px > 60 && !open.xray && open.alpha >= 0.9 && !open.line
         && tracked.arrow && tracked.alpha === SF.SELF_A && !tracked.xray && !tracked.line && tracked.lines === 0, { theirMate, open, tracked });
       g.rig.follow(me, true);
     }
@@ -245,16 +328,14 @@
         return r3((SF.HEAD_H * r.band.scale.y) / (2 * z * th));
       };
       shotCam(V(0, 22, -60), V(0, 0.8, 10));
-      const far = { share: onScreen(), size: r2(r.size), dist: r2(G.camera.position.distanceTo(foe.pos)) };
-      shotCam(V(0.9, 1.6, 7.2), V(0, 0.85, 10));
-      const near = { share: onScreen(), size: r2(r.size) };
+      const far = { share: onScreen(), size: r2(r.size), R: r3(r.R), worldR: r3(r.band.scale.x), dist: r2(G.camera.position.distanceTo(foe.pos)) };
       shotCam(V(0.5, 1.3, 8.4), V(0, 0.85, 10));
-      const nearest = { share: onScreen(), size: r2(r.size) };
+      const near = { share: onScreen(), size: r2(r.size), R: r3(r.R), worldR: r3(r.band.scale.x) };
       shotCam(V(4, 2.4, 2), V(0, 0.8, 10));
-      const mid = { share: onScreen(), size: r2(r.size) };
-      R(`clamp: far off (${far.dist} m) the arrow\'s head stays at least ${r2(SF.MIN_F * 100)} % of the screen\'s height (it grows), up close at most ${r2(SF.MAX_F * 100)} % (it shrinks — but never below ×${SF.S_MIN}, round the kid), in between its own size`,
-        far.share >= SF.MIN_F * 0.99 && far.size > 1 && near.share <= SF.MAX_F * 1.01 && near.size < 1 && near.size > SF.S_MIN && nearest.size === SF.S_MIN && mid.size === 1 && mid.share > SF.MIN_F && mid.share < SF.MAX_F,
-        { far, near, nearest, mid, MIN_F: SF.MIN_F, MAX_F: SF.MAX_F, S_MIN: SF.S_MIN });
+      const mid = { share: onScreen(), size: r2(r.size), worldR: r3(r.band.scale.x) };
+      R(`clamp: far off (${far.dist} m) the arrow grows (its head at least ${r2(SF.MIN_F * 100)} % of the screen\'s height); up close and in between it keeps its own size — its radius never under ${SF.BAND_R} m`,
+        far.share >= SF.MIN_F * 0.99 && far.size > 1 && far.worldR > SF.BAND_R && near.size === 1 && near.worldR >= SF.BAND_R && mid.size === 1 && mid.worldR >= SF.BAND_R,
+        { far, near, mid, MIN_F: SF.MIN_F });
       g.rig.follow(me, true);
     }
 
