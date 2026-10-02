@@ -4,7 +4,7 @@
 // (0.4 m apart; 8° fans at a tap / ring 1), the falling spray is a few big stretched droplets per arrow, staggered across
 // the three so a full draw lays one unbroken band, the landings ink wider; "do the mid air slow charge and ink delay").
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/bow-paint.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=shots,air,ink,net,damage' for a part ('shots' also prints the per-shot numbers as info)
+//   PAGE_ARGS='only=shots,air,ink,bot,net,damage' for a part ('shots' also prints the per-shot numbers as info)
 // Staged on testbox (a flat deck, top y 0); everyone else parked far off, brains stubbed; hits logged, not dealt. The
 // archer stands at (0, 0, −32) and looses level along +z. Checks:
 //  - shots: per tier (tap 0.3 / ring 1 at 0.6 / full) the ink a volley lays on clean floor — trail alone, landing +
@@ -18,6 +18,7 @@
 //    the rate; standing on the tower's deck (Tower Command) draws at the full rate (testbox MODE=tower only);
 //  - ink: after a bow shot the tank refills not at all for 0.33 s, in any form (swimming included), then at the normal
 //    rate; a Spritzer swimming right after a shot refills at once;
+//  - bot: a bow bot on its own brain, nobody about, paints with level shots down open lanes;
 //  - net: paint records a second firing flat out (bow full draws, bow taps) stay within a Spritzer's (trigger held);
 //  - damage: a full-draw volley dead centre on a foe 10 / 20 m off lands all three arrows (a splat), 0.3 m off two.
 (async () => {
@@ -25,6 +26,7 @@
   const { WEAPONS, PLAYER } = await import('./src/config.js');
   const { MAIN_KITS } = await import('./src/game/kits/registry.js');
   const BOW = await import('./src/game/kits/bow.js');
+  const { on } = await import('./src/core/ctx.js');
   const G = window.__G, P = G.projectiles, S = G.subs;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
@@ -264,6 +266,26 @@
         b.ink0 !== null && Math.abs(at(b, 0.3) - b.ink0) < 0.01 && subAt(b, 0.3) && at(b, 0.6) > b.ink0 + 5, { ink0: b.ink0, t03: at(b, 0.3), t045: at(b, 0.45), t06: at(b, 0.6), sub: subAt(b, 0.3) });
       const s = swimAfterShot(E, 'shooter');
       R(`…a Spritzer swimming right after a shot refills at once (0.3 s: ${s.ink0} → ${at(s, 0.3)})`, s.ink0 !== null && at(s, 0.3) > s.ink0 + 3, { ink0: s.ink0, t03: at(s, 0.3), sub: subAt(s, 0.3), cfg: { bow: W.inkRecoveryDelay, shooter: WEAPONS.shooter.inkRecoveryDelay ?? 0 } });
+    }
+
+    // ============================================================================================ bots
+    // a bow bot left to its own brain on the empty deck (everyone else parked out of sight at the far end): it paints
+    // with level shots down open lanes (bot.paintAim) — its volleys fly flat and its lines run long
+    if (want('bot')) {
+      reset();
+      const E = mates[0];
+      E.setWeapon('bow'); step(0.3);
+      others.forEach((a, i) => { if (a !== E) put(a, V(-26 + (i % 4) * 1.5, 0, 38 + Math.floor(i / 4) * 1.5)); });
+      put(E, V(0, 0, -30), 0);
+      delete E.bot.update;   // (its own brain again)
+      const shots = []; const off = on('weapon:fire', (e) => { if (e.actor === E) shots.push({ c: r2(e.charge), pitch: r2(Math.asin(e.dir.y) * 180 / Math.PI) }); });
+      const turf0 = E.stats.turf, modes = {};
+      step(10, () => { modes[E.bot.mode] = (modes[E.bot.mode] || 0) + 1; });
+      off(); stub(E);
+      const k = E.weaponRunner.kit || {};
+      const flat = shots.filter((x) => Math.abs(x.pitch) < 5).length;
+      R(`bots: a bow bot painting the empty deck for 10 s looses ${shots.length} volleys, ${flat} of them level (|pitch| < 5°: down a lane), inking ${r2(E.stats.turf - turf0)} m²`,
+        shots.length >= 4 && flat >= shots.length * 0.75 && k.laneV !== undefined && E.stats.turf - turf0 > 60, { shots, modes, lane: { yaw: r2(k.laneYaw ?? NaN), v: r2(k.laneV ?? NaN), len: r2(k.laneLen ?? NaN) } });
     }
 
     // ============================================================================================ records a second
