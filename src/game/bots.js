@@ -1403,7 +1403,8 @@ export class BotBrain {
       }
       return false;
     }
-    const turf = { storm: 1, strike: 1, booyah: 1, barrage: 1, sonar: 1, kraken: 1, crab: 1, zooka: 1, blower: 1, stamp: 1, surf: 1 };
+    if (id === 'surf') return r < 0.02 && surfWant(this, mode, dist, vis);   // Surf N' Turf: on foes the team knows of (sp-surf-bots.js)
+    const turf = { storm: 1, strike: 1, booyah: 1, barrage: 1, sonar: 1, kraken: 1, crab: 1, zooka: 1, blower: 1, stamp: 1 };
     if (!turf[id] || r > 0.012) return false;
     const st = G.paint.regionStats(a.pos.x, a.pos.y, a.pos.z, 6, a.team, _stats);
     return st.own < 0.55;

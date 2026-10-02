@@ -1,7 +1,7 @@
 // Bots and Surf N' Turf (src/game/sp-surf.js). Kept apart from it (no import of specials.js / sp-surf.js: bots.js and
 // botSpecials.js load this before the specials do) — it reads the live buoys out of G.specials.world.
-//   using it    _wantSpecial (bots.js): a foe in reach, or a patch of turf to claim / a zone / the tower to break
-//               open. Holding it, surfOwnAim (BotSpecials.act) picks the spot — the thickest knot of the foes its team
+//   using it    _wantSpecial (bots.js): a foe in reach, or — painting — foes the team knows of within a throw and a
+//               ring (surfWant); on a zone / the tower (the bots' objective rules). Holding it, surfOwnAim (BotSpecials.act) picks the spot — the thickest knot of the foes its team
 //               knows about (seen, located, seen lately: botSight.js teamKnown — no wall-hacks) in throwing range, else
 //               the live zone / the tower, else the most enemy / unclaimed ink a throw away — turns to it and throws
 //               (the launch solved for that spot: the throw's own speed and gravity) once its aim has come round.
@@ -28,8 +28,16 @@ const _p = new THREE.Vector3(), _q = new THREE.Vector3();
 const STEADY = { shooter: true, blaster: true, dualies: true, twins: true, slosher: true, bucket: true, splatling: true };
 
 // should a bot pop its Surf N' Turf now? (bots.js _wantSpecial: fight — dist to its target, vis in sight)
+// It's at its best on foes (the marks, the forced jumps): kept for a fight, or — out of one — for when the team knows
+// of foes within a throw and a ring's reach (it goes on them: pickSpot); never to ink an empty patch
 export function surfWant(b, mode, dist, vis) {
   if (mode === 'fight') return dist > 2.5 && dist < 15 && (vis || Math.random() < 0.05);
+  const a = b.a;
+  for (const e of G.actors) {
+    if (e.team === a.team || !e.alive) continue;
+    const k = teamKnown(a.team, e, 3);
+    if (k && k.pos && Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z) < 24 && Math.abs(k.pos.y - a.pos.y) < 4) return true;
+  }
   return false;
 }
 
@@ -50,7 +58,7 @@ function pickSpot(a) {
   for (const e of G.actors) {
     if (e.team === a.team || !e.alive) continue;
     const k = teamKnown(a.team, e, 3);
-    if (k && k.pos) { const d = Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z); if (d > 2.5 && d < R + 4) known.push(k.pos); }
+    if (k && k.pos) { const d = Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z); if (d > 2.5 && d < 24) known.push(k.pos); }
   }
   let best = null, bs = 0;
   for (const p of known) {
