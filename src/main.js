@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { G, on, emit, clamp, damp } from './core/ctx.js';
 import { Renderer } from './core/renderer.js';
 import { Input } from './core/input.js';
-import { mapTheme,
+import { mapTheme, roomTheme,
   DEFAULT_SETTINGS, QUALITY, TEAM_PALETTES, COLORBLIND_PALETTE, TEAM_NAMES, WEAPONS, WEAPON_ORDER, WEAPON_SUCCESSOR, ZONES, TOWER, SUB, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER,
   MAPS, DIFFICULTY, PLAYER, PROGRESSION, VERSION, MATCH, OFFLINE_MAPS, mapOfflineOk, mapNoBots, mapBossOk,
 } from './config.js';
@@ -31,6 +31,7 @@ import { revealedTo } from './game/reveal.js';
 import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
 import { TowerFx } from './fx/towerFx.js';
+import { InkWipeFx } from './fx/inkWipeFx.js';
 import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
 import { BOSS_MODE } from './boss/bossMode.js';
 
@@ -128,6 +129,7 @@ class Game {
     await this._buildWorld(map);
     this.zoneMarks = new ZoneMarks(scene);   // Zone Control ground markings: build / clear themselves on 'match:state'
     this.towerFx = new TowerFx(scene);       // Tower Command: the tower, its light pillar, the path glow, checkpoint beacons
+    this.inkWipe = new InkWipeFx(scene);     // Practice: the clear-all-ink wave's light, steam and sound (paint.startWipe clears)
     await progress(0.4, 'Filling the harbor…');
     const B = G.level.bounds;
     G.env = new envMod.Environment(G.renderer, scene, { bounds: B, theme: this.theme, shadowSize: q.shadowSize, footprint: this._footprint(G.level) });
@@ -235,6 +237,7 @@ class Game {
   async _buildWorldNow(map, scene, layoutId, mode = 'turf', worldKey = layoutId) {
     this.zoneMarks?.clear();   // zone markings belong to the old stage's faces
     this.towerFx?.clear();
+    this.inkWipe?.clear(this);   // (its uniforms live on the old stage's material)
     if (this.levelMesh) { scene.remove(this.levelMesh, this.grateMesh); this.levelMesh.geometry.dispose(); this.grateMesh?.geometry.dispose(); this.levelMat.dispose(); this.grateMat?.dispose(); }
     if (this.decor) { scene.remove(this.decor.group); }
     this.podLooks?.dispose(); this.podLooks = null;   // (built with the prop kit: gone before the kit goes)
@@ -394,10 +397,16 @@ class Game {
       // practice: solo on a random stage (no enemies, no clock); the loadout can be changed mid-session
       startPractice: (o) => self.startPractice(o),
       isPractice: () => self._inPractice(),
-      practiceInfo: () => (self._inPractice() ? { map: self.mapDef.name, weapon: self.match.local?.weaponId, sub: self.match.local?.subId, special: self.match.local?.specialId } : null),
+      practiceInfo: () => self._practiceInfo(),
       practiceReset: () => self.practiceReset(),
       practiceNewStage: () => self.startPractice(),
       quitPractice: () => self.quitToMenu('loadout'),
+      // the clear-all-ink wave (offline practice, or the host of an online one): false when it can't go now
+      practiceClearInk: () => self.practiceClearInk(),
+      // online Practice (the host): another stage without going back to the lobby / back to the lobby for everyone
+      practiceSwapStage: (map, time) => !!(self._inPractice() && G.netm && G.net?.isHost && G.net.practiceSwap?.({ map, time })),
+      practiceEnd: () => { if (self._inPractice() && G.netm && G.net?.isHost) { G.netm.sendEnd(); self.netMatchEnd(); } },
+      leaveRoom: () => self.quitToMenu('online'),
       resumeMatch: () => self.resume(),
       // online results: the host can take the room back to the lobby without waiting out the timer
       netBackToLobby: () => { if (G.netm && G.net?.isHost && self.match?.state === 'results') { clearTimeout(self._netEndT); G.netm.sendEnd(); self.netMatchEnd(); } },
@@ -457,6 +466,7 @@ class Game {
     if (G.mode === 'match' && this.match && !this.match.paused && !this.menus?.current) {
       if (e.code === 'Escape' || e.code === 'KeyP') { this.pause(); return true; }
       if (e.code === 'KeyL' && this.match.practice && !repeat) { this.openPracticeLoadout(); return true; }
+      if (e.code === 'KeyK' && this.match.practice && !repeat) { this._clearInkKey(); return true; }   // (Practice: clear all ink)
       return false;
     }
     if (this.menus && this.menus.current) return this.menus.handleKey(e) || false;
@@ -696,7 +706,7 @@ class Game {
     G.music?.preload?.('battle'); if (!practice) G.music?.preload?.('battle_final');
     this.showcase.hide();
     if (this.match) this.match.dispose();
-    G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks();
+    G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks(); this.inkWipe?.clear(this);
     let map = MAPS.find((m) => m.id === opts.mapId) || MAPS[0];
     // offline never plays an online-only stage (the menus don't offer one; a stray ?autostart / api call falls back)
     if (!mapOfflineOk(map.id) && !DEV_STAGE) {
@@ -739,6 +749,47 @@ class Game {
   }
 
   _inPractice() { return !!(this.match && this.match.practice && G.mode === 'match'); }
+  _practiceInfo() {
+    if (!this._inPractice()) return null;
+    const a = this.match.local, n = G.net, online = !!G.netm;
+    return { map: this.mapDef.name, mapId: this.mapDef.id, time: online ? G.netm.cfg.time : this.time, weapon: a?.weaponId, sub: a?.subId, special: a?.specialId,
+      online, host: online ? !!n?.isHost : true, code: online ? n?.code : null, wiping: !!G.paint?.wiping,
+      players: online ? this.match.actors.map((x) => ({ name: x.name, team: x.team, weapon: x.weaponId, bot: !!x.isBot, isSelf: !!x.isLocal, alive: x.alive, host: !x.isBot && x.owner === n?.hostId,
+        ping: (n?.lobby?.players || []).find((p) => p.id === x.owner && !x.isBot)?.ping || 0 })) : null };
+  }
+
+  // Practice: the clear-all-ink wave, from where you stand (the stage's centre while you're splatted). Offline it's just
+  // here; online only the host starts one: its record (netmatch 'w') starts the same wave on every screen. One at a
+  // time, with a breath between them.
+  practiceClearInk() {
+    const P = G.paint;
+    if (!this._inPractice() || !P || P.wiping || this.match.state !== 'playing') return false;
+    if (G.netm && !G.net?.isHost) return false;
+    const now = performance.now();
+    if (now < (this._wipeCdT || 0)) return false;
+    const a = this.match.local, B = G.level.bounds;
+    const at = a && a.alive ? a.pos : { x: (B.minX + B.maxX) / 2, z: (B.minZ + B.maxZ) / 2 };
+    const r2 = (x) => Math.round(x * 100) / 100;   // (the record's precision: every screen sweeps by the same numbers)
+    const W = P.startWipe({ k: P.wipeK + 1, cx: r2(at.x), cz: r2(at.z) });
+    if (!W) return false;
+    W.reach = r2(W.reach);
+    W.dur = r2(clamp(W.reach / 42, 1.25, 2.0));   // ≈ 1.2–2 s to cross the stage, whatever its size
+    const w = { k: W.k, cx: W.cx, cz: W.cz, dur: W.dur, reach: W.reach };
+    G.netm?.recWipe(w);
+    this.inkWipe.start(w, this);
+    this._wipeCdT = now + (W.dur + 2.5) * 1000;
+    return true;
+  }
+  // …on every other screen: the host's record (netmatch 'w'). A wave this screen already has (its own) is ignored.
+  netWipe(w) {
+    const W = G.paint?.startWipe(w);
+    if (W) this.inkWipe.start({ k: W.k, cx: W.cx, cz: W.cz, dur: W.dur, reach: W.reach }, this);
+  }
+  _clearInkKey() {
+    if (this.practiceClearInk()) return;
+    const why = G.netm && !G.net?.isHost ? 'Only the host can clear the ink' : G.paint?.wiping ? null : 'Clear ink is recharging';
+    if (why) this.menus?.toast?.(why, { icon: null });
+  }
 
   // a random stage (a different one from the current, when there's a choice)
   startPractice(o = {}) {
@@ -751,8 +802,9 @@ class Game {
   openPracticeLoadout() {
     const m = this.match;
     if (!this._inPractice() || m.paused || m.state !== 'playing') return;
-    m.paused = true;
     this.input.exitLock();
+    if (G.netm) { this.menus?.show('loadout', { under: ['pause'], quick: true }); return; }   // online: the session carries on underneath
+    m.paused = true;
     this.menus?.show('loadout', { under: ['pause'], quick: true });
     G.audio?.duck?.(0.5, 99);
     G.audio?.pauseLoops?.(true);
@@ -774,13 +826,15 @@ class Game {
     }
     if (a.subId !== sub) a.setSub(sub);
     a.ink = PLAYER.inkMax;
+    // online: everyone sees the new kit in your hands (its record rides your timeline), and the room's lobby keeps it
+    if (G.netm) { G.netm.recLoadout(a); G.net?.setMe?.({ weapon: w, sub: this.profile.sub || null, special: this.profile.special || null }); }
   }
 
   // practice: wipe the stage clean and drop back in at spawn with full ink and special
   practiceReset() {
-    if (!this._inPractice()) return;
+    if (!this._inPractice() || G.netm) return;   // (offline only: online, the host's clear-ink wave)
     const a = this.match.local;
-    G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks();
+    G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks(); this.inkWipe?.clear(this);
     if (!a) return;
     this.match.pods?.reset();
     a.respawn();
@@ -796,12 +850,19 @@ class Game {
     await this._fade(1, 350);
     G.music?.stop?.(0.3); this._musicTrack = null;
     this.showcase.hide();
+    await this._netStage(cfg, nm);
+    // hold on the stage (not black) while the others finish loading
+    this._fade(0, 450);
+  }
+  // the room's stage, look, palette and roster → the match (a match start, a Practice stage swap)
+  async _netStage(cfg, nm) {
     if (this.match) this.match.dispose();
-    G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks();
+    G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.fx.clear?.(); G.paint.clear(); this._clearDeathMarks(); this.inkWipe?.clear(this);
     const map = MAPS.find((m) => m.id === cfg.map) || MAPS[0];
     await this._buildWorld(map, cfg.mode);   // no-op when this stage (+ mode variant) is already built
-    const theme = mapTheme(map, cfg.time);
-    this.time = cfg.time === 'dusk' ? 'dusk' : 'day';
+    // (a room picks the look itself: day / golden hour / sunset — 'dusk' from older clients is sunset)
+    const theme = roomTheme(map, cfg.time);
+    this.time = cfg.time === 'dusk' || cfg.time === 'sunset' ? 'dusk' : 'day';
     if (theme !== this.theme || G.env.lookStale) {   // (lookStale: a stage with its own look — layout.env — came or went)
       this.theme = theme;
       G.env.setTheme?.(theme);
@@ -812,7 +873,7 @@ class Game {
     this.mapDef = map;
     this._setPalette(this.settings.colorblind ? COLORBLIND_PALETTE : TEAM_PALETTES[cfg.palette] || TEAM_PALETTES[0]);
     const m = (this.match = G.match = new Match({
-      attract: false, duration: cfg.duration, difficulty: cfg.difficulty, mode: cfg.mode, CharacterClass: this.CharacterClass, rig: this.rig, input: this.input,
+      attract: false, duration: cfg.duration, difficulty: cfg.difficulty, mode: cfg.mode, practice: !!cfg.practice, CharacterClass: this.CharacterClass, rig: this.rig, input: this.input,
       roster: cfg.roster, myId: G.net.myId, host: G.net.isHost, autopilot: params.has('autopilot'),
     }));
     m.setup();
@@ -822,11 +883,37 @@ class Game {
     this.minimap.setViewerTeam(m.local ? m.local.team : 0);
     G.mode = 'match';
     this.hud?.setVisible(false);
+    this.hud?.setPractice?.(cfg.practice ? { online: true, code: G.net?.code } : false);
     this.hudPrompt = null; this._hintT = 0; this._hints = {};
-    // hold on the stage (not black) while the others finish loading
     if (m.local) { this.rig.follow(m.local, true); this.rig.yaw = m.local.team === 0 ? 0 : Math.PI; }
     this.rig.dioFlip = !!(m.local && m.local.team === 1);
-    this._fade(0, 450);
+    return m;
+  }
+  // Practice, everyone: the host moved the session to another stage (net/session.js practiceSwap) — a quick card over
+  // the screen while it builds, then straight back in at your team's pad with your loadout. A swap that arrives while
+  // one is still building wins (the later stage is built after the earlier one: _buildWorld is serialised).
+  async practiceSwapStage(cfg, nm) {
+    const tok = (this._swapTok = (this._swapTok || 0) + 1);
+    const card = this.menus?.stageSwapCard?.({ mapId: cfg.map, time: cfg.time, by: (G.net?.lobby?.players || []).find((p) => p.host)?.name });
+    if (card && this.fadeEl) { this.fadeEl.querySelector('.iw-swapcard')?.remove(); this.fadeEl.appendChild(card); }
+    const resumeAfter = this.menus?.current === 'pause' || this.menus?.current === 'loadout';
+    if (resumeAfter) this.menus.show(null);
+    G.audio?.play?.('ui_confirm');
+    await this._fade(1, 300);
+    if (tok !== this._swapTok || G.net?.match !== nm) return;
+    const t0 = performance.now();
+    await this._netStage(cfg, nm);
+    if (tok !== this._swapTok || G.net?.match !== nm) return;
+    const m = this.match;
+    m.start();                                   // (Practice: straight to playing)
+    if (m.local) m.local.special = m.local.specialCost();
+    this.hud?.setVisible(true);
+    this.input.requestLock();
+    const left = 900 - (performance.now() - t0);   // (the card stays up long enough to be read)
+    if (left > 0) await new Promise((r) => setTimeout(r, left));
+    if (tok !== this._swapTok) return;
+    await this._fade(0, 450);
+    card?.remove();
   }
   // Compile every shader variant a squidkid can use this match (all detail tiers, their cross-fades, squid form,
   // weapons) and build every kid's tier meshes while the screen is still faded out, so none of it lands mid-match.
@@ -841,6 +928,12 @@ class Game {
     if (!m || m.state !== 'init') return;
     this.input.requestLock();
     m.start();
+    if (m.practice) {
+      // online Practice: no intro, no clock — straight in, special charged so it can be tried right away
+      if (m.local) m.local.special = m.local.specialCost();
+      this.hud?.setVisible(true);
+      this._fade(0, 300);
+    }
   }
   // results done → everyone back in the room's lobby
   async netMatchEnd() {
@@ -856,6 +949,10 @@ class Game {
       this.showcase.hide();
       G.mode = 'menu';
       G.net?.endMatch();
+      this.inkWipe?.clear(this);
+      this.hud?.setPractice?.(false);
+      this._swapTok = (this._swapTok || 0) + 1;
+      this.fadeEl?.querySelector('.iw-swapcard')?.remove();
       this._startAttract();
       this.menus?.show(this.menus?.hasScreen?.('lobby') === false ? 'main' : 'lobby');
       this._playMusic('menu');
@@ -918,6 +1015,8 @@ class Game {
   }
   async quitToMenu(screen = 'main') {
     clearTimeout(this._netEndT);
+    this._swapTok = (this._swapTok || 0) + 1;
+    this.inkWipe?.clear(this);
     if (G.net && G.net.state !== 'offline' && G.net.state !== 'error') G.net.leave();
     this.input.exitLock();
     this.menus?.show(null);
@@ -1195,6 +1294,7 @@ class Game {
     const tB = performance.now();
     // paint → atlas, shader uniforms
     G.paint.flush(dt);
+    this.inkWipe?.update(dt, this);   // (after the flush: this frame's sweep and its cleared cells)
     this.levelMat.userData.uniforms.uTime.value = G.time;
     // see-through window toward the local player
     {
@@ -1386,7 +1486,10 @@ class Game {
       if (!a.specialReady()) this._hints.specialT = 0;
       if (a.intent.fire) this._hints.shot = true;
     }
-    if (m.practice && m.state === 'playing' && a.alive && this._hintT < 7) prompt = 'Practice · L to change loadout · ESC for the practice menu';
+    if (m.practice && m.state === 'playing' && a.alive && this._hintT < 7) {
+      prompt = !G.netm ? 'Practice · L to change loadout · K to clear the ink · ESC for the practice menu'
+        : G.net?.isHost ? 'Practice · L loadout · K clear all ink · ESC to swap stage or end' : 'Practice · L to change loadout · ESC for the menu';
+    }
     const strikeAim = !!(a.specialActive && a.specialActive.id === 'strike' && a.specialActive.aiming);
     // "Yeah!" cheers → screen positions over the cheering player (anyone on screen)
     const cheers = [];

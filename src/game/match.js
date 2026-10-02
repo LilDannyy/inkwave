@@ -18,7 +18,9 @@ export class Match {
   constructor(opts) {
     this.opts = opts;          // { duration, difficulty, attract, practice, playerName, weapon, CharacterClass, input, rig, mode }
     this.attract = !!opts.attract;
-    this.practice = !!opts.practice;   // solo on an empty stage: no enemies, no teammates, no clock
+    // practice: no clock, no judge, no results. Offline: solo on an empty stage. Online (a room's Practice, roster set):
+    // the room's teams and bots on the host's stage until the host ends it (net/session.js, docs/NET.md)
+    this.practice = !!opts.practice;
     // turf | zones (Zone Control) | tower (Tower Command) | boss (one squad, team 0, vs HULLBREAKER); attract backdrops
     // and practice are turf
     this.mode = this.attract || this.practice ? 'turf' : ['boss', 'zones', 'tower'].includes(opts.mode) ? opts.mode : 'turf';
@@ -144,6 +146,21 @@ export class Match {
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
     this.movers = StageMovers.create(this);   // (a pure function of the synced match clock: nothing on the wire)
     this.pods = StagePods.create(this);       // (the host grows them: pods.js netEvent)
+  }
+
+  // Online Practice: someone joined the session (or the host's roster says so) — their squidkid drops in at its team's pad
+  addRosterActor(r) {
+    const o = this.opts, mine = r.owner === o.myId;
+    if (this.actors.some((a) => a.nid === r.nid)) return null;
+    const a = new Actor({ team: r.team, slot: r.slot, weapon: r.weapon, sub: r.sub || null, special: r.special || null, isLocal: mine && !r.bot, isBot: r.bot, name: r.name, style: r.style || undefined, CharacterClass: o.CharacterClass });
+    a.nid = r.nid; a.owner = r.owner; a.remote = !mine;
+    G.scene.add(a.character.root);
+    if (mine && (r.bot || o.autopilot)) a.bot = new BotBrain(a, o.difficulty);
+    this.actors.push(a);
+    a.respawn();
+    a.invuln = PLAYER.spawnInvuln;
+    if (a.bot) { a.bot.aimYaw = a.yaw; a.bot.aimPitch = 0; }
+    return a;
   }
 
   // Zone Control: ink laid while standing on (or aiming into) the live zone counts as objective play (results / XP)
@@ -275,7 +292,8 @@ export class Match {
 
   updateController(dt) {
     if (!this.controller) return;
-    this.controller.enabled = this.state === 'playing' && !this.paused && this.local.alive;
+    // (online a menu never pauses the match: it just takes your hands off the controls while it's up)
+    this.controller.enabled = this.state === 'playing' && !this.paused && this.local.alive && !(G.netm && G.game?.menus?.current);
     this.controller.update(dt);
   }
 

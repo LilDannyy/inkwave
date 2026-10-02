@@ -352,15 +352,19 @@ export class HUD {
     if (v) restartAnim(this.el, 'is-enter');
   }
 
-  /** Practice sessions: no clock (the timer reads PRACTICE) and no team rosters. */
+  /** Practice sessions: no clock (the timer reads PRACTICE). Offline (solo) the team rosters go too; online
+   *  (`{ online: true, code }`: a room's Practice) the rosters stay and the tag reads PRACTICE · <room code>. */
   setPractice(on) {
+    const online = !!(on && typeof on === 'object' && on.online);
+    const label = !on ? '3:00' : online ? `PRACTICE · ${String(on.code || '').toUpperCase()}`.replace(/ · $/, '') : 'PRACTICE';
     on = !!on;
-    if (this._practice === on) return;
-    this._practice = on;
-    this.el.classList.toggle('is-practice', on);
+    if (this._practice === on && this._practiceLbl === label) return;
+    this._practice = on; this._practiceLbl = label;
+    this.el.classList.toggle('is-practice', on && !online);
+    this.el.classList.toggle('is-netpractice', online);
     this.timer.classList.remove('is-last', 'is-final');
     this._L.fin = false; this._L.lastMin = false; this._L.timer = null;
-    this.timerTxt.textContent = on ? 'PRACTICE' : '3:00';
+    this.timerTxt.textContent = label;
   }
 
   /** ScreenFX takes over the lens-ink damage smears, the low-HP vignette and the splatted desaturation. */

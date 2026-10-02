@@ -1668,6 +1668,19 @@ export class FX {
       this._sprite(this.puffs, _v2.x, _v2.y, _v2.z, _v3.x * 1.5, 0.3, _v3.z * 1.5, this._colB, 0.18, 0.45 + 0.15 * k, 0.28, 0.22, 4);
     }
   }
+  // the clear-all-ink wave (src/fx/inkWipeFx.js): a wisp of steam off ink boiling away — tinted with its ink, rising,
+  // swelling and drifting — and now and then a bright bubble glint popping off the surface
+  inkSteam(pos, color, k = 1) {
+    const col = this._color(color, this._col);
+    this._colB.copy(col).lerp(_white, 0.5);
+    this._sprite(this.puffs, pos.x + (rand() - 0.5) * 0.35, pos.y + 0.04, pos.z + (rand() - 0.5) * 0.35, (rand() - 0.5) * 0.5, 0.7 + rand() * 0.9, (rand() - 0.5) * 0.5,
+      this._colB, 0.16 + rand() * 0.12, 0.75 + rand() * 0.6, 0.65 + rand() * 0.55, 0.34 * k, 1.5, 0.8, 4, 0.05, 1.4, 0.35, 0.3);
+    if (rand() < 0.4) {
+      this._colB.copy(col).lerp(_white, 0.65).multiplyScalar(1.3);
+      this._sprite(this.glows, pos.x + (rand() - 0.5) * 0.4, pos.y + 0.03, pos.z + (rand() - 0.5) * 0.4, 0, 0.4 + rand() * 0.5, 0, this._colB,
+        0.035 + rand() * 0.04, 0.07 + rand() * 0.04, 0.22 + rand() * 0.2, 0.85, 1, 0, G_BUBBLE + 1, 0.03, 0);
+    }
+  }
   // one mist puff (shot trails, spray)
   mist(pos, vel, color, size = 0.2, alpha = 0.25) {
     const col = this._color(color, this._col);
