@@ -194,7 +194,7 @@ export class Sight {
     if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return true; }
     const a = this.a, b = this.b, eye = _eye.set(a.pos.x, a.pos.y + 1.3, a.pos.z);
     const located = !!revealedTo(e, a.team);
-    if (!(e.superJumpState && e.superJumpState.phase === 'flight') && !(G.match?.stage && G.match.stage.sightLanding(e)) && this._look(e, k, eye, Math.sin(b.aimYaw), Math.cos(b.aimYaw), Math.cos(SIGHT.fov), b.diff.awareness, located, now - k.seenT)) {
+    if (!(e.superJumpState && e.superJumpState.phase === 'flight') && !(G.match?.stage && G.match.stage.sightLanding(e)) && this._look(e, k, eye, Math.sin(b.aimYaw), Math.cos(b.aimYaw), Math.cos(SIGHT.fov), b.diff.awareness, located, now - k.seenT)) {   // [b5-stagehooks] sightLanding
       k.seenT = now; k.t = now; k.pos.copy(e.pos); k.vel.copy(e.vel); k.guess.copy(e.pos); k.dove = e.form === 'squid';
       return true;
     }
