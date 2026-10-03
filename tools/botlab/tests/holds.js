@@ -41,7 +41,7 @@
   const BOTH = ['brush', 'roller', 'blaster', 'brolly'];
   const OTHERS = WEAPON_ORDER.filter((w) => !BOTH.includes(w));
   const W_ONLY = arg('w');
-  const GRIP_TOL = 0.025, ELB_MIN = 28, ELB_MAX = 172, WR_SWING = 80, WR_TWIST = 100, BEND_MAX = 0.9;   // (measured: elbow 60–161°, swing ≤ 71°, twist ≤ 87°)
+  const GRIP_TOL = 0.025, ELB_MIN = 28, ELB_MAX = 172, WR_SWING = 80, WR_TWIST = 100, BEND_MAX = 0.9;   // (measured: elbow 59–161°, swing ≤ 71°, twist ≤ 92° — the brolly's slam landing)
   // the deck: the weapon's lowest vertex over the ground, in the poses that hold still (standing, running, the slam's
   // landing, every menu / podium dance; a resting drum sits ~3 cm in). Not checked: the landings of a jump / fall / the
   // respawn drop and the roll's pressed drum, a few frames deep (7–50 cm) in the one-handed hold before this change too
