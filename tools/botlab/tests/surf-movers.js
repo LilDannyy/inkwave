@@ -51,8 +51,8 @@
   // a flat open floor spot (no drop or wall within r m, nothing overhead within 6 m), nearest to (x, z)
   const flatSpot = (x0, z0, r = 6) => {
     const S = [...G.nav.nodes].sort((p, q) => Math.hypot(p.x - x0, p.z - z0) - Math.hypot(q.x - x0, q.z - z0));
-    for (const n of S.slice(0, 600)) {
-      let ok = !G.physics.raycast(V(n.x, n.y + 0.3, n.z), V(0, 1, 0), 6).hit;
+    for (const n of S) {
+      let ok = !G.physics.raycast(V(n.x, n.y + 0.3, n.z), V(0, 1, 0), 5).hit && !(G.nav.blocked && G.nav.blocked[n.id]);
       for (let rr = 1; ok && rr <= r; rr += 1) for (let k = 0; ok && k < 12; k++) { const a = (k / 12) * Math.PI * 2, y = L.groundHeight(n.x + Math.sin(a) * rr, n.z + Math.cos(a) * rr, n.y + 1.5); if (Math.abs(y - n.y) > 0.05) ok = false; }
       if (ok) return V(n.x, n.y, n.z);
     }
@@ -118,7 +118,7 @@
 
     // ============================================================================================ a test platform
     if (want('lift')) {
-      const S = flatSpot(m.tower ? 12 : 0, m.tower ? 26 : 0) || flatSpot(0, 0, 4);
+      const S = flatSpot(m.tower ? 12 : 0, m.tower ? 26 : 0, 5) || flatSpot(0, 0, 4);
       R('lift: a flat open floor spot to stage it on', !!S, S && v2(S));
       if (S) {
         netOn();
@@ -232,10 +232,12 @@
         !!placed && ST.shoves > sh0 && worst === 0 && along > 3 && frontNow >= car.len / 2 && b.phase === 'live' && !b.fall && maxV > 1, { placed, at: v2(b.pos), along: r2(along), frontGap: r2(frontNow - car.len / 2), inside: worst, shoves: ST.shoves - sh0 });
       clearBuoys();
       // (b) dropped onto a moving car's roof: off-limits — it slides off, carried along by the car, and anchors beside the track
-      const leg = Tt.dwell + Tt.move;
-      setClock(Tt.first + leg + Tt.move * 0.35); step(0.05);   // (the car on its way back, near full speed)
-      const roofY = car.pos.y + car.ht;
-      const b2 = drop(me, V(car.pos.x, roofY + 2.2, car.pos.z), 7202);
+      // (the car on its way back, at speed, with open sky over its roof — not under the overpass)
+      const leg = Tt.dwell + Tt.move, roofY = car.pos.y + car.ht, clearSky = () => [-2, 0, 2].every((k) => !G.physics.raycast(V(car.pos.x + car.u.x * k, roofY + 0.1, car.pos.z + car.u.z * k), V(0, 1, 0), 3).hit);
+      let tt = 0.25; for (; tt <= 0.75; tt += 0.05) { setClock(Tt.first + leg + Tt.move * tt); if (clearSky()) break; }
+      step(0.05);
+      const fallT = Math.sqrt((2 * 1.2) / SURF.GRAV);   // (dropped 1.2 m over the roof, ahead by what the car covers meanwhile)
+      const b2 = drop(me, V(car.pos.x + car.u.x * car.vel * fallT, roofY + 1.2, car.pos.z + car.u.z * car.vel * fallT), 7202);
       let onRoof = false, carV = car.vel, minAlong = 0;
       const x0 = b2.pos.clone();
       step(3, () => { if (b2.phase === 'fly' && Math.abs(b2.pos.y - roofY) < 0.15 && Math.abs((b2.pos.x - car.pos.x) * -car.u.z + (b2.pos.z - car.pos.z) * car.u.x) < car.wid / 2) onRoof = true; return b2.phase === 'fly'; });
