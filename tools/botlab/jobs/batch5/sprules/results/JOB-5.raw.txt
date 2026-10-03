@@ -1,0 +1,93 @@
+JOB-5 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 10:23:42
+branch botlab-b5-sprules, ran at 64b7d3d, exit code 0, wall time 14min
+(a written-up JOB-5.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### round 1 @ 64b7d3d: the whole regress.sh
+== drainbow: RESULT 44/44 0 FAIL
+== sp-rules: RESULT 44/44 0 FAIL
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== surf: RESULT 41/42 1 FAIL
+FAIL bots in a ring's way jump it: hard 27 jumped / 24 hit (≥ 65 %), easy 29 / 25 (fewer)  {"hard":{"jumps":27,"hits":24,"share":0.53},"easy":{"jumps":29,"hits":25,"share":0.54},"stats":{"throws":1,"atFoes":1,"atObj":0,"atTurf":0,"noticed":109,"missed":23,"jumps":52,"shots":1}}
+== bot-specials: RESULT 19/19 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== track-arrows: RESULT 24/24 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-turf: RESULT 22/22 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-splatfeed: RESULT 4/4 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+### round 3: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+
+## last 15 lines of job.log
+== net-splatfeed: RESULT 4/4 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+### round 3: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+
+## summary.txt
+### round 1 @ 64b7d3d: the whole regress.sh
+== drainbow: RESULT 44/44 0 FAIL
+== sp-rules: RESULT 44/44 0 FAIL
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== surf: RESULT 41/42 1 FAIL
+FAIL bots in a ring's way jump it: hard 27 jumped / 24 hit (≥ 65 %), easy 29 / 25 (fewer)  {"hard":{"jumps":27,"hits":24,"share":0.53},"easy":{"jumps":29,"hits":25,"share":0.54},"stats":{"throws":1,"atFoes":1,"atObj":0,"atTurf":0,"noticed":109,"missed":23,"jumps":52,"shots":1}}
+== bot-specials: RESULT 19/19 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== track-arrows: RESULT 24/24 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-turf: RESULT 22/22 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-splatfeed: RESULT 4/4 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+### round 3: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
