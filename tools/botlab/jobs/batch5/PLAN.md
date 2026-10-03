@@ -106,3 +106,20 @@ User: "make the player hold brush rollers blasters and brollys with both hands".
 ## Wave 2 and after (the lead decides when the designs are in)
 The four subs; the Bazookarp engine, HUD, online and bots; the three stages; then a Bazookarp layout for every stage
 (big redesigns allowed, as mode-only variants); integration, balance and verification sweeps on the Mac mini.
+
+## Known issues for the integrator (`int1`), found while wave 1 ran
+- **An intermittent error online: `Cannot read properties of undefined (reading 'moveSpeed')`** on a client, seen by
+  the Mac mini in four different packages' runs tonight (holds `net-holds-b`, deploy `net-surf` and `net-practice`,
+  zipcheer's page test), so it is in the shared base, not in one package. Diagnosis (the helper's, confirmed by the lead
+  in the code): `src/net/netmatch.js` ~437 gives a remote actor a placeholder special state when its tick says a special
+  is running but no ghost was started: `a.specialActive = { id: …, net: true }`, with no `def`. The cue director then
+  reads `s.def` for it: `src/audio/cues.js` ~514 `case 'stamp': … hv / s.def.moveSpeed` (and `kraken`'s `s.def.speed`,
+  `blower`'s `s.def.inflate`, and any other `s.def.…` in that switch). Fix it at the root (the placeholder carries `def`,
+  or the cue director skips a state without one; check every other reader of `specialActive.def` for the same hole),
+  and add a two-client test that would have caught it: a remote player's Mega Stamp, Kraken and Bubble Blower with the
+  start record delayed or dropped, console clean. Also make the holds test wait out a running special before it judges
+  a hold, so an autopilot special cannot fail it.
+- **Ink Jet in `bot-specials` on the deploy branch.** "a hard charger mid-charge gets out of a blast's path …" failed
+  2 of 4 runs there (on 50 vs off 81.4; 56.5 vs 72.5) and 0 times on the other branches, so deploy's `bots.js` /
+  `botSpecials.js` changes are the suspect (bots now shoot deployables: does a bot that is shooting a device stop
+  dodging?). Run it 6 times on the merged branch; if it still fails, find the cause in deploy's bot changes and fix it.
