@@ -1,12 +1,13 @@
 // Scenes for tools/botlab/hud-shots.cjs: the Zone Control HUD and zone marks in a contest, under the forgiving rules
 // (b5-tuning: take at ZONES.control, the hold over the line before a flip). Real ink (paint splats), so the floor, the
 // marks and the HUD's share bars all agree.
-//   MAP=halyard MODE=zones PLAY=2 SCENES=tools/botlab/scenes/tuning-zones.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
-//   contest   your team holds the centre; theirs has inked about a third of it back from their side (past the warn line):
-//             the "contested" pulse
+//   MAP=saltpan MODE=zones PLAY=2 SCENES=tools/botlab/scenes/tuning-zones.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
+//   contest   your team holds the centre; theirs has inked it back from their side to between the warn line and the
+//             neutralise line (ZONES.warn … ZONES.contest): the "contested" pulse. Three viewpoints (contest = from the
+//             zone's edge, contest-in = on it, contest-side = beside it); Saltpan's open centre shows it best
 //   flip      theirs past the neutralise line on one zone: it holds there ZONES.flipHold s before it goes neutral
 //   take      a neutral centre, your team over the take line (short of the old 80 %): the take waiting on the hold
-// The local kid stands at the zone's edge on your side, looking across it.
+// The local kid stands on your side of the zone, looking across it (flip / take: on the zone, the floor in view).
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, THREE = await import('three');
   dbg.freeze();
@@ -40,19 +41,30 @@
   const c = zs().reduce((s, z) => [s[0] + z.center[0] / zs().length, s[1] + z.center[1] / zs().length, s[2] + z.center[2] / zs().length], [0, 0, 0]);
   const pad = G.level.spawnPads[me], dx = pad.x - c[0], dz = pad.z - c[2], dl = Math.hypot(dx, dz) || 1;
   const L = m.local, R = Math.max(...zs().map((z) => Math.hypot(z.center[0] - c[0], z.center[2] - c[2]))) + 6;
-  const place = () => {
-    L.pos.set(c[0] + (dx / dl) * R, c[1] + 0.3, c[2] + (dz / dl) * R); L.vel.set(0, 0, 0);
-    L.yaw = L.aimYaw = Math.atan2(-dx, -dz); L.aimPitch = -0.15;
-    if (g.rig) { g.rig.yaw = L.yaw; g.rig.pitch = -0.15; }
+  // where the kid stands: 'edge' (outside the zone on our side, looking across it), 'in' (on the zone near our edge,
+  // looking at their side, the floor in view), 'side' (beside the zone, looking along the line between the two inks)
+  const Rz = Math.max(...zs().flatMap((z) => (z.def.polys || [z.def.poly]).flat().map(([x, zz]) => Math.hypot(x - c[0], zz - c[2]))));
+  const place = (view = 'edge') => {
+    let px, pz, fx, fz;
+    if (view === 'side') { const sx = -dz / dl, sz = dx / dl; px = c[0] + sx * (Rz + 2); pz = c[2] + sz * (Rz + 2); fx = -sx; fz = -sz; }
+    else { const r = view === 'in' ? Rz * 0.55 : R; px = c[0] + (dx / dl) * r; pz = c[2] + (dz / dl) * r; fx = -dx / dl; fz = -dz / dl; }
+    L.pos.set(px, c[1] + 0.3, pz); L.vel.set(0, 0, 0);
+    const pitch = view === 'edge' ? -0.3 : -0.42;
+    L.yaw = L.aimYaw = Math.atan2(fx, fz); L.aimPitch = pitch;
+    if (g.rig) { g.rig.yaw = L.yaw; g.rig.pitch = pitch; }
   };
   for (const a of m.actors) if (a !== L) { const p = G.level.spawnPads[a.team]; a.pos.set(p.x, p.y + 0.3, p.z); a.vel.set(0, 0, 0); }
-  const neutral = () => { for (const z of zs()) { z.pend = null; if (z.owner >= 0) Z._zoneOwner(z, -1); } if (Z.owner >= 0) Z._setOwner(-1); for (const z of zs()) Z._flood(z, -1); step(1.2); };
-  const take = () => { for (const z of zs()) inkFrom(z, me, me, 1); step(1.6); };
+  // (the call-outs — WE'VE GOT CONTROL / WE LOST CONTROL / WE TOOK THE LEAD — are timed in real time: wait them out)
+  const callouts = () => new Promise((r) => setTimeout(r, 3600));
+  const neutral = async () => { const held = Z.owner >= 0 || zs().some((z) => z.owner >= 0); for (const z of zs()) { z.pend = null; if (z.owner >= 0) Z._zoneOwner(z, -1); } if (Z.owner >= 0) Z._setOwner(-1); for (const z of zs()) Z._flood(z, -1); step(1.2); if (held) await callouts(); };
+  const take = async () => { for (const z of zs()) inkFrom(z, me, me, 1); step(4.5); await callouts(); };
+  const { ZONES } = await import('./src/config.js');
   const info = (extra) => ({ ...extra, owner: Z.owner, zones: zs().map((z) => ({ owner: z.owner, share: z.share.map((s) => +s.toFixed(2)), pending: z.pend ? z.pend.to : null })) });
   const S = [];
-  S.push({ name: 'contest', set: async () => { neutral(); place(); take(); place(); const got = zs().map((z) => inkFrom(z, them, them, 0.33)); step(0.45); place(); step(0.1); return info({ got }); } });
-  S.push({ name: 'flip', set: async () => { neutral(); place(); take(); place(); const got = inkFrom(zs()[0], them, them, (await import('./src/config.js')).ZONES.contest + 0.02); step(0.3); place(); return info({ got }); } });
-  S.push({ name: 'take', set: async () => { neutral(); place(); const got = zs().map((z) => inkFrom(z, me, me, 0.72)); step(0.3); place(); return info({ got }); } });
+  const contest = (view) => async () => { await neutral(); place(view); await take(); place(view); const got = zs().map((z) => inkFrom(z, them, them, (ZONES.warn + ZONES.contest) / 2 - 0.02)); step(0.45); place(view); step(0.1); return info({ got, view }); };
+  for (const v of ['edge', 'in', 'side']) S.push({ name: v === 'edge' ? 'contest' : 'contest-' + v, set: contest(v) });
+  S.push({ name: 'flip', set: async () => { await neutral(); place('in'); await take(); place('in'); const got = inkFrom(zs()[0], them, them, ZONES.contest + 0.02); step(0.3); place('in'); return info({ got }); } });
+  S.push({ name: 'take', set: async () => { await neutral(); place('in'); const got = zs().map((z) => inkFrom(z, me, me, ZONES.control + 0.02)); step(0.3); place('in'); return info({ got }); } });
   window.__hudScenes = S;
   return S.map((s) => ({ name: s.name }));
 })()
