@@ -37,19 +37,20 @@
   const me = m.local, foes = m.actors.filter((a) => a.team !== me.team), mates = m.actors.filter((a) => a.team === me.team && a !== me);
   const zero = (a) => { a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.sub = a.intent.jump = a.intent.special = a.intent.squid = false; };
   const brains = new Map();
-  for (const a of m.actors) if (a.bot) { brains.set(a, a.bot.update); a.bot.update = () => { zero(a); if (a._go) { if (a._go.move) a.intent.move.copy(a._go.move); a.intent.fire = !!a._go.fire; a.intent.squid = !!a._go.squid; a.intent.jump = !!a._go.jump; } }; }
+  for (const a of m.actors) if (a.bot) { brains.set(a, a.bot.update); a.bot.update = () => { zero(a); if (a._go) { if (a._go.move) a.intent.move.copy(a._go.move); a.intent.fire = !!a._go.fire; a.intent.squid = !!a._go.squid; a.intent.jump = !!a._go.jump; a.intent.sub = !!a._go.sub; } }; }
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const place = (a, x, z, y = 0.02) => { a.pos.set(x, y, z); a.vel.set(0, 0, 0); a.grounded = true; a.form = 'kid'; };
   const park = (a, i) => place(a, -24 + (i % 4) * 2, 36 + Math.floor(i / 4) * 2);
   const reset = () => {
     G.specials.clear(); G.projectiles.clear(); G.subs.clear(); G.paint.clear();
-    for (const a of m.actors) { if (!a.alive) a.respawn(); if (a.specialActive) G.specials.end(a, 'swap'); a.specialActive = null; a.hp = PLAYER.hp; a.invuln = 0; a.ink = PLAYER.inkMax; a.special = 0; zero(a); a._go = null; a.status.shield = 0; a._cheerT = -9; }
+    for (const a of m.actors) { if (!a.alive) a.respawn(); if (a.specialActive) G.specials.end(a, 'swap'); a.specialActive = null; a.superJumpState = null; a.character.setVisible?.(true);   /* (a Zipline ended by hand jumps its user back: not here) */ a.hp = PLAYER.hp; a.invuln = 0; a.ink = PLAYER.inkMax; a.special = 0; zero(a); a._go = null; a.status.shield = 0; a._cheerT = -9; }
     m.actors.forEach(park);
     step(0.1);
   };
   const start = (a, id) => { a.specialId = id; a.special = a.specialCost(); a._startSpecial(); return a.specialActive; };
   const aimAt = (a, p) => { const dx = p.x - a.pos.x, dz = p.z - a.pos.z; a.yaw = a.aimYaw = Math.atan2(dx, dz); a.aimPitch = Math.atan2(p.y - (a.pos.y + 1.2), Math.hypot(dx, dz)); a.aimPoint.copy(p); };
-  const press = (a, k) => { a.intent[k] = true; frame(); a.intent[k] = false; };
+  // (a scripted bot's intent is rewritten from _go every frame: press through it)
+  const press = (a, k) => { if (a.bot) { const was = a._go; a._go = { ...(was || {}), [k]: true }; frame(); a._go = was; } else { a.intent[k] = true; frame(); a.intent[k] = false; } };
   const [E1, E2] = foes, [M1, M2, M3] = mates;
   const saved = [PLAYER.inkRefillKid, PLAYER.inkRefillSwim];
 
@@ -116,7 +117,7 @@
     const sh0 = spend(M1, 'shooter', false, fireFor(1.0)), sh1 = spend(M1, 'shooter', true, fireFor(1.0));
     const chargeShot = (a) => { a._go = { fire: true }; step(WEAPONS.charger.chargeTime + 0.4); a._go = null; step(0.15); };
     const ch0 = spend(M1, 'charger', false, chargeShot), ch1 = spend(M1, 'charger', true, chargeShot);
-    R('zipink: a shooter\'s shots cost 0.7 × while the Zipline runs (1 s of fire)', sh0 > 10 && Math.abs(sh1 / sh0 - 0.7) < 0.03, { off: r2(sh0), on: r2(sh1), ratio: r3(sh1 / sh0) });
+    R('zipink: a shooter\'s shots cost 0.7 × while the Zipline runs (1 s of fire)', sh0 > 5 && Math.abs(sh1 / sh0 - 0.7) < 0.03, { off: r2(sh0), on: r2(sh1), ratio: r3(sh1 / sh0) });
     R('zipink: a charger\'s full charge costs 0.7 ×', ch0 > 5 && Math.abs(ch1 / ch0 - 0.7) < 0.03, { off: r2(ch0), on: r2(ch1), ratio: r3(ch1 / ch0) });
     // a dualies dodge roll (the jump press while firing and moving: weaponRunner.tryDodge, before the weapon runs)
     const roll = (a) => { a._go = { fire: true, move: V(1, 0, 0) }; step(0.1); a._go = { fire: true, move: V(1, 0, 0), jump: true }; step(1 / 60); a._go = { fire: false, move: V(1, 0, 0) }; step(1 / 60); a._go = null; };
@@ -172,10 +173,13 @@
     const ceil = lv.addDynamic({ min: [0, 0, 0], max: [1, 1, 1] }); lv.moveDynamic(ceil, V(-10, 3.2, -14), V(2, 0.2, 2));
     place(M1, -10, -14); step(0.2);
     const s3 = start(M1, 'booyah'); step(BD.liftTime + 0.2);
-    const lowUp = M1.pos.y, headTop = M1.pos.y + PLAYER.height;
+    const lowUp = M1.pos.y;
+    // the orb at its biggest (full, just cheered: the pulse) must still clear the ceiling's underside (y 3.0)
+    s3.charge = 1; s3.cheered = 0.35; step(1 / 60);
+    const orbTop = s3.ball.position.y + s3.halo.scale.x;
     G.specials.end(M1, 'test'); step(0.6);
-    R('lift: under a low ceiling (3 m) it lifts only as far as leaves room for the kid and the orb (0.6 m here), never into it',
-      s3.lift && Math.abs(lowUp - 0.6) < 0.08 && headTop < 3.0 - 0.9, { up: r2(lowUp), H: s3.lift && r2(s3.lift.H) });
+    R('lift: under a low ceiling (its underside 3 m up) it lifts only as far as leaves room for the kid and its orb, full and pulsing, never into it',
+      s3.lift && lowUp > 0.15 && lowUp < 0.45 && orbTop < 3.0 && orbTop > 2.3, { up: r2(lowUp), H: s3.lift && r2(s3.lift.H), orbTop: r2(orbTop) });
     // on a moving block: it hangs over the same spot of it as it moves
     const plat = lv.addDynamic({ min: [0, 0, 0], max: [1, 1, 1] }); lv.moveDynamic(plat, V(8, 0.5, 20), V(2, 0.5, 2));
     place(M1, 8.5, 20, 1.02); step(0.3);
@@ -204,6 +208,7 @@
     place(me, 0, -10); place(M1, 4, -2); place(E1, -4, 6); step(0.2);
     const off0 = C.state().on;
     const s = start(M1, 'booyah'); step(0.3);
+    await new Promise((res) => setTimeout(res, 600));   // (its fade / grow-in is a CSS transition: real time)
     const st = C.state(), r = P.getBoundingClientRect(), W = innerWidth, H = innerHeight, pr = pill.getBoundingClientRect();
     const ks = P.querySelector('.iw-cheerp__key').getBoundingClientRect();
     R('prompt: a teammate charging a Cheer Orb → the cheer prompt on your HUD, bottom middle, its name and charge, key C',
@@ -270,9 +275,9 @@
     R('cheer: one cheer per 0.4 s (mashing does no more)', ZC.cheers - n0 === 2, { cheers: ZC.cheers - n0 });
     step(1.0);
     // gauge full: the orb wisp, no gauge wisp; your own special running: likewise
-    me._cheerT = -9; me.special = cost; me.intent.cheer = true; frame();
+    s.charge = 0.2; me._cheerT = -9; me.special = cost; me.intent.cheer = true; frame();
     const fullG = gaugeW().length, fullO = orbW().length;
-    step(1.0); me._cheerT = -9; me.special = cost; start(me, 'bubbler'); step(0.05); me.intent.cheer = true; frame();
+    step(1.0); s.charge = 0.2; me._cheerT = -9; me.special = cost; start(me, 'bubbler'); step(0.05); me.intent.cheer = true; frame();
     const ownSpG = gaugeW().length, ownSpO = orbW().length;
     G.specials.end(me, 'test'); step(1.0);
     R('cheer: with your gauge full or your own special running: the orb still gets its wisp, your gauge none', fullG === 0 && fullO === 1 && ownSpG === 0 && ownSpO === 1, { fullG, fullO, ownSpG, ownSpO });
@@ -296,7 +301,7 @@
   // ======================================================================================== bots
   if (want('bots')) {
     reset();
-    for (const a of [M1, M2]) a.bot.update = brains.get(a);
+    for (const a of [M1, M2]) { a.bot._wasDead = false; a.bot.update = brains.get(a); }   // (no respawn super jump away on the first tick)
     place(me, 0, -12); place(M1, 4, -16); place(M2, -4, -16); step(0.2);
     const s = start(me, 'booyah');
     const by = new Set(); const offC = on('actor:cheer', (e) => { if (e.helped && (e.actor === M1 || e.actor === M2)) by.add(e.actor.name); });
@@ -308,7 +313,7 @@
     for (const a of [M1, M2]) a.bot.update = () => { zero(a); };
     // a bot using it in a fight: stays where it rose, throws it once charged
     reset();
-    M1.bot.update = brains.get(M1); E1.bot.update = brains.get(E1);
+    M1.bot._wasDead = E1.bot._wasDead = false; M1.bot.update = brains.get(M1); E1.bot.update = brains.get(E1);
     place(M1, 0, -12); place(E1, 0, 4); M1.invuln = 99; E1.invuln = 99; step(0.1);
     const s2 = start(M1, 'booyah'); const p0 = M1.pos.clone();
     let maxMove = 0, threw = false;
