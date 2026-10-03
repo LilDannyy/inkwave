@@ -112,6 +112,7 @@ export class Actor {
     if (this.status) { this.status.track = 0; this.status.poison = 0; this.status.reveal = 0; this.status.shield = 0; }
     this._jumpBeacon = null;
     this.weaponRunner?.reset();
+    G.match?.stage?.actorReset(this);   // [b5-stagehooks] (a stage module's own per-actor state: a pipe ride, its cooldown)
   }
 
   setSub(id) {
@@ -180,6 +181,7 @@ export class Actor {
   damage(amount, attacker, source = 'weapon') {
     if (!this.alive || amount <= 0) return false;
     if (this.invuln > 0) return false;
+    if (G.match?.stage?.damageGuard(this, amount, attacker, source)) return false;   // [b5-stagehooks] (inside a pipe)
     if (this.specialActive && this.specialActive.armor) amount *= 0.25;
     if (G.specials) { amount = G.specials.filterDamage(this, amount, attacker, source); if (!(amount > 0)) return false; }
     { const K = MAIN_KITS[this.weapon?.kind]; if (K?.damageTaken) { amount = K.damageTaken(this.weaponRunner, amount, attacker, source); if (!(amount > 0)) return false; } }   // kit armour (e.g. the mitts' leap)
@@ -252,6 +254,8 @@ export class Actor {
       if (this.respawnTimer <= 0 && G.match?.canRespawn()) this.respawn();
       return;
     }
+    const SM = G.match?.stage;   // [b5-stagehooks] a stage module may own the body this frame (a pipe ride): it moved us
+    if (SM && SM.ownsBody(this, dt)) { this._finishFrame(dt); return; }
     const P = PLAYER;
     const intent = this.intent;
     const prev = this._prevIntent;
@@ -279,7 +283,7 @@ export class Actor {
     // ---- super jump / specials in progress own the body
     if (this.superJumpState) { this._updateSuperJump(dt); this._finishFrame(dt); return; }
     const spx = this.specialActive;
-    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive) this._finishFrame(dt); return; }
+    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
     if (specialPressed && this.specialReady()) { this._startSpecial(); this._finishFrame(dt); return; }
 
     // ---- form: squid while the swim button is held. Swim + fire / sub held together → the most recent press wins, so
@@ -395,12 +399,13 @@ export class Actor {
     if (this.specialActive) G.specials.tick(this, this.specialActive, dt);
     if (!this.alive) return;
 
+    if (SM && SM.kill(this)) return;   // [b5-stagehooks] a stage module's own hazard (the lava) splats first
     // ---- fall into the sea
     // the sea: below the waterline with no deck underneath (dry-dock trenches sit below sea level and are safe)
     if (this.pos.y < P.fallDeathY && G.level.groundHeight(this.pos.x, this.pos.z, this.pos.y + 0.6) === -Infinity) {
       G.fx?.burst(_v.copy(this.pos).setY(P.waterY + 0.05), _v2.set(0, 1, 0), new THREE.Color('#bfe9ff'), { count: 18, speed: 5, size: 0.1 });
       G.audio?.play('splat_big', { pos: this.pos });
-      this.splat(this.lastDamage < 4 ? this.lastAttacker : null, 'water');
+      this.splat(this.lastDamage < 4 ? this.lastAttacker : null, (SM && SM.fallCause(this)) || 'water');   // [b5-stagehooks] (a fall into the lava's chutes)
       return;
     }
 
@@ -786,12 +791,13 @@ export class Actor {
   // Where a teammate super jumping to this actor lands: here — or, mid Ink Jet / Zipline, the take-off point; or, while
   // this actor is itself in a super jump's flight, where that jump comes down (never a point up in the sky)
   jumpAnchor() {
+    const sa = G.match?.stage?.jumpAnchor(this); if (sa) return sa;   // [b5-stagehooks] (a pipe rider: its exit's landing)
     const s = this.specialActive;
     if (s && s.jumpBack && s.origin) return s.origin;
     const j = this.superJumpState;
     return j && j.phase === 'flight' ? j.to : this.pos;
   }
-  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing(); }   // ([drainbow] free: a special that leaves you be)
+  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing() && !(G.match.stage && !G.match.stage.canSuperJump(this)); }   // [b5-stagehooks] (not mid-pipe)   // ([drainbow] free: a special that leaves you be)
 
   // Launch toward an ally (or a fixed point). Charge in place as a glowing squid, then arc through the sky.
   // opts.instant: skip the ~0.75 s crouch charge and launch on the next frame; opts.home: an Ink Jet / Zipline jump
@@ -838,6 +844,7 @@ export class Actor {
         } else s.to.copy(tgt);
         s.phase = 'flight'; s.t = 0;
         s.dur = 1.15 + Math.min(0.6, s.from.distanceTo(s.to) / 80);
+        if (!s.tower) G.match?.stage?.superJumpLanding(this, s);   // [b5-stagehooks] (lava: a landing that will be under it moves)
         this.invuln = Math.max(this.invuln, s.dur + 0.2);
         G.fx?.burst(_v.copy(this.pos), _v2.set(0, 1, 0), this.color, { count: 16, speed: 6, size: 0.1 });
         rumble(this, 0.35, 0.5, 140);

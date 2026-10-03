@@ -30,6 +30,8 @@ import './game/sp-drainbow.js';   // [drainbow] the Drainbow special registers i
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { podColliders, PodLooks } from './game/pods.js';
+import { StageWorld, envCause } from './game/stageMods.js';   // [b5-stagehooks] stage modules (docs/STAGE-MODS.md)
+import './game/stageModList.js';   // [b5-stagehooks] … which register themselves
 import { Minimap } from './game/minimap.js';
 import { revealedTo } from './game/reveal.js';
 import { Showcase } from './game/showcase.js';
@@ -146,6 +148,7 @@ class Game {
     const B = G.level.bounds;
     G.env = new envMod.Environment(G.renderer, scene, { bounds: B, theme: this.theme, shadowSize: q.shadowSize, footprint: this._footprint(G.level) });
     if (G.env.envMap) scene.environment = G.env.envMap;
+    G.stageWorld?.attachEnv(G.env);   // [b5-stagehooks]
     // sky-fill balance (scene.environmentIntensity, hemisphere) + per-theme exposure are the environment theme's job
     // (Environment.setTheme), so a stage/time looks the same booted into or switched to mid-session
     G.renderer.toneMappingExposure = 0.94;
@@ -271,6 +274,7 @@ class Game {
     if (this.levelMesh) { scene.remove(this.levelMesh, this.grateMesh); this.levelMesh.geometry.dispose(); this.grateMesh?.geometry.dispose(); this.levelMat.dispose(); this.grateMat?.dispose(); }
     if (this.decor) { scene.remove(this.decor.group); }
     this.podLooks?.dispose(); this.podLooks = null;   // (built with the prop kit: gone before the kit goes)
+    G.stageWorld?.dispose(); G.stageWorld = null;     // [b5-stagehooks] the stage modules' world goes with it
     if (this.props) { this.props.dispose?.(); this.props = null; }
     G.paint?.dispose();
     this.layoutId = layoutId; this.worldKey = worldKey;
@@ -278,42 +282,49 @@ class Game {
     const q = QUALITY[this.settings.quality] || QUALITY.high;
     // set dressing first: solid props hand back collision boxes that become part of the level (physics, nav, paint)
     const colliders = [];
+    const layout = layoutFor(MAP_LAYOUTS[layoutId], mode);
+    const SW = (G.stageWorld = StageWorld.plan(layout, { layoutId, worldKey, mode, dressing: dressingFor(layoutId), scene }));   // [b5-stagehooks]
     if (this.PropKit) {
       try {
         this.props = new this.PropKit(scene, { castShadow: true, quality: this.settings.quality });
         for (const it of dressingFor(layoutId)) {
           if (!inMode(it, mode)) continue;
-          const r = this.props.add(it.type, it);
-          if (r && r.colliders) colliders.push(...r.colliders);
+          const r = this.props.add(it.type, SW ? SW.prop(it) : it);   // [b5-stagehooks]
+          if (r && r.colliders) colliders.push(...(SW ? SW.colliders(it, r.colliders) : r.colliders));
         }
         this.props.build();
       } catch (e) { console.error('[inkwave] props failed', e); this.props = null; }
     }
-    const layout = layoutFor(MAP_LAYOUTS[layoutId], mode);
     colliders.push(...podColliders(layout));   // sprout pods: the engine's planters, only when the layout asks (pods.js)
+    if (SW) colliders.push(...SW.extraColliders());   // [b5-stagehooks]
     const level = (G.level = new Level(layout, colliders));
+    SW?.attachLevel(level);   // [b5-stagehooks]
     this.podLooks = new PodLooks(layout);      // the pods' bulbs and hedges (the match's StagePods drives them)
     G.physics = new Physics(level);
     const lightmap = await this._loadLightmap(level, worldKey);
     G.paint = new PaintSystem(G.renderer, level, { atlasSize: q.paintAtlas, maxDensity: q.paintAtlas >= 4096 ? 30 : 18 });
+    SW?.attachPaint(G.paint);   // [b5-stagehooks]
     this.murals.userData.setStage?.(layoutId);   // stage decals (murals.js) before the material reads the table
-    this.levelMat = createLevelMaterial(G.paint.texture, G.paint.size, this.murals, { lightmap, texlib: this.texlib });
+    this.levelMat = createLevelMaterial(G.paint.texture, G.paint.size, this.murals, { lightmap, texlib: this.texlib, ext: SW?.materialExt(false) });   // [b5-stagehooks] ext
     (this.swimWake || (this.swimWake = new SwimWake())).reset();
-    this.levelMesh = new THREE.Mesh(level.buildGeometry(G.paint.size), this.levelMat);
+    this.levelMesh = new THREE.Mesh(level.buildGeometry(G.paint.size, SW?.levelFilter()), this.levelMat);   // [b5-stagehooks] filter
     this.levelMesh.castShadow = true; this.levelMesh.receiveShadow = true;
     this.levelMesh.name = 'level';
     scene.add(this.levelMesh);
     // grates: same surface shader, cut-out holes, no ink (they cast no shadow; the mesh is too fine for the shadow map)
-    this.grateMat = createLevelMaterial(G.paint.texture, G.paint.size, this.murals, { grate: true, lightmap, texlib: this.texlib });
+    this.grateMat = createLevelMaterial(G.paint.texture, G.paint.size, this.murals, { grate: true, lightmap, texlib: this.texlib, ext: SW?.materialExt(true) });   // [b5-stagehooks] ext
     const gg = level.buildGeometry(G.paint.size, (b) => b.grate);
     this.grateMesh = new THREE.Mesh(gg, this.grateMat);
     this.grateMesh.receiveShadow = true; this.grateMesh.visible = gg.index.count > 0;
     scene.add(this.grateMesh);
+    SW?.afterMeshes({ scene, level, size: G.paint.size, levelMat: this.levelMat, grateMat: this.grateMat, levelMesh: this.levelMesh, grateMesh: this.grateMesh });   // [b5-stagehooks]
     this.decor = new Decor(scene, level);
-    G.nav = new NavGraph(level, G.physics);
+    G.nav = SW ? SW.buildNav(level, G.physics) : new NavGraph(level, G.physics);   // [b5-stagehooks] (special edges, merged graphs)
     this.minimap = new Minimap(level, G.paint);
+    SW?.attachMinimap(this.minimap);   // [b5-stagehooks]
     if (G.env?.rebuildForArena) G.env.rebuildForArena(level.bounds, this._footprint(level));
     else if (G.env?.setFootprint) G.env.setFootprint(this._footprint(level));
+    SW?.ready();   // [b5-stagehooks] the world is complete
     if (G.teamColors[0]) this._setPalette(this.palette || this._pickPalette());
   }
 
@@ -568,8 +579,9 @@ class Game {
         G.audio?.play('splatted_self');
         G.audio?.duck?.(0.45, 2.2);
         // the card shows what did it (hud.js splatCause): the attacker's main weapon, or the sub / special / the sea
-        const by = attacker ? attacker.name : cause === 'water' ? null : 'enemy ink';
-        this.hud?.showSplatted({ by, byColor: attacker ? G.teamHex[attacker.team] : '#6fd0ff', respawn: PLAYER.respawnTime, attacker: attacker || null, cause });
+        const ec = envCause(cause);   // [b5-stagehooks] a stage module's cause (the lava) reads like the sea
+        const by = attacker ? attacker.name : cause === 'water' || ec ? null : 'enemy ink';
+        this.hud?.showSplatted({ by, byColor: attacker ? G.teamHex[attacker.team] : ec?.byColor || '#6fd0ff', respawn: PLAYER.respawnTime, attacker: attacker || null, cause });
         this.rig.mode = 'spectate';
         this.rig.spectate = { actor: attacker && attacker.alive ? attacker : null, pos: victim.pos.clone(), from: victim.pos.clone() };
         this.rig.lookAt.copy(victim.pos);
@@ -1565,7 +1577,9 @@ class Game {
       d.sc = clamp(1.12 - dist / 60, 0.56, 1);
       this.minimap.toCanvas(d.x, d.z, t); d.mx = t.x / this.minimap.w; d.my = t.y / this.minimap.h;
     }
+    const stP = m.stage && a.alive ? m.stage.prompt(a) : null;   // [b5-stagehooks] a stage module's prompt (a pipe mouth …)
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
+    else if (stP) prompt = stP;
     else if (m.state === 'playing' && a.alive && m.actors.some((o) => o !== a && o.team === a.team && o.specialActive?.id === 'booyah' && !o.specialActive.thrown)) prompt = 'A teammate is charging a Cheer Orb — press C to cheer it on!';
     const frame = {
       time: m.practice ? null : m.time,
@@ -1590,6 +1604,7 @@ class Game {
       zones: m.zones ? { ...m.zones.state(), viewer: a.team } : undefined,
       // Tower Command: position / control / riders / checkpoints / scores (HUD meter, tower pointer, banners)
       tower: m.tower ? { ...m.tower.state(), viewer: a.team, onTower: !!(m.tower.riderList && m.tower.riderList.includes(a)) } : undefined,
+      stage: m.stage ? m.stage.hud(a) : undefined,   // [b5-stagehooks] { <module key>: its own HUD state, noReticle }
     };
     this.hud.update(dt, frame);
   }
