@@ -3258,7 +3258,7 @@ export class Character {
       setE(D, FOOTL, 0.12, ANKLE_H + 0.18 * air, 0.02 * air); setE(D, FOOTR, -0.12, ANKLE_H + 0.18 * air, 0.02 * air);
       D[FOOTLR] = 0.6 * air; D[FOOTRR] = 0.6 * air;
       D[UARML] = lerp(-0.5, -2.7, air); D[UARML + 2] = lerp(0.2, 0.75, air); D[FARML] = -0.2;
-      if (H.both) D[ANC + 1] += 0.04 * air;
+      if (H.both) D[ANC + 1] += 0.04 * air;   // [b5-holds]
       else { lerpE(D, ANC, -0.18, 1.4, 0.05, air); lerpE(D, ANCR, -1.9, 0.3, -0.5, air); }
       D[HEAD] = -0.2 * air; D[MOPEN] = 0.9 * air; D[HANDPL] = 2; D[EARS] = 1;
     }
@@ -3353,7 +3353,7 @@ export class Character {
     setAnc(D, H.carry);
     D[IKL] = H.twoCarry ? 1 : 0;
     const tw = cyc >= 6.1 && cyc < 7.1 ? (cyc - 6.1) / 1.0 : -1;
-    if (tw >= 0 && !NO_TWIRL[this.animKind] && !H.both) {
+    if (tw >= 0 && !NO_TWIRL[this.animKind] && !H.both) {   // ([b5-holds]: no one-handed twirl)
       const k = ease(clamp(tw / 0.8, 0, 1));
       const lift = Math.sin(Math.PI * clamp(tw, 0, 1));
       D[SPIN] = wrapA(TAU * 2 * k); D[IKL] = 0;
@@ -3405,7 +3405,7 @@ export class Character {
       D[UARML + 2] = 0.9; D[FARML] = -1.6; D[HANDL] = 0.3; D[HANDL + 2] = 0.6;
       D[POLEL] = 1; D[POLEL + 1] = 0.1; D[POLEL + 2] = -0.35;
     }
-    // flourish: a quick re-grip / twirl and a proud chin-up
+    // flourish: a quick re-grip / twirl and a proud chin-up ([b5-holds]: no twirl with both hands on it)
     if ((this.animKind === 'shooter' || this.animKind === 'blaster') && !H.both) { D[SPIN] = wrapA(TAU * ease((cyc - 4.8) / 0.55)) * (cyc > 4.8 && cyc < 5.5 ? 1 : 0); D[ANC + 1] += 0.05 * fl; }
     else D[ANCR] -= 0.2 * fl;
     D[HEAD] -= 0.08 * fl; D[HIPS_P + 1] -= 0.015 * fl;
