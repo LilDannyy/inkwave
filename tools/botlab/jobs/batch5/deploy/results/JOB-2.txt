@@ -66,3 +66,85 @@ c1 console: [error] Uncaught TypeError: Cannot read properties of undefined (rea
 FAIL Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: under 0.8 s each in it on average (3 scenes); off: a second or more (2 scenes)  {"on":{"sInRainEach":0.81,"scenes":[{"sInRainEach":1,"dmg":[51,17,82.8],"escapes":13},{"sInRainEach":0.8,"dmg":[99,55,0],"escapes":9},{"sInRainEach":0.6,"dmg":[35.5,13.6,63.2],"escapes":25}]},"off":{"sInRainEach":1.95,"scenes":[{"sInRainEach":1.9,"dmg":[78.8,"dead","dead"]},{"sInRainEach":2,"dmg":["dead",99,9
 FAIL Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":50,"avgDmgOff":81.4}
 ### b5-deploy-j2-3/bot-specials.log
+
+## PART 3 (appended): Tower Command device A/B, 16 full matches at 080901f, rerun with 'xargs -S 4096' (wall time 7 min); all CONSOLE 0, no FRAME ERRORS / WATCHDOG
+### halyard | team0=sprinkler;team1=beacon | DEV_AI=0
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 97 vs 0 (score 97/0) | best push A 7m B 117.8m | OT no | sim 110.3s
+   DEPLOY hits 2 (52 dmg) | shot down {} | crushed by the tower {"beacon":2} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### halyard | team0=sprinkler;team1=beacon | DEV_AI=1
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== halyard [tower len 117.8/117.8]: winner Alpha (knockout) | counts 0 vs 95 (score 0/95) | best push A 117.8m B 10.6m | OT no | sim 149.5s
+   DEPLOY hits 11 (306 dmg) | shot down {"beacon":2} | crushed by the tower {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 7 (beacon 7, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### halyard | team0=beacon;team1=sprinkler | DEV_AI=1
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== halyard [tower len 117.8/117.8]: winner Bravo (retake) | counts 63 vs 8 (score 63/8) | best push A 45.2m B 102.5m | OT 39.6s | sim 339.5s
+   DEPLOY hits 7 (316 dmg) | shot down {"beacon":1,"sprinkler":1} | crushed by the tower {"beacon":5,"sprinkler":1} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 10 (beacon 4, sprinkler 6, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### halyard | team0=beacon;team1=sprinkler | DEV_AI=0
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 117.8m | OT no | sim 161.3s
+   DEPLOY hits 8 (217 dmg) | shot down {"beacon":1} | crushed by the tower {"beacon":1} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### calamari | team0=sprinkler;team1=beacon | DEV_AI=1
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== calamari [tower len 163.6/163.6]: winner Bravo (retake) | counts 97 vs 40 (score 97/40) | best push A 7.6m B 100.3m | OT 27.3s | sim 327.3s
+   DEPLOY hits 10 (480 dmg) | shot down {"sprinkler":1,"beacon":2} | crushed by the tower {"beacon":1} | rides 2 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 63 (beacon 61, sprinkler 2, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### calamari | team0=beacon;team1=sprinkler | DEV_AI=1
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== calamari [tower len 163.6/163.6]: winner Bravo (knockout) | counts 73 vs 0 (score 73/0) | best push A 36m B 163.6m | OT no | sim 263.5s
+   DEPLOY hits 14 (414 dmg) | shot down {"beacon":2} | crushed by the tower {"beacon":1,"sprinkler":1} | rides 1 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 47 (beacon 46, sprinkler 1, buoy 0; gave up 1)
+CONSOLE 0 unique warning/error line(s)
+### calamari | team0=sprinkler;team1=beacon | DEV_AI=0
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== calamari [tower len 163.6/163.6]: winner Bravo (retake) | counts 80 vs 9 (score 80/9) | best push A 28m B 145.5m | OT 12.7s | sim 312.8s
+   DEPLOY hits 10 (281 dmg) | shot down {"sprinkler":1} | crushed by the tower {"beacon":8,"sprinkler":1} | rides 6 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### calamari | team0=beacon;team1=sprinkler | DEV_AI=0
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== calamari [tower len 163.6/163.6]: winner Alpha (time) | counts 1 vs 90 (score 1/90) | best push A 162.2m B 21.1m | OT no | sim 300s
+   DEPLOY hits 16 (287 dmg) | shot down {} | crushed by the tower {"sprinkler":1,"beacon":1} | rides 1 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### treehills | team0=sprinkler;team1=beacon | DEV_AI=0
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== treehills [tower len 151.8/151.8]: winner Bravo (comeback) | counts 56 vs 55 (score 56/55) | best push A 66.4m B 66.4m | OT 1.5s | sim 301.5s
+   DEPLOY hits 6 (133 dmg) | shot down {} | crushed by the tower {"beacon":4,"sprinkler":1} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### treehills | team0=sprinkler;team1=beacon | DEV_AI=1
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 100 vs 7 (score 100/7) | best push A 0m B 139.5m | OT no | sim 300s
+   DEPLOY hits 19 (650 dmg) | shot down {"beacon":3} | crushed by the tower {"beacon":2} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 115 (beacon 113, sprinkler 2, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### treehills | team0=beacon;team1=sprinkler | DEV_AI=1
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== treehills [tower len 151.8/151.8]: winner Alpha (retake) | counts 1 vs 32 (score 1/32) | best push A 150.6m B 95.5m | OT 29.2s | sim 329.3s
+   DEPLOY hits 27 (1149 dmg) | shot down {"beacon":4,"sprinkler":2} | crushed by the tower {"beacon":3} | rides 1 lifts 0 shoves 7 drops 0 | skitter pops 0 | bots' picks 34 (beacon 32, sprinkler 2, buoy 0; gave up 2)
+CONSOLE 0 unique warning/error line(s)
+### saltpan | team0=sprinkler;team1=beacon | DEV_AI=1
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== saltpan [tower len 179.2/179.2]: winner Bravo (knockout) | counts 70 vs 0 (score 70/0) | best push A 45.2m B 179.2m | OT no | sim 290s
+   DEPLOY hits 12 (1196 dmg) | shot down {"beacon":5,"sprinkler":2} | crushed by the tower {"beacon":1} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 63 (beacon 58, sprinkler 5, buoy 0; gave up 1)
+CONSOLE 0 unique warning/error line(s)
+### treehills | team0=beacon;team1=sprinkler | DEV_AI=0
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 54 vs 47 (score 54/47) | best push A 69.7m B 82.3m | OT no | sim 300s
+   DEPLOY hits 7 (182 dmg) | shot down {"beacon":1} | crushed by the tower {"beacon":4} | rides 1 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### saltpan | team0=sprinkler;team1=beacon | DEV_AI=0
+   subs A:sprinkler A:sprinkler A:sprinkler A:sprinkler B:beacon B:beacon B:beacon B:beacon
+== saltpan [tower len 179.2/179.2]: winner Bravo (time) | counts 72 vs 46 (score 72/46) | best push A 40.4m B 100m | OT no | sim 300s
+   DEPLOY hits 13 (216 dmg) | shot down {"sprinkler":1} | crushed by the tower {"beacon":7} | rides 1 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### saltpan | team0=beacon;team1=sprinkler | DEV_AI=1
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== saltpan [tower len 179.2/179.2]: winner Alpha (neutralised) | counts 36 vs 55 (score 36/55) | best push A 121.5m B 79.7m | OT 5.5s | sim 305.5s
+   DEPLOY hits 157 (1291 dmg) | shot down {"beacon":5} | crushed by the tower {"surf":1,"sprinkler":1,"beacon":1} | rides 3 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 81 (beacon 51, sprinkler 24, buoy 6; gave up 1)
+CONSOLE 0 unique warning/error line(s)
+### saltpan | team0=beacon;team1=sprinkler | DEV_AI=0
+   subs A:beacon A:beacon A:beacon A:beacon B:sprinkler B:sprinkler B:sprinkler B:sprinkler
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 100 vs 26 (score 100/26) | best push A 0m B 130.8m | OT 19.4s | sim 319.3s
+   DEPLOY hits 2 (80 dmg) | shot down {} | crushed by the tower {"beacon":1} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
