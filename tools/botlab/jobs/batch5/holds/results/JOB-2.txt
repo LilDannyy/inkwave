@@ -1,0 +1,41 @@
+JOB-2 (holds) results — ran at 8b8b351 (git rev-parse --short HEAD), the branch head when your message came; Mac mini, SLOTS=3 PAR=3 REP=3, caffeinate.
+(A run at 6517e56 had started first and was stopped when you moved JOB-2 to 8b8b351; it had passed every test it reached. JOB-1 was skipped, as you said.)
+Verdict: all pass except ONE net-holds-b run (5/7): A's remote kid was in sp_stamp (special) form, not holding the brush, and c1 logged an Uncaught TypeError (reading 'moveSpeed'). Rerun alone twice: 7/7 and 7/7, console clean. So it's intermittent, but the TypeError is real — worth a look (see below).
+
+## REP=3 regress.sh output
+== holds-1: RESULT 243/243 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== holds-2: RESULT 243/243 0 FAIL
+== holds-3: RESULT 243/243 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 5/7 2 FAIL
+FAIL c1: A's remote squidkid holds the brush (a two-handed hold)  {"kind":"sp_stamp","both":false,"n":200,"off":11,"worst":0.13,"skipped":0,"firing":90,"moved":50.1}
+FAIL c1: A's remote squidkid keeps its off hand on the brush (≤ 3 cm) on every kid-form frame  {"kind":"sp_stamp","both":false,"n":200,"off":11,"worst":0.13,"skipped":0,"firing":90,"moved":50.1}
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 25.4% vs 30.4%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 0/6 323p · roller×2 4/3 725p · blaster×2 4/2 494p · brolly×2 6/4 325p
+CONSOLE 0 unique warning/error line(s)
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Bravo (time) | final 69 vs 63 (penalty +22.3/+4.1) | OT no
+   by weapon (players, splats dealt, deaths, avg turf) brolly×2 17/22 1064p · blaster×2 43/18 1469p · roller×2 32/28 2054p · brush×2 6/30 796p
+CONSOLE 0 unique warning/error line(s)
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 17.8% vs 28.1%
+   by weapon (players, splats dealt, deaths, avg turf) charger×2 3/2 340p · spinner×1 2/1 773p · brush×1 1/4 397p · roller×2 5/6 708p · bucket×1 3/1 728p · bow×1 1/1 869p
+CONSOLE 0 unique warning/error line(s)
+
+## net-holds-b (NET_ARGS='a=brush;b=blaster'): FAIL / error lines from its log
+FAIL c1: A's remote squidkid holds the brush (a two-handed hold)  {"kind":"sp_stamp","both":false,"n":200,"off":11,"worst":0.13,"skipped":0,"firing":90,"moved":50.1}
+FAIL c1: A's remote squidkid keeps its off hand on the brush (≤ 3 cm) on every kid-form frame  {"kind":"sp_stamp","both":false,"n":200,"off":11,"worst":0.13,"skipped":0,"firing":90,"moved":50.1}
+c0 console: none
+c1 console: [error] Uncaught TypeError: Cannot read properties of undefined (reading 'moveSpeed')
+
+## net-holds-b reruns, alone (nothing else running)
+rerun 1: RESULT 7/7 | c0 console: none c1 console: none 
+rerun 2: RESULT 7/7 | c0 console: none c1 console: none 
