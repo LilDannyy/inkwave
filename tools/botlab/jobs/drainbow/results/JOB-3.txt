@@ -1,0 +1,26 @@
+JOB-3 results — Drainbow balance round 3 (revised), run on the Mac mini (botlab helper) at b82cc9b, SLOTS=3 PAR=3, caffeinate, 2026-10-03 12:29 AEST
+CFGS="db dblt dbv2 bub base" balance2.sh <out> 2 2  (136 matches: 72 turf + 64 zones). The 9c4566e version never started (revised before JOB-2 finished).
+FAILED lines: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+node tools/botlab/jobs/drainbow/agg2.cjs <out>:
+
+=== turf (72 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=16: wins 38% [A 25% (n 8), B 50% (n 8)] | turf Δ -3.6 ±8.5 | K/D 1.01 ±0.36 | special used 11.4/match (theirs 13.8)
+      per bubble: shots halved 1.5, crossings 2.3, life added 0.02 s, bot-frames held inside 191
+  drainbow v2 (bigger / longer / stronger drain) n=16: wins 44% [A 63% (n 8), B 25% (n 8)] | turf Δ -1.9 ±12.2 | K/D 1.12 ±0.47 | special used 11.3/match (theirs 12.3)
+      per bubble: shots halved 1.8, crossings 2.8, life added 0.03 s, bot-frames held inside 211
+  drainbow, light to their bots (botDanger 0) n=16: wins 44% [A 38% (n 8), B 50% (n 8)] | turf Δ -1.5 ±8.5 | K/D 0.98 ±0.22 | special used 11.6/match (theirs 13.1)
+      per bubble: shots halved 2.3, crossings 2.6, life added 0.04 s, bot-frames held inside 181
+  bubble guard n=16: wins 63% [A 50% (n 8), B 75% (n 8)] | turf Δ 0.7 ±10.6 | K/D 1.19 ±0.36 | special used 9.8/match (theirs 12.3)
+  random rolls n=8: wins 50% [A 50% (n 8)] | turf Δ -4.0 ±13.7 | K/D 1.03 ±0.30 | special used 12.4/match (theirs 13.1)
+  all: stuck 0.13% | splats 37.3 | matches with console warnings 0 · frame errors 0
+
+=== zones (64 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=16: wins 38% [A 25% (n 8), B 50% (n 8)] | turf Δ -0.7 ±6.6 | K/D 1.02 ±0.26 | special used 23.1/match (theirs 23.8)
+      per bubble: shots halved 1.9, crossings 3.5, life added 0.02 s, bot-frames held inside 269
+  drainbow v2 (bigger / longer / stronger drain) n=16: wins 69% [A 75% (n 8), B 63% (n 8)] | turf Δ 0.7 ±5.4 | K/D 1.07 ±0.23 | special used 21.3/match (theirs 24.9)
+      per bubble: shots halved 4.6, crossings 4.3, life added 0.04 s, bot-frames held inside 301
+  drainbow, light to their bots (botDanger 0) n=16: wins 44% [A 25% (n 8), B 63% (n 8)] | turf Δ 1.4 ±8.9 | K/D 1.05 ±0.28 | special used 22.2/match (theirs 23.1)
+      per bubble: shots halved 3.7, crossings 3.5, life added 0.05 s, bot-frames held inside 288
+  bubble guard n=16: wins 81% [A 63% (n 8), B 100% (n 8)] | turf Δ -1.8 ±5.1 | K/D 1.00 ±0.27 | special used 21.1/match (theirs 24.0)
+  all: stuck 0.36% | splats 76.8 | matches with console warnings 0 · frame errors 0

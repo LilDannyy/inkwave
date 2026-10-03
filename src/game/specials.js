@@ -75,7 +75,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
     if (d > radius + 0.3) continue;
     if (!G.physics.los(_v2.copy(c).setY(c.y + 0.35), _v)) continue;
     const k = d <= killRadius ? 0 : clamp((d - killRadius) / Math.max(0.01, radius - killRadius), 0, 1);
-    G.projectiles.applyHit(owner, e, lerp(dmgMax, dmgMin, k * k), weaponId);
+    G.projectiles.applyHit(owner, e, lerp(dmgMax, dmgMin, k * k), weaponId, null, c);   // ([drainbow] c: the blast's way to them)
   }
   G.subs?.damageArea(c, radius, 60, team);
   G.boss?.splash(owner, c, radius, dmgMax, dmgMin, weaponId);   // Boss Battle
@@ -84,6 +84,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
 // (online: each client applies it to its own players — from a ghost's tornado / speaker too, as the Ink Tempest does)
 function tickDamage(owner, e, dmg, weaponId) {
   if (!e.alive || e.team === owner.team || e.remote) return;
+  if (G.drainbow?.live) dmg = G.drainbow.cut(owner, e, dmg);   // [drainbow]
   const killed = e.damage(dmg, owner, weaponId);
   if (killed) emit('hit', { attacker: owner, victim: e, damage: dmg, killed: true, weaponId });
 }
@@ -907,6 +908,7 @@ class Twister {
     if (hit.hit) { this._burst(hit.point, hit.normal); return false; }
     if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120)) { this._burst(this.pos, UP); return false; }
     if (this.sys.shotHit(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }
+    if (G.drainbow?.live && !this.dbw) G.drainbow.pass(this, this.prev, this.pos, this.team);   // [drainbow] (once a twister)
     // players inside the column
     for (const e of G.actors) {
       if (e.team === this.team || !e.alive || this.hit.has(e)) continue;
@@ -917,7 +919,7 @@ class Twister {
       Physics.segmentCapsuleDist(_v2.copy(this.prev), _v3.copy(this.pos).setY(this.prev.y), _v.setY(this.prev.y - 0.5), 0.01, 1, _res);
       if (_res.dist < d.radius + (e.hitR || PLAYER.radius)) {
         this.hit.add(e);
-        G.projectiles.applyHit(this.owner, e, d.damage, 'zooka');
+        G.projectiles.applyHit(this.owner, e, d.damage, 'zooka', this);
         G.fx?.burst(_v.copy(e.pos).setY(e.pos.y + 0.8), UP, this.owner.color, { count: 10, speed: 4, size: 0.09 });
       }
     }
@@ -2167,9 +2169,10 @@ const GHOST = {
   },
 };
 
-// Specials living in modules of their own (src/game/sp-*.js) register their IMPL hooks (start, tick, weapon, end, prompt
-// …) and their GHOST ones here; their world objects go in SpecialSystem.world (update / dispose, and optional hitShot /
-// hitRay / hitArea / drawMap hooks) and travel online through their own kit records (kits/registry.js KIT_GHOSTS)
+// Specials living in modules of their own (src/game/sp-*.js: Surf N' Turf, Drainbow) register their IMPL hooks (start,
+// tick, weapon, end, prompt …) and their GHOST ones (start, tick, event: their [4, …] moments) here; their world objects
+// go in SpecialSystem.world (update / dispose, and optional hitShot / hitRay / hitArea / drawMap hooks) and travel online
+// through their special's records or their own kit records (kits/registry.js KIT_GHOSTS)
 export function registerSpecial(kind, impl, ghost = null) { IMPL[kind] = impl; if (ghost) GHOST[kind] = ghost; }
 
 // the owner's special pose state beyond the actor tick (packActor) → the ghost's (applyRemote)

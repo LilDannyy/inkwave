@@ -385,6 +385,7 @@ export class SubSystem {
     it.vel.y -= GRAV * dt;
     _v.copy(it.pos);
     it.pos.addScaledVector(it.vel, dt);
+    if (G.drainbow?.live && !it.dbw) G.drainbow.pass(it, _v, it.pos, it.team);   // [drainbow] (thrown through one: its blast is halved)
     // direct hits on enemies (pellet pops on them, murk bomb poisons them for the whole mist)
     if (it.kind === 'burst' || it.kind === 'mist') {
       for (const e of G.actors) {
@@ -781,7 +782,7 @@ export class SubSystem {
     for (const e of G.actors) {
       if (e.team === it.team || !e.alive) continue;
       if (_v2.copy(e.pos).setY(e.pos.y + 0.7).distanceTo(c) > s.radius || !G.physics.los(c, _v2)) continue;
-      G.projectiles.applyHit(it.owner, e, s.damage, 'mine');
+      G.projectiles.applyHit(it.owner, e, s.damage, 'mine', null, c);   // ([drainbow] c: its way to them)
       this.track(e, it.team, s.trackTime, c);   // (from the mine)
     }
     this.damageArea(c, s.radius, 30, it.team);
@@ -901,7 +902,7 @@ export class SubSystem {
       const d = _v3.distanceTo(center);
       if (d > radius || !G.physics.los(_v2.copy(center).addScaledVector(n || UP, 0.3), _v3)) continue;
       const k = 1 - clamp((d - 0.8) / (radius - 0.8), 0, 1);
-      G.projectiles.applyHit(it.owner, e, lerp(dmgMin, dmgMax, k * k), it.kind);
+      G.projectiles.applyHit(it.owner, e, lerp(dmgMin, dmgMax, k * k), it.kind, it.dbw ? it : null, center);   // [drainbow]
     }
     this.damageArea(center, radius, 60, it.team);
     G.boss?.splash(it.owner, center, radius, dmgMax, dmgMin, it.kind);   // Boss Battle
@@ -912,12 +913,12 @@ export class SubSystem {
     G.fx?.explosion(c, G.teamColors[it.team], s.radius * 0.8);
     G.cues?.sub('burst', 'boom', { owner: it.owner, team: it.team, at: c });   // sfx-cues: the Pop Pellet's own pop
     emit('bomb:explode', { actor: it.owner, pos: c.clone(), team: it.team, radius: s.radius });
-    if (direct) G.projectiles.applyHit(it.owner, direct, s.directDamage, 'burst');
+    if (direct) G.projectiles.applyHit(it.owner, direct, s.directDamage, 'burst', it.dbw ? it : null, c);   // [drainbow]
     for (const e of G.actors) {
       if (e.team === it.team || !e.alive || e === direct) continue;
       _v3.copy(e.pos); _v3.y += 0.7;
       if (_v3.distanceTo(c) > s.radius || !G.physics.los(_v2.copy(c).setY(c.y + 0.3), _v3)) continue;
-      G.projectiles.applyHit(it.owner, e, s.splashDamage, 'burst');
+      G.projectiles.applyHit(it.owner, e, s.splashDamage, 'burst', it.dbw ? it : null, c);
     }
     this.damageArea(c, s.radius, 25, it.team);
     G.boss?.splash(it.owner, c, s.radius, s.directDamage, s.splashDamage, 'burst');   // Boss Battle

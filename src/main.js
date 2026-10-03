@@ -25,6 +25,7 @@ import { SubSystem } from './game/subs.js';
 import { SpecialSystem } from './game/specials.js';
 import './game/sp-surf.js';   // Surf N' Turf registers itself (specials.js registerSpecial)
 import './game/assists.js';   // assists: G.assists (actor.splat asks it; the results show it)
+import './game/sp-drainbow.js';   // [drainbow] the Drainbow special registers itself (specials.js registerSpecial)
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { podColliders, PodLooks } from './game/pods.js';

@@ -144,6 +144,7 @@ export class Renderer {
     comp.addPass(this.grade);
     // optional screen-FX pass (src/fx/screenfx.js) — runs in HDR linear space before tone mapping/output
     if (this.extraPass) comp.addPass(this.extraPass);
+    for (const p of this.postPasses || []) comp.addPass(p);   // (addPostPass: e.g. the Drainbow's grey wave)
     comp.addPass(new OutputPass());
     // SMAA stands in for MSAA where MSAA was skipped; it runs on the tone-mapped sRGB image
     if (q.msaa && !this.samples) comp.addPass(new SMAAPass());
@@ -156,6 +157,12 @@ export class Renderer {
   setExtraPass(pass) {
     this.extraPass = pass;
     if (this.scene) this._buildComposer();
+  }
+  // More full-screen passes after it (linear HDR, before tone mapping), kept across rebuilds; each idles with
+  // pass.enabled = false (src/fx/drainbowFx.js: the Drainbow's grey wave)
+  addPostPass(pass) {
+    (this.postPasses || (this.postPasses = [])).push(pass);
+    if (this.composer) this.composer.insertPass(pass, this.composer.passes.length - (this.q.msaa && !this.samples ? 2 : 1));
   }
 
   applySettings(settings) {

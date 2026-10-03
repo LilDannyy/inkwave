@@ -119,7 +119,7 @@ class FxHooks {
   _land(a, pos, speed = 8, surface = 0) {
     if (!a || !a.alive || speed < 3.5) return;
     const s = this._state(a);
-    if (a.specialActive || a.superJumpState || this.time - s.sjLand < 0.3 || !this._near(pos, 38)) return;
+    if ((a.specialActive && !a.specialActive.free) || a.superJumpState || this.time - s.sjLand < 0.3 || !this._near(pos, 38)) return;   // ([drainbow] free)
     if (a.form === 'squid' && surface === 1) return;          // squid landing in own ink = a dive (actor:dive)
     this.fx.land?.(pos, this._inkColor(a, surface), surface, speed);
     this._bump('land');
@@ -130,7 +130,7 @@ class FxHooks {
     this._bump('jump');
   }
   _form(a, form, surface = 0) {
-    if (!a || !a.alive || this._fresh(a) || a.superJumpState || a.specialActive) return;
+    if (!a || !a.alive || this._fresh(a) || a.superJumpState || (a.specialActive && !a.specialActive.free)) return;
     if (surface === 1) return;                                 // in own ink the dive / emerge splash covers it
     if (!this._near(a.pos, 26)) return;
     this.fx.formPop?.(this._visual(a, _v), a.color, form === 'squid', false);
@@ -325,7 +325,7 @@ class FxHooks {
     const kidForm = form === 'kid' ? 'kid' : 'squid', prevKid = s.form === 'kid' ? 'kid' : 'squid';
     if (!this.seen['actor:form'] && kidForm !== prevKid) this._form(a, kidForm, a.groundTeam);
     // footsteps from stride distance until character.js emits real foot plants
-    if (!this.seen['actor:footstep'] && form === 'kid' && a.grounded && hs > 1.2 && !a.superJumpState && !a.specialActive && near) {
+    if (!this.seen['actor:footstep'] && form === 'kid' && a.grounded && hs > 1.2 && !a.superJumpState && (!a.specialActive || a.specialActive.free) && near) {
       s.stepAcc += hs * dt;
       const stride = 0.45 + 0.12 * hs;
       if (s.stepAcc >= stride) {

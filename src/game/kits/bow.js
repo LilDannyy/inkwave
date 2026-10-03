@@ -130,7 +130,7 @@ function volley(a, S, m, dir, air, ghost = false) {
     const phase = i === 0 ? 0 : i === 1 ? 1 / 3 : 2 / 3;
     Object.assign(p, { owner: a, team: a.team, st: 0, age: 0, dist: 0, t: 0, range: S.range, speed: S.speed, tier: S.tier, dmg: i ? S.side : S.dmg, lodge: S.lodge, fuse: S.fuse,
       br: S.br, bd: S.bd, be: S.be, bp: S.bp, land: S.land, dk: S.dk, every, drop: W.dropFirst - d0 + phase * every, drops: 0,
-      seed: Math.random(), noHit: false, ticks: 0, spawnT: G.time, center: i === 0, ghost });
+      seed: Math.random(), noHit: false, ticks: 0, spawnT: G.time, center: i === 0, ghost, dbw: 0 });
     arrows.push(p);
   }
   if (a.isLocal || a._nearCamera?.()) {
@@ -216,7 +216,7 @@ function burst(p) {
     if (d > p.br) continue;
     if (!G.physics.los(c, _v)) continue;
     const dmg = d <= inner ? p.bd : lerp(p.bd, p.be, (d - inner) / Math.max(0.01, p.br - inner));
-    G.projectiles.applyHit(owner, e, dmg, W.id);
+    G.projectiles.applyHit(owner, e, dmg, W.id, p.dbw ? p : null, c);   // [drainbow]
   }
   G.subs?.damageArea(c, p.br, p.be, p.team);
   G.boss?.splash(owner, c, p.br, p.bd, p.be, W.id);   // Boss Battle
@@ -255,6 +255,7 @@ function stepArrow(p, i, dt) {
   const sp = p.vel.length();
   p.dist += sp * dt;
   if (sp > 0.01) p.dir.copy(p.vel).multiplyScalar(1 / sp);
+  if (G.drainbow?.live && !p.dbw && !p.noHit) G.drainbow.pass(p, p.prev, p.pos, p.team);   // [drainbow]
   // actors (a victim takes the direct hit; a lodging arrow then drops and sticks into the floor at their feet)
   if (!p.noHit) {
     for (const e of G.actors) {
@@ -264,7 +265,7 @@ function stepArrow(p, i, dt) {
       Physics.segmentCapsuleDist(p.prev, p.pos, hitBase(e), hr, h, _res);
       if (_res.dist < hr * 0.95 + ARROW_R) {
         _v.copy(p.prev).lerp(p.pos, _res.t);
-        if (!p.ghost) G.projectiles.applyHit(p.owner, e, p.dmg, W.id);
+        if (!p.ghost) G.projectiles.applyHit(p.owner, e, p.dmg, W.id, p);
         G.fx?.burst(_v, _v3.copy(p.dir).negate(), G.teamColors[p.team], { count: 6, speed: 3, size: 0.07 });
         emit('weapon:impact', { pos: _v.clone(), normal: _v3.clone(), team: p.team, kind: 'shot', radius: 0.3, victim: e });
         if (!p.lodge) { kill(i); return; }

@@ -7,7 +7,14 @@
 // B jumping the next ring takes nothing, B's screen opens A's assist window and A hears of the dodge; a bot of A's team
 // then splats B (its hit goes to B, B judges the splat) and A gets the assist — on both screens; the turf the rings
 // painted is the same on both screens; B shooting the buoy on its screen pops it on A's (its owner) and then on B's.
-module.exports = async ({ clients, R, wait, say, args }) => {
+module.exports = async ({ clients, R, wait, say, args, open }) => {
+  // its hooks ride the local kids' brains (window.__surfHook in the bots' update): the clients must be ?autopilot ones.
+  // Not given them (no Q0=autopilot Q1=autopilot): each is reopened with it; still none after that: a loud failure
+  for (const c of clients.slice(0, 2)) {
+    if (/[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
+    say(`c${c.i} has no ?autopilot (run with Q0=autopilot Q1=autopilot) — reopening it with it`);
+    await open(c.i, 'autopilot');
+  }
   const [A, B] = clients;
   const opt = Object.fromEntries((args || '').split(/[;&]/).filter(Boolean).map((kv) => kv.split('=')));
   const MAP = opt.map || 'saltpan';
@@ -21,6 +28,7 @@ module.exports = async ({ clients, R, wait, say, args }) => {
   await A.js(`__G.net.start()`);
   for (const c of [A, B]) await c.until(`__G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing'`, 90000, 250);
   say('practice up');
+  for (const c of [A, B]) if (!(await c.js('!!__G.match.local.bot'))) throw new Error(`c${c.i}: its own kid has no brain (an ?autopilot client is needed: Q0=autopilot Q1=autopilot)`);
   // everyone's own squidkids stand still (each screen stubs the brains it runs); a test hook per frame (window.__surfHook)
   const still = (c) => c.js(`(() => { for (const a of __G.match.actors) if (!a.remote && a.bot) { a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; window.__surfHook?.(a, it); }; }
     __G.projectiles.clear(); __G.subs.clear(); __G.specials.clear(); return 1; })()`);

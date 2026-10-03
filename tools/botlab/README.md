@@ -165,7 +165,8 @@ assist window), the assist rules, the ink by band from the buoy, the buoy's hp, 
 records and judging, bots (throwing, jumping rings, shooting buoys), its sounds:
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/surf.js tools/botlab/run.sh tools/botlab/page.cjs`
 (`PAGE_ARGS='only=throw,pulses,hit,dodge,assist,turf,buoy,walls,results,net,bots,sounds'`). Online on two clients:
-`CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-surf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (12).
+`CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-surf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (12). It needs autopilot clients (its hooks ride the local kids' brains): run without `Q0` / `Q1`, it
+reopens them with `?autopilot` itself, and fails loudly if a local kid still has no brain.
 Matches: match.cjs `SPECIALS='all=surf'` / `'team0=surf'` (and a `SURF` line: uses, hits, marks, dodges, ink, assists, the
 bots' jumps). Pictures: `tools/botlab/jobs/surf/shots.sh` (scenes/surf.js), the results screen with assists
 (scenes/surf-results.js) and the HUD / loadout (scenes/surf-hud.js) through hud-shots.cjs.
@@ -188,3 +189,15 @@ blasts, launch alerts / "you're in it" alarms / stings for the enemy's specials,
   (`SPECIAL …`); the stings; the busy fight's sample peak and K-weighted loudness (`LOUDNESS …`); then pause / resume,
   quit, the Cues slider in SETTINGS → Audio (trusted clicks), a second match, the loadout screen, practice and its
   loadout (the cue director running, the loop bus open, the listener set).
+
+Drainbow (2026-10-03, the special: src/game/sp-drainbow.js, src/fx/drainbowFx.js, src/audio/sfx-drainbow.js):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/drainbow.js tools/botlab/run.sh tools/botlab/page.cjs` — placement and
+  life, the shot halving (into it, through both sides once, a charger beam, a bomb's blast, its own team's shots full,
+  out from inside), the drain / gain rates, the owner's share as bubble time and its cap, the meter frozen while it
+  stands, the grey wave and the muffle on the local player only, crossings, the bots (`PAGE_ARGS='only=…'`: place,
+  shots, drain, gain, meter, view, cross, bots)
+- `CLIENTS=2 NET=tools/botlab/tests/net-drainbow.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` — online: the ghost
+  bubble, the guest's own grey / drain, the host fed and the longer life recorded, a guest's shot halved on its screen
+- pictures: `tools/botlab/jobs/drainbow/shots.sh [MAP]` (tools/botlab/scenes/drainbow.js through hud-shots.cjs)
+- balance: `tools/botlab/jobs/drainbow/balance.sh <outdir> [N_TURF] [N_ZONES]` (match.cjs `SPECIALS=` forces the
+  specials) + `agg.cjs`; the regressions its hook-ins touch: `tools/botlab/jobs/drainbow/regress.sh`

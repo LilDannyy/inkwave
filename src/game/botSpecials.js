@@ -216,6 +216,17 @@ export function specialDangers() {
         d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.35; d.vis = 'map'; d.linger = true; see(d, w.pos.x, w.pos.y, w.pos.z);
         break;
       }
+      case 'drainbow': {
+        // [drainbow] Drainbow (src/game/sp-drainbow.js): inside it you're drained and your shots out are halved — a lingering
+        // area on everyone's map, kept out of; light (botDanger 0: walked out of unless holding the objective) or heavy
+        // (1: even the zone's guards and the tower's riders get out — a player would: grey, muffled, drained, half damage)
+        if (!w.live) break;
+        const R = w.radius(), d = D(w, 'drainbow', w.team, w.owner);
+        disc(d, w.pos.x, w.pos.y, w.pos.z, R + 0.35, R);
+        d.yLo = w.pos.y - R - 1.2; d.yHi = w.pos.y + R - 0.5; d.lethal = SPECIALS.drainbow.botDanger ?? 0; d.tOut = Math.max(0, w.life - w.t);
+        d.vis = 'map'; d.linger = true; see(d, w.pos.x, w.pos.y, w.pos.z);
+        break;
+      }
     }
   }
   const P = G.projectiles;
@@ -696,6 +707,7 @@ export class SpecialSense {
     else {
       if (this.esc) this._endEsc();
       if (!safe) this._guard(move);
+      if (G.drainbow?.live) G.drainbow.botHold(this.b, move);   // [drainbow] fight from inside our team's bubble
     }
     if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);
@@ -886,6 +898,17 @@ export class SpecialSense {
     const s = e.specialActive;
     return !!s && s.kind === 'crab' && !s.roll && Math.hypot(e.pos.x - this.a.pos.x, e.pos.z - this.a.pos.z) > SPECIALS.crab.gunRange + 1.5;
   }
+  // [drainbow] an enemy Drainbow on the line from our eyes to T, or round T (our shots there do half)
+  _drainInLine(T) {
+    const a = this.a, ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z, tx = T.pos.x - ex, ty = T.pos.y + 0.85 - ey, tz = T.pos.z - ez, L2 = tx * tx + ty * ty + tz * tz;
+    if (L2 < 1e-4) return false;
+    for (const w of G.drainbow.bubbles) {
+      if (!w.live || w.team === a.team) continue;
+      const vx = w.pos.x - ex, vy = w.pos.y - ey, vz = w.pos.z - ez, u = clamp((vx * tx + vy * ty + vz * tz) / L2, 0, 1);
+      if (Math.hypot(vx - tx * u, vy - ty * u, vz - tz * u) < w.radius()) return true;
+    }
+    return false;
+  }
   // an enemy bubble on the line from our eyes to it (it soaks every shot)
   _bubbleInLine(T) {
     const a = this.a, ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z, tx = T.pos.x - ex, ty = T.pos.y + 0.85 - ey, tz = T.pos.z - ez, L2 = tx * tx + ty * ty + tz * tz;
@@ -928,6 +951,7 @@ export class SpecialSense {
     if (!this.on()) return 0;
     const a = this.a;
     if (immunity(e, a.pos.x, a.pos.y, a.pos.z) < 0.3) return this._knock(e) || this._crabFar(e) ? 0 : 30;
+    if (G.drainbow?.live && this._drainInLine(e)) return 8;   // [drainbow] half damage that way: another foe first
     if (!vulnerable(e)) return 0;
     // (a jetpacker only once it's in reach — walking out under one is how bots got splatted by it; the defenceless ones
     // are worth a few steps)

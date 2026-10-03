@@ -324,10 +324,11 @@ export class Buoy {
   }
   _hit(R, e) {
     const hurtable = !(e.invuln > 0);
-    const killed = e.damage(D.damage, this.owner, 'surf');
+    const dmg = G.drainbow?.live ? G.drainbow.cut(this.owner, e, D.damage, null, this.pos) : D.damage;   // [drainbow] (a ring reaching someone in an enemy Drainbow: half)
+    const killed = e.damage(dmg, this.owner, 'surf');
     SURF_STATS.hits++;
     if (killed) SURF_STATS.kills++;
-    emit('hit', { attacker: this.owner, victim: e, damage: D.damage, killed, weaponId: 'surf' });
+    emit('hit', { attacker: this.owner, victim: e, damage: dmg, killed, weaponId: 'surf' });
     if (hurtable && e.alive) { G.subs?.track(e, this.team, D.markTime, this.beacon()); SURF_STATS.marks++; }
     hitLook(this, e);
     emit('surf:hit', { buoy: this, victim: e, ring: R.i, killed });

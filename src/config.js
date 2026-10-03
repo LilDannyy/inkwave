@@ -535,9 +535,33 @@ export const SPECIALS = {
                                           // off (e-fold paintFall m) toward paintFar at the last ring's reach (sp-surf.js inkCover)
     paintStep: 1.45, paintR: 1.2,         // ink candidates every paintStep m (radially and round), splat radius
     jumpAssist: 3.5 },                    // s: a foe forced to jump a ring — their splat by your team then is your assist
+  // ---- [drainbow] Drainbow (src/game/sp-drainbow.js, src/fx/drainbowFx.js): a big soap-film bubble set down at your
+  // feet; you're free at once. Enemy shots whose path crosses it lose shotMul of their damage (once a shot); foes inside
+  // are drained (ink / s and a share of a full special meter / s — their screen drains to grey and their hearing goes
+  // muffled) and you and your teammates inside gain it: total = drain × foes inside, split across your team inside.
+  // While it's up your own meter doesn't charge (it's your running special); your share of the drained special turns
+  // into bubble time instead (extendPerMeter s per full meter, total life ≤ maxLife). No hit points: it pops when its
+  // time runs out or its owner is splatted (popOnOwnerSplat).
+  drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'A rainbow bubble at your feet. Enemy ink through it does half damage. Foes inside go grey and muffled as their ink and special drain to your team inside — your share keeps it up longer.',
+    duration: 8.5, radius: 4.3, lift: 1.0, inflate: 0.55, shotMul: 0.5,
+    inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
+    extendPerMeter: 15, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
+    popOnOwnerSplat: true,
+    // balance (2026-10-03, tools/botlab/jobs/drainbow/results: JOB-1 had it far behind the other specials — 21 % turf / 6 %
+    // zones wins for a team forced to it; with these, JOB-3 44 % / 44 % (n 16 each) and JOB-4 63 % / 58 % (n 24): Bubble
+    // Guard 63 % / 81 % and 50 % / 71 %, random rolls 50 % / 58 % turf):
+    ownerNear: 6,                             // the owner within this many m outside the film still takes its share
+    paintFoot: 0.75,                          // set down with a splash of your ink over this share of its footprint (0: none)
+    paintPop: 1.1,                            // … and when its time runs out the film rains down over this share of it (0: none)
+    botHold: 1,                               // bots fight from inside their team's bubble (1) / pay it no mind (0)
+    botDanger: 0,                             // what the other team's bots make of it: 0 a light area (they keep out, but hold
+                                              // the objective in it), 1 a heavy one (they get out, objective or not)
+    // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
+    // the muffle (master low-pass to dampCut Hz and dampGain of the level at full)
+    waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },
 };
 // (append-only: online records carry the index — keep new specials at the end)
-export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf'];
+export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf', 'drainbow'];
 
 // ---- Match ----
 export const MATCH = {
