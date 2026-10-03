@@ -93,7 +93,29 @@ export class Minimap {
     const f = team === 1;
     if (f === this.flip && this._built) { this.version = -1; return; }
     this.flip = f;
+    this._bases = null;   // [b5-stagehooks] (cached state bases were drawn for the other side)
     this._build();
+    this.version = -1;
+  }
+  // [b5-stagehooks] a stage module's base raster per state (eras: one per era): switch to the cached base for `key`,
+  // built the first time with present(block) as the block test (null = every solid block). Swapping is free.
+  setBase(key, present = null) {
+    if (this.baseKey === key && this._built) return;
+    const keep = ['base', 'hgt', 'topBlock', 'nrm', 'pixCell', 'pixFx', 'pixFy', 'pixSx', 'pixSy'];
+    const B = this._bases || (this._bases = new Map());
+    if (this._built && this.baseKey !== undefined && !B.has(this.baseKey)) B.set(this.baseKey, Object.fromEntries(keep.map((k) => [k, this[k]])));
+    this.baseKey = key;
+    const c = B.get(key);
+    if (c) { for (const k of keep) this[k] = c[k]; this.bctx = this.base.getContext('2d', { willReadFrequently: true }); }
+    else {
+      const prev = this.blockOk;
+      if (present) this.blockOk = present;
+      this.base = document.createElement('canvas'); this.base.width = this.w; this.base.height = this.h;
+      this.bctx = this.base.getContext('2d', { willReadFrequently: true });
+      this._build();
+      this.blockOk = prev;
+      B.set(key, Object.fromEntries(keep.map((k) => [k, this[k]])));
+    }
     this.version = -1;
   }
   ensure() { if (!this._built) this._build(); }
@@ -117,8 +139,10 @@ export class Minimap {
     const nrm = (this.nrm = new Float32Array(N * 2));
     const tc = { x: 0, y: 0 };
     // 1) rasterise every solid block's top surface (ramps included) → height + owning block + normal
+    const OK = this.blockOk || null;   // [b5-stagehooks] a stage module's block test (eras: present in this era; pipes: no glass)
     for (const b of lvl.blocks) {
-      if (!b.solid || b.dynamic) continue;   // (a moving block — the tower — is drawn as its own marker)
+      if (OK ? !OK(b) : !b.solid) continue;
+      if (b.dynamic) continue;   // (a moving block — the tower — is drawn as its own marker)
       if (b.hidden && (b.roof || b.perch) && b.aabbMin.y > 3) continue;   // overhead steel (crane girders, booms): not over the turf
       const n = b.axes[1];
       if (n.y < 0.45) continue;
@@ -149,6 +173,7 @@ export class Minimap {
     const sx = (this.pixSx = new Int8Array(N)), sy = (this.pixSy = new Int32Array(N));
     for (const f of faces) {
       if (f.n.y < 0.45) continue;
+      if (OK && !OK(lvl.blocks[f.block])) continue;   // [b5-stagehooks]
       const ux = f.u.x, uz = f.u.z, vx = f.v.x, vz = f.v.z;
       const uh = ux * ux + uz * uz, vh = vx * vx + vz * vz;
       if (uh < 1e-4 || vh < 1e-4) continue;
@@ -348,7 +373,7 @@ export class Minimap {
     const teamKey = (G.teamHex ? G.teamHex[0] + G.teamHex[1] : '') + (INK_ONE_STATE.level > 0.5 ? '|one' : '');
     if (teamKey !== this._teamKey) { this._teamKey = teamKey; this.version = -1; }
     const theme = G.game?.theme || G.game?.mapDef?.theme || 'day';
-    if (theme !== this._theme) { const had = this._theme; this._theme = theme; if (had) this._drawBase(); }
+    if (theme !== this._theme) { const had = this._theme; this._theme = theme; if (had) { this._bases = null; this._drawBase(); } }   // [b5-stagehooks] (state bases redraw on their next setBase)
     const BANDS = 3;
     if (this._band > 0) {
       const b = this._band;
@@ -489,6 +514,7 @@ export class Minimap {
         }
       }
     }
+    G.match?.stage?.drawMap(c, this, tc, s, hex, t, me);   // [b5-stagehooks] stage modules' live layer
     // specials: vortex targets + funnels, sound beams, bubbles, cheer orbs, the local strike cursor
     G.specials?.drawMap(c, this, tc, s, hex, t);
     c.globalAlpha = 1;

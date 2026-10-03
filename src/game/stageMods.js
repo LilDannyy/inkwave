@@ -48,9 +48,7 @@ export const stageModKeys = () => SORTED.map((d) => d.key);
 // A splat cause that isn't a weapon (the sea is built in): the splat card, the feed's "by", the screen flood.
 // registerCause('lava', { name: 'Burned in the lava', knocked: 'Knocked into the lava', icon: '<svg…>', flood: '#a3121a',
 //   clear: true, byColor: '#ff5a2a' })   (hud.js splatCause, main.js 'splatted', screenfx.js flood read it)
-const CAUSES = new Map();
-export function registerCause(id, c) { CAUSES.set(id, { name: id, ...c }); }
-export const envCause = (id) => (typeof id === 'string' ? CAUSES.get(id) || null : null);
+export { registerCause, envCause } from '../core/envCauses.js';
 
 // ------------------------------------------------------------------------------------------------ helpers
 const call = (o, name, args) => { const f = o && o[name]; return typeof f === 'function' ? f.apply(o, args) : undefined; };
@@ -109,7 +107,8 @@ export class StageWorld {
     this.level = level;
     level.stageWorld = this;
     // shared queries the level answers for everyone (subs, kits, bots): installed only when a module answers them
-    if (this.mods.some((m) => m.W.liquidY)) level.liquidY = (x, z) => this.liquidY(x, z);
+    this.liquid = this.mods.some((m) => m.W.liquidY || m.def.liquid);   // (def.liquid: only the match runtime answers)
+    if (this.liquid) level.liquidY = (x, z) => this.liquidY(x, z);
     if (this.mods.some((m) => m.W.noPlace)) level.noPlace = (p, r) => this.noPlace(p, r);
     this._each('attachLevel', level);
   }
@@ -156,12 +155,14 @@ export class StageWorld {
   }
 
   // ---- queries any code may ask while this world stands (match or not). The match runtime answers first.
-  liquidY(x, z) {
+  // the modules' own liquid surface at (x, z), −Infinity where they have none
+  surfaceY(x, z) {
     const S = G.match?.stage;
     let y = S ? S.liquidY(x, z) : -Infinity;
     for (const m of this.mods) if (m.W.liquidY) { const v = m.W.liquidY(x, z); if (v > y) y = v; }
-    return Math.max(y, -1.6);   // (never below the sea: PLAYER.waterY)
+    return y;
   }
+  liquidY(x, z) { return Math.max(this.surfaceY(x, z), -1.6); }   // (never below the sea: PLAYER.waterY)
   noPlace(p, r = 0) { for (const m of this.mods) if (m.W.noPlace && m.W.noPlace(p, r)) return true; return !!G.match?.stage?.noPlace(p, r); }
   // bake-ao: modules take their own pieces out of the AO trace (pipe glass, tank water) and put them back
   bakeMode(on) { this._each('bakeMode', on); }
@@ -179,7 +180,7 @@ const R_HOOKS = ['update', 'lateUpdate', 'seek', 'dispose',
   // nav + bots
   'navEdge', 'navNode', 'beforePath', 'botHold', 'botSteer', 'botAct', 'wet', 'goalWeight', 'sightLanding',
   // queries
-  'under', 'liquidY', 'noPlace', 'restMask', 'danger', 'state',
+  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'state',
   // looks / HUD / camera
   'drawMap', 'prompt', 'hud', 'cam', 'camAfter'];
 
@@ -308,6 +309,8 @@ export class StageRun {
 
   // ---- queries
   under(p, depth = 0) { for (const R of this.h.under) if (R.under(p, depth)) return true; return false; }
+  // something sank there (a shot, a bomb, a thrown sub): the module's hiss and steam
+  fizzle(p, what) { for (const R of this.h.fizzle) R.fizzle(p, what); }
   liquidY(x, z) { let y = -Infinity; for (const R of this.h.liquidY) { const v = R.liquidY(x, z); if (v > y) y = v; } return y; }
   noPlace(p, r = 0) { for (const R of this.h.noPlace) if (R.noPlace(p, r)) return true; return false; }
   // Bazookarp: 1 = standable at that rest / era / state, per nav node (Uint8Array) — the first module that answers

@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { on, G as CTX, clamp, damp, lerp } from '../core/ctx.js';
 import { QUALITY } from '../config.js';
+import { envCause } from '../core/envCauses.js';   // [b5-stagehooks] stage modules' splat causes (the lava's flood)
 
 const TAU = Math.PI * 2;
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3();
@@ -58,6 +59,7 @@ const FRAG = /* glsl */`
   uniform float uHurt;
   uniform vec4 uUrgency;
   uniform vec4 uSwim;
+  uniform float uHeat;   // [b5-stagehooks] a stage module's heat shimmer (screenfx.heat, 0..1), on the swim wobble
   uniform float uFocus;
   uniform vec4 uShimmer;
   uniform vec4 uFlood;
@@ -140,7 +142,7 @@ const FRAG = /* glsl */`
     // ---------------------------------------------------------------- geometric distortion
     uv = uPunchPos + (uv - uPunchPos) * (1.0 - uPunch);
     if (uStretch > 0.0001) { vec2 d = uv - 0.5; vec2 da = d * vec2(uAspect, 1.0); uv = 0.5 + d * (1.0 - uStretch * dot(da, da)); }
-    if (uSwim.a > 0.001) uv += vec2(sin(uv.y * 37.0 + uTime * 2.6) + 0.5 * sin(uv.y * 71.0 - uTime * 3.3), cos(uv.x * 29.0 + uTime * 2.1)) * 0.0011 * uSwim.a;
+    if (uSwim.a + uHeat > 0.001) uv += vec2(sin(uv.y * 37.0 + uTime * 2.6) + 0.5 * sin(uv.y * 71.0 - uTime * 3.3), cos(uv.x * 29.0 + uTime * 2.1)) * 0.0011 * (uSwim.a + uHeat);
     if (uBlast > 0.001) {
       vec2 bd = (uv - uBlastPos) * vec2(uAspect, 1.0);
       float bl = length(bd);
@@ -551,7 +553,7 @@ export class ScreenFX {
         uLensOn: { value: 0 }, uLensTexel: { value: this.lens.texel }, uLensColA: { value: new THREE.Color(0.1, 0.2, 1) }, uLensColB: { value: new THREE.Color(1, 0.4, 0.05) },
         uEdgeInk: { value: new THREE.Vector4(0, 0, 0, 0) }, uAura: { value: new THREE.Vector4(0, 0, 0, 0) },
         uHeart: { value: new THREE.Vector4(0.6, 0.02, 0.06, 0) }, uHurt: { value: 0 },
-        uUrgency: { value: new THREE.Vector4(HOT.r, HOT.g, HOT.b, 0) }, uSwim: { value: new THREE.Vector4(0, 0, 0, 0) },
+        uUrgency: { value: new THREE.Vector4(HOT.r, HOT.g, HOT.b, 0) }, uSwim: { value: new THREE.Vector4(0, 0, 0, 0) }, uHeat: { value: 0 },
         uFocus: { value: 0 }, uCharge: { value: new THREE.Vector4(1, 1, 1, 0) }, uShimmer: { value: new THREE.Vector4(0, 0, 0, 0) },
         uFlood: { value: new THREE.Vector4(0, 0, 0, 0) }, uFloodDrip: { value: 0 }, uFloodClear: { value: 0 }, uHole: { value: 0 }, uHoleRim: { value: new THREE.Color(1, 1, 1) },
         uFlash: { value: new THREE.Vector4(1, 1, 1, 0) }, uDesat: { value: 0 }, uSat: { value: 1 }, uKill: { value: new THREE.Vector4(1, 1, 1, 0) },
@@ -692,9 +694,10 @@ export class ScreenFX {
 
   _startFlood(attacker, cause) {
     const s = this.s, U = this.U;
-    const col = cause === 'water' ? SEA : attacker ? this._teamColor(attacker.team) : this._teamColor(this._local ? this._local.enemyTeam : 1);
+    const ec = envCause(cause);   // [b5-stagehooks]
+    const col = cause === 'water' ? SEA : ec && ec.flood ? (this._ecCol || (this._ecCol = new THREE.Color())).set(ec.flood) : attacker ? this._teamColor(attacker.team) : this._teamColor(this._local ? this._local.enemyTeam : 1);
     U.uFlood.value.set(col.r, col.g, col.b, s.flood);
-    U.uFloodClear.value = cause === 'water' ? 1 : 0;
+    U.uFloodClear.value = cause === 'water' || (ec && ec.clear) ? 1 : 0;
     s.floodMode = 'in'; s.floodT = 0; s.hole = 0;
     s.jump = null;
     s.chroma = Math.min(1.4, s.chroma + 0.9);
@@ -827,6 +830,7 @@ export class ScreenFX {
     U.uHurt.value = s.hurt;
     U.uUrgency.value.w = s.urg;
     U.uSwim.value.w = s.swim;
+    U.uHeat.value = this.heat || 0;   // [b5-stagehooks]
     U.uFocus.value = s.focus;
     U.uCharge.value.w = s.chargePulse * I;
     U.uShimmer.value.w = s.shimmer;
@@ -862,7 +866,7 @@ export class ScreenFX {
     const any = lensOn || s.speed > 0.002 || s.stretch > 0.0005 || Math.abs(s.punch) > 0.0004 || s.blast > 0.002 || s.chroma > 0.004 ||
       s.edgeInk > 0.002 || s.aura > 0.002 || s.heart > 0.002 || s.hurt > 0.002 || s.urg > 0.002 || s.swim > 0.002 || s.focus > 0.002 ||
       s.chargePulse > 0.002 || s.shimmer > 0.002 || s.kill > 0.002 || s.flash > 0.002 || s.desat > 0.002 || Math.abs(s.sat - 1) > 0.002 ||
-      s.satPop > 0.002 || s.flood > 0.001;
+      s.satPop > 0.002 || s.flood > 0.001 || this.heat > 0.002;   // [b5-stagehooks] heat
     this.pass.enabled = any;
     this.stats.enabled = any;
   }

@@ -34,6 +34,7 @@ import { h, clamp, colorVars, toHex, fmtTime, fmtInt, splatSVG, splatShape, pct,
 import { SQUID, SPLAT_ICON, DEATH_ICON, GLYPHS, SUB_ICONS, WEAPON_ICONS, richText, keycap, specialIcon, weaponIcon } from './ui-icons.js';
 import { WEAPONS, SPECIALS, TEAM_NAMES, SUB, PLAYER, MATCH, ZONES, TOWER } from '../config.js';
 import { on, G } from '../core/ctx.js';
+import { envCause } from '../core/envCauses.js';   // [b5-stagehooks] stage modules' splat causes (the lava)
 import { SFX } from '../audio/audio.js';
 import { BossHud } from './hud-boss.js';
 import { LeadHud } from './hud-lead.js';
@@ -91,6 +92,7 @@ const ENV_CAUSES = { water: 'Fell in the sea', sea: 'Fell in the sea', fall: 'Fe
 export function splatCause(cause, attacker) {
   const c = typeof cause === 'string' ? cause : null;
   if (c && ENV_CAUSES[c]) return { kind: 'env', id: c, name: attacker ? 'Knocked into the sea' : ENV_CAUSES[c], tag: '', icon: SEA_ICON };
+  { const ec = envCause(c); if (ec) return { kind: 'env', id: c, name: attacker ? ec.knocked || ec.name : ec.name, tag: '', icon: ec.icon || SEA_ICON }; }   // [b5-stagehooks]
   if (c && SUB[c]) return { kind: 'sub', id: c, name: SUB[c].name || c, tag: 'SUB', icon: SUB_ICONS[SUB[c].kind] || SUB_ICONS[c] || SUB_ICONS.bomb };
   if (c && SPECIALS[c]) return { kind: 'special', id: c, name: SPECIALS[c].name || c, tag: 'SPECIAL', icon: specialIcon(c) };
   const w = (attacker && attacker.weaponId) || (c && WEAPONS[c] ? c : null);
@@ -390,6 +392,7 @@ export class HUD {
     this._updTimer(f.time);
     if (f.teams) this._updSquads(this.boss.on ? this.boss.squadTeams(f.teams) : f.teams);
     this._updCrosshair(f, dt);
+    { const nr = !!(f.stage && f.stage.noReticle); if (nr !== !!L.noRet) { L.noRet = nr; this.ret.style.visibility = this.subChip.style.visibility = nr ? 'hidden' : ''; } }   // [b5-stagehooks] (riding a pipe)
     this._updTank(f, dt);
     this._updSpecial(f, dt);
     this._updSubBadge(f);

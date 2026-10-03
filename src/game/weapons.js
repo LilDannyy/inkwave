@@ -1592,6 +1592,7 @@ export class Projectiles {
   // screen decides (a hit arriving from another screen — nm._applyingHit — was halved there already).
   applyHit(attacker, victim, dmg, weaponId, shot, from) {
     if (!victim.alive || victim.team === attacker.team) return;
+    if (G.match?.stage?.damageGuard(victim, dmg, attacker, 'hit')) return;   // [b5-stagehooks] (behind pipe glass: no 'hit')
     const nm = G.netm;
     let killed = false;
     const route = nm ? nm.shouldApplyHit(attacker, victim) : 'local';
@@ -1693,6 +1694,7 @@ export class Projectiles {
         dead = true;
       }
       if (!dead && p.pos.y < PLAYER.waterY - 1.8) dead = true;
+      if (!dead) { const SM = G.match?.stage; if (SM && SM.under(p.pos)) { SM.fizzle(p.pos, 'shot'); dead = true; } }   // [b5-stagehooks] (into the lava: no splat)
       return dead;
     }
   }
@@ -1799,6 +1801,7 @@ export class Projectiles {
         if (b.fuse <= 0) { const nm = G.netm; if (b.ghost && nm) nm.mute++; try { this._explodeBomb(b); } finally { if (b.ghost && nm) nm.mute--; } this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }
       }
       if (b.pos.y < PLAYER.waterY - 1.8) { this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }
+      { const SM = G.match?.stage; if (SM && SM.under(b.pos)) { SM.fizzle(b.pos, 'bomb'); this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; } }   // [b5-stagehooks] (sinks: no blast)
       b.mesh.position.copy(b.pos);
       // [sub-view] armed (it has landed), the drawn ball — radius 0.2 × vs × the fuse pulse — sits ON the floor under it:
       // its centre that far up (the physics centre sits 0.21 up and, resting, bobs 0.03–0.21 as it settles: the drawn

@@ -695,7 +695,7 @@ export class BotBrain {
         if (ok) { this.path = null; this.goalTimer = 0; }
       }
     }
-    if (a.superJumpState) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }
+    if (a.superJumpState || (G.match?.stage && G.match.stage.botHold(this))) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }   // [b5-stagehooks] botHold (riding a pipe)
     if (!G.match || !G.match.playing()) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }
     this.think -= dt; this.jumpCd -= dt; this.bombCd -= dt; this.strafeT -= dt; this.paintPause -= dt; this.dodgeCd -= dt;
     this.acqT += dt; this.t += dt;
@@ -1044,6 +1044,7 @@ export class BotBrain {
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
     if (!thrAim && G.match?.pods) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;
+    if (!thrAim && G.match?.stage) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || null;   // [b5-stagehooks] (escape the lava …)
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- Tower Command: riders hold the platform's middle, or climb on (ink its wall, swim up); others off it
     const tAim = tp ? this._towerMove(tp, dt, move, it, thrAim, onT) : null;
@@ -1308,9 +1309,12 @@ export class BotBrain {
   _avoidWater(move) {
     const l = Math.hypot(move.x, move.z);
     if (l < 0.05) return;
-    const a = this.a, L = G.level, yaw = Math.atan2(move.x, move.z);
+    const a = this.a, L = G.level, yaw = Math.atan2(move.x, move.z), SM = G.match?.stage;
     const safe = (yw) => {
-      for (const d of [0.7, 1.3]) if (L.groundHeight(a.pos.x + Math.sin(yw) * d, a.pos.z + Math.cos(yw) * d, 50) === -Infinity) return false;
+      for (const d of [0.7, 1.3]) {
+        const x = a.pos.x + Math.sin(yw) * d, z = a.pos.z + Math.cos(yw) * d, gh = L.groundHeight(x, z, 50);
+        if (gh === -Infinity || (SM && SM.wet(x, z, gh, 0.5))) return false;   // [b5-stagehooks] (drowning floor)
+      }
       return true;
     };
     if (safe(yaw)) return;
@@ -1325,7 +1329,10 @@ export class BotBrain {
   // PLAYER.fallDeathY as wet, but our dry-dock trench floors (y = -2.0, below the sea surface) are safe, walkable nav
   // ground — counting them would freeze bots in the trench (edge guard) and block their hops there. Grates count as
   // ground here (these probes are for kid-form walking / hopping / rolling; _squidWouldDrop handles squids).
-  _wet(x, z, y) { return G.level.groundHeight(x, z, y + 0.6) === -Infinity; }
+  _wet(x, z, y) {
+    const gh = G.level.groundHeight(x, z, y + 0.6), SM = G.match?.stage;
+    return gh === -Infinity || !!(SM && SM.wet(x, z, gh, 0.5));   // [b5-stagehooks] (a floor the lava covers is wet)
+  }
   // ground all the way along a straight walk (samples every 0.45 m)
   _dryLine(x0, y0, z0, x1, z1) {
     const d = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(d / 0.45);
@@ -1353,13 +1360,14 @@ export class BotBrain {
   }
   // squid form drops through grates: is there only water under us (or just ahead) once grates don't count?
   _squidWouldDrop(move) {
-    const a = this.a, L = G.level;
-    if (L.groundHeight(a.pos.x, a.pos.z, 50, true) === -Infinity) return true;
+    const a = this.a, L = G.level, SM = G.match?.stage;
+    const dry = (x, z) => { const gh = L.groundHeight(x, z, 50, true); return gh !== -Infinity && !(SM && SM.wet(x, z, gh, 0.5)); };   // [b5-stagehooks] wet
+    if (!dry(a.pos.x, a.pos.z)) return true;
     const l = Math.hypot(move.x, move.z);
     if (l <= 0.05) return false;
     // (a swimmer carries on a couple of metres after it surfaces: the faster it goes, the further ahead it looks)
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.22;
-    for (const d of look > 1.5 ? [1.2, look] : [1.2]) if (L.groundHeight(a.pos.x + (move.x / l) * d, a.pos.z + (move.z / l) * d, 50, true) === -Infinity) return true;
+    for (const d of look > 1.5 ? [1.2, look] : [1.2]) if (!dry(a.pos.x + (move.x / l) * d, a.pos.z + (move.z / l) * d)) return true;
     return false;
   }
 
@@ -1714,6 +1722,7 @@ export class BotBrain {
     let best = -1, bs = -Infinity;
     for (let k = 0; k < 40; k++) {
       const id = I.ring[(Math.random() * I.ring.length) | 0];
+      if (!nav.valid[id]) continue;   // [b5-stagehooks] (valid can change: an era)
       const n = nav.nodes[id];
       const dx = n.x - c[0], dz = n.z - c[2], d = Math.hypot(dx, dz);
       if (d > I.R + 3 || n.wet === 2) continue;
@@ -1731,6 +1740,7 @@ export class BotBrain {
     const dMax = Math.min(range * 0.85, I.R + 12), dMin = Math.min(I.R * 0.55, dMax - 2), cands = [];
     for (let k = 0; k < 70; k++) {
       const id = I.ring[(Math.random() * I.ring.length) | 0];
+      if (!nav.valid[id]) continue;   // [b5-stagehooks]
       const n = nav.nodes[id];
       const dx = n.x - c[0], dz = n.z - c[2], d = Math.hypot(dx, dz);
       if (d < dMin || d > dMax || n.wet === 2) continue;
@@ -1754,6 +1764,7 @@ export class BotBrain {
     for (let k = 0; k < 28; k++) {
       const id = I.far[(Math.random() * I.far.length) | 0];
       if (id === undefined) break;
+      if (!nav.valid[id]) continue;   // [b5-stagehooks]
       const n = nav.nodes[id];
       if (n.zone >= 0 || n.wet === 2 || Math.hypot(n.x - ep.x, n.z - ep.z) < 22) continue;
       const dx = n.x - c[0], dz = n.z - c[2], d = Math.hypot(dx, dz), side = (dx * e[0] + dz * e[1]) / Math.max(d, 1);
@@ -2918,6 +2929,7 @@ export class BotBrain {
     this.repath = 0.8 + Math.random() * 0.4;
     if (s < 0 || g < 0) { this.path = null; return false; }
     const rule = this._climbRule();
+    G.match?.stage?.beforePath(this);   // [b5-stagehooks] (a module's per-bot nav rule: pipe costs …)
     let p = nav.path(s, g, this.a.team, undefined, rule, null, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
     // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
     // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
@@ -2946,7 +2958,7 @@ export class BotBrain {
       if (!near.n) continue;
       const vNear = near.empty + near.enemy * 1.4;
       const wide = G.paint.regionStats(n.x, n.y, n.z, 6.5, this.inkTeam, _stats);
-      const value = vNear * 0.55 + (wide.empty + wide.enemy * 1.4) * 0.45;
+      const value = (vNear * 0.55 + (wide.empty + wide.enemy * 1.4) * 0.45) * (G.match?.stage ? G.match.stage.goalWeight(id) : 1);   // [b5-stagehooks] (fresh era ground ×2)
       const progress = 1 - Math.hypot(n.x - enemyPad.x, n.z - enemyPad.z) / total; // 0 at own base → 1 at enemy base
       let score = value * 16 - d * 0.14 + clamp(progress, 0, 0.8) * 2.5 + Math.random() * 1.5 - (n.wet ? 1.5 : 0);
       if (CHARGES[a.weapon.kind]) score += clamp(n.y, 0, 5) * 1.6; // long range: high perches see (and paint) more
@@ -3106,7 +3118,10 @@ export class BotBrain {
     let cur = nav.nodes[this.path[this.pi]];
     let hd = Math.hypot(cur.x - a.pos.x, cur.z - a.pos.z);
     // waypoint is above us and we can't get there from here (slipped off a ledge, got pushed): replan now
-    if (a.grounded && cur.y - a.pos.y > 0.9 && hd < 1.2 && !['jump', 'climb'].includes(nav.edgeType(this.path[Math.max(0, this.pi - 1)], this.path[this.pi]))) {
+    // [b5-stagehooks] a stage module's own edge type (a pipe ride): its module steers it
+    const SM = G.match?.stage;
+    if (SM && SM.edgeTypes.size && this.pi > 0) { const pe = nav.edge(this.path[this.pi - 1], this.path[this.pi]); if (pe && SM.edgeTypes.has(pe.type)) { const r = SM.botSteer(this, pe, out); if (r) return r; } }
+    if (a.grounded && cur.y - a.pos.y > 0.9 && hd < 1.2 && !['jump', 'climb'].includes(nav.edgeType(this.path[Math.max(0, this.pi - 1)], this.path[this.pi])) && !(SM && SM.edgeTypes.has(nav.edgeType(this.path[Math.max(0, this.pi - 1)], this.path[this.pi])))) {
       this.path = null; this.repath = 0; this.goalTimer = 0;
       // the replan keeps landing on the same unreachable ledge: shake loose instead of re-planning every frame
       if (this.t - (this._ledgeT ?? -9) > 2) this._ledgeN = 0;

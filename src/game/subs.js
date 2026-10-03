@@ -418,6 +418,7 @@ export class SubSystem {
       it.vel.addScaledVector(n, -vn * 1.4).multiplyScalar(0.55);
     }
     if (it.pos.y < PLAYER.waterY - 1.8) { it.state = 'dead'; return; }
+    { const SM = G.match?.stage; if (SM && SM.under(it.pos)) { SM.fizzle(it.pos, 'sub'); it.state = 'dead'; return; } }   // [b5-stagehooks] (sinks in the lava)
     it.mesh.position.copy(it.pos);
     it.mesh.rotation.x += it.spinV.x * dt; it.mesh.rotation.z += it.spinV.y * dt;
   }
@@ -1015,6 +1016,7 @@ export class SubSystem {
   }
   // enemy players can't walk (or swim) through a curtain: push them back out to the side they're on
   blockActor(a) {
+    if (G.match?.stage?.noShove(a)) return;   // [b5-stagehooks] (a pipe rider is never shoved)
     for (const it of this.items) {
       if (it.state !== 'curtain' || it.team === a.team) continue;
       const s = it.sub;
