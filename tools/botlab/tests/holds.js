@@ -267,7 +267,7 @@
       R(`${w} ${st}: the off hand on the weapon (≤ ${GRIP_TOL * 100} cm) every frame`, grip, { dMax: r.dMax, at: r.dAt, n: r.n });
       R(`${w} ${st}: a natural elbow and wrist`, elb && wr, { elbow: r.elbow, bend: r.bend, swing: r.swing, twist: r.twist });
       R(`${w} ${st}: the weapon clear of the head (≥ ${HEAD_CLR[w]} m from its centre)`, r.head >= HEAD_CLR[w], { head: r.head, at: r.headAt });
-      if (st === 'roll' && (w === 'roller' || w === 'brush')) { const q = r.square || { n: 0 }; R(`${w} roll: the ${w === 'roller' ? 'drum' : 'bristle head'} square to the path (≤ ${ROLL_SQ}°) and on the midline (± ${ROLL_LAT * 100} cm) every rolling frame`, q.n >= 30 && q.offMax <= ROLL_SQ && q.latMaxCm <= ROLL_LAT * 100, q); }
+      if (st === 'roll' && (w === 'roller' || w === 'brush')) { const q = r.square || { n: 0 }; R(`${w} roll: the ${w === 'roller' ? 'drum' : 'bristle head'} square to the path (≤ ${ROLL_SQ}°) and on the midline (± ${Math.round(ROLL_LAT * 100)} cm) every rolling frame`, q.n >= 30 && q.offMax <= ROLL_SQ && q.latMaxCm <= ROLL_LAT * 100, q); }
       if (FLOOR_STATES.has(st)) R(`${w} ${st}: the weapon not through the deck (lowest point ≥ ${-FLOOR_TOL * 100} cm)`, r.floor >= -FLOOR_TOL, { floor: r.floor, at: r.floorAt, root: r.floorRoot });
     }
     // idle fidgets: none that needs the free hand is ever picked, and each one it can pick keeps the hand on
