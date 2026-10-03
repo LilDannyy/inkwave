@@ -24,11 +24,13 @@
 // Bots: a short all-bot fight on the deck with the four weapons — every kid-form frame of a bot holding one (no sub in the
 // hand, no special; not the instant it pops in / out, shrunk to nothing) has its off hand on the weapon; and it is a real
 // fight (they move, swim, fire, splat each other).
-// PAGE_ARGS: 'only=both,others,bots' (parts) · 'w=brush,roller' (weapons) · 'record' (print the baseline JSON) · 'dump'.
+// Emotes: the lobby's four, played as the room plays them — HEY! (a wave) lets the off hand go to wave, the rest keep it on.
+// PAGE_ARGS: 'only=both,others,emotes,bots' (parts) · 'w=brush,roller' (weapons) · 'record' (print the baseline JSON) · 'dump'.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { WEAPON_ORDER } = await import('./src/config.js');
   const { GRIP_HOLE_L } = await import('./src/game/character-weapons.js');
+  const { emoteDance } = await import('./src/game/showcase.js');
   const G = window.__G;
   const ARGS = window.__pageArgs || '';
   const arg = (k) => { const r = new RegExp(`(?:^|\\s)${k}=([\\w,]+)`).exec(ARGS); return r ? r[1].split(',').filter(Boolean) : null; };
@@ -137,7 +139,7 @@
     return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, floor, rootUp: gy > -Infinity ? ap.y - gy : 9, ks, wTwo: ch.wTwo || 0 };
   };
   // per state: worst values over the sampled frames + the mean hand position
-  const stats = () => ({ flMin: 9, flAt: -1, hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
+  const stats = () => ({ rsN: 0, rsOff: 0, rsOffMax: 0, rsLat: 0, rsLatMax: 0, flMin: 9, flAt: -1, hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
   const sample = (S, t) => {
     const r = measure(kid.character);
     S.rMax = Math.max(S.rMax, r.reach); S.axMax = Math.max(S.axMax, r.axErr); S.dwSum += r.dw;
@@ -150,9 +152,23 @@
     if (r.floor < S.flMin) { S.flMin = r.floor; S.flAt = +t.toFixed(2); S.flRoot = r.rootUp; }
   };
   const fin = (S) => ({ floor: +S.flMin.toFixed(3), floorAt: S.flAt, floorRoot: +(S.flRoot ?? 9).toFixed(3), head: +S.hdMin.toFixed(3), headAt: S.hdAt, reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
-    hand: [+(S.hx / S.n).toFixed(3), +(S.hy / S.n).toFixed(3), +(S.hz / S.n).toFixed(3)], dMean: +(S.dSum / S.n).toFixed(4), dw: +(S.dwSum / S.n).toFixed(4), two: +(S.two / S.n).toFixed(3) });
+    hand: [+(S.hx / S.n).toFixed(3), +(S.hy / S.n).toFixed(3), +(S.hz / S.n).toFixed(3)], dMean: +(S.dSum / S.n).toFixed(4), dw: +(S.dwSum / S.n).toFixed(4), two: +(S.two / S.n).toFixed(3),
+    ...(S.rsN ? { square: { n: S.rsN, offMean: +(S.rsOff / S.rsN).toFixed(1), offMax: +S.rsOffMax.toFixed(1), latMeanCm: +(S.rsLat / S.rsN * 100).toFixed(1), latMaxCm: +(S.rsLatMax * 100).toFixed(1) } } : {}) });
   // run `s` seconds of sim; sample every `every` frames once `from` s have passed
-  const run = (S, s, from = 0, every = 1, each) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) { kid.ink = 100; kid.hp = 1e6; if (each) each(i / 60); frame(); if (S && i / 60 >= from && i % every === 0) sample(S, i / 60); } };
+  const run = (S, s, from = 0, every = 1, each, after) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) { kid.ink = 100; kid.hp = 1e6; if (each) each(i / 60); frame(); if (S && i / 60 >= from && i % every === 0) { sample(S, i / 60); if (after) after(S); } } };
+  // rolling (the roller's roll, the brush's dash, once the roll pose is in: wRoll ≥ 0.9): the drum / bristle head square
+  // to the travel direction (its axis, the weapon's x, off square by ≤ ROLL_SQ) and its centre (the muzzle: the drum's
+  // centre, the brush head) on the midline the paint and the roll damage are laid on (weapons.js), within ± ROLL_LAT
+  const ROLL_SQ = 5, ROLL_LAT = 0.07, _rq = new THREE.Quaternion(), _rx = V(0, 0, 0), _rm = V(0, 0, 0);
+  const rollSquare = (S) => {
+    const ch = kid.character, vl = Math.hypot(kid.vel.x, kid.vel.z);
+    if (ch.wRoll < 0.9 || vl < 0.5) return;
+    const fx = kid.vel.x / vl, fz = kid.vel.z / vl;
+    ch.weapon.off.getWorldQuaternion(_rq); _rx.set(1, 0, 0).applyQuaternion(_rq);
+    const off = Math.asin(Math.min(1, Math.abs((_rx.x * fx + _rx.z * fz) / Math.hypot(_rx.x, _rx.z)))) * DEG;
+    ch.getMuzzle(_rm); const lat = (_rm.x - kid.pos.x) * fz - (_rm.z - kid.pos.z) * fx;
+    S.rsN++; S.rsOff += off; S.rsOffMax = Math.max(S.rsOffMax, off); S.rsLat += lat; S.rsLatMax = Math.max(S.rsLatMax, Math.abs(lat));
+  };
 
   const START = V(0, 0, -6);
   const fireSeq = (w, S) => {
@@ -167,7 +183,7 @@
     roll: (w, S) => {
       put(V(0, 0, -26), 0);
       if (w === 'brolly') { kid.character.nextFidget = 99; run(null, 0.4); drive.fire = true; run(S, 1.3); drive.fire = false; run(S, 0.4); return; }   // the canopy: open, held, launched
-      drive.move.set(0, 0, 1); run(null, 0.3); drive.fire = true; run(S, 1.6);
+      drive.move.set(0, 0, 1); run(null, 0.3); drive.fire = true; run(S, 1.6, 0, 1, null, rollSquare);
     },
     jump: (w, S) => { put(START, 0); run(null, 0.6); drive.jump = true; run(S, 0.05); drive.jump = false; run(S, 1.0); },
     runjump: (w, S) => { put(V(0, 0, -26), 0); drive.move.set(0, 0, 1); run(null, 0.8); drive.jump = true; run(S, 0.05); drive.jump = false; run(S, 1.0); },
@@ -251,6 +267,7 @@
       R(`${w} ${st}: the off hand on the weapon (≤ ${GRIP_TOL * 100} cm) every frame`, grip, { dMax: r.dMax, at: r.dAt, n: r.n });
       R(`${w} ${st}: a natural elbow and wrist`, elb && wr, { elbow: r.elbow, bend: r.bend, swing: r.swing, twist: r.twist });
       R(`${w} ${st}: the weapon clear of the head (≥ ${HEAD_CLR[w]} m from its centre)`, r.head >= HEAD_CLR[w], { head: r.head, at: r.headAt });
+      if (st === 'roll' && (w === 'roller' || w === 'brush')) { const q = r.square || { n: 0 }; R(`${w} roll: the ${w === 'roller' ? 'drum' : 'bristle head'} square to the path (≤ ${ROLL_SQ}°) and on the midline (± ${ROLL_LAT * 100} cm) every rolling frame`, q.n >= 30 && q.offMax <= ROLL_SQ && q.latMaxCm <= ROLL_LAT * 100, q); }
       if (FLOOR_STATES.has(st)) R(`${w} ${st}: the weapon not through the deck (lowest point ≥ ${-FLOOR_TOL * 100} cm)`, r.floor >= -FLOOR_TOL, { floor: r.floor, at: r.floorAt, root: r.floorRoot });
     }
     // idle fidgets: none that needs the free hand is ever picked, and each one it can pick keeps the hand on
@@ -268,6 +285,37 @@
       R(`${w}: idle fidgets keep the off hand on (and the weapon off the head and the deck)`, r.dMax <= GRIP_TOL && r.elbow[0] >= ELB_MIN && r.swing <= WR_SWING && r.twist <= WR_TWIST && r.head >= HEAD_CLR[w] && r.floor >= -FLOOR_TOL, r);
       res.fidgets = r;
     }
+  }
+
+  // ---- the lobby emotes (played as the room line-up plays them: showcase emoteDance, from the lobby pose): HEY! (a wave)
+  // lets the off hand go to wave — off the weapon and up above the shoulder once the dance has blended in — and takes
+  // the weapon back after; BOOYAH! / the dance / the flex keep it on (the podium's victory C, the same hops without the
+  // emote, keeps it on too: victory2 above)
+  if (part('emotes')) for (const w of both) {
+    reset(); kid.setWeapon(w); if (TUNE && TUNE[w]) Object.assign(kid.character.hold, TUNE[w]);
+    put(START, 0); kid.character.nextFidget = 99; run(null, 0.5);
+    const ch = kid.character, _sh = V(0, 0, 0), _hl = V(0, 0, 0);
+    for (const name of ['booyah', 'wave', 'dance', 'flex']) {
+      ch.setDance('lobby_pose'); run(null, 1.2);
+      const E = emoteDance(ch, name); if (E.trig) ch.trigger(E.trig);
+      const S = stats(); let n = 0, off = 0, nw = 0, up = 0;
+      run(S, E.dur, 0, 2, null, () => {
+        if (ch.danceT < 0.5) return;   // (blending in)
+        const r = measure(ch); n++;
+        if (r.dist > 0.08) off++;
+        // the wave beats (victory C's hops, beats 0–6 of 8; the closing V jump crouches): the hand up over the shoulder
+        if (((ch.danceT + ch.danceOfs) * 2.5) % 8 >= 6) return;
+        ch.bones.uArmL.getWorldPosition(_sh); ch.bones.handL.getWorldPosition(_hl); nw++;
+        if ((_hl.y - _sh.y) / r.ks > 0.05) up++;
+      });
+      ch.setDance('lobby_pose');   // (the emote over: as showcase ends it)
+      const S2 = stats(); run(S2, 1.2, 0.6, 2);
+      const a = fin(S), b = fin(S2), wave = !!E.wave;
+      const info = { n, off, waveBeats: nw, up, dMax: a.dMax, elbow: a.elbow, head: a.head, headAt: a.headAt, after: b.dMax };
+      if (wave) R(`${w} HEY! emote: the off hand lets go and waves (off the weapon every frame, up over the shoulder on ≥ 90 % of the wave beats), then takes it back`, n > 20 && off === n && nw > 10 && up >= 0.9 * nw && a.head >= HEAD_CLR[w] && b.dMax <= GRIP_TOL, info);
+      else R(`${w} ${name} emote: the off hand stays on the weapon every frame`, a.dMax <= GRIP_TOL && a.elbow[0] >= ELB_MIN && a.elbow[1] <= ELB_MAX && a.swing <= WR_SWING && a.twist <= WR_TWIST && a.head >= HEAD_CLR[w] && b.dMax <= GRIP_TOL, { ...info, swing: a.swing, twist: a.twist });
+    }
+    ch.setDance(null); run(null, 0.6);
   }
 
   // ---- bots: a short all-bot fight with the four weapons, every eligible frame on the weapon

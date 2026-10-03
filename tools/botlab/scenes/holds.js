@@ -28,19 +28,30 @@
   for (const a of m.actors) { if (!a.alive) a.respawn?.(); a.hp = 1e6; a.invuln = 0; }
   const hideHud = () => { g.hud?.setVisible(false); document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; }); };
   const put = (p, yaw = 0) => { kid.pos.copy(p); kid.pos.y += 0.02; kid.vel.set(0, 0, 0); kid.yaw = kid.aimYaw = yaw; kid.aimPitch = 0; };
-  // the camera: a view round the kid (kid space: +z ahead of the kid, +x its left), looking at its chest
-  const VIEWS = { front: [0, 0.95, 3.4], left: [3.4, 0.95, 0.2], back: [0, 1.05, -3.4], right: [-3.4, 0.95, 0.2], high: [2, 2.6, 2.4] };
-  // close-ups of the off hand: 'hand' from ahead and to its left, 'handb' from its side (the wrist), 'handd' from below
+  // the camera: a view round the kid (kid space: +z ahead of the kid, +x its left), looking at its chest. fq: the front
+  // three-quarter from the off-hand side (past the shots' spray); frontw / top: pulled back / from above, low, so a roll's
+  // drum ahead of the feet is in frame (the cells are cropped to the middle of the frame)
+  const VIEWS = { front: [0, 0.95, 3.4], fq: [2.0, 1.05, 2.9], left: [3.4, 0.95, 0.2], back: [0, 1.05, -3.4], right: [-3.4, 0.95, 0.2], high: [2, 2.6, 2.4],
+    frontw: [0, 1.15, 4.4], top: [0, 3.6, 0.9] };
+  const LOOK_Y = { frontw: 0.5, top: 0.3 }, LOOK_Z = { top: 0.35, frontw: 0.25 };
+  // close-ups of the off hand: 'hand' from ahead and to its left, 'handb' from its side (the wrist), 'handd' from below —
+  // turned with the chest (a dance may turn the body away from the actor's yaw) and pushed out until clear of the body
   const NEAR = { hand: [0.3, 0.1, 0.4], handb: [0.45, 0.12, -0.12], handd: [0.12, -0.42, 0.22] };
+  const _cq = new THREE.Quaternion(), _cf = V(0, 0, 0), _cc = V(0, 0, 0), _ch = V(0, 0, 0);
   const camAt = (view) => {
-    const c = kid.character.root, p = c.position, y = kid.yaw;
+    const c = kid.character.root, p = c.position;
+    let y = kid.yaw;
+    if (NEAR[view]) { kid.character.bones.chest.getWorldQuaternion(_cq); _cf.set(0, 0, 1).applyQuaternion(_cq); y = Math.atan2(_cf.x, _cf.z); }
     const cs = Math.cos(y), sn = Math.sin(y);
     if (NEAR[view]) {
       const v = NEAR[view], look = new THREE.Vector3(); kid.character.bones.handL.getWorldPosition(look);
-      return { from: V(look.x + v[0] * cs + v[2] * sn, look.y + v[1], look.z - v[0] * sn + v[2] * cs), look };
+      const off = V(v[0] * cs + v[2] * sn, v[1], -v[0] * sn + v[2] * cs), from = look.clone().add(off);
+      kid.character.bones.chest.getWorldPosition(_cc); kid.character.bones.head.getWorldPosition(_ch); _ch.y += 0.16;
+      for (let i = 0; i < 12 && (from.distanceTo(_cc) < 0.3 || from.distanceTo(_ch) < 0.24); i++) from.addScaledVector(off, 0.15);
+      return { from, look };
     }
-    const v = VIEWS[view];
-    const from = V(p.x + v[0] * cs + v[2] * sn, p.y + v[1], p.z - v[0] * sn + v[2] * cs), look = V(p.x, p.y + 0.74, p.z);
+    const v = VIEWS[view], lz = LOOK_Z[view] || 0;
+    const from = V(p.x + v[0] * cs + v[2] * sn, p.y + v[1], p.z - v[0] * sn + v[2] * cs), look = V(p.x + lz * sn, p.y + (LOOK_Y[view] ?? 0.74), p.z + lz * cs);
     return { from, look };
   };
   const hold = (view) => { const { from, look } = camAt(view); g.settings.fov = 38; g.rig.cinematic(from, from, look, look, 99, () => {}); };
