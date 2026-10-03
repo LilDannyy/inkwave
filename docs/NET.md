@@ -228,6 +228,20 @@ carries the helpers' net ids as `as: "3,5"` (a string: the event packer drops ar
 credits them on every other screen. The host's final count (`{k:'res'}` `st` rows) carries each player's assists as a
 seventh field, so every results screen shows the host's numbers.
 
+**Super jumps and the Ink Jet / Zipline return marks (src/game/jumpMarks.js, src/ui/hud-jumps.js).** A super jump
+is its owner's: the actor tick only says charge or flight (`F.sjCharge` / `F.sjFlight`), and the forwarded
+`'superjump'` events carry the rest — the charge event its `target` (a teammate → `{n: nid}`, or a point: a beacon,
+the base), `home` (an Ink Jet / Zipline jump back) and `instant`; the flight event its `from` / `to` / `dur` (the owner's
+landing spot and flight time). `sjNetEvent` / `sjNetFill` (netmatch.js `_playEvent` / `applyRemote`) put those on the
+remote player's `superJumpState` with its own clock (`t`, reset as the flags change phase), so every screen reads the
+same jump: the "NAME is jumping to you!" alert on the target's own screen (a guest jumping to the host alerts the host),
+the named landing tags and their countdown, the travel lines on both maps, the world reticle, and a jump to a remote
+player who is itself mid-flight (`jumpAnchor`). An Ink Jet / Zipline user's take-off point is its ghost special's
+`origin` (the ghost starts on the special's start record, on the same timeline as the positions, so it is where the
+owner took off), and its countdown is the ghost's own clock: each screen's tags count down to the touchdown *it* will
+show. A jump onto such a user lands at that point on the jumper's screen (`jumpAnchor`; the jumper owns its jump).
+Nothing new on the wire beyond those event fields. Tested by `tools/botlab/tests/net-jump-ui.cjs` (`CLIENTS=2`).
+
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
 step with the paint that caused them. Guests follow (zones.js `netEvent`): they only predict the count between
