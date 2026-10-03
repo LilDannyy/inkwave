@@ -562,6 +562,7 @@ export class SpecialSense {
     this.recs.clear(); this.known.length = 0; this.scanT = Math.random() * 0.2; this._rays = 0; this.gone = [];
     this.esc = null; this.replanT = 0; this.prevTgt = null; this.held = null; this.heldT = 0; this.knockOn = null;
     this.pop = null; this.popT = 0; this.popTgt = null; this.guardT = 0;
+    this._dev = null; this._devSkip = null; this._devT = 0;   // [b5-deploy] the enemy device it was shooting (deployables-bots.js)
   }
   on() { const S = SPECIAL_AI; return S.enabled && (!S.teams || !!S.teams[this.a.team]) && !G.boss && !!G.nav; }
   dead() { this.esc = null; this.pop = null; }

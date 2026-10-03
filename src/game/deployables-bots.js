@@ -21,7 +21,9 @@ export function resetDevBot() { for (const k in DEV_BOT) DEV_BOT[k] = 0; }
 const PREFER = { beacon: 0.8, surf: 0.85, sprinkler: 1 };   // (its distance × this: the pick)
 const MELEE = { roller: true, brush: true };   // (bots.js MELEE; kit melee weapons say so themselves: bot.melee)
 const _list = [];
-const live = (d) => (d.kind === 'surf' ? !d.obj.dead && d.obj.phase === 'live' : d.obj.state === (d.kind === 'sprinkler' ? 'spray' : 'beacon'));
+// (still standing and still in the world: a clear() — a new match, a test's next scene — drops them without a death)
+const live = (d) => (d.kind === 'surf' ? !d.obj.dead && d.obj.phase === 'live' && !!G.specials?.world.includes(d.obj)
+  : d.obj.state === (d.kind === 'sprinkler' ? 'spray' : 'beacon') && !!G.subs?.items.includes(d.obj));
 
 const DEV_GIVEUP = 8, DEV_FORGET = 12;   // s on one device before giving up on it; s it's left alone after
 const NOTICE = 10;                        // m: an enemy device in sight this near is noticed whatever the weapon's reach

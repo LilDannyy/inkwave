@@ -341,7 +341,7 @@
         const fh = hits.filter((h) => h.vic === foe && (h.wid === kind));
         const cue = cues.find((c) => c.name === { seeker: 'seeker_prime', waddle: 'waddle_prime', mine: 'mine_trip' }[kind]);
         if (opt.bot) { stub(foe); foe.bot.setDifficulty(diff0); }
-        return { armed: armT != null, wait: armT != null && boom ? r3(boom.t - armT) : null, firstHitAfterBoom: fh.length ? r3(fh[0].t - (boom ? boom.t : 0)) : null, dmg: r2(fh.reduce((a, h) => a + h.dmg, 0)),
+        return { popped: armT == null && obj.state === 'dead' && !boom, armed: armT != null, wait: armT != null && boom ? r3(boom.t - armT) : null, firstHitAfterBoom: fh.length ? r3(fh[0].t - (boom ? boom.t : 0)) : null, dmg: r2(fh.reduce((a, h) => a + h.dmg, 0)),
           tell: { swell: r2(tell.sc), lamp: r2(tell.lamp), ringFrames: rings.length, ringR: rings[0] ? rings[0].r : null, beeps: beeps.length }, cue: cue ? r3(cue.t - (armT ?? 0)) : null, danger, esc, d0: d0 != null ? r2(d0) : null, dEsc: dEsc != null ? r2(dEsc) : null, dMin: dMin != null ? r2(dMin) : null, dEnd: dEnd != null ? r2(dEnd) : null, frames: n };
       };
       for (const kind of ['seeker', 'waddle', 'mine']) {
@@ -357,7 +357,7 @@
       const bot = {};
       for (const kind of ['seeker', 'waddle', 'mine']) {
         const rounds = []; for (let r = 0; r < 3; r++) rounds.push(scene(kind, 'stay', { bot: true, at: true }));
-        bot[kind] = rounds.map((x) => ({ esc: x.esc, d0: x.d0, dEsc: x.dEsc, dMin: x.dMin, dEnd: x.dEnd, dmg: x.dmg }));
+        bot[kind] = rounds.map((x) => ({ popped: x.popped, esc: x.esc, d0: x.d0, dEsc: x.dEsc, dMin: x.dMin, dEnd: x.dEnd, dmg: x.dmg }));
       }
       SA.enabled = ai0;
       // (what's ours to make sure of: the windup is a danger it reads — it notices after its reaction time and heads out;
@@ -365,9 +365,11 @@
       // the bot started inside the blast; it's a good one when the bot ends outside it, or ran its escape for this bomb
       // and was heading out at the blast — further off than the nearest it got after it set out (a kid walking in when it
       // tripped carries on a step before it turns: the decision is ours, the momentum isn't)
-      const good = (k, x) => x.dEnd > SUBS[k].radius || (x.esc && x.esc.hit === k && x.dEnd - x.dMin > 0.15);
-      const okBot = Object.entries(bot).every(([k, rs]) => { const c = rs.filter((x) => x.d0 < SUBS[k].radius); return c.length >= 2 && c.filter((x) => good(k, x)).length >= Math.ceil(c.length * 2 / 3); });
-      R('a hard bot (its specials awareness on) caught in a windup\'s blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb', okBot, bot);
+      // ([b5-deploy] a bomb the bot shot down before it could wind up — a Skitter Bomb can be shot now, src/game/deployables.js
+      // — was dealt with: a round in it, and a good one)
+      const good = (k, x) => x.popped || x.dEnd > SUBS[k].radius || (x.esc && x.esc.hit === k && x.dEnd - x.dMin > 0.15);
+      const okBot = Object.entries(bot).every(([k, rs]) => { const c = rs.filter((x) => x.popped || x.d0 < SUBS[k].radius); return c.length >= 2 && c.filter((x) => good(k, x)).length >= Math.ceil(c.length * 2 / 3); });
+      R('a hard bot (its specials awareness on) caught in a windup\'s blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it (or shot it down before it wound up) — in 2 of 3 rounds for each bomb', okBot, bot);
     }
   } catch (e) {
     R('harness error', false, String(e && e.stack || e).slice(0, 600));
