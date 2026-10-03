@@ -91,7 +91,7 @@ module.exports = async ({ clients, R, wait, say, args, open, out }) => {
     const aHeard = await A.until(`__G.match.actors.find((x) => x.nid === ${ids.b}).status.shield > 0`, 4000, 30).then(() => true, () => false);
     const onA1 = await sh(A);
     R('chain: A\'s Bubble Guard → B by touch on B\'s screen (B\'s copy: the time left on A\'s, not a fresh 6.5 s), and A\'s screen hears it (B\'s record) — the same chain on both',
-      bGot && aHeard && onB1.B.t > 3 && onB1.B.t < 6.1 && Math.abs(onB1.B.t - onB1.A.t) < 0.25 && onA1.B.t > 3 && Math.abs(onA1.B.t - onA1.A.t) < 0.5 && onA1.same.AB && onB1.same.AB,
+      bGot && aHeard && onB1.B.t > 3 && onB1.B.t < 6.1 && Math.abs(onB1.B.t - onB1.A.t) < 0.25 && onA1.B.t > 3 && Math.abs(onA1.B.t - onA1.A.t) < 0.15 && onA1.same.AB && onB1.same.AB,
       { onB: { A: onB1.A, B: onB1.B, same: onB1.same }, onA: { A: onA1.A, B: onA1.B, same: onA1.same } });
     // A splatted: B's copy stays, on both screens
     await splatA();
@@ -112,7 +112,7 @@ module.exports = async ({ clients, R, wait, say, args, open, out }) => {
       say('shot', JSON.stringify(f));
     }
     R('chain: B → C by touch with A gone (the host\'s screen decides: C is its bot) — C\'s copy the time left on B\'s; B\'s screen hears it; one chain on both screens',
-      cGot && bHeard && onA3.C.t > 1.5 && Math.abs(onA3.C.t - onA3.B.t) < 0.2 && Math.abs(onB3.C.t - onB3.B.t) < 0.5 && onA3.same.BC && onB3.same.BC && onA3.C.chain === ids.a && onB3.C.chain === ids.a,
+      cGot && bHeard && onA3.C.t > 1.5 && Math.abs(onA3.C.t - onA3.B.t) < 0.15 && Math.abs(onB3.C.t - onB3.B.t) < 0.15 && onA3.same.BC && onB3.same.BC && onA3.C.chain === ids.a && onB3.C.chain === ids.a,
       { onA: { B: onA3.B, C: onA3.C, same: onA3.same }, onB: { B: onB3.B, C: onB3.C, same: onB3.same } });
     // together till the end: no more shares; both run out together on each screen
     const ends = (c) => c.js(`(() => { const E = window.__ends = {}; const f = (n) => __G.match.actors.find((x) => x.nid === n); const t0 = performance.now();
@@ -124,8 +124,8 @@ module.exports = async ({ clients, R, wait, say, args, open, out }) => {
     for (const c of [A, B]) await c.js(`clearInterval(window.__endI); 1`);
     const s1 = { A: (await sh(A)).stats, B: (await sh(B)).stats };
     const d = (k, s) => s1[k][s] - s0[k][s];
-    R('chain: B and C run out together on each screen (no refresh loop: the host gave one copy, the guest one, each heard the other\'s once)',
-      eA.B != null && eA.C != null && Math.abs(eA.B - eA.C) < 0.25 && eB.B != null && eB.C != null && Math.abs(eB.B - eB.C) < 0.25 && d('A', 'shares') === 1 && d('A', 'net') === 1 && d('B', 'shares') === 1 && d('B', 'net') === 1,
+    R('chain: B and C run out together on each screen (within 0.15 s: a copy heard from a record runs to the chain\'s end there, not a hop of latency later; no refresh loop: the host gave one copy, the guest one, each heard the other\'s once)',
+      eA.B != null && eA.C != null && Math.abs(eA.B - eA.C) < 0.15 && eB.B != null && eB.C != null && Math.abs(eB.B - eB.C) < 0.15 && d('A', 'shares') === 1 && d('A', 'net') === 1 && d('B', 'shares') === 1 && d('B', 'net') === 1,
       { endsA: eA, endsB: eB, host: { shares: d('A', 'shares'), heard: d('A', 'net') }, guest: { shares: d('B', 'shares'), heard: d('B', 'net') } });
     await respawnA();
   }

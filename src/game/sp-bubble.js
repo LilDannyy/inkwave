@@ -18,7 +18,12 @@
 // copies only to the players it owns, from its view of everyone's synced positions, and records it on the receiver:
 // ['k', receiverNid, 'sp', [5, giverNid, time left, chain owner nid]] → every other screen gives that player the same
 // copy (SpecialSystem.netGhost case 5 → shieldNet). The user's own field still comes from their special's start record
-// (IMPL.bubbler.start runs on every screen).
+// (IMPL.bubbler.start runs on every screen). Every screen's copy of a chain knows when it ends THERE (c.end: when that
+// screen's copy of the user's field runs out — a ghost's started when its start record arrived), and a copy heard from
+// a record runs to that end, not to the time in the record: the record's number is already a little late on arrival
+// (each hop adds the playback delay), so going by it alone, a copy passed on again from another screen would outlast
+// the field it came from there by a hop or two of latency (the two-client test saw 0.4 s). Time in the record: only
+// for a chain this screen hasn't seen.
 //
 // On screen: the hint line while you carry one you can pass on and a teammate could take it (chainPrompt: "Bubble Guard
 // 4s — touch a teammate to pass it on"; the user's own: "… touch teammates to share it"), besides the bubble itself.
@@ -34,9 +39,10 @@ export const CHAIN_STATS = { shares: 0, chained: 0, net: 0, botSteps: 0 };   // 
 const r2 = (x) => Math.round(x * 100) / 100;
 const NETC = new Map();   // chain owner nid → a stand-in chain for copies whose giver this screen can't place
 
-// the field a now carries belongs to chain c (owner: the user's own Bubble Guard — a new chain); a takes it once
+// the field a now carries belongs to chain c (owner: the user's own Bubble Guard — a new chain, ending with a's field
+// as given: giveShield set a.status.shield just before); a takes it once
 export function joinChain(a, c, owner) {
-  if (!c && owner) c = { by: a, nid: a.nid ?? -1, t: G.time };
+  if (!c && owner) c = { by: a, nid: a.nid ?? -1, t: G.time, end: G.time + (a.status.shield || 0) };
   a._shieldChain = c || null;
   if (c) (a._bgHad || (a._bgHad = new WeakSet())).add(c);
 }
@@ -69,12 +75,17 @@ export function shieldNet(sys, a, d) {
   const from = G.actors.find((e) => e.nid === d[1]) || null;
   // (the giver's chain as this screen knows it; else one keyed by its owner's nid — only a screen that later owns this
   // player would ever ask it again)
+  // (the chain's own user's current one, if it's that one's and still running here)
   let c = from && from._shieldChain && from._shieldChain.nid === d[3] ? from._shieldChain : null;
-  if (!c) { c = NETC.get(d[3]); if (!c || c.t < G.time - 2 * SPECIALS.bubbler.duration) NETC.set(d[3], (c = { by: null, nid: d[3], t: G.time })); }
-  a.status.shield = 0;   // (its owner's word: this copy, this time — not the max with whatever this screen guessed)
-  sys.giveShield(a, d[2], false, c);
+  if (!c) { const o = G.actors.find((e) => e.nid === d[3]), oc = o && o._shieldChain; if (oc && oc.by === o && oc.end > G.time) c = oc; }
+  if (!c) { c = NETC.get(d[3]); if (!c || c.t < G.time - 2 * SPECIALS.bubbler.duration) NETC.set(d[3], (c = { by: null, nid: d[3], t: G.time, end: G.time + d[2] })); }
+  // (to the chain's end here — see the header; the record's time only where that's unknown)
+  const left = c.end != null ? Math.min(d[2] + 0.5, c.end - G.time) : d[2];
+  if (!(left > 0.05)) return;
+  a.status.shield = 0;   // (its owner's word: this copy — not the max with whatever this screen guessed)
+  sys.giveShield(a, left, false, c);
   CHAIN_STATS.net++;
-  emit('special:share', { from, to: a, time: d[2], chained: !!(from && !from._shieldOwner), remote: true });
+  emit('special:share', { from, to: a, time: left, chained: !!(from && !from._shieldOwner), remote: true });
 }
 
 // the hint line while you carry a field you can pass on and a teammate could take it (main.js for a copy; the user's
