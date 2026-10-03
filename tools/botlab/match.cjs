@@ -11,6 +11,7 @@
 //   an array as 'bow.burstPaint=1/1.2').
 //   SPECIAL_AI=0 turns the bots' awareness of enemy specials off (src/game/botSpecials.js; an A/B on the same code),
 //   team0 / team1: on for that team only (head to head); unset: as shipped.
+//   DEV_AI=0: bots leave enemy devices alone ([b5-deploy] src/game/deployables-bots.js; an A/B on the same code).
 //   SPCHARGE=3: the special gauge fills 3× as fast (PLAYER.specialChargeRate; this run only) — more specials per match.
 //   DIAG=1: every stuck episode also records the bot's nav plan, snapshotted at its start and every 5 s after: mode,
 //   route length, pi, the next two route nodes, the edge into the next one (nav.edge: 'none' when there's no such
@@ -64,6 +65,8 @@ app.on('browser-window-created', (_, win) => {
       if (v === '0') S.enabled = false; else if (v === 'team0') S.teams = [true, false]; else if (v === 'team1') S.teams = [false, true];
       M.resetSpecialStats(); return S.enabled ? (S.teams ? 'team' + S.teams.indexOf(true) : 'on') : 'off'; } catch (e) { return 'n/a'; } })()`);
     if (SPCHARGE !== 1) await js(`(async () => { const C = await import('./src/config.js'); C.PLAYER.specialChargeRate *= ${SPCHARGE}; return 0; })()`);
+    // [b5-deploy] the device counters from this match on (the menus' backdrop match ran before it); DEV_AI=0: bots leave enemy devices alone (an A/B)
+    await js(`(async () => { try { (await import('./src/game/deployables.js')).resetDeployStats(); const B = await import('./src/game/deployables-bots.js'); B.resetDevBot(); if (${JSON.stringify(process.env.DEV_AI || '')} === '0') B.DEV_AI.enabled = false; } catch (e) { /* an older checkout */ } return 0; })()`);
     await js(`(async () => { try { (await import('./src/game/sp-surf.js')).resetSurfStats(); (await import('./src/game/sp-surf-bots.js')).resetSurfBot(); const A = (await import('./src/game/assists.js')).ASSIST_STATS; for (const k in A) A[k] = 0; } catch (e) { /* an older checkout */ } return 0; })()`);
     const t0 = Date.now();
     const r = await js(`(async () => {
@@ -364,8 +367,9 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
       console.log(`         died while ${JSON.stringify(t.deathState)} | by ${JSON.stringify(t.deathBy)} | ${t.deathClean} deaths without touching the killer | nearest enemy <4.5/<8/<14/far m: ${t.reach.join('/')}% | fighting ${t.fightS}s of ${t.aliveS}s alive | fired ${t.fired}${t.leaps ? ` | leaps ${t.leaps} ${JSON.stringify(t.leapKind)}, hit on landing ${t.leapHits}, landing kills ${t.leapKills}, clings ${t.clings}` : ''}`); }
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
     // [b5-deploy] devices: shot at / down, crushed, riding moving floors; the bots' picks
-    const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT } }; } catch (e) { return null; } })()`);
-    if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter pops ${dep.seekerPops} | bots' picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}; gave up ${dep.bot.gaveUp})`);
+    const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT, on: B.DEV_AI.enabled, n: window.__inkwave.match.actors.filter((a) => a.bot).length } }; } catch (e) { return null; } })()`);
+    if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter thrown ${dep.seekerThrows} popped ${dep.seekerPops}`
+      + ` | bots (device AI ${dep.bot.on ? 'on' : 'off'}): device mode ${(dep.bot.secs / Math.max(1, dep.bot.n)).toFixed(1)} s/bot (walking ${(dep.bot.walkSecs / Math.max(1, dep.bot.n)).toFixed(1)}) | picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}) re-picks ${dep.bot.repicks} gave up ${dep.bot.gaveUp}`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     r.map = MAP; r.mode = MODE; r.loadouts = equip; r.tune = tuned; r.consoleLines = uniq.length; r.specialAI = spAI; r.spCharge = SPCHARGE;

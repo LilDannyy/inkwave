@@ -1,7 +1,7 @@
 // Deployables online (batch 5, [b5-deploy]: src/game/deployables.js), with real clients on the local relay (netpage.cjs):
 // the host (A) and the guest (B) on different teams.
 //   CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-deploy.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
-//   NET_ARGS: 'map=<id>' (default saltpan); 'scene=tower': Tower Command (below)
+//   NET_ARGS: 'map=<id>' (default saltpan); 'scene=tower': Tower Command (below); 'scene=leave': the host leaves (below)
 // scene shoot (Practice): A plants a Hop Beacon and throws a Twirl Sprinkler; B shoots each down on its own screen (real
 //   rounds from B's kid): every hit goes to A (the owner's copy: its hp falls by each), B's hit marker on each, and at
 //   0 A's copy breaks ('device:down' shot) and its end record [2, gid, 1] pops B's ghost with the pop look — both
@@ -11,7 +11,12 @@
 //   same spot of the deck; the tower crushes the three in its way — each judged by its owner's screen (A's two on A's,
 //   B's on B's, against that screen's tower) and the crunch shows on both. Then B comes up onto the deck: A's mine (its
 //   owner judges) trips on B there and blows there, hurting B (on B's screen), on both screens at the same spot.
-module.exports = async ({ clients, R, wait, say, args, open }) => {
+// scene=leave (Turf War): A (the host) plants a Hop Beacon and throws a Twirl Sprinkler, B sees them; then A leaves (its
+//   window closed): B becomes the host and carries on A's squidkids — A's devices on B's screen become B's own (no longer
+//   ghosts: they can still be shot down and crushed), and B shooting the beacon takes its hp on B's screen and shoots it
+//   down there ('device:down' shot). [b5-deploy] fix round 1: before, they stayed ghosts whose hits went to the player
+//   who had gone.
+module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   // its hooks ride the local kids' brains (window.__depHook in the bots' update): the clients must be ?autopilot ones
   for (const c of clients.slice(0, 2)) {
     if (/[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
@@ -20,10 +25,10 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   }
   const [A, B] = clients;
   const opt = Object.fromEntries((args || '').split(/[;&]/).filter(Boolean).map((kv) => kv.split('=')));
-  const MAP = opt.map || 'saltpan', TOWER_SCENE = opt.scene === 'tower';
+  const MAP = opt.map || 'saltpan', TOWER_SCENE = opt.scene === 'tower', LEAVE_SCENE = opt.scene === 'leave';
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   const code = await A.js(`__G.net.create('Hosty')`);
-  await A.js(`__G.net.setSettings({ mode: ${JSON.stringify(TOWER_SCENE ? 'tower' : 'practice')}, map: ${JSON.stringify(MAP)}, time: 'day', botCount: 2, difficulty: 'easy' }); 1`);
+  await A.js(`__G.net.setSettings({ mode: ${JSON.stringify(TOWER_SCENE ? 'tower' : LEAVE_SCENE ? 'turf' : 'practice')}, map: ${JSON.stringify(MAP)}, time: 'day', botCount: 2, difficulty: 'easy' }); 1`);
   await B.js(`__G.net.join(${JSON.stringify(code)}, 'Guesty').then(() => 1)`);
   await A.until(`__G.net.lobby.players.length === 2`, 15000);
   const teams = await J(A, `__G.net.lobby.players.map((p) => p.team)`);
@@ -79,6 +84,7 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const seen = await B.until(`(() => { const a = __dep.byGid(${gBea}), b = __dep.byGid(${gSpr}); return !!(a && a.ghost && a.state === 'beacon' && b && b.ghost && b.state === 'spray'); })()`, 6000, 50).then(() => true, () => false);
   const hp0 = await J(A, `[__dep.byGid(${gBea}).hp, __dep.byGid(${gSpr}).hp]`);
   R(`B sees A's beacon and sprinkler (ghosts from A's records); A's copies at full hp (${hp0.join(' / ')})`, seen && hp0[0] === 120 && hp0[1] === 100, { seen, hp0 });
+  if (LEAVE_SCENE) { await leaveScene(); return; }
   // B shoots each down: one straight round (36) every 0.3 s from its kid's eye at the device's middle, until it's gone
   // on B's screen (its ghost ends on A's word) — each round a real one of B's (recorded: A sees it fly)
   const shootDown = async (gid) => {
@@ -110,6 +116,37 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const errs = [...A.log, ...B.log].filter((l) => !/lightmap|WebGL|GPU/i.test(l));
   R('no console errors on either screen', !errs.length, errs.slice(0, 5));
   return;
+
+  // ============================================================================================ scene=leave
+  async function leaveScene() {
+    const ghostsB = await J(B, `[__dep.byGid(${gBea})?.ghost ?? null, __dep.byGid(${gSpr})?.ghost ?? null]`);
+    const idA = await A.js('__G.net.myId');
+    close(0);
+    await B.until(`__G.net.isHost`, 30000, 250);
+    await B.until(`!__G.match.actors.some((a) => a.owner === ${JSON.stringify(idA)})`, 10000, 250).catch(() => null);
+    await wait(1200);
+    // (the squidkids B carries on now get brains: stub them as setup did, so nobody else shoots the beacon)
+    await B.js(`(() => { for (const a of __G.match.actors) if (!a.remote && a.bot) a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; window.__depHook?.(a, it); }; return 1; })()`);
+    const after = await J(B, `(() => { const b = __dep.byGid(${gBea}), s = __dep.byGid(${gSpr}); return { host: __G.net.isHost, beacon: b ? { ghost: !!b.ghost, state: b.state, hp: b.hp, ownerRemote: !!b.owner.remote } : null, sprinkler: s ? { ghost: !!s.ghost, state: s.state, ownerRemote: !!s.owner.remote } : null }; })()`);
+    R(`A (the host) leaves: B is the host now, carrying on A's squidkids, and A's beacon and sprinkler on B's screen are B's own now (ghosts before: ${ghostsB.join(' / ')})`,
+      ghostsB[0] === true && ghostsB[1] === true && after.host && after.beacon && !after.beacon.ghost && !after.beacon.ownerRemote && after.sprinkler && !after.sprinkler.ghost, after);
+    // B shoots the beacon: its hp falls on B's screen (the owner's, now), and it's shot down there
+    await B.js(`__dep.ev.length = 0; 1`);
+    const hps = [];
+    let n = 0;
+    for (; n < 8; n++) {
+      const live = await J(B, `(() => { const d = __dep.byGid(${gBea}); return !!(d && d.state !== 'dead'); })()`);
+      if (!live) break;
+      await B.js(`(() => { const me = __G.match.local, d = __dep.byGid(${gBea}), m = __dep.mid(d), T = __dep.THREE; const from = new T.Vector3(m.x + 4, m.y, m.z); __G.projectiles.fireCustom(me, from, new T.Vector3(-1, 0, 0), { type: 'shot', speed: 40, damage: 36, range: 8, straight: 1, grav: 0, drag: 0, weaponId: 'shooter' }); return 1; })()`);
+      await wait(300);
+      hps.push(await J(B, `(() => { const d = __dep.byGid(${gBea}); return d && d.state !== 'dead' ? Math.round(d.hp) : 0; })()`));
+    }
+    const evB = await J(B, `__dep.ev`);
+    R(`…B shoots A's beacon on its own screen: its hp falls there (${hps.join(' → ')}) and it's shot down there in ${n} rounds ('device:down' shot)`,
+      n === 4 && hps.slice(0, 3).join() === '84,48,12' && hps[3] === 0 && evB.some((e) => e.n === 'device:down' && e.how === 'shot' && e.kind === 'beacon'), { n, hps, down: evB.filter((e) => e.n === 'device:down') });
+    const errs = B.log.filter((l) => !/lightmap|WebGL|GPU/i.test(l));
+    R('no console errors on B', !errs.length, errs.slice(0, 5));
+  }
 
   // ============================================================================================ scene=tower
   async function towerScene() {

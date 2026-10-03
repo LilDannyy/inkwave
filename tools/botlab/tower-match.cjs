@@ -59,7 +59,8 @@ app.on('browser-window-created', (_, win) => {
     if (process.env.SUBS) console.log('   subs ' + await js(`(() => { const A = window.__inkwave.match.actors, spec = ${JSON.stringify(process.env.SUBS)};
       const S = spec.startsWith('all=') ? A.map(() => spec.slice(4)) : spec.includes('team') ? (() => { const t = {}; for (const p of spec.split(';')) { const [k, v] = p.split('='); t[+k.replace('team', '')] = v; } return A.map((a) => t[a.team] || null); })() : A.map((a, i) => spec.split(',')[i] || null);
       A.forEach((a, i) => { if (S[i]) a.setSub(S[i]); }); return A.map((a) => 'AB'[a.team] + ':' + (a.subId || '-')).join(' '); })()`));
-    if (process.env.DEV_AI === '0') await js(`(async () => { try { (await import('./src/game/deployables-bots.js')).DEV_AI.enabled = false; } catch (e) { /* */ } return 0; })()`);   // [b5-deploy] bots leave enemy devices alone (A/B)
+    // [b5-deploy] the device counters from this match on (the menus' backdrop match ran before it); DEV_AI=0: bots leave enemy devices alone (A/B)
+    await js(`(async () => { try { (await import('./src/game/deployables.js')).resetDeployStats(); const B = await import('./src/game/deployables-bots.js'); B.resetDevBot(); if (${JSON.stringify(process.env.DEV_AI || '')} === '0') B.DEV_AI.enabled = false; } catch (e) { /* */ } return 0; })()`);
     const t0 = Date.now();
     const r = await js(`(async () => {
       const g = window.__inkwave, m = g.match, T = m.tower;
@@ -366,8 +367,9 @@ app.on('browser-window-created', (_, win) => {
     for (const e of r.sideEps) console.log('   side-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
     // [b5-deploy] devices: shot at / down, crushed by the tower, riding it; the bots' picks
-    const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT } }; } catch (e) { return null; } })()`);
-    if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed by the tower ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter pops ${dep.seekerPops} | bots' picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}; gave up ${dep.bot.gaveUp})`);
+    const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT, on: B.DEV_AI.enabled, n: window.__inkwave.match.actors.filter((a) => a.bot).length } }; } catch (e) { return null; } })()`);
+    if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed by the tower ${JSON.stringify(dep.crushed)} | pushed aside by it ${dep.towerShoves} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter thrown ${dep.seekerThrows} popped ${dep.seekerPops}`
+      + ` | bots (device AI ${dep.bot.on ? 'on' : 'off'}): device mode ${(dep.bot.secs / Math.max(1, dep.bot.n)).toFixed(1)} s/bot (walking ${(dep.bot.walkSecs / Math.max(1, dep.bot.n)).toFixed(1)}) | picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}) re-picks ${dep.bot.repicks} gave up ${dep.bot.gaveUp}`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     if (OUT) require('fs').writeFileSync(OUT, JSON.stringify(r));

@@ -8,13 +8,14 @@
 //   PAGE_ARGS='only=matrix,own,down,pop,looks,beam,standing,net,bots,sounds,floors' (MODE=turf), 'only=tower' (MODE=tower)
 // Staged on testbox (a flat deck, top y 0; a 4 m wall x 14…15, z ±8); everyone parked far off, brains stubbed (the bots'
 // own parts: 'bots'). Checks:
-//  - matrix: every device (Hop Beacon 120, Twirl Sprinkler 100, Surf N' Turf buoy 350, Skitter Bomb 30 on the ground)
+//  - matrix: every device (Hop Beacon 120, Twirl Sprinkler 100, Surf N' Turf buoy 350, Skitter Bomb 60 on the ground)
 //    against every damage source, each a fresh device and the real thing where it can be: a shot (a projectile), a
 //    charger beam (fireCharger), a bow volley (looseVolley), a roller rolling into it (its drum), a Splat Bomb's blast,
 //    a blaster's splash (newly reaching subs' devices), a sub (a Pop Pellet), a special (the Tidal Slam): its hp falls by
 //    that source's damage (or it's gone);
 //  - own: its own team's shot / beam / blast / roll / slam does nothing (the shot isn't even absorbed);
-//  - down: shot until gone — destroyed at 0 (how many Spritzer shots each takes), 'device:down', out of the world;
+//  - down: shot until gone — destroyed at 0 (how many Spritzer shots each takes: a few, the Skitter Bomb two), 'device:down',
+//    out of the world;
 //  - pop: a Skitter Bomb shot down while winding up next to a foe pops harmlessly — no blast, no damage, its puff and
 //    seeker_pop; the end record [2, gid, 1]; a ghost given that record pops with no blast, one given [2, gid] bursts;
 //  - looks: a hit flashes it white (its body / ink swapped to the flash material) and squashes it, then back; the
@@ -22,11 +23,15 @@
 //    explosion, device_pop, its own break);
 //  - beam: a charger beam stops on a device in its way (the foe behind it untouched);
 //  - standing: the Ink Tempest's rain, the vortex, the Howl Box's beam (through a wall), Surf N' Turf's rings wear
-//    devices down (the owner's screen judges);
+//    devices down (the owner's screen judges) — the buoy too;
 //  - net: a hit on a ghost device goes to its owner (sendDevHit), flashing it here, its hp untouched; a ghost shot on
-//    our own device flashes it and costs nothing; the owner's netHurt takes it down and records [2, gid, 1];
+//    our own device flashes it and costs nothing; the owner's netHurt takes it down and records [2, gid, 1]; a player who
+//    left (their squidkid carried on here: DEPLOY.adopt) — their ghost devices are ours now, shot down here; a squidkid
+//    removed from the match takes its devices with it;
 //  - bots: a bot with no foe in sight walks up to an enemy beacon / sprinkler and shoots it down (a shooter, a roller, a
-//    charger, a blaster); a bot hunted by a Skitter Bomb shoots it down (the threat system);
+//    charger, a blaster); a bot hunted by a Skitter Bomb shoots it down (the threat system); a noticed Vortex Strike
+//    between a bot and an enemy beacon: it never steps into it (device AI on and off); a foe in sight comes first; a
+//    device it can't break: it gives up after 8 s on it in all (summed over re-picks), leaves it 12 s, comes back;
 //  - sounds: device_hit, device_pop, seeker_pop, device_crunch are built;
 //  - floors (any stage): the one moving-floor rule on a plain moving block — a Lurk Mine and a Hop Beacon laid on it, a
 //    sprinkler stuck to its side, a curtain dropped on it ride it along, up and round, at their spots; the owner's word
@@ -36,7 +41,9 @@
 //    beacon and a buoy in its way the moment its body reaches each (a crunch; 'device:down' how 'crush'; the end
 //    records [2, gid, 2] / [4, gid, 2]), one beside the track survives, a ghost in its way waits for its owner's word;
 //    a Lurk Mine and a Hop Beacon laid on its deck, a sprinkler stuck to its pillar, a curtain and a buoy on its deck
-//    ride it (the mine's ghost too) and the mine trips for a foe on the deck there;
+//    ride it (the mine's ghost too) and the mine trips for a foe on the deck there; a Lurk Mine lying in its way is
+//    pushed aside out of its path (never inside it, nor its ghost), still armed; bots: a rider shoots a device in reach
+//    from the deck, leaves one out of reach alone and never steps off; an escort never walks off its task for one;
 //  - rail (MAP=calamari): a sprinkler stuck to a railcar's flank and a curtain on its roof ride it the whole way (ghosts
 //    too) — a mine or a beacon can't be laid on a railcar (an off-limits roof, as before); a Lurk Mine lying on the
 //    trackbed in its way is pushed out of it as it comes (never inside it), still armed where it ends up, its ghost too;
@@ -44,13 +51,14 @@
 //    inside it); one laid on its top rides it down as it wilts; both end on the floor, still armed.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
-  const { SUBS, SPECIALS, PLAYER, WEAPONS } = await import('./src/config.js');
+  const { SUBS, SPECIALS, PLAYER, WEAPONS, TOWER: TWR, weaponRange } = await import('./src/config.js');
+  const TOWER_R = TWR.platformR;
   const DEP = await import('./src/game/deployables.js');
   const DB = await import('./src/game/deployables-bots.js');
   const SURF = await import('./src/game/sp-surf.js');
   const BOW = await import('./src/game/kits/bow.js');
   const { THREAT_STATS } = await import('./src/game/bots.js');
-  const { on } = await import('./src/core/ctx.js');
+  const { on, emit } = await import('./src/core/ctx.js');
   const { Hit } = await import('./src/game/physics.js');
   const G = window.__G, P = G.projectiles, S = G.subs, D = DEP.DEPLOY, ST = DEP.DEPLOY_STATS;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -215,8 +223,8 @@
         const ev = evs.slice(e0);
         res[kind] = { shots: n, want: Math.ceil(HP[kind] / 36), down: ev.some((e) => (e.n === 'device:down' && e.how === 'shot') || (kind === 'surf' && e.n === 'surf:pop')), inWorld: kind === 'surf' ? G.specials.world.includes(d) : S.items.includes(d) };
       }
-      R(`destroyed at 0 hp — Spritzer shots (36) each takes: ${Object.entries(res).map(([k, r]) => `${k} ${r.shots}`).join(', ')} (a few, not one, not a magazine); 'device:down', out of the world`,
-        Object.values(res).every((r) => r.shots === r.want && r.down && !r.inWorld) && res.beacon.shots >= 3 && res.sprinkler.shots >= 3, res);
+      R(`destroyed at 0 hp — Spritzer shots (36) each takes: ${Object.entries(res).map(([k, r]) => `${k} ${r.shots}`).join(', ')} (a few, not one — two for the small, quick Skitter Bomb — not a magazine); 'device:down', out of the world`,
+        Object.values(res).every((r) => r.shots === r.want && r.down && !r.inWorld) && res.beacon.shots >= 3 && res.sprinkler.shots >= 3 && res.seeker.shots >= 2 && Object.values(res).every((r) => r.shots <= 12), res);
     }
 
     // ============================================================================================ the Skitter Bomb pops
@@ -231,13 +239,14 @@
         const primed = it.state === 'prime';
         const e0 = evs.length, c0 = cues.length;
         const p = midOf(it);
-        S.blockShot(V(p.x - 1, p.y, p.z), V(p.x + 1, p.y, p.z), foe.team, 40, foe);
+        let shots = 0;
+        for (; shots < 4 && it.state !== 'dead'; shots++) S.blockShot(V(p.x - 1, p.y, p.z), V(p.x + 1, p.y, p.z), foe.team, 40, foe);
         step(1);
         const ev = evs.slice(e0);
         const rec = sent.find((x) => x.kind === 'subs' && x.data && x.data[0] === 2 && x.data[1] === 77001);
-        R('a Skitter Bomb shot down while winding up beside a foe pops harmlessly: no blast, no damage, its puff and seeker_pop; the end record [2, gid, 1]',
-          primed && it.state === 'dead' && !ev.some((e) => e.n === 'bomb:explode') && foe.hp === PLAYER.hp && ev.some((e) => e.n === 'device:down' && e.kind === 'seeker') && cues.slice(c0).some((c) => c.name === 'seeker_pop') && rec && rec.data[2] === 1,
-          { primed, state: it.state, explode: ev.filter((e) => e.n === 'bomb:explode').length, foeHp: foe.hp, cues: cues.slice(c0).map((c) => c.name), rec: rec && rec.data });
+        R(`a Skitter Bomb shot down while winding up beside a foe (${shots} shots of 40) pops harmlessly: no blast, no damage, its puff and seeker_pop; the end record [2, gid, 1]`,
+          primed && shots === Math.ceil(SUBS.seeker.hp / 40) && it.state === 'dead' && !ev.some((e) => e.n === 'bomb:explode') && foe.hp === PLAYER.hp && ev.some((e) => e.n === 'device:down' && e.kind === 'seeker') && cues.slice(c0).some((c) => c.name === 'seeker_pop') && rec && rec.data[2] === 1,
+          { primed, shots, state: it.state, explode: ev.filter((e) => e.n === 'bomb:explode').length, foeHp: foe.hp, cues: cues.slice(c0).map((c) => c.name), rec: rec && rec.data });
         // ghosts on another screen: [2, gid, 1] pops it (no blast); [2, gid] (the owner's burst) bursts it
         reset();
         put(me, V(0, 0, 0), Math.PI);
@@ -332,6 +341,18 @@
       { const d = mk.sprinkler(me, 0, -6); P._spawnCloud({ pos: V(0, 0.5, -6), owner: mate, team: mate.team, dir: V(0, 0, 0) }); step(1); res.ownRain = { lost: r2(HP.sprinkler - hpOf(d)) }; }
       R(`standing fire wears devices down: the Ink Tempest's rain −${res.tempest.lost} in 1 s (${res.tempest.want}/s), the vortex −${res.vortex.lost}, the Howl Box's beam through a wall −${res.wail.lost}, Surf N' Turf's ring −${res.rings.lost}; its own team's rain −${res.ownRain.lost}`,
         Math.abs(res.tempest.lost - res.tempest.want) < 4 && res.vortex.lost > 60 && res.wail.gone && Math.abs(res.rings.lost - res.rings.want) < 0.1 && res.ownRain.lost === 0, res);
+      // the Surf N' Turf buoy under the same standing fire: the rain, the vortex, the Howl Box's beam, another buoy's ring
+      const bres = {};
+      reset();
+      { const d = mk.surf(me, 0, -6); P._spawnCloud({ pos: V(0, 0.5, -6), owner: foe, team: foe.team, dir: V(0, 0, 0) }); step(1); bres.tempest = { lost: r2(HP.surf - hpOf(d)), want: SPECIALS.storm.dps }; }
+      reset();
+      { const d = mk.surf(me, 0, -6); G.specials._ghostObj(foe, [2, 'mi', 99011, 1, 0, -6]); step(SPECIALS.strike.flight + 1.2); bres.vortex = { lost: r2(HP.surf - hpOf(d)) }; }
+      reset();
+      { const d = mk.surf(me, 18, 0); G.specials._ghostObj(foe, [2, 'sk', 99012, 8, 0, 0, 1, 0, 0]); step(SPECIALS.wail.charge + 1); bres.wail = { lost: r2(HP.surf - hpOf(d)), gone: gone(d) }; }
+      reset();
+      { const d = mk.surf(me, 5, -6); mk.surf(foe, 0, -6, 0); step(SPECIALS.surf.anchor + 1.2); bres.rings = { lost: r2(HP.surf - hpOf(d)), want: SPECIALS.surf.damage }; }
+      R(`…and the Surf N' Turf buoy (${HP.surf} hp) under it: the rain −${bres.tempest.lost} in 1 s, the vortex −${bres.vortex.lost}, the Howl Box's beam through a wall −${bres.wail.lost}${bres.wail.gone ? ' (gone)' : ''}, another buoy's ring −${bres.rings.lost}`,
+        Math.abs(bres.tempest.lost - bres.tempest.want) < 4 && bres.vortex.lost > 60 && bres.wail.lost > 60 && bres.rings.lost >= bres.rings.want - 0.1, bres);
     }
 
     // ============================================================================================ online
@@ -367,6 +388,28 @@
         step(1);
         R('standing fire is judged by the device\'s owner: a ghost Ink Tempest over my sprinkler wears it down here; my cloud over the foe\'s ghost sprinkler costs it nothing here (its owner judges it)',
           ms.hp < HP.sprinkler - 20 && gs && gs.hp === HP.sprinkler && !sent.some((x) => x.dh && x.id === 55003), { mine: r2(ms.hp), ghost: gs && gs.hp });
+        // a player who left: this screen (the host) carries on their squidkid (netmatch.js _adopt → DEPLOY.adopt) — their
+        // ghost devices become this screen's own: a hit here takes their hp (no sendDevHit to the one who's gone), at 0
+        // they're shot down with the end record [2, gid, 1]; a squidkid taken out of the match takes its devices with it
+        reset(); netOn();
+        S.netGhost(foe, [1, 55011, 'beacon', 0, 0, -6, 0, 1, 0, 0]); S.netGhost(foe, [0, 55012, 'sprinkler', 4, 0.7, -6, 0, -6, 0]); step(0.5);
+        const ab = S.items.find((x) => x.gid === 55011), as = S.items.find((x) => x.gid === 55012);
+        D.adopt(foe);
+        const ownNow = { beacon: ab && !ab.ghost, sprinkler: as && !as.ghost };
+        const qa = midOf(ab), d0 = sent.length;
+        S.blockShot(V(qa.x - 1, qa.y, qa.z), V(qa.x + 1, qa.y, qa.z), me.team, 36, me); step(0.05);
+        const hpAfter = ab.hp, toGone = sent.slice(d0).filter((x) => x.dh).length;
+        for (let k = 0; k < 4 && ab.state !== 'dead'; k++) S.blockShot(V(qa.x - 1, qa.y, qa.z), V(qa.x + 1, qa.y, qa.z), me.team, 36, me);
+        step(0.05);
+        const arec = sent.find((x) => x.kind === 'subs' && x.data && x.data[0] === 2 && x.data[1] === 55011);
+        R('a player who left (their squidkid carried on here): their ghost devices become this screen\'s own — a hit takes the beacon\'s hp here (nothing sent to the one who\'s gone), and it\'s shot down with [2, gid, 1]',
+          ownNow.beacon && ownNow.sprinkler && hpAfter === HP.beacon - 36 && toGone === 0 && ab.state === 'dead' && arec && arec.data[2] === 1, { ownNow, hpAfter, sentToOwner: toGone, state: ab.state, rec: arec && arec.data });
+        reset(); netOn();
+        S.netGhost(foe, [1, 55021, 'beacon', 0, 0, -6, 0, 1, 0, 0]); step(0.2);
+        const rb = S.items.find((x) => x.gid === 55021), keep = mk.beacon(me, 4, -6);
+        emit('actor:removed', { actor: foe }); step(0.05);
+        R('a squidkid taken out of the match (Practice: a player who left) takes its devices with it; everyone else\'s stay',
+          rb && rb.state === 'dead' && keep.state === 'beacon', { removed: rb && rb.state, other: keep.state });
       } finally { netOff(); }
     }
 
@@ -404,6 +447,95 @@
         stub(Sh);
       }
       R(`a bot hunted by a Skitter Bomb shoots it down (bots.js threats: ${popped} of ${n} popped, ${reached} reached it)`, popped >= 3, { popped, reached, n, shoot: THREAT_STATS.shoot - (t0.shoot || 0), noticed: THREAT_STATS.noticed - (t0.noticed || 0) });
+
+      // a noticed danger on its way to a device: a roller bot (it rolls right up to a device) with no foe in sight, my
+      // beacon 9 m off and my team's Vortex Strike coming down between them (on the map: noticed) — it goes round the
+      // vortex or waits, never a step into it; the same with the device AI off (the danger guard has the last word over
+      // the device's footwork: bots.js runs devShootAim before botSpecials act)
+      // (the area the bots' danger model gives a Vortex Strike: its ring + 0.6 m — botSpecials.js specialDangers; a step in
+      // it shows as an escape out of it)
+      const VX = V(4.5, 0, -1.5), RV = SPECIALS.strike.radius + 0.6, dres = {};
+      const { SPECIAL_STATS } = await import('./src/game/botSpecials.js');
+      for (const onAI of [true, false]) {
+        reset();
+        DB.DEV_AI.enabled = onAI;
+        try {
+          const Sh = foe;
+          Sh.setWeapon('roller'); Sh.ink = PLAYER.inkMax;
+          unstub(Sh); put(Sh, V(0, 0, 3), Math.PI);
+          put(me, V(22, 0, 0), 0);
+          G.specials._ghostObj(mate, [2, 'mi', 99101 + (onAI ? 0 : 1), VX.x, VX.y, VX.z]);
+          step(0.8);   // (it has noticed it: on the map)
+          const d = mk.beacon(me, 0, -6), s0 = DB.DEV_BOT.secs, esc0 = SPECIAL_STATS.escapes;
+          let inside = 0, minD = 99, n2 = 0;
+          step(SPECIALS.strike.flight + SPECIALS.strike.duration - 0.8, () => {
+            const w = G.specials.world.find((x) => (x.kind === 'tornado' || x.kind === 'missile') && !x.dead);
+            if (!w) return false;
+            n2++;
+            const dd = Math.hypot(Sh.pos.x - VX.x, Sh.pos.z - VX.z);
+            minD = Math.min(minD, dd); if (dd < RV - 0.05) inside++;
+          });
+          dres[onAI ? 'on' : 'off'] = { inside, escapes: SPECIAL_STATS.escapes - esc0, closest: r2(minD), area: r2(RV), frames: n2, deviceSecs: r2(DB.DEV_BOT.secs - s0), beaconHp: r2(hpOf(d)), at: v2(Sh.pos) };
+        } finally { DB.DEV_AI.enabled = true; stub(foe); foe.setWeapon(weapons0.get(foe)); }
+      }
+      R(`a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a step in (device AI on: closest ${dres.on.closest} m, ${dres.on.escapes} escapes out of it; off: ${dres.off.closest} m; the area ${r2(RV)} m)`,
+        dres.on.inside === 0 && dres.off.inside === 0 && dres.on.escapes === 0 && dres.off.escapes === 0 && dres.on.frames > 200 && dres.on.deviceSecs > 1 && dres.off.deviceSecs === 0, dres);
+
+      // a foe in sight comes first: a bot with my beacon 6 m off and a foe (a dummy) in the open 11 m off fights the foe,
+      // never the beacon; once the foe has gone (behind the wall, and forgotten) it shoots the beacon down
+      {
+        reset();
+        const Sh = foe;
+        Sh.setWeapon('shooter'); Sh.ink = PLAYER.inkMax;
+        unstub(Sh); put(Sh, V(0, 0, 3), Math.PI);
+        put(me, V(22, 0, 0), 0);
+        const d = mk.beacon(me, -6, 1);
+        put(mate, V(0, 0, -8), 0); mate.hp = 1e6;
+        const s0 = DB.DEV_BOT.secs, h0 = hpOf(d);
+        let fought = 0, devWhile = 0;
+        step(3, () => { mate.hp = 1e6; if (Sh.bot.target === mate && Sh.bot.seeTimer > 0) { fought++; if (Sh.bot.sp._dev) devWhile++; } });
+        const during = { deviceSecs: r2(DB.DEV_BOT.secs - s0), deviceFramesWhileSeen: devWhile, beaconLost: r2(h0 - hpOf(d)), framesOnFoe: fought };
+        put(mate, V(22, 0, 4), 0); mate.hp = PLAYER.hp;
+        const n3 = step(14, () => !gone(d));
+        const after = { gone: gone(d), s: r2(n3 / 60), deviceSecs: r2(DB.DEV_BOT.secs - s0) };
+        stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
+        R(`a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: ${devWhile}; device mode ${during.deviceSecs} s before it had seen it; the beacon −${during.beaconLost}); the foe gone, it shoots the beacon down (${after.gone ? after.s + ' s' : 'not'})`,
+          during.framesOnFoe > 90 && devWhile === 0 && during.deviceSecs < 0.5 && during.beaconLost === 0 && after.gone && after.deviceSecs > during.deviceSecs, { during, after });
+      }
+
+      // giving up: a beacon it can't break (hp held at Infinity) — it gives up after DEV_GIVEUP s on it in all, even when
+      // a foe showing up for a moment broke it off and it went back (the time on it is summed, not restarted), then
+      // leaves it alone DEV_FORGET s, then comes back to it (a re-pick, not a new pick)
+      {
+        reset();
+        const Sh = foe;
+        Sh.setWeapon('shooter'); Sh.ink = PLAYER.inkMax;
+        unstub(Sh); put(Sh, V(0, 0, 3), Math.PI);
+        put(me, V(22, 0, 0), 0);
+        const d = mk.beacon(me, 0, -6); d.hp = Infinity;
+        const on = () => Sh.bot.sp._dev?.obj === d;
+        const P0 = { ...DB.DEV_BOT };
+        let busy = 0, t = 0, gaveAt = null, busyAtGive = null, broke = false, hid = false, seen = 0, backAt = null, offFor = null, pin = null, repickBack = null;
+        step(40, () => {
+          t += DT; Sh.ink = PLAYER.inkMax;
+          if (on()) busy += DT;
+          // (3 s on it: a foe in the open, in front of it, for a moment breaks it off; then gone again)
+          if (!broke && busy >= 3) { broke = true; put(mate, V(1.2, 0, -2.5), 0); mate.hp = 1e6; }
+          if (broke && !hid && Sh.bot.target === mate && Sh.bot.seeTimer > 0) seen += DT;
+          if (broke && !hid && seen >= 0.6) { hid = true; put(mate, V(22, 0, 4), 0); mate.hp = PLAYER.hp; }
+          else if (broke && !hid) mate.hp = 1e6;
+          if (hid && repickBack == null && on()) repickBack = DB.DEV_BOT.repicks - P0.repicks;
+          if (gaveAt == null && DB.DEV_BOT.gaveUp > P0.gaveUp) { gaveAt = t; busyAtGive = busy; pin = Sh.pos.clone(); }
+          // (while it leaves it alone it stays where it gave up — in sight of it — so the time it's left alone is the rule's)
+          if (pin && backAt == null) { Sh.pos.x = pin.x; Sh.pos.z = pin.z; Sh.vel.x = Sh.vel.z = 0; }
+          if (gaveAt != null && backAt == null && on()) { backAt = t; offFor = t - gaveAt; }
+          return backAt == null;
+        });
+        const res2 = { busyAtGiveUp: busyAtGive && r2(busyAtGive), wallAtGiveUp: gaveAt && r2(gaveAt), leftAlone: offFor && r2(offFor), picks: DB.DEV_BOT.picks - P0.picks, repicks: DB.DEV_BOT.repicks - P0.repicks, broke, foeSeenS: r2(seen), repickAfterFoe: repickBack, giveUp: DB.DEV_GIVEUP, forget: DB.DEV_FORGET };
+        stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
+        R(`giving up: a beacon it can't break — it gives up after ${res2.busyAtGiveUp} s on it in all (${DB.DEV_GIVEUP} s; ${res2.wallAtGiveUp} s of the clock: a foe broke it off and it went back), leaves it alone ${res2.leftAlone} s (${DB.DEV_FORGET} s), then comes back to it (${res2.picks} pick, ${res2.repicks} re-picks)`,
+          broke && hid && repickBack === 1 && busyAtGive != null && Math.abs(busyAtGive - DB.DEV_GIVEUP) < 0.1 && gaveAt > busyAtGive + 0.5 && offFor != null && offFor >= DB.DEV_FORGET - 0.05 && offFor < DB.DEV_FORGET + 0.6 && res2.picks === 1 && res2.repicks === 2, res2);
+      }
     }
 
     // ============================================================================================ sounds
@@ -529,6 +661,14 @@
         const by = mk.beacon(owner, P(way.beacon).x + side(way.beacon).x * 3.2, P(way.beacon).z + side(way.beacon).z * 3.2);
         S.netGhost(owner, [1, 66006, 'beacon', r2(P(way.ghost).x), r2(P(way.ghost).y), r2(P(way.ghost).z), 0, 1, 0, 0]);
         const gh = S.items.find((x) => x.gid === 66006);
+        // a Lurk Mine lying in its way (not on the user's list: pushed aside, out of its path — never inside it)
+        way.mine = 6.4;
+        const mAt = P(way.mine).addScaledVector(side(way.mine), 0.5);
+        put(owner, mAt, 0); owner.pos.y = mAt.y + 0.02; step(2 / 60); S._place(owner, SUBS.mine);
+        const pm = S.items.filter((x) => x.owner === owner && x.kind === 'mine' && x.state !== 'dead').pop();
+        F.ids.add(pm.gid); parkAll(); step(2 / 60); F.feed();
+        let mIn = 0, gmIn = 0;
+        const L = G.level, inT = (p) => L.pointInBlock(T.block, _vIn.set(p.x, p.y + 0.1, p.z), -0.05);
         const offs = { mine: dMine.pos.clone().sub(T.pos), beacon: dBea.pos.clone().sub(T.pos), sprinkler: dSpr.pos.clone().sub(T.pos), curtain: dCur.pos.clone().sub(T.pos), buoy: dBu.pos.clone().sub(T.pos) };
         hook = hold([dSpr, dCur, dBu, cur, spr, bu]);
         const e0 = evs.length, c0 = cues.length, seen = {};
@@ -539,6 +679,8 @@
           for (const [k, d] of [['curtain', cur], ['sprinkler', spr], ['beacon', bea], ['buoy', bu]]) if (seen[k] == null && gone(d)) seen[k] = r2(T.s - s0);
           if (T.s - s0 < way.ghost) ghostLive = ghostLive && gh.state !== 'dead';
           const g1 = ghostOf(dMine); gdrift = Math.max(gdrift, g1 ? g1.pos.distanceTo(dMine.pos) : 99);
+          if (pm.state !== 'dead' && inT(pm.pos)) mIn++;
+          const gpm = ghostOf(pm); if (gpm && gpm.state !== 'dead' && inT(gpm.pos)) gmIn++;
           return T.s - s0 < way.ghost + 1.4;
         });
         drive = 0;
@@ -569,7 +711,69 @@
         hook = null;
         const tr = tripAt(dMine, owner);
         R(`…the mine on the deck trips for a foe who comes up onto it there, and blows there (${tr.off} m from it, ${r2(moved)} m from where it was laid)`, tr.tripped && tr.off < 0.4, tr);
+        // the Lurk Mine that lay in its way
+        F.feed();
+        const gpm = ghostOf(pm), lat = Math.abs(pm.pos.clone().sub(P(way.mine)).dot(side(way.mine))), mfl = Math.abs(pm.pos.y - L.groundHeight(pm.pos.x, pm.pos.z, pm.pos.y + 0.05)) < 0.05 && !pm.on;
+        const mtr = pm.state === 'mine' ? tripAt(pm, me) : null;
+        R(`a Lurk Mine lying in its way is pushed aside, out of its path (${r2(lat)} m off its line, laid ${0.5} m off), never inside it (frames inside: ${mIn}, its ghost ${gmIn}), and lies on the floor there still armed (a foe trips it there), its ghost with it`,
+          mIn === 0 && gmIn === 0 && lat >= TOWER_R + 0.25 && mfl && !!gpm && gpm.pos.distanceTo(pm.pos) < 0.08 && mtr && mtr.tripped && mtr.off < 0.4 && !ev.some((e) => e.kind === 'mine'),
+          { from: v2(mAt), at: v2(pm.pos), lat: r2(lat), inside: mIn, ghostInside: gmIn, floor: mfl, ghost: gpm && v2(gpm.pos), trip: mtr, recs: recs4(pm.gid) });
       } finally { T._rules = rules0; netOff(); hook = null; }
+
+      // BOTS IN TOWER COMMAND (the tower's own rules: a rider on it pushes it): every role keeps its task — a rider shoots
+      // enemy devices from the deck only and never steps off for one out of its reach; any other role (an escort …) never
+      // walks off its route for one either: an enemy beacon past its reach (but inside what a free bot notices) is left
+      // alone; one in reach is shot down from where the task has it
+      {
+        reset();
+        const X = foe, Y = foes.find((f) => f !== X) || foe2;
+        X.setWeapon('shooter'); X.ink = PLAYER.inkMax; unstub(X);
+        const reach = weaponRange(WEAPONS.shooter) * 0.95, notice = Math.max(reach * 1.25, 10);
+        X.pos.set(T.pos.x + 0.6, T.top + 0.05, T.pos.z + 0.6); X.vel.set(0, 0, 0);
+        step(1.5, () => { X.ink = PLAYER.inkMax; });
+        const role = X.bot.tRole;
+        // a spot off to the side of the track at distance k from p, on the floor and in sight of the deck
+        const at2 = (q) => T.path.at(q, V(0, 0, 0)), dirAt2 = (q) => { const a = at2(q - 0.3), b = at2(q + 0.3); return V(b.x - a.x, 0, b.z - a.z).normalize(); };
+        // (a spot k m from p, on the floor, in sight from p's eye, at least 3.5 m off the track: the side of the track first)
+        const offTrack = (p, k) => { const dd = dirAt2(T.s), a0 = Math.atan2(dd.z, -dd.x);
+          for (let i = 0; i < 24; i++) { const ang = a0 + (i % 2 ? -1 : 1) * Math.ceil(i / 2) * (Math.PI / 12) + (i === 0 ? 0 : 0); for (const sg of i === 0 ? [1, -1] : [1]) {
+            const q = V(p.x + Math.sin(ang) * sg * k, 0, p.z + Math.cos(ang) * sg * k); const gy = G.level.groundHeight(q.x, q.z, 3); if (gy === -Infinity || Math.abs(gy) > 0.3) continue; q.y = gy;
+            let clear = true; for (let u = -20; u <= 20 && clear; u += 1) { const t = at2(T.s + u); if (Math.hypot(t.x - q.x, t.z - q.z) < 3.5) clear = false; }
+            if (clear && G.physics.los(V(p.x, p.y + 1.1, p.z), V(q.x, q.y + 0.4, q.z))) return q; } }
+          return null; };
+        const far = offTrack(X.pos, (reach + notice) / 2);
+        const bFar = far ? mk.beacon(me, far.x, far.z) : null;
+        put(me, HOME, 0);
+        const p0 = DB.DEV_BOT.picks + DB.DEV_BOT.repicks;
+        let onT = 0, n = 0, minFar = 99;
+        step(4, () => { X.ink = PLAYER.inkMax; n++; if (T.riderList?.includes(X)) onT++; if (bFar) minFar = Math.min(minFar, Math.hypot(X.pos.x - bFar.pos.x, X.pos.z - bFar.pos.z)); });
+        const pickedFar = DB.DEV_BOT.picks + DB.DEV_BOT.repicks - p0;
+        // …then one in its reach, beside the track
+        const nearAt = offTrack(X.pos, reach * 0.6), bNear = nearAt ? mk.beacon(me, nearAt.x, nearAt.z) : null;
+        let onT2 = 0, n2 = 0;
+        const s2 = step(10, () => { X.ink = PLAYER.inkMax; n2++; if (T.riderList?.includes(X)) onT2++; return !!bNear && !gone(bNear); });
+        const rres = { role, far: bFar && r2(Math.hypot(X.pos.x - bFar.pos.x, X.pos.z - bFar.pos.z)), reach: r2(reach), notice: r2(notice), pickedFar, onDeck: `${onT}/${n}`, near: bNear && { gone: gone(bNear), s: r2(s2 / 60) }, onDeck2: `${onT2}/${n2}` };
+        stub(X);   // (it stays on the deck: the rider)
+        R(`Tower Command: a rider shoots enemy devices from the deck only — one beside the track past its reach is left alone (${pickedFar} picks; it stayed on ${onT} of ${n} frames), one in reach is shot down from the deck (${rres.near && rres.near.gone ? rres.near.s + ' s' : 'not'}; on ${onT2} of ${n2} frames)`,
+          role === 'ride' && !!bFar && pickedFar === 0 && onT >= n - 2 && !!bNear && gone(bNear) && onT2 >= n2 - 2, rres);
+        // a bot with another role, off the tower: a beacon past its reach, inside what a free bot would notice
+        S.clear(); P.clear(); G.paint.clear();
+        Y.setWeapon('shooter'); Y.ink = PLAYER.inkMax; unstub(Y);
+        const ys = offTrack(V(T.pos.x, T.top, T.pos.z), 4);
+        if (ys) put(Y, ys, 0);
+        step(1, () => { Y.ink = PLAYER.inkMax; });
+        const yRole = Y.bot.tRole;
+        const yFar = offTrack(V(Y.pos.x, Y.pos.y, Y.pos.z), (reach + notice) / 2);
+        const yb = yFar ? mk.beacon(me, yFar.x, yFar.z) : null;
+        put(me, HOME, 0);
+        const q0 = DB.DEV_BOT.picks + DB.DEV_BOT.repicks, w0 = DB.DEV_BOT.walkSecs;
+        let inReachT = 0, pickedOut = 0, onYb = 0;
+        step(5, () => { Y.ink = PLAYER.inkMax; if (!yb || gone(yb)) return; const dd = Math.hypot(Y.pos.x - yb.pos.x, Y.pos.z - yb.pos.z); if (dd < reach - 0.3) inReachT += DT; const on = Y.bot.sp._dev?.obj === yb; if (on) onYb++; if (on && dd > reach + 0.3) pickedOut++; });
+        const yres = { role: yRole, beacon: !!yb, framesOnIt: onYb, framesOnItOutOfReach: pickedOut, sInReach: r2(inReachT), walkSecs: r2(DB.DEV_BOT.walkSecs - w0), picks: DB.DEV_BOT.picks + DB.DEV_BOT.repicks - q0 };
+        stub(Y); Y.setWeapon(weapons0.get(Y)); X.setWeapon(weapons0.get(X)); parkAll();
+        R(`Tower Command: a bot with another role (${yRole}) never walks off its task for a device — an enemy beacon past its reach (inside what a free bot notices) is left alone (frames on it out of reach: ${pickedOut}; device walking ${yres.walkSecs} s)`,
+          !!yb && yRole && yRole !== 'ride' && pickedOut === 0 && yres.walkSecs === 0, yres);
+      }
     }
 
     // ============================================================================================ Calamari's railcars
