@@ -232,7 +232,12 @@ tickDamage follows for players. The owner's end record says why it went: subs `[
 Bomb pops with a puff — no blast; a ghost sprinkler / beacon breaks with the pop look), `[2, gid, 2]` crushed by the
 tower (the crunch on every screen); the buoy `[4, gid, 2]` crushed. Old `[2, gid]` / `[4, gid]` mean what they did. A
 ghost device is never crushed by its own screen's tower — it waits for its owner's word, so both screens agree. Hit
-markers are the shooter's own ('device:hit' on its screen).
+markers are the shooter's own ('device:hit' on its screen). **A player who leaves:** the host, carrying on their
+squidkid as a bot (`_adopt`), takes their devices over too (`DEPLOY.adopt`: its ghosts become its own, same gid) — so
+the hits other screens send to the new owner (`dh` to the host) and the host's own hits, standing fire and tower land on
+them, and the end / update records now come from the host. A squidkid taken out of the match (Practice: a player who
+left; a humans-only stage) takes its devices with it on every screen ('actor:removed'). Tested by `net-deploy.cjs`
+`NET_ARGS='scene=leave'` (the host leaves; the guest shoots the old host's beacon down on its own screen).
 
 **Devices on moving floors** (the user: "lurk mines don't stick to moving floors such as the tower"). A Lurk Mine, Hop
 Beacon, Twirl Sprinkler, Drip Curtain or Cling Charge set down or stuck on any moving level block (the tower's deck or
@@ -240,7 +245,9 @@ pillar, a Calamari railcar, a pod's plant, any `Level.addDynamic` block) keeps i
 face it was set on, on every screen: each screen carries its copy on its own copy of the block (the movers and pods run
 on the synced clock, the tower follows the host's snapshots), as the buoy does — no records while it rides. A moving
 block pushing into a device lying on a floor lifts it onto its top or shoves it out of its way (the buoy's rule; the
-tower crushes instead); its block going from under it, a floor device drops onto what's below (a wall one breaks). The
+tower crushes what's on the user's list — sprinkler, beacon, curtain, buoy — and pushes anything else, a Lurk Mine or a
+Cling Charge on the floor, aside out of its path, never through it); its block going from under it, a floor device drops
+onto what's below (a wall one breaks). The
 owner's word settles where it is whenever it settles somewhere: the subs record `[4, gid, x, y, z, tag, lx, ly, lz, nx,
 ny, nz]` — on the moving block `tag` (its Level tag: `tower`, `tower-pillar`, `mover:<car>`, `plant:<pod>:<part>`; `#<id>`
 for an untagged one) at `l` in its axes, on the face whose normal is `n` (its axes) — or `[4, gid, x, y, z]` (on still

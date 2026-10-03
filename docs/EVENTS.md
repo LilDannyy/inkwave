@@ -95,3 +95,5 @@ longer emitted.
 | `zones:active` | `{ objective, zones, final, moved }` — rotation (final = the last-30-s centre lock) | zones.js |
 | `zones:overtime` | `{ losing }` | zones.js |
 | `zones:end` | `{ winner, reason, counts }` (reason: knockout · time · comeback · retake · neutralised · overtime-cap) | zones.js |
+| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
+| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes |
