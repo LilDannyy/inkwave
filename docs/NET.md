@@ -237,6 +237,9 @@ the host its bots), from its view of everyone's synced positions — the same ru
 only to the players it owns and records it on the receiver, `['k', receiverNid, 'sp', [5, giverNid, timeLeft,
 chainOwnerNid]]`; every other screen gives that player the same copy with that time (`netGhost` case 5 → `shieldNet`),
 joined to its own copy of that chain (keyed by the chain owner's nid), so "each chain once a player" holds everywhere.
+A copy heard that way runs to the chain's end on that screen (when its copy of the user's field runs out there), not to
+the record's time, which is a playback delay late by then: so every copy of a chain runs out together on each screen,
+however many hops it took (the record's time only for a chain the screen hasn't seen).
 Tested by `tools/botlab/tests/net-sprules.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`).
 
 **Bomb Barrages** (src/game/sp-barrage.js). The variant is the special's start record (`[0, index]`; Waddle and Mystery
