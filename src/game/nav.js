@@ -26,6 +26,10 @@ export class NavGraph {
     // Routes pay heavily to enter one (never forbidden: a bot standing in one still walks out the shortest way); goals
     // skip them (nearest() without `start`)
     this.blocked = null;
+    // [b5-stagehooks] stage modules (src/game/stageMods.js): ext = this match's edge / node rules ({ edge(e, to, metres) →
+    // extra cost | Infinity, node(id, start) → bool, timed }), edgeMask = skip edges whose e.em lacks it, hScale = the
+    // heuristic's scale when special edges are cheaper than the straight distance (1 = as always)
+    this.ext = null; this.edgeMask = 0; this.hScale = 1;
     this._build();
   }
 
@@ -112,8 +116,40 @@ export class NavGraph {
       }
     }
     this._climbEdges();
+    if (this.level.extraEdges?.length) this._extraEdges();   // [b5-stagehooks] a stage module's special edges (pipes)
     // keep nodes connected to the spawn both ways (see _prune)
     this._prune();
+  }
+
+  // [b5-stagehooks] special edges from a stage module (level.extraEdges: [{ a: [x, y, z], b: [x, y, z], cost, type, … }]):
+  // from the node nearest a (≤ 0.8 m across, ≤ 0.6 m up or down) to the node nearest b; every extra field rides on the
+  // edge. Specs that don't resolve are listed in edgeProblems. hScale keeps A* admissible across a cheap long edge.
+  _extraEdges() {
+    this.edgeProblems = [];
+    const near = (p) => {
+      const ix = Math.round((p[0] - this.x0) / this.step), iz = Math.round((p[2] - this.z0) / this.step);
+      let best = -1, bd = Infinity;
+      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+        const jx = ix + dx, jz = iz + dz;
+        if (jx < 0 || jz < 0 || jx >= this.nx || jz >= this.nz) continue;
+        for (const id of this.cells[jz * this.nx + jx]) {
+          const n = this.nodes[id], h = Math.hypot(n.x - p[0], n.z - p[2]);
+          if (h > 0.8 || Math.abs(n.y - p[1]) > 0.6) continue;
+          if (h < bd) { bd = h; best = id; }
+        }
+      }
+      return best;
+    };
+    let hs = 1;
+    for (const sp of this.level.extraEdges) {
+      const a = near(sp.a), b = near(sp.b);
+      if (a < 0 || b < 0 || a === b) { this.edgeProblems.push({ spec: sp, a, b }); continue; }
+      const { a: _a, b: _b, ...rest } = sp;
+      this.nodes[a].nb.push({ ...rest, to: b, cost: sp.cost, type: sp.type || 'special' });
+      const na = this.nodes[a], nb = this.nodes[b], d = Math.hypot(nb.x - na.x, nb.z - na.z) + Math.abs(nb.y - na.y) * 0.5;
+      if (d > 1e-3) hs = Math.min(hs, sp.cost / d);
+    }
+    this.hScale = Math.max(0.05, hs);
   }
 
   // the height of block b's top face at (x, z), or null where (x, z) is off that face
@@ -241,6 +277,7 @@ export class NavGraph {
         for (const id of this.cells[jz * this.nx + jx]) {
           if (!this.valid[id] && !(start && this.exitable[id])) continue;
           if (!start && this.blocked && this.blocked[id]) continue;
+          if (this.ext && this.ext.node && !this.ext.node(id, start)) continue;   // [b5-stagehooks]
           const n = this.nodes[id];
           if (n.y > pos.y + maxUp) continue;
           const d = (n.x - pos.x) ** 2 + (n.z - pos.z) ** 2 + ((n.y - pos.y) * 2.5) ** 2;
@@ -268,7 +305,11 @@ export class NavGraph {
     const g = this._g, from = this._from, seen = this._seen, closed = this._closed;
     const st = ++this._stamp;
     const nodes = this.nodes, goal = nodes[b], blk = this.blocked;
-    const h = (n) => Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5;
+    const hs = this.hScale, X = this.ext, XE = X && X.edge, EM = this.edgeMask;   // [b5-stagehooks]
+    const h = hs === 1 ? (n) => Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5 : (n) => (Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5) * hs;
+    // (a timed rule: metres walked without penalties, for the arrival time)
+    const tg = X && X.timed ? (this._tg && this._tg.length === N ? this._tg : (this._tg = new Float32Array(N))) : null;
+    if (tg) tg[a] = 0;
     const heap = new Heap();
     const skipClimb = noClimb === true, CO = noClimb && typeof noClimb === 'object' ? noClimb : null;
     const climbX = typeof noClimb === 'number' ? noClimb : (CO && CO.add) || 0, outX = CO && CO.out !== undefined ? CO.out : Infinity;
@@ -284,6 +325,8 @@ export class NavGraph {
       const n = nodes[cur];
       for (const e of n.nb) {
         let cx = 0;
+        if (EM && e.em !== undefined && !(e.em & EM)) continue;   // [b5-stagehooks]
+        if (XE) { const xc = XE(e, e.to, tg ? tg[cur] + e.cost : 0); if (xc === Infinity) continue; cx += xc || 0; }
         if (e.type === 'climb') {
           if (skipClimb) continue;
           cx = climbX;
@@ -295,6 +338,7 @@ export class NavGraph {
         const ng = g[cur] + e.cost + cx + (m.wet === 2 ? 2.0 : m.wet === 1 ? 0.5 : 0) + (blk && blk[e.to] ? 40 : 0) + (cost ? cost[e.to] : 0);
         if (seen[e.to] !== st || ng < g[e.to]) {
           seen[e.to] = st; g[e.to] = ng; from[e.to] = cur;
+          if (tg) tg[e.to] = tg[cur] + e.cost;   // [b5-stagehooks]
           heap.push(e.to, ng + h(m));
         }
       }
@@ -326,7 +370,7 @@ export class NavGraph {
         ids.length = 0;
         for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, ids)) {
           const b = L.blocks[id];
-          if (id === wallBlock || b.dynamic || (b.grate && !b.rail)) continue;   // (railings carry the grate flag too: they count)
+          if (id === wallBlock || b.dynamic || b.absent || (b.grate && !b.rail)) continue;   // (railings carry the grate flag too: they count) [b5-stagehooks] absent
           if ((b.rail || b.solid) && L.pointInBlock(b, _cb, 0.02)) return true;
         }
       }
