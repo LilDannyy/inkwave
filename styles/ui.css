@@ -2299,15 +2299,18 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-lset.is-shake { animation: iw-shake .4s; }
 
 /* bottom: your controls, standing on the ink band */
-.iw-lob__bar { position: absolute; left: calc(var(--u) * 3.4 + var(--sal)); right: calc(var(--u) * 3.4 + var(--sar)); bottom: calc(var(--u) * 5.9 + var(--sab)); display: flex; align-items: center; gap: calc(var(--u) * 1.4); --sh: #3a2d5c; }
-.iw-lob__you { display: flex; gap: calc(var(--u) * 1); min-width: 0; }
+.iw-lob__bar { position: absolute; left: calc(var(--u) * 3.4 + var(--sal)); right: calc(var(--u) * 3.4 + var(--sar)); bottom: calc(var(--u) * 5.9 + var(--sab)); display: flex; align-items: center; gap: calc(var(--u) * 1.25); --sh: #3a2d5c; }
+.iw-lob__you { display: flex; align-items: center; gap: calc(var(--u) * .8); min-width: 0; }
 .iw-lob__bar .iw-wchip { flex: none; height: calc(var(--u) * 5); gap: calc(var(--u) * .7); padding: 0 calc(var(--u) * .9) 0 calc(var(--u) * .7); }
-.iw-lob__wchip { width: calc(var(--u) * 17.5); rotate: -1.5deg; }
-.iw-lob__bar .iw-wchip__icon { width: calc(var(--u) * 4.6); height: calc(var(--u) * 3.6); }
+.iw-lob__wchip { width: calc(var(--u) * 16); rotate: -1.5deg; }
+.iw-lob__bar .iw-wchip__icon { width: calc(var(--u) * 3.8); height: calc(var(--u) * 3.2); }
 .iw-lob__bar .iw-lchip__av { width: calc(var(--u) * 3.8); height: calc(var(--u) * 3.8); }
 .iw-lob__bar .iw-wchip__text { min-width: 0; }
 .iw-lob__bar .iw-wchip__text b { font-size: calc(var(--u) * 1.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .iw-lob__bar .iw-wchip__edit { padding: .45em; }
+/* (a two-word weapon name — most of them — takes two lines rather than an ellipsis in the narrower chip) */
+.iw-lob__wchip.is-long .iw-wchip__text { gap: .3em; }
+.iw-lob__bar .iw-lob__wchip.is-long .iw-wchip__text b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; font-size: calc(var(--u) * 1.12); line-height: 1.04; }
 .iw-lob__bar .iw-wchip.is-pick { animation: iw-pick .5s var(--spring); }
 .iw-lob__bar .iw-lob__lchip { position: relative; width: calc(var(--u) * 5.6); padding: 0; justify-content: center; rotate: 2deg; }
 .iw-lob__bar .iw-lob__lchip .iw-lchip__av { width: calc(var(--u) * 4.2); height: calc(var(--u) * 4.2); margin-top: calc(var(--u) * -.6); }
@@ -2316,13 +2319,38 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-lob__lbadge svg { width: 100%; height: 100%; }
 .iw-lob__llbl { position: absolute; left: 50%; bottom: calc(var(--u) * -.55); translate: -50% 0; padding: .25em .45em; border-radius: .3em; background: var(--k); font: 900 calc(var(--u) * .55) / 1 'Rubik', sans-serif; letter-spacing: .14em; }
 .iw-lob__lchip.is-focus .iw-lob__lbadge, .iw-lob__lchip.is-hover .iw-lob__lbadge { background: var(--hv); }
+/* SUB over SPECIAL: two slim chips stacked between WEAPON and LOOK, each opening the kit picker (menus.js _openKitPicker);
+   their tags stick out of the stack's top and bottom. The weapon's own (no pick): the weapon's default, its tag reading
+   SUB · WEAPON'S OWN, and a dashed rim (as the picker's Weapon's Own tile) */
+.iw-lob__kits { flex: none; display: flex; flex-direction: column; gap: calc(var(--u) * .3); width: calc(var(--u) * 13.6); rotate: 1deg; }
+.iw-lob__bar .iw-lkit { position: relative; width: 100%; height: calc(var(--u) * 2.35); gap: calc(var(--u) * .4); padding: 0 calc(var(--u) * .35) 0 calc(var(--u) * .4);
+  border-radius: calc(var(--u) * .8) calc(var(--u) * .55) calc(var(--u) * .85) calc(var(--u) * .6); }
+.iw-lob__bar .iw-lkit.is-focus { z-index: 2; transform: translateY(calc(var(--u) * -.15)) scale(1.05); }
+.iw-lkit__lbl { position: absolute; left: calc(var(--u) * 1.3); z-index: 2; padding: .32em .5em .3em; border-radius: .3em; background: var(--k); color: #fff; pointer-events: none;
+  font: 900 max(7.5px, calc(var(--u) * .58)) / 1 'Rubik', sans-serif; letter-spacing: .1em; white-space: nowrap; }
+.iw-lkit--sub .iw-lkit__lbl { top: calc(var(--u) * -.62); rotate: -3deg; }
+.iw-lkit--special .iw-lkit__lbl { bottom: calc(var(--u) * -.62); rotate: 2deg; }
+.iw-lkit__icon { flex: none; display: grid; place-items: center; width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); color: var(--a); filter: drop-shadow(0 1.5px 0 var(--k)); }
+.iw-lkit__icon svg { width: 100%; height: 100%; }
+.iw-lkit__name { flex: 1; min-width: 0; padding: .1em .1em .12em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #fff;
+  font: 400 max(10px, calc(var(--u) * 1.02)) / 1.1 'Titan One', sans-serif; -webkit-text-stroke: .16em var(--k); paint-order: stroke fill; }
+.iw-lkit.is-long .iw-lkit__name { font-size: max(9px, calc(var(--u) * .86)); }
+.iw-lkit.is-xlong .iw-lkit__name { font-size: max(8px, calc(var(--u) * .78)); letter-spacing: -.01em; }
+.iw-lkit__own { display: none; font-style: normal; color: var(--hv); }
+.iw-lkit.is-own .iw-lkit__own { display: inline; }
+.iw-lkit.is-own::after { content: ''; position: absolute; inset: calc(var(--u) * .2); z-index: -1; border-radius: inherit; outline: 1.5px dashed rgba(255, 255, 255, .26); pointer-events: none; }
+.iw-lob__bar .iw-lkit .iw-wchip__edit { flex: none; justify-content: center; width: calc(var(--u) * 1.55); height: calc(var(--u) * 1.55); padding: 0; box-shadow: 0 0 0 2px var(--k); }
+.iw-lob__bar .iw-lkit .iw-wchip__edit i { width: 64%; height: 64%; }
+.iw-lkit.is-swap .iw-lkit__icon { animation: iw-squish .45s var(--spring2); }
+.iw-lkit.is-swap .iw-lkit__name { animation: iw-tip-in .4s var(--spring) backwards; }
+@media (prefers-reduced-motion: reduce) { .iw-lkit.is-swap *, .iw-plate__k.is-pop { animation: none !important; } }
 .iw-lob__team { position: relative; display: flex; flex-direction: column; gap: calc(var(--u) * .4); padding: calc(var(--u) * .35) calc(var(--u) * .5); border-radius: calc(var(--u) * 1); transition: background .2s; }
 .iw-lob__team.is-focus { animation: iw-squish .45s var(--spring2); }
 .iw-lob__team.is-shake { animation: iw-shake .4s; }
 .iw-lob__barlbl { display: flex; align-items: center; justify-content: space-between; gap: 1em; padding: 0 calc(var(--u) * .3); font: 400 calc(var(--u) * 1) / 1 'Titan One', sans-serif; letter-spacing: .04em; -webkit-text-stroke: .16em var(--k); paint-order: stroke fill; }
 .iw-lob__barlbl .iw-hint { font-size: calc(var(--u) * .78); -webkit-text-stroke: 0; }
-.iw-lob__team .iw-seg { width: calc(var(--u) * 22.5); }
-.iw-lob__team .iw-seg__opt { padding: calc(var(--u) * .55) calc(var(--u) * .2); }
+.iw-lob__team .iw-seg { width: max(calc(var(--u) * 18.5), 186px); }
+.iw-lob__team .iw-seg__opt { padding: calc(var(--u) * .55) calc(var(--u) * .2); font-size: max(10px, calc(var(--u) * .8)); }
 .iw-teamopt { display: inline-flex; align-items: center; gap: .45em; }
 .iw-teamopt i { display: block; width: 1em; height: 1em; border-radius: 50% 50% 50% 0; rotate: -45deg; box-shadow: 0 0 0 2px var(--k); }
 .iw-teamopt i svg { width: 100%; height: 100%; rotate: 45deg; }
@@ -2336,13 +2364,13 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-lob__team[data-pick="0"] .iw-seg__opt.is-sel { color: var(--ta-ink); }
 .iw-lob__team[data-pick="1"] .iw-seg__opt.is-sel { color: var(--tb-ink); }
 .iw-lob__team[data-pick="0"] .iw-seg__opt.is-sel .iw-teamopt i, .iw-lob__team[data-pick="1"] .iw-seg__opt.is-sel .iw-teamopt i { box-shadow: 0 0 0 2px #fff; }
-.iw-lob__emote { position: relative; display: flex; align-items: center; gap: .55em; height: calc(var(--u) * 5); padding: 0 calc(var(--u) * 1.2) 0 calc(var(--u) * .7); border: 0; border-radius: 999px; overflow: visible; isolation: isolate;
-  background: #2a2144 var(--tex-squids); color: #fff; cursor: pointer; pointer-events: auto; font: 400 calc(var(--u) * 1.45) / 1 'Titan One', sans-serif; letter-spacing: .02em; rotate: -2deg;
+.iw-lob__emote { position: relative; display: flex; align-items: center; gap: .5em; height: calc(var(--u) * 5); padding: 0 calc(var(--u) * 1.05) 0 calc(var(--u) * .6); border: 0; border-radius: 999px; overflow: visible; isolation: isolate;
+  background: #2a2144 var(--tex-squids); color: #fff; cursor: pointer; pointer-events: auto; font: 400 calc(var(--u) * 1.3) / 1 'Titan One', sans-serif; letter-spacing: .02em; rotate: -2deg;
   box-shadow: var(--stk); transition: transform .4s var(--spring), background .2s, color .2s; }
-.iw-lob__emoteico { display: block; width: calc(var(--u) * 3); height: calc(var(--u) * 3); color: #ffd54a; transition: transform .45s var(--spring); }
+.iw-lob__emoteico { display: block; width: calc(var(--u) * 2.7); height: calc(var(--u) * 2.7); color: #ffd54a; transition: transform .45s var(--spring); }
 .iw-lob__emoteico svg { width: 100%; height: 100%; }
 .iw-lob__emoteico svg circle:first-child { stroke: var(--k); stroke-width: 4; }
-.iw-lob__emotekeys { font-size: calc(var(--u) * .8); }
+.iw-lob__emotekeys { position: absolute; right: calc(var(--u) * .2); top: calc(var(--u) * -1.15); font-size: calc(var(--u) * .78); rotate: 2deg; pointer-events: none; }
 .iw-lob__emotekeys em { font-style: normal; margin: 0 .15em; opacity: .7; }
 .iw-lob__emote.is-focus, .iw-lob__emote.is-hover { background: #ffd54a; color: var(--k); transform: translateY(calc(var(--u) * -.3)) scale(1.04); }
 .iw-lob__emote.is-focus { animation: iw-squish .5s var(--spring2); }
@@ -2352,7 +2380,7 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-lob__grow { flex: 1; min-width: 0; }
 /* READY? / START! — the loud one: high-vis lime, scrolling stripes, wobbles when focused */
 .iw-btn__key { position: absolute; right: calc(var(--u) * .9); top: calc(var(--u) * .6); font-size: calc(var(--u) * .8); }
-.iw-btn--ready, .iw-btn--lobstart { flex: none; width: calc(var(--u) * 23); height: calc(var(--u) * 5.2); font-size: calc(var(--u) * 2.55); overflow: hidden;
+.iw-btn--ready, .iw-btn--lobstart { flex: none; width: calc(var(--u) * 20.4); height: calc(var(--u) * 5.2); font-size: calc(var(--u) * 2.55); overflow: hidden;
   border-radius: calc(var(--u) * 1.8) calc(var(--u) * 1.1) calc(var(--u) * 2) calc(var(--u) * 1.3) / calc(var(--u) * 1.5) calc(var(--u) * 1.9) calc(var(--u) * 1.3) calc(var(--u) * 1.8);
   --bg: var(--hv); --fill: #f7ffb0; --fill-ink: var(--k); color: var(--k); --tilt: -2deg;
   box-shadow: 0 0 0 var(--ol2) #fff, 0 0 0 var(--olx) var(--k), calc(var(--u) * .45) calc(var(--u) * .55) 0 var(--olx) var(--hv-deep); }
@@ -2374,6 +2402,10 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-btn--ready.is-on .iw-btn__key { opacity: 0; }
 .iw-lobby.is-host .iw-btn--ready, .iw-lobby:not(.is-host) .iw-btn--lobstart { display: none; }
 .iw-btn--lobstart .iw-start__chev { top: 64%; }
+/* (the bar is full — SUB / SPECIAL joined it: a tighter inside, and the sub-line a size down, keep READY? / START! and their
+   line whole at 1280 wide) */
+.iw-btn--ready, .iw-btn--lobstart { gap: calc(var(--u) * .9); padding-left: calc(var(--u) * 1.3); padding-right: calc(var(--u) * 1.2); }
+.iw-btn--ready .iw-btn__sub, .iw-btn--lobstart .iw-btn__sub { font-size: max(10px, calc(var(--u) * .8)); white-space: nowrap; }
 .iw-btn--lobstart.is-blocked { --bg: #3b3352; --fill: #fff; --fill-ink: var(--k); color: #fff; box-shadow: 0 0 0 var(--ol2) rgba(255, 255, 255, .7), 0 0 0 var(--olx) var(--k), calc(var(--u) * .45) calc(var(--u) * .55) 0 var(--olx) #1c1530; }
 .iw-btn--lobstart.is-blocked::before { animation: none; background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .06) 0 calc(var(--u) * 1.2), transparent calc(var(--u) * 1.2) calc(var(--u) * 2.4)); }
 .iw-btn--lobstart.is-blocked .iw-start__chev { display: none; }
@@ -2402,6 +2434,12 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
   background: var(--k); color: var(--tc); rotate: -10deg; box-shadow: 0 0 0 calc(var(--u) * .13) #fff, 0 0 0 calc(var(--u) * .32) var(--k); }
 .iw-plate__w svg { width: 76%; height: 76%; }
 .iw-plate__w.is-pop { animation: iw-code-pop .45s var(--spring2); }
+/* their sub / special: two small icons in a dark pill hanging under the weapon badge (clear of the READY stamp) */
+.iw-plate__kit { position: absolute; left: calc(var(--u) * -.55); bottom: calc(var(--u) * -1.05); z-index: 1; display: flex; gap: calc(var(--u) * .14); padding: calc(var(--u) * .14) calc(var(--u) * .26);
+  border-radius: 999px; background: var(--k); rotate: -4deg; box-shadow: 0 0 0 calc(var(--u) * .11) #fff, 0 0 0 calc(var(--u) * .27) var(--k); }
+.iw-plate__k { display: block; width: calc(var(--u) * 1.2); height: calc(var(--u) * 1.2); color: var(--tc); }
+.iw-plate__k svg { display: block; width: 100%; height: 100%; }
+.iw-plate__k.is-pop { animation: iw-code-pop .45s var(--spring2); }
 .iw-plate__crown { display: none; position: absolute; left: calc(var(--u) * -1); top: calc(var(--u) * -1.9); width: calc(var(--u) * 2.1); height: calc(var(--u) * 2.1); color: #ffd54a; rotate: -20deg; }
 .iw-plate__crown svg { width: 100%; height: 100%; }
 .iw-plate__crown svg path { stroke: var(--k); stroke-width: 9; paint-order: stroke; }

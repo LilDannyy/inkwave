@@ -14,10 +14,10 @@
 //
 // URL knobs: ?mockauto=0 (timeline paused: nothing happens on its own) · ?mockfill=N (N others already in the room on
 // create / join) · ?mocklat=ms (connect latency, default 700) · ?mockmatch=s (match length, default 6).
-// Debug handle (G.net.mock): auto(on) · add({ name, team, weapon, style, ready }) → id · drop(id) · ready(id, v) ·
-// emote(id, name) · swap(id, { weapon, style }) · fill(n) · clear() · host(id) · startMatch() · endMatch() · lose(msg)
+// Debug handle (G.net.mock): auto(on) · add({ name, team, weapon, sub, special, style, ready }) → id · drop(id) · ready(id, v) ·
+// emote(id, name) · swap(id, { weapon, sub, special, style }) · fill(n) · clear() · host(id) · startMatch() · endMatch() · lose(msg)
 import { G } from '../core/ctx.js';
-import { WEAPON_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk } from '../config.js';
+import { WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 
 const q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
@@ -149,6 +149,9 @@ export class MockNet {
     const patch = {};
     if (o.name != null) patch.name = String(o.name).slice(0, 16) || me.name;
     if (o.weapon != null) patch.weapon = o.weapon;
+    // sub / special: a known id, or null (= the weapon's own), as session.js
+    if (o.sub !== undefined) patch.sub = SUBS[o.sub] ? o.sub : null;
+    if (o.special !== undefined) patch.special = SPECIALS[o.special] ? o.special : null;
     if (o.style != null) patch.style = { ...o.style };
     if (o.ready != null && this.state === 'lobby' && !me.host) patch.ready = !!o.ready;
     if (o.team != null) {
@@ -287,7 +290,8 @@ export class MockNet {
     const p = pick(others);
     if (r < 0.62 && !p.host) { this._patch(p.id, { ready: !p.ready || rnd() < 0.15 ? !p.ready : p.ready }); return; }
     if (r < 0.8) { this._emit('emote', { id: p.id, name: pick(EMOTES) }); return; }
-    if (r < 0.9) { this._patch(p.id, { weapon: pick(WEAPON_ORDER.filter((w) => w !== p.weapon)) }); return; }
+    if (r < 0.86) { this._patch(p.id, { weapon: pick(WEAPON_ORDER.filter((w) => w !== p.weapon)) }); return; }
+    if (r < 0.9) { this._patch(p.id, rnd() < 0.5 ? { sub: rnd() < 0.3 ? null : pick(SUB_ORDER) } : { special: rnd() < 0.3 ? null : pick(SPECIAL_ORDER) }); return; }
     this._patch(p.id, { style: LOOK.randomStyle(rnd) });
   }
 
@@ -351,8 +355,8 @@ export class MockNet {
     const prof = (G.game && G.game.profile) || {};
     return {
       id: this.myId || (this.myId = this._id()), name: String(name || prof.name || 'Player').slice(0, 16), team,
-      weapon: prof.weapon || 'shooter', style: prof.style ? { ...prof.style } : LOOK.randomStyle(rnd),
-      ready: !!host, host: !!host, you: true, ping: 22,
+      weapon: prof.weapon || 'shooter', sub: SUBS[prof.sub] ? prof.sub : null, special: SPECIALS[prof.special] ? prof.special : null,
+      style: prof.style ? { ...prof.style } : LOOK.randomStyle(rnd), ready: !!host, host: !!host, you: true, ping: 22,
     };
   }
 
@@ -362,6 +366,8 @@ export class MockNet {
     return {
       id: o.id || this._id(), name: o.name || pick(free.length ? free : NAMES), team: o.team ?? 0,
       weapon: o.weapon || pick(WEAPON_ORDER), style: o.style || LOOK.randomStyle(rnd),
+      // (about half carry their own pick of sub / special, as bots and players do)
+      sub: o.sub !== undefined ? o.sub : rnd() < 0.5 ? null : pick(SUB_ORDER), special: o.special !== undefined ? o.special : rnd() < 0.5 ? null : pick(SPECIAL_ORDER),
       ready: !!(o.ready ?? rnd() < 0.3), host: !!o.host, you: false, ping: 20 + ((rnd() * 80) | 0),
     };
   }

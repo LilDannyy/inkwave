@@ -1,6 +1,7 @@
 // ?netmock=1 (the offline stand-in for G.net, src/net/mock.js) knows the new room settings and plays Practice: the host's
 // settings, a Practice session (your own, on the room's stage, dressed as the room's: the PRACTICE · <code> tag and the
-// online pause menu), the clear-ink wave, a stage swap, End Practice back to the lobby.
+// online pause menu), the clear-ink wave, a stage swap, End Practice back to the lobby; the lobby's SUB / SPECIAL chips and a
+// kit through the stand-in's setMe.
 //   CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/tests/net-mock.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 module.exports = async ({ clients: [A], R, wait, out, args }) => {
   const J = async (code) => JSON.parse(await A.js(`JSON.stringify(${code})`));
@@ -8,6 +9,19 @@ module.exports = async ({ clients: [A], R, wait, out, args }) => {
   await A.until(`__G.net && __G.net.isMock`, 10000);
   const code = await A.js(`__G.net.create('Mocky')`);
   await A.js(`__inkwave.menus.show('lobby'); 1`);
+  // the lobby's SUB / SPECIAL chips (menus.js _scr_lobby) in the stand-in, and its setMe carrying a kit (null = the weapon's own)
+  await A.until(`__inkwave.menus.current === 'lobby' && !!document.querySelector('.iw-lkit')`, 10000);
+  await wait(1200);
+  const kc = await J(`[...document.querySelectorAll('.iw-lkit')].map((e) => [e._k.kind, !!e.querySelector('.iw-lkit__icon svg'), e.querySelector('.iw-lkit__name').textContent, !!e.offsetParent])`);
+  R('mock: the lobby\'s SUB and SPECIAL chips render (icon, name)', kc.length === 2 && kc[0][0] === 'sub' && kc[1][0] === 'special' && kc.every((k) => k[1] && k[2] && k[3]), kc);
+  const meKit = () => J(`(() => { const me = __G.net.lobby.players.find((p) => p.you); return [me.sub ?? null, me.special ?? null]; })()`);
+  await A.js(`__G.net.setMe({ sub: 'scan', special: 'drainbow' }); 1`);
+  await A.until(`__G.net.lobby.players.find((p) => p.you).special === 'drainbow'`, 3000).catch(() => null);
+  const k1 = await meKit();
+  await A.js(`__G.net.setMe({ sub: null, special: 'nope' }); 1`);
+  await A.until(`__G.net.lobby.players.find((p) => p.you).special == null`, 3000).catch(() => null);
+  const k2 = await meKit();
+  R('mock: setMe carries a sub / special; null (or an unknown id) is the weapon\'s own', k1[0] === 'scan' && k1[1] === 'drainbow' && k2[0] === null && k2[1] === null, { k1, k2 });
   await A.js(`__G.net.setSettings({ mode: 'practice', map: 'random', time: 'golden', botCount: 3 }); 1`);
   const l = await J(`({ mode: __G.net.lobby.mode, map: __G.net.lobby.map, time: __G.net.lobby.time, botCount: __G.net.lobby.botCount, plan: __G.net.botPlan() })`);
   R('mock: the host\'s settings (practice · random · golden · 3 bots)', l.mode === 'practice' && l.map === 'random' && l.time === 'golden' && l.botCount === 3 && l.plan.total === 3, l);

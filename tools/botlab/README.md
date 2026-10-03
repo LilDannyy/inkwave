@@ -70,7 +70,7 @@ Online (private rooms) — real clients on this machine, never the deployed rela
   `Q0` / `Q1` … extra page query per client, `QUALITY`, `W` / `H`, `FPS`, `OUT`, `NET_ARGS`):
   - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-practice.cjs` — online Practice end to end (29)
   - `… NET=tools/botlab/tests/net-turf.cjs` — a Turf War with a bot count through results back to the lobby (9)
-  - `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/tests/net-mock.cjs` — the offline stand-in (9)
+  - `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/tests/net-mock.cjs` — the offline stand-in (11)
   - `CLIENTS=1 APP_CSP=1 NET=tools/botlab/tests/net-server.cjs` — ONLINE › SERVER: the desktop app (app://, its own CSP,
     no `?relay=`) picks a friend's server (`tools/host/selfhost.cjs` on a free localhost port) in the picker, creates a
     room; the browser build from that server and a second app client join; Practice; the links, the refusals (official
@@ -219,3 +219,15 @@ A / a click picks, Esc / B / a click outside closes; ← → on the chip still s
 - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-picker.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
   — online Practice: a guest's picks in the picker reach the host's screen and the room
 - pictures: `tools/botlab/scenes/loadout-picker.js` through hud-shots.cjs (any `W` / `H`)
+
+Room lobby › SUB / SPECIAL chips (2026-10-03, src/ui/menus.js `_scr_lobby`: SUB over SPECIAL, stacked between the WEAPON
+and LOOK chips in the bottom bar, each opening the kit picker above; a pick is saved and sent to the room with
+`net.setMe`, null for the weapon's own; the nameplates show everyone's sub / special under their weapon badge):
+- `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-lobbykit.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  — the bar by arrows, a guest's sub / special (Drainbow) / weapon's own by keyboard reaching the host's room and
+  nameplate while it stays ready, a weapon swap moving a Weapon's Own chip, the host's pick, every room mode, the turf
+  match starting with the guest's kit on both screens (14; `NET_ARGS=shots`: pictures)
+- the offline stand-in: `net-mock.cjs` (above) checks the chips and its setMe's kit; pictures at 1280×720 / 960×600 and
+  the picker: `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/jobs/lobby-kit/mock-shots.cjs
+  OUT=tools/botlab/jobs/lobby-kit/out tools/botlab/run.sh tools/botlab/netpage.cjs` (8 checks: the bar has room to spare,
+  every weapon / sub / special name fits its chip, READY? / START!'s sub-lines whole at 1280)
