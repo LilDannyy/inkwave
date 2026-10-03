@@ -149,11 +149,14 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
     await A.until(`__G.match.tower.moving !== 0`, 8000, 100).catch(() => null);
     const mv = await J(A, `__G.match.tower.moving`);
     R('A on the deck moves the tower', mv !== 0, { moving: mv });
-    // A throws its buoy up and down onto the deck beside it (away from the pillar)
-    await A.js(`(async () => { const S = await import('./src/game/sp-surf.js'); const me = __G.match.local; me.specialId = 'surf'; me.special = me.specialCost(); me._startSpecial();
-      const s = me.specialActive; s.botVel = new (await import('three')).Vector3(-0.5, 3, -0.5); S.IMPL.throwIt(me, s); return 1; })()`);
+    // A throws its buoy straight up (moving with the tower) and it comes down onto the deck where A stands
+    await A.js(`(async () => { const S = await import('./src/game/sp-surf.js'), THREE = await import('three'); const me = __G.match.local, T = __G.match.tower; me.specialId = 'surf'; me.special = me.specialCost(); me._startSpecial();
+      const s = me.specialActive, dp = T.block.dp || new THREE.Vector3(); s.botVel = new THREE.Vector3(dp.x * 60, 3, dp.z * 60); S.IMPL.throwIt(me, s); return 1; })()`);
     const live = `__G.specials.world.some((w) => w.kind === 'surf' && w.phase === 'live')`;
-    await A.until(live, 6000, 50); await B.until(live, 6000, 50).catch(() => null);
+    const upA = await A.until(live, 8000, 50).then(() => true, () => false); await B.until(live, 6000, 50).catch(() => null);
+    const st = await J(A, `(() => { const b = __G.specials.world.find((w) => w.kind === 'surf'), T = __G.match.tower, S = __G.surf.SURF_STATS; return { b: b && { phase: b.phase, fall: b.fall, pos: [b.pos.x, b.pos.y, b.pos.z].map((v) => +v.toFixed(2)), on: b.on && b.on.b.tag }, tower: [T.pos.x, T.top, T.pos.z].map((v) => +v.toFixed(2)), stats: { lost: S.lost, crushed: S.crushed, falls: S.falls, shoves: S.shoves } }; })()`);
+    R('A\'s buoy lands on the deck', upA && st.b && st.b.on === 'tower', st);
+    if (!upA) return;
     // sample both screens for 4 s: the buoy's spot on its screen's tower, whether it rides the tower's block, where it is
     const sampler = (c) => c.js(`(() => { const S = window.__twS = []; const T = __G.match.tower; window.__twI = setInterval(() => { const b = __G.specials.world.find((w) => w.kind === 'surf' && w.phase === 'live'); if (!b) return;
       S.push([+(b.pos.x - T.pos.x).toFixed(3), +(b.pos.y - T.top).toFixed(3), +(b.pos.z - T.pos.z).toFixed(3), b.on && b.on.b === T.block ? 1 : 0, +b.pos.x.toFixed(3), +b.pos.z.toFixed(3)]); }, 50); return 1; })()`);
