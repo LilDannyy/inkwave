@@ -201,3 +201,13 @@ Drainbow (2026-10-03, the special: src/game/sp-drainbow.js, src/fx/drainbowFx.js
 - pictures: `tools/botlab/jobs/drainbow/shots.sh [MAP]` (tools/botlab/scenes/drainbow.js through hud-shots.cjs)
 - balance: `tools/botlab/jobs/drainbow/balance.sh <outdir> [N_TURF] [N_ZONES]` (match.cjs `SPECIALS=` forces the
   specials) + `agg.cjs`; the regressions its hook-ins touch: `tools/botlab/jobs/drainbow/regress.sh`
+
+Loadout › SUB / SPECIAL picker (2026-10-03, src/ui/menus.js `_openKitPicker`: Enter / A / a click on the loadout's SUB or
+SPECIAL chip opens a grid of every option with the weapon's own first; arrows / WASD / d-pad / stick move in 2D, Enter /
+A / a click picks, Esc / B / a click outside closes; ← → on the chip still step):
+- `MAP=testbox PAGE=tools/botlab/tests/loadout-picker.js tools/botlab/run.sh tools/botlab/page.cjs` — the main menu's
+  LOADOUT, the hints, 2D moves and WASD, picks saved, Esc / B / outside with no change, the chip's ← →, Drainbow in a few
+  presses, the mouse, the weapon's own (null), the pad, and Practice (L) equipping the live player
+- `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-picker.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  — online Practice: a guest's picks in the picker reach the host's screen and the room
+- pictures: `tools/botlab/scenes/loadout-picker.js` through hud-shots.cjs (any `W` / `H`)

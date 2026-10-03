@@ -2986,3 +2986,93 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-swapcard__squid { position: absolute; left: 50%; top: calc(50% + var(--u) * 13.4); width: calc(var(--u) * 3); height: calc(var(--u) * 3); translate: -50% 0; color: var(--a); animation: iw-swapcard-squid .8s ease-in-out infinite alternate; }
 .iw-swapcard__squid svg { width: 100%; height: 100%; display: block; overflow: visible; }
 @keyframes iw-swapcard-squid { from { translate: -50% 0; rotate: -8deg; } to { translate: -50% -.6em; rotate: 8deg; } }
+
+/* ------------------------------------------------------------------ LOADOUT › the SUB / SPECIAL picker (menus.js _openKitPicker)
+   A die-cut card over the loadout: every option as a tile (icon + name; the current pick inked and ticked, the weapon's own
+   tagged with its weapon), the focused tile's details underneath. Sized in --u (fits 960×600 … 2560×1440 unscrolled;
+   a shorter window scrolls the grid, the focused row kept in view). */
+.iw-modal__card.iw-kpick { width: min(calc(var(--u) * 84), 94vw); max-height: calc(100vh - var(--u) * 3); display: flex; flex-direction: column; gap: calc(var(--u) * 1.15);
+  padding: calc(var(--u) * 1.8) calc(var(--u) * 2) calc(var(--u) * 1.9); text-align: left; rotate: -.4deg;
+  background: var(--tex-squids), linear-gradient(175deg, #2d2349, #1b1430); }
+.iw-kpick__head { display: flex; align-items: center; gap: calc(var(--u) * 1.2); padding-left: calc(var(--u) * .7); }
+.iw-kpick__title { position: relative; isolation: isolate; font-size: calc(var(--u) * 2.4); line-height: 1; white-space: nowrap; rotate: -1.5deg; }
+.iw-kpick__blob { position: absolute; z-index: -1; left: -.55em; top: 50%; width: 2.2em; transform: translateY(-50%) rotate(-12deg); }
+.iw-kpick__head .iw-seclabel__count { margin-left: 0; }
+.iw-kpick__hints { margin-left: auto; display: flex; gap: calc(var(--u) * 1.3); font: 700 var(--fs-xs) / 1 'Rubik', sans-serif; }
+.iw-kpick__grid { position: relative; flex: 0 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: calc(var(--u) * .75);
+  padding: calc(var(--u) * .55); margin: calc(var(--u) * -.55); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .25) transparent; }
+
+/* tiles */
+.iw-ktile { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .2); height: max(64px, calc(var(--u) * 7.4));
+  padding: calc(var(--u) * .55) calc(var(--u) * .3) calc(var(--u) * .45); border: 0; border-radius: calc(var(--u) * 1.1); background: rgba(20, 16, 32, .92); color: #fff;
+  font: inherit; cursor: pointer; pointer-events: auto; overflow: hidden; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .1), 0 calc(var(--u) * .38) 0 rgba(0, 0, 0, .45);
+  transition: transform .35s var(--spring), box-shadow .2s, background .2s; animation: iw-pop .42s var(--spring) backwards; animation-delay: calc(var(--i, 0) * 11ms + 70ms); }
+.iw-ktile__blob { position: absolute; z-index: -1; left: 50%; top: 38%; width: calc(var(--u) * 7.6); transform: translate(-50%, -50%) scale(0) rotate(-30deg); transition: transform .5s var(--spring2); }
+.iw-ktile__icon { flex: 1 1 auto; min-height: 0; display: grid; place-items: center; width: 72%; color: var(--a); transition: transform .4s var(--spring), color .2s; }
+.iw-ktile__icon svg { width: 100%; height: calc(var(--u) * 3.4); filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .4)); }
+.iw-ktile__txt { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: calc(max(10px, var(--u) * 1.02) * 2.3); }
+.iw-ktile__name { max-width: 100%; padding: 0 .12em .1em; font: 400 max(10px, calc(var(--u) * 1.02)) / 1.06 'Titan One', sans-serif; text-align: center; -webkit-text-stroke: .2em var(--k); paint-order: stroke fill; }
+.iw-ktile__sub { max-width: 100%; margin-top: .25em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 900 max(8.5px, calc(var(--u) * .62)) / 1 'Rubik', sans-serif; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+.iw-ktile__cur { position: absolute; top: calc(var(--u) * .4); right: calc(var(--u) * .4); display: grid; place-items: center; width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); border-radius: 50%;
+  background: #fff; color: var(--k); box-shadow: 0 0 0 2px var(--k); transform: scale(0) rotate(-40deg); transition: transform .4s var(--spring2); }
+.iw-ktile__cur svg { width: 64%; height: 64%; }
+.iw-ktile__wpn { position: absolute; top: calc(var(--u) * .4); left: calc(var(--u) * .4); width: calc(var(--u) * 2.5); height: calc(var(--u) * 1.6); padding: calc(var(--u) * .2) calc(var(--u) * .3);
+  border-radius: 999px; background: rgba(8, 6, 14, .6); color: #fff; opacity: .6; }
+.iw-ktile__wpn svg { width: 100%; height: 100%; }
+.iw-ktile.is-own { background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .04) 0 calc(var(--u) * .55), transparent calc(var(--u) * .55) calc(var(--u) * 1.1)), rgba(20, 16, 32, .92);
+  outline: 2px dashed rgba(255, 255, 255, .26); outline-offset: calc(var(--u) * -.4); }
+.iw-ktile.is-own .iw-ktile__wpn { opacity: .85; }
+.iw-ktile.is-own .iw-ktile__name { font-size: max(9.5px, calc(var(--u) * .95)); white-space: nowrap; }
+.iw-ktile.is-cur { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .22), 0 calc(var(--u) * .38) 0 var(--a-deep); }
+.iw-ktile.is-cur .iw-ktile__blob { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+.iw-ktile.is-cur .iw-ktile__icon { color: #fff; }
+.iw-ktile.is-cur .iw-ktile__cur { transform: scale(1) rotate(0deg); }
+.iw-ktile.is-focus { z-index: 1; transform: translateY(calc(var(--u) * -.3)) scale(1.06); background-color: rgba(38, 30, 60, .97); }
+.iw-ktile.is-focus .iw-ktile__icon { transform: rotate(-7deg) scale(1.1); }
+.iw-ktile.is-focus .iw-ktile__wpn { opacity: .9; }
+.iw-ktile.is-pick { animation: iw-pick .5s var(--spring); }
+
+/* the focused tile's details */
+.iw-kpick__info { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: calc(var(--u) * 1.4);
+  min-height: calc(var(--fs-s) * 1.38 * 3 + var(--u) * 5.2); padding: calc(var(--u) * .9) calc(var(--u) * 1.4) calc(var(--u) * 1) calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 1.2); background: var(--k); box-shadow: 0 0 0 2px rgba(255, 255, 255, .12); }
+.iw-kpick__dart { position: relative; isolation: isolate; display: grid; place-items: center; width: calc(var(--u) * 6.4); height: calc(var(--u) * 6.4); }
+.iw-kpick__dblob { position: absolute; inset: 0; z-index: -1; rotate: -8deg; }
+.iw-kpick__dblob svg { width: 100%; height: 100%; }
+.iw-kpick__dicon { display: block; width: 64%; height: 64%; color: #fff; }
+.iw-kpick__dicon svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .35)); }
+.iw-kpick__dtext { min-width: 0; }
+.iw-kpick__drow { display: flex; align-items: center; gap: .8em; min-height: 1.6em; }
+.iw-kpick__kick { font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .16em; color: var(--a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.iw-kpick__eq { display: none; flex: none; align-items: center; gap: .4em; padding: .35em .75em .35em .45em; border-radius: 999px; background: var(--a); color: var(--a-ink);
+  font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .1em; box-shadow: 0 3px 0 var(--a-deep); }
+.iw-kpick__eq i { display: block; width: 1.25em; height: 1.25em; }
+.iw-kpick__eq i svg { width: 100%; height: 100%; }
+.iw-kpick__info.is-cur .iw-kpick__eq { display: inline-flex; }
+.iw-kpick__dname { display: block; margin: .18em 0 .26em; padding: .05em .1em .14em 0; font-size: calc(var(--u) * 2.1); line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.iw-kpick__blurb { margin: 0; font: 500 var(--fs-s) / 1.38 'Rubik', sans-serif; color: #ddd8ea; }
+.iw-kpick__stat { align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: .4em; width: calc(var(--u) * 11.5);
+  padding-left: calc(var(--u) * 1.4); border-left: 2px solid rgba(255, 255, 255, .1); }
+.iw-kpick__stat small { font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .16em; opacity: .7; }
+.iw-kpick__num { font: 400 calc(var(--u) * 2.5) / 1 'Titan One', sans-serif; color: var(--a-light); -webkit-text-stroke: .16em var(--k); paint-order: stroke fill; }
+.iw-kpick__bar { position: relative; width: 100%; height: calc(var(--u) * .95); border-radius: 999px; background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .08); }
+.iw-kpick__bar i { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, var(--a-light) -30%, var(--a) 50%, var(--a-dark));
+  clip-path: inset(0 calc((1 - var(--v, 0)) * 100%) 0 0 round 999px); transition: clip-path .45s var(--spring); }
+.iw-kpick__note { font: 600 var(--fs-xs) / 1.25 'Rubik', sans-serif; color: var(--muted); }
+.iw-kpick__info.is-swap .iw-kpick__dname, .iw-kpick__info.is-swap .iw-kpick__blurb, .iw-kpick__info.is-swap .iw-kpick__kick { animation: iw-tip-in .3s var(--spring); }
+.iw-kpick__info.is-swap .iw-kpick__dicon { animation: iw-squish .42s var(--spring2); }
+
+/* the loadout's SUB / SPECIAL chips: the open-the-picker hint, hover, and the swap after a pick */
+.iw-kit--pick { transition: background .2s; }
+.iw-kit--pick.is-focus, .iw-kit--pick:hover { background: rgba(255, 255, 255, .09); }
+.iw-kit__hint { display: inline-flex; align-items: center; gap: .45em; margin-left: .4em; font-style: normal; letter-spacing: .08em; opacity: .85; vertical-align: middle; }
+.iw-kit__hint > i { display: inline-flex; align-items: center; }
+.iw-kit__hint .iw-key { height: 1.75em; min-width: 0; margin: 0; padding: 0 .5em; font-size: .92em; translate: 0 -.04em;
+  box-shadow: 0 0 0 1.5px var(--k), 0 .14em 0 1.5px var(--k), inset 0 -.14em 0 #c9c4d8; }
+.iw-kit .iw-kit__hint .iw-pad { display: inline-flex; width: 1.8em; min-width: 0; height: 1.8em; margin: 0; font: 900 .92em / 1 'Rubik', sans-serif; color: #fff; }
+.iw-kit.is-swap .iw-kit__icon { animation: iw-squish .45s var(--spring2); }
+.iw-kit.is-swap b, .iw-kit.is-swap > div > span { animation: iw-tip-in .4s var(--spring) backwards; }
+.iw-kit.is-swap > div > span { animation-delay: 40ms; }
+@media (prefers-reduced-motion: reduce) {
+  .iw-ktile, .iw-ktile.is-pick, .iw-kpick__info.is-swap *, .iw-kit.is-swap * { animation: none !important; }
+}

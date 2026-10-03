@@ -13,7 +13,7 @@ import {
   richText, logoMarkup, mapThumb, RULE_ART, weaponIcon, specialIcon,
 } from './ui-icons.js';
 import {
-  GAME_TITLE, GAME_SUBTITLE, VERSION, WEAPONS, WEAPON_ORDER, SPECIALS, SUB, MAPS, DIFFICULTY, MATCH, QUALITY,
+  GAME_TITLE, GAME_SUBTITLE, VERSION, WEAPONS, WEAPON_ORDER, SPECIALS, SPECIAL_ORDER, SUB, SUB_ORDER, MAPS, DIFFICULTY, MATCH, QUALITY,
   DEFAULT_SETTINGS, TEAM_PALETTES, COLORBLIND_PALETTE, PROGRESSION, BOT_NAMES, TEAM_NAMES, ZONES, TOWER,
   mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, roomTime, roomBotPlan,
 } from '../config.js';
@@ -734,6 +734,7 @@ export class Menus {
     const cs = getComputedStyle(el);
     this._cur.r = cs.borderTopLeftRadius;
     if (this._scr && this._scr.onFocus) this._scr.onFocus(el);
+    if (this._modal && this._modal._onFocus && this._modal.contains(el)) this._modal._onFocus(el);   // (a modal's own focus hook)
   }
 
   _candidates() {
@@ -746,6 +747,7 @@ export class Menus {
     const s = this._scr;
     if (!s) return false;
     if (this._starting) return true; // launching a match: ignore input under the wipe
+    if (this._modal && this._modal._onNav && this._modal._onNav(dir)) return true;   // (a modal's own nav, e.g. a grid: before the screen's)
     if (s.onNav && s.onNav(dir)) return true;
     if (dir === 'back') { this._back(); return true; }
     if (dir === 'tab_prev' || dir === 'tab_next' || dir === 'alt') return true;
@@ -1894,11 +1896,13 @@ export class Menus {
       const row = h('div', { class: 'iw-stat', style: { '--i': i } }, h('span', { class: 'iw-stat__label' }, h('i', { html: STAT_ICONS[k] || GLYPHS.star }), label), bar, num, delta);
       return { k, row, bar, num, delta, cur: 0, target: 0, shownInt: -1 };
     });
-    // sub picker: Enter / click cycles, ← → steps through every sub (saved to the profile)
+    // sub / special: Enter / A / a click opens the picker (_openKitPicker: every option in a grid); ← → still step
+    // through them one at a time (saved to the profile either way)
+    const kitHint = () => h('i', { class: 'iw-kit__hint' }, h('i', { class: 'iw-kbm', html: keycap('Enter') }), h('i', { class: 'iw-padg', html: padGlyph('A') }), 'CHOOSE');
     const subIcon = h('span', { class: 'iw-kit__icon' }), subName = h('b'), subBlurb = h('span');
     const subChip = h('div', { class: 'iw-kit iw-kit--pick' }, subIcon,
-      h('div', null, h('small', null, 'SUB ', h('i', { class: 'iw-kit__hint' }, '◀ ▶ CHANGE')), subName, subBlurb));
-    const subOrder = this.api.subOrder || ['bomb'];
+      h('div', null, h('small', null, 'SUB ', kitHint()), subName, subBlurb));
+    const subOrder = (this.api.subOrder || SUB_ORDER).filter((id) => (this.api.subs || SUB)[id]);
     const renderSub = () => {
       const sb = this._sub();
       subIcon.innerHTML = SUB_ICONS[sb.id] || SUB_ICONS.bomb;
@@ -1912,12 +1916,22 @@ export class Menus {
       renderSub();
       restartAnim(subChip, 'is-swap');
     };
-    this._bind(subChip, { id: 'subpick', type: 'row', accept: () => cycleSub(1), adjust: (d) => cycleSub(d) });
+    // the picker: a pick lands like a step (the chip's swap animation, focus back on it); Esc leaves it as it was
+    const openKit = (kind) => {
+      const chip = kind === 'sub' ? subChip : spChip;
+      this._openKitPicker(kind, { chip, onClose: (changed) => {
+        if (!changed) return;
+        if (kind === 'sub') renderSub(); else renderSp();
+        restartAnim(chip, 'is-swap');
+        this._burstAt(chip.firstElementChild, { count: 10, dist: 5, size: 0.8 });
+      } });
+    };
+    this._bind(subChip, { id: 'subpick', type: 'row', accept: () => openKit('sub'), adjust: (d) => cycleSub(d) });
     renderSub();
     const spIcon = h('span', { class: 'iw-kit__icon' });
     const spName = h('b'); const spBlurb = h('span'); const spCost = h('em', { class: 'iw-kit__cost' });
-    const spChip = h('div', { class: 'iw-kit iw-kit--pick' }, spIcon, h('div', null, h('small', null, 'SPECIAL ', h('i', { class: 'iw-kit__hint' }, '◀ ▶ CHANGE')), h('div', { class: 'iw-kit__row' }, spName, spCost), spBlurb));
-    const spOrder = this.api.specialOrder || Object.keys(specials);
+    const spChip = h('div', { class: 'iw-kit iw-kit--pick' }, spIcon, h('div', null, h('small', null, 'SPECIAL ', kitHint()), h('div', { class: 'iw-kit__row' }, spName, spCost), spBlurb));
+    const spOrder = (this.api.specialOrder || SPECIAL_ORDER).filter((id) => specials[id]);
     const renderSp = () => {
       const sp = this._special();
       spIcon.innerHTML = specialIcon(sp.id);
@@ -1931,7 +1945,7 @@ export class Menus {
       renderSp();
       restartAnim(spChip, 'is-swap');
     };
-    this._bind(spChip, { id: 'specialpick', type: 'row', accept: () => cycleSp(1), adjust: (d) => cycleSp(d) });
+    this._bind(spChip, { id: 'specialpick', type: 'row', accept: () => openKit('special'), adjust: (d) => cycleSp(d) });
     const detail = this._panel('iw-wd iw-in is-enter',
       h('div', { class: 'iw-wd__head' }, h('div', null, kind, nm), h('div', { class: 'iw-wd__badges' }, cmpBadge, eqBadge)),
       blurb,
@@ -2046,6 +2060,136 @@ export class Menus {
       },
       destroy: () => {},
     };
+  }
+
+  // ================================================================ LOADOUT › the SUB / SPECIAL picker
+  /** The loadout's kit picker (kind 'sub' | 'special'): every option as a tile (icon + name) in a grid, the focused one's
+   *  details underneath (its blurb; a sub's ink cost, a special's gauge points with your weapon). The first tile is the
+   *  weapon's own (null in the profile: the kit follows the weapon — main.js _subFor / _specialFor); the current pick is
+   *  marked and focused first. Arrows / WASD / d-pad / stick move in 2D (← → run on through the rows and round), Enter /
+   *  A or a click picks — applied like the chip's ← → steps (api.setLoadout: saved to the profile; in Practice the kit is
+   *  in your hands at once; online it reaches the room) — and closes; Esc / B / Back or a click outside the card closes
+   *  without a change. Focus goes back to `chip`, then onClose(changed). */
+  _openKitPicker(kind, { chip = null, onClose = null } = {}) {
+    if (this._modal || !this._scr) return null;
+    const isSub = kind === 'sub', KIND = isSub ? 'SUB' : 'SPECIAL';
+    const reduced = prefersReducedMotion();
+    const all = isSub ? (this.api.subs || SUB) : this._specials();
+    const order = (isSub ? this.api.subOrder || SUB_ORDER : this.api.specialOrder || SPECIAL_ORDER).filter((id) => all[id]);
+    if (!order.length) return null;
+    const lo = this._loadout(), W = this._weapons()[lo.weapon] || {}, wName = W.name || 'weapon';
+    const ownId = [isSub ? W.sub : W.special, isSub ? 'bomb' : 'slam', order[0]].find((id) => id && all[id]);
+    // the profile's own pick (null / unset: the weapon's own); a host api without one (the UI lab) — the loadout's
+    const saved = this._profile()[kind];
+    const cur = saved && all[saved] ? saved : saved === undefined && lo[kind] && lo[kind] !== ownId && all[lo[kind]] ? lo[kind] : null;
+    const iconOf = (id) => (isSub ? SUB_ICONS[id] || SUB_ICONS.bomb : specialIcon(id));
+    const wIcon = weaponIcon(W.kind || lo.weapon);
+    const items = [{ id: null, def: all[ownId] }, ...order.map((id) => ({ id, def: all[id] }))];
+    let done = false;   // (picked or closed: input waits for the card to go)
+
+    // ---- the tiles
+    const tiles = items.map((it, i) => {
+      const own = it.id === null, id = own ? ownId : it.id;
+      const t = h('button', { class: 'iw-ktile' + (own ? ' is-own' : id === ownId ? ' is-wdef' : '') + (it.id === cur ? ' is-cur' : ''), style: { '--i': i } },
+        h('span', { class: 'iw-ktile__blob', html: splatSVG({ seed: 61 + i * 7, cls: 'iw-fa', r: 56, arms: 7, drops: 0 }) }),
+        h('span', { class: 'iw-ktile__icon', html: iconOf(id) }),
+        own || id === ownId ? h('span', { class: 'iw-ktile__wpn', title: `Comes with the ${wName}`, html: wIcon }) : null,
+        h('span', { class: 'iw-ktile__txt' }, h('span', { class: 'iw-ktile__name' }, own ? 'Weapon’s Own' : it.def.name), own ? h('span', { class: 'iw-ktile__sub' }, it.def.name) : null),
+        h('span', { class: 'iw-ktile__cur', html: GLYPHS.check }));
+      t._kp = it;
+      this._fx(t);
+      this._bind(t, { id: `kp-${kind}-${it.id || 'own'}`, accept: () => pick(t) });
+      return t;
+    });
+    const grid = h('div', { class: 'iw-kpick__grid' }, tiles);
+
+    // ---- the focused tile's details
+    const dIcon = h('span', { class: 'iw-kpick__dicon' });
+    const dKick = h('span', { class: 'iw-kpick__kick' });
+    const dEq = h('span', { class: 'iw-kpick__eq' }, h('i', { html: GLYPHS.check }), 'EQUIPPED');
+    const dName = h('b', { class: 'iw-kpick__dname iw-display' });
+    const dBlurb = h('p', { class: 'iw-kpick__blurb' });
+    const statNum = h('b', { class: 'iw-kpick__num' });
+    const statBar = h('span', { class: 'iw-kpick__bar' }, h('i'));
+    const stat = isSub
+      ? h('div', { class: 'iw-kpick__stat' }, h('small', null, 'INK COST'), statNum, statBar, h('span', { class: 'iw-kpick__note' }, 'of your ink tank per use'))
+      : h('div', { class: 'iw-kpick__stat' }, h('small', null, 'GAUGE'), statNum, h('span', { class: 'iw-kpick__note' }, `turf points to fill it with your ${wName}`));
+    const info = h('div', { class: 'iw-kpick__info' },
+      h('span', { class: 'iw-kpick__dart' }, h('span', { class: 'iw-kpick__dblob', html: splatSVG({ seed: isSub ? 29 : 47, cls: 'iw-fa', r: 60, arms: 8, drops: 2 }) }), dIcon),
+      h('div', { class: 'iw-kpick__dtext' }, h('div', { class: 'iw-kpick__drow' }, dKick, dEq), dName, dBlurb),
+      stat);
+    const countEl = h('span', { class: 'iw-seclabel__count' });
+    const show = (t) => {
+      const it = t._kp, own = it.id === null, id = own ? ownId : it.id, d = it.def;
+      dIcon.innerHTML = iconOf(id);
+      dKick.textContent = own ? `FOLLOWS YOUR ${wName.toUpperCase()}` : id === ownId ? `${KIND} · COMES WITH THE ${wName.toUpperCase()}` : KIND;
+      dName.textContent = own ? `Weapon’s Own: ${d.name}` : d.name;
+      dBlurb.textContent = (own ? `Whatever ${isSub ? 'sub' : 'special'} your weapon comes with — change weapons and it changes too. ` : '') + (d.blurb || '');
+      if (isSub) { const c = Math.round(d.inkCost || 0); statNum.textContent = `${c}%`; statBar.style.setProperty('--v', clamp(c / 100).toFixed(3)); }
+      else statNum.textContent = W.specialCost ? `${Math.round(W.specialCost)}p` : '—';
+      info.classList.toggle('is-cur', it.id === cur);
+      countEl.textContent = `${tiles.indexOf(t) + 1} / ${tiles.length}`;
+      restartAnim(info, 'is-swap');
+      // (a grid taller than its room scrolls: keep the focused row in the middle of the view)
+      if (grid.scrollHeight > grid.clientHeight + 2) grid.scrollTo({ top: Math.max(0, t.offsetTop + t.offsetHeight / 2 - grid.clientHeight / 2), behavior: reduced ? 'auto' : 'smooth' });
+    };
+
+    const card = h('div', { class: `iw-modal__card iw-kpick iw-kpick--${kind}` },
+      h('div', { class: 'iw-kpick__head' },
+        h('div', { class: 'iw-kpick__title' },
+          h('span', { class: 'iw-kpick__blob', html: splatSVG({ seed: isSub ? 13 : 31, cls: 'iw-fa', r: 60, arms: 7, drops: 3 }) }),
+          h('span', { class: 'iw-display' }, `CHOOSE YOUR ${KIND}`)),
+        countEl,
+        h('div', { class: 'iw-kpick__hints' }, this._hint('Enter', 'A', 'Choose'), this._hint('Esc', 'B', 'Back'))),
+      grid, info);
+    const m = h('div', { class: 'iw-modal iw-kpickm' }, card);
+
+    // ---- pick / close
+    const finish = (changed) => {
+      if (this._modal !== m) return;
+      this._closeModal(true);   // (focus back on the chip)
+      if (onClose) safeCall(() => onClose(changed));
+    };
+    const pick = (t) => {
+      if (done || this._modal !== m) return;
+      done = true;
+      const id = t._kp.id, changed = id !== cur;
+      if (changed) {
+        safeCall(() => this.api.setLoadout && this.api.setLoadout({ [kind]: id }));
+        this._sfx('ui_confirm'); this._sfx('splat_small');
+        for (const x of tiles) x.classList.toggle('is-cur', x === t);
+        this._burstAt(t, { count: 10, dist: 6, size: 0.9 });
+      } else this._sfx('ui_click');
+      restartAnim(t, 'is-pick');
+      setTimeout(() => finish(changed), reduced ? 0 : 220);
+    };
+    m._onBack = () => { if (done) return; done = true; this._sfx('ui_back'); finish(false); };
+    m.addEventListener('pointerdown', (e) => { if (e.target === m) m._onBack(); });
+    m._onFocus = (f) => { if (f._kp) show(f); };
+    // 2D moves on the grid (its columns as laid out): ← → step on through the rows and round the ends; ↑ ↓ a row (from
+    // the row above a short last row, ↓ lands on its last tile); the top / bottom edge bumps
+    const colsOf = () => { const y0 = tiles[0].offsetTop; let c = 0; while (c < tiles.length && tiles[c].offsetTop === y0) c++; return Math.max(1, c); };
+    m._onNav = (dir) => {
+      if (done) return true;
+      if (dir === 'tab_prev' || dir === 'tab_next' || dir === 'alt') return true;   // (nothing here — never the screen's)
+      if (dir !== 'up' && dir !== 'down' && dir !== 'left' && dir !== 'right') return false;   // accept / back: the usual
+      const f = this._focus, i = tiles.indexOf(f), n = tiles.length;
+      if (i < 0) { this._moveFocus(first, dir); return true; }
+      const cols = colsOf(), row = Math.floor(i / cols), lastRow = Math.floor((n - 1) / cols);
+      const j = dir === 'left' ? (i - 1 + n) % n : dir === 'right' ? (i + 1) % n
+        : dir === 'up' ? (row > 0 ? i - cols : -1) : (row < lastRow ? Math.min(i + cols, n - 1) : -1);
+      if (j < 0) this._bump(f, dir);
+      else this._moveFocus(tiles[j], dir);
+      return true;
+    };
+
+    this._scr.el.appendChild(m);
+    this._modalPrev = chip || this._focus;
+    this._modal = m;
+    const first = tiles[items.findIndex((it) => it.id === cur)] || tiles[0];
+    this._setFocus(first, { snap: true });
+    this._sfx('ui_click');
+    return m;
   }
 
   // ================================================================ controls: segmented / slider / toggle
@@ -3523,8 +3667,10 @@ export class Menus {
           s.bar.style.setProperty('--v', v.toFixed(3)); s.bar.style.setProperty('--g', (id === equipped ? 0 : g).toFixed(3));
           s.bar.classList.toggle('is-up', id !== equipped && v > g + 0.01); s.bar.classList.toggle('is-down', id !== equipped && v < g - 0.01);
         }
-        const sp = this._specials()[w.special] || Object.values(this._specials())[0];
-        const sub = (w.sub && (this.api.subs || SUB)[w.sub]) || this._sub();
+        // (the kit you'd play it with: your own sub / special pick from the loadout, else the weapon's)
+        const prof = this._profile(), SPS = this._specials(), SBS = this.api.subs || SUB;
+        const sp = SPS[prof.special] || SPS[w.special] || Object.values(SPS)[0];
+        const sub = SBS[prof.sub] || (w.sub && SBS[w.sub]) || this._sub();
         kits.innerHTML = '';
         kits.append(h('span', { class: 'iw-chip' }, h('i', { html: SUB_ICONS[sub.id] || SUB_ICONS.bomb }), sub.name), h('span', { class: 'iw-chip' }, h('i', { html: specialIcon(sp.id) }), sp.name));
         restartAnim(detail, 'is-swap');
