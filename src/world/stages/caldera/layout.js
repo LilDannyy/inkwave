@@ -22,6 +22,7 @@ import { LAVA, LAVA_VIEW, BLOCKOUT_LAVA, riderStandIns } from './lava.js';
 
 const { P, ch, arc, rotPoly, inPoly, HW, S_LIP } = G;
 const HIGH_BUILD = BLOCKOUT_LAVA && LAVA_VIEW === 'high';
+const SB = 31.1;   // the Spillway Bridge's centre line, s along the channel (see the bridge)
 
 // ------------------------------------------------------------------------------------------------------------ palette
 // the works: pale tuff paving, whitewash, works green iron, buff firebrick; the caldera: basalt, red scoria, glaze
@@ -265,12 +266,16 @@ add(O(-21.2, -19.6, 3, 3, 1.2, 4.0, 140, white({ tag: 'winch-house' })));
 if (!HIGH_BUILD || true) {   // (the props on the ledges stand in the lava at HIGH: they stay)
   add(stack(8.4, -17.4, 1.6, 1.6, 1.8, 0, 'mould-stack', K.ironDk), stack(13.4, -15.0, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
   // hornitos on the Spillway floor (spatter chimneys) and the Spillway Bridge's pier
-  for (const [s, t] of [[31.5, 2], [24.6, -2.6]]) { const [x, z] = ch(s, t); add(O(x, z, 1.6, 1.6, 0, 2.2, 48, cover(K.scoria, { tag: 'hornito' }))); }
-  { const [x, z] = ch(28.5, 0); add(O(x, z, 0.8, 2.4, 0, 2.0, 48, cover(K.basaltDk, { tag: 'bridge-pier' }))); }
+  // (the second hornito moved upstream from ch(31.5, 2): it would stand under the bridge, which moved down the channel)
+  for (const [s, t] of [[27.6, 3.0], [24.6, -2.6]]) { const [x, z] = ch(s, t); add(O(x, z, 1.6, 1.6, 0, 2.2, 48, cover(K.scoria, { tag: 'hornito' }))); }
+  { const [x, z] = ch(SB, 0); add(O(x, z, 0.8, 2.4, 0, 2.0, 48, cover(K.basaltDk, { tag: 'bridge-pier' }))); }
 }
-// the Spillway Bridge (2.4, underside 2.0): Alpha's quay → Bravo's horn tip; works-green girders (rail) both sides
-{ const [x, z] = ch(28.5, 0); add(O(x, z, 3.0, 11.0, 2.0, 2.4, 48, iron({ tag: 'spillway-bridge', color: '#56685e' }))); }
-for (const s of [27.0 - 0.125, 30.0 + 0.125]) add(railSeg(ch(s, -HW), ch(s, HW), 2.4));
+// the Spillway Bridge (2.4, underside 2.0): Alpha's Spillway Quay → Bravo's horn tip; works-green girders (rail) both
+// sides. At s 29.6 … 32.6 (DESIGN.md: 27 … 30): the quay meets the channel only from s 29.5 (where the terrace's r 30
+// face crosses it), so at s 27 … 30 the bridge would have landed on the Lakefront 1.2 m below its deck, with a 0.5 m
+// sliver to the quay — the left flank's "Spillway Quay → Spillway Bridge" needs it on the quay
+{ const [x, z] = ch(SB, 0); add(O(x, z, 3.0, 11.0, 2.0, 2.4, 48, iron({ tag: 'spillway-bridge', color: '#56685e' }))); }
+for (const s of [SB - 1.5 - 0.125, SB + 1.5 + 0.125]) add(railSeg(ch(s, -HW), ch(s, HW), 2.4));
 // the lip fence: a chain fence across the lip (beyond it the lavafall chute)
 add(railSeg(ch(S_LIP - 0.1, -HW), ch(S_LIP - 0.1, HW), 0, 1.0));
 
@@ -279,15 +284,19 @@ add(railSeg(ch(S_LIP - 0.1, -HW), ch(S_LIP - 0.1, HW), 0, 1.0));
 for (const a of [-152, -168]) { const [x, z] = P(30.4, a); add(O(x, z, 1.4, 1.4, 0, 2.0, -a, cover(K.scoria, { tag: 'hornito' }))); }
 // the Ladle Road's vent hood, the ladle cradle, the horn tip's cairn; the Rim Ridge's outcrop and spatter cone
 { const [x, z] = P(24, 177); add(stack(x, z, 1.4, 1.4, 1.4, 2.4, 'vent-hood', K.ironDk)); }
-{ const [x, z] = P(22, 155.8); add(O(x, z, 1.6, 1.4, 2.4, 3.6, -155.8, cover(K.ironDk, { tag: 'ladle-cradle' }))); }
+// (the ladle cradle at θ 160, not 155.8: there it pinched the horn tip's lake-side lane against the Gauge Post to 1.6 m)
+{ const [x, z] = P(22, 160); add(O(x, z, 1.6, 1.4, 2.4, 3.6, -160, cover(K.ironDk, { tag: 'ladle-cradle' }))); }
 add(stack(-24.6, 16.2, 1.2, 1.2, 1.2, 2.4, 'cairn', K.basaltDk));
 { const [x, z] = P(28, 175.5); add(O(x, z, 2.0, 1.4, 3.6, 4.9, -175.5, cover(K.basaltDk, { tag: 'outcrop' }))); }
 { const [x, z] = P(28.25, 166.5); add(cone(x, z, 0.6, 4.2, 1.95, 3.6, 'ridge-cone')); }
 // scree ramps: loose scree from the Ladle Road up onto the Ridge (21.8°)
 for (const a of [163.5, 171]) { const lo = P(23, a), hi = P(26, a); add(R([lo[0], 2.4, lo[1]], [hi[0], 3.6, hi[1]], 3, rock({ tag: 'scree', color: '#6f6460' }))); }
 // Gauge Post W: a squat whitewashed blockhouse whose flat roof is a 1.2 m hop (a lookout over Bravo's Spillway)
-{ const [x, z] = P(26.2, 152), a = 152 * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+// (at r 27.0, not 26.2, with a rubble buttress behind it to the caldera wall: no dead-end slot between the post and
+// the wall, and a 4.2 m lane on its lake side, the left flank's way along the horn)
+{ const [x, z] = P(27.0, 152), a = 152 * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
   add(O(x, z, 3.6, 3.6, 2.4, 3.6, -152, { color: K.white, pattern: PATTERN.render, tag: 'gauge-post' }));
+  add(O(G.r3(x + c * 2.6), G.r3(z + s * 2.6), 1.6, 3.6, 2.4, 4.5, -152, cover(K.basaltDk, { tag: 'gauge-post-buttress' })));
   // the parapet on its two outer sides (the faces toward +local x: outward from the lake, and +local z)
   add(O(G.r3(x + c * 1.6), G.r3(z + s * 1.6), 0.4, 3.6, 3.6, 4.5, -152, cover(K.white, { tag: 'gauge-post-parapet' })));
   add(O(G.r3(x - s * 1.6 - c * 0.2), G.r3(z + c * 1.6 - s * 0.2), 3.2, 0.4, 3.6, 4.5, -152, cover(K.white, { tag: 'gauge-post-parapet' }))); }
