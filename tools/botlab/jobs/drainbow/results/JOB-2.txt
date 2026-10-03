@@ -1,0 +1,60 @@
+JOB-2 results — Drainbow balance round 2 + regressions, run on the Mac mini (botlab helper) at 205cac8, SLOTS=3 PAR=3, caffeinate, 2026-10-03 11:26 AEST
+
+## 1. Balance: balance2.sh <out> 2 2  (168 matches: 88 turf + 80 zones)
+FAILED lines: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+node tools/botlab/jobs/drainbow/agg2.cjs <out>:
+
+=== turf (88 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=16: wins 31% [A 50% (n 8), B 13% (n 8)] | turf Δ -4.1 ±9.6 | K/D 1.01 ±0.41 | special used 12.1/match (theirs 15.3)
+      per bubble: shots halved 1.6, crossings 2.4, life added 0.04 s, bot-frames held inside 200
+  drainbow, bots don't hold inside n=16: wins 13% [A 13% (n 8), B 13% (n 8)] | turf Δ -5.9 ±7.0 | K/D 0.98 ±0.32 | special used 11.1/match (theirs 14.8)
+      per bubble: shots halved 0.9, crossings 2.5, life added 0.05 s, bot-frames held inside 0
+  drainbow, no footprint ink n=16: wins 19% [A 13% (n 8), B 25% (n 8)] | turf Δ -7.0 ±8.1 | K/D 0.95 ±0.29 | special used 11.3/match (theirs 13.1)
+      per bubble: shots halved 1.6, crossings 2.0, life added 0.02 s, bot-frames held inside 196
+  drainbow v2 (bigger / longer / stronger drain) n=16: wins 31% [A 38% (n 8), B 25% (n 8)] | turf Δ -5.8 ±8.7 | K/D 0.98 ±0.26 | special used 12.0/match (theirs 13.9)
+      per bubble: shots halved 1.4, crossings 2.2, life added 0.04 s, bot-frames held inside 205
+  bubble guard n=16: wins 38% [A 50% (n 8), B 25% (n 8)] | turf Δ -2.8 ±7.7 | K/D 1.06 ±0.39 | special used 9.9/match (theirs 13.3)
+  random rolls n=8: wins 38% [A 38% (n 8)] | turf Δ -4.5 ±10.2 | K/D 0.88 ±0.21 | special used 11.9/match (theirs 14.9)
+  all: stuck 0.12% | splats 38.0 | matches with console warnings 0 · frame errors 0
+
+=== zones (80 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=16: wins 13% [A 13% (n 8), B 13% (n 8)] | turf Δ -4.0 ±5.3 | K/D 0.88 ±0.30 | special used 21.8/match (theirs 21.4)
+      per bubble: shots halved 2.1, crossings 3.7, life added 0.04 s, bot-frames held inside 278
+  drainbow, bots don't hold inside n=16: wins 25% [A 25% (n 8), B 25% (n 8)] | turf Δ -4.5 ±8.0 | K/D 0.90 ±0.23 | special used 22.8/match (theirs 21.8)
+      per bubble: shots halved 1.2, crossings 3.8, life added 0.12 s, bot-frames held inside 0
+  drainbow, no footprint ink n=16: wins 19% [A 0% (n 8), B 38% (n 8)] | turf Δ -7.1 ±5.1 | K/D 0.98 ±0.32 | special used 22.1/match (theirs 20.1)
+      per bubble: shots halved 2.3, crossings 3.5, life added 0.08 s, bot-frames held inside 259
+  drainbow v2 (bigger / longer / stronger drain) n=16: wins 38% [A 38% (n 8), B 38% (n 8)] | turf Δ -5.5 ±6.3 | K/D 0.88 ±0.31 | special used 20.6/match (theirs 22.4)
+      per bubble: shots halved 2.1, crossings 3.9, life added 0.07 s, bot-frames held inside 291
+  bubble guard n=16: wins 75% [A 75% (n 8), B 75% (n 8)] | turf Δ -0.9 ±5.5 | K/D 1.12 ±0.26 | special used 20.7/match (theirs 23.4)
+  all: stuck 0.35% | splats 73.5 | matches with console warnings 0 · frame errors 0
+
+## 2. Regressions: regress.sh
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== drainbow: RESULT 33/33 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-drainbow: RESULT 10/10 0 FAIL
+== net-surf: RESULT 7/12 5 FAIL
+FAIL a ring hits B on B's screen (its owner judges): 40, marked by A's team  {"hits":[]}
+FAIL …and A sees it: the mark on B (its ribbon from the buoy's beacon), A's own hit marker  {"hits":[]}
+FAIL B jumping the third ring: no hit from it on B's screen (one hit so far: the second ring), and A hears of the dodge  {"dodges":[[],[]],"hitsOnB":0}
+FAIL B's screen holds A's assist window on B (the jump)  []
+FAIL A's teammate splats B inside it: A gets the assist on both screens (B judged it; the splat event carried it), the bot the splat  {"A":{"assists":0,"splats":0,"mate":1},"B":{"assists":0,"alive":false}}
+
+### net-surf 7/12: a regress.sh bug, not a game regression
+regress.sh runs net-surf as 'CLIENTS=2 NET=…/net-surf.cjs' but the test's own header (and the Surf JOB-1, which passed 12/12) uses
+'CLIENTS=2 Q0=autopilot Q1=autopilot NET=…/net-surf.cjs'. Reruns, each ALONE (nothing else running):
+- 205cac8, regress.sh's command, run 1: RESULT 7/12  (the same 5 FAILs)
+- 205cac8, regress.sh's command, run 2: RESULT 7/12  (the same 5 FAILs)
+- botlab-surf 798f2ea, regress.sh's command: RESULT 7/12  (the same 5 FAILs, so it isn't the Drainbow merge)
+- 205cac8, with Q0=autopilot Q1=autopilot (the header's command): RESULT 12/12
+Fix: add 'Q0=autopilot Q1=autopilot' to the net-surf line in tools/botlab/jobs/drainbow/regress.sh.
