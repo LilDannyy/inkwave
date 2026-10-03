@@ -11,7 +11,7 @@ Turf War on two stages, 5 runs each, on the NEW code (the branch) and the OLD co
 run() {   # $1: tag (new / old)
   mkdir -p .botlab/b5-deploy-j3-$1
   for M in halyard saltpan; do for S in 'team0=seeker' 'team0=sprinkler' 'team0=beacon'; do for i in 1 2 3 4 5; do echo "$M|$S|$i"; done; done; done |
-    xargs -P 3 -I{} bash -c 'IFS="|" read M S I <<< "{}"; f=.botlab/b5-deploy-j3-'$1'/$M-${S//[^a-z0-9]/}-$I.log; MAP=$M MODE=turf SECS=180 SUBS="$S" WATCHDOG=600000 tools/botlab/run.sh tools/botlab/match.cjs > $f 2>&1;
+    xargs -S 4096 -P 3 -I{} bash -c 'IFS="|" read M S I <<< "{}"; f=.botlab/b5-deploy-j3-'$1'/$M-${S//[^a-z0-9]/}-$I.log; MAP=$M MODE=turf SECS=180 SUBS="$S" WATCHDOG=600000 tools/botlab/run.sh tools/botlab/match.cjs > $f 2>&1;
       echo "### '$1' $M | $S | $I"; grep -E "^== |splats by cause|DEPLOY|^   loadouts|FRAME ERRORS|^CONSOLE|WATCHDOG" $f | cut -c1-330'
 }
 run new 2>&1 | tee .botlab/b5-deploy-j3-new.txt

@@ -27,7 +27,7 @@ Alpha carries sprinklers and Bravo beacons (then swapped), on four stages; each 
 ```bash
 mkdir -p .botlab/b5-deploy-j2-tm
 for M in halyard calamari treehills saltpan; do for S in 'team0=sprinkler;team1=beacon' 'team0=beacon;team1=sprinkler'; do for AI in 1 0; do
-  echo "$M|$S|$AI"; done; done; done | xargs -P 3 -I{} bash -c 'IFS="|" read M S AI <<< "{}"; f=.botlab/b5-deploy-j2-tm/$M-${S//[^a-z0-9]/}-ai$AI.log; MAP=$M SUBS="$S" DEV_AI=$AI WATCHDOG=900000 tools/botlab/run.sh tools/botlab/tower-match.cjs > $f 2>&1; echo "### $M | $S | DEV_AI=$AI"; grep -E "^== |^   subs|DEPLOY|FRAME ERRORS|^CONSOLE|WATCHDOG|MAP MISMATCH" $f | cut -c1-400' 2>&1 | tee .botlab/b5-deploy-j2-tm.txt
+  echo "$M|$S|$AI"; done; done; done | xargs -S 4096 -P 3 -I{} bash -c 'IFS="|" read M S AI <<< "{}"; f=.botlab/b5-deploy-j2-tm/$M-${S//[^a-z0-9]/}-ai$AI.log; MAP=$M SUBS="$S" DEV_AI=$AI WATCHDOG=900000 tools/botlab/run.sh tools/botlab/tower-match.cjs > $f 2>&1; echo "### $M | $S | DEV_AI=$AI"; grep -E "^== |^   subs|DEPLOY|FRAME ERRORS|^CONSOLE|WATCHDOG|MAP MISMATCH" $f | cut -c1-400' 2>&1 | tee .botlab/b5-deploy-j2-tm.txt
 ```
 
 Put the three outputs (`.botlab/b5-deploy-j2-full.txt`, `-rep.txt`, `-tm.txt`, already compact) into the results file.
