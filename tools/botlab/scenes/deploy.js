@@ -3,13 +3,21 @@
 //   beacon-hit / beacon-pop        my round strikes an enemy Hop Beacon (it flashes white and squashes; the hit marker)
 //                                  / the round that takes it to 0: it pops (a burst of its ink, its bits)
 //   sprinkler-hit / sprinkler-pop  the same on an enemy Twirl Sprinkler
+//   skitter-hit / skitter-pop      an enemy Skitter Bomb scuttling at me: my first round flashes it / the second pops it —
+//                                  a puff of its ink and a small ring, no blast ([b5-deploy] fix round 1)
+//   buoy-hit                       my round strikes an enemy Surf N' Turf buoy (its flash; the hit marker)
 //   curtain-1 … curtain-3          the moving tower and a Drip Curtain across its track: just before, the crunch, after
+//   beacon-crush-1 / -2            … and a Hop Beacon on its track: just before, the crunch (the camera ahead of it, on the
+//                                  device's side: the burst in front of the tower's front)
+//   buoy-crush-1 / -2              … and a Surf N' Turf buoy: the same
 //   deck                           a Lurk Mine and a Hop Beacon laid on the tower's deck, riding it (my team's: the
 //                                  mine's see-through look)
+//   (the tower shots: the HUD's lead callouts held off — "WE TOOK THE LEAD!" covered the crunch)
 //   SCENES=tools/botlab/scenes/deploy.js MAP=halyard MODE=tower PLAY=2 OUT=… tools/botlab/run.sh tools/botlab/hud-shots.cjs
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, THREE = await import('three');
   const { SUBS } = await import('./src/config.js');
+  const SURF = await import('./src/game/sp-surf.js');
   dbg.freeze();
   if (g.settings.quality !== 'high') { g._setSettings({ quality: 'high' }); for (let i = 0; i < 3; i++) dbg.step(1000 / 60); }
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -65,6 +73,43 @@
       return { state: dev.state };
     }, hm, 60);
   }
+  // an enemy Skitter Bomb scuttling at me (held where it is: it never reaches me) — my rounds: the first flashes it, the
+  // second pops it (60 hp: two of the Spritzer's 36)
+  let sk = null, skAt = null;
+  const pin = () => { stand(); if (sk && sk.state === 'run') { sk.pos.copy(skAt); sk.mesh.position.copy(skAt); sk.t = 0; sk.target = null; } };
+  add('skitter-hit', () => {
+    G.projectiles.clear(); stand(); hold = stand;
+    const at = V(P.x + 4.2, P.y, P.z);
+    sk = S._throw(foe, SUBS.seeker, V(at.x, at.y + 0.7, at.z), V(0, -6, 0), false);
+    step(1, () => sk.state === 'run');
+    skAt = sk.pos.clone(); sk.heading = -Math.PI / 2; hold = pin;
+    step(0.3);
+    shoot(sk);
+    step(1, () => sk.flash >= 0.9);
+    shoulder(sk);
+    return { state: sk.state, hp: sk.hp, flash: +(sk.flash || 0).toFixed(2) };
+  }, hm);
+  add('skitter-pop', () => {
+    step(0.4);
+    shoot(sk);
+    step(1, () => sk.state === 'dead');
+    step(3 / 60);   // (the puff opening out)
+    shoulder({ pos: skAt, normal: V(0, 1, 0), mesh: { userData: { hitH: 0.3 } } });
+    return { state: sk.state, popped: true };
+  }, hm, 40);
+  // an enemy buoy, struck
+  add('buoy-hit', () => {
+    G.projectiles.clear(); G.specials.clear(); stand(); hold = stand;
+    const b = new SURF.Buoy(foe, V(P.x + 4.6, P.y + 0.3, P.z), V(0, 0, 0), false, 0); G.specials.world.push(b); b.land(V(P.x + 4.6, P.y, P.z));
+    step(0.4);
+    const t = V(b.pos.x, b.pos.y + 0.6, b.pos.z), from = V(P.x + 0.3, P.y + 1.0, P.z);
+    G.projectiles.fireCustom(me, from, t.clone().sub(from).normalize(), { type: 'shot', speed: 40, damage: 36, range: 8, straight: 1, grav: 0, drag: 0, weaponId: 'shooter' });
+    step(1, () => b.flash >= 0.45);
+    cine(V(P.x - 1.9, P.y + 1.75, P.z - 1.15), V(t.x, t.y, t.z), 50);
+    const out = { hp: b.hp, flash: +b.flash.toFixed(2) };
+    G.specials.clear();
+    return out;
+  }, hm);
   // the tower: pushed at a steady 1.4 m/s (its rules stubbed), a teammate riding; a Drip Curtain across its track ahead
   const dir = me.team === 0 ? 1 : -1, rules0 = T._rules;
   let cur = null, sc = 0;
@@ -76,8 +121,10 @@
     for (const sg of [1, -1]) { const p = V(c.x + sx * 7.5 * sg - u.x * 2.5, c.y + 3.4, c.z + sz * 7.5 * sg - u.z * 2.5); if (G.physics.los(p, V(c.x, c.y + 1.2, c.z))) { from = p; break; } }
     cine(from || V(c.x + sx * 7.5, c.y + 3.4, c.z + sz * 7.5), V(c.x - u.x * 1.2, c.y + 1.0, c.z - u.z * 1.2), 58);
   };
+  // (the HUD's lead callouts held off for these: "WE TOOK THE LEAD!" sat on the frame's middle)
+  const quiet = () => { if (G.hud?.lead) G.hud.lead.stingT = Infinity; document.querySelectorAll('.iw-zcall, .iw-bn').forEach((e) => e.remove()); };
   add('curtain-1', () => {
-    G.projectiles.clear(); park(me, 0); hold = keep;
+    G.projectiles.clear(); park(me, 0); hold = keep; quiet();
     T._rules = function () { this.s += dir * 1.4 / 60; this.moving = dir; };
     step(0.5);
     sc = T.s + dir * 4.2;
@@ -91,10 +138,42 @@
   add('curtain-2', () => {
     step(3, () => cur.state === 'dead');
     step(3 / 60);
-    camT();
+    camT(); quiet();
     return { state: cur.state };
   }, null, 40);
-  add('curtain-3', () => { step(0.9); camT(); return { s: +T.s.toFixed(2) }; });
+  add('curtain-3', () => { step(0.9); camT(); quiet(); return { s: +T.s.toFixed(2) }; });
+  // a beacon, then a buoy, on its track: just before, then the crunch — the camera ahead of the device, off to its side,
+  // looking back at the tower's front (the burst in front of it, not behind it)
+  const camFront = (c) => {
+    // (u: from the tower to the device — the way it comes at it, round a bend too)
+    const u = V(c.x - T.pos.x, 0, c.z - T.pos.z).normalize(), sx = -u.z, sz = u.x, look = V(c.x - u.x * 0.6, c.y + 0.7, c.z - u.z * 0.6);
+    let from = null;
+    for (const sg of [1, -1]) { const p = V(c.x + u.x * 4.6 + sx * 3.4 * sg, c.y + 2.2, c.z + u.z * 4.6 + sz * 3.4 * sg); if (G.physics.los(p, V(c.x, c.y + 0.6, c.z))) { from = p; break; } }
+    cine(from || V(c.x + u.x * 4.6 + sx * 3.4, c.y + 2.2, c.z + u.z * 4.6 + sz * 3.4), look, 56);
+    return { c: [c.x, c.z].map((x) => +x.toFixed(2)), T: [T.pos.x, T.pos.z].map((x) => +x.toFixed(2)), from: from && [from.x, from.y, from.z].map((x) => +x.toFixed(2)) };
+  };
+  let dv = null, dvAt = null;
+  for (const kind of ['beacon', 'buoy']) {
+    add(kind + '-crush-1', () => {
+      G.projectiles.clear(); hold = keep; quiet();
+      step(kind === 'beacon' ? 3 : 0.3);   // (on Halyard: past the stretch the curtain was crushed on)
+      sc = T.s + dir * 4.4;
+      const p = T.path.at(sc);
+      if (kind === 'beacon') { const gh = G.physics.raycast(V(p.x, p.y + 1, p.z), V(0, -1, 0), 3); dv = S._plant(foe, SUBS.beacon, gh.point.clone(), gh.normal.clone(), 0, gh, false); }
+      else { dv = new SURF.Buoy(foe, V(p.x, p.y + 0.3, p.z), V(0, 0, 0), false, 0); G.specials.world.push(dv); dv.land(V(p.x, p.y, p.z)); }
+      dvAt = dv.pos.clone();
+      hold = () => { keep(); if (kind === 'buoy' && dv.phase === 'live') dv.T = 0; };
+      step(4, () => Math.abs(sc - T.s) < 1.25 + (kind === 'buoy' ? 0.7 : 0.55));
+      const cf = camFront(dvAt); quiet();
+      return { gap: +(Math.abs(sc - T.s) - 1.25).toFixed(2), cam: cf };
+    });
+    add(kind + '-crush-2', () => {
+      step(3, () => (kind === 'beacon' ? dv.state === 'dead' : dv.dead || dv.phase !== 'live'));
+      step(3 / 60);
+      camFront(dvAt); quiet();
+      return { crushed: kind === 'beacon' ? dv.state : dv.phase };
+    }, null, 40);
+  }
   add('deck', () => {
     hold = keep; step(0.2);
     const c = Math.cos(T.yaw), s = Math.sin(T.yaw), at = (lx, lz) => V(T.pos.x + c * lx + s * lz, T.top, T.pos.z - s * lx + c * lz);
