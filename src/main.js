@@ -100,6 +100,15 @@ class Game {
     this.input = G.input = new Input(this.R.renderer.domElement);
     this.input.onKey = (e, repeat) => this._onKey(e, repeat);
     this.input.onUnlock = () => this._onPointerUnlock();
+    // a non-standard pad (HORI Switch pads in Chrome / Edge …): one toast per pad, ever (settings.padNoticed)
+    this.input.onPadNotice = (info) => {
+      if (!this.menus?.toast) { this.input._noticed = null; return; }   // (too early: ask again next frame)
+      const seen = Array.isArray(this.settings.padNoticed) ? this.settings.padNoticed : [];
+      if (seen.includes(info.id)) return;
+      this._setSettings({ padNoticed: [...seen, info.id].slice(-12) });
+      const what = info.status === 'known' ? `${info.label} — using a fitted layout` : `${info.name} — using a guessed layout`;
+      this.menus.toast(`Controller detected: ${what}. Adjust in Settings › Controller setup`, { kind: 'pad', ms: 7000 });
+    };
     // after a focus steal while the map was held, the next click on the game takes the mouse back (no pause detour)
     this.R.renderer.domElement.addEventListener('mousedown', () => {
       if (this._relock && G.mode === 'match' && this.match && !this.match.paused && !this.menus?.current) { this._relock = false; this.input.requestLock(); }
@@ -457,7 +466,7 @@ class Game {
     if (s === 'loadout') this.showcase.showLoadout(this.profile.weapon || 'shooter', G.teamColors[0], this.profile.style);
     else if (s !== 'results') { if (this.showcase.mode === 'loadout') this.showcase.hide(); }
     if (G.mode === 'menu') {
-      if (s === 'title' || s === 'main' || s === 'setup' || s === 'settings' || s === 'howto' || s === 'credits' || s === 'loadout' || s === 'locker' || s === 'online' || s === 'lobby') {
+      if (s === 'title' || s === 'main' || s === 'setup' || s === 'settings' || s === 'padsetup' || s === 'howto' || s === 'credits' || s === 'loadout' || s === 'locker' || s === 'online' || s === 'lobby') {
         if (this._musicTrack !== (s === 'title' ? 'title' : 'menu')) this._playMusic(s === 'title' ? 'title' : 'menu');
       }
     }
@@ -1441,7 +1450,7 @@ class Game {
 
   _padMenus() {
     const inp = this.input;
-    if (!inp.pad) return;
+    if (!inp.pad || inp.padCapture) return;   // (Controller setup listening for raw input: the pad isn't menu input)
     const pp = inp.padPressed;
     if (this.menus?.current) {
       const nav = (d) => this.menus.nav?.(d);

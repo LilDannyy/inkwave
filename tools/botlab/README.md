@@ -123,6 +123,14 @@ HUD:
 - The who's-ahead HUD (roster sizes, LEAD / DANGER banners, the take-the-lead sting): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/hud-lead.js
   tools/botlab/run.sh tools/botlab/page.cjs`, and the same with `MODE=zones` and `MODE=tower`.
 
+Controllers (src/core/padmap.js: every pad read as a standard layout — known HORI / PowerA / PDP Switch pads, a guess for
+other non-standard pads, Settings › Controller setup's own layouts): `MAP=testbox PAGE=tools/botlab/tests/pad-mapping.js
+PAGE_ARGS2='phase=2' tools/botlab/run.sh tools/botlab/page.cjs` fakes the Gamepad API (an Xbox pad unchanged, a HORIPAD S
+as Chrome reports it, unknown pads, Firefox ids, the guided re-map) and drives the real PlayerController; `PAGE_ARGS2`
+makes page.cjs reload the page and run the script again (here: the saved layout applies after a reload, then reset).
+`PAGE_ARGS='only=standard,hori,guess,ids,setup'` picks parts. Pictures of the screen: `tools/botlab/scenes/pad-setup.js`
+through hud-shots.cjs.
+
 Sub tweaks (2026-10-01: the Twirl Sprinkler's 5.5 m reach, the Lurk Mine invisible to the other team / a ghost to its
 own / popping up on its windup, the Hop Beacon's jump lights and sonar, the Drip Curtain's ink meter, the Skitter /
 Waddle / Mine windups — online records and the bots' danger areas included):
