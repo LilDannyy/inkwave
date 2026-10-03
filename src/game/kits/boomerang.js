@@ -592,7 +592,7 @@ const bot = {
   paint(brain) {
     const a = brain.a;
     if (active(a) || Math.random() > 0.006) return false;
-    const st = G.paint.regionStats(a.pos.x + Math.sin(a.aimYaw) * 8, a.pos.y, a.pos.z + Math.cos(a.aimYaw) * 8, 2.5, a.team, _stats);
+    const st = G.paint.regionStats(a.pos.x + Math.sin(a.aimYaw) * 8, a.pos.y, a.pos.z + Math.cos(a.aimYaw) * 8, 2.5, brain.inkTeam ?? a.team, _stats);
     if (!st.n || st.own > 0.45) return false;
     brain.bombCd = 9 + Math.random() * 7;
     return true;

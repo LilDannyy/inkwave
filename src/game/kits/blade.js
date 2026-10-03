@@ -415,7 +415,7 @@ function botState(brain) {
 function ownLane(a, nx, nz, d) {
   for (const k of [1.2, 2.6, 4.2]) {
     if (k > 1.2 && k > d - 0.6) break;
-    const s = G.paint.regionStats(a.pos.x + nx * k, a.pos.y, a.pos.z + nz * k, 0.8, a.team, _rs);
+    const s = G.paint.regionStats(a.pos.x + nx * k, a.pos.y, a.pos.z + nz * k, 0.8, a.bot?.inkTeam ?? a.team, _rs);
     if (!s.n || s.own < 0.5) return false;
   }
   return true;
@@ -480,7 +480,7 @@ function botTactics(brain, ctx) {
   const sighted = ctx.visible && facing > (t.bot && spotted ? 0.6 : 0.85);
   const exposed = sighted && ranged;
   const lane = () => {
-    if (B.laneT <= 0) { B.laneT = 0.15; B.lane = a.groundTeam === 1 && ownLane(a, nx, nz, dist); }
+    if (B.laneT <= 0) { B.laneT = 0.15; B.lane = brain.groundSeen === 1 && ownLane(a, nx, nz, dist); }
     return B.lane;
   };
   const kidOK = a.form !== 'squid' && (a.kidT ?? 9) >= PLAYER.emergeDelay + 0.02;   // fully out of the ink (can cut)
@@ -491,7 +491,7 @@ function botTactics(brain, ctx) {
     if (full && kidOK && level && pd <= reach && aimOff < 0.4) { it.fire = false; brain._blHold = -1; it.squid = false; return; }
     if (!charging && dist < 2.3 && level && ctx.visible && aimOff < 0.75 && a.ink >= w.tapInk) { it.squid = false; it.fire = (B.press = !B.press); brain._blHold = -1; return; }
     const ml = Math.hypot(move.x, move.z);
-    it.squid = a.groundTeam === 1 && (ml < 0.1 || ownLane(a, move.x / ml, move.z / ml, 2.4));
+    it.squid = brain.groundSeen === 1 && (ml < 0.1 || ownLane(a, move.x / ml, move.z / ml, 2.4));
     it.fire = charging; brain._blHold = charging ? G.time : -1;
     return;
   }
@@ -584,7 +584,7 @@ function botTactics(brain, ctx) {
     // ================= hurt, and a ranged enemy has us spotted out of reach: fall back to heal in our ink (the core's
     // retreat: own ink away from it, out of its line; ctx.retreat runs it) instead of walking into its fire
     brain.mode = 'retreat'; brain.retreatT = 1.6 + Math.random() * 1.2; brain.repath = 0; brain._pickRetreat();
-    squid = a.groundTeam === 1;
+    squid = brain.groundSeen === 1;
   } else {
     // ================= closing in without a charge: swim the lane if there is one (straight down it after a wave);
     // a target busy with someone else: run in and pre-charge from ~5–8 m (it fills as we arrive: a one-shot surprise);
@@ -597,7 +597,7 @@ function botTactics(brain, ctx) {
     if (lane() && dist > 3.4) {
       squid = true;
       if (!spotted && dist < 10 && mv) mv = [mv[0] * 0.55, mv[1] * 0.55];            // unspotted: a steady swim stays unseen
-    } else if (exposed && sk >= 0.5 && a.groundTeam === 1 && dist > 5 && B.rush <= 0 && B.lurk < lerp(0.8, 1.6, sk)) {
+    } else if (exposed && sk >= 0.5 && brain.groundSeen === 1 && dist > 5 && B.rush <= 0 && B.lurk < lerp(0.8, 1.6, sk)) {
       // a ranged enemy has us in its sights and there's no lane to it: stay under in our ink until it looks away
       // (it loses a still swimmer), rather than charging in the open
       squid = true; B.lurk += dt; mv = [0, 0]; brain.noProg = 0;

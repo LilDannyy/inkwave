@@ -18,6 +18,7 @@
 //  * lights it: a clear wet coat (sharp while fresh, satin once dry) with a tamed grazing Fresnel so a low camera still
 //    sees the team colour, and a lifted, richer fill in shade — ink never turns brown or muddy.
 import * as THREE from 'three';
+import { INK_ONE_PARS } from './inkOne.js';
 
 export const INK_RIPPLES = 24;
 
@@ -48,6 +49,8 @@ export function inkBeforeRender(U, P) {
 // (after levelMaterial's own uniforms / varyings / noise helpers; uPaint, uTexel, uAtlasSize, uGel … are declared there)
 export const INK_PARS = /* glsl */`
 uniform float uInkClock;
+${INK_ONE_PARS}
+float gOneK = 0.0;         // [drainbow] this spot's ink gone to the one shade (inkOne.js: a drained player's screen)
 uniform vec4 uRip[${INK_RIPPLES}];
 uniform vec4 uRipP[${INK_RIPPLES}];
 float gInkKeep = 0.0;      // share of the surface relief that still shows through thin (wall) ink
@@ -126,6 +129,7 @@ export const INK_COLOR = /* glsl */`
     float fresh = smoothstep(0.3, 0.97, wet);               // visibly wet for ≈ 4 s after landing
     gFresh = fresh * gInk;
     float tone = clamp(pnt.b * ia, 0.0, 1.0);
+    gOneK = inkOneK(vWPos);
     bool wallF = abs(vWNorm.y) < 0.5;
     vec3 Tf = normalize(vFaceTan - vWNorm * dot(vFaceTan, vWNorm)), Bf = cross(vWNorm, Tf);
     // world-space direction toward the sun (the scene's only directional light)
@@ -153,7 +157,7 @@ export const INK_COLOR = /* glsl */`
       vec2 sn = gT / gTl;                                    // across the seam, toward team B
       float x = (tRaw - 0.5) / gTl;                          // signed distance to the midline, texels
       float e1 = exp(-x * x / 1.7), e2 = exp(-x * x / 0.8);
-      seam = e1 * smoothstep(0.03, 0.14, gTl) * near;
+      seam = e1 * smoothstep(0.03, 0.14, gTl) * near * (1.0 - gOneK);   // (one shade: no lip telling two teams' inks apart)
       vec2 gW = (vec2(gX.g, gY.g) - wet * gradA) * ia;
       float newer = clamp(dot(gW, sn) / gTl * 1.6, -1.0, 1.0);   // +1: team B's side is the newer, wetter ink
       float dh = newer * 2.4 * e1 / 2.3 + 0.9 * 2.0 * x / 0.8 * e2 * (1.0 - 0.6 * abs(newer));
@@ -161,7 +165,7 @@ export const INK_COLOR = /* glsl */`
       // the lower (older) side sits in the lip's shadow; the crease itself is a thin dark line
       seamShadow = seam * (0.45 * max(0.0, -x * newer) * e1 + 0.55 * e2 * (1.0 - 0.7 * abs(newer)));
     }
-    vec3 team = mix(uTeamA, uTeamB, tm);
+    vec3 team = mix(mix(uTeamA, uTeamB, tm), uOneC, gOneK);
     vec3 inkCol = team * (0.93 + 0.13 * tone);
     // translucent thin lip reads lighter and a touch more saturated; the thick body a little deeper
     float lip = (1.0 - hs) * near;

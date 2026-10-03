@@ -24,7 +24,10 @@
 //              restarts from the splat share, as for any special cut short) or you change loadout.
 //   your view  inside an enemy's: the clear-ink wave's look sweeps the colour out of your view from where you crossed,
 //              everything goes grey and your hearing is muffled (master low-pass + dip); out again, the wave sweeps the
-//              colour back (drainbowFx.js DrainView). Others see a stream of your ink pulled out of you to its middle.
+//              colour back (drainbowFx.js DrainView). Under the same front both teams' ink turns one shade (the user: "make
+//              all ink appear the same colour" — src/world/inkOne.js: the floors and walls, the tower's / hedges' ink,
+//              shots, ink drops, the minimap's turf), so in there you can't tell whose turf is whose. Others see a stream
+//              of your ink pulled out of you to its middle.
 //   anyone     crossing the film: a dimple and a ring spreading over the film from the crossing point, a bloop and a
 //              chime (every screen, from its own view).
 //
@@ -35,7 +38,11 @@
 //
 // Bots: botSpecials.js reads a live enemy bubble as a light lingering area (routes round it, out of it unless holding
 // the objective) and prefers a foe not behind one (targetBias); inside an enemy one a bot's hearing shrinks and it
-// sees a little less far (botSight.js — its own screen goes grey for nobody). Its own: botWants() sets it down with the
+// sees a little less far (botSight.js — its own screen goes grey for nobody), and it can't tell its own ink from
+// theirs (the user: "bots cant tell if its their ink or not so they cover everything as they go" — API.blind(); bots.js
+// BotBrain.inkTeam / groundSeen): none of the ink reads as its own, so it paints everything it passes, walks rather than
+// swims, and a refill sends it out of the bubble first (botSpecials.js lets it keep painting on its way out; botBlind 0:
+// off). Its own: botWants() sets it down with the
 // fight in its weapon's reach (bots.js also: ON the zone, by the tower), and botHold() (SpecialSense.act) keeps a bot
 // fighting from inside its team's bubble — sliding along the film rather than stepping out — while its target is in
 // reach from in there (botHold: 0 turns that off for an A/B).
@@ -90,6 +97,9 @@ const API = {
   inEnemy(a) { for (const b of B) if (b.live && b.team !== a.team && b.in.get(a)) return b; return null; },
   // a's own team's bubble a is inside
   inOwn(a) { for (const b of B) if (b.live && b.team === a.team && b.in.get(a)) return b; return null; },
+  // a bot inside an enemy bubble can't tell its own ink from theirs (bots.js BotBrain.inkTeam / groundSeen): the enemy
+  // bubble it's in, or null (botBlind 0: never)
+  blind(a) { return API.live && D().botBlind !== 0 ? API.inEnemy(a) : null; },
 };
 G.drainbow = API;
 const refresh = () => { API.live = B.some((b) => b.live); };

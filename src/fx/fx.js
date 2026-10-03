@@ -35,6 +35,7 @@
 // 336/beam — a heavy moment (bomb + slam + 8 players fighting) stays ≈ 10–16k triangles.
 import * as THREE from 'three';
 import { QUALITY, PLAYER } from '../config.js';
+import { INK_ONE, INK_ONE_PARS } from '../world/inkOne.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const TAU = Math.PI * 2;
@@ -77,6 +78,7 @@ varying vec3 vCol;
 varying vec2 vAx;
 varying float vGloss;
 varying float vTail;
+${INK_ONE_PARS}
 void main() {
   vec4 c = viewMatrix * vec4(aPosR.xyz, 1.0);
   vec3 vv = mat3(viewMatrix) * aVelS.xyz;
@@ -88,7 +90,7 @@ void main() {
   c.xy += ax * position.y * r * st + bx * position.x * r / sqrt(st);
   c.xyz += normalize(-c.xyz) * r * 0.6;
   vUv = position.xy;
-  vCol = aColA.rgb;
+  vCol = mix(aColA.rgb, uOneC, inkOneK(aPosR.xyz) * aColA.a);   // ([drainbow] ink drops go one shade; matte dust doesn't)
   vGloss = aColA.a;
   vAx = ax;
   vTail = clamp((st - 1.15) / 1.1, 0.0, 1.0);
@@ -402,6 +404,7 @@ attribute vec4 aColA;
 attribute vec4 aMisc;   // x t, y seed, z -, w wobble amount
 attribute vec4 aAxis;   // crown axis (the surface normal), crown amount (0 = free burst, 1 = crown splash)
 uniform float uTime;
+${INK_ONE_PARS}
 varying vec3 vN;
 varying vec3 vW;
 varying vec4 vCol;
@@ -424,7 +427,7 @@ void main() {
   vec3 wp = aPosR.xyz + off;
   vN = n;
   vW = wp;
-  vCol = aColA; vMisc = aMisc; vAxis = aAxis;
+  vCol = vec4(mix(aColA.rgb, uOneC, inkOneK(aPosR.xyz)), aColA.a); vMisc = aMisc; vAxis = aAxis;   // ([drainbow] one shade)
   gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0);
 }
 `;
@@ -734,7 +737,7 @@ export class FX {
     const geo = makeQuadGeo(cap, [['aPosR', 4], ['aVelS', 4], ['aColA', 4]]);
     geo.attributes.position.array.forEach((v, i, a) => { a[i] = v * 2; }); // quad −1..1
     const L = this._light;
-    this._dropU = { uSunDirV: { value: new THREE.Vector3(0, 1, 0) }, uUpV: { value: new THREE.Vector3(0, 1, 0) }, uSunCol: { value: L.sunCol }, uSkyCol: { value: L.sky }, uGroundCol: { value: L.ground } };
+    this._dropU = { uSunDirV: { value: new THREE.Vector3(0, 1, 0) }, uUpV: { value: new THREE.Vector3(0, 1, 0) }, uSunCol: { value: L.sunCol }, uSkyCol: { value: L.sky }, uGroundCol: { value: L.ground }, ...INK_ONE };
     const mat = new THREE.ShaderMaterial({ uniforms: this._dropU, vertexShader: DROP_VERT, fragmentShader: DROP_FRAG, alphaToCoverage: true, fog: false });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.frustumCulled = false; mesh.renderOrder = 4; mesh.name = 'FX_Droplets';
@@ -1021,7 +1024,7 @@ export class FX {
     const base = new THREE.IcosahedronGeometry(1, 3);
     const geo = withInstanceAttrs(base, cap, [['aPosR', 4], ['aColA', 4], ['aMisc', 4], ['aAxis', 4]]);
     const L = this._light;
-    this._shellUniforms = { uTime: { value: 0 }, uSunDir: { value: this.sunDir }, uSunCol: { value: L.sunCol }, uSkyCol: { value: L.sky } };
+    this._shellUniforms = { uTime: { value: 0 }, uSunDir: { value: this.sunDir }, uSunCol: { value: L.sunCol }, uSkyCol: { value: L.sky }, ...INK_ONE };
     const mat = new THREE.ShaderMaterial({ uniforms: this._shellUniforms, vertexShader: SHELL_VERT, fragmentShader: SHELL_FRAG, side: THREE.DoubleSide, alphaToCoverage: true, fog: false });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.frustumCulled = false; mesh.renderOrder = 5; mesh.name = 'FX_Shells';

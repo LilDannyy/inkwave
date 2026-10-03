@@ -726,7 +726,7 @@ const _rs = { own: 0, enemy: 0, empty: 0, n: 0 };
 function ownLane(a, nx, nz, d) {
   for (const k of [1.2, 2.6, 4.2]) {
     if (k > 1.2 && k > d - 0.6) break;
-    const st = G.paint.regionStats(a.pos.x + nx * k, a.pos.y, a.pos.z + nz * k, 0.8, a.team, _rs);
+    const st = G.paint.regionStats(a.pos.x + nx * k, a.pos.y, a.pos.z + nz * k, 0.8, a.bot?.inkTeam ?? a.team, _rs);
     if (!st.n || st.own < 0.5) return false;
   }
   return true;
@@ -753,7 +753,7 @@ function botTactics(brain, ctx) {
   const sway = Math.sin(B.weaveT * 4.2 + B.weaveP) * 0.6;
   const mx = ux - uz * sway, mz = uz + ux * sway, l = Math.hypot(mx, mz) || 1;
   move.set(mx / l, 0, mz / l);
-  if (a.groundTeam === 1 && ownLane(a, nx, nz, Math.min(dist - w.range, 5))) { it.squid = true; it.fire = false; return; }
+  if (brain.groundSeen === 1 && ownLane(a, nx, nz, Math.min(dist - w.range, 5))) { it.squid = true; it.fire = false; return; }
   if (a.ink > w.inkPerPunch * 6) { it.squid = false; it.fire = true; }
 }
 

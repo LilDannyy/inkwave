@@ -591,7 +591,16 @@ export class BotBrain {
     this.reset();
   }
   setDifficulty(d) { this.diff = DIFFICULTY[d] || DIFFICULTY.normal; }
+  // [drainbow] the ink as this bot can tell it. Inside an enemy Drainbow (src/game/sp-drainbow.js blind(): a player in
+  // there sees everything grey, both teams' ink one shade) it can't tell its own ink from theirs, so none of it reads as
+  // its own: inkTeam — the team its ink queries (paint.regionStats / sample) count as "own": 2, nobody's, in there;
+  // groundSeen — what it makes of the ground under it (Actor.groundTeam: 0 bare, 1 ours, 2 theirs): any ink, theirs.
+  // Its decisions read these (where to paint, whether it needs to, goals "already ours", swimming, refilling, retreats);
+  // the physics doesn't (it still swims in its real ink if it squids there).
+  get inkTeam() { return this.dbIn ? 2 : this.a.team; }
+  get groundSeen() { const g = this.a.groundTeam; return this.dbIn && g ? 2 : g; }
   reset() {
+    this.dbIn = null;   // [drainbow] the enemy bubble it's in (blind to its own ink), or null
     this.path = null; this.pi = 0; this.goal = -1; this.repath = 0; this.goalTimer = 0;
     this.target = null; this.seeTimer = 0; this.react = 0; this.lostTimer = 0;
     // perception (botSight.js): what we know of each foe; the target's memory entry (tk) and view (tv: the actor while
@@ -691,6 +700,10 @@ export class BotBrain {
     this.think -= dt; this.jumpCd -= dt; this.bombCd -= dt; this.strafeT -= dt; this.paintPause -= dt; this.dodgeCd -= dt;
     this.acqT += dt; this.t += dt;
     if (G.boss) { this._bossTick(dt); return; }   // Boss Battle: a different job (below)
+    // [drainbow] inside an enemy bubble: blind to whose ink is whose (inkTeam / groundSeen); a refill heads out first
+    const dbIn = G.drainbow?.live ? G.drainbow.blind(a) : null;
+    if (!!dbIn !== !!this.dbIn) { this.goalCheckT = 0; if (this.mode === 'refill') this.repath = 0; }
+    this.dbIn = dbIn;
 
     // ---------------- perception
     if (this.think <= 0) {
@@ -763,7 +776,7 @@ export class BotBrain {
       this.goalCheckT -= dt;
       if (this.goalCheckT <= 0 && this.goal >= 0 && this.path && !tp) {   // (tower escorts keep to their slot, inked or not)
         this.goalCheckT = 1;
-        const g = G.nav.nodes[this.goal], st = G.paint.regionStats(g.x, g.y, g.z, 3, a.team, _stats);
+        const g = G.nav.nodes[this.goal], st = G.paint.regionStats(g.x, g.y, g.z, 3, this.inkTeam, _stats);
         if (st.n && st.own > 0.85) this.goalTimer = 0;
       }
       if (zp) {
@@ -884,7 +897,7 @@ export class BotBrain {
           it.fire = true; // keep charge while target briefly hidden
         } else if (!enemyVisible && this._spray(dist, range, aimed, inkFrac)) it.fire = true;   // a short spray where it went
         // out of range with own ink underfoot: swim in (fast, hard to hit) instead of walking
-        if (!it.fire && !a.weaponRunner.charging && dist > range * 1.15 && a.groundTeam === 1) it.squid = true;
+        if (!it.fire && !a.weaponRunner.charging && dist > range * 1.15 && this.groundSeen === 1) it.squid = true;
         if (w.kind === 'dualies') {
           // dodge roll: while firing, roll sideways when hit or when the fight gets close (the runner locks the turret
           // after) — never toward the sea
@@ -930,7 +943,7 @@ export class BotBrain {
         let bestOff = 0, bestV = -1;
         for (const off of [0, -0.6, 0.6, -1.2, 1.2]) {
           const yw = (wantMove ? Math.atan2(move.x, move.z) : this.aimYaw) + off;
-          const st = G.paint.regionStats(a.pos.x + Math.sin(yw) * reach, a.pos.y, a.pos.z + Math.cos(yw) * reach, 2.2, a.team, _stats);
+          const st = G.paint.regionStats(a.pos.x + Math.sin(yw) * reach, a.pos.y, a.pos.z + Math.cos(yw) * reach, 2.2, this.inkTeam, _stats);
           let v = st.n ? st.empty + st.enemy * 1.4 - Math.abs(off) * 0.12 : -1;
           if (zp && st.n && zp.onActive(a.pos.x + Math.sin(yw) * reach, a.pos.y, a.pos.z + Math.cos(yw) * reach)) v += 0.8;   // the zone's ink first
           if (v > bestV) { bestV = v; bestOff = off; }
@@ -959,7 +972,7 @@ export class BotBrain {
       const PKa = !zAim && MAIN_KITS[w.kind]?.bot?.paintAim;
       const lane = PKa ? PKa(this, { a, w, dt, wantYaw, wantMove, move }) : null;
       if (lane) { wantYaw = lane.yaw; wantPitch = lane.pitch; }
-      const aheadStats = G.paint.regionStats(a.pos.x + Math.sin(wantYaw) * 4, a.pos.y, a.pos.z + Math.cos(wantYaw) * 4, 3, a.team, _stats);
+      const aheadStats = G.paint.regionStats(a.pos.x + Math.sin(wantYaw) * 4, a.pos.y, a.pos.z + Math.cos(wantYaw) * 4, 3, this.inkTeam, _stats);
       const needPaint = aheadStats.n === 0 || aheadStats.own < 0.75 || !!zAim || !!lane?.need;
       const PK = MAIN_KITS[w.kind]?.bot;
       if (PK?.paint) {
@@ -988,7 +1001,7 @@ export class BotBrain {
         it.fire = needPaint && inkFrac > 0.18;
       }
       // travel as a squid through own ink when not painting
-      if (!it.fire && this._pathRemaining() > 5 && a.groundTeam === 1) it.squid = true;
+      if (!it.fire && this._pathRemaining() > 5 && this.groundSeen === 1) it.squid = true;
       if (this.bombCd <= 0 && !onT && this._paintSub()) { it.sub = true; this._bombAim = true; }   // (nothing planted on a moving tower)
       else if (zp) {
         // Zone Control: lob a bomb onto a patch of their ink on the zone (turn to it, then throw)
@@ -1005,8 +1018,8 @@ export class BotBrain {
       }
       if (a.specialReady() && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : this._wantSpecial('paint', 0, false))) it.special = true;
     } else if (this.mode === 'refill') {
-      it.squid = a.groundTeam === 1 || this._pathRemaining() > 2;
-      if (a.groundTeam !== 1 && this._pathRemaining() < 1.5) {
+      it.squid = this.groundSeen === 1 || this._pathRemaining() > 2;
+      if (this.groundSeen !== 1 && this._pathRemaining() < 1.5) {
         // arrived, but not on our ink: our ink right by us (the patch it was sent to, the puddle it just painted —
         // a weapon's puddle lands a step ahead of the feet) → step onto it; none → paint a puddle to swim in. A charging
         // weapon starts its draw only once it's aimed at the floor (a draw begun level looses a long shot instead)
@@ -1288,7 +1301,7 @@ export class BotBrain {
     const h = this._wh || (this._wh = new Hit());
     _v.set(x + nx * 0.6, y, z + nz * 0.6); _v2.set(-nx, 0, -nz);
     if (!G.physics.raycast(_v, _v2, 1.2, h, true).hit) return null;
-    return h.face >= 0 && G.paint.sample(h.face, h.u, h.v) - 1 === this.a.team;
+    return h.face >= 0 && G.paint.sample(h.face, h.u, h.v) - 1 === this.inkTeam;
   }
 
   // Remove any heading that would put us over open water: try the nearest safe heading, else stand still.
@@ -1368,7 +1381,7 @@ export class BotBrain {
     for (let i = 0; i < 16; i++) {
       const ang = Math.random() * Math.PI * 2, r = 3 + Math.random() * 8;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
-      const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.4, a.team, _stats);
+      const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.4, this.inkTeam, _stats);
       if (!st.n) continue;
       const away = t ? Math.hypot(_v.x - t.pos.x, _v.z - t.pos.z) - Math.hypot(a.pos.x - t.pos.x, a.pos.z - t.pos.z) : 0;
       const score = st.own * 6 + away * 0.8 - r * 0.15 + (t && !G.physics.los(_v2.set(_v.x, _v.y + 1, _v.z), _v3.set(t.pos.x, t.pos.y + 1, t.pos.z)) ? 4 : 0);
@@ -1407,7 +1420,7 @@ export class BotBrain {
     if (id === 'surf') return r < 0.02 && surfWant(this, mode, dist, vis);   // Surf N' Turf: on foes the team knows of (sp-surf-bots.js)
     const turf = { storm: 1, strike: 1, booyah: 1, barrage: 1, sonar: 1, kraken: 1, crab: 1, zooka: 1, blower: 1, stamp: 1 };
     if (!turf[id] || r > 0.012) return false;
-    const st = G.paint.regionStats(a.pos.x, a.pos.y, a.pos.z, 6, a.team, _stats);
+    const st = G.paint.regionStats(a.pos.x, a.pos.y, a.pos.z, 6, this.inkTeam, _stats);
     return st.own < 0.55;
   }
 
@@ -1555,7 +1568,7 @@ export class BotBrain {
       // sprinkler already covering that spot
       const L = clamp(lobDist(a.aimPitch, 0, sub.throwSpeed || 13.5) ?? 5.5, 2, 12);
       const R = sub.sprayRadius || 5.5, cx = a.pos.x + Math.sin(a.aimYaw) * L, cz = a.pos.z + Math.cos(a.aimYaw) * L;
-      const st = G.paint.regionStats(cx, a.pos.y, cz, R * 0.8, a.team, _stats);
+      const st = G.paint.regionStats(cx, a.pos.y, cz, R * 0.8, this.inkTeam, _stats);
       go = st.n > 0 && st.own < 0.4 && !G.subs.items.some((o) => o.state === 'spray' && o.team === a.team && o.owner !== a && Math.hypot(o.pos.x - cx, o.pos.z - cz) < R * 1.2);
     } else if (k === 'mine') go = progress > 0.3 && progress < 0.7;
     else if (k === 'beacon') go = progress > 0.4 && !G.subs.beaconsFor(a.team).some((b) => b.pos.distanceTo(a.pos) < 12);
@@ -1745,7 +1758,7 @@ export class BotBrain {
       if (n.zone >= 0 || n.wet === 2 || Math.hypot(n.x - ep.x, n.z - ep.z) < 22) continue;
       const dx = n.x - c[0], dz = n.z - c[2], d = Math.hypot(dx, dz), side = (dx * e[0] + dz * e[1]) / Math.max(d, 1);
       if (side < -0.1) continue;
-      const near = G.paint.regionStats(n.x, n.y, n.z, 3, a.team, _stats);
+      const near = G.paint.regionStats(n.x, n.y, n.z, 3, this.inkTeam, _stats);
       if (!near.n) continue;
       const v = near.empty + near.enemy * 1.4;
       const sc = v * 10 + side * 2 - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.1 + Math.random() * 1.5 - (n.wet ? 1.5 : 0);
@@ -2048,7 +2061,7 @@ export class BotBrain {
       // can be back round a corner)
       const J = P.proj(n.x, n.y, n.z, T.s, this._tJ || (this._tJ = {})), ja = (J.s - T.s) * fwd;
       const out = cp ? Math.abs(J.s - cp.s) > 6 : bk ? ja < -0.5 || ja > 5 : lead ? ja < 4 || ja > 16 : ja < 0 || ja > 9;
-      const st = G.paint.regionStats(n.x, n.y, n.z, 2.5, a.team, _stats);
+      const st = G.paint.regionStats(n.x, n.y, n.z, 2.5, this.inkTeam, _stats);
       const off = J.off;                                                               // (off the route)
       let sc = (st.n ? st.empty + st.enemy * 1.4 : 0) * (lead ? 4 : 2.5) - Math.hypot(n.x - a.pos.x, n.z - a.pos.z) * 0.05 + Math.random() - (n.wet ? 1.5 : 0)
         - (bk ? Math.abs(Math.hypot(rx, rz) - 3.2) + (Math.abs(n.y - T.pos.y) > 0.5 ? 2 : 0) : 0) - (lead ? off * 0.3 : 0) - (out ? 8 : 0);   // (outside it: a last resort)
@@ -2106,7 +2119,7 @@ export class BotBrain {
       for (let k = 1; k <= 7; k++) {
         const p = P.at(P.T.s + fwd * k * 2), d = Math.hypot(p.x - a.pos.x, p.z - a.pos.z);
         if (d > reach || d < 1.5 || Math.abs(p.y - a.pos.y) > 3) continue;
-        const st = G.paint.regionStats(p.x, p.y, p.z, 1.3, a.team, _stats);
+        const st = G.paint.regionStats(p.x, p.y, p.z, 1.3, this.inkTeam, _stats);
         if (st.n && st.own < 0.7) { this.tRAim = (this._tRAimV || (this._tRAimV = new THREE.Vector3())).set(p.x, p.y, p.z); break; }
       }
     }
@@ -2211,7 +2224,7 @@ export class BotBrain {
         if (Math.abs(lx) < 0.35 && Math.abs(lz) < 0.35) continue;                    // (the pillar)
         _tp.set(T.pos.x + lx * c + lz * sn, T.top, T.pos.z - lx * sn + lz * c);
         const d = Math.hypot(_tp.x - a.pos.x, _tp.z - a.pos.z);
-        if (d > 1.1 || d >= bd || T.paint.groundTeam(_tp) === a.team + 1) continue;
+        if (d > 1.1 || d >= bd || T.paint.groundTeam(_tp) === this.inkTeam + 1) continue;
         bd = d; D.copy(_tp);
       }
     }
@@ -2301,7 +2314,7 @@ export class BotBrain {
         if (fit && (shot || this._towerBoarder(P))) this.tUpT = this.t + 0.8;
         hide = !fit || this.t >= this.tUpT;
       } else hide = this.tDry || hp < 0.5 || (this.tHide && hp < 0.85) || (!seen && (hp < 0.9 || ink < 0.5));
-      this.tHide = a.groundTeam === 1 && hide;
+      this.tHide = this.groundSeen === 1 && hide;
       it.squid = this.tHide;
       if (it.squid) { it.fire = false; it.sub = false; this._bombAim = false; move.set(0, 0, 0); }   // (a swim would carry us off its small deck)
       it.jump = false; this.tSideT = 0; this.tAltT = 0;
@@ -2321,10 +2334,10 @@ export class BotBrain {
       if (this.mode === 'paint' && this.path && T.riders[a.team] === 0) {
         if ((this.tInkT = (this.tInkT || 0) - dt) <= 0) {
           this.tInkT = 0.3;
-          const st = G.paint.regionStats(a.pos.x + move.x * 2, a.pos.y, a.pos.z + move.z * 2, 1.4, a.team, _stats);
+          const st = G.paint.regionStats(a.pos.x + move.x * 2, a.pos.y, a.pos.z + move.z * 2, 1.4, this.inkTeam, _stats);
           this.tInkAhead = st.n ? st.enemy : 0;
         }
-        if (a.groundTeam === 1 && !this._squidWouldDrop(move)) { it.squid = true; it.fire = false; }
+        if (this.groundSeen === 1 && !this._squidWouldDrop(move)) { it.squid = true; it.fire = false; }
         else if (this.tInkAhead < 0.3) it.fire = false;
       }
       this.tSideT = 0;
@@ -2609,7 +2622,7 @@ export class BotBrain {
     this.thrEvT -= dt;
     if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); }
     move.set(Math.sin(this.thrEvYaw), 0, Math.cos(this.thrEvYaw));
-    const swim = a.groundTeam === 1 && !this._squidWouldDrop(move);
+    const swim = this.groundSeen === 1 && !this._squidWouldDrop(move);
     if (swim && !(this.thrActs & 4)) { this.thrActs |= 4; THREAT_STATS.swim++; }
     it.squid = swim;
     // running from a walker we can see: back off facing it, ready to shoot the moment it's in reach
@@ -2641,7 +2654,7 @@ export class BotBrain {
       if (G.nav.nearest(_evP.set(px, y0, pz), 1.0) < 0) continue;   // never run off the walkable graph (no way back)
       if (!this._dryLine(x0, y0, z0, px, pz) || !this._fatLos(x0, y0, z0, px, y0, pz)) continue;
       let sc = Math.cos(off) * (d.ground ? 2 : 1) + (d.ground ? 0 : Math.abs(Math.sin(off)) * 1.2);
-      const st = G.paint.regionStats(px, y0, pz, 1.3, a.team, _stats);
+      const st = G.paint.regionStats(px, y0, pz, 1.3, this.inkTeam, _stats);
       if (st.n) sc += st.own * 1.5;
       if (wp) { const wx = wp.x - x0, wz = wp.z - z0, wl = Math.hypot(wx, wz) || 1; sc += (0.4 * (wx * sx + wz * sz)) / wl; }
       if (!d.ground && !G.physics.los(_v.copy(d.pos), _v2.set(px, y0 + 1, pz))) sc += 2;
@@ -2929,10 +2942,10 @@ export class BotBrain {
       if (d > 38) continue;
       // value of the spot and of the patch around it: unclaimed turf counts, enemy ink counts more (flipping it
       // swings the score both ways); own ink is worth nothing
-      const near = G.paint.regionStats(n.x, n.y, n.z, 3, a.team, _stats);
+      const near = G.paint.regionStats(n.x, n.y, n.z, 3, this.inkTeam, _stats);
       if (!near.n) continue;
       const vNear = near.empty + near.enemy * 1.4;
-      const wide = G.paint.regionStats(n.x, n.y, n.z, 6.5, a.team, _stats);
+      const wide = G.paint.regionStats(n.x, n.y, n.z, 6.5, this.inkTeam, _stats);
       const value = vNear * 0.55 + (wide.empty + wide.enemy * 1.4) * 0.45;
       const progress = 1 - Math.hypot(n.x - enemyPad.x, n.z - enemyPad.z) / total; // 0 at own base → 1 at enemy base
       let score = value * 16 - d * 0.14 + clamp(progress, 0, 0.8) * 2.5 + Math.random() * 1.5 - (n.wet ? 1.5 : 0);
@@ -2950,19 +2963,31 @@ export class BotBrain {
 
   _pickRefill() {
     const a = this.a;
+    // [drainbow] in an enemy bubble: it can't tell its own ink in there (and the bubble stops any refill) — out of it
+    // first, the shortest way (the film's footprint at our height, a step past it), then the usual search
+    const w = this.dbIn;
+    if (w && w.live) {
+      const R = w.radius(), dy = a.pos.y + 0.9 - w.pos.y, foot = Math.sqrt(Math.max(0, R * R - dy * dy));
+      let ux = a.pos.x - w.pos.x, uz = a.pos.z - w.pos.z, l = Math.hypot(ux, uz);
+      if (l < 0.3) { const h = G.level.spawnPads[a.team]; ux = h.x - w.pos.x; uz = h.z - w.pos.z; l = Math.hypot(ux, uz) || 1; }
+      _v.set(w.pos.x + (ux / l) * (foot + 1.5), a.pos.y, w.pos.z + (uz / l) * (foot + 1.5));
+      if (!this._pathTo(_v, 0.8)) this._pathTo(G.level.spawnPads[a.team], 1.2);
+      this.repath = 0.5;
+      return;
+    }
     // search nearby for own ink
     let bestP = null, bd = Infinity;
     for (let i = 0; i < 14; i++) {
       const ang = Math.random() * Math.PI * 2, r = 1 + Math.random() * 7;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
-      const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.2, a.team, _stats);
+      const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.2, this.inkTeam, _stats);
       if (st.n && st.own > 0.6 && r < bd) { bd = r; bestP = _v.clone(); }
     }
     // nothing close: look further out, and failing that head back toward our own spawn (always our colour)
     for (let i = 0; i < 16 && !bestP; i++) {
       const ang = Math.random() * Math.PI * 2, r = 8 + Math.random() * 14;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
-      const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.5, a.team, _stats);
+      const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.5, this.inkTeam, _stats);
       if (st.n && st.own > 0.6) bestP = _v.clone();
     }
     if (!bestP || !this._pathTo(bestP, 0.4)) this._pathTo(G.level.spawnPads[a.team], 1.2);
@@ -2976,7 +3001,7 @@ export class BotBrain {
     this.inkStepT = (this.inkStepT || 0) - dt;
     if (this.inkStepT > 0) return this.inkStepOk ? this.inkStepP : null;
     this.inkStepT = 0.2; this.inkStepOk = false;
-    const P = this.inkStepP || (this.inkStepP = new THREE.Vector3()), own = a.team + 1;
+    const P = this.inkStepP || (this.inkStepP = new THREE.Vector3()), own = this.inkTeam + 1;
     const inkAt = (x, z) => {
       const h = G.physics.raycast(_v3.set(x, a.pos.y + 0.6, z), _down, 1.3, _stepHit, true);
       return h.hit && h.normal.y > 0.7 && Math.abs(h.point.y - a.pos.y) < 0.5 && G.paint.sample(h.face, h.u, h.v) === own ? h.point.y : null;

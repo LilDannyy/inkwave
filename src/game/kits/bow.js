@@ -556,7 +556,7 @@ const bot = {
         const clear = h.hit ? h.dist : LANE_LEN;
         let v = 0;
         for (let d = 3; d <= Math.min(clear, 20) + 0.01; d += 4) {
-          const st = G.paint.regionStats(a.pos.x + sx * d, a.pos.y, a.pos.z + sz * d, 1.8, a.team, _ls);
+          const st = G.paint.regionStats(a.pos.x + sx * d, a.pos.y, a.pos.z + sz * d, 1.8, brain.inkTeam ?? a.team, _ls);
           if (st.n) v += st.empty + st.enemy * 1.4;   // (no floor there at this height — a drop, the sea — scores nothing)
         }
         const score = v / 5 - Math.abs(off) * 0.06;   // (5 samples make a full lane; a short one scores less)

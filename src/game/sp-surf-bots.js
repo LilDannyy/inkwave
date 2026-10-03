@@ -86,7 +86,7 @@ function pickSpot(a) {
     for (let k = 0; k < 20 && nodes && nodes.length; k++) {
       const n = nodes[(Math.random() * nodes.length) | 0], d = Math.hypot(n.x - a.pos.x, n.z - a.pos.z);
       if (d < 5 || d > R || Math.abs(n.y - a.pos.y) > 3) continue;
-      const st = G.paint.regionStats(n.x, n.y, n.z, 5, a.team, _st);
+      const st = G.paint.regionStats(n.x, n.y, n.z, 5, a.bot?.inkTeam ?? a.team, _st);
       const v = st.n ? st.enemy * 1.5 + st.empty : -1;
       if (v > bv) { bv = v; best = { x: n.x, y: n.y, z: n.z, why: 'turf' }; }
     }

@@ -16,7 +16,17 @@
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/drainbow.js tools/botlab/run.sh tools/botlab/page.cjs
 //   bots       a bot dropped inside an enemy's walks out (its danger area); a bot with it ready, a foe close and a
 //              teammate beside it sets it down
-//   PAGE_ARGS='only=place,shots,drain,gain,meter,view,cross,bots'
+//   one        (the user: "make all ink appear the same colour") the local player walking into an enemy's: both teams'
+//              ink tint (src/world/inkOne.js — the uniforms every ink look reads, and the CPU mirror) converges to one
+//              value, swept in with the grey wave (near ink first), and on screen two patches of the two teams' ink
+//              read as one shade (pixels; against the same frame with the one-shade uniforms off: the old look);
+//              out again both go back to the team colours; the minimap's turf too; nobody else's view (in your own
+//              team's bubble, or a bot drained while you're outside: no change)
+//   blind      ("bots cant tell if its their ink or not so they cover everything as they go") a bot inside an enemy's:
+//              its ink queries (BotBrain.inkTeam / groundSeen) report none of its own ink as its own; held on a patch of
+//              its own ink it paints all the while, the same bot there with no bubble doesn't; walking out it keeps
+//              painting (botBlind 0: it holds its fire, as before); dry, its refill sends it out of the bubble first
+//   PAGE_ARGS='only=place,shots,drain,gain,meter,view,cross,bots,one,blind'
 (async () => {
   const g = window.__inkwave, m = g.match, G = __G, A = G.audio, dbg = g.debug;
   const THREE = await import('three');
@@ -31,6 +41,7 @@
   const frame = () => { g._skipRender = true; g._frame(1 / 60); g._skipRender = false; };
   const step = (s, fn) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) { frame(); if (fn && fn(i) === false) return; } };
   const stepR = (s, fn) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) { dbg.step(1000 / 60); if (fn && fn(i) === false) return; } };   // (rendered: the pass's uniforms)
+  for (let i = 0; i < 1200 && m.state !== 'playing'; i++) frame();   // (a slow boot under load can hand over before the intro's done)
   const me = m.local, foes = m.actors.filter((a) => a.team !== me.team), mates = m.actors.filter((a) => a.team === me.team && a !== me);
   const zero = (a) => { a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.sub = a.intent.jump = a.intent.special = a.intent.squid = false; };
   // (the bots scripted: a._go = { move, fire } holds their intents frame after frame)
@@ -281,6 +292,139 @@
     step(6, (i) => { if (used == null && M2.specialActive?.id === 'drainbow') used = r2(i / 60); });
     R('bots: with a foe close and a teammate beside it, a bot sets its Drainbow down', used != null, { used });
     M2.bot = b2;
+  }
+
+  // ======================================================================================== one shade (the local player's view)
+  if (want('one')) {
+    reset();
+    const IO = await import('./src/world/inkOne.js'), { TEAM_PALETTES } = await import('./src/config.js');
+    const dC = (a, b) => Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+    const pal0 = g.palette; g._setPalette(TEAM_PALETTES[0]);   // (tangerine / cobalt: two inks far apart in grey too)
+    // E1's bubble at (0, −10) (E1 then steps aside, inside); two patches side by side in it: team 0's and team 1's
+    // (one seed: the same per-splat tone), you walking in from +z
+    place(E1, 0, -10); step(0.05); start(E1); step(D.inflate + 0.1); place(E1, 3.5, -7.5);
+    const P0 = V(-1.25, 0, -11.5), P1 = V(1.25, 0, -11.5), PF = V(0, 0, -36);
+    G.paint.splat(V(P0.x, 0.1, P0.z), 1.15, 0, { seed: 0.37, instant: true });
+    G.paint.splat(V(P1.x, 0.1, P1.z), 1.15, 1, { seed: 0.37, instant: true });
+    place(me, 0, -2.6); me.yaw = me.aimYaw = Math.PI; me.aimPitch = -0.35;
+    g.rig.follow?.(me, true); g.rig.yaw = Math.PI; g.rig.pitch = -0.32;
+    stepR(0.4);
+    // the two patches' colour on screen (a 5 × 5 average round each one's middle), read straight after a render
+    const gl = G.renderer.getContext(), buf = new Uint8Array(4);
+    const px = (p) => {
+      const v = p.clone().setY(0.02).project(G.camera), W = gl.drawingBufferWidth, H = gl.drawingBufferHeight;
+      const x = Math.round((v.x + 1) / 2 * W), y = Math.round((v.y + 1) / 2 * H);
+      let r = 0, gg = 0, b = 0, n = 0;
+      for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { gl.readPixels(x + i * 3, y + j * 3, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf); r += buf[0]; gg += buf[1]; b += buf[2]; n++; }
+      return [r / n, gg / n, b / n];
+    };
+    const shot = () => { const v = me.character.root.visible; me.character.root.visible = false; g.R.render(); const r = [px(P0), px(P1)]; me.character.root.visible = v; return r; };
+    const lum = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    const dPx = (pp) => r2(Math.hypot(pp[0][0] - pp[1][0], pp[0][1] - pp[1][1], pp[0][2] - pp[1][2]));
+    const dL = (pp) => r2(Math.abs(lum(pp[0]) - lum(pp[1])));
+    const out0 = shot();
+    const t0 = [IO.inkOneTint(0, P0), IO.inkOneTint(1, P1)];
+    R('one: outside, each team\'s ink in its own colour (the one-shade uniforms off; on screen the two patches far apart)',
+      IO.INK_ONE.uOneB.value.y === 0 && IO.INK_ONE.uOneB.value.z === 0 && dC(t0[0], G.teamColors[0]) < 1e-6 && dC(t0[1], G.teamColors[1]) < 1e-6 && dPx(out0) > 40,
+      { uOneB: IO.INK_ONE.uOneB.value.toArray().map(r3), px: out0.map((c) => c.map(Math.round)), dPx: dPx(out0) });
+    // walk in (4.5 m/s): the one shade sweeps in with the wave — the patch near where you crossed before the far floor
+    const trace = []; let swept = null;
+    stepR(2.2, (i) => {
+      if (me.pos.z > -6) me.pos.z -= 4.5 / 60;
+      const kN = IO.inkOneK(P0), kF = IO.inkOneK(PF);
+      if (DB.view.wave && kN > 0.6 && kF < 0.05 && !swept) swept = { kNear: r2(kN), kFar: r2(kF), level: r2(DB.view.level) };
+      if (i % 8 === 0) trace.push([r2(DB.view.level), r2(kN), r2(kF), r2(me.pos.z)]);
+    });
+    const t1 = [IO.inkOneTint(0, P0), IO.inkOneTint(1, P1)];
+    R('one: walking in, both teams\' ink goes to the one tint with the grey wave — the patch by the crossing before the floor 25 m on — and inside the two tints are one value (the shaders\' uniforms: one tint, full amount)',
+      !!swept && dC(t1[0], t1[1]) < 1e-6 && dC(t1[0], IO.INK_ONE.uOneC.value) < 1e-6 && IO.INK_ONE.uOneB.value.y === 1 && DB.view.level === 1,
+      { swept, trace: trace.slice(0, 12), tint: [t1[0].toArray().map(r3), t1[1].toArray().map(r3)], one: IO.INK_ONE.uOneC.value.toArray().map(r3) });
+    // on screen: the two patches one shade; the same frame with the one-shade uniforms off (the old look: two greys)
+    stepR(0.1);
+    const one = shot();
+    const B0 = IO.INK_ONE.uOneB.value.clone();
+    IO.INK_ONE.uOneB.value.set(0, 0, 0, B0.w); const ctl = shot(); IO.INK_ONE.uOneB.value.copy(B0); shot();
+    R('one: on screen inside, the two teams\' patches are one shade (pixels), where with the one shade off (the old look) the grey still told them apart',
+      dL(ctl) > 8 && dL(one) < Math.max(3, dL(ctl) * 0.25) && dPx(one) < Math.max(5, dPx(ctl) * 0.3),
+      { one: { px: one.map((c) => c.map(Math.round)), dPx: dPx(one), dLum: dL(one) }, old: { px: ctl.map((c) => c.map(Math.round)), dPx: dPx(ctl), dLum: dL(ctl) } });
+    // the minimap's turf: one shade in there too
+    const mm = g.minimap, rgb = mm && mm._teamRGB();
+    R('one: the minimap draws both teams\' turf in the one shade while you\'re in there', !!rgb && rgb[0].join() === rgb[1].join(), { rgb });
+    // walk out: the team colours sweep back
+    stepR(2.6, () => { if (me.pos.z < 0) me.pos.z += 4.5 / 60; });
+    const t2 = [IO.inkOneTint(0, P0), IO.inkOneTint(1, P1)], back = shot(), rgb2 = mm && mm._teamRGB();
+    R('one: out again, each team\'s ink is back in its own colour (uniforms off, the patches apart on screen, the minimap in team colours)',
+      DB.view.level === 0 && IO.INK_ONE.uOneB.value.y === 0 && dC(t2[0], G.teamColors[0]) < 1e-6 && dC(t2[1], G.teamColors[1]) < 1e-6 && dPx(back) > 40 && rgb2 && rgb2[0].join() !== rgb2[1].join(),
+      { uOneB: IO.INK_ONE.uOneB.value.toArray().map(r3), dPx: dPx(back), rgb: rgb2 });
+    // only the drained local player: in your own team's bubble — nothing; a bot drained in an enemy's while you're out — nothing
+    reset();
+    place(me, 0, -10); step(0.05); start(me); stepR(1.2);
+    const own = IO.INK_ONE.uOneB.value.y;
+    place(E1, 1.5, -10); place(me, 0, 8); stepR(1.0);
+    R('one: only the drained local player — inside your own team\'s bubble, and with a foe bot drained in yours while you\'re outside, every ink keeps its colour',
+      own === 0 && IO.INK_ONE.uOneB.value.y === 0 && IO.inkOneK(V(1.5, 0, -10)) === 0 && G.time - (E1._dbT ?? -9) < 0.1, { own, after: IO.INK_ONE.uOneB.value.y });
+    if (pal0) g._setPalette(pal0);
+  }
+
+  // ======================================================================================== blind bots (their ink)
+  if (want('blind')) {
+    reset();
+    const { SPECIAL_AI } = await import('./src/game/botSpecials.js');
+    const brain = M1.bot, Brain = brain.constructor;
+    const S = V(8, 0, -20);   // (far from where everyone else is parked: nobody in sight)
+    const ownInk = () => { for (const [dx, dz] of [[0, 0], [5, 0], [-5, 0], [0, 5], [0, -5], [4, 4], [-4, 4], [4, -4], [-4, -4]]) G.paint.splat(V(S.x + dx, 0.1, S.z + dz), 4.2, M1.team, { seed: 0.21, instant: true }); };
+    const fresh = () => { M1.bot = new Brain(M1, 'normal'); M1.setWeapon('shooter'); M1.ink = PLAYER.inkMax; M1.hp = 1e6; place(M1, S.x, S.z); M1.yaw = M1.aimYaw = 0; M1.bot.aimYaw = 0; M1.bot.bombCd = 99; };
+    const awayE1 = () => park(E1, m.actors.indexOf(E1));
+    // the paint M1 puts down (its splats' area) over a few seconds, held where it stands (its decisions run as usual)
+    const sp0 = G.paint.splat; let painted = 0, counting = false;
+    G.paint.splat = function (c, r, team, o) { if (counting && team === M1.team) painted += Math.PI * r * r; return sp0.call(this, c, r, team, o); };
+    const measure = (secs, pin = true) => {
+      painted = 0; counting = true; let fires = 0, inside = 0;
+      step(secs, () => { if (pin) { M1.pos.x = S.x; M1.pos.z = S.z; M1.vel.x = M1.vel.z = 0; } M1.ink = PLAYER.inkMax; if (M1.intent.fire) fires++; if (DB.inEnemy(M1)) inside++; });
+      counting = false; return { painted: r2(painted), fires, inside };
+    };
+    try {
+      // (a) no bubble: on its own ink it sees nothing to paint
+      ownInk(); step(0.2); fresh(); step(0.3);
+      const q0 = { inkTeam: M1.bot.inkTeam, groundSeen: M1.bot.groundSeen, own: r2(G.paint.regionStats(S.x, 0, S.z, 3, M1.bot.inkTeam).own) };
+      const out1 = measure(3);
+      // (b) E1's bubble round the same spot (E1 steps away; M1's ink painted back over the bubble's splash)
+      reset(); place(E1, S.x, S.z); step(0.05); start(E1); step(D.inflate + 0.1); awayE1();
+      ownInk(); step(0.2); fresh(); step(0.3);
+      const q1 = { inkTeam: M1.bot.inkTeam, groundSeen: M1.bot.groundSeen, own: r2(G.paint.regionStats(S.x, 0, S.z, 3, M1.bot.inkTeam).own), real: r2(G.paint.regionStats(S.x, 0, S.z, 3, M1.team).own), ground: M1.groundTeam };
+      R('blind: a bot inside an enemy Drainbow reads none of its own ink as its own (inkTeam: nobody\'s; the ground under it: theirs) — outside the same ink is its own',
+        q0.inkTeam === M1.team && q0.groundSeen === 1 && q0.own > 0.9 && q1.inkTeam === 2 && q1.own === 0 && q1.real > 0.9 && q1.groundSeen === 2 && q1.ground === 1, { outside: q0, inside: q1 });
+      const in1 = measure(3);
+      R('blind: held on a patch of its own ink, the bot in the bubble paints all the while ("they cover everything as they go"); the same bot there with no bubble barely does',
+        in1.inside > 150 && in1.painted > 30 && in1.painted > out1.painted * 3 + 10 && in1.fires > out1.fires + 60, { inBubble: in1, noBubble: out1 });
+      // (c) walking out (not held): it keeps painting on its way out; botBlind 0 — as before: no shots while it gets out
+      const walkOut = (blind) => {
+        D.botBlind = blind;
+        reset(); place(E1, S.x, S.z); step(0.05); start(E1); step(D.inflate + 0.1); awayE1();
+        ownInk(); step(0.2); fresh(); step(0.05);
+        painted = 0; counting = true; let fires = 0, t = 0;
+        step(4, () => { M1.ink = PLAYER.inkMax; if (!DB.inEnemy(M1)) return false; t++; if (M1.intent.fire) fires++; });
+        counting = false;
+        return { fires, framesInside: t, painted: r2(painted), out: !DB.inEnemy(M1) };
+      };
+      const wB = walkOut(1), wS = walkOut(0);
+      D.botBlind = 1;
+      R('blind: walking out of it the blind bot keeps painting everything it passes; with botBlind 0 (the old reading: its own ink known) it holds its fire on the way out',
+        wB.out && wS.out && wB.fires > 10 && wB.painted > 10 && wS.fires === 0, { blind: wB, sighted: wS });
+      // (d) dry in there: a refill sends it out of the bubble first (it can't tell its ink, and the bubble stops refills)
+      SPECIAL_AI.enabled = false;   // (its own danger escape off: the refill's route alone)
+      reset(); place(E1, S.x, S.z); step(0.05); start(E1); step(D.inflate + 0.1); awayE1();
+      ownInk(); step(0.2); fresh(); M1.ink = 4; step(0.4);
+      const b = bubble(), pth = M1.bot.path, end = pth && pth.length ? G.nav.nodes[pth[pth.length - 1]] : null;
+      const endD = end && b ? r2(Math.hypot(end.x - b.pos.x, end.z - b.pos.z)) : null;
+      let outAt = null; step(4, (i) => { if (outAt == null && !DB.inEnemy(M1)) outAt = r2(i / 60); M1.ink = Math.min(M1.ink, 4); });
+      SPECIAL_AI.enabled = true;
+      R('blind: dry inside it, its refill heads out of the bubble first (the route ends past the film), not to the own ink under its feet',
+        M1.bot.mode === 'refill' && endD != null && endD > D.radius && outAt != null, { mode: M1.bot.mode, routeEnd: endD, radius: D.radius, outAt });
+    } finally {
+      G.paint.splat = sp0; D.botBlind = 1; SPECIAL_AI.enabled = true;
+      M1.bot = brain;
+    }
   }
 
   PLAYER.inkRefillKid = savedRefill[0]; PLAYER.inkRefillSwim = savedRefill[1];

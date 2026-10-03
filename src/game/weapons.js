@@ -11,6 +11,7 @@ import { G, emit, clamp, lerp, smoothstep } from '../core/ctx.js';
 import { WEAPONS, SUB, SPECIALS, PLAYER, subViewScale } from '../config.js';
 import { Physics, Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
+import { INK_ONE, INK_ONE_PARS } from '../world/inkOne.js';
 
 // local-player gamepad rumble (subtle; no-op without a pad or with settings.rumble = 0)
 function rumble(a, strong, weak, ms) { if (a && a.isLocal && !a.isBot) G.input?.rumble?.(strong, weak, ms); }
@@ -696,13 +697,28 @@ function makeBlobMaterial() {
           float iwIgn = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
           if (iwIgn > iwNear) discard;
         }`)
+      .replace('#include <common>', `#include <common>
+        ${INK_ONE_PARS}
+        varying vec3 iwW;`)
+      .replace('#include <color_fragment>', `vec3 iwCol = mix(vColor.rgb, uOneC, inkOneK(iwW));   // ([drainbow] one shade: inkOne.js)
+        diffuseColor.rgb *= iwCol;`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         {
           float iwRim = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0);
-          totalEmissiveRadiance += vColor.rgb * (0.16 + 0.55 * iwRim);
+          totalEmissiveRadiance += iwCol * (0.16 + 0.55 * iwRim);
         }`);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+        varying vec3 iwW;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+        #ifdef USE_INSTANCING
+        iwW = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;
+        #else
+        iwW = (modelMatrix * vec4(transformed, 1.0)).xyz;
+        #endif`);
+    Object.assign(sh.uniforms, INK_ONE);
   };
-  mat.customProgramCacheKey = () => 'iw-blob-3';
+  mat.customProgramCacheKey = () => 'iw-blob-4';
   return mat;
 }
 

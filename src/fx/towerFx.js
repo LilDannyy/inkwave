@@ -13,6 +13,7 @@ import { G, on } from '../core/ctx.js';
 import { TOWER } from '../config.js';
 import { ceilingAt } from '../game/tower.js';
 import { GRATE } from '../game/towerPaint.js';
+import { inkOneMap } from '../world/inkOne.js';
 
 const NEUTRAL = new THREE.Color('#ffd54a');
 const DIM = new THREE.Color('#7d8088');
@@ -199,8 +200,8 @@ export class TowerFx {
       geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
       geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       geo.setIndex(idx); geo.computeVertexNormals();
-      this.inkMat = new THREE.MeshStandardMaterial({ map: P.texture, transparent: true, roughness: 0.3, metalness: 0, side: THREE.DoubleSide,
-        depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+      this.inkMat = inkOneMap(new THREE.MeshStandardMaterial({ map: P.texture, transparent: true, roughness: 0.3, metalness: 0, side: THREE.DoubleSide,
+        depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));   // ([drainbow] one shade: inkOne.js)
       const ink = noAO(new THREE.Mesh(geo, this.inkMat));
       ink.renderOrder = 1;
       g.add(ink);
