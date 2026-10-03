@@ -532,6 +532,7 @@ const HOLD_BOTH = {
     // shoulders turning through it
     swipe: [-0.01, 0.09, 0.86, 0.14, 0.95, 0.5, -0.2, 1.4, 0.2] },
   blaster: { ...HOLD.blaster, both: true, gripRoll: Math.PI, gripFlip: true, lobbyTwo: 1,   // (the pump: a round sleeve)
+    aim: { p: [-0.035, -0.09, 0.17], r: [0, 0.04, 0] },   // 3 cm closer in than the one-handed blaster's: the support arm keeps a bend
     carry: { p: [-0.11, 0.8, 0.14], r: [0.38, 0.34, 0.24] },
     lobby: { p: [-0.1, 0.8, 0.17], r: [0.25, 0.5, 0.2] },       // low ready, the bell to the front left
     trophy: { p: [-0.06, 0.8, 0.2], r: [-0.25, 0.15, 0.1] },    // thrust up ahead, the bulb clear of the chin
@@ -3209,7 +3210,7 @@ export class Character {
     if (H.both) {   // [b5-holds] two-handed: no twirl — dipped low, lifted up, then thrust at the viewer
       const T = H.trophy, Q = H.present, U = H.droop;
       lerpE(D, ANC, U.p[0], U.p[1], U.p[2], dip); lerpE(D, ANCR, U.r[0], U.r[1], U.r[2], dip);
-      lerpE(D, ANC, T.p[0], T.p[1] + 0.05, T.p[2], rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);   // (up on tiptoe: 5 cm higher)
+      lerpE(D, ANC, T.p[0], T.p[1] + 0.05, T.p[2] - 0.02, rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);   // (up on tiptoe: higher, closer)
       lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], strike); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], strike);
     } else {
       lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);
