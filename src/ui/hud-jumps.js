@@ -13,9 +13,11 @@
 //     at touchdown. Under the disc are the name and the seconds left. A return mark's ring runs through the special's
 //     time left, then the flight home.
 //       world view   floating over the spot, through walls, smaller with distance, stacked above a teammate's name
-//                    tag it would cover (not your own jump, nor one coming down on you: the alert has it)
+//                    tag it would cover (not your own jump, nor one coming down on you: the alert has it). On a
+//                    return beacon it stands in for the beacon's own floating icon badge (hidden; ring + pillar stay)
 //       minimap      on the spot over the map's own landing ring / return badge (the corner map and the strike map)
-//       TAB map      on the floor at the spot, under the pins (diorama.js)
+//       TAB map      on the floor at the spot (diorama.js), drawn over the teammates' pins: a jump comes down by
+//                    its target's pin, and under it the label (the name, the seconds) would be lost
 //     Who sees what follows the marker it labels. The super-jump reticle and the return beacon are seen by both teams
 //     (the other side can camp them), so their ring and icon are shown to everyone. The name and seconds go only to the
 //     jumper's own team, as with the ally tags and the death markers. The user, on tracked foes: "dont show their name".
@@ -116,6 +118,9 @@ export class JumpHud {
     const cam = G.camera, W = innerWidth, H = innerHeight, u = Math.min(W / 100, (H * 1.7778) / 100);
     let n = 0;
     if (cam) for (const r of marks) {
+      // a return beacon's own floating icon badge (specials.js ReturnMarker) would sit doubled behind this tag's disc:
+      // the tag takes its place (seen through walls, with the name and the countdown); its ring and light pillar stay
+      if (r.kind === 'return' && r.key.badge && r.key.badge.visible) r.key.badge.visible = false;
       if (r.kind === 'jump' && (r.actor === me || (me && r.target === me))) continue;
       _v.set(r.x, r.y + JUMP_UI.lift, r.z);
       const dist = _v.distanceTo(cam.position);
@@ -218,7 +223,7 @@ export function dioJumpTags(dio, cam, W, H, me) {
     DIO.of = dio; DIO.pool = [];
     DIO.layer = h('div', { class: 'iw-dio__jts' });
     const pins = dio.pins[0] && dio.pins[0].el.parentNode;
-    dio.el.insertBefore(DIO.layer, pins && pins.parentNode === dio.el ? pins : dio.cursor);   // (on the floor, under the pins)
+    dio.el.insertBefore(DIO.layer, pins && pins.parentNode === dio.el ? pins.nextSibling : dio.cursor);   // (over the pins, under the cursor)
   }
   const m = G.match;
   const marks = m && !m.attract ? landingMarks() : [];

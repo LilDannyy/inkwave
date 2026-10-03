@@ -6,11 +6,19 @@
 HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/../../../../.." && pwd)"; cd "$ROOT"
 MAP="${1:-halyard}"; TIME="${2:-day}"
 PNG="${PNG:-${BOTLAB_OUT:-$ROOT/.botlab}/shots-jumpui}/$MAP-$TIME"; mkdir -p "$PNG" "$HERE/out"
-SCENES=tools/botlab/scenes/jump-ui.js MAP=$MAP TIME=$TIME MODE=turf PLAY=${PLAY:-8} OUT="$PNG" W=1600 H=900 CROP=0,0,1,1 WATCHDOG=500000 tools/botlab/run.sh tools/botlab/hud-shots.cjs 2>&1 | grep -E "^shot|SCENE|CONSOLE|ERROR|  \[" | cut -c1-600
+SCENES=tools/botlab/scenes/jump-ui.js MAP=$MAP TIME=$TIME MODE=turf PLAY=${PLAY:-8} OUT="$PNG" W=1600 H=900 CROP=0,0,1,1 WATCHDOG=500000 tools/botlab/run.sh tools/botlab/hud-shots.cjs 2>&1 | grep -E "^shot|SCENE|CONSOLE|ERROR|  \[" | cut -c1-8000 | tee "$PNG/shots.log" | cut -c1-600
 python3 - "$PNG" "$HERE/out" "$MAP-$TIME" <<'PY'
-import sys, glob, os
+import sys, glob, os, json, re
 from PIL import Image
 src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+# a scene may return { crop: [x, y, w, h] } (fractions of the frame): saved as <scene>-zoom at 2×
+zoom = {}
+for line in open(f'{src}/shots.log', errors='ignore'):
+    m = re.match(r'^shot (\S+) (.*) \S+-top\.png$', line.strip())
+    if not m: continue
+    try: info = json.loads(m.group(2))
+    except Exception: continue
+    if isinstance(info, dict) and info.get('crop'): zoom[m.group(1)] = info['crop']
 def save(im, path):
     q = 84
     while True:
@@ -24,7 +32,11 @@ for f in sorted(glob.glob(f'{src}/*.png')):
     save(im, f'{dst}/{tag}-{n}.jpg')
     # crops at 2×: the alert (top middle), the minimap (bottom left), the middle of the view
     crops = {'alert': (W * .3, 0, W * .7, H * .3), 'map': (0, H * .62, W * .27, H), 'mid': (W * .25, H * .18, W * .75, H * .72)}
-    want = {'alert': ['alert', 'mid'], 'world': ['mid', 'map'], 'foe': ['mid', 'map'], 'inkjet': ['mid', 'map'], 'inkjet-home': ['mid'], 'zipline': ['mid', 'map'], 'tab': ['mid']}
+    want = {'alert': ['alert', 'mid'], 'world': ['mid', 'map'], 'foe': ['mid', 'map'], 'inkjet': ['mid', 'map'], 'inkjet-home': ['mid'], 'zipline': ['mid', 'map'], 'tab': []}
+    if n in zoom:
+        x, y, w, h = zoom[n]; cr = im.crop((round(x * W), round(y * H), round((x + w) * W), round((y + h) * H)))
+        f2 = min(2, 1600 / cr.width); cr = cr.resize((round(cr.width * f2), round(cr.height * f2)), Image.LANCZOS)
+        save(cr, f'{dst}/{tag}-{n}-zoom.jpg')
     for c in want.get(n, []):
         box = tuple(round(v) for v in crops[c]); cr = im.crop(box)
         cr = cr.resize((cr.width * 2 if cr.width < 800 else cr.width, cr.height * 2 if cr.width < 800 else cr.height), Image.LANCZOS)

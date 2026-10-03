@@ -183,6 +183,7 @@
     // (the user still stands on it at first: the world tag stacks straight up above their own name tag)
     const wAt0 = mk && proj(mk.pos.x, mk.pos.y + JUMP_UI.lift, mk.pos.z), mAt0 = mk && mapXY(mk.pos);
     R(`${label}: …in the world (the user's name, the special's icon) and on the minimap`, !!w0 && !!m0 && Math.abs(w0.xy[0] - wAt0[0]) < 2.5 && w0.xy[1] <= wAt0[1] + 2.5 && near2(m0.xy, mAt0, 1.5) && !!w0.el.querySelector('.iw-jt__icon svg'), { w: w0 && w0.xy, wWant: wAt0 && wAt0.map(r2), m: m0 && m0.xy, mWant: mAt0 && mAt0.map(r2) });
+    R(`${label}: …the tag stands in for the beacon's own icon badge (hidden; its ring and pillar stay)`, !!mk && mk.badge.visible === false && mk.ring.visible !== false && mk.pillar.visible !== false, { badge: mk && mk.badge.visible });
     // the user moves off (Ink Jet: hovers out; Zipline: walks), the special runs out, they jump home
     U._go = new THREE.Vector3(1, 0, 0.35).normalize();
     const S = [];

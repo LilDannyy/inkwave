@@ -10,7 +10,7 @@
 .iw-jts, .iw-dio__jts { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .iw-jts { transition: opacity .15s; }
 body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
-.iw-map__jts { position: absolute; inset: 0; pointer-events: none; }
+.iw-map__jts { position: absolute; inset: 0; pointer-events: none; z-index: 3; }   /* (over your own arrow, .iw-mdot.is-self: z 2 — a name next to you stays readable) */
 .iw-jt { position: absolute; left: 0; top: 0; width: 0; height: 0; --d: calc(var(--u) * 2.7); transform-origin: 0 0; will-change: transform; }
 .iw-jt__disc { position: absolute; left: calc(var(--d) * -.5); top: calc(var(--d) * -.5); width: var(--d); height: var(--d); border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle at 38% 32%, #3a3150, var(--k) 70%); box-shadow: 0 0 0 calc(var(--u) * .14) #fff, 0 0 0 calc(var(--u) * .26) var(--k), 0 4px 10px rgba(0, 0, 0, .35); }
@@ -52,7 +52,7 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 .iw-jt.is-map .iw-jt__sec { display: none; }
 .iw-map.is-expanded .iw-jt.is-map { --d: calc(var(--u) * 2.4); }
 .iw-map.is-expanded .iw-jt.is-map .iw-jt__tag { font-size: calc(var(--u) * 1.05); }
-/* TAB map: on the floor at the spot (the teammates' pins stand up over it), the label under it */
+/* TAB map: on the floor at the spot, the label under it (drawn over the teammates' pins, under the cursor) */
 .iw-jt.is-dio { --d: calc(var(--u) * 2.1); opacity: var(--pinK, 1); }
 .iw-jt.is-dio .iw-jt__tag { top: calc(var(--d) * .5 + var(--u) * .55); }
 .iw-jt.is-dio.is-foe { --d: calc(var(--u) * 1.7); }

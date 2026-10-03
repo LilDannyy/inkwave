@@ -96,22 +96,36 @@
     step(0.85);
   }, 200);
   // ---- Zipline: the same beacon, the user walked off
+  // (walked on ahead along the clear line from the spot: sideways is the water on Halyard)
   add('zipline', () => {
     clearAll();
-    put(me, at(0, 0)); put(M3, at(8, -1));
+    put(me, at(0, 0)); put(M3, at(5, 1.5));
     look(way, -0.1); step(0.3);
     start(M3, 'zipcaster');
-    M3._go = V(-sx * 0.9 + wx * 0.4, 0, -sz * 0.9 + wz * 0.4).normalize(); step(1.3); M3._go = null; step(0.6);
+    M3._go = V(wx, 0, wz); step(1.1); M3._go = null; step(0.6);
+    return { user: [+M3.pos.x.toFixed(1), +M3.pos.y.toFixed(1), +M3.pos.z.toFixed(1)], alive: M3.alive };
   }, 200);
   // ---- the TAB map: a teammate's jump coming down, another's Ink Jet return pin
+  // (spread out along the clear line, so the pins and tags don't pile up at the map's scale; `crop` = the zoomed part)
   add('tab', () => {
     clearAll();
-    put(me, at(0, 0)); put(M2, at(10, 3.5)); put(M3, at(6, -4));
+    // (the TAB map shows the whole stage: the others ~30 m apart on nav nodes — the middle, and either side of your half)
+    const node = (x, z) => { let b = null, bd = 1e9; for (const n of G.nav?.nodes || []) { const d = Math.hypot(n.x - x, n.z - z); if (d < bd && flatAround(n.x, n.y, n.z, 1, 2.5)) { bd = d; b = n; } } return b ? [b.x, b.z] : [x, z]; };
+    put(me, at(0, 0)); put(M2, node(cx * 0.3, ys * 2)); put(M3, node(cx - 14, cz + ys * 14)); put(M1, node(cx + 14, cz + ys * 10));
     look(way, -0.14); step(0.3);
-    start(M3, 'jetpack'); M3._go = V(-sx, 0, -sz); step(0.8); M3._go = null;
+    start(M3, 'jetpack'); M3._go = V(1, 0, 0); step(0.9); M3._go = null;
     m.controller = { mapHeld: true, enabled: true, update() {}, computeAim() {} };
     step(0.5);
     M1.superJump(M2); step(1.1);
+    const pts = g.hud.jumps.state().dio.map((t) => (/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/.exec(t.tf) || []).slice(1).map(Number)).filter((q) => q.length === 2);
+    const pin = (a) => { const v = a.pos.clone().project(G.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (0.5 - v.y * 0.5) * innerHeight]; };
+    for (const a of [me, M1, M2, M3]) pts.push(pin(a));
+    const qx = pts.map((q) => q[0]), qy = pts.map((q) => q[1]);
+    let x0 = Math.min(...qx) - 150, x1 = Math.max(...qx) + 150, y0 = Math.min(...qy) - 170, y1 = Math.max(...qy) + 110;
+    const w = Math.max(x1 - x0, 640), h = Math.max(y1 - y0, 360), cxm = (x0 + x1) / 2, cym = (y0 + y1) / 2;
+    const W = innerWidth, H = innerHeight, cw = Math.min(W, Math.max(w, h * 16 / 9)), ch = cw * 9 / 16;
+    const cx0 = Math.max(0, Math.min(W - cw, cxm - cw / 2)), cy0 = Math.max(0, Math.min(H - ch, cym - ch / 2));
+    return { crop: [cx0 / W, cy0 / H, cw / W, ch / H].map((v) => +v.toFixed(4)) };
   }, 300);
   window.__hudScenes = scenes;
   return scenes.map((s) => ({ name: s.name }));
