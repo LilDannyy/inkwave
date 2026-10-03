@@ -9,16 +9,18 @@ folder's `balance.sh` / `agg.cjs`. The new code comes in JOB-2, into the same re
 **Revised (03:30): run it on the OLD code, commit adeacf7, not the branch head** (the branch head now carries the new
 code). Check out adeacf7 detached for the run, then go back to the branch to commit the results:
 
+**Revised again (the lead's standing order tonight: 8 matches per mode and config): `1 1` now, not `2 2`.** If you already ran this job (all of it or part) and only the push was lost, don't run anything again and don't delete anything: the command above skips every finished match (`balance.sh` is resumable), so re-running it just finishes what's missing, and `agg.cjs` counts every match in the folder (extra ones from a `2 2` run are welcome). If the results file is already written on your side, just commit and push it.
+
 ```bash
 cd ~/inkwave-botlab && git fetch && git checkout --detach adeacf7 && mkdir -p .botlab/results/zipcheer
-caffeinate -i -s bash -c 'SLOTS=3 PAR=3 CFGS="zipO orbO" tools/botlab/jobs/batch5/zipcheer/balance.sh .botlab/results/zipcheer/bal 2 2' 2>&1 | tee .botlab/results/zipcheer/job1.log
+caffeinate -i -s bash -c 'SLOTS=3 PAR=3 CFGS="zipO orbO" tools/botlab/jobs/batch5/zipcheer/balance.sh .botlab/results/zipcheer/bal 1 1' 2>&1 | tee .botlab/results/zipcheer/job1.log
 git checkout botlab-b5-zipcheer && git pull
 ```
 
 (If JOB-1 already ran on a later sha than adeacf7: delete `.botlab/results/zipcheer/bal/*-zipO-*` and `*-orbO-*` and
 run it again as above.)
 
-64 matches (per mode: 16 Zipline-forced, 16 Cheer-Orb-forced; 8 a side × 4 stages; trimmed 03:25 — no `base` set), turf 180 s and full
+32 matches (per mode: 8 Zipline-forced, 8 Cheer-Orb-forced; 4 a side × 4 stages; trimmed 03:25 — no `base` set), turf 180 s and full
 Zone Control, special gauge ×3. 
 
 Put in `tools/botlab/jobs/batch5/zipcheer/results/JOB-1.txt`:
