@@ -3416,9 +3416,22 @@ export class Menus {
 
     // ---- your controls (bottom bar)
     const Ws = this._weapons();
+    const SBS = this.api.subs || SUB, SPS = this._specials();
     const wIcon = h('span', { class: 'iw-wchip__icon' }), wName = h('b');
     const wChip = h('button', { class: 'iw-wchip iw-lob__wchip' }, wIcon, h('span', { class: 'iw-wchip__text' }, h('small', null, 'WEAPON'), wName), h('span', { class: 'iw-wchip__edit' }, h('i', { html: GLYPHS.pencil })));
     this._fx(wChip);
+    // SUB / SPECIAL (beside WEAPON, stacked): each opens the loadout's kit picker (_openKitPicker). The profile's pick
+    // (null: the weapon's own — the chip then shows the weapon's default, tagged WEAPON'S OWN, and follows a weapon swap);
+    // a pick is saved like the loadout's and sent to the room (net.setMe).
+    const kitChip = (kind) => {
+      const icon = h('span', { class: 'iw-lkit__icon' }), name = h('b', { class: 'iw-lkit__name' });
+      const c = h('button', { class: `iw-wchip iw-lkit iw-lkit--${kind}` }, h('small', { class: 'iw-lkit__lbl' }, kind === 'sub' ? 'SUB' : 'SPECIAL', h('em', { class: 'iw-lkit__own' }, ' · WEAPON’S OWN')), icon, name, h('span', { class: 'iw-wchip__edit' }, h('i', { html: GLYPHS.pencil })));
+      c._k = { kind, icon, name, sig: '' };
+      this._fx(c);
+      return c;
+    };
+    const subChip = kitChip('sub'), spChip = kitChip('special');
+    const kitStack = h('div', { class: 'iw-lob__kits' }, subChip, spChip);
     const lookAv = h('span', { class: 'iw-lchip__av' }, h('span', { class: 'iw-lchip__blob', html: splatSVG({ seed: 17, cls: 'iw-fa', r: 62, arms: 8, drops: 0 }) }), h('span', { class: 'iw-lchip__squid', html: SQUID }));
     const lChip = h('button', { class: 'iw-wchip iw-lchip iw-lob__lchip', title: 'Locker' }, lookAv, h('span', { class: 'iw-lob__lbadge', html: GLYPHS.hanger }), h('small', { class: 'iw-lob__llbl' }, 'LOOK'));
     this._fx(lChip);
@@ -3439,7 +3452,7 @@ export class Menus {
     startBtn.querySelector('.iw-btn__text').appendChild(startSub);
     startBtn.append(h('span', { class: 'iw-start__chev' }, h('i'), h('i'), h('i')), h('span', { class: 'iw-btn__key' }, this._hint('R', 'X')));
     const bar = h('div', { class: 'iw-lob__bar iw-in iw-in--up' },
-      h('div', { class: 'iw-lob__you' }, wChip, lChip), teamRow, emoteBtn, h('span', { class: 'iw-lob__grow' }), readyBtn, startBtn);
+      h('div', { class: 'iw-lob__you' }, wChip, kitStack, lChip), teamRow, emoteBtn, h('span', { class: 'iw-lob__grow' }), readyBtn, startBtn);
 
     // ---- nameplates over the 3D line-up
     const platesEl = h('div', { class: 'iw-lob__plates', 'aria-hidden': 'true' });
@@ -3717,6 +3730,22 @@ export class Menus {
       this._sfx('ui_click');
     };
     this._bind(wChip, { id: 'weapon', accept: () => openLoadout() });
+    // the kit picker over the lobby: a pick is saved (api.setLoadout, inside the picker) and goes to the room — null for
+    // the weapon's own; you stay ready (the room only takes the kit)
+    const openKit = (kind) => {
+      if (S.launching || this._modal) return;
+      const chip = kind === 'sub' ? subChip : spChip;
+      this._openKitPicker(kind, { chip, onClose: (changed) => {
+        if (!changed || !S.alive) return;
+        const k = { sub: kitOf('sub', myWeapon()), special: kitOf('special', myWeapon()) };
+        safeCall(() => net && net.setMe({ sub: k.sub.own ? null : k.sub.id, special: k.special.own ? null : k.special.id }));
+        renderKits(false);
+        restartAnim(chip, 'is-swap');
+        this._burstAt(chip._k.icon, { count: 10, dist: 5, size: 0.8 });
+      } });
+    };
+    this._bind(subChip, { id: 'sub', accept: () => openKit('sub') });
+    this._bind(spChip, { id: 'special', accept: () => openKit('special') });
     this._bind(lChip, { id: 'look', accept: () => { if (!S.launching) { this._sfx('ui_click'); this._go('locker'); } } });
     this._bind(teamRow, { id: 'team', type: 'row', adjust: (d) => (bossMode() ? requestTeam(0) : teamSeg.adjust(d)), accept: () => (bossMode() ? requestTeam(0) : teamSeg.cycle()) });
     // host settings rows (bound only for the host — guests' rows are read-only)
@@ -3755,18 +3784,21 @@ export class Menus {
           const name = h('span', { class: 'iw-plate__name' });
           const crown = h('i', { class: 'iw-plate__crown', html: GLYPHS.crown });
           const w = h('i', { class: 'iw-plate__w' });
+          // their sub / special, small, hanging under the weapon badge
+          const ksub = h('i', { class: 'iw-plate__k is-sub' }), ksp = h('i', { class: 'iw-plate__k is-sp' });
+          const kit = h('span', { class: 'iw-plate__kit' }, ksub, ksp);
           const ping = h('span', { class: 'iw-plate__ping' }, h('i'), h('i'), h('i'));
           const ready = h('span', { class: 'iw-plate__ready' }, h('i', { html: GLYPHS.check }), 'READY!');
           const bubble = h('span', { class: 'iw-plate__bubble' });
           const you = h('span', { class: 'iw-plate__you' }, 'YOU');
           const e = h('div', { class: 'iw-plate' }, h('div', { class: 'iw-plate__stack' }, bubble,
-            h('div', { class: 'iw-plate__tag iw-stag' }, art, w, h('span', { class: 'iw-stag__txt' }, title, name), crown, you, ready, ping)));
+            h('div', { class: 'iw-plate__tag iw-stag' }, art, w, kit, h('span', { class: 'iw-stag__txt' }, title, name), crown, you, ready, ping)));
           platesEl.appendChild(e);
-          P = { el: e, tag: e.querySelector('.iw-plate__tag'), art, title, name, crown, w, ping, ready, bubble, you, on: false, sig: '', bubT: 0, x: -1, y: -1, dy: 0, bw: 0 };
+          P = { el: e, tag: e.querySelector('.iw-plate__tag'), art, title, name, crown, w, kit, ksub, ksp, ping, ready, bubble, you, on: false, sig: '', bubT: 0, x: -1, y: -1, dy: 0, bw: 0 };
           plates.set(p.id, P);
         }
         const team = teamOf(p);
-        const sig = `${p.name}|${p.host}|${p.ready}|${p.weapon}|${team}|${p.you}|${bossMode() ? 1 : 0}`;
+        const sig = `${p.name}|${p.host}|${p.ready}|${p.weapon}|${team}|${p.you}|${bossMode() ? 1 : 0}|${p.sub || ''}|${p.special || ''}`;
         if (sig !== P.sig) {
           const was = P.sig ? P.sig.split('|') : null;
           P.sig = sig; P.bw = 0;   // re-measure for the overlap pass
@@ -3785,6 +3817,11 @@ export class Menus {
           if (was && was[2] !== String(p.ready) && p.ready) restartAnim(P.ready, 'is-stamp');
           if (was && was[1] !== String(p.host) && p.host) restartAnim(P.crown, 'is-stamp');
           if (was && was[3] !== p.weapon) restartAnim(P.w, 'is-pop');
+          // (null: the weapon's own)
+          const sbId = SBS[p.sub] ? p.sub : (W && SBS[W.sub] ? W.sub : 'bomb'), spId = SPS[p.special] ? p.special : (W && SPS[W.special] ? W.special : Object.keys(SPS)[0]);
+          if (P.ksub._id !== sbId) { const pop = P.ksub._id !== undefined; P.ksub._id = sbId; P.ksub.innerHTML = SUB_ICONS[sbId] || SUB_ICONS.bomb; if (pop) restartAnim(P.ksub, 'is-pop'); }
+          if (P.ksp._id !== spId) { const pop = P.ksp._id !== undefined; P.ksp._id = spId; P.ksp.innerHTML = specialIcon(spId); if (pop) restartAnim(P.ksp, 'is-pop'); }
+          P.kit.dataset.kit = `${sbId}|${spId}`;
         }
         const pingQ = p.ping == null || p.ping <= 0 ? 0 : p.ping < 70 ? 3 : p.ping < 140 ? 2 : 1;
         if (P.pingQ !== pingQ) { P.pingQ = pingQ; P.ping.dataset.q = pingQ; P.ping.title = p.ping ? `${Math.round(p.ping)} ms` : ''; }
@@ -3890,12 +3927,44 @@ export class Menus {
         }
       }
     };
+    // your sub / special: the profile's pick, or (none: null) the weapon's own — as the kit picker reads it
+    // (a chip's short name: a three-word name keeps its first and last — Cling Charge Barrage → Cling Barrage)
+    const shortKit = (n) => { const w = String(n).split(' '); return w.length > 2 ? `${w[0]} ${w[w.length - 1]}` : String(n); };
+    const myWeapon = () => { const me = meP(), lo = this._loadout(); return Ws[me && me.weapon] ? me.weapon : lo.weapon; };
+    const kitOf = (kind, wid) => {
+      const isSub = kind === 'sub', all = isSub ? SBS : SPS, W = Ws[wid] || {};
+      const ownId = [isSub ? W.sub : W.special, isSub ? 'bomb' : 'slam'].find((id) => id && all[id]) || Object.keys(all)[0];
+      const saved = this._profile()[kind], lo = this._loadout();
+      const pick = saved && all[saved] ? saved : saved === undefined && lo[kind] && lo[kind] !== ownId && all[lo[kind]] ? lo[kind] : null;
+      const id = pick || ownId;
+      return { id, def: all[id] || {}, own: !pick, W };
+    };
+    // (anim: a Weapon's Own chip that changed with the weapon swaps in; a pick animates itself)
+    const renderKits = (anim = true) => {
+      const wid = myWeapon();
+      for (const c of [subChip, spChip]) {
+        const K = c._k, k = kitOf(K.kind, wid), sig = `${k.id}|${k.own}|${k.own ? wid : ''}`;
+        if (sig === K.sig) continue;
+        const first = !K.sig;
+        K.sig = sig;
+        K.icon.innerHTML = K.kind === 'sub' ? SUB_ICONS[k.id] || SUB_ICONS.bomb : specialIcon(k.id);
+        K.name.textContent = shortKit(k.def.name || k.id);
+        const n = K.name.textContent.length;   // (longer names a size down: Twister Zooka, Whirl Boomerang)
+        c.classList.toggle('is-long', n > 11 && n <= 13); c.classList.toggle('is-xlong', n > 13);
+        c.classList.toggle('is-own', k.own);
+        const what = K.kind === 'sub' ? 'Sub' : 'Special';
+        c.title = k.own ? `${what}: ${k.def.name} — your weapon’s own (comes with the ${k.W.name || 'weapon'})` : `${what}: ${k.def.name}`;
+        c.dataset.kit = k.own ? '' : k.id;
+        if (!first && anim) restartAnim(c, 'is-swap');
+      }
+    };
     const renderBar = () => {
       const me = meP();
       const lo = this._loadout();
       const wid = (me && me.weapon) || lo.weapon;
       const W = Ws[wid] || Ws[lo.weapon];
-      if (wChip._wid !== wid) { wChip._wid = wid; wIcon.innerHTML = weaponIcon((W && W.kind) || wid); wName.textContent = W ? W.name : wid; if (wChip._init) restartAnim(wChip, 'is-pick'); wChip._init = true; }
+      if (wChip._wid !== wid) { wChip._wid = wid; wIcon.innerHTML = weaponIcon((W && W.kind) || wid); wName.textContent = W ? W.name : wid; wChip.classList.toggle('is-long', wName.textContent.length > 9); if (wChip._init) restartAnim(wChip, 'is-pick'); wChip._init = true; }
+      renderKits();
       const host = isHost();
       el.classList.toggle('is-host', host);
       const ready = !!(me && me.ready);
@@ -4007,11 +4076,18 @@ export class Menus {
     render(false);
 
     // explicit pad/keyboard focus graph: the bar is one row, the host's settings a column, the copy button on top
-    const barItems = () => [wChip, lChip, teamRow, emoteBtn, isHost() ? startBtn : readyBtn];
+    // (SUB over SPECIAL in a stack between WEAPON and LOOK: ← → pass through it at its top chip — or the one you came
+    // from, on the way back — ↑ ↓ move inside it)
+    const barItems = () => [wChip, subChip, spChip, lChip, teamRow, emoteBtn, isHost() ? startBtn : readyBtn];
     const hostRows = () => (isHost() ? setRows : []);
     const barNav = (f, dir) => {
       const items = barItems(), i = items.indexOf(f);
       if (i < 0) return undefined;
+      if (f === subChip && dir === 'down') return spChip;
+      if (f === spChip && dir === 'up') return subChip;
+      if (f === subChip || f === spChip) { if (dir === 'left') return wChip; if (dir === 'right') return lChip; }
+      if (f === wChip && dir === 'right') return S.kitLast === spChip ? spChip : subChip;
+      if (f === lChip && dir === 'left') return S.kitLast === spChip ? spChip : subChip;
       if (dir === 'left') return items[i - 1] || null;
       if (dir === 'right') return items[i + 1] || null;
       if (dir === 'up') { const rows = hostRows(); return rows.length ? rows[rows.length - 1] : copyBtn; }
@@ -4085,6 +4161,7 @@ export class Menus {
       },
       onFocus: (f) => {
         if (this._modal && this._modal.classList.contains('iw-ldr') && f._wid) this._modal._show(f._wid);
+        if (f === subChip || f === spChip) S.kitLast = f;
         this.cursorEl.classList.toggle('is-nodrip', setRows.includes(f) || f === teamRow);
       },
       onBack: () => { if (!S.launching) askLeave(); },
