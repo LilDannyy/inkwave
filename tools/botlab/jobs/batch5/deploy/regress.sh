@@ -11,7 +11,7 @@ T=tools/botlab/tests; RUN=tools/botlab/run.sh
 LOG=${LOG:-$ROOT/.botlab/b5-deploy-regress}; mkdir -p "$LOG"
 one() {   # name env… harness
   local name=$1; shift
-  env "$@" > "$LOG/$name.log" 2>&1
+  env WATCHDOG=900000 "$@" > "$LOG/$name.log" 2>&1
   echo "== $name: $(grep -E '^RESULT' "$LOG/$name.log" | tail -1) $(grep -c '^FAIL' "$LOG/$name.log") FAIL"
   grep -E '^FAIL|HARNESS|WATCHDOG|MAP MISMATCH|console errors: [^n]' "$LOG/$name.log" | cut -c1-600
 }
@@ -49,6 +49,7 @@ want audio-pause && one audio-pause MAP=testbox MODE=turf PAGE=$T/audio-pause.js
 # online
 want net-deploy && one net-deploy CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-deploy.cjs $RUN tools/botlab/netpage.cjs
 want net-deploy-tower && one net-deploy-tower CLIENTS=2 Q0=autopilot Q1=autopilot NET_ARGS=scene=tower NET=$T/net-deploy.cjs $RUN tools/botlab/netpage.cjs
+want net-deploy-leave && one net-deploy-leave CLIENTS=2 Q0=autopilot Q1=autopilot NET_ARGS=scene=leave NET=$T/net-deploy.cjs $RUN tools/botlab/netpage.cjs
 want net-surf && one net-surf CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-surf.cjs $RUN tools/botlab/netpage.cjs
 want net-surf-tower && one net-surf-tower CLIENTS=2 Q0=autopilot Q1=autopilot NET_ARGS=scene=tower NET=$T/net-surf.cjs $RUN tools/botlab/netpage.cjs
 want net-practice && one net-practice CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-practice.cjs $RUN tools/botlab/netpage.cjs
