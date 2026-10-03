@@ -116,6 +116,10 @@ const add = (...p) => HALF.push(...p.flat());
 // ---------------------------------------------------------------------------------------- the floors themselves
 for (const f of FLOORS) if (!f.single && !(f.drown && HIGH_BUILD)) add(groundOf(f.id));
 SINGLE.push(...groundOf('island'));
+// (a hidden deck slab inside the island: the environment's sea takes the stage's footprint from its deck slabs (tops at
+// 0, bottoms in the sea); at HIGH the drowned ledges are gone and the sea would fall back to the whole bounds. Blockout
+// only: the lava engine's `env.sea: false` (ENGINE H22) removes the sea)
+SINGLE.push(B(-0.37, 0.41, -1.2, 0, -0.43, 0.39, { hidden: true, paint: false, tag: 'footprint' }));
 
 // ---------------------------------------------------------------------------------------- mid: Gauge Island
 // the Pour Floor (cast-iron plates, 1.8): the centre zone, the Pond, the tower's start
@@ -243,7 +247,7 @@ add(ARC(0, 0, 30.25, 0.5, 2.4, 3.3, -79.5, -77, 1, { color: '#7a7d82', pattern: 
 // the Firebrick Store (buff brick, turned to face the lake) and the terrace cover
 { const [x, z] = P(35, -63.5); add(O(x, z, 4, 5, 2.4, 7.0, -26.5, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
 add(stack(-10.0, -37.0, 2.4, 1.0, 1.2, 2.4, 'pattern-crates', K.wood), stack(11.5, -31.5, 1.0, 2.4, 1.2, 2.4, 'pattern-crates', K.wood),
-  stack(9.5, -37.2, 1.2, 1.2, 1.0, 2.4, 'firebrick-pallet', K.brick), stack(-14.0, -31.4, 1.6, 1.6, 1.0, 2.4, 'ingot-pile'),
+  stack(9.5, -36.6, 1.2, 1.2, 1.0, 2.4, 'firebrick-pallet', K.brick), stack(-14.0, -31.4, 1.6, 1.6, 1.0, 2.4, 'ingot-pile'),
   stack(-7.5, -31.4, 1.6, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'), stack(-2.0, -31.3, 1.6, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'),
   stack(-1.0, -36.8, 2.0, 0.8, 1.0, 2.4, 'mould-boxes', K.wood));
 // the charging shed (E7)
@@ -299,11 +303,11 @@ add(EDGE_WALLS.flatMap((x) => x.w.blocks));
 
 // ---------------------------------------------------------------------------------------- Bazookarp only
 // the Ladle Gantry: the second route to the weir at HIGH (Lakefront east → the island's SE shoulder over the Casting
-// Floor). 1.1 (0.1 under the Lakefront and the island it rests on: no coplanar overlap); chain rails on both sides
-add(B(8, 11, -1.1, 1.1, -21.5, -9.4, iron({ tag: 'ladle-gantry', color: '#56685e', onlyIn: 'bazookarp' })));
-add({ ...railSeg([7.875, -20.4], [7.875, -10.5], 1.1), onlyIn: 'bazookarp' }, { ...railSeg([11.125, -20.4], [11.125, -10.5], 1.1), onlyIn: 'bazookarp' });
+// Floor). 1.3 (0.1 over the Lakefront and the island it rests on: no coplanar overlap); chain rails on both sides
+add(B(8, 11, -1.1, 1.3, -21.5, -9.4, iron({ tag: 'ladle-gantry', color: '#56685e', onlyIn: 'bazookarp' })));
+add({ ...railSeg([7.875, -20.4], [7.875, -10.5], 1.3), onlyIn: 'bazookarp' }, { ...railSeg([11.125, -20.4], [11.125, -10.5], 1.3), onlyIn: 'bazookarp' });
 RAILS.length -= 2;   // (the gantry's chain rails are drawn only in its own world: props.js reads GANTRY_RAILS)
-export const GANTRY_RAILS = [[7.875, -20.4, 7.875, -10.5, 1.1, 1.0], [11.125, -20.4, 11.125, -10.5, 1.1, 1.0]];
+export const GANTRY_RAILS = [[7.875, -20.4, 7.875, -10.5, 1.3, 1.0], [11.125, -20.4, 11.125, -10.5, 1.3, 1.0]];
 export { RAILS };
 
 // ============================================================================================================ modes

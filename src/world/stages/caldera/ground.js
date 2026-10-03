@@ -107,7 +107,9 @@ export function fill(P0, o) {
   const lips = colour(3) || colour(4) || rects.map((_, k) => k % 3);
   rects.forEach((r, k) => { r.lip = lips[k]; });
   // the last coping closes the ring: it may meet the first one with the same lip
-  const ledges = rects.map((r) => O(r3(r.cx), r3(r.cz), r3(r.len), r.w, r.e.L.y0 ?? o.y0, r3(o.top + LIPS[r.lip]), r3(r.rot), (r.e.L.mk || o.ledgeMk || o.mk)(r.cx, r.cz)));
+  // a coping over open lava or void stands proud (a rim); one over a lower floor is sunk below the floor by the same
+  // steps (a gutter), so the face it tops stays a 1.2 m hop (nav.js jump edges reach 1.25 m) and a 0.6 m walk-up
+  const ledges = rects.map((r) => O(r3(r.cx), r3(r.cz), r3(r.len), r.w, r.e.L.y0 ?? o.y0, r3(o.top + (r.e.L.sink ? -1 : 1) * LIPS[r.lip]), r3(r.rot), (r.e.L.mk || o.ledgeMk || o.mk)(r.cx, r.cz)));
   return { cols, ledges, ring: P };
 }
 
@@ -116,17 +118,19 @@ export function edgeKinds(self, all, ledge = () => ({ kind: 'ledge', w: 1.0 })) 
   const others = all.filter((f) => f !== self);
   const above = (x, z) => others.some((f) => (f.wall || f.top > self.top + 0.05) && inPoly(f.poly, x, z));
   const same = (x, z) => others.some((f) => !f.wall && Math.abs(f.top - self.top) <= 0.05 && inPoly(f.poly, x, z));
+  const lower = (x, z) => others.some((f) => !f.wall && f.top < self.top - 0.05 && inPoly(f.poly, x, z));
   return (a, b) => {
     const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), nx = dz / L, nz = -dx / L;   // outward (right of a CCW ring)
-    let up = 0, eq = 0;
+    let up = 0, eq = 0, lo = 0;
     for (const t of [0.2, 0.5, 0.8]) {
       const x = a[0] + dx * t + nx * 0.35, z = a[1] + dz * t + nz * 0.35;
-      if (above(x, z)) up++; else if (same(x, z)) eq++;
+      if (above(x, z)) up++; else if (same(x, z)) eq++; else if (lower(x, z)) lo++;
     }
     if (eq >= 2 && L > 0.2 && self.warn !== false) console.warn(`[caldera] ground: ${self.id} meets a floor of its own height at`, a, b);
     if (up >= 2) return { kind: 'poke', w: 1.0 };
     const k = ledge(a, b);
-    return L < 0.35 && k.kind === 'ledge' ? { kind: 'poke', w: k.w } : k;
+    if (L < 0.35 && k.kind === 'ledge') return { kind: 'poke', w: k.w };
+    return k.kind === 'ledge' && lo >= 2 ? { ...k, sink: true } : k;
   };
 }
 
