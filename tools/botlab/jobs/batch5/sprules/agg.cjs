@@ -10,7 +10,9 @@ const runs = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => {
 }).filter(Boolean);
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const sd = (xs) => { const m = mean(xs); return xs.length > 1 ? Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1)) : 0; };
-const NAME = { wad: 'Waddle Bomb Barrage forced', mys: 'Mystery Bomb Barrage forced', bar: 'Splat Bomb Barrage forced (reference)', base: 'random rolls (baseline)' };
+const NAME = { wad: 'Waddle Bomb Barrage forced', wadS: 'Waddle Bomb Barrage forced, TUNE wadS (a barrage Waddle: sense 5 m, chase 5 s)',
+  wadSG: 'Waddle Bomb Barrage forced, TUNE wadSG (sense 5 m, chase 5 s, gap 0.65 s)', mys: 'Mystery Bomb Barrage forced',
+  bar: 'Splat Bomb Barrage forced (reference)', ski: 'Skitter Bomb Barrage forced (reference)', base: 'random rolls (baseline)' };
 const winOf = (mode, x) => { const t = x.t, r = x.r; if (mode === 'zones') return r.winner === t ? 1 : r.winner === 1 - t ? 0 : 0.5; return r.cov[t] > r.cov[1 - t] ? 1 : r.cov[t] < r.cov[1 - t] ? 0 : 0.5; };
 for (const mode of ['turf', 'zones']) {
   const M = runs.filter((x) => x.mode === mode);
@@ -26,10 +28,13 @@ for (const mode of ['turf', 'zones']) {
     const uses = g.map((x) => (cfg === 'base' ? Object.values(x.r.spUses[x.t]).reduce((a, b) => a + b, 0) : (x.r.spUses[x.t].barrage || 0)));
     const oth = g.map((x) => Object.values(x.r.spUses[1 - x.t]).reduce((a, b) => a + b, 0));
     const sides = [0, 1].map((t) => { const gt = g.filter((x) => x.t === t); return gt.length ? `${'AB'[t]} ${(mean(gt.map((x) => winOf(mode, x))) * 100).toFixed(0)}% (n ${gt.length})` : null; }).filter(Boolean).join(', ');
-    console.log(`  ${NAME[cfg]} n=${g.length}: wins ${(mean(win) * 100).toFixed(0)}% [${sides}] | turf Δ ${mean(dturf).toFixed(1)} ±${sd(dturf).toFixed(1)} | K/D ${mean(kd).toFixed(2)} ±${sd(kd).toFixed(2)} | foes splatted by barrages ${mean(bySp).toFixed(1)}/match | special used ${mean(uses).toFixed(1)}/match (theirs ${mean(oth).toFixed(1)})`);
+    // (per use: all the cell's barrage splats over all its uses — fix round 1; the tune the matches actually ran with)
+    const perUse = bySp.reduce((a, b) => a + b, 0) / Math.max(1, uses.reduce((a, b) => a + b, 0));
+    const tunes = [...new Set(g.map((x) => x.r.tune || ''))].join(' / ');
+    console.log(`  ${NAME[cfg]} n=${g.length}: wins ${(mean(win) * 100).toFixed(0)}% [${sides}] | turf Δ ${mean(dturf).toFixed(1)} ±${sd(dturf).toFixed(1)} | K/D ${mean(kd).toFixed(2)} ±${sd(kd).toFixed(2)} | foes splatted by barrages ${mean(bySp).toFixed(1)} ±${sd(bySp).toFixed(1)}/match | special used ${mean(uses).toFixed(1)}/match (theirs ${mean(oth).toFixed(1)}) | per use ${perUse.toFixed(3)}${tunes ? ' | TUNE ' + tunes : ''}`);
     const st = [...new Set(g.map((x) => x.map))].map((s) => { const gs = g.filter((x) => x.map === s); return `${s} ${(mean(gs.map((x) => winOf(mode, x))) * 100).toFixed(0)}% (${gs.length})`; }).join(' · ');
     console.log(`      per stage: ${st}`);
-    if (cfg === 'wad' || cfg === 'mys') {
+    if (/^(wad|mys)/.test(cfg)) {
       const T = {}; for (const x of g) for (const [k, v] of Object.entries((x.r.barrage && x.r.barrage.throws) || {})) T[k] = (T[k] || 0) + v;
       const n = Object.values(T).reduce((a, b) => a + b, 0) || 1;
       console.log(`      throws (all barrages in these matches, incl. the other team's random ones): ${Object.entries(T).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v} (${(100 * v / n).toFixed(0)}%)`).join(', ')}`);
