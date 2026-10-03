@@ -10,7 +10,7 @@
 //     moveSpeed, no swimming; click to throw (holdTime: it throws itself). It flies like a bomb (gravity 24), bounces
 //     off walls, and anchors upright where it lands on a floor (into the sea: lost).
 //   · rings: `anchor` s after landing the first ring leaves the buoy, then one every `gap` s — `pulses` of them, reaching
-//     rMin … rMax (linear: 4, 6.4, 8.8, 11.2, 13.6, 16 m) at `speed` m/s from r0. Each is a knee-high ribbon (`height`)
+//     rMin … rMax (linear: 8, 12.8, 17.6, 22.4, 27.2, 32 m) at `speed` m/s from r0. Each is a knee-high ribbon (`height`)
 //     draped over the ground it runs on (POLAR below), stopped by anything taller than it can climb (a step of more than
 //     stepUp, a wall at its height) and by drops of more than stepDown / the sea.
 //   · a foe the front passes (once per ring, judged where the front crosses their body): feet at or under the ribbon's
@@ -57,7 +57,7 @@ export const HIT_R = 0.3;          // m: a body this far past the front is reach
 export const BREAK_T = 0.38;       // s: a ring at its last reach ripples and sinks away
 export const GRAV = 24;            // the throw (the arc preview's / a bomb's gravity)
 const DODGE_UP = 2.2;              // m over the ribbon's top a player in the air still counts as jumping it
-const A_N = 240, STEP = 0.4;       // the polar map: angles, radial step (m)
+const A_N = 480, STEP = 0.4;       // the polar map: angles (480: about 0.42 m apart at the 32 m last reach), radial step (m)
 // counters (tests / tools/botlab/match.cjs)
 export const SURF_STATS = { uses: 0, throws: 0, lands: 0, rings: 0, hits: 0, dodges: 0, marks: 0, kills: 0, splats: 0, turf: 0, popped: 0, lost: 0 };
 export function resetSurfStats() { for (const k in SURF_STATS) SURF_STATS[k] = 0; }

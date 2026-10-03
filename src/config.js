@@ -527,7 +527,7 @@ export const SPECIALS = {
     moveSpeed: 4.6, holdTime: 6, throwSpeed: 15,
     hp: 350,                              // the anchored buoy: enemy fire / blasts break it (stops the rings)
     anchor: 0.55,                         // s from landing to the first ring (it rights itself, the beacon lights)
-    pulses: 6, gap: 1.1, r0: 0.6, rMin: 4, rMax: 16, speed: 9.5,   // rings: count, s apart, from r0 out to 4 … 16 m at speed m/s
+    pulses: 6, gap: 1.1, r0: 0.6, rMin: 8, rMax: 32, speed: 9.5,   // rings: count, s apart, from r0 out to 8 … 32 m at speed m/s (the user doubled every ring's reach, 2026-10-03; was 4 … 16)
     height: 0.55,                         // m: the ribbon's top over the ground it runs on — feet above it dodge
     damage: 40, markTime: 4,              // per ring hit (once per ring) + the mark (s)
     stepUp: 0.6, stepDown: 2.6,           // m the ribbon climbs / drops between samples (more: a wall / a drop ends it)
@@ -543,7 +543,8 @@ export const SPECIALS = {
   // into bubble time instead (extendPerMeter s per full meter, total life ≤ maxLife). No hit points: it pops when its
   // time runs out or its owner is splatted (popOnOwnerSplat).
   drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'A rainbow bubble at your feet. Enemy ink through it does half damage. Foes inside go grey and muffled as their ink and special drain to your team inside — your share keeps it up longer.',
-    duration: 8.5, radius: 4.3, lift: 1.0, inflate: 0.55, shotMul: 0.5,
+    duration: 8.5, radius: 5.73, lift: 1.0,   // radius: the user's +33⅓ % (2026-10-03; was 4.3)
+    inflate: 0.55, shotMul: 0.5,
     inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
     extendPerMeter: 15, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
     popOnOwnerSplat: true,

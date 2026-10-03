@@ -126,7 +126,8 @@
       const evs = [], reach = [];
       const off = on('surf:pulse', (e) => { if (e.buoy === b) evs.push({ i: e.i, t: b.T }); });
       let samp = null;
-      step(10, () => {
+      // (long enough for the last ring to reach rMax and sink: about 9.7 s at 8 … 32 m)
+      step(D.anchor + D.gap * (D.pulses - 1) + (D.rMax - D.r0) / D.speed + SURF.BREAK_T + 1.5, () => {
         for (const Rg of b.rings) { reach[Rg.i] = Math.max(reach[Rg.i] || 0, Rg.r); if (Rg.state === 'travel' && Rg.i === 2 && Rg.age > 0.3 && !samp) samp = { r: Rg.r, age: Rg.age }; }
         return G.specials.world.includes(b);
       });
