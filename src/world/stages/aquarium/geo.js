@@ -127,10 +127,11 @@ function aabbOf(d) {
 // what hides a floor cell at height y: opaque (drawn) pieces standing from at or below y to at least y + 0.08
 export class Cover {
   constructor(pieces, y, cell = 2) {
-    this.y = y; this.cell = cell; this.map = new Map();
+    this.y = y; this.cell = cell; this.map = new Map(); this.list = [];
     for (const d of pieces) {
       if (d.hidden || d.rail || d.solid === false) continue;
       if (d.kind !== 'ramp' && (bottomOf(d) > y + 0.01)) continue;
+      this.list.push(d);
       const [x0, x1, z0, z1] = aabbOf(d);
       for (let i = Math.floor(x0 / cell); i <= Math.floor(x1 / cell); i++) for (let j = Math.floor(z0 / cell); j <= Math.floor(z1 / cell); j++) {
         const k = i * 8192 + j; let l = this.map.get(k); if (!l) this.map.set(k, (l = [])); l.push(d);
@@ -143,6 +144,7 @@ export class Cover {
     }
     return false;
   }
+  sig() { if (this._sig == null) this._sig = fnv(this.y + JSON.stringify(this.list.map((d) => [d.kind, d.min, d.max, d.center, d.size, d.rotY, d.low, d.high, d.width]))); return this._sig; }
   // the whole square (centre x, z, half size h) hidden
   square(x, z, h) { return this.at(x, z) && this.at(x - h, z - h) && this.at(x + h, z - h) && this.at(x - h, z + h) && this.at(x + h, z + h); }
 }
@@ -184,17 +186,32 @@ export function tileRegion(x0, x1, z0, z1, res, cell) {
 //   inside(x, z) — world coordinates; cover: a Cover (or null); the cell is needed when its centre is inside and it
 //   is not wholly hidden; optional when wholly hidden (or opt(x, z) says so)
 //   clip(x, z) — optional: no cell outside it at all (keeps hidden-merged cells off neighbouring boxes)
-export function layer({ frame = 'world', rect, res = 0.25, inside, cover = null, opt = null, clip = null, y0, y1, o = {} }) {
+//   key — names the layer in the baked tile cache (baked.js, written by bake-tiles.mjs): the greedy tiler is slow
+//   (≈ 0.35 s for the stage), so a layer whose fingerprint (its parameters, its cover's pieces and its cells sampled
+//   on a 1-in-16 sub-grid) matches the baked one reuses the baked rectangles; any change misses and recomputes
+let BAKED = {};
+export const BAKE_OUT = {};
+export function useBaked(b) { BAKED = b || {}; }
+export function fnv(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); }
+export function layer({ key, frame = 'world', rect, res = 0.25, inside, cover = null, opt = null, clip = null, y0, y1, o = {} }) {
   const [a0, a1, b0, b1] = rect;
   const toW = frame === 'blade' ? (w, s) => W(s, w) : (x, z) => [x, z];
-  const cells = tileRegion(a0, a1, b0, b1, res, (a, b, h) => {
+  const cell = (a, b, h) => {
     const [x, z] = toW(a, b);
     if (clip && !clip(x, z)) return 0;
     const hid = cover && cover.square(x, z, h * 1.42);
     if (inside(x, z)) return hid ? 2 : 1;
     if (hid || (opt && opt(x, z))) return 2;
     return 0;
-  });
+  };
+  let probe = '';
+  const nx = Math.round((a1 - a0) / res), nz = Math.round((b1 - b0) / res);
+  for (let j = 1; j < nz; j += 4) for (let i = 1; i < nx; i += 4) probe += cell(a0 + (i + 0.5) * res, b0 + (j + 0.5) * res, res / 2);
+  const sig = fnv([frame, rect, res, y0, y1, cover ? cover.sig() : '', probe].join('|'));
+  const hit = !globalThis.__AQ_REGEN && BAKED[key] && BAKED[key].sig === sig;
+  if (key && !hit && !globalThis.__AQ_REGEN && Object.keys(BAKED).length) console.warn(`[aquarium] tile cache stale for ${key}: run node src/world/stages/aquarium/bake-tiles.mjs`);
+  const cells = hit ? BAKED[key].r.map(([x0, x1, z0, z1]) => ({ x0, x1, z0, z1 })) : tileRegion(a0, a1, b0, b1, res, cell);
+  if (key) BAKE_OUT[key] = { sig, r: cells.map((c) => [c.x0, c.x1, c.z0, c.z1]) };
   return cells.map((r) => (frame === 'blade' ? bladeBox(r.z0, r.z1, r.x0, r.x1, y0, y1, o) : B(r.x0, r.x1, y0, y1, r.z0, r.z1, o)));
 }
 

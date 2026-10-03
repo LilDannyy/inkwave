@@ -26,8 +26,10 @@ import { buildBackdrop } from './backdrop.js';
 import { PIPES, allLegs, endsOf } from './tubeway.js';
 import {
   DEG, W, toBlade, bladeBox, bladeRamp, pol, bearing, dist, inArc, radBox, segBox, radRamp, arcBand, arcBandIn,
-  chainBand, Cover, layer, inNgon, r3,
+  chainBand, Cover, layer, inNgon, r3, useBaked,
 } from './geo.js';
+import { BAKED } from './baked.js';
+useBaked(BAKED);
 
 const FL = -2.0;                                    // foundations (the sea is at −1.6)
 const C0 = [0, 0], EK = [25, 0], WK = [-25, 0];      // the court's centre, the E / W kelp drums
@@ -154,8 +156,8 @@ for (const sx of [1, -1]) {
   const V = voidOf(sx), D = sx > 0 ? PY.door : null, P = roofR(K.render, { tag: 'pylon' });
   const rect = sx > 0 ? [6, 12, -31.5, -19] : [-12, -6, -31.5, -19];
   // below the lintel (no door, no shaft); above it (no shaft); the shaft's lid
-  PYLONS.push(...layer({ rect, res: 0.25, clip: (x, z) => inPylon(x, z, sx, 0), inside: (x, z) => inPylon(x, z, sx, 0.2) && !inBox(V, x, z) && !(D && inBox(D, x, z)), cover: pylonCover, y0: 0, y1: PY.lintel, o: P }));
-  PYLONS.push(...layer({ rect, res: 0.25, clip: (x, z) => inPylon(x, z, sx, 0), inside: (x, z) => inPylon(x, z, sx, 0.2) && !inBox(V, x, z), cover: new Cover(PYLONS.filter((d) => d.tag === 'pylon' && (d.max ? d.max[1] : d.center[1] + d.size[1] / 2) > 8.95), 8.9), y0: PY.lintel, y1: 8.9, o: P }));
+  PYLONS.push(...layer({ key: `pylon${sx}-low`, rect, res: 0.25, clip: (x, z) => inPylon(x, z, sx, 0), inside: (x, z) => inPylon(x, z, sx, 0.2) && !inBox(V, x, z) && !(D && inBox(D, x, z)), cover: pylonCover, y0: 0, y1: PY.lintel, o: P }));
+  PYLONS.push(...layer({ key: `pylon${sx}-high`, rect, res: 0.25, clip: (x, z) => inPylon(x, z, sx, 0), inside: (x, z) => inPylon(x, z, sx, 0.2) && !inBox(V, x, z), cover: new Cover(PYLONS.filter((d) => d.tag === 'pylon' && (d.max ? d.max[1] : d.center[1] + d.size[1] / 2) > 8.95), 8.9), y0: PY.lintel, y1: 8.9, o: P }));
   PYLONS.push(B(V[0], V[1], 8.4, 8.9, V[2], V[3], P));
   // the shaft's glazing toward the hall
   PYLONS.push(B(sx > 0 ? 6.0 : -6.15, sx > 0 ? 6.15 : -6.0, 0, 8.4, V[2], V[3], glass({ tag: 'shaft-glass' })));
@@ -256,7 +258,7 @@ const inProm = (x, z) => {
 const mir = (d) => (d.kind === 'box' ? { ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] }
   : d.kind === 'obox' ? { ...d, center: [-d.center[0], d.center[1], -d.center[2]] }
   : { ...d, low: [-d.low[0], d.low[1], -d.low[2]], high: [-d.high[0], d.high[1], -d.high[2]] });
-PROM.push(...layer({ rect: [-32, -9, -31.5, 0], res: 0.25, inside: inProm, clip: (x, z) => bearing(x, z) <= -110, cover: new Cover([...PROM, ...HALF, ...HALF.map(mir)].filter((d) => d.kind !== 'box'), PR.y), y0: 0, y1: PR.y, o: teak({ tag: 'promenade' }) }));
+PROM.push(...layer({ key: 'promenade', rect: [-32, -9, -31.5, 0], res: 0.25, inside: inProm, clip: (x, z) => bearing(x, z) <= -110, cover: new Cover([...PROM, ...HALF, ...HALF.map(mir)].filter((d) => d.kind !== 'box'), PR.y), y0: 0, y1: PR.y, o: teak({ tag: 'promenade' }) }));
 H(PROM);
 
 // ============================================================================================================ the wing (the blade)
@@ -311,7 +313,7 @@ const glassOut = (s) => (s < -3 ? -17.4 : s < 10 ? -18.2 : s < 24 ? -17.4 : -17.
 const COVE = roofR(K.rock, { tag: 'cove', noPaint: undefined, paint: false });
 const covePts = Array.from({ length: 13 }, (_, i) => { const s = -16 + (47 * i) / 12; return W(s, shore(s)); });
 H(chainBand(covePts, 0.6, 1, FL, [0.45, 0.55], COVE));
-H(layer({ frame: 'blade', rect: [-23, -16.6, -16, 31], res: 0.25, inside: (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 31 && w >= shore(s) + 0.2 && w <= glassOut(s) + 0.2; }, y0: FL, y1: 0.3, o: COVE }));
+H(layer({ key: 'cove', frame: 'blade', rect: [-23, -16.6, -16, 31], res: 0.25, inside: (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 31 && w >= shore(s) + 0.2 && w <= glassOut(s) + 0.2; }, y0: FL, y1: 0.3, o: COVE }));
 // --- the ferry plaza: the queue terrace (0.6) with its ferry-ticket kiosk and luggage trolleys; the whale-tail bench,
 //     the timetable pillar, fish topiary, the trolley stack and queue-barrier planter in front of the pavilion (the
 //     Bazookarp's apron blocks), a luggage trolley behind the Ticket Hall (not in Tower Command), the souvenir kiosk,
@@ -341,7 +343,7 @@ const backPts = Array.from({ length: 11 }, (_, i) => { const w = -16 + 3.2 * i; 
 const SPB = [...chainBand(backPts, 0.5, 1, FL, [3.5, 3.6], stone({ tag: 'deck-coping' }))];
 SPB.push(bladeBox(SP.land, back(16) - 0.1, 15.5, 16.0, FL, 3.7, stone({ tag: 'deck-coping' })), bladeBox(SP.land, back(16) - 0.1, -16.0, -15.5, FL, 3.7, stone({ tag: 'deck-coping' })));
 H(SPB);
-H(layer({ frame: 'blade', rect: [-16.5, 16.5, 30.85, 43.35], res: 0.25, cover: new Cover(SPB, SP.y), y0: FL, y1: SP.y, o: teak({ tag: 'spawn-deck', color: '#a08a70' }),
+H(layer({ key: 'spawn-deck', frame: 'blade', rect: [-16.5, 16.5, 30.85, 43.35], res: 0.25, cover: new Cover(SPB, SP.y), y0: FL, y1: SP.y, o: teak({ tag: 'spawn-deck', color: '#a08a70' }),
   inside: (x, z) => { const [s, w] = toBlade(x, z), a = Math.abs(w); return s <= back(w) - 0.2 && ((a <= SP.half && s >= SP.front + SP.fascia) || (a <= 15.8 && s >= SP.land)); } }));
 H(bladeBox(34, 36, 9.5, 11.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })), bladeBox(34, 36, -11.5, -9.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })));
 H(bladeBox(43, 46.5, -3, 3, FL, 18.0, roofR('#efe9df', { tag: 'fin-tower' })));
@@ -363,12 +365,12 @@ const inBlade = (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <
 const inDrum = (x, z) => { const r = Math.hypot(x, z); return r <= 30.6 || (Math.abs(x) <= 6.0 && z >= -32.6) || (r <= 33.0 && inArc(bearing(x, z), -63.5, -53.5)); };
 const ALL = () => [...SINGLE, ...HALF, ...HALF.map(mir)];
 const groundCover = new Cover(ALL(), 0);
-H(layer({ rect: [-36, 36, -78, 0], res: 0.25, cover: groundCover, y0: FL, y1: 0, o: floor0({ tag: 'ground' }), clip: (x, z) => !inNgon(C0, 16, TANK.a, 0, x, z, -0.05),
+H(layer({ key: 'ground', rect: [-36, 36, -78, 0], res: 0.25, cover: groundCover, y0: FL, y1: 0, o: floor0({ tag: 'ground' }), clip: (x, z) => !inNgon(C0, 16, TANK.a, 0, x, z, -0.05),
   inside: (x, z) => (inDrum(x, z) || inBlade(x, z)) && !inNgon(C0, 16, TANK.a, 0, x, z, -0.05),
   opt: (x, z) => { const [s, w] = toBlade(x, z); return s > 31 && s < 31.8 && Math.abs(w) <= 16; } }));
-H(layer({ rect: [-7.6, 7.6, -7.6, 0], res: 0.2, inside: TANK_IN, y0: FL, y1: -0.6, o: cover(K.sand, { tag: 'tank-bed', paint: false }) }));
+H(layer({ key: 'tank-bed', rect: [-7.6, 7.6, -7.6, 0], res: 0.2, inside: TANK_IN, y0: FL, y1: -0.6, o: cover(K.sand, { tag: 'tank-bed', paint: false }) }));
 // the Feeding Deck's lid (2.2–2.4) on the tank, Alpha's half (z ≤ −1.2: the Glass Walk is the middle strip)
-H(layer({ rect: [-7.7, 7.7, -7.7, -1.2], res: 0.1, inside: (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.02), cover: new Cover([...RIM], TANK.deck), y0: TANK.lid, y1: TANK.deck, o: teak({ tag: 'feeding-deck' }) }));
+H(layer({ key: 'feeding-deck', rect: [-7.7, 7.7, -7.7, -1.2], res: 0.1, inside: (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.02), cover: new Cover([...RIM], TANK.deck), y0: TANK.lid, y1: TANK.deck, o: teak({ tag: 'feeding-deck' }) }));
 
 // ============================================================================================================ the modes
 // Zone Control: the Feeding Deck (one 12-gon, r 6.2, 115 m²) and Alpha's Reef Hall (the annular sector α −54 … −26,
