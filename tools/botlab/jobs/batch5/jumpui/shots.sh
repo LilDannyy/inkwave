@@ -2,15 +2,16 @@
 # jump-ui pictures (tools/botlab/scenes/jump-ui.js through hud-shots.cjs: the HUD up): PNGs to $PNG, then JPEGs into
 # ./out/ (kept under 300 KB): each scene's full frame, plus crops — the alert (top middle), the minimap (bottom left)
 # and the world tag (around the screen middle).
-#   BOTLAB_OUT=… SLOTS=3 tools/botlab/jobs/batch5/jumpui/shots.sh [MAP] [TIME]      (default halyard day)
+#   BOTLAB_OUT=… SLOTS=3 [MODE=zones|tower] tools/botlab/jobs/batch5/jumpui/shots.sh [MAP] [TIME]      (default halyard day turf)
 HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/../../../../.." && pwd)"; cd "$ROOT"
 MAP="${1:-halyard}"; TIME="${2:-day}"
-PNG="${PNG:-${BOTLAB_OUT:-$ROOT/.botlab}/shots-jumpui}/$MAP-$TIME"; mkdir -p "$PNG" "$HERE/out"
-SCENES=tools/botlab/scenes/jump-ui.js MAP=$MAP TIME=$TIME MODE=turf PLAY=${PLAY:-8} OUT="$PNG" W=1600 H=900 CROP=0,0,1,1 WATCHDOG=500000 tools/botlab/run.sh tools/botlab/hud-shots.cjs 2>&1 | grep -E "^shot|SCENE|CONSOLE|ERROR|  \[" | cut -c1-8000 | tee "$PNG/shots.log" | cut -c1-600
-python3 - "$PNG" "$HERE/out" "$MAP-$TIME" <<'PY'
+PNG="${PNG:-${BOTLAB_OUT:-$ROOT/.botlab}/shots-jumpui}/$MAP-$TIME${MODE:+-$MODE}"; mkdir -p "$PNG" "$HERE/out"
+SCENES=tools/botlab/scenes/jump-ui.js MAP=$MAP TIME=$TIME MODE=${MODE:-turf} PLAY=${PLAY:-8} OUT="$PNG" W=1600 H=900 CROP=0,0,1,1 WATCHDOG=500000 tools/botlab/run.sh tools/botlab/hud-shots.cjs 2>&1 | grep -E "^shot|SCENE|CONSOLE|ERROR|  \[" | cut -c1-8000 | tee "$PNG/shots.log" | cut -c1-600
+python3 - "$PNG" "$HERE/out" "$MAP-$TIME" "${MODE:-turf}" <<'PY'
 import sys, glob, os, json, re
 from PIL import Image
-src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+src, dst, tag, mode = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+if mode != 'turf': tag += '-' + mode
 # a scene may return { crop: [x, y, w, h] } (fractions of the frame): saved as <scene>-zoom at 2×
 zoom = {}
 for line in open(f'{src}/shots.log', errors='ignore'):
@@ -27,7 +28,7 @@ def save(im, path):
         q -= 8
 for f in sorted(glob.glob(f'{src}/*.png')):
     if f.endswith('-top.png'): continue
-    n = os.path.basename(f)[:-4].split('-turf-')[-1].split('-', 1)[-1]   # <map>-turf-<time>-<scene> → <scene>
+    n = os.path.basename(f)[:-4].split(f'-{mode}-')[-1].split('-', 1)[-1]   # <map>-<mode>-<time>-<scene> → <scene>
     im = Image.open(f).convert('RGB'); W, H = im.size
     save(im, f'{dst}/{tag}-{n}.jpg')
     # crops at 2×: the alert (top middle), the minimap (bottom left), the middle of the view
