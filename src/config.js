@@ -548,7 +548,8 @@ export const SPECIALS = {
     extendPerMeter: 15, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
     popOnOwnerSplat: true,
     // balance (2026-10-03, tools/botlab/jobs/drainbow/results: JOB-1 had it far behind the other specials — 21 % turf / 6 %
-    // zones wins for a team forced to it; JOB-3 with these: 44 % / 44 %, Bubble Guard 63 % / 81 %, random rolls 50 % turf):
+    // zones wins for a team forced to it; with these, JOB-3 44 % / 44 % (n 16 each) and JOB-4 63 % / 58 % (n 24): Bubble
+    // Guard 63 % / 81 % and 50 % / 71 %, random rolls 50 % / 58 % turf):
     ownerNear: 6,                             // the owner within this many m outside the film still takes its share
     paintFoot: 0.75,                          // set down with a splash of your ink over this share of its footprint (0: none)
     paintPop: 1.1,                            // … and when its time runs out the film rains down over this share of it (0: none)
