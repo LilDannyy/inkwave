@@ -434,10 +434,11 @@ export class JumpHud {
 }
 
 // ---- the TAB map (diorama.js update → dioJumpTags): a pin on each landing spot, the same tag
-const DIO = { pool: [], layer: null, of: null, cur: [], ord: [], discs: new Boxes(), chips: new Boxes(), pins: new Boxes(), labs: new Boxes(), names: new WeakMap(), key: null };
+const DIO = { pool: [], layer: null, of: null, cur: [], ord: [], discs: new Boxes(), chips: new Boxes(), pins: new Boxes(), stems: new Boxes(), labs: new Boxes(), names: new WeakMap(), key: null };
 // a disc that would sit on an older disc (two marks on one spot) or hide a zone / tower chip's text slides off it the
-// shortest way, to a place clear of the pins too (drawn over the discs): right, left, down, up or a diagonal (a tie: in
-// that order — so two discs on one spot sit side by side)
+// shortest way, to a place clear of the pins' badges, keys and names too (drawn over the discs; a pin's thin stem may
+// cross a disc — it points at the spot): right, left, down, up or a diagonal (a tie: in that order — so two discs on one
+// spot sit side by side)
 const D45 = Math.SQRT1_2, SLIDE = [1, 0, -1, 0, 0, 1, 0, -1, D45, D45, -D45, D45, D45, -D45, -D45, -D45];
 // how far a box (hw × hh round x, y) slides along (ux, uy) (a unit vector) until it covers nothing in A, B or C
 // (Infinity: it would leave the frame first). Each step goes just past the box it covers, on whichever axis frees it first
@@ -481,11 +482,11 @@ export function dioJumpTags(dio, cam, W, H, me) {
   const u = uOf(W, H), g = JUMP_UI.gap, scope = u.toFixed(2);
   // 1 · each disc on its spot. One that would sit on an older disc (two marks on one spot) goes beside it; one that
   // would hide a zone / tower chip's text goes just clear of the chip (the shortest way: SLIDE)
-  const discs = DIO.discs.clear(), chips = DIO.chips.clear(), pins = DIO.pins.clear(), labs = DIO.labs.clear(), cur = DIO.cur, ord = DIO.ord;
+  const discs = DIO.discs.clear(), chips = DIO.chips.clear(), pins = DIO.pins.clear(), stems = DIO.stems.clear(), labs = DIO.labs.clear(), cur = DIO.cur, ord = DIO.ord;
   cur.length = 0; ord.length = 0;
   for (let i = 0; i < marks.length; i++) ord.push(marks[i]);
   ord.sort(byBirth);
-  if (ord.length) { chipBoxes(dio, u, chips); pinBoxes(dio, u, pins); }
+  if (ord.length) { chipBoxes(dio, u, chips); pinBoxes(dio, u, pins, stems); }
   let n = 0;
   for (let i = 0; i < ord.length; i++) {
     const r = ord[i];
@@ -527,7 +528,7 @@ export function dioJumpTags(dio, cam, W, H, me) {
     for (let k = 0; k < LAB_AT.length; k += 2) {
       const l = l0 + DX[LAB_AT[k]], tp = ROW[LAB_AT[k + 1]];
       const L = l - 2, T = tp - 2, Rt = l + lw + 2, B = tp + lh + 2;
-      let c = COST.hard * (pins.cover(L, T, Rt, B, null) + labs.cover(L, T, Rt, B, null)) + COST.chip * chips.cover(L, T, Rt, B, null) + COST.disc * discs.cover(L, T, Rt, B, t);
+      let c = COST.hard * (pins.cover(L, T, Rt, B, null) + stems.cover(L, T, Rt, B, null) + labs.cover(L, T, Rt, B, null)) + COST.chip * chips.cover(L, T, Rt, B, null) + COST.disc * discs.cover(L, T, Rt, B, t);
       if (l < 0 || tp < 0 || l + lw > W || tp + lh > H) c += COST.edge * lw * lh;
       if (c < best - 0.5) { best = c; bl = l; bt = tp; if (c <= 0) break; }
     }
@@ -554,8 +555,8 @@ function chipBox(tg, u, out) {
   if (sz.w) out.add(x - sz.w / 2 - o, y - sz.h / 2 - o, x + sz.w / 2 + o, y + sz.h / 2 + o);
 }
 // the TAB map's pins as boxes (diorama.js _pin, styles/hud.css .iw-pin: the badge on its 2.2 u stem, the key at its
-// top right, the name over it)
-function pinBoxes(dio, u, out) {
+// top right, the name over it); the stems into their own list
+function pinBoxes(dio, u, out, stems) {
   const st = 2.2 * u, planning = dio.el.classList.contains('is-planning');
   for (const p of dio.pins) {
     if (!p.vis) continue;
@@ -563,7 +564,7 @@ function pinBoxes(dio, u, out) {
     if (self && planning) continue;
     const s = (self ? 3.3 : c.contains('iw-pin--home') ? 2.5 : 2.9) * u * (c.contains('is-hover') ? 1.22 : 1), x = p.x, y = p.y, o = (self ? 0.42 : 0.36) * u;
     out.add(x - s / 2 - o, y - st - s - o, x + s / 2 + o, y - st + o);   // (with its white + dark outline)
-    out.add(x - 3, y - st, x + 3, y);   // the stem, from the badge down to the spot (3 px + its 1.5 px outline)
+    stems.add(x - 3, y - st, x + 3, y);   // the stem, from the badge down to the spot (3 px + its 1.5 px outline)
     if (!self) {
       let kw = DIO.key;
       if (!kw || kw.u !== u) { const ke = p.el.querySelector('.iw-pin__key'); kw = DIO.key = { u, w: ke ? ke.offsetWidth : 0, h: ke ? ke.offsetHeight : 0 }; }

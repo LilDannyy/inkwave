@@ -428,8 +428,9 @@
         R(`${label}: minimap — every name (inside the map), one ring on the shared spot, no name over another`, mp.length === who.length && mc.length === 0 && inFrame && rings === 1, { names: mp.map((t) => t.name), clash: mc, inFrame, rings, labels: labs.map(rb) });
       } else {
         const d = dioT().filter((t) => names.includes(t.name)), dc = clashes(d), pc = pinClash(d), zc = discChip(d);
-        // (a disc moved off its spot — beside an older one, off a chip — lands clear of the pins, which are drawn over it)
-        const P = pinRects(), moved = who.flatMap(([a, kind]) => { const r = markOf(a, kind), t = d.find((x) => x.name === a.name); if (!r || !t || near2(t.xy, proj(r.x, r.y + 0.08, r.z))) return []; const ring = rect(t.el.querySelector('.iw-jt__ring')); return P.filter((q) => hitB(ring, q)).map((q) => `${a.name} disc (moved) × pin ${q.k}`); });
+        // (a disc moved off its spot — beside an older one, off a chip — lands clear of the pins' badges, keys and names,
+        // drawn over it; a thin stem may cross it)
+        const P = pinRects().filter((q) => q.k !== 'stem'), moved = who.flatMap(([a, kind]) => { const r = markOf(a, kind), t = d.find((x) => x.name === a.name); if (!r || !t || near2(t.xy, proj(r.x, r.y + 0.08, r.z))) return []; const ring = rect(t.el.querySelector('.iw-jt__ring')); return P.filter((q) => hitB(ring, q)).map((q) => `${a.name} disc (moved) × pin ${q.k}`); });
         R(`${label}: TAB map — every name, no tag over another, no label over a pin (badge, stem, key, name), no disc over a chip, a moved disc under no pin`, d.length === who.length && dc.length === 0 && pc.length === 0 && zc.length === 0 && moved.length === 0, { names: d.map((t) => t.name), clash: dc, pins: pc, chips: zc, moved, at: d.map((t) => t.xy) });
         closeTab();
       }
