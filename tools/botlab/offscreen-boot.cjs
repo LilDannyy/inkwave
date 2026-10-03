@@ -24,9 +24,12 @@ electron.app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 // WIPSTAGES=1: every game page loads with ?wipstages (config SHOW_WIP), so the stages under construction (config wip)
 // are listed in every stage picker like the shipped ones. (MAP=<id> loads a wip stage without it: by id.)
 const DEVSTAGE = process.env.DEVSTAGE === '1', WIPSTAGES = process.env.WIPSTAGES === '1';
-const addFlag = (u, on, flag) => (on && typeof u === 'string' && u.startsWith('app://inkwave/index.html') && !new RegExp(`[?&]${flag}\\b`).test(u)
+// [b5-bluestone] ERA=1|2|3|all: every game page loads with ?era=<n> (Bluestone Junction's era: its blockout builds that
+// era's world, src/world/stages/bluestone/era.js; the era engine reads the same option for its audits, ENGINE.md T3)
+const ERA = /^(1|2|3|all)$/.test(process.env.ERA || '') ? process.env.ERA : '';
+const addFlag = (u, on, flag) => (on && typeof u === 'string' && u.startsWith('app://inkwave/index.html') && !new RegExp(`[?&]${flag.split('=')[0]}\\b`).test(u)
   ? u.replace(/^([^#]*?)(\?[^#]*)?(#.*)?$/, (_, p, q, h) => `${p}${q ? q + '&' : '?'}${flag}${h || ''}`) : u);
-const devURL = (u) => addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages');
+const devURL = (u) => addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), !!ERA, `era=${ERA}`);
 class OffscreenBW extends electron.BrowserWindow {
   constructor(opts = {}) {
     super({ ...opts, show: false, fullscreen: false, width: 1512, height: 945, webPreferences: { ...(opts.webPreferences || {}), offscreen: true } });
