@@ -59,6 +59,7 @@ class DummyRun {
   constructor(m, W, S) {
     this.m = m; this.W = W; this.S = S;
     this.calls = ['match']; this.seeks = []; this.n = 0; this.edgeTypes = ['dummy']; this.drawn = 0; this.disposed = false;
+    this.flagFor = new Set(); this.carried = new Set(); this.adopted = []; this.hostChanges = []; this.lastEt = null;
     this.block = null;
   }
   update(dt, t) {
@@ -76,9 +77,17 @@ class DummyRun {
   netEvent(d) { this.n = d[0]; this.lastRec = d; }
   netSnapshot() { return { n: this.n }; }
   netRestore(d) { this.n = d.n; this.restored = d; }
+  // online: a flag on chosen squidkids (F.stage), the painter's stage time on splats in the pool region
+  netFlag(a) { return this.flagFor.has(a.nid); }
+  carryRemote(a, flag) { if (flag) this.carried.add(a.nid); else this.carried.delete(a.nid); }
+  splatTime(c) { const P = DUMMY.pool; return c.x >= P.x0 && c.x <= P.x1 && c.z >= P.z0 && c.z <= P.z1 ? this.S.t : undefined; }
+  onSplat(c, r, team, opts) { if (opts.replay && opts.et !== undefined) this.lastEt = opts.et; }
+  adopt(a) { this.adopted.push(a.nid); }
+  hostChanged(isHost) { this.hostChanges.push(isHost); }
   drawMap(c, mm, tc) { this.drawn++; mm.toCanvas(DUMMY.lift.x, DUMMY.lift.z, tc); c.fillStyle = '#ff00ff'; c.fillRect(tc.x - 1, tc.y - 1, 3, 3); }
   hud(a) { return { n: this.n }; }
-  state() { return { n: this.n, top: this.block ? +(this.block.center.y + this.block.half.y).toFixed(3) : null, open: DUMMY.edge.open(this.S.t), seeks: this.seeks.length }; }
+  state() { return { n: this.n, t: +this.S.t.toFixed(3), top: this.block ? +(this.block.center.y + this.block.half.y).toFixed(3) : null, open: DUMMY.edge.open(this.S.t), seeks: this.seeks.map((s) => s[1]),
+    carried: [...this.carried], lastEt: this.lastEt, hostChanges: this.hostChanges, follower: !!this.m.follower }; }
   dispose() { this.calls.push('dispose'); this.disposed = true; if (this.block) G.level?.clearDynamic?.(); this.block = null; }
 }
 
