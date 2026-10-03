@@ -347,7 +347,8 @@
         const cue = cues.find((c) => c.name === { seeker: 'seeker_prime', waddle: 'waddle_prime', mine: 'mine_trip' }[kind]);
         if (opt.bot) { stub(foe); foe.bot.setDifficulty(diff0); }
         return { armed: armT != null, wait: armT != null && boom ? r3(boom.t - armT) : null, firstHitAfterBoom: fh.length ? r3(fh[0].t - (boom ? boom.t : 0)) : null, dmg: r2(fh.reduce((a, h) => a + h.dmg, 0)),
-          tell: { swell: r2(tell.sc), lamp: r2(tell.lamp), ringFrames: rings.length, ringR: rings[0] ? rings[0].r : null, beeps: beeps.length }, cue: cue ? r3(cue.t - (armT ?? 0)) : null, danger, esc, d0: d0 != null ? r2(d0) : null, dEsc: dEsc != null ? r2(dEsc) : null, dMin: dMin != null ? r2(dMin) : null, dEnd: dEnd != null ? r2(dEnd) : null, frames: n };
+          tell: { swell: r2(tell.sc), lamp: r2(tell.lamp), ringFrames: rings.length, ringR: rings[0] ? rings[0].r : null, beeps: beeps.length }, cue: cue ? r3(cue.t - (armT ?? 0)) : null, danger, esc, d0: d0 != null ? r2(d0) : null, dEsc: dEsc != null ? r2(dEsc) : null, dMin: dMin != null ? r2(dMin) : null, dEnd: dEnd != null ? r2(dEnd) : null, frames: n,
+          end: { state: obj.state, t: r3(obj.t || 0), hp: obj.hp, at: obj.pos ? [r2(obj.pos.x), r2(obj.pos.z)] : null, target: obj.target ? (obj.target === foe ? 'foe' : obj.target.name || '?') : null } };   // ([b5-deploy] how it ended: a diagnosis)
       };
       for (const kind of ['seeker', 'waddle', 'mine']) {
         const D = SUBS[kind].delay, name = SUBS[kind].name;
