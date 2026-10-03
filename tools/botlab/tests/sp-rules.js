@@ -12,14 +12,15 @@
 //             Tempest (its cloud rains its whole life, inks, hurts), Surf N' Turf (all its rings go out, still hitting;
 //             the buoy goes after the last, not popped), the Drainbow (stands for the rest of its life, still halving
 //             shots and draining foes; pops on time; the owner back from the respawn gains in it like any teammate, its
-//             life no longer growing), the Bubble Blower (the bubble being blown is let go; every bubble floats on and
-//             pops on its own time; a teammate's shots still set one off), a shared Bubble Guard (keeps its time,
-//             still shoves instead of hurting)
+//             life no longer growing), a shared Bubble Guard (keeps its time, still shoves instead of hurting); and,
+//             unchanged (the user: "I meant only bubble guard not bubble blower"), the Bubble Blower as it always was
+//             (the bubble being blown is let go; every bubble floats on and pops on its own time; a teammate's shots
+//             still set one off)
 //   chain     A's Bubble Guard → B by touch → C by touch from B; each copy carries the time left on the one it came
 //             from (never a fresh timer: all three run out together); no refresh loop (together for the rest of it:
 //             two shares, no more); one field a player (C's untouched by another player's new Bubble Guard); each
 //             chain once (B splatted and back can't take it again from C; a new chain can reach B); copies pass on
-//             after the owner is splatted; a copy shoves instead of hurting
+//             after the owner is splatted; a copy shoves instead of hurting; the hint line (share it / pass it on)
 //   waddle    Waddle Bomb Barrage: no ink, its gap, special Waddles (`sp`: no meter), one walks to a foe and bursts
 //   mystery   Mystery Bomb Barrage: the next bomb shows in the hand (the sub prop), on the HUD's NEXT card, the sub
 //             badge and the hint line before it's thrown; each throw is that bomb; it changes every throw (never the
@@ -239,7 +240,7 @@
       // the other floats on to its own end
       const w1 = after[1]; let poppedAt = null; const life1 = w1.life;
       step(life1 + 0.5, () => { if (w1.dead && poppedAt == null) poppedAt = G.time; });
-      R('survive: the Bubble Blower\'s bubbles float on after its owner is splatted (the one being blown let go) — a teammate\'s shot still sets one off (hurting a foe), the other pops on its own time',
+      R('survive: (unchanged — the user: "only bubble guard not bubble blower") the Bubble Blower\'s bubbles float on after its owner is splatted as they always did (the one being blown let go) — a teammate\'s shot still sets one off (hurting a foe), the other pops on its own time',
         before.includes('held') && allFree && blown && hurt > 40 && poppedAt != null, { before, after: after.length, blown, hurt, lifeLeft: r2(life1) });
     }
     // ---- a shared Bubble Guard
@@ -275,6 +276,13 @@
     R('chain: A\'s Bubble Guard → B by touch, then B → C by touch (A nowhere near) — each copy carries the time LEFT on the one it came from, not a fresh timer',
       Math.abs(bGot - aAt) < 0.02 && bGot < SPECIALS.bubbler.duration - 0.9 && Math.abs(cGot - bAt) < 0.02 && cGot < bGot - 0.9 && !!C._shieldChain && C._shieldChain === A._shieldChain,
       { b: r2(bGot), aThen: r2(aAt), c: r2(cGot), bThen: r2(bAt), fresh: SPECIALS.bubbler.duration });
+    // on screen: the hint line (the user's own field / a copy), none once no teammate could take it
+    const pA = G.specials.prompt(A), pB = CH.chainPrompt(B);
+    (M3._bgHad || (M3._bgHad = new WeakSet())).add(A._shieldChain);
+    const pNone = CH.chainPrompt(B);
+    M3._bgHad = null;
+    R('chain: on screen — the hint line says so: the user\'s own "… touch teammates to share it", a copy "… touch a teammate to pass it on"; none once every teammate has had it',
+      /share it/.test(pA || '') && /pass it on/.test(pB || '') && pNone === null, { pA, pB, pNone });
     // together for the rest of it: no refresh, everyone's runs out together
     place(A, 10.4, -9.4); step(DT);
     const ends = {};

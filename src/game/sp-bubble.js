@@ -20,6 +20,9 @@
 // copy (SpecialSystem.netGhost case 5 → shieldNet). The user's own field still comes from their special's start record
 // (IMPL.bubbler.start runs on every screen).
 //
+// On screen: the hint line while you carry one you can pass on and a teammate could take it (chainPrompt: "Bubble Guard
+// 4s — touch a teammate to pass it on"; the user's own: "… touch teammates to share it"), besides the bubble itself.
+//
 // Bots: a bot carrying a field it can pass on (≥ botMin s left) steps over to a teammate close by on its level who has
 // none and hasn't had this chain (botShare: botSpecials.js SpecialSense.act, after the danger checks).
 import { G, emit } from '../core/ctx.js';
@@ -74,6 +77,15 @@ export function shieldNet(sys, a, d) {
   emit('special:share', { from, to: a, time: d[2], chained: !!(from && !from._shieldOwner), remote: true });
 }
 
+// the hint line while you carry a field you can pass on and a teammate could take it (main.js for a copy; the user's
+// own: IMPL.bubbler.prompt) — null otherwise
+export function chainPrompt(a) {
+  const c = a && a._shieldChain;
+  if (!c || !a.alive || !(a.status.shield > 0.3) || !canPass(a) || !G.actors.some((o) => takes(a, o, c))) return null;
+  const left = Math.ceil(a.status.shield);
+  return a._shieldOwner ? `Bubble Guard ${left}s — touch teammates to share it` : `Bubble Guard ${left}s — touch a teammate to pass it on`;
+}
+
 // bots pass it on: step over to a teammate close by (≤ botReach m, on our level, no field, not had this chain) while
 // ours has botMin s or more left (move: the bot's wanted step this frame)
 export function botShare(b, move) {
@@ -94,4 +106,4 @@ export function botShare(b, move) {
   CHAIN_STATS.botSteps++;
 }
 
-G.bubbleChain = { CHAIN, CHAIN_STATS, share: shareShield, net: shieldNet, botShare, canPass };
+G.bubbleChain = { CHAIN, CHAIN_STATS, share: shareShield, net: shieldNet, botShare, canPass, prompt: chainPrompt };

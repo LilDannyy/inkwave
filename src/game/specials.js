@@ -20,7 +20,7 @@ import { rumble } from './actor.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
 import { KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';
 import { teamKnown } from './botSight.js';
-import { joinChain, shareShield, shieldNet } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain
+import { joinChain, shareShield, shieldNet, chainPrompt } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain
 
 // world props for the big specials (kraken, speaker, missile, jetpack, crab) — optional until they exist
 let PROPS = null;
@@ -1275,6 +1275,7 @@ const IMPL = {
   bubbler: {
     start(a, s) { this.giveShield(a, s.def.duration, true); },
     end(a, s, reason) { if (reason !== 'time') return; /* the field runs out on its own timer */ },
+    prompt(a) { return chainPrompt(a); },   // [b5-sprules] "… touch teammates to share it"
   },
 
   // ---------------------------------------------------------------------------------------------- Deep Sonar
