@@ -95,7 +95,7 @@
     w.off.localToWorld(_a0); w.off.localToWorld(_a1);
     _hp.copy(GRIP_HOLE_L); B.handL.localToWorld(_hp);
     const seg = new THREE.Line3(_a0, _a1), cl = seg.closestPointToPoint(_hp, true, V(0, 0, 0));
-    const dist = _hp.distanceTo(cl) / ch.kid.getWorldScale(_u).y;
+    const ks = ch.kid.getWorldScale(_u).y, dist = _hp.distanceTo(cl) / ks;
     B.handL.getWorldQuaternion(_q); _hz.set(0, 0, 1).applyQuaternion(_q);
     _ax.subVectors(_a1, _a0).normalize();
     const axErr = Math.acos(Math.min(1, Math.abs(_hz.dot(_ax)))) * DEG;
@@ -122,7 +122,7 @@
     _w0.set(0, mz.y, 0); _w1.copy(mz); w.off.localToWorld(_w0); w.off.localToWorld(_w1);
     _hc.copy(HEAD_C); B.head.localToWorld(_hc);
     const head = new THREE.Line3(_w0, _w1).closestPointToPoint(_hc, true, V(0, 0, 0)).distanceTo(_hc) / ch.kid.getWorldScale(_u).y;
-    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, wTwo: ch.wTwo || 0 };
+    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, ks, wTwo: ch.wTwo || 0 };
   };
   // per state: worst values over the sampled frames + the mean hand position
   const stats = () => ({ hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
@@ -262,7 +262,7 @@
       last.set(a, a.pos.clone()); const ch = a.character, t0 = ch.trigger; trig0.set(ch, t0);
       ch.trigger = function (name, arg) { if (name === 'shoot' || name === 'flick') act.shots++; else if (name === 'throw') act.throws++; else if (name === 'spawn') act.deaths++; return t0.call(this, name, arg); };
     }
-    let n = 0, bad = 0, worst = 0; const per = {};
+    let n = 0, bad = 0, worst = 0, popping = 0; const per = {}, badAt = [];
     for (let i = 0; i < 60 * 30; i++) {
       frame();
       for (const a of m.actors) { const p = last.get(a); if (a.pos.distanceTo(p) < 2) act.moved += a.pos.distanceTo(p); p.copy(a.pos); if (a.form !== 'kid') act.swimS += DT; }
@@ -270,16 +270,18 @@
       for (const a of m.actors) {
         const ch = a.character;
         if (!a.alive || a.form !== 'kid' || ch.form !== 'kid' || a.specialActive || ch.bombHeld || ch.wSub > 0.05 || ch.tr[2] < 0.62 || ch.formT < 0.5 || ch.dance || !BOTH.includes(ch.weaponKind)) continue;
-        const r = measure(ch); n++;
+        const r = measure(ch);
+        if (r.ks < 0.5) { popping++; continue; }   // (the kid popping in / out: shrunk to nothing, distances divided by ~0)
+        n++;
         const k = ch.weaponKind; per[k] = per[k] || { n: 0, bad: 0, worst: 0 }; per[k].n++;
-        if (r.dist > GRIP_TOL) { bad++; per[k].bad++; }
+        if (r.dist > GRIP_TOL) { bad++; per[k].bad++; if (badAt.length < 4) badAt.push({ k, d: +r.dist.toFixed(3), ks: +r.ks.toFixed(2), form: ch.form, formT: +ch.formT.toFixed(2), spawn: +ch.tr[8].toFixed(2), land: +ch.tr[3].toFixed(2), jump: +ch.tr[4].toFixed(2), dance: ch.dance, hidden: ch.weaponHidden }); }
         worst = Math.max(worst, r.dist); per[k].worst = Math.max(per[k].worst, +r.dist.toFixed(3));
       }
     }
     for (const [ch, t0] of trig0) ch.trigger = t0;
     act.moved = Math.round(act.moved / m.actors.length); act.swimS = Math.round(act.swimS / m.actors.length);
     R('bots: a real fight (each bot moves > 40 m on average, swims, shoots / swings, splats happen)', act.moved > 40 && act.swimS > 1 && act.shots > 50 && act.deaths > 0, act);
-    R('bots: the off hand on the weapon on every eligible frame (30 s fight)', n > 200 && bad === 0, { frames: n, off: bad, worst: +worst.toFixed(3), per });
+    R('bots: the off hand on the weapon on every eligible frame (30 s fight)', n > 200 && bad === 0, { frames: n, off: bad, worst: +worst.toFixed(3), popping, per, badAt });
     scripted();
   }
 
