@@ -12,11 +12,13 @@
 // roll, brush dash, blaster strafing shots; the brolly's canopy held open), jump, run-jump, a fall onto the deck, the
 // respawn drop, every idle fidget it can pick (and it never picks one that needs a free hand), and the menu / podium
 // dances: the lobby / loadout pose, the two menu idles, each victory and defeat variant, the locker one-shots.
-// Every other weapon ('others'): its off hand unchanged — each state's mean left-hand position (kid space), grip
-// distance and IK weight against tools/botlab/tests/holds-baseline.json (recorded on the code before this change:
-// PAGE_ARGS=record prints it).
+// Every other weapon ('others', run first): its hold is not a two-handed one, and its off hand does what it did — each
+// state's IK weight on the foregrip (±0.02), mean wrist-to-authored-grip distance (±5 cm) and mean left-hand position
+// in kid space (±8 cm) against tools/botlab/tests/holds-baseline.json, recorded on the code before this change (7ee5ad5,
+// PAGE_ARGS='only=others record' prints it). The tolerances are the run-to-run spread of the same code (the sim is not
+// bit-for-bit repeatable: up to 4.4 cm, 3 cm and 0 measured); a free hand put on a weapon moves 25–60 cm.
 // Bots: a short all-bot fight on the deck with the four weapons — every kid-form frame of a bot holding one (no sub in the
-// hand, no special) has its off hand on the weapon.
+// hand, no special) has its off hand on the weapon; and it is a real fight (they move, swim, fire, splat each other).
 // PAGE_ARGS: 'only=both,others,bots' (parts) · 'w=brush,roller' (weapons) · 'record' (print the baseline JSON) · 'dump'.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
@@ -29,6 +31,7 @@
   const part = (p) => !ONLY || ONLY.includes(p);
   // what-ifs: PAGE_ARGS '… tune:{"roller":{"carry":{"p":[…],"r":[…]}}}' replaces those fields of the weapon's hold
   const TUNE = (() => { const i = ARGS.indexOf('tune:'); return i >= 0 ? JSON.parse(ARGS.slice(i + 5)) : null; })();
+  if (m.state !== 'playing') return [{ name: 'the match is playing', ok: false, info: m.state }];
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const BOTH = ['brush', 'roller', 'blaster', 'brolly'];
   const OTHERS = WEAPON_ORDER.filter((w) => !BOTH.includes(w));
@@ -42,7 +45,8 @@
   Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const A = G.audio; const play0 = A?.play, loop0 = A?.loop; if (A) { A.play = () => null; A.loop = () => ({ set() {}, stop() {} }); }
   const DT = 1 / 60;
-  const frame = () => { g._skipRender = true; try { g._frame(DT); } finally { g._skipRender = false; } };
+  // (the clock held well short of the end: the whole run is ~10 min of sim and an ended match stops its actors)
+  const frame = () => { m.time = Math.max(m.time, 150); g._skipRender = true; try { g._frame(DT); } finally { g._skipRender = false; } };
   const me = m.local, others = m.actors.filter((a) => a !== me);
   const kid = others.find((a) => a.team === me.team) || others[0];
   const drive = { move: V(0, 0, 0), fire: false, jump: false };
@@ -182,6 +186,30 @@
     return res;
   };
 
+  // ---- every other weapon: the off hand as it was
+  if (part('others')) {
+    let base = null;
+    try { base = await (await fetch('./tools/botlab/tests/holds-baseline.json', { cache: 'no-store' })).json(); } catch (e) { /* recording */ }
+    const rec = {};
+    for (const w of (W_ONLY || OTHERS).filter((x) => OTHERS.includes(x) || RECORD)) {
+      const res = results[w] = measureWeapon(w);
+      if (!RECORD) R(`${w}: not a two-handed hold`, !kid.character.hold.both, kid.character.weaponKind);
+      rec[w] = {};
+      for (const st of STATE_LIST) { const r = res[st]; if (r && !r.error) rec[w][st] = { hand: r.hand, d: r.dw, two: r.two }; }
+      if (RECORD || !base) continue;
+      const bad = []; let mh = 0, md = 0, mt = 0;
+      for (const st of STATE_LIST) {
+        const a = rec[w][st], b = base[w] && base[w][st]; if (!a || !b) { bad.push(st + ': missing'); continue; }
+        const dh = Math.hypot(a.hand[0] - b.hand[0], a.hand[1] - b.hand[1], a.hand[2] - b.hand[2]);
+        mh = Math.max(mh, dh); md = Math.max(md, Math.abs(a.d - b.d)); mt = Math.max(mt, Math.abs(a.two - b.two));
+        if (dh > 0.08 || Math.abs(a.d - b.d) > 0.05 || Math.abs(a.two - b.two) > 0.02) bad.push(`${st}: Δhand ${(dh * 100).toFixed(1)} cm, grip ${b.d}→${a.d}, two ${b.two}→${a.two}`);
+      }
+      R(`${w}: the off hand unchanged in every state (vs the recorded baseline)`, !bad.length, bad.length ? bad : { states: STATE_LIST.length, maxHandCm: +(mh * 100).toFixed(1), maxGrip: +md.toFixed(3), maxTwo: +mt.toFixed(3) });
+    }
+    if (RECORD) R('baseline', true, rec);
+    else if (!base) R('baseline file present', false, 'tools/botlab/tests/holds-baseline.json missing (PAGE_ARGS=record)');
+  }
+
   // ---- the four two-handed weapons
   const both = (W_ONLY || BOTH).filter((w) => BOTH.includes(w));
   if (part('both')) for (const w of both) {
@@ -209,37 +237,22 @@
     }
   }
 
-  // ---- every other weapon: the off hand as it was
-  if (part('others')) {
-    let base = null;
-    try { base = await (await fetch('./tools/botlab/tests/holds-baseline.json', { cache: 'no-store' })).json(); } catch (e) { /* recording */ }
-    const rec = {};
-    for (const w of (W_ONLY || OTHERS).filter((x) => OTHERS.includes(x) || RECORD)) {
-      const res = results[w] = measureWeapon(w);
-      rec[w] = {};
-      for (const st of STATE_LIST) { const r = res[st]; if (r && !r.error) rec[w][st] = { hand: r.hand, d: r.dw, two: r.two }; }
-      if (RECORD || !base) continue;
-      const bad = [];
-      for (const st of STATE_LIST) {
-        const a = rec[w][st], b = base[w] && base[w][st]; if (!a || !b) { bad.push(st + ': missing'); continue; }
-        const dh = Math.hypot(a.hand[0] - b.hand[0], a.hand[1] - b.hand[1], a.hand[2] - b.hand[2]);
-        if (dh > 0.006 || Math.abs(a.d - b.d) > 0.006 || Math.abs(a.two - b.two) > 0.02) bad.push(`${st}: Δhand ${(dh * 100).toFixed(1)} cm, grip ${b.d}→${a.d}, two ${b.two}→${a.two}`);
-      }
-      R(`${w}: the off hand unchanged in every state (vs the recorded baseline)`, !bad.length, bad.length ? bad : STATE_LIST.length + ' states');
-    }
-    if (RECORD) R('baseline', true, rec);
-    else if (!base) R('baseline file present', false, 'tools/botlab/tests/holds-baseline.json missing (PAGE_ARGS=record)');
-  }
-
   // ---- bots: a short all-bot fight with the four weapons, every eligible frame on the weapon
   if (part('bots')) {
     for (const [a, f] of brains) if (a.bot) a.bot.update = f;
     for (const [a, f] of updates) a.update = f;
     m.actors.forEach((a, i) => { a.setWeapon(BOTH[i % 4]); a.hp = 100; if (!a.alive) a.respawn(); });
     g.rig.follow?.(me, true);
+    // (that it is a real fight: the bots move, swim, shoot / swing and splat each other — counted alongside)
+    const act = { moved: 0, swimS: 0, shots: 0, throws: 0, deaths: 0 }, last = new Map(), trig0 = new Map();
+    for (const a of m.actors) {
+      last.set(a, a.pos.clone()); const ch = a.character, t0 = ch.trigger; trig0.set(ch, t0);
+      ch.trigger = function (name, arg) { if (name === 'shoot' || name === 'flick') act.shots++; else if (name === 'throw') act.throws++; else if (name === 'spawn') act.deaths++; return t0.call(this, name, arg); };
+    }
     let n = 0, bad = 0, worst = 0; const per = {};
     for (let i = 0; i < 60 * 30; i++) {
       frame();
+      for (const a of m.actors) { const p = last.get(a); if (a.pos.distanceTo(p) < 2) act.moved += a.pos.distanceTo(p); p.copy(a.pos); if (a.form !== 'kid') act.swimS += DT; }
       if (i % 3) continue;
       for (const a of m.actors) {
         const ch = a.character;
@@ -250,10 +263,14 @@
         worst = Math.max(worst, r.dist); per[k].worst = Math.max(per[k].worst, +r.dist.toFixed(3));
       }
     }
+    for (const [ch, t0] of trig0) ch.trigger = t0;
+    act.moved = Math.round(act.moved / m.actors.length); act.swimS = Math.round(act.swimS / m.actors.length);
+    R('bots: a real fight (each bot moves > 40 m on average, swims, shoots / swings, splats happen)', act.moved > 40 && act.swimS > 1 && act.shots > 50 && act.deaths > 0, act);
     R('bots: the off hand on the weapon on every eligible frame (30 s fight)', n > 200 && bad === 0, { frames: n, off: bad, worst: +worst.toFixed(3), per });
     scripted();
   }
 
+  R('the match still playing at the end (every part measured live actors)', m.state === 'playing', m.state);
   Math.random = rnd0; if (A) { A.play = play0; A.loop = loop0; }
   if (DUMP) R('dump', true, results);
   return out;
