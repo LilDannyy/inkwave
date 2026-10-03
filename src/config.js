@@ -355,7 +355,7 @@ export const SUBS = {
     inkCost: 40, throwSpeed: 16, radius: 2.1, directDamage: 60, splashDamage: 35, paintRadius: 1.8,
   },
   seeker: {
-    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late, or shoot it — it pops harmlessly.',
+    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late, or pop it with a shot.',   // [b5-deploy] (… or pop it with a shot: deployables.js)
     // turnRate: rad/s (1.75 ≈ 100°/s: a ~3.6 m turning circle at full speed; was 5); commitDist: dashes straight (no
     // steering) once this close and lined up; creep: how much it slows turning onto a slow / standing target.
     // speed 6.3 (was 7): only just faster than a run (6), so a foe who sidesteps and keeps running gets away instead
@@ -365,7 +365,11 @@ export const SUBS = {
     // for skitter / waddle / mine bombs"; the same windup on all three)
     inkCost: 65, throwSpeed: 9, speed: 6.3, seekRange: 15, life: 4.5, trailRadius: 0.6, triggerDist: 1.2, turnRate: 1.75, commitDist: 2.5, creep: 0.6,
     delay: 0.45, radius: 2.8, damageMax: 180, damageMin: 35, paintRadius: 2.4,
-    hp: 30,   // [b5-deploy] on the ground (running or winding up) enemy fire pops it — harmlessly, no blast: the Waddle's 30 (a shot of most guns; it's faster and turns: harder to hit)
+    // [b5-deploy] on the ground (running or winding up) enemy fire pops it — harmlessly, no blast. 60: two shots of most guns
+    // (the Spritzer's 36, the Twinfin Dualies' / Twinfire Pistols' 30, the Bilge Bucket's 55; three of the Gyre Splatling's /
+    // Squall Spinner's quick 28 / 26),
+    // one full charger beam, one bomb's blast (60), a roller's drum — a few shots, not one (the Waddle has 30)
+    hp: 60,
   },
   scan: {
     id: 'scan', name: 'Echo Orb', kind: 'scan', blurb: 'Bursts into a sensing cloud. Foes it touches are tracked for your whole team. No damage.',
@@ -395,7 +399,7 @@ export const SUBS = {
     inkCost: 55, placed: true, max: 2, triggerRadius: 2.1, armTime: 0.9, delay: 0.45, radius: 2.6, damage: 45, trackTime: 8, paintRadius: 2.0,
   },
   beacon: {
-    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left). Foes can shoot it down.',
+    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left). Foes can shoot it down.',   // [b5-deploy] (… Foes can shoot it down.)
     // sonar: a ring pulse every `sonar` s from it (ground + air; its team's to see — the other team's faint); the jumps
     // left show as lights over it (and on the jump map's pins)
     // [b5-deploy] hp 50 → 120 (Splatoon's Squid Beakon): enemy fire of every kind wears it down (src/game/deployables.js)
