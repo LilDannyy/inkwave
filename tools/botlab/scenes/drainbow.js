@@ -9,6 +9,8 @@
 //   mono           well inside: everything grey, the HUD too, the film round you
 //   back-1…3       walking out: the colour sweeping back in
 //   gain           your own team's: a foe inside, the drained ink flowing in to you (your camera)
+//   pop-1, pop-2   its time up: the film tearing open, then its ink rained down over the footprint
+//   loadout        the loadout picker with the Drainbow
 //   SCENES=tools/botlab/scenes/drainbow.js MAP=halyard MODE=turf OUT=… tools/botlab/run.sh tools/botlab/hud-shots.cjs
 //   (tools/botlab/jobs/drainbow/shots.sh does that and turns them into JPEGs)
 (async () => {
@@ -136,6 +138,17 @@
     put(E1, cx - wx * 2.2 + wz * 1.6, cz - wz * 2.2 - wx * 1.6, way); put(E2, cx - wx * 1.6 - wz * 2.0, cz - wz * 1.6 + wx * 2.0, way);
     put(me, cx + wx * 1.2, cz + wz * 1.2, way + Math.PI); const yaw = Math.atan2(-wx, -wz); follow(yaw + 0.2, -0.16); step(1.4);
   });
+  // ---- its end: the film tearing open (pop-1, 0.15 s in), then its ink rained down over the footprint (pop-2)
+  add('pop-1', () => {
+    clearAll(); G.paint.clear();
+    put(M1, cx, cz, 0); start(M1); step(0.3);
+    put(M1, cx + wx * 7 + wz * 2, cz + wz * 7 - wx * 2, way + Math.PI);
+    clearCam(9.8, 3.4, [cx, cy + 1.4, cz], way + 0.2);
+    const b = DB.bubbles[0]; b.t = b.life - 0.05; M1.specialActive.t = b.life - 0.05;
+    let n = 0; while (!(b.popT >= 0.15) && n++ < 60) step(1 / 60);
+    return { popT: +b.popT.toFixed(2) };
+  });
+  add('pop-2', () => { step(0.8); });
   // ---- the loadout picker with the Drainbow (its icon, name and blurb)
   add('loadout', () => {
     clearAll();

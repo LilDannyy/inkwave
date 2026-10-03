@@ -13,7 +13,7 @@ for f in "$PNG"/*.png; do
   sips -s format jpeg -s formatOptions 80 "$f" --out "$o" >/dev/null 2>&1
   [ "$(stat -f %z "$o")" -gt 290000 ] && sips -Z 1280 -s format jpeg -s formatOptions 72 "$f" --out "$o" >/dev/null 2>&1
 done
-for sc in ripple wave back; do
+for sc in ripple wave back pop; do
   ls "$HERE/out/$MAP-$sc-"*.jpg >/dev/null 2>&1 || continue
   python3 - "$HERE/out" "$MAP-$sc" <<'PY'
 import sys, glob
