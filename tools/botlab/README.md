@@ -11,6 +11,8 @@ WEAPONS='team0=blade;team1=shooter' SUBS='all=waddle' MAP=crossmarket MODE=turf 
 
 # an in-page test (your script returns [{ name, ok, info }])
 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
+# … with the page at another size than the offscreen window's 1512×945 (HUD layout on a small window)
+W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
 ```
 
 - **Parallel runs:** start several at once (`… & … & wait`). `run.sh` keeps at most `SLOTS` (default 8) Electron

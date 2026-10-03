@@ -17,8 +17,19 @@
 //   land     a super jump to an Ink Jet / Zipline user lands at their return mark, not under them. That holds for you
 //            and for a bot. The TAB map's jump arc to their pin aims at the mark too. A teammate jumping to you while
 //            you're on Ink Jet: the alert still shows, and they land at your mark.
+//   stack    two marks on one spot, seen by a third teammate (you): a teammate jumping to an Ink Jet user (it comes down
+//            by their return mark), and two teammates jumping to one teammate. Both names show in the world view, on
+//            the minimap and on the TAB map, and no two tags cover each other (their rings and labels, as drawn)
+//   pins     TAB map: a tag's label covers no pin (its badge, key or name), wherever the jump comes down near them
+//   place    the alerts sit clear of everything at the top middle in this mode (the roster + timer, Zone Control's
+//            chip, Tower Command's track, Boss Battle's health bar), of the TRACKED / POISONED badges, and of each other
+//            (three at once); the streak callout, the zone callout, the one-minute banner and the last-ten count stay
+//            clear of them while they're up (and go back after)
+//   walls    the other team's world tag only where you could see its spot: behind a wall it is hidden (your own team's
+//            still shows there)
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/jump-ui.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=alert,tags,count,foe,jetpack,zipline,land'
+//   PAGE_ARGS='only=alert,tags,count,foe,jetpack,zipline,land,stack,pins,place,walls'   (MODE=zones / tower / boss too;
+//   W=960 H=600 for a small window. Boss Battle: eight on one team and no foes, so foe / walls are skipped there)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, THREE = await import('three');
   const { PLAYER } = await import('./src/config.js');
@@ -30,9 +41,11 @@
   const want = (k) => !ONLY || ONLY.split(',').includes(k);
   const r2 = (x) => Math.round(x * 100) / 100;
   dbg.freeze();
-  const hud = g.hud, J = hud.jumps;
+  const hud = g.hud, J = hud.jumps, boss = m.mode === 'boss';
   const me = m.local, mates = m.actors.filter((a) => a.team === me.team && a !== me), foes = m.actors.filter((a) => a.team !== me.team);
-  R('the stage: you and three teammates, four foes', mates.length === 3 && foes.length === 4, { mates: mates.length, foes: foes.length });
+  R(`the stage (${m.mode}, ${innerWidth}×${innerHeight}): you and three teammates, four foes${boss ? ' (Boss Battle: seven teammates, the boss)' : ''}`, boss ? mates.length === 7 && foes.length === 0 && !!m.boss : mates.length === 3 && foes.length === 4, { mates: mates.length, foes: foes.length });
+  // (Boss Battle: the boss stands still at the far end)
+  if (boss && m.boss) { m.boss.brain.update = () => {}; m.boss.pos.set(0, 0, 40); m.boss.vel.set(0, 0, 0); }
   // brains: stand still (a._go: walk / steer that way)
   for (const a of m.actors) if (a.bot) a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; if (a._go) it.move.copy(a._go); };
   const keep = () => { for (const a of m.actors) { if (!a.alive) a.respawn(); a.invuln = 99; a.hp = PLAYER.hp; } };
@@ -41,7 +54,7 @@
   const step = (s) => { for (let i = 0, n = Math.max(1, Math.round(s * 60)); i < n; i++) frame(); };
   const put = (a, x, z) => { a.pos.set(x, 0.02, z); a.vel.set(0, 0, 0); a.yaw = a.aimYaw = 0; a.grounded = true; a.form = 'kid'; a.netTp = (a.netTp || 0) + 1; };
   // you at the back facing +z (the camera behind you looks down the deck); teammates ahead, foes far off
-  const stage = () => { put(me, 0, -26); put(mates[0], -9, -10); put(mates[1], 9, -6); put(mates[2], 0, 4); foes.forEach((f, i) => put(f, -12 + i * 8, 30)); };
+  const stage = () => { put(me, 0, -26); put(mates[0], -9, -10); put(mates[1], 9, -6); put(mates[2], 0, 4); foes.forEach((f, i) => put(f, -12 + i * 8, 30)); mates.slice(3).forEach((a, i) => put(a, -24 + i * 3, -36)); };
   const reset = () => {
     keep(); for (const a of m.actors) if (a.specialActive) G.specials.end(a, 'test');
     G.specials.clear(); G.projectiles.clear(); G.subs.clear();
@@ -51,7 +64,7 @@
   };
   // what the player sees: visible DOM tags / alerts
   const vis = (el) => el && el.style.display !== 'none';
-  const tagsIn = (layer) => (layer ? [...layer.querySelectorAll('.iw-jt')].filter(vis).map((el) => ({ el, name: el.querySelector('.iw-jt__name').textContent, sec: el.querySelector('.iw-jt__sec').textContent, ko: +(el.querySelector('.f').style.strokeDashoffset || 0), cls: el.className, xy: xy(el) })) : []);
+  const tagsIn = (layer) => (layer ? [...layer.querySelectorAll('.iw-jt')].filter((el) => vis(el) && !el.classList.contains('is-occl')).map((el) => ({ el, name: el.querySelector('.iw-jt__name').textContent, sec: el.querySelector('.iw-jt__sec').textContent, ko: +(el.querySelector('.f').style.strokeDashoffset || 0), cls: el.className, xy: xy(el) })) : []);
   const xy = (el) => { const q = /translate3d\(([-\d.]+)px,\s*([-\d.]+)px/.exec(el.style.transform || ''); return q ? [+q[1], +q[2]] : null; };
   const world = () => tagsIn(J.wLayer), mapT = () => tagsIn(J.mLayer), dioT = () => tagsIn(g.diorama?.el.querySelector('.iw-dio__jts'));
   const alerts = () => [...J.aLayer.querySelectorAll('.iw-jal__i:not(.is-out)')].map((el) => ({ name: el.querySelector('.iw-jal__name').textContent, text: el.textContent, sec: el.querySelector('.iw-jal__sec').textContent }));
@@ -81,7 +94,7 @@
     R('…its landing by you: no world tag (the alert says it), but the minimap\'s', !world().some((t) => t.name === A.name) && mapT().some((t) => t.name === A.name), { world: world().map((t) => t.name), map: mapT().map((t) => t.name) });
     R('…with its chime (sj_incoming), once', played.filter((n) => n === 'sj_incoming').length === 1, played.filter((n) => n.startsWith('sj') || n === 'super_jump'));
     // a teammate jumping to another teammate, and an enemy jumping: no alert on your screen
-    mates[1].superJump(mates[2]); foes[0].superJump(foes[1]);
+    mates[1].superJump(mates[2]); if (foes.length) foes[0].superJump(foes[1]);
     frame();
     al = alerts();
     R('a teammate jumping to another teammate, or an enemy jumping, gives you no alert', al.length === 1 && al[0].name === A.name, al);
@@ -156,7 +169,7 @@
   }
 
   // ------------------------------------------------------------------------------------------------ enemy marks
-  if (want('foe')) {
+  if (want('foe') && foes.length) {
     reset();
     const F = foes[0];
     put(F, 4, 14); F.superJump(foes[1]);
@@ -265,6 +278,181 @@
     const Lb = lands.find((l) => l.a === B);
     R('you on Ink Jet: a teammate jumping to you still alerts you, and lands at your return mark', al.length === 1 && al[0].name === B.name && !!Lb && !!mk && Math.hypot(Lb.pos.x - mk.pos.x, Lb.pos.z - mk.pos.z) < 1.6 && mk.pos.distanceTo(origin) < 0.3, { al, land: Lb && [r2(Lb.pos.x), r2(Lb.pos.z)], mark: mk && [r2(mk.pos.x), r2(mk.pos.z)] });
     if (me.specialActive) G.specials.end(me, 'test');
+  }
+
+  // ------------------------------------------------------------------------------------------------ boxes as drawn
+  const rect = (el) => { const b = el.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+  const shown = (el) => { if (!el) return false; const b = el.getBoundingClientRect(); return b.width > 0.5 && b.height > 0.5; };
+  const hitB = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  const rb = (b) => b && [Math.round(b.l), Math.round(b.t), Math.round(b.r), Math.round(b.b)];
+  const union = (els) => { let o = null; for (const e of els) { if (!shown(e) || getComputedStyle(e).opacity === '0') continue; const b = rect(e); o = o ? { l: Math.min(o.l, b.l), t: Math.min(o.t, b.t), r: Math.max(o.r, b.r), b: Math.max(o.b, b.b) } : b; } return o; };
+  // a tag's ring (unless hidden) and its label (when it has a name)
+  const tagBoxes = (t) => { const o = [], ring = t.el.querySelector('.iw-jt__ring'), lab = t.el.querySelector('.iw-jt__tag'); if (shown(ring)) o.push({ k: 'ring', ...rect(ring) }); if (t.name && shown(lab)) o.push({ k: 'label', ...rect(lab) }); return o; };
+  const clashes = (ts, extra = []) => {
+    const out = [], all = ts.map((t) => [t.name || '?', tagBoxes(t)]).concat(extra);
+    for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) for (const a of all[i][1]) for (const b of all[j][1]) if (hitB(a, b)) out.push(`${all[i][0]}.${a.k} × ${all[j][0]}.${b.k}`);
+    return out;
+  };
+  // the TAB map's pins as drawn: badge, key, name
+  // (the badge settled — its scale glides in as the map opens — and with its outline, a box-shadow of .36 u / .42 u yours)
+  const pinRects = () => [...(g.diorama?.el.querySelectorAll('.iw-pin') || [])].filter(vis).flatMap((p) => ['.iw-pin__badge', '.iw-pin__key', '.iw-pin__name'].map((q) => p.querySelector(q))
+    .filter((e) => e && shown(e)).map((e) => {
+      const badge = e.classList.contains('iw-pin__badge'), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), o = badge ? (p.classList.contains('iw-pin--self') ? 0.42 : 0.36) * u : 0;
+      if (badge) e.style.transition = 'none';
+      const b = rect(e);
+      if (badge) e.style.transition = '';
+      return { k: e.className.replace('iw-pin__', '') + (e.classList.contains('iw-pin__name') ? ':' + e.textContent : ''), l: b.l - o, t: b.t - o, r: b.r + o, b: b.b + o };
+    }));
+  const pinClash = (ts) => { const P = pinRects(), out = []; for (const t of ts) { const lab = t.el.querySelector('.iw-jt__tag'); if (!t.name || !shown(lab)) continue; const b = rect(lab); for (const q of P) if (hitB(b, q)) out.push(`${t.name} × pin ${q.k}`); } return out; };
+  const allyTag = (a) => { const e = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((x) => x.style.display !== 'none' && x.querySelector('.iw-mk__tag b').textContent === a.name); return e ? [[a.name + '(ally tag)', [{ k: 'tag', ...rect(e.querySelector('.iw-mk__tag')) }]]] : []; };
+
+  // ------------------------------------------------------------------------------------------------ two marks on one spot
+  if (want('stack')) {
+    const scenes = [
+      ['a teammate jumping to an Ink Jet user', () => {
+        const U = mates[2], A = mates[0];
+        start(U, 'jetpack', 12); U._go = new THREE.Vector3(1, 0, 0); step(1.2); U._go = null; step(0.2);
+        A.superJump(U); step(0.3);
+        return { who: [[U, 'return'], [A, 'jump']], near: [] };
+      }],
+      ['two teammates jumping to one teammate', () => {
+        const T = mates[2];
+        mates[0].superJump(T); mates[1].superJump(T); step(1.0);
+        return { who: [[mates[0], 'jump'], [mates[1], 'jump']], near: [T] };
+      }],
+    ];
+    for (const tab of [false, true]) for (const [label, set] of scenes) {
+      reset(); if (tab) openTab();
+      const { who, near } = set(), names = who.map(([a]) => a.name);
+      if (!tab) {
+        const w = world().filter((t) => names.includes(t.name)), mp = mapT().filter((t) => names.includes(t.name));
+        const wc = clashes(w, near.flatMap(allyTag));
+        // each still straight over its own spot (stacked up, never sideways)
+        const off = who.map(([a, kind]) => { const r = markOf(a, kind), t = w.find((x) => x.name === a.name); if (!r || !t) return 'missing ' + a.name; const p = proj(r.x, r.y + JUMP_UI.lift, r.z); return Math.abs(t.xy[0] - p[0]) < 2.5 && t.xy[1] <= p[1] + 2.5 ? '' : `${a.name} off its spot`; }).filter(Boolean);
+        R(`${label}: world view — both names, no tag over another (or the teammate's name tag), each over its spot`, w.length === 2 && wc.length === 0 && off.length === 0, { names: w.map((t) => t.name), clash: wc, off, at: w.map((t) => t.xy) });
+        const frame = rect(hud.mapFrame), labs = mp.map((t) => rect(t.el.querySelector('.iw-jt__tag')));
+        const mc = [];
+        for (let i = 0; i < mp.length; i++) for (let j = 0; j < mp.length; j++) {
+          if (i === j) continue;
+          if (i < j && hitB(labs[i], labs[j])) mc.push(`${mp[i].name} name × ${mp[j].name} name`);
+          const rg = mp[j].el.querySelector('.iw-jt__ring');
+          if (shown(rg) && hitB(labs[i], rect(rg))) mc.push(`${mp[i].name} name × ${mp[j].name} ring`);
+        }
+        const inFrame = labs.every((b) => b.l >= frame.l - 0.5 && b.r <= frame.r + 0.5 && b.t >= frame.t - 0.5 && b.b <= frame.b + 0.5);
+        const rings = mp.filter((t) => shown(t.el.querySelector('.iw-jt__ring'))).length;
+        R(`${label}: minimap — both names (inside the map), one ring on the shared spot, no name over another`, mp.length === 2 && mc.length === 0 && inFrame && rings === 1, { names: mp.map((t) => t.name), clash: mc, inFrame, rings, labels: labs.map(rb) });
+      } else {
+        const d = dioT().filter((t) => names.includes(t.name)), dc = clashes(d), pc = pinClash(d);
+        R(`${label}: TAB map — both names, no tag over another, no label over a pin`, d.length === 2 && dc.length === 0 && pc.length === 0, { names: d.map((t) => t.name), clash: dc, pins: pc, at: d.map((t) => t.xy) });
+        closeTab();
+      }
+      step(2.5);
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------------ TAB map: labels clear of the pins
+  if (want('pins')) {
+    const bad = [];
+    let n = 0;
+    // a teammate T a few metres from you every way round, another jumping to T: the jump comes down by your pin and T's
+    for (const [dx, dz] of [[0, 2.5], [0, 3.5], [0, 5], [0, -2.5], [2.5, 0], [-2.5, 0], [1.8, 2.5], [-1.8, 2.5]]) {
+      reset(); openTab();
+      const T = mates[2], A = mates[0];
+      put(T, me.pos.x + dx, me.pos.z + dz); step(0.1);
+      A.superJump(T); step(1.0);
+      const d = dioT().filter((t) => t.name === A.name), pc = pinClash(d);
+      n += d.length;
+      if (!d.length || pc.length) bad.push({ at: [dx, dz], tag: d.length, pins: pc });
+      closeTab(); step(2);
+    }
+    R('TAB map: a jump coming down by your pin and a teammate\'s, from every side — its label covers no pin (badge, key, name)', bad.length === 0 && n === 8, { bad });
+  }
+
+  // ------------------------------------------------------------------------------------------------ the alerts' place
+  if (want('place')) {
+    reset();
+    const calm = (els) => { for (const e of els) { if (!e) continue; e.style.animation = 'none'; e.style.transition = 'none'; for (const c of e.querySelectorAll('*')) c.style.animation = 'none'; } };
+    calm([J.aLayer, hud.callouts, hud.zcalls, hud.countLayer]);   // (their glides: the resting place is what's checked)
+    const alertEls = () => [...J.aLayer.querySelectorAll('.iw-jal__i:not(.is-out)')];
+    const aBoxes = () => { const els = alertEls(); calm(els); return els.map((e) => ({ k: e.querySelector('.iw-jal__name').textContent, ...rect(e) })); };
+    const furn = () => [['top bar', hud.top], ['zone chip', hud.zo], ['tower track', hud.tw], ['boss bar', hud.boss && hud.boss.bar], ['boss emblem', hud.boss && hud.boss.emb],
+      ...[...hud.statusEl.children].map((e) => [e.textContent, e]), ...[...hud.el.querySelectorAll('.iw-lead.is-on .iw-lead__tag')].map((e) => ['LEAD', e])]
+      .filter(([, e]) => e && shown(e)).map(([k, e]) => ({ k, ...rect(e) }));
+    const against = (A, B) => { const out = []; for (const a of A) for (const b of B) if (hitB(a, b)) out.push(`${a.k} × ${b.k}`); return out; };
+    mates[0].superJump(me); step(0.2);
+    let A = aBoxes(), F = furn();
+    R(`one alert: clear of the top middle (${F.map((f) => f.k).join(', ')})`, A.length === 1 && against(A, F).length === 0 && (!boss || F.some((f) => f.k === 'boss bar')), { alert: A.map(rb), hits: against(A, F), furn: F.map((f) => [f.k, ...rb(f)]) });
+    // the mode's biggest states under the timer: Zone Control's overtime + zone shift, Tower Command's overtime + status
+    if (m.mode === 'zones' || m.mode === 'tower') {
+      const el = m.mode === 'zones' ? hud.zo : hud.tw, cls = m.mode === 'zones' ? ['is-ot', 'is-shift'] : ['is-ot', 'has-status'];
+      const had = cls.map((c) => el.classList.contains(c)), txt = hud.twStatus.textContent;
+      el.classList.add(...cls); if (m.mode === 'tower') hud.twStatus.textContent = 'CONTESTED';
+      J._placeAlerts();
+      A = aBoxes(); F = furn();
+      R(`…and with ${m.mode === 'zones' ? 'OVERTIME + ZONE SHIFT' : 'OVERTIME + a status'} under the timer`, A.length === 1 && against(A, F).length === 0, { alert: A.map(rb), hits: against(A, F), furn: F.map((f) => [f.k, ...rb(f)]) });
+      cls.forEach((c, i) => el.classList.toggle(c, had[i])); hud.twStatus.textContent = txt;
+    }
+    // the status badges (at a fixed 118 px: on a small window they reach the row)
+    me.status.track = 30; me.status.poison = 30; step(0.1);
+    A = aBoxes(); F = furn();
+    R('…with TRACKED and POISONED up: clear of the badges too', A.length === 1 && F.some((f) => f.k === 'TRACKED') && F.some((f) => f.k === 'POISONED') && against(A, F).length === 0, { alert: A.map(rb), hits: against(A, F), furn: F.map((f) => [f.k, ...rb(f)]) });
+    me.status.track = 0; me.status.poison = 0;
+    // three at once, and the announcements that share their band
+    mates[1].superJump(me); mates[2].superJump(me); step(0.15);
+    A = aBoxes(); F = furn();
+    const own = against(A.slice(0, 1), A.slice(1)).concat(against(A.slice(1, 2), A.slice(2)));
+    R('three alerts at once: all shown, none over another or the top middle', A.length === 3 && own.length === 0 && against(A, F).length === 0, { alerts: A.map((a) => [a.k, ...rb(a)]), hits: own.concat(against(A, F)) });
+    const ann = [
+      ['streak callout', () => hud._callout('FIRST SPLAT!', null, false), () => hud.callouts.querySelector('.iw-call'), 0.27],
+      ['big callout', () => hud._callout('WIPEOUT!', 'TEAM WIPE', true), () => hud.callouts.querySelector('.iw-call'), 0.27],
+      ['one-minute banner', () => hud.banner('one_minute'), () => hud.bannerLayer.querySelector('.iw-bn--minute'), 0.22],
+      ['last-ten count', () => hud.countdown(3), () => { const e = hud.countLayer.querySelector('.iw-count:not(.is-old)'); return e && e.querySelector('.iw-display'); }, 0.3, true],
+      ...(m.mode === 'zones' || m.mode === 'tower' ? [['zone callout', () => hud._zCall('CONTESTED!', { small: false }), () => hud.zcalls.querySelector('.iw-zcall'), 0.33]] : []),
+    ];
+    const H = innerHeight;
+    // a big digit's ink (its inline box has the font's whole ascent and descent round it)
+    const ink = (e) => { const b = rect(e), cs = getComputedStyle(e), cx = (ink.c || (ink.c = document.createElement('canvas').getContext('2d'))); cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; const q = cx.measureText(e.textContent); return { l: b.l, r: b.r, t: b.t + q.fontBoundingBoxAscent - q.actualBoundingBoxAscent, b: b.t + q.fontBoundingBoxAscent + q.actualBoundingBoxDescent }; };
+    for (const [k, fire, get, , glyph] of ann) {
+      fire();
+      const el = get();
+      calm([el && (glyph ? el.parentNode : el)]);
+      const b = el && (glyph ? ink(el) : union([el, ...el.children]));
+      const hits = b ? against([{ k, ...b }], A) : ['missing'];
+      R(`…the ${k} stays clear of them`, !!b && hits.length === 0 && A.length === 3, { box: rb(b), hits, alerts: A.map(rb) });
+      if (el) el.remove();
+    }
+    // they go back once the alerts are gone
+    until(() => alerts().length === 0 && !J.alerts.length, 6); frame();
+    const ct = parseFloat(getComputedStyle(hud.callouts).top), mt = (() => { hud.banner('one_minute'); const e = hud.bannerLayer.querySelector('.iw-bn--minute'); calm([e]); const v = parseFloat(getComputedStyle(e).top); e.remove(); return v; })();
+    R('…and back in their usual place once the alerts are gone', !hud.el.classList.contains('has-jal') && Math.abs(ct - 0.27 * H) < 1.5 && Math.abs(mt - 0.22 * H) < 1.5, { hasJal: hud.el.classList.contains('has-jal'), callout: r2(ct), want: r2(0.27 * H), minute: r2(mt) });
+    for (const e of [J.aLayer, hud.callouts, hud.zcalls, hud.countLayer]) { e.style.animation = ''; e.style.transition = ''; }
+  }
+
+  // ------------------------------------------------------------------------------------------------ the other team's tags and walls
+  if (want('walls') && foes.length) {
+    // testbox's wall: x 14…15, z −8…8, 4 m tall. You at (0, −26) looking up the deck; a jump landing at (22, 5) is behind it
+    reset();
+    const F = foes[0], T = foes[1];
+    put(T, 22, 5); F.superJump(T); step(0.3);
+    const r = markOf(F, 'jump'), cam = G.camera.position;
+    const blocked = !!r && !G.physics.los(cam, new THREE.Vector3(r.x, r.y + 0.3, r.z)) && !G.physics.los(cam, new THREE.Vector3(r.x, r.y + JUMP_UI.lift, r.z));
+    const p = r && proj(r.x, r.y + JUMP_UI.lift, r.z), onScr = !!p && p[0] > 0 && p[0] < innerWidth && p[1] > 0 && p[1] < innerHeight;
+    const hidden = [...J.wLayer.querySelectorAll('.iw-jt.is-foe')].filter(vis);
+    const op = hidden[0] ? (hidden[0].style.transition = 'none', getComputedStyle(hidden[0]).opacity) : null;
+    if (hidden[0]) hidden[0].style.transition = '';
+    R('an enemy landing behind a wall (on screen, out of sight): no tag through the wall', blocked && onScr && world().filter((t) => /is-foe/.test(t.cls)).length === 0 && hidden.length === 1 && hidden[0].classList.contains('is-occl') && op === '0', { blocked, onScr, shown: world().filter((t) => /is-foe/.test(t.cls)).length, opacity: op });
+    R('…its ring + icon stay on the minimap (the map shows both teams\' landings)', mapT().some((t) => /is-foe/.test(t.cls)), { map: mapT().map((t) => t.cls) });
+    step(3);
+    // in the open: its tag
+    reset();
+    put(T, -4, 10); F.superJump(T); step(0.3);
+    R('…the same in the open: its tag', world().filter((t) => /is-foe/.test(t.cls)).length === 1, { shown: world().map((t) => t.cls) });
+    step(3);
+    // your own team's behind that wall: still shown, with the name
+    reset();
+    put(mates[2], 22, 5); mates[0].superJump(mates[2]); step(0.3);
+    R('your teammate landing behind the wall: shown through it, with the name', world().some((t) => t.name === mates[0].name), { shown: world().map((t) => t.name) });
+    step(3);
   }
 
   G.audio.play = play0;
