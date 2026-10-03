@@ -10,7 +10,10 @@
 //   states: stand (idle 2 s) · run (full speed) · fire (the weapon's main action held: blaster / brolly shots, the brush's
 //   swipes, the roller's flick) · roll (fire held while moving: the roller's roll, the brush's dash; the brolly's open
 //   canopy) · jump (the rise, near the apex) · lobby / victory / defeat / idle / locker (the menu and podium dances) ·
-//   leap / hang / slam (the Tidal Slam: the tuck on the way up, the top, just after the impact; not in the default list)
+//   leap / hang / slam (the Tidal Slam: the tuck on the way up, the top, just after the impact; not in the default list) ·
+//   v<variant>b<beat> (a victory dance at an exact beat, e.g. v0b7) · hey<s> (the lobby's HEY! emote, s seconds in).
+//   Views: front / fq (front 3/4 from the off-hand side) / left / back / right / high, frontw / top (wide and from above:
+//   a roll's drum in frame), hand / handb / handd (off-hand close-ups)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const G = window.__G;
@@ -91,7 +94,7 @@
     },
   };
   const DANCES = { lobby: 'lobby_pose', victory: 'victory', defeat: 'defeat', idle: 'menu_idle', locker: 'locker_idle' };
-  const arg = (k) => { const r = new RegExp(`(?:^|\\s)${k}=([\\w,]+)`).exec(window.__preArgs || ''); return r ? r[1].split(',').filter(Boolean) : null; };
+  const arg = (k) => { const r = new RegExp(`(?:^|\\s)${k}=([\\w,.]+)`).exec(window.__preArgs || ''); return r ? r[1].split(',').filter(Boolean) : null; };
   const WEAPONS = arg('w') || ['brush', 'roller', 'blaster', 'brolly'];
   // what-ifs: '… tune:{"roller":{"carry":{…}}}' replaces those fields of the weapon's hold (as tests/holds.js)
   const TUNE = (() => { const a = window.__preArgs || '', i = a.indexOf('tune:'); return i >= 0 ? JSON.parse(a.slice(i + 5)) : null; })();
@@ -106,8 +109,15 @@
         reset(); kid.setWeapon(w); kid.character.root.visible = true; kid.character.setVisible?.(true);
         if (TUNE && TUNE[w]) Object.assign(kid.character.hold, TUNE[w]);
         hold('front');
-        const dv = /^(victory|defeat)(\d)$/.exec(st);
-        if (DANCES[st] || dv) { put(START, 0); settle(0.4); kid.character.setDance(dv ? dv[1] : DANCES[st]); kid.character.danceVar = dv ? +dv[2] : 0; settle(dv ? [[1.0, 1.9, 0.9], [1.5, 2.5, 1.5]][dv[1] === 'victory' ? 0 : 1][+dv[2]] : st === 'victory' ? 1.0 : st === 'lobby' ? 1.0 : 1.5); }
+        const dv = /^(victory|defeat)(\d)$/.exec(st), hey = /^hey([\d.]+)$/.exec(st), bt = /^v(\d)b([\d.]+)$/.exec(st);
+        if (hey) {   // hey0.7: the lobby's HEY! emote 0.7 s in, played from the lobby pose as the room plays it (showcase emoteDance)
+          put(START, 0); settle(0.4); kid.character.setDance('lobby_pose'); settle(1.2);
+          const { emoteDance } = await import('./src/game/showcase.js'); emoteDance(kid.character, 'wave'); settle(+hey[1]);
+        } else if (bt) {   // v0b7: victory variant 0 at beat 7 of its 8 (variant 1: at second 7 of its 4.6 s loop)
+          put(START, 0); settle(0.4); const ch = kid.character; ch.setDance('victory'); ch.danceVar = +bt[1]; settle(1.2);
+          const v = +bt[1], bpm = [2.1, 1, 2.5][v], P = [8 / 2.1, 4.6, 8 / 2.5][v]; let T = +bt[2] / bpm - ch.danceOfs; while (T < 1) T += P;
+          ch.danceT = T - 8 / 60; settle(8 / 60);
+        } else if (DANCES[st] || dv) { put(START, 0); settle(0.4); kid.character.setDance(dv ? dv[1] : DANCES[st]); kid.character.danceVar = dv ? +dv[2] : 0; settle(dv ? [[1.0, 1.9, 0.9], [1.5, 2.5, 1.5]][dv[1] === 'victory' ? 0 : 1][+dv[2]] : st === 'victory' ? 1.0 : st === 'lobby' ? 1.0 : 1.5); }
         else STATES[st](w);
         hold('front'); dbg.step(1000 / 60);
       }
