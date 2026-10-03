@@ -14,22 +14,25 @@
 //      from the time it really takes there to ~0 at A's touchdown there.
 //   3. A's Zipline: its mark (the Zipline icon, A's name) on B's screen; A's special ends with A still on its take-off
 //      spot (no jump home): B's mark goes at once (specials.js ReturnMarker: it used to sit grey for 30 s).
+//   scene=tower (Tower Command, instead of 1–3): B rides the moving tower, A jumps to B. On both screens A's landing
+//      mark rides the deck through the flight and A comes down where the mark ended up (the owner's landing follows the
+//      tower: Actor._updateSuperJump; B's copy of A's jump follows B's own tower: jumpMarks.js sjNetFill).
 //   CLIENTS=2 NET=tools/botlab/tests/net-jump-ui.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 //   NET_ARGS: 'map=<id>' (default saltpan); 'shots' saves B's screen (the alert; A's Ink Jet return mark) to
-//   tools/botlab/jobs/batch5/jumpui/out/ (or OUT)
+//   tools/botlab/jobs/batch5/jumpui/out/ (or OUT); 'scene=tower'
 const path = require('path');
 module.exports = async (ctx) => {
   const { clients, R, wait, say, args } = ctx;
   const [A, B] = clients;
   const opt = Object.fromEntries((args || '').split(/[;&]/).filter(Boolean).map((kv) => kv.split('=')));
-  const MAP = opt.map || 'saltpan', SHOTS = 'shots' in opt;
+  const MAP = opt.map || 'saltpan', SHOTS = 'shots' in opt, TOWER = opt.scene === 'tower';
   const SHOT_DIR = process.env.OUT || path.join(process.env.BOTLAB_ROOT || process.cwd(), 'tools/botlab/jobs/batch5/jumpui/out');
   const shot = async (c, name) => { if (!SHOTS) return; const r = await c.shot(`${SHOT_DIR}/${name}.jpg`); say('shot', name, r && r.bytes); };
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   const r2 = (x) => Math.round(x * 100) / 100;
   const code = await A.js(`__G.net.create('Hosty')`);
   say('room', code);
-  await A.js(`__G.net.setSettings({ mode: 'practice', map: ${JSON.stringify(MAP)}, time: 'day', botCount: 0 }); 1`);
+  await A.js(`__G.net.setSettings({ mode: ${JSON.stringify(TOWER ? 'tower' : 'practice')}, map: ${JSON.stringify(MAP)}, time: 'day', botCount: 0 }); 1`);
   await B.js(`__G.net.join(${JSON.stringify(code)}, 'Guesty').then(() => 1)`);
   await A.until(`__G.net.lobby.players.length === 2`, 15000);
   // one team: the guest asks for the host's side
@@ -40,7 +43,7 @@ module.exports = async (ctx) => {
   say('practice up');
   const ids = await J(A, `(() => { const m = __G.match; return m.actors.map((a) => [a.nid, a.name, a.team, !!a.isLocal]); })()`);
   const tA = ids.find((x) => x[1] === 'Hosty'), tB = ids.find((x) => x[1] === 'Guesty');
-  R('two players on one team (online Practice, no bots)', !!tA && !!tB && tA[2] === tB[2] && ids.length === 2, ids);
+  R(`two players on one team (online ${TOWER ? 'Tower Command' : 'Practice'}, no bots)`, !!tA && !!tB && tA[2] === tB[2] && ids.length === 2, ids);
   if (!tA || !tB) return;
   // on each screen: listeners, and a per-frame sampler of what the HUD shows (hud.jumps.state()) and the marks
   const setup = (c) => c.js(`(async () => {
@@ -83,6 +86,7 @@ module.exports = async (ctx) => {
   const rec = (c, on) => c.js(`(() => { window.__ju.rec = ${on}; if (${on}) { window.__ju.f.length = 0; window.__ju.land.length = 0; window.__ju.sj.length = 0; } return 1; })()`);
   const log = (c) => J(c, `window.__ju`);
   const landOf = (L, who) => L.land.find((l) => l.who === who) || null;
+  if (TOWER) { await towerScene(); return; }
 
   // ------------------------------------------------------------------------------------------------ 1. A jumps to B
   await stage();
@@ -192,4 +196,38 @@ module.exports = async (ctx) => {
   R('…A\'s Zipline ends on the spot (no jump home): the mark goes on B\'s screen within 1.5 s, not stuck', !aSj && zGone != null && zGone < 1500, { aJumped: aSj, goneAfterMs: zGone });
   const errs = clients.flatMap((c) => c.log.filter((l) => /error|TypeError|ReferenceError/i.test(l)));
   R('no console errors', !errs.length, errs.slice(0, 5));
+
+  // ------------------------------------------------------------------------------------------------ scene=tower
+  async function towerScene() {
+    const hasT = await J(A, `!!__G.match.tower`) && await J(B, `!!__G.match.tower`);
+    R('Tower Command is up with its tower (both screens)', hasT, { map: MAP });
+    if (!hasT) return;
+    // B steps onto the deck (its own screen carries it from there: the tower moves under one team's riders); A waits at
+    // its pad, a long jump away
+    await B.js(`(() => { const me = __G.match.local, T = __G.match.tower; me.pos.set(T.pos.x + 0.6, T.top + 0.05, T.pos.z + 0.6); me.vel.set(0, 0, 0); me.netTp = (me.netTp || 0) + 1; return 1; })()`);
+    await A.js(`(() => { const me = __G.match.local, p = __G.level.spawnPads[me.team]; me.pos.set(p.x, p.y + 0.05, p.z); me.vel.set(0, 0, 0); me.netTp = (me.netTp || 0) + 1; return 1; })()`);
+    const mv = await A.until(`__G.match.tower.moving !== 0 && __G.match.tower.riderList.some((a) => a.name === 'Guesty')`, 10000, 100).then(() => true, () => false);
+    await B.until(`__G.match.tower.riderList.includes(__G.match.local)`, 5000, 100).catch(() => null);
+    R('B rides the tower and it moves', mv, { moving: await J(A, `__G.match.tower.moving`) });
+    if (!mv) return;
+    await rec(A, true); await rec(B, true);
+    const ok = await A.js(`(() => { const m = __G.match, him = m.actors.find((a) => a.name === 'Guesty'); return m.local.superJump(him); })()`);
+    await B.until(`window.__ju.land.some((l) => l.who === 'Hosty')`, 9000).catch(() => null);
+    await A.until(`window.__ju.land.some((l) => l.who === 'Hosty')`, 3000).catch(() => null);
+    await wait(300);
+    await rec(A, false); await rec(B, false);
+    const LA = await log(A), LB = await log(B);
+    // on each screen: the mark's spot through the flight, and where A came down there
+    const ride = (L) => { const land = landOf(L, 'Hosty'); const fl = L.f.map((f) => f.mk.find((x) => x[0] === 'jump' && x[1] === 'Hosty' && x[6] === 'flight')).filter(Boolean);
+      if (!land || fl.length < 5) return { land: land && land.p.map(r2), n: fl.length };
+      const a = fl[0], z = fl[fl.length - 1];
+      return { n: fl.length, rode: r2(Math.hypot(z[2] - a[2], z[4] - a[4])), miss: r2(Math.hypot(z[2] - land.p[0], z[4] - land.p[2])), missFirst: r2(Math.hypot(a[2] - land.p[0], a[4] - land.p[2])) }; };
+    const rA = ride(LA), rB = ride(LB);
+    const okR = (r) => r.n >= 5 && r.rode > 0.8 && r.miss < 0.8;
+    R('A jumps to B on the moving tower: on both screens the landing mark rides the deck through the flight and A comes down where it ended (B\'s screen: from its own tower)', ok && okR(rA) && okR(rB), { owner: rA, other: rB });
+    const al = LB.f.filter((f) => f.al.some((x) => x[0] === 'Hosty')).length;
+    R('…and B, on the tower, got the alert', al > 10, { frames: al });
+    const errs = clients.flatMap((c) => c.log.filter((l) => /error|TypeError|ReferenceError/i.test(l)));
+    R('no console errors', !errs.length, errs.slice(0, 5));
+  }
 };

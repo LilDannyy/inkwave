@@ -31,7 +31,8 @@
 // the remote player's superJumpState with its own clock, so every screen reads the same jump. That covers these marks
 // and also the parts that were already there: the travel lines on the minimap and the TAB map (superJumpInfo), the world
 // reticle (fxHooks), a jump to that player while they're in the air (jumpAnchor) and a ghost return marker's
-// colour-to-grey wipe.
+// colour-to-grey wipe. A jump onto a teammate riding Tower Command's tower lands on the moving deck: as on the owner's
+// screen, the landing spot rides this screen's tower through the flight.
 import { G } from '../core/ctx.js';
 
 export const SJ_CHARGE = 0.75;   // s crouching before the launch (Actor._updateSuperJump)
@@ -131,6 +132,11 @@ export function sjNetEvent(a, e) {
     v.to = e.to && e.to.isVector3 ? e.to.clone() : null;
     v.from = e.from && e.from.isVector3 ? e.from.clone() : a.pos.clone();
     v.dur = +e.dur || sjFlightDur(v.from, v.to);
+    // a jump onto a teammate riding Tower Command's tower: the owner's landing follows the tower's deck through the
+    // flight (Actor._updateSuperJump s.tower / towerOff); here too, from this screen's tower (sjNetFill)
+    const T = G.match?.tower, tg = v.target;
+    v.tower = T && v.to && tg && tg.pos && tg.pos.isVector3 && T.riderList && T.riderList.includes(tg) ? T : null;
+    v.off = v.tower ? v.to.clone().sub(T.pos) : null;
   }
 }
 /** net/netmatch.js applyRemote, after the tick's flags set superJumpState: its clock and what the events said. */
@@ -143,4 +149,5 @@ export function sjNetFill(a, dt) {
   if (!v.s) { v.s = s; if (s.phase === 'charge' && v.instant) s.t = SJ_CHARGE; }
   s.target = v.target; s.home = v.home;
   if (v.to) { s.from = v.from; s.to = v.to; s.dur = v.dur; }
+  if (v.tower) { if (G.match?.tower === v.tower) { v.to.copy(v.tower.pos).add(v.off); n.sjTo = v.to; } else v.tower = null; }   // (netmatch's landing ring rides it too)
 }
