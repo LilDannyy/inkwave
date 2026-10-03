@@ -18,10 +18,16 @@
 //            and for a bot. The TAB map's jump arc to their pin aims at the mark too. A teammate jumping to you while
 //            you're on Ink Jet: the alert still shows, and they land at your mark.
 //   stack    two marks on one spot, seen by a third teammate (you): a teammate jumping to an Ink Jet user (it comes down
-//            by their return mark), and two teammates jumping to one teammate. Both names show in the world view, on
-//            the minimap and on the TAB map, and no two tags cover each other (their rings and labels, as drawn)
-//   pins     TAB map: a tag's label covers no pin (its badge, key or name) nor a zone / tower chip, wherever the jump
-//            comes down near them
+//            by their return mark), and two teammates jumping to one teammate; and the first again with the rest of the
+//            squad standing round the spot, high on the screen. Both names show in the world view, on the minimap and on
+//            the TAB map, and no two tags cover each other (their rings and labels, as drawn). In the world view each tag
+//            is over its spot: on it when nothing is in the way, else straight up (or, where that would meet the top
+//            middle: the top bar, the boss bar … , down) its column, resting on what it clears, no further (seat). On
+//            the TAB map no label covers a pin (badge, stem, key, name) and no disc a zone / tower chip
+//   pins     TAB map: a tag's label covers no pin (its badge, stem, key or name) nor a zone / tower chip, wherever the
+//            jump comes down near them; a jump coming down on a chip puts its disc just beside the chip's text
+//   size     on this window: the alert's lines and the minimap's names at 11 px or more (the game's floor, --fs-xs); a
+//            far teammate's world tag shrinks, but its name no further than the teammates' own name tags (0.82×)
 //   place    the alerts sit clear of everything at the top middle in this mode (the roster + timer, Zone Control's
 //            chip, Tower Command's track, Boss Battle's health bar), of the TRACKED / POISONED badges, and of each other
 //            (three at once); the streak callout, the zone callout, the one-minute banner and the last-ten count stay
@@ -29,7 +35,7 @@
 //   walls    the other team's world tag only where you could see its spot: behind a wall it is hidden (your own team's
 //            still shows there)
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/jump-ui.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=alert,tags,count,foe,jetpack,zipline,land,stack,pins,place,walls'   (MODE=zones / tower / boss too;
+//   PAGE_ARGS='only=alert,tags,count,foe,jetpack,zipline,land,stack,pins,size,place,walls'   (MODE=zones / tower / boss too;
 //   W=960 H=600 for a small window. Boss Battle: eight on one team and no foes, so foe / walls are skipped there)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, THREE = await import('three');
@@ -50,7 +56,8 @@
   // brains: stand still (a._go: walk / steer that way)
   for (const a of m.actors) if (a.bot) a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; if (a._go) it.move.copy(a._go); };
   const keep = () => { for (const a of m.actors) { if (!a.alive) a.respawn(); a.invuln = 99; a.hp = PLAYER.hp; } };
-  const aim = () => { g.rig.yaw = 0; g.rig.pitch = -0.12; me.aimYaw = me.yaw = 0; me.aimPitch = -0.12; };
+  let pitch = -0.12;   // (the camera's: a scene may look further down)
+  const aim = () => { g.rig.yaw = 0; g.rig.pitch = pitch; me.aimYaw = me.yaw = 0; me.aimPitch = pitch; };
   const frame = () => { aim(); dbg.step(1000 / 60); };
   const step = (s) => { for (let i = 0, n = Math.max(1, Math.round(s * 60)); i < n; i++) frame(); };
   const put = (a, x, z) => { a.pos.set(x, 0.02, z); a.vel.set(0, 0, 0); a.yaw = a.aimYaw = 0; a.grounded = true; a.form = 'kid'; a.netTp = (a.netTp || 0) + 1; };
@@ -60,7 +67,7 @@
     keep(); for (const a of m.actors) if (a.specialActive) G.specials.end(a, 'test');
     G.specials.clear(); G.projectiles.clear(); G.subs.clear();
     for (const a of m.actors) { a.specialActive = null; a.superJumpState = null; a._go = null; a.special = 0; }
-    m.controller = null;
+    m.controller = null; pitch = -0.12;
     stage(); step(0.6);
   };
   // what the player sees: visible DOM tags / alerts
@@ -82,6 +89,77 @@
   const landed = (a) => lands.some((l) => l.a === a);
   const until = (fn, s = 6) => { for (let i = 0; i < s * 60; i++) { if (fn()) return true; frame(); } return !!fn(); };
   const start = (a, id, dur) => { a.specialId = id; a.special = a.specialCost(); a._startSpecial(); if (dur && a.specialActive) a.specialActive.dur = dur; return a.specialActive; };
+
+  // ------------------------------------------------------------------------------------------------ boxes as drawn
+  const rect = (el) => { const b = el.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+  const shown = (el) => { if (!el) return false; const b = el.getBoundingClientRect(); return b.width > 0.5 && b.height > 0.5; };
+  const hitB = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  const rb = (b) => b && [Math.round(b.l), Math.round(b.t), Math.round(b.r), Math.round(b.b)];
+  const union = (els) => { let o = null; for (const e of els) { if (!shown(e) || getComputedStyle(e).opacity === '0') continue; const b = rect(e); o = o ? { l: Math.min(o.l, b.l), t: Math.min(o.t, b.t), r: Math.max(o.r, b.r), b: Math.max(o.b, b.b) } : b; } return o; };
+  // a tag's ring (unless hidden) and its label (when it has a name)
+  const tagBoxes = (t) => { const o = [], ring = t.el.querySelector('.iw-jt__ring'), lab = t.el.querySelector('.iw-jt__tag'); if (shown(ring)) o.push({ k: 'ring', ...rect(ring) }); if (t.name && shown(lab)) o.push({ k: 'label', ...rect(lab) }); return o; };
+  const clashes = (ts, extra = []) => {
+    const out = [], all = ts.map((t) => [t.name || '?', tagBoxes(t)]).concat(extra);
+    // (each tag against the others and the extras; extras against each other are not ours: teammates' tags overlap)
+    for (let i = 0; i < ts.length; i++) for (let j = i + 1; j < all.length; j++) for (const a of all[i][1]) for (const b of all[j][1]) if (hitB(a, b)) out.push(`${all[i][0]}.${a.k} × ${all[j][0]}.${b.k}`);
+    return out;
+  };
+  // the TAB map's pins as drawn: badge, key, name
+  // (the badge settled — its scale glides in as the map opens — and with its outline, a box-shadow of .36 u / .42 u yours)
+  // (and its stem, from the badge down to the spot, with its 1.5 px outline)
+  const pinRects = () => [...(g.diorama?.el.querySelectorAll('.iw-pin') || [])].filter(vis).flatMap((p) => ['.iw-pin__badge', '.iw-pin__key', '.iw-pin__name', '.iw-pin__stem'].map((q) => p.querySelector(q))
+    .filter((e) => e && shown(e)).map((e) => {
+      const badge = e.classList.contains('iw-pin__badge'), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), o = badge ? (p.classList.contains('iw-pin--self') ? 0.42 : 0.36) * u : e.classList.contains('iw-pin__stem') ? 1.5 : 0;
+      if (badge) e.style.transition = 'none';
+      const b = rect(e);
+      if (badge) e.style.transition = '';
+      return { k: e.className.replace('iw-pin__', '') + (e.classList.contains('iw-pin__name') ? ':' + e.textContent : ''), l: b.l - o, t: b.t - o, r: b.r + o, b: b.b + o };
+    }));
+  // (and Zone Control's zone chips / Tower Command's tower chip)
+  const chipRects = () => [...(g.diorama?.el.querySelectorAll('.iw-dio-z') || [])].filter(vis).map((e) => e.querySelector('.iw-dio-z__tag')).filter(shown).map((e) => ({ k: 'chip:' + e.textContent, ...rect(e) }));
+  // a disc over a zone / tower chip's text
+  const discChip = (ts) => { const C = chipRects(), out = []; for (const t of ts) { const ring = t.el.querySelector('.iw-jt__ring'); if (!shown(ring)) continue; const b = rect(ring); for (const q of C) if (hitB(b, q)) out.push(`${t.name || 'foe'} disc × ${q.k}`); } return out; };
+  // a TAB-map disc on its spot (within 2.5 px); or, where a zone / tower chip's text is there, slid just clear of the
+  // chip (its ring off it, no further than a disc and a half)
+  const dioSpot = (t, at) => {
+    if (!t || !at) return { ok: false };
+    const u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), R = 0.83 * 2.1 * u, D = 2 * R + 0.35 * u, off = Math.hypot(t.xy[0] - at[0], t.xy[1] - at[1]);
+    const chip = chipRects().filter((q) => hitB(grow({ l: at[0] - R, t: at[1] - R, r: at[0] + R, b: at[1] + R }, 6), q)).map((q) => q.k);
+    return { ok: off <= 2.5 || (chip.length > 0 && discChip([t]).length === 0 && off <= 1.5 * D), off: r2(off), chip };
+  };
+  const pinClash = (ts) => { const P = pinRects().concat(chipRects()), out = []; for (const t of ts) { const lab = t.el.querySelector('.iw-jt__tag'); if (!t.name || !shown(lab)) continue; const b = rect(lab); for (const q of P) if (hitB(b, q)) out.push(`${t.name} × pin ${q.k}`); } return out; };
+  const allyTag = (a) => { const e = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((x) => x.style.display !== 'none' && x.querySelector('.iw-mk__tag b').textContent === a.name); return e ? [[a.name + '(ally tag)', [{ k: 'tag', ...rect(e.querySelector('.iw-mk__tag')) }]]] : []; };
+
+  // what hangs at the top middle, as drawn: the roster + timer, the mode's chip / track, the boss bar and emblem, the
+  // status badges, the LEAD tags (and with topMiddle(): the alerts' pills)
+  const furn = () => [['top bar', hud.top], ['zone chip', hud.zo], ['tower track', hud.tw], ['boss bar', hud.boss && hud.boss.bar], ['boss emblem', hud.boss && hud.boss.emb],
+    ...[...hud.statusEl.children].map((e) => [e.textContent, e]), ...[...hud.el.querySelectorAll('.iw-lead.is-on .iw-lead__tag')].map((e) => ['LEAD', e])]
+    .filter(([, e]) => e && shown(e)).map(([k, e]) => ({ k, ...rect(e) }));
+  const topMiddle = () => furn().concat([...J.aLayer.querySelectorAll('.iw-jal__i')].filter(shown).map((e) => ({ k: 'alert', ...rect(e) })));
+  // the teammates' name tags on screen, as drawn (with the pointer under each)
+  const allyRects = () => [...hud.markerLayer.querySelectorAll('.iw-mk')].filter((e) => e.style.display !== 'none' && !e.classList.contains('is-off'))
+    .map((e) => { const b = rect(e.querySelector('.iw-mk__tag')); return { k: 'tag:' + e.querySelector('.iw-mk__tag b').textContent, ...b, b: b.b + 6 }; });
+  // a world tag as drawn: its ring and (when named) its label
+  const tagRect = (t) => union([t.el.querySelector('.iw-jt__ring'), t.el.querySelector('.iw-jt__tag')]);
+  const grow = (b, e) => ({ l: b.l - e, t: b.t - e, r: b.r + e, b: b.b + e });
+  // A world tag "over its spot" (want: the spot + JUMP_UI.lift on screen). Nothing in the way there (a teammate's name
+  // tag, another jump tag, the top middle): on it, within 2.5 px. Something in the way: moved straight up or down its
+  // column (x within 2.5 px), covering none of them, resting just above / below one (within 9 px: the gap, the ring's
+  // beat), and moved no further than the tag's own height plus those in its column between the spot and where it is.
+  const seat = (t, want) => {
+    const tb = t && tagRect(t);
+    if (!tb || !want) return { ok: false, why: 'missing' };
+    const dx = t.xy[0] - want[0], dy = t.xy[1] - want[1];
+    const ub = { l: tb.l - dx, t: tb.t - dy, r: tb.r - dx, b: tb.b - dy };
+    const O = allyRects().concat(world().filter((o) => o.el !== t.el).map((o) => ({ k: 'jump:' + (o.name || 'foe'), ...tagRect(o) })).filter((o) => o.l !== undefined), topMiddle());
+    const hx = (o) => o.l < tb.r && tb.l < o.r;
+    const near = O.filter((o) => hitB(grow(ub, 8), o)).map((o) => o.k), over = O.filter((o) => hitB(tb, o)).map((o) => o.k);
+    const rests = O.filter((o) => hx(o) && (dy < 0 ? o.t - tb.b > -0.5 && o.t - tb.b < 9 : tb.t - o.b > -0.5 && tb.t - o.b < 9)).map((o) => o.k);
+    const lo = Math.min(tb.t, ub.t), hi = Math.max(tb.b, ub.b);
+    const bound = (tb.b - tb.t) + O.filter((o) => hx(o) && o.b > lo && o.t < hi).reduce((a, o) => a + (o.b - o.t) + 9, 0) + 2.5;
+    const ok = Math.abs(dx) <= 2.5 && over.length === 0 && (Math.abs(dy) <= 2.5 || (near.length > 0 && rests.length > 0 && Math.abs(dy) <= bound));
+    return { ok, dx: r2(dx), dy: r2(dy), near, over, rests, bound: r2(bound) };
+  };
 
   // ------------------------------------------------------------------------------------------------ alert
   if (want('alert')) {
@@ -129,7 +207,8 @@
     const mkT = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((e) => e.style.display !== 'none' && e.querySelector('.iw-mk__tag b').textContent === T.name);
     const tagBox = w && w.el.querySelector('.iw-jt__tag').getBoundingClientRect(), discBox = w && w.el.querySelector('.iw-jt__disc').getBoundingClientRect(), tBox = mkT && mkT.querySelector('.iw-mk__tag').getBoundingClientRect();
     const hit = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-    R('world view: the landing mark carries the jumper\'s name, over the spot', !!r && !!w && Math.abs(w.xy[0] - wAt[0]) < 2.5 && w.xy[1] <= wAt[1] + 2.5, { mark: r && [r2(r.x), r2(r.y), r2(r.z)], tag: w && w.xy, want: wAt && wAt.map(r2) });
+    const st0 = seat(w, wAt);
+    R('world view: the landing mark carries the jumper\'s name, over the spot (on it, or resting on what it clears)', !!r && !!w && st0.ok, { mark: r && [r2(r.x), r2(r.y), r2(r.z)], tag: w && w.xy, want: wAt && wAt.map(r2), seat: st0 });
     R('…stacked clear of the name tag of the teammate it lands by', !!w && !!tBox && !hit(tagBox, tBox) && !hit(discBox, tBox), { tag: tagBox && [r2(tagBox.top), r2(tagBox.bottom)], disc: discBox && [r2(discBox.top), r2(discBox.bottom)], ally: tBox && [r2(tBox.top), r2(tBox.bottom)] });
     R('…with the super-jump glyph and the countdown ring', !!w && !!w.el.querySelector('.iw-jt__icon svg') && w.ko >= 0 && w.ko < 100 && /\d/.test(w.sec), w && { sec: w.sec, ko: w.ko });
     R('minimap: the jumper\'s name on the landing spot', !!r && !!mp && near2(mp.xy, mapXY(r), 1.5), { tag: mp && mp.xy, want: r && mapXY(r).map(r2) });
@@ -139,7 +218,8 @@
     R('the TAB map opens (the diorama)', (g.rig.mapK || 0) >= 1, { mapK: g.rig.mapK });
     A.superJump(T); for (let i = 0; i < 15; i++) frame();
     const r3 = markOf(A, 'jump'), d = dioT().find((t) => t.name === A.name);
-    R('TAB map: the jumper\'s name on the landing spot', !!r3 && !!d && near2(d.xy, proj(r3.x, r3.y + 0.08, r3.z)), { tag: d && d.xy, want: r3 && proj(r3.x, r3.y + 0.08, r3.z).map(r2) });
+    const ds = dioSpot(d, r3 && proj(r3.x, r3.y + 0.08, r3.z));
+    R('TAB map: the jumper\'s name on the landing spot (or just clear of a zone / tower chip there)', !!r3 && !!d && ds.ok, { tag: d && d.xy, want: r3 && proj(r3.x, r3.y + 0.08, r3.z).map(r2), ...ds });
     J.wLayer.style.transition = 'none';   // (its CSS fade runs on composited frames, which the stepped sim holds back)
     const wOp = getComputedStyle(J.wLayer).opacity;
     J.wLayer.style.transition = '';
@@ -179,15 +259,11 @@
     step(0.3);
     const r = markOf(F, 'jump');
     const w = world().find((t) => /is-foe/.test(t.cls)), mp = mapT().find((t) => /is-foe/.test(t.cls));
-    // over its spot: straight above it, lifted only to clear a teammate's name tag it would cover (on a small window a
-    // teammate a few metres nearer on that line has its name tag there: hud-jumps.js stacks the tag above it, as in
-    // 'tags'). Its disc covers no name tag.
-    const fWant = r && proj(r.x, r.y + JUMP_UI.lift, r.z);
-    const fDisc = w && w.el.querySelector('.iw-jt__disc').getBoundingClientRect();
-    const allyTags = [...hud.markerLayer.querySelectorAll('.iw-mk')].filter((e) => e.style.display !== 'none').map((e) => e.querySelector('.iw-mk__tag').getBoundingClientRect());
-    const covers = !!fDisc && allyTags.some((b) => fDisc.left < b.right && b.left < fDisc.right && fDisc.top < b.bottom && b.top < fDisc.bottom);
-    R('an enemy\'s landing mark: ring + icon in the world (over its spot, on no teammate\'s name tag) and on the minimap', !!r && !!w && !!mp && Math.abs(w.xy[0] - fWant[0]) < 2.5 && w.xy[1] <= fWant[1] + 2.5 && !covers,
-      { w: w && w.xy, want: fWant && fWant.map(r2), lifted: !!(w && fWant) && r2(fWant[1] - w.xy[1]), covers, mp: !!mp });
+    // over its spot: on it, or moved only to clear a teammate's name tag it would cover (on a small window a teammate a
+    // few metres nearer on that line has its name tag there: hud-jumps.js stacks the tag above it, as in 'tags')
+    const fWant = r && proj(r.x, r.y + JUMP_UI.lift, r.z), fs = seat(w, fWant);
+    R('an enemy\'s landing mark: ring + icon in the world (over its spot, on no teammate\'s name tag) and on the minimap', !!r && !!w && !!mp && fs.ok,
+      { w: w && w.xy, want: fWant && fWant.map(r2), seat: fs, mp: !!mp });
     R('…but no name or seconds for you (the jumper\'s own team only)', !!w && !w.name && getComputedStyle(w.el.querySelector('.iw-jt__tag')).display === 'none' && !!mp && !mp.name, { w: w && w.name, mp: mp && mp.name });
     step(3);
   }
@@ -204,7 +280,8 @@
     R(`${label}: the return mark is up from the special's first frame (at the take-off spot)`, !!s && !!mk && mk.pos.distanceTo(origin) < 0.3, { mk: !!mk });
     // (the user still stands on it at first: the world tag stacks straight up above their own name tag)
     const wAt0 = mk && proj(mk.pos.x, mk.pos.y + JUMP_UI.lift, mk.pos.z), mAt0 = mk && mapXY(mk.pos);
-    R(`${label}: …in the world (the user's name, the special's icon) and on the minimap`, !!w0 && !!m0 && Math.abs(w0.xy[0] - wAt0[0]) < 2.5 && w0.xy[1] <= wAt0[1] + 2.5 && near2(m0.xy, mAt0, 1.5) && !!w0.el.querySelector('.iw-jt__icon svg'), { w: w0 && w0.xy, wWant: wAt0 && wAt0.map(r2), m: m0 && m0.xy, mWant: mAt0 && mAt0.map(r2) });
+    const s0 = seat(w0, wAt0);
+    R(`${label}: …in the world (the user's name, the special's icon) and on the minimap`, !!w0 && !!m0 && s0.ok && near2(m0.xy, mAt0, 1.5) && !!w0.el.querySelector('.iw-jt__icon svg'), { w: w0 && w0.xy, wWant: wAt0 && wAt0.map(r2), seat: s0, m: m0 && m0.xy, mWant: mAt0 && mAt0.map(r2) });
     R(`${label}: …the tag stands in for the beacon's own icon badge (hidden; its ring and pillar stay)`, !!mk && mk.badge.visible === false && mk.ring.visible !== false && mk.pillar.visible !== false, { badge: mk && mk.badge.visible });
     // the user moves off (Ink Jet: hovers out; Zipline: walks), the special runs out, they jump home
     U._go = new THREE.Vector3(1, 0, 0.35).normalize();
@@ -234,7 +311,8 @@
     start(U, 'zipcaster');
     for (let i = 0; i < 10; i++) frame();
     const mk = G.specials.world.find((w) => w.kind === 'return' && w.owner === U), d = dioT().find((t) => t.name === U.name && /is-return/.test(t.cls));
-    R('TAB map: the return mark with the user\'s name, on the spot', !!mk && !!d && near2(d.xy, proj(mk.pos.x, mk.pos.y + 0.08, mk.pos.z)), { tag: d && d.xy });
+    const ds = dioSpot(d, mk && proj(mk.pos.x, mk.pos.y + 0.08, mk.pos.z));
+    R('TAB map: the return mark with the user\'s name, on the spot (or just clear of a zone / tower chip there)', !!mk && !!d && ds.ok, { tag: d && d.xy, want: mk && proj(mk.pos.x, mk.pos.y + 0.08, mk.pos.z).map(r2), ...ds });
     closeTab();
   }
 
@@ -289,34 +367,6 @@
     if (me.specialActive) G.specials.end(me, 'test');
   }
 
-  // ------------------------------------------------------------------------------------------------ boxes as drawn
-  const rect = (el) => { const b = el.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
-  const shown = (el) => { if (!el) return false; const b = el.getBoundingClientRect(); return b.width > 0.5 && b.height > 0.5; };
-  const hitB = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
-  const rb = (b) => b && [Math.round(b.l), Math.round(b.t), Math.round(b.r), Math.round(b.b)];
-  const union = (els) => { let o = null; for (const e of els) { if (!shown(e) || getComputedStyle(e).opacity === '0') continue; const b = rect(e); o = o ? { l: Math.min(o.l, b.l), t: Math.min(o.t, b.t), r: Math.max(o.r, b.r), b: Math.max(o.b, b.b) } : b; } return o; };
-  // a tag's ring (unless hidden) and its label (when it has a name)
-  const tagBoxes = (t) => { const o = [], ring = t.el.querySelector('.iw-jt__ring'), lab = t.el.querySelector('.iw-jt__tag'); if (shown(ring)) o.push({ k: 'ring', ...rect(ring) }); if (t.name && shown(lab)) o.push({ k: 'label', ...rect(lab) }); return o; };
-  const clashes = (ts, extra = []) => {
-    const out = [], all = ts.map((t) => [t.name || '?', tagBoxes(t)]).concat(extra);
-    for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) for (const a of all[i][1]) for (const b of all[j][1]) if (hitB(a, b)) out.push(`${all[i][0]}.${a.k} × ${all[j][0]}.${b.k}`);
-    return out;
-  };
-  // the TAB map's pins as drawn: badge, key, name
-  // (the badge settled — its scale glides in as the map opens — and with its outline, a box-shadow of .36 u / .42 u yours)
-  const pinRects = () => [...(g.diorama?.el.querySelectorAll('.iw-pin') || [])].filter(vis).flatMap((p) => ['.iw-pin__badge', '.iw-pin__key', '.iw-pin__name'].map((q) => p.querySelector(q))
-    .filter((e) => e && shown(e)).map((e) => {
-      const badge = e.classList.contains('iw-pin__badge'), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), o = badge ? (p.classList.contains('iw-pin--self') ? 0.42 : 0.36) * u : 0;
-      if (badge) e.style.transition = 'none';
-      const b = rect(e);
-      if (badge) e.style.transition = '';
-      return { k: e.className.replace('iw-pin__', '') + (e.classList.contains('iw-pin__name') ? ':' + e.textContent : ''), l: b.l - o, t: b.t - o, r: b.r + o, b: b.b + o };
-    }));
-  // (and Zone Control's zone chips / Tower Command's tower chip)
-  const chipRects = () => [...(g.diorama?.el.querySelectorAll('.iw-dio-z') || [])].filter(vis).map((e) => e.querySelector('.iw-dio-z__tag')).filter(shown).map((e) => ({ k: 'chip:' + e.textContent, ...rect(e) }));
-  const pinClash = (ts) => { const P = pinRects().concat(chipRects()), out = []; for (const t of ts) { const lab = t.el.querySelector('.iw-jt__tag'); if (!t.name || !shown(lab)) continue; const b = rect(lab); for (const q of P) if (hitB(b, q)) out.push(`${t.name} × pin ${q.k}`); } return out; };
-  const allyTag = (a) => { const e = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((x) => x.style.display !== 'none' && x.querySelector('.iw-mk__tag b').textContent === a.name); return e ? [[a.name + '(ally tag)', [{ k: 'tag', ...rect(e.querySelector('.iw-mk__tag')) }]]] : []; };
-
   // ------------------------------------------------------------------------------------------------ two marks on one spot
   if (want('stack')) {
     const scenes = [
@@ -331,16 +381,34 @@
         mates[0].superJump(T); mates[1].superJump(T); step(1.0);
         return { who: [[mates[0], 'jump'], [mates[1], 'jump']], near: [T] };
       }],
+      // the rest of the squad (Boss Battle: five) standing round an Ink Jet user's take-off spot far up the screen, the
+      // camera looking down until the spot's tag is 3.5 u under the lowest thing hanging at the top middle: stacked up
+      // over the crowd's name tags the tags would end under the top bar / boss bar, so they go down instead
+      ['a teammate jumping to an Ink Jet user in a crowd, high on the screen', () => {
+        const U = mates[2], A = mates[0], crowd = mates.filter((a) => a !== U && a !== A), sx = 0, sz = 18;
+        const offs = [[-1.1, 0.7], [1.0, 1.4], [-0.4, 2.4], [1.5, -0.5], [0.2, 3.4], [-1.7, -0.8]];
+        put(U, sx, sz); crowd.forEach((a, i) => put(a, sx + offs[i % 6][0], sz + offs[i % 6][1]));
+        const F = J._furn(0), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100);
+        let fb = 0; for (let i = 0; i < F.boxes.n; i++) fb = Math.max(fb, F.boxes.a[i].b);
+        for (pitch = -0.12; pitch > -0.7; pitch -= 0.02) { step(0.1); if (proj(sx, JUMP_UI.lift, sz)[1] <= fb + 3.5 * u) break; }
+        start(U, 'jetpack', 12); U._go = new THREE.Vector3(1, 0, 0); step(1.2); U._go = null; step(0.2);
+        A.superJump(U); step(0.3);
+        return { who: [[U, 'return'], [A, 'jump']], near: crowd, top: { pitch: r2(pitch), furnBottom: r2(fb), spotY: r2(proj(sx, JUMP_UI.lift, sz)[1]) } };
+      }],
     ];
     for (const tab of [false, true]) for (const [label, set] of scenes) {
       reset(); if (tab) openTab();
-      const { who, near } = set(), names = who.map(([a]) => a.name);
+      const { who, near, top } = set(), names = who.map(([a]) => a.name);
       if (!tab) {
         const w = world().filter((t) => names.includes(t.name)), mp = mapT().filter((t) => names.includes(t.name));
         const wc = clashes(w, near.flatMap(allyTag));
-        // each still straight over its own spot (stacked up, never sideways)
-        const off = who.map(([a, kind]) => { const r = markOf(a, kind), t = w.find((x) => x.name === a.name); if (!r || !t) return 'missing ' + a.name; const p = proj(r.x, r.y + JUMP_UI.lift, r.z); return Math.abs(t.xy[0] - p[0]) < 2.5 && t.xy[1] <= p[1] + 2.5 ? '' : `${a.name} off its spot`; }).filter(Boolean);
-        R(`${label}: world view — both names, no tag over another (or the teammate's name tag), each over its spot`, w.length === 2 && wc.length === 0 && off.length === 0, { names: w.map((t) => t.name), clash: wc, off, at: w.map((t) => t.xy) });
+        // each over its own spot: on it, or straight up / down its column resting on what it clears (seat)
+        const seats = who.map(([a, kind]) => { const r = markOf(a, kind), t = w.find((x) => x.name === a.name); return { who: a.name, ...seat(t, r && proj(r.x, r.y + JUMP_UI.lift, r.z)) }; });
+        const tm = topMiddle(), overTop = w.flatMap((t) => { const b = tagRect(t); return b ? tm.filter((o) => hitB(b, o)).map((o) => `${t.name} × ${o.k}`) : []; });
+        // (the crowd scene: the column over the spot meets the top middle, so at least one tag went down)
+        const down = !top || seats.some((x) => x.dy > 2.5);
+        R(`${label}: world view — both names, no tag over another (nor a teammate's name tag, nor the top middle), each over its spot (on it, or resting on what it clears)`,
+          w.length === 2 && wc.length === 0 && overTop.length === 0 && seats.every((x) => x.ok) && down, { names: w.map((t) => t.name), clash: wc, overTop, seats, ...(top ? { top, down } : {}) });
         const frame = rect(hud.mapFrame), labs = mp.map((t) => rect(t.el.querySelector('.iw-jt__tag')));
         const mc = [];
         for (let i = 0; i < mp.length; i++) for (let j = 0; j < mp.length; j++) {
@@ -353,8 +421,8 @@
         const rings = mp.filter((t) => shown(t.el.querySelector('.iw-jt__ring'))).length;
         R(`${label}: minimap — both names (inside the map), one ring on the shared spot, no name over another`, mp.length === 2 && mc.length === 0 && inFrame && rings === 1, { names: mp.map((t) => t.name), clash: mc, inFrame, rings, labels: labs.map(rb) });
       } else {
-        const d = dioT().filter((t) => names.includes(t.name)), dc = clashes(d), pc = pinClash(d);
-        R(`${label}: TAB map — both names, no tag over another, no label over a pin`, d.length === 2 && dc.length === 0 && pc.length === 0, { names: d.map((t) => t.name), clash: dc, pins: pc, at: d.map((t) => t.xy) });
+        const d = dioT().filter((t) => names.includes(t.name)), dc = clashes(d), pc = pinClash(d), zc = discChip(d);
+        R(`${label}: TAB map — both names, no tag over another, no label over a pin (badge, stem, key, name), no disc over a chip`, d.length === 2 && dc.length === 0 && pc.length === 0 && zc.length === 0, { names: d.map((t) => t.name), clash: dc, pins: pc, chips: zc, at: d.map((t) => t.xy) });
         closeTab();
       }
       step(2.5);
@@ -376,7 +444,7 @@
       if (!d.length || pc.length) bad.push({ at: [dx, dz], tag: d.length, pins: pc });
       closeTab(); step(2);
     }
-    R('TAB map: a jump coming down by your pin and a teammate\'s, from every side — its label covers no pin (badge, key, name)', bad.length === 0 && n === 8, { bad });
+    R('TAB map: a jump coming down by your pin and a teammate\'s, from every side — its label covers no pin (badge, stem, key, name)', bad.length === 0 && n === 8, { bad });
     // a jump coming down on a zone's chip / onto the tower's spot (Zone Control / Tower Command)
     const spots = m.zones ? m.zones.zones.map((z) => [z.center[0], z.center[2]]) : m.tower ? [[m.tower.pos.x + 2.5, m.tower.pos.z]] : [];
     if (spots.length) {
@@ -385,12 +453,39 @@
         reset(); openTab();
         put(mates[2], x, z); step(0.1);
         mates[0].superJump(mates[2]); step(1.0);
-        const d = dioT().filter((t) => t.name === mates[0].name), pc = pinClash(d), ch = chipRects().length;
-        if (!d.length || pc.length || !ch) bad2.push({ at: [r2(x), r2(z)], tag: d.length, chips: ch, hits: pc });
+        const d = dioT().filter((t) => t.name === mates[0].name), pc = pinClash(d), zc = discChip(d), ch = chipRects().length;
+        // (its disc moved off a chip's text goes no further than the next place round its spot: a disc and a half)
+        const r = markOf(mates[0], 'jump'), at = r && proj(r.x, r.y + 0.08, r.z), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), D = (2 * 0.83 * 2.1 + 0.35) * u;
+        const off = d[0] && at ? Math.hypot(d[0].xy[0] - at[0], d[0].xy[1] - at[1]) : null;
+        if (!d.length || pc.length || zc.length || !ch || !(off <= 1.5 * D)) bad2.push({ at: [r2(x), r2(z)], tag: d.length, chips: ch, hits: pc.concat(zc), off: off && r2(off), D: r2(D) });
         closeTab(); step(2.5);
       }
-      R(`TAB map: a jump coming down on ${m.zones ? 'each zone' : 'the tower'} — its label clear of the ${m.zones ? 'zone' : 'tower'} chip and the pins`, bad2.length === 0, { spots: spots.length, bad: bad2 });
+      R(`TAB map: a jump coming down on ${m.zones ? 'each zone' : 'the tower'} — its label clear of the ${m.zones ? 'zone' : 'tower'} chip and the pins, its disc off the chip's text (just beside its spot)`, bad2.length === 0, { spots: spots.length, bad: bad2 });
     }
+  }
+
+  // ------------------------------------------------------------------------------------------------ sizes on this window
+  if (want('size')) {
+    reset();
+    const u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), fsxs = Math.max(11, 0.8 * u);
+    const px = (el) => (el ? parseFloat(getComputedStyle(el).fontSize) : 0);
+    // as drawn: the computed size times the scale it is drawn at (its box as drawn over its box as laid out)
+    const drawnPx = (el) => { if (!el || !el.offsetHeight) return 0; return px(el) * el.getBoundingClientRect().height / el.offsetHeight; };
+    // a teammate jumping to you (the alert); another jumping to a teammate far up the deck (~56 m from the camera: its
+    // world tag at its smallest) — and its name on the minimap
+    mates[0].superJump(me);
+    put(mates[2], 0, 30); step(0.1);
+    mates[1].superJump(mates[2]); step(0.3);
+    const al = J.aLayer.querySelector('.iw-jal__i:not(.is-out)');
+    const A = al && { name: px(al.querySelector('.iw-jal__name')), sub: px(al.querySelector('.iw-jal__txt small')), sec: px(al.querySelector('.iw-jal__sec')) };
+    R(`the alert at ${innerWidth}×${innerHeight}: its name, "is jumping to you!" and the seconds at 11 px or more (the game's floor, --fs-xs)`, !!A && A.name >= 11 && A.sub >= 11 && A.sec >= 11, A);
+    const w = world().find((t) => t.name === mates[1].name), mp = mapT().find((t) => t.name === mates[1].name);
+    const sc = w ? +((/scale\(([\d.]+)\)/.exec(w.el.style.transform) || [])[1] || 1) : null;
+    const wn = w && drawnPx(w.el.querySelector('.iw-jt__name')), ws = w && drawnPx(w.el.querySelector('.iw-jt__sec'));
+    R(`a far teammate's world tag (shrunk to ${sc}): its name drawn no smaller than the teammates' own name tags at their smallest (0.82 × ${r2(fsxs)} px)`, !!w && sc < 0.8 && wn >= 0.82 * fsxs - 0.05, { sc, name: wn && r2(wn), sec: ws && r2(ws), want: r2(0.82 * fsxs) });
+    const mn = mp && px(mp.el.querySelector('.iw-jt__name'));
+    R('…and on the minimap: its name at 11 px or more', !!mp && mn >= 11, { name: mn });
+    step(3);
   }
 
   // ------------------------------------------------------------------------------------------------ the alerts' place
@@ -400,9 +495,6 @@
     calm([J.aLayer, hud.callouts, hud.zcalls, hud.countLayer]);   // (their glides: the resting place is what's checked)
     const alertEls = () => [...J.aLayer.querySelectorAll('.iw-jal__i:not(.is-out)')];
     const aBoxes = () => { const els = alertEls(); calm(els); return els.map((e) => ({ k: e.querySelector('.iw-jal__name').textContent, ...rect(e) })); };
-    const furn = () => [['top bar', hud.top], ['zone chip', hud.zo], ['tower track', hud.tw], ['boss bar', hud.boss && hud.boss.bar], ['boss emblem', hud.boss && hud.boss.emb],
-      ...[...hud.statusEl.children].map((e) => [e.textContent, e]), ...[...hud.el.querySelectorAll('.iw-lead.is-on .iw-lead__tag')].map((e) => ['LEAD', e])]
-      .filter(([, e]) => e && shown(e)).map(([k, e]) => ({ k, ...rect(e) }));
     const against = (A, B) => { const out = []; for (const a of A) for (const b of B) if (hitB(a, b)) out.push(`${a.k} × ${b.k}`); return out; };
     mates[0].superJump(me); step(0.2);
     let A = aBoxes(), F = furn();
@@ -412,7 +504,7 @@
       const el = m.mode === 'zones' ? hud.zo : hud.tw, cls = m.mode === 'zones' ? ['is-ot', 'is-shift'] : ['is-ot', 'has-status'];
       const had = cls.map((c) => el.classList.contains(c)), txt = hud.twStatus.textContent;
       el.classList.add(...cls); if (m.mode === 'tower') hud.twStatus.textContent = 'CONTESTED';
-      J._placeAlerts();
+      J._placeAlerts(J._furn(0));
       A = aBoxes(); F = furn();
       R(`…and with ${m.mode === 'zones' ? 'OVERTIME + ZONE SHIFT' : 'OVERTIME + a status'} under the timer`, A.length === 1 && against(A, F).length === 0, { alert: A.map(rb), hits: against(A, F), furn: F.map((f) => [f.k, ...rb(f)]) });
       cls.forEach((c, i) => el.classList.toggle(c, had[i])); hud.twStatus.textContent = txt;

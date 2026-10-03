@@ -17,7 +17,7 @@
 //                discs side by side, each label clear of the pins
 //   alert3-call  three teammates jumping to you at once (side by side) and a streak callout, dropped below them
 //   alert-tracked  a teammate jumping to you while you're TRACKED and POISONED: the row under the badges
-//   (a small window, W < 1400: only the alert scenes; Boss Battle: no foe scenes, the boss stands still)
+//   (every scene at every window size — W=960 H=600 for a small one; Boss Battle: no foe scenes, the boss stands still)
 //   SCENES=tools/botlab/scenes/jump-ui.js MAP=halyard MODE=turf OUT=… tools/botlab/run.sh tools/botlab/hud-shots.cjs
 //   (tools/botlab/jobs/batch5/jumpui/shots.sh does that and turns them into JPEGs)
 (async () => {
@@ -27,7 +27,7 @@
   if (g.settings.quality !== 'high') { g._setSettings({ quality: 'high' }); for (let i = 0; i < 3; i++) dbg.step(1000 / 60); }
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const me = m.local, foes = m.actors.filter((a) => a.team !== me.team), mates = m.actors.filter((a) => a.team === me.team && a !== me);
-  const small = innerWidth < 1400, boss = m.mode === 'boss';
+  const boss = m.mode === 'boss';
   if (boss && m.boss) m.boss.brain.update = () => {};
   const zero = (a) => { a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.sub = a.intent.jump = a.intent.special = a.intent.squid = false; };
   for (const a of m.actors) if (a.bot) a.bot.update = () => { zero(a); if (a._go) a.intent.move.copy(a._go); };
@@ -96,13 +96,12 @@
     look(way, -0.2); step(0.4);
     M1.superJump(me); M2.superJump(me); M3.superJump(me); step(0.5);
   }, 900, () => g.hud._callout('FIRST SPLAT!', null, false));
-  if (!small) add('alert', () => {
+  add('alert', () => {
     clearAll();
     put(me, at(0, 0)); put(M2, at(8, 3.5)); put(M3, at(11, -4));
     look(way, -0.2); step(0.4);
     M1.superJump(me); step(0.95);
   }, 700);
-  if (small) { window.__hudScenes = scenes; return scenes.map((sc) => ({ name: sc.name })); }
   // ---- a teammate jumping to another teammate, seen in the world (and on the minimap)
   add('world', () => {
     clearAll();

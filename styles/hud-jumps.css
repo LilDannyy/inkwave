@@ -38,11 +38,14 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 .iw-jt.is-home .iw-jt__disc, .iw-jt:not(.is-return):not(.is-charge) .iw-jt__disc { animation: iw-jt-beat .5s ease-in-out infinite; }
 @keyframes iw-jt-beat { 50% { scale: 1.1; } }
 
-/* world view: the disc floats over the spot (hud-jumps.js lifts it JUMP_UI.lift m) */
+/* world view: the disc floats over the spot (hud-jumps.js lifts it JUMP_UI.lift m). The whole tag shrinks with distance;
+   the label is scaled back up from its top middle (hud-jumps.js: never under JUMP_UI.labelMin, as the teammates' name tags) */
 .iw-jt.is-world { opacity: .96; transition: opacity .18s; }
+.iw-jt.is-world .iw-jt__tag { transform-origin: 50% 0; }
 /* the other team's tag where walls hide its spot (JUMP_UI.foeThroughWalls) */
 .iw-jt.is-world.is-occl { opacity: 0; }
-/* minimap: just the ring (the map draws its own landing ring / return badge underneath) and a small name beside it */
+/* minimap: just the ring (the map draws its own landing ring / return badge underneath) and a small name beside it
+   (never under the game's 11 px floor, --fs-xs) */
 .iw-jt.is-map { --d: calc(var(--u) * 1.5); }
 .iw-jt.is-map .iw-jt__disc { background: none; box-shadow: none; animation: none; }
 .iw-jt.is-map .iw-jt__icon { display: none; }
@@ -51,12 +54,12 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 .iw-jt.is-map .iw-jt__ring .b { stroke-width: 9.5; }
 /* (the name over the ring; --lx keeps it inside the map's frame) */
 .iw-jt.is-map .iw-jt__tag { top: auto; bottom: calc(var(--d) * .66); translate: calc(-50% + var(--lx, 0px)) var(--ly, 0px); padding: 0; background: none; box-shadow: none; color: #fff;
-  font: 800 calc(var(--u) * .74) / 1 'Rubik', sans-serif; text-shadow: 1px 1px 0 var(--k), -1px 1px 0 var(--k), 1px -1px 0 var(--k), -1px -1px 0 var(--k), 0 0 3px var(--k); }
+  font: 800 max(11px, calc(var(--u) * .74)) / 1 'Rubik', sans-serif; text-shadow: 1px 1px 0 var(--k), -1px 1px 0 var(--k), 1px -1px 0 var(--k), -1px -1px 0 var(--k), 0 0 3px var(--k); }
 .iw-jt.is-map .iw-jt__sec { display: none; }
 /* a second mark on the spot of an older one: one ring for the spot, the names stacked over it */
 .iw-jt.is-map.is-merged .iw-jt__disc { display: none; }
 .iw-map.is-expanded .iw-jt.is-map { --d: calc(var(--u) * 2.4); }
-.iw-map.is-expanded .iw-jt.is-map .iw-jt__tag { font-size: calc(var(--u) * 1.05); }
+.iw-map.is-expanded .iw-jt.is-map .iw-jt__tag { font-size: max(11px, calc(var(--u) * 1.05)); }
 /* TAB map: on the floor at the spot, the label under it, or above / beside it clear of the pins (drawn under the pins) */
 .iw-jt.is-dio { --d: calc(var(--u) * 2.1); opacity: var(--pinK, 1); }
 .iw-jt.is-dio .iw-jt__tag { top: calc(var(--d) * .5 + var(--u) * .55); translate: calc(-50% + var(--lx, 0px)) var(--ly, 0px); }
@@ -80,8 +83,8 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 .iw-jal__disc .iw-jt__ring .f { stroke: #fff; }
 .iw-jal__txt { display: flex; flex-direction: column; gap: calc(var(--u) * .12); line-height: 1; }
 .iw-jal__name { font-size: calc(var(--u) * 1.45); line-height: 1; color: #fff; }   /* (white in the display outline on every ink: dark ink-text in it blots on the light inks) */
-.iw-jal__txt small { font: 800 calc(var(--u) * .82) / 1 'Rubik', sans-serif; letter-spacing: .03em; opacity: .9; }
-.iw-jal__sec { font: 900 calc(var(--u) * 1.05) / 1 'Rubik', sans-serif; font-style: normal; font-variant-numeric: tabular-nums; min-width: 2.5em; text-align: center;
+.iw-jal__txt small { font: 800 max(11px, calc(var(--u) * .82)) / 1 'Rubik', sans-serif; letter-spacing: .03em; opacity: .9; }
+.iw-jal__sec { font: 900 max(11px, calc(var(--u) * 1.05)) / 1 'Rubik', sans-serif; font-style: normal; font-variant-numeric: tabular-nums; min-width: 2.5em; text-align: center;
   padding: .32em .5em .34em; border-radius: 999px; background: rgba(21, 18, 28, .82); color: #fff; }
 .iw-jal__i.is-landing .iw-jal__disc { animation: iw-jt-beat .3s ease-in-out infinite; }
 body.iw-dio-on .iw-jal { opacity: .35; }
