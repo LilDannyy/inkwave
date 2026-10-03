@@ -236,11 +236,13 @@ landing spot and flight time). `sjNetEvent` / `sjNetFill` (netmatch.js `_playEve
 remote player's `superJumpState` with its own clock (`t`, reset as the flags change phase), so every screen reads the
 same jump: the "NAME is jumping to you!" alert on the target's own screen (a guest jumping to the host alerts the host),
 the named landing tags and their countdown, the travel lines on both maps, the world reticle, and a jump to a remote
-player who is itself mid-flight (`jumpAnchor`). An Ink Jet / Zipline user's take-off point is its ghost special's
+player who is itself mid-flight (`jumpAnchor`). A jump onto a teammate riding Tower Command's tower lands on the moving
+deck: the owner's landing follows its tower, and every other screen's copy (with netmatch's landing ring) follows that
+screen's tower from the offset at launch. An Ink Jet / Zipline user's take-off point is its ghost special's
 `origin` (the ghost starts on the special's start record, on the same timeline as the positions, so it is where the
 owner took off), and its countdown is the ghost's own clock: each screen's tags count down to the touchdown *it* will
 show. A jump onto such a user lands at that point on the jumper's screen (`jumpAnchor`; the jumper owns its jump).
-Nothing new on the wire beyond those event fields. Tested by `tools/botlab/tests/net-jump-ui.cjs` (`CLIENTS=2`).
+Nothing new on the wire beyond those event fields. Tested by `tools/botlab/tests/net-jump-ui.cjs` (`CLIENTS=2`; `NET_ARGS='scene=tower'`: the tower ride).
 
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
