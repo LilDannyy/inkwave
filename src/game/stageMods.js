@@ -325,6 +325,10 @@ export class StageRun {
   // this branch it is a no-op that returns 0 — the call sites are final.
   crushIn(shape, how) { const D = G.deploy; return D && typeof D.crushIn === 'function' ? D.crushIn(shape, how) : 0; }
 
+  // ---- warnings on the HUD (every screen from its own clock / events; not on the menu backdrop)
+  callout(text, sub, big = false) { if (!this.match.attract) G.hud?._callout?.(text, sub, big); }
+  banner(kind, text) { if (!this.match.attract) G.hud?.banner?.(kind, text); }
+
   // ---- looks
   drawMap(c, mm, tc, s, hex, t, me) { for (const R of this.h.drawMap) R.drawMap(c, mm, tc, s, hex, t, me); }
   prompt(a) { for (const R of this.h.prompt) { const p = R.prompt(a); if (p) return p; } return null; }

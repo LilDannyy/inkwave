@@ -68,7 +68,9 @@ mode variant, a Practice stage swap). In order:
 | 13 | `W.attachEnv(env)` (now, and at boot once the Environment exists) | extra surfaces, theme overlay |
 | 14 | `W.ready()` | the world rests in its starting state (eras: `apply(1, { instant })`) |
 
-`W` lives until the next world build. It survives matches on the same stage.
+`W` lives until the next world build. It survives matches on the same stage. At boot the first world is built before
+`G.game` and `G.env` exist: use the kit handed to `prop` / `colliders` / `afterMeshes` (`o.props.buildPart`), not
+`G.game.props` or `stageKit.buildLook` (which return an empty group then), and wait for `attachEnv` for the environment.
 
 **Match** (`match.js`, both `setup()` and `_setupRoster()`, offline and online, Practice and the menu backdrop):
 
@@ -116,6 +118,11 @@ ready() { this.apply(1, { instant: true }); }
   exclude, need)` skips blocks whose presence lacks `need`; face hiding, the grounded-bottom test and the bevel test pass
   the block's own presence, so a face pressed against a block of another era keeps its faces. Stages without it: 0
   everywhere, nothing changes.
+- **Colliders that move or come and go** (the existing `Level` API, which every query already sees):
+  `G.level.addDynamic({ tag, roof, perch })` → a block, `moveDynamic(b, center, half, yaw)` (it keeps `b.dp`, the move it
+  just made: what a moving block did last frame, which riders, devices and the buoy follow), `b.solid = false` to take
+  one out (park it far below to leave every query, as pods / lava do), `clearDynamic()` at match end (the movers / pods
+  do it too, after `R.dispose`). Static pieces that switch (eras) stay hash blocks: toggle `b.solid` (+ `b.absent`).
 - **Absent** (`b.absent = true` with `b.solid = false`): a block a module took out of play. The nav climb-bar test and
   `paint.regionStats` skip it (they don't read `solid` alone).
 - **Geometry attributes**: `level.geomAttrs = [{ name: 'aEra', size: 2, value: (b) => [b.presence || 7, b.eraR || 0] }]`
@@ -261,7 +268,8 @@ clamp). The lens never dips under `G.level.liquidY` + 0.15.
 - `R.prompt(a)` → a prompt string for the local player (after a running special's).
 - `R.hud(a)` → your object at `frame.stage[key]`; `noReticle: true` on it hides the reticle and the sub chip.
 - Your own DOM: append to `G.hud.root` (the gauge chip, the ride chip) and remove it at `R.dispose()`. Callouts and
-  banners: `G.hud._callout(text, sub, big)`, `G.hud.banner(kind, text)`, from your own `on('lava:warn', …)` listeners.
+  banners: `S.callout(text, sub, big)` / `S.banner(kind, text)` (skipped on the menu backdrop), from your own
+  `on('lava:warn', …)` listeners; `stageEmit(key, name, payload)` emits `key:name` on the bus.
 - Causes: `registerCause(id, { name, knocked, icon, flood, clear, byColor })` (the splat card, the feed, the screen flood).
 
 ### Queries (anyone, any time)
