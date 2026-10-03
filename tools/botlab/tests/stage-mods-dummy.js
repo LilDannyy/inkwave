@@ -10,7 +10,7 @@
 // Every hook call is logged in W.calls / R.calls (the tests read the order).
 import * as THREE from 'three';
 import { G } from '../../../src/core/ctx.js';
-import { registerStageMod } from '../../../src/game/stageMods.js';
+import { registerStageMod, registerCause } from '../../../src/game/stageMods.js';
 import { Level } from '../../../src/world/level.js';
 
 export const DUMMY = {
@@ -20,11 +20,12 @@ export const DUMMY = {
   edge: { a: [-16, 0, -30], b: [16, 0, -30], cost: 3, open: (t) => ((t % 20) + 20) % 20 < 10 },
   // no device in this disc
   disc: { x: 8, z: -12, r: 2 },
-  // the liquid: x −24…−18, z 0…10, surface L(t) = −0.6 + 0.5 sin(t · 0.25)
-  pool: { x0: -24, x1: -18, z0: 0, z1: 10, y: (t) => -0.6 + 0.5 * Math.sin(t * 0.25) },
+  // the liquid: x −24…−18, z 0…10, surface L(t) = 0.3 + 0.2 sin(t · 0.25)
+  pool: { x0: -24, x1: -18, z0: 0, z1: 10, y: (t) => 0.3 + 0.2 * Math.sin(t * 0.25) },   // (over the deck: a kid standing there is in it)
 };
 
 Level.blockField('dummyTag', (b, d) => { b.dummyTag = d.dummyTag; });
+registerCause('dummy', { name: 'Fell in the dummy pool', knocked: 'Knocked into the dummy pool', flood: '#7a3dd8', clear: true, byColor: '#7a3dd8' });
 Level.blockField('dummy', (b) => { b.dummy = true; });   // (the flag physics.skip names)
 // presence: a block that exists only in state 2 of two (an era-like mask); the level's full mask is 3
 Level.blockField('dummyState', (b, d, level) => { b.presence = d.dummyState; level.presenceAll = 3; });
@@ -62,6 +63,8 @@ class DummyRun {
     this.m = m; this.W = W; this.S = S;
     this.calls = ['match']; this.seeks = []; this.n = 0; this.edgeTypes = ['dummy']; this.drawn = 0; this.disposed = false;
     this.flagFor = new Set(); this.carried = new Set(); this.adopted = []; this.hostChanges = []; this.lastEt = null;
+    // actors this module "carries" (a ride): it owns their bodies, they take no damage, can't super jump, are never pushed
+    this.ride = new Set(); this.anchor = new THREE.Vector3(5, 0, 5); this.camN = 0; this.camAfterN = 0; this.fizzles = []; this.kills = 0;
     this.block = null;
   }
   update(dt, t) {
@@ -79,6 +82,19 @@ class DummyRun {
   netEvent(d) { this.n = d[0]; this.lastRec = d; }
   netSnapshot() { return { n: this.n }; }
   netRestore(d) { this.n = d.n; this.restored = d; }
+  // actors (owner side)
+  ownsBody(a, dt) { if (!this.ride.has(a)) return false; a.pos.x += 2 * dt; a.vel.set(2, 0, 0); return true; }
+  damageGuard(a) { return this.ride.has(a); }
+  canSuperJump(a) { return !this.ride.has(a); }
+  jumpAnchor(a) { return this.ride.has(a) ? this.anchor : null; }
+  noPush(a) { return this.ride.has(a); }
+  noShove(a) { return this.ride.has(a); }
+  kill(a) { if (!a.alive || !this.under(a.pos)) return false; this.kills++; a.splat(null, 'dummy'); return true; }
+  wet(x, z, gy) { const y = this.liquidY(x, z); return y > -Infinity && gy < y + 0.15; }
+  fizzle(p, what) { this.fizzles.push(what); }
+  botHold(b) { return this.ride.has(b.a); }
+  cam(rig, a) { if (!this.ride.has(a)) return null; this.camN++; return { glide: true, boom: 0.8, fov: 6, skip: 'dummy' }; }
+  camAfter() { this.camAfterN++; }
   // online: a flag on chosen squidkids (F.stage), the painter's stage time on splats in the pool region
   netFlag(a) { return this.flagFor.has(a.nid); }
   carryRemote(a, flag) { if (flag) this.carried.add(a.nid); else this.carried.delete(a.nid); }

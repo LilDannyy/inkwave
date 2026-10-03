@@ -49,9 +49,16 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   await install(C);
   await C.js(`__G.net.join(${JSON.stringify(code)}, 'Latey').then(() => 1)`);
   await C.until(`__G.net.state === 'match' && __G.match && __G.match.practice && __G.match.state === 'playing' && !!__G.match.dummymod && __G.netm && !__G.netm.stagePending`, 90000, 250);
-  await wait(1500);
-  a = await st(A); const c = await st(C);
-  R('a late joiner restores the module\'s state from the snapshot (n) and its clock (± 0.6 s), with seek(\'late\')', c && c.n === a.n && Math.abs(c.t - a.t) < 0.6 && c.seeks.includes('late'), { host: [a.n, a.t], joiner: c && [c.n, c.t, c.seeks] });
+  // (a joiner that is still compiling runs a few frames a second, and a follower's stage clock trails by the frames it
+  // missed until it settles: the clocks are compared once it has, within 10 s)
+  let c = null, skew = [];
+  for (let i = 0; i < 10; i++) {
+    await wait(1000);
+    a = await st(A); c = await st(C);
+    skew.push(c ? +(c.t - a.t).toFixed(2) : null);
+    if (c && Math.abs(c.t - a.t) < 0.6) break;
+  }
+  R('a late joiner restores the module\'s state from the snapshot (n) and its clock (± 0.6 s once settled), with seek(\'late\')', c && c.n === a.n && Math.abs(c.t - a.t) < 0.6 && c.seeks.includes('late'), { host: [a.n, a.t], joiner: c && [c.n, c.t, c.seeks], skew });
   await A.js(`(__G.match.dummymod.bump(), 1)`);
   await C.until(`__G.match.dummymod.n === ${a.n + 1}`, 8000).catch(() => {});
   const c2 = await st(C);

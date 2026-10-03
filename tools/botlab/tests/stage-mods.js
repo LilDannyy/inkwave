@@ -104,6 +104,37 @@
   R('G.level.liquidY: the module\'s surface in its region, the sea elsewhere', Math.abs(ly - D.DUMMY.pool.y(tl)) < 1e-6 && lo === -1.6, { ly, want: D.DUMMY.pool.y(tl), lo });
   R('match.stage.under: below the surface in the region only', S.under(P.set(-21, ly - 0.5, 5)) && !S.under(P.set(-21, ly + 0.5, 5)) && !S.under(P.set(0, -5, 0)));
 
+  // ---- 7b) actor hooks (this screen's own): a carried actor's body, damage, super jump, anchor; the camera override;
+  // a kill in the module's hazard (its cause on the splat card); wet floor for bots and shoves; sink + fizzle
+  const me = g.match.local || g.match.actors[0];
+  me.pos.set(0, 0.05, -20); me.vel.set(0, 0, 0); step(0.2);
+  Rn.ride.add(me);
+  const x0 = me.pos.x, hp0 = me.hp;
+  step(0.5);
+  const moved = me.pos.x - x0, dmg = me.damage(40, g.match.actors.find((o) => o.team !== me.team) || null);
+  const sj = me.canSuperJump(), anc = me.jumpAnchor();
+  const camN = Rn.camN;
+  R('a carried actor: the module owns its body (moved by it), no damage, no super jump, teammates land at its anchor', moved > 0.8 && moved < 1.2 && dmg === false && me.hp === hp0 && !sj && anc === Rn.anchor,
+    { moved: +moved.toFixed(3), dmg, hp: [hp0, me.hp], sj });
+  R('the camera override runs for the carried actor (cam + camAfter) and the probe\'s skip flag is cleared after', (camN > 0 && Rn.camAfterN > 0 && __G.physics.skip === null) || g.rig.target !== me,
+    { camN, after: Rn.camAfterN, target: g.rig.target === me });
+  Rn.ride.clear();
+  const { splatCause } = await import('./src/ui/hud.js');
+  let cause = null; const off = (await import('./src/core/ctx.js')).on('splatted', (e) => { if (e.victim === me) cause = e.cause; });
+  me.pos.set(-21, 0.05, 5); me.vel.set(0, 0, 0); step(0.1);
+  off();
+  const sc = splatCause('dummy', null);
+  R('a kill in the module\'s hazard (R.kill before the sea check) splats with its cause; the splat card names it', !me.alive && cause === 'dummy' && Rn.kills > 0 && sc && sc.name === 'Fell in the dummy pool',
+    { alive: me.alive, cause, kills: Rn.kills, card: sc && sc.name });
+  const { floorFor } = await import('./src/game/stageKit.js');
+  const bot = g.match.actors.find((o) => o.bot && o !== me);
+  const wetIn = bot ? bot.bot._wet(-21, 5, 0) : null, wetOut = bot ? bot.bot._wet(0, 5, 0) : null;
+  const kid = { pos: new THREE.Vector3(-10, 0.05, 5), form: 'kid' };   // (a kid on the deck beside the pool)
+  const ff = [floorFor(kid, -21, 5), floorFor(kid, 0, 5)];
+  R('wet floor: a bot reads the module\'s hazard floor as wet (and dry elsewhere); shoves never put anyone there', wetIn === true && wetOut === false && ff && !ff[0] && ff[1], { wetIn, wetOut, ff });
+  const sk = [S.sink(P.set(-21, 0.05, 5), 'test'), S.sink(P.set(0, 0.05, 5), 'test')];
+  R('sink(): true (and fizzle) inside the hazard, false elsewhere', sk[0] && !sk[1] && Rn.fizzles.includes('test'), { sk, fizzles: Rn.fizzles });
+
   // ---- 8) the minimap layer, the HUD frame
   g.minimap.update(0.05, true);
   const drawn = Rn.drawn;
