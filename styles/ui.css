@@ -3196,3 +3196,9 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-loadout .iw-wd__kits { justify-content: space-evenly; }
 .iw-loadout .iw-wd__blurb { min-height: calc(1.35em * 3); }
 .iw-loadout .iw-wd__blurb.is-kit { color: #f4f0fb; }
+/* (the sub and special weapons' names too: the lobby's SUB / SPECIAL chips show the whole name — the longest on two
+   lines — instead of "Splat Barrage"; the picker's Weapon's Own caption no smaller than 9 px, and never an ellipsis) */
+.iw-lkit__name { text-overflow: clip; }
+.iw-lob__bar .iw-lkit.is-xlong .iw-lkit__name { font-size: max(9px, calc(var(--u) * .84)); line-height: 1; white-space: normal; text-wrap: balance; letter-spacing: 0; }
+.iw-ktile__sub { flex: none; font-size: max(9px, calc(var(--u) * .62)); overflow: visible; text-overflow: clip; white-space: normal; text-wrap: balance; line-height: 1.05; }
+.iw-ktile.is-own .iw-ktile__txt { height: auto; min-height: calc(max(10px, var(--u) * 1.02) * 2.3); }   /* (a two-line caption takes room from the icon) */

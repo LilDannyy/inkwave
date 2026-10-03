@@ -29,7 +29,7 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
     const out = [], els = [...document.querySelectorAll(sel)].filter((e) => e.offsetParent !== null);
     for (const el of els) {
       const r = el.getBoundingClientRect(), cs = getComputedStyle(el), txt = el.textContent.trim(), bad = [];
-      if (want && !want.includes(txt)) bad.push('text "' + txt + '"');
+      if (want && !want.includes(txt)) bad.push('text "' + txt + '"' + (want.length === 1 ? ' not "' + want[0] + '"' : ''));
       if (el.scrollWidth > el.clientWidth + 1) bad.push('width ' + el.scrollWidth + '>' + el.clientWidth);
       if (el.scrollHeight > el.clientHeight + 2) bad.push('height ' + el.scrollHeight + '>' + el.clientHeight);
       if (r.left < -1 || r.top < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1) bad.push('off-screen ' + [r.left, r.top, r.right, r.bottom].map(Math.round));
@@ -45,16 +45,25 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
     }
     return out;
   }; 1`);
-  const fails = [];
+  const fails = [], kfails = [];
+  let sink = fails;   // (the sub / special names go to kfails: reported apart)
   const check = async (where, sel, want, need = 1) => {
+    await settled();
     const res = await J(`__nameCheck(${JSON.stringify(sel)}, ${JSON.stringify(want)})`);
     const bad = res.filter((x) => x.bad.length);
-    if (res.length < need) fails.push({ where, sel, missing: `${res.length} of ${need}` });
-    for (const b of bad) fails.push({ where, ...b });
+    if (res.length < need) sink.push({ where, sel, missing: `${res.length} of ${need}` });
+    for (const b of bad) sink.push({ where, ...b });
     return res;
   };
+  const kits = await J(`(() => { const a = __inkwave.api, nm = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.name]));
+    const own = Object.fromEntries(Object.entries(a.weapons).map(([k, w]) => [k, { sub: (a.subs[w.sub] || a.subs.bomb).name, special: (a.specials[w.special] || a.specials.slam).name }]));
+    return { subOrder: a.subOrder.filter((id) => a.subs[id]), specialOrder: a.specialOrder.filter((id) => a.specials[id]), subs: nm(a.subs), specials: nm(a.specials), own }; })()`);
+  const kitFails = {};
   const key = (code) => A.js(`(() => { window.dispatchEvent(new KeyboardEvent('keydown', { code: '${code}', key: '${code}', bubbles: true })); window.dispatchEvent(new KeyboardEvent('keyup', { code: '${code}', key: '${code}', bubbles: true })); return 1; })()`);
-  const show = async (name, ms = 1100) => { await A.js(`__inkwave.menus.show(${JSON.stringify(name)}, { force: true }); 1`); await A.until(`__inkwave.menus.current === ${JSON.stringify(name)}`, 8000); await wait(ms); };
+  // (every finite animation on the page done: the screens slide their panels in, staggered, for up to ~1 s; looped
+  // decorations — drips, blobs — never end and don't count)
+  const settled = () => A.until(`document.getAnimations().every((a) => a.playState !== 'running' || !Number.isFinite(a.effect && a.effect.getComputedTiming().endTime))`, 5000, 100).catch(() => say('(animations still running after 5 s)'));
+  const show = async (name, ms = 1100) => { await A.js(`__inkwave.menus.show(${JSON.stringify(name)}, { force: true }); 1`); await A.until(`__inkwave.menus.current === ${JSON.stringify(name)}`, 8000); await wait(Math.min(ms, 500)); await settled(); };
   const equip = (id) => A.js(`__inkwave.api.setLoadout({ weapon: ${JSON.stringify(id)} }); 1`);
   const snap = async (file) => { await wait(900); await A.shot(file, { w: 1920, q: 84 }); await wait(500); return A.shot(file, { w: 1920, q: 84 }); };
   const startW = await A.js(`__inkwave.api.getLoadout().weapon`);
@@ -116,6 +125,62 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
     }
     if (SHOTS && want('setup')) { await equip(longest); await show('setup', 1300); say(await snap(`${out}/setup-${w}x${h}.jpg`)); }
     per[S] = fails.length - f0;
+    // ---- the sub and special weapons' names in the same pickers (reported apart: kitFails), the longest main equipped:
+    //   LOADOUT's SUB / SPECIAL chips (each one stepped through with →), the kit picker (every tile, every detail name,
+    //   the "FOLLOWS YOUR <weapon>" kicker), the lobby's SUB / SPECIAL chips
+    if (want('kits')) {
+      sink = kfails; const k0 = kfails.length;
+      for (const kind of ['sub', 'special']) {
+        const ord = kind === 'sub' ? kits.subOrder : kits.specialOrder, nm = kind === 'sub' ? kits.subs : kits.specials;
+        const allK = ord.map((id) => nm[id]);
+        await equip(longest);
+        await A.js(`__inkwave.api.setLoadout({ ${kind}: ${JSON.stringify(ord[0])} }); 1`);
+        await show('loadout', 1300);
+        const chip = `[...document.querySelectorAll('.iw-loadout .iw-kit--pick')][${kind === 'sub' ? 0 : 1}]`;
+        const nameSel = `.iw-loadout .iw-kit--pick ${kind === 'sub' ? '> div > b' : '.iw-kit__row > b'}`;
+        const seen = new Set();
+        for (let i = 0; i < ord.length; i++) {
+          await A.js(`(() => { __inkwave.menus._setFocus(${chip}, { snap: true }); return 1; })()`);
+          if (i) { await key('ArrowRight'); await wait(250); }
+          const r = await check(`${S} loadout ${kind} chip`, nameSel, allK);
+          for (const x of r) seen.add(x.txt);
+        }
+        if (allK.some((n) => !seen.has(n))) sink.push({ where: `${S} loadout ${kind} chip`, missing: 'never shown: ' + allK.filter((n) => !seen.has(n)).join(', ') });
+        await A.js(`__inkwave.api.setLoadout({ ${kind}: null }); 1`);
+        // the picker (Enter on the chip): with the longest weapon name (the "FOLLOWS YOUR …" kicker), then with the
+        // weapon whose own sub / special has the longest name (the Weapon's Own tile's caption)
+        const ownLong = ids.reduce((b, id) => ((kits.own[id][kind] || '').length > (kits.own[b][kind] || '').length ? id : b), ids[0]);
+        for (const wid of [...new Set([longest, ownLong])]) {
+          await equip(wid); await show('loadout', 1100);
+          await A.js(`(() => { __inkwave.menus._setFocus(${chip}, { snap: true }); return 1; })()`); await key('Enter');
+          await A.until(`!!document.querySelector('.iw-kpick .iw-ktile')`, 5000); await wait(500);
+          await check(`${S} ${kind} picker tiles`, '.iw-kpick .iw-ktile__name', null, ord.length);
+          await check(`${S} ${kind} picker own (${names[wid]})`, '.iw-kpick .iw-ktile__sub', [kits.own[wid][kind]], 1);
+          const nT = wid === longest ? await A.js(`document.querySelectorAll('.iw-kpick .iw-ktile').length`) : 1;
+          for (let i = 0; i < nT; i++) {
+            await A.js(`(() => { __inkwave.menus._setFocus(document.querySelectorAll('.iw-kpick .iw-ktile')[${i}], { snap: true }); return 1; })()`); await wait(250);
+            await check(`${S} ${kind} picker detail`, '.iw-kpick .iw-kpick__dname', null);
+            await check(`${S} ${kind} picker kicker`, '.iw-kpick .iw-kpick__kick', null);
+          }
+          await key('Escape'); await wait(500);
+        }
+      }
+      // the lobby's SUB / SPECIAL chips (they show your saved pick: api.setLoadout, as the picker does)
+      await equip(longest);
+      await show('online', 600);
+      await A.until(`__G.net && __G.net.isMock`, 10000);
+      if (!(await A.js(`!!(__G.net.lobby && __G.net.lobby.code)`))) await A.js(`__G.net.create('Mocky')`);
+      await show('lobby', 1200);
+      for (const kind of ['sub', 'special']) {
+        const ord = kind === 'sub' ? kits.subOrder : kits.specialOrder, nm = kind === 'sub' ? kits.subs : kits.specials;
+        for (const id of ord) {
+          await A.js(`__inkwave.api.setLoadout({ ${kind}: ${JSON.stringify(id)} }); __G.net.setMe({ ${kind}: ${JSON.stringify(id)} }); 1`); await wait(450);
+          await check(`${S} lobby ${kind} chip`, `.iw-lkit--${kind} .iw-lkit__name`, [nm[id]]);
+        }
+        await A.js(`__inkwave.api.setLoadout({ ${kind}: null }); __G.net.setMe({ ${kind}: null }); 1`);
+      }
+      kitFails[S] = kfails.length - k0; sink = fails;
+    }
   }
   // ---- Practice's pause panel (one practice, each size, each weapon)
   if (want('pause')) {
@@ -139,5 +204,6 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
   // (grouped: one line per screen and fault, with the names it hit)
   const group = (L) => { const o = {}; for (const f of L) { const k = f.where + ' · ' + (f.bad ? f.bad.map((b) => b.replace(/[\d,]+/g, '#')).join(' + ') : 'missing ' + f.missing); (o[k] || (o[k] = new Set())).add(f.txt || ''); } return Object.entries(o).map(([k, v]) => k + ' [' + [...v].join(', ') + ']'); };
   for (const [w, h] of SIZES) R(`${w}×${h}: every weapon name whole and unclipped on every screen that shows a weapon pick`, !per[`${w}×${h}`], group(fails.filter((f) => String(f.where).startsWith(`${w}×${h}`))));
+  if (want('kits')) for (const [w, h] of SIZES) R(`${w}×${h}: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)`, !kitFails[`${w}×${h}`], group(kfails.filter((f) => String(f.where).startsWith(`${w}×${h}`))));
   R('every weapon name checked on: the main menu card, the setup chip, LOADOUT (cards, detail, vs badge, the panel on screen), the online hub chip, the lobby chip and drawer, the practice pause', fails.length === 0, { fails: fails.length, longest: names[longest] });
 };

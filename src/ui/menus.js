@@ -4190,7 +4190,6 @@ export class Menus {
     };
     // your sub / special: the profile's pick, or (none: null) the weapon's own — as the kit picker reads it
     // (a chip's short name: a three-word name keeps its first and last — Cling Charge Barrage → Cling Barrage)
-    const shortKit = (n) => { const w = String(n).split(' '); return w.length > 2 ? `${w[0]} ${w[w.length - 1]}` : String(n); };
     const myWeapon = () => { const me = meP(), lo = this._loadout(); return Ws[me && me.weapon] ? me.weapon : lo.weapon; };
     const kitOf = (kind, wid) => {
       const isSub = kind === 'sub', all = isSub ? SBS : SPS, W = Ws[wid] || {};
@@ -4209,8 +4208,8 @@ export class Menus {
         const first = !K.sig;
         K.sig = sig;
         K.icon.innerHTML = K.kind === 'sub' ? SUB_ICONS[k.id] || SUB_ICONS.bomb : specialIcon(k.id);
-        K.name.textContent = shortKit(k.def.name || k.id);
-        const n = K.name.textContent.length;   // (longer names a size down: Twister Zooka, Whirl Boomerang)
+        K.name.textContent = k.def.name || k.id;   // [b5-tuning] the whole name (was cut to its first and last words: "Splat Barrage")
+        const n = K.name.textContent.length;   // (longer names a size down: Twister Zooka, Whirl Boomerang; the longest wrap to two lines, ui.css)
         c.classList.toggle('is-long', n > 11 && n <= 13); c.classList.toggle('is-xlong', n > 13);
         c.classList.toggle('is-own', k.own);
         const what = K.kind === 'sub' ? 'Sub' : 'Special';
