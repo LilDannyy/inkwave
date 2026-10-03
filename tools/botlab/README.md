@@ -210,12 +210,28 @@ Drainbow (2026-10-03, the special: src/game/sp-drainbow.js, src/fx/drainbowFx.js
 - balance: `tools/botlab/jobs/drainbow/balance.sh <outdir> [N_TURF] [N_ZONES]` (match.cjs `SPECIALS=` forces the
   specials) + `agg.cjs`; the regressions its hook-ins touch: `tools/botlab/jobs/drainbow/regress.sh`
 
+Special rules (batch 5, `[b5-sprules]`: the gauge on a splat mid-special — specials.js `splatShare`; what outlives its
+owner — kits/boomerang.js, sp-drainbow.js; the Bubble Guard chain — src/game/sp-bubble.js; the Bomb Barrages with the
+Waddle and the Mystery — src/game/sp-barrage.js, src/ui/hud-barrage.js):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sp-rules.js tools/botlab/run.sh tools/botlab/page.cjs` — the gauge kept
+  (several shares, the sea, the respawn, no special running), the boomerang / Tempest / buoy / Drainbow / shared Bubble
+  Guard outliving its owner (the Bubble Blower unchanged), the chain (time carried, no refresh loop, one field a player,
+  each chain once, the hint line), both barrages (the Mystery: 120 throws), the bots, the order / icons
+  (`PAGE_ARGS='only=gauge,survive,chain,waddle,mystery,bots,list'`; a section that throws is one FAIL, so it also runs
+  on the code before the package)
+- `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sprules.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  — online: the chain across screens (each receiver's owner decides), the host's things outliving the host on the guest's
+  screen, the guest's Mystery / Waddle Barrage on the host's screen (`NET_ARGS='only=chain,survive,barrage'`)
+- pictures: `SCENES=tools/botlab/scenes/sprules.js MAP=halyard MODE=turf PLAY=6 OUT=… tools/botlab/run.sh
+  tools/botlab/hud-shots.cjs`; balance: `tools/botlab/jobs/batch5/sprules/balance.sh` + `agg.cjs`; regressions:
+  `tools/botlab/jobs/batch5/sprules/regress.sh`
+
 Loadout › SUB / SPECIAL picker (2026-10-03, src/ui/menus.js `_openKitPicker`: Enter / A / a click on the loadout's SUB or
 SPECIAL chip opens a grid of every option with the weapon's own first; arrows / WASD / d-pad / stick move in 2D, Enter /
 A / a click picks, Esc / B / a click outside closes; ← → on the chip still step):
 - `MAP=testbox PAGE=tools/botlab/tests/loadout-picker.js tools/botlab/run.sh tools/botlab/page.cjs` — the main menu's
-  LOADOUT, the hints, 2D moves and WASD, picks saved, Esc / B / outside with no change, the chip's ← →, Drainbow in a few
-  presses, the mouse, the weapon's own (null), the pad, and Practice (L) equipping the live player
+  LOADOUT, the hints, 2D moves and WASD, picks saved, Esc / B / outside with no change, the chip's ← →, the last special in
+  a few presses, the mouse, the weapon's own (null), the pad, and Practice (L) equipping the live player
 - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-picker.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
   — online Practice: a guest's picks in the picker reach the host's screen and the room
 - pictures: `tools/botlab/scenes/loadout-picker.js` through hud-shots.cjs (any `W` / `H`)
