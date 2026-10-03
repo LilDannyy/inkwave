@@ -848,6 +848,7 @@ export class NetMatch {
     if (a.alive && a.net.spawnPending) { a.net.spawnPending = false; a.respawn(); }   // mid-respawn: finish it here
     else if (a.alive) { a.character.setVisible(true); a.character.root.visible = true; }
     a.net.err.set(0, 0, 0); a.net.errV?.set(0, 0, 0);   // a.pos is already where it was drawn (path + offset)
+    G.deploy?.adopt(a);   // [b5-deploy] its devices (ghosts here till now) are ours: they can still be shot down and crushed
   }
 
   _ownership() { /* reserved: explicit transfers */ }

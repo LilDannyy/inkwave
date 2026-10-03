@@ -4,7 +4,7 @@
 //
 // THE DEVICES (hp: config SUBS / SPECIALS.surf)
 //   Twirl Sprinkler 100 · Hop Beacon 120 (Splatoon's Sprinkler / Squid Beakon: a few shots, not one, not a magazine) ·
-//   Surf N' Turf's buoy 350 (sp-surf.js) · Skitter Bomb 30 (the Waddle's) — on the ground (running or winding up); shot down it pops
+//   Surf N' Turf's buoy 350 (sp-surf.js) · Skitter Bomb 60 (two shots of most guns) — on the ground (running or winding up); shot down it pops
 //   harmlessly: no blast, no damage, a puff, its windup cancelled. The Drip Curtain keeps its own rule (it soaks enemy
 //   shots and fades: subs.js) and is one of the things the tower crushes. Hit shapes are the built size, never the drawn
 //   one ([sub-view]: subs.js hitH — tools/botlab/tests/sub-scale.js holds gameplay identical at any view scale).
@@ -28,16 +28,19 @@
 // sprinkler, beacon, Drip Curtain or buoy it overlaps (crush): a crunch (device_crunch, a burst, a little shake),
 // 'device:down' { how: 'crush' }. Anything on its deck rides it and is never crushed (a buoy on its deck did already;
 // every placed / stuck device rides any moving floor now: MOVING FLOORS below). The buoy is no longer shoved by the
-// tower (sp-surf.js _pushed): the tower crushes it.
+// tower (sp-surf.js _pushed): the tower crushes it. A Lurk Mine (or a Cling Charge on the floor) in its way isn't on the
+// user's list: the tower pushes it aside, out of its path, still armed (_pushes) — never through it.
 //
 // ONLINE (docs/NET.md): the device's owner decides what happens to it. A hit made on another screen goes to the owner
 // (netHurt, as before). Standing fire and the tower are judged on the owner's screen against its own copies of the
 // cloud / vortex / beam / rings / tower (as tickDamage judges players on their owner's). The end record says why it went:
 // subs [2, gid, 1] shot down (a ghost Skitter pops: no blast), [2, gid, 2] crushed; the buoy [4, gid, 2] crushed. The
-// flash shows wherever the hit is seen (a ghost shot flashes a device, never hurts it).
+// flash shows wherever the hit is seen (a ghost shot flashes a device, never hurts it). A player who leaves: the host
+// takes their devices over with their squidkid (adopt); a squidkid removed from the match takes its devices with it.
 //
-// BOTS: with no foe in sight they shoot enemy beacons, sprinklers and buoys in range and sight (deployables-bots.js);
-// a Skitter Bomb hunting them is a threat to shoot down (threats → bots.js _threatScan).
+// BOTS: with nothing better to shoot (no foe in sight or on their mind) they shoot enemy beacons, sprinklers and buoys
+// in sight (deployables-bots.js: walking up to one only when free to roam, never into a noticed danger); a Skitter Bomb
+// hunting them is a threat to shoot down (threats → bots.js _threatScan).
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
@@ -55,9 +58,11 @@ const SHOOT = { spray: 'sprinkler', beacon: 'beacon', run: 'seeker', prime: 'see
 export const DEV_R = { sprinkler: 0.3, beacon: 0.3, seeker: 0.25 };   // m: the hit capsule's radius (subs.js blockShot's 0.3 + 0.04)
 export const ROLL_CD = 0.5;                                          // s between one roller's drum hits on one device
 const LIFT = 0.7;                                                    // m: a moving block's top this far over a device, rising into it, lifts it on (sp-surf.js LIFT)
+const CRUSHED = { spray: true, beacon: true, curtain: true };        // (subs states the tower crushes; the user's list — the buoy too)
+const _tries = [], _B = [null, null], _hs = [0.06, 0.5, 1], _l = [0, 0, 0];
 
 // counters (tests / match.cjs / tower-match.cjs)
-export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, lifts: 0, shoves: 0, seekerPops: 0 };
+export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, lifts: 0, shoves: 0, towerShoves: 0, seekerPops: 0, seekerThrows: 0, adopted: 0, orphans: 0 };
 export function resetDeployStats() { for (const k in DEPLOY_STATS) DEPLOY_STATS[k] = typeof DEPLOY_STATS[k] === 'object' ? {} : 0; }
 const bump = (o, k) => { o[k] = (o[k] || 0) + 1; };
 
@@ -103,6 +108,8 @@ class Deployables {
       DEPLOY_STATS.markers++;
       if (G.time - this._sndT > 0.06) { this._sndT = G.time; G.audio?.play('hit_marker', { volume: 0.4, pitch: 1.15 }); }
     });
+    on('actor:removed', (e) => { if (e?.actor) this._removed(e.actor); });
+    on('sub:use', (e) => { if (e?.kind === 'seeker') DEPLOY_STATS.seekerThrows++; });   // (the match harnesses: thrown vs popped)
   }
 
   // ---------------------------------------------------------------------------------------------- hits
@@ -188,7 +195,8 @@ class Deployables {
   carry(it) {
     const o = it.on;
     if (!o) return;
-    const b = o.b, l = o.l, h = [b.half.x, b.half.y, b.half.z];
+    const b = o.b, l = o.l, h = _l;
+    h[0] = b.half.x; h[1] = b.half.y; h[2] = b.half.z;
     if (b.solid === false || !G.level.dyn.includes(b)) return this._lost(it);
     l[o.k] = o.s * h[o.k] + o.gap;
     for (let j = 0; j < 3; j++) if (j !== o.k && Math.abs(l[j]) > h[j] + 0.05) return this._lost(it);   // (its face drew in)
@@ -250,15 +258,32 @@ class Deployables {
     if (it.onRec) this._onRec(it);
   }
 
+  // ---------------------------------------------------------------------------------------------- players leaving
+  // (online) a player who left: the host carries on their squidkid as a bot (netmatch.js _adopt, on the host's screen) —
+  // their devices, ghosts on the host's screen till now, become the host's own (the same gid: every other screen's
+  // ghosts, records and hits keep finding them), so they can still be shot down and crushed, and they carry on as the
+  // player's did (a mine trips, a sprinkler sprays, a buoy pulses). Before this a hit on one went to the player who had
+  // gone (dropped), and the tower left it standing (it crushes only its own screen's devices).
+  adopt(a) {
+    for (const it of G.subs?.items || []) if (it.owner === a && it.ghost && it.state !== 'dead') { it.ghost = false; it.pendOn = null; DEPLOY_STATS.adopted++; }
+    for (const w of G.specials?.world || []) if (w.kind === 'surf' && w.owner === a && w.ghost && !w.dead) { w.ghost = false; DEPLOY_STATS.adopted++; }
+  }
+  // a squidkid taken out of the match (Practice: a player who left; a humans-only stage — netmatch.js _remove): its
+  // devices go with it on every screen (a ghost one could never be shot or crushed again: its owner is gone)
+  _removed(a) {
+    for (const it of G.subs?.items || []) if (it.owner === a && it.state !== 'dead' && (devKind(it) || it.state === 'mine' || it.state === 'curtain' || it.state === 'stuck')) { G.subs._destroy(it); DEPLOY_STATS.orphans++; }
+    for (const w of G.specials?.world || []) if (w.kind === 'surf' && w.owner === a && !w.dead && w.phase === 'live') { w.pop(); DEPLOY_STATS.orphans++; }
+  }
+
   // ---------------------------------------------------------------------------------------------- the tower
   isTowerBlock(b, T = G.match?.tower) { return !!T && !!b && (b === T.block || b === T.pillar); }
   // tower.js update, every frame the tower moved: its body destroys the sprinklers, beacons, curtains and buoys it
   // overlaps — this screen's own (a ghost waits for its owner's word); anything riding it is left alone
   crush(T) {
     if (!T || !T.block) return;
-    const B = [T.block, T.pillar].filter(Boolean);
+    const B = _B; B[0] = T.block; B[1] = T.pillar || null;
     for (const it of G.subs?.items || []) {
-      if (it.ghost || (it.on && this.isTowerBlock(it.on.b, T)) || it.state === 'dead') continue;
+      if (it.ghost || !CRUSHED[it.state] || (it.on && this.isTowerBlock(it.on.b, T))) continue;
       const st = it.state;
       let hit = false;
       if (st === 'spray' || st === 'beacon') { const h = devBody(it, _v); hit = this._bodyIn(B, _v, h, DEV_R[devKind(it)]); }
@@ -289,7 +314,8 @@ class Deployables {
   // a vertical body (base … base + h, radius r) inside any of the blocks (sampled at its foot, middle and top)
   _bodyIn(B, base, h, r) {
     const L = G.level;
-    for (const b of B) for (const k of [0.06, 0.5, 1]) {
+    for (const b of B) for (const k of _hs) {
+      if (!b) continue;
       _v2.set(base.x, base.y + Math.min(h, Math.max(0.06, h * k)), base.z);
       if (L.pointInBlock(b, _v2, r)) return true;
     }
@@ -340,7 +366,9 @@ class Deployables {
   // riding it; from the side (a hedge spreading over it, a railcar running into it) → shoved out (out of its front the
   // way it's going, or its nearer side; never through a wall) onto the floor there; nowhere to go → crushed. Every screen
   // alike (the owner's word [4] settles a ghost; a ghost is never crushed by its own screen: it waits for [2, gid, 2]).
-  // Not the tower: it crushes what's in its way (crush). A device stuck to a wall or a ceiling is left as it is.
+  // The tower crushes what's on the user's list (crush: a sprinkler, beacon, Drip Curtain); anything else lying in its
+  // way — a Lurk Mine, a Cling Charge on the floor — it pushes aside, out of its path (its nearer side first: it isn't
+  // pushed along ahead of it), never through it. A device stuck to a wall or a ceiling is left as it is.
   _pushes(items) {
     const L = G.level, T = G.match?.tower;
     for (const it of items) {
@@ -348,7 +376,9 @@ class Deployables {
       if (it.on || !(it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || ((it.state === 'spray' || it.state === 'stuck') && it.normal && it.normal.y > 0.6))) continue;
       const p = it.pos, r = 0.3;
       for (const b of L.dyn) {
-        if (b.solid === false || this.isTowerBlock(b, T)) continue;
+        if (b.solid === false) continue;
+        const tw = this.isTowerBlock(b, T);
+        if (tw && CRUSHED[it.state]) continue;   // (the tower crushes those: crush)
         if (p.x < b.aabbMin.x - r || p.x > b.aabbMax.x + r || p.z < b.aabbMin.z - r || p.z > b.aabbMax.z + r || p.y + 0.3 < b.aabbMin.y || p.y > b.aabbMax.y - 0.04) continue;
         const ax = b.axes[0], az = b.axes[2], dx = p.x - b.center.x, dz = p.z - b.center.z;
         const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z, ex = b.half.x + r - Math.abs(lx), ez = b.half.z + r - Math.abs(lz);
@@ -360,15 +390,24 @@ class Deployables {
           this.attach(it, b.id);
           break;
         }
-        // from the side: out of its front (the way it moves) or its nearer side, where it fits
-        const mv = b.dp, mx = mv ? mv.x * ax.x + mv.z * ax.z : 0, mz = mv ? mv.x * az.x + mv.z * az.z : 0, tries = [];
+        // from the side: out of its front (the way it moves) or its nearer side, where it fits (the tower: out to its
+        // nearer side, then the other, then its front)
+        const mv = b.dp, mx = mv ? mv.x * ax.x + mv.z * ax.z : 0, mz = mv ? mv.x * az.x + mv.z * az.z : 0, tries = _tries;
+        tries.length = 0;
+        const sx = Math.sign(lx) || 1, sz = Math.sign(lz) || 1, alongX = Math.abs(mx) >= Math.abs(mz);
         if (Math.abs(mx) > 1e-5 || Math.abs(mz) > 1e-5) {
-          if (Math.abs(mx) >= Math.abs(mz)) tries.push([ax.x * Math.sign(mx), ax.z * Math.sign(mx), b.half.x + r + 0.03 - Math.sign(mx) * lx]);
+          if (alongX) tries.push([ax.x * Math.sign(mx), ax.z * Math.sign(mx), b.half.x + r + 0.03 - Math.sign(mx) * lx]);
           else tries.push([az.x * Math.sign(mz), az.z * Math.sign(mz), b.half.z + r + 0.03 - Math.sign(mz) * lz]);
         }
-        const sx = Math.sign(lx) || 1, sz = Math.sign(lz) || 1;
-        tries.push([ax.x * sx, ax.z * sx, ex + 0.03], [az.x * sz, az.z * sz, ez + 0.03]);
-        tries.sort((u, w) => u[2] - w[2]);
+        if (tw) {
+          const front = tries.pop();
+          if (alongX) tries.push([az.x * sz, az.z * sz, ez + 0.03], [-az.x * sz, -az.z * sz, b.half.z + r + 0.03 + Math.abs(lz)]);
+          else tries.push([ax.x * sx, ax.z * sx, ex + 0.03], [-ax.x * sx, -ax.z * sx, b.half.x + r + 0.03 + Math.abs(lx)]);
+          if (front) tries.push(front);
+        } else {
+          tries.push([ax.x * sx, ax.z * sx, ex + 0.03], [az.x * sz, az.z * sz, ez + 0.03]);
+          tries.sort((u, w) => u[2] - w[2]);
+        }
         let moved = false;
         for (const [ux, uz, dist] of tries) {
           const nx = p.x + ux * dist, nz = p.z + uz * dist;
@@ -376,7 +415,7 @@ class Deployables {
           const g = G.physics.raycast(_v.set(nx, p.y + 0.5, nz), DOWN, 40, _h, true);
           if (!g.hit || g.normal.y < 0.6 || g.block === b.id) continue;
           p.set(nx, g.point.y, nz); it.mesh.position.copy(p);
-          DEPLOY_STATS.shoves++;
+          DEPLOY_STATS.shoves++; if (tw) DEPLOY_STATS.towerShoves++;
           if (!this.attach(it, g.block) && !it.ghost) { it.pushT = G.time; it.pushRec = true; }   // (the word once it has settled)
           moved = true; break;
         }
@@ -416,54 +455,63 @@ class Deployables {
   // the Ink Tempest's rain, the Vortex Strike's vortex, the Howl Box's beam (per second, no hit marker: like players)
   // and Surf N' Turf's rings (a ring's damage, once a ring) on this screen's own devices — the owner judges
   _standing(dt) {
-    const own = [];
-    for (const it of G.subs?.items || []) { const k = devKind(it); if (k && !it.ghost) own.push({ obj: it, kind: k, team: it.team, pos: it.pos, mid: devMid(it, new THREE.Vector3()), r: DEV_R[k], hurt: (d, by) => G.subs._hurt(it, d, by) }); }
-    for (const w of G.specials?.world || []) if (w.kind === 'surf' && !w.ghost && !w.dead && w.phase === 'live') own.push({ obj: w, kind: 'surf', team: w.team, pos: w.pos, mid: new THREE.Vector3(w.pos.x, w.pos.y + BUOY.hitH * 0.5, w.pos.z), r: BUOY.hitR, hurt: (d, by) => w._shot(d, by) });
-    if (!own.length) return;
-    const hit = (d, dmg, by) => { DEPLOY_STATS.standing++; d.hurt(dmg, by); };
+    // (nothing standing: nothing to do — the common case, every frame)
+    const W = G.specials?.world || [], clouds = G.projectiles?.clouds;
+    let any = !!clouds?.length;
+    if (!any) for (const w of W) if (!w.dead && (w.kind === 'tornado' || (w.kind === 'speaker' && w.phase === 'blast') || (w.kind === 'surf' && w.phase === 'live'))) { any = true; break; }
+    if (!any) return;
+    // this screen's own devices (a pooled list: no garbage per frame)
+    let n = 0;
+    for (const it of G.subs?.items || []) { const k = devKind(it); if (k && !it.ghost) { devMid(it, _c); n = addOwn(n, it, k, it.team, it.pos, _c.x, _c.y, _c.z, DEV_R[k]); } }
+    for (const w of W) if (w.kind === 'surf' && !w.ghost && !w.dead && w.phase === 'live') n = addOwn(n, w, 'surf', w.team, w.pos, w.pos.x, w.pos.y + BUOY.hitH * 0.5, w.pos.z, BUOY.hitR);
+    if (!n) return;
     // the Ink Tempest (weapons.js _updateClouds): under its cloud with nothing between
     const sp = SPECIALS.storm;
-    for (const c of G.projectiles?.clouds || []) {
+    for (const c of clouds || []) {
       if (c.t >= c.dur - 0.3) continue;
       const P = c.group.position;
-      for (const d of own) {
+      for (let i = 0; i < n; i++) {
+        const d = _own[i];
         if (d.team === c.team || d.pos.y > P.y) continue;
         const dx = d.pos.x - P.x, dz = d.pos.z - P.z;
         if (dx * dx + dz * dz > sp.radius * sp.radius) continue;
         if (!G.physics.los(_v.copy(d.mid), _v2.set(d.pos.x, P.y - 0.6, d.pos.z))) continue;
-        hit(d, sp.dps * dt, null);
+        standHit(d, sp.dps * dt, null);
       }
     }
-    for (const w of G.specials?.world || []) {
+    for (const w of W) {
       if (w.dead) continue;
       if (w.kind === 'tornado') {   // the Vortex Strike (specials.js Tornado)
         const D = SPECIALS.strike, fade = clamp((w.dur - w.t) / 0.6, 0, 1);
-        for (const d of own) {
+        for (let i = 0; i < n; i++) {
+          const d = _own[i];
           if (d.team === w.team) continue;
           const dh = Math.hypot(w.pos.x - d.pos.x, w.pos.z - d.pos.z);
           if (dh > w.radius + d.r || d.pos.y < w.pos.y - 1.5 || d.pos.y > w.pos.y + 7) continue;
-          hit(d, D.dps * dt * fade, null);
+          standHit(d, D.dps * dt * fade, null);
         }
       } else if (w.kind === 'speaker' && w.phase === 'blast') {   // the Howl Box's beam (through walls)
         const D = SPECIALS.wail;
-        for (const d of own) {
+        for (let i = 0; i < n; i++) {
+          const d = _own[i];
           if (d.team === w.team) continue;
           _v.copy(d.mid).sub(w.mouth);
           const along = _v.dot(w.dir);
           if (along < -0.5 || along > w.range) continue;
-          if (_v.addScaledVector(w.dir, -along).length() < w.radius + d.r + 0.15) hit(d, D.dps * dt, null);
+          if (_v.addScaledVector(w.dir, -along).length() < w.radius + d.r + 0.15) standHit(d, D.dps * dt, null);
         }
-      } else if (w.kind === 'surf' && w.phase === 'live') this._rings(w, own);
+      } else if (w.kind === 'surf' && w.phase === 'live') this._rings(w, n);
     }
   }
   // Surf N' Turf's rings: the front crossing a device on the ground it runs on (the buoy's polar map: not behind a wall,
-  // not on a floor above or below it) hits it once a ring
-  _rings(w, own) {
+  // not on a floor above or below it) hits it once a ring (the first n of _own: this screen's own devices)
+  _rings(w, n) {
     const D = SPECIALS.surf;
     for (const R of w.rings) {
       if (R.state !== 'travel' || !R.polar) continue;
       const J = R.devs || (R.devs = new Set());
-      for (const d of own) {
+      for (let i = 0; i < n; i++) {
+        const d = _own[i];
         if (d.team === w.team || d.obj === w || J.has(d.obj)) continue;
         const dx = d.pos.x - R.c.x, dz = d.pos.z - R.c.z, dist = Math.hypot(dx, dz);
         if (dist - d.r > R.r) continue;
@@ -474,7 +522,7 @@ class Deployables {
         const g = R.polar.groundAt(th, Math.min(dist, reach));
         if (d.pos.y < g - 1.2 || d.pos.y > g + D.height) continue;
         DEPLOY_STATS.rings++;
-        d.hurt(D.damage, w.owner);
+        hurtDev(d, D.damage, w.owner);
       }
     }
   }
@@ -522,6 +570,17 @@ function curtainIn(B, it) {
   }
   return false;
 }
+
+// standing fire's list of this screen's own devices (pooled: _standing fills the first n each frame there's any)
+const _own = [];
+function addOwn(n, obj, kind, team, pos, mx, my, mz, r) {
+  const d = _own[n] || (_own[n] = { obj: null, kind: '', team: 0, pos: null, mid: new THREE.Vector3(), r: 0 });
+  d.obj = obj; d.kind = kind; d.team = team; d.pos = pos; d.mid.set(mx, my, mz); d.r = r;
+  return n + 1;
+}
+// a hit on one of them: a subs device (subs.js _hurt) or the buoy (sp-surf.js _shot)
+function hurtDev(d, dmg, by) { if (d.kind === 'surf') d.obj._shot(dmg, by); else G.subs._hurt(d.obj, dmg, by); }
+function standHit(d, dmg, by) { DEPLOY_STATS.standing++; hurtDev(d, dmg, by); }
 
 function seekerThreat(it) {
   if (it.thr) return it.thr;
