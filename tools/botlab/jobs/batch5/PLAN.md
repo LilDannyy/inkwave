@@ -123,3 +123,7 @@ The four subs; the Bazookarp engine, HUD, online and bots; the three stages; the
   2 of 4 runs there (on 50 vs off 81.4; 56.5 vs 72.5) and 0 times on the other branches, so deploy's `bots.js` /
   `botSpecials.js` changes are the suspect (bots now shoot deployables: does a bot that is shooting a device stop
   dodging?). Run it 6 times on the merged branch; if it still fails, find the cause in deploy's bot changes and fix it.
+- **`jump-ui` at 960×600, "an enemy's landing mark: ring + icon in the world and on the minimap"** failed twice in
+  jumpui JOB-5 on the Mac mini (61/62) and passed 4 of 4 in the helper's own re-runs: intermittent, and when it fails it
+  is more than a rounding miss (either the mark is missing or the tag is away from it). Make the check print which part
+  failed (the mark, its screen position, the projected point), run it 6 times on the merged branch, find the cause.
