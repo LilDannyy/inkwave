@@ -514,13 +514,15 @@ const SWIPE_ONE = [-0.06, 0.3, 0.78, 0.28, 0.9, 0.95, -0.2];
 // the support shoulder forward, `poleC` is the support elbow's bend direction there.
 const SHAFT_BOTH = {   // the roller and the brush: one long shaft, the right fist on the top grip, the left on the mid grip
   both: true, gripRoll: Math.PI, gripFlip: true, twoCarry: 1, twoAim: 1, lobbyTwo: 1,   // (the left thumb toward the right fist)
-  carry: { p: [-0.1, 0.86, 0.12], r: [0.95, 0.35, 0] },
+  carry: { p: [-0.1, 0.885, 0.12], r: [0.95, 0.35, 0] },          // (the drum resting on the deck, as the one-handed carry's)
   roll: { p: [-0.05, 0.84, 0.2], r: [0.95, 0.3, 0] },
   lobby: { p: [-0.06, 0.95, 0.12], r: [1.05, 0.45, 0] },
   trophy: { p: [-0.12, 0.8, 0.15], r: [-0.75, 0.75, 0] },      // port arms: the drum up by the left shoulder, clear of the head
   present: { p: [-0.06, 0.97, 0.15], r: [0.35, 0.4, 0] },
-  droop: { p: [-0.06, 0.8, 0.1], r: [1.25, 0.35, 0] },
-  fidget: [-0.05, 0.94, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],   // idle: lean on the shaft (anchor · head · spine)
+  droop: { p: [-0.06, 0.86, 0.12], r: [0.9, 0.35, 0] },         // the drum / bristles resting on the deck, not in it
+  run: { p: [-0.1, 0.92, 0.15], r: [0.5, 0.35, 0] },             // running: lifted off the deck (the lean would sink it)
+  smash: { p: [-0.05, 1.0, 0.15], r: [0.1, 0.05, 0] },           // the Tidal Slam's landing: the head on the deck in front
+  fidget: [-0.05, 0.97, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],   // idle: lean on the shaft (anchor · head · spine)
   twist: -0.12, clav: 0.12, poleC: [0.8, -0.5, -0.35],
 };
 const HOLD_BOTH = {
@@ -528,6 +530,8 @@ const HOLD_BOTH = {
     // flick: a two-handed swing — coiled up by the right shoulder, whipped down in front, the drum following through low
     flick: [-0.1, 0.86, 0.12, 0.95, 0.35, -0.1, 1.0, 0.1, -1.4, 0.4, -0.05, 0.9, 0.24, 0.25, 0.3, -0.05, 0.8, 0.14, 1.0] },
   brush: { ...HOLD.roller, ...SHAFT_BOTH,
+    carry: { p: [-0.1, 0.9, 0.12], r: [0.95, 0.35, 0] },   // (a little higher than the roller's: the bristles reach lower than the drum)
+    fidget: [-0.05, 1.0, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],
     // swipe: a broom's sweep — narrower than the one-handed flail, centred a little left (the off hand's side), the
     // shoulders turning through it
     swipe: [-0.01, 0.09, 0.86, 0.14, 0.95, 0.5, -0.2, 1.4, 0.2] },
@@ -548,9 +552,11 @@ const HOLD_BOTH = {
     trophy: { p: [-0.14, 0.85, 0.14], r: [-0.9, -0.15, 0] },    // raised by the right shoulder, clear of the head
     present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
+    smash: { p: [-0.05, 0.9, 0.25], r: [0.1, 0.05, 0] },         // the Tidal Slam's landing: the tip off the deck
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
     twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.15 },
 };
+const SMASH_TWO = { p: [-0.05, 0.8, 0.18], r: [1.0, 0.05, 0] };   // [b5-holds] the Tidal Slam's landing, two-handed (hold.smash)
 const HOLD_HERO = { p: [-0.14, 1.05, 0.25], r: [-0.35, 0.35, -0.2] };
 const K_SL_T = [0, 0.13, 0.25, 0.4, 0.62];
 const K_SL_X = [0, -0.08, 0.02, 0.025, 0], K_SL_Y = [0, -0.22, 0.24, 0.33, 0], K_SL_Z = [0, -0.34, 0.04, -0.04, 0];
@@ -2637,7 +2643,7 @@ export class Character {
     lerpE(X, FOOTL, 0.2, ANKLE_H, 0.06, imp); lerpE(X, FOOTLR, 0, 0.35, 0, imp);
     lerpE(X, FOOTR, -0.2, ANKLE_H, -0.1, imp); lerpE(X, FOOTRR, 0, -0.5, 0, imp);
     X[HIPS_P + 1] -= 0.25 * imp; X[SPINE] += 0.45 * imp; X[CHEST] += 0.25 * imp; X[HLP] += 0.2 * imp;
-    if (T) { lerpE(X, ANC, -0.05, 0.8, 0.18, imp); lerpE(X, ANCR, 1.0, 0.05, 0, imp); }   // (the anchor rides the crouching chest)
+    if (T) { const M = this.hold.smash || SMASH_TWO; lerpE(X, ANC, M.p[0], M.p[1], M.p[2], imp); lerpE(X, ANCR, M.r[0], M.r[1], M.r[2], imp); }   // (the anchor rides the crouching chest)
     else { lerpE(X, ANC, -0.05, this.animKind === 'roller' ? 0.5 : 0.36, 0.4, imp); lerpE(X, ANCR, this.animKind === 'roller' ? 1.2 : 1.35, 0.05, 0, imp); }
     X[KNEEL] += 0.3 * imp; X[KNEER] -= 0.3 * imp;
     X[IKL] = 1; X[AFOLT] = 1; X[AFOLR] = 0.6; X[EARS] -= 0.6 * dive; X[HANDPL] = -1;

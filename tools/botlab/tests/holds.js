@@ -8,6 +8,8 @@
 //    up into the body (kid space: the elbow's offset from the shoulder→wrist line);
 //  - the wrist: the hand's bend off the forearm (swing) ≤ WR_SWING, its twist about the forearm ≤ WR_TWIST.
 //  - the head: the weapon's long axis clear of the head (HEAD_CLR: the head's radius + the weapon's own).
+//  - the deck: the weapon's lowest vertex over the ground ≥ -FLOOR_TOL (a resting drum sits a little in) in the poses that
+//    hold still (FLOOR_STATES and the fidgets).
 // The brush, the roller, the blaster and the brolly ('both'): on the weapon, natural elbow / wrist, in every state —
 // stand (2 s idle), run, fire (blaster / brolly shots, brush swipes, roller flick), roll (fire held while moving: roller
 // roll, brush dash, blaster strafing shots; the brolly's canopy held open), jump, run-jump, a fall onto the deck, the
@@ -40,6 +42,10 @@
   const OTHERS = WEAPON_ORDER.filter((w) => !BOTH.includes(w));
   const W_ONLY = arg('w');
   const GRIP_TOL = 0.025, ELB_MIN = 28, ELB_MAX = 172, WR_SWING = 80, WR_TWIST = 100, BEND_MAX = 0.9;   // (measured: elbow 60–161°, swing ≤ 71°, twist ≤ 87°)
+  // the deck: the weapon's lowest vertex over the ground, in the poses that hold still (standing, running, the slam's
+  // landing, every menu / podium dance; a resting drum sits ~3 cm in). Not checked: the landings of a jump / fall / the
+  // respawn drop and the roll's pressed drum, a few frames deep (7–50 cm) in the one-handed hold before this change too
+  const FLOOR_TOL = 0.045, FLOOR_STATES = new Set(['stand', 'run', 'leap', 'lobby', 'idle', 'locker', 'lockershots', 'victory0', 'victory1', 'victory2', 'defeat0', 'defeat1', 'defeat2']);
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const DEG = 180 / Math.PI;
   dbg.freeze();
@@ -79,7 +85,7 @@
   // (from above the grip to the muzzle / drum / bristles), at least the head's radius (~0.12) + the weapon's own (the
   // shaft ~1.5 cm, the blaster's ink bulb ~6.6 cm, the furled canopy ~4 cm)
   const HEAD_C = V(0, 0.164, 0.014), HEAD_CLR = { roller: 0.135, brush: 0.135, blaster: 0.19, brolly: 0.16 };
-  const _w0 = V(0, 0, 0), _w1 = V(0, 0, 0), _hc = V(0, 0, 0);
+  const _w0 = V(0, 0, 0), _w1 = V(0, 0, 0), _hc = V(0, 0, 0), _bb = new THREE.Box3();
   const _a0 = V(0, 0, 0), _a1 = V(0, 0, 0), _hz = V(0, 0, 0), _gy = V(0, 0, 0), _gz = V(0, 0, 0), _hp = V(0, 0, 0);
   const measure = (ch) => {
     ch.root.updateMatrixWorld(true);
@@ -124,10 +130,15 @@
     _w0.set(0, mz.y, 0); _w1.copy(mz); w.off.localToWorld(_w0); w.off.localToWorld(_w1);
     _hc.copy(HEAD_C); B.head.localToWorld(_hc);
     const head = new THREE.Line3(_w0, _w1).closestPointToPoint(_hc, true, V(0, 0, 0)).distanceTo(_hc) / ch.kid.getWorldScale(_u).y;
-    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, ks, wTwo: ch.wTwo || 0 };
+    // the floor: the weapon's lowest point over the ground under the kid (m; below 0: through the deck)
+    _bb.makeEmpty(); w.pivot.traverseVisible((o) => { if (o.isMesh) _bb.expandByObject(o, true); });   // (every vertex: a box would sink a tilted drum)
+    const ap = ch.root.position, gy = G.level?.groundHeight?.(ap.x, ap.z, ap.y + 0.5);
+    // (not in the Tidal Slam's leap before the slam: this test plays that pose on the deck, the real one is metres up)
+    const floor = gy > -Infinity && !(ch.tr[6] < 1.9 && ch.tr[7] >= 1.4) ? _bb.min.y - gy : 9;
+    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, floor, ks, wTwo: ch.wTwo || 0 };
   };
   // per state: worst values over the sampled frames + the mean hand position
-  const stats = () => ({ hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
+  const stats = () => ({ flMin: 9, flAt: -1, hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
   const sample = (S, t) => {
     const r = measure(kid.character);
     S.rMax = Math.max(S.rMax, r.reach); S.axMax = Math.max(S.axMax, r.axErr); S.dwSum += r.dw;
@@ -137,8 +148,9 @@
     S.swMax = Math.max(S.swMax, r.swing); S.twMax = Math.max(S.twMax, r.twist);
     S.hx += r.hk.x; S.hy += r.hk.y; S.hz += r.hk.z; S.dSum += r.dist; S.two += r.wTwo;
     if (r.head < S.hdMin) { S.hdMin = r.head; S.hdAt = +t.toFixed(2); }
+    if (r.floor < S.flMin) { S.flMin = r.floor; S.flAt = +t.toFixed(2); }
   };
-  const fin = (S) => ({ head: +S.hdMin.toFixed(3), headAt: S.hdAt, reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
+  const fin = (S) => ({ floor: +S.flMin.toFixed(3), floorAt: S.flAt, head: +S.hdMin.toFixed(3), headAt: S.hdAt, reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
     hand: [+(S.hx / S.n).toFixed(3), +(S.hy / S.n).toFixed(3), +(S.hz / S.n).toFixed(3)], dMean: +(S.dSum / S.n).toFixed(4), dw: +(S.dwSum / S.n).toFixed(4), two: +(S.two / S.n).toFixed(3) });
   // run `s` seconds of sim; sample every `every` frames once `from` s have passed
   const run = (S, s, from = 0, every = 1, each) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) { kid.ink = 100; kid.hp = 1e6; if (each) each(i / 60); frame(); if (S && i / 60 >= from && i % every === 0) sample(S, i / 60); } };
@@ -239,6 +251,7 @@
       R(`${w} ${st}: the off hand on the weapon (≤ ${GRIP_TOL * 100} cm) every frame`, grip, { dMax: r.dMax, at: r.dAt, n: r.n });
       R(`${w} ${st}: a natural elbow and wrist`, elb && wr, { elbow: r.elbow, bend: r.bend, swing: r.swing, twist: r.twist });
       R(`${w} ${st}: the weapon clear of the head (≥ ${HEAD_CLR[w]} m from its centre)`, r.head >= HEAD_CLR[w], { head: r.head, at: r.headAt });
+      if (FLOOR_STATES.has(st)) R(`${w} ${st}: the weapon not through the deck (lowest point ≥ ${-FLOOR_TOL * 100} cm)`, r.floor >= -FLOOR_TOL, { floor: r.floor, at: r.floorAt });
     }
     // idle fidgets: none that needs the free hand is ever picked, and each one it can pick keeps the hand on
     {
@@ -249,9 +262,10 @@
       R(`${w}: idle fidgets never need the off hand (picks)`, !names.some((n) => n === 'goggles' || n === 'tank' || n === 'stretch'), names);
       const S = stats();
       put(START, 0); run(null, 0.6);
-      for (const id of picks) { ch.idleT = 0; ch.nextFidget = 99; ch.fidget = id; ch.fidgetT = 0; ch.lastFidget = id; run(S, 2.4, 0, 2); }
-      const r = fin(S);
-      R(`${w}: idle fidgets keep the off hand on (and the weapon off the head)`, r.dMax <= GRIP_TOL && r.elbow[0] >= ELB_MIN && r.swing <= WR_SWING && r.twist <= WR_TWIST && r.head >= HEAD_CLR[w], r);
+      const fl = {};   // (each fidget's lowest weapon point)
+      for (const id of picks) { const f0 = S.flMin; S.flMin = 9; ch.idleT = 0; ch.nextFidget = 99; ch.fidget = id; ch.fidgetT = 0; ch.lastFidget = id; run(S, 2.4, 0, 2); fl[FID[id]] = +S.flMin.toFixed(3); S.flMin = Math.min(f0, S.flMin); }
+      const r = { ...fin(S), fl };
+      R(`${w}: idle fidgets keep the off hand on (and the weapon off the head and the deck)`, r.dMax <= GRIP_TOL && r.elbow[0] >= ELB_MIN && r.swing <= WR_SWING && r.twist <= WR_TWIST && r.head >= HEAD_CLR[w] && r.floor >= -FLOOR_TOL, r);
       res.fidgets = r;
     }
   }
