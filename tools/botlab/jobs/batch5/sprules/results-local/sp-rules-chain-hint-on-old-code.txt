@@ -1,0 +1,6 @@
+# fix round 1: sp-rules only=chain, the NEW hint checks run against the OLD hint code (src/main.js + src/game/sp-bubble.js from c9ba0fe), locally, 2026-10-04
+# With the fix: the same section 10/10.
+FAIL chain: a copy's hint line only with a teammate who could take it within undefined m (none far off, the line close by)  {"pFar":"Bubble Guard 5s — touch a teammate to pass it on","pNear":"Bubble Guard 5s — touch a teammate to pass it on"}
+FAIL chain: on the HUD — you with a copy: "… pass it on" with a teammate close by, not with none near; a teammate's Cheer Orb charging: the chain's line goes (the cheer prompt shows)  {"meCopy":6.38,"hFar":"Bubble Guard 7s — touch a teammate to pass it on","hNear":"Bubble Guard 7s — touch a teammate to pass it on","hCheer":"Bubble Guard 7s — touch a teammate to pass it on","pCheer":"Bubble Guard 7s — touch a teammate to pass it on","charging":true}
+RESULT 8/10
+console errors: none

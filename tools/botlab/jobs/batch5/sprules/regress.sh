@@ -13,7 +13,7 @@ one() {   # name env… -- harness
   if [ -n "$ONLY" ] && ! [[ " $ONLY " == *" $name "* ]]; then return 0; fi
   env "$@" > "$LOG/$name.log" 2>&1
   echo "== $name: $(grep -E '^RESULT' "$LOG/$name.log" | tail -1) $(grep -c '^FAIL' "$LOG/$name.log") FAIL"
-  grep -E '^FAIL|HARNESS|WATCHDOG|MAP MISMATCH|^console errors: [^n]' "$LOG/$name.log" | cut -c1-400
+  grep -E '^FAIL|HARNESS|WATCHDOG|MAP MISMATCH|^console errors: [^n]|^c[0-9] console: [^n]' "$LOG/$name.log" | cut -c1-400   # (c0 / c1 console: the online tests' clients)
 }
 export -f one; export LOG RUN T ONLY
 # the batch (PAR at once)
