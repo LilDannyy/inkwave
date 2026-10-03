@@ -53,22 +53,39 @@ Battle). Read `README.md`, `tools/botlab/README.md` and the docs your package to
   online tests use the local relay the harness starts.
 - Audio tests (`sfx-cues`, `audio-pause`) only pass when run alone.
 
-**On the Mac mini (about 5× faster; the user wants it used for everything heavy):** a Claude session there called
-"Inkwave botlab helper" runs `tools/botlab/run.sh` jobs from its clone of the fork. Its replies cannot reach you, so
-results come back through git:
-1. Commit a job file `tools/botlab/jobs/batch5/<your key>/JOB-<n>.md`: the exact commands, how many runs, what to
-   summarise (ask for compact RESULT lines / summaries, never raw dumps).
-2. `git push fork HEAD:botlab-b5-<your key>` (only that branch name, never force; before any later push,
-   `git fetch fork botlab-b5-<your key>` and merge it, because the helper pushes result commits onto it). Never write
-   under `results/` yourself.
-3. Load SendMessage (`ToolSearch` with `select:SendMessage`) and message "Inkwave botlab helper":
-   `JOB-<n> on botlab-b5-<your key> @ <sha>: see tools/botlab/jobs/batch5/<your key>/JOB-<n>.md`. The message is what
-   starts the job; the helper does not poll while idle. Several builders share it, so jobs queue.
-4. It commits `tools/botlab/jobs/batch5/<your key>/results/JOB-<n>.txt` on that branch and pushes. Poll with
-   `git fetch fork botlab-b5-<your key> && git show fork/botlab-b5-<your key>:tools/botlab/jobs/batch5/<your key>/results/JOB-<n>.txt`
-   every 4–5 minutes (keep working meanwhile). If a result seems missing, look at `botlab-b5-<your key>-results` too.
-5. Send it: every regression batch, every multi-match balance set, every repeat-for-flakiness run, lightmap bakes of a
-   whole stage. Keep local only what you need to iterate.
+**On the Mac mini (about 5× faster; the user wants it used for everything heavy):** an autonomous runner there watches
+the fork and runs job scripts from your scratch branch by itself, with no Claude session involved, so it keeps working
+through usage limits. This is the protocol (it replaced the older "message the helper" one on 2026-10-04):
+1. Write a job script `tools/botlab/jobs/batch5/<your key>/JOB-<n>.sh` (plain bash; the folder name must equal your
+   key). Its first lines are comments the runner reads:
+   - `# kind: tests` (page tests, online tests, a few matches for errors: these run first) or `# kind: balance`;
+   - optionally `# after: JOB-<m>` (wait for that job's result on your branch);
+   - optionally `# push: tools/botlab/jobs/batch5/<your key>/out/*.jpg` (up to 20 files, each ≤ 1 MB, only under your
+     `out/` folder, are committed back with the results: this is how you get pictures made on the Mac mini).
+2. The script runs with cwd = the repo root of your branch's head, and may rely on these env vars: `BOTLAB_OUT` (the
+   lock and profile dir: leave it as is), `SLOTS=3`, `PAR=3`, `JOB_OUT` (a fresh dir for this job: write compact
+   `*.txt` summaries there, their first 150 lines come back), `JOB_KEY`, `JOB_N`, `JOB_SHA`, `JOB_BRANCH`.
+   **Do not set a job-wide `OUT`**: `match.cjs`, `page.cjs` and `netpage.cjs` read `OUT` as their own output path;
+   pass `OUT=` per command when you want one. Run up to 3 things in parallel inside your script (the lock allows 3).
+   Print clear lines: the runner keeps lines matching `== `, `### `, `RESULT`, `FAIL`, `HARNESS`, `WATCHDOG`,
+   `CONSOLE`, `FRAME ERRORS`, `FAILED`, `SUMMARY`, lines starting with `#`, and the log's last 15 lines.
+3. The runner refuses a script whose non-comment lines mention `sudo`, `launchctl`, `crontab`, `ssh`, `scp`, `curl`,
+   `wget`, `git push`, `osascript`, `killall`, `pkill`, `defaults write`, `networksetup`, `security `, `rm -rf` on a
+   home or root path, `inkwave-host`, `cloudflared` or `selfhost`. A job has 3 hours; one job runs at a time across
+   all builders, so keep jobs focused and split long ones.
+4. Commit the script and `git push fork HEAD:botlab-b5-<your key>` (only that branch name; never force; before any
+   later push, `git fetch fork botlab-b5-<your key>` and merge it, because results are pushed onto it). Never write
+   under `results/` yourself. A script that already ran is never re-run, even if you edit it: use a new `<n>`.
+5. Within about 90 s the runner picks it up. The result arrives as
+   `tools/botlab/jobs/batch5/<your key>/results/JOB-<n>.raw.txt` on your branch (head sha, exit code, wall time, the
+   kept lines, your `$JOB_OUT/*.txt`), on success, failure or timeout alike. Poll with
+   `git fetch fork botlab-b5-<your key> && git show fork/botlab-b5-<your key>:tools/botlab/jobs/batch5/<your key>/results/JOB-<n>.raw.txt`
+   every 4–5 minutes and keep working meanwhile. If it seems missing, look at the branch `botlab-b5-<your key>-results`.
+6. Send it: every regression batch, every repeat-for-flakiness run, lightmap bakes, picture sets you do not need
+   instantly, and balance sets. **Balance sets are capped tonight at 8 matches per mode and config** (summed over the
+   stages); the lead runs one consolidated balance pass after integration. Keep local only what you need to iterate.
+7. You do not need to message anyone. (A Claude session on the Mac mini, "Inkwave botlab helper", adds a written
+   `JOB-<n>.txt` when it is awake; do not wait for it.)
 
 ## Git
 - Commit as you go: `git -c user.name=LilDannyy -c user.email=94884334+LilDannyy@users.noreply.github.com commit`,
