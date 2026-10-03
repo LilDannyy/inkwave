@@ -1108,7 +1108,7 @@ export class BotBrain {
     // diagonal is safe) or stop.
     if (this.mvMag > 0.05 && a.grounded && !a.climbing) this._edgeGuard(a, it.move);
     // stuck recovery, based on progress toward the current waypoint: hop → skip the waypoint → replan
-    const trying = this.path && wantMove && !(CHARGES[w.kind] && (a.weaponRunner.charging || a.weaponRunner.burstT > 0));
+    const trying = this.path && wantMove && !a.specialActive?.pin && !(CHARGES[w.kind] && (a.weaponRunner.charging || a.weaponRunner.burstT > 0));   // ([b5-zipcheer] pin: a Cheer Orb's lift holds us)
     if (!trying) this.noProg = 0;
     if (this.noProg > 0.7 && this.jumpCd <= 0 && a.grounded && !this._nearWater(a, 1.2)) { it.jump = true; this.jumpCd = 1.0; }
     if (this.noProg > 1.5 && this.path && this.pi < this.path.length - 1 && !this._skipped) { this.pi++; this._skipped = true; this.bestD = Infinity; }
@@ -1429,7 +1429,7 @@ export class BotBrain {
     const a = this.a, s = a.specialActive;
     // cheer on a teammate's charging Cheer Orb
     if ((!s || s.id !== 'booyah') && Math.random() < dt * 1.3) {
-      for (const o of G.actors) { const os = o.specialActive; if (o !== a && o.team === a.team && os && os.id === 'booyah' && !os.thrown) { it.cheer = true; break; } }
+      for (const o of G.actors) { const os = o.specialActive; if (G.cheerOrb ? G.cheerOrb.helpable(a, o) : o !== a && o.team === a.team && os && os.id === 'booyah' && !os.thrown) { it.cheer = true; break; } }   // ([b5-zipcheer] one still charging)
     }
     // don't waste shots or bombs into a Mega Stamp's swing from the front (its guard deflects them)
     const ts = this.target && this.seeTimer > 0 && this.target.specialActive;
@@ -1526,6 +1526,7 @@ export class BotBrain {
       case 'booyah':
         it.squid = false;
         it.fire = s.charge >= 1 && Math.random() < dt * 3;
+        if (s.pin) { move.set(0, 0, 0); it.jump = false; }   // [b5-zipcheer] held up in the air: no walking it off
         break;
       case 'jetpack':
         it.fire = fighting && vis && dist < 30;

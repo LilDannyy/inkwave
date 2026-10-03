@@ -38,7 +38,7 @@ for (const mode of ['turf', 'zones']) {
     if (Z.length) {
       const S = (k) => Z.reduce((a, z) => a + (z[k] || 0), 0), u = Math.max(1, S(sp === 'booyah' ? 'orbs' : 'zipUses'));
       if (sp === 'booyah') console.log(`      per orb: lifted ${f2(S('lifted') / u)} (avg ${f2(S('liftM') / Math.max(1, S('lifted')))} m), cheers ${f2(S('cheers') / u)} (helping ${f2(S('helped') / u)}), orb charge from cheers ${f2(S('orbCharge') / u)}, gauge gains ${f2(S('gains') / u)} (${f1(S('gainPts') / u)} pts), splatted while held up ${f2(S('splatHeld') / u)}, damage taken held up ${f1(S('dmgHeld') / u)}`);
-      else console.log(`      per use: zips ${f2(S('zips') / u)}, hits taken mid-zip ${f2(S('zipHits') / u)} (${f1(S('zipSaved') / u)} damage saved), ink saved ${f1(S('inkSaved') / u)}`);
+      else console.log(`      per use: zips ${f2(S('zips') / u)}, hits taken mid-zip ${f2(S('zipHits') / u)} (${f1(S('zipSaved') / u)} damage saved)`);
     }
   }
   const all = M.map((x) => x.r);

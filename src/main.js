@@ -26,6 +26,7 @@ import { SpecialSystem } from './game/specials.js';
 import './game/sp-surf.js';   // Surf N' Turf registers itself (specials.js registerSpecial)
 import './game/assists.js';   // assists: G.assists (actor.splat asks it; the results show it)
 import './game/sp-drainbow.js';   // [drainbow] the Drainbow special registers itself (specials.js registerSpecial)
+import './game/sp-cheer.js';   // [b5-zipcheer] the Cheer Orb's lift, cheers and wisps (G.cheerOrb; specials.js hooks)
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { podColliders, PodLooks } from './game/pods.js';
@@ -1556,7 +1557,7 @@ class Game {
       this.minimap.toCanvas(d.x, d.z, t); d.mx = t.x / this.minimap.w; d.my = t.y / this.minimap.h;
     }
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
-    else if (m.state === 'playing' && a.alive && m.actors.some((o) => o !== a && o.team === a.team && o.specialActive?.id === 'booyah' && !o.specialActive.thrown)) prompt = 'A teammate is charging a Cheer Orb — press C to cheer it on!';
+    // ([b5-zipcheer] a teammate charging a Cheer Orb: the big bottom-middle cheer prompt is src/ui/hud-cheer.js's)
     const frame = {
       time: m.practice ? null : m.time,
       teams: a.team === 1 ? m.teamSummary().reverse() : m.teamSummary(),   // HUD: [your team, theirs]

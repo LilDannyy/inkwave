@@ -508,11 +508,20 @@ export const SPECIALS = {
     // swing in the air: one flip — hits behind you as the stamp goes over, then a longer-reaching smash in front
     flipTime: 0.5, flipReach: 2.7, flipRadius: 1.9, flipBackReach: 1.2, flipBackRadius: 1.6 },
   // a ball of ink held overhead charges over time (faster with "Yeah!" cheers); throw it once full for a huge blast
-  booyah: { id: 'booyah', name: 'Cheer Orb', blurb: 'Hold up a ball of ink that charges over time, then throw it for a huge blast. Teammates\' "Yeah!" cheers (C) charge it faster and top up their own special.',
-    charge: 4.5, cheer: 0.12, cheerSpecial: 12, autoThrow: 2.5, moveSpeed: 1.8, throwSpeed: 19.6, fuse: 1.5, radius: 8.4, killRadius: 4.6, damageMax: 220, damageMin: 60 },
+  // [b5-zipcheer] (src/game/sp-cheer.js) using it lifts you `lift` m into the air over liftTime s (less under a ceiling)
+  // and holds you there — no walking, swimming or jumping, you still turn and aim — until it's thrown or the special ends
+  // (lift 0: the old way, walking at moveSpeed). A teammate's cheer sends a wisp to each of their team's orbs still
+  // charging (+cheer of a full charge as it arrives, cheerFly s) and one into their own special gauge (+cheerGain of
+  // their full gauge as it arrives, cheerGaugeFly s; none while their own special runs).
+  booyah: { id: 'booyah', name: 'Cheer Orb', blurb: 'Rise into the air holding a ball of ink that charges over time — you can\'t move while it charges — then throw it for a huge blast. Teammates\' "Yeah!" cheers (C) send it energy and top up their own special a little.',
+    charge: 4.5, cheer: 0.12, autoThrow: 2.5, moveSpeed: 1.8, throwSpeed: 19.6, fuse: 1.5, radius: 8.4, killRadius: 4.6, damageMax: 220, damageMin: 60,
+    lift: 2.2, liftTime: 0.45, cheerGain: 0.04, cheerFly: 0.45, cheerGaugeFly: 0.6 },
   // grapple: the sub button fires a tether to latch onto surfaces and zip over; super jump back when it ends
-  zipcaster: { id: 'zipcaster', name: 'Zipline', blurb: 'Cloaked in a mysterious aura, your sub becomes a grapple: latch onto walls from afar and zip over, main weapon in hand. You super jump back when it ends (marked for everyone to see).',
-    duration: 8.5, range: 21, speed: 22, hang: 1.4, cooldown: 0.35,
+  // [b5-zipcheer] (2026-10-04, the user: "75% damage reduction while zipping … 50% faster … ink consummation during the
+  // special 30% less"): zipDamage = the share of damage taken while travelling along a zip; speed 22 → 33; inkUse = what
+  // every ink cost comes to while it runs (actor.js)
+  zipcaster: { id: 'zipcaster', name: 'Zipline', blurb: 'Cloaked in a mysterious aura, your sub becomes a grapple: latch onto walls from afar and zip over, main weapon in hand — you take a quarter of the damage while zipping, and your ink goes further. You super jump back when it ends (marked for everyone to see).',
+    duration: 8.5, range: 21, speed: 33, hang: 1.4, cooldown: 0.35, zipDamage: 0.25, inkUse: 0.7,
     // body impact at the end of every zip (or on an enemy met mid-zip): a mini explosion
     impactDirect: 100, impactSplash: 30, impactDirectR: 1.0, impactRadius: 2.4 },
   // ride a crab tank: gatling (main), mortar (sub), roll into an armoured ball (swim); the tank has HP, the rider is
