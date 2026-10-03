@@ -1,7 +1,7 @@
 #!/bin/bash
 # batch5 holds regressions (both hands on the brush / roller / blaster / brolly): the holds test (REP times), the page
-# tests the lead listed (PAR at once), net-mock, then 90 s all-bot matches (the four weapons mirrored, and the default
-# loadouts). Prints each run's RESULT and FAIL lines and the matches' console errors.
+# tests the lead listed (PAR at once), net-mock and net-holds (two clients, both weapon pairs), then 90 s all-bot matches
+# (the four weapons mirrored, and the default loadouts). Prints each run's RESULT and FAIL lines and the matches' console errors.
 #   tools/botlab/jobs/batch5/holds/regress.sh            (env: BOTLAB_OUT / SLOTS for run.sh; PAR default 3, REP default 3)
 #   ONLY="holds world-build" tools/botlab/jobs/batch5/holds/regress.sh     (just those names)
 set -u
@@ -35,6 +35,8 @@ batch+=(
 )
 for b in "${batch[@]}"; do n="${b%% *}"; want "${n%-[0-9]*}" || want "$n" && echo "$b"; done | xargs -P "$PAR" -L 1 bash -c 'one "$@"' _
 want net-mock && one net-mock CLIENTS=1 Q0='netmock=1&mockauto=0' NET=$T/net-mock.cjs $RUN tools/botlab/netpage.cjs
+want net-holds && one net-holds-a CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-holds.cjs NET_ARGS='a=roller;b=brolly' $RUN tools/botlab/netpage.cjs
+want net-holds && one net-holds-b CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-holds.cjs NET_ARGS='a=brush;b=blaster' $RUN tools/botlab/netpage.cjs
 want match && {
   match match-four MAP=halyard MODE=turf WEAPONS='brush,roller,blaster,brolly,brush,roller,blaster,brolly'
   match match-four-zones MAP=crossmarket MODE=zones WEAPONS='brolly,blaster,roller,brush,brolly,blaster,roller,brush'
