@@ -2,9 +2,10 @@
 // Hop Beacon, Twirl Sprinkler or Surf N' Turf buoy in its weapon's reach and in sight — a wall between: it isn't seen
 // (no wall-hacks) — the nearest first (a beacon, then a buoy, ahead of a sprinkler a little nearer: the jump point and
 // the rings hurt more). Footwork: it walks up until the device is well inside its reach (a straight walk with floor
-// all the way; a roller / brush runs right over it, drum or bristles down), then plants for the shots. Every weapon by
-// its own trigger: bots.js _devTrigger (a roller's flick / a brush's swipe in their window, a short spinner / splatling
-// burst, a bow ring), a charger at full charge (one shot breaks either). A device it can't break in DEV_GIVEUP s is
+// all the way; a roller / brush runs right over it, drum or bristles down; a tower rider stays on the deck), then plants
+// for the shots. Every weapon by its own trigger: bots.js _devTrigger (a roller's flick / a brush's swipe in their
+// window, a short spinner / splatling burst, a bow ring), a charger at full charge (one shot breaks either). A device it
+// can't break in DEV_GIVEUP s is
 // left alone for a while. It takes over sp-surf-bots.js surfShootAim (buoys only, steady-trigger weapons only) in
 // BotSpecials.act; SURF_BOT.shots still counts the buoys. (A Skitter Bomb hunting a bot is a threat: deployables.js
 // threats → bots.js _threatScan.)
@@ -61,12 +62,15 @@ export function devShootAim(sense, dt, it, move) {
   // footwork: up to well inside its reach (a roller / brush: right over it), then plant for the shots
   const over = ROLL[w.kind] && d.kind !== 'surf';   // (a buoy is too big to roll over: flick / swipe at it)
   const near = over ? 0.6 : melee ? win[1] * 0.85 : Math.min(win[1] * 0.7, 9);
+  // (a tower rider keeps riding: it only shoots from where it stands — Tower Command's own footwork moves it)
+  const T = G.match?.tower, rooted = b.tRole === 'ride' || !!(T && T.riderList?.includes(a));
   let walking = false;
-  if (move && dh > near + 0.3 && dh > 0.3) {
+  if (rooted) { /* */ } else if (move && dh > near + 0.3 && dh > 0.3) {
     const ux = dx / dh, uz = dz / dh;
     if (!b._dryLine || b._dryLine(a.pos.x, a.pos.y, a.pos.z, a.pos.x + ux * Math.min(dh, 2.5), a.pos.z + uz * Math.min(dh, 2.5))) { move.set(ux, 0, uz); walking = true; }
     else move.multiplyScalar(0.2);
   } else if (move) move.multiplyScalar(0.2);
+  if (rooted && dh > win[1]) { sense._dev = null; return null; }   // (out of reach from the deck: leave it)
   a.fireFacing = Math.max(a.fireFacing || 0, 0.25);   // square up to it (a flick / swipe / roll leaves along the body)
   b.noProg = 0; b.bestD = Infinity;                    // (off its route on purpose: not "stuck")
   // (a roller's flick at something on the ground: aim low — it arcs down onto it, as bots.js does for a Waddle)
