@@ -115,10 +115,10 @@ export class CheerHud {
     } else { st.name = null; st.charge = 0; st.full = false; }
     // ---- the gauge wisps (the local player's, in flight)
     const list = G.cheerOrb ? G.cheerOrb.gauge : [];
-    let n = 0;
-    const hr = this.hud.el.getBoundingClientRect();
+    let n = 0, hr = null;   // (the HUD's box: read only while a wisp of ours flies — no layout read every frame)
     for (const w of list) {
       if (n >= this.wisps.length || !me || w.owner !== me) continue;
+      hr = hr || this.hud.el.getBoundingClientRect();
       let s0 = this._start.get(w.id);
       if (!s0) { s0 = this._from(me, hr); this._start.set(w.id, s0); }
       const sp = this.hud.sp.getBoundingClientRect(), ex = sp.left + sp.width / 2 - hr.left, ey = sp.top + sp.height / 2 - hr.top;
