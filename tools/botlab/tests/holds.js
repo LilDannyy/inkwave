@@ -133,9 +133,8 @@
     // the floor: the weapon's lowest point over the ground under the kid (m; below 0: through the deck)
     _bb.makeEmpty(); w.pivot.traverseVisible((o) => { if (o.isMesh) _bb.expandByObject(o, true); });   // (every vertex: a box would sink a tilted drum)
     const ap = ch.root.position, gy = G.level?.groundHeight?.(ap.x, ap.z, ap.y + 0.5);
-    // (not in the Tidal Slam's leap before the slam: this test plays that pose on the deck, the real one is metres up)
-    const floor = gy > -Infinity && !(ch.tr[6] < 1.9 && ch.tr[7] >= 1.4) ? _bb.min.y - gy : 9;
-    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, floor, ks, wTwo: ch.wTwo || 0 };
+    const floor = gy > -Infinity ? _bb.min.y - gy : 9;
+    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, floor, rootUp: gy > -Infinity ? ap.y - gy : 9, ks, wTwo: ch.wTwo || 0 };
   };
   // per state: worst values over the sampled frames + the mean hand position
   const stats = () => ({ flMin: 9, flAt: -1, hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
@@ -148,9 +147,9 @@
     S.swMax = Math.max(S.swMax, r.swing); S.twMax = Math.max(S.twMax, r.twist);
     S.hx += r.hk.x; S.hy += r.hk.y; S.hz += r.hk.z; S.dSum += r.dist; S.two += r.wTwo;
     if (r.head < S.hdMin) { S.hdMin = r.head; S.hdAt = +t.toFixed(2); }
-    if (r.floor < S.flMin) { S.flMin = r.floor; S.flAt = +t.toFixed(2); }
+    if (r.floor < S.flMin) { S.flMin = r.floor; S.flAt = +t.toFixed(2); S.flRoot = r.rootUp; }
   };
-  const fin = (S) => ({ floor: +S.flMin.toFixed(3), floorAt: S.flAt, head: +S.hdMin.toFixed(3), headAt: S.hdAt, reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
+  const fin = (S) => ({ floor: +S.flMin.toFixed(3), floorAt: S.flAt, floorRoot: +(S.flRoot ?? 9).toFixed(3), head: +S.hdMin.toFixed(3), headAt: S.hdAt, reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
     hand: [+(S.hx / S.n).toFixed(3), +(S.hy / S.n).toFixed(3), +(S.hz / S.n).toFixed(3)], dMean: +(S.dSum / S.n).toFixed(4), dw: +(S.dwSum / S.n).toFixed(4), two: +(S.two / S.n).toFixed(3) });
   // run `s` seconds of sim; sample every `every` frames once `from` s have passed
   const run = (S, s, from = 0, every = 1, each) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) { kid.ink = 100; kid.hp = 1e6; if (each) each(i / 60); frame(); if (S && i / 60 >= from && i % every === 0) sample(S, i / 60); } };
@@ -174,9 +173,10 @@
     runjump: (w, S) => { put(V(0, 0, -26), 0); drive.move.set(0, 0, 1); run(null, 0.8); drive.jump = true; run(S, 0.05); drive.jump = false; run(S, 1.0); },
     fall: (w, S) => { put(V(0, 3.2, -6), 0); kid.grounded = false; run(S, 1.6); },
     spawn: (w, S) => { kid.respawn(); kid.hp = 1e6; run(S, 1.6); },
-    // the Tidal Slam's body (the pose layers only): the leap's tuck and hang, then the slam into the deck — not its launch
-    // (0.24 s: the free arm is flung up as the kid springs off, the one moment the off hand lets go besides a sub throw)
-    leap: (w, S) => { put(START, 0); run(null, 0.5); kid.character.trigger('special_leap'); run(null, 0.26); run(S, 0.54); kid.character.trigger('special_slam'); run(S, 1.4); },
+    // the Tidal Slam, the real special (the actor leaps metres up, hangs, dives and lands in its crouch): the tuck, the
+    // hang, the dive and the landing — not its launch (0.24 s: the free arm is flung up as the kid springs off, the one
+    // moment the off hand lets go besides a sub throw)
+    leap: (w, S) => { put(START, 0); run(null, 0.5); kid.specialId = 'slam'; kid._startSpecial(); run(null, 0.26); run(S, 2.4); },
   };
   const DANCES = { lobby: ['lobby_pose', 0, 7.1], idle: ['menu_idle', 0, 8.1], locker: ['locker_idle', 0, 9.1],
     victory0: ['victory', 0, 3.9], victory1: ['victory', 1, 4.7], victory2: ['victory', 2, 3.3],
@@ -251,7 +251,7 @@
       R(`${w} ${st}: the off hand on the weapon (≤ ${GRIP_TOL * 100} cm) every frame`, grip, { dMax: r.dMax, at: r.dAt, n: r.n });
       R(`${w} ${st}: a natural elbow and wrist`, elb && wr, { elbow: r.elbow, bend: r.bend, swing: r.swing, twist: r.twist });
       R(`${w} ${st}: the weapon clear of the head (≥ ${HEAD_CLR[w]} m from its centre)`, r.head >= HEAD_CLR[w], { head: r.head, at: r.headAt });
-      if (FLOOR_STATES.has(st)) R(`${w} ${st}: the weapon not through the deck (lowest point ≥ ${-FLOOR_TOL * 100} cm)`, r.floor >= -FLOOR_TOL, { floor: r.floor, at: r.floorAt });
+      if (FLOOR_STATES.has(st)) R(`${w} ${st}: the weapon not through the deck (lowest point ≥ ${-FLOOR_TOL * 100} cm)`, r.floor >= -FLOOR_TOL, { floor: r.floor, at: r.floorAt, root: r.floorRoot });
     }
     // idle fidgets: none that needs the free hand is ever picked, and each one it can pick keeps the hand on
     {

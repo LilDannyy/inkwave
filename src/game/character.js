@@ -521,7 +521,7 @@ const SHAFT_BOTH = {   // the roller and the brush: one long shaft, the right fi
   present: { p: [-0.06, 0.97, 0.15], r: [0.35, 0.4, 0] },
   droop: { p: [-0.06, 0.86, 0.12], r: [0.9, 0.35, 0] },         // the drum / bristles resting on the deck, not in it
   run: { p: [-0.1, 0.92, 0.15], r: [0.5, 0.35, 0] },             // running: lifted off the deck (the lean would sink it)
-  smash: { p: [-0.05, 1.0, 0.15], r: [0.1, 0.05, 0] },           // the Tidal Slam's landing: the head on the deck in front
+  smash: { p: [-0.05, 1.05, 0.18], r: [-0.75, 0.05, 0] },        // the Tidal Slam's landing: the head on the deck in front
   fidget: [-0.05, 0.97, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],   // idle: lean on the shaft (anchor · head · spine)
   twist: -0.12, clav: 0.12, poleC: [0.8, -0.5, -0.35],
 };
@@ -542,6 +542,7 @@ const HOLD_BOTH = {
     trophy: { p: [-0.06, 0.8, 0.2], r: [-0.25, 0.15, 0.1] },    // thrust up ahead, the bulb clear of the chin
     present: { p: [-0.05, 0.88, 0.14], r: [-0.12, 0.1, 0.1] },
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
+    smash: { p: [-0.05, 0.9, 0.2], r: [-0.3, 0.05, 0] },          // the Tidal Slam's landing: the bell off the deck
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
     twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.12 },
   brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1,
@@ -552,11 +553,10 @@ const HOLD_BOTH = {
     trophy: { p: [-0.14, 0.85, 0.14], r: [-0.9, -0.15, 0] },    // raised by the right shoulder, clear of the head
     present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
-    smash: { p: [-0.05, 0.9, 0.25], r: [0.1, 0.05, 0] },         // the Tidal Slam's landing: the tip off the deck
+    smash: { p: [-0.05, 0.95, 0.22], r: [-0.35, 0.05, 0] },      // the Tidal Slam's landing: the tip off the deck
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
     twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.15 },
 };
-const SMASH_TWO = { p: [-0.05, 0.8, 0.18], r: [1.0, 0.05, 0] };   // [b5-holds] the Tidal Slam's landing, two-handed (hold.smash)
 const HOLD_HERO = { p: [-0.14, 1.05, 0.25], r: [-0.35, 0.35, -0.2] };
 const K_SL_T = [0, 0.13, 0.25, 0.4, 0.62];
 const K_SL_X = [0, -0.08, 0.02, 0.025, 0], K_SL_Y = [0, -0.22, 0.24, 0.33, 0], K_SL_Z = [0, -0.34, 0.04, -0.04, 0];
@@ -2634,16 +2634,20 @@ export class Character {
     const T = this.hold.both ? this.hold.trophy : null, dv = dive * (1 - ease(st / 0.12));   // [b5-holds] two hands reach it
     if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], dv); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], dv); }
     else { lerpE(X, ANC, -0.06, 1.3, 0.12, dv); lerpE(X, ANCR, -1.9, 0.05, 0, dv); }
-    // [b5-holds] two-handed: the smash lands closer in, and once down the weapon comes back from the smash to the hold
-    // (not out to the low whip, which the off hand can't reach with the body upright again)
-    const zf = T ? 0.28 : 0.36, wf = ease((st - 0.04) / 0.1) * (1 - imp) * (T && this.slamGround ? 0 : 1);
-    lerpE(X, ANC, -0.05, 0.62, zf, wf); lerpE(X, ANCR, 0.9, 0.05, 0, wf);
+    // [b5-holds] two-handed: the dive whips the weapon from overhead straight to the landing's (hold.smash: the low whip
+    // would put the head through the deck the frame before the landing), and once down it comes back from the smash to
+    // the hold (not out to the low whip, which the off hand can't reach with the body upright again)
+    const M = T ? this.hold.smash : null;
+    if (M) {   // (on the deck: held there until the impact pose has it, then left to the impact's fade)
+      const k = this.slamGround ? (it < 0.1 ? 1 - imp : 0) : ease((st - 0.04) / 0.1);
+      lerpE(X, ANC, M.p[0], M.p[1], M.p[2], k); lerpE(X, ANCR, M.r[0], M.r[1], M.r[2], k);
+    } else { const wf = ease((st - 0.04) / 0.1) * (1 - imp); lerpE(X, ANC, -0.05, 0.62, 0.36, wf); lerpE(X, ANCR, 0.9, 0.05, 0, wf); }
     X[SPINE] += 0.3 * dive; X[CHEST] += 0.15 * dive;
     // impact: wide low crouch, weapon planted in front, head down
     lerpE(X, FOOTL, 0.2, ANKLE_H, 0.06, imp); lerpE(X, FOOTLR, 0, 0.35, 0, imp);
     lerpE(X, FOOTR, -0.2, ANKLE_H, -0.1, imp); lerpE(X, FOOTRR, 0, -0.5, 0, imp);
     X[HIPS_P + 1] -= 0.25 * imp; X[SPINE] += 0.45 * imp; X[CHEST] += 0.25 * imp; X[HLP] += 0.2 * imp;
-    if (T) { const M = this.hold.smash || SMASH_TWO; lerpE(X, ANC, M.p[0], M.p[1], M.p[2], imp); lerpE(X, ANCR, M.r[0], M.r[1], M.r[2], imp); }   // (the anchor rides the crouching chest)
+    if (M) { lerpE(X, ANC, M.p[0], M.p[1], M.p[2], imp); lerpE(X, ANCR, M.r[0], M.r[1], M.r[2], imp); }   // (the anchor rides the crouching chest)
     else { lerpE(X, ANC, -0.05, this.animKind === 'roller' ? 0.5 : 0.36, 0.4, imp); lerpE(X, ANCR, this.animKind === 'roller' ? 1.2 : 1.35, 0.05, 0, imp); }
     X[KNEEL] += 0.3 * imp; X[KNEER] -= 0.3 * imp;
     X[IKL] = 1; X[AFOLT] = 1; X[AFOLR] = 0.6; X[EARS] -= 0.6 * dive; X[HANDPL] = -1;
