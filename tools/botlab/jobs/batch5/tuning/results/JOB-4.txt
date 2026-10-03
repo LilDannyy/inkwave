@@ -1,0 +1,87 @@
+JOB-4 (tuning) @ 98c1f0a (fix round 1) — verdict: as intended throughout (Mac mini b5-runner, 08:55–09:24, exit 0).
+1. own tests ×3: all full — tuning turf 12/12 ×3, tuning zones 16/16 ×3, weapon-names 13/13 ×3.
+2. the proof runs fail where they should, and the tree was clean after the swaps ([] in the check line):
+   2a bbade3e's zones.js + ui.css: head-zones 14/16 (the 2 FAILs are the overtime / horn take checks); head-names-icons 4/10
+      (the 6 FAILs are the icon-into-name and name-above-icon checks, at 960×600, 1280×720 and 1920×1080).
+   2b PAGE_ARGS=old: old-tuning-zones 8/14 (6 rule / HUD-tick FAILs), old-tuning-turf 5/12 (7 FAILs: rolling speed, the roller
+      bot, the pad and mouse aim-assist numbers).
+   2c 7ee5ad5's menus.js + ui.css: old-names 0/13 (66 clipped / overlapping names; the longest Twinfire Pistols).
+3. regressions all full: hud-lead turf / zones / tower, input-swim, bot-sight, loadout-picker, net-mock, net-lobbykit, net-picker.
+4. the three 90 s Zone Control matches ran to the end with CONSOLE 0; halyard went to overtime (15.1 s) and ended
+   'neutralised', so the horn and overtime path ran under the new _controls without errors.
+SUMMARY 29 runs, 34 FAIL lines — all 34 in the 2a / 2b / 2c runs that are meant to fail; none anywhere else.
+
+## the job's summary (FAIL lines cut at 330 characters)
+## 1. own tests ×3
+== tuning-zones-1: RESULT 16/16 0 FAIL
+== tuning-turf-1: RESULT 12/12 0 FAIL
+== tuning-zones-2: RESULT 16/16 0 FAIL
+== tuning-turf-2: RESULT 12/12 0 FAIL
+== tuning-turf-3: RESULT 12/12 0 FAIL
+== tuning-zones-3: RESULT 16/16 0 FAIL
+== names-1: RESULT 13/13 0 FAIL
+== names-2: RESULT 13/13 0 FAIL
+== names-3: RESULT 13/13 0 FAIL
+## 2a. the reviewed head's zones.js and ui.css (bbade3e): the horn checks and the icon checks must FAIL
+== head-zones: RESULT 14/16 2 FAIL
+FAIL overtime: team 1 behind, off the objective, its grace running out 0.3 s in — its take of the zone in its hold from 0.03 s: overtime goes on, the take lands (null s)  {"ends":[[0,"neutralised"]],"zone":-1,"objective":-1,"overtime":true,"takeAt":null,"pendAt":0.03,"graceOutAt":0.3}
+FAIL time-up: team 1 behind takes the neutral centre over the line 0.3 s before the horn (in its hold from 0.22 s; team 0 held it last) — overtime at the horn (null s), the take lands in it (null s), the match plays on  {"otAt":null,"takeAt":null,"pend2":0.22,"ev":["end 0 time"],"state":"finish","winner":0,"owner":-1}
+== head-names-icons: RESULT 4/10 6 FAIL
+FAIL 960×600: no weapon card's icon drawn into its name's letters — LOADOUT and the lobby drawer, all 12 cards, at rest and focused (and both panels on screen)  {"loadout":["Twinfire Pistols: +2.7 px at rest, +5.8 px focused","Canopy Brolly: +1.8 px at rest, +4.4 px focused","Popper Blaster: +1.5 px at rest, +4 px focused","S
+FAIL 960×600: the name paints above its icon (each icon pushed down onto its name: the name on top wherever the drawing is)  {"loadout":["Spritzer: the name on top at 0 of 13 points","Twinfire Pistols: the name on top at 0 of 23 points","Canopy Brolly: the name on top at 0 of 14 points","Popper Blaster: the name on top at 0 of 
+FAIL 1280×720: no weapon card's icon drawn into its name's letters — LOADOUT and the lobby drawer, all 12 cards, at rest and focused (and both panels on screen)  {"loadout":["Twinfire Pistols: clear at rest, +3.5 px focused","Canopy Brolly: clear at rest, +1.6 px focused","Popper Blaster: clear at rest, +1 px focused","Tideli
+FAIL 1280×720: the name paints above its icon (each icon pushed down onto its name: the name on top wherever the drawing is)  {"loadout":["Spritzer: the name on top at 0 of 13 points","Twinfire Pistols: the name on top at 0 of 20 points","Canopy Brolly: the name on top at 0 of 16 points","Popper Blaster: the name on top at 0 of
+FAIL 1920×1080: no weapon card's icon drawn into its name's letters — LOADOUT and the lobby drawer, all 12 cards, at rest and focused (and both panels on screen)  {"loadout":["Twinfire Pistols: clear at rest, +4.5 px focused","Canopy Brolly: clear at rest, +1.7 px focused","Popper Blaster: clear at rest, +0.8 px focused","Tid
+FAIL 1920×1080: the name paints above its icon (each icon pushed down onto its name: the name on top wherever the drawing is)  {"loadout":["Spritzer: the name on top at 0 of 13 points","Twinfire Pistols: the name on top at 0 of 20 points","Canopy Brolly: the name on top at 0 of 15 points","Popper Blaster: the name on top at 0 o
+## 2b. the old values (PAGE_ARGS=old): the rule checks must FAIL
+== old-tuning-zones: RESULT 8/14 6 FAIL
+FAIL the rules: take at 80 % (was 80), neutralise at 40 % (was 40), warn at 30 % (was 30), over the line 0 s before a flip (was 0)  {"control":0.8,"contest":0.4,"warn":0.3,"flipHold":0}
+FAIL 72 % takes a neutral zone (the old rules needed 80 %): after null s; then 37 % of it inked back by the other team (the old rules needed 40 %) neutralises it after null s  {"t72":null,"o72":-1,"t37":null,"o37":0}
+FAIL a sliver: 81 % for 0.35 s, then inked back to 77 % — never taken  {"owner":0,"t":null}
+FAIL a sliver: the other team at 41 % for 0.35 s, inked back to 34 % — still held  {"owner":-1}
+FAIL losing: the other team at 41 % — neutral after the hold (null s)  {"t":null,"owner":-1,"objOwner":-1}
+FAIL HUD: the share bar's take ticks sit at 80 % from each end (24 / 10 px of 35)  {"la":24,"lb":10,"bw":35}
+== old-tuning-turf: RESULT 5/12 7 FAIL
+FAIL rolling 4.4 m/s vs walking 6 m/s: ×0.733 — slightly faster (×1.02 … ×1.12; config rollSpeed 4.4)  {"roll":{"v":4.4,"top":4.4,"rolling":1,"turf":40.19,"z":-22.83,"grounded":true},"walk":{"v":6,"top":6,"rolling":0,"turf":0,"z":-17.09,"grounded":true}}
+FAIL bots: a roller bot on its own brain, the empty deck, 10 s — rolls 64 % of the time (0 % of that faster than walking), 42.8 m covered, 103.87 m² inked  {"modes":{"paint":600},"start":[0,-30],"end":[9.87,-32.47]}
+FAIL pad, the same foe 10 m off, dead centre — the look slows ×0.58 on it with the Spritzer, ×0.58 with the Glint Charger (the slow-down 0.42 vs 0.42: ≤ 60 % of it)  {"shooter":{"k":0.58,"on":true,"off":true},"charger":{"k":0.58,"on":true,"off":true}}
+FAIL pad, 1.6° off the foe — Spritzer ×0.607, Glint Charger ×0.607 (its window is narrower too: ≤ 50 % of the slow-down)  {"shooter":{"k":0.607,"on":true,"off":true},"charger":{"k":0.607,"on":true,"off":true}}
+FAIL pad, the foe strafing 3 m/s, dead centre — the camera carries 0.42 of its motion with the Spritzer, 0.42 with the Glint Charger (≤ 50 % of it)  {"shooter":{"k":0.42,"seen":1},"charger":{"k":0.42,"seen":1}}
+FAIL pad, the foe strafing, 1.6° off — Spritzer 0.392, Glint Charger 0.392 (≤ 40 %)  {"shooter":{"k":0.392,"seen":1},"charger":{"k":0.392,"seen":1}}
+FAIL mouse (assist opted in), dead centre — the look slows ×0.79 Spritzer / ×0.79 Glint Charger; the camera carries 0.21 / 0.21 of a strafe (both ≤ 60 %)  {"st":{"shooter":{"k":0.79,"on":true,"off":true},"charger":{"k":0.79,"on":true,"off":true}},"pu":{"shooter":{"k":0.21,"seen":1},"charger":{"k":0.21,"seen":1}}}
+## 2c. the old UI (7ee5ad5's menus.js + ui.css): the name checks must FAIL
+== old-names: RESULT 0/13 13 FAIL
+FAIL 960×600: every weapon name whole and unclipped on every screen that shows a weapon pick  ["960×600 loadout cards · width #># [Twinfire Pistols, Canopy Brolly, Popper Blaster, Squall Spinner, Glint Charger, Brine Cutlass]","960×600 loadout stat labels · width #># [Ink coverage]","960×600 loadout panel (Spritzer equippe
+FAIL 1280×720: every weapon name whole and unclipped on every screen that shows a weapon pick  ["1280×720 loadout cards · width #># [Twinfire Pistols, Canopy Brolly, Popper Blaster, Squall Spinner, Glint Charger, Brine Cutlass, Sponge Mitts]","1280×720 loadout panel (Spritzer equipped) · runs off the bottom []","1280×720 l
+FAIL 1920×1080: every weapon name whole and unclipped on every screen that shows a weapon pick  ["1920×1080 loadout cards · width #># [Twinfire Pistols, Canopy Brolly, Popper Blaster, Squall Spinner, Glint Charger, Brine Cutlass, Sponge Mitts]","1920×1080 loadout panel (Spritzer equipped) · runs off the bottom []","1920×10
+FAIL 960×600: no weapon card's icon drawn into its name's letters — LOADOUT and the lobby drawer, all 12 cards, at rest and focused (and both panels on screen)  {"loadout":["Tideline Bow: clear at rest, +1.8 px focused","Brine Cutlass: clear at rest, +0.6 px focused","the panel runs off the screen with some card focused (311�
+FAIL 960×600: the name paints above its icon (each icon pushed down onto its name: the name on top wherever the drawing is)  {"loadout":["Spritzer: the name on top at 0 of 13 points","Twinfire Pistols: the name on top at 0 of 28 points","Canopy Brolly: the name on top at 0 of 18 points","Popper Blaster: the name on top at 0 of 
+FAIL 1280×720: no weapon card's icon drawn into its name's letters — LOADOUT and the lobby drawer, all 12 cards, at rest and focused (and both panels on screen)  {"loadout":["the panel runs off the screen with some card focused (409…807 of 720)"],"drawer":["Tideline Bow: clear at rest, +0.6 px focused","the panel runs off t
+FAIL 1280×720: the name paints above its icon (each icon pushed down onto its name: the name on top wherever the drawing is)  {"loadout":["Spritzer: the name on top at 0 of 13 points","Twinfire Pistols: the name on top at 0 of 29 points","Canopy Brolly: the name on top at 0 of 18 points","Popper Blaster: the name on top at 0 of
+FAIL 1920×1080: no weapon card's icon drawn into its name's letters — LOADOUT and the lobby drawer, all 12 cards, at rest and focused (and both panels on screen)  {"loadout":["the panel runs off the screen with some card focused (613…1174 of 1080)"],"drawer":["Tideline Bow: clear at rest, +0.8 px focused","the panel runs of
+FAIL 1920×1080: the name paints above its icon (each icon pushed down onto its name: the name on top wherever the drawing is)  {"loadout":["Spritzer: the name on top at 0 of 13 points","Twinfire Pistols: the name on top at 0 of 29 points","Canopy Brolly: the name on top at 0 of 19 points","Popper Blaster: the name on top at 0 o
+FAIL 960×600: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)  ["960×600 sub picker own (Twinfire Pistols) · font #.#px [Skitter Bomb]","960×600 sub picker own (Sponge Mitts) · width #># + font #.#px [Whirl Boomerang]","960×600 loadout special chip · off-screen # 
+FAIL 1280×720: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)  ["1280×720 sub picker own (Twinfire Pistols) · font #.#px [Skitter Bomb]","1280×720 sub picker own (Sponge Mitts) · font #.#px [Whirl Boomerang]","1280×720 loadout special chip · off-screen # + cut by
+FAIL 1920×1080: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)  ["1920×1080 lobby special chip · text \"Splat Barrage\" not \"Splat Bomb Barrage\" [Splat Barrage]","1920×1080 lobby special chip · text \"Cling Barrage\" not \"Cling Charge Barrage\" [Cling Barrage]",
+FAIL every weapon name checked on: the main menu card, the setup chip, LOADOUT (cards, detail, vs badge, the panel on screen), the online hub chip, the lobby chip and drawer, the practice pause  {"fails":66,"longest":"Twinfire Pistols"}
+# tree after the swaps (must be empty): []
+## 3. regressions
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== hud-lead-turf: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+## 4. Zone Control bot matches, 90 s (the horn under the new _controls)
+== zones-crossmarket: 1 result line(s)
+== crossmarket [zones]: winner Alpha (time) | final 23 vs 89 (penalty +0/+9) | OT no
+CONSOLE 0 unique warning/error line(s)
+== zones-halyard: 1 result line(s)
+== halyard [zones]: winner Bravo (neutralised) | final 76 vs 62 (penalty +0/+30) | OT 15.1s
+CONSOLE 0 unique warning/error line(s)
+== zones-saltpan: 1 result line(s)
+== saltpan [zones]: winner Bravo (time) | final 82 vs 76 (penalty +0/+14) | OT no
+CONSOLE 0 unique warning/error line(s)
