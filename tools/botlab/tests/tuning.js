@@ -2,7 +2,7 @@
 // assist lock on."; "Make contesting and covering zones more forgiving"):
 //   MAP=testbox MODE=turf  PAGE=tools/botlab/tests/tuning.js tools/botlab/run.sh tools/botlab/page.cjs   (roller, assist)
 //   MAP=testbox MODE=zones PAGE=tools/botlab/tests/tuning.js tools/botlab/run.sh tools/botlab/page.cjs   (zones)
-//   PAGE_ARGS='only=roller,bot,assist,mouse,zones,hud,net' for a part; PAGE_ARGS='old' runs it on the old values
+//   PAGE_ARGS='only=roller,bot,assist,mouse,zones,hud,net,horn' for a part; PAGE_ARGS='old' runs it on the old values
 // Staged on testbox (a flat deck, top y 0); everyone else parked far off, brains stubbed.
 //  - roller: a kid walking flat out vs the same kid rolling (fire held, a Swell Roller) along the deck, measured over a
 //    second of steady motion: rolling a few % to ~10 % faster than walking (config WEAPONS.roller.rollSpeed vs
@@ -15,9 +15,17 @@
 //  - mouse: the same with the optional mouse assist (settings.aimAssistMouse);
 //  - zones (MODE=zones): the thresholds at their edges on the live centre zone — taking (control − 1 % never, + 1 % after
 //    the hold), a sliver over the line inked straight back never flips it, losing it (contest − 1 % never, + 1 % after the
-//    hold), the contested warning at the warn line; the old rules (80 % / no hold) put back for one check;
+//    hold), the contested warning at the warn line; the absolute 72 % take / 37 % neutralise the old 80 / 40 refused;
+//    slivers held past a coverage sample (so a run without the hold flips on them);
 //  - hud: the share bar's take ticks sit at ZONES.control;
-//  - net: the host records the flip (one 'zz') only when it lands; a follower applies a 'zz' at once.
+//  - net: the host records the flip (one 'zz') only when it lands; a follower's own ink past the line never flips its
+//    copy (owner, zones:zone, the HUD pip) before the host's 'zz', which then applies at once;
+//  - horn: a take still in its hold counts for the team behind — at time-up (overtime, not the end) and when the
+//    overtime grace runs out (overtime goes on). Last, as on the old code it ends the match. Not run with PAGE_ARGS=old.
+// Which checks prove what (PAGE_ARGS=old fails them): the rule values; 72 % / 37 %; the two slivers (the hold). The
+// 'after the hold' timings check the hold against the config; hud: the ticks follow ZONES.control (they were fixed at
+// 80 % in hud.css — with 'old' it fails only because the HUD read the shipped value at match start); the follower
+// check guards an unchanged path; horn: the fix round's _controls (fails on bbade3e's zones.js).
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { WEAPONS, WEAPON_ORDER, PLAYER, ZONES } = await import('./src/config.js');
@@ -222,7 +230,7 @@
   }
 
   // ============================================================================================ zones
-  if (m.mode === 'zones' && (want('zones') || want('hud') || want('net'))) {
+  if (m.mode === 'zones' && (want('zones') || want('hud') || want('net') || want('horn'))) {
     reset();
     for (const a of m.actors) put(a, V(-24 + (m.actors.indexOf(a) % 4) * 2, 0, 34 + Math.floor(m.actors.indexOf(a) / 4) * 2));
     const Z = m.zones;
@@ -247,11 +255,13 @@
       let t = hold(C - 0.01, 0.1, 3);
       R(`taking: ${Math.round((C - 0.01) * 100)} % for 3 s never takes it`, t === null && own() === -1, { owner: own(), share: z.share });
       t = hold(C + 0.01, 0.1, 2);
-      R(`taking: ${Math.round((C + 0.01) * 100)} % (well short of the old 80) takes it after the hold — ${t} s (${H} … ${r2(H + 0.45)})`, own() === 0 && t >= H - 0.01 && t <= H + 0.45, { t, owner: own() });
+      R(`taking: ${Math.round((C + 0.01) * 100)} % (well short of the old 80) takes it after the hold — ${t} s (${H} … ${r2(H + 0.45)})`, own() === 0 && t !== null && t >= H - 0.01 && t <= H + 0.45, { t, owner: own() });
       neutral();
-      // a sliver over the line, inked straight back: never a flip
-      hold(C + 0.01, 0.1, Math.max(0.05, H - 0.25)); t = hold(C - 0.03, 0.12, 2.5);
-      R(`a sliver: ${Math.round((C + 0.01) * 100)} % for ${r2(Math.max(0.05, H - 0.25))} s, then inked back to ${Math.round((C - 0.03) * 100)} % — never taken`, own() === -1, { owner: own(), t });
+      // a sliver over the line, inked straight back: never a flip. (SL ≥ 0.35 s: longer than a coverage sample (5 Hz), so
+      // without the hold — PAGE_ARGS=old — the sliver IS sampled over the line and flips the zone: these checks fail then)
+      const SL = Math.max(0.35, H - 0.25);
+      hold(C + 0.01, 0.1, SL); t = hold(C - 0.03, 0.12, 2.5);
+      R(`a sliver: ${Math.round((C + 0.01) * 100)} % for ${r2(SL)} s, then inked back to ${Math.round((C - 0.03) * 100)} % — never taken`, own() === -1, { owner: own(), t });
       // losing it: held by team 0 (flooded), the other team inks it back
       hold(1, 0, 1.5);
       const heldOk = own() === 0;
@@ -262,22 +272,14 @@
       R(`held: the other team at ${Math.round((W + 0.01) * 100)} % (the warn line) — "contested" warned, still held`, own() === 0 && contests.length === 1, { contests });
       t = hold(1 - (K - 0.01), K - 0.01, 3);
       R(`losing: the other team at ${Math.round((K - 0.01) * 100)} % for 3 s — still held`, own() === 0 && t === null, { owner: own() });
-      hold(1 - (K + 0.01), K + 0.01, Math.max(0.05, H - 0.25)); t = hold(1 - (K - 0.06), K - 0.06, 2);
-      R(`a sliver: the other team at ${Math.round((K + 0.01) * 100)} % for ${r2(Math.max(0.05, H - 0.25))} s, inked back to ${Math.round((K - 0.06) * 100)} % — still held`, own() === 0, { owner: own() });
+      hold(1 - (K + 0.01), K + 0.01, SL); t = hold(1 - (K - 0.06), K - 0.06, 2);
+      R(`a sliver: the other team at ${Math.round((K + 0.01) * 100)} % for ${r2(SL)} s, inked back to ${Math.round((K - 0.06) * 100)} % — still held`, own() === 0, { owner: own() });
       t = hold(1 - (K + 0.01), K + 0.01, 2);
-      R(`losing: the other team at ${Math.round((K + 0.01) * 100)} % — neutral after the hold (${t} s)`, own() === -1 && t >= H - 0.01 && t <= H + 0.45, { t, owner: own(), objOwner: Z.owner });
+      R(`losing: the other team at ${Math.round((K + 0.01) * 100)} % — neutral after the hold (${t} s)`, own() === -1 && t !== null && t >= H - 0.01 && t <= H + 0.45, { t, owner: own(), objOwner: Z.owner });
       offC();
       // after a neutralise the old holder needs the full take share again (no retake on a sliver)
       t = hold(1 - K - 0.02, K + 0.02, 2);
       R(`after the neutralise, the old holder at ${Math.round((1 - K - 0.02) * 100)} % (short of ${C * 100}) doesn't get it back`, own() === -1 && Z.owner === -1, { owner: own() });
-      // the old rules put back (TUNE): 79 % never, 81 % on the next sample — this file tells the two apart
-      const keep = { control: ZONES.control, contest: ZONES.contest, warn: ZONES.warn, flipHold: ZONES.flipHold };
-      Object.assign(ZONES, { control: 0.8, contest: 0.4, warn: 0.3, flipHold: 0 });
-      neutral();
-      const t79 = hold(0.79, 0.1, 2), o79 = own(); neutral();
-      const t81 = hold(0.81, 0.1, 1);
-      Object.assign(ZONES, keep);
-      R(`(the old rules, put back for this check: 79 % never took it, 81 % took it on the next sample ${t81} s)`, t79 === null && o79 === -1 && t81 !== null && t81 <= 0.25, { t79, t81 });
       neutral();
     }
     if (want('hud')) {
@@ -298,13 +300,61 @@
       const zz = recs.filter((r) => r.e === 'zz');
       R(`online (host): one 'zz' record, sent when the take lands (${zz[0] && r2(zz[0].t - t0)} s after the ink), none while it waits`, zz.length === 1 && zz[0].o === 0 && zz[0].t - t0 >= H - 0.01, { recs, t });
       neutral();
-      // a follower: the host's 'zz' applies at once (its copy never waits on its own ink)
+      // a follower (a guest's copy), its own ink past the take line for 1.5 s — over twice the hold the host waits out:
+      // its zone stays neutral (no zones:zone, the HUD's zone pip not held) until the host's 'zz' arrives, which then
+      // applies at once (owner, event, HUD). (The follower path itself is unchanged by b5-tuning — a guest never decided a
+      // capture — this guards it through the longer window the hold opens between the ink and the host's record.)
+      g.hud?.setVisible?.(true);
       const kf = Object.getOwnPropertyDescriptor(m, 'follower'); m.follower = true;
-      Z.netEvent(['zz', z.id, 1]);
-      const got = own();
+      const zev = [], offZ = on('zones:zone', (e) => { if (e.zone === z) zev.push(e.owner); });
+      const pip = () => { const el = document.querySelectorAll('.iw-zo__z')[Z.active.zones.indexOf(z)]; return el ? el.classList.contains('is-held') : null; };
+      hold(C + 0.05, 0.05, 1.5);
+      const bf = { owner: own(), events: [...zev], held: pip(), share: r3(z.share[0]), pend: z.pend };
+      Z.netEvent(['zz', z.id, 0]); step(3 / 60);
+      const got = { owner: own(), events: [...zev], held: pip() };
+      offZ();
       if (kf) Object.defineProperty(m, 'follower', kf); else delete m.follower;
-      R("online (follower): the host's 'zz' applies at once", got === 1, { got });
+      g.hud?.setVisible?.(false);
+      R(`online (follower): its own ink at ${Math.round(bf.share * 100)} % for 1.5 s — still neutral (owner ${bf.owner}, no zones:zone, HUD pip ${bf.held ? 'held' : 'neutral'}); the host's 'zz' then applies at once (owner ${got.owner}, HUD pip ${got.held ? 'held' : 'neutral'})`,
+        bf.owner === -1 && !bf.events.length && bf.held === false && bf.pend === null && got.owner === 0 && got.events.join() === '0' && got.held === true, { before: bf, got });
       Z._zoneOwner(z, -1); Z._setOwner(-1);
+    }
+    // ---- the horn and overtime with a take still in its hold: the hold filters slivers, it must not cost the team behind
+    // a real take. Team 1 behind (count 90 vs 40). Both fail on b5-tuning's zones.js before fix round 1 (bbade3e), which
+    // read only owner / lastOwner / neutralT; with PAGE_ARGS=old (no hold) a take lands before either moment.
+    if (want('horn') && H > 0) {   // (PAGE_ARGS=old: no hold, nothing ever waits — not run)
+      const setCounts = () => { Z.count[0] = 40; Z.count[1] = 90; Z.penalty[0] = Z.penalty[1] = 0; Z.tieEnd = [null, null]; };
+      // (1) overtime: team 1 off the objective, its 10 s grace 0.3 s from running out, inks the zone past the take line —
+      //     the grace runs out while the take is in its hold: overtime goes on and the take lands. (Z._end recorded, not
+      //     played: the match itself doesn't end here, so the horn check below still runs on the old code.)
+      neutral(); setCounts();
+      const ends = [], keepEnd = Z._end;
+      Z._end = (w, r) => { ends.push([w, r]); Z.winner = w; Z.reason = r; };
+      Object.assign(Z, { overtime: true, overtimeT: 0, otLosing: 1, lastOwner: 1, neutralT: ZONES.overtimeGrace - 0.3 });
+      m.time = 0;
+      let pendAt = null;
+      const tO = (() => { const o0 = own(); let at = null; hook = () => ink(0.05, C + 0.02);
+        step(1.5, (i) => { if (pendAt === null && z.pend && z.pend.to === 1) pendAt = r2((i + 1) * DT); if (at === null && own() !== o0) at = r2((i + 1) * DT); }); hook = null; return at; })();
+      const ot = { ends: [...ends], zone: own(), objective: Z.owner, overtime: Z.overtime, takeAt: tO, pendAt, graceOutAt: 0.3 };
+      Z._end = keepEnd; Object.assign(Z, { winner: null, reason: null, overtime: false, overtimeT: 0, otLosing: -1 });
+      m.time = 200;
+      R(`overtime: team 1 behind, off the objective, its grace running out 0.3 s in — its take of the zone in its hold from ${pendAt} s: overtime goes on, the take lands (${tO} s)`,
+        !ot.ends.length && pendAt !== null && pendAt < 0.3 && tO !== null && tO > 0.3 && ot.zone === 1 && ot.objective === 1, ot);
+      // (2) time-up: team 1 inks the neutral centre past the take line 0.3 s before the horn; team 0 held it last (no
+      //     grace) — overtime at the horn, the take lands in it, the match plays on. (Last: on the old code this ends the match.)
+      neutral(); setCounts();
+      Object.assign(Z, { lastOwner: 0, neutralT: 30 });
+      m.time = 0.3;
+      const ev = [], offO = on('zones:overtime', (e) => ev.push(e.losing)), offE = on('zones:end', (e) => ev.push('end ' + e.winner + ' ' + e.reason));
+      let otAt = null, takeAt = null, pend2 = null; hook = () => ink(0.05, C + 0.02);
+      step(1.5, (i) => { const tt = r2((i + 1) * DT);
+        if (pend2 === null && z.pend && z.pend.to === 1) pend2 = tt;
+        if (otAt === null && Z.overtime) otAt = tt;
+        if (takeAt === null && own() === 1) takeAt = tt;
+        if (m.state !== 'playing') return false; });
+      hook = null; offO(); offE();
+      R(`time-up: team 1 behind takes the neutral centre over the line 0.3 s before the horn (in its hold from ${pend2} s; team 0 held it last) — overtime at the horn (${otAt} s), the take lands in it (${takeAt} s), the match plays on`,
+        otAt !== null && otAt <= 0.35 && ev[0] === 1 && takeAt !== null && takeAt > otAt && m.state === 'playing' && Z.winner == null && Z.owner === 1, { otAt, takeAt, pend2, ev, state: m.state, winner: Z.winner, owner: Z.owner });
     }
   }
   return out;

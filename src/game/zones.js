@@ -12,7 +12,8 @@
 //   • coverage: the share of the zone's inkable floor each team has inked. Taking a zone needs ≥ ZONES.control (70 %;
 //     80 % before 2026-10-04); a held zone is neutralised when the other team inks ≥ ZONES.contest (35 %; was 40) of it. Either
 //     change only lands once the share has stayed over its line for ZONES.flipHold s (0.6; 0 before) — a sliver of ink
-//     that's inked straight back never flips a zone. An objective is held when a team holds all of its zones.
+//     that's inked straight back never flips a zone (time-up and overtime count a take still in its hold as landed
+//     for the team behind: _controls). An objective is held when a team holds all of its zones.
 //   • countdown: each team starts at 100. Holding the operational objective counts you down — 1 pt/s at the centre;
 //     a side zone on your own half 1 pt / 2 s; a side zone on the enemy's half (i.e. closer to THEIR spawn) 1 pt / 0.5 s.
 //     A team at 0 wins on the spot.
@@ -316,11 +317,17 @@ export class ZoneControl {
     else { this._net(['zf']); emit('zones:active', { objective: C.id, zones: C.zones.map((z) => z.id), final: true, moved: false }); }
   }
 
+  // team t has the objective, or will have it once the takes still in their flipHold land: every zone of it is t's or
+  // has t's take pending. (Time-up and overtime read a capture still in its hold as landed for the team behind — the
+  // hold only filters out slivers, it must not cost a real take at the horn. Only a take can turn the objective to the
+  // team behind; a pending neutralise of theirs leaves the leaders its last holders, which never earns overtime.)
+  _controls(t) { return this.owner === t || this.active.zones.every((z) => z.owner === t || (z.pend && z.pend.to === t)); }
+
   // ---- time's up. Returns true when the match should end now; false = overtime has begun.
   timeUp() {
     const L = this.losing();
     const grace = this.owner === -1 && this.lastOwner === L && this.neutralT < ZONES.overtimeGrace;
-    if (L >= 0 && (this.owner === L || grace)) {
+    if (L >= 0 && (this._controls(L) || grace)) {   // [b5-tuning] (a take in its hold counts: _controls)
       this.overtime = true; this.overtimeT = 0; this.otLosing = L;
       this._net(['zt', L]);
       emit('zones:overtime', { losing: L });
@@ -355,7 +362,7 @@ export class ZoneControl {
     const W = 1 - L;
     if (this.count[L] < this.count[W]) return this._end(L, 'comeback');
     if (this.owner === W) return this._end(W, 'retake');
-    if (this.owner !== L && this.neutralT >= ZONES.overtimeGrace) return this._end(W, 'neutralised');
+    if (!this._controls(L) && this.neutralT >= ZONES.overtimeGrace) return this._end(W, 'neutralised');   // (a take of theirs in its hold holds the grace open)
     if (this.overtimeT >= ZONES.overtimeMax) return this._end(W, 'overtime-cap');
   }
 
