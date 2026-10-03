@@ -71,3 +71,8 @@ FAIL its rings leave from where it has got to (the last 0.00 m on from the first
 - net-surf-tower: 4/6 in all 5 runs (3 at 75e2b05, 2 at 162711a), the same 2 checks each time: the buoy's span along the tower is 0.00 m on both screens and all ring centres sit at one spot, so the tower doesn't seem to move (or the buoy isn't carried) in that scene. Deterministic, not load.
 - drainbow 'blind': 44/44 in 4 of 5 runs; 43/44 once at 162711a (pass 1, in a PAR=3 batch): sighted fires 4, fightFrames 0, painted 1.
 - Everything else is a full pass in every run (net-surf 13/13 ×3, net-drainbow 11/11 ×3, surf-tower 11/11 ×5, net-practice 29/29, sfx-cues 54/54, audio-pause 10/10, …).
+
+## 4. Addendum @ cc9e16c (pushed while JOB-2 ran): net-surf-tower, alone, twice
+- run 1: RESULT 7/7
+- run 2: RESULT 7/7
+So the straight-up throw fixes the 0.00 m tower scene.
