@@ -3174,3 +3174,25 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 @media (prefers-reduced-motion: reduce) {
   .iw-ktile, .iw-ktile.is-pick, .iw-kpick__info.is-swap *, .iw-kit.is-swap * { animation: none !important; }
 }
+
+/* =====================================================================================
+   [b5-tuning] FULL WEAPON NAMES (2026-10-04, the user: "make sure the full weapon name can be seen in the weapon
+   select"): wherever a weapon is picked or shown as picked its whole name shows — a name too wide for its box wraps
+   (balanced; two lines for the longest in the roster) instead of an ellipsis. LOADOUT's panel fits a 16:9 screen: the
+   SUB / SPECIAL chips keep their icon, name and hint, and their blurbs show in the panel's description while the chip
+   has the focus (menus.js _scr_loadout describe()). tools/botlab/tests/weapon-names.cjs checks every screen at
+   960×600, 1280×720 and 1920×1080.
+   ===================================================================================== */
+.iw-wcard__name { white-space: normal; overflow: visible; text-overflow: clip; text-wrap: balance; line-height: 1.02; }
+.iw-wcard__icon svg { height: 100%; max-height: calc(var(--u) * 5.6); }
+.iw-wgrid.is-compact .iw-wcard { height: calc(var(--u) * 8.8); }
+.iw-wgrid.is-compact .iw-wcard__name { font-size: calc(var(--u) * 1.1); }
+.iw-wgrid.is-compact .iw-wcard__icon svg { max-height: calc(var(--u) * 4.3); }
+.iw-ldr__grid .iw-wcard__icon svg { max-height: calc(var(--u) * 4); }
+.iw-wd__name { white-space: normal; overflow: visible; text-overflow: clip; text-wrap: balance; }
+.iw-wd__badges { flex: none; }
+.iw-ss__foot .iw-wchip:not(.iw-lchip) .iw-wchip__text b, .iw-hub__chips .iw-wchip:not(.iw-lchip) .iw-wchip__text b { white-space: normal; overflow: visible; text-overflow: clip; text-wrap: balance; line-height: 1.04; }
+.iw-loadout .iw-kit__blurb { display: none; }
+.iw-loadout .iw-wd__kits { justify-content: space-evenly; }
+.iw-loadout .iw-wd__blurb { min-height: calc(1.35em * 3); }
+.iw-loadout .iw-wd__blurb.is-kit { color: #f4f0fb; }
