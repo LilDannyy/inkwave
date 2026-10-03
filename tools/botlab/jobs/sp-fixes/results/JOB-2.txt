@@ -1,0 +1,78 @@
+JOB-2 results — sp-fixes, every regression on the final code, run on the Mac mini (botlab helper), SLOTS=3 PAR=3, caffeinate, 2026-10-03 23:54 AEST
+Ran at 75e2b05: JOB-2 had already started when the 162711a update came, so it carried on there. Then the tests 162711a changed (drainbow.js, surf-movers.js) plus net-surf-tower were run twice more at 162711a (section 3).
+
+## 1. All of the regressions @ 75e2b05: regress.sh
+== surf-roof: RESULT 1/1 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== drainbow: RESULT 44/44 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 6/7 1 FAIL
+FAIL rail: a buoy dropped onto a moving railcar's roof (off-limits) slides off it, carried along by the car (0 m its way), and anchors beside the track  {"onRoof":false,"at":[6.48,4.3,-5],"along":0,"carVel":-6.88,"side":0,"halfWidth":1.45}
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 4/6 2 FAIL
+FAIL the buoy rides the tower on both screens (A: 0.00 m, B: 0.00 m along), on its tower's block, at the same spot of the deck on each  {"A":{"n":80,"span":0,"spread":8.848,"off":[8.139,-1.558,-2.389]},"B":{"n":80,"span":0,"spread":8.71,"off":[7.8,-1.56,-2.39]}}
+FAIL its rings leave from where it has got to (the last 0.00 m on from the first) and are centred at the same spots on both screens  {"A":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]],"B":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]]}
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+
+## 2. Online and new tests twice more @ 75e2b05
+### pass 2
+== surf-tower: RESULT 11/11 0 FAIL
+== surf-calamari: RESULT 6/7 1 FAIL
+FAIL rail: a buoy dropped onto a moving railcar's roof (off-limits) slides off it, carried along by the car (0 m its way), and anchors beside the track  {"onRoof":false,"at":[6.48,4.3,-5],"along":0,"carVel":-6.88,"side":0,"halfWidth":1.45}
+== drainbow: RESULT 44/44 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 4/6 2 FAIL
+FAIL the buoy rides the tower on both screens (A: 0.00 m, B: 0.00 m along), on its tower's block, at the same spot of the deck on each  {"A":{"n":80,"span":0,"spread":8.848,"off":[8.101,-1.559,-2.389]},"B":{"n":80,"span":0,"spread":8.741,"off":[7.83,-1.56,-2.39]}}
+FAIL its rings leave from where it has got to (the last 0.00 m on from the first) and are centred at the same spots on both screens  {"A":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]],"B":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]]}
+### pass 3
+== surf-tower: RESULT 11/11 0 FAIL
+== surf-calamari: RESULT 6/7 1 FAIL
+FAIL rail: a buoy dropped onto a moving railcar's roof (off-limits) slides off it, carried along by the car (0 m its way), and anchors beside the track  {"onRoof":false,"at":[6.48,4.3,-5],"along":0,"carVel":-6.88,"side":0,"halfWidth":1.45}
+== drainbow: RESULT 44/44 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 4/6 2 FAIL
+FAIL the buoy rides the tower on both screens (A: 0.00 m, B: 0.00 m along), on its tower's block, at the same spot of the deck on each  {"A":{"n":79,"span":0,"spread":8.736,"off":[8.139,-1.558,-2.389]},"B":{"n":79,"span":0,"spread":8.739,"off":[7.85,-1.56,-2.39]}}
+FAIL its rings leave from where it has got to (the last 0.00 m on from the first) and are centred at the same spots on both screens  {"A":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]],"B":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]]}
+
+## 3. @ 162711a: ONLY="drainbow surf-tower surf-hedge surf-calamari net-surf-tower", twice
+### pass 1
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== drainbow: RESULT 43/44 1 FAIL
+FAIL blind: walking out of it the blind bot keeps painting everything it passes; with botBlind 0 (the old reading: its own ink known) it holds its fire on the way out  {"blind":{"fires":76,"framesInside":76,"fightFrames":0,"painted":58.24,"out":true},"sighted":{"fires":4,"framesInside":35,"fightFrames":0,"painted":1,"out":true}}
+== net-surf-tower: RESULT 4/6 2 FAIL
+FAIL the buoy rides the tower on both screens (A: 0.00 m, B: 0.00 m along), on its tower's block, at the same spot of the deck on each  {"A":{"n":80,"span":0,"spread":8.848,"off":[8.213,-1.558,-2.389]},"B":{"n":80,"span":0,"spread":8.795,"off":[7.907,-1.559,-2.39]}}
+FAIL its rings leave from where it has got to (the last 0.00 m on from the first) and are centred at the same spots on both screens  {"A":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]],"B":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]]}
+### pass 2
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== drainbow: RESULT 44/44 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== net-surf-tower: RESULT 4/6 2 FAIL
+FAIL the buoy rides the tower on both screens (A: 0.00 m, B: 0.00 m along), on its tower's block, at the same spot of the deck on each  {"A":{"n":80,"span":0,"spread":8.848,"off":[8.251,-1.558,-2.389]},"B":{"n":80,"span":0,"spread":8.821,"off":[7.956,-1.559,-2.39]}}
+FAIL its rings leave from where it has got to (the last 0.00 m on from the first) and are centred at the same spots on both screens  {"A":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]],"B":[[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69],[-0.91,0.08,-0.69]]}
+
+## Summary
+- surf-calamari 'rail': failed 6/7 in all 3 runs at 75e2b05; 7/7 both runs at 162711a (fixed by the surf-movers.js change).
+- net-surf-tower: 4/6 in all 5 runs (3 at 75e2b05, 2 at 162711a), the same 2 checks each time: the buoy's span along the tower is 0.00 m on both screens and all ring centres sit at one spot, so the tower doesn't seem to move (or the buoy isn't carried) in that scene. Deterministic, not load.
+- drainbow 'blind': 44/44 in 4 of 5 runs; 43/44 once at 162711a (pass 1, in a PAR=3 batch): sighted fires 4, fightFrames 0, painted 1.
+- Everything else is a full pass in every run (net-surf 13/13 ×3, net-drainbow 11/11 ×3, surf-tower 11/11 ×5, net-practice 29/29, sfx-cues 54/54, audio-pause 10/10, …).
+
+## 4. Addendum @ cc9e16c (pushed while JOB-2 ran): net-surf-tower, alone, twice
+- run 1: RESULT 7/7
+- run 2: RESULT 7/7
+So the straight-up throw fixes the 0.00 m tower scene.
