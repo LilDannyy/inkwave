@@ -23,6 +23,7 @@ const _list = [];
 const live = (d) => (d.kind === 'surf' ? !d.obj.dead && d.obj.phase === 'live' : d.obj.state === (d.kind === 'sprinkler' ? 'spray' : 'beacon'));
 
 const DEV_GIVEUP = 8, DEV_FORGET = 12;   // s on one device before giving up on it; s it's left alone after
+const NOTICE = 10;                        // m: an enemy device in sight this near is noticed whatever the weapon's reach
 const ROLL = { roller: true, brush: true };
 // the aim to hold ({ yaw, pitch, dist }), the trigger and the footwork (move: the bot's move command, world x / z), or
 // null (BotSpecials.act: after its own escapes / throws)
@@ -38,7 +39,8 @@ export function devShootAim(sense, dt, it, move) {
   if (!d) {
     if ((sense._devT = (sense._devT || 0) - dt) > 0) return null;
     sense._devT = 0.35;
-    const ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z, reach = Math.max(win[1], weaponRange(w) * 0.95);
+    // (noticed out to a little past its reach — at least NOTICE m: it walks up to the rest)
+    const ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z, reach = Math.max(win[1] * 1.25, weaponRange(w) * 0.95 * 1.25, NOTICE);
     let bs = Infinity;
     _list.length = 0;
     for (const x of D.devices(_list)) {
@@ -61,7 +63,7 @@ export function devShootAim(sense, dt, it, move) {
   const dx = px - a.pos.x, dy = py - (a.pos.y + 1.1), dz = pz - a.pos.z, dh = Math.hypot(dx, dz), d3 = Math.hypot(dh, dy);
   // footwork: up to well inside its reach (a roller / brush: right over it), then plant for the shots
   const over = ROLL[w.kind] && d.kind !== 'surf';   // (a buoy is too big to roll over: flick / swipe at it)
-  const near = over ? 0.6 : melee ? win[1] * 0.85 : Math.min(win[1] * 0.7, 9);
+  const near = over ? 0.6 : melee ? win[1] * 0.85 : w.kind === 'charger' ? win[1] * 0.85 : Math.min(win[1] * 0.7, 9);
   // (a tower rider keeps riding: it only shoots from where it stands — Tower Command's own footwork moves it)
   const T = G.match?.tower, rooted = b.tRole === 'ride' || !!(T && T.riderList?.includes(a));
   let walking = false;

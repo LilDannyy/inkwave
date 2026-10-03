@@ -4,7 +4,7 @@
 //
 // THE DEVICES (hp: config SUBS / SPECIALS.surf)
 //   Twirl Sprinkler 100 · Hop Beacon 120 (Splatoon's Sprinkler / Squid Beakon: a few shots, not one, not a magazine) ·
-//   Surf N' Turf's buoy 350 (sp-surf.js) · Skitter Bomb 40 — on the ground (running or winding up); shot down it pops
+//   Surf N' Turf's buoy 350 (sp-surf.js) · Skitter Bomb 30 (the Waddle's) — on the ground (running or winding up); shot down it pops
 //   harmlessly: no blast, no damage, a puff, its windup cancelled. The Drip Curtain keeps its own rule (it soaks enemy
 //   shots and fades: subs.js) and is one of the things the tower crushes. Hit shapes are the built size, never the drawn
 //   one ([sub-view]: subs.js hitH — tools/botlab/tests/sub-scale.js holds gameplay identical at any view scale).

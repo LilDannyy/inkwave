@@ -7,7 +7,7 @@
 //   PAGE_ARGS='only=matrix,own,down,pop,looks,beam,standing,net,bots,sounds' (MODE=turf), 'only=tower' (MODE=tower)
 // Staged on testbox (a flat deck, top y 0; a 4 m wall x 14…15, z ±8); everyone parked far off, brains stubbed (the bots'
 // own parts: 'bots'). Checks:
-//  - matrix: every device (Hop Beacon 120, Twirl Sprinkler 100, Surf N' Turf buoy 350, Skitter Bomb 40 on the ground)
+//  - matrix: every device (Hop Beacon 120, Twirl Sprinkler 100, Surf N' Turf buoy 350, Skitter Bomb 30 on the ground)
 //    against every damage source, each a fresh device and the real thing where it can be: a shot (a projectile), a
 //    charger beam (fireCharger), a bow volley (looseVolley), a roller rolling into it (its drum), a Splat Bomb's blast,
 //    a blaster's splash (newly reaching subs' devices), a sub (a Pop Pellet), a special (the Tidal Slam): its hp falls by

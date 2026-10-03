@@ -365,7 +365,7 @@ export const SUBS = {
     // for skitter / waddle / mine bombs"; the same windup on all three)
     inkCost: 65, throwSpeed: 9, speed: 6.3, seekRange: 15, life: 4.5, trailRadius: 0.6, triggerDist: 1.2, turnRate: 1.75, commitDist: 2.5, creep: 0.6,
     delay: 0.45, radius: 2.8, damageMax: 180, damageMin: 35, paintRadius: 2.4,
-    hp: 40,   // [b5-deploy] on the ground (running or winding up) enemy fire pops it — harmlessly, no blast: two shots of most guns
+    hp: 30,   // [b5-deploy] on the ground (running or winding up) enemy fire pops it — harmlessly, no blast: the Waddle's 30 (a shot of most guns; it's faster and turns: harder to hit)
   },
   scan: {
     id: 'scan', name: 'Echo Orb', kind: 'scan', blurb: 'Bursts into a sensing cloud. Foes it touches are tracked for your whole team. No damage.',
