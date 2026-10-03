@@ -85,6 +85,9 @@
   const BOX = /box$/.test(G.level.layout?.id || ''), pad = (t) => G.level.spawnPads[t];
   const HOME = BOX ? V(-20, 0, -30) : V(pad(me.team).x, pad(me.team).y, pad(me.team).z);
   const parkAll = () => others.forEach((a, i) => put(a, BOX ? V(-22 + (i % 4) * 2, 0, 34 + Math.floor(i / 4) * 2) : V(pad(a.team).x + (i % 4) - 1.5, pad(a.team).y, pad(a.team).z + Math.floor(i / 4) - 0.5)));
+  // (a bot scene on testbox: everyone on the other side from bot x — but `keep` — behind the 4 m wall at x 14…15: no foe
+  // for it to find but the ones a scene shows it)
+  const hideFoes = (x, keep = []) => m.actors.filter((a) => a.team !== x.team && !keep.includes(a)).forEach((a, i) => put(a, V(21 + (i % 3) * 1.5, 0, -3 + Math.floor(i / 3) * 1.5), 0));
   if (G.fx) { G.fx.onDropletLand = null; G.fx.onSpeck = null; }
   const weapons0 = new Map(m.actors.map((a) => [a, a.weaponId]));
   const reset = () => {
@@ -464,7 +467,7 @@
           const Sh = foe;
           Sh.setWeapon('shooter'); Sh.ink = PLAYER.inkMax;
           unstub(Sh); put(Sh, V(0, 0, 5), Math.PI);
-          put(me, V(22, 0, 0), 0);
+          hideFoes(Sh);
           G.specials._ghostObj(mate, [2, 'mi', 99101 + (onAI ? 0 : 1) + rep * 2, VX.x, VX.y, VX.z]);
           hook = () => { put(Sh, V(0, 0, 5), Math.PI); Sh.ink = PLAYER.inkMax; };
           step(0.8);   // (it has noticed it — on the map — standing where it starts)
@@ -499,6 +502,7 @@
         unstub(Sh); put(Sh, V(0, 0, 3), Math.PI);
         put(me, V(22, 0, 0), 0);
         const d = mk.beacon(me, -6, 1);
+        hideFoes(Sh, [mate]);
         put(mate, V(0, 0, -8), 0); mate.hp = 1e6;
         const s0 = DB.DEV_BOT.secs, h0 = hpOf(d);
         let fought = 0, devWhile = 0;
@@ -509,7 +513,8 @@
         const n3 = step(16, () => { Sh.ink = PLAYER.inkMax; if (fr++ % 60 === 0) trace.push([Sh.bot.mode, Sh.bot.target ? Sh.bot.target.name : null, r2(Sh.bot.seeTimer), v2(Sh.pos), Sh.bot.sp._dev ? Sh.bot.sp._dev.kind : null]); return !gone(d); });
         const after = { gone: gone(d), s: r2(n3 / 60), deviceSecs: r2(DB.DEV_BOT.secs - s0), trace };
         stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
-        R(`a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: ${devWhile}; device mode ${during.deviceSecs} s before it had seen it; the beacon −${during.beaconLost}); the foe gone, it shoots the beacon down (${after.gone ? after.s + ' s' : 'not'})`,
+        const tr = after.gone ? '' : ` — ${trace.map((t) => `${t[0]}${t[1] ? ':' + t[1] + (t[2] > 0 ? '(seen)' : '') : ''}${t[4] ? '+dev' : ''}@${t[3][0]},${t[3][2]}`).join(' ')}`;
+        R(`a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: ${devWhile}; device mode ${during.deviceSecs} s before it had seen it; the beacon −${during.beaconLost}); the foe gone, it shoots the beacon down (${after.gone ? after.s + ' s' : 'not'}${tr})`,
           during.framesOnFoe > 90 && devWhile === 0 && during.deviceSecs < 0.5 && during.beaconLost === 0 && after.gone && after.deviceSecs > during.deviceSecs, { during, after });
       }
 
@@ -522,6 +527,7 @@
         Sh.setWeapon('shooter'); Sh.ink = PLAYER.inkMax;
         unstub(Sh); put(Sh, V(0, 0, 3), Math.PI);
         put(me, V(22, 0, 0), 0);
+        hideFoes(Sh, [mate]);
         const d = mk.beacon(me, 0, -6); d.hp = Infinity;
         const on = () => Sh.bot.sp._dev?.obj === d;
         const P0 = { ...DB.DEV_BOT };
