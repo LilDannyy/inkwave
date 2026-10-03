@@ -38,7 +38,8 @@
 //    a Lurk Mine and a Hop Beacon laid on its deck, a sprinkler stuck to its pillar, a curtain and a buoy on its deck
 //    ride it (the mine's ghost too) and the mine trips for a foe on the deck there;
 //  - rail (MAP=calamari): a sprinkler stuck to a railcar's flank and a curtain on its roof ride it the whole way (ghosts
-//    too) — a mine or a beacon can't be laid on a railcar (an off-limits roof, as before);
+//    too) — a mine or a beacon can't be laid on a railcar (an off-limits roof, as before); a Lurk Mine lying on the
+//    trackbed in its way is pushed out of it as it comes (never inside it), still armed where it ends up, its ghost too;
 //  - hedge (MAP=podbox): a mine in a bramble wall's trough is lifted onto it or shoved out of its way as it grows (never
 //    inside it); one laid on its top rides it down as it wilts; both end on the floor, still armed.
 (async () => {
@@ -600,6 +601,35 @@
         const went = r2(car.pos.distanceTo(p0));
         R(`a railcar: a sprinkler stuck to its flank and a Drip Curtain dropped on its roof ride it the ${went} m to its other stop (worst drift ${r2(worst)} m), and so do their ghosts (${r2(gworst)} m)`,
           !!spr && on.sprinkler && on.curtain && went > 10 && worst < 0.05 && gworst < 0.05 && spr.state === 'spray' && cur.state === 'curtain', { on, went, worst: r2(worst), ghost: r2(gworst), rec: recs4(cur.gid)[0] });
+      } finally { netOff(); hook = null; }
+      // a Lurk Mine and a railcar: one can't be laid on its roof (off-limits, as before); one lying on the trackbed in its
+      // way is pushed out of it as it comes (the buoy's rule, as players are: never inside the car), stays on the floor,
+      // armed (a foe trips it where it ends up), and its ghost goes with it (the owner's word [4, gid, x, y, z])
+      reset(); netOn();
+      try {
+        const M = m.movers, Tt = M.T, car = M.cars[0], L = G.level, F = feeder(foe);
+        m.duration = 99999;
+        const setClock = (t) => { m.time = m.duration - t; frame(); };
+        setClock(Tt.first - 0.8); step(2 / 60);
+        const perp = V(-car.u.z, 0, car.u.x);
+        const lay = (p) => { put(me, p, 0); me.pos.y = p.y + 0.02; step(2 / 60); const n0 = S.items.length; S._place(me, SUBS.mine); const it = S.items.length > n0 ? S.items[S.items.length - 1] : null; if (it) F.ids.add(it.gid); put(me, HOME, 0); return it; };
+        const roofAt = car.pos.clone().addScaledVector(car.u, car.len * 0.25); roofAt.y = car.pos.y + car.ht;
+        const onRoof = lay(roofAt);
+        const at = car.pos.clone().addScaledVector(car.u, car.len / 2 + 2.5).addScaledVector(perp, 0.4);
+        at.y = L.groundHeight(at.x, at.z, car.pos.y + 0.5);
+        const mn = lay(at);
+        step(0.3, () => { F.feed(); }); F.feed();
+        const p0 = car.pos.clone(), m0 = mn ? mn.pos.clone() : null;
+        let inside = 0, gworst = 0;
+        step(Tt.move + 1.2, () => { F.feed(); if (!mn) return; if (L.pointInBlock(car.block, _vIn.set(mn.pos.x, mn.pos.y + 0.1, mn.pos.z), -0.05)) inside++; const g1 = ghostOf(mn); if (g1) gworst = Math.max(gworst, g1.pos.distanceTo(mn.pos)); });
+        step(0.4, () => { F.feed(); }); F.feed();
+        const went = r2(car.pos.distanceTo(p0)), g1 = mn && ghostOf(mn);
+        const floor = mn && Math.abs(mn.pos.y - L.groundHeight(mn.pos.x, mn.pos.z, mn.pos.y + 0.05)) < 0.05 && !mn.on;
+        const clear = mn && !L.pointInBlock(car.block, _vIn.set(mn.pos.x, mn.pos.y + 0.1, mn.pos.z), 0.25);
+        const tr = mn && mn.state === 'mine' ? tripAt(mn, foe) : null;
+        R(`a railcar: a Lurk Mine can't be laid on its roof; one lying on the trackbed in its way is pushed out of it as it comes (${went} m; the mine moved ${mn && m0 ? r2(Math.hypot(mn.pos.x - m0.x, mn.pos.z - m0.z)) : '?'} m) — never inside it — and lies on the floor, still armed (a foe trips it there), its ghost with it (${g1 ? r2(g1.pos.distanceTo(mn.pos)) : '?'} m)`,
+          !onRoof && !!mn && went > 10 && inside === 0 && floor && clear && !!g1 && g1.pos.distanceTo(mn.pos) < 0.08 && tr && tr.tripped && tr.off < 0.4,
+          { onRoof: !!onRoof, from: m0 && v2(m0), at: mn && v2(mn.pos), went, inside, floor, clear, ghostEnd: g1 && r2(g1.pos.distanceTo(mn.pos)), ghostWorst: r2(gworst), recs: mn ? recs4(mn.gid).slice(-2) : null, trip: tr });
       } finally { netOff(); hook = null; }
     }
 
