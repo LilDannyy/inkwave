@@ -679,6 +679,12 @@ export class NetMatch {
     victim.net.deathTp = victim.net.tp;
     // your own kills: the confirm sting / marker (the hit that did it was only a prediction)
     if (attacker && !attacker.remote) emit('hit', { attacker, victim, damage: 0, killed: true, weaponId: cause });
+    // …and the splat itself, as a local one is, so this screen reacts the same: the kill card + callouts under the crosshair
+    // (hud.js), "You splatted …" / ally-down feed lines, the death mark and sounds (main.js), the winner's gloat, the
+    // victim's ghost subs / special cleaned up. (Assists were credited above, from `as`; the forwarder skips it: the
+    // victim isn't ours. Without this, splatting a real player online showed nothing — only bots, whose splats the host
+    // judges and replays as its own, got the card.)
+    emit('splatted', { victim, attacker, cause, remote: true });
   }
 
   // Alive again, but the path still holds the old life until the owner's first post-respawn sample is due: stay hidden
