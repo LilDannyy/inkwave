@@ -359,6 +359,9 @@ app.on('browser-window-created', (_, win) => {
     for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
     for (const e of r.sideEps) console.log('   side-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
+    // [b5-deploy] devices: shot at / down, crushed by the tower, riding it; the bots' picks
+    const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT } }; } catch (e) { return null; } })()`);
+    if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed by the tower ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter pops ${dep.seekerPops} | bots' picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}; gave up ${dep.bot.gaveUp})`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     if (OUT) require('fs').writeFileSync(OUT, JSON.stringify(r));
