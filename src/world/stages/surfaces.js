@@ -14,11 +14,15 @@ import * as craters from './craters/surfaces.js';
 import * as calamari from './calamari/surfaces.js';
 import * as spirhalite from './spirhalite/surfaces.js';
 import * as treehills from './treehills/surfaces.js';
+import * as bluestone from './bluestone/surfaces.js';
+import * as aquarium from './aquarium/surfaces.js';
+import * as caldera from './caldera/surfaces.js';
 
-const PACKS = { tidewater, kelpline, saltpan, crossmarket, lockgate, terraces, cargo, nantai, craters, calamari, spirhalite, treehills };
+const PACKS = { tidewater, kelpline, saltpan, crossmarket, lockgate, terraces, cargo, nantai, craters, calamari, spirhalite, treehills, bluestone, aquarium, caldera };
 export const STAGE_SLOTS = { tidewater: [28, 29, 30], kelpline: [31, 32, 33], saltpan: [34, 35, 36], crossmarket: [37, 38, 39], lockgate: [40, 41, 42], terraces: [43, 44, 45], cargo: [46, 47, 48],
-  nantai: [49, 50, 51], craters: [52, 53, 54], calamari: [55, 56, 57], spirhalite: [58, 59, 60], treehills: [61, 62, 63] };
-export const FIRST_STAGE_SLOT = 28, LAST_STAGE_SLOT = 63;
+  nantai: [49, 50, 51], craters: [52, 53, 54], calamari: [55, 56, 57], spirhalite: [58, 59, 60], treehills: [61, 62, 63],
+  bluestone: [64, 65, 66], aquarium: [67, 68, 69], caldera: [70, 71, 72] };
+export const FIRST_STAGE_SLOT = 28, LAST_STAGE_SLOT = 72;
 // flat list: { stage, slot, name (texlib layer name, '<stage>:<name>'), group (texlib uber-program), mat, onWall, onTop }
 // Each stage's layers get an uber-program of their own (group 3 + its index): compiled in parallel with the others, and
 // each stays small.
