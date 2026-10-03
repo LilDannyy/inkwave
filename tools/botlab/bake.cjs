@@ -45,6 +45,8 @@ const PAGE_BAKE = (o) => `(async () => {
     const u1 = (k + 0.5) / O.rays, r = Math.sqrt(u1), ph = 2 * Math.PI * rv; dirs.push([r * Math.cos(ph), r * Math.sin(ph), Math.sqrt(1 - u1)]); }
   const hit = new Hit(), p = new THREE.Vector3(), d = new THREE.Vector3();
   const faces = L.faces.filter((f) => f.light);
+  __G.stageWorld?.bakeMode(true);   // [b5-stagehooks] stage modules take their own pieces out of the trace (pipe glass, tank water)
+  try {
   let done = 0, lastLog = performance.now();
   for (const f of faces) {
     const blk = L.blocks[f.block], pad = f.light.pad;
@@ -76,6 +78,7 @@ const PAGE_BAKE = (o) => `(async () => {
     done++;
     if (performance.now() - lastLog > 3000) { lastLog = performance.now(); console.log('[bake] ' + Math.round(done / faces.length * 100) + '%'); await new Promise((r) => setTimeout(r)); }
   }
+  } finally { __G.stageWorld?.bakeMode(false); }   // [b5-stagehooks]
   let bin = ''; for (let i = 0; i < img.length; i += 0x8000) bin += String.fromCharCode.apply(null, img.subarray(i, i + 0x8000));
   return { hash: L.layoutHash, used: L.lightUsed, png: btoa(bin) };
 })()`;

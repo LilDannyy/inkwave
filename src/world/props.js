@@ -1127,6 +1127,13 @@ function mergeParts(parts) {
   g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   g.setAttribute('color', new THREE.BufferAttribute(colr, 3));
   g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  // [b5-stagehooks] a tagged bucket's parts carry their placement's bucketVec as a per-vertex aTag (stage modules)
+  if (parts[0] && parts[0].tv) {
+    const tag = new Float32Array(nv * 2);
+    let o = 0;
+    for (const p of parts) { const c = p.g.attributes.position.count, t = p.tv || [0, 0]; for (let i = 0; i < c; i++) { tag[o++] = t[0]; tag[o++] = t[1]; } }
+    g.setAttribute('aTag', new THREE.BufferAttribute(tag, 2));
+  }
   g.setIndex(new THREE.BufferAttribute(idx, 1));
   g.computeBoundingSphere(); g.computeBoundingBox();
   return g;
@@ -3276,7 +3283,10 @@ export class PropKit {
     this.mat.fence.alphaToCoverage = true;
   }
 
-  _push(mat, part) { let a = this._buckets.get(mat); if (!a) { a = []; this._buckets.set(mat, a); } a.push(part); }
+  _push(mat, part) {
+    if (this._tag) { mat += '@' + this._tag; part.tv = this._tagV || [0, 0]; }   // [b5-stagehooks] a tagged placement's own buckets
+    let a = this._buckets.get(mat); if (!a) { a = []; this._buckets.set(mat, a); } a.push(part);
+  }
   _tplGeo(kind) {
     if (!this._tpl[kind]) this._tpl[kind] = SPIN_TEMPLATES.has(kind) ? SPIN_TEMPLATES.get(kind)() : kind === 'fan' ? fanTemplate() : turbineTemplate();
     return this._tpl[kind];
@@ -3291,7 +3301,8 @@ export class PropKit {
     const B = this._B;
     B.begin(pos, rotY, scale, seed, def.mount !== 'wall' || type === 'pipes' || type === 'ladder' || type === 'container_door');
     B.tris = 0;
-    def.build(B, o);
+    this._tag = o.bucketTag || null; this._tagV = o.bucketVec || null;   // [b5-stagehooks] (stage modules: bucketTag / bucketVec)
+    try { def.build(B, o); } finally { this._tag = null; this._tagV = null; }
     this.lastTris = B.tris;
     this.count++;
     return { colliders: this._xfCols(B.cols, pos, rotY, scale, !!o.oboxCols) };
@@ -3381,8 +3392,10 @@ export class PropKit {
     if (this._headless) return this;
     for (const [bucket, parts] of this._buckets) {
       if (!parts.length) continue;
-      const [key, flag] = bucket.split('~');   // 'gloss~ns' = gloss material, no shadow casting
-      const mesh = new THREE.Mesh(mergeParts(parts), this.mat[key]);
+      const [mb, tag] = bucket.split('@');     // [b5-stagehooks] 'paint@e3' = a stage module's tagged bucket
+      const [key, flag] = mb.split('~');   // 'gloss~ns' = gloss material, no shadow casting
+      const mesh = new THREE.Mesh(mergeParts(parts), tag && this.tagMaterial ? this.tagMaterial(key, tag, this.mat[key]) || this.mat[key] : this.mat[key]);
+      if (tag) mesh.userData.tag = tag;
       mesh.name = 'props:' + bucket;
       mesh.castShadow = this.castShadow && CASTS[key] && flag !== 'ns';
       mesh.receiveShadow = key !== 'glow' && key !== 'blob';
