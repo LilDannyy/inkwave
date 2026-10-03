@@ -181,7 +181,8 @@ from those (it pops on its own only if no end ever arrives, 3 s past its life). 
 the positions it shows: who's inside (crossing ripples, the drain streams); the drain of the players it owns (their
 ink and special meter — the host's screen does its bots) and their gains (teammates' ink and meter; the owner's share
 becomes bubble time on the owner's screen only, which is why the life rides the record); the grey view and muffle of
-its own player. Shots: like every hit, the shooter's screen decides — its copy of the bubble (ghost or not) halves a
+its own player. Its ink (the splash it lands with, the film raining down when its time runs out) is the owner's splats,
+replicated as usual. Shots: like every hit, the shooter's screen decides — its copy of the bubble (ghost or not) halves a
 shot whose path touched it (or that reaches someone inside it), and the halved damage is what `{k:'hit'}` carries; the
 victim's owner applies it as it comes (applyHit doesn't halve again while `_applyingHit`). Tested by
 `tools/botlab/tests/net-drainbow.cjs` (`CLIENTS=2`).
