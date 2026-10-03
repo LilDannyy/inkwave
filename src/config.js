@@ -106,8 +106,10 @@ export const WEAPONS = {
   roller: {
     id: 'roller', name: 'Swell Roller', kind: 'roller', class: 'Roller',
     blurb: 'Roll out wide stripes of turf. Flick for a crushing splash.',
-    stats: { range: 0.35, damage: 0.95, rate: 0.3, mobility: 0.55, paint: 0.95 },
-    rollSpeed: 4.4, rollWidth: 1.9, rollInkPerMeter: 1.1, rollDamage: 140,
+    stats: { range: 0.35, damage: 0.95, rate: 0.3, mobility: 0.6, paint: 0.95 },
+    // [b5-tuning] rolling is a touch faster than walking (PLAYER.runSpeed 6.0; was 4.4 — the user, 2026-10-04: "slightly
+    // faster than walking speed"); the same ink per metre, so a tank rolls as far as before
+    rollSpeed: 6.5, rollWidth: 1.9, rollInkPerMeter: 1.1, rollDamage: 140,
     flickInterval: 0.62, flickWindup: 0.22, flickInk: 9, flickDrops: 9,
     flickDamageNear: 125, flickDamageFar: 30, flickSpeed: 17, flickSpreadDeg: 34,
     impactRadius: 1.0,
@@ -121,6 +123,10 @@ export const WEAPONS = {
     chargeTime: 1.0, rangeMin: 11, rangeMax: 27, damageMin: 40, damageMax: 160,
     inkFull: 18, lineSplatEvery: 1.2, lineRadius: 0.55, impactRadius: 1.2,
     moveSpeedFiring: 1.8,
+    // [b5-tuning] aim assist (player.js; controller, and the mouse when opted in) on this weapon, × every other weapon's:
+    // stick = how much the look slows near a target, pull = the share of its motion carried, cone = how wide a window
+    // engages it. The user, 2026-10-04: "reduce charger's aim assist lock on" — a one-shot splat needs the aim to be yours
+    assist: { stick: 0.5, pull: 0.4, cone: 0.75 },
     special: 'sonar', specialCost: 180, sub: 'mine',
   },
   blaster: {
@@ -586,7 +592,9 @@ export const ZONES = {
   rotateMin: 30, rotateMax: 60,   // the operational objective swaps between the centre and a side zone this often (s)
   finalCentre: 30,            // from this many seconds left (and all through overtime) only the centre is live
   warn: 0.30,                 // the other team's share of a held zone that sounds the "about to flip" warning
-  control: 0.80, contest: 0.40,   // ink share to take a zone / to neutralise the other team's
+  // [b5-tuning] "make contesting and covering zones more forgiving" (2026-10-04; was 0.80 / 0.40, flipHold 0): ink share
+  // to take a zone / to neutralise the other team's, and how long a share must stay over its line before the zone flips
+  control: 0.70, contest: 0.40, flipHold: 0.6,
   rateCenter: 1,              // points / s holding the centre
   rateHome: 0.5,              // … holding the side zone on your own half (closer to your spawn)
   rateAway: 2,                // … holding the side zone on the other team's half

@@ -9,8 +9,10 @@
 // mirror). Only one objective is operational at a time: the centre to start with, then every 30–60 s the operational
 // one swaps between the centre and a side zone.
 //
-//   • coverage: the share of the zone's inkable floor each team has inked. Taking a zone needs ≥ 80 %; a held zone is
-//     neutralised when the other team inks ≥ 40 % of it. An objective is held when a team holds all of its zones.
+//   • coverage: the share of the zone's inkable floor each team has inked. Taking a zone needs ≥ ZONES.control (70 %;
+//     80 % before 2026-10-04); a held zone is neutralised when the other team inks ≥ ZONES.contest (40 %) of it. Either
+//     change only lands once the share has stayed over its line for ZONES.flipHold s (0.6; 0 before) — a sliver of ink
+//     that's inked straight back never flips a zone. An objective is held when a team holds all of its zones.
 //   • countdown: each team starts at 100. Holding the operational objective counts you down — 1 pt/s at the centre;
 //     a side zone on your own half 1 pt / 2 s; a side zone on the enemy's half (i.e. closer to THEIR spawn) 1 pt / 0.5 s.
 //     A team at 0 wins on the spot.
@@ -25,7 +27,7 @@
 //   • time (5 min) + overtime: see _timeUp / _overtime. The last 30 s (ZONES.finalCentre) and overtime are played on
 //     the centre only: a live side zone is swapped back to the centre and there are no more rotations.
 //   • ink: taking a zone floods every one of its cells with the taker's ink (a front running out from its centre, see
-//     PaintSystem.flood; nobody is credited for it), so the other team has to ink the full 40 % back to neutralise it.
+//     PaintSystem.flood; nobody is credited for it), so the other team has to ink the full contest share back to neutralise it.
 //     An objective that becomes operational is wiped back to bare floor first (in step with the zone marks' reveal).
 //
 // Events (on / emit, src/core/ctx.js):
@@ -33,6 +35,7 @@
 //   zones:active { objective, zones, final?, moved? } — a rotation; final: the last-30-s lock (moved: false when the
 //                  centre was already live and only the lock is announced)
 //   zones:contest { zone, holder, share } — the other team has inked a held zone up to ZONES.warn (≈ 30 %) of it
+//   (the thresholds are read live from ZONES, so match.cjs TUNE='zones.control=0.8,…' can replay the old rules)
 //   zones:overtime { losing }  ·  zones:end { winner, reason, counts, penalty } (counts = the scores, penalty apart)
 //
 // ZONE_FORMAT (layout.zones):
@@ -45,7 +48,6 @@ import { G, emit } from '../core/ctx.js';
 import { ZONES } from '../config.js';
 
 const FINAL = ZONES.finalCentre ?? 30;   // the last N s (+ overtime): the centre only, no more rotations
-const WARN = ZONES.warn ?? 0.3;          // the other team's share of a held zone that sounds the "contested" warning
 const WARN_GAP = 4;                      // s between two warnings for one zone
 const MIN_STINT = 10;                    // a rotation never leaves an objective live for less than this before the lock
 const FILL_T = 0.6;                      // capture flood: the front's run time (s), eased out
@@ -111,7 +113,7 @@ export class ZoneControl {
     // zones: [center…, sideA (home 0), sideB (home 1)]
     const defs = [...Z.center.map((z) => ({ ...z, kind: 'center', home: -1 })),
       { ...Z.side, kind: 'side', home: 0 }, { ...mirrorZone(Z.side), kind: 'side', home: 1 }];
-    this.zones = defs.map((d, i) => ({ id: i, def: d, kind: d.kind, home: d.home, owner: -1, share: [0, 0], hold: 0, warnArmed: true, warnT: -99, flood: null, ...zoneCells(d) }));
+    this.zones = defs.map((d, i) => ({ id: i, def: d, kind: d.kind, home: d.home, owner: -1, share: [0, 0], hold: 0, warnArmed: true, warnT: -99, flood: null, pend: null, ...zoneCells(d) }));
     const nc = Z.center.length;
     // objectives: the centre (1 or 2 zones), and one per side zone
     this.objectives = [
@@ -176,13 +178,16 @@ export class ZoneControl {
       const n = Math.max(1, c.length);
       z.share[0] = a / n; z.share[1] = b / n;
       if (this.follower) { if (z.owner >= 0) this._contest(z); continue; }   // (control is the host's call)
-      if (this.clock < z.hold) continue;                 // still being wiped for its turn as the objective
-      if (z.owner === -1) {
-        const t = z.share[0] >= ZONES.control ? 0 : z.share[1] >= ZONES.control ? 1 : -1;
-        if (t >= 0) this._zoneOwner(z, t);
-      } else if (z.share[1 - z.owner] >= ZONES.contest) {
-        this._zoneOwner(z, -1);
-      } else this._contest(z);
+      if (this.clock < z.hold) { z.pend = null; continue; }   // still being wiped for its turn as the objective
+      // the change this zone's ink calls for now: taken (≥ control), neutralised (the other team ≥ contest), or none
+      let to = null;
+      if (z.owner === -1) { const t = z.share[0] >= ZONES.control ? 0 : z.share[1] >= ZONES.control ? 1 : -1; if (t >= 0) to = t; }
+      else if (z.share[1 - z.owner] >= ZONES.contest) to = -1;
+      if (to === null) { z.pend = null; if (z.owner >= 0) this._contest(z); continue; }
+      // …and it lands once the share has stayed over the line for flipHold s (a sliver inked straight back never flips it)
+      if (!z.pend || z.pend.to !== to) z.pend = { to, t: this.clock };
+      if (this.clock - z.pend.t >= (ZONES.flipHold || 0) - 1e-6) { z.pend = null; this._zoneOwner(z, to); }
+      else if (z.owner >= 0) this._contest(z);
     }
     if (this.follower) return;
     const o = this.active.zones.every((z) => z.owner === 0) ? 0 : this.active.zones.every((z) => z.owner === 1) ? 1 : -1;
@@ -198,7 +203,7 @@ export class ZoneControl {
 
   // the other team is inking a held zone close to the neutralise line: warn once (re-armed when it's pushed back)
   _contest(z) {
-    const o = z.share[1 - z.owner];
+    const o = z.share[1 - z.owner], WARN = ZONES.warn ?? 0.3;
     if (o < WARN - 0.08) { z.warnArmed = true; return; }
     if (o < WARN || !z.warnArmed || this.clock - z.warnT < WARN_GAP) return;
     z.warnArmed = false; z.warnT = this.clock;
@@ -292,10 +297,10 @@ export class ZoneControl {
     const o = this.objectives;
     const next = to || (this.active === o[0] ? (Math.random() < 0.5 ? o[1] : o[2]) : o[0]);
     this._net(['za', o.indexOf(next), final ? 1 : 0]);
-    for (const z of this.active.zones) z.owner = -1;
+    for (const z of this.active.zones) { z.owner = -1; z.pend = null; }
     this.active = next;
     // a new objective starts neutral on bare floor (wiped as it's revealed); control is re-read from the ink after
-    for (const z of next.zones) { z.owner = -1; z.warnArmed = true; this._flood(z, -1); }
+    for (const z of next.zones) { z.owner = -1; z.pend = null; z.warnArmed = true; this._flood(z, -1); }
     if (final) this.nextSwap = 0; else this._schedule();
     if (this.owner !== -1) { this.owner = -1; this.neutralT = 0; emit('zones:control', { owner: -1, prev: this.lastOwner, objective: next.id }); }
     this.sampleT = 0;
@@ -417,7 +422,7 @@ export class ZoneControl {
     return {
       active: this.active.id, owner: this.owner, lastOwner: this.lastOwner,
       count: this.count.map((c) => Math.ceil(c)), penalty: [...this.penalty], total: [Math.ceil(this.total(0)), Math.ceil(this.total(1))],
-      zones: this.active.zones.map((z) => ({ id: z.id, owner: z.owner, share: z.share.map((s) => +s.toFixed(3)), cells: z.cells.length, center: z.center })),
+      zones: this.active.zones.map((z) => ({ id: z.id, owner: z.owner, share: z.share.map((s) => +s.toFixed(3)), cells: z.cells.length, center: z.center, pending: z.pend ? z.pend.to : null })),
       nextSwap: this.final || !Number.isFinite(this.nextSwap) ? 0 : +this.nextSwap.toFixed(1), final: this.final, overtime: this.overtime, overtimeT: +this.overtimeT.toFixed(1), neutralT: +this.neutralT.toFixed(1),
       winner: this.winner, reason: this.reason, placeholder: this.placeholder,
     };

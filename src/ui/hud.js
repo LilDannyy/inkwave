@@ -959,7 +959,7 @@ export class HUD {
   // right, each showing its count (ceil'd; the score), a "+N" penalty badge and a bar that fills toward the timer as the
   // count closes on 0 (the striped block ahead of it = penalty to count off before the count moves again). The chip under the timer names the operational
   // objective (CENTRE / YOUR SIDE / ENEMY SIDE, relative to the viewer), colours each of its zones by holder and shows
-  // each zone's live ink share (the ticks = the 80 % needed to take it); then the rotation hint or the OVERTIME badge.
+  // each zone's live ink share (the ticks = the ZONES.control share needed to take it); then the rotation hint or the OVERTIME badge.
   _zMe() { const a = this._local(); return a && (a.team === 0 || a.team === 1) ? a.team : 0; }
   _zLive() { return this._live() && !!(this.lab || (G.match && (G.match.zones || G.match.tower))); }   // (Tower Command shares the banners)
   _zHex(t) { return t === 0 || t === 1 ? toHex(G.teamHex?.[t], t ? '#2f5bff' : '#ff8a14') : '#ffffff'; }
@@ -972,6 +972,7 @@ export class HUD {
       L.zOn = on;
       this.el.classList.toggle('is-zones', on);
       L.zKey = L.zc0 = L.zc1 = null; L.zSh = L.zOt = L.zOff = L.zG = null;
+      if (on) this.zo.style.setProperty('--zt', String(ZONES.control ?? 0.8));   // [b5-tuning] the share bars' take ticks
     }
     if (!on) return;
     const me = z.viewer === 0 || z.viewer === 1 ? z.viewer : this._zMe();

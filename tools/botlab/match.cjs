@@ -8,7 +8,7 @@
 //   line, Drainbow runs the Drainbow's counters (special uses …).
 //   TRACK=<weapon> (+ TRACK_TEAM=0|1): a closer look at the players on that weapon (see trk below).
 //   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS / SPECIALS values;
-//   an array as 'bow.burstPaint=1/1.2').
+//   an array as 'bow.burstPaint=1/1.2'; 'zones.control=0.8' for the Zone Control rules, config ZONES).
 //   SPECIAL_AI=0 turns the bots' awareness of enemy specials off (src/game/botSpecials.js; an A/B on the same code),
 //   team0 / team1: on for that team only (head to head); unset: as shipped.
 //   SPCHARGE=3: the special gauge fills 3× as fast (PLAYER.specialChargeRate; this run only) — more specials per match.
@@ -46,7 +46,7 @@ app.on('browser-window-created', (_, win) => {
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     // what-if tuning (TUNE, see the header): patched into the live config before the loadouts
     const tuned = TUNE ? await js(`(async () => { const C = await import('./src/config.js'); const out = [];
-      for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id] || C.SPECIALS[id];
+      for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id] || C.SPECIALS[id] || (id === 'zones' ? C.ZONES : null);
         if (!o || !(key in o)) { out.push('?' + path); continue; } o[key] = v.includes('/') ? v.split('/').map(Number) : isNaN(+v) ? v : +v; out.push(path + '=' + o[key]); }
       return out.join(','); })()`) : '';
     // loadouts: WEAPONS / SUBS (see the header)
@@ -99,6 +99,7 @@ app.on('browser-window-created', (_, win) => {
       const inPoly = (poly, x, z) => { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) ins = !ins; } return ins; };
       const inZone = (zn, p) => { const d = zn.def, parts = d.polys || [d.poly]; return p.y > (d.y0 ?? -2) - 0.6 && p.y < (d.y1 ?? 6) + 1.6 && parts.some((q) => inPoly(q, p.x, p.z)); };
       const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, anyIn = 0, insideN = [0, 0], nearN = [0, 0], held = [0, 0], neutral = 0, zs = 0;
+      const __ZC = (await import('./src/config.js')).ZONES, zLead = { cur: -1, changes: 0, contested: 0, dispute: 0, pending: 0 };
       const eps = []; let holdS = 0; const roleS = {}; const frameErr = { n: 0, msg: '' }; const where = {}; let whereN = 0; const whereT = [{}, {}]; const farMode = {}; let ready = 0;
       offs.push(on('special:ready', () => ready++));
       const open = new Map();
@@ -237,6 +238,15 @@ app.on('browser-window-created', (_, win) => {
           noteShares();
           zs++;
           if (Z.owner >= 0) held[Z.owner] += 0.25; else neutral += 0.25;
+          // [b5-tuning] lead changes (the count alone is the score: the lower count leads; a tie keeps the last leader) and
+          // contested time: a held zone of the live objective with the other team at / over the HUD's warn line (ZONES.warn)
+          // — and, the same for every rule set, at / over 25 % (dispute)
+          { const c0 = Math.ceil(Z.count[0] - 1e-6), c1 = Math.ceil(Z.count[1] - 1e-6), ld = c0 < c1 ? 0 : c1 < c0 ? 1 : -1;
+            if (ld >= 0 && ld !== zLead.cur) { if (zLead.cur >= 0) zLead.changes++; zLead.cur = ld; }
+            const hz = Z.active.zones.filter((zn) => zn.owner >= 0), W = __ZC.warn ?? 0.3;
+            if (hz.some((zn) => zn.share[1 - zn.owner] >= W)) zLead.contested += 0.25;
+            if (hz.some((zn) => zn.share[1 - zn.owner] >= 0.25)) zLead.dispute += 0.25;
+            if (Z.active.zones.some((zn) => zn.pend)) zLead.pending += 0.25; }
           const act = Z.active.zones;
           let any = false;
           for (const a of m.actors) {
@@ -321,6 +331,8 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
       };
       if (Z) Object.assign(res, {
         held: held.map((h) => +h.toFixed(1)), neutral: +neutral.toFixed(1), captures: flips, controlEvents: ev.control.length,
+        leadChanges: zLead.changes, contestedS: +zLead.contested.toFixed(1), disputeS: +zLead.dispute.toFixed(1), pendingS: +zLead.pending.toFixed(1),
+        rules: { control: __ZC.control, contest: __ZC.contest, warn: __ZC.warn, flipHold: __ZC.flipHold ?? 0 },
         takeovers: ev.control.filter((c, i) => c.owner >= 0 && ev.control.slice(0, i).reverse().find((q) => q.owner >= 0)?.owner === 1 - c.owner).length,
         firstCapture: ev.control.find((c) => c.owner >= 0)?.t ?? null,
         counts: st.count, penalty: st.penalty.map((p) => +p.toFixed(1)), total: st.total, winner: st.winner, reason: st.reason, overtime: st.overtime, overtimeT: st.overtimeT,
@@ -340,6 +352,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     if (MODE === 'zones') {
       console.log(`== ${MAP} [zones]: winner ${r.winner === 0 ? 'Alpha' : r.winner === 1 ? 'Bravo' : '-'} (${r.reason}) | final ${r.counts[0]} vs ${r.counts[1]} (penalty +${r.penalty.join('/+')}) | OT ${r.overtime ? r.overtimeT + 's' : 'no'}`);
       console.log(`   held A ${r.held[0]}s B ${r.held[1]}s neutral ${r.neutral}s | captures ${r.captures} (takeovers ${r.takeovers}), control events ${r.controlEvents}, first capture @${r.firstCapture}s | rotations ${r.rotations}`);
+      console.log(`   lead changes ${r.leadChanges} | contested ${r.contestedS}s (other team ≥ warn on a held zone; ≥ 25 %: ${r.disputeS}s) | a flip pending ${r.pendingS}s | rules ${JSON.stringify(r.rules)} | match ${r.simT}s`);
       console.log(`   teams: A [${r.teams[0]}] ${r.whereT[0]} | B [${r.teams[1]}] ${r.whereT[1]}`);
       console.log(`   bot-time: ${JSON.stringify(r.where)} (far by mode ${JSON.stringify(r.farMode)}) | specials ready ${r.ready}`);
       console.log(`   bots in the active zone ${r.zonePct}% of the time | avg inside A ${r.insideAvg[0]} B ${r.insideAvg[1]} | within 12 m A ${r.nearAvg[0]} B ${r.nearAvg[1]}`);
