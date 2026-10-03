@@ -161,6 +161,9 @@
     runjump: (w, S) => { put(V(0, 0, -26), 0); drive.move.set(0, 0, 1); run(null, 0.8); drive.jump = true; run(S, 0.05); drive.jump = false; run(S, 1.0); },
     fall: (w, S) => { put(V(0, 3.2, -6), 0); kid.grounded = false; run(S, 1.6); },
     spawn: (w, S) => { kid.respawn(); kid.hp = 1e6; run(S, 1.6); },
+    // the Tidal Slam's body (the pose layers only): the leap's tuck and hang, then the slam into the deck — not its launch
+    // (0.24 s: the free arm is flung up as the kid springs off, the one moment the off hand lets go besides a sub throw)
+    leap: (w, S) => { put(START, 0); run(null, 0.5); kid.character.trigger('special_leap'); run(null, 0.26); run(S, 0.54); kid.character.trigger('special_slam'); run(S, 1.4); },
   };
   const DANCES = { lobby: ['lobby_pose', 0, 7.1], idle: ['menu_idle', 0, 8.1], locker: ['locker_idle', 0, 9.1],
     victory0: ['victory', 0, 3.9], victory1: ['victory', 1, 4.7], victory2: ['victory', 2, 3.3],
@@ -181,15 +184,16 @@
     kid.character.setDance(null); run(null, 0.6);
   };
   const STATE_LIST = arg('s') || ['stand', 'run', 'fire', 'roll', 'jump', 'runjump', 'fall', 'spawn', ...Object.keys(DANCES), 'lockershots'];
+  const BOTH_STATES = arg('s') || [...STATE_LIST, 'leap'];   // (the four only: the others' baseline predates it)
 
   const results = {};
-  const measureWeapon = (w) => {
+  const measureWeapon = (w, LIST = STATE_LIST) => {
     reset(); kid.setWeapon(w); kid.character.setDance(null);
     if (TUNE && TUNE[w]) Object.assign(kid.character.hold, TUNE[w]);
     if (!kid.alive) kid.respawn();
     put(START, 0); run(null, 0.5);
     const res = {};
-    for (const st of STATE_LIST) {
+    for (const st of LIST) {
       reset(); camHold();
       const S = stats();
       try { STATES[st](w, S); } catch (e) { res[st] = { error: e.message }; continue; }
@@ -226,8 +230,8 @@
   // ---- the four two-handed weapons
   const both = (W_ONLY || BOTH).filter((w) => BOTH.includes(w));
   if (part('both')) for (const w of both) {
-    const res = results[w] = measureWeapon(w);
-    for (const st of STATE_LIST) {
+    const res = results[w] = measureWeapon(w, BOTH_STATES);
+    for (const st of BOTH_STATES) {
       const r = res[st]; if (!r) continue;
       if (r.error) { R(`${w} ${st}: ran`, false, r.error); continue; }
       const grip = r.dMax <= GRIP_TOL, elb = r.elbow[0] >= ELB_MIN && r.elbow[1] <= ELB_MAX && r.bend <= BEND_MAX, wr = r.swing <= WR_SWING && r.twist <= WR_TWIST;

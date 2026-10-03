@@ -2203,9 +2203,11 @@ export class Character {
 
   /** [b5-holds] A two-handed weapon (hold.both) keeps the off hand on it through every layer and dance: whatever a
    *  layer asked of the free hand (a fidget, the respawn's hand to the ground, a hand on the hip, a fist pump) gives way
-   *  to the foregrip IK. It lets go only while a sub is held and thrown, and while a special hides the weapon. */
+   *  to the foregrip IK. It lets go only while a sub is held and thrown, while a special hides the weapon, and for the
+   *  Tidal Slam's launch (the free arm flung up as the kid springs off, 0.24 s; both hands again for the tuck and hang). */
   _bothHands(P) {
-    const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62));
+    const lp = this.tr[T_LEAP], launch = lp < 0.24 ? win(lp, 0, 0.04, 0.12, 0.24) : 0;
+    const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62), launch);
     const k = 1 - free;
     if (k <= 0.001) return;
     // a layer that sent the hand to a target (LTW) also bent the elbow for it: that bend goes with it
@@ -2597,8 +2599,9 @@ export class Character {
     const flip = ease((lt - 0.14) / 0.36);
     X[MODELR] += lt > 0.14 ? wrapA(flip * TAU) : 0;
     // weapon: thrust up on launch, tucked to the chest, raised overhead two-handed for the hang
-    const up = Math.max(launch, hang);
-    lerpE(X, ANC, -0.06, 1.34, 0.06, up); lerpE(X, ANCR, -1.85, 0.05, 0, up);
+    const up = Math.max(launch, hang), T = this.hold.both ? this.hold.trophy : null;
+    if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], up); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], up); }   // [b5-holds] two hands reach it
+    else { lerpE(X, ANC, -0.06, 1.34, 0.06, up); lerpE(X, ANCR, -1.85, 0.05, 0, up); }
     lerpE(X, ANC, -0.1, 0.86, 0.2, tuck); lerpE(X, ANCR, -0.6, 0.1, 0, tuck);
     X[AFOLT] = 1; X[AFOLR] = 0.5 + 0.5 * tuck;
     X[IKL] = lerp(X[IKL], 1, Math.max(hang, tuck)); X[IKL] = lerp(X[IKL], 0, launch);
@@ -2622,14 +2625,20 @@ export class Character {
     // diving: legs extended down, weapon whipped from overhead to the front
     lerpE(X, FOOTL, 0.1, 0.1, 0.06, dive); lerpE(X, FOOTLR, 0.5, 0.1, 0, dive);
     lerpE(X, FOOTR, -0.1, 0.12, -0.08, dive); lerpE(X, FOOTRR, 0.7, -0.1, 0, dive);
-    lerpE(X, ANC, -0.06, 1.3, 0.12, dive * (1 - ease(st / 0.12))); lerpE(X, ANCR, -1.9, 0.05, 0, dive * (1 - ease(st / 0.12)));
-    lerpE(X, ANC, -0.05, 0.62, 0.36, ease((st - 0.04) / 0.1) * (1 - imp)); lerpE(X, ANCR, 0.9, 0.05, 0, ease((st - 0.04) / 0.1) * (1 - imp));
+    const T = this.hold.both ? this.hold.trophy : null, dv = dive * (1 - ease(st / 0.12));   // [b5-holds] two hands reach it
+    if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], dv); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], dv); }
+    else { lerpE(X, ANC, -0.06, 1.3, 0.12, dv); lerpE(X, ANCR, -1.9, 0.05, 0, dv); }
+    // [b5-holds] two-handed: the smash lands closer in, and once down the weapon comes back from the smash to the hold
+    // (not out to the low whip, which the off hand can't reach with the body upright again)
+    const zf = T ? 0.28 : 0.36, wf = ease((st - 0.04) / 0.1) * (1 - imp) * (T && this.slamGround ? 0 : 1);
+    lerpE(X, ANC, -0.05, 0.62, zf, wf); lerpE(X, ANCR, 0.9, 0.05, 0, wf);
     X[SPINE] += 0.3 * dive; X[CHEST] += 0.15 * dive;
     // impact: wide low crouch, weapon planted in front, head down
     lerpE(X, FOOTL, 0.2, ANKLE_H, 0.06, imp); lerpE(X, FOOTLR, 0, 0.35, 0, imp);
     lerpE(X, FOOTR, -0.2, ANKLE_H, -0.1, imp); lerpE(X, FOOTRR, 0, -0.5, 0, imp);
     X[HIPS_P + 1] -= 0.25 * imp; X[SPINE] += 0.45 * imp; X[CHEST] += 0.25 * imp; X[HLP] += 0.2 * imp;
-    lerpE(X, ANC, -0.05, this.animKind === 'roller' ? 0.5 : 0.36, 0.4, imp); lerpE(X, ANCR, this.animKind === 'roller' ? 1.2 : 1.35, 0.05, 0, imp);
+    if (T) { lerpE(X, ANC, -0.05, 0.8, 0.18, imp); lerpE(X, ANCR, 1.0, 0.05, 0, imp); }   // (the anchor rides the crouching chest)
+    else { lerpE(X, ANC, -0.05, this.animKind === 'roller' ? 0.5 : 0.36, 0.4, imp); lerpE(X, ANCR, this.animKind === 'roller' ? 1.2 : 1.35, 0.05, 0, imp); }
     X[KNEEL] += 0.3 * imp; X[KNEER] -= 0.3 * imp;
     X[IKL] = 1; X[AFOLT] = 1; X[AFOLR] = 0.6; X[EARS] -= 0.6 * dive; X[HANDPL] = -1;
     lerpE(X, POLER, -0.9, -0.2, -0.3, imp); lerpE(X, POLEL, 0.9, -0.2, -0.3, imp);
