@@ -11,8 +11,9 @@
 // The brush, the roller, the blaster and the brolly ('both'): on the weapon, natural elbow / wrist, in every state —
 // stand (2 s idle), run, fire (blaster / brolly shots, brush swipes, roller flick), roll (fire held while moving: roller
 // roll, brush dash, blaster strafing shots; the brolly's canopy held open), jump, run-jump, a fall onto the deck, the
-// respawn drop, every idle fidget it can pick (and it never picks one that needs a free hand), and the menu / podium
-// dances: the lobby / loadout pose, the two menu idles, each victory and defeat variant, the locker one-shots.
+// respawn drop, the Tidal Slam's tuck / hang / slam (its launch fling excepted), every idle fidget it can pick (and it
+// never picks one that needs a free hand), and the menu / podium dances: the lobby / loadout pose, the two menu idles,
+// each victory and defeat variant, the locker one-shots.
 // Every other weapon ('others', run first): its hold is not a two-handed one, and its off hand does what it did — each
 // state's IK weight on the foregrip (±0.02), mean wrist-to-authored-grip distance (±5 cm) and mean left-hand position
 // in kid space (±8 cm) against tools/botlab/tests/holds-baseline.json, recorded on the code before this change (7ee5ad5,
