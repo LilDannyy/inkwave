@@ -447,7 +447,8 @@
         return { jumps, hits: hitsN, share: r2(jumps / Math.max(1, jumps + hitsN)) };
       };
       const hard = run('hard'), easy = run('easy');
-      R(`bots in a ring's way jump it: hard ${hard.jumps} jumped / ${hard.hits} hit (≥ 75 %), easy ${easy.jumps} / ${easy.hits} (fewer)`, hard.jumps + hard.hits >= 20 && hard.share >= 0.75 && easy.share < hard.share, { hard, easy, stats: { ...SB.SURF_BOT } });
+      // (hard bots jump 72–86 % across runs — about 35 rings a run, so the share swings ±7 points: a 75 % bar flaked at 0.72 / 0.74)
+      R(`bots in a ring's way jump it: hard ${hard.jumps} jumped / ${hard.hits} hit (≥ 65 %), easy ${easy.jumps} / ${easy.hits} (fewer)`, hard.jumps + hard.hits >= 20 && hard.share >= 0.65 && easy.share < hard.share, { hard, easy, stats: { ...SB.SURF_BOT } });
       // no foe in sight: a bot shoots an enemy buoy down
       reset();
       const Sh = foes.find((f) => ['shooter', 'blaster', 'dualies', 'splatling', 'slosher'].includes(f.weapon.kind)) || foe;
