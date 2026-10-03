@@ -117,7 +117,7 @@ export function bars(poly, { only, level, w = BARW, y0 = BOT, opts = {} }) {
     const dx = x1 - x0, dz = z1 - z0, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, nx = -uz * s, nz = ux * s;   // (n: inward)
     const cx = (x0 + x1) / 2 + (nx * w) / 2, cz = (z0 + z1) / 2 + (nz * w) / 2;
     const deg = (Math.atan2(dx, dz) * 180) / Math.PI;   // the bar's long side (local z) along the edge
-    out.push(O(+cx.toFixed(4), +cz.toFixed(4), w, +L.toFixed(4), y0, level(i), +deg.toFixed(4), { ...opts, kerb: [x0, z0, x1, z1] }));
+    out.push(O(+cx.toFixed(4), +cz.toFixed(4), w, +L.toFixed(4), y0, level(i), +deg.toFixed(4), { ...opts, kerb: [x0, z0, x1, z1], noPaint: [[+(-nx).toFixed(4), 0, +(-nz).toFixed(4)]] }));   // (its outer face: the quay wall over the water, out of reach)
   }
   return out;
 }

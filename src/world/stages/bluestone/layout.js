@@ -25,13 +25,19 @@
 // Heights: 0 streets · 0.3 tram islands · 0.6 Degrayling pavements, the arcade, the West Wharf · 1.0 the forecourt
 // terrace and yards · 1.2 the GPO terrace · 1.3 the concourse · 1.6 the loading platform · 2.4 the balcony and
 // gallery, the Boathouse deck · 3.1–3.18 the Signal Garden · 3.3 the spawn decks · 5.4 the Halo.
-import { PATTERN, B, R, O, OCT } from '../../mapkit.js';
+import { PATTERN, B, R as R0, O, OCT } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { ERA, eraFilter } from './era.js';
-import { BOT, coverRects, bars, reflexPatches, junctionPatches, coreBoxes, tierBoxes, symOutline, rectPoly, oPoly } from './ground.js';
+import { BOT, TIER_Y, coverRects, bars, reflexPatches, junctionPatches, coreBoxes, tierBoxes, symOutline, rectPoly, oPoly } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------ frames
+// a stair / ramp (a solid wedge): its sides and end caps are buried or hidden, so only its top is turf (paint atlas)
+function R(low, high, width, o = {}) {
+  const dx = high[0] - low[0], dy = high[1] - low[1], dz = high[2] - low[2], L = Math.hypot(dx, dy, dz), h = Math.hypot(dx, dz);
+  const sx = -dz / h, sz = dx / h, ux = dx / L, uy = dy / L, uz = dz / L;
+  return R0(low, high, width, { ...o, noPaint: [[sx, 0, sz], [-sx, 0, -sz], [ux, uy, uz], [-ux, -uy, -uz]] });
+}
 // Flathead Street's frame: along = p·(sin 65°, cos 65°), off = p·(−cos 65°, sin 65°); AO(a, o) = the world point
 const S65 = Math.sin((65 * Math.PI) / 180), C65 = Math.cos((65 * Math.PI) / 180);
 export const AO = (a, o) => [+(a * S65 - o * C65).toFixed(4), +(a * C65 + o * S65).toFixed(4)];
@@ -65,8 +71,9 @@ const cover = (o = {}) => ({ color: K.cover, pattern: PATTERN.plain, ...o });
 const wall = (o = {}) => ({ color: K.wall, pattern: SURF.bluestone, roof: true, paint: false, ...o });
 // a building: an inkable block from y0 to 3 m, and a roof block (`roof`, not inkable) from 3 m to its top (DESIGN.md
 // §2.6 point 1: paint and lightmap stay in the 0–3 m band)
-const bld = (x0, x1, z0, z1, top, o = {}, y0 = 0) => [...(y0 < 0 ? [B(x0, x1, y0, 0, z0, z1, { pattern: PATTERN.render, ...o, paint: false })] : []),
-  B(x0, x1, Math.max(0, y0), 3, z0, z1, { pattern: PATTERN.render, ...o }), B(x0, x1, 3, top, z0, z1, { pattern: PATTERN.render, ...o, roof: true, paint: false })];
+// (y0 < 0: the building stands in a hole in the street on a base, like a tier: no street under it in the paint atlas)
+const bld = (x0, x1, z0, z1, top, o = {}, y0 = 0) => [...(y0 < 0 ? [B(x0, x1, y0, TIER_Y, z0, z1, { pattern: PATTERN.render, ...o, paint: false })] : []),
+  B(x0, x1, y0 < 0 ? TIER_Y : y0, 3, z0, z1, { pattern: PATTERN.render, ...o }), B(x0, x1, 3, top, z0, z1, { pattern: PATTERN.render, ...o, roof: true, paint: false })];
 const obld = (cx, cz, w, d, deg, top, o = {}, y0 = 0) => [O(cx, cz, w, d, y0, 3, deg, { pattern: PATTERN.render, ...o }), O(cx, cz, w, d, 3, top, deg, { pattern: PATTERN.render, ...o, roof: true, paint: false })];
 const rail = (o = {}) => ({ rail: true, paint: false, color: '#333333', ...o });
 
@@ -99,7 +106,9 @@ export const P = {
   carriage: [-4.5, 4.5, -50, -20],   // Swimston's carriageway (granite): one slab, its own colour
   wharf: [-62, -50, -14, 14],        // the West Wharf in the arm's frame (along a0…a1, off o0…o1)
 };
-const TIERS = [TERRACE, rectPoly(...P.deck), rectPoly(...P.engine), rectPoly(...P.boiler), rectPoly(-P.boiler[1], -P.boiler[0], P.boiler[2], P.boiler[3]),
+// the square-built buildings on the street (the street is cut out under them; they stand on a base like the tiers)
+const BLDS = [[7, 10.5, -27, -19], [7, 10.5, -44, -31], [16.5, 19.5, -44, -38], [-13.5, -7, -44, -40], [-14, -7, -22.5, -18.5], [-14, -13.5, -46, -26], [-19, -18.5, -46, -26]];
+const TIERS = [TERRACE, ...BLDS.map((r) => rectPoly(...r)), rectPoly(...P.deck), rectPoly(...P.engine), rectPoly(...P.boiler), rectPoly(-P.boiler[1], -P.boiler[0], P.boiler[2], P.boiler[3]),
   rectPoly(...P.gpo), rectPoly(...P.arcade), rectPoly(...P.degS), rectPoly(...P.degN), rectPoly(...P.boathouse), armPoly(...P.wharf)];
 const mirP = (p) => p.map(([x, z]) => [-x, -z]);
 
@@ -170,7 +179,8 @@ const MID = [
 const HALO_Y = 5.4, AP_IN = 11.6, AP_OUT = 14.6, AP_MID = 13.1, HS = 4.8;
 const haloPieces = [];
 {
-  const halo = (o) => ({ tag: 'halo', color: K.glass, pattern: PATTERN.glasstile, eras: '3', ...o });
+  // (the deck's 0.4 m edges are out of reach: only its top is turf)
+  const halo = (o) => ({ tag: 'halo', color: K.glass, pattern: PATTERN.glasstile, eras: '3', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0.7071, 0, 0.7071], [-0.7071, 0, -0.7071], [0.7071, 0, -0.7071], [-0.7071, 0, 0.7071], [0.9239, 0, 0.3827], [-0.9239, 0, -0.3827], [0.3827, 0, 0.9239], [-0.3827, 0, -0.9239], [0.9239, 0, -0.3827], [-0.9239, 0, 0.3827], [0.3827, 0, -0.9239], [-0.3827, 0, 0.9239]], ...o });
   const hrail = (o) => rail({ tag: 'halo-rail', eras: '3', ...o });
   // half-sides: [bearing of the side, which half (+1: the tangent's + end, −1: the − end), group]
   const sides = [[90, 1, 'halo-1'], [135, 1, 'halo-2'], [135, -1, 'halo-3'], [180, 1, 'halo-4'], [180, -1, 'halo-5'], [225, 1, 'halo-6'], [225, -1, 'halo-7'], [270, -1, 'halo-8']];
@@ -252,11 +262,11 @@ const WEST = [
   B(-12.4, -11.4, 1.2, 3.2, -28.4, -27.4, { tag: 'gpo-pier', color: '#bdb196', pattern: PATTERN.render, roof: true }),
   B(-12.4, -11.4, 1.2, 3.2, -38.6, -37.6, { tag: 'gpo-pier', color: '#bdb196', pattern: PATTERN.render, roof: true }),
   R([-10, 1.2, -27.5], [-7, 2.4, -27.5], 3, stair({ tag: 'gpo-stair' })),
-  ...bld(-13.5, -7, -44, -40, 9, { tag: 'corner-shop', color: K.gpo }),
+  ...bld(-13.5, -7, -44, -40, 9, { tag: 'corner-shop', color: K.gpo }, BOT),
   B(-13.5, -11, 9, 16, -42.5, -40, { tag: 'gpo-clocktower', color: K.gpo, pattern: PATTERN.render, roof: true, paint: false }),
   // the arcade: its two walls, its 0.6 mosaic floor (on across Hotel Lane and under the hotel arch), its glass vault
-  ...bld(-14, -13.5, -46, -26, 7, { tag: 'arcade-wall', color: K.gpo }),
-  ...bld(-19, -18.5, -46, -26, 7, { tag: 'arcade-wall', color: K.gpo }),
+  ...bld(-14, -13.5, -46, -26, 7, { tag: 'arcade-wall', color: K.gpo }, BOT),
+  ...bld(-19, -18.5, -46, -26, 7, { tag: 'arcade-wall', color: K.gpo }, BOT),
   ...tierBoxes([P.arcade], 0.6, ground({ tag: 'arcade-floor', color: '#8d8679', pattern: PATTERN.tiles })),
   B(-18.5, -14, 6, 6.3, -46, -26, { tag: 'arcade-roof', color: '#9fb1b5', pattern: PATTERN.glasstile, roof: true, paint: false }),
   // 1880s: the arcade under construction, hoarded and full of scaffold (gates: 2.8 m, roof, not inkable) → today: a kiosk,
@@ -268,7 +278,7 @@ const WEST = [
   OB(-16.25, -36, 1.2, 2, 0.6, 1.8, 0, cover({ tag: 'flower-stall', color: '#6f7a5a', eras: '23', eraGroup: 'arcade-2' })),
   OB(-16.25, -29.5, 1.2, 2.4, 0.6, 1.6, 0, cover({ tag: 'arcade-bench', color: '#7a6a58', eras: '23', eraGroup: 'arcade-3' })),
   // the hotel: H1 (to 9 m) and the prow's corner turret (to 13 m); the west wing on an arch over the arcade (soffit 3.8)
-  ...bld(-14, -7, -22.5, -18.5, 9, { tag: 'hotel', color: K.hotel }),
+  ...bld(-14, -7, -22.5, -18.5, 9, { tag: 'hotel', color: K.hotel }, BOT),
   B(-14, -11.5, 9, 13, -21, -18.5, { tag: 'hotel-turret', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
   B(-19, -14, 3.8, 9, -22.5, -18.5, { tag: 'hotel-arch', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
   B(-19, -18.5, 0, 3.8, -22.5, -18.5, { tag: 'arch-pier', color: K.hotel, pattern: PATTERN.render, roof: true }),
@@ -352,7 +362,8 @@ const SIGNAL_GARDEN = [
   armStair(GARDEN.arm, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-sa' }),
   armStair(GARDEN.wharf, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-sc' }),
   // the signal pavilion round the old signal box (the garden's landmark), planters, the lawn mound
-  B(-40, -35.5, LTOP, 8.38, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, roof: true, eras: '3', eraGroup: 'garden-t6' }),
+  B(-40, -35.5, LTOP, LTOP + 3, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, eras: '3', eraGroup: 'garden-t6' }),
+  B(-40, -35.5, LTOP + 3, 8.38, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, roof: true, paint: false, eras: '3', eraGroup: 'garden-t6' }),
   gCover(-27.5, -32.3, GTOP, 65, 'garden-t1'), gCover(-28, -48.8, LTOP, 0, 'garden-t3'), gCover(-42.5, -37.5, GTOP, 65, 'garden-t6'),
   gCover(-33.6, -35.8, GTOP, 65, 'garden-t2'), gCover(-40, -47.5, LTOP, 90, 'garden-t5'),
   B(-35.5, -32.6, LTOP, 3.7, -49.6, -46.6, { tag: 'lawn-mound', color: K.lawn, pattern: PATTERN.planter, eras: '3', eraGroup: 'garden-t4' }),
@@ -383,7 +394,8 @@ const ARM = [
   armCover(-48, 4, 1.2, 2.4, 0, 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   armCover(-48, -8, 1.2, 2.4, 0, 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   // the West Wharf (timber, 0.6) with its loading platform (1.6), goods shed, crane base and cargo
-  armBox(P.wharf[0], P.wharf[1], P.wharf[2], P.wharf[3], BOT, 0.6, { tag: 'west-wharf', color: K.planks, pattern: PATTERN.planks }),
+  // (its three sides over the water are out of reach: not inkable; its inner step onto the arm is)
+  armBox(P.wharf[0], P.wharf[1], P.wharf[2], P.wharf[3], BOT, 0.6, { tag: 'west-wharf', color: K.planks, pattern: PATTERN.planks, noPaint: [[-C65, 0, S65], [C65, 0, -S65], [-S65, 0, -C65]] }),
   armBox(-62, -57, -8, 6, 0.6, 1.6, { tag: 'loading-platform', color: K.planks, pattern: PATTERN.planks }),
   ...(() => { const [x, z] = AO(-53.75, -11.25); return [O(x, z, 4.5, 4.5, 0.6, 4, 65, { tag: 'goods-shed', color: '#7e6a55', pattern: PATTERN.weatherboard, roof: true })]; })(),
   armCover(-54, 6, 2.5, 2.5, 0.6, 2.6, cover({ tag: 'crane-base', color: '#59626a', pattern: PATTERN.metal, roof: true })),
@@ -403,15 +415,15 @@ const ARM = [
 // Swimston's east shops and Little Lane, Degrayling Lane (0.6 pavements; its north end stacked with crates in the
 // 1880s), the bond store, Centre Plaice (the side zone), the Boathouse (deck 2.4, two stairs), the Yabby quay
 const EAST = [
-  ...bld(7, 10.5, -27, -19, 7, { tag: 'shops', color: K.shop, pattern: PATTERN.brick }),
-  ...bld(7, 10.5, -44, -31, 7, { tag: 'shops', color: K.shop, pattern: PATTERN.brick }),
+  ...bld(7, 10.5, -27, -19, 7, { tag: 'shops', color: K.shop, pattern: PATTERN.brick }, BOT),
+  ...bld(7, 10.5, -44, -31, 7, { tag: 'shops', color: K.shop, pattern: PATTERN.brick }, BOT),
   ...tierBoxes([P.degS, P.degN], 0.6, ground({ tag: 'degrayling', color: '#626a73' })),
   B(10.5, 16.5, 0.6, 3.4, -24, -19.25, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, notIn: 'tower', eras: '1', eraGroup: 'crates-1' }),
   B(10.5, 16.5, 0.6, 3.4, -19.25, -14.5, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, notIn: 'tower', eras: '1', eraGroup: 'crates-2' }),
   OB(13.5, -21.4, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower', eras: '23', eraGroup: 'crates-1' })),
   OB(13.5, -16.9, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower', eras: '23', eraGroup: 'crates-2' })),
   OB(13.6, -41.4, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower' })),
-  ...bld(16.5, 19.5, -44, -38, 7, { tag: 'bond-store', color: K.bond, pattern: SURF.bluestone }),
+  ...bld(16.5, 19.5, -44, -38, 7, { tag: 'bond-store', color: K.bond, pattern: SURF.bluestone }, BOT),
   // Centre Plaice's cover (the side zone)
   OB(16.4, -33, 1.2, 2.2, 0, 1.5, 0, cover({ tag: 'plaice-cart', color: '#7a6a58' })),
   OB(13.6, -34.4, 1.2, 1.2, 0, 1, 0, cover({ tag: 'cafe', color: '#7b6f60' })),
