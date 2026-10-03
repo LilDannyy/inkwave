@@ -121,7 +121,7 @@
     M1.splat(foes[0], 'test'); M1.character.setVisible?.(false); step(0.2);
     put(me, cx + wx * 3, cz + wz * 3, yawOut + Math.PI);
     put(M2, cx + wx * 3 + wz * 1.0, cz + wz * 3 - wx * 1.0, yawOut + Math.PI + 0.4);
-    if (M3) put(M3, cx + wx * 9 - wz * 2, cz + wz * 9 + wx * 2, yawOut + Math.PI);
+    if (M3) put(M3, cx + wx * 7 - wz * 2, cz + wz * 7 + wx * 2, yawOut + Math.PI);   // (4.5 m off: a teammate who could take it, close enough for the hint line — fix round 1: CHAIN.hintReach 6 m)
     step(0.1);
     put(M2, cx + wx * 4.6 + wz * 2.4, cz + wz * 4.6 - wx * 2.4, yawOut + Math.PI + 0.6);
     follow(yawOut - 0.55, -0.2); step(0.4);
