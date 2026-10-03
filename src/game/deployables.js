@@ -26,9 +26,9 @@
 //
 // THE TOWER (Tower Command): every frame it moves, its body — the platform and the pillar, their colliders — destroys a
 // sprinkler, beacon, Drip Curtain or buoy it overlaps (crush): a crunch (device_crunch, a burst, a little shake),
-// 'device:down' { how: 'crush' }. Anything on its deck rides it and is never crushed (a sprinkler stuck to it, a buoy on
-// its deck did already; a beacon planted or a curtain dropped on its deck rides it now too: towerRide). The buoy is no
-// longer shoved by the tower (sp-surf.js _pushed): the tower crushes it.
+// 'device:down' { how: 'crush' }. Anything on its deck rides it and is never crushed (a buoy on its deck did already;
+// every placed / stuck device rides any moving floor now: MOVING FLOORS below). The buoy is no longer shoved by the
+// tower (sp-surf.js _pushed): the tower crushes it.
 //
 // ONLINE (docs/NET.md): the device's owner decides what happens to it. A hit made on another screen goes to the owner
 // (netHurt, as before). Standing fire and the tower are judged on the owner's screen against its own copies of the
@@ -43,10 +43,12 @@ import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
 import { netRec, netMuted } from './kits/registry.js';
 import { BUOY } from '../fx/surfFx.js';
+import { Hit } from './physics.js';
 import '../audio/sfx-deploy.js';
 
-const UP = new THREE.Vector3(0, 1, 0);
-const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _c = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
+const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _c = new THREE.Vector3(), _q = new THREE.Quaternion(), _h = new Hit();
+const yawOf = (b) => Math.atan2(-b.axes[0].z, b.axes[0].x);   // a moving block's heading (Level.moveDynamic: x → (cos, 0, −sin))
 const near = (p, r = 40) => !!G.camera && G.camera.position.distanceToSquared(p) < r * r;
 // a subs item's state → the device it is while it can be shot (the curtain has its own rule: subs.js)
 const SHOOT = { spray: 'sprinkler', beacon: 'beacon', run: 'seeker', prime: 'seeker' };
@@ -54,7 +56,7 @@ export const DEV_R = { sprinkler: 0.3, beacon: 0.3, seeker: 0.25 };   // m: the 
 export const ROLL_CD = 0.5;                                          // s between one roller's drum hits on one device
 
 // counters (tests / match.cjs / tower-match.cjs)
-export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, seekerPops: 0 };
+export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, seekerPops: 0 };
 export function resetDeployStats() { for (const k in DEPLOY_STATS) DEPLOY_STATS[k] = typeof DEPLOY_STATS[k] === 'object' ? {} : 0; }
 const bump = (o, k) => { o[k] = (o[k] || 0) + 1; };
 
@@ -151,16 +153,101 @@ class Deployables {
     G.subs._destroy(it);   // (its burst, its own break sound, 'sub:destroyed')
   }
 
-  // ---------------------------------------------------------------------------------------------- the tower
-  // a subs item set down on the tower's deck (planted / landed: its floor hit's block) rides it, as a sprinkler stuck to
-  // it does (subs.js _step); the pillar's top is a roof (nothing stays there)
-  towerRide(it, bid) {
-    const T = G.match?.tower;
-    if (!T || bid == null || bid < 0 || G.level.blocks[bid] !== T.block) return false;
-    it.ride = T; it.rideOff = it.pos.clone().sub(T.pos);
+  // ---------------------------------------------------------------------------------------------- moving floors
+  // The user (2026-10-04): "lurk mines don't stick to moving floors such as the tower". One rule for every placed or
+  // stuck device (a Lurk Mine, a Hop Beacon, a Twirl Sprinkler, a Drip Curtain, a Cling Charge) on every moving level
+  // block (Level.addDynamic / moveDynamic: the tower's deck and pillar, Calamari's railcars, the pods' plants, any mover)
+  // — the rule the Surf N' Turf buoy follows (sp-surf.js _attach / _support): it keeps its spot on the block, in the
+  // block's own axes, on the face it was set on (a top that rises or sinks, a wall that grows: it stays on that face), and
+  // turns with the block; a mine trips (and blows) wherever the block has taken it. When its block goes from under it
+  // (parked, gone, its face drawn in, a jump of more than 3 m) a device on a floor drops onto whatever is below (and
+  // rides that, if it moves too), one stuck to a wall or a ceiling breaks. No records while it rides (every screen moves
+  // its copy on its own copy of the block: the movers / pods run on the synced clock, the tower follows the host); the
+  // owner's word [4, gid, x, y, z, tag, lx, ly, lz, nx, ny, nz] says where on which block it sits whenever it settles
+  // on one (or [4, gid, x, y, z]: on still ground again), so a ghost that landed a little differently snaps to it.
+  // it (a subs item) was set down / stuck on block bid: on a moving one it rides it (true)
+  attach(it, bid) {
+    if (it.pendOn) { const p = it.pendOn; it.pendOn = null; this.netOn(it, p); return !!it.on; }   // (a ghost: its owner's word came first)
+    const b = bid != null && bid >= 0 ? G.level.blocks[bid] : null;
+    it.on = null; it.ride = null;
+    if (!b || !b.dynamic || b.solid === false) return false;
+    const A = b.axes, d = _v.copy(it.pos).sub(b.center), n = it.normal || UP;
+    const l = [d.dot(A[0]), d.dot(A[1]), d.dot(A[2])], nl = [n.dot(A[0]), n.dot(A[1]), n.dot(A[2])];
+    let k = 1; for (let j = 0; j < 3; j++) if (Math.abs(nl[j]) > Math.abs(nl[k])) k = j;
+    const s = Math.sign(nl[k]) || 1, h = [b.half.x, b.half.y, b.half.z];
+    it.on = { b, l, nl, k, s, gap: l[k] - s * h[k], yaw: yawOf(b), q0: it.mesh.quaternion.clone(), n0: it.n ? it.n.clone() : null };
+    it.ride = b;   // (truthy while it rides: tests read it)
+    if (!it.ghost) it.onRec = true;   // (the owner's word, next frame: after the record that made it)
     DEPLOY_STATS.rides++;
     return true;
   }
+  // per frame (subs.js _step, first): keep it at its spot of the block it rides
+  carry(it) {
+    const o = it.on;
+    if (!o) return;
+    const b = o.b, l = o.l, h = [b.half.x, b.half.y, b.half.z];
+    if (b.solid === false || !G.level.dyn.includes(b)) return this._lost(it);
+    l[o.k] = o.s * h[o.k] + o.gap;
+    for (let j = 0; j < 3; j++) if (j !== o.k && Math.abs(l[j]) > h[j] + 0.05) return this._lost(it);   // (its face drew in)
+    const A = b.axes, c = b.center;
+    const x = c.x + A[0].x * l[0] + A[1].x * l[1] + A[2].x * l[2], y = c.y + A[0].y * l[0] + A[1].y * l[1] + A[2].y * l[2], z = c.z + A[0].z * l[0] + A[1].z * l[1] + A[2].z * l[2];
+    const dx = x - it.pos.x, dy = y - it.pos.y, dz = z - it.pos.z;
+    if (dx * dx + dy * dy + dz * dz > 9) return this._lost(it);   // (it jumped away: parked)
+    it.pos.set(x, y, z);
+    it.mesh.position.copy(it.pos);
+    const yw = yawOf(b) - o.yaw;
+    if (Math.abs(yw - (o.yw || 0)) > 1e-6) {   // the block turned: so does it
+      o.yw = yw;
+      _q.setFromAxisAngle(UP, yw);
+      it.mesh.quaternion.copy(_q).multiply(o.q0);
+      if (it.normal) it.normal.set(A[0].x * o.nl[0] + A[1].x * o.nl[1] + A[2].x * o.nl[2], A[0].y * o.nl[0] + A[1].y * o.nl[1] + A[2].y * o.nl[2], A[0].z * o.nl[0] + A[1].z * o.nl[1] + A[2].z * o.nl[2]);
+      if (o.n0 && it.n) { it.n.copy(o.n0).applyQuaternion(_q); it.tan.set(-it.n.z, 0, it.n.x); }
+    }
+    if (it.onRec) this._onRec(it);
+  }
+  // the owner's word on where it sits (on a moving block: which, and where on it)
+  _onRec(it) {
+    it.onRec = false;
+    if (it.ghost || !it.gid) return;
+    const o = it.on, r = (x) => Math.round(x * 100) / 100, p = [r(it.pos.x), r(it.pos.y), r(it.pos.z)];
+    netRec(it.owner, 'subs', o ? [4, it.gid, ...p, o.b.tag || '#' + o.b.id, r(o.l[0]), r(o.l[1]), r(o.l[2]), r(o.nl[0]), r(o.nl[1]), r(o.nl[2])] : [4, it.gid, ...p]);
+  }
+  // a ghost: its owner's word [4, gid, x, y, z (, tag, lx, ly, lz, nx, ny, nz)] (subs.js netGhost). Still in flight
+  // here: kept until it lands (attach)
+  netOn(it, d) {
+    if (it.state === 'fly') { it.pendOn = d; return; }
+    it.on = null; it.ride = null;
+    it.pos.set(d[2], d[3], d[4]);
+    const tag = d[5];
+    const b = tag == null ? null : G.level.dyn.find((x) => (x.tag || '#' + x.id) === tag);
+    if (b && b.solid !== false) {
+      const nl = [d[9], d[10], d[11]];
+      let k = 1; for (let j = 0; j < 3; j++) if (Math.abs(nl[j]) > Math.abs(nl[k])) k = j;
+      const s = Math.sign(nl[k]) || 1, h = [b.half.x, b.half.y, b.half.z], l = [d[6], d[7], d[8]];
+      const A = b.axes, n = _v.set(A[0].x * nl[0] + A[1].x * nl[1] + A[2].x * nl[2], A[0].y * nl[0] + A[1].y * nl[1] + A[2].y * nl[2], A[0].z * nl[0] + A[1].z * nl[1] + A[2].z * nl[2]).normalize();
+      if (it.normal && it.normal.dot(n) < 0.9) { it.normal.copy(n); it.mesh.quaternion.setFromUnitVectors(UP, n); }   // (it stuck to another face here)
+      it.on = { b, l, nl, k, s, gap: l[k] - s * h[k], yaw: yawOf(b), q0: it.mesh.quaternion.clone(), n0: it.n ? it.n.clone() : null };
+      it.ride = b;
+      this.carry(it);
+    }
+    it.mesh.position.copy(it.pos);
+  }
+  // its block went from under it: on a floor it drops onto whatever is below (riding that, if it moves); on a wall or
+  // a ceiling it breaks
+  _lost(it) {
+    it.on = null; it.ride = null;
+    if (it.state === 'dead') return;
+    const n = it.normal || UP, floor = it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || n.y > 0.6;
+    const g = floor ? G.physics.raycast(_v.set(it.pos.x, it.pos.y + 0.3, it.pos.z), DOWN, 40, _h, true) : null;
+    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30) { G.subs._destroy(it); return; }
+    it.pos.copy(g.point); it.mesh.position.copy(it.pos);
+    if (it.normal && it.normal.dot(g.normal) < 0.99) { it.normal.copy(g.normal); if (it.state !== 'curtain') it.mesh.quaternion.setFromUnitVectors(UP, g.normal); }
+    DEPLOY_STATS.drops++;
+    if (!this.attach(it, g.block) && !it.ghost) it.onRec = true;
+    if (it.onRec) this._onRec(it);
+  }
+
+  // ---------------------------------------------------------------------------------------------- the tower
   isTowerBlock(b, T = G.match?.tower) { return !!T && !!b && (b === T.block || b === T.pillar); }
   // tower.js update, every frame the tower moved: its body destroys the sprinklers, beacons, curtains and buoys it
   // overlaps — this screen's own (a ghost waits for its owner's word); anything riding it is left alone
@@ -168,7 +255,7 @@ class Deployables {
     if (!T || !T.block) return;
     const B = [T.block, T.pillar].filter(Boolean);
     for (const it of G.subs?.items || []) {
-      if (it.ghost || it.ride === T || it.state === 'dead') continue;
+      if (it.ghost || (it.on && this.isTowerBlock(it.on.b, T)) || it.state === 'dead') continue;
       const st = it.state;
       let hit = false;
       if (st === 'spray' || st === 'beacon') { const h = devBody(it, _v); hit = this._bodyIn(B, _v, h, DEV_R[devKind(it)]); }

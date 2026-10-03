@@ -241,7 +241,7 @@ export class SubSystem {
     const it = { kind: sub.kind, sub, owner: a, team: a.team, mesh, pos: pos.clone(), state: sub.kind, age: 0, t: 0, born: G.time, normal: normal.clone(), sp: !!a.specialActive,
       face: g ? g.face : -1, u: g ? g.u : 0, v: g ? g.v : 0, hp: sub.hp || 1, uses: sub.uses || 0, ghost, gid: gid || netId(a) };
     this.items.push(it);
-    if (g) DEPLOY.towerRide(it, g.block);   // [b5-deploy] set down on the tower's deck: it rides it
+    if (g) DEPLOY.attach(it, g.block);   // [b5-deploy] set down on a moving floor (the tower's deck, a pod …): it rides it
     if (sub.kind === 'mine') { this._paintUnder(it, 1.1); this._mineLook(it); }   // (hidden from the other team from its first frame)
     if (sub.kind === 'beacon') this._beaconFx(it);
     G.cues?.sub(sub.kind, 'throw', { owner: a, at: pos, range: sub.kind === 'mine' ? 14 : 30 });   // sfx-cues: placed (a mine is heard only close by)
@@ -313,10 +313,7 @@ export class SubSystem {
     this.statusFx.update(dt);   // (after everyone moved: the looks sit on them this frame)
   }
   _step(it, dt) {
-    if (it.ride) {
-      if (G.match?.tower !== it.ride) it.ride = null;
-      else { it.pos.copy(it.ride.pos).add(it.rideOff); it.mesh.position.copy(it.pos); }
-    }
+    if (it.on) DEPLOY.carry(it);   // [b5-deploy] riding a moving block (deployables.js: the one rule for every mover)
     {
       switch (it.state) {
         case 'fly': this._fly(it, dt); break;
@@ -354,6 +351,11 @@ export class SubSystem {
       else if (it.state === 'stuck' || it.state === 'run' || it.state === 'prime') this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), it.sub.radius, it.sub.damageMax, it.sub.damageMin, it.sub.paintRadius, it.normal || UP);
       else this._destroy(it);
       it.state = 'dead';
+      return;
+    }
+    if (op === 4) {   // [b5-deploy] the owner's word on where it sits (which moving block, where on it): deployables.js
+      const it = this.items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
+      if (it) DEPLOY.netOn(it, d);
       return;
     }
     if (op === 3) {
@@ -432,14 +434,12 @@ export class SubSystem {
     it.normal = hit.normal.clone();
     it.pos.copy(hit.point).addScaledVector(hit.normal, 0.005);
     it.face = hit.face; it.u = hit.u; it.v = hit.v;
-    // stuck to Tower Command's tower (its platform or pillar: moving blocks): ride along with it
-    const T = G.match?.tower, lb = hit.block >= 0 ? G.level.blocks[hit.block] : null;
-    it.ride = T && lb && lb.dynamic ? T : null;
-    if (it.ride) it.rideOff = it.pos.clone().sub(T.pos);
     it.hp = it.sub.hp || 1; it.born = G.time;
     it.mesh.userData.inner.position.y = 0;
     it.mesh.position.copy(it.pos);
     it.mesh.quaternion.setFromUnitVectors(UP, hit.normal);
+    // stuck to a moving block (the tower's platform or pillar, a railcar, a pod …): it rides it ([b5-deploy] any mover)
+    DEPLOY.attach(it, hit.block);
     if (state === 'spray') {
       // one sprinkler per player: a new one replaces the old
       for (const o of this.items) if (o !== it && o.owner === it.owner && o.kind === 'sprinkler' && o.state === 'spray') this._destroy(o);
@@ -654,7 +654,7 @@ export class SubSystem {
     })));
     it.meter.renderOrder = 3;
     it.mesh.add(it.meter);
-    DEPLOY.towerRide(it, hit.block);   // [b5-deploy] dropped on the tower's deck: it rides it
+    DEPLOY.attach(it, hit.block);   // [b5-deploy] dropped on a moving floor: it rides it
     this._paintUnder(it, 1.4);
     G.cues?.sub('curtain', 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues
     emit('sub:land', { kind: 'curtain', pos: it.pos.clone(), team: it.team, radius: s.width / 2 });

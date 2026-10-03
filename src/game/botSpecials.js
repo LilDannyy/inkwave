@@ -712,7 +712,7 @@ export class SpecialSense {
     }
     if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);
-    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b) || devShootAim(this, dt, it);   // [b5-deploy] (was surfShootAim: buoys only)
+    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b) || devShootAim(this, dt, it, move);   // [b5-deploy] (was surfShootAim: buoys only)
   }
   // the worst noticed danger we're standing in that counts now
   _here() {

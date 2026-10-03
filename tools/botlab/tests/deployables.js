@@ -39,6 +39,7 @@
   const BOW = await import('./src/game/kits/bow.js');
   const { THREAT_STATS } = await import('./src/game/bots.js');
   const { on } = await import('./src/core/ctx.js');
+  const { Hit } = await import('./src/game/physics.js');
   const G = window.__G, P = G.projectiles, S = G.subs, D = DEP.DEPLOY, ST = DEP.DEPLOY_STATS;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
@@ -59,8 +60,10 @@
   const unstub = (a) => { if (a.bot && a.bot._u0) a.bot.update = a.bot._u0; };
   for (const a of m.actors) stub(a);
   const put = (a, p, yaw = 0) => { a.pos.copy(p); a.pos.y += 0.02; a.vel.set(0, 0, 0); a.yaw = a.aimYaw = yaw; a.aimPitch = 0; if (a.bot) { a.bot.aimYaw = yaw; a.bot.aimPitch = 0; } };
-  const HOME = V(-20, 0, -30);
-  const parkAll = () => others.forEach((a, i) => put(a, V(-22 + (i % 4) * 2, 0, 34 + Math.floor(i / 4) * 2)));
+  // (testbox / podbox: the open deck; any other stage: the spawn pads)
+  const BOX = /box$/.test(G.level.layout?.id || ''), pad = (t) => G.level.spawnPads[t];
+  const HOME = BOX ? V(-20, 0, -30) : V(pad(me.team).x, pad(me.team).y, pad(me.team).z);
+  const parkAll = () => others.forEach((a, i) => put(a, BOX ? V(-22 + (i % 4) * 2, 0, 34 + Math.floor(i / 4) * 2) : V(pad(a.team).x + (i % 4) - 1.5, pad(a.team).y, pad(a.team).z + Math.floor(i / 4) - 0.5)));
   if (G.fx) { G.fx.onDropletLand = null; G.fx.onSpeck = null; }
   const weapons0 = new Map(m.actors.map((a) => [a, a.weaponId]));
   const reset = () => {
@@ -79,7 +82,7 @@
   };
   // events + the looks' calls, recorded
   const evs = [];
-  for (const n of ['device:hit', 'device:down', 'bomb:explode', 'sub:destroyed', 'surf:pop']) on(n, (e) => evs.push({ n, t: G.time, kind: e.kind, how: e.how, by: e.attacker || e.by || null, dmg: e.damage }));
+  for (const n of ['device:hit', 'device:down', 'bomb:explode', 'sub:destroyed', 'surf:pop']) on(n, (e) => evs.push({ n, t: G.time, kind: e.kind, how: e.how, by: e.attacker || e.by || null, dmg: e.damage, pos: e.pos ? e.pos.clone() : null }));
   const cues = [];
   if (G.cues) { const one = G.cues.one.bind(G.cues); G.cues.one = (name, o) => { cues.push({ name, t: G.time }); return one(name, o); }; }
   const fxLog = [];
@@ -154,10 +157,15 @@
       reset();
       foe.setWeapon('brush'); foe.ink = PLAYER.inkMax;
       const b = mk.beacon(me, 0, -6);
-      put(foe, V(-3, 0, -6), Math.PI / 2); step(0.1);
-      foe._int = (it) => { it.fire = true; it.move.set(1, 0, 0); };
-      step(0.6); foe._int = null; zero(foe);
-      R(`a brush's bristles brushing into a beacon wear it down (${WEAPONS.brush.brushDamage} a touch, its ${WEAPONS.brush.brushHitCd} s cooldown): −${HP.beacon - hpOf(b)}`, HP.beacon - hpOf(b) >= WEAPONS.brush.brushDamage && (HP.beacon - hpOf(b)) % WEAPONS.brush.brushDamage === 0, { hp: hpOf(b), sweeps: ST.sweeps });
+      // (it runs up first: a press while standing is a swipe — flung globs — not the bristles)
+      put(foe, V(-4.6, 0, -6), Math.PI / 2); step(0.1);
+      let fr = 0;
+      foe._int = (it) => { it.move.set(1, 0, 0); it.fire = ++fr > 14; };
+      const sw0 = ST.sweeps, e0 = evs.length;
+      step(0.75); foe._int = null; zero(foe);
+      // (a press always flicks a swipe first — its globs hit too; the bristles' touches are the 30s, one per touch)
+      const bl = HP.beacon - hpOf(b), nsw = ST.sweeps - sw0, t30 = evs.slice(e0).filter((e) => e.n === 'device:hit' && e.dmg === WEAPONS.brush.brushDamage).length;
+      R(`a brush's bristles brushing into a beacon wear it down (${WEAPONS.brush.brushDamage} a touch, its ${WEAPONS.brush.brushHitCd} s cooldown): ${nsw} touches of ${WEAPONS.brush.brushDamage} (−${bl} with the swipe's globs)`, nsw >= 1 && t30 === nsw && bl >= nsw * WEAPONS.brush.brushDamage, { hp: hpOf(b), sweeps: nsw, hits30: t30 });
       foe.setWeapon(weapons0.get(foe));
     }
 
@@ -214,7 +222,7 @@
         S.blockShot(V(p.x - 1, p.y, p.z), V(p.x + 1, p.y, p.z), foe.team, 40, foe);
         step(1);
         const ev = evs.slice(e0);
-        const rec = sent.find((x) => x.kind === 'subs' && x.data[0] === 2 && x.data[1] === 77001);
+        const rec = sent.find((x) => x.kind === 'subs' && x.data && x.data[0] === 2 && x.data[1] === 77001);
         R('a Skitter Bomb shot down while winding up beside a foe pops harmlessly: no blast, no damage, its puff and seeker_pop; the end record [2, gid, 1]',
           primed && it.state === 'dead' && !ev.some((e) => e.n === 'bomb:explode') && foe.hp === PLAYER.hp && ev.some((e) => e.n === 'device:down' && e.kind === 'seeker') && cues.slice(c0).some((c) => c.name === 'seeker_pop') && rec && rec.data[2] === 1,
           { primed, state: it.state, explode: ev.filter((e) => e.n === 'bomb:explode').length, foeHp: foe.hp, cues: cues.slice(c0).map((c) => c.name), rec: rec && rec.data });
@@ -237,6 +245,7 @@
     // ============================================================================================ the looks
     if (want('looks')) {
       reset();
+      put(me, V(-8, 0, -6), Math.PI / 2); step(0.1);   // (close by: a hit's tok is heard within 30 m)
       const b = mk.beacon(foe, 0, -6), ud = b.mesh.userData, mat0 = ud.body.material, model = ud.inner.children[0], s0 = model.scale.x;
       const p = midOf(b), c0 = cues.length, m0 = markers, e0 = evs.length;
       // my own shot (a real projectile) → the flash, the squash, the tok, my hit marker
@@ -334,7 +343,7 @@
         // the owner's side: the hits arriving (netHurt) take it down → the end record [2, gid, 1]
         for (let k = 0; k < 4; k++) S.netHurt(55002, 36);
         step(0.05);
-        const rec = sent.find((x) => x.kind === 'subs' && x.data[0] === 2 && x.data[1] === 55002);
+        const rec = sent.find((x) => x.kind === 'subs' && x.data && x.data[0] === 2 && x.data[1] === 55002);
         R('the owner takes the hits that arrive (netHurt) and at 0 records [2, gid, 1] (shot down)', mb.state === 'dead' && rec && rec.data[2] === 1, { state: mb.state, rec: rec && rec.data });
         // standing fire is the owner's to judge: a ghost cloud over my own sprinkler hurts it; over the foe's ghost sprinkler nothing
         reset(); netOn();
@@ -352,19 +361,20 @@
     // ============================================================================================ bots
     if (want('bots')) {
       const res = {};
-      for (const kind of ['beacon', 'sprinkler']) {
+      // (a bot 9 m off, facing away, its brain running; me behind the wall: no foe in its sight)
+      for (const [kind, wid] of [['beacon', 'shooter'], ['sprinkler', 'shooter'], ['beacon', 'roller'], ['sprinkler', 'charger'], ['beacon', 'blaster']]) {
         reset();
-        const Sh = foes.find((f) => f.weapon.kind === 'shooter') || foe;
-        if (Sh.weapon.kind !== 'shooter') Sh.setWeapon('shooter');
-        unstub(Sh); put(Sh, V(0, 0, 2), Math.PI);
+        const Sh = foe;
+        Sh.setWeapon(wid); Sh.ink = PLAYER.inkMax;
+        unstub(Sh); put(Sh, V(0, 0, 3), 0);
         const d = mk[kind](me, 0, -6);
-        put(me, V(-20, 0, -44), 0);   // (out of its sight: up on the spawn deck behind)
+        put(me, V(22, 0, 0), 0);   // (out of its sight: behind the wall)
         const p0 = DB.DEV_BOT.picks;
-        step(5, () => !gone(d));
-        res[kind] = { hp: hpOf(d), gone: gone(d), picked: DB.DEV_BOT.picks - p0, weapon: Sh.weaponId };
-        stub(Sh);
+        const n = step(10, () => !gone(d));
+        res[kind + ':' + wid] = { gone: gone(d), hp: r2(hpOf(d)), s: r2(n / 60), picked: DB.DEV_BOT.picks - p0 };
+        stub(Sh); Sh.setWeapon(weapons0.get(Sh));
       }
-      R(`a bot with no foe in sight shoots an enemy beacon and an enemy sprinkler down (${Object.entries(res).map(([k, r]) => `${k}: ${r.gone ? 'gone' : 'hp ' + r.hp}`).join(', ')})`, res.beacon.gone && res.sprinkler.gone && res.beacon.picked >= 1, res);
+      R(`a bot with no foe in sight walks up to an enemy beacon / sprinkler and shoots it down: ${Object.entries(res).map(([k, r]) => `${k} ${r.gone ? r.s + ' s' : 'hp ' + r.hp}`).join(', ')}`, Object.values(res).every((r) => r.gone && r.picked >= 1), res);
       // a Skitter Bomb hunting a bot (its threat system): shot down, rounds over
       let popped = 0, reached = 0, n = 0;
       const t0 = { ...THREAT_STATS };
@@ -373,7 +383,7 @@
         const Sh = foes.find((f) => f.weapon.kind === 'shooter') || foe;
         if (Sh.weapon.kind !== 'shooter') Sh.setWeapon('shooter');
         unstub(Sh); put(Sh, V(0, 0, 4), Math.PI);
-        put(me, V(-20, 0, -44), 0);
+        put(me, V(22, 0, 0), 0);
         step(0.3);
         const it = S._throw(me, SUBS.seeker, V(0, 0.6, -8), V(0, -6, 0), false);
         const p0 = ST.seekerPops, b0 = evs.filter((e) => e.n === 'bomb:explode').length;
@@ -392,69 +402,225 @@
       R(`its sounds are built: ${DEPLOY_SOUNDS.join(', ')}`, built.every((b) => b[1]), built);
     }
 
+    // ============================================================================================ moving floors: helpers
+    // a device's spot in a block's own axes (what the rule keeps), and back to the world
+    const locOf = (p, b) => { const d = p.clone().sub(b.center); return [d.dot(b.axes[0]), d.dot(b.axes[1]), d.dot(b.axes[2])]; };
+    const worldOf = (l, b) => b.center.clone().addScaledVector(b.axes[0], l[0]).addScaledVector(b.axes[1], l[1]).addScaledVector(b.axes[2], l[2]);
+    // the owner's records for these gids, played into ghosts (another player's copies: gid + 500000) as they come
+    const feeder = (owner) => { let n = 0; const ids = new Set(); return { ids, owner, feed() { for (; n < sent.length; n++) { const x = sent[n]; if (x.kind !== 'subs' || !x.data || !ids.has(x.data[1])) continue; const d = x.data.slice(); d[1] += 500000; S.netGhost(owner, d); } } }; };
+    const ghostOf = (it) => S.items.find((x) => x.ghost && x.gid === it.gid + 500000);
+    // a throw, as G.subs.use makes it, with its throw record played into the ghost too (use() sends [0, gid, kind, from, vel])
+    const throwG = (o, sub, from, vel, F) => { const it = S._throw(o, sub, from, vel, false); F.ids.add(it.gid); S.netGhost(F.owner, [0, it.gid + 500000, sub.kind, r2(from.x), r2(from.y), r2(from.z), r2(vel.x), r2(vel.y), r2(vel.z)]); return it; };
+    const recs4 = (gid) => sent.filter((x) => x.kind === 'subs' && x.data && x.data[0] === 4 && x.data[1] === gid).map((x) => x.data);
+    const hold = (list) => () => { for (const d of list) { if (!d) continue; if (d.state === 'spray') d.pulseT = 9; if (d.state === 'curtain') d.hp = SUBS.curtain.hp; if (d.kind === 'surf' && d.phase === 'live') d.T = 0; } };
+    // a foe walking up to a mine (wherever it is now): it trips and blows there
+    const tripAt = (mine, who) => {
+      const e0 = evs.length, at = mine.pos.clone();
+      put(who, V(at.x + 0.9, at.y, at.z + 0.3), 0); who.pos.y = at.y + 0.02;
+      let boom = null;
+      const h0 = hook; hook = () => { if (h0) h0(); if (!boom) { who.pos.x = mine.pos.x + 0.9; who.pos.z = mine.pos.z + 0.3; who.pos.y = mine.pos.y + 0.02; who.vel.set(0, 0, 0); } };
+      step(1.6, () => { const e = evs.slice(e0).find((x) => x.n === 'bomb:explode'); if (e) boom = e.pos; return !boom; });
+      hook = h0;
+      return { tripped: !!boom, at: boom && v2(boom), from: v2(at), off: boom ? r2(Math.hypot(boom.x - mine.pos.x, boom.z - mine.pos.z)) : null };
+    };
+
+    // ============================================================================================ a moving platform (any stage)
+    // the one rule on a plain moving block (Level.addDynamic): a Lurk Mine and a Hop Beacon planted on it by a kid standing
+    // there, a Twirl Sprinkler stuck to its side, a Drip Curtain dropped on it — it goes 3 m along, 1 m up and turns
+    // 0.5 rad: each keeps its spot (and the sprinkler its face); ghosts built from the owner's records ride it the same;
+    // a foe walking up trips the mine where it is now. Then the block goes from under them: the floor ones drop onto the
+    // floor below (the owner's word [4, gid, x, y, z]), the one on its side breaks
+    if (want('floors')) {
+      reset(); netOn();
+      try {
+        const L = G.level, plat = L.addDynamic({ tag: 'test:platform' }), half = V(2.4, 0.3, 2.4);
+        const c = V(-6, 1.1, 8); let yaw = 0;
+        L.moveDynamic(plat, c, half, yaw); step(2 / 60);
+        const top = c.y + half.y, F = feeder(mate);
+        const plantOn = (sub, x, z) => { put(me, V(x, top, z), 0); me.pos.y = top + 0.02; step(2 / 60); S._place(me, sub); return S.items.filter((x) => x.owner === me && x.kind === sub.kind).pop(); };
+        const laid = V(c.x - 1.4, top, c.z - 1.4);
+        const mine = plantOn(SUBS.mine, c.x - 1.4, c.z - 1.4), mine2 = plantOn(SUBS.mine, c.x - 1.4, c.z + 1.4), bea = plantOn(SUBS.beacon, c.x + 1.3, c.z - 1.3);
+        put(me, HOME, 0); step(2 / 60);
+        const spr = throwG(me, SUBS.sprinkler, V(c.x + half.x + 1.2, c.y + 0.05, c.z + 0.6), V(-14, 1.5, 0), F);
+        const cur = throwG(me, SUBS.curtain, V(c.x + 0.6, top + 0.9, c.z + 1.0), V(0, -6, 0.25), F);
+        for (const d of [mine, mine2, bea, spr, cur]) F.ids.add(d.gid);
+        step(0.6, () => { F.feed(); return spr.state === 'fly' || cur.state === 'fly'; }); step(0.1); F.feed(); step(0.1); F.feed();
+        const all = { mine, mine2, beacon: bea, sprinkler: spr, curtain: cur };
+        const set = Object.fromEntries(Object.entries(all).map(([k, d]) => [k, { on: d.on && d.on.b === plat, face: d.on ? [d.on.k, d.on.s] : null }]));
+        const l0 = Object.fromEntries(Object.entries(all).map(([k, d]) => [k, locOf(d.pos, plat)]));
+        const n0 = locOf(spr.normal.clone().add(plat.center), plat);
+        hook = hold([spr, cur]);
+        let drift = {}, gdrift = {};
+        step(2, () => { c.x += 1.5 / 60; c.y += 0.5 / 60; yaw += 0.25 / 60; L.moveDynamic(plat, c, half, yaw); F.feed();
+          for (const [k, d] of Object.entries(all)) { const w = worldOf(l0[k], plat); drift[k] = Math.max(drift[k] || 0, r2(d.pos.distanceTo(w))); const gh = ghostOf(d); gdrift[k] = Math.max(gdrift[k] || 0, gh ? r2(gh.pos.distanceTo(d.pos)) : 99); } });
+        step(2 / 60);
+        const nNow = locOf(spr.normal.clone().add(plat.center), plat), curTurn = r2(Math.atan2(cur.n.x, cur.n.z));
+        const r4 = Object.fromEntries(Object.entries(all).map(([k, d]) => [k, recs4(d.gid).map((x) => x[5])]));
+        R(`a moving platform: a Lurk Mine and a Hop Beacon planted on it, a sprinkler stuck to its side, a Drip Curtain dropped on it ride it 3 m along, 1 m up and turned 0.5 rad, each at its spot (worst drift ${Math.max(...Object.values(drift))} m), the sprinkler still on its side`,
+          Object.values(set).every((x) => x.on) && Object.values(drift).every((x) => x < 0.05) && Math.abs(nNow[0] - n0[0]) < 0.02 && set.sprinkler.face[0] !== 1 && set.mine.face[0] === 1 && Math.abs(c.y + half.y - mine.pos.y) < 0.02,
+          { set, drift, sprinklerFace: set.sprinkler.face, curtainFacing: curTurn, mineY: r2(mine.pos.y), top: r2(c.y + half.y) });
+        R('…the owner says where each sits once ([4, gid, …, \'test:platform\', …]), and the ghosts built from its records ride the same spots',
+          Object.values(r4).every((x) => x.length === 1 && x[0] === 'test:platform') && Object.values(gdrift).every((x) => x < 0.05), { records: r4, ghostDrift: gdrift });
+        const tr = tripAt(mine, foe);
+        const away = r2(Math.hypot(tr.from[0] - laid.x, tr.from[2] - laid.z));
+        R(`…a foe walking up to the mine where the platform has taken it trips it, and it blows there (${tr.off} m from it; ${away} m from where it was laid)`, tr.tripped && tr.off < 0.4 && away > 2, { ...tr, away });
+        put(foe, V(c.x + 30, 0, c.z), 0); step(0.1);
+        // the block goes from under them
+        const s0 = sent.length;
+        plat.solid = false; L.moveDynamic(plat, V(1e4, -50, 1e4), V(0.1, 0.1, 0.1), 0);
+        step(0.2, () => { F.feed(); }); F.feed();
+        const fl = (d) => d.state !== 'dead' && Math.abs(d.pos.y - L.groundHeight(d.pos.x, d.pos.z, d.pos.y + 0.5)) < 0.05 && !d.on;
+        const after = sent.slice(s0).filter((x) => x.kind === 'subs' && x.data).map((x) => x.data);
+        const dropRec = (d) => after.find((x) => x[0] === 4 && x[1] === d.gid && x.length === 5);
+        R('…the platform taken away: the mine, the beacon and the curtain drop onto the floor below (the owner\'s word [4, gid, x, y, z]), the sprinkler on its side breaks ([2, gid]); the ghosts do the same',
+          fl(mine2) && fl(bea) && fl(cur) && spr.state === 'dead' && dropRec(mine2) && dropRec(bea) && dropRec(cur) && after.some((x) => x[0] === 2 && x[1] === spr.gid)
+            && [mine2, bea, cur].every((d) => { const gh = ghostOf(d); return gh && gh.pos.distanceTo(d.pos) < 0.05; }) && !(ghostOf(spr) && ghostOf(spr).state !== 'dead'),
+          { mine2: v2(mine2.pos), beacon: v2(bea.pos), curtain: v2(cur.pos), sprinkler: spr.state, recs: after });
+        const tr2 = tripAt(mine2, foe);
+        R('…and the mine that dropped is still armed where it landed: a foe trips it there', tr2.tripped && tr2.off < 0.4, tr2);
+      } finally { netOff(); hook = null; }
+    }
+
     // ============================================================================================ the tower (MODE=tower)
     if (want('tower') && m.tower) {
       reset(); netOn();
+      const T = m.tower, rules0 = T._rules;
       try {
-        const T = m.tower, A = m.actors.filter((a) => a.team === 0 && a !== me);
-        const rider = A[0], owner = m.actors.find((a) => a.team === 1) || foe;
+        // the tower pushed at a steady 1.5 m/s (its rules stubbed: the push itself is tower-rules.js's)
+        let drive = 0;
+        T._rules = function () { if (drive) { this.s = Math.min(this.path.len[0] - 0.5, this.s + drive / 60); this.moving = 1; } else this.moving = 0; };
+        const rider = mates[0] || me, owner = foe, F = feeder(foe2 || foe);
         const at = (s) => T.path.at(s, V(0, 0, 0));
-        const dirAt = (s) => { const a = at(s), b = at(s + 0.5); const d = V(b.x - a.x, 0, b.z - a.z); return d.normalize(); };
-        // a team-0 rider on the deck pushes it toward +s (held there, unhurt)
-        const onTop = () => { rider.pos.set(T.pos.x - 0.6, T.top + 0.05, T.pos.z - 0.6); rider.vel.set(0, 0, 0); rider.invuln = 9; };
-        hook = onTop; step(0.6);
+        const dirAt = (s) => { const a = at(s - 0.3), b = at(s + 0.3); return V(b.x - a.x, 0, b.z - a.z).normalize(); };
         const s0 = T.s;
-        // in its way, ahead along the track (team 1's and team 0's alike); one beside the track; a ghost in its way
-        const P0 = at(s0 + 3.5), P1 = at(s0 + 5), P2 = at(s0 + 7), P3 = at(s0 + 9), P4 = at(s0 + 10.5), dir = dirAt(s0 + 5), side = V(dir.z, 0, -dir.x);
-        const cur = mk.curtain(owner, P0.x, P0.z, dir.x * 0.3, dir.z * 0.3); cur.gid = 66001;
-        const spr = mk.sprinkler(owner, P1.x + side.x * 0.6, P1.z + side.z * 0.6); spr.gid = 66002;
-        const bea = mk.beacon(rider, P2.x, P2.z); bea.gid = 66003;
-        const bu = mk.surf(rider, P3.x - side.x * 0.5, P3.z - side.z * 0.5); bu.gid = 66004;
-        const by = mk.beacon(owner, P2.x + side.x * 2.9, P2.z + side.z * 2.9); by.gid = 66005;   // (beside the track: clear of the body)
-        S.netGhost(owner, [1, 66006, 'beacon', r2(P4.x), r2(P4.y), r2(P4.z), 0, 1, 0, 0]);
+        // ON ITS DECK: a Lurk Mine and a Hop Beacon laid by a kid standing there, a sprinkler stuck to the pillar, a Drip
+        // Curtain dropped on it, a buoy set down on it
+        const deck = (lx, lz) => { const c = Math.cos(T.yaw), s = Math.sin(T.yaw); return V(T.pos.x + c * lx + s * lz, T.top, T.pos.z - s * lx + c * lz); };
+        const lay = (sub, lx, lz) => { const p = deck(lx, lz); put(rider, p, 0); rider.pos.y = T.top + 0.02; step(2 / 60); S._place(rider, sub); return S.items.filter((x) => x.owner === rider && x.kind === sub.kind && x.state !== 'dead').pop(); };
+        const dMine = lay(SUBS.mine, -0.75, 0.75), dBea = lay(SUBS.beacon, 0.75, 0.75);
+        put(rider, HOME, 0); step(2 / 60);
+        const pc = deck(0, -1.4); pc.y = T.top + 1.0;
+        const dSpr = S._throw(rider, SUBS.sprinkler, pc, V(T.pos.x - pc.x, 0, T.pos.z - pc.z).normalize().multiplyScalar(10), false);
+        const dCur = S._throw(owner, SUBS.curtain, deck(-0.7, -0.7).setY(T.top + 0.6), V(0.2, -6, 0), false);
+        const dBu = new SURF.Buoy(rider, deck(0.75, -0.75).setY(T.top + 0.4), V(0, 0, 0), false, 0); G.specials.world.push(dBu);
+        for (const d of [dMine, dBea, dSpr]) F.ids.add(d.gid);
+        step(0.5, () => { F.feed(); }); F.feed();
+        const deckSet = { mine: dMine.on && dMine.on.b.tag, beacon: dBea.on && dBea.on.b.tag, sprinkler: dSpr.on && dSpr.on.b.tag, curtain: dCur.on && dCur.on.b.tag, buoy: dBu.on && dBu.on.b.tag };
+        // IN ITS WAY, ahead along the track (whoever's they are): a curtain across it, a sprinkler, a beacon, a buoy; one
+        // beacon beside it; a ghost beacon (another player's) in its way
+        const P = (k) => at(s0 + k), side = (k) => { const d = dirAt(s0 + k); return V(d.z, 0, -d.x); };
+        const way = { curtain: 2.6, sprinkler: 3.6, beacon: 4.6, buoy: 5.8, ghost: 7.0 };
+        const cur = mk.curtain(owner, P(way.curtain).x, P(way.curtain).z, dirAt(s0 + way.curtain).x * 0.3, dirAt(s0 + way.curtain).z * 0.3);
+        const spr = mk.sprinkler(owner, P(way.sprinkler).x + side(way.sprinkler).x * 0.5, P(way.sprinkler).z + side(way.sprinkler).z * 0.5);
+        const bea = mk.beacon(rider, P(way.beacon).x, P(way.beacon).z);
+        const bu = mk.surf(owner, P(way.buoy).x - side(way.buoy).x * 0.4, P(way.buoy).z - side(way.buoy).z * 0.4);
+        const by = mk.beacon(owner, P(way.beacon).x + side(way.beacon).x * 3.2, P(way.beacon).z + side(way.beacon).z * 3.2);
+        S.netGhost(owner, [1, 66006, 'beacon', r2(P(way.ghost).x), r2(P(way.ghost).y), r2(P(way.ghost).z), 0, 1, 0, 0]);
         const gh = S.items.find((x) => x.gid === 66006);
-        // on the deck: a beacon planted, a sprinkler stuck, a curtain dropped, a buoy set down
-        const deck = (dx, dz) => V(T.pos.x + dx, T.top, T.pos.z + dz);
-        const g1 = G.physics.raycast(deck(0.7, 0.7).setY(T.top + 0.5), DOWN, 1.5);
-        const dBea = S._plant(rider, SUBS.beacon, g1.point.clone(), g1.normal.clone(), 0, g1, false);
-        const dSpr = S._throw(rider, SUBS.sprinkler, deck(-0.7, 0.75).setY(T.top + 0.6), V(0, -6, 0), false);
-        const dCur = S._throw(owner, SUBS.curtain, deck(0.7, -0.7).setY(T.top + 0.6), V(0.2, -6, 0), false);
-        const dBu = new SURF.Buoy(rider, deck(-0.7, -0.7).setY(T.top + 0.3), V(0, 0, 0), false, 0); G.specials.world.push(dBu);
-        step(0.3);
-        const offs = { bea: dBea.pos.clone().sub(T.pos), spr: null, cur: null, bu: null };
-        offs.spr = dSpr.pos.clone().sub(T.pos); offs.cur = dCur.pos.clone().sub(T.pos); offs.bu = dBu.pos.clone().sub(T.pos);
-        const e0 = evs.length, c0 = cues.length;
-        const seen = {};
-        let ghostLive = true;
-        step(25, () => {
+        const offs = { mine: dMine.pos.clone().sub(T.pos), beacon: dBea.pos.clone().sub(T.pos), sprinkler: dSpr.pos.clone().sub(T.pos), curtain: dCur.pos.clone().sub(T.pos), buoy: dBu.pos.clone().sub(T.pos) };
+        hook = hold([dSpr, dCur, dBu, cur, spr, bu]);
+        const e0 = evs.length, c0 = cues.length, seen = {};
+        let ghostLive = true, gdrift = 0;
+        drive = 1.5;
+        step(6.5, () => {
+          F.feed();
           for (const [k, d] of [['curtain', cur], ['sprinkler', spr], ['beacon', bea], ['buoy', bu]]) if (seen[k] == null && gone(d)) seen[k] = r2(T.s - s0);
-          if (T.s - s0 < 10.6 + TOWER_PAD()) ghostLive = ghostLive && gh.state !== 'dead';
-          return T.s - s0 < 12.5;
+          if (T.s - s0 < way.ghost) ghostLive = ghostLive && gh.state !== 'dead';
+          const g1 = ghostOf(dMine); gdrift = Math.max(gdrift, g1 ? g1.pos.distanceTo(dMine.pos) : 99);
+          return T.s - s0 < way.ghost + 1.4;
         });
-        hook = null;
+        drive = 0;
         const moved = r2(T.s - s0);
+        // the moment the body reaches it: its front (half-width 1.25 m, up to 1.77 m on a diagonal) at its near edge
+        const R0 = { curtain: 0, sprinkler: DEP.DEV_R.sprinkler, beacon: DEP.DEV_R.beacon, buoy: 0.37 * 0.8 };
+        const timely = Object.fromEntries(Object.keys(R0).map((k) => [k, seen[k] != null && seen[k] <= way[k] - 1.25 - R0[k] + 0.15 && seen[k] >= way[k] - 1.77 - R0[k] - 0.15]));
         const ev = evs.slice(e0).filter((e) => e.n === 'device:down' && e.how === 'crush');
-        const recs = sent.filter((x) => x.kind === 'subs' && x.data[0] === 2 && x.data[2] === 2).map((x) => x.data[1]);
-        const brec = sent.find((x) => x.kind === 'surf' && x.data[0] === 4 && x.data[2] === 2);
-        R(`the moving tower destroys what's in its way the moment its body reaches it — a Drip Curtain at ${seen.curtain} m, a sprinkler at ${seen.sprinkler} m, a beacon at ${seen.beacon} m, a buoy at ${seen.buoy} m (placed 3.5 / 5 / 7 / 9 m ahead; its half-width ${1.25} m), whoever's they are`,
-          moved > 10 && ['curtain', 'sprinkler', 'beacon', 'buoy'].every((k) => seen[k] != null) && seen.curtain < 3.5 && seen.sprinkler < 5 && seen.beacon < 7 && seen.buoy < 9 && ev.length >= 4,
-          { seen, moved, crushEvents: ev.map((e) => e.kind) });
+        const recs = sent.filter((x) => x.kind === 'subs' && x.data && x.data[0] === 2 && x.data[2] === 2).map((x) => x.data[1]);
+        const brec = sent.find((x) => x.kind === 'surf' && x.data && x.data[0] === 4 && x.data[1] === bu.gid && x.data[2] === 2);
+        R(`the moving tower destroys what's in its way the moment its body reaches it — a Drip Curtain across the track at ${seen.curtain} m, a sprinkler at ${seen.sprinkler} m, a beacon at ${seen.beacon} m, a buoy at ${seen.buoy} m (placed ${way.curtain} / ${way.sprinkler} / ${way.beacon} / ${way.buoy} m ahead), whoever's they are`,
+          moved > way.ghost && Object.values(timely).every(Boolean) && ['curtain', 'sprinkler', 'beacon', 'surf'].every((k) => ev.some((e) => e.kind === k)), { seen, timely, moved, crushEvents: ev.map((e) => e.kind) });
         R('…with a crunch (device_crunch) each, and the owners\' end records say so: [2, gid, 2] for the curtain, sprinkler and beacon, [4, gid, 2] for the buoy',
-          cues.slice(c0).filter((c) => c.name === 'device_crunch').length >= 4 && [66001, 66002, 66003].every((id) => recs.includes(id)) && !!brec, { crunches: cues.slice(c0).filter((c) => c.name === 'device_crunch').length, recs, buoy: brec && brec.data });
+          cues.slice(c0).filter((c) => c.name === 'device_crunch').length >= 4 && [cur.gid, spr.gid, bea.gid].every((id) => recs.includes(id)) && !!brec, { crunches: cues.slice(c0).filter((c) => c.name === 'device_crunch').length, recs, buoy: brec && brec.data });
         R('a beacon beside the track (its body clear of the tower\'s) is left standing', by.state === 'beacon' && S.items.includes(by), { state: by.state });
-        R('a ghost in its way waits for its owner\'s word (not crushed by this screen\'s tower); the owner\'s [2, gid, 2] takes it with the crunch', ghostLive, { ghostLive });
+        R('a ghost in its way waits for its owner\'s word (not crushed by this screen\'s tower)', ghostLive && gh.state === 'beacon', { ghostLive, state: gh.state });
         const c1 = cues.length;
         S.netGhost(owner, [2, 66006, 2]); step(0.05);
         R('…[2, gid, 2] arrives: gone, with the crunch', gh.state === 'dead' && cues.slice(c1).some((c) => c.name === 'device_crunch'), { state: gh.state });
-        // the deck: everything set down on it rides along
+        // the deck: everything set down on it rode along
         const drift = (d, o) => r2(d.pos.clone().sub(T.pos).distanceTo(o));
-        const deckRes = { beacon: { alive: dBea.state === 'beacon', drift: drift(dBea, offs.bea) }, sprinkler: { alive: dSpr.state === 'spray', drift: drift(dSpr, offs.spr) },
-          curtain: { alive: dCur.state === 'curtain', drift: drift(dCur, offs.cur) }, buoy: { alive: dBu.phase === 'live', drift: drift(dBu, offs.bu), on: dBu.on && dBu.on.b.tag } };
-        R(`devices on its deck ride it ${moved} m and are never crushed: a beacon planted on it, a sprinkler stuck to it, a Drip Curtain dropped on it, a buoy set down on it`,
-          Object.values(deckRes).every((r) => r.alive && r.drift < 0.05) && deckRes.buoy.on === 'tower', deckRes);
+        const deckRes = { mine: { alive: dMine.state === 'mine', drift: drift(dMine, offs.mine) }, beacon: { alive: dBea.state === 'beacon', drift: drift(dBea, offs.beacon) }, sprinkler: { alive: dSpr.state === 'spray', drift: drift(dSpr, offs.sprinkler) },
+          curtain: { alive: dCur.state === 'curtain', drift: drift(dCur, offs.curtain) }, buoy: { alive: dBu.phase === 'live', drift: drift(dBu, offs.buoy) } };
+        const r4 = [dMine, dBea, dSpr].map((d) => recs4(d.gid).map((x) => x[5]));
+        R(`devices on its deck ride it ${moved} m and are never crushed: a Lurk Mine and a Hop Beacon laid on it, a sprinkler stuck to its pillar, a Drip Curtain dropped on it, a buoy set down on it`,
+          Object.values(deckRes).every((r) => r.alive && r.drift < 0.05) && deckSet.mine === 'tower' && deckSet.beacon === 'tower' && deckSet.sprinkler === 'tower-pillar' && deckSet.curtain === 'tower' && deckSet.buoy === 'tower', { deckRes, on: deckSet });
+        R('…the owner says where each sits ([4, gid, …, \'tower\' / \'tower-pillar\', …]); a ghost of the mine built from its records rides the deck with it', r4[0][0] === 'tower' && r4[1][0] === 'tower' && r4[2][0] === 'tower-pillar' && gdrift < 0.05, { records: r4, ghostDrift: r2(gdrift) });
+        hook = null;
+        const tr = tripAt(dMine, owner);
+        R(`…the mine on the deck trips for a foe who comes up onto it there, and blows there (${tr.off} m from it, ${r2(moved)} m from where it was laid)`, tr.tripped && tr.off < 0.4, tr);
+      } finally { T._rules = rules0; netOff(); hook = null; }
+    }
+
+    // ============================================================================================ Calamari's railcars
+    // MAP=calamari: a sprinkler stuck to a railcar's flank and a Drip Curtain dropped on its roof ride it the whole way
+    // (the ghosts from the owner's records too). (A Lurk Mine or a Hop Beacon can't be laid on a railcar: its roof is
+    // off-limits — nothing is planted on one, as before: the platform, the tower and the pods carry those.)
+    if (want('rail') && m.movers) {
+      reset(); netOn();
+      try {
+        const M = m.movers, Tt = M.T, car = M.cars[0], L = G.level, F = feeder(foe);
+        m.duration = 99999;
+        const setClock = (t) => { m.time = m.duration - t; frame(); };
+        setClock(Tt.first - 0.8); step(2 / 60);
+        const perp = V(-car.u.z, 0, car.u.x);
+        // its flank facing the open side (nothing between the throw and it)
+        let sgn = 1, from = null;
+        for (const sg of [1, -1]) { const f = car.pos.clone().addScaledVector(perp, sg * (car.wid / 2 + 0.9)).addScaledVector(car.u, 1.5); f.y = car.pos.y + car.ht * 0.6; const h = G.physics.segment(f, f.clone().addScaledVector(perp, -sg * 1.2), new Hit()); if (h.hit && h.block === car.block.id) { sgn = sg; from = f; break; } }
+        const spr = from ? throwG(me, SUBS.sprinkler, from, perp.clone().multiplyScalar(-sgn * 12).setY(1.4), F) : null;
+        const cur = throwG(me, SUBS.curtain, V(car.pos.x - car.u.x * 2, car.pos.y + car.ht + 1.2, car.pos.z - car.u.z * 2), V(perp.x * 0.2, -5, perp.z * 0.2), F);
+        step(0.5, () => { F.feed(); }); F.feed();
+        const on = { sprinkler: spr && spr.on && spr.on.b === car.block, curtain: cur.on && cur.on.b === car.block, face: spr && spr.on ? [spr.on.k, spr.on.s] : null };
+        const o0 = { spr: spr && spr.pos.clone().sub(car.pos), cur: cur.pos.clone().sub(car.pos) };
+        hook = hold([spr, cur]);
+        let worst = 0, gworst = 0;
+        const p0 = car.pos.clone();
+        step(Tt.move + 1.2, () => { F.feed(); if (spr) worst = Math.max(worst, spr.pos.clone().sub(car.pos).distanceTo(o0.spr)); worst = Math.max(worst, cur.pos.clone().sub(car.pos).distanceTo(o0.cur));
+          for (const d of [spr, cur]) { if (!d) continue; const g1 = ghostOf(d); gworst = Math.max(gworst, g1 ? g1.pos.distanceTo(d.pos) : 99); } });
+        hook = null;
+        const went = r2(car.pos.distanceTo(p0));
+        R(`a railcar: a sprinkler stuck to its flank and a Drip Curtain dropped on its roof ride it the ${went} m to its other stop (worst drift ${r2(worst)} m), and so do their ghosts (${r2(gworst)} m)`,
+          !!spr && on.sprinkler && on.curtain && went > 10 && worst < 0.05 && gworst < 0.05 && spr.state === 'spray' && cur.state === 'curtain', { on, went, worst: r2(worst), ghost: r2(gworst), rec: recs4(cur.gid)[0] });
+      } finally { netOff(); hook = null; }
+    }
+
+    // ============================================================================================ a grown pod (MAP=podbox)
+    // a Lurk Mine laid on a grown bramble wall's top rides the top down as it wilts and, when the wall has gone, lies on
+    // the floor where it stood — still armed: a foe trips it there
+    if (want('hedge') && m.pods) {
+      reset(); netOn();
+      try {
+        const Pd = m.pods, L = G.level, F = feeder(foe);
+        m.duration = 99999; m.time = m.duration - Pd.t;
+        const setClock = (t) => { m.time = m.duration - t; step(1 / 60); };
+        const p = Pd.pods.find((q) => q.kind === 'wall' && q.id === 'gate') || Pd.pods.find((q) => q.kind === 'wall');
+        Pd.grow(p, me.team, Pd.t);
+        step(Pd.T.grow + 0.4);
+        const tb = p.topPart.blk, ty = tb.center.y + tb.half.y;
+        put(me, V(tb.center.x + 0.8 * p.c, ty, tb.center.z - 0.8 * p.s), 0); me.pos.y = ty + 0.02; step(2 / 60);
+        S._place(me, SUBS.mine);
+        const mine = S.items.filter((x) => x.owner === me && x.kind === 'mine' && x.state !== 'dead').pop();
+        put(me, HOME, 0);
+        F.ids.add(mine.gid); step(0.2, () => { F.feed(); }); F.feed();
+        const onTop = !!(mine.on && p.parts.some((q) => q.blk === mine.on.b)), y0 = r2(mine.pos.y);
+        let rode = 0, gworst = 0;
+        setClock(p.wiltAt - 0.05);
+        step(Pd.T.wilt + 0.6, () => { F.feed(); if (mine.on) rode = Math.max(rode, y0 - mine.pos.y); const g1 = ghostOf(mine); gworst = Math.max(gworst, g1 ? g1.pos.distanceTo(mine.pos) : 99); });
+        const fy = L.groundHeight(mine.pos.x, mine.pos.z, mine.pos.y + 0.5);
+        R(`a grown pod: a Lurk Mine laid on a bramble wall's top (${y0} m) rides it down as it wilts (${r2(rode)} m) and lies on the floor where it stood once it has gone (its ghost with it)`,
+          onTop && rode > 0.5 && mine.state === 'mine' && Math.abs(mine.pos.y - fy) < 0.05 && !mine.on && gworst < 0.08, { onTop, y0, rode: r2(rode), at: v2(mine.pos), floor: r2(fy), ghost: r2(gworst), recs: recs4(mine.gid) });
+        const tr = tripAt(mine, foe);
+        R('…still armed there: a foe trips it and it blows there', tr.tripped && tr.off < 0.4, tr);
       } finally { netOff(); hook = null; }
     }
   } catch (e) { R('harness error: ' + e.message, false, String(e.stack).slice(0, 900)); }
-  function TOWER_PAD() { return 0; }
   return out;
 })();
