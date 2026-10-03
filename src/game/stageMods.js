@@ -211,6 +211,7 @@ export class StageRun {
     this.match = match; this.world = SW; this.mods = [];
     this.clock = new StageClock();
     this.h = {};
+    for (const n of R_HOOKS) this.h[n] = [];   // (a module's factory may already ask a query)
     this.edgeTypes = new Set();          // special nav edge types a module steers itself ('pipe' …): bots.js _steer
     this._navSet = false;
   }
