@@ -1,6 +1,6 @@
-// [b5-deploy] Bots and enemy deployables (src/game/deployables.js). With nothing better to do — no foe in sight or on its
-// mind (bots.js 'paint' mode: a fight, even one gone out of sight, comes first), not refilling / retreating / climbing,
-// nothing else drawing its aim (a threat, a canopy, a sprout pod) — a bot shoots down an enemy Hop Beacon, Twirl
+// [b5-deploy] Bots and enemy deployables (src/game/deployables.js). With nothing better to shoot — no foe in sight, not
+// refilling / retreating / climbing, nothing else drawing its aim (a threat, a canopy, a sprout pod) — a bot shoots down
+// an enemy Hop Beacon, Twirl
 // Sprinkler or Surf N' Turf buoy it can see (a wall between: it isn't seen — no wall-hacks), the nearest first (a
 // beacon, then a buoy, ahead of a sprinkler a little nearer: the jump point and the rings hurt more).
 // FOOTWORK: bots.js calls this BEFORE Tower Command's footwork, the wall climb and the enemy-specials awareness
@@ -9,7 +9,8 @@
 // the device is well inside its reach (a straight walk with floor all the way; a roller / brush runs right over it, drum
 // or bristles down), then plants for the shots. Tied to a task, it only shoots what's in its reach from where its task
 // takes it, and never walks for one: every Tower Command role (a rider from the deck only, never while it's getting on;
-// escorts, perches … on their route), and in Zone Control anything not on a live zone.
+// escorts, perches … on their route), in Zone Control anything not on a live zone, and a bot hunting a foe it lost
+// sight of (the hunt is its task: only a device in reach on the way).
 // Every weapon by its own trigger: bots.js _devTrigger (a roller's flick / a brush's swipe in their window, a short
 // spinner / splatling burst, a bow ring), a charger at full charge (one shot breaks either).
 // GIVING UP: a device it has been on for DEV_GIVEUP s in all (summed over every time it went back to it — a foe seen,
@@ -24,7 +25,7 @@ import { MAIN_KITS } from './kits/registry.js';
 
 // picks: devices taken on (a device once); repicks: going back to one it was on before; secs: seconds in device mode
 // (all bots); fired: frames with the trigger down for one; gaveUp: left alone after DEV_GIVEUP s on it
-export const DEV_BOT = { picks: 0, repicks: 0, beacon: 0, sprinkler: 0, surf: 0, frames: 0, secs: 0, walkSecs: 0, fired: 0, gaveUp: 0 };
+export const DEV_BOT = { picks: 0, repicks: 0, beacon: 0, sprinkler: 0, surf: 0, frames: 0, secs: 0, walkSecs: 0, blockedSecs: 0, fired: 0, gaveUp: 0 };
 export const DEV_AI = { enabled: true };   // (match harnesses switch it off for an A/B: match.cjs / tower-match.cjs DEV_AI=0)
 export function resetDevBot() { for (const k in DEV_BOT) DEV_BOT[k] = 0; }
 const PREFER = { beacon: 0.8, surf: 0.85, sprinkler: 1 };   // (its distance × this: the pick)
@@ -44,7 +45,9 @@ const drop = (sense) => { sense._dev = null; };
 // null. tp: Tower Command's team plan (bots.js towerPlan(), else null), onT: on the tower now; zp: Zone Control's
 export function devShootAim(sense, dt, it, move, tp = null, onT = false, zp = null) {
   const b = sense.b, a = b.a, w = a.weapon, D = G.deploy;
-  if (!D || !DEV_AI.enabled || b.mode !== 'paint' || (b.target && b.seeTimer > 0) || a.climbing || b._clE || a.specialActive || a.superJumpState
+  // (hunting a foe it lost sight of: that's its task — a device in reach on the way gets shot, none walked to)
+  const hunting = b.mode === 'fight' && !!b.target;
+  if (!D || !DEV_AI.enabled || (b.mode !== 'paint' && !hunting) || (b.target && b.seeTimer > 0) || a.climbing || b._clE || a.specialActive || a.superJumpState
     || a.ink < Math.max(6, w.inkPerShot || 0)) { drop(sense); return null; }
   // Tower Command: every role keeps its task (a rider shoots from the deck only — none while it's getting on)
   const tower = !!tp;
@@ -55,7 +58,7 @@ export function devShootAim(sense, dt, it, move, tp = null, onT = false, zp = nu
   let d = sense._dev, rec = d ? mem.get(d.obj) : null;
   if (d && !live(d.kind, d.obj)) { mem.delete(d.obj); d = sense._dev = null; }
   else if (d && !rec) mem.set(d.obj, rec = { kind: d.kind, busy: 0, skip: 0 });
-  const free = (x) => !tower && (!zp || zp.onActive(x.pos.x, x.pos.y, x.pos.z));   // (may it walk for this one?)
+  const free = (x) => !tower && !hunting && (!zp || zp.onActive(x.pos.x, x.pos.y, x.pos.z));   // (may it walk for this one?)
   if (!d) {
     if ((sense._devT = (sense._devT || 0) - dt) > 0) return null;
     sense._devT = 0.35;
@@ -100,10 +103,16 @@ export function devShootAim(sense, dt, it, move, tp = null, onT = false, zp = nu
   if (roam && move) {
     if (dh > near + 0.3 && dh > 0.3) {
       const ux = dx / dh, uz = dz / dh;
-      if (!b._dryLine || b._dryLine(a.pos.x, a.pos.y, a.pos.z, a.pos.x + ux * Math.min(dh, 2.5), a.pos.z + uz * Math.min(dh, 2.5))) { move.set(ux, 0, uz); walking = true; DEV_BOT.walkSecs += dt; }
+      // (a noticed danger on the straight way there — a vortex, a cloud, a wail's line …: no walk into it. It keeps to its
+      // own route, which goes round noticed dangers, shooting from where that takes it; the danger guard after this has
+      // the last word on every step as well)
+      let blocked = false;
+      for (let k = 0.5; k <= Math.min(dh, 4) && !blocked; k += 0.5) blocked = sense._inAny(a.pos.x + ux * k, a.pos.y, a.pos.z + uz * k, k / 6, null);
+      if (blocked) DEV_BOT.blockedSecs += dt;
+      else if (!b._dryLine || b._dryLine(a.pos.x, a.pos.y, a.pos.z, a.pos.x + ux * Math.min(dh, 2.5), a.pos.z + uz * Math.min(dh, 2.5))) { move.set(ux, 0, uz); walking = true; DEV_BOT.walkSecs += dt; }
       else move.multiplyScalar(0.2);
-    } else move.multiplyScalar(0.2);
-    b.noProg = 0; b.bestD = Infinity;                    // (off its route on purpose: not "stuck")
+      if (!blocked) { b.noProg = 0; b.bestD = Infinity; }   // (off its route on purpose: not "stuck")
+    } else { move.multiplyScalar(0.2); b.noProg = 0; b.bestD = Infinity; }
   }
   a.fireFacing = Math.max(a.fireFacing || 0, 0.25);   // square up to it (a flick / swipe / roll leaves along the body)
   // (a roller's flick at something on the ground: aim low — it arcs down onto it, as bots.js does for a Waddle)

@@ -140,6 +140,7 @@ function predict(d, pos, vel, g, maxT) {
   return false;
 }
 const _barEnd = new WeakMap();
+const _fresh = [];   // [b5-deploy] (_scan: the dangers new to this bot this look)
 const barrage = (a) => !!a && (a.specialActive?.kind === 'barrage' || G.time - (_barEnd.get(a) ?? -99) < 3.5);
 
 // every enemy special effect as a danger area (both teams' — a bot reads the other team's); once a frame
@@ -592,14 +593,23 @@ export class SpecialSense {
     const fighting = b.mode === 'fight' && b.seeTimer > 0;
     this._rays = 3;
     for (const r of this.recs.values()) r.live = false;
+    const fresh = _fresh; fresh.length = 0;
     for (const d of _list) {
       if (d.team === a.team || distTo(d, ex, ez) > 45) continue;
-      let r = this.recs.get(d.key);
+      const r = this.recs.get(d.key);
       if (r) {
         r.live = true; r.d = d;
         if (d.actor && this._sense(d, ex, ey, ez, fx, fz, cone, aw, r)) r.lastT = now;
         continue;
       }
+      fresh.push(d);
+    }
+    // (what's over: scored, and kept a moment — the vortex a missile turns into is the same danger. [b5-deploy] Before the
+    // new ones register, so the vortex takes over the missile's notice at once: it used to wait a reaction time, ~0.3 s
+    // with nothing known, in which a bot walked into the vortex that had just landed)
+    for (let i = this.gone.length - 1; i >= 0; i--) if (now - this.gone[i].t > 1) this.gone.splice(i, 1);
+    for (const [k, r] of this.recs) if (!r.live) { this._gone(r); if (!r.miss) this.gone.push({ src: r.d.src, x: r.d.x, z: r.d.z, t: now, at: r.at }); this.recs.delete(k); }
+    for (const d of fresh) {
       if (!this._sense(d, ex, ey, ez, fx, fz, cone, aw, null)) continue;
       const sx = d.sx - ex, sz = d.sz - ez, sl = Math.hypot(sx, sz), inCone = sl < SIGHT.near || (sx * fx + sz * fz) / (sl || 1) > cone;
       // (a telegraphed special registers a little quicker than a flick onto a foe: 0.6–1.0 × the reaction time; later
@@ -614,9 +624,6 @@ export class SpecialSense {
       const jit = (Math.random() - 0.5) * 0.9 * (1.05 - b.diff.fireDiscipline);
       this.recs.set(d.key, { key: d.key, d, at: at2, miss, lastT: now, live: true, t0: now, noted: false, wasIn: false, cover: false, backed: false, rayT: -9, jit });
     }
-    // (what's over: scored, and kept a moment — the vortex a missile turns into is the same danger)
-    for (let i = this.gone.length - 1; i >= 0; i--) if (now - this.gone[i].t > 1) this.gone.splice(i, 1);
-    for (const [k, r] of this.recs) if (!r.live) { this._gone(r); if (!r.miss) this.gone.push({ src: r.d.src, x: r.d.x, z: r.d.z, t: now, at: r.at }); this.recs.delete(k); }
     // behind cover from a blast that needs a sight line from its centre? (one look each, at those we're in)
     for (const r of this.recs.values()) {
       const d = r.d;
