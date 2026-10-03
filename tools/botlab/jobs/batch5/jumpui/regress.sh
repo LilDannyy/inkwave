@@ -5,6 +5,7 @@
 #   tools/botlab/jobs/batch5/jumpui/regress.sh               (env: BOTLAB_OUT / SLOTS for run.sh; PAR, default 3)
 #   ONLY="jump-ui net-jump-ui" tools/botlab/jobs/batch5/jumpui/regress.sh     (just those names)
 #   REP=3: the jump-ui / net-jump-ui runs repeated (names -1 … -REP)
+#   (jump-ui also once in Zone Control, Tower Command and Boss Battle, and at 960×600 / 1280×720: W / H, page.cjs)
 set -u
 ROOT=$(cd "$(dirname "$0")/../../../../.." && pwd); cd "$ROOT"
 PAR=${PAR:-3}; ONLY=${ONLY:-}; REP=${REP:-1}
@@ -22,6 +23,13 @@ batch=()
 for i in $(seq 1 "$REP"); do batch+=("jump-ui-$i MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"); done
 batch+=(
   "jump-ui-zones MAP=testbox MODE=zones WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
+  "jump-ui-tower MAP=testbox MODE=tower WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
+  "jump-ui-boss MAP=testbox MODE=boss WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
+  "jump-ui-960 MAP=testbox MODE=turf W=960 H=600 WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
+  "jump-ui-1280 MAP=testbox MODE=turf W=1280 H=720 WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
+  "jump-ui-boss-960 MAP=testbox MODE=boss W=960 H=600 WATCHDOG=900000 PAGE_ARGS=only=alert,place,stack PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
+  "tower-ink MAP=testbox MODE=tower WATCHDOG=900000 PAGE=$T/tower-ink.js $RUN tools/botlab/page.cjs"
+  "sub-tweaks MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/sub-tweaks.js $RUN tools/botlab/page.cjs"
   "hud-lead MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
   "hud-lead-zones MAP=testbox MODE=zones WATCHDOG=900000 PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
   "hud-lead-tower MAP=testbox MODE=tower WATCHDOG=900000 PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
