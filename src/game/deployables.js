@@ -54,9 +54,10 @@ const near = (p, r = 40) => !!G.camera && G.camera.position.distanceToSquared(p)
 const SHOOT = { spray: 'sprinkler', beacon: 'beacon', run: 'seeker', prime: 'seeker' };
 export const DEV_R = { sprinkler: 0.3, beacon: 0.3, seeker: 0.25 };   // m: the hit capsule's radius (subs.js blockShot's 0.3 + 0.04)
 export const ROLL_CD = 0.5;                                          // s between one roller's drum hits on one device
+const LIFT = 0.7;                                                    // m: a moving block's top this far over a device, rising into it, lifts it on (sp-surf.js LIFT)
 
 // counters (tests / match.cjs / tower-match.cjs)
-export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, seekerPops: 0 };
+export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, lifts: 0, shoves: 0, seekerPops: 0 };
 export function resetDeployStats() { for (const k in DEPLOY_STATS) DEPLOY_STATS[k] = typeof DEPLOY_STATS[k] === 'object' ? {} : 0; }
 const bump = (o, k) => { o[k] = (o[k] || 0) + 1; };
 
@@ -161,7 +162,9 @@ class Deployables {
   // block's own axes, on the face it was set on (a top that rises or sinks, a wall that grows: it stays on that face), and
   // turns with the block; a mine trips (and blows) wherever the block has taken it. When its block goes from under it
   // (parked, gone, its face drawn in, a jump of more than 3 m) a device on a floor drops onto whatever is below (and
-  // rides that, if it moves too), one stuck to a wall or a ceiling breaks. No records while it rides (every screen moves
+  // rides that, if it moves too), one stuck to a wall or a ceiling breaks. A moving block pushing into a device lying on
+  // a floor lifts it onto its top or shoves it out of its way (_pushes: the buoy's _pushed; the tower crushes instead).
+  // No records while it rides (every screen moves
   // its copy on its own copy of the block: the movers / pods run on the synced clock, the tower follows the host); the
   // owner's word [4, gid, x, y, z, tag, lx, ly, lz, nx, ny, nz] says where on which block it sits whenever it settles
   // on one (or [4, gid, x, y, z]: on still ground again), so a ghost that landed a little differently snaps to it.
@@ -327,8 +330,63 @@ class Deployables {
   tick(dt) {
     const items = G.subs?.items || [];
     for (const it of items) if (it.flash > 0 || it._flashOn) this._flashLook(it, dt);
+    if (G.level?.dyn?.length) this._pushes(items);
     if (!G.actors) return;
     this._standing(dt);
+  }
+  // a moving block (not the one it rides) pushing into a device lying on a floor — the buoy's rule (sp-surf.js _pushed),
+  // so it's never left inside one: rising under it (a hedge growing in its trough, a platform coming up) → onto its top,
+  // riding it; from the side (a hedge spreading over it, a railcar running into it) → shoved out (out of its front the
+  // way it's going, or its nearer side; never through a wall) onto the floor there; nowhere to go → crushed. Every screen
+  // alike (the owner's word [4] settles a ghost; a ghost is never crushed by its own screen: it waits for [2, gid, 2]).
+  // Not the tower: it crushes what's in its way (crush). A device stuck to a wall or a ceiling is left as it is.
+  _pushes(items) {
+    const L = G.level, T = G.match?.tower;
+    for (const it of items) {
+      if (it.pushRec && G.time - it.pushT > 0.2) { it.pushRec = false; if (!it.on) this._onRec(it); }   // (a shove that has settled: the owner's word on where it is now)
+      if (it.on || !(it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || ((it.state === 'spray' || it.state === 'stuck') && it.normal && it.normal.y > 0.6))) continue;
+      const p = it.pos, r = 0.3;
+      for (const b of L.dyn) {
+        if (b.solid === false || this.isTowerBlock(b, T)) continue;
+        if (p.x < b.aabbMin.x - r || p.x > b.aabbMax.x + r || p.z < b.aabbMin.z - r || p.z > b.aabbMax.z + r || p.y + 0.3 < b.aabbMin.y || p.y > b.aabbMax.y - 0.04) continue;
+        const ax = b.axes[0], az = b.axes[2], dx = p.x - b.center.x, dz = p.z - b.center.z;
+        const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z, ex = b.half.x + r - Math.abs(lx), ez = b.half.z + r - Math.abs(lz);
+        if (ex <= 0 || ez <= 0) continue;
+        const top = b.center.y + b.half.y;
+        if (!b.roof && top - p.y <= LIFT && Math.abs(lx) < b.half.x && Math.abs(lz) < b.half.z) {   // rising under it: onto its top
+          p.y = top; it.mesh.position.copy(p);
+          DEPLOY_STATS.lifts++;
+          this.attach(it, b.id);
+          break;
+        }
+        // from the side: out of its front (the way it moves) or its nearer side, where it fits
+        const mv = b.dp, mx = mv ? mv.x * ax.x + mv.z * ax.z : 0, mz = mv ? mv.x * az.x + mv.z * az.z : 0, tries = [];
+        if (Math.abs(mx) > 1e-5 || Math.abs(mz) > 1e-5) {
+          if (Math.abs(mx) >= Math.abs(mz)) tries.push([ax.x * Math.sign(mx), ax.z * Math.sign(mx), b.half.x + r + 0.03 - Math.sign(mx) * lx]);
+          else tries.push([az.x * Math.sign(mz), az.z * Math.sign(mz), b.half.z + r + 0.03 - Math.sign(mz) * lz]);
+        }
+        const sx = Math.sign(lx) || 1, sz = Math.sign(lz) || 1;
+        tries.push([ax.x * sx, ax.z * sx, ex + 0.03], [az.x * sz, az.z * sz, ez + 0.03]);
+        tries.sort((u, w) => u[2] - w[2]);
+        let moved = false;
+        for (const [ux, uz, dist] of tries) {
+          const nx = p.x + ux * dist, nz = p.z + uz * dist;
+          if (G.physics.segment(_v.set(p.x, p.y + 0.3, p.z), _v2.set(nx, p.y + 0.3, nz), _h, true).hit && _h.block !== b.id) continue;   // (a wall that way)
+          const g = G.physics.raycast(_v.set(nx, p.y + 0.5, nz), DOWN, 40, _h, true);
+          if (!g.hit || g.normal.y < 0.6 || g.block === b.id) continue;
+          p.set(nx, g.point.y, nz); it.mesh.position.copy(p);
+          DEPLOY_STATS.shoves++;
+          if (!this.attach(it, g.block) && !it.ghost) { it.pushT = G.time; it.pushRec = true; }   // (the word once it has settled)
+          moved = true; break;
+        }
+        if (!moved && !it.ghost) {   // nowhere to go: crushed
+          it.endWhy = 2; this.endLook(it, 2);
+          bump(DEPLOY_STATS.crushed, it.kind);
+          emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how: 'crush' });
+        }
+        break;
+      }
+    }
   }
   _flashLook(it, dt) {
     it.flash = Math.max(0, (it.flash || 0) - dt * 5.5);

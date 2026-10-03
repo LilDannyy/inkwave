@@ -45,7 +45,7 @@
   const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
   const want = (k) => !ONLY || ONLY.split(',').includes(k);
   dbg.freeze();
-  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const V = (x, y, z) => new THREE.Vector3(x, y, z), _vIn = new THREE.Vector3();
   const DOWN = V(0, -1, 0), UPV = V(0, 1, 0);
   const r2 = (x) => Math.round(x * 100) / 100, v2 = (v) => [r2(v.x), r2(v.y), r2(v.z)];
   const DT = 1 / 60;
@@ -101,7 +101,7 @@
     beacon(o, x, z) { const gh = ground(x, z); return S._plant(o, SUBS.beacon, gh.point.clone(), gh.normal.clone(), 0, gh, false); },
     sprinkler(o, x, z, vel = V(0, -6, 0), y = 0.7) { const it = S._throw(o, SUBS.sprinkler, V(x, y, z), vel, false); step(1, () => it.state === 'fly'); return it; },
     seeker(o, x, z) { const it = S._throw(o, SUBS.seeker, V(x, 0.6, z), V(0, -6, 0), false); step(1, () => it.state === 'fly'); return it; },
-    surf(o, x, z) { const b = new SURF.Buoy(o, V(x, 0.3, z), V(0, 0, 0), false, 0); G.specials.world.push(b); b.land(V(x, 0, z)); return b; },
+    surf(o, x, z, gid = 0) { const b = new SURF.Buoy(o, V(x, 0.3, z), V(0, 0, 0), false, gid); G.specials.world.push(b); b.land(V(x, 0, z)); return b; },
     curtain(o, x, z, vx = 0, vz = 0.2) { const it = S._throw(o, SUBS.curtain, V(x, 0.6, z), V(vx, -6, vz), false); step(1, () => it.state === 'fly'); return it; },
   };
   const HP = { beacon: SUBS.beacon.hp, sprinkler: SUBS.sprinkler.hp, seeker: SUBS.seeker.hp, surf: SPECIALS.surf.hp };
@@ -513,7 +513,7 @@
         const cur = mk.curtain(owner, P(way.curtain).x, P(way.curtain).z, dirAt(s0 + way.curtain).x * 0.3, dirAt(s0 + way.curtain).z * 0.3);
         const spr = mk.sprinkler(owner, P(way.sprinkler).x + side(way.sprinkler).x * 0.5, P(way.sprinkler).z + side(way.sprinkler).z * 0.5);
         const bea = mk.beacon(rider, P(way.beacon).x, P(way.beacon).z);
-        const bu = mk.surf(owner, P(way.buoy).x - side(way.buoy).x * 0.4, P(way.buoy).z - side(way.buoy).z * 0.4);
+        const bu = mk.surf(owner, P(way.buoy).x - side(way.buoy).x * 0.4, P(way.buoy).z - side(way.buoy).z * 0.4, 66004);
         const by = mk.beacon(owner, P(way.beacon).x + side(way.beacon).x * 3.2, P(way.beacon).z + side(way.beacon).z * 3.2);
         S.netGhost(owner, [1, 66006, 'beacon', r2(P(way.ghost).x), r2(P(way.ghost).y), r2(P(way.ghost).z), 0, 1, 0, 0]);
         const gh = S.items.find((x) => x.gid === 66006);
@@ -540,7 +540,7 @@
         R(`the moving tower destroys what's in its way the moment its body reaches it — a Drip Curtain across the track at ${seen.curtain} m, a sprinkler at ${seen.sprinkler} m, a beacon at ${seen.beacon} m, a buoy at ${seen.buoy} m (placed ${way.curtain} / ${way.sprinkler} / ${way.beacon} / ${way.buoy} m ahead), whoever's they are`,
           moved > way.ghost && Object.values(timely).every(Boolean) && ['curtain', 'sprinkler', 'beacon', 'surf'].every((k) => ev.some((e) => e.kind === k)), { seen, timely, moved, crushEvents: ev.map((e) => e.kind) });
         R('…with a crunch (device_crunch) each, and the owners\' end records say so: [2, gid, 2] for the curtain, sprinkler and beacon, [4, gid, 2] for the buoy',
-          cues.slice(c0).filter((c) => c.name === 'device_crunch').length >= 4 && [cur.gid, spr.gid, bea.gid].every((id) => recs.includes(id)) && !!brec, { crunches: cues.slice(c0).filter((c) => c.name === 'device_crunch').length, recs, buoy: brec && brec.data });
+          cues.slice(c0).filter((c) => c.name === 'device_crunch').length >= 4 && [cur.gid, spr.gid, bea.gid].every((id) => recs.includes(id)) && !!brec, { crunches: cues.slice(c0).filter((c) => c.name === 'device_crunch').length, recs, want: [cur.gid, spr.gid, bea.gid], buoy: brec && brec.data });
         R('a beacon beside the track (its body clear of the tower\'s) is left standing', by.state === 'beacon' && S.items.includes(by), { state: by.state });
         R('a ghost in its way waits for its owner\'s word (not crushed by this screen\'s tower)', ghostLive && gh.state === 'beacon', { ghostLive, state: gh.state });
         const c1 = cues.length;
@@ -593,8 +593,9 @@
     }
 
     // ============================================================================================ a grown pod (MAP=podbox)
-    // a Lurk Mine laid on a grown bramble wall's top rides the top down as it wilts and, when the wall has gone, lies on
-    // the floor where it stood — still armed: a foe trips it there
+    // a Lurk Mine lying in a bramble wall's trough is lifted onto its top as it grows (never left inside it); one laid on
+    // the grown wall's top rides it; both ride the top down as it wilts and, when the wall has gone, lie on the floor
+    // where it stood — still armed: a foe trips one there
     if (want('hedge') && m.pods) {
       reset(); netOn();
       try {
@@ -602,22 +603,32 @@
         m.duration = 99999; m.time = m.duration - Pd.t;
         const setClock = (t) => { m.time = m.duration - t; step(1 / 60); };
         const p = Pd.pods.find((q) => q.kind === 'wall' && q.id === 'gate') || Pd.pods.find((q) => q.kind === 'wall');
+        const along = (k, y) => V(p.x + k * p.c, y, p.z - k * p.s);
+        const layAt = (k, y) => { const q = along(k, y); put(me, q, 0); me.pos.y = y + 0.02; step(2 / 60); S._place(me, SUBS.mine); const it = S.items.filter((x) => x.owner === me && x.kind === 'mine' && x.state !== 'dead').pop(); F.ids.add(it.gid); return it; };
+        // in the trough, beside the bulb (1.6 m along the wall)
+        const fy0 = L.groundHeight(along(1.6, 0).x, along(1.6, 0).z, 3);
+        const mA = layAt(1.6, fy0);
+        put(me, HOME, 0); step(0.1, () => { F.feed(); }); F.feed();
         Pd.grow(p, me.team, Pd.t);
-        step(Pd.T.grow + 0.4);
+        let inside = 0;
+        step(Pd.T.grow + 0.4, () => { F.feed(); for (const q of p.parts) if (q.blk.solid && L.pointInBlock(q.blk, _vIn.set(mA.pos.x, mA.pos.y + 0.1, mA.pos.z), -0.05)) inside++; });
         const tb = p.topPart.blk, ty = tb.center.y + tb.half.y;
-        put(me, V(tb.center.x + 0.8 * p.c, ty, tb.center.z - 0.8 * p.s), 0); me.pos.y = ty + 0.02; step(2 / 60);
-        S._place(me, SUBS.mine);
-        const mine = S.items.filter((x) => x.owner === me && x.kind === 'mine' && x.state !== 'dead').pop();
+        const liftedA = !!(mA.on && p.parts.some((q) => q.blk === mA.on.b)) && Math.abs(mA.pos.y - ty) < 0.05;
+        const outA = !mA.on && !p.parts.some((q) => q.blk.solid && L.pointInBlock(q.blk, _vIn.set(mA.pos.x, mA.pos.y + 0.1, mA.pos.z), 0.25)) && Math.abs(mA.pos.y - L.groundHeight(mA.pos.x, mA.pos.z, mA.pos.y + 0.05)) < 0.05;
+        const ghA = ghostOf(mA);
+        R(`a grown pod: a Lurk Mine lying in a bramble wall's trough where it grows ends up ${liftedA ? 'on its top, riding it' : 'shoved out of its way, on the floor beside it'} — never inside it (nor its ghost)`,
+          (liftedA || outA) && inside === 0 && mA.state === 'mine' && ghA && ghA.pos.distanceTo(mA.pos) < 0.08, { from: v2(along(1.6, fy0)), at: v2(mA.pos), top: r2(ty), inside, on: mA.on && mA.on.b.tag, ghost: ghA && v2(ghA.pos), recs: recs4(mA.gid) });
+        const mB = layAt(-1.6, ty);
         put(me, HOME, 0);
-        F.ids.add(mine.gid); step(0.2, () => { F.feed(); }); F.feed();
-        const onTop = !!(mine.on && p.parts.some((q) => q.blk === mine.on.b)), y0 = r2(mine.pos.y);
+        step(0.2, () => { F.feed(); }); F.feed();
+        const onTop = !!(mB.on && p.parts.some((q) => q.blk === mB.on.b)), y0 = r2(mB.pos.y);
         let rode = 0, gworst = 0;
         setClock(p.wiltAt - 0.05);
-        step(Pd.T.wilt + 0.6, () => { F.feed(); if (mine.on) rode = Math.max(rode, y0 - mine.pos.y); const g1 = ghostOf(mine); gworst = Math.max(gworst, g1 ? g1.pos.distanceTo(mine.pos) : 99); });
-        const fy = L.groundHeight(mine.pos.x, mine.pos.z, mine.pos.y + 0.5);
-        R(`a grown pod: a Lurk Mine laid on a bramble wall's top (${y0} m) rides it down as it wilts (${r2(rode)} m) and lies on the floor where it stood once it has gone (its ghost with it)`,
-          onTop && rode > 0.5 && mine.state === 'mine' && Math.abs(mine.pos.y - fy) < 0.05 && !mine.on && gworst < 0.08, { onTop, y0, rode: r2(rode), at: v2(mine.pos), floor: r2(fy), ghost: r2(gworst), recs: recs4(mine.gid) });
-        const tr = tripAt(mine, foe);
+        step(Pd.T.wilt + 0.6, () => { F.feed(); if (mB.on) rode = Math.max(rode, y0 - mB.pos.y); for (const d of [mA, mB]) { const g1 = ghostOf(d); gworst = Math.max(gworst, g1 ? g1.pos.distanceTo(d.pos) : 99); } });
+        const fl = (d) => { const fy = L.groundHeight(d.pos.x, d.pos.z, d.pos.y + 0.05); return d.state === 'mine' && Math.abs(d.pos.y - fy) < 0.05 && !d.on; };
+        R(`…a Lurk Mine laid on its top (${y0} m) rides it down as it wilts (${r2(rode)} m); once it has gone both lie on the floor where it stood (their ghosts with them)`,
+          onTop && rode > 0.5 && fl(mA) && fl(mB) && gworst < 0.08, { onTop, y0, rode: r2(rode), A: v2(mA.pos), B: v2(mB.pos), ghost: r2(gworst), recs: recs4(mB.gid) });
+        const tr = tripAt(mB, foe);
         R('…still armed there: a foe trips it and it blows there', tr.tripped && tr.off < 0.4, tr);
       } finally { netOff(); hook = null; }
     }
