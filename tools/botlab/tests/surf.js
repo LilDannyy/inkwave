@@ -13,8 +13,9 @@
 //    assist window on them opens (assists.js); a squid hop counts; swimming in ink doesn't help (hit);
 //  - assist: a teammate's splat on the jumper inside the window → the owner gets an assist (the teammate the splat), one
 //    after it → nothing; the damage rule (≤ 3 s); never the splatter's own; one per splat per player;
-//  - turf: after all rings, the ink by bands from the buoy: ≈ solid near it, falling off with distance (≈ 15–30 % at the
-//    outermost band); how many splats it took;
+//  - turf: after all rings, the ink by bands from the buoy out to the last ring's reach (rMax; where the rings get to):
+//    ≈ solid near it, falling off with distance as the ink model has it (≈ paintFar at the outermost band); how many
+//    splats it took;
 //  - buoy: enemy shots / blasts / a charger beam hurt it, it pops at 0 (the rings stop); its own team's don't;
 //  - walls: a foe behind the wall isn't reached (one beside it, the same distance out, is);
 //  - results: the results data carry assists (Match → main.js _judge → menus), and so does the host's final count online
@@ -266,17 +267,23 @@
       put(me, V(-20, 0, -30), 0);
       const n0 = SURF.SURF_STATS.splats, t0 = SURF.SURF_STATS.turf;
       const b = plant(me, c);
-      step(D.anchor + D.gap * D.pulses + 2.5, () => G.specials.world.includes(b));
+      step(D.anchor + D.gap * (D.pulses - 1) + (D.rMax - D.r0) / D.speed + SURF.BREAK_T + 1.5, () => G.specials.world.includes(b));
       step(0.6);   // (the last splats spread)
-      const bands = [[0, 3], [3, 6], [6, 9], [9, 12], [12, 14], [14, 16]];
+      // the bands: 0–3 m (solid), then five even bands out to the last ring's reach (rMax) — counted only where a ring
+      // could get to (the polar map: not behind the wall, not past the deck's edge); each against the ink model's
+      // share for that band (SURF.inkCover averaged over its area)
+      const Pm = b.polar, sol = D.solid, nb = 5;
+      const bands = [[0, Math.min(3, sol)], ...Array.from({ length: nb }, (_, i) => [r2(sol + ((D.rMax - sol) * i) / nb), r2(sol + ((D.rMax - sol) * (i + 1)) / nb)])];
       const cov = bands.map(([r0, r1]) => {
         let n = 0, own = 0;
-        for (let r = r0 + 0.05; r < r1; r += 0.25) { const k = Math.max(24, Math.round(Math.PI * 2 * r / 0.25)); for (let j = 0; j < k; j++) { const a = (j / k) * Math.PI * 2, v = inkAt(c.x + Math.sin(a) * r, c.z + Math.cos(a) * r); if (v < 0) continue; n++; if (v === me.team + 1) own++; } }
+        for (let r = r0 + 0.05; r < r1; r += 0.25) { const k = Math.max(24, Math.round(Math.PI * 2 * r / 0.25)); for (let j = 0; j < k; j++) { const a = (j / k) * Math.PI * 2; if (r > Pm.reachAt(a) - 0.6) continue; const v = inkAt(c.x + Math.sin(a) * r, c.z + Math.cos(a) * r); if (v < 0) continue; n++; if (v === me.team + 1) own++; } }
         return n ? r2(own / n) : -1;
       });
+      const model = bands.map(([r0, r1]) => { let w = 0, t = 0; for (let r = r0 + 0.05; r < r1; r += 0.1) { w += r; t += r * SURF.inkCover(r); } return r2(t / w); });
       const splats = SURF.SURF_STATS.splats - n0, turf = r2(SURF.SURF_STATS.turf - t0);
-      R(`the ink after all ${D.pulses} rings by band from the buoy (${bands.map(([a, z], i) => `${a}–${z} m ${Math.round(cov[i] * 100)} %`).join(', ')}): ≈ solid out to 3 m, then falling off, 15–30 % at the outermost`,
-        cov[0] >= 0.93 && cov.every((x, i) => !i || x <= cov[i - 1] + 0.03) && cov[5] >= 0.12 && cov[5] <= 0.32, { cov, splats, turf, ownerTurf: r2(me.stats.surfTurf || 0) });
+      const last = cov.length - 1;
+      R(`the ink after all ${D.pulses} rings by band from the buoy, where the rings reach (${bands.map(([a, z], i) => `${a}–${z} m ${Math.round(cov[i] * 100)} % (model ${Math.round(model[i] * 100)} %)`).join(', ')}): ≈ solid out to 3 m, then falling off as the model has it, ≈ ${Math.round(D.paintFar * 100)} % at the last ring's reach`,
+        cov[0] >= 0.93 && cov.every((x, i) => x >= 0 && (!i || x <= cov[i - 1] + 0.03)) && cov.every((x, i) => Math.abs(x - model[i]) <= 0.12) && cov[last] >= D.paintFar - 0.08 && cov[last] <= D.paintFar + 0.12, { cov, model, splats, turf, ownerTurf: r2(me.stats.surfTurf || 0) });
       R(`…in ${splats} splats (≤ 260 on the wire for the whole special) for ${turf} m² of turf, the owner's turf (never the special meter)`, splats > 20 && splats <= 260 && me.special === 0, { splats, turf, meter: me.special });
     }
 
@@ -491,12 +498,12 @@
       const b = buoys()[0];
       step(1.5, () => b.phase !== 'live');
       put(foe, V(b.pos.x, 0, b.pos.z + 3), Math.PI); hook = pin(foe);
-      step(D.anchor + D.gap * 5 + 2.2);
+      step(D.anchor + D.gap * (D.pulses - 1) + 2.2);
       hook = null;
       A.play = p0;
       const names = rec.map((x) => x.n), pulses = rec.filter((x) => x.n === 'surf_pulse').map((x) => x.k);
-      R('…heard in play: the machine powering up, the throw, the deploy clunk + bell, a "whoom" per ring growing with each (params.n 0 … 5), the hit',
-        ['surf_ready', 'surf_throw', 'surf_deploy', 'surf_hit'].every((n) => names.includes(n)) && JSON.stringify(pulses) === JSON.stringify([0, 1, 2, 3, 4, 5]), { names: [...new Set(names)], pulses });
+      R(`…heard in play: the machine powering up, the throw, the deploy clunk + bell, a "whoom" per ring growing with each (params.n 0 … ${D.pulses - 1}), the hit`,
+        ['surf_ready', 'surf_throw', 'surf_deploy', 'surf_hit'].every((n) => names.includes(n)) && JSON.stringify(pulses) === JSON.stringify(Array.from({ length: D.pulses }, (_, i) => i)), { names: [...new Set(names)], pulses });
       // the sting an enemy's Surf N' Turf gets (the cue director: sting_<kind>)
       reset();
       const st = []; const p1 = A.play.bind(A); A.play = (n, o) => { if (n === 'sting_surf') st.push(1); return p1(n, o); };

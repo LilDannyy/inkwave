@@ -22,11 +22,28 @@
 //     candidate spots every paintStep m radially and round each circle; every one to `solid` m, then a share falling
 //     off exponentially (paintFall) toward paintFar — a spot already ours is skipped (no wasted splats on the wire).
 //   · the buoy has `hp`; enemy shots / beams / blasts hurt it (a hit flash), and at 0 it pops: the rings stop.
+//   · moving things (the user: "the surf n turf doesnt follow gravity such as moving blocks (like the tower)"): it
+//     follows gravity on whatever it lands on, the same rule for every moving level block (Level.addDynamic: Tower
+//     Command's tower, Calamari's railcars, the pods' plants …), no per-object cases — on a block's standable top it
+//     rides it (kept at the same spot of the block, its top's height: along, up a wall, down a drop, a hedge rising or
+//     sinking); a block rising under it lifts it onto its top; one driving into it from the side shoves it out (out
+//     of its front the way it's going, or its nearer side; never into a wall — nowhere to go: crushed, it pops); an
+//     off-limits top (a railcar's roof, the tower's pillar) slides it off, carried by its motion; and when its floor
+//     goes (a block moving or drawing in from under it, parked away, a shove over a drop) it falls with gravity, with
+//     the motion it had, to whatever is below and anchors there again (the sea: lost, as in flight). While it's in the
+//     air no new ring leaves (the rings' clock waits); rings already out keep going round the spot each one left from
+//     — every ring is centred where it was emitted (its own POLAR map from there: fair, and what the ribbon drapes
+//     over), the buoy riding on.
 //
 // ONLINE (docs/NET.md): the special's start / end go through the specials' records (specials.js rec / _startGhost: the
 // held buoy on everyone's screen); the buoy itself through this kit kind's records (kits/registry.js netRec → KIT_GHOSTS
 // .surf.ghost on every other screen): [0, gid, from, vel] thrown · [3, gid, x, y, z] anchored (the owner's word: every
-// screen's rings are timed from it) · [4, gid] popped. Hits and dodges are judged on each screen for its OWN players
+// screen's rings are timed from it; + lx, lz: where on the moving block it rides, when it does) · [4, gid] popped ·
+// [5, gid, x, y, z, T (+ lx, lz)] anchored again (after a fall, or once a shove has settled: where, and its ring clock)
+// · [6, gid, i, x, y, z] ring i left from here (sent when that's not where it last anchored: it rode there). A ride itself sends nothing: every screen carries its copy on its own copy of the
+// block (the movers run on the synced match clock; the tower follows the host's), and falls / shoves run on every
+// screen alike — the owner's [5] / [6] are the word that settles where it is and where each ring is centred (a ghost's
+// ring re-centres to it). Hits and dodges are judged on each screen for its OWN players
 // only (the victim's owner: where their position is authoritative — the same rule as the tornado / speaker damage), from
 // that screen's copy of the rings; the victim's owner applies the damage + mark there (the mark rides the actor tick
 // like every other) and records [1, gid, ring] hit / [2, gid, ring] dodge on the victim — other screens play the hit
@@ -57,9 +74,13 @@ export const HIT_R = 0.3;          // m: a body this far past the front is reach
 export const BREAK_T = 0.38;       // s: a ring at its last reach ripples and sinks away
 export const GRAV = 24;            // the throw (the arc preview's / a bomb's gravity)
 const DODGE_UP = 2.2;              // m over the ribbon's top a player in the air still counts as jumping it
+const LIFT = 0.7;                  // m: a moving block's top this far over its base, rising into it, lifts it on (more: a shove)
+const FLOOR_GAP = 0.08;            // m under its base its floor may drop away before it falls (a block sinking slowly: it rides)
+const DOWN = new THREE.Vector3(0, -1, 0);
 const A_N = 480, STEP = 0.4;       // the polar map: angles (480: about 0.42 m apart at the 32 m last reach), radial step (m)
 // counters (tests / tools/botlab/match.cjs)
-export const SURF_STATS = { uses: 0, throws: 0, lands: 0, rings: 0, hits: 0, dodges: 0, marks: 0, kills: 0, splats: 0, turf: 0, popped: 0, lost: 0 };
+export const SURF_STATS = { uses: 0, throws: 0, lands: 0, rings: 0, hits: 0, dodges: 0, marks: 0, kills: 0, splats: 0, turf: 0, popped: 0, lost: 0,
+  rides: 0, lifts: 0, shoves: 0, crushed: 0, falls: 0, reanchors: 0 };   // (moving things)
 export function resetSurfStats() { for (const k in SURF_STATS) SURF_STATS[k] = 0; }
 
 // a small seeded random (each ring's ink pattern; tests repeat)
@@ -134,6 +155,9 @@ export class Buoy {
     this.pos = from.clone(); this.prev = from.clone(); this.vel = vel.clone();
     this.phase = 'fly'; this.t = 0; this.T = 0; this.hp = D.hp; this.dead = false; this.flash = 0; this.lampK = 0;
     this.rings = []; this.polar = null; this.turf = 0; this.splats = 0; this.restT = 0;
+    // moving things: the dynamic block it rides ({ b, lx, lz }: where on it), falling after it anchored, s in the air,
+    // where it last anchored on the wire ([3] / [5]), a shove's settle record pending, the owner's ring centres (a ghost)
+    this.on = null; this.fall = false; this.airT = 0; this.recP = null; this.pushT = -9; this.pushRec = false; this.ringAt = null;
     this.look = makeBuoy(this.team);
     this.look.group.position.copy(this.pos);
     this.spinA = 0; this.tumble = new THREE.Vector3(Math.random() * 6, 0, Math.random() * 6);
@@ -147,7 +171,7 @@ export class Buoy {
     this.t += dt;
     this.flash = Math.max(0, this.flash - dt * 5);
     if (this.phase === 'fly') return this._fly(dt);
-    if (this.phase === 'rest') { if ((this.restT += dt) > 1.5) this.land(this.pos); this._pose(dt); return true; }   // (a ghost with no word yet)
+    if (this.phase === 'rest') { if ((this.restT += dt) > 1.5) this.land(this.pos); else this._support(dt); this._pose(dt); return true; }   // (a ghost with no word yet)
     if (this.phase === 'pop') return false;
     if (this.phase === 'sink') {
       const k = Math.min(1, (this.t - this.sinkT) / 0.6);
@@ -155,16 +179,21 @@ export class Buoy {
       this.look.group.scale.setScalar(1 - 0.5 * k);
       return k < 1;
     }
-    // live: the rings
-    this.T += dt;
+    // live: what it stands on (riding / pushed / its floor gone: falling), then the rings — no new one while it's in the
+    // air (the rings' clock waits); those already out run on their own clocks round the spot each left from
+    if (this.fall) { if (!this._fall(dt)) return false; }
+    else this._support(dt);
+    if (this.phase === 'pop') return false;
+    if (!this.fall) this.T += dt;
     let left = 0;
     for (const R of this.rings) {
-      if (R.state === 'wait' && this.T >= R.t0) this._startRing(R);
+      if (R.state === 'wait' && this.T >= R.t0 && !this.fall) this._startRing(R);
       if (R.state === 'travel') {
         R.age += dt; R.rPrev = R.r;
-        R.r = Math.min(R.R, D.r0 + D.speed * (this.T - R.t0));
+        if (R.fresh) R.fresh = false; else R.tr += dt;   // (its own clock — the same as T − t0 while the buoy's never in the air)
+        R.r = Math.min(R.R, D.r0 + D.speed * R.tr);
         R.spin += (dt * 1.6) / (TAU * Math.max(0.6, R.r));
-        this.polar.ensure(R.r + 0.6);
+        R.polar.ensure(R.r + 0.6);
         this._judge(R);
         if (!this.ghost) this._paint(R);
         if (R.r >= R.R - 1e-4) { R.state = 'break'; R.bt = 0; }
@@ -177,11 +206,32 @@ export class Buoy {
       if (R.state !== 'done') left++;
     }
     this._pose(dt);
-    if (!left) { this.phase = 'sink'; this.sinkT = this.t; if (near(this.pos, 30)) G.fx?.burst(_v.copy(this.pos).setY(this.pos.y + 0.4), UP, G.teamColors[this.team], { count: 8, speed: 2.5, size: 0.07 }); }
+    if (!left && !this.fall) { this.phase = 'sink'; this.sinkT = this.t; if (near(this.pos, 30)) G.fx?.burst(_v.copy(this.pos).setY(this.pos.y + 0.4), UP, G.teamColors[this.team], { count: 8, speed: 2.5, size: 0.07 }); }
     return true;
   }
   // in flight: a lob (the arc preview's gravity), off walls, onto a floor; the sea takes it
   _fly(dt) {
+    this.airT = this.t;
+    const r = this._air(dt);
+    if (r === 'lost') {
+      if (!this.ghost) { SURF_STATS.lost++; if (this.gid) netRec(this.owner, 'surf', [4, this.gid]); }
+      if (near(this.pos)) G.fx?.burst(_v.copy(this.pos), UP, G.teamColors[this.team], { count: 10, speed: 3, size: 0.08 });
+      return false;
+    }
+    if (r) {
+      if (this.ghost) { this.phase = 'rest'; this.vel.set(0, 0, 0); this.restT = 0; this._attach(r.block); }
+      else { this.land(this.pos, r.block); if (this.gid) netRec(this.owner, 'surf', [3, this.gid, ...this._where()]); }
+      return true;
+    }
+    const g = this.look.group;
+    g.position.copy(this.pos);
+    g.rotation.set(this.tumble.x + this.t * 7, 0, this.tumble.z + this.t * 5);
+    return true;
+  }
+  // a step through the air (the flight, a fall): gravity, off walls; onto a floor → that floor's hit (pos on it); an
+  // off-limits top (a roof: nobody stands there) — it slides off toward the nearest edge, as a kid would, carried by the
+  // top's own motion when it moves (a railcar's roof); the sea (or too long in the air) → 'lost'; else null
+  _air(dt) {
     this.prev.copy(this.pos);
     this.vel.y -= GRAV * dt;
     this.pos.addScaledVector(this.vel, dt);
@@ -189,50 +239,207 @@ export class Buoy {
     if (h.hit) {
       const blk = h.block >= 0 ? G.level.blocks[h.block] : null;
       if (h.normal.y > 0.6 && blk && blk.roof) {
-        // an off-limits top (a roof: nobody stands there) — it slides off toward the nearest edge, as a kid would
-        const n = blk.axes[1], d = _d;
-        if (n.y < 0.995) d.set(n.x, 0, n.z).normalize();
-        else {
-          const ax = blk.axes[0], az = blk.axes[2], dx = h.point.x - blk.center.x, dz = h.point.z - blk.center.z;
-          const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z;
-          if (blk.half.x - Math.abs(lx) < blk.half.z - Math.abs(lz)) d.set(ax.x, 0, ax.z).multiplyScalar(Math.sign(lx) || 1); else d.set(az.x, 0, az.z).multiplyScalar(Math.sign(lz) || 1);
-        }
         this.pos.copy(h.point).addScaledVector(h.normal, 0.03);
-        const along = this.vel.x * d.x + this.vel.z * d.z;
-        this.vel.set(d.x * Math.max(6, along), 0, d.z * Math.max(6, along));
+        this._slide(blk, h.point, dt);
         this.look.group.position.copy(this.pos);
-        return true;
+        return null;
       }
-      if (h.normal.y > 0.6) {
-        this.pos.copy(h.point);
-        if (this.ghost) { this.phase = 'rest'; this.vel.set(0, 0, 0); this.restT = 0; }
-        else { this.land(this.pos); if (this.gid) netRec(this.owner, 'surf', [3, this.gid, ...v3(this.pos)]); }
-        return true;
-      }
+      if (h.normal.y > 0.6) { this.pos.copy(h.point); return h; }
       // a wall (or a ceiling): bounce off it, losing most of its speed, and drop
       this.pos.copy(h.point).addScaledVector(h.normal, 0.25);
       const vn = this.vel.dot(h.normal);
       if (vn < 0) this.vel.addScaledVector(h.normal, -1.3 * vn);
       this.vel.x *= 0.35; this.vel.z *= 0.35; if (h.normal.y < -0.5) this.vel.y = Math.min(0, this.vel.y);
     }
-    if (this.pos.y < PLAYER.waterY - 1 || this.t > 5) {
+    if (this.pos.y < PLAYER.waterY - 1 || this.airT > 5) return 'lost';
+    return null;
+  }
+  // off an off-limits top: toward its nearest edge (down its slope), at ≥ 6 m/s, plus the top's own motion
+  _slide(blk, at, dt) {
+    const n = blk.axes[1], d = _d;
+    if (n.y < 0.995) d.set(n.x, 0, n.z).normalize();
+    else {
+      const ax = blk.axes[0], az = blk.axes[2], dx = at.x - blk.center.x, dz = at.z - blk.center.z;
+      const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z;
+      if (blk.half.x - Math.abs(lx) < blk.half.z - Math.abs(lz)) d.set(ax.x, 0, ax.z).multiplyScalar(Math.sign(lx) || 1); else d.set(az.x, 0, az.z).multiplyScalar(Math.sign(lz) || 1);
+    }
+    const mv = blk.dynamic && blk.dp && dt > 0 ? blk.dp : null, bx = mv ? mv.x / dt : 0, bz = mv ? mv.z / dt : 0;
+    const along = (this.vel.x - bx) * d.x + (this.vel.z - bz) * d.z;
+    this.vel.set(d.x * Math.max(6, along) + bx, 0, d.z * Math.max(6, along) + bz);
+  }
+
+  // ---- moving things (the same rule for every moving level block: Level.addDynamic)
+  // standing on block id: a moving block's standable top → ride it (where on it); anything else → not riding
+  // (rel: [lx, lz] — the owner's word for where on the block, a ghost's record: its copy of the block may lag a little)
+  _attach(bid, rel) {
+    const b = bid >= 0 ? G.level.blocks[bid] : null;
+    if (!b || !b.dynamic || b.roof || b.solid === false) { this.on = null; return; }
+    const dx = this.pos.x - b.center.x, dz = this.pos.z - b.center.z;
+    this.on = rel ? { b, lx: rel[0], lz: rel[1] } : { b, lx: dx * b.axes[0].x + dz * b.axes[0].z, lz: dx * b.axes[2].x + dz * b.axes[2].z };
+    if (rel) this.pos.set(b.center.x + b.axes[0].x * rel[0] + b.axes[2].x * rel[1], 0, b.center.z + b.axes[0].z * rel[0] + b.axes[2].z * rel[1]);
+    this.pos.y = b.center.y + b.half.y;
+    SURF_STATS.rides++;
+  }
+  // a ghost placed by a record at p: the block under it (or, with the owner's word that it rides one, the moving block
+  // whose top is at p's height round there — this screen's copy of it may be a step behind)
+  _carrierAt(p, riding) {
+    const g = G.physics.raycast(_p.set(p.x, p.y + 0.3, p.z), DOWN, 0.6, _h2, true);
+    if (g.hit && (!riding || (g.block >= 0 && G.level.blocks[g.block].dynamic))) return g.block;
+    if (!riding) return -1;
+    for (const b of G.level.dyn) {
+      if (b.solid === false || b.roof || Math.abs(b.center.y + b.half.y - p.y) > 0.25) continue;
+      const dx = p.x - b.center.x, dz = p.z - b.center.z;
+      if (Math.abs(dx * b.axes[0].x + dz * b.axes[0].z) < b.half.x + 0.8 && Math.abs(dx * b.axes[2].x + dz * b.axes[2].z) < b.half.z + 0.8) return b.id;
+    }
+    return -1;
+  }
+  // the owner's word on where it's anchored: its spot, and where on the block when it rides one
+  _where() { return this.on ? [...v3(this.pos), r2(this.on.lx), r2(this.on.lz)] : v3(this.pos); }
+  // per frame while anchored (and a ghost at rest): ride what it's on; a moving block pushing into it; its floor
+  _support(dt) {
+    const L = G.level;
+    if (this.on) {
+      const o = this.on, b = o.b;
+      if (b.solid === false || !L.dyn.includes(b) || Math.abs(o.lx) > b.half.x + 0.05 || Math.abs(o.lz) > b.half.z + 0.05) { this._drop('gone'); return; }   // (parked / its top drew in)
+      const x = b.center.x + b.axes[0].x * o.lx + b.axes[2].x * o.lz, z = b.center.z + b.axes[0].z * o.lx + b.axes[2].z * o.lz, y = b.center.y + b.half.y;
+      const dx = x - this.pos.x, dy = y - this.pos.y, dz = z - this.pos.z, m2 = dx * dx + dy * dy + dz * dz;
+      if (m2 > 9) { this._drop('gone'); return; }          // (it jumped away: parked)
+      if (dt > 0) this.vel.set(dx / dt, dy / dt, dz / dt);
+      if (m2 > 1e-12) { this.pos.set(x, y, z); this.rideD = (this.rideD || 0) + Math.sqrt(m2); }
+    } else this.vel.set(0, 0, 0);
+    if (this._pushed(dt)) return;
+    if (!this.on) this._floor(dt);
+    // (a shove that has settled: the owner's word on where it is now)
+    if (this.pushRec && G.time - this.pushT > 0.2) { this.pushRec = false; this._anchorRec(); }
+  }
+  // a moving block (not the one it rides) pushing into its body: rising under it → onto its top (it rides it; an
+  // off-limits top slides it off); from the side → shoved out (its front the way it's going, or its nearer side; only
+  // where it fits — nowhere: crushed); true when it moved
+  _pushed(dt) {
+    const L = G.level, p = this.pos, BR = BUOY.hitR * 0.8, BH = BUOY.hitH;
+    for (const b of L.dyn) {
+      if (b.solid === false || (this.on && this.on.b === b)) continue;
+      if (p.x < b.aabbMin.x - BR || p.x > b.aabbMax.x + BR || p.z < b.aabbMin.z - BR || p.z > b.aabbMax.z + BR || p.y + BH < b.aabbMin.y || p.y > b.aabbMax.y - 0.04) continue;
+      const ax = b.axes[0], az = b.axes[2], dx = p.x - b.center.x, dz = p.z - b.center.z;
+      const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z;
+      const ex = b.half.x + BR - Math.abs(lx), ez = b.half.z + BR - Math.abs(lz);
+      if (ex <= 0 || ez <= 0) continue;
+      const top = b.center.y + b.half.y;
+      if (top - p.y <= LIFT && Math.abs(lx) < b.half.x && Math.abs(lz) < b.half.z) {
+        // rising under it (a hedge growing, a platform coming up): onto its top
+        p.y = top;
+        if (b.roof) { this.vel.set(0, 0, 0); this._slide(b, p, dt); this._drop('roof', true); }
+        else { this._attach(b.id); SURF_STATS.lifts++; }
+        return true;
+      }
+      // from the side: out of its front (the way it moves) or its nearer side
+      const mv = b.dp, mx = mv ? mv.x * ax.x + mv.z * ax.z : 0, mz = mv ? mv.x * az.x + mv.z * az.z : 0;
+      const tries = [];
+      const out = (ux, uz, dist) => tries.push({ ux, uz, dist });
+      if (Math.abs(mx) > 1e-5 || Math.abs(mz) > 1e-5) {
+        if (Math.abs(mx) >= Math.abs(mz)) out(ax.x * Math.sign(mx), ax.z * Math.sign(mx), b.half.x + BR + 0.03 - Math.sign(mx) * lx);
+        else out(az.x * Math.sign(mz), az.z * Math.sign(mz), b.half.z + BR + 0.03 - Math.sign(mz) * lz);
+      }
+      const sx = Math.sign(lx) || 1, sz = Math.sign(lz) || 1;
+      if (ex < ez) { out(ax.x * sx, ax.z * sx, ex + 0.03); out(az.x * sz, az.z * sz, ez + 0.03); }
+      else { out(az.x * sz, az.z * sz, ez + 0.03); out(ax.x * sx, ax.z * sx, ex + 0.03); }
+      tries.sort((a, c) => a.dist - c.dist);
+      for (const t of tries) {
+        const nx = p.x + t.ux * t.dist, nz = p.z + t.uz * t.dist;
+        _v.set(p.x, p.y + 0.3, p.z); _v2.set(nx, p.y + 0.3, nz);
+        if (G.physics.segment(_v, _v2, _h2, true).hit && _h2.block !== b.id) continue;   // (a wall that way)
+        p.x = nx; p.z = nz;
+        if (this.on) this.on = null;
+        SURF_STATS.shoves++;
+        this.pushT = G.time; this.pushRec = !this.ghost;
+        if (dt > 0 && mv) this.vel.set(mv.x / dt, 0, mv.z / dt);
+        this._floor(dt);
+        return true;
+      }
+      // nowhere to go: crushed (the owner's copy pops it; a ghost waits for that word)
+      if (!this.ghost) { SURF_STATS.crushed++; if (this.gid) netRec(this.owner, 'surf', [4, this.gid]); this.pop(); }
+      return true;
+    }
+    return false;
+  }
+  // not riding: still a floor under it? A moving block that has come under it → ride it; an off-limits top → off it;
+  // none → it falls
+  _floor(dt) {
+    const g = G.physics.raycast(_p.set(this.pos.x, this.pos.y + 0.6, this.pos.z), DOWN, 0.6 + FLOOR_GAP, _h2, true);
+    if (!g.hit || g.normal.y < 0.6) { this._drop('floor'); return; }
+    const blk = g.block >= 0 ? G.level.blocks[g.block] : null;
+    if (blk && blk.roof) { this.pos.y = g.point.y + 0.03; this._slide(blk, g.point, dt); this._drop('roof', true); return; }
+    if (g.point.y < this.pos.y - 0.02 || g.point.y > this.pos.y + 0.02) this.pos.y = g.point.y;
+    if (blk && blk.dynamic) this._attach(g.block);
+  }
+  // its floor's gone: it falls (with the motion it had: the ride's, a slide's)
+  _drop(why, keepVel = false) {
+    if (this.fall || this.phase === 'pop' || this.phase === 'sink') return;
+    this.on = null;
+    if (this.phase === 'rest') { this.phase = 'fly'; this.airT = 0; return; }   // (a ghost not yet anchored: back to its flight)
+    this.fall = true; this.airT = 0; this.dropWhy = why;
+    if (!keepVel) this.vel.y = Math.max(0, this.vel.y);
+    SURF_STATS.falls++;
+    emit('surf:fall', { buoy: this, why });
+  }
+  // in the air after it anchored: gravity to whatever is below → anchored there again (the owner's word: [5])
+  _fall(dt) {
+    this.airT += dt;
+    const r = this._air(dt);
+    if (r === 'lost') {
       if (!this.ghost) { SURF_STATS.lost++; if (this.gid) netRec(this.owner, 'surf', [4, this.gid]); }
       if (near(this.pos)) G.fx?.burst(_v.copy(this.pos), UP, G.teamColors[this.team], { count: 10, speed: 3, size: 0.08 });
       return false;
     }
-    const g = this.look.group;
-    g.position.copy(this.pos);
-    g.rotation.set(this.tumble.x + this.t * 7, 0, this.tumble.z + this.t * 5);
+    if (r) {
+      this.fall = false; this.vel.set(0, 0, 0);
+      this._attach(r.block);
+      SURF_STATS.reanchors++;
+      if (near(this.pos, 40)) G.fx?.burst(_v.copy(this.pos).setY(this.pos.y + 0.15), UP, G.teamColors[this.team], { count: 8, speed: 2.5, size: 0.07 });
+      emit('surf:reanchor', { buoy: this, pos: this.pos.clone() });
+      this._anchorRec();
+    }
     return true;
   }
+  // the owner's word on where it's anchored now (after a fall / a shove) and its ring clock
+  _anchorRec() {
+    if (this.ghost) return;
+    (this.recP || (this.recP = new THREE.Vector3())).copy(this.pos);
+    if (this.gid) netRec(this.owner, 'surf', [5, this.gid, ...v3(this.pos), r2(this.T), ...(this.on ? [r2(this.on.lx), r2(this.on.lz)] : [])]);
+  }
+  // a ghost: the owner's word — anchored again here at ring clock T (rel: where on the block it rides, if it does)
+  reanchor(p, T, rel) {
+    if (this.phase !== 'live') { this.land(p, undefined, rel); return; }
+    this.fall = false; this.vel.set(0, 0, 0); this.pos.copy(p); this.T = T;
+    (this.recP || (this.recP = new THREE.Vector3())).copy(p);
+    this.on = null;
+    this._attach(this._carrierAt(p, !!rel), rel);
+  }
+  // a ghost: the owner's word — ring i left from p
+  ringFrom(i, p) {
+    (this.ringAt || (this.ringAt = []))[i] = p.clone();
+    const R = this.rings[i];
+    if (R && R.c && (R.state === 'travel' || R.state === 'break') && R.c.distanceToSquared(p) > 1e-6) { R.c.copy(p); R.polar = this._polarAt(p); }
+  }
+  // the polar map round c (shared with the last one when it's the same spot)
+  _polarAt(c) {
+    const P = this.polar;
+    if (P && Math.abs(P.cx - c.x) < 0.05 && Math.abs(P.cy - c.y) < 0.05 && Math.abs(P.cz - c.z) < 0.05) return P;
+    return (this.polar = new Polar(c.x, c.y, c.z, D.rMax + 1));
+  }
   // anchored where it landed (the owner decides where; a ghost snaps to that)
-  land(p) {
+  // (bid: the block it landed on — a moving one's standable top: it rides it; a ghost's record: found under p)
+  land(p, bid, rel) {
     if (this.phase === 'live' || this.phase === 'pop' || this.phase === 'sink') return;
     this.pos.copy(p); this.vel.set(0, 0, 0);
-    this.phase = 'live'; this.T = 0; this.landT = this.t;
-    this.polar = new Polar(p.x, p.y, p.z, D.rMax + 1);
+    this.phase = 'live'; this.T = 0; this.landT = this.t; this.fall = false;
+    this.recP = p.clone();
+    if (bid === undefined) bid = this._carrierAt(p, !!rel);
+    this.on = null;
+    this._attach(bid, rel);
+    this.polar = new Polar(this.pos.x, this.pos.y, this.pos.z, D.rMax + 1);
     this.rings = [];
-    for (let i = 0; i < D.pulses; i++) this.rings.push({ i, t0: D.anchor + i * D.gap, R: ringReach(i), state: 'wait', r: 0, rPrev: 0, age: 0, bt: 0, spin: 0, ribbon: null, judged: null, pk: 0, rnd: null });
+    for (let i = 0; i < D.pulses; i++) this.rings.push({ i, t0: D.anchor + i * D.gap, R: ringReach(i), state: 'wait', r: 0, rPrev: 0, age: 0, tr: 0, bt: 0, spin: 0, ribbon: null, judged: null, pk: 0, rnd: null, c: null, polar: null });
     SURF_STATS.lands++;
     if (!this.ghost) {
       paintAt(this.owner, _v.copy(p).setY(p.y + 0.25), 1.5, this.team, Math.random(), this);
@@ -264,6 +471,11 @@ export class Buoy {
   }
   _startRing(R) {
     R.state = 'travel'; R.r = D.r0; R.rPrev = D.r0; R.age = 0; R.spin = Math.random();
+    R.tr = this.T - R.t0; R.fresh = true;   // (its own clock: from the moment it was due; a fall after it left doesn't hold it)
+    // centred where it leaves from (a ghost: the owner's word for it when that's come, else where its copy is)
+    R.c = (this.ghost && this.ringAt && this.ringAt[R.i] ? this.ringAt[R.i] : this.pos).clone();
+    R.polar = this._polarAt(R.c);
+    if (!this.ghost && this.gid && this.recP && R.c.distanceTo(this.recP) > 0.05) netRec(this.owner, 'surf', [6, this.gid, R.i, ...v3(R.c)]);
     R.judged = new Set(); R.pk = 0; R.rnd = rng((this.gid || 7) * 31 + R.i * 977 + 13);
     R.ribbon = new RingRibbon(G.specials.scene, this.team, { arrows: 2 + (R.i >> 1), height: D.height });
     this.lampK = 1;
@@ -275,7 +487,7 @@ export class Buoy {
   // leaves the buoy, throbbing as it goes; k > 0: its last reach — it ripples and sinks away
   _draw(R, k) {
     const rb = R.ribbon; if (!rb) return;
-    const P = this.polar, N = RING_N, cx = this.pos.x, cz = this.pos.z;
+    const P = R.polar, N = RING_N, cx = R.c.x, cz = R.c.z;
     const rad = this._rad || (this._rad = new Float32Array(N)), gy = this._gy || (this._gy = new Float32Array(N)), top = this._top || (this._top = new Float32Array(N));
     const al = this._al || (this._al = new Float32Array(N)), fy = this._fy || (this._fy = new Float32Array(N));
     const rise = Math.min(1, R.age / 0.14), H = D.height * (0.25 + 0.75 * rise) * (1 + 0.05 * Math.sin(R.age * 18)) * (1 - 0.8 * k);
@@ -294,17 +506,17 @@ export class Buoy {
   _judge(R) {
     for (const e of G.actors) {
       if (!e.alive || e.team === this.team || e.remote || R.judged.has(e)) continue;
-      const dx = e.pos.x - this.pos.x, dz = e.pos.z - this.pos.z, d = Math.hypot(dx, dz);
+      const dx = e.pos.x - R.c.x, dz = e.pos.z - R.c.z, d = Math.hypot(dx, dz);
       if (d - HIT_R > R.r) continue;                   // the front isn't there yet
       R.judged.add(e);
       if (d + HIT_R < R.rPrev - 0.35) continue;        // (already inside when it went by: a landing super jump, a respawn)
       this._cross(R, e, d, Math.atan2(dx, dz));
     }
   }
-  // what the front does to e as it crosses them: 'hit' | 'dodge' | null (not involved). Exported for tests / bots:
-  // ringCheck() below
-  judgeAt(e, d, th) {
-    const P = this.polar, reach = P.reachAt(th);
+  // what the front does to e as it crosses them: 'hit' | 'dodge' | null (not involved) — d, th: from ring R's centre
+  // (none given: the last ring's / the anchor's). For tests / bots too (sp-surf-bots.js surfDodge)
+  judgeAt(e, d, th, R) {
+    const P = (R && R.polar) || this.polar, reach = P.reachAt(th);
     if (reach < d - HIT_R) return null;                // a wall (or a drop) between: it never got to them
     const g = P.groundAt(th, Math.min(d, reach)), feet = e.pos.y, top = g + D.height;
     if (feet < g - 1.2) return null;                   // on a floor below it
@@ -314,7 +526,7 @@ export class Buoy {
     return 'dodge';
   }
   _cross(R, e, d, th) {
-    const what = this.judgeAt(e, d, th);
+    const what = this.judgeAt(e, d, th, R);
     if (!what) return;
     // (a ghost's update runs with paint muted; what it does to this screen's own player is this screen's real word —
     // a splat's burst of ink included: unmuted for it)
@@ -348,9 +560,9 @@ export class Buoy {
     while (R.pk * step <= R.r + 1e-6) { this._paintCircle(R, R.pk * step); R.pk++; }
   }
   _paintCircle(R, rk) {
-    const P = this.polar, rnd = R.rnd, team = this.team;
+    const P = R.polar, C = R.c, rnd = R.rnd, team = this.team;
     if (rk < 0.5) {
-      if (G.paint.regionStats(this.pos.x, this.pos.y, this.pos.z, 1.0, team, _st).own < 0.9) paintAt(this.owner, _v.copy(this.pos).setY(this.pos.y + 0.25), 1.35, team, rnd(), this);
+      if (G.paint.regionStats(C.x, C.y, C.z, 1.0, team, _st).own < 0.9) paintAt(this.owner, _v.copy(C).setY(C.y + 0.25), 1.35, team, rnd(), this);
       return;
     }
     const n = Math.max(4, Math.round((TAU * rk) / D.paintStep)), ph = rnd(), dens = inkDensity(rk);
@@ -361,7 +573,7 @@ export class Buoy {
       if (P.reachAt(th) < rk - 0.3) continue;
       const y = P.groundAt(th, rk);
       if (!Number.isFinite(y)) continue;
-      const x = this.pos.x + Math.sin(th) * rk, z = this.pos.z + Math.cos(th) * rk;
+      const x = C.x + Math.sin(th) * rk, z = C.z + Math.cos(th) * rk;
       if (G.paint.regionStats(x, y, z, 0.6, team, _st).own > 0.85) continue;   // (already ours: no splat on the wire)
       paintAt(this.owner, _v.set(x, y + 0.25, z), D.paintR * (0.9 + 0.25 * rnd()), team, rnd(), this);
     }
@@ -419,14 +631,15 @@ export class Buoy {
   // ---- the minimap: the buoy and its rings going out (both teams see it)
   drawMap(c, mm, tc, s, col) {
     if (this.phase !== 'live') return;
-    mm.toCanvas(this.pos.x, this.pos.z, tc);
     c.lineWidth = 2.5; c.strokeStyle = col;
     for (const R of this.rings) {
       if (R.state !== 'travel' && R.state !== 'break') continue;
+      mm.toCanvas(R.c.x, R.c.z, tc);
       c.globalAlpha = R.state === 'break' ? 0.6 * (1 - R.bt / BREAK_T) : 0.75;
       c.beginPath(); c.arc(tc.x, tc.y, Math.max(1, R.r * s), 0, TAU); c.stroke();
     }
     c.globalAlpha = 1;
+    mm.toCanvas(this.pos.x, this.pos.z, tc);
     c.fillStyle = '#15121c'; c.beginPath(); c.arc(tc.x, tc.y, s * 1.05, 0, TAU); c.fill();
     c.fillStyle = col; c.beginPath(); c.arc(tc.x, tc.y, s * 0.78, 0, TAU); c.fill();
     c.lineWidth = 1.5; c.strokeStyle = '#ffffff'; c.stroke();
@@ -559,8 +772,10 @@ KIT_GHOSTS.surf = {
         G.specials.world.push(b);
         break;
       }
-      case 3: { const b = findBuoy(d[1], true); if (b) b.land(new THREE.Vector3(d[2], d[3], d[4])); break; }   // anchored (its rings run from now)
-      case 4: { const b = findBuoy(d[1], true); if (b) { if (b.phase === 'fly' || b.phase === 'rest') b.phase = 'pop', b.dead = true; else b.pop(); } break; }   // popped / lost
+      case 3: { const b = findBuoy(d[1], true); if (b) b.land(new THREE.Vector3(d[2], d[3], d[4]), undefined, d.length > 5 ? [d[5], d[6]] : undefined); break; }   // anchored (its rings run from now)
+      case 4: { const b = findBuoy(d[1], true); if (b) { if (b.phase === 'fly' || b.phase === 'rest' || b.fall) b.phase = 'pop', b.dead = true; else b.pop(); } break; }   // popped / lost
+      case 5: { const b = findBuoy(d[1], true); if (b) b.reanchor(new THREE.Vector3(d[2], d[3], d[4]), d[5], d.length > 6 ? [d[6], d[7]] : undefined); break; }   // anchored again (a fall, a shove)
+      case 6: { const b = findBuoy(d[1], true); if (b) b.ringFrom(d[2], new THREE.Vector3(d[3], d[4], d[5])); break; }   // ring i left from there
       case 1: {   // a hit on a, judged on a's owner's screen
         const b = findBuoy(d[1]);
         if (!b || !a.alive) break;

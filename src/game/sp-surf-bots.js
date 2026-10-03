@@ -132,9 +132,10 @@ export function surfDodge(sense, it) {
   if (S.size > 24) for (const [R] of S) if (R.state !== 'travel') S.delete(R);
   for (const w of G.specials?.world || []) {
     if (w.kind !== 'surf' || w.team === a.team || w.phase !== 'live') continue;
-    const dx = a.pos.x - w.pos.x, dz = a.pos.z - w.pos.z, d = Math.hypot(dx, dz);
     for (const R of w.rings) {
-      if (R.state !== 'travel' || d > R.R + 0.5) continue;
+      if (R.state !== 'travel') continue;
+      const c = R.c || w.pos, dx = a.pos.x - c.x, dz = a.pos.z - c.z, d = Math.hypot(dx, dz);   // (each ring round where it left from)
+      if (d > R.R + 0.5) continue;
       const gap = d - 0.3 - R.r;
       if (gap < -0.15) continue;                                   // gone by
       let k = S.get(R);
@@ -149,7 +150,7 @@ export function surfDodge(sense, it) {
       const tIn = gap / D.speed;
       if (tIn > JUMP_AT + k.err || !a.grounded) continue;
       // (it'll really reach us: no wall between, our floor is the one it runs on)
-      if (w.judgeAt(a, d, Math.atan2(dx, dz)) !== 'hit') { k.done = true; continue; }
+      if (w.judgeAt(a, d, Math.atan2(dx, dz), R) !== 'hit') { k.done = true; continue; }
       it.jump = true; it.squid = false;
       if (b.jumpCd !== undefined) b.jumpCd = 0.5;
       k.done = true; SURF_BOT.jumps++;
