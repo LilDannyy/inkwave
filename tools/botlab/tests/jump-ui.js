@@ -179,7 +179,15 @@
     step(0.3);
     const r = markOf(F, 'jump');
     const w = world().find((t) => /is-foe/.test(t.cls)), mp = mapT().find((t) => /is-foe/.test(t.cls));
-    R('an enemy\'s landing mark: ring + icon in the world and on the minimap', !!r && !!w && !!mp && near2(w.xy, proj(r.x, r.y + JUMP_UI.lift, r.z)), { w: !!w, mp: !!mp });
+    // over its spot: straight above it, lifted only to clear a teammate's name tag it would cover (on a small window a
+    // teammate a few metres nearer on that line has its name tag there: hud-jumps.js stacks the tag above it, as in
+    // 'tags'). Its disc covers no name tag.
+    const fWant = r && proj(r.x, r.y + JUMP_UI.lift, r.z);
+    const fDisc = w && w.el.querySelector('.iw-jt__disc').getBoundingClientRect();
+    const allyTags = [...hud.markerLayer.querySelectorAll('.iw-mk')].filter((e) => e.style.display !== 'none').map((e) => e.querySelector('.iw-mk__tag').getBoundingClientRect());
+    const covers = !!fDisc && allyTags.some((b) => fDisc.left < b.right && b.left < fDisc.right && fDisc.top < b.bottom && b.top < fDisc.bottom);
+    R('an enemy\'s landing mark: ring + icon in the world (over its spot, on no teammate\'s name tag) and on the minimap', !!r && !!w && !!mp && Math.abs(w.xy[0] - fWant[0]) < 2.5 && w.xy[1] <= fWant[1] + 2.5 && !covers,
+      { w: w && w.xy, want: fWant && fWant.map(r2), lifted: !!(w && fWant) && r2(fWant[1] - w.xy[1]), covers, mp: !!mp });
     R('…but no name or seconds for you (the jumper\'s own team only)', !!w && !w.name && getComputedStyle(w.el.querySelector('.iw-jt__tag')).display === 'none' && !!mp && !mp.name, { w: w && w.name, mp: mp && mp.name });
     step(3);
   }
