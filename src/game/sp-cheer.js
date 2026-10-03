@@ -11,6 +11,10 @@
 //               you hang over the same spot of it as it moves. Let go, you drop back down. lift 0: the old way (walking
 //               slowly at moveSpeed). Damage while held up: as before (heldDamage 1 — a what-if lever for the botlab:
 //               TUNE='booyah.heldDamage=0.5'; specials.js filterDamage).
+//   the cue     (every screen, a ghost's too) under a held-up user, its spot on the ground: a dark drop shadow straight
+//               under it and a bright ring in its colour round that, a light column up past its feet with rings climbing
+//               it, motes rising — so the lift reads at a glance from a player's camera (teammate or enemy): that kid is
+//               up THERE, over this spot.
 //   the cheer  a "Yeah!" (C / d-pad up: player.js intent.cheer, bots too) while a teammate's orb is still charging (not
 //               thrown, not full) sends a wisp of energy from the cheerer to each such orb — on arrival (cheerFly s, a
 //               little longer from far off) the orb takes +cheer of a full charge and pulses — and a second wisp into the
@@ -32,19 +36,21 @@ import { SPECIALS, PLAYER } from '../config.js';
 import { ZC_STATS } from './specials.js';
 import { KIT_GHOSTS, netRec } from './kits/registry.js';
 import { Hit } from './physics.js';
-import '../audio/sfx-cheer.js';
+// (the sounds — orb_lift, cheer_wisp, cheer_orb, cheer_gain — are src/audio/sfx-cheer.js's; audio.js defines them on the cue bus)
 
 export { ZC_STATS };
 const D = () => SPECIALS.booyah;
 const UP = new THREE.Vector3(0, 1, 0);
 const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _c = new THREE.Color(), _c2 = new THREE.Color();
-const WHITE = new THREE.Color(1, 1, 1);
+const WHITE = new THREE.Color(1, 1, 1), SHADOW = new THREE.Color(0.03, 0.025, 0.05);
 const _hit = new Hit();
 const rand = Math.random;
 const near = (p, r = 40) => !!G.camera && G.camera.position.distanceToSquared(p) < r * r;
 const play = (name, o) => G.audio?.play(name, o);
 const hearable = (a) => a.isLocal || (a._nearCamera && a._nearCamera());
 const G_SOFT = 0, G_STAR = 10, G_HALO = 30;   // (fx.js glow sprite kinds)
+const R_DISC = 2, R_THIN = 7;                  // (fx.js ring / mark styles)
+const CUE_MIN = 0.3;                           // the ground cue shows once the user is this far (m) over the ground
 
 // an orb a cheer can still help: a teammate's (not the cheerer's own), held up, not full
 const helpable = (a, o) => {
@@ -248,7 +254,41 @@ const API = {
     s.pinVel.set((x - a.pos.x) / Math.max(dt, 1e-3), (y - a.pos.y) / Math.max(dt, 1e-3), (z - a.pos.z) / Math.max(dt, 1e-3));
     a.pos.set(x, y, z);
     a.grounded = false; a.jumpBuffer = 0; a.coyote = 0;
-    if (G.time - (L.sparkT || 0) > 0.09 && G.fx && near(a.pos, 30)) { L.sparkT = G.time; G.fx.specialSparkle?.(_p.set(x, y - 0.4, z), a.color, 0.6); }
+  },
+  // each frame on EVERY screen (specials.js IMPL.booyah.tick — the owner's and a ghost's): the ground cue under a held-up
+  // user (the header). s.cue = { gy, gap } while it shows (tests; net-zipcheer checks the ghost's).
+  cue(a, s, dt) {
+    const gy = !s.thrown && a.alive ? G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1) : -Infinity;
+    const gap = gy > -Infinity ? a.pos.y - gy : 0;
+    if (!(gap > CUE_MIN)) { s.cue = null; return; }
+    const c = s.cue || (s.cue = { gy: 0, gap: 0, t: 0, mote: 0 });
+    c.gy = gy; c.gap = gap; c.t += dt;
+    const fx = G.fx;
+    if (!fx || !fx.mark || !near(a.pos, 90)) return;
+    const k = clamp((gap - CUE_MIN) / 0.6, 0, 1);   // (fades in over the first bit of the rise)
+    const x = a.pos.x, z = a.pos.z, col = _c.copy(a.color);
+    // on the ground: a dark drop shadow straight under it (the platformer's height cue: the sun's shadow falls aside),
+    // a bright ring round that
+    _p.set(x, gy + 0.03, z);
+    fx.mark(_p, UP, SHADOW, 0.62, R_DISC, 0.5 * k, 0, 1, 0.21);
+    _c2.copy(col).lerp(WHITE, 0.25).multiplyScalar(1.6);
+    fx.mark(_p, UP, _c2, 1.0, R_THIN, k, 0.1, 1.6, 0.3);
+    // up from it: a light column (it fades out towards its top: drawn ~1.6 × the gap, it's still bright at the feet),
+    // rings climbing it
+    fx.pillar?.(_p, _c2.copy(col).multiplyScalar(1.6), 0.45, gap * 1.6, 0.6 * k, 0.37);
+    _c2.copy(col).lerp(WHITE, 0.3).multiplyScalar(1.4);
+    for (let i = 0; i < 2; i++) {
+      const ph = (c.t * 0.85 + i * 0.5) % 1;
+      fx.mark(_q.set(x, gy + 0.05 + ph * (gap - 0.1), z), UP, _c2, 0.66 - 0.24 * ph, R_THIN, 0.9 * k * Math.sin(ph * Math.PI), 0.25, 1.2, 0.5);
+    }
+    // motes drifting up the column
+    c.mote -= dt;
+    if (c.mote <= 0 && fx._sprite && near(a.pos, 45)) {
+      c.mote = 0.07 / (fx.q ?? 1);
+      const an = rand() * Math.PI * 2, r = 0.15 + rand() * 0.3, h = rand() * 0.35;
+      _c2.copy(col).lerp(WHITE, 0.4).multiplyScalar(2.4);
+      fx._sprite(fx.glows, x + Math.cos(an) * r, gy + 0.1 + h, z + Math.sin(an) * r, 0, Math.max(1.2, gap * 1.3), 0, _c2, 0.12 + rand() * 0.06, 0.04, 0.7, 1, 0, 0, G_STAR + 1.2, 0.05, 2);
+    }
   },
   // the special over (thrown, splatted, swapped): let go — down you come
   release(a, s, reason) {

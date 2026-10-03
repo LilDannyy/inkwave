@@ -1,7 +1,8 @@
 // [b5-zipcheer] The Cheer Orb's cheers online (src/game/sp-cheer.js), two real clients on the local relay (netpage.cjs):
 // online Practice, no bots, the host (A, "Hosty") and the guest (B, "Guesty") on ONE team.
 //   1. A uses a Cheer Orb: A rises and hangs on its own screen; B's screen sees A up there too (A's tick) and B's HUD
-//      shows the big cheer prompt with A's name (A's own HUD: not its own orb's prompt)
+//      shows the big cheer prompt with A's name (A's own HUD: not its own orb's prompt); on B's screen A has its ground
+//      cue (the ghost's), and B's name tag for A sits over A's orb, not on it
 //   2. B cheers: a wisp flies to A's orb on BOTH screens (B's own, and A's from B's ['k', …, 'cheer'] record); A's screen
 //      (the orb's owner) adds the +0.12 charge when its wisp lands, and B's screen gets that charge back through A's tick;
 //      B's gauge gains 4 % on B's screen (its own gauge), with its HUD wisp
@@ -64,6 +65,19 @@ module.exports = async (ctx) => {
     return { up: a ? a.pos.y - ${S.y} : null, ghost: !!(s && s.ghost), id: s && s.id, prompt: st.on, name: st.name, key: st.key }; })()`);
   R('A uses a Cheer Orb: A hangs ~2.2 m up on its own screen and on B\'s (A\'s tick); B\'s HUD shows the big cheer prompt for A ("Hosty"), A\'s own HUD none',
     aUp.pin && Math.abs(aUp.up - 2.2) < 0.15 && bSee.ghost && bSee.id === 'booyah' && Math.abs(bSee.up - aUp.up) < 0.25 && bSee.prompt && bSee.name === 'Hosty' && !aUp.prompt, { A: aUp, B: bSee });
+  // [fix round 1] B's screen: the ground cue under the ghost (IMPL.booyah.tick → sp-cheer.js cue runs for ghosts too), and
+  // B's name tag for A over A's orb, not on it (main.js's ally markers). (B looks up at A a little first: the orb in view)
+  await B.js(`(() => { const g = window.__inkwave; if (g.rig) g.rig.pitch = 0.1; __G.match.local.aimPitch = 0.1; return 1; })()`);
+  await wait(400);
+  const bCue = await J(B, `(() => { const THREE = __G.camera.position.constructor, a = __G.match.actors.find((x) => x.nid === ${ids.a}), s = a && a.specialActive;
+    const P = (p) => { const v = p.clone().project(__G.camera); return { y: (-v.y * 0.5 + 0.5) * innerHeight, z: v.z }; };
+    const mk = __G.hud.markers.find((el) => el._name === 'Hosty' && el.style.display !== 'none'), tr = mk && /translate3d\\(\\s*([-\\d.]+)px,\\s*([-\\d.]+)px/.exec(mk.style.transform);
+    let tag = null, top = null, ctr = null;
+    if (mk && tr && s && s.ball) { const t = mk.querySelector('.iw-mk__tag').getBoundingClientRect(), r = mk.getBoundingClientRect(); tag = +tr[2] + (t.bottom - r.top) + 6;
+      top = P(s.ball.position.clone().setY(s.ball.position.y + s.halo.scale.y)); ctr = P(s.ball.position); }
+    return { gap: s && s.cue ? s.cue.gap : null, ground: s && s.cue ? s.cue.gy - ${S.y} : null, tag: tag && Math.round(tag), orbTop: top && Math.round(top.y), orbOn: !!(ctr && ctr.z < 1 && ctr.y > 0 && ctr.y < innerHeight), off: !!(mk && mk.classList.contains('is-off')) }; })()`);
+  R('…on B\'s screen A (a ghost there) has its ground cue (the ground under it, ~2.2 m below), and B\'s name tag for A sits over A\'s orb, not on it',
+    bCue.gap !== null && Math.abs(bCue.gap - bSee.up) < 0.2 && Math.abs(bCue.ground) < 0.2 && bCue.orbOn && !bCue.off && bCue.tag !== null && bCue.tag <= bCue.orbTop + 1, bCue);
   if (SHOTS) { await B.shot(`${out}/zipcheer-net-guest-prompt.png`); say('shot guest-prompt'); }
 
   // ---------------------------------------------------------------- 2. B cheers

@@ -1934,6 +1934,7 @@ export class Character {
   _poseAir(P, dt, air) {
     const X = this.PX; X.set(P);
     const vy = this.vyS, jt = this.tr[T_JUMP];
+    // [b5-zipcheer] rewritten from here down to the two setE foot lines: every air weight × hov, + sw (held up: legs hang, sway)
     const hov = 1 - (this.wHover || 0);                              // [b5-zipcheer] held up (a Cheer Orb): 0 — no tuck, no reach, no flail
     const up = sstep(-1.5, 4, vy);                                  // 1 rising … 0 falling
     const launch = (jt < 0.3 ? 1 - sstep(0.03, 0.2, jt) : 0) * hov;   // legs still extended from the push-off

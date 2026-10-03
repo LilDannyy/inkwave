@@ -512,7 +512,8 @@ export const SPECIALS = {
   // and holds you there — no walking, swimming or jumping, you still turn and aim — until it's thrown or the special ends
   // (lift 0: the old way, walking at moveSpeed; heldDamage: the share of damage taken up there — 1, as before). A teammate's cheer sends a wisp to each of their team's orbs still
   // charging (+cheer of a full charge as it arrives, cheerFly s) and one into their own special gauge (+cheerGain of
-  // their full gauge as it arrives, cheerGaugeFly s; none while their own special runs).
+  // their full gauge as it arrives, cheerGaugeFly s; none while their own special runs). cheerGain 0.04 = 6.8–8 points a
+  // cheer on the 170–200 gauges (the old cheer gave a flat 12 at once, full orbs too; ~0.065 would match it).
   booyah: { id: 'booyah', name: 'Cheer Orb', blurb: 'Rise into the air holding a ball of ink that charges over time — you can\'t move while it charges — then throw it for a huge blast. Teammates\' "Yeah!" cheers (C) send it energy and top up their own special a little.',
     charge: 4.5, cheer: 0.12, autoThrow: 2.5, moveSpeed: 1.8, throwSpeed: 19.6, fuse: 1.5, radius: 8.4, killRadius: 4.6, damageMax: 220, damageMin: 60,
     lift: 2.2, liftTime: 0.45, heldDamage: 1, cheerGain: 0.04, cheerFly: 0.45, cheerGaugeFly: 0.6 },

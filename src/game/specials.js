@@ -1789,6 +1789,7 @@ const IMPL = {
       s.halo.scale.setScalar(r * 1.3 * pulse);
       s.halo.material.uniforms.uTime.value = s.t;
       s.loop?.set?.({ pitch: 1 + s.charge, pos: a.isLocal ? undefined : a.pos });
+      G.cheerOrb?.cue(a, s, dt);   // [b5-zipcheer] held up: the ground cue under it (every screen, a ghost's too; sp-cheer.js)
     },
     throwIt(a, s) {
       s.thrown = true;

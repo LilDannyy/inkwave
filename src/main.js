@@ -1500,6 +1500,7 @@ class Game {
       if (o.isLocal || o.team !== a.team || !o.alive) continue;
       if (o.character.getHeadPosition && o.form !== 'squid') { o.character.getHeadPosition(v); v.y += 0.45; }
       else { if (o.visualPos) o.visualPos(v); else v.copy(o.pos); v.y += o.form === 'squid' ? 1.0 : 1.9; }
+      { const s = o.specialActive; if (s && s.kind === 'booyah' && s.ball && !s.thrown) v.y = Math.max(v.y, s.ball.position.y + s.halo.scale.y + 0.15); }   // [b5-zipcheer] a Cheer Orb held up: the tag over the ball, not on it
       v.project(cam);
       const behind = v.z > 1;
       let x = (v.x * 0.5 + 0.5) * W, y = (-v.y * 0.5 + 0.5) * H;

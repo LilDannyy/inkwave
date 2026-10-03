@@ -8,17 +8,19 @@
 //   lift      the Cheer Orb lifts its user ~2.2 m over its lift time and holds them there: no moving, jumping or swimming
 //             (turning and aiming yes); thrown → down they come; a splat / the special ending lets go too; under a low
 //             ceiling it lifts less (the kid and the orb fit under it); started on a moving block it hangs over the same
-//             spot of it as the block moves
+//             spot of it as the block moves; held up, a ground cue under it (a drop shadow and a ring on the ground, a
+//             light column up past its feet), gone once it's back down
 //   prompt    a teammate charging an orb: the big bottom-middle cheer prompt on your HUD (its name, its charge, the key —
 //             C, or the d-pad's up once you're on a pad), much bigger than the hint line; never for an enemy's orb or
-//             your own; CHARGED! once full; gone once thrown
+//             your own; CHARGED! once full; gone once thrown; its name tag over its orb, not on it
 //   cheer     your cheer: a wisp flies from you to the orb (charge +0.12 as it arrives, not before) and one into your
 //             gauge on the HUD (+4 % of a full gauge as it lands, not before); one cheer per 0.4 s; none to a full orb,
 //             an enemy's, your own; no gauge wisp with your gauge full or your own special running; a "Yeah!" bubble
 //             either way
+//   sounds    the new sounds (orb_lift, cheer_wisp, cheer_orb, cheer_gain) ride the cue bus (SFX_GROUPS.Specials, isCue)
 //   bots      bot teammates cheer a charging orb (with brains); a bot using it stays up where it rose and throws it
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/zipcheer.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=zipdmg,zipspeed,zipink,lift,prompt,cheer,bots'; MODE=tower: the 'tower' part (a rider using it on the deck)
+//   PAGE_ARGS='only=zipdmg,zipspeed,zipink,lift,prompt,cheer,sounds,bots'; MODE=tower: the 'tower' part (a rider using it on the deck)
 (async () => {
   const g = window.__inkwave, m = g.match, G = __G, dbg = g.debug;
   const THREE = await import('three');
@@ -147,6 +149,20 @@
     const up = M1.pos.y - y0;
     R('lift: up 2.2 m over its lift time (an ease-out, no overshoot), held there (special.pin)', s.pin && Math.abs(up - BD.lift) < 0.07 && ys[Math.round(BD.liftTime * 30)] > BD.lift * 0.6 && Math.max(...ys) < BD.lift + 0.07 && !M1.grounded,
       { up: r2(up), half: r2(ys[Math.round(BD.liftTime * 30)]), max: r2(Math.max(...ys)) });
+    // the ground cue under it (sp-cheer.js cue, from IMPL.booyah.tick — every screen's: net-zipcheer checks a ghost's): on
+    // the deck right under it a ring, and a light column from the deck up to its feet
+    const cueFrame = () => {
+      const fx = G.fx, got = { pillar: [], mark: [] }, oP = fx.pillar, oM = fx.mark;
+      fx.pillar = function (p, c, r, h, al) { got.pillar.push({ x: p.x, y: p.y, z: p.z, r, h, al }); return oP.apply(this, arguments); };
+      fx.mark = function (p, n, c, r, st, al) { got.mark.push({ x: p.x, y: p.y, z: p.z, r, st, al, dark: Math.max(c.r, c.g, c.b) < 0.1 }); return oM.apply(this, arguments); };
+      try { frame(); } finally { delete fx.pillar; delete fx.mark; }
+      const under = (q) => Math.hypot(q.x - M1.pos.x, q.z - M1.pos.z) < 0.02, onDeck = (q) => under(q) && Math.abs(q.y - y0) < 0.1;
+      return { col: got.pillar.find(under), ring: got.mark.find((q) => onDeck(q) && !q.dark && q.r >= 0.9 && q.al > 0.5), shadow: got.mark.find((q) => onDeck(q) && q.dark && q.al > 0.3) };
+    };
+    const cu = cueFrame(), gapNow = M1.pos.y - y0;
+    R('lift: held up, it has a ground cue — on the deck right under it a dark drop shadow and a bright ring, and a light column from the deck up past its feet',
+      !!s.cue && Math.abs(s.cue.gap - gapNow) < 0.03 && !!cu.col && Math.abs(cu.col.y - y0) < 0.1 && cu.col.h > gapNow * 1.2 && cu.col.h < gapNow * 2 && cu.col.al > 0.3 && !!cu.ring && !!cu.shadow,
+      { gap: s.cue && r2(s.cue.gap), column: cu.col && { y: r2(cu.col.y), h: r2(cu.col.h), alpha: r2(cu.col.al) }, ring: cu.ring && { y: r2(cu.ring.y), r: r2(cu.ring.r) }, shadow: cu.shadow && { r: r2(cu.shadow.r), alpha: r2(cu.shadow.al) } });
     // no walking, jumping or swimming up there
     M1._go = { move: V(1, 0, 0.3) }; step(0.6);
     const dxz = Math.hypot(M1.pos.x - x0, M1.pos.z - z0);
@@ -161,6 +177,8 @@
     const thrown = !M1.specialActive && s.thrown && !s.pin;
     step(1.4);
     R('lift: throwing the orb lets go — it drops back to the deck', thrown && M1.grounded && Math.abs(M1.pos.y - y0) < 0.05 && G.specials.world.some((w) => w.kind === 'orb'), { thrown, y: r2(M1.pos.y - y0), grounded: M1.grounded });
+    const cuAfter = cueFrame();
+    R('lift: back on the deck, its ground cue is gone', thrown && !cuAfter.col && !cuAfter.ring && !cuAfter.shadow, { column: !!cuAfter.col, ring: !!cuAfter.ring, shadow: !!cuAfter.shadow });
     // the special ending otherwise (a splat; a swap) lets go too
     reset(); place(M1, 0, -6); step(0.2); let s2 = start(M1, 'booyah'); step(1);
     G.specials.end(M1, 'swap'); step(1.2);
@@ -243,6 +261,28 @@
     const own = C.state().on, ownLine = G.specials.prompt(me);
     G.specials.end(me, 'test');
     R('prompt: never for the other team\'s orb, nor for your own (you get your own hint line)', !enemy && !own && /Charging|Charged/.test(ownLine || ''), { enemy, own, ownLine });
+    // the teammate's name tag (main.js's ally markers) sits over its orb, never on it — the orb, where the cheer wisps
+    // fly, stays in view (the orb at its biggest: full, just cheered); the old anchor (head + 0.45 m) was inside it
+    reset(); place(me, 0, -16); place(M1, 0, -5); step(0.1);
+    const sT = start(M1, 'booyah');
+    const look = () => { me.yaw = me.aimYaw = 0; me.aimPitch = 0.1; if (g.rig) { g.rig.yaw = 0; g.rig.pitch = 0.1; } };
+    step(BD.liftTime + 0.4, look);
+    sT.charge = 1; sT.cheered = 0.35; step(2 / 60, look);
+    const proj = (p) => { const v = p.clone().project(G.camera); return { x: (v.x * 0.5 + 0.5) * innerWidth, y: (-v.y * 0.5 + 0.5) * innerHeight, z: v.z }; };
+    const mk = G.hud.markers.find((el) => el._name === M1.name && el.style.display !== 'none');
+    const tr = mk && /translate3d\(\s*([-\d.]+)px,\s*([-\d.]+)px/.exec(mk.style.transform);
+    let tagBottom = null, orbTop = null, orbC = null, oldAnchor = null;
+    if (mk && tr && sT.ball) {
+      const tagR = mk.querySelector('.iw-mk__tag').getBoundingClientRect(), mkR = mk.getBoundingClientRect();
+      tagBottom = +tr[2] + (tagR.bottom - mkR.top) + 6;   // (its little arrow under it: 6 px)
+      orbTop = proj(sT.ball.position.clone().setY(sT.ball.position.y + sT.halo.scale.y));
+      orbC = proj(sT.ball.position);
+      const hd = new THREE.Vector3(); M1.character.getHeadPosition(hd); oldAnchor = proj(hd.setY(hd.y + 0.45));
+    }
+    R('prompt: your teammate\'s name tag sits over its Cheer Orb, not on it (the old spot, head + 0.45 m, was inside the orb)',
+      !!mk && !mk.classList.contains('is-off') && orbC && orbC.z < 1 && orbC.y > 0 && orbC.y < innerHeight && tagBottom <= orbTop.y + 1 && oldAnchor.y > orbTop.y + 3,
+      { tagBottomY: tagBottom && Math.round(tagBottom), orbTopY: orbTop && Math.round(orbTop.y), orbCentreY: orbC && Math.round(orbC.y), oldAnchorY: oldAnchor && Math.round(oldAnchor.y) });
+    G.specials.end(M1, 'test');
   }
 
   // ======================================================================================== the cheer: wisps, charge, gauge
@@ -307,6 +347,17 @@
     const both = orbW().map((w) => w.to);
     step(1);
     R('cheer: two teammates charging orbs: a wisp to each, both charged', both.length === 2 && both.includes(M1) && both.includes(M2), { to: both.map((a) => a.name) });
+  }
+
+  // ======================================================================================== sounds (fix round 1)
+  // the four new sounds ride the cue bus like every special's (docs/EVENTS.md: listed in SFX_GROUPS.Specials → isCue):
+  // the Cues slider and +6 dB with the rest, not 6 dB under the "Yeah!"
+  if (want('sounds')) {
+    const AU = await import('./src/audio/audio.js');
+    const names = ['orb_lift', 'cheer_wisp', 'cheer_orb', 'cheer_gain'];
+    const st = names.map((n) => ({ n, def: !!AU.SFX[n], group: AU.SFX_GROUPS.Specials.includes(n), cue: AU.isCue(n) }));
+    R('sounds: the Cheer Orb\'s lift / wisp / orb / gain sounds are defined, in the Specials group and on the cue bus (as booyah_cheer is)',
+      st.every((x) => x.def && x.group && x.cue) && AU.isCue('booyah_cheer'), st);
   }
 
   // ======================================================================================== bots

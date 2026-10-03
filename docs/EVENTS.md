@@ -73,7 +73,10 @@ longer emitted.
 
 | event | payload | where |
 |---|---|---|
-| `actor:cheer` | `{ actor, helped }` | specials.js (Cheer Orb) |
+| `actor:cheer` | `{ actor, helped, targets, remote? }` — a "Yeah!": `helped` it sent a wisp to a teammate's charging Cheer Orb, `targets` to how many; `remote` replayed from the cheerer's record on another screen | sp-cheer.js (Cheer Orb) |
+| `cheer:orb` | `{ actor, target, pos }` — a cheer's wisp reached `target`'s orb (every screen; the +charge is added only on the screen that owns `target`) | sp-cheer.js |
+| `cheer:gain` | `{ actor, amount, frac }` — the cheerer's gauge wisp landed: its gauge gained `amount` points (`frac` of a full gauge); the cheerer's own screen only | sp-cheer.js |
+| `cheer:lift` | `{ actor, height }` — a Cheer Orb user lifted off (its owner's screen; `height` m it rises) | sp-cheer.js |
 | `actor:dodge` / `weapon:dodge` | `{ actor, dir }` / `{ actor, pos, dir }` | weapons.js (Twins dodge roll) |
 | `actor:poisoned` / `actor:tracked` | `{ actor }` / `{ actor, team }` | subs.js (poison / point sensor) |
 | `actor:marked` | `{ actor, team, from, fresh }` | subs.js track() — every mark, fresh or a refresh; `from` its source (a point, or the special's user) |
