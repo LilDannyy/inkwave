@@ -56,6 +56,8 @@
   const press = (a, k) => { if (a.bot) { const was = a._go; a._go = { ...(was || {}), [k]: true }; frame(); a._go = was; } else { a.intent[k] = true; frame(); a.intent[k] = false; } };
   const [E1, E2] = foes, [M1, M2, M3] = mates;
   const saved = [PLAYER.inkRefillKid, PLAYER.inkRefillSwim];
+  // (every splat in the test, for the record: a kill card for the local player from one shows up in the HUD checks)
+  const splatLog = []; const offSplat = on('splatted', (e) => splatLog.push(`${e.victim?.name || '?'} by ${e.attacker?.name || '-'}${e.attacker === me ? ' (you)' : ''} ${e.cause || ''} @${r2(G.time)}`));
 
   // ======================================================================================== Zipline: damage while zipping
   if (want('zipdmg')) {
@@ -293,31 +295,44 @@
     const hudEl = G.hud.el, sleep = (ms) => new Promise((res) => setTimeout(res, ms));
     const updP = G.hud._updPrompt;
     const box = (el) => { const b = el.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; };
+    // (kill / assist cards — hud.js: they hide the hint and lift the prompt 3.4 u — are their own case, 'cards': a card
+    // from something earlier in the test still up is noted (strayCards) and cleared first)
+    const clearCards = () => { const k = [...G.hud.kcards.children].map((c) => c.textContent); for (const c of [...G.hud.kcards.children]) { clearTimeout(c._t); c.remove(); } hudEl.classList.remove('has-cards'); return k; };
     const hintCase = async (u, how) => {
       if (u) hudEl.style.setProperty('--u', u); else hudEl.style.removeProperty('--u');
       C.L.vw = -1;   // (the window "resized": re-measure)
       sH.charge = 0.3; me.ink = PLAYER.inkMax; me.special = 0; g._lowInkFlash = 0; g._hints.specialT = 0; g._hints.shot = true; G.hud._updPrompt = updP;   // (shot: no start-of-match tutorial hint)
-      if (how === 'lowink') me.ink = PLAYER.inkMax * 0.12;
+      if (how === 'lowink' || how === 'cards') me.ink = PLAYER.inkMax * 0.12;
       if (how === 'ready') { me.special = me.specialCost(); g._hints.specialT = 2.5; }
       if (how === 'keycap') G.hud._updPrompt = function () { return updP.call(this, 'Hold [SHIFT] to swim in your ink and refill'); };
       step(0.1);
-      await sleep(500);   // (the hint's grow-in, the prompt's move: real time)
+      const stray = clearCards();
+      if (how === 'cards') { G.hud._killCard(E1, 'kill'); G.hud._killCard(E2, 'assist'); }
+      frame();
+      await sleep(how === 'cards' ? 650 : 500);   // (the hint's grow-in, the prompt's move, a card's pop-in: real time)
       const r = P.getBoundingClientRect(), hr = pill.getBoundingClientRect(), hintOn = !pill.classList.contains('is-out') && getComputedStyle(pill).opacity > 0.5;
       const res = { u: u || 'window', how, hint: G.hud._L.prompt, over: C.state().overHint, gap: Math.round(hr.top - r.bottom), prompt: box(P), hintBox: box(pill), bottom: Math.round(innerHeight - r.bottom) };
+      if (stray.length) res.strayCards = stray;
+      if (how === 'cards') { const top = G.hud.kcards.firstChild; res.card = top && box(top); res.cardGap = top ? Math.round(top.getBoundingClientRect().top - r.bottom) : null; }
       G.hud.jumpNote('Beakon gone — Super Jump cancelled'); await sleep(450);
       const jr = G.hud.jnote.getBoundingClientRect(); res.note = box(G.hud.jnote); res.noteGap = Math.round(r.top - jr.bottom);
       G.hud.jnote.classList.remove('is-on');
+      if (how === 'cards') clearCards();
       const uPx = u ? parseFloat(u) : Math.min(innerWidth / 100, innerHeight * 1.7778 / 100);
-      res.ok = C.state().on && res.noteGap >= 4 && jr.top > innerHeight * 0.3 && (how === 'none' ? !hintOn && !res.over && Math.abs(res.bottom - 5.2 * uPx) < 2 : hintOn && res.over && res.gap >= 4 && r.top > innerHeight * 0.5);
+      res.ok = C.state().on && res.noteGap >= 4 && jr.top > innerHeight * 0.3 && r.top > innerHeight * 0.5 && (
+        how === 'none' ? !hintOn && !res.over && Math.abs(res.bottom - 5.2 * uPx) < 2
+        : how === 'cards' ? !hintOn && !res.over && res.cardGap >= 4   // (the hint hidden under the cards; the prompt over the top card)
+        : hintOn && res.over && res.gap >= 4);
       return res;
     };
     const hc = [];
-    for (const u of [null, '9.6px', '12.8px']) for (const how of ['lowink', 'ready', 'keycap', 'none']) hc.push(await hintCase(u, how));
+    for (const u of [null, '9.6px', '12.8px']) for (const how of ['lowink', 'ready', 'keycap', 'none', 'cards']) hc.push(await hintCase(u, how));
     hudEl.style.removeProperty('--u'); C.L.vw = -1; G.hud._updPrompt = updP; me.ink = PLAYER.inkMax; me.special = 0; g._hints.specialT = 0; step(0.05);
     const hb = hc.filter((x) => !x.ok);
-    R('prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window\'s size, 960×600\'s and 1280×720\'s; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it',
+    R('prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window\'s size, 960×600\'s and 1280×720\'s; no hint, back down at 5.2 u; kill cards up: the hint hidden, the prompt over the cards; a "Super Jump cancelled" note over it, not on it',
       hb.length === 0 && hc.filter((x) => x.how === 'lowink').every((x) => /SHIFT/.test(x.hint || '')) && hc.filter((x) => x.how === 'ready').every((x) => /Special ready/.test(x.hint || '')),
-      { bad: hb, gaps: hc.map((x) => `${x.u}/${x.how}: ${x.how === 'none' ? 'bottom ' + x.bottom : 'gap ' + x.gap + ' (hint ' + (x.hintBox[3] - x.hintBox[1]) + ' px high)'}, note ${x.noteGap}`) });
+      { bad: hb, gaps: hc.map((x) => `${x.u}/${x.how}: ${x.how === 'none' ? 'bottom ' + x.bottom : x.how === 'cards' ? 'card gap ' + x.cardGap : 'gap ' + x.gap + ' (hint ' + (x.hintBox[3] - x.hintBox[1]) + ' px high)'}, note ${x.noteGap}`),
+        strayCards: hc.filter((x) => x.strayCards).map((x) => `${x.u}/${x.how}: ${x.strayCards.join(' | ')}`), splats: splatLog.slice(-6) });
     G.specials.end(M1, 'test');
   }
 
@@ -455,5 +470,6 @@
 
   for (const [a] of brains) a.bot.update = brains.get(a);
   PLAYER.inkRefillKid = saved[0]; PLAYER.inkRefillSwim = saved[1];
+  offSplat();
   return out;
 })();
