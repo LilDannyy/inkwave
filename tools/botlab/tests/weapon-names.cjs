@@ -85,6 +85,7 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
         await equip(id); await show('loadout', 1300);
         if (id === ids[0]) {
           await check(`${S} loadout cards`, '.iw-loadout .iw-wcard__name', all, ids.length);
+          await check(`${S} loadout stat labels`, '.iw-loadout .iw-stat__label', null, 5);   // (the panel's own labels: INK COVERAGE)
           // every weapon focused in turn: the detail panel's name
           for (const f of ids) { await A.js(`(() => { const c = [...document.querySelectorAll('.iw-loadout .iw-wcard')].find((e) => e._wid === ${JSON.stringify(f)}); __inkwave.menus._setFocus(c, { snap: true }); return 1; })()`); await wait(450); await check(`${S} loadout detail`, '.iw-loadout .iw-wd__name', [names[f]]); }
         }
@@ -119,6 +120,7 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
       await A.until(`!!document.querySelector('.iw-ldr .iw-wcard')`, 5000);
       await wait(900);
       await check(`${S} lobby drawer cards`, '.iw-ldr .iw-wcard__name', all, ids.length);
+      await check(`${S} lobby drawer stat labels`, '.iw-ldr .iw-stat__label', null, 5);
       for (const f of ids) { await A.js(`(() => { const c = [...document.querySelectorAll('.iw-ldr .iw-wcard')].find((e) => e._wid === ${JSON.stringify(f)}); __inkwave.menus._setFocus(c, { snap: true }); return 1; })()`); await wait(350); await check(`${S} lobby drawer detail`, '.iw-ldr .iw-wd__name', [names[f]]); }
       if (SHOTS) { await A.js(`(() => { const c = [...document.querySelectorAll('.iw-ldr .iw-wcard')].find((e) => e._wid === ${JSON.stringify(longest)}); __inkwave.menus._setFocus(c, { snap: true }); return 1; })()`); say(await snap(`${out}/lobby-drawer-${w}x${h}.jpg`)); }
       await key('Escape'); await wait(600);
@@ -176,6 +178,12 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
         for (const id of ord) {
           await A.js(`__inkwave.api.setLoadout({ ${kind}: ${JSON.stringify(id)} }); __G.net.setMe({ ${kind}: ${JSON.stringify(id)} }); 1`); await wait(450);
           await check(`${S} lobby ${kind} chip`, `.iw-lkit--${kind} .iw-lkit__name`, [nm[id]]);
+          // (and no line of it under the chip's SUB / SPECIAL tag, which sticks into the chip's edge: the tag may graze a
+          // line's box — its empty ascender room — but not cover more than a quarter of its height)
+          const under = await J(`(() => { const c = document.querySelector('.iw-lkit--${kind}'), n = c.querySelector('.iw-lkit__name'), t = c.querySelector('.iw-lkit__lbl');
+            const rg = document.createRange(); rg.selectNodeContents(n); const q = t.getBoundingClientRect();
+            return [...rg.getClientRects()].some((l) => l.right > q.left + 2 && l.left < q.right - 2 && Math.min(l.bottom, q.bottom) - Math.max(l.top, q.top) > 0.25 * l.height); })()`);
+          if (under) sink.push({ where: `${S} lobby ${kind} chip`, txt: nm[id], bad: ['under the tag'] });
         }
         await A.js(`__inkwave.api.setLoadout({ ${kind}: null }); __G.net.setMe({ ${kind}: null }); 1`);
       }

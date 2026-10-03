@@ -10,7 +10,7 @@
 // one swaps between the centre and a side zone.
 //
 //   • coverage: the share of the zone's inkable floor each team has inked. Taking a zone needs ≥ ZONES.control (70 %;
-//     80 % before 2026-10-04); a held zone is neutralised when the other team inks ≥ ZONES.contest (40 %) of it. Either
+//     80 % before 2026-10-04); a held zone is neutralised when the other team inks ≥ ZONES.contest (35 %; was 40) of it. Either
 //     change only lands once the share has stayed over its line for ZONES.flipHold s (0.6; 0 before) — a sliver of ink
 //     that's inked straight back never flips a zone. An objective is held when a team holds all of its zones.
 //   • countdown: each team starts at 100. Holding the operational objective counts you down — 1 pt/s at the centre;
@@ -34,7 +34,7 @@
 //   zones:zone { zone, owner }  ·  zones:control { owner, prev, objective }  ·  zones:penalty { team, penalty, … }
 //   zones:active { objective, zones, final?, moved? } — a rotation; final: the last-30-s lock (moved: false when the
 //                  centre was already live and only the lock is announced)
-//   zones:contest { zone, holder, share } — the other team has inked a held zone up to ZONES.warn (≈ 30 %) of it
+//   zones:contest { zone, holder, share } — the other team has inked a held zone up to ZONES.warn (25 %; was 30) of it
 //   (the thresholds are read live from ZONES, so match.cjs TUNE='zones.control=0.8,…' can replay the old rules)
 //   zones:overtime { losing }  ·  zones:end { winner, reason, counts, penalty } (counts = the scores, penalty apart)
 //

@@ -591,10 +591,11 @@ export const ZONES = {
   count: 100,                 // each team's countdown
   rotateMin: 30, rotateMax: 60,   // the operational objective swaps between the centre and a side zone this often (s)
   finalCentre: 30,            // from this many seconds left (and all through overtime) only the centre is live
-  warn: 0.30,                 // the other team's share of a held zone that sounds the "about to flip" warning
-  // [b5-tuning] "make contesting and covering zones more forgiving" (2026-10-04; was 0.80 / 0.40, flipHold 0): ink share
-  // to take a zone / to neutralise the other team's, and how long a share must stay over its line before the zone flips
-  control: 0.70, contest: 0.40, flipHold: 0.6,
+  // [b5-tuning] "make contesting and covering zones more forgiving" (2026-10-04; was warn 0.30, control 0.80, contest
+  // 0.40, flipHold 0 — tools/botlab/jobs/batch5/tuning/JOB-1: more lead changes, an earlier first take, less neutral time):
+  warn: 0.25,                 // the other team's share of a held zone that sounds the "about to flip" warning
+  control: 0.70, contest: 0.35,   // ink share to take a zone / to neutralise the other team's
+  flipHold: 0.6,              // s a share must stay over its line before the zone flips (a sliver inked straight back never does)
   rateCenter: 1,              // points / s holding the centre
   rateHome: 0.5,              // … holding the side zone on your own half (closer to your spawn)
   rateAway: 2,                // … holding the side zone on the other team's half

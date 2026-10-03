@@ -30,7 +30,7 @@
   const want = (k) => (ONLY ? ONLY.split(',').includes(k) : true);
   // PAGE_ARGS='old': the values before b5-tuning put back for this run (the roller 4.4 m/s, no charger assist scale,
   // zones 80 % / no hold) — the checks that prove the change must FAIL then
-  if (/\bold\b/.test(window.__pageArgs || '')) { WEAPONS.roller.rollSpeed = 4.4; delete WEAPONS.charger.assist; ZONES.control = 0.8; ZONES.flipHold = 0; }
+  if (/\bold\b/.test(window.__pageArgs || '')) { WEAPONS.roller.rollSpeed = 4.4; delete WEAPONS.charger.assist; Object.assign(ZONES, { control: 0.8, contest: 0.4, warn: 0.3, flipHold: 0 }); }
   dbg.freeze();
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
@@ -237,7 +237,13 @@
     const C = ZONES.control, K = ZONES.contest, W = ZONES.warn, H = ZONES.flipHold;
     if (want('zones')) {
       neutral();
-      R(`the rules: take at ${C * 100} % (was 80), neutralise at ${K * 100} %, warn at ${W * 100} %, over the line ${H} s before a flip (was 0)`, C <= 0.72 && C >= 0.65 && H >= 0.4 && H <= 1, { control: C, contest: K, warn: W, flipHold: H });
+      R(`the rules: take at ${Math.round(C * 100)} % (was 80), neutralise at ${Math.round(K * 100)} % (was 40), warn at ${Math.round(W * 100)} % (was 30), over the line ${H} s before a flip (was 0)`,
+        C <= 0.72 && C >= 0.65 && K <= 0.37 && K >= 0.3 && W < K - 0.05 && H >= 0.4 && H <= 1, { control: C, contest: K, warn: W, flipHold: H });
+      // the absolute edges the old rules failed: 72 % takes a zone (80 % was needed), 37 % of a held one neutralises it (40 %)
+      let t72 = hold(0.72, 0.1, 2); const o72 = own();
+      hold(1, 0, 1.2); const t37 = hold(0.63, 0.37, 2), o37 = own();
+      R(`72 % takes a neutral zone (the old rules needed 80 %): after ${t72} s; then 37 % of it inked back by the other team (the old rules needed 40 %) neutralises it after ${t37} s`, o72 === 0 && o37 === -1 && t37 !== null, { t72, o72, t37, o37 });
+      neutral();
       let t = hold(C - 0.01, 0.1, 3);
       R(`taking: ${Math.round((C - 0.01) * 100)} % for 3 s never takes it`, t === null && own() === -1, { owner: own(), share: z.share });
       t = hold(C + 0.01, 0.1, 2);
@@ -265,8 +271,8 @@
       t = hold(1 - K - 0.02, K + 0.02, 2);
       R(`after the neutralise, the old holder at ${Math.round((1 - K - 0.02) * 100)} % (short of ${C * 100}) doesn't get it back`, own() === -1 && Z.owner === -1, { owner: own() });
       // the old rules put back (TUNE): 79 % never, 81 % on the next sample — this file tells the two apart
-      const keep = { control: ZONES.control, flipHold: ZONES.flipHold };
-      ZONES.control = 0.8; ZONES.flipHold = 0;
+      const keep = { control: ZONES.control, contest: ZONES.contest, warn: ZONES.warn, flipHold: ZONES.flipHold };
+      Object.assign(ZONES, { control: 0.8, contest: 0.4, warn: 0.3, flipHold: 0 });
       neutral();
       const t79 = hold(0.79, 0.1, 2), o79 = own(); neutral();
       const t81 = hold(0.81, 0.1, 1);

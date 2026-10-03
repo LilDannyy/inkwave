@@ -3200,5 +3200,12 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
    lines — instead of "Splat Barrage"; the picker's Weapon's Own caption no smaller than 9 px, and never an ellipsis) */
 .iw-lkit__name { text-overflow: clip; }
 .iw-lob__bar .iw-lkit.is-xlong .iw-lkit__name { font-size: max(9px, calc(var(--u) * .84)); line-height: 1; white-space: normal; text-wrap: balance; letter-spacing: 0; }
+/* (a two-line name: its chip a little taller, the lines kept clear of the SUB / SPECIAL tag that sticks into its edge) */
+.iw-lob__bar .iw-lkit.is-xlong { height: calc(var(--u) * 3); }
+.iw-lob__bar .iw-lkit--sub.is-xlong { padding-top: calc(var(--u) * .5); }
+.iw-lob__bar .iw-lkit--special.is-xlong { padding-bottom: calc(var(--u) * .5); }
 .iw-ktile__sub { flex: none; font-size: max(9px, calc(var(--u) * .62)); overflow: visible; text-overflow: clip; white-space: normal; text-wrap: balance; line-height: 1.05; }
 .iw-ktile.is-own .iw-ktile__txt { height: auto; min-height: calc(max(10px, var(--u) * 1.02) * 2.3); }   /* (a two-line caption takes room from the icon) */
+/* (the stat labels whole at 960×600 too — INK COVERAGE: --fs-xs bottoms out at 11 px, the column didn't) */
+.iw-stat { grid-template-columns: max(calc(var(--u) * 8.8), calc(var(--fs-xs) * 11.5)) 1fr calc(var(--u) * 2.3) calc(var(--u) * 2.2); }
+.iw-ldr__detail .iw-stat { grid-template-columns: max(calc(var(--u) * 8.4), calc(var(--fs-xs) * 11.5)) 1fr; }
