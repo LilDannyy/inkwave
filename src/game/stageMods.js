@@ -182,7 +182,7 @@ const R_HOOKS = ['update', 'lateUpdate', 'seek', 'dispose',
   // queries
   'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'sweeps', 'state',
   // looks / HUD / camera
-  'drawMap', 'prompt', 'hud', 'cam', 'camAfter'];
+  'drawMap', 'diorama', 'prompt', 'hud', 'cam', 'camAfter'];
 
 /**
  * One per Match (match.stage), or null. Created in both setup paths before the modes; updated from Match.update
@@ -332,6 +332,9 @@ export class StageRun {
 
   // ---- looks
   drawMap(c, mm, tc, s, hex, t, me) { for (const R of this.h.drawMap) R.drawMap(c, mm, tc, s, hex, t, me); }
+  // the TAB map (the diorama: the live scene from above, ui/diorama.js) while it is open: root = its overlay element (add
+  // your own pins / labels there once, move them each call: project with cam), k = how far it is open (0..1)
+  diorama(root, cam, W, H, k) { for (const R of this.h.diorama) R.diorama(root, cam, W, H, k); }
   prompt(a) { for (const R of this.h.prompt) { const p = R.prompt(a); if (p) return p; } return null; }
   // frame.stage for the HUD: each module's own object under its key ({ pipes: {…}, lava: {…} }); flags any module sets
   // on its object that the HUD reads generically: noReticle (hide the reticle and the sub chip)

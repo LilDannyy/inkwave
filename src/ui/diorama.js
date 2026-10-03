@@ -141,6 +141,7 @@ export class DioramaOverlay {
     if (planning !== this._planning) { this._planning = planning; this.el.classList.toggle('is-planning', planning); this._head(); this._last.plan = null; }
     const beacons = beaconsOf(me.team);
     this._liveJumps(dt, me, cam, W, H);
+    G.match?.stage?.diorama(this.el, cam, W, H, k);   // [b5-stagehooks] a stage module's TAB-map layer (its own DOM in this.el)
     // ---- pins
     for (let i = 0; i < NPIN; i++) {
       const p = this.pins[i];

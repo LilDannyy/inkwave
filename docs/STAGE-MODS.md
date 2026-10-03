@@ -206,7 +206,10 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
   block test the first time; the viewer's side flips clear the cache). Eras build `1`, `2`, `3` in idle time and swap at
   done.
 - Live layer: `R.drawMap(c, mm, tc, s, hex, t, me)` every frame, after the zones / tower / devices, before the
-  specials. It serves the corner map and the TAB map (the same canvas). The TAB diorama renders the real scene.
+  specials (the corner map, and the expanded map while aiming a strike).
+- The TAB map is the diorama (`ui/diorama.js`): the live scene from overhead, so the module's world looks show there as
+  they are. For pins or labels over it: `R.diorama(root, cam, W, H, k)` each frame while it is open (`root` = its
+  overlay element: add your own elements once, place them by projecting with `cam`; `k` = how far it is open).
 
 ### Environment (`src/world/environment.js`)
 
@@ -333,6 +336,7 @@ generic extension that does nothing until a module sets it.
 | `src/game/sp-surf.js` | the buoy's lost test (`under`) | the buoy |
 | `src/game/kits/shaker.js`, `torpedo.js` (×3), `tracer.js`, `waddle.js` (×2) | beside each sea test (`sink`) | kit items |
 | `src/ui/hud.js` | `splatCause` (env causes); `noReticle` | HUD |
+| `src/ui/diorama.js` | `update` (`R.diorama`) | the TAB map |
 | `src/fx/screenfx.js` | the flood (env causes); `uHeat` (`screenfx.heat`) | screen FX |
 | `src/core/envCauses.js` (new) | `registerCause` / `envCause` | causes |
 | `src/world/mapThumb.js`, `build/check-maps.mjs` | `stageDataFor` (`src/world/stageData.js`, new) | tools |
