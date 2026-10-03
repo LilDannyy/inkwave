@@ -289,8 +289,8 @@ class Game {
         this.props = new this.PropKit(scene, { castShadow: true, quality: this.settings.quality });
         for (const it of dressingFor(layoutId)) {
           if (!inMode(it, mode)) continue;
-          const r = this.props.add(it.type, SW ? SW.prop(it) : it);   // [b5-stagehooks]
-          if (r && r.colliders) colliders.push(...(SW ? SW.colliders(it, r.colliders) : r.colliders));
+          const r = this.props.add(it.type, SW ? SW.prop(it, this.props) : it);   // [b5-stagehooks]
+          if (r && r.colliders) colliders.push(...(SW ? SW.colliders(it, r.colliders, this.props) : r.colliders));
         }
         this.props.build();
       } catch (e) { console.error('[inkwave] props failed', e); this.props = null; }
@@ -317,7 +317,7 @@ class Game {
     this.grateMesh = new THREE.Mesh(gg, this.grateMat);
     this.grateMesh.receiveShadow = true; this.grateMesh.visible = gg.index.count > 0;
     scene.add(this.grateMesh);
-    SW?.afterMeshes({ scene, level, size: G.paint.size, levelMat: this.levelMat, grateMat: this.grateMat, levelMesh: this.levelMesh, grateMesh: this.grateMesh });   // [b5-stagehooks]
+    SW?.afterMeshes({ scene, level, size: G.paint.size, levelMat: this.levelMat, grateMat: this.grateMat, levelMesh: this.levelMesh, grateMesh: this.grateMesh, props: this.props });   // [b5-stagehooks]
     this.decor = new Decor(scene, level);
     G.nav = SW ? SW.buildNav(level, G.physics) : new NavGraph(level, G.physics);   // [b5-stagehooks] (special edges, merged graphs)
     this.minimap = new Minimap(level, G.paint);

@@ -303,7 +303,7 @@ function advance(b, dist) {
     if (w.hit) bounce(b, w);
     if (b.state !== 'fly') return;
     if (b.left <= 1e-4) { addPoint(b); b.path.push(b.pos.clone()); end(b, 'range'); return; }
-    if (b.pos.y < PLAYER.waterY - 0.3) { addPoint(b); end(b, 'water'); return; }
+    if (b.pos.y < PLAYER.waterY - 0.3 || G.match?.stage?.sink(b.pos, 'tracer')) { addPoint(b); end(b, 'water'); return; }   // [b5-stagehooks]
   }
 }
 function bounce(b, w) {

@@ -418,7 +418,7 @@ export class SubSystem {
       it.vel.addScaledVector(n, -vn * 1.4).multiplyScalar(0.55);
     }
     if (it.pos.y < PLAYER.waterY - 1.8) { it.state = 'dead'; return; }
-    { const SM = G.match?.stage; if (SM && SM.under(it.pos)) { SM.fizzle(it.pos, 'sub'); it.state = 'dead'; return; } }   // [b5-stagehooks] (sinks in the lava)
+    if (G.match?.stage?.sink(it.pos, 'sub')) { it.state = 'dead'; return; }   // [b5-stagehooks] (sinks in the lava)
     it.mesh.position.copy(it.pos);
     it.mesh.rotation.x += it.spinV.x * dt; it.mesh.rotation.z += it.spinV.y * dt;
   }

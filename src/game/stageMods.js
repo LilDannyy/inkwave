@@ -100,8 +100,8 @@ export class StageWorld {
   }
 
   // ---- build chain
-  prop(it) { for (const m of this.mods) if (m.W.prop) it = m.W.prop(it) || it; return it; }
-  colliders(it, cols) { for (const m of this.mods) if (m.W.colliders) cols = m.W.colliders(it, cols) || cols; return cols; }
+  prop(it, kit) { for (const m of this.mods) if (m.W.prop) it = m.W.prop(it, kit) || it; return it; }
+  colliders(it, cols, kit) { for (const m of this.mods) if (m.W.colliders) cols = m.W.colliders(it, cols, kit) || cols; return cols; }
   extraColliders() { const out = []; for (const m of this.mods) { const c = guarded(`${m.key}.extraColliders`, () => call(m.W, 'extraColliders', [])); if (c?.length) out.push(...c); } return out; }
   attachLevel(level) {
     this.level = level;
@@ -311,6 +311,8 @@ export class StageRun {
   under(p, depth = 0) { for (const R of this.h.under) if (R.under(p, depth)) return true; return false; }
   // something sank there (a shot, a bomb, a thrown sub): the module's hiss and steam
   fizzle(p, what) { for (const R of this.h.fizzle) R.fizzle(p, what); }
+  // under() and, if so, fizzle(): the one call a projectile / bomb / kit item makes beside its sea test
+  sink(p, what) { if (!this.h.under.length || !this.under(p)) return false; this.fizzle(p, what); return true; }
   liquidY(x, z) { let y = -Infinity; for (const R of this.h.liquidY) { const v = R.liquidY(x, z); if (v > y) y = v; } return y; }
   noPlace(p, r = 0) { for (const R of this.h.noPlace) if (R.noPlace(p, r)) return true; return false; }
   // Bazookarp: 1 = standable at that rest / era / state, per nav node (Uint8Array) — the first module that answers
