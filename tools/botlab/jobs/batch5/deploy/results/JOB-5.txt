@@ -1,0 +1,164 @@
+JOB-5 (deploy) @ 1ce8a55 (old = 7ee5ad5) — Mac mini, 2026-10-04 07:28–07:43 (15 min for both parts)
+
+## part 1 verdict: 25 of 25 tests full (470/470 checks), no FAIL lines; the 4 Tower Command bot matches (halyard, calamari,
+## treehills, saltpan) ran to the end with CONSOLE 0 and no FRAME ERRORS. sfx-cues 54/54 and audio-pause 10/10 (run alone).
+## No Electron died at boot, so nothing was rerun.
+
+## part 2: Turf War, 3 min, halyard ×4 + saltpan ×4 per code; Alpha = Skitter Bomb, Twirl Sprinkler, Hop Beacon, Skitter Bomb;
+## Bravo = Splat Bombs; weapons mirrored (shooter, roller, charger, splatling). 16 matches, all with CONSOLE 0, no WATCHDOG.
+new (1ce8a55): 8 matches (halyard ×4, saltpan ×4)
+  Alpha (devices) mean turf 37%   Bravo (Splat Bombs) mean turf 35.2%   Alpha wins 5/8
+  mean splats per match by cause: seeker 0.5  sprinkler 0  bomb 0.5   (all splats 37.9; 'drop' 2.88)
+    halyard: A 38% B 37.7%, A wins 2/4; seeker 0.75 sprinkler 0 bomb 0.75
+    saltpan: A 36.1% B 32.7%, A wins 3/4; seeker 0.25 sprinkler 0 bomb 0.25
+  DEPLOY summed over the 8 matches: hits 32 (1426 dmg) | shot down {"seeker":12,"beacon":4} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 12 | bots' picks 29 (beacon 28, sprinkler 1, buoy 0; gave up 2)
+
+old (7ee5ad5): 8 matches (halyard ×4, saltpan ×4)
+  Alpha (devices) mean turf 36%   Bravo (Splat Bombs) mean turf 37.3%   Alpha wins 6/8
+  mean splats per match by cause: seeker 0.38  sprinkler 0  bomb 0.38   (all splats 32.6; 'drop' 2)
+    halyard: A 37.6% B 39.8%, A wins 3/4; seeker 0.5 sprinkler 0 bomb 0.25
+    saltpan: A 34.4% B 34.9%, A wins 3/4; seeker 0.25 sprinkler 0 bomb 0.5
+  (the old code has no DEPLOY line)
+
+Notes:
+- 'sprinkler' is 0 in all 16 matches: no splat was credited to a sprinkler. Its drops are credited 'sprinkler' (src/game/subs.js,
+  spawnDrop … weaponId: 'sprinkler'). The 'drop' cause is the roller's flick drops (weapons.js: type 'drop', no weaponId),
+  shown above for reference only.
+- 8 matches per code is a small set: the turf gaps (new A 37.0 / B 35.2, old A 36.0 / B 37.3) and the 5/8 vs 6/8 are well
+  inside match-to-match spread (single matches range 23–50 %). Device-caused splats are rare on both codes (≤ 1 a match).
+
+## part 1 output (LOG=.botlab/b5-deploy-j5-full PAR=3 MATCHES="halyard calamari treehills saltpan" …/deploy/regress.sh)
+== deployables-tower: RESULT 8/8 0 FAIL
+== deployables-rail: RESULT 2/2 0 FAIL
+== deployables: RESULT 28/28 0 FAIL
+== deployables-hedge: RESULT 3/3 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-turf: RESULT 9/9 0 FAIL
+== tm-halyard
+== halyard [tower len 117.8/117.8]: winner Alpha (retake) | counts 23 vs 31 (score 23/31) | best push A 74.2m B 64.6m | OT 24s | sim 324s
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed by the tower {"curtain":1} | rides 4 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+== tm-calamari
+== calamari [tower len 163.6/163.6]: winner Bravo (time) | counts 50 vs 31 (score 50/31) | best push A 83.7m B 100.5m | OT no | sim 300s
+   DEPLOY hits 2 (52 dmg) | shot down {"seeker":1} | crushed by the tower {} | rides 2 lifts 0 shoves 0 drops 0 | skitter pops 1 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+== tm-treehills
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 94 vs 7 (score 94/7) | best push A 12.5m B 139.6m | OT no | sim 300s
+   DEPLOY hits 39 (387 dmg) | shot down {"seeker":2,"beacon":2} | crushed by the tower {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 2 | bots' picks 57 (beacon 57, sprinkler 0, buoy 0; gave up 1)
+CONSOLE 0 unique warning/error line(s)
+== tm-saltpan
+== saltpan [tower len 179.2/179.2]: winner Alpha (retake) | counts 45 vs 58 (score 45/58) | best push A 102.8m B 73.5m | OT 19.4s | sim 319.5s
+   DEPLOY hits 11 (298 dmg) | shot down {"beacon":2} | crushed by the tower {"beacon":1,"curtain":1} | rides 2 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 9 (beacon 9, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+
+## part 2 output, new (1ce8a55)
+### new halyard 2
+== halyard [turf 180s]: turf 23.4% vs 46.3%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":20,"charger":9,"drop":3,"roller":1,"splatling":6,"zooka":2,"water":1,"bomb":1}
+   DEPLOY hits 1 (47 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 1 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### new halyard 3
+== halyard [turf 180s]: turf 35.1% vs 41.3%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"roller":4,"shot":10,"splatling":8,"charger":4,"water":2,"drop":3,"seeker":1,"bomb":1}
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### new halyard 1
+== halyard [turf 180s]: turf 50.2% vs 28.2%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"roller":5,"splatling":3,"zooka":1,"charger":8,"shot":18,"water":4,"seeker":1,"drop":1}
+   DEPLOY hits 1 (60 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 1 | bots' picks 12 (beacon 12, sprinkler 0, buoy 0; gave up 2)
+CONSOLE 0 unique warning/error line(s)
+### new halyard 4
+== halyard [turf 180s]: turf 43.2% vs 35%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":12,"splatling":8,"charger":10,"roller":2,"seeker":1,"drop":2,"water":1,"bomb":1}
+   DEPLOY hits 2 (72 dmg) | shot down {} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### new saltpan 1
+== saltpan [turf 180s]: turf 38.6% vs 33.3%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"drop":3,"charger":6,"roller":2,"shot":18,"crab":1,"splatling":11}
+   DEPLOY hits 8 (256 dmg) | shot down {"beacon":1,"seeker":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 2 | bots' picks 3 (beacon 3, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### new saltpan 2
+== saltpan [turf 180s]: turf 38.4% vs 32.3%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"charger":7,"shot":11,"splatling":11,"roller":1,"drop":6}
+   DEPLOY hits 7 (254 dmg) | shot down {"seeker":5} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 5 | bots' picks 2 (beacon 2, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### new saltpan 4
+== saltpan [turf 180s]: turf 27.9% vs 34.7%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"drop":3,"splatling":10,"zooka":2,"shot":12,"charger":8,"roller":2,"crab":1,"bomb":1,"seeker":1}
+   DEPLOY hits 4 (305 dmg) | shot down {"beacon":1,"seeker":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 2 | bots' picks 5 (beacon 4, sprinkler 1, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+### new saltpan 3
+== saltpan [turf 180s]: turf 39.4% vs 30.4%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"splatling":10,"shot":12,"charger":6,"drop":2,"slam":1,"roller":1}
+   DEPLOY hits 9 (432 dmg) | shot down {"beacon":2,"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 1 | bots' picks 7 (beacon 7, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+
+## part 2 output, old (7ee5ad5)
+### old halyard 2
+== halyard [turf 180s]: turf 31.9% vs 44.1%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":10,"splatling":9,"water":3,"crab":3,"jetpack":1,"charger":4,"roller":3,"drop":1}
+CONSOLE 0 unique warning/error line(s)
+### old halyard 3
+== halyard [turf 180s]: turf 38.2% vs 38%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"charger":10,"shot":8,"water":1,"crab":2,"drop":1,"splatling":12,"bomb":1,"roller":2}
+CONSOLE 0 unique warning/error line(s)
+### old halyard 1
+== halyard [turf 180s]: turf 40.8% vs 39.3%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":6,"charger":7,"roller":3,"water":1,"splatling":11,"crab":1,"seeker":1,"drop":1}
+CONSOLE 0 unique warning/error line(s)
+### old halyard 4
+== halyard [turf 180s]: turf 39.3% vs 37.9%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":12,"splatling":5,"water":2,"charger":4,"drop":4,"seeker":1}
+CONSOLE 0 unique warning/error line(s)
+### old saltpan 2
+== saltpan [turf 180s]: turf 36.2% vs 32.7%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":14,"drop":3,"roller":3,"bomb":1,"splatling":5,"jetpack":2,"charger":3,"seeker":1}
+CONSOLE 0 unique warning/error line(s)
+### old saltpan 1
+== saltpan [turf 180s]: turf 36.2% vs 32.8%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":16,"drop":2,"splatling":4,"stamp":2,"charger":3,"roller":1}
+CONSOLE 0 unique warning/error line(s)
+### old saltpan 4
+== saltpan [turf 180s]: turf 30.2% vs 39.5%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"splatling":10,"drop":3,"shot":10,"charger":6,"roller":2,"bomb":1,"slam":1}
+CONSOLE 0 unique warning/error line(s)
+### old saltpan 3
+== saltpan [turf 180s]: turf 35.1% vs 34.4%
+   loadouts A:shooter+seeker A:roller+sprinkler A:charger+beacon A:splatling+seeker B:shooter+bomb B:roller+bomb B:charger+bomb B:splatling+bomb
+   splats by cause {"shot":14,"charger":15,"splatling":8,"drop":1}
+CONSOLE 0 unique warning/error line(s)
