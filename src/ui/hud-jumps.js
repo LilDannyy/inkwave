@@ -292,11 +292,11 @@ export class JumpHud {
   /** hud._updMap → the minimap's tags at its current size (bw × bh px). */
   map(bw, bh) {
     const mm = G.game?.minimap, me = this.hud._local();
-    const marks = this.hud._live() && !this.hud.lab && mm ? landingMarks() : [];
+    const marks = this.hud._live() && !this.hud.lab && mm ? landingMarks() : NONE;
     const tc = this._tc || (this._tc = { x: 0, y: 0 });
     const u = uOf(), exp = this.hud.map.classList.contains('is-expanded'), g = 2;
     const d = (exp ? 2.4 : 1.5) * u, near = 0.72 * d, rr = 0.6 * d, nb = 0.66 * d;   // (.iw-jt.is-map: the ring, the name's bottom over it)
-    const rings = this._mRings.clear(), labs = this._mLabs.clear(), scope = exp ? this._scopeX(u) : u.toFixed(2);
+    const rings = this._mRings.clear(), labs = this._mLabs.clear(), scope = this._mScope(u, exp, bw);
     let n = 0;
     for (const r of this._sorted(marks)) {
       mm.toCanvas(r.x, r.z, tc);
@@ -335,7 +335,16 @@ export class JumpHud {
     for (let i = n; i < this.mapTags.length; i++) show(this.mapTags[i], false);
     this._mapOn = true;
   }
-  _scopeX(u) { if (this._sxU !== u) { this._sxU = u; this._sx = u.toFixed(2) + '|x'; } return this._sx; }   // (the expanded map's labels: their own size)
+  // the minimap labels' measuring scope: the window's size, the expanded map, the map's width — a name wider than the map
+  // (11 px at least: a long online name on a narrow map) is cut to it with an ellipsis (--jt-mw), not clipped by the frame
+  _mScope(u, exp, bw) {
+    const w = Math.max(0, Math.floor(bw - 4));
+    if (this._msU !== u || this._msX !== exp || this._msW !== w) {
+      this._msU = u; this._msX = exp; this._msW = w; this._ms = `${u.toFixed(2)}|${exp ? 1 : 0}|${w}`;
+      this.mLayer.style.setProperty('--jt-mw', w + 'px');
+    }
+    return this._ms;
+  }
   _mapOff() { if (!this._mapOn) return; this._mapOn = false; for (const t of this.mapTags) show(t, false); }
 
   // ---- "NAME is jumping to you!" (only on the screen of the player being jumped to)

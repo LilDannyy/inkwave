@@ -494,6 +494,15 @@
     R(`a far teammate's world tag (shrunk to ${sc}): its name drawn no smaller than the teammates' own name tags at their smallest (0.82 × ${r2(fsxs)} px)`, !!w && sc < 0.8 && wn >= 0.82 * fsxs - 0.05, { sc, name: wn && r2(wn), sec: ws && r2(ws), want: r2(0.82 * fsxs) });
     const mn = mp && px(mp.el.querySelector('.iw-jt__name'));
     R('…and on the minimap: its name at 11 px or more', !!mp && mn >= 11, { name: mn });
+    // a long online name (16 characters, the most a room takes) on the minimap: inside the map's frame at 11 px, ending
+    // in an ellipsis where the map is narrower than it (not clipped at both ends by the frame)
+    const L = mates[1], nm0 = L.name;
+    L.name = 'Bartholomew Long'; step(0.1);
+    const ml = mapT().find((t) => t.name === L.name), fr = rect(hud.mapFrame), lb = ml && rect(ml.el.querySelector('.iw-jt__tag')), ne = ml && ml.el.querySelector('.iw-jt__name');
+    const inside = !!lb && lb.l >= fr.l - 0.5 && lb.r <= fr.r + 0.5, cut = !!ne && ne.scrollWidth > ne.clientWidth + 1;
+    R('…a 16-character name there: inside the map at 11 px, with an ellipsis where the map is narrower', !!ml && inside && px(ne) >= 11 && (!cut || getComputedStyle(ne).textOverflow === 'ellipsis'),
+      { label: lb && rb(lb), frame: rb(fr), cut, font: ne && px(ne) });
+    L.name = nm0;
     step(3);
   }
 

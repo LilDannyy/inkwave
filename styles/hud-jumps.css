@@ -56,6 +56,9 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 .iw-jt.is-map .iw-jt__tag { top: auto; bottom: calc(var(--d) * .66); translate: calc(-50% + var(--lx, 0px)) var(--ly, 0px); padding: 0; background: none; box-shadow: none; color: #fff;
   font: 800 max(11px, calc(var(--u) * .74)) / 1 'Rubik', sans-serif; text-shadow: 1px 1px 0 var(--k), -1px 1px 0 var(--k), 1px -1px 0 var(--k), -1px -1px 0 var(--k), 0 0 3px var(--k); }
 .iw-jt.is-map .iw-jt__sec { display: none; }
+/* (a name wider than the map — a long online name on a small window — ends in an ellipsis inside the frame) */
+.iw-jt.is-map .iw-jt__tag { max-width: var(--jt-mw, none); }
+.iw-jt.is-map .iw-jt__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0 1px; line-height: 1.3; margin: -.15em 0; }   /* (room for the glyphs and their outline; the same 1em in the layout) */
 /* a second mark on the spot of an older one: one ring for the spot, the names stacked over it */
 .iw-jt.is-map.is-merged .iw-jt__disc { display: none; }
 .iw-map.is-expanded .iw-jt.is-map { --d: calc(var(--u) * 2.4); }
