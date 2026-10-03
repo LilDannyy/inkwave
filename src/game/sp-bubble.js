@@ -26,7 +26,10 @@
 // for a chain this screen hasn't seen.
 //
 // On screen: the hint line while you carry one you can pass on and a teammate could take it (chainPrompt: "Bubble Guard
-// 4s — touch a teammate to pass it on"; the user's own: "… touch teammates to share it"), besides the bubble itself.
+// 4s — touch a teammate to pass it on"; the user's own: "… touch teammates to share it"), besides the bubble itself. A
+// copy's line (main.js) is the hint line's last word — any other hint (the Cheer Orb's, low ink, special ready …) comes
+// first — and shows only while a teammate who could take it is within hintReach m (fix round 1: it used to show for any
+// teammate anywhere, i.e. a copy's whole life, over the Cheer Orb prompt).
 //
 // Bots: a bot carrying a field it can pass on (≥ botMin s left) steps over to a teammate close by on its level who has
 // none and hasn't had this chain (botShare: botSpecials.js SpecialSense.act, after the danger checks).
@@ -34,7 +37,7 @@ import { G, emit } from '../core/ctx.js';
 import { SPECIALS } from '../config.js';
 import { netRec } from './kits/registry.js';
 
-export const CHAIN = { botReach: 5, botMin: 1.2 };   // m a bot walks over to pass it on; s a field needs left for that
+export const CHAIN = { botReach: 5, botMin: 1.2, hintReach: 6 };   // m a bot walks over to pass it on; s a field needs left for that; m a teammate who could take a copy is near enough for its hint line
 export const CHAIN_STATS = { shares: 0, chained: 0, net: 0, botSteps: 0 };   // (tests / match.cjs)
 const r2 = (x) => Math.round(x * 100) / 100;
 const NETC = new Map();   // chain owner nid → a stand-in chain for copies whose giver this screen can't place
@@ -88,11 +91,12 @@ export function shieldNet(sys, a, d) {
   emit('special:share', { from, to: a, time: left, chained: !!(from && !from._shieldOwner), remote: true });
 }
 
-// the hint line while you carry a field you can pass on and a teammate could take it (main.js for a copy; the user's
-// own: IMPL.bubbler.prompt) — null otherwise
-export function chainPrompt(a) {
-  const c = a && a._shieldChain;
-  if (!c || !a.alive || !(a.status.shield > 0.3) || !canPass(a) || !G.actors.some((o) => takes(a, o, c))) return null;
+// the hint line while you carry a field you can pass on and a teammate could take it (near: within CHAIN.hintReach m —
+// main.js, for a copy; the user's own: IMPL.bubbler.prompt, any teammate) — null otherwise
+export function chainPrompt(a, near = false) {
+  const c = a && a._shieldChain, R2 = CHAIN.hintReach * CHAIN.hintReach;
+  if (!c || !a.alive || !(a.status.shield > 0.3) || !canPass(a)) return null;
+  if (!G.actors.some((o) => takes(a, o, c) && (!near || o.pos.distanceToSquared(a.pos) < R2))) return null;
   const left = Math.ceil(a.status.shield);
   return a._shieldOwner ? `Bubble Guard ${left}s — touch teammates to share it` : `Bubble Guard ${left}s — touch a teammate to pass it on`;
 }

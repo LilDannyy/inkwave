@@ -299,7 +299,8 @@ function ghost(a, d) {
   const [op, gid] = d;
   if (op === 0) {
     if (items.some((x) => x.gid === gid)) return;
-    spawn(a, SUBS.waddle, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), true, gid);
+    const bar = a.specialActive?.kind === 'barrage' && a.specialActive.bomb?.kind === 'waddle' ? a.specialActive.bomb : null;   // [b5-sprules] a barrage's (sp-barrage.js barrageBomb)
+    spawn(a, bar || SUBS.waddle, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), true, gid);
     G.cues?.sub('waddle', 'throw', { owner: a, at: a.pos });   // sfx-cues
     return;
   }

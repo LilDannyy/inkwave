@@ -3,7 +3,8 @@
 // still working (the throw itself: weapons.js WeaponRunner.update — `bar.bomb`, `bar.gap`, then emit('barrage:throw')).
 // [b5-sprules] moved here from specials.js (IMPL.barrage) with the two new ones:
 //   Waddle Bomb Barrage   the Waddle Bomb (src/game/kits/waddle.js) — each one lands, senses, waddles after a foe near
-//                         it and bursts (the barrage's are special bombs: their ink never charges the meter, `sp`)
+//                         it and bursts (the barrage's are special bombs: their ink never charges the meter, `sp`;
+//                         they sense and chase with the barrage's own numbers — barrageBomb, config waddleSense / waddleLife)
 //   Mystery Bomb Barrage  (the user: "mystery bomb barrage (changes bomb each time you throw)") every throw is a
 //                         different bomb, drawn at random from `mystery` (the bombs the barrages throw, the Waddle
 //                         included): a shuffled round of all of them, never the same one twice running (the round's
@@ -29,14 +30,21 @@ const rec = (a, d) => netRec(a, 'sp', d);
 // counters (tests / match.cjs): throws per bomb kind (the Mystery's), the Mystery's draws
 export const BARRAGE_STATS = { throws: {}, draws: 0, repeats: 0 };
 
-// a bomb kind's gap between throws: its own barrage's (the Mystery throws each one at the pace its barrage would)
-const GAP = {};
+// a bomb kind's gap between throws: its own barrage's (the Mystery throws each one at the pace its barrage would). Read
+// fresh each time (a few entries): a what-if tune of a barrage's gap (match.cjs TUNE) holds from the next draw
 export function gapOf(kind, def) {
-  if (GAP[kind] === undefined) {
-    const v = Object.values(SPECIALS).find((d) => d.kind === 'barrage' && !d.mystery && d.bomb === kind);
-    GAP[kind] = v ? v.gap : null;
-  }
-  return GAP[kind] ?? def.gap;
+  const v = Object.values(SPECIALS).find((d) => d.kind === 'barrage' && !d.mystery && d.bomb === kind);
+  return v ? v.gap : def.gap;
+}
+// the bomb a barrage throws: the sub itself — but a barrage's Waddle (the Waddle Bomb Barrage's, and the Mystery's) is
+// the Waddle Bomb with the Waddle Bomb Barrage's own, smaller sense circle and shorter chase (waddleSense, waddleLife:
+// a dozen full Waddles in 6.5 s swamped a zone — see config.js). Every screen alike: a ghost's Waddle reads its owner's
+// running barrage too (kits/waddle.js).
+export function barrageBomb(kind) {
+  const b = SUBS[kind] || SUBS.bomb;
+  if (b.kind !== 'waddle') return b;
+  const W = SPECIALS.barrage_waddle;
+  return { ...b, senseRadius: W.waddleSense ?? b.senseRadius, life: W.waddleLife ?? b.life, barrage: true };
 }
 // the Mystery's next bomb: from a shuffled round of every kind; never the one just thrown
 function draw(s) {
@@ -54,7 +62,7 @@ function draw(s) {
 }
 // the bomb in hand now (send: the owner records it for everyone else's screen)
 function setBomb(a, s, kind, send) {
-  s.bomb = SUBS[kind] || SUBS.bomb;
+  s.bomb = barrageBomb(kind);
   s.gap = gapOf(s.bomb.kind, s.def);
   s.nb = (s.nb || 0) + 1;   // (the HUD: one more bomb shown)
   a.character?.setSub?.(s.bomb.kind);

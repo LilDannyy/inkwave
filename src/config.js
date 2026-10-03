@@ -478,7 +478,10 @@ export const SPECIALS = {
   // [b5-sprules] (src/game/sp-barrage.js) Waddle Bomb Barrage; Mystery Bomb Barrage: every throw a different bomb, drawn
   // at random from `mystery` (the bombs the barrages throw) — never the same twice running, every kind once in each
   // round of draws; each throw waits its own barrage's gap (bomb 0.3 … seeker 0.5) before the next
-  barrage_waddle: { id: 'barrage_waddle', kind: 'barrage', bomb: 'waddle', name: 'Waddle Bomb Barrage', blurb: 'Send out a parade of Waddle Bombs that waddle after any foe near where they land — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.5 },
+  // (waddleSense / waddleLife: a barrage's Waddle — this one's and the Mystery's — senses foes within this many m of where
+  // it lands and chases one for at most this many s; the Waddle Bomb sub's own are SUBS.waddle senseRadius / life)
+  barrage_waddle: { id: 'barrage_waddle', kind: 'barrage', bomb: 'waddle', name: 'Waddle Bomb Barrage', blurb: 'Send out a parade of Waddle Bombs that waddle after any foe near where they land — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.5,
+    waddleSense: 7.5, waddleLife: 9 },
   barrage_mystery: { id: 'barrage_mystery', kind: 'barrage', bomb: 'bomb', mystery: ['bomb', 'sticky', 'burst', 'seeker', 'mist', 'waddle'], name: 'Mystery Bomb Barrage', blurb: 'Every throw is a different bomb, picked at random — the next one shows by your crosshair and in your hand. No ink needed. Your main weapon still works.', duration: 6.5, gap: 0.4 },
   // force field: hits become knockback (reduced); touching teammates shares it
   // [b5-sprules] shared down a chain (src/game/sp-bubble.js): a teammate who got one passes it on by touch too; every

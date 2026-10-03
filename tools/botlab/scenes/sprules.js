@@ -1,8 +1,9 @@
 // [b5-sprules] pictures for tools/botlab/hud-shots.cjs (the HUD up): the Mystery Bomb Barrage's NEXT card and the bomb in
 // hand, the Waddle Bomb Barrage, the special picker with both new barrages, a Bubble Guard passed down a chain.
 //   mystery-1 … 3   you with the Mystery Bomb Barrage, the throw held (the arc): the NEXT card by the crosshair, the bomb
-//                   in your hand, the hint line and the gauge's sub badge — then after a throw (the card landed on a
-//                   different bomb, the last one in the air), and after another
+//                   in your hand, the hint line and the gauge's sub badge — then after a throw (the card on a different
+//                   bomb, the last one in the air), and 0.1 s after another (fix round 1: the card already shows the new
+//                   bomb, half a Pop Pellet's gap after the throw — it used to be mid-spin there)
 //   waddle          the Waddle Bomb Barrage: Waddles out ahead walking to a foe, the next one in your hand
 //   picker-waddle / picker-mystery   the loadout's special picker, focus on each new barrage (icon, name, blurb)
 //   chain           you, the THIRD player of a chain: a teammate used Bubble Guard and was splatted, the second passed it
@@ -75,9 +76,9 @@
   }, 500);
   add('mystery-3', () => {
     const s = me.specialActive, was = s.bomb.kind;
-    throwOne(); step(0.12);
-    return { was, next: s.bomb.kind, hand: me.character.bomb?.kind, card: card(), spinning: card()?.spinning };
-  }, 60);
+    throwOne(); step(0.1);
+    return { was, next: s.bomb.kind, hand: me.character.bomb?.kind, card: card() };
+  }, 100);   // (the shot ~0.1 s of wall time later: the drop-in nearly done, as a player sees it)
   // ---- the Waddle Bomb Barrage: Waddles walking out to a foe, the next in hand
   add('waddle', () => {
     clearAll();

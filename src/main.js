@@ -1558,7 +1558,7 @@ class Game {
     }
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
     else if (m.state === 'playing' && a.alive && m.actors.some((o) => o !== a && o.team === a.team && o.specialActive?.id === 'booyah' && !o.specialActive.thrown)) prompt = 'A teammate is charging a Cheer Orb — press C to cheer it on!';
-    if (!a.specialActive && m.state === 'playing') prompt = G.bubbleChain?.prompt(a) || prompt;   // [b5-sprules] a shared Bubble Guard: pass it on (sp-bubble.js)
+    if (!prompt && !a.specialActive && m.state === 'playing') prompt = G.bubbleChain?.prompt(a, true) || null;   // [b5-sprules] a shared Bubble Guard: pass it on, a teammate close by (sp-bubble.js; the last word: the Cheer Orb's and every other hint come first)
     const frame = {
       time: m.practice ? null : m.time,
       teams: a.team === 1 ? m.teamSummary().reverse() : m.teamSummary(),   // HUD: [your team, theirs]

@@ -20,12 +20,17 @@
 //             from (never a fresh timer: all three run out together); no refresh loop (together for the rest of it:
 //             two shares, no more); one field a player (C's untouched by another player's new Bubble Guard); each
 //             chain once (B splatted and back can't take it again from C; a new chain can reach B); copies pass on
-//             after the owner is splatted; a copy shoves instead of hurting; the hint line (share it / pass it on)
-//   waddle    Waddle Bomb Barrage: no ink, its gap, special Waddles (`sp`: no meter), one walks to a foe and bursts
+//             after the owner is splatted; a copy shoves instead of hurting; the hint line (share it / pass it on;
+//             a copy's only with a teammate who could take it close by; on the HUD the Cheer Orb's prompt wins over it)
+//   waddle    Waddle Bomb Barrage: no ink, its gap, special Waddles (`sp`: no meter), one walks to a foe and bursts;
+//             a barrage's Waddle senses and chases with the barrage's own numbers (waddleSense / waddleLife), its
+//             ghost on another screen too; the Waddle Bomb sub keeps its own
 //   mystery   Mystery Bomb Barrage: the next bomb shows in the hand (the sub prop), on the HUD's NEXT card, the sub
 //             badge and the hint line before it's thrown; each throw is that bomb; it changes every throw (never the
 //             same twice running); over 120 throws every kind comes up, evenly (each a sixth, ±2); each throw waits
-//             its own bomb's barrage gap; the card spins and lands on the new one; other barrages show no card
+//             its own bomb's barrage gap; the card shows the next bomb on every real frame from the throw on (after a
+//             Pop Pellet or a Splat Bomb too, when the next throw is first allowed), marked with a drop-in and a pop;
+//             other barrages show no card
 //   bots      a bot with each new barrage, a foe in front, pops it and throws (the Mystery: several kinds); a bot with a
 //             shared Bubble Guard walks over to pass it on to a teammate close by
 //   list      both appended at the END of SPECIAL_ORDER, their icons and blurbs, the online records they use
@@ -286,6 +291,13 @@
     M3._bgHad = null;
     R('chain: on screen — the hint line says so: the user\'s own "… touch teammates to share it", a copy "… touch a teammate to pass it on"; none once every teammate has had it',
       /share it/.test(pA || '') && /pass it on/.test(pB || '') && pNone === null, { pA, pB, pNone });
+    // (fix round 1) a copy's line only while a teammate who could take it is close by (CHAIN.hintReach): M3, the one left
+    // who could, far off → none; within reach → the line
+    const pFar = CH.chainPrompt(B, true), m3At = [M3.pos.x, M3.pos.z];
+    place(M3, B.pos.x + CH.CHAIN.hintReach - 1, B.pos.z + 0.5);
+    const pNear = CH.chainPrompt(B, true);
+    place(M3, m3At[0], m3At[1]);
+    R(`chain: a copy's hint line only with a teammate who could take it within ${CH.CHAIN.hintReach} m (none far off, the line close by)`, pFar === null && /pass it on/.test(pNear || ''), { pFar, pNear });
     // together for the rest of it: no refresh, everyone's runs out together
     place(A, 10.4, -9.4); step(DT);
     const ends = {};
@@ -320,6 +332,22 @@
     place(C, 0, -4); place(E1, 0, -16); step(0.05); C.hp = PLAYER.hp; const sk0 = SOAK.get(C) || 0;
     shoot(E1, V(0, 0.9, -15.4), chestOf(C), 40); step(0.5);
     R('chain: a chained copy shoves instead of hurting (C hit — the field soaked it — no damage)', C.hp === PLAYER.hp && C.status.shield > 0 && (SOAK.get(C) || 0) > sk0, { hp: C.hp, soaked: (SOAK.get(C) || 0) - sk0 });
+    // (fix round 1) the hint line the HUD shows (main.js, real frames): you holding a copy — the chain's line with a
+    // teammate close by who could take it, nothing about it with none near; a teammate charging a Cheer Orb: its prompt
+    // wins (the chain's line is the last word)
+    reset();
+    const shown = () => (g.hud && g.hud._L ? g.hud._L.prompt : undefined) ?? null;
+    place(M1, 0, -10); place(me, 0.9, -10); place(M2, 20, -10); place(M3, 26, -10); step(0.05);
+    start(M1, 'bubbler'); step(DT); place(M1, 0, 24); step(0.1);
+    const meCopy = me.status.shield;
+    const hFar = shown();
+    place(M2, 4.5, -10); step(0.1);
+    const hNear = shown();
+    const cheer = start(M3, 'booyah'); step(0.1);
+    const hCheer = shown(), charging = !!(M3.specialActive && M3.specialActive.id === 'booyah' && !M3.specialActive.thrown);
+    if (M3.specialActive) G.specials.end(M3, 'test');
+    R('chain: on the HUD — you with a copy: "… pass it on" with a teammate close by, not with none near; a teammate\'s Cheer Orb charging: its "press C to cheer" prompt shows, not the chain\'s',
+      meCopy > 3 && !/pass it on/.test(hFar || '') && /pass it on/.test(hNear || '') && charging && !!cheer && /Cheer Orb/.test(hCheer || ''), { meCopy: r2(meCopy), hFar, hNear, hCheer, charging });
   } catch (e) { crash('chain', e); }
 
   // ======================================================================================== Waddle Bomb Barrage
@@ -343,6 +371,28 @@
     R('waddle: one lands, waddles after the foe near it and bursts on them', blasted && dmgTo(E1, 'waddle', t0) > 30, { blasted, dmg: dmgTo(E1, 'waddle', t0), state: w1.state });
     step(SPECIALS.barrage_waddle.duration);
     R('waddle: it ends on time and the hand goes back to the loadout\'s sub', !me.specialActive && me.character.bomb?.kind === (me.sub || SUBS.bomb).kind, { hand: me.character.bomb?.kind });
+    // (fix round 1) a barrage's Waddle senses and chases with the barrage's own numbers (config barrage_waddle
+    // waddleSense / waddleLife; test values here, so agreeing numbers can't pass it), and so does its ghost on another
+    // screen (built from the owner's [0 …] record while the owner's barrage runs there); the Waddle Bomb sub keeps its own
+    reset();
+    const BW = SPECIALS.barrage_waddle, keepBW = [BW.waddleSense, BW.waddleLife], sub0 = [me.subId, me.sub];
+    BW.waddleSense = 4.2; BW.waddleLife = 3.3;
+    try {
+      place(me, 0, -12); aim(me, 0, 0.12); step(0.05);
+      start(me, 'barrage_waddle'); step(DT); throwSub(me);
+      const wb = W[W.length - 1];
+      G.specials.netGhost(E3, [0, SPECIAL_ORDER.indexOf('barrage_waddle')]);
+      SUB_KITS.waddle.ghost(E3, [0, 90017, 6, 1.4, 20, 0, 2, -3]);
+      const wg = W.find((x) => x.gid === 90017);
+      if (E3.specialActive) G.specials.end(E3, 'net');
+      G.specials.end(me, 'test'); step(0.05);
+      me.setSub('waddle'); me.ink = PLAYER.inkMax; step(DT); throwSub(me);
+      const ws = W[W.length - 1];
+      const nums = (w) => w && [w.sub.senseRadius, w.sub.life];
+      R('waddle: a barrage\'s Waddle senses / chases with the barrage\'s own numbers (waddleSense, waddleLife), its ghost on another screen too; the Waddle Bomb sub its own',
+        wb && wb.sp && wb.owner === me && wb.sub.senseRadius === 4.2 && wb.sub.life === 3.3 && wg && wg.ghost && wg.sub.senseRadius === 4.2 && wg.sub.life === 3.3
+        && ws && ws !== wb && !ws.sp && ws.sub === SUBS.waddle && ws.sub.senseRadius === SUBS.waddle.senseRadius, { barrage: nums(wb), ghost: nums(wg), sub: nums(ws), subCfg: [SUBS.waddle.senseRadius, SUBS.waddle.life] });
+    } finally { BW.waddleSense = keepBW[0]; BW.waddleLife = keepBW[1]; me.subId = sub0[0]; me.sub = sub0[1]; me.character.setSub?.((sub0[1] || SUBS.bomb).kind); }
   } catch (e) { crash('waddle', e); }
 
   // ======================================================================================== Mystery Bomb Barrage
@@ -355,21 +405,30 @@
     const offS = on('sub:use', (e) => { if (e.actor === me) thrown.push(e.kind); });
     // the kind a throw made (the Splat Bomb: weapons.js's bomb list; the rest their sub items / kits)
     const rows = []; let shownOk = 0, handOk = 0, promptOk = 0, badgeOk = 0, changes = 0, gapOk = 0, gapBad = [];
-    g.hud && g.hud.update(DT, { prompt: null });
+    // (fix round 1) the card read on EVERY real frame (the HUD drawn by the game's own frame, as in play — no settling
+    // it by hand), from the throw's own frame to the frame the next throw is first allowed: the bomb the next throw
+    // will be, icon and name, every time — never another (it used to spin through other bombs for 0.3 s, longer than a
+    // Pop Pellet's 0.2 s gap)
+    let cardFrames = 0, cardOff = 0; const cardBad = [], atAllowed = {};
+    const cardIs = (kind) => { const st = card ? card.state() : null; return !!(st && st.on && st.kind === kind && st.name === SUBS[kind].name); };
+    step(0.05);
     for (let i = 0; i < 120; i++) {
       const next = s.bomb.kind;
-      // shown before the throw: the hand, the HUD card, the sub badge (main.js frame subKind), the hint line
-      step(0.02);
-      g.hud?.barrage?.update(0.5);   // (the card's reel settled)
-      const st = card ? card.state() : null;
-      if (st && st.on && st.kind === next && st.name === SUBS[next].name) shownOk++;
+      // shown before the throw: the hand, the HUD card, the sub badge (main.js frame subKind), the hint line — read on
+      // the frame before the throw is first allowed (what the player sees as they let go)
+      while (G.time + DT < s.nextThrow) { frame(); cardFrames++; if (!cardIs(next)) { cardOff++; if (cardBad.length < 4) cardBad.push({ next, card: card && card.state(), left: r3(s.nextThrow - G.time) }); } }
+      if (cardIs(next)) shownOk++;
       if (me.character.bomb?.kind === next) handOk++;
       if ((G.specials.prompt(me) || '').includes(SUBS[next].name)) promptOk++;
       if ((me.specialActive?.kind === 'barrage' ? me.specialActive.bomb : me.sub).kind === next) badgeOk++;
-      // wait out the gap, then throw
+      // then the throw, the frame it's allowed
       while (G.time < s.nextThrow) frame();
       const n0 = thrown.length; let tT = null; const offT = on('barrage:throw', (e) => { if (e.actor === me) tT = G.time; });
       throwSub(me); offT();
+      // the throw's own frame: the card already on the new one
+      cardFrames++; if (!cardIs(s.bomb.kind)) { cardOff++; if (cardBad.length < 4) cardBad.push({ thrown: next, next: s.bomb.kind, card: card && card.state(), at: 'throw frame' }); }
+      // (the reviewer's case: right after a Pop Pellet / a Splat Bomb, the two shortest gaps)
+      if ((next === 'burst' || next === 'bomb') && !atAllowed[next]) { let f = 0; const k = s.bomb.kind; while (G.time < s.nextThrow) { frame(); f++; } atAllowed[next] = { gap: r2(BAR.gapOf(next, s.def)), frames: f, next: k, card: card && card.state(), ok: cardIs(k) }; }
       const got = thrown[n0] || null;
       rows.push([next, got]);
       if (s.bomb.kind !== next) changes++;
@@ -384,19 +443,21 @@
     R('mystery: each throw is the bomb that was shown next (120 throws)', match === 120, { match, sample: rows.slice(0, 8) });
     R('mystery: the next bomb shows before the throw — in the hand (the sub prop), on the HUD\'s NEXT card (icon + name), the sub badge and the hint line',
       handOk === 120 && shownOk === 120 && promptOk === 120 && badgeOk === 120, { handOk, shownOk, promptOk, badgeOk });
+    R(`mystery: the NEXT card shows the bomb the next throw will be on every frame from the throw on (${cardFrames} real 1/60 s frames over 120 throws) — never another bomb, never mid-spin`,
+      cardFrames > 600 && cardOff === 0, { cardFrames, cardOff, bad: cardBad });
+    R('mystery: …so after a Pop Pellet (0.2 s gap) and a Splat Bomb (0.3 s), when the next throw is first allowed, the card already shows that next bomb',
+      !!(atAllowed.burst && atAllowed.burst.ok && atAllowed.burst.gap === 0.2 && atAllowed.bomb && atAllowed.bomb.ok), atAllowed);
     R('mystery: it changes bomb every throw — never the same twice running', changes === 120 && repeats === 0, { changes, repeats });
     R('mystery: over 120 throws every kind comes up, evenly (each 20 ± 2: a shuffled round of all six at a time)', KINDS.every((k) => Math.abs(counts[k] - 20) <= 2), counts);
     R('mystery: each throw waits its own bomb\'s barrage gap (Splat Bomb 0.3, Cling 0.4, Pop Pellet 0.2, Skitter 0.5, Murk 0.45, Waddle 0.5)',
       gapOk === 120 && BAR.gapOf('burst', s.def) === 0.2 && BAR.gapOf('waddle', s.def) === 0.5 && BAR.gapOf('seeker', s.def) === 0.5, { gapOk, bad: gapBad.slice(0, 4) });
-    // the card's reel: a throw sets it spinning, it lands on the new bomb
-    const nb0 = s.bomb.kind;
+    // a throw marks the new bomb on the card: its icon drops in (a reel stopping) and the card pops, in the throw's frame
+    const nb0 = s.bomb.kind, p0 = card ? card.state().popped : 0;
     while (G.time < s.nextThrow) frame();
     throwSub(me);
-    card?.update(0.02);
-    const spin = card ? card.state() : null;
-    card?.update(0.4);
     const land = card ? card.state() : null;
-    R('mystery: the NEXT card spins after a throw and lands on the new bomb', spin && spin.spinning && land && !land.spinning && land.kind === s.bomb.kind && s.bomb.kind !== nb0, { spin, land });
+    const marks = !!(card && card.icon.classList.contains('is-drop') && card.el.classList.contains('is-land'));
+    R('mystery: a throw marks the new bomb on the NEXT card in that same frame — the icon drops in, the card pops — on the new bomb', land && land.kind === s.bomb.kind && s.bomb.kind !== nb0 && land.popped === p0 + 1 && marks, { land, marks, was: nb0 });
     G.specials.end(me, 'time'); card?.update(0.1);
     const offCard = card ? card.state() : null;
     reset(); place(me, 0, -30); start(me, 'barrage_sticky'); step(0.1); card?.update(0.1);
@@ -404,7 +465,7 @@
     R('mystery: the card goes when it ends; a plain barrage shows none (its bomb never changes)', offCard && !offCard.on && plainCard && !plainCard.on, { offCard, plainCard });
     // online: the owner records each next bomb as the special's moment [4, 'nb', SUB_ORDER index] — a ghost follows it
     reset();
-    const recs = []; const NM = G.netm; const fake = { recKit: (a, kind, d) => { if (a === me && kind === 'sp') recs.push(JSON.parse(JSON.stringify(d))); } };
+    const recs = []; const NM = G.netm; const fake = { recKit: (a, kind, d) => { if (a === me && kind === 'sp') recs.push(JSON.parse(JSON.stringify(d))); }, recBomb() {} };   // (recBomb: the first bomb may be a Splat Bomb — fix round 1: without it that one in six threw here)
     G.netm = fake;
     try { const s2 = start(me, 'barrage_mystery'); step(0.05); while (G.time < s2.nextThrow) frame(); throwSub(me); } finally { G.netm = NM; }
     const nbs = recs.filter((d) => d[0] === 4 && d[1] === 'nb').map((d) => SUB_ORDER[d[2]]);

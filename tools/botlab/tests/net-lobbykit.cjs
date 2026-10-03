@@ -1,6 +1,6 @@
 // Online: the room lobby's SUB / SPECIAL chips (menus.js _scr_lobby → _openKitPicker), with real clients on the local
 // relay. The guest walks the bottom bar by keyboard (WEAPON → SUB ↓ SPECIAL → LOOK and back), readies up, picks a sub
-// and a special (Drainbow) in the picker by keyboard — the host's room and its nameplate for the guest show them, and
+// and a special (the last in SPECIAL_ORDER: ← from the first tile; Drainbow until [b5-sprules] appended two) in the picker by keyboard — the host's room and its nameplate for the guest show them, and
 // the guest stays ready — then the weapon's own (null on the wire); a weapon swap in the drawer moves a Weapon's Own
 // chip to the new weapon's kit and keeps an explicit pick; the host picks too; the chips are there in every room mode;
 // the match starts with the guest's kit in its hands on both screens.
@@ -26,6 +26,12 @@ module.exports = async (ctx) => {
     return { weapon: p.weapon, sub: p.sub ?? null, special: p.special ?? null, ready: !!p.ready, plate: pl ? (pl.querySelector('.iw-plate__kit') || { dataset: {} }).dataset.kit || null : null }; })()`);
   const hostSees = (name, test, ms = 8000) => A.until(`(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(name)}); const pl = [...document.querySelectorAll('.iw-plate')].find((e) => (e.querySelector('.iw-plate__name') || {}).textContent === ${JSON.stringify(name)});
     const kit = pl && pl.querySelector('.iw-plate__kit') ? pl.querySelector('.iw-plate__kit').dataset.kit : null; return !!p && (${test}); })()`, ms).catch(() => null);
+
+  // the last special in SPECIAL_ORDER (← from the first tile wraps round to it): the order only grows at its end, so this
+  // follows whichever is last ([b5-sprules]: it was Drainbow, now the Mystery Bomb Barrage — as loadout-picker.js)
+  const [LAST, LN] = JSON.parse(await B.js(`(async () => { const { SPECIAL_ORDER, SPECIALS } = await import('./src/config.js'); const k = SPECIAL_ORDER[SPECIAL_ORDER.length - 1]; return JSON.stringify([k, SPECIALS[k].name]); })()`));
+  const LT = `kp-special-${LAST}`;
+  say('the last special:', LAST, LN);
 
   // ---------------------------------------------------------------- a turf room, no bots; both on the Spritzer with its own kit
   // (a slot's profile outlives a run: set both loadouts)
@@ -72,24 +78,24 @@ module.exports = async (ctx) => {
   const h1 = await onHost('Guesty');
   R('host: the room has the guest\'s Echo Orb, and so does its nameplate; the guest is still ready', h1.sub === 'scan' && h1.plate === 'scan|zooka' && h1.ready, h1);
 
-  // ---------------------------------------------------------------- 3. SPECIAL: → Drainbow
+  // ---------------------------------------------------------------- 3. SPECIAL: → the last special (LAST)
   await key(B, 'ArrowDown');
   const fs = await focusId(B);
   await key(B, 'Enter', 60);
   await pickerOpen(B);
   const st2 = await focusId(B);
-  await key(B, 'ArrowLeft');   // (from the weapon's own, the first tile, ← wraps round to the last: Drainbow)
+  await key(B, 'ArrowLeft');   // (from the weapon's own, the first tile, ← wraps round to the last: LAST)
   const f2 = await focusId(B);
   if (SHOTS) await shot(B, 'lobby-picker-special');
   await key(B, 'Enter', 200);
   await pickerGone(B);
   await wait(400);
   const k2 = kitOf(await chips(B), 'special');
-  R('guest: ↓ SPECIAL, Enter: the picker on the weapon\'s own, ← Drainbow, Enter — the chip shows Drainbow',
-    fs === 'special' && st2 === 'kp-special-own' && f2 === 'kp-special-drainbow' && k2.id === 'drainbow' && !k2.own && k2.name === 'Drainbow', { fs, st2, f2, k2 });
-  await hostSees('Guesty', `p.special === 'drainbow' && kit === 'scan|drainbow'`);
+  R(`guest: ↓ SPECIAL, Enter: the picker on the weapon's own, ← ${LN} (the last), Enter — the chip shows ${LN}`,
+    fs === 'special' && st2 === 'kp-special-own' && f2 === LT && k2.id === LAST && !k2.own && k2.name === LN, { fs, st2, f2, k2 });
+  await hostSees('Guesty', `p.special === ${JSON.stringify(LAST)} && kit === ${JSON.stringify('scan|' + LAST)}`);
   const h2 = await onHost('Guesty');
-  R('host: the guest\'s Drainbow in the room and on its nameplate; still ready', h2.special === 'drainbow' && h2.plate === 'scan|drainbow' && h2.ready, h2);
+  R(`host: the guest's ${LN} in the room and on its nameplate; still ready`, h2.special === LAST && h2.plate === 'scan|' + LAST && h2.ready, h2);
 
   // ---------------------------------------------------------------- 4. SUB back to the weapon's own: null on the wire
   await focus(B, 'sub');
@@ -103,10 +109,10 @@ module.exports = async (ctx) => {
   await wait(400);
   const g3 = await J(B, `({ prof: __inkwave.api.getProfile().sub ?? null, me: __G.net.lobby.players.find((p) => p.you).sub ?? null })`);
   const k3 = kitOf(await chips(B), 'sub');
-  await hostSees('Guesty', `p.sub == null && kit === 'bomb|drainbow'`);
+  await hostSees('Guesty', `p.sub == null && kit === ${JSON.stringify('bomb|' + LAST)}`);
   const h3 = await onHost('Guesty');
   R('Weapon\'s Own: the picker starts on Echo Orb, ↑ ← ← the first tile, Enter — null in the profile and the room, the chip back on Splat Bomb marked as the weapon\'s own',
-    st3 === 'kp-sub-scan' && f3 === 'kp-sub-own' && g3.prof === null && g3.me === null && k3.id === 'bomb' && k3.own && k3.mark && h3.sub === null && h3.plate === 'bomb|drainbow' && h3.ready, { st3, f3, g3, k3, h3 });
+    st3 === 'kp-sub-scan' && f3 === 'kp-sub-own' && g3.prof === null && g3.me === null && k3.id === 'bomb' && k3.own && k3.mark && h3.sub === null && h3.plate === 'bomb|' + LAST && h3.ready, { st3, f3, g3, k3, h3 });
 
   // ---------------------------------------------------------------- 5. a weapon swap in the drawer: the Weapon's Own chip follows, the pick stays
   await B.js(`document.querySelectorAll('.iw-lkit').forEach((e) => e.classList.remove('is-swap')); 1`);
@@ -120,11 +126,11 @@ module.exports = async (ctx) => {
   const c5 = await chips(B);
   const s5 = kitOf(c5, 'sub'), p5 = kitOf(c5, 'special');
   const anim = await J(B, `[...document.querySelectorAll('.iw-lkit')].map((e) => e.classList.contains('is-swap'))`);
-  R('guest: the Swell Roller from the drawer — the Weapon\'s Own SUB chip moves to its Cling Charge (swap animation), the SPECIAL pick stays Drainbow',
-    drawer && s5.id === 'sticky' && s5.own && s5.name === 'Cling Charge' && anim[0] && !anim[1] && p5.id === 'drainbow' && !p5.own, { drawer, s5, p5, anim });
-  await hostSees('Guesty', `p.weapon === 'roller' && kit === 'sticky|drainbow'`);
+  R(`guest: the Swell Roller from the drawer — the Weapon's Own SUB chip moves to its Cling Charge (swap animation), the SPECIAL pick stays ${LN}`,
+    drawer && s5.id === 'sticky' && s5.own && s5.name === 'Cling Charge' && anim[0] && !anim[1] && p5.id === LAST && !p5.own, { drawer, s5, p5, anim });
+  await hostSees('Guesty', `p.weapon === 'roller' && kit === ${JSON.stringify('sticky|' + LAST)}`);
   const h5 = await onHost('Guesty');
-  R('host: roller, sub null (its own: Cling Charge on the nameplate), Drainbow; still ready', h5.weapon === 'roller' && h5.sub === null && h5.special === 'drainbow' && h5.plate === 'sticky|drainbow' && h5.ready, h5);
+  R(`host: roller, sub null (its own: Cling Charge on the nameplate), ${LN}; still ready`, h5.weapon === 'roller' && h5.sub === null && h5.special === LAST && h5.plate === 'sticky|' + LAST && h5.ready, h5);
 
   // ---------------------------------------------------------------- 6. the host picks too: SPECIAL → Tidal Slam (the first after the weapon's own)
   const hostName = await A.js(`__G.net.lobby.players.find((p) => p.you).name`);
@@ -166,8 +172,8 @@ module.exports = async (ctx) => {
   const actorOf = (c, owner) => J(c, `(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(owner)} && !x.isBot); return a ? [a.weaponId, a.subId, a.specialId] : null; })()`);
   const onA = await actorOf(A, idB), onB = await J(B, `[__G.match.local.weaponId, __G.match.local.subId, __G.match.local.specialId]`);
   const hostOnB = await actorOf(B, idA);
-  R('turf match (the guest stayed ready, so the host could start): the guest holds the roller, its own Cling Charge and Drainbow — on the host\'s screen and its own',
-    ready && JSON.stringify(onA) === JSON.stringify(['roller', 'sticky', 'drainbow']) && JSON.stringify(onB) === JSON.stringify(['roller', 'sticky', 'drainbow']), { ready, onA, onB });
+  R(`turf match (the guest stayed ready, so the host could start): the guest holds the roller, its own Cling Charge and ${LN} — on the host's screen and its own`,
+    ready && JSON.stringify(onA) === JSON.stringify(['roller', 'sticky', LAST]) && JSON.stringify(onB) === JSON.stringify(['roller', 'sticky', LAST]), { ready, onA, onB });
   R('…and the host\'s Tidal Slam reached the guest\'s screen', hostOnB && hostOnB[2] === 'slam', { hostOnB });
   for (const c of [A, B]) await c.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);   // (as found)
 };
