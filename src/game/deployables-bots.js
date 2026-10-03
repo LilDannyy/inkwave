@@ -16,6 +16,7 @@ import { SURF_BOT } from './sp-surf-bots.js';
 import { MAIN_KITS } from './kits/registry.js';
 
 export const DEV_BOT = { picks: 0, beacon: 0, sprinkler: 0, surf: 0, frames: 0, fired: 0, gaveUp: 0 };
+export const DEV_AI = { enabled: true };   // (match harnesses switch it off for an A/B: tower-match.cjs DEV_AI=0)
 export function resetDevBot() { for (const k in DEV_BOT) DEV_BOT[k] = 0; }
 const PREFER = { beacon: 0.8, surf: 0.85, sprinkler: 1 };   // (its distance × this: the pick)
 const MELEE = { roller: true, brush: true };   // (bots.js MELEE; kit melee weapons say so themselves: bot.melee)
@@ -29,7 +30,7 @@ const ROLL = { roller: true, brush: true };
 // null (BotSpecials.act: after its own escapes / throws)
 export function devShootAim(sense, dt, it, move) {
   const b = sense.b, a = b.a, w = a.weapon, D = G.deploy;
-  if (!D || b.mode === 'refill' || a.climbing || a.specialActive || a.superJumpState || a.ink < Math.max(6, w.inkPerShot || 0) || (b.target && b.seeTimer > 0)) { sense._dev = null; return null; }
+  if (!D || !DEV_AI.enabled || b.mode === 'refill' || a.climbing || a.specialActive || a.superJumpState || a.ink < Math.max(6, w.inkPerShot || 0) || (b.target && b.seeTimer > 0)) { sense._dev = null; return null; }
   const melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee);
   const win = melee && b._meleeWindow ? b._meleeWindow(w, { ground: true, state: 'still' }) : [0, weaponRange(w) * 0.95];
   const skip = sense._devSkip || (sense._devSkip = new Map());

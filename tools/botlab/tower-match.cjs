@@ -5,7 +5,8 @@
 // longest, bot stuck % (as bots-zbot), bots stuck against the tower collider, splats / specials / super jumps,
 // console errors, sim cost.
 //   MAP=halyard tools/botlab/run.sh tools/botlab/tower-match.cjs      (OUT=file.json writes the numbers; DUR=300 match seconds;
-//   OTMAX=120 caps a stalled overtime; MAP=towerbox is a synthetic test stage defined below, never shipped)
+//   OTMAX=120 caps a stalled overtime; MAP=towerbox is a synthetic test stage defined below, never shipped; SUBS='all=sprinkler'
+//   or 'team0=beacon;team1=curtain' equips the subs, as match.cjs; DEV_AI=0: bots don't shoot enemy devices — an A/B)
 //   TOWER_DEF='{ path: [[x, z], …] }' swaps in a drawn path for the stage
 //   HUMAN=still | ride | escort: Alpha's first player (the local kid) plays as a human would, outside the bots' team plan
 //   — still: stands at spawn (a player gone AFK); ride / escort: its own brain in that role, never re-dealt (a pushy
@@ -54,6 +55,11 @@ app.on('browser-window-created', (_, win) => {
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', mode: 'tower', duration: ${DUR} })`);
     { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got} (a stage missing from MAPS falls back to the first one)`); app.exit(3); return; } }   // (never test the wrong stage silently)
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
+    // [b5-deploy] SUBS equips the subs as match.cjs does ('all=sprinkler' · 'team0=beacon;team1=curtain' · per slot 'a,b,…')
+    if (process.env.SUBS) console.log('   subs ' + await js(`(() => { const A = window.__inkwave.match.actors, spec = ${JSON.stringify(process.env.SUBS)};
+      const S = spec.startsWith('all=') ? A.map(() => spec.slice(4)) : spec.includes('team') ? (() => { const t = {}; for (const p of spec.split(';')) { const [k, v] = p.split('='); t[+k.replace('team', '')] = v; } return A.map((a) => t[a.team] || null); })() : A.map((a, i) => spec.split(',')[i] || null);
+      A.forEach((a, i) => { if (S[i]) a.setSub(S[i]); }); return A.map((a) => 'AB'[a.team] + ':' + (a.subId || '-')).join(' '); })()`));
+    if (process.env.DEV_AI === '0') await js(`(async () => { try { (await import('./src/game/deployables-bots.js')).DEV_AI.enabled = false; } catch (e) { /* */ } return 0; })()`);   // [b5-deploy] bots leave enemy devices alone (A/B)
     const t0 = Date.now();
     const r = await js(`(async () => {
       const g = window.__inkwave, m = g.match, T = m.tower;
