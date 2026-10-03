@@ -130,7 +130,15 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
     const way = await J(A, `(() => { const me = __G.match.local; const g1 = __dep.plant('beacon', ${a1[0]}, ${a1[1]}, ${a1[2]});
       const g2 = __dep.toss('sprinkler', new __dep.THREE.Vector3(${a2[0]} + 0.3, ${a2[1]} + 0.8, ${a2[2]}), new __dep.THREE.Vector3(0, -6, 0)); return { g1, g2 }; })()`);
     const b1 = await ahead(B, 7);
-    const wayB = await J(B, `(() => { __dep.ev.length = 0; const g = __dep.plant('beacon', ${b1[0]}, ${b1[1]}, ${b1[2]}); const me = __G.match.local, p = __G.level.spawnPads[me.team]; me.pos.set(p.x, p.y + 0.05, p.z); return g; })()`);
+    // (then B watches from beside the track, 3.5 … 9 m off it, in sight of the crush: the crunch is heard and seen near
+    // the camera only)
+    const wayB = await J(B, `(() => { __dep.ev.length = 0; const g = __dep.plant('beacon', ${b1[0]}, ${b1[1]}, ${b1[2]}); const me = __G.match.local, T = __G.match.tower, Tv = __dep.THREE;
+      const c = T.path.at(T.s + ${dir} * 5), N = [...__G.nav.nodes].filter((n) => { const d = Math.hypot(n.x - c.x, n.z - c.z); if (d < 3.5 || d > 9 || Math.abs(n.y - c.y) > 1.5) return false;
+        for (let k = -2; k <= 9; k++) { const q = T.path.at(T.s + ${dir} * k); if (Math.hypot(n.x - q.x, n.z - q.z) < 3.2) return false; } return __G.physics.los(new Tv.Vector3(n.x, n.y + 1.4, n.z), new Tv.Vector3(c.x, c.y + 0.8, c.z)); })
+        .sort((p, q) => Math.hypot(p.x - c.x, p.z - c.z) - Math.hypot(q.x - c.x, q.z - c.z));
+      const p = N[0] || __G.level.spawnPads[me.team]; window.__bAt = [p.x, p.y, p.z]; me.pos.set(p.x, p.y + 0.05, p.z);
+      window.__depHook = (a) => { if (a === me && !window.__bFree) { a.pos.set(p.x, p.y + 0.05, p.z); a.vel.set(0, 0, 0); } }; return g; })()`);
+    const bAt = await J(B, `window.__bAt`);
     await A.until(`!!__dep.byGid(${wayB})`, 4000, 50).catch(() => null);
     await B.until(`!!__dep.byGid(${way.g1}) && !!__dep.byGid(${way.g2}) && !!__dep.byGid(${deck.gm})`, 4000, 50).catch(() => null);
     await A.js(`__dep.cues.length = 0; __dep.ev.length = 0; 1`); await B.js(`__dep.cues.length = 0; 1`);
@@ -151,7 +159,7 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
     const crushA = evA.filter((e) => e.n === 'device:down' && e.how === 'crush').map((e) => e.kind), crushB = evB.filter((e) => e.n === 'device:down' && e.how === 'crush').map((e) => e.kind);
     R(`the tower crushes the three in its way (in ${secs} s), each judged by its owner (A's beacon and sprinkler on A's screen, B's beacon on B's), gone on both screens with the crunch on both`,
       goneA.every(Boolean) && goneB.every(Boolean) && crA >= 3 && crB >= 3 && crushA.filter((k) => k === 'beacon').length === 1 && crushA.includes('sprinkler') && crushB.filter((k) => k === 'beacon').length === 1,
-      { goneA, goneB, crunches: [crA, crB], crushedHere: { A: crushA, B: crushB } });
+      { goneA, goneB, crunches: [crA, crB], crushedHere: { A: crushA, B: crushB }, bWatches: bAt });
     const SA = await J(A, `window.__twS`), SB = await J(B, `window.__twS`);
     const span = (S) => S.length ? Math.hypot(S[S.length - 1][5] - S[0][5], S[S.length - 1][6] - S[0][6]) : 0;
     const spread = (S) => { if (!S.length) return 99; let m = 0; for (const x of S) m = Math.max(m, Math.hypot(x[0] - S[0][0], x[2] - S[0][2]), Math.abs(x[1]), Math.hypot(x[3] - S[0][3], x[4] - S[0][4])); return m; };
@@ -161,7 +169,7 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
       { A: { n: SA.length, span: +span(SA).toFixed(2), spread: +spread(SA).toFixed(3), off: oA && oA.slice(0, 5) }, B: { n: SB.length, span: +span(SB).toFixed(2), spread: +spread(SB).toFixed(3), off: oB && oB.slice(0, 5) } });
     // B comes up onto the deck by A's mine (on B's screen: B's kid is B's to move); A's screen (its owner) trips it
     await A.js(`__dep.ev.length = 0; 1`); await B.js(`__dep.ev.length = 0; 1`);
-    const hpB0 = await J(B, `__G.match.local.hp`);
+    const hpB0 = await J(B, `Math.round(__G.match.local.hp)`);
     await B.js(`(() => { const me = __G.match.local, T = __G.match.tower; window.__bFree = true; me.invuln = 0; const m = __dep.byGid(${deck.gm});
       window.__depHook = (a) => { if (a === me) { const mm = __dep.byGid(${deck.gm}); const q = mm && mm.state !== 'dead' ? mm.pos : m.pos; a.pos.set(q.x + 0.8, T.top + 0.05, q.z + 0.3); a.vel.set(0, 0, 0); } }; return 1; })()`);
     const boomA = await A.until(`__dep.ev.some((e) => e.n === 'bomb:explode')`, 8000, 50).then(() => true, () => false);
@@ -169,7 +177,7 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
     await wait(500);
     const exA = (await J(A, `__dep.ev`)).find((e) => e.n === 'bomb:explode'), exB = (await J(B, `__dep.ev`)).find((e) => e.n === 'bomb:explode');
     const mineA = await J(A, `(() => { const T = __G.match.tower; return [T.pos.x, T.top, T.pos.z]; })()`);
-    const hpB = await J(B, `__G.match.local.hp`), hitB = (await J(B, `__dep.ev`)).filter((e) => e.n === 'hit' && e.w === 'mine' && e.vic === ids.b);
+    const hpB = await J(B, `Math.round(__G.match.local.hp)`), hitB = (await J(B, `__dep.ev`)).filter((e) => e.n === 'hit' && e.w === 'mine' && e.vic === ids.b);
     R(`B coming up onto the deck trips A's mine there (A's screen judges it) and it blows there on both screens (A ${exA && exA.pos}, B ${exB && exB.pos}), hurting B (${hpB0} → ${hpB} on B's screen)`,
       boomA && exA && exB && Math.hypot(exA.pos[0] - exB.pos[0], exA.pos[2] - exB.pos[2]) < 0.15 && Math.abs(exA.pos[1] - (mineA[1] + 0.3)) < 0.2 && (hpB < hpB0 || hitB.length > 0),
       { exA, exB, deckTop: mineA, hpB0, hpB, hitB });
