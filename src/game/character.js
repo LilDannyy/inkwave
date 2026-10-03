@@ -111,6 +111,7 @@ const _m1 = new THREE.Matrix4(), _m2 = new THREE.Matrix4();
 const _pA = new THREE.Vector3(), _pT = new THREE.Vector3(), _pE = new THREE.Vector3(), _pN = new THREE.Vector3(), _pH = new THREE.Vector3(), _pD = new THREE.Vector3();
 const _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
 const _cP = new THREE.Vector3(), _cQ = new THREE.Quaternion(), _aP = new THREE.Vector3(), _aQ = new THREE.Quaternion();
+const _gA = new THREE.Vector3(), _gP = new THREE.Vector3(), _gS = new THREE.Vector3(), _gD = new THREE.Vector3(), _gN = new THREE.Vector3(), _gE = new THREE.Vector3(), _gY = new THREE.Vector3(), _gQ = new THREE.Quaternion(), _gFlip = new THREE.Quaternion(0, 1, 0, 0);   // [b5-holds] _gripRoll
 const _gO = new THREE.Vector3(), _gHit = { hit: false, dist: 0, point: new THREE.Vector3(), normal: new THREE.Vector3(), block: -1, face: -1, u: 0, v: 0 };
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0), XAX = new THREE.Vector3(1, 0, 0), YAX = new THREE.Vector3(0, 1, 0);
 const _sEnd = new THREE.Quaternion(), _sQp = new THREE.Quaternion(), _sQa = new THREE.Quaternion(), _sQb = new THREE.Quaternion(), _sP = new THREE.Vector3(), _sT = new THREE.Vector3(), _sPole = new THREE.Vector3();
@@ -494,6 +495,23 @@ function poseBow(ch, P, dt) {
   ch._bowCant = damp(ch._bowCant ?? BOW_CANT, ch.grounded ? BOW_CANT : 0, 12, dt);
   P[ANCR + 2] += ch._bowCant * ch.wAim;
 }
+// roller flick keys (_poseFlick): rest [x y z pitch yaw] · coiled · whip · follow-through [x y z pitch]
+const FLICK_ONE = [-0.11, 0.84, 0.18, 0.8, 0.1, -0.13, 1.22, -0.02, -2.3, 0.3, -0.07, 0.98, 0.3, -0.1, 0.05, -0.06, 0.74, 0.3, 0.75];
+// brush swipe (_poseSwipe): anchor x at the middle / per side, y, z · pitch, yaw / side, roll / side
+const SWIPE_ONE = [-0.06, 0.3, 0.78, 0.28, 0.9, 0.95, -0.2];
+// ---- [b5-holds] two-handed weapons (the user: "make the player hold brush rollers blasters and brollys with both
+// hands"). The brush, the roller, the blaster and the brolly carry their own hold (setWeapon prefers HOLD_BOTH[kind]
+// over the family's, so the held specials that borrow a family — sp_stamp, sp_jetgun — keep theirs). `both`: the off
+// hand stays on the foregrip in every state: carry, run, aim, the swings and rolls, the air, landings, the respawn drop,
+// idle fidgets, the menu and podium dances (see BOTH_* below and the `both` branches). `gripRoll` (rad): how far the off
+// hand may turn round its handle toward its own shoulder (a round shaft: all the way round; a pump or a foregrip: a
+// little), so the wrist meets the weapon the way the arm arrives instead of twisting to a fixed grip.
+const HOLD_BOTH = {
+  roller: { ...HOLD.roller, both: true, gripRoll: Math.PI },
+  brush: { ...HOLD.roller, both: true, gripRoll: Math.PI },
+  blaster: { ...HOLD.blaster, both: true, gripRoll: 1.1 },
+  brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1 },
+};
 const HOLD_HERO = { p: [-0.14, 1.05, 0.25], r: [-0.35, 0.35, -0.2] };
 const K_SL_T = [0, 0.13, 0.25, 0.4, 0.62];
 const K_SL_X = [0, -0.08, 0.02, 0.025, 0], K_SL_Y = [0, -0.22, 0.24, 0.33, 0], K_SL_Z = [0, -0.34, 0.04, -0.04, 0];
@@ -1134,7 +1152,7 @@ export class Character {
     this.bones.handR.add(w.pivot);
     if (w.left) this.bones.handL.add(w.left.pivot);
     if (w.pivotL) this.bones.handL.add(w.pivotL);
-    this.weaponKind = kind; this.animKind = ANIM_OF[kind] || kind; this.weapon = w; this.hold = HOLD[kind] || HOLD[this.animKind];   // a kind may bring its own hold data (bow)
+    this.weaponKind = kind; this.animKind = ANIM_OF[kind] || kind; this.weapon = w; this.hold = HOLD_BOTH[kind] || HOLD[kind] || HOLD[this.animKind];   // a kind may bring its own hold data (bow; [b5-holds] the two-handed four)
     this.dual = !!w.left;
   }
 
@@ -2078,6 +2096,13 @@ export class Character {
       lerpE(P, POLER, -0.7, -0.35, -0.7, wRoll); lerpE(P, POLEL, 0.7, -0.35, -0.7, wRoll);
       P[HIPS + 1] += H.hip * wRoll * (1 - gw);
     }
+    // [b5-holds] two hands on the weapon outside the aim stance: the shoulders turn toward it (the support shoulder
+    // comes forward) and the support shoulder reaches in, so the off hand gets there with a bent elbow
+    if (H.both) {
+      const k = 1 - wAim * (1 - wRoll);
+      const tw = H.twist || 0; P[CHEST + 1] += tw * k; P[SPINE + 1] += tw * 0.5 * k; P[CLAVL + 1] -= (H.clav || 0) * k;
+      if (H.poleC) lerpE(P, POLEL, H.poleC[0], H.poleC[1], H.poleC[2], k);
+    }
     // two hands on one weapon (foregrip IK) — a dual wield is never "two-handed": each fist holds its own pistol
     this.wTwo = dual ? 0 : Math.max(lerp(H.twoCarry, H.twoAim, wAim), H.roll ? 1 : 0);
     P[IKL] = dual ? 1 : this.wTwo;
@@ -2172,10 +2197,11 @@ export class Character {
     const kWhip = ease((ft - 0.15) / 0.08);      // whip through release (~0.22 s)
     const kFol = easeOut((ft - 0.23) / 0.14);    // follow-through
     const kRec = ease((ft - 0.42) / 0.26);       // recover
-    let ax = -0.11, ay = 0.84, az = 0.18, rx = 0.8, ry = 0.1;
-    ax = lerp(ax, -0.13, kUp); ay = lerp(ay, 1.22, kUp); az = lerp(az, -0.02, kUp); rx = lerp(rx, -2.3, kUp); ry = lerp(ry, 0.3, kUp);
-    ax = lerp(ax, -0.07, kWhip); ay = lerp(ay, 0.98, kWhip); az = lerp(az, 0.3, kWhip); rx = lerp(rx, -0.1, kWhip); ry = lerp(ry, 0.05, kWhip);
-    ax = lerp(ax, -0.06, kFol); ay = lerp(ay, 0.74, kFol); az = lerp(az, 0.3, kFol); rx = lerp(rx, 0.75, kFol);
+    const F = this.hold.flick || FLICK_ONE;      // [b5-holds] the two-handed roller swings closer in (the off hand stays on)
+    let ax = F[0], ay = F[1], az = F[2], rx = F[3], ry = F[4];
+    ax = lerp(ax, F[5], kUp); ay = lerp(ay, F[6], kUp); az = lerp(az, F[7], kUp); rx = lerp(rx, F[8], kUp); ry = lerp(ry, F[9], kUp);
+    ax = lerp(ax, F[10], kWhip); ay = lerp(ay, F[11], kWhip); az = lerp(az, F[12], kWhip); rx = lerp(rx, F[13], kWhip); ry = lerp(ry, F[14], kWhip);
+    ax = lerp(ax, F[15], kFol); ay = lerp(ay, F[16], kFol); az = lerp(az, F[17], kFol); rx = lerp(rx, F[18], kFol);
     const w = 1 - kRec;
     lerpE(X, ANC, ax, ay, az, w); lerpE(X, ANCR, rx, ry, 0, w);
     X[AFOLT] = lerp(X[AFOLT], 0.6, w); X[AFOLR] = lerp(X[AFOLR], 0.25, w);
@@ -2220,10 +2246,11 @@ export class Character {
     const k = ease(ft / 0.13);
     const kRec = ease((ft - 0.15) / 0.2);
     const u = lerp(-sd, sd, k);                       // -1 … 1 across the body
-    const w = 1 - kRec;
-    lerpE(X, ANC, -0.06 + 0.3 * u, 0.78, 0.28, w);
-    lerpE(X, ANCR, 0.9, 0.95 * u, -0.2 * u, w);
-    X[SPINE + 1] += 0.3 * u * w; X[CHEST + 1] += 0.24 * u * w; X[HIPS + 1] += 0.1 * u * w;
+    const w = 1 - kRec, F = this.hold.swipe || SWIPE_ONE;   // [b5-holds] two-handed: a narrower sweep, the body turning more
+    lerpE(X, ANC, F[0] + F[1] * u, F[2], F[3], w);
+    lerpE(X, ANCR, F[4], F[5] * u, F[6] * u, w);
+    const tb = F[7] ?? 1;
+    X[SPINE + 1] += 0.3 * u * w * tb; X[CHEST + 1] += 0.24 * u * w * tb; X[HIPS + 1] += 0.1 * u * w * tb;
     X[SPINE] += 0.14 * w; X[CHEST] += 0.06 * w; X[HIPS_P + 1] -= 0.03 * w;
     lerpE(X, POLER, -0.7, -0.35, -0.7, w); lerpE(X, POLEL, 0.7, -0.35, -0.7, w);
     this._effort = Math.max(this._effort || 0, 0.5 * w);
@@ -3508,6 +3535,7 @@ export class Character {
       _pT.copy(d.handL.pos); if (w.pump) _pT.z -= 0.036 * w.pump;   // blaster: the support hand racks the pump
       _pT.applyQuaternion(_q5).add(_v5);
       _q2.copy(_q5).multiply(d.handL.quat);
+      if (this.hold.gripRoll) this._gripRoll(_pT, _q2, P, dt);   // [b5-holds] the hand turns round the handle to meet the arm
       if (P[LTW] > 0.001) {
         _pT.lerp(_v6.set(P[LTGT], P[LTGT + 1], P[LTGT + 2]), P[LTW]);
         const wgt = Math.max(P[IKL], P[LTW]);
@@ -3764,6 +3792,38 @@ export class Character {
     let o = bone;
     while (o && o !== this.kid) { pos.applyQuaternion(o.quaternion).add(o.position); quat.premultiply(o.quaternion); o = o.parent; }
     return pos;
+  }
+
+  /** [b5-holds] The off hand on a two-handed weapon (hold.gripRoll): turn the grip (hand pos `pT` + orientation `q`, kid
+   *  space, both rewritten) round the handle axis (the hand's Z through the grip hole) so the back of the wrist faces where
+   *  the forearm will come from — the elbow the arm IK is about to place (shoulder, reach, pole) — up to ±gripRoll from
+   *  the weapon's authored grip, eased so the hand slides round the shaft instead of snapping. */
+  _gripRoll(pT, q, P, dt) {
+    const H = this.hold, L = this.limbs.armL, lim = H.gripRoll;
+    _gA.set(0, 0, 1).applyQuaternion(q);                                    // handle axis
+    _gP.copy(GRIP_HOLE_L).applyQuaternion(q).add(pT);                       // grip point on it
+    if (H.gripAt) _gP.addScaledVector(_gA, H.gripAt);                       // slid along a round shaft (m, + toward the head)
+    if (H.gripFlip) { q.multiply(_gFlip); _gA.negate(); }                   // the thumb toward the other end of the shaft
+    if (H.gripAt || H.gripFlip) pT.copy(GRIP_HOLE_L).applyQuaternion(q).negate().add(_gP);
+    this._kidXform(L.up, _gS, _gQ);                                         // shoulder
+    _gD.subVectors(pT, _gS); const len = clamp(_gD.length(), Math.abs(L.a - L.b) + 1e-3, (L.a + L.b) * 0.9995); _gD.normalize();
+    const cosA = clamp((L.a * L.a + len * len - L.b * L.b) / (2 * L.a * len), -1, 1);
+    _gN.set(P[POLEL], P[POLEL + 1], P[POLEL + 2]); _gN.addScaledVector(_gD, -_gN.dot(_gD));
+    if (_gN.lengthSq() < 1e-8) _gN.set(0, -1, 0).addScaledVector(_gD, _gD.y);
+    _gN.normalize();
+    _gE.copy(_gS).addScaledVector(_gD, L.a * cosA).addScaledVector(_gN, L.a * Math.sqrt(1 - cosA * cosA));   // elbow
+    _gE.sub(pT); _gE.addScaledVector(_gA, -_gE.dot(_gA));                   // wrist → elbow, across the handle
+    _gY.set(0, 1, 0).applyQuaternion(q);                                     // the grip's own wrist side
+    let want = this._gRollV || 0;
+    if (_gE.lengthSq() > 4e-4) {
+      const cx = _gY.y * _gE.z - _gY.z * _gE.y, cy = _gY.z * _gE.x - _gY.x * _gE.z, cz = _gY.x * _gE.y - _gY.y * _gE.x;
+      want = clamp(Math.atan2(cx * _gA.x + cy * _gA.y + cz * _gA.z, _gY.dot(_gE)), -lim, lim);
+    }
+    this._gRollV = this._gRollOn ? dampAngle(this._gRollV || 0, want, 16, dt) : want;
+    this._gRollOn = true;
+    _gQ.setFromAxisAngle(_gA, this._gRollV);
+    q.premultiply(_gQ);
+    pT.copy(GRIP_HOLE_L).applyQuaternion(q).negate().add(_gP);
   }
 
   /** Analytic two-bone IK in kid space. target = end-bone origin, pole = bend direction, endQuat = kid-space end orientation. */
