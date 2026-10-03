@@ -3,7 +3,7 @@
 # ./out/ (kept under 300 KB): each scene's full frame, plus crops — the alert (top middle), the minimap (bottom left)
 # and the world tag (around the screen middle).
 #   BOTLAB_OUT=… SLOTS=3 [MODE=zones|tower|boss] [W=960 H=600] tools/botlab/jobs/batch5/jumpui/shots.sh [MAP] [TIME]
-#   (default halyard day turf at 1600×900; another size adds -<W>x<H> to the names and shoots the alert scenes only)
+#   (default halyard day turf at 1600×900; another size adds -<W>x<H> to the names)
 HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/../../../../.." && pwd)"; cd "$ROOT"
 MAP="${1:-halyard}"; TIME="${2:-day}"; W=${W:-1600}; H=${H:-900}; SZ=""; [ "$W" != 1600 -o "$H" != 900 ] && SZ="${W}x${H}"
 PNG="${PNG:-${BOTLAB_OUT:-$ROOT/.botlab}/shots-jumpui}/$MAP-$TIME${MODE:+-$MODE}${SZ:+-$SZ}"; mkdir -p "$PNG" "$HERE/out"; rm -f "$PNG"/*.png

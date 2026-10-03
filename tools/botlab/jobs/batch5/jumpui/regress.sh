@@ -5,7 +5,10 @@
 #   tools/botlab/jobs/batch5/jumpui/regress.sh               (env: BOTLAB_OUT / SLOTS for run.sh; PAR, default 3)
 #   ONLY="jump-ui net-jump-ui" tools/botlab/jobs/batch5/jumpui/regress.sh     (just those names)
 #   REP=3: the jump-ui / net-jump-ui runs repeated (names -1 … -REP)
-#   (jump-ui also once in Zone Control, Tower Command and Boss Battle, and at 960×600 / 1280×720: W / H, page.cjs)
+#   (jump-ui in every mode — Turf War, Zone Control, Tower Command, Boss Battle — at every size: the offscreen window's
+#   1512×945, 1280×720 and 960×600 (W / H, page.cjs), all its checks; the Turf War one at 1512×945 REP times.
+#   ONLY="jump-ui" the Turf War ones (the REP runs, 1280, 960); "jump-ui-zones" Zone Control at each size;
+#   "jump-ui-zones-960" one cell; "jump-ui-all" the whole matrix)
 set -u
 ROOT=$(cd "$(dirname "$0")/../../../../.." && pwd); cd "$ROOT"
 PAR=${PAR:-3}; ONLY=${ONLY:-}; REP=${REP:-1}
@@ -17,17 +20,19 @@ one() {   # name env… harness
   echo "== $name: $(grep -E '^RESULT' "$LOG/$name.log" | tail -1) $(grep -c '^FAIL' "$LOG/$name.log") FAIL"
   grep -E '^FAIL|HARNESS|WATCHDOG|MAP MISMATCH|console errors: [^n]|timed out' "$LOG/$name.log" | cut -c1-600
 }
-want() { [ -z "$ONLY" ] && return 0; local b=${1%-[0-9]*}; case " $ONLY " in *" $1 "*|*" $b "*) return 0;; esac; return 1; }
+want() { [ -z "$ONLY" ] && return 0; local b=${1%-[0-9]*}; case " $ONLY " in *" $1 "*|*" $b "*) return 0;; esac
+  case "$1" in jump-ui-*) case " $ONLY " in *" jump-ui-all "*) return 0;; esac;; esac; return 1; }
 export -f one; export LOG RUN T
 batch=()
 for i in $(seq 1 "$REP"); do batch+=("jump-ui-$i MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"); done
+# the matrix: every mode at every size (turf at 1512×945: the REP runs above)
+for md in turf zones tower boss; do
+  n=jump-ui; [ "$md" != turf ] && n="jump-ui-$md"
+  [ "$md" != turf ] && batch+=("$n MAP=testbox MODE=$md WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs")
+  batch+=("$n-1280 MAP=testbox MODE=$md W=1280 H=720 WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs")
+  batch+=("$n-960 MAP=testbox MODE=$md W=960 H=600 WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs")
+done
 batch+=(
-  "jump-ui-zones MAP=testbox MODE=zones WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
-  "jump-ui-tower MAP=testbox MODE=tower WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
-  "jump-ui-boss MAP=testbox MODE=boss WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
-  "jump-ui-960 MAP=testbox MODE=turf W=960 H=600 WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
-  "jump-ui-1280 MAP=testbox MODE=turf W=1280 H=720 WATCHDOG=900000 PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
-  "jump-ui-boss-960 MAP=testbox MODE=boss W=960 H=600 WATCHDOG=900000 PAGE_ARGS=only=alert,place,stack PAGE=$T/jump-ui.js $RUN tools/botlab/page.cjs"
   "tower-ink MAP=testbox MODE=tower WATCHDOG=900000 PAGE=$T/tower-ink.js $RUN tools/botlab/page.cjs"
   "sub-tweaks MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/sub-tweaks.js $RUN tools/botlab/page.cjs"
   "hud-lead MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
