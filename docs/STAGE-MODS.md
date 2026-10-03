@@ -468,8 +468,11 @@ Nothing by hand.
 - `MAP=testbox PAGE=tools/botlab/tests/stage-mods.js tools/botlab/run.sh tools/botlab/page.cjs`: a dummy module
   (`tools/botlab/tests/stage-mods-dummy.js`, registered only by the tests) through the whole lifecycle — the world
   chain's order, a block kind and fields, a tagged prop, the material extension, a special edge that opens and closes on
-  the clock, a moving collider, `noPlace`, `liquidY` / `under`, a clock snap → `seek`, the minimap layer, `frame.stage`,
-  snapshot / restore, `bakeMode`, disposal; and a stage without the key has no stage world, run, nav rule or extension.
+  the clock, a moving collider, `noPlace`, `liquidY` / `under`, presence (a shared face kept against a state-only
+  block), a clock snap → `seek`, an actor the module carries (body, damage guard, super jump, anchor, the camera
+  override), a kill in its hazard with its own cause on the splat card, wet floor for bots and shoves, `sink`, the
+  minimap layer, `frame.stage`, snapshot / restore, `bakeMode`, disposal; and a stage without the key has no stage
+  world, run, nav rule or extension (27 checks).
 - `CLIENTS=2 NET=tools/botlab/tests/net-stagemods.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`: the dummy online
   (Practice on halyard): the stage clock and a pure function of it agree; host records; field 15; `F.stage`; a late
   joiner's restore; a host change.
