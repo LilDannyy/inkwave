@@ -94,11 +94,14 @@ Each with the smallest example. "W." hooks are on your world object, "R." hooks 
 ### World build
 
 ```js
-prop(it) { return it.eras ? { ...it, bucketTag: 'e' + eraMask(it.eras), bucketVec: [eraMask(it.eras), 0] } : it; }
-colliders(it, cols) { return it.eras ? cols.map((c) => ({ ...c, eras: it.eras, eraGroup: it.eraGroup })) : cols; }
+prop(it, kit) {   // kit = the PropKit being filled (G.game may not exist yet at boot)
+  kit.tagMaterial ||= (key, tag, base) => eraMaterial(base);
+  return it.eras ? { ...it, bucketTag: 'e' + eraMask(it.eras), bucketVec: [eraMask(it.eras), eraR(it)] } : it;
+}
+colliders(it, cols, kit) { return it.eras ? cols.map((c) => ({ ...c, eras: it.eras, eraGroup: it.eraGroup })) : cols; }
 extraColliders() { return pipeColliderDefs(this.layout); }      // [{ kind: 'seg', a, b, w, h, pipe, glass, roof }]
 levelFilter() { return (b) => !b.grate && b.presence === 0; }  // the main mesh: shared blocks only
-afterMeshes({ scene, level, size, levelMat }) { this.meshes = buildEraMeshes(scene, level, size, levelMat); }
+afterMeshes({ scene, level, size, levelMat, grateMat, props }) { this.meshes = buildEraMeshes(scene, level, size, levelMat, grateMat); this.tagProps(props); }
 ready() { this.apply(1, { instant: true }); }
 ```
 
