@@ -344,10 +344,13 @@
     place(M2, 4.5, -10); step(0.1);
     const hNear = shown();
     const cheer = start(M3, 'booyah'); step(0.1);
-    const hCheer = shown(), charging = !!(M3.specialActive && M3.specialActive.id === 'booyah' && !M3.specialActive.thrown);
+    const hCheer = shown(), pCheer = CH.chainPrompt(me, true), charging = !!(M3.specialActive && M3.specialActive.id === 'booyah' && !M3.specialActive.thrown);
     if (M3.specialActive) G.specials.end(M3, 'test');
-    R('chain: on the HUD — you with a copy: "… pass it on" with a teammate close by, not with none near; a teammate\'s Cheer Orb charging: its "press C to cheer" prompt shows, not the chain\'s',
-      meCopy > 3 && !/pass it on/.test(hFar || '') && /pass it on/.test(hNear || '') && charging && !!cheer && /Cheer Orb/.test(hCheer || ''), { meCopy: r2(meCopy), hFar, hNear, hCheer, charging });
+    // (the cheer prompt: this line on this branch's main.js; [b5-zipcheer] moves it to its own big HUD prompt and leaves
+    // the line empty — either way the chain's line stays off)
+    R('chain: on the HUD — you with a copy: "… pass it on" with a teammate close by, not with none near; a teammate\'s Cheer Orb charging: the chain\'s line goes (the cheer prompt shows)',
+      meCopy > 3 && !/pass it on/.test(hFar || '') && /pass it on/.test(hNear || '') && charging && !!cheer && pCheer === null && !/pass it on/.test(hCheer || '') && (hCheer === null || /Cheer Orb/.test(hCheer)),
+      { meCopy: r2(meCopy), hFar, hNear, hCheer, pCheer, charging });
   } catch (e) { crash('chain', e); }
 
   // ======================================================================================== Waddle Bomb Barrage

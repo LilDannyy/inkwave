@@ -246,7 +246,9 @@ Tested by `tools/botlab/tests/net-sprules.cjs` (`CLIENTS=2 Q0=autopilot Q1=autop
 appended to `SPECIAL_ORDER`). The bombs are their own records as ever (`'b'` for the Splat Bomb, the subs' and kits'
 `'k'` for the rest, the Waddle's `[0 …]`). The Mystery Bomb Barrage's owner records each next bomb as the special's
 moment `[4, 'nb', SUB_ORDER index]` (at the start and after every throw), so every screen shows the same bomb in that
-player's hand.
+player's hand. A barrage's Waddle senses and chases with the Waddle Bomb Barrage's own numbers (`barrageBomb`:
+`waddleSense` / `waddleLife`); its ghost reads them from the owner's barrage running on that screen when its `[0 …]`
+record arrives (records keep their order, so a Mystery's `'nb'` after the throw never gets there first).
 
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf

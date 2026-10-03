@@ -27,9 +27,10 @@
 //
 // On screen: the hint line while you carry one you can pass on and a teammate could take it (chainPrompt: "Bubble Guard
 // 4s — touch a teammate to pass it on"; the user's own: "… touch teammates to share it"), besides the bubble itself. A
-// copy's line (main.js) is the hint line's last word — any other hint (the Cheer Orb's, low ink, special ready …) comes
-// first — and shows only while a teammate who could take it is within hintReach m (fix round 1: it used to show for any
-// teammate anywhere, i.e. a copy's whole life, over the Cheer Orb prompt).
+// copy's line (main.js) is the hint line's last word — any other hint (low ink, special ready …) comes first — shows
+// only while a teammate who could take it is within hintReach m, and never while a teammate charges a Cheer Orb (its
+// cheer prompt, wherever the HUD puts it, has the bottom middle to itself). Fix round 1: it used to show for any teammate
+// anywhere, i.e. a copy's whole life, over the Cheer Orb prompt.
 //
 // Bots: a bot carrying a field it can pass on (≥ botMin s left) steps over to a teammate close by on its level who has
 // none and hasn't had this chain (botShare: botSpecials.js SpecialSense.act, after the danger checks).
@@ -91,11 +92,13 @@ export function shieldNet(sys, a, d) {
   emit('special:share', { from, to: a, time: left, chained: !!(from && !from._shieldOwner), remote: true });
 }
 
-// the hint line while you carry a field you can pass on and a teammate could take it (near: within CHAIN.hintReach m —
-// main.js, for a copy; the user's own: IMPL.bubbler.prompt, any teammate) — null otherwise
+// the hint line while you carry a field you can pass on and a teammate could take it (near: within CHAIN.hintReach m,
+// and no teammate charging a Cheer Orb — main.js, for a copy; the user's own: IMPL.bubbler.prompt, any teammate) — null
+// otherwise
+const cheerOn = (a) => G.actors.some((o) => o !== a && o.team === a.team && o.specialActive?.id === 'booyah' && !o.specialActive.thrown);
 export function chainPrompt(a, near = false) {
   const c = a && a._shieldChain, R2 = CHAIN.hintReach * CHAIN.hintReach;
-  if (!c || !a.alive || !(a.status.shield > 0.3) || !canPass(a)) return null;
+  if (!c || !a.alive || !(a.status.shield > 0.3) || !canPass(a) || (near && cheerOn(a))) return null;
   if (!G.actors.some((o) => takes(a, o, c) && (!near || o.pos.distanceToSquared(a.pos) < R2))) return null;
   const left = Math.ceil(a.status.shield);
   return a._shieldOwner ? `Bubble Guard ${left}s — touch teammates to share it` : `Bubble Guard ${left}s — touch a teammate to pass it on`;

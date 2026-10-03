@@ -216,7 +216,9 @@ Waddle and the Mystery — src/game/sp-barrage.js, src/ui/hud-barrage.js):
 - `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sp-rules.js tools/botlab/run.sh tools/botlab/page.cjs` — the gauge kept
   (several shares, the sea, the respawn, no special running), the boomerang / Tempest / buoy / Drainbow / shared Bubble
   Guard outliving its owner (the Bubble Blower unchanged), the chain (time carried, no refresh loop, one field a player,
-  each chain once, the hint line), both barrages (the Mystery: 120 throws), the bots, the order / icons
+  each chain once, the hint line: a copy's only with a teammate who could take it within 6 m, and under the Cheer Orb
+  prompt on the HUD), both barrages (a barrage's Waddle with its own numbers, its ghost too; the Mystery: 120 throws,
+  its NEXT card read on every real frame between them), the bots, the order / icons
   (`PAGE_ARGS='only=gauge,survive,chain,waddle,mystery,bots,list'`; a section that throws is one FAIL, so it also runs
   on the code before the package)
 - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sprules.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
