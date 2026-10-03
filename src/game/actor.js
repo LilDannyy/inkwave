@@ -17,6 +17,7 @@ import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER } from '../config.js';
 import { makeContacts, Hit, GroundHit, WALKABLE } from './physics.js';
 import { WeaponRunner } from './weapons.js';
 import { MAIN_KITS } from './kits/registry.js';
+import { sjFlightDur } from './jumpMarks.js';   // [b5-jumpui] the flight time the landing countdown predicts
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _fwd = new THREE.Vector3();
 const DOWN = new THREE.Vector3(0, -1, 0);
@@ -789,7 +790,7 @@ export class Actor {
     const s = this.specialActive;
     if (s && s.jumpBack && s.origin) return s.origin;
     const j = this.superJumpState;
-    return j && j.phase === 'flight' ? j.to : this.pos;
+    return j && j.phase === 'flight' && j.to ? j.to : this.pos;   // [b5-jumpui] (a remote jump before its flight record: here)
   }
   canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing(); }   // ([drainbow] free: a special that leaves you be)
 
@@ -803,7 +804,7 @@ export class Actor {
     this._setClimb(false);
     this.weaponRunner.reset();
     G.audio?.play('super_jump', { pos: this.isLocal ? undefined : this.pos, volume: this.isLocal ? 0.9 : 0.6 });
-    emit('superjump', { actor: this, phase: 'charge' });
+    emit('superjump', { actor: this, phase: 'charge', target, home: this.superJumpState.home, instant: !!(opts && opts.instant) });   // [b5-jumpui] target / home / instant: online, every screen's marks + alert
     return true;
   }
 
@@ -837,11 +838,11 @@ export class Actor {
           }
         } else s.to.copy(tgt);
         s.phase = 'flight'; s.t = 0;
-        s.dur = 1.15 + Math.min(0.6, s.from.distanceTo(s.to) / 80);
+        s.dur = sjFlightDur(s.from, s.to);   // [b5-jumpui] (1.15 s + up to 0.6 s with the distance)
         this.invuln = Math.max(this.invuln, s.dur + 0.2);
         G.fx?.burst(_v.copy(this.pos), _v2.set(0, 1, 0), this.color, { count: 16, speed: 6, size: 0.1 });
         rumble(this, 0.35, 0.5, 140);
-        emit('superjump', { actor: this, phase: 'flight', to: s.to.clone(), home: s.home });
+        emit('superjump', { actor: this, phase: 'flight', to: s.to.clone(), home: s.home, from: s.from.clone(), dur: s.dur });   // [b5-jumpui] from / dur
       }
       return;
     }

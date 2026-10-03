@@ -37,6 +37,7 @@ import { on, G } from '../core/ctx.js';
 import { SFX } from '../audio/audio.js';
 import { BossHud } from './hud-boss.js';
 import { LeadHud } from './hud-lead.js';
+import { JumpHud } from './hud-jumps.js';   // [b5-jumpui] super-jump alerts + landing / return tags
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -145,6 +146,7 @@ export class HUD {
     this._bindBus();
     this.boss = new BossHud(this);
     this.lead = new LeadHud(this);   // (after the build: it hangs its banners on the roster groups)
+    this.jumps = new JumpHud(this);  // [b5-jumpui] "NAME is jumping to you!" + the named landing tags (world / minimap)
     installBossAudio();   // boss-mode sfx + music director (idle outside boss matches)
   }
 
@@ -406,6 +408,7 @@ export class HUD {
     this._updZones(f.zones, dt);
     this._updTower(f.tower, dt);
     this.lead.update(dt, f);
+    this.jumps.update(dt, f);   // [b5-jumpui]
     this.boss.update(dt);
   }
 
@@ -1998,6 +2001,7 @@ export class HUD {
       d.style.transform = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0) rotate(${p.isSelf ? (+p.yaw || 0).toFixed(3) : 0}rad)`;
     }
     this._updMapDeaths(bw, bh);
+    this.jumps.map(bw, bh);   // [b5-jumpui] the landing / return tags on the map
     this._updBeacons(bw, bh, dt, u);
   }
 

@@ -27,6 +27,7 @@ import { specialNetState, specialNetApply } from '../game/specials.js';
 import { BotBrain } from '../game/bots.js';
 import { statusBits, NET_TRACKED, NET_POISONED } from '../game/statusFx.js';
 import { Boss } from '../boss/boss.js';
+import { sjNetEvent, sjNetFill } from '../game/jumpMarks.js';   // [b5-jumpui] remote super jumps: target, flight, clock
 
 const TICK = 1 / 20;
 
@@ -440,6 +441,7 @@ export class NetMatch {
     specialNetApply(a, S.spst | 0);
     a.superJumpState = f & (F.sjCharge | F.sjFlight) ? (a.superJumpState || { phase: 'charge', net: true }) : null;
     if (a.superJumpState) a.superJumpState.phase = f & F.sjFlight ? 'flight' : 'charge';
+    sjNetFill(a, dt);   // [b5-jumpui] (its clock + the owner's target / from / to / duration: game/jumpMarks.js)
     // weapon pose state (charge glow, roller drum, splatling spin, dualies lock …)
     const wr = a.weaponRunner;
     wr.charging = !!(f & F.charging); wr.charge = S.ch;
@@ -646,6 +648,7 @@ export class NetMatch {
         if (e.swim) G.fx?.burst(_v2.copy(a.pos), UPV, a.color, { count: 10, speed: 3.5, size: 0.08 });
         break;
       case 'superjump':
+        sjNetEvent(a, e);   // [b5-jumpui]
         if (e.phase === 'charge') G.audio?.play('super_jump', { pos: a.pos, volume: 0.6 });
         if (e.phase === 'flight') { a.net.sjTo = e.to ? e.to.clone() : null; G.fx?.burst(_v2.copy(a.pos), UPV, a.color, { count: 16, speed: 6, size: 0.1 }); }
         break;

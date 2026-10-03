@@ -1,0 +1,271 @@
+// jump-ui (b5-jumpui, 2026-10-04: src/game/jumpMarks.js, src/ui/hud-jumps.js, styles/hud-jumps.css). The user asked:
+// "Give an on screen alert when a teammate is jumping to you and their name, as well as a name around the super jump
+// icon, and an indicator for when they're landing" and "if someone is using zipline or inkjet, add an indicator when
+// they start using the special so players know where they'd super jump to, and where the player will jump back when
+// it ends". Checked on the HUD the player actually sees (the DOM), from the local player's screen (you = team 0):
+//   alert    a teammate super jumping to YOU: the alert with their name (and the chime); not for a teammate jumping to
+//            someone else, nor for an enemy's jump. It counts down to 0 at their touchdown, then goes. A jump called off
+//            (the jumper splatted mid-charge) takes its alert with it.
+//   tags     the landing mark carries the jumper's name in the world view (over the spot), on the minimap (on the spot)
+//            and on the TAB map (a pin on the spot). Each is placed where the mark is, to the pixel.
+//   count    the landing indicator counts down: it starts at the time the jump really takes (charge + flight), never
+//            goes up, and ends at touchdown. The tags go the frame they land.
+//   foe      an enemy's landing mark: its ring and icon for you too, but no name or seconds
+//   jetpack / zipline   the return mark: from the special's first frame (world tag, minimap tag, TAB-map pin, with the
+//            user's name and the special's icon) until the user is back on it. It is still there through the special
+//            and the jump home, counts down all the way, and is gone the frame they land.
+//   land     a super jump to an Ink Jet / Zipline user lands at their return mark, not under them. That holds for you
+//            and for a bot. The TAB map's jump arc to their pin aims at the mark too. A teammate jumping to you while
+//            you're on Ink Jet: the alert still shows, and they land at your mark.
+//   MAP=testbox MODE=turf PAGE=tools/botlab/tests/jump-ui.js tools/botlab/run.sh tools/botlab/page.cjs
+//   PAGE_ARGS='only=alert,tags,count,foe,jetpack,zipline,land'
+(async () => {
+  const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, THREE = await import('three');
+  const { PLAYER } = await import('./src/config.js');
+  const JM = await import('./src/game/jumpMarks.js');
+  const { JUMP_UI } = await import('./src/ui/hud-jumps.js');
+  const { on } = await import('./src/core/ctx.js');
+  const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
+  const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
+  const want = (k) => !ONLY || ONLY.split(',').includes(k);
+  const r2 = (x) => Math.round(x * 100) / 100;
+  dbg.freeze();
+  const hud = g.hud, J = hud.jumps;
+  const me = m.local, mates = m.actors.filter((a) => a.team === me.team && a !== me), foes = m.actors.filter((a) => a.team !== me.team);
+  R('the stage: you and three teammates, four foes', mates.length === 3 && foes.length === 4, { mates: mates.length, foes: foes.length });
+  // brains: stand still (a._go: walk / steer that way)
+  for (const a of m.actors) if (a.bot) a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; if (a._go) it.move.copy(a._go); };
+  const keep = () => { for (const a of m.actors) { if (!a.alive) a.respawn(); a.invuln = 99; a.hp = PLAYER.hp; } };
+  const aim = () => { g.rig.yaw = 0; g.rig.pitch = -0.12; me.aimYaw = me.yaw = 0; me.aimPitch = -0.12; };
+  const frame = () => { aim(); dbg.step(1000 / 60); };
+  const step = (s) => { for (let i = 0, n = Math.max(1, Math.round(s * 60)); i < n; i++) frame(); };
+  const put = (a, x, z) => { a.pos.set(x, 0.02, z); a.vel.set(0, 0, 0); a.yaw = a.aimYaw = 0; a.grounded = true; a.form = 'kid'; a.netTp = (a.netTp || 0) + 1; };
+  // you at the back facing +z (the camera behind you looks down the deck); teammates ahead, foes far off
+  const stage = () => { put(me, 0, -26); put(mates[0], -9, -10); put(mates[1], 9, -6); put(mates[2], 0, 4); foes.forEach((f, i) => put(f, -12 + i * 8, 30)); };
+  const reset = () => {
+    keep(); for (const a of m.actors) if (a.specialActive) G.specials.end(a, 'test');
+    G.specials.clear(); G.projectiles.clear(); G.subs.clear();
+    for (const a of m.actors) { a.specialActive = null; a.superJumpState = null; a._go = null; a.special = 0; }
+    m.controller = null;
+    stage(); step(0.6);
+  };
+  // what the player sees: visible DOM tags / alerts
+  const vis = (el) => el && el.style.display !== 'none';
+  const tagsIn = (layer) => (layer ? [...layer.querySelectorAll('.iw-jt')].filter(vis).map((el) => ({ el, name: el.querySelector('.iw-jt__name').textContent, sec: el.querySelector('.iw-jt__sec').textContent, ko: +(el.querySelector('.f').style.strokeDashoffset || 0), cls: el.className, xy: xy(el) })) : []);
+  const xy = (el) => { const q = /translate3d\(([-\d.]+)px,\s*([-\d.]+)px/.exec(el.style.transform || ''); return q ? [+q[1], +q[2]] : null; };
+  const world = () => tagsIn(J.wLayer), mapT = () => tagsIn(J.mLayer), dioT = () => tagsIn(g.diorama?.el.querySelector('.iw-dio__jts'));
+  const alerts = () => [...J.aLayer.querySelectorAll('.iw-jal__i:not(.is-out)')].map((el) => ({ name: el.querySelector('.iw-jal__name').textContent, text: el.textContent, sec: el.querySelector('.iw-jal__sec').textContent }));
+  const markOf = (a, kind) => JM.landingMarks().find((r) => r.actor === a && r.kind === kind) || null;
+  const proj = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(G.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (0.5 - v.y * 0.5) * innerHeight]; };
+  const near2 = (a, b, tol = 2.5) => !!(a && b) && Math.abs(a[0] - b[0]) <= tol && Math.abs(a[1] - b[1]) <= tol;
+  const mapXY = (r) => { const mm = G.game.minimap, t = mm.toCanvas(r.x, r.z, { x: 0, y: 0 }); return [t.x / mm.w * parseFloat(hud.map.style.width), t.y / mm.h * parseFloat(hud.map.style.height)]; };
+  // the TAB map: the player controller's map key held (the autopilot has no controller: a stand-in that only holds it)
+  const openTab = () => { m.controller = { mapHeld: true, enabled: true, update() {}, computeAim() {} }; for (let i = 0; i < 60 && (g.rig.mapK || 0) < 1; i++) frame(); };
+  const closeTab = () => { m.controller = null; for (let i = 0; i < 60 && (g.rig.mapK || 0) > 0; i++) frame(); };
+  // sounds and landings
+  const played = []; const play0 = G.audio.play.bind(G.audio); G.audio.play = (n, o) => { played.push(n); return play0(n, o); };
+  const lands = []; on('superjump:land', (e) => lands.push({ a: e.actor, t: G.time, pos: e.pos.clone() }));
+  const landed = (a) => lands.some((l) => l.a === a);
+  const until = (fn, s = 6) => { for (let i = 0; i < s * 60; i++) { if (fn()) return true; frame(); } return !!fn(); };
+  const start = (a, id, dur) => { a.specialId = id; a.special = a.specialCost(); a._startSpecial(); if (dur && a.specialActive) a.specialActive.dur = dur; return a.specialActive; };
+
+  // ------------------------------------------------------------------------------------------------ alert
+  if (want('alert')) {
+    reset(); played.length = 0; lands.length = 0;
+    R('no alert while nobody is jumping', alerts().length === 0, alerts());
+    const A = mates[0];
+    const okJ = A.superJump(me);
+    frame();
+    let al = alerts();
+    R('a teammate super jumps to you: the alert with their name, "is jumping to you!"', okJ && al.length === 1 && al[0].name === A.name && /is jumping to you/i.test(al[0].text), al);
+    R('…its landing by you: no world tag (the alert says it), but the minimap\'s', !world().some((t) => t.name === A.name) && mapT().some((t) => t.name === A.name), { world: world().map((t) => t.name), map: mapT().map((t) => t.name) });
+    R('…with its chime (sj_incoming), once', played.filter((n) => n === 'sj_incoming').length === 1, played.filter((n) => n.startsWith('sj') || n === 'super_jump'));
+    // a teammate jumping to another teammate, and an enemy jumping: no alert on your screen
+    mates[1].superJump(mates[2]); foes[0].superJump(foes[1]);
+    frame();
+    al = alerts();
+    R('a teammate jumping to another teammate, or an enemy jumping, gives you no alert', al.length === 1 && al[0].name === A.name, al);
+    // it counts down to touchdown and goes when they land
+    const secs = [];
+    let landSec = null;
+    for (let i = 0; i < 4 * 60 && !landed(A); i++) { const a = alerts().find((x) => x.name === A.name); if (a) secs.push(+a.sec); frame(); }
+    landSec = secs[secs.length - 1];
+    const mono = secs.every((s, i) => i === 0 || s <= secs[i - 1] + 1e-9);
+    R('the alert counts down (seconds never go up) to ~0 at their touchdown', landed(A) && mono && secs.length > 20 && landSec <= 0.1, { first: secs[0], last: landSec, n: secs.length, landed: landed(A) });
+    step(0.45);
+    R('…and is gone once they have landed', alerts().length === 0 && J.aLayer.querySelectorAll('.iw-jal__i').length === 0, alerts());
+    // a jump called off: the jumper splatted mid-charge
+    reset();
+    mates[0].invuln = 0; mates[0].superJump(me); frame();
+    const had = alerts().length === 1;
+    mates[0].splat(null, 'test'); step(0.45);
+    R('a jump called off (the jumper splatted mid-charge): its alert goes', had && alerts().length === 0, { had, now: alerts() });
+    keep();
+  }
+
+  // ------------------------------------------------------------------------------------------------ named tags
+  if (want('tags')) {
+    reset();
+    const A = mates[1], T = mates[2];
+    A.superJump(T); step(0.25);
+    const r = markOf(A, 'jump');
+    const w = world().find((t) => t.name === A.name), mp = mapT().find((t) => t.name === A.name);
+    const wAt = r && proj(r.x, r.y + JUMP_UI.lift, r.z);
+    // (it lands 1.1 m from T, so the tag stacks above T's own name tag: straight up from the spot, never over it)
+    const mkT = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((e) => e.style.display !== 'none' && e.querySelector('.iw-mk__tag b').textContent === T.name);
+    const tagBox = w && w.el.querySelector('.iw-jt__tag').getBoundingClientRect(), discBox = w && w.el.querySelector('.iw-jt__disc').getBoundingClientRect(), tBox = mkT && mkT.querySelector('.iw-mk__tag').getBoundingClientRect();
+    const hit = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    R('world view: the landing mark carries the jumper\'s name, over the spot', !!r && !!w && Math.abs(w.xy[0] - wAt[0]) < 2.5 && w.xy[1] <= wAt[1] + 2.5, { mark: r && [r2(r.x), r2(r.y), r2(r.z)], tag: w && w.xy, want: wAt && wAt.map(r2) });
+    R('…stacked clear of the name tag of the teammate it lands by', !!w && !!tBox && !hit(tagBox, tBox) && !hit(discBox, tBox), { tag: tagBox && [r2(tagBox.top), r2(tagBox.bottom)], disc: discBox && [r2(discBox.top), r2(discBox.bottom)], ally: tBox && [r2(tBox.top), r2(tBox.bottom)] });
+    R('…with the super-jump glyph and the countdown ring', !!w && !!w.el.querySelector('.iw-jt__icon svg') && w.ko >= 0 && w.ko < 100 && /\d/.test(w.sec), w && { sec: w.sec, ko: w.ko });
+    R('minimap: the jumper\'s name on the landing spot', !!r && !!mp && near2(mp.xy, mapXY(r), 1.5), { tag: mp && mp.xy, want: r && mapXY(r).map(r2) });
+    step(4);
+    // the TAB map: open it, then a jump
+    reset(); openTab();
+    R('the TAB map opens (the diorama)', (g.rig.mapK || 0) >= 1, { mapK: g.rig.mapK });
+    A.superJump(T); for (let i = 0; i < 15; i++) frame();
+    const r3 = markOf(A, 'jump'), d = dioT().find((t) => t.name === A.name);
+    R('TAB map: the jumper\'s name on the landing spot', !!r3 && !!d && near2(d.xy, proj(r3.x, r3.y + 0.08, r3.z)), { tag: d && d.xy, want: r3 && proj(r3.x, r3.y + 0.08, r3.z).map(r2) });
+    J.wLayer.style.transition = 'none';   // (its CSS fade runs on composited frames, which the stepped sim holds back)
+    const wOp = getComputedStyle(J.wLayer).opacity;
+    J.wLayer.style.transition = '';
+    R('…the world tags step aside while the map is up (it has its own pins)', document.body.classList.contains('iw-dio-on') && wOp === '0', { opacity: wOp });
+    closeTab(); step(3);
+  }
+
+  // ------------------------------------------------------------------------------------------------ countdown
+  if (want('count')) {
+    reset(); lands.length = 0;
+    const A = mates[0], T = mates[2];
+    const t0 = G.time;
+    A.superJump(T); frame();
+    const first = markOf(A, 'jump'), firstLeft = first ? first.left + 1 / 60 : null;
+    const S = [];
+    for (let i = 0; i < 4 * 60 && !landed(A); i++) {
+      const w = world().find((t) => t.name === A.name), mp = mapT().find((t) => t.name === A.name);
+      S.push({ w: w ? +w.sec : null, ko: w ? w.ko : null, map: !!mp });
+      frame();
+    }
+    const took = landed(A) ? lands.find((l) => l.a === A).t - t0 : null;
+    const ws = S.filter((s) => s.w != null).map((s) => s.w), kos = S.filter((s) => s.ko != null).map((s) => s.ko);
+    R('the indicator starts at the time the jump really takes (charge + flight, within 0.1 s)', took != null && Math.abs(firstLeft - took) < 0.1, { predicted: firstLeft && r2(firstLeft), took: took && r2(took) });
+    R('it counts down every frame (never up), the ring draining toward empty', ws.every((s, i) => !i || s <= ws[i - 1] + 1e-9) && kos.every((k, i) => !i || k >= kos[i - 1] - 0.05) && kos[0] < 3 && kos[kos.length - 1] > 90, { secs: [ws[0], ws[ws.length - 1]], ring: [kos[0], kos[kos.length - 1]], n: ws.length });
+    R('…shown on the world tag and the minimap the whole way', S.length > 20 && S.every((s) => s.w != null && s.map), { frames: S.length, missing: S.filter((s) => s.w == null || !s.map).length });
+    R('…reaching ~0 at touchdown', ws.length && ws[ws.length - 1] <= 0.1, { last: ws[ws.length - 1] });
+    R('the tags go the frame they land', landed(A) && !world().some((t) => t.name === A.name) && !mapT().some((t) => t.name === A.name), { world: world().map((t) => t.name), map: mapT().map((t) => t.name) });
+  }
+
+  // ------------------------------------------------------------------------------------------------ enemy marks
+  if (want('foe')) {
+    reset();
+    const F = foes[0];
+    put(F, 4, 14); F.superJump(foes[1]);
+    // (foes[1] somewhere you can see: on the deck ahead)
+    put(foes[1], -4, 10);
+    step(0.3);
+    const r = markOf(F, 'jump');
+    const w = world().find((t) => /is-foe/.test(t.cls)), mp = mapT().find((t) => /is-foe/.test(t.cls));
+    R('an enemy\'s landing mark: ring + icon in the world and on the minimap', !!r && !!w && !!mp && near2(w.xy, proj(r.x, r.y + JUMP_UI.lift, r.z)), { w: !!w, mp: !!mp });
+    R('…but no name or seconds for you (the jumper\'s own team only)', !!w && !w.name && getComputedStyle(w.el.querySelector('.iw-jt__tag')).display === 'none' && !!mp && !mp.name, { w: w && w.name, mp: mp && mp.name });
+    step(3);
+  }
+
+  // ------------------------------------------------------------------------------------------------ Ink Jet / Zipline return marks
+  const returnScene = (id, label) => {
+    reset(); lands.length = 0;
+    const U = mates[2];
+    const t0 = G.time, origin = U.pos.clone();
+    const s = start(U, id, 3.2);   // (a shorter special: the same rules, a quicker test)
+    frame();
+    const mk = G.specials.world.find((w) => w.kind === 'return' && w.owner === U);
+    const w0 = world().find((t) => t.name === U.name && /is-return/.test(t.cls)), m0 = mapT().find((t) => t.name === U.name && /is-return/.test(t.cls));
+    R(`${label}: the return mark is up from the special's first frame (at the take-off spot)`, !!s && !!mk && mk.pos.distanceTo(origin) < 0.3, { mk: !!mk });
+    R(`${label}: …in the world (the user's name, the special's icon) and on the minimap`, !!w0 && !!m0 && near2(w0.xy, proj(mk.pos.x, mk.pos.y + JUMP_UI.lift, mk.pos.z)) && near2(m0.xy, mapXY(mk.pos)) && !!w0.el.querySelector('.iw-jt__icon svg'), { w: w0 && w0.xy, m: m0 && m0.xy });
+    // the user moves off (Ink Jet: hovers out; Zipline: walks), the special runs out, they jump home
+    U._go = new THREE.Vector3(1, 0, 0.35).normalize();
+    const S = [];
+    let gone = null;
+    for (let i = 0; i < 8 * 60; i++) {
+      if (G.time - t0 > 1.6) U._go = null;
+      const w = world().find((t) => t.name === U.name && /is-return/.test(t.cls)), mp = mapT().find((t) => t.name === U.name && /is-return/.test(t.cls));
+      S.push({ w: w ? +w.sec : null, ko: w ? w.ko : null, mp: !!mp, sj: U.superJumpState ? U.superJumpState.phase : '', home: /is-home/.test(w ? w.cls : '') });
+      if (landed(U)) { gone = !w && !mp; break; }
+      frame();
+    }
+    const L = lands.find((l) => l.a === U);
+    const shown = S.slice(0, -1);
+    const ws = shown.filter((x) => x.w != null).map((x) => x.w);
+    R(`${label}: the mark stays up through the special and the jump home (every frame, world + minimap)`, !!L && shown.length > 60 && shown.every((x) => x.w != null && x.mp) && shown.some((x) => x.sj === 'flight' && x.home), { frames: shown.length, missing: shown.filter((x) => x.w == null || !x.mp).length, flew: shown.some((x) => x.sj === 'flight') });
+    R(`${label}: its countdown runs down through the special and the flight home, to ~0`, ws.length > 60 && ws.every((v, i) => !i || v <= ws[i - 1] + 1e-9) && ws[ws.length - 1] <= 0.15, { first: ws[0], last: ws[ws.length - 1] });
+    R(`${label}: the user lands on it, and the mark is gone that frame`, !!L && Math.hypot(L.pos.x - origin.x, L.pos.z - origin.z) < 1.2 && gone === true, { land: L && [r2(L.pos.x), r2(L.pos.z)], origin: [r2(origin.x), r2(origin.z)], gone });
+    void s;
+  };
+  if (want('jetpack')) returnScene('jetpack', 'Ink Jet');
+  if (want('zipline')) returnScene('zipcaster', 'Zipline');
+  // the TAB map shows the return mark as a pin with the name
+  if (want('jetpack') || want('zipline')) {
+    reset(); openTab();
+    const U = mates[1];
+    start(U, 'zipcaster');
+    for (let i = 0; i < 10; i++) frame();
+    const mk = G.specials.world.find((w) => w.kind === 'return' && w.owner === U), d = dioT().find((t) => t.name === U.name && /is-return/.test(t.cls));
+    R('TAB map: the return mark with the user\'s name, on the spot', !!mk && !!d && near2(d.xy, proj(mk.pos.x, mk.pos.y + 0.08, mk.pos.z)), { tag: d && d.xy });
+    closeTab();
+  }
+
+  // ------------------------------------------------------------------------------------------------ jumping to an Ink Jet / Zipline user
+  if (want('land')) {
+    for (const [id, label] of [['jetpack', 'Ink Jet'], ['zipcaster', 'Zipline']]) {
+      reset(); lands.length = 0;
+      const U = mates[2], origin = U.pos.clone();
+      start(U, id, 12);   // (long enough for both jumps to it)
+      U._go = new THREE.Vector3(1, 0, 0); step(1.4); U._go = null; step(0.2);
+      const mk = G.specials.world.find((w) => w.kind === 'return' && w.owner === U);
+      const away = Math.hypot(U.pos.x - origin.x, U.pos.z - origin.z);
+      // you jump to them (the TAB map's arc first: hovering their pin aims at the mark)
+      openTab();
+      const dio = g.diorama, pins = dio.pins, k = m.actors.filter((o) => o.team === me.team && o !== me).indexOf(U), pin = pins[k];
+      let arcEnd = null;
+      if (pin && pin.vis) {
+        dio.hasCursor = true;
+        for (let i = 0; i < 4; i++) { dio.cx = pin.x / innerWidth; dio.cy = (pin.y - 34) / innerHeight; frame(); }
+        const dd = dio.arc.firstChild.getAttribute('d') || '', q = /Q[-\d.]+ [-\d.]+ ([-\d.]+) ([-\d.]+)/.exec(dd);
+        arcEnd = q ? [+q[1], +q[2]] : null;
+      }
+      const markScr = mk && proj(mk.pos.x, mk.pos.y + 0.1, mk.pos.z);
+      R(`${label}: the TAB map's jump arc to their pin aims at their return mark (not at them, ${r2(away)} m off)`, away > 4 && near2(arcEnd, markScr, 3) && !near2(arcEnd, [pin.x, pin.y], 20), { arcEnd, mark: markScr && markScr.map(r2), pin: pin && [r2(pin.x), r2(pin.y)] });
+      closeTab();
+      const okMe = me.superJump(U);
+      until(() => landed(me), 5);
+      const Lm = lands.find((l) => l.a === me);
+      R(`${label}: you super jump to the user and land at their return mark`, okMe && !!Lm && !!mk && Math.hypot(Lm.pos.x - mk.pos.x, Lm.pos.z - mk.pos.z) < 1.6 && Math.hypot(Lm.pos.x - U.pos.x, Lm.pos.z - U.pos.z) > 2.5, { land: Lm && [r2(Lm.pos.x), r2(Lm.pos.z)], mark: mk && [r2(mk.pos.x), r2(mk.pos.z)], user: [r2(U.pos.x), r2(U.pos.z)] });
+      // and a bot
+      const B = mates[0];
+      const okB = B.superJump(U);
+      until(() => landed(B), 5);
+      const Lb = lands.find((l) => l.a === B);
+      R(`${label}: a bot jumping to them lands at the mark too`, okB && !!Lb && !!mk && Math.hypot(Lb.pos.x - mk.pos.x, Lb.pos.z - mk.pos.z) < 1.6, { land: Lb && [r2(Lb.pos.x), r2(Lb.pos.z)], mark: mk && [r2(mk.pos.x), r2(mk.pos.z)] });
+    }
+    // a teammate jumping to YOU while you're on Ink Jet: the alert, and they land at your mark
+    reset(); lands.length = 0;
+    const origin = me.pos.clone();
+    start(me, 'jetpack');
+    me._go = null;
+    if (me.bot) me.bot.update = () => { const it = me.intent; it.move.set(0.8, 0, 0.6); it.fire = it.squid = it.sub = it.special = it.jump = false; };
+    step(1.2);
+    if (me.bot) me.bot.update = () => { const it = me.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; };
+    const mk = G.specials.world.find((w) => w.kind === 'return' && w.owner === me);
+    const B = mates[1];
+    B.superJump(me); frame();
+    const al = alerts();
+    until(() => landed(B), 5);
+    const Lb = lands.find((l) => l.a === B);
+    R('you on Ink Jet: a teammate jumping to you still alerts you, and lands at your return mark', al.length === 1 && al[0].name === B.name && !!Lb && !!mk && Math.hypot(Lb.pos.x - mk.pos.x, Lb.pos.z - mk.pos.z) < 1.6 && mk.pos.distanceTo(origin) < 0.3, { al, land: Lb && [r2(Lb.pos.x), r2(Lb.pos.z)], mark: mk && [r2(mk.pos.x), r2(mk.pos.z)] });
+    if (me.specialActive) G.specials.end(me, 'test');
+  }
+
+  G.audio.play = play0;
+  m.controller = null;
+  keep();
+  return out;
+})()

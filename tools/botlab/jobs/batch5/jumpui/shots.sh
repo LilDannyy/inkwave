@@ -1,0 +1,33 @@
+#!/bin/bash
+# jump-ui pictures (tools/botlab/scenes/jump-ui.js through hud-shots.cjs: the HUD up): PNGs to $PNG, then JPEGs into
+# ./out/ (kept under 300 KB): each scene's full frame, plus crops — the alert (top middle), the minimap (bottom left)
+# and the world tag (around the screen middle).
+#   BOTLAB_OUT=… SLOTS=3 tools/botlab/jobs/batch5/jumpui/shots.sh [MAP] [TIME]      (default halyard day)
+HERE="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(cd "$HERE/../../../../.." && pwd)"; cd "$ROOT"
+MAP="${1:-halyard}"; TIME="${2:-day}"
+PNG="${PNG:-${BOTLAB_OUT:-$ROOT/.botlab}/shots-jumpui}/$MAP-$TIME"; mkdir -p "$PNG" "$HERE/out"
+SCENES=tools/botlab/scenes/jump-ui.js MAP=$MAP TIME=$TIME MODE=turf PLAY=${PLAY:-8} OUT="$PNG" W=1600 H=900 CROP=0,0,1,1 WATCHDOG=500000 tools/botlab/run.sh tools/botlab/hud-shots.cjs 2>&1 | grep -E "^shot|SCENE|CONSOLE|ERROR|  \[" | cut -c1-600
+python3 - "$PNG" "$HERE/out" "$MAP-$TIME" <<'PY'
+import sys, glob, os
+from PIL import Image
+src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+def save(im, path):
+    q = 84
+    while True:
+        im.save(path, quality=q)
+        if os.path.getsize(path) < 290_000 or q <= 50: break
+        q -= 8
+for f in sorted(glob.glob(f'{src}/*.png')):
+    if f.endswith('-top.png'): continue
+    n = os.path.basename(f)[:-4].split('-turf-')[-1].split('-', 1)[-1]   # <map>-turf-<time>-<scene> → <scene>
+    im = Image.open(f).convert('RGB'); W, H = im.size
+    save(im, f'{dst}/{tag}-{n}.jpg')
+    # crops at 2×: the alert (top middle), the minimap (bottom left), the middle of the view
+    crops = {'alert': (W * .3, 0, W * .7, H * .3), 'map': (0, H * .62, W * .27, H), 'mid': (W * .25, H * .18, W * .75, H * .72)}
+    want = {'alert': ['alert', 'mid'], 'world': ['mid', 'map'], 'foe': ['mid', 'map'], 'inkjet': ['mid', 'map'], 'inkjet-home': ['mid'], 'zipline': ['mid', 'map'], 'tab': ['mid']}
+    for c in want.get(n, []):
+        box = tuple(round(v) for v in crops[c]); cr = im.crop(box)
+        cr = cr.resize((cr.width * 2 if cr.width < 800 else cr.width, cr.height * 2 if cr.width < 800 else cr.height), Image.LANCZOS)
+        save(cr, f'{dst}/{tag}-{n}-{c}.jpg')
+PY
+ls -la "$HERE/out" | tail -40
