@@ -497,20 +497,62 @@ function poseBow(ch, P, dt) {
 }
 // roller flick keys (_poseFlick): rest [x y z pitch yaw] · coiled · whip · follow-through [x y z pitch]
 const FLICK_ONE = [-0.11, 0.84, 0.18, 0.8, 0.1, -0.13, 1.22, -0.02, -2.3, 0.3, -0.07, 0.98, 0.3, -0.1, 0.05, -0.06, 0.74, 0.3, 0.75];
-// brush swipe (_poseSwipe): anchor x at the middle / per side, y, z · pitch, yaw / side, roll / side
+// brush swipe (_poseSwipe): anchor x at the middle / per side, y, z · pitch, yaw / side, roll / side · [body turn ×,
+// yaw at the middle]
 const SWIPE_ONE = [-0.06, 0.3, 0.78, 0.28, 0.9, 0.95, -0.2];
 // ---- [b5-holds] two-handed weapons (the user: "make the player hold brush rollers blasters and brollys with both
 // hands"). The brush, the roller, the blaster and the brolly carry their own hold (setWeapon prefers HOLD_BOTH[kind]
 // over the family's, so the held specials that borrow a family — sp_stamp, sp_jetgun — keep theirs). `both`: the off
-// hand stays on the foregrip in every state: carry, run, aim, the swings and rolls, the air, landings, the respawn drop,
-// idle fidgets, the menu and podium dances (see BOTH_* below and the `both` branches). `gripRoll` (rad): how far the off
-// hand may turn round its handle toward its own shoulder (a round shaft: all the way round; a pump or a foregrip: a
-// little), so the wrist meets the weapon the way the arm arrives instead of twisting to a fixed grip.
+// hand stays on the weapon in every state (_bothHands: carry, run, aim, the swings and rolls, the air, landings, the
+// respawn drop, idle fidgets, the locker one-shots, the menu and podium dances); it only lets go to hold and throw a
+// sub (and while a special hides the weapon). The anchors below are placed so the off hand reaches its grip with a bent
+// elbow; the dances use the two-handed ones (trophy: lifted overhead · present: thrust at the viewer · droop: hanging
+// low in front · hug: held against the chest) in place of the free-hand choreography. `gripRoll` (rad): how far the
+// off hand may turn round its handle toward its own shoulder (a round shaft: all the way round; a pump or a foregrip: a
+// little), so the wrist meets the weapon the way the arm arrives instead of twisting to a fixed grip; `gripAt` (m)
+// slides it along a round shaft. `twist` turns the shoulders toward the weapon outside the aim stance, `clav` brings
+// the support shoulder forward, `poleC` is the support elbow's bend direction there.
+const SHAFT_BOTH = {   // the roller and the brush: one long shaft, the right fist on the top grip, the left on the mid grip
+  both: true, gripRoll: Math.PI, gripFlip: true, twoCarry: 1, twoAim: 1, lobbyTwo: 1,   // (the left thumb toward the right fist)
+  carry: { p: [-0.1, 0.86, 0.12], r: [0.95, 0.35, 0] },
+  roll: { p: [-0.05, 0.84, 0.2], r: [0.95, 0.3, 0] },
+  raise: { p: [-0.1, 1.08, 0.12], r: [-0.55, 0.45, 0] },
+  lobby: { p: [-0.06, 0.95, 0.12], r: [1.05, 0.45, 0] },
+  trophy: { p: [-0.12, 1.22, 0.08], r: [0, 1.45, 0] },
+  present: { p: [-0.06, 0.97, 0.15], r: [0.35, 0.4, 0] },
+  droop: { p: [-0.06, 0.8, 0.1], r: [1.25, 0.35, 0] },
+  hug: { p: [-0.06, 0.92, 0.14], r: [-1.2, 0.35, 0.2] },
+  fidget: [-0.05, 0.94, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],   // idle: lean on the shaft (anchor · head · spine)
+  twist: -0.12, clav: 0.12, poleC: [0.8, -0.5, -0.35],
+};
 const HOLD_BOTH = {
-  roller: { ...HOLD.roller, both: true, gripRoll: Math.PI },
-  brush: { ...HOLD.roller, both: true, gripRoll: Math.PI },
-  blaster: { ...HOLD.blaster, both: true, gripRoll: 1.1 },
-  brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1 },
+  roller: { ...HOLD.roller, ...SHAFT_BOTH,
+    // flick: a two-handed swing — coiled up by the right shoulder, whipped down in front, the drum following through low
+    flick: [-0.1, 0.86, 0.12, 0.95, 0.35, -0.1, 1.0, 0.1, -1.4, 0.4, -0.05, 0.9, 0.24, 0.25, 0.3, -0.05, 0.8, 0.14, 1.0] },
+  brush: { ...HOLD.roller, ...SHAFT_BOTH,
+    // swipe: a broom's sweep — narrower than the one-handed flail, centred a little left (the off hand's side), the
+    // shoulders turning through it
+    swipe: [-0.01, 0.09, 0.86, 0.14, 0.95, 0.5, -0.2, 1.4, 0.2] },
+  blaster: { ...HOLD.blaster, both: true, gripRoll: Math.PI, gripFlip: true, lobbyTwo: 1,   // (the pump: a round sleeve)
+    carry: { p: [-0.11, 0.8, 0.14], r: [0.38, 0.34, 0.24] },
+    lobby: { p: [-0.1, 0.8, 0.17], r: [0.25, 0.5, 0.2] },       // low ready, the bell to the front left
+    trophy: { p: [-0.14, 0.98, 0.1], r: [-0.95, 0.1, 0] },      // raised up by the right shoulder
+    present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
+    droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
+    hug: { p: [-0.05, 0.92, 0.12], r: [-1.1, 0.4, 0.3] },
+    fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
+    twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.12 },
+  brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1,
+    aim: { p: [-0.035, -0.08, 0.2], r: [0, 0.035, 0] },   // a little closer in than the shooter's (the foregrip sits further out)
+    carry: { p: [-0.12, 0.8, 0.14], r: [0.55, 0.4, 0.1] },
+    run: { p: [-0.12, 0.83, 0.17], r: [0.3, 0.35, 0.05] },
+    lobby: { p: [-0.03, 0.88, 0.16], r: [1.2, 0.2, 0] },        // held point-down in front, like a walking cane
+    trophy: { p: [-0.06, 0.98, 0.1], r: [-0.4, 0.15, 0.1] },    // held up ahead (its pistol foregrip won't go overhead)
+    present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
+    droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
+    hug: { p: [-0.05, 0.92, 0.12], r: [-1.2, 0.4, 0.3] },
+    fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
+    twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.15 },
 };
 const HOLD_HERO = { p: [-0.14, 1.05, 0.25], r: [-0.35, 0.35, -0.2] };
 const K_SL_T = [0, 0.13, 0.25, 0.4, 0.62];
@@ -1526,6 +1568,8 @@ export class Character {
     if (id === this.lastFidget) id = (id + 1 + ((this.rng() * 3) | 0)) % FIDGETS.length;
     // a pistol in each fist: no free hand for the goggles / tank taps
     if ((this.dual || this.weapon?.pivotL) && (FIDGETS[id] === 'goggles' || FIDGETS[id] === 'tank')) id = FIDGETS.indexOf(this.rng() < 0.5 ? 'twirl' : 'look');
+    // [b5-holds] both hands on the weapon: nor for the goggles, the tank or the big stretch (its 'twirl' is two-handed)
+    if (this.hold.both && (FIDGETS[id] === 'goggles' || FIDGETS[id] === 'tank' || FIDGETS[id] === 'stretch')) id = FIDGETS.indexOf(this.rng() < 0.5 ? 'twirl' : 'look');
     this.fidget = id; this.lastFidget = id; this.fidgetT = 0;
   }
 
@@ -1941,6 +1985,7 @@ export class Character {
       } else if (this.lastDance) { poseNeutral(D); this._poseDance(D, this.lastDance, this.danceT + this.danceOfs, dt); }
       poseLerp(P, P, D, ease(this.wDance));
     }
+    if (this.hold.both) this._bothHands(P);   // [b5-holds] the off hand back on the weapon (see HOLD_BOTH)
     // ---------------- life layer on top of everything (micro-expressions, menu head attention, pupils)
     this._lifePost(dt);
   }
@@ -2098,9 +2143,11 @@ export class Character {
     }
     // [b5-holds] two hands on the weapon outside the aim stance: the shoulders turn toward it (the support shoulder
     // comes forward) and the support shoulder reaches in, so the off hand gets there with a bent elbow
+    // (aiming: `aimTwist` blades the stance a little more — the support shoulder forward toward the foregrip)
     if (H.both) {
-      const k = 1 - wAim * (1 - wRoll);
-      const tw = H.twist || 0; P[CHEST + 1] += tw * k; P[SPINE + 1] += tw * 0.5 * k; P[CLAVL + 1] -= (H.clav || 0) * k;
+      const k = 1 - wAim * (1 - wRoll), ka = wAim * (1 - wRoll);
+      const tw = (H.twist || 0) * k + (H.aimTwist || 0) * ka;
+      P[CHEST + 1] += tw; P[SPINE + 1] += tw * 0.5; P[CLAVL + 1] -= (H.clav || 0) * k;
       if (H.poleC) lerpE(P, POLEL, H.poleC[0], H.poleC[1], H.poleC[2], k);
     }
     // two hands on one weapon (foregrip IK) — a dual wield is never "two-handed": each fist holds its own pistol
@@ -2155,6 +2202,16 @@ export class Character {
       P[CHEST + 1] += (rz2 - rz) * 0.6;
       this.rcP2 = rp2; this.rcZ2 = rz2;
     }
+  }
+
+  /** [b5-holds] A two-handed weapon (hold.both) keeps the off hand on it through every layer and dance: whatever a
+   *  layer asked of the free hand (a fidget, the respawn's hand to the ground, a hand on the hip, a fist pump) gives way
+   *  to the foregrip IK. It lets go only while a sub is held and thrown, and while a special hides the weapon. */
+  _bothHands(P) {
+    const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62));
+    const k = 1 - free;
+    if (k <= 0.001) return;
+    P[IKL] = lerp(P[IKL], 1, k); P[LTW] *= 1 - k; P[SPIN] *= 1 - k;
   }
 
   // Moving weapon parts are owned by the arsenal stream: animateWeapon(w, st) (character-weapons.js) runs once per held
@@ -2248,7 +2305,7 @@ export class Character {
     const u = lerp(-sd, sd, k);                       // -1 … 1 across the body
     const w = 1 - kRec, F = this.hold.swipe || SWIPE_ONE;   // [b5-holds] two-handed: a narrower sweep, the body turning more
     lerpE(X, ANC, F[0] + F[1] * u, F[2], F[3], w);
-    lerpE(X, ANCR, F[4], F[5] * u, F[6] * u, w);
+    lerpE(X, ANCR, F[4], (F[8] || 0) + F[5] * u, F[6] * u, w);
     const tb = F[7] ?? 1;
     X[SPINE + 1] += 0.3 * u * w * tb; X[CHEST + 1] += 0.24 * u * w * tb; X[HIPS + 1] += 0.1 * u * w * tb;
     X[SPINE] += 0.14 * w; X[CHEST] += 0.06 * w; X[HIPS_P + 1] -= 0.03 * w;
@@ -2700,7 +2757,13 @@ export class Character {
         break;
       }
       case 'twirl': {
-        if (kind === 'shooter' || kind === 'blaster' || kind === 'dualies') {
+        const B2 = this.hold.both && this.hold.fidget;   // [b5-holds] two-handed: lean on the shaft / lift it for a look
+        if (B2) {
+          const k = win(ft, 0.1, 0.35, 0.8, 1.15), F = B2;
+          lerpE(X, ANC, F[0], F[1], F[2], k); lerpE(X, ANCR, F[3], F[4], F[5], k);
+          X[HLP] += F[6] * k; X[HLY] += F[7] * k; X[LOOKY] -= 0.2 * k * Math.sign(F[6]); X[SPINE] += F[8] * k; X[HIPS_P] += F[9] * k;
+          X[MCURVE] += 0.3 * k; X[BROWY] += 0.3 * k;
+        } else if (kind === 'shooter' || kind === 'blaster' || kind === 'dualies') {
           const k = ease((ft - 0.2) / 0.6), lift = win(ft, 0.1, 0.3, 0.75, 1.0);
           X[SPIN] = wrapA(TAU * 2 * k); if (!this.dual) X[IKL] = 0;
           X[ANC + 1] += 0.08 * lift; X[ANC + 2] += 0.08 * lift; X[ANC] -= 0.03 * lift; X[ANCR] -= 0.7 * lift;
@@ -3099,7 +3162,7 @@ export class Character {
     D[SPINE] = 0.05 - 0.05 * pump; D[CHEST] = -0.08 * pump;
     D[HEAD] = 0.12 * hit - 0.1; D[HEAD + 2] = 0.1 * Math.sin(Math.PI * b * 0.5);
     D[SQY] = 1 - 0.05 * hit; D[SQXZ] = 1 + 0.03 * hit;
-    setAnc(D, H.raise);
+    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: the weapon pumped overhead like a trophy
     D[IKL] = 0; D[POLER] = -0.8; D[POLER + 1] = 0.1; D[POLER + 2] = -0.5;
     setE(D, FOOTL, 0.11, ANKLE_H, 0.01); setE(D, FOOTR, -0.11, ANKLE_H, -0.01); D[FOOTLR + 1] = 0.2; D[FOOTRR + 1] = -0.2;
     D[FOOTLR] = 0.25 * pump * (b < 4 ? 1 : 0);
@@ -3127,7 +3190,7 @@ export class Character {
       D[UARML] = -2.0; D[UARML + 2] = 1.0 * k; D[FARML] = -0.9; D[HANDL + 2] = 0.3; D[HANDPL] = 1.9;
       D[HEAD + 2] = -0.18 * k; D[HEAD] = -0.1;
       D[WINK] = ease((b - 6.3) / 0.12) * (1 - ease((b - 7.6) / 0.15));
-      setAnc(D, HOLD_HERO);
+      setAnc(D, H.both ? H.present : HOLD_HERO);
     }
     D[MOPEN] = 0.75; D[MCURVE] = 1; D[BROW] = -0.1; D[BROWY] = 0.8; D[EYE] = 0.92; D[LOOKY] = 0.1; D[EARS] = 0.9 + 0.1 * hit;
   }
@@ -3145,9 +3208,15 @@ export class Character {
     // weapon: pulled back → overhead twirl → thrust forward to the camera
     setAnc(D, H.carry);
     lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);
-    lerpE(D, ANC, -0.15, 1.36, 0.06, rise); lerpE(D, ANCR, -1.6, 0.2, 0, rise);
-    D[SPIN] = wrapA(TAU * 2 * ease((c - 0.55) / 0.85)) * (NO_TWIRL[this.animKind] ? 0 : 1);
-    lerpE(D, ANC, -0.1, 1.02, 0.32, strike); lerpE(D, ANCR, -0.12, -0.05, 0.25, strike);
+    if (H.both) {   // [b5-holds] two-handed: no twirl — lifted overhead, then thrust at the viewer
+      const T = H.trophy, Q = H.present;
+      lerpE(D, ANC, T.p[0], T.p[1], T.p[2], rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);
+      lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], strike); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], strike);
+    } else {
+      lerpE(D, ANC, -0.15, 1.36, 0.06, rise); lerpE(D, ANCR, -1.6, 0.2, 0, rise);
+      D[SPIN] = wrapA(TAU * 2 * ease((c - 0.55) / 0.85)) * (NO_TWIRL[this.animKind] ? 0 : 1);
+      lerpE(D, ANC, -0.1, 1.02, 0.32, strike); lerpE(D, ANCR, -0.12, -0.05, 0.25, strike);
+    }
     D[IKL] = 0; D[POLER] = -0.9; D[POLER + 1] = 0.05; D[POLER + 2] = -0.3;
     // free hand: up with the twirl, then on the hip
     D[UARML] = -2.4 * rise - 0.4 * dip; D[UARML + 2] = 0.3 + 0.2 * dip; D[FARML] = -0.3 - 0.8 * dip;
@@ -3165,7 +3234,7 @@ export class Character {
     const H = this.hold;
     const b = (t * 2.5) % 8, bf = frac(b), bi = Math.floor(b);
     const sd = bi % 2 ? -1 : 1;
-    setAnc(D, H.raise);
+    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: held up overhead through the hops
     D[IKL] = 0;
     if (b < 6) {
       const hop = Math.sin(Math.PI * clamp(bf / 0.62, 0, 1));
@@ -3189,7 +3258,8 @@ export class Character {
       setE(D, FOOTL, 0.12, ANKLE_H + 0.18 * air, 0.02 * air); setE(D, FOOTR, -0.12, ANKLE_H + 0.18 * air, 0.02 * air);
       D[FOOTLR] = 0.6 * air; D[FOOTRR] = 0.6 * air;
       D[UARML] = lerp(-0.5, -2.7, air); D[UARML + 2] = lerp(0.2, 0.75, air); D[FARML] = -0.2;
-      lerpE(D, ANC, -0.18, 1.4, 0.05, air); lerpE(D, ANCR, -1.9, 0.3, -0.5, air);
+      if (H.both) D[ANC + 1] += 0.04 * air;
+      else { lerpE(D, ANC, -0.18, 1.4, 0.05, air); lerpE(D, ANCR, -1.9, 0.3, -0.5, air); }
       D[HEAD] = -0.2 * air; D[MOPEN] = 0.9 * air; D[HANDPL] = 2; D[EARS] = 1;
     }
     D[MOPEN] = Math.max(D[MOPEN], 0.65); D[MCURVE] = 1; D[BROWY] = 0.9; D[EYE] = 0.88; D[LOOKY] = 0.12;
@@ -3209,6 +3279,8 @@ export class Character {
     D[UARML] = 0.1 + 0.03 * sw; D[UARML + 2] = 0.05; D[FARML] = -0.12;
     D[UARMR] = 0.1 - 0.03 * sw; D[UARMR + 2] = -0.05; D[FARMR] = -0.12;
     D[IKR] = 0; D[IKL] = 0;
+    // [b5-holds] two-handed: the weapon hangs low in front in both hands, sagging further on the head drop
+    if (H.both) { D[IKR] = 1; setAnc(D, H.droop); D[ANC] += 0.01 * sw; D[ANC + 1] -= 0.025 * drop - 0.015 * sigh; D[ANCR] += 0.12 * drop; }
     D[FOOTL] = 0.075; D[FOOTR] = -0.075; D[FOOTLR + 1] = -0.18; D[FOOTRR + 1] = 0.18;
     D[FOOTLR] = 0.12; D[FOOTL + 2] = 0.02; D[KNEEL] = -0.2; D[KNEER] = 0.2;
     D[MCURVE] = -0.9; D[MWIDTH] = 0.8; D[BROW] = 0.75; D[BROWY] = -0.3; D[EYE] = 0.45 + 0.25 * sigh; D[LOOKY] = -0.4; D[LOOKX] = 0.1 * sw;
@@ -3228,11 +3300,14 @@ export class Character {
     D[HIPS + 2] = -0.06 * stomp;
     // fists clenched down by the sides while stomping
     D[UARML] = 0.15; D[UARML + 2] = 0.2; D[FARML] = -0.5; D[CLAVL + 2] = 0.12 * stomp; D[CLAVR + 2] = -0.12 * stomp;
-    setAnc(D, this.hold.carry); D[ANC + 1] -= 0.05 * stomp; D[ANCR] += 0.4;
+    const H = this.hold;
+    if (H.both) { setAnc(D, H.droop); D[ANC + 1] -= 0.04 * stomp; }   // [b5-holds] two-handed: low in both fists
+    else { setAnc(D, H.carry); D[ANC + 1] -= 0.05 * stomp; D[ANCR] += 0.4; }
     // turned away with the free arm across the chest
     D[MODELR + 1] = -0.9 * ease(turn);
     D[LTW] = turn; setE(D, LTGT, -0.06, 0.9, 0.13); lerpE(D, POLEL, 1, -0.3, 0.2, turn); D[IKL] = 0;
-    lerpE(D, ANC, -0.16, 0.86, 0.1, turn); lerpE(D, ANCR, 1.1, 0.8, 0.4, turn);
+    if (H.both) { lerpE(D, ANC, H.hug.p[0], H.hug.p[1], H.hug.p[2], turn); lerpE(D, ANCR, H.hug.r[0], H.hug.r[1], H.hug.r[2], turn); }   // hugged
+    else { lerpE(D, ANC, -0.16, 0.86, 0.1, turn); lerpE(D, ANCR, 1.1, 0.8, 0.4, turn); }
     D[CHEST] -= 0.08 * turn; D[HEAD] = -0.12 * turn + 0.2 * imp; D[HEAD + 2] = 0.1 * turn;
     D[HEAD + 1] = 0.8 * glance * turn - 0.15 * turn; D[NECK + 1] = 0.3 * glance * turn;
     D[LOOKX] = 0.35 * glance - 0.2 * turn * (1 - glance);
@@ -3254,7 +3329,8 @@ export class Character {
     D[SPINE] = 0.18 - 0.08 * sigh; D[CHEST] = 0.13 - 0.1 * sigh; D[NECK] = 0.1; D[HEAD] = 0.2 - 0.16 * sigh - 0.2 * sniff;
     D[CLAVL + 2] = -0.1 + 0.18 * sigh; D[CLAVR + 2] = 0.1 - 0.18 * sigh;
     D[UARML] = 0.05; D[UARML + 2] = 0.04; D[FARML] = -0.15; D[IKL] = 0;
-    setAnc(D, this.hold.carry); D[ANC + 1] -= 0.12; D[ANCR] += 0.55; D[ANC + 2] -= 0.04;
+    if (this.hold.both) { setAnc(D, this.hold.droop); D[ANC + 1] -= 0.015 * sigh; }   // [b5-holds] two-handed
+    else { setAnc(D, this.hold.carry); D[ANC + 1] -= 0.12; D[ANCR] += 0.55; D[ANC + 2] -= 0.04; }
     D[MCURVE] = -1.0; D[MWIDTH] = 0.7; D[BROW] = 0.85; D[BROWY] = -0.2; D[EYE] = 0.5 + 0.3 * sniff; D[LOOKY] = -0.35; D[LOOKX] = -0.1 * scuff;
     D[MOPEN] = 0.35 * sigh; D[HANDPL] = 1.1; D[EARS] = -0.9 + 0.3 * sniff;
   }
@@ -3277,7 +3353,7 @@ export class Character {
     setAnc(D, H.carry);
     D[IKL] = H.twoCarry ? 1 : 0;
     const tw = cyc >= 6.1 && cyc < 7.1 ? (cyc - 6.1) / 1.0 : -1;
-    if (tw >= 0 && !NO_TWIRL[this.animKind]) {
+    if (tw >= 0 && !NO_TWIRL[this.animKind] && !H.both) {
       const k = ease(clamp(tw / 0.8, 0, 1));
       const lift = Math.sin(Math.PI * clamp(tw, 0, 1));
       D[SPIN] = wrapA(TAU * 2 * k); D[IKL] = 0;
@@ -3306,7 +3382,7 @@ export class Character {
     D[LTW] = 1; setE(D, LTGT, 0.17, 0.745, -0.005); D[IKL] = 0;
     D[UARML + 2] = 0.9; D[FARML] = -1.6; D[HANDL] = 0.3; D[HANDL + 2] = 0.6; D[POLEL] = 1; D[POLEL + 1] = 0.1; D[POLEL + 2] = -0.35;
     setAnc(D, H.carry); D[ANC + 1] += 0.005 * br;
-    if (H.twoCarry) { D[IKL] = 0; lerpE(D, ANC, -0.19, 0.74, 0.12, 1); }
+    if (H.twoCarry && !H.both) { D[IKL] = 0; lerpE(D, ANC, -0.19, 0.74, 0.12, 1); }   // ([b5-holds]: both hands stay on)
     D[MCURVE] = 0.95; D[MTILT] = 0.12 * tilt; D[BROWY] = 0.2 * tilt; D[EYE] = 0.95; D[HANDPL] = 1.4; D[EARS] = 0.3 + 0.3 * tilt;
   }
 
@@ -3330,7 +3406,7 @@ export class Character {
       D[POLEL] = 1; D[POLEL + 1] = 0.1; D[POLEL + 2] = -0.35;
     }
     // flourish: a quick re-grip / twirl and a proud chin-up
-    if (this.animKind === 'shooter' || this.animKind === 'blaster') { D[SPIN] = wrapA(TAU * ease((cyc - 4.8) / 0.55)) * (cyc > 4.8 && cyc < 5.5 ? 1 : 0); D[ANC + 1] += 0.05 * fl; }
+    if ((this.animKind === 'shooter' || this.animKind === 'blaster') && !H.both) { D[SPIN] = wrapA(TAU * ease((cyc - 4.8) / 0.55)) * (cyc > 4.8 && cyc < 5.5 ? 1 : 0); D[ANC + 1] += 0.05 * fl; }
     else D[ANCR] -= 0.2 * fl;
     D[HEAD] -= 0.08 * fl; D[HIPS_P + 1] -= 0.015 * fl;
     D[MCURVE] = 1; D[MTILT] = 0.22; D[BROW] = -0.25; D[EYE] = 0.92; D[LOOKX] = -0.12; D[LOOKY] = 0.04;

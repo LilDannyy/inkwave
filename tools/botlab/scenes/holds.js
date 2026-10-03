@@ -29,9 +29,16 @@
   const put = (p, yaw = 0) => { kid.pos.copy(p); kid.pos.y += 0.02; kid.vel.set(0, 0, 0); kid.yaw = kid.aimYaw = yaw; kid.aimPitch = 0; };
   // the camera: a view round the kid (kid space: +z ahead of the kid, +x its left), looking at its chest
   const VIEWS = { front: [0, 0.95, 3.4], left: [3.4, 0.95, 0.2], back: [0, 1.05, -3.4], right: [-3.4, 0.95, 0.2], high: [2, 2.6, 2.4] };
+  // close-ups of the off hand: 'hand' from ahead and to its left, 'handb' from its side (the wrist), 'handd' from below
+  const NEAR = { hand: [0.3, 0.1, 0.4], handb: [0.45, 0.12, -0.12], handd: [0.12, -0.42, 0.22] };
   const camAt = (view) => {
-    const v = VIEWS[view], c = kid.character.root, p = c.position, y = kid.yaw;
+    const c = kid.character.root, p = c.position, y = kid.yaw;
     const cs = Math.cos(y), sn = Math.sin(y);
+    if (NEAR[view]) {
+      const v = NEAR[view], look = new THREE.Vector3(); kid.character.bones.handL.getWorldPosition(look);
+      return { from: V(look.x + v[0] * cs + v[2] * sn, look.y + v[1], look.z - v[0] * sn + v[2] * cs), look };
+    }
+    const v = VIEWS[view];
     const from = V(p.x + v[0] * cs + v[2] * sn, p.y + v[1], p.z - v[0] * sn + v[2] * cs), look = V(p.x, p.y + 0.74, p.z);
     return { from, look };
   };
@@ -46,7 +53,7 @@
   const START = V(0, 0, -6);
   const STATES = {
     stand: () => { put(START, 0); settle(2.2); },
-    run: () => { put(V(0, 0, -20), 0); drive.move.set(0, 0, 1); settle(1.6); },
+    run: () => { put(V(0, 0, -5), 0); drive.move.set(0, 0, 1); settle(1.6); },
     fire: (w) => {
       put(START, 0);
       settle(0.6);
@@ -56,7 +63,7 @@
       drive.fire = true; settle(0.3); drive.fire = false; settle(0.12);                                         // blaster: the shot's pump
     },
     roll: (w) => {
-      put(V(0, 0, -20), 0);
+      put(V(0, 0, -5), 0);
       if (w === 'brolly' || w === 'blaster') { settle(0.4); drive.fire = true; settle(0.6); return; }        // brolly: the canopy held open
       drive.move.set(0, 0, 1); settle(0.3); drive.fire = true; settle(1.2);
     },
