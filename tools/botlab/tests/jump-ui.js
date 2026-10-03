@@ -180,7 +180,9 @@
     const mk = G.specials.world.find((w) => w.kind === 'return' && w.owner === U);
     const w0 = world().find((t) => t.name === U.name && /is-return/.test(t.cls)), m0 = mapT().find((t) => t.name === U.name && /is-return/.test(t.cls));
     R(`${label}: the return mark is up from the special's first frame (at the take-off spot)`, !!s && !!mk && mk.pos.distanceTo(origin) < 0.3, { mk: !!mk });
-    R(`${label}: …in the world (the user's name, the special's icon) and on the minimap`, !!w0 && !!m0 && near2(w0.xy, proj(mk.pos.x, mk.pos.y + JUMP_UI.lift, mk.pos.z)) && near2(m0.xy, mapXY(mk.pos)) && !!w0.el.querySelector('.iw-jt__icon svg'), { w: w0 && w0.xy, m: m0 && m0.xy });
+    // (the user still stands on it at first: the world tag stacks straight up above their own name tag)
+    const wAt0 = mk && proj(mk.pos.x, mk.pos.y + JUMP_UI.lift, mk.pos.z), mAt0 = mk && mapXY(mk.pos);
+    R(`${label}: …in the world (the user's name, the special's icon) and on the minimap`, !!w0 && !!m0 && Math.abs(w0.xy[0] - wAt0[0]) < 2.5 && w0.xy[1] <= wAt0[1] + 2.5 && near2(m0.xy, mAt0, 1.5) && !!w0.el.querySelector('.iw-jt__icon svg'), { w: w0 && w0.xy, wWant: wAt0 && wAt0.map(r2), m: m0 && m0.xy, mWant: mAt0 && mAt0.map(r2) });
     // the user moves off (Ink Jet: hovers out; Zipline: walks), the special runs out, they jump home
     U._go = new THREE.Vector3(1, 0, 0.35).normalize();
     const S = [];
