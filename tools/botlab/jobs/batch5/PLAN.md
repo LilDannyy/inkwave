@@ -106,3 +106,14 @@ User: "make the player hold brush rollers blasters and brollys with both hands".
 ## Wave 2 and after (the lead decides when the designs are in)
 The four subs; the Bazookarp engine, HUD, online and bots; the three stages; then a Bazookarp layout for every stage
 (big redesigns allowed, as mode-only variants); integration, balance and verification sweeps on the Mac mini.
+
+## Known issues for the integrator (`int1`), found while wave 1 ran
+- **An intermittent error online with the Mega Stamp.** The Mac mini saw it once in `holds` JOB-2 (`net-holds-b`,
+  `NET_ARGS='a=brush;b=blaster'`, two autopilot clients; 7/7 on two re-runs): client c1 logged
+  `Uncaught TypeError: Cannot read properties of undefined (reading 'moveSpeed')` while A's remote kid was in its
+  `sp_stamp` form (an autopilot kid had started the Mega Stamp). Candidates: `src/game/specials.js` ~1651 (the stamp's
+  start reads `s.def.moveSpeed`: is `s.def` missing on a replayed ghost?), ~1771 (the Cheer Orb, same pattern), and
+  `src/game/actor.js` 461 / 475 (`this.weaponRunner.moveSpeed()` on an actor with no runner). Reproduce it with a
+  two-client test that forces the stamp (and the Cheer Orb) on one side, on the base commit too, so we know whether it
+  is older than this batch. Fix it either way, with a test. Also make the holds test wait out a running special before
+  it judges a hold, so an autopilot special cannot fail it.
