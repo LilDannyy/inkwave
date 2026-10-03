@@ -462,7 +462,7 @@ export class Menus {
   toast(text, { kind = 'info', icon = null, color = null, ms = 3400, tag = null } = {}) {
     if (!text) return null;
     if (!this._toasts || !this._toasts.isConnected) { this._toasts = h('div', { class: 'iw-toasts', 'aria-live': 'polite' }); this.el.insertBefore(this._toasts, this.cursorEl); }
-    const ico = icon || GLYPHS[kind === 'error' ? 'close' : kind === 'join' ? 'plus' : kind === 'leave' ? 'exit' : kind === 'good' ? 'check' : 'sparkle'];
+    const ico = icon || GLYPHS[kind === 'error' ? 'close' : kind === 'join' ? 'plus' : kind === 'leave' ? 'exit' : kind === 'good' ? 'check' : kind === 'pad' ? 'gamepad' : 'sparkle'];
     const W = tag && this._weapons()[tag.weapon];
     const lead = tag
       ? h('span', { class: 'iw-stag iw-toast__tag' }, h('span', { class: 'iw-stag__art', html: tagArt(fnv(String(tag.name).toLowerCase())) }),

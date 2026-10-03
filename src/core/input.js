@@ -1,7 +1,12 @@
-// Keyboard + mouse (pointer lock) + standard gamepad. Produces a unified per-frame snapshot.
+// Keyboard + mouse (pointer lock) + gamepad. Produces a unified per-frame snapshot.
 // Gamepad: radial dead zone + response curve sticks (padStick) and subtle dual-rumble (rumble), scaled by
 // settings.rumble (0..1, default 1) and only while the pad is the active device.
+// Every pad read goes through a STANDARD-layout view (core/padmap.js): `this.pad` is the browser's pad itself when it is
+// 'standard', else a remapped stand-in with standard indices (a known layout — HORI / PowerA / PDP Switch pads … — a
+// guess, or the player's own from Settings › Controller setup). `this.rawPad` is what the browser reports; `this.padInfo`
+// says how it is read ({ name, status: 'standard' | 'known' | 'guess' | 'custom', label, layout }).
 import { G } from './ctx.js';
+import { PadMapper } from './padmap.js';
 
 // keys whose browser default (focus moves, page scroll) must never fire while the game has the mouse
 const GAME_KEYS = new Set(['Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Slash', 'Quote']);
@@ -15,6 +20,12 @@ export class Input {
     this.locked = false;
     this.enabled = true;
     this.pad = null;
+    this.rawPad = null;
+    this.padInfo = null;
+    this.padCapture = false;        // Controller setup is listening for raw input: the menus ignore the pad meanwhile
+    this.onPadNotice = null;        // (info) => void — the first time a non-standard pad is read (main.js: a toast)
+    this._mapper = new PadMapper();
+    this._padKey = null;
     this.padPrev = [];
     this.padPressed = new Set();
     this.lastDevice = 'kbm';
@@ -77,12 +88,21 @@ export class Input {
 
   pollPad() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    let pad = null;
-    for (const p of pads) if (p && p.connected && p.mapping === 'standard') { pad = p; break; }
-    if (!pad) for (const p of pads) if (p && p.connected) { pad = p; break; }
-    this.pad = pad;
+    let raw = null;
+    for (const p of pads) if (p && p.connected && p.mapping === 'standard') { raw = p; break; }
+    if (!raw) for (const p of pads) if (p && p.connected) { raw = p; break; }
+    this.rawPad = raw;
+    const key = raw ? raw.index + '|' + raw.id : null;
+    if (key !== this._padKey) { this._padKey = key; this.padPrev = []; }
+    const pad = this.pad = this._mapper.view(raw, G.settings);
+    this.padInfo = pad ? this._mapper.info : null;
     this.padPressed.clear();
     if (!pad) return;
+    const info = this.padInfo;
+    if (info && info.raw && info.status !== 'custom' && this._noticed !== info.id) {
+      this._noticed = info.id;
+      try { this.onPadNotice?.(info); } catch { /* the notice is optional */ }
+    }
     pad.buttons.forEach((b, i) => {
       const was = this.padPrev[i] || false;
       if (b.pressed && !was) { this.padPressed.add(i); this.lastDevice = 'pad'; }
