@@ -184,8 +184,10 @@ becomes bubble time on the owner's screen only, which is why the life rides the 
 its own player. Its ink (the splash it lands with, the film raining down when its time runs out) is the owner's splats,
 replicated as usual. Shots: like every hit, the shooter's screen decides — its copy of the bubble (ghost or not) halves a
 shot whose path touched it (or that reaches someone inside it), and the halved damage is what `{k:'hit'}` carries; the
-victim's owner applies it as it comes (applyHit doesn't halve again while `_applyingHit`). Tested by
-`tools/botlab/tests/net-drainbow.cjs` (`CLIENTS=2`).
+victim's owner applies it as it comes (applyHit doesn't halve again while `_applyingHit`). Inside an enemy bubble
+both teams' ink turns one shade (src/world/inkOne.js) — the drained player's own screen only, nothing on the wire; and
+the host's bots inside one can't tell their own ink from theirs (their decisions, on the host where they run). Tested
+by `tools/botlab/tests/net-drainbow.cjs` (`CLIENTS=2`).
 
 **Surf N' Turf (src/game/sp-surf.js).** The special itself (holding the buoy machine) is an ordinary special record
 (`['k', nid, 'sp', [0, index]]` … `[1, 'throw']`: the buoy in the ghost's hand). The buoy travels as its own kit kind
@@ -203,6 +205,21 @@ owner's hit marker: an `'hit'` event with the owner as attacker). A dodge record
 dodge event elsewhere) and opens the owner's assist window on the victim's owner's screen. A shot / beam / blast on a
 remote player's buoy goes to its owner as a device hit (`{k:'dh', kind:'surf'}` → `KIT_GHOSTS.surf.netHurt`); the
 owner's copy loses the hp and, at 0, records `[4]`. tools/botlab/tests/net-surf.cjs plays it out on two real clients.
+
+*On moving things* (the tower, the railcars, the pods' plants — any `Level.addDynamic` block): a buoy on a moving block's
+top rides it, a block rising under it lifts it on, one driving into it shoves it out, and with its floor gone it falls
+and anchors again below. **A ride sends nothing**: every screen carries its own copy on its own copy of the block (the
+movers and pods run on the synced match clock, the tower follows the host's snapshots), so each screen's buoy sits on
+the deck where that screen's tower is. The owner's word settles the rest: `[3, gid, x, y, z, lx, lz]` — anchored on a
+moving block, with where on it (its local x / z: a ghost whose copy of the tower is a step behind attaches at the same
+spot of the deck, not at the owner's world point); `[5, gid, x, y, z, T (, lx, lz)]` — anchored again after a fall, or
+once a shove has settled: the spot and the ring clock `T` (no ring leaves while it's in the air; the ghost takes the
+owner's clock); `[6, gid, i, x, y, z]` — ring `i` left from there (sent only when that's off where it last anchored:
+it rode there). **Each ring is centred where it was emitted** (its own polar map from there), so a ghost's ring i
+re-centres to the owner's `[6]` and every screen judges its own players against rings in the same places. Falls,
+shoves and slides run on every screen alike; a ghost never decides it was crushed (that's the owner's `[4]`).
+`net-surf.cjs` with `NET_ARGS='scene=tower'` checks the ride (the same spot on each screen's deck) and the ring centres
+on two real clients.
 
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf

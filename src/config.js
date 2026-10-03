@@ -557,6 +557,8 @@ export const SPECIALS = {
     botHold: 1,                               // bots fight from inside their team's bubble (1) / pay it no mind (0)
     botDanger: 0,                             // what the other team's bots make of it: 0 a light area (they keep out, but hold
                                               // the objective in it), 1 a heavy one (they get out, objective or not)
+    botBlind: 1,                              // a foe's bot inside can't tell its own ink from theirs (1: none of it reads as its
+                                              // own — it paints everything it passes, no swim / refill by its ink) / 0: it can
     // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
     // the muffle (master low-pass to dampCut Hz and dampGain of the level at full)
     waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },

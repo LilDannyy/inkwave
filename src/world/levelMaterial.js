@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { STAGE_SURFACES, FIRST_STAGE_SLOT, LAST_STAGE_SLOT } from './stages/surfaces.js';
 import { TEXLIB_GLSL } from './texlib.js';
 import { G } from '../core/ctx.js';
+import { INK_ONE } from './inkOne.js';
 import { inkUniforms, inkBeforeRender, INK_PARS, INK_COLOR, INK_ROUGH, INK_GEL, INK_SLOPE, INK_EMISSIVE, INK_LIGHTS, INK_LIGHT_MAPS, INK_SHADE } from './inkShading.js';
 
 // Street lamps light the deck at dusk: each bulb is a real punctual light through the material's own BRDF (diffuse +
@@ -62,7 +63,7 @@ if (uWaveT.y > 0.5) {
       float hole = wn * 0.8 + 0.2 * vnoise(vWPos.xz * 11.0 + uTime * 4.0);
       float keep = smoothstep(k * 1.15 - 0.08, k * 1.15 + 0.08, hole);
       float rim = (1.0 - smoothstep(0.0, 0.07, abs(hole - k * 1.15))) * (1.0 - k);
-      vec3 tc = mix(uTeamA, uTeamB, clamp(gp.r / max(gp.a, 1e-3), 0.0, 1.0));
+      vec3 tc = mix(mix(uTeamA, uTeamB, clamp(gp.r / max(gp.a, 1e-3), 0.0, 1.0)), uOneC, gOneK);
       vec3 boil = mix(tc * (1.25 - 0.4 * k), vec3(1.0), 0.18 + 0.55 * k);
       outgoingLight = mix(outgoingLight, boil, ga * keep * (1.0 - k * k) * 0.9);
       outgoingLight += vec3(0.95, 1.0, 1.0) * rim * ga * 1.4 * uWaveT.w;
@@ -116,6 +117,7 @@ export function createLevelMaterial(paintTexture, atlasSize, muralTexture = null
     uAtlasSize: { value: atlasSize },
     uPpm: { value: opts.ppm || 20 },          // atlas texels per metre (from the paint system, set per draw)
     ...inkUniforms(),                        // wet-ink layer (inkShading.js): paint clock + ripple table
+    ...INK_ONE,                              // [drainbow] one shade for both teams' ink (inkOne.js: shared refs)
     uGel: { value: 13 },                      // texlib layer of the ink gel micro-surface
     // swim wakes (src/fx/swimWake.js): 4 swimmers × 12-point trails (xyz, birth time; w < -1 = empty/break),
     // per-swimmer bounds (xyz centre, radius; 0 = off), head position + presence, head direction + speed
@@ -773,6 +775,6 @@ outgoingLight = min(outgoingLight, vec3(5.0));
     mat.side = THREE.DoubleSide;
     mat.defines = { ...(mat.defines || {}), GRATE: 1 };
   }
-  mat.customProgramCacheKey = () => 'inkwave-level-v7' + (opts.grate ? '-grate' : '');
+  mat.customProgramCacheKey = () => 'inkwave-level-v8' + (opts.grate ? '-grate' : '');
   return mat;
 }

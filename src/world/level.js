@@ -153,8 +153,10 @@ export class Level {
     if (this.blockStamp.length < this.blocks.length) { const s = new Uint32Array(this.blocks.length + 8); s.set(this.blockStamp); this.blockStamp = s; }
     return b;
   }
-  // place a moving block: centre, half extents, turned `yaw` about the vertical (its local z along (sin yaw, cos yaw))
+  // place a moving block: centre, half extents, turned `yaw` about the vertical (its local z along (sin yaw, cos yaw));
+  // b.dp keeps the move it just made (anything resting on it or pushed by it reads its motion: sp-surf.js's buoy)
   moveDynamic(b, center, half, yaw = 0) {
+    (b.dp || (b.dp = center.clone().set(0, 0, 0))).subVectors(center, b.center);
     b.center.copy(center);
     if (half) b.half.copy(half);
     const c = Math.cos(yaw), s = Math.sin(yaw);

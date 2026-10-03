@@ -11,6 +11,7 @@
 //                                      respawn pulses (splats: the HUD's death markers)
 import { G, on } from '../core/ctx.js';
 import { SPECIALS, SUB } from '../config.js';
+import { INK_ONE, INK_ONE_STATE } from '../world/inkOne.js';
 
 const TAU = Math.PI * 2;
 let CURRENT = null;          // the live Minimap (a new one is built per stage layout)
@@ -282,6 +283,8 @@ export class Minimap {
   _teamRGB() {
     const ca = G.teamColors?.[0], cb = G.teamColors?.[1];
     if (!ca || !cb) return [[255, 138, 20], [47, 91, 255]];
+    // [drainbow] drained (inside an enemy bubble: inkOne.js): both teams' turf in the one shade
+    if (INK_ONE_STATE.level > 0.5) { const c = INK_ONE.uOneC.value, o = [lin2s(c.r), lin2s(c.g), lin2s(c.b)]; return [o, o]; }
     return [[lin2s(ca.r), lin2s(ca.g), lin2s(ca.b)], [lin2s(cb.r), lin2s(cb.g), lin2s(cb.b)]];
   }
 
@@ -342,7 +345,7 @@ export class Minimap {
     if (!this._built) this._build();
     this.time += dt;
     this.timer -= dt;
-    const teamKey = G.teamHex ? G.teamHex[0] + G.teamHex[1] : '';
+    const teamKey = (G.teamHex ? G.teamHex[0] + G.teamHex[1] : '') + (INK_ONE_STATE.level > 0.5 ? '|one' : '');
     if (teamKey !== this._teamKey) { this._teamKey = teamKey; this.version = -1; }
     const theme = G.game?.theme || G.game?.mapDef?.theme || 'day';
     if (theme !== this._theme) { const had = this._theme; this._theme = theme; if (had) this._drawBase(); }

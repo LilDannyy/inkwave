@@ -53,6 +53,11 @@ module.exports = async (ctx) => {
   await B.until(`__G.drainbow.view.level > 0.99`, 8000).catch(() => null);
   const bIn = await J(B, `({ level: __G.drainbow.view.level, damp: __G.audio.damp, inside: __G.drainbow.view.inside })`);
   R('the guest walking in: its own screen greys and muffles', bIn.level > 0.99 && bIn.damp > 0.99, bIn);
+  // (one shade: both teams' ink turns one tint on the guest's screen only — src/world/inkOne.js; nothing on the wire)
+  const oneOf = async (c) => JSON.parse(await c.js(`(async () => { const IO = await import('./src/world/inkOne.js'); const p = __G.match.local.pos;
+    return JSON.stringify({ amount: IO.INK_ONE.uOneB.value.y, same: IO.inkOneTint(0, p).getHexString() === IO.inkOneTint(1, p).getHexString() }); })()`));
+  const oneB = await oneOf(B), oneA = await oneOf(A);
+  R('…both teams\' ink goes one shade on the guest\'s screen (inside), never on the host\'s (outside)', oneB.amount === 1 && oneB.same && oneA.amount === 0 && !oneA.same, { guest: oneB, host: oneA });
   await wait(2000);
   const bInk = await B.js(`__G.match.local.ink`);
   R('…and its own screen drains its tank', bInk < 90, { ink: bInk });

@@ -79,6 +79,7 @@ import { G, clamp, angleDiff } from '../core/ctx.js';
 import { PLAYER, TOWER } from '../config.js';
 import { SFX, texture } from '../audio/audio.js';
 import { BoxPaint } from './towerPaint.js';
+import { inkOneMap } from '../world/inkOne.js';
 import { Hit } from './physics.js';
 import { TOWER_HEAD } from './tower.js';
 import { POD_HINT } from './weapons.js';
@@ -382,8 +383,8 @@ export class StagePods {
         part.blk.inkPaint = part.paint;
         // its look: drawn from the paint's canvas just off the block's faces (on the plant's look: _hedge)
         if (G.scene) {
-          const mat = new THREE.MeshStandardMaterial({ map: part.paint.texture, transparent: true, roughness: 0.3, metalness: 0, side: THREE.DoubleSide,
-            depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+          const mat = inkOneMap(new THREE.MeshStandardMaterial({ map: part.paint.texture, transparent: true, roughness: 0.3, metalness: 0, side: THREE.DoubleSide,
+            depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));   // ([drainbow] one shade: inkOne.js)
           const ink = part.paint.inkMesh(mat);
           ink.position.set(q.x, q.y0, q.z);
           ink.renderOrder = 1; ink.name = 'plant-ink:' + d.id + ':' + q.id;
@@ -1235,7 +1236,7 @@ export class StagePods {
     const guard = this.match.zones && (b.zRole === 'guard' || b.zRole === 'watch') && this._nearZone(p) < 6;
     if (inRange || guard) S.okT = b.t;
     const why = S.exit ? S.exit.why : S.cross ? 'cross'
-      : b.t - S.okT > 1.5 ? 'no foe' : hp < 0.35 ? 'hurt' : ink < 0.08 && a.groundTeam !== 1 ? 'dry' : b.mode === 'retreat' ? 'retreat'
+      : b.t - S.okT > 1.5 ? 'no foe' : hp < 0.35 ? 'hurt' : ink < 0.08 && b.groundSeen !== 1 ? 'dry' : b.mode === 'retreat' ? 'retreat'
       : (b.zRole || b.tRole || null) !== S.role ? 'role' : p.state !== 'stand' || p.wiltAt - this.clock.t < 0.8 ? 'wilt' : p.life < p.life0 * 0.15 ? 'cut' : null;
     if (why) return this._botExit(b, S, p, it, move, why, vis);
     b.perchUntil = b.t + 0.3; this.stats.perched += dt; this._tally(p, 'perchS', dt);
@@ -1252,11 +1253,11 @@ export class StagePods {
     const ex = wx - lx, ez = wz - lz;
     const gx = ex * p.c + ez * p.s, gz = -ex * p.s + ez * p.c, gl = Math.hypot(gx, gz);
     if (gl > 0.12) { const k = Math.min(0.8, gl / 0.5); move.set((gx / gl) * k, 0, (gz / gl) * k); } else move.set(0, 0, 0);
-    it.squid = a.groundTeam === 1 && (hp < 0.45 || (!vis && ink < 0.4));
+    it.squid = b.groundSeen === 1 && (hp < 0.45 || (!vis && ink < 0.4));
     if (it.squid) { it.fire = false; move.set(0, 0, 0); }
     this._own(b);
     // nothing to shoot: ink the top round our feet (to hide and refill in)
-    if (!vis && !it.squid && a.groundTeam !== 1 && ink > 0.15) {
+    if (!vis && !it.squid && b.groundSeen !== 1 && ink > 0.15) {
       it.fire = true;
       return { yaw: b.aimYaw, pitch: -1.0, dist: 1.6 };
     }
@@ -1411,7 +1412,7 @@ export class StagePods {
     it.squid = false; it.sub = false; it.jump = false; b._bombAim = false;
     this._own(b);
     b.perchUntil = b.t + 0.3;                            // (standing here on purpose)
-    if (a.ink < PLAYER.inkMax * 0.05) { it.fire = false; if (a.groundTeam === 1) { it.squid = true; move.set(0, 0, 0); } return aim; }
+    if (a.ink < PLAYER.inkMax * 0.05) { it.fire = false; if (b.groundSeen === 1) { it.squid = true; move.set(0, 0, 0); } return aim; }
     const aimed = Math.abs(angleDiff(b.aimYaw, aim.yaw)) < 0.14 && Math.abs(b.aimPitch - aim.pitch) < 0.14;
     it.fire = this._trigger(b, S, aimed);
     return aim;

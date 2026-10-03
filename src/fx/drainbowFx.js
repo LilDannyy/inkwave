@@ -10,12 +10,15 @@
 //                front sweeps the colour back in. One full-screen pass after the screen FX (linear HDR, before tone
 //                mapping; idle = disabled). Depth: GTAO's own depth texture when AO is on (high / ultra), else the scene
 //                once more depth-only at half size — only while a front is sweeping. It drives the muffle on the
-//                master bus (audio.setDamp) and greys the HUD with the same amount (level).
+//                master bus (audio.setDamp) and greys the HUD with the same amount (level), and turns both teams' ink
+//                to one shade under the same front (src/world/inkOne.js: the level's paint, the tower's and hedges' ink,
+//                shots, ink drops, the minimap's turf) — so in there turf can't be told apart.
 //   drain streams, inflow, fizzles, the pop's spray: glows from the FX pools (src/fx/fx.js).
 import * as THREE from 'three';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { G, clamp } from '../core/ctx.js';
 import { SPECIALS } from '../config.js';
+import { inkOneSet, inkOneSetTint } from '../world/inkOne.js';
 
 const TAU = Math.PI * 2;
 const RIPS = 8;
@@ -359,6 +362,9 @@ export class DrainView {
     if (w) { w.t += dt; if (w.t >= w.dur) this.wave = null; }
     this.level = this.wave ? this._visual() : this.inside ? 1 : 0;
     if (this.pass) this.pass.enabled = this.level > 0.001 || !!this.wave;
+    // every ink look on this screen: both teams' ink to one shade with the grey (src/world/inkOne.js)
+    if (this.level > 0.001 || this.wave) inkOneSetTint(G.teamColors?.[0], G.teamColors?.[1]);
+    inkOneSet(this.level, this.wave, this.wave ? this._front(this.wave) : 0, G.time);
     G.audio?.setDamp?.(this.level, d.dampCut, d.dampGain);
     const hk = Math.round(this.level * 85) / 100;
     if (hk !== this._hud && G.hud?.el) { this._hud = hk; G.hud.el.style.filter = hk > 0 ? `grayscale(${hk})` : ''; }
@@ -366,6 +372,7 @@ export class DrainView {
   reset() {
     this.inside = false; this.level = 0; this.wave = null;
     if (this.pass) this.pass.enabled = false;
+    inkOneSet(0, null, 0, G.time || 0);
     G.audio?.setDamp?.(0);
     if (G.hud?.el && this._hud !== 0) G.hud.el.style.filter = '';
     this._hud = 0;

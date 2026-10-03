@@ -1,0 +1,23 @@
+JOB-3 results — sp-fixes, the three tests fixed after JOB-2, run on the Mac mini (botlab helper) at 5a102e0, SLOTS=3 PAR=3, caffeinate, 2026-10-04 00:01 AEST
+All full passes: net-surf-tower 7/7 ×3, drainbow 44/44 ×3, surf-calamari 7/7 ×3; net-surf 13/13, net-drainbow 11/11, surf 42/42, surf-tower 11/11.
+
+## for i=1: ONLY="net-surf-tower drainbow surf-calamari" regress.sh
+== surf-calamari: RESULT 7/7 0 FAIL
+== drainbow: RESULT 44/44 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+
+## for i=2: ONLY="net-surf-tower drainbow surf-calamari" regress.sh
+== surf-calamari: RESULT 7/7 0 FAIL
+== drainbow: RESULT 44/44 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+
+## for i=3: ONLY="net-surf-tower drainbow surf-calamari" regress.sh
+== surf-calamari: RESULT 7/7 0 FAIL
+== drainbow: RESULT 44/44 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+
+## ONLY="net-surf net-drainbow surf surf-tower" regress.sh
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL

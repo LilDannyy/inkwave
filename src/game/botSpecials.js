@@ -749,11 +749,14 @@ export class SpecialSense {
     // shooting (and charging, rolling, brushing) slows a kid down: none while getting out of a blast, unless there's
     // a second to spare and the weapon keeps its pace (backing off from the untouchable: the fight's own trigger)
     const w = a.weapon, slowGun = CHARGE[w.kind] || w.kind === 'roller' || w.kind === 'brush' || MAIN_KITS[w.kind]?.bot?.charges || MAIN_KITS[w.kind]?.bot?.melee || (w.moveSpeedFiring || 6) < 4.4;
-    if (!d.imm && (slowGun || E.spare < 1)) { it.fire = false; it.sub = false; b._bombAim = false; }
+    // ([drainbow] walking out of an enemy Drainbow, blind to its own ink: it keeps painting everything it passes — the
+    // user's "they cover everything as they go"; the bubble drains, it doesn't hurt)
+    const coverAll = d.src === 'drainbow' && !!b.dbIn && !slowGun;
+    if (!d.imm && (slowGun || E.spare < 1) && !coverAll) { it.fire = false; it.sub = false; b._bombAim = false; }
     // (a charger mid-charge or just after its shot walks at 1.8 m/s: a squid hops faster even on bare ground)
     const noSq = a.specialActive && a.specialActive.noSquid, wr = a.weaponRunner;
     const slowKid = !d.imm && (wr.charging || wr.firingT > 0.05) && (a.weapon.moveSpeedFiring || 6) < PLAYER.squidDrySpeed;
-    if (!noSq && !b._squidWouldDrop(move) && ((E.swim && a.groundTeam === 1) || (slowKid && a.groundTeam !== 2))) { it.squid = true; it.fire = false; it.sub = false; b._bombAim = false; }
+    if (!noSq && !b._squidWouldDrop(move) && ((E.swim && b.groundSeen === 1) || (slowKid && b.groundSeen !== 2))) { it.squid = true; it.fire = false; it.sub = false; b._bombAim = false; }
     else it.squid = false;
     // a Tidal Slam: at its edge, a hop on the landing beat lifts us out of the kill ring (3D distance)
     if (d.src === 'slam' && a.grounded && b.jumpCd <= 0) {
@@ -789,7 +792,7 @@ export class SpecialSense {
     }
     if (!hn) { const h = G.level.spawnPads[a.team]; hx = h.x - x0; hz = h.z - z0; }
     { const l = Math.hypot(hx, hz) || 1; hx /= l; hz /= l; }
-    const own = a.groundTeam === 1, noise = (1 - b.diff.fireDiscipline) * 2.2, prev = this.esc && this.esc.r === r ? this.esc.yaw : null;
+    const own = b.groundSeen === 1, noise = (1 - b.diff.fireDiscipline) * 2.2, prev = this.esc && this.esc.r === r ? this.esc.yaw : null;
     let best = null;
     for (let k = 0; k < 12; k++) {
       const yaw = base + (k === 0 ? 0 : (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 6)), sx = Math.sin(yaw), sz = Math.cos(yaw);
@@ -813,7 +816,7 @@ export class SpecialSense {
         const ex = exit + (cover ? 0.3 : LEAVE), ux = x0 + sx * ex, uz = z0 + sz * ex;
         if (!b._dryLine(x0, y0, z0, ux, uz) || !b._fatLos(x0, y0, z0, ux, py, uz)) sc = -12 - ex * 0.2;
         else {
-          G.paint.regionStats(x0 + sx * ex * 0.5, py, z0 + sz * ex * 0.5, 1.2, a.team, _st);
+          G.paint.regionStats(x0 + sx * ex * 0.5, py, z0 + sz * ex * 0.5, 1.2, b.inkTeam ?? a.team, _st);
           swim = own && _st.n > 0 && _st.own > 0.55;
           const slow = _st.n > 0 && _st.enemy > 0.5;
           const sp = swim ? PLAYER.swimSpeed * 0.85 : slow ? PLAYER.enemyInkSpeed + 1 : PLAYER.runSpeed * 0.9;
