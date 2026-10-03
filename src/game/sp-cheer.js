@@ -100,7 +100,9 @@ class OrbWisp {
     if (!fx || !fx._sprite || !near(this.pos, 60)) return;
     const q = fx.q ?? 1, P = this.pos, Q = this.prev, c = _c.copy(this.col).multiplyScalar(3.2 * fade);
     // the head: a soft hot core (two frames' worth overlap into a steady blob) with a white heart
-    fx._sprite(fx.glows, P.x, P.y, P.z, 0, 0, 0, c, 0.62, 0.5, 0.05, 1, 0, 0, G_SOFT + 2.2, 0.0, 0);
+    fx._sprite(fx.glows, P.x, P.y, P.z, 0, 0, 0, c, 0.78, 0.6, 0.05, 1, 0, 0, G_SOFT + 2.2, 0.0, 0);
+    _c2.copy(WHITE).multiplyScalar(2.4 * fade);
+    fx._sprite(fx.glows, P.x, P.y, P.z, 0, 0, 0, _c2, 0.3, 0.24, 0.05, 1, 0, 0, G_SOFT + 2.4, 0.0, 0);
     // the tail: soft blobs laid along the frame's travel, shrinking and fading behind it
     const n = Math.max(1, Math.round(3 * q));
     for (let i = 0; i < n; i++) {

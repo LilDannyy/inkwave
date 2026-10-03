@@ -47,10 +47,10 @@ const CSS = `
 .iw-hud.has-cards .iw-cheerp { translate: -50% calc(var(--u) * -3.4); }
 .iw-cwisp { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; display: none; }
 .iw-cwisp.is-on { display: block; }
-.iw-cwisp i { position: absolute; left: 0; top: 0; width: calc(var(--u) * 1.5); height: calc(var(--u) * 1.5); margin: calc(var(--u) * -.75) 0 0 calc(var(--u) * -.75); border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 22%, var(--self-light) 38%, rgba(var(--self-rgb), .55) 58%, rgba(var(--self-rgb), 0) 72%); will-change: transform; }
-.iw-cwisp i:first-child { width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); margin: calc(var(--u) * -1.3) 0 0 calc(var(--u) * -1.3);
-  box-shadow: 0 0 calc(var(--u) * 1.4) rgba(var(--self-rgb), .9); background: radial-gradient(circle, #fff 0 26%, var(--self-light) 42%, rgba(var(--self-rgb), .7) 60%, rgba(var(--self-rgb), 0) 72%); }
+.iw-cwisp i { position: absolute; left: 0; top: 0; width: calc(var(--u) * 2.2); height: calc(var(--u) * 2.2); margin: calc(var(--u) * -1.1) 0 0 calc(var(--u) * -1.1); border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 24%, var(--self-light) 40%, rgba(var(--self-rgb), .7) 58%, rgba(var(--self-rgb), 0) 72%); will-change: transform; }
+.iw-cwisp i:first-child { width: calc(var(--u) * 3.8); height: calc(var(--u) * 3.8); margin: calc(var(--u) * -1.9) 0 0 calc(var(--u) * -1.9);
+  box-shadow: 0 0 calc(var(--u) * 1.8) rgba(var(--self-rgb), .95), 0 0 calc(var(--u) * .5) #fff; background: radial-gradient(circle, #fff 0 30%, var(--self-light) 44%, rgba(var(--self-rgb), .85) 60%, rgba(var(--self-rgb), 0) 72%); }
 .iw-cgain { position: absolute; left: 0; top: 0; pointer-events: none; display: none; }
 .iw-cgain.is-on { display: block; }
 .iw-cgain b { position: absolute; left: 0; top: 0; translate: -50% -50%; padding: .3em .6em .32em; border-radius: 99px; background: #fff; color: #15121c;
@@ -63,7 +63,7 @@ const CSS = `
 @keyframes iw-cgain-ring { 0% { opacity: 1; scale: .55; } 100% { opacity: 0; scale: 1.45; border-width: 1px; } }
 @media (prefers-reduced-motion: reduce) { .iw-cheerp.is-on, .iw-cheerp.is-on .iw-cheerp__key { animation: none; } }
 `;
-const TRAIL = 6;
+const TRAIL = 8;
 // the d-pad, its up arm lit (a pad's cheer button)
 const DPAD_UP = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3 H15 V9 H21 V15 H15 V21 H9 V15 H3 V9 H9 Z" fill="#9b95aa" stroke="#15121c" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 3 H15 V9.5 H9 Z" fill="var(--self)" stroke="#15121c" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 4.6 L14 7.4 H10 Z" fill="#fff"/></svg>`;
 
@@ -127,7 +127,7 @@ export class CheerHud {
       el.classList.add('is-on');
       const kids = el.children;
       for (let i = 0; i < TRAIL; i++) {
-        const kk = Math.max(0, k - i * 0.045), e = kk * kk * (3 - 2 * kk);
+        const kk = Math.max(0, k - i * 0.04), e = kk * kk * (3 - 2 * kk);
         // up first, then across into the gauge (a quadratic curve through (start x, gauge y)), with a little sway
         const cx = s0.x + (ex - s0.x) * 0.12, cy = ey + (s0.y - ey) * 0.08, u = 1 - e;
         const x = u * u * s0.x + 2 * u * e * cx + e * e * ex + Math.sin(kk * 9 + w.id) * 10 * (1 - kk);

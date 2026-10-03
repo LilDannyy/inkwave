@@ -1444,6 +1444,7 @@ export class Character {
     const rolling = kid && !dance && !!s.rolling && this.animKind === 'roller' && this.tr[T_FLICK] > 0.6;
     this.wRoll = damp(this.wRoll, rolling ? 1 : 0, rolling ? 11 : 6, dt);
     this.wAir = damp(this.wAir, this.grounded ? 0 : 1, this.grounded ? 24 : 12, dt);
+    this.wHover = damp(this.wHover || 0, s.hover && kid ? 1 : 0, 6, dt);   // [b5-zipcheer] held up in the air (a Cheer Orb): legs hang, no jump tuck
     this.wDance = damp(this.wDance, dance ? 1 : 0, 5, dt);
     this.charge = damp(this.charge, ch, 25, dt);
     this.fullT = ch >= 0.995 ? this.fullT + dt : 0;
@@ -1933,17 +1934,18 @@ export class Character {
   _poseAir(P, dt, air) {
     const X = this.PX; X.set(P);
     const vy = this.vyS, jt = this.tr[T_JUMP];
+    const hov = 1 - (this.wHover || 0);                              // [b5-zipcheer] held up (a Cheer Orb): 0 — no tuck, no reach, no flail
     const up = sstep(-1.5, 4, vy);                                  // 1 rising … 0 falling
-    const launch = jt < 0.3 ? 1 - sstep(0.03, 0.2, jt) : 0;        // legs still extended from the push-off
+    const launch = (jt < 0.3 ? 1 - sstep(0.03, 0.2, jt) : 0) * hov;   // legs still extended from the push-off
     const apex = 1 - sstep(0.6, 3.2, Math.abs(vy));                 // hang time at the top
-    const reach = (1 - up) * sstep(0.95, 0.15, this.gnd);            // ground coming up: legs reach, knees soft
-    const fallLong = sstep(0.4, 1.0, this.airT) * (1 - up) * (1 - reach);
-    const lp = jt < 1.2 ? this.jumpRun : 0;                           // running leap vs standing jump
+    const reach = (1 - up) * sstep(0.95, 0.15, this.gnd) * hov;      // ground coming up: legs reach, knees soft
+    const fallLong = sstep(0.4, 1.0, this.airT) * (1 - up) * (1 - reach) * hov;
+    const lp = jt < 1.2 ? this.jumpRun * hov : 0;                     // running leap vs standing jump
     const ld = this.jumpLead === 1 ? -1 : 1;                          // lead leg side: +1 left, −1 right
-    // standing jump: knees tuck up together, then extend down, a little apart
-    const tk = (1 - launch) * Math.max(apex, up * 0.85) * (1 - reach);
-    setE(X, FOOTL, 0.1, lerp(0.16, 0.34, tk), lerp(0.0, 0.07, tk)); setE(X, FOOTLR, lerp(0.15, 0.55, tk), 0.16, 0);
-    setE(X, FOOTR, -0.1, lerp(0.16, 0.31, tk), lerp(-0.03, 0.04, tk)); setE(X, FOOTRR, lerp(0.25, 0.6, tk), -0.16, 0);
+    // standing jump: knees tuck up together, then extend down, a little apart (held up: the legs just hang, swaying)
+    const tk = (1 - launch) * Math.max(apex, up * 0.85) * (1 - reach) * hov, sw = (1 - hov) * Math.sin(this.t * 1.7) * 0.05;
+    setE(X, FOOTL, 0.1, lerp(0.16, 0.34, tk), lerp(0.0, 0.07, tk) + sw); setE(X, FOOTLR, lerp(0.15, 0.55, tk), 0.16, 0);
+    setE(X, FOOTR, -0.1, lerp(0.16, 0.31, tk), lerp(-0.03, 0.04, tk) - sw); setE(X, FOOTRR, lerp(0.25, 0.6, tk), -0.16, 0);
     // running leap: lead knee driven up and forward, trail leg stretched back with the toes pointed; it cycles
     // through (legs pass) on the way down
     if (lp > 0.001) {

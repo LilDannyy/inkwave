@@ -1045,6 +1045,7 @@ export class Actor {
     a.charge = this.weaponRunner.charge;
     a.rolling = this.weaponRunner.rolling;
     a.subAim = !!this.weaponRunner.aimingSub || !!(this.specialActive && this.specialActive.raise);      // bomb cocked / orb held up
+    { const s = this.specialActive; a.hover = !!(s && s.kind === 'booyah' && !s.thrown && s.def.lift > 0 && !this.grounded); }   // [b5-zipcheer] held up by a Cheer Orb (a ghost's too): the legs hang
     a.form = !isSquid ? 'kid' : this.climbing ? 'climb' : this.submerged ? 'swim' : 'squid';
     if (this.specialActive && (this.specialActive.body || this.specialActive.noSquid)) a.form = 'kid';
     a.specialId = this.specialActive ? this.specialActive.id : null;
