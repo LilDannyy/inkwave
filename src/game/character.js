@@ -506,8 +506,8 @@ const SWIPE_ONE = [-0.06, 0.3, 0.78, 0.28, 0.9, 0.95, -0.2];
 // hand stays on the weapon in every state (_bothHands: carry, run, aim, the swings and rolls, the air, landings, the
 // respawn drop, idle fidgets, the locker one-shots, the menu and podium dances); it only lets go to hold and throw a
 // sub (and while a special hides the weapon). The anchors below are placed so the off hand reaches its grip with a bent
-// elbow; the dances use the two-handed ones (trophy: lifted overhead · present: thrust at the viewer · droop: hanging
-// low in front · hug: held against the chest) in place of the free-hand choreography. `gripRoll` (rad): how far the
+// elbow; the dances use the two-handed ones (trophy: lifted for a cheer · present: thrust at the viewer · droop: hanging
+// low in front) in place of the free-hand choreography, all clear of the head. `gripRoll` (rad): how far the
 // off hand may turn round its handle toward its own shoulder (a round shaft: all the way round; a pump or a foregrip: a
 // little), so the wrist meets the weapon the way the arm arrives instead of twisting to a fixed grip; `gripAt` (m)
 // slides it along a round shaft. `twist` turns the shoulders toward the weapon outside the aim stance, `clav` brings
@@ -516,12 +516,10 @@ const SHAFT_BOTH = {   // the roller and the brush: one long shaft, the right fi
   both: true, gripRoll: Math.PI, gripFlip: true, twoCarry: 1, twoAim: 1, lobbyTwo: 1,   // (the left thumb toward the right fist)
   carry: { p: [-0.1, 0.86, 0.12], r: [0.95, 0.35, 0] },
   roll: { p: [-0.05, 0.84, 0.2], r: [0.95, 0.3, 0] },
-  raise: { p: [-0.1, 1.08, 0.12], r: [-0.55, 0.45, 0] },
   lobby: { p: [-0.06, 0.95, 0.12], r: [1.05, 0.45, 0] },
-  trophy: { p: [-0.12, 1.22, 0.08], r: [0, 1.45, 0] },
+  trophy: { p: [-0.12, 0.8, 0.15], r: [-0.75, 0.75, 0] },      // port arms: the drum up by the left shoulder, clear of the head
   present: { p: [-0.06, 0.97, 0.15], r: [0.35, 0.4, 0] },
   droop: { p: [-0.06, 0.8, 0.1], r: [1.25, 0.35, 0] },
-  hug: { p: [-0.06, 0.92, 0.14], r: [-1.2, 0.35, 0.2] },
   fidget: [-0.05, 0.94, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],   // idle: lean on the shaft (anchor · head · spine)
   twist: -0.12, clav: 0.12, poleC: [0.8, -0.5, -0.35],
 };
@@ -536,10 +534,9 @@ const HOLD_BOTH = {
   blaster: { ...HOLD.blaster, both: true, gripRoll: Math.PI, gripFlip: true, lobbyTwo: 1,   // (the pump: a round sleeve)
     carry: { p: [-0.11, 0.8, 0.14], r: [0.38, 0.34, 0.24] },
     lobby: { p: [-0.1, 0.8, 0.17], r: [0.25, 0.5, 0.2] },       // low ready, the bell to the front left
-    trophy: { p: [-0.14, 0.98, 0.1], r: [-0.95, 0.1, 0] },      // raised up by the right shoulder
-    present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
+    trophy: { p: [-0.06, 0.8, 0.2], r: [-0.25, 0.15, 0.1] },    // thrust up ahead, the bulb clear of the chin
+    present: { p: [-0.05, 0.88, 0.14], r: [-0.12, 0.1, 0.1] },
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
-    hug: { p: [-0.05, 0.92, 0.12], r: [-1.1, 0.4, 0.3] },
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
     twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.12 },
   brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1,
@@ -547,10 +544,9 @@ const HOLD_BOTH = {
     carry: { p: [-0.12, 0.8, 0.14], r: [0.55, 0.4, 0.1] },
     run: { p: [-0.12, 0.83, 0.17], r: [0.3, 0.35, 0.05] },
     lobby: { p: [-0.03, 0.88, 0.16], r: [1.2, 0.2, 0] },        // held point-down in front, like a walking cane
-    trophy: { p: [-0.09, 0.94, 0.12], r: [-0.35, -0.4, 0.1] },  // held up, angled off the face (its foregrip won't go overhead)
+    trophy: { p: [-0.14, 0.85, 0.14], r: [-0.9, -0.15, 0] },    // raised by the right shoulder, clear of the head
     present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
-    hug: { p: [-0.05, 0.92, 0.12], r: [-1.2, 0.4, 0.3] },
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
     twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.15 },
 };
@@ -3310,7 +3306,7 @@ export class Character {
     // turned away with the free arm across the chest
     D[MODELR + 1] = -0.9 * ease(turn);
     D[LTW] = turn; setE(D, LTGT, -0.06, 0.9, 0.13); lerpE(D, POLEL, 1, -0.3, 0.2, turn); D[IKL] = 0;
-    if (H.both) { lerpE(D, ANC, H.hug.p[0], H.hug.p[1], H.hug.p[2], turn); lerpE(D, ANCR, H.hug.r[0], H.hug.r[1], H.hug.r[2], turn); }   // hugged
+    if (H.both) { D[ANC + 1] += 0.05 * turn; D[ANC + 2] -= 0.02 * turn; D[ANCR] += 0.15 * turn; }   // hugged in low
     else { lerpE(D, ANC, -0.16, 0.86, 0.1, turn); lerpE(D, ANCR, 1.1, 0.8, 0.4, turn); }
     D[CHEST] -= 0.08 * turn; D[HEAD] = -0.12 * turn + 0.2 * imp; D[HEAD + 2] = 0.1 * turn;
     D[HEAD + 1] = 0.8 * glance * turn - 0.15 * turn; D[NECK + 1] = 0.3 * glance * turn;

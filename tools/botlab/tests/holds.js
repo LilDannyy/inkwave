@@ -7,6 +7,7 @@
 //  - the elbow: its inside angle (shoulder–elbow–wrist) in [ELB_MIN, ELB_MAX] and its bend pointing down / out / back, never
 //    up into the body (kid space: the elbow's offset from the shoulder→wrist line);
 //  - the wrist: the hand's bend off the forearm (swing) ≤ WR_SWING, its twist about the forearm ≤ WR_TWIST.
+//  - the head: the weapon's long axis clear of the head (HEAD_CLR: the head's radius + the weapon's own).
 // The brush, the roller, the blaster and the brolly ('both'): on the weapon, natural elbow / wrist, in every state —
 // stand (2 s idle), run, fire (blaster / brolly shots, brush swipes, roller flick), roll (fire held while moving: roller
 // roll, brush dash, blaster strafing shots; the brolly's canopy held open), jump, run-jump, a fall onto the deck, the
@@ -72,6 +73,11 @@
   // each weapon's off-hand handle: the segment of its axis the hand may hold (weapon space: the foregrip ± half), its
   // round shafts being longer (the hand may slide on the rubber), the pump riding with its stroke
   const HANDLE_HALF = { roller: 0.065, brush: 0.065, blaster: 0.02, brolly: 0.012 };
+  // the head stays clear of the weapon: the head's centre (head bone + its centre offset) to the weapon's long axis
+  // (from above the grip to the muzzle / drum / bristles), at least the head's radius (~0.12) + the weapon's own (the
+  // shaft ~1.5 cm, the blaster's ink bulb ~6.6 cm, the furled canopy ~4 cm)
+  const HEAD_C = V(0, 0.164, 0.014), HEAD_CLR = { roller: 0.135, brush: 0.135, blaster: 0.19, brolly: 0.16 };
+  const _w0 = V(0, 0, 0), _w1 = V(0, 0, 0), _hc = V(0, 0, 0);
   const _a0 = V(0, 0, 0), _a1 = V(0, 0, 0), _hz = V(0, 0, 0), _gy = V(0, 0, 0), _gz = V(0, 0, 0), _hp = V(0, 0, 0);
   const measure = (ch) => {
     ch.root.updateMatrixWorld(true);
@@ -111,10 +117,15 @@
     // the left hand in kid space (the "unchanged" fingerprint)
     _m.copy(ch.kid.matrixWorld).invert(); const hk = _h.clone().applyMatrix4(_m);
     const reach = _s.distanceTo(cl) / ch.kid.getWorldScale(_u).y;
-    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, wTwo: ch.wTwo || 0 };
+    // head clearance
+    const mz = d.muzzle || V(0, 0, 0.3);
+    _w0.set(0, mz.y, 0); _w1.copy(mz); w.off.localToWorld(_w0); w.off.localToWorld(_w1);
+    _hc.copy(HEAD_C); B.head.localToWorld(_hc);
+    const head = new THREE.Line3(_w0, _w1).closestPointToPoint(_hc, true, V(0, 0, 0)).distanceTo(_hc) / ch.kid.getWorldScale(_u).y;
+    return { dist, dw, axErr, elbow, bend: bendIn, bl, twist, swing, hk, reach, head, wTwo: ch.wTwo || 0 };
   };
   // per state: worst values over the sampled frames + the mean hand position
-  const stats = () => ({ axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
+  const stats = () => ({ hdMin: 9, hdAt: -1, axMax: 0, dwSum: 0, rMax: 0, n: 0, dMax: 0, dAt: -1, eMin: 999, eMax: 0, bendMax: -9, swMax: 0, twMax: 0, hx: 0, hy: 0, hz: 0, dSum: 0, two: 0 });
   const sample = (S, t) => {
     const r = measure(kid.character);
     S.rMax = Math.max(S.rMax, r.reach); S.axMax = Math.max(S.axMax, r.axErr); S.dwSum += r.dw;
@@ -123,8 +134,9 @@
     if (r.bl > 0.01) S.bendMax = Math.max(S.bendMax, r.bend);
     S.swMax = Math.max(S.swMax, r.swing); S.twMax = Math.max(S.twMax, r.twist);
     S.hx += r.hk.x; S.hy += r.hk.y; S.hz += r.hk.z; S.dSum += r.dist; S.two += r.wTwo;
+    if (r.head < S.hdMin) { S.hdMin = r.head; S.hdAt = +t.toFixed(2); }
   };
-  const fin = (S) => ({ reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
+  const fin = (S) => ({ head: +S.hdMin.toFixed(3), headAt: S.hdAt, reach: +S.rMax.toFixed(3), ax: +S.axMax.toFixed(1), n: S.n, dMax: +S.dMax.toFixed(4), dAt: S.dAt, elbow: [+S.eMin.toFixed(1), +S.eMax.toFixed(1)], bend: +S.bendMax.toFixed(2), swing: +S.swMax.toFixed(1), twist: +S.twMax.toFixed(1),
     hand: [+(S.hx / S.n).toFixed(3), +(S.hy / S.n).toFixed(3), +(S.hz / S.n).toFixed(3)], dMean: +(S.dSum / S.n).toFixed(4), dw: +(S.dwSum / S.n).toFixed(4), two: +(S.two / S.n).toFixed(3) });
   // run `s` seconds of sim; sample every `every` frames once `from` s have passed
   const run = (S, s, from = 0, every = 1, each) => { const n = Math.round(s * 60); for (let i = 0; i < n; i++) { kid.ink = 100; kid.hp = 1e6; if (each) each(i / 60); frame(); if (S && i / 60 >= from && i % every === 0) sample(S, i / 60); } };
@@ -220,6 +232,7 @@
       const grip = r.dMax <= GRIP_TOL, elb = r.elbow[0] >= ELB_MIN && r.elbow[1] <= ELB_MAX && r.bend <= BEND_MAX, wr = r.swing <= WR_SWING && r.twist <= WR_TWIST;
       R(`${w} ${st}: the off hand on the weapon (≤ ${GRIP_TOL * 100} cm) every frame`, grip, { dMax: r.dMax, at: r.dAt, n: r.n });
       R(`${w} ${st}: a natural elbow and wrist`, elb && wr, { elbow: r.elbow, bend: r.bend, swing: r.swing, twist: r.twist });
+      R(`${w} ${st}: the weapon clear of the head (≥ ${HEAD_CLR[w]} m from its centre)`, r.head >= HEAD_CLR[w], { head: r.head, at: r.headAt });
     }
     // idle fidgets: none that needs the free hand is ever picked, and each one it can pick keeps the hand on
     {
@@ -232,7 +245,7 @@
       put(START, 0); run(null, 0.6);
       for (const id of picks) { ch.idleT = 0; ch.nextFidget = 99; ch.fidget = id; ch.fidgetT = 0; ch.lastFidget = id; run(S, 2.4, 0, 2); }
       const r = fin(S);
-      R(`${w}: idle fidgets keep the off hand on`, r.dMax <= GRIP_TOL && r.elbow[0] >= ELB_MIN && r.swing <= WR_SWING && r.twist <= WR_TWIST, r);
+      R(`${w}: idle fidgets keep the off hand on (and the weapon off the head)`, r.dMax <= GRIP_TOL && r.elbow[0] >= ELB_MIN && r.swing <= WR_SWING && r.twist <= WR_TWIST && r.head >= HEAD_CLR[w], r);
       res.fidgets = r;
     }
   }
