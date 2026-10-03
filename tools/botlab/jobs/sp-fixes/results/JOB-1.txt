@@ -1,0 +1,33 @@
+JOB-1 results — sp-fixes (Drainbow one shade + blind bots), run on the Mac mini (botlab helper) at 3f9b2bb, SLOTS=3 PAR=3, caffeinate, 2026-10-03 23:42 AEST
+
+## 1. Regressions: ONLY="drainbow bot-specials bot-specials-tower bot-sight net-drainbow" regress.sh
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== drainbow: RESULT 43/44 1 FAIL
+FAIL blind: walking out of it the blind bot keeps painting everything it passes; with botBlind 0 (the old reading: its own ink known) it holds its fire on the way out  {"blind":{"fires":80,"framesInside":80,"painted":57.46,"out":true},"sighted":{"fires":4,"framesInside":35,"painted":3.44,"out":true}}
+== bot-sight: RESULT 13/13 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== net-drainbow: RESULT 10/10 0 FAIL
+
+drainbow.js rerun ALONE twice afterwards (nothing else running): RESULT 44/44, RESULT 44/44.
+So the 'blind' check's one miss came in the PAR=3 batch (sighted fired 4 times on the way out); alone it passes.
+
+## 2. Balance A/B: CFGS="db dbx bub" DBX='drainbow.botBlind=0' balance2.sh <out> 2 2  (96 matches)
+FAILED lines: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+node tools/botlab/jobs/drainbow/agg2.cjs <out>:
+
+=== turf (48 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=16: wins 56% [A 63% (n 8), B 50% (n 8)] | turf Δ -1.9 ±7.5 | K/D 1.00 ±0.35 | special used 11.4/match (theirs 13.9)
+      per bubble: shots halved 1.8, crossings 2.2, life added 0.09 s, bot-frames held inside 198
+  drainbow what-if ($DBX) n=16: wins 56% [A 75% (n 8), B 38% (n 8)] | turf Δ 3.9 ±11.7 | K/D 1.22 ±0.43 | special used 11.6/match (theirs 14.0)
+      per bubble: shots halved 1.7, crossings 2.5, life added 0.11 s, bot-frames held inside 251
+  bubble guard n=16: wins 56% [A 50% (n 8), B 63% (n 8)] | turf Δ 0.4 ±9.8 | K/D 1.13 ±0.35 | special used 9.6/match (theirs 13.1)
+  all: stuck 0.10% | splats 36.5 | matches with console warnings 0 · frame errors 0
+
+=== zones (48 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=16: wins 56% [A 50% (n 8), B 63% (n 8)] | turf Δ 3.3 ±5.2 | K/D 1.09 ±0.33 | special used 18.9/match (theirs 22.1)
+      per bubble: shots halved 2.4, crossings 3.7, life added 0.17 s, bot-frames held inside 329
+  drainbow what-if ($DBX) n=16: wins 38% [A 63% (n 8), B 13% (n 8)] | turf Δ 2.5 ±6.0 | K/D 1.11 ±0.27 | special used 22.4/match (theirs 23.1)
+      per bubble: shots halved 2.4, crossings 4.0, life added 0.21 s, bot-frames held inside 280
+  bubble guard n=16: wins 69% [A 50% (n 8), B 88% (n 8)] | turf Δ -2.7 ±5.7 | K/D 1.04 ±0.27 | special used 20.6/match (theirs 23.8)
+  all: stuck 0.37% | splats 75.7 | matches with console warnings 0 · frame errors 0
