@@ -15,6 +15,8 @@
 //   stack-two    two teammates super jumping to one teammate: both tags stacked over the spot, clear of its name tag
 //   tab-stack    the TAB map: a teammate on Ink Jet and both others jumping to them — three marks on one spot, the
 //                discs side by side, each label clear of the pins
+//   tab-chip     (Zone Control / Tower Command) the TAB map: a jump coming down on the centre zone / by the tower — the
+//                disc just clear of the chip's text and the pins, the label clear of them
 //   alert3-call  three teammates jumping to you at once (side by side) and a streak callout, dropped below them
 //   alert-tracked  a teammate jumping to you while you're TRACKED and POISONED: the row under the badges
 //   (every scene at every window size — W=960 H=600 for a small one; Boss Battle: no foe scenes, the boss stands still)
@@ -183,6 +185,21 @@
     const pts = g.hud.jumps.state().dio.map(tfXY).filter((q) => q.length === 2);
     for (const a of [me, M1, M2, M3]) pts.push(scr(a.pos));
     return { crop: cropAround(pts) };
+  }, 300);
+  // ---- the TAB map: a jump coming down on Zone Control's centre zone / by Tower Command's tower — its disc just clear
+  // of the chip's text and of the pins there (the teammate it lands by stands on the spot), its label clear of them all
+  if (m.zones || m.tower) add('tab-chip', () => {
+    clearAll();
+    const z = m.zones ? (m.zones.zones.find((q) => q.kind === 'center') || m.zones.zones[0]) : null;
+    const [x, y, zz] = z ? z.center : [m.tower.pos.x + 2.5, m.tower.pos.y, m.tower.pos.z];
+    put(me, at(0, 0)); look(way, -0.14); step(0.3);
+    M2.pos.set(x, G.level.groundHeight(x, zz, y + 2) + 0.02, zz); M2.vel.set(0, 0, 0); M2.netTp = (M2.netTp || 0) + 1;
+    m.controller = { mapHeld: true, enabled: true, update() {}, computeAim() {} };
+    step(0.5);
+    M1.superJump(M2); step(1.0);
+    const pts = g.hud.jumps.state().dio.map(tfXY).filter((q) => q.length === 2);
+    pts.push(scr(M2.pos));
+    return { crop: cropAround(pts), spot: [+x.toFixed(1), +zz.toFixed(1)] };
   }, 300);
   window.__hudScenes = scenes;
   return scenes.map((s) => ({ name: s.name }));

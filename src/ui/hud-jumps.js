@@ -427,18 +427,21 @@ export class JumpHud {
 // ---- the TAB map (diorama.js update → dioJumpTags): a pin on each landing spot, the same tag
 const DIO = { pool: [], layer: null, of: null, cur: [], ord: [], discs: new Boxes(), chips: new Boxes(), pins: new Boxes(), labs: new Boxes(), names: new WeakMap(), key: null };
 // a disc that would sit on an older disc (two marks on one spot) or hide a zone / tower chip's text slides off it the
-// shortest way: right, left, down or up (a tie: in that order — so two discs on one spot sit side by side)
-const SLIDE = [1, 0, -1, 0, 0, 1, 0, -1];
-// how far a box (hw × hh round x, y) slides along the axis (ux, uy) until it covers nothing in A or B (Infinity: it
-// would leave the frame first)
-function slide(A, B, x, y, hw, hh, g, ux, uy, W, H) {
+// shortest way, to a place clear of the pins too (drawn over the discs): right, left, down, up or a diagonal (a tie: in
+// that order — so two discs on one spot sit side by side)
+const D45 = Math.SQRT1_2, SLIDE = [1, 0, -1, 0, 0, 1, 0, -1, D45, D45, -D45, D45, D45, -D45, -D45, -D45];
+// how far a box (hw × hh round x, y) slides along (ux, uy) (a unit vector) until it covers nothing in A, B or C
+// (Infinity: it would leave the frame first). Each step goes just past the box it covers, on whichever axis frees it first
+function slide(A, B, C, x, y, hw, hh, g, ux, uy, W, H) {
   let s = 0;
-  for (let k = 0; k < 16; k++) {
+  for (let k = 0; k < 24; k++) {
     const cx = x + ux * s, cy = y + uy * s, l = cx - hw, t = cy - hh, r = cx + hw, b = cy + hh;
     if (l < 0 || t < 0 || r > W || b > H) return Infinity;
-    const o = A.hit(l, t, r, b, g, null) || B.hit(l, t, r, b, g, null);
+    const o = A.hit(l, t, r, b, g, null) || B.hit(l, t, r, b, g, null) || C.hit(l, t, r, b, g, null);
     if (!o) return s;
-    s = (ux > 0 ? o.r + g + hw - x : ux < 0 ? x - (o.l - g - hw) : uy > 0 ? o.b + g + hh - y : y - (o.t - g - hh)) + EPS;
+    const sx = ux > 0 ? (o.r + g + hw - x) / ux : ux < 0 ? (o.l - g - hw - x) / ux : Infinity;
+    const sy = uy > 0 ? (o.b + g + hh - y) / uy : uy < 0 ? (o.t - g - hh - y) / uy : Infinity;
+    s = Math.min(sx, sy) + EPS;
   }
   return Infinity;
 }
@@ -469,12 +472,12 @@ export function dioJumpTags(dio, cam, W, H, me) {
   const u = uOf(W, H), g = JUMP_UI.gap, scope = u.toFixed(2);
   // 1 · each disc on its spot. One that would sit on an older disc (two marks on one spot) goes beside it; one that
   // would hide a zone / tower chip's text goes just clear of the chip (the shortest way: SLIDE)
-  const discs = DIO.discs.clear(), chips = DIO.chips.clear(), cur = DIO.cur, ord = DIO.ord;
+  const discs = DIO.discs.clear(), chips = DIO.chips.clear(), pins = DIO.pins.clear(), labs = DIO.labs.clear(), cur = DIO.cur, ord = DIO.ord;
   cur.length = 0; ord.length = 0;
   for (let i = 0; i < marks.length; i++) ord.push(marks[i]);
   ord.sort(byBirth);
-  if (ord.length) chipBoxes(dio, u, chips);
-  let n = 0, named = false;
+  if (ord.length) { chipBoxes(dio, u, chips); pinBoxes(dio, u, pins); }
+  let n = 0;
   for (let i = 0; i < ord.length; i++) {
     const r = ord[i];
     _v.set(r.x, r.y + 0.08, r.z).project(cam);
@@ -489,7 +492,7 @@ export function dioJumpTags(dio, cam, W, H, me) {
     if (discs.hit(x0 - R, y0 - R, x0 + R, y0 + R, g, null) || chips.hit(x0 - R, y0 - R, x0 + R, y0 + R, g, null)) {
       let best = Infinity, bx = 0, by = 0;
       for (let k = 0; k < SLIDE.length; k += 2) {
-        const sl = slide(discs, chips, x0, y0, R, R, g, SLIDE[k], SLIDE[k + 1], W, H);
+        const sl = slide(discs, chips, pins, x0, y0, R, R, g, SLIDE[k], SLIDE[k + 1], W, H);
         if (sl < best - 0.5) { best = sl; bx = SLIDE[k]; by = SLIDE[k + 1]; }
       }
       if (best < Infinity) { x = x0 + bx * best; y = y0 + by * best; }
@@ -498,13 +501,10 @@ export function dioJumpTags(dio, cam, W, H, me) {
     discs.add(x - R, y - R, x + R, y + R, t);
     place(t, x, y, 0);
     cur.push(t);
-    if (t.named) named = true;
   }
   for (let i = n; i < DIO.pool.length; i++) show(DIO.pool[i], false);
   // 2 · each name label where it covers nothing: the first free place in LAB_AT (nearest first); where every place
   // covers something, the one that costs least (COST: a pin or another label only if nothing else will do)
-  const pins = DIO.pins.clear(), labs = DIO.labs.clear();
-  if (named) pinBoxes(dio, u, pins);
   for (let i = 0; i < cur.length; i++) {
     const t = cur[i];
     if (!t.named) { setLabel(t, 0, 0); continue; }

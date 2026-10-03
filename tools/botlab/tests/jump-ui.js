@@ -120,12 +120,12 @@
   // a disc over a zone / tower chip's text
   const discChip = (ts) => { const C = chipRects(), out = []; for (const t of ts) { const ring = t.el.querySelector('.iw-jt__ring'); if (!shown(ring)) continue; const b = rect(ring); for (const q of C) if (hitB(b, q)) out.push(`${t.name || 'foe'} disc × ${q.k}`); } return out; };
   // a TAB-map disc on its spot (within 2.5 px); or, where a zone / tower chip's text is there, slid just clear of the
-  // chip (its ring off it, no further than a disc and a half)
+  // chip (its ring off it, no further than two disc widths)
   const dioSpot = (t, at) => {
     if (!t || !at) return { ok: false };
     const u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), R = 0.83 * 2.1 * u, D = 2 * R + 0.35 * u, off = Math.hypot(t.xy[0] - at[0], t.xy[1] - at[1]);
     const chip = chipRects().filter((q) => hitB(grow({ l: at[0] - R, t: at[1] - R, r: at[0] + R, b: at[1] + R }, 6), q)).map((q) => q.k);
-    return { ok: off <= 2.5 || (chip.length > 0 && discChip([t]).length === 0 && off <= 1.5 * D), off: r2(off), chip };
+    return { ok: off <= 2.5 || (chip.length > 0 && discChip([t]).length === 0 && off <= 2 * D), off: r2(off), chip };
   };
   const pinClash = (ts) => { const P = pinRects().concat(chipRects()), out = []; for (const t of ts) { const lab = t.el.querySelector('.iw-jt__tag'); if (!t.name || !shown(lab)) continue; const b = rect(lab); for (const q of P) if (hitB(b, q)) out.push(`${t.name} × pin ${q.k}`); } return out; };
   const allyTag = (a) => { const e = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((x) => x.style.display !== 'none' && x.querySelector('.iw-mk__tag b').textContent === a.name); return e ? [[a.name + '(ally tag)', [{ k: 'tag', ...rect(e.querySelector('.iw-mk__tag')) }]]] : []; };
@@ -381,6 +381,12 @@
         mates[0].superJump(T); mates[1].superJump(T); step(1.0);
         return { who: [[mates[0], 'jump'], [mates[1], 'jump']], near: [T] };
       }],
+      ['two teammates jumping to an Ink Jet user (three marks on one spot)', () => {
+        const U = mates[2];
+        start(U, 'jetpack', 12); U._go = new THREE.Vector3(1, 0, 0); step(1.2); U._go = null; step(0.2);
+        mates[0].superJump(U); mates[1].superJump(U); step(0.3);
+        return { who: [[U, 'return'], [mates[0], 'jump'], [mates[1], 'jump']], near: [] };
+      }],
       // the rest of the squad (Boss Battle: five) standing round an Ink Jet user's take-off spot far up the screen, the
       // camera looking down until the spot's tag is 3.5 u under the lowest thing hanging at the top middle: stacked up
       // over the crowd's name tags the tags would end under the top bar / boss bar, so they go down instead
@@ -407,8 +413,8 @@
         const tm = topMiddle(), overTop = w.flatMap((t) => { const b = tagRect(t); return b ? tm.filter((o) => hitB(b, o)).map((o) => `${t.name} × ${o.k}`) : []; });
         // (the crowd scene: the column over the spot meets the top middle, so at least one tag went down)
         const down = !top || seats.some((x) => x.dy > 2.5);
-        R(`${label}: world view — both names, no tag over another (nor a teammate's name tag, nor the top middle), each over its spot (on it, or resting on what it clears)`,
-          w.length === 2 && wc.length === 0 && overTop.length === 0 && seats.every((x) => x.ok) && down, { names: w.map((t) => t.name), clash: wc, overTop, seats, ...(top ? { top, down } : {}) });
+        R(`${label}: world view — every name, no tag over another (nor a teammate's name tag, nor the top middle), each over its spot (on it, or resting on what it clears)`,
+          w.length === who.length && wc.length === 0 && overTop.length === 0 && seats.every((x) => x.ok) && down, { names: w.map((t) => t.name), clash: wc, overTop, seats, ...(top ? { top, down } : {}) });
         const frame = rect(hud.mapFrame), labs = mp.map((t) => rect(t.el.querySelector('.iw-jt__tag')));
         const mc = [];
         for (let i = 0; i < mp.length; i++) for (let j = 0; j < mp.length; j++) {
@@ -419,10 +425,12 @@
         }
         const inFrame = labs.every((b) => b.l >= frame.l - 0.5 && b.r <= frame.r + 0.5 && b.t >= frame.t - 0.5 && b.b <= frame.b + 0.5);
         const rings = mp.filter((t) => shown(t.el.querySelector('.iw-jt__ring'))).length;
-        R(`${label}: minimap — both names (inside the map), one ring on the shared spot, no name over another`, mp.length === 2 && mc.length === 0 && inFrame && rings === 1, { names: mp.map((t) => t.name), clash: mc, inFrame, rings, labels: labs.map(rb) });
+        R(`${label}: minimap — every name (inside the map), one ring on the shared spot, no name over another`, mp.length === who.length && mc.length === 0 && inFrame && rings === 1, { names: mp.map((t) => t.name), clash: mc, inFrame, rings, labels: labs.map(rb) });
       } else {
         const d = dioT().filter((t) => names.includes(t.name)), dc = clashes(d), pc = pinClash(d), zc = discChip(d);
-        R(`${label}: TAB map — both names, no tag over another, no label over a pin (badge, stem, key, name), no disc over a chip`, d.length === 2 && dc.length === 0 && pc.length === 0 && zc.length === 0, { names: d.map((t) => t.name), clash: dc, pins: pc, chips: zc, at: d.map((t) => t.xy) });
+        // (a disc moved off its spot — beside an older one, off a chip — lands clear of the pins, which are drawn over it)
+        const P = pinRects(), moved = who.flatMap(([a, kind]) => { const r = markOf(a, kind), t = d.find((x) => x.name === a.name); if (!r || !t || near2(t.xy, proj(r.x, r.y + 0.08, r.z))) return []; const ring = rect(t.el.querySelector('.iw-jt__ring')); return P.filter((q) => hitB(ring, q)).map((q) => `${a.name} disc (moved) × pin ${q.k}`); });
+        R(`${label}: TAB map — every name, no tag over another, no label over a pin (badge, stem, key, name), no disc over a chip, a moved disc under no pin`, d.length === who.length && dc.length === 0 && pc.length === 0 && zc.length === 0 && moved.length === 0, { names: d.map((t) => t.name), clash: dc, pins: pc, chips: zc, moved, at: d.map((t) => t.xy) });
         closeTab();
       }
       step(2.5);
@@ -454,10 +462,11 @@
         put(mates[2], x, z); step(0.1);
         mates[0].superJump(mates[2]); step(1.0);
         const d = dioT().filter((t) => t.name === mates[0].name), pc = pinClash(d), zc = discChip(d), ch = chipRects().length;
-        // (its disc moved off a chip's text goes no further than the next place round its spot: a disc and a half)
+        // (its disc moved off a chip's text goes no further than two disc widths: clear of the chip — 3 to 4 discs wide —
+        // and of the pins there, the teammate it lands by standing on the spot)
         const r = markOf(mates[0], 'jump'), at = r && proj(r.x, r.y + 0.08, r.z), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100), D = (2 * 0.83 * 2.1 + 0.35) * u;
         const off = d[0] && at ? Math.hypot(d[0].xy[0] - at[0], d[0].xy[1] - at[1]) : null;
-        if (!d.length || pc.length || zc.length || !ch || !(off <= 1.5 * D)) bad2.push({ at: [r2(x), r2(z)], tag: d.length, chips: ch, hits: pc.concat(zc), off: off && r2(off), D: r2(D) });
+        if (!d.length || pc.length || zc.length || !ch || !(off <= 2 * D)) bad2.push({ at: [r2(x), r2(z)], tag: d.length, chips: ch, hits: pc.concat(zc), off: off && r2(off), D: r2(D) });
         closeTab(); step(2.5);
       }
       R(`TAB map: a jump coming down on ${m.zones ? 'each zone' : 'the tower'} — its label clear of the ${m.zones ? 'zone' : 'tower'} chip and the pins, its disc off the chip's text (just beside its spot)`, bad2.length === 0, { spots: spots.length, bad: bad2 });
