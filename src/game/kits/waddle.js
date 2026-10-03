@@ -689,14 +689,15 @@ function ringFx(it, dt) {
 let preview = null;
 function previewFx() {
   const a = G.local, P = G.projectiles;
-  const show = !!(a && a.alive && a.weaponRunner?.aimingSub && a.sub?.kind === 'waddle' && P?.arcRing?.visible);
+  const sub = a?.specialActive?.kind === 'barrage' ? a.specialActive.bomb : a?.sub;   // [b5-sprules] (a barrage's Waddles too)
+  const show = !!(a && a.alive && a.weaponRunner?.aimingSub && sub?.kind === 'waddle' && P?.arcRing?.visible);
   if (!show) { if (preview) preview.visible = false; return; }
   if (!preview) { preview = makeRing(a.color, 0.4); preview.material.uniforms.uGrow.value = 1; preview.material.uniforms.uSweep.value = 0; G.scene.add(preview); }
   if (preview.parent !== G.scene) G.scene.add(preview);
   preview.material.uniforms.uColor.value.copy(a.color);
   preview.material.uniforms.uTime.value = G.time;
   preview.position.copy(P.arcRing.position);
-  preview.scale.setScalar(a.sub.senseRadius);
+  preview.scale.setScalar(sub.senseRadius);
   preview.visible = true;
 }
 

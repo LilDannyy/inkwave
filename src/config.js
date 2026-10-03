@@ -46,8 +46,10 @@ export const PLAYER = {
   regenRate: 22,
   regenRateSwim: 60,
   respawnTime: 5.5,
-  // share of the special gauge you keep when splatted (a special running at the time ends and the gauge restarts
-  // from this share of full); the rest is lost, and what's kept carries through the respawn
+  // share of the special gauge you keep when splatted; the rest is lost, and what's kept carries through the respawn.
+  // [b5-sprules] A special running at the time ends and the gauge restarts from this share of what was LEFT of it (its
+  // gauge as the HUD showed it, less what carries on without you — specials.js splatShare), not of a full gauge (the
+  // user: "gives you half back of 100% if you die during the special, not how much you currently have")
   specialKeepOnSplat: 0.5,
   spawnInvuln: 1.6,
   fallDeathY: -1.45,  // touching the sea (surface y = -1.6) splats you
@@ -473,8 +475,15 @@ export const SPECIALS = {
   barrage_burst: { id: 'barrage_burst', kind: 'barrage', bomb: 'burst', name: 'Pop Pellet Barrage', blurb: 'Pelt foes with rapid-fire Pop Pellets — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.2 },
   barrage_seeker: { id: 'barrage_seeker', kind: 'barrage', bomb: 'seeker', name: 'Skitter Bomb Barrage', blurb: 'Send a pack of Skitter Bombs chasing foes, each inking a trail — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.5 },
   barrage_mist: { id: 'barrage_mist', kind: 'barrage', bomb: 'mist', name: 'Murk Bomb Barrage', blurb: 'Smother an area in Murk Bomb mist — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.45 },
+  // [b5-sprules] (src/game/sp-barrage.js) Waddle Bomb Barrage; Mystery Bomb Barrage: every throw a different bomb, drawn
+  // at random from `mystery` (the bombs the barrages throw) — never the same twice running, every kind once in each
+  // round of draws; each throw waits its own barrage's gap (bomb 0.3 … seeker 0.5) before the next
+  barrage_waddle: { id: 'barrage_waddle', kind: 'barrage', bomb: 'waddle', name: 'Waddle Bomb Barrage', blurb: 'Send out a parade of Waddle Bombs that waddle after any foe near where they land — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.5 },
+  barrage_mystery: { id: 'barrage_mystery', kind: 'barrage', bomb: 'bomb', mystery: ['bomb', 'sticky', 'burst', 'seeker', 'mist', 'waddle'], name: 'Mystery Bomb Barrage', blurb: 'Every throw is a different bomb, picked at random — the next one shows by your crosshair and in your hand. No ink needed. Your main weapon still works.', duration: 6.5, gap: 0.4 },
   // force field: hits become knockback (reduced); touching teammates shares it
-  bubbler: { id: 'bubbler', name: 'Bubble Guard', blurb: 'A force field that turns every hit into a shove instead of damage. Touch teammates to share it.',
+  // [b5-sprules] shared down a chain (src/game/sp-bubble.js): a teammate who got one passes it on by touch too; every
+  // copy keeps what was left of the one it came from, one at a time a player, each chain once a player
+  bubbler: { id: 'bubbler', name: 'Bubble Guard', blurb: 'A force field that turns every hit into a shove instead of damage. Touch teammates to share it — and they can pass it on.',
     duration: 6.5, radius: 1.3, knockPerDamage: 0.045, knockMax: 6.5, shareRange: 1.5 },
   // reveals every enemy to your team (screen + map); they are slowed and burn ink faster
   sonar: { id: 'sonar', name: 'Deep Sonar', blurb: 'Reveals every enemy to your team on screen and on the map. Revealed foes move slower and burn through ink faster.',
@@ -541,13 +550,15 @@ export const SPECIALS = {
   // muffled) and you and your teammates inside gain it: total = drain × foes inside, split across your team inside.
   // While it's up your own meter doesn't charge (it's your running special); your share of the drained special turns
   // into bubble time instead (extendPerMeter s per full meter, total life ≤ maxLife). No hit points: it pops when its
-  // time runs out or its owner is splatted (popOnOwnerSplat).
+  // time runs out (or its owner is splatted, with popOnOwnerSplat). [b5-sprules] It outlives its owner (the user: "make
+  // the following survive after the user is splatted: … drainbow"): it stands for the rest of its life, on its own clock
+  // — the owner's share stops growing it while they're away (back from the respawn they're any teammate in it).
   drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'A rainbow bubble at your feet. Enemy ink through it does half damage. Foes inside go grey and muffled as their ink and special drain to your team inside — your share keeps it up longer.',
     duration: 8.5, radius: 5.73, lift: 1.0,   // radius: the user's +33⅓ % (2026-10-03; was 4.3)
     inflate: 0.55, shotMul: 0.5,
     inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
     extendPerMeter: 15, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
-    popOnOwnerSplat: true,
+    popOnOwnerSplat: false,                   // [b5-sprules] (was true)
     // balance (2026-10-03, tools/botlab/jobs/drainbow/results: JOB-1 had it far behind the other specials — 21 % turf / 6 %
     // zones wins for a team forced to it; with these, JOB-3 44 % / 44 % (n 16 each) and JOB-4 63 % / 58 % (n 24): Bubble
     // Guard 63 % / 81 % and 50 % / 71 %, random rolls 50 % / 58 % turf):
@@ -564,7 +575,8 @@ export const SPECIALS = {
     waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },
 };
 // (append-only: online records carry the index — keep new specials at the end)
-export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf', 'drainbow'];
+export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf', 'drainbow',
+  'barrage_waddle', 'barrage_mystery'];   // [b5-sprules]
 
 // ---- Match ----
 export const MATCH = {

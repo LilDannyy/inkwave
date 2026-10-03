@@ -1452,3 +1452,23 @@ body.iw-dio-on .iw-xh, body.iw-dio-on .iw-mks, body.iw-dio-on .iw-map, body.iw-d
   .iw-bb__embsplat, .iw-bb__stripes, .iw-btc__stripes, .iw-bb__stars i, .iw-bmv.has-dir.is-on .iw-bmv__dir svg { animation: none !important; }
   .iw-btc__txt, .iw-bend__emb { animation-name: none !important; }
 }
+
+/* ------------------------------------------------------------------ [b5-sprules] the Mystery Bomb Barrage's NEXT card
+   (src/ui/hud-barrage.js): lower right of the crosshair (the sub-aim chip is lower left); a slot-reel spin on each draw */
+.iw-bnext { position: absolute; left: 26px; top: 50px; display: flex; align-items: center; gap: 7px; padding: 4px 13px 4px 5px; border-radius: 999px;
+  background: rgba(14, 11, 22, .86); box-shadow: 0 0 0 2px var(--self), 0 3px 0 rgba(0, 0, 0, .3); color: #fff; white-space: nowrap; pointer-events: none;
+  opacity: 0; scale: .5; transform-origin: 0 50%; transition: opacity .15s, scale .3s var(--spring); }
+.iw-bnext.is-on { opacity: 1; scale: 1; }
+.iw-bnext small { order: -1; font: 900 10px / 1 'Rubik', sans-serif; letter-spacing: .14em; color: var(--self-light); padding-left: 5px; }
+.iw-bnext__w { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.iw-bnext__i { display: block; width: 30px; height: 30px; color: var(--self); }
+.iw-bnext__i svg { width: 100%; height: 100%; }
+.iw-bnext__n { font: 900 14px / 1 'Rubik', sans-serif; letter-spacing: .03em; transition: opacity .1s; }
+.iw-bnext.is-spin .iw-bnext__n { opacity: .3; }
+.iw-bnext__i.is-tick { animation: iw-bnext-tick 55ms linear; }
+@keyframes iw-bnext-tick { from { translate: 0 -70%; } to { translate: 0 0; } }
+.iw-bnext.is-land { animation: iw-bnext-land .42s var(--spring2); }
+@keyframes iw-bnext-land { 0% { scale: 1.28; } 100% { scale: 1; } }
+.iw-bnext.is-land .iw-bnext__w { animation: iw-bnext-flash .45s ease-out; }
+@keyframes iw-bnext-flash { 0% { background: #fff; box-shadow: 0 0 12px var(--self); } 100% { background: rgba(255, 255, 255, .1); box-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .iw-bnext__i.is-tick, .iw-bnext.is-land, .iw-bnext.is-land .iw-bnext__w { animation: none; } }

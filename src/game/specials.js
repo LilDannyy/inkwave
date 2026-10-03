@@ -20,6 +20,7 @@ import { rumble } from './actor.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
 import { KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';
 import { teamKnown } from './botSight.js';
+import { joinChain, shareShield, shieldNet } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain
 
 // world props for the big specials (kraken, speaker, missile, jetpack, crab) — optional until they exist
 let PROPS = null;
@@ -277,6 +278,7 @@ export class SpecialSystem {
       case 2: this._ghostObj(a, d); break;
       case 3: { const w = this.world.find((x) => x.ghost && x.gid === d[1] && !x.dead); if (w) w.netEvent?.(d); break; }
       case 4: { const s = a.specialActive; if (s?.ghost) GHOST[s.kind]?.event?.call(this, a, s, d); break; }
+      case 5: shieldNet(this, a, d); break;   // [b5-sprules] a Bubble Guard passed on to a (sp-bubble.js)
     }
   }
   _startGhost(a, id) {
@@ -352,10 +354,11 @@ export class SpecialSystem {
     this._endCue(a, s);
     IMPL[s.kind]?.body?.call(this, a, s, dt);
     if (a.specialActive === s && s.dur && s.t >= s.dur) this.end(a, 'time');
-    // the sea still wins
+    // the sea still wins ([b5-sprules] the gauge keeps its share of what was left, as for any splat mid-special)
     if (a.alive && a.pos.y < PLAYER.fallDeathY && G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.6) === -Infinity) {
+      const left = this.splatShare(a);
       if (a.specialActive) this.end(a, 'splat');
-      a.splat(a.lastDamage < 4 ? a.lastAttacker : null, 'water');
+      a.splat(a.lastDamage < 4 ? a.lastAttacker : null, 'water', left);
     }
   }
   // before the actor moves: a special may steer / shape the movement input (Mega Stamp)
@@ -392,6 +395,17 @@ export class SpecialSystem {
     if (s.id === 'crab') return Math.min(Math.max(0, 1 - s.t / s.dur), Math.max(0, s.hp / s.def.hp));
     if (s.dur) return Math.max(0, 1 - s.t / s.dur);
     return 1;
+  }
+  // [b5-sprules] what a splat right now cuts short of the running special, as a share of a full gauge (actor.splat
+  // keeps PLAYER.specialKeepOnSplat of it): what's left of it as its gauge shows (remaining), less what carries on
+  // without its owner — a registered special's own splatShare (Drainbow: its bubble stands on), the Ink Tempest (thrown
+  // the moment it starts). null: none running.
+  splatShare(a) {
+    const s = a.specialActive;
+    if (!s) return null;
+    if (s.id === 'storm') return 0;
+    const f = IMPL[s.kind]?.splatShare;
+    return clamp(f ? f.call(this, a, s) : this.remaining(a), 0, 1);
   }
   // HUD hint for the local player while a special runs
   prompt(a) {
@@ -495,9 +509,10 @@ export class SpecialSystem {
   }
 
   // ---------------------------------------------------------------------------------------------- shields
-  giveShield(a, time, owner) {
+  giveShield(a, time, owner, chain = null) {
     a.status.shield = Math.max(a.status.shield, time);
     a._shieldOwner = !!owner;
+    joinChain(a, chain, owner);   // [b5-sprules] the chain this field belongs to (its own new one for the user's)
     if (!this.shieldMeshes.has(a)) {
       const m = new THREE.Mesh(this.sphereGeo, bubbleMat(G.teamColors[a.team]));
       m.renderOrder = 4;
@@ -565,12 +580,7 @@ export class SpecialSystem {
         m.material.uniforms.uHit.value = Math.max(0, m.material.uniforms.uHit.value - dt * 3);
         m.material.uniforms.uAlpha.value = a.status.shield < 1 ? 0.5 + 0.5 * Math.abs(Math.sin(G.time * 14)) : 1;
       }
-      if (a._shieldOwner && a.specialActive && a.specialActive.id === 'bubbler') {
-        for (const o of G.actors) {
-          if (o === a || o.team !== a.team || !o.alive || o.status.shield > 0) continue;
-          if (o.pos.distanceTo(a.pos) < SPECIALS.bubbler.shareRange) this.giveShield(o, a.status.shield, false);
-        }
-      }
+      shareShield(this, a);   // [b5-sprules] passing it on by touch, down the chain (sp-bubble.js)
       if (a.status.shield <= 0) this._dropShield(a, true);
     }
     this._ghostTick(dt);
@@ -1259,13 +1269,7 @@ class Orb {
 // ================================================================================================ specials
 const IMPL = {
   // ---------------------------------------------------------------------------------------------- Bomb Barrage
-  barrage: {
-    start(a, s) {
-      s.bomb = SUBS[s.def.bomb] || SUBS.bomb; s.nextThrow = 0;
-      a.character.setSub?.(s.bomb.kind);
-    },
-    end(a) { a.character.setSub?.(a.sub.kind); a.weaponRunner.aimingSub = false; },
-  },
+  // [b5-sprules] src/game/sp-barrage.js (registerSpecial('barrage'): every variant, the Waddle and the Mystery)
 
   // ---------------------------------------------------------------------------------------------- Bubble Guard
   bubbler: {
@@ -1557,6 +1561,9 @@ const IMPL = {
       s.inflate?.stop?.(0.05);
       this._restoreWeapon(a);
     },
+    // [b5-sprules] a splat: the bubble being blown is let go (end) and floats on like the others — only the ones not
+    // yet started are cut short
+    splatShare(a, s) { return Math.max(0, 1 - ((s.count || 0) + (s.cur ? 1 : 0)) / s.def.max) * (s.dur ? Math.max(0, 1 - s.t / s.dur) : 1); },
   },
 
   // ---------------------------------------------------------------------------------------------- Ink Jet
