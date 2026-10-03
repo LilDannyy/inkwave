@@ -217,12 +217,13 @@ export function specialDangers() {
         break;
       }
       case 'drainbow': {
-        // [drainbow] Drainbow (src/game/sp-drainbow.js): inside it you're drained and your shots out are halved — a light,
-        // lingering area (kept out of, walked out of unless holding the objective), on everyone's map
+        // [drainbow] Drainbow (src/game/sp-drainbow.js): inside it you're drained and your shots out are halved — a lingering
+        // area on everyone's map, kept out of; light (botDanger 0: walked out of unless holding the objective) or heavy
+        // (1: even the zone's guards and the tower's riders get out — a player would: grey, muffled, drained, half damage)
         if (!w.live) break;
         const R = w.radius(), d = D(w, 'drainbow', w.team, w.owner);
         disc(d, w.pos.x, w.pos.y, w.pos.z, R + 0.35, R);
-        d.yLo = w.pos.y - R - 1.2; d.yHi = w.pos.y + R - 0.5; d.lethal = 0; d.tOut = Math.max(0, w.life - w.t);
+        d.yLo = w.pos.y - R - 1.2; d.yHi = w.pos.y + R - 0.5; d.lethal = SPECIALS.drainbow.botDanger ?? 0; d.tOut = Math.max(0, w.life - w.t);
         d.vis = 'map'; d.linger = true; see(d, w.pos.x, w.pos.y, w.pos.z);
         break;
       }

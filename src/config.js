@@ -552,6 +552,8 @@ export const SPECIALS = {
     paintFoot: 0.75,                          // set down with a splash of your ink over this share of its footprint (0: none)
     paintPop: 1.1,                            // … and when its time runs out the film rains down over this share of it (0: none)
     botHold: 1,                               // bots fight from inside their team's bubble (1) / pay it no mind (0)
+    botDanger: 1,                             // what the other team's bots make of it: 0 a light area (they keep out, but hold
+                                              // the objective in it), 1 a heavy one (they get out, objective or not)
     // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
     // the muffle (master low-pass to dampCut Hz and dampGain of the level at full)
     waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },

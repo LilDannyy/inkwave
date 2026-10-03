@@ -9,7 +9,7 @@ const runs = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => {
 }).filter(Boolean);
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const sd = (xs) => { const m = mean(xs); return xs.length > 1 ? Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1)) : 0; };
-const NAME = { db: 'drainbow (as shipped)', dbnh: 'drainbow, bots don\'t hold inside', dbnp: 'drainbow, no footprint ink', dbv2: 'drainbow v2 (bigger / longer / stronger drain)', bub: 'bubble guard', base: 'random rolls' };
+const NAME = { db: 'drainbow (as shipped)', dbnh: 'drainbow, bots don\'t hold inside', dbnp: 'drainbow, no footprint ink', dbv2: 'drainbow v2 (bigger / longer / stronger drain)', dbhv: 'drainbow, heavy to their bots (botDanger 1)', dblt: 'drainbow, light to their bots (botDanger 0)', dbx: 'drainbow what-if ($DBX)', bub: 'bubble guard', base: 'random rolls' };
 const spOf = (c) => (c.startsWith('db') ? 'drainbow' : c === 'bub' ? 'bubbler' : null);
 for (const mode of ['turf', 'zones']) {
   const M = runs.filter((x) => x.mode === mode);
