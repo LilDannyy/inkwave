@@ -545,14 +545,15 @@ export const SPECIALS = {
   drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'A rainbow bubble at your feet. Enemy ink through it does half damage. Foes inside go grey and muffled as their ink and special drain to your team inside — your share keeps it up longer.',
     duration: 8.5, radius: 4.3, lift: 1.0, inflate: 0.55, shotMul: 0.5,
     inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
-    extendPerMeter: 10, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
+    extendPerMeter: 15, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
     popOnOwnerSplat: true,
-    // balance (2026-10-03, the bots' first batch had it far behind the other specials — tools/botlab/jobs/drainbow):
+    // balance (2026-10-03, tools/botlab/jobs/drainbow/results: JOB-1 had it far behind the other specials — 21 % turf / 6 %
+    // zones wins for a team forced to it; JOB-3 with these: 44 % / 44 %, Bubble Guard 63 % / 81 %, random rolls 50 % turf):
     ownerNear: 6,                             // the owner within this many m outside the film still takes its share
     paintFoot: 0.75,                          // set down with a splash of your ink over this share of its footprint (0: none)
     paintPop: 1.1,                            // … and when its time runs out the film rains down over this share of it (0: none)
     botHold: 1,                               // bots fight from inside their team's bubble (1) / pay it no mind (0)
-    botDanger: 1,                             // what the other team's bots make of it: 0 a light area (they keep out, but hold
+    botDanger: 0,                             // what the other team's bots make of it: 0 a light area (they keep out, but hold
                                               // the objective in it), 1 a heavy one (they get out, objective or not)
     // the drained player's own screen and ears (src/fx/drainbowFx.js): the wave out from where they crossed, the grey,
     // the muffle (master low-pass to dampCut Hz and dampGain of the level at full)
