@@ -80,7 +80,7 @@ export function buildBackdrop(kit, data = {}) {
   const see = (c, op, o = {}) => std(c, { transparent: true, opacity: op, depthWrite: false, side: T.DoubleSide, ...o });
   const glow = (c) => new T.MeshBasicMaterial({ color: c });
   const LOOK = {
-    water: see('#2b5966', 0.42, { roughness: 0.1 }), glass: see('#d9eef0', 0.16, { roughness: 0.05 }), kelp: std('#5b5a33', { roughness: 0.8 }),
+    water: new T.MeshBasicMaterial({ color: '#2a5f6c', transparent: true, opacity: 0.72, depthWrite: false, side: T.DoubleSide }), glass: see('#d9eef0', 0.14, { roughness: 0.05 }), kelp: std('#5b5a33', { roughness: 0.8 }),
     tube: see('#eef8f8', 0.3, { roughness: 0.05 }), two: glow('#f4f1e8'), in: glow('#3cc46a'), out: glow('#c8402f'), land: new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.32, depthWrite: false }),
     chev: glow('#3cc46a'), upIn: glow('#3cc46a'), upOut: glow('#c8402f'), dnIn: glow('#3cc46a'), dnOut: glow('#c8402f'), upChev: glow('#3cc46a'), dnChev: glow('#3cc46a'),
   };

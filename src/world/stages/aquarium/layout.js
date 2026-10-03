@@ -107,11 +107,12 @@ for (const [a, t0, t1] of [[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -
 // the gulper heads (E listed; W = its twin): bronze, jaws facing out, the Gulper Run's mouths at (±12.7, 0.8, 0); their
 // necks run into the tank glass, 0.5 m below the deck's rim
 H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head' })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck' })));
-// the Feeding Gantry: four legs (inner faces 6 m apart: cover on the centre lanes), beams at 16.8–17.8, the winch house;
+// the Feeding Gantry: four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
+// pads the near legs then hid half the bathysphere), beams at 16.8–17.8, the winch house;
 // Bathysphere No. 1 hangs at 13.05–15.95 (drawn by props.js; this is its off-limits collider)
-H(B(3.0, 4.2, 0, 16.8, -11.6, -10.4, roofR(K.seagreen, { tag: 'gantry-leg' })), B(-4.2, -3.0, 0, 16.8, -11.6, -10.4, roofR(K.seagreen, { tag: 'gantry-leg' })));
-H(B(3.1, 4.1, 16.8, 17.8, -11.6, 11.6, roofR(K.seagreen, { tag: 'gantry-beam' })));
-S(B(-3.1, 3.1, 16.8, 17.8, -0.5, 0.5, roofR(K.seagreen, { tag: 'gantry-beam' })), B(-1.5, 1.5, 17.8, 20.0, -1.5, 1.5, roofR(K.seagreen, { tag: 'winch-house' })));
+H(B(4.4, 5.6, 0, 16.8, -11.6, -10.4, roofR(K.seagreen, { tag: 'gantry-leg' })), B(-5.6, -4.4, 0, 16.8, -11.6, -10.4, roofR(K.seagreen, { tag: 'gantry-leg' })));
+H(B(4.5, 5.5, 16.8, 17.8, -11.6, 11.6, roofR(K.seagreen, { tag: 'gantry-beam' })));
+S(B(-4.5, 4.5, 16.8, 17.8, -0.5, 0.5, roofR(K.seagreen, { tag: 'gantry-beam' })), B(-1.5, 1.5, 17.8, 20.0, -1.5, 1.5, roofR(K.seagreen, { tag: 'winch-house' })));
 S(B(-1.45, 1.45, 13.05, 15.95, -1.45, 1.45, glass({ tag: 'bathysphere' })));
 // the court's exhibits: moon-jelly columns (opaque milky glass, lit from inside), the SW touch-pool dais (a coral-rock
 // bed 1.0 with a 0.5 step), the SE diving-helmet bed (0.9) with the bronze helmet, the Tubeway map lectern

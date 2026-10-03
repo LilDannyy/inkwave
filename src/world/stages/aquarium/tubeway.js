@@ -29,9 +29,9 @@ export const PIPES = {
       names: ['S. REEF HALL', 'S. PROMENADE'],
       twinNames: ['N. REEF HALL', 'N. PROMENADE'],
       pts: [[9.58, 0.8, -26.31], [7.32, 0.8, -27.13], [7.32, 7.5, -27.13], [-7.32, 7.5, -27.13],
-            [-7.32, 3.2, -27.13], [-9.58, 3.2, -26.31]],
-      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
-      hide: [[0, 2.0], [25.4, 27.4]],                         // the end runs inside the pylons (the risers are glazed: drawn)
+            [-7.32, 3.2, -27.13], [-9.96, 3.2, -26.17]],    // [blockout] B 0.4 m further out: the west pylon's face
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],         //   overhangs the promenade's edge by 0.4 m (layout.js)
+      hide: [[0, 2.0], [25.4, 27.8]],                         // the end runs inside the pylons (the risers are glazed: drawn)
       look: { tint: 'clear', collars: 'brass' } },
     { id: 'express', way: 'one', speed: 24, bend: 2.7,        // the Express, across the wing high over the Ticket Hall
       names: ['FERRY PLAZA', 'PENGUIN POINT'],
