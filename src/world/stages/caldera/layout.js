@@ -187,15 +187,19 @@ add(B(15.4, 16.6, 3.6, 12, -57.1, -55.9, { color: K.green, pattern: PATTERN.meta
 const stack = (x, z, w, d, h, base, tag, c = K.cast) => B(x - w / 2, x + w / 2, base, base + h, z - d / 2, z + d / 2, cover(c, { tag }));
 add(
   stack(5.6, -56.2, 1.6, 1.6, 1.3, 3.6, 'covers-stack'), stack(2.0, -50.6, 1.6, 1.6, 1.3, 3.6, 'manhole-covers'),
-  stack(-7.5, -56.6, 5.0, 1.2, 1.2, 3.6, 'lamp-post-rack', '#5f6a63'), stack(-16, -44.5, 1.6, 2.4, 1.0, 3.6, 'bench-ends', K.wood),
-  stack(-18.5, -41.5, 1.6, 1.6, 1.0, 3.6, 'pig-iron', '#5b5550'), stack(-1.0, -47.0, 1.6, 1.6, 1.1, 3.6, 'ingot-stack'),
-  stack(-24.0, -44.5, 1.4, 1.4, 1.2, 3.6, 'drum-stack', '#56606a'), stack(-25.5, -37.0, 1.6, 1.2, 1.2, 3.6, 'drum-stack', '#56606a'),
-  stack(4.0, -39.9, 2.0, 1.0, 1.0, 3.6, 'mould-boxes', K.wood), stack(13.5, -53.5, 1.6, 1.6, 1.2, 3.6, 'cable-drum', K.wood),
+  stack(-7.5, -56.6, 5.0, 1.2, 1.6, 3.6, 'lamp-post-rack', '#5f6a63'), stack(-16, -44.5, 1.6, 2.4, 1.0, 3.6, 'bench-ends', K.wood),
+  stack(-18.5, -41.5, 1.6, 1.6, 1.3, 3.6, 'pig-iron', '#5b5550'), stack(-1.0, -47.0, 1.6, 1.6, 1.1, 3.6, 'ingot-stack'),
+  stack(-24.0, -44.5, 1.4, 1.4, 1.8, 3.6, 'drum-stack', '#56606a'), stack(-25.5, -37.0, 1.6, 1.2, 1.2, 3.6, 'drum-stack', '#56606a'),
+  stack(4.0, -39.9, 2.0, 1.0, 1.0, 3.6, 'mould-boxes', K.wood), stack(13.5, -53.5, 1.6, 1.6, 1.6, 3.6, 'cable-drum', K.wood),
   stack(-8.5, -54.0, 2.0, 1.2, 1.1, 3.6, 'weighbridge-load'), stack(-8.5, -46.3, 2.4, 1.4, 2.4, 3.6, 'weigh-beam-hut', K.white),
   stack(-1.5, -40.1, 2.0, 1.0, 1.0, 3.6, 'ingot-rack'), stack(-21.5, -46.0, 1.6, 1.6, 0.9, 3.6, 'bollard-pallet', '#4f555c'),
   stack(-12.5, -59.0, 1.6, 1.6, 1.1, 3.6, 'drain-grates'), stack(10.5, -40.4, 2.2, 1.2, 1.0, 3.6, 'rails-stack', '#5b5f63'),
   stack(-21.5, -36.5, 1.2, 1.2, 1.2, 3.6, 'cairn', K.basaltDk),
 );
+// the yard's massing (blockout additions beyond the piece table, out of every lane): the coke bunkers against the east
+// wall by the cupola, a stack of castings for the ferry in each side yard (clear of the side stairs' landings)
+add(B(16.1, 18.0, 3.6, 6.0, -43.8, -40.6, { color: '#3e3b38', pattern: PATTERN.asphalt, roof: true, tag: 'coke-bunker' }));
+add(stack(15.0, -64.6, 1.6, 2.0, 2.2, 3.6, 'ferry-stack', K.cast), stack(-15.0, -64.6, 1.6, 2.0, 2.2, 3.6, 'ferry-stack', '#5f6a63'));
 // the yard front railing on the r 39 arc: gaps at the Cupola Stair, the Upper Surge Steps + its hop face, the tower climb;
 // the bastion (θ −116 … −123) has solid parapets instead
 for (const [a0, a1] of [[-63, -67.8], [-72.2, -90], [-101, -105], [-112.2, -116], [-123, -126]]) {
