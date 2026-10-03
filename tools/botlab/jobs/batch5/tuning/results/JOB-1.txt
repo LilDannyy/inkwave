@@ -31,3 +31,19 @@ FAILED: 0 of 96. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
   reachable cells crossmarket: center0:1502/1502 R7.6 nodes106 side1:1491/1491 R7.2 nodes97 side2:1491/1491 R7.2 nodes97 | retake pushes A 5 B 2
   reachable cells halyard: center0:460/460 R3.7 nodes31 center1:460/460 R3.7 nodes31 side2:864/864 R6.2 nodes52 side3:864/864 R6.2 nodes52 | retake pushes A 2 B 1
   reachable cells saltpan: center0:1246/1246 R6.3 nodes64 center1:1246/1246 R6.3 nodes64 side2:1396/1396 R6.4 nodes75 side3:1396/1396 R6.4 nodes75 | retake pushes A 1 B 3
+
+## PART 2 (appended): the roller, before (rollSpeed 4.4) vs after — REDUCED BY THE LEAD to 2 runs per stage (8 per config over the 4 stages), 16 matches, run at 9581c91, wall time 4 min. FAILED 0, console warnings 0, frame errors 0.
+=== roller (16 matches)
+  before  [roller.rollSpeed=4.4]
+    all: n 8 | roller turf 1028.1 ±167.7 p vs the others' 1056.1 ±156.1 p → ×0.98 ±0.17 | roller splats 71 deaths 98 → K/D 0.72 (4.44 / 6.13 per roller per match) | splats per match 40.6 ±5.8 | stuck 0.04 ±0.05 %
+    crossmarket: n 2 | roller turf 951.0 ±135.8 p vs the others' 1119.8 ±41.7 p → ×0.85 ±0.09 | roller splats 17 deaths 31 → K/D 0.55 (4.25 / 7.75 per roller per match) | splats per match 46.0 ±1.4 | stuck 0.00 ±0.00 %
+    halyard: n 2 | roller turf 861.5 ±145.0 p vs the others' 855.8 ±31.3 p → ×1.00 ±0.13 | roller splats 15 deaths 25 → K/D 0.60 (3.75 / 6.25 per roller per match) | splats per match 39.0 ±4.2 | stuck 0.00 ±0.00 %
+    lockgate: n 2 | roller turf 1216.0 ±65.1 p vs the others' 1124.3 ±245.1 p → ×1.11 ±0.30 | roller splats 17 deaths 19 → K/D 0.89 (4.25 / 4.75 per roller per match) | splats per match 33.0 ±2.8 | stuck 0.05 ±0.07 %
+    tidewater: n 2 | roller turf 1084.0 ±94.8 p vs the others' 1124.5 ±26.2 p → ×0.96 ±0.06 | roller splats 22 deaths 23 → K/D 0.96 (5.50 / 5.75 per roller per match) | splats per match 44.5 ±0.7 | stuck 0.10 ±0.00 %
+  after  [(none)]
+    all: n 8 | roller turf 1201.5 ±202.3 p vs the others' 1016.9 ±203.1 p → ×1.20 ±0.20 | roller splats 71 deaths 102 → K/D 0.70 (4.44 / 6.38 per roller per match) | splats per match 40.8 ±4.4 | stuck 0.07 ±0.07 %
+    crossmarket: n 2 | roller turf 1042.5 ±85.6 p vs the others' 968.8 ±123.3 p → ×1.08 ±0.05 | roller splats 16 deaths 29 → K/D 0.55 (4.00 / 7.25 per roller per match) | splats per match 42.0 ±8.5 | stuck 0.05 ±0.07 %
+    halyard: n 2 | roller turf 1171.5 ±301.9 p vs the others' 821.2 ±57.3 p → ×1.42 ±0.27 | roller splats 20 deaths 25 → K/D 0.80 (5.00 / 6.25 per roller per match) | splats per match 40.0 ±5.7 | stuck 0.00 ±0.00 %
+    lockgate: n 2 | roller turf 1199.0 ±21.2 p vs the others' 959.5 ±27.6 p → ×1.25 ±0.06 | roller splats 22 deaths 26 → K/D 0.85 (5.50 / 6.50 per roller per match) | splats per match 42.5 ±2.1 | stuck 0.15 ±0.07 %
+    tidewater: n 2 | roller turf 1393.0 ±248.9 p vs the others' 1318.2 ±13.0 p → ×1.06 ±0.20 | roller splats 13 deaths 22 → K/D 0.59 (3.25 / 5.50 per roller per match) | splats per match 38.5 ±2.1 | stuck 0.10 ±0.00 %
+112 matches read | FAILED (no result) 0 | with console warnings 0 | with frame errors 0
