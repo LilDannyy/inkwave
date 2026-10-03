@@ -4,7 +4,8 @@
 // destroys it."
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/deployables.js tools/botlab/run.sh tools/botlab/page.cjs
 //   MAP=testbox MODE=tower PAGE=tools/botlab/tests/deployables.js PAGE_ARGS='only=tower' tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=matrix,own,down,pop,looks,beam,standing,net,bots,sounds' (MODE=turf), 'only=tower' (MODE=tower)
+//   MAP=calamari MODE=turf … PAGE_ARGS='only=rail' · MAP=podbox MODE=turf … PAGE_ARGS='only=hedge'
+//   PAGE_ARGS='only=matrix,own,down,pop,looks,beam,standing,net,bots,sounds,floors' (MODE=turf), 'only=tower' (MODE=tower)
 // Staged on testbox (a flat deck, top y 0; a 4 m wall x 14…15, z ±8); everyone parked far off, brains stubbed (the bots'
 // own parts: 'bots'). Checks:
 //  - matrix: every device (Hop Beacon 120, Twirl Sprinkler 100, Surf N' Turf buoy 350, Skitter Bomb 30 on the ground)
@@ -24,12 +25,22 @@
 //    devices down (the owner's screen judges);
 //  - net: a hit on a ghost device goes to its owner (sendDevHit), flashing it here, its hp untouched; a ghost shot on
 //    our own device flashes it and costs nothing; the owner's netHurt takes it down and records [2, gid, 1];
-//  - bots: a bot with no foe in sight shoots an enemy beacon and an enemy sprinkler down; a bot hunted by a Skitter Bomb
-//    shoots it down (the threat system);
+//  - bots: a bot with no foe in sight walks up to an enemy beacon / sprinkler and shoots it down (a shooter, a roller, a
+//    charger, a blaster); a bot hunted by a Skitter Bomb shoots it down (the threat system);
 //  - sounds: device_hit, device_pop, seeker_pop, device_crunch are built;
-//  - tower (MODE=tower): the moving tower destroys a sprinkler, a beacon, a Drip Curtain and a buoy in its way (a
-//    crunch; 'device:down' how 'crush'; the end records [2, gid, 2] / [4, gid, 2]), one beside the track survives, and a
-//    beacon, a sprinkler, a curtain and a buoy on its deck ride it; a ghost in its way waits for its owner's word.
+//  - floors (any stage): the one moving-floor rule on a plain moving block — a Lurk Mine and a Hop Beacon laid on it, a
+//    sprinkler stuck to its side, a curtain dropped on it ride it along, up and round, at their spots; the owner's word
+//    [4, gid, …, tag, l, n] once each, ghosts from the records ride the same; a foe trips the mine where it is now; the
+//    block taken away: the floor ones drop onto the floor below ([4, gid, x, y, z]), the wall one breaks;
+//  - tower (MODE=tower, its push stubbed to a steady 1.5 m/s): the moving tower destroys a Drip Curtain, a sprinkler, a
+//    beacon and a buoy in its way the moment its body reaches each (a crunch; 'device:down' how 'crush'; the end
+//    records [2, gid, 2] / [4, gid, 2]), one beside the track survives, a ghost in its way waits for its owner's word;
+//    a Lurk Mine and a Hop Beacon laid on its deck, a sprinkler stuck to its pillar, a curtain and a buoy on its deck
+//    ride it (the mine's ghost too) and the mine trips for a foe on the deck there;
+//  - rail (MAP=calamari): a sprinkler stuck to a railcar's flank and a curtain on its roof ride it the whole way (ghosts
+//    too) — a mine or a beacon can't be laid on a railcar (an off-limits roof, as before);
+//  - hedge (MAP=podbox): a mine in a bramble wall's trough is lifted onto it or shoved out of its way as it grows (never
+//    inside it); one laid on its top rides it down as it wilts; both end on the floor, still armed.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { SUBS, SPECIALS, PLAYER, WEAPONS } = await import('./src/config.js');
