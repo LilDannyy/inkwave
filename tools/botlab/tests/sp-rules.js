@@ -38,10 +38,13 @@
   const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const { SPECIAL_ICONS } = await import('./src/ui/ui-icons.js');
   const SURF = await import('./src/game/sp-surf.js');
-  const BAR = await import('./src/game/sp-barrage.js');
-  const CH = await import('./src/game/sp-bubble.js');
+  // (the modules this package adds: absent on the code before it — run there, every check fails instead of the page)
+  const BAR = await import('./src/game/sp-barrage.js').catch(() => null);
+  const CH = await import('./src/game/sp-bubble.js').catch(() => null);
   const { on } = await import('./src/core/ctx.js');
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
+  // a section that throws (on the old code: what it tests isn't there) is one FAIL, and the rest still run
+  const crash = (name, e) => { R(`${name}: the section threw`, false, String(e && e.stack || e).slice(0, 300)); try { reset(); } catch (e2) { /* */ } };
   const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
   const want = (k) => !ONLY || ONLY.split(',').includes(k);
   const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
@@ -89,14 +92,14 @@
   me.bot && (me.bot._u0 = me.bot._u0 || me.bot.update);
 
   // ======================================================================================== the gauge on a splat
-  if (want('gauge')) {
+  if (want('gauge')) try {
     const rows = [];
     // a splat mid-special at `t` s (or when `at()` says): the gauge kept against ½ × what the HUD showed (remaining)
     const mid = (id, t, prep, label) => {
       reset(); place(me, 0, -10); aim(me, 0);
       const s = start(me, id);
       if (prep) prep(s); else step(t);
-      const hud = G.specials.remaining(me), share = G.specials.splatShare(me);
+      const hud = G.specials.remaining(me), share = G.specials.splatShare ? G.specials.splatShare(me) : null;
       me.splat(E1, 'test');
       const k = kept(me);
       rows.push({ special: label || id, hud: r3(hud), share: r3(share), kept: k, want: r3(0.5 * share), oldRule: 0.5 });
@@ -135,10 +138,10 @@
     const plain = (f) => { reset(); place(me, 0, -10); me.special = me.specialCost() * f; me.splat(E1, 'test'); return kept(me); };
     const p6 = plain(0.6), p10 = plain(1), p25 = plain(0.25);
     R('gauge: no special running — ½ of what you had, as before (0.6 → 0.3, full → 0.5, 0.25 → 0.125)', Math.abs(p6 - 0.3) < 0.002 && Math.abs(p10 - 0.5) < 0.002 && Math.abs(p25 - 0.125) < 0.002, { p6, p10, p25 });
-  }
+  } catch (e) { crash('gauge', e); }
 
   // ======================================================================================== survives its owner
-  if (want('survive')) {
+  if (want('survive')) try {
     // ---- Whirl Boomerang: splatted while it hovers; home to the spot they went down, circle it, burst there
     {
       reset(); place(me, 0, -10); aim(me, 0, 0); me.setSub('boomerang'); step(0.05);
@@ -258,10 +261,10 @@
         sh0 > 6 && Math.abs(sh1 - (sh0 - 0.2)) < 0.05 && hp === PLAYER.hp && shoved && endT != null, { shared: r2(sh0), afterSplat: r2(sh1), hp, soaked: (SOAK.get(M1) || 0) - soak0, shove: r2(zMax - z0), ranOut: endT != null });
       void t0;
     }
-  }
+  } catch (e) { crash('survive', e); }
 
   // ======================================================================================== the Bubble Guard chain
-  if (want('chain')) {
+  if (want('chain')) try {
     const CS = CH.CHAIN_STATS;
     reset();
     const [A, B, C] = [me, M1, M2];
@@ -317,10 +320,10 @@
     place(C, 0, -4); place(E1, 0, -16); step(0.05); C.hp = PLAYER.hp; const sk0 = SOAK.get(C) || 0;
     shoot(E1, V(0, 0.9, -15.4), chestOf(C), 40); step(0.5);
     R('chain: a chained copy shoves instead of hurting (C hit — the field soaked it — no damage)', C.hp === PLAYER.hp && C.status.shield > 0 && (SOAK.get(C) || 0) > sk0, { hp: C.hp, soaked: (SOAK.get(C) || 0) - sk0 });
-  }
+  } catch (e) { crash('chain', e); }
 
   // ======================================================================================== Waddle Bomb Barrage
-  if (want('waddle')) {
+  if (want('waddle')) try {
     reset(); place(me, 0, -12); aim(me, 0, 0.12); place(E1, 0.5, -3); step(0.05);
     const s = start(me, 'barrage_waddle');
     me.ink = 5;
@@ -340,10 +343,10 @@
     R('waddle: one lands, waddles after the foe near it and bursts on them', blasted && dmgTo(E1, 'waddle', t0) > 30, { blasted, dmg: dmgTo(E1, 'waddle', t0), state: w1.state });
     step(SPECIALS.barrage_waddle.duration);
     R('waddle: it ends on time and the hand goes back to the loadout\'s sub', !me.specialActive && me.character.bomb?.kind === (me.sub || SUBS.bomb).kind, { hand: me.character.bomb?.kind });
-  }
+  } catch (e) { crash('waddle', e); }
 
   // ======================================================================================== Mystery Bomb Barrage
-  if (want('mystery')) {
+  if (want('mystery')) try {
     reset(); place(me, 0, -30); aim(me, 0, 0.3); step(0.05);
     const card = g.hud?.barrage;
     const s = start(me, 'barrage_mystery'); s.dur = 9999;   // (long enough for many throws)
@@ -411,10 +414,10 @@
     R('mystery online: the owner records its first bomb and each next one ([4, \'nb\', index]); a ghost built from those holds the same bomb (hand prop too)',
       recs[0] && recs[0][0] === 0 && nbs.length === 2 && gs && gs.ghost && gs.bomb.kind === nbs[1] && ghost.character.bomb?.kind === nbs[1], { recs, ghost: gs && gs.bomb.kind });
     if (ghost.specialActive) G.specials.end(ghost, 'net');
-  }
+  } catch (e) { crash('mystery', e); }
 
   // ======================================================================================== bots
-  if (want('bots')) {
+  if (want('bots')) try {
     const botRun = (id) => {
       reset(); place(E1, 0, -16); aim(E1, 0); place(me, 0, -5); unstub(E1);   // (no invuln on the foe: bots hold fire on the untouchable)
       E1.specialId = id; E1.special = E1.specialCost(); E1.ink = PLAYER.inkMax;
@@ -442,17 +445,17 @@
     let got = null; step(3, () => { if (M2.status.shield > 0 && got == null) got = G.time; });
     stub(M1); stub(M2);
     R('bots: a bot holding a shared Bubble Guard walks over to a teammate close by and passes it on', M1.status.shield > 0 && got != null && CH.CHAIN_STATS.botSteps > s0, { m1Got: r2(m1Got), meAlive: meA, d1, got: got != null, steps: CH.CHAIN_STATS.botSteps - s0 });
-  }
+  } catch (e) { crash('bots', e); }
 
   // ======================================================================================== the list
-  if (want('list')) {
+  if (want('list')) try {
     const L = SPECIAL_ORDER.slice(-2);
     R('list: both appended at the END of SPECIAL_ORDER (online records index into it)', L[0] === 'barrage_waddle' && L[1] === 'barrage_mystery' && SPECIAL_ORDER.indexOf('drainbow') === 20, { tail: SPECIAL_ORDER.slice(-4) });
     const icons = ['barrage_waddle', 'barrage_mystery'].map((id) => SPECIAL_ICONS[id] || '');
     R('list: each has its own icon (not the fallback), a name and a blurb, kind barrage',
       icons.every((x) => x.length > 400 && x !== SPECIAL_ICONS.slam) && icons[0] !== icons[1] && SPECIALS.barrage_waddle.name === 'Waddle Bomb Barrage' && SPECIALS.barrage_mystery.name === 'Mystery Bomb Barrage' && SPECIALS.barrage_mystery.blurb.length > 30 && SPECIALS.barrage_waddle.kind === 'barrage' && SPECIALS.barrage_mystery.kind === 'barrage',
       { len: icons.map((x) => x.length) });
-  }
+  } catch (e) { crash('list', e); }
 
   reset();
   return out;
