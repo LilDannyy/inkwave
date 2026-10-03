@@ -3209,7 +3209,7 @@ export class Character {
     if (H.both) {   // [b5-holds] two-handed: no twirl — dipped low, lifted up, then thrust at the viewer
       const T = H.trophy, Q = H.present, U = H.droop;
       lerpE(D, ANC, U.p[0], U.p[1], U.p[2], dip); lerpE(D, ANCR, U.r[0], U.r[1], U.r[2], dip);
-      lerpE(D, ANC, T.p[0], T.p[1], T.p[2], rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);
+      lerpE(D, ANC, T.p[0], T.p[1] + 0.05, T.p[2], rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);   // (up on tiptoe: 5 cm higher)
       lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], strike); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], strike);
     } else {
       lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);

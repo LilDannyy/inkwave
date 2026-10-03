@@ -37,7 +37,7 @@
   const BOTH = ['brush', 'roller', 'blaster', 'brolly'];
   const OTHERS = WEAPON_ORDER.filter((w) => !BOTH.includes(w));
   const W_ONLY = arg('w');
-  const GRIP_TOL = 0.025, ELB_MIN = 28, ELB_MAX = 179, WR_SWING = 80, WR_TWIST = 110, BEND_MAX = 0.9;
+  const GRIP_TOL = 0.025, ELB_MIN = 28, ELB_MAX = 172, WR_SWING = 80, WR_TWIST = 100, BEND_MAX = 0.9;   // (measured: elbow 60–161°, swing ≤ 71°, twist ≤ 87°)
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const DEG = 180 / Math.PI;
   dbg.freeze();
