@@ -427,6 +427,7 @@ export class SpecialSystem {
     if (s && s.id === 'crab') return IMPL.crab.hurt.call(this, v, s, amount, attacker);
     // [b5-zipcheer] travelling along a zip: a quarter of the damage (the owner's screen judges: it applies every hit on its player)
     if (s && s.kind === 'zipcaster' && s.zip && !s.ghost) { ZC_STATS.zipHits++; ZC_STATS.zipSaved += amount * (1 - s.def.zipDamage); amount *= s.def.zipDamage; }
+    if (s && s.kind === 'booyah' && s.pin && s.def.heldDamage !== 1) amount *= s.def.heldDamage ?? 1;   // [b5-zipcheer] held up by a Cheer Orb (1: as before; a botlab what-if)
     // Mega Stamp mid-swing: anything coming from the front is deflected (sides + back stay open)
     if (s && s.id === 'stamp' && s.guard > 0 && attacker && attacker !== v && stampFront(v, s, attacker.pos, s.def.deflectArc)) {
       if (near(v.pos, 40)) { play('shield_hit', { pos: v.isLocal ? undefined : v.pos, volume: 0.6, pitch: 1.3 }); G.fx?.burst(_v.copy(v.pos).setY(v.pos.y + 1.1).addScaledVector(stampFwd(s), 0.9), UP, v.color, { count: 6, speed: 4, size: 0.07 }); }

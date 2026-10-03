@@ -3,13 +3,15 @@
 // charging. Teammates get a bigger prompt bottom middle to cheer. When they do cheer, send a wisp of energy to the Orb
 // and also to their special meter to charge it a little bit."). Numbers: config SPECIALS.booyah.
 //
-//   the lift    using it lifts you `lift` m (2.2) into the air over liftTime s (an ease-out; less under a ceiling, none
-//               under a low one) and holds you there (special.pin: actor.js leaves the body where this module puts it) —
+//   the lift    using it lifts you `lift` m (2.2) over the ground into the air over liftTime s (an ease-out; less under a
+//               ceiling, none under a low one; used mid-jump, only the rest of the way; over a deep drop, none) and
+//               holds you there (special.pin: actor.js leaves the body where this module puts it) —
 //               no walking, swimming or jumping; you still turn and aim — until the orb is thrown or the special ends
 //               (a splat, a loadout swap). Started on a moving block (Tower Command's tower, a railcar, a pod's hedge)
 //               you hang over the same spot of it as it moves. Let go, you drop back down. lift 0: the old way (walking
-//               slowly at moveSpeed).
-//   the cheer   a "Yeah!" (C / d-pad up: player.js intent.cheer, bots too) while a teammate's orb is still charging (not
+//               slowly at moveSpeed). Damage while held up: as before (heldDamage 1 — a what-if lever for the botlab:
+//               TUNE='booyah.heldDamage=0.5'; specials.js filterDamage).
+//   the cheer  a "Yeah!" (C / d-pad up: player.js intent.cheer, bots too) while a teammate's orb is still charging (not
 //               thrown, not full) sends a wisp of energy from the cheerer to each such orb — on arrival (cheerFly s, a
 //               little longer from far off) the orb takes +cheer of a full charge and pulses — and a second wisp into the
 //               cheerer's own special gauge on their HUD (src/ui/hud-cheer.js draws it), which gains cheerGain (4 %) of
@@ -203,10 +205,14 @@ const API = {
     const d = s.def;
     ZC_STATS.orbs++;
     if (!(d.lift > 0)) return;
-    // under a ceiling: only as high as leaves room for the kid and the orb over its head
+    // `lift` m over the ground under you: started mid-jump you rise only the rest of the way (never down); over a deep
+    // drop you hang where you are (no ground at all under you: the full lift)
     let H = d.lift;
+    const gy = G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.3);
+    if (gy > -Infinity) H = clamp(gy + d.lift - a.pos.y, 0, d.lift);
+    // under a ceiling: only as high as leaves room for the kid and the orb over its head
     const g = G.physics.raycast(_p.set(a.pos.x, a.pos.y + 0.3, a.pos.z), UP, d.lift + 2.7, _hit, true);
-    if (g.hit) H = clamp(g.dist - 2.4, 0, d.lift);
+    if (g.hit) H = clamp(g.dist - 2.4, 0, H);
     s.pin = true;
     s.pinVel = new THREE.Vector3();
     const L = s.lift = { x: a.pos.x, y0: a.pos.y, z: a.pos.z, H, t: 0, b: null, lx: 0, ly: 0, lz: 0 };

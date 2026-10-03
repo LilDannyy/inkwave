@@ -167,6 +167,16 @@
     reset(); place(M1, 0, -6); step(0.2); s2 = start(M1, 'booyah'); step(1);
     const held0 = ZC.splatHeld; M1.splat(E1, 'shooter'); step(0.05);
     R('lift: the special ending (a loadout swap) lets go and it drops; splatted up there: let go, counted', swapDown && !s2.pin && !M1.specialActive && ZC.splatHeld === held0 + 1, { swapDown, splatHeld: ZC.splatHeld - held0 });
+    // used mid-jump (1.2 m up): it rises only to 2.2 m over the ground, never higher; a hit up there: all of it (today's
+    // damage rule kept: heldDamage 1), the what-if lever (heldDamage 0.5) halves it
+    reset(); place(M1, 0, -6, 1.22); M1.grounded = false; M1.vel.set(0, 0, 0);
+    const sj = start(M1, 'booyah'); step(BD.liftTime + 0.15);
+    const jumpUp = M1.pos.y;
+    const hitHeld = () => { M1.hp = PLAYER.hp; M1.invuln = 0; G.projectiles.applyHit(E1, M1, 40, 'shooter'); return r2(PLAYER.hp - M1.hp); };
+    const full = hitHeld(); BD.heldDamage = 0.5; const half = hitHeld(); BD.heldDamage = 1;
+    G.specials.end(M1, 'test'); step(0.8);
+    R('lift: used mid-jump it rises to 2.2 m over the ground (not 2.2 m over the jump); a hit held up takes all of it (heldDamage 1: today\'s rule), 0.5 halves it',
+      sj.lift && Math.abs(jumpUp - BD.lift) < 0.07 && Math.abs(sj.lift.H - (BD.lift - 1.22)) < 0.05 && full === 40 && half === 20, { up: r2(jumpUp), H: sj.lift && r2(sj.lift.H), full, half });
     // under a low ceiling: only as high as the kid and its orb fit
     reset();
     const lv = G.level;
