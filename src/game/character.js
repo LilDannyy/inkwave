@@ -505,17 +505,20 @@ const SWIPE_ONE = [-0.06, 0.3, 0.78, 0.28, 0.9, 0.95, -0.2];
 // over the family's, so the held specials that borrow a family — sp_stamp, sp_jetgun — keep theirs). `both`: the off
 // hand stays on the weapon in every state (_bothHands: carry, run, aim, the swings and rolls, the air, landings, the
 // respawn drop, idle fidgets, the locker one-shots, the menu and podium dances); it only lets go to hold and throw a
-// sub (and while a special hides the weapon). The anchors below are placed so the off hand reaches its grip with a bent
-// elbow; the dances use the two-handed ones (trophy: lifted for a cheer · present: thrust at the viewer · droop: hanging
-// low in front) in place of the free-hand choreography, all clear of the head. `gripRoll` (rad): how far the
+// sub (and while a special hides the weapon) and to wave in the lobby's HEY! emote (`wave`: the weapon hand alone,
+// falling back to the family's `raise`). The anchors below are placed so the off hand reaches its grip with a bent
+// elbow; the dances use the two-handed ones (trophy: lifted for a cheer · present: shown off to the viewer,
+// off to the side of the face · droop: hanging low in front; `hang`: the Tidal Slam's raise, where it differs; `ride`:
+// the anchor's chest-follow [translation, rotation] in victory A / C) in place of the free-hand choreography, all clear
+// of the head. `gripRoll` (rad): how far the
 // off hand may turn round its handle toward its own shoulder (a round shaft: all the way round; a pump or a foregrip: a
 // little), so the wrist meets the weapon the way the arm arrives instead of twisting to a fixed grip; `gripAt` (m)
-// slides it along a round shaft. `twist` turns the shoulders toward the weapon outside the aim stance, `clav` brings
+// slides it along a round shaft. `twist` turns the shoulders toward the weapon outside the aim stance and the roll, `clav` brings
 // the support shoulder forward, `poleC` is the support elbow's bend direction there.
 const SHAFT_BOTH = {   // the roller and the brush: one long shaft, the right fist on the top grip, the left on the mid grip
   both: true, gripRoll: Math.PI, gripFlip: true, twoCarry: 1, twoAim: 1, lobbyTwo: 1,   // (the left thumb toward the right fist)
   carry: { p: [-0.1, 0.885, 0.12], r: [0.95, 0.35, 0] },          // (the drum resting on the deck, as the one-handed carry's)
-  roll: { p: [-0.05, 0.84, 0.2], r: [0.95, 0.3, 0] },
+  roll: { p: [-0.03, 0.84, 0.2], r: [0.95, 0, 0] },              // rolling: the drum square to the path, near the midline (no twist)
   lobby: { p: [-0.06, 0.95, 0.12], r: [1.05, 0.45, 0] },
   trophy: { p: [-0.12, 0.8, 0.15], r: [-0.75, 0.75, 0] },      // port arms: the drum up by the left shoulder, clear of the head
   present: { p: [-0.06, 0.97, 0.15], r: [0.35, 0.4, 0] },
@@ -539,10 +542,13 @@ const HOLD_BOTH = {
     aim: { p: [-0.035, -0.09, 0.17], r: [0, 0.04, 0] },   // 3 cm closer in than the one-handed blaster's: the support arm keeps a bend
     carry: { p: [-0.11, 0.8, 0.14], r: [0.38, 0.34, 0.24] },
     lobby: { p: [-0.1, 0.8, 0.17], r: [0.25, 0.5, 0.2] },       // low ready, the bell to the front left
-    trophy: { p: [-0.06, 0.8, 0.2], r: [-0.25, 0.15, 0.1] },    // thrust up ahead, the bulb clear of the chin
-    present: { p: [-0.05, 0.88, 0.14], r: [-0.12, 0.1, 0.1] },
+    trophy: { p: [-0.06, 0.88, 0.16], r: [-0.75, -0.5, -0.15] },  // raised up to the right, the bell beside the face, not over it
+    ride: [1, 0.5],   // (in the bouncing victory dances it rides the chest, so the head's sway never meets it)
+    present: { p: [-0.04, 0.86, 0.14], r: [-0.3, -0.55, -0.1] },  // shown off to the right of the face, angled up, not at the viewer
+    hang: { p: [-0.06, 0.8, 0.2], r: [-0.25, 0.15, 0.1] },        // the Tidal Slam's raise / hang (two hands up ahead, the bulb clear of the chin)
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
     smash: { p: [-0.05, 0.9, 0.2], r: [-0.3, 0.05, 0] },          // the Tidal Slam's landing: the bell off the deck
+    wave: { p: [-0.22, 1.2, 0.15], r: [-1.1, 0.4, -0.4] },       // the HEY! emote, the weapon hand alone: the raise, the bell further out from the head
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
     twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.12 },
   brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1,
@@ -551,7 +557,7 @@ const HOLD_BOTH = {
     run: { p: [-0.12, 0.83, 0.17], r: [0.3, 0.35, 0.05] },
     lobby: { p: [-0.03, 0.88, 0.16], r: [1.2, 0.2, 0] },        // held point-down in front, like a walking cane
     trophy: { p: [-0.14, 0.85, 0.14], r: [-0.9, -0.15, 0] },    // raised by the right shoulder, clear of the head
-    present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
+    present: { p: [-0.08, 0.88, 0.15], r: [-0.15, -0.6, -0.1] },  // shown off to the right of the face, not at the viewer
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
     smash: { p: [-0.05, 0.95, 0.22], r: [-0.35, 0.05, 0] },      // the Tidal Slam's landing: the tip off the deck
     fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
@@ -660,6 +666,7 @@ export class Character {
     this.lastShot = 99; this.lastRelease = 99; this.charge = 0; this.chargeFlash = 0; this.fullT = 0; this.fireHold = 0; this._fireWant = 0;
     this.lReach = 0; this.ikErrPre = 0; this.leapEnd = -1; this.landAmp = 0; this.hitX = 0; this.hitZ = 1; this.hitAmp = 1; this.hitAcc = 0; this.slamGround = false;
     this.dance = null; this.danceT = 0; this.prevDance = null; this.prevDanceT = 0; this.danceFade = 1; this.lastDance = null;
+    this.waveHand = false; this.prevWave = false;   // [b5-holds] the lobby's HEY! emote (showcase emoteDance) frees the off hand to wave
     this.danceVar = 0; this.danceOfs = frac(seed * 0.61803) * 2.3;
     this.form = 'kid'; this.formPrev = 'kid'; this.formT = 99;
     this.kidScale = 1; this.sqScale = 0; this.kidPop = 1;
@@ -1289,7 +1296,8 @@ export class Character {
   setDance(name) {
     name = name || null;
     if (name === this.dance) return;
-    if (this.dance && name) { this.prevDance = this.dance; this.prevDanceT = this.danceT; this.danceFade = 0; }
+    if (this.dance && name) { this.prevDance = this.dance; this.prevDanceT = this.danceT; this.danceFade = 0; this.prevWave = this.waveHand; }
+    if (name) this.waveHand = false;   // [b5-holds] (a HEY! emote sets it again after: showcase emoteDance)
     this.dance = name; this.danceT = 0;
     const nv = DANCE_VARIANTS[name] || 1;
     this.danceVar = (this.seed >>> 5) % nv;
@@ -1979,13 +1987,13 @@ export class Character {
     if (this.wDance > 0.001 || this.dance) {
       const D = this.PD;
       if (this.dance) {
-        poseNeutral(D); this._poseDance(D, this.dance, this.danceT + this.danceOfs, dt);
+        poseNeutral(D); this._poseDance(D, this.dance, this.danceT + this.danceOfs, dt, this.waveHand);
         if (this.danceFade < 1 && this.prevDance) {
-          const X = this.PY; poseNeutral(X); this._poseDance(X, this.prevDance, this.prevDanceT + this.danceOfs, 0);
+          const X = this.PY; poseNeutral(X); this._poseDance(X, this.prevDance, this.prevDanceT + this.danceOfs, 0, this.prevWave);
           poseLerp(D, X, D, ease(this.danceFade));
         }
         this.lastDance = this.dance;
-      } else if (this.lastDance) { poseNeutral(D); this._poseDance(D, this.lastDance, this.danceT + this.danceOfs, dt); }
+      } else if (this.lastDance) { poseNeutral(D); this._poseDance(D, this.lastDance, this.danceT + this.danceOfs, dt, this.waveHand); }
       poseLerp(P, P, D, ease(this.wDance));
     }
     if (this.hold.both) this._bothHands(P);   // [b5-holds] the off hand back on the weapon (see HOLD_BOTH)
@@ -2146,10 +2154,11 @@ export class Character {
     }
     // [b5-holds] two hands on the weapon outside the aim stance: the shoulders turn toward it (the support shoulder
     // comes forward) and the support shoulder reaches in, so the off hand gets there with a bent elbow
-    // (aiming: `aimTwist` blades the stance a little more — the support shoulder forward toward the foregrip)
+    // (aiming: `aimTwist` blades the stance a little more — the support shoulder forward toward the foregrip; rolling:
+    // no turn, so the drum / bristles stay square to the path they paint — the reach comes from `clav` and `poleC`)
     if (H.both) {
       const k = 1 - wAim * (1 - wRoll), ka = wAim * (1 - wRoll);
-      const tw = (H.twist || 0) * k + (H.aimTwist || 0) * ka;
+      const tw = ((H.twist || 0) * k + (H.aimTwist || 0) * ka) * (1 - wRoll);   // (rolling: square to the path, no twist)
       P[CHEST + 1] += tw; P[SPINE + 1] += tw * 0.5; P[CLAVL + 1] -= (H.clav || 0) * k;
       if (H.poleC) lerpE(P, POLEL, H.poleC[0], H.poleC[1], H.poleC[2], k);
     }
@@ -2209,11 +2218,18 @@ export class Character {
 
   /** [b5-holds] A two-handed weapon (hold.both) keeps the off hand on it through every layer and dance: whatever a
    *  layer asked of the free hand (a fidget, the respawn's hand to the ground, a hand on the hip, a fist pump) gives way
-   *  to the foregrip IK. It lets go only while a sub is held and thrown, while a special hides the weapon, and for the
-   *  Tidal Slam's launch (the free arm flung up as the kid springs off, 0.24 s; both hands again for the tuck and hang). */
+   *  to the foregrip IK. It lets go only while a sub is held and thrown, while a special hides the weapon, for the
+   *  Tidal Slam's launch (the free arm flung up as the kid springs off, 0.24 s; both hands again for the tuck and hang),
+   *  and for the lobby's HEY! emote (it waves). */
   _bothHands(P) {
     const lp = this.tr[T_LEAP], launch = lp < 0.24 ? win(lp, 0, 0.04, 0.12, 0.24) : 0;
-    const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62), launch);
+    // the HEY! emote's wave (waveHand), eased in and out with the dance blends it rides
+    let wave = 0;
+    if ((this.waveHand || this.prevWave) && this.wDance > 0.001) {
+      wave = this.dance && this.prevDance && this.danceFade < 1 ? lerp(+this.prevWave, +this.waveHand, ease(this.danceFade)) : +this.waveHand;
+      wave *= ease(this.wDance);
+    }
+    const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62), launch, wave);
     const k = 1 - free;
     if (k <= 0.001) return;
     // a layer that sent the hand to a target (LTW) also bent the elbow for it: that bend goes with it
@@ -2605,7 +2621,7 @@ export class Character {
     const flip = ease((lt - 0.14) / 0.36);
     X[MODELR] += lt > 0.14 ? wrapA(flip * TAU) : 0;
     // weapon: thrust up on launch, tucked to the chest, raised overhead two-handed for the hang
-    const up = Math.max(launch, hang), T = this.hold.both ? this.hold.trophy : null;
+    const up = Math.max(launch, hang), T = this.hold.both ? this.hold.hang || this.hold.trophy : null;
     if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], up); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], up); }   // [b5-holds] two hands reach it
     else { lerpE(X, ANC, -0.06, 1.34, 0.06, up); lerpE(X, ANCR, -1.85, 0.05, 0, up); }
     lerpE(X, ANC, -0.1, 0.86, 0.2, tuck); lerpE(X, ANCR, -0.6, 0.1, 0, tuck);
@@ -2631,7 +2647,7 @@ export class Character {
     // diving: legs extended down, weapon whipped from overhead to the front
     lerpE(X, FOOTL, 0.1, 0.1, 0.06, dive); lerpE(X, FOOTLR, 0.5, 0.1, 0, dive);
     lerpE(X, FOOTR, -0.1, 0.12, -0.08, dive); lerpE(X, FOOTRR, 0.7, -0.1, 0, dive);
-    const T = this.hold.both ? this.hold.trophy : null, dv = dive * (1 - ease(st / 0.12));   // [b5-holds] two hands reach it
+    const T = this.hold.both ? this.hold.hang || this.hold.trophy : null, dv = dive * (1 - ease(st / 0.12));   // [b5-holds] two hands reach it
     if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], dv); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], dv); }
     else { lerpE(X, ANC, -0.06, 1.3, 0.12, dv); lerpE(X, ANCR, -1.9, 0.05, 0, dv); }
     // [b5-holds] two-handed: the dive whips the weapon from overhead straight to the landing's (hold.smash: the low whip
@@ -3152,12 +3168,12 @@ export class Character {
   // ---------------------------------------------------------------------------------------------
   // Dances / showcase poses (kid-space feet; variants picked per character)
   // ---------------------------------------------------------------------------------------------
-  _poseDance(D, name, t, dt) {
+  _poseDance(D, name, t, dt, wave) {
     D[WPL] = 0; D[WPR] = 0; D[STAB] = 0; D[AFOLT] = 0; D[AFOLR] = 0;
     if (name === 'victory') {
       if (this.danceVar === 0) this._dVictoryPump(D, t);
       else if (this.danceVar === 1) this._dVictoryFlourish(D, t);
-      else this._dVictoryHops(D, t);
+      else this._dVictoryHops(D, t, wave);
     } else if (name === 'defeat') {
       if (this.danceVar === 0) this._dDefeatSlump(D, t);
       else if (this.danceVar === 1) this._dDefeatSulk(D, t);
@@ -3187,7 +3203,7 @@ export class Character {
     D[FOOTLR] = 0.25 * pump * (b < 4 ? 1 : 0);
     if (b < 4) {
       D[UARML] = -2.6 - 0.35 * pump; D[UARML + 2] = 0.35; D[FARML] = -0.2 - 1.3 * (1 - pump); D[HANDL] = 0; D[HANDPL] = -1;
-      D[ANC + 1] += 0.05 * pump;
+      D[ANC + 1] += (H.both ? 0.03 : 0.05) * pump;   // ([b5-holds] two-handed: a smaller pump, the off hand in reach)
       D[CHEST + 1] = 0.12 * Math.sin(Math.PI * b);
       // anticipation crouch before the spin
       const pre = win(b, 3.4, 3.8, 3.9, 4.0);
@@ -3209,9 +3225,14 @@ export class Character {
       D[UARML] = -2.0; D[UARML + 2] = 1.0 * k; D[FARML] = -0.9; D[HANDL + 2] = 0.3; D[HANDPL] = 1.9;
       D[HEAD + 2] = -0.18 * k; D[HEAD] = -0.1;
       D[WINK] = ease((b - 6.3) / 0.12) * (1 - ease((b - 7.6) / 0.15));
-      setAnc(D, H.both ? H.present : HOLD_HERO);
+      if (!H.both) setAnc(D, HOLD_HERO);
+      else {   // [b5-holds] two-handed: eased from the trophy to the present and back (both hands ride the change)
+        const Q = H.present, k = ease((b - 6) / 0.6) * (1 - ease((b - 7.4) / 0.6));
+        lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], k); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], k);
+      }
     }
     D[MOPEN] = 0.75; D[MCURVE] = 1; D[BROW] = -0.1; D[BROWY] = 0.8; D[EYE] = 0.92; D[LOOKY] = 0.1; D[EARS] = 0.9 + 0.1 * hit;
+    if (H.both && H.ride) { D[AFOLT] = H.ride[0]; D[AFOLR] = H.ride[1]; }   // [b5-holds] the raised weapon rides the chest's bounce
   }
 
   // Victory B: anticipation dip → weapon twirl overhead on tiptoe → point it at the camera, hand on hip, wink
@@ -3247,14 +3268,17 @@ export class Character {
     D[WINK] = win(c, 1.75, 1.85, 2.4, 2.55);
     D[MCURVE] = 1; D[MOPEN] = 0.3 + 0.45 * rise + 0.2 * bounce; D[MTILT] = 0.2 * strike; D[BROW] = -0.2 * strike; D[BROWY] = 0.6 * rise;
     D[LOOKX] = -0.05; D[LOOKY] = 0.05 + 0.2 * rise; D[EYE] = 1 - 0.1 * strike;
+    if (H.both && H.ride) { D[AFOLT] = H.ride[0]; D[AFOLR] = H.ride[1]; }   // [b5-holds] the weapon rides the chest's turn
   }
 
   // Victory C: side-to-side happy hops with alternating arm waves → big V jump (8 beats @ 150 bpm)
-  _dVictoryHops(D, t) {
-    const H = this.hold;
+  // ([b5-holds] `wave`: played as the lobby's HEY! emote — a two-handed weapon goes to the weapon hand alone and the off
+  // hand waves, as the one-handed hold does; _bothHands lets go of it for the emote)
+  _dVictoryHops(D, t, wave) {
+    const H = this.hold, two = H.both && !wave;
     const b = (t * 2.5) % 8, bf = frac(b), bi = Math.floor(b);
     const sd = bi % 2 ? -1 : 1;
-    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: held up in both fists through the hops
+    setAnc(D, two ? H.trophy : (wave && H.wave) || H.raise);   // [b5-holds] two-handed: held up in both fists through the hops
     D[IKL] = 0;
     if (b < 6) {
       const hop = Math.sin(Math.PI * clamp(bf / 0.62, 0, 1));
@@ -3278,11 +3302,12 @@ export class Character {
       setE(D, FOOTL, 0.12, ANKLE_H + 0.18 * air, 0.02 * air); setE(D, FOOTR, -0.12, ANKLE_H + 0.18 * air, 0.02 * air);
       D[FOOTLR] = 0.6 * air; D[FOOTRR] = 0.6 * air;
       D[UARML] = lerp(-0.5, -2.7, air); D[UARML + 2] = lerp(0.2, 0.75, air); D[FARML] = -0.2;
-      if (H.both) D[ANC + 1] += 0.04 * air;   // [b5-holds]
+      if (two) D[ANC + 1] += 0.04 * air;   // [b5-holds]
       else { lerpE(D, ANC, -0.18, 1.4, 0.05, air); lerpE(D, ANCR, -1.9, 0.3, -0.5, air); }
       D[HEAD] = -0.2 * air; D[MOPEN] = 0.9 * air; D[HANDPL] = 2; D[EARS] = 1;
     }
     D[MOPEN] = Math.max(D[MOPEN], 0.65); D[MCURVE] = 1; D[BROWY] = 0.9; D[EYE] = 0.88; D[LOOKY] = 0.12;
+    if (two && H.ride) { D[AFOLT] = H.ride[0]; D[AFOLR] = H.ride[1]; }   // [b5-holds] the raised weapon rides the chest's sway
   }
 
   // Defeat A: slumped sway, big sigh, head drop
