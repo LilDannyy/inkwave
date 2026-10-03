@@ -380,8 +380,9 @@
     G.paint.splat = function (c, r, team, o) { if (counting && team === M1.team) painted += Math.PI * r * r; return sp0.call(this, c, r, team, o); };
     const measure = (secs, pin = true) => {
       painted = 0; counting = true; let fires = 0, inside = 0;
-      step(secs, () => { if (pin) { M1.pos.x = S.x; M1.pos.z = S.z; M1.vel.x = M1.vel.z = 0; } M1.ink = PLAYER.inkMax; if (M1.intent.fire) fires++; if (DB.inEnemy(M1)) inside++; });
-      counting = false; return { painted: r2(painted), fires, inside };
+      let fight = 0;
+      step(secs, () => { if (pin) { M1.pos.x = S.x; M1.pos.z = S.z; M1.vel.x = M1.vel.z = 0; } M1.ink = PLAYER.inkMax; if (M1.bot.target) fight++; else if (M1.intent.fire) fires++; if (DB.inEnemy(M1)) inside++; });
+      counting = false; return { painted: r2(painted), fires, inside, fightFrames: fight };
     };
     try {
       // (a) no bubble: on its own ink it sees nothing to paint
@@ -403,9 +404,12 @@
         reset(); place(E1, S.x, S.z); step(0.05); start(E1); step(D.inflate + 0.1); awayE1();
         ownInk(); step(0.2); fresh(); step(0.05);
         painted = 0; counting = true; let fires = 0, t = 0;
-        step(4, () => { M1.ink = PLAYER.inkMax; if (!DB.inEnemy(M1)) return false; t++; if (M1.intent.fire) fires++; });
+        // (painting, not fighting: a foe it knows of — the team's word, though everyone's parked far off — can send it
+        // into a fight's spray now and then; those frames don't count)
+        let fight = 0;
+        step(4, () => { M1.ink = PLAYER.inkMax; if (!DB.inEnemy(M1)) return false; t++; if (M1.bot.target) { fight++; return; } if (M1.intent.fire) fires++; });
         counting = false;
-        return { fires, framesInside: t, painted: r2(painted), out: !DB.inEnemy(M1) };
+        return { fires, framesInside: t, fightFrames: fight, painted: r2(painted), out: !DB.inEnemy(M1) };
       };
       const wB = walkOut(1), wS = walkOut(0);
       D.botBlind = 1;

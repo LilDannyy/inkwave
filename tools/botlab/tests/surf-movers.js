@@ -232,12 +232,14 @@
         !!placed && ST.shoves > sh0 && worst === 0 && along > 3 && frontNow >= car.len / 2 && b.phase === 'live' && !b.fall && maxV > 1, { placed, at: v2(b.pos), along: r2(along), frontGap: r2(frontNow - car.len / 2), inside: worst, shoves: ST.shoves - sh0 });
       clearBuoys();
       // (b) dropped onto a moving car's roof: off-limits — it slides off, carried along by the car, and anchors beside the track
-      // (the car on its way back, at speed, with open sky over its roof — not under the overpass)
-      const leg = Tt.dwell + Tt.move, roofY = car.pos.y + car.ht, clearSky = () => [-2, 0, 2].every((k) => !G.physics.raycast(V(car.pos.x + car.u.x * k, roofY + 0.1, car.pos.z + car.u.z * k), V(0, 1, 0), 3).hit);
-      let tt = 0.25; for (; tt <= 0.75; tt += 0.05) { setClock(Tt.first + leg + Tt.move * tt); if (clearSky()) break; }
-      step(0.05);
-      const fallT = Math.sqrt((2 * 1.2) / SURF.GRAV);   // (dropped 1.2 m over the roof, ahead by what the car covers meanwhile)
-      const b2 = drop(me, V(car.pos.x + car.u.x * car.vel * fallT, roofY + 1.2, car.pos.z + car.u.z * car.vel * fallT), 7202);
+      // (the car on its way back, at speed, with nothing between the drop point and its roof — not under the overpass)
+      const leg = Tt.dwell + Tt.move, roofY = car.pos.y + car.ht, fallT = Math.sqrt((2 * 1.2) / SURF.GRAV);
+      const dropAt = () => V(car.pos.x + car.u.x * car.vel * fallT, roofY + 1.2, car.pos.z + car.u.z * car.vel * fallT);
+      const clear = () => { const p = dropAt(), h = G.physics.raycast(p, V(0, -1, 0), 1.5); return h.hit && h.block === car.block.id && !G.physics.raycast(p, V(0, 1, 0), 2).hit; };
+      let tt = 0.15, ok = false;
+      for (; tt <= 0.85 && !ok; tt += 0.02) { setClock(Tt.first + leg + Tt.move * tt); ok = clear(); }
+      step(1 / 60);
+      const b2 = drop(me, dropAt(), 7202);
       let onRoof = false, carV = car.vel, minAlong = 0;
       const x0 = b2.pos.clone();
       step(3, () => { if (b2.phase === 'fly' && Math.abs(b2.pos.y - roofY) < 0.15 && Math.abs((b2.pos.x - car.pos.x) * -car.u.z + (b2.pos.z - car.pos.z) * car.u.x) < car.wid / 2) onRoof = true; return b2.phase === 'fly'; });
@@ -247,7 +249,7 @@
       void minAlong;
       R(`rail: a buoy dropped onto a moving railcar's roof (off-limits) slides off it, carried along by the car (${r2(alongB)} m its way), and anchors beside the track`,
         onRoof && b2.phase === 'live' && !b2.fall && side >= car.wid / 2 && Math.sign(alongB) === Math.sign(carV) && Math.abs(alongB) > 0.4 && !inside(b2, car.block, 0),
-        { onRoof, at: v2(b2.pos), along: r2(alongB), carVel: r2(carV), side: r2(side), halfWidth: r2(car.wid / 2) });
+        { onRoof, at: v2(b2.pos), along: r2(alongB), carVel: r2(carV), side: r2(side), halfWidth: r2(car.wid / 2), clearDrop: ok, tt: r2(tt) });
       clearBuoys(); netOff();
     }
   } finally { hook = null; netOff(); }
