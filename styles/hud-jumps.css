@@ -4,8 +4,9 @@
    name only), TAB map (.is-dio: on the floor): a dark disc with the mark's icon (the super-jump glyph / the special's
    icon on a cream badge), a countdown ring in the jumper's ink round it (full when the mark appears, empty at
    touchdown: stroke-dashoffset written per frame), and a dark label with the jumper's name and the seconds left. The
-   other team's marks: the ring and icon only (.is-foe). Plus the "NAME is jumping to you!" alert under the top bar
-   (.iw-jal).
+   other team's marks: the ring and icon only (.is-foe). Plus the "NAME is jumping to you!" alerts under the top bar
+   (.iw-jal). Where tags would cover one another, hud-jumps.js moves them: the whole world tag (its transform), a label
+   on the minimap / TAB map (--lx / --ly, px from where these rules put it).
    ===================================================================================== */
 .iw-jts, .iw-dio__jts { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .iw-jts { transition: opacity .15s; }
@@ -38,7 +39,9 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 @keyframes iw-jt-beat { 50% { scale: 1.1; } }
 
 /* world view: the disc floats over the spot (hud-jumps.js lifts it JUMP_UI.lift m) */
-.iw-jt.is-world { opacity: .96; }
+.iw-jt.is-world { opacity: .96; transition: opacity .18s; }
+/* the other team's tag where walls hide its spot (JUMP_UI.foeThroughWalls) */
+.iw-jt.is-world.is-occl { opacity: 0; }
 /* minimap: just the ring (the map draws its own landing ring / return badge underneath) and a small name beside it */
 .iw-jt.is-map { --d: calc(var(--u) * 1.5); }
 .iw-jt.is-map .iw-jt__disc { background: none; box-shadow: none; animation: none; }
@@ -47,19 +50,22 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
 .iw-jt.is-map .iw-jt__ring .f { stroke-width: 7; }
 .iw-jt.is-map .iw-jt__ring .b { stroke-width: 9.5; }
 /* (the name over the ring; --lx keeps it inside the map's frame) */
-.iw-jt.is-map .iw-jt__tag { top: auto; bottom: calc(var(--d) * .66); translate: calc(-50% + var(--lx, 0px)) 0; padding: 0; background: none; box-shadow: none; color: #fff;
+.iw-jt.is-map .iw-jt__tag { top: auto; bottom: calc(var(--d) * .66); translate: calc(-50% + var(--lx, 0px)) var(--ly, 0px); padding: 0; background: none; box-shadow: none; color: #fff;
   font: 800 calc(var(--u) * .74) / 1 'Rubik', sans-serif; text-shadow: 1px 1px 0 var(--k), -1px 1px 0 var(--k), 1px -1px 0 var(--k), -1px -1px 0 var(--k), 0 0 3px var(--k); }
 .iw-jt.is-map .iw-jt__sec { display: none; }
+/* a second mark on the spot of an older one: one ring for the spot, the names stacked over it */
+.iw-jt.is-map.is-merged .iw-jt__disc { display: none; }
 .iw-map.is-expanded .iw-jt.is-map { --d: calc(var(--u) * 2.4); }
 .iw-map.is-expanded .iw-jt.is-map .iw-jt__tag { font-size: calc(var(--u) * 1.05); }
-/* TAB map: on the floor at the spot, the label under it (drawn over the teammates' pins, under the cursor) */
+/* TAB map: on the floor at the spot, the label under it, or above / beside it clear of the pins (drawn under the pins) */
 .iw-jt.is-dio { --d: calc(var(--u) * 2.1); opacity: var(--pinK, 1); }
-.iw-jt.is-dio .iw-jt__tag { top: calc(var(--d) * .5 + var(--u) * .55); }
+.iw-jt.is-dio .iw-jt__tag { top: calc(var(--d) * .5 + var(--u) * .55); translate: calc(-50% + var(--lx, 0px)) var(--ly, 0px); }
 .iw-jt.is-dio.is-foe { --d: calc(var(--u) * 1.7); }
 
-/* ---- "NAME is jumping to you!" — under the top bar, one per incoming jump (up to three) */
-.iw-jal { position: absolute; left: 50%; top: calc(var(--u) * 10.2); width: 0; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .5); pointer-events: none; }
-.iw-jal__i { display: flex; align-items: center; gap: calc(var(--u) * .7); padding: calc(var(--u) * .34) calc(var(--u) * .5) calc(var(--u) * .34) calc(var(--u) * .4); border-radius: 999px; white-space: nowrap;
+/* ---- "NAME is jumping to you!" — under the top bar, one per incoming jump (up to three, side by side). hud-jumps.js
+   sets `top`: 10.2 u, or lower, clear of what hangs under the top bar in this mode and of the status badges */
+.iw-jal { position: absolute; left: 50%; top: calc(var(--u) * 10.2); width: 0; display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: calc(var(--u) * .7); pointer-events: none; transition: top .2s; }
+.iw-jal__i { flex: none; display: flex; align-items: center; gap: calc(var(--u) * .7); padding: calc(var(--u) * .34) calc(var(--u) * .5) calc(var(--u) * .34) calc(var(--u) * .4); border-radius: 999px; white-space: nowrap;
   background: linear-gradient(180deg, color-mix(in srgb, var(--c) 82%, #fff), var(--c)); color: var(--c-ink, #fff);
   box-shadow: 0 0 0 calc(var(--u) * .16) var(--k), 0 calc(var(--u) * .22) 0 calc(var(--u) * .16) rgba(0, 0, 0, .3);
   animation: iw-jal-in .5s var(--spring2) both; }
@@ -79,6 +85,15 @@ body.iw-dio-on .iw-jts { opacity: 0; transition: opacity .12s; }
   padding: .32em .5em .34em; border-radius: 999px; background: rgba(21, 18, 28, .82); color: #fff; }
 .iw-jal__i.is-landing .iw-jal__disc { animation: iw-jt-beat .3s ease-in-out infinite; }
 body.iw-dio-on .iw-jal { opacity: .35; }
+/* while alerts are up (.has-jal; --jal-b: the row's bottom), the announcements that share the band under the top bar
+   drop below the row: the streak callouts, the zone callouts, the one-minute banner, the last-ten count */
+.iw-hud.has-jal .iw-callouts { top: max(27%, calc(var(--jal-b, 0px) + var(--u) * 3.7 + 4px)); }   /* (a big callout with a sub line: 3.65 u over its anchor, more on a small window: the sub's 12 px floor) */
+.iw-hud.has-jal .iw-zcalls { top: max(33%, calc(var(--jal-b, 0px) + var(--u) * .9)); }
+.iw-hud.has-jal .iw-counts { top: max(30%, calc(var(--jal-b, 0px) + var(--u) * 4.6)); }   /* (the digit's ink: 4.2 u over its anchor) */
+.iw-hud.has-jal .iw-bn--minute { top: max(22%, calc(var(--jal-b, 0px) + var(--u) * 2.4)); }
+.iw-hud.has-jal .iw-bn--special { top: max(25%, calc(var(--jal-b, 0px) + var(--u) * 4)); }
+.iw-hud.has-jal .iw-bn--custom { top: max(30%, calc(var(--jal-b, 0px) + var(--u) * 3.2)); }
+.iw-callouts, .iw-zcalls, .iw-counts { transition: top .2s; }
 @media (prefers-reduced-motion: reduce) {
   .iw-jt__disc, .iw-jal__i, .iw-jal__i.is-landing .iw-jal__disc { animation: none !important; }
 }
