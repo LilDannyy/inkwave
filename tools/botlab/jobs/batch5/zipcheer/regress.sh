@@ -26,6 +26,7 @@ batch=(
   "hud-lead MAP=testbox MODE=turf PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
   "hud-lead-zones MAP=testbox MODE=zones PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
   "input-swim MAP=testbox PAGE=$T/input-swim.js $RUN tools/botlab/page.cjs"
+  "track-arrows MAP=testbox MODE=turf PAGE=$T/track-arrows.js $RUN tools/botlab/page.cjs"
 )
 for b in "${batch[@]}"; do want "${b%% *}" && echo "$b"; done | xargs -P "$PAR" -L 1 bash -c 'one "$@"' _
 # alone
