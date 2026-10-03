@@ -298,6 +298,7 @@ class Deployables {
   _crunch(c, team, owner) {
     const col = G.teamColors[team];
     if (near(c, 50)) {
+      G.fx?.explosion(c, col, 0.9);                                       // (its ink bursting out under the weight)
       G.fx?.burst(c, UP, col, { count: 18, speed: 5, size: 0.09 });
       G.fx?.burst(c, UP, new THREE.Color(0.86, 0.84, 0.8), { count: 8, speed: 3.5, size: 0.06, sheet: false });   // (bits of it)
       G.cues?.one('device_crunch', { at: c.clone(), owner, team, kind: 'end', range: 50 });
