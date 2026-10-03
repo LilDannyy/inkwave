@@ -283,6 +283,42 @@
       !!mk && !mk.classList.contains('is-off') && orbC && orbC.z < 1 && orbC.y > 0 && orbC.y < innerHeight && tagBottom <= orbTop.y + 1 && oldAnchor.y > orbTop.y + 3,
       { tagBottomY: tagBottom && Math.round(tagBottom), orbTopY: orbTop && Math.round(orbTop.y), orbCentreY: orbC && Math.round(orbC.y), oldAnchorY: oldAnchor && Math.round(oldAnchor.y) });
     G.specials.end(M1, 'test');
+    // (fix round 2) the hint line under it (hud.js .iw-prompt — its font is floored at 13.5 px, so on a small window it
+    // doesn't shrink with --u): the prompt stands on top of it, never on it — at this window's size and at 960×600's and
+    // 1280×720's --u (9.6 / 12.8 px: set on the HUD, the window "resized"), with the low-ink hint and the special-ready
+    // one (main.js's own), and a taller one with a keycap in it; with no hint it's back where it was. The rare "… Super
+    // Jump cancelled" note (hud.js jumpNote, normally at 7.6 u — inside the prompt) goes over the prompt meanwhile
+    reset(); place(me, 0, -10); place(M1, 4, -2); place(E1, -4, 6); step(0.1);
+    const sH = start(M1, 'booyah'); step(0.2);
+    const hudEl = G.hud.el, sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+    const updP = G.hud._updPrompt;
+    const box = (el) => { const b = el.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; };
+    const hintCase = async (u, how) => {
+      if (u) hudEl.style.setProperty('--u', u); else hudEl.style.removeProperty('--u');
+      C.L.vw = -1;   // (the window "resized": re-measure)
+      sH.charge = 0.3; me.ink = PLAYER.inkMax; me.special = 0; g._lowInkFlash = 0; g._hints.specialT = 0; g._hints.shot = true; G.hud._updPrompt = updP;   // (shot: no start-of-match tutorial hint)
+      if (how === 'lowink') me.ink = PLAYER.inkMax * 0.12;
+      if (how === 'ready') { me.special = me.specialCost(); g._hints.specialT = 2.5; }
+      if (how === 'keycap') G.hud._updPrompt = function () { return updP.call(this, 'Hold [SHIFT] to swim in your ink and refill'); };
+      step(0.1);
+      await sleep(500);   // (the hint's grow-in, the prompt's move: real time)
+      const r = P.getBoundingClientRect(), hr = pill.getBoundingClientRect(), hintOn = !pill.classList.contains('is-out') && getComputedStyle(pill).opacity > 0.5;
+      const res = { u: u || 'window', how, hint: G.hud._L.prompt, over: C.state().overHint, gap: Math.round(hr.top - r.bottom), prompt: box(P), hintBox: box(pill), bottom: Math.round(innerHeight - r.bottom) };
+      G.hud.jumpNote('Beakon gone — Super Jump cancelled'); await sleep(450);
+      const jr = G.hud.jnote.getBoundingClientRect(); res.note = box(G.hud.jnote); res.noteGap = Math.round(r.top - jr.bottom);
+      G.hud.jnote.classList.remove('is-on');
+      const uPx = u ? parseFloat(u) : Math.min(innerWidth / 100, innerHeight * 1.7778 / 100);
+      res.ok = C.state().on && res.noteGap >= 4 && jr.top > innerHeight * 0.3 && (how === 'none' ? !hintOn && !res.over && Math.abs(res.bottom - 5.2 * uPx) < 2 : hintOn && res.over && res.gap >= 4 && r.top > innerHeight * 0.5);
+      return res;
+    };
+    const hc = [];
+    for (const u of [null, '9.6px', '12.8px']) for (const how of ['lowink', 'ready', 'keycap', 'none']) hc.push(await hintCase(u, how));
+    hudEl.style.removeProperty('--u'); C.L.vw = -1; G.hud._updPrompt = updP; me.ink = PLAYER.inkMax; me.special = 0; g._hints.specialT = 0; step(0.05);
+    const hb = hc.filter((x) => !x.ok);
+    R('prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window\'s size, 960×600\'s and 1280×720\'s; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it',
+      hb.length === 0 && hc.filter((x) => x.how === 'lowink').every((x) => /SHIFT/.test(x.hint || '')) && hc.filter((x) => x.how === 'ready').every((x) => /Special ready/.test(x.hint || '')),
+      { bad: hb, gaps: hc.map((x) => `${x.u}/${x.how}: ${x.how === 'none' ? 'bottom ' + x.bottom : 'gap ' + x.gap + ' (hint ' + (x.hintBox[3] - x.hintBox[1]) + ' px high)'}, note ${x.noteGap}`) });
+    G.specials.end(M1, 'test');
   }
 
   // ======================================================================================== the cheer: wisps, charge, gauge
@@ -361,16 +397,31 @@
   }
 
   // ======================================================================================== bots
+  // (fix round 2: when a bot cheers is a roll — bots.js, ~1.3 a second — so a fixed 2.5 s window made the count vary and
+  // the check flaky. Now: step until EACH bot has cheered once (cap 10 s), switch that bot off at its cheer — one cheer
+  // each, an exact count — let every wisp land, then require exactly that many arrivals and +0.12 a wisp. The orb's own
+  // climb is slowed meanwhile so a late cheer never lands on a full orb.)
   if (want('bots')) {
     reset();
     for (const a of [M1, M2]) { a.bot._wasDead = false; a.bot.update = brains.get(a); }   // (no respawn super jump away on the first tick)
     place(me, 0, -12); place(M1, 4, -16); place(M2, -4, -16); step(0.2);
+    const charge0 = BD.charge; BD.charge = 60;
     const s = start(me, 'booyah');
-    const by = new Set(); const offC = on('actor:cheer', (e) => { if (e.helped && (e.actor === M1 || e.actor === M2)) by.add(e.actor.name); });
-    let wisps = 0; const offW = on('cheer:orb', (e) => { if (e.target === me) wisps++; });
-    const c0 = s.charge; step(2.5); const extra = s.charge - c0 - 2.5 / BD.charge;
-    offC(); offW();
-    R('bots: bot teammates cheer a charging orb — their wisps reach it and charge it', by.size >= 1 && wisps >= 2 && extra > 0.2, { cheeredBy: [...by], wisps, extra: r2(extra) });
+    const first = new Map(); let helps = 0, arrived = 0, n = 0;
+    const offC = on('actor:cheer', (e) => {
+      if (!e.helped || (e.actor !== M1 && e.actor !== M2)) return;
+      helps++;
+      if (!first.has(e.actor)) { first.set(e.actor, r2(n / 60)); const b = e.actor; b.bot.update = () => { zero(b); }; }
+    });
+    const offW = on('cheer:orb', (e) => { if (e.target === me) arrived++; });
+    const c0 = s.charge;
+    step(10, () => { n++; return first.size < 2; });
+    const nCheer = n; step(1.2, () => { n++; });   // (the last wisps land: cheerFly × ≤ 1.6 s)
+    const extra = s.charge - c0 - n / 60 / BD.charge;
+    offC(); offW(); BD.charge = charge0;
+    R('bots: each bot teammate cheers a charging orb (within 10 s; one cheer each, then it\'s switched off) — every cheer\'s wisp reaches the orb and adds 0.12',
+      first.size === 2 && helps === 2 && arrived === 2 && Math.abs(extra - 2 * BD.cheer) < 0.01 && s.charge < 1 && me.specialActive === s,
+      { firstCheerS: [...first].map(([a, t]) => `${a.name} ${t}`), helps, arrived, extra: r3(extra), steppedS: r2(nCheer / 60) });
     G.specials.end(me, 'test');
     for (const a of [M1, M2]) a.bot.update = () => { zero(a); };
     // a bot using it in a fight: stays where it rose, throws it once charged

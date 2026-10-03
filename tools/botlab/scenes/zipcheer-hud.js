@@ -8,7 +8,11 @@
 //   mate     your teammate up in the air close by, from your over-the-shoulder camera: its ground cue (shadow, ring,
 //            column), its orb clear of its tag
 //   foe      an ENEMY up in the air charging one ahead of you (no prompt, no tag): its ground cue in its colour
+//   lowink   the prompt with the hint line showing under it (low ink: "Hold SHIFT to swim …"): the prompt stands on top
+//   ready    likewise with "Special ready! Press F" (your gauge full — cheering fills it towards that)
+//   note     likewise, plus the rare "… Super Jump cancelled" note: over the prompt, not on it
 // (fix round 1: the teammate's name tag sits over the orb; the ground cue under a held-up user — sp-cheer.js cue)
+// (fix round 2: lowink / ready / note — the prompt clear of the hint line at 960×600 too)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const me = m.local;
@@ -33,6 +37,25 @@
     const t = mk.querySelector('.iw-mk__tag').getBoundingClientRect(), r = mk.getBoundingClientRect();
     const v = s.ball.position.clone(); v.y += s.halo.scale.y; v.project(G.camera);
     return { tagBottom: Math.round(+tr[2] + t.bottom - r.top + 6), orbTop: Math.round((-v.y * 0.5 + 0.5) * innerHeight) };
+  };
+  // (the prompt, the hint line and the jump note on screen: their boxes and the gaps between them, px)
+  const bx = (el) => { const b = el.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; };
+  const layout = () => {
+    const p = bx(G.hud.cheer.el), hn = bx(G.hud.promptEl), on = !G.hud.promptEl.classList.contains('is-out');
+    return { prompt: p, hint: on ? hn : null, hintText: G.hud._L.prompt, gapOverHint: on ? hn[1] - p[3] : null, over: G.hud.cheer.state().overHint };
+  };
+  // a teammate charging an orb in front of you, as in 'prompt', then `prep` (the hint's cause) for a second
+  const withHint = (prep) => async () => {
+    for (const a of m.actors) if (a.specialActive) G.specials.end(a, 'test');
+    G.specials.clear(); G.projectiles.clear();
+    put(me, 1.0, -1.5); put(M1, 10, 1.5); view();
+    for (let i = 0; i < 20; i++) frame();
+    M1.specialId = 'booyah'; M1.special = M1.specialCost(); M1._startSpecial();
+    g._hints.shot = true; g._lowInkFlash = 0; me.special = 0; me.ink = 100;
+    for (let i = 0; i < 60; i++) { prep(); frame(); view(); }
+    M1.specialActive.charge = Math.min(M1.specialActive.charge, 0.4);
+    await new Promise((q) => setTimeout(q, 450));   // (the hint's grow-in, the prompt's move: real time)
+    return layout();
   };
   window.__hudScenes = [
     { name: 'prompt', wait: 300, set: async () => {
@@ -81,6 +104,15 @@
       for (let i = 0; i < 60; i++) { frame(); view(E1); }
       const s = E1.specialActive;
       return { prompt: G.hud.cheer.state().on, up: +(E1.pos.y - G.level.groundHeight(E1.pos.x, E1.pos.z, E1.pos.y)).toFixed(2), cue: !!(s && s.cue), charge: s && +s.charge.toFixed(2) };
+    } },
+    { name: 'lowink', wait: 120, set: withHint(() => { me.ink = 12; }) },
+    { name: 'ready', wait: 120, set: withHint(() => { me.special = me.specialCost(); g._hints.specialT = 2.5; }) },
+    { name: 'note', wait: 120, set: async () => {
+      await withHint(() => { me.special = me.specialCost(); g._hints.specialT = 2.5; })();
+      G.hud.jumpNote('Beakon gone — Super Jump cancelled');
+      await new Promise((q) => setTimeout(q, 450));   // (its grow-in, the prompt's move: real time)
+      const r = layout(), n = bx(G.hud.jnote);
+      return { ...r, note: n, gapUnderNote: r.prompt[1] - n[3] };
     } },
   ];
   return window.__hudScenes.map((s) => ({ name: s.name }));

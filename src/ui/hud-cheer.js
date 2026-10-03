@@ -5,7 +5,11 @@
 //                bottom middle of the screen: the cheer key as a big keycap (C, or the d-pad's up arrow once you're on a
 //                pad), "CHEER!", whose orb it is and a bar with its charge. It pulses to catch the eye, jumps when you
 //                cheer (a cheer that helps lights it up), reads CHARGED! once the orb is full, and goes when the orb is
-//                thrown. Off while the map is open, while you're splatted, outside play.
+//                thrown. Off while the map is open, while you're splatted, outside play. With the hint line showing
+//                under it (hud.js .iw-prompt: low ink, special ready, your own special's hint …) it stands on top of
+//                the hint's real box (is-over, --cheer-hint on the HUD: the hint's font has a px floor, so on a small
+//                window it doesn't shrink with --u — measured, only when the hint or the window changes), never on
+//                it; the rare "Super Jump cancelled" note (hud.js .iw-jnote) goes over the prompt meanwhile (has-cheerp).
 //   the wisp     a cheer that tops up your gauge sends a wisp of energy from you on screen up into your special gauge
 //                (top right) along a curve; it lands as the gauge gains (sp-cheer.js applies the gain at that moment): a
 //                ring bursts round the gauge and a "+4%" pops beside it.
@@ -19,7 +23,10 @@ const CSS = `
   padding: calc(var(--u) * .62) calc(var(--u) * 1.7) calc(var(--u) * .62) calc(var(--u) * .62); border-radius: calc(var(--u) * 3);
   background: rgba(14, 11, 22, .9); box-shadow: inset 0 0 0 calc(var(--u) * .22) var(--self), 0 0 calc(var(--u) * 1.6) rgba(var(--self-rgb), .55), 0 calc(var(--u) * .3) 0 rgba(0, 0, 0, .4);
   color: #fff; font: 800 calc(var(--u) * 1.05) / 1 'Rubik', sans-serif; white-space: nowrap; pointer-events: none;
-  opacity: 0; scale: .6; transition: opacity .18s, scale .35s cubic-bezier(.34, 1.8, .64, 1), translate .3s cubic-bezier(.2, .8, .3, 1); }
+  opacity: 0; scale: .6; transition: opacity .18s, scale .35s cubic-bezier(.34, 1.8, .64, 1), translate .3s cubic-bezier(.2, .8, .3, 1), bottom .25s cubic-bezier(.2, .8, .3, 1); }
+.iw-cheerp.is-over { bottom: max(calc(var(--u) * 5.2), calc(var(--cheer-hint, 0px) + max(8px, var(--u) * .7))); }
+.iw-hud.has-cheerp .iw-jnote { bottom: calc(max(calc(var(--u) * 5.2), calc(var(--cheer-hint, 0px) + max(8px, var(--u) * .7))) + var(--u) * 6.8 + max(8px, var(--u) * .7)); }
+.iw-hud.has-cheerp.has-cards .iw-jnote { translate: -50% calc(var(--u) * -3.4); }
 .iw-cheerp.is-on { opacity: 1; scale: 1; animation: iw-cheerp-pulse 1.1s ease-in-out infinite; }
 @keyframes iw-cheerp-pulse { 50% { box-shadow: inset 0 0 0 calc(var(--u) * .22) var(--self-light), 0 0 calc(var(--u) * 2.6) rgba(var(--self-rgb), .85), 0 calc(var(--u) * .3) 0 rgba(0, 0, 0, .4); } }
 .iw-cheerp__key { position: relative; display: grid; place-items: center; width: calc(var(--u) * 3.5); height: calc(var(--u) * 3.5); border-radius: calc(var(--u) * .9);
@@ -81,10 +88,10 @@ export class CheerHud {
     this.gainEl = h('div', { class: 'iw-cgain' }, h('i'), h('b', null, '+4%'));
     hud.el.append(this.el, ...this.wisps, this.gainEl);
     this.el.addEventListener('animationend', (e) => { if (e.animationName === 'iw-cheerp-hit') this.el.classList.remove('is-hit'); });
-    this.L = { on: false, name: '', full: null, pad: null, p: -1 };
+    this.L = { on: false, name: '', full: null, pad: null, p: -1, hint: undefined, vw: 0, vh: 0 };
     this._calls = [];
     this._start = new Map();   // gauge wisp id → its start on screen
-    this.st = { on: false, name: null, charge: 0, full: false, key: 'C', wisps: 0, gains: 0, lastGain: null };
+    this.st = { on: false, name: null, charge: 0, full: false, key: 'C', overHint: false, wisps: 0, gains: 0, lastGain: null };
     on('actor:cheer', (e) => { if (e.actor && e.actor === this.hud._local() && !e.remote && this.L.on) this._restart(this.el, 'is-hit'); });
     on('cheer:gain', (e) => { if (e.actor && e.actor === this.hud._local()) this._gain(e.frac); });
   }
@@ -101,7 +108,7 @@ export class CheerHud {
       for (const c of calls) if (!call || (c.s.charge || 0) < (call.s.charge || 0)) call = c;
       show = !!call;
     }
-    if (show !== L.on) { L.on = show; this.el.classList.toggle('is-on', show); if (!show) this.el.classList.remove('is-hit'); }
+    if (show !== L.on) { L.on = show; this.el.classList.toggle('is-on', show); this.hud.el.classList.toggle('has-cheerp', show); if (!show) this.el.classList.remove('is-hit'); }
     st.on = show;
     if (show) {
       const o = call.actor, s = call.s, ch = Math.max(0, Math.min(1, s.charge || 0)), full = ch >= 0.999;
@@ -113,6 +120,15 @@ export class CheerHud {
       if (pad !== L.pad) { L.pad = pad; if (pad) this.key.innerHTML = DPAD_UP; else this.key.textContent = 'C'; }
       st.name = o.name; st.charge = ch; st.full = full; st.key = pad ? 'dpad-up' : 'C';
     } else { st.name = null; st.charge = 0; st.full = false; }
+    // (the hint line under it — not while kill cards hide it: then it's has-cards' lift — stand on top of it)
+    const hud = this.hud, hint = show && hud._L.prompt && !hud.el.classList.contains('has-cards') ? hud._L.prompt : null;
+    if (hint !== L.hint || (hint && (innerWidth !== L.vw || innerHeight !== L.vh))) {
+      L.hint = hint; L.vw = innerWidth; L.vh = innerHeight;
+      const pe = hud.promptEl;
+      hud.el.style.setProperty('--cheer-hint', hint ? `${(parseFloat(getComputedStyle(pe).bottom) + pe.offsetHeight).toFixed(1)}px` : '0px');
+      this.el.classList.toggle('is-over', !!hint);
+    }
+    st.overHint = !!hint;
     // ---- the gauge wisps (the local player's, in flight)
     const list = G.cheerOrb ? G.cheerOrb.gauge : [];
     let n = 0, hr = null;   // (the HUD's box: read only while a wisp of ours flies — no layout read every frame)
