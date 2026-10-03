@@ -16,6 +16,7 @@ import {
   GAME_TITLE, GAME_SUBTITLE, VERSION, WEAPONS, WEAPON_ORDER, SPECIALS, SPECIAL_ORDER, SUB, SUB_ORDER, MAPS, DIFFICULTY, MATCH, QUALITY,
   DEFAULT_SETTINGS, TEAM_PALETTES, COLORBLIND_PALETTE, PROGRESSION, BOT_NAMES, TEAM_NAMES, ZONES, TOWER,
   mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, roomTime, roomBotPlan,
+  mapListed,   // [b5-stages]
 } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 import { G } from '../core/ctx.js';
@@ -601,6 +602,7 @@ export class Menus {
   _sub() { const id = this._loadout().sub, all = this.api.subs || SUB; return (id && all[id]) || this.api.sub || SUB.bomb; }
   _special() { const lo = this._loadout(), all = this._specials(); return (lo.special && all[lo.special]) || all[(this._weapons()[lo.weapon] || {}).special] || Object.values(all)[0]; }
   _maps() { return this.api.maps || MAPS; }
+  _pickMaps() { return this._maps().filter((m) => mapListed(m.id)); }   // [b5-stages] the stages a player may pick (config wip)
   _diffs() { return this.api.difficulties || DIFFICULTY; }
   _version() { return this.api.version || VERSION; }
 
@@ -1172,7 +1174,7 @@ export class Menus {
   _preloadStages() {
     if (this._stageImgs) return;
     this._stageImgs = [];
-    for (const m of this._maps()) {
+    for (const m of this._pickMaps()) {
       for (const t of ['day', 'dusk']) {
         for (const sm of [true, false]) {
           const im = new Image();
@@ -1187,7 +1189,7 @@ export class Menus {
 
   _scr_setup() {
     const s = this._settings();
-    const maps = this._maps().filter((m) => !m.onlineOnly);   // (online-only stages live in the online lobby's picker)
+    const maps = this._pickMaps().filter((m) => !m.onlineOnly);   // (online-only stages live in the online lobby's picker; wip ones in none)
     const diffs = this._diffs();
     const byId = (id) => maps.find((m) => m.id === id);
     const st = this._setup || (this._setup = { times: {} });
@@ -3738,7 +3740,8 @@ export class Menus {
     };
     // the stages this room's mode can use: Boss Battle never lists a noBoss stage
     // (RANDOM first: the host rolls a stage from the mode's list at the start)
-    const stageList = () => [RANDOM_STAGE, ...(bossMode() ? maps.filter((m) => mapBossOk(m.id)) : maps)];
+    const listed = this._pickMaps();   // [b5-stages] (a wip stage is never listed — though a ?wipstages host's room can be on one)
+    const stageList = () => [RANDOM_STAGE, ...(bossMode() ? listed.filter((m) => mapBossOk(m.id)) : listed)];
     const setMap = (d) => {
       if (!isHost()) { this._bump(stage, 'left'); this._sfx('ui_error', 0.15); return; }
       const list = stageList();
@@ -4848,7 +4851,7 @@ export class Menus {
   // day, then SWAP. The session moves the whole room there in place.
   _openStageSwap(info = {}) {
     if (this._modal) return;
-    const maps = [RANDOM_STAGE, ...this._maps()];
+    const maps = [RANDOM_STAGE, ...this._pickMaps()];   // [b5-stages]
     let i = Math.max(0, maps.findIndex((m) => m.id === info.mapId));
     let time = roomTime(info.time || 'day');
     const stImgs = h('span', { class: 'iw-lstage__imgs' });

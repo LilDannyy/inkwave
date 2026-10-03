@@ -50,6 +50,11 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
 - **Online-only stages** (config `onlineOnly`, Cargo Terminal): `DEVSTAGE=1` boots every harness page with `?devstage`
   (src/main.js `DEV_STAGE`), so page tests, shots, tower checks, bakes and stage art run there offline (a solo walk: the
   stage is `noBots`, so no bot matches).
+- **Stages under construction** (config `wip`: Bluestone Junction, Gulper Aquarium, Highmark Foundry until the lead
+  removes the flag): every harness loads one by id as usual (`MAP=bluestone …`); players never see one in a stage
+  list. `WIPSTAGES=1` boots every harness page with `?wipstages` (config `SHOW_WIP`), which lists them everywhere. The
+  check: `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
+  with `WIPSTAGES=1` (then every picker must list them).
 - **Useful page-script globals:**
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)

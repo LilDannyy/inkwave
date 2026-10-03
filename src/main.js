@@ -6,6 +6,7 @@ import { Input } from './core/input.js';
 import { mapTheme, roomTheme,
   DEFAULT_SETTINGS, QUALITY, TEAM_PALETTES, COLORBLIND_PALETTE, TEAM_NAMES, WEAPONS, WEAPON_ORDER, WEAPON_SUCCESSOR, ZONES, TOWER, SUB, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER,
   MAPS, DIFFICULTY, PLAYER, PROGRESSION, VERSION, MATCH, OFFLINE_MAPS, mapOfflineOk, mapNoBots, mapBossOk,
+  mapListed,   // [b5-stages]
 } from './config.js';
 import { Level } from './world/level.js';
 import { MAP_LAYOUTS } from './world/maps.js';
@@ -128,8 +129,7 @@ class Game {
     // world
     // (old ?map=sunset links = Tidewater at dusk)
     const pm = params.get('map') === 'sunset' ? 'tidewater' : params.get('map');
-    let map = MAPS.find((m) => m.id === pm) || MAPS[0];
-    if (!mapOfflineOk(map.id) && !DEV_STAGE) { console.info(`[inkwave] ${map.name} is online only — booting ${OFFLINE_MAPS[0].name}`); map = OFFLINE_MAPS[0]; }
+    let map = this._bootMap(pm);   // [b5-stages]
     this.time = params.get('time') === 'dusk' || params.get('map') === 'sunset' ? 'dusk' : (this.settings.timeOfDay === 'dusk' ? 'dusk' : 'day');
     this.theme = mapTheme(map, this.time);
     const q = QUALITY[this.settings.quality] || QUALITY.high;
@@ -231,6 +231,15 @@ class Game {
       fire: (on) => { this.input.mouse.left = on; },
       freezeBots: () => { for (const a of G.actors) if (a.bot && !a.isLocal) a.bot.update = () => { a.intent.move.set(0, 0, 0); a.intent.fire = false; }; },
     };
+  }
+
+  // the stage the game boots on (the menu backdrop): ?map=<id>, else the first — never an online-only stage (?devstage
+  // aside) or a work-in-progress one (config wip; ?wipstages aside) [b5-stages]
+  _bootMap(id) {
+    let map = MAPS.find((m) => m.id === id) || MAPS[0];
+    if (!mapOfflineOk(map.id) && !DEV_STAGE) { console.info(`[inkwave] ${map.name} is online only — booting ${OFFLINE_MAPS[0].name}`); map = OFFLINE_MAPS[0]; }
+    if (!mapListed(map.id)) { console.info(`[inkwave] ${map.name} is a work in progress — booting ${OFFLINE_MAPS[0].name} (?wipstages shows it)`); map = OFFLINE_MAPS[0]; }
+    return map;
   }
 
   // Build (or rebuild) everything that depends on the stage layout: level, collision, paint atlas, surface material,
@@ -829,7 +838,8 @@ class Game {
 
   // a random stage (a different one from the current, when there's a choice)
   startPractice(o = {}) {
-    const pool = OFFLINE_MAPS.filter((m) => m.id !== this.mapDef?.id);   // (never an online-only stage)
+    // (never an online-only stage; never a work-in-progress one unless asked for by id — the harness — [b5-stages])
+    const pool = OFFLINE_MAPS.filter((m) => m.id !== this.mapDef?.id && mapListed(m.id));
     const map = (o.mapId && OFFLINE_MAPS.find((m) => m.id === o.mapId)) || pool[(Math.random() * pool.length) | 0] || OFFLINE_MAPS[0];
     return this.startMatch({ mapId: map.id, practice: true });
   }

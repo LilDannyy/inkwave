@@ -71,6 +71,9 @@ Rules the UI can rely on:
   Boss Battle is one squad of up to 8. A humans-only stage (config `noBots`) forces 0 (the host's own count comes back
   on the next stage); 'random' never rolls a humans-only stage the room couldn't start on or that would turn away the
   bots asked for.
+- A stage under construction (config `wip`) is never offered: the host refuses it in `setSettings` / `practiceSwap`,
+  'random' never rolls it, and a room opened over one starts on the first stage. A host whose page has `?wipstages`
+  lists and picks them; every client loads the stage it is sent by id, flag or not.
 - `start()` launches the match on every client; the menus should hide themselves when `state === 'match'` (main.js
   also does it). When the match's results finish, everyone returns to the lobby screen with `state === 'lobby'`.
 - A player leaving mid-match is replaced by a bot on the same actor; if the host leaves, the room migrates to the next
