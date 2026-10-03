@@ -404,17 +404,17 @@
         reset(); place(E1, S.x, S.z); step(0.05); start(E1); step(D.inflate + 0.1); awayE1();
         ownInk(); step(0.2); fresh(); step(0.05);
         painted = 0; counting = true; let fires = 0, t = 0;
-        // (painting, not fighting: a foe it knows of — the team's word, though everyone's parked far off — can send it
-        // into a fight's spray now and then; those frames don't count)
-        let fight = 0;
-        step(4, () => { M1.ink = PLAYER.inkMax; if (!DB.inEnemy(M1)) return false; t++; if (M1.bot.target) { fight++; return; } if (M1.intent.fire) fires++; });
+        // (its trigger while it's getting out — its escape from the bubble (botSpecials.js): before it has noticed the
+        // bubble its paint goal now and then routes it up the spawn steps, and it inks that wall to climb)
+        let esc = 0, escFires = 0;
+        step(4, () => { M1.ink = PLAYER.inkMax; if (!DB.inEnemy(M1)) return false; t++; if (M1.intent.fire) fires++; if (M1.bot.sp.esc && !M1.bot.target) { esc++; if (M1.intent.fire) escFires++; } });
         counting = false;
-        return { fires, framesInside: t, fightFrames: fight, painted: r2(painted), out: !DB.inEnemy(M1) };
+        return { escFires, escFrames: esc, fires, framesInside: t, painted: r2(painted), out: !DB.inEnemy(M1) };
       };
       const wB = walkOut(1), wS = walkOut(0);
       D.botBlind = 1;
       R('blind: walking out of it the blind bot keeps painting everything it passes; with botBlind 0 (the old reading: its own ink known) it holds its fire on the way out',
-        wB.out && wS.out && wB.fires > 10 && wB.painted > 10 && wS.fires === 0, { blind: wB, sighted: wS });
+        wB.out && wS.out && wB.escFrames > 10 && wS.escFrames > 3 && wB.escFires > 10 && wB.painted > 10 && wS.escFires === 0, { blind: wB, sighted: wS });
       // (d) dry in there: a refill sends it out of the bubble first (it can't tell its ink, and the bubble stops refills)
       SPECIAL_AI.enabled = false;   // (its own danger escape off: the refill's route alone)
       reset(); place(E1, S.x, S.z); step(0.05); start(E1); step(D.inflate + 0.1); awayE1();
