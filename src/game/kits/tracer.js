@@ -293,7 +293,7 @@ function advance(b, dist) {
       return;
     }
     // enemy curtains / shields / devices / bubbles stop it
-    if (G.subs?.blockShot(b.pos, _end, b.team, s.directDamage) || G.specials?.shotHit?.(b.pos, _end, b.team, s.directDamage, b.owner)) {
+    if (G.subs?.blockShot(b.pos, _end, b.team, s.directDamage, b.owner) || G.specials?.shotHit?.(b.pos, _end, b.team, s.directDamage, b.owner)) {   // [b5-deploy] (by)
       b.pos.copy(_end); addPoint(b); b.path.push(b.pos.clone());
       end(b, 'blocked');
       return;

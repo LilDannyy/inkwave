@@ -503,7 +503,7 @@ function burst(t, full) {
     const dmg = d <= s.coreRadius ? s.damageMax : lerp(s.damageMax, s.damageMin, (d - s.coreRadius) / (s.radius - s.coreRadius));
     G.projectiles.applyHit(t.owner, e, dmg, 'torpedo');
   }
-  G.subs?.damageArea(c, s.radius, 60, t.team);   // enemy curtains / devices / bubbles; sets off enemy locked torpedoes
+  G.subs?.damageArea(c, s.radius, 60, t.team, t.owner);   // enemy curtains / devices / bubbles; sets off enemy locked torpedoes ([b5-deploy] by)
   G.boss?.splash(t.owner, c, s.radius, s.damageMax, s.damageMin, 'torpedo');   // Boss Battle
   if (full) spawnDrops(t, c);
 }
@@ -585,7 +585,7 @@ function dropStep(d, dt) {
         dead = true; break;
       }
     }
-    if (!dead && G.subs?.blockShot(d.prev, d.pos, d.team, d.dmg)) dead = true;
+    if (!dead && G.subs?.blockShot(d.prev, d.pos, d.team, d.dmg, d.owner)) dead = true;   // [b5-deploy] (by)
     if (!dead) {
       const w = G.physics.segment(d.prev, d.pos, _hit, true);
       if (w.hit) {

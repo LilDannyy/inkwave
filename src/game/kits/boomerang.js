@@ -294,7 +294,7 @@ function shred(it, dt, paintK) {
       G.projectiles.applyHit(it.owner, e, s.tickDamage, KIND);
       any = true;
     }
-    G.subs?.damageArea(it.pos, s.hoverRadius, s.tickDamage, it.team);
+    G.subs?.damageArea(it.pos, s.hoverRadius, s.tickDamage, it.team, it.owner);   // [b5-deploy] (by)
     if (any && nearCam(it.pos)) G.audio?.play('boomerang_shred', { pos: it.pos, volume: 0.7 });
   }
   it.paintT -= dt;
@@ -453,7 +453,7 @@ function blast(it, radius, dmgMax, dmgMin, paintR, big) {
     const k = 1 - clamp((d - 0.8) / (radius - 0.8), 0, 1);
     G.projectiles.applyHit(it.owner, e, lerp(dmgMin, dmgMax, k * k), KIND);
   }
-  G.subs?.damageArea(c, radius, big ? 60 : 35, it.team);
+  G.subs?.damageArea(c, radius, big ? 60 : 35, it.team, it.owner);   // [b5-deploy] (by)
   it.state = 'dead';
 }
 

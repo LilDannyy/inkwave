@@ -638,7 +638,7 @@ function blast(it) {
     const k = 1 - clamp((d - 0.8) / (s.radius - 0.8), 0, 1);
     G.projectiles.applyHit(a, e, lerp(s.damageMin, s.damageMax, k * k), 'waddle');
   }
-  G.subs?.damageArea(c, s.radius, 60, team);
+  G.subs?.damageArea(c, s.radius, 60, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'waddle');   // Boss Battle
   it.state = 'dead';
 }

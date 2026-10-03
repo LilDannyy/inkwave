@@ -4,9 +4,10 @@
 //   G.subs.use(actor, subDef)             throw or place (called by the weapon runner after the ink is paid)
 //   G.subs.update(dt)                     per frame
 //   G.subs.blockActor(actor)              push an actor out of enemy ink curtains (after its movement)
-//   G.subs.blockShot(prev, pos, team, dmg) true if an enemy curtain / device absorbed this projectile segment
-//   G.subs.blockRay(from, dir, len, team, dmg)  distance to the first enemy curtain / device on a beam (or len)
-//   G.subs.damageArea(center, radius, dmg, team)  blasts hurt enemy devices
+//   G.subs.blockShot(prev, pos, team, dmg, by?) true if an enemy curtain / device absorbed this projectile segment
+//   G.subs.blockRay(from, dir, len, team, dmg, by?)  distance to the first enemy curtain / device on a beam (or len)
+//   G.subs.damageArea(center, radius, dmg, team, by?)  blasts hurt enemy devices (and special objects: specials.areaHit)
+//   ([b5-deploy] by: who fired it, for the hit marker; the devices' rules: src/game/deployables.js)
 //   G.subs.beaconsFor(team)               live jump beacons, for the super-jump map
 //   G.subs.jumpToBeacon(actor, beacon)
 //   G.subs.mineLook(mine, team)           'hidden' | 'ghost' | 'reveal': how a Lurk Mine looks to that team
@@ -32,6 +33,7 @@ import { getSubDef } from './character-weapons.js';
 import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
 import { MAIN_KITS, SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted } from './kits/registry.js';
 import { StatusFx } from './statusFx.js';
+import { DEPLOY, rayCapsule, devBody, devKind, DEV_R } from './deployables.js';   // [b5-deploy] devices can be shot; the tower crushes them
 const r2 = (x) => Math.round(x * 100) / 100;
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _patchC = new THREE.Vector3(), _patchQ = new THREE.Vector3();
@@ -239,6 +241,7 @@ export class SubSystem {
     const it = { kind: sub.kind, sub, owner: a, team: a.team, mesh, pos: pos.clone(), state: sub.kind, age: 0, t: 0, born: G.time, normal: normal.clone(), sp: !!a.specialActive,
       face: g ? g.face : -1, u: g ? g.u : 0, v: g ? g.v : 0, hp: sub.hp || 1, uses: sub.uses || 0, ghost, gid: gid || netId(a) };
     this.items.push(it);
+    if (g) DEPLOY.towerRide(it, g.block);   // [b5-deploy] set down on the tower's deck: it rides it
     if (sub.kind === 'mine') { this._paintUnder(it, 1.1); this._mineLook(it); }   // (hidden from the other team from its first frame)
     if (sub.kind === 'beacon') this._beaconFx(it);
     G.cues?.sub(sub.kind, 'throw', { owner: a, at: pos, range: sub.kind === 'mine' ? 14 : 30 });   // sfx-cues: placed (a mine is heard only close by)
@@ -294,6 +297,7 @@ export class SubSystem {
   update(dt) {
     for (const k in SUB_KITS) SUB_KITS[k].tick?.(dt);   // kit subs' own objects
     this._pulse();
+    DEPLOY.tick(dt);   // [b5-deploy] hit flashes; standing fire (rain, vortex, beam, rings) on this screen's own devices
     const items = this.items, nm = G.netm;
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
@@ -302,7 +306,7 @@ export class SubSystem {
       if (gm) nm.mute++;
       try { this._step(it, dt); } finally { if (gm) nm.mute--; }
       if (it.state === 'dead') {
-        if (!it.ghost && it.gid) netRec(it.owner, 'subs', [2, it.gid]);
+        if (!it.ghost && it.gid) netRec(it.owner, 'subs', it.endWhy ? [2, it.gid, it.endWhy] : [2, it.gid]);   // [b5-deploy] endWhy 1 shot down, 2 crushed
         this._dispose(it); items.splice(i, 1);
       }
     }
@@ -345,7 +349,8 @@ export class SubSystem {
     if (op === 2) {
       const it = this.items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
       if (!it) return;
-      if (it.kind === 'mine') this._mineBlast(it);
+      if (d[2] === 1 || d[2] === 2) DEPLOY.endLook(it, d[2]);   // [b5-deploy] shot down (a Skitter pops: no blast) / crushed by the tower
+      else if (it.kind === 'mine') this._mineBlast(it);
       else if (it.state === 'stuck' || it.state === 'run' || it.state === 'prime') this._blast(it, _v.copy(it.pos).setY(it.pos.y + 0.2), it.sub.radius, it.sub.damageMax, it.sub.damageMin, it.sub.paintRadius, it.normal || UP);
       else this._destroy(it);
       it.state = 'dead';
@@ -463,6 +468,7 @@ export class SubSystem {
   // ---- skitter bomb: lands, scuttles after the nearest enemy laying a swimmable trail, bursts on reaching them
   _startRun(it, hit) {
     it.state = 'run'; it.t = 0;
+    it.hp = it.sub.hp || 1;   // [b5-deploy] on the ground enemy fire can pop it
     it.pos.copy(hit.point);
     it.heading = Math.atan2(it.dir.x, it.dir.z);
     it.trail = 0; it.stuckT = 0; it.target = null; it.dash = false;
@@ -648,6 +654,7 @@ export class SubSystem {
     })));
     it.meter.renderOrder = 3;
     it.mesh.add(it.meter);
+    DEPLOY.towerRide(it, hit.block);   // [b5-deploy] dropped on the tower's deck: it rides it
     this._paintUnder(it, 1.4);
     G.cues?.sub('curtain', 'land', { owner: it.owner, team: it.team, at: it.pos });   // sfx-cues
     emit('sub:land', { kind: 'curtain', pos: it.pos.clone(), team: it.team, radius: s.width / 2 });
@@ -785,7 +792,7 @@ export class SubSystem {
       G.projectiles.applyHit(it.owner, e, s.damage, 'mine', null, c);   // ([drainbow] c: its way to them)
       this.track(e, it.team, s.trackTime, c);   // (from the mine)
     }
-    this.damageArea(c, s.radius, 30, it.team);
+    this.damageArea(c, s.radius, 30, it.team, it.owner);   // [b5-deploy] (by: the hit marker)
     it.state = 'dead';
   }
 
@@ -904,7 +911,7 @@ export class SubSystem {
       const k = 1 - clamp((d - 0.8) / (radius - 0.8), 0, 1);
       G.projectiles.applyHit(it.owner, e, lerp(dmgMin, dmgMax, k * k), it.kind, it.dbw ? it : null, center);   // [drainbow]
     }
-    this.damageArea(center, radius, 60, it.team);
+    this.damageArea(center, radius, 60, it.team, it.owner);   // [b5-deploy] (by)
     G.boss?.splash(it.owner, center, radius, dmgMax, dmgMin, it.kind);   // Boss Battle
   }
   _pelletBlast(it, direct, at) {
@@ -920,7 +927,7 @@ export class SubSystem {
       if (_v3.distanceTo(c) > s.radius || !G.physics.los(_v2.copy(c).setY(c.y + 0.3), _v3)) continue;
       G.projectiles.applyHit(it.owner, e, s.splashDamage, 'burst', it.dbw ? it : null, c);
     }
-    this.damageArea(c, s.radius, 25, it.team);
+    this.damageArea(c, s.radius, 25, it.team, it.owner);   // [b5-deploy] (by)
     G.boss?.splash(it.owner, c, s.radius, s.directDamage, s.splashDamage, 'burst');   // Boss Battle
   }
   _paint(it, c, r) {
@@ -951,8 +958,11 @@ export class SubSystem {
   _credit(it, area) { if (it.sp) it.owner.addTurfNoSpecial(area); else it.owner.addTurf(area); }
 
   // ---------------------------------------------------------------------------------------------- blocking + damage
-  _hurt(it, dmg) {
-    if (it.state === 'dead' || netMuted()) return;   // (a ghost's hit: its owner's copy decides)
+  // (by: who fired it, when the caller knows — [b5-deploy] the shooter's hit marker)
+  _hurt(it, dmg, by) {
+    if (it.state === 'dead') return;
+    DEPLOY.struck(it, dmg, by);   // [b5-deploy] the hit flash wherever it's seen; the hit marker
+    if (netMuted()) return;   // (a ghost's hit: its owner's copy decides)
     if (it.ghost) {   // a remote player's device: its owner's copy takes the hit (and says when it's gone)
       netHurt(it.owner, 'subs', it.gid, dmg);
       if (it.state === 'curtain') it.hp -= dmg;   // (the curtain fades as it's hit)
@@ -960,11 +970,11 @@ export class SubSystem {
     }
     it.hp -= dmg;
     if (it.state === 'curtain') { it.hpDirty = true; return; }   // curtains fade instead; _curtain removes them at 0
-    if (it.hp <= 0) this._destroy(it);
+    if (it.hp <= 0) DEPLOY.down(it, by);   // [b5-deploy] shot down: the pop (a Skitter Bomb: harmless, no blast)
   }
   // an enemy shot segment: curtains absorb it (and lose hp); devices it touches are damaged
-  blockShot(prev, pos, team, dmg) {
-    for (const R of [MAIN_KITS, SUB_KITS]) for (const k in R) if (R[k].blockShot?.(prev, pos, team, dmg)) return true;   // kit shields / shoot-able bombs
+  blockShot(prev, pos, team, dmg, by) {
+    for (const R of [MAIN_KITS, SUB_KITS]) for (const k in R) if (R[k].blockShot?.(prev, pos, team, dmg, by)) return true;   // kit shields / shoot-able bombs
     for (const it of this.items) {
       if (it.team === team) continue;
       if (it.state === 'curtain') {
@@ -974,24 +984,32 @@ export class SubSystem {
         const f = a / (a - b);
         _v3.lerpVectors(prev, pos, f).sub(it.pos);
         if (Math.abs(_v3.dot(it.tan)) > s.width / 2 || _v3.y < -0.2 || _v3.y > s.height) continue;
-        this._hurt(it, dmg * s.shotMul);
+        this._hurt(it, dmg * s.shotMul, by);
         if (nearCam(it.pos)) G.fx?.burst(_v3.add(it.pos), it.n, G.teamColors[it.team], { count: 3, speed: 2, size: 0.06 });
         return true;
       }
-      if (it.state === 'spray' || it.state === 'beacon') {
-        const h = it.mesh.userData.hitH;                    // model height (the built size's: [sub-view] _prop)
-        _v.copy(it.pos).addScaledVector(it.normal || UP, h * 0.5);
-        Physics.segmentCapsuleDist(prev, pos, _v2.copy(_v).setY(_v.y - h * 0.5), 0.3, h, _res);
-        if (_res.dist < 0.34) { this._hurt(it, dmg); return true; }
+      const dk = devKind(it);   // [b5-deploy] sprinkler, beacon, and now a Skitter Bomb on the ground
+      if (dk) {
+        const h = devBody(it, _v2);                         // model height (the built size's: [sub-view] _prop)
+        Physics.segmentCapsuleDist(prev, pos, _v2, 0.3, h, _res);
+        if (_res.dist < DEV_R[dk] + 0.04) { this._hurt(it, dmg, by); return true; }
       }
     }
     return false;
   }
-  blockRay(from, dir, len, team, dmg) {
-    for (const R of [MAIN_KITS, SUB_KITS]) for (const k in R) if (R[k].blockRay) len = Math.min(len, R[k].blockRay(from, dir, len, team, dmg));   // kit shields
-    let best = len, hitIt = null;
+  blockRay(from, dir, len, team, dmg, by) {
+    for (const R of [MAIN_KITS, SUB_KITS]) for (const k in R) if (R[k].blockRay) len = Math.min(len, R[k].blockRay(from, dir, len, team, dmg, by));   // kit shields
+    let best = len, hitIt = null, mul = 1;
     for (const it of this.items) {
-      if (it.team === team || it.state !== 'curtain') continue;
+      if (it.team === team) continue;
+      // [b5-deploy] a beam stops on the first enemy sprinkler / beacon / Skitter Bomb in its way (the same capsule as a shot)
+      const dk = devKind(it);
+      if (dk) {
+        const h = devBody(it, _v2), r = rayCapsule(from, dir, best, _v2, h);
+        if (r.d < DEV_R[dk] + 0.04 && r.t < best) { best = Math.max(0.1, r.t - DEV_R[dk] * 0.5); hitIt = it; mul = 1; }
+        continue;
+      }
+      if (it.state !== 'curtain') continue;
       const s = it.sub;
       const dn = dir.dot(it.n);
       if (Math.abs(dn) < 1e-4) continue;
@@ -999,19 +1017,21 @@ export class SubSystem {
       if (t <= 0 || t >= best) continue;
       _v2.copy(from).addScaledVector(dir, t).sub(it.pos);
       if (Math.abs(_v2.dot(it.tan)) > s.width / 2 || _v2.y < -0.2 || _v2.y > s.height) continue;
-      best = t; hitIt = it;
+      best = t; hitIt = it; mul = s.shotMul;
     }
-    if (hitIt) this._hurt(hitIt, dmg * hitIt.sub.shotMul);
+    if (hitIt) this._hurt(hitIt, dmg * mul, by);
     return best;
   }
-  damageArea(c, radius, dmg, team) {
-    if (netMuted()) return;   // a ghost's blast: the owner's own blast hurts devices (netHurt carries it to theirs)
-    G.specials?.areaHit(c, radius, dmg, team);
-    for (const k in SUB_KITS) SUB_KITS[k].damageArea?.(c, radius, dmg, team);   // kit subs caught in a blast (torpedo)
-    for (const it of this.items) {
-      if (it.team === team || !(it.state === 'curtain' || it.state === 'spray' || it.state === 'beacon')) continue;
-      if (it.pos.distanceTo(c) < radius + 0.4) this._hurt(it, dmg);
+  // [b5-deploy] by: who set it off (the hit marker); the special objects first, always (bubbles / the buoy keep their own
+  // mute rules: a ghost's blast only flashes them), then — not for a ghost's blast — kit objects and our devices
+  damageArea(c, radius, dmg, team, by) {
+    G.specials?.areaHit(c, radius, dmg, team, by);
+    for (const it of this.items) {   // (a ghost's blast flashes a device it catches; only the owner's blast hurts: _hurt)
+      if (it.team === team || !(it.state === 'curtain' || devKind(it))) continue;
+      if (it.pos.distanceTo(c) < radius + 0.4) this._hurt(it, dmg, by);
     }
+    if (netMuted()) return;   // a ghost's blast: the owner's own blast hurts devices (netHurt carries it to theirs)
+    for (const k in SUB_KITS) SUB_KITS[k].damageArea?.(c, radius, dmg, team, by);   // kit subs caught in a blast (torpedo)
   }
   // enemy players can't walk (or swim) through a curtain: push them back out to the side they're on
   blockActor(a) {

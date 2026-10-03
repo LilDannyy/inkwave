@@ -2464,6 +2464,7 @@ export class BotBrain {
     const a = this.a, L = _thrList, S = this._shl;
     L.length = 0; S.length = 0;
     for (const k in SUB_KITS) SUB_KITS[k].threats?.(L);
+    G.deploy?.threats(L);   // [b5-deploy] Skitter Bombs (they can be shot down now)
     for (const k in MAIN_KITS) MAIN_KITS[k].shields?.(S);
     for (let i = S.length - 1; i >= 0; i--) if (S[i].team === a.team) { S[i] = S[S.length - 1]; S.pop(); }
     let best = null, bs = 0.2;

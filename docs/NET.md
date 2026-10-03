@@ -221,6 +221,21 @@ shoves and slides run on every screen alike; a ghost never decides it was crushe
 `net-surf.cjs` with `NET_ARGS='scene=tower'` checks the ride (the same spot on each screen's deck) and the ring centres
 on two real clients.
 
+**Deployables can be shot; the tower crushes them** (src/game/deployables.js, batch 5). Sprinklers, Hop Beacons, Skitter
+Bombs on the ground and the Surf N' Turf buoy take enemy fire of every kind. **The device's owner decides.** A shot,
+beam, blast or roller drum on a remote player's device is judged on the shooter's screen (its own projectile against
+its ghost of the device) and sent to the owner as a device hit (`{k:'dh', kind:'subs' | 'surf'}`, as before); a ghost
+shot only flashes a device, never hurts it (muted). Standing fire (the Ink Tempest's rain, the vortex, the Howl Box's
+beam, Surf N' Turf's rings) and the tower are judged **on the owner's screen**, against its own copies of them (the
+tower follows the host's snapshots; a ghost cloud / vortex / beam / ring runs there like any ghost) — the rule
+tickDamage follows for players. The owner's end record says why it went: subs `[2, gid, 1]` shot down (a ghost Skitter
+Bomb pops with a puff — no blast; a ghost sprinkler / beacon breaks with the pop look), `[2, gid, 2]` crushed by the
+tower (the crunch on every screen); the buoy `[4, gid, 2]` crushed. Old `[2, gid]` / `[4, gid]` mean what they did. A
+beacon planted or a curtain dropped on the tower's deck rides it on every screen (each screen's copy rides its own copy
+of the tower, as the buoy does); a ghost device is never crushed by its own screen's tower — it waits for its owner's
+word, so both screens agree. Hit markers are the shooter's own ('device:hit' on its screen). Tested by
+`tools/botlab/tests/net-deploy.cjs` (`CLIENTS=2`).
+
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
 ring (the forced-jump rule, ≤ 3.5 s). `actor.splat()` asks the judge before it emits `'splatted'`; the forwarded event

@@ -287,6 +287,7 @@ export class WeaponRunner {
         if (G.time - last > 0.5) { this.rollHits.set(e, G.time); G.projectiles.applyHit(a, e, w.rollDamage, 'roller'); }
       }
     }
+    if (hs > 1.0) G.deploy?.sweep(a, w.rollWidth, 1.35, w.rollDamage, this.rollHits, 0.5);   // [b5-deploy] the drum over enemy devices
     // boss mode: the drum crushes into HULLBREAKER's claws / belly and flattens crablets
     if (G.boss && hs > 1.0) {
       const bh = G.boss.rollHit(a.pos, fx, fz, w.rollWidth);
@@ -634,6 +635,7 @@ Object.assign(WeaponRunner.prototype, {
         if (G.time - last > w.brushHitCd) { this.rollHits.set(e, G.time); G.projectiles.applyHit(a, e, w.brushDamage, 'brush'); }
       }
     }
+    G.deploy?.sweep(a, w.brushWidth, 1.2, w.brushDamage, this.rollHits, w.brushHitCd);   // [b5-deploy] the bristles over enemy devices
     // Boss Battle: the bristles drag across HULLBREAKER's claws / belly or a crablet (like the roller's drum)
     if (G.boss) {
       const bh = G.boss.rollHit(a.pos, fx, fz, w.brushWidth);
@@ -1201,8 +1203,8 @@ export class Projectiles {
       if (p.vol) p.vol.hits.push(e);
       this.applyHit(p.owner, e, w.splashDamage, p.wid || 'slosher', p.dbw ? p : null, at);
     }
-    // special objects (bubbles, tanks …) caught in the splash, like a blaster burst
-    G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
+    // special objects (bubbles, tanks …) caught in the splash, like a blaster burst — [b5-deploy] and enemy devices
+    if (G.subs) G.subs.damageArea(at, w.splashRadius, w.splashDamage, p.team, p.owner); else G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
     // boss mode: one splash per throw (a direct head hit already counted)
     if (G.boss && direct !== 'boss' && !(p.vol && p.vol.hits.includes(G.boss))) { p.vol?.hits.push(G.boss); G.boss.splash(p.owner, at, w.splashRadius + 0.3, w.splashDamage, w.splashDamage, p.wid || 'slosher'); }
     if (p.owner.isLocal || G.camera.position.distanceToSquared(at) < 26 * 26) {
@@ -1284,7 +1286,7 @@ export class Projectiles {
     const dmg = charge >= 0.999 ? w.damageMax : lerp(w.damageMin, w.damageMax * 0.62, charge);
     const hit = G.physics.raycast(m, dir, range, _hit, true);
     let len = hit.hit ? hit.dist : range;
-    if (G.subs) { const cut = G.subs.blockRay(m, dir, len, a.team, dmg); if (cut < len) { len = cut; hit.hit = false; } }
+    if (G.subs) { const cut = G.subs.blockRay(m, dir, len, a.team, dmg, a); if (cut < len) { len = cut; hit.hit = false; } }   // [b5-deploy] (by)
     if (G.specials) { const cut = G.specials.rayHit(m, dir, len, a.team, dmg, a); if (cut < len) { len = cut; hit.hit = false; } }
     // first enemy along the beam
     let victim = null;
@@ -1532,7 +1534,7 @@ export class Projectiles {
       area += G.paint.splat(_v.set(c.x + Math.cos(a) * r, c.y + 0.5, c.z + Math.sin(a) * r), 0.7 + Math.random() * 0.5, b.team, { seed: Math.random() });
     }
     this._credit(b, area);
-    G.subs?.damageArea(c, s.radius, 60, b.team);
+    G.subs?.damageArea(c, s.radius, 60, b.team, b.owner);   // [b5-deploy] (by)
     G.fx?.explosion(c, G.teamColors[b.team], s.radius);
     G.cues?.sub('bomb', 'boom', { owner: b.owner, team: b.team, at: c });   // sfx-cues
     emit('shake', { pos: c.clone(), amount: 0.6 });
@@ -1664,7 +1666,7 @@ export class Projectiles {
         }
       }
       // enemy ink curtains and devices (sprinklers, beacons) catch shots; so do special objects (bubbles, tanks)
-      if (!dead && G.subs && G.subs.blockShot(p.prev, p.pos, p.team, p.damage || 10)) dead = true;
+      if (!dead && G.subs && G.subs.blockShot(p.prev, p.pos, p.team, p.damage || 10, p.owner)) dead = true;   // [b5-deploy] (by: the hit marker)
       if (!dead && G.specials && G.specials.shotHit(p.prev, p.pos, p.team, p.damage || 10, p.owner)) dead = true;
       // world
       // boss mode: HULLBREAKER's hit spheres and its crablets
@@ -1754,7 +1756,8 @@ export class Projectiles {
       if (!G.physics.los(c, _v)) continue;
       this.applyHit(p.owner, e, lerp(w.splashDamageMax, w.splashDamageMin, d / w.splashRadius), p.weaponId || 'blaster', p.dbw ? p : null, c);
     }
-    G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
+    // [b5-deploy] the splash reaches enemy devices too (subs.damageArea → special objects: specials.areaHit)
+    if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashDamageMin, p.team, p.owner); else G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
     if (direct !== 'boss') G.boss?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, 'blaster');
   }
 

@@ -59,6 +59,7 @@ import { SPECIAL_ICONS } from '../ui/ui-icons.js';
 import { makeBuoy, disposeBuoy, BUOY, RingRibbon, RING_N } from '../fx/surfFx.js';
 import '../audio/sfx-surf.js';
 import { SPECIAL_START } from '../audio/cues.js';
+import { DEPLOY } from './deployables.js';   // [b5-deploy] the hit marker; the tower crushes it (no shove)
 
 const D = SPECIALS.surf;
 const TAU = Math.PI * 2;
@@ -319,6 +320,7 @@ export class Buoy {
     const L = G.level, p = this.pos, BR = BUOY.hitR * 0.8, BH = BUOY.hitH;
     for (const b of L.dyn) {
       if (b.solid === false || (this.on && this.on.b === b)) continue;
+      if (DEPLOY.isTowerBlock(b) && !(this.on && DEPLOY.isTowerBlock(this.on.b))) continue;   // [b5-deploy] the tower doesn't shove it: it crushes it (deployables.js crush)
       if (p.x < b.aabbMin.x - BR || p.x > b.aabbMax.x + BR || p.z < b.aabbMin.z - BR || p.z > b.aabbMax.z + BR || p.y + BH < b.aabbMin.y || p.y > b.aabbMax.y - 0.04) continue;
       const ax = b.axes[0], az = b.axes[2], dx = p.x - b.center.x, dz = p.z - b.center.z;
       const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z;
@@ -606,6 +608,7 @@ export class Buoy {
   }
   _shot(dmg, by) {
     this.flash = Math.min(1, this.flash + 0.5);
+    DEPLOY.struck(this, dmg, by);   // [b5-deploy] the shooter's hit marker ('device:hit')
     if (near(this.pos, 30) && G.time - (this._pingT || 0) > 0.09) { this._pingT = G.time; G.audio?.play('crab_hit', { pos: this.lamp.clone(), volume: 0.35, pitch: 1.35 }); }
     if (netMuted() || !(dmg > 0)) return;              // (a ghost's shot: its owner's copy of the shot reports the hit)
     if (this.ghost) { netHurt(this.owner, 'surf', this.gid, dmg); return; }
@@ -773,7 +776,7 @@ KIT_GHOSTS.surf = {
         break;
       }
       case 3: { const b = findBuoy(d[1], true); if (b) b.land(new THREE.Vector3(d[2], d[3], d[4]), undefined, d.length > 5 ? [d[5], d[6]] : undefined); break; }   // anchored (its rings run from now)
-      case 4: { const b = findBuoy(d[1], true); if (b) { if (b.phase === 'fly' || b.phase === 'rest' || b.fall) b.phase = 'pop', b.dead = true; else b.pop(); } break; }   // popped / lost
+      case 4: { const b = findBuoy(d[1], true); if (b) { if (d[2] === 2 && !b.dead) DEPLOY.crushLook(b); if (b.phase === 'fly' || b.phase === 'rest' || b.fall) b.phase = 'pop', b.dead = true; else b.pop(); } break; }   // popped / lost ([b5-deploy] [4, gid, 2]: crushed by the tower)
       case 5: { const b = findBuoy(d[1], true); if (b) b.reanchor(new THREE.Vector3(d[2], d[3], d[4]), d[5], d.length > 6 ? [d[6], d[7]] : undefined); break; }   // anchored again (a fall, a shove)
       case 6: { const b = findBuoy(d[1], true); if (b) b.ringFrom(d[2], new THREE.Vector3(d[3], d[4], d[5])); break; }   // ring i left from there
       case 1: {   // a hit on a, judged on a's owner's screen
