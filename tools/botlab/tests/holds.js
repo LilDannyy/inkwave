@@ -2,8 +2,8 @@
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/holds.js tools/botlab/run.sh tools/botlab/page.cjs
 // A real actor (its weapon runner, physics, the character's pose layers and arm IK, as in a match) is driven through each
 // state by scripted intents; every sampled frame measures the LEFT (off) hand against the weapon:
-//  - grip: the left hand bone's distance to where the weapon's foregrip puts it (def.handL in the weapon's frame; the
-//    blaster's rides its pump) — on the weapon: ≤ GRIP_TOL;
+//  - grip: the hand's grip hole (the axis its fingers wrap) to the weapon's off-hand handle (def.gripL ± HANDLE_HALF
+//    along it; the blaster's rides its pump) — on the weapon: ≤ GRIP_TOL;
 //  - the elbow: its inside angle (shoulder–elbow–wrist) in [ELB_MIN, ELB_MAX] and its bend pointing down / out / back, never
 //    up into the body (kid space: the elbow's offset from the shoulder→wrist line);
 //  - the wrist: the hand's bend off the forearm (swing) ≤ WR_SWING, its twist about the forearm ≤ WR_TWIST.
@@ -19,7 +19,8 @@
 // PAGE_ARGS='only=others record' prints it). The tolerances are the run-to-run spread of the same code (the sim is not
 // bit-for-bit repeatable: up to 4.4 cm, 3 cm and 0 measured); a free hand put on a weapon moves 25–60 cm.
 // Bots: a short all-bot fight on the deck with the four weapons — every kid-form frame of a bot holding one (no sub in the
-// hand, no special) has its off hand on the weapon; and it is a real fight (they move, swim, fire, splat each other).
+// hand, no special; not the instant it pops in / out, shrunk to nothing) has its off hand on the weapon; and it is a real
+// fight (they move, swim, fire, splat each other).
 // PAGE_ARGS: 'only=both,others,bots' (parts) · 'w=brush,roller' (weapons) · 'record' (print the baseline JSON) · 'dump'.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
