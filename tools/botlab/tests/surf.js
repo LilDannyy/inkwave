@@ -475,7 +475,9 @@
     if (want('sounds')) {
       const A = G.audio; if (!A.ctx) A.init();
       const { SURF_SOUNDS } = await import('./src/audio/sfx-surf.js');
-      const built = SURF_SOUNDS.map((n) => [n, !!A.play(n, { volume: 0.01 })]);
+      // (the engine collapses a sound played within its minGap of the last: a buoy shot down a moment ago in the same
+      // stepped block — the audio clock doesn't move inside one — would swallow surf_pop here)
+      const built = SURF_SOUNDS.map((n) => { A.last?.delete(n); return [n, !!A.play(n, { volume: 0.01 })]; });
       R('every Surf N\' Turf sound builds and plays (synthesized: ' + SURF_SOUNDS.join(', ') + ')', built.every((x) => x[1]), built);
       // the special's own moments: its sounds as it goes (the enemy's ring in your face, your dodge)
       const rec = []; const p0 = A.play.bind(A);
