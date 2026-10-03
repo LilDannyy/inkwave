@@ -165,7 +165,8 @@ assist window), the assist rules, the ink by band from the buoy, the buoy's hp, 
 records and judging, bots (throwing, jumping rings, shooting buoys), its sounds:
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/surf.js tools/botlab/run.sh tools/botlab/page.cjs`
 (`PAGE_ARGS='only=throw,pulses,hit,dodge,assist,turf,buoy,walls,results,net,bots,sounds'`). Online on two clients:
-`CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-surf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (12).
+`CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-surf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (12). It needs autopilot clients (its hooks ride the local kids' brains): run without `Q0` / `Q1`, it
+reopens them with `?autopilot` itself, and fails loudly if a local kid still has no brain.
 Matches: match.cjs `SPECIALS='all=surf'` / `'team0=surf'` (and a `SURF` line: uses, hits, marks, dodges, ink, assists, the
 bots' jumps). Pictures: `tools/botlab/jobs/surf/shots.sh` (scenes/surf.js), the results screen with assists
 (scenes/surf-results.js) and the HUD / loadout (scenes/surf-hud.js) through hud-shots.cjs.

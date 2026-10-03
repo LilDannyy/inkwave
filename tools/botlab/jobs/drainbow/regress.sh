@@ -30,4 +30,4 @@ one audio-pause MAP=testbox MODE=turf PAGE=$T/audio-pause.js $RUN tools/botlab/p
 # online
 one net-practice CLIENTS=2 Q0=autopilot Q1=autopilot APP_CSP=1 NET=$T/net-practice.cjs $RUN tools/botlab/netpage.cjs
 one net-drainbow CLIENTS=2 NET=$T/net-drainbow.cjs $RUN tools/botlab/netpage.cjs
-one net-surf CLIENTS=2 NET=$T/net-surf.cjs $RUN tools/botlab/netpage.cjs
+one net-surf CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-surf.cjs $RUN tools/botlab/netpage.cjs   # (autopilot clients: its hooks ride their brains)
