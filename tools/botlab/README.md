@@ -218,7 +218,8 @@ and LOOK chips in the bottom bar, each opening the kit picker above; a pick is s
 - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-lobbykit.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
   — the bar by arrows, a guest's sub / special (Drainbow) / weapon's own by keyboard reaching the host's room and
   nameplate while it stays ready, a weapon swap moving a Weapon's Own chip, the host's pick, every room mode, the turf
-  match starting with the guest's kit on both screens (`NET_ARGS=shots`: pictures)
+  match starting with the guest's kit on both screens (14; `NET_ARGS=shots`: pictures)
 - the offline stand-in: `net-mock.cjs` (above) checks the chips and its setMe's kit; pictures at 1280×720 / 960×600 and
   the picker: `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/jobs/lobby-kit/mock-shots.cjs
-  OUT=tools/botlab/jobs/lobby-kit/out tools/botlab/run.sh tools/botlab/netpage.cjs`
+  OUT=tools/botlab/jobs/lobby-kit/out tools/botlab/run.sh tools/botlab/netpage.cjs` (8 checks: the bar has room to spare,
+  every weapon / sub / special name fits its chip, READY? / START!'s sub-lines whole at 1280)
