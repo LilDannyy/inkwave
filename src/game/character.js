@@ -547,7 +547,7 @@ const HOLD_BOTH = {
     carry: { p: [-0.12, 0.8, 0.14], r: [0.55, 0.4, 0.1] },
     run: { p: [-0.12, 0.83, 0.17], r: [0.3, 0.35, 0.05] },
     lobby: { p: [-0.03, 0.88, 0.16], r: [1.2, 0.2, 0] },        // held point-down in front, like a walking cane
-    trophy: { p: [-0.06, 0.98, 0.1], r: [-0.4, 0.15, 0.1] },    // held up ahead (its pistol foregrip won't go overhead)
+    trophy: { p: [-0.09, 0.94, 0.12], r: [-0.35, -0.4, 0.1] },  // held up, angled off the face (its foregrip won't go overhead)
     present: { p: [-0.05, 0.95, 0.1], r: [-0.12, 0.1, 0.1] },
     droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
     hug: { p: [-0.05, 0.92, 0.12], r: [-1.2, 0.4, 0.3] },
@@ -2211,6 +2211,9 @@ export class Character {
     const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62));
     const k = 1 - free;
     if (k <= 0.001) return;
+    // a layer that sent the hand to a target (LTW) also bent the elbow for it: that bend goes with it
+    const lt = clamp(P[LTW], 0, 1) * k, pc = this.hold.poleC || this.hold.poleL;
+    if (lt > 0.001) lerpE(P, POLEL, pc[0], pc[1], pc[2], lt);
     P[IKL] = lerp(P[IKL], 1, k); P[LTW] *= 1 - k; P[SPIN] *= 1 - k;
   }
 
@@ -3207,12 +3210,13 @@ export class Character {
     D[FOOTLR] = 0.45 * rise; D[FOOTRR] = 0.45 * rise; D[FOOTL + 1] += 0.03 * rise; D[FOOTR + 1] += 0.03 * rise;
     // weapon: pulled back → overhead twirl → thrust forward to the camera
     setAnc(D, H.carry);
-    lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);
-    if (H.both) {   // [b5-holds] two-handed: no twirl — lifted overhead, then thrust at the viewer
-      const T = H.trophy, Q = H.present;
+    if (H.both) {   // [b5-holds] two-handed: no twirl — dipped low, lifted up, then thrust at the viewer
+      const T = H.trophy, Q = H.present, U = H.droop;
+      lerpE(D, ANC, U.p[0], U.p[1], U.p[2], dip); lerpE(D, ANCR, U.r[0], U.r[1], U.r[2], dip);
       lerpE(D, ANC, T.p[0], T.p[1], T.p[2], rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);
       lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], strike); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], strike);
     } else {
+      lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);
       lerpE(D, ANC, -0.15, 1.36, 0.06, rise); lerpE(D, ANCR, -1.6, 0.2, 0, rise);
       D[SPIN] = wrapA(TAU * 2 * ease((c - 0.55) / 0.85)) * (NO_TWIRL[this.animKind] ? 0 : 1);
       lerpE(D, ANC, -0.1, 1.02, 0.32, strike); lerpE(D, ANCR, -0.12, -0.05, 0.25, strike);
