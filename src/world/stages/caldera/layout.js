@@ -30,13 +30,15 @@ const K = {
   pave: '#85878b', wall: '#45484e', iron: '#7c8186', ironDk: '#5d6268', white: '#e9e4d8', green: '#2f5a48', brick: '#c9b08a',
   spawn: '#ece7dc', pumice: '#bdb8ae', wood: '#9a7b58', cast: '#6d7176', sand: '#b9a68a', rope: '#a78f6c',
 };
-const tuff = (o = {}) => ({ color: K.tuff, pattern: PATTERN.pavers, ...o });
-const rock = (o = {}) => ({ color: K.basalt, pattern: PATTERN.concrete, ...o });
-const glaze = (o = {}) => ({ color: K.glaze, pattern: PATTERN.plain, ...o });
-const coping = (o = {}) => ({ color: K.basaltDk, pattern: PATTERN.concrete, tag: 'coping', ...o });
+// (blockout patterns: never the ones the level shader caps with pale stone coping on narrow tops — plain, tiles,
+// concrete, brick, glasstile, pavers, render — since the curved floors are columns often under 1.15 m wide)
+const tuff = (o = {}) => ({ color: K.tuff, pattern: PATTERN.yard, ...o });
+const rock = (o = {}) => ({ color: K.basalt, pattern: PATTERN.asphalt, ...o });
+const glaze = (o = {}) => ({ color: K.glaze, pattern: PATTERN.rubber, ...o });
+const coping = (o = {}) => ({ color: K.basaltDk, pattern: PATTERN.asphalt, tag: 'coping', ...o });
 const steps = (o = {}) => ({ color: K.basalt, pattern: PATTERN.stonestep, ...o });
 const iron = (o = {}) => ({ color: K.iron, pattern: PATTERN.metalpanel, ...o });
-const cover = (c = K.cast, o = {}) => ({ color: c, pattern: PATTERN.plain, roof: true, ...o });
+const cover = (c = K.cast, o = {}) => ({ color: c, pattern: PATTERN.rubber, roof: true, ...o });
 const white = (o = {}) => ({ color: K.white, pattern: PATTERN.render, roof: true, ...o });
 const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, tag: 'caldera-wall' });
 
@@ -44,7 +46,7 @@ const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, t
 // the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`.
 const RH_REGION = [P(39, -126), ...G.RIMHEAD_OUT, [-27.5, -40]];   // the Rim Head inside the yard's polygon (natural rock)
 const FLOORS = [
-  { id: 'island', poly: G.ISLAND, top: 1.2, y0: -1.1, single: true, mk: () => rock({ tag: 'island', color: K.pave, pattern: PATTERN.tiles }) },
+  { id: 'island', poly: G.ISLAND, top: 1.2, y0: -1.1, single: true, mk: () => rock({ tag: 'island', color: K.pave, pattern: PATTERN.yard }) },
   { id: 'yard', poly: G.YARD, top: 3.6, y0: 0, mk: () => tuff({ tag: 'yard', color: '#b4aea3' }) },
   { id: 'terrace', poly: G.TERRACE, top: 2.4, y0: 0, mk: () => tuff({ tag: 'terrace', color: K.tuffDk }) },
   { id: 'lakefront', poly: G.LAKEFRONT, top: 1.2, y0: -1.1, mk: () => tuff({ tag: 'lakefront' }) },
@@ -55,7 +57,7 @@ const FLOORS = [
   { id: 'hornLadle', poly: G.HORN_LADLE, top: 2.4, y0: -1.1, mk: () => rock({ tag: 'ladle-road', color: K.scoria }) },
   { id: 'hornStep', poly: G.HORN_STEP, top: 1.2, y0: -1.1, mk: () => rock({ tag: 'horn-step' }) },
   { id: 'ridge', poly: G.RIDGE, top: 3.6, y0: 0, mk: () => rock({ tag: 'rim-ridge' }) },
-  { id: 'castingBed', poly: G.CASTING_BED, top: 3.0, y0: 2.4, w: 0.8, mk: () => ({ color: K.sand, pattern: PATTERN.plain, tag: 'casting-bed' }) },
+  { id: 'castingBed', poly: G.CASTING_BED, top: 3.0, y0: 2.4, w: 0.8, mk: () => ({ color: K.sand, pattern: PATTERN.rubber, tag: 'casting-bed' }) },
 ];
 // rectangular floors and solid volumes the edge test must see (Alpha's half): x0, x1, z0, z1, top
 const rectP = (x0, x1, z0, z1) => [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
@@ -143,9 +145,9 @@ add(OCT(-12.4, -2.8, 0.9, 1.2, 2.4, rock({ tag: 'organ-stump', color: K.basaltDk
 add(OCT(-7.0, -3.4, 0.8, 1.2, 1.8, rock({ tag: 'organ-stump', color: K.basaltDk })));
 // the Organ Pipes and (at HIGH) the Pumice Race: static stand-ins at this build's level until the lava engine lands
 if (BLOCKOUT_LAVA) {
-  add(riderStandIns((what, o) => (what === 'stone' ? { color: K.pumice, pattern: PATTERN.plain, ...o }
-    : what === 'organ-stub' ? { color: K.basaltDk, pattern: PATTERN.plain, roof: true, ...o }
-      : { color: '#53575e', pattern: PATTERN.concrete, ...o })));
+  add(riderStandIns((what, o) => (what === 'stone' ? { color: K.pumice, pattern: PATTERN.rubber, ...o }
+    : what === 'organ-stub' ? { color: K.basaltDk, pattern: PATTERN.asphalt, roof: true, ...o }
+      : { color: '#53575e', pattern: PATTERN.asphalt, ...o })));
 }
 
 // ---------------------------------------------------------------------------------------- Alpha's base: the gallery
@@ -166,6 +168,8 @@ const railSeg = (a, b, y, h = 1.0, t = 0.25, o = {}) => {
 };
 add(railSeg([4, -57.4], [10, -57.4], 4.8), railSeg([-10, -57.4], [-4, -57.4], 4.8));
 for (const s of [-1, 1]) add(railSeg([s * 9.9, -68.9], [s * 9.9, -64.5], 4.8), railSeg([s * 9.9, -61.5], [s * 9.9, -57.6], 4.8));
+// the gallery's two lamp standards on cast-iron plinths, flanking the Gallery Stair's head (cover at the deck's front)
+for (const x of [4.75, -4.75]) add(B(x - 0.4, x + 0.4, 4.8, 6.0, -58.9, -58.1, cover(K.green, { tag: 'gallery-lamp' })));
 // gallery urns (cover outside the barrier)
 for (const [x, z] of [[8.4, -59.4], [-8.4, -59.4], [8.4, -67.4], [-8.4, -67.4]]) add(B(x - 0.6, x + 0.6, 4.8, 5.9, z - 0.6, z + 0.6, cover('#8a7f72', { tag: 'urn' })));
 

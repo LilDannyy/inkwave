@@ -34,6 +34,7 @@ export function arcF(r, a0, a1, feats = [], step = 2.5) {
   const lo = Math.min(a0, a1), hi = Math.max(a0, a1), n = arcN(lo, hi, step);
   let pts = Array.from({ length: n }, (_, i) => { const a = lo + ((hi - lo) * i) / (n - 1); return { a, p: P(r, a) }; });
   for (const f of feats) {
+    if (f.a[1] <= lo + 1e-9 || f.a[0] >= hi - 1e-9) continue;   // (a feature outside this arc's range)
     const keep = pts.filter((q) => q.a <= f.a[0] + 1e-9 || q.a >= f.a[1] - 1e-9);
     const at = keep.findIndex((q) => q.a >= f.a[1] - 1e-9);
     const ins = f.pts.map((p) => ({ a: f.a[0], p }));

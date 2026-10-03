@@ -68,8 +68,11 @@ export function fill(P0, o) {
     if (!e.L || e.L.kind !== 'ledge') continue;
     const [ax, az] = e.a, [bx, bz] = e.b, dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
     const nx = -uz, nz = ux, w = e.L.w;
-    const endAdj = (vi) => { const a = interior(P, vi); if (a > 181) return w * Math.tan(((a - 180) * Math.PI) / 360) + 0.06; if (a < 89) return -w / Math.tan((a * Math.PI) / 180); return 0; };
-    const e0 = endAdj(e.i), e1 = endAdj((e.i + 1) % n);
+    // ends: reach past a reflex corner to close the wedge against the next coping (none needed where the next edge has
+    // no coping: its columns end exactly there), pull back from an acute one (never poke into the lava)
+    const coped = (k) => { const q = edges[(k + n) % n]; return q.L && q.L.kind === 'ledge'; };
+    const endAdj = (vi, nb) => { const a = interior(P, vi); if (a > 181) return coped(nb) ? w * Math.tan(((a - 180) * Math.PI) / 360) + 0.06 : 0; if (a < 89) return -w / Math.tan((a * Math.PI) / 180); return 0; };
+    const e0 = endAdj(e.i, e.i - 1), e1 = endAdj((e.i + 1) % n, e.i + 1);
     const len = L + e0 + e1, off = (e1 - e0) / 2;
     if (len < 0.05) continue;
     rects.push({ e, cx: (ax + bx) / 2 + ux * off + (nx * w) / 2, cz: (az + bz) / 2 + uz * off + (nz * w) / 2, len, w, ux, uz, rot: -Math.atan2(uz, ux) * DEG });
