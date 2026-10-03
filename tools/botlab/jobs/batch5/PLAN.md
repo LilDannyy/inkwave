@@ -22,6 +22,12 @@ sprinkler, beacon, curtain, beacon or surf n turf is in the path of the tower, t
   runs into is destroyed at once, with a crunch. Lead's reading: this is about things standing in the tower's way on the
   ground or on walls beside the track. A device placed ON the tower's deck keeps riding it, as today (the user asked for
   the buoy to ride the tower two days ago). Say in your report if you think the user meant otherwise.
+- Added by the user (2026-10-04, after this plan went out): "lurk mines don't stick to moving floors such as the tower".
+  A Lurk Mine laid on a moving floor (the tower's deck, a railcar, any mover, a grown pod) must stay on it and ride it,
+  and trigger there, on every screen. Use the one rule the Surf N' Turf buoy got in the sp-fixes merge (moving blocks
+  remember their last move; `src/game/sp-surf.js`, `src/game/movers.js`, `tools/botlab/tests/surf-movers.js`), not a
+  per-object case. While you are there, check the other placed devices (sprinkler, beacon, Drip Curtain) do the same,
+  and fix any that do not. Add it to your test (the tower and a Calamari railcar) and to the two-client test.
 
 ### `sprules`: special-gauge and survival rules, the bubble chain, two new barrages
 User: "Add waddle bomb barrage and mystery bomb barrage (changes bomb each time you throw)"; "The special meter
@@ -33,8 +39,10 @@ to a teammate, that player can also share the bubble to another teammate."
   no special running keeps its existing rule.
 - Survive the owner's splat: Whirl Boomerang (keeps flying and finishes its burst), Ink Tempest (the cloud stays),
   Surf N' Turf (the buoy keeps pulsing), Drainbow (the bubble stays for its remaining time; the owner's life extension
-  simply stops while they are away), "bubble". Lead's reading of "bubble": both the Bubble Blower's blown bubbles in the
-  world and a Bubble Guard already shared onto teammates outlive the player who made them. Check every screen online:
+  simply stops while they are away), "bubble". The user clarified (2026-10-04, after this plan went out): "I meant only
+  bubble guard not bubble blower". So: a Bubble Guard already shared onto teammates outlives the player it came from
+  (and keeps its remaining time). The Bubble Blower's bubbles are NOT part of this: leave them as they are today.
+  Check every screen online:
   the remote splat now emits `splatted` with `remote: true`, and several ghosts clean themselves up on that event.
 - Bubble Guard chain: a teammate who received a shared Bubble Guard can pass it on by touch to another teammate. The
   copy carries the remaining time of the one it came from (never a fresh timer), one bubble per player, no ping-pong
