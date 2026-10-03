@@ -231,7 +231,9 @@ seventh field, so every results screen shows the host's numbers.
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
 step with the paint that caused them. Guests follow (zones.js `netEvent`): they only predict the count between
-snapshots, and each client fills its own players' special gauges.
+snapshots, and each client fills its own players' special gauges. A flip waits until the ink has stayed over its line for
+`ZONES.flipHold` s (0.6): that wait runs on the host only, and the capture record goes out when the flip lands, so guests
+apply it at once and never see a flip that was inked straight back.
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the

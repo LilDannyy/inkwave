@@ -459,7 +459,7 @@ export class ZoneMarks {
 // ---------------------------------------------------------------------------------------------------- sound
 // The zones' own sounds (src/audio/audio.js): a positional hum at each live zone — one loop per zone, its timbre saying
 // who holds it (neutral / ours / theirs, relative to the viewer) and its pulse quickening, pitch lifting as a flip nears
-// (the holder's hold being inked back toward the 40 % line, or a neutral zone being inked toward the 80 % capture) —
+// (the holder's hold being inked back toward the ZONES.contest line, or a neutral zone being inked toward the ZONES.control capture) —
 // plus the flood / wipe surges at the zone and the contested warnings (2D, rate-limited). The control cues themselves
 // (WE / THEY took it, WE / THEY lost it) are the HUD's, with its call-outs.
 const HUM_DT = 1 / 6;            // hum control updates (s)

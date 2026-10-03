@@ -179,6 +179,13 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
         }
         await A.js(`__inkwave.api.setLoadout({ ${kind}: null }); __G.net.setMe({ ${kind}: null }); 1`);
       }
+      if (SHOTS) {   // the lobby with the longest sub and special picked
+        const lg = (o, ord) => ord.reduce((b, id) => (o[id].length > o[b].length ? id : b), ord[0]);
+        const ls = lg(kits.subs, kits.subOrder), lp = lg(kits.specials, kits.specialOrder);
+        await A.js(`__inkwave.api.setLoadout({ sub: ${JSON.stringify(ls)}, special: ${JSON.stringify(lp)} }); __G.net.setMe({ sub: ${JSON.stringify(ls)}, special: ${JSON.stringify(lp)} }); 1`);
+        say(await snap(`${out}/lobby-kits-${w}x${h}.jpg`));
+        await A.js(`__inkwave.api.setLoadout({ sub: null, special: null }); __G.net.setMe({ sub: null, special: null }); 1`);
+      }
       kitFails[S] = kfails.length - k0; sink = fails;
     }
   }
