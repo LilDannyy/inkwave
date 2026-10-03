@@ -63,7 +63,6 @@ import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { SIGHT } from './botSight.js';
 import { surfDanger, surfDodge, surfOwnAim, surfShootAim } from './sp-surf-bots.js';   // Surf N' Turf (sp-surf.js): its rings, our own throw
-import { devShootAim } from './deployables-bots.js';   // [b5-deploy] no foe in sight: shoot enemy beacons / sprinklers / buoys
 
 export const SPECIAL_AI = { enabled: true, teams: null };
 // engagements, not frames (heldFire / bubbleHold are seconds); splattedBy: bots splatted per special (Bomb Barrage:
@@ -562,7 +561,7 @@ export class SpecialSense {
     this.recs.clear(); this.known.length = 0; this.scanT = Math.random() * 0.2; this._rays = 0; this.gone = [];
     this.esc = null; this.replanT = 0; this.prevTgt = null; this.held = null; this.heldT = 0; this.knockOn = null;
     this.pop = null; this.popT = 0; this.popTgt = null; this.guardT = 0;
-    this._dev = null; this._devSkip = null; this._devT = 0;   // [b5-deploy] the enemy device it was shooting (deployables-bots.js)
+    this._dev = null; this._devMem = null; this._devT = 0;   // [b5-deploy] the enemy device it was shooting, its time on each (deployables-bots.js)
   }
   on() { const S = SPECIAL_AI; return S.enabled && (!S.teams || !!S.teams[this.a.team]) && !G.boss && !!G.nav; }
   dead() { this.esc = null; this.pop = null; }
@@ -713,7 +712,7 @@ export class SpecialSense {
     }
     if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);
-    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b) || devShootAim(this, dt, it, move);   // [b5-deploy] (was surfShootAim: buoys only)
+    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b);   // [b5-deploy] (enemy buoys — was surfShootAim — beacons, sprinklers: bots.js devShootAim, before this)
   }
   // the worst noticed danger we're standing in that counts now
   _here() {

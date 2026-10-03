@@ -17,6 +17,7 @@ import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
 import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
 import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
+import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing better to shoot: enemy beacons / sprinklers / buoys
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
@@ -1044,6 +1045,9 @@ export class BotBrain {
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
     if (!thrAim && G.match?.pods) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;
+    // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
+    // the danger guard's below have the last word)
+    if (!thrAim && this.sp.on()) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- Tower Command: riders hold the platform's middle, or climb on (ink its wall, swim up); others off it
     const tAim = tp ? this._towerMove(tp, dt, move, it, thrAim, onT) : null;
@@ -2307,7 +2311,7 @@ export class BotBrain {
       // (up a moment at least, then under again); full steam, stay up inking and shooting, under only when hurt or dry
       const hp = a.hp / PLAYER.hp, ink = a.ink / PLAYER.inkMax, tgt = this.target;
       const seen = this.mode === 'fight' && tgt && this.seeTimer > 0;
-      const shot = seen && Math.hypot(tgt.pos.x - a.pos.x, tgt.pos.z - a.pos.z) < this._range() * 1.1;
+      const shot = (seen && Math.hypot(tgt.pos.x - a.pos.x, tgt.pos.z - a.pos.z) < this._range() * 1.1) || !!(thrAim && this.sp._dev);   // [b5-deploy] (or an enemy device in reach: up to shoot it)
       let hide;
       if (!P.steam[a.team]) {
         const fit = hp >= 0.3 && !this.tDry && ink >= 0.06;
