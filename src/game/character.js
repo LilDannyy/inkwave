@@ -3161,7 +3161,7 @@ export class Character {
     D[SPINE] = 0.05 - 0.05 * pump; D[CHEST] = -0.08 * pump;
     D[HEAD] = 0.12 * hit - 0.1; D[HEAD + 2] = 0.1 * Math.sin(Math.PI * b * 0.5);
     D[SQY] = 1 - 0.05 * hit; D[SQXZ] = 1 + 0.03 * hit;
-    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: the weapon pumped overhead like a trophy
+    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: the weapon pumped up in both fists (hold.trophy)
     D[IKL] = 0; D[POLER] = -0.8; D[POLER + 1] = 0.1; D[POLER + 2] = -0.5;
     setE(D, FOOTL, 0.11, ANKLE_H, 0.01); setE(D, FOOTR, -0.11, ANKLE_H, -0.01); D[FOOTLR + 1] = 0.2; D[FOOTRR + 1] = -0.2;
     D[FOOTLR] = 0.25 * pump * (b < 4 ? 1 : 0);
@@ -3234,7 +3234,7 @@ export class Character {
     const H = this.hold;
     const b = (t * 2.5) % 8, bf = frac(b), bi = Math.floor(b);
     const sd = bi % 2 ? -1 : 1;
-    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: held up overhead through the hops
+    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: held up in both fists through the hops
     D[IKL] = 0;
     if (b < 6) {
       const hop = Math.sin(Math.PI * clamp(bf / 0.62, 0, 1));
