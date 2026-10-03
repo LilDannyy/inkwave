@@ -1,0 +1,68 @@
+JOB-2 (deploy) results, PARTS 1–2 — run on the Mac mini at 080901f, SLOTS=3 PAR=3, caffeinate (after JOB-1 finished, as you asked).
+PART 3 (the Tower Command device A/B) did not run: the job file's 'xargs -P 3 -I{} bash -c ...' line is longer than macOS xargs' 255-byte -I limit ('xargs: command line cannot be assembled, too long'). It is re-queued with 'xargs -S 4096' (same command otherwise) and will be appended to this file.
+
+Verdict, parts 1–2:
+- the package's own tests pass every time (deployables 28/28 ×3, -tower 8/8 ×3, -rail 1/1 ×3, -hedge 3/3 ×3, net-deploy 7/7 ×3, net-deploy-tower 7/7 ×3).
+- bot-specials: 19/19 in the full run, then 17/19 and 19/19 in the two passes. The Ink Jet check ('a hard charger mid-charge gets out of a blast's path …', avgDmgOn 50 vs off 81.4) also failed in JOB-1 (56.5 vs 72.5): 2 failures in 4 runs on this branch, against 0 in the other branches' runs tonight. Worth a look at bots.js / botSpecials.js.
+- sub-tweaks 28/29 (the windup-blast escape check, one round); sub-tweaks2 23/23 now (failed 1 check in JOB-1).
+- net-surf 12/13: 'no console errors' — c1: Uncaught TypeError: Cannot read properties of undefined (reading 'moveSpeed'). The same error was logged by net-practice here (it passed 29/29), and on other branches tonight (holds net-holds-b, zipcheer's zipcheer.log), never in verify20/21. A likely source: src/audio/cues.js:514 (case 'stamp': … s.def.moveSpeed) when s.def is undefined (a stamp seen on another screen?). Not from this package as far as I can tell.
+
+## part 1: the full regression set
+== deployables-rail: RESULT 1/1 0 FAIL
+== deployables-tower: RESULT 8/8 0 FAIL
+== deployables: RESULT 28/28 0 FAIL
+== deployables-hedge: RESULT 3/3 0 FAIL
+== sub-tweaks: RESULT 28/29 1 FAIL
+FAIL a hard bot (its specials awareness on) caught in a windup's blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb  {"seeker":[{"esc":{"hit":"seeker","t":0},"d0":1.2,"dEsc":1.2,"dMin":1.2,"dEnd":3.4,"dmg":0},{"esc":null,"d0":null,"dEsc":null,"dMin":null,"dEnd":null,"dmg":0},{"esc":{"hit":"seeker","t":0.3},"d0":0.32,"dEsc":1.43,"dMin":1.43,"dEnd":2.17,"dmg":46.83}],"waddle":[{"esc":{"hit":"waddle","t":0.333},"d0":0.99,"dEsc":0.76,"dMin":0.76,"dEnd":1.24,"dmg":119.58},{"esc":{"hit":"waddl
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== net-surf: RESULT 12/13 1 FAIL
+FAIL no console errors on either screen  ["[error] Uncaught TypeError: Cannot read properties of undefined (reading 'moveSpeed')"]
+== net-surf-tower: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+
+## part 2: two more passes (own tests + bot ones)
+== deployables-tower: RESULT 8/8 0 FAIL
+== deployables-rail: RESULT 1/1 0 FAIL
+== deployables: RESULT 28/28 0 FAIL
+== deployables-hedge: RESULT 3/3 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== bot-specials: RESULT 17/19 2 FAIL
+FAIL Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: under 0.8 s each in it on average (3 scenes); off: a second or more (2 scenes)  {"on":{"sInRainEach":0.81,"scenes":[{"sInRainEach":1,"dmg":[51,17,82.8],"escapes":13},{"sInRainEach":0.8,"dmg":[99,55,0],"escapes":9},{"sInRainEach":0.6,"dmg":[35.5,13.6,63.2],"escapes":25}]},"off":{"sInRainEach":1.95,"scenes":[{"sInRainEach":1.9,"dmg":[78.8,"dead","dead"]},{"sInRainEach":2,"dmg":["dead",99,99]}]},"cloudS":4.4}
+FAIL Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":50,"avgDmgOff":81.4}
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== deployables-rail: RESULT 1/1 0 FAIL
+== deployables-tower: RESULT 8/8 0 FAIL
+== deployables: RESULT 28/28 0 FAIL
+== deployables-hedge: RESULT 3/3 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+
+## FAIL lines from the failing tests' logs
+### b5-deploy-j2-full/sub-tweaks.log
+FAIL a hard bot (its specials awareness on) caught in a windup's blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb  {"seeker":[{"esc":{"hit":"seeker","t":0},"d0":1.2,"dEsc":1.2,"dMin":1.2,"dEnd":3.4,"dmg":0},{"esc":null,"d0":null,"dEsc":null,"dMin":null,"dEnd":null,"dmg":0},{"esc":{"hit":"seeker","t":0.3},"d0":0.32,"dEsc":1.43,"dMin":1.43,"dEnd":2.17,"dmg":46.83}],"waddle":[{"esc":{"hit":
+### b5-deploy-j2-full/net-surf.log
+FAIL no console errors on either screen  ["[error] Uncaught TypeError: Cannot read properties of undefined (reading 'moveSpeed')"]
+c1 console: [error] Uncaught TypeError: Cannot read properties of undefined (reading 'moveSpeed')
+### b5-deploy-j2-2/bot-specials.log
+FAIL Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: under 0.8 s each in it on average (3 scenes); off: a second or more (2 scenes)  {"on":{"sInRainEach":0.81,"scenes":[{"sInRainEach":1,"dmg":[51,17,82.8],"escapes":13},{"sInRainEach":0.8,"dmg":[99,55,0],"escapes":9},{"sInRainEach":0.6,"dmg":[35.5,13.6,63.2],"escapes":25}]},"off":{"sInRainEach":1.95,"scenes":[{"sInRainEach":1.9,"dmg":[78.8,"dead","dead"]},{"sInRainEach":2,"dmg":["dead",99,9
+FAIL Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":50,"avgDmgOff":81.4}
+### b5-deploy-j2-3/bot-specials.log
