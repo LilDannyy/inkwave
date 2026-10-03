@@ -436,8 +436,9 @@ export class TowerCommand {
     const c = Math.cos(this.yaw), s = Math.sin(this.yaw);
     for (const a of this.match.actors) {
       if (!a.alive || a.superJumpState || a.team > 1) continue;
-      const dy = a.pos.y - top;
-      if (dy < -0.3 || dy > TOWER.riderUp) continue;
+      const dy = a.pos.y - top, sp = a.specialActive;
+      // ([b5-zipcheer] held up over the deck by a Cheer Orb — a ghost's too: still riding)
+      if (dy < -0.3 || dy > TOWER.riderUp + (sp && sp.kind === 'booyah' && !sp.thrown ? sp.def.lift || 0 : 0)) continue;
       const dx = a.pos.x - this.pos.x, dz = a.pos.z - this.pos.z;
       const lx = dx * c - dz * s, lz = dx * s + dz * c;
       if (Math.abs(lx) > R || Math.abs(lz) > R) continue;

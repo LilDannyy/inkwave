@@ -18,7 +18,7 @@
 //             either way
 //   bots      bot teammates cheer a charging orb (with brains); a bot using it stays up where it rose and throws it
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/zipcheer.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=zipdmg,zipspeed,zipink,lift,prompt,cheer,bots'
+//   PAGE_ARGS='only=zipdmg,zipspeed,zipink,lift,prompt,cheer,bots'; MODE=tower: the 'tower' part (a rider using it on the deck)
 (async () => {
   const g = window.__inkwave, m = g.match, G = __G, dbg = g.debug;
   const THREE = await import('three');
@@ -26,7 +26,8 @@
   const ZC = (await import('./src/game/sp-cheer.js')).ZC_STATS;
   const { on } = await import('./src/core/ctx.js');
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
-  const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
+  const TOWER = m.mode === 'tower';   // (MODE=tower: only the 'tower' part, unless asked)
+  const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1] || (TOWER ? 'tower' : null);
   const want = (k) => !ONLY || ONLY.split(',').includes(k);
   const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
   const ZD = SPECIALS.zipcaster, BD = SPECIALS.booyah;
@@ -330,6 +331,24 @@
     step(BD.charge + BD.autoThrow + 0.5, () => { if (M1.specialActive === s2) maxMove = Math.max(maxMove, Math.hypot(M1.pos.x - p0.x, M1.pos.z - p0.z)); if (s2.thrown) { threw = true; return false; } });
     R('bots: a bot with the orb stays up where it rose (no walking off) and throws it once charged', threw && maxMove < 0.02, { threw, maxMove: r3(maxMove) });
     for (const a of [M1, E1]) a.bot.update = () => { zero(a); };
+  }
+
+  // ======================================================================================== Tower Command (MODE=tower)
+  if (TOWER && want('tower') && m.tower) {
+    reset();
+    const T = m.tower;
+    const onTop = (a) => { a.pos.set(T.pos.x - 0.6, T.top + 0.05, T.pos.z - 0.6); a.vel.set(0, 0, 0); a.grounded = false; };
+    onTop(M1); step(0.6);
+    const moving0 = T.moving, rode0 = T.riderList.includes(M1);
+    const s = start(M1, 'booyah'); step(BD.liftTime + 0.2);
+    const off0 = V(M1.pos.x - T.pos.x, M1.pos.y - T.top, M1.pos.z - T.pos.z), s0 = T.s;
+    let drift = 0, riding = 0, n = 0;
+    step(3, () => { n++; if (T.riderList.includes(M1)) riding++; drift = Math.max(drift, Math.hypot(M1.pos.x - T.pos.x - off0.x, M1.pos.y - T.top - off0.y, M1.pos.z - T.pos.z - off0.z)); });
+    R('tower: a rider using a Cheer Orb on the deck hangs 2.2 m over it, still counts as riding (the tower keeps going) and rides along over the same spot',
+      rode0 && moving0 !== 0 && s.pin && Math.abs(off0.y - BD.lift) < 0.15 && riding === n && Math.abs(T.s - s0) > 1 && drift < 0.12,
+      { rode0, up: r2(off0.y), ridingFrames: `${riding}/${n}`, towerMoved: r2(Math.abs(T.s - s0)), drift: r2(drift) });
+    G.specials.end(M1, 'test'); step(1.2);
+    R('tower: thrown / ended, it drops back onto the deck', M1.grounded && Math.abs(M1.pos.y - T.top) < 0.1, { dy: r2(M1.pos.y - T.top) });
   }
 
   for (const [a] of brains) a.bot.update = brains.get(a);
