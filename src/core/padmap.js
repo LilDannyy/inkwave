@@ -228,7 +228,7 @@ export class PadMapper {
     const custom = this.customFor(raw.id, settings);
     const std = raw.mapping === 'standard';
     let dirty = custom !== this._custom || raw.axes.length !== this._nA || raw.buttons.length !== this._nB;
-    if (!std && !custom) { this.probe.feed(raw.axes); if (this.probe.ver !== this._probeVer) dirty = true; }
+    if (!std) { this.probe.feed(raw.axes); if (!custom && this.probe.ver !== this._probeVer) dirty = true; }   // (fed under a custom layout too: auto() stays current)
     if (std && !custom) {
       if (dirty || !this.info) {
         this._custom = custom; this._nA = raw.axes.length; this._nB = raw.buttons.length;
@@ -240,6 +240,15 @@ export class PadMapper {
     if (dirty || !this.info) this._build(raw, custom);
     this._fill(raw);
     return this._view;
+  }
+  /** The automatic layout for this pad as it is now (what Controller setup starts from and resets to). */
+  auto(raw) {
+    if (!raw) return null;
+    if (this._key !== raw.index + '|' + raw.id) this._reset(raw);
+    if (raw.mapping === 'standard') return identityLayout(raw);
+    const lay = autoLayout(raw, this.ids, this.probe, this.known);
+    while (lay.buttons.length < STD_BUTTONS) lay.buttons.push('');
+    return { axes: lay.axes, buttons: lay.buttons };
   }
   _build(raw, custom) {
     this._custom = custom; this._nA = raw.axes.length; this._nB = raw.buttons.length; this._probeVer = this.probe.ver;

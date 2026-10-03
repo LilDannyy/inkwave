@@ -872,6 +872,18 @@ function previewLink() {
   return { el, set() {} };
 }
 
+// Settings › Controller setup: the pad that's connected and how it's read (ctx.pad = input.padInfo)
+function previewPad(ctx) {
+  const p = ctx.pad, e = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const st = !p ? 'No controller yet — press a button on it'
+    : p.status === 'known' ? `${e(p.name)} · known layout: <b>${e(p.label)}</b>` : p.status === 'guess' ? `${e(p.name)} · <b>guessed</b> layout`
+    : p.status === 'custom' ? `${e(p.name)} · your <b>custom</b> layout` : `${e(p.name)} · <b>standard</b> layout`;
+  const el = h('div', { class: 'iw-pv iw-pv--link', html: `<div class="iw-pv-link__art"><i>${GLYPHS.gamepad}</i></div>
+    <div class="iw-pv-link__keys">${padGlyph('LS')}${padGlyph('RS')}<em>·</em>${padGlyph('A')}${padGlyph('B')}${padGlyph('X')}${padGlyph('Y')}<em>·</em>${padGlyph('DPad')}</div>
+    <div class="iw-pv-cap">${st}</div>` });
+  return { el, set() {} };
+}
+
 function previewTab(ctx) {
   const t = ctx.tab || {};
   const el = h('div', { class: 'iw-pv iw-pv--tab', html: `<div class="iw-pv-tab__icon">${GLYPHS[t.icon] || GLYPHS.gear}</div>
@@ -905,6 +917,7 @@ export function createPreview(key, ctx = {}) {
     case 'difficulty': return previewDifficulty(ctx);
     case 'matchLength': return previewLength(ctx);
     case '_howto': return previewLink(ctx);
+    case '_padsetup': return previewPad(ctx);
     case '_reset': return previewReset(ctx);
     default: return previewTab(ctx);
   }

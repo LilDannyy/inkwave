@@ -19,6 +19,7 @@ import {
 } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 import { G } from '../core/ctx.js';
+import { STD_BUTTON_NAMES, hatDirs } from '../core/padmap.js';
 import {
   computeAwards, medalMarkup, awardBadge, awardIcon, rankEmblem, rankTier, RANK_TIERS, inkBurst, InkWipe, createPreview,
   sweepEdge, sweepClip, splatClip, splatCover, skinSwatch, irisSwatch, outfitIcon, tagArt, inkBand, dripsSVG, computeBossAwards,
@@ -27,11 +28,11 @@ import { bossSilhouette, bossEmblem, BOSS_GLYPH, BOSS_NAME, BOSS_EPITHET } from 
 import { WhatsNew } from './news.js';
 import { relayInfo, serverChoice, parseServerLink, pingRelay, isDesktopApp, NO_LINK, REFUSED } from '../net/transport.js';
 
-const SCREENS = ['loading', 'title', 'main', 'mode', 'loadout', 'setup', 'locker', 'settings', 'howto', 'credits', 'pause', 'results', 'online', 'lobby'];
+const SCREENS = ['loading', 'title', 'main', 'mode', 'loadout', 'setup', 'locker', 'settings', 'padsetup', 'howto', 'credits', 'pause', 'results', 'online', 'lobby'];
 // Transitions that get the full-screen ink wipe (the rest use staggered pop-ins).
 const WIPES = new Set(['loading>title', 'title>main', 'results>main', 'pause>main', 'results>null', 'pause>title', 'online>lobby', 'lobby>online', 'lobby>main', 'results>lobby', 'pause>online']);
 // Pushes/pops between these get the light ink swipe (decorative — the swap itself is immediate).
-const LIGHT = new Set(['main', 'mode', 'loadout', 'setup', 'locker', 'settings', 'howto', 'credits', 'pause', 'online', 'lobby']);
+const LIGHT = new Set(['main', 'mode', 'loadout', 'setup', 'locker', 'settings', 'padsetup', 'howto', 'credits', 'pause', 'online', 'lobby']);
 // ?netmock=1 → an offline stand-in for G.net (src/net/mock.js) so the online screens work without the relay
 const NETMOCK = typeof location !== 'undefined' && new URLSearchParams(location.search).get('netmock') === '1';
 // room codes (the session generates them from this set: no O/0, I/1)
@@ -262,6 +263,7 @@ const SETTINGS_TABS = [
     { key: 'sensitivity', label: 'Mouse sensitivity', type: 'slider', min: 0.2, max: 3, step: 0.05, fmt: (v) => v.toFixed(2) + '×', help: 'How far the camera turns for each bit of mouse movement.' },
     { key: 'padSensitivity', label: 'Controller sensitivity', type: 'slider', min: 0.2, max: 3, step: 0.05, fmt: (v) => v.toFixed(2) + '×', help: 'Camera turn speed with the right stick.' },
     { key: 'invertY', label: 'Invert vertical look', type: 'toggle', help: 'Push up to look down, like a flight stick.' },
+    { key: '_padsetup', label: 'Controller setup', type: 'link', go: 'padsetup', help: 'See how your controller is read, test it live, and re-map its sticks and buttons if something is off — some Switch-style pads in a browser.' },
     { key: 'aimAssist', label: 'Aim assist (controller)', type: 'slider', min: 0, max: 1, step: 0.05, fmt: pctFmt, help: 'Gently slows and steers your aim onto nearby rivals when you play with a controller.' },
     { key: 'aimAssistMouse', label: 'Aim assist for mouse', type: 'toggle', help: 'Also apply a lighter aim assist when aiming with a mouse. Off by default.' },
     { key: '_howto', label: 'Controls reference', type: 'link', help: 'Every keyboard, mouse and controller binding in one place.' },
@@ -297,6 +299,31 @@ const TAB_BLURB = {
   audio: 'Master, music and sound-effect levels.',
   gameplay: 'Shake, vibration, colour-safe inks, minimap and match defaults.',
 };
+
+// Controller setup: the live test's button chips (standard slots 0–16: glyph, position) and the guided re-map's prompts
+const PAD_CHIPS = [['A', 'Bottom'], ['B', 'Right'], ['X', 'Left'], ['Y', 'Top'], ['LB'], ['RB'], ['LT'], ['RT'], ['View', 'Select −'], ['Start', 'Start +'],
+  ['LS', 'L click'], ['RS', 'R click'], ['↑'], ['↓'], ['←'], ['→'], ['Home']];
+const PAD_STEPS = [
+  { k: 'a', i: 3, dir: -1, text: 'Push the RIGHT stick UP' },
+  { k: 'a', i: 2, dir: 1, text: 'Push the RIGHT stick RIGHT' },
+  { k: 'a', i: 1, dir: -1, text: 'Push the LEFT stick UP' },
+  { k: 'a', i: 0, dir: 1, text: 'Push the LEFT stick RIGHT' },
+  { k: 'b', i: 0, text: 'Press JUMP — the BOTTOM face button' },
+  { k: 'b', i: 1, text: 'Press the RIGHT face button (back)' },
+  { k: 'b', i: 2, text: 'Press the LEFT face button' },
+  { k: 'b', i: 3, text: 'Press the TOP face button (special)' },
+  { k: 'b', i: 4, text: 'Press the LEFT bumper (L)' },
+  { k: 'b', i: 5, text: 'Press the RIGHT bumper (R) — sub weapon' },
+  { k: 'b', i: 6, text: 'Pull the LEFT trigger (ZL / LT) — swim' },
+  { k: 'b', i: 7, text: 'Pull the RIGHT trigger (ZR / RT) — fire' },
+  { k: 'b', i: 12, text: 'Press the D-pad UP' },
+  { k: 'b', i: 13, text: 'Press the D-pad DOWN' },
+  { k: 'b', i: 14, text: 'Press the D-pad LEFT' },
+  { k: 'b', i: 15, text: 'Press the D-pad RIGHT' },
+  { k: 'b', i: 8, text: 'Press SELECT / MINUS (−) — the map' },
+  { k: 'b', i: 9, text: 'Press START / PLUS (+) — pause' },
+];
+const PAD_IDLE = 10;   // s with no input on a prompt → it skips itself (a pad-only player can't reach SKIP: the pad is being listened to)
 
 const durLabel = (s) => (s < 120 ? `${s} SEC` : `${Math.round(s / 60)} MIN`);
 
@@ -647,7 +674,7 @@ export class Menus {
     if (this._stack.length > 1) {
       this._sfx('ui_back');
       this.show(this._stack[this._stack.length - 2], { pop: true, back: true });
-    } else if (['mode', 'loadout', 'setup', 'locker', 'settings', 'howto', 'credits', 'online'].includes(this.current)) {
+    } else if (['mode', 'loadout', 'setup', 'locker', 'settings', 'padsetup', 'howto', 'credits', 'online'].includes(this.current)) {
       this._sfx('ui_back'); // opened directly by the engine: fall back to the main menu
       this.show('main', { back: true });
     }
@@ -2395,7 +2422,7 @@ export class Menus {
       const r = rowDef(key);
       const pv = createPreview(key, {
         value: r ? s[key] : null, settings: s, qualityTable: QUALITY, palettes: TEAM_PALETTES, cbPalette: COLORBLIND_PALETTE,
-        diffs: this._diffs(), diffInfo: DIFF_INFO, durations: MATCH.durations || [90, 180], tab,
+        diffs: this._diffs(), diffInfo: DIFF_INFO, durations: MATCH.durations || [90, 180], tab, pad: (G.input && G.input.padInfo) || null,
       });
       // retire every preview still on stage (fast focus moves can queue several)
       for (const old of [...pvStage.children]) { if (old._out) continue; old._out = true; old.classList.add('is-out'); setTimeout(() => old.remove(), 260); }
@@ -2415,7 +2442,7 @@ export class Menus {
       const tab = SETTINGS_TABS[tabIdx];
       tab.rows.forEach((r, i) => {
         let ctrl;
-        if (r.type === 'link') ctrl = { el: h('span', { class: 'iw-row__link' }, 'VIEW', h('i', { html: GLYPHS.next })), accept: () => { this._sfx('ui_click'); this._go('howto'); } };
+        if (r.type === 'link') ctrl = { el: h('span', { class: 'iw-row__link' }, 'VIEW', h('i', { html: GLYPHS.next })), accept: () => { this._sfx('ui_click'); this._go(r.go || 'howto'); } };
         else if (r.type === 'slider') ctrl = this._slider(r, s[r.key]);
         else if (r.type === 'toggle') ctrl = this._toggle(r, s[r.key]);
         else {
@@ -2546,6 +2573,229 @@ export class Menus {
       h('div', { class: 'iw-ctl__row' },
         h('span', { class: 'iw-ctl__act' }, compact ? act.replace(' · release to throw', '').replace(' · squid form', '') : act, hold ? h('em', null, hold) : null),
         h('span', { class: 'iw-ctl__keys', html: mode === 'pad' ? pad : kb }))));
+  }
+
+  // ================================================================ SCREEN: Controller setup (Settings › Controls)
+  // Which pad is read and how (Standard / Known: HORIPAD / Guessed / Custom — src/core/padmap.js), a live test of what the
+  // game reads (both sticks, the triggers, the buttons, plus the raw values), and a guided re-map: one prompt per stick
+  // direction / button, the next raw input that moves answers it. Saved per pad id in settings.padMaps; reset deletes it.
+  _scr_padsetup() {
+    const inp = G.input;
+    const stick = (label) => {
+      const dot = h('i', { class: 'iw-pads__dot' });
+      const el = h('div', { class: 'iw-pads__stick' }, h('span', { class: 'iw-pads__ring' }, h('i', { class: 'iw-pads__arrow' }), dot), h('em', null, label));
+      return { el, dot };
+    };
+    const LS = stick('LEFT STICK'), RS = stick('RIGHT STICK');
+    const trig = (label) => { const fill = h('i'); return { el: h('div', { class: 'iw-pads__trig' }, h('span', { class: 'iw-pads__bar' }, fill), h('em', null, label)), fill }; };
+    const LT = trig('L TRIGGER'), RT = trig('R TRIGGER');
+    const chips = PAD_CHIPS.map(([g, t], i) => h('span', { class: 'iw-pads__btn', title: STD_BUTTON_NAMES[i] }, h('span', { class: 'iw-pads__g', html: padGlyph(g) }), t ? h('small', null, t) : null));
+    const live = h('div', { class: 'iw-pads__live' }, LS.el,
+      h('div', { class: 'iw-pads__mid' }, h('div', { class: 'iw-pads__trigs' }, LT.el, RT.el), h('div', { class: 'iw-pads__btns' }, chips)), RS.el);
+    const nameEl = h('div', { class: 'iw-pads__name' }), idEl = h('div', { class: 'iw-pads__id' }), statusEl = h('span', { class: 'iw-pads__status' });
+    const dev = h('div', { class: 'iw-pads__dev' }, h('i', { html: GLYPHS.gamepad }), h('div', { class: 'iw-pads__devtxt' }, nameEl, idEl), statusEl);
+    const rawEl = h('div', { class: 'iw-pads__raw' });
+    const hintEl = h('p', { class: 'iw-pads__hint' }, 'Move the sticks and press the buttons — what lights up is what the game reads. If up / down or a button is wrong, run the guided setup.');
+    // guide card
+    const gStep = h('div', { class: 'iw-pads__gstep' }), gText = h('div', { class: 'iw-pads__gtext iw-display' }), gNote = h('div', { class: 'iw-pads__gnote' });
+    const gFill = h('i'), gDots = h('div', { class: 'iw-pads__gdots' }, PAD_STEPS.map(() => h('i')));
+    const guideEl = h('div', { class: 'iw-pads__guide' }, h('div', { class: 'iw-pads__ghead' }, gStep, gDots), gText, gNote, h('div', { class: 'iw-pads__gbar' }, gFill));
+    const toastNoPad = () => { this._sfx('ui_error'); this.toast('Connect a controller and press a button on it first', { kind: 'pad' }); };
+    const startBtn = this._btn({ id: 'pad-remap', label: 'GUIDED SETUP', sub: 'Re-map sticks and buttons, one prompt at a time', icon: GLYPHS.gamepad, cls: 'iw-pads__go', accept: () => start() });
+    const resetBtn = this._btn({ id: 'pad-reset', label: 'RESET TO AUTOMATIC', icon: GLYPHS.reset, cls: 'iw-btn--ghost iw-btn--small', accept: () => reset() });
+    const skipBtn = this._btn({ id: 'pad-skip', label: 'SKIP', icon: GLYPHS.next, cls: 'iw-btn--ghost iw-btn--small', accept: () => skip() });
+    const cancelBtn = this._btn({ id: 'pad-cancel', label: 'CANCEL', icon: GLYPHS.close, cls: 'iw-btn--ghost iw-btn--small', accept: () => cancel() });
+    const actsLive = h('div', { class: 'iw-pads__acts iw-pads__acts--live' }, startBtn, resetBtn);
+    const actsGuide = h('div', { class: 'iw-pads__acts iw-pads__acts--guide' }, skipBtn, cancelBtn);
+    const panel = this._panel('iw-pads__panel iw-in', dev, guideEl, live, rawEl, hintEl, actsLive, actsGuide);
+    const el = h('div', { class: 'iw-screen iw-pads' },
+      h('div', { class: 'iw-scrim-left' }),
+      this._header('CONTROLLER SETUP', { sub: 'Test your controller and fix its layout' }),
+      panel,
+      this._prompts([[['↑', '↓'], 'DPad', 'Choose'], ['Enter', 'A', 'Select'], ['Esc', 'B', 'Back']]));
+
+    const padMaps = () => ({ ...(this._settings().padMaps || {}) });
+    let devKey = '', rawT = 0, prevOn = [], guide = null;
+    const STATUS = { standard: 'STANDARD', known: 'KNOWN', guess: 'GUESSED', custom: 'CUSTOM' };
+    const renderDev = () => {
+      const info = inp && inp.padInfo, raw = inp && inp.rawPad;
+      const key = info ? `${info.id}|${info.status}|${info.label}|${raw ? raw.axes.length + 'x' + raw.buttons.length : ''}` : '';
+      if (key === devKey) return;
+      devKey = key;
+      if (!info) {
+        nameEl.textContent = 'No controller';
+        idEl.textContent = 'Plug it in (or pair it) and press any button on it — browsers only show a controller after a press.';
+        statusEl.textContent = '—'; statusEl.className = 'iw-pads__status is-none';
+      } else {
+        nameEl.textContent = info.name;
+        idEl.textContent = `${info.id}${raw ? ` · ${raw.axes.length} axes · ${raw.buttons.length} buttons · ${raw.mapping ? 'standard mapping' : 'no browser mapping'}` : ''}`;
+        statusEl.textContent = info.status === 'known' ? `${STATUS.known}: ${info.label}` : STATUS[info.status] || info.status;
+        statusEl.className = `iw-pads__status is-${info.status}`;
+      }
+      resetBtn.classList.toggle('is-off', !(info && info.status === 'custom'));
+    };
+    const f2 = (v) => (v < 0 ? '−' : ' ') + Math.abs(v).toFixed(2);
+    const renderLive = (dt) => {
+      const v = inp && inp.pad;
+      const ax = v ? v.axes : [0, 0, 0, 0];
+      LS.dot.style.setProperty('--x', (+ax[0] || 0).toFixed(3)); LS.dot.style.setProperty('--y', (+ax[1] || 0).toFixed(3));
+      RS.dot.style.setProperty('--x', (+ax[2] || 0).toFixed(3)); RS.dot.style.setProperty('--y', (+ax[3] || 0).toFixed(3));
+      const bv = (i) => (v && v.buttons[i] ? +v.buttons[i].value || (v.buttons[i].pressed ? 1 : 0) : 0);
+      LT.fill.style.setProperty('--v', bv(6).toFixed(3)); RT.fill.style.setProperty('--v', bv(7).toFixed(3));
+      for (let i = 0; i < chips.length; i++) {
+        const on = !!(v && v.buttons[i] && v.buttons[i].pressed);
+        if (on !== !!prevOn[i]) { prevOn[i] = on; chips[i].classList.toggle('is-on', on); }
+      }
+      rawT -= dt;
+      if (rawT <= 0) {
+        rawT = 0.1;
+        const raw = inp && inp.rawPad;
+        rawEl.textContent = raw ? `raw axes   ${[...raw.axes].map((x) => f2(+x || 0)).join(' ')}\nraw buttons ${[...raw.buttons].map((b, i) => (b && b.pressed ? i : null)).filter((x) => x !== null).join(' ') || '—'}` : '';
+      }
+    };
+    // ---- the guided re-map
+    const setTarget = (s) => {
+      for (const c of chips) c.classList.remove('is-target');
+      LS.el.classList.remove('is-target'); RS.el.classList.remove('is-target');
+      if (!s) return;
+      if (s.k === 'a') { const st = s.i < 2 ? LS : RS; st.el.classList.add('is-target'); st.el.dataset.dir = s.i % 2 ? 'up' : 'right'; }
+      else if (chips[s.i]) chips[s.i].classList.add('is-target');
+    };
+    const renderGuide = () => {
+      if (!guide) return;
+      const s = PAD_STEPS[guide.i];
+      gStep.textContent = s ? `STEP ${guide.i + 1} / ${PAD_STEPS.length}` : 'DONE';
+      gText.textContent = s ? s.text : 'Saved!';
+      [...gDots.children].forEach((d, k) => { d.className = k < guide.i ? (guide.got[k] ? 'is-got' : 'is-skip') : k === guide.i ? 'is-cur' : ''; });
+      setTarget(s);
+    };
+    const note = (t, cls = '') => { gNote.textContent = t; gNote.className = 'iw-pads__gnote ' + cls; };
+    const start = () => {
+      const raw = inp && inp.rawPad;
+      if (!raw) { toastNoPad(); return; }
+      const base = inp._mapper.auto(raw);
+      guide = { id: raw.id, i: 0, phase: 'calm', calmT: 0, last: null, rest: null, idle: 0, axes: base.axes.slice(0, 4), buttons: base.buttons.slice(), got: [] };
+      inp.padCapture = true;
+      el.classList.add('is-guide');
+      note('Let go of the controller…');
+      renderGuide();
+      this._setFocus(skipBtn, { snap: true });
+    };
+    const end = () => {
+      guide = null; if (inp) inp.padCapture = false;
+      el.classList.remove('is-guide'); setTarget(null);
+      if (this._focus && !this._focus.isConnected) this._setFocus(startBtn, { snap: true });
+      if (this._focus === skipBtn || this._focus === cancelBtn) this._setFocus(startBtn, { snap: true });
+    };
+    const cancel = () => { if (!guide) return; end(); this._sfx('ui_back'); };
+    const finish = () => {
+      const g = guide;
+      const m = padMaps();
+      m[g.id] = { axes: g.axes.slice(), buttons: g.buttons.slice(), name: (inp.padInfo && inp.padInfo.name) || '', at: Date.now() };
+      this._setSetting('padMaps', m);
+      end();
+      this._sfx('ui_confirm');
+      this.toast('Controller layout saved — it is used every time this controller connects', { kind: 'pad' });
+    };
+    const next = (got) => {
+      guide.got[guide.i] = got; guide.i++; guide.idle = 0;
+      if (guide.i >= PAD_STEPS.length) { finish(); return; }
+      guide.phase = guide.rest ? 'release' : 'calm';
+      renderGuide();
+    };
+    const skip = () => { if (!guide) return; this._sfx('ui_toggle'); note('Skipped — kept the automatic one', 'is-skip'); next(false); };
+    const reset = () => {
+      const info = inp && inp.padInfo;
+      if (!info) { toastNoPad(); return; }
+      const m = padMaps();
+      if (!m[info.id]) { this._sfx('ui_error', 0.15); this.toast('This controller already uses the automatic layout', { kind: 'pad' }); return; }
+      delete m[info.id];
+      this._setSetting('padMaps', m);
+      this._sfx('ui_confirm');
+      this.toast('Back to the automatic layout', { kind: 'pad' });
+    };
+    const remove = (list, code) => list.map((c) => (c ? c.split(',').filter((x) => x !== code).join(',') : c));
+    const neutral = (raw) => {
+      for (const b of raw.buttons) if (b && b.pressed) return false;
+      const r = guide.rest;
+      for (let j = 0; j < raw.axes.length; j++) {
+        const v = +raw.axes[j] || 0, r0 = r ? r[j] : 0;
+        if (r0 > 1.05 ? Math.abs(v) <= 1.05 : Math.abs(v - r0) > 0.3) return false;
+      }
+      return true;
+    };
+    const stepGuide = (raw, dt) => {
+      if (!raw || raw.id !== guide.id) { end(); this.toast('The controller went away — setup cancelled', { kind: 'pad' }); return; }
+      const ax = raw.axes, r = guide.rest;
+      if (guide.phase === 'calm') {   // hands off: the rest values (a hat rests out of range, triggers at −1)
+        const now = [...ax].map((x) => +x || 0);
+        const still = guide.last && now.length === guide.last.length && now.every((x, j) => Math.abs(x - guide.last[j]) < 0.03) && ![...raw.buttons].some((b) => b && b.pressed);
+        guide.last = now;
+        guide.calmT = still ? guide.calmT + dt : 0;
+        if (guide.calmT >= 0.3) { guide.rest = now; guide.phase = 'listen'; guide.idle = 0; note('Waiting for you…'); }
+        return;
+      }
+      if (guide.phase === 'release') {
+        if (neutral(raw)) { guide.phase = 'listen'; guide.idle = 0; }
+        gFill.style.setProperty('--v', '0');
+        return;
+      }
+      const s = PAD_STEPS[guide.i];
+      guide.idle += dt;
+      gFill.style.setProperty('--v', Math.min(1, guide.idle / PAD_IDLE).toFixed(3));
+      if (guide.idle >= PAD_IDLE) { note('Nothing pressed — skipped (kept the automatic one)', 'is-skip'); next(false); return; }
+      const stickAxes = new Set(guide.axes.filter(Boolean).map((c) => +c.replace(/\D/g, '')));
+      let code = null, what = '';
+      if (s.k === 'a') {
+        // the axis that moved furthest from rest (not a hat, not a trigger resting at −1, not the other stick slots)
+        const others = new Set(guide.axes.map((c, k) => (k !== s.i && c ? +c.replace(/\D/g, '') : -1)));
+        let best = -1, bd = 0.6;
+        for (let j = 0; j < ax.length; j++) {
+          if (r[j] > 1.05 || r[j] < -0.85 || others.has(j)) continue;
+          const d = Math.abs((+ax[j] || 0) - r[j]);
+          if (d > bd) { bd = d; best = j; }
+        }
+        if (best >= 0) { code = (Math.sign((+ax[best] || 0) - r[best]) === s.dir ? '' : '-') + 'a' + best; what = `axis ${best}${code[0] === '-' ? ' (flipped)' : ''}`; }
+      } else {
+        const taken = new Set();
+        for (let k = 0; k < guide.got.length; k++) if (guide.got[k] && PAD_STEPS[k].k === 'b') taken.add(guide.buttons[PAD_STEPS[k].i]);
+        for (let i = 0; i < raw.buttons.length && !code; i++) { const b = raw.buttons[i]; if (b && b.pressed && !taken.has('b' + i)) { code = 'b' + i; what = `button ${i}`; } }
+        for (let j = 0; j < ax.length && !code; j++) {
+          if (stickAxes.has(j)) continue;
+          const v = +ax[j] || 0;
+          if (r[j] > 1.05) {   // a hat: one direction at a time (wait out diagonals)
+            const d = hatDirs(v), L = { 1: 'u', 2: 'd', 4: 'l', 8: 'r' }[d];
+            if (L && !taken.has(`h${j}${L}`)) { code = `h${j}${L}`; what = `hat ${j} ${({ u: 'up', d: 'down', l: 'left', r: 'right' })[L]}`; }
+          } else if (Math.abs(v - r[j]) > 0.6) {
+            const c = r[j] < -0.85 ? 't' + j : `a${j}${v > r[j] ? '+' : '-'}`;
+            if (!taken.has(c)) { code = c; what = c[0] === 't' ? `trigger axis ${j}` : `axis ${j} ${v > r[j] ? '+' : '−'}`; }
+          }
+        }
+      }
+      if (!code) return;
+      if (s.k === 'a') guide.axes[s.i] = code;
+      else { guide.buttons = remove(guide.buttons, code); guide.buttons[s.i] = code; }
+      this._sfx('ui_toggle');
+      note(`✓ ${s.text.replace(/^(Push|Press|Pull) (the )?/, '').replace(/ — .*| \(.*\)$/, '')} → ${what}`, 'is-got');   // (shown under the next prompt)
+      next(true);
+    };
+    return {
+      el,
+      initial: () => startBtn,
+      tick: (dt) => {
+        renderDev();
+        renderLive(dt || 1 / 60);
+        if (guide) stepGuide(inp && inp.rawPad, dt || 1 / 60);
+      },
+      onNav: (dir) => {
+        if (guide && dir === 'back') { cancel(); return true; }
+        return false;
+      },
+      destroy: () => { if (inp) inp.padCapture = false; guide = null; },
+      // (tests / pictures)
+      _guide: () => guide && { i: guide.i, phase: guide.phase, axes: guide.axes.slice(), buttons: guide.buttons.slice(), got: guide.got.slice(), step: PAD_STEPS[guide.i] || null },
+      _start: () => start(), _skip: () => skip(), _cancel: () => cancel(), _reset: () => reset(),
+    };
   }
 
   _scr_howto() {

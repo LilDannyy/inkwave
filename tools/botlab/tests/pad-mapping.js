@@ -8,18 +8,27 @@
 //   guess     unknown non-standard pads: the heuristic (axis 2 + 5, a hat; triggers resting at −1; Firefox's compact
 //             layout with the hat as 4 buttons)
 //   ids       Chrome / Firefox / bare pad.id parsing
-// PAGE_ARGS='only=hori,guess' runs some parts. Settings it touches are put back at the end.
+//   setup     Settings › Controller setup: the link, the status, the live test, the guided re-map of a pad the guess gets
+//             wrong (scripted raw inputs, a flipped axis, a skip, an idle auto-skip), saved per pad id and applied
+// PAGE_ARGS='only=hori,guess' runs some parts. Settings it touches are put back at the end (the setup part leaves its saved
+// layout for one fake pad id behind for the reload pass, which removes it):
+//   PAGE_ARGS2='phase=2' (tools/botlab/page.cjs reloads the page and runs this again): the saved layout applies after a
+//   reload; RESET TO AUTOMATIC removes it.
 (async () => {
   const g = window.__inkwave, inp = g.input, dbg = g.debug, M = g.menus;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
-  const args = String(window.__pageArgs || ''), only = /only=([\w,]+)/.exec(args), want = (k) => !only || only[1].split(',').includes(k);
+  const args = String(window.__pageArgs || ''), only = /only=([\w,]+)/.exec(args), phase2 = /phase=2/.test(args);
+  const want = (k) => (phase2 ? k === 'reload' : !only || only[1].split(',').includes(k));
+  const WEIRD = 'Weird Pad (Vendor: 3333 Product: 0001)';
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   dbg.freeze();
   const PM = await import('./src/core/padmap.js');
   const { PlayerController } = await import('./src/game/player.js');
   const S = g.settings;
   const keep = { padMaps: S.padMaps, padNoticed: S.padNoticed, invertY: S.invertY, padSensitivity: S.padSensitivity };
-  g._setSettings({ padMaps: {}, padNoticed: [], invertY: false, padSensitivity: 1 });
+  if (phase2) { const m = { ...(S.padMaps || {}) }; keep.padMaps = { ...m }; delete keep.padMaps[WEIRD]; g._setSettings({ padMaps: m, invertY: false, padSensitivity: 1 }); }
+  else g._setSettings({ padMaps: {}, padNoticed: [], invertY: false, padSensitivity: 1 });
+  let leave = null;   // (the setup part: its saved layout, left for the reload pass)
 
   // ---- the fake Gamepad API
   let pads = [];
@@ -190,6 +199,109 @@
         && k('Core (Plus) Wired Controller (Vendor: 20d6 Product: a711)') === 'PowerA' && k('0e6f-0185-PDP Wired Fight Pad Pro') === 'PDP' && k('USB Gamepad (Vendor: 0079 Product: 0006)') === null,
         { hori: k('HORIPAD S (Vendor: 0f0d Product: 00c1)'), safari: k('HORIPAD S'), powera: k('Core (Plus) Wired Controller (Vendor: 20d6 Product: a711)'), pdp: k('0e6f-0185-PDP Wired Fight Pad Pro'), generic: k('USB Gamepad (Vendor: 0079 Product: 0006)') });
     }
+
+    // ================================================================ Settings › Controller setup
+    // a pad the guess gets wrong: Xbox-order face buttons (b0 bottom …), the right stick on Rx / Ry (axes 2 / 4) beside a
+    // live dial on 5, the left stick's Y flipped (up = +1), the hat on 9
+    const weird = () => mkPad(WEIRD, '', [0.004, 0.004, 0.004, 0, 0.004, 0.004, 0, 0, 0, 9 / 7], 12);
+    if (want('setup')) {
+      const W = weird();
+      use(W);
+      const guessed = inp.padInfo.layout.axes.join(), up0 = run(W, (p) => { p.axes[4] = -1; });
+      R('setup: the guess gets this pad wrong (right stick a2 + a5, so up on axis 4 does nothing) — a job for the setup', inp.padInfo.status === 'guess' && guessed === 'a0,a1,a2,a5' && Math.abs(up0.pitch) < 0.01, { guessed, pitch: up0.pitch });
+      // the link in Settings › Controls, under Invert vertical look
+      M.show('settings'); await wait(250);
+      const rows = [...document.querySelectorAll('.iw-row')].map((r) => r._key);
+      M._setFocus(document.querySelector('[data-id="set-_padsetup"]'), { snap: true });
+      M.nav('accept'); await wait(450);
+      const scr = M._scr;
+      const status = () => document.querySelector('.iw-pads__status')?.textContent, name = () => document.querySelector('.iw-pads__name')?.textContent;
+      const drive = (n = 1, set) => { for (let i = 0; i < n; i++) { if (set) set(W); inp.pollPad(); g._padMenus(); scr.tick(1 / 60); } };
+      drive(2);
+      R('setup: "Controller setup" sits under Invert vertical look and opens the screen: pad name + GUESSED',
+        rows.indexOf('_padsetup') === rows.indexOf('invertY') + 1 && M.current === 'padsetup' && name() === 'Weird Pad' && status() === 'GUESSED', { rows, screen: M.current, name: name(), status: status() });
+      // live test: the right stick's dot, the trigger bar, a lit chip (what the game reads: the guessed view)
+      drive(8, (p) => { p.axes[2] = 1; p.axes[5] = -1; btn(p, 1); btn(p, 7); });
+      const dot = document.querySelectorAll('.iw-pads__dot')[1], chips = [...document.querySelectorAll('.iw-pads__btn')];
+      const liveT = { x: dot.style.getPropertyValue('--x'), y: dot.style.getPropertyValue('--y'), rt: document.querySelectorAll('.iw-pads__bar i')[1].style.getPropertyValue('--v'),
+        on: chips.map((c, i) => (c.classList.contains('is-on') ? i : null)).filter((x) => x !== null), raw: document.querySelector('.iw-pads__raw').textContent };
+      neutral(W); drive(2);
+      R('setup: the live test shows the sticks, triggers and buttons as the game reads them (+ the raw values)', liveT.x === '1.000' && liveT.y === '-1.000' && liveT.on.includes(0) && liveT.on.includes(7) && /raw buttons 1 7/.test(liveT.raw), liveT);
+      // start the guided setup with the pad (its bottom button under the guess = raw b1 → accept on GUIDED SETUP)
+      M._setFocus(document.querySelector('[data-id="pad-remap"]'), { snap: true });
+      drive(1, (p) => btn(p, 1)); neutral(W); drive(1);
+      const g0 = scr._guide();
+      R('setup: the pad\'s accept starts the guided setup; the pad stops driving the menus meanwhile', g0 && g0.i === 0 && inp.padCapture === true && document.querySelector('.iw-pads').classList.contains('is-guide'), { guide: g0, capture: inp.padCapture });
+      drive(30);   // hands off: the rest values
+      const firstPrompt = document.querySelector('.iw-pads__gtext').textContent;
+      const STEP = [
+        (p) => { p.axes[4] = -1; }, (p) => { p.axes[2] = 1; }, (p) => { p.axes[1] = 1; }, (p) => { p.axes[0] = 1; },   // RS up, RS right, LS up (flipped), LS right
+        (p) => btn(p, 0), (p) => btn(p, 1), (p) => btn(p, 2), (p) => btn(p, 3), (p) => btn(p, 4), (p) => btn(p, 5), (p) => btn(p, 6, true, 1), (p) => btn(p, 7, true, 1),
+        (p) => { p.axes[9] = -1; }, (p) => { p.axes[9] = 1 / 7; }, (p) => { p.axes[9] = 5 / 7; }, (p) => { p.axes[9] = -3 / 7; },
+      ];
+      const prompts = [];
+      let menuMoved = false; const f0 = M._focus;
+      for (let k = 0; k < STEP.length; k++) {
+        prompts.push(document.querySelector('.iw-pads__gtext').textContent);
+        drive(3, STEP[k]); neutral(W); drive(3);
+        if (M._focus !== f0 || M.current !== 'padsetup') menuMoved = true;
+      }
+      const mid = scr._guide();
+      R('setup: prompts in order — the RIGHT stick UP first, then RIGHT, the left stick, JUMP (bottom face button) …; inputs don\'t move the menus',
+        firstPrompt === 'Push the RIGHT stick UP' && prompts[1] === 'Push the RIGHT stick RIGHT' && prompts[4] === 'Press JUMP — the BOTTOM face button' && !menuMoved && mid.i === 16 && mid.got.every(Boolean),
+        { prompts: prompts.slice(0, 6), at: mid.i, got: mid.got, menuMoved });
+      // SELECT: skipped with the SKIP button (keeps the automatic one); START: nothing pressed for 10 s skips it and saves
+      const selPrompt = document.querySelector('.iw-pads__gtext').textContent;
+      scr._skip(); drive(3);
+      const startPrompt = document.querySelector('.iw-pads__gtext').textContent;
+      drive(Math.round(10.3 * 60));
+      const saved = (S.padMaps || {})[WEIRD];
+      R('setup: SKIP keeps the automatic slot; a prompt left alone 10 s skips itself; then the layout is saved under the pad id',
+        /SELECT/.test(selPrompt) && /START/.test(startPrompt) && !scr._guide() && inp.padCapture === false && !!saved,
+        { selPrompt, startPrompt, guide: scr._guide(), saved });
+      const want0 = 'a0,-a1,a2,a4', wantB = 'b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,h9u,h9d,h9l,h9r,';   // (12 buttons: no b12 for home)
+      R('setup: saved = sticks a0 / −a1 (flipped) / a2 / a4, faces b0–b3, bumpers, triggers, the hat as the d-pad, skipped slots automatic',
+        saved && saved.axes.join() === want0 && saved.buttons.slice(0, 17).join() === wantB, saved && { axes: saved.axes.join(), buttons: saved.buttons.join() });
+      inp.pollPad(); drive(2);
+      const upC = run(W, (p) => { p.axes[4] = -1; }), lsUp = run(W, (p) => { p.axes[1] = 1; }, 0.1), jumpC = run(W, (p) => btn(p, 0), 0.05).it, fireC = run(W, (p) => btn(p, 7, true, 1), 0.05).it;
+      drive(2);
+      const persisted = (() => { try { return !!JSON.parse(localStorage.getItem('inkwave.settings')).padMaps[WEIRD]; } catch { return false; } })();
+      R('setup: applied at once — status CUSTOM; right stick up looks up, the flipped left stick walks forward, b0 jumps, b7 fires; in localStorage',
+        inp.padInfo.status === 'custom' && status() === 'CUSTOM' && upC.pitch > 0.2 && lsUp.it.move > 0.5 && jumpC.jump && fireC.fire && persisted,
+        { status: inp.padInfo.status, chip: status(), up: upC.pitch, move: +lsUp.it.move.toFixed(2), jump: jumpC.jump, fire: fireC.fire, persisted });
+      // Esc / B mid-setup cancels without saving
+      scr._start(); drive(30); drive(3, (p) => { p.axes[4] = -1; }); neutral(W); drive(3);
+      M.nav('back'); drive(2);
+      const afterCancel = (S.padMaps || {})[WEIRD];
+      R('setup: Back mid-setup cancels it (nothing saved, the screen stays, the pad drives the menus again)', !scr._guide() && M.current === 'padsetup' && inp.padCapture === false && afterCancel && afterCancel.axes.join() === want0, { guide: scr._guide(), screen: M.current, capture: inp.padCapture });
+      leave = saved;
+      M.show(null); await wait(200);
+      use(null, 2);
+    }
+
+    // ================================================================ after a reload (PAGE_ARGS2='phase=2')
+    if (want('reload')) {
+      const W = weird();
+      const stored = (S.padMaps || {})[WEIRD];
+      use(W);
+      const info = inp.padInfo;
+      const up = run(W, (p) => { p.axes[4] = -1; }), jump = run(W, (p) => btn(p, 0), 0.05).it;
+      R('reload: the saved layout applies after a reload (status Custom, right stick up on axis 4 looks up, b0 jumps)',
+        !!stored && info.status === 'custom' && info.layout.axes.join() === 'a0,-a1,a2,a4' && up.pitch > 0.2 && jump.jump, { stored: !!stored, status: info.status, axes: info.layout.axes, up: up.pitch, jump: jump.jump });
+      M.show('settings'); await wait(250);
+      M._setFocus(document.querySelector('[data-id="set-_padsetup"]'), { snap: true });
+      M.nav('accept'); await wait(450);
+      const scr = M._scr;
+      inp.pollPad(); scr.tick(1 / 60);
+      const chip0 = document.querySelector('.iw-pads__status')?.textContent;
+      scr._reset();
+      inp.pollPad(); scr.tick(1 / 60);
+      const chip1 = document.querySelector('.iw-pads__status')?.textContent;
+      R('reload: the screen says CUSTOM; RESET TO AUTOMATIC removes the saved layout (back to GUESSED)',
+        chip0 === 'CUSTOM' && chip1 === 'GUESSED' && inp.padInfo.status === 'guess' && !(S.padMaps || {})[WEIRD], { chip0, chip1, status: inp.padInfo.status });
+      M.show(null); await wait(200);
+      use(null, 2);
+    }
   } catch (e) {
     R('HARNESS ERROR ' + e.message, false, String(e.stack).slice(0, 600));
   } finally {
@@ -198,6 +310,7 @@
     delete navigator.getGamepads;
     M.toast = toast0;
     g._setSettings(keep);
+    if (leave) g._setSettings({ padMaps: { ...(S.padMaps || {}), [WEIRD]: leave } });
   }
   return out;
 })();
