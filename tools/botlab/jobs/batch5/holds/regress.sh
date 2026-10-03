@@ -13,7 +13,7 @@ one() {   # name env… harness
   local name=$1; shift
   env WATCHDOG=900000 "$@" > "$LOG/$name.log" 2>&1
   echo "== $name: $(grep -E '^RESULT' "$LOG/$name.log" | tail -1) $(grep -c '^FAIL' "$LOG/$name.log") FAIL"
-  grep -E '^FAIL|HARNESS|WATCHDOG|MAP MISMATCH|console errors: [^n]' "$LOG/$name.log" | cut -c1-600
+  grep -E '^FAIL|HARNESS|WATCHDOG|MAP MISMATCH|console errors: [^n]|uncaught' "$LOG/$name.log" | cut -c1-600
 }
 match() {   # name env…: a 90 s all-bot match; its splats per weapon and its console warnings / errors
   local name=$1; shift
