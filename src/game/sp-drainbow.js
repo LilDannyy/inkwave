@@ -225,6 +225,8 @@ class Drainbow {
     if (this.popT >= 0 || this.dead) return;
     this.popT = 0; this.popReason = reason;
     refresh();
+    // its time up (not splatted / lost): the film rains down as the owner's ink (the owner's screen paints; it replicates)
+    if (!this.ghost && reason === 'time' && D().paintPop > 0) inkFoot(this.owner, this, D().paintPop, 10);
     DRAIN_STATS.pops++;
     if (near(this.pos, 60)) {
       popSpray(this.pos, this.r, G.teamColors[this.team], this.ground);
@@ -399,14 +401,15 @@ function botWants(a, dist) {
   return dist < reach || a.ink < 25 || a.hp < 60;
 }
 
-// set down with a splash of the owner's ink over `k` of its footprint (special ink: turf, never meter)
-function inkFoot(a, b, k) {
+// a splash of the owner's ink over `k` of its footprint (special ink: turf, never meter): set down, and its film raining
+// down when its time runs out
+function inkFoot(a, b, k, n = 7) {
   if (!(b.ground > -Infinity) || !G.paint) return;
   const hy = b.pos.y - b.ground, foot = Math.sqrt(Math.max(0, b.r * b.r - hy * hy)) * k;
   if (foot < 0.5) return;
   let area = G.paint.splat(_p.set(b.pos.x, b.ground + 0.1, b.pos.z), foot * 0.55, b.team, { seed: Math.random() });
-  for (let i = 0; i < 7; i++) {
-    const ang = (i / 7) * TAU + Math.random() * 0.4, r = foot * (0.55 + Math.random() * 0.3);
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * TAU + Math.random() * 0.4, r = foot * (0.55 + Math.random() * 0.3);
     const g = G.physics.raycast(_p.set(b.pos.x + Math.cos(ang) * r, b.pos.y, b.pos.z + Math.sin(ang) * r), DOWN, b.r + 2, _hit, true);
     if (g.hit) area += G.paint.splat(_q.copy(g.point).setY(g.point.y + 0.1), foot * (0.3 + Math.random() * 0.12), b.team, { seed: Math.random() });
   }
