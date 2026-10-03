@@ -65,4 +65,5 @@ module.exports = async ({ clients: [A], R, wait, say, out, args }) => {
   await wait(900);
   say(await snap(`${out}/${tag}-picker-1280x720.jpg`));
   R('the special picker opens over the lobby on the weapon\'s own', (await A.js(`__inkwave.menus._focus && __inkwave.menus._focus.dataset.id`)) === 'kp-special-own');
+  await A.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);   // (the slot's profile outlives the run)
 };

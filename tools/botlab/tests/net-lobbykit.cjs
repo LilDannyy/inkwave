@@ -27,11 +27,12 @@ module.exports = async (ctx) => {
   const hostSees = (name, test, ms = 8000) => A.until(`(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(name)}); const pl = [...document.querySelectorAll('.iw-plate')].find((e) => (e.querySelector('.iw-plate__name') || {}).textContent === ${JSON.stringify(name)});
     const kit = pl && pl.querySelector('.iw-plate__kit') ? pl.querySelector('.iw-plate__kit').dataset.kit : null; return !!p && (${test}); })()`, ms).catch(() => null);
 
-  // ---------------------------------------------------------------- a turf room, no bots; the guest on the Spritzer with its own kit
+  // ---------------------------------------------------------------- a turf room, no bots; both on the Spritzer with its own kit
+  // (a slot's profile outlives a run: set both loadouts)
+  for (const c of [A, B]) await c.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);
   const code = await A.js(`__G.net.create('Hosty')`);
   await A.js(`__inkwave.menus.show('lobby'); 1`);
   await A.js(`__G.net.setSettings({ mode: 'turf', map: 'saltpan', time: 'day', botCount: 0, duration: 90 }); 1`);
-  await B.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);
   await B.js(`__G.net.join(${JSON.stringify(code)}, 'Guesty').then(() => { __inkwave.menus.show('lobby'); return 1; })`);
   await A.until(`__G.net.lobby.players.length === 2`, 15000);
   for (const c of [A, B]) await c.until(`__inkwave.menus.current === 'lobby' && !!document.querySelector('.iw-lkit') && __G.net.lobby.players.length === 2`, 15000);
@@ -131,7 +132,6 @@ module.exports = async (ctx) => {
   await key(A, 'Enter', 60);
   await pickerOpen(A);
   const fa0 = await focusId(A);
-  const dbg = await J(A, `({ input: __inkwave.menus._input, pads: (navigator.getGamepads ? [...navigator.getGamepads()] : []).filter(Boolean).map((g) => g.id), modal: !!__inkwave.menus._modal })`);
   await key(A, 'ArrowRight');
   const fa = await focusId(A);
   await key(A, 'Enter', 200);
@@ -139,7 +139,7 @@ module.exports = async (ctx) => {
   await B.until(`(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(hostName)}); return p && p.special === 'slam'; })()`, 8000).catch(() => null);
   const hs = await J(B, `(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(hostName)}) || {}; const pl = [...document.querySelectorAll('.iw-plate')].find((e) => (e.querySelector('.iw-plate__name') || {}).textContent === ${JSON.stringify(hostName)}); return { special: p.special, plate: pl ? pl.querySelector('.iw-plate__kit').dataset.kit : null }; })()`);
   const ka = kitOf(await chips(A), 'special');
-  R('host: its SPECIAL chip → Tidal Slam; the guest\'s room and nameplate show it', fa0 === 'kp-special-own' && fa === 'kp-special-slam' && ka.id === 'slam' && hs.special === 'slam' && hs.plate === 'bomb|slam', { fa0, fa, dbg, ka, hs });
+  R('host: its SPECIAL chip → Tidal Slam; the guest\'s room and nameplate show it', fa0 === 'kp-special-own' && fa === 'kp-special-slam' && ka.id === 'slam' && hs.special === 'slam' && hs.plate === 'bomb|slam', { fa0, fa, ka, hs });
   if (SHOTS) { await wait(600); await shot(A, 'lobby-host-plates'); await shot(B, 'lobby-guest-plates'); }
 
   // ---------------------------------------------------------------- 7. every room mode: the chips stay (host and guest)
@@ -169,4 +169,5 @@ module.exports = async (ctx) => {
   R('turf match (the guest stayed ready, so the host could start): the guest holds the roller, its own Cling Charge and Drainbow — on the host\'s screen and its own',
     ready && JSON.stringify(onA) === JSON.stringify(['roller', 'sticky', 'drainbow']) && JSON.stringify(onB) === JSON.stringify(['roller', 'sticky', 'drainbow']), { ready, onA, onB });
   R('…and the host\'s Tidal Slam reached the guest\'s screen', hostOnB && hostOnB[2] === 'slam', { hostOnB });
+  for (const c of [A, B]) await c.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);   // (as found)
 };
