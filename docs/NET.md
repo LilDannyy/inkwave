@@ -231,10 +231,23 @@ tower follows the host's snapshots; a ghost cloud / vortex / beam / ring runs th
 tickDamage follows for players. The owner's end record says why it went: subs `[2, gid, 1]` shot down (a ghost Skitter
 Bomb pops with a puff — no blast; a ghost sprinkler / beacon breaks with the pop look), `[2, gid, 2]` crushed by the
 tower (the crunch on every screen); the buoy `[4, gid, 2]` crushed. Old `[2, gid]` / `[4, gid]` mean what they did. A
-beacon planted or a curtain dropped on the tower's deck rides it on every screen (each screen's copy rides its own copy
-of the tower, as the buoy does); a ghost device is never crushed by its own screen's tower — it waits for its owner's
-word, so both screens agree. Hit markers are the shooter's own ('device:hit' on its screen). Tested by
-`tools/botlab/tests/net-deploy.cjs` (`CLIENTS=2`).
+ghost device is never crushed by its own screen's tower — it waits for its owner's word, so both screens agree. Hit
+markers are the shooter's own ('device:hit' on its screen).
+
+**Devices on moving floors** (the user: "lurk mines don't stick to moving floors such as the tower"). A Lurk Mine, Hop
+Beacon, Twirl Sprinkler, Drip Curtain or Cling Charge set down or stuck on any moving level block (the tower's deck or
+pillar, a Calamari railcar, a pod's plant, any `Level.addDynamic` block) keeps its spot in the block's own axes, on the
+face it was set on, on every screen: each screen carries its copy on its own copy of the block (the movers and pods run
+on the synced clock, the tower follows the host's snapshots), as the buoy does — no records while it rides. A moving
+block pushing into a device lying on a floor lifts it onto its top or shoves it out of its way (the buoy's rule; the
+tower crushes instead); its block going from under it, a floor device drops onto what's below (a wall one breaks). The
+owner's word settles where it is whenever it settles somewhere: the subs record `[4, gid, x, y, z, tag, lx, ly, lz, nx,
+ny, nz]` — on the moving block `tag` (its Level tag: `tower`, `tower-pillar`, `mover:<car>`, `plant:<pod>:<part>`; `#<id>`
+for an untagged one) at `l` in its axes, on the face whose normal is `n` (its axes) — or `[4, gid, x, y, z]` (on still
+ground again, after a drop or once a shove has settled: 0.2 s). A ghost snaps to it (one still in the air keeps it until
+it lands). A mine is tripped by its owner's screen wherever the block has taken it (the `[3, gid]` / `[2, gid]` records,
+as before). Old clients ignore `[4, …]` (no sub kind at `d[2]`). Tested by `tools/botlab/tests/net-deploy.cjs`
+(`CLIENTS=2`; `NET_ARGS='scene=tower'`: the deck, the crush, the mine on the deck) and `tests/deployables.js`.
 
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
