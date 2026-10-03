@@ -20,7 +20,8 @@
 //   stack    two marks on one spot, seen by a third teammate (you): a teammate jumping to an Ink Jet user (it comes down
 //            by their return mark), and two teammates jumping to one teammate. Both names show in the world view, on
 //            the minimap and on the TAB map, and no two tags cover each other (their rings and labels, as drawn)
-//   pins     TAB map: a tag's label covers no pin (its badge, key or name), wherever the jump comes down near them
+//   pins     TAB map: a tag's label covers no pin (its badge, key or name) nor a zone / tower chip, wherever the jump
+//            comes down near them
 //   place    the alerts sit clear of everything at the top middle in this mode (the roster + timer, Zone Control's
 //            chip, Tower Command's track, Boss Battle's health bar), of the TRACKED / POISONED badges, and of each other
 //            (three at once); the streak callout, the zone callout, the one-minute banner and the last-ten count stay
@@ -303,7 +304,9 @@
       if (badge) e.style.transition = '';
       return { k: e.className.replace('iw-pin__', '') + (e.classList.contains('iw-pin__name') ? ':' + e.textContent : ''), l: b.l - o, t: b.t - o, r: b.r + o, b: b.b + o };
     }));
-  const pinClash = (ts) => { const P = pinRects(), out = []; for (const t of ts) { const lab = t.el.querySelector('.iw-jt__tag'); if (!t.name || !shown(lab)) continue; const b = rect(lab); for (const q of P) if (hitB(b, q)) out.push(`${t.name} × pin ${q.k}`); } return out; };
+  // (and Zone Control's zone chips / Tower Command's tower chip)
+  const chipRects = () => [...(g.diorama?.el.querySelectorAll('.iw-dio-z') || [])].filter(vis).map((e) => e.querySelector('.iw-dio-z__tag')).filter(shown).map((e) => ({ k: 'chip:' + e.textContent, ...rect(e) }));
+  const pinClash = (ts) => { const P = pinRects().concat(chipRects()), out = []; for (const t of ts) { const lab = t.el.querySelector('.iw-jt__tag'); if (!t.name || !shown(lab)) continue; const b = rect(lab); for (const q of P) if (hitB(b, q)) out.push(`${t.name} × pin ${q.k}`); } return out; };
   const allyTag = (a) => { const e = [...hud.markerLayer.querySelectorAll('.iw-mk')].find((x) => x.style.display !== 'none' && x.querySelector('.iw-mk__tag b').textContent === a.name); return e ? [[a.name + '(ally tag)', [{ k: 'tag', ...rect(e.querySelector('.iw-mk__tag')) }]]] : []; };
 
   // ------------------------------------------------------------------------------------------------ two marks on one spot
@@ -366,6 +369,20 @@
       closeTab(); step(2);
     }
     R('TAB map: a jump coming down by your pin and a teammate\'s, from every side — its label covers no pin (badge, key, name)', bad.length === 0 && n === 8, { bad });
+    // a jump coming down on a zone's chip / onto the tower's spot (Zone Control / Tower Command)
+    const spots = m.zones ? m.zones.zones.map((z) => [z.center[0], z.center[2]]) : m.tower ? [[m.tower.pos.x + 2.5, m.tower.pos.z]] : [];
+    if (spots.length) {
+      const bad2 = [];
+      for (const [x, z] of spots) {
+        reset(); openTab();
+        put(mates[2], x, z); step(0.1);
+        mates[0].superJump(mates[2]); step(1.0);
+        const d = dioT().filter((t) => t.name === mates[0].name), pc = pinClash(d), ch = chipRects().length;
+        if (!d.length || pc.length || !ch) bad2.push({ at: [r2(x), r2(z)], tag: d.length, chips: ch, hits: pc });
+        closeTab(); step(2.5);
+      }
+      R(`TAB map: a jump coming down on ${m.zones ? 'each zone' : 'the tower'} — its label clear of the ${m.zones ? 'zone' : 'tower'} chip and the pins`, bad2.length === 0, { spots: spots.length, bad: bad2 });
+    }
   }
 
   // ------------------------------------------------------------------------------------------------ the alerts' place

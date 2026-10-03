@@ -27,7 +27,7 @@
 //     order the marks appeared (an older tag keeps its place): the world view stacks a tag above any tag or teammate's
 //     name tag it would cover; the minimap keeps one ring on a shared spot and stacks the names over it; the TAB map
 //     puts a second disc beside the first and moves a label above / beside its disc when below it would cover a pin
-//     (badge, key or name) or another tag.
+//     (badge, key or name), a zone / tower chip or another tag.
 //     Who sees what follows the marker it labels. The super-jump reticle and the return beacon are seen by both teams
 //     (the other side can camp them), so their ring and icon are shown to everyone. The name and seconds go only to the
 //     jumper's own team, as with the ally tags and the death markers. The user, on tracked foes: "dont show their name".
@@ -380,11 +380,11 @@ export function dioJumpTags(dio, cam, W, H, me) {
     cur.push(t);
   }
   for (let i = n; i < DIO.pool.length; i++) show(DIO.pool[i], false);
-  // 2 · each name label where it covers no pin (its badge, key or name) and no other tag: the first free place, nearest
-  // first — under its disc, nudged sideways, over it, beside it, then a row further out; where every place covers
-  // something, the one that covers least
+  // 2 · each name label where it covers no pin (its badge, key or name), no zone / tower chip and no other tag: the
+  // first free place, nearest first — under its disc, nudged sideways, over it, beside it, then a row further out;
+  // where every place covers something, the one that covers least
   const obs = DIO.obs.clear();
-  if (cur.some((t) => t.named)) pinBoxes(dio, u, obs);
+  if (cur.some((t) => t.named)) { pinBoxes(dio, u, obs); chipBoxes(dio, u, obs); }
   for (const t of cur) {
     if (!t.named) { setLabel(t, 0, 0); continue; }
     const { x, y, R, d, lw, lh } = t, s = 0.25 * u;
@@ -400,6 +400,21 @@ export function dioJumpTags(dio, cam, W, H, me) {
     }
     obs.add(bl, bt, bl + lw, bt + lh);
     setLabel(t, bl - l0, bt - t0);
+  }
+}
+// Zone Control's zone chips and Tower Command's tower chip on the TAB map (diorama.js _zones / _tower: centred on
+// their transform's point)
+const _tf = /translate3d\(([-\d.]+)px,\s*([-\d.]+)px/;
+function chipBoxes(dio, u, out) {
+  for (const tg of [...(dio.ztags || []), dio.ttag]) {
+    if (!tg || !tg.vis || tg.el.style.display === 'none') continue;
+    const q = _tf.exec(tg.el.style.transform || ''), box = tg.el.firstChild;
+    if (!q || !box) continue;
+    const k = box.textContent + '|' + tg.el.className + '|' + u;
+    let sz = DIO.names.get(box);
+    if (!sz || sz.k !== k) DIO.names.set(box, (sz = { k, w: box.offsetWidth, h: box.offsetHeight }));
+    const x = +q[1], y = +q[2], o = 3;   // (its 2.5 px ink outline)
+    if (sz.w) out.add(x - sz.w / 2 - o, y - sz.h / 2 - o, x + sz.w / 2 + o, y + sz.h / 2 + o);
   }
 }
 // the TAB map's pins as boxes (diorama.js _pin, styles/hud.css .iw-pin: the badge on its 2.2 u stem, the key at its
