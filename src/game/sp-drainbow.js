@@ -8,10 +8,13 @@
 //              else (melee, rollers, devices …) when the line from the attacker does; and whatever reaches someone
 //              INSIDE the bubble came through the film: always halved. The shot fizzles at the film (sparks, a fizz, a
 //              small ripple). The shooter's screen decides, like every hit (netmatch: the halved damage is what's sent).
-//   inside     foes inside are drained — ink inkDrain / s (and no refill), special specialDrain × a full meter / s — by their own screen
-//              (each player owns their ink and meter; the host its bots), and you and your teammates inside gain: ink
-//              and special at drain × (foes inside) / (your team inside), every screen from its own view of where
-//              everyone is (synced positions). None in it: nobody gains.
+//   inside     foes inside are drained — ink inkDrain / s (and no refill), special specialDrain × a full meter / s — by
+//              their own screen (each player owns their ink and meter; the host its bots), and you and your teammates
+//              inside gain: ink and special at drain × (foes inside) / (your team inside — its owner counted while
+//              within ownerNear m of the film), every screen from its own view of where everyone is (synced
+//              positions). None in it: nobody gains.
+//   ink        it lands with a splash of the owner's ink over paintFoot of its footprint, and when its time runs out the
+//              film rains down over paintPop of it (special ink: turf, never meter; the owner's screen paints).
 //   the owner  your Drainbow is your running special while it stands (actor.specialActive, flagged `free`: it holds
 //              neither your body nor your weapon), so your meter doesn't charge — painting, zones, the tower, cheers all
 //              skip a running special. Your share of the drained special turns into bubble time instead
@@ -32,7 +35,10 @@
 //
 // Bots: botSpecials.js reads a live enemy bubble as a light lingering area (routes round it, out of it unless holding
 // the objective) and prefers a foe not behind one (targetBias); inside an enemy one a bot's hearing shrinks and it
-// sees a little less far (botSight.js — its own screen goes grey for nobody); botWants() decides when to pop one.
+// sees a little less far (botSight.js — its own screen goes grey for nobody). Its own: botWants() sets it down with the
+// fight in its weapon's reach (bots.js also: ON the zone, by the tower), and botHold() (SpecialSense.act) keeps a bot
+// fighting from inside its team's bubble — sliding along the film rather than stepping out — while its target is in
+// reach from in there (botHold: 0 turns that off for an A/B).
 import * as THREE from 'three';
 import { G, emit, clamp } from '../core/ctx.js';
 import { SPECIALS, PLAYER, weaponRange } from '../config.js';
