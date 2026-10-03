@@ -19,6 +19,8 @@ want() { [ -z "$ONLY" ] && return 0; case " $ONLY " in *" $1 "*) return 0;; esac
 export -f one; export LOG RUN T
 batch=(
   "zipcheer MAP=testbox MODE=turf PAGE=$T/zipcheer.js $RUN tools/botlab/page.cjs"
+  "zipcheer-tower MAP=testbox MODE=tower PAGE=$T/zipcheer.js $RUN tools/botlab/page.cjs"
+  "tower-rules MAP=testbox MODE=tower PAGE=$T/tower-rules.js $RUN tools/botlab/page.cjs"
   "bot-specials MAP=testbox MODE=turf PAGE=$T/bot-specials.js $RUN tools/botlab/page.cjs"
   "bot-specials-tower MAP=testbox MODE=tower PAGE=$T/bot-specials.js $RUN tools/botlab/page.cjs"
   "hud-lead MAP=testbox MODE=turf PAGE=$T/hud-lead.js $RUN tools/botlab/page.cjs"
