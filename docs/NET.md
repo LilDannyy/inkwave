@@ -236,6 +236,17 @@ with its exact counts) and a count snapshot twice a second go on its event timel
 step with the paint that caused them. Guests follow (zones.js `netEvent`): they only predict the count between
 snapshots, and each client fills its own players' special gauges.
 
+**Stage modules** (src/game/stageMods.js, docs/STAGE-MODS.md: eras, pipes, lava). A module's state is a pure function
+of the stage clock wherever it can be (nothing on the wire): the match clock every follower tracks, and in Practice the
+host's stage clock on its ticks (`msg.c[2]`: the movers', else the pods', else the stage modules' clock). What can't be
+(a host-run decision) goes as `['sm', key, data]` on the sender's timeline (`StageRun.rec` → the module's `netEvent`).
+A splat near a module's change carries its painter's stage time as record field 15 (`opts.et` on replay: the eras' ink
+guard and the lava's clip judge it at the painter's moment on every screen); the pads before it (pod 0, wave
+`[0, 9999]`) read exactly as no tag. A module may flag a squidkid in the tick (`F.stage`, bit 22: the aquarium's pipe
+ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw). A late joiner of a Practice session
+gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
+`seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
+
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
 tower onto the host's position (dead-reckoned between snapshots); each client carries its own players standing on it

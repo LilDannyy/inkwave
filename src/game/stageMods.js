@@ -180,7 +180,7 @@ const R_HOOKS = ['update', 'lateUpdate', 'seek', 'dispose',
   // nav + bots
   'navEdge', 'navNode', 'beforePath', 'botHold', 'botSteer', 'botAct', 'wet', 'goalWeight', 'sightLanding',
   // queries
-  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'state',
+  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'sweeps', 'state',
   // looks / HUD / camera
   'drawMap', 'prompt', 'hud', 'cam', 'camAfter'];
 
@@ -318,6 +318,9 @@ export class StageRun {
   // Bazookarp: 1 = standable at that rest / era / state, per nav node (Uint8Array) — the first module that answers
   restMask(state) { for (const R of this.h.restMask) { const m = R.restMask(state); if (m) return m; } return null; }
   danger(pos, pad = 0.5) { for (const R of this.h.danger) if (R.danger(pos, pad)) return true; return false; }
+  // the volumes a module's moving pieces cover over their whole travel ({ x, z, hx, hz, yaw, y0, y1 } boxes pushed into
+  // out): Bazookarp's rest flags, like movers.js sweepRect(car) for the railcars
+  sweeps(out = []) { for (const R of this.h.sweeps) R.sweeps(out); return out; }
   // the one device destroyer (subs SPEC §0.3: G.deploy.crushIn(shape, how)). Until the deploy package's crushIn lands on
   // this branch it is a no-op that returns 0 — the call sites are final.
   crushIn(shape, how) { const D = G.deploy; return D && typeof D.crushIn === 'function' ? D.crushIn(shape, how) : 0; }
