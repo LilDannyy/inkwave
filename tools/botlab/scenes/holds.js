@@ -9,7 +9,8 @@
 // same frozen frame again.
 //   states: stand (idle 2 s) · run (full speed) · fire (the weapon's main action held: blaster / brolly shots, the brush's
 //   swipes, the roller's flick) · roll (fire held while moving: the roller's roll, the brush's dash; the brolly's open
-//   canopy) · jump (the rise, near the apex) · lobby / victory / defeat / idle / locker (the menu and podium dances)
+//   canopy) · jump (the rise, near the apex) · lobby / victory / defeat / idle / locker (the menu and podium dances) ·
+//   leap / hang / slam (the Tidal Slam: the tuck on the way up, the top, just after the impact; not in the default list)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const G = window.__G;
@@ -68,6 +69,15 @@
       drive.move.set(0, 0, 1); settle(0.3); drive.fire = true; settle(1.2);
     },
     jump: () => { put(START, 0); settle(0.8); drive.jump = true; settle(0.05); drive.jump = false; settle(0.22); },
+    // the Tidal Slam, the real special (actor._startSpecial): the tuck on the way up, the hang at the top, just after the slam
+    leap: () => { put(START, 0); settle(0.6); kid.specialId = 'slam'; kid._startSpecial(); settle(0.4); },
+    hang: () => { put(START, 0); settle(0.6); kid.specialId = 'slam'; kid._startSpecial(); settle(0.68); },
+    slam: () => {
+      put(START, 0); settle(0.6); kid.specialId = 'slam'; kid._startSpecial();
+      for (let i = 0; i < 180 && kid.specialActive; i++) settle(1 / 60);
+      settle(0.2);
+      if (G.fx?.root) G.fx.root.visible = false;   // (the shockwave's splash hides the kid: off for this picture)
+    },
   };
   const DANCES = { lobby: 'lobby_pose', victory: 'victory', defeat: 'defeat', idle: 'menu_idle', locker: 'locker_idle' };
   const arg = (k) => { const r = new RegExp(`(?:^|\\s)${k}=([\\w,]+)`).exec(window.__preArgs || ''); return r ? r[1].split(',').filter(Boolean) : null; };
@@ -76,7 +86,7 @@
   const TUNE = (() => { const a = window.__preArgs || '', i = a.indexOf('tune:'); return i >= 0 ? JSON.parse(a.slice(i + 5)) : null; })();
   const STATE_LIST = arg('s') || ['stand', 'run', 'fire', 'roll', 'jump', 'lobby', 'victory', 'defeat'];
   const VIEW_LIST = arg('v') || ['front', 'left', 'back', 'right'];
-  const reset = () => { drive.move.set(0, 0, 0); drive.fire = false; drive.jump = false; kid.character.setDance?.(null); };
+  const reset = () => { drive.move.set(0, 0, 0); drive.fire = false; drive.jump = false; kid.character.setDance?.(null); if (G.fx?.root) G.fx.root.visible = true; };
   const scenes = [];
   for (const w of WEAPONS) for (const st of STATE_LIST) VIEW_LIST.forEach((view, vi) => {
     scenes.push({ name: `${w}-${st}-${view}`, wait: 60, set: async () => {
