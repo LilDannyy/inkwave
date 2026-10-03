@@ -230,12 +230,13 @@ const ST_GAP = [-152 - Math.asin(3 / 21) / DEG, -152 + Math.asin(3 / 21) / DEG];
 const PROM = [];
 // court edge: coping (2.5) and balustrades (0.9 solid, 3.3), concave chords on r 21
 for (const [a0, a1, top, n] of [[-163.6, ST_GAP[0], 3.3, 1], [ST_GAP[1], -133, 2.5, 3], [-133, -117, 3.3, 4], [-117, -110, 2.5, 2]]) {
-  PROM.push(...arcBandIn(C0, PR.r0, PR.r0 + 0.4, a0, a1, n, FL, top, top > 3 ? render({ tag: 'balustrade' }) : stone({ tag: 'prom-coping' })));
+  // (the balustrades' tops are off-limits: a 0.4 m ledge nobody should stand on; their court faces stay inkable render)
+  PROM.push(...arcBandIn(C0, PR.r0, PR.r0 + 0.4, a0, a1, n, FL, top, top > 3 ? render({ tag: 'balustrade', roof: true }) : stone({ tag: 'prom-coping' })));
 }
 // sea edge: the coping (convex chords on r 31.4), cut for the Penguin Steps
 for (const [a0, a1, n] of [[-171, -124.6, 12], [-115.4, -110, 2]]) PROM.push(...arcBand(C0, 30.9, PR.r1, a0, a1, n, FL, [2.5, 2.6], stone({ tag: 'prom-coping' })));
 // the Lookout (3.6) with its balustrade (4.5) on the court edge; the telescope bay (3.0); kiosks; deckchairs
-PROM.push(radBox(-141.5, 21.4, 24.4, 3.6, FL, 3.6, teak({ tag: 'lookout' })), radBox(-141.5, 21.4, 21.8, 3.6, FL, 4.5, render({ tag: 'lookout-balustrade' })));
+PROM.push(radBox(-141.5, 21.4, 24.4, 3.6, FL, 3.6, teak({ tag: 'lookout' })), radBox(-141.5, 21.4, 21.8, 3.6, FL, 4.5, render({ tag: 'lookout-balustrade', roof: true })));
 PROM.push(radBox(-145, 27.6, 31.0, 6.4, FL, 3.0, teak({ tag: 'telescope-bay' })));
 PROM.push(radBox(-145, 25.75, 28.25, 2.5, FL, 5.0, roofR(K.kiosk, { tag: 'kiosk' })), radBox(-122, 26.25, 28.75, 2.5, FL, 5.0, roofR(K.kiosk, { tag: 'kiosk' })));
 PROM.push(radBox(-158, 28.3, 29.7, 1.4, FL, 3.6, cover(K.coral, { tag: 'deckchairs' })));
@@ -270,6 +271,8 @@ H(B(2.0, 10.0, 0, 1.2, -46.0, -39.0, floor0({ tag: 'ticket-hall', color: '#cfc6b
 H(R([9.0, 0, -36.2], [9.0, 1.2, -39.0], 2.0, stair({ tag: 'ticket-stair' })));
 H(B(7.4, 10.0, 0, 0.6, -47.2, -46.0, stone({ tag: 'queue-step' })));
 H(B(8.2, 10.0, 1.2, 3.7, -42.0, -40.0, roofR(K.kiosk, { tag: 'ticket-booth' })), B(2.6, 3.8, 1.2, 2.4, -40.3, -39.3, cover(K.brass, { tag: 'luggage-scale' })));
+// (the school-trip coat-peg stand: cover on the hall's west half, clear of the tower's lane by 0.95 m)
+H(B(2.4, 3.8, 1.2, 2.3, -44.8, -44.2, cover(K.teak, { tag: 'coat-pegs' })));
 H(B(8.0, 8.6, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile' })), B(9.2, 9.8, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile' })));
 for (const [x, z] of [[3.0, -39.3], [9.7, -39.3], [3.0, -45.7], [9.7, -45.7]]) H(B(x - 0.25, x + 0.25, 1.2, 6.6, z - 0.25, z + 0.25, roofR(K.brass, { tag: 'canopy-column' })));
 H(B(2.5, 10.2, 6.6, 6.8, -46.2, -38.8, roofR(K.canopy, { tag: 'ticket-canopy' })));
@@ -287,7 +290,7 @@ H(bladeBox(8, 10, 13, 18.9, FL, 1.2, BUND), bladeBox(10, 19, 13, 17.4, FL, 1.2, 
 for (const [x, z] of [[19.11, -33.59], [20.66, -37.89], [22.39, -42.09]]) H(rnd(x, z, 1.3, FL, 4.3, roofR(K.steel, { tag: 'sand-filter' })));
 H(B(17.05, 18.55, 0, 1.0, -42.0, -40.0, cover(K.pump, { tag: 'pump-set' })), B(18.45, 19.95, 0, 1.0, -46.6, -44.6, cover(K.pump, { tag: 'pump-set' })));
 H(B(17.7, 19.3, 0, 1.4, -31.8, -30.2, cover(K.crate, { tag: 'salt-crates' })));
-H(B(16.5, 18.5, 0, 2.2, -54.5, -51.5, roofR('#d9a441', { tag: 'forklift' })));
+H(B(16.0, 18.0, 0, 2.2, -52.5, -49.5, roofR('#d9a441', { tag: 'forklift' })));
 // --- the Gate Terrace's cross-cover: bollard planters at both ends, the ice-cream cart, the Tubeway post-box column,
 //     the ticket-machine bank in front of the hall's wing mouth (not in Tower Command: the track runs there)
 H(rnd(-8.5, -33.5, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter' })), rnd(11.0, -36.6, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter' })));
@@ -301,52 +304,54 @@ H(bladeBox(-16, -3, -17.0, -10, FL, 1.2, ROCK), bladeBox(-3, 10, -17.8, -10, FL,
 H(bladeBox(13, 21, -17.0, -12, FL, 2.4, { ...ROCK, color: K.rockUp, tag: 'upper-rock' }));
 const GL = glass({ tag: 'penguin-glass' });
 H(bladeBox(-16, -3, -17.4, -17.0, FL, 3.2, GL), bladeBox(-3, 7, -18.2, -17.8, FL, 3.2, GL), bladeBox(7, 10, -18.2, -17.8, FL, 4.4, GL),
-  bladeBox(10, 24, -17.4, -17.0, FL, 4.4, GL), bladeBox(24, 31, -17.0, -16.6, FL, 2.6, GL));
+  bladeBox(10, 24, -17.4, -17.0, FL, 4.4, GL), bladeBox(24, 27.5, -17.0, -16.6, FL, 2.6, GL));
 H(bladeBox(-3.4, -3.0, -18.2, -17.4, FL, 3.2, GL), bladeBox(10.0, 10.4, -18.2, -17.4, FL, 4.4, GL), bladeBox(23.6, 24.0, -17.0, -16.6, FL, 4.4, GL));
-H(bladeBox(21.0, 31.2, -17.4, -16.3, FL, 0.4, cover(K.granite, { tag: 'glass-sill', paint: false })));
+H(bladeBox(21.0, 27.7, -17.4, -16.3, FL, 0.4, cover(K.granite, { tag: 'glass-sill', paint: false })));
 H(bladeBox(-1, 1, -16.6, -14.6, FL, 3.9, roofR('#c9b79a', { tag: 'keeper-hut' })), B(-9.6, -8.4, 0, 2.4, -46.6, -45.4, roofR('#c4a35a', { tag: 'buckets' })));
 H(B(-7.7, -6.3, 0, 2.2, -49.2, -47.8, cover('#e6f0f2', { tag: 'ice-pile' })), B(-8.2, -7.0, 0, 2.2, -40.5, -39.3, cover(K.rockUp, { tag: 'basking-rock', notIn: 'tower' })));
 H(bladeBox(16, 18, -14.5, -13.1, FL, 3.6, roofR(K.rock, { tag: 'outcrop' })), bladeBox(9, 10.4, -17.6, -16.2, FL, 2.6, roofR(K.steel, { tag: 'feeding-chute' })));
 // the cove (out of bounds: rocks, a pool, the colony; anyone landing there slides off into the sea)
-const shore = (s) => -20 - 2.5 * (1 - ((s - 7.5) / 23.5) ** 2);
+const shore = (s) => -20 - 2.5 * (1 - ((s - 5.75) / 21.75) ** 2);
 const glassOut = (s) => (s < -3 ? -17.4 : s < 10 ? -18.2 : s < 24 ? -17.4 : -17.0);
 const COVE = roofR(K.rock, { tag: 'cove', noPaint: undefined, paint: false });
-const covePts = Array.from({ length: 13 }, (_, i) => { const s = -16 + (47 * i) / 12; return W(s, shore(s)); });
+const covePts = Array.from({ length: 13 }, (_, i) => { const s = -16 + (43.5 * i) / 12; return W(s, shore(s)); });
 H(chainBand(covePts, 0.6, 1, FL, [0.45, 0.55], COVE));
-H(layer({ key: 'cove', frame: 'blade', rect: [-23, -16.6, -16, 31], res: 0.25, inside: (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 31 && w >= shore(s) + 0.2 && w <= glassOut(s) + 0.2; }, y0: FL, y1: 0.3, o: COVE }));
+H(layer({ key: 'cove', frame: 'blade', rect: [-23, -16.6, -16, 27.5], res: 0.25, inside: (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 27.5 && w >= shore(s) + 0.2 && w <= glassOut(s) + 0.2; }, y0: FL, y1: 0.3, o: COVE }));
 // --- the ferry plaza: the queue terrace (0.6) with its ferry-ticket kiosk and luggage trolleys; the whale-tail bench,
 //     the timetable pillar, fish topiary, the trolley stack and queue-barrier planter in front of the pavilion (the
 //     Bazookarp's apron blocks), a luggage trolley behind the Ticket Hall (not in Tower Command), the souvenir kiosk,
 //     tank-delivery crates, the two Express stops
-H(bladeBox(25, 30.6, -17.0, -9, FL, 0.6, stone({ tag: 'queue-terrace' })));
-H(bladeBox(28.2, 30.2, -15.8, -13.8, FL, 3.0, roofR(K.kiosk, { tag: 'ferry-kiosk' })), bladeBox(25.6, 26.8, -13, -11, FL, 2.0, cover(K.steel, { tag: 'trolleys' })));
-H(B(-2.5, 0.5, 0, 1.2, -58.6, -57.4, cover(K.teak, { tag: 'whale-bench' })), B(4.4, 5.6, 0, 2.2, -58.2, -57.0, roofR(K.seagreen, { tag: 'timetable' })));
-H(rnd(11.0, -57.6, 1.0, FL, 1.2, cover(K.planter, { tag: 'topiary' })));
-H(bladeBox(27.9, 29.1, -7.8, -5.8, FL, 1.4, cover(K.crate, { tag: 'trolley-stack' })), bladeBox(28.1, 28.9, 0.8, 3.2, FL, 1.3, cover(K.planter, { tag: 'queue-planter' })));
-H(B(6.2, 8.2, 0, 1.4, -52.3, -51.3, cover(K.steel, { tag: 'trolley', notIn: 'tower' })));
-H(bladeBox(28.2, 30.7, 6, 8.5, FL, 2.6, roofR(K.kiosk, { tag: 'souvenir-kiosk' })), bladeBox(28.7, 30.5, 13.4, 15.2, FL, 1.6, cover(K.crate, { tag: 'delivery-crates' })));
-H(bladeBox(22.2, 26.0, 10.8, 13.2, FL, 3.0, roofR(K.brass, { tag: 'express-stop-in' })), bladeBox(-6.0, -1.4, -16.2, -13.8, FL, 5.0, roofR(K.brass, { tag: 'express-stop-out' })));
+H(bladeBox(22.3, 27.0, -17.0, -9, FL, 0.6, stone({ tag: 'queue-terrace' })));
+H(bladeBox(24.6, 26.6, -15.8, -13.8, FL, 3.0, roofR(K.kiosk, { tag: 'ferry-kiosk' })), bladeBox(22.6, 23.8, -13, -11, FL, 2.0, cover(K.steel, { tag: 'trolleys' })));
+H(B(-2.5, 0.5, 0, 1.2, -58.6, -57.4, cover(K.teak, { tag: 'whale-bench' })), B(3.15, 4.35, 0, 2.2, -55.99, -54.79, roofR(K.seagreen, { tag: 'timetable' })));
+H(rnd(10.98, -53.53, 1.0, FL, 1.2, cover(K.planter, { tag: 'topiary' })));
+H(bladeBox(24.4, 25.6, -7.8, -5.8, FL, 1.4, cover(K.crate, { tag: 'trolley-stack' })), bladeBox(24.6, 25.4, 0.8, 3.2, FL, 1.3, cover(K.planter, { tag: 'queue-planter' })));
+H(B(4.7, 6.7, 0, 1.4, -49.7, -48.7, cover(K.steel, { tag: 'trolley', notIn: 'tower' })));
+H(bladeBox(24.7, 27.2, 6, 8.5, FL, 2.6, roofR(K.kiosk, { tag: 'souvenir-kiosk' })), bladeBox(25.2, 27.0, 13.4, 15.2, FL, 1.6, cover(K.crate, { tag: 'delivery-crates' })));
+H(bladeBox(21.7, 25.5, 10.8, 13.2, FL, 3.0, roofR(K.brass, { tag: 'express-stop-in' })), bladeBox(-6.0, -1.4, -16.2, -13.8, FL, 5.0, roofR(K.brass, { tag: 'express-stop-out' })));
 // the plaza's sea edge: a granite coping (s 21 … 31) with the sea rail on it (and on the bund's end)
-H(bladeBox(21, 31.2, 16.3, 16.85, FL, 0.1, cover(K.granite, { tag: 'sea-coping', paint: false })));
-H(bladeBox(21, 24, 16.5, 16.8, 1.2, 2.2, railO()), bladeBox(24, 31, 16.5, 16.8, 0.1, 1.1, railO()));
+H(bladeBox(21, 27.7, 16.3, 16.85, FL, 0.1, cover(K.granite, { tag: 'sea-coping', paint: false })));
+H(bladeBox(21, 24, 16.5, 16.8, 1.2, 2.2, railO()), bladeBox(24, 27.5, 16.5, 16.8, 0.1, 1.1, railO()));
 
 // ============================================================================================================ the Fin Pavilion
 // The spawn on the pavilion's curved roof terrace (3.4): a glass-block fascia along its front (a one-way 3.4 m drop),
 // stairs down its flanks toward mid (they end on the plaza at the deck's front corners), landings at their tops, sea
-// rails round the back, the 18 m fin tower behind.
-export const PAD = [18.0, 3.4, -63.68];
-const SP = { y: 3.4, front: 31.0, fascia: 0.35, land: 39.6, half: 13, stair: 3 };
-const back = (w) => 41 + 2 * (1 - (w / 16) ** 2);
+// rails round the back, the 18 m fin tower behind. [blockout] The whole pavilion stands 3.5 m nearer mid than DESIGN.md
+// §2.4 drew it (front s 27.5, not 31; the pad at s 31.9, not 36), the plaza's front row with it: spawn → mid measured
+// 6.65 / 6.84 s on the real nav graph (its 1 m octile grid runs ~7 % long along a 30° blade; the 3.4 m drop counts).
+export const PAD = [15.95, 3.38, -60.13];   // (3.38, not 3.4: the front drop must stay inside nav.js's 3.4 m drop rule after rounding)
+const SP = { y: 3.38, front: 27.5, fascia: 0.35, land: 36.1, half: 13, stair: 3 };
+const back = (w) => 37.5 + 2 * (1 - (w / 16) ** 2);
 H(bladeBox(SP.front, SP.front + SP.fascia, -SP.half, SP.half, FL, SP.y, { color: K.glassblock, pattern: PATTERN.glasstile, paint: false, tag: 'fascia' }));
 H(bladeRamp(SP.front, 0, SP.land, SP.y, SP.half + SP.stair / 2, SP.stair, stair({ tag: 'pavilion-stair' })), bladeRamp(SP.front, 0, SP.land, SP.y, -SP.half - SP.stair / 2, SP.stair, stair({ tag: 'pavilion-stair' })));
 const backPts = Array.from({ length: 11 }, (_, i) => { const w = -16 + 3.2 * i; return W(back(w), w); });
 const SPB = [...chainBand(backPts, 0.5, 1, FL, [3.5, 3.6], stone({ tag: 'deck-coping' }))];
 SPB.push(bladeBox(SP.land, back(16) - 0.1, 15.5, 16.0, FL, 3.7, stone({ tag: 'deck-coping' })), bladeBox(SP.land, back(16) - 0.1, -16.0, -15.5, FL, 3.7, stone({ tag: 'deck-coping' })));
 H(SPB);
-H(layer({ key: 'spawn-deck', frame: 'blade', rect: [-16.5, 16.5, 30.85, 43.35], res: 0.25, cover: new Cover(SPB, SP.y), y0: FL, y1: SP.y, o: teak({ tag: 'spawn-deck', color: '#a08a70' }),
+H(layer({ key: 'spawn-deck', frame: 'blade', rect: [-16.5, 16.5, 27.35, 39.85], res: 0.25, cover: new Cover(SPB, SP.y), y0: FL, y1: SP.y, o: teak({ tag: 'spawn-deck', color: '#a08a70' }),
   inside: (x, z) => { const [s, w] = toBlade(x, z), a = Math.abs(w); return s <= back(w) - 0.2 && ((a <= SP.half && s >= SP.front + SP.fascia) || (a <= 15.8 && s >= SP.land)); } }));
-H(bladeBox(34, 36, 9.5, 11.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })), bladeBox(34, 36, -11.5, -9.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })));
-H(bladeBox(43, 46.5, -3, 3, FL, 18.0, roofR('#efe9df', { tag: 'fin-tower' })));
+H(bladeBox(30.5, 32.5, 9.5, 11.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })), bladeBox(30.5, 32.5, -11.5, -9.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })));
+H(bladeBox(39.5, 43.0, -3, 3, FL, 18.0, roofR('#efe9df', { tag: 'fin-tower' })));
 // rails: the deck's back curve and the landings, the stairs' outer sides
 for (let i = 0; i < backPts.length - 1; i++) {
   const [a, b] = [backPts[i], backPts[i + 1]], ux = b[0] - a[0], uz = b[1] - a[1], L = Math.hypot(ux, uz), nx = -uz / L * 0.15, nz = ux / L * 0.15;
@@ -361,13 +366,13 @@ H(bladeRamp(SP.front, 1.0, SP.land, SP.y + 1.0, 16.15, 0.3, railO()), bladeRamp(
 // (its sand bed is sunk). Laid last, round everything standing on it (cells under a higher piece may merge freely).
 const wW = (s) => (s < -3 ? -17.0 : s < 10 ? -17.8 : s < 24 ? -17.0 : -16.6);
 const wEf = (s) => (s < 10 ? 19.2 : s < 19 ? 17.7 : s < 21 ? 16.2 : 16.6);
-const inBlade = (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 31.0 && w >= wW(s) && w <= wEf(s); };
+const inBlade = (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 27.5 && w >= wW(s) && w <= wEf(s); };
 const inDrum = (x, z) => { const r = Math.hypot(x, z); return r <= 30.6 || (Math.abs(x) <= 6.0 && z >= -32.6) || (r <= 33.0 && inArc(bearing(x, z), -63.5, -53.5)); };
 const ALL = () => [...SINGLE, ...HALF, ...HALF.map(mir)];
 const groundCover = new Cover(ALL(), 0);
 H(layer({ key: 'ground', rect: [-36, 36, -78, 0], res: 0.25, cover: groundCover, y0: FL, y1: 0, o: floor0({ tag: 'ground' }), clip: (x, z) => !inNgon(C0, 16, TANK.a, 0, x, z, -0.05),
   inside: (x, z) => (inDrum(x, z) || inBlade(x, z)) && !inNgon(C0, 16, TANK.a, 0, x, z, -0.05),
-  opt: (x, z) => { const [s, w] = toBlade(x, z); return s > 31 && s < 31.8 && Math.abs(w) <= 16; } }));
+  opt: (x, z) => { const [s, w] = toBlade(x, z); return s > 27.5 && s < 28.3 && Math.abs(w) <= 16; } }));
 H(layer({ key: 'tank-bed', rect: [-7.6, 7.6, -7.6, 0], res: 0.2, inside: TANK_IN, y0: FL, y1: -0.6, o: cover(K.sand, { tag: 'tank-bed', paint: false }) }));
 // the Feeding Deck's lid (2.2–2.4) on the tank, Alpha's half (z ≤ −1.2: the Glass Walk is the middle strip)
 H(layer({ key: 'feeding-deck', rect: [-7.7, 7.7, -7.7, -1.2], res: 0.1, inside: (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.02), cover: new Cover([...RIM], TANK.deck), y0: TANK.lid, y1: TANK.deck, o: teak({ tag: 'feeding-deck' }) }));
@@ -384,7 +389,7 @@ const ZONES = {
 // Hall (checkpoint 2), up past the penguins, down the lane to the plaza and across it to the goal before the pavilion
 const TOWER = {
   path: [[0, 2.4, 0], [0, 13.5], [3.4, 13.5], [3.4, 33.5], [-14.0, 33.5], [-14.0, 50.0], [-6.0, 50.0], [-6.0, 37.0],
-         [10.5, 37.0], [10.5, 42.5], [-0.5, 42.5], [-0.5, 53.5], [-12.5, 53.5]],
+         [10.5, 37.0], [10.5, 42.5], [-0.5, 42.5], [-0.5, 52.5], [-8.0, 52.5]],
   checkpoints: [[-14.0, 44.0], [-6.0, 40.0]],
   yaw: 0,
 };
@@ -397,20 +402,20 @@ for (const leg of allLegs(PIPES)) for (const e of endsOf(leg)) for (const p of [
 const BAZOOKARP = {
   start: [0, 2.4, 0],                       // the Pond: on the Glass Walk's centre, raised like S1 Blackbelly's tower
   weirs: [{ at: [0, 0, 28.0], yaw: 0 }],    // inside the North Arch hall, 6.5 m past the bubble column
-  gate: { at: [-8.54, 0, 55.28], yaw: -20 },// the North plaza, a level below the spawn deck, 12.6 m from the pad
+  gate: { at: [-6.79, 0, 52.25], yaw: -20 },// the North plaza, a level below the spawn deck, 12.1 m from the pad
   freeZones: [                              // Bravo's own (turned: Alpha's)
-    { poly: [[-1.64, 67.35], [-29.36, 51.35], [-34.36, 60.01], [-29.76, 64.05], [-21.5, 69.74], [-12.44, 74.05], [-6.64, 76.01]], y0: 2.9, y1: 6,
-      signs: [[-32.06, 59.02, 150], [-6.94, 73.52, 150]] },          // the spawn deck and its stair landings
+    { poly: [[0.11, 64.32], [-27.61, 48.32], [-32.61, 56.98], [-28.01, 61.02], [-19.75, 66.71], [-10.69, 71.02], [-4.89, 72.98]], y0: 2.9, y1: 6,
+      signs: [[-30.31, 55.99, 150], [-5.19, 70.49, 150]] },          // the spawn deck and its stair landings
     { poly: [[31.95, 1.86], [31.53, 3.04], [30.9, 4.13], [30.09, 5.09], [29.13, 5.9], [28.04, 6.53], [26.86, 6.95], [26.19, 4.44], [26.94, 4.17], [27.64, 3.77], [28.25, 3.25], [28.77, 2.64], [29.17, 1.94], [29.44, 1.19]],
       y0: 3.1, y1: 6, signs: [[26.53, 5.7, -75]] },                   // the E Kelp Balcony (on Bravo's half)
     { poly: [[8.22, 52.26], [3.89, 49.76], [-0.11, 56.69], [4.22, 59.19]], y0: 1.9, y1: 5,
       signs: [[6.26, 50.66, 150], [1.55, 53.02, -120]] },              // Bravo's Penguin upper rock
   ],
   routes: {
-    centre:   [[0, 2.4, 0], [0, 10], [2, 21.5], [0, 28], [-1.8, 31], [-1.8, 48.8], [-8.5, 55.3]],
+    centre:   [[0, 2.4, 0], [0, 10], [2, 21.5], [0, 28], [-1.8, 31], [-1.8, 46.5], [-6.8, 52.2]],
     arcade:   [[0, 2.4, 0], [-16, 16], [-8.8, 19.2], [0, 28]],
-    pumphall: [[0, 28], [-10, 37.8], [-14.8, 39.8], [-13.2, 50.8], [-8.5, 55.3]],
-    rocks:    [[0, 28], [9.8, 40.8], [4.8, 42.2], [-8.5, 55.3]],
+    pumphall: [[0, 28], [-10, 37.8], [-14.8, 39.8], [-12.6, 48.6], [-6.8, 52.2]],
+    rocks:    [[0, 28], [9.8, 40.8], [4.8, 42.2], [-6.8, 52.2]],
   },
   noRest: NO_REST,
 };

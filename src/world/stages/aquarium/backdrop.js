@@ -61,7 +61,7 @@ export function buildBackdrop(kit, data = {}) {
       for (let s = 3; s < L - 3; s += 3) {
         const p = path.getPointAt(s / L), t = path.getTangentAt(s / L);
         for (const [key, dir] of tidal ? [['upChev', 1], ['dnChev', -1]] : [['chev', 1]]) {
-          const c = new T.ConeGeometry(0.42, 0.9, 10); c.applyQuaternion(new T.Quaternion().setFromUnitVectors(UP, t.clone().multiplyScalar(dir))); c.translate(p.x, p.y, p.z);
+          const c = new T.ConeGeometry(0.3, 0.65, 10); c.applyQuaternion(new T.Quaternion().setFromUnitVectors(UP, t.clone().multiplyScalar(dir))); c.translate(p.x, p.y, p.z);
           put(key, c);
         }
       }
