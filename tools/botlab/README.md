@@ -236,9 +236,11 @@ Two-handed holds (batch 5, src/game/character.js `HOLD_BOTH` / `_bothHands` / `_
 blaster and the Canopy Brolly keep the off hand on the weapon in every state, the menu and podium dances included):
 - `MAP=testbox MODE=turf PAGE=tools/botlab/tests/holds.js tools/botlab/run.sh tools/botlab/page.cjs` — the other weapons
   first (their off hand's role per state against `holds-baseline.json`, recorded on the code before the change), then
-  the four through stand / run / fire / roll / jump / a fall / the respawn / every menu and podium dance / the fidgets:
-  the off hand on its grip, a natural elbow and wrist, the weapon clear of the head; then a 30 s bot fight with them
+  the four through stand / run / fire / roll / jump / a fall / the respawn / the Tidal Slam / every menu and podium dance /
+  the fidgets: the off hand on its grip, a natural elbow and wrist, the weapon clear of the head and (in the poses that
+  hold still) not through the deck; then a 30 s bot fight with them
   (`PAGE_ARGS='only=both,others,bots'`, `w=…`, `s=…`, `dump`, `record`)
 - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-holds.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
   — online Practice: each screen sees the other player's squidkid keep its off hand on the weapon (`NET_ARGS='a=brush;b=blaster'`)
-- pictures: `tools/botlab/scenes/holds.js` through hud-shots.cjs (`PRE_ARGS='w=… s=… v=front,left,back,right,hand,handb,handd'`)
+- pictures: `tools/botlab/scenes/holds.js` through hud-shots.cjs (`PRE_ARGS='w=… s=… v=front,left,back,right,hand,handb,handd'`;
+  `s=leap,hang,slam` for the Tidal Slam)
