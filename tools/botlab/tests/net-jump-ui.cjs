@@ -12,6 +12,8 @@
 //      and lands at the mark (A's screen alerts "Guesty is jumping to you!" while A is up on Ink Jet); A's Ink Jet runs
 //      out, A jumps home: on B's screen the mark stays until A lands on it, then goes. Its countdown on each screen runs
 //      from the time it really takes there to ~0 at A's touchdown there.
+//   3. A's Zipline: its mark (the Zipline icon, A's name) on B's screen; A's special ends with A still on its take-off
+//      spot (no jump home): B's mark goes at once (specials.js ReturnMarker: it used to sit grey for 30 s).
 //   CLIENTS=2 NET=tools/botlab/tests/net-jump-ui.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 //   NET_ARGS: 'map=<id>' (default saltpan); 'shots' saves B's screen (the alert; A's Ink Jet return mark) to
 //   tools/botlab/jobs/batch5/jumpui/out/ (or OUT)
@@ -175,6 +177,19 @@ module.exports = async (ctx) => {
   const okCd = (c) => !!c && c.mono && Math.abs(c.first - c.took) < 0.35 && c.last <= 0.25;
   R('…its countdown on both screens runs down (never up) from the time it really takes there to ~0 at touchdown', okCd(cdA) && okCd(cdB), { a: cdA, b: cdB, lagMs: hlA && hl ? hl.t - hlA.t : null });
   R('…on B\'s screen the mark stayed up every frame until then (the flight home included), then went', fr.length > 60 && shownB.length >= fr.length - 2 && homeFr.length > 5 && frAfter.length > 3 && frAfter.every((f) => !f.mk.some((x) => x[1] === 'Hosty')), { frames: fr.length, shown: shownB.length, home: homeFr.length, after: frAfter.length, startToShownMs: i0 >= 0 && LA4.t0 ? Math.round(t0B - LA4.t0) : null });
+  // ------------------------------------------------------------------------------------------------ 3. A's Zipline, ended on the spot
+  // A's Zipline shows on B's screen too; A's special runs out with A still within 2.5 m of its take-off point (no jump
+  // home: the owner just walks on). B's ghost mark heads home, sees no jump, and goes (it used to sit there grey for 30 s)
+  await stage();
+  await A.js(`(() => { const me = __G.match.local; me.specialId = 'zipcaster'; me.special = me.specialCost(); me._startSpecial(); return 1; })()`);
+  const zOk = await B.until(`(() => { const w = __G.specials.world.find((w) => w.kind === 'return' && w.owner && w.owner.name === 'Hosty' && !w.done); return !!w && w.icon === 'zipcaster' && __inkwave.hud.jumps.state().map.some((x) => x.kind === 'return' && x.name === 'Hosty'); })()`, 5000).catch(() => false);
+  R('A starts Zipline: B\'s screen shows its return mark (the Zipline icon) with A\'s name', !!zOk, { ok: zOk });
+  await wait(600);
+  await A.js(`(() => { __G.specials.end(__G.match.local, 'time'); return 1; })()`);
+  const tEnd = Date.now();
+  const zGone = await B.until(`!__G.specials.world.some((w) => w.kind === 'return' && w.owner && w.owner.name === 'Hosty' && !w.done) && !__inkwave.hud.jumps.state().map.some((x) => x.name === 'Hosty')`, 4000).then(() => Date.now() - tEnd).catch(() => null);
+  const aSj = await A.js(`!!__G.match.local.superJumpState`);
+  R('…A\'s Zipline ends on the spot (no jump home): the mark goes on B\'s screen within 1.5 s, not stuck', !aSj && zGone != null && zGone < 1500, { aJumped: aSj, goneAfterMs: zGone });
   const errs = clients.flatMap((c) => c.log.filter((l) => /error|TypeError|ReferenceError/i.test(l)));
   R('no console errors', !errs.length, errs.slice(0, 5));
 };
