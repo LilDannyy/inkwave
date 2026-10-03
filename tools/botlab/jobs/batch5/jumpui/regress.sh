@@ -34,6 +34,7 @@ for b in "${batch[@]}"; do want "${b%% *}" && echo "$b"; done | xargs -P "$PAR" 
 want sfx-cues && one sfx-cues MAP=testbox MODE=turf WATCHDOG=900000 PAGE=$T/sfx-cues.js $RUN tools/botlab/page.cjs
 # online (one at a time)
 for i in $(seq 1 "$REP"); do want "net-jump-ui-$i" && one "net-jump-ui-$i" CLIENTS=2 WATCHDOG=900000 NET=$T/net-jump-ui.cjs $RUN tools/botlab/netpage.cjs; done
+for i in $(seq 1 "$REP"); do want "net-jump-ui-tower-$i" && one "net-jump-ui-tower-$i" CLIENTS=2 WATCHDOG=900000 NET=$T/net-jump-ui.cjs NET_ARGS=scene=tower $RUN tools/botlab/netpage.cjs; done
 want net-practice && one net-practice CLIENTS=2 Q0=autopilot Q1=autopilot WATCHDOG=900000 NET=$T/net-practice.cjs $RUN tools/botlab/netpage.cjs
 want net-turf && one net-turf CLIENTS=2 Q0=autopilot Q1=autopilot WATCHDOG=900000 NET=$T/net-turf.cjs $RUN tools/botlab/netpage.cjs
 exit 0
