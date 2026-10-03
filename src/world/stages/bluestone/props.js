@@ -21,7 +21,7 @@ export function register(D, H) {
     build(B, o) {
       const [w, d] = o.size, top = o.top ?? RAILYARD.top, h = top - BOT;
       B.col(-w / 2, BOT, -d / 2, w / 2, top, d / 2, { roof: true });
-      if (!o.noMesh) B.box('rubber', o.color || '#3b3a37', w, h, d, 0, BOT + h / 2, 0, { r: 0.02 });
+      if (!o.noMesh) B.box('rubber', o.color || '#2f2c29', w, h, d, 0, BOT + h / 2, 0, { r: 0.02 });
     },
   };
   // Commander Tartar (placeholder): a rounded cream-and-brass telephone hanging on his cord under the dome
@@ -39,15 +39,27 @@ export function register(D, H) {
 // ---- the embankment: raster rectangles over the railyard outline (reaching 0.15 m into the walls it backs onto),
 // minus the stairs' channels (grown 0.3 m), then the channel fillers
 const grow = (poly, x, z, d) => inPoly(poly, x, z) || edgeDist(poly, x, z) <= d;
-const BERM = rasterRects((x, z) => grow(RAILYARD.poly, x, z, 0.15) && !RAILYARD.channels.some((c) => grow(c.poly, x, z, 0.25)), { x0: -63, x1: -24, z0: -85, z1: -27 });
+// the open river edge (the outline's last edge: the bounds back to the wharf's corner) gets one straight block; the
+// raster stays 1.2 m behind it (no saw-tooth over the water)
+const RP = RAILYARD.poly, E0 = RP[RP.length - 1], E1 = RP[0];
+const riverEdge = (x, z) => { const dx = E1[0] - E0[0], dz = E1[1] - E0[1], L = Math.hypot(dx, dz); const t = ((x - E0[0]) * dx + (z - E0[1]) * dz) / (L * L); return t > -0.05 && t < 1.05 ? Math.abs((x - E0[0]) * dz - (z - E0[1]) * dx) / L : Infinity; };
+const BERM = rasterRects((x, z) => grow(RAILYARD.poly, x, z, 0.15) && riverEdge(x, z) > 1.2 && !RAILYARD.channels.some((c) => grow(c.poly, x, z, 0.25)), { x0: -63, x1: -24, z0: -85, z1: -27 });
 const placements = [];
 for (const [x0, x1, z0, z1] of BERM.rects) placements.push({ type: 'bluestone_berm', pos: [+((x0 + x1) / 2).toFixed(3), 0, +((z0 + z1) / 2).toFixed(3)], size: [+(x1 - x0).toFixed(3), +(z1 - z0).toFixed(3)] });
+// a block over a quad (a rectangle in the world or the arm's frame), turned with it
+const quadBerm = (q, o = {}) => {
+  const [a, b, , d] = q, w = Math.hypot(b[0] - a[0], b[1] - a[1]), dd = Math.hypot(d[0] - a[0], d[1] - a[1]);
+  const cx = (q[0][0] + q[2][0]) / 2, cz = (q[0][1] + q[2][1]) / 2, rot = Math.atan2(d[0] - a[0], d[1] - a[1]);   // local z along a → d
+  return { type: 'bluestone_berm', pos: [+cx.toFixed(3), 0, +cz.toFixed(3)], rotY: rot, oboxCols: true, size: [+w.toFixed(3), +dd.toFixed(3)], ...o };
+};
 for (const c of RAILYARD.channels) {
-  // the filler: the channel's own quad (a rectangle in the world or the arm's frame), turned with it
-  const [a, b, , d] = c.fill, w = Math.hypot(b[0] - a[0], b[1] - a[1]), dd = Math.hypot(d[0] - a[0], d[1] - a[1]);
-  const cx = (c.fill[0][0] + c.fill[2][0]) / 2, cz = (c.fill[0][1] + c.fill[2][1]) / 2;
-  const rot = Math.atan2(d[0] - a[0], d[1] - a[1]);   // local z along a → d
-  placements.push({ type: 'bluestone_berm', pos: [+cx.toFixed(3), 0, +cz.toFixed(3)], rotY: rot, oboxCols: true, size: [+w.toFixed(3), +dd.toFixed(3)], eras: '12', eraGroup: c.group });
+  for (const [q, group] of c.fills) placements.push(quadBerm(q, { eras: '12', eraGroup: group }));   // the 1880s / today filler
+  for (const q of c.sides || []) placements.push(quadBerm(q));                                        // the trench's walls (every era)
+}
+{ // the straight river-edge block, 2 m wide inside the edge
+  const dx = E1[0] - E0[0], dz = E1[1] - E0[1], L = Math.hypot(dx, dz), nx = dz / L, nz = -dx / L;   // (inward: the railyard side)
+  const s = inPoly(RP, (E0[0] + E1[0]) / 2 + nx, (E0[1] + E1[1]) / 2 + nz) ? 1 : -1;
+  placements.push({ type: 'bluestone_berm', pos: [+((E0[0] + E1[0]) / 2 + s * nx).toFixed(3), 0, +((E0[1] + E1[1]) / 2 + s * nz).toFixed(3)], rotY: Math.atan2(dx, dz), oboxCols: true, size: [2, +L.toFixed(3)] });
 }
 placements.push({ type: 'bluestone_tartar', pos: [0, 0, 0], mirror: false });
 export const BERM_MISS = BERM.miss;

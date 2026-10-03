@@ -167,53 +167,48 @@ const MID = [
   B(-20.1, -18.9, 0, 1.2, -5.6, -3.6, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter })),
   B(17.13, 18.33, 0, 2.4, -3.73, -2.53, { tag: 'phone-kiosk', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
   B(-14, -12.8, 0, 2.4, -11.07, -9.87, { tag: 'phone-kiosk', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
-  // the bill-poster column (1880s, today) → the inkable light-pylon onto the Halo (the 3000s): the same footprint
+  // the bill-poster column (1880s, today) → the inkable light-pylon onto the Halo (the 3000s): the same footprint (5.5:
+  // 0.1 over the Halo's deck it meets, a climb within nav's 5.5 m)
   B(-15.94, -14.54, 0, 2.6, -7.01, -5.61, { tag: 'poster-column', color: '#6e5f4c', pattern: PATTERN.wood, roof: true, paint: false, eras: '12', eraGroup: 'pylon-w' }),
-  B(-15.94, -14.54, 0, 5.4, -7.01, -5.61, { tag: 'light-pylon', color: K.glass, pattern: PATTERN.glasstile, eras: '3', eraGroup: 'pylon-w' }),
+  B(-15.94, -14.54, 0, 5.5, -7.01, -5.61, { tag: 'light-pylon', color: K.glass, pattern: PATTERN.glasstile, eras: '3', eraGroup: 'pylon-w' }),
 ];
 
 // ------------------------------------------------------------------------------------------------ the Halo (the 3000s)
 // a glass ring walkway at 5.4 (inner apothem 11.6, outer 14.6), half-sides 4.8 long, corner squares 0.1 lower; glass
 // balustrades (rail) both edges; gaps where the stair lands (180°, x ±1.5), at the light-pylon (247.5°), and 2 m drop
 // gaps in the inner edge at the middles of the 135° and 225° sides (DESIGN.md §2.6)
-const HALO_Y = 5.4, AP_IN = 11.6, AP_OUT = 14.6, AP_MID = 13.1, HS = 4.8;
+const HALO_Y = 5.4, AP_IN = 11.6, AP_OUT = 14.6, AP_MID = 13.1, T22 = Math.tan(22.5 * DEG);
+const HIN = AP_IN * T22, HOUT = AP_OUT * T22;   // half a side's length at the inner (4.80) and outer (6.05) edge
 const haloPieces = [];
 {
   // (the deck's 0.4 m edges are out of reach: only its top is turf)
-  const halo = (o) => ({ tag: 'halo', color: K.glass, pattern: PATTERN.glasstile, eras: '3', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0.7071, 0, 0.7071], [-0.7071, 0, -0.7071], [0.7071, 0, -0.7071], [-0.7071, 0, 0.7071], [0.9239, 0, 0.3827], [-0.9239, 0, -0.3827], [0.3827, 0, 0.9239], [-0.3827, 0, -0.9239], [0.9239, 0, -0.3827], [-0.9239, 0, 0.3827], [0.3827, 0, -0.9239], [-0.3827, 0, 0.9239]], ...o });
+  const N8 = [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5].flatMap((a) => [[Math.sin(a * DEG), 0, Math.cos(a * DEG)], [-Math.sin(a * DEG), 0, -Math.cos(a * DEG)]]).map((v) => v.map((x) => +x.toFixed(4)));
+  const halo = (o) => ({ tag: 'halo', color: K.glass, pattern: PATTERN.glasstile, eras: '3', noPaint: N8, ...o });
   const hrail = (o) => rail({ tag: 'halo-rail', eras: '3', ...o });
-  // half-sides: [bearing of the side, which half (+1: the tangent's + end, −1: the − end), group]
-  const sides = [[90, 1, 'halo-1'], [135, 1, 'halo-2'], [135, -1, 'halo-3'], [180, 1, 'halo-4'], [180, -1, 'halo-5'], [225, 1, 'halo-6'], [225, -1, 'halo-7'], [270, -1, 'halo-8']];
+  // half-sides [bearing of the side, which end (+1: the tangent's + end), group]; each runs from the side's middle to
+  // its outer corner (6.05 m), so the two half-sides at a corner overlap there: the diagonal sides (135°, 225°) stand
+  // 0.1 m lower (5.3), as DESIGN.md's corner squares did — no corner pieces, no corner rails (ENGINE rule 6's 160 blocks)
+  const sides = [[90, 1, 'halo-1'], [135, -1, 'halo-2'], [135, 1, 'halo-3'], [180, -1, 'halo-4'], [180, 1, 'halo-5'], [225, -1, 'halo-6'], [225, 1, 'halo-7'], [270, -1, 'halo-8']];
   for (const [b, k, g] of sides) {
+    const top = b % 90 === 0 ? HALO_Y : HALO_Y - 0.1;
     const nx = Math.sin(b * DEG), nz = Math.cos(b * DEG), tx = Math.cos(b * DEG), tz = -Math.sin(b * DEG);   // radial n, tangent t
-    const c = [AP_MID * nx + k * (HS / 2) * tx, AP_MID * nz + k * (HS / 2) * tz];
-    haloPieces.push(O(+c[0].toFixed(4), +c[1].toFixed(4), 3, HS, 5.0, HALO_Y, b + 90, halo({ eraGroup: g })));
-    // balustrades: inner and outer edge, the tangent span s0…s1 (from the side's middle toward the k end)
-    const spans = [];
-    let inner = [0.02, HS - 0.12], outer = [0.02, HS - 0.02];
-    if (b === 135 || b === 225) inner = [1.0, HS - 0.12];          // the 2 m drop gaps (1 m each side of the middle)
-    if (b === 180) outer = [1.5, HS - 0.02];                         // the stair lands at x −1.5 … 1.5
-    spans.push([AP_IN - 0.06, inner], [AP_OUT + 0.06, outer]);
-    for (const [ap, [s0, s1]] of spans) {
-      const m = (s0 + s1) / 2;
-      haloPieces.push(O(+(ap * nx + k * m * tx).toFixed(4), +(ap * nz + k * m * tz).toFixed(4), 0.12, +(s1 - s0).toFixed(4), HALO_Y, HALO_Y + 1, b + 90, hrail({ eraGroup: g })));
+    const at = (ap, m) => [+(ap * nx + k * m * tx).toFixed(4), +(ap * nz + k * m * tz).toFixed(4)];
+    const [cx, cz] = at(AP_MID, HOUT / 2);
+    haloPieces.push(O(cx, cz, 3, +HOUT.toFixed(4), top - 0.4, top, b + 90, halo({ eraGroup: g })));
+    // balustrades: the inner edge to its corner, the outer edge to its corner (the two outer rails cross there)
+    let inner = [0.02, HIN - 0.12], outer = [0.02, HOUT + 0.03];
+    if (b === 135 || b === 225) inner = [1.0, HIN - 0.12];        // the 2 m drop gaps (1 m each side of the middle)
+    if (b === 180) outer = [1.5, HOUT + 0.03];                      // the stair lands at x −1.5 … 1.5
+    if ((b === 225 && k === 1) || (b === 270 && k === -1)) outer = [0.02, HOUT - 0.8];   // the light-pylon's corner (247.5°)
+    for (const [ap, [s0, s1]] of [[AP_IN - 0.06, inner], [AP_OUT + 0.06, outer]]) {
+      const [rx, rz] = at(ap, (s0 + s1) / 2);
+      haloPieces.push(O(rx, rz, 0.12, +(s1 - s0).toFixed(4), top, top + 1, b + 90, hrail({ eraGroup: g })));
     }
   }
-  // corners (r of the mid-line octagon's corner), 4.9–5.3, with a planter (1.0 above the deck) and the outer edge's two
-  // short balustrade runs round the corner (none at the light-pylon's corner)
-  const rc = AP_MID / Math.cos(22.5 * DEG), halfOut = AP_OUT * Math.tan(22.5 * DEG);
+  // planters at the corners (1.0 above the deck), with the half-side group on the corner's clockwise side
   for (const [b, g] of [[112.5, 'halo-1'], [157.5, 'halo-3'], [202.5, 'halo-5'], [247.5, 'halo-7']]) {
-    const [cx, cz] = polar(rc, b);
-    haloPieces.push(O(cx, cz, 3.4, 3.4, 4.9, 5.3, b, halo({ eraGroup: g })));
     const [px, pz] = polar(13.4, b);
-    haloPieces.push(O(px, pz, 1.2, 1.2, 5.3, 6.4, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g }));
-    if (b === 247.5) continue;
-    for (const sb of [b - 22.5, b + 22.5]) {                           // the two sides meeting at this corner
-      const nx = Math.sin(sb * DEG), nz = Math.cos(sb * DEG), tx = Math.cos(sb * DEG), tz = -Math.sin(sb * DEG);
-      const k = sb < b ? 1 : -1;                                       // the end of that side toward the corner
-      const s0 = HS + 0.02, s1 = halfOut - 0.08, m = (s0 + s1) / 2;
-      haloPieces.push(O(+((AP_OUT + 0.06) * nx + k * m * tx).toFixed(4), +((AP_OUT + 0.06) * nz + k * m * tz).toFixed(4), 0.12, +(s1 - s0).toFixed(4), 5.3, 6.3, sb + 90, hrail({ eraGroup: g })));
-    }
+    haloPieces.push(O(px, pz, 1.2, 1.2, HALO_Y - 0.1, HALO_Y + 1, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g }));
   }
 }
 
@@ -224,7 +219,10 @@ const SWIMSTON = [
   B(-1.5, 1.5, 0, 3.2, -26.6, -20.6, { tag: 'superstop', color: '#56685e', pattern: PATTERN.metal, roof: true, paint: false, eras: '12', eraGroup: 'stair-s1' }),
   B(-1.5, 1.5, 0, 3.2, -20.6, -14.6, { tag: 'superstop', color: '#56685e', pattern: PATTERN.metal, roof: true, paint: false, eras: '12', eraGroup: 'stair-s2' }),
   R([0, 0, -26.6], [0, 2.65, -20.6], 3, { tag: 'halo-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'stair-s1' }),
-  R([0, 2.65, -20.6], [0, 5.3, -14.6], 3, { tag: 'halo-stair', color: K.glass, pattern: PATTERN.treads, thickness: 5.4, eras: '3', eraGroup: 'stair-s2' }),
+  R([0, 2.65, -20.6], [0, 5.3, -14.6], 3, { tag: 'halo-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'stair-s2' }),
+  // (departs: DESIGN.md's `thickness: 5.4` makes the flight's block 8.7 m long, over ENGINE rule 3's 8 m; a support block
+  //  inside superstop B's footprint carries it instead)
+  B(-1.38, 1.38, 0, 2.6, -20.6, -14.6, { tag: 'halo-stair-base', color: K.glass, pattern: PATTERN.glasstile, paint: false, eras: '3', eraGroup: 'stair-s2' }),
   // the glass stair's side walls (inside the superstop's footprint: departs from x ±1.5 … ±1.62 so nothing appears
   // outside the old solid)
   B(1.38, 1.5, 0, 3.65, -26.6, -20.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s1' })),
@@ -288,6 +286,7 @@ const WEST = [
   B(-14, -11, 2.1, 2.4, -15.5, -12.5, { tag: 'balcony-landing', color: K.planks, pattern: PATTERN.planks }),
   R([-5, 0, -14], [-11, 2.4, -14], 3, stair({ tag: 'balcony-stair', color: K.iron, pattern: PATTERN.treads })),
   ...[[-13.85, -12.65], [-13.85, -15.4], [-5.1, -28.85], [-5.1, -25.25], [-5.1, -21], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
+  B(-14, -13.2, 2.4, 3.4, -13.3, -12.5, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),   // (adds: cover on the landing)
   B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   // Prow Place's fountain; Hoki Lane's cover, alternating sides
@@ -338,39 +337,49 @@ const gWalk = (a0, a1, g, o0 = GW1) => armBox(a0, a1, o0, GW0, EMB, GTOP, { tag:
 const gLawn = (x0, x1, z0, z1, g) => B(x0, x1, EMB, LTOP, z0, z1, { tag: 'garden-lawn', color: K.lawn, pattern: PATTERN.planter, eras: '3', eraGroup: g });
 const gCover = (x, z, y0, deg, g, o = {}) => OB(x, z, 1.2, 2.4, y0, y0 + 1.2, deg, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g, ...o }));
 const gPar = (o) => wall({ tag: 'garden-parapet', ...o });
+const gStair = (o) => ({ tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', thin: true, thickness: 1.0, ...o });
 export const GARDEN = {
-  hoki: { low: [-25.38, 0, -44.5], high: [-32.58, LTOP, -44.5], w: 3 },          // world grid (z −46 … −43)
-  arm: { a: -43, o0: -13, o1: -20.15, y1: GTOP, w: 3 },                           // the arm's frame (along −44.5 … −41.5)
-  wharf: { a: -57, o0: -14, o1: -19.8, y0: 0.6, y1: GTOP, w: 3 },                 // the arm's frame (along −58.5 … −55.5)
+  hoki: { low: [-25.38, 0, -44.5], high: [-32.38, LTOP, -44.5], w: 3 },          // world grid (z −46 … −43), 23.7°
+  arm: { a: -43, o0: -13, oMid: -16.6, o1: -20.15, y1: GTOP, w: 3 },              // the arm's frame (along −44.5 … −41.5), 24.0°
+  wharf: { a: -57, o0: -14, o1: -19.8, y0: 0.6, y1: GTOP, w: 3 },                 // the arm's frame (along −58.5 … −55.5), 24.0°
 };
-const armStair = (s, o) => { const [lx, lz] = AO(s.a, s.o0), [hx, hz] = AO(s.a, s.o1); return R([lx, s.y0 ?? 0, lz], [hx, s.y1, hz], s.w, o); };
+const armRamp = (a, o0, y0, o1, y1, w, o) => { const [lx, lz] = AO(a, o0), [hx, hz] = AO(a, o1); return R([lx, y0, lz], [hx, y1, hz], w, o); };
+const GA = GARDEN.arm, GH = GARDEN.hoki, GC = GARDEN.wharf, armMidY = +(GA.y1 * (GA.o0 - GA.oMid) / (GA.o0 - GA.o1)).toFixed(3);
+// Twelve groups per half (ENGINE rules 3–6: each ≤ 8 m and ≤ 12 blocks; with the Halo's eight, the pylon, the two glass
+// stairs and the Tide Steps, jump 2 changes 24 groups per half):
+//   garden-sc  the wharf stair (the garden's west end), its landing and the wall arch (1880s, today) it breaks through
+//   garden-t6 / -t4 / -t2   the walk's next three pieces (t2 also the lawn's north-east corner by the viaduct)
+//   garden-sa / -sa2        the arm stair's lower flight and wall arch / its upper flight and landing
+//   garden-t3  the Hoki stair, the viaduct arch, the lawn beside its foot      garden-t5 / -t8 / -t9 / -t10 / -t11 the lawn
+// (departs from DESIGN.md's outline G1 … G10 and cells t1 … t7: rebuilt on the arm's frame (the walk) and the world grid
+// (the lawn) so every edge is straight and every group stays within the engine's limits; each stair runs in a trench in
+// the deck, with glass side rails; about 300 m² of floor per half)
 const SIGNAL_GARDEN = [
-  // the walk (the arm's frame), split at the stairs' trenches; the stairs' top landings
-  gWalk(-60, -58.5, 'garden-t7'),
-  armBox(-58.5, -55.5, GW1, GARDEN.wharf.o1, EMB, GTOP, { tag: 'garden-walk', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: 'garden-sc' }),
+  // the walk (the arm's frame, 3.18), split at the stairs' trenches; the stairs' top landings
+  armBox(-58.5, -55.5, GW1, GC.o1, EMB, GTOP, { tag: 'garden-walk', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: 'garden-sc' }),
   gWalk(-55.5, -50, 'garden-t6'), gWalk(-50, -44.5, 'garden-t4'),
-  armBox(-44.5, -41.5, GW1, GARDEN.arm.o1, EMB, GTOP, { tag: 'garden-walk', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: 'garden-sa' }),
+  armBox(-44.5, -41.5, GW1, GA.o1, EMB, GTOP, { tag: 'garden-walk', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: 'garden-sa2' }),
   gWalk(-41.5, -37.2, 'garden-t2'),
-  armBox(-37.2, -34.3, -16.4, GW0, EMB, GTOP, { tag: 'garden-walk', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: 'garden-t1' }),
-  // the lower lawn (world grid): its north edges tuck under the walk, its east edges into the viaduct wall
-  gLawn(-45.2, -43, -47, -42.5, 'garden-t7'), gLawn(-43, -36, -50, -44.5, 'garden-t5'), gLawn(-43, -36, -44.5, -39, 'garden-t6'),
-  gLawn(-36, -30, -50, -46, 'garden-t4'), gLawn(-36, -32.6, -46, -43, 'garden-t4'), gLawn(-36, -30, -43, -36.5, 'garden-t2'),
-  gLawn(-30, -26.1, -50, -46, 'garden-t3'), gLawn(-30, -25.25, -43, -39, 'garden-t2'), gLawn(-30, -24.78, -39, -35, 'garden-t2'),
-  gLawn(-27, -24.4, -35, -29.5, 'garden-t1'),
-  // the stairs (each in its era-1/2 wall arch's group)
-  R(GARDEN.hoki.low, GARDEN.hoki.high, 3, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-t3' }),
-  armStair(GARDEN.arm, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-sa' }),
-  armStair(GARDEN.wharf, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-sc' }),
+  // the lower lawn (world grid, 3.08): its north edges tuck under the walk, its east edges into the viaduct wall
+  gLawn(-30, -26.1, -50, -46, 'garden-t3'),
+  gLawn(-36, -30, -50, -46, 'garden-t5'), gLawn(-36, -32.38, -46, -43, 'garden-t5'),
+  gLawn(-43, -36, -50, -44.5, 'garden-t8'), gLawn(-43, -36, -44.5, -39, 'garden-t9'),
+  gLawn(-36, -30, -43, -36.5, 'garden-t10'),
+  gLawn(-30, -25.25, -43, -39, 'garden-t11'), gLawn(-30, -24.78, -39, -35, 'garden-t11'),
+  gLawn(-27, -24.4, -35, -29.5, 'garden-t2'),
+  // the stairs (glass treads in a trench) — each with the 1880s / today wall arch it replaces
+  R(GH.low, GH.high, GH.w, gStair({ eraGroup: 'garden-t3' })),
+  armRamp(GA.a, GA.o0, 0, GA.oMid, armMidY, GA.w, gStair({ eraGroup: 'garden-sa', thin: false })),
+  armRamp(GA.a, GA.oMid, armMidY, GA.o1, GA.y1, GA.w, gStair({ eraGroup: 'garden-sa2', thin: false })),
+  armRamp(GC.a, GC.o0, GC.y0, GC.o1, GC.y1, GC.w, gStair({ eraGroup: 'garden-sc' })),
   // the signal pavilion round the old signal box (the garden's landmark), planters, the lawn mound
-  B(-40, -35.5, LTOP, LTOP + 3, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, eras: '3', eraGroup: 'garden-t6' }),
-  B(-40, -35.5, LTOP + 3, 8.38, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, roof: true, paint: false, eras: '3', eraGroup: 'garden-t6' }),
-  gCover(-27.5, -32.3, GTOP, 65, 'garden-t1'), gCover(-28, -48.8, LTOP, 0, 'garden-t3'), gCover(-42.5, -37.5, GTOP, 65, 'garden-t6'),
-  gCover(-33.6, -35.8, GTOP, 65, 'garden-t2'), gCover(-40, -47.5, LTOP, 90, 'garden-t5'),
-  B(-35.5, -32.6, LTOP, 3.7, -49.6, -46.6, { tag: 'lawn-mound', color: K.lawn, pattern: PATTERN.planter, eras: '3', eraGroup: 'garden-t4' }),
+  B(-40, -36.2, LTOP, 8.38, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, roof: true, paint: false, eras: '3', eraGroup: 'garden-t9' }),   // (glass: not inkable)
+  gCover(-27.5, -32.3, GTOP, 65, 'garden-t2'), gCover(-28, -48.8, LTOP, 0, 'garden-t3'), gCover(-42.5, -37.5, GTOP, 65, 'garden-t6'),
+  gCover(-33.6, -35.8, GTOP, 65, 'garden-t4'), gCover(-40, -47.5, LTOP, 90, 'garden-t8'),
+  B(-35.5, -32.6, LTOP, 3.68, -49.6, -46.6, { tag: 'lawn-mound', color: K.lawn, pattern: PATTERN.planter, eras: '3', eraGroup: 'garden-t5' }),
   // parapets on the garden's open edges (every era: in the 1880s and today they edge the railyard)
-  B(-43.4, -26.3, EMB, 4.0, -50.4, -50, gPar()),
-  B(-43.4, -43, EMB, 3.92, -50, -47.4, gPar()), B(-45.6, -43, EMB, 4.0, -47.4, -47, gPar()), B(-45.6, -45.2, EMB, 3.92, -47, -43.6, gPar()),
-  armBox(-60.4, -60, GW1, GW0, EMB, 4.0, gPar()),
+  armBox(-58.9, -58.5, -21.0, GW0, EMB, 4.0, gPar()), armBox(-58.5, -57.2, -21.0, GW1, EMB, 3.92, gPar()),
+  B(-43.4, -43, EMB, 4.0, -50, -42.8, gPar()), B(-43.4, -26.3, EMB, 3.92, -50.4, -50, gPar()),
 ];
 
 // ------------------------------------------------------------------------------------------------ Alpha's arm: Flathead Street WSW, the West Wharf
@@ -403,6 +412,8 @@ const ARM = [
   armCover(-54, -2.5, 1.6, 1.6, 0.6, 1.8, cover({ tag: 'barrels', color: '#6e5a45' })),
   armCover(-58.5, 9.5, 1.4, 2.4, 0.6, 1.8, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   armCover(-59.5, -1, 1.4, 1.4, 1.6, 2.6, cover({ tag: 'winch', color: '#59626a', pattern: PATTERN.metal })),
+  armCover(-60.5, -6.3, 1.2, 1.2, 1.6, 2.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),   // (adds: platform cover)
+  armCover(-58.6, 4.6, 1.2, 1.2, 1.6, 2.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   // the river railings (every rail's ends on the outline or on another rail)
   armBox(-62.15, -62, -14, 14, 0.6, 1.6, rail({ tag: 'wharf-rail' })),
   armBox(-62, -50, 14, 14.15, 0.6, 1.6, rail({ tag: 'river-rail' })),
@@ -479,6 +490,7 @@ const RIVER = [];
   }
   RIVER.push(OB(27.59, -18.31, 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-2' })));
   RIVER.push(OB(31.13, -6.59, 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-4' })));
+  { const [lx, lz] = bp(24.6, -1.4); RIVER.push(OB(+lx.toFixed(3), +lz.toFixed(3), 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-6' }))); }   // (adds: the far end was 6 m from cover)
   // the 1880s BRIDGE WORKS barrier on Bravo's arm where Alpha's bridge lands (its own group, on Bravo's side: key :b)
   RIVER.push(armBox(31.14, 39.23, -14.15, -14, 0, 1, rail({ tag: 'bridge-works', eras: '1', eraGroup: 'landing' })));
   // the Tide Steps (the 3000s): a river terrace beside the boardwalk, its rails and the FLOOD LEVEL 3026 obelisk
@@ -508,6 +520,16 @@ const BASE = [
   R([8.5, 1, -60.5], [8.5, 3.3, -66], 5, stair({ tag: 'grand-stair', color: '#a59b88' })),
   R([-18, 1, -71], [-12, 3.3, -71], 4, stair({ tag: 'side-ramp', color: '#a59b88', pattern: PATTERN.rampboard })),
   R([18, 1, -71], [12, 3.3, -71], 4, stair({ tag: 'side-ramp', color: '#a59b88', pattern: PATTERN.rampboard })),
+  // the gallery's own cover (adds: the decks were the biggest bare floor; the pad keeps 6 m clear, the stair heads and
+  // the drop over the turntable stay open): planters beside the stair heads, lamp plinths at the drop, benches at the back
+  B(6.5, 7.7, 3.3, 4.3, -70.7, -68.3, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-7.7, -6.5, 3.3, 4.3, -70.7, -68.3, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(2.4, 3.6, 3.3, 4.3, -67.1, -66.5, cover({ tag: 'deck-plinth', color: '#8b8579' })),
+  B(-3.6, -2.4, 3.3, 4.3, -67.1, -66.5, cover({ tag: 'deck-plinth', color: '#8b8579' })),
+  B(4.8, 7.2, 3.3, 4.3, -75.6, -74.8, cover({ tag: 'bench', color: '#7d6c5a' })),
+  B(-7.2, -4.8, 3.3, 4.3, -75.6, -74.8, cover({ tag: 'bench', color: '#7d6c5a' })),
+  B(9.9, 11.1, 3.3, 4.3, -75.6, -74.4, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-11.1, -9.9, 3.3, 4.3, -75.6, -74.4, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
   // the deck's front railing (gaps at the stair heads and over the turntable: a one-way 2.3 m drop)
   ...[[-12, -11], [-6, -4.5], [4.5, 6], [11, 12]].map(([x0, x1]) => B(x0, x1, 3.3, 4.3, -66.15, -66, rail({ tag: 'deck-rail' }))),
   // the Cable Tram Engine House (and its chimney), the boiler house and the tram shed: the back of the base
@@ -526,11 +548,19 @@ const BASE = [
   B(-10.8, -9.4, 1, 2.4, -63, -57, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
   B(9.4, 10.8, 1, 2.4, -63, -57, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
   B(-9.2, -6.8, 1, 2, -56, -55.2, cover({ tag: 'bench', color: '#7d6c5a' })),
+  // (adds: the strip between the forecourt steps and the turntable was 6 m from cover; the east one stands in the
+  //  tower's lane, so not in Tower Command)
+  B(-3.8, -2.6, 1, 2.2, -55.2, -54, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter })),
+  B(2.6, 3.8, 1, 2.2, -55.2, -54, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, notIn: 'tower' })),
   B(6, 8.4, 1, 2, -54.8, -53.6, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, notIn: 'tower' })),
   B(19, 20.4, 1, 3.2, -54.8, -53.4, { tag: 'kiosk', color: '#4d5f57', pattern: PATTERN.metal, roof: true, notIn: 'tower' }),
   B(-21.5, -19.9, 1, 3.2, -55.8, -54.2, { tag: 'ticket-booth', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
   B(16.4, 18.8, 1, 1.9, -58.4, -57.6, cover({ tag: 'trough', color: '#6f726f' })),
   B(24.4, 25.6, 1, 2, -58.6, -57.4, cover({ tag: 'bollards' })),
+  // (adds: three open corners of the terrace, each clear of the tower's lane by 1.6 m)
+  B(-17.7, -15.3, 1, 1.9, -60.4, -59.6, cover({ tag: 'trough', color: '#6f726f' })),
+  B(17.9, 19.1, 1, 2, -66.1, -64.9, cover({ tag: 'bollards' })),
+  B(24.4, 25.6, 1, 2, -53.1, -51.9, cover({ tag: 'bollards' })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the modes
@@ -602,12 +632,16 @@ export const RAILYARD = {
   top: EMB,
   poly: [AO(-62, -14.6), AO(-33.95, -14.6), [-24.6, -33.0], [-27.6, -57.9], [-27.6, -85], [-63, -85], [-63, -46]],
   // the garden stairs' channels through it (all eras open; filled in the 1880s and today in the stair's group)
-  // (poly: the stair's footprint + 0.2 m, kept clear of the embankment's cells by 0.25 m more; fill: the 1880s / today
-  //  filler, 0.5 m wider, its lane end inside the wall it backs onto)
+  // (poly: the stair's footprint + 0.2 m, kept clear of the embankment's cells by 0.25 m more; fills: the 1880s / today
+  //  fillers of the stair's own footprint, in the stair's groups; sides: solid strips beside the stair in every era, so the
+  //  trench has walls and no slot)
   channels: [
-    { poly: rectPoly(-32.8, -25.6, -46.2, -42.8), fill: rectPoly(-33.3, -25.7, -46.7, -42.3), group: 'garden-t3' },
-    { poly: armPoly(-44.7, -41.3, -20.35, -14.4), fill: armPoly(-45.0, -41.0, -20.65, -14.4), group: 'garden-sa' },
-    { poly: armPoly(-58.7, -55.3, -20.0, -14.4), fill: armPoly(-59.0, -55.0, -20.3, -14.4), group: 'garden-sc' },
+    { poly: rectPoly(-32.58, -25.6, -46.2, -42.8), fills: [[rectPoly(-32.38, -25.7, -46, -43), 'garden-t3']],
+      sides: [rectPoly(-32.38, -25.7, -47.0, -46), rectPoly(-32.38, -25.7, -43, -42.0)] },
+    { poly: armPoly(-44.7, -41.3, -20.35, -14.4), fills: [[armPoly(-44.5, -41.5, -16.6, -14.4), 'garden-sa'], [armPoly(-44.5, -41.5, -20.15, -16.6), 'garden-sa2']],
+      sides: [armPoly(-45.5, -44.5, -20.15, -14.4), armPoly(-41.5, -40.5, -20.15, -14.4)] },
+    { poly: armPoly(-58.7, -55.3, -20.0, -14.4), fills: [[armPoly(-58.5, -55.5, -19.8, -14.4), 'garden-sc']],
+      sides: [armPoly(-59.5, -58.5, -19.8, -14.4), armPoly(-55.5, -54.5, -19.8, -14.4)] },
   ],
 };
 

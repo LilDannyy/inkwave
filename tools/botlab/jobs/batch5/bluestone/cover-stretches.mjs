@@ -24,6 +24,8 @@ const floorOf = (x, z) => {
   }
   return bb ? { tag: bb.tag, y: +best.toFixed(2), area: 4 * bb.half.x * bb.half.z } : null;
 };
+// floors that are ground (a slab, a deck, a tier, a stair), not the top of a crate or a planter
+const OPEN = /^(spawn-deck|balcony-landing|loading-platform|tram-island|garden-walk|garden-lawn|halo|balcony|gallery|tide-steps|terrace|street|circus|concourse|west-wharf|degrayling|arcade-floor|gpo-terrace|boathouse|boardwalk|iron-bridge|carriageway|kerb|terrace-kerb|grand-stair|side-ramp|clock-steps|concourse-ramp|gpo-steps|gpo-stair|balcony-stair|boathouse-stair|forecourt-steps|halo-stair|garden-stair|light-pylon)$/;
 const seen = new Set(), patches = [];
 for (let j = 0; j < g.nz; j++) for (let i = 0; i < g.nx; i++) {
   const d = D(i, j); if (d === null || d <= 5 || seen.has(j * g.nx + i)) continue;
@@ -31,7 +33,7 @@ for (let j = 0; j < g.nz; j++) for (let i = 0; i < g.nx; i++) {
   while (st.length) { const [a, c] = st.pop(); cells.push([a, c]);
     for (const [p, q] of [[a + 1, c], [a - 1, c], [a, c + 1], [a, c - 1]]) { if (p < 0 || q < 0 || p >= g.nx || q >= g.nz || seen.has(q * g.nx + p)) continue; const v = D(p, q); if (v !== null && v > 5) { seen.add(q * g.nx + p); st.push([p, q]); } } }
   const far = cells.reduce((m, c) => (D(...c) > D(...m) ? c : m)), x = g.x0 + far[0] + 0.5, z = g.z0 + far[1] + 0.5, f = floorOf(x, z);
-  patches.push({ cells: cells.length, r: D(...far), at: [x, z], floor: f, objectTop: !!(f && f.area < 12 && f.y > 0.25 && !/deck|landing|platform|island|walk|lawn|halo|balcony|gallery|tide/.test(f.tag || '')) });
+  patches.push({ cells: cells.length, r: D(...far), at: [x, z], floor: f, objectTop: !!(f && f.area < 12 && f.y > 0.25 && !OPEN.test(f.tag || '')) });
 }
 patches.sort((p, q) => q.r - p.r);
 const open = patches.filter((p) => !p.objectTop);

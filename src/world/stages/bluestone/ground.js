@@ -137,7 +137,8 @@ export function reflexPatches(poly, { only, top, size = 1.3, y0 = BOT, opts = {}
   return out;
 }
 // junction patches: where a barred edge meets a square (unbarred) edge the cores keep INSET back from the bar's end
-// too; a square under that corner, along the square edge, at the bar's level, fills it
+// too; a square under that corner, along the square edge, at the bar's level, fills it (only patches whose centre is
+// inside the region: at a convex corner the one past the bar's end would stand outside it)
 export function junctionPatches(poly, { barred, level, size = 1.2, y0 = BOT, opts = {} }) {
   const s = polyArea(poly) > 0 ? 1 : -1, n = poly.length, out = [];
   for (let i = 0; i < n; i++) {
@@ -149,13 +150,13 @@ export function junctionPatches(poly, { barred, level, size = 1.2, y0 = BOT, opt
       const tx = ux / L, tz = uz / L, ex = b[0] - a[0], ez = b[1] - a[1], el = Math.hypot(ex, ez);
       const nx = (-ez / el) * s, nz = (ex / el) * s;                                      // the square edge's inward normal
       const cx = v[0] + (tx + nx) * size / 2, cz = v[1] + (tz + nz) * size / 2;
-      out.push(O(+cx.toFixed(4), +cz.toFixed(4), size, size, y0, +(level(bar) - 0.1).toFixed(3), +((Math.atan2(tx, tz) * 180) / Math.PI).toFixed(4), { ...opts, patch: true }));
+      if (inPoly(poly, cx, cz)) out.push(O(+cx.toFixed(4), +cz.toFixed(4), size, size, y0, +(level(bar) - 0.1).toFixed(3), +((Math.atan2(tx, tz) * 180) / Math.PI).toFixed(4), { ...opts, patch: true }));
       // and one just past the bar's own end, inside it (the cores keep INSET back from that end in every direction)
       const c = poly[bar], d = poly[(bar + 1) % n], bl = Math.hypot(d[0] - c[0], d[1] - c[1]);
       const fx = ((d[0] - c[0]) / bl) * dir, fz = ((d[1] - c[1]) / bl) * dir;          // along the bar, away from it past v
       const mx = (-(d[1] - c[1]) / bl) * s, mz = ((d[0] - c[0]) / bl) * s;            // the bar's inward normal
       const qx = v[0] + (fx * 0.9 + mx) * size / 2, qz = v[1] + (fz * 0.9 + mz) * size / 2;
-      out.push(O(+qx.toFixed(4), +qz.toFixed(4), size, size, y0, +(level(bar) - 0.2).toFixed(3), +((Math.atan2(fx, fz) * 180) / Math.PI).toFixed(4), { ...opts, patch: true }));
+      if (inPoly(poly, qx, qz)) out.push(O(+qx.toFixed(4), +qz.toFixed(4), size, size, y0, +(level(bar) - 0.2).toFixed(3), +((Math.atan2(fx, fz) * 180) / Math.PI).toFixed(4), { ...opts, patch: true }));
     }
   }
   return out;

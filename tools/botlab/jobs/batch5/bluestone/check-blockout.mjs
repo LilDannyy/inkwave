@@ -81,7 +81,11 @@ if (!ERA.ERA) {
     const key = (d.eraGroup || '#' + b.id) + (b.center.z < 0 ? ':a' : ':b');
     add(d, key, [b.aabbMin.x, b.aabbMax.x, b.aabbMin.z, b.aabbMax.z], 'n');
   }
-  for (const it of PR.PLACEMENTS) if (it.eras) { const [x, , z] = it.pos, r = Math.hypot(...it.size) / 2; for (const s of [1, -1]) add(it, (it.eraGroup || 'p') + (s * z < 0 ? ':a' : ':b'), [s * x - r, s * x + r, s * z - r, s * z + r], 'props'); }
+  for (const it of PR.PLACEMENTS) if (it.eras) {
+    const [x, , z] = it.pos, [w, d] = it.size, a = it.rotY || 0, c = Math.cos(a), sn = Math.sin(a);
+    const ex = Math.abs(c) * w / 2 + Math.abs(sn) * d / 2, ez = Math.abs(sn) * w / 2 + Math.abs(c) * d / 2;   // the turned box's AABB
+    for (const s of [1, -1]) add(it, (it.eraGroup || 'p') + (s * z < 0 ? ':a' : ':b'), [s * x - ex, s * x + ex, s * z - ez, s * z + ez], 'props');
+  }
   const rows = [];
   let bad = 0;
   for (const [k, g] of groups) {
