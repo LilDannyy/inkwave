@@ -489,4 +489,11 @@ On a stage without a module key (every existing stage):
   attribute;
 - `tools/botlab/tests/stage-mods-perf.js` measures raycasts, `pointInside`, `groundHeight`, `nav.path`, `nearest`,
   splats, `regionStats`, the minimap and 600 simulated match frames on halyard, on this branch and on the base commit
-  alternately (the numbers are in the batch's job results).
+  alternately (the numbers are in the batch's job results). A first local run (this Mac, one each, halyard, ms):
+
+  | | raycast ×20k | pointInside ×20k | groundHeight ×20k | nav.path ×300 | nearest ×5k | splat ×1500 | regionStats ×5k | minimap ×200 | frame median / p90 |
+  |---|---|---|---|---|---|---|---|---|---|
+  | this branch | 13.5 | 3.0 | 4.4 | 85.5 | 0.8 | 19.7 | 6.9 | 0.6 | 2.0 / 3.8 |
+  | base 9f2cdef | 14.0 | 3.3 | 4.7 | 85.9 | 0.7 | 19.6 | 7.3 | 0.8 | 1.9 / 3.6 |
+
+  Within run-to-run noise either way.
