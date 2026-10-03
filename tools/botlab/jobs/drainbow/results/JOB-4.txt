@@ -1,0 +1,34 @@
+JOB-4 results — Drainbow final defaults, run on the Mac mini (botlab helper) at 5589c5a, SLOTS=3 PAR=3, caffeinate, 2026-10-03 13:26 AEST
+
+## 1. Balance: CFGS="db bub base" balance2.sh <out> 3 3  (108 matches: 60 turf + 48 zones)
+FAILED lines: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+node tools/botlab/jobs/drainbow/agg2.cjs <out>:
+
+=== turf (60 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=24: wins 63% [A 50% (n 12), B 75% (n 12)] | turf Δ 1.6 ±7.3 | K/D 1.05 ±0.31 | special used 11.8/match (theirs 13.4)
+      per bubble: shots halved 1.6, crossings 2.6, life added 0.08 s, bot-frames held inside 185
+  bubble guard n=24: wins 50% [A 58% (n 12), B 42% (n 12)] | turf Δ 1.1 ±9.3 | K/D 1.07 ±0.32 | special used 10.0/match (theirs 12.8)
+  random rolls n=12: wins 58% [A 58% (n 12)] | turf Δ -2.1 ±7.7 | K/D 0.99 ±0.26 | special used 14.8/match (theirs 13.9)
+  all: stuck 0.10% | splats 36.8 | matches with console warnings 0 · frame errors 0
+
+=== zones (48 matches; the forced team vs the other, means per match ± sd)
+  drainbow (as shipped) n=24: wins 58% [A 67% (n 12), B 50% (n 12)] | turf Δ 1.7 ±4.7 | K/D 1.11 ±0.23 | special used 22.8/match (theirs 23.3)
+      per bubble: shots halved 2.0, crossings 4.2, life added 0.12 s, bot-frames held inside 278
+  bubble guard n=24: wins 71% [A 58% (n 12), B 83% (n 12)] | turf Δ -1.2 ±5.8 | K/D 1.19 ±0.50 | special used 20.6/match (theirs 23.5)
+  all: stuck 0.37% | splats 75.3 | matches with console warnings 0 · frame errors 0
+
+## 2. Regressions: regress.sh (all full passes)
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== drainbow: RESULT 34/34 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-drainbow: RESULT 10/10 0 FAIL
+== net-surf: RESULT 12/12 0 FAIL
