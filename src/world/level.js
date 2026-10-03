@@ -192,8 +192,11 @@ export class Level {
       Math.abs(_v2.dot(b.axes[2])) < b.half.z + pad;
   }
 
+  // [b5-stagehooks] the states a block's own faces must be hidden in: its presence, or for a block in every state (0) the
+  // full mask a module declared (level.presenceAll, e.g. 7 for three eras; 0 / unset on every other stage)
+  _need(b) { return b.presence || this.presenceAll || 0; }
   // need [b5-stagehooks]: only blocks present in every state of that mask count (a face of an era-1 block is not hidden by
-  // an era-3 one); 0 / undefined = every solid block, as always
+  // an era-3 one; a shared face by neither); 0 / undefined = every solid block, as always
   pointInside(p, pad = 0, exclude = -1, need = 0) {
     const ids = this.queryBlocks(p.x - 0.01, p.z - 0.01, p.x + 0.01, p.z + 0.01, this._qtmp || (this._qtmp = []));
     for (const id of ids) {
@@ -248,7 +251,7 @@ export class Level {
         if ((b.roof || b.perch) && n.y > 0.5) face.paintable = false;
         if (face.wall) {
           _v.copy(origin).addScaledVector(u, su / 2).addScaledVector(v, -0.06).addScaledVector(n, 0.06);
-          face.groundedBottom = this.pointInside(_v, 0, b.id, b.presence) || _v.y < 0.02;   // [b5-stagehooks] presence
+          face.groundedBottom = this.pointInside(_v, 0, b.id, this._need(b)) || _v.y < 0.02;   // [b5-stagehooks] presence
         }
         b.faces[k * 2 + (sign > 0 ? 0 : 1)] = face.id;
         this.faces.push(face);
@@ -264,7 +267,7 @@ export class Level {
         const uu = Math.min(f.su - 0.05, Math.max(0.05, (i / nu) * f.su));
         const vv = Math.min(f.sv - 0.05, Math.max(0.05, (j / nv) * f.sv));
         _v.copy(f.origin).addScaledVector(f.u, uu).addScaledVector(f.v, vv).addScaledVector(f.n, 0.03);
-        if (!this.pointInside(_v, 0, f.block, this.blocks[f.block].presence)) return false;   // [b5-stagehooks] presence
+        if (!this.pointInside(_v, 0, f.block, this._need(this.blocks[f.block]))) return false;   // [b5-stagehooks] presence
       }
     }
     return true;
@@ -350,7 +353,7 @@ export class Level {
           for (let t = -1; t <= 1; t += 0.25) {
             E.copy(b.center).addScaledVector(ax[k1], s1 * h[k1]).addScaledVector(ax[k2], s2 * h[k2]).addScaledVector(ax[k3], t * h[k3] * 0.98);
             Q.copy(E).addScaledVector(ax[k1], s1 * 0.04).addScaledVector(ax[k2], s2 * 0.04);
-            if (self.pointInside(Q, 0, b.id, b.presence)) { ok = false; break; }   // [b5-stagehooks] presence
+            if (self.pointInside(Q, 0, b.id, self._need(b))) { ok = false; break; }   // [b5-stagehooks] presence
           }
         }
         edgeCache.set(key, ok);

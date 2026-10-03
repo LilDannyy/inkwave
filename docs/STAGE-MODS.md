@@ -108,16 +108,20 @@ ready() { this.apply(1, { instant: true }); }
   the function runs at the end of `Level._addBlock` (prop colliders forward every registered field). Register it at
   module load:
   ```js
-  Level.blockField('eras', (b, d) => { b.eras = eraMask(d.eras); b.presence = b.eras === 7 ? 0 : b.eras; });
+  Level.blockField('eras', (b, d, level) => { b.eras = eraMask(d.eras); b.presence = b.eras === 7 ? 0 : b.eras; level.presenceAll = 7; });
   Level.blockField('eraGroup', (b, d) => { b.eraGroup = d.eraGroup; });
   Level.blockField('bakeClear', (b) => { b.bakeClear = true; });
   ```
 - **Block kinds**: `Level.blockKind('seg', { build(b, d) { …center, half, axes, aligned… }, mirror(d) { return {…} } })`.
   A layout def or a prop collider with `kind: 'seg'` is built by it (`mirror` for `half` pieces).
-- **Presence** (`b.presence`: a bit mask of the states the block exists in, 0 = every state): `pointInside(p, pad,
-  exclude, need)` skips blocks whose presence lacks `need`; face hiding, the grounded-bottom test and the bevel test pass
-  the block's own presence, so a face pressed against a block of another era keeps its faces. Stages without it: 0
-  everywhere, nothing changes.
+- **Presence** (`b.presence`: a bit mask of the states the block exists in, 0 = every state; `level.presenceAll`: the
+  full mask, e.g. 7, set from the block field so it is known before the faces are built):
+  `pointInside(p, pad, exclude, need)` skips blocks whose presence lacks `need`; face hiding, the grounded-bottom test
+  and the bevel test pass the block's own presence (a shared block: `presenceAll`), so a face pressed against a block of
+  another era keeps its faces. Stages without it: 0 everywhere, nothing changes.
+  ```js
+  Level.blockField('eras', (b, d, level) => { b.eras = eraMask(d.eras); b.presence = b.eras === 7 ? 0 : b.eras; level.presenceAll = 7; });
+  ```
 - **Colliders that move or come and go** (the existing `Level` API, which every query already sees):
   `G.level.addDynamic({ tag, roof, perch })` → a block, `moveDynamic(b, center, half, yaw)` (it keeps `b.dp`, the move it
   just made: what a moving block did last frame, which riders, devices and the buoy follow), `b.solid = false` to take

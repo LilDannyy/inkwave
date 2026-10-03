@@ -56,6 +56,11 @@
   __G.physics.skip = null;
   R('a custom block kind (from W.extraColliders) is solid; a block field rides a layout piece and a prop collider', kb && fb && kb.hidden && !kb.paint && Math.abs(kb.center.z + 36) < 1e-6 && h1, { kb: kb && kb.id, fb: fb && fb.id, h1 });
   R('physics.skip: a ray ignores blocks with that flag only while it is set', !h2 && __G.physics.skip === null, { h2 });
+  // presence: a shared block's face pressed against a state-limited block stays; the state block's face against the
+  // shared one is hidden (the shared block is there in every state it is)
+  const sh = L.blocks.find((b) => b.dummyTag === 'shared'), s2 = L.blocks.find((b) => b.dummyTag === 'state2');
+  R('presence: a shared face against a state-2-only block is kept; that block\'s face against the shared one is hidden', sh && s2 && L.presenceAll === 3 && s2.presence === 2 && sh.faces[0] >= 0 && s2.faces[1] < 0,
+    { shared: sh && sh.faces, state2: s2 && s2.faces, all: L.presenceAll });
   // the dressing item W.prop tagged: its parts in their own bucket (material@dm, aTag = bucketVec), its colliders tagged
   const tagged = g.props?._meshes?.filter((m) => m.userData.tag === 'dm') || [];
   const at = tagged[0]?.geometry.getAttribute('aTag');

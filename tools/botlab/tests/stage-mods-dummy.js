@@ -26,6 +26,8 @@ export const DUMMY = {
 
 Level.blockField('dummyTag', (b, d) => { b.dummyTag = d.dummyTag; });
 Level.blockField('dummy', (b) => { b.dummy = true; });   // (the flag physics.skip names)
+// presence: a block that exists only in state 2 of two (an era-like mask); the level's full mask is 3
+Level.blockField('dummyState', (b, d, level) => { b.presence = d.dummyState; level.presenceAll = 3; });
 Level.blockKind('dummybox', {
   build(b, d) { b.center.set(...d.c); b.half.set(...d.h); b.aligned = true; },
   mirror(d) { return { ...d, c: [-d.c[0], d.c[1], -d.c[2]] }; },
@@ -101,7 +103,10 @@ registerStageMod({
 export function installDummy(layout, dressing) {
   if (dressing && !dressing.some((it) => it.dummyProp)) dressing.push({ type: 'crates', variant: 0, pos: [20, 0, -20], dummyProp: true, mirror: false });
   layout.dummymod = { on: true };
-  if (!layout.single.some((d) => d.dummyTag)) layout.single.push({ kind: 'box', min: [-2, 0, -42], max: [2, 0.6, -40], color: '#c0b0a0', pattern: 3, dummyTag: 'piece' });
+  if (!layout.single.some((d) => d.dummyTag)) layout.single.push({ kind: 'box', min: [18, 0, -38], max: [20, 0.6, -37], color: '#c0b0a0', pattern: 3, dummyTag: 'piece' },
+    // a shared crate with a state-2-only crate pressed against its +x side: the shared face must stay (it shows in state 1)
+    { kind: 'box', min: [20, 0, 20], max: [22, 2, 22], color: '#c0b0a0', pattern: 3, dummyTag: 'shared' },
+    { kind: 'box', min: [22, 0, 20], max: [24, 2, 22], color: '#b0a090', pattern: 3, dummyTag: 'state2', dummyState: 2 });
   return layout;
 }
 export function removeDummy(layout, dressing) {
