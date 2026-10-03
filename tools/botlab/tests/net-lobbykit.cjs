@@ -31,6 +31,9 @@ module.exports = async (ctx) => {
   // follows whichever is last ([b5-sprules]: it was Drainbow, now the Mystery Bomb Barrage — as loadout-picker.js)
   const [LAST, LN] = JSON.parse(await B.js(`(async () => { const { SPECIAL_ORDER, SPECIALS } = await import('./src/config.js'); const k = SPECIAL_ORDER[SPECIAL_ORDER.length - 1]; return JSON.stringify([k, SPECIALS[k].name]); })()`));
   const LT = `kp-special-${LAST}`;
+  // (the lobby's chip shortens a name of three words or more to its first and last — menus.js shortKit: "Mystery Barrage";
+  // the full name passes too)
+  const LW = LN.split(' '), chipName = (n) => n === LN || n === (LW.length > 2 ? `${LW[0]} ${LW[LW.length - 1]}` : LN);
   say('the last special:', LAST, LN);
 
   // ---------------------------------------------------------------- a turf room, no bots; both on the Spritzer with its own kit
@@ -92,7 +95,7 @@ module.exports = async (ctx) => {
   await wait(400);
   const k2 = kitOf(await chips(B), 'special');
   R(`guest: ↓ SPECIAL, Enter: the picker on the weapon's own, ← ${LN} (the last), Enter — the chip shows ${LN}`,
-    fs === 'special' && st2 === 'kp-special-own' && f2 === LT && k2.id === LAST && !k2.own && k2.name === LN, { fs, st2, f2, k2 });
+    fs === 'special' && st2 === 'kp-special-own' && f2 === LT && k2.id === LAST && !k2.own && chipName(k2.name), { fs, st2, f2, k2 });
   await hostSees('Guesty', `p.special === ${JSON.stringify(LAST)} && kit === ${JSON.stringify('scan|' + LAST)}`);
   const h2 = await onHost('Guesty');
   R(`host: the guest's ${LN} in the room and on its nameplate; still ready`, h2.special === LAST && h2.plate === 'scan|' + LAST && h2.ready, h2);
