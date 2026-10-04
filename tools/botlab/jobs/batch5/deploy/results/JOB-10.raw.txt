@@ -1,0 +1,88 @@
+JOB-10 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:45:53
+branch botlab-b5-deploy, ran at 9eb29bf, exit code 0, wall time 3min
+(a written-up JOB-10.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### deploy JOB-10 at 9eb29bf
+== bots 1: RESULT 5/5
+== bots 2: RESULT 5/5
+== surf 1: RESULT 42/42
+== bots 3: RESULT 5/5
+== surf 2: RESULT 42/42
+== surf 3: RESULT 41/42
+FAIL with no foe in sight a bot shoots an enemy buoy down (hp 350 → 350; blaster, 0 s on it, 0 escapes, modes {"paint":150,"fight":90})  {"hp":350,"phase":"live","weapon":"blaster","diag":{"devS":0,"escapes":0,"modes":{"paint":150,"fight":90},"target":"Zest","weapon":"blaster","ink":82}}
+== bots 4: RESULT 5/5
+== bots 5: RESULT 4/5
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.12 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not — fight:Fizz(seen)@1.55,1.6 fight:Fizz+dev@3.91,3.18 fight:Fizz@8.17,6.29 fight:Fizz@13.72,8.25 fight:P1(seen)@15.55,5.16 fight:P1
+== surf 4: RESULT 42/42
+== surf 5: RESULT 42/42
+== bots 6: RESULT 4/5
+FAIL giving up: a beacon it can't break — it gives up after null s on it in all (8 s; null s of the clock: a foe broke it off and it went back), leaves it alone null s (12 s), then comes back to it (1 pick, 1 re-picks)  {"busyAtGiveUp":null,"wallAtGiveUp":null,"leftAlone":null,"picks":1,"repicks":1,"broke":true,"foeSeenS":0.6,"repickAfterFoe":1,"giveUp":8,"forget":12}
+== surf 6: RESULT 42/42
+== sub-tweaks 1: RESULT 29/29
+== deployables 1: RESULT 33/34
+FAIL a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest 5.77 m, 13 frames past the edge, 3 escapes; off: 6.11 m, 0, 0; the area 6.1 m, the vortex's ring 5.5 m)  {"on":[{"inside":0,"escapes":1,"closest":6.06,"frames":354,"deviceSecs":0.85,"beaconHp":0,"at":[4.54,0,-7.38]},{"inside":13,"escapes":2
+== deployables 2: RESULT 32/34
+FAIL a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest 6.1 m, 0 frames past the edge, 1 escapes; off: 5.91 m, 18, 8; the area 6.1 m, the vortex's ring 5.5 m)  {"on":[{"inside":0,"escapes":1,"closest":6.1,"frames":354,"deviceSecs":5.4,"beaconHp":0,"at":[9.14,0,-7.38]},{"inside":0,"escapes":0,"cl
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.18 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not — fight:Coral(seen)@9.7,-7.64 paint@6.49,-9.3 paint@4.05,-11.88 paint@2.75,-16.29 paint@1.22,-20.5 paint@-1.97,-23.81 paint@-5.16,
+== sub-tweaks2 1: RESULT 23/23
+== sub-tweaks 2: RESULT 29/29
+== sub-tweaks2 2: RESULT 22/23
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.98,"widthMed":1.25,"width10":1.1},{"line":0.93,"widthMed":1.15,"width10":1},{"line":0.99,"widthMed":1.25,"width10":1.1}]
+== sub-tweaks 3: RESULT 29/29
+== sub-tweaks2 3: RESULT 23/23
+== bot-specials 1: RESULT 18/19
+FAIL Twister Zooka, sustained (6 shots a round: 30 rounds off, 30 on for a normal bot, 12 for a hard one): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time  {"hitRate":{"off":0.71,"normalOn":0.73,"hardOn":0.38},"off":{"hits":127,"shots":180,"perRound":
+== bot-specials 2: RESULT 19/19
+== bot-specials 3: RESULT 19/19
+SUMMARY 23 runs, 8 FAIL lines
+
+## last 15 lines of job.log
+FAIL a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest 5.77 m, 13 frames past the edge, 3 escapes; off: 6.11 m, 0, 0; the area 6.1 m, the vortex's ring 5.5 m)  {"on":[{"inside":0,"escapes":1,"closest":6.06
+== deployables 2: RESULT 32/34
+FAIL a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest 6.1 m, 0 frames past the edge, 1 escapes; off: 5.91 m, 18, 8; the area 6.1 m, the vortex's ring 5.5 m)  {"on":[{"inside":0,"escapes":1,"closest":6.1,"
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.18 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not — fight:Coral(seen)@9.7,-7.64 paint@6.49
+== sub-tweaks2 1: RESULT 23/23
+== sub-tweaks 2: RESULT 29/29
+== sub-tweaks2 2: RESULT 22/23
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.98,"widthMed":1.25,"width10":1.1},{"line":0.93,"widthMed":1.15,"width10":1},{"line":0.99,"widthMed":1.25,"width10":1.1}]
+== sub-tweaks 3: RESULT 29/29
+== sub-tweaks2 3: RESULT 23/23
+== bot-specials 1: RESULT 18/19
+FAIL Twister Zooka, sustained (6 shots a round: 30 rounds off, 30 on for a normal bot, 12 for a hard one): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time  {"hit
+== bot-specials 2: RESULT 19/19
+== bot-specials 3: RESULT 19/19
+SUMMARY 23 runs, 8 FAIL lines
+
+## summary.txt
+== bots 1: RESULT 5/5
+== bots 2: RESULT 5/5
+== surf 1: RESULT 42/42
+== bots 3: RESULT 5/5
+== surf 2: RESULT 42/42
+== surf 3: RESULT 41/42
+FAIL with no foe in sight a bot shoots an enemy buoy down (hp 350 → 350; blaster, 0 s on it, 0 escapes, modes {"paint":150,"fight":90})  {"hp":350,"phase":"live","weapon":"blaster","diag":{"devS":0,"escapes":0,"modes":{"paint":150,"fight":90},"target":"Zest","weapon":"blaster","ink":82}}
+== bots 4: RESULT 5/5
+== bots 5: RESULT 4/5
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.12 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not — fight:Fizz(seen)@1.55,1.6 fight:Fizz+dev@3.91,3.18 fight:Fizz@8.17,6.29 fight:Fizz@13.72,8.25 fight:P1(seen)@15.55,5.16 fight:P1
+== surf 4: RESULT 42/42
+== surf 5: RESULT 42/42
+== bots 6: RESULT 4/5
+FAIL giving up: a beacon it can't break — it gives up after null s on it in all (8 s; null s of the clock: a foe broke it off and it went back), leaves it alone null s (12 s), then comes back to it (1 pick, 1 re-picks)  {"busyAtGiveUp":null,"wallAtGiveUp":null,"leftAlone":null,"picks":1,"repicks":1,"broke":true,"foeSeenS":0.6,"repickAfterFoe":1,"giveUp":8,"forget":12}
+== surf 6: RESULT 42/42
+== sub-tweaks 1: RESULT 29/29
+== deployables 1: RESULT 33/34
+FAIL a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest 5.77 m, 13 frames past the edge, 3 escapes; off: 6.11 m, 0, 0; the area 6.1 m, the vortex's ring 5.5 m)  {"on":[{"inside":0,"escapes":1,"closest":6.06,"frames":354,"deviceSecs":0.85,"beaconHp":0,"at":[4.54,0,-7.38]},{"inside":13,"escapes":2
+== deployables 2: RESULT 32/34
+FAIL a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest 6.1 m, 0 frames past the edge, 1 escapes; off: 5.91 m, 18, 8; the area 6.1 m, the vortex's ring 5.5 m)  {"on":[{"inside":0,"escapes":1,"closest":6.1,"frames":354,"deviceSecs":5.4,"beaconHp":0,"at":[9.14,0,-7.38]},{"inside":0,"escapes":0,"cl
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.18 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not — fight:Coral(seen)@9.7,-7.64 paint@6.49,-9.3 paint@4.05,-11.88 paint@2.75,-16.29 paint@1.22,-20.5 paint@-1.97,-23.81 paint@-5.16,
+== sub-tweaks2 1: RESULT 23/23
+== sub-tweaks 2: RESULT 29/29
+== sub-tweaks2 2: RESULT 22/23
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.98,"widthMed":1.25,"width10":1.1},{"line":0.93,"widthMed":1.15,"width10":1},{"line":0.99,"widthMed":1.25,"width10":1.1}]
+== sub-tweaks 3: RESULT 29/29
+== sub-tweaks2 3: RESULT 23/23
+== bot-specials 1: RESULT 18/19
+FAIL Twister Zooka, sustained (6 shots a round: 30 rounds off, 30 on for a normal bot, 12 for a hard one): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time  {"hitRate":{"off":0.71,"normalOn":0.73,"hardOn":0.38},"off":{"hits":127,"shots":180,"perRound":
+== bot-specials 2: RESULT 19/19
+== bot-specials 3: RESULT 19/19
