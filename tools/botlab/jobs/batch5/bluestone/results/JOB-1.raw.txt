@@ -1,0 +1,333 @@
+JOB-1 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:34:06
+branch botlab-b5-bluestone, ran at 2030db8, exit code 0, wall time 13min
+(a written-up JOB-1.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== era 1: Turf War x3
+== bluestone [turf 180s]: turf 34.1% vs 22.7%
+== bluestone [turf 180s]: turf 28.2% vs 35%
+== bluestone [turf 180s]: turf 25.3% vs 28.3%
+== era 2: Turf War x3
+== bluestone [turf 180s]: turf 30.7% vs 32.9%
+== bluestone [turf 180s]: turf 29.1% vs 29.4%
+== bluestone [turf 180s]: turf 33.4% vs 28.5%
+== era 3: Turf War x3
+== bluestone [turf 180s]: turf 25.4% vs 33.5%
+== bluestone [turf 180s]: turf 24.1% vs 32.9%
+== bluestone [turf 180s]: turf 31.6% vs 25.8%
+== era 1: Zone Control x2, tower-match
+== bluestone [zones]: winner Bravo (time) | final 55 vs 48 (penalty +0/+40) | OT no
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no
+== bluestone [tower len 152.5/152.5]: winner Alpha (retake) | counts 3 vs 77 (score 3/77) | best push A 146.8m B 44.2m | OT 38.5s | sim 338.5s
+== era 2: Zone Control x2, tower-match
+== bluestone [zones]: winner Alpha (neutralised) | final 43 vs 67 (penalty +25/+0) | OT 6.8s
+== bluestone [zones]: winner Bravo (time) | final 79 vs 68 (penalty +13/+0) | OT no
+== bluestone [tower len 152.5/152.5]: winner Alpha (knockout) | counts 0 vs 100 (score 0/100) | best push A 152.5m B 0m | OT no | sim 176.8s
+== era 3: Zone Control x2, tower-match
+== bluestone [zones]: winner Bravo (knockout) | final 90 vs 0 (penalty +7/+0) | OT no
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 76 (penalty +0/+19) | OT no
+== bluestone [tower len 152.5/152.5]: winner Bravo (retake) | counts 100 vs 3 (score 100/3) | best push A 0m B 148.1m | OT 7.3s | sim 307.3s
+== era 1: tower-check
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 2: tower-check
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 3: tower-check
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== perf: Halyard and Bluestone eras 1/2/3, same machine, one after the other
+RESULT done
+
+## last 15 lines of job.log
+== era 2: tower-check
+   holes (no floor under the platform): none
+   clearance: clean
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 3: tower-check
+   holes (no floor under the platform): none
+   clearance: clean
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== perf: Halyard and Bluestone eras 1/2/3, same machine, one after the other
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6278,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":158,"tris":1026935,"cpuRenderMs":1.87,"cpuSimMs":1.41},"coverage":[3.6,4.8]}
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5700,"blocks":1106,"solidBlocks":1106,"propMeshes":3,"navNodes":7218,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":158,"tris":345152,"cpuRenderMs":1.57,"cpuSimMs":1.36},"coverage":[1.9,2.7]}
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5612,"blocks":1158,"solidBlocks":1158,"propMeshes":3,"navNodes":7834,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":99,"tris":188430,"cpuRenderMs":1.47,"cpuSimMs":1.22},"coverage":[1.3,2.1]}
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5713,"blocks":1268,"solidBlocks":1268,"propMeshes":3,"navNodes":8764,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":109,"tris":210275,"cpuRenderMs":1.48,"cpuSimMs":1.38},"coverage":[1.6,1.8]}
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6281,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":206,"tris":1479491,"cpuRenderMs":1.89,"cpuSimMs":1.33},"coverage":[3.4,4.2]}
+RESULT done
+
+## perf.txt
+### perf halyard
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6278,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":158,"tris":1026935,"cpuRenderMs":1.87,"cpuSimMs":1.41},"coverage":[3.6,4.8]}
+CONSOLE 0 unique warning/error line(s)
+### perf bluestone1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5700,"blocks":1106,"solidBlocks":1106,"propMeshes":3,"navNodes":7218,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":158,"tris":345152,"cpuRenderMs":1.57,"cpuSimMs":1.36},"coverage":[1.9,2.7]}
+CONSOLE 1 unique warning/error line(s)
+### perf bluestone2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5612,"blocks":1158,"solidBlocks":1158,"propMeshes":3,"navNodes":7834,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":99,"tris":188430,"cpuRenderMs":1.47,"cpuSimMs":1.22},"coverage":[1.3,2.1]}
+CONSOLE 1 unique warning/error line(s)
+### perf bluestone3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5713,"blocks":1268,"solidBlocks":1268,"propMeshes":3,"navNodes":8764,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":109,"tris":210275,"cpuRenderMs":1.48,"cpuSimMs":1.38},"coverage":[1.6,1.8]}
+CONSOLE 1 unique warning/error line(s)
+### perf halyard2
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6281,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":206,"tris":1479491,"cpuRenderMs":1.89,"cpuSimMs":1.33},"coverage":[3.4,4.2]}
+CONSOLE 0 unique warning/error line(s)
+
+## towercheck1.txt
+== bluestone tower track · heading 0° · length 152.5 / 152.5 m (Alpha's / Bravo's side) · speed 1.91 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 152.5 m
+     DROP     s=  9.99  [-9.99,1.3,0] → [-9.99,0,0]  -1.3 m
+     CLIMB    s= 28.09  [-13.5,0,13.29] → [-13.5,0.6,13.29]  0.6 m  onto [{"id":872,"tag":"degrayling","centre":[-13.5,-0.05,19.25],"size":[6,1.3,9.5]}]
+     DROP     s= 40.61  [-13.5,0.6,25.21] → [-13.5,0,25.21]  -0.6 m
+     CLIMB    s=104.29  [-21.5,0,48.79] → [-21.5,1,48.79]  1 m  onto [{"id":664,"tag":"terrace","centre":[-15.25,0.15,51.25],"size":[20.5,1.7,2.5]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 152.5 m
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-1-1004-1120/tc1): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s15.png, bluestone-03-climb-s28.png, bluestone-04-drop-s41.png, bluestone-05-corner-s45.png, bluestone-06-corner-s61.png, bluestone-07-checkpoint1-s63.png, bluestone-08-corner-s79.png, bluestone-09-checkpoint2-s95.png, bluestone-10-
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towercheck2.txt
+== bluestone tower track · heading 0° · length 152.5 / 152.5 m (Alpha's / Bravo's side) · speed 1.91 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 152.5 m
+     DROP     s=  9.99  [-9.99,1.3,0] → [-9.99,0,0]  -1.3 m
+     CLIMB    s= 28.09  [-13.5,0,13.29] → [-13.5,0.6,13.29]  0.6 m  onto [{"id":897,"tag":"degrayling","centre":[-13.5,-0.05,19.25],"size":[6,1.3,9.5]}]
+     DROP     s= 40.61  [-13.5,0.6,25.21] → [-13.5,0,25.21]  -0.6 m
+     CLIMB    s=104.29  [-21.5,0,48.79] → [-21.5,1,48.79]  1 m  onto [{"id":690,"tag":"terrace","centre":[-15.25,0.15,51.25],"size":[20.5,1.7,2.5]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 152.5 m
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-1-1004-1120/tc2): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s15.png, bluestone-03-climb-s28.png, bluestone-04-drop-s41.png, bluestone-05-corner-s45.png, bluestone-06-corner-s61.png, bluestone-07-checkpoint1-s63.png, bluestone-08-corner-s79.png, bluestone-09-checkpoint2-s95.png, bluestone-10-
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towercheck3.txt
+== bluestone tower track · heading 0° · length 152.5 / 152.5 m (Alpha's / Bravo's side) · speed 1.91 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 152.5 m
+     DROP     s=  9.99  [-9.99,1.3,0] → [-9.99,0,0]  -1.3 m
+     CLIMB    s= 28.09  [-13.5,0,13.29] → [-13.5,0.6,13.29]  0.6 m  onto [{"id":1011,"tag":"degrayling","centre":[-13.5,-0.05,19.25],"size":[6,1.3,9.5]}]
+     DROP     s= 40.61  [-13.5,0.6,25.21] → [-13.5,0,25.21]  -0.6 m
+     CLIMB    s=104.29  [-21.5,0,48.79] → [-21.5,1,48.79]  1 m  onto [{"id":749,"tag":"terrace","centre":[-15.25,0.15,51.25],"size":[20.5,1.7,2.5]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 152.5 m
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-1-1004-1120/tc3): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s15.png, bluestone-03-climb-s28.png, bluestone-04-drop-s41.png, bluestone-05-corner-s45.png, bluestone-06-corner-s61.png, bluestone-07-checkpoint1-s63.png, bluestone-08-corner-s79.png, bluestone-09-checkpoint2-s95.png, bluestone-10-
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towermatch1.txt
+### towermatch1
+== bluestone [tower len 152.5/152.5]: winner Alpha (retake) | counts 3 vs 77 (score 3/77) | best push A 146.8m B 44.2m | OT 38.5s | sim 338.5s
+   held A 168.5s B 154s | contested 1s (4×) | neutral 15.8s | control changes 4 (takes 6) | idle→neutral 1
+   checkpoints cleared A 2 B 0 (reached 2/0, refills 0/0) | riders avg while held A 1.53 B 1.03 | mounts 25/21
+   left empty while held: 15× (>2 s: 7, of those with a teammate up within 15 m: 7; team wiped: 0; longest 5s; [5,4,3.75,3.75,3.75,3.5]) | off the tower {"death":11,"role":19,"fell":10,"retreat":4}, last one off a held tower {"death":3,"retreat":2,"role":4,"fell":6}
+   stuck 0.1% | by the tower's side 2.8% of bot-time, stuck there 0s (0 episodes) | splats 123 (water 0) | specials 23 (ready 23) | super jumps 47 | turf 22.9/17.7 | sim 338.5s in 102s (wall 102s) | {"cpuSimMs":0.55}
+   stuck {"t":153,"name":"Nori","w":"spinner","mode":"paint","role":"escort","pos":[-6,0,48.7],"tower":20.2,"path":true,"dur":0.75}
+   stuck {"t":38.3,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[1.3,1.3,7.8],"tower":21.6,"path":true,"dur":0.5}
+   stuck {"t":285.5,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-0.7,0,44.3],"tower":22.2,"path":true,"dur":0.5}
+   stuck {"t":134.5,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-16.3,0,30],"tower":22.6,"path":true,"dur":0.25}
+   stuck {"t":152.8,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-11.8,0,35.9],"tower":7.1,"path":false,"dur":0.25}
+   stuck {"t":194,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-0.5,0,-27.7],"tower":16,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+
+## towermatch2.txt
+### towermatch2
+== bluestone [tower len 152.5/152.5]: winner Alpha (knockout) | counts 0 vs 100 (score 0/100) | best push A 152.5m B 0m | OT no | sim 176.8s
+   held A 134s B 29.3s | contested 3.5s (4×) | neutral 13.3s | control changes 4 (takes 6) | idle→neutral 1
+   checkpoints cleared A 2 B 0 (reached 2/0, refills 0/0) | riders avg while held A 1.26 B 0.98 | mounts 24/3
+   left empty while held: 6× (>2 s: 2, of those with a teammate up within 15 m: 2; team wiped: 0; longest 4.8s; [5,4.5,1.75,1,1,0.5]) | off the tower {"death":9,"role":13,"fell":4}, last one off a held tower {"fell":2,"death":4}
+   stuck 0.1% | by the tower's side 2.9% of bot-time, stuck there 0s (0 episodes) | splats 61 (water 0) | specials 11 (ready 11) | super jumps 18 | turf 18.1/5.7 | sim 176.8s in 68s (wall 68s) | {"cpuSimMs":3.37}
+   stuck {"t":50.3,"name":"Pip","w":"charger","mode":"fight","role":"perch","pos":[7.2,1.67,62.1],"tower":31.5,"path":false,"dur":0.25}
+   stuck {"t":51,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[6.9,1.7,62.2],"tower":31.5,"path":true,"dur":0.25}
+   stuck {"t":75.3,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[-9.8,0,48.1],"tower":21.3,"path":true,"dur":0.25}
+   stuck {"t":95.8,"name":"Pip","w":"charger","mode":"fight","role":"perch","pos":[-21,0,35.7],"tower":20.2,"path":false,"dur":0.25}
+   stuck {"t":156.5,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[3.3,1,62],"tower":26.1,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+
+## towermatch3.txt
+### towermatch3
+== bluestone [tower len 152.5/152.5]: winner Bravo (retake) | counts 100 vs 3 (score 100/3) | best push A 0m B 148.1m | OT 7.3s | sim 307.3s
+   held A 116.8s B 176.3s | contested 5s (9×) | neutral 14s | control changes 14 (takes 15) | idle→neutral 1
+   checkpoints cleared A 0 B 2 (reached 0/2, refills 0/0) | riders avg while held A 1.28 B 1.16 | mounts 29/38
+   left empty while held: 23× (>2 s: 8, of those with a teammate up within 15 m: 8; team wiped: 0; longest 4.8s; [5,3,2.75,2.5,2.5,2.25]) | off the tower {"fell":8,"role":31,"death":28}, last one off a held tower {"role":4,"death":16,"fell":3}
+   stuck 0.1% | by the tower's side 4.1% of bot-time, stuck there 0s (0 episodes) | splats 116 (water 0) | specials 14 (ready 15) | super jumps 46 | turf 11.2/15.9 | sim 307.3s in 71s (wall 71s) | {"cpuSimMs":0.51}
+   stuck {"t":47.8,"name":"Marlo","w":"charger","mode":"fight","role":"perch","pos":[1.9,0,-15],"tower":15.1,"path":false,"dur":0.5}
+   stuck {"t":121.8,"name":"Marlo","w":"charger","mode":"paint","role":"perch","pos":[-6.6,0,-49.6],"tower":28.4,"path":true,"dur":0.5}
+   stuck {"t":101.8,"name":"Marlo","w":"charger","mode":"paint","role":"perch","pos":[-0.7,3.3,-70.1],"tower":27.4,"path":true,"dur":0.25}
+   stuck {"t":126.3,"name":"Marlo","w":"charger","mode":"paint","role":"perch","pos":[-4,0.06,-50.2],"tower":27.4,"path":true,"dur":0.25}
+   stuck {"t":135.3,"name":"Marlo","w":"charger","mode":"fight","role":"perch","pos":[-4.7,1,-65.6],"tower":18.6,"path":false,"dur":0.25}
+   stuck {"t":140.3,"name":"Marlo","w":"charger","mode":"refill","role":"perch","pos":[-5.2,1,-65.5],"tower":13.2,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+
+## turf1a.txt
+### turf1a
+== bluestone [turf 180s]: turf 34.1% vs 22.7%
+   stuck 0.1% | splats 40 (water 0) | specials 5 | super jumps 19 | turf 34.1/22.7 | sim 180s in 49s (wall 49s) | {"cpuSimMs":0.75}
+   splats by cause {"blast":11,"blade":7,"mitts":7,"slosh":5,"drop":1,"charger":4,"zooka":2,"brolly":1,"mine":1,"blaster":1}
+   wall climbs (at the wall): {"tries":2,"done":1,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf1b.txt
+### turf1b
+== bluestone [turf 180s]: turf 28.2% vs 35%
+   stuck 0% | splats 46 (water 0) | specials 7 | super jumps 24 | turf 28.2/35 | sim 180s in 49s (wall 49s) | {"cpuSimMs":2.21}
+   splats by cause {"blade":7,"wail":1,"shot":26,"zooka":2,"zipcaster":2,"slosh":5,"brolly":3}
+   wall climbs (at the wall): {"tries":2,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf1c.txt
+### turf1c
+== bluestone [turf 180s]: turf 25.3% vs 28.3%
+   stuck 0% | splats 39 (water 0) | specials 6 | super jumps 21 | turf 25.3/28.3 | sim 180s in 50s (wall 50s) | {"cpuSimMs":0.8}
+   splats by cause {"drop":7,"brolly":5,"blade":11,"shot":6,"charger":2,"brush":1,"slosh":3,"bow":4}
+   wall climbs (at the wall): {"tries":0,"done":0,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf2a.txt
+### turf2a
+== bluestone [turf 180s]: turf 30.7% vs 32.9%
+   stuck 0% | splats 25 (water 0) | specials 15 | super jumps 14 | turf 30.7/32.9 | sim 180s in 47s (wall 47s) | {"cpuSimMs":1.29}
+   splats by cause {"shot":13,"mitts":5,"drop":3,"roller":2,"boomerang":1,"slam":1}
+   wall climbs (at the wall): {"tries":1,"done":1,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf2b.txt
+### turf2b
+== bluestone [turf 180s]: turf 29.1% vs 29.4%
+   stuck 0% | splats 43 (water 0) | specials 8 | super jumps 20 | turf 29.1/29.4 | sim 180s in 46s (wall 46s) | {"cpuSimMs":1.38}
+   splats by cause {"shot":19,"drop":3,"blade":6,"charger":6,"boomerang":1,"roller":3,"zooka":3,"mine":2}
+   wall climbs (at the wall): {"tries":2,"done":1,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf2c.txt
+### turf2c
+== bluestone [turf 180s]: turf 33.4% vs 28.5%
+   stuck 0% | splats 34 (water 0) | specials 10 | super jumps 18 | turf 33.4/28.5 | sim 180s in 45s (wall 45s) | {"cpuSimMs":0.56}
+   splats by cause {"mitts":10,"shot":16,"slam":1,"bow":2,"mine":1,"blade":3,"charger":1}
+   wall climbs (at the wall): {"tries":5,"done":3,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf3a.txt
+### turf3a
+== bluestone [turf 180s]: turf 25.4% vs 33.5%
+   stuck 0% | splats 31 (water 0) | specials 11 | super jumps 13 | turf 25.4/33.5 | sim 180s in 51s (wall 52s) | {"cpuSimMs":2.67}
+   splats by cause {"shot":14,"zooka":1,"drop":2,"charger":4,"roller":2,"bow":6,"seeker":1,"brush":1}
+   wall climbs (at the wall): {"tries":3,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf3b.txt
+### turf3b
+== bluestone [turf 180s]: turf 24.1% vs 32.9%
+   stuck 0% | splats 33 (water 0) | specials 11 | super jumps 17 | turf 24.1/32.9 | sim 180s in 52s (wall 52s) | {"cpuSimMs":0.82}
+   splats by cause {"bow":5,"shot":11,"seeker":1,"blade":5,"mitts":5,"blast":5,"roller":1}
+   wall climbs (at the wall): {"tries":0,"done":0,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## turf3c.txt
+### turf3c
+== bluestone [turf 180s]: turf 31.6% vs 25.8%
+   stuck 0.1% | splats 36 (water 0) | specials 9 | super jumps 15 | turf 31.6/25.8 | sim 180s in 52s (wall 52s) | {"cpuSimMs":1.59}
+   splats by cause {"blade":8,"slosh":4,"slam":1,"mitts":12,"bow":3,"zooka":2,"shot":6}
+   wall climbs (at the wall): {"tries":2,"done":1,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## zones1a.txt
+### zones1a
+== bluestone [zones]: winner Bravo (time) | final 55 vs 48 (penalty +0/+40) | OT no
+   held A 59.3s B 74.3s neutral 166.3s | captures 7 (takeovers 1), control events 14, first capture @78.7s | rotations 6
+   bots in the active zone 65% of the time | avg inside A 0.31 B 0.74 | within 12 m A 0.92 B 1.24
+   stuck 0.3% | splats 68 (water 0) | specials 16 | super jumps 25 | turf 16.9/19.9 | sim 300s in 90s (wall 91s) | {"cpuSimMs":2.75}
+   splats by cause {"shot":23,"blast":10,"slosh":7,"drop":3,"bow":4,"charger":8,"brolly":3,"sticky":1,"jetpack":3,"blaster":4,"roller":1,"waddle":1}
+   wall climbs (at the wall): {"tries":6,"done":5,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## zones1b.txt
+### zones1b
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no
+   held A 135.3s B 0s neutral 160.5s | captures 7 (takeovers 0), control events 13, first capture @46.6s | rotations 6
+   bots in the active zone 69.7% of the time | avg inside A 0.93 B 0.19 | within 12 m A 1.95 B 0.42
+   stuck 0.4% | splats 78 (water 0) | specials 10 | super jumps 26 | turf 24.5/8.7 | sim 296s in 92s (wall 92s) | {"cpuSimMs":1.03}
+   splats by cause {"shot":39,"mitts":18,"charger":6,"slosh":5,"burst":1,"crab":1,"drop":5,"roller":1,"boomerang":2}
+   wall climbs (at the wall): {"tries":4,"done":4,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## zones2a.txt
+### zones2a
+== bluestone [zones]: winner Alpha (neutralised) | final 43 vs 67 (penalty +25/+0) | OT 6.8s
+   held A 51.8s B 69.5s neutral 185.3s | captures 7 (takeovers 4), control events 14, first capture @55s | rotations 7
+   bots in the active zone 67.9% of the time | avg inside A 0.41 B 0.66 | within 12 m A 0.96 B 1.2
+   stuck 0.5% | splats 78 (water 0) | specials 15 | super jumps 43 | turf 15.7/17.3 | sim 306.8s in 80s (wall 80s) | {"cpuSimMs":0.54}
+   splats by cause {"roller":3,"shot":47,"charger":7,"mitts":7,"bow":6,"drop":4,"stamp":1,"kraken":2,"waddle":1}
+   wall climbs (at the wall): {"tries":4,"done":4,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## zones2b.txt
+### zones2b
+== bluestone [zones]: winner Bravo (time) | final 79 vs 68 (penalty +13/+0) | OT no
+   held A 55s B 46.8s neutral 198s | captures 6 (takeovers 3), control events 11, first capture @29s | rotations 6
+   bots in the active zone 69.6% of the time | avg inside A 0.46 B 0.69 | within 12 m A 1.13 B 1.23
+   stuck 0.1% | splats 83 (water 0) | specials 12 | super jumps 48 | turf 17.9/20 | sim 300s in 80s (wall 80s) | {"cpuSimMs":0.65}
+   splats by cause {"drop":6,"shot":35,"blast":24,"bow":6,"blaster":5,"brush":2,"surf":2,"burst":1,"jetpack":1,"brolly":1}
+   wall climbs (at the wall): {"tries":5,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## zones3a.txt
+### zones3a
+== bluestone [zones]: winner Bravo (knockout) | final 90 vs 0 (penalty +7/+0) | OT no
+   held A 5.5s B 101.3s neutral 142.5s | captures 6 (takeovers 2), control events 11, first capture @57.7s | rotations 5
+   bots in the active zone 66.9% of the time | avg inside A 0.38 B 0.81 | within 12 m A 0.89 B 1.57
+   stuck 0.1% | splats 67 (water 0) | specials 15 | super jumps 40 | turf 16.6/16.4 | sim 249.5s in 61s (wall 61s) | {"cpuSimMs":0.86}
+   splats by cause {"slosh":4,"shot":28,"blaster":3,"shaker":1,"brolly":3,"drop":3,"zooka":1,"blast":12,"tracer":1,"jetpack":3,"crab":4,"bow":4}
+   wall climbs (at the wall): {"tries":4,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+
+## zones3b.txt
+### zones3b
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 76 (penalty +0/+19) | OT no
+   held A 64.8s B 45s neutral 113s | captures 6 (takeovers 1), control events 11, first capture @33.6s | rotations 4
+   bots in the active zone 62.2% of the time | avg inside A 0.62 B 0.43 | within 12 m A 1.13 B 0.91
+   stuck 0.4% | splats 55 (water 0) | specials 11 | super jumps 22 | turf 17.3/11.1 | sim 223s in 56s (wall 56s) | {"cpuSimMs":2.37}
+   splats by cause {"roller":2,"shot":10,"charger":5,"boomerang":2,"blast":12,"mitts":12,"slosh":2,"blaster":3,"drop":4,"jetpack":2,"stamp":1}
+   wall climbs (at the wall): {"tries":2,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":142,"name":"Wasabi","w":"charger","mode":"paint","role":"watch","pos":[7.7,5.3,11.5],"path":true,"hold":false,"pod":"-","dur":2.25}
+      plan {"t":142,"mode":"paint","pos":[7.7,5.3,11.5],"len":37,"pi":1,"next":[[8.5,0,11.5],[7.5,0,11.5]],"edgeIn":"walk","goal":[-16.5,2.4,17.5],"noProg":0.03,"near":[7.5,5.3,11.5],"noClimb":false,"climbing":false,"climb":null,"ink":19}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
