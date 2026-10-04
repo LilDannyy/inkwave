@@ -1,0 +1,236 @@
+JOB-7 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 12:00:46
+branch botlab-b5-deploy, ran at e2cb815, exit code 0, wall time 13min
+(a written-up JOB-7.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### deploy JOB-7 at e2cb815
+### turf halyard 2 DEV_AI=1
+== halyard [turf 180s]: turf 40.2% vs 34.9%
+### turf halyard 1 DEV_AI=1
+== halyard [turf 180s]: turf 36% vs 40.2%
+### turf halyard 1 DEV_AI=0
+== halyard [turf 180s]: turf 40.2% vs 32.2%
+### turf halyard 2 DEV_AI=0
+== halyard [turf 180s]: turf 34.1% vs 39.4%
+### turf halyard 3 DEV_AI=0
+== halyard [turf 180s]: turf 37.2% vs 40.3%
+### turf halyard 3 DEV_AI=1
+== halyard [turf 180s]: turf 33.1% vs 43.4%
+### turf halyard 4 DEV_AI=1
+== halyard [turf 180s]: turf 39.3% vs 38.7%
+### turf halyard 4 DEV_AI=0
+== halyard [turf 180s]: turf 39.8% vs 32.2%
+### turf saltpan 1 DEV_AI=1
+== saltpan [turf 180s]: turf 37% vs 33.8%
+### turf saltpan 2 DEV_AI=1
+== saltpan [turf 180s]: turf 36.2% vs 34.1%
+### turf saltpan 1 DEV_AI=0
+== saltpan [turf 180s]: turf 35.9% vs 34.9%
+### turf saltpan 2 DEV_AI=0
+== saltpan [turf 180s]: turf 36.6% vs 36.1%
+### turf saltpan 3 DEV_AI=0
+== saltpan [turf 180s]: turf 34.9% vs 37.8%
+### turf saltpan 3 DEV_AI=1
+== saltpan [turf 180s]: turf 32.6% vs 35.8%
+### turf saltpan 4 DEV_AI=1
+== saltpan [turf 180s]: turf 36.9% vs 34.8%
+### turf saltpan 4 DEV_AI=0
+== saltpan [turf 180s]: turf 29.1% vs 40.8%
+### tower halyard | team0=sprinkler;team1=beacon | DEV_AI=0
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 97 vs 0 (score 97/0) | best push A 6.3m B 117.8m | OT no | sim 169.3s
+### tower halyard | team0=beacon;team1=sprinkler | DEV_AI=1
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 117.8m | OT no | sim 211.5s
+### tower halyard | team0=sprinkler;team1=beacon | DEV_AI=1
+== halyard [tower len 117.8/117.8]: winner Alpha (time) | counts 12 vs 34 (score 12/34) | best push A 95m B 64.6m | OT no | sim 299.8s
+### tower halyard | team0=beacon;team1=sprinkler | DEV_AI=0
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0.8m B 117.8m | OT no | sim 105.8s
+### tower calamari | team0=sprinkler;team1=beacon | DEV_AI=1
+== calamari [tower len 163.6/163.6]: winner Bravo (retake) | counts 88 vs 38 (score 88/38) | best push A 24.6m B 100.3m | OT 6.7s | sim 306.5s
+### tower calamari | team0=beacon;team1=sprinkler | DEV_AI=1
+== calamari [tower len 163.6/163.6]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 163.6m | OT no | sim 200.3s
+### tower calamari | team0=sprinkler;team1=beacon | DEV_AI=0
+== calamari [tower len 163.6/163.6]: winner Bravo (comeback) | counts 46 vs 45 (score 46/45) | best push A 91.9m B 92m | OT 8.2s | sim 308.3s
+### tower calamari | team0=beacon;team1=sprinkler | DEV_AI=0
+== calamari [tower len 163.6/163.6]: winner Bravo (retake) | counts 93 vs 2 (score 93/2) | best push A 16.3m B 160.1m | OT 15s | sim 315s
+### tower treehills | team0=sprinkler;team1=beacon | DEV_AI=1
+== treehills [tower len 151.8/151.8]: winner Alpha (time) | counts 33 vs 60 (score 33/60) | best push A 95.5m B 58.2m | OT no | sim 300s
+### tower treehills | team0=sprinkler;team1=beacon | DEV_AI=0
+== treehills [tower len 151.8/151.8]: winner Bravo (neutralised) | counts 84 vs 37 (score 84/37) | best push A 32.2m B 95.5m | OT 13.2s | sim 313s
+### tower treehills | team0=beacon;team1=sprinkler | DEV_AI=0
+== treehills [tower len 151.8/151.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0.4m B 151.8m | OT no | sim 132.3s
+### tower treehills | team0=beacon;team1=sprinkler | DEV_AI=1
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 100 vs 10 (score 100/10) | best push A 0.4m B 133.3m | OT no | sim 300s
+### tower saltpan | team0=sprinkler;team1=beacon | DEV_AI=1
+== saltpan [tower len 179.2/179.2]: winner Bravo (time) | counts 61 vs 52 (score 61/52) | best push A 66.7m B 86.9m | OT no | sim 300s
+### tower saltpan | team0=sprinkler;team1=beacon | DEV_AI=0
+== saltpan [tower len 179.2/179.2]: winner Alpha (comeback) | counts 51 vs 52 (score 51/52) | best push A 87.4m B 85.2m | OT 17.9s | sim 317.8s
+### tower saltpan | team0=beacon;team1=sprinkler | DEV_AI=1
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 58 vs 49 (score 58/49) | best push A 72.1m B 93.3m | OT 2.4s | sim 302.5s
+### tower saltpan | team0=beacon;team1=sprinkler | DEV_AI=0
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 100 vs 22 (score 100/22) | best push A 0m B 130.8m | OT 1.8s | sim 301.8s
+SUMMARY turf 16/16, tower 16/16; frame errors 0, console 0
+
+## last 15 lines of job.log
+== saltpan [tower len 179.2/179.2]: winner Alpha (comeback) | counts 51 vs 52 (score 51/52) | best push A 87.4m B 85.2m | OT 17.9s | sim 317.8s
+   checkpoints cleared A 1 B 1 (reached 1/3, refills 0/2) | riders avg while held A 1.4 B 1.24 | mounts 35/26
+   roles (% of bot-time) {"ride":47,"escort":25} | riding 15.3% | holding on purpose 0.4%
+   DEPLOY hits 12 (374 dmg) | shot down {"beacon":1} | crushed by the tower {"beacon":2,"sprinkler":1} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 
+### tower saltpan | team0=beacon;team1=sprinkler | DEV_AI=1
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 58 vs 49 (score 58/49) | best push A 72.1m B 93.3m | OT 2.4s | sim 302.5s
+   checkpoints cleared A 1 B 1 (reached 1/1, refills 0/0) | riders avg while held A 1.25 B 0.93 | mounts 36/25
+   roles (% of bot-time) {"ride":45,"escort":20,"perch":10} | riding 13% | holding on purpose 1.7%
+   DEPLOY hits 10 (540 dmg) | shot down {"beacon":1,"sprinkler":1} | crushed by the tower {"sprinkler":1} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 1.1 s/bot (walking 0.0) | picks 7 (beacon 4, sprinkler 3, buoy 0) re-pick
+### tower saltpan | team0=beacon;team1=sprinkler | DEV_AI=0
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 100 vs 22 (score 100/22) | best push A 0m B 130.8m | OT 1.8s | sim 301.8s
+   checkpoints cleared A 0 B 1 (reached 0/2, refills 0/1) | riders avg while held A 1.27 B 1.54 | mounts 30/25
+   roles (% of bot-time) {"escort":28,"ride":46} | riding 17.2% | holding on purpose 0.6%
+   DEPLOY hits 2 (160 dmg) | shot down {"beacon":1} | crushed by the tower {"sprinkler":1,"beacon":2} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0
+SUMMARY turf 16/16, tower 16/16; frame errors 0, console 0
+
+## tower.txt
+### tower halyard | team0=sprinkler;team1=beacon | DEV_AI=0
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 97 vs 0 (score 97/0) | best push A 6.3m B 117.8m | OT no | sim 169.3s
+   checkpoints cleared A 0 B 3 (reached 0/5, refills 0/2) | riders avg while held A 0.51 B 1.41 | mounts 6/23
+   roles (% of bot-time) {"ride":48,"escort":27} | riding 14.8% | holding on purpose 0.2%
+   DEPLOY hits 2 (80 dmg) | shot down {} | crushed by the tower {"beacon":2} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower halyard | team0=beacon;team1=sprinkler | DEV_AI=1
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 117.8m | OT no | sim 211.5s
+   checkpoints cleared A 0 B 3 (reached 0/4, refills 0/1) | riders avg while held A 1.08 B 1.65 | mounts 9/17
+   roles (% of bot-time) {"ride":47,"escort":21,"perch":11} | riding 17.5% | holding on purpose 2.8%
+   DEPLOY hits 12 (585 dmg) | shot down {"beacon":3} | crushed by the tower {} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 0.1 s/bot (walking 0.0) | picks 1 (beacon 1, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower halyard | team0=sprinkler;team1=beacon | DEV_AI=1
+== halyard [tower len 117.8/117.8]: winner Alpha (time) | counts 12 vs 34 (score 12/34) | best push A 95m B 64.6m | OT no | sim 299.8s
+   checkpoints cleared A 3 B 2 (reached 3/3, refills 0/1) | riders avg while held A 1.38 B 1.35 | mounts 28/22
+   roles (% of bot-time) {"ride":44,"escort":24,"perch":9} | riding 16.3% | holding on purpose 1.9%
+   DEPLOY hits 66 (590 dmg) | shot down {"sprinkler":1,"beacon":1} | crushed by the tower {"sprinkler":1,"beacon":1} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 2.7 s/bot (walking 0.0) | picks 12 (beacon 6, sprinkler 6, buoy 0) re-picks 12 gave up 1
+### tower halyard | team0=beacon;team1=sprinkler | DEV_AI=0
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0.8m B 117.8m | OT no | sim 105.8s
+   checkpoints cleared A 0 B 3 (reached 0/3, refills 0/0) | riders avg while held A 1 B 1.69 | mounts 1/17
+   roles (% of bot-time) {"escort":27,"ride":53} | riding 18.7% | holding on purpose 0.7%
+   DEPLOY hits 6 (156 dmg) | shot down {"beacon":1} | crushed by the tower {} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower calamari | team0=sprinkler;team1=beacon | DEV_AI=1
+== calamari [tower len 163.6/163.6]: winner Bravo (retake) | counts 88 vs 38 (score 88/38) | best push A 24.6m B 100.3m | OT 6.7s | sim 306.5s
+   checkpoints cleared A 0 B 1 (reached 0/2, refills 0/1) | riders avg while held A 1.15 B 1.52 | mounts 24/26
+   roles (% of bot-time) {"ride":46,"escort":27} | riding 16.3% | holding on purpose 0.8%
+   DEPLOY hits 84 (871 dmg) | shot down {"beacon":3} | crushed by the tower {"beacon":3} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 3.0 s/bot (walking 0.0) | picks 10 (beacon 9, sprinkler 1, buoy 0) re-picks 6 gave up 2
+### tower calamari | team0=beacon;team1=sprinkler | DEV_AI=1
+== calamari [tower len 163.6/163.6]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 163.6m | OT no | sim 200.3s
+   checkpoints cleared A 0 B 2 (reached 0/2, refills 0/0) | riders avg while held A 0.98 B 1.95 | mounts 11/19
+   roles (% of bot-time) {"ride":46,"escort":30} | riding 19.8% | holding on purpose 0.9%
+   DEPLOY hits 9 (198 dmg) | shot down {"beacon":1} | crushed by the tower {} | pushed aside by it 5 | rides 4 lifts 0 shoves 5 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 0.2 s/bot (walking 0.0) | picks 1 (beacon 1, sprinkler 0, buoy 0) re-picks 1 gave up 0
+### tower calamari | team0=sprinkler;team1=beacon | DEV_AI=0
+== calamari [tower len 163.6/163.6]: winner Bravo (comeback) | counts 46 vs 45 (score 46/45) | best push A 91.9m B 92m | OT 8.2s | sim 308.3s
+   checkpoints cleared A 1 B 1 (reached 1/2, refills 0/1) | riders avg while held A 1.48 B 1.37 | mounts 27/34
+   roles (% of bot-time) {"ride":47,"escort":25} | riding 17.1% | holding on purpose 0.7%
+   DEPLOY hits 7 (188 dmg) | shot down {"beacon":1} | crushed by the tower {"beacon":1} | pushed aside by it 0 | rides 2 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower calamari | team0=beacon;team1=sprinkler | DEV_AI=0
+== calamari [tower len 163.6/163.6]: winner Bravo (retake) | counts 93 vs 2 (score 93/2) | best push A 16.3m B 160.1m | OT 15s | sim 315s
+   checkpoints cleared A 0 B 2 (reached 0/2, refills 0/0) | riders avg while held A 1.01 B 1.3 | mounts 23/23
+   roles (% of bot-time) {"ride":41,"perch":22,"escort":17} | riding 14.6% | holding on purpose 4.4%
+   DEPLOY hits 4 (32 dmg) | shot down {} | crushed by the tower {} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower treehills | team0=sprinkler;team1=beacon | DEV_AI=1
+== treehills [tower len 151.8/151.8]: winner Alpha (time) | counts 33 vs 60 (score 33/60) | best push A 95.5m B 58.2m | OT no | sim 300s
+   checkpoints cleared A 1 B 1 (reached 2/1, refills 1/0) | riders avg while held A 1.28 B 1.61 | mounts 22/31
+   roles (% of bot-time) {"ride":49,"escort":26} | riding 17.4% | holding on purpose 0.5%
+   DEPLOY hits 20 (444 dmg) | shot down {"beacon":2} | crushed by the tower {} | pushed aside by it 0 | rides 2 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 1.7 s/bot (walking 0.0) | picks 6 (beacon 5, sprinkler 1, buoy 0) re-picks 7 gave up 0
+### tower treehills | team0=sprinkler;team1=beacon | DEV_AI=0
+== treehills [tower len 151.8/151.8]: winner Bravo (neutralised) | counts 84 vs 37 (score 84/37) | best push A 32.2m B 95.5m | OT 13.2s | sim 313s
+   checkpoints cleared A 0 B 1 (reached 0/4, refills 0/3) | riders avg while held A 0.96 B 1.21 | mounts 24/33
+   roles (% of bot-time) {"escort":28,"ride":47} | riding 13.3% | holding on purpose 0.6%
+   DEPLOY hits 37 (1396 dmg) | shot down {"sprinkler":3,"beacon":4} | crushed by the tower {"beacon":2,"surf":1} | pushed aside by it 2 | rides 12 lifts 0 shoves 2 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower treehills | team0=beacon;team1=sprinkler | DEV_AI=0
+== treehills [tower len 151.8/151.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0.4m B 151.8m | OT no | sim 132.3s
+   checkpoints cleared A 0 B 2 (reached 0/2, refills 0/0) | riders avg while held A 0.92 B 1.66 | mounts 7/20
+   roles (% of bot-time) {"escort":24,"ride":49} | riding 18.2% | holding on purpose 0.1%
+   DEPLOY hits 3 (91 dmg) | shot down {} | crushed by the tower {} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower treehills | team0=beacon;team1=sprinkler | DEV_AI=1
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 100 vs 10 (score 100/10) | best push A 0.4m B 133.3m | OT no | sim 300s
+   checkpoints cleared A 0 B 2 (reached 0/2, refills 0/0) | riders avg while held A 0.86 B 1.56 | mounts 29/36
+   roles (% of bot-time) {"escort":28,"ride":44} | riding 16% | holding on purpose 0.6%
+   DEPLOY hits 16 (311 dmg) | shot down {"beacon":1} | crushed by the tower {"sprinkler":1} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 1.3 s/bot (walking 0.0) | picks 4 (beacon 4, sprinkler 0, buoy 0) re-picks 5 gave up 1
+### tower saltpan | team0=sprinkler;team1=beacon | DEV_AI=1
+== saltpan [tower len 179.2/179.2]: winner Bravo (time) | counts 61 vs 52 (score 61/52) | best push A 66.7m B 86.9m | OT no | sim 300s
+   checkpoints cleared A 1 B 1 (reached 3/1, refills 2/0) | riders avg while held A 1.07 B 1.18 | mounts 29/27
+   roles (% of bot-time) {"escort":22,"ride":43,"perch":11} | riding 13.5% | holding on purpose 3%
+   DEPLOY hits 24 (1420 dmg) | shot down {"sprinkler":1,"beacon":7} | crushed by the tower {"beacon":1} | pushed aside by it 0 | rides 2 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 5.7 s/bot (walking 0.0) | picks 25 (beacon 22, sprinkler 1, buoy 2) re-picks 20 gave up 1
+### tower saltpan | team0=sprinkler;team1=beacon | DEV_AI=0
+== saltpan [tower len 179.2/179.2]: winner Alpha (comeback) | counts 51 vs 52 (score 51/52) | best push A 87.4m B 85.2m | OT 17.9s | sim 317.8s
+   checkpoints cleared A 1 B 1 (reached 1/3, refills 0/2) | riders avg while held A 1.4 B 1.24 | mounts 35/26
+   roles (% of bot-time) {"ride":47,"escort":25} | riding 15.3% | holding on purpose 0.4%
+   DEPLOY hits 12 (374 dmg) | shot down {"beacon":1} | crushed by the tower {"beacon":2,"sprinkler":1} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### tower saltpan | team0=beacon;team1=sprinkler | DEV_AI=1
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 58 vs 49 (score 58/49) | best push A 72.1m B 93.3m | OT 2.4s | sim 302.5s
+   checkpoints cleared A 1 B 1 (reached 1/1, refills 0/0) | riders avg while held A 1.25 B 0.93 | mounts 36/25
+   roles (% of bot-time) {"ride":45,"escort":20,"perch":10} | riding 13% | holding on purpose 1.7%
+   DEPLOY hits 10 (540 dmg) | shot down {"beacon":1,"sprinkler":1} | crushed by the tower {"sprinkler":1} | pushed aside by it 0 | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 1.1 s/bot (walking 0.0) | picks 7 (beacon 4, sprinkler 3, buoy 0) re-picks 4 gave up 0
+### tower saltpan | team0=beacon;team1=sprinkler | DEV_AI=0
+== saltpan [tower len 179.2/179.2]: winner Bravo (retake) | counts 100 vs 22 (score 100/22) | best push A 0m B 130.8m | OT 1.8s | sim 301.8s
+   checkpoints cleared A 0 B 1 (reached 0/2, refills 0/1) | riders avg while held A 1.27 B 1.54 | mounts 30/25
+   roles (% of bot-time) {"escort":28,"ride":46} | riding 17.2% | holding on purpose 0.6%
+   DEPLOY hits 2 (160 dmg) | shot down {"beacon":1} | crushed by the tower {"sprinkler":1,"beacon":2} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+
+## turf.txt
+### turf halyard 2 DEV_AI=1
+== halyard [turf 180s]: turf 40.2% vs 34.9%
+   splats by cause {"roller":3,"shot":14,"drop":3,"charger":5,"splatling":7,"burst":1,"bomb":1,"water":1}
+   DEPLOY hits 1 (140 dmg) | shot down {"beacon":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 4 popped 0 | bots (device AI on): device mode 0.8 s/bot (walking 0.4) | picks 2 (beacon 2, sprinkler 0, buoy 0) re-picks 1 gave up 0
+### turf halyard 1 DEV_AI=1
+== halyard [turf 180s]: turf 36% vs 40.2%
+   splats by cause {"shot":14,"charger":7,"drop":1,"splatling":12,"roller":6,"water":1}
+   DEPLOY hits 4 (260 dmg) | shot down {"seeker":1,"beacon":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 7 popped 1 | bots (device AI on): device mode 1.9 s/bot (walking 0.3) | picks 2 (beacon 2, sprinkler 0, buoy 0) re-picks 5 gave up 1
+### turf halyard 1 DEV_AI=0
+== halyard [turf 180s]: turf 40.2% vs 32.2%
+   splats by cause {"water":2,"shot":10,"charger":6,"splatling":14,"seeker":2,"drop":2,"roller":4}
+   DEPLOY hits 6 (369 dmg) | shot down {"beacon":2,"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 7 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf halyard 2 DEV_AI=0
+== halyard [turf 180s]: turf 34.1% vs 39.4%
+   splats by cause {"charger":7,"shot":11,"splatling":13,"drop":3,"roller":1,"bomb":1,"water":1}
+   DEPLOY hits 4 (148 dmg) | shot down {"seeker":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 13 popped 2 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf halyard 3 DEV_AI=0
+== halyard [turf 180s]: turf 37.2% vs 40.3%
+   splats by cause {"shot":21,"splatling":13,"seeker":1,"water":1,"drop":5,"roller":1,"charger":2,"bomb":1}
+   DEPLOY hits 9 (338 dmg) | shot down {"seeker":1,"beacon":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 11 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf halyard 3 DEV_AI=1
+== halyard [turf 180s]: turf 33.1% vs 43.4%
+   splats by cause {"shot":17,"charger":8,"roller":1,"drop":4,"zipcaster":1,"splatling":3,"water":1,"seeker":2,"bomb":1}
+   DEPLOY hits 4 (144 dmg) | shot down {"beacon":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 4 popped 0 | bots (device AI on): device mode 0.1 s/bot (walking 0.0) | picks 2 (beacon 2, sprinkler 0, buoy 0) re-picks 1 gave up 0
+### turf halyard 4 DEV_AI=1
+== halyard [turf 180s]: turf 39.3% vs 38.7%
+   splats by cause {"charger":5,"splatling":8,"seeker":1,"shot":18,"water":1,"drop":3}
+   DEPLOY hits 1 (140 dmg) | shot down {"beacon":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 10 popped 0 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 1 (beacon 1, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf halyard 4 DEV_AI=0
+== halyard [turf 180s]: turf 39.8% vs 32.2%
+   splats by cause {"shot":12,"splatling":14,"charger":5,"roller":3,"drop":1}
+   DEPLOY hits 1 (36 dmg) | shot down {} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 8 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf saltpan 1 DEV_AI=1
+== saltpan [turf 180s]: turf 37% vs 33.8%
+   splats by cause {"splatling":8,"shot":15,"charger":10,"jetpack":1,"drop":3,"zooka":1,"roller":2,"seeker":1}
+   DEPLOY hits 3 (108 dmg) | shot down {"sprinkler":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 14 popped 0 | bots (device AI on): device mode 0.5 s/bot (walking 0.0) | picks 3 (beacon 2, sprinkler 1, buoy 0) re-picks 5 gave up 0
+### turf saltpan 2 DEV_AI=1
+== saltpan [turf 180s]: turf 36.2% vs 34.1%
+   splats by cause {"splatling":8,"shot":17,"drop":3,"charger":5,"jetpack":2,"seeker":3,"roller":1}
+   DEPLOY hits 3 (84 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 14 popped 1 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf saltpan 1 DEV_AI=0
+== saltpan [turf 180s]: turf 35.9% vs 34.9%
+   splats by cause {"shot":14,"roller":1,"splatling":9,"charger":8,"drop":4,"water":1}
+   DEPLOY hits 5 (262 dmg) | shot down {"seeker":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 9 popped 2 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf saltpan 2 DEV_AI=0
+== saltpan [turf 180s]: turf 36.6% vs 36.1%
+   splats by cause {"shot":6,"roller":3,"charger":5,"splatling":5,"zipcaster":3}
+   DEPLOY hits 58 (33 dmg) | shot down {} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 3 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf saltpan 3 DEV_AI=0
+== saltpan [turf 180s]: turf 34.9% vs 37.8%
+   splats by cause {"splatling":7,"shot":16,"drop":5,"charger":6,"burst":1,"seeker":2}
+   DEPLOY hits 5 (262 dmg) | shot down {"seeker":1,"beacon":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 11 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf saltpan 3 DEV_AI=1
+== saltpan [turf 180s]: turf 32.6% vs 35.8%
+   splats by cause {"shot":16,"splatling":11,"charger":9,"drop":1,"roller":1}
+   DEPLOY hits 8 (436 dmg) | shot down {"beacon":2,"seeker":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 8 popped 2 | bots (device AI on): device mode 0.2 s/bot (walking 0.0) | picks 2 (beacon 2, sprinkler 0, buoy 0) re-picks 2 gave up 0
+### turf saltpan 4 DEV_AI=1
+== saltpan [turf 180s]: turf 36.9% vs 34.8%
+   splats by cause {"shot":12,"splatling":12,"charger":5,"roller":1,"drop":2,"crab":1}
+   DEPLOY hits 3 (84 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 8 popped 1 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### turf saltpan 4 DEV_AI=0
+== saltpan [turf 180s]: turf 29.1% vs 40.8%
+   splats by cause {"shot":7,"splatling":12,"jetpack":1,"seeker":2,"charger":5,"drop":4,"roller":3}
+   DEPLOY hits 2 (96 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 11 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
