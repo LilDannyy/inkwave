@@ -1,0 +1,146 @@
+JOB-1 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:40:42
+branch botlab-b5-aquarium, ran at 56781fe, exit code 0, wall time 5min
+(a written-up JOB-1.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== matches (3 in parallel)
+== tower-check (rides, pictures)
+== perf: Halyard and Gulper Aquarium, same machine, one after the other
+RESULT done
+
+## last 15 lines of job.log
+== matches (3 in parallel)
+== tower-check (rides, pictures)
+== perf: Halyard and Gulper Aquarium, same machine, one after the other
+RESULT done
+
+## perf.txt
+### perf halyard
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6274,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":122,"tris":973355,"cpuRenderMs":1.77,"cpuSimMs":1.44},"coverage":[4,4.7]}
+CONSOLE 0 unique warning/error line(s)
+### perf aquarium
+REPORT {"map":"aquarium","mode":"turf","time":"day","loadMs":5648,"blocks":1742,"solidBlocks":1742,"propMeshes":2,"navNodes":4640,"bounds":{"minX":-36,"maxX":36,"minZ":-78,"maxZ":78},"perf":{"calls":163,"tris":534472,"cpuRenderMs":1.62,"cpuSimMs":1.41},"coverage":[3.8,4]}
+CONSOLE 1 unique warning/error line(s)
+### perf halyard2
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6334,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":192,"tris":1483668,"cpuRenderMs":1.87,"cpuSimMs":1.52},"coverage":[4,5.9]}
+CONSOLE 0 unique warning/error line(s)
+### perf aquarium2
+REPORT {"map":"aquarium","mode":"turf","time":"day","loadMs":5593,"blocks":1742,"solidBlocks":1742,"propMeshes":2,"navNodes":4640,"bounds":{"minX":-36,"maxX":36,"minZ":-78,"maxZ":78},"perf":{"calls":184,"tris":554070,"cpuRenderMs":1.7,"cpuSimMs":1.49},"coverage":[1.5,3.7]}
+CONSOLE 1 unique warning/error line(s)
+
+## stuck-episodes.txt
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":48238,"state":"finish","stuckPct":0,"splats":45,"water":0,"specials":4,"jumps":23,"cov":[45.9,18.9],"teamKD":[{"k":28,"d":17,"sp":0,"by":{}},{"k":17,"d":28,"sp":3,"by":{"zooka":3}}],"spUses":[{"zipcaster":1,"zooka":2,"slam":1},{}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":36,"missed":1,
+--
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":46214,"state":"finish","stuckPct":0,"splats":56,"water":0,"specials":6,"jumps":23,"cov":[18.1,47.5],"teamKD":[{"k":13,"d":43,"sp":1,"by":{"jetpack":1}},{"k":43,"d":13,"sp":0,"by":{}}],"spUses":[{},{"barrage":4,"jetpack":2}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":44,"missed":1,"escape
+--
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":49725,"state":"finish","stuckPct":0,"splats":40,"water":0,"specials":5,"jumps":14,"cov":[49.9,15.3],"teamKD":[{"k":29,"d":11,"sp":0,"by":{}},{"k":11,"d":29,"sp":5,"by":{"zooka":3,"crab":2}}],"spUses":[{"zooka":2,"crab":1,"blower":1,"slam":1},{}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed"
+--
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":306,"simMs":88739,"state":"finish","stuckPct":0.3,"splats":85,"water":0,"specials":10,"jumps":40,"cov":[24.4,24.5],"teamKD":[{"k":40,"d":45,"sp":0,"by":{}},{"k":45,"d":40,"sp":2,"by":{"jetpack":1,"kraken":1}}],"spUses":[{"zipcaster":1,"sonar":3,"jetpack":1,"kraken":2},{"barrage":2,"blower":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extend
+--
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":85154,"state":"finish","stuckPct":0.3,"splats":79,"water":0,"specials":17,"jumps":44,"cov":[34.1,21.4],"teamKD":[{"k":45,"d":34,"sp":2,"by":{"surf":2}},{"k":34,"d":45,"sp":2,"by":{"jetpack":1,"zipcaster":1}}],"spUses":[{"bubbler":4,"jetpack":3,"sonar":1,"zipcaster":1},{"surf":2,"kraken":1,"sonar":3,"barrage":2}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings"
+
+## towercheck.txt
+== aquarium tower track · heading 0° · length 149.5 / 149.5 m (Alpha's / Bravo's side) · speed 1.87 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 30 pieces · 24 runs, 0 inclines, 2 climbs, 4 drops · 149.5 m
+     DROP     s=  8.71  [0,2.4,8.71] → [0,1.2,8.71]  -1.2 m
+     DROP     s= 12.21  [0,1.2,11.01] → [0,0,11.01]  -1.2 m
+     CLIMB    s= 83.99  [-6,0,47.21] → [-6,1.2,47.21]  1.2 m  onto [{"id":1281,"tag":"ticket-hall","centre":[-6,0.6,42.5],"size":[8,1.2,7]}]
+     DROP     s= 94.61  [-6,1.2,37.79] → [-6,0,37.79]  -1.2 m
+     CLIMB    s=109.64  [7.04,0,37] → [7.04,1.2,37]  1.2 m  onto [{"id":1340,"tag":"penguin-rocks","centre":[10.29,-0.4,42.48],"size":[7.8,3.2,13]}]
+     DROP     s=126.44  [3.86,1.2,42.5] → [3.86,0,42.5]  -1.2 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 30 pieces · 24 runs, 0 inclines, 2 climbs, 4 drops · 149.5 m
+   checkpoints [{"team":0,"index":0,"d":67.2,"dur":10,"at":[-14,0,44]},{"team":0,"index":1,"d":92.4,"dur":10,"at":[-6,1.2,40]},{"team":1,"index":0,"d":67.2,"dur":10,"at":[14,0,-44]},{"team":1,"index":1,"d":92.4,"dur":10,"at":[6,1.2,-40]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 149.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -149.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/aquarium-JOB-1-1004-1135/tc): aquarium-top.png, aquarium-01-drop-s9.png, aquarium-02-drop-s12.png, aquarium-03-corner-s16.png, aquarium-04-corner-s19.png, aquarium-05-corner-s39.png, aquarium-06-corner-s57.png, aquarium-07-checkpoint1-s67.png, aquarium-08-corner-s73.png, aquarium-09-corner-s81.png, aquarium-10-climb-s84.png, aqu
+   console errors: none
+RESULT_JSON {"map":"aquarium","len":[149.5,149.5],"holes":0,"issues":0,"climbs":2,"drops":4,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towermatch.txt
+### towermatch
+== aquarium [tower len 149.5/149.5]: winner Bravo (retake) | counts 71 vs 48 (score 71/48) | best push A 55.2m B 79m | OT 23.8s | sim 323.8s
+   held A 159.5s B 148.3s | contested 5.8s (8×) | neutral 15.8s | control changes 17 (takes 19) | idle→neutral 2
+   checkpoints cleared A 0 B 1 (reached 0/1, refills 0/0) | riders avg while held A 1.1 B 1.21 | mounts 34/28
+   stuck 0% | by the tower's side 3.8% of bot-time, stuck there 0s (0 episodes) | splats 136 (water 0) | specials 14 (ready 16) | super jumps 53 | turf 23.2/21 | sim 323.8s in 95s (wall 95s) | {"cpuSimMs":0.56}
+   stuck {"t":232.5,"name":"Nori","w":"blaster","mode":"retreat","role":"ride","pos":[10.4,0.63,-43.2],"tower":6.9,"path":true,"dur":0.75}
+   stuck {"t":114.3,"name":"Fizz","w":"brolly","mode":"paint","role":"ride","pos":[0.1,0,-26],"tower":4.2,"path":false,"dur":0.25}
+   stuck {"t":233.5,"name":"Nori","w":"blaster","mode":"paint","role":"ride","pos":[10.4,0,-43],"tower":7,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium.tower Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"map":"aquarium","winner":1,"reason":"retake","counts":[71,48],"best":[55.2,79],"held":[159.5,148.3],"controlChanges":17,"cpClear":[0,1],"stuckPct":0,"console":1,"frameErrors":0,"mounts":[34,28],"ridersAvg":[1.1,1.21],"x":{"climbs":[32,23],"sjRider":12,"kills":136,"killsNear":[79,57],"attempts":167,"boarded":48,"aborted":117,"climbMounts":42,"sjMounts":0,"toBoard":{"med":3.5,"p80":7.7
+
+## turf1.txt
+### turf1
+== aquarium [turf 180s]: turf 45.9% vs 18.9%
+   per bot: turf 906p, on-zone ink 0p, splats 5.6 → XP beyond the win/lose base ≈ 1131
+   stuck 0% | splats 45 (water 0) | specials 4 | super jumps 23 | turf 45.9/18.9 | sim 180s in 48s (wall 48s) | {"cpuSimMs":1.31}
+   splats by cause {"bow":11,"slosh":5,"tracer":1,"blade":6,"charger":8,"brolly":3,"mitts":6,"brush":1,"zooka":3,"drop":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":48238,"state":"finish","stuckPct":0,"splats":45,"water":0,"specials":4,"jumps":23,"cov":[45.9,18.9],"teamKD":[{"k":28,"d":17,"sp":0,"by":{}},{"k":17,"d":28,"sp":3,"by":{"zooka":3}}],"spUses":[{"zipcaster":1,"zooka":2,"slam":1},{}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":36,"missed":1,
+
+## turf2.txt
+### turf2
+== aquarium [turf 180s]: turf 18.1% vs 47.5%
+   per bot: turf 1101p, on-zone ink 0p, splats 7 → XP beyond the win/lose base ≈ 1381
+   stuck 0% | splats 56 (water 0) | specials 6 | super jumps 23 | turf 18.1/47.5 | sim 180s in 46s (wall 46s) | {"cpuSimMs":2.17}
+   splats by cause {"shot":14,"mitts":18,"blade":6,"charger":4,"slosh":5,"drop":1,"jetpack":1,"blast":6,"brush":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":46214,"state":"finish","stuckPct":0,"splats":56,"water":0,"specials":6,"jumps":23,"cov":[18.1,47.5],"teamKD":[{"k":13,"d":43,"sp":1,"by":{"jetpack":1}},{"k":43,"d":13,"sp":0,"by":{}}],"spUses":[{},{"barrage":4,"jetpack":2}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":44,"missed":1,"escape
+
+## turf3.txt
+### turf3
+== aquarium [turf 180s]: turf 49.9% vs 15.3%
+   per bot: turf 984p, on-zone ink 0p, splats 5 → XP beyond the win/lose base ≈ 1184
+   stuck 0% | splats 40 (water 0) | specials 5 | super jumps 14 | turf 49.9/15.3 | sim 180s in 50s (wall 50s) | {"cpuSimMs":0.56}
+   splats by cause {"shot":19,"slosh":1,"zooka":3,"charger":4,"crab":2,"roller":1,"boomerang":1,"bow":4,"drop":2,"waddle":1,"mitts":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":49725,"state":"finish","stuckPct":0,"splats":40,"water":0,"specials":5,"jumps":14,"cov":[49.9,15.3],"teamKD":[{"k":29,"d":11,"sp":0,"by":{}},{"k":11,"d":29,"sp":5,"by":{"zooka":3,"crab":2}}],"spUses":[{"zooka":2,"crab":1,"blower":1,"slam":1},{}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed"
+
+## zones1.txt
+### zones1
+== aquarium [zones]: winner Bravo (retake) | final 80 vs 58 (penalty +15/+7) | OT 5.8s
+   held A 27.5s B 67.5s neutral 210.8s | captures 7 (takeovers 3), control events 13, first capture @45.1s | rotations 7
+   bots in the active zone 71.5% of the time | avg inside A 0.5 B 0.64 | within 12 m A 1.02 B 1.65
+   per bot: turf 1196p, on-zone ink 428p, splats 10.6 → XP beyond the win/lose base ≈ 1570
+   stuck 0.3% | splats 85 (water 0) | specials 10 | super jumps 40 | turf 24.4/24.5 | sim 306s in 89s (wall 89s) | {"cpuSimMs":1.29}
+   splats by cause {"blade":9,"shot":16,"mitts":27,"boomerang":8,"slosh":13,"brolly":3,"charger":7,"jetpack":1,"kraken":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":306,"simMs":88739,"state":"finish","stuckPct":0.3,"splats":85,"water":0,"specials":10,"jumps":40,"cov":[24.4,24.5],"teamKD":[{"k":40,"d":45,"sp":0,"by":{}},{"k":45,"d":40,"sp":2,"by":{"jetpack":1,"kraken":1}}],"spUses":[{"zipcaster":1,"sonar":3,"jetpack":1,"kraken":2},{"barrage":2,"blower":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extend
+
+## zones2.txt
+### zones2
+== aquarium [zones]: winner Alpha (time) | final 20 vs 63 (penalty +0/+18) | OT no
+   held A 111.8s B 37.8s neutral 150.3s | captures 6 (takeovers 2), control events 11, first capture @44.1s | rotations 6
+   bots in the active zone 64% of the time | avg inside A 0.93 B 0.2 | within 12 m A 1.89 B 0.68
+   per bot: turf 1450p, on-zone ink 418p, splats 9.9 → XP beyond the win/lose base ≈ 1683
+   stuck 0.3% | splats 79 (water 0) | specials 17 | super jumps 44 | turf 34.1/21.4 | sim 300s in 85s (wall 85s) | {"cpuSimMs":4.47}
+   splats by cause {"blade":19,"shot":20,"roller":2,"burst":4,"charger":5,"drop":8,"blast":11,"surf":2,"blaster":2,"jetpack":1,"brush":4,"zipcaster":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":85154,"state":"finish","stuckPct":0.3,"splats":79,"water":0,"specials":17,"jumps":44,"cov":[34.1,21.4],"teamKD":[{"k":45,"d":34,"sp":2,"by":{"surf":2}},{"k":34,"d":45,"sp":2,"by":{"jetpack":1,"zipcaster":1}}],"spUses":[{"bubbler":4,"jetpack":3,"sonar":1,"zipcaster":1},{"surf":2,"kraken":1,"sonar":3,"barrage":2}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings"
