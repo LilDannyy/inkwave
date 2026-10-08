@@ -188,22 +188,40 @@ add(B(G.PIT.x0, G.PIT.x1, 0, 3.0, G.PIT.z0, G.PIT.z1, iron({ tag: 'weighbridge',
 add(R([-12, 3.0, -50], [G.PIT.x0, 3.6, -50], 4, iron({ tag: 'pit-ramp', pattern: PATTERN.rampboard })), R([-5, 3.0, -50], [G.PIT.x1, 3.6, -50], 4, iron({ tag: 'pit-ramp', pattern: PATTERN.rampboard })));
 // buildings and big pieces (roof)
 add(B(-23, -16, 3.6, 9.5, -53.5, -47.5, white({ tag: 'surge-office' })));
+// the Pattern Store (blockout massing beyond the piece table): the Surge Office's brick annex, from its west face to the
+// caldera wall and south along the wall to the side yard. It closes the dead-end strip between the office and the wall
+// (3 m wide, open only at one end) and the wedge south of the office, so the yard's west side is one built edge
+{ const poke = () => ({ kind: 'poke', w: 1.0 }), mk = () => ({ color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'pattern-store' });
+  const annex = fill([[-23, -47.5], [-27.5, -47.5], [-27.5, -47], [-24.25, -53.5], [-23, -53.5]], { y0: 3.6, top: 8.6, mk, edge: poke });
+  const store = fill([[-16, -53.5], [-16, -60.5], [-20.5, -58], [-24, -54], [-24.25, -53.5]], { y0: 3.6, top: 8.0, mk, edge: poke });
+  add(annex.cols, store.cols); }
 add(OCT(14.0, -46.5, 2.38, 3.6, 9.4, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'cupola' }));
 add(OCT(14.0, -46.5, 1.0, 9.4, 15.0, { color: '#4b4f55', pattern: PATTERN.metal, roof: true, tag: 'cupola-stack' }));
 add(B(10.5, 14.5, 3.6, 6.8, -59.5, -56, white({ tag: 'weigh-office' })));
 add(B(15.4, 16.6, 3.6, 12, -57.1, -55.9, { color: K.green, pattern: PATTERN.metal, roof: true, tag: 'jib-mast' }));
 // casting stacks: cover every 5–8 m, clear of the tower lane and the Gate
 const stack = (x, z, w, d, h, base, tag, c = K.cast) => B(x - w / 2, x + w / 2, base, base + h, z - d / 2, z + d / 2, cover(c, { tag }));
+// a stack of castings two pallets high: the lower pallet, and a smaller one on it set back toward (ox, oz) (a stepped
+// silhouette, so a yard of stacks never reads as a field of dice); a drum / round stack is an octagon
+const stack2 = (x, z, w, d, h, base, tag, c, [w2, d2, h2, ox = 0, oz = 0]) => [stack(x, z, w, d, h, base, tag, c), stack(x + ox, z + oz, w2, d2, h2, base + h, tag, c)];
+const drum = (x, z, r, h, base, tag, c) => OCT(x, z, r, base, base + h, cover(c, { tag }));
 add(
-  stack(5.6, -56.2, 1.6, 1.6, 1.3, 3.6, 'covers-stack'), stack(2.0, -50.6, 1.6, 1.6, 1.3, 3.6, 'manhole-covers'),
-  stack(-7.5, -56.6, 5.0, 1.2, 1.6, 3.6, 'lamp-post-rack', '#5f6a63'), stack(-16, -44.5, 1.6, 2.4, 1.0, 3.6, 'bench-ends', K.wood),
-  stack(-18.5, -41.5, 1.6, 1.6, 1.3, 3.6, 'pig-iron', '#5b5550'), stack(-1.0, -47.0, 1.6, 1.6, 1.1, 3.6, 'ingot-stack'),
-  stack(-24.0, -44.5, 1.4, 1.4, 1.8, 3.6, 'drum-stack', '#56606a'), stack(-25.5, -37.0, 1.6, 1.2, 1.2, 3.6, 'drum-stack', '#56606a'),
-  stack(4.0, -39.9, 2.0, 1.0, 1.0, 3.6, 'mould-boxes', K.wood), stack(13.5, -53.5, 1.6, 1.6, 1.6, 3.6, 'cable-drum', K.wood),
+  // the Gate apron's two blocks (bazookarp SPEC #6: ≥ 1.2 m, 3.0 / 3.4 m from route 1): a pallet of manhole covers with a
+  // second pallet on it, and a round stack of covers
+  stack2(5.6, -56.2, 1.6, 1.6, 1.3, 3.6, 'covers-stack', K.cast, [1.1, 1.1, 0.6, 0.15, -0.15]), drum(2.0, -50.6, 0.9, 1.3, 3.6, 'manhole-covers', '#666b70'),
+  // lamp posts for Inkopolis racked on A-frames: too tall to see over from the yard (from the gallery you can)
+  stack(-7.5, -56.6, 5.0, 1.3, 2.2, 3.6, 'lamp-post-rack', '#5f6a63'), stack2(-16, -44.5, 1.6, 2.4, 1.0, 3.6, 'bench-ends', K.wood, [1.2, 1.4, 0.5, 0, -0.3]),
+  stack2(-18.5, -41.5, 1.6, 1.6, 1.3, 3.6, 'pig-iron', '#5b5550', [1.0, 1.2, 0.45, 0.2, 0]), stack2(-1.0, -47.0, 1.6, 1.6, 1.1, 3.6, 'ingot-stack', K.cast, [1.0, 1.0, 0.6, -0.2, -0.2]),
+  drum(-24.0, -44.5, 0.8, 1.8, 3.6, 'drum-stack', '#56606a'), drum(-25.5, -37.0, 0.75, 1.2, 3.6, 'drum-stack', '#56606a'),
+  stack2(4.0, -39.9, 2.0, 1.0, 1.0, 3.6, 'mould-boxes', K.wood, [1.0, 0.8, 0.5, -0.4, 0]), drum(13.5, -53.5, 0.85, 1.6, 3.6, 'cable-drum', K.wood),
   stack(-8.5, -54.0, 2.0, 1.2, 1.1, 3.6, 'weighbridge-load'), stack(-8.5, -46.3, 2.4, 1.4, 2.4, 3.6, 'weigh-beam-hut', K.white),
-  stack(-1.5, -40.1, 2.0, 1.0, 1.0, 3.6, 'ingot-rack'), stack(-21.5, -46.0, 1.6, 1.6, 0.9, 3.6, 'bollard-pallet', '#4f555c'),
-  stack(-12.5, -59.0, 1.6, 1.6, 1.1, 3.6, 'drain-grates'), stack(10.5, -40.4, 2.2, 1.2, 1.0, 3.6, 'rails-stack', '#5b5f63'),
+  stack2(-1.5, -40.1, 2.0, 1.0, 1.0, 3.6, 'ingot-rack', K.cast, [1.4, 0.7, 0.5, 0.2, 0]), stack(-21.5, -46.0, 1.6, 1.6, 0.9, 3.6, 'bollard-pallet', '#4f555c'),
+  stack(-12.5, -59.0, 1.6, 1.6, 1.1, 3.6, 'drain-grates'), stack2(10.5, -40.4, 2.2, 1.2, 1.0, 3.6, 'rails-stack', '#5b5f63', [2.2, 0.6, 0.4, 0, 0.2]),
   stack(-21.5, -36.5, 1.2, 1.2, 1.2, 3.6, 'cairn', K.basaltDk),
+  // (beyond the piece table, where cover-map found open stretches over 10 m): a pig-iron pile at the yard's front west
+  // between its railing and the tower lane, and an ingot pallet on the apron north of the covers (≥ 0.5 m from the lane,
+  // 7.7 m from the Gate)
+  stack2(-9.4, -39.7, 1.6, 1.2, 1.2, 3.6, 'pig-iron', '#5b5550', [1.0, 0.8, 0.4, 0.2, 0]), stack(4.0, -46.2, 1.4, 1.2, 1.2, 3.6, 'ingot-stack'),
 );
 // the yard's massing (blockout additions beyond the piece table, out of every lane): the coke bunkers against the east
 // wall by the cupola, a stack of castings for the ferry in each side yard (clear of the side stairs' landings)
@@ -231,6 +249,7 @@ function cone(cx, cz, rTop, yTop, rBase, yBase, tag) {
 }
 add(cone(-29.5, -33.0, 1.2, 4.5, 3.25, 3.6, 'spatter-cone'));
 add(cone(-28.5, -24.5, 0.8, 4.2, 2.2, 3.6, 'hummock'));
+add(stack(-21.9, -24.2, 1.2, 1.2, 1.2, 3.6, 'cairn', K.basaltDk));   // (beyond the table: the Rim Head's edge over the Moorings, 11 m open)
 add(stack(-33.0, -38.0, 2.4, 1.6, 1.4, 3.6, 'outcrop', K.basaltDk), stack(-29.8, -40.8, 1.6, 1.4, 1.3, 3.6, 'outcrop', K.basaltDk),
   stack(-24.5, -29.0, 1.6, 1.4, 1.3, 3.6, 'outcrop', K.basaltDk), stack(-26.0, -27.0, 1.2, 1.2, 1.2, 3.6, 'cairn', K.basaltDk),
   stack(-32.2, -27.5, 1.2, 1.2, 1.2, 3.6, 'cairn', K.basaltDk));
@@ -254,7 +273,9 @@ add(ARC(0, 0, 30.25, 0.5, 2.4, 3.3, -79.5, -77, 1, { color: '#7a7d82', pattern: 
 add(stack(-10.0, -37.0, 2.4, 1.0, 1.2, 2.4, 'pattern-crates', K.wood), stack(11.5, -31.5, 1.0, 2.4, 1.2, 2.4, 'pattern-crates', K.wood),
   stack(9.5, -36.6, 1.2, 1.2, 1.0, 2.4, 'firebrick-pallet', K.brick), stack(-14.0, -31.4, 1.6, 1.6, 1.0, 2.4, 'ingot-pile'),
   stack(-7.5, -31.4, 1.6, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'), stack(-2.0, -31.3, 1.6, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'),
-  stack(-1.0, -36.8, 2.0, 0.8, 1.0, 2.4, 'mould-boxes', K.wood));
+  stack(-1.0, -36.8, 2.0, 0.8, 1.0, 2.4, 'mould-boxes', K.wood),
+  // (beyond the piece table: the casting bed's top was 12.6 m across without cover) a moulding flask on the bed
+  stack(8.9, -33.9, 1.2, 0.8, 1.0, 3.0, 'flask-stack', '#6b5f55'));
 // the charging shed (E7)
 add(SHED.blocks);
 
