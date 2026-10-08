@@ -305,8 +305,8 @@ export class NavGraph {
     const g = this._g, from = this._from, seen = this._seen, closed = this._closed;
     const st = ++this._stamp;
     const nodes = this.nodes, goal = nodes[b], blk = this.blocked;
-    const hs = this.hScale, X = this.ext, XE = X && X.edge, EM = this.edgeMask;   // [b5-stagehooks]
-    const h = hs === 1 ? (n) => Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5 : (n) => (Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5) * hs;
+    const hs = this.hScale, X = this.ext, XE = X && X.edge, EM = this.edgeMask, XR = !!(XE || EM);   // [b5-stagehooks]
+    const h = (n) => (Math.hypot(n.x - goal.x, n.z - goal.z) + Math.abs(n.y - goal.y) * 0.5) * hs;
     // (a timed rule: metres walked without penalties, for the arrival time)
     const tg = X && X.timed ? (this._tg && this._tg.length === N ? this._tg : (this._tg = new Float32Array(N))) : null;
     if (tg) tg[a] = 0;
@@ -325,8 +325,10 @@ export class NavGraph {
       const n = nodes[cur];
       for (const e of n.nb) {
         let cx = 0;
-        if (EM && e.em !== undefined && !(e.em & EM)) continue;   // [b5-stagehooks]
-        if (XE) { const xc = XE(e, e.to, tg ? tg[cur] + e.cost : 0); if (xc === Infinity) continue; cx += xc || 0; }
+        if (XR) {   // [b5-stagehooks] a stage module's edge mask and rule (one test per edge without them)
+          if (EM && e.em !== undefined && !(e.em & EM)) continue;
+          if (XE) { const xc = XE(e, e.to, tg ? tg[cur] + e.cost : 0); if (xc === Infinity) continue; cx += xc || 0; }
+        }
         if (e.type === 'climb') {
           if (skipClimb) continue;
           cx += climbX;   // [b5-stagehooks] += (a stage rule's cost above stays: lava's soft cost on a climb)
