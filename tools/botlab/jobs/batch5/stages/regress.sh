@@ -25,6 +25,9 @@ want() { [ -z "$ONLY" ] && return 0; case " $ONLY " in *" $1 "*) return 0;; esac
 export -f one; export LOG RUN T
 batch=()
 for i in $(seq 1 "$REP"); do batch+=("stage-mods-$i MAP=testbox PAGE=$T/stage-mods.js $RUN tools/botlab/page.cjs"); done
+# the bake's page code against BASE's (one pass byte-identical) and with the dummy's two states (RGB)
+mkdir -p "$ROOT/.botlab"; git show "$BASE:tools/botlab/bake.cjs" > "$ROOT/.botlab/bake-old.cjs" 2>/dev/null
+batch+=("stage-mods-bake MAP=testbox PAGE=$T/stage-mods-bake.js PAGE_ARGS=old=.botlab/bake-old.cjs $RUN tools/botlab/page.cjs")
 batch+=(
   "world-build MAP=halyard PAGE=$T/world-build.js $RUN tools/botlab/page.cjs"
   "movers MAP=calamari MODE=turf PAGE=$T/movers.js $RUN tools/botlab/page.cjs"
