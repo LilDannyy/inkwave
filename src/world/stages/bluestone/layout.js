@@ -479,7 +479,7 @@ const RIVER = [];
   RIVER.push(OB(24.2, -13.6, 1.2, 1.6, -0.08, 1, 0, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, eras: '23', eraGroup: 'bw-3' })));
   for (let k = 0; k < SPANS.length - 1; k++) {
     const m0 = SPANS[k], m1 = SPANS[k + 1], g = `bridge-${k + 1}`, [cx, cz] = bp((m0 + m1) / 2, 0);
-    RIVER.push(O(+cx.toFixed(4), +cz.toFixed(4), 4.5, +(m1 - m0).toFixed(4), -0.6, -0.16, 30, { tag: 'iron-bridge', color: K.bridge, pattern: PATTERN.planks, eras: '23', eraGroup: g }));
+    RIVER.push(O(+cx.toFixed(4), +cz.toFixed(4), 4.5, +(m1 - m0).toFixed(4), -0.6, -0.16, 30, { tag: 'iron-bridge', color: K.bridge, pattern: PATTERN.planks, eras: '23', eraGroup: g, noPaint: [[0.866, 0, -0.5], [-0.866, 0, 0.5]] }));
     for (const [s, [r0, r1]] of [[2.32, RIGHT], [-2.32, LEFT]]) {
       const a = Math.max(m0, r0) + 0.01, b = Math.min(m1, r1) - 0.01;
       if (b - a < 0.05) continue;
@@ -531,14 +531,15 @@ const BASE = [
   B(-11.1, -9.9, 3.3, 4.3, -75.6, -74.4, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
   // the deck's front railing (gaps at the stair heads and over the turntable: a one-way 2.3 m drop)
   ...[[-12, -11], [-6, -4.5], [4.5, 6], [11, 12]].map(([x0, x1]) => B(x0, x1, 3.3, 4.3, -66.15, -66, rail({ tag: 'deck-rail' }))),
-  // the Cable Tram Engine House (and its chimney), the boiler house and the tram shed: the back of the base
-  ...bld(P.engine[0], P.engine[1], P.engine[2], P.engine[3], 9, { tag: 'engine-house', color: K.engine, pattern: SURF.bluestone }, BOT),
+  // the Cable Tram Engine House (and its chimney), the boiler house and the tram shed: the back of the base (their faces
+  // over the water are out of reach: not inkable, the paint budget, ENGINE rule 8)
+  ...bld(P.engine[0], P.engine[1], P.engine[2], P.engine[3], 9, { tag: 'engine-house', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1]] }, BOT),
   B(-11, -9, 9, 24, -80, -78, { tag: 'chimney', color: '#6a5b50', pattern: PATTERN.brick, roof: true, paint: false }),
-  ...bld(P.boiler[0], P.boiler[1], P.boiler[2], P.boiler[3], 6, { tag: 'boiler-house', color: K.engine, pattern: SURF.bluestone }, BOT),
-  ...bld(-P.boiler[1], -P.boiler[0], P.boiler[2], P.boiler[3], 6, { tag: 'tram-shed', color: K.engine, pattern: SURF.bluestone }, BOT),
+  ...bld(P.boiler[0], P.boiler[1], P.boiler[2], P.boiler[3], 6, { tag: 'boiler-house', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [-1, 0, 0]] }, BOT),
+  ...bld(-P.boiler[1], -P.boiler[0], P.boiler[2], P.boiler[3], 6, { tag: 'tram-shed', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [1, 0, 0]] }, BOT),
   // yard and terrace cover
   B(-25, -22.4, 1, 4, -65, -57, { tag: 'grip-car', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
-  B(24, 27, 1, 5, -67.5, -62, { tag: 'stable', color: '#7e6a55', pattern: PATTERN.weatherboard, roof: true }),
+  B(24, 27, 1, 5, -67.5, -62, { tag: 'stable', color: '#7e6a55', pattern: PATTERN.weatherboard, roof: true, noPaint: [[1, 0, 0]] }),
   B(-20, -18, 1, 2.4, -66, -64.4, cover({ tag: 'coal-bin', color: '#4a4744' })),
   B(-6.1, -4.9, 1, 2.25, -60, -58, cover({ tag: 'turntable-bench', color: '#7d6c5a' })), B(4.9, 6.1, 1, 2.25, -60, -58, cover({ tag: 'turntable-bench', color: '#7d6c5a' })),
   B(-4.6, -3.4, 1, 2.25, -64.6, -63.4, cover({ tag: 'buffer', color: '#5b5048' })), B(3.4, 4.6, 1, 2.25, -64.6, -63.4, cover({ tag: 'buffer', color: '#5b5048' })),

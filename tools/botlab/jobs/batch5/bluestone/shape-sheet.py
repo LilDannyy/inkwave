@@ -25,8 +25,8 @@ for id, s in d.items():
     dr = ImageDraw.Draw(im)
     for m in range(-100, 101, 10):   # 10 m grid
         X = (m - s['x0']) * S; Y = h - (m - s['z0']) * S
-        if 0 <= X < w: dr.line([(X, 0), (X, h)], fill=(70, 100, 130) if m else (220, 90, 90), width=1)
-        if 0 <= Y < h: dr.line([(0, Y), (w, Y)], fill=(70, 100, 130) if m else (220, 90, 90), width=1)
+        if 0 <= X < w: dr.line([(X, 0), (X, h)], fill=(70, 100, 130) if m else (220, 90, 90), width=1 if m else 3)
+        if 0 <= Y < h: dr.line([(0, Y), (w, Y)], fill=(70, 100, 130) if m else (220, 90, 90), width=1 if m else 3)
     panels.append((labels.get(id, id), im))
 W = sum(p[1].width for p in panels) + 40 * (len(panels) + 1); H = max(p[1].height for p in panels) + 120
 sheet = Image.new('RGB', (W, H), (22, 26, 32)); dr = ImageDraw.Draw(sheet)
