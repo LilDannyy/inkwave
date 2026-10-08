@@ -466,6 +466,10 @@
       unstub(Sh); Sh.bot.reset(); put(Sh, V(0, 0, 2), Math.PI);
       const bb = plant(me, V(0, 0, -6));
       put(me, V(-20, 0, -40), 0);
+      // ([b5-deploy] fix round 1, resumed: "no foe in sight" for real — the bot's foes, parked in the open 35–42 m off, were
+      // found 2 times in 9 (JOB-9/10: "fight" for 1.5 s, then painting far from the buoy, 0 s on it): all behind the
+      // testbox wall, x 14…15)
+      m.actors.filter((a) => a.team !== Sh.team).forEach((a, i) => put(a, V(21 + (i % 3) * 1.5, 0, -3 + Math.floor(i / 3) * 1.5), 0));
       const hp0 = bb.hp, DBm = await import('./src/game/deployables-bots.js'), SPm = await import('./src/game/botSpecials.js');
       const ds0 = DBm.DEV_BOT.secs, es0 = SPm.SPECIAL_STATS.escapes, modes = {};
       step(4, () => { modes[Sh.bot.mode] = (modes[Sh.bot.mode] || 0) + 1; return bb.phase === 'live'; });
