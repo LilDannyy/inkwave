@@ -329,7 +329,7 @@ export class NavGraph {
         if (XE) { const xc = XE(e, e.to, tg ? tg[cur] + e.cost : 0); if (xc === Infinity) continue; cx += xc || 0; }
         if (e.type === 'climb') {
           if (skipClimb) continue;
-          cx = climbX;
+          cx += climbX;   // [b5-stagehooks] += (a stage rule's cost above stays: lava's soft cost on a climb)
           if (e.rise < minRise || e.rise > maxRise || e === bad) { if (outX === Infinity) continue; cx += outX; }
         }
         if (avoid && avoid[e.to]) continue;
