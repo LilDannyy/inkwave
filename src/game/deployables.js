@@ -336,20 +336,11 @@ class Deployables {
   // a roller's drum / a brush's bristles (weapons.js _roller / _brush, its owner's screen): an enemy device in front of
   // it (fwd −0.2 … reach, ±width/2 + 0.35 across, within 1.2 m up or down) takes dmg, once per cd s each (hits: the
   // runner's own map, keyed by the device)
+  // (every frame a roller rolls: no closures, no garbage)
   sweep(a, width, reach, dmg, hits, cd) {
     const fx = Math.sin(a.yaw), fz = Math.cos(a.yaw);
-    const test = (obj, p, r, hurt) => {
-      if (obj.team === a.team) return;
-      const dx = p.x - a.pos.x, dz = p.z - a.pos.z, dy = p.y - a.pos.y;
-      const fwd = dx * fx + dz * fz, lat = Math.abs(dx * fz - dz * fx);
-      if (fwd < -0.2 || fwd > reach + r || lat > width / 2 + 0.35 + r || dy < -1.2 || dy > 1.2) return;
-      if (G.time - (hits.get(obj) ?? -9) <= cd) return;
-      hits.set(obj, G.time);
-      DEPLOY_STATS.sweeps++;
-      hurt();
-    };
-    for (const it of G.subs?.items || []) { const k = devKind(it); if (k) test(it, it.pos, DEV_R[k], () => G.subs._hurt(it, dmg, a)); }
-    for (const w of G.specials?.world || []) if (w.kind === 'surf' && !w.dead && w.phase === 'live') test(w, w.pos, BUOY.hitR, () => w._shot(dmg, a));
+    for (const it of G.subs?.items || []) { const k = devKind(it); if (k && swept(a, fx, fz, width, reach, hits, cd, it, it.pos, DEV_R[k])) G.subs._hurt(it, dmg, a); }
+    for (const w of G.specials?.world || []) if (w.kind === 'surf' && !w.dead && w.phase === 'live' && swept(a, fx, fz, width, reach, hits, cd, w, w.pos, BUOY.hitR)) w._shot(dmg, a);
   }
 
   // ---------------------------------------------------------------------------------------------- per frame
@@ -534,12 +525,12 @@ class Deployables {
     for (const it of G.subs?.items || []) {
       const k = devKind(it);
       if (!k) continue;
-      const aim = devMid(it, new THREE.Vector3());
+      const aim = devMid(it, it._aimV || (it._aimV = new THREE.Vector3()));   // (one per device, reused)
       out.push({ kind: k, obj: it, team: it.team, owner: it.owner, pos: it.pos, aim, r: DEV_R[k], ghost: !!it.ghost });
     }
     for (const w of G.specials?.world || []) {
       if (w.kind !== 'surf' || w.dead || w.phase !== 'live') continue;
-      out.push({ kind: 'surf', obj: w, team: w.team, owner: w.owner, pos: w.pos, aim: new THREE.Vector3(w.pos.x, w.pos.y + 0.6, w.pos.z), r: BUOY.hitR, ghost: !!w.ghost });
+      out.push({ kind: 'surf', obj: w, team: w.team, owner: w.owner, pos: w.pos, aim: (w._aimV || (w._aimV = new THREE.Vector3())).set(w.pos.x, w.pos.y + 0.6, w.pos.z), r: BUOY.hitR, ghost: !!w.ghost });
     }
     return out;
   }
@@ -569,6 +560,18 @@ function curtainIn(B, it) {
     if (lo <= hi) return true;
   }
   return false;
+}
+
+// sweep: is enemy device obj (at p, radius r) in front of runner a's drum / bristles, off its hit cooldown? (marks the hit)
+function swept(a, fx, fz, width, reach, hits, cd, obj, p, r) {
+  if (obj.team === a.team) return false;
+  const dx = p.x - a.pos.x, dz = p.z - a.pos.z, dy = p.y - a.pos.y;
+  const fwd = dx * fx + dz * fz, lat = Math.abs(dx * fz - dz * fx);
+  if (fwd < -0.2 || fwd > reach + r || lat > width / 2 + 0.35 + r || dy < -1.2 || dy > 1.2) return false;
+  if (G.time - (hits.get(obj) ?? -9) <= cd) return false;
+  hits.set(obj, G.time);
+  DEPLOY_STATS.sweeps++;
+  return true;
 }
 
 // standing fire's list of this screen's own devices (pooled: _standing fills the first n each frame there's any)
