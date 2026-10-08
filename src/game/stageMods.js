@@ -141,14 +141,17 @@ export class StageWorld {
   }
   attachMinimap(mm) {
     this.minimap = mm;
+    // (the base raster's block test: solid, as always, and every module's mapBlock — setBase(key, present) replaces it)
     const pres = this.mods.filter((m) => m.W.mapBlock).map((m) => m.W);
-    if (pres.length) mm.blockOk = (b) => pres.every((w) => w.mapBlock(b));
+    if (pres.length) mm.blockOk = (b) => b.solid && pres.every((w) => w.mapBlock(b));
     this._each('attachMinimap', mm);
   }
   attachEnv(env) { if (env && this._env !== env) { this._env = env; this._each('attachEnv', env); } }
   ready() { if (G.env) this.attachEnv(G.env); this._each('ready'); }
   dispose() {
     this._each('dispose');
+    // (the environment's slot a module may have filled: eras' look per era. The next stage's theme is re-applied anyway)
+    if (this._env && this._env.themeOverlay) this._env.themeOverlay = null;
     for (const m of this.mods) if (m.def.worldAs && G[m.def.worldAs] === m.W) G[m.def.worldAs] = null;
     if (this.level?.stageWorld === this) this.level.stageWorld = null;
     if (G.stageWorld === this) G.stageWorld = null;
@@ -166,6 +169,10 @@ export class StageWorld {
   noPlace(p, r = 0) { for (const m of this.mods) if (m.W.noPlace && m.W.noPlace(p, r)) return true; return !!G.match?.stage?.noPlace(p, r); }
   // bake-ao: modules take their own pieces out of the AO trace (pipe glass, tank water) and put them back
   bakeMode(on) { this._each('bakeMode', on); }
+  // bake-ao: one trace per world state, each into its own channel (eras: [() => apply(1), () => apply(2), () => apply(3)]
+  // → an RGB lightmap, channel e−1 = era e). The first module that answers; null = one trace, a gray PNG as always.
+  // At most 3 (R, G, B); bakeMode(false) afterwards puts the world back.
+  bakePasses() { const p = this._first('bakePasses'); return Array.isArray(p) && p.length > 1 ? p.slice(0, 3) : null; }
 }
 
 // ================================================================================================ the match
@@ -245,6 +252,7 @@ export class StageRun {
   dispose() {
     for (const R of this.h.dispose) guarded('dispose', () => R.dispose());
     if (this._navSet && G.nav?.ext) G.nav.ext = null;
+    if (G.game?.screenfx?.heat) G.game.screenfx.heat = 0;   // (a module's heat shimmer goes with its match)
     for (const m of this.mods) { const k = m.def.matchAs || m.key; if (this.match[k] === m.R) this.match[k] = null; }
     this.mods.length = 0;
     for (const n of R_HOOKS) this.h[n] = [];
