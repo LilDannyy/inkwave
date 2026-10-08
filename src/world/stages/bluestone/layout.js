@@ -286,6 +286,7 @@ const WEST = [
   R([-5, 0, -14], [-11, 2.4, -14], 3, stair({ tag: 'balcony-stair', color: K.iron, pattern: PATTERN.treads })),
   ...[[-13.85, -12.65], [-13.85, -15.4], [-5.1, -28.85], [-5.1, -25.25], [-5.1, -21], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
   B(-14, -13.2, 2.4, 3.4, -13.3, -12.5, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),   // (adds: cover on the landing)
+  B(-6.6, -5.4, 2.4, 3.4, -29, -28.4, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),    // (adds: the gallery's south end, 6 m from cover in the 3000s once the superstop is a glass stair)
   B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   // Prow Place's fountain; Hoki Lane's cover, alternating sides
@@ -375,6 +376,7 @@ const SIGNAL_GARDEN = [
   B(-40, -36.2, LTOP, 8.38, -41.8, -37.3, { tag: 'signal-pavilion', color: '#e6ece9', pattern: PATTERN.glasstile, roof: true, paint: false, eras: '3', eraGroup: 'garden-t9' }),   // (glass: not inkable)
   gCover(-27.5, -32.3, GTOP, 65, 'garden-t2'), gCover(-28, -48.8, LTOP, 0, 'garden-t3'), gCover(-42.5, -37.5, GTOP, 65, 'garden-t6'),
   gCover(-33.6, -35.8, GTOP, 65, 'garden-t4'), gCover(-40, -47.5, LTOP, 90, 'garden-t8'),
+  gCover(-32.5, -41, LTOP, 0, 'garden-t10'),   // (adds: the lawn by the Hoki stair's head was 5.1 m from cover)
   B(-35.5, -32.6, LTOP, 3.68, -49.6, -46.6, { tag: 'lawn-mound', color: K.lawn, pattern: PATTERN.planter, eras: '3', eraGroup: 'garden-t5' }),
   // parapets on the garden's open edges (every era: in the 1880s and today they edge the railyard)
   armBox(-58.9, -58.5, -21.0, GW0, EMB, 4.0, gPar()), armBox(-58.5, -57.2, -21.0, GW1, EMB, 3.92, gPar()),
