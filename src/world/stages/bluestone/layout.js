@@ -6,7 +6,9 @@
 // BLOCKOUT (2026-10-04): every floor, tier, stair, wall and piece of cover in DESIGN.md §2.6 at its real size, both
 // halves, with the era engine's tags; plain surfaces, no art. The design: tools/botlab/jobs/batch5/stages/bluestone/
 // DESIGN.md (the plan, the piece tables), ENGINE.md (the era data's format). Where this file departs from them it says
-// so in a "(departs: …)" note.
+// so in a "(departs: …)" note, and an "(adds: …)" note marks cover the design did not list.
+// The big volumes whose silhouette a box cannot give (the copper dome and lantern, the hotel's turret, the GPO tower's
+// spire, the railyard's trains) are props.js blockout volumes over hidden (collision-only) layout blocks.
 //
 // Bluestone Junction — Clockface Circus, where Swimston Street (the tram boulevard on the spawn axis) crosses Flathead
 // Street (the old river road on the diagonal, bearing 65°) under the domed station and its clocks; the city around it

@@ -28,7 +28,7 @@ for id, s in d.items():
         if 0 <= X < w: dr.line([(X, 0), (X, h)], fill=(70, 100, 130) if m else (220, 90, 90), width=1 if m else 3)
         if 0 <= Y < h: dr.line([(0, Y), (w, Y)], fill=(70, 100, 130) if m else (220, 90, 90), width=1 if m else 3)
     panels.append((labels.get(id, id), im))
-W = sum(p[1].width for p in panels) + 40 * (len(panels) + 1); H = max(p[1].height for p in panels) + 120
+W = sum(p[1].width for p in panels) + 40 * (len(panels) + 1); H = max(p[1].height for p in panels) + 132
 sheet = Image.new('RGB', (W, H), (22, 26, 32)); dr = ImageDraw.Draw(sheet)
 dr.text((40, 14), title, fill=(255, 255, 255), font=Fb)
 x = 40
@@ -36,5 +36,6 @@ for name, im in panels:
     sheet.paste(im, (x, 76 + (H - 120 - im.height) // 2))
     for li, line in enumerate(name.split('|')): dr.text((x, 40 + li * 16), line, fill=(230, 230, 230), font=Fs)
     x += im.width + 40
-dr.text((40, H - 32), '3 px = 1 m (same scale), +z up (Alpha at the bottom), 10 m grid, red = the axes through mid; sand = walkable (lighter = higher), grey = buildings / roofs, blue = water / out of play', fill=(200, 200, 200), font=F)
+for li, line in enumerate(['3 px = 1 m (the same scale), +z up (Alpha at the bottom), 10 m grid, red = the axes through mid', 'sand = walkable (lighter = higher), grey = buildings / roofs, blue = water / out of play']):
+    dr.text((40, H - 40 + li * 18), line, fill=(200, 200, 200), font=F)
 sheet.save(out); print('saved', out, sheet.size)
