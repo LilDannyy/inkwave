@@ -34,7 +34,7 @@ for e in 1 2 3; do
   ERA=$e MAP=bluestone OUT="$J/tc$e" $R tools/botlab/tower-check.cjs > "$J/towercheck$e.log" 2>&1
   grep -vE '^     run ' "$J/towercheck$e.log" | cut -c1-500 | head -70 > "$J/towercheck$e.txt"
   grep -E '^RESULT|holes|clearance' "$J/towercheck$e.log" | head -6
-  [ -f "$J/tc$e/bluestone-top.png" ] && sips -Z 1400 -s format jpeg -s formatOptions 70 "$J/tc$e/bluestone-top.png" --out "$O/mm-tower-rail-top-era$e.jpg" >/dev/null
+  [ -f "$J/tc$e/bluestone-top.png" ] && sips -Z 1400 -s format jpeg -s formatOptions 70 "$J/tc$e/bluestone-top.png" --out "$O/mm3-tower-rail-top-era$e.jpg" >/dev/null
 done
 echo "== perf: Halyard and Bluestone eras 1/2/3, same machine, one after the other"
 MAP=halyard TIME=day MODE=turf OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-halyard.log" 2>&1
