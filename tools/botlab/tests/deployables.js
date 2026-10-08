@@ -30,7 +30,9 @@
 //    removed from the match takes its devices with it;
 //  - bots: a bot with no foe in sight walks up to an enemy beacon / sprinkler and shoots it down (a shooter, a roller, a
 //    charger, a blaster); a bot hunted by a Skitter Bomb shoots it down (the threat system); a noticed Vortex Strike
-//    between a bot and an enemy beacon: it never steps into it (device AI on and off); a foe in sight comes first; a
+//    between a bot and an enemy beacon: never inside the vortex (device AI on and off), known the whole time (the missile's
+//    notice handed to the vortex the frame it lands), never a walk for the beacon with the danger on the way (a control
+//    scene plays the old order and must show such walks); a foe in sight comes first (the foe gone: splatted); a
 //    device it can't break: it gives up after 8 s on it in all (summed over re-picks), leaves it 12 s, comes back;
 //  - sounds: device_hit, device_pop, seeker_pop, device_crunch are built;
 //  - floors (any stage): the one moving-floor rule on a plain moving block — a Lurk Mine and a Hop Beacon laid on it, a
@@ -88,6 +90,9 @@
   // (a bot scene on testbox: everyone on the other side from bot x — but `keep` — behind the 4 m wall at x 14…15: no foe
   // for it to find but the ones a scene shows it)
   const hideFoes = (x, keep = []) => m.actors.filter((a) => a.team !== x.team && !keep.includes(a)).forEach((a, i) => put(a, V(21 + (i % 3) * 1.5, 0, -3 + Math.floor(i / 3) * 1.5), 0));
+  // (a foe a bot scene is done with: splatted — a bot drops a splatted target at once, no hunt — and, back from its
+  // respawn, kept behind the wall: `hook`, till the scene clears it)
+  const foeGone = (a) => { a.hp = PLAYER.hp; a.splat(null, 'test'); hook = () => { if (a.alive && a.pos.x < 20) put(a, V(22, 0, 4), 0); }; };
   if (G.fx) { G.fx.onDropletLand = null; G.fx.onSpeck = null; }
   const weapons0 = new Map(m.actors.map((a) => [a, a.weaponId]));
   const reset = () => {
@@ -458,40 +463,57 @@
       // the device's footwork: bots.js runs devShootAim before botSpecials act)
       // (the area the bots' danger model gives a Vortex Strike: its ring + 0.6 m — botSpecials.js specialDangers; a step in
       // it shows as an escape out of it)
-      const VX = V(4.7, 0, -1), RV = SPECIALS.strike.radius + 0.6, dres = {};
+      // What's judged (fix round 1, resumed): the vortex itself (its ring, 5.5 m: where it hurts) is never entered, with
+      // the device AI on or off; and the device AI never walks the bot at the danger — a frame it walked for the beacon
+      // (DEV_BOT.walkSecs grew) while the straight way there (its next 4 m) crossed the danger area ("walks at it"). The
+      // control scene plays the old order (the device's footwork after the danger guard, no look for dangers on the way:
+      // what the review found) and must show such walks, so the check can see the bug it guards against (the escape out
+      // of the area catches that old order before the vortex itself: it grazed the area, never the ring). The area's
+      // edge grazed on the bot's own route (the danger guard's precision: JOB-10 had 18 frames / 0.19 m in with the device
+      // AI OFF) is reported, not judged.
+      const VX = V(4.7, 0, -1), RV = SPECIALS.strike.radius + 0.6, RING = SPECIALS.strike.radius, dres = {};
       const { SPECIAL_STATS } = await import('./src/game/botSpecials.js');
-      for (const [onAI, rep] of [[true, 0], [false, 0], [true, 1], [false, 1]]) {
+      for (const [onAI, rep] of [[true, 0], [false, 0], [true, 1], [false, 1], ['old', 0]]) {
         reset();
-        DB.DEV_AI.enabled = onAI;
+        DB.DEV_AI.enabled = !!onAI;
+        const sp = foe.bot.sp, act0 = sp.act;
         try {
           const Sh = foe;
           Sh.setWeapon('shooter'); Sh.ink = PLAYER.inkMax;
           unstub(Sh); put(Sh, V(0, 0, 5), Math.PI);
           hideFoes(Sh);
-          G.specials._ghostObj(mate, [2, 'mi', 99101 + (onAI ? 0 : 1) + rep * 2, VX.x, VX.y, VX.z]);
+          G.specials._ghostObj(mate, [2, 'mi', 99101 + (onAI === true ? 0 : onAI ? 4 : 1) + rep * 2, VX.x, VX.y, VX.z]);
           hook = () => { put(Sh, V(0, 0, 5), Math.PI); Sh.ink = PLAYER.inkMax; };
           step(0.8);   // (it has noticed it — on the map — standing where it starts)
           hook = () => { Sh.ink = PLAYER.inkMax; };
-          const d = mk.beacon(me, 0, -7), s0 = DB.DEV_BOT.secs, esc0 = SPECIAL_STATS.escapes;
-          let inside = 0, minD = 99, n2 = 0;
+          // (the control: the old order — after the guard, out of a danger, the device's straight walk has the last word)
+          if (onAI === 'old') sp.act = function (dt, it, move) { const r = act0.call(this, dt, it, move); if (this._dev && !this._here()) { const ia = this._inAny; this._inAny = () => false; try { DB.devShootAim(this, dt, it, move, null, false, null); } finally { this._inAny = ia; } } return r; };
+          const d = mk.beacon(me, 0, -7), s0 = DB.DEV_BOT.secs, w0 = DB.DEV_BOT.walkSecs, esc0 = SPECIAL_STATS.escapes;
+          let inside = 0, minD = 99, n2 = 0, walkIns = 0, walkAt = 0, walkN = 0, gap = 0, wPrev = DB.DEV_BOT.walkSecs; const atLog = [];
+          const p0 = Sh.pos.clone();
+          // (the straight way from p toward the beacon, its next 4 m: through the danger area while it's still there when the
+          // bot gets that far — a run is ~6 m/s; the bots' model reads it the same way)
+          const wayIn = (p, left) => { const dx = d.pos.x - p.x, dz = d.pos.z - p.z, dh = Math.hypot(dx, dz); for (let k = 0.5; k <= Math.min(dh, 4); k += 0.5) if (k / 6 <= left && Math.hypot(p.x + dx / dh * k - VX.x, p.z + dz / dh * k - VX.z) < RV) return true; return false; };
           step(SPECIALS.strike.flight + SPECIALS.strike.duration - 0.8, () => {
             const w = G.specials.world.find((x) => (x.kind === 'tornado' || x.kind === 'missile') && !x.dead);
+            const walked = DB.DEV_BOT.walkSecs > wPrev; wPrev = DB.DEV_BOT.walkSecs;
+            if (w && walked) { walkN++; if (wayIn(p0, w.kind === 'tornado' ? w.dur - w.t : 99)) { walkAt++; if (atLog.length < 8) atLog.push([r2(n2 / 60), w.kind, Sh.bot.sp.known.map((r) => r.d.src + (r.d.lethal ?? '')).join('/')]); } }
+            p0.copy(Sh.pos);
             if (!w) return false;
             n2++;
+            // (known all along: the missile's notice handed to its vortex in the frame it lands — botSpecials tick)
+            if (!Sh.bot.sp.known.some((r) => r.d.src === 'strike')) gap++;
             const dd = Math.hypot(Sh.pos.x - VX.x, Sh.pos.z - VX.z);
-            minD = Math.min(minD, dd); if (dd < RV - 0.05) inside++;
+            minD = Math.min(minD, dd); if (dd < RV - 0.05) { inside++; if (walked) walkIns++; }
           });
-          (dres[onAI ? 'on' : 'off'] || (dres[onAI ? 'on' : 'off'] = [])).push({ inside, escapes: SPECIAL_STATS.escapes - esc0, closest: r2(minD), frames: n2, deviceSecs: r2(DB.DEV_BOT.secs - s0), beaconHp: r2(hpOf(d)), at: v2(Sh.pos) });
-        } finally { hook = null; DB.DEV_AI.enabled = true; stub(foe); foe.setWeapon(weapons0.get(foe)); }
+          (dres[onAI === 'old' ? 'old' : onAI ? 'on' : 'off'] || (dres[onAI === 'old' ? 'old' : onAI ? 'on' : 'off'] = [])).push({ walkAt, walkN, atLog, gap, walkIns, inside, escapes: SPECIAL_STATS.escapes - esc0, closest: r2(minD), frames: n2, deviceSecs: r2(DB.DEV_BOT.secs - s0), walkSecs: r2(DB.DEV_BOT.walkSecs - w0), beaconHp: r2(hpOf(d)), at: v2(Sh.pos) });
+        } finally { sp.act = act0; hook = null; DB.DEV_AI.enabled = true; stub(foe); foe.setWeapon(weapons0.get(foe)); }
       }
-      // (two scenes each way. The danger model's area is the vortex's ring + 0.6 m; a bot sliding along the area's edge on
-      // its own route may graze it — a few frames, a few cm — and step back out (an escape): the danger guard's own
-      // precision, the same with the device AI off. What may never happen: a walk into it — the old order (device
-      // footwork after the guard) went 0.26 m in for 36 frames with 4 escapes in one scene)
-      const worst = (xs) => ({ closest: Math.min(...xs.map((x) => x.closest)), inside: Math.max(...xs.map((x) => x.inside)), escapes: xs.reduce((t, x) => t + x.escapes, 0) });
-      const wOn = worst(dres.on), wOff = worst(dres.off);
-      R(`a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it (device AI on: closest ${wOn.closest} m, ${wOn.inside} frames past the edge, ${wOn.escapes} escapes; off: ${wOff.closest} m, ${wOff.inside}, ${wOff.escapes}; the area ${r2(RV)} m, the vortex's ring ${SPECIALS.strike.radius} m)`,
-        [wOn, wOff].every((w) => w.closest >= RV - 0.2 && w.inside <= 12) && dres.on.every((x) => x.frames > 200 && x.deviceSecs > 1) && dres.off.every((x) => x.deviceSecs === 0), { on: dres.on, off: dres.off, area: r2(RV) });
+      const worst = (xs) => ({ closest: Math.min(...xs.map((x) => x.closest)), inside: Math.max(...xs.map((x) => x.inside)), walkAt: xs.reduce((t, x) => t + x.walkAt, 0), walkN: xs.reduce((t, x) => t + x.walkN, 0), escapes: xs.reduce((t, x) => t + x.escapes, 0) });
+      const wOn = worst(dres.on), wOff = worst(dres.off), wOld = worst(dres.old);
+      const gaps = [...dres.on, ...dres.off, ...dres.old].map((x) => x.gap);
+      R(`a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it: the vortex (${RING} m) never entered (closest: device AI on ${wOn.closest} m, off ${wOff.closest} m); known the whole time, missile and vortex (frames not known: ${gaps.join(', ')}); never a walk for the beacon with the danger area (${r2(RV)} m) on the way (frames: ${wOn.walkAt} of ${wOn.walkN} it walked; the old order, the control: ${wOld.walkAt} of ${wOld.walkN}, closest ${wOld.closest} m); the area's edge grazed on its own route, not judged: on ${wOn.inside} frames / ${wOn.escapes} escapes, off ${wOff.inside} / ${wOff.escapes}`,
+        [wOn, wOff].every((w) => w.closest > RING) && gaps.every((x) => x === 0) && wOn.walkAt <= 1 && wOld.walkAt >= 10 && dres.on.every((x) => x.frames > 200 && x.deviceSecs > 1) && dres.off.every((x) => x.deviceSecs === 0), { on: dres.on, off: dres.off, old: dres.old, area: r2(RV), ring: RING });
 
       // a foe in sight comes first: a bot with my beacon 6 m off and a foe (a dummy) in the open 11 m off fights the foe,
       // never the beacon; once the foe has gone (behind the wall, and forgotten) it shoots the beacon down
@@ -508,11 +530,14 @@
         let fought = 0, devWhile = 0;
         step(3, () => { mate.hp = 1e6; Sh.ink = PLAYER.inkMax; if (Sh.bot.target === mate && Sh.bot.seeTimer > 0) { fought++; if (Sh.bot.sp._dev) devWhile++; } });
         const during = { deviceSecs: r2(DB.DEV_BOT.secs - s0), deviceFramesWhileSeen: devWhile, beaconLost: r2(h0 - hpOf(d)), framesOnFoe: fought };
-        put(mate, V(22, 0, 4), 0); mate.hp = PLAYER.hp;
+        // (the foe gone: splatted — [fix round 1, resumed] it used to be moved behind the wall, and the bot hunted it there,
+        // over the wall or off round it, 2 of 8 times in JOB-10 ending 17–28 m from the beacon: the hunt's doing, not the
+        // device's; back from its respawn it's kept behind the wall)
+        foeGone(mate);
         const trace = []; let fr = 0;
         const n3 = step(16, () => { Sh.ink = PLAYER.inkMax; if (fr++ % 60 === 0) trace.push([Sh.bot.mode, Sh.bot.target ? Sh.bot.target.name : null, r2(Sh.bot.seeTimer), v2(Sh.pos), Sh.bot.sp._dev ? Sh.bot.sp._dev.kind : null]); return !gone(d); });
         const after = { gone: gone(d), s: r2(n3 / 60), deviceSecs: r2(DB.DEV_BOT.secs - s0), trace };
-        stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
+        hook = null; stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
         const tr = after.gone ? '' : ` — ${trace.map((t) => `${t[0]}${t[1] ? ':' + t[1] + (t[2] > 0 ? '(seen)' : '') : ''}${t[4] ? '+dev' : ''}@${t[3][0]},${t[3][2]}`).join(' ')}`;
         R(`a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: ${devWhile}; device mode ${during.deviceSecs} s before it had seen it; the beacon −${during.beaconLost}); the foe gone, it shoots the beacon down (${after.gone ? after.s + ' s' : 'not'}${tr})`,
           during.framesOnFoe > 90 && devWhile === 0 && during.deviceSecs < 0.5 && during.beaconLost === 0 && after.gone && after.deviceSecs > during.deviceSecs, { during, after });
@@ -538,7 +563,7 @@
           // (3 s on it: a foe in the open, in front of it, for a moment breaks it off; then gone again)
           if (!broke && busy >= 3) { broke = true; put(mate, V(1.2, 0, -2.5), 0); mate.hp = 1e6; }
           if (broke && !hid && Sh.bot.target === mate && Sh.bot.seeTimer > 0) seen += DT;
-          if (broke && !hid && seen >= 0.6) { hid = true; put(mate, V(22, 0, 4), 0); mate.hp = PLAYER.hp; }
+          if (broke && !hid && seen >= 0.6) { hid = true; foeGone(mate); }   // (splatted: no hunt for it — foe-first's note)
           else if (broke && !hid) mate.hp = 1e6;
           if (hid && repickBack == null && on()) repickBack = DB.DEV_BOT.repicks - P0.repicks;
           if (gaveAt == null && DB.DEV_BOT.gaveUp > P0.gaveUp) { gaveAt = t; busyAtGive = busy; pin = Sh.pos.clone(); }
@@ -547,8 +572,8 @@
           if (gaveAt != null && backAt == null && on()) { backAt = t; offFor = t - gaveAt; }
           return backAt == null;
         });
-        const res2 = { busyAtGiveUp: busyAtGive && r2(busyAtGive), wallAtGiveUp: gaveAt && r2(gaveAt), leftAlone: offFor && r2(offFor), picks: DB.DEV_BOT.picks - P0.picks, repicks: DB.DEV_BOT.repicks - P0.repicks, broke, foeSeenS: r2(seen), repickAfterFoe: repickBack, giveUp: DB.DEV_GIVEUP, forget: DB.DEV_FORGET };
-        stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
+        const res2 = { busyAtGiveUp: busyAtGive && r2(busyAtGive), wallAtGiveUp: gaveAt && r2(gaveAt), leftAlone: offFor && r2(offFor), picks: DB.DEV_BOT.picks - P0.picks, repicks: DB.DEV_BOT.repicks - P0.repicks, broke, foeSeenS: r2(seen), repickAfterFoe: repickBack, giveUp: DB.DEV_GIVEUP, forget: DB.DEV_FORGET, at: v2(Sh.pos), mode: Sh.bot.mode };
+        hook = null; stub(Sh); Sh.setWeapon(weapons0.get(Sh)); parkAll();
         R(`giving up: a beacon it can't break — it gives up after ${res2.busyAtGiveUp} s on it in all (${DB.DEV_GIVEUP} s; ${res2.wallAtGiveUp} s of the clock: a foe broke it off and it went back), leaves it alone ${res2.leftAlone} s (${DB.DEV_FORGET} s), then comes back to it (${res2.picks} pick, ${res2.repicks} re-picks)`,
           broke && hid && repickBack === 1 && busyAtGive != null && Math.abs(busyAtGive - DB.DEV_GIVEUP) < 0.1 && gaveAt > busyAtGive + 0.5 && offFor != null && offFor >= DB.DEV_FORGET - 0.05 && offFor < DB.DEV_FORGET + 0.6 && res2.picks === 1 && res2.repicks === 2, res2);
       }
