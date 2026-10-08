@@ -3093,8 +3093,8 @@ export class Environment {
         add(mesh(out.static, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 }), U, { shore: true }), 'StageBackdrop'));
         add(mesh(out.plain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), U, {}), 'StageBackdropPlain'));
         add(mesh(out.terrain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }), U, { terrain: true, shore: true }), 'StageTerrain'));
-        for (const [i, inst] of (out.instances || []).entries()) {
-          if (!inst?.geo || !inst.list?.length) continue;
+        const instMesh = (inst, name) => {   // ([b5-stagehooks] shared with the sets below)
+          if (!inst?.geo || !inst.list?.length) return null;
           const im = new THREE.InstancedMesh(prep(inst.geo), patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: inst.doubleSided ? THREE.DoubleSide : THREE.FrontSide }), U, {}), inst.list.length);
           const c = new THREE.Color();
           inst.list.forEach((t, k) => {
@@ -3102,16 +3102,18 @@ export class Environment {
             im.setMatrixAt(k, _m4);
             im.setColorAt(k, c.set(t[5] || '#ffffff'));
           });
-          im.name = 'StageBackdropInst' + i;
-          add(im);
-        }
+          im.name = name;
+          return im;
+        };
+        for (const [i, inst] of (out.instances || []).entries()) { const im = instMesh(inst, 'StageBackdropInst' + i); if (im) add(im); }
         for (const o of out.objects || []) add(o);
-        // [b5-stagehooks] extra sets (out.sets: { key: { static, plain, terrain, objects } }): each its own hidden group
+        // [b5-stagehooks] extra sets (out.sets: { key: { static, plain, terrain, instances, objects } }): each its own hidden group
         for (const [key, set] of Object.entries(out.sets || {})) {
           const g = new THREE.Group(); g.name = 'StageSet:' + key; g.visible = false;
           for (const m of [mesh(set.static, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 }), U, { shore: true }), 'StageSetStatic:' + key),
             mesh(set.plain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), U, {}), 'StageSetPlain:' + key),
             mesh(set.terrain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }), U, { terrain: true, shore: true }), 'StageSetTerrain:' + key),
+            ...(set.instances || []).map((inst, i) => instMesh(inst, `StageSetInst:${key}:${i}`)),
             ...(set.objects || [])]) if (m) g.add(m);
           this.stageSets[key] = add(g);
         }
