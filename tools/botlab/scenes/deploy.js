@@ -112,7 +112,7 @@
   }, hm);
   // the tower: pushed at a steady 1.4 m/s (its rules stubbed), a teammate riding; a Drip Curtain across its track ahead
   const dir = me.team === 0 ? 1 : -1, rules0 = T._rules;
-  let cur = null, sc = 0;
+  let cur = null, curAt = null, sc = 0;
   const keep = () => { mate.pos.set(T.pos.x - 0.6, T.top + 0.02, T.pos.z - 0.6); mate.vel.set(0, 0, 0); mate.grounded = true; mate.form = 'kid'; mate.character.root.visible = true; };
   const along = (k) => { const a = T.path.at(T.s + dir * (k - 0.4)), b = T.path.at(T.s + dir * (k + 0.4)), d = V(b.x - a.x, 0, b.z - a.z); return d.lengthSq() > 1e-6 ? d.normalize() : V(1, 0, 0); };
   const camT = () => {
@@ -132,23 +132,33 @@
     cur = S._throw(foe, SUBS.curtain, V(p.x, p.y + 0.6, p.z), V(u.x * 0.3, -6, u.z * 0.3), false);
     hold = () => { keep(); if (cur && cur.state === 'curtain') cur.hp = SUBS.curtain.hp; };
     step(4, () => Math.abs(sc - T.s) < 1.25 + 0.55);   // (its front half a metre short of the sheet)
-    camT();
+    curAt = cur.pos.clone();
+    camFront(curAt);   // (fix round 1, resumed: ahead of the sheet like the beacon / buoy shots — from beside the track the
+    // tower hid most of the crunch)
     return { gap: +(Math.abs(sc - T.s) - 1.25).toFixed(2), state: cur.state };
   });
   add('curtain-2', () => {
     step(3, () => cur.state === 'dead');
     step(3 / 60);
-    camT(); quiet();
+    camFront(curAt); quiet();
     return { state: cur.state };
   }, null, 40);
   add('curtain-3', () => { step(0.9); camT(); quiet(); return { s: +T.s.toFixed(2) }; });
   // a beacon, then a buoy, on its track: just before, then the crunch — the camera ahead of the device, off to its side,
   // looking back at the tower's front (the burst in front of it, not behind it)
+  // (the checkpoints' glowing columns stand on the track: a camera right beside one saw it as a wide band across the frame
+  // — buoy-crush-1/2 in fix round 1. A camera whose sight line passes within 1.3 m of one is passed over)
+  const cpAt = (T.cps || []).map((cp) => T.path.at(cp.team === 0 ? cp.d : -cp.d));
+  const clearOfCps = (p, q) => cpAt.every((k) => { const dx = q.x - p.x, dz = q.z - p.z, l2 = dx * dx + dz * dz || 1, t = Math.max(0, Math.min(1, ((k.x - p.x) * dx + (k.z - p.z) * dz) / l2)); return Math.hypot(p.x + dx * t - k.x, p.z + dz * t - k.z) > 1.3; });
   const camFront = (c) => {
     // (u: from the tower to the device — the way it comes at it, round a bend too)
     const u = V(c.x - T.pos.x, 0, c.z - T.pos.z).normalize(), sx = -u.z, sz = u.x, look = V(c.x - u.x * 0.6, c.y + 0.7, c.z - u.z * 0.6);
     let from = null;
-    for (const sg of [1, -1]) { const p = V(c.x + u.x * 4.6 + sx * 3.4 * sg, c.y + 2.2, c.z + u.z * 4.6 + sz * 3.4 * sg); if (G.physics.los(p, V(c.x, c.y + 0.6, c.z))) { from = p; break; } }
+    for (const [ah, sd] of [[4.6, 3.4], [4.6, 4.6], [3.6, 5.2]]) for (const sg of [1, -1]) {
+      if (from) break;
+      const p = V(c.x + u.x * ah + sx * sd * sg, c.y + 2.2, c.z + u.z * ah + sz * sd * sg);
+      if (G.physics.los(p, V(c.x, c.y + 0.6, c.z)) && clearOfCps(p, look)) from = p;
+    }
     cine(from || V(c.x + u.x * 4.6 + sx * 3.4, c.y + 2.2, c.z + u.z * 4.6 + sz * 3.4), look, 56);
     return { c: [c.x, c.z].map((x) => +x.toFixed(2)), T: [T.pos.x, T.pos.z].map((x) => +x.toFixed(2)), from: from && [from.x, from.y, from.z].map((x) => +x.toFixed(2)) };
   };
