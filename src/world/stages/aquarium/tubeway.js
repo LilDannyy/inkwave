@@ -35,10 +35,10 @@ export const PIPES = {
       look: { tint: 'clear', collars: 'brass' } },
     { id: 'express', way: 'one', speed: 24, bend: 2.7,        // the Express, across the wing high over the Ticket Hall
       names: ['FERRY PLAZA', 'PENGUIN POINT'],
-      pts: [[23.14, 0.8, -48.58], [21.44, 0.8, -45.64], [21.44, 9.4, -45.64], [-14.29, 9.4, -37.75],   // [blockout] A 0.5 m up the blade with the pavilion
-            [-14.29, 2.0, -37.75], [-15.99, 2.0, -34.8]],
-      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
-      hide: [[0, 4.4], [49.56, 54.76]],                       // inside the two Express stops (54.76 m: A moved 0.5 m)
+      pts: [[23.14, 0.8, -48.58], [21.44, 0.8, -45.64], [21.44, 10.1, -45.64], [-14.29, 10.1, -37.75],   // [blockout] A 0.5 m up the blade with the pavilion;
+            [-14.29, 2.0, -37.75], [-15.99, 2.0, -34.8]],     //   the span at 10.1, not 9.4: at 9.4 it crossed the play camera's view
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],         //   of the bathysphere from the pad (glass top 10.98 ≤ rule 16's 11.0)
+      hide: [[0, 4.4], [50.96, 56.16]],                       // inside the two Express stops (56.16 m: A moved 0.5 m, the span 0.7 m up)
       look: { tint: 'clear', collars: 'steel', chevrons: true } },
     { id: 'kelp', speed: 24, bend: 2.7,                       // the Kelp Line, up the E drum, along the North Promenade
       way: { flip: { every: 90, first: 'ab', warn: 10, close: 3, reopen: 1, quietEnd: 15 } },   // the tide (E2)
