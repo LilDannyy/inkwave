@@ -394,8 +394,9 @@
         const U = mates[2], A = mates[0], crowd = mates.filter((a) => a !== U && a !== A), sx = 0, sz = 18;
         const offs = [[-1.1, 0.7], [1.0, 1.4], [-0.4, 2.4], [1.5, -0.5], [0.2, 3.4], [-1.7, -0.8]];
         put(U, sx, sz); crowd.forEach((a, i) => put(a, sx + offs[i % 6][0], sz + offs[i % 6][1]));
-        const F = J._furn(0), u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100);
-        let fb = 0; for (let i = 0; i < F.boxes.n; i++) fb = Math.max(fb, F.boxes.a[i].b);
+        // (the top middle as drawn — the test's own read, not hud-jumps.js's cache)
+        const u = Math.min(innerWidth / 100, innerHeight * 1.7778 / 100);
+        let fb = 0; for (const o of furn()) fb = Math.max(fb, o.b);
         for (pitch = -0.12; pitch > -0.7; pitch -= 0.02) { step(0.1); if (proj(sx, JUMP_UI.lift, sz)[1] <= fb + 3.5 * u) break; }
         start(U, 'jetpack', 12); U._go = new THREE.Vector3(1, 0, 0); step(1.2); U._go = null; step(0.2);
         A.superJump(U); step(0.3);
