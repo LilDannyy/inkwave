@@ -489,7 +489,9 @@ const RIVER = [];
   }
   RIVER.push(OB(27.59, -18.31, 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-2' })));
   RIVER.push(OB(31.13, -6.59, 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-4' })));
-  { const [lx, lz] = bp(24.6, -1.4); RIVER.push(OB(+lx.toFixed(3), +lz.toFixed(3), 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-6' }))); }   // (adds: the far end was 6 m from cover)
+  { const [lx, lz] = bp(24.6, -1.4); RIVER.push(OB(+lx.toFixed(3), +lz.toFixed(3), 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-6' }))); }
+  // (adds: two more lamp plinths in spans 3 and 4: the cover map found 11 m open circles on the deck between the lamps)
+  for (const [m, g] of [[9.0, 'bridge-3'], [19.2, 'bridge-4']]) { const [lx, lz] = bp(m, 1.4); RIVER.push(OB(+lx.toFixed(3), +lz.toFixed(3), 1, 1.4, -0.16, 1.2, 30, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: g }))); }   // (adds: the far end was 6 m from cover)
   // the 1880s BRIDGE WORKS barrier on Bravo's arm where Alpha's bridge lands (its own group, on Bravo's side: key :b)
   RIVER.push(armBox(31.14, 39.23, -14.15, -14, 0, 1, rail({ tag: 'bridge-works', eras: '1', eraGroup: 'landing' })));
   // the Tide Steps (the 3000s): a river terrace beside the boardwalk, its rails and the FLOOD LEVEL 3026 obelisk
@@ -582,16 +584,19 @@ const TOWER = {
 // tools/botlab/jobs/batch5/bazookarp/SPEC.md §4.1, drawn on Bravo's half (Alpha's attack), DESIGN.md §4.4.
 const BAZOOKARP = {
   start: [0, 1.3, 0],                                    // the Pond: the concourse centre, under Tartar
-  weirs: [{ at: [10.15, 1.2, 33.0] }],                   // Bravo's GPO terrace
+  weirs: [{ at: [10.15, 1.2, 33.0] }],                   // Bravo's GPO terrace (yaw: the field's downhill, the default)
   gate: { at: [0, 59], yaw: 0 },                         // Bravo's turntable on the forecourt terrace (y 1.0)
   freeZones: [{ poly: [[-12, 66], [12, 66], [12, 76], [-12, 76]], y0: 2.9, y1: 5.9,
-    signs: [[-8.5, 66.3, 0], [8.5, 66.3, 0], [-12.3, 71, 90], [12.3, 71, 270]] }],   // Bravo's spawn deck
+    signs: [[-8.5, 66.3, 0], [8.5, 66.3, 0], [-12.3, 71, 90], [12.3, 71, 270]],     // Bravo's spawn deck: the two stair
+    eras: null }],                                       //  heads and the two side ramps (its front edge is a one-way drop)
   routes: {
     swimston: [[0, 12], [3, 26], [5.5, 34], [10.15, 33], [5.5, 36], [3, 47], [0, 52], [0, 59]],
     arch: [[8, 8], [16.25, 17], [16.25, 24], [12, 24.5], [10.15, 30], [10.15, 33]],
     east: [[10.15, 33], [5.5, 32], [-4, 33], [-4, 48], [-1, 53], [0, 59]],
   },
   noRetreat: [], carrierBlock: [], noRest: [], hopVeto: [],
+  pondPlinth: null,                                      // (the Pond stands on the concourse itself, 1.3 m: start's y)
+  shellHp: null,
 };
 
 // ------------------------------------------------------------------------------------------------ the eras (the engine's data)
