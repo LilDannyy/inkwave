@@ -165,10 +165,13 @@ for (const sx of [1, -1]) {
 }
 H(PYLONS);
 // the hall: the Arch Tank over it (water, 6–9 m; drawn by backdrop.js), the vault's ribs, the bubble column splitting
-// its court mouth into two 5.2 m lanes (and blocking the wing → deck sightline), the shark-viewing bench
+// its court mouth into two 4.8 m lanes (and blocking the wing → deck sightline), the shark-viewing bench.
+// [blockout] The column is Ø 2.4, not DESIGN.md's 1.6: with the gantry legs out at x ±5 the court's south band
+// between the Feeding Step and the hall mouth opened to an 11 m circle (cover-map r 5.5); at Ø 2.4 it is under 10 m,
+// the Tower lane keeps 0.95 m to the column and the weir (0, ∓28) 5.3 m.
 H(B(-6, 6, 6.0, 9.0, -31, -19, glass({ tag: 'arch-tank' })));
 for (const z of [-19.15, -22.1, -25.0, -27.9, -30.85]) H(B(-6, 6, 5.8, 6.0, z - 0.15, z + 0.15, roofR(K.brass, { tag: 'vault-rib' })));
-H(rnd(0, -21.5, 0.8, FL, 5.8, roofR(K.glassblock, { tag: 'bubble-column' })));
+H(rnd(0, -21.5, 1.2, FL, 5.8, roofR(K.glassblock, { tag: 'bubble-column' })));
 H(B(3.0, 5.4, 0, 0.9, -30.3, -29.7, cover(K.teak, { tag: 'shark-bench' })));
 
 // ============================================================================================================ the SE Reef Hall
@@ -240,7 +243,8 @@ for (const [a0, a1, n] of [[-171, -124.6, 12], [-115.4, -110, 2]]) PROM.push(...
 PROM.push(radBox(-141.5, 21.4, 24.4, 3.6, FL, 3.6, teak({ tag: 'lookout' })), radBox(-141.5, 21.4, 21.8, 3.6, FL, 4.5, render({ tag: 'lookout-balustrade', roof: true })));
 PROM.push(radBox(-145, 27.6, 31.0, 6.4, FL, 3.0, teak({ tag: 'telescope-bay' })));
 PROM.push(radBox(-145, 25.75, 28.25, 2.5, FL, 5.0, roofR(K.kiosk, { tag: 'kiosk' })), radBox(-122, 26.25, 28.75, 2.5, FL, 5.0, roofR(K.kiosk, { tag: 'kiosk' })));
-PROM.push(radBox(-158, 28.3, 29.7, 1.4, FL, 3.6, cover(K.coral, { tag: 'deckchairs' })));
+// (the stacked deckchairs: off-limits on top — DESIGN.md had them walkable, but their 2 m² top was 6 m from any cover)
+PROM.push(radBox(-158, 28.3, 29.7, 1.4, FL, 3.6, roofR(K.coral, { tag: 'deckchairs' })));
 // the deep Kelp stop (Bravo's Kelp Line comes down into it from 9 m; its mouth at r 28.3 faces the court)
 PROM.push(radBox(-132, 28.3, 33.2, 2.4, FL, 5.0, roofR(K.brass, { tag: 'kelp-stop-deep' })));
 // the grand stair (6 wide, 0 → 2.4) and the Penguin Steps (5 wide, 2.4 → 1.2 onto the rock terrace)
@@ -272,8 +276,9 @@ H(B(2.0, 10.0, 0, 1.2, -46.0, -39.0, floor0({ tag: 'ticket-hall', color: '#cfc6b
 H(R([9.0, 0, -36.2], [9.0, 1.2, -39.0], 2.0, stair({ tag: 'ticket-stair' })));
 H(B(7.4, 10.0, 0, 0.6, -47.2, -46.0, stone({ tag: 'queue-step' })));
 H(B(8.2, 10.0, 1.2, 3.7, -42.0, -40.0, roofR(K.kiosk, { tag: 'ticket-booth' })), B(2.6, 3.8, 1.2, 2.4, -40.3, -39.3, cover(K.brass, { tag: 'luggage-scale' })));
-// (the school-trip coat-peg stand: cover on the hall's west half, clear of the tower's lane by 0.95 m)
-H(B(2.4, 3.8, 1.2, 2.3, -44.8, -44.2, cover(K.teak, { tag: 'coat-pegs' })));
+// (the school-trip coat-peg stand: cover on the hall's west half, clear of the tower's lane by 0.95 m; a peg rack, so its
+// top is off-limits — as a perch it was a 2 m² spot 6.5 m from any cover)
+H(B(2.4, 3.8, 1.2, 2.3, -44.8, -44.2, roofR(K.teak, { tag: 'coat-pegs' })));
 H(B(8.0, 8.6, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile' })), B(9.2, 9.8, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile' })));
 for (const [x, z] of [[3.0, -39.3], [9.7, -39.3], [3.0, -45.7], [9.7, -45.7]]) H(B(x - 0.25, x + 0.25, 1.2, 6.6, z - 0.25, z + 0.25, roofR(K.brass, { tag: 'canopy-column' })));
 H(B(2.5, 10.2, 6.6, 6.8, -46.2, -38.8, roofR(K.canopy, { tag: 'ticket-canopy' })));
@@ -352,6 +357,10 @@ H(SPB);
 H(layer({ key: 'spawn-deck', frame: 'blade', rect: [-16.5, 16.5, 27.35, 39.85], res: 0.25, cover: new Cover(SPB, SP.y), y0: FL, y1: SP.y, o: teak({ tag: 'spawn-deck', color: '#a08a70' }),
   inside: (x, z) => { const [s, w] = toBlade(x, z), a = Math.abs(w); return s <= back(w) - 0.2 && ((a <= SP.half && s >= SP.front + SP.fascia) || (a <= 15.8 && s >= SP.land)); } }));
 H(bladeBox(30.5, 32.5, 9.5, 11.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })), bladeBox(30.5, 32.5, -11.5, -9.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })));
+// [blockout] the foyer's two glass-block skylights flanking the pad (1.1 m, off-limits, never inked), 4.8 m out from it
+// (outside the 4.2 m barrier): cover for defenders re-forming on the deck. Without them the deck's barrier ring was
+// 5–10 m from any cover and the stage's share of floor within 5 m of cover fell under Halyard's (95.9 against 96.4 %)
+for (const sg of [1, -1]) H(bladeBox(28.6, 34.4, sg > 0 ? 4.8 : -6.4, sg > 0 ? 6.4 : -4.8, FL, r3(SP.y + 1.1), roofR(K.glassblock, { tag: 'skylight' })));
 H(bladeBox(39.5, 43.0, -3, 3, FL, 18.0, roofR('#efe9df', { tag: 'fin-tower' })));
 // rails: the deck's back curve and the landings, the stairs' outer sides
 for (let i = 0; i < backPts.length - 1; i++) {
@@ -413,7 +422,7 @@ const BAZOOKARP = {
       signs: [[6.26, 50.66, 150], [1.55, 53.02, -120]] },              // Bravo's Penguin upper rock
   ],
   routes: {
-    centre:   [[0, 2.4, 0], [0, 10], [2, 21.5], [0, 28], [-1.8, 31], [-1.8, 46.5], [-6.8, 52.2]],
+    centre:   [[0, 2.4, 0], [0, 10], [3.2, 21.5], [0, 28], [-1.8, 31], [-1.8, 46.5], [-6.8, 52.2]],   // (3.2: the east lane's middle past the Ø 2.4 column)
     arcade:   [[0, 2.4, 0], [-16, 16], [-8.8, 19.2], [0, 28]],
     pumphall: [[0, 28], [-10, 37.8], [-14.8, 39.8], [-12.6, 48.6], [-6.8, 52.2]],
     rocks:    [[0, 28], [9.8, 40.8], [4.8, 42.2], [-6.8, 52.2]],

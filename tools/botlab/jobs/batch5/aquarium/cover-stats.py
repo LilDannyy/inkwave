@@ -4,7 +4,7 @@
 #   python3 cover-stats.py page.log [aquarium|other]
 import sys, json, base64, re, math
 log = open(sys.argv[1]).read(); stage = sys.argv[2] if len(sys.argv) > 2 else 'aquarium'
-info = json.loads(re.search(r'PASS cover map  (\{.*\})', log).group(1))
+info = json.loads(re.search(r'PASS (?:cover-map: )?cover map  (\{.*\})', log).group(1))
 g = info['grid']; x0, z0, nx, nz = g['x0'], g['z0'], g['nx'], g['nz']; b = base64.b64decode(g['b64'])
 C30 = math.cos(math.radians(30))
 def blade(x, z):  # Alpha's blade frame; Bravo's by the turn
@@ -14,7 +14,7 @@ def excluded(x, z):
     if stage != 'aquarium': return False
     if math.hypot(x, z) <= 7.6: return True                 # the Feeding Deck's top (the centre zone)
     s, w = blade(x, z)
-    return s >= 31.0 and abs(w) <= 16.5                      # the spawn deck, its stairs and landings
+    return s >= 27.5 and abs(w) <= 16.5                      # the spawn deck (front s 27.5), its stairs and landings
 cells = {}
 for j in range(nz):
     for i in range(nx):
