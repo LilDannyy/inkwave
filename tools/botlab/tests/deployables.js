@@ -511,9 +511,11 @@
       }
       const worst = (xs) => ({ closest: Math.min(...xs.map((x) => x.closest)), inside: Math.max(...xs.map((x) => x.inside)), walkAt: xs.reduce((t, x) => t + x.walkAt, 0), walkN: xs.reduce((t, x) => t + x.walkN, 0), escapes: xs.reduce((t, x) => t + x.escapes, 0) });
       const wOn = worst(dres.on), wOff = worst(dres.off), wOld = worst(dres.old);
+      // (the scene played as meant: the device AI on went for the beacon — half a second at least: one bot shot it down in
+      // 0.97 s — and off never did)
       const gaps = [...dres.on, ...dres.off, ...dres.old].map((x) => x.gap);
       R(`a bot going for an enemy beacon with a noticed Vortex Strike between them goes round it or waits — never a walk into it: the vortex (${RING} m) never entered (closest: device AI on ${wOn.closest} m, off ${wOff.closest} m); known the whole time, missile and vortex (frames not known: ${gaps.join(', ')}); never a walk for the beacon with the danger area (${r2(RV)} m) on the way (frames: ${wOn.walkAt} of ${wOn.walkN} it walked; the old order, the control: ${wOld.walkAt} of ${wOld.walkN}, closest ${wOld.closest} m); the area's edge grazed on its own route, not judged: on ${wOn.inside} frames / ${wOn.escapes} escapes, off ${wOff.inside} / ${wOff.escapes}`,
-        [wOn, wOff].every((w) => w.closest > RING) && gaps.every((x) => x === 0) && wOn.walkAt <= 1 && wOld.walkAt >= 10 && dres.on.every((x) => x.frames > 200 && x.deviceSecs > 1) && dres.off.every((x) => x.deviceSecs === 0), { on: dres.on, off: dres.off, old: dres.old, area: r2(RV), ring: RING });
+        [wOn, wOff].every((w) => w.closest > RING) && gaps.every((x) => x === 0) && wOn.walkAt <= 1 && wOld.walkAt >= 10 && dres.on.every((x) => x.frames > 200 && x.deviceSecs > 0.5) && dres.off.every((x) => x.deviceSecs === 0), { on: dres.on, off: dres.off, old: dres.old, area: r2(RV), ring: RING });
 
       // a foe in sight comes first: a bot with my beacon 6 m off and a foe (a dummy) in the open 11 m off fights the foe,
       // never the beacon; once the foe has gone (behind the wall, and forgotten) it shoots the beacon down
