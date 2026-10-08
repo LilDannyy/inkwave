@@ -134,8 +134,8 @@
 
   // ---- 7) queries: noPlace, liquidY, under (and the sea elsewhere)
   const P = new THREE.Vector3();
-  const np = [L.noPlace(P.set(8, 0, -12), 0), L.noPlace(P.set(8, 0, -9.5), 0), L.noPlace(P.set(8, 0, -9.5), 1)];
-  R('G.level.noPlace: inside the disc, outside it, and a device radius reaching in', np[0] && !np[1] && np[2], { np });
+  const np = [L.noPlace(P.set(8, 0, -12), 0), L.noPlace(P.set(8, 0, -9.5), 0), L.noPlace(P.set(8, 0, -9.5), 1), L.noPlace(P.set(-8, 0, -12), 0), L.noPlace(P.set(-8, 0, -9), 0)];
+  R('G.level.noPlace: inside the world\'s disc, outside it, a device radius reaching in; the match runtime\'s own disc (R.noPlace) too', np[0] && !np[1] && np[2] && np[3] && !np[4], { np });
   const tl = S.t, ly = L.liquidY(-21, 5), lo = L.liquidY(0, 0);
   R('G.level.liquidY: the module\'s surface in its region, the sea elsewhere', Math.abs(ly - D.DUMMY.pool.y(tl)) < 1e-6 && lo === -1.6, { ly, want: D.DUMMY.pool.y(tl), lo });
   R('match.stage.under: below the surface in the region only', S.under(P.set(-21, ly - 0.5, 5)) && !S.under(P.set(-21, ly + 0.5, 5)) && !S.under(P.set(0, -5, 0)));

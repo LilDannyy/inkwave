@@ -21,8 +21,9 @@ export const DUMMY = {
   lift: { x: -12, z: -20, top: (t) => 1.2 + 0.8 * Math.sin(t * 0.6) },
   // the special edge: from a to b, cost 3 (much less than walking), open while (t mod 20) < 10
   edge: { a: [-16, 0, -30], b: [16, 0, -30], cost: 3, open: (t) => ((t % 20) + 20) % 20 < 10 },
-  // no device in this disc
+  // no device in this disc (the world's: W.noPlace) — nor in disc2 (the match runtime's: R.noPlace)
   disc: { x: 8, z: -12, r: 2 },
+  disc2: { x: -8, z: -12, r: 1.5 },
   // the liquid: x −24…−18, z 0…10, surface L(t) = 0.3 + 0.2 sin(t · 0.25)
   pool: { x0: -24, x1: -18, z0: 0, z1: 10, y: (t) => 0.3 + 0.2 * Math.sin(t * 0.25) },   // (over the deck: a kid standing there is in it)
 };
@@ -94,6 +95,7 @@ class DummyRun {
   navEdge(e) { if (e.type === 'climb') return this.climbX || 0; return e.type !== 'dummy' ? 0 : DUMMY.edge.open(this.S.t) ? 0 : Infinity; }
   liquidY(x, z) { const P = DUMMY.pool; return x >= P.x0 && x <= P.x1 && z >= P.z0 && z <= P.z1 ? P.y(this.S.t) : -Infinity; }
   under(p, depth = 0) { const y = this.liquidY(p.x, p.z); return y > -Infinity && p.y < y + 0.15 - depth; }
+  noPlace(p, r = 0) { const D = DUMMY.disc2; return Math.hypot(p.x - D.x, p.z - D.z) < D.r + r; }
   // the host bumps the counter; every screen follows its records
   bump() { if (this.m.follower) return false; this.n++; this.S.rec('dummymod', [this.n, +this.S.t.toFixed(2)]); return true; }
   netEvent(d) { this.n = d[0]; this.lastRec = d; }

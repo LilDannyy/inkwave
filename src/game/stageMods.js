@@ -109,7 +109,7 @@ export class StageWorld {
     // shared queries the level answers for everyone (subs, kits, bots): installed only when a module answers them
     this.liquid = this.mods.some((m) => m.W.liquidY || m.def.liquid);   // (def.liquid: only the match runtime answers)
     if (this.liquid) level.liquidY = (x, z) => this.liquidY(x, z);
-    if (this.mods.some((m) => m.W.noPlace)) level.noPlace = (p, r) => this.noPlace(p, r);
+    level.noPlace = (p, r) => this.noPlace(p, r);   // (W.noPlace, then the match runtime's R.noPlace: lava's rising surface)
     this._each('attachLevel', level);
   }
   attachPaint(paint) {
