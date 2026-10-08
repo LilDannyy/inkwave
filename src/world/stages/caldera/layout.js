@@ -27,7 +27,7 @@ const SB = 31.1;   // the Spillway Bridge's centre line, s along the channel (se
 // ------------------------------------------------------------------------------------------------------------ palette
 // the works: pale tuff paving, whitewash, works green iron, buff firebrick; the caldera: basalt, red scoria, glaze
 const K = {
-  tuff: '#aaa49a', tuffDk: '#97928a', basalt: '#646870', basaltDk: '#4f535a', scoria: '#5d5450', glaze: '#5f5955',
+  tuff: '#aaa49a', tuffDk: '#97928a', basalt: '#646870', basaltDk: '#4f535a', scoria: '#5d5450', glaze: '#4d4542',
   pave: '#85878b', wall: '#45484e', iron: '#7c8186', ironDk: '#5d6268', white: '#e9e4d8', green: '#2f5a48', brick: '#c9b08a',
   spawn: '#ece7dc', pumice: '#bdb8ae', wood: '#9a7b58', cast: '#6d7176', sand: '#b9a68a', rope: '#a78f6c',
 };
@@ -35,6 +35,8 @@ const K = {
 // concrete, brick, glasstile, pavers, render — since the curved floors are columns often under 1.15 m wide)
 const tuff = (o = {}) => ({ color: K.tuff, pattern: PATTERN.yard, ...o });
 const rock = (o = {}) => ({ color: K.basalt, pattern: PATTERN.asphalt, ...o });
+// (the ledges that drown: blockout colour = DESIGN.md §5.3's glaze as the stain will darken it below the high mark,
+// #4d4945, warmed: "the dark glazed floor floods" reads before the engine's stain exists)
 const glaze = (o = {}) => ({ color: K.glaze, pattern: PATTERN.rubber, ...o });
 const coping = (o = {}) => ({ color: K.basaltDk, pattern: PATTERN.asphalt, tag: 'coping', ...o });
 const steps = (o = {}) => ({ color: K.basalt, pattern: PATTERN.stonestep, ...o });
