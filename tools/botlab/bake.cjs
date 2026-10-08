@@ -17,8 +17,9 @@ const layouts = process.argv.slice(2).filter((a) => /^[a-z0-9_-]+(\.[a-z]+)?$/i.
 
 require(process.env.S + '/offscreen-boot.cjs');
 
-// 8-bit grayscale PNG (colour type 0), same format as the shipped bakes
-function grayPNG(size, pixels) {
+// 8-bit grayscale PNG (colour type 0), same format as the shipped bakes; ch 3: RGB (colour type 2), one channel per
+// stage-module world state ([b5-stagehooks] W.bakePasses: eras' R / G / B)
+function grayPNG(size, pixels, ch = 1) {
   const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
   const crc = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
   const chunk = (type, data) => {
@@ -28,9 +29,9 @@ function grayPNG(size, pixels) {
     return Buffer.concat([len, td, c]);
   };
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4); ihdr[8] = 8; ihdr[9] = 0; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-  const raw = Buffer.alloc(size * (size + 1));
-  for (let y = 0; y < size; y++) { raw[y * (size + 1)] = 0; pixels.copy(raw, y * (size + 1) + 1, y * size, (y + 1) * size); }
+  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4); ihdr[8] = 8; ihdr[9] = ch === 3 ? 2 : 0; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+  const row = size * ch, raw = Buffer.alloc(size * (row + 1));
+  for (let y = 0; y < size; y++) { raw[y * (row + 1)] = 0; pixels.copy(raw, y * (row + 1) + 1, y * row, (y + 1) * row); }
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
@@ -39,7 +40,9 @@ const PAGE_BAKE = (o) => `(async () => {
   const THREE = await import('three'); const { Hit } = await import('./src/game/physics.js');
   const O = ${JSON.stringify(o)}, L = __G.level, P = __G.physics, S = O.size;
   if (!L.layoutLightmap(O.ppm, S)) throw new Error('lightmap atlas does not fit ' + S + ' at ' + O.ppm + ' ppm (used ' + L.lightUsed + ')');
-  const img = new Uint8Array(S * S).fill(255);
+  // [b5-stagehooks] a stage module's world states (W.bakePasses: eras 1, 2, 3), one trace each into its own channel
+  const PS = __G.stageWorld?.bakePasses?.() || [null], NC = PS.length > 1 ? 3 : 1;
+  const img = new Uint8Array(S * S * NC).fill(255);
   const dirs = []; // cosine-weighted hemisphere, Hammersley points
   for (let k = 0; k < O.rays; k++) { let b = k, rv = 0, f = 0.5; while (b) { if (b & 1) rv += f; b >>= 1; f *= 0.5; }
     const u1 = (k + 0.5) / O.rays, r = Math.sqrt(u1), ph = 2 * Math.PI * rv; dirs.push([r * Math.cos(ph), r * Math.sin(ph), Math.sqrt(1 - u1)]); }
@@ -47,6 +50,8 @@ const PAGE_BAKE = (o) => `(async () => {
   const faces = L.faces.filter((f) => f.light);
   __G.stageWorld?.bakeMode(true);   // [b5-stagehooks] stage modules take their own pieces out of the trace (pipe glass, tank water)
   try {
+  for (let pi = 0; pi < PS.length; pi++) {   // [b5-stagehooks] (one pass without a module)
+  if (PS[pi]) { PS[pi](); console.log('[bake] state ' + (pi + 1) + ' of ' + PS.length); }
   let done = 0, lastLog = performance.now();
   for (const f of faces) {
     const blk = L.blocks[f.block], pad = f.light.pad;
@@ -73,14 +78,15 @@ const PAGE_BAKE = (o) => `(async () => {
       let s = 0, n = 0;
       for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const x = i + di, y = j + dj; if (x >= 0 && y >= 0 && x < w && y < h) { s += val[y * w + x]; n++; } }
       const X = f.light.x + i, Y = S - 1 - (f.light.y + j);
-      if (X < S && Y >= 0) img[Y * S + X] = Math.round((s / n) * 255);
+      if (X < S && Y >= 0) img[(Y * S + X) * NC + pi] = Math.round((s / n) * 255);   // [b5-stagehooks] (NC 1, pi 0: as always)
     }
     done++;
     if (performance.now() - lastLog > 3000) { lastLog = performance.now(); console.log('[bake] ' + Math.round(done / faces.length * 100) + '%'); await new Promise((r) => setTimeout(r)); }
   }
+  }
   } finally { __G.stageWorld?.bakeMode(false); }   // [b5-stagehooks]
   let bin = ''; for (let i = 0; i < img.length; i += 0x8000) bin += String.fromCharCode.apply(null, img.subarray(i, i + 0x8000));
-  return { hash: L.layoutHash, used: L.lightUsed, png: btoa(bin) };
+  return { hash: L.layoutHash, used: L.lightUsed, png: btoa(bin), ch: NC };
 })()`;
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -106,8 +112,8 @@ app.on('browser-window-created', (_e, win) => {
         const t0 = Date.now();
         const r = await js(PAGE_BAKE(OPTS));
         fs.mkdirSync(OUT, { recursive: true });
-        fs.writeFileSync(path.join(OUT, `${id}.png`), grayPNG(OPTS.size, Buffer.from(r.png, 'base64')));
-        fs.writeFileSync(path.join(OUT, `${id}.json`), JSON.stringify({ id, hash: r.hash, size: OPTS.size, ppm: OPTS.ppm, rays: OPTS.rays, dist: OPTS.dist }));
+        fs.writeFileSync(path.join(OUT, `${id}.png`), grayPNG(OPTS.size, Buffer.from(r.png, 'base64'), r.ch || 1));
+        fs.writeFileSync(path.join(OUT, `${id}.json`), JSON.stringify({ id, hash: r.hash, size: OPTS.size, ppm: OPTS.ppm, rays: OPTS.rays, dist: OPTS.dist, ...(r.ch > 1 ? { channels: r.ch } : {}) }));   // [b5-stagehooks] channels
         console.log(`[bake] ${id}: done in ${((Date.now() - t0) / 1000).toFixed(1)} s (hash ${r.hash}, ${r.used}/${OPTS.size} rows used)`);
         await js('window.__inkwave.debug.unfreeze(); window.__inkwave.quitToMenu()');
         await wait(1200);
