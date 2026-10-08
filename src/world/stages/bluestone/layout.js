@@ -138,13 +138,12 @@ const SINGLE = [
   // the circus floor (one slab: the hour-ring mural's face) and the concourse (the booking-hall floor, 1.3)
   B(-20, 20, BOT, 0, -20, 20, ground({ tag: 'circus', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] })),
   ...OCT(0, 0, 9.5, 0, 1.3, sand({ tag: 'concourse' })),
-  // the dome: the drum on the columns, a stepped dome, the lantern (colliders for the look; DESIGN.md: OCT R 8.8 / 6.5)
+  // the dome: the drum on the columns (drawn), the dome and the lantern as collision only: their look is the
+  // bluestone_dome prop (a copper dome and an octagonal lantern: the landmark's real silhouette, not a stepped stack)
   ...OCT(0, 0, 8.8, 8, 10, { tag: 'drum', color: '#b8a888', pattern: PATTERN.render, roof: true, paint: false }),
-  ...OCT(0, 0, 7.6, 10, 11.7, { tag: 'dome', color: K.dome, pattern: PATTERN.metal, roof: true, paint: false }),
-  ...OCT(0, 0, 6.3, 11.7, 13.2, { tag: 'dome', color: K.dome, pattern: PATTERN.metal, roof: true, paint: false }),
-  ...OCT(0, 0, 4.4, 13.2, 14.5, { tag: 'dome', color: K.dome, pattern: PATTERN.metal, roof: true, paint: false }),
-  ...OCT(0, 0, 2.4, 14.5, 15.3, { tag: 'dome', color: K.dome, pattern: PATTERN.metal, roof: true, paint: false }),
-  B(-1.5, 1.5, 15.3, 19, -1.5, 1.5, { tag: 'lantern', color: '#c9bb9a', pattern: PATTERN.render, roof: true, paint: false }),
+  ...OCT(0, 0, 7.0, 10, 12.4, { tag: 'dome', hidden: true, roof: true, paint: false }),
+  ...OCT(0, 0, 4.8, 12.4, 14.4, { tag: 'dome', hidden: true, roof: true, paint: false }),
+  B(-1.75, 1.75, 14.4, 19, -1.75, 1.75, { tag: 'lantern', hidden: true, roof: true, paint: false }),
 ];
 
 const MID = [
@@ -277,7 +276,7 @@ const WEST = [
   OB(-16.25, -29.5, 1.2, 2.4, 0.6, 1.6, 0, cover({ tag: 'arcade-bench', color: '#7a6a58', eras: '23', eraGroup: 'arcade-3' })),
   // the hotel: H1 (to 9 m) and the prow's corner turret (to 13 m); the west wing on an arch over the arcade (soffit 3.8)
   ...bld(-14, -7, -22.5, -18.5, 9, { tag: 'hotel', color: K.hotel }, BOT),
-  B(-14, -11.5, 9, 13, -21, -18.5, { tag: 'hotel-turret', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
+  B(-14, -11.5, 9, 13, -21, -18.5, { tag: 'hotel-turret', hidden: true, roof: true, paint: false }),   // (the look: bluestone_turret)
   B(-19, -14, 3.8, 9, -22.5, -18.5, { tag: 'hotel-arch', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
   B(-19, -18.5, 0, 3.8, -22.5, -18.5, { tag: 'arch-pier', color: K.hotel, pattern: PATTERN.render, roof: true }),
   // the balcony (Alpha's raised corner over mid) and the gallery over Swimston's west footpath, the landing, the stair
