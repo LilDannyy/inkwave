@@ -571,9 +571,13 @@ export class SpecialSense {
   tick(dt) {
     if (!this.on()) { if (this.recs.size || this.esc) this.reset(); return; }
     specialDangers();
-    if ((this.scanT -= dt) <= 0) { this.scanT = 0.1 + Math.random() * 0.05; this._scan(); }
+    // [b5-deploy] a danger it knew went this frame (a Vortex Strike's missile turned into its vortex): a look now, so
+    // what took its place takes over its notice at once — between looks (~0.1–0.15 s) it knew nothing there, and a bot
+    // on the vortex's edge stepped in
+    if ((this.scanT -= dt) <= 0 || this._stale()) { this.scanT = 0.1 + Math.random() * 0.05; this._scan(); }
     this._known();
   }
+  _stale() { for (const r of this.recs.values()) if (!r.miss && r.d.gen !== _gen) return true; return false; }
   _known() {
     const now = G.time, K = this.known, team = TEAMK[this.a.team];
     K.length = 0;
