@@ -5,14 +5,16 @@
 // BLOCKOUT: no far scenery yet (the art pass). What this draws now is the stage's glass and water as placeholder
 // volumes — the level blocks for them are hidden colliders (layout.js `glass`) — and the Tubeway as placeholder clear
 // tubes along the legs' real centrelines (tubeway.js) with their mouths: a white ring at a two-way end, green at an
-// IN end, red at an OUT end, chevrons along the one-way legs pointing with the flow, a pale disc on each landing point.
+// IN end, red at an OUT end, chevrons along the one-way legs pointing with the flow; on the floor, an arrow on each IN
+// end's apron (white at a two-way end) and a ring round each OUT end's landing point (red; white at a two-way end).
 // The Kelp Lines' tide (UP / DOWN) swaps their rings and chevrons: globalThis.__aqTide = 'down' shows the DOWN state
 // (the pipe engine will own this; the blockout's pictures set it by hand).
 import { PIPES, allLegs, centreline, endsOf } from './tubeway.js';
 
 export function buildBackdrop(kit, data = {}) {
   const T = kit.THREE, DEG = Math.PI / 180;
-  const buckets = { glass: [], water: [], kelp: [], tube: [], two: [], in: [], out: [], land: [], upIn: [], upOut: [], dnIn: [], dnOut: [], chev: [], upChev: [], dnChev: [] };
+  const buckets = { glass: [], water: [], kelp: [], tube: [], two: [], in: [], out: [], upIn: [], upOut: [], dnIn: [], dnOut: [], chev: [], upChev: [], dnChev: [],
+    apTwo: [], landTwo: [], apIn: [], landOut: [], upApIn: [], upLandOut: [], dnApIn: [], dnLandOut: [] };
   const put = (k, g) => buckets[k].push(g.index ? g.toNonIndexed() : g);
   // ---- glass panels and water volumes (from the layout's hidden glass pieces, both halves)
   for (const d of data.glass || []) {
@@ -53,15 +55,23 @@ export function buildBackdrop(kit, data = {}) {
       if (two) put('two', ring);
       else if (!tidal) put(e.k === 0 ? 'in' : 'out', ring);
       else { put(e.k === 0 ? 'upIn' : 'upOut', ring); put(e.k === 0 ? 'dnOut' : 'dnIn', ring.clone()); }
-      const disc = new T.CircleGeometry(1.0, 20); disc.rotateX(-Math.PI / 2); disc.translate(e.land[0], e.land[1] + 0.04, e.land[2]);
-      if (two || tidal || e.k === 1) put('land', disc);
+      // floor marks, legible from the top camera: an arrow on the IN end's apron (2.4 wide, 0.2 … 2.2 m out, pointing
+      // into the mouth) and a ring round the OUT end's landing point (3.1 m out); white at a two-way end
+      const yaw = Math.atan2(e.out[0], e.out[2]);
+      const arrow = new T.Shape([[-1.2, 2.2], [1.2, 2.2], [1.2, 1.0], [0, 0.2], [-1.2, 1.0]].map(([x, y]) => new T.Vector2(x, y)));
+      const ap = new T.ShapeGeometry(arrow); ap.rotateX(-Math.PI / 2); ap.rotateY(yaw + Math.PI); ap.translate(e.pos[0], e.floorY + 0.05, e.pos[2]);
+      const lr = new T.RingGeometry(0.85, 1.3, 24); lr.rotateX(-Math.PI / 2); lr.translate(e.land[0], e.land[1] + 0.05, e.land[2]);
+      if (two) { put('apTwo', ap); put('landTwo', lr); }
+      else if (!tidal) { if (e.k === 0) put('apIn', ap); else put('landOut', lr); }
+      else if (e.k === 0) { put('upApIn', ap); put('dnLandOut', lr); }
+      else { put('dnApIn', ap); put('upLandOut', lr); }
     }
-    if (!two) {   // chevrons every 3 m along the leg (not in its first / last 3 m), pointing with the flow
+    if (!two) {   // chevrons every 2.5 m along the leg (not in its first / last 3 m), pointing with the flow
       const L = path.getLength();
-      for (let s = 3; s < L - 3; s += 3) {
+      for (let s = 3; s < L - 3; s += 2.5) {
         const p = path.getPointAt(s / L), t = path.getTangentAt(s / L);
         for (const [key, dir] of tidal ? [['upChev', 1], ['dnChev', -1]] : [['chev', 1]]) {
-          const c = new T.ConeGeometry(0.3, 0.65, 10); c.applyQuaternion(new T.Quaternion().setFromUnitVectors(UP, t.clone().multiplyScalar(dir))); c.translate(p.x, p.y, p.z);
+          const c = new T.ConeGeometry(0.5, 1.1, 10); c.applyQuaternion(new T.Quaternion().setFromUnitVectors(UP, t.clone().multiplyScalar(dir))); c.translate(p.x, p.y, p.z);
           put(key, c);
         }
       }
@@ -81,8 +91,10 @@ export function buildBackdrop(kit, data = {}) {
   const glow = (c) => new T.MeshBasicMaterial({ color: c });
   const LOOK = {
     water: new T.MeshBasicMaterial({ color: '#2a5f6c', transparent: true, opacity: 0.72, depthWrite: false, side: T.DoubleSide }), glass: see('#d9eef0', 0.14, { roughness: 0.05 }), kelp: std('#5b5a33', { roughness: 0.8 }),
-    tube: see('#eef8f8', 0.3, { roughness: 0.05 }), two: glow('#f4f1e8'), in: glow('#3cc46a'), out: glow('#c8402f'), land: new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.32, depthWrite: false }),
+    tube: see('#eef8f8', 0.3, { roughness: 0.05 }), two: glow('#f4f1e8'), in: glow('#3cc46a'), out: glow('#c8402f'),
     chev: glow('#3cc46a'), upIn: glow('#3cc46a'), upOut: glow('#c8402f'), dnIn: glow('#3cc46a'), dnOut: glow('#c8402f'), upChev: glow('#3cc46a'), dnChev: glow('#3cc46a'),
+    apTwo: glow('#f4f1e8'), landTwo: glow('#f4f1e8'), apIn: glow('#3cc46a'), landOut: glow('#c8402f'),
+    upApIn: glow('#3cc46a'), upLandOut: glow('#c8402f'), dnApIn: glow('#3cc46a'), dnLandOut: glow('#c8402f'),
   };
   const objects = [], groups = { up: [], down: [] };
   for (const [k, geos] of Object.entries(buckets)) {
