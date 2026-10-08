@@ -4,7 +4,9 @@
 // chain in order, a custom block kind and field, a level-material extension, a special nav edge that opens and closes on
 // the stage clock, one moving collider, a noPlace disc, a liquid level, the match runtime's hooks, a clock snap (seek),
 // the minimap layer, the HUD frame, a Practice-style snapshot / restore, the physics skip flag, and disposal on a stage
-// swap. Plus: a stage with no module key has no stage world and no stage run (the twelve existing stages).
+// swap; every level-material slot at its anchor, the minimap's per-state bases, a nav rule's cost on climb edges, the
+// environment (a backdrop set with instances, a theme overlay, env.sea, addSurface) and the bake passes. Plus: a stage
+// with no module key has no stage world and no stage run (the twelve existing stages).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -46,6 +48,15 @@
   R('the world build calls every hook once, in order', JSON.stringify(seen) === JSON.stringify(want), { calls: W.calls });
   R('the match runtime was made after the world was ready, and ticks (update and lateUpdate)', Rn.calls[0] === 'match' && Rn.calls.includes('lateUpdate') && Rn.lastT !== undefined, { calls: Rn.calls });
 
+  // ---- 1b) the environment: a backdrop set with instances (hidden until a module shows it), the module's theme overlay,
+  // env.sea false (no sea mesh), a surface of the module's own (addSurface)
+  const env = __G.env, set = env.stageSets && env.stageSets.d1;
+  const inst = set ? set.children.filter((c) => c.isInstancedMesh) : [];
+  const ovl = env._stageTheme('day').dummyMark;
+  R('environment: a backdrop set (out.sets) with its instances, hidden; the theme overlay layers in; env.sea false hides the sea; addSurface',
+    set && !set.visible && inst.length === 1 && inst[0].count === 2 && ovl === 'day' && env.sea && env.sea.visible === false && W.surface && W.surface.parent === env.root,
+    { set: !!set, inst: inst.length, overlay: ovl, sea: env.sea && env.sea.visible, surface: !!(W.surface && W.surface.parent === env.root) });
+
   // ---- 2) level: block kind + field, the physics skip flag
   const L = __G.level;
   const kb = L.blocks.find((b) => b.dummyTag === 'extra'), fb = L.blocks.find((b) => b.dummyTag === 'piece');
@@ -71,6 +82,22 @@
   // ---- 3) the level material extension compiled (its key on the program) and the shared uniform object is the module's
   const k1 = g.levelMat.customProgramCacheKey();
   R('the level material carries the extension: program key + shared uniform', k1 === progKey0 + '-dummymod' && g.levelMat.userData.uniforms.uDummyK === W.uniforms.uDummyK, { k0: progKey0, k1 });
+  // every slot lands at its anchor, exactly once (the dummy's marker comments): a missed anchor would drop a chunk silently
+  const shd = { vertexShader: THREE.ShaderLib.physical.vertexShader, fragmentShader: THREE.ShaderLib.physical.fragmentShader, uniforms: {} };
+  g.levelMat.onBeforeCompile(shd, __G.renderer);
+  const VS = shd.vertexShader, FS = shd.fragmentShader, vMain = VS.indexOf('void main()'), fMain = FS.indexOf('void main()');
+  const slotAt = (src, k, ok) => { const m = '/*SM:' + k + '*/'; return src.split(m).length === 2 && ok(src.indexOf(m)); };
+  const slots = {
+    vertPars: slotAt(VS, 'vertPars', (i) => i < vMain && i > VS.indexOf('varying vec3 vWNorm;')),
+    vertMain: slotAt(VS, 'vertMain', (i) => i > vMain && i > VS.indexOf('#include <project_vertex>')),
+    fragPars: slotAt(FS, 'fragPars', (i) => i < fMain),
+    fragBase: slotAt(FS, 'fragBase', (i) => i > FS.indexOf('gBaseRough = rough;') && i < FS.indexOf('// ---- wet ink (src/world/inkShading.js) ----')),
+    fragMural: slotAt(FS, 'fragMural', (i) => i > FS.indexOf('vec4 mc = texture2D(uMural, muv);') && i < FS.indexOf('base = mix(base, mc.rgb')),
+    fragEmissive: slotAt(FS, 'fragEmissive', (i) => i > FS.indexOf('#include <emissivemap_fragment>') && i < FS.indexOf('#include <lights_physical_fragment>')),
+    fragFinal: slotAt(FS, 'fragFinal', (i) => i > FS.indexOf('#include <lights_fragment_end>') && i < FS.indexOf('outgoingLight = min(outgoingLight, vec3(5.0));')),
+    aoSample: slotAt(FS, 'aoSample', (i) => FS.lastIndexOf('float bao = mix(1.0, (', i) > FS.indexOf('#include <aomap_fragment>')),
+  };
+  R('every level-material slot (vertPars, vertMain, fragPars, fragBase, fragMural, fragEmissive, fragFinal, aoSample) lands at its anchor, once', Object.values(slots).every(Boolean), slots);
 
   // ---- 4) nav: the special edge, the heuristic scale, open / closed on the stage clock
   const nav = __G.nav, edges = [];
@@ -85,6 +112,15 @@
   const pShut = nav.path(ea, eb, 0);
   R('the edge is taken while open (t 3: 2 nodes) and forbidden while shut (t 13: walks round)', pOpen && pOpen.length === 2 && pShut && pShut.length > 10, { open: pOpen && pOpen.length, shut: pShut && pShut.length, t: S.t });
   R('nav.ext is this match\'s rule while the module runs', !!nav.ext && typeof nav.ext.edge === 'function');
+  // a rule's extra cost holds on climb edges too (the lava's soft cost on a climb into a floor it will cover)
+  let ce = null;
+  for (let i = 0; i < nav.nodes.length && !ce; i++) {
+    if (!nav.valid[i] || nav.nodes[i].zone >= 0) continue;
+    for (const e of nav.nodes[i].nb) if (e.type === 'climb' && nav.valid[e.to] && !(nav.nodes[e.to].zone >= 0)) { ce = [i, e.to]; break; }
+  }
+  const gTo = (x) => { Rn.climbX = x; const p = ce ? nav.path(ce[0], ce[1], 0) : null; Rn.climbX = 0; return p ? +nav._g[ce[1]].toFixed(2) : null; };
+  const gc0 = gTo(0), gc1 = gTo(25);
+  R('a nav rule\'s extra cost holds on a climb edge (the climb rule adds to it, never replaces it)', ce && gc0 !== null && gc1 !== null && gc1 > gc0 + 1, { ce, gc0, gc1 });
 
   // ---- 5) the moving collider follows the clock (a pure function of it)
   setT(7.5); step(0.2);
@@ -140,6 +176,18 @@
   const drawn = Rn.drawn;
   step(0.1);
   R('the minimap live layer draws the module (drawMap)', drawn > 0 || Rn.drawn > 0, { drawn: Rn.drawn });
+  // the base raster: W.mapBlock leaves a block out (and a non-solid block stays out); setBase keeps one base per state
+  const mm = g.minimap; mm.ensure();
+  const pix = (x, z) => { const t = mm.toCanvas(x, z, { x: 0, y: 0 }); return mm.topBlock[Math.floor(t.y) * mm.w + Math.floor(t.x)]; };
+  const mb0 = { extra: pix(0, -36), shared: pix(21, 21), s2: pix(23, 21) };
+  s2.solid = false; mm.setBase('s2off'); const mb1 = { s2: pix(23, 21), shared: pix(21, 21) }; s2.solid = true;
+  mm.setBase('noShared', (b) => b.solid && b.dummyTag !== 'shared'); const mb2 = { shared: pix(21, 21), s2: pix(23, 21) }, base2 = mm.base;
+  mm.setBase('s2off'); const mb3 = pix(23, 21);
+  mm.setBase('noShared'); const same = mm.base === base2;
+  mm.setBase('all');   // (every solid block again, for what follows)
+  R('minimap base: W.mapBlock leaves the custom block out, a non-solid block stays out, setBase(key, present) builds a base per state and swaps back to the cached one',
+    kb && mb0.extra !== kb.id && mb0.shared === sh.id && mb0.s2 === s2.id && mb1.s2 !== s2.id && mb1.shared === sh.id && mb2.shared !== sh.id && mb2.s2 === s2.id && mb3 !== s2.id && same,
+    { mb0, mb1, mb2, mb3, same, ids: { extra: kb && kb.id, shared: sh && sh.id, s2: s2 && s2.id } });
   Rn.n = 4;
   const fr = S.hud(g.match.local || g.match.actors[0]);
   R('frame.stage carries the module\'s own HUD object under its key', fr && fr.dummymod && fr.dummymod.n === 4, { fr });
@@ -155,11 +203,18 @@
   // ---- 10) bake mode reaches the world
   SW.bakeMode(true); SW.bakeMode(false);
   R('bakeMode(on / off) reaches the module world', W.calls.includes('bakeMode:true') && W.calls.includes('bakeMode:false'));
+  const ps = SW.bakePasses();
+  if (ps) for (const p of ps) p();
+  R('bakePasses: the module\'s world states for a per-state lightmap (one channel each, at most 3)', ps && ps.length === 2 && W.calls.includes('pass:1') && W.calls.includes('pass:2'), { n: ps && ps.length });
 
   // ---- 11) the runtime and the world go with the match and the stage
   D.removeDummy(MAP_LAYOUTS.testbox, dress);
   const back = await restart('testbox');
   R('a rebuild without the key disposes the module (world and run) and leaves no stage world, no nav rule, no extension', back && W.disposed && Rn.disposed && __G.stageWorld === null && !g.match.stage && !__G.nav.ext && !__G.dummyWorld && g.levelMat.customProgramCacheKey() === progKey0,
     { wd: W.disposed, rd: Rn.disposed, sw: __G.stageWorld, key: g.levelMat.customProgramCacheKey() });
+  const E2 = __G.env;
+  R('…and its environment pieces go with it: the theme overlay cleared, the sea back, its surface and its backdrop set gone',
+    E2.themeOverlay === null && E2.sea && E2.sea.visible === true && !W.surface.parent && !(E2.stageSets && E2.stageSets.d1) && E2._stageTheme('day').dummyMark === undefined,
+    { overlay: E2.themeOverlay, sea: E2.sea && E2.sea.visible, surface: !!W.surface.parent, set: !!(E2.stageSets && E2.stageSets.d1) });
   return out;
 })();
