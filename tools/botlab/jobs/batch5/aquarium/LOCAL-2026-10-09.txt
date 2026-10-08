@@ -1,0 +1,165 @@
+Gulper Aquarium blockout — the runs made LOCALLY on 2026-10-09 (the Mac mini's runner gave no result for JOB-2 within 20 min; no branch has had a result since 2026-10-04)
+geometry at 3fb187c (cover fixes db426de; later commits change only drawn placeholders); one Electron at a time, SLOTS=3
+
+### turf1
+== aquarium [turf 180s]: turf 32.2% vs 32.8%
+   stuck 0.1% | splats 45 (water 0) | specials 4 | super jumps 19 | turf 32.2/32.8 | sim 180s in 39s (wall 39s) | {"cpuSimMs":1.93}
+   splats by cause {"mitts":6,"shot":7,"blast":15,"slam":1,"blaster":3,"slosh":2,"brolly":7,"bow":4}
+   stuck {"t":178.8,"name":"Moxie","w":"brolly","mode":"refill","role":"-","pos":[0.7,1.2,7.9],"path":true,"hold":false,"pod":"-","dur":1}
+   stuck {"t":56.5,"name":"Moxie","w":"brolly","mode":"paint","role":"-","pos":[-3,1.1,-50.1],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+
+### turf2
+== aquarium [turf 180s]: turf 28.5% vs 40.7%
+   stuck 0% | splats 39 (water 0) | specials 3 | super jumps 15 | turf 28.5/40.7 | sim 180s in 39s (wall 39s) | {"cpuSimMs":2.22}
+   splats by cause {"blade":4,"shot":17,"zooka":1,"mitts":6,"bow":6,"drop":1,"charger":1,"slosh":1,"brush":1,"boomerang":1}
+   stuck {"t":98.3,"name":"Squiddo","w":"brush","mode":"fight","role":"-","pos":[2.3,0.86,-7.9],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+
+### zones1
+== aquarium [zones]: winner Bravo (time) | final 100 vs 9 (penalty +0/+0) | OT no
+   held A 0s B 92s neutral 207.8s | captures 4 (takeovers 0), control events 7, first capture @30.5s | rotations 6
+   bots in the active zone 73.9% of the time | avg inside A 0.3 B 0.88 | within 12 m A 0.83 B 1.84
+   stuck 0.3% | splats 78 (water 0) | specials 8 | super jumps 51 | turf 17.5/28.9 | sim 300s in 76s (wall 76s) | {"cpuSimMs":2.82}
+   splats by cause {"mitts":31,"blast":8,"charger":6,"bow":17,"slosh":8,"seeker":1,"blaster":2,"boomerang":1,"tracer":3,"mine":1}
+   stuck {"t":233.8,"name":"Moxie","w":"mitts","mode":"fight","role":"paint","pos":[7,0.56,-15.1],"path":true,"hold":false,"pod":"-","dur":1}
+   stuck {"t":187.8,"name":"Bubbles","w":"bow","mode":"retreat","role":"paint","pos":[17.4,0,-26.2],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":115.5,"name":"P1","w":"charger","mode":"refill","role":"watch","pos":[18,0.22,-9.2],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":124,"name":"Sprinkle","w":"bow","mode":"fight","role":"watch","pos":[-1.6,2.4,4.1],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":131,"name":"P1","w":"charger","mode":"paint","role":"watch","pos":[25.3,0,-5.1],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":143.8,"name":"P1","w":"charger","mode":"fight","role":"watch","pos":[20,0,-8.9],"path":false,"hold":false,"pod":"-","dur":0.5}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+
+### zones2
+== aquarium [zones]: winner Alpha (time) | final 57 vs 76 (penalty +0/+16.4) | OT no
+   held A 63s B 48s neutral 188.8s | captures 6 (takeovers 3), control events 11, first capture @25.3s | rotations 6
+   bots in the active zone 62.3% of the time | avg inside A 0.57 B 0.43 | within 12 m A 1.37 B 0.99
+   stuck 0.2% | splats 79 (water 0) | specials 13 | super jumps 37 | turf 29.4/22.3 | sim 300s in 71s (wall 71s) | {"cpuSimMs":1.77}
+   splats by cause {"blade":6,"mitts":22,"shot":15,"bow":4,"brolly":7,"blast":9,"surf":4,"jetpack":4,"shaker":2,"waddle":1,"burst":1,"blaster":2,"tracer":2}
+   stuck {"t":31.3,"name":"Marlo","w":"spinner","mode":"fight","role":"stage","pos":[19.5,0,-6.1],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":214.5,"name":"Sprinkle","w":"brolly","mode":"paint","role":"stage","pos":[-2.5,0,20.3],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":261,"name":"Moxie","w":"bow","mode":"fight","role":"paint","pos":[-7.7,0,14.2],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":34.8,"name":"Moxie","w":"bow","mode":"paint","role":"watch","pos":[-5.4,2.1,5.9],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":37,"name":"Inky Vee","w":"mitts","mode":"paint","role":"stage","pos":[14.2,3.38,-60.3],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":46.8,"name":"Moxie","w":"bow","mode":"fight","role":"paint","pos":[2.4,1.67,8.6],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+
+### towermatch1
+== aquarium [tower len 149.5/149.5]: winner Alpha (comeback) | counts 71 vs 72 (score 71/72) | best push A 54.2m B 54m | OT 16.6s | sim 316.5s
+   held A 172s B 131.5s | contested 5s (4×) | neutral 12.8s | control changes 12 (takes 13) | idle→neutral 1
+   checkpoints cleared A 0 B 0 (reached 0/0, refills 0/0) | riders avg while held A 1.27 B 1.33 | mounts 42/22
+   stuck 0.2% | by the tower's side 4.4% of bot-time, stuck there 0s (0 episodes) | splats 106 (water 0) | specials 14 (ready 14) | super jumps 47 | turf 27.4/23.8 | sim 316.5s in 142s (wall 142s) | {"cpuSimMs":1.63}
+   stuck {"t":152.3,"name":"Zest","w":"charger","mode":"refill","role":"perch","pos":[2.4,0,18.9],"tower":11.2,"path":true,"dur":1.25}
+   stuck {"t":306.8,"name":"Zest","w":"charger","mode":"fight","role":"perch","pos":[-12.8,0,39.9],"tower":18.2,"path":false,"dur":0.75}
+   stuck {"t":197.3,"name":"Zest","w":"charger","mode":"fight","role":"perch","pos":[-9.3,0,24.3],"tower":14.8,"path":false,"dur":0.5}
+   stuck {"t":271,"name":"Zest","w":"charger","mode":"fight","role":"perch","pos":[-18.7,0.22,9.3],"tower":19.1,"path":false,"dur":0.5}
+   stuck {"t":113.5,"name":"Zest","w":"charger","mode":"paint","role":"perch","pos":[-5.4,0,20.4],"tower":22.2,"path":true,"dur":0.25}
+   stuck {"t":128.8,"name":"Zest","w":"charger","mode":"paint","role":"perch","pos":[-0.5,0,26.9],"tower":8.8,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium.tower Unexpected token 'N', "Not found" is not valid JSON
+
+### tower-check
+== aquarium tower track · heading 0° · length 149.5 / 149.5 m (Alpha's / Bravo's side) · speed 1.87 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 30 pieces · 24 runs, 0 inclines, 2 climbs, 4 drops · 149.5 m
+     DROP     s=  8.71  [0,2.4,8.71] → [0,1.2,8.71]  -1.2 m
+     DROP     s= 12.21  [0,1.2,11.01] → [0,0,11.01]  -1.2 m
+     CLIMB    s= 83.99  [-6,0,47.21] → [-6,1.2,47.21]  1.2 m  onto [{"id":1283,"tag":"ticket-hall","centre":[-6,0.6,42.5],"size":[8,1.2,7]}]
+     DROP     s= 94.61  [-6,1.2,37.79] → [-6,0,37.79]  -1.2 m
+     CLIMB    s=109.64  [7.04,0,37] → [7.04,1.2,37]  1.2 m  onto [{"id":1342,"tag":"penguin-rocks","centre":[10.29,-0.4,42.48],"size":[7.8,3.2,13]}]
+     DROP     s=126.44  [3.86,1.2,42.5] → [3.86,0,42.5]  -1.2 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 30 pieces · 24 runs, 0 inclines, 2 climbs, 4 drops · 149.5 m
+   checkpoints [{"team":0,"index":0,"d":67.2,"dur":10,"at":[-14,0,44]},{"team":0,"index":1,"d":92.4,"dur":10,"at":[-6,1.2,40]},{"team":1,"index":0,"d":67.2,"dur":10,"at":[14,0,-44]},{"team":1,"index":1,"d":92.4,"dur":10,"at":[6,1.2,-40]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 149.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -149.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   console errors: none
+RESULT_JSON {"map":"aquarium","len":[149.5,149.5],"holes":0,"issues":0,"climbs":2,"drops":4,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+### audit-zones
+FAIL lightmap applied (baked for this build, not stale)  {"id":"aquarium","mode":"zones"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.32,6.53],"avg":6.43,"straight":62.2}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+console errors: none
+
+### audit-tower
+FAIL lightmap applied (baked for this build, not stale)  {"id":"aquarium","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.04,6.26],"avg":6.15,"straight":62.2}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":149.5,"cps":["45%","62%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+console errors: none
+
+### pipe-aprons
+PASS gulper A  {"mouth":[12.7,0.8,0],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.54,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.58,"lane":null,"headroom":null,"coverWithin":1.5,"padDist":60.13,"b
+PASS gulper B  {"mouth":[-12.7,0.8,0],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.54,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.58,"lane":null,"headroom":null,"coverWithin":1.5,"padDist":60.13,"
+PASS arch A  {"mouth":[9.58,0.8,-26.31],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.47,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.25,"lane":null,"headroom":null,"coverWithin":2.5,"padDist":35.05
+PASS arch B  {"mouth":[-9.96,3.2,-26.17],"floorY":2.4,"way":"two","in":true,"out":true,"approachFloor":2.4,"navApproach":0.52,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.54,"lane":null,"headroom":null,"coverWithin":1.25,"pa
+PASS arch~ A  {"mouth":[-9.58,0.8,26.31],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.47,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.25,"lane":null,"headroom":null,"coverWithin":2.5,"padDist":35.0
+PASS arch~ B  {"mouth":[9.96,3.2,26.17],"floorY":2.4,"way":"two","in":true,"out":true,"approachFloor":2.4,"navApproach":0.52,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.54,"lane":null,"headroom":null,"coverWithin":1.25,"pad
+PASS express A  {"mouth":[23.14,0.8,-48.58],"floorY":0,"way":"one","in":true,"out":false,"approachFloor":0,"navApproach":0.15,"apron":{"floor":[0,0],"block":null},"bad":[]}
+PASS express B  {"mouth":[-15.99,2,-34.8],"floorY":1.2,"way":"one","in":false,"out":true,"approachFloor":1.2,"navApproach":0.43,"landFloor":1.2,"drop":0,"navLanding":0.39,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":43.66,"bad":[]}
+PASS express~ A  {"mouth":[-23.14,0.8,48.58],"floorY":0,"way":"one","in":true,"out":false,"approachFloor":0,"navApproach":0.15,"apron":{"floor":[0,0],"block":null},"bad":[]}
+PASS express~ B  {"mouth":[15.99,2,34.8],"floorY":1.2,"way":"one","in":false,"out":true,"approachFloor":1.2,"navApproach":0.43,"landFloor":1.2,"drop":0,"navLanding":0.39,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":43.66,"bad":[]}
+PASS kelp A  {"mouth":[27.4,0.8,-4.6],"floorY":0,"way":"tidal","in":true,"out":true,"approachFloor":0,"navApproach":0.14,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.22,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":53.6
+PASS kelp B  {"mouth":[18.94,3.2,21.03],"floorY":2.4,"way":"tidal","in":true,"out":true,"approachFloor":2.4,"navApproach":0.31,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.43,"lane":null,"headroom":null,"coverWithin":2.75,"p
+PASS kelp~ A  {"mouth":[-27.4,0.8,4.6],"floorY":0,"way":"tidal","in":true,"out":true,"approachFloor":0,"navApproach":0.14,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.22,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":53.
+PASS kelp~ B  {"mouth":[-18.94,3.2,-21.03],"floorY":2.4,"way":"tidal","in":true,"out":true,"approachFloor":2.4,"navApproach":0.31,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.43,"lane":null,"headroom":null,"coverWithin":2.75
+RESULT 14/14
+console errors: none
+
+### reach-probe
+PASS penguin glass: no way onto the cove  {"starts":29,"runs":928,"leaks":[],"nLeaks":0}
+PASS plant room: not reachable from the Kelp Balcony  {"starts":20,"runs":640,"leaks":[],"nLeaks":0}
+PASS Feeding Deck: no way up from the viewing steps / the court beside the glass  {"starts":16,"runs":512,"leaks":[],"nLeaks":0}
+PASS spawn deck: the front drop is one-way (no way up from the plaza)  {"starts":16,"runs":512,"leaks":[],"nLeaks":0}
+PASS promenade: only the Penguin Steps join it to Penguin Point  {"starts":3,"runs":96,"leaks":[],"nLeaks":0}
+PASS roofs: the Reef Window, the pylons, the kiosks and stops stay off-limits  {"starts":19,"runs":608,"leaks":[],"nLeaks":0}
+RESULT 6/6
+console errors: none
+
+### perf (shoot.cjs REPORT, day, at load; alternating on this Mac)
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":8584,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":326,"tris":3768850,"cpuRenderMs":4.39,"cpuSimMs":1.99},"coverage":[3.5,2.9]}
+REPORT {"map":"aquarium","mode":"turf","time":"day","loadMs":6794,"blocks":1746,"solidBlocks":1746,"propMeshes":2,"navNodes":4562,"bounds":{"minX":-36,"maxX":36,"minZ":-78,"maxZ":78},"perf":{"calls":241,"tris":1123963,"cpuRenderMs":3.61,"cpuSimMs":2.22},"coverage":[2.5,3.5]}
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":10725,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":332,"tris":3835729,"cpuRenderMs":6,"cpuSimMs":3.01},"coverage":[3.6,2.7]}
+REPORT {"map":"aquarium","mode":"turf","time":"day","loadMs":8152,"blocks":1746,"solidBlocks":1746,"propMeshes":2,"navNodes":4562,"bounds":{"minX":-36,"maxX":36,"minZ":-78,"maxZ":78},"perf":{"calls":253,"tris":1220947,"cpuRenderMs":3.05,"cpuSimMs":2.09},"coverage":[3.7,3.2]}
+
+### combined page checks at the final head (spawn-mid, size-budget, climb-audit, stage-audit turf, cover-map)
+PASS spawn-mid: spawn to mid  {"t0":{"m":74.5,"s":6.32,"straight":62.2},"t1":{"m":77.1,"s":6.53,"straight":62.2},"spawns":[[15.9,-60.1],[-15.9,60.1]],"mid":[0,0]}
+PASS size-budget: lightmap atlas fits 2048 at 8 ppm  {"used":1724}
+PASS size-budget: paint atlas density  {"ppm":7.2,"atlas":2048}
+PASS size-budget: A* reach spawn to far side (within the bots' search cap)  {"nodes":4562,"cap":13686,"capNeeded":[6000,6000]}
+PASS climb-audit: climb edges barred by a railing  {"climbs":163,"bad":[],"n":0}
+PASS stage-audit: lightmap applied (baked for this build, not stale)  {"id":"aquarium","mode":"turf","rows":1724}
+PASS stage-audit: spawn → mid (s, bots' default search cap)  {"secs":[6.32,6.53],"avg":6.43,"straight":62.2}
+PASS stage-audit: no climb barred by a railing  {"bad":0}
+PASS cover-map: cover map  {"map":"aquarium","floorCells":4966,"within5m_pct":98.8,"largestOpenRadius_m":11.5,"at":[6.5,-64.5],"skip":[],"grid":{"x0":-36,"z0":-78,"nx":72,"nz":156,"b64":"///////////////////////////////////////////
+RESULT 9/9
+
+### cover-stats.py (aquarium final; then Halyard, same tool)
+floor cells 4966: 98.9% within 5 m of cover; outside the excluded areas 4136: 100.0%
+median distance to cover 1.5 m; within 3 m 93.7%
+open stretches (cells > 5 m from cover, outside the excluded areas): 0
+  deck top: 176 cells, 93.2% within 5 m, worst 8.1 m
+  spawn decks: 654 cells, 93.3% within 5 m, worst 11.5 m
+floor cells 4252: 96.6% within 5 m of cover; outside the excluded areas 4252: 96.6%
+median distance to cover 2.0 m; within 3 m 78.9%
+open stretches (cells > 5 m from cover, outside the excluded areas): 18
+
+### karp-data.js (LAYOUT.bazookarp on the nav graph)
+PASS #1 L = Pond → Gate 55–85 m, both teams within 2 %  {"L":[58,57.4]}
+PASS #2 weir at 40–55 % of L  {"pct":[52,52],"pondWeir":[30.8,30.8]}
+PASS #3 weir → Gate ≥ 45 % of L and ≥ 25 m  {"m":[28.9,28.3],"pctL":[50,49]}
+PASS #4 route 2 (2.5 m off route 1) ≤ 1.6× route 1, to the weir and to the Gate  {"weir":[[30.8,32.7],[30.8,33.5]],"gate":[[28.9,31.7],[28.3,32]]}
+PASS named route hints walk (carrier: no climbs)  {"t0":{"centre":61.3,"arcade":52.4,"pumphall":38.8,"rocks":41},"t1":{"centre":59.9,"arcade":51.5,"pumphall":38.2,"rocks":39.6}}
+PASS #6 pad → Gate 12–20 m; ≥ 2 apron blocks  {"padGate":[12.1,12.1],"apron":[["queue-planter","topiary","skylight","trolley-stack","trolley","timetable"],["skylight","queue-planter","topiary","trolley-stack","timetable","trolley"]]}
+PASS #8 Gate y ≤ pad y + 0.2, within 40° of the pad → Pond line  {"gateY":0,"padY":3.4,"coneDeg":34.4}
+PASS #15 nothing solid within 3 m of the weir (0.3–3.6 m up)  {"weir":[0,28],"hit":null}
+PASS #14 the Pond: ≥ 70 % of the 4.5–10 m ring is floor; the shell (1.3 m up) seen from ≥ 6 of 8 points at 7 m  {"floorPct":100,"seenFrom":8}
+PASS free zones / noRest polygons  {"freeZones":3,"noRest":16,"signs":[2,1,2]}
+RESULT 10/10
