@@ -119,18 +119,21 @@ export function edgeKinds(self, all, ledge = () => ({ kind: 'ledge', w: 1.0 })) 
   const above = (x, z) => others.some((f) => (f.wall || f.top > self.top + 0.05) && inPoly(f.poly, x, z));
   const same = (x, z) => others.some((f) => !f.wall && Math.abs(f.top - self.top) <= 0.05 && inPoly(f.poly, x, z));
   const lower = (x, z) => others.some((f) => !f.wall && f.top < self.top - 0.05 && inPoly(f.poly, x, z));
+  const lowTop = (x, z) => { let t = Infinity; for (const f of others) if (!f.wall && f.top < self.top - 0.05 && inPoly(f.poly, x, z)) t = Math.min(t, f.top); return t; };
   return (a, b) => {
     const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), nx = dz / L, nz = -dx / L;   // outward (right of a CCW ring)
-    let up = 0, eq = 0, lo = 0;
+    let up = 0, eq = 0, lo = 0, floorTop = Infinity, open = 0;
     for (const t of [0.2, 0.5, 0.8]) {
       const x = a[0] + dx * t + nx * 0.35, z = a[1] + dz * t + nz * 0.35;
-      if (above(x, z)) up++; else if (same(x, z)) eq++; else if (lower(x, z)) lo++;
+      if (above(x, z)) up++; else if (same(x, z)) eq++; else if (lower(x, z)) { lo++; floorTop = Math.min(floorTop, lowTop(x, z)); } else open++;
     }
     if (eq >= 2 && L > 0.2 && self.warn !== false) console.warn(`[caldera] ground: ${self.id} meets a floor of its own height at`, a, b);
     if (up >= 2) return { kind: 'poke', w: 1.0 };
     const k = ledge(a, b);
     if (L < 0.35 && k.kind === 'ledge') return { kind: 'poke', w: k.w };
-    return k.kind === 'ledge' && lo >= 2 ? { ...k, sink: true } : k;
+    // the coping's foot: down to the lower floor beyond it, or to the lake's depth (−1.1) over open lava / void
+    const foot = open ? -1.1 : (Number.isFinite(floorTop) ? floorTop : -1.1);
+    return k.kind === 'ledge' ? { ...k, sink: lo >= 2, y0: k.y0 ?? Math.min(foot, self.top - 0.5) } : k;
   };
 }
 

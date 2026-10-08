@@ -44,20 +44,23 @@ const white = (o = {}) => ({ color: K.white, pattern: PATTERN.render, roof: true
 const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, tag: 'caldera-wall' });
 
 // ============================================================================================================ floors
-// the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`.
+// the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`. A floor's foot (y0) is only as
+// deep as its open faces need (the lake's banks reach −1.1 through their copings); floors with nothing open under them
+// stop at 0.45, under the level's 0.5 m underside cull (a deeper foot only adds hidden faces to the lightmap and paint
+// atlases, a higher one adds undersides)
 const RH_REGION = [P(39, -126), ...G.RIMHEAD_OUT, [-27.5, -40]];   // the Rim Head inside the yard's polygon (natural rock)
 const FLOORS = [
   { id: 'island', poly: G.ISLAND, top: 1.2, y0: -1.1, single: true, mk: () => rock({ tag: 'island', color: K.pave, pattern: PATTERN.yard }) },
-  { id: 'yard', poly: G.YARD, top: 3.6, y0: 0, mk: () => tuff({ tag: 'yard', color: '#b4aea3' }) },
-  { id: 'terrace', poly: G.TERRACE, top: 2.4, y0: 0, mk: () => tuff({ tag: 'terrace', color: K.tuffDk }) },
-  { id: 'lakefront', poly: G.LAKEFRONT, top: 1.2, y0: -1.1, mk: () => tuff({ tag: 'lakefront' }) },
+  { id: 'yard', poly: G.YARD, top: 3.6, y0: 0.45, mk: () => tuff({ tag: 'yard', color: '#b4aea3' }) },
+  { id: 'terrace', poly: G.TERRACE, top: 2.4, y0: 0.45, mk: () => tuff({ tag: 'terrace', color: K.tuffDk }) },
+  { id: 'lakefront', poly: G.LAKEFRONT, top: 1.2, y0: 0, mk: () => tuff({ tag: 'lakefront' }) },
   { id: 'moorings', poly: G.MOORINGS, top: 1.8, y0: 1.2, w: 0.8, mk: () => iron({ tag: 'moorings', color: '#8c8a84' }) },
-  { id: 'ledgeE', poly: G.LEDGE_E, top: 0, y0: -1.1, drown: true, mk: () => glaze({ tag: 'casting-floor' }) },
-  { id: 'shelf', poly: G.SHELF, top: 0, y0: -1.1, drown: true, mk: () => glaze({ tag: 'slump-shelf' }) },
-  { id: 'northHead', poly: G.NORTH_HEAD, top: 1.2, y0: -1.1, mk: () => rock({ tag: 'north-head' }) },
-  { id: 'hornLadle', poly: G.HORN_LADLE, top: 2.4, y0: -1.1, mk: () => rock({ tag: 'ladle-road', color: K.scoria }) },
-  { id: 'hornStep', poly: G.HORN_STEP, top: 1.2, y0: -1.1, mk: () => rock({ tag: 'horn-step' }) },
-  { id: 'ridge', poly: G.RIDGE, top: 3.6, y0: 0, mk: () => rock({ tag: 'rim-ridge' }) },
+  { id: 'ledgeE', poly: G.LEDGE_E, top: 0, y0: -0.7, drown: true, mk: () => glaze({ tag: 'casting-floor' }) },
+  { id: 'shelf', poly: G.SHELF, top: 0, y0: -0.7, drown: true, mk: () => glaze({ tag: 'slump-shelf' }) },
+  { id: 'northHead', poly: G.NORTH_HEAD, top: 1.2, y0: 0, mk: () => rock({ tag: 'north-head' }) },
+  { id: 'hornLadle', poly: G.HORN_LADLE, top: 2.4, y0: 0.45, mk: () => rock({ tag: 'ladle-road', color: K.scoria }) },
+  { id: 'hornStep', poly: G.HORN_STEP, top: 1.2, y0: 0, mk: () => rock({ tag: 'horn-step' }) },
+  { id: 'ridge', poly: G.RIDGE, top: 3.6, y0: 0.45, mk: () => rock({ tag: 'rim-ridge' }) },
   { id: 'castingBed', poly: G.CASTING_BED, top: 3.0, y0: 2.4, w: 0.8, mk: () => ({ color: K.sand, pattern: PATTERN.rubber, tag: 'casting-bed' }) },
 ];
 // rectangular floors and solid volumes the edge test must see (Alpha's half): x0, x1, z0, z1, top
@@ -157,10 +160,11 @@ if (BLOCKOUT_LAVA) {
 
 // ---------------------------------------------------------------------------------------- Alpha's base: the gallery
 // the spawn gallery (4.8): the Casting Hall's gable balcony, open to the sky. Pad (0, 4.8, −64.5).
-add(B(-10, 10, 0, 4.8, -69, -57.5, { color: K.spawn, pattern: PATTERN.spawn, tag: 'gallery' }));
+add(B(-10, 10, 3.6, 4.8, -69, -57.5, { color: K.spawn, pattern: PATTERN.spawn, tag: 'gallery' }));
 // the Casting Hall (12, out of play) and its wings (8): whitewashed basalt; the sawtooth roof and round window are props
-add(B(-16, 16, 0, 12, -74, -69, white({ tag: 'casting-hall' })));
-add(B(-16, -10, 0, 8, -69, -66, white({ tag: 'hall-wing' })), B(10, 16, 0, 8.15, -69, -66, white({ tag: 'hall-wing' })));
+// (collision only: props.js caldera_hall_roof draws the hall and its wings, keeping their big faces out of the lightmap)
+add(B(-16, 16, 0, 12, -74, -69, white({ tag: 'casting-hall', hidden: true, paint: false })));
+add(B(-16, -10, 0, 8, -69, -66, white({ tag: 'hall-wing', hidden: true, paint: false })), B(10, 16, 0, 8.15, -69, -66, white({ tag: 'hall-wing', hidden: true, paint: false })));
 // three exits: the Gallery Stair (forward) and two side stairs onto the side yards
 add(R([0, 3.6, -54.8], [0, 4.8, -57.5], 8, steps({ tag: 'gallery-stair' })));
 add(R([12.7, 3.6, -63], [10, 4.8, -63], 3, steps({ tag: 'gallery-side-stair' })), R([-12.7, 3.6, -63], [-10, 4.8, -63], 3, steps({ tag: 'gallery-side-stair' })));
@@ -357,7 +361,11 @@ const LAYOUT_CALDERA = {
   // (the art pass sets the real intro and hero shot: DESIGN.md §5.7)
   intro: { from: [40, 26, -40], lookFrom: [0, 8, 0], toBack: 3.2 },
   art: { from: [-44, 30, -56], look: [4, 2, 4], fov: 56, lava: 'high' },
-  env: { backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, sea: false },
+  // (blockout: until the lava engine's `sea: false` (ENGINE H22) and the backdrop land, the environment still draws its
+  // sea round the arena; it is tinted the caldera floor's black basalt and stilled, so no picture shows a volcano
+  // floating in a blue ocean. The art pass replaces this theme)
+  env: { backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, sea: false,
+    theme: { all: { seaDeep: '#1c1918', seaShallow: '#2b2523', seaCrest: '#3a312d', foam: '#4a403a', waveStrength: 0.15, sunSpec: 0.25 } } },
   lava: LAVA,
   zones: ZONES,
   tower: TOWER,

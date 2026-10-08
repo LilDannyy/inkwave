@@ -146,7 +146,8 @@ export function register(D, H) {
         B.pop();
         B.box(NS('paint'), '#3a5560', 32.0, 1.7, 0.12, 0, 12.85, z - 0.05, { r: 0.02 });
       }
-      B.box('paint', K.white, 32.4, 11.98, 13.9, 0, 5.99, -81.0, { r: 0.05 });   // the hall running back out of play
+      B.box('paint', K.white, 32.0, 12.0, 19.0, 0, 6.0, -78.5, { r: 0.05 });   // the hall (its collider is the layout's), running back out of play
+      for (const sx of [-1, 1]) B.box('paint', K.white, 6.0, 8.0 + (sx > 0 ? 0.15 : 0), 3.0, sx * 13, 4.0 + (sx > 0 ? 0.075 : 0), -67.5, { r: 0.05 });   // the wings
       for (const x of [-11, 11]) { B.box('paint', K.brick, 1.4, 6.0, 1.4, x, 15.5, -74.5, { r: 0.04 }); B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, 18.6, -74.5); }
       // the gable over the gallery: the round furnace window and the works clock
       B.push(0, 9.2, -68.9, 0);
