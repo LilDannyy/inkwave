@@ -226,21 +226,22 @@ const MID = [
   // (fix round 2: this kiosk stood 17 m out at 232°, pinching the boss's ring against the columns. Fix round 3: against
   //  the cab shelter's west side, out of the hotel stair's footprint)
   B(-17.7, -16.5, 0, 2.4, -13.4, -12.2, { tag: 'phone-kiosk', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
-  // the bill-poster column (1880s, today) → in the 3000s the inkable light-pylon, now the column under the hotel stair's
-  // top landing (fix round 3: the stair is the walk-up the pylon's climb was)
+  // the bill-poster column, under the hotel stair's top landing in the 3000s (fix round 3: the stair is the walk-up the
+  // light-pylon's climb was; round B fix 1, review minor 4: the column is the same in every era — its 3000s look, the
+  // light-pylon holding up the landing, is the art pass's, with no collider change — so jump 2 changes 2 fewer blocks)
   // (fix round 2, review issue 3: not in Boss Battle — on the 247.5° bearing it left the boss a 1.7 m lane past the dome's
-  //  column; the pylon it becomes is era 3, and the boss is held in era 2)
-  B(-15.94, -14.54, 0, 2.6, -7.01, -5.61, { tag: 'poster-column', color: '#6e5f4c', pattern: PATTERN.wood, roof: true, paint: false, eras: '12', eraGroup: 'pylon-w', notIn: 'boss' }),
-  B(-15.94, -14.54, 0, HOTEL_STAIR.yTop - 0.4, -7.01, -5.61, { tag: 'light-pylon', color: K.glass, pattern: PATTERN.glasstile, eras: '3', eraGroup: 'pylon-w' }),
+  //  column)
+  B(-15.94, -14.54, 0, 2.6, -7.01, -5.61, { tag: 'poster-column', color: '#6e5f4c', pattern: PATTERN.wood, roof: true, paint: false, notIn: 'boss' }),
   // ---- the hotel stair (fix round 3, review issue 1: the Halo's third way up, from each team's side flank). The 1880s and
   // today: a cast-iron CAB SHELTER on the ring against the balcony landing's west side (3.0 m, roof, not inkable: cover at
   // the 7:30 / 8 o'clock corner, and to HULLBREAKER a wall that keeps its shell from under the landing). The 3000s: inside
   // its footprint (ENGINE rule 19) a glass stair rises from the landing's west edge (2.4, stepped onto from the landing's
   // south half) north to 5.2, on over the ring at 4.0 m and more, to a top landing that meets the Halo's west corner.
-  B(HOTEL_STAIR.x0, HOTEL_STAIR.x1, 0, 3.0, HOTEL_STAIR.zK0, HOTEL_STAIR.zK1, { tag: 'cab-shelter', color: K.kiosk, pattern: PATTERN.metalpanel, roof: true, paint: false, eras: '12', eraGroup: 'stair-w' }),
+  // (round B fix 1, review minor 4: the shelter's lower 2.1 m is the same in every era — in the 3000s the glass stair's
+  //  base, so no kid climbs into the space under the flight's north end — and only its top 0.9 m changes)
+  B(HOTEL_STAIR.x0, HOTEL_STAIR.x1, 0, 2.1, HOTEL_STAIR.zK0, HOTEL_STAIR.zK1, { tag: 'cab-shelter', color: K.kiosk, pattern: PATTERN.metalpanel, paint: false }),
+  B(HOTEL_STAIR.x0, HOTEL_STAIR.x1, 2.1, 3.0, HOTEL_STAIR.zK0, HOTEL_STAIR.zK1, { tag: 'cab-shelter', color: K.kiosk, pattern: PATTERN.metalpanel, roof: true, paint: false, eras: '12', eraGroup: 'stair-w' }),
   R([HS_X, HOTEL_STAIR.yFoot, HOTEL_STAIR.zFoot], [HS_X, HOTEL_STAIR.yTop, HOTEL_STAIR.zTop], HOTEL_STAIR.x1 - HOTEL_STAIR.x0, { tag: 'hotel-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'stair-w', thin: true, thickness: 0.4 }),
-  // its glass base inside the old shelter (2.1: no kid climbs into the space left under the flight's north end)
-  B(HOTEL_STAIR.x0 + 0.05, HOTEL_STAIR.x1 - 0.05, 0, 2.1, HOTEL_STAIR.zK0 + 0.05, HOTEL_STAIR.zK1 - 0.05, { tag: 'hotel-stair-base', color: K.glass, pattern: PATTERN.glasstile, paint: false, eras: '3', eraGroup: 'stair-w' }),
   // a glass side on its outer (west) edge, where the flight stands clear of the shelter (its bottom 3.4 m over the ring);
   // the inner side is open, a drop onto the ring (ENGINE rule 6's 160 blocks per jump)
   B(HOTEL_STAIR.x0, HOTEL_STAIR.x0 + 0.12, 3.4, HOTEL_STAIR.yTop + 1, -12.6, HOTEL_STAIR.zTop, rail({ tag: 'hotel-stair-glass', eras: '3', eraGroup: 'stair-w' })),
@@ -308,18 +309,19 @@ const haloPieces = [];
 // the Halo inside the same footprint, in the same groups (ENGINE rule 19)
 const SWIMSTON = [
   B(-1.5, 1.5, 0, 3.2, -26.6, -20.6, { tag: 'superstop', color: '#56685e', pattern: PATTERN.metal, roof: true, paint: false, eras: '12', eraGroup: 'stair-s1' }),
-  B(-1.5, 1.5, 0, 3.2, -20.6, -14.6, { tag: 'superstop', color: '#56685e', pattern: PATTERN.metal, roof: true, paint: false, eras: '12', eraGroup: 'stair-s2' }),
+  // (round B fix 1, review minor 4 — jump 2 at most 140 blocks: superstop B's lower 2.6 m is the same in every era, the
+  //  glass stair's base in the 3000s, so only its top changes)
+  B(-1.5, 1.5, 0, 2.6, -20.6, -14.6, { tag: 'superstop', color: '#56685e', pattern: PATTERN.metal, roof: true, paint: false }),
+  B(-1.5, 1.5, 2.6, 3.2, -20.6, -14.6, { tag: 'superstop', color: '#56685e', pattern: PATTERN.metal, roof: true, paint: false, eras: '12', eraGroup: 'stair-s2' }),
   R([0, 0, -26.6], [0, 2.65, -20.6], 3, { tag: 'halo-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'stair-s1' }),
   R([0, 2.65, -20.6], [0, 5.3, -14.6], 3, { tag: 'halo-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'stair-s2' }),
-  // (departs: DESIGN.md's `thickness: 5.4` makes the flight's block 8.7 m long, over ENGINE rule 3's 8 m; a support block
-  //  inside superstop B's footprint carries it instead)
-  B(-1.38, 1.38, 0, 2.6, -20.6, -14.6, { tag: 'halo-stair-base', color: K.glass, pattern: PATTERN.glasstile, paint: false, eras: '3', eraGroup: 'stair-s2' }),
-  // the glass stair's side walls (inside the superstop's footprint: departs from x ±1.5 … ±1.62 so nothing appears
-  // outside the old solid)
-  B(1.38, 1.5, 0, 3.65, -26.6, -20.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s1' })),
-  B(-1.5, -1.38, 0, 3.65, -26.6, -20.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s1' })),
-  B(1.38, 1.5, 0, 6.3, -20.6, -14.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s2' })),
-  B(-1.5, -1.38, 0, 6.3, -20.6, -14.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s2' })),
+  // (departs: DESIGN.md's `thickness: 5.4` makes the flight's block 8.7 m long, over ENGINE rule 3's 8 m; superstop B's
+  //  lower 2.6 m carries it instead)
+  // the glass stair's side walls over the upper flight (inside the superstop's footprint: departs from x ±1.5 … ±1.62 so
+  // nothing appears outside the old solid); (round B fix 1: the lower flight's sides are open — it rises 2.65 m over the
+  // tram lanes — ENGINE rule 6's blocks per jump)
+  B(1.38, 1.5, 2.6, 6.3, -20.6, -14.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s2' })),
+  B(-1.5, -1.38, 2.6, 6.3, -20.6, -14.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s2' })),
   // Alpha's parked tram on the east track (the era-slot kit: one collider, three looks)
   B(0.95, 3.55, 0, 3.2, -44, -38, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
   B(0.95, 3.55, 0, 3.2, -38, -32, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
@@ -500,7 +502,7 @@ export const YARD = [Q.MS0, Q.MS1, Q.R4, Q.R3, YB, YC, Q.Q5];
 // the garden is the whole yard (the lawn and the walk along the alley)
 export const GARDEN_POLY = YARD;
 // tiles (each its own era group, ≤ 8 m): the garden's edges are split where they cross a tile line
-const GT_X = [-41, -35, -30, -24], GT_Z = [-37, -30, -23, -16];   // (on the garden's 1 m raster)
+const GT_X = [-41, -36, -31, -24], GT_Z = [-37, -30, -23, -16];   // (on the garden’s 1 m raster; round B fix 1: x lines at −36, −31, 2 fewer lawn cores)
 export const tileOf = (x, z) => { let i = 0, j = 0; while (i < GT_X.length - 2 && x >= GT_X[i + 1]) i++; while (j < GT_Z.length - 2 && z >= GT_Z[j + 1]) j++; return `garden-${i}${j}`; };
 const yardCol = { color: '#4c4741', pattern: SURF.bluestone, roof: true, paint: false };
 // the garden's two ramps (round B fix 1, review issue 1: the garden on the bots' paths — nav prices a 1.2 m hop up at
@@ -508,7 +510,9 @@ const yardCol = { color: '#4c4741', pattern: SURF.bluestone, roof: true, paint: 
 // Place's corner and from Hoki Lane by the alley's east end, so the way Hoki Lane ↔ the arm crosses the lawn. In the
 // 1880s and today their footprints are the signal yard's bed, in the same group: the bed there vanishes as the ramp
 // appears (ENGINE rules 19, 29); on the yard's and the lawn's rasters
-export const GARDEN_PLANTERS = [[-29.4, -27.6, 2.4, 1.2], [-25.8, -28.6, 1.2, 1.2], [-34.4, -28.6, 1.2, 1.2], [-30.6, -32.6, 1.2, 1.2]];
+// the yard's relay cabinets — the garden's planters in the 3000s (round B fix 1: the same pieces in every era, 1.5 m on
+// the bed, roof; review minor 4, jump 2's blocks; off the 1 m lawn raster so no side plane is shared)
+export const GARDEN_PLANTERS = [[-29.4, -27.7, 2.4, 1.2], [-25.8, -28.7, 1.2, 1.2], [-34.5, -28.7, 1.2, 1.2], [-30.7, -32.7, 1.2, 1.2]];
 export const GARDEN_RAMPS = [{ x0: -28, x1: -24, z0: -23, z1: -20 }, { x0: -28, x1: -24, z0: -33, z1: -30 }];
 const rampRects = GARDEN_RAMPS.map((r) => [r.x0, r.x1, r.z0, r.z1]);
 // the signal yard's iron fence: Boss Battle only (onlyIn: 'boss'), 1.4 m of railing on the bed's edge, see-through, so
@@ -542,7 +546,9 @@ const YARD_SLAB = (() => {
   // (fix round 3: the gaps the cores and the trimmed bars leave at the bed's sharp corners — voids down to the water, under
   //  the garden in the 3000s — filled at 0.76, under the kerb bars' tops)
   const holes = uncovered(YARD, bed, { x0: -41, x1: -24, z0: -37, z1: -16 }, 0.125);
-  return [...bed, ...holes.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y - 0.14, z0, z1, { tag: 'signal-yard-kerb', ...yardCol })), ...YARD_FENCE];
+  // the relay cabinets (every era: in the 3000s the garden's planters, 1.2 m over its lawn)
+  const cab = GARDEN_PLANTERS.map(([x, z, w, d]) => B(+(x - w / 2).toFixed(2), +(x + w / 2).toFixed(2), YARD_Y, GY + 1.2, +(z - d / 2).toFixed(2), +(z + d / 2).toFixed(2), cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true })));
+  return [...bed, ...holes.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y - 0.14, z0, z1, { tag: 'signal-yard-kerb', ...yardCol })), ...cab, ...YARD_FENCE];
 })();
 const SIGNAL_GARDEN = (() => {
   const out = [];
@@ -562,9 +568,9 @@ const SIGNAL_GARDEN = (() => {
   for (const d of bars(ge, { only: diag, trim: true, level: (i) => GY - 0.12 - 0.1 * (i % 2), y0: YARD_Y - 0.1, opts: lawn('') })) { d.eraGroup = tileOf(d.center[0], d.center[2]); out.push(d); }
   // the ramps (round B fix 1)
   for (const r of GARDEN_RAMPS) { const zc = (r.z0 + r.z1) / 2; out.push(R([r.x1, 0, zc], [r.x0, GY, zc], r.z1 - r.z0, { tag: 'garden-ramp', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: tileOf((r.x0 + r.x1) / 2, zc) })); }
-  // cover on the lawn and the walk: planters (roof: nobody stands on them), 1.2 m over the lawn, about 6–8 m apart
-  // (round B fix 1: off the ramps' heads and out of the terminus platform's view over the garden to Prow Place)
-  for (const [x, z, w, d] of GARDEN_PLANTERS) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
+  // cover on the lawn and the walk: the planters (roof: nobody stands on them), 1.2 m over the lawn, about 6–8 m apart,
+  // are the yard's relay cabinets (YARD_SLAB, every era; round B fix 1: off the ramps' heads and out of the terminus
+  // platform's view over the garden to Prow Place)
   return out;
 })();
 
