@@ -637,39 +637,49 @@
       settle();
       put(me, V(4, 0, 1), Math.PI / 2); me.setWeapon('shooter'); g.rig.follow(me, true); g.rig.yaw = Math.PI / 2; g.rig.pitch = 0.05; me.aimYaw = Math.PI / 2;
       step(0.3);
+      // (what the tether shader reads: the glow column of the team's uploaded per-tether attribute, aS.z)
+      const glowUp = () => { const st = K.draw.sets[mate.team]; const o = []; if (st) for (let k = 0; k < st.tn; k++) o.push(st.aS.array[k * 4 + 2]); return o; };
+      const up0 = glowUp();
       put(foe, V(11.5, 0, 1), 0); step(0.4);
-      const glowA = Lc.every((x) => x.glow), hintA = BOBBER_HUD.hint, glowCnt = BOBBER_HUD.glowChains, promptA = BOBBER_HUD.prompt;
+      const glowA = Lc.every((x) => x.glow), hintA = BOBBER_HUD.hint, glowCnt = BOBBER_HUD.glowChains, promptA = BOBBER_HUD.prompt, upA = glowUp();
       put(foe, V(15.6, 0, 1), 0); step(0.4);
-      const glowB = Lc.some((x) => x.glow), hintB = BOBBER_HUD.hint;
+      const glowB = Lc.some((x) => x.glow), hintB = BOBBER_HUD.hint, upB = glowUp();
       // the other team never sees it
       S.viewer = foe.team; step(0.3); put(foe, V(11.5, 0, 1), 0); step(0.3);
       const enemyGlow = Lc.some((x) => x.glow) || BOBBER_HUD.glowChains > 0;
       S.viewer = null;
-      R('cue: a foe in the open within R(N) − 0.3 of a teammate\'s chain — the chain glows on your screen and "Shoot to set off" sits on its nearest bobber you have a line to in reach (+ the prompt)', glowA && glowCnt === 1 && Lc.some((x) => x.gid === hintA) && /Shoot your team/.test(promptA || ''), { glowA, hintA, glowCnt, promptA });
-      R('cue: the same foe behind a wall from you (in the chain\'s reach all the same): neither the glow nor the hint; the other team never sees either', !glowB && hintB == null && !enemyGlow, { glowB, hintB, enemyGlow });
+      R('cue: a foe in the open within R(N) − 0.3 of a teammate\'s chain — the chain glows on your screen (its tethers: the glow uploaded to every one of its tethers\' instances, read back from the GPU buffer) and "Shoot to set off" sits on its nearest bobber you have a line to in reach (+ the prompt)',
+        glowA && glowCnt === 1 && up0.length === 5 && up0.every((x) => x === 0) && upA.length === 5 && upA.every((x) => x === 1) && Lc.some((x) => x.gid === hintA) && /Shoot your team/.test(promptA || ''), { glowA, hintA, glowCnt, promptA, tetherGlow: { before: up0, during: upA } });
+      R('cue: the same foe behind a wall from you (in the chain\'s reach all the same): neither the glow (flags and uploaded tethers) nor the hint; the other team never sees either', !glowB && upB.length === 5 && upB.every((x) => x === 0) && hintB == null && !enemyGlow, { glowB, tetherGlow: upB, hintB, enemyGlow });
     }
 
     // ============================================================================================ 8. bots
     if (want('bots')) {
-      // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3
-      reset();
-      // (the chain runs away from the bot; the foe comes in by its far end — out of the bot's own reach, so a duel isn't
-      // the better shot: the chain is)
-      const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, 0, 3.5 + i * 3));
-      settle();
-      put(mate, V(0, 0, -2.0), 0); mate.setWeapon('shooter'); wake(mate);
-      put(foe, V(0, 0, 17.5), Math.PI);   // (in its sight first — it turns to face it — out of its reach, no chain near it)
-      hook = () => { mate.pos.x = 0; mate.pos.z = -2.0; };   // (it holds its ground: what it looks at is its own call)
-      step(1.0);
-      const before = ev('bobber:trigger').length, cs0 = THREAT_STATS.chainShots || 0;
-      put(foe, V(0.5, 0, 10.4), Math.PI);   // (12.4 m off: well in its sight — an easy bot's 16 m, where noticing one at
-      // 14 m is a coin toss — and just out of its reach, 11.9)
-      const tIn = G.time; let tGo = null;
-      step(3.0, () => { foe.pos.y = 0.02; foe.vel.set(0, 0, 0); if (tGo == null && ev('bobber:trigger').length > before) tGo = G.time; });
-      stub(mate); hook = null;
-      const trg = ev('bobber:trigger')[before];
-      R(`bots: a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 (in ${tGo != null ? r2(tGo - tIn) : '—'} s; its reaction ${mate.bot.diff.reaction} + 0.6 s allowed), credited to it`,
-        tGo != null && tGo - tIn <= mate.bot.diff.reaction + 0.6 + 0.1 && trg?.e.by === mate && (THREAT_STATS.chainShots || 0) > cs0, { dt: tGo != null ? r2(tGo - tIn) : null, by: trg?.e.by?.name, chainShots: THREAT_STATS.chainShots, BOBBER_BOT });
+      // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 — several trials (PAGE_ARGS reps=N,
+      // default 5), every one within the time: one lucky run proves nothing about a 0.2 m target
+      const REPS = +((/reps=(\d+)/.exec(window.__pageArgs || '') || [])[1] || 5);
+      const trials = [];
+      for (let k = 0; k < REPS; k++) {
+        reset();
+        // (the chain runs away from the bot; the foe comes in by its far end — out of the bot's own reach, so a duel isn't
+        // the better shot: the chain is)
+        const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, 0, 3.5 + i * 3));
+        settle();
+        put(mate, V(0, 0, -2.0), 0); mate.setWeapon('shooter'); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobSkip = null; wake(mate);
+        put(foe, V(0, 0, 17.5), Math.PI);   // (in its sight first — it turns to face it — out of its reach, no chain near it)
+        hook = () => { mate.pos.x = 0; mate.pos.z = -2.0; };   // (it holds its ground: what it looks at is its own call)
+        step(1.0);
+        const before = ev('bobber:trigger').length, cs0 = THREAT_STATS.chainShots || 0, bb0 = { ...BOBBER_BOT };
+        put(foe, V(0.5, 0, 10.4), Math.PI);   // (12.4 m off: well in its sight, just out of its reach, 11.9)
+        const tIn = G.time; let tGo = null;
+        step(3.0, () => { foe.pos.y = 0.02; foe.vel.set(0, 0, 0); if (tGo == null && ev('bobber:trigger').length > before) tGo = G.time; });
+        stub(mate); hook = null;
+        const trg = ev('bobber:trigger')[before];
+        trials.push({ dt: tGo != null ? r2(tGo - tIn) : null, by: trg?.e.by === mate, shots: (THREAT_STATS.chainShots || 0) - cs0, fired: BOBBER_BOT.fired - bb0.fired, gaveUp: BOBBER_BOT.gaveUp - bb0.gaveUp });
+      }
+      const allow = mate.bot.diff.reaction + 0.6;
+      R(`bots: a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3, within its reaction ${mate.bot.diff.reaction} + 0.6 s, credited to it — ${trials.filter((x) => x.dt != null && x.dt <= allow + 0.1 && x.by).length} of ${REPS} trials (times ${trials.map((x) => x.dt).join(', ')} s)`,
+        trials.every((x) => x.dt != null && x.dt <= allow + 0.1 && x.by && x.shots > 0), { trials, allow });
       // an enemy bot shoots bobbers near its route (wave 1's device shooting: DEV_BOT.bobber)
       reset();
       const nb = drop(me, 2, -2); settle();

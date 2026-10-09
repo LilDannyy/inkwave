@@ -18,7 +18,7 @@
 import * as THREE from 'three';
 import { G, clamp } from '../../core/ctx.js';
 import { weaponRange, subViewScale } from '../../config.js';
-import { items, sizeOf, SB, predictSpot } from './bobber.js';
+import { items, sizeOf, SB, predictSpot, markTethers } from './bobber.js';
 
 const V3 = THREE.Vector3;
 const _v = new V3(), _v2 = new V3();
@@ -161,13 +161,23 @@ function guide(a) {
 
 // ---- the teammate cue (every 0.1 s) and its hint
 let cueT = 0, hintIt = null, hintWas = false, prompt = null, promptT = 0, hintPrompts = 0, firstThrow = false;
+const _was = new Set();
 function cue(dt) {
-  const vt = G.subs?.viewTeam ? G.subs.viewTeam() : G.local ? G.local.team : -1;
   if ((cueT -= dt) > 0) return;
   cueT = 0.1;
   BOBBER_HUD.cueT++;
-  for (const it of items) it.glow = false;
+  _was.clear();
+  for (const it of items) if (it.glow) { _was.add(it); it.glow = false; }
   hintIt = null;
+  glowScan();
+  // (a bobber's glow flipped: its tethers' glow is a per-tether attribute — have the kit re-upload them; the pulse itself
+  // runs in the shader)
+  let flip = false;
+  for (const it of items) if (it.glow !== _was.has(it)) { flip = true; break; }
+  if (flip) { markTethers(); BOBBER_HUD.glowFlips = (BOBBER_HUD.glowFlips || 0) + 1; }
+}
+function glowScan() {
+  const vt = G.subs?.viewTeam ? G.subs.viewTeam() : G.local ? G.local.team : -1;
   const m = G.match;
   if (vt < 0 || !m || m.attract || m.state !== 'playing') return;
   const cam = G.rig?.gameCam || G.camera; if (!cam) return;

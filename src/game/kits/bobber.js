@@ -416,6 +416,8 @@ function open(it) {
 
 // ================================================================================================= tethers + chains
 let tethersDirty = true;
+// (bobber-hud.js: the teammate cue's glow flipped on a bobber — the tethers' glow attribute is re-uploaded)
+export function markTethers() { tethersDirty = true; }
 const lastList = new Map();   // owner → the last [5] list sent (a string)
 // (the owner) re-link every live bobber of this owner: nearest pairs first, ≤ maxTethers each, a clear line
 export function relink(owner) {
