@@ -784,6 +784,8 @@ export class StagePipes {
     let pp = this.push.get(b);
     if (!pp || pp.key !== edge.key || G.time - pp.last > 0.5) this.push.set(b, (pp = { key: edge.key, t0: G.time, last: G.time }));
     pp.last = G.time;
+    // (this push keeps its own watchdog: the brain's displacement one would wiggle the path away first, unmarked)
+    b.dispT = 0; b.moveAcc = 0; b.snap?.copy(a.pos);
     if (G.time - pp.t0 > PIPES.bot.push) {   // pushing for 2 s without a capture (a body, a curtain): drop the path, the key is bad for 5 s
       this._markBad(b, from); this.push.delete(b); b.path = null; b.repath = 0; this.stats.giveUps++;
       this.stats.pushMax = Math.max(this.stats.pushMax, G.time - pp.t0);
