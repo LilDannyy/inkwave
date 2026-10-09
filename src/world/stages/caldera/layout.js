@@ -155,10 +155,12 @@ for (const [x, z] of [[3.4, -14.5], [-3.4, -14.5], [3.4, -19.5], [-3.4, -19.5]])
 // Bridge lands on it level. Its stair faces the enemy's causeway; its machine house holds the gauge's float-well pump.
 const DECK = { x0: -12.9, x1: -5.0, z0: -2.4, z1: 6.6 };
 add(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' }));
-// (from the bridge north the deck runs flush to the island's straight west face, x −13.5: no ledge strip outside it)
-add(B(-13.5, DECK.x0, 1.2, 2.4, WB_Z0 - 0.1, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' }));
+// (from the machine house north the deck runs flush to the island's west face — x −13.9 where it bulges, −13.5 north of
+// z 2 — and the house itself stands on the island's edge: no ledge strip outside either (a bot was wedged there))
+add(B(-13.9, DECK.x0, 1.2, 2.4, -0.35, 2.0, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' }));
+add(B(-13.5, DECK.x0, 1.2, 2.4, 2.0, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' }));
 add(R([-7.35, 1.2, 9.3], [-7.35, 2.4, DECK.z1], 4, steps({ tag: 'deck-stair' })));
-add(B(DECK.x0, -9.6, 2.4, 5.4, DECK.z0, -0.35, white({ tag: 'gauge-machine-house', color: '#dcd6c8' })));
+add(B(-13.95, -9.6, 1.2, 5.4, DECK.z0 - 0.05, -0.35, white({ tag: 'gauge-machine-house', color: '#dcd6c8' })));
 // a low parapet (cover) on the deck's west edge north of the bridge, and a valve chest at its south-east corner (the
 // deck's north edge west of the stair stays open: the island strip below it is a hop up, not a pocket)
 add(B(-13.5, -13.1, 2.4, 3.3, WB_Z1 + 0.35, DECK.z1 - 0.2, cover(K.basaltDk, { tag: 'deck-parapet', pattern: PATTERN.concrete })));
