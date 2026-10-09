@@ -427,7 +427,7 @@ mirror. The 202.5° poster column of revision 1 is gone: the balcony's front sta
 
 **The Halo, the superstops and their stairs (the Halo is era 3; the superstops eras 1–2)**
 
-*As built: 3.5 m wide (apothem 11.1–14.6), two planters (157.5°, 202.5°); a third way up per team, the hotel stair from the balcony landing in an era-1/2 cab shelter (§2.6a).*
+*As built: 3.5 m wide (apothem 11.1–14.6), three planters per half (157.5°, 202.5°, 233°); a third way up per team, the hotel stair from the balcony landing in an era-1/2 cab shelter (§2.6a).*
 
 | Piece | Centre (x, z) | Shape / size | y | Flags | Era / group | Purpose |
 |---|---|---|---|---|---|---|
@@ -716,7 +716,7 @@ listed here, Alpha's half (Bravo's is the twin). Everything else is as designed.
   - It has 5 planters (`roof`), no rails and no stairs.
   - It replaces the design's 3.18 m deck with three stairs and round 2's 2.68 m deck with two stairs.
 - **The Halo (era 3).**
-  - 3.5 m wide (apothem 11.1 … 14.6), with glass rails on both edges and two planters (157.5°, 202.5°).
+  - 3.5 m wide (apothem 11.1 … 14.6), with glass rails on both edges and three planters per half (157.5°, 202.5°, and 233° by the hotel stair's head).
   - Gaps in the rails: the superstop stair's landing, the 2 m inner drop gaps at 135° and 225°, and the outer edge at the
     west corner, where the hotel stair's landing joins (z −4.4 … −6.05).
 - **The hotel stair (era 3): the Halo's third way up.**
