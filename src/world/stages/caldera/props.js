@@ -10,7 +10,7 @@
 //   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
 // No colliders here: every collider is a layout piece (layout.js).
 import { RAILS, GANTRY_RAILS } from './layout.js';
-import { REGION_ALL, inPoly, HEAD, TH_GE, TH_GW, angOf } from './geo.js';
+import { REGION_ALL, inPoly, HALL_LINE, PAD } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA } from './lava.js';
 
 export function register(D, H) {
@@ -140,31 +140,21 @@ export function register(D, H) {
   // ------------------------------------------------------------------------------------------ the yard's skyline
   D.caldera_hall_roof = {
     build(B) {
-      // (fix round 2) the Casting Hall follows the head's curve behind the turned gallery: a whitewashed bay per segment of
-      // the curve (12 m behind the gallery, 8 m wings behind the side yards) running back out of play, each with a
-      // north-light sawtooth roof whose glazed faces look toward the lake; the round furnace window on the gallery's axis
-      const pts = HEAD(-74.5, -104.5);
-      for (let i = 0; i + 1 < pts.length; i++) {
-        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2, L = Math.hypot(bx - ax, bz - az) + 0.25;
-        const am = angOf(mx, mz), tall = am < TH_GE - 0.4 && am > TH_GW + 0.4, H = tall ? 12 : 8, ry = Math.atan2(bx - ax, bz - az);
-        const nx = mx / Math.hypot(mx, mz), nz = mz / Math.hypot(mx, mz), D0 = 14;   // outward
-        B.push(mx + nx * D0 / 2, 0, mz + nz * D0 / 2, ry + Math.PI / 2);
-        B.box('paint', K.white, D0, H, L, 0, H / 2, 0, { r: 0.05 });
-        for (let k = 0; k < 4; k++) {
-          const off = -D0 / 2 + 1.75 + k * 3.5;
-          B.push(off, H + 0.95, 0, 0, 0); B.box('paint', K.verd, 3.7, 0.18, L + 0.1, 0, 0, 0, { rz: 0.5, r: 0.03 }); B.pop();
-          B.box(NS('paint'), '#3a5560', 0.12, 1.7, L - 0.2, off - 1.75, H + 0.85, 0, { r: 0.02 });
-        }
-        B.pop();
+      // the Casting Hall behind the gallery and its side yards: a whitewashed hall running back out of play under a
+      // north-light sawtooth roof whose glazed faces look toward the lake; two brick chimneys; the round furnace window
+      const [[xe, z0], [xw]] = HALL_LINE, L = xe - xw + 0.6, D0 = 16, H = 12, mx = (xe + xw) / 2;
+      B.box('paint', K.white, L, H, D0, mx, H / 2, z0 - D0 / 2 - 0.2, { r: 0.05 });
+      for (let k = 0; k < 4; k++) {
+        const zc = z0 - 2.0 - k * 3.8;
+        B.push(mx, H + 0.95, zc, 0, 0); B.box('paint', K.verd, L + 0.1, 0.18, 3.9, 0, 0, 0, { rx: -0.5, r: 0.03 }); B.pop();
+        B.box(NS('paint'), '#3a5560', L - 0.4, 1.7, 0.12, mx, H + 0.85, zc + 1.9, { r: 0.02 });
       }
-      for (const a of [TH_GE - 6, TH_GW + 6]) { const r = 76, x = r * Math.cos((a * Math.PI) / 180), z = r * Math.sin((a * Math.PI) / 180); B.box('paint', K.brick, 1.4, 6.0, 1.4, x, 15.5, z, { r: 0.04 }); B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, 18.6, z); }
-      // the gable over the gallery: the round furnace window on the curve behind the pad
-      { const a = (TH_GE + TH_GW) / 2, p = HEAD(a, a - 0.01, 1)[0], ry = Math.atan2(p[0], p[1]);
-        B.push(p[0] * 1.0005, 9.2, p[1] * 1.0005, ry + Math.PI);
-        B.cyl('paint', K.green, 2.3, 0.2, 0, 0, 0, { rx: HP, seg: 28 });
-        B.cyl(NS('glow'), K.glass, 2.0, 0.22, 0, 0, 0.02, { rx: HP, seg: 28, glow: 1.4 });
-        for (let k = 0; k < 4; k++) B.box(NS('paint'), K.green, 0.14, 4.0, 0.25, 0, 0, 0.05, { rz: (k * PI) / 4 });
-        B.pop(); }
+      for (const x of [xe - 4, xw + 4]) { B.box('paint', K.brick, 1.4, 6.0, 1.4, x, H + 3.5, z0 - 12, { r: 0.04 }); B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, H + 6.6, z0 - 12); }
+      B.push(PAD[0], 9.2, z0 - 0.15, 0);
+      B.cyl('paint', K.green, 2.3, 0.2, 0, 0, 0, { rx: HP, seg: 28 });
+      B.cyl(NS('glow'), K.glass, 2.0, 0.22, 0, 0, 0.02, { rx: HP, seg: 28, glow: 1.4 });
+      for (let k = 0; k < 4; k++) B.box(NS('paint'), K.green, 0.14, 4.0, 0.25, 0, 0, 0.05, { rz: (k * PI) / 4 });
+      B.pop();
     },
   };
   D.caldera_cupola_hood = {
@@ -204,7 +194,4 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
-  { type: 'caldera_cupola_hood', pos: [16.2, 0, -46.0] },
-  { type: 'caldera_jib', pos: [23.0, 0, -55.8] },
-  { type: 'caldera_office_roof', pos: [-19.6, 0, -49.6] },
 ];

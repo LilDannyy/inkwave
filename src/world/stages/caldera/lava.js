@@ -11,7 +11,7 @@
 //   • at HIGH every floor the lava covers (the Slump shelves, the Spillways, the Casting Floors: tops at 0) is left out
 //     of the build, so the nav, the cover map, spawn-mid and the bots see it as gone,
 //   • props.js draws a placeholder lava surface at the level over the whole region.
-import { P, ch, sp, rot, S0, S1, FACE, S_LIP, LAKE, SPILL, SLUMP, CHUTE, STONES, STONE_YAW, ORG, POSE, DEPTH, LIP_C, LIP_N, r3 } from './geo.js';
+import { P, A, sp, rot, S0, S1, FACE, LAKE, SPILL, SLUMP, CHUTE, STONES, STONE_YAW, ORG, POSE, DEPTH, LC, LCE, LIP, AW, r3 } from './geo.js';
 
 export const BLOCKOUT_LAVA = true;
 export const LAVA_VIEW = (() => {
@@ -70,8 +70,8 @@ export const LAVA = {
   ],
   // (fix round 1: each Spillway's outer half (s 28 → the lip) is lava at both levels, so its lip sits at the LOW level
   // and the lavafall pours at both levels: a thin fall at LOW, a full one at HIGH; the vent there is a pool vent now)
-  cascades: [{ lip: [LIP_C.map((v) => r3(v * 0.99)), LIP_N.map((v) => r3(v * 0.99))], y: -0.65, drop: 14 }],    // Alpha's Spillway lip, the fan's whole width (twin: Bravo's)
-  vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [24.6, -0.6, -20.5]],   // pools, a floor drain, the fan (8 with twins)
+  cascades: [{ lip: [A(LIP - 0.2, -AW + 0.2), A(LIP - 0.2, AW - 0.2)], y: -0.65, drop: 14 }],    // Alpha's Spillway lip, the arm's whole width (twin: Bravo's)
+  vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [...A(9, 0)].reduce((a, v, i) => (i ? [a[0], -0.6, v] : [v]), [])],   // pools, a floor drain, the arm (8 with twins)
   flotsam: { count: 48, size: [0.3, 0.9], keepOff: 1.0 },  // cosmetic pumice drifting on the open lava, no collider
   look: { crust: 'ember', cone: [230, 0, 150] },           // warm charcoal-maroon crust, lit seams (§5.3); the Bellows Vent
   text: {
@@ -86,7 +86,7 @@ export const LAVA = {
 // (the steps' static ends, for the record: the island's socket collar just north of A's north flat; the south head
 // 0.45 m behind its tip face; the north head 0.45 m behind its tip face)
 export const STEP_ENDS = { island: [-10, -4.45], south: sp(S0, -0.45, 0), north: sp(S1, 0.45, 0) };
-void P; void ch; void rot; void FACE; void S_LIP;
+void P; void rot; void FACE; void LC; void LCE;
 
 // ---------------------------------------------------------------------------------------------- the blockout stand-ins
 // hexagonal column (corners on ±x) as three boxes turned 0 / 60 / 120°: the middle one carries the deck, the turned
