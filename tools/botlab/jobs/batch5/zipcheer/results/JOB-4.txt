@@ -1,0 +1,33 @@
+JOB-4 (zipcheer) @ 693f2d3 (fix round 1) — verdict: everything full (Mac mini b5-runner, 08:03–08:10, exit 0).
+- regress.sh: 14 of 14 tests full (zipcheer 35/35 + its tower part, tower-rules, bot-specials turf + tower, hud-lead turf +
+  zones, input-swim, track-arrows 24/24; sfx-cues 54/54 and audio-pause 10/10 alone; net-zipcheer, net-practice, net-turf).
+- flakiness repeats: zipcheer 35/35 and net-zipcheer 10/10 in all 3 rounds.
+- the two 120 s Cheer Orb matches (SPCHARGE=3): CONSOLE 0, no FRAME ERRORS, both ran to the end. Orbs thrown and working:
+  turf (Alpha forced to the orb) 7 orbs, 29 cheers / 29 helped, 2 splats held; zones (Bravo forced) 24 orbs, 94 cheers / 93
+  helped, 5 splats held. No '[net] cN uncaught:' line in any log; fails.txt empty. SUMMARY 20 runs, 0 FAIL, 0 frame errors.
+
+## the job's output
+### zipcheer JOB-4 at 693f2d3
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== zipcheer: RESULT 35/35 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== track-arrows: RESULT 24/24 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-zipcheer: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 35/35 0 FAIL
+== net-zipcheer: RESULT 10/10 0 FAIL
+== zipcheer: RESULT 35/35 0 FAIL
+== net-zipcheer: RESULT 10/10 0 FAIL
+== orb-turf: == halyard [turf 120s]: turf 21.1% vs 41.6% | CONSOLE 0 unique warning/error line(s) 
+   orb-turf    special ends A {"booyah":{"throw":4,"splat":3}} B {"zooka":{"time":4},"strike":{"launch":3},"stamp":{"throw":1},"wail":{"place":2}} | zipcheer {"zipUses":0,"zips":0,"zipHits":0,"zipSaved":0,"orbs":7,"lifted":6,"liftM":12.866030057793786,"cheers":29,"helped":29,"orbCharge":2.2037037037037153,"gains":25,"gainPts":167.7572849404964,"splatHeld":2,"dmgHeld":396,"thrown":4}
+== orb-zones: == crossmarket [zones]: winner Alpha (knockout) | final 0 vs 89 (penalty +0/+10) | OT no | CONSOLE 0 unique warning/error line(s) 
+   orb-zones    special ends A {"strike":{"launch":5},"zipcaster":{"splat":3,"time":4},"crab":{"time":8,"splat":1}} B {"booyah":{"throw":19,"splat":5}} | zipcheer {"zipUses":7,"zips":5,"zipHits":1,"zipSaved":21.731856449334014,"orbs":24,"lifted":23,"liftM":49.71822222222224,"cheers":94,"helped":93,"orbCharge":8.941481481481507,"gains":86,"gainPts":611.8222880792949,"splatHeld":5,"dmgHeld":554.9287338994167,"thrown":19}
+SUMMARY 20 runs, 0 FAIL lines, 0 with frame errors

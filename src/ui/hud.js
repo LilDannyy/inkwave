@@ -38,6 +38,7 @@ import { SFX } from '../audio/audio.js';
 import { BossHud } from './hud-boss.js';
 import { LeadHud } from './hud-lead.js';
 import { BarrageHud } from './hud-barrage.js';   // [b5-sprules] the Mystery Bomb Barrage's NEXT card
+import { CheerHud } from './hud-cheer.js';   // [b5-zipcheer] the Cheer Orb's cheer prompt + gauge wisps
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -147,6 +148,7 @@ export class HUD {
     this.boss = new BossHud(this);
     this.lead = new LeadHud(this);   // (after the build: it hangs its banners on the roster groups)
     this.barrage = new BarrageHud(this);   // [b5-sprules] (on the crosshair cluster)
+    this.cheer = new CheerHud(this);   // [b5-zipcheer]
     installBossAudio();   // boss-mode sfx + music director (idle outside boss matches)
   }
 
@@ -409,6 +411,7 @@ export class HUD {
     this._updTower(f.tower, dt);
     this.lead.update(dt, f);
     this.barrage.update(dt, f);   // [b5-sprules]
+    this.cheer.update(dt, f);   // [b5-zipcheer]
     this.boss.update(dt);
   }
 

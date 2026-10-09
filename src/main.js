@@ -27,6 +27,7 @@ import './game/sp-surf.js';   // Surf N' Turf registers itself (specials.js regi
 import './game/assists.js';   // assists: G.assists (actor.splat asks it; the results show it)
 import './game/sp-drainbow.js';   // [drainbow] the Drainbow special registers itself (specials.js registerSpecial)
 import './game/sp-barrage.js';   // [b5-sprules] the Bomb Barrages (+ Waddle / Mystery) register themselves
+import './game/sp-cheer.js';   // [b5-zipcheer] the Cheer Orb's lift, cheers and wisps (G.cheerOrb; specials.js hooks)
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { podColliders, PodLooks } from './game/pods.js';
@@ -1500,6 +1501,7 @@ class Game {
       if (o.isLocal || o.team !== a.team || !o.alive) continue;
       if (o.character.getHeadPosition && o.form !== 'squid') { o.character.getHeadPosition(v); v.y += 0.45; }
       else { if (o.visualPos) o.visualPos(v); else v.copy(o.pos); v.y += o.form === 'squid' ? 1.0 : 1.9; }
+      { const s = o.specialActive; if (s && s.kind === 'booyah' && s.ball && !s.thrown) v.y = Math.max(v.y, s.ball.position.y + s.halo.scale.y + 0.15); }   // [b5-zipcheer] a Cheer Orb held up: the tag over the ball, not on it
       v.project(cam);
       const behind = v.z > 1;
       let x = (v.x * 0.5 + 0.5) * W, y = (-v.y * 0.5 + 0.5) * H;
@@ -1557,7 +1559,7 @@ class Game {
       this.minimap.toCanvas(d.x, d.z, t); d.mx = t.x / this.minimap.w; d.my = t.y / this.minimap.h;
     }
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
-    else if (m.state === 'playing' && a.alive && m.actors.some((o) => o !== a && o.team === a.team && o.specialActive?.id === 'booyah' && !o.specialActive.thrown)) prompt = 'A teammate is charging a Cheer Orb — press C to cheer it on!';
+    // ([b5-zipcheer] a teammate charging a Cheer Orb: the big bottom-middle cheer prompt is src/ui/hud-cheer.js's)
     if (!prompt && !a.specialActive && m.state === 'playing') prompt = G.bubbleChain?.prompt(a, true) || null;   // [b5-sprules] a shared Bubble Guard: pass it on, a teammate close by (sp-bubble.js; the last word: every other hint comes first, and none while a teammate charges a Cheer Orb)
     const frame = {
       time: m.practice ? null : m.time,

@@ -28,6 +28,7 @@ import('./special-props.js').then((m) => { PROPS = m; }).catch(() => { /* placeh
 const prop = (kind) => { try { return PROPS && PROPS.getSpecialProp ? PROPS.getSpecialProp(kind) : null; } catch (e) { console.warn('[specials] prop', kind, e); return null; } };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _v4 = new THREE.Vector3();
+const _zb = new THREE.Vector3();   // [b5-zipcheer] (a zip step's start)
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
@@ -64,6 +65,9 @@ function stampFront(a, s, p, arcDeg) {
   if (l < 0.3) return true;
   return (dx * Math.sin(s.bodyYaw) + dz * Math.cos(s.bodyYaw)) / l >= Math.cos((arcDeg * Math.PI) / 180);
 }
+// [b5-zipcheer] counters (tests / botlab match.cjs, through src/game/sp-cheer.js): the Zipline's zips, hits taken mid-zip and
+// the damage that saved; the Cheer Orb's orbs, lifts, cheers, wisps, gauge gains, splats while held up
+export const ZC_STATS = { zipUses: 0, zips: 0, zipHits: 0, zipSaved: 0, orbs: 0, lifted: 0, liftM: 0, cheers: 0, helped: 0, orbCharge: 0, gains: 0, gainPts: 0, splatHeld: 0, dmgHeld: 0, thrown: 0 };
 // specials that transform you / take over your weapon for a while: they sound a "wearing off" cue before they end
 const TRANSFORMS = new Set(['jetpack', 'crab', 'kraken', 'stamp', 'zipcaster', 'zooka', 'blower', 'bubbler']);
 const ENDING_CUE = 2.0;   // seconds left when it sounds
@@ -435,6 +439,9 @@ export class SpecialSystem {
     const onTower = !!(G.match?.tower && G.match.tower.riderList.includes(v));
     if (s && s.id === 'kraken') { this._knock(v, attacker, onTower ? Math.min(10, amount * s.def.knockPerDamage * 4) : Math.min(4, amount * s.def.knockPerDamage)); this._hitFlash(v); return 0; }
     if (s && s.id === 'crab') return IMPL.crab.hurt.call(this, v, s, amount, attacker);
+    // [b5-zipcheer] travelling along a zip: a quarter of the damage (the owner's screen judges: it applies every hit on its player)
+    if (s && s.kind === 'zipcaster' && s.zip && !s.ghost) { ZC_STATS.zipHits++; ZC_STATS.zipSaved += amount * (1 - s.def.zipDamage); amount *= s.def.zipDamage; }
+    if (s && s.kind === 'booyah' && s.pin && s.def.heldDamage !== 1) amount *= s.def.heldDamage ?? 1;   // [b5-zipcheer] held up by a Cheer Orb (1: as before; a botlab what-if)
     // Mega Stamp mid-swing: anything coming from the front is deflected (sides + back stay open)
     if (s && s.id === 'stamp' && s.guard > 0 && attacker && attacker !== v && stampFront(v, s, attacker.pos, s.def.deflectArc)) {
       if (near(v.pos, 40)) { play('shield_hit', { pos: v.isLocal ? undefined : v.pos, volume: 0.6, pitch: 1.3 }); G.fx?.burst(_v.copy(v.pos).setY(v.pos.y + 1.1).addScaledVector(stampFwd(s), 0.9), UP, v.color, { count: 6, speed: 4, size: 0.07 }); }
@@ -534,28 +541,8 @@ export class SpecialSystem {
   }
 
   // ---------------------------------------------------------------------------------------------- "Yeah!" cheers
-  cheer(a) {
-    if (!a.alive || G.time - (a._cheerT || -9) < 0.4) return;
-    a._cheerT = G.time;
-    if (hearable(a)) play('booyah_cheer', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.7 : 0.5, pitch: 0.95 + Math.random() * 0.15 });
-    this.cheers.push({ a, t: 0 });
-    const d = SPECIALS.booyah;
-    let helped = false;
-    for (const o of G.actors) {
-      const s = o.specialActive;
-      if (o.team !== a.team || !o.alive || !s || s.id !== 'booyah' || s.thrown) continue;
-      s.charge = Math.min(1, (s.charge || 0) + d.cheer);
-      s.cheered = 0.35;
-      helped = true;
-    }
-    // cheering on a teammate's orb tops up your own special a little
-    if (helped && !a.specialActive) {
-      const was = a.specialReady();
-      a.special = Math.min(a.specialCost(), a.special + d.cheerSpecial);
-      if (!was && a.specialReady()) emit('special:ready', { actor: a });
-    }
-    emit('actor:cheer', { actor: a, helped });
-  }
+  // [b5-zipcheer] the cheer, its wisps to the orbs and the gauge, and online: src/game/sp-cheer.js
+  cheer(a) { G.cheerOrb?.cheer(a); }
   // ---------------------------------------------------------------------------------------------- per frame
   update(dt) {
     // cheer input (controllers set intent.cheer for one frame)
@@ -1782,7 +1769,9 @@ const IMPL = {
       s.halo = new THREE.Mesh(this.sphereGeo, bubbleMat(a.color));
       this._add(s.ball, s.halo);
       s.loop = null;   // sfx-cues: the charge loop comes from src/audio/cues.js
+      if (!s.ghost) G.cheerOrb?.lift(a, s);   // [b5-zipcheer] up into the air, held there (sp-cheer.js)
     },
+    move(a, s, dt) { G.cheerOrb?.hold(a, s, dt); },   // [b5-zipcheer] (the owner, each frame before it moves)
     weapon(a, s, dt, inp) {
       const d = s.def;
       s.charge = Math.min(1, s.charge + dt / d.charge);
@@ -1808,6 +1797,7 @@ const IMPL = {
       s.halo.scale.setScalar(r * 1.3 * pulse);
       s.halo.material.uniforms.uTime.value = s.t;
       s.loop?.set?.({ pitch: 1 + s.charge, pos: a.isLocal ? undefined : a.pos });
+      G.cheerOrb?.cue(a, s, dt);   // [b5-zipcheer] held up: the ground cue under it (every screen, a ghost's too; sp-cheer.js)
     },
     throwIt(a, s) {
       s.thrown = true;
@@ -1819,11 +1809,12 @@ const IMPL = {
       if (hearable(a)) play('booyah_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.9 });
       this.end(a, 'throw');
     },
-    end(a, s) {
+    end(a, s, reason) {
       s.loop?.stop?.(0.2);
       this._remove(s.ball, s.halo);
       s.ball?.material.dispose(); s.halo?.material.dispose();
       a.character.subPropHidden = false;
+      if (!s.ghost) G.cheerOrb?.release(a, s, reason);   // [b5-zipcheer] let go: down you come
     },
   },
 
@@ -1860,7 +1851,7 @@ const IMPL = {
       const to = g.point.clone().addScaledVector(n, PLAYER.radius + 0.08);
       if (wall) to.y -= 1.0; else to.y = g.point.y;
       s.zip = { to, n, wall, anchor: g.point.clone(), t: 0, stuck: 0 };
-      s.anchor = s.zip.anchor;
+      s.anchor = s.zip.anchor; ZC_STATS.zips++;   // [b5-zipcheer]
       rec(a, [4, 'zf', ...v3(s.anchor), r2(n.x), r2(n.y), r2(n.z)]);
       s.body = true; s.hang = 0;
       paint(a, g.point.clone().addScaledVector(n, 0.1), 1.0, a.team);
@@ -1871,31 +1862,36 @@ const IMPL = {
       const z = s.zip;
       if (!z) { s.body = false; return; }
       z.t += dt;
-      _v.copy(z.to).sub(a.pos);
-      const dist = _v.length(), step = s.def.speed * dt;
-      // an enemy in the way: the body slams into them and the zip stops there
-      for (const e of G.actors) {
-        if (e.team === a.team || !e.alive) continue;
-        if (Math.hypot(e.pos.x - a.pos.x, e.pos.z - a.pos.z) < PLAYER.radius * 2 + 0.2 && Math.abs(e.pos.y - a.pos.y) < 1.4) {
+      // [b5-zipcheer] (1.5× the speed now) the frame's travel in pieces of ≤ 0.35 m: never through a thin wall, never past an enemy
+      const nSub = Math.max(1, Math.ceil((s.def.speed * dt) / 0.35)), h = dt / nSub;
+      for (let k = 0; k < nSub; k++) {
+        _v.copy(z.to).sub(a.pos);
+        const dist = _v.length(), step = s.def.speed * h;
+        // an enemy in the way: the body slams into them and the zip stops there
+        for (const e of G.actors) {
+          if (e.team === a.team || !e.alive) continue;
+          if (Math.hypot(e.pos.x - a.pos.x, e.pos.z - a.pos.z) < PLAYER.radius * 2 + 0.2 && Math.abs(e.pos.y - a.pos.y) < 1.4) {
+            a.vel.set(0, 0, 0);
+            s.body = false; s.zip = null; s.faceYaw = null;
+            IMPL.zipcaster.impact.call(this, a, s, e);
+            return;
+          }
+        }
+        if (dist <= step || z.t > 1.6 || z.stuck > 0.15) {
           a.vel.set(0, 0, 0);
+          if (dist <= step) a.pos.copy(z.to);
           s.body = false; s.zip = null; s.faceYaw = null;
-          IMPL.zipcaster.impact.call(this, a, s, e);
+          if (z.wall) { s.hang = s.def.hang; s.hangN = z.n; a.grounded = false; }
+          IMPL.zipcaster.impact.call(this, a, s, null);
           return;
         }
+        a.vel.copy(_v).multiplyScalar(s.def.speed / dist);
+        const py = a.pos.y;
+        _zb.copy(a.pos);
+        a.pos.addScaledVector(a.vel, h);
+        a._resolve(false, py, false);
+        if (a.pos.distanceTo(_zb) < step * 0.3) z.stuck += h; else z.stuck = 0;
       }
-      if (dist <= step || z.t > 1.6 || z.stuck > 0.15) {
-        a.vel.set(0, 0, 0);
-        if (dist <= step) a.pos.copy(z.to);
-        s.body = false; s.zip = null; s.faceYaw = null;
-        if (z.wall) { s.hang = s.def.hang; s.hangN = z.n; a.grounded = false; }
-        IMPL.zipcaster.impact.call(this, a, s, null);
-        return;
-      }
-      a.vel.copy(_v).multiplyScalar(s.def.speed / dist);
-      const before = a.pos.clone(), py = a.pos.y;
-      a.pos.addScaledVector(a.vel, dt);
-      a._resolve(false, py, false);
-      if (a.pos.distanceTo(before) < step * 0.3) z.stuck += dt; else z.stuck = 0;
       s.faceYaw = Math.atan2(a.vel.x, a.vel.z);
       s.anchor = z.anchor;
       IMPL.zipcaster.tick.call(this, a, s, dt);

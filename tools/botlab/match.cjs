@@ -83,6 +83,8 @@ app.on('browser-window-created', (_, win) => {
         on('special:use', (e) => { ev.specials++; const U = ev.uses || (ev.uses = [{}, {}]), id = /^barrage/.test(String(e.id)) ? 'barrage' : String(e.id); if (e.actor) U[e.actor.team][id] = (U[e.actor.team][id] || 0) + 1; }),
         on('superjump', (e) => { if (e.phase === 'charge') ev.jumps++; }),
         on('special:end', (e) => { if (/^barrage/.test(String(e.id))) (ev.barEnd || (ev.barEnd = new Map())).set(e.actor, simT); }),
+        // [b5-zipcheer] how each team's specials ended, by special and reason (a Cheer Orb: 'throw' or cut short by a 'splat' …)
+        on('special:end', (e) => { if (!e.actor || e.actor.team > 1) return; const E = ev.ends || (ev.ends = [{}, {}]), o = E[e.actor.team][e.id] || (E[e.actor.team][e.id] = {}); o[e.reason] = (o[e.reason] || 0) + 1; }),
         on('splatted', (e) => {
           // splats by special, per victim team (Bomb Barrage: its thrower's bombs during it or within 3.5 s after), K / D per team
           const SP = ['slam', 'storm', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf'];
@@ -279,7 +281,7 @@ app.on('browser-window-created', (_, win) => {
           const holding = !!((a.bot.zHoldUntil > a.bot.t && (!a.bot.path || a.bot.pi >= a.bot.path.length)) || a.bot.perchUntil > a.bot.t);
           if (holding && a.alive) holdS += 0.25;
           if (a.alive && a.bot.zRole) roleS[a.bot.zRole] = (roleS[a.bot.zRole] || 0) + 0.25;
-          const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !holding;
+          const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !holding && !(a.specialActive && a.specialActive.pin);   // ([b5-zipcheer] pin: held up in the air by a Cheer Orb)
           samples++;
           const span = h.length > 1 ? Math.max(...h.map((p) => Math.hypot(p.x - a.pos.x, p.z - a.pos.z))) : 99;
           const stuck = wants && h.length >= 11 && span < 1.0;
@@ -303,6 +305,8 @@ app.on('browser-window-created', (_, win) => {
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, jumps: ev.jumps, cov,
         teamKD: ev.team || [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }],
         spUses: ev.uses || [{}, {}],   // (specials used, per team, by special)
+        spEnds: ev.ends || [{}, {}],   // [b5-zipcheer] (how they ended, per team, by special and reason)
+        zipcheer: await (async () => { try { const M = await import('./src/game/sp-cheer.js'); return M.ZC_STATS ? JSON.parse(JSON.stringify(M.ZC_STATS)) : null; } catch (e) { return null; } })(),   // [b5-zipcheer] (an older checkout: null)
         drainbow: __G.drainbow ? { ...__G.drainbow.stats } : null,   // (src/game/sp-drainbow.js: placed, shots halved, crossings, life added …)
         spStats: await (async () => { try { const M = await import('./src/game/botSpecials.js'); return JSON.parse(JSON.stringify(M.SPECIAL_STATS)); } catch (e) { return null; } })(),
         // Surf N' Turf (sp-surf.js SURF_STATS, the bots' sp-surf-bots.js SURF_BOT) and the assists (assists.js), per team
@@ -374,6 +378,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log('   by weapon (players, splats dealt, deaths, avg turf) ' + Object.entries(r.byWeapon).map(([w, o]) => `${w}×${o.n} ${o.splats}/${o.deaths} ${o.turf}p`).join(' · '));
     console.log('   splats by cause ' + JSON.stringify(r.byCause));
     console.log('   special uses A ' + JSON.stringify(r.spUses[0]) + ' B ' + JSON.stringify(r.spUses[1]) + (r.drainbow && r.drainbow.placed ? ' | drainbow ' + JSON.stringify(r.drainbow) : ''));
+    console.log('   special ends A ' + JSON.stringify(r.spEnds[0]) + ' B ' + JSON.stringify(r.spEnds[1]) + (r.zipcheer ? ' | zipcheer ' + JSON.stringify(r.zipcheer) : ''));   // [b5-zipcheer]
     if (r.surf) { const S = r.surf; console.log(`   SURF uses ${S.stats.uses} thrown ${S.stats.throws} anchored ${S.stats.lands} lost ${S.stats.lost} popped ${S.stats.popped} | rings ${S.stats.rings} hits ${S.stats.hits} (marks ${S.stats.marks}, ring splats ${S.stats.kills}) dodged ${S.stats.dodges} | ink ${S.stats.turf} m² in ${S.stats.splats} splats | turf from it A ${S.teams[0].surfTurf} of ${S.teams[0].turf} · B ${S.teams[1].surfTurf} of ${S.teams[1].turf} | assists A ${S.teams[0].assists} B ${S.teams[1].assists} ${JSON.stringify(S.assists)} | bots ${JSON.stringify(S.bots)}`); }
     { const T = r.teamKD; console.log(`   enemy specials AI ${spAI} | splatted by specials: A ${T[0].sp} ${JSON.stringify(T[0].by)} · B ${T[1].sp} ${JSON.stringify(T[1].by)} | K/D A ${T[0].k}/${T[0].d} B ${T[1].k}/${T[1].d}${r.spStats ? ' | ' + JSON.stringify(r.spStats) : ''}`); }
     { const s = r.sight; console.log(`   sight: fighting ${s.fightS} bot-s, trigger held ${s.fireS} s | foe out of sight ${s.hidPct}% of fight time, aim still on it ${s.trackPct}% of that | shooting at nothing ${s.blindPct}% of trigger time (${s.blindTrackPct}% straight at the hidden foe; ${s.blindBelievedPct}% while it still thinks it sees it, ${s.blindChargePct}% a charge held, ${s.blindShotPct}% shots) | bots ${r.botMsPerS} ms per sim s (looking ${r.seeMsPerS})${s.stats ? ' | ' + JSON.stringify(s.stats) : ''}`); }

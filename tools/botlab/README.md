@@ -241,6 +241,24 @@ Waddle and the Mystery — src/game/sp-barrage.js, src/ui/hud-barrage.js):
   tools/botlab/hud-shots.cjs`; balance: `tools/botlab/jobs/batch5/sprules/balance.sh` + `agg.cjs`; regressions:
   `tools/botlab/jobs/batch5/sprules/regress.sh`
 
+Zipline buffs and the Cheer Orb rework (batch 5, 2026-10-04; src/game/specials.js, src/game/sp-cheer.js, src/ui/hud-cheer.js,
+src/audio/sfx-cheer.js; actor.js's ink and pin hooks):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/zipcheer.js tools/botlab/run.sh tools/botlab/page.cjs` — the Zipline's
+  quarter damage mid-zip (and full before / clinging / after), 33 m/s zips that still stop at an enemy, 0.7× ink costs
+  (shots, a charger's charge, a dodge roll, the "enough ink?" check); the Cheer Orb's lift (2.2 m over the ground, held:
+  no walking / jumping / swimming, turning yes; let go by the throw, a splat, a swap; under a ceiling; mid-jump; on a
+  moving block; lift 0 the old way), the teammate's big cheer prompt (bottom middle, its size, the pad's d-pad up, never
+  for an enemy's or your own orb), the cheer (both wisps, +0.12 as the orb's lands, +4 % of the gauge as its own lands,
+  the rate, the exceptions), bots cheering and a bot holding still up there (`PAGE_ARGS='only=zipdmg,zipspeed,zipink,
+  lift,prompt,cheer,bots'`)
+- `CLIENTS=2 NET=tools/botlab/tests/net-zipcheer.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` — online, one team:
+  the host risen on both screens, the guest's prompt and cheer (wisps on both screens, the charge on the orb owner's
+  screen and back through its tick, the guest's gauge on its own), the throw, and the other way round
+- match.cjs prints `special ends` (per team, per special, by reason) and the `zipcheer` counters (sp-cheer.js ZC_STATS);
+  `TUNE='booyah.heldDamage=0.5'` is a what-if (the share of damage taken while held up: 1 in the game)
+- pictures: tools/botlab/scenes/zipcheer.js through shoot.cjs (`PRE_ARGS=risen|wisps|zip`, testbox, `ACTORS=1 PLAY=1`)
+  and tools/botlab/scenes/zipcheer-hud.js through hud-shots.cjs (halyard; the prompt, the wisps, the gauge's +4 %)
+
 Loadout › SUB / SPECIAL picker (2026-10-03, src/ui/menus.js `_openKitPicker`: Enter / A / a click on the loadout's SUB or
 SPECIAL chip opens a grid of every option with the weapon's own first; arrows / WASD / d-pad / stick move in 2D, Enter /
 A / a click picks, Esc / B / a click outside closes; ← → on the chip still step):

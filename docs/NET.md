@@ -285,6 +285,18 @@ player's hand. A barrage's Waddle senses and chases with the Waddle Bomb Barrage
 `waddleSense` / `waddleLife`); its ghost reads them from the owner's barrage running on that screen when its `[0 …]`
 record arrives (records keep their order, so a Mystery's `'nb'` after the throw never gets there first).
 
+**Zipline and Cheer Orb (batch 5; src/game/specials.js, src/game/sp-cheer.js).** The Zipline's quarter damage while
+travelling along a zip is judged where every hit is applied, on the zipper's owner's screen (`filterDamage`: its own
+special, not a ghost, mid-zip); its faster zips and cheaper ink are the owner's own movement and tank, so nothing new
+crosses the wire. The Cheer Orb's lift isn't on the wire either: the owner moves its player up and holds it there, and
+the position rides the actor tick (every screen's ghost shows it up there, legs hanging). A cheer is recorded by the
+cheerer's owner (each player its own kid, the host its bots) as `['k', nid, 'cheer', [gain, nid …]]`: whether its own
+gauge gains, and the users of the orbs it sent wisps to. Every other screen plays the "Yeah!" and flies the same wisps
+(`KIT_GHOSTS.cheer`). The orb's charge is its user's owner's: that screen adds the cheer when its own copy of the wisp
+reaches the orb, and the charge reaches everyone through the user's tick (`specialNetState`, as before); a ghost orb
+only pulses. The gauge gain is the cheerer's own screen's (it owns its gauge). Tested by
+`tools/botlab/tests/net-zipcheer.cjs` (`CLIENTS=2`: a guest cheers the host's orb, and the other way round).
+
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
 ring (the forced-jump rule, ≤ 3.5 s). `actor.splat()` asks the judge before it emits `'splatted'`; the forwarded event

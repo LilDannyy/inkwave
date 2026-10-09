@@ -323,10 +323,15 @@ export class Actor {
     // ---- dodge roll (twin pistols / dualies): jump pressed while firing and moving rolls instead of jumping. The
     // runner's tryDodge dispatches by weapon kind (it spends the ink, triggers the character's roll, emits the FX events)
     // (not while a special holds the weapon: the runner isn't updated then, so a roll would never run out)
+    // [b5-zipcheer] a special that makes ink go further (its def.inkUse — the Zipline's 0.7; not sonar's inkMul, which is for its victims): the weapon runs on a tank 1 / inkMul
+    // as big, so every cost and every "enough ink?" check comes to inkMul of what it was (here and round the weapon below)
+    const inkMul = spx?.def?.inkUse || 1;
+    if (inkMul !== 1) this.ink /= inkMul;
     if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
     if (this.jumpBuffer > 0 && !isSquid && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
+    if (inkMul !== 1) this.ink *= inkMul;
 
     // ---- jump (buffered, with coyote time). An off-limits top (a roof) is no ground to jump from: you slide off it, and
     // no coyote jump carries off its edge either (perches, railings and swim-jumps are ground as usual)
@@ -390,10 +395,12 @@ export class Actor {
     }
     const winp = { fire, firePressed: pressed, sub: intent.sub && !isSquid, subReleased: subReleased && !isSquid };
     const inkBefore = this.ink;
+    if (inkMul !== 1) this.ink /= inkMul;   // [b5-zipcheer] (see above)
     // specials that replace the main weapon (zooka, stamp, blower, crab …) take the trigger; others may take the sub
     this._spWeapon = !!(spx && G.specials.weapon(this, spx, dt, winp));
     if (!this._spWeapon) this.weaponRunner.update(dt, winp);
     else if (this.weaponRunner.dodgeT > 0 || this.weaponRunner.dodge) this.weaponRunner.endDodge();   // (never a roll frozen mid-slide)
+    if (inkMul !== 1) this.ink *= inkMul;
     // sonar-revealed players burn ink faster
     if (st.reveal > 0 && this.ink < inkBefore) this.ink = Math.max(0, this.ink - (inkBefore - this.ink) * (SPECIALS.sonar.inkMul - 1));
     if (this.specialActive) G.specials.tick(this, this.specialActive, dt);
@@ -540,6 +547,12 @@ export class Actor {
     // zipline: clinging to where the tether landed (weapon still usable). Kit weapons can hang the kid too: runner.kit.hang
     // (Sponge Mitts: stuck to a wall after a leap) — kid form only, and never while a special runs
     const kitHang = !this.specialActive && this.form === 'kid' && !!this.weaponRunner.kit?.hang;
+    // [b5-zipcheer] pin: held up in the air (the Cheer Orb's lift, src/game/sp-cheer.js): the special put the body where it
+    // goes this frame (its move hook) and says how fast it went there (pinVel: the animation, the online tick)
+    if (this.specialActive && this.specialActive.pin) {
+      this.vel.copy(this.specialActive.pinVel || _ZERO_MOVE); this.grounded = false; this.airTime = 0;
+      return;
+    }
     if ((this.specialActive && this.specialActive.hang > 0) || kitHang) {
       this.vel.set(0, 0, 0); this.grounded = false; this.airTime = 0;
       return;
@@ -1037,6 +1050,7 @@ export class Actor {
     a.charge = this.weaponRunner.charge;
     a.rolling = this.weaponRunner.rolling;
     a.subAim = !!this.weaponRunner.aimingSub || !!(this.specialActive && this.specialActive.raise);      // bomb cocked / orb held up
+    { const s = this.specialActive; a.hover = !!(s && s.kind === 'booyah' && !s.thrown && s.def.lift > 0 && !this.grounded); }   // [b5-zipcheer] held up by a Cheer Orb (a ghost's too): the legs hang
     a.form = !isSquid ? 'kid' : this.climbing ? 'climb' : this.submerged ? 'swim' : 'squid';
     if (this.specialActive && (this.specialActive.body || this.specialActive.noSquid)) a.form = 'kid';
     a.specialId = this.specialActive ? this.specialActive.id : null;

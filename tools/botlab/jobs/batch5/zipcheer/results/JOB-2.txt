@@ -1,0 +1,22 @@
+JOB-2 (zipcheer) results — run on the Mac mini at 8b920b1 (the code at d21983c is the same; d21983c only trims JOB-1/3's .md files). SLOTS=3 PAR=3, caffeinate.
+Verdict: ALL PASS — every test in regress.sh and both extra zipcheer / net-zipcheer passes full, no FAIL / HARNESS / WATCHDOG lines.
+(An earlier run at eadc645 was stopped when you moved JOB-2 to 8b920b1; it had also passed every test it reached.)
+
+## .botlab/zc-j2.out (regress.sh, then ONLY="zipcheer net-zipcheer" twice)
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== zipcheer: RESULT 31/31 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-zipcheer: RESULT 9/9 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 31/31 0 FAIL
+== net-zipcheer: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 31/31 0 FAIL
+== net-zipcheer: RESULT 9/9 0 FAIL
