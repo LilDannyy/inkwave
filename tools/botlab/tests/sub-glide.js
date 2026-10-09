@@ -570,6 +570,29 @@
       R('the re-forming shell\'s sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)', n3 === 0 && s2.state === 'slide' && (DEPLOY_STATS.crushed.glide || 0) === c0, { crushed: n3, state: s2.state });
     }
 
+    // ============================================================================================ cost per step
+    // the slide's bumpers that aren't level geometry are gathered once a frame / a prediction run, not per step: with a
+    // stone sliding and the guide up (20 runs a second of up to 144 steps), the sentry kit's devices() is asked a few times
+    // a frame — it was every step of every run (≈ 2,900 a second for the guide alone); the guide's points are pooled
+    if (want('perf')) {
+      reset(); put(me, V(0, 0, -34), 0); step(0.05);
+      const SK = SUB_KITS.sentry, dev0 = SK.devices; let calls = 0;
+      SK.devices = (o) => { calls++; return dev0 ? dev0.call(SK, o) : o; };
+      throwHeld(0.1); me.ink = PLAYER.inkMax;
+      ctl.sub = true; step(0.1);
+      calls = 0; const f0 = G.time;
+      step(1.0);
+      const perS = calls / (G.time - f0), live = items().length;
+      ctl.sub = false; step(0.2);
+      if (dev0) SK.devices = dev0; else delete SK.devices;
+      // the pooled points: two runs into the same array reuse the same point objects
+      const pts = [], p0 = V(0, 0, -34), v0 = V(0, 0, S.speed0);
+      MATH.simulate(p0, v0, false, 2.4, me.team, pts, 3); const a1 = pts.slice();
+      MATH.simulate(p0, v0, false, 1.2, me.team, pts, 3); const reused = pts.every((p, i) => p === a1[i]);
+      R('a stone sliding and the guide up: the sentry kit\'s devices() is asked ≤ 100 times a second (once a frame + once a guide run), not every step of every run; the guide\'s points are pooled (reused run to run)',
+        perS <= 100 && perS > 0 && live >= 1 && reused && a1.length > pts.length, { perSecond: Math.round(perS), stones: live, reused, n: [a1.length, pts.length] });
+    }
+
     // ============================================================================================ the rest
     if (want('more')) {
       // the HUD: the reticle dims while locked; the cook bar; the reach in the sub chip

@@ -62,7 +62,7 @@ const r2 = (x) => Math.round(x * 100) / 100;
 const _a = new V3(), _b = new V3(), _c = new V3(), _d = new V3(), _e = new V3(), _q = new V3();
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
-const _devs = [], _sph = [];
+const _devs = [], _kd = [], _sph = [];
 const S = () => SUBS.glide;
 
 // counters (tests / match.cjs)
@@ -189,11 +189,10 @@ function bumpers(s, ctx) {
       if (hit) { _bounce.kind = 'curtain'; return hit; }
     }
   }
-  // any team's Scrap Sentry (the sentry kit's device descriptors), the guide's runs too
-  _devs.length = 0;
-  for (const k in SUB_KITS) if (k !== KIND) SUB_KITS[k].devices?.(_devs);
+  // any team's Scrap Sentry (the sentry kit's device descriptors, gathered once a frame / a run: gatherBumpers), the guide's
+  // runs too
   for (const d of _devs) {
-    if (d.kind !== 'sentry' || d.live === false) continue;
+    if (d.live === false) continue;
     const dx = p.x - d.pos.x, dz = p.z - d.pos.z, dist = Math.hypot(dx, dz), R = (d.r || R_SENTRY) + sb.bodyRadius;
     if (dist >= R || my < d.pos.y - 0.3 || my > d.pos.y + (d.h || 0.72)) continue;
     const nx = dist > 1e-4 ? dx / dist : -v.x, nz = dist > 1e-4 ? dz / dist : -v.z, nl = Math.hypot(nx, nz) || 1;
@@ -201,9 +200,7 @@ function bumpers(s, ctx) {
     const hit = reflect(v, nx, nz, sb.restitution, sb.scrape);
     if (hit) { _bounce.kind = 'sentry'; return hit; }
   }
-  // an intact Roe Shell (Bazookarp: G.objTargets.spheres — none on any other mode)
-  _sph.length = 0;
-  G.objTargets?.spheres?.(_sph);
+  // an intact Roe Shell (Bazookarp: G.objTargets.spheres — none on any other mode; gathered with the sentries)
   for (const o of _sph) {
     if (o.solid === false) continue;
     const dy = my - o.c.y;
@@ -217,23 +214,38 @@ function bumpers(s, ctx) {
   }
   return 0;
 }
+// the bumpers that aren't level geometry, gathered once a frame (the kit's tick, before any stone steps) and once at the
+// start of every prediction run — never per step: any team's Scrap Sentry (only the sentry kit is asked: its devices()
+// descriptors are stable, their getters read live state) and the intact Roe Shell(s) (G.objTargets.spheres: stable)
+export function gatherBumpers() {
+  _devs.length = 0; _kd.length = 0;
+  SUB_KITS.sentry?.devices?.(_kd);
+  for (const d of _kd) if (d.kind === 'sentry') _devs.push(d);
+  _kd.length = 0;
+  _sph.length = 0;
+  G.objTargets?.spheres?.(_sph);
+}
 // where a slide from p (velocity v, in the air or not) for f s ends, ignoring kids: the guide, the bots' prediction.
-// pts (optional): the floor points along it, cut after `maxBounces` bounces. Returns { x, y, z, bounces, sunk }
+// pts (optional): the floor points along it, cut after `maxBounces` bounces (pooled objects, reused run to run: read
+// them before the next run). Returns { x, y, z, bounces, sunk }
 const _sim = { p: new V3(), v: new V3(), air: false, t: 0 }, _simOut = { x: 0, y: 0, z: 0, bounces: 0, sunk: false };
+function ptAt(pts, i, p) { const P = pts._pool || (pts._pool = []); let o = P[i]; if (!o) P[i] = o = { x: 0, y: 0, z: 0 }; o.x = p.x; o.y = p.y; o.z = p.z; pts.push(o); }
 export function simulate(p, v, air, f, team, pts = null, maxBounces = 3, ctx = null) {
   const s = _sim, h = S().step || 1 / 60, n = Math.min(Math.round(f / h), 240);
   s.p.copy(p); s.v.copy(v); s.air = air; s.t = 0;
   const c = ctx || _simCtx; c.team = team;
   _simOut.bounces = 0; _simOut.sunk = false;
-  if (pts) { pts.length = 0; pts.push({ x: p.x, y: p.y, z: p.z }); }
+  gatherBumpers();
+  let np = 0;
+  if (pts) { pts.length = 0; ptAt(pts, np++, p); }
   let cut = false;
   for (let i = 0; i < n; i++) {
     const b = slideStep(s, h, c);
     if (b) { _simOut.bounces++; if (_simOut.bounces > maxBounces) cut = true; }
     if (sinks(s.p, s.air)) { _simOut.sunk = true; break; }
-    if (pts && !cut && (i % 2 === 1 || b)) pts.push({ x: s.p.x, y: s.p.y, z: s.p.z });
+    if (pts && !cut && (i % 2 === 1 || b)) ptAt(pts, np++, s.p);
   }
-  if (pts && !cut) pts.push({ x: s.p.x, y: s.p.y, z: s.p.z });
+  if (pts && !cut) ptAt(pts, np++, s.p);
   _simOut.x = s.p.x; _simOut.y = s.p.y; _simOut.z = s.p.z;
   return _simOut;
 }
@@ -916,11 +928,12 @@ SUB_KITS[KIND] = {
   // the cook level this screen shows in a player's hand (0 … 3: its own cook, or a remote player's last [5] record)
   levelShown(a) { const st = a?.weaponRunner?.glide; if (st) return levelOf(st.cook, a.sub?.kind === KIND ? a.sub : S()); return netCook.get(a)?.level || 0; },
   // exposed for tests / tools: the numbers and the step function
-  math: { cookOf, radiusOf, paintOf, devDmgOf, fuseOf, levelOf, reachOf, fuseFor, simulate, slideStep, dangerOf, guide, bar },
+  math: { cookOf, radiusOf, paintOf, devDmgOf, fuseOf, levelOf, reachOf, fuseFor, simulate, slideStep, gatherBumpers, dangerOf, guide, bar },
   threats(out) { for (const it of items) if (it.state !== 'dead') out.push(threatOf(it)); return out; },
   devices(out) { for (const it of items) if (it.state !== 'dead') out.push(devOf(it)); return out; },
   tick(dt) {
     trackDyn(dt);
+    if (items.length) gatherBumpers();   // (once a frame for every stone's steps)
     for (let i = items.length - 1; i >= 0; i--) {
       const it = items[i];
       ghostMute(it, () => tickOne(it, dt));
