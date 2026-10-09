@@ -412,21 +412,29 @@ function landing(b, a, yaw, L) {
   }
   return true;
 }
-function botAct(b, dt, it, move, busy) {
+// bossTh (the Boss Battle think passes it): the boss's telegraphs at this bot as it reads them (bossHazards threat(), after
+// the bot's reaction time) — a slam, a barrel, a charge lane or a frenzy on it: a dodge along its escape (ax, az)
+function botAct(b, dt, it, move, busy, bossTh = null) {
   const a = b.a, sub = a.sub;
   const evNew = b.thrEvNew; b.thrEvNew = false;
   if (!sub || sub.kind !== KIND) return null;
-  const st = b._dash || (b._dash = { cd: 0, seenE: null, seenT: 0 });
+  const st = b._dash || (b._dash = { cd: 0, seenE: null, seenT: 0, evFor: null, dodged: null });
   st.cd -= dt;
+  // (the threat block's heading, thrEvYaw, is this threat's once a fresh evade heading or sidestep came with it)
+  if (!b.thr) st.evFor = null; else if (evNew) st.evFor = b.thr;
   const T = b.target, seen = !!(T && T.alive && b.seeTimer > 0);
   if (seen) { if (st.seenE !== T) { st.seenE = T; st.seenT = 0; } st.seenT += dt; } else { st.seenE = null; st.seenT = 0; }
   if (!DASH_AI.enabled || (DASH_AI.teams && !DASH_AI.teams[a.team])) return null;
   const r = a.weaponRunner;
   if (st.cd > 0 || a.ink < sub.inkCost || a.specialActive || a.superJumpState || a.climbing || a.carry || why(a)) return null;
-  let yaw = null, use = null;
+  let yaw = null, use = null, thr = null;
   const esc = b.sp && b.sp.esc;
-  if (evNew && b.thr && b.thrAct && b.thrIn < 0.6) { yaw = b.thrEvYaw; use = 'dashDodge'; }
+  // a dodge: a threat about to land (within 0.6 s) — once per threat, on any frame of it, along the heading the threat
+  // block picked for it (its evade heading, or its sidestep); or a special's danger closing on our escape; or (Boss
+  // Battle) a telegraph on us
+  if (b.thr && b.thr === st.evFor && st.dodged !== b.thr && b.thrAct && b.thrIn < 0.6) { yaw = b.thrEvYaw; use = 'dashDodge'; thr = b.thr; }
   else if (esc && esc.r && esc.r.d && tInAt(esc.r.d, a.pos.x, a.pos.z) < 0.5) { yaw = esc.yaw; use = 'dashDodge'; }
+  else if (bossTh && bossTh.level >= 0.9 && !bossTh.beam && (bossTh.ax || bossTh.az)) { yaw = Math.atan2(bossTh.ax, bossTh.az); use = 'dashDodge'; }
   else if (seen) {
     const dx = T.pos.x - a.pos.x, dz = T.pos.z - a.pos.z, d = Math.hypot(dx, dz), w = a.weapon;
     const melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee);
@@ -443,6 +451,7 @@ function botAct(b, dt, it, move, busy) {
   b.dashDir = { x: Math.sin(yaw), z: Math.cos(yaw) };
   b._bombAim = true;   // (_tail presses the sub this frame and lets go the next; trySubPress reads dashDir)
   st.cd = DASH_AI.cd;
+  if (thr) st.dodged = thr;
   THREAT_STATS[use]++;
   void r; void it; void move;
   return null;

@@ -3278,7 +3278,7 @@ export class BotBrain {
         else it.fire = true;
         this._firing = it.fire;
         this.mode = 'fight';   // (the aim spring's combat stiffness while shooting; reset each frame)
-        if (this.bombCd <= 0 && !T.crab && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }
+        if (this.bombCd <= 0 && !T.crab && !SUB_KITS[a.sub?.kind]?.onPress && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }   // ([b5-sub-dash] an onPress sub, the Dash Pellet, is no throw: its botAct below)
       } else if ((w.kind === 'charger' || w.kind === 'splatling' || w.kind === 'spinner' || w.kind === 'bow') && a.weaponRunner.charging && T.los) it.fire = true;   // hold a charge through a blink
       // specials: slam from under its claws, the storm cloud onto it
       if (a.specialReady() && !th.level && !T.crab) {
@@ -3305,6 +3305,8 @@ export class BotBrain {
     if (dive) { it.squid = true; it.fire = false; }
     else if (!it.fire && !a.weaponRunner.charging && a.groundTeam === 1 && (this._pathRemaining() > 4 || evading)) it.squid = true;
     if (!wantMove && !it.fire && a.groundTeam !== 1) it.squid = false;
+    // [b5-sub-dash] kit subs' own bot moves (SPEC §0.5 botAct), as in the turf think; th: the boss's telegraphs on us
+    { const busy = evading || dive; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy, th); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; } } }
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove);
     if (this.mode === 'fight') this.mode = 'boss';
   }
