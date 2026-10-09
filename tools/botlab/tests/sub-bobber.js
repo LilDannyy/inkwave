@@ -262,6 +262,19 @@
       R(`trigger: the owner's shot on bobber 1 of a 4-chain blows all 4 breadth-first (1, 2, 3, 4) at ${B.hopDelay} s hops (± 1 frame), each R 3.0, 180 / 35`,
         hit && ex.length === 4 && JSON.stringify(order) === '[0,1,2,3]' && dts.every((d, i) => Math.abs(d - i * B.hopDelay) <= DT + 1e-3) && ex.every((x) => x.e.radius === 3.0) && g4 && g4.dmax === 180 && g4.dmin === 35 && tr.e.n === 4 && tr.e.by === me,
         { order, dts, radius: ex.map((x) => x.e.radius), n: tr?.e.n, first: r3(ex[0]?.t - t0) });
+      // (the review) a blown bobber leaves the spatial hash — ten chains in a row leave nothing in it — and the tether buffer
+      // is rewritten only as the chain's sparks come and go (not every frame for the 6 s its group is kept)
+      { const hashed = []; let w0 = K.DRAW_STATS.tetherWrites, idle = 0, after = 0;
+        for (let r = 0; r < 10; r++) {
+          const Q = line4(me, -9, -24 + (r % 3) * 6);
+          if (r === 0) { const wi = K.DRAW_STATS.tetherWrites; step(1.0); idle = K.DRAW_STATS.tetherWrites - wi; }
+          S.blockShot(V(Q[0].spot.x, 2.5, Q[0].spot.z), V(Q[0].spot.x, 0.4, Q[0].spot.z), me.team, 36, me);
+          const wa = K.DRAW_STATS.tetherWrites; step(r === 0 ? 3.0 : 0.6); if (r === 0) after = K.DRAW_STATS.tetherWrites - wa;
+          hashed.push(K.near(-60, -60, 60, 60, []).length);
+        }
+        void w0;
+        R('trigger: a blown bobber leaves the spatial hash (after each of 10 four-chains, nothing is left in it) and the tether buffer is rewritten only as the sparks come and go (idle: never; 3 s after a chain: a handful of times, not 180)',
+          hashed.every((n) => n === 0) && idle === 0 && after >= 2 && after <= 8, { hashed, idleWrites1s: idle, writes3sAfterChain: after }); }
       // a teammate's shot (from the middle: two levels each way)
       reset();
       const D = line4(me, -9, -12);

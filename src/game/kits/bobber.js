@@ -530,7 +530,8 @@ function makeGroup(id, owner, n, by, levels, t0, ghost) {
 function schedule(g) {
   const hop = SB().hopDelay;
   const lvOf = new Map();
-  g.levels.forEach((L, k) => { for (const b of L) { b.state = 'blow'; b.blast = g; b.hop = k; b.blowAt = g.t0 + k * hop; lvOf.set(b, k); liveN--; } });
+  // (out of the spatial hash at once: a bobber about to blow is no longer anything's target — shots, blasts, links)
+  g.levels.forEach((L, k) => { for (const b of L) { b.state = 'blow'; b.blast = g; b.hop = k; b.blowAt = g.t0 + k * hop; lvOf.set(b, k); liveN--; hashDel(b); } });
   // the sparks: down every tether of the chain, from the end that blows first (a level apart; level-mates blow together)
   for (const [b, k] of lvOf) for (const o of b.ten) {
     const ko = lvOf.get(o);
@@ -867,6 +868,7 @@ function tick(dt) {
     const it = items[i];
     if (it.state !== 'dead') continue;
     if (it.rb) { it.rb.on = null; it.rb.ride = null; }
+    hashDel(it);   // (every way out of the world leaves the hash too)
     byGid.delete(it.gid); items.splice(i, 1);
   }
   hudTick(dt);
@@ -902,7 +904,9 @@ function render() {
     const l = lampsOf(it, _lamps, k);
     draw.bobber(it.team, _mat, l[0], l[1], l[2], l[3], fl * 0.9);
   }
-  if (tethersDirty || groups.size) { tethersDirty = false; draw.tethers(tetherList()); }
+  // (the tether buffer is rewritten only when it changes: the list, a riding / easing bobber, the cue's glow, and as a
+  // chain's sparks come and go — the spark itself runs in the shader, so not every frame while a chain's group is kept)
+  if (tethersDirty || (sparkNext != null && G.time > sparkNext)) { tethersDirty = false; draw.tethers(tetherList()); }
   draw.end();
 }
 // the lamps → out[4] (0 off · 0..1 lit, its brightness · 1..2 white-hot): N of 4 lit, one more white-hot for each link
@@ -921,6 +925,7 @@ export function lampsOf(it, out = [0, 0, 0, 0], k = 1) {
   return out;
 }
 const _tl = [];
+let sparkNext = null;
 const eyeUp = () => B_EYE * WSCALE * subViewScale(KIND);
 function tetherList() {
   _tl.length = 0;
@@ -934,9 +939,12 @@ function tetherList() {
         sag: 0.03 * len, bright: n <= 2 ? 0.6 : n === 3 ? 0.75 : n === 4 ? 0.9 : Math.min(1.2, 1 + 0.05 * (n - 4)), glow: it.glow || o.glow ? 1 : 0, s0: -99, sd: 0 });
     }
   }
-  // a chain going off: its tethers stay until the spark has run down them
+  // a chain going off: its tethers stay until the spark has run down them (sparkNext: when the next one drops out)
+  sparkNext = null;
   for (const g of groups.values()) for (const s of g.sparks) {
-    if (G.time > s.t0 + SB().hopDelay + 0.03) continue;
+    const end = s.t0 + SB().hopDelay + 0.03;
+    if (G.time > end) continue;
+    if (sparkNext == null || end < sparkNext) sparkNext = end;
     _tl.push({ team: g.team, ax: s.a.x, ay: s.a.y + up, az: s.a.z, bx: s.b.x, by: s.b.y + up, bz: s.b.z, pa: s.pa, pb: s.pb, sag: 0.03 * s.a.distanceTo(s.b), bright: 1.1, glow: 0, s0: s.t0, sd: 1 });
   }
   return _tl;
@@ -972,7 +980,7 @@ const kit = SUB_KITS[KIND] = {
   tick,
   clear() {
     for (const it of items) { if (it.rb) { it.rb.on = null; it.rb.ride = null; } }
-    items.length = 0; byGid.clear(); H.clear(); groups.clear(); lastList.clear(); ghostLists.clear(); relinkSet.clear(); liveN = 0; tethersDirty = true;
+    items.length = 0; byGid.clear(); H.clear(); groups.clear(); lastList.clear(); ghostLists.clear(); relinkSet.clear(); liveN = 0; tethersDirty = true; sparkNext = null;
     draw.clear(); hudClear(); guideOff();
   },
   // every shot / beam touching it is absorbed: own team's sets the chain off, the enemy's wears it down
