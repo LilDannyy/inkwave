@@ -173,10 +173,13 @@ The Glide Bomb (`[b5-sub-glide]`, src/game/kits/glide.js; batch 5 subs SPEC §A:
 floor inking a lane, bounces off walls and kids, blows when its fuse runs out; hold to cook it — shorter, bigger, the main
 weapon locked meanwhile, slipping out a second past full cook):
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-glide.js tools/botlab/run.sh tools/botlab/page.cjs`
-(`PAGE_ARGS='only=reach,lane,bounce,ledge,blast,shot,fizzle,guide,bots,stubs,lock,more'`) and, online, `CLIENTS=2
-Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-glide.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`. Its
-pictures: `tools/botlab/jobs/batch5/sub-glide/scenes.js` through hud-shots.cjs. match.cjs prints a `GLIDE` line (uses,
-cooks, endings, bounces, hits) when anyone threw one (`SUBS='all=glide'`).
+(`PAGE_ARGS='only=reach,lane,bounce,ledge,blast,shot,fizzle,guide,bots,stubs,lock,crush,boss,start,perf,more'`; `crush`
+uses the real `G.deploy.crushIn` once the sentry / bobber branches are merged, a copy of its kit loop before) and,
+online, `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-glide.cjs tools/botlab/run.sh
+tools/botlab/netpage.cjs` (`NET_ARGS='scene=hostleave'`: the host leaves with its stones out). Its pictures:
+`tools/botlab/jobs/batch5/sub-glide/scenes.js` through hud-shots.cjs. match.cjs prints a `GLIDE` line (uses, cooks, the
+bots' fight / paint / boss throws, endings, bounces, hits, boss hits) when anyone threw one (`SUBS='all=glide'`), and a
+`SUBUSE` line for every sub kind thrown (uses / enemy hits / damage / splats: the Glide against the Splat Bomb).
 
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,

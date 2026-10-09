@@ -84,6 +84,7 @@ app.on('browser-window-created', (_, win) => {
         on('superjump', (e) => { if (e.phase === 'charge') ev.jumps++; }),
         // [b5-sub-glide] per sub kind: uses ('sub:use') and its blast / hit damage on enemy players ('hit' with that weaponId)
         on('sub:use', (e) => { const U = ev.subU || (ev.subU = {}), k = String(e.kind), o = U[k] || (U[k] = { uses: 0, hits: 0, dmg: 0 }); o.uses++; }),
+        on('bomb:throw', (e) => { if (!e.actor) return; const U = ev.subU || (ev.subU = {}), o = U.bomb || (U.bomb = { uses: 0, hits: 0, dmg: 0 }); o.uses++; }),   // (the Splat Bomb: projectiles.throwBomb, no 'sub:use')
         on('hit', (e) => { const U = ev.subU || (ev.subU = {}), o = U[String(e.weaponId)]; if (o && e.attacker && e.victim && e.attacker.team !== e.victim.team) { o.hits++; o.dmg += e.damage || 0; } }),
         on('special:end', (e) => { if (/^barrage/.test(String(e.id))) (ev.barEnd || (ev.barEnd = new Map())).set(e.actor, simT); }),
         // [b5-zipcheer] how each team's specials ended, by special and reason (a Cheer Orb: 'throw' or cut short by a 'splat' …)
