@@ -1,7 +1,9 @@
 // [b5-karp] Bazookarp: every rule in the SPEC's rules table (§2.1 S0–S52, §2.2–§2.8, §3) checked on karpbox, deterministic
 // (frozen clock, stepped at 60 Hz, bots off). Groups as SPEC §10.1 karp-rules: A setup · B the shell · C the pick-up and
 // the carrier · D scoring · E the fuse · F drops · G overtime · H passive charge · I the field reading · J state switches
-// · K the Carp Shot · L the sides, one carrier, the marker / reveal / wake, the zones' data, the stage variant. Each check fails without its rule (its comment names the rule).
+// · K the Carp Shot · L the sides, one carrier, the marker / reveal / wake, the zones' data, the stage variant, the
+// call-outs and the splat screen · M (fix round 2) devices and subs at the Roe Shell: the re-form's crush, glancing off,
+// every damaging sub counted and stopped. Each check fails without its rule (its comment names the rule).
 //   MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/bazookarp-rules.js tools/botlab/run.sh tools/botlab/page.cjs
 //   PAGE_ARGS='only=A,B,…' runs some groups.
 (async () => {
@@ -693,6 +695,150 @@
         && two[0].length === 2 && two[1].length === 2 && two[0].every((w, i) => Math.abs(w.c - two[1][i].c) <= 1) && apart > 6, s32);
     fresh();
     R('L8 S52: the mode builds its own stage variant (kit pieces, Halyard\'s wheelhouse gone) and no other mode\'s build changes', s52.variant && !s52.turf && s52.kitB >= 5 && s52.kitT === 0 && s52.kitZ === 0 && s52.raw === 0 && !s52.wheelB && s52.wheelT, s52);
+    // (fix round 2) the Carp Blast's call-out stays up: the reset / drop that follows it in the same frame no longer
+    // replaces it, and it says where the Bazookarp went — on the carrier's own half (the Pond) and on the enemy half
+    const callsNow = () => (g.hud.zcalls ? [...g.hud.zcalls.children].map((el) => [el.querySelector('.iw-zcall__txt')?.textContent || '', el.textContent || '']) : null);
+    const fuseOut = (x, z) => { fresh(); look(); g.hud.zcalls && [...g.hud.zcalls.children].forEach((el) => el.remove()); if (g.hud.karp) g.hud.karp._sayT = -1e9; carry(me, x, z); step(0.1); clearEv(); Kp.fuse = 0.02; step(0.1); return { calls: callsNow(), phase: Kp.phase, reset: evs('karp:reset').length, drop: evs('karp:drop').length, card: (() => { const el = g.hud._splatted?.el;   /* (the card up now: an older one may still be fading out) */ return el ? { by: el.querySelector('.iw-spl__by')?.textContent, name: el.querySelector('.iw-spl__name')?.textContent || null, why: el.querySelector('.iw-spl__wn')?.textContent } : null; })() }; };
+    const own11 = fuseOut(-1.5, -6), enemy11 = fuseOut(2, 14);
+    R('L11b §1.1: the fuse runs out — the Carp Blast\'s banner stays (its own half: "Back to the Pond"; the enemy half: "It lies where it blew"), never replaced by BACK TO THE POND! / a drop banner',
+      own11.reset === 1 && own11.calls?.length === 1 && /IT BLEW UP ON US/.test(own11.calls[0][0]) && /Back to the Pond/.test(own11.calls[0][1])
+        && enemy11.drop === 1 && enemy11.calls?.length === 1 && /IT BLEW UP ON US/.test(enemy11.calls[0][0]) && /lies where it blew/.test(enemy11.calls[0][1]), { own: own11, enemy: enemy11 });
+    // (fix round 2) the splat screen names Bazookarp's causes: the Carp Blast splats nobody's doing ("SPLATTED!", no
+    // "enemy ink"), a Carp Shot and a shell burst name themselves (not the attacker's main weapon)
+    const { splatCause } = await import('./src/ui/hud.js');
+    fresh(); look(); put(me, 0, -2.6); put(B[0], 0, 6); step(0.05); Kp.shell.add(1, 2000, B[0]); step(0.1);
+    const burstCard = (() => { const el = g.hud._splatted?.el;   /* (the card up now: an older one may still be fading out) */ return el ? { by: el.querySelector('.iw-spl__by')?.textContent, name: el.querySelector('.iw-spl__name')?.textContent || null, why: el.querySelector('.iw-spl__wn')?.textContent } : null; })();
+    const shotWhy = splatCause('karp', B[0]), burstWhy = splatCause('karp-burst', B[0]), fuseWhy = splatCause('karp-fuse', null);
+    R('L12 the splat screen: the Carp Blast reads "SPLATTED!" + "The Bazookarp blew up" (never "by enemy ink"); a shell burst "SPLATTED BY <its last hitter>" + "Roe Shell burst"; a Carp Shot "Carp Shot" (not the shooter\'s main)',
+      own11.card?.by === 'SPLATTED!' && !own11.card.name && /The Bazookarp blew up/.test(own11.card.why || '')
+        && burstCard?.by === 'SPLATTED BY' && burstCard.name === B[0].name && /Roe Shell burst/.test(burstCard.why || '') && shotWhy?.name === 'Carp Shot' && burstWhy?.name === 'Roe Shell burst' && fuseWhy?.name === 'The Bazookarp blew up',
+      { fuseCard: own11.card, burstCard, shotWhy: shotWhy && { kind: shotWhy.kind, name: shotWhy.name }, burstWhy: burstWhy && burstWhy.name, fuseWhy: fuseWhy && fuseWhy.name });
+  }
+
+  // ============================================================================ M. devices and subs at the Roe Shell (§2.2, fix round 2)
+  // The growing shell crushes every device inside it (G.deploy.crushIn — it did not exist: a silent no-op); a standing
+  // shell crushes what its swelling reaches; thrown subs glance off it and never rest inside it; every damaging sub
+  // counts into it (the Tracer Bolt, the Whirl Boomerang and the Lurk Mine never did) and none goes through it.
+  if (want('M')) {
+    const { SUB_ORDER } = await import('./src/config.js');
+    const { SUB_KITS } = await import('./src/game/kits/registry.js');
+    const { Buoy } = await import('./src/game/sp-surf.js');
+    const { Hit } = await import('./src/game/physics.js');
+    const down = []; const offD = on('device:down', (e) => down.push({ kind: e.kind, how: e.how, team: e.team }));
+    const floorHit = (x, z) => { const h = new Hit(); G.physics.raycast(V(x, floorY(x, z) + 0.5, z), V(0, -1, 0), 3, h); return h; };
+    const plant = (a, kind, x, z) => { const h = floorHit(x, z); return G.subs._plant(a, SUB[kind], h.point.clone(), h.normal.clone(), 0, h, false); };
+    const drop = (a, kind, x, z) => G.subs._throw(a, SUB[kind], V(x, floorY(x, z) + 0.45, z), V(0.4, -2, 0), false);
+    const buoy = (a, x, z) => { const b = new Buoy(a, V(x, floorY(x, z) + 0.5, z), V(0, -1, 0), false, 0); G.specials.world.push(b); return b; };
+    const gone = (it) => it.state === 'dead' || !(G.subs.items || []).includes(it);
+    // a set of this screen's devices round (x, z): offsets ≤ 0.6 m, plus a control 4 m off
+    const setAround = (x, z) => {
+      const d = { sprinkler: drop(A[1], 'sprinkler', x + 0.5, z), beacon: plant(A[1], 'beacon', x - 0.5, z + 0.2), curtain: drop(A[2], 'curtain', x, z - 0.6),
+        mine: plant(A[2], 'mine', x + 0.3, z + 0.5), sticky: drop(A[3], 'sticky', x - 0.3, z - 0.3), buoy: buoy(A[1], x + 0.1, z + 0.1) };
+      const far = plant(A[3], 'beacon', x + 4, z);
+      return { d, far };
+    };
+    const states = (S) => Object.fromEntries(Object.entries(S.d).map(([k, it]) => [k, it.state || it.phase]));
+    const crushed = (S) => Object.entries(S.d).every(([k, it]) => (k === 'buoy' ? it.dead || it.phase !== 'live' : gone(it)));
+    // M1: at a drop spot — the devices stand where the carrier is splatted; the 0.8 s re-form ends them all
+    fresh(); const c = A[0]; carry(c, -2, 10); step(0.05);
+    let S1 = setAround(-2, 10); step(0.6);
+    const before1 = states(S1); down.length = 0;
+    c.splat(B[0], 'weapon'); step(0.05); const at1 = Kp.pos.clone(), ph1 = Kp.phase; step(1.0);
+    const after1 = states(S1), dn1 = down.slice();
+    R('M1 §2.2: at a drop spot the re-forming shell crushes every device inside it — a sprinkler, a beacon, a Drip Curtain, a Lurk Mine, a stuck Cling Charge, a Surf N\' Turf buoy (\'device:down\' how \'shell\', one each); a beacon 4 m off stays',
+      ph1 === 'reforming' && Object.values(before1).every((s) => ['spray', 'beacon', 'curtain', 'mine', 'stuck', 'live'].includes(s)) && crushed(S1) && !gone(S1.far)
+        && dn1.filter((e) => e.how === 'shell').length === 6 && Kp.shell.stats.crushes === 6 && Kp.shell.state === 'intact',
+      { before: before1, after: after1, down: dn1, at: at1.toArray(), far: S1.far.state, crushes: Kp.shell.stats.crushes });
+    // M2: at the Pond — devices put there while the Bazookarp flies back; the shell that re-forms there ends them
+    fresh(); Kp._reset(Kp.pos.clone(), 'none'); step(0.05);
+    const S2 = setAround(0, 0); step(0.6); const before2 = states(S2); down.length = 0;
+    step(1.0 + 0.9);
+    const after2 = states(S2), dn2 = down.slice();
+    R('M2 §2.2: at the Pond the re-forming shell crushes the same six (after the 1.5 s flight back); the beacon 4 m off stays',
+      Object.values(before2).every((s) => ['spray', 'beacon', 'curtain', 'mine', 'stuck', 'live'].includes(s)) && crushed(S2) && !gone(S2.far) && dn2.filter((e) => e.how === 'shell').length === 6 && Kp.shell.state === 'intact' && Kp.pos.length() < 0.3,
+      { before: before2, after: after2, down: dn2, phase: Kp.phase, far: S2.far.state });
+    // M3: thrown short at the standing shell (the review's probe: from 3 m, aimed low) — a sprinkler, a curtain, a Cling
+    // Charge, a Skitter Bomb: they glance off; none is ever inside it, frame by frame; nothing counts from inside it
+    const inside = (p, tol = 0.1) => Kp.shell.state === 'intact' && p.distanceTo(Kp.shell.center()) < Kp.shell.radius() - tol;
+    const m3 = {};
+    const thrower3 = A[1];
+    for (const id of ['sprinkler', 'curtain', 'sticky', 'seeker']) {
+      fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
+      const sc = Kp.shell.center();
+      thrower3.setSub(id); put(thrower3, sc.x, sc.z - 3); thrower3.yaw = thrower3.aimYaw = 0; thrower3.aimPitch = -0.7; step(0.05);
+      let worst = Infinity, inn = 0, n0 = Kp.shell.stats.counted[0];
+      for (let i = 0; i < 180; i++) {
+        thrower3.intent.sub = i < 6; thrower3.ink = PLAYER.inkMax;
+        dbg.step(1000 / 60);
+        for (const it of G.subs.items) if (it.owner === thrower3 && it.state !== 'dead') { const d = it.pos.distanceTo(sc); worst = Math.min(worst, d); if (inside(it.pos)) inn++; }
+      }
+      idle(thrower3);
+      const left = G.subs.items.filter((it) => it.owner === thrower3 && it.kind === id && it.state !== 'dead');
+      m3[id] = { worst: +worst.toFixed(2), r: +Kp.shell.radius().toFixed(2), inside: inn, rest: left.map((it) => [it.state, +it.pos.distanceTo(sc).toFixed(2)]), counted: Math.round(Kp.shell.stats.counted[0] - n0), crushes: Kp.shell.stats.crushes };
+    }
+    R('M3 §2.2: a sprinkler, a Drip Curtain, a Cling Charge and a Skitter Bomb thrown short at the standing shell glance off it — never inside it (every frame), none rests inside it',
+      Object.values(m3).every((v) => v.inside === 0 && v.worst < v.r + 0.6 && v.rest.every(([, d]) => d >= v.r - 0.1)), m3);
+    // M4: a standing shell that swells crushes a device its surface reaches (a beacon 1.75 m off its axis: safe at rest,
+    // inside at 95 %); one 3.2 m off stays
+    fresh(); const sc4 = Kp.shell.center();
+    const near4 = plant(A[1], 'beacon', sc4.x + 1.75, sc4.z), far4 = plant(A[2], 'beacon', sc4.x - 3.2, sc4.z); step(0.3);
+    const rest4 = near4.state; down.length = 0;
+    Kp.shell.m = 0.95 * Kp.shell.hp; Kp.shell.quiet = 0; step(0.1);
+    R('M4 §2.2: the standing shell crushes a device its swelling reaches (r 1.6 → 2.2 m), not one by it at rest or further off', rest4 === 'beacon' && gone(near4) && !gone(far4) && down.some((e) => e.how === 'shell' && e.kind === 'beacon'),
+      { rest: rest4, after: near4.state, far: far4.state, r: +Kp.shell.radius().toFixed(2), down: down.slice() });
+    // M5: every damaging sub in SUB_ORDER, thrown / fired / placed at a lone shell from 2.6 m (a mine: tripped by a foe in
+    // front), with a Bravo kid 2.5 m behind it: it counts into the shell (> 0), nothing of it is ever inside the shell
+    // (its flight, its hover; the boomerang's way home flies through anything by design, as through walls), and the kid
+    // behind is never hurt — but by a walker (Skitter, Waddle) that went round it. (2.5 m: no sub's blast from the near
+    // side reaches it — the SPEC lets blasts past the shell, only shots stop — while a sub through it would.)
+    const NOHURT = { scan: 1, curtain: 1, beacon: 1, mist: 1 }, WALKER = { seeker: 1, waddle: 1 };
+    let thrower = A[1];
+    const kitPos = () => {
+      const P = [];
+      for (const b of G.projectiles.bombs || []) if (b.owner === thrower) P.push(b.pos);
+      for (const it of G.subs.items) if (it.owner === thrower && it.state !== 'dead' && it.state !== 'cloud' && it.state !== 'mist') P.push(it.pos);
+      for (const it of SUB_KITS.shaker?.items || []) if (it.owner === thrower && it.state !== 'dead') P.push(it.pos);
+      for (const it of SUB_KITS.waddle?.items || []) if (it.owner === thrower && it.state !== 'dead') P.push(it.pos);
+      for (const t of SUB_KITS.torpedo?._list || []) if (t.owner === thrower && t.state !== 'dead') P.push(t.pos);
+      for (const d of SUB_KITS.torpedo?._drops || []) if (d.owner === thrower) P.push(d.pos);
+      for (const b of SUB_KITS.tracer?._bolts || []) if (b.owner === thrower && b.state === 'fly') P.push(b.pos);
+      for (const it of SUB_KITS.boomerang?._items || []) if (it.owner === thrower && (it.state === 'out' || it.state === 'hover' || it.state === 'armed')) P.push(it.pos);
+      return P;
+    };
+    const m5 = {}; let m5ok = true;
+    for (const id of SUB_ORDER) {
+      if (NOHURT[id]) continue;
+      // (a clean slate: the last trial's drops, bolts and kit objects still in flight would count here; the Shaker is
+      // thrown by the local kid — a bot's hold follows its own plan, botHold — the rest by a parked bot, whose aim
+      // point no camera moves: the Tracer flies at it)
+      G.projectiles.clear(); G.subs.clear(); G.specials.clear();
+      thrower = id === 'shaker' ? m.local : A[1];
+      fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
+      const sc = Kp.shell.center(), r0 = Kp.shell.radius(), foe = B[0], fz = sc.z + r0 + 2.5;
+      thrower.setSub(id);
+      const mine = id === 'mine';
+      // (the Shaker is lobbed onto it, 0.3 rad up: thrown flat from 2.6 m it bounces 2 m back off the shell, as off a
+      // wall, and its hops carry on away from it — its first blast then sits at the edge of its 2.3 m reach)
+      put(thrower, sc.x, sc.z - (mine ? 2.2 : 2.6)); thrower.yaw = thrower.aimYaw = 0; thrower.aimPitch = id === 'shaker' ? 0.3 : 0;
+      thrower.aimPoint.copy(sc); thrower.aimDir?.set(0, Math.sin(Math.atan2(sc.y - thrower.pos.y - 1.2, 2.6)), 1).normalize();
+      put(foe, sc.x, fz); step(0.05);
+      const n0 = Kp.shell.stats.counted[0]; let inn = 0;
+      const hold = id === 'shaker' ? 70 : 8;
+      for (let i = 0; i < 400; i++) {
+        thrower.intent.sub = i < hold; thrower.ink = PLAYER.inkMax; thrower.aimPoint.copy(sc); thrower.aimYaw = 0; thrower.aimPitch = id === 'shaker' ? 0.3 : 0;
+        if (mine && i === 30) { put(thrower, sc.x - 6, sc.z - 4); put(B[1], sc.x + 1.2, sc.z - 2.2); }   // (away; a foe steps by it)
+        foe.pos.set(sc.x, floorY(sc.x, fz), fz); foe.vel.set(0, 0, 0);
+        dbg.step(1000 / 60);
+        for (const p of kitPos()) if (inside(p)) inn++;
+      }
+      idle(thrower);
+      const counted = Math.round(Kp.shell.stats.counted[0] - n0), hurt = foe.hp < PLAYER.hp - 0.01 || !foe.alive;
+      const ok = counted > 0 && inn === 0 && (WALKER[id] || !hurt);
+      m5ok = m5ok && ok;
+      m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits };
+    }
+    R('M5 §2.2: every damaging sub (bomb, Cling Charge, Pop Pellet, Shaker, Skitter, Waddle, Torpedo, Tracer Bolt, Whirl Boomerang, sprinkler, Lurk Mine) counts into a lone shell, is never inside it, and never hurts a kid 2.5 m behind it (a walker may go round it)', m5ok && Object.keys(m5).length === 11, m5);
+    offD();
   }
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }
   offs.forEach((f) => f());
