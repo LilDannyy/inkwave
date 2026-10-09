@@ -63,6 +63,7 @@
     ...K.torpedo._list.map((t) => ['torpedo', t.state, v4(t.pos), r4(t.hp)]),
     ...K.tracer._bolts.map((b) => ['tracer', b.state, v4(b.pos), b.bounces]),
     ...K.boomerang._items.map((it) => ['boomerang', it.state, v4(it.pos)]),
+    ...[...(K.dash?._live || [])].map(([a, D]) => ['dash', v4(a.pos), r4(a.weaponRunner.dashT), D.acc != null ? r4(D.acc) : 0]),   // [b5-sub-dash] (the dasher)
   ];
   function snap() {
     rec.push(['f',
@@ -88,6 +89,7 @@
   const scaledNode = {
     bomb: (b) => b.mesh.children[0], shaker: (it) => it.m.model, waddle: (it) => it.m.model, torpedo: (t) => t.mesh.userData.model,
     tracer: (b) => b.head.children[0], boomerang: (it) => it.mesh.userData.spin.children[0],
+    dash: (p) => p.m,   // [b5-sub-dash] (the pellet at the take-off point)
   };
   function localSize(node) {
     node.updateWorldMatrix(true, true);
@@ -177,6 +179,12 @@
     },
     tracer(o) { aim(0, -0.1); step(3); put(foe, V(0.2, 0, 3), Math.PI); G.subs.use(me, SUBS.tracer); o.first(objOf('tracer')); run(70); },
     boomerang(o) { put(foe, V(0.8, 0, 1.3), Math.PI); G.subs.use(me, SUBS.boomerang); const it = objOf('boomerang'); o.first(it); run(480, () => it.state === 'dead'); },
+    // [b5-sub-dash] a dash along +x: the pellet popping at the take-off point (a foe just behind it), the dash, its streak
+    dash(o) {
+      put(foe, V(T.x - 0.4, 0, T.z), 0);
+      me.bot.dashDir = { x: 1, z: 0 }; G.subs.use(me, SUBS.dash); o.first(last(K.dash._pellets));
+      run(40);
+    },
   };
 
   const FACTORS = { ...SUB_VIEW_SCALE };

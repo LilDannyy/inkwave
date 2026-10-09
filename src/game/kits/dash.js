@@ -520,7 +520,7 @@ SUB_KITS[KIND] = {
   },
   bot: { fight: () => false, paint: () => false },  // (every bot use lives in botAct)
   // test handles
-  _live: live, _ribbons: ribbons, _marks: marks, why,
+  _live: live, _ribbons: ribbons, _marks: marks, _pellets: pellets, why,
 };
 // a dasher who went into the sea within 2 s of a dash (bots must never: match.cjs counts it)
 on('splatted', ({ victim, cause }) => { if (victim && cause === 'water' && G.time - (lastDash.get(victim) ?? -99) < 2) DASH_STATS.seaAfter++; });
