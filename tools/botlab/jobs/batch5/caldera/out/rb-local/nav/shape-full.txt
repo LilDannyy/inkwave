@@ -1,0 +1,19 @@
+cal-low   floor  4716  footprint  5984  solidity 0.790  holes(lake)   622
+cal-high  floor  4380  footprint  5848  solidity 0.772  holes(lake)   862
+halyard   floor  4666  footprint  6494  solidity 0.980  holes(lake)  1360
+craters   floor  5664  footprint  6790  solidity 0.921  holes(lake)    50
+aquarium  floor  5240  footprint  5972  solidity 0.833  holes(lake)     0
+cal-low IoU halyard 0.527  craters 0.596  aquarium 0.406
+cal-high IoU halyard 0.529  craters 0.579  aquarium 0.392
+aquarium IoU halyard 0.714  craters 0.654  aquarium 1.000
+craters IoU halyard 0.727  craters 1.000  aquarium 0.654
+cal-low -70:0 -65:28 -60:35 -55:34 -50:25 -45:25 -40:34 -35:37 -30:43 -25:60 -20:57 -15:58 -10:62 -5:63 0:72 5:63 10:62 15:57 20:58 25:61 30:44 35:37 40:33 45:25 50:32 55:34 60:36 65:27 70:0
+cal-high -70:0 -65:28 -60:35 -55:34 -50:25 -45:25 -40:34 -35:37 -30:43 -25:60 -20:57 -15:53 -10:56 -5:59 0:72 5:59 10:56 15:53 20:58 25:61 30:44 35:37 40:33 45:25 50:32 55:34 60:36 65:27 70:0
+halyard -70:0 -65:39 -60:48 -55:48 -50:48 -45:48 -40:48 -35:48 -30:48 -25:48 -20:48 -15:48 -10:48 -5:48 0:48 5:48 10:48 15:48 20:48 25:48 30:48 35:48 40:48 45:48 50:48 55:48 60:48 65:34 70:0
+cal-low enclosed non-floor regions (m2, largest): [337, 337, 15, 15, 3, 3]
+cal-high enclosed non-floor regions (m2, largest): [235, 235, 209, 209, 15, 15]
+--- what-if: horns end at the arm mouth, arm opens as an out-of-play bay
+cal-low floor 4530 footprint 5778 solidity 0.786 IoU halyard 0.515 craters 0.572 aquarium 0.403
+  widths -50:25 -45:25 -40:34 -35:37 -30:43 -25:47 -20:56 -15:58 -10:62 -5:63 0:72 5:63 10:62 15:57 20:44 25:48 30:44 35:37 40:33 45:25 50:32
+cal-high floor 4214 footprint 5210 solidity 0.708 IoU halyard 0.463 craters 0.501 aquarium 0.337
+  widths -50:25 -45:25 -40:34 -35:37 -30:43 -25:47 -20:41 -15:39 -10:47 -5:52 0:72 5:51 10:44 15:39 20:34 25:48 30:44 35:37 40:33 45:25 50:32

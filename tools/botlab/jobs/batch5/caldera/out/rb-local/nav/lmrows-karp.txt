@@ -1,0 +1,2 @@
+rows 1593 / 2048, faces 4915, blocks 1743
+yard:204r/387f  coping:166r/878f  rim-head:108r/154f

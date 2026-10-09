@@ -1,0 +1,29 @@
+== caldera tower track · heading 0° · length 100.71 / 100.71 m (Alpha's / Bravo's side) · speed 1.68 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 21 pieces · 16 runs, 1 inclines, 3 climbs, 1 drops · 100.71 m
+     run      s=     0  [0,1.8,0] → [0,1.8,6.2]  6.2 m
+     run      s=   6.2  [0,1.8,6.2] → [0,1.8,6.21]  0.01 m
+     DROP     s=  6.21  [0,1.8,6.21] → [0,1.2,6.21]  -0.6 m
+     run      s=  6.81  [0,1.2,6.21] → [0,1.2,26]  19.79 m
+     run      s=  26.6  [0,1.2,26] → [9.7,1.2,26]  9.7 m
+     run      s=  36.3  [9.7,1.2,26] → [9.79,1.2,26]  0.09 m
+     CLIMB    s= 36.39  [9.79,1.2,26] → [9.79,1.8,26]  0.6 m  onto [{"id":1242,"tag":"moorings","centre":[11.5,1.5,27.3],"size":[0.99,0.6,8.46]}]
+     run      s= 36.99  [9.79,1.8,26] → [19.5,1.8,26]  9.71 m
+     run      s=  46.7  [19.5,1.8,26] → [19.5,1.8,26.8]  0.8 m
+     run      s=  47.5  [19.5,1.8,26.8] → [19.5,1.8,26.89]  0.09 m
+     CLIMB    s= 47.59  [19.5,1.8,26.89] → [19.5,2.8,26.89]  1 m  onto [{"id":1611,"tag":"chain-bollard","centre":[17.8,2.3,28.6],"size":[1,1,1]}]
+     run      s= 48.59  [19.5,2.8,26.89] → [19.5,2.8,30.3]  3.41 m
+     incline  s=    52  [19.5,2.8,30.3] → [19.5,2.4,30.4]  0.1 m 76°
+     run      s= 52.41  [19.5,2.4,30.4] → [19.5,2.4,34]  3.6 m
+     run      s= 56.01  [19.5,2.4,34] → [9,2.4,34]  10.5 m
+     run      s= 66.51  [9,2.4,34] → [9,2.4,37.7]  3.7 m
+     run      s= 70.21  [9,2.4,37.7] → [9,2.4,37.79]  0.09 m
+     CLIMB    s=  70.3  [9,2.4,37.79] → [9,3.6,37.79]  1.2 m  onto [{"id":989,"tag":"yard","centre":[9,2.03,47.25],"size":[3.2,3.15,16.5]}]
+     run      s=  71.5  [9,3.6,37.79] → [9,3.6,45]  7.21 m
+     run      s= 78.71  [9,3.6,45] → [24,3.6,45]  15 m
+     run      s= 93.71  [24,3.6,45] → [24,3.6,52]  7 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 21 pieces · 16 runs, 1 inclines, 3 climbs, 1 drops · 100.71 m
+   checkpoints [{"team":0,"index":0,"d":24.1,"dur":13.33,"at":[0,1.2,23.5]},{"team":0,"index":1,"d":59.01,"dur":13.33,"at":[16.5,2.4,34]},{"team":0,"index":2,"d":80.71,"dur":13.33,"at":[11,3.6,45]},{"team":1,"index":0,"d":24.1,"dur":13.33,"at":[0,1.2,-23.5]},{"team":1,"index":1,"d":59.01,"dur":13.33,"at":[-16.5,2.4,-34]},{"team":1,"index":2,"d":80.71,"dur":13.33,"at":[-11,3.6,-45]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   console errors: none
+RESULT_JSON {"map":"caldera","len":[100.71,100.71],"holes":0,"issues":0,"climbs":3,"drops":1,"rides":[]}

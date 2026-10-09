@@ -1,0 +1,16 @@
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-top.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-aerialA.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-shape.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-mid1.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-mid2.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-mid3.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-slump.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-bay.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-tail.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-alphahalf.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-midob.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-race2.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/high/caldera-day-lookout.png
+REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":7067,"blocks":1615,"solidBlocks":1615,"propMeshes":6,"navNodes":4218,"bounds":{"minX":-44,"maxX":44,"minZ":-76,"maxZ":76},"perf":{"calls":80,"tris":224054,"cpuRenderMs":2.6,"cpuSimMs":3.01},"coverage":[2.8,3.3]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON

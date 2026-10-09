@@ -1,0 +1,14 @@
+grid-low.json solidity 0.790 area 5984 hull ~ 7560
+   void  486 m2 at (   6, -41)  depth 16.1 m  mouth 39.1 m
+   void   49 m2 at ( -35, -47)  depth  7.0 m  mouth  6.0 m
+   void  216 m2 at ( -33, -15)  depth 10.0 m  mouth 33.1 m
+   void  216 m2 at (  32,  14)  depth 10.0 m  mouth 33.1 m
+   void  486 m2 at (  -7,  40)  depth 16.1 m  mouth 39.1 m
+   void   49 m2 at (  34,  46)  depth  7.0 m  mouth  6.0 m
+grid-high.json solidity 0.772 area 5848 hull ~ 7560
+   void  486 m2 at (   6, -41)  depth 16.1 m  mouth 39.1 m
+   void   49 m2 at ( -35, -47)  depth  7.0 m  mouth  6.0 m
+   void  284 m2 at ( -31, -14)  depth 15.0 m  mouth 33.1 m
+   void  284 m2 at (  30,  13)  depth 15.0 m  mouth 33.1 m
+   void  486 m2 at (  -7,  40)  depth 16.1 m  mouth 39.1 m
+   void   49 m2 at (  34,  46)  depth  7.0 m  mouth  6.0 m
