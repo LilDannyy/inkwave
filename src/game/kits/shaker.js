@@ -531,6 +531,7 @@ function blast(it) {
   }
   G.subs?.damageArea(c, s.radius, 40, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'shaker');   // Boss Battle
+  G.objTargets?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'shaker', { special: !!a.specialActive });   // [b5-karp] the Roe Shell
   if (it.left > 0) {
     // the blast kicks it forward and up; the next one goes off `gap` later (usually just after it lands)
     it.vel.set(it.dir.x * s.hopSpeed, s.hopUp, it.dir.z * s.hopSpeed);

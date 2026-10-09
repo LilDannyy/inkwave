@@ -506,6 +506,12 @@ export class Buoy {
 
   // ---- hits: this screen's own players only (the victim's owner judges — see the header)
   _judge(R) {
+    // [b5-karp] the Roe Shell: once per ring, as its front reaches it (the owner's copy; a special: × 0.5)
+    if (G.objTargets && !this.ghost && !R.karp) for (const t of G.objTargets.targets) {
+      if (!t.hittable()) continue;
+      const c = t.center();
+      if (Math.hypot(c.x - R.c.x, c.z - R.c.z) - t.radius() <= R.r && Math.abs(c.y - R.c.y) < D.height + t.radius()) { R.karp = true; G.objTargets.hit(this.owner, D.damage, 'surf', c.clone(), { special: true, target: t }); }
+    }
     for (const e of G.actors) {
       if (!e.alive || e.team === this.team || e.remote || R.judged.has(e)) continue;
       const dx = e.pos.x - R.c.x, dz = e.pos.z - R.c.z, d = Math.hypot(dx, dz);

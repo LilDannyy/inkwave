@@ -17,7 +17,7 @@
 // Debug handle (G.net.mock): auto(on) · add({ name, team, weapon, sub, special, style, ready }) → id · drop(id) · ready(id, v) ·
 // emote(id, name) · swap(id, { weapon, sub, special, style }) · fill(n) · clear() · host(id) · startMatch() · endMatch() · lose(msg)
 import { G } from '../core/ctx.js';
-import { WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk, mapListed, listedMaps } from '../config.js';
+import { WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk, mapListed, listedMaps, modeListed } from '../config.js';   // [b5-karp] modeListed
 import * as LOOK from '../game/character-style.js';
 
 const q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
@@ -172,7 +172,7 @@ export class MockNet {
     if (o.time) { const t = roomTime(o.time); if (t === o.time || o.time === 'dusk') L.time = t; }
     if (o.duration) L.duration = +o.duration;
     if (o.difficulty) L.difficulty = o.difficulty;
-    if (['turf', 'zones', 'tower', 'boss', 'practice'].includes(o.mode)) L.mode = o.mode;
+    if (['turf', 'zones', 'tower', 'boss', 'practice'].includes(o.mode) || (o.mode === 'bazookarp' && modeListed(o.mode))) L.mode = o.mode;   // [b5-karp]
     if (Number.isInteger(o.palette) && TEAM_PALETTES[o.palette]) L.palette = o.palette;
     const kind = L.mode === 'practice' ? 'practice' : 'match';
     const pref = this._botsPref || (this._botsPref = { match: -1, practice: 0 });

@@ -641,6 +641,7 @@ function blast(it) {
   }
   G.subs?.damageArea(c, s.radius, 60, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'waddle');   // Boss Battle
+  G.objTargets?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'waddle', { special: !!it.sp });   // [b5-karp] the Roe Shell
   it.state = 'dead';
 }
 // popped by enemy fire / an enemy blast: harmless

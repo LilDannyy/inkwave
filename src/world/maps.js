@@ -6,6 +6,7 @@ import { PATTERN, C, B, R, O, OCT, ARC, OCTRAMP, R_ } from './mapkit.js';
 import { STAGES } from './stages/index.js';
 import { ZONE_DEFS } from './zones-data.js';
 import { TOWER_DEFS } from './tower-data.js';
+import { BAZOOKARP_DEFS } from './bazookarp-data.js';   // [b5-karp]
 import { floatSections, FLOAT_Y0 } from './props-marina-vessels.js';
 import { hq, QUAY_FRONT as QF, SLICE as SL } from './props-marina-slice.js';
 export * from './mapkit.js';
@@ -190,5 +191,7 @@ for (const [id, s] of Object.entries(STAGES)) if (s.LAYOUT) MAP_LAYOUTS[id] = s.
 for (const [id, z] of Object.entries(ZONE_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAYOUTS[id].zones) MAP_LAYOUTS[id].zones = z;
 // Tower Command paths (tower-data.js) — likewise
 for (const [id, t] of Object.entries(TOWER_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAYOUTS[id].tower) MAP_LAYOUTS[id].tower = t;
+// [b5-karp] Bazookarp layouts (bazookarp-data.js) — likewise (data only: the kit's pieces come from variants.js layoutFor)
+for (const [id, k] of Object.entries(BAZOOKARP_DEFS)) if (MAP_LAYOUTS[id] && !MAP_LAYOUTS[id].bazookarp) MAP_LAYOUTS[id].bazookarp = k;
 // stage-select order
 for (const id of ['tidewater', 'kelpline', 'halyard', 'saltpan', 'crossmarket', 'lockgate', 'terraces', 'nantai', 'craters', 'calamari', 'spirhalite', 'treehills', 'bluestone', 'aquarium', 'caldera', 'cargo']) { const L = MAP_LAYOUTS[id]; if (L) { delete MAP_LAYOUTS[id]; MAP_LAYOUTS[id] = L; } }

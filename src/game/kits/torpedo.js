@@ -505,6 +505,7 @@ function burst(t, full) {
   }
   G.subs?.damageArea(c, s.radius, 60, t.team, t.owner);   // enemy curtains / devices / bubbles; sets off enemy locked torpedoes ([b5-deploy] by)
   G.boss?.splash(t.owner, c, s.radius, s.damageMax, s.damageMin, 'torpedo');   // Boss Battle
+  G.objTargets?.splash(t.owner, c, s.radius, s.damageMax, s.damageMin, 'torpedo', { special: !!t.sp });   // [b5-karp] the Roe Shell
   if (full) spawnDrops(t, c);
 }
 // shot down (or out of the world): gone without a blast

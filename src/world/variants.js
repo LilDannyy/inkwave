@@ -4,19 +4,24 @@
 // (either may list several modes: notIn: ['zones', 'tower'])
 // Everything untagged is shared. A stage with no tagged items for a mode builds (and bakes) exactly as its Turf War
 // layout; one with tagged items gets its own world + lightmap (assets/lightmaps/<id>.<mode>.{png,json}).
+import { karpKitPieces } from './bazookarp-kit.js';   // [b5-karp]
+
 const hit = (v, mode) => (Array.isArray(v) ? v.includes(mode) : v === mode);
 export const inMode = (it, mode) => (!it.onlyIn || hit(it.onlyIn, mode)) && (!it.notIn || !hit(it.notIn, mode));
 
 // does building this stage for `mode` differ from its Turf War build?
 export function hasVariant(layout, dressing, mode) {
   if (!mode || mode === 'turf') return false;
+  if (mode === 'bazookarp' && layout?.bazookarp) return true;   // [b5-karp] its weir / Gate / sign pieces (layoutFor)
   const any = (list) => (list || []).some((it) => (it.onlyIn || it.notIn) && inMode(it, mode) !== inMode(it, 'turf'));
   return any(layout?.single) || any(layout?.half) || any(dressing);
 }
 
 // the layout as built in `mode` (pieces filtered; zones, bounds, spawns … shared)
 export function layoutFor(layout, mode) {
-  return { ...layout, single: layout.single.filter((d) => inMode(d, mode)), half: layout.half.filter((d) => inMode(d, mode)) };
+  const half = layout.half.filter((d) => inMode(d, mode));
+  if (mode === 'bazookarp' && layout.bazookarp) half.push(...karpKitPieces(layout.bazookarp, layout));   // [b5-karp] (never into layout.half itself)
+  return { ...layout, single: layout.single.filter((d) => inMode(d, mode)), half };
 }
 
 // world / lightmap key: '<id>' for the shared build, '<id>.<mode>' for a mode variant

@@ -919,6 +919,7 @@ export class SubSystem {
     }
     this.damageArea(center, radius, 60, it.team, it.owner);   // [b5-deploy] (by)
     G.boss?.splash(it.owner, center, radius, dmgMax, dmgMin, it.kind);   // Boss Battle
+    G.objTargets?.splash(it.owner, center, radius, dmgMax, dmgMin, it.kind, { special: !!it.sp });   // [b5-karp] the Roe Shell
   }
   _pelletBlast(it, direct, at) {
     const s = it.sub, c = (at || it.pos).clone();
@@ -935,6 +936,7 @@ export class SubSystem {
     }
     this.damageArea(c, s.radius, 25, it.team, it.owner);   // [b5-deploy] (by)
     G.boss?.splash(it.owner, c, s.radius, s.directDamage, s.splashDamage, 'burst');   // Boss Battle
+    G.objTargets?.splash(it.owner, c, s.radius, s.directDamage, s.splashDamage, 'burst', { special: !!it.sp });   // [b5-karp]
   }
   _paint(it, c, r) {
     let area = G.paint.splat(c, r, it.team, { seed: Math.random() });

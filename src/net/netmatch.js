@@ -234,6 +234,7 @@ export class NetMatch {
     const msg = { k: 't', ts: r3(now()), a };
     if (this.gen) msg.g = this.gen;
     if (this.out.length) { msg.e = this.out; this.out = []; }
+    if (!this.isHost && this.match?.karp) { const kh = G.objTargets?.takeHits(); if (kh) msg.kh = kh; }   // [b5-karp] shell hits ride the tick
     const boss = this.match?.boss;
     if (this.isHost && boss && boss.sim) { this.bossN = (this.bossN || 0) + 1; msg.B = boss.pack(this.bossN % 10 === 0); }
     if (this.isHost && this.match) {
@@ -260,6 +261,11 @@ export class NetMatch {
         break;
       }
       case 'bhit': if (this.isHost) this.match?.boss?.remoteHit(d); break;
+      // [b5-karp] Bazookarp: the host's discrete records (sent at once); a guest's claim / decline / rate / footing; a
+      // refused claim (to one guest)
+      case 'bk': if (from === this.s.hostId) this.match?.karp?.netEvent(d.e); break;
+      case 'kc': case 'kx': case 'kr': case 'kf': if (this.isHost) this.match?.karp?.wire.message?.(from, d); break;
+      case 'kd': if (from === this.s.hostId) this.match?.karp?.wire.message?.(from, d); break;
       case 'st': if (from === this.s.hostId) this._hostState(d); break;
       case 'res': if (from === this.s.hostId) this._result(d); break;
       case 'end': if (from === this.s.hostId) G.game?.netMatchEnd?.(); break;
@@ -313,6 +319,7 @@ export class NetMatch {
     // events → the sender's queue (played on its timeline)
     if (d.e) for (const e of d.e) p.events.push(e);
     if (d.c && from === this.s.hostId) this._hostClock(d.c);
+    if (d.kh && this.isHost && this.match?.karp) this.match.karp.netHits(d.kh);   // [b5-karp] a guest's shell hits (summed, filtered)
     // the boss: the host's snapshot, on the host's playback timeline
     const boss = this.match?.boss;
     if (d.B && from === this.s.hostId && boss && !boss.sim) {
@@ -567,6 +574,7 @@ export class NetMatch {
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
+      case 'ks': this.match?.karp?.netEvent(e[2], true); break;   // [b5-karp] the host's snapshots (its timeline)
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
       case 'sm': this.match?.stage?.netEvent(e[2], e[3], from); break;   // [b5-stagehooks] a stage module's record
       case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
@@ -747,17 +755,19 @@ export class NetMatch {
     if (!this.isHost) return;
     this._sendNow({ k: 'res', cov: result.coverage, win: result.winner, mode: result.mode, bo: result.boss,
       ...(result.mode === 'zones' ? { zc: result.counts, zp: result.penalty, zr: result.reason, zo: result.overtime ? 1 : 0, zl: result.log } : {}),
-      ...(result.mode === 'tower' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),
-      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0]) });
+      ...(result.mode === 'tower' || result.mode === 'bazookarp' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),   // [b5-karp]
+      ...(result.coin !== undefined ? { kco: result.coin } : {}),
+      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]) });   // [b5-karp] karpM, karpPops
   }
   _result(d) {
     const m = this.match;
     if (!m || this.isHost) return;
-    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; } }
+    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists, karpM, karpPops] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; if (karpM !== undefined) { a.stats.karpM = karpM; a.stats.karpPops = karpPops; } } }   // [b5-karp]
     if (d.mode !== 'boss') m.time = 0;   // (a boss win stops the clock where it was)
     m.result = d.mode === 'boss' ? { mode: 'boss', coverage: d.cov, winner: d.win, boss: d.bo }
       : d.mode === 'zones' ? { mode: 'zones', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, penalty: d.zp, overtime: !!d.zo, log: d.zl || [] }
         : d.mode === 'tower' ? { mode: 'tower', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo }
+        : d.mode === 'bazookarp' ? { mode: 'bazookarp', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo, ...(d.kco !== undefined ? { coin: d.kco } : {}) }   // [b5-karp]
         : { coverage: d.cov, winner: d.win };
     m.setState('judge');
   }

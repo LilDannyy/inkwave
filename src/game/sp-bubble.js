@@ -51,7 +51,7 @@ export function joinChain(a, c, owner) {
   if (c) (a._bgHad || (a._bgHad = new WeakSet())).add(c);
 }
 // can a pass its field on? the user's own while their special runs; any copy
-const canPass = (a) => !!a._shieldChain && (!a._shieldOwner || a.specialActive?.id === 'bubbler');
+const canPass = (a) => !!a._shieldChain && !a.carry && (!a._shieldOwner || a.specialActive?.id === 'bubbler');   // [b5-karp] a Bazookarp carrier never passes one on (passing is using a special)
 // may o take a copy of chain c from a?
 const takes = (a, o, c) => o !== a && o.team === a.team && o.alive && !(o.status.shield > 0) && !(o._bgHad && o._bgHad.has(c));
 

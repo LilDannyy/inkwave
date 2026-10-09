@@ -233,6 +233,10 @@ function melee(a, w, S) {
     const bh = G.boss.segHit(_v3, _bossTip.set(_v3.x + fx * reach, _v3.y, _v3.z + fz * reach), 0.55);
     if (bh) { S.hits.add(G.boss); G.boss.hit(a, dmg, bh.target, 'blade', bh.point.clone()); }
   }
+  if (G.objTargets && !S.hits.has(G.objTargets)) {   // [b5-karp] the Roe Shell, once per swing
+    const kh = G.objTargets.segHit(_v3, _bossTip.set(_v3.x + fx * reach, _v3.y, _v3.z + fz * reach), 0.55);
+    if (kh) { S.hits.add(G.objTargets); G.objTargets.hit(a, dmg, 'blade', kh.point.clone(), { target: kh.target }); }
+  }
   // devices in reach (sprinklers, beacons, curtains) and bubbles: the blade cuts them too — once per swing
   if (!S.dev) {
     S.dev = true;
@@ -341,6 +345,10 @@ function stepWave(W, i, dt) {
     if (G.boss && !W.hits.has(G.boss)) {
       const bh = G.boss.segHit(W.prev, W.pos, w.waveWidth * 0.5);
       if (bh) { W.hits.add(G.boss); G.boss.hit(W.owner, dmg, bh.target, 'blade', bh.point.clone()); }
+    }
+    if (G.objTargets && !W.hits.has(G.objTargets)) {   // [b5-karp] the Roe Shell, once on its way through
+      const kh = G.objTargets.segHit(W.prev, W.pos, w.waveWidth * 0.5);
+      if (kh) { W.hits.add(G.objTargets); G.objTargets.hit(W.owner, dmg, 'blade', kh.point.clone(), { target: kh.target }); }
     }
     // shields, curtains, devices and bubbles catch it; walls break it
     let stop = false;

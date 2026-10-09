@@ -41,6 +41,7 @@ import { LeadHud } from './hud-lead.js';
 import { BarrageHud } from './hud-barrage.js';   // [b5-sprules] the Mystery Bomb Barrage's NEXT card
 import { CheerHud } from './hud-cheer.js';   // [b5-zipcheer] the Cheer Orb's cheer prompt + gauge wisps
 import { JumpHud } from './hud-jumps.js';   // [b5-jumpui] super-jump alerts + landing / return tags
+import { KarpHud, KARP_GLYPH } from './hud-karp.js';   // [b5-karp] Bazookarp's placeholder HUD
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -418,6 +419,7 @@ export class HUD {
     this.barrage.update(dt, f);   // [b5-sprules]
     this.cheer.update(dt, f);   // [b5-zipcheer]
     this.jumps.update(dt, f);   // [b5-jumpui]
+    (this.karp || (this.karp = new KarpHud(this))).update(dt, f.karp);   // [b5-karp] (made once the top bar exists)
     this.boss.update(dt);
   }
 
@@ -564,6 +566,7 @@ export class HUD {
   judge(opts = {}) {
     if (opts && opts.mode === 'zones') return this._judgeZones(opts);
     if (opts && opts.mode === 'tower') return this._judgeZones({ ...opts, penalty: [0, 0], icon: TOWER_ICON });   // (the same count reveal)
+    if (opts && opts.mode === 'bazookarp') return this._judgeZones({ ...opts, penalty: [0, 0], icon: KARP_GLYPH });   // [b5-karp]
     return this._judgeTurf(opts);
   }
 
@@ -973,7 +976,7 @@ export class HUD {
   // objective (CENTRE / YOUR SIDE / ENEMY SIDE, relative to the viewer), colours each of its zones by holder and shows
   // each zone's live ink share (the ticks = the ZONES.control share needed to take it); then the rotation hint or the OVERTIME badge.
   _zMe() { const a = this._local(); return a && (a.team === 0 || a.team === 1) ? a.team : 0; }
-  _zLive() { return this._live() && !!(this.lab || (G.match && (G.match.zones || G.match.tower))); }   // (Tower Command shares the banners)
+  _zLive() { return this._live() && !!(this.lab || (G.match && (G.match.zones || G.match.tower || G.match.karp))); }   // [b5-karp]   // (Tower Command shares the banners)
   _zHex(t) { return t === 0 || t === 1 ? toHex(G.teamHex?.[t], t ? '#2f5bff' : '#ff8a14') : '#ffffff'; }
   _zLabel(id, me) { return id === 'center' ? ZONE_LABEL.center : (id === 'sideA' ? 0 : 1) === me ? ZONE_LABEL.home : ZONE_LABEL.away; }
 
@@ -1465,7 +1468,7 @@ export class HUD {
         const k = `sq${t}${i}`;
         if (!p) { if (L[k] !== 'none') { L[k] = 'none'; el.classList.add('is-empty'); } continue; }
         const w = p.weapon || (this._actorFor(t, i) || {}).weaponId || 'shooter';
-        const key = `${p.alive ? 1 : 0}|${p.alive ? 0 : Math.ceil(p.respawn || 0)}|${p.specialReady ? 1 : 0}|${p.isSelf ? 1 : 0}|${w}`;
+        const key = `${p.alive ? 1 : 0}|${p.alive ? 0 : Math.ceil(p.respawn || 0)}|${p.specialReady ? 1 : 0}|${p.isSelf ? 1 : 0}|${w}|${p.carrier ? 1 : 0}`;   // [b5-karp] carrier
         if (L[k] === key) continue;
         const prev = L[k];
         L[k] = key;
@@ -1476,6 +1479,7 @@ export class HUD {
         el.classList.toggle('is-dead', !p.alive);
         el.classList.toggle('is-ready', !!p.specialReady && !!p.alive);
         el.classList.toggle('is-self', !!p.isSelf);
+        el.classList.toggle('is-karp', !!p.carrier);   // [b5-karp] the carrier's badge (S35)
         el.querySelector('.iw-sq__n').textContent = p.alive ? '' : String(Math.max(0, Math.ceil(p.respawn || 0)) || '');
         if (wasAlive && !p.alive) {
           el.animate([{ transform: 'scale(1.4) rotate(-14deg)' }, { transform: 'scale(.92) rotate(4deg)', offset: 0.5 }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.6,.64,1)' });
