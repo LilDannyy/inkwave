@@ -1,0 +1,345 @@
+Gulper Aquarium blockout, fix round 1 — runs made on 2026-10-09 (JOB-3 was pushed to botlab-b5-aquarium for the Mac mini;
+its runner has given no result on any branch since 2026-10-04, so the same script ran here, PAR=1, one Electron at a time)
+geometry at b088274 (layout) — 2903815 (tools); SLOTS=3, BOTLAB_OUT shared
+
+Fast checks run in Node against the same Level / NavGraph code (scratchpad aqpage.mjs, three resolved to vendor/): they
+reproduce the Electron numbers exactly on the reviewed commit (spawn-mid 74.5/77.1 m, karp-data L 58/57.4, pipe-aprons 14/14,
+cover-map 98.8 %, cover-plus 4 / 54 bare cells). Node builds no climb edges (they need the paint atlas): the aquarium's
+spawn-mid path uses none (Electron agrees below); Halyard's does, so Halyard numbers are Electron only.
+
+### issue 1 — landings.js (Node; reviewed commit 9604245 → this round)
+reviewed 9604245: 0/8 — east stair blocked at s 23.6 by express-stop-in (line clear 0.5 m); west stair by the queue
+  terrace (line clear 0.4 m); front drop: queue terrace 2 m from the fascia; Express mouth 2.24 m from the east stair's
+  foot, 26° off it (facing it)
+this round: 8/8 — both stairs: 4 m × 5 m landing flat and clear; east stair's line clear 6.5 m, west 3.9 m (to the 0.6 m
+  queue-terrace step); front drop 2 m clear; Express plaza mouth 8.27 m from the east stair's foot, 93° off it, 18.2 m
+  from the pad (rule 19), 16.5 m from the Gate (rule 22)
+
+### issue 2 — spawn → mid (spawn-mid.js in Node; see the Electron run below), Bazookarp (karp-data.js)
+pavilion moved (reviewed): 74.5 / 77.1 m = 6.32 / 6.53 s, straight 62.2 m; L 58.0/57.4; pad→Gate 12.1
+pavilion restored (DESIGN.md §2.4): 77.1 / 79.3 m = 6.53 / 6.72 s, straight 66.2 m; L 61.9/61.3; pad→Gate 12.5
++ Service Gate α −67…−58 (every opening reaching α ≤ −66 gives the same): 76.3 / 78.5 m = 6.46 / 6.65 s (avg 6.55)
+for the lead, the other option: the moved pavilion (9604245) with the same Service Gate shift: 72.9 / 75.5 m = 6.18 / 6.39 s
+  (avg 6.29), at L 58.0/57.4, pad→Gate 12.1 and an 11 m plaza
+the path (Alpha): pad → front drop (10.2 m incl. the 3.38 m drop) → straight north on x 14.5 → the Service Gate →
+  (13.5, −25.5) → (11.5, −12.5) → SE deck ramp → deck; plaza → ramp foot 50.5 m against an octile-grid minimum of 50.1
+Bravo's +2.2 m: spawn-mid.js's goal is the first lowest node within 2 m of (0, 0) = (−0.5, 2.4, −1.5), on Alpha's side of
+  the deck centre, so Bravo's path walks on across the deck (the same tool gives Halyard 6.02 / 6.41)
+karp-data (this round): #1 L 61.9/61.3 · #2 weir 48/49 % · #3 weir→Gate 32.7/32.1 m (53/52 %) · #4 route 2 32.7/33.5 (weir),
+  35.0/34.1 (Gate) · #6 pad→Gate 12.5; apron (no spawn-deck pieces now) queue-planter, topiary, forklift, trolley,
+  trolley-stack, timetable · #8 cone 32.6° · #14 100 % / 8 · #15 clear
+floor (floor-area, Turf War): 5,581 m² (band 5,200–5,700)
+
+### issue 5 — ball-view.js (Node): the bathysphere from the play camera (camera measured in Electron: 2.51 m over the pad,
+### 4.36 m behind, facing down the stage; vertical fov 50.7°)
+reviewed 9604245 (pad s 31.9): 100 % seen, 4.7° to the tube
+pavilion restored, the span straight at 10.1: 91 % seen (36 of 400 rays behind the Express), −0.4°
+this round (span at 8.0, bent at (9, −32) over the Pump Hall roof): 100 % seen, 1.0° clear; at ±1.1 m spawn offsets
+  0.94–1.06°
+pipe-ratio.js (Node, door to door L/v + 0.75 against the nav walk): gulper 0.55 / 0.57, arch 0.70 / 0.66, express 0.78
+  (reviewed 0.72), kelp 0.75 / 0.74
+
+### issue 6 — cover-hop.py on cover-plus.js (Node for the aquarium; the reviewer's own Electron run for Halyard)
+aquarium this round: all floor 98.1 % within 5 m (98 cells > 5 m); without hop-up tops 99.6 % (22 cells > 5 m, all on the
+  spawn decks' back corners); flat-and-bare: 10 m disc 4 cells, 8 m disc 58; hop tops left out: 164 cells (skylight 38,
+  helmet-bed 20, deck-planter 18, lookout 18, hatch 8, …)
+aquarium reviewed: all floor 98.9 %; without hop tops 99.4 % (30 cells > 5 m); bare 4 / 54
+halyard (reviewer's run): all floor 97.8 %; without hop tops 98.2 % (76 cells > 5 m); bare 6 / 60
+round the Kelp Ramps (|x| 19…27, |z| ≤ 8): 142 floor cells, max 3.0 m to cover, max 2.5 m to a height change
+
+### Electron (JOB-3 run locally): zones, mirrored loadouts (L1 shooter,roller,charger,spinner · L2 blaster,brush,bow,bucket · L3 twins,blade,spinner,brolly · L4 mitts,shooter,bow,roller; subs/specials random)
+aquarium   zones-aquarium-1.log     final [89, 41] (rebuilt [89, 41]) winner B | lead changes 1 | takeovers 3 of 8 captures | first capture 27.1 s | neutral 182 s | held [28.5, 89.3] | led A 95 s B 178 s
+aquarium   zones-aquarium-2.log     final [29, 77] (rebuilt [29, 76]) winner A | lead changes 1 | takeovers 2 of 7 captures | first capture 26.4 s | neutral 186 s | held [66.5, 47.3] | led A 160 s B 114 s
+aquarium   zones-aquarium-3.log     final [59, 73] (rebuilt [59, 72]) winner A | lead changes 1 | takeovers 2 of 5 captures | first capture 85 s | neutral 193.8 s | held [61.8, 44.3] | led A 165 s B 50 s
+aquarium   zones-aquarium-4.log     final [36, 83] (rebuilt [36, 83]) winner A | lead changes 1 | takeovers 5 of 9 captures | first capture 36.2 s | neutral 160.3 s | held [106, 33.5] | led A 206 s B 57 s
+halyard    zones-halyard-1.log      final [86, 89] (rebuilt [86, 89]) winner A | lead changes 0 | takeovers 2 of 4 captures | first capture 43.1 s | neutral 261.3 s | held [16.8, 21.8] | led A 257 s B 0 s
+halyard    zones-halyard-2.log      final [83, 77] (rebuilt [83, 76]) winner B | lead changes 0 | takeovers 1 of 4 captures | first capture 93.5 s | neutral 238 s | held [27.8, 34] | led A 0 s B 206 s
+halyard    zones-halyard-3.log      final [64, 80] (rebuilt [63, 80]) winner A | lead changes 0 | takeovers 1 of 2 captures | first capture 74.9 s | neutral 240.5 s | held [18.3, 41] | led A 225 s B 0 s
+halyard    zones-halyard-4.log      final [92, 50] (rebuilt [92, 50]) winner B | lead changes 0 | takeovers 3 of 8 captures | first capture 44.8 s | neutral 222.5 s | held [21, 68.5] | led A 0 s B 280 s
+SUMMARY aquarium: 4 matches; lead changes [1, 1, 1, 1] (≥ 4 in 0 of 4); takeovers [3, 2, 2, 5]; margins [48, 48, 14, 47]; neutral s [182, 186, 193.8, 160.3]; rebuild ok 4/4
+SUMMARY halyard: 4 matches; lead changes [0, 0, 0, 0] (≥ 4 in 0 of 4); takeovers [2, 1, 1, 3]; margins [3, 6, 16, 42]; neutral s [261.3, 238, 240.5, 222.5]; rebuild ok 4/4
+
+### tower-match (random loadouts: tower-match.cjs has no loadout option)
+aquarium  tower-aquarium-1.log   winner Alpha (knockout) counts 0/85 | best push A 155 B 29.8 | cps cleared A 2 B 0 | control changes 5 | pushes ended at A [153] B [30]
+aquarium  tower-aquarium-2.log   winner Bravo (retake) counts 84/61 | best push A 32.1 B 67.2 | cps cleared A 0 B 0 | control changes 18 | pushes ended at A [23, 31, 32] B [0, 40, 30, 21, 38, 16, 15, 67]
+aquarium  tower-aquarium-3.log   winner Alpha (retake) counts 10/72 | best push A 137.3 B 54.5 | cps cleared A 2 B 0 | control changes 12 | pushes ended at A [0, 119, 135, 137] B [54]
+aquarium  tower-aquarium-4.log   winner Bravo (retake) counts 63/50 | best push A 67.2 B 79.1 | cps cleared A 0 B 1 | control changes 12 | pushes ended at A [8, 0, 67, 67, 66, 34] B [79, 65]
+halyard   tower-halyard-1.log    winner Bravo (knockout) counts 81/0 | best push A 23.6 B 117.8 | cps cleared A 0 B 3 | control changes 4 | pushes ended at A [24, 16] B [14]
+halyard   tower-halyard-2.log    winner Bravo (knockout) counts 100/0 | best push A 0 B 117.8 | cps cleared A 0 B 3 | control changes 9 | pushes ended at A [] B [104, 38, 94]
+SUMMARY aquarium: team-best pushes [29.8, 32.1, 54.5, 67.2, 67.2, 79.1, 137.3, 155.0]; push ends ≥ 10 m by 5 m bin {15: 2, 20: 2, 25: 2, 30: 3, 35: 1, 40: 1, 50: 1, 65: 5, 75: 1, 115: 1, 130: 1, 135: 1, 150: 1}; within 2 m of s 56.7: 0 of 26
+SUMMARY halyard: team-best pushes [0.0, 23.6, 117.8, 117.8]; push ends ≥ 10 m by 5 m bin {10: 1, 15: 1, 20: 1, 35: 1, 90: 1, 100: 1}; within 2 m of s 56.7: 0 of 6
+
+### tower-aquarium-1.log
+== aquarium [tower len 155/155]: winner Alpha (knockout) | counts 0 vs 85 (score 0/85) | best push A 155m B 29.8m | OT no | sim 141.5s
+   held A 108s B 22.3s | contested 0.5s (2×) | neutral 11s | control changes 3 (takes 4) | idle→neutral 1
+   checkpoints cleared A 2 B 0 (reached 2/0, refills 0/0) | riders avg while held A 1.56 B 0.96 | mounts 17/6
+   teams: A [bow/slam blade/slam shooter/zooka blaster/jetpack] | B [blade/barrage_sticky mitts/slam brush/stamp roller/kraken] | ride s by kind {"bow":44,"blade":17,"shooter":59,"blaster":61,"mitts":4,"brush":0,"roller":5}
+   stuck 0% | by the tower's side 4.9% of bot-time, stuck there 0s (0 episodes) | splats 64 (water 0) | specials 9 (ready 9) | super jumps 19 | turf 21.8/10.2 | sim 141.5s in 25s (wall 25s) | {"cpuSimMs":1.07}
+   control log 11.3:B@0 32.2:N@-29.8 32.3:A@-29.7 138.1:B@153.3 139.4:A@150.9
+   checkpoint log 85.4:A0c 106.4:A1c
+CONSOLE 1 unique warning/error line(s)
+### tower-aquarium-2.log
+== aquarium [tower len 155/155]: winner Bravo (retake) | counts 84 vs 61 (score 84/61) | best push A 32.1m B 67.2m | OT 3.7s | sim 303.8s
+   held A 142.5s B 146s | contested 9s (9×) | neutral 15s | control changes 16 (takes 17) | idle→neutral 1
+   checkpoints cleared A 0 B 0 (reached 0/1, refills 0/1) | riders avg while held A 1.08 B 1.29 | mounts 28/32
+   teams: A [blaster/crab brolly/stamp bow/strike shooter/zooka] | B [shooter/zooka spinner/surf blade/zipcaster charger/stamp] | ride s by kind {"blaster":29,"brolly":10,"bow":31,"shooter":164,"spinner":50,"blade":61,"charger":8}
+   stuck 0.2% | by the tower's side 4.9% of bot-time, stuck there 0s (0 episodes) | splats 113 (water 0) | specials 12 (ready 15) | super jumps 53 | turf 22.6/27 | sim 303.8s in 56s (wall 56s) | {"cpuSimMs":0.62}
+   control log 11.8:B@0 13.3:A@-0.1 25.1:B@23.2 62:N@-40.1 65.6:A@-36 81.2:B@-5.3 94.9:A@-29.8 110.7:B@0 122.6:A@-21.3 129.9:B@-8.1 145.8:A@-37.5 163:B@-4.2 170.4:A@-16.1 171:B@-15 171.6:A@-15.3 195.7:B@30.9 254.3:A@-67.2 303.7:B@32.1
+   checkpoint log 259.3:B0r
+   stuck {"t":96.3,"name":"Fizz","w":"charger","mode":"fight","role":"perch","pos":[-4.2,0,-7.5],"tower":13.6,"path":false,"dur":1.25}
+   stuck {"t":69.5,"name":"Fizz","w":"charger","mode":"refill","role":"perch","pos":[-0.4,2.4,-6.8],"tower":15.5,"path":true,"dur":0.5}
+   stuck {"t":97.8,"name":"Fizz","w":"charger","mode":"fight","role":"perch","pos":[-4.3,0,-7.7],"tower":10,"path":false,"dur":0.5}
+   stuck {"t":178.8,"name":"Fizz","w":"charger","mode":"refill","role":"perch","pos":[19.6,0,-15.5],"tower":24.4,"path":true,"dur":0.5}
+   stuck {"t":159.5,"name":"Blotch","w":"blade","mode":"fight","role":"ride","pos":[-12.3,0,-11.8],"tower":12.5,"path":true,"dur":0.25}
+   stuck {"t":171.5,"name":"Riptide","w":"bow","mode":"retreat","role":"escort","pos":[-3.3,0.4,-7.9],"tower":5.8,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### tower-aquarium-3.log
+== aquarium [tower len 155/155]: winner Alpha (retake) | counts 10 vs 72 (score 10/72) | best push A 137.3m B 54.5m | OT 1.9s | sim 302s
+   held A 165.5s B 121.5s | contested 5.5s (3×) | neutral 14.8s | control changes 8 (takes 10) | idle→neutral 2
+   checkpoints cleared A 2 B 0 (reached 2/0, refills 0/0) | riders avg while held A 1.45 B 1.11 | mounts 25/27
+   teams: A [twins/drainbow bow/strike mitts/zooka charger/barrage_mist] | B [blade/zipcaster brush/stamp brolly/bubbler bow/strike] | ride s by kind {"twins":138,"bow":97,"mitts":52,"charger":0,"blade":38,"brush":18,"brolly":41}
+   stuck 0.1% | by the tower's side 3.6% of bot-time, stuck there 0s (0 episodes) | splats 112 (water 0) | specials 17 (ready 19) | super jumps 33 | turf 32.7/14.5 | sim 302s in 65s (wall 65s) | {"cpuSimMs":1.33}
+   control log 12.2:A@0 13.3:B@0.1 38.3:A@-54.5 142.2:B@118.7 168.3:N@65.4 170.5:A@62.9 206.6:B@134.8 229.4:A@89.4 253.9:B@137.3 264.2:N@117.3 264.7:B@116.8 301.9:A@44.2
+   checkpoint log 106:A0c 126.3:A1c
+   stuck {"t":155.8,"name":"Inky Vee","w":"charger","mode":"fight","role":"perch","pos":[-22.3,0,55],"tower":20.3,"path":false,"dur":0.5}
+   stuck {"t":268.8,"name":"Inky Vee","w":"charger","mode":"paint","role":"perch","pos":[3.9,0,18.9],"tower":18.2,"path":true,"dur":0.5}
+   stuck {"t":287,"name":"Inky Vee","w":"charger","mode":"paint","role":"perch","pos":[9.7,0,34.8],"tower":28,"path":true,"dur":0.5}
+   stuck {"t":61.5,"name":"Inky Vee","w":"charger","mode":"paint","role":"perch","pos":[2.2,0,-17.7],"tower":11,"path":true,"dur":0.25}
+   stuck {"t":208.8,"name":"Inky Vee","w":"charger","mode":"refill","role":"perch","pos":[3.3,0,24.6],"tower":18.2,"path":true,"dur":0.25}
+   stuck {"t":259.8,"name":"Loop","w":"brush","mode":"paint","role":"ride","pos":[-3.9,1.2,43.3],"tower":8.5,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### tower-aquarium-4.log
+== aquarium [tower len 155/155]: winner Bravo (retake) | counts 63 vs 50 (score 63/50) | best push A 67.2m B 79.1m | OT 0.2s | sim 300.3s
+   held A 152.8s B 135.3s | contested 4.3s (6×) | neutral 12s | control changes 11 (takes 12) | idle→neutral 0
+   checkpoints cleared A 0 B 1 (reached 2/1, refills 2/0) | riders avg while held A 1.5 B 1.26 | mounts 41/38
+   teams: A [charger/booyah roller/zooka bow/strike mitts/slam] | B [twins/barrage_sticky bow/strike bucket/blower blade/zipcaster] | ride s by kind {"charger":15,"roller":55,"bow":88,"mitts":105,"twins":85,"bucket":32,"blade":26}
+   stuck 0.1% | by the tower's side 3.8% of bot-time, stuck there 0s (0 episodes) | splats 105 (water 0) | specials 22 (ready 23) | super jumps 51 | turf 27.3/22.9 | sim 300.3s in 65s (wall 65s) | {"cpuSimMs":1.44}
+   control log 12.2:A@0 17.3:B@8.5 69:A@-79.1 106.2:B@0.2 138.2:A@-65.2 208.5:B@67.2 217.7:A@50.2 230.2:B@67.2 246.6:A@34.3 261.6:B@65.7 287.4:A@14.7 300.2:B@33.5
+   checkpoint log 61.7:B0c 213.5:A0r 235.2:A0r
+   stuck {"t":38,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-1.8,0.56,10.2],"tower":39.9,"path":true,"dur":0.25}
+   stuck {"t":52.3,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[0.6,0,-11.8],"tower":34.9,"path":true,"dur":0.25}
+   stuck {"t":99,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-5.2,0,-22],"tower":13.3,"path":true,"dur":0.25}
+   stuck {"t":188.8,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[16.7,1.7,10.6],"tower":22.5,"path":true,"dur":0.25}
+   stuck {"t":205.8,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[1,0,36.5],"tower":16.7,"path":true,"dur":0.25}
+   stuck {"t":209.8,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-1.7,0,34.8],"tower":13.7,"path":false,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### tower-halyard-1.log
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 81 vs 0 (score 81/0) | best push A 23.6m B 117.8m | OT no | sim 167.5s
+   held A 39.8s B 114.5s | contested 1.5s (2×) | neutral 13s | control changes 3 (takes 4) | idle→neutral 0
+   checkpoints cleared A 0 B 3 (reached 1/3, refills 1/0) | riders avg while held A 1.44 B 1.62 | mounts 7/11
+   teams: A [twins/bubbler spinner/barrage_burst brush/drainbow bow/barrage] | B [shooter/barrage blaster/jetpack mitts/slam twins/slam] | ride s by kind {"twins":92,"spinner":11,"brush":19,"bow":12,"shooter":106,"blaster":4,"mitts":1}
+   stuck 0.2% | by the tower's side 1.7% of bot-time, stuck there 0s (0 episodes) | splats 58 (water 1) | specials 9 (ready 9) | super jumps 25 | turf 15.2/27.7 | sim 167.5s in 33s (wall 33s) | {"cpuSimMs":0.91}
+   control log 13.2:A@0 33.1:B@23.6 52.8:A@-14.1 72.8:B@16.5
+   checkpoint log 38.1:A0r 102.9:B0c 123.2:B1c 144.5:B2c
+   stuck {"t":100,"name":"Riptide","w":"twins","mode":"paint","role":"ride","pos":[-16.8,3.9,-1.9],"tower":0.9,"path":false,"dur":0.75}
+   stuck {"t":137.5,"name":"Riptide","w":"twins","mode":"fight","role":"ride","pos":[7.2,4.5,-16.7],"tower":0.7,"path":true,"dur":0.75}
+   stuck {"t":69.8,"name":"Loop","w":"shooter","mode":"fight","role":"ride","pos":[6.5,1.3,3.5],"tower":8.3,"path":true,"dur":0.5}
+   stuck {"t":70.5,"name":"Suki","w":"mitts","mode":"paint","role":"escort","pos":[0.5,0.57,27.3],"tower":30.5,"path":true,"dur":0.25}
+   stuck {"t":98.5,"name":"Suki","w":"mitts","mode":"fight","role":"escort","pos":[-20.6,0,-3.1],"tower":3.1,"path":true,"dur":0.25}
+CONSOLE 0 unique warning/error line(s)
+### tower-halyard-2.log
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 117.8m | OT no | sim 268.8s
+   held A 80.8s B 173.3s | contested 1.8s (2×) | neutral 14.5s | control changes 6 (takes 7) | idle→neutral 2
+   checkpoints cleared A 0 B 3 (reached 0/3, refills 0/0) | riders avg while held A 0.95 B 1.43 | mounts 15/26
+   teams: A [spinner/crab blaster/wail mitts/slam blade/kraken] | B [twins/barrage_seeker charger/drainbow shooter/drainbow blade/zipcaster] | ride s by kind {"spinner":26,"blaster":31,"mitts":16,"blade":12,"twins":114,"charger":2,"shooter":126}
+   stuck 0.1% | by the tower's side 1.9% of bot-time, stuck there 0s (0 episodes) | splats 98 (water 1) | specials 16 (ready 16) | super jumps 52 | turf 15.8/34.6 | sim 268.8s in 56s (wall 56s) | {"cpuSimMs":1.45}
+   control log 12.2:B@0 100.3:A@-104.2 136.6:N@-32.4 138.2:B@-30.4 142.5:A@-37.6 162.1:N@0 162.8:B@0 212.7:A@-94.3 237.6:B@-45.7
+   checkpoint log 38.1:B0c 59.4:B1c 80:B2c
+   stuck {"t":184.5,"name":"Loop","w":"charger","mode":"paint","role":"perch","pos":[1.7,1.69,4],"tower":21.5,"path":true,"dur":0.75}
+   stuck {"t":19.5,"name":"Loop","w":"charger","mode":"fight","role":"perch","pos":[-12.7,1.3,3.4],"tower":3.4,"path":false,"dur":0.5}
+   stuck {"t":21,"name":"Loop","w":"charger","mode":"refill","role":"perch","pos":[-13,1.3,4.1],"tower":5.1,"path":true,"dur":0.5}
+   stuck {"t":240.3,"name":"Loop","w":"charger","mode":"paint","role":"perch","pos":[-2.3,3.8,1.3],"tower":19,"path":true,"dur":0.5}
+   stuck {"t":124,"name":"Loop","w":"charger","mode":"paint","role":"perch","pos":[-11.2,0,-7.2],"tower":15.2,"path":true,"dur":0.25}
+   stuck {"t":242.8,"name":"Loop","w":"charger","mode":"paint","role":"perch","pos":[-2.6,3.8,1.1],"tower":18.7,"path":true,"dur":0.25}
+CONSOLE 0 unique warning/error line(s)
+
+### turf-aquarium-1.log
+== aquarium [turf 180s]: turf 41.2% vs 31.9%
+   stuck 0.1% | splats 41 (water 0) | specials 6 | super jumps 21 | turf 41.2/31.9 | sim 180s in 29s (wall 29s) | {"cpuSimMs":1.23}
+   loadouts A:spinner+curtain A:brolly+tracer A:blaster+burst A:roller+beacon B:twins+seeker B:brush+mist B:blaster+seeker B:spinner+boomerang
+   stuck {"t":104.8,"name":"Juno","w":"roller","mode":"refill","role":"-","pos":[-3.2,0.4,8.1],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":15,"name":"Tako","w":"spinner","mode":"paint","role":"-","pos":[3.2,0.15,50.3],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":42.5,"name":"Bubbles","w":"twins","mode":"fight","role":"-","pos":[18.9,0,6.2],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":43,"name":"Bubbles","w":"twins","mode":"fight","role":"-","pos":[19.3,1.35,6.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":131,"name":"Juno","w":"roller","mode":"paint","role":"-","pos":[-3.1,0.19,-50.3],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### turf-aquarium-2.log
+== aquarium [turf 180s]: turf 36.8% vs 37.3%
+   stuck 0.1% | splats 35 (water 0) | specials 9 | super jumps 16 | turf 36.8/37.3 | sim 180s in 31s (wall 31s) | {"cpuSimMs":1.59}
+   loadouts A:brolly+tracer A:blade+seeker A:spinner+bomb A:charger+mine B:blade+boomerang B:spinner+scan B:charger+mine B:mitts+shaker
+   stuck {"t":61.5,"name":"Nori","w":"blade","mode":"fight","role":"-","pos":[5.7,0,12],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":112.5,"name":"Squiddo","w":"charger","mode":"fight","role":"-","pos":[-5.5,0,-30],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":113.8,"name":"Squiddo","w":"charger","mode":"fight","role":"-","pos":[-5.5,0,-30.7],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+
+### page checks
+## audit-tower.log
+FAIL lightmap applied (baked for this build, not stale)  {"id":"aquarium","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.46,6.65],"avg":6.55,"straight":66.2}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":155,"cps":["43%","60%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+console errors: none
+## audit-turf.log
+FAIL lightmap applied (baked for this build, not stale)  {"id":"aquarium","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.46,6.65],"avg":6.55,"straight":66.2}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+console errors: none
+## audit-zones.log
+FAIL lightmap applied (baked for this build, not stale)  {"id":"aquarium","mode":"zones"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.46,6.65],"avg":6.55,"straight":66.2}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+console errors: none
+## page-ball-view.log
+PASS Alpha: the whole bathysphere seen from the play camera  {"camera":[17.9,5.89,-68.04],"seenPct":100,"hiddenByLevel":0,"hiddenByExpress":0,"gapToExpressDeg":1}
+PASS Bravo: the whole bathysphere seen from the play camera  {"camera":[-17.9,5.89,68.04],"seenPct":100,"hiddenByLevel":0,"hiddenByExpress":0,"gapToExpressDeg":1}
+RESULT 2/2
+console errors: none
+## page-climb-audit.log
+PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+RESULT 1/1
+console errors: none
+## page-cover-map.log
+PASS cover map  {"map":"aquarium","floorCells":5240,"within5m_pct":98,"largestOpenRadius_m":12.3,"at":[26.5,-56.5],"skip":[],…
+RESULT 1/1
+console errors: none
+## page-cover-plus.log
+RESULT 1/1
+console errors: none
+## page-karp-data.log
+PASS #1 L = Pond → Gate 55–85 m, both teams within 2 %  {"L":[61.9,61.3]}
+PASS #2 weir at 40–55 % of L  {"pct":[48,49],"pondWeir":[30.8,30.8]}
+PASS #3 weir → Gate ≥ 45 % of L and ≥ 25 m  {"m":[32.7,32.1],"pctL":[53,52]}
+PASS #4 route 2 (2.5 m off route 1) ≤ 1.6× route 1, to the weir and to the Gate  {"weir":[[30.8,32.7],[30.8,33.5]],"gate":[[32.7,35],[32.1,34.7]]}
+PASS named route hints walk (carrier: no climbs)  {"t0":{"centre":65.2,"arcade":52.4,"pumphall":40.9,"rocks":44.8},"t1":{"centre":63.8,"arcade":51.5,"pumphall":40.4,"rocks":43.4}}
+PASS #6 pad → Gate 12–20 m; ≥ 2 apron blocks  {"padGate":[12.5,12.5],"apron":[["queue-planter","topiary","forklift","trolley","trolley-stack","timetable"],["trolley-stack","topiary","timetable","ferry-kiosk","trolley","forklift"]]}
+PASS #8 Gate y ≤ pad y + 0.2, within 40° of the pad → Pond line  {"gateY":0,"padY":3.4,"coneDeg":32.6}
+PASS #15 nothing solid within 3 m of the weir (0.3–3.6 m up)  {"weir":[0,28],"hit":null}
+PASS #14 the Pond: ≥ 70 % of the 4.5–10 m ring is floor; the shell (1.3 m up) seen from ≥ 6 of 8 points at 7 m  {"floorPct":100,"seenFrom":8}
+PASS free zones / noRest polygons  {"freeZones":3,"noRest":16,"signs":[2,1,2]}
+RESULT 10/10
+console errors: none
+## page-landings.log
+PASS Alpha east stair: landing 4 m × 5 m flat and clear  {"cells":288,"floor":[0,0],"blocked":null,"lineClearM":6.5}
+PASS Alpha west stair: landing 4 m × 5 m flat and clear  {"cells":288,"floor":[0,0],"blocked":null,"lineClearM":3.9}
+PASS Alpha front drop: 2 m clear in front of the fascia  {"blocked":null}
+PASS Alpha Express plaza mouth: ≥ 5 m from the east stair's foot, not facing it; rules 19 and 22  {"mouth":[22.2,0.8,-45.95],"out":[-0.87,0,-0.5],"toStairFoot":8.27,"angleOffStair":93,"toPad":18.22,"toGate":16.54}
+PASS Bravo east stair: landing 4 m × 5 m flat and clear  {"cells":288,"floor":[0,0],"blocked":null,"lineClearM":6.5}
+PASS Bravo west stair: landing 4 m × 5 m flat and clear  {"cells":288,"floor":[0,0],"blocked":null,"lineClearM":3.9}
+PASS Bravo front drop: 2 m clear in front of the fascia  {"blocked":null}
+PASS Bravo Express plaza mouth: ≥ 5 m from the east stair's foot, not facing it; rules 19 and 22  {"mouth":[-22.2,0.8,45.95],"out":[0.87,0,0.5],"toStairFoot":8.27,"angleOffStair":93,"toPad":18.22,"toGate":16.54}
+RESULT 8/8
+console errors: none
+## page-pipe-aprons.log
+PASS gulper A  {"mouth":[12.7,0.8,0],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.54,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.58,"lane":null,"headroom":null,"coverWithin":1.5,"padDist":63.72,"bad":[]}
+PASS gulper B  {"mouth":[-12.7,0.8,0],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.54,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.58,"lane":null,"headroom":null,"coverWithin":1.5,"padDist":63.72,"bad":[]}
+PASS arch A  {"mouth":[9.58,0.8,-26.31],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.47,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.25,"lane":null,"headroom":null,"coverWithin":2.75,"padDist":38.82,"bad":[]}
+PASS arch B  {"mouth":[-9.96,3.2,-26.17],"floorY":2.4,"way":"two","in":true,"out":true,"approachFloor":2.4,"navApproach":0.52,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.54,"lane":null,"headroom":null,"coverWithin":1.25,"padDist":49.4,"bad":[]}
+PASS arch~ A  {"mouth":[-9.58,0.8,26.31],"floorY":0,"way":"two","in":true,"out":true,"approachFloor":0,"navApproach":0.47,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.25,"lane":null,"headroom":null,"coverWithin":2.75,"padDist":38.82,"bad":[]}
+PASS arch~ B  {"mouth":[9.96,3.2,26.17],"floorY":2.4,"way":"two","in":true,"out":true,"approachFloor":2.4,"navApproach":0.52,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.54,"lane":null,"headroom":null,"coverWithin":1.25,"padDist":49.4,"bad":[]}
+PASS express A  {"mouth":[22.2,0.8,-45.95],"floorY":0,"way":"one","in":true,"out":false,"approachFloor":0,"navApproach":0.17,"apron":{"floor":[0,0],"block":null},"bad":[]}
+PASS express B  {"mouth":[-15.99,2,-34.8],"floorY":1.2,"way":"one","in":false,"out":true,"approachFloor":1.2,"navApproach":0.43,"landFloor":1.2,"drop":0,"navLanding":0.39,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":47.53,"bad":[]}
+PASS express~ A  {"mouth":[-22.2,0.8,45.95],"floorY":0,"way":"one","in":true,"out":false,"approachFloor":0,"navApproach":0.17,"apron":{"floor":[0,0],"block":null},"bad":[]}
+PASS express~ B  {"mouth":[15.99,2,34.8],"floorY":1.2,"way":"one","in":false,"out":true,"approachFloor":1.2,"navApproach":0.43,"landFloor":1.2,"drop":0,"navLanding":0.39,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":47.53,"bad":[]}
+PASS kelp A  {"mouth":[27.4,0.8,-4.6],"floorY":0,"way":"tidal","in":true,"out":true,"approachFloor":0,"navApproach":0.14,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.22,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":56.76,"bad":[]}
+PASS kelp B  {"mouth":[18.94,3.2,21.03],"floorY":2.4,"way":"tidal","in":true,"out":true,"approachFloor":2.4,"navApproach":0.31,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.43,"lane":null,"headroom":null,"coverWithin":2.75,"padDist":56.89,"bad":[]}
+PASS kelp~ A  {"mouth":[-27.4,0.8,4.6],"floorY":0,"way":"tidal","in":true,"out":true,"approachFloor":0,"navApproach":0.14,"apron":{"floor":[0,0],"block":null},"landFloor":0,"drop":0,"navLanding":0.22,"lane":null,"headroom":null,"coverWithin":2.25,"padDist":56.76,"bad":[]}
+PASS kelp~ B  {"mouth":[-18.94,3.2,-21.03],"floorY":2.4,"way":"tidal","in":true,"out":true,"approachFloor":2.4,"navApproach":0.31,"apron":{"floor":[2.4,2.4],"block":null},"landFloor":2.4,"drop":0,"navLanding":0.43,"lane":null,"headroom":null,"coverWithin":2.75,"padDist":56.89,"bad":[]}
+RESULT 14/14
+console errors: none
+## page-reach-probe.log
+PASS penguin glass: no way onto the cove  {"starts":33,"runs":1056,"leaks":[],"nLeaks":0}
+PASS plant room: not reachable from the Kelp Balcony  {"starts":20,"runs":640,"leaks":[],"nLeaks":0}
+PASS Feeding Deck: no way up from the viewing steps / the court beside the glass  {"starts":16,"runs":512,"leaks":[],"nLeaks":0}
+PASS spawn deck: the front drop is one-way (no way up from the plaza)  {"starts":18,"runs":576,"leaks":[],"nLeaks":0}
+PASS promenade: only the Penguin Steps join it to Penguin Point  {"starts":3,"runs":96,"leaks":[],"nLeaks":0}
+PASS roofs: the Reef Window, the pylons, the kiosks and stops stay off-limits  {"starts":19,"runs":608,"leaks":[],"nLeaks":0}
+RESULT 6/6
+console errors: none
+## page-size-budget.log
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1735}
+PASS paint atlas density  {"ppm":7.2,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4826,"cap":14478,"capNeeded":[6000,6000]}
+RESULT 3/3
+console errors: none
+## page-spawn-mid.log
+PASS spawn to mid  {"t0":{"m":76.3,"s":6.46,"straight":66.2},"t1":{"m":78.5,"s":6.65,"straight":66.2},"spawns":[[18,-63.7],[-18,63.7]],"mid":[0,0]}
+RESULT 1/1
+console errors: none
+
+### cover-stats.py (cover-map.js, Electron)
+floor cells 5240: 98.1% within 5 m of cover; outside the excluded areas 4162: 99.8%
+median distance to cover 1.5 m; within 3 m 92.9%
+open stretches (cells > 5 m from cover, outside the excluded areas): 4
+  open circle r 6.5 m (diameter 13.0) at (2.5, -44.5); 2 m² of floor > 5 m from cover round (3.0, -44.5); x 2.5..3.5 z -44.5..-44.5
+  open circle r 6.5 m (diameter 13.0) at (-2.5, 44.5); 2 m² of floor > 5 m from cover round (-3.0, 44.5); x -3.5..-2.5 z 44.5..44.5
+  open circle r 6.0 m (diameter 12.0) at (27.5, 10.5); 2 m² of floor > 5 m from cover round (27.0, 10.5); x 26.5..27.5 z 10.5..10.5
+  open circle r 6.0 m (diameter 12.0) at (-27.5, -10.5); 2 m² of floor > 5 m from cover round (-27.0, -10.5); x -27.5..-26.5 z -10.5..-10.5
+  deck top: 176 cells, 93.2% within 5 m, worst 8.1 m
+  spawn decks: 902 cells, 91.4% within 5 m, worst 12.3 m
+
+### cover-hop.py (cover-plus.js, Electron)
+== aquarium
+  all floor (cover-map.js): 5240 cells, 98.1% within 5 m of cover; 98 cells > 5 m in 26 patches; flat-and-bare 10 m disc 4 cells, 8 m disc 58 cells
+       5 cells, worst 12.3 m at (26.5, -56.5) y 4.5 [('deck-planter', 5)]
+       5 cells, worst 12.3 m at (-26.5, 56.5) y 4.5 [('deck-planter', 5)]
+       4 cells, worst 12.2 m at (7.5, -67.5) y 4.5 [('deck-planter', 4)]
+       4 cells, worst 12.2 m at (-7.5, 67.5) y 4.5 [('deck-planter', 4)]
+      10 cells, worst 10.3 m at (11.5, -64.5) y 4.48 [('skylight', 10)]
+      10 cells, worst 10.3 m at (-11.5, 64.5) y 4.48 [('skylight', 10)]
+       9 cells, worst 10.2 m at (21.5, -58.5) y 4.48 [('skylight', 9)]
+       9 cells, worst 10.2 m at (-21.5, 58.5) y 4.48 [('skylight', 9)]
+  without hop-up tops: 5076 cells, 99.6% within 5 m of cover; 22 cells > 5 m in 6 patches; flat-and-bare 10 m disc 4 cells, 8 m disc 58 cells
+       2 cells, worst 6.2 m at (6.5, -75.5) y 3.7 [('deck-coping', 2)]
+       2 cells, worst 6.2 m at (-6.5, 75.5) y 3.7 [('deck-coping', 2)]
+       7 cells, worst 6 m at (33.5, -60.5) y 3.6 [('deck-coping', 4), ('spawn-deck', 3)]
+       7 cells, worst 6 m at (-33.5, 60.5) y 3.6 [('deck-coping', 4), ('spawn-deck', 3)]
+       2 cells, worst 5.6 m at (10.5, -74.5) y 3.6 [('deck-coping', 1), ('spawn-deck', 1)]
+       2 cells, worst 5.6 m at (-10.5, 74.5) y 3.6 [('spawn-deck', 1), ('deck-coping', 1)]
+  hop-up tops left out: 164 cells: skylight 38, helmet-bed 20, deck-planter 18, lookout 18, hatch 8, trolley-stack 6, planter 6, ticket-machines 6, trolleys 4, trolley 4, ice-pile 4, turnstile 4, coat-pegs 4, basking-rock 4, window-kerb 4, deckchairs 4, hopper 4, queue-terrace 2, luggage-scale 2, pole-rack 2, kelp-parapet 2
+
+### tower-check
+== aquarium tower track · heading 0° · length 155 / 155 m (Alpha's / Bravo's side) · speed 1.94 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 30 pieces · 24 runs, 0 inclines, 2 climbs, 4 drops · 155 m
+     DROP     s=  8.71  [0,2.4,8.71] → [0,1.2,8.71]  -1.2 m
+     DROP     s= 12.21  [0,1.2,11.01] → [0,0,11.01]  -1.2 m
+     CLIMB    s= 83.99  [-6,0,47.21] → [-6,1.2,47.21]  1.2 m  onto [{"id":1289,"tag":"ticket-hall","centre":[-6,0.6,42.5],"size":[8,1.2,7]}]
+     DROP     s= 94.61  [-6,1.2,37.79] → [-6,0,37.79]  -1.2 m
+     CLIMB    s=109.64  [7.04,0,37] → [7.04,1.2,37]  1.2 m  onto [{"id":1346,"tag":"penguin-rocks","centre":[10.29,-0.4,42.48],"size":[7.8,3.2,13]}]
+     DROP     s=126.44  [3.86,1.2,42.5] → [3.86,0,42.5]  -1.2 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 30 pieces · 24 runs, 0 inclines, 2 climbs, 4 drops · 155 m
+   checkpoints [{"team":0,"index":0,"d":67.2,"dur":10,"at":[-14,0,44]},{"team":0,"index":1,"d":92.4,"dur":10,"at":[-6,1.2,40]},{"team":1,"index":0,"d":67.2,"dur":10,"at":[14,0,-44]},{"team":1,"index":1,"d":92.4,"dur":10,"at":[6,1.2,-40]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 155 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -155 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   console errors: none
+RESULT_JSON {"map":"aquarium","len":[155,155],"holes":0,"issues":0,"climbs":2,"drops":4,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+### perf (shoot.cjs REPORT at load, day; alternating Halyard / aquarium on this Mac; the REPORT samples the follow camera 3 s in)
+### perf halyard1
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":7775,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":156,"tris":1459622,"cpuRenderMs":2.69,"cpuSimMs":2.02},"coverage":[3.3,3.2]}
+CONSOLE 0 unique warning/error line(s)
+### perf aquarium1
+REPORT {"map":"aquarium","mode":"turf","time":"day","loadMs":6534,"blocks":1762,"solidBlocks":1762,"propMeshes":2,"navNodes":4826,"bounds":{"minX":-36,"maxX":36,"minZ":-78,"maxZ":78},"perf":{"calls":120,"tris":364062,"cpuRenderMs":2.03,"cpuSimMs":1.9},"coverage":[2,1.1]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+### perf halyard2
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":7603,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":102,"tris":949781,"cpuRenderMs":2.15,"cpuSimMs":1.61},"coverage":[3.8,3]}
+CONSOLE 0 unique warning/error line(s)
+### perf aquarium2
+REPORT {"map":"aquarium","mode":"turf","time":"day","loadMs":6195,"blocks":1762,"solidBlocks":1762,"propMeshes":2,"navNodes":4826,"bounds":{"minX":-36,"maxX":36,"minZ":-78,"maxZ":78},"perf":{"calls":126,"tris":360240,"cpuRenderMs":1.78,"cpuSimMs":1.66},"coverage":[2,1.9]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for aquarium Unexpected token 'N', "Not found" is not valid JSON
+
+### pictures (tools/botlab/jobs/batch5/stages/aquarium/out/blockout/, all re-taken at 8c11252 unless named new)
+tops: top-tide-up, top-tide-down, tide-up-vs-down, top-zones, top-tower-rail · tower: tower-checkpoint1-pumphall,
+tower-checkpoint2-tickethall, tower-pumphall-corner (new) · player height: mid-1-south-band, mid-2-reef-hall,
+mid-3-lookout, mid-4-on-the-deck, shark-arch-hall, spawn-play-camera, spawn-play-camera-rider (new: a rider in the Express,
+its spine and strut blocked in) · outside: aerial-alpha, aerial-bravo, side-west, side-east · ink: ink-after-20s-top,
+ink-after-20s-aerialA · sheets: cover-map-vs-halyard, shape-sheet, plan-check-maps · new for this round: wstair-top-eye,
+estair-top-eye, wstair-mid-eye, estair-mid-eye (each pavilion stair from its top and halfway down, player height),
+wstair-above, estair-above, wing-above, kelpramp, kelpramp-court, service-gate, pumphall-corner, express-plaza,
+express-gateterrace, express-aerial
