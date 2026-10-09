@@ -276,10 +276,13 @@ function spotRule(a, s, x, z, air) {
 }
 // where actor a's sentry would go now (0.9 m ahead along its aim, else at its feet) → _spot { ok, why, point, … }; cached
 // for the frame (blocked() then use() on the release ask twice)
+// (a bot that chose its spot a moment ago — botGo — sets it down the way it chose: b._sentryAim)
+const aimOf = (a) => { const A = a.bot?._sentryAim; return A && G.time - A.t < 0.5 ? A.yaw : a.aimYaw ?? a.yaw; };
 function findSpot(a, s = a.sub && a.sub.kind === KIND ? a.sub : SUBS.sentry) {
-  if (_spot.a === a && _spot.t === G.time && _spot.yaw === a.aimYaw) return _spot;
-  _spot.a = a; _spot.t = G.time; _spot.yaw = a.aimYaw; _spot.ok = false; _spot.why = '';
-  const yaw = a.aimYaw ?? a.yaw, air = !a.grounded;
+  const yaw = aimOf(a);
+  if (_spot.a === a && _spot.t === G.time && _spot.yaw === yaw) return _spot;
+  _spot.a = a; _spot.t = G.time; _spot.yaw = yaw; _spot.ok = false; _spot.why = '';
+  const air = !a.grounded;
   let worst = '';
   for (const ahead of [0.9, 0]) {
     const why = spotRule(a, s, a.pos.x + Math.sin(yaw) * ahead, a.pos.z + Math.cos(yaw) * ahead, air);
@@ -326,7 +329,8 @@ function use(subs, a, sub) {
   }
   // one each: the older one folds up and pops harmlessly
   for (const o of items) if (o.owner === a && !o.ghost && live(o)) end(o, 'replaced', null);
-  const yaw = a.aimYaw ?? a.yaw, p = S.point, n = S.normal;
+  const yaw = aimOf(a), p = S.point, n = S.normal;
+  if (a.bot) a.bot._sentryAim = null;
   const it = spawn(a, sub, p, yaw, false, netId(a), S.block);
   netRec(a, KIND, [0, it.gid, r2(p.x), r2(p.y), r2(p.z), r2(n.x), r2(n.y), r2(n.z), r2(yaw)]);
   G.cues?.sub(KIND, 'throw', { owner: a, at: p, range: 30 });   // sfx-cues: the tin clatter (cues.js SUB_CUE.sentry)
@@ -536,6 +540,9 @@ function dropTarget(it, swap = false) {
 const _sol = new V3();
 function watch(it, dt) {
   const s = it.sub;
+  // (the lock runs while its target is in sight: counted before this frame's look, so a lock started now is 0 at the end of
+  // this frame and takes exactly s.lock from the frame it began)
+  if (it.target && it.vis) it.lockT += dt;
   // its looks: every LOOK_EVERY s from its own phase; a deferred look tries again next frame
   it.lookT -= dt;
   if (it.lookT <= 0) {
@@ -555,8 +562,7 @@ function watch(it, dt) {
   const tgt = it.target, inSight = !!tgt && it.vis;
   it.shotT -= dt;
   if (tgt) {
-    if (inSight) it.lockT += dt;
-    if (!it.locked && it.lockT >= s.lock - 1e-6) { it.locked = true; it.shotT = 0; }
+    if (!it.locked && inSight && it.lockT >= s.lock - 1e-6) { it.locked = true; it.shotT = 0; }
     // aim: the current chest, the drop solved (the Squall Spinner's solver), no lead
     const mz = muzzleOf(it, _m), cy = tgt.bossT ? tgt.pos.y + 0.7 : chestY(tgt);
     _v3.set(tgt.pos.x, cy, tgt.pos.z);
@@ -910,20 +916,28 @@ function threatOf(it) {
 }
 const mateSentryNear = (a, r) => items.some((o) => live(o) && o.team === a.team && o.owner !== a && Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z) < r);
 // a bot sets one down: the spot must be good (no "Can't use" from a bot), no teammate's within 6 m, then a long cooldown
-function botGo(b) {
+// yaws: the ways it may set it down (the first good one wins; the release follows it: b._sentryAim)
+function botGo(b, yaws = null) {
   const a = b.a;
-  if (mateSentryNear(a, 6) || !findSpot(a, a.sub).ok) return false;
+  if (mateSentryNear(a, 6)) return false;
+  let ok = false;
+  for (const yaw of yaws || [a.aimYaw]) {
+    b._sentryAim = { yaw, t: G.time };
+    if (findSpot(a, a.sub).ok) { ok = true; break; }
+  }
+  if (!ok) { b._sentryAim = null; return false; }
   b.bombCd = 10 + Math.random() * 4;
   SENTRY_STATS.botUses++;
   return true;
 }
+const around = (y0, n = 8) => Array.from({ length: n }, (_, k) => y0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (TAU / n));
 const BOT = {
   rides: true,   // (set down on the moving tower's deck too: it rides it — bots.js _paintSub's !onT exception)
   // a known foe 6–14 m off, not hit in the last 1 s: 2.5 % a frame — down 0.9 m ahead toward the fight
   fight(b, dist) {
     const a = b.a;
     if (dist < 6 || dist > 14 || a.lastDamage < 1 || Math.random() > 0.025) return false;
-    return botGo(b);
+    return botGo(b, [a.aimYaw, a.aimYaw + 0.6, a.aimYaw - 0.6]);   // (toward the fight)
   },
   paint(b) {
     const a = b.a, m = G.match;
@@ -937,14 +951,15 @@ const BOT = {
       if (Math.abs(dz - (z.reach || 5)) > 6) return false;
       const ep = enemyPad(a.team), fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
       if ((ep.x - a.pos.x) * fx + (ep.z - a.pos.z) * fz <= 0) return false;
-      return botGo(b);
+      const ey = Math.atan2(ep.x - a.pos.x, ep.z - a.pos.z);
+      return botGo(b, [a.aimYaw, ey, ey + 0.5, ey - 0.5]);   // (facing their side)
     }
     // Tower Command: a rider on the deck, no teammate's sentry on it already
     if (m.tower) {
       const T = m.tower;
       if (b.tRole !== 'ride' || !T.riderList?.includes(a) || Math.random() > 0.02) return false;
       if (items.some((o) => live(o) && o.team === a.team && o.rb.on && o.rb.on.b === T.block)) return false;
-      return botGo(b);
+      return botGo(b, around(Math.atan2(a.pos.x - T.pos.x, a.pos.z - T.pos.z)));   // (out from the pillar: its deck's ring)
     }
     // Turf War: near the front line (0.4–0.7 of the way to their pad, as _paintSub measures it)
     if (Math.random() > 0.004) return false;
