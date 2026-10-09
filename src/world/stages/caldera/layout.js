@@ -329,10 +329,11 @@ export { RAILS };
 export const WALL_BOXES = EDGE_WALLS.filter((x) => !x.e.cliff).flatMap((x) => x.w.blocks).map((b) => [b.center[0], b.center[1], b.center[2], b.size[0], b.size[1], b.size[2], b.rotY]);
 
 // ============================================================================================================ modes
-// Zone Control: the Pour Floor (centre, 94 m² net of the piers) and the Pumice Moorings (Alpha's side; Bravo's turned)
+// Zone Control: the Pour Floor (centre, 94 m² net of the piers) and the Pumice Moorings (Alpha's side, 95 m², 36 m from its pad
+// and 31 m from the centre; Bravo's turned)
 const ZONES = {
   center: [{ poly: [[-5, -5], [5, -5], [5, 5], [-5, 5]], y0: 1.7, y1: 2.0 }],
-  side: { poly: G.MOORINGS.filter((p, i, A) => i === 0 || i === A.length - 1 || i % 2 === 0).map(([x, z]) => [G.r3(x), G.r3(z)]), y0: 1.7, y1: 2.0 },
+  side: { poly: G.MOORINGS.map(([x, z]) => [G.r3(x), G.r3(z)]), y0: 1.7, y1: 2.0 },          // the whole Moorings top (95 m²)
 };
 // Tower Command: "the tower rides the ladle rail" (Alpha's attack, drawn on Bravo's half): down Bravo's causeway, west
 // along its Lakefront (a 0.6 step onto the Moorings, square to the run), up the terrace face off the Moorings, east along
