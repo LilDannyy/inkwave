@@ -719,6 +719,9 @@ listed here, Alpha's half (Bravo's is the twin). Everything else is as designed.
   - 3.5 m wide (apothem 11.1 … 14.6), with glass rails on both edges and three planters per half (157.5°, 202.5°, and 233° by the hotel stair's head).
   - Gaps in the rails: the superstop stair's landing, the 2 m inner drop gaps at 135° and 225°, and the outer edge at the
     west corner, where the hotel stair's landing joins (z −4.4 … −6.05).
+  - The 90°, 180° and 270° sides are 0.3 m thick (underside 5.1; the diagonal sides 0.4). In Tower Command the tower
+    leaves the concourse (1.3) under the 90° / 270° sides' inner edge, and it climbs anything less than 3.72 m over its
+    base: at 5.0 it rode up onto the Halo.
 - **The hotel stair (era 3): the Halo's third way up.**
   - A 2.5 m glass flight at x −16.5 … −14. It runs from the balcony landing's west edge (z −15, 2.4) north to z −8.4
     (5.2), at 23°, then a top landing on to z −4.5, which overlaps the Halo's 270° side 0.2 m under it.
