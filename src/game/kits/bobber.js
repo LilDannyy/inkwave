@@ -638,11 +638,7 @@ function blowLevel(g, k) {
       let area = 0;
       const f = G.physics.raycast(_v2.copy(c), DOWN, 3.2, _hit);
       const pc = f.hit ? _v2.copy(f.point).setY(f.point.y + 0.2) : _v2.copy(c);
-      area += G.paint.splat(pc, g.paint, g.team, { seed: Math.random() });
-      for (let i = 0; i < 3; i++) {
-        const ang = Math.random() * Math.PI * 2, r = g.paint * (0.55 + Math.random() * 0.4);
-        area += G.paint.splat(_v3.set(pc.x + Math.cos(ang) * r, pc.y + 0.3, pc.z + Math.sin(ang) * r), 0.45 + Math.random() * 0.35, g.team, { seed: Math.random() });
-      }
+      area += G.paint.splat(pc, g.paint, g.team, { seed: Math.random() });   // (one splat a bobber, C4.1: a big chain paints a lot already)
       if (b.sp) a.addTurfNoSpecial?.(area); else a.addTurf?.(area);
       G.subs?.damageArea(c, g.R, g.dev, g.team, a);
       if (G.boss) G.boss.splash(a, c, g.R, g.dmax, g.dmin, KIND, { body: b === g.boss });

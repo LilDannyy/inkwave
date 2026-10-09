@@ -343,7 +343,7 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 | `G.match.stage?.sweeps(out)` | R `sweeps(out)` | [] (Bazookarp rest flags: the boxes a module's moving pieces cover over their whole travel) |
 | `G.match.stage?.restMask(state)` | R `restMask` | null (Bazookarp: `Uint8Array` over nav nodes, 1 = standable in that state) |
 | `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots) |
-| `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | **0 until the subs package adds `G.deploy.crushIn`**: wave 1's `deployables.js` (merged in b5-int2) has the tower's `crush(T)` only (the user's list; a Lurk Mine is pushed aside, not crushed). The page test proves the forwarding with a stand-in |
+| `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | [b5-subs] `G.deploy.crushIn` exists now (the Chain Bobber's branch): `{ blocks, rider }` (the tower: the user's list, every kit device; a Lurk Mine or floor Cling Charge still pushed aside), `{ sphere: { c, r } }`, `{ where: (pos) => bool }` (those two also take mines and stuck charges) → how many it destroyed, one `'device:down'` { how } each. The page test proves the forwarding with a stand-in |
 | `G.match.stage?.state()` | R `state` | `{ t, keys }` (tests) |
 
 ### Tools

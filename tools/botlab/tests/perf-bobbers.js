@@ -51,18 +51,22 @@
   const put = (a, p) => { a.pos.copy(p); a.pos.y += 0.02; a.vel.set(0, 0, 0); };
   const camAt = () => { g.rig.follow(me, true); g.rig.yaw = 0; g.rig.pitch = -0.32; };
   const lay = () => {
-    // a grid of spots 3 m apart in rows 4.5 m apart; runs of 4 / 3 along a row, owners round-robin (no two runs of one
-    // owner within 5 m: each run its own chain); the first row's runs are three 8-chains (owners 0, 1, 2)
-    const owners = A.slice(0, 8), count = new Map(owners.map((a) => [a, 0])), sizes = [4, 4, 3, 3, 3];
+    // three 8-chains in the first three rows (owners 0, 1, 2: one a row, 3 m apart), then rows 4.6 m apart of runs of
+    // 4 / 4 / 3 / 3 (3 m apart in a run, 3.4 m between runs), owners round-robin — no two runs of one owner within 5 m,
+    // so each run is its own chain — until every owner has 24
+    const owners = A.slice(0, 8), count = new Map(owners.map((a) => [a, 0])), sizes = [4, 4, 3, 3];
+    const add = (o, x, z) => { K.throwFrom(o, V(x, 0.6, z), V(0, -3, 0)); count.set(o, count.get(o) + 1); };
+    for (let k = 0; k < 3; k++) for (let i = 0; i < 8; i++) add(owners[k], -25 + i * 3, -36 + k * 4.6);
     let run = 0;
-    for (let row = 0; row < 14; row++) {
-      const z = -34 + row * 5.2;
-      if (row === 0) { for (let k = 0; k < 3; k++) { const o = owners[k]; for (let i = 0; i < 8; i++) { K.throwFrom(o, V(-25 + k * 1.0 + i * 3, 0.6, z + k * 1.6), V(0, -3, 0)); count.set(o, count.get(o) + 1); } } continue; }
-      let x = -24;
+    for (let row = 3; row < 17; row++) {
+      const z = -36 + row * 4.6;
+      if (z > 38) break;
+      let x = -25.5;
       for (let r = 0; r < sizes.length; r++, run++) {
-        const n = sizes[r], o = owners[run % 8];
-        for (let i = 0; i < n; i++, x += 3) if (count.get(o) < 24 && x <= 25) { K.throwFrom(o, V(x, 0.6, z), V(0, -3, 0)); count.set(o, count.get(o) + 1); }
-        x += 3;
+        let o = owners[run % 8];
+        for (let tries = 0; tries < 8 && count.get(o) >= 24; tries++) o = owners[(run + 1 + tries) % 8] === o ? o : owners[(run + 1 + tries) % 8];
+        for (let i = 0; i < sizes[r]; i++, x += 3) if (count.get(o) < 24 && x <= 26) add(o, x, z);
+        x += 0.4;
       }
     }
     return count;
@@ -98,16 +102,16 @@
     run(120);
     let d0 = sight();
     const F4a = run(N4), s4a = stats(F4a), defA = (sight() - d0) / (N4 * DT);
-    // (with): every 0.25 s each bot short of 24 gets one more near it, on the deck
+    // (with): every 0.1 s each bot short of 24 gets up to three more round it, on the deck (they're shot and set off as fast)
     let topT = 0, discs = [];
     hook = () => {
-      if ((topT -= DT) > 0) return; topT = 0.25;
+      if ((topT -= DT) > 0) return; topT = 0.1;
       for (const a of A) {
-        if (!a.alive) continue;
-        const n = K.items.filter((x) => x.owner === a && x.state !== 'dead').length;
-        if (n >= 24) continue;
-        const ang = Math.random() * Math.PI * 2, d = 3 + Math.random() * 6, x = Math.max(-26, Math.min(26, a.pos.x + Math.cos(ang) * d)), z = Math.max(-38, Math.min(38, a.pos.z + Math.sin(ang) * d));
-        K.throwFrom(a, V(x, 0.6, z), V(0, -3, 0));
+        let n = K.items.filter((x) => x.owner === a && x.state !== 'dead').length;
+        for (let k = 0; k < 3 && n < 24; k++, n++) {
+          const ang = Math.random() * Math.PI * 2, d = 3 + Math.random() * 9, x = Math.max(-26, Math.min(26, a.pos.x + Math.cos(ang) * d)), z = Math.max(-38, Math.min(38, a.pos.z + Math.sin(ang) * d));
+          K.throwFrom(a, V(x, 0.6, z), V(0, -3, 0));
+        }
       }
     };
     // (filled up before the measured run)

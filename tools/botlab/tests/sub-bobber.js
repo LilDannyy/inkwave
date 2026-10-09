@@ -387,6 +387,12 @@
         R('disarm: a ghost\'s shot or blast replayed here (netMuted) does nothing to a real bobber — the enemy\'s doesn\'t wear it down, a teammate\'s doesn\'t set it off (absorbed all the same: the shooter\'s screen judged it)',
           ab1 && ab2 && r.state === 'live' && r.hp === B.hp && r2b.state === 'live' && ev('bomb:explode').length === 0 && !sent.some((x) => x.dev), { r: [r.state, r.hp], r2: r2b.state });
       } finally { netOff(); }
+      // standing fire: the enemy Ink Tempest's rain wears one down (34 a second: gone in under a second)
+      reset();
+      { const rb = drop(me, 0, 2); settle(); const t0 = G.time; let tD = null;
+        P._spawnCloud({ pos: V(0, 0.5, 2), team: foe.team, owner: foe, dir: V(1, 0, 0) });
+        step(2.0, () => { if (tD == null && rb.state !== 'live') tD = G.time; });
+        R('disarm: an enemy Ink Tempest\'s rain (standing fire, judged on the owner\'s screen) wears a bobber down and disarms it — no blast', tD != null && tD - t0 < 1.4 && rb.state === 'dead' && ev('bomb:explode').length === 0 && ev('device:down')[0]?.e.how === 'shot', { t: tD != null ? r2(tD - t0) : null, state: rb.state }); }
       // a charger beam stops on one
       reset();
       { const bb = drop(me, 0, 2); settle(); put(foe, V(0, 0, 8), Math.PI); step(2 / 60);

@@ -249,11 +249,12 @@ function scan(b) {
     if (!foeIn) continue;
     // a bobber of it in our reach with a line: the nearest first (rays from the shared budget)
     const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez) })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => x.d - y.d);
-    for (const c of cand.slice(0, 3)) {
-      if (c.d >= bd) break;
+    // (one sight line a chain a scan: its nearest bobber in reach; the next one gets its turn on a later scan)
+    const c = cand[(b._bobRot = ((b._bobRot || 0) + 1)) % Math.min(2, cand.length || 1)] || cand[0];
+    if (c && c.d < bd) {
       const r = sightRay(_v.set(ex, ey, ez), c.o.spot);
-      if (r === null) { BOBBER_BOT.deferred++; b._bobScanT = 0; return null; }   // (this frame's rays are spent: next frame)
-      if (r) { best = c.o; bd = c.d; break; }
+      if (r === null) { BOBBER_BOT.deferred++; b._bobScanT = 0; return null; }   // (its share of this frame's rays is spent: next frame)
+      if (r) { best = c.o; bd = c.d; }
     }
   }
   if (!best) return null;
@@ -267,26 +268,24 @@ function armedFor(ch, team) {
   // team: the bots facing it (the other team); armed when they know a foe of the chain's team (in sight, or seen within
   // 1.5 s) within armRange of one of its bobbers with a line to it (re-checked every 0.25 s; a spent ray budget keeps the
   // last answer)
+  // (one sight line a check at most — the nearest known foe to its nearest bobber; none when no foe is known near it)
   let s = armT.get(ch);
   if (!s) { s = { t: -9 + Math.random() * 0.25, armed: false }; armT.set(ch, s); }
   if (G.time - s.t < 0.25) return s.armed;
   s.t = G.time;
   const S = SB(), chainTeam = 1 - team;
-  let armed = false, spent = false;
+  let best = null, bo = null, bd = Infinity;
   for (const e of G.actors) {
     if (e.team !== chainTeam || !e.alive) continue;
     const k = teamKnown(team, e, 1.5);
     if (!k) continue;
-    let nearest = null, nd = Infinity;
-    for (const o of ch.items) { if (o.state !== 'live') continue; const d = o.spot.distanceTo(k.pos); if (d < nd) { nd = d; nearest = o; } }
-    if (!nearest || nd > S.armRange) continue;
-    const r = sightRay(_v.set(k.pos.x, k.pos.y + 1.3, k.pos.z), nearest.spot);
-    if (r === null) { spent = true; continue; }
-    if (r) { armed = true; break; }
+    for (const o of ch.items) { if (o.state !== 'live') continue; const d = o.spot.distanceTo(k.pos); if (d < bd) { bd = d; bo = o; best = k; } }
   }
-  if (spent && !armed) { s.t -= 0.2; return s.armed; }   // (try again next frame)
-  s.armed = armed;
-  return armed;
+  if (!best || bd > S.armRange) { s.armed = false; return false; }
+  const r = sightRay(_v.set(best.pos.x, best.pos.y + 1.3, best.pos.z), bo.spot);
+  if (r === null) { s.t -= 0.2; return s.armed; }   // (its share of this frame's rays is spent: again next frame)
+  s.armed = r;
+  return r;
 }
 export function botDangers(api) {
   if (!items.length) return;

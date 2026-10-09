@@ -43,6 +43,7 @@ export const SIGHT = {
   lookEvery: 0.3,      // s between looks round a remembered spot
   recheck: 0.1,        // s: the target in sight is re-checked this often between full looks (it ducks out of view)
   frameRays: 24,       // sight lines per frame for all bots together
+  kitRays: 6,          // [b5-subs] … of which the kit subs' bot code (sightRay) may take at most this many a frame
 };
 // what the bots' eyes cost and did (a match's totals; tests / botlab read and reset it)
 export const SIGHT_STATS = { checks: 0, rays: 0, deferred: 0, seen: 0, lost: 0, cleared: 0, expired: 0, located: 0, jumps: 0, hits: 0, sprays: 0, memBombs: 0, hunts: 0 };
@@ -269,12 +270,16 @@ export class Sight {
 
 // What team t knows about foe e: a teammate bot seeing it (freshest first), a located one, or the freshest memory no
 // older than maxAge s. Returns that Known (pos / vel / seen / t) or null. No sight lines: it's the bots' own checks.
-// [b5-subs] one sight line a to b from the same per-frame budget as Sight.check (SIGHT.frameRays for every bot together):
-// true / false, or null when this frame's rays are spent (try again next frame) — the kit subs' bot code
+// [b5-subs] one sight line a to b from the same per-frame budget as Sight.check (SIGHT.frameRays for every bot together),
+// the kit subs' bot code taking at most SIGHT.kitRays of it a frame (so the bots' own looks are never starved): true /
+// false, or null when its share is spent (try again next frame; counted apart: SIGHT_STATS.kitDeferred)
+let _kitRays = 0, _kitT = -1;
 export function sightRay(a, b) {
   const now = G.time;
   if (_frameT !== now) { _frameT = now; _frameRays = 0; }
-  if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return null; }
+  if (_kitT !== now) { _kitT = now; _kitRays = 0; }
+  if (_frameRays >= SIGHT.frameRays || _kitRays >= SIGHT.kitRays) { SIGHT_STATS.kitDeferred = (SIGHT_STATS.kitDeferred || 0) + 1; return null; }
+  _kitRays++; SIGHT_STATS.kitRays = (SIGHT_STATS.kitRays || 0) + 1;
   return ray(a, b);
 }
 export function teamKnown(t, e, maxAge = SIGHT.keep) {

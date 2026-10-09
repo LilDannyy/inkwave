@@ -169,6 +169,16 @@ end — SUBS, SUB_ORDER, SUB_VIEW_SCALE, placeholder models and icons, stub kits
 for every SUB_ORDER id; each stub in hand, refused; bots on stubs) and, online, `CLIENTS=2 Q0=autopilot Q1=autopilot
 NET=tools/botlab/tests/net-subscaf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (stub ids through the lobby into a match).
 
+The Chain Bobber (`[b5-subs]`, src/game/kits/bobber*.js; SPEC §C): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-bobber.js
+tools/botlab/run.sh tools/botlab/page.cjs` (C10: deploy heights over floors, walls, ceilings, the sea, a stand-in shell and
+rising lava; tethers; the trigger and its hops; the damage table to N = 8; disarming; life and the hidden guard; movers,
+crushIn, era flips; Drainbow, Bubble Guard, the Stamp; the net records; the teammate cue; bots; the drawing, HUD and aim
+guide — `PAGE_ARGS='only=deploy,tether,…'`), and its mode runs: `MODE=tower … PAGE_ARGS='only=tower'`, `MAP=podbox …
+'only=pod'`, `MAP=halyard MODE=zones … 'only=zone'`, `MAP=podbox MODE=boss … 'only=boss'`. Online: `CLIENTS=2
+Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-bobber.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`. Its budget
+(192 live, three 8-chains, a live 4 v 4 with 24 a bot): `MAP=testbox PAGE=tools/botlab/tests/perf-bobbers.js …page.cjs`.
+`match.cjs` prints a BOBBER line when any were thrown (`SUBS='all=bobber'`).
+
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
 no ink refill for 0.33 s after a shot — src/game/kits/bow.js, config WEAPONS.bow, actor.js; the bots' level lane shots):
