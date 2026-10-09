@@ -22,10 +22,13 @@
 //  7 fizzle: splatted while cooking — a fizzle, no ink, [5, 0]; a runner reset() mid-cook the same within 0.15 s + 1
 //    frame, no stone; diving while cooking the same
 //  8 guide: its end ring within 0.3 m of where the real stone stops, 6 throws with 0–2 bounces; grey without the ink
-//  9 bots: a fighting bot throws at a foe 10 m off, its stop within 2 m of the foe's (led) spot; a bot in a predicted
-//    stop disc is clear of R at the blast (or popped it) with no damage
-// 11 stubs: a stand-in lava (surface 0.5 m over x > 10): it sinks there, no blast; a stand-in Roe Shell (r 1.6): it
-//    bounces off it like a wall (39° ± 3°) and its blast calls the shell's splash once with 180 / 35 and the cook's R
+//  9 bots: a fighting bot throws at a foe 10 m off, its stop within 2 m of the foe's (led) spot; a foe by the deck's edge
+//    running at it: the led slide would leave the deck — the bot throws at where they stand (or holds off), no stone sinks
+//    or blows over the sea; a bot in a predicted stop disc is clear of R at the blast (or popped it) with no damage
+// 11 stubs: a stand-in lava (surface 0.5 m over x > 10): it sinks there, no blast; caldera's case (G.level.liquidY and
+//    G.match.lava over the same half): one hiss, no water plop; a module liquid alone: a plop, no hiss; a stand-in Roe
+//    Shell (r 1.6): it bounces off it like a wall (39° ± 3°) and its blast calls the shell's splash once with 180 / 35 and
+//    the cook's R
 // 12 lock: the Spritzer fires no shot from held 0.15 s + 1 frame on; a charger's charge in progress is dropped with no
 //    shot and the stone keeps cooking; a tap never interrupts the fire; a barrage's stone never cooks (R 2.2) and never
 //    stops the main weapon
@@ -460,6 +463,27 @@
       }
       B.setSub(B.subId); delete B.bot._glide;
       R('a fighting bot throws one at a foe 10 m off, cooked so it stops within 2 m of them (3 rounds, ≥ 2)', ok >= 2, rows);
+      // a foe 2.5 m from the deck's edge (x 28, the sea past it) running at it on a slant (3, 3 m/s, held in place): the
+      // led slide passes beside the foe (3 m off) and over the edge, into the sea or blowing in the air over it. The bot's
+      // plan and its release check the slide (the guide's prediction): it throws at where the foe stands instead (or not at
+      // all) — never off the deck (4 rounds: ≥ 2 thrown, none sunk or ended over the sea)
+      const rowsE = []; let thrownE = 0, sunkE = 0;
+      for (let round = 0; round < 4; round++) {
+        reset();
+        const zE = 12 + round - 1.5;   // (north of the testbox wall's end, z 8: open deck between them)
+        put(T, V(25.5, 0, zE), -Math.PI / 2); put(B, V(15.5, 0, zE), Math.PI / 2);
+        B.setSub('glide'); B.ink = 100;
+        delete B.bot.update; B.bot.bombCd = 0;
+        const g0 = { ...GLIDE_STATS };
+        let it = null;
+        step(8, () => { B.ink = Math.max(B.ink, 80); T.pos.set(25.5, 0.02, zE); T.vel.set(3, 0, 3); if (!it) it = K.items.find((x) => x.owner === B && x.state !== 'dead') || null; return !it; });
+        stub(B);
+        let offDeck = false;
+        if (it) { thrownE++; until(() => it.state === 'dead', 4); offDeck = /^sunk/.test(it.why || '') || L.groundHeight(it.p.x, it.p.z, it.p.y + 0.1) === -Infinity; if (offDeck) sunkE++; }
+        rowsE.push({ thrown: !!it, why: it && it.why, offDeck, cook: it && r2(it.cook), stop: it && [r2(it.p.x), r2(it.p.y), r2(it.p.z)], retarget: GLIDE_STATS.botRetarget - g0.botRetarget, refused: GLIDE_STATS.botNoSink - g0.botNoSink, relAlt: GLIDE_STATS.botRelAlt - g0.botRelAlt, cancel: GLIDE_STATS.botCancel - g0.botCancel, B: [r2(B.pos.x), r2(B.pos.z)] });
+      }
+      B.setSub(B.subId); delete B.bot._glide;
+      R('a fighting bot\'s foe by the deck\'s edge, running at it on a slant: the led slide would leave the deck — the bot throws at where the foe stands instead (or holds off); no stone sinks or blows over the sea (4 rounds: ≥ 2 thrown, 0 off the deck)', thrownE >= 2 && sunkE === 0, { thrown: thrownE, offDeck: sunkE, rows: rowsE });
       // a bot in a predicted stop disc: out of it before the blast (botSpecials' escape: hard, its awareness on), or it
       // shoots the stone (bots.js threats). The thrower goes behind the wall at once (no fight to distract it). A round
       // counts when the bot stands in the blast; a good one (SPEC A10.9): it took no damage from it, and it was clear of

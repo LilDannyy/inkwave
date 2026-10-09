@@ -67,7 +67,10 @@ const _devs = [], _kd = [], _sph = [];
 const S = () => SUBS.glide;
 
 // counters (tests / match.cjs)
-export const GLIDE_STATS = { uses: 0, cookSum: 0, cooked: 0, slips: 0, fizzles: 0, blasts: 0, popped: 0, sunk: 0, smashed: 0, bounces: 0, kidBounces: 0, hits: 0, dmg: 0, botFight: 0, botPaint: 0, botBoss: 0, bossNo: 0, bossHits: 0, bossDmg: 0 };
+export const GLIDE_STATS = { uses: 0, cookSum: 0, cooked: 0, slips: 0, fizzles: 0, blasts: 0, popped: 0, sunk: 0, smashed: 0, bounces: 0, kidBounces: 0, hits: 0, dmg: 0, botFight: 0, botPaint: 0, botBoss: 0, bossNo: 0, bossHits: 0, bossDmg: 0,
+  // the bots' sink checks: a fight plan that fell back to the foe's own spot (its led slide sank) / refused (both sank); a
+  // release that took its fallback yaw / didn't throw (every yaw sank); stones sunk by who threw them
+  botRetarget: 0, botNoSink: 0, botRelAlt: 0, botCancel: 0, sunk_fight: 0, sunk_paint: 0, sunk_boss: 0, sunk_human: 0, sunk_other: 0 };
 export function resetGlideStats() { for (const k in GLIDE_STATS) GLIDE_STATS[k] = 0; }
 
 // ================================================================================================= the numbers
@@ -275,7 +278,7 @@ export function gatherBumpers() {
 // where a slide from p (velocity v, in the air or not) for f s ends, ignoring kids: the guide, the bots' prediction.
 // pts (optional): the floor points along it, cut after `maxBounces` bounces (pooled objects, reused run to run: read
 // them before the next run). Returns { x, y, z, bounces, sunk }
-const _sim = { p: new V3(), v: new V3(), air: false, t: 0 }, _simOut = { x: 0, y: 0, z: 0, bounces: 0, sunk: false };
+const _sim = { p: new V3(), v: new V3(), air: false, t: 0 }, _simOut = { x: 0, y: 0, z: 0, bounces: 0, sunk: false, off: false };
 function ptAt(pts, i, p) { const P = pts._pool || (pts._pool = []); let o = P[i]; if (!o) P[i] = o = { x: 0, y: 0, z: 0 }; o.x = p.x; o.y = p.y; o.z = p.z; pts.push(o); }
 export function simulate(p, v, air, f, team, pts = null, maxBounces = 3, ctx = null) {
   const s = _sim, h = S().step || 1 / 60, n = Math.min(Math.round(f / h), 240);
@@ -294,6 +297,8 @@ export function simulate(p, v, air, f, team, pts = null, maxBounces = 3, ctx = n
   }
   if (pts && !cut) ptAt(pts, np++, s.p);
   _simOut.x = s.p.x; _simOut.y = s.p.y; _simOut.z = s.p.z;
+  // (off: its fuse ends in the air with nothing under it — sailed off the stage's edge, it blows over the sea / the void)
+  _simOut.off = !_simOut.sunk && s.air && G.level.groundHeight(s.p.x, s.p.z, s.p.y + 0.05) === -Infinity;
   return _simOut;
 }
 const _simCtx = { team: -1, kids: false, cd: null, frameDt: 0 };
@@ -325,7 +330,7 @@ function spawn(a, sub, p, v, air, fuse, R, cook, ghost, gid) {
   const it = { kind: KIND, owner: a, team: a.team, sub: s, gid, ghost: !!ghost, sp: !!a.specialActive,
     p: p.clone(), v: v.clone(), air: !!air, t: 0, age: 0, acc: 0, trail: s.trailEvery, fuse, fuse0: Math.max(0.05, fuse), R, cook,
     paintR: paintOf(cook, s), devDmg: devDmgOf(cook, s), hp: s.hp, state: 'slide', recT: 0.25, bounces: 0, cd: new Map(),
-    err: new V3(), m, vs, spin: m.outer.rotation.y, flash: 0, flashT: 0, holdT: 0, why: null, dbw: 0, thr: null,
+    err: new V3(), m, vs, spin: m.outer.rotation.y, flash: 0, flashT: 0, holdT: 0, why: null, dbw: 0, thr: null, bAge: -9, mode: null,
     pred: { t: -9, x: 0, y: 0, z: 0, n: -1 }, floorB: null, floorId: -1, ctx: null };
   it.pos = it.p;   // (the generic name: cues, tests, liveIn)
   it.ctx = { team: it.team, kids: true, cd: it.cd, frameDt: 1 / 60 };
@@ -353,11 +358,13 @@ function use(subs, a, sub) {
   const bar = a.specialActive?.kind === 'barrage';
   const cook = !bar && st && G.time - st.t1 < 0.25 ? st.cook : 0;
   if (a.bot) botAimAt(a);
+  const pm = st?.plan?.mode, mode = pm === 'fight' || pm === 'paint' || pm === 'boss' ? pm : a.bot ? 'other' : 'human';   // (match.cjs: whose sank)
   if (st) endHold(a, false);
   const p = new V3(), air = startOf(a, p);
   const v = new V3(Math.sin(a.aimYaw) * s.speed0, 0, Math.cos(a.aimYaw) * s.speed0);
   const fuse = fuseOf(cook, s), R = radiusOf(cook, s);
   const it = spawn(a, s, p, v, air, fuse, R, cook, false, netId(a));
+  it.mode = mode;
   netRec(a, KIND, [0, it.gid, r2(p.x), r2(p.y), r2(p.z), r2(v.x), r2(v.z), r2(fuse), r2(R)]);
   GLIDE_STATS.uses++; GLIDE_STATS.cookSum += cook; if (cook > 0) GLIDE_STATS.cooked++;
   if (a.isLocal && !a.bot && cook <= 0 && !bar) tapNote();
@@ -932,10 +939,40 @@ function fight(brain, dist) {
   // a foe has two seconds to step out of: a quarter of the chance)
   if (Math.random() > 0.03 * (1 + brain.diff.fireDiscipline) * (dist <= 11 ? 1 : 0.25)) return false;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, t.pos.x, t.pos.z) || !brain._fatLos(a.pos.x, a.pos.y - 0.15, a.pos.z, t.pos.x, t.pos.y - 0.15, t.pos.z)) return false;
+  // the planned slide must stay on the stage (the guide's prediction, ignoring kids): at the cook that stops it on the
+  // foe's led spot; if that goes over an edge / into a liquid, at the cook that stops it where they stand; else no throw
+  let led = true;
+  if (fightSinks(a, t, s, true)) {
+    led = false;
+    if (fightSinks(a, t, s, false)) { GLIDE_STATS.botNoSink++; return false; }
+    GLIDE_STATS.botRetarget++;
+  }
   brain.bombCd = 6 + Math.random() * 5;
-  brain._glide = { mode: 'fight', t };
+  brain._glide = { mode: 'fight', t, led };
   GLIDE_STATS.botFight++;
   return true;
+}
+// a fight throw's mark from where a stands now: the foe's spot, led by their velocity × the fuse left (≤ 2 s) when `led`;
+// out.x / out.z, returns the fuse that slides there (the reach formula on the flat)
+function fightMark(a, t, s, led, out) {
+  startOf(a, _gp);
+  let f = fuseFor(Math.hypot(t.pos.x - _gp.x, t.pos.z - _gp.z), s), ax = t.pos.x, az = t.pos.z;
+  if (led) for (let i = 0; i < 2; i++) { const lead = Math.min(2, f); ax = t.pos.x + t.vel.x * lead; az = t.pos.z + t.vel.z * lead; f = fuseFor(Math.hypot(ax - _gp.x, az - _gp.z), s); }
+  out.x = ax; out.z = az;
+  return f;
+}
+const _fm = { x: 0, z: 0 };
+function fightSinks(a, t, s, led) {
+  const f = fightMark(a, t, s, led, _fm);
+  return slideSinks(a, Math.atan2(_fm.x - a.pos.x, _fm.z - a.pos.z), clamp(s.fuse - f, 0, s.cookMax), s);
+}
+// would a's stone, let go now along `yaw` at this cook, leave the stage (the guide's prediction): sink on its way (the sea,
+// a liquid, lava), or sail off an edge and blow in the air over the sea?
+function slideSinks(a, yaw, cook, s) {
+  const air = startOf(a, _gp, yaw);
+  _gv.set(Math.sin(yaw) * s.speed0, 0, Math.cos(yaw) * s.speed0);
+  const o = simulate(_gp, _gv, air, fuseOf(cook, s), a.team, null, 99);
+  return o.sunk || o.off;
 }
 function paint(brain) {
   const a = brain.a, s = a.sub?.kind === KIND ? a.sub : S();
@@ -948,11 +985,11 @@ function paint(brain) {
   }
   if (!n || own / n >= 0.4) return false;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, a.pos.x + fx * 10, a.pos.z + fz * 10)) return false;
-  // (the whole uncooked slide: not off the stage into the sea or a liquid — the guide's own prediction, ignoring kids)
-  const air = startOf(a, _gp); _gv.set(fx * s.speed0, 0, fz * s.speed0);
-  if (simulate(_gp, _gv, air, s.fuse, a.team, null, 99).sunk) return false;
+  // (the whole uncooked slide stays on the stage: not into the sea or a liquid, not off an edge — the guide's own
+  // prediction, ignoring kids)
+  if (slideSinks(a, a.aimYaw, 0, s)) return false;
   brain.bombCd = 9 + Math.random() * 6;
-  brain._glide = { mode: 'paint' };
+  brain._glide = { mode: 'paint', yaw: a.aimYaw };   // (the checked yaw: the release checks it again — botRelease)
   GLIDE_STATS.botPaint++;
   return true;
 }
@@ -970,7 +1007,7 @@ function boss(brain, B) {
   for (const cook of [0, 0.45, 0.9, 1.35, 1.8]) {
     _gv.set(Math.sin(yaw) * s.speed0, 0, Math.cos(yaw) * s.speed0);
     const o = simulate(_gp, _gv, air, fuseOf(cook, s), a.team, null, 99);
-    if (o.sunk) continue;
+    if (o.sunk || o.off) continue;
     const R = radiusOf(cook, s);
     _bc.set(o.x, o.y + 0.25, o.z);   // (the blast's centre)
     let bd = Infinity;
@@ -989,7 +1026,9 @@ function boss(brain, B) {
 // now (re-solved every frame: it may be strafing), never past full cook (a bot never reaches the slip); painting: a tap
 function botHold(a, st, inp, s) {
   const b = a.bot;
-  if (!st.plan) { const g = b._glide; b._glide = null; st.plan = { mode: g?.mode || 'paint', t: g?.t || null, cook: g?.cook || 0, yaw: g?.yaw ?? null }; }
+  // (a press no kit hook planned — a scripted one: the harness's own kid — is the brain's own button: 'manual', let go
+  // when the brain lets go, its release unchecked)
+  if (!st.plan) { const g = b._glide; b._glide = null; st.plan = { mode: g?.mode || 'manual', t: g?.t || null, cook: g?.cook || 0, yaw: g?.yaw ?? null, led: g?.led ?? true }; }
   const P = st.plan;
   let keep = false;
   // Boss Battle: hold to the planned cook — let go at once (throwing what's cooked) when one of the boss's telegraphs
@@ -999,24 +1038,44 @@ function botHold(a, st, inp, s) {
     const t = P.t && P.t.alive ? P.t : b.target;
     if (t && t.alive && t.pos) {
       P.t = t;
-      startOf(a, _gp);
-      let f = fuseFor(Math.hypot(t.pos.x - _gp.x, t.pos.z - _gp.z), s), ax = t.pos.x, az = t.pos.z;
-      for (let i = 0; i < 2; i++) { const lead = Math.min(2, f); ax = t.pos.x + t.vel.x * lead; az = t.pos.z + t.vel.z * lead; f = fuseFor(Math.hypot(ax - _gp.x, az - _gp.z), s); }
-      st.aimAt = st.aimAt || { x: 0, z: 0 }; st.aimAt.x = ax; st.aimAt.z = az;
-      const need = clamp(s.fuse - f, 0, s.cookMax);
+      st.aimAt = st.aimAt || { x: 0, z: 0 };
+      const f = fightMark(a, t, s, P.led, st.aimAt), need = clamp(s.fuse - f, 0, s.cookMax);
       keep = st.cook < need - 1e-6 && st.held < s.cookGrace + s.cookMax;
     }
   }
   keep = keep && a.alive && a.form === 'kid';
   if (keep) { inp.sub = true; inp.subReleased = false; }
   else if (!inp.sub) inp.subReleased = true;   // (the brain let go frames ago: throw now)
+  if (inp.subReleased && P.mode !== 'manual') botRelease(a, st, inp, s);
 }
-// at the release: a fighting bot turns to its foe's led spot
+// the release frame (the runner throws right after this hold): the slide is checked again with the cook it has and from
+// where the bot stands — the planned mark first (the foe's led spot / the boss as it is now / the paint lane's checked
+// yaw), then the fallback (where the foe stands / the plan's yaw / where it aims now). The first that stays on the stage
+// is the throw's yaw (botAimAt); if every one sinks the bot doesn't throw: the stone stays unthrown (no ink, a fizzle if
+// it was cooked) and its button is let go
+function botRelease(a, st, inp, s) {
+  const P = st.plan, Y = _ry;
+  Y.length = 0;
+  if (P.mode === 'fight') {
+    if (st.aimAt && P.t?.alive) Y.push(Math.atan2(st.aimAt.x - a.pos.x, st.aimAt.z - a.pos.z));
+    if (P.t?.alive) Y.push(Math.atan2(P.t.pos.x - a.pos.x, P.t.pos.z - a.pos.z));
+  } else if (P.mode === 'boss') {
+    const B = G.boss;
+    if (B && !B.dead) Y.push(Math.atan2(B.pos.x - a.pos.x, B.pos.z - a.pos.z));
+    if (P.yaw != null) Y.push(P.yaw);
+  } else if (P.yaw != null) Y.push(P.yaw);
+  Y.push(a.aimYaw);
+  for (const y of Y) if (!slideSinks(a, y, st.cook, s)) { st.relYaw = y; if (y !== Y[0]) GLIDE_STATS.botRelAlt++; return; }
+  GLIDE_STATS.botCancel++;
+  inp.sub = false; inp.subReleased = false;
+  a.weaponRunner.aimingSub = false;
+  endHold(a, true);
+}
+const _ry = [];
+// at the release: a bot turns to the yaw its release frame checked (botRelease)
 function botAimAt(a) {
-  const st = a.weaponRunner?.glide, P = st?.plan;
-  if (P?.mode === 'boss' && P.yaw != null) { const B = G.boss; a.aimYaw = B && !B.dead ? Math.atan2(B.pos.x - a.pos.x, B.pos.z - a.pos.z) : P.yaw; return; }   // (at the boss's middle as it is now)
-  if (!P || P.mode !== 'fight' || !st.aimAt || !P.t?.alive) return;
-  a.aimYaw = Math.atan2(st.aimAt.x - a.pos.x, st.aimAt.z - a.pos.z);
+  const st = a.weaponRunner?.glide;
+  if (st?.relYaw != null) a.aimYaw = st.relYaw;
 }
 
 // ================================================================================================= registration
