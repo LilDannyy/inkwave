@@ -587,8 +587,9 @@ class Game {
         G.audio?.duck?.(0.45, 2.2);
         // the card shows what did it (hud.js splatCause): the attacker's main weapon, or the sub / special / the sea
         const ec = envCause(cause);   // [b5-stagehooks] a stage module's cause (the lava) reads like the sea
-        const by = attacker ? attacker.name : cause === 'water' || ec ? null : 'enemy ink';
-        this.hud?.showSplatted({ by, byColor: attacker ? G.teamHex[attacker.team] : ec?.byColor || '#6fd0ff', respawn: PLAYER.respawnTime, attacker: attacker || null, cause });
+        const kf = cause === 'karp-fuse';   // [b5-karp] the Carp Blast: nobody did it (its ink is the other team's)
+        const by = attacker ? attacker.name : cause === 'water' || ec || kf ? null : 'enemy ink';
+        this.hud?.showSplatted({ by, byColor: attacker ? G.teamHex[attacker.team] : kf ? G.teamHex[victim.enemyTeam] : ec?.byColor || '#6fd0ff', respawn: PLAYER.respawnTime, attacker: attacker || null, cause });
         this.rig.mode = 'spectate';
         this.rig.spectate = { actor: attacker && attacker.alive ? attacker : null, pos: victim.pos.clone(), from: victim.pos.clone() };
         this.rig.lookAt.copy(victim.pos);

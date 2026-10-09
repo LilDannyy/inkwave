@@ -41,7 +41,7 @@ import { LeadHud } from './hud-lead.js';
 import { BarrageHud } from './hud-barrage.js';   // [b5-sprules] the Mystery Bomb Barrage's NEXT card
 import { CheerHud } from './hud-cheer.js';   // [b5-zipcheer] the Cheer Orb's cheer prompt + gauge wisps
 import { JumpHud } from './hud-jumps.js';   // [b5-jumpui] super-jump alerts + landing / return tags
-import { KarpHud, KARP_GLYPH } from './hud-karp.js';   // [b5-karp] Bazookarp's placeholder HUD
+import { KarpHud, KARP_GLYPH, KARP_CAUSES } from './hud-karp.js';   // [b5-karp] Bazookarp's placeholder HUD (+ its splat causes)
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -97,6 +97,7 @@ export function splatCause(cause, attacker) {
   const c = typeof cause === 'string' ? cause : null;
   if (c && ENV_CAUSES[c]) return { kind: 'env', id: c, name: attacker ? 'Knocked into the sea' : ENV_CAUSES[c], tag: '', icon: SEA_ICON };
   { const ec = envCause(c); if (ec) return { kind: 'env', id: c, name: attacker ? ec.knocked || ec.name : ec.name, tag: '', icon: ec.icon || SEA_ICON }; }   // [b5-stagehooks]
+  { const kc = c && KARP_CAUSES[c]; if (kc) return { kind: kc.kind, id: c, name: kc.name, tag: kc.tag, icon: kc.icon }; }   // [b5-karp] Carp Shot / shell burst / Carp Blast
   if (c && SUB[c]) return { kind: 'sub', id: c, name: SUB[c].name || c, tag: 'SUB', icon: SUB_ICONS[SUB[c].kind] || SUB_ICONS[c] || SUB_ICONS.bomb };
   if (c && SPECIALS[c]) return { kind: 'special', id: c, name: SPECIALS[c].name || c, tag: 'SPECIAL', icon: specialIcon(c) };
   const w = (attacker && attacker.weaponId) || (c && WEAPONS[c] ? c : null);

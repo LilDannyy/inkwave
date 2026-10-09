@@ -19,6 +19,15 @@ export const KARP_GLYPH = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="
 // the carp on a carrier's special gauge (S35: frame.specialId is 'karp' while carrying)
 SPECIAL_ICONS.karp = KARP_GLYPH;
 
+// (fix round 2) what the splat screen says splatted you (hud.js splatCause): a Carp Shot's blast (cause 'karp', its
+// shooter credited), the Roe Shell's burst ('karp-burst', the bursting team's last hitter credited) and the Carp Blast
+// ('karp-fuse': nobody credited — main.js shows "SPLATTED!", never "by enemy ink")
+export const KARP_CAUSES = {
+  karp: { kind: 'special', name: 'Carp Shot', tag: 'BAZOOKARP', icon: KARP_GLYPH },
+  'karp-burst': { kind: 'special', name: 'Roe Shell burst', tag: 'BAZOOKARP', icon: KARP_GLYPH },
+  'karp-fuse': { kind: 'special', name: 'The Bazookarp blew up', tag: '', icon: KARP_GLYPH, nobody: true },
+};
+
 const CSS = `
 .iw-hud.is-karp .iw-zc { display: block; }
 .iw-hud.is-karp .iw-timer__drip { display: none; }
@@ -63,14 +72,18 @@ export class KarpHud {
       on('karp:refuse', ({ actor, why }) => { if (actor === G.match?.local && why === 'special') this._note('Finish your special first'); }),
       on('karp:burst', ({ team }) => this._call(team, 'SHELL BURST!', 'GRAB THE BAZOOKARP!', 'THEY BURST THE SHELL!', 'STOP THE GRAB!')),
       on('karp:pickup', ({ actor, team }) => { if (actor === G.match?.local) this._call(team, "YOU'VE GOT THE BAZOOKARP!", '60 s to land it — go!'); else this._call(team, "WE'VE GOT THE BAZOOKARP!", null, "THEY'VE GOT THE BAZOOKARP!", 'SPLAT THE CARRIER!'); }),
-      on('karp:drop', ({ team, how }) => { if (how !== 'moved' && team >= 0) this._call(team, 'WE LOST THE BAZOOKARP!', null, 'CARRIER DOWN!', null); }),
+      on('karp:drop', ({ team, how }) => { if (how !== 'moved' && team >= 0 && !this._boomed(how)) this._call(team, 'WE LOST THE BAZOOKARP!', null, 'CARRIER DOWN!', null); }),
       on('karp:plant', ({ team }) => this._call(team, 'WEIR DOWN!', 'Their Dragon Gate is open!', 'THEY TOOK A WEIR!', 'Our Dragon Gate is open — defend it!')),
-      on('karp:explode', ({ actor }) => actor && this._call(actor.team, 'IT BLEW UP ON US!', null, 'THEIR BAZOOKARP BLEW UP!', null)),
-      on('karp:reset', () => this.hud._zLive?.() && this._say('BACK TO THE POND!', { small: true, icon: KARP_GLYPH })),
+      // (fix round 2) the Carp Blast's banner says where it goes next, and the drop / reset that follows it at once (the
+      // same frame; on a guest the 'x' record and its 'r' / 'd' arrive together) no longer replaces it
+      on('karp:explode', ({ actor, own }) => { if (!actor) return; this._boomT = performance.now(); this._call(actor.team, 'IT BLEW UP ON US!', own ? 'Back to the Pond' : 'It lies where it blew — get it back!', 'THEIR BAZOOKARP BLEW UP!', own ? 'Back to the Pond' : 'It lies where it blew — grab it!'); }),
+      on('karp:reset', ({ why }) => this.hud._zLive?.() && !this._boomed(why) && this._say('BACK TO THE POND!', { small: true, icon: KARP_GLYPH })),
       on('karp:overtime', ({ losing }) => { const me = G.match?.local?.team ?? 0; this.hud._zLive?.() && this._say('OVERTIME!', { sub: me === losing ? 'Grab it within 10 s!' : 'Stop them — 10 s to hold!', icon: KARP_GLYPH }); }),
     ];
   }
   _note(t) { this.no.textContent = t; this.no.classList.add('is-on'); this._noT = 1.6; this.show.no = t; }
+  // a drop / reset the fuse caused, right after the Carp Blast's own banner (which already says where it went)
+  _boomed(why) { return why === 'fuse' && performance.now() - (this._boomT ?? -1e9) < 1500; }
   // a call-out: ours (us) / theirs (them) by the event's team
   _call(team, us, usSub, them, themSub) {
     if (!this.hud._zLive?.()) return;
@@ -98,7 +111,7 @@ export class KarpHud {
       const el = this.hud.zc[t ^ me];
       if (!el) continue;
       if (!el._num) { el._num = el.querySelector('.iw-zc__num'); el._pb = el.querySelector('.iw-zc__pb'); }
-      const cnt = f.count[t], hold = f.holderTeam === t, key = `k${cnt}|${hold ? 1 : 0}`, lk = 'zc' + t;
+      const cnt = f.count[t], hold = f.holderTeam === t, key = `k${cnt}|${hold ? 1 : 0}|${me}`, lk = 'zc' + t;   // (the viewer too: its own badge is the left one)
       if (L[lk] === key) continue;
       L[lk] = key;
       el._num.textContent = String(cnt);
