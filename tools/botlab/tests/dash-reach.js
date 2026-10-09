@@ -1,7 +1,8 @@
 // [b5-sub-dash] The dash-reach audit (SPEC D10.6): the Dash Pellet must not open up a roof, a perch or an out-of-bounds
 // spot. Any stage:
 //   MAP=<id> MODE=turf PAGE=tools/botlab/tests/dash-reach.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS: 'dt=24' runs the movement at 1/24 s a step (default 1/60); 'step=2' takes every 2nd start (a quick look)
+//   PAGE_ARGS: 'dt=24' runs the movement at 1/24 s a step (default 1/60); 'step=2' takes every 2nd start (a quick look);
+//   'air=2.5' a what-if air dash length (this run only)
 // What: the nodes a kid reaches on foot (the stage's nav graph from both spawn pads: walks, jumps, drops, climbs); of
 // those, the ones by a change of level or a drop within 6 m (where a dash could lead somewhere new). From each, a kid
 // stepped on its own (actor.update, the real dash) tries, in 8 headings: a ground dash (off a ledge too, when there is
@@ -23,6 +24,7 @@
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const args = Object.fromEntries((window.__pageArgs || '').split(/[;,&]/).filter(Boolean).map((kv) => kv.split('=')));
   const DT = args.dt ? 1 / +args.dt : 1 / 60, EVERY = +(args.step || 1);
+  const air0 = SUBS.dash.airDashDist; if (args.air) SUBS.dash.airDashDist = +args.air;   // ('air=2.5': a what-if air dash length, this run only)
   const L = G.level, nav = G.nav, N = nav.nodes, r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100;
   dbg.freeze();
   for (const a of m.actors) if (a.bot) a.bot.update = () => {};
@@ -69,8 +71,11 @@
     // baseline look shorter than what a player does)
     if (kind !== 'g' && kind !== 'w') kid.vel.set(d[0] * PLAYER.runSpeed, 0, d[1] * PLAYER.runSpeed);
     const fr = (f) => Math.round(f / (60 * DT));   // a 60 Hz frame count at this step
-    let i = 0, ok = true, roofT = null;
-    const tick = (w) => { it.move.set(w.move ? d[0] : 0, 0, w.move ? d[1] : 0); it.jump = !!w.jump; it.sub = !!w.sub; G.time += DT; kid.update(DT); i++; if (!kid.alive) ok = false; else if (!roofT && onRoof()) roofT = kid.pos.clone(); return ok; };
+    let i = 0, ok = true, roofT = null, wasAir = false, landY = null;
+    // (landY: where it first comes down after leaving the ground — the height the jump + dash got it to; a dash that
+    // carries on along the ground after that, up a ramp or a stair, is a run, judged by where it ends like any walk)
+    const tick = (w) => { it.move.set(w.move ? d[0] : 0, 0, w.move ? d[1] : 0); it.jump = !!w.jump; it.sub = !!w.sub; G.time += DT; kid.update(DT); i++;
+      if (!kid.alive) ok = false; else { if (!roofT && onRoof()) roofT = kid.pos.clone(); if (!kid.grounded) wasAir = true; else if (wasAir && landY === null) landY = kid.pos.y; } return ok; };
     if (kind === 'g') { tick({ sub: true, move: true }); for (let k = 0; k < fr(16) && ok; k++) tick({ move: false }); }
     else if (kind === 'w') { for (let k = 0; k < fr(16) && ok; k++) tick({ move: true }); }
     else if (kind === 'h') { for (let k = 0; k < fr(54) && ok; k++) { tick({ move: true, jump: k < 2 }); if (k > fr(6) && kid.grounded && !onRoof()) break; } }
@@ -82,7 +87,7 @@
     for (let k = 0; k < fr(90) && ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) tick({});
     if (!ok) return { dead: true, roofT };
     const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
-    return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1 };
+    return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY };
   };
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
   const count = { sims: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
@@ -112,7 +117,7 @@
       }
       const id = nodeAt(p);
       if (id >= 0 && reach[id]) { count.onFoot++; continue; }
-      if (p.y - n.y > count.maxUp) { count.maxUp = r2(p.y - n.y); count.maxUpAt = what; }   // (how high over its start, of the landings a walk doesn't reach: a ground dash up a stair is a walk)
+      { const up = (r.landY ?? n.y) - n.y; if (up > count.maxUp) { count.maxUp = r2(up); count.maxUpAt = { ...what, landedAt: r.landY != null ? r2(r.landY) : null }; } }   // (how high over its start it first came down, of the landings a walk doesn't reach)
       if (id >= 0) {
         // a node the graph says isn't reachable: does a plain walk or hop from here land on it too?
         let base = false;
@@ -142,7 +147,7 @@
     else realLeaks.push(l);
   }
   count.stranded = realLeaks.length; count.strandedHopOn = hopOn.length;
-  kid.setSub('bomb');
+  kid.setSub('bomb'); SUBS.dash.airDashDist = air0;
   for (const a of m.actors) { delete a.update; if (a.bot) delete a.bot.update; }
   // off the graph: the distinct spots (0.5 m), highest first
   const seen = new Map(); for (const o of offs) { const k = Math.round(o.to[0] * 2) + ',' + Math.round(o.to[2] * 2) + ',' + Math.round(o.to[1] * 2); if (!seen.has(k)) seen.set(k, o); }
