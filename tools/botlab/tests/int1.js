@@ -254,9 +254,11 @@
     let n = 0; step(5.5, () => { if (G.time >= (s.nextThrow || 0) && n < 6 && me.specialActive === s) { press(me, 'sub'); n++; } });
     step(2);
     const hitW = EV.slice(e0).filter((e) => e.n === 'device:hit' && e.by === me);
-    R(`barrage: the Waddle Bomb Barrage's Waddles (${n} thrown) wear down an enemy sprinkler (100 hp: ${hpOf(spE)} left) and leave a teammate's beacon whole (${hpOf(bOwn)} of ${SUBS.beacon.hp})`,
-      n >= 3 && hpOf(spE) < SUBS.sprinkler.hp && hitW.some((e) => e.kind === 'sprinkler') && hpOf(bOwn) === SUBS.beacon.hp && bOwn.state === 'beacon',
-      { thrown: n, sprinkler: hpOf(spE), beacon: hpOf(bOwn), hits: hitW.map((e) => `${e.kind}:${e.dmg}`) });
+    // (the teammate's beacon: never hit by our Waddles — the enemy sprinkler's drops may wear it down, as they should)
+    const ownW = hitW.filter((e) => e.team === me.team);
+    R(`barrage: the Waddle Bomb Barrage's Waddles (${n} thrown) wear down an enemy sprinkler (100 hp: ${hpOf(spE)} left) and never hit a teammate's beacon beside it`,
+      n >= 3 && hpOf(spE) < SUBS.sprinkler.hp && hitW.some((e) => e.kind === 'sprinkler') && ownW.length === 0 && bOwn.state === 'beacon',
+      { thrown: n, sprinkler: hpOf(spE), beacon: hpOf(bOwn), hits: hitW.map((e) => `${e.kind}:${e.dmg}`), onOurs: ownW.length });
     // the Mystery Bomb Barrage at an enemy beacon 2.5 m ahead
     reset();
     place(me, 0, -2); aim(me, 0, -0.55);
@@ -266,9 +268,10 @@
     const sm = start(me, 'barrage_mystery');
     step(5.5, () => { if (me.specialActive === sm && G.time >= (sm.nextThrow || 0) && kinds.length < 8) { kinds.push(sm.bomb.kind); press(me, 'sub'); } });
     step(2);
-    const hitM = EV.slice(e1).filter((e) => e.n === 'device:hit' && e.by === me && e.kind === 'beacon');
-    R(`barrage: the Mystery Bomb Barrage's bombs (${kinds.join(', ')}) wear down an enemy beacon (${hpOf(bE)} of ${SUBS.beacon.hp} left) and leave a teammate's beacon whole`,
-      new Set(kinds).size >= 3 && hitM.length >= 1 && hpOf(bE) < SUBS.beacon.hp && hpOf(bOwn2) === SUBS.beacon.hp,
+    const hitM = EV.slice(e1).filter((e) => e.n === 'device:hit' && e.by === me && e.kind === 'beacon' && e.team !== me.team);
+    const ownM = EV.slice(e1).filter((e) => e.n === 'device:hit' && e.by === me && e.team === me.team);
+    R(`barrage: the Mystery Bomb Barrage's bombs (${kinds.join(', ')}) wear down an enemy beacon (${hpOf(bE)} of ${SUBS.beacon.hp} left) and never hit a teammate's beacon beside it`,
+      new Set(kinds).size >= 3 && hitM.length >= 1 && hpOf(bE) < SUBS.beacon.hp && ownM.length === 0 && hpOf(bOwn2) === SUBS.beacon.hp,
       { kinds, beacon: hpOf(bE), own: hpOf(bOwn2), hits: hitM.map((e) => e.dmg) });
     // an enemy's barrage Waddle, shot down (the Waddle was shootable before; a barrage's too)
     reset();
