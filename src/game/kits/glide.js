@@ -415,16 +415,27 @@ function stepOnce(it) {
 }
 function onBounce(it, b) {
   it.bounces++; it.pred.t = -9;
-  if (!it.ghost) { GLIDE_STATS.bounces++; if (b.kind === 'kid') GLIDE_STATS.kidBounces++; rec4(it); }
+  if (!it.ghost) { GLIDE_STATS.bounces++; if (b.kind === 'kid') GLIDE_STATS.kidBounces++; rec4(it, b); }
+  else if (it.age - it.bAge < 0.15) return;   // (a ghost: its owner's [4] at this bounce already clonked it here — bounceLook)
+  bounceLook(it, b);
+}
+// the clonk, its sparks, 'glide:bounce' — a ghost also plays it from its owner's [4] at a bounce when it hasn't bounced
+// itself within 0.15 s (the record can turn it a step before it would have touched: the victim still sees and hears it)
+function bounceLook(it, b, byRec = false) {
+  it.bAge = it.age;
   const vol = clamp(b.speed / 8, 0.15, 1);
   if (near(it.p, 35)) G.audio?.play('glide_bounce', { pos: _c.set(it.p.x, it.p.y + MID, it.p.z), volume: vol, pitch: b.kind === 'kid' ? 0.8 : 1 });
   if (near(it.p, 30)) G.fx?.burst?.(_c.set(it.p.x + b.nx * 0.2, it.p.y + MID, it.p.z + b.nz * 0.2), _e.set(b.nx, 0.4, b.nz), G.teamColors[it.team], { count: 4, speed: 2.2, size: 0.05, sheet: false });
-  emit('glide:bounce', { pos: it.p.clone(), kind: b.kind, speed: b.speed, team: it.team, who: b.who || null, ghost: it.ghost });
+  emit('glide:bounce', { pos: it.p.clone(), kind: b.kind, speed: b.speed, team: it.team, who: b.who || null, ghost: it.ghost, byRec });
 }
-function rec4(it) {
+// [4, gid, x, y, z, vx, vz, fuse] every 0.25 s; at a bounce + [kind code (BK), the kid's nid for a kid bounce]
+const BK = ['', 'wall', 'mover', 'kid', 'curtain', 'sentry', 'shell'];
+function rec4(it, b = null) {
   it.recT = 0.25;
   if (it.ghost || !it.gid) return;
-  netRec(it.owner, KIND, [4, it.gid, r2(it.p.x), r2(it.p.y), r2(it.p.z), r2(it.v.x), r2(it.v.z), Math.round(it.fuse * 1000) / 1000]);
+  const d = [4, it.gid, r2(it.p.x), r2(it.p.y), r2(it.p.z), r2(it.v.x), r2(it.v.z), Math.round(it.fuse * 1000) / 1000];
+  if (b) { d.push(Math.max(1, BK.indexOf(b.kind))); if (b.kind === 'kid' && b.who?.nid != null) d.push(b.who.nid); }
+  netRec(it.owner, KIND, d);
 }
 // a moving floor under it carries it (its block's move since our last look)
 function ride(it) {
@@ -847,6 +858,16 @@ function ghost(a, d) {
   const it = items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
   if (!it) return;
   if (op === 4) {
+    // (at a bounce, d[8] its kind: if this ghost hasn't bounced itself within 0.15 s, the clonk plays here now — the
+    // normal is the turn the record makes of its velocity)
+    if (d[8] > 0 && it.age - it.bAge >= 0.15) {
+      const dvx = d[5] - it.v.x, dvz = d[6] - it.v.z, dl = Math.hypot(dvx, dvz);
+      if (dl > 0.05) {
+        const who = d[8] === 3 && d[9] != null ? (G.actors || []).find((x) => x.nid === d[9]) || null : null;
+        _gb.kind = BK[d[8]] || 'wall'; _gb.nx = dvx / dl; _gb.nz = dvz / dl; _gb.speed = dl / (1 + (d[8] === 3 ? S().playerE : S().restitution)); _gb.who = who;
+        bounceLook(it, _gb, true);
+      }
+    }
     it.err.set(d[2] - it.p.x, d[3] - it.p.y, d[4] - it.p.z);
     if (it.err.lengthSq() > 9) { it.p.set(d[2], d[3], d[4]); it.err.set(0, 0, 0); }   // (way off: snap)
     it.v.x = d[5]; it.v.z = d[6]; it.fuse = d[7];

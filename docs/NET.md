@@ -181,10 +181,17 @@ call `SUB_KITS[k].dropOwner(actor)` for each of their squidkids (bots included),
 - `[0, gid, x, y, z, vx, vz, fuse, R]` — released: where it was set down, its slide velocity, the fuse left and the blast
   radius (the cook is decided). Every screen slides its copy with the same step function at a fixed 1/60 s step through
   an accumulator (≤ 6 steps a frame), so the frame rate never changes where it goes.
-- `[4, gid, x, y, z, vx, vz, fuse]` — the owner's word at every bounce and every 0.25 s (the players it bounces off
-  differ per screen): a ghost eases onto it (`k = 1 − e^(−14 dt)`; snaps beyond 3 m) and takes its velocity and fuse.
+- `[4, gid, x, y, z, vx, vz, fuse]` — the owner's word every 0.25 s (the players it bounces off differ per screen): a
+  ghost eases onto it (`k = 1 − e^(−14 dt)`; snaps beyond 3 m) and takes its velocity and fuse. At a bounce the record
+  also carries the bounce: `[4, …, fuse, kind, who]` (kind 1 wall · 2 mover · 3 kid · 4 curtain · 5 sentry · 6 shell; who:
+  the kid's nid, for a kid bounce). A ghost that hasn't bounced by itself within 0.15 s plays the clonk and sparks from
+  it (the record can turn it a step before it would have touched — so the kid it bounced off still sees and hears it);
+  one that has, doesn't (never twice).
 - `[1, gid, x, y, z]` — the blast (the look there; paint and damage are the owner's).
-- `[2, gid, why]` — an end without a blast: 0 sank, 1 popped (shot down), 2 smashed (a Mega Stamp's guard).
+- `[2, gid, why, hot]` — an end without a blast: why 0 sank, 1 popped (shot down), 2 smashed (a Mega Stamp's guard); for a
+  sink, hot 1 when it went into lava or another stage hazard (`G.match.lava.under` / `G.match.stage.under`, asked before
+  `G.level.liquidY`, which on caldera answers the lava's surface too): the ghost hisses (`lava.fizzle` / `stage.fizzle`)
+  instead of plopping.
 A ghost never paints, hurts, blows or pops by itself: at the end of its fuse it holds, pulsing, until the owner's word
 (2 s at most). Enemy fire on a ghost goes to the owner (`netHurt(owner, 'glide', gid, dmg, by)`; while `netMuted()` — a
 ghost's shot or blast being replayed — it only flashes). A Mega Stamp's guard that smashes a ghost on the stamper's

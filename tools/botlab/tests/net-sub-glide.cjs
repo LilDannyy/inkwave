@@ -40,10 +40,13 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   await still(A); await still(B);
   // listeners (wall-clock times: both pages share this machine's clock)
   const listen = (c) => c.js(`(async () => { const { on } = await import('./src/core/ctx.js'); const { SUB_KITS } = await import('./src/game/kits/registry.js'); window.__K = SUB_KITS.glide;
-    const L = window.__g = { charge: [], boom: [], hits: [], down: [], end: [], dh: [], bounce: [] };
+    const L = window.__g = { charge: [], boom: [], hits: [], down: [], end: [], dh: [], bounce: [], clonk: [] };
+    // (the sounds this screen plays for a bounce: the clonk, pitch 0.8 off a kid — the audio engine runs, muted)
+    const A = __G.audio; L.audio = !!A;
+    if (A && !A.__glideTap) { const p0 = A.play.bind(A); A.play = (n, o) => { if (n === 'glide_bounce') L.clonk.push({ pitch: o?.pitch ?? 1, at: Date.now() }); return p0(n, o); }; A.__glideTap = true; }
     on('sub:charge', (e) => { if (e.kind === 'glide') L.charge.push({ lv: e.level, at: Date.now(), who: e.actor?.nid }); });
     on('bomb:explode', (e) => { if (e.kind === 'glide') L.boom.push({ p: [e.pos.x, e.pos.y, e.pos.z], ghost: !!e.ghost, at: Date.now(), who: e.actor?.nid }); });
-    on('glide:bounce', (e) => L.bounce.push({ kind: e.kind, ghost: !!e.ghost, who: e.who?.nid ?? null, at: Date.now() }));
+    on('glide:bounce', (e) => L.bounce.push({ kind: e.kind, ghost: !!e.ghost, rec: !!e.byRec, who: e.who?.nid ?? null, at: Date.now() }));
     on('hit', (e) => { if (e.weaponId === 'glide') L.hits.push({ vic: e.victim?.nid, att: e.attacker?.nid, d: e.damage, local: !!e.victim?.isLocal }); });
     on('device:down', (e) => { if (e.kind === 'glide') L.down.push({ how: e.how, by: e.by?.nid ?? null }); });
     on('glide:end', (e) => L.end.push({ why: e.why }));
@@ -92,14 +95,15 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const aimA = await J(A, `window.__aimOn`), aimB = await J(B, `window.__aimOn`);
   await A.js(`clearInterval(window.__poll); 1`);
   const lag = [1, 2, 3].map((lv) => { const a = chA.find((c) => c.lv === lv), b = seenB.find((s) => s.lv === lv); return a && b ? b.at - a.at : null; });
-  // (the records ride A's timeline: B plays them back as late as everything else of A's — its playback delay, which grows
-  // with the machine's load. Judged: each level within 0.3 s of A's mark, or — on a loaded machine — within 0.15 s of
-  // where A's own sub-held flag (the actor tick, the same timeline) puts it: the records add no lag of their own)
+  // (the records ride A's timeline: B plays them back as late as everything else of A's — its playback delay for A, which
+  // grows with the machine's load. Judged: each level within 0.3 s of A's mark; or — on a loaded machine — no later than
+  // B's playback delay for A + 0.1 s (B's poll and frame), or no later than 0.15 s past where A's own sub-held flag (the
+  // actor tick, the same timeline) puts it. One-sided: a level that shows sooner than the flag is no defect)
   const pd = await J(B, `(() => { const nm = __G.netm, a = __G.match.actors.find((q) => q.nid === ${ids.a}), p = nm.peers.get(a.owner); return p ? Math.round((p.delay || 0) * 1000) : null; })()`);
   const tickLag = aimA != null && aimB != null ? aimB - aimA : null;
   const rel = lag.map((x) => (x != null && tickLag != null ? x - tickLag : null));
-  const okLv = lag.every((x, i) => x != null && x >= -50 && (x <= 300 || (rel[i] != null && Math.abs(rel[i]) <= 150)));
-  R(`A cooks: B's copy of A's hand shows cook levels 1, 2, 3 in order (the [5] records), each within 0.3 s of A's own (or, loaded, of A's sub-held flag on the same timeline), A's sub held there`,
+  const okLv = lag.every((x, i) => x != null && x >= -50 && (x <= 300 || (pd != null && x <= pd + 100) || (rel[i] != null && rel[i] <= 150)));
+  R(`A cooks: B's copy of A's hand shows cook levels 1, 2, 3 in order (the [5] records), each within 0.3 s of A's own (or, loaded, within B's playback delay for A + 0.1 s, or 0.15 s past A's sub-held flag on the same timeline), A's sub held there`,
     chA.map((c) => c.lv).join() === '1,2,3' && seenMid.map((s) => s.lv).join() === '1,2,3' && okLv && seenMid.every((s) => s.aim), { a: chA.map((c) => c.lv), b: seenMid.map((s) => [s.lv, s.aim]), lagMs: lag, flagLagMs: tickLag, beyondFlagMs: rel, playbackDelayMs: pd });
   R('…and back to 0 on B once A lets go (the stone thrown)', seenB.length && seenB[seenB.length - 1].lv === 0, seenB.map((s) => s.lv));
 
@@ -118,19 +122,23 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   // copy of B) and on B's (B's own kid, where it really is); A's [4] at the bounce and every 0.25 s keeps B's ghost on
   // A's path — the ghost's blast still within 0.3 m of A's
   await B.until(`__G.match.local.alive`, 12000, 100);
-  await B.js(`(() => { __G.match.local.hp = 1000; window.__g.boom.length = 0; window.__g.bounce.length = 0; return 1; })()`);
+  await B.js(`(() => { __G.match.local.hp = 1000; window.__g.boom.length = 0; window.__g.bounce.length = 0; window.__g.clonk.length = 0; return 1; })()`);
   await A.js(`(() => { window.__g.boom.length = 0; window.__g.bounce.length = 0; __G.match.local.ink = 100; return 1; })()`);
   await tap();
   await A.until(`__K.items.some((x) => !x.ghost && x.state === 'slide')`, 3000, 30).catch(() => null);
   await A.until(`!__K.items.some((x) => x.state !== 'dead')`, 8000, 50).catch(() => null);
   await B.until(`!__K.items.some((x) => x.state !== 'dead')`, 8000, 50).catch(() => null);
   await wait(300);
-  const kb = { A: await J(A, `{ boom: window.__g.boom, bounce: window.__g.bounce }`), B: await J(B, `{ boom: window.__g.boom, bounce: window.__g.bounce }`) };
+  const kb = { A: await J(A, `{ boom: window.__g.boom, bounce: window.__g.bounce }`), B: await J(B, `{ boom: window.__g.boom, bounce: window.__g.bounce, clonk: window.__g.clonk, audio: window.__g.audio }`) };
   const kA = kb.A.boom.find((x) => !x.ghost), kB = kb.B.boom.find((x) => x.ghost);
   const dKid = kA && kB ? Math.hypot(kA.p[0] - kB.p[0], kA.p[1] - kB.p[1], kA.p[2] - kB.p[2]) : null;
-  R('a tap at B: it bounces off B on A\'s screen and B\'s ghost bounces off B too; the ghost\'s blast is within 0.3 m of A\'s (no drift past the [4] corrections)',
-    kb.A.bounce.some((x) => !x.ghost && x.kind === 'kid' && x.who === ids.b) && kb.B.bounce.some((x) => x.ghost && x.kind === 'kid' && x.who === ids.b) && dKid != null && dKid <= 0.3,
-    { dKid: dKid != null && Math.round(dKid * 1000) / 1000, bouncesA: kb.A.bounce.map((x) => x.kind), bouncesB: kb.B.bounce.map((x) => x.kind), a: kA && kA.p, b: kB && kB.p });
+  // (on B, the victim's own screen: the clonk off its shins plays whether its ghost touched B a step before A's [4] at the
+  // bounce arrived, or the record turned it first — the record carries the bounce's kind and B's nid. Exactly one: the
+  // ghost's own bounce and the record's never both)
+  const kidB = kb.B.bounce.filter((x) => x.ghost && x.kind === 'kid' && x.who === ids.b), clonkB = kb.B.clonk.filter((c) => Math.abs(c.pitch - 0.8) < 1e-6);
+  R('a tap at B: it bounces off B on A\'s screen and on B\'s (the ghost\'s bounce off B, its clonk heard there, exactly once); the ghost\'s blast is within 0.3 m of A\'s (no drift past the [4] corrections)',
+    kb.A.bounce.some((x) => !x.ghost && x.kind === 'kid' && x.who === ids.b) && kidB.length === 1 && kb.B.audio && clonkB.length === 1 && dKid != null && dKid <= 0.3,
+    { dKid: dKid != null && Math.round(dKid * 1000) / 1000, bouncesA: kb.A.bounce.map((x) => x.kind), bouncesB: kb.B.bounce.map((x) => [x.kind, x.ghost, x.rec ? 'by its [4]' : 'touched']), clonksB: clonkB.length, audio: kb.B.audio, a: kA && kA.p, b: kB && kB.p });
 
   // a stone that blows at B's feet: B's hp falls once, by the hit A judged
   await B.until(`__G.match.local.alive`, 12000, 100);

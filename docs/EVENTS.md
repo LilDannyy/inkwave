@@ -93,7 +93,7 @@ longer emitted.
 | `sub:lock` / `sub:end` | `{ kind: 'waddle', pos, team, actor, target }` / `{ kind, why, team, pos }` (why: reached · travel · life · lost · stuck · fuse · popped · sea · fell · cleared) | kits/waddle.js |
 | `sub:charge` (glide) | `{ actor, kind: 'glide', level, max }` — a Glide Bomb's cook in the hand reached a level (1, 2, 3 = full) | kits/glide.js |
 | `sub:use` (glide) | `{ actor, kind: 'glide', cook }` — released (cook: the seconds it was cooked) | kits/glide.js |
-| `glide:bounce` | `{ pos, kind, speed, team, who, ghost }` — a Glide Bomb bounced (kind: wall · mover · kid · curtain · sentry · shell; who: the kid) | kits/glide.js |
+| `glide:bounce` | `{ pos, kind, speed, team, who, ghost, byRec }` — a Glide Bomb bounced (kind: wall · mover · kid · curtain · sentry · shell; who: the kid; byRec: a ghost's clonk played from its owner's `[4]` at the bounce) | kits/glide.js |
 | `glide:slip` / `glide:fizzle` | `{ actor }` — held a second past full cook it slipped out (thrown) / a cook dropped in the hand (no ink) | kits/glide.js |
 | `glide:end` | `{ why, pos, team }` — ended without a blast (why: sunk · popped · smashed) | kits/glide.js |
 | `zones:zone` | `{ zone, owner }` — one zone taken (≥ ZONES.control ink, 70 %, kept over that line for ZONES.flipHold s) or neutralised (owner −1: the other team ≥ ZONES.contest, likewise held); a taken zone is then flooded with the taker's ink | zones.js |
