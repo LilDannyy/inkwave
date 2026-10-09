@@ -896,6 +896,8 @@
       const guardsAt = G.time - t0, bestOf = new Map(), atZone = new Map();
       if (zp) zp.roleOf = function (a) { return bots.includes(a) ? { role: 'guard', zone: this.Z.active.zones[0].id } : roleOf0.call(this, a); };
       BOBBER_BOT.logOn = true; BOBBER_BOT.log.length = 0;   // (the bots' set-up decisions: printed for a guard that falls short)
+      // (and the objective doesn't rotate in the 20 s: a guard whose zone moves away mid-window has nothing to guard)
+      const swap0 = m.zones.nextSwap; m.zones.nextSwap = Infinity;
       const tg = G.time;
       try {
         step(20, () => {
@@ -905,7 +907,7 @@
             for (const x of K.items) if (x.owner === a && x.state === 'live' && Math.hypot(x.spot.x - c[0], x.spot.z - c[2]) < Rz + 6) bestOf.set(a, Math.max(bestOf.get(a) || 0, x.chain?.n || 1));
           }
         });
-      } finally { if (zp) zp.roleOf = roleOf0; BOBBER_BOT.logOn = false; }
+      } finally { if (zp) zp.roleOf = roleOf0; BOBBER_BOT.logOn = false; m.zones.nextSwap = swap0; }
       for (const a of bots) stub(a);
       const bests = bots.map((a) => bestOf.get(a) || 0);
       const short = bots.filter((a) => (bestOf.get(a) || 0) < 3).map((a) => ({ who: a.name, log: BOBBER_BOT.log.filter((e) => e.who === a.name).map((e) => ({ ...e, t: r2(e.t - tg) })) }));

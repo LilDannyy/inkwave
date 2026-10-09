@@ -259,12 +259,12 @@ function lobPitch(d, dy, speed) {
 // slope move where it settles) → out { yaw, pitch, miss: the predicted float spot's miss in metres (Infinity: none) }.
 // (A bot's throw cancels the run it would inherit — use() — so this is the whole of it.)
 const _lv = new V3(), _ls = { x: 0, y: 0, z: 0 }, _lo = new V3();
-export function lobAim(from, P, team, speed, out = { yaw: 0, pitch: 0, miss: Infinity }) {
+export function lobAim(from, P, team, speed, out = { yaw: 0, pitch: 0, miss: Infinity }, tries = 4) {
   const want = Math.hypot(P.x - from.x, P.z - from.z), wy = Math.atan2(P.x - from.x, P.z - from.z);
   let yaw = wy, d = want;
   out.yaw = wy; out.pitch = 0; out.miss = Infinity;
   _lo.set(from.x, from.y + 1.35, from.z);
-  for (let k = 0; k < 4; k++) {
+  for (let k = 0; k < tries; k++) {
     const pitch = lobPitch(d, P.y - from.y, speed);
     if (pitch == null) break;
     const tp = clamp(pitch + 0.28, -0.3, 1.1), cp = Math.cos(tp);

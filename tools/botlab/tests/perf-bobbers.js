@@ -23,6 +23,10 @@
   const G = window.__G, K = SUB_KITS.bobber, S = G.subs;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const QUICK = /quick/.test(window.__pageArgs || '');
+  // (PAGE_ARGS='kitRays=24': the kit subs' per-frame share of the bots' sight lines uncapped — the Scrap Sentry branch's
+  // sightRay has no cap of its own: what this budget measures without it, for the lead's pick between the two)
+  const KR = (/kitRays=(\d+)/.exec(window.__pageArgs || '') || [])[1];
+  if (KR) (await import('./src/game/botSight.js')).SIGHT.kitRays = +KR;
   const N1 = QUICK ? 300 : 600, N4 = QUICK ? 900 : 1800;
   dbg.freeze();
   const V = (x, y, z) => new THREE.Vector3(x, y, z);

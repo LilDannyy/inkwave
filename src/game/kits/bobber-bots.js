@@ -86,13 +86,14 @@ function okSpot(a, x, z, tower, from = a.pos, lob = true) {
   if (lob && !lobOk(a, at, from)) return null;
   return at;
 }
-// (the lob checks one look for a chain may make — each flies the throw up to four times: a frame's cost stays small)
+// (the lob checks one look for a chain may make — 24; a growth or a replaced link 12 — each flying the throw at most twice:
+// a frame's cost stays small)
 let _lobLeft = Infinity;
 const lobBudget = (n, fn) => { const k = _lobLeft; _lobLeft = n; try { return fn(); } finally { _lobLeft = k; } };
 function lobOk(a, at, from) {
   if (_lobLeft <= 0) { NO.lob++; _noWhy = 'lobBudget'; return false; }
   _lobLeft--;
-  if (lobAim(from, at, a.team, SB().throwSpeed, _la).miss <= 1.2) return true;
+  if (lobAim(from, at, a.team, SB().throwSpeed, _la, 2).miss <= 1.2) return true;   // (a look: the lob and one correction; the throw itself takes up to four)
   NO.lob++; _noWhy = 'lob' + Math.round(_la.miss * 10) / 10; return false;
 }
 // a chain at anchor A, thrown from `from` (Zone Control, Turf): floor spots round A — across the foes' way first, then
@@ -305,7 +306,7 @@ function heatAnchors(b, pads) {
 }
 // a chain to lay now: the first anchor with a layout that stands — from here when it's in reach, else from a stand spot
 // on our side of it (a set-up the bot walks to first) → { A, L, stand } | null
-function planChain(b, tp) { return lobBudget(14, () => planChain0(b, tp)); }
+function planChain(b, tp) { return lobBudget(24, () => planChain0(b, tp)); }
 function planChain0(b, tp) {
   const a = b.a, C = anchors(b, tp), why = BOBBER_BOT.logOn ? [] : null;
   let n = 0;
@@ -341,7 +342,7 @@ function planOf(b) {
 }
 // (a burst's chain left short of three) the links that grow this bot's newest chain to three: each 3.2–4.2 m from one of
 // its bobbers with a clear line to it (so they tether), ≥ 2.4 m from the rest, clear of the team's other chains → [V3] | null
-function growPlan(b, tp) { return lobBudget(8, () => growPlan0(b, tp)); }
+function growPlan(b, tp) { return lobBudget(12, () => growPlan0(b, tp)); }
 function growPlan0(b, tp) {
   const a = b.a;
   let nw = null;
@@ -363,7 +364,7 @@ function growPlan0(b, tp) {
 // (a burst's next link whose planned spot no longer stands) a spot near it, or 3.2–4.2 m from one of the burst's links,
 // that stands from here, ≥ 2.4 m from the burst's other links, within 4.6 m of one of them with a clear line (they
 // tether), clear of the team's other chains → V3 | null
-function linkNear(b, P, q, tp) { return lobBudget(8, () => linkNear0(b, P, q, tp)); }
+function linkNear(b, P, q, tp) { return lobBudget(12, () => linkNear0(b, P, q, tp)); }
 function linkNear0(b, P, q, tp) {
   const a = b.a, T = P.thrown || [P.pts[0]];
   const ok = (x, z) => {
@@ -402,6 +403,9 @@ export const botKit = {
         // (the planned spot no longer stands from here — the bot dived, refilled, was pushed — then the nearest one that
         // still tethers to this burst's links)
         let at = okSpot(a, q.x, q.z, tp);
+        // (and it still tethers to a link that was thrown: one it was picked beside may have been skipped)
+        const T0 = P.thrown || [P.pts[0]];
+        if (at && !T0.some((t) => Math.hypot(t.x - at.x, t.z - at.z) <= 4.6 && Math.abs(t.y - at.y) < 2.2 && G.physics.los(_v.set(t.x, t.y + 1.0, t.z), _v2.set(at.x, at.y + 1.0, at.z)))) { at = null; _noWhy = 'untethered'; }
         if (!at) { const why = _noWhy; at = linkNear(b, P, q, tp); blog(b, at ? 'moved' : 'skip', { i: P.i - 1, d: Math.round(Math.hypot(q.x - a.pos.x, q.z - a.pos.z) * 10) / 10, why, moved: P.from ? Math.round(P.from.distanceTo(a.pos) * 10) / 10 : -1 }); }
         if (at) {
           b._bobberAt = at; BOBBER_BOT.grows++; (P.thrown || (P.thrown = [P.pts[0]])).push(at);
@@ -418,6 +422,7 @@ export const botKit = {
         }
       }
       b._bobPlan = null; b.bombCd = 4 + Math.random() * 3;
+      if (!P.fight && (P.grow || 0) < 2) b._bobGrow = { at: G.time + 1.2, n: (P.grow || 0) + 1, A: P.A, m: G.match };   // (what did land, grown to three)
       return false;
     }
     // a new chain: ink for a link or two now (the rest after a dive), a 2 % chance a frame (a Zone Control guard on its zone:
@@ -677,8 +682,11 @@ export function botAct(b, dt, it, move, busy) {
   if (it.special && !a.specialActive && items.length) {
     for (const o of near(a.pos.x - 5, a.pos.z - 5, a.pos.x + 5, a.pos.z + 5, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - a.pos.x, o.spot.z - a.pos.z) < 5 && !foeIn(o.chain, a.team)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; break; }
   }
-  if (busy) return null;
   const P = a.sub?.kind === 'bobber' ? planOf(b) : null, fighting = !!(b.target && b.seeTimer > 0);
+  // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links
+  // were picked from here)
+  if (P && !fighting && b.mode !== 'refill') { move.multiplyScalar(0.05); b.noProg = 0; }
+  if (busy) return null;
   // laying a chain: hold about where it stands (its links are picked in reach of here) and, short of ink for the next one,
   // a quick dive in its own ink (42 ink/s) — a Zone Control guard with its web to build does the same before it starts
   // (a burst's chain left short of three: its growth, straight away — the links thrown by paint, bombCd waived)
@@ -708,7 +716,9 @@ export function botAct(b, dt, it, move, busy) {
     if (low) {
       it.fire = false;
       if (b.groundSeen === 1) { if (P || atStand) { move.multiplyScalar(0.05); b.noProg = 0; } it.squid = true; BOBBER_BOT.tops = (BOBBER_BOT.tops || 0) + 1; return null; }
-      if (a.ink < (P ? 30 : 40) && b.mode === 'paint') { b.mode = 'refill'; b.refillUntil = 0.9; b.path = null; BOBBER_BOT.refills = (BOBBER_BOT.refills || 0) + 1; return null; }
+      // (mid-burst it stays put — its links were picked from here — and its tank fills as it stands, 9 a second)
+      if (P) { move.multiplyScalar(0.05); b.noProg = 0; }
+      else if (a.ink < 40 && b.mode === 'paint') { b.mode = 'refill'; b.refillUntil = 0.9; b.path = null; BOBBER_BOT.refills = (BOBBER_BOT.refills || 0) + 1; return null; }
     }
     if (P && !low) { move.multiplyScalar(0.05); b.noProg = 0; }   // (its links were picked from here: it stands while it lays them)
   }
