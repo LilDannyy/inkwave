@@ -54,8 +54,8 @@ const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, t
 // atlases, a higher one adds undersides)
 const FLOORS = [
   { id: 'island', poly: G.ISLAND, top: 1.2, y0: -1.1, single: true, mk: () => rock({ tag: 'island', color: K.pave, pattern: PATTERN.yard }) },
-  { id: 'gallery', poly: G.GALLERY, top: 4.8, y0: 0.45, w: 0.8, mk: () => ({ color: K.spawn, pattern: PATTERN.spawn, tag: 'gallery' }) },
-  { id: 'yard', poly: G.YARD, top: 3.6, y0: 0.45, mk: () => tuff({ tag: 'yard', color: '#b4aea3' }) },
+  { id: 'gallery', poly: G.GALLERY, top: 4.8, y0: 3.6, w: 1.2, mk: () => ({ color: K.spawn, pattern: PATTERN.spawn, tag: 'gallery' }) },
+  { id: 'yard', poly: G.YARD, top: 3.6, y0: 0.45, w: 1.4, mk: () => tuff({ tag: 'yard', color: '#b4aea3' }) },
   { id: 'terrace', poly: G.TERRACE, top: 2.4, y0: 0.45, mk: () => tuff({ tag: 'terrace', color: K.tuffDk }) },
   { id: 'lakefront', poly: G.LAKEFRONT, top: 1.2, y0: 0, mk: () => tuff({ tag: 'lakefront' }) },
   { id: 'moorings', poly: G.MOORINGS, top: 1.8, y0: 1.2, w: 0.8, mk: () => iron({ tag: 'moorings', color: '#8c8a84' }) },
@@ -84,9 +84,9 @@ const floorAt = (x, z) => ALL0.some((f) => !f.wall && inPoly(f.poly, x, z));
 const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: calWall }, floorAt) }));
 const hallMk = () => white({ tag: 'casting-hall', hidden: true, paint: false });
 const HALL_W = [
-  walls(G.HEAD(-74.5, G.TH_GE - 0.4, 2.5), { t: 3.0, top: 8.0, y0: 0, ext0: 0.3, ext1: 0, mk: hallMk }, floorAt),
-  walls(G.HEAD(G.TH_GE - 0.4, G.TH_GW + 0.4, 2.0), { t: 3.0, top: 12.0, y0: 0, ext0: 0.3, ext1: 0.3, mk: hallMk }, floorAt),
-  walls(G.HEAD(G.TH_GW + 0.4, -104.5, 2.5), { t: 3.0, top: 8.0, y0: 0, ext0: 0, ext1: 0.3, mk: hallMk }, floorAt),
+  walls(G.HEAD(-74.5, G.TH_GE - 0.4), { t: 3.0, top: 8.0, y0: 0, ext0: 0.3, ext1: 0, mk: hallMk }, floorAt),
+  walls(G.HEAD(G.TH_GE - 0.4, G.TH_GW + 0.4), { t: 3.0, top: 12.0, y0: 0, ext0: 0.3, ext1: 0.3, mk: hallMk }, floorAt),
+  walls(G.HEAD(G.TH_GW + 0.4, -104.5), { t: 3.0, top: 8.0, y0: 0, ext0: 0, ext1: 0.3, mk: hallMk }, floorAt),
 ];
 const WALL_FEET = [...EDGE_WALLS.flatMap((x) => x.w.feet), ...HALL_W.flatMap((w) => w.feet)];
 const ALL = [...ALL0];
@@ -350,11 +350,12 @@ for (const [a0, a1] of [[G.angOf(...ch(G.S_T, -HW)) - 0.4, G.ST_EAST.a[1]], [G.S
 }
 // the Firebrick Store (buff brick) at the terrace's back by the quay; the Pattern Shop on its front west; terrace cover
 { const [x, z] = P(33.9, -63.6); add(O(x, z, 2.6, 2.6, 2.4, 7.0, 63.6 + 90, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
-add(B(-13.4, -8.4, 2.4, 5.4, -33.2, -30.9, { color: K.wood, pattern: PATTERN.planks, roof: true, tag: 'pattern-shop' }));
+add(B(-13.4, -8.6, 2.4, 5.4, -32.6, -30.3, { color: K.wood, pattern: PATTERN.planks, roof: true, tag: 'pattern-shop' }));
 add(stack(-10.2, -37.9, 2.4, 1.0, 1.2, 2.4, 'pattern-crates', K.wood),
   stack(8.6, -33.4, 1.2, 1.2, 1.0, 2.4, 'firebrick-pallet', K.brick),
   stack(-0.9, -37.6, 2.0, 0.8, 1.0, 2.4, 'mould-boxes', K.wood),
-  stack(-16.4, -33.0, 1.6, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'));
+  stack(-16.4, -33.0, 1.6, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'),
+  stack(-1.2, -32.4, 1.6, 0.8, 1.1, 2.4, 'flask-stack', '#6b5f55'));   // (behind the Lower Surge Steps' head, clear of the tower lane)
 { const [x, z] = P(32.7, -77); add(stack(x, z, 1.2, 0.8, 1.0, 3.0, 'flask-stack', '#6b5f55')); }   // a moulding flask on the casting bed
 
 // ---------------------------------------------------------------------------------------- the Lakefront (1.2) and Moorings (1.8)
@@ -366,6 +367,8 @@ add(O(G.r3(DOCK_CAR[0]), G.r3(DOCK_CAR[1]), 2.6, 1.4, 1.8, 3.9, -DOCK_CAR[2] - 9
   O(G.r3(DOCK_TB[0]), G.r3(DOCK_TB[1]), 2.2, 0.6, 1.2, 3.4, -DOCK_TB[2] - 90, cover('#e6dfcd', { tag: 'tide-board' })));
 add(stack(-14.6, -22.6, 1.4, 1.2, 1.3, 1.8, 'capstan', '#4f5a52'), stack(-11.6, -25.2, 1.0, 1.0, 1.0, 1.8, 'chain-bollard', K.ironDk),
   stack(-18.6, -23.4, 1.2, 1.2, 1.0, 1.8, 'stone-crate', K.pumice), stack(-16.4, -28.0, 1.2, 1.6, 1.1, 1.8, 'spare-pumice', K.pumice));
+// a chain bollard on the south head, 2.2 m back from the Race's landing and off the steps' line (cover at the landing)
+{ const [x, z] = G.sp(G.S0, -2.2, -1.8); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
 // the winch house at the Lakefront's west end against the Rim Head's face: drives the Race's chains (fix round 2: the
 // shore spiral narrowed this end, so it stands back against the face and leaves a 2.6 m lane to the south head)
 { const [x, z] = P(31.3, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house' }))); }
@@ -422,10 +425,11 @@ const ZONES = {
 };
 // Tower Command: "the tower rides the ladle rail" (Alpha's attack, drawn on Bravo's half): the causeway, a jog along the
 // Lakefront, up the terrace face, along the terrace, up the yard face, across the yard to the end-stop by the gallery
-// (fix round 2: the terrace run 1 m further back, z 35, behind the Pattern Shop that now stands on the spiral front)
+// (fix round 2: the terrace run 0.6 m further back, z 34.6, between the Pattern Shop on the spiral front and the Upper
+// Surge Steps' foot)
 const TOWER = {
-  path: [[0, 1.8, 0], [0, 25.5], [-3.5, 25.5], [-3.5, 35], [13, 35], [13, 43], [-8, 43], [-8, 52]],
-  checkpoints: [[0, 22.5], [8, 35], [4, 43]],
+  path: [[0, 1.8, 0], [0, 25.5], [-3.5, 25.5], [-3.5, 34.6], [13, 34.6], [13, 43], [-8, 43], [-8, 52]],
+  checkpoints: [[0, 22.5], [8, 34.6], [4, 43]],
 };
 // Bazookarp (bazookarp/SPEC.md §4.1: Alpha's attack on Bravo's half; the engine mirrors it). Data only: inert until the
 // mode's engine reads layout.bazookarp. (Fix round 2: the routes re-drawn through the stairs' new places.)

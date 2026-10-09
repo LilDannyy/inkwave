@@ -116,7 +116,7 @@ function headR(a) {   // monotone piecewise-cubic (Fritsch–Carlson) through HE
   return (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * h * m[i + 1];
 }
 export { headR };
-export const HEAD = (a0, a1, step = 2) => sarcF(headR, a0, a1, [], step);
+export const HEAD = (a0, a1, step = 5) => sarcF(headR, a0, a1, [], step);   // (5° facets, ~5 m: each vertex costs the yard a column)
 
 // the gallery (4.8): the rectangle x ±10, z −69 … −57.5 turned about the pad; its back is the head's curve (its sides run
 // on to meet it), and the side yards beside it reach back to the same curve
@@ -130,7 +130,7 @@ function sideHit(f, b) {   // where the gallery's side line f → b, run on past
 export const GAL_E = sideHit(GAL.fr, GAL.br), GAL_W = sideHit(GAL.fl, GAL.bl);
 export const TH_GE = angOf(...GAL_E), TH_GW = angOf(...GAL_W);
 const inner = (pts, a0, a1) => pts.filter((p) => { const a = angOf(p[0], p[1]); return a < Math.max(a0, a1) - 0.2 && a > Math.min(a0, a1) + 0.2; });
-export const GAL_BACK = inner(HEAD(TH_GE, TH_GW, 2), TH_GE, TH_GW);   // east → west, strictly between the sides
+export const GAL_BACK = inner(HEAD(TH_GE, TH_GW, 5), TH_GE, TH_GW);   // east → west, strictly between the sides
 export const GALLERY = [GAL.fl, GAL.fr, GAL_E, ...GAL_BACK, GAL_W];
 
 // ---------------------------------------------------------------------------------------------- tier features
@@ -145,8 +145,9 @@ export const ST_UPPER = chordA(RY, -101.0, -95.0);    // the Upper Surge Steps (
 export const ST_CUPOLA = chordA(RY, -72.7, -68.0);    // the Cupola Stair (terrace → yard), ~3 m
 // the bastion: the yard's balcony out over the terrace (sector RY − 3.5 → RY, θ −123 → −116)
 export const BASTION = { a: [-123, -116], pts: [SP(RY, -123), ...sarcF((a) => RY(a) - 3.5, -123, -116, [], 2), SP(RY, -116)] };
-export const FRONT_T = (a0, a1) => sarcF(RT, a0, a1, [CHORD_T, ST_LOWER, ST_EAST]);
-export const FRONT_Y = (a0, a1) => sarcF(RY, a0, a1, [CHORD_Y, BASTION, ST_UPPER, ST_CUPOLA]);
+// (4° facets, 2–3 m: every vertex of a front costs both floors a column)
+export const FRONT_T = (a0, a1) => sarcF(RT, a0, a1, [CHORD_T, ST_LOWER, ST_EAST], 4);
+export const FRONT_Y = (a0, a1) => sarcF(RY, a0, a1, [CHORD_Y, BASTION, ST_UPPER, ST_CUPOLA], 4);
 
 // ---------------------------------------------------------------------------------------------- the Organ Pipes
 export const ORG = { L: [-10, -12.8, 2.5], B: [-10, -9.14, 1.5], A: [-10, -6.34, 1.5] };      // Alpha's cluster (x, z, r)
@@ -181,10 +182,10 @@ const SLIT_Z = r3(headR(SLIT_TH) * Math.sin(SLIT_TH * D));
 export const YARD = [
   ...FRONT_Y(TE, -126),
   ...RH_FACE, P(38.8, -148.5), P(42.5, -141), P(44.5, -136),
-  ...inner(HEAD(-136, SLIT_TH, 2), -136, SLIT_TH),
+  ...inner(HEAD(-136, SLIT_TH), -136, SLIT_TH),
   [PIT.x0, SLIT_Z], [PIT.x0, PIT.z0], [PIT.x0, PIT.z1], [PIT.x1, PIT.z1], [PIT.x1, PIT.z0], [PIT.x0, PIT.z0], [PIT.x0, SLIT_Z],
-  ...inner(HEAD(SLIT_TH, TH_GW, 2), SLIT_TH, TH_GW), GAL_W, GAL.fl, GAL.fr, GAL_E,
-  ...inner(HEAD(TH_GE, TE, 2), TH_GE, TE),
+  ...inner(HEAD(SLIT_TH, TH_GW), SLIT_TH, TH_GW), GAL_W, GAL.fl, GAL.fr, GAL_E,
+  ...inner(HEAD(TH_GE, TE), TH_GE, TE),
 ];
 export const RH_REGION = [SP(RY, -126), ...RH_FACE, P(38.8, -148.5), P(42.5, -141), P(44.5, -136), SP(headR, -128), [-25.4, -36.6]];
 // the Moulding Terrace (2.4): between the two spirals, θ −126 → the channel; its east end along the channel the quay
@@ -266,15 +267,15 @@ export const CAST_DOCK = [...arc(25.4, -64.4, -59.8, 2), ...sarcF(RT, -59.8, -64
 export const EDGES = [
   // E8/E2: the head's curve from the lip corner round the east cheek to the gallery, and from the gallery round the west
   // side to the Rim Head's crest and its north edge, stopping square at the Slump's corner (the shelf starts there)
-  { id: 'E8', pts: [LIP_C, ...inner(HEAD(TE, -74.5, 2), TE, -74.5), SP(headR, -74.5)], t: 1.5, top: 7.0, y0: 0 },
-  { id: 'E2', pts: [SP(headR, -104.5), ...inner(HEAD(-104.5, -136, 2), -104.5, -136), P(44.5, -136), P(42.5, -141), P(38.8, -148.5), P(SH_OUT, SA0)], t: 1.5, top: 7.0, y0: 0, ext1: 0 },
+  { id: 'E8', pts: [LIP_C, ...inner(HEAD(TE, -74.5), TE, -74.5), SP(headR, -74.5)], t: 1.5, top: 7.0, y0: 0 },
+  { id: 'E2', pts: [SP(headR, -104.5), ...inner(HEAD(-104.5, -136), -104.5, -136), P(44.5, -136), P(42.5, -141), P(38.8, -148.5), P(SH_OUT, SA0)], t: 1.5, top: 7.0, y0: 0, ext1: 0 },
   { id: 'E3', pts: [...sarcF(SHO, SA0, SA1), [RO_NH, NH_Z]], t: 1.5, top: 7.6, y0: -1.1, cliff: true },
   { id: 'E4r', pts: [[RO_NH, NH_Z], ...inner(sarcF(RO, TH_RO_NH, TH_TIP, [], 4), TH_RO_NH, TH_TIP), TIP_P], t: 1.2, top: 6.0, y0: 0 },
   // the breach's far side: from the horn's point straight out (radially) to the lip, so the Spillway opens as a fan
   { id: 'E4h', pts: [TIP_P, LIP_N_A], t: 1.2, top: 5.4, y0: -1.1 },
 ];
 // the Casting Hall: a curved hall along the gallery's back and the side yards' backs (collision; props.js draws it)
-export const HALL_PTS = HEAD(-74.5, -104.5, 2.5);
+export const HALL_PTS = HEAD(-74.5, -104.5);
 
 // ---------------------------------------------------------------------------------------------- the stones (Pumice Race)
 // [cx, cz, across, along] (DESIGN.md §2.3; the zig-zag offsets are already in the centres); engine yaw −19.0°

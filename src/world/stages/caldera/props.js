@@ -143,7 +143,7 @@ export function register(D, H) {
       // (fix round 2) the Casting Hall follows the head's curve behind the turned gallery: a whitewashed bay per segment of
       // the curve (12 m behind the gallery, 8 m wings behind the side yards) running back out of play, each with a
       // north-light sawtooth roof whose glazed faces look toward the lake; the round furnace window on the gallery's axis
-      const pts = HEAD(-74.5, -104.5, 2.5);
+      const pts = HEAD(-74.5, -104.5);
       for (let i = 0; i + 1 < pts.length; i++) {
         const [ax, az] = pts[i], [bx, bz] = pts[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2, L = Math.hypot(bx - ax, bz - az) + 0.25;
         const am = angOf(mx, mz), tall = am < TH_GE - 0.4 && am > TH_GW + 0.4, H = tall ? 12 : 8, ry = Math.atan2(bx - ax, bz - az);
