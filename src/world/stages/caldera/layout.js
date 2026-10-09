@@ -245,7 +245,7 @@ const railSeg = (a, b, y, h = 1.0, t = 0.25, o = {}) => {
   return O(G.r3((a[0] + b[0]) / 2), G.r3((a[1] + b[1]) / 2), G.r3(L - 0.06), t, y, y + h, G.r3((-Math.atan2(dz, dx) * 180) / Math.PI), { rail: true, color: K.green, tag: 'rail', ...o });
 };
 add(railSeg(SW(4, -57.4), SW(10, -57.4), 4.8), railSeg(SW(-10, -57.4), SW(-4, -57.4), 4.8));
-for (const s of [-1, 1]) add(railSeg(SW(s * 9.9, -68.9), SW(s * 9.9, -64.5), 4.8), railSeg(SW(s * 9.9, -61.5), SW(s * 9.9, -57.6), 4.8));
+for (const s of [-1, 1]) add(railSeg(SW(s * 9.9, -69.3), SW(s * 9.9, -64.5), 4.8), railSeg(SW(s * 9.9, -61.5), SW(s * 9.9, -57.6), 4.8));   // (to the hall's curved wall: no gap at the back corners)
 // the gallery's two lamp standards on cast-iron plinths, flanking the Gallery Stair's head (cover at the deck's front)
 for (const x of [4.75, -4.75]) { const c = SW(x, -58.5); add(O(c[0], c[1], 0.8, 0.8, 4.8, 6.0, SWA, cover(K.green, { tag: 'gallery-lamp' }))); }
 // gallery urns (cover outside the barrier)
@@ -296,6 +296,8 @@ add(
   // the Gate apron's second block (bazookarp SPEC #6: ≥ 1.2 m within 4 m of route 1): a pallet of manhole covers with a
   // second pallet on it, east of the Gallery Stair's foot
   stack2(7.8, -57.2, 1.6, 1.6, 1.3, 3.6, 'covers-stack', K.cast, [1.1, 1.1, 0.6, 0.15, -0.15]),
+  // and a pallet of manhole covers 3.9 m off route 1 (the Upper Surge Steps → the Gate), 4.2 m from the Gate
+  stack(5.2, -53.8, 1.6, 1.6, 1.3, 3.6, 'manhole-covers', K.cast),
   stack2(4.0, -40.0, 2.0, 1.0, 1.0, 3.6, 'mould-boxes', K.wood, [1.0, 0.8, 0.5, -0.4, 0]),
   stack(-9.6, -54.3, 2.0, 1.2, 1.1, 3.6, 'weighbridge-load'),
   stack2(-1.5, -40.1, 2.0, 1.0, 1.0, 3.6, 'ingot-rack', K.cast, [1.4, 0.7, 0.5, 0.2, 0]),
