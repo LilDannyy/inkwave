@@ -952,6 +952,9 @@ function hermite(a, b, t, o) {
   o.t = t;
   o.x = h00 * a.x + h10 * d * a.vx + h01 * b.x + h11 * d * b.vx;
   o.z = h00 * a.z + h10 * d * a.vz + h01 * b.z + h11 * d * b.vz;
+  // [b5-sub-dash] a dash is a straight line at 29 m/s that stops dead on a wall: a Hermite from a dashing sample to a
+  // stopped one bulges past the stop (up to ~0.1 m): straight between them instead
+  if ((a.f | b.f) & F.dash) { o.x = a.x + (b.x - a.x) * u; o.z = a.z + (b.z - a.z) * u; }
   // vertical: Hermite in the air, but never through a floor both ends are standing on (landing velocities jump)
   let y = h00 * a.y + h10 * d * a.vy + h01 * b.y + h11 * d * b.vy;
   if ((a.f & F.grounded) || (b.f & F.grounded)) y = Math.min(Math.max(a.y, b.y) + 0.02, Math.max(Math.min(a.y, b.y) - 0.02, y));
