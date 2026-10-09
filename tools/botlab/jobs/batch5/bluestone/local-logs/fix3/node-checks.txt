@@ -1,0 +1,59 @@
+era 1 bluestone    1142 pieces  ok
+era 1 bluestone.tower 1106 pieces  ok
+era 1 bluestone.bazookarp 1142 pieces  ok
+era 1 bluestone.boss 1154 pieces  ok
+era 2 bluestone    1198 pieces  ok
+era 2 bluestone.tower 1162 pieces  ok
+era 2 bluestone.bazookarp 1198 pieces  ok
+era 2 bluestone.boss 1210 pieces  ok
+era 3 bluestone    1336 pieces  ok
+era 3 bluestone.tower 1300 pieces  ok
+era 3 bluestone.bazookarp 1336 pieces  ok
+era 3 bluestone.boss 1350 pieces  ok
+== check-blockout era 1
+ "blocks": 1254,
+ "holes": 0,
+ "floor_m2": 7462,
+ "floorByHeight": {
+ "paint_m2": 15552,
+== check-blockout era 2
+ "blocks": 1310,
+ "holes": 0,
+ "floor_m2": 8185,
+ "floorByHeight": {
+ "paint_m2": 16504,
+== check-blockout era 3
+ "blocks": 1448,
+ "holes": 0,
+ "floor_m2": 9055,
+ "floorByHeight": {
+ "paint_m2": 17613,
+== appear turf
+== jump 1 -> 2: 78 appearing pieces, 0 violations
+== jump 2 -> 3: 146 appearing pieces, 0 violations
+RESULT 0 violations
+== appear tower
+== jump 1 -> 2: 74 appearing pieces, 0 violations
+== jump 2 -> 3: 146 appearing pieces, 0 violations
+RESULT 0 violations
+== era 1 deadend / strips
+Alpha: dead-end floor 114 m2 (beyond along -50.0)
+Bravo: dead-end floor 114 m2 (beyond along -50.0)
+Alpha: dead-end floor 11 m2 (beyond along -53.5)
+Bravo: dead-end floor 11 m2 (beyond along -53.5)
+RESULT longest 0.0 m; 0 strips over 25 m
+RESULT longest 39.1 m; 7 strips over 25 m
+== era 2 deadend / strips
+Alpha: dead-end floor 114 m2 (beyond along -50.0)
+Bravo: dead-end floor 114 m2 (beyond along -50.0)
+Alpha: dead-end floor 11 m2 (beyond along -53.5)
+Bravo: dead-end floor 11 m2 (beyond along -53.5)
+RESULT longest 0.0 m; 0 strips over 25 m
+RESULT longest 39.1 m; 7 strips over 25 m
+== era 3 deadend / strips
+Alpha: dead-end floor 114 m2 (beyond along -50.0)
+Bravo: dead-end floor 114 m2 (beyond along -50.0)
+Alpha: dead-end floor 11 m2 (beyond along -53.5)
+Bravo: dead-end floor 11 m2 (beyond along -53.5)
+RESULT longest 0.0 m; 0 strips over 25 m
+RESULT longest 35.7 m; 7 strips over 25 m

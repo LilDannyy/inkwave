@@ -1,0 +1,252 @@
+### zones1.log
+== bluestone [zones]: winner Bravo (neutralised) | final 39 vs 33 (penalty +0/+12) | OT 58.4s
+   held A 83.3s B 123.3s neutral 151.8s | captures 9 (takeovers 4), control events 18, first capture @21.2s | rotations 6
+   teams: A [blaster/jetpack brolly/stamp roller/kraken bow/wail] far 44%, near 34%, dead 18%, jump 4% | B [brush/barrage_seeker brolly/barrage_sticky blaster/jetpack blade/zipcaster] far 36%, near 38%, dead 22%, jump 4%
+   bot-time: {"far":40,"near":36,"dead":20,"jump":4} (far by mode {"paint":2941,"refill":118,"fight":1128,"retreat":442}) | specials ready 15
+   bots in the active zone 70.8% of the time | avg inside A 0.57 B 0.61 | within 12 m A 1.15 B 1.33
+   roles (% of bot-time) {"paint":49,"push":10,"guard":7,"watch":3,"stage":12} | holding on purpose 5.3%
+   per bot: turf 1324p, on-zone ink 454p, splats 13 → XP beyond the win/lose base ≈ 1768
+   stuck 0.1% | splats 104 (water 0) | specials 13 | super jumps 52 | turf 20.9/16.9 | sim 358.5s in 73s (wall 73s) | {"cpuSimMs":1.23}
+   penalties [{"team":0,"p":10,"start":100,"end":87.9},{"team":1,"p":10,"start":100,"end":87.9},{"team":0,"p":12,"start":97.9,"end":82.4},{"team":1,"p":12,"start":48.5,"end":32.2}]
+   control log 21.2:A@center 33.3:N@sideB 42:B@sideB 45.9:N@sideB 62.6:B@sideB 84.6:N@center 100.9:B@center 133.7:N@sideB 143:B@sideB 174.4:N@center 213.7:A@center 229.1:N@sideB 237.3:B@sideB 270:N@center 286:A@center 318.8:N@center 325.2:A@center 348.4:N@center
+   best shares per activation center@0-33s A100/B37 | sideB@33-84s A78/B100 | center@85-134s A100/B100 | sideB@134-174s A24/B100 | center@175-229s A100/B49 | sideB@229-270s A27/B100 | center@270-358s A100/B67
+   reachable cells center0:1812/1812 R6.5 nodes108 side1:1259/1259 R7.0 nodes72 side2:1259/1259 R7.0 nodes72 | retake pushes A 6 B 3
+   loadouts A:blaster+burst A:brolly+tracer A:roller+seeker A:bow+curtain B:brush+mist B:brolly+scan B:blaster+burst B:blade+shaker
+   by weapon (players, splats dealt, deaths, avg turf) blaster×2 41/24 1401p · brolly×2 16/27 873p · roller×1 8/18 1735p · bow×1 17/5 1439p · brush×1 6/17 806p · blade×1 16/13 2065p
+   splats by cause {"blade":15,"blast":33,"brolly":15,"roller":1,"bow":17,"burst":3,"drop":10,"brush":3,"jetpack":3,"blaster":2,"tracer":1,"shaker":1}
+   special uses A {"kraken":2,"wail":4,"jetpack":2,"stamp":1} B {"zipcaster":1,"jetpack":2,"barrage":1}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 5552 · B 0 of 5041 | assists A 9 B 13 {"jumps":0,"byDamage":22,"byJump":0,"credited":22} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 3 {"jetpack":3} · B 0 {} | K/D A 57/47 B 47/57 | {"noticed":84,"missed":3,"escapes":31,"evaded":10,"caught":5,"avoidedPath":46,"goalMoved":119,"guard":6,"backedOff":7,"retargeted":10,"heldFire":3.383333333333326,"knockShots":0,"reengaged":10,"bubbleHold":0,"popShots":0,"hops":0,"hunted":7,"splattedBy":{"jetpack":3}}
+   sight: fighting 649 bot-s, trigger held 199 s | foe out of sight 39% of fight time, aim still on it 80.8% of that | shooting at nothing 27.3% of trigger time (23.6% straight at the hidden foe; 2.5% while it still thinks it sees it, 21.9% a charge held, 2.9% shots) | bots 17.42 ms per sim s (looking 0.87) | {"checks":10485,"rays":18300,"deferred":0,"seen":1108,"lost":496,"cleared":19,"expired":45,"located":1343,"jumps":150,"hits":1,"sprays":8,"memBombs":16,"hunts":228}
+   wall climbs (at the wall): {"tries":7,"done":5,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### zones2.log
+== bluestone [zones]: winner Bravo (time) | final 78 vs 6 (penalty +0/+16) | OT no
+   held A 60s B 77s neutral 162.8s | captures 7 (takeovers 4), control events 14, first capture @25.3s | rotations 6
+   teams: A [mitts/barrage_sticky bow/zipcaster blaster/jetpack charger/sonar] far 42%, near 43%, dead 12%, jump 3% | B [bucket/barrage_burst shooter/zooka brush/drainbow roller/kraken] far 47%, near 30%, dead 22%, jump 2%
+   bot-time: {"far":45,"near":36,"dead":17,"jump":3} (far by mode {"paint":2777,"refill":203,"fight":1015,"retreat":293}) | specials ready 18
+   bots in the active zone 71.9% of the time | avg inside A 0.55 B 0.63 | within 12 m A 1.44 B 1.07
+   roles (% of bot-time) {"paint":51,"watch":15,"push":7,"stage":9,"guard":1} | holding on purpose 7.5%
+   per bot: turf 1312p, on-zone ink 468p, splats 9.1 → XP beyond the win/lose base ≈ 1620
+   stuck 0.3% | splats 73 (water 0) | specials 18 | super jumps 28 | turf 15.2/18.8 | sim 300s in 68s (wall 68s) | {"cpuSimMs":0.85}
+   penalties [{"team":0,"p":7,"start":100,"end":92.5},{"team":1,"p":7,"start":100,"end":92.5},{"team":0,"p":11,"start":99.5,"end":84.5},{"team":1,"p":16,"start":27.1,"end":5.2}]
+   control log 25.3:A@center 32.8:N@sideA 52.3:B@sideA 77.2:N@sideA 93:B@center 123:N@sideA 140.2:A@sideA 170.3:N@center 183.5:B@center 205.4:N@center 210.6:A@center 223.4:N@center 260.3:A@sideA 270:N@center
+   best shares per activation center@0-33s A100/B61 | sideA@33-83s A49/B100 | center@84-123s A100/B100 | sideA@123-170s A100/B49 | center@170-226s A100/B100 | sideA@226-270s A100/B72 | center@270-300s A60/B81
+   reachable cells center0:1812/1812 R6.5 nodes108 side1:1259/1259 R7.0 nodes72 side2:1259/1259 R7.0 nodes72 | retake pushes A 3 B 4
+   loadouts A:mitts+boomerang A:bow+mist A:blaster+burst A:charger+mine B:bucket+sprinkler B:shooter+torpedo B:brush+mist B:roller+sticky
+   by weapon (players, splats dealt, deaths, avg turf) mitts×1 16/12 1628p · bow×1 6/5 1135p · blaster×1 16/8 1445p · charger×1 9/1 703p · bucket×1 2/12 836p · shooter×1 14/7 2570p · brush×1 1/16 526p · roller×1 9/12 1649p
+   splats by cause {"bow":6,"blast":12,"mitts":14,"slosh":2,"sticky":1,"zooka":6,"charger":8,"blaster":1,"drop":6,"kraken":3,"shot":8,"boomerang":2,"jetpack":3,"mine":1}
+   special uses A {"zipcaster":3,"jetpack":3,"sonar":3,"barrage":3} B {"zooka":4,"kraken":2}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 4910 · B 0 of 5582 | assists A 8 B 5 {"jumps":0,"byDamage":13,"byJump":0,"credited":13} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 9 {"zooka":6,"kraken":3} · B 3 {"jetpack":3} | K/D A 47/26 B 26/47 | {"noticed":130,"missed":8,"escapes":60,"evaded":18,"caught":17,"avoidedPath":21,"goalMoved":61,"guard":2,"backedOff":3,"retargeted":11,"heldFire":5.199999999999987,"knockShots":0,"reengaged":5,"bubbleHold":0,"popShots":0,"hops":0,"hunted":5,"splattedBy":{"zooka":6,"kraken":3,"jetpack":3}}
+   sight: fighting 584 bot-s, trigger held 219 s | foe out of sight 42.8% of fight time, aim still on it 82.5% of that | shooting at nothing 32.5% of trigger time (30.6% straight at the hidden foe; 2.1% while it still thinks it sees it, 30% a charge held, 0.5% shots) | bots 19.64 ms per sim s (looking 0.9) | {"checks":9337,"rays":14211,"deferred":0,"seen":808,"lost":386,"cleared":21,"expired":54,"located":1267,"jumps":88,"hits":8,"sprays":8,"memBombs":11,"hunts":176}
+   wall climbs (at the wall): {"tries":4,"done":3,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### zones3.log
+== bluestone [zones]: winner Alpha (time) | final 25 vs 80 (penalty +22/+0) | OT no
+   held A 61s B 82.3s neutral 156.5s | captures 7 (takeovers 4), control events 14, first capture @49.9s | rotations 6
+   teams: A [shooter/barrage_sticky brolly/bubbler charger/surf spinner/crab] far 53%, near 31%, dead 12%, jump 3% | B [bow/sonar blaster/surf charger/jetpack blade/strike] far 46%, near 34%, dead 17%, jump 3%
+   bot-time: {"far":49,"near":33,"dead":15,"jump":3} (far by mode {"paint":2854,"refill":193,"fight":1426,"retreat":274}) | specials ready 15
+   bots in the active zone 54.3% of the time | avg inside A 0.38 B 0.36 | within 12 m A 0.87 B 0.99
+   roles (% of bot-time) {"paint":40,"watch":29,"stage":8,"push":7,"guard":1} | holding on purpose 10.5%
+   per bot: turf 1378p, on-zone ink 412p, splats 7.9 → XP beyond the win/lose base ≈ 1553
+   stuck 0.6% | splats 63 (water 0) | specials 15 | super jumps 33 | turf 23.3/17 | sim 300s in 60s (wall 60s) | {"cpuSimMs":1.5}
+   penalties [{"team":1,"p":7,"start":100,"end":91.8},{"team":0,"p":7,"start":100,"end":91.8},{"team":1,"p":14,"start":98.8,"end":80.3},{"team":0,"p":22,"start":54.1,"end":24.7}]
+   control log 49.9:B@sideB 66.4:N@sideB 69.2:A@sideB 90.4:N@sideB 113.5:A@center 123.9:N@sideB 131.3:B@sideB 168.1:N@sideB 186.6:A@center 203.7:N@center 214.9:A@center 227.3:N@sideB 233.8:B@sideB 263:N@sideB
+   best shares per activation center@0-42s A60/B70 | sideB@42-93s A100/B100 | center@93-124s A100/B27 | sideB@124-170s A70/B100 | center@170-227s A100/B51 | sideB@227-270s A94/B100 | center@270-300s A100/B72
+   reachable cells center0:1812/1812 R6.5 nodes108 side1:1259/1259 R7.0 nodes72 side2:1259/1259 R7.0 nodes72 | retake pushes A 3 B 2
+   loadouts A:shooter+sticky A:brolly+tracer A:charger+mine A:spinner+curtain B:bow+mine B:blaster+shaker B:charger+torpedo B:blade+shaker
+   by weapon (players, splats dealt, deaths, avg turf) shooter×1 9/9 2653p · brolly×1 6/12 745p · charger×2 13/7 716p · spinner×1 16/3 1916p · bow×1 8/7 1189p · blaster×1 8/10 1319p · blade×1 3/15 1768p
+   splats by cause {"shot":20,"charger":13,"bow":6,"shaker":1,"crab":5,"blast":6,"brolly":5,"mine":2,"blade":2,"blaster":2,"tracer":1}
+   special uses A {"crab":3,"barrage":3,"surf":2} B {"jetpack":3,"strike":1,"sonar":2,"surf":1}
+   SURF uses 3 thrown 3 anchored 3 lost 0 popped 0 | rings 18 hits 1 (marks 1, ring splats 0) dodged 0 | ink 221 m² in 93 splats | turf from it A 116 of 6003 · B 105 of 5019 | assists A 11 B 5 {"jumps":0,"byDamage":16,"byJump":0,"credited":16} | bots {"throws":3,"atFoes":1,"atObj":2,"atTurf":0,"noticed":19,"missed":7,"jumps":1,"shots":0}
+   enemy specials AI on | splatted by specials: A 0 {} · B 5 {"crab":5} | K/D A 36/27 B 27/36 | {"noticed":113,"missed":8,"escapes":27,"evaded":18,"caught":3,"avoidedPath":17,"goalMoved":36,"guard":0,"backedOff":4,"retargeted":4,"heldFire":3.6999999999999917,"knockShots":0,"reengaged":4,"bubbleHold":0,"popShots":0,"hops":0,"hunted":4,"splattedBy":{"crab":5}}
+   sight: fighting 675 bot-s, trigger held 272 s | foe out of sight 50.2% of fight time, aim still on it 84.4% of that | shooting at nothing 40.5% of trigger time (35.4% straight at the hidden foe; 1.7% while it still thinks it sees it, 35.9% a charge held, 2.8% shots) | bots 17.02 ms per sim s (looking 0.84) | {"checks":9469,"rays":12322,"deferred":0,"seen":655,"lost":297,"cleared":12,"expired":110,"located":1123,"jumps":108,"hits":12,"sprays":6,"memBombs":5,"hunts":167}
+   wall climbs (at the wall): {"tries":5,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### zones3b.log
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 81 (penalty +0/+13.5) | OT no
+   held A 84.3s B 28.8s neutral 170s | captures 9 (takeovers 3), control events 17, first capture @21.9s | rotations 6
+   teams: A [brush/stamp shooter/zooka twins/drainbow mitts/bubbler] far 38%, near 44%, dead 16%, jump 3% | B [shooter/zooka roller/storm brush/stamp bucket/wail] far 44%, near 26%, dead 27%, jump 3%
+   bot-time: {"far":41,"near":35,"dead":21,"jump":3} (far by mode {"paint":2577,"refill":34,"fight":722,"retreat":360}) | specials ready 9
+   bots in the active zone 68.5% of the time | avg inside A 0.85 B 0.35 | within 12 m A 1.61 B 0.87
+   roles (% of bot-time) {"paint":57,"stage":10,"push":7,"guard":5} | holding on purpose 3.7%
+   per bot: turf 1370p, on-zone ink 415p, splats 11.1 → XP beyond the win/lose base ≈ 1681
+   stuck 0% | splats 89 (water 0) | specials 9 | super jumps 28 | turf 24.1/12.8 | sim 283.3s in 67s (wall 68s) | {"cpuSimMs":2.52}
+   penalties [{"team":1,"p":15,"start":100,"end":80.7},{"team":0,"p":15,"start":100,"end":80.7},{"team":1,"p":3,"start":95.7,"end":91.2}]
+   control log 21.9:B@center 41.2:N@center 49.4:A@center 51.6:N@sideB 74.6:A@sideB 91.1:N@center 106.9:A@center 133.6:N@sideB 153.8:B@sideB 162.9:N@sideB 197.4:A@center 217:N@sideB 242.4:A@sideB 249.9:N@sideB 255.6:A@sideB 261.9:N@sideB 277.6:A@center
+   best shares per activation center@0-51s A100/B100 | sideB@52-91s A100/B42 | center@91-133s A100/B30 | sideB@134-165s A70/B100 | center@165-217s A100/B53 | sideB@217-270s A100/B78 | center@270-283s A100/B4
+   reachable cells center0:1812/1812 R6.5 nodes108 side1:1259/1259 R7.0 nodes72 side2:1259/1259 R7.0 nodes72 | retake pushes A 2 B 5
+   loadouts A:brush+mist A:shooter+sprinkler A:twins+shaker A:mitts+tracer B:shooter+tracer B:roller+mine B:brush+mist B:bucket+sprinkler
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 12/30 550p · shooter×2 35/12 2000p · twins×1 8/7 2321p · mitts×1 24/7 1156p · roller×1 8/19 1510p · bucket×1 2/14 872p
+   splats by cause {"shot":34,"mitts":23,"roller":3,"slosh":2,"zooka":7,"drop":12,"brush":5,"tracer":3}
+   special uses A {"zooka":2,"drainbow":2,"bubbler":1} B {"zooka":4} | drainbow {"placed":2,"passes":7,"cuts":2,"crossings":12,"fizzles":8,"pops":2,"extended":0.25,"holds":658}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 6182 · B 0 of 4777 | assists A 13 B 9 {"jumps":0,"byDamage":22,"byJump":0,"credited":22} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 4 {"zooka":4} · B 3 {"zooka":3} | K/D A 57/32 B 32/57 | {"noticed":94,"missed":5,"escapes":37,"evaded":10,"caught":11,"avoidedPath":17,"goalMoved":54,"guard":1,"backedOff":3,"retargeted":6,"heldFire":1.4499999999999997,"knockShots":0,"reengaged":1,"bubbleHold":0,"popShots":0,"hops":0,"hunted":0,"splattedBy":{"zooka":7}}
+   sight: fighting 467 bot-s, trigger held 104 s | foe out of sight 38.7% of fight time, aim still on it 76.9% of that | shooting at nothing 3.6% of trigger time (3.6% straight at the hidden foe; 1.9% while it still thinks it sees it, 0% a charge held, 1.7% shots) | bots 21.67 ms per sim s (looking 1.01) | {"checks":8233,"rays":13478,"deferred":0,"seen":872,"lost":374,"cleared":17,"expired":15,"located":1251,"jumps":83,"hits":5,"sprays":13,"memBombs":3,"hunts":177}
+   wall climbs (at the wall): {"tries":4,"done":2,"stalled":1,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### zonesH.log
+[55663:1009/193448.531423:ERROR:ui/gl/angle_platform_impl.cc:48] mtl_command_buffer.mm:690 (onCommandBufferCompleted): Completed MTLCommandBuffer failed, and error is Caused GPU Hang Error (00000003:kIOGPUCommandBufferCallbackErrorHang)
+== halyard [zones]: winner Bravo (neutralised) | final 70 vs 58 (penalty +0/+17) | OT 20.3s
+   held A 43s B 49.8s neutral 227.3s | captures 7 (takeovers 2), control events 14, first capture @20.4s | rotations 6
+   teams: A [roller/kraken shooter/zooka bow/barrage_burst brolly/barrage_burst] far 38%, near 42%, dead 16%, jump 3% | B [bow/strike spinner/crab roller/kraken bucket/blower] far 48%, near 32%, dead 18%, jump 3%
+   bot-time: {"far":43,"near":37,"dead":17,"jump":3} (far by mode {"paint":2188,"fight":1389,"refill":153,"retreat":665}) | specials ready 13
+   bots in the active zone 66.6% of the time | avg inside A 0.68 B 0.37 | within 12 m A 1.65 B 1.17
+   roles (% of bot-time) {"paint":63,"push":4,"watch":5,"stage":11,"guard":1} | holding on purpose 6.9%
+   per bot: turf 1280p, on-zone ink 383p, splats 9.8 → XP beyond the win/lose base ≈ 1541
+   stuck 0.2% | splats 80 (water 4) | specials 13 | super jumps 32 | turf 27.9/28.2 | sim 320.3s in 53s (wall 54s) | {"cpuSimMs":1.25}
+   penalties [{"team":0,"p":17,"start":100,"end":78.9},{"team":1,"p":17,"start":100,"end":78.9}]
+   control log 20.4:A@center 41.5:N@sideA 70.1:B@sideA 81.6:N@center 134.3:B@sideB 150.8:N@sideB 165.9:B@sideB 175:N@center 249.1:B@sideB 261.7:N@sideB 265.6:A@sideB 270:N@center 292.8:A@center 310.3:N@center
+   best shares per activation center@0-41s A100/B10+A100/B39 | sideA@42-82s A52/B100 | center@82-117s A52/B89+A100/B100 | sideB@118-175s A71/B100 | center@175-226s A100/B75+A99/B78 | sideB@226-270s A100/B100 | center@270-320s A100/B58+A100/B100
+   reachable cells center0:460/460 R3.7 nodes31 center1:460/460 R3.7 nodes31 side2:864/864 R6.2 nodes52 side3:864/864 R6.2 nodes52 | retake pushes A 2 B 3
+   loadouts A:roller+sticky A:shooter+seeker A:bow+waddle A:brolly+tracer B:bow+shaker B:spinner+curtain B:roller+sprinkler B:bucket+sprinkler
+   by weapon (players, splats dealt, deaths, avg turf) roller×2 13/30 1595p · shooter×1 20/9 2034p · bow×2 20/13 928p · brolly×1 5/8 722p · spinner×1 15/7 1470p · bucket×1 5/13 971p
+   splats by cause {"roller":6,"drop":6,"waddle":1,"bow":19,"water":4,"kraken":1,"crab":4,"shot":23,"slosh":5,"zooka":6,"burst":1,"brolly":4}
+   special uses A {"kraken":2,"zooka":3,"barrage":3} B {"kraken":1,"crab":2,"strike":2}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 5151 · B 0 of 5091 | assists A 7 B 10 {"jumps":0,"byDamage":17,"byJump":0,"credited":17} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 5 {"kraken":1,"crab":4} · B 7 {"zooka":6,"barrage":1} | K/D A 40/38 B 38/42 | {"noticed":103,"missed":6,"escapes":39,"evaded":16,"caught":7,"avoidedPath":21,"goalMoved":36,"guard":2,"backedOff":7,"retargeted":6,"heldFire":11.266666666666806,"knockShots":2,"reengaged":9,"bubbleHold":0,"popShots":0,"hops":0,"hunted":1,"splattedBy":{"kraken":1,"crab":4,"zooka":6,"barrage":1}}
+   sight: fighting 752 bot-s, trigger held 309 s | foe out of sight 37.6% of fight time, aim still on it 86.1% of that | shooting at nothing 35.7% of trigger time (32.8% straight at the hidden foe; 1.1% while it still thinks it sees it, 34.3% a charge held, 0.4% shots) | bots 15.99 ms per sim s (looking 0.92) | {"checks":9860,"rays":19809,"deferred":1,"seen":968,"lost":467,"cleared":31,"expired":29,"located":1177,"jumps":109,"hits":10,"sprays":2,"memBombs":8,"hunts":153}
+   wall climbs (at the wall): {"tries":102,"done":55,"stalled":2,"dry":0,"long":0}
+   stuck {"t":181.8,"name":"Squiddo","w":"spinner","mode":"fight","role":"paint","pos":[-20.1,2.6,13.4],"path":true,"hold":false,"pod":"-","dur":1}
+   stuck {"t":34.3,"name":"Coral","w":"roller","mode":"fight","role":"stage","pos":[1.3,0,10.9],"path":false,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":183,"name":"Squiddo","w":"spinner","mode":"paint","role":"paint","pos":[-20.1,2.6,13.3],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":201.8,"name":"Zest","w":"bow","mode":"refill","role":"paint","pos":[-1,0.69,-10.7],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":257.8,"name":"Zest","w":"bow","mode":"retreat","role":"stage","pos":[17.8,0.65,-3.6],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":308.3,"name":"Coral","w":"roller","mode":"paint","role":"paint","pos":[-0.9,2.4,65.4],"path":true,"hold":false,"pod":"-","dur":0.5}
+CONSOLE 0 unique warning/error line(s)
+### towermatch1.log
+== bluestone [tower len 146.5/146.5]: winner Alpha (neutralised) | counts 47 vs 74 (score 47/74) | best push A 79.1m B 48.8m | OT 15.8s | sim 316s
+   held A 148.8s B 155.5s | contested 1.8s (6×) | neutral 11.5s | control changes 10 (takes 12) | idle→neutral 2
+   checkpoints cleared A 1 B 0 (reached 1/0, refills 0/0) | riders avg while held A 1.2 B 1.49 | mounts 40/30
+   left empty while held: 21× (>2 s: 4, of those with a teammate up within 15 m: 3; team wiped: 1; longest 5s; [5,5,3.5,2.5,2,1.75]) | off the tower {"death":22,"role":34,"fell":12,"refill":1,"retreat":1}, last one off a held tower {"death":10,"role":4,"fell":5}
+   teams: A [blaster/jetpack bow/strike mitts/slam brush/stamp] | B [blade/zipcaster bow/surf roller/booyah mitts/bubbler] | ride s by kind {"blaster":40,"bow":128,"mitts":134,"brush":18,"blade":43,"roller":46}
+   roles (% of bot-time) {"ride":46,"escort":27} | riding 16.3% | holding on purpose 0.4%
+   stuck 0% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 122 (water 0) | specials 17 (ready 21) | super jumps 50 | turf 15.5/21.8 | sim 316s in 78s (wall 78s) | {"cpuSimMs":1.3}
+   control log 11:B@0 37:A@-46.1 37.5:B@-45.6 39.3:A@-48.8 66.7:B@0 90.6:A@-45.3 144:B@51.2 151.5:N@37.2 152:B@36.5 160.4:A@21.2 201.7:B@79.1 263:A@-46.4 289.3:B@1.3 315.8:N@-43.8
+   checkpoint log 191.9:A0c
+   X {"climbs":[32,26],"sjRider":12,"kills":122,"killsNear":[58,63],"attempts":177,"boarded":50,"aborted":123,"climbMounts":39,"sjMounts":0,"toBoard":{"med":1.75,"p80":5.75},"nearBoard":{"med":1.5,"p80":2.25,"under6":40,"n":41},"stanceT":[[291.75,24],[291,24.75]],"stanceSw":[14,8],"ridersThreat":[1.08,1.27],"ridersSafe":[2.09,3.2],"heldThreatS":[131.75,137.75],"heldSafeS":[17,17.75],"escortDist":16,"escortWithin12":66,"water":[],"offWhy":{"far":4,"climbing":1,"sj":6,"mode:fight":2},"abortWhy":{"role":41,"death":82},"steamEps":[7,4],"steamEpMed":[3,7],"ridersSafe3s":[3.17,3.77],"aliveSafe3s":[4
+   escort hot: held 211.75s | riders 1.13 | full steam 2% | escort dist med 8.56 p80 24.71, along the track med -6.52 m | screening 32% | fighting 50% | our ink 2–12 m ahead 34% | place {"esc:beside":10,"esc:behind":38,"esc:ahead":21,"esc:far":28,"esc:wayAhead":4}
+   escort warm: held 25.25s | riders 1.68 | full steam 32% | escort dist med 4.93 p80 16.5, along the track med -0.64 m | screening 41% | fighting 6% | our ink 2–12 m ahead 44% | place {"esc:far":19,"esc:ahead":34,"esc:beside":23,"esc:behind":24,"esc:wayAhead":1}
+   escort cold: held 67.25s | riders 1.9 | full steam 33% | escort dist med 8.08 p80 25.95, along the track med -5.07 m | screening 0% | fighting 12% | our ink 2–12 m ahead 41% | place {"esc:far":29,"esc:ahead":17,"esc:wayAhead":7,"esc:beside":15,"esc:behind":32}
+   escort: riders held-time by count 0–4 [34.25,165,80,15.5,9.5] | full steam total [24,24.75]s, full-steam-while-hot episodes [5,3] | escort by the next checkpoint [0,0]% | deck ink [85,78]% | riders hidden (threat / safe) [41,7]% of [319.25,92.25] rider-s | deaths while riding 23 [23,0] = 3.35/rider-min | rolling home [4.75,10.5]s, riders hopped off for it [5,4]× ([3.75,6.75]s)
+   escort slots hot: {"lead:beside":3,"flank:beside":1,"backup:beside":6,"backup:behind":24,"lead:ahead":8,"backup:ahead":11,"flank:far":3,"backup:far":11,"lead:far":11,"flank:behind":5,"flank:ahead":1,"lead:wayAhead":1,"backup:wayAhead":2,"lead:behind":8,"flank:wayAhead":0,"cp:far":3,"cp:behind":0,"cp:wayAhead":0} | painting escorts: goal along med 4.690783333331439 (p20 0.8966437500001945) vs them -38.22272708333371, arrived 3%, fighting 50% of 1308 {"backup":185,"lead":149,"flank":44,"cp":36}
+   escort slots warm: {"backup:far":7,"lead:ahead":21,"backup:ahead":13,"lead:beside":2,"backup:beside":16,"flank:far":3,"flank:behind":4,"backup:behind":10,"lead:far":8,"lead:behind":9,"flank:beside":5,"flank:ahead":1,"backup:wayAhead":1} | painting escorts: goal along med 3.435916666666998 (p20 0.6113770833329326) vs them -0.41994583333421787, arrived 7%, fighting 6% of 144 {"lead":49,"backup":53,"flank":19}
+   escort slots cold: {"backup:far":11,"backup:ahead":11,"lead:ahead":6,"backup:wayAhead":2,"lead:far":12,"backup:beside":14,"backup:behind":17,"flank:far":2,"flank:behind":1,"lead:wayAhead":5,"flank:ahead":0,"lead:behind":13,"cp:far":3,"cp:behind":0,"lead:beside":1} | painting escorts: goal along med 2.2813885416649917 (p20 0.38985312499991664) vs them -4.250000000000007, arrived 9%, fighting 12% of 297 {"backup":137,"lead":79,"flank":6,"cp":10}
+   roles A P1/blaster           rrrrrrrrrrR.....Errrrrrrr......SSrrrrrrrrEEEEEEBRRRrRRRRRRRRRR......EEErrrrrr......EErrrrrRRRrrRRRRRRRREEEErrBBBBBBBBBBBBSrrrEEEEEEBBrBBBBBBBBrrrr....
+   roles A Bubbles/bow          rrrrrrrrrEErrrrrrrr.....SSSrr.....SSSEEBBBBBBBBrrrRRBBBBBBBBBBBrrrr......rrrrrrrrrrrr.....SSSRRRRRRRRRrRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR.....EEEErrrrrrrr
+   roles A Inky Vee/mitts       EErrrrrrrrr.....EEErrrrrrr......SSrrRrrRRRRRRRRErEE.....EEEEEEEBBBEErrrr.....EEEEEEErrr......EEEEEEEEEEEEEEE......EEEEEEESSRRRBBBBBrrrRRrRRRRR.....EEE
+   roles A Juno/brush           EErrrrrrrEEr......EEEEEEErrrrrrrrR.....EEEEEEEEEBBB......SSEEEErrrrrrr......SSrrrrrr.....SSBBBBBBBBBBBBBBBBB.....SSSrrrrRRRRRRE.....ESSEEE......EErrrr
+   roles B Riptide/blade        EErrrrrrrEEB.....SSSREEEE......SSRR......EEEErEErrrrr.....EEEEErrrBBrBBBBBBBBBBBEEB.....SSSr......EEEEErEEErrrrrrrr.....Errrrrr.....ErrrrrrrrrrRR.....
+   roles B Tako/bow             rrrrrrrrrrrr.....SSSRRRR......BBBEBrrBBrrrrrr......Srrrrrrrrrr.....SSSEEEEEEEEEEBBEEEEEEBrrrrrrr......SSrrrr.....SSSrrr.....EEEErrrrrrr......SSEBBrrrr
+   roles B Pip/roller           EErrrrrrrEEEBBBBBBBBBBBBBBBBB.....SSSRR.....SSSr......rrrrrrrr......SSRRRRRRRRRRRRRRBBBBrr......Errrrrrrrr......SSEr......rrrrrr.....EEErrrr.....EBBBB
+   roles B Drip/mitts           rrrrrrrrrrRRRRRRRRRRRRRRRRRRRRRRRRR.....Errrrrrrrrr......EEEEErrrrRRRRrRRRRRRRRRRRRRRRRR......rrrrrrrrr......rrrrrrrr......EEEErrrr.....EEEErrrrRRrrrr
+   stuck {"t":60.8,"name":"Bubbles","w":"bow","mode":"refill","role":"escort","pos":[15.8,0,-0.2],"tower":6.9,"path":true,"dur":0.25}
+   stuck {"t":312.8,"name":"P1","w":"blaster","mode":"paint","role":"ride","pos":[5.4,1.5,-22.8],"tower":9.6,"path":true,"dur":0.25}
+   stuck {"t":314.5,"name":"P1","w":"blaster","mode":"fight","role":"ride","pos":[5.5,1.5,-23.4],"tower":9.1,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+### towermatch1b.log
+== bluestone [tower len 146.5/146.5]: winner Bravo (time) | counts 64 vs 49 (score 64/49) | best push A 62.8m B 75.2m | OT no | sim 300s
+   held A 162.3s B 127.3s | contested 5s (9×) | neutral 10.3s | control changes 16 (takes 17) | idle→neutral 0
+   checkpoints cleared A 0 B 1 (reached 2/1, refills 2/0) | riders avg while held A 1.37 B 1.32 | mounts 29/39
+   left empty while held: 19× (>2 s: 9, of those with a teammate up within 15 m: 7; team wiped: 0; longest 4.5s; [4.75,4.25,2.75,2.5,2.5,2.5]) | off the tower {"role":36,"death":22,"fell":8,"retreat":1}, last one off a held tower {"death":11,"fell":4,"role":3}
+   teams: A [bucket/blower shooter/zipcaster bow/bubbler mitts/barrage] | B [spinner/barrage_mist blade/kraken roller/zooka mitts/slam] | ride s by kind {"bucket":37,"shooter":48,"bow":27,"mitts":154,"spinner":57,"blade":49,"roller":26}
+   roles (% of bot-time) {"ride":47,"escort":27} | riding 16.5% | holding on purpose 0.5%
+   stuck 0% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 113 (water 0) | specials 12 (ready 13) | super jumps 42 | turf 21/15.9 | sim 300s in 87s (wall 87s) | {"cpuSimMs":1.27}
+   control log 10.3:B@0 58.7:A@-75.2 120:B@42.3 123.9:A@35.2 141.9:B@62.8 157.1:A@34.2 171.3:B@61.4 190.6:A@25.6 197.7:B@34.3 204.1:A@21.2 217.9:B@43.4 219.7:A@43.2 233.2:B@62.8 259:A@13 273.1:B@43 279.1:A@31.8 299.4:B@60.6
+   checkpoint log 48.4:B0c 146.9:A0r 238.2:A0r
+   X {"climbs":[27,36],"sjRider":10,"kills":113,"killsNear":[51,61],"attempts":177,"boarded":52,"aborted":121,"climbMounts":44,"sjMounts":0,"toBoard":{"med":2,"p80":5},"nearBoard":{"med":1.5,"p80":2.5,"under6":46,"n":47},"stanceT":[[279.5,20.25],[276,23.75]],"stanceSw":[10,12],"ridersThreat":[1.24,1.13],"ridersSafe":[2.87,2.5],"heldThreatS":[148.75,110.25],"heldSafeS":[13.5,17],"escortDist":15.3,"escortWithin12":67,"water":[],"offWhy":{"approach":9,"near:climb":3,"climbing":1,"sj":1,"role:escort":1},"abortWhy":{"role":49,"death":72},"steamEps":[5,6],"steamEpMed":[4,3.25],"ridersSafe3s":[3.77,3
+   escort hot: held 213.25s | riders 1.17 | full steam 2% | escort dist med 7.9 p80 22.08, along the track med -5.85 m | screening 27% | fighting 51% | our ink 2–12 m ahead 37% | place {"esc:beside":13,"esc:behind":43,"esc:ahead":17,"esc:wayAhead":4,"esc:far":22}
+   escort warm: held 23s | riders 2.09 | full steam 45% | escort dist med 3.53 p80 14.61, along the track med -1.97 m | screening 13% | fighting 1% | our ink 2–12 m ahead 45% | place {"esc:beside":34,"esc:behind":40,"esc:ahead":16,"esc:far":10}
+   escort cold: held 53.25s | riders 1.76 | full steam 31% | escort dist med 5.89 p80 15.79, along the track med -5.51 m | screening 0% | fighting 3% | our ink 2–12 m ahead 42% | place {"esc:behind":46,"esc:ahead":18,"esc:wayAhead":5,"esc:beside":16,"esc:far":15}
+   escort: riders held-time by count 0–4 [35.75,148.25,84,11.75,9.75] | full steam total [20.25,23.75]s, full-steam-while-hot episodes [4,4] | escort by the next checkpoint [12,26]% | deck ink [85,75]% | riders hidden (threat / safe) [51,4]% of [314.5,81.25] rider-s | deaths while riding 23 [23,0] = 3.49/rider-min | rolling home [0,13]s, riders hopped off for it [1,7]× ([0.5,8.25]s)
+   escort slots hot: {"backup:beside":6,"flank:behind":1,"lead:ahead":7,"backup:behind":31,"lead:beside":4,"lead:behind":8,"cp:ahead":2,"cp:beside":3,"cp:behind":3,"backup:ahead":7,"cp:wayAhead":0,"lead:wayAhead":3,"backup:wayAhead":1,"flank:beside":1,"flank:ahead":1,"flank:wayAhead":0,"flank:far":2,"lead:far":11,"backup:far":7,"cp:far":3} | painting escorts: goal along med 4.8293812499982565 (p20 1.1663489583324207) vs them -18.357271874999146, arrived 4%, fighting 51% of 1370 {"backup":202,"lead":215,"cp":64,"flank":40}
+   escort slots warm: {"cp:beside":2,"lead:beside":8,"backup:beside":17,"backup:behind":25,"lead:behind":9,"flank:beside":7,"lead:ahead":7,"flank:behind":3,"backup:ahead":7,"lead:far":6,"backup:far":5,"cp:ahead":1,"cp:behind":2,"flank:ahead":1} | painting escorts: goal along med 2.6968187500003395 (p20 0.15800000000034942) vs them -1.8453687499996505, arrived 12%, fighting 1% of 88 {"cp":5,"lead":22,"backup":40,"flank":10}
+   escort slots cold: {"backup:behind":29,"lead:behind":11,"backup:ahead":10,"lead:wayAhead":4,"backup:beside":11,"lead:ahead":8,"backup:wayAhead":1,"backup:far":7,"lead:far":8,"flank:behind":5,"flank:beside":3,"lead:beside":3,"cp:beside":1,"flank:far":0} | painting escorts: goal along med 1.8769145833335656 (p20 0.4473177083343245) vs them -4.965916666667077, arrived 5%, fighting 3% of 237 {"backup":130,"lead":70,"flank":20,"cp":2}
+   roles A P1/bucket            rrrrrrrrrrr.....rrrrrrrr.....Errrrrrr.....EErr......ErrrrrBRRRRRRREEEEEEEEEBBBBEBBBEEEEEEEEEEEErRRRRREBEEEErrrrrrBB......SSBBBrEEEEEEEEEEEE.....SSSrrr
+   roles A Sprinkle/shooter     rrrrrrrrrrrr.....EEEEEEErrr......EEEErrrrrrrr......rr......BBBBBBBBBBBBB.....SSSRRRRRRRRRRRRRRRRRRRRR......EEEEEEEEEEErrrrrrrrrBBBSErrrrRRRRrr.....Err
+   roles A Inky Vee/bow         EErrrrrrrEErr.....EEEEEErrr.....EEEEEErrrrr......rrrr.....EEEEEEEEEEEEEEBBB......SSRBBBBBBBBBBBrRRRRBBrRRRRRRRRRRRRRRR......SSrEEEBBBBBBBBBBBErrrr....
+   roles A Suki/mitts           EErrrrrrrEE.....rrrrrrrr.....Errrrrrr......EEEr.....EErrrrRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRREErBBBBBBBBBBEEBBBrrrrrRRRRRRRRRRRRRRRRErr......SS
+   roles B Fizz/spinner         rrrrrrrrrrBrrRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR......Errrrrrrrrrrr......EErrrrrrrr.....rrrrrrrrrrr.....Errrrrrrr.....rrrrrr.....rrrrrrrBBrrrrBBB
+   roles B Coral/blade          EErrrrrrrEEBBBBrRRRRRRREBBBBBBrRRREEEEBBBBBRBBBBBrRRBBrrrrrr.....EEEEEEErrrrrr......rrrErrr.....EEEEEEEErrrrr......SSErR......EEErrrr......SSErR......
+   roles B Tako/roller          EErrrrrrrEEEEEErrrrrRRREEEEEEErRREEEEEEEEEEEEE......EEBBrrrrrrrrrrr.....EEEEEErrrrr......SSr......EEEEEEEEE......EEEEErrRRR......Errrrr......EEBBrrRRR
+   roles B Loop/mitts           rrrrrrrrrrRRRRRRRRRRRRRRrrRRRRRRRBBBBBrRRRRREErrRRRRRErr.....EEEEEErrrrrrrrrrrrr.....SSSrr.....Errrrrrrrrrrrrrrrrrrrrr.....Errrrrr......rrrrrRR.....SS
+   stuck {"t":143.3,"name":"Inky Vee","w":"bow","mode":"fight","role":"ride","pos":[-10.9,0.68,29.2],"tower":12.6,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+### towermatch2.log
+== bluestone [tower len 146.5/146.5]: winner Alpha (knockout) | counts 0 vs 100 (score 0/100) | best push A 146.5m B 0m | OT no | sim 103.3s
+   held A 93.5s B 0s | contested 1s (1×) | neutral 9.5s | control changes 0 (takes 1) | idle→neutral 0
+   checkpoints cleared A 2 B 0 (reached 2/0, refills 0/0) | riders avg while held A 1.55 B 0 | mounts 15/1
+   left empty while held: 2× (>2 s: 0, of those with a teammate up within 15 m: 0; team wiped: 0; longest 1.5s; [1.5,1.25]) | off the tower {"death":3,"role":9,"fell":2,"retreat":1}, last one off a held tower {"fell":1}
+   teams: A [brolly/bubbler mitts/slam blaster/barrage_seeker spinner/crab] | B [charger/sonar blade/zipcaster blaster/stamp brolly/bubbler] | ride s by kind {"brolly":32,"mitts":8,"blaster":79,"spinner":26,"charger":0,"blade":0}
+   roles (% of bot-time) {"ride":42,"escort":24,"perch":11} | riding 17.7% | holding on purpose 1.5%
+   stuck 0.5% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 36 (water 0) | specials 7 (ready 7) | super jumps 11 | turf 13.8/4.7 | sim 103.3s in 24s (wall 24s) | {"cpuSimMs":1.42}
+   control log 9.9:A@0
+   checkpoint log 53.6:A0c 78.9:A1c
+   X {"climbs":[16,1],"sjRider":3,"kills":36,"killsNear":[7,29],"attempts":46,"boarded":10,"aborted":34,"climbMounts":7,"sjMounts":0,"toBoard":{"med":1,"p80":3},"nearBoard":{"med":1,"p80":1.5,"under6":9,"n":9},"stanceT":[[96.75,6.25],[96.75,6.25]],"stanceSw":[2,2],"ridersThreat":[1.55,0],"ridersSafe":[0,0],"heldThreatS":[93.5,0],"heldSafeS":[0,0],"escortDist":5.8,"escortWithin12":88,"water":[],"offWhy":{},"abortWhy":{"role":9,"death":25},"steamEps":[1,1],"steamEpMed":[6.25,6.25],"ridersSafe3s":[0,0],"aliveSafe3s":[0,0],"safe3sS":[0,0],"escortMed":5.0945559172504575,"escortP80":10.6754714989792
+   escort hot: held 67.75s | riders 1.52 | full steam 0% | escort dist med 5.21 p80 9.96, along the track med -1.59 m | screening 35% | fighting 60% | our ink 2–12 m ahead 22% | place {"esc:beside":14,"esc:far":5,"esc:ahead":31,"esc:behind":43,"esc:wayAhead":7}
+   escort warm: held 17.5s | riders 1.74 | full steam 0% | escort dist med 4.05 p80 9.2, along the track med 1.25 m | screening 41% | fighting 10% | our ink 2–12 m ahead 22% | place {"esc:far":3,"esc:beside":17,"esc:ahead":39,"esc:behind":29,"esc:wayAhead":12}
+   escort cold: held 8.25s | riders 1.45 | full steam 0% | escort dist med 2.55 p80 9.35, along the track med -2.21 m | screening 0% | fighting 8% | our ink 2–12 m ahead 8% | place {"esc:far":5,"esc:behind":49,"esc:ahead":27,"esc:beside":19}
+   escort: riders held-time by count 0–4 [2.75,39.75,47.5,3.5,0] | full steam total [6.25,6.25]s, full-steam-while-hot episodes [1,1] | escort by the next checkpoint [25,null]% | deck ink [87,null]% | riders hidden (threat / safe) [62,null]% of [146.25,0] rider-s | deaths while riding 3 [3,0] = 1.23/rider-min | rolling home [0,0]s, riders hopped off for it [0,0]× ([0,0]s)
+   escort slots hot: {"backup:beside":7,"lead:far":1,"flank:far":1,"lead:ahead":19,"backup:behind":29,"backup:ahead":7,"backup:far":3,"flank:ahead":3,"flank:beside":1,"cp:ahead":2,"lead:beside":6,"lead:behind":7,"cp:behind":6,"cp:beside":0,"lead:wayAhead":0,"flank:wayAhead":0,"cp:wayAhead":1,"backup:wayAhead":5,"flank:behind":1} | painting escorts: goal along med 2.749999999999993 (p20 0.7499999999999929) vs them 0.07371770833488256, arrived 24%, fighting 60% of 490 {"lead":25,"flank":13,"backup":56,"cp":15}
+   escort slots warm: {"backup:far":3,"lead:beside":7,"flank:ahead":5,"backup:behind":24,"lead:ahead":14,"backup:beside":10,"backup:ahead":14,"lead:behind":4,"cp:ahead":6,"cp:wayAhead":4,"backup:wayAhead":8} | painting escorts: goal along med 2.5 (p20 0.7499999999999929) vs them 1.658437499999991, arrived 13%, fighting 10% of 115 {"backup":39,"lead":22,"flank":6,"cp":12}
+   escort slots cold: {"backup:far":5,"backup:behind":49,"lead:ahead":11,"flank:ahead":8,"backup:beside":19,"cp:ahead":8} | painting escorts: goal along med 1.7024166666665117 (p20 -0.15724791666680105) vs them -2.157247916666801, arrived 0%, fighting 8% of 37 {"backup":24,"lead":4,"flank":3,"cp":3}
+   roles A P1/brolly            rrrrrrrrrBBr.....SSSREEEEEBBBBBBBBBBBBB.....SSSREEEB......SSREEEEEEEEEEErRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+   roles A Kelp/mitts           rrrrrrrrrR......SSSRREEEEEEEEEEEEEEEEEEEEErrRRRRREE......SSBBBBBBBBBBBRBBBBBBBBBBBBBBBBBBBBBBBBBB......
+   roles A Zest/blaster         EErrrrrrEEErRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRrBBBRRRRRRRRRrRRRRRRRRREEEErrRRRRRRRRRRRRRRRRRREE
+   roles A Fizz/spinner         EErrrrrrEEEBBBBBBBrBBBBBBBrrrRRRRRRRRREBBBBBBBBBBBBrEBrRRRRRRRRRRRRRRRRR......SSEEEEEREEEEEEEEEEEEBBBBB
+   roles B Tako/charger         PPrrrrrrPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.....PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP..
+   roles B Pip/blade            EErrrrrrEE......rrrrrrrr.....rrrrrrrrrrr......rrrr.....SSSr.....Errr.....Errrr......rr......rrr.....Err
+   roles B Wasabi/blaster       rrrrrrrrrrrrrr......EEEErrrrrrr......SSErR......EErr......SSr......Errrr......SSr......rr.....Errr.....
+   roles B Riptide/brolly       rrrrrrrrrrrrrr.....rrrrrrr......rrrrrrrrr......rrrr.....Srrr......rrrr......rrrrrrrr......rrrr.....Errr
+   stuck {"t":99.3,"name":"Tako","w":"charger","mode":"fight","role":"perch","pos":[5.6,1,63.6],"tower":13.2,"path":false,"dur":2}
+   stuck {"t":70.5,"name":"Tako","w":"charger","mode":"paint","role":"perch","pos":[0.1,3.3,70.3],"tower":27.3,"path":true,"dur":0.5}
+   stuck {"t":53.3,"name":"Tako","w":"charger","mode":"paint","role":"perch","pos":[-4.4,1,54.4],"tower":24.3,"path":true,"dur":0.25}
+   stuck {"t":68,"name":"Tako","w":"charger","mode":"fight","role":"perch","pos":[0.7,3.3,70.2],"tower":25.3,"path":false,"dur":0.25}
+   stuck {"t":78.3,"name":"Kelp","w":"mitts","mode":"fight","role":"escort","pos":[-16.2,0,44.5],"tower":3.3,"path":true,"dur":0.25}
+   stuck {"t":78.5,"name":"Tako","w":"charger","mode":"fight","role":"perch","pos":[-1.6,1,62.8],"tower":20.1,"path":false,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+### towermatch3.log
+[60932:1009/193855.966935:ERROR:ui/gl/angle_platform_impl.cc:48] mtl_command_buffer.mm:690 (onCommandBufferCompleted): Completed MTLCommandBuffer failed, and error is Impacting Interactivity (0000000e:kIOGPUCommandBufferCallbackErrorImpactingInteractivity)
+== bluestone [tower len 146.5/146.5]: winner Bravo (time) | counts 77 vs 64 (score 77/64) | best push A 42.6m B 62.8m | OT no | sim 300s
+   held A 133.3s B 153s | contested 9.3s (8×) | neutral 13.5s | control changes 13 (takes 15) | idle→neutral 1
+   checkpoints cleared A 0 B 0 (reached 0/1, refills 0/1) | riders avg while held A 1.15 B 1.35 | mounts 25/38
+   left empty while held: 19× (>2 s: 7, of those with a teammate up within 15 m: 7; team wiped: 2; longest 4.8s; [5,4.5,4.25,3.25,2.75,2.5]) | off the tower {"death":21,"role":31,"refill":1,"fell":9}, last one off a held tower {"fell":5,"death":10,"role":3}
+   teams: A [shooter/storm roller/crab blaster/strike brolly/blower] | B [blaster/jetpack twins/bubbler bucket/drainbow charger/booyah] | ride s by kind {"shooter":95,"roller":18,"blaster":109,"brolly":6,"twins":97,"bucket":30,"charger":14}
+   roles (% of bot-time) {"ride":45,"escort":23,"perch":10} | riding 15.4% | holding on purpose 2.8%
+   stuck 0.1% | by the tower's side 3.9% of bot-time, stuck there 0s (0 episodes) | splats 98 (water 0) | specials 15 (ready 17) | super jumps 43 | turf 16.6/18 | sim 300s in 95s (wall 95s) | {"cpuSimMs":1.87}
+   control log 11.3:A@0 32.3:B@30.1 66.7:A@-33.3 82.1:B@-6.1 99.8:A@-35.8 116.2:B@-6.3 148.5:A@-62.8 169.7:B@-22.7 176.6:A@-36.5 217.6:B@42.6 243.5:N@0 246:B@0 255.4:A@-8 256.6:B@-6.6 259.1:A@-9 275.6:B@18.2
+   checkpoint log 153.5:B0r
+   X {"climbs":[30,35],"sjRider":15,"kills":98,"killsNear":[52,41],"attempts":144,"boarded":48,"aborted":94,"climbMounts":43,"sjMounts":1,"toBoard":{"med":3.25,"p80":10},"nearBoard":{"med":1.5,"p80":3,"under6":45,"n":46},"stanceT":[[288.5,11.25],[265.75,34]],"stanceSw":[4,12],"ridersThreat":[1.11,1.08],"ridersSafe":[2.71,2.65],"heldThreatS":[129.75,126.75],"heldSafeS":[3.5,26.25],"escortDist":12.6,"escortWithin12":68,"water":[],"offWhy":{"near:climb":24,"climbing":5,"approach":7,"mode:fight":1,"sj":5,"near:hop":1},"abortWhy":{"role":38,"death":56},"steamEps":[2,6],"steamEpMed":[7.75,6.25],"rid
+   escort hot: held 202.25s | riders 1.1 | full steam 1% | escort dist med 6.16 p80 12.9, along the track med -1.94 m | screening 41% | fighting 53% | our ink 2–12 m ahead 38% | place {"esc:ahead":14,"esc:beside":19,"esc:behind":23,"esc:far":13,"perch:beside":2,"perch:behind":8,"perch:far":15,"esc:wayAhead":4,"perch:ahead":1}
+   escort warm: held 35.5s | riders 1.55 | full steam 16% | escort dist med 4.16 p80 8.77, along the track med -0.59 m | screening 44% | fighting 6% | our ink 2–12 m ahead 51% | place {"esc:beside":22,"esc:ahead":28,"esc:behind":23,"perch:far":9,"perch:behind":8,"esc:far":8,"esc:wayAhead":2}
+   escort cold: held 48.5s | riders 1.69 | full steam 44% | escort dist med 3.32 p80 5.81, along the track med -2.18 m | screening 0% | fighting 3% | our ink 2–12 m ahead 48% | place {"esc:behind":32,"esc:ahead":8,"esc:beside":22,"perch:far":15,"perch:behind":21,"esc:far":3}
+   escort: riders held-time by count 0–4 [38,165,62.25,14,7] | full steam total [11.25,34]s, full-steam-while-hot episodes [2,4] | escort by the next checkpoint [null,0]% | deck ink [85,76]% | riders hidden (threat / safe) [55,9]% of [290,79] rider-s | deaths while riding 21 [21,0] = 3.41/rider-min | rolling home [11,7]s, riders hopped off for it [4,2]× ([2.75,5.5]s)
+   escort slots hot: {"lead:ahead":8,"flank:beside":1,"lead:beside":4,"backup:beside":13,"lead:behind":5,"backup:ahead":6,"lead:far":3,"flank:behind":4,"backup:behind":15,"cp:beside":0,"perch:beside":2,"perch:behind":8,"perch:far":15,"lead:wayAhead":3,"flank:far":2,"backup:far":7,"perch:ahead":1,"cp:far":1,"flank:ahead":0,"backup:wayAhead":1,"cp:wayAhead":1} | painting escorts: goal along med 2.263999999999859 (p20 0.532979166666669) vs them -2.1141781250011853, arrived 16%, fighting 53% of 1022 {"lead":110,"backup":191,"flank":40,"cp":20}
+   escort slots warm: {"flank:beside":2,"lead:ahead":16,"backup:behind":14,"backup:beside":16,"flank:behind":2,"perch:far":9,"lead:beside":5,"lead:behind":6,"perch:behind":8,"flank:ahead":2,"lead:far":4,"backup:far":2,"backup:ahead":10,"flank:far":2,"cp:ahead":1,"cp:wayAhead":1,"lead:wayAhead":1} | painting escorts: goal along med 3.3266645833337094 (p20 0.8108124999996988) vs them -0.13116562499841677, arrived 11%, fighting 6% of 209 {"flank":18,"lead":72,"backup":83,"cp":5}
+   escort slots cold: {"flank:behind":1,"lead:ahead":7,"backup:behind":27,"flank:beside":1,"backup:beside":15,"perch:far":15,"backup:ahead":1,"perch:behind":21,"cp:behind":1,"lead:beside":5,"lead:behind":4,"backup:far":3} | painting escorts: goal along med 1.2446812500002764 (p20 -0.06458333333449451) vs them -2.1799937500000794, arrived 5%, fighting 3% of 102 {"flank":2,"lead":22,"backup":61}
+   roles A P1/shooter           rrrrrrrrrrrRRRRRRRRRRRRRRRrrrrR.....EEEEEEErrrrrrrr.....EEErrEEEEErRRRRRRRRRRRRRRR.....EErrrrrr.....SSSRrRRRRRRrrrrrr......EEEEErrrrr......EEEErrrrrRR
+   roles A Bubbles/roller       EErrrrrrrrEEEEEEEEEEEEEEEE......rrrrrrrrrr.....EEEErrrrrrrr.....SSSBBBBBBBBBBBBBBBrrrrrrr......rrrrBB......SSSEEEEE......rrrrrrr......rrrrrrrrr.....SS
+   roles A Kelp/blaster         rrrrrrrrrrrRRRRRRRREEEEEREB......EEEEEEEEErrrrrrrrrrr.....SSSrrrrrrr.....SSSEEEEEEr......EEEEErrrrrRRRRRRRRRRRRBBrrrrr......EEEEErrr......EEEEErrrrrBr
+   roles A Tako/brolly          EErrrrrrrrEBBBBBBBBBBBBBBBr.....rrrrrrrrrrr.....rEEEErrrrrrrrrrrrrRErrRREEEEEEEEE......rrrrrrr.....SSSBBBBBBBBBrrBB.....rrrrrrrr......rrrrrrrrr.....EB
+   roles B Fizz/blaster         rrrrrrrrrrr......rrrrrrrrrrrrrrrRRRRRRRRBrrrRRRRRRB.....SSSrRRRRR.....ErrrrrrrrrrRRRRRRRRRRRRRRRR......SSr.....SSSrrRRRRRRRRRRBBBrRRRr.....BEEEBBBBrrr
+   roles B Riptide/twins        rrrrrrrrrrr......rrrrrrrrrr......SSrrrRRREErRRRRRRRRRRRRRBBrRRBBB......rrrrrrrrrrr......SSEEEErrrrrrR......SSr......SSRRRRRRRRRRRRRRRRRRRRRrRRRRRR....
+   roles B Suki/bucket          EErrrrrrrrEr......EEEEEEEEErrrrrBrRRRRRREBBrBBBBB......SSRR.....SSSr.....EEEEEEEEEBSSSRBBBBBBBBBBBrrrSrr......rrrrrrrrBBBRRRRREREBBBBBBBBBBrBBBrrrR...
+   roles B Pip/charger          PPrrrrrrrrPPPPPPPPPPPP.....PPPPPPSSRRRRRRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPrrrrrPPPPPPPPPPPPPPPPPPPPPPPP
+   stuck {"t":190.5,"name":"Pip","w":"charger","mode":"fight","role":"perch","pos":[-5.9,1.2,-3.7],"tower":15.4,"path":false,"dur":0.5}
+   stuck {"t":134,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[15.6,0,1.5],"tower":30.2,"path":true,"dur":0.25}
+   stuck {"t":143.5,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[3.9,0,-22.5],"tower":8.3,"path":true,"dur":0.25}
+   stuck {"t":262.8,"name":"Pip","w":"charger","mode":"fight","role":"perch","pos":[-3.8,5.4,12.6],"tower":13.9,"path":false,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON

@@ -1,0 +1,242 @@
+### turf3a
+== bluestone [turf 180s]: turf 30.2% vs 24.7%
+   stuck 0% | splats 48 (water 0) | specials 6 | super jumps 27 | turf 30.2/24.7 | sim 180s in 35s (wall 35s) | {"cpuSimMs":1.08}
+   splats by cause {"zipcaster":1,"blast":6,"shot":15,"mitts":11,"blower":1,"boomerang":2,"brush":2,"drop":4,"slosh":1,"blade":4,"blaster":1}
+### turf3b
+== bluestone [turf 180s]: turf 27.6% vs 30.4%
+   stuck 0% | splats 33 (water 0) | specials 6 | super jumps 15 | turf 27.6/30.4 | sim 180s in 31s (wall 31s) | {"cpuSimMs":0.99}
+   splats by cause {"mitts":4,"zooka":3,"boomerang":1,"shot":13,"charger":5,"drop":1,"tracer":1,"brush":1,"roller":1,"slam":1,"brolly":1,"seeker":1}
+### turf3c
+== bluestone [turf 180s]: turf 31% vs 28.6%
+   stuck 0.1% | splats 30 (water 0) | specials 9 | super jumps 11 | turf 31/28.6 | sim 180s in 43s (wall 44s) | {"cpuSimMs":2.44}
+   splats by cause {"shot":18,"bow":4,"slosh":2,"brush":1,"drop":1,"crab":3,"booyah":1}
+### turf3d
+== bluestone [turf 180s]: turf 31% vs 23.8%
+   stuck 0.3% | splats 31 (water 0) | specials 5 | super jumps 10 | turf 31/23.8 | sim 180s in 36s (wall 36s) | {"cpuSimMs":1.03}
+   splats by cause {"zipcaster":1,"brolly":9,"charger":2,"blade":4,"blast":3,"surf":1,"shot":5,"brush":2,"slosh":3,"blaster":1}
+### turf3e
+== bluestone [turf 180s]: turf 30% vs 23.7%
+   stuck 0% | splats 41 (water 0) | specials 7 | super jumps 24 | turf 30/23.7 | sim 180s in 32s (wall 32s) | {"cpuSimMs":0.66}
+   splats by cause {"zooka":3,"blast":15,"shot":7,"slosh":3,"blaster":2,"bow":7,"roller":3,"drop":1}
+### turf3f
+== bluestone [turf 180s]: turf 33.8% vs 26.1%
+   stuck 0% | splats 43 (water 0) | specials 9 | super jumps 18 | turf 33.8/26.1 | sim 180s in 35s (wall 35s) | {"cpuSimMs":1.8}
+   splats by cause {"shot":16,"zooka":2,"blast":11,"brolly":2,"jetpack":2,"blaster":2,"blade":3,"mitts":5}
+### turf3g
+== bluestone [turf 180s]: turf 35% vs 19%
+   stuck 0% | splats 39 (water 0) | specials 8 | super jumps 17 | turf 35/19 | sim 180s in 35s (wall 35s) | {"cpuSimMs":1.2}
+   splats by cause {"shot":8,"brolly":4,"zooka":6,"slosh":3,"blast":8,"tracer":1,"mitts":3,"blaster":2,"burst":1,"bow":2,"drop":1}
+### turf3h
+== bluestone [turf 180s]: turf 28.9% vs 30.9%
+   stuck 0.2% | splats 33 (water 0) | specials 10 | super jumps 18 | turf 28.9/30.9 | sim 180s in 38s (wall 38s) | {"cpuSimMs":1.02}
+   splats by cause {"brolly":2,"shot":12,"drop":4,"roller":2,"blade":2,"brush":2,"bow":8,"burst":1}
+### ink-regions era 3 a
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":8406,"inked":0.595,"regions":{"base":{"m2":1745,"share":0.208,"inked":0.73},"circus":{"m2":1260,"share":0.15,"inked":0.8},"east":{"m2":1032,"share":0.123,"inked":0.62},"west":{"m2":881,"share":0.105,"inked":0.5},"swimston":{"m2":830,"share":0.099,"inked":0.69},"arm-tip":{"m2":569,"share":0.068,"inked":0.2},"arm":{"m2":562,"share":0.067,"inked":0.54},"river-works":{"m2":408,"share":0.049,"inked":0.41},"halo":{"m2":366,"share":0.044,"inked":0.52},"garden":{"m2":312,"share":0.037,"inked":0.43},"arm-walks":{"m2":228,"share":0.027,"inked":0.4},"alley":{"m2":212,"share":0.025,"inked":0.34}}}
+### ink-regions era 3 b
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":8406,"inked":0.576,"regions":{"base":{"m2":1745,"share":0.208,"inked":0.67},"circus":{"m2":1260,"share":0.15,"inked":0.81},"east":{"m2":1032,"share":0.123,"inked":0.62},"west":{"m2":881,"share":0.105,"inked":0.49},"swimston":{"m2":830,"share":0.099,"inked":0.68},"arm-tip":{"m2":569,"share":0.068,"inked":0.09},"arm":{"m2":562,"share":0.067,"inked":0.6},"river-works":{"m2":408,"share":0.049,"inked":0.35},"halo":{"m2":366,"share":0.044,"inked":0.6},"garden":{"m2":312,"share":0.037,"inked":0.26},"arm-walks":{"m2":228,"share":0.027,"inked":0.52},"alley":{"m2":212,"share":0.025,"inked":0.31}}}
+### ink-regions era 3 c
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":8406,"inked":0.599,"regions":{"base":{"m2":1745,"share":0.208,"inked":0.75},"circus":{"m2":1260,"share":0.15,"inked":0.75},"east":{"m2":1032,"share":0.123,"inked":0.7},"west":{"m2":881,"share":0.105,"inked":0.63},"swimston":{"m2":830,"share":0.099,"inked":0.77},"arm-tip":{"m2":569,"share":0.068,"inked":0.19},"arm":{"m2":562,"share":0.067,"inked":0.59},"river-works":{"m2":408,"share":0.049,"inked":0.24},"halo":{"m2":366,"share":0.044,"inked":0.24},"garden":{"m2":312,"share":0.037,"inked":0.33},"arm-walks":{"m2":228,"share":0.027,"inked":0.4},"alley":{"m2":212,"share":0.025,"inked":0.27}}}
+### ink-regions era 1 a
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":6995,"inked":0.713,"regions":{"base":{"m2":1745,"share":0.25,"inked":0.81},"circus":{"m2":1233,"share":0.176,"inked":0.89},"east":{"m2":974,"share":0.139,"inked":0.64},"swimston":{"m2":783,"share":0.112,"inked":0.74},"west":{"m2":687,"share":0.098,"inked":0.67},"arm-tip":{"m2":569,"share":0.081,"inked":0.35},"arm":{"m2":561,"share":0.08,"inked":0.65},"arm-walks":{"m2":228,"share":0.033,"inked":0.46},"alley":{"m2":212,"share":0.03,"inked":0.69},"halo":{"m2":1,"share":0,"inked":0.82},"river-works":{"m2":0,"share":0,"inked":0}}}
+### ink-regions era 1 b
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":6995,"inked":0.627,"regions":{"base":{"m2":1745,"share":0.25,"inked":0.68},"circus":{"m2":1233,"share":0.176,"inked":0.75},"east":{"m2":974,"share":0.139,"inked":0.51},"swimston":{"m2":783,"share":0.112,"inked":0.71},"west":{"m2":687,"share":0.098,"inked":0.5},"arm-tip":{"m2":569,"share":0.081,"inked":0.56},"arm":{"m2":561,"share":0.08,"inked":0.68},"arm-walks":{"m2":228,"share":0.033,"inked":0.39},"alley":{"m2":212,"share":0.03,"inked":0.49},"halo":{"m2":1,"share":0,"inked":0},"river-works":{"m2":0,"share":0,"inked":0}}}
+### ink-regions era 1 c
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":6995,"inked":0.581,"regions":{"base":{"m2":1745,"share":0.25,"inked":0.74},"circus":{"m2":1233,"share":0.176,"inked":0.7},"east":{"m2":974,"share":0.139,"inked":0.56},"swimston":{"m2":783,"share":0.112,"inked":0.7},"west":{"m2":687,"share":0.098,"inked":0.53},"arm-tip":{"m2":569,"share":0.081,"inked":0.08},"arm":{"m2":561,"share":0.08,"inked":0.44},"arm-walks":{"m2":228,"share":0.033,"inked":0.46},"alley":{"m2":212,"share":0.03,"inked":0.3},"halo":{"m2":1,"share":0,"inked":0},"river-works":{"m2":0,"share":0,"inked":0}}}
+### ink-regions era 2 a
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"2","simS":180,"total_m2":7654,"inked":0.6,"regions":{"base":{"m2":1745,"share":0.228,"inked":0.72},"circus":{"m2":1234,"share":0.161,"inked":0.77},"east":{"m2":1032,"share":0.135,"inked":0.62},"west":{"m2":880,"share":0.115,"inked":0.59},"swimston":{"m2":783,"share":0.102,"inked":0.72},"arm-tip":{"m2":569,"share":0.074,"inked":0.14},"arm":{"m2":561,"share":0.073,"inked":0.54},"river-works":{"m2":408,"share":0.053,"inked":0.31},"arm-walks":{"m2":228,"share":0.03,"inked":0.47},"alley":{"m2":212,"share":0.028,"inked":0.21},"halo":{"m2":1,"share":0,"inked":0.64}}}
+### ink-regions era 2 b
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"2","simS":180,"total_m2":7654,"inked":0.618,"regions":{"base":{"m2":1745,"share":0.228,"inked":0.73},"circus":{"m2":1234,"share":0.161,"inked":0.82},"east":{"m2":1032,"share":0.135,"inked":0.65},"west":{"m2":880,"share":0.115,"inked":0.56},"swimston":{"m2":783,"share":0.102,"inked":0.75},"arm-tip":{"m2":569,"share":0.074,"inked":0.23},"arm":{"m2":561,"share":0.073,"inked":0.48},"river-works":{"m2":408,"share":0.053,"inked":0.27},"arm-walks":{"m2":228,"share":0.03,"inked":0.43},"alley":{"m2":212,"share":0.028,"inked":0.39},"halo":{"m2":1,"share":0,"inked":0.55}}}
+### ink-regions era 2 c
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"2","simS":180,"total_m2":7654,"inked":0.641,"regions":{"base":{"m2":1745,"share":0.228,"inked":0.67},"circus":{"m2":1234,"share":0.161,"inked":0.84},"east":{"m2":1032,"share":0.135,"inked":0.76},"west":{"m2":880,"share":0.115,"inked":0.52},"swimston":{"m2":783,"share":0.102,"inked":0.74},"arm-tip":{"m2":569,"share":0.074,"inked":0.35},"arm":{"m2":561,"share":0.073,"inked":0.58},"river-works":{"m2":408,"share":0.053,"inked":0.39},"arm-walks":{"m2":228,"share":0.03,"inked":0.47},"alley":{"m2":212,"share":0.028,"inked":0.42},"halo":{"m2":1,"share":0,"inked":0}}}
+### spawn-mid era 1
+PASS spawn to mid  {"t0":{"m":72,"s":6.1,"straight":70},"t1":{"m":76,"s":6.44,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+### size-budget era 1
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1409}
+PASS paint atlas density  {"ppm":9.2,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":6148,"cap":18444,"capNeeded":[1500,1500]}
+RESULT 3/3
+### climb-audit era 1
+PASS climb edges barred by a railing  {"climbs":113,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 1
+PASS cover map  {"map":"bluestone","floorCells":6270,"within5m_pct":98.9,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+### stage-audit turf era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+### stage-audit tower era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+### spawn-mid era 2
+PASS spawn to mid  {"t0":{"m":72,"s":6.1,"straight":70},"t1":{"m":76,"s":6.44,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+### size-budget era 2
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1430}
+PASS paint atlas density  {"ppm":9.2,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":6740,"cap":20220,"capNeeded":[1500,1500]}
+RESULT 3/3
+### climb-audit era 2
+PASS climb edges barred by a railing  {"climbs":184,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 2
+PASS cover map  {"map":"bluestone","floorCells":6910,"within5m_pct":98.8,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+### stage-audit turf era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+### stage-audit tower era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+### spawn-mid era 3
+PASS spawn to mid  {"t0":{"m":72,"s":6.1,"straight":70},"t1":{"m":76,"s":6.44,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+### size-budget era 3
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1502}
+PASS paint atlas density  {"ppm":8.5,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":7496,"cap":22488,"capNeeded":[1500,1500]}
+RESULT 3/3
+### climb-audit era 3
+PASS climb edges barred by a railing  {"climbs":184,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 3
+PASS cover map  {"map":"bluestone","floorCells":7364,"within5m_pct":98,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+### stage-audit turf era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+### stage-audit tower era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+### cover-map Halyard
+RESULT 1/1
+### tower-check era 1
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### tower-check era 2
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### tower-check era 3
+== bluestone tower track · heading 0° · length 170.6 / 170.6 m (Alpha's / Bravo's side) · speed 2.13 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: 
+   ride Alpha: knockout (winner 0) at s 170.6 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -170.6 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[170.6,170.6],"holes":0,"issues":2,"climbs":11,"drops":10,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### zones era 1
+== bluestone [zones]: winner Bravo (neutralised) | final 39 vs 33 (penalty +0/+12) | OT 58.4s
+   held A 83.3s B 123.3s neutral 151.8s | captures 9 (takeovers 4), control events 18, first capture @21.2s | rotations 6
+   stuck 0.1% | splats 104 (water 0) | specials 13 | super jumps 52 | turf 20.9/16.9 | sim 358.5s in 73s (wall 73s) | {"cpuSimMs":1.23}
+   splats by cause {"blade":15,"blast":33,"brolly":15,"roller":1,"bow":17,"burst":3,"drop":10,"brush":3,"jetpack":3,"blaster":2,"tracer":1,"shaker":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### zones era 2
+== bluestone [zones]: winner Bravo (time) | final 78 vs 6 (penalty +0/+16) | OT no
+   held A 60s B 77s neutral 162.8s | captures 7 (takeovers 4), control events 14, first capture @25.3s | rotations 6
+   stuck 0.3% | splats 73 (water 0) | specials 18 | super jumps 28 | turf 15.2/18.8 | sim 300s in 68s (wall 68s) | {"cpuSimMs":0.85}
+   splats by cause {"bow":6,"blast":12,"mitts":14,"slosh":2,"sticky":1,"zooka":6,"charger":8,"blaster":1,"drop":6,"kraken":3,"shot":8,"boomerang":2,"jetpack":3,"mine":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### zones era 3
+== bluestone [zones]: winner Alpha (time) | final 25 vs 80 (penalty +22/+0) | OT no
+   held A 61s B 82.3s neutral 156.5s | captures 7 (takeovers 4), control events 14, first capture @49.9s | rotations 6
+   stuck 0.6% | splats 63 (water 0) | specials 15 | super jumps 33 | turf 23.3/17 | sim 300s in 60s (wall 60s) | {"cpuSimMs":1.5}
+   splats by cause {"shot":20,"charger":13,"bow":6,"shaker":1,"crab":5,"blast":6,"brolly":5,"mine":2,"blade":2,"blaster":2,"tracer":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### zones era 3b
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 81 (penalty +0/+13.5) | OT no
+   held A 84.3s B 28.8s neutral 170s | captures 9 (takeovers 3), control events 17, first capture @21.9s | rotations 6
+   stuck 0% | splats 89 (water 0) | specials 9 | super jumps 28 | turf 24.1/12.8 | sim 283.3s in 67s (wall 68s) | {"cpuSimMs":2.52}
+   splats by cause {"shot":34,"mitts":23,"roller":3,"slosh":2,"zooka":7,"drop":12,"brush":5,"tracer":3}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### zones Halyard
+== halyard [zones]: winner Bravo (neutralised) | final 70 vs 58 (penalty +0/+17) | OT 20.3s
+   held A 43s B 49.8s neutral 227.3s | captures 7 (takeovers 2), control events 14, first capture @20.4s | rotations 6
+   stuck 0.2% | splats 80 (water 4) | specials 13 | super jumps 32 | turf 27.9/28.2 | sim 320.3s in 53s (wall 54s) | {"cpuSimMs":1.25}
+   splats by cause {"roller":6,"drop":6,"waddle":1,"bow":19,"water":4,"kraken":1,"crab":4,"shot":23,"slosh":5,"zooka":6,"burst":1,"brolly":4}
+   stuck {"t":181.8,"name":"Squiddo","w":"spinner","mode":"fight","role":"paint","pos":[-20.1,2.6,13.4],"path":true,"hold":false,"pod":"-","dur":1}
+   stuck {"t":34.3,"name":"Coral","w":"roller","mode":"fight","role":"stage","pos":[1.3,0,10.9],"path":false,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":183,"name":"Squiddo","w":"spinner","mode":"paint","role":"paint","pos":[-20.1,2.6,13.3],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":201.8,"name":"Zest","w":"bow","mode":"refill","role":"paint","pos":[-1,0.69,-10.7],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":257.8,"name":"Zest","w":"bow","mode":"retreat","role":"stage","pos":[17.8,0.65,-3.6],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":308.3,"name":"Coral","w":"roller","mode":"paint","role":"paint","pos":[-0.9,2.4,65.4],"path":true,"hold":false,"pod":"-","dur":0.5}
+CONSOLE 0 unique warning/error line(s)
+### tower-match era 1
+== bluestone [tower len 146.5/146.5]: winner Alpha (neutralised) | counts 47 vs 74 (score 47/74) | best push A 79.1m B 48.8m | OT 15.8s | sim 316s
+   held A 148.8s B 155.5s | contested 1.8s (6×) | neutral 11.5s | control changes 10 (takes 12) | idle→neutral 2
+   checkpoints cleared A 1 B 0 (reached 1/0, refills 0/0) | riders avg while held A 1.2 B 1.49 | mounts 40/30
+   stuck 0% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 122 (water 0) | specials 17 (ready 21) | super jumps 50 | turf 15.5/21.8 | sim 316s in 78s (wall 78s) | {"cpuSimMs":1.3}
+   stuck {"t":60.8,"name":"Bubbles","w":"bow","mode":"refill","role":"escort","pos":[15.8,0,-0.2],"tower":6.9,"path":true,"dur":0.25}
+   stuck {"t":312.8,"name":"P1","w":"blaster","mode":"paint","role":"ride","pos":[5.4,1.5,-22.8],"tower":9.6,"path":true,"dur":0.25}
+   stuck {"t":314.5,"name":"P1","w":"blaster","mode":"fight","role":"ride","pos":[5.5,1.5,-23.4],"tower":9.1,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"neutralised","counts":[47,74],"best":[79.1,48.8],"held":[148.8,155.5],"controlChanges":10,"cpClear":[1,0],"stuckPct":0,"console":1,"frameErrors":0,"mounts":[40,30],"ridersAvg":[1.2,1.49],"x":{"climbs":[32,26],"sjRider":12,"kills":122,"killsNear":[58,63],"attempts":177,"boarded":50,"aborted":123,"climbMounts":39,"sjMounts":0,"toBoard":{"med":1.75,
+### tower-match era 2
+== bluestone [tower len 146.5/146.5]: winner Alpha (knockout) | counts 0 vs 100 (score 0/100) | best push A 146.5m B 0m | OT no | sim 103.3s
+   held A 93.5s B 0s | contested 1s (1×) | neutral 9.5s | control changes 0 (takes 1) | idle→neutral 0
+   checkpoints cleared A 2 B 0 (reached 2/0, refills 0/0) | riders avg while held A 1.55 B 0 | mounts 15/1
+   stuck 0.5% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 36 (water 0) | specials 7 (ready 7) | super jumps 11 | turf 13.8/4.7 | sim 103.3s in 24s (wall 24s) | {"cpuSimMs":1.42}
+   stuck {"t":99.3,"name":"Tako","w":"charger","mode":"fight","role":"perch","pos":[5.6,1,63.6],"tower":13.2,"path":false,"dur":2}
+   stuck {"t":70.5,"name":"Tako","w":"charger","mode":"paint","role":"perch","pos":[0.1,3.3,70.3],"tower":27.3,"path":true,"dur":0.5}
+   stuck {"t":53.3,"name":"Tako","w":"charger","mode":"paint","role":"perch","pos":[-4.4,1,54.4],"tower":24.3,"path":true,"dur":0.25}
+   stuck {"t":68,"name":"Tako","w":"charger","mode":"fight","role":"perch","pos":[0.7,3.3,70.2],"tower":25.3,"path":false,"dur":0.25}
+   stuck {"t":78.3,"name":"Kelp","w":"mitts","mode":"fight","role":"escort","pos":[-16.2,0,44.5],"tower":3.3,"path":true,"dur":0.25}
+   stuck {"t":78.5,"name":"Tako","w":"charger","mode":"fight","role":"perch","pos":[-1.6,1,62.8],"tower":20.1,"path":false,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"knockout","counts":[0,100],"best":[146.5,0],"held":[93.5,0],"controlChanges":0,"cpClear":[2,0],"stuckPct":0.5,"console":1,"frameErrors":0,"mounts":[15,1],"ridersAvg":[1.55,0],"x":{"climbs":[16,1],"sjRider":3,"kills":36,"killsNear":[7,29],"attempts":46,"boarded":10,"aborted":34,"climbMounts":7,"sjMounts":0,"toBoard":{"med":1,"p80":3},"nearBoard":{
+### tower-match era 3
+== bluestone [tower len 146.5/146.5]: winner Bravo (time) | counts 77 vs 64 (score 77/64) | best push A 42.6m B 62.8m | OT no | sim 300s
+   held A 133.3s B 153s | contested 9.3s (8×) | neutral 13.5s | control changes 13 (takes 15) | idle→neutral 1
+   checkpoints cleared A 0 B 0 (reached 0/1, refills 0/1) | riders avg while held A 1.15 B 1.35 | mounts 25/38
+   stuck 0.1% | by the tower's side 3.9% of bot-time, stuck there 0s (0 episodes) | splats 98 (water 0) | specials 15 (ready 17) | super jumps 43 | turf 16.6/18 | sim 300s in 95s (wall 95s) | {"cpuSimMs":1.87}
+   stuck {"t":190.5,"name":"Pip","w":"charger","mode":"fight","role":"perch","pos":[-5.9,1.2,-3.7],"tower":15.4,"path":false,"dur":0.5}
+   stuck {"t":134,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[15.6,0,1.5],"tower":30.2,"path":true,"dur":0.25}
+   stuck {"t":143.5,"name":"Pip","w":"charger","mode":"paint","role":"perch","pos":[3.9,0,-22.5],"tower":8.3,"path":true,"dur":0.25}
+   stuck {"t":262.8,"name":"Pip","w":"charger","mode":"fight","role":"perch","pos":[-3.8,5.4,12.6],"tower":13.9,"path":false,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"time","counts":[77,64],"best":[42.6,62.8],"held":[133.3,153],"controlChanges":13,"cpClear":[0,0],"stuckPct":0.1,"console":1,"frameErrors":0,"mounts":[25,38],"ridersAvg":[1.15,1.35],"x":{"climbs":[30,35],"sjRider":15,"kills":98,"killsNear":[52,41],"attempts":144,"boarded":48,"aborted":94,"climbMounts":43,"sjMounts":1,"toBoard":{"med":3.25,"p80":10
+### tower-match era 1b
+== bluestone [tower len 146.5/146.5]: winner Bravo (time) | counts 64 vs 49 (score 64/49) | best push A 62.8m B 75.2m | OT no | sim 300s
+   held A 162.3s B 127.3s | contested 5s (9×) | neutral 10.3s | control changes 16 (takes 17) | idle→neutral 0
+   checkpoints cleared A 0 B 1 (reached 2/1, refills 2/0) | riders avg while held A 1.37 B 1.32 | mounts 29/39
+   stuck 0% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 113 (water 0) | specials 12 (ready 13) | super jumps 42 | turf 21/15.9 | sim 300s in 87s (wall 87s) | {"cpuSimMs":1.27}
+   stuck {"t":143.3,"name":"Inky Vee","w":"bow","mode":"fight","role":"ride","pos":[-10.9,0.68,29.2],"tower":12.6,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"time","counts":[64,49],"best":[62.8,75.2],"held":[162.3,127.3],"controlChanges":16,"cpClear":[0,1],"stuckPct":0,"console":1,"frameErrors":0,"mounts":[29,39],"ridersAvg":[1.37,1.32],"x":{"climbs":[27,36],"sjRider":10,"kills":113,"killsNear":[51,61],"attempts":177,"boarded":52,"aborted":121,"climbMounts":44,"sjMounts":0,"toBoard":{"med":2,"p80":5},
+### boss1
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":557,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6836.5,"wall":922.5,"drop":13395,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":-0.46,"at":[-4.25,-11.75]},"balconyN:b":{"pen_m":-0.46,"at":[3.75,11.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":426.5}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":7,"cells4m":3,"trail":[[9.3,-9.8],[12.9,-6.1],[13.1,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9],[13.2,-5.9]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS it plays its moves (charges included)  {"played":{"barrage":16,"charge":1,"crablets":3},"stuns":1,"hp":0.45,"dead":false}
+RESULT 6/7
+### boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":557,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6836.5,"wall":922.5,"drop":13395,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":-0.46,"at":[-4.25,-11.75]},"balconyN:b":{"pen_m":-0.46,"at":[3.75,11.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":426.5}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":24,"cells4m":6,"trail":[[8.4,-10.1],[7.1,-11.8],[13.5,-9.3],[14,-4.6],[13.8,-3.1],[15.7,-0.1],[15.9,0.1],[15.9,0.1],[15.9,0.1],[15.9,0.2],[16.2,0.5],[16.3,0.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS it plays its moves (charges included)  {"played":{"sweep":1,"barrage":15,"charge":1,"slam":1,"crablets":1},"stuns":1,"hp":0.66,"dead":false}
+RESULT 6/7
+### perf era 1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6527,"blocks":1254,"solidBlocks":1254,"propMeshes":4,"navNodes":6148,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":83,"tris":199593,"cpuRenderMs":2.3,"cpuSimMs":2.07},"coverage":[1.5,3]}
+### perf era 2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6594,"blocks":1310,"solidBlocks":1310,"propMeshes":4,"navNodes":6740,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":102,"tris":210049,"cpuRenderMs":2.05,"cpuSimMs":1.99},"coverage":[1.9,1.2]}
+### perf era 3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6533,"blocks":1448,"solidBlocks":1448,"propMeshes":4,"navNodes":7496,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":95,"tris":221048,"cpuRenderMs":2.18,"cpuSimMs":1.94},"coverage":[1.2,1.8]}
+### perf Halyard
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":7802,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":166,"tris":1435829,"cpuRenderMs":2.4,"cpuSimMs":1.89},"coverage":[3.9,3.1]}
+### done Fri Oct  9 19:45:49 AEDT 2026
