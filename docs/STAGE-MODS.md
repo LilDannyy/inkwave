@@ -569,5 +569,7 @@ On a stage without a module key (every existing stage):
   `Physics` and `NavGraph`, no props; 300 random paths, the minimum of 40 alternated runs) that is +0.7 % and +4.1 % on
   halyard and −2.0 % on calamari against 9f2cdef (the earlier hook-in: +3.0 %, +4.3 %, +0.4 %), the same paths, on a
   machine whose noise is about ±3 %. A bot plans a path every 0.8–1.2 s, so even 10 µs per path is under 0.1 ms a second
-  for eight bots; the 600-frame match median and p90 are unchanged. The latest Mac mini numbers:
-  `tools/botlab/jobs/batch5/stages/results/JOB-3.raw.txt`.
+  for eight bots; the 600-frame match median and p90 are unchanged. A local run at the final code (2026-10-09, this
+  Mac, shared with other builders: about twice the Mac mini's times and noisy; head vs 9f2cdef in alternated pairs):
+  `nav.path` 111 / 105 / 151 ms against 138 / 107 / 164, every other column within noise
+  (`tools/botlab/jobs/batch5/stages/LOCAL-2026-10-09.txt`; JOB-3 repeats it on the Mac mini once its runner is back).
