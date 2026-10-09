@@ -223,6 +223,7 @@ export class SubSystem {
   _place(a, sub) {
     const g = G.physics.raycast(_v.copy(a.pos).setY(a.pos.y + 0.4), DOWN, 3, _hit);
     if (!g.hit) return; { const gb = G.level.blocks[g.block]; if (gb && (gb.roof || gb.rail || gb.perch)) return; }   // nothing gets planted on an off-limits roof, a railing or a crane perch
+    if (G.level.noPlace(g.point, 0.3)) return;   // [b5-int2] … nor in a stage module's no-place disc (G.level.noPlace)
     // per-player limits: mines — the oldest beyond the limit goes off; beacons — the oldest is removed
     // (a tripped mine is on its way out: it doesn't count, and its windup runs on)
     const mine = this.items.filter((it) => it.owner === a && it.kind === sub.kind && it.state !== 'dead' && it.fuse == null).sort((x, y) => x.born - y.born);
@@ -410,6 +411,10 @@ export class SubSystem {
     const hit = G.physics.segment(_v, it.pos, _hit);
     if (hit.hit) {
       const n = hit.normal, floor = n.y > 0.6;
+      // [b5-int2] no device comes to rest in a stage module's no-place disc (G.level.noPlace: false on every stage
+      // without one): a sprinkler or a curtain landing in one breaks there (its end look), as _place refuses a mine or a
+      // beacon there
+      if ((it.kind === 'sprinkler' || (it.kind === 'curtain' && floor)) && G.level.noPlace(hit.point, 0.3)) { this._destroy(it); return; }
       switch (it.kind) {
         case 'sticky': return this._stick(it, hit, 'stuck', s.fuse);
         case 'sprinkler': return this._stick(it, hit, 'spray', 0);

@@ -140,6 +140,35 @@
   R('G.level.liquidY: the module\'s surface in its region, the sea elsewhere', Math.abs(ly - D.DUMMY.pool.y(tl)) < 1e-6 && lo === -1.6, { ly, want: D.DUMMY.pool.y(tl), lo });
   R('match.stage.under: below the surface in the region only', S.under(P.set(-21, ly - 0.5, 5)) && !S.under(P.set(-21, ly + 0.5, 5)) && !S.under(P.set(0, -5, 0)));
 
+  // ---- 7a) [b5-int2] the device code asks the registry: no device comes to rest in a no-place disc (a mine or a beacon
+  // planted there, a sprinkler thrown in: subs.js _place / _fly); the one destroyer S.crushIn forwards to
+  // G.deploy.crushIn once the deploy code has one (subs SPEC §0.3; wave 1 has the tower's crush(T) only: 0 till then)
+  {
+    const { SUBS } = await import('./src/config.js');
+    const pl = g.match.local || g.match.actors[0];
+    const live = (k) => __G.subs.items.filter((it) => it.owner === pl && it.kind === k && it.state !== 'dead' && it.state !== 'fly').length;
+    const plant = (x, z, k) => { pl.pos.set(x, 0.02, z); pl.vel.set(0, 0, 0); pl.grounded = true; const n0 = live(k); __G.subs.use(pl, SUBS[k]); step(0.05); return live(k) - n0; };
+    const toss = (x, z) => { const it = __G.subs._throw(pl, SUBS.sprinkler, new THREE.Vector3(x, 1.2, z), new THREE.Vector3(0, -6, 0), false); step(0.5); return it.state; };
+    const pr = { mineIn: plant(8, -12, 'mine'), mineIn2: plant(-8, -12, 'mine'), mineOut: plant(12, -16, 'mine'), beaconIn: plant(8.6, -11.5, 'beacon'), beaconOut: plant(12, -19, 'beacon'), sprinklerIn: toss(8, -12.5), sprinklerOut: toss(12, -22) };
+    R('[b5-int2] device placement asks G.level.noPlace: a mine or a beacon planted in a no-place disc (the world\'s or the match runtime\'s) is refused, a sprinkler landing in one breaks; outside, as always',
+      pr.mineIn === 0 && pr.mineIn2 === 0 && pr.mineOut === 1 && pr.beaconIn === 0 && pr.beaconOut === 1 && pr.sprinklerIn === 'dead' && pr.sprinklerOut === 'spray', pr);
+    __G.subs.clear(); __G.paint.clear();
+    // a device whose floor went from under it (deployables.js _lost) drops onto what's below: not into the module's
+    // liquid nor its no-place disc (it breaks there, as over the sea), onto the deck elsewhere
+    const drop = (x, z) => { const it = __G.subs._plant(pl, SUBS.mine, new THREE.Vector3(x, 0.6, z), new THREE.Vector3(0, 1, 0), 0, null, false); __G.deploy._lost(it); return it.state; };
+    const dr = { pool: drop(-21, 5), disc: drop(8, -12), deck: drop(3, -16) };
+    R('[b5-int2] a device dropped from a moving floor (deployables _lost) breaks over the module\'s liquid (match.stage.under) or in its no-place disc; on the deck elsewhere it lands',
+      dr.pool === 'dead' && dr.disc === 'dead' && dr.deck === 'mine', dr);
+    __G.subs.clear(); __G.paint.clear();
+    const DP = __G.deploy, had = DP.crushIn, r0 = S.crushIn({ where: () => true }, 'lava');
+    let got = null;
+    DP.crushIn = (shape, how) => { got = [shape, how]; return 3; };
+    const shp = { sphere: { c: new THREE.Vector3(1, 0, 2), r: 1.5 } }, r1 = S.crushIn(shp, 'shell');
+    if (had === undefined) delete DP.crushIn; else DP.crushIn = had;
+    R('[b5-int2] S.crushIn → G.deploy.crushIn (shape, how, its count) once the deploy code has one; 0 while it has none (wave 1: the tower\'s crush(T) only)',
+      (typeof had === 'function' || r0 === 0) && got && got[0] === shp && got[1] === 'shell' && r1 === 3, { hadCrushIn: typeof had, r0, forwarded: !!got && got[1], r1 });
+  }
+
   // ---- 7b) actor hooks (this screen's own): a carried actor's body, damage, super jump, anchor; the camera override;
   // a kill in the module's hazard (its cause on the splat card); wet floor for bots and shoves; sink + fizzle
   const me = g.match.local || g.match.actors[0];

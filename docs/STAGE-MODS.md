@@ -155,7 +155,11 @@ ready() { this.apply(1, { instant: true }); }
 - **Queries**: `level.liquidY(x, z)` (the liquid surface there; default the sea's −1.6) and `level.noPlace(p, r)` (no
   device may be placed in that disc; default false). On a stage with modules, `liquidY` is answered by `W.liquidY` /
   `R.liquidY` (installed when a W has `liquidY` or the def says `liquid: true`; the highest wins, never below the sea)
-  and `noPlace` by `W.noPlace`, then `R.noPlace` (any one saying "no place" wins).
+  and `noPlace` by `W.noPlace`, then `R.noPlace` (any one saying "no place" wins). The device code asks `noPlace`
+  ([b5-int2]): a Lurk Mine or a Hop Beacon is never planted in a no-place disc (`subs.js _place`, as on an off-limits
+  roof), a Twirl Sprinkler or a Drip Curtain landing in one breaks (`_fly`), and a device dropped from a moving floor
+  (`deployables.js _lost`) or shoved off one (`_pushes`) never comes to rest in one, nor under a module's liquid
+  (`G.match.stage.under`).
 - **Special edges**: `level.extraEdges` (set from `W.navEdges()` before the graph is built).
 
 ### Nav (`src/game/nav.js`)
@@ -339,7 +343,7 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 | `G.match.stage?.sweeps(out)` | R `sweeps(out)` | [] (Bazookarp rest flags: the boxes a module's moving pieces cover over their whole travel) |
 | `G.match.stage?.restMask(state)` | R `restMask` | null (Bazookarp: `Uint8Array` over nav nodes, 1 = standable in that state) |
 | `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots) |
-| `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3) | **0: a no-op until the subs package adds `G.deploy.crushIn` (no batch-5 branch has it yet)** |
+| `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | **0 until the subs package adds `G.deploy.crushIn`**: wave 1's `deployables.js` (merged in b5-int2) has the tower's `crush(T)` only (the user's list; a Lurk Mine is pushed aside, not crushed). The page test proves the forwarding with a stand-in |
 | `G.match.stage?.state()` | R `state` | `{ t, keys }` (tests) |
 
 ### Tools
@@ -470,7 +474,8 @@ Nothing by hand.
 
 Nothing by hand. One open point for the lead: DECISIONS.md #24 says "aquarium device aprons through `G.level.noPlace`:
 yes", while this ENGINE.md (§1.4, §3.10) and the subs SPEC (rev 3 §0.5) dropped the aprons. The registry offers it
-either way (`W.noPlace` → `G.level.noPlace`); the subs' placement code has to call it for it to matter.
+either way (`W.noPlace` → `G.level.noPlace`), and the device code now calls it ([b5-int2]: placement, drops, shoves; see
+*Level*), so an apron is one `W.noPlace` away.
 
 ### Highmark Foundry: lava (`stages/caldera/ENGINE.md` §3.5)
 
@@ -511,7 +516,7 @@ Nothing by hand.
 
 | ask | home |
 |---|---|
-| subs §0.3: one destroyer `G.deploy.crushIn(shape, how)` for the tower, the shell, era flips, lava | stage modules call `G.match.stage.crushIn(shape, how)`, which forwards to `G.deploy.crushIn`: a no-op returning 0 until the subs package adds it (wave 1's `deployables.js` on b5-deploy has no `crushIn` either). Until then eras H17 and lava H17 use the module-private walk of `G.subs.items` above |
+| subs §0.3: one destroyer `G.deploy.crushIn(shape, how)` for the tower, the shell, era flips, lava | stage modules call `G.match.stage.crushIn(shape, how)`, which forwards to `G.deploy.crushIn`: a no-op returning 0 until the subs package adds it (wave 1's `deployables.js` on b5-deploy has no `crushIn` either). Until then eras H17 and lava H17 use the module-private walk of `G.subs.items` above. [b5-int2] The lead (2026-10-09): a Lurk Mine in the tower's path stays as wave 1 built it (pushed aside, still armed; crushed only with nowhere to go), so when `crush(T)` becomes `crushIn({ blocks, rider }, 'crush')` (SPEC §0.2) the tower's call must leave mines and a floor Cling Charge to `_pushes` (`tests/deployables.js` 'tower' checks it) |
 | subs §0.5–0.6 (rev 3): `liquidTop(x, z) = max(PLAYER.waterY, G.match?.lava?.surfaceAt?.(x, z) ?? -Infinity)`; the Glide's `G.match?.lava?.under(pos)`; the sentry's `G.match?.lava?.covers(x, z, floorY, 1)` | the lava module's R published as `G.match.lava` (`matchAs` default) with `surfaceAt(x, z)`, `under(p, depth)`, `covers(x, z, gy, ahead)` under exactly those names. The generic `G.level.liquidY` / `G.match.stage.sink` answer the same for code that doesn't name the lava |
 | subs §0.6: `era:flip` listeners (sentry, bobber) | the eras module emits `emit('era:flip', { group, on: [blockIds], off: [blockIds], r })` (its §3.7): an interface, keep the payload |
 | subs §0.5 / DECISIONS #24: `G.level.noPlace` (aquarium device aprons) | `G.level.noPlace(p, r)`, answered by `W.noPlace` / `R.noPlace` (false on every other stage). Whether the aquarium uses it and the subs call it: the lead's (see the pipes table) |
@@ -533,7 +538,9 @@ Nothing by hand.
   damage guard, super jump, anchor, the camera override), a kill in its hazard with its own cause on the splat card, wet
   floor for bots and shoves, `sink`, the minimap layer and per-state bases (`mapBlock`, `setBase`), `frame.stage`,
   snapshot / restore, `bakeMode`, `bakePasses`, disposal and cleanup; and a stage without the key has no stage world,
-  run, nav rule or extension (33 checks).
+  run, nav rule or extension (33 checks); and ([b5-int2]) the device code asking `noPlace` / `under` (a mine and a beacon
+  refused in either disc, a sprinkler breaking there, a dropped device breaking over the liquid or in a disc) and
+  `S.crushIn` forwarding to `G.deploy.crushIn` (36 checks).
 - `MAP=testbox PAGE=tools/botlab/tests/stage-mods-bake.js PAGE_ARGS='old=.botlab/bake-old.cjs' …page.cjs` (with
   `git show 9f2cdef:tools/botlab/bake.cjs > .botlab/bake-old.cjs`): the bake's page code with no module is byte-identical
   to the base commit's; with the dummy's two states it writes one channel each of an RGB image (6 checks).

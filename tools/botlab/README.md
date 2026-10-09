@@ -126,7 +126,7 @@ Stage set pieces:
   `MAP=podbox` is the test arena with pods (testmaps.cjs: page.cjs and match.cjs both take it).
 - Stage modules (src/game/stageMods.js, docs/STAGE-MODS.md: the registry eras / pipes / lava plug into): `MAP=testbox
   PAGE=tools/botlab/tests/stage-mods.js tools/botlab/run.sh tools/botlab/page.cjs` (a test-only dummy module through the
-  whole lifecycle, 33), `MAP=testbox PAGE=tools/botlab/tests/stage-mods-bake.js PAGE_ARGS='old=.botlab/bake-old.cjs' …`
+  whole lifecycle, and the device code asking `noPlace` / `under`, `S.crushIn`'s forwarding: 36), `MAP=testbox PAGE=tools/botlab/tests/stage-mods-bake.js PAGE_ARGS='old=.botlab/bake-old.cjs' …`
   (the AO bake's page code: one pass byte-identical to an older bake.cjs copied there, a module's states as RGB channels,
   6), `CLIENTS=2 NET=tools/botlab/tests/net-stagemods.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
   (the same online: clock, records, field 15, F.stage, a late joiner, a host change, 10), and

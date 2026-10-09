@@ -250,7 +250,9 @@ class Deployables {
     if (it.state === 'dead') return;
     const n = it.normal || UP, floor = it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || n.y > 0.6;
     const g = floor ? G.physics.raycast(_v.set(it.pos.x, it.pos.y + 0.3, it.pos.z), DOWN, 40, _h, true) : null;
-    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30) { G.subs._destroy(it); return; }
+    // ([b5-int2] a floor under a stage module's liquid or in its no-place disc is no floor for it: G.match.stage.under,
+    // G.level.noPlace — nothing on a stage without a module)
+    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30 || G.match?.stage?.under(g.point) || G.level.noPlace(g.point, 0.3)) { G.subs._destroy(it); return; }
     it.pos.copy(g.point); it.mesh.position.copy(it.pos);
     if (it.normal && it.normal.dot(g.normal) < 0.99) { it.normal.copy(g.normal); if (it.state !== 'curtain') it.mesh.quaternion.setFromUnitVectors(UP, g.normal); }
     DEPLOY_STATS.drops++;
@@ -405,6 +407,7 @@ class Deployables {
           if (G.physics.segment(_v.set(p.x, p.y + 0.3, p.z), _v2.set(nx, p.y + 0.3, nz), _h, true).hit && _h.block !== b.id) continue;   // (a wall that way)
           const g = G.physics.raycast(_v.set(nx, p.y + 0.5, nz), DOWN, 40, _h, true);
           if (!g.hit || g.normal.y < 0.6 || g.block === b.id) continue;
+          if (G.match?.stage?.under(g.point) || L.noPlace(g.point, r)) continue;   // [b5-int2] (not into a stage module's liquid / no-place disc)
           p.set(nx, g.point.y, nz); it.mesh.position.copy(p);
           DEPLOY_STATS.shoves++; if (tw) DEPLOY_STATS.towerShoves++;
           if (!this.attach(it, g.block) && !it.ghost) { it.pushT = G.time; it.pushRec = true; }   // (the word once it has settled)
