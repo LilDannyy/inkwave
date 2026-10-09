@@ -199,10 +199,12 @@ const MID = [
 ];
 
 // ------------------------------------------------------------------------------------------------ the Halo (the 3000s)
-// a glass ring walkway at 5.4 (inner apothem 11.6, outer 14.6), half-sides 4.8 long, corner squares 0.1 lower; glass
+// a glass ring walkway at 5.4 (inner apothem 12.2, outer 14.6), half-sides 5.05 long, corner squares 0.1 lower; glass
 // balustrades (rail) both edges; gaps where the stair lands (180°, x ±1.5), at the light-pylon (247.5°), and 2 m drop
 // gaps in the inner edge at the middles of the 135° and 225° sides (DESIGN.md §2.6)
-const HALO_Y = 5.4, AP_IN = 11.6, AP_OUT = 14.6, AP_MID = 13.1, T22 = Math.tan(22.5 * DEG);
+// (fix round 2, review issues 1 and 5: 2.4 m wide, its inner edge 12.2 m out (was 3.0 m and 11.6): less floor the bots
+//  leave bare, and a perch 0.6 m farther from the centre zone; the outer edge, the stair landings and the pylon stay)
+const HALO_Y = 5.4, AP_IN = 12.2, AP_OUT = 14.6, AP_MID = (AP_IN + AP_OUT) / 2, T22 = Math.tan(22.5 * DEG);
 const HIN = AP_IN * T22, HOUT = AP_OUT * T22;   // half a side's length at the inner (4.80) and outer (6.05) edge
 const haloPieces = [];
 {
@@ -219,7 +221,7 @@ const haloPieces = [];
     const nx = Math.sin(b * DEG), nz = Math.cos(b * DEG), tx = Math.cos(b * DEG), tz = -Math.sin(b * DEG);   // radial n, tangent t
     const at = (ap, m) => [+(ap * nx + k * m * tx).toFixed(4), +(ap * nz + k * m * tz).toFixed(4)];
     const [cx, cz] = at(AP_MID, HOUT / 2);
-    haloPieces.push(O(cx, cz, 3, +HOUT.toFixed(4), top - 0.4, top, b + 90, halo({ eraGroup: g })));
+    haloPieces.push(O(cx, cz, +(AP_OUT - AP_IN).toFixed(4), +HOUT.toFixed(4), top - 0.4, top, b + 90, halo({ eraGroup: g })));
     // balustrades: the inner edge to its corner, the outer edge to its corner (the two outer rails cross there)
     let inner = [0.02, HIN - 0.12], outer = [0.02, HOUT + 0.03];
     if (b === 135 || b === 225) inner = [1.0, HIN - 0.12];        // the 2 m drop gaps (1 m each side of the middle)
@@ -236,7 +238,7 @@ const haloPieces = [];
   //  Boathouse deck (halo-sight.mjs), so a perch over the zone keeps little cover of its own; the two kept stop the stair's
   //  head being a 7 m bare circle)
   for (const [b, g] of [[157.5, 'halo-3'], [202.5, 'halo-5']]) {
-    const [px, pz] = polar(13.4, b);
+    const [px, pz] = polar(14.4, b);
     haloPieces.push(O(px, pz, 1.2, 1.2, HALO_Y - 0.1, HALO_Y + 1, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g }));
   }
 }
@@ -697,15 +699,17 @@ const BASE = [
   //  their faces over the water and the railyard are out of reach: not inkable)
   ...bld(P.boiler[0], P.boiler[1], P.boiler[2], P.boiler[3], 6, { tag: 'boiler-house', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [-1, 0, 0]] }, BOT),
   ...bld(-P.boiler[1], -P.boiler[0], P.boiler[2], P.boiler[3], 6, { tag: 'tram-shed', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [1, 0, 0]] }, BOT),
-  // terrace cover (the grip car moved in off the chamfer; the stable is gone with the east yard)
+  // terrace cover (the grip car moved in off the chamfer; the stable is gone with the east yard; the turntable's benches
+  // and banks stop 0.85 m short of the tower's lane on the terrace's north strip, z −55; the banks stand beside the
+  // grand stairs' outer edges, no longer over their feet)
   B(-23.6, -21, 1, 4, -61, -55.4, { tag: 'grip-car', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
   B(-20, -18, 1, 2.4, -64, -62.4, cover({ tag: 'coal-bin', color: '#4a4744' })),
-  B(-6.1, -4.9, 1, 2.25, -58, -56, cover({ tag: 'turntable-bench', color: '#7d6c5a' })), B(4.9, 6.1, 1, 2.25, -58, -56, cover({ tag: 'turntable-bench', color: '#7d6c5a' })),
+  B(-6.1, -4.9, 1, 2.25, -59.2, -57.2, cover({ tag: 'turntable-bench', color: '#7d6c5a' })), B(4.9, 6.1, 1, 2.25, -59.2, -57.2, cover({ tag: 'turntable-bench', color: '#7d6c5a' })),
   B(-4.6, -3.4, 1, 2.25, -62.6, -61.4, cover({ tag: 'buffer', color: '#5b5048' })), B(3.4, 4.6, 1, 2.25, -62.6, -61.4, cover({ tag: 'buffer', color: '#5b5048' })),
   B(-16, -6.5, 1, 2.4, -53, -51.6, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
   B(6.5, 12.6, 1, 2.4, -52.2, -50.8, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
-  B(-10.8, -9.4, 1, 2.4, -61, -55.4, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
-  B(9.4, 10.8, 1, 2.4, -61, -55.4, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
+  B(-12, -11.1, 1, 2.4, -62, -57.1, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
+  B(11.1, 12, 1, 2.4, -62, -57.1, { tag: 'apron-bank', color: '#6e7a62', pattern: PATTERN.planter, roof: true }),
   B(-9.2, -6.8, 1, 2, -56, -55.2, cover({ tag: 'bench', color: '#7d6c5a' })),
   // (adds: the strip between the forecourt steps and the turntable was 6 m from cover; the east one stands in the
   //  tower's lane, so not in Tower Command)
