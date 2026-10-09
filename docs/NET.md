@@ -254,7 +254,11 @@ on the synced clock, the tower follows the host's snapshots), as the buoy does �
 block pushing into a device lying on a floor lifts it onto its top or shoves it out of its way (the buoy's rule; the
 tower crushes what's on the user's list — sprinkler, beacon, curtain, buoy — and pushes anything else, a Lurk Mine or a
 Cling Charge on the floor, aside out of its path, never through it); its block going from under it, a floor device drops
-onto what's below (a wall one breaks). The
+onto what's below (a wall one breaks). On a stage with a stage module ([b5-int2]) a device never comes to rest in its
+no-place disc (`G.level.noPlace`) or under its liquid (`G.match.stage.under`): a mine or beacon isn't planted there (the
+owner's screen, before any record), a sprinkler or curtain landing there breaks, a drop or shove there counts as none —
+every screen alike, from the module's pure function of the synced stage clock (the owner's end record settles a ghost,
+as with any end). The
 owner's word settles where it is whenever it settles somewhere: the subs record `[4, gid, x, y, z, tag, lx, ly, lz, nx,
 ny, nz]` — on the moving block `tag` (its Level tag: `tower`, `tower-pillar`, `mover:<car>`, `plant:<pod>:<part>`; `#<id>`
 for an untagged one) at `l` in its axes, on the face whose normal is `n` (its axes) — or `[4, gid, x, y, z]` (on still
@@ -271,7 +275,8 @@ back there; the owner's burst record `[1, gid, x, y, z, big]` still says where a
 owner is splatted is orphaned by the end record (`popOnOwnerSplat: false`) and runs out its life on its own clock on
 every screen (pop 'time', not the 3 s 'lost' fallback). The Ink Tempest's cloud and the Surf N' Turf buoy never
 depended on their thrower (their own records). The gauge a splat leaves (half of what was left of a running special,
-`specials.js splatShare`) is the victim's own screen's, synced as usual (`sp` in the actor tick).
+`specials.js splatShare` — an orphaned Drainbow's too, [b5-int2]) is the victim's own screen's, synced as usual (`sp` in
+the actor tick).
 
 **Bubble Guard chain** (src/game/sp-bubble.js). The user's own field comes from the special's start record (every
 screen runs `IMPL.bubbler.start`). Passing a field on by touch is decided by the **receiver's owner** (its own squidkid;
