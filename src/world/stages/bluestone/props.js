@@ -5,11 +5,11 @@
 //     a `roof` collider at 3.0 (anyone landing on it slides off; the Signal Garden's deck sits on it in the 3000s). A
 //     layout block would be drawn by the stage-card thumbnail and check-maps' plan as land, filling the X's railyard
 //     corners; a prop collider is not. Drawn here as a plain dark mass so the pictures read "railyard, out of play".
-//     Its channels for the garden's three stairs are open in every era and filled in the 1880s and today (eras '12', in
-//     the stair's group: ENGINE rule 19).
+//     (fix round 2: Prawn Alley and the signal yard lie outside its outline, so it has no channels; the Signal Garden
+//     stands on the yard, a layout piece.)
 //   • a placeholder of Commander Tartar under the dome (no collider), so mid reads as the place it is.
 // Placements carry the era engine's tags (eras / eraGroup) and are filtered by era.js like the layout.
-import { RAILYARD, AL } from './layout.js';
+import { RAILYARD, AL, tileOf, YARD_FENCE_LINES } from './layout.js';
 import { rasterRects, inPoly, edgeDist } from './ground.js';
 import { eraFilter } from './era.js';
 
@@ -52,9 +52,9 @@ export function register(D, H) {
   D.bluestone_clockrow = {
     build(B) {
       for (const x of [-2.48, -1.24, 0, 1.24, 2.48]) for (const s of [-1, 1]) {
-        B.cyl('metal', '#2f3a35', 0.57, 0.08, x, 5.15, s * 0.3, { rx: Math.PI / 2, seg: 16 });
-        B.cyl('gloss', '#f1e9d2', 0.5, 0.06, x, 5.15, s * 0.33, { rx: Math.PI / 2, seg: 16 });
-        B.box('rubber', '#2a2a28', 0.06, 0.4, 0.02, x, 5.3, s * 0.37);
+        B.cyl('metal', '#2f3a35', 0.57, 0.08, x, 5.95, s * 0.3, { rx: Math.PI / 2, seg: 16 });
+        B.cyl('gloss', '#f1e9d2', 0.5, 0.06, x, 5.95, s * 0.33, { rx: Math.PI / 2, seg: 16 });
+        B.box('rubber', '#2a2a28', 0.06, 0.4, 0.02, x, 6.1, s * 0.37);
       }
     },
   };
@@ -104,6 +104,15 @@ export function register(D, H) {
       for (const y of [0.05, 1.2, 2.95]) B.box('metal', '#2f3a35', 0.08, 0.1, L, 0, y, 0);
     },
   };
+  // an iron railing (blockout look of the signal yard's fence: the layout's rail blocks collide, this only shows them;
+  // o.len along local z, o.h tall, standing at the placement's y)
+  D.bluestone_fence = {
+    build(B, o) {
+      const L = o.len || 3, h = o.h || 1.4, y = o.y0 || 0, n = Math.max(1, Math.round(L / 0.3));
+      for (let i = 0; i <= n; i++) B.box('metal', '#2f3a35', 0.05, h, 0.05, 0, y + h / 2, -L / 2 + (i * L) / n);
+      for (const yy of [0.12, h - 0.04]) B.box('metal', '#2f3a35', 0.07, 0.08, L, 0, y + yy, 0);
+    },
+  };
   // the old signal box (the 1880s, today): where the Signal Garden's glass pavilion stands in the 3000s
   D.bluestone_signalbox = {
     build(B) {
@@ -120,13 +129,13 @@ const grow = (poly, x, z, d) => inPoly(poly, x, z) || edgeDist(poly, x, z) <= d;
 // raster stays 1.2 m behind it (no saw-tooth over the water)
 const RP = RAILYARD.poly, E0 = RP[RP.length - 1], E1 = RP[0];
 const riverEdge = (x, z) => { const dx = E1[0] - E0[0], dz = E1[1] - E0[1], L = Math.hypot(dx, dz); const t = ((x - E0[0]) * dx + (z - E0[1]) * dz) / (L * L); return t > -0.05 && t < 1.05 ? Math.abs((x - E0[0]) * dz - (z - E0[1]) * dx) / L : Infinity; };
-// (fix round 1: the embankment stands lower, at RAILYARD.low.top, under the Signal Garden; its cells there are laid apart)
-const LOW = RAILYARD.low, inLow = (x, z) => inPoly(LOW.poly, x, z);
+// (a lower part, RAILYARD.low, if the layout names one: its cells are laid apart, at its own top)
+const LOW = RAILYARD.low, inLow = (x, z) => !!LOW && inPoly(LOW.poly, x, z);
 const bermCell = (x, z) => grow(RAILYARD.poly, x, z, 0.15) && riverEdge(x, z) > 1.2 && !RAILYARD.channels.some((c) => grow(c.poly, x, z, 0.25));
 const BERM = rasterRects((x, z) => bermCell(x, z) && !inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 });
-const BERM_LOW = rasterRects((x, z) => bermCell(x, z) && inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 });
+const BERM_LOW = LOW ? rasterRects((x, z) => bermCell(x, z) && inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 }) : { rects: [], miss: [] };
 const placements = [];
-for (const [rects, top] of [[BERM.rects, undefined], [BERM_LOW.rects, LOW.top]]) for (const [x0, x1, z0, z1] of rects) placements.push({ type: 'bluestone_berm', pos: [+((x0 + x1) / 2).toFixed(3), 0, +((z0 + z1) / 2).toFixed(3)], size: [+(x1 - x0).toFixed(3), +(z1 - z0).toFixed(3)], top });
+for (const [rects, top] of [[BERM.rects, undefined], [BERM_LOW.rects, LOW?.top]]) for (const [x0, x1, z0, z1] of rects) placements.push({ type: 'bluestone_berm', pos: [+((x0 + x1) / 2).toFixed(3), 0, +((z0 + z1) / 2).toFixed(3)], size: [+(x1 - x0).toFixed(3), +(z1 - z0).toFixed(3)], top });
 // a block over a quad (a rectangle in the world or the arm's frame), turned with it (top: the low embankment's where the
 // quad's centre lies under the garden)
 const quadBerm = (q, o = {}) => {
@@ -145,6 +154,7 @@ for (const c of RAILYARD.channels) {
 }
 placements.push({ type: 'bluestone_tartar', pos: [0, 0, 0], mirror: false });
 for (const z of [-39.75, -32.25]) placements.push({ type: 'bluestone_grille', pos: [-18.75, 0, z], len: 3.5 });   // (the arcade's grilles onto Hoki Lane)
+for (const f of YARD_FENCE_LINES) placements.push({ type: 'bluestone_fence', pos: [f.pos[0], 0, f.pos[2]], rotY: f.rotY, len: f.len, h: f.h, y0: f.pos[1], eras: f.eras, eraGroup: f.eraGroup });   // (the signal yard's fence)
 // the landmark's and the hero buildings' blockout volumes (looks only)
 placements.push({ type: 'bluestone_dome', pos: [0, 0, 0], mirror: false });
 placements.push({ type: 'bluestone_clockrow', pos: [0, 0, -7.575] });
@@ -156,6 +166,8 @@ for (const x of [-60, -56.5, -53, -49.5, -46, -42.5, -39, -35.5, -32]) placement
 placements.push({ type: 'bluestone_train', pos: [-56.5, 0, -66], cars: 3, loco: true, color: '#5a4a3c' });
 placements.push({ type: 'bluestone_train', pos: [-46, 0, -72], cars: 2, color: '#4d5a52' });
 placements.push({ type: 'bluestone_train', pos: [-35.5, 0, -63], cars: 2, loco: true, color: '#6b5a48' });
-{ const [x, z] = AL(9.8, -10.9); placements.push({ type: 'bluestone_signalbox', pos: [x, 0, z], size: [4.2, 4.2], eras: '12', eraGroup: 'garden-s2' }); }   // (where the 3000s' signal mast stands)
+{ const [x, z] = AL(9, -9); placements.push({ type: 'bluestone_signalbox', pos: [x, 0, z] }); }   // (the old signal box on the embankment behind Prawn Alley)
+// the signal yard's tracks (the 1880s, today: ballast on the yard's 0.9 m bed; the Signal Garden covers it in the 3000s)
+for (const [t, s] of [[6, 4.2], [9, 6.6], [12, 4.6]]) { const [x, z] = AL(t, s); placements.push({ type: 'bluestone_track', pos: [x, 0, z], rotY: (65 * Math.PI) / 180, len: 7, top: 0.84, eras: '12', eraGroup: tileOf(x, z) }); }
 export const BERM_MISS = [...BERM.miss, ...BERM_LOW.miss];
 export const PLACEMENTS = eraFilter(placements);
