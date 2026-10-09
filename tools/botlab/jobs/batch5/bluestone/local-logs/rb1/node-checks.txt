@@ -1,0 +1,110 @@
+7d101e6 Bluestone blockout round B fix 1: a sea bed under the signal yard and the railyard walls (the bots read them as water)
+era 1 bluestone            bluestone    1184 pieces  ok
+era 1 bluestone.tower      bluestone.tower 1148 pieces  ok
+era 1 bluestone.bazookarp  bluestone.bazookarp 1184 pieces  ok
+era 1 bluestone.boss       bluestone.boss 1196 pieces  ok
+era 2 bluestone            bluestone    1244 pieces  ok
+era 2 bluestone.tower      bluestone.tower 1208 pieces  ok
+era 2 bluestone.bazookarp  bluestone.bazookarp 1244 pieces  ok
+era 2 bluestone.boss       bluestone.boss 1256 pieces  ok
+era 3 bluestone            bluestone    1358 pieces  ok
+era 3 bluestone.tower      bluestone.tower 1322 pieces  ok
+era 3 bluestone.bazookarp  bluestone.bazookarp 1358 pieces  ok
+era 3 bluestone.boss       bluestone.boss 1370 pieces  ok
+== check-blockout era 1
+ "blocks": 1286, "groundMiss": 0, "holes": 0, "floor_m2": 6952, "paint_m2": 15164, "lightRows": 1441
+== check-blockout era 2
+ "blocks": 1346, "groundMiss": 0, "holes": 0, "floor_m2": 7551, "paint_m2": 15969, "lightRows": 1464
+== check-blockout era 3
+ "blocks": 1460, "groundMiss": 0, "holes": 0, "floor_m2": 8413, "paint_m2": 16958, "lightRows": 1529
+== check-blockout era all
+ "blocks": 1492, "groundMiss": 0, "holes": 0, "floor_m2": 8081, "paint_m2": 16585, "lightRows": 1533, "groups": 76, "groupFails": 0, "jump12": { "groupsPerHalf": [ "blocks": 104 "jump23": { "groupsPerHalf": [ "blocks": 134 "eraShare": 0.171
+== appear turf
+== jump 1 -> 2: 82 appearing pieces, 0 violations
+== jump 2 -> 3: 124 appearing pieces, 0 violations
+RESULT 0 violations
+== appear tower
+== jump 1 -> 2: 78 appearing pieces, 0 violations
+== jump 2 -> 3: 124 appearing pieces, 0 violations
+RESULT 0 violations
+== era 1 deadend (default band, tip band) / strips (turf, tower)
+Alpha: dead-end floor 95 m2 (beyond along -50.0)
+Bravo: dead-end floor 95 m2 (beyond along -50.0)
+Alpha: dead-end floor 7 m2 (beyond along -55.0)
+Bravo: dead-end floor 7 m2 (beyond along -55.0)
+RESULT longest 0.0 m; 0 strips over 25 m
+RESULT longest 39.1 m; 7 strips over 25 m
+== era 2 deadend (default band, tip band) / strips (turf, tower)
+Alpha: dead-end floor 95 m2 (beyond along -50.0)
+Bravo: dead-end floor 95 m2 (beyond along -50.0)
+Alpha: dead-end floor 7 m2 (beyond along -55.0)
+Bravo: dead-end floor 7 m2 (beyond along -55.0)
+RESULT longest 0.0 m; 0 strips over 25 m
+RESULT longest 39.1 m; 7 strips over 25 m
+== era 3 deadend (default band, tip band) / strips (turf, tower)
+Alpha: dead-end floor 95 m2 (beyond along -50.0)
+Bravo: dead-end floor 95 m2 (beyond along -50.0)
+Alpha: dead-end floor 7 m2 (beyond along -55.0)
+Bravo: dead-end floor 7 m2 (beyond along -55.0)
+RESULT longest 0.0 m; 0 strips over 25 m
+RESULT longest 35.7 m; 7 strips over 25 m
+check-blockout era 1 {"floor_m2": 6952, "floorByHeight": {"<0.5": "4057 (58%)", "0.5-1.1": "1446 (21%)", "1.1-2": "663 (10%)", "2-3": "345 (5%)", "3-4": "416 (6%)", "4-6": "26 (0%)"}, "paint_m2": 15164, "blocks": 1286, "jump12": null, "jump23": null, "groups": null, "groupFails": null, "holes": 0, "groundMiss": 0, "bermMiss": 0, "lightRows": 1441, "eraShare": null, "eraBlocks": null}
+check-blockout era 2 {"floor_m2": 7551, "floorByHeight": {"<0.5": "4411 (58%)", "0.5-1.1": "1659 (22%)", "1.1-2": "696 (9%)", "2-3": "345 (5%)", "3-4": "416 (6%)", "4-6": "26 (0%)"}, "paint_m2": 15969, "blocks": 1346, "jump12": null, "jump23": null, "groups": null, "groupFails": null, "holes": 0, "groundMiss": 0, "bermMiss": 0, "lightRows": 1464, "eraShare": null, "eraBlocks": null}
+check-blockout era 3 {"floor_m2": 8413, "floorByHeight": {"<0.5": "4450 (53%)", "0.5-1.1": "1821 (22%)", "1.1-2": "891 (11%)", "2-3": "390 (5%)", "3-4": "444 (5%)", "4-6": "420 (5%)"}, "paint_m2": 16958, "blocks": 1460, "jump12": null, "jump23": null, "groups": null, "groupFails": null, "holes": 0, "groundMiss": 0, "bermMiss": 0, "lightRows": 1529, "eraShare": null, "eraBlocks": null}
+check-blockout era all {"floor_m2": 8081, "floorByHeight": {"<0.5": "4401 (54%)", "0.5-1.1": "1606 (20%)", "1.1-2": "857 (11%)", "2-3": "355 (4%)", "3-4": "444 (5%)", "4-6": "420 (5%)"}, "paint_m2": 16585, "blocks": 1492, "jump12": {"groupsPerHalf": [18, 18], "blocks": 104}, "jump23": {"groupsPerHalf": [20, 20], "blocks": 134}, "groups": 76, "groupFails": 0, "holes": 0, "groundMiss": 0, "bermMiss": 0, "lightRows": 1533, "eraShare": 0.171, "eraBlocks": 238}
+era 1: platform (top 1.40, 20 eyes) -> Prow Place: 331/480 lines clear = 69 %   blocked most by: fountain 60, terminus-shelter 49, tram-shelter 40, ground-frame 15
+era 1: platform (top 1.40, 20 eyes) -> down the arm: 157/300 lines clear = 52 %   blocked most by: tram 60, tram-shelter 58, terminus-shelter 45, warehouse 30, crates 19
+era 2: platform (top 1.40, 20 eyes) -> Prow Place: 331/480 lines clear = 69 %   blocked most by: fountain 60, terminus-shelter 49, tram-shelter 40, ground-frame 15
+era 2: platform (top 1.40, 20 eyes) -> down the arm: 157/300 lines clear = 52 %   blocked most by: tram 60, tram-shelter 58, terminus-shelter 45, warehouse 30, crates 19
+era 3: platform (top 1.40, 20 eyes) -> Prow Place: 216/480 lines clear = 45 %   blocked most by: garden-lawn 173, fountain 60, terminus-shelter 49, tram-shelter 40, ground-frame 15
+era 3: platform (top 1.40, 20 eyes) -> down the arm: 157/300 lines clear = 52 %   blocked most by: tram 60, tram-shelter 58, terminus-shelter 45, warehouse 30, crates 19
+{"era":"1","nodes":5704,"Hoki Lane -> arm":{"m":23.7,"onGarden_m":0,"maxY":0},"arm -> Hoki Lane":{"m":23.7,"onGarden_m":0,"maxY":0},"Hoki Lane -> arm at along -40":{"m":29.5,"onGarden_m":0,"maxY":0},"arm at along -40 -> Hoki Lane":{"m":29.5,"onGarden_m":0,"maxY":0},"Prow Place -> tip south lane":{"m":28,"onGarden_m":0,"maxY":0},"tip south lane -> Prow Place":{"m":28,"onGarden_m":0,"maxY":0},"Hoki Lane -> tip turning area":{"m":38,"onGarden_m":0,"maxY":0},"Hoki Lane S (-22,-44) -> tip south lane":{"m":29,"onGarden_m":0,"maxY":0},"alley east end -> arm":{"m":32.2,"onGarden_m":0,"maxY":0},"pad -> terminus platform":83.6,"east flight foot -> platform":{"m":9.5,"onGarden_m":0,"maxY":1.4},"south flight foot -> platform":{"m":7.7,"onGarden_m":0,"maxY":1.4},"platform -> tip turning area":{"m":11.1,"onGarden_m":0,"maxY":1.4}}
+{"era":"1","nodes":5704,"spawnMid_t0":{"centre":[74.4,6.31],"alphaSide":[73,6.19],"bravoSide":[74.4,6.31]},"spawnMid_t1":{"centre":[73.5,6.23],"alphaSide":[75,6.36],"bravoSide":[73.5,6.23]},"bazookarp":{"alphaAttack":{"L":59,"pondWeir":37.7,"weirGate":29.3},"bravoAttack":{"L":59.8,"pondWeir":40.1,"weirGate":27.7}},"bazookarpRoutes":{"alphaAttack":{"pondWeir":{"route1":37.7,"route2":59.2,"ratio":1.57,"ok":true,"via1":[2.5,17.5],"via2":[-7.5,18.5]},"weirGate":{"route1":29.3,"route2":32.3,"ratio":1.1,"ok":true,"via1":[5.5,45.5],"via2":[0.5,43.5]}},"bravoAttack":{"pondWeir":{"route1":40.1,"route2":59,"ratio":1.47,"ok":true,"via1":[-2.5,-17.5],"via2":[2.5,-14.5]},"weirGate":{"route1":27.7,"route2":31.4,"ratio":1.13,"ok":true,"via1":[-4.5,-45.5],"via2":[-0.5,-42.5]}}}}
+era 1 bluestone
+base         nodes  1416  wet1   2%  wet2   2%
+west         nodes   494  wet1   0%  wet2   0%
+swimston     nodes   632  wet1   0%  wet2   0%
+east         nodes   718  wet1  12%  wet2  14%
+alley        nodes   217  wet1   0%  wet2   0%
+arm-tip      nodes   396  wet1  15%  wet2  13%
+river-works  nodes    26  wet1   0%  wet2 100%
+arm          nodes   686  wet1   3%  wet2   5%
+circus       nodes  1058  wet1   0%  wet2   0%
+all wet1 3.5 % wet2 4.3 %
+false-wet nodes by region {"base":6,"east":8}
+by the block that makes them wet {"river-rail":12,"#1184":1,"#1185":1}
+{"era":"2","nodes":6218,"Hoki Lane -> arm":{"m":23.7,"onGarden_m":0,"maxY":0},"arm -> Hoki Lane":{"m":23.7,"onGarden_m":0,"maxY":0},"Hoki Lane -> arm at along -40":{"m":29.5,"onGarden_m":0,"maxY":0},"arm at along -40 -> Hoki Lane":{"m":29.5,"onGarden_m":0,"maxY":0},"Prow Place -> tip south lane":{"m":28,"onGarden_m":0,"maxY":0},"tip south lane -> Prow Place":{"m":28,"onGarden_m":0,"maxY":0},"Hoki Lane -> tip turning area":{"m":38,"onGarden_m":0,"maxY":0},"Hoki Lane S (-22,-44) -> tip south lane":{"m":29,"onGarden_m":0,"maxY":0},"alley east end -> arm":{"m":32.2,"onGarden_m":0,"maxY":0},"pad -> terminus platform":83.6,"east flight foot -> platform":{"m":9.5,"onGarden_m":0,"maxY":1.4},"south flight foot -> platform":{"m":7.7,"onGarden_m":0,"maxY":1.4},"platform -> tip turning area":{"m":11.1,"onGarden_m":0,"maxY":1.4}}
+{"era":"2","nodes":6218,"spawnMid_t0":{"centre":[74.4,6.31],"alphaSide":[73,6.19],"bravoSide":[74.4,6.31]},"spawnMid_t1":{"centre":[73.5,6.23],"alphaSide":[75,6.36],"bravoSide":[73.5,6.23]},"bazookarp":{"alphaAttack":{"L":59,"pondWeir":37.7,"weirGate":29.3},"bravoAttack":{"L":59.8,"pondWeir":40.1,"weirGate":27.7}},"bazookarpRoutes":{"alphaAttack":{"pondWeir":{"route1":37.7,"route2":59.2,"ratio":1.57,"ok":true,"via1":[2.5,17.5],"via2":[-7.5,18.5]},"weirGate":{"route1":29.3,"route2":32.3,"ratio":1.1,"ok":true,"via1":[5.5,45.5],"via2":[0.5,43.5]}},"bravoAttack":{"pondWeir":{"route1":40.1,"route2":59,"ratio":1.47,"ok":true,"via1":[-2.5,-17.5],"via2":[2.5,-14.5]},"weirGate":{"route1":27.7,"route2":31.4,"ratio":1.13,"ok":true,"via1":[-4.5,-45.5],"via2":[-0.5,-42.5]}}}}
+era 2 bluestone
+base         nodes  1416  wet1   2%  wet2   2%
+west         nodes   660  wet1   0%  wet2   0%
+swimston     nodes   632  wet1   0%  wet2   0%
+east         nodes   796  wet1   6%  wet2   5%
+alley        nodes   217  wet1   0%  wet2   0%
+arm-tip      nodes   396  wet1  15%  wet2  13%
+river-works  nodes   288  wet1  27%  wet2  50%
+arm          nodes   686  wet1   3%  wet2   4%
+circus       nodes  1060  wet1   0%  wet2   0%
+all wet1 3.8 % wet2 4.7 %
+false-wet nodes by region {"base":6,"east":10,"river-works":30}
+by the block that makes them wet {"river-rail":12,"#1244":1,"boardwalk-rail":30,"bridge-rail":2,"#1245":1}
+{"era":"3","nodes":6992,"Hoki Lane -> arm":{"m":21.7,"onGarden_m":6.4,"maxY":1.2},"arm -> Hoki Lane":{"m":20.4,"onGarden_m":13.5,"maxY":1.2},"Hoki Lane -> arm at along -40":{"m":23.5,"onGarden_m":17.1,"maxY":1.2},"arm at along -40 -> Hoki Lane":{"m":22.2,"onGarden_m":13.9,"maxY":1.2},"Prow Place -> tip south lane":{"m":22.1,"onGarden_m":11.4,"maxY":1.2},"tip south lane -> Prow Place":{"m":22.2,"onGarden_m":11.1,"maxY":1.2},"Hoki Lane -> tip turning area":{"m":29.3,"onGarden_m":16.8,"maxY":1.2},"Hoki Lane S (-22,-44) -> tip south lane":{"m":29,"onGarden_m":0,"maxY":0},"alley east end -> arm":{"m":22.8,"onGarden_m":18.8,"maxY":1.2},"pad -> terminus platform":83.6,"east flight foot -> platform":{"m":9.5,"onGarden_m":0,"maxY":1.4},"south flight foot -> platform":{"m":7.7,"onGarden_m":0,"maxY":1.4},"platform -> tip turning area":{"m":11.1,"onGarden_m":0,"maxY":1.4}}
+{"era":"3","nodes":6992,"spawnMid_t0":{"centre":[74.5,6.31],"alphaSide":[73.1,6.19],"bravoSide":[74.5,6.31]},"spawnMid_t1":{"centre":[73.7,6.25],"alphaSide":[75.1,6.36],"bravoSide":[73.7,6.25]},"bazookarp":{"alphaAttack":{"L":59,"pondWeir":37.7,"weirGate":29.3},"bravoAttack":{"L":59.8,"pondWeir":40.1,"weirGate":27.7}},"bazookarpRoutes":{"alphaAttack":{"pondWeir":{"route1":37.7,"route2":58.2,"ratio":1.54,"ok":true,"via1":[2.5,17.5],"via2":[-8.5,17.5]},"weirGate":{"route1":29.3,"route2":32.3,"ratio":1.1,"ok":true,"via1":[5.5,45.5],"via2":[0.5,43.5]}},"bravoAttack":{"pondWeir":{"route1":40.1,"route2":58,"ratio":1.45,"ok":true,"via1":[-2.5,-17.5],"via2":[2.5,-13.5]},"weirGate":{"route1":27.7,"route2":31.4,"ratio":1.13,"ok":true,"via1":[-4.5,-45.5],"via2":[-0.5,-42.5]}}}}
+era 3 bluestone
+base         nodes  1416  wet1   2%  wet2   2%
+west         nodes   678  wet1   0%  wet2   0%
+swimston     nodes   684  wet1   0%  wet2   0%
+east         nodes   796  wet1   6%  wet2   5%
+alley        nodes   218  wet1   0%  wet2   0%
+garden       nodes   276  wet1   0%  wet2   0%
+arm-tip      nodes   396  wet1  15%  wet2  13%
+river-works  nodes   288  wet1  27%  wet2  50%
+arm          nodes   710  wet1   3%  wet2   4%
+circus       nodes  1128  wet1   0%  wet2   0%
+halo         nodes   312  wet1   0%  wet2   0%
+all wet1 3.4 % wet2 4.2 %
+false-wet nodes by region {"base":6,"east":10,"river-works":30}
+by the block that makes them wet {"river-rail":12,"#1358":1,"boardwalk-rail":30,"bridge-rail":2,"#1359":1}
+{"era":"1","halo 225 side":{"at":[-9.5,0,-9.5],"fromPad":66.4},"halo 270 side":{"at":[-12.5,0,0.5],"fromPad":80.2},"hotel stair top landing":{"at":[-15.5,0,-7.5],"fromPad":73.3},"hotel stair mid":{"at":[-13.5,2.4,-13.5],"fromPad":69.2},"garden lawn N":{"at":[-30.5,0,-18.5],"fromPad":75.9},"garden walk E":{"at":[-23.5,1,-34.5],"fromPad":50.2},"garden walk W (by the tip)":{"at":[-37.5,0,-31.5],"fromPad":60.4},"garden lawn by the mouth":{"at":[-28.5,0,-17.5],"fromPad":73.5},"terminus platform":{"at":[-49.5,1.4,-16.5],"fromPad":83.6},"tip street":{"at":[-46.5,0,-27.5],"fromPad":71.1},"alley middle":{"at":[-34.5,0,-34.5],"fromPad":56.2},"landingToHalo":18.7,"ringToHalo_viaHotelStair":12.2,"prowToGardenWalk":27.3,"armToGarden":13.6,"alleyToGarden":23.2,"prowToTip_street":37.8}
+{"era":"2","halo 225 side":{"at":[-9.5,0,-9.5],"fromPad":66.4},"halo 270 side":{"at":[-12.5,0,0.5],"fromPad":80.2},"hotel stair top landing":{"at":[-15.5,0,-7.5],"fromPad":73.3},"hotel stair mid":{"at":[-13.5,2.4,-13.5],"fromPad":69.2},"garden lawn N":{"at":[-30.5,0,-18.5],"fromPad":75.9},"garden walk E":{"at":[-23.5,1,-34.5],"fromPad":50.2},"garden walk W (by the tip)":{"at":[-37.5,0,-31.5],"fromPad":60.4},"garden lawn by the mouth":{"at":[-28.5,0,-17.5],"fromPad":73.5},"terminus platform":{"at":[-49.5,1.4,-16.5],"fromPad":83.6},"tip street":{"at":[-46.5,0,-27.5],"fromPad":71.1},"alley middle":{"at":[-34.5,0,-34.5],"fromPad":56.2},"landingToHalo":18.7,"ringToHalo_viaHotelStair":12.2,"prowToGardenWalk":27.3,"armToGarden":13.6,"alleyToGarden":23.2,"prowToTip_street":37.8}
+{"era":"3","halo 225 side":{"at":[-9.5,5.3,-9.5],"fromPad":69.3},"halo 270 side":{"at":[-12.5,5.4,0.5],"fromPad":80.5},"hotel stair top landing":{"at":[-15.5,5.2,-6.5],"fromPad":78.3},"hotel stair mid":{"at":[-15.5,3.88,-11.5],"fromPad":73.1},"garden lawn N":{"at":[-28.5,1.2,-20.5],"fromPad":67.2},"garden walk E":{"at":[-25.3,0.38,-32.5],"fromPad":52.3},"garden walk W (by the tip)":{"at":[-36.5,1.2,-29.5],"fromPad":62.5},"garden lawn by the mouth":{"at":[-27.5,1.2,-19.5],"fromPad":67.3},"terminus platform":{"at":[-49.5,1.4,-16.5],"fromPad":83.6},"tip street":{"at":[-46.5,0,-27.5],"fromPad":71.1},"alley middle":{"at":[-34.5,0,-34.5],"fromPad":56.2},"landingToHalo":15.5,"ringToHalo_viaHotelStair":29.8,"prowToGardenWalk":15.8,"armToGarden":12,"alleyToGarden":14.5,"prowToTip_street":30.5}

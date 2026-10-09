@@ -1,0 +1,30 @@
+# the pictures at 46f2132 (scratch) Bluestone DESIGN.md as-built: the garden's paths with the sea bed (section 2.6a) (rb1-pictures2.sh; tower-check's rail from the eras 1-2 run at 73472b2 and the era-3 run at 86abfbc; the cover maps from the final-head runs)
+### r3-era1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":7137,"blocks":1286,"solidBlocks":1286,"propMeshes":4,"navNodes":5704,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":
+### r3-era2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6764,"blocks":1346,"solidBlocks":1346,"propMeshes":4,"navNodes":6218,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":
+### r3-era3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6882,"blocks":1460,"solidBlocks":1460,"propMeshes":4,"navNodes":6992,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":
+### era 1 z
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6454,"blocks":1286,"solidBlocks":1286,"propMeshes":4,"navNodes":5704,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls"
+### era 1 w
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6640,"blocks":1252,"solidBlocks":1252,"propMeshes":4,"navNodes":5878,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls"
+### era 1 p
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6701,"blocks":1286,"solidBlocks":1286,"propMeshes":4,"navNodes":5704,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":
+### era 2 z
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6790,"blocks":1346,"solidBlocks":1346,"propMeshes":4,"navNodes":6218,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls"
+### era 2 w
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":13337,"blocks":1312,"solidBlocks":1312,"propMeshes":4,"navNodes":6312,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls
+### era 2 p
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":8809,"blocks":1346,"solidBlocks":1346,"propMeshes":4,"navNodes":6218,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":
+### era 3 z
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6920,"blocks":1460,"solidBlocks":1460,"propMeshes":4,"navNodes":6992,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls"
+### era 3 w
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6717,"blocks":1426,"solidBlocks":1426,"propMeshes":4,"navNodes":7086,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls"
+### era 3 p
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":7770,"blocks":1460,"solidBlocks":1460,"propMeshes":4,"navNodes":6992,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":
+### crossmarket mid
+mid sheet ok
+cover sheet ok
+91
+PICS-DONE Fri Oct  9 23:16:46 AEDT 2026
