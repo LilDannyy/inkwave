@@ -178,7 +178,8 @@ uses the real `G.deploy.crushIn` once the sentry / bobber branches are merged, a
 online, `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-glide.cjs tools/botlab/run.sh
 tools/botlab/netpage.cjs` (`NET_ARGS='scene=hostleave'`: the host leaves with its stones out). Its pictures:
 `tools/botlab/jobs/batch5/sub-glide/scenes.js` through hud-shots.cjs. match.cjs prints a `GLIDE` line (uses, cooks, the
-bots' fight / paint / boss throws, endings, bounces, hits, boss hits) when anyone threw one (`SUBS='all=glide'`), and a
+bots' fight / paint / boss throws, endings — the sunk ones by thrower —, the bots' stay-on-the-stage checks, bounces, hits,
+boss hits) when anyone threw one (`SUBS='all=glide'`), and a
 `SUBUSE` line for every sub kind thrown (uses / enemy hits / damage / splats: the Glide against the Splat Bomb).
 
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
