@@ -34,7 +34,7 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 W, O = sys.argv[1], sys.argv[2]
 F = ImageFont.truetype('/System/Library/Fonts/Menlo.ttc', 22)
-ims = [(f'Bluestone era {e}: the circus from the ring at 7:30', f'{W}/r4-era{e}/bluestone-day-mid-from-ring-730.png') for e in (1, 2, 3)] + [('Crossroads Market: its mid at the same height', f'{W}/cross/crossmarket-day-mid.png')]
+ims = [(f'Bluestone era {e}: the dome over the concourse from the ring at 7:30', f'{W}/r4-era{e}/bluestone-day-mid-from-ring-730.png') for e in (1, 2, 3)] + [('Crossroads Market: the Market Hall and its tram, the same height', f'{W}/cross/crossmarket-day-mid.png')]
 tiles = []
 for lab, p in ims:
     im = Image.open(p).convert('RGB'); im.thumbnail((900, 900)); t = Image.new('RGB', (im.width, im.height + 34), (22, 26, 32)); t.paste(im, (0, 34)); ImageDraw.Draw(t).text((8, 4), lab, fill=(240, 240, 240), font=F); tiles.append(t)
