@@ -395,6 +395,14 @@ and fills its own players' gauges. The start config carries `mode: 'tower'` and 
   `kx` first, so a declined grant is never a carrier's loss (S39c). `kd` reaches the guest's engine (its claim lock
   ends). A remote carrier is scored only from samples after the one its claim was judged on (never its samples from
   before the pick-up). Remote claimants are measured where their newest sample is (nearest wins, host bots included).
+- **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
+  shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
+  inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
+  the Surf N' Turf buoy); the owner's existing end records — subs `[2, gid, 2]`, the buoy `[4, gid, 2]` — end the
+  ghosts everywhere with the crunch, so a ghost is never crushed by a screen that doesn't own it. Thrown and walking
+  subs glance off / stop on each screen's own copy of the standing shell (ghosts too: the owner's records still decide
+  how each ends); the Whirl Boomerang's owner records where it stopped on the shell, `['k', nid, 'boomerang', [4, gid,
+  x, y, z]]` (a ghost still flying out snaps there and hovers). Tested by `tools/botlab/tests/net-karp-crush.cjs`.
 - **host migration (built here: the new host takes over the rules).** `netmatch.onLeave` calls
   `match.karp.onHostChange(isHost)` once `match.follower` is false: the new host's records carry on from the old host's
   `q` (the other guests drop anything at or below the last `q` they applied), a holder that is gone (a humans-only
