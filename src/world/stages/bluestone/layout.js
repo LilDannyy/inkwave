@@ -273,6 +273,11 @@ const LEG_PIECES = [
   B(-15.9, -14.7, 0, 1.5, -27.5, -25.5, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-21.2, -19.8, 0, 2.2, -41.5, -39.5, { tag: 'news-kiosk', color: '#4d5f57', pattern: PATTERN.metal, roof: true, notIn: 'tower' }),
   OB(-22.4, -24, 1.2, 2.2, 0, 1.2, 0, cover({ tag: 'cart' })),
+  // (round C, the strip test: the east track ran 46 m bare from the kiosk into the knee — the tower's lane, so these
+  //  stand in every mode but Tower Command; the kerb planter by the GPO steps' north end stands in every mode)
+  B(-20.4, -18.6, 0, 1.2, -27, -25.8, cover({ tag: 'bollards', notIn: 'tower' })),
+  B(-20.4, -18.6, 0, 1.0, -12, -10.8, cover({ tag: 'trough', color: '#6f726f', notIn: 'tower' })),
+  B(-17.2, -16.2, 0, 1.5, -30, -28, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // the GPO: the building on Customs Lane's corner (its clock tower to 16 m), the portico terrace (1.2) with its steps
   // down to Swimston and its piers, the hop down to the quay on its east face
   // (6 m and its tower on the quay corner: from the spawn deck the dome shows over it, up Swimston's east side)
@@ -292,6 +297,7 @@ const LEG_PIECES = [
   B(-7.2, -6.2, 0, 1.0, -46, -44.8, cover({ tag: 'bollards' })),
   B(-7.4, -6.2, 0, 1.2, -38.6, -36.4, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-7.4, -6.2, 0, 1.0, -27.8, -26.6, cover({ tag: 'bollards' })),
+  B(-9.5, -8.3, 0, 1.2, -32.2, -30.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),   // (the strip test: against the GPO terrace)
   // Customs Lane: the goods wagon on the GPO siding (the 1880s, today: a horse-drawn wagon, then the heritage siding's
   // last wagon) → the 3000s clear the level crossing, a bike dock in its footprint; benches, planters
   B(-12.4, -9, 0, 2.8, -49.6, -46.4, { tag: 'goods-wagon', color: K.wagon, pattern: PATTERN.wood, roof: true, paint: false, eras: '12', eraGroup: 'crossing' }),
@@ -328,6 +334,7 @@ const KNEE = [
   // the river walk west of the Customs House and the chamfer: crates, a bench
   B(-36.4, -35.2, 0, 1.0, -9, -7.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-31.5, -29.5, 0, 1.0, 1.5, 2.3, cover({ tag: 'bench', color: '#7d6c5a' })),
+  B(-29.6, -28.4, 0, 1.2, -1.6, -0.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),   // (the strip test: the knee's east–west line)
   B(-33.2, -31.8, 0, 1.2, 6.6, 9, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-28.2, -26.8, 0, 1.0, 10.4, 12.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-25, -23.6, 0, 1.5, 15.4, 16.8, cover({ tag: 'lamp-plinth', color: '#8b8579' })),
