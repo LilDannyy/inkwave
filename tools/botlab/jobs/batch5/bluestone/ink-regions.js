@@ -6,11 +6,9 @@
 (async () => {
   const g = window.__inkwave, m = g.match, P = __G.paint, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
-  g.debug.freeze();
-  const DT = 1 / 60; let t = 0;
-  while (m.state === 'playing' && t < 180) { for (let k = 0; k < 15; k++) { g._skipRender = true; try { g._frame(DT); } catch (e) { /* */ } } g._skipRender = false; t += 0.25; }
   const S65 = Math.sin(65 * Math.PI / 180), C65 = Math.cos(65 * Math.PI / 180);
   const LY = await import('./src/world/stages/bluestone/layout.js'), G = await import('./src/world/stages/bluestone/ground.js');
+  const X2 = window.__pageArgs === 'x2';   // (fix round 3, the review's minor: the pending fresh-ground hook stubbed in)
   // (fix round 3: the regions follow the round-3 layout — the hotel stairs count with the Halo; the garden is the grown
   //  yard (lawn, walk) and its two stairs; the arm is split into its round-2 street (along −20 … −40: 'arm' |off| ≤ 9,
   //  'arm-walks' beyond) and the restored tip ('arm-tip', along < −40, the terminus platform included))
@@ -31,6 +29,14 @@
     if (Math.abs(x) <= 7) return 'swimston';
     return x < 0 ? 'west' : 'east';
   };
+  // PAGE_ARGS=x2: the Halo's and the garden's paint value doubled for the bots' paint goals (regionStats' empty and enemy
+  // shares ×2 there), DESIGN §3.9's ×2 fresh-ground weight held on for the whole match — an experiment, not shipped
+  let x2calls = 0;
+  if (X2) { const P0 = __G.paint, orig = P0.regionStats.bind(P0);
+    P0.regionStats = function (x, y, z, r, team, out) { const o = orig(x, y, z, r, team, out); const rg = region(x, y, z); if ((rg === 'halo' || rg === 'garden') && o && o.n) { o.empty *= 2; o.enemy *= 2; x2calls++; } return o; }; }
+  g.debug.freeze();
+  const DT = 1 / 60; let t = 0;
+  while (m.state === 'playing' && t < 180) { for (let k = 0; k < 15; k++) { g._skipRender = true; try { g._frame(DT); } catch (e) { /* */ } } g._skipRender = false; t += 0.25; }
   const A = {}, grid = new Map(), fine = new Map(), v = { x: 0, y: 0, z: 0 };
   for (const f of P.paintFaces) {
     if (!f.turf) continue;
@@ -48,7 +54,7 @@
   const tot = Object.values(A).reduce((s, o) => ({ m2: s.m2 + o.m2, inked: s.inked + o.inked }), { m2: 0, inked: 0 });
   const rows = Object.fromEntries(Object.entries(A).sort((a, b) => b[1].m2 - a[1].m2).map(([k, o]) => [k, { m2: Math.round(o.m2), share: +(o.m2 / tot.m2).toFixed(3), inked: +(o.inked / o.m2).toFixed(2) }]));
   const cov = P.coverage ? P.coverage() : null;
-  R('ink by region (both halves folded onto Alpha’s)', true, { era: new URLSearchParams(location.search).get('era'), simS: t, total_m2: Math.round(tot.m2), inked: +(tot.inked / tot.m2).toFixed(3), regions: rows });
+  R('ink by region (both halves folded onto Alpha’s)', true, { era: new URLSearchParams(location.search).get('era'), x2: X2 ? x2calls : undefined, simS: t, total_m2: Math.round(tot.m2), inked: +(tot.inked / tot.m2).toFixed(3), regions: rows });
   // a coarse map of Alpha's folded half: 4 m cells, 0–9 = inked tenths, . = no turf
   const lines = [];
   for (let zz = 0; zz >= -88; zz -= 4) { let s = ''; for (let xx = -64; xx < 32; xx += 4) { const c = grid.get(Math.floor(xx / 4) + ':' + Math.floor(zz / 4)); s += !c || c.m2 < 2 ? '.' : String(Math.min(9, Math.floor((c.inked / c.m2) * 10))); } lines.push(String(zz).padStart(4) + ' ' + s); }

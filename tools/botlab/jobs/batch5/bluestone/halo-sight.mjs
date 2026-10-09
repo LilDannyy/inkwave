@@ -34,7 +34,7 @@ const grid = (test, yb) => { const out = []; for (let x = -25; x <= 25; x += 0.5
 const r = (x, z) => Math.hypot(x, z);
 const inRect = (x, z, [x0, x1, z0, z1]) => (x >= x0 && x <= x1 && z >= z0 && z <= z1) || (-x >= x0 && -x <= x1 && -z >= z0 && -z <= z1);
 const perches = {
-  halo: grid((x, z) => r(x, z) > 11 && r(x, z) < 16, [4.8, 5.6]),
+  halo: grid((x, z) => r(x, z) > 10.5 && r(x, z) < 16.5, [4.8, 5.6]),   // (fix round 3: the 3.5 m Halo, inner apothem 11.1)
   balconies: grid((x, z) => inRect(x, z, [-14, -5, -18.5, -12.5]), [2.2, 2.6]),
   boathouseDecks: grid((x, z) => inRect(x, z, [16.5, 21.5, -24, -12]), [2.2, 2.6]),
   concourseEdge: grid((x, z) => r(x, z) > 6.6 && r(x, z) < 8.6, [1.2, 1.4]),
