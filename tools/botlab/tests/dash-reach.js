@@ -65,6 +65,9 @@
   const move = (n, d, kind) => {
     put(n);
     if (!kid.grounded) return null;
+    // (a running start for the hop and the jumps: already at run speed along d — a hop from a standstill would make the
+    // baseline look shorter than what a player does)
+    if (kind !== 'g' && kind !== 'w') kid.vel.set(d[0] * PLAYER.runSpeed, 0, d[1] * PLAYER.runSpeed);
     const fr = (f) => Math.round(f / (60 * DT));   // a 60 Hz frame count at this step
     let i = 0, ok = true, roofT = null;
     const tick = (w) => { it.move.set(w.move ? d[0] : 0, 0, w.move ? d[1] : 0); it.jump = !!w.jump; it.sub = !!w.sub; G.time += DT; kid.update(DT); i++; if (!kid.alive) ok = false; else if (!roofT && onRoof()) roofT = kid.pos.clone(); return ok; };
@@ -104,12 +107,12 @@
           for (const q of near.slice(0, 30)) { for (const dd of DIRS) for (const k2 of ['h', 'w']) { if (by) break; const qq = move(q, dd, k2); if (qq && qq.block === r.block) by = true; } if (by) break; }
           perchOk.set(r.block, by);
         }
-        if (perchOk.get(r.block)) count.perchOnFoot++; else { count.perch++; perches.push(what); }
+        if (perchOk.get(r.block)) count.perchOnFoot++; else { count.perch++; perches.push({ ...what, block: r.block, tag: L.blocks[r.block]?.tag || null }); }
         continue;
       }
       const id = nodeAt(p);
       if (id >= 0 && reach[id]) { count.onFoot++; continue; }
-      count.maxUp = Math.max(count.maxUp, r2(p.y - n.y));   // (how high over its start, of the landings a walk doesn't reach: a ground dash up a stair is a walk)
+      if (p.y - n.y > count.maxUp) { count.maxUp = r2(p.y - n.y); count.maxUpAt = what; }   // (how high over its start, of the landings a walk doesn't reach: a ground dash up a stair is a walk)
       if (id >= 0) {
         // a node the graph says isn't reachable: does a plain walk or hop from here land on it too?
         let base = false;
@@ -147,7 +150,7 @@
   const ms = Math.round(performance.now() - t0);
   const roofSeen = new Map(); for (const o of roofs) { const k = Math.round(o.roofAt[0]) + ',' + Math.round(o.roofAt[2]); if (!roofSeen.has(k)) roofSeen.set(k, o); }
   R(`${g.mapDef?.id}: no dash (ground, off a ledge, air on a running jump's rise / apex / fall; 8 headings; dt 1/${Math.round(1 / DT)}) from ${use.length} edge nodes reached on foot (of ${starts.length}; ${N.length} nodes) comes to rest on a perch a kid can't get onto on foot, or out of bounds, or higher than a jump (1.9 m) over its start; a roof it touches slides it off (never a place to stay)`,
-    perches.length === 0 && oob.length === 0 && count.roof === 0 && count.maxUp <= 1.9, { count, perches: perches.slice(0, 8), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms });
+    perches.length === 0 && oob.length === 0 && count.roof === 0 && count.maxUp <= 1.9, { count, perchBlocks: [...new Set(perches.map((q) => q.block))].map((b) => { const B = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, top: [r1(B.center.x), r2(B.center.y + B.half.y), r1(B.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms });
   R(`${g.mapDef?.id}: tops the nav graph doesn't reach that a dash lands on and no plain walk / hop from within 5 m does (${realLeaks.length}; the lead's list — none is higher than a jump reaches: the dash adds no height)`, true,
     { tops: realLeaks.slice(0, 16), topsAKidHopsOnto: hopOn.length });
   const downSeen = new Map(); for (const o of down) { const k = Math.round(o.to[0]) + ',' + Math.round(o.to[2]); if (!downSeen.has(k)) downSeen.set(k, o); }
