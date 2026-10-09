@@ -46,6 +46,7 @@ uniform float uTime; uniform float uBack;
 uniform float uFlow[${MAXL}];          // a one-way leg's flow: +1 A → B, −1 B → A; 0: a two-way leg
 uniform float uWarn[${MAXL}];          // the tide's warning strobe (0 / 1)
 uniform float uShut[${MAXL}];          // shut: dim
+uniform float uLensLeg;                // the tube the lens is inside (its walls seen from inside: thin)
 varying float vS; varying float vLeg; varying float vAng; varying vec3 vN; varying vec3 vV;
 void main() {
   vec3 N = normalize(vN) * (uBack > 0.5 ? -1.0 : 1.0), V = normalize(vV);
@@ -81,6 +82,10 @@ void main() {
   // the glass right at the lens fades out (a ride camera inside or beside the tube sees through it, its own glow too)
   float near = smoothstep(1.2, 4.5, length(vV));
   float alpha = clamp(a + ga * 0.55 + chev * 0.45 + 0.04 * strip, 0.0, 0.95) * near;
+  // the walls of the tube the lens is in, seen from inside (the back pass): at grazing angles their fresnel would lay a
+  // half-opaque haze over everything outside (the Kelp Line's top run at the drum's lid, where the lens rides on the axis:
+  // ride-4's washed-out promenade, LEAD-REVIEW round 2 item 4)
+  if (uBack > 0.5 && abs(vLeg - uLensLeg) < 0.5) alpha *= 0.2;
   gl_FragColor = vec4(c, alpha);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -158,6 +163,7 @@ export class PipeLooks {
       uRideOn: { value: new Array(MAXR).fill(0) },
       uTeam0: { value: new THREE.Color('#ff8a14') }, uTeam1: { value: new THREE.Color('#2f5bff') },
       uTime: { value: 0 }, uFlow: { value: Array.from(this.flowDir) }, uWarn: { value: new Array(MAXL).fill(0) }, uShut: { value: new Array(MAXL).fill(0) },
+      uLensLeg: { value: -1 },   // the leg whose tube the ride camera's lens is inside (−1: none)
     };
     this._glass();
     this._hardware();
@@ -460,6 +466,7 @@ export class PipeLooks {
 
   // ---------------------------------------------------------------- state from the engine
   setRiders(list) { this.riders = list || []; }
+  lensLeg(i) { this.uniforms.uLensLeg.value = i ?? -1; }
   lightEnd(i, team, fast) { const L = this.lit[i]; if (L) { L.team = team; L.fast = !!fast; } }
   pop(i, team) { this.flapV[i] = 9; void team; }
   rattle(i) { this.rattleT[i] = 0.45; }

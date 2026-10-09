@@ -18,7 +18,7 @@
 // landing) in line of sight.
 import * as THREE from 'three';
 import { G, clamp, damp, dampAngle } from '../core/ctx.js';
-import { legAt } from '../world/pipes-data.js';
+import { legAt, nearestOnLeg, PIPE } from '../world/pipes-data.js';
 
 export const RIDECAM = {
   step: 0.25,                     // m between planned track samples
@@ -331,6 +331,9 @@ export class RideCam {
     const V = this.W.inWater(lens);
     this.R.camInWater = !!V;
     this.W.looks?.underwater(V || null);
+    // (the lens inside the rider's own tube: its walls drawn thin from inside — pipesFx.js uLensLeg)
+    const leg = this.R.legs[st.plan.leg];
+    this.W.looks?.lensLeg(leg && nearestOnLeg(leg, lens).d < PIPE.rIn + 0.05 ? leg.i : -1);
   }
   // the follow camera's boom comes back out quickly once the way behind is clear (its own ease-out is for walking)
   _recover(rig, o, dt) {
@@ -341,5 +344,5 @@ export class RideCam {
     try { G.physics.cameraProbe(rig.pivot, back, rig.wantDist, 0.62, pr); } finally { G.physics.skip = null; }
     if (pr.soft > rig.boom.x) { rig.boom.x = Math.min(pr.soft, rig.boom.x + 10 * dt); rig.curDist = rig.boom.x; }
   }
-  reset() { this.st = null; this.on = false; }
+  reset() { this.st = null; this.on = false; this.R.W?.looks?.lensLeg?.(-1); }
 }
