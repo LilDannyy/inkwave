@@ -263,7 +263,9 @@
     // few metres nearer on that line has its name tag there: hud-jumps.js stacks the tag above it, as in 'tags')
     const fWant = r && proj(r.x, r.y + JUMP_UI.lift, r.z), fs = seat(w, fWant);
     R('an enemy\'s landing mark: ring + icon in the world (over its spot, on no teammate\'s name tag) and on the minimap', !!r && !!w && !!mp && fs.ok,
-      { w: w && w.xy, want: fWant && fWant.map(r2), seat: fs, mp: !!mp });
+      // ([b5-int1] which part: the mark itself (landingMarks), its world tag's screen spot, the projected spot, the minimap tag)
+      { mark: r ? [r2(r.x), r2(r.y), r2(r.z)] : null, w: w ? w.xy : null, want: fWant && fWant.map(r2), seat: fs, mp: !!mp,
+        tags: world().map((t) => (/is-foe/.test(t.cls) ? 'foe' : t.name || '?')), foeTags: J.wLayer.querySelectorAll('.iw-jt.is-foe').length });
     R('…but no name or seconds for you (the jumper\'s own team only)', !!w && !w.name && getComputedStyle(w.el.querySelector('.iw-jt__tag')).display === 'none' && !!mp && !mp.name, { w: w && w.name, mp: mp && mp.name });
     step(3);
   }
