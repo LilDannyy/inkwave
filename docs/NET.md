@@ -369,10 +369,14 @@ if `[1]` is late (its exit going dark as on the owner's screen), and lights the 
 copy. Nobody can change a ride: riders take no damage (the shooter's `applyHit` drops a shot at a proxy rider before its
 'hit' event; the owner's `damage()` backs it), are never shoved and never pushed. A late joiner (or a screen that missed
 `[0]`) projects a flagged proxy onto the nearest leg within 1.2 m and rides it on at the leg's speed; on a host change the
-new owner of a bot mid-ride re-bases the ride where it was drawn (`adopt` → a fresh `[0]` with `u0`), and the other screens
-ride on from where they drew it until that record arrives. The Kelp Lines' tide is a pure function of the stage clock
-(the host's match clock; in Practice its stage clock on the ticks): nothing on the wire. The touchdown splat is an ordinary
-splat record. About 60 bytes a ride. Tested by `tools/botlab/tests/net-pipes.cjs` (two clients and a late joiner).
+new owner of a bot mid-ride re-bases the ride on where it really is on the old owner's clock — its drawn position plus the
+playback delay and any stall while the old owner's ticks ran out (`adopt` → a fresh `[0]` with that `u0`, so it pops when
+it would have) — and draws it blending there from where it had it (≤ 0.4 s, local only); the other screens ride on from
+where they drew it, making up only the old owner's playback stall, and blend onto that record when it arrives: no jump
+on any screen [b5-aquarium, review round 1]. The Kelp Lines' tide is a pure function of the stage clock (the host's match
+clock; in Practice its stage clock on the ticks): nothing on the wire. The touchdown splat is an ordinary splat record,
+painted with the record's own rounding (so every screen paints the same cells). About 60 bytes a ride. Tested by
+`tools/botlab/tests/net-pipes.cjs` (two clients and a late joiner).
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
