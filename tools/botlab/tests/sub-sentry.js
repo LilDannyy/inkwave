@@ -105,7 +105,7 @@
   // events
   const evs = [];
   for (const n of ['device:hit', 'device:down', 'bomb:explode', 'sub:destroyed', 'sub:cantuse', 'sub:note', 'sentry:lock', 'sentry:fire', 'sub:use', 'sub:end'])
-    on(n, (e) => evs.push({ n, t: G.time, kind: e.kind || (e.obj ? 'sentry' : null), how: e.how, by: e.attacker || e.by || null, dmg: e.damage, reason: e.reason, text: e.text, obj: e.obj || null, target: e.target || null, actor: e.actor || null, why: e.why }));
+    on(n, (e) => { if (!e.ghost) evs.push({ n, t: G.time, kind: e.kind || (e.obj ? 'sentry' : null), how: e.how, by: e.attacker || e.by || null, dmg: e.damage, reason: e.reason, text: e.text, obj: e.obj || null, target: e.target || null, actor: e.actor || null, why: e.why }); });   // (a ghost's replayed bursts: not its owner's rounds)
   const since = (i, n) => evs.slice(i).filter((e) => e.n === n);
   let markers = 0;
   if (g.hud?.hitMarker) { const hm = g.hud.hitMarker.bind(g.hud); g.hud.hitMarker = (k) => { markers++; return hm(k); }; }

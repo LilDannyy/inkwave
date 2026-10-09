@@ -26,7 +26,8 @@
 // A hit on a ghost goes to its owner (netHurt, with the attacker); a ghost shot never hurts a real one (netMuted).
 //
 // Events: 'sub:use' { actor, kind, pos }, 'sub:land' { kind, pos, team, radius: 0 } (unfolded), 'sentry:lock' { obj,
-// target, team, pos }, 'sentry:fire' { obj, owner, team, pos, dir }, 'device:hit' / 'device:down' (wave 1's),
+// target, team, pos }, 'sentry:fire' { obj, owner, team, pos, dir, ghost? } (a ghost's: its burst replayed, the look
+// only), 'device:hit' / 'device:down' (wave 1's),
 // 'sub:destroyed' { kind, pos, team }, 'sub:end' { kind, why, team, pos }, 'sub:note' { actor, kind, text } ("SENTRY DOWN").
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -626,6 +627,7 @@ function ghostAim(it, dt) {
     it.ghostShots--; it.ghostShotT += s.burstGap; it.fireT = 0.09;
     const mz = muzzleOf(it, _v.set(0, 0, 0)).clone(), cp = Math.cos(it.headPitch);
     shotFx(it, mz, _d.set(Math.sin(it.headYaw) * cp, Math.sin(it.headPitch), Math.cos(it.headYaw) * cp));
+    emit('sentry:fire', { obj: it, owner: it.owner, team: it.team, pos: mz, dir: _d.clone(), ghost: true });   // (the look only: its rounds are the owner's)
   }
 }
 
