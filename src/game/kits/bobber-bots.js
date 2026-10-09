@@ -684,8 +684,9 @@ export function botAct(b, dt, it, move, busy) {
   }
   const P = a.sub?.kind === 'bobber' ? planOf(b) : null, fighting = !!(b.target && b.seeTimer > 0);
   // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links
-  // were picked from here)
-  if (P && !fighting && b.mode !== 'refill') { move.multiplyScalar(0.05); b.noProg = 0; }
+  // were picked from here. Run dry by its last link, bots.js sends it to refill: it refills where it stands — a dive in its
+  // ink, or the puddle bots.js paints to swim in when it's on none)
+  if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; }
   if (busy) return null;
   // laying a chain: hold about where it stands (its links are picked in reach of here) and, short of ink for the next one,
   // a quick dive in its own ink (42 ink/s) — a Zone Control guard with its web to build does the same before it starts
