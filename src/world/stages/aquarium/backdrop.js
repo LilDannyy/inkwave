@@ -47,9 +47,10 @@ export function buildBackdrop(kit, data = {}) {
       // (streaming with the tide moves a frond by at most 1.08 m: scaled down near the line's corridor so its centre never
       // comes inside the 1.6 m the ride camera's lens keeps clear — tests/pipes.js's frond model holds while it streams)
       const clear = Math.min(kelpRun(sg * x, sg * z), top > 8.5 ? kelpTop(sg * x, sg * z) : Infinity) - 1.6;
-      kelp.push({ g: f.toNonIndexed(), base: 0.4, h, seed: rnd(), amp: Math.max(0, Math.min(1, clear / 1.1)), cx, cz });
+      kelp.push({ g: f.index ? f.toNonIndexed() : f, base: 0.4, h, seed: rnd(), amp: Math.max(0, Math.min(1, clear / 1.1)), cx, cz });
     }
-    for (let i = 0; i < 36; i++) { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * 3.9; bubbles.push([cx + Math.cos(a) * r, cz + Math.sin(a) * r, 0.035 + rnd() * 0.05, rnd(), 0.7 + rnd() * 0.6]); }
+    // (70 always streaming, 160 more only in the flip's curtain)
+    for (let i = 0; i < 230; i++) { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * 3.9; bubbles.push([cx + Math.cos(a) * r, cz + Math.sin(a) * r, 0.06 + rnd() * 0.07, rnd(), 0.7 + rnd() * 0.6, i >= 70 ? 1 : 0]); }
   }
   // ---- merge per look
   const merge = (geos) => {
@@ -84,7 +85,7 @@ export function buildBackdrop(kit, data = {}) {
 // over (1.5 s) and the bubbles roar through the drum at four times their pace for 1.5 s (the curtain). Looks only, in the
 // vertex shaders: two meshes, no per-frame upload — the stream and the bubbles' travel are uniforms.
 function tideDrums(T, kelp, bubbles) {
-  const U = { uTime: { value: 0 }, uStream: { value: 1 }, uPhase: { value: 0 } };
+  const U = { uTime: { value: 0 }, uStream: { value: 1 }, uPhase: { value: 0 }, uBurst: { value: 0 } };
   // the fronds: aK (0 at the root … 1 at the tip), aS (a seed), aA (how far this one may move), aC (its drum's centre)
   let n = 0; for (const f of kelp) n += f.g.attributes.position.count;
   const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), aK = new Float32Array(n), aS = new Float32Array(n), aA = new Float32Array(n), aC = new Float32Array(n * 2);
@@ -117,15 +118,19 @@ function tideDrums(T, kelp, bubbles) {
   const kmesh = new T.Mesh(kg, km); kmesh.name = 'aq-kelp';
   // the bubbles: one small octahedron each, carried round the drum's height by uPhase (rising when it grows)
   const bg = [], bA = [];
-  for (const [x, z, r, seed, sp] of bubbles) { const g = new T.OctahedronGeometry(r, 0).toNonIndexed(); g.translate(x, 0, z); bg.push(g); for (let i = 0; i < g.attributes.position.count; i++) bA.push(seed, sp); }
+  const bP = [];   // (an octahedron is already non-indexed: no toNonIndexed, which warns)
+  for (const [x, z, r, seed, sp, cur] of bubbles) { const g = new T.OctahedronGeometry(r, 0); g.translate(x, 0, z); bg.push(g); for (let i = 0; i < g.attributes.position.count; i++) { bA.push(seed, sp, cur); bP.push(x, z); } }
   let m = 0; for (const g of bg) m += g.attributes.position.count;
   const bp = new Float32Array(m * 3); o = 0; for (const g of bg) { bp.set(g.attributes.position.array, o * 3); o += g.attributes.position.count; }
-  const bgeo = new T.BufferGeometry(); bgeo.setAttribute('position', new T.BufferAttribute(bp, 3)); bgeo.setAttribute('aB', new T.BufferAttribute(new Float32Array(bA), 2));
+  const bgeo = new T.BufferGeometry(); bgeo.setAttribute('position', new T.BufferAttribute(bp, 3)); bgeo.setAttribute('aB', new T.BufferAttribute(new Float32Array(bA), 3)); bgeo.setAttribute('aP', new T.BufferAttribute(new Float32Array(bP), 2));
   bgeo.boundingSphere = new T.Sphere(new T.Vector3(0, 5, 0), 32);
-  const bm = new T.MeshBasicMaterial({ color: '#e8fbff', transparent: true, opacity: 0.55, depthWrite: false });
+  const bm = new T.MeshBasicMaterial({ color: '#eefcff', transparent: true, opacity: 0.7, depthWrite: false });
   bm.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
-    sh.vertexShader = 'attribute vec2 aB; uniform float uTime; uniform float uPhase;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+    sh.vertexShader = 'attribute vec3 aB; attribute vec2 aP; uniform float uTime; uniform float uPhase; uniform float uBurst;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+  // (the curtain's bubbles exist only in the burst; every bubble swells in it)
+  float bs = (aB.z > 0.5 ? uBurst : 1.0) * (1.0 + 0.6 * uBurst);
+  transformed = vec3(aP.x + (transformed.x - aP.x) * bs, transformed.y * bs, aP.y + (transformed.z - aP.y) * bs);
   transformed.y += 0.6 + mod(aB.x * 8.8 + uPhase * aB.y, 8.8);
   transformed.x += 0.07 * sin(uTime * 3.1 + aB.x * 41.0); transformed.z += 0.07 * cos(uTime * 2.7 + aB.x * 37.0);`);
   };
@@ -139,7 +144,7 @@ function tideDrums(T, kelp, bubbles) {
     dirWas = f.dir;
     stream += (want - stream) * Math.min(1, dt * 2.2);
     burst = Math.max(0, burst - dt);
-    U.uTime.value = t; U.uStream.value = stream;
+    U.uTime.value = t; U.uStream.value = stream; U.uBurst.value = Math.min(1, burst * 1.6);
     U.uPhase.value += dt * 1.5 * stream * (1 + 3 * Math.min(1, burst));
   };
   animate(0);

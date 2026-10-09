@@ -44,7 +44,7 @@
     });
     S('ride-2-suck', () => { const a = me(); for (let i = 0; i < 60 && !a.pipe; i++) { a.intent.move.set(-e.out[0], 0, -e.out[2]); dbg.step(1000 / 60); } a.intent.move.set(0, 0, 0); step(0.12); return { phase: a.pipe?.phase }; });
     S('ride-3-up-the-kelp-drum', () => { step(0.32); const a = me(); return { phase: a.pipe?.phase, u: a.pipe?.u, y: a.pos.y, water: P().camInWater }; });
-    S('ride-4-over-their-promenade', () => { step(0.55); const a = me(); return { u: a.pipe?.u, y: a.pos.y }; });
+    S('ride-4-over-their-promenade', () => { step(0.55); const a = me(), W = __G.pipes, c = __G.camera.position; return { u: a.pipe?.u, y: a.pos.y, mode: P().rideCam.st?.mode, cam: c.toArray().map((v) => +v.toFixed(2)), uw: W.looks.uwOn, uwK: +W.looks.uwK.toFixed(2), vol: !!W.looks.rideVol }; });
     S('ride-5-turning-to-the-exit', () => { const a = me(); const L = leg('kelp').len; for (let i = 0; i < 90 && a.pipe && a.pipe.phase === 'ride' && (L - a.pipe.u) / a.pipe.v > 0.3; i++) dbg.step(1000 / 60);
       const c = __G.camera.position; return { left: a.pipe && (L - a.pipe.u) / a.pipe.v, pos: a.pos.toArray().map((v) => +v.toFixed(2)), cam: c.toArray().map((v) => +v.toFixed(2)), form: a.anim.form, chip: !!document.querySelector('.iw-pp-ride.is-on'), boom: +g.rig.curDist.toFixed(2) }; });
     S('ride-6-pop', () => { const a = me(); for (let i = 0; i < 40 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.22); return { phase: a.pipe?.phase, y: a.pos.y }; });
@@ -106,7 +106,7 @@
     // the E kelp drum from the court beside it: UP (the fronds tall, their ripples running up, bubbles rising), then the
     // same view after the flip (DOWN: the tops bowed over inward, ripples running down, bubbles sinking) and at the flip
     // itself (the bubble curtain)
-    const drum = () => { hud(false); cine([16.2, 2.6, -7.4], [25, 4.6, 0], 58); };
+    const drum = () => { hud(false); cine([14.0, 2.8, -9.3], [25, 5.0, 0], 72); };
     S('tide-kelp-up', () => {
       for (const [k, o] of M().actors.entries()) away(o, k);
       M().time = M().duration - 60; P().S.clock.t = 60; dbg.step(1000 / 60);

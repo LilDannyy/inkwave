@@ -260,14 +260,14 @@ export class PipeLooks {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     geo.computeBoundingSphere();
-    // a collar right at the lens fades away (the ride camera rides the tube's own corridor: a ring sweeping past it would
+    // a collar near the lens fades away (gone inside 2.0 m, whole from 3.6 m: the ride camera rides the tube's own corridor: a ring sweeping past it would
     // black out the view for a frame), as the glass fades there. By its alpha, not a dither: the dither's stipple read as a
     // black dotted ring across the whole frame (LEAD-REVIEW round 2, item 4). Transparent but writing depth and drawn
-    // before the glass (opaque wherever the lens isn't within 2.8 m); one pass (forceSinglePass: still one draw call)
+    // before the glass (opaque wherever the lens isn't within 3.6 m); one pass (forceSinglePass: still one draw call)
     const hwMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide, transparent: true, depthWrite: true, forceSinglePass: true });
     hwMat.onBeforeCompile = (sh) => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-  { float lensK = smoothstep(1.3, 2.8, length(vViewPosition)); if (lensK < 0.02) discard; diffuseColor.a *= lensK; }`);
+  { float lensK = smoothstep(2.0, 3.6, length(vViewPosition)); if (lensK < 0.02) discard; diffuseColor.a *= lensK; }`);
     };
     hwMat.customProgramCacheKey = () => 'pipes-hw-lensalpha';
     this.hw = new THREE.Mesh(geo, hwMat);
