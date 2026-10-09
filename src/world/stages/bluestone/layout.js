@@ -72,7 +72,7 @@ const kerbAt = (i) => KERB[i % NCH];
 // ------------------------------------------------------------------------------------------------ the base
 // the forecourt terrace (1.0) across the leg, its front notched for the forecourt steps; the spawn deck (3.3) behind it
 // between the boiler house and the tram shed; the Cable Tram Engine House at the back
-export const PAD = [-21.5, 3.3, -65];
+export const PAD = [-18, 3.3, -64.5];   // (east of the deck's middle, toward the leg's inner side: spawn → mid 6.1 / 6.4 s, and the Bazookarp Gate 12 m off)
 export const P = {
   deck: [-31, -12, -70, -60], engine: [-31, -12, -76, -70], boiler: [-37, -31, -76, -60], shed: [-12, -6, -76, -60],
   carriage: [-24.5, -16, -50, -20],   // Swimston's carriageway (granite): one slab, its own colour
@@ -276,7 +276,7 @@ const LEG_PIECES = [
   // (round C, the strip test: the east track ran 46 m bare from the kiosk into the knee — the tower's lane, so these
   //  stand in every mode but Tower Command; the kerb planter by the GPO steps' north end stands in every mode)
   B(-20.4, -18.6, 0, 1.2, -27, -25.8, cover({ tag: 'bollards', notIn: 'tower' })),
-  B(-20.4, -18.6, 0, 1.0, -12, -10.8, cover({ tag: 'trough', color: '#6f726f', notIn: 'tower' })),
+  B(-20.4, -18.6, 0, 1.0, -11, -9.8, cover({ tag: 'trough', color: '#6f726f', notIn: 'tower' })),
   B(-17.2, -16.2, 0, 1.5, -30, -28, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // the GPO: the building on Customs Lane's corner (its clock tower to 16 m), the portico terrace (1.2) with its steps
   // down to Swimston and its piers, the hop down to the quay on its east face
@@ -327,7 +327,7 @@ const KNEE = [
   B(-36.4, -35.4, 1.0, 2.0, -18, -15.6, cover({ tag: 'trough', color: '#6f726f' })),
   B(-28.4, -27.2, 1.0, 2.0, -24.4, -23, cover({ tag: 'bollards' })),
   // the cab rank: a cabmen's shelter, a statue on its plinth, bollards
-  B(-24.6, -22.4, 0, 2.6, -14.5, -11.5, { tag: 'cabmen-shelter', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
+  B(-25.6, -23.4, 0, 2.6, -11.5, -8.5, { tag: 'cabmen-shelter', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
   B(-23.8, -22.2, 0, 1.6, -4.8, -3.2, cover({ tag: 'statue-plinth', color: '#8b8579' })),
   B(-16.8, -15.6, 0, 1.2, -4.2, -2.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-26, -24.8, 0, 1.0, 1.0, 2.2, cover({ tag: 'bollards' })),
@@ -391,13 +391,12 @@ const BASE = [
   B(-30, -28, 9, 24, -74, -72, { tag: 'chimney', color: '#6a5b50', pattern: PATTERN.brick, roof: true, paint: false }),
   ...bld(P.boiler[0], P.boiler[1], P.boiler[2], P.boiler[3], 6, { tag: 'boiler-house', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [-1, 0, 0]] }, BOT),
   ...bld(P.shed[0], P.shed[1], P.shed[2], P.shed[3], 6, { tag: 'tram-shed', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [1, 0, 0]] }, BOT),
-  // the gallery's own cover: planters beside the stair heads, benches at the back (the pad keeps 4.2 m clear)
+  // the gallery's own cover: planters beside the stair heads and at the back, a plinth by the drop (the pad keeps 4.2 m clear)
   B(-26.8, -25.6, 3.3, 4.3, -68.4, -66.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
-  B(-17.4, -16.2, 3.3, 4.3, -68.4, -66.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-13.6, -12.4, 3.3, 4.3, -69.6, -68.4, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-30.6, -29.4, 3.3, 4.3, -64.4, -62.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-13.6, -12.4, 3.3, 4.3, -64.4, -62.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-23.9, -22.7, 3.3, 4.3, -60.9, -60.3, cover({ tag: 'deck-plinth', color: '#8b8579', roof: true })),
-  B(-20.3, -19.1, 3.3, 4.3, -60.9, -60.3, cover({ tag: 'deck-plinth', color: '#8b8579', roof: true })),
   // the forecourt terrace: the grip car on the turntable road, a coal bin, the turntable's benches and buffers, banks,
   // troughs, the ticket booth (cover every 6–8 m; the tower's lane on the east track, x −19.5 … −17, stays clear)
   B(-36, -33.4, 1, 4, -59.4, -54, { tag: 'grip-car', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
@@ -430,7 +429,7 @@ const TOWER = {
 // Bazookarp (DATA ONLY; SPEC.md §4.1, drawn on Bravo's half: Alpha's attack)
 const BAZOOKARP = {
   start: [0, 1.3, 0],
-  weirs: [{ at: [21.5, 0, 18] }],                       // Bravo's knee, where its Swimston meets the crossbar (y 0)
+  weirs: [{ at: [21, 0, 15] }],                         // Bravo's knee, where its Swimston meets the crossbar (y 0)
   gate: { at: [22, 53], yaw: 0 },                       // Bravo's forecourt terrace (y 1.0), 12 m in front of its pad
   freeZones: [{ poly: [[12, 60], [31, 60], [31, 70], [12, 70]], y0: 2.9, y1: 5.9, signs: [[15, 60.3, 0], [28, 60.3, 0]], eras: null }],   // Bravo's spawn deck
   routes: {},
