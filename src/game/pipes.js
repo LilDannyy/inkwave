@@ -242,6 +242,7 @@ export class StagePipes {
     this.unsubs = [
       on('actor:removed', (e) => this._removed(e && e.actor)),
       on('splatted', (e) => { const v = e && e.victim; if (!v || !this.m.playing()) return; this.stats.deaths++; const lt = this.lastLand.get(v); if (lt !== undefined && this.t - lt < 2) { this.stats.deathsAfterLand++; const x = this.lastExit?.get(v); if (x !== undefined) { const pe = this.stats.perExit || (this.stats.perExit = {}); (pe[x] || (pe[x] = [0, 0]))[1]++; } } }),
+      on('weapon:impact', (e) => this._glassBeads(e)),
     ];
     this.loops = new Map();      // actor → ride whoosh loop
     this.rideCam = new RideCam(this);
@@ -637,6 +638,27 @@ export class StagePipes {
     this.stats.pops++;
     this.events.push(['pipe:pop', { nid: a.nid, end: e.i, high: p.high, yaw: r3(yaw), steer: p.steerOn }]);
     emit('pipe:pop', { actor: a, end: e.i, pos: a.pos.clone(), dir: yaw, high: p.high });
+  }
+  // a shot or a drop that lands on pipe glass, or the tank and drum glass (bakeClear), beads a white splash that runs off
+  // (DESIGN.md §3.7; ENGINE.md risk 2's answer to "glass you can't shoot through": the glass shows the hit as glass, not
+  // as an ink wall). Looks only, on every screen that draws the impact; at most one bead burst per 0.06 s near the camera
+  glassBeads(e) { return this._glassBeads(e); }
+  _glassBeads(e) {
+    const L = G.level, p = e && e.pos;
+    if (!L || !p || !G.fx?.burst || (e.kind !== 'shot' && e.kind !== 'drop')) return false;
+    const c = G.camera?.position;
+    if (c && c.distanceToSquared(p) > 30 * 30) return false;
+    const ids = this._beadIds || (this._beadIds = []);
+    L.queryBlocks(p.x - 0.2, p.z - 0.2, p.x + 0.2, p.z + 0.2, ids);
+    let glass = false;
+    for (const id of ids) { const b = L.blocks[id]; if ((b.pipe || b.bakeClear) && L.pointInBlock(b, p, 0.12)) { glass = true; break; } }
+    if (!glass) return false;
+    const t = performance.now();
+    if (t - (this._beadT || 0) < 60) return true;
+    this._beadT = t;
+    this.stats.beads = (this.stats.beads || 0) + 1;
+    G.fx.burst(p, e.normal, '#f2fbff', { count: 6, speed: 0.9, size: 0.06, spread: 0.45, gravity: 0.55, sheet: false, paint: false });
+    return true;
   }
   _popFx(a, e, yaw, high) {
     this.W.looks?.pop(e.i, a.team);

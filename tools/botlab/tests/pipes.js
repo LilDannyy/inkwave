@@ -815,6 +815,20 @@
     const meshes = []; grp.traverse((o) => { if (o.isMesh && o.visible) meshes.push(o.name); });
     R('looks: the Tubeway draws in ≤ 8 meshes (glass back + front, hardware, rings, fans, flaps, signs + floor arrows, the deck light) and the grade only while on', meshes.length <= 8 && !W.looks.uw.visible, { meshes });
     R('looks: the glass is ≤ 120 k triangles with its hardware', W.looks.tris < 120000, { tris: Math.round(W.looks.tris) });
+    // a shot landing on the glass beads a white splash (DESIGN §3.7: the glass shows a hit as glass); one on stone doesn't
+    {
+      const gl = leg('express'), q = {}; D.legAt(gl, gl.len * 0.5, q);
+      const onGlass = new THREE.Vector3(q.x, q.y + 0.8, q.z), cam = __G.camera.position.clone();
+      __G.camera.position.set(q.x, q.y + 4, q.z - 6);
+      P._beadT = 0; const b0 = P.stats.beads || 0;
+      const hitGlass = P.glassBeads({ pos: onGlass, normal: new THREE.Vector3(0, 1, 0), kind: 'shot' });
+      P._beadT = 0;
+      const pad = __G.level.spawnPads[0], onFloor = new THREE.Vector3(pad.x + 3, pad.y, pad.z);
+      __G.camera.position.set(onFloor.x, onFloor.y + 3, onFloor.z - 5);
+      const hitFloor = P.glassBeads({ pos: onFloor, normal: new THREE.Vector3(0, 1, 0), kind: 'shot' });
+      __G.camera.position.copy(cam);
+      R('looks: a shot landing on the pipe glass beads a white splash; one landing on a floor does not', hitGlass && !hitFloor && (P.stats.beads || 0) === b0 + 1, { hitGlass, hitFloor, beads: (P.stats.beads || 0) - b0 });
+    }
     // a rider glows in the tube in its team colour (the glass shader's uRide carries it)
     const A6 = M.actors.find((a) => !a.isLocal && a.team === 0) || M.actors[0], me6 = M.local;
     for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
