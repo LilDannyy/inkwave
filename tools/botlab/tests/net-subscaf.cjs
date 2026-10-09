@@ -12,9 +12,9 @@ module.exports = async (ctx) => {
   const NEW = ['glide', 'sentry', 'bobber', 'dash'];
   const NAMES = { glide: 'Glide Bomb', sentry: 'Scrap Sentry', bobber: 'Chain Bobber', dash: 'Dash Pellet' };
   // the guest's SUB chip: [kit id, name, its icon is that sub's]
-  const subChip = (c) => J(c, `(async () => { const { SUB_ICONS } = await import('./src/ui/ui-icons.js'); const e = [...document.querySelectorAll('.iw-lkit')].find((x) => x._k.kind === 'sub'); if (!e) return null;
+  const subChip = async (c) => JSON.parse(await c.js(`(async () => { const { SUB_ICONS } = await import('./src/ui/ui-icons.js'); const e = [...document.querySelectorAll('.iw-lkit')].find((x) => x._k.kind === 'sub'); if (!e) return 'null';
     const id = String(e._k.sig || '').split('|')[0], t = document.createElement('template'); t.innerHTML = (SUB_ICONS[id] || '').trim();
-    const ic = e.querySelector('svg'); return { id, name: e.querySelector('.iw-lkit__name').textContent, icon: !!ic && ic.outerHTML === t.innerHTML }; })()`);
+    const ic = e.querySelector('svg'); return JSON.stringify({ id, name: e.querySelector('.iw-lkit__name').textContent, icon: !!ic && ic.outerHTML === t.innerHTML }); })()`));
   const hostSees = (name, test, ms = 8000) => A.until(`(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(name)}); const pl = [...document.querySelectorAll('.iw-plate')].find((e) => (e.querySelector('.iw-plate__name') || {}).textContent === ${JSON.stringify(name)});
     const kit = pl && pl.querySelector('.iw-plate__kit') ? pl.querySelector('.iw-plate__kit').dataset.kit : null; return !!p && (${test}); })()`, ms).then(() => true).catch(() => false);
 
@@ -38,8 +38,9 @@ module.exports = async (ctx) => {
   }
   R('the guest picks each stub in turn: its SUB chip shows the name and icon; the host\'s room and the guest\'s nameplate get the id',
     NEW.every((id) => picks[id].host && picks[id].chip && picks[id].chip.id === id && picks[id].chip.name === NAMES[id] && picks[id].chip.icon), picks);
+  const hostId = await A.js('__G.net.myId');
   await A.js(`__inkwave.api.setLoadout({ sub: 'glide' }); __G.net.setMe({ sub: 'glide' }); 1`);
-  const hostPick = await B.until(`(() => { const p = __G.net.lobby.players.find((q) => q.name === 'Hosty'); return p && p.sub === 'glide'; })()`, 8000).then(() => true).catch(() => false);
+  const hostPick = await B.until(`(() => { const p = __G.net.lobby.players.find((q) => q.id === ${JSON.stringify(hostId)}); return !!p && p.sub === 'glide'; })()`, 8000).then(() => true).catch(() => false);
   R('the host picks the Glide Bomb: the guest\'s room has it', hostPick);
 
   // ---------------------------------------------------------------- 2. the match: both kits on both screens
