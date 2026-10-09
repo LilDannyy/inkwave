@@ -30,7 +30,9 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   for (const c of [A, B]) await c.until(`__G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing'`, 90000, 250);
   say('practice up');
   // every squidkid each screen runs stands still; a per-frame hook (window.__dashHook) drives the local kid
+  // (a special a brain popped before the stubs took over ends now: a weapon special owns the sub button, a body one the kid)
   const still = (c) => c.js(`(() => { for (const a of __G.match.actors) if (!a.remote && a.bot) { a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; window.__dashHook?.(a, it); }; }
+    for (const a of __G.match.actors) if (!a.remote && a.specialActive) __G.specials.end(a, 'test'); for (const a of __G.match.actors) if (!a.remote) a.special = 0;
     __G.projectiles.clear(); __G.subs.clear(); __G.specials.clear(); return 1; })()`);
   await still(A); await still(B);
   const ids = await J(A, `(() => { const m = __G.match, me = m.local, him = m.actors.find((x) => !x.isBot && x !== me); return { a: me.nid, b: him.nid, ta: me.team, tb: him.team }; })()`);
