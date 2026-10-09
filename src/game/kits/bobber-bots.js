@@ -222,7 +222,9 @@ export function botAct(b, dt, it, move, busy) {
   a.fireFacing = Math.max(a.fireFacing || 0, 0.25);
   const wr = a.weaponRunner;
   if (kind === 'charger') it.fire = wr.charging ? !(off < tol && wr.charge >= 0.12) : off < tol * 4 && !(wr.cooldown > 0);
-  else it.fire = b._devTrigger ? b._devTrigger(d3, off < tol, off < tol * 4, S.lo, S.hi) : off < tol;
+  // (the trigger itself on a tighter cone than the turn: the bobber's 0.2 m and a shot's own width at that distance —
+  // a wider one spends the 0.6 s on misses)
+  else { const tf = Math.max(0.025, Math.atan2(0.25, Math.max(0.5, d3))) * 1.15; it.fire = b._devTrigger ? b._devTrigger(d3, off < tf, off < tol * 4, S.lo, S.hi) : off < tf; }
   // (a small target: a steady-trigger gun taps — lets its spread settle between shots, as a player would)
   if (it.fire && !melee && !(MAIN_KITS[kind]?.bot?.charges) && kind !== 'charger' && (wr.bloom ?? 0) > 0.35) it.fire = false;
   if (off < tol * 1.5 && S.fire0 == null) S.fire0 = G.time;

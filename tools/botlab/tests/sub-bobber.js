@@ -642,14 +642,15 @@
       reset();
       // (the chain runs away from the bot; the foe comes in by its far end — out of the bot's own reach, so a duel isn't
       // the better shot: the chain is)
-      const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, 0, 5.5 + i * 3));
+      const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, 0, 3.5 + i * 3));
       settle();
       put(mate, V(0, 0, -2.0), 0); mate.setWeapon('shooter'); wake(mate);
       put(foe, V(0, 0, 17.5), Math.PI);   // (in its sight first — it turns to face it — out of its reach, no chain near it)
       hook = () => { mate.pos.x = 0; mate.pos.z = -2.0; };   // (it holds its ground: what it looks at is its own call)
       step(1.0);
       const before = ev('bobber:trigger').length, cs0 = THREAT_STATS.chainShots || 0;
-      put(foe, V(0.5, 0, 12.4), Math.PI);   // (14.4 m off: in its sight — an easy bot's 16 m — not in its reach, 11.9)
+      put(foe, V(0.5, 0, 10.4), Math.PI);   // (12.4 m off: well in its sight — an easy bot's 16 m, where noticing one at
+      // 14 m is a coin toss — and just out of its reach, 11.9)
       const tIn = G.time; let tGo = null;
       step(3.0, () => { foe.pos.y = 0.02; foe.vel.set(0, 0, 0); if (tGo == null && ev('bobber:trigger').length > before) tGo = G.time; });
       stub(mate); hook = null;
