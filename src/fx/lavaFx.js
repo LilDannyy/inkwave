@@ -154,7 +154,7 @@ void main() {
   float s = lvn(vec2(vUv.x * 9.0, vUv.y * 3.0 + uTime * 1.8)) * 0.6 + lvn(vec2(vUv.x * 23.0, vUv.y * 7.0 + uTime * 3.1)) * 0.4;
   vec3 col = mix(uA, uB, smoothstep(0.35, 0.8, s)) * (1.6 + 0.8 * s);
   float edge = 1.0;
-  float a = clamp((0.45 + 0.55 * uK) * edge * (0.7 + 0.5 * s) * smoothstep(1.0, 0.75, vUv.y), 0.0, 1.0);
+  float a = clamp((0.45 + 0.55 * uK) * edge * (0.7 + 0.5 * s) * (1.0 - smoothstep(0.75, 1.0, vUv.y)), 0.0, 1.0);
   gl_FragColor = vec4(col, a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
@@ -172,7 +172,7 @@ attribute float aSize; attribute float aA; attribute vec3 aCol; varying float vA
 void main() { vA = aA; vCol = aCol; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aSize * 320.0 / max(1.0, -mv.z); gl_Position = projectionMatrix * mv; }`;
 const PT_FS = /* glsl */`
 varying float vA; varying vec3 vCol; uniform float uSoft;
-void main() { vec2 c = gl_PointCoord - 0.5; float r = length(c); if (r > 0.5) discard; float a = vA * (uSoft > 0.5 ? smoothstep(0.5, 0.0, r) : smoothstep(0.5, 0.3, r)); gl_FragColor = vec4(vCol, a);
+void main() { vec2 c = gl_PointCoord - 0.5; float r = length(c); if (r > 0.5) discard; float a = vA * (uSoft > 0.5 ? (1.0 - smoothstep(0.0, 0.5, r)) : (1.0 - smoothstep(0.3, 0.5, r))); gl_FragColor = vec4(vCol, a);
 #include <colorspace_fragment>
 }`;
 
@@ -433,7 +433,7 @@ export class LavaLook {
     if (bc) this.beaconMat.color.set(bc).multiplyScalar(0.15 + bk * 1.1); else this.beaconMat.color.set('#1a0a08');
     // the lavafalls: thin at LOW, full while the surface is high over the lip
     this.fallMat.uniforms.uTime.value = this.t;
-    if (this.fallMesh) { const k = Math.max(0, Math.min(1, (st.y - this.fallY) / Math.max(0.3, W.high - this.fallY))); this.fallMesh.position.y = Math.max(st.y, this.fallY) - 0.04; this.fallMat.uniforms.uK.value = k; }
+    if (this.fallMesh) { const k = Math.max(0, Math.min(1, (st.y - this.fallY) / Math.max(0.3, W.high - this.fallY))); this.fallMesh.position.y = Math.max(st.y, this.fallY) + 0.02; this.fallMat.uniforms.uK.value = k; }
     this._stepParticles(dt, st);
     this._stepFlotsam(st);
     // the rumble loop
