@@ -98,6 +98,7 @@ void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mvPos
 const SURF_FS = /* glsl */`
 uniform float uTime; uniform vec4 uS;   // x: move (−1 fall … 1 rise), y: warn (0 … 1), z: no orange band, w: rest at HIGH
 uniform vec3 uCrA, uCrB, uS0, uS1, uS2, uS3;
+uniform sampler2D uLavaMap; uniform vec4 uLavaBox;   // (the region mask: the grid's cells are clipped to the region's own edge)
 varying vec3 vW;
 #include <common>
 #include <fog_pars_fragment>
@@ -118,6 +119,8 @@ vec2 plates(vec2 x, float t) {
 }
 void main() {
   vec2 p = vW.xz; float t = uTime;
+  // (cut along the region's edge, not the 0.5 m grid's: over a Spillway lip the cells' corners stood out as a sawtooth)
+  if (texture2D(uLavaMap, (p - uLavaBox.xy) * uLavaBox.zw).r < 0.5) discard;
   float rise = max(uS.x, 0.0), fall = max(-uS.x, 0.0);
   vec2 warp = vec2(lvn(p * 0.21 + t * 0.01), lvn(p * 0.21 - 5.3 - t * 0.008)) * 2.4 + vec2(lvn(p * 0.7 + 3.1), lvn(p * 0.7 - 1.7)) * 0.5;
   vec2 c1 = plates(p * 0.62 + warp + vec2(t * 0.025, -t * 0.018) * (1.0 + 2.0 * rise), t * (1.0 + 3.0 * rise));
@@ -194,20 +197,24 @@ export class LavaLook {
     this._flotsam();
     this.setY(W.low, null);
   }
-  // ---- the surface: a 0.5 m grid over the region (cells the banks and the island hide are left out)
+  // ---- the surface: a 0.5 m grid over the region (cells the banks and the island hide are left out), every cell the
+  // region touches, clipped to the region's edge in the shader (the mask)
   _surface() {
     const W = this.W, B = W.box, S = 0.5, L = this.level, pos = [], idx = [], vid = new Map();
-    const covered = (x, z) => L.groundHeight(x, z, 50) >= W.high + 0.2;
+    // (hidden: inside a solid at the high mark — a bank, the island, a coping; not under a bridge's deck, which the
+    // ground height alone took for a bank and left a hole in the lava under each Spillway Bridge)
+    const hp = new THREE.Vector3(), qb = [];
+    const covered = (x, z) => { hp.set(x, W.high + 0.05, z); for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = L.blocks[id]; if (b.solid && L.pointInBlock(b, hp, 0.001)) return true; } return false; };
     const vert = (i, j) => { const k = i + ',' + j; let v = vid.get(k); if (v === undefined) { v = pos.length / 3; vid.set(k, v); pos.push(i * S, 0, j * S); } return v; };
     const i0 = Math.floor(B.x0 / S), i1 = Math.ceil((B.x0 + B.nx * B.res) / S), j0 = Math.floor(B.z0 / S), j1 = Math.ceil((B.z0 + B.nz * B.res) / S);
-    const open = [];
+    const open = [], e = 0.01;
     for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) {
       const cx = (i + 0.5) * S, cz = (j + 0.5) * S;
-      if (!W.inRegion(cx, cz)) continue;
+      if (!W.inRegion(cx, cz) && !W.inRegion(i * S + e, j * S + e) && !W.inRegion((i + 1) * S - e, j * S + e) && !W.inRegion(i * S + e, (j + 1) * S - e) && !W.inRegion((i + 1) * S - e, (j + 1) * S - e)) continue;
       if (covered(i * S + 0.02, j * S + 0.02) && covered((i + 1) * S - 0.02, j * S + 0.02) && covered(i * S + 0.02, (j + 1) * S - 0.02) && covered((i + 1) * S - 0.02, (j + 1) * S - 0.02)) continue;
       const a = vert(i, j), b = vert(i + 1, j), c = vert(i + 1, j + 1), d = vert(i, j + 1);
       idx.push(a, d, c, a, c, b);
-      if (L.groundHeight(cx, cz, 50) === -Infinity) open.push(cx, cz);
+      if (W.inRegion(cx, cz) && L.groundHeight(cx, cz, 50) === -Infinity) open.push(cx, cz);
     }
     this.open = Float32Array.from(open);   // open-lava cell centres (embers, steam, flotsam)
     const g = new THREE.BufferGeometry();
@@ -215,6 +222,7 @@ export class LavaLook {
     const ink = (G.teamHex || []).map((h) => String(h).toLowerCase());
     this.mat = new THREE.ShaderMaterial({
       uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uTime: { value: 0 }, uS: { value: new THREE.Vector4(0, 0, ink.some((h) => HOT_INKS.has(h)) ? 1 : 0, 0) },
+        uLavaMap: W.uniforms.uLavaMap, uLavaBox: W.uniforms.uLavaBox,
         uCrA: { value: lin(LOOK.crust[0]) }, uCrB: { value: lin(LOOK.crust[1]) }, uS0: { value: lin(LOOK.seam[0]) }, uS1: { value: lin(LOOK.seam[1]) }, uS2: { value: lin(LOOK.seam[2]) }, uS3: { value: lin(LOOK.seam[3]) } },
       vertexShader: SURF_VS, fragmentShader: SURF_FS, fog: true,
     });
