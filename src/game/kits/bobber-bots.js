@@ -628,15 +628,20 @@ export function botAct(b, dt, it, move, busy) {
   }
   // (every bot, whatever its sub: its shot is about to go through one of its team's idle bobbers — hold it; in a duel,
   // step aside after a moment to clear the line)
-  if (!S && it.fire && items.length) {
+  // (asked while it would fire, and while what it loosed is still going — a spinner's or a splatling's burst, a draw or a
+  // charge, a roller's or a brush's flick winding up — whatever its sub)
+  const wr0 = a.weaponRunner, going = !!wr0 && (wr0.charging || wr0.burstT > 0 || wr0.streaming || wr0.flick >= 0 || wr0.slosh >= 0);
+  if (!S && (it.fire || going) && items.length) {
     // (asked every 3 frames a bot, the answer held between: its aim moves little in 0.05 s)
     let o = b._bobHF?.o;
     if (!b._bobHF || G.time - b._bobHF.t >= 0.05 || G.time < b._bobHF.t) { o = holdFire(b, a); b._bobHF = { t: G.time, o }; }
     if (o && o.state !== 'live' && o.state !== 'open' && o.state !== 'fly') o = null;
     if (o) {
-      // (a weapon that looses on the release — a charger, splatling, spinner, the bow, the blade's heavy cut — and was held
-      // last frame: it keeps holding instead of letting go into the bobber)
-      if (a._prevIntent?.fire && (RELEASE[a.weapon.kind] || MAIN_KITS[a.weapon.kind]?.bot?.charges)) it.fire = true; else it.fire = false;
+      // (no shot: and what it had going is let go of without loosing it — a charge or a draw dropped (no shot, no ink), a
+      // burst or a stream stopped, a wind-up undone — as a player swimming out of it would: the bow lets a stalled draw
+      // go by itself, a spinner's burst runs on after the release, a flick comes out once wound up)
+      it.fire = false;
+      if (going && !wr0.aimingSub) { wr0.cancelForSwim(); BOBBER_BOT.dropped = (BOBBER_BOT.dropped || 0) + 1; }
       BOBBER_BOT.holds++;
       b._bobHoldT = (b._bobHoldT || 0) + dt;
       if (b.mode === 'fight' && b._bobHoldT > 0.35) { const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd); }
@@ -880,7 +885,11 @@ export function botDangers(api) {
     const sz = sizeOf(o.chain?.n || 1), R = sz.R, d = api.D(api.keyOf(o), 'bobber', o.team, o.owner);
     // (its lethal core: where the blast still does ≥ 100 to a full-health kid)
     const kk = Math.sqrt(Math.max(0, (100 - sz.dmin) / Math.max(1, sz.dmax - sz.dmin))), core = sz.dmax >= 100 ? 0.8 + (1 - kk) * (R - 0.8) : 0;
-    api.disc(d, o.spot.x, o.spot.y - o.hover, o.spot.z, S.dangerCore && core > 0 ? core + 0.2 : R + 0.3, core);   // (dangerCore: the A/B knob in config.js)
+    // (dangerCore 1: only its heavy part is the danger — the lethal core where a full-health kid takes ≥ 100, or for a
+    // chain of 1–2, which has none, where it takes ≥ 50 — and 0.2 m round it: the outer ring's 25–50 a foe walks through,
+    // as a player would past a lone pellet)
+    const k50 = Math.sqrt(Math.max(0, (50 - sz.dmin) / Math.max(1, sz.dmax - sz.dmin))), heavy = core > 0 ? core : 0.8 + (1 - k50) * (R - 0.8);
+    api.disc(d, o.spot.x, o.spot.y - o.hover, o.spot.z, S.dangerCore ? heavy + 0.2 : R + 0.3, core);   // (dangerCore: the knob in config.js)
     d.yLo = o.spot.y - R - 1.2; d.yHi = o.spot.y + R;
     d.hit = 'bobber'; d.lethal = (o.chain?.n || 1) >= 3 ? 2 : 1; d.linger = true; d.vis = 'near';
     d.tIn = 0.3; d.tOut = Math.max(0.1, S.life - (G.time - o.born)); d.los = true; d.losY = o.hover;
