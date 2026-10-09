@@ -71,6 +71,9 @@ Rules the UI can rely on:
   Boss Battle is one squad of up to 8. A humans-only stage (config `noBots`) forces 0 (the host's own count comes back
   on the next stage); 'random' never rolls a humans-only stage the room couldn't start on or that would turn away the
   bots asked for.
+- A stage under construction (config `wip`) is never offered: the host refuses it in `setSettings` / `practiceSwap`,
+  'random' never rolls it, and a room opened over one starts on the first stage. A host whose page has `?wipstages`
+  lists and picks them; every client loads the stage it is sent by id, flag or not.
 - `start()` launches the match on every client; the menus should hide themselves when `state === 'match'` (main.js
   also does it). When the match's results finish, everyone returns to the lobby screen with `state === 'lobby'`.
 - A player leaving mid-match is replaced by a bot on the same actor; if the host leaves, the room migrates to the next
@@ -338,6 +341,17 @@ step with the paint that caused them. Guests follow (zones.js `netEvent`): they 
 snapshots, and each client fills its own players' special gauges. A flip waits until the ink has stayed over its line for
 `ZONES.flipHold` s (0.6): that wait runs on the host only, and the capture record goes out when the flip lands, so guests
 apply it at once and never see a flip that was inked straight back.
+
+**Stage modules** (src/game/stageMods.js, docs/STAGE-MODS.md: eras, pipes, lava). A module's state is a pure function
+of the stage clock wherever it can be (nothing on the wire): the match clock every follower tracks, and in Practice the
+host's stage clock on its ticks (`msg.c[2]`: the movers', else the pods', else the stage modules' clock). What can't be
+(a host-run decision) goes as `['sm', key, data]` on the sender's timeline (`StageRun.rec` → the module's `netEvent`).
+A splat near a module's change carries its painter's stage time as record field 15 (`opts.et` on replay: the eras' ink
+guard and the lava's clip judge it at the painter's moment on every screen); the pads before it (pod 0, wave
+`[0, 9999]`) read exactly as no tag. A module may flag a squidkid in the tick (`F.stage`, bit 22: the aquarium's pipe
+ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw). A late joiner of a Practice session
+gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
+`seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the

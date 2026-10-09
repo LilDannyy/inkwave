@@ -17,7 +17,7 @@
 // Debug handle (G.net.mock): auto(on) · add({ name, team, weapon, sub, special, style, ready }) → id · drop(id) · ready(id, v) ·
 // emote(id, name) · swap(id, { weapon, sub, special, style }) · fill(n) · clear() · host(id) · startMatch() · endMatch() · lose(msg)
 import { G } from '../core/ctx.js';
-import { WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk } from '../config.js';
+import { WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk, mapListed, listedMaps } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 
 const q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
@@ -85,7 +85,7 @@ export class MockNet {
     this.hostId = this.myId;
     const s = G.settings || {};
     this.lobby = {
-      map: MAPS.some((m) => m.id === s.lastStage) ? s.lastStage : MAPS[0].id,
+      map: mapListed(s.lastStage) ? s.lastStage : MAPS[0].id,   // [b5-stages] (config wip: never a wip stage)
       time: roomTime((s.stageTimes && s.stageTimes[s.lastStage]) || 'day'),
       duration: s.matchLength === 90 ? 90 : 180, bots: true, botCount: -1, difficulty: s.difficulty || 'normal', mode: 'turf', live: null,
       palette: G.game && G.game.paletteIndex ? G.game.paletteIndex() : 0,
@@ -121,7 +121,7 @@ export class MockNet {
     const host = this._bot({ id: hostId, team: 0, host: true, ready: true });
     const mode = q.get('mockmode') || pick(['turf', 'turf', 'practice', 'zones']);
     this.lobby = {
-      map: rnd() < 0.15 ? 'random' : pick(MAPS).id, time: pick([...ROOM_TIMES, 'random']), duration: rnd() < 0.3 ? 90 : 180, botCount: mode === 'practice' ? pick([0, 0, 2]) : pick([-1, -1, 2, 0]),
+      map: rnd() < 0.15 ? 'random' : pick(listedMaps()).id, time: pick([...ROOM_TIMES, 'random']), duration: rnd() < 0.3 ? 90 : 180, botCount: mode === 'practice' ? pick([0, 0, 2]) : pick([-1, -1, 2, 0]),
       difficulty: pick(['easy', 'normal', 'normal', 'hard']), palette: (rnd() * TEAM_PALETTES.length) | 0, mode, live: null, players: [host], maxPlayers: 8,
     };
     if (mapNoBots(this.lobby.map)) this.lobby.botCount = 0;   // (the stage rules, as a real host applies them)
@@ -168,7 +168,7 @@ export class MockNet {
   setSettings(o = {}) {
     if (!this.isHost || !this.lobby || this.state !== 'lobby') return;
     const L = this.lobby, wasMap = L.map;
-    if (o.map === 'random' || (o.map && MAPS.some((m) => m.id === o.map))) L.map = o.map;
+    if (o.map === 'random' || (o.map && mapListed(o.map))) L.map = o.map;   // [b5-stages]
     if (o.time) { const t = roomTime(o.time); if (t === o.time || o.time === 'dusk') L.time = t; }
     if (o.duration) L.duration = +o.duration;
     if (o.difficulty) L.difficulty = o.difficulty;
@@ -195,7 +195,7 @@ export class MockNet {
   // Practice (offline stand-in): the host swaps the stage — your solo practice moves there
   practiceSwap({ map, time } = {}) {
     if (!this.isHost || !this.practicing) return false;
-    const L = this.lobby, ids = MAPS.filter((m) => mapOfflineOk(m.id)).map((m) => m.id);
+    const L = this.lobby, ids = listedMaps().filter((m) => mapOfflineOk(m.id)).map((m) => m.id);   // [b5-stages]
     const mapId = map === 'random' || !ids.includes(map) ? pick(ids.filter((id) => id !== L.live.map)) : map;
     L.live = { ...L.live, map: mapId, time: time === 'random' ? pick(ROOM_TIMES) : roomTime(time || L.live.time), gen: (L.live.gen | 0) + 1 };
     this._emit('lobby', { lobby: L });
@@ -228,7 +228,7 @@ export class MockNet {
     if (this.state !== 'starting' || this.lobby !== L) return;
     if (L.mode === 'practice' && G.game?.startMockPractice) {
       // Practice: no clock — it runs (for real, solo, offline) until the host ends it
-      const ids = MAPS.filter((m) => mapOfflineOk(m.id)).map((m) => m.id);
+      const ids = listedMaps().filter((m) => mapOfflineOk(m.id)).map((m) => m.id);   // [b5-stages]
       L.live = { mode: 'practice', map: ids.includes(L.map) ? L.map : pick(ids), time: L.time === 'random' ? pick(ROOM_TIMES) : roomTime(L.time), gen: 0 };
       this._setState('match');
       this._emit('lobby', { lobby: L });

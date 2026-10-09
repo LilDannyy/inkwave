@@ -341,7 +341,7 @@ function fly(t, h) {
   if (t.ghost) {   // flies the arc; stops where it touches something and waits for its owner's word
     const w = G.physics.segment(t.prev, t.pos, _hit);
     if (w.hit) { t.pos.copy(w.point).addScaledVector(w.normal, 0.14); t.vel.set(0, 0, 0); }
-    if (t.pos.y < PLAYER.waterY - 1.8) fizzle(t);
+    if (t.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(t.pos, 'torpedo')) fizzle(t);   // [b5-stagehooks]
     return;
   }
   const e = touchFoe(t);
@@ -349,7 +349,7 @@ function fly(t, h) {
   if (touchDevice(t)) return burst(t, false);
   const w = G.physics.segment(t.prev, t.pos, _hit);          // grates count: any surface
   if (w.hit) { t.pos.copy(w.point).addScaledVector(w.normal, 0.14); t.hitN = w.normal.clone(); return burst(t, false); }
-  if (t.pos.y < PLAYER.waterY - 1.8) { fizzle(t); return; }
+  if (t.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(t.pos, 'torpedo')) { fizzle(t); return; }   // [b5-stagehooks]
   if (t.age >= s.armTime) {
     const tg = findTarget(t, s.lockRange);
     if (tg) return startLock(t, tg);
@@ -418,7 +418,7 @@ function launch(t, h) {
   if (touchDevice(t)) return burst(t, true);
   const w = G.physics.segment(t.prev, t.pos, _hit);
   if (w.hit) { t.pos.copy(w.point).addScaledVector(w.normal, 0.16); t.hitN = w.normal.clone(); return burst(t, true); }
-  if (t.pos.y < PLAYER.waterY - 0.2) { fizzle(t); return; }
+  if (t.pos.y < PLAYER.waterY - 0.2 || G.match?.stage?.sink(t.pos, 'torpedo')) { fizzle(t); return; }   // [b5-stagehooks]
   if (t.t > s.launchLife) burst(t, true);
 }
 // a ghost's swim: dead-reckoned from its owner's last report, eased onto it

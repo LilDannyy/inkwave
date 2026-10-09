@@ -445,7 +445,7 @@ function update(it, dt) {
   else if (it.next > 0) { it.next -= dt; if (it.next <= 0) { if (it.ghost) it.next = 1e-3; else blast(it); } }
   if (it.ghost && it.age > 20) it.state = 'dead';                           // (its owner left mid-throw)
   if (it.state === 'dead') return;
-  if (it.pos.y < PLAYER.waterY - 1.8) { it.state = 'dead'; return; }        // sank: no blast
+  if (it.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(it.pos, 'shaker')) { it.state = 'dead'; return; }        // sank: no blast ([b5-stagehooks] the lava too)
   if (!it.armed && it.age > 6) arm(it);                                     // never found a floor (wedged): go anyway
   // ---- look: tumbles in the air; once armed it stands up and rattles; the danger ring shows the next blast
   const M_ = it.m;

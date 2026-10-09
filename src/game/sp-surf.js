@@ -252,7 +252,7 @@ export class Buoy {
       if (vn < 0) this.vel.addScaledVector(h.normal, -1.3 * vn);
       this.vel.x *= 0.35; this.vel.z *= 0.35; if (h.normal.y < -0.5) this.vel.y = Math.min(0, this.vel.y);
     }
-    if (this.pos.y < PLAYER.waterY - 1 || this.airT > 5) return 'lost';
+    if (this.pos.y < PLAYER.waterY - 1 || this.airT > 5 || G.match?.stage?.under(this.pos)) return 'lost';   // [b5-stagehooks] (the lava)
     return null;
   }
   // off an off-limits top: toward its nearest edge (down its slope), at ≥ 6 m/s, plus the top's own motion

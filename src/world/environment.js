@@ -3030,12 +3030,22 @@ export class Environment {
   // the theme with the stage's overrides (env.theme.all, then env.theme[name]); nested grade / marina merge too
   _stageTheme(name) {
     const base = THEMES[name] || THEMES.day, E = this._stageEnv();
-    const ovs = [E?.theme?.all, E?.theme?.[name]].filter(Boolean);
+    const ovs = [E?.theme?.all, E?.theme?.[name], this.themeOverlay ? this.themeOverlay(name) : null].filter(Boolean);   // [b5-stagehooks] a module's overlay (eras' look)
     if (!ovs.length) return base;
     const T = { ...base };
     for (const o of ovs) for (const [k, v] of Object.entries(o)) T[k] = v && typeof v === 'object' && !Array.isArray(v) && T[k] && typeof T[k] === 'object' && !Array.isArray(T[k]) ? { ...T[k], ...v } : v;
     return T;
   }
+
+  // [b5-stagehooks] a stage module's own big look (a liquid surface …): into the environment root, frustum culling off,
+  // transparent meshes out of the GTAO override pass. Returns its remover. sceneryMaterial: the backdrop kit's material.
+  addSurface(o) {
+    o.frustumCulled = false;
+    o.traverse?.((c) => { if (c.isMesh && c.onBeforeRender === THREE.Object3D.prototype.onBeforeRender && [].concat(c.material).some((m) => m && m.transparent)) c.onBeforeRender = aoGate; });
+    this.root.add(o);
+    return () => this.root.remove(o);
+  }
+  sceneryMaterial(flags = {}, params = {}) { return patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, ...params }), this.U, flags); }
 
   // the stage's env differs from the one the current theme was applied with: main.js re-applies the theme
   get lookStale() { return (this._lookEnv || null) !== this._stageEnv(); }
@@ -3057,7 +3067,9 @@ export class Environment {
     // dispose the previous stage's pieces
     for (const o of this._stageObjs || []) { this.root.remove(o); o.traverse?.((c) => { c.geometry?.dispose(); if (c.material && !c.material._shared) c.material.dispose(); }); }
     this._stageObjs = []; this._backdropAnim = null; this.snowFx = null; this.mistFx = null; this.stars = null;
+    this.stageSets = {};   // [b5-stagehooks] backdrop sets a stage module toggles (out.sets)
     this.bay.visible = E?.bay !== false;
+    if (this.sea) this.sea.visible = E?.sea !== false;   // [b5-stagehooks] env.sea: false (a lava stage): no sea mesh, no reflection pass
     if (this.gullInst) this.gullInst.visible = E?.gulls !== false;
     if (this.buoyInst) this.buoyInst.visible = E?.buoys !== false && this.bay.visible;
     this.U.uSnow.value.set(E?.snow?.line ?? 1e4, E?.snow?.cover ?? 0, 0, 0);
@@ -3081,8 +3093,8 @@ export class Environment {
         add(mesh(out.static, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 }), U, { shore: true }), 'StageBackdrop'));
         add(mesh(out.plain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), U, {}), 'StageBackdropPlain'));
         add(mesh(out.terrain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }), U, { terrain: true, shore: true }), 'StageTerrain'));
-        for (const [i, inst] of (out.instances || []).entries()) {
-          if (!inst?.geo || !inst.list?.length) continue;
+        const instMesh = (inst, name) => {   // ([b5-stagehooks] shared with the sets below)
+          if (!inst?.geo || !inst.list?.length) return null;
           const im = new THREE.InstancedMesh(prep(inst.geo), patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: inst.doubleSided ? THREE.DoubleSide : THREE.FrontSide }), U, {}), inst.list.length);
           const c = new THREE.Color();
           inst.list.forEach((t, k) => {
@@ -3090,10 +3102,21 @@ export class Environment {
             im.setMatrixAt(k, _m4);
             im.setColorAt(k, c.set(t[5] || '#ffffff'));
           });
-          im.name = 'StageBackdropInst' + i;
-          add(im);
-        }
+          im.name = name;
+          return im;
+        };
+        for (const [i, inst] of (out.instances || []).entries()) { const im = instMesh(inst, 'StageBackdropInst' + i); if (im) add(im); }
         for (const o of out.objects || []) add(o);
+        // [b5-stagehooks] extra sets (out.sets: { key: { static, plain, terrain, instances, objects } }): each its own hidden group
+        for (const [key, set] of Object.entries(out.sets || {})) {
+          const g = new THREE.Group(); g.name = 'StageSet:' + key; g.visible = false;
+          for (const m of [mesh(set.static, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0 }), U, { shore: true }), 'StageSetStatic:' + key),
+            mesh(set.plain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 }), U, {}), 'StageSetPlain:' + key),
+            mesh(set.terrain, patchScenery(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }), U, { terrain: true, shore: true }), 'StageSetTerrain:' + key),
+            ...(set.instances || []).map((inst, i) => instMesh(inst, `StageSetInst:${key}:${i}`)),
+            ...(set.objects || [])]) if (m) g.add(m);
+          this.stageSets[key] = add(g);
+        }
         if (typeof out.animate === 'function') this._backdropAnim = out.animate;
       } catch (e) { console.error('[inkwave] stage backdrop failed', e); }
     }

@@ -52,6 +52,13 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
 - **Online-only stages** (config `onlineOnly`, Cargo Terminal): `DEVSTAGE=1` boots every harness page with `?devstage`
   (src/main.js `DEV_STAGE`), so page tests, shots, tower checks, bakes and stage art run there offline (a solo walk: the
   stage is `noBots`, so no bot matches).
+- **Stages under construction** (config `wip`: Bluestone Junction, Gulper Aquarium, Highmark Foundry until the lead
+  removes the flag): every harness loads one by id as usual (`MAP=bluestone …`); players never see one in a stage
+  list. `WIPSTAGES=1` boots every harness page with `?wipstages` (config `SHOW_WIP`), which lists them everywhere. The
+  check: `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
+  with `WIPSTAGES=1` (then every picker must list them).
+- **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
+  reads its own switch from `location.search`: `?era=`, `?lava=` …).
 - **Useful page-script globals:**
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)
@@ -117,6 +124,13 @@ Stage set pieces:
   tools/botlab/page.cjs` (meters, the calibration per weapon kind, growth and timing, blocking, tint, owner-only ink,
   climbing, carrying down, shoving, nav, the follower replay, bots), and the same with `MODE=tower` and `MODE=boss`.
   `MAP=podbox` is the test arena with pods (testmaps.cjs: page.cjs and match.cjs both take it).
+- Stage modules (src/game/stageMods.js, docs/STAGE-MODS.md: the registry eras / pipes / lava plug into): `MAP=testbox
+  PAGE=tools/botlab/tests/stage-mods.js tools/botlab/run.sh tools/botlab/page.cjs` (a test-only dummy module through the
+  whole lifecycle, 33), `MAP=testbox PAGE=tools/botlab/tests/stage-mods-bake.js PAGE_ARGS='old=.botlab/bake-old.cjs' …`
+  (the AO bake's page code: one pass byte-identical to an older bake.cjs copied there, a module's states as RGB channels,
+  6), `CLIENTS=2 NET=tools/botlab/tests/net-stagemods.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  (the same online: clock, records, field 15, F.stage, a late joiner, a host change, 10), and
+  `MAP=halyard PAGE=tools/botlab/tests/stage-mods-perf.js …` (what the hook-ins cost on a stage without a module).
 
 HUD:
 - `MAP=halyard MODE=turf SCENES=tools/botlab/tests/hud-lead-scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs`:

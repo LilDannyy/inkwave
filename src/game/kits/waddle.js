@@ -346,7 +346,7 @@ function fly(it, dt) {
     const vn = it.vel.dot(n);
     it.vel.addScaledVector(n, -vn * 1.45).multiplyScalar(0.55);
   }
-  if (it.pos.y < PLAYER.waterY - 1.8) { it.why = 'sea'; plop(it); return; }
+  if (it.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(it.pos, 'waddle')) { it.why = 'sea'; plop(it); return; }   // [b5-stagehooks]
   it.m.outer.position.copy(it.pos).setY(it.pos.y - MID * it.vs);   // (the drawn middle on the flight path)
   it.m.tilt.rotation.x += it.spin.x * dt; it.m.tilt.rotation.z += it.spin.z * dt;
 }
@@ -544,7 +544,7 @@ function fallStep(it, dt) {
     it.pos.y = gy; it.air = false; it.vel.set(0, 0, 0); it.repath = 0;
     if (near(it.pos, 30)) G.audio?.play('waddle_land', { pos: it.pos, volume: 0.45, pitch: 1.2 });
   }
-  if (it.pos.y < PLAYER.waterY - 1.2) { it.why = 'fell'; plop(it); return 0; }
+  if (it.pos.y < PLAYER.waterY - 1.2 || G.match?.stage?.sink(it.pos, 'waddle')) { it.why = 'fell'; plop(it); return 0; }   // [b5-stagehooks]
   it.m.outer.position.copy(it.pos);
   return Math.hypot(it.pos.x - x0, it.pos.z - z0);
 }

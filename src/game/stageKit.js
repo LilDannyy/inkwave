@@ -98,7 +98,7 @@ export function navNodesInBox(cx, cz, yaw, hx, hz, pad, y0, y1) {
 
 // ------------------------------------------------------------------------------------------------ shoving
 // Can this client push actor a about? (its own squidkids only: a remote one is where its owner puts it)
-export const shovable = (a) => a.alive && !a.remote && !a.superJumpState;
+export const shovable = (a) => a.alive && !a.remote && !a.superJumpState && !(G.match?.stage && G.match.stage.noShove(a));   // [b5-stagehooks] (pipe riders)
 
 // Move squidkid `a` to the first of `spots` ([[x, z], …]) where its body fits. opts.floor: there must also be floor
 // under it above the water and no big drop (never into the sea); opts.line: nothing solid on the straight line from
@@ -121,7 +121,7 @@ export function shoveActor(a, spots, opts = {}) {
 // floor under (x, z) for a kid standing at a.pos: above the water, and no more than a short drop down
 export function floorFor(a, x, z) {
   const L = G.level, gh = L.groundHeight(x, z, a.pos.y + PLAYER.stepUp + 0.05, a.form === 'squid');
-  return gh > PLAYER.waterY + 0.4 && gh > a.pos.y - 1.6;
+  return gh > PLAYER.waterY + 0.4 && gh > a.pos.y - 1.6 && !(G.match?.stage && G.match.stage.wet(x, z, gh, 1));   // [b5-stagehooks] (never onto drowning floor)
 }
 // nothing solid at waist / knee height on the straight line from p to (x, z)
 export function clearLine(p, x, z) {

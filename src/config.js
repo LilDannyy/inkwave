@@ -703,6 +703,10 @@ export const MAPS = [
   { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowy home village: fight over the little station, up its footbridges and down the lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'An S-shaped chain of islets risen from the sea: hold the sandbar under the Great Arch, cross the lagoons or loop round by the causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   { id: 'treehills', name: 'Eco-Forest Treehills', blurb: 'Alterna\'s tiered forest biome under a simulated sky: grow your team\'s hedges from the sprout pods and hold the meadow plaza.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  // [b5-stages] batch 5's stages, under construction (wip: in no player's stage list until the lead removes the flag)
+  { id: 'bluestone', name: 'Bluestone Junction', blurb: 'Under the station clocks, Commander Tartar is winding the city forward: the streets jump from the 1880s to today to the 3000s, opening new routes and raising new ground as the match goes on.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
+  { id: 'aquarium', name: 'Gulper Aquarium', blurb: 'A 1936 aquarium on an islet in the bay: fight round the Great Tank and ride the clear Tubeway pipes from one side to the other.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
+  { id: 'caldera', name: 'Highmark Foundry', blurb: 'A foundry inside a breathing volcano. Every surge drowns the low floors, floats the Pumice Race and heaves the Organ Pipes up. Mind the high mark.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];
@@ -711,13 +715,23 @@ export const MAPS = [
 //   noBots      humans only: "fill with bots" is forced off, a match needs 2+ players with one on each side, and a player
 //               who leaves mid-match is removed instead of handed to a bot; the menu backdrop runs without bots too
 //   noBoss      never a Boss Battle stage (a boss room switches away from it)
+//   wip         [b5-stages] unfinished (a stage under construction): in no player-facing stage list — the offline stage
+//               select (Turf War, Zone Control, Tower Command, Boss Battle), the online lobby's stage picker, Random (the
+//               lobby's roll, the Practice stage swap, Practice's new stage), the stage the game boots on (the menu
+//               backdrop) and the room it opens — yet it still loads by id (api.startMatch: the botlab harness, MAP=<id>),
+//               and the page option ?wipstages (harness: WIPSTAGES=1) lists it everywhere for testing. The lead removes
+//               the flag when the stage ships. (tools/botlab/tests/wip-stages.js)
 export const mapById = (id) => MAPS.find((m) => m.id === id) || null;
 export const mapNoBots = (id) => !!mapById(id)?.noBots;
 export const mapBossOk = (id) => !!mapById(id) && !mapById(id).noBoss;
 export const mapOfflineOk = (id) => !!mapById(id) && !mapById(id).onlineOnly;
 export const OFFLINE_MAPS = MAPS.filter((m) => !m.onlineOnly);
+// [b5-stages] wip stages: shown to players only with ?wipstages; mapListed / listedMaps() are what every stage list uses
+export const SHOW_WIP = typeof location !== 'undefined' && new URLSearchParams(location.search).has('wipstages');
+export const mapListed = (id) => !!mapById(id) && (!mapById(id).wip || SHOW_WIP);
+export const listedMaps = () => MAPS.filter((m) => mapListed(m.id));
 // a boss-eligible stage to fall back to (the preferred one if it qualifies)
-export const bossFallbackMap = (prefer) => (mapBossOk(prefer) ? prefer : (MAPS.find((m) => !m.noBoss && !m.onlineOnly) || MAPS[0]).id);
+export const bossFallbackMap = (prefer) => (mapBossOk(prefer) && mapListed(prefer) ? prefer : (MAPS.find((m) => !m.noBoss && !m.onlineOnly && mapListed(m.id)) || MAPS[0]).id);
 // Why a humans-only room can't start yet (null when it can, or when the stage allows bots): lobby = { map, players }
 export function noBotsStartBlock(lobby) {
   if (!lobby || !mapNoBots(lobby.map) || lobby.mode === 'practice') return null;   // (Practice: play on your own if you like)
