@@ -44,7 +44,7 @@
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
-import { netRec, netMuted, SUB_KITS } from './kits/registry.js';
+import { netRec, netMuted, SUB_KITS } from './kits/registry.js';   // [b5-karp] SUB_KITS: crushIn's kit devices
 import { BUOY } from '../fx/surfFx.js';
 import { Hit } from './physics.js';
 import '../audio/sfx-deploy.js';
@@ -357,7 +357,7 @@ class Deployables {
     L.length = 0;
     return n;
   }
-  crushBuoy(w, how = 'crush') {
+  crushBuoy(w, how = 'crush') {   // [b5-karp] (how: crushIn's; the tower's call keeps 'crush')
     if (w.gid) netRec(w.owner, 'surf', [4, w.gid, 2]);
     this.crushLook(w);
     if (G.surf?.SURF_STATS) G.surf.SURF_STATS.crushed++;
