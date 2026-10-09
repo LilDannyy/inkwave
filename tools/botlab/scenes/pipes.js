@@ -171,6 +171,46 @@
       return 1;
     });
   }
+  if (set === 'ridecam') {
+    // the ride camera (src/game/pipesCam.js) on every kind of leg, as the rider sees it: the Gulper Run, an Arch Line, a
+    // Kelp Line UP and the Express, each from the walk-in to the landing (start, middle, the exit shot, the pop, after)
+    const RIDES = [
+      ['gulper', 0, [['1-suck', 'suck', 0.12], ['2-into-the-tank', 'u', 9.5], ['3-mid-tank', 'u', 14], ['4-exit-shot', 'u', 23.5], ['5-pop', 'pop', 0.12], ['6-landed', 'land', 0.25]]],
+      ['arch', 0, [['1-suck', 'suck', 0.12], ['2-up-the-shaft', 'u', 6.0], ['3-arch-tank', 'u', 14], ['4-exit-shot', 'u', 26.5], ['5-pop', 'pop', 0.12], ['6-landed', 'land', 0.25]]],
+      ['kelp', 0, [['1-up-the-drum', 'u', 7.0], ['2-out-of-the-drum', 'u', 13.5], ['3-over-their-promenade', 'u', 25], ['4-exit-shot', 'u', 39.5], ['5-pop', 'pop', 0.12]]],
+      ['express', 0, [['1-up-the-riser', 'u', 9.5], ['2-over-the-wing', 'u', 30], ['3-exit-shot', 'u', 57], ['4-pop', 'pop', 0.12]]],
+    ];
+    for (const [id, k, marks] of RIDES) {
+      let popAt = -1, landAt = -1;
+      for (const [tag, kind, at] of marks) {
+        S(`ridecam-${id}-${tag}`, () => {
+          const a = me(), lg = leg(id), e = lg.ends[k];
+          if (tag === marks[0][0]) {
+            for (const [kk, o] of M().actors.entries()) if (o !== a) away(o, kk);
+            if (a.pipe) P()._abort(a, 'scene'); P().rideCam.reset(); step(0.1);
+            P().refused.clear(); a.pipeCd = 0; P().myRides = 0;
+            put(a, e.approach[0] + e.out[0] * 0.6, e.approach[1], e.approach[2] + e.out[2] * 0.6, facing(a, e));
+            follow(); hud(true); g.rig.yaw = facing(a, e); g.rig.pitch = -0.12; step(0.5);
+            for (let i = 0; i < 90 && !a.pipe; i++) { a.intent.move.set(-e.out[0], 0, -e.out[2]); dbg.step(1000 / 60); }
+            a.intent.move.set(0, 0, 0); popAt = -1; landAt = -1;
+          }
+          const t0 = performance.now();
+          for (let i = 0; i < 400; i++) {
+            const p = a.pipe;
+            if (p && p.phase === 'pop' && popAt < 0) popAt = i;
+            if (!p && landAt < 0) landAt = i;
+            if (kind === 'suck' && p && p.phase === 'suck' && P()._T(p) >= at) break;
+            if (kind === 'u' && (!p || p.phase === 'pop' || (p.phase === 'ride' && (p.u || 0) >= at))) break;
+            if (kind === 'pop' && p && p.phase === 'pop' && (p.popT || 0) >= at) break;
+            if (kind === 'land' && !p) { step(at); break; }
+            dbg.step(1000 / 60);
+          }
+          const st = P().rideCam.st, c = __G.camera.position;
+          return { mode: st?.mode, phase: a.pipe?.phase, u: +(a.pipe?.u ?? 0).toFixed(2), cam: c.toArray().map((v) => +v.toFixed(2)), rider: a.pos.toArray().map((v) => +v.toFixed(2)), ms: Math.round(performance.now() - t0) };
+        });
+      }
+    }
+  }
   window.__hudScenes = scenes;
   return scenes.map((s) => ({ name: s.name, wait: s.wait }));
 })()

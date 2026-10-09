@@ -16,7 +16,7 @@
 // capture and [1] at the pop (kit kind 'pipe', KIT_GHOSTS); every other screen draws the rider exactly on the path at
 // the owner's timeline time from [0] (R.carryRemote), never extrapolating off the tube.
 import * as THREE from 'three';
-import { G, emit, on, clamp, damp, dampAngle } from '../core/ctx.js';
+import { G, emit, on, clamp } from '../core/ctx.js';
 import { PLAYER } from '../config.js';
 import { SFX } from '../audio/audio.js';
 import { registerStageMod } from './stageMods.js';
@@ -26,6 +26,7 @@ import { KIT_GHOSTS, netRec } from './kits/registry.js';
 import { expandPipes, legAt, nearestOnLeg, pipeColliderDefs, tideAt, endIsIn, inWaterVol, polyDist, PIPE as PD } from '../world/pipes-data.js';
 import { PipeLooks } from '../fx/pipesFx.js';
 import { PipesHud } from '../ui/hud-pipes.js';
+import { RideCam } from './pipesCam.js';
 
 export const PIPES = {
   suck: 0.25,                          // s, can be hit
@@ -219,6 +220,7 @@ export class StagePipes {
       on('splatted', (e) => { const v = e && e.victim; if (!v || !this.m.playing()) return; this.stats.deaths++; const lt = this.lastLand.get(v); if (lt !== undefined && this.t - lt < 2) this.stats.deathsAfterLand++; }),
     ];
     this.loops = new Map();      // actor → ride whoosh loop
+    this.rideCam = new RideCam(this);
   }
 
   // ------------------------------------------------------------------------------------------------ the clock and tide
@@ -301,7 +303,12 @@ export class StagePipes {
     if (why === 'shut' && e && this.legs[e.leg].flip && !this.off && !this.modeShut.has(e.leg)) return REFUSE.tide;
     return REFUSE[why] || why;
   }
-  seek(t) { this._tideSync(t, true); for (const leg of this.tidal) { const s = this.tide.get(leg.i); this.W.looks?.setFlow(leg.i, s.dir, s.phase, null); } }
+  seek(t) {
+    this._tideSync(t, true);
+    for (const leg of this.tidal) { const s = this.tide.get(leg.i); this.W.looks?.setFlow(leg.i, s.dir, s.phase, null); }
+    const f = this.flowLeg && this.tide.get(this.flowLeg.i);
+    if (f) this.hudUi?.seek(f);   // (inside the warning: the countdown line too, not only the red pill)
+  }
 
   // ------------------------------------------------------------------------------------------------ per frame
   update(dt, t) {
@@ -310,8 +317,8 @@ export class StagePipes {
     if (!this.started && this.m.state === 'playing') { this.started = true; this.hudUi?.start(); }
     if (this.m.state === 'playing') this.stats.playT += dt;
     if (STATS_Q && !this._reported && this.started && this.m.state !== 'playing' && this.m.state !== 'intro') { this._reported = true; this._report(); }
-    const ct = G.game?.rig?.target || G.local;   // (the camera's rider: the grade only while its ride camera is in a water volume)
-    if (this.W.looks?.rideVol && !(ct && ct.pipe && ct.pipe.phase !== 'pop')) { this.camInWater = false; this.W.looks.underwater(null); }
+    // (the grade only while the ride camera runs: it sets it each frame from its lens)
+    if (this.W.looks?.rideVol && !this.rideCam.st) { this.camInWater = false; this.W.looks.underwater(null); }
   }
   lateUpdate(dt) {
     const m = this.m;
@@ -797,62 +804,10 @@ export class StagePipes {
   }
 
   // ------------------------------------------------------------------------------------------------ camera
-  // the ride camera (CameraRig._follow): flight-style follow, boom +0.8, FOV +6; yaw toward the travel heading (3.5),
-  // in the last 0.6 s toward the pop heading (8) so you land facing out; pitch −0.30 (−0.15 at the end; level in water)
-  cam(rig, a, dt) {
-    const p = a.pipe;
-    if (!p || p.phase === 'pop') return null;
-    const leg = this.legs[p.leg], left = (leg.len - (p.u || 0)) / p.v + (p.phase === 'suck' ? PIPES.suck : 0);
-    const e = this.ends[p.exit];
-    let yaw = p.camYaw ?? rig.yaw, rate = 3.5;
-    if (left <= 0.6) { yaw = Math.atan2(e.out[0], e.out[2]); if (p.steerOn) { const w = Math.atan2(p.steerX, p.steerZ); let d = w - yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; yaw += clamp(d, -Math.PI / 4, Math.PI / 4); } rate = 8; }
-    if (p.phase === 'suck') { const en = this.ends[p.entry]; yaw = Math.atan2(-en.out[0], -en.out[2]); }
-    rig.yaw = dampAngle(rig.yaw, yaw, rate, dt);
-    this._camDt = dt;
-    const wv = this.W.inWater(_w.set(a.pos.x, a.pos.y + 0.3, a.pos.z));
-    rig.pitch = damp(rig.pitch, wv ? 0.06 : left <= 0.6 ? -0.15 : -0.30, 4, dt);   // (in water: a hair up, the lens low under a tank's lid)
-    this._camWater = wv;
-    return { glide: true, boom: 0.8, fov: 6, skip: wv ? 'camSkip' : 'pipe' };
-  }
-  // the water clamp: while the rider's centreline is in a water volume, the lens stays in that volume (0.3 m in), the boom
-  // never under 1.2 m (and, if the volume is too shallow for that, the pivot comes down); the underwater grade exactly then
-  camAfter(rig, a, o) {
-    const V = this._camWater, cam = this._camP || (this._camP = new THREE.Vector3());
-    // the boom comes back out quickly once the way behind is clear (the rig's own ease-out is for walking: at 18–24 m/s
-    // a boom pulled in at a housing would otherwise trail at half length for a second)
-    // (its own probe every third frame: the way behind changes slowly next to a 1/60 s frame)
-    if (rig.boom && rig.wantDist > rig.boom.x + 0.05) {
-      const pr = this._pr || (this._pr = { soft: 0 });
-      if (((this._camN = (this._camN || 0) + 1) % 3) === 1) {
-        const back = rig.forward(_v).negate();
-        G.physics.skip = (o && o.skip) || 'pipe';
-        try { G.physics.cameraProbe(rig.pivot, back, rig.wantDist, 0.62, pr); } finally { G.physics.skip = null; }
-      }
-      const dt = this._camDt || 1 / 60;
-      if (pr.soft > rig.boom.x) { rig.boom.x = Math.min(pr.soft, rig.boom.x + 10 * dt); rig.curDist = rig.boom.x; }
-    } else this._camN = 0;
-    let inside = false;
-    if (V) {
-      const fwd = rig.forward(_v);
-      const at = (d) => cam.copy(rig.pivot).addScaledVector(fwd, -d).setY(rig.pivot.y - fwd.y * d + 0.15);
-      at(rig.curDist);
-      if (!inWaterVol(V, cam.x, cam.y, cam.z, 0.3)) {
-        let lo = 1.2, hi = rig.curDist;
-        if (hi > lo) { for (let i = 0; i < 18; i++) { const mid = (lo + hi) / 2; at(mid); if (inWaterVol(V, cam.x, cam.y, cam.z, 0.3)) lo = mid; else hi = mid; } }
-        const d = Math.min(rig.curDist, Math.max(1.2, lo));
-        rig.curDist = d; if (rig.boom) { rig.boom.x = Math.min(rig.boom.x, d); rig.boom.v = Math.min(rig.boom.v || 0, 0); }
-        at(d);
-        // still out of it (a shallow volume): bring the pivot down (or up) so the lens sits 0.3 m inside
-        const top = V.y[1] - 0.3, bot = V.y[0] + 0.3;
-        if (cam.y > top) { rig.pivot.y -= cam.y - top; rig.pivotY = rig.pivot.y; }
-        else if (cam.y < bot) { rig.pivot.y += bot - cam.y; rig.pivotY = rig.pivot.y; }
-        at(d);
-      }
-      inside = inWaterVol(V, cam.x, cam.y, cam.z, 0.05);
-    }
-    this.camInWater = inside;
-    this.W.looks?.underwater(V || null);   // (the grade itself: on exactly while the final lens is in V, decided at render time)
-  }
+  // the ride camera (src/game/pipesCam.js): the module places the lens for the whole ride — the entry hold, the chase
+  // along the tube's own corridor, the exit shot over the OUT mouth through the pop, the blend back after touchdown
+  cam(rig, a, dt) { return this.rideCam.cam(rig, a, dt); }
+  camAfter(rig, a, o) { this.rideCam.after(rig, a, o); }
 
   // ------------------------------------------------------------------------------------------------ HUD + maps
   prompt(a) {
@@ -878,7 +833,15 @@ export class StagePipes {
       const leg = this.legs[p.leg], to = this.ends[p.exit];
       o.name = to.name; o.k = clamp((p.u || 0) / leg.len, 0, 1); o.eta = this._eta(p); o.leg = leg.id;
       o.hint = (this.myRides || 0) <= 3 ? 'Hold a direction to aim your pop · JUMP: high pop' : '';
-    }
+      // the chip sits in the top band, clear of the rider; while the rider is high on the screen (looking up a riser) it
+      // drops to the bottom instead (with a margin either way, so it doesn't flicker)
+      const cam = G.camera;
+      if (cam && a === (G.game?.rig?.target || a)) {
+        const v = _w.set(a.pos.x, a.pos.y + 0.4, a.pos.z).project(cam), hi = v.z < 1 && Math.abs(v.x) < 0.7 ? v.y : -1;
+        this._chipLow = this._chipLow ? hi > 0.08 : hi > 0.22;
+      }
+      o.chipLow = !!this._chipLow;
+    } else this._chipLow = false;
     this.hudUi?.update(o, a);
     return o;
   }
@@ -895,13 +858,14 @@ export class StagePipes {
       for (let i = 0; i < P.length; i++) { mm.toCanvas(P[i][0], P[i][1], tc); if (i) c.lineTo(tc.x, tc.y); else c.moveTo(tc.x, tc.y); }
       c.setLineDash(shut ? [s * 1.2, s * 0.9] : []);
       c.globalAlpha = shut ? 0.45 : 0.85;
-      c.lineWidth = s * 1.15 + 2.2; c.strokeStyle = '#15121c'; c.stroke();
-      c.lineWidth = s * 1.15; c.strokeStyle = '#dff6f8'; c.stroke();
-      c.lineWidth = Math.max(1, s * 0.35); c.strokeStyle = '#5d8f9a'; c.stroke();
+      // (wide enough to read on the corner map, ~ a fifth of this canvas's size: a dark casing, a white tube, a fine core)
+      c.lineWidth = s * 1.9 + 3; c.strokeStyle = '#15121c'; c.stroke();
+      c.lineWidth = s * 1.3; c.strokeStyle = '#ffffff'; c.stroke();
+      c.lineWidth = Math.max(1, s * 0.3); c.strokeStyle = '#7d9aa3'; c.stroke();
       c.setLineDash([]);
       c.globalAlpha = 1;
       if (leg.way === 'two') {
-        for (const e of leg.ends) { mm.toCanvas(e.pos[0], e.pos[2], tc); c.beginPath(); c.arc(tc.x, tc.y, s * 0.75 + 1, 0, Math.PI * 2); c.fillStyle = '#15121c'; c.fill(); c.beginPath(); c.arc(tc.x, tc.y, s * 0.75, 0, Math.PI * 2); c.fillStyle = '#f4f1e8'; c.fill(); }
+        for (const e of leg.ends) { mm.toCanvas(e.pos[0], e.pos[2], tc); c.beginPath(); c.arc(tc.x, tc.y, s * 1.15 + 2, 0, Math.PI * 2); c.fillStyle = '#15121c'; c.fill(); c.beginPath(); c.arc(tc.x, tc.y, s * 1.15, 0, Math.PI * 2); c.fillStyle = '#ffffff'; c.fill(); }
       } else if (!shut) {
         const dir = leg.flip ? (this.tide.get(leg.i).dir === 'ab' ? 1 : -1) : 1, step = 7, ph = ((t * 6) % step + step) % step;
         for (let d = 2; d < leg.len - 1; d += step) {
@@ -913,7 +877,7 @@ export class StagePipes {
           mm.toCanvas(_q.x, _q.z, tc); const x0 = tc.x, y0 = tc.y;
           mm.toCanvas(_q.x + hx / hl, _q.z + hz / hl, tc);
           let ux = tc.x - x0, uy = tc.y - y0; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
-          const k = s * 0.95;
+          const k = s * 1.3;
           c.beginPath(); c.moveTo(x0 + ux * k, y0 + uy * k); c.lineTo(x0 - ux * k - uy * k * 0.75, y0 - uy * k + ux * k * 0.75); c.lineTo(x0 - ux * k + uy * k * 0.75, y0 - uy * k - ux * k * 0.75); c.closePath();
           c.fillStyle = '#15121c'; c.fill();
         }
@@ -986,6 +950,7 @@ export class StagePipes {
     this.unsubs.length = 0;
     this._stopLoops();
     this.hudUi?.dispose(); this.hudUi = null;
+    this.rideCam.reset();
     this.W.looks?.setRiders([]);
     this.W.looks?.underwater(null);
     for (let i = 0; i < this.lit.length; i++) this.W.looks?.lightEnd(i, -1, false);

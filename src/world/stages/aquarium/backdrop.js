@@ -27,15 +27,22 @@ export function buildBackdrop(kit, data = {}) {
   // the Great Tank's water (a 16-gon prism inside its glass, down to the sunk sand bed)
   const tank = data.tank || { a: 7.5 };
   { const g = new T.CylinderGeometry((tank.a - 0.3) / Math.cos(Math.PI / 16), (tank.a - 0.3) / Math.cos(Math.PI / 16), 2.7, 16, 1, false, 78.75 * DEG); g.translate(0, 0.75, 0); put('water', g); }
-  // the kelp drums: glass cylinders, water, kelp fronds (thinned to clear water round the Kelp Line's riser)
+  // the kelp drums: glass cylinders, water, kelp fronds (thinned to clear water round the Kelp Line's run through the drum)
+  const segD = (x, z, ax, az, bx, bz) => { const dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - ax - dx * t, z - az - dz * t); };
+  const kelpRun = (x, z) => segD(x, z, 27.4, -4.6, 27.4, -1.2), kelpTop = (x, z) => segD(x, z, 27.4, -1.2, 26.05, 4.28);   // (the E drum's; the W drum's turned)
   for (const [cx, cz, sg] of [[25, 0, 1], [-25, 0, -1]]) {
     const gl = new T.CylinderGeometry(4.5, 4.5, 9.7, 32, 1, true); gl.translate(cx, 0.3 + 4.85, cz); put('glass', gl);
     const wa = new T.CylinderGeometry(4.35, 4.35, 9.5, 24, 1, false); wa.translate(cx, 0.35 + 4.75, cz); put('water', wa);
     const rnd = kit.rnd(cx > 0 ? 11 : 13);
     for (let i = 0; i < 16; i++) {
       const a = rnd() * Math.PI * 2, r = 0.8 + rnd() * 3.0, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
-      if (Math.hypot(x - sg * 27.4, z + sg * 1.2) < 1.6) continue;
-      const h = 6 + rnd() * 3.3, f = new T.BoxGeometry(0.12, h, 0.55); f.rotateY(rnd() * Math.PI); f.translate(x, 0.4 + h / 2, z); put('kelp', f);
+      // the ride camera's lens rides the Kelp Line's own corridor (src/game/pipesCam.js), so nothing grows into its view:
+      // no frond within 1.6 m of the line's foot run and riser (x 27.4, z −4.6 … −1.2), none taller than 8.0 m within 1.6 m
+      // of its top run across the drum (to (26.05, 4.28) at the drum's rim), and none over 9.0 m anywhere (the top run's axis)
+      if (kelpRun(sg * x, sg * z) < 1.6) continue;
+      const top = kelpTop(sg * x, sg * z) < 1.6 ? 8.0 : 9.0;
+      const h = Math.min(top - 0.4, 6 + rnd() * 2.6), f = new T.BoxGeometry(0.12, h, 0.55);
+      f.rotateY(rnd() * Math.PI); f.translate(x, 0.4 + h / 2, z); put('kelp', f);
     }
   }
   // ---- merge per look
