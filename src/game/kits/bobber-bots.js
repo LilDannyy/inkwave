@@ -328,7 +328,7 @@ export function botDangers(api) {
     }
     cands.sort((x, y) => (x.nd - y.nd) || (x.o.gid - y.o.gid));
     pick = cands.slice(0, S.dangerCap).map((c) => c.o);
-    BOBBER_BOT.armed = armedN;
+    BOBBER_BOT.armed = armedN; BOBBER_BOT.cands = cands.length;
   }
   let n = 0;
   for (const o of pick) {

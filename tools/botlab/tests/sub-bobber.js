@@ -711,16 +711,20 @@
       const L2 = specialDangers().filter((x) => x.src === 'bobber');
       hook = null; stub(foe);
       R('bots: …an unarmed one (no foe of the chain\'s team known near it for 1.5 s) is none', L2.length === 0, { discs: L2.length });
-      // 48 at most (a big web, armed)
+      // 48 at most: three owners' webs of 24 (72 bobbers, every one of an armed chain — each owner in the foe's sight by
+      // its web), so there are more candidates than the cap and the cap has to bite
       reset();
-      for (let i = 0; i < 60; i++) { const o = i < 24 ? me : i < 48 ? mate : mates[1] || mate; drop(o, -24 + (i % 10) * 4.8, -20 + Math.floor(i / 10) * 4.8); }
-      settle();
-      put(me, V(0, 0, -24), 0); put(foe, V(0, 0, -30), 0); wake(foe);
+      const owners3 = [me, mate, mates[1] || mate];
+      for (let i = 0; i < 72; i++) drop(owners3[Math.floor(i / 24)], -24 + (i % 12) * 4.2, -20 + Math.floor(i / 12) * 4.2);
+      settle(0.6);
+      owners3.forEach((o, i) => put(o, V(-10 + i * 8, 0, -4), 0));
+      put(foe, V(0, 0, 4), Math.PI); wake(foe);
       hook = () => { foe.ink = 0; };
-      step(1.0);
+      step(1.2);
       const L3 = specialDangers().filter((x) => x.src === 'bobber');
       hook = null; stub(foe);
-      R(`bots: at most ${B.dangerCap} bobber discs in all (a web of ${live().length} armed)`, L3.length <= B.dangerCap && L3.length >= 24, { discs: L3.length, live: live().length, armed: BOBBER_BOT.armed });
+      R(`bots: at most ${B.dangerCap} bobber discs in all — a web of ${live().length} with ${BOBBER_BOT.cands} armed candidates, more than the cap: ${L3.length} discs`, BOBBER_BOT.cands > B.dangerCap && L3.length === B.dangerCap,
+        { discs: L3.length, cands: BOBBER_BOT.cands, live: live().length, armedChains: BOBBER_BOT.armed });
     }
 
     // ============================================================================================ drawing, HUD, guide
