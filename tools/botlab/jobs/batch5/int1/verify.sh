@@ -107,7 +107,7 @@ list() {   # the whole list, "<group> <name> ENV=… harness"
   echo "net net-zipcheer CLIENTS=2 NET=$T/net-zipcheer.cjs $RUN $N"
   echo "net net-jump-ui CLIENTS=2 NET=$T/net-jump-ui.cjs $RUN $N"
   echo "net net-jump-ui-tower CLIENTS=2 NET=$T/net-jump-ui.cjs NET_ARGS=scene=tower $RUN $N"
-  [ -f $T/net-late-special.cjs ] && echo "net net-late-special CLIENTS=2 Q0=autopilot Q1=autopilot NET=$T/net-late-special.cjs $RUN $N"
+  [ -f $T/net-late-special.cjs ] && echo "net net-late-special CLIENTS=2 NET=$T/net-late-special.cjs $RUN $N"
   # ---- rep: the known issues, 6 each
   for i in $(seq 1 "$REP"); do
     echo "rep bot-specials-r$i MAP=testbox MODE=turf PAGE=$T/bot-specials.js $RUN $P"
