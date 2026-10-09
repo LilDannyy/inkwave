@@ -723,9 +723,8 @@ round 3's 7,462 / 8,185 / 9,055, all of it from floor eras 1–2 have (the revie
   - You hop up onto it from the arm, the alley, Prow Place and Hoki Lane anywhere along its edges (nav's jump edges reach
     1.25 m), and **two 3 m ramps** (1.2 m over 4 m) climb onto it from Prow Place's corner (x −28 … −24, z −23 … −20)
     and from Hoki Lane by the alley's east end (z −33 … −30). In eras 1–2 their footprints are the yard's bed (the same
-    group). On the bots' nav (`rb1-nav.mjs`) Prow Place ↔ the tip's south lane, Hoki Lane → the turning area, Hoki
-    Lane → the arm at along −40 and the alley's east end → the arm all cross the lawn; Hoki Lane ↔ the arm at along −35
-    keeps to Prow Place (shorter).
+    group). On the bots' nav (`rb1-nav.mjs`, with the sea bed below) Prow Place ↔ the tip's south lane, Hoki Lane ↔ the
+    arm (at along −35 and −40), Hoki Lane → the turning area and the alley's east end → the arm all cross the lawn.
   - Its four planters are the yard's relay cabinets (`roof`), out of the terminus platform's view toward Prow Place. No
     rails, no stairs.
   - It replaces the design's 3.18 m deck with three stairs and round 2's 2.68 m deck with two stairs.
