@@ -704,7 +704,7 @@
     // a Kelp Line ×2.4), never for one that saw enemies at that landing, never for a goal it can walk to as easily
     {
       for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; }
-      const b3 = M.actors.find((a) => a.bot && !a.isLocal && a.team === 0);
+      const b3 = M.actors.find((a) => a.bot && !a.isLocal && a.team === 0), En = M.actors.find((a) => a.team === 1);   // (this match's: the tide part restarts it)
       b3.bot.sight?.mem.clear(); P.badKey.clear();
       const near = (pos) => __G.nav.nearest(new THREE.Vector3(...pos), 1.5);
       const weigh = (id) => { P.botHold(b3.bot); P._trips = null; return P.goalWeight(id); };
@@ -714,7 +714,7 @@
       const kTo = P.legs[kOpen.leg].ends[1 - kOpen.k];
       put(b3, [kOpen.approach[0] + kOpen.out[0] * 6, kOpen.approach[1], kOpen.approach[2] + kOpen.out[2] * 6]);
       const wKelp = weigh(near(kTo.land));
-      const k3 = b3.bot.sight._k(E1); k3.pos.set(kTo.land[0] + 1, kTo.land[1], kTo.land[2]); k3.t = __G.time; k3.seen = true;
+      const k3 = b3.bot.sight._k(En); k3.pos.set(kTo.land[0] + 1, kTo.land[1], kTo.land[2]); k3.t = __G.time; k3.seen = true;
       const wKelpWatched = weigh(near(kTo.land));
       b3.bot.sight.mem.clear();
       R('bots: a paint goal across a pipe weighs more for a bot by its IN end (Gulper ×1.7, Kelp Line ×2.4); not a goal it can walk to as easily, not a landing it saw enemies at',
@@ -737,7 +737,8 @@
       // the pop away from it (a player sees the same in the exit shot)
       for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; }
       const side = [-eW.out[2], 0, eW.out[0]];
-      put(E1, [eW.land[0] + side[0] * 1.8, eW.land[1], eW.land[2] + side[2] * 1.8]); E1.alive = true; E1.hp = 100;
+      if (!En.alive) En.respawn();
+      put(En, [eW.land[0] + side[0] * 1.8, eW.land[1], eW.land[2] + side[2] * 1.8]); En.hp = 100;
       put(bot, [eE.approach[0], eE.approach[1], eE.approach[2]]); P.debugRide(bot, 'gulper', 0);
       let popYaw = null; for (let i = 0; i < 200 && bot.pipe && popYaw === null; i++) { dbg.step(1000 / 60); if (bot.pipe?.phase === 'pop') popYaw = bot.pipe.popYaw; }
       const base = Math.atan2(eW.out[0], eW.out[2]);
@@ -745,7 +746,7 @@
       const awayYaw = Math.atan2(-side[0], -side[2]); let dAway = awayYaw - base; while (dAway > Math.PI) dAway -= 2 * Math.PI; while (dAway < -Math.PI) dAway += 2 * Math.PI;
       rideOut(bot);
       R('bots: a riding bot that sees an enemy beside the landing from the mouth steers its pop away from it (up to 45°)', popYaw !== null && Math.abs(dYaw) > 0.3 && Math.sign(dYaw) === Math.sign(dAway), { dYawDeg: Math.round(dYaw * 57.3), awayDeg: Math.round(dAway * 57.3) });
-      put(E1, [0, 0, 60]);
+      put(En, [0, 0, 60]);
     }
     // the tidal leg's both directed specs exist from load, the closed one masked
     const kl = P.legs.find((l) => l.id === 'kelp'), kk = [kl.i * 2, kl.i * 2 + 1];
