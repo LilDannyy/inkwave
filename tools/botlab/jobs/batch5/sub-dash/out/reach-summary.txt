@@ -1,0 +1,143 @@
+# dash-reach audit (tools/botlab/tests/dash-reach.js), local, 2026-10-09: every 8th edge node at 1/60, every 16th at 1/24
+# per stage: the pass line's counts, then the lead's list (tops the nav graph doesn't reach that a dash lands on and no plain hop / walk from within 5 m does)
+
+aquarium-dt_24_step_16: PASS | sims 3712 | highest first landing off the walk -99 m null | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 0 (still on one after 3 s 0) | sea 827
+
+aquarium-step_8: PASS | sims 7392 | highest first landing off the walk -99 m null | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 0 (still on one after 3 s 0) | sea 1588
+
+bluestone-dt_24_step_16: PASS | sims 3712 | highest first landing off the walk -99 m null | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 0 (still on one after 3 s 0) | sea 827
+
+bluestone-step_8: PASS | sims 7392 | highest first landing off the walk -99 m null | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 0 (still on one after 3 s 0) | sea 1588
+
+calamari-dt_24_step_16: PASS | sims 11936 | highest first landing off the walk 1.85 m {"from": [-4.5, 0, 23], "dir": [0, -1], "move": "air dash at frame 30", "to": [-4.3, 1.85, 16.4], "up": 1.85, "landedAt": 1.85} | perches 0 (also on foot 268) | out of bounds 0 (also on foot 0) | roof touched 83 (still on one after 3 s 0) | sea 526
+
+calamari-step_8: PASS | sims 23872 | highest first landing off the walk 1.82 m {"from": [14.5, -0.1, -45], "dir": [-1, 0], "move": "air dash at frame 18", "to": [9.1, 0.9, -45.1], "up": 1, "landedAt": 1.72} | perches 0 (also on foot 536) | out of bounds 0 (also on foot 0) | roof touched 211 (still on one after 3 s 0) | sea 981
+   top: {"from": [28.5, 0.25, -17], "dir": [-0.71, 0.71], "move": "air dash at frame 18", "to": [26.8, 2, -13.7], "up": 1.75}
+
+caldera-dt_24_step_16: PASS | sims 3712 | highest first landing off the walk -99 m null | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 0 (still on one after 3 s 0) | sea 827
+
+caldera-step_8: PASS | sims 7392 | highest first landing off the walk -99 m null | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 0 (still on one after 3 s 0) | sea 1588
+
+cargo-dt_24_step_16: not loadable offline (a humans-only / online stage)
+
+cargo-step_8: not loadable offline (a humans-only / online stage)
+
+craters-dt_24_step_16: PASS | sims 12544 | highest first landing off the walk 1.7 m {"from": [-6.5, 0, -14.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [-6.9, 1.7, -9.5], "up": 1.7, "landedAt": 1.7} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 72 (still on one after 3 s 0) | sea 1194
+
+craters-step_8: PASS | sims 25056 | highest first landing off the walk 1.77 m {"from": [-0.5, -0.87, -5.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [4.1, 0.9, -6.6], "up": 1.77, "landedAt": 0.9} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 192 (still on one after 3 s 0) | sea 2398
+
+crossmarket-dt_24_step_16: PASS | sims 8992 | highest first landing off the walk 1.73 m {"from": [4.5, 1.97, 30.5], "dir": [0.71, -0.71], "move": "air dash at frame 30", "to": [9.9, 3.55, 28.4], "up": 1.58, "landedAt": 3.7} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 93 (still on one after 3 s 0) | sea 378
+
+crossmarket-step_8: PASS | sims 17984 | highest first landing off the walk 1.8 m {"from": [-19.5, 1.2, 11.5], "dir": [0.71, -0.71], "move": "air dash at frame 30", "to": [-13.2, 0, 6.6], "up": -1.2, "landedAt": 3} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 247 (still on one after 3 s 0) | sea 588
+
+halyard-dt_24_step_16: PASS | sims 8096 | highest first landing off the walk 1.81 m {"from": [13.5, -0.9, 37.5], "dir": [0.71, 0.71], "move": "air dash at frame 30", "to": [19.1, 0.91, 43.1], "up": 1.81} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 27 (still on one after 3 s 0) | sea 2052
+   top: {"from": [17.5, 0.46, -44.5], "dir": [0, -1], "move": "air dash at frame 18", "to": [17.5, 2.03, -50], "up": 1.57}
+   top: {"from": [19.5, 0, -32.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [23.1, 1.5, -28.6], "up": 1.5}
+   top: {"from": [23.5, 0, -21.5], "dir": [0, -1], "move": "air dash at frame 18", "to": [23.5, 1.5, -27], "up": 1.5}
+   top: {"from": [-17.5, 1.4, 10.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-23.7, 1.87, 10.2], "up": 0.47}
+   top: {"from": [-22.5, 0, 23.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [-22.5, 1.5, 29], "up": 1.5}
+   top: {"from": [-17.5, 0, 35.5], "dir": [-0.71, -0.71], "move": "air dash at frame 18", "to": [-21.4, 1.5, 33.4], "up": 1.5}
+   top: {"from": [-23.5, 0, 63.5], "dir": [0, 1], "move": "air dash at frame 30", "to": [-23.5, 1.75, 69], "up": 1.75}
+
+halyard-step_8: PASS | sims 16160 | highest first landing off the walk 1.81 m {"from": [13.5, -0.9, 43.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [18.9, 0.91, 43.4], "up": 1.81} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 79 (still on one after 3 s 0) | sea 3957
+   top: {"from": [19.5, 0, -32.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [23, 1.5, -28.6], "up": 1.5}
+   top: {"from": [18.5, 0, -31.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [22.3, 1.5, -27.7], "up": 1.5}
+   top: {"from": [-17.5, 0.7, -14.5], "dir": [-0.71, -0.71], "move": "air dash at frame 18", "to": [-21.8, 2.2, -19], "up": 1.5}
+   top: {"from": [-22.5, 0, 23.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [-22.5, 1.5, 28.9], "up": 1.5}
+   top: {"from": [-19.5, 0, 31.5], "dir": [-0.71, -0.71], "move": "air dash at frame 18", "to": [-23.3, 1.5, 27.7], "up": 1.5}
+   top: {"from": [-17.5, 0, 35.5], "dir": [-0.71, -0.71], "move": "air dash at frame 18", "to": [-21.4, 1.5, 33.1], "up": 1.5}
+   top: {"from": [-16.5, 0.88, 45.5], "dir": [0, 1], "move": "air dash at frame 30", "to": [-16.5, 2.03, 53.1], "up": 1.15}
+   top: {"from": [-23.5, 0, 63.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [-23.5, 1.75, 68.9], "up": 1.75}
+
+kelpline-air25: PASS | sims 22016 | highest first landing off the walk 1.87 m {"from": [-14.5, 0, -36.5], "dir": [0.71, -0.71], "move": "air dash at frame 30", "to": [-11.5, 1.87, -39.3], "up": 1.87, "landedAt": 1.87} | perches 0 (also on foot 8) | out of bounds 0 (also on foot 0) | roof touched 296 (still on one after 3 s 0) | sea 1424
+   top: {"from": [-21.5, 0, -62.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [-18.4, 1.6, -59.4], "up": 1.6}
+   top: {"from": [-21.5, 0, -60.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [-17.1, 1.6, -60.5], "up": 1.6}
+   top: {"from": [2.5, 1.2, -28.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [5.9, 2.6, -25.1], "up": 1.4}
+   top: {"from": [-7.5, 2.6, -23.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-11.9, 3.95, -23.5], "up": 1.35}
+   top: {"from": [-7.5, 2.6, -23.5], "dir": [-0.71, 0.71], "move": "air dash at frame 18", "to": [-10.6, 3.95, -20.4], "up": 1.35}
+   top: {"from": [-7.5, 2.6, -23.5], "dir": [-0.71, 0.71], "move": "air dash at frame 30", "to": [-11.5, 3.95, -19.5], "up": 1.35}
+   top: {"from": [-6.5, 2.6, -21.5], "dir": [-1, 0], "move": "air dash at frame 30", "to": [-12.1, 3.95, -21.5], "up": 1.35}
+   top: {"from": [6.5, 2.6, 21.5], "dir": [1, 0], "move": "air dash at frame 30", "to": [12.1, 3.95, 21.5], "up": 1.35}
+
+kelpline-dt_24_step_16: FAIL | sims 11008 | highest first landing off the walk 1.87 m {"from": [12.5, 0, 29.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [10.4, 1.87, 29.1], "up": 1.87, "landedAt": 1.87} | perches 6 (also on foot 2) | out of bounds 0 (also on foot 0) | roof touched 148 (still on one after 3 s 0) | sea 825
+   perch blocks: [{"block": 522, "top": [-9.1, 3.29, -8.5], "by": ["air dash at frame 18", "air dash at frame 30"], "from": [-4.5, 2.6, -13.5]}, {"block": 524, "top": [-8.8, 3.57, -8], "by": ["air dash at frame 30"], "from": [-15.5, 2.6, -8.5]}, {"block": 562, "top": [9.9, 2.57, 9.6], "by": ["air dash at frame 18"], "from": [15.5, 2.6, 4.1]}, {"block": 563, "top": [9.7, 2.71, 9.3], "by": ["air dash at frame 30"], "from": [15.5, 2.6, 4.1]}]
+   top: {"from": [2.5, 1.2, -28.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [6.4, 2.6, -24.6], "up": 1.4}
+   top: {"from": [-6.5, 2.6, -21.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-12, 3.95, -21.5], "up": 1.35}
+   top: {"from": [7.5, 2.6, 23.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [13, 3.95, 23.5], "up": 1.35}
+   top: {"from": [7.5, 2.6, 23.5], "dir": [0.71, -0.71], "move": "air dash at frame 18", "to": [11.4, 3.95, 19.6], "up": 1.35}
+   top: {"from": [5.5, 2.6, 25.5], "dir": [0.71, -0.71], "move": "air dash at frame 18", "to": [9.9, 3.95, 21], "up": 1.35}
+
+kelpline-step_8: FAIL | sims 22016 | highest first landing off the walk 1.87 m {"from": [-12.5, 0, -29.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [-10.5, 1.87, -29.1], "up": 1.87, "landedAt": 1.87} | perches 13 (also on foot 5) | out of bounds 0 (also on foot 0) | roof touched 316 (still on one after 3 s 0) | sea 1642
+   perch blocks: [{"block": 522, "top": [-9.1, 3.29, -8.5], "by": ["air dash at frame 18", "air dash at frame 30"], "from": [-4.5, 2.6, -13.5]}, {"block": 617, "top": [-31.4, 2.92, -9.7], "by": ["air dash at frame 4", "air dash at frame 18", "air dash at frame 30"], "from": [-27.5, 5.2, -12.5]}, {"block": 565, "top": [9.4, 3, 8.9], "by": ["air dash at frame 4"], "from": [14.5, 2.6, 8.5]}, {"block": 569, "top": [8.8, 3.57, 8], "by": ["air dash at frame 18"], "from": [14.5, 2.6, 8.5]}, {"block": 567, "top": [9.1, 3.29, 8.5], "by": ["air dash at frame 18", "air dash at frame 30"], "from": [4.5, 2.6, 13.5]}, {"block": 563, "top": [9.7, 2.71, 9.3], "by": ["air dash at frame 18", "air dash at frame 30"], "from": [15.5, 2.6, 4.1]}]
+   top: {"from": [-22.5, 0, -63.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [-18.7, 1.6, -59.7], "up": 1.6}
+   top: {"from": [2.5, 1.2, -28.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [6.3, 2.6, -24.7], "up": 1.4}
+   top: {"from": [-7.5, 2.6, -23.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-12.9, 3.95, -23.5], "up": 1.35}
+   top: {"from": [-7.5, 2.6, -23.5], "dir": [-0.71, 0.71], "move": "air dash at frame 18", "to": [-11.3, 3.95, -19.7], "up": 1.35}
+   top: {"from": [-6.5, 2.6, -21.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-11.9, 3.95, -21.5], "up": 1.35}
+   top: {"from": [-6.5, 2.6, -21.5], "dir": [-1, 0], "move": "air dash at frame 30", "to": [-13.1, 3.95, -21.5], "up": 1.35}
+   top: {"from": [6.5, 2.6, 21.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [11.9, 3.95, 21.5], "up": 1.35}
+   top: {"from": [6.5, 2.6, 21.5], "dir": [1, 0], "move": "air dash at frame 30", "to": [13.1, 3.95, 21.5], "up": 1.35}
+
+lockgate-dt_24_step_16: PASS | sims 9344 | highest first landing off the walk 1.67 m {"from": [15.5, 0, -45.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [20.4, 1.67, -45.5], "up": 1.67, "landedAt": 1.67} | perches 0 (also on foot 21) | out of bounds 0 (also on foot 0) | roof touched 122 (still on one after 3 s 0) | sea 261
+   top: {"from": [16.5, 1.06, -53.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [20.4, 2.15, -49.6], "up": 1.09}
+   top: {"from": [-15.5, 0, 43.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-20.4, 1.67, 43.5], "up": 1.67}
+
+lockgate-step_8: PASS | sims 18656 | highest first landing off the walk 1.67 m {"from": [19.5, 0, -51.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [19.5, 1.67, -46.1], "up": 1.67, "landedAt": 1.67} | perches 0 (also on foot 29) | out of bounds 0 (also on foot 0) | roof touched 281 (still on one after 3 s 0) | sea 536
+   top: {"from": [16.5, 1.06, -53.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [20.5, 2.15, -49.5], "up": 1.09}
+   top: {"from": [17.5, 0, -47.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [21.3, 1.67, -43.7], "up": 1.67}
+   top: {"from": [-16.5, 0, 39.5], "dir": [-0.71, 0.71], "move": "air dash at frame 18", "to": [-20.3, 1.67, 43.3], "up": 1.67}
+
+nantai-dt_24_step_16: PASS | sims 10912 | highest first landing off the walk 1.55 m {"from": [0.5, 0, -6.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [4.4, 1.55, -2.6], "up": 1.55, "landedAt": 1.55} | perches 0 (also on foot 43) | out of bounds 0 (also on foot 0) | roof touched 21 (still on one after 3 s 0) | sea 1148
+   top: {"from": [-3.5, 2.6, -34.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [0.9, 3.21, -30.1], "up": 0.61}
+   top: {"from": [5.5, 2.6, 30.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [-0.7, 3.21, 30.5], "up": 0.61}
+
+nantai-step_8: PASS | sims 21824 | highest first landing off the walk 1.84 m {"from": [-21.5, 1.86, -13.5], "dir": [-0.71, -0.71], "move": "air dash at frame 30", "to": [-26.3, 3.7, -18.4], "up": 1.84} | perches 0 (also on foot 75) | out of bounds 0 (also on foot 0) | roof touched 55 (still on one after 3 s 0) | sea 2371
+   top: {"from": [-3.5, 2.6, -34.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [1, 3.21, -30], "up": 0.61}
+   top: {"from": [3.5, 2.6, 25.5], "dir": [-0.71, 0.71], "move": "air dash at frame 18", "to": [-1, 3.21, 30], "up": 0.61}
+
+saltpan-dt_24_step_16: FAIL | sims 12288 | highest first landing off the walk 1.8 m {"from": [-12.5, 0, -15.5], "dir": [0.71, -0.71], "move": "air dash at frame 18", "to": [-8.6, 1.8, -19.4], "up": 1.8, "landedAt": 1.8} | perches 0 (also on foot 0) | out of bounds 1 (also on foot 0) | roof touched 218 (still on one after 3 s 0) | sea 1096
+   out of bounds: [{"from": [-16.5, 0, -67.5], "dir": [-0.71, -0.71], "move": "air dash at frame 4", "to": [-19.4, 0.92, -70.5], "up": 0.92}]
+   top: {"from": [21.5, 0, -26.5], "dir": [0, 1], "move": "air dash at frame 4", "to": [21.5, 0.72, -22.3], "up": 0.72}
+   top: {"from": [21.5, 0, -26.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [21.5, 0.82, -20.5], "up": 0.82}
+   top: {"from": [21.5, 0, -26.5], "dir": [0, 1], "move": "air dash at frame 30", "to": [21.5, 0.72, -19.8], "up": 0.72}
+   top: {"from": [21.5, 0, -26.5], "dir": [0.71, 0.71], "move": "air dash at frame 30", "to": [21.8, 0.57, -21.8], "up": 0.57}
+
+saltpan-step_8: PASS | sims 24544 | highest first landing off the walk 1.85 m {"from": [-2.5, -0.6, -29.5], "dir": [-0.71, -0.71], "move": "air dash at frame 18", "to": [-6.7, 1.25, -33.7], "up": 1.85, "landedAt": 1.25} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 467 (still on one after 3 s 0) | sea 1904
+   top: {"from": [21.5, 0, -26.5], "dir": [0, 1], "move": "air dash at frame 4", "to": [21.5, 0.72, -22.5], "up": 0.72}
+   top: {"from": [21.5, 0, -26.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [21.5, 0.82, -20.4], "up": 0.82}
+   top: {"from": [21.5, 0, -26.5], "dir": [0, 1], "move": "air dash at frame 30", "to": [21.5, 0.72, -19.9], "up": 0.72}
+   top: {"from": [21.5, 0, -26.5], "dir": [0.71, 0.71], "move": "air dash at frame 30", "to": [21.8, 0.57, -21.9], "up": 0.57}
+
+spirhalite-dt_24_step_16: PASS | sims 9056 | highest first landing off the walk 1.87 m {"from": [11.5, 0, 63.5], "dir": [0.71, -0.71], "move": "air dash at frame 30", "to": [17.3, 2.35, 57.8], "up": 2.35, "landedAt": 1.87} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 53 (still on one after 3 s 0) | sea 2048
+
+spirhalite-step_8: PASS | sims 18080 | highest first landing off the walk 1.85 m {"from": [11.5, 0, 63.5], "dir": [0.71, -0.71], "move": "air dash at frame 30", "to": [17.3, 2.35, 57.9], "up": 2.35, "landedAt": 1.85} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 139 (still on one after 3 s 0) | sea 3841
+
+terraces-dt_24_step_16: PASS | sims 8192 | highest first landing off the walk 1.76 m {"from": [-17.5, 1.05, -17.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [-13.9, 3.44, -13.9], "up": 2.39, "landedAt": 2.81} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 181 (still on one after 3 s 0) | sea 294
+   top: {"from": [-15.5, 0.89, -18.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [-14.8, 3.02, -14.6], "up": 2.13}
+   top: {"from": [-17.5, 1.05, -17.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [-13.9, 3.44, -13.9], "up": 2.39}
+   top: {"from": [18.5, 0.93, 16.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [14.2, 2.96, 15.4], "up": 2.02}
+   top: {"from": [18.5, 0.93, 16.5], "dir": [-1, 0], "move": "air dash at frame 30", "to": [13.2, 3.46, 14.5], "up": 2.53}
+
+terraces-step_8: PASS | sims 16352 | highest first landing off the walk 1.9 m {"from": [12.5, 4.7, 49.5], "dir": [0, -1], "move": "air dash at frame 18", "to": [12.5, 5.78, 47.4], "up": 1.08, "landedAt": 6.6} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 471 (still on one after 3 s 0) | sea 828
+   top: {"from": [-15.5, 0.89, -18.5], "dir": [0, 1], "move": "air dash at frame 18", "to": [-14.4, 3.24, -14.1], "up": 2.35}
+   top: {"from": [-17.5, 1.05, -17.5], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [-13.9, 3.44, -13.9], "up": 2.39}
+   top: {"from": [18.5, 0.93, 16.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [14.2, 2.94, 15.5], "up": 2.01}
+   top: {"from": [18.5, 0.93, 16.5], "dir": [-1, 0], "move": "air dash at frame 30", "to": [13.2, 3.46, 14.5], "up": 2.53}
+   top: {"from": [15.5, 1.2, 22.5], "dir": [0, -1], "move": "air dash at frame 30", "to": [15.5, 2.47, 15.9], "up": 1.27}
+
+tidewater-dt_24_step_16: PASS | sims 9248 | highest first landing off the walk 1.87 m {"from": [14.5, -0.2, 33.3], "dir": [0, -1], "move": "air dash at frame 30", "to": [14.5, 1.67, 26.3], "up": 1.87, "landedAt": 1.67} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 114 (still on one after 3 s 0) | sea 139
+   top: {"from": [-12.5, -0.2, -40.7], "dir": [0.71, -0.71], "move": "air dash at frame 18", "to": [-8.6, 1.41, -44.6], "up": 1.61}
+   top: {"from": [5.5, 0.7, -34.7], "dir": [1, 0], "move": "air dash at frame 18", "to": [11.2, 1.72, -34.7], "up": 1.02}
+   top: {"from": [14.5, 0.7, 13.3], "dir": [0, 1], "move": "air dash at frame 18", "to": [14.5, 1.72, 19], "up": 1.02}
+
+tidewater-step_8: PASS | sims 18464 | highest first landing off the walk 1.92 m {"from": [-1.5, -0.2, 48.3], "dir": [0, -1], "move": "air dash at frame 18", "to": [-1.8, 1.72, 43.6], "up": 1.92, "landedAt": 1.72} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 288 (still on one after 3 s 0) | sea 263
+   top: {"from": [-12.5, -0.2, -40.7], "dir": [0.71, -0.71], "move": "air dash at frame 18", "to": [-8.7, 1.41, -44.5], "up": 1.61}
+   top: {"from": [-3.5, 0.8, -40.7], "dir": [-0.71, 0.71], "move": "air dash at frame 18", "to": [-8.2, 1.72, -36.2], "up": 0.92}
+   top: {"from": [5.5, 0.7, -34.7], "dir": [1, 0], "move": "air dash at frame 18", "to": [11.4, 1.72, -34.7], "up": 1.02}
+   top: {"from": [10.5, 0.7, 14.3], "dir": [0.71, 0.71], "move": "air dash at frame 18", "to": [14.7, 1.72, 18.5], "up": 1.02}
+   top: {"from": [8.5, -0.2, 39.3], "dir": [0, 1], "move": "air dash at frame 18", "to": [8.5, 1.41, 44.7], "up": 1.61}
+
+treehills-dt_24_step_16: PASS | sims 10784 | highest first landing off the walk 1.6 m {"from": [13, 1.3, -27.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [10, 1.3, -27.5], "up": 0, "landedAt": 2.9} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 515 (still on one after 3 s 0) | sea 687
+
+treehills-step_8: PASS | sims 21568 | highest first landing off the walk 1.79 m {"from": [9, 1.85, 40.5], "dir": [-1, 0], "move": "air dash at frame 18", "to": [4.4, 3.64, 40.5], "up": 1.79, "landedAt": 3.64} | perches 0 (also on foot 0) | out of bounds 0 (also on foot 0) | roof touched 1091 (still on one after 3 s 0) | sea 1445
+
