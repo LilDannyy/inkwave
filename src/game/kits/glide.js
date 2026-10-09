@@ -351,7 +351,7 @@ function stepOnce(it) {
   if (sk) return sink(it, sk);
   if (!it.ghost && G.match?.stage?.sink?.(p, KIND)) return sink(it, 'stage');   // [b5-stagehooks] (the lava's own test)
   it.fuse -= h;
-  if (!it.ghost && (it.recT -= h) <= 0) rec4(it);
+  if (!it.ghost && (it.recT -= h) <= 1e-6) rec4(it);   // (15 steps of 1/60 s, not 16: the float sum lands a hair over 0)
   if (it.fuse <= 1e-6) {
     if (it.ghost) { it.state = 'hold'; it.holdT = 0; }
     else blast(it);
