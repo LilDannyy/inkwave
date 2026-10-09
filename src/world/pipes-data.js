@@ -180,9 +180,11 @@ export function nearestOnLeg(leg, p) {
 }
 // is s inside one of the leg's `hide` ranges (housings, heads, pylons: no glass drawn there)
 export function hiddenAt(leg, s) { for (const h of leg.hide) if (s >= h[0] && s <= h[1]) return true; return false; }
-// is (x, y, z) inside one of the water volumes (the ride camera's grade)?
-export function inWaterVol(v, x, y, z, pad = 0) {
-  if (y < v.y[0] + pad || y > v.y[1] - pad) return false;
+// is (x, y, z) inside one of the water volumes (the ride camera's grade)? A volume's optional `open` (m) is water open to
+// the sky at its top: the grade starts that far below it (`graded`; a lens just under an open surface looks out at the
+// open air: LEAD-REVIEW round 2, item 4 — the kelp drum's top tinted the whole promenade teal)
+export function inWaterVol(v, x, y, z, pad = 0, graded = false) {
+  if (y < v.y[0] + pad || y > v.y[1] - pad - (graded ? v.open || 0 : 0)) return false;
   if (v.cyl) return Math.hypot(x - v.cyl[0], z - v.cyl[1]) <= v.cyl[2] - pad;
   return x >= v.box[0] + pad && x <= v.box[1] - pad && z >= v.box[2] + pad && z <= v.box[3] - pad;
 }

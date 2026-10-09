@@ -99,8 +99,11 @@ void main() {
     if (uRT[i].y <= 0.0 || abs(uRT[i].z - uLeg) > 0.5) continue;
     vec2 d = vW.xz - uRP[i].xy, dir = uRP[i].zw;
     float along = dot(d, dir), perp = abs(dot(d, vec2(-dir.y, dir.x)));
-    float g = (1.0 - smoothstep(0.6, 2.4, length(d)));
-    if (along < 0.0 && along > -6.0) g = max(g, 0.55 * (1.0 + along / 6.0) * (1.0 - smoothstep(0.5, 1.2, perp)));
+    // a disc over the rider with a short, crisp edge, and a trail that tapers to a point 6 m back: it keeps its strength
+    // and narrows rather than fading (a half-strength rider colour laid over the other team's ink averages to a dull grey
+    // stripe: LEAD-REVIEW round 2, item 4)
+    float g = 1.0 - smoothstep(1.4, 2.2, length(d));
+    if (along < 0.0 && along > -6.0) { float t = -along / 6.0, hw = mix(1.05, 0.12, t); g = max(g, 0.9 * (1.0 - smoothstep(hw * 0.65, hw, perp)) * (1.0 - smoothstep(0.82, 1.0, t))); }
     g *= uRT[i].y;
     c += (uRT[i].x > 0.5 ? uTeam1 : uTeam0) * g; k = max(k, g);
   }
@@ -257,14 +260,16 @@ export class PipeLooks {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     geo.computeBoundingSphere();
-    const hwMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide });
-    // a collar right at the lens dithers away (the ride camera rides the tube's own corridor: a ring sweeping past it
-    // would black out the view for a frame), as the glass fades there
+    // a collar right at the lens fades away (the ride camera rides the tube's own corridor: a ring sweeping past it would
+    // black out the view for a frame), as the glass fades there. By its alpha, not a dither: the dither's stipple read as a
+    // black dotted ring across the whole frame (LEAD-REVIEW round 2, item 4). Transparent but writing depth and drawn
+    // before the glass (opaque wherever the lens isn't within 2.8 m); one pass (forceSinglePass: still one draw call)
+    const hwMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide, transparent: true, depthWrite: true, forceSinglePass: true });
     hwMat.onBeforeCompile = (sh) => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-  { float dCam = length(vViewPosition); if (dCam < 2.8 && smoothstep(1.5, 2.8, dCam) < fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453)) discard; }`);
+  { float lensK = smoothstep(1.3, 2.8, length(vViewPosition)); if (lensK < 0.02) discard; diffuseColor.a *= lensK; }`);
     };
-    hwMat.customProgramCacheKey = () => 'pipes-hw-lensfade';
+    hwMat.customProgramCacheKey = () => 'pipes-hw-lensalpha';
     this.hw = new THREE.Mesh(geo, hwMat);
     this.hw.name = 'pipes:hardware'; this.hw.castShadow = false; this.hw.receiveShadow = true;
     this.group.add(this.hw);
@@ -380,13 +385,15 @@ export class PipeLooks {
     for (const dx of [-60, 0, 60]) { c.beginPath(); c.moveTo(dx - 26, -40); c.lineTo(dx + 8, 0); c.lineTo(dx - 26, 40); c.lineTo(dx - 6, 40); c.lineTo(dx + 28, 0); c.lineTo(dx - 6, -40); c.closePath(); c.fill(); }
     c.restore();
   }
-  // the words an end's sign shows in a tide state ('ab' / 'ba'), and its kind
+  // the words an end's sign shows in a tide state ('ab' / 'ba'), and its kind. An OUT end names where its riders come
+  // FROM, never a place on its own: "EXIT ONLY / PENGUIN POINT" (its own name) read like the IN end's "→ PENGUIN POINT", a
+  // way there (LEAD-REVIEW round 2, item 4)
   _words(e, dir) {
     const leg = this.X.legs[e.leg], to = leg.ends[1 - e.k];
     if (leg.way === 'two') return { top: '⇄', sub: '→ ' + to.name, kind: 'two' };
-    if (leg.way === 'one') return e.k === 0 ? { top: '▶ IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'EXIT ONLY', sub: e.name, kind: 'out' };
+    if (leg.way === 'one') return e.k === 0 ? { top: '▶ IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'EXIT ONLY', sub: 'FROM ' + to.name, kind: 'out' };
     const isIn = endIsIn(e, dir);
-    return isIn ? { top: dir === 'ab' ? '▲ UP · IN' : '▼ DOWN · IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'EXIT ONLY', sub: e.name, kind: 'out' };
+    return isIn ? { top: dir === 'ab' ? '▲ UP · IN' : '▼ DOWN · IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'EXIT ONLY', sub: 'FROM ' + to.name, kind: 'out' };
   }
   _signFor(i, scramble) {
     const E = this.X.ends, e = E[i], leg = this.X.legs[e.leg];
@@ -443,7 +450,7 @@ export class PipeLooks {
     this.uw.onBeforeRender = (r, scene, camera, geo) => {
       if (scene.overrideMaterial) { geo.drawRange.count = 0; return; }   // (an override pass: GTAO's, a depth pass — not the view)
       const V = this.rideVol, c = camera.position;
-      const inside = !!V && !scene.overrideMaterial && V.y && c.y > V.y[0] + 0.05 && c.y < V.y[1] - 0.05 && (V.cyl ? Math.hypot(c.x - V.cyl[0], c.z - V.cyl[1]) < V.cyl[2] - 0.05 : c.x > V.box[0] + 0.05 && c.x < V.box[1] - 0.05 && c.z > V.box[2] + 0.05 && c.z < V.box[3] - 0.05);
+      const inside = !!V && !scene.overrideMaterial && V.y && c.y > V.y[0] + 0.05 && c.y < V.y[1] - 0.05 - (V.open || 0) && (V.cyl ? Math.hypot(c.x - V.cyl[0], c.z - V.cyl[1]) < V.cyl[2] - 0.05 : c.x > V.box[0] + 0.05 && c.x < V.box[1] - 0.05 && c.z > V.box[2] + 0.05 && c.z < V.box[3] - 0.05);
       this._setUnder(inside, c);
       geo.drawRange.count = scene.overrideMaterial || this.uwK < 0.01 ? 0 : Infinity;
     };

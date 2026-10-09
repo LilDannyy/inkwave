@@ -26,7 +26,8 @@ export const PIPES = {
   ],
   water: [                       // looks only: volumes where the ride camera gets the underwater grade
     { cyl: [0, 0, 7.4], y: [-0.6, 2.3] },                    // the Great Tank, down to its sunken sand bed (its own twin)
-    { cyl: [25, 0, 4.4], y: [0, 9.9] },                      // the E kelp drum (twin: the W drum)
+    { cyl: [25, 0, 4.4], y: [0, 9.9], open: 1.2 },           // the E kelp drum (twin: the W drum); open to the sky: no grade
+                                                             //   in its top 1.2 m (a lens there looks out over the promenade)
     { box: [-5.9, 5.9, -30.9, -19.1], y: [6.05, 8.95] },     // the South Arch Tank over the hall (twin: the North)
   ],
   legs: [
