@@ -18,18 +18,20 @@
 //     clock rows over the Clock Steps; the Halo (a glass ring walkway at 5.4) in the 3000s
 //   • centre lane: Swimston Street (14 m: trams, the superstop median, the GPO steps, verandas)
 //   • right (−x): the balcony walk (the hotel gallery, 2.4), Hotel Lane → the hotel arch (from today also the Royal
-//     Arcade), Hoki Lane under the railway viaduct → Prow Place → Alpha's arm of Flathead Street; from the arm's end
-//     Prawn Alley runs back to Hoki Lane round the signal yard (fix round 2: no West Wharf)
+//     Arcade), Hoki Lane under the railway viaduct → Prow Place → Alpha's arm of Flathead Street, out to the tram
+//     terminus at its tip (fix round 3: the X restored); from the tip Prawn Alley runs back to Hoki Lane round the
+//     signal yard
 //   • left (+x): Little Lane, Degrayling Lane (its north end half stacked with crates in the 1880s) and Centre Plaice
 //     (the side zone), the Boathouse (deck 2.4), the quay; from today the riverside boardwalk and the Iron Bridge to
 //     Bravo's arm
-//   • the 3000s add the Halo (via glass stairs out of the superstops and the light-pylon) and the Signal Garden (a park
-//     deck on each team's signal yard, a stair up from the arm and one from Hoki Lane)
+//   • the 3000s add the Halo (3.5 m; via glass stairs out of the superstops and the hotel stair from the balcony
+//     landing) and the Signal Garden (a 1.2 m park terrace over each team's signal yard, stepped onto from the arm, the
+//     alley, Prow Place and Hoki Lane)
 //   • spawn: the Cable Tram Engine House's gallery (3.3) over the forecourt terrace (1.0) with the turntable, between
 //     the boiler house and the tram shed
 // Heights: 0 streets · 0.3 tram islands · 0.6 Degrayling pavements, the arcade · 0.9 the signal yard (off limits) ·
-// 1.0 the forecourt terrace · 1.2 the GPO terrace · 1.3 the concourse · 2.4 the balcony and gallery, the Boathouse deck ·
-// 2.68 the Signal Garden · 3.3 the spawn decks · 5.4 the Halo.
+// 1.0 the forecourt terrace · 1.2 the GPO terrace, the Signal Garden · 1.3 the concourse · 1.4 the terminus platform ·
+// 2.4 the balcony and gallery, the Boathouse deck · 3.3 the spawn decks · 5.4 the Halo.
 import { PATTERN, B, R as R0, O, OCT } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
