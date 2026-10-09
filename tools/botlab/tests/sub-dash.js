@@ -472,10 +472,11 @@
       const B = foes[0], E = me;   // B dashes; E (us) is its foe, our brain scripted (we never shoot)
       delete B.bot.update;          // B's own brain
       B.setSub('dash'); B.setWeapon('shooter');
-      const fresh = () => { const b = B.bot; b.thr = null; b.thrCand = null; b._thrMem.clear(); b._dash = null; b.thrAct = null; b.target = null; b.seeTimer = 0; b.sp?.reset?.(); b.path = null; };
+      const fresh = () => { const b = B.bot; b._wasDead = false; b.thr = null; b.thrCand = null; b._thrMem.clear(); b._dash = null; b.thrAct = null; b.target = null; b.seeTimer = 0; b.sp?.reset?.(); b.path = null; };
       const TOR = SUB_KITS.torpedo;
-      // a Torpedo launched at it from 5 m (5 m/s, homing; one it can't shoot down: the dodge is the only answer), 20 trials
-      // with the dash and 20 without (the bot's own sidestep already beats a torpedo most of the time: told, not judged)
+      // a Torpedo locked onto it 4 m off (it hovers 0.5 s, then darts at it, homing; one it can't shoot down: dodging is the
+      // only answer), 20 trials with the dash and 20 without (on foot the bot's own sidestep already beats a torpedo most of
+      // the time: told, not judged)
       const torTrial = (dash) => {
         DK.DASH_AI.enabled = dash;
         put(B, 0, 0, 0, Math.PI); B.ink = 100; fresh();
@@ -484,8 +485,8 @@
         const before = new Set(TOR._list);
         E.aimYaw = Math.PI; E.aimPitch = 0.2; TOR.use(G.subs, E, SUBS.torpedo);
         const t = TOR._list.find((x) => !before.has(x));
-        t.pos.set(0, 1.0, 5); t.vel.set(0, 0, 0); t.hover.copy(t.pos); t.target = B;
-        t.state = 'launch'; t.t = 0; t.speed = 5; t.dir.set(0, -0.05, -1).normalize();
+        t.pos.set(0, 1.0, 4); t.vel.set(0, 0, 0); t.hover.copy(t.pos); t.target = B;
+        t.state = 'unfold'; t.t = 0;
         TOR.threats([]); Object.defineProperty(t.thr, 'shootable', { get: () => false, configurable: true });
         const e0 = ev.length, d0 = THREAT_STATS.dashDodge;
         for (let i = 0; i < 210 && t.state !== 'dead'; i++) step(1);
@@ -496,7 +497,7 @@
       for (let i = 0; i < 20; i++) { torOn.push(torTrial(true)); torOff.push(torTrial(false)); }
       DK.DASH_AI.enabled = true;
       const pOn = torOn.filter((x) => x.clear).length / 20, pOff = torOff.filter((x) => x.clear).length / 20, dashedOn = torOn.filter((x) => x.dashed).length;
-      R(`a bot with a Torpedo darting at it dashes it off (the threat block's fresh sidestep, thrIn < 0.6 s) in ${dashedOn} of 20 and comes out clear in ${Math.round(pOn * 100)} % (target ≥ 70 %); with the dash off: ${Math.round(pOff * 100)} % on foot`,
+      R(`a bot with a Torpedo locked on and darting at it dashes it off (the threat block's fresh sidestep, thrIn < 0.6 s) in ${dashedOn} of 20 and comes out clear in ${Math.round(pOn * 100)} % (target ≥ 70 %); with the dash off: ${Math.round(pOff * 100)} % on foot`,
         pOn >= 0.7 && dashedOn >= 10, { on: pOn, off: pOff, dashedOn });
       // a Splat Bomb landing at its feet (fuse 0.62 s: noticed, its escape has < 0.5 s): it dashes along its escape heading
       // and comes out clear; with the dash off it can't outrun the blast

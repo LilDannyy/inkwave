@@ -21,6 +21,9 @@ screen-FX modules should subscribe to these instead of editing gameplay code.
 | `actor:<name>` | `{ actor, surface, ...data }` — re-emitted from `character.onEvent(name, data)`; surface 0 dry · 1 own ink · 2 enemy ink | actor.js wiring |
 | `actor:added` | `{ actor }` — online Practice: someone dropped into the running session (`{k:'pj'}`) | net/netmatch.js addActor |
 | `actor:loadout` | `{ actor }` — online Practice: a remote squidkid's new loadout landed (`['lo' …]`) | net/netmatch.js |
+| `sub:cantuse` | `{ actor, kind, reason? }` — a sub refused the press / throw ("Can't use"); `reason` (`[b5-sub-dash]`, a kit's `blockedWhy`: "Already dashing", "Air dash used", "Rolling", "Mid-leap") is the HUD callout's second line | weapons.js (the sub block, trySubPress), kits |
+| `sub:dash` | `{ actor, from, dir, air, remote? }` — `[b5-sub-dash]` a Dash Pellet dash: the take-off point, the unit way it went (horizontal), whether it was the air dash; `remote`: a ghost's, from its owner's record | kits/dash.js |
+| `bomb:explode` (dash) | `{ actor, pos, team, radius: 2.2, kind: 'dash' }` — the pellet's pop at the take-off point (every screen; a ghost's never hurts) | kits/dash.js |
 
 ## To add
 | event | payload |
