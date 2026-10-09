@@ -826,6 +826,8 @@
       put(foe, sc.x, fz); step(0.05);
       const n0 = Kp.shell.stats.counted[0]; let inn = 0;
       const booms = [], offB = on('bomb:explode', (e) => { if (e.actor === thrower) booms.push([+(e.pos.x - sc.x).toFixed(2), +(e.pos.z - sc.z).toFixed(2)]); });   // (where its blasts went off, from the centre)
+      let hpMin = foe.hp, inkPeak = 0;
+      const ink0 = foe.damageFromInk || 0, hurts = [], offH = on('damage', (e) => { if (e.victim === foe) hurts.push([e.source, +(+e.amount).toFixed(1), e.attacker ? e.attacker.name : null, +m.time.toFixed(2)]); });   // (what hurt the kid, if anything)
       const hold = id === 'shaker' ? 70 : 8;
       for (let i = 0; i < 400; i++) {
         thrower.intent.sub = i < hold; thrower.ink = PLAYER.inkMax; thrower.aimPoint.copy(sc); thrower.aimYaw = 0; thrower.aimPitch = id === 'shaker' ? 0.3 : 0;
@@ -833,12 +835,16 @@
         foe.pos.set(sc.x, floorY(sc.x, fz), fz); foe.vel.set(0, 0, 0);
         dbg.step(1000 / 60);
         for (const p of kitPos()) if (inside(p)) inn++;
+        hpMin = Math.min(hpMin, foe.alive ? foe.hp : 0); inkPeak = Math.max(inkPeak, (foe.damageFromInk || 0) - ink0);
       }
-      idle(thrower); offB();
-      const counted = Math.round(Kp.shell.stats.counted[0] - n0), hurt = foe.hp < PLAYER.hp - 0.01 || !foe.alive;
+      idle(thrower); offB(); offH();
+      // (hurt = any damage dealt to the kid, or any hp it lost beyond the enemy ink under its feet. That ink is not the sub
+      // reaching it: a blast's ink drops fly over the shell and may land by the kid — 20 hp/s, at most 40, no 'damage'
+      // event — so it is logged apart)
+      const counted = Math.round(Kp.shell.stats.counted[0] - n0), hurt = hurts.length > 0 || !foe.alive || PLAYER.hp - hpMin > inkPeak + 0.5;
       const ok = counted > 0 && inn === 0 && (WALKER[id] || !hurt);
       m5ok = m5ok && ok;
-      m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits, booms: booms.slice(0, 4) };
+      m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits, booms: booms.slice(0, 4), hurts: hurts.slice(0, 6), hpMin: +hpMin.toFixed(1), inkHurt: +inkPeak.toFixed(1) };
     }
     R('M5 §2.2: every damaging sub (bomb, Cling Charge, Pop Pellet, Shaker, Skitter, Waddle, Torpedo, Tracer Bolt, Whirl Boomerang, sprinkler, Lurk Mine) counts into a lone shell, is never inside it, and never hurts a kid 0.9 m behind it (a walker may go round it)', m5ok && Object.keys(m5).length === 11, m5);
     offD();
