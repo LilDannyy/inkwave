@@ -230,6 +230,37 @@
       const spDash = since(e0, 'sub:dash', (e) => e.actor === me).length, spCant = since(e0, 'sub:cantuse', (e) => e.actor === me).length;
       R('while a special has taken the main weapon (its _spWeapon), a press does nothing: no dash, no "Can\'t use", no ink', spDash === 0 && spCant === 0 && me.ink === 100, { dashes: spDash, cantuse: spCant, ink: r2(me.ink) });
       sim(me, 2, 1 / 60, {});
+      // the Zipline (its tether is the sub button; its weapon() leaves the trigger to the main weapon, so _spWeapon stays
+      // false): a press zips, and never dashes too; and a dash already running when a body phase starts (here a dash forced
+      // through the kit, then the tether) ends there: never paused through the zip and run on after it
+      {
+        const { ZC_STATS } = await import('./src/game/specials.js');
+        unbox(); box(0, 2, 4.25, 3, 2, 0.25);                  // a wall 8 m ahead
+        const zf = (w) => { setIt(me, w); me.intent.special = !!w.special; me.aimPoint.set(0, 2.2, 3.9); G.time += 1 / 60; me.update(1 / 60); };
+        const zipOn = () => { put(me, 0, 0, -4, 0); me.specialId = 'zipcaster'; me.special = me.specialCost(); zf({ special: true }); for (let i = 0; i < 6; i++) zf({}); };
+        zipOn();
+        const sp = me.specialActive, z0 = ZC_STATS.zips; e0 = ev.length;
+        const ink0 = me.ink; let dashFrames = 0, zipped = false;
+        zf({ sub: true });
+        for (let i = 0; i < 50; i++) { if (wr.dashT > 0) dashFrames++; if (sp.zip) zipped = true; zf({ sub: i < 3 }); }
+        const zDash = since(e0, 'sub:dash', (e) => e.actor === me).length, zCant = since(e0, 'sub:cantuse', (e) => e.actor === me).length, zips = ZC_STATS.zips - z0;
+        R('with the Zipline up, a sub press fires its tether alone: one zip, no dash (no "sub:dash", dashT 0 every frame), no "Can\'t use", no ink', sp?.kind === 'zipcaster' && zipped && zips === 1 && zDash === 0 && zCant === 0 && dashFrames === 0 && Math.abs(me.ink - ink0) < 1e-6,
+          { special: sp?.kind, zips, dashes: zDash, cantuse: zCant, dashFrames, ink: [r2(ink0), r2(me.ink)] });
+        G.specials.end(me, 'splat'); sim(me, 30, 1 / 60, {});   // ('splat': no super jump back)
+        zipOn();
+        const sp2 = me.specialActive;
+        K.use(G.subs, me, D);                                   // (a dash under way, however it started)
+        const t0 = wr.dashT;
+        zf({ sub: true });                                      // the tether: a body phase begins
+        const zipping = !!sp2.zip;
+        zf({});
+        const tAfter = wr.dashT;
+        let endAt = null, moved = 0, dashLater = 0;
+        for (let i = 0; i < 60; i++) { zf({}); if (wr.dashT > 0) dashLater++; if (!sp2.zip && !endAt) endAt = me.pos.clone(); else if (endAt) moved = Math.max(moved, Math.hypot(me.pos.x - endAt.x, me.pos.z - endAt.z)); }
+        R('a dash running when a body phase starts (the Zipline\'s tether) ends there: dashT 0 from the first zip frame, and nothing of it runs on after the zip (≤ 0.1 m sideways from where the zip ended)', t0 > 0.2 && zipping && tAfter === 0 && dashLater === 0 && endAt && moved <= 0.1,
+          { dashT: [r3(t0), r3(tAfter)], zipping, dashLater, movedAfterZip: r3(moved) });
+        G.specials.end(me, 'splat'); unbox(); sim(me, 30, 1 / 60, {});
+      }
       // the sub held through a stand-in pipe ride: no dash on the exit until a release and a new press
       me.setWeapon('shooter'); put(me, 0, 0, -4, 0);
       e0 = ev.length;

@@ -620,7 +620,9 @@ Object.assign(WeaponRunner.prototype, {
     if (!held) { if (free) this.subLatch = false; return; }        // a real release, with the body free
     if (!pressed || this.subLatch) return;
     this.subLatch = true;
-    if (a.form === 'squid' || a._spWeapon || a.carry || a.specialActive?.kind === 'barrage') return;
+    // (a special that owns the sub button — the Zipline's tether, any that replaces the main weapon — takes the press
+    // silently: G.specials.ownsSub, from the special's first frame; _spWeapon is last frame's word)
+    if (a.form === 'squid' || a._spWeapon || a.carry || a.specialActive?.kind === 'barrage' || (a.specialActive && G.specials?.ownsSub?.(a.specialActive))) return;
     if (SK.blocked?.(a, sub)) emit('sub:cantuse', { actor: a, kind: sub.kind, reason: SK.blockedWhy?.(a, sub) || '' });
     else if (a.ink < sub.inkCost) { if (a.isLocal) { G.audio?.play('low_ink'); emit('lowink', { actor: a, need: sub.inkCost }); } }
     else { a.ink -= sub.inkCost; a.lastFire = 0; G.subs.use(a, sub); }

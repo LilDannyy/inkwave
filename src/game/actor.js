@@ -291,7 +291,8 @@ export class Actor {
     // ---- super jump / specials in progress own the body
     if (this.superJumpState) { this._updateSuperJump(dt); this._finishFrame(dt); return; }
     const spx = this.specialActive;
-    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
+    if (spx && spx.body) { if (wr.dashT > 0) wr.endDash();   // [b5-sub-dash] a body phase ends a dash (never paused, then resumed)
+      this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
     if (specialPressed && this.specialReady()) { this._startSpecial(); this._finishFrame(dt); return; }
 
     // ---- form: squid while the swim button is held. Swim + fire / sub held together → the most recent press wins, so
