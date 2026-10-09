@@ -26,7 +26,8 @@
 //   the sea / lava       the player's own risk (counted)
 // And the height: where a jump + dash first comes down, over the kid's own standing height at the start, must be no
 // higher than a plain running hop ever gets — HOP_BEST, measured by sub-dash.js 'height' to 0.01 m — + 0.02 m (the
-// spec's own ± 0.02 for heights). (A climb's height is the wall's: not judged.)
+// spec's own ± 0.02 for heights), unless the same running hop without the dash comes down as high (then it's the
+// jump's height, counted as hopAsHigh). (A climb's height is the wall's: not judged.)
 // Pass: no perch leak, no out-of-bounds leak, no first landing over the height bar.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
@@ -220,7 +221,14 @@
     }
     const id = nodeAt(p);
     if (id >= 0 && reach[id]) { count.onFoot++; return; }
-    if (!plain) { const upL = (r.landY ?? r.y0) - r.y0; if (upL > count.maxUp) { count.maxUp = r2(upL); count.maxUpAt = { ...what, landedAt: r.landY != null ? r2(r.landY) : null, startY: r2(r.y0) }; } }   // (how high over its start it first came down, of the landings a walk doesn't reach)
+    if (!plain) {
+      // how high over its start it first came down, of the landings a walk doesn't reach. Over the bar, the same running
+      // hop from the same start and heading (no dash) is asked first: when it comes down as high or higher, that height
+      // is the jump's (at 1/24 a running jump from a basin floor can step up a kerb in its first frame), not the dash's
+      let upL = (r.landY ?? r.y0) - r.y0;
+      if (upL > BAR) { const h = move(n, d, 'h'); if (h && h.landY != null && h.landY >= r.landY - 0.02) { count.hopAsHigh = (count.hopAsHigh || 0) + 1; if (!count.hopAsHighAt) count.hopAsHighAt = { ...what, landedAt: r2(r.landY), hopLandedAt: r2(h.landY), startY: r2(r.y0) }; upL = -99; } }
+      if (upL > count.maxUp) { count.maxUp = r2(upL); count.maxUpAt = { ...what, landedAt: r.landY != null ? r2(r.landY) : null, startY: r2(r.y0) }; }
+    }
     if (id >= 0) {
       // a node the graph says isn't reachable. Down from the start: a drop into a spot the graph doesn't reach (a walk off
       // its edge goes there too), counted. Up: does a plain walk or hop from here (16 headings: where they end, once per
