@@ -632,16 +632,19 @@
     if (want('bots')) {
       // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3
       reset();
-      const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, -3 + i * 3, 10));
+      // (the chain runs away from the bot; the foe comes in by its far end — out of the bot's own reach, so a duel isn't
+      // the better shot: the chain is)
+      const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, 0, 5.5 + i * 3));
       settle();
-      put(mate, V(0, 0, 2.0), 0); mate.setWeapon('shooter'); wake(mate);
-      put(foe, V(0, 0, 21), Math.PI);   // (out of its reach first)
+      put(mate, V(0, 0, -2.0), 0); mate.setWeapon('shooter'); wake(mate);
+      put(foe, V(0, 0, 17.5), Math.PI);   // (in its sight first — it turns to face it — out of its reach, no chain near it)
+      hook = () => { mate.pos.x = 0; mate.pos.z = -2.0; };   // (it holds its ground: what it looks at is its own call)
       step(1.0);
       const before = ev('bobber:trigger').length, cs0 = THREAT_STATS.chainShots || 0;
-      put(foe, V(0.5, 0, 11.2), Math.PI);
+      put(foe, V(0.5, 0, 12.4), Math.PI);   // (14.4 m off: in its sight — an easy bot's 16 m — not in its reach, 11.9)
       const tIn = G.time; let tGo = null;
       step(3.0, () => { foe.pos.y = 0.02; foe.vel.set(0, 0, 0); if (tGo == null && ev('bobber:trigger').length > before) tGo = G.time; });
-      stub(mate);
+      stub(mate); hook = null;
       const trg = ev('bobber:trigger')[before];
       R(`bots: a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 (in ${tGo != null ? r2(tGo - tIn) : '—'} s; its reaction ${mate.bot.diff.reaction} + 0.6 s allowed), credited to it`,
         tGo != null && tGo - tIn <= mate.bot.diff.reaction + 0.6 + 0.1 && trg?.e.by === mate && (THREAT_STATS.chainShots || 0) > cs0, { dt: tGo != null ? r2(tGo - tIn) : null, by: trg?.e.by?.name, chainShots: THREAT_STATS.chainShots, BOBBER_BOT });

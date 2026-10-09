@@ -180,7 +180,8 @@ export function botAct(b, dt, it, move, busy) {
   const a = b.a;
   if (!a.alive || a.specialActive || a.superJumpState || a.climbing) { b._bob = null; return null; }
   let S = b._bob;
-  if (S && S.it && (S.it.state !== 'live' || G.time - S.t0 > 0.6)) {   // it blew (or 0.6 s went by): done / leave it a moment
+  // (it blew — done; or 0.6 s of shots at it went by — the turn onto it not counted — leave it a moment)
+  if (S && S.it && (S.it.state !== 'live' || (S.fire0 != null && G.time - S.fire0 > 0.6) || G.time - S.t0 > 1.6)) {
     if (S.it.state === 'live') { BOBBER_BOT.gaveUp++; b._bobSkip = S.it.chain; b._bobSkipT = G.time + 1.5; }
     S = b._bob = null;
   }
@@ -213,8 +214,12 @@ export function botAct(b, dt, it, move, busy) {
   const off = Math.hypot(angleDiff(b.aimYaw, idealYaw), b.aimPitch - idealPitch), tol = Math.max(0.035, Math.atan2(0.2, Math.max(0.5, d3))) * 1.6;
   it.squid = false; it.sub = false; b._bombAim = false;
   a.fireFacing = Math.max(a.fireFacing || 0, 0.25);
-  if (kind === 'charger') { const wr = a.weaponRunner; it.fire = wr.charging ? !(off < tol && wr.charge >= 0.12) : off < tol * 4 && !(wr.cooldown > 0); }
+  const wr = a.weaponRunner;
+  if (kind === 'charger') it.fire = wr.charging ? !(off < tol && wr.charge >= 0.12) : off < tol * 4 && !(wr.cooldown > 0);
   else it.fire = b._devTrigger ? b._devTrigger(d3, off < tol, off < tol * 4, S.lo, S.hi) : off < tol;
+  // (a small target: a steady-trigger gun taps — lets its spread settle between shots, as a player would)
+  if (it.fire && !melee && !(MAIN_KITS[kind]?.bot?.charges) && kind !== 'charger' && (wr.bloom ?? 0) > 0.35) it.fire = false;
+  if (off < tol * 1.5 && S.fire0 == null) S.fire0 = G.time;
   if (it.fire) BOBBER_BOT.fired++;
   move.multiplyScalar(0.3);
   return _aim;
@@ -224,15 +229,16 @@ function scan(b) {
   const a = b.a, sight = b.sight;
   if (!sight) return null;
   BOBBER_BOT.scans++;
+  const X = BOBBER_BOT.sx || (BOBBER_BOT.sx = { better: 0, noFoe: 0, noChain: 0, noLos: 0 });
   // (a better shot under way: our own target in our sights)
   const T = b.target;
   if (T && b.mode === 'fight' && b.seeTimer > 0) {
     const tx = T.pos.x - a.pos.x, tz = T.pos.z - a.pos.z;
-    if (Math.abs(angleDiff(b.aimYaw, Math.atan2(tx, tz))) < 0.15 && Math.hypot(tx, tz) < weaponRange(a.weapon) * 0.95) return null;
+    if (Math.abs(angleDiff(b.aimYaw, Math.atan2(tx, tz))) < 0.15 && Math.hypot(tx, tz) < weaponRange(a.weapon) * 0.95) { X.better++; return null; }
   }
   const foes = [];
   for (const e of G.actors) if (e.team !== a.team && e.alive && sight.sees(e)) foes.push(e);
-  if (!foes.length) return null;
+  if (!foes.length) { X.noFoe++; return null; }
   const w = a.weapon, melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee);
   const win = melee && b._meleeWindow ? b._meleeWindow(w, { ground: false, state: 'still' }) : [0, weaponRange(w) * 0.95];
   const ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z;
@@ -249,15 +255,16 @@ function scan(b) {
     if (!foeIn) continue;
     // a bobber of it in our reach with a line: the nearest first (rays from the shared budget)
     const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez) })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => x.d - y.d);
-    // (one sight line a chain a scan: its nearest bobber in reach; the next one gets its turn on a later scan)
-    const c = cand[(b._bobRot = ((b._bobRot || 0) + 1)) % Math.min(2, cand.length || 1)] || cand[0];
+    // (one sight line a chain a scan: its nearest bobber in reach — the biggest target — unless that one had no line a
+    // moment ago, then the next)
+    const c = cand.find((q) => !(b._bobNoLos === q.o && G.time - (b._bobNoLosT || 0) < 0.4)) || cand[0];
     if (c && c.d < bd) {
       const r = sightRay(_v.set(ex, ey, ez), c.o.spot);
       if (r === null) { BOBBER_BOT.deferred++; b._bobScanT = 0; return null; }   // (its share of this frame's rays is spent: next frame)
-      if (r) { best = c.o; bd = c.d; }
+      if (r) { best = c.o; bd = c.d; } else { b._bobNoLos = c.o; b._bobNoLosT = G.time; X.noLos++; }
     }
   }
-  if (!best) return null;
+  if (!best) { X.noChain++; return null; }
   return { it: best, t0: G.time, lo: win[0], hi: win[1], sy: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.5), sp: (Math.random() - 0.5) * 1.2 };
 }
 
