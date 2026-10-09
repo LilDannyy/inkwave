@@ -138,9 +138,12 @@
     const worstLoad = Math.max(...fixed.map((r) => r.loadPerState)), worstWarm = Math.max(...fixed.map((r) => r.warmPerState));
     // (the code's cost is the warm rebuild — the median of three; the build at match start adds the first build's
     // compile and whatever else the machine is doing: on the shared Mac at load average 25+ it is reported, and fails
-    // only past 90 ms, a gross regression)
-    R(`the load cost per state ≤ 60 ms on every stage (warm rebuilds: worst ${worstWarm} ms; at match start: worst ${worstLoad} ms)`, fixed.length >= 12 && worstWarm <= 60 && worstLoad <= 90,
-      rows.map((r) => ({ id: r.id, states: r.states, start: r.loadPerState, warm: r.warmPerState, split: r.loadSplit })));
+    // only past 90 ms, a gross regression. Fix round 2: two rows, each named after what it checks — the SPEC's 60 ms
+    // budget at load, all included, is NOT shown met until a quiet machine measures the match-start build)
+    R(`the warm rebuild per state ≤ 60 ms on every stage (the code's cost, median of three: worst ${worstWarm} ms)`, fixed.length >= 12 && worstWarm <= 60,
+      rows.map((r) => ({ id: r.id, states: r.states, warm: r.warmPerState })));
+    R(`the build at match start per state ≤ 90 ms on every stage (a gross-regression bound on this shared machine, NOT the SPEC's 60 ms budget at load — unmeasured until a quiet machine runs it: worst ${worstLoad} ms${worstLoad > 60 ? ', over 60' : ''})`, fixed.length >= 12 && worstLoad <= 90,
+      rows.map((r) => ({ id: r.id, states: r.states, start: r.loadPerState, split: r.loadSplit })));
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }
   return out;
 })()
