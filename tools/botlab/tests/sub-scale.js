@@ -181,9 +181,18 @@
 
   const FACTORS = { ...SUB_VIEW_SCALE };
   const KINDS = Object.keys(scenes);
+  // [b5-subscaf] a kit sub that isn't built yet (SUB_KITS[k].stub) has no world object to measure: it needs its factor,
+  // and using it must make nothing and throw nothing. Its builder adds its scene above and drops `stub`.
+  const STUBS = Object.keys(SUBS).filter((k) => K[k]?.stub && !KINDS.includes(k));
   const rows = [];
   try {
-    R('every sub kind in the table has a scene (and every kind has a factor)', KINDS.every((k) => FACTORS[k] > 0) && Object.keys(SUBS).every((k) => KINDS.includes(k)), { factors: FACTORS });
+    R('every sub kind in the table has a scene (and every kind has a factor)', KINDS.every((k) => FACTORS[k] > 0) && Object.keys(SUBS).every((k) => KINDS.includes(k) || STUBS.includes(k)), { factors: FACTORS, stubs: STUBS });
+    for (const kind of STUBS) {   // [b5-subscaf]
+      reset();
+      const n0 = G.subs.items.length + P.bombs.length; let err = null;
+      try { G.subs.use(me, SUBS[kind]); step(5); } catch (e) { err = e.message; }
+      R(`${kind}: a stub (not built yet) — its factor (×${FACTORS[kind]}) is set; using it makes nothing and throws nothing`, FACTORS[kind] > 0 && !err && G.subs.items.length + P.bombs.length === n0, { err });
+    }
     for (const kind of KINDS) {
       const res = {};
       // a first, unrecorded run warms what's made on first use (materials, shaders, cached geometry: three.js draws a
