@@ -818,9 +818,9 @@ up the superstop's glass stair.
 *As built (round B fix 1): the Signal Garden is a 1.2 m terrace over the signal yard with no stairs and two ramps (from
 Prow Place's corner and from Hoki Lane), the Tide Steps are gone, the West Wharf and the arm's south walk are gone, so
 the jump-2 lengths above are struck. Measured on the current layout with the bots' nav (`rb1-nav.mjs`, era 2 → era 3):
-Prow Place → the tip's south lane 28.6 → 23.5 m (18 % shorter, 10.4 m of it on the garden); Hoki Lane → the tip's
-turning area 38.0 → 30.1 m (21 %, over the garden); the alley's east end → the arm 34.2 → 22.8 m (33 %); Swimston → the
-Halo: no way → up the superstop's glass stair or the hotel stair.*
+Prow Place → the tip's south lane 28.0 → 22.1 m (21 % shorter, 11.4 m of it on the garden); Hoki Lane → the tip's
+turning area 38.0 → 29.3 m (23 %, over the garden); the alley's east end → the arm 32.2 → 22.8 m (29 %); Hoki Lane → the
+arm at along −40 29.5 → 23.5 m (20 %); Swimston → the Halo: no way → up the superstop's glass stair or the hotel stair.*
 
 **Why the pad-to-mid lengths barely move, and what does change.** Swimston runs straight from each pad to the centre and
 is open in every era, so every point at mid is 59–72 m from a pad by some route in every era; a closure can only make a
