@@ -598,7 +598,8 @@ const ARM = [
   //  in round 2's arm; the tram waits beside it, below)
   armCover(ISLAND_A, 0, 2.4, 6, 0, 0.3, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
   armCover(ISLAND_A, 0, 1, 4, 0.3, 2.6, { tag: 'tram-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
-  armCover(-26, 3.6, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),   // (round B fix 1: the cart at along −37.4 gave way to the tram)
+  armCover(-26, 3.6, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),
+  armCover(-40.5, 6.5, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),   // (round B fix 1: the cover map's open stretch at along −39, clear of the platform's view)
   armCover(-23.5, -4, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),
   // (fix round 2: a cart and a bollard pair broke the street's middle stretch, the strip test's 30 m line; round B fix 1:
   //  the tram waits there now, along −34 … −28, so they are gone)
