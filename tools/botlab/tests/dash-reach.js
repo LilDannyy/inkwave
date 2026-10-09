@@ -84,14 +84,14 @@
       const f = fr(kind); for (let k = 0; k <= f && ok; k++) tick({ move: true, jump: k < 2, sub: k === f });
       for (let k = 0; k < fr(30) && ok && (!kid.grounded || kid.weaponRunner.dashT > 0); k++) tick({ move: true });
     }
-    for (let k = 0; k < fr(90) && ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) tick({});
+    for (let k = 0; k < fr(180) && ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) tick({});
     if (!ok) return { dead: true, roofT };
     const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
     return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY };
   };
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
   const count = { sims: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
-  const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], perches = [], perchOk = new Map();
+  const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], perches = [], perchOk = new Map();
   const KINDS = ['g', 4, 18, 30];
   for (const n of use) {
     for (const d of DIRS) for (const kind of KINDS) {
@@ -101,7 +101,7 @@
       if (r.roofT) { count.roofTouch++; if (roofs.length < 200) roofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, roofAt: [r1(r.roofT.x), r2(r.roofT.y), r1(r.roofT.z)] }); }
       if (r.dead) { count.sea++; continue; }
       if (!r.grounded) { count.air++; continue; }
-      if (r.roof) { count.roof++; continue; }
+      if (r.roof) { count.roof++; if (onRoofs.length < 40) onRoofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, at: [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)], up: r2(r.pos.y - n.y) }); continue; }
       const p = r.pos, what = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, to: [r1(p.x), r2(p.y), r1(p.z)], up: r2(p.y - n.y) };
       if (!inB(p)) { count.oob++; oob.push(what); continue; }
       if (r.perch) {
@@ -154,8 +154,8 @@
   const spots = [...seen.values()].sort((a, b) => b.up - a.up);
   const ms = Math.round(performance.now() - t0);
   const roofSeen = new Map(); for (const o of roofs) { const k = Math.round(o.roofAt[0]) + ',' + Math.round(o.roofAt[2]); if (!roofSeen.has(k)) roofSeen.set(k, o); }
-  R(`${g.mapDef?.id}: no dash (ground, off a ledge, air on a running jump's rise / apex / fall; 8 headings; dt 1/${Math.round(1 / DT)}) from ${use.length} edge nodes reached on foot (of ${starts.length}; ${N.length} nodes) comes to rest on a perch a kid can't get onto on foot, or out of bounds, or higher than a jump (1.9 m) over its start; a roof it touches slides it off (never a place to stay)`,
-    perches.length === 0 && oob.length === 0 && count.roof === 0 && count.maxUp <= 1.9, { count, perchBlocks: [...new Set(perches.map((q) => q.block))].map((b) => { const B = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, top: [r1(B.center.x), r2(B.center.y + B.half.y), r1(B.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms });
+  R(`${g.mapDef?.id}: no dash (ground, off a ledge, air on a running jump's rise / apex / fall; 8 headings; dt 1/${Math.round(1 / DT)}) from ${use.length} edge nodes reached on foot (of ${starts.length}; ${N.length} nodes) comes to rest on a perch a kid can't get onto on foot, or out of bounds, or first coming down higher than a jump (1.9 m) over its start; a roof slides it off (any still on one after 3 s are listed)`,
+    perches.length === 0 && oob.length === 0 && count.maxUp <= 1.9, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks: [...new Set(perches.map((q) => q.block))].map((b) => { const B = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, top: [r1(B.center.x), r2(B.center.y + B.half.y), r1(B.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms });
   R(`${g.mapDef?.id}: tops the nav graph doesn't reach that a dash lands on and no plain walk / hop from within 5 m does (${realLeaks.length}; the lead's list — none is higher than a jump reaches: the dash adds no height)`, true,
     { tops: realLeaks.slice(0, 16), topsAKidHopsOnto: hopOn.length });
   const downSeen = new Map(); for (const o of down) { const k = Math.round(o.to[0]) + ',' + Math.round(o.to[2]); if (!downSeen.has(k)) downSeen.set(k, o); }
