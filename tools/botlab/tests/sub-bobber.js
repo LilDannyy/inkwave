@@ -177,7 +177,15 @@
         const rf = drop(me, pad.x + 1, pad.z - dz * (barrier + B.padNoDeploy - 1.0)), ok = drop(me, pad.x + 1, pad.z - dz * (barrier + B.padNoDeploy + 0.6));
         settle();
         const r2s = sent.slice(n2).map((x) => x.data).filter((d) => d && d[0] === 2 && d[1] === rf.gid);
-        R(`deploy: refused within spawnBarrier + 2 = ${barrier + B.padNoDeploy} m of the enemy pad (it fizzles, [2, gid, 3]); just outside it floats`, rf.state === 'dead' && r2s.length === 1 && r2s[0][2] === 3 && ok.state === 'live' && K.BOBBER_STATS.refused === 1, { refused: rf.state, rec: r2s, ok: ok.state });
+        const note1 = BOBBER_HUD.note;
+        R(`deploy: refused within spawnBarrier + 2 = ${barrier + B.padNoDeploy} m of the enemy pad (it fizzles, [2, gid, 3], "${note1}"); just outside it floats`, rf.state === 'dead' && r2s.length === 1 && r2s[0][2] === 3 && ok.state === 'live' && K.BOBBER_STATS.refused === 1 && note1 === 'TOO CLOSE TO THEIR BASE', { refused: rf.state, rec: r2s, ok: ok.state, note1 });
+        // refused in a stage's no-place disc: the note names that reason, not the base
+        const np0 = G.level.noPlace;
+        G.level.noPlace = (p, r) => Math.hypot(p.x - 8, p.z - 4) < 1.5 + r || !!np0?.call(G.level, p, r);
+        const rf2 = drop(me, 8, 4); settle();
+        G.level.noPlace = np0;
+        const note2 = BOBBER_HUD.note;
+        R(`deploy: refused in a stage's no-place disc too, its note "${note2}" (not the base's)`, rf2.state === 'dead' && note2 === 'NO ROOM TO FLOAT THERE', { state: rf2.state, note2 });
         // on a mover over the sea that parks: re-floats over the sea, keeps its chain, a new [3]
         K.clear(); sent.length = 0;
         const plat = L.addDynamic({ tag: 'test:float' }); const pc = V(32.0, -0.3, -20); L.moveDynamic(plat, pc, V(2, 0.3, 2), 0); step(2 / 60);

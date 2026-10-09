@@ -174,11 +174,12 @@ export function spotFor(px, py, pz, nx, ny, nz, kind, block, team, out) {
   // refused: near the enemy pad (no spawn traps), in a stage's no-place disc, inside a block
   const L = G.level, pad = L?.spawnPads?.[1 - team];
   out.refused = !!pad && Math.hypot(out.x - pad.x, out.z - pad.z) < (L.spawnBarrier ?? 4.2) + s.padNoDeploy;
-  if (!out.refused && L?.noPlace?.(_v3.set(out.x, base, out.z), 0.3)) out.refused = true;
-  if (!out.refused && L?.pointInside?.(_v3.set(out.x, out.y, out.z), 0.06)) out.refused = true;
+  out.why = out.refused ? 'pad' : '';
+  if (!out.refused && L?.noPlace?.(_v3.set(out.x, base, out.z), 0.3)) { out.refused = true; out.why = 'place'; }
+  if (!out.refused && L?.pointInside?.(_v3.set(out.x, out.y, out.z), 0.06)) { out.refused = true; out.why = 'inside'; }
   return out;
 }
-const _spot = { x: 0, y: 0, z: 0, hover: 0, base: 0, block: -1, refused: false, kind: '' };
+const _spot = { x: 0, y: 0, z: 0, hover: 0, base: 0, block: -1, refused: false, why: '', kind: '' };
 // the Bazookarp's solid spheres (G.objTargets.spheres, §0.6): the first one a segment a → b touches (pad: the float's
 // own radius) → { t, c, r } or null
 const _sph = [];
@@ -299,7 +300,7 @@ function deploy(it, s) {
   if (!it.ghost && s.refused) {
     BOBBER_STATS.refused++;
     it.spot.set(s.x, s.y, s.z);
-    if (it.owner.isLocal) onRefusedHud(it);
+    if (it.owner.isLocal) onRefusedHud(it, s.why);
     finish(it, 3, 'puff');
     return;
   }

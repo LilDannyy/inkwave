@@ -263,9 +263,12 @@ export function onDisarmHud(it) {
   // (a foe disarmed one of yours: a quiet low "doo", yours only — 2D)
   if (it.owner?.isLocal && G.match && !G.match.attract) G.audio?.play('bobber_doo', { volume: 0.6 });
 }
-export function onRefusedHud() {
+export function onRefusedHud(it, why) {
   BOBBER_HUD.refused++;
-  const Dm = dom(); if (Dm) restart(Dm.note, 'is-on');
+  // (the reason: by their base — no spawn traps — or no room to float: inside a wall, a stage's no-place disc)
+  const t = why === 'pad' ? 'TOO CLOSE TO THEIR BASE' : 'NO ROOM TO FLOAT THERE';
+  BOBBER_HUD.note = t;
+  const Dm = dom(); if (Dm) { if (Dm.note.textContent !== t) Dm.note.textContent = t; restart(Dm.note, 'is-on'); }
 }
 export function hudClear() {
   hintIt = null; hintWas = false; prompt = null; promptT = 0; hintPrompts = 0; firstThrow = false; chainEl = null;
