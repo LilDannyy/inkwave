@@ -656,6 +656,28 @@
 
     // ============================================================================================ 8. bots
     if (want('bots')) {
+      // hold-fire (every bot, whatever its sub): its shot along a line through an own idle bobber (no foe near it) is held —
+      // for every kind of gun, the bow's burst a [ring, full] pair (read as a NaN, it held nothing: its arrows were most of
+      // the matches' strays), the Brolly's pellets, a blaster's blob; one 3 m off the line to the side of a bow's 8° fan at
+      // 9 m is held too, the same off a Splattershot's line is not; a draw it had going is dropped, not loosed
+      {
+        const res = {};
+        for (const [wid, dx, want] of [['shooter', 0, true], ['bow', 0, true], ['brolly', 0, true], ['blaster', 0, true], ['bow', 1.2, true], ['shooter', 3.0, false]]) {
+          reset();
+          drop(me, dx, 9); settle();
+          put(mate, V(0, 0, 0), 0); mate.setWeapon(wid); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobHF = null; mate.bot.aimYaw = 0; mate.bot.aimPitch = 0;
+          const it = mate.intent; zero(mate); it.fire = true;
+          K.botAct(mate.bot, DT, it, new THREE.Vector3(), false);
+          res[`${wid}${dx ? '+' + dx : ''}`] = !it.fire === want;
+        }
+        reset();
+        drop(me, 0, 9); settle();
+        put(mate, V(0, 0, 0), 0); mate.setWeapon('bow'); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobHF = null; mate.bot.aimYaw = 0; mate.bot.aimPitch = 0;
+        const wr = mate.weaponRunner; wr.charging = true; wr.charge = 0.6; zero(mate); mate.intent.fire = true;
+        K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+        res.drawDropped = !wr.charging && !mate.intent.fire;
+        R('bots: hold-fire — a teammate\'s shot through an own idle bobber is held (Splattershot, Tideline Bow, Brolly, blaster; a bow\'s fan reaches 1.2 m to the side at 9 m); 3 m off a Splattershot\'s line it fires; a bow\'s draw is dropped, not loosed', Object.values(res).every(Boolean), res);
+      }
       // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 — several trials (PAGE_ARGS reps=N,
       // default 5), every one within the time: one lucky run proves nothing about a 0.2 m target
       const REPS = +((/reps=(\d+)/.exec(window.__pageArgs || '') || [])[1] || 5);

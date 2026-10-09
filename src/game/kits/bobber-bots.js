@@ -514,6 +514,19 @@ function idleNow(o, team) {
   for (const e of G.actors) { if (e.team === team || !e.alive) continue; const k = teamKnown(team, e, 1.0); if (k && Math.hypot(k.pos.x - p.x, k.pos.z - p.z) < R && Math.abs(k.pos.y + 0.7 - p.y) < 1.8) return false; }
   return true;
 }
+// what a weapon's shot covers besides its line (config numbers, a per-draw [ring, full] pair read as its larger): the
+// splash or burst where it goes off (a kit weapon's at least 1.4 m), its cone in degrees (the bow's fan, the Brolly's
+// pellets, the Twinfire's spread), the side-by-side arrows' gap, and whether it goes off at the end of its flight
+const _ws = new Map(), big = (v) => (Array.isArray(v) ? Math.max(0, ...v) : +v || 0);
+function wSpec(w) {
+  let o = _ws.get(w);
+  if (!o) {
+    const K = MAIN_KITS[w.kind], sr = Math.max(big(w.splashRadius), big(w.burstRadius), big(w.waveWidth), big(w.impactRadius), K ? 1.4 : 0);
+    o = { sr, cone: Math.max(big(w.fanTap), big(w.fanRing), big(w.spreadDeg), big(w.spreadGround), big(w.swipeSpreadDeg) / 2), gap: big(w.fanGap), bursts: !!(w.burstRadius || w.fuseFull || w.kind === 'blaster') };
+    _ws.set(w, o);
+  }
+  return o;
+}
 function holdFire(b, a) {
   const w = a.weapon, melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee), pad = SB().hitR + 0.3;
   const P = pendingOwn(a.team);
@@ -534,19 +547,23 @@ function holdFire(b, a) {
   // or a brush's flick — or the foe it's fighting plus a splash and a miss's carry; as wide as a bobber, the gun's spread at
   // that distance, and the splash of anything that bursts — a blaster's blob, a fist, an arrow, a slosher's glob, a blade's
   // wave — wherever along the way it goes off)
-  const cp = Math.cos(b.aimPitch), K = MAIN_KITS[w.kind], sr = Math.max(w.splashRadius || 0, w.burstRadius || 0, w.waveWidth || 0, K ? 1.4 : 0);
+  const cp = Math.cos(b.aimPitch), ws = wSpec(w);
+  const sr = ws.sr;
   _a.set(a.pos.x, a.pos.y + 1.15, a.pos.z); _d.set(fx * cp, Math.sin(b.aimPitch), fz * cp);
   let L = Math.max(weaponRange(w), w.waveRange || 0) * 1.05;
-  if (b.mode === 'fight' && b.target) L = Math.min(L, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z) + 2.5 + sr);
+  // (the foe it's fighting plus a miss's carry — but a shot that lodges or bursts at the end of its flight, an arrow or a
+  // blaster's blob, goes off wherever a miss ends: its whole reach)
+  if (b.mode === 'fight' && b.target && !ws.bursts) L = Math.min(L, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z) + 2.5 + sr);
   if (_d.y < -0.05) L = Math.min(L, (1.15 + 0.15) / -_d.y + sr);
-  const spr = Math.tan(((a.weaponRunner?.spread || 0) * Math.PI) / 180), W = pad + sr + spr * L;
+  // (as wide as the gun's spread now, its pellets' or arrows' fan, the side-by-side arrows' gap)
+  const spr = Math.tan((((a.weaponRunner?.spread || 0) + ws.cone) * Math.PI) / 180), W = pad + sr + ws.gap + spr * L;
   const ex = _a.x + _d.x * L, ez = _a.z + _d.z * L;
   const along = (o) => {
     const p = posOf(o);
     const t0 = (p.x - _a.x) * _d.x + (p.y - _a.y) * _d.y + (p.z - _a.z) * _d.z;
     if (t0 < -0.5) return false;   // (behind it)
     const t = clamp(t0, 0, L);
-    const qx = _a.x + _d.x * t - p.x, qy = _a.y + _d.y * t - p.y, qz = _a.z + _d.z * t - p.z, pt = pad + sr + spr * t;
+    const qx = _a.x + _d.x * t - p.x, qy = _a.y + _d.y * t - p.y, qz = _a.z + _d.z * t - p.z, pt = pad + sr + ws.gap + spr * t;
     return qx * qx + qy * qy + qz * qz <= pt * pt;
   };
   for (const o of near(Math.min(_a.x, ex) - W, Math.min(_a.z, ez) - W, Math.max(_a.x, ex) + W, Math.max(_a.z, ez) + W, _nr)) {
