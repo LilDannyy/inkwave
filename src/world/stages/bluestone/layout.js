@@ -168,6 +168,10 @@ const MID = [
   B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-14, -13.4, 0, 1.5, -15.4, -13.4, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  // (the balcony's north-east corner, against HULLBREAKER's claws: rounds 1–2's boss fix; in the 3000s they stand 3.4 m
+  //  under the river stair's landing, roofs nobody stands on)
+  B(-6.2, -5.2, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-4.8, -4.0, 0, 1.5, -16.0, -15.2, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // the Boathouse: its roof deck is Alpha's raised corner by the river (2.4)
   ...tierBoxes([P.boathouse], 2.4, { tag: 'boathouse', color: '#8a7158', pattern: PATTERN.weatherboard }),
   R([18.6, 0, -6], [18.6, 2.4, -12], 3, stair({ tag: 'boathouse-stair', color: K.wood, pattern: PATTERN.treads })),   // (round C: flush with the boat shed)
