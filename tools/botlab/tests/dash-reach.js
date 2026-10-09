@@ -3,7 +3,8 @@
 //   MAP=<id> MODE=turf PAGE=tools/botlab/tests/dash-reach.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs
 //   PAGE_ARGS: 'dt=24' runs the movement at 1/24 s a step (default 1/60); 'step=4;off=1' takes every 4th edge node from
 //   the 2nd (a stage's full audit is step=N run once for each off=0 … N−1: the parts tile every edge node exactly once);
-//   'air=2.5' a what-if air dash length (this run only); 'climb=0' leaves out the wall-climb dashes
+//   'air=2.5' a what-if air dash length (this run only); 'climb=0' leaves out the wall-climb dashes. Cargo Terminal
+//   (humans only, online only) boots offline with DEVSTAGE=1.
 // What: the nodes a kid reaches on foot (the stage's nav graph from both spawn pads: walks, jumps, drops, climbs); of
 // those, the ones by a change of level or a drop within 6 m (where a dash could lead somewhere new). From each, a kid
 // stepped on its own (actor.update, the real dash) tries, in 8 headings: a ground dash (off a ledge too, when there is
@@ -12,7 +13,9 @@
 // press (SPEC D1.5: the press makes it a kid off the wall, an air dash) along the wall both ways, away from it both
 // diagonals, and straight off it. Where each comes to rest:
 //   on foot ground       a nav node the kid reaches on foot anyway: fine
-//   a roof               an off-limits top: it slides off (counted; one still on a roof after 3 s is listed)
+//   a roof               an off-limits top: it slides off (counted). Still on one after 3 s (its slide stalled): a LEAK
+//                        unless a plain walk or hop from a spot reached on foot within 5 m (or the same climb) ends stuck on
+//                        that roof block too
 //   a perch              a walkable, never-inkable lookout: a LEAK unless its piece (the perch blocks a kid walks between:
 //                        a reach stacker's boom is a stair of them) is reached on foot — a plain running hop or walk (16
 //                        headings) from a spot reached on foot within 6 m gets onto any block of it (or, off a wall, the
@@ -24,11 +27,13 @@
 //   out of bounds        a LEAK unless a plain walk or hop from nearby (or the same climb) ends past the line too, or on the
 //                        same block within 1 m of it
 //   the sea / lava       the player's own risk (counted)
-// And the height: where a jump + dash first comes down, over the kid's own standing height at the start, must be no
-// higher than a plain running hop ever gets — HOP_BEST, measured by sub-dash.js 'height' to 0.01 m — + 0.02 m (the
-// spec's own ± 0.02 for heights), unless the same running hop without the dash comes down as high (then it's the
-// jump's height, counted as hopAsHigh). (A climb's height is the wall's: not judged.)
-// Pass: no perch leak, no out-of-bounds leak, no first landing over the height bar.
+// And the height, for EVERY ground dash and jump + dash whatever it comes to rest on (on-foot ground, a roof, a perch,
+// past the line, the sea): where it first comes down after leaving the ground, over the kid's own standing height at
+// the start, must be no higher than a plain running hop ever gets — HOP_BEST, measured by sub-dash.js 'height' to
+// 0.01 m — + 0.02 m (the spec's own ± 0.02 for heights), unless the same running hop without the dash comes down as high
+// (then it's the jump's height, counted as hopAsHigh). (A climb's height is the wall's: the dashes off one aren't judged.)
+// Pass: no perch leak, no out-of-bounds leak, no kid stuck on a roof where no plain walk / hop gets stuck, no first
+// landing over the height bar.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const THREE = await import('three'); const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -45,9 +50,14 @@
   const L = G.level, nav = G.nav, N = nav.nodes, r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100;
   dbg.freeze();
   for (const a of m.actors) if (a.bot) a.bot.update = () => {};
-  const kid = m.actors.find((a) => a.bot && !a.isLocal) || m.actors.find((a) => a.bot), it = kid.intent;
+  // (a bot; on a humans-only stage — Cargo Terminal, booted offline with DEVSTAGE=1 — the local kid, stepped the same way)
+  const kid = m.actors.find((a) => a.bot && !a.isLocal) || m.actors.find((a) => a.bot) || m.local, it = kid.intent;
   m.actors.forEach((a) => { if (a !== kid) { a.update = () => {}; } });
   kid.setSub('dash'); kid.setWeapon('shooter');
+  // a splat only ends the move: the kid is marked dead, nothing else. (The real one feeds the HUD a "was splatted" pill,
+  // a death mark and its effects, and the page's timers never run inside this synchronous loop: on a sea-heavy stage the
+  // pills piled up by the thousand and every later splat queried them all — halyard's runs slowed ~4x as they went)
+  kid.splat = function () { if (!this.alive) return; this.alive = false; this.hp = 0; this.climbing = false; this.specialActive = null; };
   const t0 = performance.now();
   // ---- on foot: the nav graph's reach from both pads
   const reach = new Uint8Array(N.length);
@@ -86,7 +96,7 @@
   // the end of a move: wait out a roof's slide, a fall, the dash (≤ 3 s), and read where it came to rest
   const settle = (st) => {
     for (let k = 0; k < fr(180) && st.ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) st.tick({});
-    if (!st.ok) return { dead: true, roofT: st.roofT };
+    if (!st.ok) return { dead: true, roofT: st.roofT, landY: st.landY, y0: startY };
     const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
     return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT: st.roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY: st.landY, y0: startY };
   };
@@ -167,7 +177,7 @@
     return settle(st);
   };
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
-  const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
+  const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, judgedUp: 0, hopAsHigh: 0, onFoot: 0, roof: 0, roofOnFoot: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
   const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], perches = [], perchOk = new Map();
   const KINDS = ['g', 4, 18, 30];
   const label = (kind) => (typeof kind === 'string' && kind.startsWith('c') ? kind.slice(2) : kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`);
@@ -197,16 +207,46 @@
     return S;
   };
   const near = (p, lo = -99) => N.filter((q) => reach[q.id] && Math.hypot(q.x - p.x, q.z - p.z) < 5 && p.y - q.y < 2.4 && p.y - q.y > lo).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z));
+  // the height a ground dash or a jump + dash first came down at, over its start, wherever it then came to rest (r.landY:
+  // null when it never left the ground — a floor, a ramp, a stair). Over the bar, the same running hop from the same
+  // start and heading (no dash) is asked first: when it comes down as high or higher, that height is the jump's (at 1/24
+  // a running jump from a basin floor can step up a kerb in its first frame), not the dash's
+  const judgeUp = (n, d, kind, r) => {
+    if (r.landY == null) return;
+    count.judgedUp++;
+    const upL = r.landY - r.y0;
+    if (upL > BAR) {
+      const h = move(n, d, 'h');
+      if (h && h.landY != null && h.landY >= r.landY - 0.02) {
+        count.hopAsHigh++;
+        if (!count.hopAsHighAt) count.hopAsHighAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), hopLandedAt: r2(h.landY), startY: r2(r.y0) };
+        return;
+      }
+    }
+    if (upL > count.maxUp) {
+      count.maxUp = r2(upL);
+      count.maxUpAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), startY: r2(r.y0), restedAt: r.pos ? [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)] : 'the sea', block: r.block ?? -1, tag: r.block >= 0 ? bTag(r.block) : null };
+    }
+  };
   // where one move came to rest, sorted into the buckets above; plain: the same climb without the dash (off a wall)
   const classify = (n, d, kind, r, plain) => {
     if (!r) return;
+    if (!plain) judgeUp(n, d, kind, r);   // (every ground dash and jump + dash, before the buckets)
     if (r.roofT) { count.roofTouch++; if (roofs.length < 200) roofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), roofAt: [r1(r.roofT.x), r2(r.roofT.y), r1(r.roofT.z)] }); }
     if (r.dead) { count.sea++; return; }
     if (!r.grounded) { count.air++; return; }
     const what = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), to: [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)], up: r2(r.pos.y - r.y0), block: r.block, tag: bTag(r.block) };
-    if (r.roof) { count.roof++; if (onRoofs.length < 40) onRoofs.push(what); return; }
     const p = r.pos;
     const plainHere = (test) => { const q = plain && plain(); return !!(q && q.pos && test(q)); };
+    if (r.roof) {
+      // still on a roof after 3 s (its slide stalled): a leak unless a plain walk or hop from a spot reached on foot
+      // within 5 m (or the same climb) ends stuck on that roof block too — then it's the roof's own business
+      const same = (q) => !!(q && q.pos && q.roof && q.block === r.block);
+      let by = plainHere(same);
+      for (const q of near(p).slice(0, 30)) { for (const dd of DIRS16) for (const k2 of ['h', 'w']) { if (by) break; if (same(move(q, dd, k2))) by = true; } if (by) break; }
+      if (by) count.roofOnFoot++; else { count.roof++; if (onRoofs.length < 40) onRoofs.push(what); }
+      return;
+    }
     if (!inB(p)) {
       // past the bounds line: a leak unless a plain walk or hop from a spot reached on foot within 5 m ends past it too, or
       // ends on the same block within a metre of it (the edge of a bollard on a walkable sea wall, its centre a hair out)
@@ -227,14 +267,6 @@
     }
     const id = nodeAt(p);
     if (id >= 0 && reach[id]) { count.onFoot++; return; }
-    if (!plain) {
-      // how high over its start it first came down, of the landings a walk doesn't reach. Over the bar, the same running
-      // hop from the same start and heading (no dash) is asked first: when it comes down as high or higher, that height
-      // is the jump's (at 1/24 a running jump from a basin floor can step up a kerb in its first frame), not the dash's
-      let upL = (r.landY ?? r.y0) - r.y0;
-      if (upL > BAR) { const h = move(n, d, 'h'); if (h && h.landY != null && h.landY >= r.landY - 0.02) { count.hopAsHigh = (count.hopAsHigh || 0) + 1; if (!count.hopAsHighAt) count.hopAsHighAt = { ...what, landedAt: r2(r.landY), hopLandedAt: r2(h.landY), startY: r2(r.y0) }; upL = -99; } }
-      if (upL > count.maxUp) { count.maxUp = r2(upL); count.maxUpAt = { ...what, landedAt: r.landY != null ? r2(r.landY) : null, startY: r2(r.y0) }; }
-    }
     if (id >= 0) {
       // a node the graph says isn't reachable. Down from the start: a drop into a spot the graph doesn't reach (a walk off
       // its edge goes there too), counted. Up: does a plain walk or hop from here (16 headings: where they end, once per
@@ -312,7 +344,7 @@
   }
   count.stranded = realLeaks.length; count.strandedHopOn = hopOn.length; tm.tops = performance.now() - t4;
   for (const k in tm) tm[k] = Math.round(tm[k]);
-  kid.setSub('bomb'); SUBS.dash.airDashDist = air0; LH = null; delete kid._integrate;
+  kid.setSub('bomb'); SUBS.dash.airDashDist = air0; LH = null; delete kid._integrate; delete kid.splat;
   for (const a of m.actors) { delete a.update; if (a.bot) delete a.bot.update; }
   // off the graph: the distinct spots (0.5 m), highest first
   const seen = new Map(); for (const o of offs) { const k = Math.round(o.to[0] * 2) + ',' + Math.round(o.to[2] * 2) + ',' + Math.round(o.to[1] * 2); if (!seen.has(k)) seen.set(k, o); }
@@ -321,8 +353,8 @@
   const roofSeen = new Map(); for (const o of roofs) { const k = Math.round(o.roofAt[0]) + ',' + Math.round(o.roofAt[2]); if (!roofSeen.has(k)) roofSeen.set(k, o); }
   const part = EVERY > 1 ? `every ${EVERY}th edge node from the ${OFF + 1}${['st', 'nd', 'rd'][OFF] || 'th'}` : 'every edge node';
   const perchBlocks = [...new Set(perches.map((q) => q.block))].map((b) => { const Bk = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, tag: bTag(b), top: [r1(Bk.center.x), r2(Bk.center.y + Bk.half.y), r1(Bk.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; });
-  R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece or out of bounds where no plain walk / hop gets, and no jump + dash first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02); roofs slide it off (one still on after 3 s is listed)`,
-    perches.length === 0 && oob.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
+  R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02; ${count.judgedUp} landings judged)`,
+    perches.length === 0 && oob.length === 0 && onRoofs.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
   R(`${g.mapDef?.id}: listed for the lead (SPEC D10.6: newly reachable spots are listed, not judged) — tops the nav graph doesn't reach that a dash ends on and no plain walk / hop from within 5 m (or the same climb) does: ${realLeaks.length}; with their block, its tag, the first landing's height over the start (judged in the line above) and where it came to rest (it may run on up a ramp or a stair after landing)`, true,
     { tops: realLeaks.slice(0, 24), topsAKidHopsOnto: hopOn.length });
   const downSeen = new Map(); for (const o of down) { const k = Math.round(o.to[0]) + ',' + Math.round(o.to[2]); if (!downSeen.has(k)) downSeen.set(k, o); }
