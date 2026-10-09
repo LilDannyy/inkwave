@@ -211,6 +211,7 @@
   // null when it never left the ground — a floor, a ramp, a stair). Over the bar, the same running hop from the same
   // start and heading (no dash) is asked first: when it comes down as high or higher, that height is the jump's (at 1/24
   // a running jump from a basin floor can step up a kerb in its first frame), not the dash's
+  let maxUpMove = null;   // (the highest first landing's start and heading: its plain hops are told beside it at the end)
   const judgeUp = (n, d, kind, r) => {
     if (r.landY == null) return;
     count.judgedUp++;
@@ -224,7 +225,7 @@
       }
     }
     if (upL > count.maxUp) {
-      count.maxUp = r2(upL);
+      count.maxUp = r2(upL); maxUpMove = { n, d };
       count.maxUpAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), startY: r2(r.y0), restedAt: r.pos ? [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)] : 'the sea', block: r.block ?? -1, tag: r.block >= 0 ? bTag(r.block) : null };
     }
   };
@@ -343,6 +344,13 @@
     else realLeaks.push(l);
   }
   count.stranded = realLeaks.length; count.strandedHopOn = hopOn.length; tm.tops = performance.now() - t4;
+  // beside the highest first landing: where a plain running hop from the same start comes down, the same heading and the
+  // best of 16 (over the same start height)
+  if (maxUpMove) {
+    const { n, d } = maxUpMove, h0 = move(n, d, 'h');
+    let best = -99; for (const dd of DIRS16) { const q = move(n, dd, 'h'); if (q && q.landY != null) best = Math.max(best, q.landY - q.y0); }
+    count.maxUpAt.plainHopSameHeading = h0 && h0.landY != null ? r2(h0.landY - h0.y0) : null; count.maxUpAt.plainHopBestOf16 = r2(best);
+  }
   for (const k in tm) tm[k] = Math.round(tm[k]);
   kid.setSub('bomb'); SUBS.dash.airDashDist = air0; LH = null; delete kid._integrate; delete kid.splat;
   for (const a of m.actors) { delete a.update; if (a.bot) delete a.bot.update; }
