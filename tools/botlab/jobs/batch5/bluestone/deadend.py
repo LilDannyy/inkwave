@@ -5,7 +5,7 @@
 # band |off| ≤ 15 along Flathead Street beyond along −20 (Bravo's is the mirror). The arm is cut at every 0.5 m of
 # along, one cross-section at a time (the band's cells there removed): the part beyond the cut is a DEAD END when it no
 # longer reaches the concourse. Prints the largest dead-end floor (m²) and where its cut is, per arm.
-import json, sys, numpy as np
+import json, sys, os, numpy as np
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 D = json.load(open(sys.argv[1])); RES = 0.5; X0, X1, Z0, Z1 = -64, 64, -86, 86
@@ -61,7 +61,11 @@ centre = idxL[0, int((0 - Z0) / RES), int((0 - X0) / RES)]
 print(f'floor {walkL.sum() * RES * RES:.0f} m2 (standable, every level, this build)')
 for name, sgn in (('Alpha', 1), ('Bravo', -1)):
     al = sgn * (GX * S65 + GZ * C65); off = sgn * (-GX * C65 + GZ * S65)
-    band = walk & (np.abs(off) <= 15) & (al <= -20)
+    # (fix round 3: BAND=tip — the band follows the arm's outline: |off| ≤ 15 out to along −40, then ≤ 10 on the narrowed
+    #  tip (off ±9.5), so the cut runs across the arm's own street and not along Prawn Alley's first metres, which leave
+    #  the tip's south edge at 47° to it; the default keeps the round-1/2 band, |off| ≤ 15 everywhere)
+    lim = np.where(al < -40, 10.0, 15.0) if os.environ.get('BAND') == 'tip' else 15.0
+    band = walk & (np.abs(off) <= lim) & (al <= -20)
     worst = (0.0, None)
     for a in np.arange(-20, -64, -0.5):
         cut = band & (al <= a) & (al > a - RES)

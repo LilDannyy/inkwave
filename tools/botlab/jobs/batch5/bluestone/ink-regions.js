@@ -11,17 +11,22 @@
   while (m.state === 'playing' && t < 180) { for (let k = 0; k < 15; k++) { g._skipRender = true; try { g._frame(DT); } catch (e) { /* */ } } g._skipRender = false; t += 0.25; }
   const S65 = Math.sin(65 * Math.PI / 180), C65 = Math.cos(65 * Math.PI / 180);
   const LY = await import('./src/world/stages/bluestone/layout.js'), G = await import('./src/world/stages/bluestone/ground.js');
+  // (fix round 3: the regions follow the round-3 layout — the hotel stairs count with the Halo; the garden is the grown
+  //  yard (lawn, walk) and its two stairs; the arm is split into its round-2 street (along −20 … −40: 'arm' |off| ≤ 9,
+  //  'arm-walks' beyond) and the restored tip ('arm-tip', along < −40, the terminus platform included))
+  const HS = LY.HOTEL_STAIR, TS = LY.TS;
+  const inTS = (x, z) => { if (!TS || !LY.alFrame) return false; const [t, s] = LY.alFrame(x, z); return t > TS.t0 - 0.6 && t < TS.t1 && s > TS.s0 && s < TS.s1; };
   const region = (x, y, z) => {
     if (z > 0) { x = -x; z = -z; }   // fold Bravo's half onto Alpha's
     const al = x * S65 + z * C65, off = -x * C65 + z * S65, r = Math.hypot(x, z);
-    if (G.inPoly(LY.ALLEY.quad, x, z)) return 'alley';
-    if (y > 2.4 && y < 3.2 && LY.YARD && G.inPoly(LY.YARD, x, z)) return 'garden';   // (fix round 2: the garden on the signal yard, and its two stairs)
-    if (y > 0.05 && y < 3.2 && Math.abs(off + 4.5) < 1.5 && al > -39.4 && al < -32.6) return 'garden';
-    if (y > 0 && y < 2.4 && LY.HOKI_STAIR && x > LY.HOKI_STAIR.x0 && x < LY.HOKI_STAIR.x1 && z > LY.HOKI_STAIR.zFoot && z < LY.HOKI_STAIR.zTop) return 'garden';
+    if (HS && x > HS.x0 - 0.2 && x < HS.x1 + 0.2 && z > HS.zFoot - 0.8 && z < HS.zLand + 0.2 && y > 2.3) return 'halo';
     if (y > 4.5 && r < 16) return 'halo';
+    if (LY.YARD && y > 0.5 && G.inPoly(LY.YARD, x, z)) return 'garden';
+    if (inTS(x, z) && y > 0.02) return 'garden';
+    if (G.inPoly(LY.ALLEY.floor || LY.ALLEY.quad, x, z)) return 'alley';
     if (!G.inPoly(LY.OUTLINE, x, z) && (x > 20 || z > -8)) return 'river-works';
     if (r <= 20) return 'circus';
-    if (Math.abs(off) <= 15 && al <= -20) return Math.abs(off) > 9 ? 'arm-walks' : 'arm';
+    if (Math.abs(off) <= 15 && al <= -20) return al < -40 ? 'arm-tip' : Math.abs(off) > 9 ? 'arm-walks' : 'arm';
     if (z <= -50) return 'base';
     if (Math.abs(x) <= 7) return 'swimston';
     return x < 0 ? 'west' : 'east';

@@ -28,13 +28,13 @@ out.groundMiss = LY.GROUND_MISS.length; out.bermMiss = PR.BERM_MISS.length;
 const holes = [];
 for (let x = -63; x <= 63; x += 0.25) for (let z = -85; z <= 85; z += 0.25) {
   // the outline, and Prawn Alley's floor (both halves; fix round 1) — 5 cm in from every edge
-  const inA = G.inPoly(LY.ALLEY.quad, x, z) && G.edgeDist(LY.ALLEY.quad, x, z) >= 0.05, mq = LY.ALLEY.quad.map(([a, b]) => [-a, -b]);
+  const AQ = LY.ALLEY.floor || LY.ALLEY.quad, inA = G.inPoly(AQ, x, z) && G.edgeDist(AQ, x, z) >= 0.05, mq = AQ.map(([a, b]) => [-a, -b]);   // (fix round 3: the alley's floor with its wedge)
   const inB = G.inPoly(mq, x, z) && G.edgeDist(mq, x, z) >= 0.05;
   if (!inA && !inB && (!G.inPoly(LY.OUTLINE, x, z) || G.edgeDist(LY.OUTLINE, x, z) < 0.05)) continue;
   const y = lvl.groundHeight(x, z, 60);
   if (y < -0.5) holes.push([x, z]);
 }
-out.holes = holes.length; out.holeSample = holes.slice(0, 12);
+out.holes = holes.length; out.holeSample = holes.slice(0, 12); if (process.env.HOLES) { const cl = []; for (const h of holes) { let c = cl.find((c) => Math.hypot(c.x - h[0], c.z - h[1]) < 2.5); if (!c) cl.push(c = { x: h[0], z: h[1], n: 0, x0: h[0], x1: h[0], z0: h[1], z1: h[1] }); c.n++; c.x0 = Math.min(c.x0, h[0]); c.x1 = Math.max(c.x1, h[0]); c.z0 = Math.min(c.z0, h[1]); c.z1 = Math.max(c.z1, h[1]); } out.holeClusters = cl; }
 // floor area by height (walkable tops: solid, not roof / rail / hidden; 0.5 m raster over the bounds, the highest top
 // with 1.8 m of clearance above it counts once per cell; tops above 30 m ignored)
 const bins = { '<0.5': 0, '0.5-1.1': 0, '1.1-2': 0, '2-3': 0, '3-4': 0, '4-6': 0 };

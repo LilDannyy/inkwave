@@ -96,22 +96,26 @@ const rail = (o = {}) => ({ rail: true, paint: false, color: '#333333', ...o });
 //  terrace's outer corners are cut back (the west edge V50 → (−20, −64), the east edge (25, −50) → (25.5, −60)), with the
 //  quay's line from the Plaice down to them)
 export const ARM_END = -56, ARM_S = -4.5, ARM_TIP = -40, ARM_W = 9.5;
+// the Signal Garden's mouth stair (the 3000s; its 1880s / today channel in the yard): along MS.a1 … MS.a0 on the arm's
+// yard edge, off ARM_S − 3 … ARM_S; its foot's outer corner on Prow Place's line (x −24), so the land outline turns
+// round its foot (the yard's old north-east tip by Prow Place is street now)
+export const MS = { a0: +((-24 + (ARM_S - 3) * Math.cos((65 * Math.PI) / 180)) / Math.sin((65 * Math.PI) / 180)).toFixed(4), a1: -36.3, o0: ARM_S - 3, o1: ARM_S };
 const zOnOff = (x, o) => +((o + x * C65) / S65).toFixed(4);                   // the z where the line off = o crosses x
 export const Q = {
   Q1: [-21.5, 5.42], R1: AO(ARM_TIP, 14), R2: AO(ARM_TIP, ARM_W), W1: AO(ARM_END, ARM_W), Q3: AO(ARM_END, -ARM_W),
-  R3: AO(ARM_TIP, -ARM_W), R4: AO(ARM_TIP, ARM_S), A: [-24, zOnOff(-24, ARM_S)], Q5: [-24, -33],
+  R3: AO(ARM_TIP, -ARM_W), R4: AO(ARM_TIP, ARM_S), A: [-24, zOnOff(-24, ARM_S)], MS1: AO(MS.a0, MS.o1), MS0: [-24, AO(MS.a0, MS.o0)[1]], Q5: [-24, -33],
   QW1: [-20, -64], QW2: [-20, -74.9091], Q8: [-16, -80], Q9: [16, -80], QE2: [22, -72.3636], QE1: [22, -64], QE0: [25.5, -60],
   Q12: [21.5, -30], Q13: [21.5, -5.42],
 };
 const V50 = [-26.04, -50], U50 = [25, -50];   // (the terrace's north corners on the viaduct and the quay)
-const CHAIN = [Q.Q1, Q.R1, Q.R2, Q.W1, Q.Q3, Q.R3, Q.R4, Q.A, Q.Q5, V50, Q.QW1, Q.QW2, Q.Q8, Q.Q9, Q.QE2, Q.QE1, Q.QE0, U50, Q.Q12];
+const CHAIN = [Q.Q1, Q.R1, Q.R2, Q.W1, Q.Q3, Q.R3, Q.R4, Q.MS1, Q.MS0, Q.Q5, V50, Q.QW1, Q.QW2, Q.Q8, Q.Q9, Q.QE2, Q.QE1, Q.QE0, U50, Q.Q12];
 const NCH = CHAIN.length;
 export const OUTLINE = symOutline(CHAIN);
 // kerb bars on the diagonal edges the street meets (edge i of the chain; its mirror is i + NCH): the arm's river edge
 // (−0.26: the boardwalk at −0.34 and the Iron Bridge at −0.43 tuck under Bravo's twin of it), the step in to the tip,
 // the tip's river edge, its end, its south edge (Prawn Alley's mouth), the step out to the yard edge, the arm's edge on
 // the signal yard, the viaduct, the quay
-const KERB = { 0: -0.26, 1: -0.18, 2: -0.26, 3: -0.18, 4: -0.09, 5: -0.18, 6: -0.09, 8: -0.18, 17: -0.09 };
+const KERB = { 0: -0.26, 1: -0.18, 2: -0.26, 3: -0.18, 4: -0.09, 5: -0.18, 6: -0.09, 7: -0.18, 9: -0.18, 18: -0.09 };
 const kerbAt = (i) => KERB[i % NCH];
 
 // ------------------------------------------------------------------------------------------------ the tiers
@@ -154,8 +158,6 @@ const groundPieces = [
   ...reflexPatches(TERRACE, { only: (i) => TERRACE_KERB[i] !== undefined && TERRACE_KERB[(i + TERRACE.length - 1) % TERRACE.length] !== undefined, top: 0.73, opts: ground({ tag: 'terrace-kerb' }) }),
   ...junctionPatches(TERRACE, { barred: (i) => TERRACE_KERB[i] !== undefined, level: (i) => TERRACE_KERB[i], opts: ground({ tag: 'terrace-kerb', color: '#5f666f' }) }),
   ...tierBoxes([P.carriage], 0, { tag: 'carriageway', color: K.granite, pattern: SURF.granite }),
-  // (fix round 2: a patch under the reflex corner A, where the arm's barred edge meets Prow Place's square edge)
-  B(-24, -23, BOT, -0.39, +(Q.A[1] - 0.6).toFixed(2), +(Q.A[1] + 0.5).toFixed(2), ground({ tag: 'kerb', color: '#535a63' })),
 ];
 
 // ------------------------------------------------------------------------------------------------ mid: the station
@@ -228,10 +230,10 @@ const MID = [
   // a glass side on its outer (west) edge, where the flight stands clear of the shelter (its bottom 3.4 m over the ring);
   // the inner side is open, a drop onto the ring (ENGINE rule 6's 160 blocks per jump)
   B(HOTEL_STAIR.x0, HOTEL_STAIR.x0 + 0.12, 3.4, HOTEL_STAIR.yTop + 1, -12.6, HOTEL_STAIR.zTop, rail({ tag: 'hotel-stair-glass', eras: '3', eraGroup: 'stair-w' })),
-  // the top landing (5.2: 0.1 under the 225° side, 0.2 under the 270° side it overlaps) on the light-pylon, its rails
+  // the top landing (5.2: 0.1 under the 225° side, 0.2 under the 270° side it overlaps) on the light-pylon, glass on its
+  // outer (west) side (its short north end is open: ENGINE rule 6's 160 blocks per jump)
   B(HOTEL_STAIR.x0, HOTEL_STAIR.x1, HOTEL_STAIR.yTop - 0.4, HOTEL_STAIR.yTop, HOTEL_STAIR.zTop, HOTEL_STAIR.zLand, { tag: 'hotel-stair-landing', color: K.glass, pattern: PATTERN.glasstile, eras: '3', eraGroup: 'pylon-w', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0]] }),
   B(HOTEL_STAIR.x0, HOTEL_STAIR.x0 + 0.12, HOTEL_STAIR.yTop, HOTEL_STAIR.yTop + 1, HOTEL_STAIR.zTop, HOTEL_STAIR.zLand, rail({ tag: 'hotel-stair-glass', eras: '3', eraGroup: 'pylon-w' })),
-  B(HOTEL_STAIR.x0 + 0.12, -14.6, HOTEL_STAIR.yTop, HOTEL_STAIR.yTop + 1, HOTEL_STAIR.zLand - 0.12, HOTEL_STAIR.zLand, rail({ tag: 'hotel-stair-glass', eras: '3', eraGroup: 'pylon-w' })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the Halo (the 3000s)
@@ -480,8 +482,12 @@ const YARD_Y = 0.9, GY = 2.68;
 const YB = AL(alT(2.5, fArm(-ARM_W)), 2.5), YC = AL(alT(2.5, fVia(0)), 2.5);
 // the tip stair's channel (TS: the alley frame) and its corners
 const TSP = { foot0: AL(TS.t0, TS.s0), foot1: AL(TS.t0, TS.s1), top1: AL(TS.t1, TS.s1), top0: AL(TS.t1, TS.s0) };
+// the MOUTH STAIR (the 3000s): in the yard along the arm's edge, off ARM_S … ARM_S − 3, from its foot at along −30 (by
+// the arm's mouth, 10 m from the circus, its outer corner on Prow Place's line) up west-south-west to along −36.3, where
+// the lawn is; the 1880s / today fill its channel (rule 19) and its fence faces the arm and the street at its foot
+const MSP = { foot1: Q.MS1, foot0: Q.MS0, top0: AO(MS.a1, MS.o0), top1: AO(MS.a1, MS.o1) };
 // the yard: the arm's edge (A → R4 → R3 → the tip stair's foot), round the tip stair's channel, the alley's edge, Hoki Lane
-export const YARD = [Q.A, Q.R4, Q.R3, TSP.foot1, TSP.top1, TSP.top0, YC, Q.Q5];
+export const YARD = [MSP.foot0, MSP.top0, MSP.top1, Q.R4, Q.R3, TSP.foot1, TSP.top1, TSP.top0, YC, Q.Q5];
 // the Hoki stair: x −27 … −24 (against Hoki Lane), from its foot at z −25 (Prow Place's south-west corner) up SOUTH to
 // z −31, where the walk turns along the alley's edge
 export const HOKI_STAIR = { x0: -27, x1: -24, zFoot: -25, zTop: -31 };
@@ -525,6 +531,7 @@ const YARD_FENCE = (() => {
     // (no fence where the yard meets the tip stair's channel: its north side and its top end)
     const onTS = (P) => { const [x, z] = P, q = Q.Q3, tt = (x - ALY_A0[0]) * ALY_C[0] + (z - ALY_A0[1]) * ALY_C[1], ss = (x - ALY_A0[0]) * ALY_N[0] + (z - ALY_A0[1]) * ALY_N[1]; return tt > TS.t0 - 0.05 && tt < TS.t1 + 0.05 && ss > TS.s0 + 0.05 && ss < TS.s1 + 0.05; };
     if (onTS(m)) continue;
+    { const al = along(m[0], m[1]), of = offOf(m[0], m[1]); if (al < MS.a0 + 0.05 && al > MS.a1 - 0.05 && of < MS.o1 - 0.05 && of > MS.o0 - 0.05) continue; }   // (the mouth stair's channel)
     const onStair = Math.abs(a[0] - HS.x1) < 0.2 && Math.abs(b[0] - HS.x1) < 0.2 && Math.min(a[1], b[1]) > HS_Z0 - 0.2 && Math.max(a[1], b[1]) < HS_Z1 + 0.2;
     const h = i === yp.length - 1 && i % 2 === 0 ? 1.16 : i % 2 ? 1.4 : 1.28;   // (alternate: corner pieces never share a top)
     fenceSeg(a, b, inw, h, onStair ? { eras: '12', eraGroup: 'garden-hs' } : {}, out);
@@ -532,6 +539,9 @@ const YARD_FENCE = (() => {
   // the tip stair's channel (the 1880s, today): its foot and its alley side
   fenceSeg(TSP.foot0, TSP.foot1, ALY_C, 1.4, { eras: '12', eraGroup: 'garden-ts' }, out);
   fenceSeg(TSP.foot0, TSP.top0, ALY_N, 1.28, { eras: '12', eraGroup: 'garden-ts' }, out);
+  // the mouth stair's channel: its side on the arm
+  fenceSeg(MSP.foot1, MSP.top1, [C65, -S65], 1.28, { eras: '12', eraGroup: 'garden-ms' }, out);
+  fenceSeg(MSP.foot1, MSP.foot0, [-S65, -C65], 1.4, { eras: '12', eraGroup: 'garden-ms' }, out);
   return out;
 })();
 const YARD_SLAB = (() => {
@@ -546,6 +556,7 @@ const YARD_SLAB = (() => {
     // the two stairs' channels, filled in the 1880s and today (each in its stair's group: the stair appears inside, rule 19)
     B(HS.x0, HS.x1, BOT, YARD_Y, HS_Z0, HS_Z1, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: 'garden-hs' }),
     alBox(TS.t0, TS.t1, TS.s0, TS.s1, BOT, YARD_Y, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: 'garden-ts' }),
+    armBox(MS.a1, MS.a0, MS.o0, MS.o1, BOT, YARD_Y, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: 'garden-ms' }),
     ...YARD_FENCE,
   ];
 })();
@@ -564,7 +575,7 @@ const SIGNAL_GARDEN = (() => {
   //  fewer blocks than one per tile, ENGINE rule 6; the alley's edge in thirds)
   const mid = (P, R) => [+((P[0] + R[0]) / 2).toFixed(4), +((P[1] + R[1]) / 2).toFixed(4)];
   const lerp = (P, R, f) => [+(P[0] + (R[0] - P[0]) * f).toFixed(4), +(P[1] + (R[1] - P[1]) * f).toFixed(4)];
-  const ge = [Q.A, mid(Q.A, Q.R4), Q.R4, Q.R3, TSP.foot1, TSP.top1, TSP.top0, lerp(TSP.top0, YC, 1 / 3), lerp(TSP.top0, YC, 2 / 3), YC, Q.Q5];
+  const ge = [MSP.foot0, MSP.top0, MSP.top1, Q.R4, Q.R3, TSP.foot1, TSP.top1, TSP.top0, lerp(TSP.top0, YC, 1 / 3), lerp(TSP.top0, YC, 2 / 3), YC, Q.Q5];
   const diag = (i) => { const a = ge[i], b = ge[(i + 1) % ge.length]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
   for (const d of bars(ge, { only: diag, trim: true, level: (i) => GY - 0.1 - 0.09 * (i % 2), y0: YARD_Y - 0.1, opts: lawn('') })) { d.eraGroup = tileOf(d.center[0], d.center[2]); out.push(d); }
   // (fix round 3: no rails — every edge of the garden is a drop onto the street (2.68 m, a nav drop): the arm, the alley,
@@ -575,7 +586,10 @@ const SIGNAL_GARDEN = (() => {
     // (a thin flight keeps the group within 8 m, ENGINE rule 3; 1.2 m thick, so nobody fits under its top end)
     out.push(R([lx, 0.0, lz], [hx, GY, hz], TS.s1 - TS.s0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-ts', thin: true, thickness: 1.2 })); }
   // cover on the lawn and the walk: planters (roof: nobody stands on them, so no top sees over the rails), 1.2 m
-  for (const [x, z, w, d] of [[-29.6, -21.4, 1.2, 2.4], [-29.0, -26.8, 2.4, 1.2], [-29.0, -32.4, 1.2, 1.2]]) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
+  // the mouth stair (fix round 3: the garden's way up from the arm's mouth, where the bots are)
+  { const om = (MS.o0 + MS.o1) / 2, [lx, lz] = AO(MS.a0, om), [hx, hz] = AO(MS.a1, om);
+    out.push(R([lx, 0.0, lz], [hx, GY, hz], MS.o1 - MS.o0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-ms', thin: true, thickness: 1.2 })); }
+  for (const [x, z, w, d] of [[-27.0, -23.6, 1.2, 2.0], [-29.0, -32.4, 1.2, 1.2]]) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
   return out;
 })();
 
