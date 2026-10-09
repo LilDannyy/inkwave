@@ -42,8 +42,8 @@
 //  - hud: holding the sub shows the guide (the ghost and the 11 m ring; team colour when good, grey + × when not); the
 //    life ring on the badge runs down; the minimap draws it;
 //  - tower (MODE=tower): the tower's body crushes it ('device:down' how 'crush', [2, gid, 2]); on the deck it rides and
-//    fires; a rider bot sets one on the deck;
-//  - zones (MODE=zones): a guard bot sets one down at its zone;
+//    fires; a rider bot on the deck decides to set one down (its bot.paint) and the press / release puts it on the deck;
+//  - zones (MODE=zones): a guard by its held zone's edge, facing their side, decides to set one down and does (by the edge);
 //  - boss (MODE=boss, PAGE_ARGS='only=boss'): it targets the boss / a crablet and its rounds hit it (G.boss.segHit).
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
@@ -731,16 +731,23 @@
         R(`the moving tower's body crushes a sentry in its way (${seenAt} m on; 'device:down' how 'crush', [2, gid, 2])`, inWay && inWay.state === 'dead' && seenAt != null && dn.length >= 1 && recs(inWay.gid, 2).some((x) => x[2] === 2), { seenAt, events: dn.length, recs: inWay && recs(inWay.gid, 2) });
         R(`one set down on its deck rides it (${ride0}; drift ${drift} m over ${r2(T.s - s0)} m) and keeps firing (${since(e0, 'sentry:fire').filter((e) => e.obj === onDeck).length} rounds), never crushed`, onDeck && onDeck.state === 'watch' && ride0 === 'tower' && drift < 0.06 && since(e0, 'sentry:fire').some((e) => e.obj === onDeck), { ride0, drift, state: onDeck && onDeck.state });
       } finally { T._rules = rules0; netOff(); logHits(false); }
-      // a rider bot sets one down on the deck
+      // a rider bot sets one down on the deck: its own decision (bot.paint: a rider on the deck, no teammate's sentry
+      // there, 2 % a frame — the way out from the pillar to its deck's ring) and the press / release _tail makes of it
       reset();
-      const X = mates[0] || me === m.local ? mates[0] : null;
+      const X = mates[0];
       if (X) {
-        X.setSub('sentry'); X.ink = PLAYER.inkMax; unstub(X);
-        X.pos.set(T.pos.x + 0.5, T.top + 0.05, T.pos.z + 0.5); X.vel.set(0, 0, 0);
-        let got = null;
-        step(12, () => { X.ink = PLAYER.inkMax; const it = K.items.find((x) => x.owner === X && x.state !== 'dead'); if (it) { got = it; return false; } });
-        stub(X);
-        R(`a Tower Command rider bot sets one down on the deck (${got ? got.rb.on?.b.tag || 'not riding' : 'none in 12 s'}; role ${X.bot.tRole})`, got && got.rb.on && got.rb.on.b.tag === 'tower', { role: X.bot.tRole, got: !!got });
+        X.setSub('sentry'); X.ink = PLAYER.inkMax;
+        const deck2 = (lx, lz) => { const c = Math.cos(T.yaw), sn = Math.sin(T.yaw); return V(T.pos.x + c * lx + sn * lz, T.top, T.pos.z - sn * lx + c * lz); };
+        hook = () => { const p = deck2(0.35, 0.3); X.pos.set(p.x, p.y + 0.02, p.z); X.vel.set(0, 0, 0); X.grounded = true; X.ink = PLAYER.inkMax; };
+        step(0.4);
+        X.bot.tRole = 'ride';
+        const onDeck = !!T.riderList?.includes(X);
+        let went = false, n = 0;
+        for (; n < 900 && !went; n++) went = K.bot.paint(X.bot);
+        X._int = (it) => { it.sub = true; }; step(2 / 60); X._int = null; step(3 / 60);
+        hook = null;
+        const got = K.items.find((x) => x.owner === X && x.state !== 'dead');
+        R(`a Tower Command rider bot on the deck (${onDeck}) decides to set one down (after ${n} frames at 2 %) and does: ${got ? got.rb.on?.b.tag || 'not riding' : 'none'} (bombCd ${r2(X.bot.bombCd)} s after)`, onDeck && went && got && got.rb.on && got.rb.on.b.tag === 'tower' && X.bot.bombCd >= 10, { onDeck, went, n, got: !!got });
       }
     }
 
@@ -766,22 +773,35 @@
 
     // ============================================================================================ Zone Control
     if (want('zones') && m.zones) {
+      // a guard of a zone its team holds, by its edge, facing the other side: its own decision (bot.paint: 1.5 % a frame)
+      // and the press / release _tail makes of it — the sentry by the zone, toward their side
       reset();
-      // our team holds the live zone (flooded with our ink; the other team parked at its pad): its bots guard it
-      for (const z of m.zones.active.zones) m.zones._zoneOwner(z, me.team);
-      for (const a of m.actors) if (a !== me && a.team === me.team) a.setSub('sentry');
-      for (const a of m.actors) if (a.bot && a !== me && a.team === me.team) unstub(a);
-      let got = null, by = null;
-      const seen = {}, calls = { paint: 0, guard: 0 }, pt0 = K.bot.paint;
-      K.bot.paint = (b) => { calls.paint++; if (b.zRole === 'guard') calls.guard++; return pt0(b); };
-      step(60, (i) => { for (const a of m.actors) a.ink = PLAYER.inkMax;
-        if (i % 120 === 0) for (const a of m.actors) if (a.bot && a.team === me.team && a !== me) { const z = m.zones.zones[a.bot.zZone]; (seen[a.nid ?? a.name] ||= []).push([a.bot.zRole, a.bot.mode, z ? r2(Math.hypot(a.pos.x - z.center[0], a.pos.z - z.center[2]) - (z.reach || 0)) : null, r2(a.bot.bombCd)]); }
-        const it = K.items.find((x) => x.state !== 'dead' && x.owner.bot?.zRole === 'guard'); if (it) { got = it; by = it.owner; return false; } });
-      K.bot.paint = pt0;
-      for (const a of m.actors) stub(a);
-      let edge = null;
-      if (got) { const z = m.zones.zones[by.bot.zZone]; edge = z ? r2(Math.hypot(got.pos.x - z.center[0], got.pos.z - z.center[2]) - (z.reach || 0)) : null; }
-      R(`a Zone Control guard bot sets one down by its zone (${got ? `${edge} m from its edge` : 'none in 60 s'})`, got && edge != null && Math.abs(edge) <= 7, { edge, role: by && by.bot.zRole, calls, uses: SEN.SENTRY_STATS.botUses, roles: Object.fromEntries(Object.entries(seen).map(([k, v]) => [k, [...new Set(v.map((x) => x[0]))]])) });
+      const Z = m.zones, act = Z.active.zones[0], zi = Z.zones.indexOf(act), b = mate.bot;
+      for (const z of Z.active.zones) Z._zoneOwner(z, me.team);
+      mate.setSub('sentry'); mate.ink = PLAYER.inkMax;
+      const ep = pad(1 - mate.team), cx = act.center[0], cz = act.center[2], base = Math.atan2(ep.x - cx, ep.z - cz);
+      let spot = null;
+      for (const da of [0, 0.4, -0.4, 0.8, -0.8, 1.2, -1.2]) for (const dr of [-1.5, -3, 0.5, -4.5, 2]) {
+        if (spot) break;
+        const r = (act.reach || 5) + dr, x = cx + Math.sin(base + da) * r, z = cz + Math.cos(base + da) * r, y = L.groundHeight(x, z, act.center[1] + 3);
+        if (y === -Infinity) continue;
+        put(mate, V(x, y, z), Math.atan2(ep.x - x, ep.z - z));
+        if (K._findSpot(mate, SUBS.sentry).ok) spot = V(x, y, z);
+      }
+      let went = false, n = 0, got = null;
+      if (spot) {
+        const yw = Math.atan2(ep.x - spot.x, ep.z - spot.z);
+        hook = () => { put(mate, spot, yw); mate.ink = PLAYER.inkMax; };
+        step(0.1);
+        b.zRole = 'guard'; b.zZone = zi;
+        for (; n < 900 && !went; n++) went = K.bot.paint(b);
+        mate._int = (it) => { it.sub = true; }; step(2 / 60); mate._int = null; step(3 / 60);
+        hook = null;
+        got = K.items.find((x) => x.owner === mate && x.state !== 'dead');
+      }
+      const edge = got ? r2(Math.hypot(got.pos.x - cx, got.pos.z - cz) - (act.reach || 0)) : null;
+      const toward = got ? (ep.x - got.pos.x) * Math.sin(got.headYaw) + (ep.z - got.pos.z) * Math.cos(got.headYaw) > 0 : false;
+      R(`a Zone Control guard by its held zone's edge decides to set one down (after ${n} frames at 1.5 %) and does: ${got ? `${edge} m from the edge, facing their side (${toward})` : 'none'}`, !!spot && went && got && Math.abs(edge) <= 6.5 && toward, { spot: spot && v2(spot), went, n, edge, toward });
     }
   } catch (e) { R('HARNESS ' + e.message, false, (e.stack || '').split('\n').slice(0, 4)); }
   finally {
