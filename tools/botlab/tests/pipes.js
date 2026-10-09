@@ -639,6 +639,7 @@
   if (part('bots')) try {
     W = __G.pipes; M = g.match; P = M.pipes;
     for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
+    P._errT = Infinity; P._errand = null;   // (the tide's errand would send these bots to the Kelp Line: it has its own check below)
     const bot = M.actors.find((a) => a.bot && !a.isLocal && a.team === 0);
     const gl = P.legs.find((l) => l.id === 'gulper'), eE = gl.ends[0], eW = gl.ends[1];
     // a bot with its goal 2 m past the Gulper's west landing rides it from the east approach
@@ -699,8 +700,56 @@
       }
     }
     R('bots: every open leg and direction, a bot of either team plans the pipe and rides it (no side is harder for bots)', every.every((x) => x[3] && x[4]), { 'leg, dir, team, planned, rode': every });
+    // reasons to ride (LEAD-REVIEW round 1 item 3): a paint goal across a pipe weighs more for a bot by its IN end (×1.7,
+    // a Kelp Line ×2.4), never for one that saw enemies at that landing, never for a goal it can walk to as easily
+    {
+      for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; }
+      const b3 = M.actors.find((a) => a.bot && !a.isLocal && a.team === 0);
+      b3.bot.sight?.mem.clear(); P.badKey.clear();
+      const near = (pos) => __G.nav.nearest(new THREE.Vector3(...pos), 1.5);
+      const weigh = (id) => { P.botHold(b3.bot); P._trips = null; return P.goalWeight(id); };
+      put(b3, [eE.approach[0] + 1.0, eE.approach[1], eE.approach[2]]);
+      const wGul = weigh(near(eW.land)), wHere = weigh(near([eE.land[0] + 2, eE.land[1], eE.land[2]]));
+      const kOpen = P.legs.filter((l) => l.flip).flatMap((l) => l.ends).find((e) => P.open(e) && Math.sign(e.pos[2]) === Math.sign(__G.level.spawnPads[0].z));
+      const kTo = P.legs[kOpen.leg].ends[1 - kOpen.k];
+      put(b3, [kOpen.approach[0] + kOpen.out[0] * 6, kOpen.approach[1], kOpen.approach[2] + kOpen.out[2] * 6]);
+      const wKelp = weigh(near(kTo.land));
+      const k3 = b3.bot.sight._k(E1); k3.pos.set(kTo.land[0] + 1, kTo.land[1], kTo.land[2]); k3.t = __G.time; k3.seen = true;
+      const wKelpWatched = weigh(near(kTo.land));
+      b3.bot.sight.mem.clear();
+      R('bots: a paint goal across a pipe weighs more for a bot by its IN end (Gulper ×1.7, Kelp Line ×2.4); not a goal it can walk to as easily, not a landing it saw enemies at',
+        Math.abs(wGul - 1.7) < 1e-6 && wHere === 1 && Math.abs(wKelp - 2.4) < 1e-6 && wKelpWatched === 1, { wGul, wHere, wKelp, wKelpWatched });
+      // the tide's errand: no Kelp ride by its team in this phase → its painting bot nearest the open Kelp IN end is sent
+      // and rides
+      for (const o of M.actors) if (o !== b3 && o.alive) { o.alive = false; o.respawnTimer = 999; o._parked = true; }
+      P.stats.kelpPhase = []; P._errand = null; b3.bot.mode = 'paint'; b3.ink = 100; b3.hp = 100;
+      put(b3, [kOpen.approach[0] + kOpen.out[0] * 8, kOpen.approach[1], kOpen.approach[2] + kOpen.out[2] * 8]);
+      const wasPlaying = M.playing; M.playing = () => true;
+      P._errands(); P._errT = 1;
+      const sent = P._errand?.[0]?.b === b3.bot && P._pathUses(b3.bot, kOpen.leg * 2 + kOpen.k);
+      let rodeK = false; runBot(b3.bot, 8, () => { if (b3.pipe && b3.pipe.leg === kOpen.leg) rodeK = true; return rodeK; });
+      delete M.playing; void wasPlaying; P._errT = Infinity; P._errand = null;
+      if (b3.pipe) P._abort(b3, 'test');
+      for (const o of M.actors) if (o._parked) { delete o._parked; o.respawn(); o.invuln = 0; }
+      R('bots: the tide\'s errand: while its team has not ridden the open Kelp Line this phase, its painting bot nearest the IN end is sent to the landing and rides the line',
+        sent && rodeK, { sent, rodeK, errand: !!P._errand?.[0], stats: P.stats.errands });
+      // a riding bot looks out of the exit in the steer window: an enemy in plain sight beside the landing → it steers
+      // the pop away from it (a player sees the same in the exit shot)
+      for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; }
+      const side = [-eW.out[2], 0, eW.out[0]];
+      put(E1, [eW.land[0] + side[0] * 1.8, eW.land[1], eW.land[2] + side[2] * 1.8]); E1.alive = true; E1.hp = 100;
+      put(bot, [eE.approach[0], eE.approach[1], eE.approach[2]]); P.debugRide(bot, 'gulper', 0);
+      let popYaw = null; for (let i = 0; i < 200 && bot.pipe && popYaw === null; i++) { dbg.step(1000 / 60); if (bot.pipe?.phase === 'pop') popYaw = bot.pipe.popYaw; }
+      const base = Math.atan2(eW.out[0], eW.out[2]);
+      let dYaw = (popYaw ?? base) - base; while (dYaw > Math.PI) dYaw -= 2 * Math.PI; while (dYaw < -Math.PI) dYaw += 2 * Math.PI;
+      const awayYaw = Math.atan2(-side[0], -side[2]); let dAway = awayYaw - base; while (dAway > Math.PI) dAway -= 2 * Math.PI; while (dAway < -Math.PI) dAway += 2 * Math.PI;
+      rideOut(bot);
+      R('bots: a riding bot that sees an enemy beside the landing from the mouth steers its pop away from it (up to 45°)', popYaw !== null && Math.abs(dYaw) > 0.3 && Math.sign(dYaw) === Math.sign(dAway), { dYawDeg: Math.round(dYaw * 57.3), awayDeg: Math.round(dAway * 57.3) });
+      put(E1, [0, 0, 60]);
+    }
     // the tidal leg's both directed specs exist from load, the closed one masked
     const kl = P.legs.find((l) => l.id === 'kelp'), kk = [kl.i * 2, kl.i * 2 + 1];
+    P._errT = 0;
     R('bots: both directed Kelp edges exist from load; the closed direction is masked (Infinity) by the tide', W.edgeKeys.has(kk[0]) && W.edgeKeys.has(kk[1]) && (P.keyShut[kk[0]] !== P.keyShut[kk[1]]), { has: kk.map((k) => W.edgeKeys.has(k)), shut: kk.map((k) => P.keyShut[k]) });
   } catch (err) { R('ERROR in a part: ' + err.message, false, String(err.stack).split('\n').slice(0, 4)); }
 

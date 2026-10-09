@@ -23,6 +23,7 @@ import { registerStageMod } from './stageMods.js';
 import { Level } from '../world/level.js';
 import { registerReveal } from './reveal.js';
 import { KIT_GHOSTS, netRec } from './kits/registry.js';
+import { Hit } from './physics.js';
 import { expandPipes, legAt, nearestOnLeg, pipeColliderDefs, tideAt, endIsIn, inWaterVol, polyDist, PIPE as PD } from '../world/pipes-data.js';
 import { PipeLooks } from '../fx/pipesFx.js';
 import { PipesHud } from '../ui/hud-pipes.js';
@@ -43,7 +44,9 @@ export const PIPES = {
   refuseShow: 1.5,                     // s a refusal line stays up
   promptR: 2.5,                        // m: "Walk in to ride → …" within this of an open IN end, facing it
   apron: { deep: 2.0, wide: 2.4, land: 1.5 },   // the device aprons: the IN apron in front of each mouth, a disc on each landing
-  bot: { seen: 20, ink: 8, bad: 60, badT: 5, push: 2.0, seenT: 3, seenR: 7 },
+  bot: { seen: 20, ink: 8, bad: 60, badT: 5, push: 2.0, seenT: 3, seenR: 7,
+         trip: 13, tripKelp: 20, tripR: 9, tripGain: 10, tripW: 1.7, tripWKelp: 2.4,   // (paint goals across a pipe: goalWeight)
+         errand: 30, popLook: 12 },                                                                   // (the tide's errand: _errands)
 };
 export const REFUSE = {
   oneway: 'One way: this end is the exit',
@@ -217,7 +220,7 @@ export class StagePipes {
     Object.assign(this.stats, { deaths: 0, deathsAfterLand: 0, pushMax: 0, giveUps: 0, botRides: 0, playT: 0 });
     this.unsubs = [
       on('actor:removed', (e) => this._removed(e && e.actor)),
-      on('splatted', (e) => { const v = e && e.victim; if (!v || !this.m.playing()) return; this.stats.deaths++; const lt = this.lastLand.get(v); if (lt !== undefined && this.t - lt < 2) this.stats.deathsAfterLand++; }),
+      on('splatted', (e) => { const v = e && e.victim; if (!v || !this.m.playing()) return; this.stats.deaths++; const lt = this.lastLand.get(v); if (lt !== undefined && this.t - lt < 2) { this.stats.deathsAfterLand++; const x = this.lastExit?.get(v); if (x !== undefined) { const pe = this.stats.perExit || (this.stats.perExit = {}); (pe[x] || (pe[x] = [0, 0]))[1]++; } } }),
     ];
     this.loops = new Map();      // actor → ride whoosh loop
     this.rideCam = new RideCam(this);
@@ -316,6 +319,7 @@ export class StagePipes {
     this._tideSync(t, false);
     if (!this.started && this.m.state === 'playing') { this.started = true; this.hudUi?.start(); }
     if (this.m.state === 'playing') this.stats.playT += dt;
+    if ((this._errT = (this._errT || 0) - dt) <= 0) { this._errT = 1; this._errands(); }
     if (STATS_Q && !this._reported && this.started && this.m.state !== 'playing' && this.m.state !== 'intro') { this._reported = true; this._report(); }
     // (the grade only while the ride camera runs: it sets it each frame from its lens)
     if (this.W.looks?.rideVol && !this.rideCam.st) { this.camInWater = false; this.W.looks.underwater(null); }
@@ -411,9 +415,11 @@ export class StagePipes {
     if (!rebased) {
       this.stats.rides[leg.id][(dir > 0 ? 0 : 2) + (a.team ? 1 : 0)]++;
       this.stats.team[a.team ? 1 : 0]++;
+      if (leg.flip) { const n = this.tide.get(leg.i)?.n ?? 0, kp = this.stats.kelpPhase || (this.stats.kelpPhase = []); (kp[n] || (kp[n] = [0, 0]))[a.team ? 1 : 0]++; }
       this.rides++;
       if (a.isLocal) { this.stats.firstRides++; this.myRides = (this.myRides || 0) + 1; }
-      if (a.bot) { this.stats.botRides++; const pp = this.push.get(a.bot); if (pp) { this.stats.pushMax = Math.max(this.stats.pushMax, G.time - pp.t0); this.push.delete(a.bot); } }
+      if (a.bot && this._errandKey(a.bot) === leg.i * 2 + e.k) this.stats.errandRides = (this.stats.errandRides || 0) + 1;
+      if (a.bot) { this.stats.botRides++; const pp = this.push.get(a.bot); if (pp) { if (G.time - pp.last < 0.5) this.stats.pushMax = Math.max(this.stats.pushMax, G.time - pp.t0); this.push.delete(a.bot); } }   // (a push record left over from an earlier visit is not this push)
       G.audio?.play('pipe_suck', { pos: _v.fromArray(e.pos), volume: a.isLocal ? 0.9 : 0.6 });
     } else this._light(p, a);
     this.events.push(['pipe:enter', { nid: a.nid, leg: leg.i, k: e.k, rebased }]);
@@ -478,6 +484,7 @@ export class StagePipes {
     const left = (L - u) / p.v;
     // the steer window: the move input held in the last 0.5 s picks the pop heading (±45°), jump held a high pop
     if (own && left <= PIPES.pop.steerWin) {
+      if (a.bot && !p.botAimed) { p.botAimed = true; this._botPop(a, p); }
       const mv = a.intent.move, mm = Math.hypot(mv.x, mv.z);
       if (mm > 0.3) { p.steerX = mv.x / mm; p.steerZ = mv.z / mm; p.steerOn = true; }
       if (a.intent.jump) p.high = true;
@@ -583,6 +590,8 @@ export class StagePipes {
     }
     this.stats.landings.push([+this.t.toFixed(2), a.nid ?? -1, a.team, r3(a.pos.x), r3(a.pos.y), r3(a.pos.z), p.exit]);
     this.lastLand.set(a, this.t);
+    (this.lastExit || (this.lastExit = new Map())).set(a, p.exit);
+    { const pe = this.stats.perExit || (this.stats.perExit = {}); (pe[p.exit] || (pe[p.exit] = [0, 0]))[0]++; }
     this.events.push(['pipe:land', { nid: a.nid, end: p.exit }]);
     emit('pipe:land', { actor: a, pos: a.pos.clone() });
   }
@@ -768,17 +777,134 @@ export class StagePipes {
     const d = Math.hypot(a.pos.x - from.approach[0], a.pos.z - from.approach[2]);
     let c = 0;
     if (a.hp < PLAYER.hp * 0.45 && a.lastDamage < 1.5 && d < 6) c -= 6;
-    if (leg.flip && k === 1 && d < 10) c -= 3;
+    if (leg.flip && d < 12) c -= 3;   // (a Kelp Line from close by, whichever way the tide runs: UP from the Reef Hall, DOWN from the promenade)
     if (leg.way === 'one' && d < 12 && Math.sign(a.pos.z) === Math.sign(G.level?.spawnPads?.[a.team]?.z || 0)) c -= 3;
+    // DESIGN.md §3.8: a bot holding its side zone prefers the Arch Line to reach its promenade (and back): in Zone Control,
+    // a two-way leg of its own half (not the Gulper Run under mid) from close by
+    if (this.m.mode === 'zones' && leg.way === 'two' && !leg.single && d < 10 && Math.sign(from.pos[2]) === Math.sign(G.level?.spawnPads?.[a.team]?.z || 0)) c -= 4;
+    if (this._errandKey(b) === leg.i * 2 + k) c -= 6;   // (the tide's errand)
     return c;
   }
+  // the tide's errand (DESIGN.md §3.8; LEAD-REVIEW round 1: the Kelp Lines went almost unridden): while a team has not
+  // ridden its open Kelp Line in this tide phase, its free painting bot nearest that IN end (within 30 m) is sent to the
+  // line's landing, which A* reaches by the Kelp Line (the errand's key also costs 6 less); after 12 s without a ride the
+  // errand passes to another bot. Host side (bots are the host's); nothing goes on the wire.
+  _errands() {
+    if (!this.tidal.length || !this.m.playing() || this.m.attract || this.m.mode === 'tower' || !G.nav) return;
+    const now = G.time, kp = this.stats.kelpPhase || [], E = this._errand || (this._errand = [null, null]);
+    for (const team of [0, 1]) {
+      const pad = G.level?.spawnPads?.[team];
+      const e = pad && this.ends.find((x) => this.legs[x.leg].flip && this.open(x) && Math.sign(x.pos[2]) === Math.sign(pad.z));
+      const s = e && this.tide.get(e.leg);
+      if (!e || (kp[s.n]?.[team] || 0) > 0) { E[team] = null; continue; }
+      const cur = E[team];
+      if (cur && cur.e === e && cur.until > now && cur.b.a.alive && !cur.b.a.pipe) {
+        // (still on it: back on the way if a fight or a refill took it off, once it paints again)
+        if (cur.b.mode === 'paint' && !this._pathUses(cur.b, cur.key)) { const to = this.legs[e.leg].ends[1 - e.k]; cur.b._pathTo?.(_v.set(to.land[0], to.land[1], to.land[2]), 0.6); cur.b.goalTimer = 9; }
+        continue;
+      }
+      let best = null, bd = PIPES.bot.errand;
+      for (const a of this.m.actors) {
+        const b = a.bot;
+        if (!b || a.remote || a.team !== team || !a.alive || a.pipe || a.carry || (a.specialActive && !a.specialActive.free) || a.pipeCd > 0 || b.mode !== 'paint') continue;
+        if (cur && cur.b === b && cur.e === e) continue;   // (the last one didn't make it: someone else)
+        if (this._landWatched(b, this.legs[e.leg].ends[1 - e.k])) continue;   // (not into enemies it saw there)
+        const d = Math.hypot(a.pos.x - e.approach[0], a.pos.z - e.approach[2]);
+        if (d < bd && Math.abs(a.pos.y - e.floorY) < 3) { bd = d; best = b; }
+      }
+      if (!best) { if (cur && cur.until <= now) E[team] = null; continue; }
+      const to = this.legs[e.leg].ends[1 - e.k];
+      E[team] = { b: best, e, key: e.leg * 2 + e.k, until: now + 12 };
+      this.stats.errands = (this.stats.errands || 0) + 1;
+      (this.stats.errandLog || (this.stats.errandLog = [])).push([+this.S.clock.t.toFixed(0), team, +bd.toFixed(0)]);
+      best._pathTo?.(_v.set(to.land[0], to.land[1], to.land[2]), 0.6);
+      best.goalTimer = 9;
+    }
+  }
+  // this bot saw (or located) an enemy within 7 m of end `to`'s landing in the last 3 s (its own sight memory only)
+  _landWatched(b, to) {
+    const mem = b.sight?.mem, B = PIPES.bot, tnow = G.time;
+    if (mem) for (const [e, kn] of mem) { if (!e.alive || tnow - kn.t > B.seenT) continue; if (Math.hypot(kn.pos.x - to.land[0], kn.pos.z - to.land[2]) < B.seenR) return true; }
+    return false;
+  }
+  _pathUses(b, key) {
+    const P = b.path, nav = G.nav;
+    if (!P || !nav) return false;
+    for (let i = Math.max(1, b.pi | 0); i < P.length; i++) { const e = nav.edge(P[i - 1], P[i]); if (e && e.type === 'pipe' && e.key === key) return true; }
+    return false;
+  }
+  _errandKey(b) { const E = this._errand; if (!E) return -1; const x = E[b.a.team ? 1 : 0]; return x && x.b === b && x.until > G.time ? x.key : -1; }
   _markBad(b, e) {
     let m = this.badKey.get(b);
     if (!m) this.badKey.set(b, (m = new Map()));
     m.set(e.leg * 2 + e.k, G.time + PIPES.bot.badT);
   }
-  // hold the bot while it rides and pops (bots never steer a pop: they land on the predicted landing node)
-  botHold(b) { return !!b.a.pipe; }
+  // a riding bot's pop (the steer window opens): it looks out of the exit as a player's exit shot does — enemies standing
+  // within 12 m of the landing in plain sight of the mouth — and steers the pop (±45°) to the side farthest from them,
+  // high when one is within 5 m of the plain landing; nobody in sight: the plain pop onto the landing node (its path
+  // continues from wherever it lands)
+  _botPop(a, p) {
+    const e = this.ends[p.exit], L = G.level, B = PIPES.bot;
+    const eye = _w.set(e.pos[0] + e.out[0] * 0.6, e.floorY + 2.2, e.pos[2] + e.out[2] * 0.6), seen = [];
+    for (const o of this.m.actors) {
+      if (o.team === a.team || !o.alive || o.pipe || o.pipeNet) continue;
+      if (Math.hypot(o.pos.x - e.land[0], o.pos.z - e.land[2]) > B.popLook || Math.abs(o.pos.y - e.land[1]) > 4) continue;
+      _v.set(o.pos.x, o.pos.y + 0.8, o.pos.z);
+      if (G.physics && G.physics.segment(eye, _v, this._hit || (this._hit = new Hit()), true).hit) continue;
+      seen.push([o.pos.x, o.pos.z]);
+    }
+    this.stats.botPopLooks = (this.stats.botPopLooks || 0) + 1;
+    if (!seen.length) return;
+    const base = Math.atan2(e.out[0], e.out[2]);
+    let best = base, bs = -Infinity, near = Infinity;
+    for (const dy of [-45, -22, 0, 22, 45]) {
+      const yaw = base + (dy * Math.PI) / 180, lx = e.pos[0] + Math.sin(yaw) * 3.6, lz = e.pos[2] + Math.cos(yaw) * 3.6;
+      if (L && L.groundHeight(lx, lz, e.floorY + 1) < e.floorY - 3.4) continue;   // (never off an edge)
+      let m = Infinity; for (const [x, z] of seen) m = Math.min(m, Math.hypot(x - lx, z - lz));
+      if (dy === 0) near = m;
+      if (m - Math.abs(dy) * 0.01 > bs) { bs = m - Math.abs(dy) * 0.01; best = yaw; }
+    }
+    p.steerX = Math.sin(best); p.steerZ = Math.cos(best); p.steerOn = best !== base;
+    if (near < 5) p.high = true;
+    this.stats.botPopSteers = (this.stats.botPopSteers || 0) + 1;
+  }
+  // hold the bot while it rides and pops (bots never steer a pop: they land on the predicted landing node). (BotBrain.update
+  // asks this first every frame: the bot it asks for is the one whose paint goal goalWeight() is about to weigh)
+  botHold(b) { this._gwBot = b; this._gwT = G.time; return !!b.a.pipe; }
+  // a reason to ride in Turf War (LEAD-REVIEW, round 1: 0.08–0.21 rides per bot-minute): a paint goal near the landing of
+  // an open pipe whose IN end is close to this bot, and far enough from the bot that walking there is the long way, is
+  // worth more (×1.7; a Kelp Line's ×2.4 and from further off: the tide's lift and dive are the stage's signature). The
+  // bot then plans its path there and the pipe edge is the cheap way (no wall-hacks: the network and the ink are what it
+  // sees)
+  goalWeight(id) {
+    const b = this._gwBot, n = G.nav?.nodes?.[id];
+    if (!b || this._gwT !== G.time || !n || !b.a.alive) return 1;
+    let T = this._trips;
+    if (!T || T.b !== b || T.t !== G.time) T = this._trips = this._tripsFor(b);
+    const a = b.a, B = PIPES.bot;
+    let w = 1;
+    for (const tr of T.list) {
+      const dl = Math.hypot(n.x - tr.land[0], n.z - tr.land[2]);
+      if (dl > B.tripR || Math.abs(n.y - tr.land[1]) > 2.5) continue;
+      if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < dl + B.tripGain) continue;   // (near enough to walk)
+      if (tr.w > w) w = tr.w;
+    }
+    return w;
+  }
+  _tripsFor(b) {
+    const a = b.a, list = [], B = PIPES.bot, bad = this.badKey.get(b);
+    if (!(a.carry || this.m.tower?.riderList?.includes(a) || a.pipeCd > 1.5 || this.m.mode === 'tower')) {
+      for (const e of this.ends) {
+        const key = e.leg * 2 + e.k;
+        if (!this.open(e) || this.keyShut[key] || (bad && bad.get(key) > G.time)) continue;
+        const leg = this.legs[e.leg], reach = leg.flip ? B.tripKelp : B.trip, to = leg.ends[1 - e.k];
+        if (Math.hypot(a.pos.x - e.approach[0], a.pos.z - e.approach[2]) > reach || Math.abs(a.pos.y - e.floorY) > 2.5) continue;
+        if (this._landWatched(b, to)) continue;   // (it saw enemies by that landing: no reason to go there by pipe)
+        list.push({ land: to.land, w: leg.flip ? B.tripWKelp : B.tripW });
+      }
+    }
+    return { b, t: G.time, list };
+  }
   // a 'pipe' edge is next: walk to the approach point, then straight in along the mouth's axis; give up after 2 s
   botSteer(b, edge, out) {
     const a = b.a, from = this.ends[edge.end];
@@ -924,10 +1050,11 @@ export class StagePipes {
     const legs = Object.fromEntries(Object.entries(S.rides).map(([k, v]) => [k, v]));
     console.warn('[pipes] STATS rides ' + JSON.stringify({ total: S.team[0] + S.team[1], team: S.team, perBotMin: +(S.botRides / bots / mins).toFixed(3), mins: +mins.toFixed(2) }));
     console.warn('[pipes] STATS legs [A→B t0, A→B t1, B→A t0, B→A t1] ' + JSON.stringify(legs));
-    console.warn('[pipes] STATS mouths ' + JSON.stringify({ pushMaxS: +S.pushMax.toFixed(2), giveUps: S.giveUps, refusals: S.refusals, pops: S.pops, aborts: S.aborts }));
+    console.warn('[pipes] STATS mouths ' + JSON.stringify({ pushMaxS: +S.pushMax.toFixed(2), giveUps: S.giveUps, refusals: S.refusals, pops: S.pops, aborts: S.aborts, botPops: [S.botPopLooks || 0, S.botPopSteers || 0], errands: S.errands || 0, errandRides: S.errandRides || 0, errandLog: (S.errandLog || []).slice(0, 12) }));
     const rate = S.deaths / Math.max(1, S.playT / 2) / Math.max(1, this.m.actors.length);
     console.warn('[pipes] STATS camping ' + JSON.stringify({ deaths: S.deaths, landings: S.landings.length, deathsWithin2sOfTouchdown: S.deathsAfterLand, perLanding: +(S.deathsAfterLand / Math.max(1, S.landings.length)).toFixed(3), basePer2sPerActor: +rate.toFixed(4) }));
-    console.warn('[pipes] STATS tide ' + JSON.stringify(S.flips.filter((f) => f.phase === 'flip').map((f) => [f.t, f.dir])));
+    console.warn('[pipes] STATS perExit [landings, deaths ≤ 2 s] ' + JSON.stringify(Object.fromEntries(Object.entries(S.perExit || {}).map(([i, v]) => [`${this.legs[this.ends[i].leg].id}:${this.ends[i].k ? 'B' : 'A'}`, v]))));
+    console.warn('[pipes] STATS tide ' + JSON.stringify(S.flips.filter((f) => f.phase === 'flip').map((f) => [f.t, f.dir])) + ' kelp rides per tide phase [team0, team1] ' + JSON.stringify(Array.from(S.kelpPhase || [], (x) => x || [0, 0])));
   }
 
   // ------------------------------------------------------------------------------------------------ tests
