@@ -1,0 +1,2 @@
+JOB-3 (deploy) — NOT RUN, as you asked.
+History: it was queued behind the other balance sets with the lead's cut (4 runs per stage = 48 matches). Its first attempt never started: the job file's 'xargs -P 3 -I{} bash -c …' line is over macOS xargs' 255-byte -I limit ('xargs: command line cannot be assembled, too long'). I restarted it with 'xargs -S 4096' this morning; when your message came 3 matches had finished and I stopped it there (no results kept). Send the smaller one and it goes into the queue.

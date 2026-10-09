@@ -72,10 +72,17 @@ const SWIM = { v: 10, acc: 26, brake: 13, lift: 0.1, gap: 0.07, leap: 2.3, T: 0.
 // lobby emotes → character dances (danceVar forces the variant; t0 starts mid-dance)
 const LOB_EMOTES = {
   booyah: { dance: 'victory', v: 0, dur: 2.9, hop: 0.32 },
-  wave: { dance: 'victory', v: 2, dur: 2.35, hop: 0 },
+  wave: { dance: 'victory', v: 2, dur: 2.35, hop: 0, wave: 1 },   // [b5-holds] wave: a two-handed weapon's off hand lets go to wave
   dance: { dance: 'victory', v: 1, dur: 3.4, hop: 0 },
   flex: { dance: 'victory', v: 0, t0: 2.86, dur: 1.55, hop: 0.12, trig: 'hairflip' },
 };
+/** Start lobby emote `name`'s dance on character `c` (the room line-up; the holds test plays them the same way). */
+export function emoteDance(c, name) {
+  const E = LOB_EMOTES[name];
+  c.setDance(E.dance); c.danceVar = E.v; if (E.t0) c.danceT = E.t0;
+  c.waveHand = !!E.wave;   // [b5-holds]
+  return E;
+}
 const sameStyle = (a, b) => {
   if (!a || !b) return false;
   for (const k in a) if (a[k] !== b[k]) return false;
@@ -2419,8 +2426,7 @@ export class Showcase {
       M.act.t0 = t + (M.act.delay || 0);
       M.act.flag = 0;
       if (M.act.kind === 'emote') {
-        const E = LOB_EMOTES[M.act.name];
-        c.setDance(E.dance); c.danceVar = E.v; if (E.t0) c.danceT = E.t0;
+        const E = emoteDance(c, M.act.name);
         if (E.trig) c.trigger(E.trig);
         if (!E.hop) c.trigger('jump');
         this._lobSparkle(M, 6);

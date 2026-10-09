@@ -1,0 +1,62 @@
+JOB-3 (jumpui) @ 3ae5fbd — verdict: every jump-ui run passes (×3 turf, zones, tower, boss, 960×600, 1280×720, boss 960×600) and every net-jump-ui / net-jump-ui tower run (×3 each); the only failure is one check in sub-tweaks (the sprinkler's drop spread, below — not this package's code; sub-tweaks has dropped a single check on other branches tonight too). No HARNESS ERROR lines. Mac mini, SLOTS=3 PAR=3 REP=3, caffeinate.
+
+## REP=3 regress.sh output
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-2: RESULT 62/62 0 FAIL
+== jump-ui-3: RESULT 62/62 0 FAIL
+== jump-ui-zones: RESULT 64/64 0 FAIL
+== jump-ui-tower: RESULT 64/64 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== sub-tweaks: RESULT 28/29 1 FAIL
+FAIL its drops land evenly over the disc's area, out to sprayRadius − 0.75 m (their own splat reaches the rest): the far ring isn't thinner than the middle  {"landed":267,"outerHalf":0.61,"maxLanding":4.75,"meanLanding":3.37}
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-2: RESULT 21/21 0 FAIL
+== net-jump-ui-3: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-jump-ui-tower-2: RESULT 7/7 0 FAIL
+== net-jump-ui-tower-3: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+
+## sub-tweaks.log, 30 lines around the first FAIL
+PASS Twirl Sprinkler reaches ~5.5 m (was 3.2): after 12 s the ring at 4.7–5.3 m is well inked (≥ 35 %), the middle too (≥ 60 %), next to nothing past ~6.5 m; the furthest ink along most directions is 5–6.2 m  {"cov":{"mid":0.99,"old":1,"far":0.93,"past":0},"reachMedian":5.5,"reach90":5.75,"r
+FAIL its drops land evenly over the disc's area, out to sprayRadius − 0.75 m (their own splat reaches the rest): the far ring isn't thinner than the middle  {"landed":267,"outerHalf":0.61,"maxLanding":4.75,"meanLanding":3.37}
+PASS its ink output: 7 drops a pulse every 0.3 s (≈ 23.33 a second, was 20), 8 damage each (unchanged)  {"perSec":22.17,"dmg":[8]}
+PASS a bot placing a sprinkler weighs its new reach: the turf check is 0.8 × sprayRadius round where its lob lands (~5.5 m ahead); not where a teammate's sprinkler already sprays  {"asked":[{"x":-10,"z":-10.57,"r":4.4},{"x":-10,"z":-10.57,"r":4.4}],"go1":true,"go2":false}
+PASS Lurk Mine: invisible to the enemy team (no mesh — so no shadow either — whether in ink or not)  {"visible":false,"look":"hidden"}
+PASS Lurk Mine: a translucent ghost to its own team (opacity 0.35–0.45, pulsing; team-tinted; no shadow) — the local player's view too  {"own":{"visible":true,"look":"ghost","transparent":true,"opMin":0.35,"opMax":0.45,"shadow":false,"tint":true},"local":{"visible":true,"look":"ghost"}}
+PASS Lurk Mine: an enemy bot can't know of a lurking one (no danger area, nothing in its senses — the sight rule); the enemy's minimap skips it  {"lurking":0,"foeKnows":false,"minimapRule":"n/a"}
+PASS Lurk Mine tripped: it pops up for everyone — the enemy's eyes included — opaque and swelling, its blast radius (2.6 m) on the floor every frame and a beep pulse quickening; 0.45 s later it blows (was 0.35)  {"opaque":true,"shown":true,"popUp":0.22,"swell":1.31,"ring":[28,2.6],"beeps":6,"wai
+PASS …its trip alarm plays at the trip (cues: mine_trip), a danger area for the enemy's bots from the trip (the blast where it stands, until it blows), and no damage before the blast  {"cue":["place_mine","mine_trip","mine_explode"],"danger":{"tIn":0.45,"r":2.9},"firstHit":{"dmg":45,"after":0.45}}
+PASS online: on an enemy client the mine (a ghost there) is hidden; the owner's trip record pops it up there too (with its alarm); the owner's end record blows it  {"gHidden":true,"gShown":true,"gWaits":true,"end":"dead"}
+PASS online, the owner's side: tripping sends [3, gid] (every screen pops it up), then the blast's end record [2, gid]  {"gid":1,"sent":[[1,1,"mine"],[3,1],[2,1]]}
+PASS Hop Beacon: two lights over it, both lit in its team colour (a fresh one: 2 jumps left)  {"lights":2,"lit":[true,true],"pipsY":1.22,"top":0.96}
+PASS its sonar: a ping every ~1.75 s (a ring along the ground to ~7 m and a shell in the air), its team's to see, the other team's faint  {"pings":3,"ringR":1,"airR":3.9,"alphaOwn":1,"alphaFoe":0.18}
+PASS after a jump onto it (1 jump left): one light dark, the last one blinking, its lamp dimmed — it looks different from a fresh one  {"ok":true,"uses":1,"first":true,"dark":true,"blink":1.64,"glowDim":true}
+PASS the super-jump map labels it with its jumps left (●○)  {"label":"Your beacon ●○"}
+PASS online: a ghost beacon's lights follow its owner's record; a jump onto a ghost goes to the owner (and uses it up here), the owner counts it and sends the jumps left  {"ghostOne":true,"toOwner":{"dev":"beaconUse","id":992,"d":1},"ghostAfter":"dead","ownerUses":1,"rec":[3,2,1]}
+PASS Drip Curtain: an ink meter along its top tracks its hp every frame (its decay, and shots — 4 × 30 × shotMul off), on both faces (double-sided, filling in from both ends toward the middle: the same from either side), above the sheet  {"drift":0,"decayedPerSec":0.11,"afterHits":{"hp":81.82,"f
+PASS …half its ink: the meter at half  {"fill":0.498}
+PASS online: the owner sends its curtain's hp after hits ([3, gid, hp]); a ghost curtain on another screen takes it, its meter with it  {"rec":[3,3,140.8],"ghostBefore":161.13,"ghostAfter":59.68}
+PASS Skitter Bomb: it waits its 0.45 s windup between reaching / tripping on its target and the blast (the tell: swelling, its blast radius on the floor every frame and a beep pulse quickening — the Splat Bomb's look; its warning cue at the windup's start) — no damage before the blast; the targe
+PASS Skitter Bomb: a target who walks out during the windup (run speed, from its start) takes none  {"armed":true,"wait":0.45,"firstHitAfterBoom":null,"dmg":0,"tell":{"swell":1.32,"lamp":0,"ringFrames":27,"ringR":2.8,"beeps":6},"cue":0,"danger":{"tIn":0.45,"r":3.1,"lethal":2},"esc":null,"d0":1.11,"d
+PASS Skitter Bomb: its windup is a danger area for the other team's bots (the blast where it stands, until it goes off)  {"tIn":0.45,"r":3.1,"lethal":2}
+PASS Waddle Bomb: it waits its 0.45 s windup between reaching / tripping on its target and the blast (the tell: swelling, its lamp strobing, its blast radius on the floor every frame and a beep pulse quickening — the Splat Bomb's look; its warning cue at the windup's start) — no damage before th
+PASS Waddle Bomb: a target who walks out during the windup (run speed, from its start) takes none  {"armed":true,"wait":0.45,"firstHitAfterBoom":null,"dmg":0,"tell":{"swell":1.3,"lamp":6,"ringFrames":27,"ringR":3,"beeps":6},"cue":0,"danger":{"tIn":0.45,"r":3.3,"lethal":2},"esc":null,"d0":1.11,"dEsc"
+PASS Waddle Bomb: its windup is a danger area for the other team's bots (the blast where it stands, until it goes off)  {"tIn":0.45,"r":3.3,"lethal":2}
+PASS Lurk Mine: it waits its 0.45 s windup between reaching / tripping on its target and the blast (the tell: popped up, swelling, its blast radius on the floor every frame and a beep pulse quickening — the Splat Bomb's look; its warning cue at the windup's start) — no damage before the blast; t
+PASS Lurk Mine: a target who walks out during the windup (run speed, from its start) takes none  {"armed":true,"wait":0.45,"firstHitAfterBoom":null,"dmg":0,"tell":{"swell":1.31,"lamp":0,"ringFrames":28,"ringR":2.6,"beeps":6},"cue":0,"danger":{"tIn":0.45,"r":2.9,"lethal":1},"esc":null,"d0":1.7,"dEsc"
+PASS Lurk Mine: its windup is a danger area for the other team's bots (the blast where it stands, until it goes off)  {"tIn":0.45,"r":2.9,"lethal":1}
+PASS a hard bot (its specials awareness on) caught in a windup's blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb  {"seeker":[{"esc":{"hit":"seeker","t":0.167},"d0":1.18,"dEsc":1.5,"dMin":1.
+RESULT 28/29

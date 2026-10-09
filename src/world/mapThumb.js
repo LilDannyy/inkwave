@@ -2,6 +2,9 @@
 // Pure data → string (no three.js): boxes and ramp footprints, mirrored like the level, drawn with a height-shaded
 // drop shadow so structure reads at a glance. Long axis (z) runs left → right; team Alpha's base is on the left.
 
+import { stageDataFor } from './stageData.js';   // [b5-stagehooks] stage modules' thumbnail hooks
+import './stageDataList.js';
+
 const W = 344, H = 160;
 
 function expand(layout) {
@@ -38,7 +41,10 @@ export function layoutThumbSVG(layout, theme = 'day', teams = ['#18c7e8', '#ff4a
   const parts = [`<rect width="${W}" height="${H}" fill="url(#tsea${layout.id}${theme})"/>`];
   // soft wave marks
   for (let i = 0; i < 6; i++) { const y = 14 + i * 26, x = (i * 53) % 300; parts.push(`<path d="M${x} ${y} q8 -5 16 0 t16 0" stroke="#fff" stroke-opacity=".35" stroke-width="2.4" fill="none" stroke-linecap="round"/>`); }
-  const blocks = expand(layout).map((d) => {
+  const SD = stageDataFor(layout), api = SD.length ? { X, Y, s, theme, W, H } : null;   // [b5-stagehooks]
+  for (const h of SD) if (h.thumbBelow) parts.push(h.thumbBelow(layout, api) || '');
+  const look = (d) => { for (const h of SD) { const v = h.thumbBlock?.(d); if (v) return v; } return null; };
+  const blocks = expand(layout).filter((d) => !SD.length || look(d) !== 'skip').map((d) => {
     if (d.kind === 'box') return { x0: d.min[0], x1: d.max[0], z0: d.min[2], z1: d.max[2], top: d.max[1], d };
     if (d.kind === 'octagon') {
       const [cx, cz, R] = d.oct;
@@ -66,6 +72,12 @@ export function layoutThumbSVG(layout, theme = 'day', teams = ['#18c7e8', '#ff4a
   }).sort((a, b) => a.top - b.top);
   for (const b of blocks) {
     const top = b.top;
+    if (SD.length && look(b.d) === 'dashed') {   // [b5-stagehooks] (eras: a later era's piece)
+      const pts = b.poly ? b.poly.map(([px, pz]) => `${X(pz).toFixed(1)},${Y(px).toFixed(1)}`).join(' ') : null;
+      parts.push(pts ? `<polygon points="${pts}" fill="none" stroke="#2a3552" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 2"/>`
+        : `<rect x="${X(b.z0).toFixed(1)}" y="${Y(b.x1).toFixed(1)}" width="${((b.z1 - b.z0) * s).toFixed(1)}" height="${((b.x1 - b.x0) * s).toFixed(1)}" fill="none" stroke="#2a3552" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 2"/>`);
+      continue;
+    }
     if (b.poly) {
       const pts = (dx, dy) => b.poly.map(([px, pz]) => `${(X(pz) + dx).toFixed(1)},${(Y(px) + dy).toFixed(1)}`).join(' ');
       if (top > 0.2 && !b.ramp && !b.d.grate) parts.push(`<polygon points="${pts(1.2 + top * 0.35, 1.2 + top * 0.45)}" fill="#1b2a44" opacity=".28"/>`);
@@ -85,6 +97,7 @@ export function layoutThumbSVG(layout, theme = 'day', teams = ['#18c7e8', '#ff4a
     const tint = b.d.pattern === 5 && b.d.color ? b.d.color : null; // containers keep their colour
     parts.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${top > 0.05 ? 1.4 : 2.5}" fill="${tint || fill}" stroke="#2a3552" stroke-opacity="${top > 0.05 ? 0.35 : 0.15}" stroke-width="1"/>`);
   }
+  for (const h of SD) if (h.thumb) parts.push(h.thumb(layout, api) || '');   // [b5-stagehooks] (pipes: the legs)
   // team splats + spawn rings
   layout.spawnPads.forEach(([px, , pz], t) => {
     const cx = X(pz), cy = Y(px), c = teams[t];

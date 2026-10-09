@@ -1,0 +1,59 @@
+JOB-6 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 10:49:27
+branch botlab-b5-zipcheer, ran at 974ca33, exit code 0, wall time 2min
+(a written-up JOB-6.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### zipcheer JOB-6 at 974ca33
+== zipcheer-3: RESULT 36/36 0 FAIL
+== zipcheer-2: RESULT 36/36 0 FAIL
+== zipcheer-1: RESULT 36/36 0 FAIL
+== zipcheer-5: RESULT 36/36 0 FAIL
+== zipcheer-6: RESULT 36/36 0 FAIL
+== zipcheer-4: RESULT 36/36 0 FAIL
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== bot-specials-2: RESULT 18/19 1 FAIL
+FAIL Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge (slow on their feet: a squid hop out) — on: at most one caught; off: splatted; shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse  {"on":{"dead":2,"dmgTotal":242.5,"escapes":14,"evaded":8},"off":{"dead":1,"dmgTotal":167.6},"chargers":{"on":{"dead":0,"dmg":[37.4,2.7,45.1]},"off":{"dead":3,"dm
+== bot-specials-1: RESULT 19/19 0 FAIL
+== bot-specials-3: RESULT 19/19 0 FAIL
+SUMMARY 10 runs, 1 FAIL lines, 6/6 zipcheer 36/36
+
+## last 15 lines of job.log
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== bot-specials-2: RESULT 18/19 1 FAIL
+FAIL Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge (slow on their feet: a squid hop out) — on: at most one caught; off: splatted; shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse  {"on":{"dead":2,"dmgTotal":242.5,"escapes":14,"evaded":8},"of
+== bot-specials-1: RESULT 19/19 0 FAIL
+== bot-specials-3: RESULT 19/19 0 FAIL
+zipcheer-1: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/r
+zipcheer-2: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/r
+zipcheer-3: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/r
+zipcheer-4: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/r
+zipcheer-5: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/r
+zipcheer-6: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/r
+bot-specials-1: PASS  "off":{"shotsShielded":180,"distShielded":9.2}
+bot-specials-2: PASS  "off":{"shotsShielded":161,"distShielded":9.4}
+bot-specials-3: PASS  "off":{"shotsShielded":180,"distShielded":9.6}
+SUMMARY 10 runs, 1 FAIL lines, 6/6 zipcheer 36/36
+
+## detail.txt
+zipcheer-1: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none
+zipcheer-2: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none
+zipcheer-3: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none
+zipcheer-4: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none
+zipcheer-5: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none
+zipcheer-6: "gaps":["window/lowink: gap 11 (hint 34 px high), note 15","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","window/cards: card gap 35, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none
+bot-specials-1: PASS  "off":{"shotsShielded":180,"distShielded":9.2}
+bot-specials-2: PASS  "off":{"shotsShielded":161,"distShielded":9.4}
+bot-specials-3: PASS  "off":{"shotsShielded":180,"distShielded":9.6}
+
+## summary.txt
+== zipcheer-3: RESULT 36/36 0 FAIL
+== zipcheer-2: RESULT 36/36 0 FAIL
+== zipcheer-1: RESULT 36/36 0 FAIL
+== zipcheer-5: RESULT 36/36 0 FAIL
+== zipcheer-6: RESULT 36/36 0 FAIL
+== zipcheer-4: RESULT 36/36 0 FAIL
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== bot-specials-2: RESULT 18/19 1 FAIL
+FAIL Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge (slow on their feet: a squid hop out) — on: at most one caught; off: splatted; shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse  {"on":{"dead":2,"dmgTotal":242.5,"escapes":14,"evaded":8},"off":{"dead":1,"dmgTotal":167.6},"chargers":{"on":{"dead":0,"dmg":[37.4,2.7,45.1]},"off":{"dead":3,"dm
+== bot-specials-1: RESULT 19/19 0 FAIL
+== bot-specials-3: RESULT 19/19 0 FAIL

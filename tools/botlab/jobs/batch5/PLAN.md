@@ -127,3 +127,8 @@ The four subs; the Bazookarp engine, HUD, online and bots; the three stages; the
   jumpui JOB-5 on the Mac mini (61/62) and passed 4 of 4 in the helper's own re-runs: intermittent, and when it fails it
   is more than a rounding miss (either the mark is missing or the tag is away from it). Make the check print which part
   failed (the mark, its screen position, the projected point), run it 6 times on the merged branch, find the cause.
+- **Bots and devices in Tower Command (deploy).** Since deploy's commit 96fcfa4 every Tower Command bot match on the
+  Mac mini shows "device mode 0.0 s/bot, picks 0" (6 of 6 matches); at 1ce8a55 saltpan had 9 picks and treehills 57.
+  Find out whether that is intended (the tower guard comes first) or device mode got switched off in Tower Command by
+  accident; bots with nothing better to shoot should still shoot enemy devices there. The surf buoy check also failed
+  2 of 26 runs on the deploy branch only: run surf 6 times on the merged branch.

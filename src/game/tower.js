@@ -436,8 +436,9 @@ export class TowerCommand {
     const c = Math.cos(this.yaw), s = Math.sin(this.yaw);
     for (const a of this.match.actors) {
       if (!a.alive || a.superJumpState || a.team > 1) continue;
-      const dy = a.pos.y - top;
-      if (dy < -0.3 || dy > TOWER.riderUp) continue;
+      const dy = a.pos.y - top, sp = a.specialActive;
+      // ([b5-zipcheer] held up over the deck by a Cheer Orb — a ghost's too: still riding)
+      if (dy < -0.3 || dy > TOWER.riderUp + (sp && sp.kind === 'booyah' && !sp.thrown ? sp.def.lift || 0 : 0)) continue;
       const dx = a.pos.x - this.pos.x, dz = a.pos.z - this.pos.z;
       const lx = dx * c - dz * s, lz = dx * s + dz * c;
       if (Math.abs(lx) > R || Math.abs(lz) > R) continue;
@@ -480,6 +481,7 @@ export class TowerCommand {
     for (const c of this.cps) { const p = c.cleared ? 1 : 1 - c.left / (c.dur || 1); if (p > c.best) c.best = p; }
     this._place(dt);
     this._carry(before);
+    if (this.s !== before) G.deploy?.crush(this);   // [b5-deploy] its body destroys the sprinklers, beacons, curtains and buoys in its way
     this._score();
     this._fillSpecials(dt);
     if (this.follower) { if (this.overtime) this.overtimeT += dt; return; }

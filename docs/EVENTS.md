@@ -12,7 +12,7 @@ screen-FX modules should subscribe to these instead of editing gameplay code.
 | `respawn` | `{ actor }` | actor.respawn |
 | `special:ready` | `{ actor }` | actor.addTurf |
 | `special:use` | `{ actor, id }` ('slam' / 'storm') | actor._startSpecial |
-| `superjump` | `{ actor, phase: 'charge' \| 'flight', to? }` | actor.superJump |
+| `superjump` | `{ actor, phase: 'charge' \| 'flight', … }` — charge: `target` (a teammate, or a point: beacon / base), `home` (an Ink Jet / Zipline jump back), `instant`; flight: `to`, `from`, `dur`, `home` (forwarded online: game/jumpMarks.js) | actor.superJump |
 | `shake` | `{ amount, pos? }` | camera trauma requests |
 | `recoil` | `{ amount }` | local-player visual recoil |
 | `lowink` | `{ actor, need? }` | weapons |
@@ -73,7 +73,10 @@ longer emitted.
 
 | event | payload | where |
 |---|---|---|
-| `actor:cheer` | `{ actor, helped }` | specials.js (Cheer Orb) |
+| `actor:cheer` | `{ actor, helped, targets, remote? }` — a "Yeah!": `helped` it sent a wisp to a teammate's charging Cheer Orb, `targets` to how many; `remote` replayed from the cheerer's record on another screen | sp-cheer.js (Cheer Orb) |
+| `cheer:orb` | `{ actor, target, pos }` — a cheer's wisp reached `target`'s orb (every screen; the +charge is added only on the screen that owns `target`) | sp-cheer.js |
+| `cheer:gain` | `{ actor, amount, frac }` — the cheerer's gauge wisp landed: its gauge gained `amount` points (`frac` of a full gauge); the cheerer's own screen only | sp-cheer.js |
+| `cheer:lift` | `{ actor, height }` — a Cheer Orb user lifted off (its owner's screen; `height` m it rises) | sp-cheer.js |
 | `actor:dodge` / `weapon:dodge` | `{ actor, dir }` / `{ actor, pos, dir }` | weapons.js (Twins dodge roll) |
 | `actor:poisoned` / `actor:tracked` | `{ actor }` / `{ actor, team }` | subs.js (poison / point sensor) |
 | `actor:marked` | `{ actor, team, from, fresh }` | subs.js track() — every mark, fresh or a refresh; `from` its source (a point, or the special's user) |
@@ -88,10 +91,12 @@ longer emitted.
 | `sub:land` / `sub:arm` / `sub:cloud` / `sub:destroyed` | `{ kind, pos, team, radius? }` | subs.js |
 | `sub:charge` | `{ actor, kind: 'shaker', level, max }` — the Shaker Bomb in hand reached a new charge (2, then 3 = max) | kits/shaker.js |
 | `sub:lock` / `sub:end` | `{ kind: 'waddle', pos, team, actor, target }` / `{ kind, why, team, pos }` (why: reached · travel · life · lost · stuck · fuse · popped · sea · fell · cleared) | kits/waddle.js |
-| `zones:zone` | `{ zone, owner }` — one zone taken (≥ 80 % ink); it is then flooded with the taker's ink | zones.js |
+| `zones:zone` | `{ zone, owner }` — one zone taken (≥ ZONES.control ink, 70 %, kept over that line for ZONES.flipHold s) or neutralised (owner −1: the other team ≥ ZONES.contest, likewise held); a taken zone is then flooded with the taker's ink | zones.js |
 | `zones:control` | `{ owner, prev, objective }` — the live objective's holder changed (owner −1 = neutral) | zones.js |
 | `zones:contest` | `{ zone, holder, share }` — the other team has inked a held zone to the warning share (ZONES.warn) | zones.js |
 | `zones:penalty` | `{ team, penalty, total, start, end }` | zones.js |
 | `zones:active` | `{ objective, zones, final, moved }` — rotation (final = the last-30-s centre lock) | zones.js |
 | `zones:overtime` | `{ losing }` | zones.js |
 | `zones:end` | `{ winner, reason, counts }` (reason: knockout · time · comeback · retake · neutralised · overtime-cap) | zones.js |
+| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
+| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes |

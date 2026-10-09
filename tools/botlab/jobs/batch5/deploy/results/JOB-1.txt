@@ -1,0 +1,54 @@
+JOB-1 (deploy) results — run on the Mac mini at c8cbaf1, SLOTS=3 PAR=3, caffeinate (it was already running when JOB-2 arrived, so it finished; JOB-2 is queued next for this branch's tests).
+Verdict: 26 of 28 tests full; 2 single-check FAILs (sub-tweaks2 22/23, bot-specials 18/19, both below); all 6 two-client tests pass; 4 tower matches ran clean (CONSOLE 0, no FRAME ERRORS).
+Note: sub-tweaks2 and bot-specials passed 23/23 and 19/19 in other branches' runs tonight at 7ee5ad5-based code (zipcheer / jumpui / sprules JOB-2); JOB-2 will re-run both at 080901f.
+
+## regress.sh output (MATCHES="halyard calamari treehills saltpan")
+== deployables-tower: RESULT 8/8 0 FAIL
+== deployables-rail: RESULT 1/1 0 FAIL
+== deployables: RESULT 28/28 0 FAIL
+== deployables-hedge: RESULT 3/3 0 FAIL
+== sub-tweaks2: RESULT 22/23 1 FAIL
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.99,"widthMed":1.25,"width10":1},{"line":0.99,"widthMed":1.25,"width10":1},{"line":0.94,"widthMed":1.1,"width10":1}]
+== sub-tweaks: RESULT 29/29 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":56.5,"avgDmgOff":72.5}
+== pods: RESULT 39/39 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== tm-halyard
+== halyard [tower len 117.8/117.8]: winner Bravo (knockout) | counts 72 vs 0 (score 72/0) | best push A 30.1m B 117.8m | OT no | sim 271s
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed by the tower {} | rides 2 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 1 (beacon 0, sprinkler 0, buoy 1; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+== tm-calamari
+== calamari [tower len 163.6/163.6]: winner Alpha (retake) | counts 37 vs 53 (score 37/53) | best push A 100.3m B 77.3m | OT 11.8s | sim 311.8s
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed by the tower {} | rides 1 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 1 (beacon 0, sprinkler 0, buoy 1; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+== tm-treehills
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 56 vs 19 (score 56/19) | best push A 65.6m B 117.3m | OT no | sim 300s
+   DEPLOY hits 2 (120 dmg) | shot down {"seeker":2} | crushed by the tower {} | rides 7 lifts 0 shoves 0 drops 0 | skitter pops 2 | bots' picks 0 (beacon 0, sprinkler 0, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+== tm-saltpan
+== saltpan [tower len 179.2/179.2]: winner Bravo (neutralised) | counts 62 vs 49 (score 62/49) | best push A 64m B 93.4m | OT 22.1s | sim 322s
+   DEPLOY hits 4 (130 dmg) | shot down {"sprinkler":1} | crushed by the tower {"sprinkler":1,"curtain":3} | rides 0 lifts 0 shoves 0 drops 0 | skitter pops 0 | bots' picks 5 (beacon 0, sprinkler 5, buoy 0; gave up 0)
+CONSOLE 0 unique warning/error line(s)
+
+## FAIL / error lines from the failing tests' logs
+### sub-tweaks2
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.99,"widthMed":1.25,"width10":1},{"line":0.99,"widthMed":1.25,"width10":1},{"line":0.94,"widthMed":1.1,"width10":1}]
+### bot-specials
+FAIL Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":56.5,"avgDmgOff":72.5}

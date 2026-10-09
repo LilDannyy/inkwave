@@ -82,34 +82,36 @@
     await press('ArrowLeft', 150);
     R('← → on the SUB chip still step through the subs (no picker)', !picker() && stepped === SUB_ORDER[(SUB_ORDER.indexOf(wantId) + 1) % SUB_ORDER.length] && g.profile.sub === wantId, { stepped, back: g.profile.sub });
 
-    // ---- the special picker: Drainbow (the last special) in a few presses
+    // ---- the special picker: the last special in a few presses ([b5-sprules] it was Drainbow; the order only grows at
+    // its end, so this follows whichever is last — the Mystery Bomb Barrage now)
+    const LAST = SPECIAL_ORDER[SPECIAL_ORDER.length - 1], LT = `kp-special-${LAST}`, LN = SPECIALS[LAST].name;
     sounds.length = 0;
     await openWithEnter('specialpick');
     const ST = tiles(), sc = cols(), last = ST.length - 1;
-    R('Enter on the SPECIAL chip: the weapon’s own + every special; the weapon’s own (Twister Zooka) marked and focused; the gauge (190p on the Spritzer) shown', ST.length === SPECIAL_ORDER.length + 1 && ST[last].dataset.id === 'kp-special-drainbow'
+    R('Enter on the SPECIAL chip: the weapon’s own + every special; the weapon’s own (Twister Zooka) marked and focused; the gauge (190p on the Spritzer) shown', ST.length === SPECIAL_ORDER.length + 1 && ST[last].dataset.id === LT
       && focusId() === 'kp-special-own' && /Twister Zooka/.test(detail().name) && detail().stat === `${C.WEAPONS.shooter.specialCost}p` && !!q('[data-id="kp-special-zooka"] .iw-ktile__wpn'), { tiles: ST.length, focus: focusId(), detail: detail() });
-    const ks = path(0, last, sc);
+    const ks = path(0, last, sc);   // ([b5-sprules] at most the grid's corner to corner — rows − 1 + columns − 1 — where it was ≤ 8 for 22 tiles)
     for (const k of ks) await press(k);
     await wait(150);
-    R(`Drainbow (the last special) in ${ks.length} presses on the grid (${ks.map((k) => k.slice(5)).join(' ')}), not ${SPECIAL_ORDER.length}`, focusId() === 'kp-special-drainbow' && ks.length <= 8 && detail().name === 'Drainbow', { presses: ks.length, cols: sc, focus: focusId() });
+    R(`${LN} (the last special) in ${ks.length} presses on the grid (${ks.map((k) => k.slice(5)).join(' ')}), not ${SPECIAL_ORDER.length}`, focusId() === LT && ks.length <= Math.ceil(ST.length / sc) - 1 + sc - 1 && ks.length < SPECIAL_ORDER.length / 2 && detail().name === LN, { presses: ks.length, cols: sc, focus: focusId() });
     await press('ArrowRight', 120);
     const wrapR = focusId();
     await press('ArrowLeft', 120);
-    R('← → run on round the ends: → from Drainbow is the first tile, ← from the first is Drainbow (one press)', wrapR === 'kp-special-own' && focusId() === 'kp-special-drainbow', { wrapR, back: focusId() });
+    R(`← → run on round the ends: → from ${LN} is the first tile, ← from the first is ${LN} (one press)`, wrapR === 'kp-special-own' && focusId() === LT, { wrapR, back: focusId() });
     await press('ArrowDown', 120);
-    R('↓ on the bottom row bumps (stays put)', focusId() === 'kp-special-drainbow', { focus: focusId() });
+    R('↓ on the bottom row bumps (stays put)', focusId() === LT, { focus: focusId() });
     await press('Enter', 600);
-    R('Enter picks Drainbow: saved, the chip shows it, focus back on the SPECIAL chip', !picker() && g.profile.special === 'drainbow' && saved().special === 'drainbow' && chipName('specialpick') === 'Drainbow' && focusId() === 'specialpick',
+    R(`Enter picks ${LN}: saved, the chip shows it, focus back on the SPECIAL chip`, !picker() && g.profile.special === LAST && saved().special === LAST && chipName('specialpick') === LN && focusId() === 'specialpick',
       { special: g.profile.special, saved: saved().special, chip: chipName('specialpick'), focus: focusId() });
     await openWithEnter('specialpick');
     const spStart = focusId();
     await press('ArrowUp'); await press('ArrowLeft', 120);
     await press('Escape', 400);
-    R('special picker: starts on Drainbow; Esc closes with no change', spStart === 'kp-special-drainbow' && !picker() && g.profile.special === 'drainbow' && saved().special === 'drainbow', { spStart, special: g.profile.special });
+    R(`special picker: starts on ${LN}; Esc closes with no change`, spStart === LT && !picker() && g.profile.special === LAST && saved().special === LAST, { spStart, special: g.profile.special });
     // nothing reaches the screen behind it: P / R (practice), Q / E (tabs)
     await openWithEnter('specialpick');
     await press('KeyP'); await press('KeyQ'); await press('KeyE', 300);
-    R('P (practice) and Q / E do nothing while the picker is open', M.current === 'loadout' && !!picker() && !M._starting && g.match?.practice !== true && focusId() === 'kp-special-drainbow', { screen: M.current, open: !!picker(), focus: focusId() });
+    R('P (practice) and Q / E do nothing while the picker is open', M.current === 'loadout' && !!picker() && !M._starting && g.match?.practice !== true && focusId() === LT, { screen: M.current, open: !!picker(), focus: focusId() });
     await press('Escape', 400);
 
     // ---- the mouse: a click on the chip opens, hover shows details, a click picks; the weapon's own sets null

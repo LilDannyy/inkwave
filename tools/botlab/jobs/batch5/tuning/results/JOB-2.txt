@@ -1,0 +1,40 @@
+JOB-2 (b5-tuning) results — run on the Mac mini at 354d8e6, SLOTS=3 (blocks 1 and 3 three at a time, block 2 in order), caffeinate. Wall time: 22 min.
+Verdict: the package's own tests pass 3/3 times each (tuning turf 12/12, tuning zones 15/15, weapon names 7/7); the old values / old UI fail as expected (old-tuning-turf 5/12, old-tuning-zones 12/15, old-names 0/7); every regression passes. After block 2, 'git status --short src styles' printed nothing (restored).
+
+bot-sight.log: RESULT 13/13
+hud-lead-tower.log: RESULT 12/12
+hud-lead-turf.log: RESULT 22/22
+hud-lead-zones.log: RESULT 14/14
+input-swim.log: RESULT 8/8
+loadout-picker.log: RESULT 23/23
+names-1.log: RESULT 7/7
+names-2.log: RESULT 7/7
+names-3.log: RESULT 7/7
+net-lobbykit.log: RESULT 14/14
+net-mock.log: RESULT 11/11
+old-names.log: RESULT 0/7
+FAIL 960×600: every weapon name whole and unclipped on every screen that shows a weapon pick  ["960×600 loadout cards · width #># [Twinfire Pistols, Canopy Brolly, Popper Blaster, Squall Spinner, Glint Charger, Brine Cutlass]","960×600 loadout stat labels · width #># [Ink coverage]","960×600 loadout panel (Spritzer equipped) · runs off the bottom []","960×600 loadout panel (Twinfire Pistol
+FAIL 1280×720: every weapon name whole and unclipped on every screen that shows a weapon pick  ["1280×720 loadout cards · width #># [Twinfire Pistols, Canopy Brolly, Popper Blaster, Squall Spinner, Glint Charger, Brine Cutlass, Sponge Mitts]","1280×720 loadout panel (Spritzer equipped) · runs off the bottom []","1280×720 loadout panel (Twinfire Pistols equipped) · runs off the bottom []","1
+FAIL 1920×1080: every weapon name whole and unclipped on every screen that shows a weapon pick  ["1920×1080 loadout cards · width #># [Twinfire Pistols, Canopy Brolly, Popper Blaster, Squall Spinner, Glint Charger, Brine Cutlass, Sponge Mitts]","1920×1080 loadout panel (Spritzer equipped) · runs off the bottom []","1920×1080 loadout panel (Twinfire Pistols equipped) · runs off the bottom []
+FAIL 960×600: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)  ["960×600 sub picker own (Twinfire Pistols) · font #.#px [Skitter Bomb]","960×600 sub picker own (Sponge Mitts) · width #># + font #.#px [Whirl Boomerang]","960×600 loadout special chip · off-screen # + cut by .iw-screen [Tidal Slam, Ink Tempest, Splat Bomb Barrage, Clin
+FAIL 1280×720: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)  ["1280×720 sub picker own (Twinfire Pistols) · font #.#px [Skitter Bomb]","1280×720 sub picker own (Sponge Mitts) · font #.#px [Whirl Boomerang]","1280×720 loadout special chip · off-screen # + cut by .iw-screen [Splat Bomb Barrage, Cling Charge Barrage, Skitter Bomb Ba
+FAIL 1920×1080: every sub and special weapon name whole too (LOADOUT's chips, the sub / special picker, the lobby's chips)  ["1920×1080 lobby special chip · text \"Splat Barrage\" not \"Splat Bomb Barrage\" [Splat Barrage]","1920×1080 lobby special chip · text \"Cling Barrage\" not \"Cling Charge Barrage\" [Cling Barrage]","1920×1080 lobby special chip · text \"Pop Barrage\" not \"Pop Pelle
+FAIL every weapon name checked on: the main menu card, the setup chip, LOADOUT (cards, detail, vs badge, the panel on screen), the online hub chip, the lobby chip and drawer, the practice pause  {"fails":66,"longest":"Twinfire Pistols"}
+old-tuning-turf.log: RESULT 5/12
+FAIL rolling 4.4 m/s vs walking 6 m/s: ×0.733 — slightly faster (×1.02 … ×1.12; config rollSpeed 4.4)  {"roll":{"v":4.4,"top":4.4,"rolling":1,"turf":39.69,"z":-22.83,"grounded":true},"walk":{"v":6,"top":6,"rolling":0,"turf":0,"z":-17.09,"grounded":true}}
+FAIL bots: a roller bot on its own brain, the empty deck, 10 s — rolls 81 % of the time (0 % of that faster than walking), 43.18 m covered, 126.81 m² inked  {"modes":{"paint":600},"start":[0,-30],"end":[-15.45,-16.6]}
+FAIL pad, the same foe 10 m off, dead centre — the look slows ×0.58 on it with the Spritzer, ×0.58 with the Glint Charger (the slow-down 0.42 vs 0.42: ≤ 60 % of it)  {"shooter":{"k":0.58,"on":true,"off":true},"charger":{"k":0.58,"on":true,"off":true}}
+FAIL pad, 1.6° off the foe — Spritzer ×0.607, Glint Charger ×0.607 (its window is narrower too: ≤ 50 % of the slow-down)  {"shooter":{"k":0.607,"on":true,"off":true},"charger":{"k":0.607,"on":true,"off":true}}
+FAIL pad, the foe strafing 3 m/s, dead centre — the camera carries 0.42 of its motion with the Spritzer, 0.42 with the Glint Charger (≤ 50 % of it)  {"shooter":{"k":0.42,"seen":1},"charger":{"k":0.42,"seen":1}}
+FAIL pad, the foe strafing, 1.6° off — Spritzer 0.392, Glint Charger 0.392 (≤ 40 %)  {"shooter":{"k":0.392,"seen":1},"charger":{"k":0.392,"seen":1}}
+FAIL mouse (assist opted in), dead centre — the look slows ×0.79 Spritzer / ×0.79 Glint Charger; the camera carries 0.21 / 0.21 of a strafe (both ≤ 60 %)  {"st":{"shooter":{"k":0.79,"on":true,"off":true},"charger":{"k":0.79,"on":true,"off":true}},"pu":{"shooter":{"k":0.21,"seen":1},"charger":{"k":0.21,"seen":1}}}
+old-tuning-zones.log: RESULT 12/15
+FAIL the rules: take at 80 % (was 80), neutralise at 40 % (was 40), warn at 30 % (was 30), over the line 0 s before a flip (was 0)  {"control":0.8,"contest":0.4,"warn":0.3,"flipHold":0}
+FAIL 72 % takes a neutral zone (the old rules needed 80 %): after null s; then 37 % of it inked back by the other team (the old rules needed 40 %) neutralises it after null s  {"t72":null,"o72":-1,"t37":null,"o37":0}
+FAIL HUD: the share bar's take ticks sit at 80 % from each end (24 / 10 px of 35)  {"la":24,"lb":10,"bw":35}
+tuning-turf-1.log: RESULT 12/12
+tuning-turf-2.log: RESULT 12/12
+tuning-turf-3.log: RESULT 12/12
+tuning-zones-1.log: RESULT 15/15
+tuning-zones-2.log: RESULT 15/15
+tuning-zones-3.log: RESULT 15/15

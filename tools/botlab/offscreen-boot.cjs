@@ -26,10 +26,9 @@ electron.app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 const DEVSTAGE = process.env.DEVSTAGE === '1', WIPSTAGES = process.env.WIPSTAGES === '1';
 const addFlag = (u, on, flag) => (on && typeof u === 'string' && u.startsWith('app://inkwave/index.html') && !new RegExp(`[?&]${flag}\\b`).test(u)
   ? u.replace(/^([^#]*?)(\?[^#]*)?(#.*)?$/, (_, p, q, h) => `${p}${q ? q + '&' : '?'}${flag}${h || ''}`) : u);
-// LAVA=low|high|rise|fall: every game page loads with ?lava=… (a lava stage built or held at that level: the caldera
-// blockout's stand-in builds at that level; the lava engine, once it lands, holds it there — ENGINE.md T1) [b5-caldera]
-const LAVA = /^(low|high|rise|fall)$/.test(process.env.LAVA || '') ? process.env.LAVA : '';
-const devURL = (u) => addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), !!LAVA, 'lava=' + LAVA);
+// PAGEQ='era=2' / 'lava=high' …: every game page loads with that query too (a stage module's audit switch) [b5-stagehooks]
+const PAGEQ = process.env.PAGEQ || '';
+const devURL = (u) => addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), !!PAGEQ, PAGEQ);
 class OffscreenBW extends electron.BrowserWindow {
   constructor(opts = {}) {
     super({ ...opts, show: false, fullscreen: false, width: 1512, height: 945, webPreferences: { ...(opts.webPreferences || {}), offscreen: true } });

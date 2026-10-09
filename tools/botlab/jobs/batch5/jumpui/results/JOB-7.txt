@@ -1,0 +1,53 @@
+JOB-7 (jumpui) @ 6fc9a53 (review fix round 1) — verdict: every jump-ui run full (Mac mini b5-runner, 09:53–10:07, exit 0).
+- round 1: all 12 jump-ui runs full — turf 72/72, zones 75/75, tower 75/75, boss 66/66, each at the window size, 960×600 and
+  1280×720 (Zone Control at 960×600, the reviewer's failing case: 75/75). Every other test full (sub-tweaks, tower-ink,
+  hud-lead ×3, map-reveal, input-swim, sfx-cues 54/54 alone, net-jump-ui 21/21, its tower scene 7/7, net-practice, net-turf)
+  except bot-specials 18/19.
+- rounds 2 and 3: jump-ui at 960×600 in all four modes + Zone Control / Tower Command at 1280×720: all full both times.
+  So Zone Control at 960×600 passed 3 of 3, Tower Command at 960×600 3 of 3, both at 1280×720 3 of 3.
+- bot-specials 18/19: Mega Stamp. The failing part is the device-AI-off baseline (off.frontShots 2, the check wants ≥ 5);
+  the on half was right (0 front shots, not splatted). This check: 1 FAIL / 42 PASS on this Mac; no jumpui code involved —
+  chance.
+
+## the job's output
+### round 1 @ 6fc9a53: the whole regress list
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-1280: RESULT 72/72 0 FAIL
+== jump-ui-1: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+== jump-ui-tower: RESULT 75/75 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-boss-1280: RESULT 66/66 0 FAIL
+== jump-ui-boss: RESULT 66/66 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Mega Stamp: no shots into its front, guarded swing after swing (the old code held them only mid-swing); out of the lane in front of it  {"on":{"dead":false,"frontShots":0,"sInFront":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0.6000000000000002,"knockShots":0,"reengaged":0,"bubbleHold":0,"popShots":0,"hops":0,"hunted":0,"splattedBy":{}}},"off":{"dead":false,"frontShots":2,"sInFront":0.2}}
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+### round 3: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL

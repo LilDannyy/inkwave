@@ -1,12 +1,20 @@
 // Level: turns a map layout (oriented boxes) into collision blocks, paintable faces and render geometry.
 import * as THREE from 'three';
 import { PATTERN } from './maps.js';
+import { PLAYER } from '../config.js';
 
 const _v = new THREE.Vector3();
 const _v2 = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
+// [b5-stagehooks] stage modules (src/game/stageMods.js, docs/STAGE-MODS.md): extra block fields / kinds a layout def or
+// a prop collider may carry. Empty for every existing stage.
+const FIELDS = new Map(), KINDS = new Map();
 
 export class Level {
+  // a def (or prop collider) carrying `key` runs apply(block, def, level) at the end of _addBlock
+  static blockField(key, apply) { FIELDS.set(key, apply); }
+  // a def (or prop collider) of kind `name`: build(block, def) sets center / half / axes / aligned; mirror(def) → its twin
+  static blockKind(name, k) { KINDS.set(name, k); }
   // extra: collision-only boxes from set dressing ({min,max}, or {obox, center, size, rotY} for a turned prop; optional
   // roof / rail / perch flags) — solid, un-inkable, never rendered (the prop mesh is)
   constructor(layout, extra = []) {
@@ -26,7 +34,9 @@ export class Level {
   _build() {
     const L = this.layout;
     const defs = [...L.single, ...L.half, ...L.half.map(mirrorDef),
-      ...this.extra.map((c) => (c.obox
+      ...this.extra.map((c) => withFields(c, KINDS.has(c.kind)   // [b5-stagehooks] a module's own kind / fields ride along
+        ? { color: '#888888', ...c, paint: false, hidden: true, roof: !!c.roof, rail: !!c.rail, perch: !!c.perch }
+        : c.obox
         ? { kind: 'obox', center: c.center, size: c.size, rotY: c.rotY, paint: false, hidden: true, color: '#888888', roof: !!c.roof, rail: !!c.rail, perch: !!c.perch }
         : { kind: 'box', min: c.min, max: c.max, paint: false, hidden: true, color: '#888888', roof: !!c.roof, rail: !!c.rail, perch: !!c.perch }))];
     for (const d of defs) this._addBlock(d);
@@ -59,6 +69,7 @@ export class Level {
       bevel: d.bevel,
       faces: [-1, -1, -1, -1, -1, -1],
       aligned: true,
+      presence: 0,                 // [b5-stagehooks] the states (bits) a stage module says it exists in; 0 = always
     };
     if (d.kind === 'box') {
       b.center.set((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2);
@@ -70,6 +81,8 @@ export class Level {
       b.half.set(d.size[0] / 2, d.size[1] / 2, d.size[2] / 2);
       b.axes = [new THREE.Vector3(c, 0, -s), new THREE.Vector3(0, 1, 0), new THREE.Vector3(s, 0, c)];
       b.aligned = false;
+    } else if (KINDS.has(d.kind)) {
+      KINDS.get(d.kind).build(b, d, this);   // [b5-stagehooks]
     } else {
       // Ramp: a thick tilted slab whose top surface runs from low → high and whose underside reaches the floor.
       const L0 = new THREE.Vector3(...d.low), H0 = new THREE.Vector3(...d.high);
@@ -102,6 +115,7 @@ export class Level {
         .addScaledVector(b.axes[2], (i & 4 ? 1 : -1) * b.half.z);
       b.aabbMin.min(_v); b.aabbMax.max(_v);
     }
+    if (FIELDS.size) for (const [k, f] of FIELDS) if (d[k] !== undefined) f(b, d, this);   // [b5-stagehooks]
     this.blocks.push(b);
   }
 
@@ -178,12 +192,18 @@ export class Level {
       Math.abs(_v2.dot(b.axes[2])) < b.half.z + pad;
   }
 
-  pointInside(p, pad = 0, exclude = -1) {
+  // [b5-stagehooks] the states a block's own faces must be hidden in: its presence, or for a block in every state (0) the
+  // full mask a module declared (level.presenceAll, e.g. 7 for three eras; 0 / unset on every other stage)
+  _need(b) { return b.presence || this.presenceAll || 0; }
+  // need [b5-stagehooks]: only blocks present in every state of that mask count (a face of an era-1 block is not hidden by
+  // an era-3 one; a shared face by neither); 0 / undefined = every solid block, as always
+  pointInside(p, pad = 0, exclude = -1, need = 0) {
     const ids = this.queryBlocks(p.x - 0.01, p.z - 0.01, p.x + 0.01, p.z + 0.01, this._qtmp || (this._qtmp = []));
     for (const id of ids) {
       if (id === exclude) continue;
       const b = this.blocks[id];
       if (!b.solid) continue;
+      if (need && b.presence && (b.presence & need) !== need) continue;
       if (this.pointInBlock(b, p, pad)) return true;
     }
     return false;
@@ -231,7 +251,7 @@ export class Level {
         if ((b.roof || b.perch) && n.y > 0.5) face.paintable = false;
         if (face.wall) {
           _v.copy(origin).addScaledVector(u, su / 2).addScaledVector(v, -0.06).addScaledVector(n, 0.06);
-          face.groundedBottom = this.pointInside(_v, 0, b.id) || _v.y < 0.02;
+          face.groundedBottom = this.pointInside(_v, 0, b.id, this._need(b)) || _v.y < 0.02;   // [b5-stagehooks] presence
         }
         b.faces[k * 2 + (sign > 0 ? 0 : 1)] = face.id;
         this.faces.push(face);
@@ -247,7 +267,7 @@ export class Level {
         const uu = Math.min(f.su - 0.05, Math.max(0.05, (i / nu) * f.su));
         const vv = Math.min(f.sv - 0.05, Math.max(0.05, (j / nv) * f.sv));
         _v.copy(f.origin).addScaledVector(f.u, uu).addScaledVector(f.v, vv).addScaledVector(f.n, 0.03);
-        if (!this.pointInside(_v, 0, f.block)) return false;
+        if (!this.pointInside(_v, 0, f.block, this._need(this.blocks[f.block]))) return false;   // [b5-stagehooks] presence
       }
     }
     return true;
@@ -300,6 +320,7 @@ export class Level {
       B.fdat.push(f.pattern, f.atlas ? 1 : 0, f.su, f.sv);
       B.fflag.push(f.wall ? 1 : 0, f.groundedBottom ? 1 : 0, f.mural);
       B.ftan.push(f.u.x, f.u.y, f.u.z);
+      if (XA) for (let k = 0; k < XA.length; k++) { const v = XA[k].cur; for (let c = 0; c < XA[k].size; c++) XA[k].out.push(v[c] ?? 0); }   // [b5-stagehooks]
       return i;
     }
     // triangle with winding chosen so it faces along `n`
@@ -311,8 +332,11 @@ export class Level {
       _c.crossVectors(_a, _b);
       if (_c.dot(n) >= 0) B.idx.push(i0, i1, i2); else B.idx.push(i0, i2, i1);
     }
+    // [b5-stagehooks] a stage module's per-vertex attributes (level.geomAttrs: [{ name, size, value(block) → numbers }])
+    const XA = this.geomAttrs && this.geomAttrs.length ? this.geomAttrs.map((a) => ({ ...a, out: [], cur: [] })) : null;
     for (const b of this.blocks) {
       if ((!b.solid && !b.render) || !filter(b)) continue;
+      if (XA) for (const a of XA) a.cur = a.value(b) || [];
       const ax = b.axes, h = [b.half.x, b.half.y, b.half.z];
       const minH = Math.min(h[0], h[1], h[2]);
       // bevel scales with the block: chunky rounded edges on big structures, finer on crates/ramps/rails
@@ -329,7 +353,7 @@ export class Level {
           for (let t = -1; t <= 1; t += 0.25) {
             E.copy(b.center).addScaledVector(ax[k1], s1 * h[k1]).addScaledVector(ax[k2], s2 * h[k2]).addScaledVector(ax[k3], t * h[k3] * 0.98);
             Q.copy(E).addScaledVector(ax[k1], s1 * 0.04).addScaledVector(ax[k2], s2 * 0.04);
-            if (self.pointInside(Q, 0, b.id)) { ok = false; break; }
+            if (self.pointInside(Q, 0, b.id, self._need(b))) { ok = false; break; }   // [b5-stagehooks] presence
           }
         }
         edgeCache.set(key, ok);
@@ -412,6 +436,7 @@ export class Level {
     g.setAttribute('faceData', new THREE.Float32BufferAttribute(B.fdat, 4));
     g.setAttribute('faceFlags', new THREE.Float32BufferAttribute(B.fflag, 3));
     g.setAttribute('faceTan', new THREE.Float32BufferAttribute(B.ftan, 3));
+    if (XA) for (const a of XA) g.setAttribute(a.name, new THREE.Float32BufferAttribute(a.out, a.size));   // [b5-stagehooks]
     g.setIndex(B.idx);
     g.computeBoundingSphere();
     this.renderTris = B.idx.length / 3;
@@ -437,7 +462,15 @@ export class Level {
     }
     return best;
   }
+
+  // [b5-stagehooks] shared answers a stage module may take over (StageWorld.attachLevel installs its own): the liquid
+  // surface at (x, z) — the sea everywhere by default — and whether a device may not be placed in the disc (p, r)
+  liquidY(x, z) { return PLAYER.waterY; }
+  noPlace(p, r = 0) { return false; }
 }
+
+// [b5-stagehooks] a prop collider's registered extra fields go onto its def
+function withFields(c, def) { if (FIELDS.size) for (const k of FIELDS.keys()) if (c[k] !== undefined) def[k] = c[k]; return def; }
 
 function mirrorDef(d) {
   const mural = d.mural ? d.mural.map((m) => ({ ...m, n: [-m.n[0], m.n[1], -m.n[2]] })) : undefined;
@@ -446,5 +479,6 @@ function mirrorDef(d) {
     return { ...d, mural, noPaint, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] };
   }
   if (d.kind === 'obox') return { ...d, mural, noPaint, center: [-d.center[0], d.center[1], -d.center[2]] };
+  if (KINDS.has(d.kind)) return { ...KINDS.get(d.kind).mirror(d), mural, noPaint };   // [b5-stagehooks]
   return { ...d, mural, noPaint, low: [-d.low[0], d.low[1], -d.low[2]], high: [-d.high[0], d.high[1], -d.high[2]] };
 }

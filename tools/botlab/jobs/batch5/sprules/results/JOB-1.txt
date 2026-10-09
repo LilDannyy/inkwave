@@ -1,0 +1,31 @@
+REDUCED BY THE LEAD: 8 matches per cell; the full balance run happens once, after integration.
+JOB-1 (b5-sprules) results — run on the Mac mini at 4d7234e (you said to use it for both jobs; JOB-1 unchanged), SLOTS=3 PAR=3, caffeinate. Cut by the lead to balance.sh <out> 1 1 = 64 matches (8 per mode × config over the 4 stages). Wall time 24 min. Ran after JOB-2 (the lead: tests before balance), not alongside it.
+FAILED lines: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+## node tools/botlab/jobs/batch5/sprules/agg.cjs .botlab/results/b5-sprules/job1
+
+=== turf (32 matches; the forced team vs the other, means per match ± sd)
+  Waddle Bomb Barrage forced n=8: wins 63% [A 75% (n 4), B 50% (n 4)] | turf Δ 2.6 ±7.5 | K/D 0.89 ±0.22 | foes splatted by barrages 1.5/match | special used 15.3/match (theirs 14.1)
+      per stage: craters 100% (2) · crossmarket 0% (2) · halyard 100% (2) · spirhalite 50% (2)
+      throws (all barrages in these matches, incl. the other team's random ones): waddle 913 (83%), seeker 78 (7%), bomb 68 (6%), mist 34 (3%), burst 5 (0%), sticky 5 (0%)
+  Mystery Bomb Barrage forced n=8: wins 63% [A 75% (n 4), B 50% (n 4)] | turf Δ 5.5 ±10.3 | K/D 1.08 ±0.37 | foes splatted by barrages 1.1/match | special used 14.1/match (theirs 13.1)
+      per stage: craters 100% (2) · crossmarket 50% (2) · halyard 0% (2) · spirhalite 100% (2)
+      throws (all barrages in these matches, incl. the other team's random ones): seeker 204 (19%), mist 199 (19%), waddle 185 (17%), sticky 164 (15%), bomb 162 (15%), burst 154 (14%)
+  Splat Bomb Barrage forced (reference) n=8: wins 88% [A 75% (n 4), B 100% (n 4)] | turf Δ 10.4 ±10.7 | K/D 1.06 ±0.48 | foes splatted by barrages 1.5/match | special used 14.0/match (theirs 13.8)
+      per stage: craters 100% (2) · crossmarket 100% (2) · halyard 100% (2) · spirhalite 50% (2)
+  random rolls (baseline) n=8: wins 50% [A 50% (n 8)] | turf Δ 1.9 ±15.2 | K/D 0.95 ±0.36 | foes splatted by barrages 0.1/match | special used 12.6/match (theirs 13.6)
+      per stage: craters 100% (2) · crossmarket 50% (2) · halyard 0% (2) · spirhalite 50% (2)
+  all: stuck 0.11% | splats 38.4 | matches with console warnings 0 · frame errors 0
+
+=== zones (32 matches; the forced team vs the other, means per match ± sd)
+  Waddle Bomb Barrage forced n=8: wins 75% [A 75% (n 4), B 75% (n 4)] | turf Δ 1.2 ±12.0 | K/D 1.22 ±0.55 | foes splatted by barrages 4.6/match | special used 21.3/match (theirs 23.6)
+      per stage: craters 100% (2) · crossmarket 50% (2) · halyard 50% (2) · spirhalite 100% (2)
+      throws (all barrages in these matches, incl. the other team's random ones): waddle 1178 (88%), burst 78 (6%), sticky 59 (4%), bomb 7 (1%), mist 7 (1%), seeker 5 (0%)
+  Mystery Bomb Barrage forced n=8: wins 38% [A 50% (n 4), B 25% (n 4)] | turf Δ -1.5 ±6.5 | K/D 0.92 ±0.27 | foes splatted by barrages 3.0/match | special used 22.9/match (theirs 24.4)
+      per stage: craters 50% (2) · crossmarket 0% (2) · halyard 50% (2) · spirhalite 50% (2)
+      throws (all barrages in these matches, incl. the other team's random ones): burst 365 (23%), sticky 275 (17%), mist 258 (16%), bomb 257 (16%), seeker 248 (15%), waddle 208 (13%)
+  Splat Bomb Barrage forced (reference) n=8: wins 63% [A 75% (n 4), B 50% (n 4)] | turf Δ 1.5 ±7.6 | K/D 0.94 ±0.34 | foes splatted by barrages 1.4/match | special used 19.0/match (theirs 24.0)
+      per stage: craters 100% (2) · crossmarket 50% (2) · halyard 100% (2) · spirhalite 0% (2)
+  random rolls (baseline) n=8: wins 25% [A 25% (n 8)] | turf Δ -1.1 ±6.0 | K/D 0.99 ±0.17 | foes splatted by barrages 0.0/match | special used 23.4/match (theirs 24.5)
+      per stage: craters 0% (2) · crossmarket 100% (2) · halyard 0% (2) · spirhalite 0% (2)
+  all: stuck 0.42% | splats 82.4 | matches with console warnings 0 · frame errors 0
