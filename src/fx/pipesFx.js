@@ -244,7 +244,7 @@ export class PipeLooks {
         }
         if (over) continue;
         // high up in open air (a riser's top, a bend over the sky) no collar either: a ring with nothing to hold it reads
-        // as a hoop floating in the spawn's view (LEAD-REVIEW round 2); one beside a wall, a pylon or a housing stays
+        // as a hoop floating in the spawn's view (LEAD-REVIEW round 1); one beside a wall, a pylon or a housing stays
         if (q.y > 4.5 && !this._nearSolid(L, q, 1.4)) { this.collarsSkipped = (this.collarsSkipped || 0) + 1; continue; }
         _qt.setFromUnitVectors(UP, _p.set(q.tx, q.ty, q.tz));
         _m.compose(_s.set(q.x, q.y, q.z), _qt, new THREE.Vector3(1, 1, 1));

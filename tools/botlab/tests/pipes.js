@@ -434,7 +434,7 @@
     const hudNow = txt.some(([t, l]) => t > 91.2 && /KELP LINES DOWN: dive from your promenade/.test(l));
     const pillOk = txt.some(([t, , p]) => t < 89 && /KELP UP/.test(p)) && txt.some(([t, , p]) => t > 90.5 && /KELP DOWN/.test(p));
     R('tide: the HUD says "KELP LINES GOING DOWN IN 10" counting down, then "KELP LINES DOWN: dive from your promenade"; the pill under the clock turns ▲ UP → ▼ DOWN', hudWarn && hudNow && pillOk, { txt: txt.filter((_, i) => i % 2 === 0) });
-    // readability (LEAD-REVIEW round 2 item 7): riding through the warning keeps the countdown on screen, with the ride chip
+    // readability (LEAD-REVIEW round 1 item 7): riding through the warning keeps the countdown on screen, with the ride chip
     // in the top band (not over the rider); a late joiner inside the warning gets the countdown line too; the tidal
     // mouths say "KELP LINE"; one OUT wording on both one-way kinds; the match-start line names the tide's real direction
     {
