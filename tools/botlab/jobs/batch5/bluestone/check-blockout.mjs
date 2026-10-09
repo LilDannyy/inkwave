@@ -17,7 +17,7 @@ for (const it of PR.PLACEMENTS) {
   if (it.type !== 'bluestone_berm') continue;
   for (const sgn of [1, -1]) {
     const [x, , z] = it.pos, [w, d] = it.size, rot = (it.rotY || 0) + (sgn < 0 ? Math.PI : 0);
-    extra.push({ obox: true, center: [sgn * x, (3 - 2) / 2, sgn * z], size: [w, 5, d], rotY: (rot * 180) / Math.PI, roof: true });
+    const top = it.top ?? 3.0; extra.push({ obox: true, center: [sgn * x, (top - 2) / 2, sgn * z], size: [w, top + 2, d], rotY: (rot * 180) / Math.PI, roof: true });
   }
 }
 const lvl = new Level(L, extra);
@@ -27,8 +27,10 @@ out.groundMiss = LY.GROUND_MISS.length; out.bermMiss = PR.BERM_MISS.length;
 // holes: points inside the outline (and on the terrace) with no walkable top above y −0.5
 const holes = [];
 for (let x = -63; x <= 63; x += 0.25) for (let z = -85; z <= 85; z += 0.25) {
-  if (!G.inPoly(LY.OUTLINE, x, z)) continue;
-  if (G.edgeDist(LY.OUTLINE, x, z) < 0.05) continue;
+  // the outline, and Prawn Alley's floor (both halves; fix round 1) — 5 cm in from every edge
+  const inA = G.inPoly(LY.ALLEY.quad, x, z) && G.edgeDist(LY.ALLEY.quad, x, z) >= 0.05, mq = LY.ALLEY.quad.map(([a, b]) => [-a, -b]);
+  const inB = G.inPoly(mq, x, z) && G.edgeDist(mq, x, z) >= 0.05;
+  if (!inA && !inB && (!G.inPoly(LY.OUTLINE, x, z) || G.edgeDist(LY.OUTLINE, x, z) < 0.05)) continue;
   const y = lvl.groundHeight(x, z, 60);
   if (y < -0.5) holes.push([x, z]);
 }
@@ -96,6 +98,15 @@ if (!ERA.ERA) {
     else if (flag) rows.push(`${k} ${flag}`);
   }
   out.groups = groups.size; out.groupFails = bad;
+  // per jump (1→2, 2→3): the groups per half and the blocks (layout blocks of both halves + prop colliders) that change
+  const M = { 1: 1, 12: 3, 2: 2, 23: 6, 3: 4 }, has = (t, e) => ((t ? M[t] : 7) >> (e - 1)) & 1;
+  for (const [ea, eb] of [[1, 2], [2, 3]]) {
+    const gA = new Set(), gB = new Set(); let blocks = 0;
+    i = 0;
+    for (const b of lvl2.blocks) { const d = all[i++]; if (!d || !d.eras) continue; if (has(d.eras, ea) !== has(d.eras, eb)) { blocks++; (b.center.z < 0 ? gA : gB).add(d.eraGroup || '#' + b.id); } }
+    for (const it of PR.PLACEMENTS) if (it.eras && it.type === 'bluestone_berm' && has(it.eras, ea) !== has(it.eras, eb)) { blocks += 2; gA.add(it.eraGroup); gB.add(it.eraGroup); }
+    out[`jump${ea}${eb}`] = { groupsPerHalf: [gA.size, gB.size], blocks };
+  }
   console.log(rows.sort().join('\n'));
   const eraBlocks = all.length;
   out.eraBlocks = eraBlocks; out.eraShare = +(eraBlocks / (L.single.length + 2 * L.half.length)).toFixed(3);
