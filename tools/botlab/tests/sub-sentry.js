@@ -3,6 +3,7 @@
 // shoot in a turret mode. It shoots with its Splattershot-like weapon. The weapon is made from recycled materials."
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-sentry.js tools/botlab/run.sh tools/botlab/page.cjs
 //   MAP=testbox MODE=tower … PAGE_ARGS='only=tower'      MAP=halyard MODE=zones … PAGE_ARGS='only=zones'
+//   MAP=testbox MODE=boss … PAGE_ARGS='only=boss'
 //   PAGE_ARGS='only=place,spawn,unfold,sight,fire,skip,life,device,crush,movers,net,bots,hud' (MODE=turf, the default set)
 // Staged on testbox (a flat deck, top y 0; a 4 m wall x 14…15, z ±8; pads at z ±44, spawnBarrier 4.2); everyone parked
 // far off with their brains stubbed but where a scene says; hits logged, not dealt, where a scene says so. Checks:
@@ -42,7 +43,8 @@
 //    life ring on the badge runs down; the minimap draws it;
 //  - tower (MODE=tower): the tower's body crushes it ('device:down' how 'crush', [2, gid, 2]); on the deck it rides and
 //    fires; a rider bot sets one on the deck;
-//  - zones (MODE=zones): a guard bot sets one down at its zone.
+//  - zones (MODE=zones): a guard bot sets one down at its zone;
+//  - boss (MODE=boss, PAGE_ARGS='only=boss'): it targets the boss / a crablet and its rounds hit it (G.boss.segHit).
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { SUBS, PLAYER, WEAPONS } = await import('./src/config.js');
@@ -740,6 +742,26 @@
         stub(X);
         R(`a Tower Command rider bot sets one down on the deck (${got ? got.rb.on?.b.tag || 'not riding' : 'none in 12 s'}; role ${X.bot.tRole})`, got && got.rb.on && got.rb.on.b.tag === 'tower', { role: X.bot.tRole, got: !!got });
       }
+    }
+
+    // ============================================================================================ Boss Battle
+    // (MODE=boss): the nearest crablet in range and sight, else the boss's nearest hit shape — its rounds hit through
+    // G.boss.segHit, credited to its owner
+    if (want('boss') && G.boss) {
+      reset();
+      const B = G.boss, bh0 = B.hit.bind(B), got = [];
+      B.hit = function (att, dmg, target, wid, point) { if (att === me) got.push({ dmg, crab: target && target.id !== undefined }); return bh0(att, dmg, target, wid, point); };
+      try {
+        step(3, () => !B.visible);
+        let it = null, tries = 0;
+        const placeNear = () => { const bp = B.pos, dir = V(bp.x, 0, bp.z).normalize(); const p = V(bp.x - dir.x * 8, 0, bp.z - dir.z * 8); p.y = Math.max(0, L.groundHeight(p.x, p.z, 4)); return plant(me, p, Math.atan2(bp.x - p.x, bp.z - p.z)); };
+        while (!it && tries++ < 3) { it = placeNear(); if (!it) step(0.5); }
+        put(me, HOME, 0);
+        const e0 = evs.length;
+        step(4, () => { me.hp = PLAYER.hp; me.invuln = 9; });
+        const tgt = it && it.target, shots = since(e0, 'sentry:fire').length;
+        R(`Boss Battle: it targets the boss (or a crablet: ${tgt ? (tgt.bossT ? (tgt.ref && tgt.ref.id !== undefined ? 'crablet' : 'hit shape') : 'actor') : 'none'}) and its ${shots} rounds hit it through segHit (${got.length} hits for its owner)`, it && shots >= 3 && got.length >= 1, { placed: !!it, shots, hits: got.length, bossAt: v2(B.pos) });
+      } finally { B.hit = bh0; }
     }
 
     // ============================================================================================ Zone Control

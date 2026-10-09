@@ -302,7 +302,7 @@ function spawn(a, sub, pos, yaw, ghost, gid, block = -1) {
   const m = makeMesh(a.team, vs);
   G.scene.add(m.outer);
   const it = { owner: a, team: a.team, sub, gid, ghost, state: 'unfold', t: 0, age: 0, hp: sub.hp, vs, m,
-    pos: pos.clone(), headYaw: yaw, headPitch: 0, sweepPh: 0, target: null, lockT: 0, locked: false, seenT: -9, lostT: 0, lookT: 0, reT: 0,
+    pos: pos.clone(), headYaw: yaw, headPitch: 0, sweepPh: 0, target: null, lockT: 0, locked: false, seenT: -9, reT: 0,
     glim: new Map(), shotT: 0, burstLeft: sub.burst, burstOn: false, ghostShots: 0, ghostShotT: 0, flash: 0, flashOn: false,
     lineT: 0, fireT: 0, coughT: 0, smokeT: 0, chkT: 0, liqT: 0, hpT: -9, why: '', vis: false, floorId: block,
     lookT: ((gid % 97) / 97) * LOOK_EVERY };   // (its looks staggered by gid)

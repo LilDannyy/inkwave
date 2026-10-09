@@ -531,6 +531,7 @@ function rebuild(L, team) {
 }
 // [b5-subs] does a Scrap Sentry have a line from its eye to nav node n? (cached per node while it stands where it is)
 function turretSees(it, n, id) {
+  if (it.rb?.on) return true;   // (riding a mover: its reach as a plain disc — no sight lines re-cast as it goes)
   let V = it._navVis;
   if (!V || Math.abs(V.x - it.pos.x) + Math.abs(V.y - it.pos.y) + Math.abs(V.z - it.pos.z) > 0.3) V = it._navVis = { x: it.pos.x, y: it.pos.y, z: it.pos.z, m: new Map() };
   let v = V.m.get(id);
