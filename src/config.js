@@ -492,6 +492,7 @@ export const SUBS = {
     // drawDist m from the camera; the bots' danger discs: ≤ dangerCap in all, armed while a foe known within armRange m
     // has a line to one of the chain (C7)
     sagTime: 0.4, particleCap: 400, drawDist: 60, dangerCap: 48, armRange: 20,
+    dangerCore: 0,   // [b5-subs] (fix round 1, an A/B knob for the lead, off: 1 = foes' bots treat an armed chain's lethal core, not R + 0.3, as its danger)
   },
   dash: {
     id: 'dash', name: 'Dash Pellet', kind: 'dash', blurb: 'Pops under your feet and blasts you a few metres the way you\'re steering, on the ground or in the air. Its blast hits anyone you leave behind.',

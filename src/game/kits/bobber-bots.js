@@ -661,7 +661,7 @@ export function botDangers(api) {
     const sz = sizeOf(o.chain?.n || 1), R = sz.R, d = api.D(api.keyOf(o), 'bobber', o.team, o.owner);
     // (its lethal core: where the blast still does ≥ 100 to a full-health kid)
     const kk = Math.sqrt(Math.max(0, (100 - sz.dmin) / Math.max(1, sz.dmax - sz.dmin))), core = sz.dmax >= 100 ? 0.8 + (1 - kk) * (R - 0.8) : 0;
-    api.disc(d, o.spot.x, o.spot.y - o.hover, o.spot.z, R + 0.3, core);
+    api.disc(d, o.spot.x, o.spot.y - o.hover, o.spot.z, S.dangerCore && core > 0 ? core + 0.2 : R + 0.3, core);   // (dangerCore: the A/B knob in config.js)
     d.yLo = o.spot.y - R - 1.2; d.yHi = o.spot.y + R;
     d.hit = 'bobber'; d.lethal = (o.chain?.n || 1) >= 3 ? 2 : 1; d.linger = true; d.vis = 'near';
     d.tIn = 0.3; d.tOut = Math.max(0.1, S.life - (G.time - o.born)); d.los = true; d.losY = o.hover;
