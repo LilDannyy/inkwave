@@ -194,7 +194,7 @@
     for (const w of ['shooter', 'brolly', 'mitts', 'bow', 'blade']) {
       fresh(); const c0 = A[0]; c0.setWeapon(w); carry(c0, -3, 2); runs[w] = speed(c0, () => { c0.intent.move.set(0, 0, 1); });
     }
-    R('C8 S7, S21: a carrier runs at PLAYER × 0.8 (4.8 m/s) with the Splattershot, Brolly, Mitts, Bow and Blade alike', Object.values(runs).every((v) => Math.abs(v - PLAYER.runSpeed * K.speedMul) < 0.15), runs);
+    R('C8 S7, S21: a carrier runs at PLAYER × 0.8 (4.8 m/s) with the Splattershot, Brolly, Mitts, Bow and Blade alike', Object.values(runs).every((v) => Math.abs(v - 4.8) < 0.15), runs);   // (the SPEC's number, not the config's: a changed speedMul fails here)
     A[0].setWeapon('shooter');
     // swimming, squid on dry ground, enemy ink, the air, the wall climb
     fresh(); const c0 = A[0];
