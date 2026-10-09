@@ -300,7 +300,7 @@ add(stairOn(G.ST_EAST, 2.7, 1.2, 2.4, 2.2, steps({ tag: 'east-steps' })));
     frameBox([0, 0], ur, [40.4, 42.5], [1.7, 2.6], 2.4, 4.6, { color: '#8a6e50', pattern: PATTERN.planks, roof: true, tag: 'pattern-shop-porch' }),
     frameBox([0, 0], ur, [45.5, 46.2], [0, 1.9], 2.4, 3.7, cover(K.sand, { tag: 'sand-bin' }))); }
 add(B(-14.3, -11.05, 2.4, 3.0, -39.05, -36.95, { color: K.sand, pattern: PATTERN.rubber, tag: 'casting-bed' }));
-add(B(-14.0, -12.8, 2.4, 4.0, -38.8, -37.85, cover('#6b5f55', { tag: 'flask-stack' })), B(-12.2, -11.3, 3.0, 3.9, -38.7, -37.6, cover(K.wood, { tag: 'pattern-crates' })));
+add(B(-14.15, -12.95, 2.4, 4.0, -37.95, -37.05, cover('#6b5f55', { tag: 'flask-stack' })), B(-12.3, -11.3, 3.0, 3.9, -38.8, -37.6, cover(K.wood, { tag: 'pattern-crates' })));
 { const c = G.ST_CUPOLA, u = unit(c.pts[0], c.pts[1]), e = [c.mid[0] + u[0] * 1.2, c.mid[1] + u[1] * 1.2];   // the stair's top east corner
   add(frameBox(e, u, [0.02, 3.25], [-0.05, 2.3], 2.4, 5.9, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
 
