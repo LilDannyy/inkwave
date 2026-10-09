@@ -1789,8 +1789,8 @@ cover, heights and mode data go back.
 - **No straight sightline from base to base.** Every line from a kid's eye (1.5 m over the 3.3 m deck) on a 1 m grid
   over one spawn deck to every such eye on the other is blocked by something solid, in every era: 0 of 36,100 lines
   are clear (`rc-sight.mjs`). The hotel closes the Z's throat (see 8.2).
-- **Size.** Walkable floor (`cover-map.js` floorCells) is 4,828 / 4,988 / 5,508 m² in eras 1 / 2 / 3. Era 1 sits between
-  Crossroads' 4,700 m² and 5,500 m². Era 2 is +3.3 %. Era 3 is **+14.1 % over era 1 and +10.4 % over era 2**.
+- **Size.** Walkable floor (`cover-map.js` floorCells) is 4,826 / 4,986 / 5,508 m² in eras 1 / 2 / 3. Era 1 sits between
+  Crossroads' 4,690 m² and 5,500 m². Era 2 is +3.3 %. Era 3 is **+14.1 % over era 1 and +10.5 % over era 2**.
 
 ### 8.2 Mid, kept as built
 
@@ -1860,8 +1860,8 @@ ever vanishes (rule 28).
 - **The Iron Bridge (today, the 3000s).** It runs from the quay by the GPO (z −33 … −30) straight across to the punt's
   north leg, as three 5.7 m spans with rails and a lamp. It opens a second, shorter crossing in era 2.
 - **The floating garden (the 3000s).** Lawn on pontoons (top −0.2) fills the harbour basin that the quay, the punt
-  and the bridge enclose: x −6 … 11, z −41 … −33 and z −30 … −26, six tiles of 5.7 × 8 / 4 m, with planters and a
-  glasshouse (`roof`). It is a new area on the flank route. It is reached from the quay, the punt (a 0.14 m step) and
+  and the bridge enclose: x −6 … 11, z −41 … −33 and z −30 … −26, six tiles of 5.7 × 8 / 4 m (about 180 m² of floor per team), with
+  planters and a glasshouse (`roof`). It is a new area on the flank route. It is reached from the quay, the punt (a 0.14 m step) and
   the bridge's ends. The bridge's rails stay, so the bridge runs through the garden as a railed walk.
 
 The crossings are drawn orthogonal (an L and a straight span), so from above they read as harbour piers, never as
@@ -1902,7 +1902,7 @@ Crossroads' diagonal jetties.
   Swimston meets the crossbar. The Gate is on Bravo's forecourt terrace (22, 53), 12.2 m from the pad and a level below
   it. The free zone is Bravo's spawn deck, signed at both stair heads.
 - **Boss Battle**: era 2, as before. The circus ring is the arena, with the booking office and the boat shed on its
-  river and Boathouse edges.
+  river and Boathouse edges, and the two kerb planters under the balcony's north-east corner against its claws.
 
 ### 8.8 The numbers
 
@@ -1910,9 +1910,9 @@ Crossroads' diagonal jetties.
 
 | | Era 1 | Era 2 | Era 3 | Halyard | Crossroads |
 |---|---|---|---|---|---|
-| Walkable floor (`cover-map.js` floorCells) | 4,828 | 4,988 (+3.3 %) | 5,508 (+14.1 % on era 1, +10.4 % on era 2) | 4,252 | 4,690 |
-| Within 5 m of cover | 99.4 % | 99.4 % | 99.2 % | 96.4 % | 95.4 % |
-| Spawn → mid (`spawn-mid.js`, Alpha / Bravo) | 6.09 / 6.41 s | 6.09 / 6.41 s | 6.09 / 6.41 s | | |
+| Walkable floor (`cover-map.js` floorCells) | 4,826 | 4,986 (+3.3 %) | 5,508 (+14.1 % on era 1, +10.5 % on era 2) | 4,252 | 4,690 |
+| Within 5 m of cover | 99.4 % | 99.4 % | 99.4 % | 96.4 % | 95.4 % |
+| Spawn → mid (`spawn-mid.js`, Alpha / Bravo) | 6.13 / 6.46 s | 6.13 / 6.46 s | 6.13 / 6.46 s | | |
 | Deck-to-deck sightlines clear (`rc-sight.mjs`) | 0 of 36,100 | 0 | 0 | | |
 | Strips over 25 m with no free-standing cover (turf build) | 0 | 0 | 0 | | |
 | climb-audit | 168 climbs, 0 barred | 168, 0 | 182, 0 | | |
@@ -1920,5 +1920,13 @@ Crossroads' diagonal jetties.
 Jump 1 changes 4 groups per half (26 blocks) and jump 2 changes 22 (130 blocks). Appear-check reads 0 in every build.
 On the bots' nav, jump 1 shortens Swimston → the quay at mid-leg from 22.4 to 11.7 m (Degrayling Lane) and the
 quay → the punt's north leg from 49.3 to 20.0 m (the Iron Bridge). Jump 2 shortens the quay → the punt from 20.1 to
-15.5 m (the garden) and puts the Halo 77 m from the pad by the hotel stair (`rc-routes.mjs`). The bot matches,
-regions and performance are in `LEAD-REPORT.md`.
+15.5 m (the garden) and puts the Halo 77 m from the pad by the hotel stair (`rc-routes.mjs`).
+
+Bots:
+- **Turf War, era 3:** 60.9 / 72.8 / 65.2 % of turf inked (3 runs).
+- **By region** (4 runs): the floating garden 60 / 61 / 46 / 46 %, the Halo 50 / 22 / 48 / 45 %.
+- **Zone Control:** a full match in eras 3 and 1, 10 and 8 captures.
+- **Tower Command:** a tower-match in era 3, 74 m, 10 control changes.
+- **Boss Battle (era 2):** 6/7; it roams too little, as on Halyard.
+
+The details are in `LEAD-REPORT.md`.
