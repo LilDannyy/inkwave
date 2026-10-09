@@ -306,6 +306,13 @@ export const botKit = {
 // (a player sees their team's bobbers on screen). A chain with a foe in it is fair game: that shot sets it off on them.
 const _a = new V3(), _d = new V3(), _nr = [];
 function foeIn(ch, team) {
+  // (held 0.15 s a chain and team: every firing bot of the team asks, every few frames)
+  const c = ch._fi || (ch._fi = [-9, false, -9, false]), k = team * 2;
+  if (G.time - c[k] < 0.15 && G.time >= c[k]) return c[k + 1];
+  c[k] = G.time;
+  return (c[k + 1] = foeInNow(ch, team));
+}
+function foeInNow(ch, team) {
   const R = sizeOf(ch.n).R;
   for (const e of G.actors) {
     if (e.team === team || !e.alive) continue;
@@ -435,7 +442,10 @@ export function botAct(b, dt, it, move, busy) {
   // (every bot, whatever its sub: its shot is about to go through one of its team's idle bobbers — hold it; in a duel,
   // step aside after a moment to clear the line)
   if (!S && it.fire && items.length) {
-    const o = holdFire(b, a);
+    // (asked every 3 frames a bot, the answer held between: its aim moves little in 0.05 s)
+    let o = b._bobHF?.o;
+    if (!b._bobHF || G.time - b._bobHF.t >= 0.05 || G.time < b._bobHF.t) { o = holdFire(b, a); b._bobHF = { t: G.time, o }; }
+    if (o && o.state !== 'live') o = null;
     if (o) {
       // (a weapon that looses on the release — a charger, splatling, spinner, the bow, the blade's heavy cut — and was held
       // last frame: it keeps holding instead of letting go into the bobber)
