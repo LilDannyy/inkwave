@@ -259,6 +259,7 @@ const SWIMSTON = [
   B(5.1, 6.5, 0, 2.2, -37.6, -35.6, { tag: 'news-kiosk', color: '#4d5f57', pattern: PATTERN.metal, roof: true }),
   OB(5.8, -23, 1.2, 2.2, 0, 1.5, 0, cover({ tag: 'coffee-cart', color: '#7a6a58' })),
   ...[-25.5, -21, -34, -42.5].map((z) => B(4.6, 5.2, 0, 1.5, z - 1, z + 1, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter }))),
+  B(4.55, 5.15, 0, 1.5, -19.6, -19.0, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),   // (fix round 1: veranda E1's north end, the boss check)
   ...[-27.5, -23, -18.6].map((z) => B(-5.2, -4.6, 0, 1.5, z - 1, z + 1, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter }))),
 ];
 
@@ -311,6 +312,11 @@ const WEST = [
   B(-6.6, -5.4, 2.4, 3.4, -27.1, -26.5, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),    // (adds: the gallery's south end, 6 m from cover in the 3000s once the superstop is a glass stair)
   B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
+  // (fix round 1, review issue 8: DESIGN.md §4.5's three overhang spots, measured with the boss check — HULLBREAKER's
+  //  centre came within 1.3 m of the balcony's corner and 2.25 m of the landing and veranda E1, so its legs (2.6 m) stood
+  //  under them; these 1.5 m planters, which its nav sees, are the design's own fix)
+  B(-14, -13.4, 0, 1.5, -15.4, -13.4, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-6.2, -5.2, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   // Prow Place's fountain; Hoki Lane's cover, alternating sides
   B(-23.6, -22, 0, 1.2, -24.6, -23, cover({ tag: 'fountain', color: '#8a8e8c' })),
   B(-22.9, -21.9, 0, 1, -31.7, -29.3, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
