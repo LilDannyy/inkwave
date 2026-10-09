@@ -1,0 +1,16 @@
+== caldera [turf 180s]: turf 37.2% vs 36.7%
+   roles (% of bot-time) {} | holding on purpose 0.6%
+   per bot: turf 1601p, on-zone ink 0p, splats 4.8 → XP beyond the win/lose base ≈ 1791
+   stuck 0.1% | splats 38 (water 0) | specials 14 | super jumps 14 | turf 37.2/36.7 | sim 180s in 42s (wall 42s) | {"cpuSimMs":1.58}
+   loadouts A:mitts+waddle A:shooter+bomb A:charger+bomb A:twins+seeker B:blade+shaker B:brush+curtain B:mitts+boomerang B:bucket+sprinkler
+   by weapon (players, splats dealt, deaths, avg turf) mitts×2 14/7 1180p · shooter×1 5/5 2352p · charger×1 3/1 1009p · twins×1 11/3 2091p · blade×1 2/7 2519p · brush×1 1/8 1179p · bucket×1 2/7 1297p
+   splats by cause {"mitts":14,"zooka":1,"shot":15,"charger":3,"drop":1,"blade":2,"slosh":2}
+   special uses A {"zooka":3,"bubbler":3,"slam":1,"sonar":2} B {"zipcaster":3,"stamp":1,"slam":1}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 6510 · B 0 of 6296 | assists A 1 B 2 {"jumps":0,"byDamage":3,"byJump":0,"credited":3} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 0 {} · B 1 {"zooka":1} | K/D A 25/13 B 13/25 | {"noticed":23,"missed":0,"escapes":15,"evaded":9,"caught":0,"avoidedPath":20,"goalMoved":50,"guard":2,"backedOff":4,"retargeted":6,"heldFire":5.649999999999985,"knockShots":0,"reengaged":7,"bubbleHold":0,"popShots":0,"hops":0,"hunted":0,"splattedBy":{"zooka":1}}
+   sight: fighting 277 bot-s, trigger held 76 s | foe out of sight 20.8% of fight time, aim still on it 80.5% of that | shooting at nothing 12.1% of trigger time (10.8% straight at the hidden foe; 1.6% while it still thinks it sees it, 7.5% a charge held, 3% shots) | bots 25.39 ms per sim s (looking 0.89) | {"checks":5779,"rays":3933,"deferred":0,"seen":274,"lost":97,"cleared":4,"expired":36,"located":820,"jumps":49,"hits":1,"sprays":5,"memBombs":2,"hunts":51}
+   wall climbs (at the wall): {"tries":7,"done":4,"stalled":1,"dry":0,"long":0}
+   stuck {"t":156.8,"name":"P1","w":"mitts","mode":"paint","role":"-","pos":[9.7,0,-10.2],"path":true,"hold":false,"pod":"-","dur":1.5}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":42323,"state":"finish","stuckPct":0.1,"splats":38,"water":0,"specials":14,"jumps":14,"cov":[37.2,36.7],"teamKD":[{"k":25,"d":13,"sp":0,"by":{}},{"k":13,"d":25,"sp":1,"by":{"zooka":1}}],"spUses":[{"zooka":3,"bubbler":3,"slam":1,"sonar":2},{"zipcaster":3,"stamp":1,"slam":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":23,"missed":0,"escapes":15,"evaded":9,"caught":0,"avoidedPath":20,"goalMoved":50,"guard":2,"backedOff":4,"retargeted":6,"heldFire":5.649999999999985,"knockShots":0,"reenga

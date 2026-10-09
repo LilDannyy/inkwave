@@ -1,0 +1,29 @@
+== caldera [zones]: winner Bravo (time) | final 78 vs 24 (penalty +18/+25.4) | OT no
+   held A 22.3s B 145.8s neutral 131.8s | captures 8 (takeovers 2), control events 15, first capture @23.8s | rotations 6
+   teams: A [twins/crab bow/barrage_burst blade/barrage brush/bubbler] far 55%, near 18%, dead 26%, jump 1% | B [blaster/barrage_burst spinner/surf twins/bubbler mitts/surf] far 32%, near 51%, dead 14%, jump 3%
+   bot-time: {"far":43,"near":34,"dead":20,"jump":2} (far by mode {"paint":2822,"refill":90,"fight":988,"retreat":272}) | specials ready 18
+   bots in the active zone 62.5% of the time | avg inside A 0.14 B 0.88 | within 12 m A 0.54 B 1.83
+   roles (% of bot-time) {"paint":42,"stage":15,"push":9,"watch":7,"guard":7} | holding on purpose 7.8%
+   per bot: turf 1681p, on-zone ink 537p, splats 10.8 → XP beyond the win/lose base ≈ 1976
+   stuck 0.2% | splats 87 (water 1) | specials 15 | super jumps 22 | turf 20.1/25.5 | sim 300s in 75s (wall 76s) | {"cpuSimMs":2.77}
+   penalties [{"team":1,"p":58,"start":100,"end":23.6},{"team":0,"p":18,"start":100,"end":77.9}]
+   control log 23.8:B@center 56.1:N@center 72.2:B@sideB 92.6:N@sideB 114.5:B@center 139.5:N@center 168.7:B@sideB 186.6:N@center 191.6:A@center 213.7:N@center 225.9:B@center 227.7:N@sideB 234.6:B@sideB 270:N@center 286.9:B@center
+   best shares per activation center@0-56s A57/B100 | sideB@57-98s A48/B100 | center@98-144s A80/B100 | sideB@144-186s A76/B100 | center@187-228s A100/B100 | sideB@228-270s A26/B100 | center@270-300s A78/B98
+   reachable cells center0:1520/1520 R6.9 nodes84 side1:1546/1546 R7.5 nodes91 side2:1546/1546 R7.5 nodes91 | retake pushes A 6 B 1
+   loadouts A:twins+seeker A:bow+curtain A:blade+shaker A:brush+boomerang B:blaster+scan B:spinner+curtain B:twins+mist B:mitts+boomerang
+   by weapon (players, splats dealt, deaths, avg turf) twins×2 28/23 2175p · bow×1 12/8 1471p · blade×1 2/17 1608p · brush×1 5/18 942p · blaster×1 19/9 1567p · spinner×1 12/3 2223p · mitts×1 8/9 1288p
+   splats by cause {"mitts":5,"shot":35,"water":1,"blast":18,"bow":12,"blade":2,"surf":2,"crab":3,"blaster":1,"boomerang":5,"brush":2,"drop":1}
+   special uses A {"crab":3,"barrage":5,"bubbler":1} B {"surf":3,"bubbler":2,"barrage":1}
+   SURF uses 3 thrown 3 anchored 3 lost 0 popped 0 | rings 18 hits 7 (marks 5, ring splats 2) dodged 12 | ink 539 m² in 177 splats | turf from it A 0 of 6311 · B 539 of 7138 | assists A 11 B 16 {"jumps":12,"byDamage":26,"byJump":1,"credited":27} | bots {"throws":3,"atFoes":3,"atObj":0,"atTurf":0,"noticed":23,"missed":6,"jumps":12,"shots":0}
+   enemy specials AI on | splatted by specials: A 2 {"surf":2} · B 3 {"crab":3} | K/D A 29/57 B 57/30 | {"noticed":107,"missed":5,"escapes":68,"evaded":6,"caught":3,"avoidedPath":36,"goalMoved":93,"guard":4,"backedOff":17,"retargeted":15,"heldFire":8.416666666666664,"knockShots":0,"reengaged":8,"bubbleHold":0,"popShots":0,"hops":0,"hunted":0,"splattedBy":{"surf":2,"crab":3}}
+   sight: fighting 538 bot-s, trigger held 187 s | foe out of sight 19.3% of fight time, aim still on it 79.3% of that | shooting at nothing 15.4% of trigger time (11.7% straight at the hidden foe; 2% while it still thinks it sees it, 12.1% a charge held, 1.3% shots) | bots 22.96 ms per sim s (looking 1.19) | {"checks":8982,"rays":12567,"deferred":0,"seen":954,"lost":476,"cleared":30,"expired":41,"located":1077,"jumps":57,"hits":5,"sprays":10,"memBombs":1,"hunts":154}
+   wall climbs (at the wall): {"tries":11,"done":7,"stalled":2,"dry":0,"long":0}
+   stuck {"t":248,"name":"Tako","w":"bow","mode":"fight","role":"stage","pos":[-2.3,1.2,14.7],"path":false,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":33,"name":"Nori","w":"spinner","mode":"paint","role":"watch","pos":[9.1,4.65,12.2],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":42,"name":"Nori","w":"spinner","mode":"paint","role":"watch","pos":[-5.6,2.4,4.8],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":205,"name":"Loop","w":"brush","mode":"paint","role":"paint","pos":[7.5,1.58,10.9],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":206.8,"name":"Loop","w":"brush","mode":"paint","role":"paint","pos":[7.6,1.46,10.9],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":48.5,"name":"Nori","w":"spinner","mode":"paint","role":"watch","pos":[-3.6,1.8,3.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":75344,"state":"finish","stuckPct":0.2,"splats":87,"water":1,"specials":15,"jumps":22,"cov":[20.1,25.5],"teamKD":[{"k":29,"d":57,"sp":2,"by":{"surf":2}},{"k":57,"d":30,"sp":3,"by":{"crab":3}}],"spUses":[{"crab":3,"barrage":5,"bubbler":1},{"surf":3,"bubbler":2,"barrage":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":107,"missed":5,"escapes":68,"evaded":6,"caught":3,"avoidedPath":36,"goalMoved":93,"guard":4,"backedOff":17,"retargeted":15,"heldFire":8.416666666666664,"knockShots":0,"reen
