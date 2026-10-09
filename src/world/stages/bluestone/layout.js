@@ -457,7 +457,7 @@ const yardCol = { color: '#4c4741', pattern: SURF.bluestone, roof: true, paint: 
 // stair goes at jump 2 (in the stair's group: the stair is entered from Hoki Lane over its side)
 export const YARD_FENCE_LINES = [];
 const YARD_FENCE = (() => {
-  const yp = splitPoly(YARD, GT_X, GT_Z), out = [], s = polyArea(yp) > 0 ? 1 : -1;
+  const yp = splitPoly(YARD, GT_X, [...GT_Z, HS.zFoot, HS.zTop]), out = [], s = polyArea(yp) > 0 ? 1 : -1;   // (split at the Hoki stair's ends too)
   for (let i = 0; i < yp.length; i++) {
     let a = yp[i], b = yp[(i + 1) % yp.length], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
     if (L < 0.4) continue;
@@ -549,7 +549,9 @@ const armCover = (a, o, w, d, y0, y1, opts) => { const [x, z] = AO(a, o); return
 //  bridge lands on an open promenade beside the street, not behind a building; W2 stays near the circus)
 const ARM = [
   ...(() => { const [x, z] = AO(-44, 10); return obld(x, z, 8, 8, 65, 7, { tag: 'warehouse', color: K.ware, pattern: PATTERN.brick, noPaint: [[-C65, 0, S65], [-S65, 0, -C65]] }); })(),
-  ...(() => { const [x, z] = AO(-24.5, 8); return obld(x, z, 4, 7, 65, 7, { tag: 'warehouse', color: K.ware, pattern: PATTERN.brick }); })(),
+  // (fix round 2: W2 reaches the river (off 6 … 14): the 4 m walk behind it led nowhere in the 1880s; the boardwalk
+  //  still lands clear east of it)
+  ...(() => { const [x, z] = AO(-25.5, 10); return obld(x, z, 8, 6, 65, 7, { tag: 'warehouse', color: K.ware, pattern: PATTERN.brick, noPaint: [[-C65, 0, S65]] }); })(),
   armCover(-31, 0, 2.4, 6, 0, 0.3, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
   armCover(-31, 0, 1, 4, 0.3, 2.6, { tag: 'tram-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
   armCover(-42.5, 0, 2.4, 5, 0, 0.3, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
@@ -560,13 +562,12 @@ const ARM = [
   armCover(-31.3, 3.8, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })), armCover(-28.4, -3.4, 1.2, 1.6, 0, 1.2, cover({ tag: 'bollards' })),
   // the promenade at the bridge landing (benches by the rail, a bollard pair) and the arm's end
   armCover(-36, 12, 0.8, 2, 0, 1, cover({ tag: 'bench', color: '#7d6c5a' })), armCover(-29.5, 11.2, 1.2, 2, 0, 1, cover({ tag: 'bollards' })),
-  armCover(-25, 12, 1.2, 2, 0, 1, cover({ tag: 'bollards' })),
   armCover(-46.3, 3.6, 1.2, 2.4, 0, 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   // the river railings (every rail's ends on the outline or on another rail): the arm's end, the promenade either side of
   // the bridge landing, the boardwalk landing (the 1880s)
   armBox(ARM_END - 0.15, ARM_END, ARM_S, 6, 0, 1, rail({ tag: 'river-rail' })),
   armBox(-40, -39.23, 14, 14.15, 0, 1, rail({ tag: 'river-rail' })),
-  armBox(-31.14, -21.22, 14, 14.15, 0, 1, rail({ tag: 'river-rail' })),
+  armBox(-31.14, -28.5, 14, 14.15, 0, 1, rail({ tag: 'river-rail' })), armBox(-22.5, -21.22, 14, 14.15, 0, 1, rail({ tag: 'river-rail' })),
   armBox(-21.22, -17.39, 14, 14.15, 0, 1, rail({ tag: 'river-rail', eras: '1', eraGroup: 'bw-4' })),   // (where Bravo's boardwalk lands from today)
 ];
 
