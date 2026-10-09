@@ -57,15 +57,15 @@
       for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
       const gl = leg('gulper');
       // (on the court's SW side, looking past the west gulper head into the Great Tank)
-      const yaw = Math.atan2(-6 + 16, 0 + 8.5);
-      put(a, -16, 0, -8.5, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = -0.12; step(0.4);
+      const yaw = 0.62;   // (from (−18, −6.5): the west jaws ahead, their landing to the left, the tank beyond)
+      put(a, -18, 0, -6.5, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = -0.1; step(0.4);
       const eE = gl.ends[0]; put(bot, eE.approach[0], eE.approach[1], eE.approach[2]); step(0.1);
       P().debugRide(bot, 'gulper', 0);
       return go(0.45)();
     });
     S('bystander-2-under-the-glass-walk', go(0.95));
     S('bystander-3-chime', go(1.35));
-    S('bystander-4-pop', () => { const a = bot; for (let i = 0; i < 120 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.12); return { phase: a.pipe?.phase }; });
+    S('bystander-4-pop', () => { const a = bot; for (let i = 0; i < 120 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.18); return { phase: a.pipe?.phase, pos: a.pos.toArray().map((v) => +v.toFixed(2)) }; });
   }
   if (set === 'mouths') {
     S('mouth-two-way-arch', () => { hud(false); for (const [k, o] of M().actors.entries()) away(o, k); const e = leg('arch').ends[0]; cine([e.pos[0] + e.out[0] * 5.5 + 1.2, 2.1, e.pos[2] + e.out[2] * 5.5 + 1.6], [e.pos[0], 1.3, e.pos[2]]); step(0.3); return 1; });
