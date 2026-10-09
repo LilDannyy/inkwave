@@ -1,6 +1,6 @@
 // [b5-subs] Chain Bobber drawing (tools/botlab/jobs/batch5/subs/SPEC.md C4.1: "as many as you like" has to be cheap).
 // Every bobber in the world is drawn instanced: per team one InstancedMesh per part — the plastic body (cream half, band,
-// pinstripe, decals, stem, eye-ring, keel), the team-ink half, the four lamps (their on / off / white-hot state a
+// pinstripe, decals, stem, eye-ring, keel), the team-ink half, the lamps (two rows of four; their on / off / white-hot state a
 // per-instance vec4, shaded in their own small shader), and the white hit-flash shell (a per-instance amount) — all four
 // sharing one instance-matrix buffer, so one matrix write a bobber a frame moves every part. Tethers are one instanced
 // tube per team (6 sides × 8 segments along a unit length); the vertex shader lays each along the sagging quadratic
@@ -23,8 +23,9 @@ const LAMP_VS = `
   uniform vec3 uColor; varying vec3 vC;
   void main() {
     float on = aLamp < 0.5 ? aOn.x : aLamp < 1.5 ? aOn.y : aLamp < 2.5 ? aOn.z : aOn.w;
-    vec3 lit = uColor * (0.45 + 1.55 * min(on, 1.0)) + 0.05;
-    vC = on <= 0.001 ? vec3(0.075, 0.05, 0.06) : mix(lit, vec3(1.7, 1.62, 1.45), clamp(on - 1.0, 0.0, 1.0));
+    // (lit: a strong emissive in the team colour with a white core, so a lamp reads at 6–8 m in daylight; off: near black)
+    vec3 lit = uColor * (1.0 + 2.6 * min(on, 1.0)) + 0.32 * min(on, 1.0);
+    vC = on <= 0.001 ? vec3(0.06, 0.04, 0.05) : mix(lit, vec3(2.6, 2.5, 2.3), clamp(on - 1.0, 0.0, 1.0));
     gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
   }`;
 const LAMP_FS = `

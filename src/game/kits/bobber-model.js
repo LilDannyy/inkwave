@@ -1,7 +1,9 @@
 // [b5-subs] Chain Bobber: the model (held and world), the world's instanced part geometries, and the icon.
 // A fishing bobber made a bomb (tools/botlab/jobs/batch5/subs/SPEC.md C4): a sphere with a team-ink upper half and a cream
-// lower half, a dark equator band with a hazard pinstripe above it, four small lamps on the band (they show the chain's
-// size: lit one per link, 1 to 4; from 5 links on they turn white-hot one by one, so 8 reads as four white lamps), a
+// lower half, a dark equator band with a hazard pinstripe above it, lamps on the band that show the chain's size (lit one
+// per link, 1 to 4; from 5 links on they turn white-hot one by one, so 8 reads as four white lamps) — a row of four big
+// lenses on each side, the second row the first turned half round, so whichever side you see it from exactly N of the
+// lamps facing you are lit (the bobber turns slowly: a lamp at the edge of one row is at the middle of the other), a
 // short dark stem on top ending in a metal eye-ring (the tether's anchor; the fist holds the stem), a stubby rubber keel
 // spike underneath and a squid decal on each side of the cream half.
 // Built at hand scale (Ø 0.10 m; the hand-held prop). In the world it's WSCALE × bigger (Ø 0.24 m, the "built" size the
@@ -19,7 +21,12 @@ export const B_R = 0.05, B_CY = 0.072;                 // hand scale: the sphere
 const STEM0 = B_CY + B_R - 0.004, STEM1 = B_CY + B_R + 0.021, RING_R = 0.0092, RING_T = 0.0024;
 export const B_EYE = STEM1 + RING_R - B_CY;            // the eye-ring's middle over the sphere's middle (hand scale)
 export const WSCALE = 2.4;                             // hand → world (built Ø 0.24 m)
-export const LAMP_AZ = [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4];
+// the lamps' places round the band: lamp k of the front row at −60° + 40° k, and again half round (the back row) — both
+// rows lit alike (aLamp = k), so the half you can see always holds one of each pair
+const D2R = Math.PI / 180;
+export const LAMP_AZ = [-60, -20, 20, 60].map((d) => d * D2R);
+const LAMPS = [...LAMP_AZ.map((az, k) => [az, k]), ...LAMP_AZ.map((az, k) => [az + Math.PI, k])];
+const LAMP_R = 0.0074, LAMP_H = 0.0046;   // (a lens 1.5 cm across in the hand: 5.3 cm drawn — reads at 6–8 m)
 
 // the parts, at a level of detail (seg: round the axis)
 function parts(seg) {
@@ -47,12 +54,12 @@ function parts(seg) {
   body.add(at(torus(RING_R, RING_T, 6, 20), 0, STEM1 + RING_R, 0), C.metal, M.metal);
   return { body, ink };
 }
-// the four lamps on the band (their own geometry: a per-vertex lamp index, aLamp 0 … 3)
+// the eight lamps on the band (their own geometry: a per-vertex lamp index, aLamp 0 … 3 — each row's k-th alike)
 function lampGeo(seg) {
   const list = [];
-  for (let k = 0; k < 4; k++) {
-    const az = LAMP_AZ[k], n = new V3(Math.sin(az), 0, Math.cos(az));
-    const g = orient(superEllipsoid(0.0043, 0.0026, 0.0043, 1, 1, Math.max(8, seg >> 1), 5), n, new V3(n.x * (B_R + 0.0052), B_CY, n.z * (B_R + 0.0052)));
+  for (const [az, k] of LAMPS) {
+    const n = new V3(Math.sin(az), 0, Math.cos(az));
+    const g = orient(superEllipsoid(LAMP_R, LAMP_H, LAMP_R, 1, 1, Math.max(8, seg >> 1), 5), n, new V3(n.x * (B_R + 0.0046), B_CY, n.z * (B_R + 0.0046)));
     const c = g.attributes.position.count;
     g.setAttribute('aLamp', new THREE.Float32BufferAttribute(new Float32Array(c).fill(k), 1));
     for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'aLamp') g.deleteAttribute(name);
@@ -74,9 +81,9 @@ function lampGeo(seg) {
 // ---- the hand-held prop (registerSubModel: prop space, origin at the keel's tip, +Y up)
 registerSubModel('bobber', () => {
   const { body, ink } = parts(32);
-  for (let k = 0; k < 4; k++) {   // (in the hand the lamps are dark lenses: it isn't in a chain yet)
-    const az = LAMP_AZ[k], n = new V3(Math.sin(az), 0, Math.cos(az));
-    body.add(orient(superEllipsoid(0.0043, 0.0026, 0.0043, 1, 1, 12, 6), n, new V3(n.x * (B_R + 0.0052), B_CY, n.z * (B_R + 0.0052))), '#3a1012', M.lens);
+  for (const [az] of LAMPS) {   // (in the hand the lamps are dark lenses: it isn't in a chain yet)
+    const n = new V3(Math.sin(az), 0, Math.cos(az));
+    body.add(orient(superEllipsoid(LAMP_R, LAMP_H, LAMP_R, 1, 1, 12, 6), n, new V3(n.x * (B_R + 0.0046), B_CY, n.z * (B_R + 0.0046))), '#3a1012', M.lens);
   }
   return { kind: 'bobber', body: body.build(), ink: ink.build(), grip: { pos: new V3(0, (STEM0 + STEM1) / 2, 0), handZ: new V3(0, 1, 0), handY: new V3(0.3, 0.1, -1) } };
 });
@@ -95,27 +102,28 @@ export function worldGeometry() {
   return WORLD;
 }
 
-// ---- the icon (the roster's style: dark outline, light fills, team colour = currentColor): two bobbers, the right
-// one higher, joined by a wavy tether with a spark star in the middle; lamps on their bands, keels under them
+// ---- the icon (the roster's style: dark outline, light fills, team colour = currentColor): one big bobber filling the
+// badge — a big team-colour cap, the cream lower half, the dark band with three lit lamps, the stem and its eye-ring, the
+// keel spike — and a short tether stub off its eye-ring with a spark on it (a chain, at a glance, at badge size)
 {
   const K = '#15121c', DK = '#2b2735', LT = '#e4e8ef', HZ = '#ffcf33';
   const O = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-  const bob = (x, y) => `
-      <path d="M${x - 2} ${y + 9} L${x} ${y + 14.5} L${x + 2} ${y + 9} Z" fill="${DK}"/>
-      <path d="M${x} ${y - 10} L${x} ${y - 14}" fill="none"/>
-      <circle cx="${x}" cy="${y - 16.6}" r="2.6" fill="none"/>
-      <path d="M${x - 10} ${y} A10 10 0 0 0 ${x + 10} ${y} Z" fill="${LT}"/>
-      <path d="M${x - 10} ${y} A10 10 0 0 1 ${x + 10} ${y} Z" fill="currentColor"/>
-      <rect x="${x - 11.5}" y="${y - 2.4}" width="23" height="4.8" rx="2.4" fill="${DK}"/>`;
-  const lamps = (x, y) => `<circle cx="${x - 5}" cy="${y}" r="1.35" fill="${HZ}"/><circle cx="${x}" cy="${y}" r="1.35" fill="${HZ}"/><circle cx="${x + 5}" cy="${y}" r="1.35" fill="${HZ}"/>`;
-  const TETHER = 'M20.2 25.4 Q25 13.4 31.5 18.5 Q38 23.6 42.8 11.6';
+  const cx = 27, cy = 36, r = 19;
+  // (the stub leaves the eye-ring to the right and waves off toward the top right corner; the spark rides it)
+  const ey = cy - r - 9.2, STUB = `M${cx + 3} ${ey} Q${cx + 11} ${ey + 7} ${cx + 18.5} ${ey + 3.4} Q${cx + 25} ${ey - 0.5} ${cx + 31} ${ey + 5.5}`;
   SUB_ICONS.bobber = `<svg class="iw-ico " viewBox="0 0 64 64" aria-hidden="true">
-    <g fill="none" stroke="${K}" stroke-width="6" stroke-linecap="round"><path d="${TETHER}"/></g>
-    <g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="${TETHER}"/></g>
-    <g ${O}>${bob(18, 44)}${bob(45, 30)}</g>
-    ${lamps(18, 44)}${lamps(45, 30)}
-    <path d="M31.5 12.3 L33.2 16.8 L37.7 18.5 L33.2 20.2 L31.5 24.7 L29.8 20.2 L25.3 18.5 L29.8 16.8 Z" fill="#fff" stroke="${K}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M12 40.4 Q13.5 36.4 17 35.4" stroke="#fff" stroke-opacity=".6" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-    <path d="M39 26.4 Q40.5 22.4 44 21.4" stroke="#fff" stroke-opacity=".6" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <g fill="none" stroke="${K}" stroke-width="7" stroke-linecap="round"><path d="${STUB}"/></g>
+    <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="${STUB}"/></g>
+    <g ${O}>
+      <path d="M${cx - 3.4} ${cy + r - 1.5} L${cx} ${cy + r + 6.5} L${cx + 3.4} ${cy + r - 1.5} Z" fill="${DK}"/>
+      <rect x="${cx - 2.6}" y="${cy - r - 6.2}" width="5.2" height="7.2" rx="1.6" fill="${DK}"/>
+      <circle cx="${cx}" cy="${ey}" r="3.3" fill="none"/>
+      <path d="M${cx - r} ${cy} A${r} ${r} 0 0 0 ${cx + r} ${cy} Z" fill="${LT}"/>
+      <path d="M${cx - r} ${cy} A${r} ${r} 0 0 1 ${cx + r} ${cy} Z" fill="currentColor"/>
+      <rect x="${cx - r - 1.8}" y="${cy - 3.6}" width="${2 * r + 3.6}" height="7.2" rx="3.6" fill="${DK}"/>
+    </g>
+    <circle cx="${cx - 8.5}" cy="${cy}" r="2.3" fill="${HZ}"/><circle cx="${cx}" cy="${cy}" r="2.3" fill="${HZ}"/><circle cx="${cx + 8.5}" cy="${cy}" r="2.3" fill="${HZ}"/>
+    <path d="M${cx + 18.5} ${ey + -1.6} L${cx + 20.4} ${ey + 1.5} L${cx + 23.5} ${ey + 3.4} L${cx + 20.4} ${ey + 5.3} L${cx + 18.5} ${ey + 8.4} L${cx + 16.6} ${ey + 5.3} L${cx + 13.5} ${ey + 3.4} L${cx + 16.6} ${ey + 1.5} Z" fill="#fff" stroke="${K}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M${cx - 13} ${cy - 7.5} Q${cx - 11} ${cy - 14.5} ${cx - 4.5} ${cy - 16.5}" stroke="#fff" stroke-opacity=".6" stroke-width="3.2" fill="none" stroke-linecap="round"/>
   </svg>`;
 }
