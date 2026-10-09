@@ -90,7 +90,7 @@
     return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY };
   };
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
-  const count = { sims: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
+  const count = { sims: 0, oobOnFoot: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
   const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], perches = [], perchOk = new Map();
   const KINDS = ['g', 4, 18, 30];
   for (const n of use) {
@@ -103,7 +103,14 @@
       if (!r.grounded) { count.air++; continue; }
       if (r.roof) { count.roof++; if (onRoofs.length < 40) onRoofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, at: [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)], up: r2(r.pos.y - n.y) }); continue; }
       const p = r.pos, what = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, to: [r1(p.x), r2(p.y), r1(p.z)], up: r2(p.y - n.y) };
-      if (!inB(p)) { count.oob++; oob.push(what); continue; }
+      if (!inB(p)) {
+        // past the bounds line: a leak unless a plain walk or hop from a spot reached on foot within 5 m ends there too
+        const near = N.filter((q) => reach[q.id] && Math.hypot(q.x - p.x, q.z - p.z) < 5 && p.y - q.y < 2.4).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z));
+        let by = false;
+        for (const q of near.slice(0, 30)) { for (const dd of DIRS) for (const k2 of ['h', 'w']) { if (by) break; const qq = move(q, dd, k2); if (qq && qq.pos && !inB(qq.pos) && Math.abs(qq.pos.y - p.y) < 0.4) by = true; } if (by) break; }
+        if (by) count.oobOnFoot++; else { count.oob++; oob.push(what); }
+        continue;
+      }
       if (r.perch) {
         // a perch (a crane top …): a leak unless a plain walk or hop from some spot reached on foot gets onto that block too
         if (!perchOk.has(r.block)) {
