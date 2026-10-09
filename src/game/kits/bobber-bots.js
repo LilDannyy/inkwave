@@ -98,8 +98,14 @@ function modeSpot(b) {
   if (zp) {
     if (b.zRole !== 'guard' || b.zZone < 0) return null;
     const z = zp.Z.zones[b.zZone], I = zp.info[b.zZone]; if (!z || !I) return null;
-    const [ex, ez] = zp.enemyDir(z, a.team), side = (r() - 0.5) * I.R * 1.2, out = I.R - 0.5 + r() * 1.8;
-    return okSpot(a, z.center[0] + ex * out - ez * side, z.center[2] + ez * out + ex * side, null);
+    // (its edge toward the enemy, a few tries: a raised zone's edge is often a drop or out of reach)
+    const [ex, ez] = zp.enemyDir(z, a.team);
+    for (let i = 0; i < 5; i++) {
+      const side = (r() - 0.5) * I.R * 1.2, out = I.R - 0.5 + r() * 1.8;
+      const at = okSpot(a, z.center[0] + ex * out - ez * side, z.center[2] + ez * out + ex * side, null);
+      if (at) return at;
+    }
+    return null;
   }
   if (tp) {   // (by the track ahead of the tower — its next 24 m — 3.7–5.7 m off its line: within 6 m of it, never in its
     // swept body; the ones in this bot's throwing reach, one at random)
@@ -144,8 +150,8 @@ export const botKit = {
     const tp = zonePlan() ? null : towerPlan();
     let at = null;
     if (newest) {   // grow it: 3–5 m from the newest, toward the front / along the line
-      for (let i = 0; i < 6 && !at; i++) {
-        const ang = a.aimYaw + (Math.random() - 0.5) * 2.4, d = 3.2 + Math.random() * 1.6;
+      for (let i = 0; i < 10 && !at; i++) {
+        const ang = a.aimYaw + (Math.random() - 0.5) * (i < 5 ? 2.4 : 4.4), d = 3.2 + Math.random() * 1.6;   // (wider after 5)
         at = okSpot(a, newest.spot.x + Math.sin(ang) * d, newest.spot.z + Math.cos(ang) * d, tp);
       }
       if (at) BOBBER_BOT.grows++;

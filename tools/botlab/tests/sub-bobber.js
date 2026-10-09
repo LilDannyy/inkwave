@@ -764,12 +764,40 @@
       const spots = [];
       const offL = on('sub:land', (e) => { if (e.kind === 'bobber') spots.push(e.pos.clone()); });
       m.duration = 9999; m.time = 9999;
-      step(60);
+      // (60 s, and on to 120 s until four have settled; the other team parked as elsewhere — splatted, they stand on their
+      // pad — so these bots fight as well as push; unopposed, the push reaches the goal in about 30 s, so the knockout is
+      // held off meanwhile; their tanks kept at 70 or more: the ink economy isn't what this judges, where throws land is)
+      const Tw = m.tower, end0 = Tw?._end;
+      if (Tw) Tw._end = function () {};
+      const tw0 = G.time;
+      try { step(120, () => { for (const a of bots) a.ink = Math.max(a.ink, 70); if (G.time - tw0 >= 60 && spots.length >= 4) return false; }); }
+      finally { if (Tw) Tw._end = end0; }
+      const twT = Math.round(G.time - tw0);
       offL(); for (const a of bots) stub(a);
       const P2 = towerPlan();
       const dTrack = (p) => { let best = 1e9; for (let i = 1; i < P2.pts.length; i++) { const A = P2.pts[i - 1], Bp = P2.pts[i], dx = Bp.x - A.x, dz = Bp.z - A.z, Lq = dx * dx + dz * dz, t = Lq > 1e-9 ? Math.max(0, Math.min(1, ((p.x - A.x) * dx + (p.z - A.z) * dz) / Lq)) : 0; best = Math.min(best, Math.hypot(A.x + dx * t - p.x, A.z + dz * t - p.z)); } return best; };
       const near = spots.filter((p) => dTrack(p) < 3.25);
-      R(`tower: bots playing Tower Command with the bobber never settle one within 3.25 m of the track's centre line (${spots.length} settled in 60 s)`, spots.length >= 2 && near.length === 0, { settled: spots.length, nearest: spots.length ? r2(Math.min(...spots.map(dTrack))) : null, near: near.map(v3), BOBBER_BOT, stats: K.BOBBER_STATS, state: m.state, subs: bots.map((a) => a.sub?.kind) });
+      // (how many settle in a minute or two is up to the fight — 0 to 9 in runs — so the planning rule is also asked
+      // directly: one of these bots stood at 30 spots 1–9 m off the track, either side, along the tower's next 20 m, its set-up roll
+      // forced each time; every spot it plans must be clear of the tower's way too)
+      S.clear();   // (no chain under way: each ask is a new chain's set-up)
+      const a0 = bots[0], b0 = a0.bot, pos0 = a0.pos.clone(), rnd0 = Math.random, plans = [];
+      const fw = P2.fwdOf(a0.team);
+      for (let i = 0; i < 30; i++) {
+        // (along the tower's next 20 m — where a bot's set-ups go — 1–9 m off the line, either side)
+        const sA = P2.T.s + fw * (1 + (i / 30) * 20), A = P2.at(sA), Bq = P2.at(sA + fw);
+        const tx = Bq.x - A.x, tz = Bq.z - A.z, tl = Math.hypot(tx, tz) || 1, off = (1 + (i % 5) * 2) * (i % 2 ? 1 : -1);
+        const x = A.x - (tz / tl) * off, z = A.z + (tx / tl) * off;
+        put(a0, V(x, G.level.groundHeight(x, z, 5), z), Math.atan2(tx, tz));
+        a0.ink = 100; a0.lastDamage = 99; b0.bombCd = 0; b0._bobRollT = -1; b0._bobberAt = null;
+        let first = true; Math.random = () => (first ? ((first = false), 0) : rnd0());
+        try { K.bot.paint(b0); } finally { Math.random = rnd0; }
+        if (b0._bobberAt) plans.push(b0._bobberAt.clone());
+      }
+      b0._bobberAt = null; put(a0, pos0);
+      const nearPlans = plans.filter((p) => dTrack(p) < 3.25);
+      R(`tower: bots playing Tower Command with the bobber never settle one within 3.25 m of the track's centre line (${spots.length} settled in ${twT} s, nearest ${spots.length ? r2(Math.min(...spots.map(dTrack))) : '-'} m; ${plans.length} of 30 forced set-ups planned, nearest ${plans.length ? r2(Math.min(...plans.map(dTrack))) : '-'} m)`,
+        near.length === 0 && plans.length >= 10 && nearPlans.length === 0, { settled: spots.length, nearest: spots.length ? r2(Math.min(...spots.map(dTrack))) : null, near: near.map(v3), plans: plans.length, nearPlans: nearPlans.map(v3), BOBBER_BOT, stats: K.BOBBER_STATS, state: m.state, subs: bots.map((a) => a.sub?.kind) });
     }
 
     // ============================================================================================ MODE=turf on podbox: a pod
