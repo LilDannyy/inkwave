@@ -12,7 +12,7 @@ screen-FX modules should subscribe to these instead of editing gameplay code.
 | `respawn` | `{ actor }` | actor.respawn |
 | `special:ready` | `{ actor }` | actor.addTurf |
 | `special:use` | `{ actor, id }` ('slam' / 'storm') | actor._startSpecial |
-| `superjump` | `{ actor, phase: 'charge' \| 'flight', to? }` | actor.superJump |
+| `superjump` | `{ actor, phase: 'charge' \| 'flight', … }` — charge: `target` (a teammate, or a point: beacon / base), `home` (an Ink Jet / Zipline jump back), `instant`; flight: `to`, `from`, `dur`, `home` (forwarded online: game/jumpMarks.js) | actor.superJump |
 | `shake` | `{ amount, pos? }` | camera trauma requests |
 | `recoil` | `{ amount }` | local-player visual recoil |
 | `lowink` | `{ actor, need? }` | weapons |

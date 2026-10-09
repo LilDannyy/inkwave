@@ -39,6 +39,7 @@ import { BossHud } from './hud-boss.js';
 import { LeadHud } from './hud-lead.js';
 import { BarrageHud } from './hud-barrage.js';   // [b5-sprules] the Mystery Bomb Barrage's NEXT card
 import { CheerHud } from './hud-cheer.js';   // [b5-zipcheer] the Cheer Orb's cheer prompt + gauge wisps
+import { JumpHud } from './hud-jumps.js';   // [b5-jumpui] super-jump alerts + landing / return tags
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -149,6 +150,7 @@ export class HUD {
     this.lead = new LeadHud(this);   // (after the build: it hangs its banners on the roster groups)
     this.barrage = new BarrageHud(this);   // [b5-sprules] (on the crosshair cluster)
     this.cheer = new CheerHud(this);   // [b5-zipcheer]
+    this.jumps = new JumpHud(this);  // [b5-jumpui] "NAME is jumping to you!" + the named landing tags (world / minimap)
     installBossAudio();   // boss-mode sfx + music director (idle outside boss matches)
   }
 
@@ -412,6 +414,7 @@ export class HUD {
     this.lead.update(dt, f);
     this.barrage.update(dt, f);   // [b5-sprules]
     this.cheer.update(dt, f);   // [b5-zipcheer]
+    this.jumps.update(dt, f);   // [b5-jumpui]
     this.boss.update(dt);
   }
 
@@ -2005,6 +2008,7 @@ export class HUD {
       d.style.transform = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0) rotate(${p.isSelf ? (+p.yaw || 0).toFixed(3) : 0}rad)`;
     }
     this._updMapDeaths(bw, bh);
+    this.jumps.map(bw, bh);   // [b5-jumpui] the landing / return tags on the map
     this._updBeacons(bw, bh, dt, u);
   }
 

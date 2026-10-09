@@ -755,6 +755,9 @@ class ReturnMarker {
     this.t += dt;
     if (this.done) { this.fade -= dt * 3; if (this.fade <= 0) return false; }
     if (this.t > 30) this.done = true;          // safety net
+    // [b5-jumpui] heading home but no jump shows (a ghost whose owner ended it within 2.5 m of here and walked, or
+    // whose landing we missed): gone, not stuck grey for 30 s
+    if (this.back && !this.done) { this._noJump = this.owner.superJumpState ? 0 : (this._noJump || 0) + dt; if (this._noJump > 0.6) this.finish(); }
     const p = 0.5 + 0.5 * Math.sin(this.t * (this.back ? 12 : 4));
     this.ring.material.opacity = (0.45 + 0.4 * p) * this.fade;
     const k = (this.t * 0.8) % 1;
