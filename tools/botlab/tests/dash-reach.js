@@ -75,7 +75,7 @@
     for (const [dx, dz] of DIRS) { for (const s of [1.5, 3, 4.5, 6]) { const gy = L.groundHeight(n.x + dx * s, n.z + dz * s, n.y + 2.2); if (gy === -Infinity || Math.abs(gy - n.y) > 0.3) { edge = true; break; } } if (edge) break; }
     if (edge) starts.push(n);
   }
-  const use = starts.filter((_, i) => i % EVERY === OFF);
+  const use = starts.filter((_, i) => i % EVERY === OFF).slice(+(args.skip || 0), args.max ? +(args.skip || 0) + +args.max : Infinity);   // ('skip=<k>;max=<n>': n starts from the k-th, a diagnostic)
   // ---- the kid
   let startY = 0;
   const put = (n) => { kid.spawnAt(V(n.x, n.y + 0.02, n.z), 0); kid.invuln = 99; kid.vel.set(0, 0, 0); kid.form = 'kid'; it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false; for (let i = 0; i < 2; i++) { G.time += DT; kid.update(DT); } startY = kid.pos.y; };
@@ -239,12 +239,26 @@
   const T = (a) => [-a[1], a[0]];   // (a quarter turn: along the wall)
   const tm = { dash: 0, climb: 0, judge: 0, tops: 0 };   // (ms: the moves under test, the climbs, the baselines, the tops pass)
   const nrm = (x, z) => { const l = Math.hypot(x, z) || 1; return [x / l, z / l]; };
-  let nStart = 0;
+  let nStart = 0; const prog = [];   // (the run's pace every 500 starts: a sim that slows as it goes shows here)
   for (const n of use) {
     // (the page is frozen — no frames: what the dashes leave behind would pile up and slow every later sim. The kit's
     // ribbons and pellets go at every start; the ink and the effects every 20 starts — the walls are re-inked per climb)
     SUB_KITS.dash?.clear?.();
     if (++nStart % 20 === 0) { G.paint.clear?.(); G.fx?.clear?.(); }
+    if (args.bench && nStart % (+args.every || 500) === 0) {   // ('bench=1': a fixed set of operations timed at each pace mark)
+      const b0 = N[use[0].id], tb = {}, T0 = () => performance.now();
+      let t = T0(); put(b0); for (let i = 0; i < 300; i++) { G.time += DT; kid.update(DT); } tb.upd = Math.round(T0() - t);
+      { const u0 = kid.update; let nu = 0, slow = 0; kid.update = function (dt) { nu++; const a = performance.now(); u0.call(this, dt); const e = performance.now() - a; if (e > 1) slow++; };
+        t = T0(); for (let i = 0; i < 20; i++) move(b0, DIRS[i % 8], 'g'); tb.gdash = Math.round(T0() - t); tb.gticks = nu; tb.slowTicks = slow; delete kid.update; if (kid.update !== u0) kid.update = u0; }
+      t = T0(); for (let i = 0; i < 20; i++) { put(b0); SUB_KITS.dash.use(G.subs, kid, SUBS.dash); } tb.use = Math.round(T0() - t);
+      SUB_KITS.dash?.clear?.();
+      t = T0(); for (let i = 0; i < 20; i++) { put(b0); kid.weaponRunner.startDash(DIRS[i % 8][0], DIRS[i % 8][1], 4.5, 0.22, 7, false); for (let k = 0; k < 20; k++) { G.time += DT; kid.update(DT); } } tb.motion = Math.round(T0() - t);
+      t = T0(); for (let i = 0; i < 20; i++) put(b0); tb.put = Math.round(T0() - t);
+      t = T0(); for (let i = 0; i < 1000; i++) G.physics.raycast(O.set(b0.x, b0.y + 1, b0.z), DIR.set(Math.sin(i), -0.3, Math.cos(i)).normalize(), 8, H2); tb.ray = Math.round(T0() - t);
+      t = T0(); for (let i = 0; i < 60; i++) G.paint.splat(V(b0.x + (i % 7), b0.y + 0.2, b0.z), 1.2, kid.team, { seed: 0.3 }); tb.splat = Math.round(T0() - t);
+      prog.push({ starts: nStart, bench: tb });
+    }
+    if (nStart % (+args.every || 500) === 0 && prog.length < 40) prog.push({ starts: nStart, s: Math.round((performance.now() - t0) / 1000), cues: G.cues?.slots?.size ?? null, tracks: G.cues?.tracks?.size ?? null, stats: Object.keys(G.audio?.voices || {}).length || null, scene: G.scene?.children?.length, growing: G.paint.growing?.length ?? null, heapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : null, gtime: Math.round(G.time) });
     for (const d of DIRS) {
       for (const kind of KINDS) { count.sims++; const t1 = performance.now(), rr = move(n, d, kind), t2 = performance.now(); tm.dash += t2 - t1; classify(n, d, kind, rr, null); tm.judge += performance.now() - t2; }
       if (!CLIMB) continue;
@@ -294,7 +308,7 @@
   const part = EVERY > 1 ? `every ${EVERY}th edge node from the ${OFF + 1}${['st', 'nd', 'rd'][OFF] || 'th'}` : 'every edge node';
   const perchBlocks = [...new Set(perches.map((q) => q.block))].map((b) => { const Bk = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, tag: bTag(b), top: [r1(Bk.center.x), r2(Bk.center.y + Bk.half.y), r1(Bk.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; });
   R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece or out of bounds where no plain walk / hop gets, and no jump + dash first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02); roofs slide it off (one still on after 3 s is listed)`,
-    perches.length === 0 && oob.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm });
+    perches.length === 0 && oob.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
   R(`${g.mapDef?.id}: listed for the lead (SPEC D10.6: newly reachable spots are listed, not judged) — tops the nav graph doesn't reach that a dash ends on and no plain walk / hop from within 5 m (or the same climb) does: ${realLeaks.length}; with their block, its tag, the first landing's height over the start (judged in the line above) and where it came to rest (it may run on up a ramp or a stair after landing)`, true,
     { tops: realLeaks.slice(0, 24), topsAKidHopsOnto: hopOn.length });
   const downSeen = new Map(); for (const o of down) { const k = Math.round(o.to[0]) + ',' + Math.round(o.to[2]); if (!downSeen.has(k)) downSeen.set(k, o); }
