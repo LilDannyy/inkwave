@@ -131,7 +131,7 @@ export const botKit = {
     if (!t || !t.alive || dist < 3 || dist > 10 || Math.random() > 0.005) return false;
     const dx = a.pos.x - t.pos.x, dz = a.pos.z - t.pos.z, l = Math.hypot(dx, dz) || 1;
     if ((t.vel.x * dx + t.vel.z * dz) / l < 2) return false;   // (not coming at us)
-    const at = okSpot(a, t.pos.x + (dx / l) * 1.6, t.pos.z + (dz / l) * 1.6, null);
+    const at = okSpot(a, t.pos.x + (dx / l) * 1.6, t.pos.z + (dz / l) * 1.6, zonePlan() ? null : towerPlan());
     if (!at) return false;
     b._bobberAt = at; b.bombCd = 6 + Math.random() * 4; BOBBER_BOT.lures++;
     return true;

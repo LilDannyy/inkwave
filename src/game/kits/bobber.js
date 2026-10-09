@@ -92,6 +92,7 @@ const rec = (a, data) => { BOBBER_STATS.records[data[0]] = (BOBBER_STATS.records
 // ================================================================================================= the bobbers
 export const items = [];
 let SEQ = 0, liveN = 0, LOCAL_GID = 0;
+const relinkSet = new Set();   // owners to re-link at the end of this tick (a bobber of theirs ended)
 const byGid = new Map();
 class Bobber {
   constructor(owner, sub, pos, vel, ghost, gid) {
@@ -154,7 +155,7 @@ function floorBelow(x, y, z, depth = 6) {
 // floats → into out { x, y, z, hover, base, block, refused } (pure: the flight and the aim guide both use it)
 export function spotFor(px, py, pz, nx, ny, nz, kind, block, team, out) {
   const s = SB();
-  let x = px, y = py, z = pz, base, hover = s.floatH, fb = -1;
+  let x = px, y = py, z = pz, base, hover = s.floatH, fb = -1, floorY = -Infinity;
   if (kind === 'floor') {
     const liq = liquidTop(x, z);
     base = Math.max(py, liq); fb = py >= liq ? block : -1;
@@ -164,10 +165,12 @@ export function spotFor(px, py, pz, nx, ny, nz, kind, block, team, out) {
     if (kind === 'wall') { const hl = Math.hypot(nx, nz) || 1; x += (nx / hl) * s.wallOut; z += (nz / hl) * s.wallOut; }
     else if (kind === 'shell') { x += nx * s.wallOut; y += ny * s.wallOut; z += nz * s.wallOut; }
     const f = floorBelow(x, (kind === 'ceil' ? py - 0.15 : y + 0.05), z, 6), liq = liquidTop(x, z);
-    base = Math.max(f ? f.y : -Infinity, liq); fb = f && f.y >= liq ? f.block : -1;
+    floorY = f ? f.y : -Infinity;
+    base = Math.max(floorY, liq); fb = f && f.y >= liq ? f.block : -1;
     hover = kind === 'ceil' ? s.floatH : clamp(y - base, s.floatMin, s.floatMax);
   }
   out.x = r2(x); out.z = r2(z); out.y = r2(base + hover); out.base = base; out.hover = r2(out.y - base); out.block = fb; out.kind = kind;
+  out.floorY = kind === 'floor' ? py : kind === 'liquid' ? -Infinity : floorY;
   // refused: near the enemy pad (no spawn traps), in a stage's no-place disc, inside a block
   const L = G.level, pad = L?.spawnPads?.[1 - team];
   out.refused = !!pad && Math.hypot(out.x - pad.x, out.z - pad.z) < (L.spawnBarrier ?? 4.2) + s.padNoDeploy;
@@ -258,6 +261,13 @@ function use(subs, a, sub) {
   emit('sub:use', { actor: a, kind: KIND });
   if (a.isLocal) onThrowHud(a);
 }
+// (tests, bots' scripts) a bobber thrown by a from pos at vel — recorded like a throw
+export function throwFrom(a, pos, vel, sub = SB()) {
+  const it = spawn(a, sub, pos, vel, false, netId(a) || 9e8 + ++LOCAL_GID);
+  rec(a, [0, it.gid, r2(pos.x), r2(pos.y), r2(pos.z), r2(vel.x), r2(vel.y), r2(vel.z)]);
+  BOBBER_STATS.thrown++;
+  return it;
+}
 function spawn(a, sub, pos, vel, ghost, gid) {
   const it = new Bobber(a, sub, pos, vel, ghost, gid);
   items.push(it); byGid.set(gid, it);
@@ -285,7 +295,7 @@ function deploy(it, s) {
   }
   if (it.ghost && it.pend3) { const d = it.pend3; it.pend3 = null; it.spot.set(d[2], d[3], d[4]); it.hover = d[5] ?? s.hover; it.baseY = it.spot.y - it.hover; }
   else { it.spot.set(s.x, s.y, s.z); it.hover = s.hover; it.baseY = s.base; }
-  it.floorB = s.block;
+  it.floorB = s.block; it.floorY = s.floorY; it.liqY = null;
   it.state = 'open'; it.t = 0;
   if (!it.ghost) rec(it.owner, [3, it.gid, it.spot.x, it.spot.y, it.spot.z, r2(it.hover)]);
   if (nearCam(it.spot, 40)) G.cues?.sub(KIND, 'land', { owner: it.owner, team: it.team, at: it.spot });
@@ -325,7 +335,7 @@ function rideBody(it) {
 function syncFromRide(it) {
   const rb = it.rb, x = rb.pos.x, y = rb.pos.y + it.hover, z = rb.pos.z;
   const moved = Math.abs(x - it.spot.x) + Math.abs(y - it.spot.y) + Math.abs(z - it.spot.z) > 1e-4;
-  if (moved) { it.spot.set(x, y, z); it.baseY = rb.pos.y; hashPut(it); tethersDirty = true; it.moved = true; }
+  if (moved) { it.spot.set(x, y, z); it.baseY = rb.pos.y; it.floorY = rb.pos.y; hashPut(it); tethersDirty = true; it.moved = true; }
   _e.setFromQuaternion(rb.mesh.quaternion, 'YXZ'); it.rideYaw = _e.y;
   return moved;
 }
@@ -336,7 +346,7 @@ function lost(it) {
   const rb = it.rb; if (rb) { rb.on = null; rb.ride = null; }
   const f = floorBelow(it.spot.x, it.spot.y - 0.05, it.spot.z, 6 + it.hover), liq = liquidTop(it.spot.x, it.spot.z);
   const base = Math.max(f ? f.y : -Infinity, liq), y = r2(base + SB().floatH);
-  it.hover = SB().floatH; it.baseY = base; it.floorB = f && f.y >= liq ? f.block : -1;
+  it.hover = SB().floatH; it.baseY = base; it.floorB = f && f.y >= liq ? f.block : -1; it.floorY = f ? f.y : -Infinity;
   it.easeY = y; it.easeV = 3;
   BOBBER_STATS.refloats++;
   if (rb) { rb.pos.set(it.spot.x, base, it.spot.z); rb.mesh.position.copy(rb.pos); if (it.floorB >= 0) G.deploy?.attach(rb, it.floorB); }
@@ -352,13 +362,24 @@ function live(it, dt) {
   const rb = it.rb;
   if (rb?.on) { G.deploy?.carry(rb); if (it.state !== 'live') return; if (rb.on) syncFromRide(it); }
   else if (rb && Math.abs(rb.pos.x - it.spot.x) + Math.abs(rb.pos.z - it.spot.z) + Math.abs(rb.pos.y + it.hover - it.spot.y) > 1e-3 && it.easeY == null) syncFromRide(it);   // (lifted / shoved by wave 1)
-  else if ((it.floatT -= dt) <= 0) {
-    // re-check its float over the higher of its floor and the liquid every 0.25 s (rising / falling lava)
-    it.floatT = 0.25;
-    const f = floorBelow(it.spot.x, it.spot.y - 0.05, it.spot.z, 6 + it.hover), liq = liquidTop(it.spot.x, it.spot.z);
-    const base = Math.max(f ? f.y : -Infinity, liq), y = base + it.hover;
-    if (Math.abs(y - it.spot.y) > 0.004 && it.easeY == null) { it.easeY = y; it.easeV = 1; }
+  else {
+    // its float: `hover` over the higher of its floor (re-checked every 0.25 s: a ray) and the liquid's top (every frame:
+    // a lookup), eased at ≤ 1 m/s — so it rides rising lava up and settles back as it falls. (A liquid rising faster
+    // than 1 m/s — no stage's does: caldera's peaks at 0.36 — is outpaced at 1.25 × its rate, so it never sinks in.)
+    if ((it.floatT -= dt) <= 0) { it.floatT = 0.25; const f = floorBelow(it.spot.x, it.spot.y - 0.05, it.spot.z, 6 + it.hover); it.floorY = f ? f.y : -Infinity; }
+    const liq = liquidTop(it.spot.x, it.spot.z), rate = dt > 0 && it.liqY != null ? (liq - it.liqY) / dt : 0;
+    it.liqY = liq;
+    const base = Math.max(it.floorY ?? -Infinity, liq);
     it.baseY = base;
+    if (it.easeY == null) {
+      const d = base + it.hover - it.spot.y;
+      if (Math.abs(d) > 0.002) {
+        const v = Math.max(1, Math.abs(rate) * 1.25) * dt;
+        it.spot.y += Math.abs(d) <= v ? d : Math.sign(d) * v;
+        if (rb) { rb.pos.set(it.spot.x, it.spot.y - it.hover, it.spot.z); rb.mesh.position.copy(rb.pos); }
+        tethersDirty = true; it.moved = true;
+      }
+    }
   }
   if (it.easeY != null) {
     const d = it.easeY - it.spot.y, st = it.easeV * dt;
@@ -703,7 +724,7 @@ function sag(it) {
 }
 // what a bobber ending on this screen leaves behind
 function leaveLive(it) {
-  if (it.state === 'live') liveN--;
+  if (it.state === 'live') { liveN--; if (!it.ghost) relinkSet.add(it.owner); }
   hashDel(it);
   for (const o of it.ten) { const i = o.ten.indexOf(it); if (i >= 0) o.ten.splice(i, 1); }
   it.ten = [];
@@ -741,9 +762,7 @@ export function finish(it, why, look) {
     }
   }
   emit('sub:end', { kind: KIND, why: why === 0 ? 'expired' : why === 2 ? 'crushed' : why === 3 ? 'refused' : String(why), team: it.team, pos: c.clone() });
-  if (!it.ghost && was === 'live') it.owner && (relinkSet.add(it.owner));
 }
-const relinkSet = new Set();
 
 // ================================================================================================= online
 function ghost(a, d) {
@@ -873,20 +892,26 @@ function render() {
     _e.set(tilt, it.yaw + (it.rideYaw || 0) + T * 0.35, tilt * 0.6, 'YXZ'); _q.setFromEuler(_e);
     _scl.set(base * k * sx, base * k * sy, base * k * sx);
     _mat.compose(_pos, _q, _scl);
-    // the lamps: N of 4 lit (from 5 links on they turn white-hot one by one), the teammate cue's glow, the last 3 s blink
-    let l = [0, 0, 0, 0];
-    if (it.state === 'live' || it.state === 'blow' || it.state === 'open') {
-      const n = it.state === 'blow' ? it.blast?.n || 1 : it.chain?.n || 1;
-      const g = it.glow ? 1.0 * (0.88 + 0.12 * Math.sin(T * Math.PI * 6)) : 0.62;
-      const on = it.blink && it.state === 'live' && Math.sin((G.time - it.born) * (12 + 10 * (G.time - it.born - SB().life + 3))) < 0 ? 0 : 1;
-      for (let i = 0; i < 4; i++) l[i] = on && i < n ? (n > 4 && i < n - 4 ? 1 + g : g) : 0;
-      if (it.state === 'blow') l = l.map((x) => (x ? 2 : 0));
-      if (it.state === 'open') l = l.map((x, i) => (i === 0 ? g * k : 0));
-    }
+    const l = lampsOf(it, _lamps, k);
     draw.bobber(it.team, _mat, l[0], l[1], l[2], l[3], fl * 0.9);
   }
   if (tethersDirty || groups.size) { tethersDirty = false; draw.tethers(tetherList()); }
   draw.end();
+}
+// the lamps → out[4] (0 off · 0..1 lit, its brightness · 1..2 white-hot): N of 4 lit, one more white-hot for each link
+// past 4 (8: four white lamps); the teammate cue's glow (×1.6, pulsing); the last 3 s of its life they blink; dark once
+// disarmed; all white-hot as its chain goes
+const _lamps = [0, 0, 0, 0];
+export function lampsOf(it, out = [0, 0, 0, 0], k = 1) {
+  out[0] = out[1] = out[2] = out[3] = 0;
+  if (it.state !== 'live' && it.state !== 'blow' && it.state !== 'open') return out;
+  const T = G.time, n = it.state === 'blow' ? it.blast?.n || 1 : it.chain?.n || 1;
+  const g = it.glow ? 1.0 * (0.88 + 0.12 * Math.sin(T * Math.PI * 6)) : 0.62;
+  const age = T - it.born, on = it.blink && it.state === 'live' && Math.sin(age * (12 + 10 * (age - SB().life + 3))) < 0 ? 0 : 1;
+  for (let i = 0; i < 4; i++) out[i] = on && i < n ? (n > 4 && i < n - 4 ? 1 + g : g) : 0;
+  if (it.state === 'blow') for (let i = 0; i < 4; i++) out[i] = out[i] ? 2 : 0;
+  if (it.state === 'open') { out[0] = g * k; out[1] = out[2] = out[3] = 0; }
+  return out;
 }
 const _tl = [];
 const eyeUp = () => B_EYE * WSCALE * subViewScale(KIND);
@@ -1011,12 +1036,15 @@ const kit = SUB_KITS[KIND] = {
   botAct,
   dangers: botDangers,
   bot: botKit,
-  items, groups, BOBBER_STATS, resetBobberStats, sizeOf, falloff, liquidTop, spotFor, predictSpot, relink, trigger, hurt, teamFire, finish, shotProbe, near, draw, DRAW_STATS,
+  items, groups, BOBBER_STATS, resetBobberStats, sizeOf, falloff, liquidTop, spotFor, predictSpot, relink, trigger, hurt, teamFire, finish, shotProbe, near, draw, DRAW_STATS, throwFrom, lampsOf,
+  liveCount: () => liveN,
   lastTickMs: 0,
   // (tests / sub-scale) a stand-in node carrying a bobber's drawn size (the world draws them instanced)
   drawNode(it) { const g = new THREE.Group(), m = new THREE.Mesh(worldGeometry().body); m.scale.setScalar(WSCALE * subViewScale(KIND)); g.add(m); g.position.copy(it.spot); return m; },
 };
-THROWN.bobber = true;
+// (not in bots.js THROWN: the generic bomb lobs — onto a zone's enemy ink, a tower's riders, a remembered foe, over a
+// shield — would waste a bobber that only goes off on follow-up fire; its bots throw it through bot.paint / bot.fight)
+void THROWN;
 
 // ---- the world's own endings it listens for
 // bluestone's era flips (§0.6): a block in `on` round its sphere ends it; its floor in `off` makes it re-float
