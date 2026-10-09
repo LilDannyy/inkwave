@@ -24,6 +24,9 @@
   // (the rig blends 0.6 s from a cinematic into follow: one frame to see the change, then the blend cut short)
   const follow = () => { g.settings.fov = fov0; g.rig.follow(me, true); g.rig.yaw = me.yaw; g.rig.pitch = -0.22; dbg.step(1000 / 60); if (g.rig.blend) g.rig.blend.active = false; g.rig.follow(me, true); };
   const paintLane = (team, x0, z0, x1, z1) => { for (let k = 0; k <= 12; k++) { const u = k / 12; G.paint.splat(V(x0 + (x1 - x0) * u, 0.2, z0 + (z1 - z0) * u), 1.5, team, { seed: k }); } };
+  // (fix round 2) a staged pick-up's own call-out ("YOU'VE GOT THE BAZOOKARP!", "SHELL BURST!") is the scene's set-up, not
+  // the moment a picture shows: cleared before the shot, where the picture is about something else
+  const calm = () => { if (g.hud.zcalls) [...g.hud.zcalls.children].forEach((el) => el.remove()); if (g.hud.karp) g.hud.karp._sayT = -1e9; };
   const S = [];
   const add = (name, set, moment, wait = 90) => S.push({ name, set: async () => { await set(); return { phase: Kp.phase, meter: Math.round(Kp.shell.meter), count: Kp.count, holder: Kp.holder?.name }; }, moment, wait });
 
@@ -40,18 +43,19 @@
     put(me, 0, 9, 0); step(0.1);
     Kp.shell.clear(); Kp.pos.copy(me.pos); Kp._setPhase('free', 0); step(2 / 60);
     me.aimPitch = 0.12; me.intent.fire = true; step(0.9);   // (charging: the arc preview)
-    Kp.fuse = 42.4; follow(); step(1 / 60);
+    Kp.fuse = 42.4; calm(); follow(); step(1 / 60);
   });
   // the arc preview from the side (the chase camera sees it edge-on): dots along the flight, the ring over a disc
   add('carrier-arc', () => {
-    me.aimPitch = 0.12; me.intent.fire = true; step(1 / 60);
+    me.aimPitch = 0.12; me.intent.fire = true; calm(); step(1 / 60);
     cine(V(-7, 10, 3), V(0, 1.5, 17), 62);   // (high and behind to the side: low cameras had a wall in the way)
   });
   add('carrier-foe', () => {
     me.intent.fire = false; step(0.3);
     put(B[0], 0.5, 19, Math.PI); step(0.05);
     // (Bravo's screen: the HUD follows the local player — Bravo's kid stands in for it for this picture)
-    m.local = B[0]; if (g.hud.zcalls) [...g.hud.zcalls.children].forEach((el) => el.remove()); step(2 / 60);   // (Alpha's last banner is not Bravo's)
+    // (fix round 2: the count badges follow the viewer — hud-karp.js keys them by it — so Bravo's own count is its left one)
+    m.local = B[0]; calm(); step(2 / 60);   // (Alpha's last banner is not Bravo's)
     cine(V(1.5, 2.3, 21.5), V(0, 1.5, 9.5), 60);
   });
   add('carp-blast', () => {
@@ -63,7 +67,7 @@
     me.aimYaw = 0; me.aimPitch = 0.0;
     const s = G.karpGun._fire(me, 1);
     for (let i = 0; i < 200 && !(s.phase === 'swell' && s.swell > 0.38); i++) dbg.step(1000 / 60);
-    cine(V(9, 4.5, 11), V(0, 0.8, 22), 60);
+    calm(); cine(V(9, 4.5, 11), V(0, 0.8, 22), 60);
   }, () => { for (let i = 0; i < 6; i++) dbg.step(1000 / 60); }, 40);
   add('weir-plant', () => {
     park(); G.paint.clear();
@@ -80,7 +84,7 @@
     Kp.shell.add(0, 600, A[1]); step(0.35);
     put(me, 0, 41, 0); Kp.pos.copy(me.pos); Kp._setPhase('free', 0); step(2 / 60);
     me.intent.move.set(0, 0, 1); step(0.6); zero(me);
-    cine(V(6.5, 3.0, 40), V(0, 1.6, 48.5), 60);
+    calm(); cine(V(6.5, 3.0, 40), V(0, 1.6, 48.5), 60);
   });
   add('score-bar', () => {
     // a fresh carry on Alpha's own half, the count at 64 vs Bravo's 81, retreating: ×3
@@ -89,7 +93,7 @@
     put(me, 0, -12, 0); step(0.05);
     Kp.shell.clear(); Kp.pos.copy(me.pos); Kp._setPhase('free', 0); step(2 / 60);
     me.intent.move.set(0, 0, -1); step(2.2); zero(me); step(0.1);
-    Kp.fuse = 37.2; follow(); step(1 / 60);
+    Kp.fuse = 37.2; calm(); follow(); step(1 / 60);
   });
   window.__hudScenes = S;
   return S.map((s) => ({ name: s.name }));
