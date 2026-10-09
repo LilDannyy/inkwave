@@ -27,6 +27,7 @@ import { specialNetState, specialNetApply } from '../game/specials.js';
 import { BotBrain } from '../game/bots.js';
 import { statusBits, NET_TRACKED, NET_POISONED } from '../game/statusFx.js';
 import { Boss } from '../boss/boss.js';
+import { sjNetEvent, sjNetFill } from '../game/jumpMarks.js';   // [b5-jumpui] remote super jumps: target, flight, clock
 
 const TICK = 1 / 20;
 
@@ -45,6 +46,7 @@ const F = {
   invuln: 262144, enemy: 524288,
   tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks;
                                           // two teams, so tracked = by the other one: the ring's colour and who gets lines)
+  stage: 4194304,                         // [b5-stagehooks] a stage module holds this squidkid (a pipe ride: aquarium's F.pipe)
 };
 // events forwarded from owners (actor-bearing payloads; vectors/actors are packed)
 const FORWARD = ['actor:jump', 'superjump', 'superjump:land', 'special:use', 'special:slam', 'weapon:dodge', 'weapon:fire', 'splatted', 'respawn'];
@@ -72,6 +74,7 @@ export class NetMatch {
     this._ink = null;
     this.stageSync = null;                       // Practice: the host's stage clock ({ t, at }: stageKit StageClock)
     this.podsPending = cfg.late && Array.isArray(cfg.pods) ? cfg.pods : null;   // a late joiner's copy of the pods
+    this.stagePending = cfg.late && cfg.stage ? cfg.stage : null;   // [b5-stagehooks] … and of the stage modules' state
   }
 
   get isHost() { return this.s.isHost; }
@@ -129,6 +132,10 @@ export class NetMatch {
     if (o.pod != null && o.pod !== 1) e.push(r2(o.pod));   // (a sprout pod's weight for it: pods.js)
     const wt = G.paint?.wipeTag?.();                        // the clear-all-ink wave: [wave, front] (paint.js _wipeGate)
     if (wt) { if (e.length < 13) e.push(0); e.push(wt[0], r2(wt[1])); }
+    // [b5-stagehooks] the painter's stage time (field 15) near a stage module's change (eras' guard, lava's clip); the pads
+    // (pod 0, wave [0, WIPE_DONE]) read exactly as no tag
+    const et = this.match?.stage?.splatTime(c, radius);
+    if (et !== undefined) { if (e.length < 13) e.push(0); if (e.length < 15) e.push(0, 9999); e.push(r2(et)); }
     this._rec(e);
   }
 
@@ -169,6 +176,8 @@ export class NetMatch {
   recTower(e) { if (this.isHost && G.netm === this) this._rec(['tw', e]); }
   // sprout pods: a hedge grown (by which team, when) / trampled, the meters' look (pods.js netEvent)
   recPods(e) { if (this.isHost && G.netm === this) this._rec(['pd', e]); }
+  // [b5-stagehooks] a stage module's record (stageMods.js StageRun.rec): its key + data, on the sender's timeline
+  recStage(key, data) { if (G.netm === this) this._rec(['sm', key, data]); }
   // Practice: the host's clear-all-ink wave (number, centre, length, reach) — on its timeline, so it lands in step with
   // its own splats; each screen runs it from this record (main.js netWipe → paint.startWipe + the look)
   recWipe(w) { if (this.isHost && G.netm === this) this._rec(['w', w.k, r2(w.cx), r2(w.cz), r2(w.dur), r2(w.reach)]); }
@@ -232,7 +241,7 @@ export class NetMatch {
       if (this.clockT <= 0) {
         this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time)];
         // (Practice: no match clock — the stage clock instead: movers' timetables, pods' growth)
-        const st = this.practice ? (this.match.movers?.clock?.t ?? this.match.pods?.clock?.t) : undefined;
+        const st = this.practice ? (this.match.movers?.clock?.t ?? this.match.pods?.clock?.t ?? this.match.stage?.clockT()) : undefined;   // [b5-stagehooks] stage modules' clock
         if (st !== undefined) msg.c.push(r3(st));
       }
     }
@@ -434,12 +443,16 @@ export class NetMatch {
     if (S.spx && SPECIAL_ORDER[S.spx - 1]) a.specialId = SPECIAL_ORDER[S.spx - 1];   // their loadout's special
     // a special: its owner's records run a ghost of it here (specials.js netGhost); the flag alone is the fallback, and a
     // ghost whose end never arrived goes when the flag has been off a moment
-    if (f & F.special) { n.spOff = 0; if (!a.specialActive) a.specialActive = { id: a.specialId || a.weapon.special, net: true }; }
+    // ([b5-int1] the stand-in carries its special's numbers, `def`: the flag can come before the start record — late, or
+    // lost — and readers of a running special's numbers (the cue director's s.def.moveSpeed / speed / inflate …) found
+    // none: "Cannot read properties of undefined (reading 'moveSpeed')" every frame; tests/net-late-special.cjs)
+    if (f & F.special) { n.spOff = 0; if (!a.specialActive) { const id = a.specialId || a.weapon.special; a.specialActive = { id, def: SPECIALS[id] || null, net: true }; } }
     else if (a.specialActive?.ghost) { if ((n.spOff = (n.spOff || 0) + dt) > 0.6) G.specials?.end(a, 'net'); }
     else a.specialActive = null;
     specialNetApply(a, S.spst | 0);
     a.superJumpState = f & (F.sjCharge | F.sjFlight) ? (a.superJumpState || { phase: 'charge', net: true }) : null;
     if (a.superJumpState) a.superJumpState.phase = f & F.sjFlight ? 'flight' : 'charge';
+    sjNetFill(a, dt);   // [b5-jumpui] (its clock + the owner's target / from / to / duration: game/jumpMarks.js)
     // weapon pose state (charge glow, roller drum, splatling spin, dualies lock …)
     const wr = a.weaponRunner;
     wr.charging = !!(f & F.charging); wr.charge = S.ch;
@@ -479,6 +492,7 @@ export class NetMatch {
       const pad = G.level.spawnPads[a.team];
       G.fx?.spawnFlash(_v2.set(a.pos.x, pad.y, a.pos.z), a.color);
     }
+    this.match?.stage?.carryRemote(a, !!(f & F.stage), dt);   // [b5-stagehooks] (a pipe rider drawn on its path)
     a.character.root.visible = true;
     a._finishFrame(dt);
   }
@@ -527,6 +541,7 @@ export class NetMatch {
         if (st) { opts.stretch = st; opts.stretchAmt = e[12]; }
         if (e[13]) opts.pod = e[13];
         if (e[14] !== undefined) { opts.wk = e[14]; opts.wr = e[15]; }   // (its painter's wave tag)
+        if (e[16] !== undefined) opts.et = e[16];                          // [b5-stagehooks] (its painter's stage time)
         G.paint?.splat(_v.set(e[2], e[3], e[4]), e[5], e[6], opts);
         this.applying = false;
         break;
@@ -553,6 +568,7 @@ export class NetMatch {
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
+      case 'sm': this.match?.stage?.netEvent(e[2], e[3], from); break;   // [b5-stagehooks] a stage module's record
       case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
       case 'lo': { const a = this.byNid.get(e[2]); if (a && a.remote) applyLoadout(a, e[3], e[4], e[5]); break; }
       case 'bc': { const b = this.match?.boss; if (b && !b.sim) b._crabBurst(e[2], e[3], e[4], e[5], !!e[6]); break; }
@@ -646,6 +662,7 @@ export class NetMatch {
         if (e.swim) G.fx?.burst(_v2.copy(a.pos), UPV, a.color, { count: 10, speed: 3.5, size: 0.08 });
         break;
       case 'superjump':
+        sjNetEvent(a, e);   // [b5-jumpui]
         if (e.phase === 'charge') G.audio?.play('super_jump', { pos: a.pos, volume: 0.6 });
         if (e.phase === 'flight') { a.net.sjTo = e.to ? e.to.clone() : null; G.fx?.burst(_v2.copy(a.pos), UPV, a.color, { count: 16, speed: 6, size: 0.1 }); }
         break;
@@ -716,6 +733,7 @@ export class NetMatch {
         for (const e of this.podsPending) { try { m.pods.netEvent(e); } catch (err) { console.warn('[net] pods snapshot', err); } }
         this.podsPending = null;
       }
+      if (this.stagePending && m.stage) { m.stage.netRestore(this.stagePending, st); this.stagePending = null; }   // [b5-stagehooks]
     }
     if (state === 'playing' && m.state === 'playing' && Math.abs(m.time - time) > 0.2) m.time += (time - m.time) * 0.5;
   }
@@ -760,6 +778,7 @@ export class NetMatch {
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
     }
     if (hostChanged && this.isHost) { this.match.follower = false; this.clockT = 0; }
+    if (hostChanged) this.match.stage?.hostChanged(this.isHost);   // [b5-stagehooks]
     // the boss moves with the host: the new host adopts it from what it was showing; everyone else glides onto its path
     if (hostChanged && this.match.boss) { if (this.isHost) this.match.boss.adopt(); else this.match.boss.handoff(); }
   }
@@ -848,6 +867,8 @@ export class NetMatch {
     if (a.alive && a.net.spawnPending) { a.net.spawnPending = false; a.respawn(); }   // mid-respawn: finish it here
     else if (a.alive) { a.character.setVisible(true); a.character.root.visible = true; }
     a.net.err.set(0, 0, 0); a.net.errV?.set(0, 0, 0);   // a.pos is already where it was drawn (path + offset)
+    G.deploy?.adopt(a);   // [b5-deploy] its devices (ghosts here till now) are ours: they can still be shot down and crushed
+    this.match?.stage?.adopt(a);   // [b5-stagehooks] (a ride in progress becomes ours)
   }
 
   _ownership() { /* reserved: explicit transfers */ }
@@ -897,6 +918,7 @@ function packActor(a) {
   if (a.invuln > 0) f |= F.invuln;
   if (a.onEnemy) f |= F.enemy;
   { const sb = statusBits(a); if (sb & NET_TRACKED) f |= F.tracked; if (sb & NET_POISONED) f |= F.poisoned; }
+  if (G.match?.stage?.netFlag(a)) f |= F.stage;   // [b5-stagehooks]
   // the visual position (the owner's step smoothing included) — that's what the owner sees
   const y = a.pos.y + (a.smoothY || 0);
   const n = a.climbing ? a.wallN : null;

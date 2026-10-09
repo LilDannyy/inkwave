@@ -1,0 +1,31 @@
+REDUCED BY THE LEAD: 8 matches per cell; the full balance run happens once, after integration.
+JOB-3 (zipcheer) results — the NEW code at 8b920b1 (code identical to d21983c), Mac mini, SLOTS=3 PAR=3, caffeinate. CFGS="zipN orbN" (your trimmed set), cut by the lead to balance.sh <out> 1 1 = 32 matches, into JOB-1's folder; wall time 11 min. Run after JOB-1, as asked.
+FAILED lines in job3.log: 0. Match logs with CONSOLE n > 0 or FRAME ERRORS: none.
+
+## node tools/botlab/jobs/batch5/zipcheer/agg.cjs .botlab/results/zipcheer/bal (old zipO / orbO and new zipN / orbN)
+
+=== turf (32 matches; the forced team vs the other, means per match ± sd)
+  orbN n=8: wins 75% [A 50% (n 4), B 100% (n 4)] | turf Δ 10.3 ±9.4 | K/D 1.08 ±0.21 | splats 36.0
+      booyah: used 20.1/match, splats by it 1.25/match (0.06 per use) | ended: throw 87%, splat 13% (n 159)
+      per orb: lifted 0.98 (avg 2.16 m), cheers 4.11 (helping 4.08), orb charge from cheers 0.40, gauge gains 3.41 (23.9 pts), splatted while held up 0.12, damage taken held up 16.8
+  orbO n=8: wins 88% [A 100% (n 4), B 75% (n 4)] | turf Δ 16.0 ±9.3 | K/D 1.11 ±0.31 | splats 38.5
+      booyah: used 21.0/match, splats by it 0.88/match (0.04 per use) | ended: throw 89%, splat 11% (n 165)
+  zipN n=8: wins 13% [A 25% (n 4), B 0% (n 4)] | turf Δ -11.2 ±10.9 | K/D 0.86 ±0.22 | splats 40.9
+      zipcaster: used 13.1/match, splats by it 3.38/match (0.26 per use) | ended: splat 61%, time 39% (n 101)
+      per use: zips 0.65, hits taken mid-zip 0.14 (6.6 damage saved)
+  zipO n=8: wins 0% [A 0% (n 4), B 0% (n 4)] | turf Δ -12.4 ±6.0 | K/D 0.80 ±0.21 | splats 40.4
+      zipcaster: used 13.1/match, splats by it 1.38/match (0.10 per use) | ended: splat 61%, time 39% (n 103)
+  all: stuck 0.19% | splats 38.9 | matches with console warnings 0 · frame errors 0
+
+=== zones (32 matches; the forced team vs the other, means per match ± sd)
+  orbN n=8: wins 25% [A 25% (n 4), B 25% (n 4)] | turf Δ 0.3 ±6.0 | K/D 0.76 ±0.21 | splats 72.5
+      booyah: used 28.1/match, splats by it 2.00/match (0.07 per use) | ended: throw 75%, splat 25% (n 224)
+      per orb: lifted 0.99 (avg 2.15 m), cheers 3.86 (helping 3.86), orb charge from cheers 0.39, gauge gains 3.39 (24.0 pts), splatted while held up 0.24, damage taken held up 35.7
+  orbO n=8: wins 50% [A 50% (n 4), B 50% (n 4)] | turf Δ 5.3 ±8.1 | K/D 0.96 ±0.24 | splats 79.9
+      booyah: used 33.1/match, splats by it 2.75/match (0.08 per use) | ended: throw 78%, splat 22% (n 264)
+  zipN n=8: wins 50% [A 50% (n 4), B 50% (n 4)] | turf Δ 2.7 ±5.4 | K/D 1.06 ±0.32 | splats 85.9
+      zipcaster: used 28.9/match, splats by it 6.88/match (0.24 per use) | ended: time 54%, splat 46% (n 229)
+      per use: zips 0.70, hits taken mid-zip 0.20 (5.0 damage saved)
+  zipO n=8: wins 0% [A 0% (n 4), B 0% (n 4)] | turf Δ -8.0 ±6.5 | K/D 0.67 ±0.19 | splats 76.5
+      zipcaster: used 25.3/match, splats by it 2.88/match (0.11 per use) | ended: splat 66%, time 34% (n 200)
+  all: stuck 0.41% | splats 78.7 | matches with console warnings 0 · frame errors 0

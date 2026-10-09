@@ -1,0 +1,28 @@
+JOB-6 (jumpui) @ d8eb73e — verdict: everything full in all 3 rounds (run by the Mac mini's b5-runner, 07:44–07:50, exit 0).
+- jump-ui at 960×600 (the enemy-mark check, test fixed in 6bd31ef): 62/62 in rounds 1, 2 and 3.
+- bot-specials (the Bubble Blower check): 19/19 in rounds 1, 2 and 3. With JOB-5's rerun that makes 4 passes in a row
+  after its one failure, so it is chance.
+- every other jump-ui run full: turf ×3, 1280×720 ×3, zones, tower, boss, boss 960×600.
+(The raw file came about 2 min late: the runner's first result push failed because botlab-b5-jumpui was checked out in
+ the helper's own worktree; fixed on the Mac mini, and pushed by hand.)
+
+## the job's output
+### round 1 @ d8eb73e
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-tower: RESULT 65/65 0 FAIL
+== jump-ui-zones: RESULT 65/65 0 FAIL
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 2
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 3
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL

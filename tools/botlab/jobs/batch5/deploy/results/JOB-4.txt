@@ -1,0 +1,68 @@
+JOB-4 (deploy) results — head 308b3f2 vs base 7ee5ad5, each 6 × bot-specials and 6 × sub-tweaks (only=windup), Mac mini, SLOTS=3.
+
+| | Ink Jet check (bot-specials) FAILED | windup-escape check (sub-tweaks) FAILED |
+|---|---|---|
+| head 308b3f2 | 0 of 6 | 0 of 6 |
+| base 7ee5ad5 | 0 of 6 | 2 of 6 |
+
+Ink Jet avgDmgOn / avgDmgOff per run:
+- head: {"avgDmgOn":0,"avgDmgOff":81.9} {"avgDmgOn":25.3,"avgDmgOff":72.6} {"avgDmgOn":0,"avgDmgOff":100} {"avgDmgOn":0.2,"avgDmgOff":90.9} {"avgDmgOn":0,"avgDmgOff":100} {"avgDmgOn":15.7,"avgDmgOff":91} 
+- base: {"avgDmgOn":0.3,"avgDmgOff":72} {"avgDmgOn":0,"avgDmgOff":81.4} {"avgDmgOn":0,"avgDmgOff":90.4} {"avgDmgOn":25,"avgDmgOff":81.9} {"avgDmgOn":0.2,"avgDmgOff":72.6} {"avgDmgOn":0,"avgDmgOff":100} 
+Other FAIL lines: none in the head runs; the base's two sub-tweaks fails are the windup check (below). bot-specials 19/19 in all 12 runs.
+Reading: on the head the Ink Jet check passed 6/6 here (vs 2 fails in 4 earlier runs on this branch), and the base fails the windup check about as often — both look like chance, not this package.
+
+## head
+### head st 1: RESULT 10/10
+PASS 
+### head st 2: RESULT 10/10
+PASS 
+### head bs 2: RESULT 19/19
+PASS {"avgDmgOn":0,"avgDmgOff":81.9} 
+### head bs 1: RESULT 19/19
+PASS {"avgDmgOn":25.3,"avgDmgOff":72.6} 
+### head st 3: RESULT 10/10
+PASS 
+### head bs 3: RESULT 19/19
+PASS {"avgDmgOn":0,"avgDmgOff":100} 
+### head st 4: RESULT 10/10
+PASS 
+### head st 5: RESULT 10/10
+PASS 
+### head bs 4: RESULT 19/19
+PASS {"avgDmgOn":0.2,"avgDmgOff":90.9} 
+### head st 6: RESULT 10/10
+PASS 
+### head bs 5: RESULT 19/19
+PASS {"avgDmgOn":0,"avgDmgOff":100} 
+### head bs 6: RESULT 19/19
+PASS {"avgDmgOn":15.7,"avgDmgOff":91} 
+
+## base
+### base st 1: RESULT 9/10
+FAIL 
+### base st 2: RESULT 10/10
+PASS 
+### base bs 2: RESULT 19/19
+PASS {"avgDmgOn":0.3,"avgDmgOff":72} 
+### base bs 1: RESULT 19/19
+PASS {"avgDmgOn":0,"avgDmgOff":81.4} 
+### base st 3: RESULT 10/10
+PASS 
+### base bs 3: RESULT 19/19
+PASS {"avgDmgOn":0,"avgDmgOff":90.4} 
+### base st 4: RESULT 10/10
+PASS 
+### base st 5: RESULT 9/10
+FAIL 
+### base bs 4: RESULT 19/19
+PASS {"avgDmgOn":25,"avgDmgOff":81.9} 
+### base st 6: RESULT 10/10
+PASS 
+### base bs 5: RESULT 19/19
+PASS {"avgDmgOn":0.2,"avgDmgOff":72.6} 
+### base bs 6: RESULT 19/19
+PASS {"avgDmgOn":0,"avgDmgOff":100} 
+
+## base FAIL lines (sub-tweaks windup)
+FAIL a hard bot (its specials awareness on) caught in a windup's blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb  {"seeker":[{"esc":{"hit":"seeker","t":0.05},"d0":1.17,"dEsc":1.37,"dMin":1.37,"dEnd":3.31,"dmg":0},{"esc":{"hit":"seeker","t":0.217},"d0":0.37,"dEsc":0.54,"dMin":0.54,"dEnd":1
+FAIL a hard bot (its specials awareness on) caught in a windup's blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb  {"seeker":[{"esc":{"hit":"seeker","t":0.033},"d0":1.19,"dEsc":1.34,"dMin":1.34,"dEnd":3.25,"dmg":0},{"esc":{"hit":"seeker","t":0.133},"d0":0.35,"dEsc":0.28,"dMin":0.28,"dEnd":

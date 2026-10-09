@@ -484,6 +484,10 @@ export class Cues {
       if (a.status?.shield > 0) this._want(a, 'shield', 'shield_hum', { ...o, range: 28 });
       const s = a.specialActive;
       if (!s) continue;
+      // ([b5-int1] its numbers: a state without them — a remote player's stand-in from the tick flag, before or without
+      // its start record (net/netmatch.js) — reads its special's own, never undefined.moveSpeed)
+      const def = s.def || SPECIALS[s.id];
+      if (!def) continue;
       const hv = hs(a.vel);
       switch (s.kind || s.id) {
         case 'slam': {
@@ -502,16 +506,16 @@ export class Cues {
         case 'strike': if (own2D && s.aiming) this._want(a, 'aim', 'strike_aim', { ...o, prio: 2 }); break;
         case 'wail': this._want(a, 'hold', 'wail_hold', { ...o, range: 30 }); break;
         case 'kraken': {
-          this._want(a, 'body', 'kraken_move', { ...o, params: { speed: clamp(hv / s.def.speed, 0, 1) } });
+          this._want(a, 'body', 'kraken_move', { ...o, params: { speed: clamp(hv / def.speed, 0, 1) } });
           if (s.attack && !a.grounded) {
-            const k = clamp((s.def.attackVel - a.vel.y) / (s.def.attackVel + 14), 0, 1);
-            this._want(a, 'dive', 'kraken_dive', { ...o, warn: true, big: true, radius: s.def.radius, params: { k } });
+            const k = clamp((def.attackVel - a.vel.y) / (def.attackVel + 14), 0, 1);
+            this._want(a, 'dive', 'kraken_dive', { ...o, warn: true, big: true, radius: def.radius, params: { k } });
           }
           break;
         }
-        case 'blower': if (s.cur) this._want(a, 'inflate', 'blower_inflate', { ...o, vol: 0.85, pitch: 1 + clamp(s.curT / s.def.inflate, 0, 1) }); break;
+        case 'blower': if (s.cur) this._want(a, 'inflate', 'blower_inflate', { ...o, vol: 0.85, pitch: 1 + clamp(s.curT / def.inflate, 0, 1) }); break;
         case 'jetpack': this._want(a, 'jet', 'jet_loop', { ...o, vol: 0.8, range: 50 }); break;
-        case 'stamp': this._want(a, 'carry', 'stamp_carry', { ...o, params: { speed: clamp(hv / s.def.moveSpeed, 0, 1) } }); break;
+        case 'stamp': this._want(a, 'carry', 'stamp_carry', { ...o, params: { speed: clamp(hv / def.moveSpeed, 0, 1) } }); break;
         case 'booyah': if (!s.thrown) this._want(a, 'charge', 'booyah_charge', { ...o, vol: 0.75, pitch: 1 + clamp(s.charge || 0, 0, 1), range: 50 }); break;
         case 'zipcaster':
           this._want(a, 'aura', 'zip_aura', { ...o, range: 22 });

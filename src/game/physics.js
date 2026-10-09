@@ -27,6 +27,7 @@ export class Physics {
   constructor(level) {
     this.level = level;
     this._ids = [];
+    this.skip = null;   // [b5-stagehooks] a block flag raycast ignores while set (the ride camera's probe: 'pipe')
   }
 
   // Ray vs all blocks. dir must be normalized. Ignores blocks containing the origin.
@@ -35,11 +36,12 @@ export class Physics {
     out.hit = false; out.dist = maxDist; out.block = -1; out.face = -1;
     const ex = origin.x + dir.x * maxDist, ez = origin.z + dir.z * maxDist;
     const ids = this.level.queryBlocks(Math.min(origin.x, ex), Math.min(origin.z, ez), Math.max(origin.x, ex), Math.max(origin.z, ez), this._ids);
-    const blocks = this.level.blocks;
+    const blocks = this.level.blocks, SK = this.skip;
     let best = maxDist, bestK = -1, bestSign = 0, bestB = -1;
     for (let i = 0; i < ids.length; i++) {
       const b = blocks[ids[i]];
       if (!b.solid || (skipGrates && b.grate)) continue;
+      if (SK && b[SK]) continue;   // [b5-stagehooks]
       // AABB precheck along the segment (cheap)
       _o.copy(origin).sub(b.center);
       let tmin = -Infinity, tmax = Infinity, kmin = -1, smin = 0, miss = false;

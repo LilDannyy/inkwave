@@ -71,6 +71,9 @@ Rules the UI can rely on:
   Boss Battle is one squad of up to 8. A humans-only stage (config `noBots`) forces 0 (the host's own count comes back
   on the next stage); 'random' never rolls a humans-only stage the room couldn't start on or that would turn away the
   bots asked for.
+- A stage under construction (config `wip`) is never offered: the host refuses it in `setSettings` / `practiceSwap`,
+  'random' never rolls it, and a room opened over one starts on the first stage. A host whose page has `?wipstages`
+  lists and picks them; every client loads the stage it is sent by id, flag or not.
 - `start()` launches the match on every client; the menus should hide themselves when `state === 'match'` (main.js
   also does it). When the match's results finish, everyone returns to the lobby screen with `state === 'lobby'`.
 - A player leaving mid-match is replaced by a bot on the same actor; if the host leaves, the room migrates to the next
@@ -154,6 +157,10 @@ result on every screen.
 sub, a Waddle …) is recorded by its owner as `['k', nid, kind, data]` and replayed by the kit's `ghost(actor, data)`:
 visual-only (paint muted, hits dropped) and never deciding for itself — its owner's end / lock / path records drive it.
 A hit on a ghost device (curtain, beacon, Waddle, Torpedo …) goes to its owner (`{k:'dh'}` → the kit's `netHurt`).
+(Amounts are positive only. A Bubble Blower bubble's two kinds of hit — enemy fire shrinks it, its own team's charges
+it until it blows — go on two channels: `kind:'sp'` and, `[b5-int1]`, `kind:'spTeam'`; team fire used to be sent as a
+negative `sp` amount and was dropped, so a teammate on another screen could never set off your bubble.
+`tools/botlab/tests/net-blower-team.cjs`.)
 The built-in subs (subs.js) add an update record `[3, gid, …]` from the owner: a Lurk Mine tripped (it pops up on every
 screen — it's invisible to the other team until then, on theirs too), a Skitter Bomb stopping to wind up (ghost Skitters
 never trigger themselves), a Hop Beacon's jumps left, a Drip Curtain's ink after hits (its decay runs everywhere); a
@@ -221,6 +228,95 @@ shoves and slides run on every screen alike; a ghost never decides it was crushe
 `net-surf.cjs` with `NET_ARGS='scene=tower'` checks the ride (the same spot on each screen's deck) and the ring centres
 on two real clients.
 
+**Deployables can be shot; the tower crushes them** (src/game/deployables.js, batch 5). Sprinklers, Hop Beacons, Skitter
+Bombs on the ground and the Surf N' Turf buoy take enemy fire of every kind. **The device's owner decides.** A shot,
+beam, blast or roller drum on a remote player's device is judged on the shooter's screen (its own projectile against
+its ghost of the device) and sent to the owner as a device hit (`{k:'dh', kind:'subs' | 'surf'}`, as before); a ghost
+shot only flashes a device, never hurts it (muted). Standing fire (the Ink Tempest's rain, the vortex, the Howl Box's
+beam, Surf N' Turf's rings) and the tower are judged **on the owner's screen**, against its own copies of them (the
+tower follows the host's snapshots; a ghost cloud / vortex / beam / ring runs there like any ghost) — the rule
+tickDamage follows for players. The owner's end record says why it went: subs `[2, gid, 1]` shot down (a ghost Skitter
+Bomb pops with a puff — no blast; a ghost sprinkler / beacon breaks with the pop look), `[2, gid, 2]` crushed by the
+tower (the crunch on every screen); the buoy `[4, gid, 2]` crushed. Old `[2, gid]` / `[4, gid]` mean what they did. A
+ghost device is never crushed by its own screen's tower — it waits for its owner's word, so both screens agree. Hit
+markers are the shooter's own ('device:hit' on its screen). **A player who leaves:** the host, carrying on their
+squidkid as a bot (`_adopt`), takes their devices over too (`DEPLOY.adopt`: its ghosts become its own, same gid) — so
+the hits other screens send to the new owner (`dh` to the host) and the host's own hits, standing fire and tower land on
+them, and the end / update records now come from the host. A squidkid taken out of the match (Practice: a player who
+left; a humans-only stage) takes its devices with it on every screen ('actor:removed'). Tested by `net-deploy.cjs`
+`NET_ARGS='scene=leave'` (the host leaves; the guest shoots the old host's beacon down on its own screen).
+
+**Devices on moving floors** (the user: "lurk mines don't stick to moving floors such as the tower"). A Lurk Mine, Hop
+Beacon, Twirl Sprinkler, Drip Curtain or Cling Charge set down or stuck on any moving level block (the tower's deck or
+pillar, a Calamari railcar, a pod's plant, any `Level.addDynamic` block) keeps its spot in the block's own axes, on the
+face it was set on, on every screen: each screen carries its copy on its own copy of the block (the movers and pods run
+on the synced clock, the tower follows the host's snapshots), as the buoy does — no records while it rides. A moving
+block pushing into a device lying on a floor lifts it onto its top or shoves it out of its way (the buoy's rule; the
+tower crushes what's on the user's list — sprinkler, beacon, curtain, buoy — and pushes anything else, a Lurk Mine or a
+Cling Charge on the floor, aside out of its path, never through it); its block going from under it, a floor device drops
+onto what's below (a wall one breaks). On a stage with a stage module ([b5-int2]) a device never comes to rest in its
+no-place disc (`G.level.noPlace`) or under its liquid (`G.match.stage.under`): a mine or beacon isn't planted there (the
+owner's screen, before any record), a sprinkler or curtain landing there breaks, a drop or shove there counts as none —
+every screen alike, from the module's pure function of the synced stage clock (the owner's end record settles a ghost,
+as with any end). The
+owner's word settles where it is whenever it settles somewhere: the subs record `[4, gid, x, y, z, tag, lx, ly, lz, nx,
+ny, nz]` — on the moving block `tag` (its Level tag: `tower`, `tower-pillar`, `mover:<car>`, `plant:<pod>:<part>`; `#<id>`
+for an untagged one) at `l` in its axes, on the face whose normal is `n` (its axes) — or `[4, gid, x, y, z]` (on still
+ground again, after a drop or once a shove has settled: 0.2 s). A ghost snaps to it (one still in the air keeps it until
+it lands). A mine is tripped by its owner's screen wherever the block has taken it (the `[3, gid]` / `[2, gid]` records,
+as before). Old clients ignore `[4, …]` (no sub kind at `d[2]`). Tested by `tools/botlab/tests/net-deploy.cjs`
+(`CLIENTS=2`; `NET_ARGS='scene=tower'`: the deck, the crush, the mine on the deck) and `tests/deployables.js`.
+
+**What outlives its owner** (batch 5, `[b5-sprules]`). A remote splat (`NetMatch._remoteSplat`) emits `'splatted'` with
+`remote: true` on every other screen, after the owner's own records that went before it (a special's end `[1, 'splat']`
+is recorded inside `actor.splat()`, ahead of the forwarded event). The Whirl Boomerang's ghost no longer fizzles on it:
+like the owner's copy it notes where its thrower went down (`it.home`, from that screen's copy of the thrower) and whirls
+back there; the owner's burst record `[1, gid, x, y, z, big]` still says where and when it goes off. A Drainbow whose
+owner is splatted is orphaned by the end record (`popOnOwnerSplat: false`) and runs out its life on its own clock on
+every screen (pop 'time', not the 3 s 'lost' fallback). The Ink Tempest's cloud and the Surf N' Turf buoy never
+depended on their thrower (their own records). The gauge a splat leaves (half of what was left of a running special,
+`specials.js splatShare` — an orphaned Drainbow's too, [b5-int2]) is the victim's own screen's, synced as usual (`sp` in
+the actor tick).
+
+**Bubble Guard chain** (src/game/sp-bubble.js). The user's own field comes from the special's start record (every
+screen runs `IMPL.bubbler.start`). Passing a field on by touch is decided by the **receiver's owner** (its own squidkid;
+the host its bots), from its view of everyone's synced positions — the same rule as damage: each screen hands copies
+only to the players it owns and records it on the receiver, `['k', receiverNid, 'sp', [5, giverNid, timeLeft,
+chainOwnerNid]]`; every other screen gives that player the same copy with that time (`netGhost` case 5 → `shieldNet`),
+joined to its own copy of that chain (keyed by the chain owner's nid), so "each chain once a player" holds everywhere.
+A copy heard that way runs to the chain's end on that screen (when its copy of the user's field runs out there), not to
+the record's time, which is a playback delay late by then: so every copy of a chain runs out together on each screen,
+however many hops it took (the record's time only for a chain the screen hasn't seen).
+Tested by `tools/botlab/tests/net-sprules.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`).
+
+**Bomb Barrages** (src/game/sp-barrage.js). The variant is the special's start record (`[0, index]`; Waddle and Mystery
+appended to `SPECIAL_ORDER`). The bombs are their own records as ever (`'b'` for the Splat Bomb, the subs' and kits'
+`'k'` for the rest, the Waddle's `[0 …]`). The Mystery Bomb Barrage's owner records each next bomb as the special's
+moment `[4, 'nb', SUB_ORDER index]` (at the start and after every throw), so every screen shows the same bomb in that
+player's hand. A barrage's Waddle senses and chases with the Waddle Bomb Barrage's own numbers (`barrageBomb`:
+`waddleSense` / `waddleLife`); its ghost reads them from the owner's barrage running on that screen when its `[0 …]`
+record arrives (records keep their order, so a Mystery's `'nb'` after the throw never gets there first).
+
+**Zipline and Cheer Orb (batch 5; src/game/specials.js, src/game/sp-cheer.js).** The Zipline's quarter damage while
+travelling along a zip is judged where every hit is applied, on the zipper's owner's screen (`filterDamage`: its own
+special, not a ghost, mid-zip); its faster zips and cheaper ink are the owner's own movement and tank, so nothing new
+crosses the wire. The Cheer Orb's lift isn't on the wire either: the owner moves its player up and holds it there, and
+the position rides the actor tick (every screen's ghost shows it up there, legs hanging). A cheer is recorded by the
+cheerer's owner (each player its own kid, the host its bots) as `['k', nid, 'cheer', [gain, nid …]]`: whether its own
+gauge gains, and the users of the orbs it sent wisps to. Every other screen plays the "Yeah!" and flies the same wisps
+(`KIT_GHOSTS.cheer`). The orb's charge is its user's owner's: that screen adds the cheer when its own copy of the wisp
+reaches the orb, and the charge reaches everyone through the user's tick (`specialNetState`, as before); a ghost orb
+only pulses. The gauge gain is the cheerer's own screen's (it owns its gauge). Tested by
+`tools/botlab/tests/net-zipcheer.cjs` (`CLIENTS=2`: a guest cheers the host's orb, and the other way round).
+
+**A special's stand-in** (batch 5, `[b5-int1]`). Another screen learns a player's special runs from two places: the
+owner's tick flag (`F.special`) and the owner's start record (`[0, index]`). When the flag gets there first, or the record
+is lost, `applyRemote` gives that player a stand-in `{ id, def, net: true }` (its special's own numbers, no ghost) until
+the record starts the ghost over it, and drops it with the flag. Anything that reads a running special's numbers for a
+remote player (the cue director's Mega Stamp / Kraken / Bubble Blower loops) finds them on the stand-in; the cue
+director also falls back to `SPECIALS[id]` for a state without them. Tested by `tools/botlab/tests/net-late-special.cjs`
+(`CLIENTS=2`: the guest's screen holds the host's start records back — 1.2 s, or for good).
+
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
 ring (the forced-jump rule, ≤ 3.5 s). `actor.splat()` asks the judge before it emits `'splatted'`; the forwarded event
@@ -228,10 +324,39 @@ carries the helpers' net ids as `as: "3,5"` (a string: the event packer drops ar
 credits them on every other screen. The host's final count (`{k:'res'}` `st` rows) carries each player's assists as a
 seventh field, so every results screen shows the host's numbers.
 
+**Super jumps and the Ink Jet / Zipline return marks (src/game/jumpMarks.js, src/ui/hud-jumps.js).** A super jump
+is its owner's: the actor tick only says charge or flight (`F.sjCharge` / `F.sjFlight`), and the forwarded
+`'superjump'` events carry the rest — the charge event its `target` (a teammate → `{n: nid}`, or a point: a beacon,
+the base), `home` (an Ink Jet / Zipline jump back) and `instant`; the flight event its `from` / `to` / `dur` (the owner's
+landing spot and flight time). `sjNetEvent` / `sjNetFill` (netmatch.js `_playEvent` / `applyRemote`) put those on the
+remote player's `superJumpState` with its own clock (`t`, reset as the flags change phase), so every screen reads the
+same jump: the "NAME is jumping to you!" alert on the target's own screen (a guest jumping to the host alerts the host),
+the named landing tags and their countdown, the travel lines on both maps, the world reticle, and a jump to a remote
+player who is itself mid-flight (`jumpAnchor`). A jump onto a teammate riding Tower Command's tower lands on the moving
+deck: the owner's landing follows its tower, and every other screen's copy (with netmatch's landing ring) follows that
+screen's tower from the offset at launch. An Ink Jet / Zipline user's take-off point is its ghost special's
+`origin` (the ghost starts on the special's start record, on the same timeline as the positions, so it is where the
+owner took off), and its countdown is the ghost's own clock: each screen's tags count down to the touchdown *it* will
+show. A jump onto such a user lands at that point on the jumper's screen (`jumpAnchor`; the jumper owns its jump).
+Nothing new on the wire beyond those event fields. Tested by `tools/botlab/tests/net-jump-ui.cjs` (`CLIENTS=2`; `NET_ARGS='scene=tower'`: the tower ride).
+
 **Zone Control.** The host runs the rules; every decision (capture, control, penalty, rotation, overtime, the end
 with its exact counts) and a count snapshot twice a second go on its event timeline as `['z', …]`, so they land in
 step with the paint that caused them. Guests follow (zones.js `netEvent`): they only predict the count between
-snapshots, and each client fills its own players' special gauges.
+snapshots, and each client fills its own players' special gauges. A flip waits until the ink has stayed over its line for
+`ZONES.flipHold` s (0.6): that wait runs on the host only, and the capture record goes out when the flip lands, so guests
+apply it at once and never see a flip that was inked straight back.
+
+**Stage modules** (src/game/stageMods.js, docs/STAGE-MODS.md: eras, pipes, lava). A module's state is a pure function
+of the stage clock wherever it can be (nothing on the wire): the match clock every follower tracks, and in Practice the
+host's stage clock on its ticks (`msg.c[2]`: the movers', else the pods', else the stage modules' clock). What can't be
+(a host-run decision) goes as `['sm', key, data]` on the sender's timeline (`StageRun.rec` → the module's `netEvent`).
+A splat near a module's change carries its painter's stage time as record field 15 (`opts.et` on replay: the eras' ink
+guard and the lava's clip judge it at the painter's moment on every screen); the pads before it (pod 0, wave
+`[0, 9999]`) read exactly as no tag. A module may flag a squidkid in the tick (`F.stage`, bit 22: the aquarium's pipe
+ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw). A late joiner of a Practice session
+gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
+`seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the

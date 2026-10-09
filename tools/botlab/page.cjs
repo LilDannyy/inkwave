@@ -2,6 +2,7 @@
 // and prints PASS / FAIL lines + RESULT n/m. PAGE_ARGS (a string) reaches the script as window.__pageArgs; PAGE_ARGS2 (optional)
 // then reloads the page (localStorage kept), boots again and runs PAGE once more with those args ('[reload] ' results).
 //   MAP=halyard MODE=turf PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
+//   (W=960 H=600: the page at that size instead of the window's)
 // MAP=testbox / podbox are test-only arenas (tools/botlab/testmaps.cjs, never shipped).
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
@@ -22,6 +23,7 @@ let claimed = false; app.on('browser-window-created', (_, win) => { if (claimed)
     // boot the game page and start the match (again after a reload: PAGE_ARGS2)
     const boot = async () => {
       await win.loadURL('app://inkwave/index.html?autopilot');
+      if (process.env.W) win.setContentSize(+process.env.W, +(process.env.H || 600));   // [b5-jumpui] W / H: the page's size (default the window's)
       for (let i = 0; i < 80; i++) { if (await js('!!window.__inkwave?.api')) break; await wait(250); }
       await js('window.__inkwave._onPointerUnlock = () => {}; 0');
       if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));   // (a test-only arena: testmaps.cjs)
@@ -43,7 +45,7 @@ let claimed = false; app.on('browser-window-created', (_, win) => { if (claimed)
       // checks that something saved survives a reload
       if (process.env.PAGE_ARGS2) { if (!(await boot())) return; await runPage(process.env.PAGE_ARGS2, '[reload] '); }
       console.log(`RESULT ${pass}/${total}`);
-    } catch (e) { console.log('HARNESS ERROR', e.message); }
+    } catch (e) { console.log('HARNESS ERROR', e.message, e.stack); }   // [b5-jumpui] (the stack)
     console.log('console errors:', errs.length ? [...new Set(errs)].slice(0, 5).join(' || ') : 'none');
     app.quit();
   });

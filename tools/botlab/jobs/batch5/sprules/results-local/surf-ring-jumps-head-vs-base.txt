@@ -1,0 +1,38 @@
+# fix round 1: surf.js 'bots in a ring's way jump it' (hard share >= 0.65) failed once in JOB-5 (hard 27 jumped / 24 hit = 0.53).
+# Locally, 2026-10-04, PAGE_ARGS='only=bots', one boot per line. head = 9819b87 source; base = src + styles from 7ee5ad5 (the code before the package).
+## random foe loadouts (as the test runs): hard jumped / hit
+head-1: hard 35 jumped / 19 hit   base-1: hard 40 jumped / 13 hit
+head-2: hard 36 jumped / 18 hit   base-2: hard 37 jumped / 17 hit
+head-3: hard 37 jumped / 17 hit   base-3: hard 37 jumped / 17 hit
+head-4: hard 34 jumped / 20 hit   base-4: hard 36 jumped / 18 hit
+head-5: hard 38 jumped / 16 hit   base-5: hard 41 jumped / 13 hit
+head-6: hard 33 jumped / 21 hit   base-6: hard 42 jumped / 12 hit
+head-7: hard 41 jumped / 13 hit   base-7: hard 38 jumped / 16 hit
+head-8: hard 40 jumped / 14 hit   base-8: hard 44 jumped / 10 hit
+head-9: hard 38 jumped / 16 hit   base-9: hard 38 jumped / 16 hit
+head-10: hard 40 jumped / 14 hit   base-10: hard 38 jumped / 16 hit
+head-11: hard 36 jumped / 18 hit   base-11: hard 42 jumped / 12 hit
+head-12: hard 42 jumped / 12 hit   base-12: hard 40 jumped / 14 hit
+head-13: hard 36 jumped / 15 hit   base-13: hard 41 jumped / 13 hit
+head-14: hard 32 jumped / 22 hit   base-14: hard 41 jumped / 13 hit
+## head with botSpecials.js from base / head with config.js from base
+nobs-1: hard 33 jumped / 21 hit   nocfg-1: hard 34 jumped / 20 hit
+nobs-2: hard 37 jumped / 15 hit   nocfg-2: hard 34 jumped / 20 hit
+nobs-3: hard 33 jumped / 18 hit   nocfg-3: hard 45 jumped / 9 hit
+nobs-4: hard 39 jumped / 15 hit   nocfg-4: hard 40 jumped / 14 hit
+nobs-5: hard 38 jumped / 16 hit   nocfg-5: hard 40 jumped / 14 hit
+nobs-6: hard 39 jumped / 15 hit   nocfg-6: hard 37 jumped / 17 hit
+nobs-7: hard 35 jumped / 19 hit   nocfg-7: hard 42 jumped / 12 hit
+nobs-8: hard 31 jumped / 20 hit   nocfg-8: hard 42 jumped / 12 hit
+## the same three foes fixed to a Splattershot + Tidal Slam (a scratch copy of surf.js: fix=shooter reps=20), so the loadout roll is out of it
+head-1: hard 124 jumped / 56 hit   base-1: hard 119 jumped / 61 hit
+head-2: hard 122 jumped / 58 hit   base-2: hard 123 jumped / 57 hit
+head-3: hard 118 jumped / 62 hit   base-3: hard 120 jumped / 60 hit
+## per foe (6 head boots, scratch copy): the share swings with the foe's weapon (a brolly 9/18, a Splattershot + Zooka 7/15, a bucket 15/18)
+PERFOE  {"hard|Moxie|bow|strike|bow":[12,6],"hard|Loop|brolly|bubbler|brolly":[9,9],"hard|Kelp|spinner|slam|spinner":[11,7],"easy|Moxie|bow|strike|bow":[3,12],"easy|Loop|brolly|bubbler|brolly":[8,10],"easy|Kelp|spinner|slam|spinner":[11,7]}
+PERFOE  {"hard|Moxie|shooter|slam|shooter":[16,2],"hard|Tako|mitts|slam|mitts":[12,6],"hard|Riptide|roller|stamp|roller":[13,5],"easy|Tako|mitts|slam|mitts":[10,8],"easy|Moxie|shooter|slam|shooter":[8,10],"easy|Riptide|roller|stamp|roller":[13,5]}
+PERFOE  {"hard|Kelp|mitts|slam|mitts":[14,4],"hard|Suki|bow|strike|bow":[12,6],"hard|Fizz|bucket|blower|bucket":[14,4],"easy|Kelp|mitts|slam|mitts":[7,10],"easy|Suki|bow|strike|bow":[6,12],"easy|Fizz|bucket|blower|bucket":[11,7]}
+PERFOE  {"hard|Blotch|spinner|crab|spinner":[15,3],"hard|Bubbles|mitts|slam|mitts":[13,5],"hard|Moxie|charger|blower|charger":[11,7],"easy|Blotch|spinner|crab|spinner":[4,8],"easy|Bubbles|mitts|slam|mitts":[9,9],"easy|Moxie|charger|blower|charger":[12,6]}
+PERFOE  {"hard|Riptide|bow|storm|bow":[14,4],"hard|Fizz|shooter|zooka|shooter":[7,8],"hard|Drip|charger|sonar|charger":[12,6],"easy|Riptide|bow|storm|bow":[12,6],"easy|Fizz|shooter|zooka|shooter":[7,11],"easy|Drip|charger|sonar|charger":[8,7]}
+PERFOE  {"hard|Juno|bow|barrage|bow":[12,6],"hard|Marlo|blade|crab|blade":[10,8],"hard|Drip|bucket|barrage|bucket":[15,3],"easy|Juno|bow|barrage|bow":[9,9],"easy|Marlo|blade|crab|blade":[6,9],"easy|Drip|bucket|barrage|bucket":[10,8]}
+# Reading: with fixed loadouts head and base are the same (364/540 = 0.674 vs 362/540 = 0.670); with random ones the means were 0.688 (head, 14) vs 0.734 (base, 14) — the weapon roll, not the code. The check sits close to its 0.65 bar on both (its comment's 72-86 % is from when it was written).

@@ -237,7 +237,7 @@ function melee(a, w, S) {
   if (!S.dev) {
     S.dev = true;
     _v.set(a.pos.x + fx * reach * 0.6, a.pos.y + 0.8, a.pos.z + fz * reach * 0.6);
-    G.subs?.damageArea?.(_v, reach * 0.75, dmg * 0.6, a.team);
+    G.subs?.damageArea?.(_v, reach * 0.75, dmg * 0.6, a.team, a);   // [b5-deploy] (by)
   }
 }
 
@@ -345,7 +345,7 @@ function stepWave(W, i, dt) {
     // shields, curtains, devices and bubbles catch it; walls break it
     let stop = false;
     const bd = W.ghost ? 0 : dmg;
-    if (G.subs?.blockShot(W.prev, W.pos, W.team, bd) || G.specials?.shotHit(W.prev, W.pos, W.team, bd, W.owner)) { endWave(W, W.pos.clone(), _n.copy(W.dir).negate()); stop = true; }
+    if (G.subs?.blockShot(W.prev, W.pos, W.team, bd, W.owner) || G.specials?.shotHit(W.prev, W.pos, W.team, bd, W.owner)) { endWave(W, W.pos.clone(), _n.copy(W.dir).negate()); stop = true; }   // [b5-deploy] (by)
     if (!stop) {
       const hit = G.physics.segment(W.prev, W.pos, _hit, true);
       if (hit.hit) { W.pos.copy(hit.point); endWave(W, hit.point, hit.normal); stop = true; }

@@ -17,6 +17,7 @@ import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER } from '../config.js';
 import { makeContacts, Hit, GroundHit, WALKABLE } from './physics.js';
 import { WeaponRunner } from './weapons.js';
 import { MAIN_KITS } from './kits/registry.js';
+import { sjFlightDur } from './jumpMarks.js';   // [b5-jumpui] the flight time the landing countdown predicts
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _fwd = new THREE.Vector3();
 const DOWN = new THREE.Vector3(0, -1, 0);
@@ -112,6 +113,7 @@ export class Actor {
     if (this.status) { this.status.track = 0; this.status.poison = 0; this.status.reveal = 0; this.status.shield = 0; }
     this._jumpBeacon = null;
     this.weaponRunner?.reset();
+    G.match?.stage?.actorReset(this);   // [b5-stagehooks] (a stage module's own per-actor state: a pipe ride, its cooldown)
   }
 
   setSub(id) {
@@ -180,6 +182,7 @@ export class Actor {
   damage(amount, attacker, source = 'weapon') {
     if (!this.alive || amount <= 0) return false;
     if (this.invuln > 0) return false;
+    if (G.match?.stage?.damageGuard(this, amount, attacker, source)) return false;   // [b5-stagehooks] (inside a pipe)
     if (this.specialActive && this.specialActive.armor) amount *= 0.25;
     if (G.specials) { amount = G.specials.filterDamage(this, amount, attacker, source); if (!(amount > 0)) return false; }
     { const K = MAIN_KITS[this.weapon?.kind]; if (K?.damageTaken) { amount = K.damageTaken(this.weaponRunner, amount, attacker, source); if (!(amount > 0)) return false; } }   // kit armour (e.g. the mitts' leap)
@@ -206,16 +209,20 @@ export class Actor {
     return false;
   }
 
-  splat(attacker, cause = 'weapon') {
+  // (cutLeft: [b5-sprules] the share of the gauge a special ended just before this splat had left — specials.js body(),
+  // the sea — else null)
+  splat(attacker, cause = 'weapon', cutLeft = null) {
     if (!this.alive) return;
     this.alive = false;
     this.hp = 0;
     this.respawnTimer = PLAYER.respawnTime;
     this.stats.deaths++;
-    // keep a share of the gauge (PLAYER.specialKeepOnSplat); a special cut short by the splat restarts the gauge from
-    // that share of full (its points were spent when it started). Carried through respawn() (reset() zeroes it).
+    // keep a share of the gauge (PLAYER.specialKeepOnSplat); [b5-sprules] a special cut short by the splat restarts the
+    // gauge from that share of what was LEFT of it (G.specials.splatShare: its gauge as the HUD shows it, less what
+    // carries on without you), not of a full one. Carried through respawn() (reset() zeroes it).
     const keep = PLAYER.specialKeepOnSplat ?? 0.5;
-    this.special = this.specialActive ? this.specialCost() * keep : Math.min(this.specialCost(), this.special) * keep;
+    const left = this.specialActive ? (G.specials?.splatShare?.(this) ?? 1) : cutLeft;
+    this.special = left != null ? this.specialCost() * left * keep : Math.min(this.specialCost(), this.special) * keep;
     G.specials?.onSplat(this);
     this.specialActive = null;
     this.climbing = false;
@@ -252,6 +259,8 @@ export class Actor {
       if (this.respawnTimer <= 0 && G.match?.canRespawn()) this.respawn();
       return;
     }
+    const SM = G.match?.stage;   // [b5-stagehooks] a stage module may own the body this frame (a pipe ride): it moved us
+    if (SM && SM.ownsBody(this, dt)) { this._finishFrame(dt); return; }
     const P = PLAYER;
     const intent = this.intent;
     const prev = this._prevIntent;
@@ -279,7 +288,7 @@ export class Actor {
     // ---- super jump / specials in progress own the body
     if (this.superJumpState) { this._updateSuperJump(dt); this._finishFrame(dt); return; }
     const spx = this.specialActive;
-    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive) this._finishFrame(dt); return; }
+    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
     if (specialPressed && this.specialReady()) { this._startSpecial(); this._finishFrame(dt); return; }
 
     // ---- form: squid while the swim button is held. Swim + fire / sub held together → the most recent press wins, so
@@ -319,10 +328,15 @@ export class Actor {
     // ---- dodge roll (twin pistols / dualies): jump pressed while firing and moving rolls instead of jumping. The
     // runner's tryDodge dispatches by weapon kind (it spends the ink, triggers the character's roll, emits the FX events)
     // (not while a special holds the weapon: the runner isn't updated then, so a roll would never run out)
+    // [b5-zipcheer] a special that makes ink go further (its def.inkUse — the Zipline's 0.7; not sonar's inkMul, which is for its victims): the weapon runs on a tank 1 / inkMul
+    // as big, so every cost and every "enough ink?" check comes to inkMul of what it was (here and round the weapon below)
+    const inkMul = spx?.def?.inkUse || 1;
+    if (inkMul !== 1) this.ink /= inkMul;
     if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
     if (this.jumpBuffer > 0 && !isSquid && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
+    if (inkMul !== 1) this.ink *= inkMul;
 
     // ---- jump (buffered, with coyote time). An off-limits top (a roof) is no ground to jump from: you slide off it, and
     // no coyote jump carries off its edge either (perches, railings and swim-jumps are ground as usual)
@@ -386,21 +400,24 @@ export class Actor {
     }
     const winp = { fire, firePressed: pressed, sub: intent.sub && !isSquid, subReleased: subReleased && !isSquid };
     const inkBefore = this.ink;
+    if (inkMul !== 1) this.ink /= inkMul;   // [b5-zipcheer] (see above)
     // specials that replace the main weapon (zooka, stamp, blower, crab …) take the trigger; others may take the sub
     this._spWeapon = !!(spx && G.specials.weapon(this, spx, dt, winp));
     if (!this._spWeapon) this.weaponRunner.update(dt, winp);
     else if (this.weaponRunner.dodgeT > 0 || this.weaponRunner.dodge) this.weaponRunner.endDodge();   // (never a roll frozen mid-slide)
+    if (inkMul !== 1) this.ink *= inkMul;
     // sonar-revealed players burn ink faster
     if (st.reveal > 0 && this.ink < inkBefore) this.ink = Math.max(0, this.ink - (inkBefore - this.ink) * (SPECIALS.sonar.inkMul - 1));
     if (this.specialActive) G.specials.tick(this, this.specialActive, dt);
     if (!this.alive) return;
 
+    if (SM && SM.kill(this)) return;   // [b5-stagehooks] a stage module's own hazard (the lava) splats first
     // ---- fall into the sea
     // the sea: below the waterline with no deck underneath (dry-dock trenches sit below sea level and are safe)
     if (this.pos.y < P.fallDeathY && G.level.groundHeight(this.pos.x, this.pos.z, this.pos.y + 0.6) === -Infinity) {
       G.fx?.burst(_v.copy(this.pos).setY(P.waterY + 0.05), _v2.set(0, 1, 0), new THREE.Color('#bfe9ff'), { count: 18, speed: 5, size: 0.1 });
       G.audio?.play('splat_big', { pos: this.pos });
-      this.splat(this.lastDamage < 4 ? this.lastAttacker : null, 'water');
+      this.splat(this.lastDamage < 4 ? this.lastAttacker : null, (SM && SM.fallCause(this)) || 'water');   // [b5-stagehooks] (a fall into the lava's chutes)
       return;
     }
 
@@ -536,6 +553,12 @@ export class Actor {
     // zipline: clinging to where the tether landed (weapon still usable). Kit weapons can hang the kid too: runner.kit.hang
     // (Sponge Mitts: stuck to a wall after a leap) — kid form only, and never while a special runs
     const kitHang = !this.specialActive && this.form === 'kid' && !!this.weaponRunner.kit?.hang;
+    // [b5-zipcheer] pin: held up in the air (the Cheer Orb's lift, src/game/sp-cheer.js): the special put the body where it
+    // goes this frame (its move hook) and says how fast it went there (pinVel: the animation, the online tick)
+    if (this.specialActive && this.specialActive.pin) {
+      this.vel.copy(this.specialActive.pinVel || _ZERO_MOVE); this.grounded = false; this.airTime = 0;
+      return;
+    }
     if ((this.specialActive && this.specialActive.hang > 0) || kitHang) {
       this.vel.set(0, 0, 0); this.grounded = false; this.airTime = 0;
       return;
@@ -786,12 +809,20 @@ export class Actor {
   // Where a teammate super jumping to this actor lands: here — or, mid Ink Jet / Zipline, the take-off point; or, while
   // this actor is itself in a super jump's flight, where that jump comes down (never a point up in the sky)
   jumpAnchor() {
+    const sa = G.match?.stage?.jumpAnchor(this); if (sa) return sa;   // [b5-stagehooks] (a pipe rider: its exit's landing)
     const s = this.specialActive;
     if (s && s.jumpBack && s.origin) return s.origin;
     const j = this.superJumpState;
-    return j && j.phase === 'flight' ? j.to : this.pos;
+    if (j && j.phase === 'flight' && j.to) return j.to;   // [b5-jumpui] (a remote jump before its flight record: here)
+    // [b5-int1] held up in the air by a Cheer Orb (b5-zipcheer: up to 2.2 m over the ground, a ghost's too): the floor
+    // under them — a jump to them lands beside them there (as on Splatoon's Booyah Bomb), not up where they hang
+    if (s && (s.kind || s.id) === 'booyah' && !s.thrown) {
+      const gy = G.level?.groundHeight?.(this.pos.x, this.pos.z, this.pos.y + 0.1);
+      if (gy > -Infinity && this.pos.y - gy > 0.3) return (this._anchor || (this._anchor = new THREE.Vector3())).set(this.pos.x, gy, this.pos.z);
+    }
+    return this.pos;
   }
-  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing(); }   // ([drainbow] free: a special that leaves you be)
+  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing() && !(G.match.stage && !G.match.stage.canSuperJump(this)); }   // [b5-stagehooks] (not mid-pipe)   // ([drainbow] free: a special that leaves you be)
 
   // Launch toward an ally (or a fixed point). Charge in place as a glowing squid, then arc through the sky.
   // opts.instant: skip the ~0.75 s crouch charge and launch on the next frame; opts.home: an Ink Jet / Zipline jump
@@ -803,7 +834,7 @@ export class Actor {
     this._setClimb(false);
     this.weaponRunner.reset();
     G.audio?.play('super_jump', { pos: this.isLocal ? undefined : this.pos, volume: this.isLocal ? 0.9 : 0.6 });
-    emit('superjump', { actor: this, phase: 'charge' });
+    emit('superjump', { actor: this, phase: 'charge', target, home: this.superJumpState.home, instant: !!(opts && opts.instant) });   // [b5-jumpui] target / home / instant: online, every screen's marks + alert
     return true;
   }
 
@@ -837,11 +868,14 @@ export class Actor {
           }
         } else s.to.copy(tgt);
         s.phase = 'flight'; s.t = 0;
-        s.dur = 1.15 + Math.min(0.6, s.from.distanceTo(s.to) / 80);
+        s.dur = sjFlightDur(s.from, s.to);   // [b5-jumpui] (1.15 s + up to 0.6 s with the distance)
+        // [b5-stagehooks] (lava: a landing that will be under it moves; it reads s.dur, so after it; the 'superjump'
+        // event below carries the moved s.to to the landing marks)
+        if (!s.tower) G.match?.stage?.superJumpLanding(this, s);
         this.invuln = Math.max(this.invuln, s.dur + 0.2);
         G.fx?.burst(_v.copy(this.pos), _v2.set(0, 1, 0), this.color, { count: 16, speed: 6, size: 0.1 });
         rumble(this, 0.35, 0.5, 140);
-        emit('superjump', { actor: this, phase: 'flight', to: s.to.clone(), home: s.home });
+        emit('superjump', { actor: this, phase: 'flight', to: s.to.clone(), home: s.home, from: s.from.clone(), dur: s.dur });   // [b5-jumpui] from / dur
       }
       return;
     }
@@ -963,6 +997,7 @@ export class Actor {
       _v.copy(a.pos); _v.y += 0.8;
       if (G.physics.los(_v2.copy(c).setY(c.y + 0.8), _v)) G.projectiles.applyHit(this, a, dmg, 'slam');
     }
+    G.subs?.damageArea(_v.copy(c).setY(c.y + 0.5), sp.radius, 60, this.team, this);   // [b5-deploy] enemy devices (and special objects) in the slam
   }
 
   addTurfNoSpecial(area) { if (area > 0) { this.stats.turf += area; emit('turf', { actor: this, area }); } }
@@ -1032,6 +1067,7 @@ export class Actor {
     a.charge = this.weaponRunner.charge;
     a.rolling = this.weaponRunner.rolling;
     a.subAim = !!this.weaponRunner.aimingSub || !!(this.specialActive && this.specialActive.raise);      // bomb cocked / orb held up
+    { const s = this.specialActive; a.hover = !!(s && s.kind === 'booyah' && !s.thrown && s.def.lift > 0 && !this.grounded); }   // [b5-zipcheer] held up by a Cheer Orb (a ghost's too): the legs hang
     a.form = !isSquid ? 'kid' : this.climbing ? 'climb' : this.submerged ? 'swim' : 'squid';
     if (this.specialActive && (this.specialActive.body || this.specialActive.noSquid)) a.form = 'kid';
     a.specialId = this.specialActive ? this.specialActive.id : null;

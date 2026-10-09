@@ -49,6 +49,18 @@ import * as treehillsLayout from './treehills/layout.js';
 import * as treehillsProps from './treehills/props.js';
 import * as treehillsSurfaces from './treehills/surfaces.js';
 import * as treehillsMurals from './treehills/murals.js';
+import * as bluestoneLayout from './bluestone/layout.js';
+import * as bluestoneProps from './bluestone/props.js';
+import * as bluestoneSurfaces from './bluestone/surfaces.js';
+import * as bluestoneMurals from './bluestone/murals.js';
+import * as aquariumLayout from './aquarium/layout.js';
+import * as aquariumProps from './aquarium/props.js';
+import * as aquariumSurfaces from './aquarium/surfaces.js';
+import * as aquariumMurals from './aquarium/murals.js';
+import * as calderaLayout from './caldera/layout.js';
+import * as calderaProps from './caldera/props.js';
+import * as calderaSurfaces from './caldera/surfaces.js';
+import * as calderaMurals from './caldera/murals.js';
 
 // STAGES[id] = { LAYOUT, register, PLACEMENTS, SURF, SURFACES, drawMurals } (missing pieces are simply absent)
 export const STAGES = {
@@ -64,5 +76,8 @@ export const STAGES = {
   calamari: { ...calamariLayout, ...calamariProps, ...calamariSurfaces, ...calamariMurals },
   spirhalite: { ...spirhaliteLayout, ...spirhaliteProps, ...spirhaliteSurfaces, ...spirhaliteMurals },
   treehills: { ...treehillsLayout, ...treehillsProps, ...treehillsSurfaces, ...treehillsMurals },
+  bluestone: { ...bluestoneLayout, ...bluestoneProps, ...bluestoneSurfaces, ...bluestoneMurals },
+  aquarium: { ...aquariumLayout, ...aquariumProps, ...aquariumSurfaces, ...aquariumMurals },
+  caldera: { ...calderaLayout, ...calderaProps, ...calderaSurfaces, ...calderaMurals },
 };
 export const STAGE_IDS = Object.keys(STAGES);

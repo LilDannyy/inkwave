@@ -56,6 +56,7 @@ const WOB_MAX = 1.5;   // upper bound of blobWobble (reach of the CPU cell loop)
 // roller band segment (face space, along = roll direction): half length / half width / corner rounding, × radius
 const BAND_L = 0.55, BAND_W = 0.62, BAND_R = 0.1;
 
+const QUAD_ATTRS = ['aPos', 'aLocal', 'aSplat', 'aStretch', 'aGrow', 'aW', 'aMask'], QUAD_ATTRS_CLIP = [...QUAD_ATTRS, 'aClip'];
 const PAINT_VS = /* glsl */`
 attribute vec2 aPos;
 attribute vec3 aLocal;
@@ -70,8 +71,15 @@ varying vec3 vStretch;
 varying vec4 vGrow;
 varying vec3 vW;
 varying vec4 vMask;
+#ifdef CLIP
+attribute float aClip;
+varying float vClip;
+#endif
 void main() {
   vLocal = aLocal; vSplat = aSplat; vStretch = aStretch; vGrow = aGrow; vW = aW; vMask = aMask;
+#ifdef CLIP
+  vClip = aClip;
+#endif
   gl_Position = vec4(aPos, 0.0, 1.0);
 }`;
 
@@ -83,6 +91,12 @@ varying vec3 vStretch;   // travel direction in face space, smear amount (0 = no
 varying vec4 vGrow;      // x: age / spread time (runs on past 1) · y: drip progress 0..1 · z: 1 = drips only
 varying vec3 vW;         // world position of this texel
 varying vec4 vMask;      // the wipe wave's mask: never draw where r0 < |xz − c| <= r1 (c = xy, r0 = z, r1 = w)
+#ifdef CLIP
+// [b5-stagehooks] a stage module's height clip (setClip): no ink below vClip inside its region mask
+uniform sampler2D uClipMap;
+uniform vec4 uClipBox;
+varying float vClip;
+#endif
 float hsh(float n) { return fract(sin(n) * 43758.5453123); }
 float wob(float a, float s) {
   return 1.0 + 0.12 * sin(3.0 * a + s * 6.2831) + 0.08 * sin(5.0 * a + s * 17.0) + 0.05 * sin(7.0 * a + s * 41.0)
@@ -108,6 +122,9 @@ vec4 kindShape(float k) {
 }
 void main() {
   if (vMask.w > vMask.z) { float mr = length(vW.xz - vMask.xy); if (mr > vMask.z && mr <= vMask.w) discard; }
+#ifdef CLIP
+  if (vW.y < vClip && texture2D(uClipMap, (vW.xz - uClipBox.xy) * uClipBox.zw).r > 0.5) discard;
+#endif
   float R = vSplat.x, team = vSplat.y, seed = vSplat.z;
   float isWall = mod(vSplat.w, 2.0);
   float kind = floor(vSplat.w * 0.5 + 0.01);
@@ -295,6 +312,7 @@ export class PaintSystem {
     this.version = 0;          // bumps whenever the CPU grid changes (minimap polling)
     this.clock = 0;
     this.frame = 0;
+    this.blockGate = null; this.clip = null; this.aClip = null; this._clip = -1e9;   // [b5-stagehooks] (stage modules)
     this.viewPos = null;       // camera position (setView) — ripples far from it are skipped / evicted first
     // ripple table read by the level shader (inkShading.js): xyz + birth (paint clock) · amp, wavelength, speed, life
     this.rip = new Float32Array(RIP_N * 4);
@@ -522,6 +540,11 @@ export class PaintSystem {
     if (!cosmetic) G.match?.tower?.paint?.splat(center, radius, team, { seed });
     // sprout pods: their meters and their hedges' own ink (src/game/pods.js)
     if (!cosmetic) G.match?.pods?.onSplat(center, radius, team, opts);
+    // [b5-stagehooks] stage modules: every splat; the painter's stage time (a replay's opts.et) for the block gate and the clip
+    const SM = cosmetic ? null : G.match?.stage;
+    if (SM) SM.onSplat(center, radius, team, opts);
+    const BG = cosmetic ? null : this.blockGate, et = SM || BG || this.clip ? opts.et ?? (SM ? SM.t : 0) : 0;
+    this._clip = !cosmetic && this.clip ? this.clip.clipAt(et) : -1e9;
     const st = opts.stretch;
     let sAmt = st ? (opts.stretchAmt ?? 1) : 0;
     const kind = cosmetic && opts.kind === undefined ? K_SPECK : this._kind(opts, radius, st, sAmt);
@@ -538,6 +561,7 @@ export class PaintSystem {
       if (center.x < b.aabbMin.x - reach || center.x > b.aabbMax.x + reach ||
           center.y < b.aabbMin.y - reach || center.y > b.aabbMax.y + reach ||
           center.z < b.aabbMin.z - reach || center.z > b.aabbMax.z + reach) continue;
+      if (BG && !BG(b, et)) continue;   // [b5-stagehooks] (an era block that is absent or guarded at the painter's time)
       for (let fi = 0; fi < 6; fi++) {
         const fid = b.faces[fi];
         if (fid < 0) continue;
@@ -577,6 +601,7 @@ export class PaintSystem {
       const drips = wall && kind !== K_SPECK && kind !== K_ROLL ? 1 : 0;
       const g = {
         entries, R: radius, team, seed, kind, age: 0, wk, wr, wcx: this._wipeC ? this._wipeC.cx : 0, wcz: this._wipeC ? this._wipeC.cz : 0,
+        et: this.clip && !cosmetic ? et : undefined,   // [b5-stagehooks] (the clip is re-evaluated as it spreads)
         // the body floods out in ≈ 0.1–0.3 s (bigger = heavier), droplets land up to ~1.3× that later; drips run on
         dur: kind === K_SPECK ? 0.05 : 0.085 + Math.min(0.22, radius * 0.075),
         dripDur: drips ? 1.1 + Math.min(2.2, radius * 1.5) : 0,
@@ -592,6 +617,7 @@ export class PaintSystem {
       }
     }
     this._mk = null;
+    this._clip = -1e9;
     return claimed;
   }
 
@@ -646,6 +672,7 @@ export class PaintSystem {
     const reachK = REACH[kind];
     // (a splat spreading while a wave runs: never redraw what the front has passed since it was painted)
     this._mk = g.wk ? this._maskFor(g.wk, g.wr, this._mkBuf || (this._mkBuf = [0, 0, 0, 0]), g.wcx, g.wcz) : null;
+    this._clip = g.et !== undefined && this.clip ? this.clip.clipAt(g.et) : -1e9;   // [b5-stagehooks]
     for (let i = 0; i < E.length; i += 7) {
       const f = E[i], lu = E[i + 1], lv = E[i + 2], dn = E[i + 3], sdu = E[i + 4], sdv = E[i + 5], sa = E[i + 6];
       if (dn >= R) continue;
@@ -660,6 +687,7 @@ export class PaintSystem {
       }
     }
     this._mk = null;
+    this._clip = -1e9;
   }
 
   _cpuSplat(f, lu, lv, r, team, seed, sdu, sdv, sa, kind) {
@@ -673,12 +701,17 @@ export class PaintSystem {
     let claimed = 0;
     const cellA = f.cu * f.cv;
     const mk = this._mk && this._mk[3] > this._mk[2] ? this._mk : null;   // (the wipe wave already went over (r0, r1])
+    const CL = f.clipOn && this.clip ? this.clip : null, cy = this._clip;   // [b5-stagehooks] (no ink below the clip)
     for (let j = j0; j <= j1; j++) {
       for (let i = i0; i <= i1; i++) {
         if (mk) {
           const s = (i + 0.5) * f.cu, t = (j + 0.5) * f.cv;
           const d = Math.hypot(f.origin.x + f.u.x * s + f.v.x * t - mk[0], f.origin.z + f.u.z * s + f.v.z * t - mk[1]);
           if (d > mk[2] && d <= mk[3]) continue;
+        }
+        if (CL) {
+          const s = (i + 0.5) * f.cu, t = (j + 0.5) * f.cv, x = f.origin.x + f.u.x * s + f.v.x * t, z = f.origin.z + f.u.z * s + f.v.z * t;
+          if (f.origin.y + f.u.y * s + f.v.y * t < cy && CL.inside(x, z)) continue;
         }
         let px = (i + 0.5) * f.cu - lu, py = (j + 0.5) * f.cv - lv;
         if (roll) {
@@ -727,6 +760,7 @@ export class PaintSystem {
       this.aW[vi * 3] = f.origin.x + f.u.x * cu + f.v.x * cv; this.aW[vi * 3 + 1] = f.origin.y + f.u.y * cu + f.v.y * cv; this.aW[vi * 3 + 2] = f.origin.z + f.u.z * cu + f.v.z * cv;
       if (mk) { this.aMask[vi * 4] = mk[0]; this.aMask[vi * 4 + 1] = mk[1]; this.aMask[vi * 4 + 2] = mk[2]; this.aMask[vi * 4 + 3] = mk[3]; }
       else { this.aMask[vi * 4 + 2] = 0; this.aMask[vi * 4 + 3] = 0; }
+      if (this.aClip) this.aClip[vi] = f.clipOn ? this._clip : -1e9;   // [b5-stagehooks]
       const px = a.x + a.pad + cu * a.ppm, py = a.y + a.pad + cv * a.ppm;
       this.aPos[vi * 2] = (px / S) * 2 - 1;
       this.aPos[vi * 2 + 1] = (py / S) * 2 - 1;
@@ -913,7 +947,7 @@ export class PaintSystem {
     if (!this.quads && !this.dryMesh.visible) return;
     const g = this.geo, n = this.quads * 4;
     if (n) {
-      for (const name of ['aPos', 'aLocal', 'aSplat', 'aStretch', 'aGrow', 'aW', 'aMask']) {
+      for (const name of this.aClip ? QUAD_ATTRS_CLIP : QUAD_ATTRS) {   // [b5-stagehooks] (+ aClip with a clip)
         const at = g.attributes[name];
         at.clearUpdateRanges(); at.addUpdateRange(0, n * at.itemSize); at.needsUpdate = true;
       }
@@ -1156,6 +1190,7 @@ export class PaintSystem {
       k += len; x = 0; mul = 1;
     }
     if (k !== n) return false;
+    this._clip = -1e9;   // [b5-stagehooks] (the host's copy already has no ink under a clip)
     this.counts[0] = this.counts[1] = 0;
     for (let i = 0; i < n; i++) if (g[i] && this.live[i]) this.counts[g[i] - 1]++;
     this.version++;
@@ -1212,6 +1247,7 @@ export class PaintSystem {
     const own = team + 1;
     for (const bid of ids) {
       const b = this.level.blocks[bid];
+      if (b.absent) continue;   // [b5-stagehooks] (taken out of play by a stage module)
       for (let fi = 0; fi < 6; fi++) {
         const fid = b.faces[fi];
         if (fid < 0) continue;
@@ -1237,7 +1273,94 @@ export class PaintSystem {
     return out;
   }
 
+  // ------------------------------------------------------------ [b5-stagehooks] generic edits for stage modules
+  // (src/game/stageMods.js, docs/STAGE-MODS.md). None of these is called on a stage without a module.
+  // setClip({ map, box, faceOn(f), clipAt(et), inside(x, z) }) | null: cells of faces with faceOn(f) whose centre is
+  // inside(x, z) and below clipAt(et) (et = the painter's stage time) take no ink; the atlas draw discards the same
+  // texels (map: R > 0.5 inside, box: Vector4(x0, z0, 1 / width, 1 / depth)). Splats still spreading re-evaluate it.
+  setClip(c) {
+    this.clip = c || null;
+    for (const f of this.paintFaces) f.clipOn = !!(c && c.faceOn(f));
+    if (c && !this.aClip) {
+      this.aClip = new Float32Array(MAX_QUADS * 4).fill(-1e9);
+      const at = new THREE.BufferAttribute(this.aClip, 1); at.setUsage(THREE.DynamicDrawUsage);
+      this.geo.setAttribute('aClip', at);
+    }
+    const D = this.mat.defines || (this.mat.defines = {});
+    if (!!D.CLIP !== !!c) { if (c) D.CLIP = 1; else delete D.CLIP; this.mat.needsUpdate = true; }
+    if (c) { this.mat.uniforms.uClipMap = { value: c.map }; this.mat.uniforms.uClipBox = { value: c.box }; }
+  }
+  // the world position of cell k's centre (out: Vector3), or null
+  cellWorld(k, out = new THREE.Vector3()) {
+    const f = this._faceOfCell(k);
+    if (!f) return null;
+    const c = k - f.grid, i = c % f.nu, j = (c - i) / f.nu;
+    return out.copy(f.origin).addScaledVector(f.u, (i + 0.5) * f.cu).addScaledVector(f.v, (j + 0.5) * f.cv);
+  }
+  // zero these cells (live ones leave the counts); `sample` (an array) collects up to `max` of the inked ones (steam).
+  // Returns how many were inked. The atlas is the caller's (drawInto / clearFaces).
+  clearCells(ids, sample = null, max = 96) {
+    const g = this.grid, live = this.live, cnt = this.counts;
+    let n = 0;
+    for (let i = 0; i < ids.length; i++) {
+      const k = ids[i], v = g[k];
+      if (!v) continue;
+      if (live[k]) cnt[v - 1]--;
+      g[k] = 0; n++;
+      if (sample && sample.length < max) sample.push(k, v - 1);
+    }
+    if (n) this.version++;
+    return n;
+  }
+  // these cells are never turf again (always under a liquid): dead, not live, out of turfTotal / turfArea and the counts
+  retireCells(ids) {
+    const g = this.grid, live = this.live, dead = this.dead, cnt = this.counts;
+    for (let i = 0; i < ids.length; i++) {
+      const k = ids[i];
+      if (!live[k]) { dead[k] = 1; continue; }
+      const f = this._faceOfCell(k);
+      live[k] = 0; dead[k] = 1;
+      this.turfTotal--; if (f) this.turfArea -= f.cu * f.cv;
+      if (g[k]) cnt[g[k] - 1]--;
+    }
+    this.version++;
+  }
+  // these faces' cells to zero and their whole atlas rects (padding included) to bare
+  clearFaces(faceIds) {
+    const S = this.size, pos = [], index = [];
+    for (const id of faceIds) {
+      const f = this.level.faces[id];
+      if (!f || !f.atlas) continue;
+      const k0 = f.grid, k1 = f.grid + f.nu * f.nv;
+      for (let k = k0; k < k1; k++) { const v = this.grid[k]; if (v) { if (this.live[k]) this.counts[v - 1]--; this.grid[k] = 0; } }
+      const a = f.atlas, x0 = (a.x / S) * 2 - 1, y0 = (a.y / S) * 2 - 1, x1 = ((a.x + a.w) / S) * 2 - 1, y1 = ((a.y + a.h) / S) * 2 - 1, b = pos.length / 3;
+      pos.push(x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0);
+      index.push(b, b + 1, b + 2, b, b + 2, b + 3);
+    }
+    this.version++;
+    if (!index.length) return;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(index);
+    if (!this._clearMat) this._clearMat = new THREE.ShaderMaterial({ vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: 'precision highp float; void main() { gl_FragColor = vec4(0.0); }', depthTest: false, depthWrite: false, toneMapped: false, blending: THREE.NoBlending });
+    const mesh = new THREE.Mesh(geo, this._clearMat); mesh.frustumCulled = false;
+    const sc = new THREE.Scene(); sc.add(mesh);
+    this.drawInto(sc);
+    geo.dispose();
+  }
+  // render a scene of the caller's into the paint atlas (clip space = the atlas), on top of what is there
+  drawInto(scene) {
+    const r = this.renderer, prev = r.getRenderTarget(), ac = r.autoClear;
+    r.autoClear = false;
+    r.setRenderTarget(this.rt);
+    r.render(scene, this.cam);
+    r.setRenderTarget(prev);
+    r.autoClear = ac;
+  }
+
   dispose() {
+    this._clearMat?.dispose();
     this.rt.dispose(); this.geo.dispose(); this.mat.dispose(); this.dryMesh.geometry.dispose(); this.dryMesh.material.dispose();
     for (const p of this._floodPrep.values()) p.geo.dispose();
     this._floodPrep.clear(); this._floods.length = 0;

@@ -17,6 +17,7 @@ import { keycap, weaponIcon, richText, SUB_ICONS } from './ui-icons.js';
 import { DEATH_MARK_SVG } from './hud.js';
 import { G } from '../core/ctx.js';
 import { superJumpInfo } from '../game/minimap.js';
+import { dioJumpTags } from './hud-jumps.js';   // [b5-jumpui] the named landing / return tags on the map
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3();
@@ -141,6 +142,7 @@ export class DioramaOverlay {
     if (planning !== this._planning) { this._planning = planning; this.el.classList.toggle('is-planning', planning); this._head(); this._last.plan = null; }
     const beacons = beaconsOf(me.team);
     this._liveJumps(dt, me, cam, W, H);
+    G.match?.stage?.diorama(this.el, cam, W, H, k);   // [b5-stagehooks] a stage module's TAB-map layer (its own DOM in this.el)
     // ---- pins
     for (let i = 0; i < NPIN; i++) {
       const p = this.pins[i];
@@ -159,6 +161,10 @@ export class DioramaOverlay {
           dead = !o.alive; if (dead) st = String(Math.max(1, Math.ceil(o.respawnTimer || 0)));
           else if (o.superJumpState) st = '↑';
         }
+        // [b5-jumpui] where a jump to them comes down when that isn't at their feet (up on Ink Jet / Zipline: their
+        // take-off point; mid super jump: their landing) — the arc below aims there
+        const an = o && o.alive && o.jumpAnchor ? o.jumpAnchor() : null;
+        p.land = an && Math.hypot(an.x - o.pos.x, an.z - o.pos.z) > 1.5 ? an : null;
       } else if (i === 3) { tgt = G.level?.spawnPads?.[me.team] || null; ok = !!tgt; }
       else { tgt = me.visualPos ? me.visualPos(_v2) : me.pos; ok = true; dead = !me.alive; }
       if (i < 5) { p.target = i < 3 ? allies[i] || null : null; p.queued = !!(q && i < 3 && q.kind === 'ally' && q.target === allies[i]); }
@@ -198,6 +204,7 @@ export class DioramaOverlay {
     this._zones(cam, W, H, me);
     this._tower(cam, W, H, me);
     this._deathMarks(cam, W, H);
+    dioJumpTags(this, cam, W, H, me);   // [b5-jumpui]
     if (planning) this._plan(me, q);
     // ---- map cursor (pointer stays locked in play: steer with mouse deltas / right stick; snaps to pins)
     const inp = G.input;
@@ -248,7 +255,9 @@ export class DioramaOverlay {
     if (showArc !== this._last.arc) { this._last.arc = showArc; this.arc.classList.toggle('is-on', showArc); }
     if (showArc) {
       // a lob bowed out to the side facing up-screen (lobCtl) — the live travel line keeps this shape once you jump
-      const x0 = sp.x, y0 = sp.y, x1 = hp.x, y1 = hp.y;
+      const x0 = sp.x, y0 = sp.y;
+      let x1 = hp.x, y1 = hp.y;
+      if (hp.land) { _v.set(hp.land.x, hp.land.y + 0.1, hp.land.z).project(cam); if (_v.z < 1) { x1 = (_v.x * 0.5 + 0.5) * W; y1 = (0.5 - _v.y * 0.5) * H; } }   // [b5-jumpui]
       const { x: cx, y: cy } = lobCtl(x0, y0, x1, y1, _ctl);
       const d = `M${x0.toFixed(1)} ${y0.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
       if (d !== this._last.d) { this._last.d = d; for (const path of this.arc.children) path.setAttribute('d', d); }

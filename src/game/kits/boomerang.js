@@ -2,8 +2,11 @@
 // there shredding anything close (small rapid ticks + ink under it), then whirls back to the thrower, circles them for a
 // couple of seconds (grazing foes it touches) and bursts beside them like a small Splat Bomb. Should it hit a foe while
 // it flies (out or back), it stops dead, hovers a moment and goes off like a full Splat Bomb instead, without returning.
-// One out at a time (blocked() → the core's "Can't use"). If the thrower is splatted while it's out it fizzles: it drops
-// and pops in a little splash of ink, no damage (a boomerang already latched onto a foe still goes off, like any bomb).
+// One out at a time (blocked() → the core's "Can't use"). [b5-sprules] If the thrower is splatted while it's out it carries
+// on (the user: "make the following survive after the user is splatted: boomerang"; it used to fizzle): it finishes its
+// flight and hover, whirls back to where they went down (it can't follow them to their respawn), circles that spot and
+// bursts there — every screen alike (a ghost's spot: its copy of the thrower's, from the remote splat; the owner's
+// burst record says where it went off).
 // Numbers: SUBS.boomerang in config.js. Registers the model, icon, sounds and bot use; see kits/registry.js.
 import * as THREE from 'three';
 import { G, emit, on, clamp, lerp, angleDiff } from '../../core/ctx.js';
@@ -294,7 +297,7 @@ function shred(it, dt, paintK) {
       G.projectiles.applyHit(it.owner, e, s.tickDamage, KIND);
       any = true;
     }
-    G.subs?.damageArea(it.pos, s.hoverRadius, s.tickDamage, it.team);
+    G.subs?.damageArea(it.pos, s.hoverRadius, s.tickDamage, it.team, it.owner);   // [b5-deploy] (by)
     if (any && nearCam(it.pos)) G.audio?.play('boomerang_shred', { pos: it.pos, volume: 0.7 });
   }
   it.paintT -= dt;
@@ -312,7 +315,7 @@ function shred(it, dt, paintK) {
 // ---- return: a curving homing flight back to the thrower (through anything); a foe in the way → armed
 function startBack(it) {
   it.state = 'back'; it.t = 0;
-  const o = it.owner;
+  const o = homeOf(it);   // [b5-sprules]
   chest(o, _v).sub(it.pos); _v.y = 0;
   if (_v.lengthSq() < 1e-4) _v.set(0, 0, 1);
   _v.normalize();
@@ -321,7 +324,7 @@ function startBack(it) {
   setLoop(it, 'boomerang_whirr', 0.6, 1.2);
 }
 function back(it, dt) {
-  const s = it.sub, o = it.owner;
+  const s = it.sub, o = homeOf(it);   // [b5-sprules]
   const tgt = chest(o, _v3); tgt.y += 0.2;
   const sp = Math.min(s.returnSpeed, 4 + it.t * 34);
   _v.copy(tgt).sub(it.pos);
@@ -343,7 +346,7 @@ function back(it, dt) {
 
 // ---- orbit: circles the thrower, grazing foes it touches, lightly inking a ring; then the small burst
 function orbit(it, dt) {
-  const s = it.sub, o = it.owner;
+  const s = it.sub, o = homeOf(it);   // [b5-sprules]
   it.orbitA += s.orbitSpin * dt;
   const h = o.form === 'squid' ? 0.55 : 0.95;
   _v.set(o.pos.x + Math.cos(it.orbitA) * s.orbitRadius, o.pos.y + h + 0.08 * Math.sin(it.t * 9), o.pos.z + Math.sin(it.orbitA) * s.orbitRadius);
@@ -417,14 +420,15 @@ function fizzle(it, dt) {
     it.state = 'dead';
   }
 }
+// [b5-sprules] the thrower splatted: it carries on to the spot where they went down (home), not to them (was: fizzle)
 on('splatted', ({ victim }) => {
   for (const it of items) {
-    if (it.owner !== victim || it.state === 'dead' || it.state === 'armed' || it.state === 'fizzle') continue;
-    it.state = 'fizzle'; it.t = 0;
-    it.vel.multiplyScalar(0.25);
-    setLoop(it, null);
+    if (it.owner !== victim || it.state === 'dead' || it.home) continue;
+    it.home = { pos: victim.pos.clone(), form: victim.form };
   }
 });
+// who it whirls back to and circles: the thrower, or where they went down
+const homeOf = (it) => it.home || it.owner;
 
 // ---- bursts
 function burst(it) { const s = it.sub; blast(it, s.radius, s.damageMax, s.damageMin, s.paintRadius, false); }
@@ -453,7 +457,7 @@ function blast(it, radius, dmgMax, dmgMin, paintR, big) {
     const k = 1 - clamp((d - 0.8) / (radius - 0.8), 0, 1);
     G.projectiles.applyHit(it.owner, e, lerp(dmgMin, dmgMax, k * k), KIND);
   }
-  G.subs?.damageArea(c, radius, big ? 60 : 35, it.team);
+  G.subs?.damageArea(c, radius, big ? 60 : 35, it.team, it.owner);   // [b5-deploy] (by)
   it.state = 'dead';
 }
 

@@ -129,9 +129,11 @@ export class Sight {
       if (!e.alive) { if (k) this.mem.delete(e); this.glim.delete(e); continue; }   // splatted: its splat is announced
       const located = !!revealedTo(e, a.team);   // (what the team's map shows — game/reveal.js)
       const sj = e.superJumpState;
-      if (sj && sj.phase === 'flight') {
+      const pl = G.match?.stage ? G.match.stage.sightLanding(e) : null;   // [b5-stagehooks] (a pipe rider: where it pops out)
+      if ((sj && sj.phase === 'flight') || pl) {
         // in the sky (and untouchable): the landing marker says where it'll be
-        if (sj.to) { k = k || this._k(e); if (k.src !== 'jump') SIGHT_STATS.jumps++; k.pos.copy(sj.to); k.vel.set(0, 0, 0); k.guess.copy(sj.to); k.t = now; k.src = 'jump'; k.dove = false; k.dropped = false; }
+        if (pl) { k = k || this._k(e); if (k.src !== 'jump') SIGHT_STATS.jumps++; k.pos.copy(pl); k.vel.set(0, 0, 0); k.guess.copy(pl); k.t = now; k.src = 'jump'; k.dove = false; k.dropped = false; }
+        else if (sj.to) { k = k || this._k(e); if (k.src !== 'jump') SIGHT_STATS.jumps++; k.pos.copy(sj.to); k.vel.set(0, 0, 0); k.guess.copy(sj.to); k.t = now; k.src = 'jump'; k.dove = false; k.dropped = false; }
         if (k) k.seen = false;
         continue;
       }
@@ -192,7 +194,7 @@ export class Sight {
     if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return true; }
     const a = this.a, b = this.b, eye = _eye.set(a.pos.x, a.pos.y + 1.3, a.pos.z);
     const located = !!revealedTo(e, a.team);
-    if (!(e.superJumpState && e.superJumpState.phase === 'flight') && this._look(e, k, eye, Math.sin(b.aimYaw), Math.cos(b.aimYaw), Math.cos(SIGHT.fov), b.diff.awareness, located, now - k.seenT)) {
+    if (!(e.superJumpState && e.superJumpState.phase === 'flight') && !(G.match?.stage && G.match.stage.sightLanding(e)) && this._look(e, k, eye, Math.sin(b.aimYaw), Math.cos(b.aimYaw), Math.cos(SIGHT.fov), b.diff.awareness, located, now - k.seenT)) {   // [b5-stagehooks] sightLanding
       k.seenT = now; k.t = now; k.pos.copy(e.pos); k.vel.copy(e.vel); k.guess.copy(e.pos); k.dove = e.form === 'squid';
       return true;
     }

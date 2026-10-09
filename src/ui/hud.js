@@ -34,9 +34,13 @@ import { h, clamp, colorVars, toHex, fmtTime, fmtInt, splatSVG, splatShape, pct,
 import { SQUID, SPLAT_ICON, DEATH_ICON, GLYPHS, SUB_ICONS, WEAPON_ICONS, richText, keycap, specialIcon, weaponIcon } from './ui-icons.js';
 import { WEAPONS, SPECIALS, TEAM_NAMES, SUB, PLAYER, MATCH, ZONES, TOWER } from '../config.js';
 import { on, G } from '../core/ctx.js';
+import { envCause } from '../core/envCauses.js';   // [b5-stagehooks] stage modules' splat causes (the lava)
 import { SFX } from '../audio/audio.js';
 import { BossHud } from './hud-boss.js';
 import { LeadHud } from './hud-lead.js';
+import { BarrageHud } from './hud-barrage.js';   // [b5-sprules] the Mystery Bomb Barrage's NEXT card
+import { CheerHud } from './hud-cheer.js';   // [b5-zipcheer] the Cheer Orb's cheer prompt + gauge wisps
+import { JumpHud } from './hud-jumps.js';   // [b5-jumpui] super-jump alerts + landing / return tags
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -91,6 +95,7 @@ const ENV_CAUSES = { water: 'Fell in the sea', sea: 'Fell in the sea', fall: 'Fe
 export function splatCause(cause, attacker) {
   const c = typeof cause === 'string' ? cause : null;
   if (c && ENV_CAUSES[c]) return { kind: 'env', id: c, name: attacker ? 'Knocked into the sea' : ENV_CAUSES[c], tag: '', icon: SEA_ICON };
+  { const ec = envCause(c); if (ec) return { kind: 'env', id: c, name: attacker ? ec.knocked || ec.name : ec.name, tag: '', icon: ec.icon || SEA_ICON }; }   // [b5-stagehooks]
   if (c && SUB[c]) return { kind: 'sub', id: c, name: SUB[c].name || c, tag: 'SUB', icon: SUB_ICONS[SUB[c].kind] || SUB_ICONS[c] || SUB_ICONS.bomb };
   if (c && SPECIALS[c]) return { kind: 'special', id: c, name: SPECIALS[c].name || c, tag: 'SPECIAL', icon: specialIcon(c) };
   const w = (attacker && attacker.weaponId) || (c && WEAPONS[c] ? c : null);
@@ -145,6 +150,9 @@ export class HUD {
     this._bindBus();
     this.boss = new BossHud(this);
     this.lead = new LeadHud(this);   // (after the build: it hangs its banners on the roster groups)
+    this.barrage = new BarrageHud(this);   // [b5-sprules] (on the crosshair cluster)
+    this.cheer = new CheerHud(this);   // [b5-zipcheer]
+    this.jumps = new JumpHud(this);  // [b5-jumpui] "NAME is jumping to you!" + the named landing tags (world / minimap)
     installBossAudio();   // boss-mode sfx + music director (idle outside boss matches)
   }
 
@@ -390,6 +398,7 @@ export class HUD {
     this._updTimer(f.time);
     if (f.teams) this._updSquads(this.boss.on ? this.boss.squadTeams(f.teams) : f.teams);
     this._updCrosshair(f, dt);
+    { const nr = !!(f.stage && f.stage.noReticle); if (nr !== !!L.noRet) { L.noRet = nr; this.ret.style.visibility = this.subChip.style.visibility = nr ? 'hidden' : ''; } }   // [b5-stagehooks] (riding a pipe)
     this._updTank(f, dt);
     this._updSpecial(f, dt);
     this._updSubBadge(f);
@@ -406,6 +415,9 @@ export class HUD {
     this._updZones(f.zones, dt);
     this._updTower(f.tower, dt);
     this.lead.update(dt, f);
+    this.barrage.update(dt, f);   // [b5-sprules]
+    this.cheer.update(dt, f);   // [b5-zipcheer]
+    this.jumps.update(dt, f);   // [b5-jumpui]
     this.boss.update(dt);
   }
 
@@ -959,7 +971,7 @@ export class HUD {
   // right, each showing its count (ceil'd; the score), a "+N" penalty badge and a bar that fills toward the timer as the
   // count closes on 0 (the striped block ahead of it = penalty to count off before the count moves again). The chip under the timer names the operational
   // objective (CENTRE / YOUR SIDE / ENEMY SIDE, relative to the viewer), colours each of its zones by holder and shows
-  // each zone's live ink share (the ticks = the 80 % needed to take it); then the rotation hint or the OVERTIME badge.
+  // each zone's live ink share (the ticks = the ZONES.control share needed to take it); then the rotation hint or the OVERTIME badge.
   _zMe() { const a = this._local(); return a && (a.team === 0 || a.team === 1) ? a.team : 0; }
   _zLive() { return this._live() && !!(this.lab || (G.match && (G.match.zones || G.match.tower))); }   // (Tower Command shares the banners)
   _zHex(t) { return t === 0 || t === 1 ? toHex(G.teamHex?.[t], t ? '#2f5bff' : '#ff8a14') : '#ffffff'; }
@@ -972,6 +984,7 @@ export class HUD {
       L.zOn = on;
       this.el.classList.toggle('is-zones', on);
       L.zKey = L.zc0 = L.zc1 = null; L.zSh = L.zOt = L.zOff = L.zG = null;
+      if (on) this.zo.style.setProperty('--zt', String(ZONES.control ?? 0.8));   // [b5-tuning] the share bars' take ticks
     }
     if (!on) return;
     const me = z.viewer === 0 || z.viewer === 1 ? z.viewer : this._zMe();
@@ -1998,6 +2011,7 @@ export class HUD {
       d.style.transform = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0) rotate(${p.isSelf ? (+p.yaw || 0).toFixed(3) : 0}rad)`;
     }
     this._updMapDeaths(bw, bh);
+    this.jumps.map(bw, bh);   // [b5-jumpui] the landing / return tags on the map
     this._updBeacons(bw, bh, dt, u);
   }
 

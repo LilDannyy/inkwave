@@ -165,11 +165,12 @@ export class WeaponRunner {
       if (refused) emit('sub:cantuse', { actor: a, kind: sub.kind });
       const ok = !refused && (bar ? G.time >= (bar.nextThrow || 0) : a.ink >= sub.inkCost);
       if (ok) {
-        if (bar) bar.nextThrow = G.time + bar.def.gap; else a.ink -= sub.inkCost;
+        if (bar) bar.nextThrow = G.time + (bar.gap ?? bar.def.gap); else a.ink -= sub.inkCost;   // ([b5-sprules] gap: the bomb's own — sp-barrage.js)
         a.lastFire = 0;
         a.character.trigger('throw');
         if (sub.kind === 'bomb') G.projectiles.throwBomb(a); else G.subs.use(a, sub);
         rumble(a, 0.08, 0.22, 70);
+        if (bar) emit('barrage:throw', { actor: a, special: bar, kind: sub.kind });   // [b5-sprules] (the Mystery draws its next)
       }
     }
     if (!inp.sub && !inp.subReleased) this.aimingSub = false;
@@ -287,6 +288,7 @@ export class WeaponRunner {
         if (G.time - last > 0.5) { this.rollHits.set(e, G.time); G.projectiles.applyHit(a, e, w.rollDamage, 'roller'); }
       }
     }
+    if (hs > 1.0) G.deploy?.sweep(a, w.rollWidth, 1.35, w.rollDamage, this.rollHits, 0.5);   // [b5-deploy] the drum over enemy devices
     // boss mode: the drum crushes into HULLBREAKER's claws / belly and flattens crablets
     if (G.boss && hs > 1.0) {
       const bh = G.boss.rollHit(a.pos, fx, fz, w.rollWidth);
@@ -634,6 +636,7 @@ Object.assign(WeaponRunner.prototype, {
         if (G.time - last > w.brushHitCd) { this.rollHits.set(e, G.time); G.projectiles.applyHit(a, e, w.brushDamage, 'brush'); }
       }
     }
+    G.deploy?.sweep(a, w.brushWidth, 1.2, w.brushDamage, this.rollHits, w.brushHitCd);   // [b5-deploy] the bristles over enemy devices
     // Boss Battle: the bristles drag across HULLBREAKER's claws / belly or a crablet (like the roller's drum)
     if (G.boss) {
       const bh = G.boss.rollHit(a.pos, fx, fz, w.brushWidth);
@@ -1201,8 +1204,8 @@ export class Projectiles {
       if (p.vol) p.vol.hits.push(e);
       this.applyHit(p.owner, e, w.splashDamage, p.wid || 'slosher', p.dbw ? p : null, at);
     }
-    // special objects (bubbles, tanks …) caught in the splash, like a blaster burst
-    G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
+    // special objects (bubbles, tanks …) caught in the splash, like a blaster burst — [b5-deploy] and enemy devices
+    if (G.subs) G.subs.damageArea(at, w.splashRadius, w.splashDamage, p.team, p.owner); else G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
     // boss mode: one splash per throw (a direct head hit already counted)
     if (G.boss && direct !== 'boss' && !(p.vol && p.vol.hits.includes(G.boss))) { p.vol?.hits.push(G.boss); G.boss.splash(p.owner, at, w.splashRadius + 0.3, w.splashDamage, w.splashDamage, p.wid || 'slosher'); }
     if (p.owner.isLocal || G.camera.position.distanceToSquared(at) < 26 * 26) {
@@ -1284,7 +1287,7 @@ export class Projectiles {
     const dmg = charge >= 0.999 ? w.damageMax : lerp(w.damageMin, w.damageMax * 0.62, charge);
     const hit = G.physics.raycast(m, dir, range, _hit, true);
     let len = hit.hit ? hit.dist : range;
-    if (G.subs) { const cut = G.subs.blockRay(m, dir, len, a.team, dmg); if (cut < len) { len = cut; hit.hit = false; } }
+    if (G.subs) { const cut = G.subs.blockRay(m, dir, len, a.team, dmg, a); if (cut < len) { len = cut; hit.hit = false; } }   // [b5-deploy] (by)
     if (G.specials) { const cut = G.specials.rayHit(m, dir, len, a.team, dmg, a); if (cut < len) { len = cut; hit.hit = false; } }
     // first enemy along the beam
     let victim = null;
@@ -1532,7 +1535,7 @@ export class Projectiles {
       area += G.paint.splat(_v.set(c.x + Math.cos(a) * r, c.y + 0.5, c.z + Math.sin(a) * r), 0.7 + Math.random() * 0.5, b.team, { seed: Math.random() });
     }
     this._credit(b, area);
-    G.subs?.damageArea(c, s.radius, 60, b.team);
+    G.subs?.damageArea(c, s.radius, 60, b.team, b.owner);   // [b5-deploy] (by)
     G.fx?.explosion(c, G.teamColors[b.team], s.radius);
     G.cues?.sub('bomb', 'boom', { owner: b.owner, team: b.team, at: c });   // sfx-cues
     emit('shake', { pos: c.clone(), amount: 0.6 });
@@ -1592,6 +1595,7 @@ export class Projectiles {
   // screen decides (a hit arriving from another screen — nm._applyingHit — was halved there already).
   applyHit(attacker, victim, dmg, weaponId, shot, from) {
     if (!victim.alive || victim.team === attacker.team) return;
+    if (G.match?.stage?.damageGuard(victim, dmg, attacker, 'hit')) return;   // [b5-stagehooks] (behind pipe glass: no 'hit')
     const nm = G.netm;
     let killed = false;
     const route = nm ? nm.shouldApplyHit(attacker, victim) : 'local';
@@ -1664,7 +1668,7 @@ export class Projectiles {
         }
       }
       // enemy ink curtains and devices (sprinklers, beacons) catch shots; so do special objects (bubbles, tanks)
-      if (!dead && G.subs && G.subs.blockShot(p.prev, p.pos, p.team, p.damage || 10)) dead = true;
+      if (!dead && G.subs && G.subs.blockShot(p.prev, p.pos, p.team, p.damage || 10, p.owner)) dead = true;   // [b5-deploy] (by: the hit marker)
       if (!dead && G.specials && G.specials.shotHit(p.prev, p.pos, p.team, p.damage || 10, p.owner)) dead = true;
       // world
       // boss mode: HULLBREAKER's hit spheres and its crablets
@@ -1693,6 +1697,7 @@ export class Projectiles {
         dead = true;
       }
       if (!dead && p.pos.y < PLAYER.waterY - 1.8) dead = true;
+      if (!dead && G.match?.stage?.sink(p.pos, 'shot')) dead = true;   // [b5-stagehooks] (into the lava: no splat)
       return dead;
     }
   }
@@ -1754,7 +1759,8 @@ export class Projectiles {
       if (!G.physics.los(c, _v)) continue;
       this.applyHit(p.owner, e, lerp(w.splashDamageMax, w.splashDamageMin, d / w.splashRadius), p.weaponId || 'blaster', p.dbw ? p : null, c);
     }
-    G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
+    // [b5-deploy] the splash reaches enemy devices too (subs.damageArea → special objects: specials.areaHit)
+    if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashDamageMin, p.team, p.owner); else G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
     if (direct !== 'boss') G.boss?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, 'blaster');
   }
 
@@ -1799,6 +1805,7 @@ export class Projectiles {
         if (b.fuse <= 0) { const nm = G.netm; if (b.ghost && nm) nm.mute++; try { this._explodeBomb(b); } finally { if (b.ghost && nm) nm.mute--; } this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }
       }
       if (b.pos.y < PLAYER.waterY - 1.8) { this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }
+      if (G.match?.stage?.sink(b.pos, 'bomb')) { this.scene.remove(b.mesh); this.bombs.splice(i, 1); continue; }   // [b5-stagehooks] (sinks: no blast)
       b.mesh.position.copy(b.pos);
       // [sub-view] armed (it has landed), the drawn ball — radius 0.2 × vs × the fuse pulse — sits ON the floor under it:
       // its centre that far up (the physics centre sits 0.21 up and, resting, bobs 0.03–0.21 as it settles: the drawn

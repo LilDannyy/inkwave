@@ -11,6 +11,8 @@ WEAPONS='team0=blade;team1=shooter' SUBS='all=waddle' MAP=crossmarket MODE=turf 
 
 # an in-page test (your script returns [{ name, ok, info }])
 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
+# … with the page at another size than the offscreen window's 1512×945 (HUD layout on a small window)
+W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
 ```
 
 - **Parallel runs:** start several at once (`… & … & wait`). `run.sh` keeps at most `SLOTS` (default 8) Electron
@@ -50,6 +52,13 @@ MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botlab/page.cjs
 - **Online-only stages** (config `onlineOnly`, Cargo Terminal): `DEVSTAGE=1` boots every harness page with `?devstage`
   (src/main.js `DEV_STAGE`), so page tests, shots, tower checks, bakes and stage art run there offline (a solo walk: the
   stage is `noBots`, so no bot matches).
+- **Stages under construction** (config `wip`: Bluestone Junction, Gulper Aquarium, Highmark Foundry until the lead
+  removes the flag): every harness loads one by id as usual (`MAP=bluestone …`); players never see one in a stage
+  list. `WIPSTAGES=1` boots every harness page with `?wipstages` (config `SHOW_WIP`), which lists them everywhere. The
+  check: `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
+  with `WIPSTAGES=1` (then every picker must list them).
+- **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
+  reads its own switch from `location.search`: `?era=`, `?lava=` …).
 - **Useful page-script globals:**
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)
@@ -115,6 +124,13 @@ Stage set pieces:
   tools/botlab/page.cjs` (meters, the calibration per weapon kind, growth and timing, blocking, tint, owner-only ink,
   climbing, carrying down, shoving, nav, the follower replay, bots), and the same with `MODE=tower` and `MODE=boss`.
   `MAP=podbox` is the test arena with pods (testmaps.cjs: page.cjs and match.cjs both take it).
+- Stage modules (src/game/stageMods.js, docs/STAGE-MODS.md: the registry eras / pipes / lava plug into): `MAP=testbox
+  PAGE=tools/botlab/tests/stage-mods.js tools/botlab/run.sh tools/botlab/page.cjs` (a test-only dummy module through the
+  whole lifecycle, and the device code asking `noPlace` / `under`, `S.crushIn`'s forwarding: 36), `MAP=testbox PAGE=tools/botlab/tests/stage-mods-bake.js PAGE_ARGS='old=.botlab/bake-old.cjs' …`
+  (the AO bake's page code: one pass byte-identical to an older bake.cjs copied there, a module's states as RGB channels,
+  6), `CLIENTS=2 NET=tools/botlab/tests/net-stagemods.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  (the same online: clock, records, field 15, F.stage, a late joiner, a host change, 10), and
+  `MAP=halyard PAGE=tools/botlab/tests/stage-mods-perf.js …` (what the hook-ins cost on a stage without a module).
 
 HUD:
 - `MAP=halyard MODE=turf SCENES=tools/botlab/tests/hud-lead-scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs`:
@@ -179,6 +195,19 @@ Matches: match.cjs `SPECIALS='all=surf'` / `'team0=surf'` (and a `SURF` line: us
 bots' jumps). Pictures: `tools/botlab/jobs/surf/shots.sh` (scenes/surf.js), the results screen with assists
 (scenes/surf-results.js) and the HUD / loadout (scenes/surf-hud.js) through hud-shots.cjs.
 
+Deployables (src/game/deployables.js, its bots src/game/deployables-bots.js, its sounds src/audio/sfx-deploy.js: enemy
+fire of every kind wears down Hop Beacons, Twirl Sprinklers, Skitter Bombs and the Surf N' Turf buoy; the tower crushes
+sprinklers, beacons, Drip Curtains and buoys in its way and pushes a Lurk Mine aside; every placed / stuck device rides
+any moving floor; bots shoot enemy devices with nothing better to do, never into a noticed danger):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/deployables.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=matrix,own,down,pop,looks,beam,standing,net,bots,sounds,floors'`), and the same with `MODE=tower
+PAGE_ARGS='only=tower'`, `MAP=calamari PAGE_ARGS='only=rail'`, `MAP=podbox PAGE_ARGS='only=hedge'`. Online on two
+clients: `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-deploy.cjs tools/botlab/run.sh
+tools/botlab/netpage.cjs` (and `NET_ARGS='scene=tower'`; `'scene=leave'`: the host leaves). Pictures: scenes/deploy.js
+through hud-shots.cjs (`MAP=halyard MODE=tower PLAY=2`). Matches: match.cjs / tower-match.cjs print a `DEPLOY` line (hits,
+shot down, crushed, Skitter Bombs thrown / popped, the bots' seconds in device mode per bot, picks / re-picks / give-ups);
+`DEV_AI=0` turns the bots' device shooting off (an A/B).
+
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
 blasts, launch alerts / "you're in it" alarms / stings for the enemy's specials, the enemy's louder than yours):
@@ -210,12 +239,48 @@ Drainbow (2026-10-03, the special: src/game/sp-drainbow.js, src/fx/drainbowFx.js
 - balance: `tools/botlab/jobs/drainbow/balance.sh <outdir> [N_TURF] [N_ZONES]` (match.cjs `SPECIALS=` forces the
   specials) + `agg.cjs`; the regressions its hook-ins touch: `tools/botlab/jobs/drainbow/regress.sh`
 
+Special rules (batch 5, `[b5-sprules]`: the gauge on a splat mid-special — specials.js `splatShare`; what outlives its
+owner — kits/boomerang.js, sp-drainbow.js; the Bubble Guard chain — src/game/sp-bubble.js; the Bomb Barrages with the
+Waddle and the Mystery — src/game/sp-barrage.js, src/ui/hud-barrage.js):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sp-rules.js tools/botlab/run.sh tools/botlab/page.cjs` — the gauge kept
+  (several shares, the sea, the respawn, no special running), the boomerang / Tempest / buoy / Drainbow / shared Bubble
+  Guard outliving its owner (the Bubble Blower unchanged), the chain (time carried, no refresh loop, one field a player,
+  each chain once, the hint line: a copy's only with a teammate who could take it within 6 m, and under the Cheer Orb
+  prompt on the HUD), both barrages (a barrage's Waddle with its own numbers, its ghost too; the Mystery: 120 throws,
+  its NEXT card read on every real frame between them), the bots, the order / icons
+  (`PAGE_ARGS='only=gauge,survive,chain,waddle,mystery,bots,list'`; a section that throws is one FAIL, so it also runs
+  on the code before the package)
+- `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sprules.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  — online: the chain across screens (each receiver's owner decides), the host's things outliving the host on the guest's
+  screen, the guest's Mystery / Waddle Barrage on the host's screen (`NET_ARGS='only=chain,survive,barrage'`)
+- pictures: `SCENES=tools/botlab/scenes/sprules.js MAP=halyard MODE=turf PLAY=6 OUT=… tools/botlab/run.sh
+  tools/botlab/hud-shots.cjs`; balance: `tools/botlab/jobs/batch5/sprules/balance.sh` + `agg.cjs`; regressions:
+  `tools/botlab/jobs/batch5/sprules/regress.sh`
+
+Zipline buffs and the Cheer Orb rework (batch 5, 2026-10-04; src/game/specials.js, src/game/sp-cheer.js, src/ui/hud-cheer.js,
+src/audio/sfx-cheer.js; actor.js's ink and pin hooks):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/zipcheer.js tools/botlab/run.sh tools/botlab/page.cjs` — the Zipline's
+  quarter damage mid-zip (and full before / clinging / after), 33 m/s zips that still stop at an enemy, 0.7× ink costs
+  (shots, a charger's charge, a dodge roll, the "enough ink?" check); the Cheer Orb's lift (2.2 m over the ground, held:
+  no walking / jumping / swimming, turning yes; let go by the throw, a splat, a swap; under a ceiling; mid-jump; on a
+  moving block; lift 0 the old way), the teammate's big cheer prompt (bottom middle, its size, the pad's d-pad up, never
+  for an enemy's or your own orb), the cheer (both wisps, +0.12 as the orb's lands, +4 % of the gauge as its own lands,
+  the rate, the exceptions), bots cheering and a bot holding still up there (`PAGE_ARGS='only=zipdmg,zipspeed,zipink,
+  lift,prompt,cheer,bots'`)
+- `CLIENTS=2 NET=tools/botlab/tests/net-zipcheer.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` — online, one team:
+  the host risen on both screens, the guest's prompt and cheer (wisps on both screens, the charge on the orb owner's
+  screen and back through its tick, the guest's gauge on its own), the throw, and the other way round
+- match.cjs prints `special ends` (per team, per special, by reason) and the `zipcheer` counters (sp-cheer.js ZC_STATS);
+  `TUNE='booyah.heldDamage=0.5'` is a what-if (the share of damage taken while held up: 1 in the game)
+- pictures: tools/botlab/scenes/zipcheer.js through shoot.cjs (`PRE_ARGS=risen|wisps|zip`, testbox, `ACTORS=1 PLAY=1`)
+  and tools/botlab/scenes/zipcheer-hud.js through hud-shots.cjs (halyard; the prompt, the wisps, the gauge's +4 %)
+
 Loadout › SUB / SPECIAL picker (2026-10-03, src/ui/menus.js `_openKitPicker`: Enter / A / a click on the loadout's SUB or
 SPECIAL chip opens a grid of every option with the weapon's own first; arrows / WASD / d-pad / stick move in 2D, Enter /
 A / a click picks, Esc / B / a click outside closes; ← → on the chip still step):
 - `MAP=testbox PAGE=tools/botlab/tests/loadout-picker.js tools/botlab/run.sh tools/botlab/page.cjs` — the main menu's
-  LOADOUT, the hints, 2D moves and WASD, picks saved, Esc / B / outside with no change, the chip's ← →, Drainbow in a few
-  presses, the mouse, the weapon's own (null), the pad, and Practice (L) equipping the live player
+  LOADOUT, the hints, 2D moves and WASD, picks saved, Esc / B / outside with no change, the chip's ← →, the last special in
+  a few presses, the mouse, the weapon's own (null), the pad, and Practice (L) equipping the live player
 - `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-picker.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
   — online Practice: a guest's picks in the picker reach the host's screen and the room
 - pictures: `tools/botlab/scenes/loadout-picker.js` through hud-shots.cjs (any `W` / `H`)
@@ -231,3 +296,22 @@ and LOOK chips in the bottom bar, each opening the kit picker above; a pick is s
   the picker: `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/jobs/lobby-kit/mock-shots.cjs
   OUT=tools/botlab/jobs/lobby-kit/out tools/botlab/run.sh tools/botlab/netpage.cjs` (8 checks: the bar has room to spare,
   every weapon / sub / special name fits its chip, READY? / START!'s sub-lines whole at 1280)
+
+Two-handed holds (batch 5, src/game/character.js `HOLD_BOTH` / `_bothHands` / `_gripRoll`: the brush, the roller, the
+blaster and the Canopy Brolly keep the off hand on the weapon in every state, the menu and podium dances included):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/holds.js tools/botlab/run.sh tools/botlab/page.cjs` — the other weapons
+  first (their off hand's role per state against `holds-baseline.json`, recorded on the code before the change), then
+  the four through stand / run / fire / roll / jump / a fall / the respawn / the Tidal Slam / every menu and podium dance /
+  the fidgets: the off hand on its grip, a natural elbow and wrist, the weapon clear of the head and (in the poses that
+  hold still) not through the deck, and the roller's drum / the brush's head square to its path (≤ 5°) and on the
+  midline (± 7 cm) while rolling; then the lobby emotes as the room plays them (HEY! lets the off hand go to wave and
+  takes the weapon back, BOOYAH! / the dance / the flex keep it on); then a 30 s bot fight with them
+  (`PAGE_ARGS='only=both,others,emotes,bots'`, `w=…`, `s=…`, `dump`, `record`)
+- `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-holds.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  — online Practice: each screen sees the other player's squidkid keep its off hand on the weapon (`NET_ARGS='a=brush;b=blaster'`)
+- the room lobby (offline stand-in): `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/jobs/batch5/holds/lobby-shots.cjs
+  OUT=/dir tools/botlab/run.sh tools/botlab/netpage.cjs` — pictures of the line-up, and everyone's HEY! checked (the off
+  hands let go to wave, back on after)
+- pictures: `tools/botlab/scenes/holds.js` through hud-shots.cjs (`PRE_ARGS='w=… s=… v=front,fq,left,back,right,hand,handb,handd'`;
+  `s=leap,hang,slam` for the Tidal Slam, `s=v0b7` a victory dance at a set beat, `s=hey0.7` the HEY! emote, `v=frontw,top`
+  a roll's drum in frame)

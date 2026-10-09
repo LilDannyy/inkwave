@@ -1,0 +1,146 @@
+JOB-5 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 09:52:25
+branch botlab-b5-zipcheer, ran at fc4ac0c, exit code 0, wall time 7min
+(a written-up JOB-5.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### zipcheer JOB-5 at fc4ac0c
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Guard: no shots into the shield and backed out of its reach; back on it straight after it pops (off: shoots the shield)  {"on":{"shotsShielded":0,"distShielded":14.2,"shotsAfter":46,"firstShotAfter":0.2,"st":{"noticed":1,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":3,"guard":0,"backedOff":1,"retargeted":0,"heldFire":1.2833333333333337,"knockShots":0,"reengag
+== track-arrows: RESULT 24/24 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-zipcheer: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== zipcheer: RESULT 35/36 1 FAIL
+FAIL prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window's size, 960×600's and 1280×720's; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it  {"bad":[{"u":"window","how":"lowink","hint":"Hold SHIFT to swim in your ink and refill","over":false,"gap":57,"prompt":[594,716,918,815
+== bots-3: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.92","Kelp 0.98"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1}
+== bots-2: RESULT 2/2 0 FAIL | {"firstCheerS":["Kelp 0.37","Nori 0.75"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.77}
+== bots-1: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.03","Marlo 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-4: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.37","Bubbles 0.5"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.52}
+== bots-6: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.35","Inky Vee 0.7"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.72}
+== bots-5: RESULT 2/2 0 FAIL | {"firstCheerS":["Moxie 0.05","Riptide 2.13"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.15}
+== bots-7: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.87","Bubbles 0.93"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.95}
+== bots-9: RESULT 2/2 0 FAIL | {"firstCheerS":["Blotch 0.02","Coral 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-8: RESULT 2/2 0 FAIL | {"firstCheerS":["Squiddo 1.23","Marlo 2.45"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.47}
+== bots-10: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.63","Bubbles 1.2"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.22}
+SUMMARY 26 runs, 2 FAIL lines, 10/10 bots runs 2/2
+
+## last 15 lines of job.log
+== net-turf: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== zipcheer: RESULT 35/36 1 FAIL
+FAIL prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window's size, 960×600's and 1280×720's; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it  {"bad":[{"u":"window","how":"lowink
+== bots-3: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.92","Kelp 0.98"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1}
+== bots-2: RESULT 2/2 0 FAIL | {"firstCheerS":["Kelp 0.37","Nori 0.75"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.77}
+== bots-1: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.03","Marlo 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-4: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.37","Bubbles 0.5"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.52}
+== bots-6: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.35","Inky Vee 0.7"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.72}
+== bots-5: RESULT 2/2 0 FAIL | {"firstCheerS":["Moxie 0.05","Riptide 2.13"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.15}
+== bots-7: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.87","Bubbles 0.93"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.95}
+== bots-9: RESULT 2/2 0 FAIL | {"firstCheerS":["Blotch 0.02","Coral 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-8: RESULT 2/2 0 FAIL | {"firstCheerS":["Squiddo 1.23","Marlo 2.45"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.47}
+== bots-10: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.63","Bubbles 1.2"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.22}
+SUMMARY 26 runs, 2 FAIL lines, 10/10 bots runs 2/2
+
+## fails.txt
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/zipcheer-JOB-5-1004-0945/logs-3/zipcheer.log
+PASS zipdmg: a hit while travelling along a zip takes 25 % (10 of 40); before the zip, clinging after it and once the special is over: all of it  {"before":40,"midZip":10,"clinging":40,"after":40,"zipDamage":0.25}
+PASS zipdmg: a bomb's 80 mid-zip comes to 20  {"lost":20}
+PASS zipspeed: zips travel at 33 m/s — 1.5 × the old 22 (a ~19.5 m zip in ~0.6 s; the frame-to-frame step 0.55 m)  {"dist":19.54,"frames":36,"avg":32.57,"steady":32.99}
+PASS zipspeed: an enemy in the way still stops the zip at them (it slams in, never passes through)  {"zipper":2.25,"enemy":3}
+PASS zipink: a shooter's shots cost 0.7 × while the Zipline runs (1 s of fire)  {"off":9.5,"on":6.65,"ratio":0.7}
+PASS zipink: a charger's full charge costs 0.7 ×  {"off":18,"on":12.6,"ratio":0.7}
+PASS zipink: a twins dodge roll costs 0.7 × (the roll's ink, apart from the shots round it)  {"off":7.85,"on":5.49,"ratio":0.7}
+PASS zipink: with ink for 0.8 of a shot, a shot fires during the Zipline (it costs 0.7 of one) and not without it  {"during":0.665,"without":0,"shot":0.95}
+PASS lift: up 2.2 m over its lift time (an ease-out, no overshoot), held there (special.pin)  {"up":2.22,"half":2.01,"max":2.22}
+PASS lift: held up, it has a ground cue — on the deck right under it a dark drop shadow and a bright ring, and a light column from the deck up past its feet  {"gap":2.22,"column":{"y":0.03,"h":3.55,"alpha":0.6},"ring":{"y":0.03,"r":1},"shadow":{"r":0.62,"alpha":0.5}}
+PASS lift: stuck up there — walking, jumping and swimming move it nowhere, it stays a kid  {"moved":0,"offHeight":0.031,"form":"kid"}
+PASS lift: it still turns to its aim up there  {"yaw":1.57}
+PASS lift: throwing the orb lets go — it drops back to the deck  {"thrown":true,"y":0,"grounded":true}
+PASS lift: back on the deck, its ground cue is gone  {"column":false,"ring":false,"shadow":false}
+PASS lift: the special ending (a loadout swap) lets go and it drops; splatted up there: let go, counted  {"swapDown":true,"splatHeld":1}
+PASS lift: used mid-jump it rises to 2.2 m over the ground (not 2.2 m over the jump); a hit held up takes all of it (heldDamage 1: today's rule), 0.5 halves it  {"up":2.22,"H":0.98,"full":40,"half":20}
+PASS lift: under a low ceiling (its underside 3 m up) it lifts only as far as leaves room for the kid and its orb, full and pulsing, never into it  {"up":0.32,"H":0.3,"orbTop":2.79}
+PASS lift: started on a moving block it rides along over the same spot (the block went +3 m x, +0.5 m up)  {"onPlat":true,"moved":[2.95,0.49,0]}
+PASS lift: (lift 0 — the old way, for an A/B: it walks slowly at moveSpeed, no lift)  {"walked":1.77}
+PASS prompt: a teammate charging a Cheer Orb → the cheer prompt on your HUD, bottom middle, its name and charge, key C  {"on":true,"name":"Squiddo","charge":0.07,"box":[594,716,325,99],"screen":[1512,945],"text":"CCHEER!\n    \n    \n    \n      \n      \n      \n    \n    \n    \n    Squiddo's Cheer Orb"}
+PASS prompt: it's big — at least twice the hint line's height, a keycap a few times the hint's font  {"prompt":99,"hint":34,"key":53}
+PASS prompt: on a pad it shows the d-pad's up (the pad's cheer button)  {"padKey":"dpad-up"}
+PASS prompt: CHARGED! once full; gone once it's thrown  {"full":true,"after":false}
+PASS prompt: never for the other team's orb, nor for your own (you get your own hint line)  {"enemy":false,"own":false,"ownLine":"Charging… teammates press C to cheer!"}
+PASS prompt: your teammate's name tag sits over its Cheer Orb, not on it (the old spot, head + 0.45 m, was inside the orb)  {"tagBottomY":362,"orbTopY":374,"orbCentreY":406,"oldAnchorY":426}
+FAIL prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window's size, 960×600's and 1280×720's; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it  {"bad":[{"u":"window","how":"lowink","hint":"Hold SHIFT to swim in your ink and refill","over":false,"gap":57,"prompt":[594,716,918,815
+PASS cheer: one press sends a wisp to the orb and one into your gauge, and a "Yeah!" bubble  {"orbWisps":1,"gaugeWisps":1}
+PASS cheer: the orb wisp closes on the orb and arrives in ~cheerFly s; only then the orb gains 0.12 (on top of its own charging)  {"arrivedS":0.45,"dist0":8.97,"distEnd":0.03,"extraBefore":0.004,"extraAfter":0.124}
+PASS cheer: your gauge gains 4 % of a full gauge as its wisp lands (cheerGaugeFly s), not before; the HUD wisp flies up into the gauge meanwhile  {"gain":7.6,"pct":0.04,"landedS":0.58,"hudFrames":34,"hudDist":[888,3]}
+PASS cheer: one cheer per 0.4 s (mashing does no more)  {"cheers":2}
+PASS cheer: with your gauge full or your own special running: the orb still gets its wisp, your gauge none  {"fullG":0,"fullO":1,"ownSpG":0,"ownSpO":1}
+PASS cheer: a full orb, an enemy's orb, your own orb: no wisps, no charge (a "Yeah!" all the same)  {"fullOrb":0,"bubble":1,"enemyOrb":0,"ownOrb":0,"ownExtra":0.004}
+PASS cheer: two teammates charging orbs: a wisp to each, both charged  {"to":["Squiddo","Moxie"]}
+PASS sounds: the Cheer Orb's lift / wisp / orb / gain sounds are defined, in the Specials group and on the cue bus (as booyah_cheer is)  [{"n":"orb_lift","def":true,"group":true,"cue":true},{"n":"cheer_wisp","def":true,"group":true,"cue":true},{"n":"cheer_orb","def":true,"group":true,"cue":true},{"n":"cheer_gain","def":true,"group":true,"cue":true}]
+PASS bots: each bot teammate cheers a charging orb (within 10 s; one cheer each, then it's switched off) — every cheer's wisp reaches the orb and adds 0.12  {"firstCheerS":["Squiddo 0.15","Moxie 0.33"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.35}
+PASS bots: a bot with the orb stays up where it rose (no walking off) and throws it once charged  {"threw":true,"maxMove":0}
+RESULT 35/36
+console errors: none
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/zipcheer-JOB-5-1004-0945/logs/bot-specials.log
+PASS Tidal Slam: rollers brawling the jumper get out of its kill ring (3.2 m) before it lands — hard bots nearly all (at most 2 of 9 caught over 3 scenes), normal bots (slower to react) fewer (at most 6 of 9, and no fewer caught than hard ones); the old behaviour loses them all  {"hard":{"caught":0,"scenes":[{"distAtImpact":[4.2,4.1,4.9],"dead":0,"hops":3},{"distAtImpact":[4.6,4.2,4.8],"dead":0,
+PASS Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge (slow on their feet: a squid hop out) — on: at most one caught; off: splatted; shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse  {"on":{"dead":0,"dmgTotal":87.1,"escapes":14,"evaded":11},"off":{"dead":4,"dmgTotal":400},"chargers":{"on":{"dead":0,"dmg":[49.3,49.9,1.7]},"off":{"dead":3,"dmg"
+PASS Vortex Strike: chargers in a fight under the ring are out of it when the missile lands — on: none in it (2 scenes); off: many stay (at least 4 of 9 over 3 scenes)  {"on":{"inRing":0,"dead":0,"escapes":4,"evaded":3},"off":{"inRing":8,"perScene":[2,3,3],"dead":0}}
+PASS Vortex Strike: a route past the standing vortex goes round it and the bot never walks in (off: straight through)  {"on":{"nodesInside":0,"framesInside":0},"off":{"nodesInside":10}}
+PASS Howl Box: chargers standing in the beam's line step out of it during the 1.3 s charge — on: none in it (none splatted); off: splatted  {"on":{"inBeam":0,"dead":0,"escapes":2},"off":{"inBeam":1,"dead":2}}
+PASS Cheer Orb: chargers where the orb comes down are clear of its 8.4 m blast when it goes off — on: none splatted; off: splatted  {"on":{"atBlast":[{"d":9.2,"los":true},{"d":9,"los":true},{"d":9.4,"los":true}],"dead":0,"escapes":3},"off":{"atBlast":[{"d":3.8,"los":true},{"d":2.9,"los":true},{"d":2.2,"los":true}],"dead":3}}
+PASS Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: under 0.8 s each in it on average (3 scenes); off: a second or more (2 scenes)  {"on":{"sInRainEach":0.41,"scenes":[{"sInRainEach":0.5,"dmg":[84.2,0,21.8],"escapes":34},{"sInRainEach":0.5,"dmg":[46,30,0],"escapes":27},{"sInRainEach":0.3,"dmg":[0,0,24.9],"escapes":21}]},"off":{"sInRainEach"
+PASS Twister Zooka, sustained (6 shots a round: 30 rounds off, 30 on for a normal bot, 12 for a hard one): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time  {"hitRate":{"off":0.78,"normalOn":0.62,"hardOn":0.47},"off":{"hits":140,"shots":180,"perRound":[6,4,3,5,3
+PASS Twister Zooka: a hard bot walking in on the zooka user sidesteps a twister led at it from ~25 m (on: at most 3 of 10 hit; off: 6+) — a normal bot, slower, dodges fewer  {"hardOn":{"hits":1,"noticed":19},"hardOff":{"hits":9,"noticed":0},"normalOn":{"hits":2,"noticed":12}}
+PASS Kraken (2 rounds): rollers in their own turf don't roll at it — they swim out of its reach (dodging its jumps), no more lost than the old behaviour — then go for it once it's a kid again  {"on":{"dead":1,"sWithin3m":4.1,"shotsAtKraken":0,"shotsAtOther":189,"shotsAfter":215,"reengaged":4,"escapes":7,"evaded":0},"off":{"dead":4,"sWithin3m":3.1,"shotsAtKraken":202,"shotsAtOther":0}}
+FAIL Bubble Guard: no shots into the shield and backed out of its reach; back on it straight after it pops (off: shoots the shield)  {"on":{"shotsShielded":0,"distShielded":14.2,"shotsAfter":46,"firstShotAfter":0.2,"st":{"noticed":1,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":3,"guard":0,"backedOff":1,"retargeted":0,"heldFire":1.2833333333333337,"knockShots":0,"reengag
+PASS Bubble Guard at the very edge of the deck: the shove can put it in the sea — judged worth it, so the bot keeps shooting  {"shots":82,"sunk":true,"knockShots":1}
+PASS Crab Rig: out of its gun lane, no shots into the armoured front (off: stands in the lane shooting the hull); from behind it shoots the rider  {"on":{"dead":false,"sInLane":0.1,"frontShots":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":0,"guard":0,"backedOff":0,"retargeted":0,"heldFire":2.2333333333333303,"knockShots":0,"reengaged":0,"bubbleHold":
+PASS Mega Stamp: no shots into its front, guarded swing after swing (the old code held them only mid-swing); out of the lane in front of it  {"on":{"dead":false,"frontShots":0,"sInFront":0,"st":{"noticed":1,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":3,"guard":0,"backedOff":1,"retargeted":0,"heldFire":0.44999999999999996,"knockShots":0,"reengaged":0,"bubbleHold":0,"pop
+PASS Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":240,"bubbleHold":4,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":2,"guard":0,"backedOff":0,"reta
+PASS Bubble Blower, counter-play: one of theirs ducks out of sight behind a wall right by our team's bubble — the bot shoots the bubble and it goes off on them  {"on":{"bubble":true,"sawItFirst":true,"hidden":true,"popped":true,"e2Hit":175.3,"popShots":1},"off":{"bubble":true,"sawItFirst":true,"hidden":true,"popped":false,"e2Hit":0,"popShots":0}}
+PASS Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":0,"avgDmgOff":90.4}
+PASS Ink Jet: a jetpacker in reach is taken before a closer foe (floating, in the open); one out of reach doesn't lure the bot out (the foe it can reach, and never under it)  {"framesOnJetpacker":90,"framesOnCloserFoe":0,"hunted":1,"outOfReach":{"framesOnJetpacker":4,"framesOnReachableFoe":146,"closestToUnderIt":6.4}}
+PASS the sight rule: a shield / a slam / a kraken behind a wall, unseen and unheard, is nothing to the bot; heard close by (slam 8 m, kraken 7 m) or on the map (a strike ring behind it): noticed  {"shieldBehindWall":0,"slamFar":0,"slamHeard":1,"krakenFar":0,"krakenHeard":1,"strikeOnMap":1}
+RESULT 18/19
+console errors: none
+
+## summary.txt
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Guard: no shots into the shield and backed out of its reach; back on it straight after it pops (off: shoots the shield)  {"on":{"shotsShielded":0,"distShielded":14.2,"shotsAfter":46,"firstShotAfter":0.2,"st":{"noticed":1,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":3,"guard":0,"backedOff":1,"retargeted":0,"heldFire":1.2833333333333337,"knockShots":0,"reengag
+== track-arrows: RESULT 24/24 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-zipcheer: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-turf: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== zipcheer: RESULT 35/36 1 FAIL
+FAIL prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window's size, 960×600's and 1280×720's; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it  {"bad":[{"u":"window","how":"lowink","hint":"Hold SHIFT to swim in your ink and refill","over":false,"gap":57,"prompt":[594,716,918,815
+== bots-3: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.92","Kelp 0.98"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1}
+== bots-2: RESULT 2/2 0 FAIL | {"firstCheerS":["Kelp 0.37","Nori 0.75"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.77}
+== bots-1: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.03","Marlo 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-4: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.37","Bubbles 0.5"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.52}
+== bots-6: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.35","Inky Vee 0.7"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.72}
+== bots-5: RESULT 2/2 0 FAIL | {"firstCheerS":["Moxie 0.05","Riptide 2.13"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.15}
+== bots-7: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.87","Bubbles 0.93"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.95}
+== bots-9: RESULT 2/2 0 FAIL | {"firstCheerS":["Blotch 0.02","Coral 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-8: RESULT 2/2 0 FAIL | {"firstCheerS":["Squiddo 1.23","Marlo 2.45"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.47}
+== bots-10: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.63","Bubbles 1.2"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.22}

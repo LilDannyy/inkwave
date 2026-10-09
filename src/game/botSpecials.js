@@ -63,6 +63,7 @@ import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { SIGHT } from './botSight.js';
 import { surfDanger, surfDodge, surfOwnAim, surfShootAim } from './sp-surf-bots.js';   // Surf N' Turf (sp-surf.js): its rings, our own throw
+import { botShare } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain: bots pass it on
 
 export const SPECIAL_AI = { enabled: true, teams: null };
 // engagements, not frames (heldFire / bubbleHold are seconds); splattedBy: bots splatted per special (Bomb Barrage:
@@ -74,7 +75,7 @@ export function resetSpecialStats() { for (const k in SPECIAL_STATS) SPECIAL_STA
 const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _d = new THREE.Vector3(), _h = new Hit();
 const _st = { own: 0, enemy: 0, empty: 0, n: 0 };
 const CHARGE = { charger: true, spinner: true, splatling: true };
-const BOMB = { bomb: true, sticky: true, burst: true, seeker: true, mist: true };
+const BOMB = { bomb: true, sticky: true, burst: true, seeker: true, mist: true, waddle: true };   // ([b5-sprules] + the Waddle Barrage's)
 const MISS = { easy: 0.35, normal: 0.18, hard: 0.06 };    // chance a fast projectile goes unnoticed (by difficulty)
 const LEAVE = 0.45;                                          // (m past an area's edge counts as out of it)
 
@@ -140,6 +141,7 @@ function predict(d, pos, vel, g, maxT) {
   return false;
 }
 const _barEnd = new WeakMap();
+const _fresh = [];   // [b5-deploy] (_scan: the dangers new to this bot this look)
 const barrage = (a) => !!a && (a.specialActive?.kind === 'barrage' || G.time - (_barEnd.get(a) ?? -99) < 3.5);
 
 // every enemy special effect as a danger area (both teams' — a bot reads the other team's); once a frame
@@ -308,7 +310,7 @@ export function specialDangers() {
   // ---- (sub-tweaks) a Waddle Bomb winding up to burst where it stands
   for (const it of SUB_KITS.waddle?.items || []) {
     if (it.state !== 'prime') continue;
-    const S = it.sub, d = D(keyOf(it), 'sub', it.team, it.owner);
+    const S = it.sub, d = D(keyOf(it), it.sp || barrage(it.owner) ? 'barrage' : 'sub', it.team, it.owner);   // ([b5-sprules] a barrage's: the barrage's)
     d.hit = 'waddle';
     disc(d, it.pos.x, it.pos.y, it.pos.z, S.radius + 0.3, 1.6);
     d.tIn = Math.max(0, it.fuse); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.3;
@@ -561,6 +563,7 @@ export class SpecialSense {
     this.recs.clear(); this.known.length = 0; this.scanT = Math.random() * 0.2; this._rays = 0; this.gone = [];
     this.esc = null; this.replanT = 0; this.prevTgt = null; this.held = null; this.heldT = 0; this.knockOn = null;
     this.pop = null; this.popT = 0; this.popTgt = null; this.guardT = 0;
+    this._dev = null; this._devMem = null; this._devT = 0;   // [b5-deploy] the enemy device it was shooting, its time on each (deployables-bots.js)
   }
   on() { const S = SPECIAL_AI; return S.enabled && (!S.teams || !!S.teams[this.a.team]) && !G.boss && !!G.nav; }
   dead() { this.esc = null; this.pop = null; }
@@ -569,9 +572,13 @@ export class SpecialSense {
   tick(dt) {
     if (!this.on()) { if (this.recs.size || this.esc) this.reset(); return; }
     specialDangers();
-    if ((this.scanT -= dt) <= 0) { this.scanT = 0.1 + Math.random() * 0.05; this._scan(); }
+    // [b5-deploy] a danger it knew went this frame (a Vortex Strike's missile turned into its vortex): a look now, so
+    // what took its place takes over its notice at once — between looks (~0.1–0.15 s) it knew nothing there, and a bot
+    // on the vortex's edge stepped in
+    if ((this.scanT -= dt) <= 0 || this._stale()) { this.scanT = 0.1 + Math.random() * 0.05; this._scan(); }
     this._known();
   }
+  _stale() { for (const r of this.recs.values()) if (!r.miss && r.d.gen !== _gen) return true; return false; }
   _known() {
     const now = G.time, K = this.known, team = TEAMK[this.a.team];
     K.length = 0;
@@ -591,14 +598,23 @@ export class SpecialSense {
     const fighting = b.mode === 'fight' && b.seeTimer > 0;
     this._rays = 3;
     for (const r of this.recs.values()) r.live = false;
+    const fresh = _fresh; fresh.length = 0;
     for (const d of _list) {
       if (d.team === a.team || distTo(d, ex, ez) > 45) continue;
-      let r = this.recs.get(d.key);
+      const r = this.recs.get(d.key);
       if (r) {
         r.live = true; r.d = d;
         if (d.actor && this._sense(d, ex, ey, ez, fx, fz, cone, aw, r)) r.lastT = now;
         continue;
       }
+      fresh.push(d);
+    }
+    // (what's over: scored, and kept a moment — the vortex a missile turns into is the same danger. [b5-deploy] Before the
+    // new ones register, so the vortex takes over the missile's notice at once: it used to wait a reaction time, ~0.3 s
+    // with nothing known, in which a bot walked into the vortex that had just landed)
+    for (let i = this.gone.length - 1; i >= 0; i--) if (now - this.gone[i].t > 1) this.gone.splice(i, 1);
+    for (const [k, r] of this.recs) if (!r.live) { this._gone(r); if (!r.miss) this.gone.push({ src: r.d.src, x: r.d.x, z: r.d.z, t: now, at: r.at }); this.recs.delete(k); }
+    for (const d of fresh) {
       if (!this._sense(d, ex, ey, ez, fx, fz, cone, aw, null)) continue;
       const sx = d.sx - ex, sz = d.sz - ez, sl = Math.hypot(sx, sz), inCone = sl < SIGHT.near || (sx * fx + sz * fz) / (sl || 1) > cone;
       // (a telegraphed special registers a little quicker than a flick onto a foe: 0.6–1.0 × the reaction time; later
@@ -613,9 +629,6 @@ export class SpecialSense {
       const jit = (Math.random() - 0.5) * 0.9 * (1.05 - b.diff.fireDiscipline);
       this.recs.set(d.key, { key: d.key, d, at: at2, miss, lastT: now, live: true, t0: now, noted: false, wasIn: false, cover: false, backed: false, rayT: -9, jit });
     }
-    // (what's over: scored, and kept a moment — the vortex a missile turns into is the same danger)
-    for (let i = this.gone.length - 1; i >= 0; i--) if (now - this.gone[i].t > 1) this.gone.splice(i, 1);
-    for (const [k, r] of this.recs) if (!r.live) { this._gone(r); if (!r.miss) this.gone.push({ src: r.d.src, x: r.d.x, z: r.d.z, t: now, at: r.at }); this.recs.delete(k); }
     // behind cover from a blast that needs a sight line from its centre? (one look each, at those we're in)
     for (const r of this.recs.values()) {
       const d = r.d;
@@ -708,10 +721,11 @@ export class SpecialSense {
       if (this.esc) this._endEsc();
       if (!safe) this._guard(move);
       if (G.drainbow?.live) G.drainbow.botHold(this.b, move);   // [drainbow] fight from inside our team's bubble
+      botShare(this.b, move);   // [b5-sprules] pass our Bubble Guard on to a teammate close by (sp-bubble.js)
     }
     if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);
-    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b) || surfShootAim(this, dt, it);
+    return r ? null : this._popAim(dt, it) || surfOwnAim(this.b);   // [b5-deploy] (enemy buoys — was surfShootAim — beacons, sprinklers: bots.js devShootAim, before this)
   }
   // the worst noticed danger we're standing in that counts now
   _here() {

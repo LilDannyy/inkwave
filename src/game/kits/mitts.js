@@ -168,7 +168,7 @@ function burstFist(f, at, direct, normal) {
     if (d > w.splashRadius || !G.physics.los(c, _v2)) continue;
     G.projectiles.applyHit(o, e, lerp(w.splashMax, w.splashMin, clamp(d / w.splashRadius, 0, 1)), 'mitts', f.dbw ? f : null, c);   // [drainbow]
   }
-  G.specials?.areaHit?.(c, w.splashRadius, w.splashMin, f.team, o);
+  if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashMin, f.team, o); else G.specials?.areaHit?.(c, w.splashRadius, w.splashMin, f.team, o);   // [b5-deploy] enemy devices too
   if (direct !== 'boss') G.boss?.splash(o, c, w.splashRadius, w.splashMax, w.splashMin, 'mitts');   // Boss Battle
   burstFx(f, o, c, direct, normal, w);
 }
@@ -223,7 +223,7 @@ function stepFist(f, i, w, dt) {
     }
     // enemy curtains / devices / special objects catch it (and it bursts there) — a ghost's blow costs them nothing
     const fd = f.ghost ? 0 : w.punchDamage;
-    if (!dead && G.subs && G.subs.blockShot(f.prev, f.pos, f.team, fd)) { burstFist(f, f.pos, null, null); dead = true; }
+    if (!dead && G.subs && G.subs.blockShot(f.prev, f.pos, f.team, fd, f.owner)) { burstFist(f, f.pos, null, null); dead = true; }   // [b5-deploy] (by)
     if (!dead && G.specials && G.specials.shotHit(f.prev, f.pos, f.team, fd, f.owner)) { burstFist(f, f.pos, null, null); dead = true; }
     // the level
     if (!dead) {
@@ -453,7 +453,7 @@ function landSplash(a, at, n) {
     const dmg = lerp(w.landDamageMax, w.landDamageMin, clamp((d - 0.6) / (w.landRadius - 0.6), 0, 1));
     G.projectiles.applyHit(a, e, dmg, 'mitts');
   }
-  G.specials?.areaHit?.(c, w.landRadius, w.landDamageMin, a.team, a);
+  if (G.subs) G.subs.damageArea(c, w.landRadius, w.landDamageMin, a.team, a); else G.specials?.areaHit?.(c, w.landRadius, w.landDamageMin, a.team, a);   // [b5-deploy] enemy devices too
   G.boss?.splash(a, c, w.landRadius, w.landDamageMax, w.landDamageMin, 'mitts');   // Boss Battle
   landFx(a, at, n, c);
   netRec(a, 'mitts', [1, r2(at.x), r2(at.y), r2(at.z), r2(n.x), r2(n.y), r2(n.z)]);

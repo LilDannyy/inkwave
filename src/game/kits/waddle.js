@@ -299,7 +299,8 @@ function ghost(a, d) {
   const [op, gid] = d;
   if (op === 0) {
     if (items.some((x) => x.gid === gid)) return;
-    spawn(a, SUBS.waddle, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), true, gid);
+    const bar = a.specialActive?.kind === 'barrage' && a.specialActive.bomb?.kind === 'waddle' ? a.specialActive.bomb : null;   // [b5-sprules] a barrage's (sp-barrage.js barrageBomb)
+    spawn(a, bar || SUBS.waddle, new V3(d[2], d[3], d[4]), new V3(d[5], d[6], d[7]), true, gid);
     G.cues?.sub('waddle', 'throw', { owner: a, at: a.pos });   // sfx-cues
     return;
   }
@@ -345,7 +346,7 @@ function fly(it, dt) {
     const vn = it.vel.dot(n);
     it.vel.addScaledVector(n, -vn * 1.45).multiplyScalar(0.55);
   }
-  if (it.pos.y < PLAYER.waterY - 1.8) { it.why = 'sea'; plop(it); return; }
+  if (it.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(it.pos, 'waddle')) { it.why = 'sea'; plop(it); return; }   // [b5-stagehooks]
   it.m.outer.position.copy(it.pos).setY(it.pos.y - MID * it.vs);   // (the drawn middle on the flight path)
   it.m.tilt.rotation.x += it.spin.x * dt; it.m.tilt.rotation.z += it.spin.z * dt;
 }
@@ -543,7 +544,7 @@ function fallStep(it, dt) {
     it.pos.y = gy; it.air = false; it.vel.set(0, 0, 0); it.repath = 0;
     if (near(it.pos, 30)) G.audio?.play('waddle_land', { pos: it.pos, volume: 0.45, pitch: 1.2 });
   }
-  if (it.pos.y < PLAYER.waterY - 1.2) { it.why = 'fell'; plop(it); return 0; }
+  if (it.pos.y < PLAYER.waterY - 1.2 || G.match?.stage?.sink(it.pos, 'waddle')) { it.why = 'fell'; plop(it); return 0; }   // [b5-stagehooks]
   it.m.outer.position.copy(it.pos);
   return Math.hypot(it.pos.x - x0, it.pos.z - z0);
 }
@@ -638,7 +639,7 @@ function blast(it) {
     const k = 1 - clamp((d - 0.8) / (s.radius - 0.8), 0, 1);
     G.projectiles.applyHit(a, e, lerp(s.damageMin, s.damageMax, k * k), 'waddle');
   }
-  G.subs?.damageArea(c, s.radius, 60, team);
+  G.subs?.damageArea(c, s.radius, 60, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'waddle');   // Boss Battle
   it.state = 'dead';
 }
@@ -689,14 +690,15 @@ function ringFx(it, dt) {
 let preview = null;
 function previewFx() {
   const a = G.local, P = G.projectiles;
-  const show = !!(a && a.alive && a.weaponRunner?.aimingSub && a.sub?.kind === 'waddle' && P?.arcRing?.visible);
+  const sub = a?.specialActive?.kind === 'barrage' ? a.specialActive.bomb : a?.sub;   // [b5-sprules] (a barrage's Waddles too)
+  const show = !!(a && a.alive && a.weaponRunner?.aimingSub && sub?.kind === 'waddle' && P?.arcRing?.visible);
   if (!show) { if (preview) preview.visible = false; return; }
   if (!preview) { preview = makeRing(a.color, 0.4); preview.material.uniforms.uGrow.value = 1; preview.material.uniforms.uSweep.value = 0; G.scene.add(preview); }
   if (preview.parent !== G.scene) G.scene.add(preview);
   preview.material.uniforms.uColor.value.copy(a.color);
   preview.material.uniforms.uTime.value = G.time;
   preview.position.copy(P.arcRing.position);
-  preview.scale.setScalar(a.sub.senseRadius);
+  preview.scale.setScalar(sub.senseRadius);
   preview.visible = true;
 }
 

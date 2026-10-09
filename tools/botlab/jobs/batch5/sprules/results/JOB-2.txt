@@ -1,0 +1,26 @@
+JOB-2 (b5-sprules) results — run on the Mac mini at dab102a (as your later message asked; it superseded 4d7234e for JOB-2), SLOTS=3, caffeinate. Wall time: 9 min for all three runs.
+Verdict: ALL PASS — every test full in run 1; sp-rules 39/39 and net-sprules 14/14 in all three runs. No FAIL / HARNESS / WATCHDOG lines, every log has its RESULT line.
+Order note: the lead's standing order puts test jobs ahead of balance sets, so JOB-2 ran before JOB-1 (JOB-1, the balance, is queued; not alongside).
+
+## run 1: PAR=3 regress.sh
+== drainbow: RESULT 44/44 0 FAIL
+== sp-rules: RESULT 39/39 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-splatfeed: RESULT 4/4 0 FAIL
+
+## run 2: PAR=2 ONLY='sp-rules net-sprules'
+== sp-rules: RESULT 39/39 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+
+## run 3: PAR=2 ONLY='sp-rules net-sprules'
+== sp-rules: RESULT 39/39 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL

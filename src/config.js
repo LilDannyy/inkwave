@@ -46,8 +46,10 @@ export const PLAYER = {
   regenRate: 22,
   regenRateSwim: 60,
   respawnTime: 5.5,
-  // share of the special gauge you keep when splatted (a special running at the time ends and the gauge restarts
-  // from this share of full); the rest is lost, and what's kept carries through the respawn
+  // share of the special gauge you keep when splatted; the rest is lost, and what's kept carries through the respawn.
+  // [b5-sprules] A special running at the time ends and the gauge restarts from this share of what was LEFT of it (its
+  // gauge as the HUD showed it, less what carries on without you — specials.js splatShare), not of a full gauge (the
+  // user: "gives you half back of 100% if you die during the special, not how much you currently have")
   specialKeepOnSplat: 0.5,
   spawnInvuln: 1.6,
   fallDeathY: -1.45,  // touching the sea (surface y = -1.6) splats you
@@ -106,8 +108,10 @@ export const WEAPONS = {
   roller: {
     id: 'roller', name: 'Swell Roller', kind: 'roller', class: 'Roller',
     blurb: 'Roll out wide stripes of turf. Flick for a crushing splash.',
-    stats: { range: 0.35, damage: 0.95, rate: 0.3, mobility: 0.55, paint: 0.95 },
-    rollSpeed: 4.4, rollWidth: 1.9, rollInkPerMeter: 1.1, rollDamage: 140,
+    stats: { range: 0.35, damage: 0.95, rate: 0.3, mobility: 0.6, paint: 0.95 },
+    // [b5-tuning] rolling is a touch faster than walking (PLAYER.runSpeed 6.0; was 4.4 — the user, 2026-10-04: "slightly
+    // faster than walking speed"); the same ink per metre, so a tank rolls as far as before
+    rollSpeed: 6.5, rollWidth: 1.9, rollInkPerMeter: 1.1, rollDamage: 140,
     flickInterval: 0.62, flickWindup: 0.22, flickInk: 9, flickDrops: 9,
     flickDamageNear: 125, flickDamageFar: 30, flickSpeed: 17, flickSpreadDeg: 34,
     impactRadius: 1.0,
@@ -121,6 +125,10 @@ export const WEAPONS = {
     chargeTime: 1.0, rangeMin: 11, rangeMax: 27, damageMin: 40, damageMax: 160,
     inkFull: 18, lineSplatEvery: 1.2, lineRadius: 0.55, impactRadius: 1.2,
     moveSpeedFiring: 1.8,
+    // [b5-tuning] aim assist (player.js; controller, and the mouse when opted in) on this weapon, × every other weapon's:
+    // stick = how much the look slows near a target, pull = the share of its motion carried, cone = how wide a window
+    // engages it. The user, 2026-10-04: "reduce charger's aim assist lock on" — a one-shot splat needs the aim to be yours
+    assist: { stick: 0.5, pull: 0.4, cone: 0.75 },
     special: 'sonar', specialCost: 180, sub: 'mine',
   },
   blaster: {
@@ -355,7 +363,7 @@ export const SUBS = {
     inkCost: 40, throwSpeed: 16, radius: 2.1, directDamage: 60, splashDamage: 35, paintRadius: 1.8,
   },
   seeker: {
-    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late.',
+    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late, or pop it with a shot.',   // [b5-deploy] (… or pop it with a shot: deployables.js)
     // turnRate: rad/s (1.75 ≈ 100°/s: a ~3.6 m turning circle at full speed; was 5); commitDist: dashes straight (no
     // steering) once this close and lined up; creep: how much it slows turning onto a slow / standing target.
     // speed 6.3 (was 7): only just faster than a run (6), so a foe who sidesteps and keeps running gets away instead
@@ -365,6 +373,11 @@ export const SUBS = {
     // for skitter / waddle / mine bombs"; the same windup on all three)
     inkCost: 65, throwSpeed: 9, speed: 6.3, seekRange: 15, life: 4.5, trailRadius: 0.6, triggerDist: 1.2, turnRate: 1.75, commitDist: 2.5, creep: 0.6,
     delay: 0.45, radius: 2.8, damageMax: 180, damageMin: 35, paintRadius: 2.4,
+    // [b5-deploy] on the ground (running or winding up) enemy fire pops it — harmlessly, no blast. 60: two shots of most guns
+    // (the Spritzer's 36, the Twinfin Dualies' / Twinfire Pistols' 30, the Bilge Bucket's 55; three of the Gyre Splatling's /
+    // Squall Spinner's quick 28 / 26),
+    // one full charger beam, one bomb's blast (60), a roller's drum — a few shots, not one (the Waddle has 30)
+    hp: 60,
   },
   scan: {
     id: 'scan', name: 'Echo Orb', kind: 'scan', blurb: 'Bursts into a sensing cloud. Foes it touches are tracked for your whole team. No damage.',
@@ -384,7 +397,8 @@ export const SUBS = {
     // 2026-10-02 ("let you throw the sprinkler further and applies an ink patch on landing"): throwSpeed 12 → 15.8, a
     // flat throw (aim level) carries ~1.47× as far (6.7 → 9.8 m; the Pop Pellet's 16, ~10 m, stays the longest); where it
     // sticks it splats an ink patch of landPaint m (subs.js _patch: on the floor, wall or ceiling it lands on)
-    inkCost: 60, throwSpeed: 15.8, landPaint: 1.7, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
+    // [b5-deploy] hp 70 → 100 (Splatoon's Sprinkler): enemy fire of every kind wears it down (src/game/deployables.js)
+    inkCost: 60, throwSpeed: 15.8, landPaint: 1.7, hp: 100, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
   },
   mine: {
     id: 'mine', name: 'Lurk Mine', kind: 'mine', blurb: 'Planted at your feet, invisible to the other team. Foes who come close set it off: it pops up and blows a moment later, hitting and tracking them. Two at a time.',
@@ -393,10 +407,11 @@ export const SUBS = {
     inkCost: 55, placed: true, max: 2, triggerRadius: 2.1, armTime: 0.9, delay: 0.45, radius: 2.6, damage: 45, trackTime: 8, paintRadius: 2.0,
   },
   beacon: {
-    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left).',
+    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left). Foes can shoot it down.',   // [b5-deploy] (… Foes can shoot it down.)
     // sonar: a ring pulse every `sonar` s from it (ground + air; its team's to see — the other team's faint); the jumps
     // left show as lights over it (and on the jump map's pins)
-    inkCost: 70, placed: true, max: 3, uses: 2, hp: 50, sonar: 1.75,
+    // [b5-deploy] hp 50 → 120 (Splatoon's Squid Beakon): enemy fire of every kind wears it down (src/game/deployables.js)
+    inkCost: 70, placed: true, max: 3, uses: 2, hp: 120, sonar: 1.75,
   },
   mist: {
     id: 'mist', name: 'Murk Bomb', kind: 'mist', blurb: 'Releases a poison mist that slows foes and drains their ink. A direct hit keeps them poisoned until the mist fades.',
@@ -473,8 +488,21 @@ export const SPECIALS = {
   barrage_burst: { id: 'barrage_burst', kind: 'barrage', bomb: 'burst', name: 'Pop Pellet Barrage', blurb: 'Pelt foes with rapid-fire Pop Pellets — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.2 },
   barrage_seeker: { id: 'barrage_seeker', kind: 'barrage', bomb: 'seeker', name: 'Skitter Bomb Barrage', blurb: 'Send a pack of Skitter Bombs chasing foes, each inking a trail — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.5 },
   barrage_mist: { id: 'barrage_mist', kind: 'barrage', bomb: 'mist', name: 'Murk Bomb Barrage', blurb: 'Smother an area in Murk Bomb mist — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.45 },
+  // [b5-sprules] (src/game/sp-barrage.js) Waddle Bomb Barrage; Mystery Bomb Barrage: every throw a different bomb, drawn
+  // at random from `mystery` (the bombs the barrages throw) — never the same twice running, every kind once in each
+  // round of draws; each throw waits its own barrage's gap (bomb 0.3 … seeker 0.5) before the next
+  // (waddleSense / waddleLife: a barrage's Waddle — this one's and the Mystery's — senses foes within this many m of where
+  // it lands and chases one for at most this many s; the Waddle Bomb sub's own are SUBS.waddle senseRadius / life, 7.5 / 9.
+  // Zone Control, a team forced to it vs random rolls, 16 matches a cell (jobs/batch5/sprules JOB-4): with the sub's
+  // numbers 0.19 foes splatted per use, 44 % wins — the Skitter Bomb Barrage 0.22 / 38 %, the Splat Bomb Barrage
+  // 0.09 / 63 %; with these 0.15 / 44 %: a little less of a swarm on a zone, no weaker a pick)
+  barrage_waddle: { id: 'barrage_waddle', kind: 'barrage', bomb: 'waddle', name: 'Waddle Bomb Barrage', blurb: 'Send out a parade of Waddle Bombs that waddle after any foe near where they land — no ink needed. Your main weapon still works.', duration: 6.5, gap: 0.5,
+    waddleSense: 5, waddleLife: 5 },
+  barrage_mystery: { id: 'barrage_mystery', kind: 'barrage', bomb: 'bomb', mystery: ['bomb', 'sticky', 'burst', 'seeker', 'mist', 'waddle'], name: 'Mystery Bomb Barrage', blurb: 'Every throw is a different bomb, picked at random — the next one shows by your crosshair and in your hand. No ink needed. Your main weapon still works.', duration: 6.5, gap: 0.4 },
   // force field: hits become knockback (reduced); touching teammates shares it
-  bubbler: { id: 'bubbler', name: 'Bubble Guard', blurb: 'A force field that turns every hit into a shove instead of damage. Touch teammates to share it.',
+  // [b5-sprules] shared down a chain (src/game/sp-bubble.js): a teammate who got one passes it on by touch too; every
+  // copy keeps what was left of the one it came from, one at a time a player, each chain once a player
+  bubbler: { id: 'bubbler', name: 'Bubble Guard', blurb: 'A force field that turns every hit into a shove instead of damage. Touch teammates to share it — and they can pass it on.',
     duration: 6.5, radius: 1.3, knockPerDamage: 0.045, knockMax: 6.5, shareRange: 1.5 },
   // reveals every enemy to your team (screen + map); they are slowed and burn ink faster
   sonar: { id: 'sonar', name: 'Deep Sonar', blurb: 'Reveals every enemy to your team on screen and on the map. Revealed foes move slower and burn through ink faster.',
@@ -508,11 +536,21 @@ export const SPECIALS = {
     // swing in the air: one flip — hits behind you as the stamp goes over, then a longer-reaching smash in front
     flipTime: 0.5, flipReach: 2.7, flipRadius: 1.9, flipBackReach: 1.2, flipBackRadius: 1.6 },
   // a ball of ink held overhead charges over time (faster with "Yeah!" cheers); throw it once full for a huge blast
-  booyah: { id: 'booyah', name: 'Cheer Orb', blurb: 'Hold up a ball of ink that charges over time, then throw it for a huge blast. Teammates\' "Yeah!" cheers (C) charge it faster and top up their own special.',
-    charge: 4.5, cheer: 0.12, cheerSpecial: 12, autoThrow: 2.5, moveSpeed: 1.8, throwSpeed: 19.6, fuse: 1.5, radius: 8.4, killRadius: 4.6, damageMax: 220, damageMin: 60 },
+  // [b5-zipcheer] (src/game/sp-cheer.js) using it lifts you `lift` m over the ground over liftTime s (less under a ceiling)
+  // and holds you there — no walking, swimming or jumping, you still turn and aim — until it's thrown or the special ends
+  // (lift 0: the old way, walking at moveSpeed; heldDamage: the share of damage taken up there — 1, as before). A teammate's cheer sends a wisp to each of their team's orbs still
+  // charging (+cheer of a full charge as it arrives, cheerFly s) and one into their own special gauge (+cheerGain of
+  // their full gauge as it arrives, cheerGaugeFly s; none while their own special runs). cheerGain 0.04 = 6.8–8 points a
+  // cheer on the 170–200 gauges (the old cheer gave a flat 12 at once, full orbs too; ~0.065 would match it).
+  booyah: { id: 'booyah', name: 'Cheer Orb', blurb: 'Rise into the air holding a ball of ink that charges over time — you can\'t move while it charges — then throw it for a huge blast. Teammates\' "Yeah!" cheers (C) send it energy and top up their own special a little.',
+    charge: 4.5, cheer: 0.12, autoThrow: 2.5, moveSpeed: 1.8, throwSpeed: 19.6, fuse: 1.5, radius: 8.4, killRadius: 4.6, damageMax: 220, damageMin: 60,
+    lift: 2.2, liftTime: 0.45, heldDamage: 1, cheerGain: 0.04, cheerFly: 0.45, cheerGaugeFly: 0.6 },
   // grapple: the sub button fires a tether to latch onto surfaces and zip over; super jump back when it ends
-  zipcaster: { id: 'zipcaster', name: 'Zipline', blurb: 'Cloaked in a mysterious aura, your sub becomes a grapple: latch onto walls from afar and zip over, main weapon in hand. You super jump back when it ends (marked for everyone to see).',
-    duration: 8.5, range: 21, speed: 22, hang: 1.4, cooldown: 0.35,
+  // [b5-zipcheer] (2026-10-04, the user: "75% damage reduction while zipping … 50% faster … ink consummation during the
+  // special 30% less"): zipDamage = the share of damage taken while travelling along a zip; speed 22 → 33; inkUse = what
+  // every ink cost comes to while it runs (actor.js)
+  zipcaster: { id: 'zipcaster', name: 'Zipline', blurb: 'Cloaked in a mysterious aura, your sub becomes a grapple: latch onto walls from afar and zip over, main weapon in hand — you take a quarter of the damage while zipping, and your ink goes further. You super jump back when it ends (marked for everyone to see).',
+    duration: 8.5, range: 21, speed: 33, hang: 1.4, cooldown: 0.35, zipDamage: 0.25, inkUse: 0.7,
     // body impact at the end of every zip (or on an enemy met mid-zip): a mini explosion
     impactDirect: 100, impactSplash: 30, impactDirectR: 1.0, impactRadius: 2.4 },
   // ride a crab tank: gatling (main), mortar (sub), roll into an armoured ball (swim); the tank has HP, the rider is
@@ -541,13 +579,15 @@ export const SPECIALS = {
   // muffled) and you and your teammates inside gain it: total = drain × foes inside, split across your team inside.
   // While it's up your own meter doesn't charge (it's your running special); your share of the drained special turns
   // into bubble time instead (extendPerMeter s per full meter, total life ≤ maxLife). No hit points: it pops when its
-  // time runs out or its owner is splatted (popOnOwnerSplat).
+  // time runs out (or its owner is splatted, with popOnOwnerSplat). [b5-sprules] It outlives its owner (the user: "make
+  // the following survive after the user is splatted: … drainbow"): it stands for the rest of its life, on its own clock
+  // — the owner's share stops growing it while they're away (back from the respawn they're any teammate in it).
   drainbow: { id: 'drainbow', name: 'Drainbow', blurb: 'A rainbow bubble at your feet. Enemy ink through it does half damage. Foes inside go grey and muffled as their ink and special drain to your team inside — your share keeps it up longer.',
     duration: 8.5, radius: 5.73, lift: 1.0,   // radius: the user's +33⅓ % (2026-10-03; was 4.3)
     inflate: 0.55, shotMul: 0.5,
     inkDrain: 10, specialDrain: 0.06,        // per second per foe inside: ink points (of 100; its refill stops in there); share of a full meter
     extendPerMeter: 15, maxLife: 15,          // the owner's drained-special share → bubble time (s per full meter), the cap
-    popOnOwnerSplat: true,
+    popOnOwnerSplat: false,                   // [b5-sprules] (was true)
     // balance (2026-10-03, tools/botlab/jobs/drainbow/results: JOB-1 had it far behind the other specials — 21 % turf / 6 %
     // zones wins for a team forced to it; with these, JOB-3 44 % / 44 % (n 16 each) and JOB-4 63 % / 58 % (n 24): Bubble
     // Guard 63 % / 81 % and 50 % / 71 %, random rolls 50 % / 58 % turf):
@@ -564,7 +604,8 @@ export const SPECIALS = {
     waveTime: 1.1, waveReach: 70, mono: 0.97, dampCut: 950, dampGain: 0.6 },
 };
 // (append-only: online records carry the index — keep new specials at the end)
-export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf', 'drainbow'];
+export const SPECIAL_ORDER = ['slam', 'storm', 'barrage', 'barrage_sticky', 'barrage_burst', 'barrage_seeker', 'barrage_mist', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf', 'drainbow',
+  'barrage_waddle', 'barrage_mystery'];   // [b5-sprules]
 
 // ---- Match ----
 export const MATCH = {
@@ -585,8 +626,11 @@ export const ZONES = {
   count: 100,                 // each team's countdown
   rotateMin: 30, rotateMax: 60,   // the operational objective swaps between the centre and a side zone this often (s)
   finalCentre: 30,            // from this many seconds left (and all through overtime) only the centre is live
-  warn: 0.30,                 // the other team's share of a held zone that sounds the "about to flip" warning
-  control: 0.80, contest: 0.40,   // ink share to take a zone / to neutralise the other team's
+  // [b5-tuning] "make contesting and covering zones more forgiving" (2026-10-04; was warn 0.30, control 0.80, contest
+  // 0.40, flipHold 0 — tools/botlab/jobs/batch5/tuning/JOB-1: more lead changes, an earlier first take, less neutral time):
+  warn: 0.25,                 // the other team's share of a held zone that sounds the "about to flip" warning
+  control: 0.70, contest: 0.35,   // ink share to take a zone / to neutralise the other team's
+  flipHold: 0.6,              // s a share must stay over its line before the zone flips (a sliver inked straight back never does)
   rateCenter: 1,              // points / s holding the centre
   rateHome: 0.5,              // … holding the side zone on your own half (closer to your spawn)
   rateAway: 2,                // … holding the side zone on the other team's half
@@ -659,6 +703,10 @@ export const MAPS = [
   { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowy home village: fight over the little station, up its footbridges and down the lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'An S-shaped chain of islets risen from the sea: hold the sandbar under the Great Arch, cross the lagoons or loop round by the causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   { id: 'treehills', name: 'Eco-Forest Treehills', blurb: 'Alterna\'s tiered forest biome under a simulated sky: grow your team\'s hedges from the sprout pods and hold the meadow plaza.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  // [b5-stages] batch 5's stages, under construction (wip: in no player's stage list until the lead removes the flag)
+  { id: 'bluestone', name: 'Bluestone Junction', blurb: 'Under the station clocks, Commander Tartar is winding the city forward: the streets jump from the 1880s to today to the 3000s, opening new routes and raising new ground as the match goes on.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
+  { id: 'aquarium', name: 'Gulper Aquarium', blurb: 'A 1936 aquarium on an islet in the bay: fight round the Great Tank and ride the clear Tubeway pipes from one side to the other.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
+  { id: 'caldera', name: 'Highmark Foundry', blurb: 'A foundry inside a breathing volcano. Every surge drowns the low floors, floats the Pumice Race and heaves the Organ Pipes up. Mind the high mark.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];
@@ -667,13 +715,23 @@ export const MAPS = [
 //   noBots      humans only: "fill with bots" is forced off, a match needs 2+ players with one on each side, and a player
 //               who leaves mid-match is removed instead of handed to a bot; the menu backdrop runs without bots too
 //   noBoss      never a Boss Battle stage (a boss room switches away from it)
+//   wip         [b5-stages] unfinished (a stage under construction): in no player-facing stage list — the offline stage
+//               select (Turf War, Zone Control, Tower Command, Boss Battle), the online lobby's stage picker, Random (the
+//               lobby's roll, the Practice stage swap, Practice's new stage), the stage the game boots on (the menu
+//               backdrop) and the room it opens — yet it still loads by id (api.startMatch: the botlab harness, MAP=<id>),
+//               and the page option ?wipstages (harness: WIPSTAGES=1) lists it everywhere for testing. The lead removes
+//               the flag when the stage ships. (tools/botlab/tests/wip-stages.js)
 export const mapById = (id) => MAPS.find((m) => m.id === id) || null;
 export const mapNoBots = (id) => !!mapById(id)?.noBots;
 export const mapBossOk = (id) => !!mapById(id) && !mapById(id).noBoss;
 export const mapOfflineOk = (id) => !!mapById(id) && !mapById(id).onlineOnly;
 export const OFFLINE_MAPS = MAPS.filter((m) => !m.onlineOnly);
+// [b5-stages] wip stages: shown to players only with ?wipstages; mapListed / listedMaps() are what every stage list uses
+export const SHOW_WIP = typeof location !== 'undefined' && new URLSearchParams(location.search).has('wipstages');
+export const mapListed = (id) => !!mapById(id) && (!mapById(id).wip || SHOW_WIP);
+export const listedMaps = () => MAPS.filter((m) => mapListed(m.id));
 // a boss-eligible stage to fall back to (the preferred one if it qualifies)
-export const bossFallbackMap = (prefer) => (mapBossOk(prefer) ? prefer : (MAPS.find((m) => !m.noBoss && !m.onlineOnly) || MAPS[0]).id);
+export const bossFallbackMap = (prefer) => (mapBossOk(prefer) && mapListed(prefer) ? prefer : (MAPS.find((m) => !m.noBoss && !m.onlineOnly && mapListed(m.id)) || MAPS[0]).id);
 // Why a humans-only room can't start yet (null when it can, or when the stage allows bots): lobby = { map, players }
 export function noBotsStartBlock(lobby) {
   if (!lobby || !mapNoBots(lobby.map) || lobby.mode === 'practice') return null;   // (Practice: play on your own if you like)

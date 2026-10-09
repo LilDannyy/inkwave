@@ -6,7 +6,7 @@
 // together. In the match NetMatch (netmatch.js) does the replication.
 import { G, emit } from '../core/ctx.js';
 import { MAPS, WEAPONS, WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MATCH, ZONES, TOWER, BOT_NAMES, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock,
-  ROOM_TIMES, roomTime, roomBotPlan } from '../config.js';
+  ROOM_TIMES, roomTime, roomBotPlan, mapListed, listedMaps } from '../config.js';
 import { randomStyle } from '../game/character-style.js';
 import { Transport } from './transport.js';
 import { NetMatch } from './netmatch.js';
@@ -21,8 +21,8 @@ const subOf = (id) => (SUBS[id] ? id : null), specialOf = (id) => (SPECIALS[id] 
 // host ends it — docs/NET.md)
 export const ROOM_MODES = ['turf', 'zones', 'tower', 'boss', 'practice'];
 const modeOk = (m) => (ROOM_MODES.includes(m) ? m : 'turf');
-// the stages a mode can use (Boss Battle: never a noBoss stage)
-export const roomStages = (mode) => (mode === 'boss' ? MAPS.filter((m) => mapBossOk(m.id)) : MAPS);
+// the stages a mode can use (Boss Battle: never a noBoss stage; never a wip one — config wip, ?wipstages aside [b5-stages])
+export const roomStages = (mode) => (mode === 'boss' ? listedMaps().filter((m) => mapBossOk(m.id)) : listedMaps());
 const pick = (a) => a[(Math.random() * a.length) | 0];
 
 export class NetSession {
@@ -70,7 +70,7 @@ export class NetSession {
     // tower.js) | 'boss' (Boss Battle: everyone is one squad vs HULLBREAKER — docs/BOSS.md)
     // botCount: -1 = fill every empty spot, else that many (bots: true when there will be any — older clients read it);
     // live: the Practice session running right now ({ mode, map, time, gen }) — a joiner drops straight into it
-    const map = g?.mapDef?.id || MAPS[0].id;
+    const map = mapListed(g?.mapDef?.id) ? g.mapDef.id : MAPS[0].id;   // [b5-stages] (the backdrop's stage, unless it's wip)
     return { map, time: roomTime(g?.time || 'day'), duration: g?.settings?.matchLength || MATCH.defaultDuration, bots: !mapNoBots(map), botCount: mapNoBots(map) ? 0 : -1, difficulty: g?.settings?.difficulty || 'normal', palette: g?.paletteIndex?.() ?? 0, mode: 'turf', live: null, players: [], maxPlayers: TEAM * 2 };
   }
 
@@ -253,7 +253,7 @@ export class NetSession {
   setSettings(s = {}) {
     if (!this.isHost) return;
     const l = this.lobby, wasMap = l.map;
-    if (s.map === 'random' || (s.map && MAPS.some((m) => m.id === s.map))) l.map = s.map;
+    if (s.map === 'random' || (s.map && mapListed(s.map))) l.map = s.map;   // [b5-stages] (mapListed: a known stage, not wip)
     if (s.time) { const t = roomTime(s.time); if (t === s.time || s.time === 'dusk') l.time = t; }
     if (s.duration) l.duration = Math.max(60, Math.min(600, +s.duration | 0));
     if (s.difficulty && ['easy', 'normal', 'hard'].includes(s.difficulty)) l.difficulty = s.difficulty;
@@ -288,7 +288,7 @@ export class NetSession {
     };
     const pool = roomStages(mode).filter(ok);
     const fresh = pool.filter((m) => m.id !== except);
-    return (pick(fresh.length ? fresh : pool.length ? pool : MAPS) || MAPS[0]).id;
+    return (pick(fresh.length ? fresh : pool.length ? pool : listedMaps()) || MAPS[0]).id;
   }
 
   canStart() {
@@ -431,7 +431,7 @@ export class NetSession {
     while (used.has(slot)) slot++;
     const r = { nid: nm.nextNid(), owner: id, bot: false, team, slot, name: p.name, weapon: WEAPONS[p.weapon] ? p.weapon : 'shooter', sub: subOf(p.sub), special: specialOf(p.special), style: p.style || null };
     nm.addActorNet(r);
-    this.tr?.sendTo(id, { ...this._startCfg, k: 'start', roster: nm.liveRoster(), late: 1, pods: m.pods?.netSnapshot?.() || undefined });
+    this.tr?.sendTo(id, { ...this._startCfg, k: 'start', roster: nm.liveRoster(), late: 1, pods: m.pods?.netSnapshot?.() || undefined, stage: m.stage?.netSnapshot() || undefined });   // [b5-stagehooks] stage
     if (p.team !== team) { p.team = team; this._broadcastLobby(); }
     this._emit('practice', { phase: 'join', id, name: p.name });
   }
@@ -441,7 +441,7 @@ export class NetSession {
   practiceSwap({ map, time } = {}) {
     const cfg0 = this._startCfg;
     if (!this.isHost || this.state !== 'match' || !cfg0 || !cfg0.practice || !this.match) return false;
-    const mapId = map === 'random' ? this._randomMap('practice', cfg0.map) : MAPS.some((m) => m.id === map) ? map : cfg0.map;
+    const mapId = map === 'random' ? this._randomMap('practice', cfg0.map) : mapListed(map) ? map : cfg0.map;   // [b5-stages]
     const t = time === 'random' ? pick(ROOM_TIMES) : roomTime(time || cfg0.time);
     let roster = this.match.liveRoster();
     if (mapNoBots(mapId)) roster = roster.filter((r) => !r.bot);
