@@ -423,12 +423,12 @@ const VIADUCT = [
 const YARD_Y = 0.9, GY = 2.68;
 const YB = AL(alT(2.5, fArm(ARM_S)), 2.5), YC = AL(alT(2.5, fVia(0)), 2.5);
 export const YARD = [Q.A, YB, YC, Q.Q5];
-// the Hoki stair: x −27 … −24 (along the yard's east edge), its foot at z −32 (Hoki Lane), its top at z −25.5
-export const HOKI_STAIR = { x0: -27, x1: -24, zFoot: -32, zTop: -25.5 };
+// the Hoki stair: x −27 … −24 (along the yard's east edge), its foot at z −31.5 (Hoki Lane), its top at z −25.5
+export const HOKI_STAIR = { x0: -27, x1: -24, zFoot: -31.5, zTop: -25.5 };
 const HS = HOKI_STAIR;
-// the arm stair: on the arm's kerb (off −6 … −3), from along −39.4 (foot) up east to −32.6 (top), inside the 1880s /
-// today goods shed (along −40 … −32.6)
-export const ARM_STAIR = { a0: -39.4, a1: -32.6, o0: ARM_S, o1: ARM_S + 3, shed: [-40, -32.6] };
+// the arm stair: on the arm's kerb (off −6 … −3), from along −39 (foot) up east to −32.6 (top), inside the 1880s /
+// today goods shed (along −39.4 … −32.6)
+export const ARM_STAIR = { a0: -39.0, a1: -32.6, o0: ARM_S, o1: ARM_S + 3, shed: [-39.4, -32.6] };
 const AS = ARM_STAIR;
 // the garden's own outline (the yard minus the Hoki stair and the strip south of it): A → B → (on the alley edge at
 // x −27) → the stair's west side → its top → A
@@ -450,9 +450,9 @@ function splitPoly(poly, xs, zs) {   // insert a vertex wherever an edge crosses
 const yardCol = { color: '#4c4741', pattern: SURF.bluestone, roof: true, paint: false };
 // the signal yard's iron fence (the 1880s, today): 1.4 m of railing on the bed's edge (0.9 → 2.3), see-through (rail:
 // shots, ink, sight and squids pass), so nobody hops onto the bed from the street and HULLBREAKER's nav sees a wall
-// (review issue 3: without it the boss walked over the 0.9 m bed into Hoki Lane and on to the bases). Split where the
-// edges cross a tile line, each piece in its tile's group: the Signal Garden's deck and glass rails replace it (along
-// the Hoki stair, in the stair's group)
+// (review issue 3: without it the boss walked over the 0.9 m bed into Hoki Lane and on to the bases). Every era: in the
+// 3000s it is buried in the Signal Garden's edge (it tops out at 2.3, under the lawn); only the stretch along the Hoki
+// stair goes at jump 2 (in the stair's group: the stair is entered from Hoki Lane over its side)
 export const YARD_FENCE_LINES = [];
 const YARD_FENCE = (() => {
   const yp = splitPoly(YARD, GT_X, GT_Z), out = [], s = polyArea(yp) > 0 ? 1 : -1;
@@ -463,9 +463,10 @@ const YARD_FENCE = (() => {
     a = [a[0] + u[0] * 0.1, a[1] + u[1] * 0.1]; b = [b[0] - u[0] * 0.1, b[1] - u[1] * 0.1]; L -= 0.2;
     const cx = (a[0] + b[0]) / 2 + inw[0] * 0.1, cz = (a[1] + b[1]) / 2 + inw[1] * 0.1;
     const onStair = Math.abs(a[0] - HS.x1) < 0.2 && Math.abs(b[0] - HS.x1) < 0.2 && Math.min(a[1], b[1]) > HS.zFoot - 0.2 && Math.max(a[1], b[1]) < HS.zTop + 0.2;
-    const g = onStair ? 'garden-hs' : tileOf(cx, cz), h = i === yp.length - 1 && i % 2 === 0 ? 1.16 : i % 2 ? 1.4 : 1.28;   // (alternate: corner pieces never share a top)
-    out.push(O(+cx.toFixed(4), +cz.toFixed(4), 0.1, +L.toFixed(4), YARD_Y, YARD_Y + h, +((Math.atan2(dx, dz) * 180) / Math.PI).toFixed(4), rail({ tag: 'yard-fence', eras: '12', eraGroup: g })));
-    YARD_FENCE_LINES.push({ pos: [+cx.toFixed(3), YARD_Y, +cz.toFixed(3)], rotY: Math.atan2(dx, dz), len: +L.toFixed(3), h, eras: '12', eraGroup: g });
+    const h = i === yp.length - 1 && i % 2 === 0 ? 1.16 : i % 2 ? 1.4 : 1.28;   // (alternate: corner pieces never share a top)
+    const era = onStair ? { eras: '12', eraGroup: 'garden-hs' } : {};
+    out.push(O(+cx.toFixed(4), +cz.toFixed(4), 0.1, +L.toFixed(4), YARD_Y, YARD_Y + h, +((Math.atan2(dx, dz) * 180) / Math.PI).toFixed(4), rail({ tag: 'yard-fence', ...era })));
+    YARD_FENCE_LINES.push({ pos: [+cx.toFixed(3), YARD_Y, +cz.toFixed(3)], rotY: Math.atan2(dx, dz), len: +L.toFixed(3), h, ...era });
   }
   return out;
 })();
@@ -494,10 +495,11 @@ const SIGNAL_GARDEN = (() => {
   }
   const diag = (i) => { const a = gp[i], b = gp[(i + 1) % gp.length]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
   for (const d of bars(gp, { only: diag, level: (i) => GY - 0.1 - 0.09 * (i % 2), y0: YARD_Y - 0.1, opts: lawn('') })) { d.eraGroup = tileOf(d.center[0], d.center[2]); out.push(d); }
-  // glass rails along the open edges (1.0 m, rail), each in its tile; gaps: the arm stair's top, a drop gap to the alley
-  // (2.5 m), a drop gap to Prow Place (2 m), the Hoki stair's top; along the Hoki stair's side the rail stops 0.9 m short
-  // of its top
-  const n = gp.length, gaps = { arm: [AS.a1 - 1.8, AS.a1 + 0.2] };
+  // glass rails (1.0 m, rail), each in its tile, on the Prow Place / Hoki Lane side and along the Hoki stair (gaps: a 2 m
+  // drop gap to Prow Place, the stair's top; along its side the rail stops 0.9 m short of its top); the edges over the
+  // arm and over the alley are open — the arm stair's top, and a drop anywhere onto the street (fix round 2: the group
+  // limits, and more ways off the deck)
+  const n = gp.length;
   const railSeg = (a, b, inward, h = 1) => {   // a 0.12 m rail on the garden's side of the edge a → b, h tall
     let dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) return;
     a = [a[0] + (dx / L) * 0.1, a[1] + (dz / L) * 0.1]; b = [b[0] - (dx / L) * 0.1, b[1] - (dz / L) * 0.1]; dx = b[0] - a[0]; dz = b[1] - a[1]; L = Math.hypot(dx, dz);   // (0.1 m short of each end: corners never overlap)
@@ -510,8 +512,8 @@ const SIGNAL_GARDEN = (() => {
     // which stretches of this edge are open (no rail)
     let cuts = [];
     const onEdge = (P) => (P[0] - a[0]) * u[0] + (P[1] - a[1]) * u[1];
-    if (Math.abs(offOf(a[0], a[1]) - ARM_S) < 0.05 && Math.abs(offOf(b[0], b[1]) - ARM_S) < 0.05) { const t0 = onEdge(AO(gaps.arm[0], ARM_S)), t1 = onEdge(AO(gaps.arm[1], ARM_S)); cuts.push([Math.min(t0, t1), Math.max(t0, t1)]); }
-    if (Math.abs(dx + dz) < 1e-3 && L > 3) cuts.push([L / 2 - 1.25, L / 2 + 1.25]);                      // the alley edge's drop gap (mid-edge)
+    if (Math.abs(offOf(a[0], a[1]) - ARM_S) < 0.05 && Math.abs(offOf(b[0], b[1]) - ARM_S) < 0.05) continue;   // the arm edge: open (the arm stair's top, and a drop anywhere)
+    if (Math.abs(dx + dz) < 1e-3) continue;                                                                  // the alley edge: open (a drop anywhere)
     if (Math.abs(a[0] - HS.x1) < 1e-3 && Math.abs(b[0] - HS.x1) < 1e-3 && Math.abs(a[1] - HS.zTop) < 1e-3) cuts.push([2.6, 4.6]);   // the Prow Place drop gap
     if (Math.abs(a[1] - HS.zTop) < 1e-3 && Math.abs(b[1] - HS.zTop) < 1e-3) continue;                     // the Hoki stair's top: open
     if (Math.abs(a[0] - HS.x0) < 1e-3 && Math.abs(b[0] - HS.x0) < 1e-3) { const tTop = onEdge([HS.x0, HS.zTop]); cuts.push([tTop - 0.9, tTop + 0.5]); }
@@ -523,9 +525,11 @@ const SIGNAL_GARDEN = (() => {
   }
   // the two stairs (glass treads) and the arm stair's 1880s / today goods shed (2.3 m, roof, not inkable: cover on the
   // arm's kerb that becomes the stair: rule 19)
-  out.push(R([HS.x0 + 1.5, -0.02, HS.zFoot], [HS.x0 + 1.5, GY, HS.zTop], HS.x1 - HS.x0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-hs' }));
+  out.push(R([HS.x0 + 1.5, 0.05, HS.zFoot], [HS.x0 + 1.5, GY, HS.zTop], HS.x1 - HS.x0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-hs' }));
   { const [lx, lz] = AO(AS.a0, (AS.o0 + AS.o1) / 2), [hx, hz] = AO(AS.a1, (AS.o0 + AS.o1) / 2);
-    out.push(R([lx, -0.02, lz], [hx, GY, hz], AS.o1 - AS.o0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-as' })); }
+    out.push(R([lx, -0.02, lz], [hx, GY, hz], AS.o1 - AS.o0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-as', thin: true, thickness: 1.0 }));
+    // (a glass base under its top end, so nobody walks under it; a thin flight keeps the group within 8 m: ENGINE rule 3)
+    out.push(armBox(AS.a1 - 2, AS.a1, AS.o0, AS.o1, 0, 0.9, { tag: 'garden-stair-base', color: K.glass, pattern: PATTERN.glasstile, paint: false, eras: '3', eraGroup: 'garden-as' })); }
   out.push(armBox(AS.shed[0], AS.shed[1], AS.o0, AS.o1, 0, 2.3, { tag: 'goods-shed', color: K.hoard, pattern: PATTERN.wood, roof: true, paint: false, eras: '12', eraGroup: 'garden-as' }));
   // cover on the lawn: three planters (roof: nobody stands on them, so no top sees over the rails), 1.2 m
   for (const [x, z, w, d] of [[-30.4, -24.0, 2.4, 1.2], [-27.6, -21.2, 1.2, 1.2], [-29.2, -28.8, 1.2, 2.0]]) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
@@ -571,10 +575,13 @@ const EAST = [
   ...bld(7, 10.5, -27, -19, 7, { tag: 'shops', color: K.shop, pattern: PATTERN.brick }, BOT),
   ...bld(7, 10.5, -44, -31, 7, { tag: 'shops', color: K.shop, pattern: PATTERN.brick }, BOT),
   ...tierBoxes([P.degS, P.degN], 0.6, ground({ tag: 'degrayling', color: '#626a73' })),
-  B(10.5, 16.5, 0.6, 3.4, -24, -19.25, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, notIn: 'tower', eras: '1', eraGroup: 'crates-1' }),
-  B(10.5, 16.5, 0.6, 3.4, -19.25, -14.5, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, notIn: 'tower', eras: '1', eraGroup: 'crates-2' }),
-  OB(13.5, -21.4, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower', eras: '23', eraGroup: 'crates-1' })),
-  OB(13.5, -16.9, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower', eras: '23', eraGroup: 'crates-2' })),
+  // (fix round 2, DESIGN.md §6.2 #3's lever, review issue 1: the bots left the 1880s east side half bare — it was a
+  //  pocket behind a lane shut by crates. The produce stacks now fill the lane's east half only: a 3 m passage runs past
+  //  them, so the 1880s have a street-level left flank to 5 o'clock; today clears the stacks and widens it)
+  B(13.5, 16.5, 0.6, 3.4, -24, -19.25, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, notIn: 'tower', eras: '1', eraGroup: 'crates-1' }),
+  B(13.5, 16.5, 0.6, 3.4, -19.25, -14.5, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, notIn: 'tower', eras: '1', eraGroup: 'crates-2' }),
+  OB(15, -21.4, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower', eras: '23', eraGroup: 'crates-1' })),
+  OB(15, -16.9, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower', eras: '23', eraGroup: 'crates-2' })),
   OB(13.6, -41.4, 1.2, 1.2, 0.6, 1.6, 0, cover({ tag: 'cafe', color: '#7b6f60', notIn: 'tower' })),
   ...bld(16.5, 19.5, -44, -38, 7, { tag: 'bond-store', color: K.bond, pattern: SURF.bluestone }, BOT),
   // Centre Plaice's cover (the side zone)
