@@ -109,11 +109,24 @@ export function rasterRects(test, win, cell = CELL) {
 }
 
 // kerb bars inside the edges `only(i)` of `poly`, `w` wide, tops level(i), from y0
-export function bars(poly, { only, level, w = BARW, y0 = BOT, opts = {} }) {
-  const s = polyArea(poly) > 0 ? 1 : -1, out = [];
-  for (let i = 0; i < poly.length; i++) {
+// (trim: at a convex corner sharper than 90° the bar's end steps back w / tan(angle), so its inner corner stays inside
+//  the region instead of poking out across the next edge — fix round 3, the Signal Garden's bars over the street)
+export function bars(poly, { only, level, w = BARW, y0 = BOT, opts = {}, trim = false }) {
+  const s = polyArea(poly) > 0 ? 1 : -1, out = [], n = poly.length;
+  const back = (j) => {   // how far a bar steps back at vertex j (the interior angle there, if convex and under 90°)
+    if (!trim) return 0;
+    const p = poly[(j + n - 1) % n], v = poly[j], q = poly[(j + 1) % n];
+    const ax = v[0] - p[0], az = v[1] - p[1], bx = q[0] - v[0], bz = q[1] - v[1];
+    if ((ax * bz - az * bx) * s <= 0) return 0;                                   // reflex (or straight): no trim
+    const cosI = (-ax * bx - az * bz) / (Math.hypot(ax, az) * Math.hypot(bx, bz)), ang = Math.acos(Math.max(-1, Math.min(1, cosI)));
+    return ang < Math.PI / 2 - 1e-3 ? w / Math.tan(ang) : 0;
+  };
+  for (let i = 0; i < n; i++) {
     if (!only(i)) continue;
-    const [x0, z0] = poly[i], [x1, z1] = poly[(i + 1) % poly.length];
+    let [x0, z0] = poly[i], [x1, z1] = poly[(i + 1) % n];
+    { const L0 = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / L0, uz = (z1 - z0) / L0, b0 = back(i), b1 = back((i + 1) % n);
+      if (b0 + b1 > L0 - 0.3) continue;
+      x0 += ux * b0; z0 += uz * b0; x1 -= ux * b1; z1 -= uz * b1; }
     const dx = x1 - x0, dz = z1 - z0, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, nx = -uz * s, nz = ux * s;   // (n: inward)
     const cx = (x0 + x1) / 2 + (nx * w) / 2, cz = (z0 + z1) / 2 + (nz * w) / 2;
     const deg = (Math.atan2(dx, dz) * 180) / Math.PI;   // the bar's long side (local z) along the edge

@@ -132,8 +132,8 @@ const riverEdge = (x, z) => { const dx = E1[0] - E0[0], dz = E1[1] - E0[1], L = 
 // (a lower part, RAILYARD.low, if the layout names one: its cells are laid apart, at its own top)
 const LOW = RAILYARD.low, inLow = (x, z) => !!LOW && inPoly(LOW.poly, x, z);
 const bermCell = (x, z) => grow(RAILYARD.poly, x, z, 0.15) && riverEdge(x, z) > 1.2 && !RAILYARD.channels.some((c) => grow(c.poly, x, z, 0.25));
-const BERM = rasterRects((x, z) => bermCell(x, z) && !inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 });
-const BERM_LOW = LOW ? rasterRects((x, z) => bermCell(x, z) && inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 }) : { rects: [], miss: [] };
+const BERM = rasterRects((x, z) => bermCell(x, z) && !inLow(x, z), { x0: -63, x1: -19.5, z0: -85, z1: -27 });
+const BERM_LOW = LOW ? rasterRects((x, z) => bermCell(x, z) && inLow(x, z), { x0: -63, x1: -19.5, z0: -85, z1: -27 }) : { rects: [], miss: [] };
 const placements = [];
 for (const [rects, top] of [[BERM.rects, undefined], [BERM_LOW.rects, LOW?.top]]) for (const [x0, x1, z0, z1] of rects) placements.push({ type: 'bluestone_berm', pos: [+((x0 + x1) / 2).toFixed(3), 0, +((z0 + z1) / 2).toFixed(3)], size: [+(x1 - x0).toFixed(3), +(z1 - z0).toFixed(3)], top });
 // a block over a quad (a rectangle in the world or the arm's frame), turned with it (top: the low embankment's where the
@@ -168,6 +168,6 @@ placements.push({ type: 'bluestone_train', pos: [-46, 0, -72], cars: 2, color: '
 placements.push({ type: 'bluestone_train', pos: [-35.5, 0, -63], cars: 2, loco: true, color: '#6b5a48' });
 { const [x, z] = AL(9, -9); placements.push({ type: 'bluestone_signalbox', pos: [x, 0, z] }); }   // (the old signal box on the embankment behind Prawn Alley)
 // the signal yard's tracks (the 1880s, today: ballast on the yard's 0.9 m bed; the Signal Garden covers it in the 3000s)
-for (const [t, s] of [[6, 4.2], [9, 6.6], [12, 4.6]]) { const [x, z] = AL(t, s); placements.push({ type: 'bluestone_track', pos: [x, 0, z], rotY: (65 * Math.PI) / 180, len: 7, top: 0.84, eras: '12', eraGroup: tileOf(x, z) }); }
+for (const [x, z, len] of [[-28.5, -20.0, 4], [-29.4, -28.6, 4]]) placements.push({ type: 'bluestone_track', pos: [x, 0, z], rotY: (65 * Math.PI) / 180, len, top: 0.84, eras: '12', eraGroup: tileOf(x, z) });   // (fix round 3: the grown yard)
 export const BERM_MISS = [...BERM.miss, ...BERM_LOW.miss];
 export const PLACEMENTS = eraFilter(placements);
