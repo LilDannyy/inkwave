@@ -63,6 +63,7 @@
     ...K.torpedo._list.map((t) => ['torpedo', t.state, v4(t.pos), r4(t.hp)]),
     ...K.tracer._bolts.map((b) => ['tracer', b.state, v4(b.pos), b.bounces]),
     ...K.boomerang._items.map((it) => ['boomerang', it.state, v4(it.pos)]),
+    ...(K.glide.items || []).map((it) => ['glide', it.state, v4(it.p), r4(it.hp), r4(it.fuse)]),   // [b5-sub-glide]
   ];
   function snap() {
     rec.push(['f',
@@ -88,6 +89,7 @@
   const scaledNode = {
     bomb: (b) => b.mesh.children[0], shaker: (it) => it.m.model, waddle: (it) => it.m.model, torpedo: (t) => t.mesh.userData.model,
     tracer: (b) => b.head.children[0], boomerang: (it) => it.mesh.userData.spin.children[0],
+    glide: (it) => it.m.model,   // [b5-sub-glide]
   };
   function localSize(node) {
     node.updateWorldMatrix(true, true);
@@ -98,7 +100,7 @@
   const worldBox = (o) => { o.updateWorldMatrix(true, true); return new THREE.Box3().setFromObject(o, true); };
   const objOf = (kind) => {
     if (kind === 'bomb') return last(P.bombs);
-    const L = { shaker: K.shaker.items, waddle: K.waddle.items, torpedo: K.torpedo._list, tracer: K.tracer._bolts, boomerang: K.boomerang._items }[kind];
+    const L = { shaker: K.shaker.items, waddle: K.waddle.items, torpedo: K.torpedo._list, tracer: K.tracer._bolts, boomerang: K.boomerang._items, glide: K.glide.items }[kind];
     return L ? last(L) : last(G.subs.items.filter((it) => it.kind === kind));
   };
   const nodeOf = (kind, o) => (scaledNode[kind] || subModel)(o);
@@ -177,6 +179,14 @@
     },
     tracer(o) { aim(0, -0.1); step(3); put(foe, V(0.2, 0, 3), Math.PI); G.subs.use(me, SUBS.tracer); o.first(objOf('tracer')); run(70); },
     boomerang(o) { put(foe, V(0.8, 0, 1.3), Math.PI); G.subs.use(me, SUBS.boomerang); const it = objOf('boomerang'); o.first(it); run(480, () => it.state === 'dead'); },
+    // [b5-sub-glide] a tap down the deck: it clonks off the foe in its lane, slides back and blows; its shot ball probed
+    glide(o) {
+      put(foe, V(0.2, 0, -2), Math.PI);
+      G.subs.use(me, SUBS.glide); const it = objOf('glide'); o.first(it);
+      run(20); o.rest(it);
+      rec.push(['hitTop', edge((y) => shotAt(it.p, y), 0.02, 2), 'hitSide', edge((dz) => shotAt(it.p, 0.14, dz), 0, 2)]);
+      run(200, () => it.state === 'dead');
+    },
   };
 
   const FACTORS = { ...SUB_VIEW_SCALE };
@@ -245,7 +255,7 @@
         if (kind === 'sticky') {
           const gap = +(14 - bx.max.x).toFixed(4);
           R('sticky: the Cling Charge sits flush on its wall (model within 3 cm of the wall face, none of it inside)', Math.abs(gap) <= 0.03, { wallX: 14, modelMaxX: +bx.max.x.toFixed(4), gap, stuckAt: v4(o.pos) });
-        } else if (kind === 'curtain' || kind === 'sprinkler' || kind === 'beacon' || kind === 'mine' || kind === 'waddle' || kind === 'shaker' || kind === 'bomb') {
+        } else if (kind === 'curtain' || kind === 'sprinkler' || kind === 'beacon' || kind === 'mine' || kind === 'waddle' || kind === 'shaker' || kind === 'bomb' || kind === 'glide') {   // ([b5-sub-glide] glide)
           R(`${kind}: the drawn model rests on the floor (bottom within 3 cm)`, Math.abs(bx.min.y) <= 0.03, { floorY: 0, modelMinY: +bx.min.y.toFixed(4), modelTopY: +bx.max.y.toFixed(3) });
         }
       }

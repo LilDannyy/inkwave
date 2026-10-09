@@ -167,6 +167,30 @@ never trigger themselves), a Hop Beacon's jumps left, a Drip Curtain's ink after
 super jump onto a remote player's beacon goes to its owner through the same device-hit channel (`beaconUse`). The
 Waddle's windup is its `[5, gid, x, y, z]`.
 A kit's pose state (a Mitts leap, a held Brolly canopy) rides the actor tick (`netState` / `netApply`).
+`[b5-sub-glide]` A device hit names its attacker: `{k:'dh', kind, id, d, a}` (`a`: the shooter's nid, when known — the
+kit's `netHurt(id, dmg, by)` gets that actor on the owner's screen, or null; older senders leave it out). A player who
+leaves takes their kit objects with them: `onLeave` (before the squidkid is re-owned, on every screen) and `_remove`
+call `SUB_KITS[k].dropOwner(actor)` for each of their squidkids (bots included), which ends their objects there quietly
+(no blast, no paint, no `'device:down'`).
+
+**Glide Bomb** (`src/game/kits/glide.js`, kit kind `glide`). The owner simulates; records `['k', nid, 'glide', …]`:
+- `[5, level]` — the cook in the hand reached a level (1 / 2 / 3 at cook 0.6 / 1.2 / 1.8 s, i.e. held 0.75 / 1.35 /
+  1.95 s); `[5, 0]` when a cook in the hand fizzles (splatted, dived, any interrupted hold). Other screens show the
+  held stone's lamps (8 / 5 / 3 / 1), the team glow round the fist and the fuse sizzle (within 12 m) at that level; the
+  actor tick's `subAim` flag ends it (level 0 when it drops). No new tick bits.
+- `[0, gid, x, y, z, vx, vz, fuse, R]` — released: where it was set down, its slide velocity, the fuse left and the blast
+  radius (the cook is decided). Every screen slides its copy with the same step function at a fixed 1/60 s step through
+  an accumulator (≤ 6 steps a frame), so the frame rate never changes where it goes.
+- `[4, gid, x, y, z, vx, vz, fuse]` — the owner's word at every bounce and every 0.25 s (the players it bounces off
+  differ per screen): a ghost eases onto it (`k = 1 − e^(−14 dt)`; snaps beyond 3 m) and takes its velocity and fuse.
+- `[1, gid, x, y, z]` — the blast (the look there; paint and damage are the owner's).
+- `[2, gid, why]` — an end without a blast: 0 sank, 1 popped (shot down), 2 smashed (a Mega Stamp's guard).
+A ghost never paints, hurts, blows or pops by itself: at the end of its fuse it holds, pulsing, until the owner's word
+(2 s at most). Enemy fire on a ghost goes to the owner (`netHurt(owner, 'glide', gid, dmg, by)`; while `netMuted()` — a
+ghost's shot or blast being replayed — it only flashes). A Mega Stamp's guard that smashes a ghost on the stamper's
+screen ends it there at once and tells the owner on the `glideSmash` channel. Players in the blast are judged on the
+owner's screen and applied by each victim's owner (`applyHit`, as every bomb). Tested by
+`tools/botlab/tests/net-sub-glide.cjs` (`CLIENTS=2`).
 Statuses: every screen's ghost subs track / poison the players they touch there too (the timers run out on remote
 players as well); the owner's own word — tracked, poisoned — rides the actor tick's flags (`F.tracked`, `F.poisoned` →
 `a.netStatus`), so the tracked look and the poison bubbles (src/game/statusFx.js) show on every screen while they last.
