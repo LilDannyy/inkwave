@@ -18,7 +18,7 @@ import { getWeaponDef } from './character-weapons.js';
 import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
 import { rumble } from './actor.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
-import { KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';
+import { KIT_GHOSTS, SUB_KITS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';   // ([b5-sub-glide] SUB_KITS: the Stamp's smash)
 import { teamKnown } from './botSight.js';
 import { joinChain, shareShield, shieldNet, chainPrompt } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain
 
@@ -1742,6 +1742,8 @@ const IMPL = {
         if (it.pos.distanceTo(_v.copy(a.pos).setY(ay)) > d.bombClearR || !stampFront(a, s, it.pos, d.deflectArc)) continue;
         G.subs._destroy(it);
       }
+      // [b5-sub-glide] kit bombs in front (the Glide Bomb: SUB_KITS[k].smash, SPEC §0.5)
+      for (const k in SUB_KITS) SUB_KITS[k].smash?.(_v.copy(a.pos).setY(ay), d.bombClearR, a.team, (p) => stampFront(a, s, p, d.deflectArc));
     },
     slam(a, s, radius, reach) {
       const f = stampFwd(s);

@@ -182,6 +182,7 @@
   scale: calc(1 + var(--bl, 0) * .14); }
 .iw-xh.is-target .iw-ret { color: var(--enemy); scale: 1.14; filter: drop-shadow(0 0 1.2px #fff) drop-shadow(0 0 1.2px #fff) drop-shadow(0 0 3px rgba(0, 0, 0, .55)); }
 .iw-ret.is-hitflash { animation: iw-ret-hit .18s ease-out; }
+.iw-ret.is-locked { opacity: .4; }   /* [b5-sub-glide] the main weapon locked by the held sub (a cooking Glide Bomb) */
 @keyframes iw-ret-hit { 0% { color: #fff; filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 1px #000); scale: 1.12; } }
 .iw-ret.is-killflash { animation: iw-ret-kill .45s var(--spring); }
 @keyframes iw-ret-kill { 0% { color: var(--self-light); scale: 1.45; rotate: 45deg; } }

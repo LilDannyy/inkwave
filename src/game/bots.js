@@ -2501,6 +2501,7 @@ export class BotBrain {
     const a = this.a, dx = d.pos.x - a.pos.x, dz = d.pos.z - a.pos.z, dh = Math.hypot(dx, dz);
     const dy = d.pos.y + d.aimY - (a.pos.y + 0.8);
     if (dh > 18 || Math.abs(dy) > 6) return 0;
+    if (d.slider) return d.score(a);   // [b5-sub-glide] a Glide Bomb: in its stop disc, or on its lane ahead (kits/glide.js)
     const st = d.state, mine = d.target === a;
     if (st === 'fly') {
       // still in the air after the throw: a human sees it coming, so it's noticed now (the reaction time runs during its
@@ -2579,7 +2580,7 @@ export class BotBrain {
       if (score < pd) { if (mine || dh < 4) this._thrDrift(d, move, 0.6); return null; }
     }
     // far off / out of reach and not about to arrive: carry on, edging away from it
-    const urgent = d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';
+    const urgent = d.slider ? d.urgent(a) : d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';   // ([b5-sub-glide] slider)
     if (!canShoot && !waitIn && !urgent) { this._thrDrift(d, move, 0.5); return null; }
     const act = canShoot || waitIn ? 'shoot' : 'evade', bit = act === 'shoot' ? 1 : 2;
     if (!(this.thrActs & bit)) { this.thrActs |= bit; THREAT_STATS[act]++; }
@@ -2636,6 +2637,7 @@ export class BotBrain {
   _thrEvade(d, dt, move, it, ttl) {
     const a = this.a;
     if (!d.ground && d.state === 'launch' && ttl < 0.55) { this._thrSidestep(d, move, it, ttl < 0.35); return; }
+    if (d.slider) { this._thrSidestep(d, move, it, false); return; }   // [b5-sub-glide] step off a Glide Bomb's line (its stop disc: botSpecials' escape)
     this.thrEvT -= dt;
     if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); }
     move.set(Math.sin(this.thrEvYaw), 0, Math.cos(this.thrEvYaw));

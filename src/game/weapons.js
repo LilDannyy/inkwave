@@ -34,6 +34,10 @@ export const POD_HINT = { charger: 4.5, flick: 7.5, drop: 1.6 };
 // trigger('shoot', HAND_*) arg for dual wield (character.js reads .hand; valueOf keeps numeric readers at 1)
 const HAND_R = Object.freeze({ hand: 0, valueOf() { return 1; } }), HAND_L = Object.freeze({ hand: 1, valueOf() { return 1; } });
 
+// [b5-sub-glide] the runner's input with the trigger masked (a sub that locks the main weapon): one reused object
+const _lockInp = { fire: false, firePressed: false, sub: false, subReleased: false };
+function lockedInp(inp) { Object.assign(_lockInp, inp); _lockInp.fire = false; _lockInp.firePressed = false; return _lockInp; }
+
 // ---------------------------------------------------------------------------------------------- per-actor runner
 export class WeaponRunner {
   constructor(actor) {
@@ -61,6 +65,7 @@ export class WeaponRunner {
     this.slosh = -1; this.streaming = false; this.burstDur = 0; this.burstFrac = 0;
     this.spinLoop?.stop(0.08); this.spinLoop = null;
     this.kit = null;   // kit weapons (kits/*.js) keep their per-runner state here
+    this.subSpent = false; this.mainLocked = false;   // [b5-sub-glide] (SPEC §0.5: a held press already used; the sub locks the main weapon)
     MAIN_KITS[this.a?.weapon?.kind]?.reset?.(this);
   }
   onDeath() { this.reset(); }
@@ -68,16 +73,18 @@ export class WeaponRunner {
   // doing — a charge (no shot, no ink spent), a splatling / spinner stream, a flick / swing / slosh wind-up, the sub held
   // ready to throw (not thrown). Dodge rolls and the post-roll turret keep the body (brief, committed moves); kit weapons
   // cancel their own through MAIN_KITS[kind].cancel?(runner). True when anything was dropped.
-  cancelForSwim() {
+  // ([b5-sub-glide] keepSub: drop the weapon's own business only, not the sub held ready — dropCharge, SPEC §0.5)
+  cancelForSwim(keepSub = false) {
     let did = false;
     if (this.charging) { this.charging = false; this.charge = 0; this.chargeT = 0; this.chargeLoop?.stop(0.05); this.chargeLoop = null; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }   // (a splatling's charge hum is its spinLoop)
     if (this.streaming || this.burstT > 0) { this.streaming = false; this.burstT = 0; this.burstPower = 0; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }
     if (this.flick >= 0) { this.flick = -1; did = true; }
     if (this.slosh >= 0) { this.slosh = -1; did = true; }
-    if (this.aimingSub) { this.aimingSub = false; did = true; }
+    if (this.aimingSub && !keepSub) { this.aimingSub = false; did = true; }
     if (MAIN_KITS[this.a.weapon?.kind]?.cancel?.(this)) did = true;
     return did;
   }
+  dropCharge() { return this.cancelForSwim(true); }   // [b5-sub-glide] a charge / stream / wind-up let go without firing; the sub stays in hand
   busy() { return this.charging || this.flick >= 0 || this.burstT > 0 || this.dodgeT > 0 || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.busy?.(this); }
   firingPose() { return this.firingT > 0 || this.charging || this.flick >= 0 || this.rolling || this.burstT > 0 || this.turret || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.firingPose?.(this); }
   moveSpeed() {
@@ -127,6 +134,15 @@ export class WeaponRunner {
 
   update(dt, inp) {
     const a = this.a, w = a.weapon;
+    // [b5-sub-glide] the sub first (SPEC §0.5): one held that locks the main weapon (a cooking Glide Bomb) masks the
+    // trigger; the frame the lock starts, a charge / stream / wind-up is dropped without firing (the sub stays in hand)
+    const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
+    const sub = bar ? bar.bomb : (a.sub || SUB.bomb);
+    const SK = SUB_KITS[sub.kind];
+    const locked = !!SK?.lockMain?.(this);
+    if (locked && !this.mainLocked) this.dropCharge();
+    this.mainLocked = locked;
+    if (locked) inp = lockedInp(inp);
     this.cooldown -= dt; this.emptyCd -= dt; this.rumbleT -= dt;
     this.firingT = Math.max(0, this.firingT - dt);
     this.flickRecover = Math.max(0, this.flickRecover - dt);
@@ -148,12 +164,12 @@ export class WeaponRunner {
       default: MAIN_KITS[w.kind]?.update(this, dt, inp, w);   // kit weapons (kits/*.js)
     }
     // ---- sub weapon (the actor's own: the Splat Bomb here, everything else via G.subs). Bomb Barrage: its bomb,
-    // no ink, as fast as its throw gap allows
-    const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
-    const sub = bar ? bar.bomb : (a.sub || SUB.bomb);
-    const SK = SUB_KITS[sub.kind];
+    // no ink, as fast as its throw gap allows ([b5-sub-glide] bar / sub / SK: computed at the top)
+    // [b5-sub-glide] a held press already used (the Glide's slip threw while the button was still down): no new hold, the
+    // release throws nothing; cleared once the button is up
+    if (this.subSpent) { this.aimingSub = false; if (!inp.sub && !inp.subReleased) this.subSpent = false; }
     if (this.aimingSub && SK?.hold) SK.hold(this, dt, inp, sub);   // charge-up subs
-    if (inp.sub && !this.aimingSub) {
+    if (inp.sub && !this.aimingSub && !this.subSpent) {
       this.aimingSub = true;
       if (!bar && a.ink < sub.inkCost && a.isLocal) { G.audio?.play('low_ink'); emit('lowink', { actor: a, need: sub.inkCost }); }
     }

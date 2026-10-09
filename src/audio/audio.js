@@ -42,7 +42,7 @@ const cueGain = (v) => CUE_BOOST * Math.pow(Math.min(1.5, Math.max(0, +v || 0)),
 // code plays itself (a Vortex Strike's launch, a Cheer Orb's blast, a kit sub's bounce …) — not a Crab Rig's gatling
 // (a gun, like the other weapons)
 let CUE_SET = null;
-const KIT_CUE = /^(torpedo|tracer|boomerang|waddle|shaker)_/, NOT_CUE = new Set(['crab_gatling']);
+const KIT_CUE = /^(torpedo|tracer|boomerang|waddle|shaker|glide)_/, NOT_CUE = new Set(['crab_gatling']);   // ([b5-sub-glide] glide_)
 export function isCue(name) {
   if (!CUE_SET) CUE_SET = new Set([...SFX_GROUPS.Subs, ...SFX_GROUPS.Specials, ...SFX_GROUPS.Flight, ...SFX_GROUPS['Special alerts'], ...SFX_GROUPS['Special stings'],
     'bomb_throw', 'bomb_beep', 'bomb_explode', 'special_slam', 'storm_rain', 'storm_thunder']);

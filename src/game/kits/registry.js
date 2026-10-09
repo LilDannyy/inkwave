@@ -43,6 +43,15 @@ import { G } from '../../core/ctx.js';
 //                                        ground (walks on the ground), live, state, hp, shootable, locked, target (the
 //                                        actor it tracks, or null) } + kind extras (waddle: senseRadius, left;
 //                                        torpedo: lockRange, hover)
+//                                      [b5-sub-glide] slider: true (a Glide Bomb sliding along the floor): fuse, stopAt (its
+//                                        predicted stop), score(bot actor) → number and urgent(bot actor) → bool, which
+//                                        bots.js _threatScore / _threatCtl use for it in place of the walkers' / flyers' rules
+//   [b5-sub-glide] (SPEC §0.5; the other batch-5 subs add theirs beside these)
+//   lockMain?(runner) → bool           the held sub locks the main weapon (weapons.js: read at the top of the runner's update;
+//                                      the frame it starts, a charge / stream / wind-up is dropped without firing — dropCharge)
+//   smash?(c, r, team, front(pos) → bool)  a Mega Stamp's swing guard at c (reach r) smashes the kit's enemy bombs in front of it
+//   dropOwner?(actor)                  online: a player who left takes this kit's objects with them (netmatch onLeave / _remove)
+//   prompt?(actor) → string | null     a light-tutorial hint for the local player (main.js; richText: [RMB], {RB} …)
 // }
 //
 // Online (src/net/netmatch.js), any kit:
@@ -51,7 +60,8 @@ import { G } from '../../core/ctx.js';
 //                                      (netmatch mutes paint while ghost() runs; the kit keeps muting in its own tick for
 //                                      ghost objects) and never hurts (a remote attacker's hits are dropped). Shields /
 //                                      curtains stay solid (they block the local player's shots like the owner's do).
-//   netHurt?(id, dmg)                  the owner's side of a device hit made on another screen (registry netHurt)
+//   netHurt?(id, dmg, by?)             the owner's side of a device hit made on another screen (registry netHurt; [b5-sub-glide]
+//                                      by: the shooter's actor on the owner's screen, or null)
 //   MAIN_KITS only: netState?(runner) → int   the pose / state bits other screens need (packed each tick)
 //                   netApply?(runner, bits, dt)   a remote runner: rebuild runner.kit from those bits
 // KIT_GHOSTS[kind] = { ghost } — ghost-only entries for things that aren't a main or sub kit (e.g. a special's objects)
@@ -65,7 +75,8 @@ let _seq = 0;
 export function netId(owner) { return owner && owner.nid !== undefined ? owner.nid * 100000 + (++_seq % 100000) : 0; }
 // a non-owner damaged a ghost device (a remote player's sprinkler, curtain, waddle …): the owner's copy takes it.
 // (kind: 'subs' for SubSystem items, else the kit kind — its netHurt(id, dmg) applies it on the owner's screen)
-export function netHurt(owner, kind, id, dmg) { if (id && dmg > 0) G.netm?.sendDevHit?.(owner, kind, id, dmg); }
+// ([b5-sub-glide] by: who hit it — its nid rides the message, SPEC §0.4)
+export function netHurt(owner, kind, id, dmg, by) { if (id && dmg > 0) G.netm?.sendDevHit?.(owner, kind, id, dmg, by); }
 // run fn with paint muted when obj is a ghost (a remote player's copy): its splats are the owner's to send
 // true while a ghost (a remote player's replayed shot / bomb / sub) is being simulated: its damage to devices counts for
 // nothing here — the owner's own copy hits our ghost of the device and that hit arrives by netHurt

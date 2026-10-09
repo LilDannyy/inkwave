@@ -1708,6 +1708,8 @@ export class HUD {
     const tr = !!f.tracked, po = !!f.poisoned;
     if (tr !== L.stTr) { L.stTr = tr; this.statusEl.classList.toggle('show-tracked', tr); }
     if (po !== L.stPo) { L.stPo = po; this.statusEl.classList.toggle('show-poison', po); this.poisonVig.classList.toggle('is-on', po); }
+    const lk = !!f.mainLocked;   // [b5-sub-glide] a held sub locks the main weapon (a cooking Glide Bomb): the reticle dims
+    if (lk !== L.mLock) { L.mLock = lk; this.ret.classList.toggle('is-locked', lk); }
     const aim = !!(a && a.alive && a.weaponRunner && a.weaponRunner.aimingSub) || !!f.subAim;
     if (aim !== L.aim) { L.aim = aim; this.subChip.classList.toggle('is-on', aim); if (aim) this._snd('ui_toggle', { volume: 0.35 }); }
     if (aim) {
