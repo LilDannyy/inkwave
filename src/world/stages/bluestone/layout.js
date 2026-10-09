@@ -19,17 +19,17 @@
 //   • centre lane: Swimston Street (14 m: trams, the superstop median, the GPO steps, verandas)
 //   • right (−x): the balcony walk (the hotel gallery, 2.4), Hotel Lane → the hotel arch (from today also the Royal
 //     Arcade), Hoki Lane under the railway viaduct → Prow Place → Alpha's arm of Flathead Street, out to the tram
-//     terminus at its tip (fix round 3: the X restored); from the tip Prawn Alley runs back to Hoki Lane round the
-//     signal yard
+//     terminus at its tip (fix round 3: the X restored; round B fix 1: the tram waits at the last stop, the tip's middle
+//     is the terminus's sidings); from the tip Prawn Alley runs back to Hoki Lane round the signal yard
 //   • left (+x): Little Lane, Degrayling Lane (its north end half stacked with crates in the 1880s) and Centre Plaice
 //     (the side zone), the Boathouse (deck 2.4), the quay; from today the riverside boardwalk and the Iron Bridge to
 //     Bravo's arm
 //   • the 3000s add the Halo (3.5 m; via glass stairs out of the superstops and the hotel stair from the balcony
 //     landing) and the Signal Garden (a 1.2 m park terrace over each team's signal yard, stepped onto from the arm, the
-//     alley, Prow Place and Hoki Lane)
+//     alley, Prow Place and Hoki Lane, and walked up two ramps from Prow Place and Hoki Lane: round B fix 1)
 //   • spawn: the Cable Tram Engine House's gallery (3.3) over the forecourt terrace (1.0) with the turntable, between
 //     the boiler house and the tram shed
-// Heights: 0 streets · 0.3 tram islands · 0.6 Degrayling pavements, the arcade · 0.9 the signal yard (off limits) ·
+// Heights: 0 streets · 0.3 tram islands · 0.6 Degrayling pavements, the arcade · 0.9 the signal yard, the sidings (off limits) ·
 // 1.0 the forecourt terrace · 1.2 the GPO terrace, the Signal Garden · 1.3 the concourse · 1.4 the terminus platform ·
 // 2.4 the balcony and gallery, the Boathouse deck · 3.3 the spawn decks · 5.4 the Halo.
 import { PATTERN, B, R as R0, O, OCT } from '../../mapkit.js';
@@ -627,6 +627,7 @@ const ARM = [
   armCover(SIDINGS.a0 + 0.7, 1.2, 1.8, 1.2, SIDINGS.y, SIDINGS.y + 1.2, { tag: 'buffer-stop', color: '#5b5048', roof: true }),
   armCover(SIDINGS.a1 - 1.6, -3.9, 1.2, 1.8, SIDINGS.y, SIDINGS.y + 1.2, { tag: 'ground-frame', color: K.iron, pattern: PATTERN.metal, roof: true }),
   // on the platform: the terminus shelter (roof) against the river rail, a stack of mail sacks and crates at its east end
+  // (round B fix 1: on the river side too, clear of the platform's view over the sidings toward Prow Place)
   armCover(-52.5, 8.6, 1.0, 3.5, T.y, T.y + 2.2, { tag: 'terminus-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
   armCover(-49.2, 8.4, 1.2, 1.4, T.y, T.y + 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   // the street at the tip: a bollard pair at the south lane's mouth (the turning area's cover is the buffer stops)
