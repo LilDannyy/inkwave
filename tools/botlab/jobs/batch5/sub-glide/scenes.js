@@ -1,8 +1,11 @@
 // [b5-sub-glide] pictures of the Glide Bomb, for tools/botlab/hud-shots.cjs:
 //   MAP=halyard PLAY=2 W=1280 H=720 SCENES=tools/botlab/jobs/batch5/sub-glide/scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
-//   held     the stone in a kid's hand, cooking (its lamps going out, the team glow round the fist), seen from the front
+//   held     the stone in a kid's hand, cooking (its lamps going out, the team glow round the fist), carried low by its
+//            handle beside the hip, seen from the front
 //   guide    the player's view while cooking: the aim guide (the dashed lane, the blast ring at its stop), the HUD cook bar,
 //            the reach in the sub chip, the reticle dimmed (the main weapon locked)
+//   enemy    a foe 8 m ahead cooking one, from our eyes (the stone low at its hip, its glow)
+//   roll     the underhand roll on the release (side view)
 //   slide    a stone sliding: its curl, its lamps, the inked lane behind it, its size ring riding with it
 //   fuse     its last 0.8 s: the Splat Bomb's danger ring, beep pulses
 //   blast    the blast (full cook: R 3.2)
@@ -40,8 +43,7 @@
       if (M.current) { M.show(null); await wait(500); }
       g.hud?.setVisible?.(false); reset();
       hold = true; step(78);   // (held 1.3 s: cook 1.15 — half the lamps out, the glow up)
-      const h = new THREE.Vector3(); me.character.bones.handL.getWorldPosition(h);
-      cine(at(1.7, 1.6, 1.75), h.clone().lerp(at(0, 0, 1.3), 0.3), 36);
+      cine(at(2.0, -0.9, 1.2), at(0, -0.2, 0.6), 44);   // (in front, on its left: carried low by its handle beside the hip)
       step(1);
       return { cook: me.weaponRunner.glide?.cook, lv: K.levelShown(me) };
     } },
@@ -49,6 +51,26 @@
       g.hud?.setVisible?.(true); reset(); g.settings.fov = 70; g.rig.follow(me, true); g.rig.yaw = P.yaw; g.rig.pitch = -0.32;
       hold = true; step(60);   // (held 1.0 s: cook 0.85 — the lane to its stop, the bar a half, "12 m")
       return { chip: g.hud?.subChip?.lastChild.textContent, locked: me.weaponRunner.mainLocked };
+    } },
+    { name: 'enemy', wait: 300, set: async () => {
+      g.hud?.setVisible?.(false); reset();
+      // a foe 8 m ahead cooking one (held 1.4 s: cook 1.25, level 2), seen from our eyes: the stone low at its hip, its glow
+      const f = others.find((a) => a.team !== me.team), u0 = f.bot.update;
+      f.setSub('glide'); f.ink = 100; f.pos.copy(at(8)).setY(P.y + 0.02); f.vel.set(0, 0, 0); f.yaw = f.aimYaw = P.yaw + Math.PI; f.aimPitch = -0.1;
+      if (f.bot) { f.bot.aimYaw = f.aimYaw; f.bot.aimPitch = -0.1; }
+      f.bot.update = () => { zero(f); f.intent.sub = true; };
+      step(84);
+      cine(at(0, 0, 1.55), at(8, 0, 0.8), 45);
+      step(1);
+      const r = { cook: f.weaponRunner.glide?.cook, lv: K.levelShown(f) };
+      f.bot.update = u0; return r;
+    } },
+    { name: 'roll', wait: 120, set: async () => {
+      g.hud?.setVisible?.(false); reset();
+      hold = true; step(40); hold = false; step(7);   // (the underhand roll, 7 frames after the release)
+      cine(at(0.5, -3.0, 1.1), at(0.6, 0, 0.55), 48);   // (from its left side)
+      step(1);
+      return { stone: !!lastStone() };
     } },
     { name: 'slide', wait: 300, set: async () => {
       g.hud?.setVisible?.(false); reset(); g.settings.fov = 70; g.rig.follow(me, true);
