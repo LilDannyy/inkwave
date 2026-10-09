@@ -643,13 +643,20 @@
     R('looks: the Tubeway draws in ≤ 8 meshes (glass back + front, hardware, rings, fans, flaps, signs + floor arrows, the deck light) and the grade only while on', meshes.length <= 8 && !W.looks.uw.visible, { meshes });
     R('looks: the glass is ≤ 120 k triangles with its hardware', W.looks.tris < 120000, { tris: Math.round(W.looks.tris) });
     // a rider glows in the tube in its team colour (the glass shader's uRide carries it)
-    const A6 = M.local || M.actors[0];
+    const A6 = M.actors.find((a) => !a.isLocal && a.team === 0) || M.actors[0], me6 = M.local;
     for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
     const ex = P.legs.find((l) => l.id === 'express');
     atApproach(A6, ex.ends[0], 0.1); pushIn(A6, ex.ends[0]); step(0.6);
     const U = W.looks.uniforms.uRide.value[0], on = W.looks.uniforms.uRideOn.value[0];
-    R('looks: a rider lights its tube in its team colour (uRide: its leg, its arc position, its team)', U.x === ex.i && Math.abs(U.y - A6.pipe.s) < 0.5 && U.z === A6.team && on === 1, { leg: U.x, s: U.y, team: U.z });
+    R('looks: a rider lights its tube in its team colour (uRide: its leg, its arc position, its team), full strength on everyone else\'s screen', U.x === ex.i && Math.abs(U.y - A6.pipe.s) < 0.5 && U.z === A6.team && on === 1, { leg: U.x, s: U.y, team: U.z, on });
     rideOut(A6);
+    if (me6) {
+      const gl = P.legs.find((l) => l.id === 'gulper'); me6.pipeCd = 0;
+      atApproach(me6, gl.ends[0], 0.1); pushIn(me6, gl.ends[0]); step(0.5);
+      const on2 = W.looks.uniforms.uRideOn.value[0];
+      R('looks: on the rider\'s own screen its own glow is dimmed (0.35)', Math.abs(on2 - 0.35) < 0.01, { on: on2 });
+      rideOut(me6);
+    }
   } catch (err) { R('ERROR in a part: ' + err.message, false, String(err.stack).split('\n').slice(0, 4)); }
 
   // ============================================================================================ a stage without the key
