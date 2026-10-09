@@ -179,6 +179,19 @@ Matches: match.cjs `SPECIALS='all=surf'` / `'team0=surf'` (and a `SURF` line: us
 bots' jumps). Pictures: `tools/botlab/jobs/surf/shots.sh` (scenes/surf.js), the results screen with assists
 (scenes/surf-results.js) and the HUD / loadout (scenes/surf-hud.js) through hud-shots.cjs.
 
+Deployables (src/game/deployables.js, its bots src/game/deployables-bots.js, its sounds src/audio/sfx-deploy.js: enemy
+fire of every kind wears down Hop Beacons, Twirl Sprinklers, Skitter Bombs and the Surf N' Turf buoy; the tower crushes
+sprinklers, beacons, Drip Curtains and buoys in its way and pushes a Lurk Mine aside; every placed / stuck device rides
+any moving floor; bots shoot enemy devices with nothing better to do, never into a noticed danger):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/deployables.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=matrix,own,down,pop,looks,beam,standing,net,bots,sounds,floors'`), and the same with `MODE=tower
+PAGE_ARGS='only=tower'`, `MAP=calamari PAGE_ARGS='only=rail'`, `MAP=podbox PAGE_ARGS='only=hedge'`. Online on two
+clients: `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-deploy.cjs tools/botlab/run.sh
+tools/botlab/netpage.cjs` (and `NET_ARGS='scene=tower'`; `'scene=leave'`: the host leaves). Pictures: scenes/deploy.js
+through hud-shots.cjs (`MAP=halyard MODE=tower PLAY=2`). Matches: match.cjs / tower-match.cjs print a `DEPLOY` line (hits,
+shot down, crushed, Skitter Bombs thrown / popped, the bots' seconds in device mode per bot, picks / re-picks / give-ups);
+`DEV_AI=0` turns the bots' device shooting off (an A/B).
+
 Audio cues (src/audio/cues.js, src/audio/sfx-cues.js, src/audio/sfx-alerts.js — every sub and special by ear: its
 sound at each phase, one positional loop per moving thing, a gliding flight for every thrown sub, warnings before the big
 blasts, launch alerts / "you're in it" alarms / stings for the enemy's specials, the enemy's louder than yours):

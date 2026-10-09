@@ -963,6 +963,7 @@ export class Actor {
       _v.copy(a.pos); _v.y += 0.8;
       if (G.physics.los(_v2.copy(c).setY(c.y + 0.8), _v)) G.projectiles.applyHit(this, a, dmg, 'slam');
     }
+    G.subs?.damageArea(_v.copy(c).setY(c.y + 0.5), sp.radius, 60, this.team, this);   // [b5-deploy] enemy devices (and special objects) in the slam
   }
 
   addTurfNoSpecial(area) { if (area > 0) { this.stats.turf += area; emit('turf', { actor: this, area }); } }

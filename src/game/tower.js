@@ -480,6 +480,7 @@ export class TowerCommand {
     for (const c of this.cps) { const p = c.cleared ? 1 : 1 - c.left / (c.dur || 1); if (p > c.best) c.best = p; }
     this._place(dt);
     this._carry(before);
+    if (this.s !== before) G.deploy?.crush(this);   // [b5-deploy] its body destroys the sprinklers, beacons, curtains and buoys in its way
     this._score();
     this._fillSpecials(dt);
     if (this.follower) { if (this.overtime) this.overtimeT += dt; return; }

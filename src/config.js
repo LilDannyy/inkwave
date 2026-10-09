@@ -361,7 +361,7 @@ export const SUBS = {
     inkCost: 40, throwSpeed: 16, radius: 2.1, directDamage: 60, splashDamage: 35, paintRadius: 1.8,
   },
   seeker: {
-    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late.',
+    id: 'seeker', name: 'Skitter Bomb', kind: 'seeker', blurb: 'Scuttles after the nearest foe, laying a swimmable ink trail, and bursts a moment after it reaches them. It turns wide: sidestep it late, or pop it with a shot.',   // [b5-deploy] (… or pop it with a shot: deployables.js)
     // turnRate: rad/s (1.75 ≈ 100°/s: a ~3.6 m turning circle at full speed; was 5); commitDist: dashes straight (no
     // steering) once this close and lined up; creep: how much it slows turning onto a slow / standing target.
     // speed 6.3 (was 7): only just faster than a run (6), so a foe who sidesteps and keeps running gets away instead
@@ -371,6 +371,11 @@ export const SUBS = {
     // for skitter / waddle / mine bombs"; the same windup on all three)
     inkCost: 65, throwSpeed: 9, speed: 6.3, seekRange: 15, life: 4.5, trailRadius: 0.6, triggerDist: 1.2, turnRate: 1.75, commitDist: 2.5, creep: 0.6,
     delay: 0.45, radius: 2.8, damageMax: 180, damageMin: 35, paintRadius: 2.4,
+    // [b5-deploy] on the ground (running or winding up) enemy fire pops it — harmlessly, no blast. 60: two shots of most guns
+    // (the Spritzer's 36, the Twinfin Dualies' / Twinfire Pistols' 30, the Bilge Bucket's 55; three of the Gyre Splatling's /
+    // Squall Spinner's quick 28 / 26),
+    // one full charger beam, one bomb's blast (60), a roller's drum — a few shots, not one (the Waddle has 30)
+    hp: 60,
   },
   scan: {
     id: 'scan', name: 'Echo Orb', kind: 'scan', blurb: 'Bursts into a sensing cloud. Foes it touches are tracked for your whole team. No damage.',
@@ -390,7 +395,8 @@ export const SUBS = {
     // 2026-10-02 ("let you throw the sprinkler further and applies an ink patch on landing"): throwSpeed 12 → 15.8, a
     // flat throw (aim level) carries ~1.47× as far (6.7 → 9.8 m; the Pop Pellet's 16, ~10 m, stays the longest); where it
     // sticks it splats an ink patch of landPaint m (subs.js _patch: on the floor, wall or ceiling it lands on)
-    inkCost: 60, throwSpeed: 15.8, landPaint: 1.7, hp: 70, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
+    // [b5-deploy] hp 70 → 100 (Splatoon's Sprinkler): enemy fire of every kind wears it down (src/game/deployables.js)
+    inkCost: 60, throwSpeed: 15.8, landPaint: 1.7, hp: 100, pulse: 0.3, drops: 7, sprayRadius: 5.5, sprayFade: 12, dropDamage: 8,
   },
   mine: {
     id: 'mine', name: 'Lurk Mine', kind: 'mine', blurb: 'Planted at your feet, invisible to the other team. Foes who come close set it off: it pops up and blows a moment later, hitting and tracking them. Two at a time.',
@@ -399,10 +405,11 @@ export const SUBS = {
     inkCost: 55, placed: true, max: 2, triggerRadius: 2.1, armTime: 0.9, delay: 0.45, radius: 2.6, damage: 45, trackTime: 8, paintRadius: 2.0,
   },
   beacon: {
-    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left).',
+    id: 'beacon', name: 'Hop Beacon', kind: 'beacon', blurb: 'A super-jump point for your team. Place up to three; each takes two jumps (its lights show what\'s left). Foes can shoot it down.',   // [b5-deploy] (… Foes can shoot it down.)
     // sonar: a ring pulse every `sonar` s from it (ground + air; its team's to see — the other team's faint); the jumps
     // left show as lights over it (and on the jump map's pins)
-    inkCost: 70, placed: true, max: 3, uses: 2, hp: 50, sonar: 1.75,
+    // [b5-deploy] hp 50 → 120 (Splatoon's Squid Beakon): enemy fire of every kind wears it down (src/game/deployables.js)
+    inkCost: 70, placed: true, max: 3, uses: 2, hp: 120, sonar: 1.75,
   },
   mist: {
     id: 'mist', name: 'Murk Bomb', kind: 'mist', blurb: 'Releases a poison mist that slows foes and drains their ink. A direct hit keeps them poisoned until the mist fades.',

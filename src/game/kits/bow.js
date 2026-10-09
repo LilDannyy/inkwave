@@ -218,7 +218,7 @@ function burst(p) {
     const dmg = d <= inner ? p.bd : lerp(p.bd, p.be, (d - inner) / Math.max(0.01, p.br - inner));
     G.projectiles.applyHit(owner, e, dmg, W.id, p.dbw ? p : null, c);   // [drainbow]
   }
-  G.subs?.damageArea(c, p.br, p.be, p.team);
+  G.subs?.damageArea(c, p.br, p.be, p.team, owner);   // [b5-deploy] (by)
   G.boss?.splash(owner, c, p.br, p.bd, p.be, W.id);   // Boss Battle
   burstFx(p, c, col, owner);
 }
@@ -287,7 +287,8 @@ function stepArrow(p, i, dt) {
   }
   // enemy devices (curtains, sprinklers …) and special objects (bubbles) catch arrows; lodging ones stick in them
   const bd = p.ghost ? 0 : p.dmg;   // (a ghost arrow's blow costs a device nothing)
-  const blocked = !p.noHit && ((G.subs && G.subs.blockShot(p.prev, p.pos, p.team, bd)) || (G.specials && G.specials.shotHit(p.prev, p.pos, p.team, bd, p.owner)));
+  const blocked = !p.noHit && ((G.subs && G.subs.blockShot(p.prev, p.pos, p.team, bd, p.owner)) ||   // [b5-deploy] (by)
+    (G.specials && G.specials.shotHit(p.prev, p.pos, p.team, bd, p.owner)));
   if (blocked) {
     if (p.lodge) lodge(p, p.pos, _v.copy(p.dir).negate(), p.dir); else kill(i);
     return;

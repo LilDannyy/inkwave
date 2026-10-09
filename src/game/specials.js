@@ -77,7 +77,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
     const k = d <= killRadius ? 0 : clamp((d - killRadius) / Math.max(0.01, radius - killRadius), 0, 1);
     G.projectiles.applyHit(owner, e, lerp(dmgMax, dmgMin, k * k), weaponId, null, c);   // ([drainbow] c: the blast's way to them)
   }
-  G.subs?.damageArea(c, radius, 60, team);
+  G.subs?.damageArea(c, radius, 60, team, owner);   // [b5-deploy] (by: the hit marker)
   G.boss?.splash(owner, c, radius, dmgMax, dmgMin, weaponId);   // Boss Battle
 }
 // continuous damage (tornado, sound beam): no per-frame hit events, only the splat
@@ -906,7 +906,7 @@ class Twister {
     // walls end it
     const hit = G.physics.segment(this.prev, this.pos, _hit, true);
     if (hit.hit) { this._burst(hit.point, hit.normal); return false; }
-    if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120)) { this._burst(this.pos, UP); return false; }
+    if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }   // [b5-deploy] (by)
     if (this.sys.shotHit(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }
     if (G.drainbow?.live && !this.dbw) G.drainbow.pass(this, this.prev, this.pos, this.team);   // [drainbow] (once a twister)
     // players inside the column
@@ -1759,7 +1759,7 @@ const IMPL = {
         if (!G.physics.los(_v2.copy(at).setY(at.y + 0.5), _v3.copy(e.pos).setY(e.pos.y + 0.6))) continue;
         G.projectiles.applyHit(a, e, s.def.damage, 'stamp');
       }
-      G.subs?.damageArea(at, radius, 80, a.team);
+      G.subs?.damageArea(at, radius, 80, a.team, a);   // [b5-deploy] (by)
     },
     end(a) { this._restoreWeapon(a); },
   },
@@ -1905,7 +1905,7 @@ const IMPL = {
         if (e !== direct && !G.physics.los(_v2.copy(c), _v)) continue;
         G.projectiles.applyHit(a, e, hitDirect ? d.impactDirect : d.impactSplash, 'zipcaster');
       }
-      G.subs?.damageArea(c, d.impactRadius, d.impactSplash, a.team);
+      G.subs?.damageArea(c, d.impactRadius, d.impactSplash, a.team, a);   // [b5-deploy] (by)
       const g = groundBelow(c, 3);
       paint(a, (g || c).clone().setY((g || c).y + 0.2), d.impactRadius * 0.75, a.team);
       G.fx?.explosion(c, a.color, d.impactRadius);

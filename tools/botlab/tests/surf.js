@@ -461,13 +461,21 @@
       reset();
       const Sh = foes.find((f) => ['shooter', 'blaster', 'dualies', 'splatling', 'slosher'].includes(f.weapon.kind)) || foe;
       const w0 = Sh.weaponId; if (!['shooter', 'blaster', 'dualies', 'splatling', 'slosher'].includes(Sh.weapon.kind)) Sh.setWeapon('shooter');
-      unstub(Sh); put(Sh, V(0, 0, 2), Math.PI);
+      // ([b5-deploy] a fresh brain: one still hunting a foe from the scenes before is not "no foe in sight" — and what it
+      // did, for a diagnosis: seconds on the buoy, its mode, a target, escapes)
+      unstub(Sh); Sh.bot.reset(); put(Sh, V(0, 0, 2), Math.PI);
       const bb = plant(me, V(0, 0, -6));
       put(me, V(-20, 0, -40), 0);
-      const hp0 = bb.hp;
-      step(4, () => bb.phase === 'live');
+      // ([b5-deploy] fix round 1, resumed: "no foe in sight" for real — the bot's foes, parked in the open 35–42 m off, were
+      // found 2 times in 9 (JOB-9/10: "fight" for 1.5 s, then painting far from the buoy, 0 s on it): all behind the
+      // testbox wall, x 14…15)
+      m.actors.filter((a) => a.team !== Sh.team).forEach((a, i) => put(a, V(21 + (i % 3) * 1.5, 0, -3 + Math.floor(i / 3) * 1.5), 0));
+      const hp0 = bb.hp, DBm = await import('./src/game/deployables-bots.js'), SPm = await import('./src/game/botSpecials.js');
+      const ds0 = DBm.DEV_BOT.secs, es0 = SPm.SPECIAL_STATS.escapes, modes = {};
+      step(4, () => { modes[Sh.bot.mode] = (modes[Sh.bot.mode] || 0) + 1; return bb.phase === 'live'; });
+      const diag = { devS: r2(DBm.DEV_BOT.secs - ds0), escapes: SPm.SPECIAL_STATS.escapes - es0, modes, target: Sh.bot.target ? Sh.bot.target.name : null, weapon: Sh.weaponId, ink: Math.round(Sh.ink) };
       stub(Sh); if (Sh.weaponId !== w0) Sh.setWeapon(w0);
-      R(`with no foe in sight a bot shoots an enemy buoy down (hp ${hp0} → ${Math.max(0, bb.hp)})`, bb.hp < hp0, { hp: bb.hp, phase: bb.phase, weapon: Sh.weaponId });
+      R(`with no foe in sight a bot shoots an enemy buoy down (hp ${hp0} → ${Math.max(0, bb.hp)}; ${diag.weapon}, ${diag.devS} s on it, ${diag.escapes} escapes, modes ${JSON.stringify(modes)})`, bb.hp < hp0, { hp: bb.hp, phase: bb.phase, weapon: Sh.weaponId, diag });
     }
     // ============================================================================================ roof (MAP=podbox)
     // an off-limits top (a roof: the dead-end lane's walls, x 19.5…20 / 24…24.5, z −36.5…−22, 2.6 m, roof) is no place to

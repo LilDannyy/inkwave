@@ -1,0 +1,75 @@
+JOB-5 raw lines (automatic, written by the Mac mini's queue when the job ended, 2026-10-04 07:43); ran at 1ce8a55. A written-up JOB-5.txt follows when a helper session is awake.
+
+## full.txt
+== deployables-tower: RESULT 8/8 0 FAIL
+== deployables-rail: RESULT 2/2 0 FAIL
+== deployables: RESULT 28/28 0 FAIL
+== deployables-hedge: RESULT 3/3 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== tm-halyard
+== halyard [tower len 117.8/117.8]: winner Alpha (retake) | counts 23 vs 31 (score 23/31) | best push A 74.2m B 64.6m | OT 24s | sim 324s
+== tm-calamari
+== calamari [tower len 163.6/163.6]: winner Bravo (time) | counts 50 vs 31 (score 50/31) | best push A 83.7m B 100.5m | OT no | sim 300s
+== tm-treehills
+== treehills [tower len 151.8/151.8]: winner Bravo (time) | counts 94 vs 7 (score 94/7) | best push A 12.5m B 139.6m | OT no | sim 300s
+== tm-saltpan
+== saltpan [tower len 179.2/179.2]: winner Alpha (retake) | counts 45 vs 58 (score 45/58) | best push A 102.8m B 73.5m | OT 19.4s | sim 319.5s
+
+## new.txt
+### new halyard 2
+== halyard [turf 180s]: turf 23.4% vs 46.3%
+### new halyard 3
+== halyard [turf 180s]: turf 35.1% vs 41.3%
+### new halyard 1
+== halyard [turf 180s]: turf 50.2% vs 28.2%
+### new halyard 4
+== halyard [turf 180s]: turf 43.2% vs 35%
+### new saltpan 1
+== saltpan [turf 180s]: turf 38.6% vs 33.3%
+### new saltpan 2
+== saltpan [turf 180s]: turf 38.4% vs 32.3%
+### new saltpan 4
+== saltpan [turf 180s]: turf 27.9% vs 34.7%
+### new saltpan 3
+== saltpan [turf 180s]: turf 39.4% vs 30.4%
+
+## old.txt
+### old halyard 2
+== halyard [turf 180s]: turf 31.9% vs 44.1%
+### old halyard 3
+== halyard [turf 180s]: turf 38.2% vs 38%
+### old halyard 1
+== halyard [turf 180s]: turf 40.8% vs 39.3%
+### old halyard 4
+== halyard [turf 180s]: turf 39.3% vs 37.9%
+### old saltpan 2
+== saltpan [turf 180s]: turf 36.2% vs 32.7%
+### old saltpan 1
+== saltpan [turf 180s]: turf 36.2% vs 32.8%
+### old saltpan 4
+== saltpan [turf 180s]: turf 30.2% vs 39.5%
+### old saltpan 3
+== saltpan [turf 180s]: turf 35.1% vs 34.4%
+
+## walltime.txt
+15 min
