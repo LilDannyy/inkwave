@@ -77,7 +77,7 @@ function capGeo(r, h, crimps = 21) {
   });
 }
 // a straight rod from a to b (radius r)
-function rod(a, b, r = 0.0032) {
+function rod(a, b, r = 0.0037) {
   const d = _d.copy(b).sub(a), len = d.length();
   return orient(superEllipsoid(r, len / 2 + r * 0.6, r, 1, 1, 7, 4), d.clone(), a.clone().addScaledVector(d, 0.5));
 }
@@ -709,7 +709,9 @@ function looks(it, dt) {
   for (const L of M_.legs) L.rotation.x = FOLD * (1 - splay) - (legK >= 1 && it.state !== 'dead' ? Math.max(0, Math.sin(clamp((u - 0.67) / 0.2, 0, 1) * Math.PI)) * 0.08 : 0);
   const popK = it.state === 'dead' ? 1 - clamp(it.endT / 0.2, 0, 1) : clamp((u - 0.55) / 0.45, 0, 1);
   const pop = popK >= 1 ? 1 : 1 - Math.cos(popK * Math.PI * 2.5) * Math.exp(-popK * 4) * (1 - popK) - (1 - popK) * 0.6;
-  M_.neck.scale.set(1, Math.max(0.02, pop), 1);
+  // (the head rises out of the can on its spring: low and small → up, overshooting a little)
+  M_.neck.position.y = NECK1 - (1 - pop) * 0.028;
+  M_.neck.scale.setScalar(0.55 + 0.45 * clamp(pop, 0, 1.2));
   const thump = it.state === 'dead' ? 0 : Math.max(0, 1 - t / 0.14) * 0.12;
   M_.model.position.y = (1 - splay) * 0.012 * WS * vs;
   const fl = it.flash;
@@ -798,12 +800,14 @@ const RING_FS = `
   void main(){
     float r = length(vUv);
     if (r > 1.01) discard;
-    float w = 0.09 / uR;
-    float rim = smoothstep(w, w * 0.4, abs(r - 0.985));
+    float w = 0.09 / uR, e = abs(r - 0.985);
+    float rim = smoothstep(w, w * 0.4, e);
+    float halo = smoothstep(w * 2.6, w * 1.2, e) * (1.0 - rim);   // (a dark edge either side: it reads on any floor, its own ink too)
     float ang = atan(vUv.y, vUv.x);
     float dash = step(0.45, fract(ang / 6.2831853 * 64.0 + uTime * 0.25));
     float fill = 0.12 * smoothstep(0.0, 0.98, r) * step(r, 0.98);
-    gl_FragColor = vec4(uColor, (rim * dash + fill) * uAlpha);
+    vec3 col = mix(vec3(0.03, 0.025, 0.05), mix(uColor, vec3(1.0), 0.18), rim / max(1e-3, rim + halo));
+    gl_FragColor = vec4(col, (max(rim, halo * 0.75) * dash + fill) * uAlpha);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }`;
@@ -851,7 +855,7 @@ function guideFx(dt) {
     gd.root.position.copy(p);
     gd.ghostM.rotation.y = a.aimYaw; gd.ghostM.scale.setScalar(WS * vs);
     const col = ok ? a.color : _grey;
-    gd.mat.color.copy(col); gd.mat.opacity = ok ? 0.42 : 0.3;
+    gd.mat.color.copy(col).lerp(_white, ok ? 0.3 : 0.1); gd.mat.opacity = ok ? 0.5 : 0.36;
     gd.ring.position.y = 0.03; gd.ring.scale.setScalar(s.range);
     gd.ring.material.uniforms.uColor.value.copy(col); gd.ring.material.uniforms.uR.value = s.range;
     gd.cross.visible = !S.ok; gd.cross.position.set(0, (HEAD_Y + 0.07) * WS * vs, 0);

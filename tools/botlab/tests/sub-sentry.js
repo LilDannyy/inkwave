@@ -677,10 +677,10 @@
       me._int = (x) => { x.sub = true; };   // (holding the sub button)
       step(0.15);
       const gd = K._guide();
-      const okLook = !!gd && gd.root.visible && gd.ok && !gd.cross.visible && gd.mat.color.getHex() === me.color.getHex() && Math.abs(gd.ring.scale.x - s.range) < 1e-6;
+      const okLook = !!gd && gd.root.visible && gd.ok && !gd.cross.visible && gd.ring.material.uniforms.uColor.value.getHex() === me.color.getHex() && Math.abs(gd.ring.scale.x - s.range) < 1e-6;
       put(me, V(0, 3, -6), 0); me.grounded = false;
       step(0.15, () => { me.pos.y = 3.02; me.vel.set(0, 0, 0); });
-      const badLook = !!gd && gd.root.visible && !gd.ok && gd.cross.visible && gd.mat.color.getHex() !== me.color.getHex();
+      const badLook = !!gd && gd.root.visible && !gd.ok && gd.cross.visible && gd.ring.material.uniforms.uColor.value.getHex() !== me.color.getHex();
       me._int = null; put(me, V(0, 0, -6), 0); step(0.1); S.clear();
       R('holding the sub shows the guide: a ghost of it where it would go and its 11 m ring — team colour when the spot is good, grey with a "×" when it isn\'t (mid-air)', okLook && badLook && !gd.root.visible, { okLook, badLook });
       const it = plant(me, V(0, 0, -6), 0); put(me, HOME, 0);
