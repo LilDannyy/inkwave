@@ -169,6 +169,13 @@ end — SUBS, SUB_ORDER, SUB_VIEW_SCALE, placeholder models and icons, stub kits
 for every SUB_ORDER id; each stub in hand, refused; bots on stubs) and, online, `CLIENTS=2 Q0=autopilot Q1=autopilot
 NET=tools/botlab/tests/net-subscaf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (stub ids through the lobby into a match).
 
+Dash Pellet (`[b5-sub-dash]`, src/game/kits/dash.js — the press, the dash in ≤ 0.2 m substeps, the blast left behind):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-dash.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs`
+(PAGE_ARGS picks sections: press, dir, height, limits, blast, walls, edges, hud, bots); online, `CLIENTS=2 Q0=autopilot
+Q1='autopilot&netlag=150&netjitter=60' NET=tools/botlab/tests/net-sub-dash.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`;
+the stage audit, any stage: `MAP=<id> PAGE=tools/botlab/tests/dash-reach.js PAGE_ARGS='step=4' (or 'dt=24;step=8') …
+page.cjs`; in matches, `SUBS='all=dash'` adds a DASH line to match.cjs (`DASH_AI=0`: bots never dash).
+
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
 no ink refill for 0.33 s after a shot — src/game/kits/bow.js, config WEAPONS.bow, actor.js; the bots' level lane shots):
