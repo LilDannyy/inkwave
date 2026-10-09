@@ -3,7 +3,7 @@
 // sets: rider (a Kelp Line ride UP as the rider sees it: 6 frames) · bystander (an enemy rider through the Great Tank as a
 // player on the court sees it: 4 frames) · bystander-kelp (an enemy riding the Kelp Line UP, from the court and from
 // the North Promenade's deck: 4 frames each; the deck's are out/engine/bystander-*.jpg) · mouths (a two-way and a one-way mouth, its OUT end, a lit exit) · tide (the
-// warning in the HUD and in the world) · map (the corner map with the network, a rider and its lit exit) · spawn (the
+// warning in the HUD and in the world; the kelp drum UP, DOWN and at the flip) · map (the corner map with the network, a rider and its lit exit) · spawn (the
 // spawn's play camera, both teams, and Alpha's with a teammate riding the Express)
 (() => {
   const g = window.__inkwave, set = String(window.__preArgs || 'rider');
@@ -103,6 +103,15 @@
     });
   }
   if (set === 'tide') {
+    // the E kelp drum from the court beside it: UP (the fronds tall, their ripples running up, bubbles rising), then the
+    // same view after the flip (DOWN: the tops bowed over inward, ripples running down, bubbles sinking) and at the flip
+    // itself (the bubble curtain)
+    const drum = () => { hud(false); cine([16.2, 2.6, -7.4], [25, 4.6, 0], 58); };
+    S('tide-kelp-up', () => {
+      for (const [k, o] of M().actors.entries()) away(o, k);
+      M().time = M().duration - 60; P().S.clock.t = 60; dbg.step(1000 / 60);
+      drum(); step(2.0); return { flow: P().flow() };
+    });
     S('tide-warning-hud', () => {
       const a = me(), e = leg('kelp').ends[0];
       for (const [k, o] of M().actors.entries()) if (o !== a) away(o, k);
@@ -123,6 +132,14 @@
       for (let i = 0; i < 90 && P().flow().phase !== 'run'; i++) dbg.step(1000 / 60);
       follow(); hud(true); g.rig.yaw = facing(a, e); step(0.6);
       return { flow: P().flow(), line: document.querySelector('.iw-pp-line.is-on')?.textContent };
+    });
+    S('tide-kelp-down', () => { drum(); step(2.5); return { flow: P().flow() }; });
+    S('tide-kelp-flip-curtain', () => {
+      // (back to just before the 90 s flip, then on to 0.35 s after it: the curtain roars through the drum as it turns)
+      M().time = M().duration - 89.2; P().S.clock.t = 89.2; P().seek?.(89.2); dbg.step(1000 / 60);
+      drum();
+      for (let i = 0; i < 120 && P().flow().dir === 'ab'; i++) dbg.step(1000 / 60);
+      step(0.35); return { flow: P().flow() };
     });
   }
   if (set === 'map') {
