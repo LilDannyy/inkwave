@@ -626,6 +626,22 @@ export class Actor {
     wr.dashSteps = n;   // (tests)
     wr.tickDash(dt);
   }
+  // [b5-sub-dash] an airborne dash substep whose body was pushed UP by a floor-like face (collideBody: a slope gentler than
+  // ~17°, or a top's face; steeper ones push it sideways under _dashFlat): it lands on what's under its feet, within the
+  // ledge assist as any landing, instead of riding up the face while still airborne. At dash speed that ride raised the
+  // feet 0.1–0.25 m over a plain hop's reach before the assist landed them (dash-reach.js: lockgate's cart ramp, 1.93 m
+  // over the start; saltpan's pitched shed roof, 2.13 m; a plain hop from the same spots 1.79 / 1.90). False (no ground
+  // under the feet in reach): the push stands, as before.
+  _dashLand(isSquid, prevY, y0, gh) {
+    const P = PLAYER, top = Math.max(prevY, y0);
+    G.physics.groundProbe(this.pos.x, y0, this.pos.z, (top - y0) + P.ledgeAssist, 0.02, P.footRadius, gh, isSquid);
+    if (!isSquid) this._railFeet(gh, y0 - 0.02, top + P.ledgeAssist);
+    if (!gh.hit || gh.y < y0 - 0.02 || gh.y > top + P.ledgeAssist + 1e-3) return false;
+    const pop = gh.y - prevY;
+    this.pos.y = gh.y;
+    if (pop > 0.035) this.smoothY -= pop;
+    return true;
+  }
 
   // Standing on a roof block: pushed toward its nearest edge (a pitched top: downhill), picking up speed until you drop
   // off. The direction sticks for the whole slide (adjacent roof boxes would otherwise push back and forth at a seam);
@@ -658,6 +674,7 @@ export class Actor {
     const P = PLAYER;
     const lift = isSquid ? P.squidBodyLift : P.stepUp;
     const height = isSquid ? P.squidHeight : P.height;
+    const y0 = this.pos.y;
     const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick || this._dashFlat, isSquid);   // [b5-sub-dash] (a dash: walls push it out sideways only, never up over a ledge's corner)
     if (c.ceiling && this.vel.y > 0) this.vel.y = 0;
     if (c.wall) {
@@ -679,6 +696,8 @@ export class Actor {
         // discontinuities (curbs, steps up / down) are eased visually; slope following and ramp creases stay exact
         if (Math.abs(dy) > 0.06) this.smoothY -= dy;
       }
+    } else if (this._dashFlat && c.ground && this.pos.y > y0 + 1e-4 && this._dashLand(isSquid, prevY, y0, gh)) {
+      grounded = true;   // [b5-sub-dash] an airborne dash's body met a gentle slope or a top: it lands (_dashLand)
     } else if (this.vel.y <= 0.5) {
       // landing: probe from the highest point this frame passed through (never tunnels), with ledge assist
       const top = Math.max(prevY, this.pos.y);
