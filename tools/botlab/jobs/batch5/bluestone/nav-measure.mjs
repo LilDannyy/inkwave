@@ -39,4 +39,25 @@ out.bazookarp = {
   alphaAttack: { L: len(pond, gateB, 0), pondWeir: len(pond, weirB, 0), weirGate: len(weirB, gateB, 0) },
   bravoAttack: { L: len(pond, gateA, 1), pondWeir: len(pond, weirA, 1), weirGate: len(weirA, gateA, 1) },
 };
+// (fix round 2, review issue 7) SPEC §9.1 #4: each leg's second route. Route 1 = the nav's shortest walk (no wall climbs:
+// the carrier walks; hops and drops are nav edges); then every node within 2.5 m (xz) of route 1's polyline is avoided,
+// except within 6 m of either end, and route 2 is the shortest walk left. Pass: route 2 ≤ 1.6 × route 1.
+const segD = (x, z, a, b) => { const dx = b.x - a.x, dz = b.z - a.z, L2 = dx * dx + dz * dz, t = L2 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / L2)) : 0; return Math.hypot(x - a.x - t * dx, z - a.z - t * dz); };
+const plen = (p) => { let s = 0; for (let i = 1; i < p.length; i++) { const u = nav.nodes[p[i - 1]], v = nav.nodes[p[i]]; s += Math.hypot(v.x - u.x, v.y - u.y, v.z - u.z); } return +s.toFixed(1); };
+const route2 = (a, b, team) => {
+  const p1 = nav.path(a, b, team, 400000, true); if (!p1) return null;
+  const A = nav.nodes[a], Bn = nav.nodes[b], pts = p1.map((i) => nav.nodes[i]);
+  const avoid = new Uint8Array(nav.nodes.length);
+  for (let i = 0; i < nav.nodes.length; i++) { const n = nav.nodes[i];
+    if (Math.hypot(n.x - A.x, n.z - A.z) < 6 || Math.hypot(n.x - Bn.x, n.z - Bn.z) < 6) continue;
+    for (let k = 1; k < pts.length; k++) if (segD(n.x, n.z, pts[k - 1], pts[k]) < 2.5) { avoid[i] = 1; break; } }
+  const p2 = nav.path(a, b, team, 400000, true, avoid);
+  const L1 = plen(p1), L2 = p2 ? plen(p2) : null;
+  const via = (p) => { const m = nav.nodes[p[Math.floor(p.length / 2)]]; return [+m.x.toFixed(1), +m.z.toFixed(1)]; };
+  return { route1: L1, route2: L2, ratio: L2 ? +(L2 / L1).toFixed(2) : null, ok: !!L2 && L2 <= 1.6 * L1, via1: via(p1), via2: p2 ? via(p2) : null };
+};
+out.bazookarpRoutes = {
+  alphaAttack: { pondWeir: route2(pond, weirB, 0), weirGate: route2(weirB, gateB, 0) },
+  bravoAttack: { pondWeir: route2(pond, weirA, 1), weirGate: route2(weirA, gateA, 1) },
+};
 console.log(JSON.stringify(out));

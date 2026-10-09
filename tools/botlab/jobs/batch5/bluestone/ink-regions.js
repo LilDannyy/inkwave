@@ -15,11 +15,13 @@
     if (z > 0) { x = -x; z = -z; }   // fold Bravo's half onto Alpha's
     const al = x * S65 + z * C65, off = -x * C65 + z * S65, r = Math.hypot(x, z);
     if (G.inPoly(LY.ALLEY.quad, x, z)) return 'alley';
-    if (y > 2.5 && y < 3.2 && x < -24 && z < -28 && !G.inPoly(LY.OUTLINE, x, z)) return 'garden';
+    if (y > 2.4 && y < 3.2 && LY.YARD && G.inPoly(LY.YARD, x, z)) return 'garden';   // (fix round 2: the garden on the signal yard, and its two stairs)
+    if (y > 0.05 && y < 3.2 && Math.abs(off + 4.5) < 1.5 && al > -39.4 && al < -32.6) return 'garden';
+    if (y > 0 && y < 2.4 && LY.HOKI_STAIR && x > LY.HOKI_STAIR.x0 && x < LY.HOKI_STAIR.x1 && z > LY.HOKI_STAIR.zFoot && z < LY.HOKI_STAIR.zTop) return 'garden';
     if (y > 4.5 && r < 16) return 'halo';
     if (!G.inPoly(LY.OUTLINE, x, z) && (x > 20 || z > -8)) return 'river-works';
     if (r <= 20) return 'circus';
-    if (Math.abs(off) <= 15 && al <= -20) return 'arm';
+    if (Math.abs(off) <= 15 && al <= -20) return Math.abs(off) > 9 ? 'arm-walks' : 'arm';
     if (z <= -50) return 'base';
     if (Math.abs(x) <= 7) return 'swimston';
     return x < 0 ? 'west' : 'east';

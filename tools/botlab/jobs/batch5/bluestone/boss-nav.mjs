@@ -6,7 +6,7 @@ const root = process.argv[2] || new URL('../../../../../', import.meta.url).path
 const { MAP_LAYOUTS } = await import(root + '/src/world/maps.js');
 const { layoutFor } = await import(root + '/src/world/variants.js');
 const { Level } = await import(root + '/src/world/level.js');
-const { BossNav } = await import(root + '/src/boss/bossNav.js');
+const { BossNav, WALL_BODY } = await import(root + '/src/boss/bossNav.js');
 const PR = await import(root + '/src/world/stages/bluestone/props.js');
 const L = layoutFor(MAP_LAYOUTS.bluestone, 'boss');
 const extra = [];
@@ -31,3 +31,25 @@ const dbox = (x, z, [x0, x1, z0, z1]) => Math.hypot(Math.max(x0 - x, 0, x - x1),
 const near = {};
 for (const [k, b] of Object.entries(OVER)) for (const s of [1, -1]) { const bb = s > 0 ? b : [-b[1], -b[0], -b[3], -b[2]]; let best = Infinity, at = null; for (const i of nav.planIds) { const [x, z] = nav.xz(i); const d = dbox(x, z, bb); if (d < best) { best = d; at = [x, z]; } } near[k + (s > 0 ? ':a' : ':b')] = { d: +best.toFixed(2), at }; }
 console.log(JSON.stringify({ overhangs: near }));
+
+// (fix round 2) the honest overhang measure: every pose the boss may take on its home ground (each plan cell × 32
+// headings where poseOk holds) — its wall circles (claws r 2.5 at 2.3 m ahead, shell rim r 2.6 at 1.8 m behind) against
+// each overhang's footprint. Penetration = how far the deepest circle reaches inside it (≤ 0: never under it).
+const pen = {};
+for (const [k, b] of Object.entries(OVER)) for (const s of [1, -1]) {
+  const bb = s > 0 ? b : [-b[1], -b[0], -b[3], -b[2]]; let worst = -Infinity, at = null;
+  for (const i of nav.planIds) { const [x, z] = nav.xz(i);
+    if (dbox(x, z, bb) > 6) continue;
+    for (let a = 0; a < 32; a++) { const yaw = (a / 32) * Math.PI * 2; if (!nav.poseOk(x, z, yaw)) continue;
+      for (const w of WALL_BODY) { const cx = x + Math.sin(yaw) * w.z, cz = z + Math.cos(yaw) * w.z, p = w.r - dbox(cx, cz, bb); if (p > worst) { worst = p; at = [x, z, +(yaw * 180 / Math.PI).toFixed(0)]; } } } }
+  pen[k + (s > 0 ? ':a' : ':b')] = { pen: worst === -Infinity ? null : +worst.toFixed(2), at };
+}
+console.log(JSON.stringify({ posePenetration_m: pen }));
+
+// (fix round 2) DUMP=<file>: the circus's cells (x, z −26 … 26) as JSON for boss-map.py: kind (0 floor · 1 wall · 2 drop ·
+// 3 pad), plan (home ground), and the overhang footprints
+if (process.env.DUMP) {
+  const cells = [];
+  for (let z = -26; z <= 26; z += 0.5) for (let x = -26; x <= 26; x += 0.5) { const i = nav.cell(x, z); cells.push([x, z, nav.kind[i], nav.plan[i] ? 1 : 0]); }
+  (await import('node:fs')).writeFileSync(process.env.DUMP, JSON.stringify({ cells, over: OVER, pen }));
+}
