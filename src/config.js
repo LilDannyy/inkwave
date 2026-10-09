@@ -489,9 +489,7 @@ export const SUBS = {
   },
   dash: {
     id: 'dash', name: 'Dash Pellet', kind: 'dash', blurb: 'Pops under your feet and blasts you a few metres the way you\'re steering, on the ground or in the air. Its blast hits anyone you leave behind.',
-    // ([b5-sub-dash] airDashDist 2.5, not the spec's 3.5: at 3.5 / 3.0 a running jump + air dash reaches Kelpline's perch
-    // lookouts, which the user wants reached only by specials or super jumps — tools/botlab/tests/dash-reach.js)
-    inkCost: 55, dashDist: 4.5, airDashDist: 2.5, dashTime: 0.22, endSpeed: 7, airVyMin: -1.5, airVyMax: 1.0, airGravMul: 0.3,
+    inkCost: 55, dashDist: 4.5, airDashDist: 3.5, dashTime: 0.22, endSpeed: 7, airVyMin: -1.5, airVyMax: 1.0, airGravMul: 0.3,
     radius: 2.2, damageMax: 50, damageMin: 25, paintRadius: 2.0, devDamage: 25, substep: 0.2, streakEvery: 0.6, streakRadius: 0.45, airDashes: 1,
   },
 };
