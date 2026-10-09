@@ -208,7 +208,9 @@ function cone(cx, cz, rTop, yTop, rBase, yBase, tag) {
 
 // the causeway (10 m, the tower's track) with four lamp plinths
 add(B(-G.CW, G.CW, -1.1, 1.2, G.r3(G.CAUSE_Z), -11.5, tuff({ tag: 'causeway', color: '#aaa59c' })));
-for (const [x, z] of [[4.0, -14.5], [-4.0, -14.5], [4.0, -19.5], [-4.0, -19.5]]) add(B(x - 0.45, x + 0.45, 1.2, 2.5, z - 0.45, z + 0.45, cover(K.basaltDk, { tag: 'lamp-plinth' })));
+// (the lava phase: the plinths 1 m in from the edges — at x ±4 they left a 0.55 m strip, no landing for the 1.2 m hop up
+// from the Casting Floor beside them, and a bot escaping the rise died there; ≥ 0.8 m from the tower's lane still)
+for (const [x, z] of [[3.0, -14.5], [-3.0, -14.5], [3.0, -19.5], [-3.0, -19.5]]) add(B(x - 0.45, x + 0.45, 1.2, 2.5, z - 0.45, z + 0.45, cover(K.basaltDk, { tag: 'lamp-plinth' })));
 // the Organ Pipes and (at HIGH) both Pumice Races: static stand-ins at this build's level until the lava engine lands
 if (BLOCKOUT_LAVA) {
   add(riderStandIns((what, o) => (what === 'stone' ? { color: K.pumice, pattern: PATTERN.rubber, ...o }

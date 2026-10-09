@@ -45,8 +45,8 @@
   R('A2 Boss Battle held LOW; Practice loops 20 / 35 / 35 and the menu backdrop 8 / 15 / 15 (found by their flags, not the mode string)',
     sch.boss.kind === 'fixed' && sch.boss.level === 'low' && sch.practice.kind === 'loop' && sch.practice.first === 20 && sch.practice.holdHigh === 35 && sch.practice.holdLow === 35 && sch.attract.first === 8 && sch.attract.holdHigh === 15 && sch.attract.holdLow === 15
       // (and the loops move between the stage's own levels)
-      && [0, 25, 45, 70, 95, 130].every((t) => { const y = C.lavaY(t, sch.practice); return y >= def.low - 1e-9 && y <= def.high + 1e-9; }) && C.lavaY(45, sch.practice) === def.high && C.lavaY(10, sch.attract) === def.low,
-    { boss: sch.boss.level, practice: [sch.practice.first, sch.practice.holdHigh, sch.practice.holdLow, C.lavaY(45, sch.practice)], attract: [sch.attract.first, sch.attract.holdHigh, sch.attract.holdLow, C.lavaY(10, sch.attract)] });
+      && [0, 25, 45, 70, 95, 130].every((t) => { const y = C.lavaY(t, sch.practice); return y >= def.low - 1e-9 && y <= def.high + 1e-9; }) && C.lavaY(45, sch.practice) === def.high && C.lavaY(5, sch.attract) === def.low && C.lavaY(25, sch.attract) === def.high,
+    { boss: sch.boss.level, practice: [sch.practice.first, sch.practice.holdHigh, sch.practice.holdLow, C.lavaY(45, sch.practice)], attract: [sch.attract.first, sch.attract.holdHigh, sch.attract.holdLow, C.lavaY(5, sch.attract), C.lavaY(25, sch.attract)] });
   {
     const bad = [];
     for (const [m, d] of [['turf', 180], ['turf', 90], ['zones', 300]]) {
