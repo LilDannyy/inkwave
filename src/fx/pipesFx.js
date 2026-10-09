@@ -78,7 +78,9 @@ void main() {
   float strobe = warn > 0.5 ? step(0.5, fract(uTime * 3.0)) : 1.0;
   chev *= on * strobe * (shut > 0.5 ? 0.15 : 1.0) * (flow != 0.0 ? 0.55 : 0.8);
   vec3 c = col + glow * 2.4 + vec3(0.9, 1.0, 1.0) * chev * 0.9;
-  float alpha = clamp(a + ga * 0.55 + chev * 0.45 + 0.04 * strip, 0.0, 0.95);
+  // the glass right at the lens fades out (a ride camera inside or beside the tube sees through it, its own glow too)
+  float near = smoothstep(1.2, 4.5, length(vV));
+  float alpha = clamp(a + ga * 0.55 + chev * 0.45 + 0.04 * strip, 0.0, 0.95) * near;
   gl_FragColor = vec4(c, alpha);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -225,14 +227,17 @@ export class PipeLooks {
         const next = s + (over ? 7.0 : gap);
         if (hiddenAt(leg, s)) { s = next; continue; }
         s = next;
+        // under an overhead run: a saddle and a post down to a roof / wall top close below (no spine over the span); in
+        // open air over the sky the tube runs bare between them (LEAD-NOTES 2026-10-09: only clear tube across the
+        // spawn's view), so a collar there only where it is held
+        let held = false, gy = -Infinity, drop = 0;
+        if (Math.abs(q.ty) < 0.2 && L && q.y > 4) { gy = L.groundHeight(q.x, q.z, q.y - R_GLASS - 0.05); drop = q.y - R_GLASS - gy; held = gy > -Infinity && drop > 0.05 && drop < 3.2; }
+        if (over && !held) continue;
         _qt.setFromUnitVectors(UP, _p.set(q.tx, q.ty, q.tz));
         _m.compose(_s.set(q.x, q.y, q.z), _qt, new THREE.Vector3(1, 1, 1));
         add(new THREE.CylinderGeometry(0.95, 0.95, 0.14, 18, 1, true), color, _m);
-        // under an overhead run: a saddle and a post down to a roof / wall top close below (no spine over the span)
-        if (Math.abs(q.ty) < 0.2 && L && q.y > 4) {
-          const gy = L.groundHeight(q.x, q.z, q.y - R_GLASS - 0.05);
-          const drop = q.y - R_GLASS - gy;
-          if (gy > -Infinity && drop > 0.05 && drop < 3.2) {
+        {
+          if (held) {
             const yaw = Math.atan2(q.tx, q.tz);
             _m.compose(_s.set(q.x, q.y - R_GLASS - 0.08, q.z), _qt.setFromEuler(_e.set(0, yaw, 0)), new THREE.Vector3(1, 1, 1));
             add(new THREE.BoxGeometry(1.5, 0.16, 0.22), color, _m);
@@ -406,6 +411,7 @@ export class PipeLooks {
     // decided at render time from the camera's final position (after every lens offset): the grade is on exactly while
     // the lens is inside the rider's water volume; the fog follows a frame later
     this.uw.onBeforeRender = (r, scene, camera, geo) => {
+      if (scene.overrideMaterial) { geo.drawRange.count = 0; return; }   // (an override pass: GTAO's, a depth pass — not the view)
       const V = this.rideVol, c = camera.position;
       const inside = !!V && !scene.overrideMaterial && V.y && c.y > V.y[0] + 0.05 && c.y < V.y[1] - 0.05 && (V.cyl ? Math.hypot(c.x - V.cyl[0], c.z - V.cyl[1]) < V.cyl[2] - 0.05 : c.x > V.box[0] + 0.05 && c.x < V.box[1] - 0.05 && c.z > V.box[2] + 0.05 && c.z < V.box[3] - 0.05);
       this._setUnder(inside, c);

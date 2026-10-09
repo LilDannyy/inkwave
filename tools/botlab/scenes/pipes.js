@@ -20,7 +20,13 @@
   const hud = (on) => { g.hud?.setVisible(on); };
   const facing = (a, e) => Math.atan2(-e.out[0], -e.out[2]);
   const scenes = [];
-  const init = async () => { THREE = await import('three'); if (window.__fov0 === undefined) window.__fov0 = g.settings.fov; freeze(); };
+  // (everyone alive and at full health first: a player splatted during the warm-up play would leave the splat screen's
+  // camera and desaturation over every picture)
+  const init = async () => {
+    THREE = await import('three'); if (window.__fov0 === undefined) window.__fov0 = g.settings.fov; freeze();
+    for (const a of M().actors) { if (!a.alive) a.respawn(); a.hp = 100; }
+    step(1.6); for (const a of M().actors) { a.invuln = 0; a.hp = 100; }
+  };
   const S = (name, fn, wait) => scenes.push({ name, set: async () => { if (!THREE) await init(); return fn(); }, wait });
   if (set === 'rider') {
     // a Kelp Line ride UP from Alpha's Reef Hall (the low stop in the E drum's foot) to Bravo's promenade
@@ -37,7 +43,8 @@
     S('ride-2-suck', () => { const a = me(); for (let i = 0; i < 60 && !a.pipe; i++) { a.intent.move.set(-e.out[0], 0, -e.out[2]); dbg.step(1000 / 60); } a.intent.move.set(0, 0, 0); step(0.12); return { phase: a.pipe?.phase }; });
     S('ride-3-up-the-kelp-drum', () => { step(0.32); const a = me(); return { phase: a.pipe?.phase, u: a.pipe?.u, y: a.pos.y, water: P().camInWater }; });
     S('ride-4-over-their-promenade', () => { step(0.55); const a = me(); return { u: a.pipe?.u, y: a.pos.y }; });
-    S('ride-5-turning-to-the-exit', () => { const a = me(); const L = leg('kelp').len; for (let i = 0; i < 90 && a.pipe && a.pipe.phase === 'ride' && (L - a.pipe.u) / a.pipe.v > 0.3; i++) dbg.step(1000 / 60); return { left: a.pipe && (L - a.pipe.u) / a.pipe.v }; });
+    S('ride-5-turning-to-the-exit', () => { const a = me(); const L = leg('kelp').len; for (let i = 0; i < 90 && a.pipe && a.pipe.phase === 'ride' && (L - a.pipe.u) / a.pipe.v > 0.3; i++) dbg.step(1000 / 60);
+      const c = __G.camera.position; return { left: a.pipe && (L - a.pipe.u) / a.pipe.v, pos: a.pos.toArray().map((v) => +v.toFixed(2)), cam: c.toArray().map((v) => +v.toFixed(2)), form: a.anim.form, chip: !!document.querySelector('.iw-pp-ride.is-on'), boom: +g.rig.curDist.toFixed(2) }; });
     S('ride-6-pop', () => { const a = me(); for (let i = 0; i < 40 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.22); return { phase: a.pipe?.phase, y: a.pos.y }; });
   }
   if (set === 'bystander') {
@@ -49,7 +56,9 @@
       bot = M().actors.find((o) => o.team !== a.team && o.bot);
       for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
       const gl = leg('gulper');
-      put(a, -21.0, 0, 5.4, Math.atan2(21.0 - 3, -5.4)); follow(); hud(true); g.rig.yaw = Math.atan2(16, -5.4); g.rig.pitch = -0.1; step(0.4);
+      // (on the court's SW side, looking past the west gulper head into the Great Tank)
+      const yaw = Math.atan2(-6 + 16, 0 + 8.5);
+      put(a, -16, 0, -8.5, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = -0.12; step(0.4);
       const eE = gl.ends[0]; put(bot, eE.approach[0], eE.approach[1], eE.approach[2]); step(0.1);
       P().debugRide(bot, 'gulper', 0);
       return go(0.45)();
@@ -63,7 +72,7 @@
     S('mouth-one-way-in-express', () => { const e = leg('express').ends[0]; cine([e.pos[0] + e.out[0] * 5.0 - 1.5, 2.2, e.pos[2] + e.out[2] * 5.0 + 1.0], [e.pos[0], 1.2, e.pos[2]]); step(0.3); return 1; });
     S('mouth-one-way-out-express', () => { const e = leg('express').ends[1]; cine([e.pos[0] + e.out[0] * 5.0 + 1.5, 3.2, e.pos[2] + e.out[2] * 5.0], [e.pos[0], 2.2, e.pos[2]]); step(0.3); return 1; });
     S('mouth-two-way-lit-by-a-rider', () => {
-      const bot = M().actors.find((o) => o.bot && o.team === 1), e = leg('arch').ends[1];
+      const bot = M().actors.find((o) => o !== me() && o.team !== me().team), e = leg('arch').ends[1];
       const a0 = leg('arch').ends[0]; put(bot, a0.approach[0], a0.approach[1], a0.approach[2]); step(0.05); P().debugRide(bot, 'arch', 0); step(0.9);
       cine([e.pos[0] + e.out[0] * 5.0 - 1.2, 3.9, e.pos[2] + e.out[2] * 5.0 + 0.8], [e.pos[0], 3.4, e.pos[2]]); return { lit: P().lit[e.i].n };
     });
@@ -77,7 +86,7 @@
       step(1.0); return { flow: P().flow(), line: document.querySelector('.iw-pp-line.is-on')?.textContent };
     });
     S('tide-warning-world-gauges', () => {
-      hud(false); cine([2.0, 4.6, -10.0], [3.4, 10.4, -25.0], 50);
+      hud(false); cine([7.5, 10.4, -15.0], [4.5, 10.6, -25.0], 42);
       step(0.4); return { flow: P().flow() };
     });
     S('tide-flip-world', () => {
@@ -100,6 +109,17 @@
       follow(); hud(true); step(0.1);
       return { rider: bot.pipe?.phase, revealed: true };
     });
+    // the same map at four times the size, laid over the screen (the corner map is ~ 110 px wide): the network, the
+    // enemy rider's dot on the Express, its lit exit's ring, the Kelp Lines' arrows
+    S('map-enlarged', () => {
+      const mm = g.minimap; mm._compose(0);
+      const c = document.createElement('canvas'), k = Math.min((innerHeight - 40) / mm.h, (innerWidth - 40) / mm.w);
+      c.width = Math.round(mm.w * k); c.height = Math.round(mm.h * k);
+      const x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.drawImage(mm.canvas, 0, 0, c.width, c.height);
+      c.id = 'aq-mapbig'; Object.assign(c.style, { position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999, borderRadius: '18px', boxShadow: '0 0 0 4px #15121c, 0 0 40px rgba(0,0,0,.6)', background: '#123' });
+      document.body.appendChild(c);
+      return { w: c.width, h: c.height };
+    });
   }
   if (set === 'spawn') {
     S('spawn-play-camera-alpha', () => {
@@ -112,7 +132,7 @@
       return window.__spawnCam;
     });
     S('spawn-play-camera-alpha-express-rider', () => {
-      const a = me(), mate = M().actors.find((o) => o.bot && o.team === a.team), lg = leg(a.team === 0 ? 'express' : 'express~');
+      const a = me(), mate = M().actors.find((o) => o !== a && o.team === a.team), lg = leg(a.team === 0 ? 'express' : 'express~');
       const e = lg.ends[0]; put(mate, e.approach[0], e.approach[1], e.approach[2]); step(0.05);
       P().debugRide(mate, lg.id, 0); for (let i = 0; i < 200 && mate.pipe && mate.pipe.u < 33; i++) dbg.step(1000 / 60);
       return { u: mate.pipe?.u };

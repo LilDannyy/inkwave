@@ -550,7 +550,7 @@
       step(3);
       const gl = P.legs.find((l) => l.id === 'gulper'), tankV = W.X.water[0];
       atApproach(A5, gl.ends[0], 0.1); pushIn(A5, gl.ends[0]);
-      let n = 0, bad = 0, minB = Infinity, maxY = -Infinity, gradeBad = 0;
+      let n = 0, bad = 0, minB = Infinity, maxY = -Infinity, gradeBad = 0; const gradeWhy = [];
       for (let i = 0; i < 200 && A5.pipe && A5.pipe.phase !== 'pop'; i++) {
         dbg.step(1000 / 60);
         const cx = A5.pos.x, cz = A5.pos.z, inTank = Math.hypot(cx, cz) < tankV.cyl[2] - 1.6 && A5.pipe?.phase === 'ride';
@@ -561,11 +561,11 @@
           minB = Math.min(minB, rig.curDist); maxY = Math.max(maxY, cam.y);
         }
         const riderIn = D.inWaterVol(tankV, A5.pos.x, A5.pos.y + 0.3, A5.pos.z, 0), inV = riderIn && D.inWaterVol(tankV, cam.x, cam.y, cam.z, 0.05);
-        if (A5.pipe?.phase === 'ride' && inV !== !!W.looks.uwOn && Math.abs(Math.hypot(cam.x, cam.z) - tankV.cyl[2]) > 0.1 && Math.abs(cam.y - tankV.y[1]) > 0.1) gradeBad++;
+        if (A5.pipe?.phase === 'ride' && inV !== !!W.looks.uwOn && Math.abs(Math.hypot(cam.x, cam.z) - tankV.cyl[2]) > 0.1 && Math.abs(cam.y - tankV.y[1]) > 0.1) { gradeBad++; if (gradeBad < 4) gradeWhy.push([+cam.x.toFixed(2), +cam.y.toFixed(2), +cam.z.toFixed(2), inV, W.looks.uwOn, !!W.looks.rideVol, W.looks.uw.visible]); }
       }
       rideOut(A5);
       R('cam: through the Great Tank (the rider 1.6 m or more inside its water) the lens stays inside the volume (boom ≥ 1.2 m, y ≤ 2.0); the underwater grade is on exactly while the rider and the lens are both in the water',
-        n > 20 && bad === 0 && minB >= 1.19 && maxY <= 2.01 && gradeBad === 0, { frames: n, outside: bad, minBoom: minB, maxY, gradeBad });
+        n > 20 && bad === 0 && minB >= 1.19 && maxY <= 2.01 && gradeBad === 0, { frames: n, outside: bad, minBoom: minB, maxY, gradeBad, gradeWhy });
       step(0.5);
       R('cam: the grade is off once the ride camera is out of the water (and the fog is the stage\'s again)', !W.looks.uwOn && !W.looks.rideVol && !W.looks._fogSave);
     } else R('cam: (no local player in this run)', true);

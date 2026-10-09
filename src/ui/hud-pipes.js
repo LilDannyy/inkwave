@@ -34,7 +34,7 @@ const CSS = `
   background: conic-gradient(rgba(244, 241, 232, .95) calc(var(--k, 0) * 360deg), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent 78%, #000 80%, #000 98%, transparent 100%);
   mask: radial-gradient(closest-side, transparent 78%, #000 80%, #000 98%, transparent 100%); }
 .iw-pp-cd.is-on { opacity: 1; }
-.iw-pp-pill { position: absolute; left: calc(100% + var(--u) * .7); top: 50%; translate: 0 -50%; display: flex; flex-direction: column; align-items: stretch; gap: calc(var(--u) * .25);
+.iw-pp-pill { position: absolute; left: 50%; top: calc(100% + var(--u) * .55); translate: -50% 0; display: flex; flex-direction: column; align-items: stretch; gap: calc(var(--u) * .25);
   padding: calc(var(--u) * .35) calc(var(--u) * .7) calc(var(--u) * .4); border-radius: calc(var(--u) * .9); background: rgba(14, 11, 22, .8); color: #fff;
   font: 900 calc(var(--u) * 1.0) / 1 'Rubik', sans-serif; letter-spacing: .06em; white-space: nowrap; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .12); pointer-events: none; }
 .iw-pp-pill__row { display: flex; align-items: center; gap: .45em; }
@@ -42,6 +42,7 @@ const CSS = `
 .iw-pp-pill__bar { height: calc(var(--u) * .3); border-radius: 99px; background: rgba(255, 255, 255, .18); overflow: hidden; }
 .iw-pp-pill__bar i { display: block; height: 100%; width: 0; background: #dff6f8; }
 .iw-pp-pill.is-warn { background: rgba(120, 18, 30, .92); }
+.iw-hud.is-zones .iw-pp-pill, .iw-hud.is-tower .iw-pp-pill { top: calc(100% + var(--u) * 6.2); }   /* (under Zone Control's / Tower Command's own chip) */
 .iw-pp-pill.is-warn .iw-pp-pill__bar i { background: #ff5a4a; }
 .iw-pp-pill.is-shut .iw-pp-pill__tube { opacity: .45; border-style: dashed; }
 `;
