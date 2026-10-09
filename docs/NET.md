@@ -363,6 +363,38 @@ overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (t
 tower onto the host's position (dead-reckoned between snapshots); each client carries its own players standing on it
 and fills its own players' gauges. The start config carries `mode: 'tower'` and its fixed 5:00.
 
+**Bazookarp** ([b5-karp], a wip mode: `config WIP_MODES`, rooms take it only with `?wipmodes`). The host runs the rules
+(src/game/bazookarp.js) and talks to the wire only through a `KarpWire` (src/game/karpWire.js `NetWire`); WP2
+(karp-face) completes the netcode on this shape (tools/botlab/jobs/batch5/bazookarp/SPEC.md §7). Today:
+- **host → all.** Discrete records sent **at once** as `{ k: 'bk', e }` (not on the timeline: a burst, a grant or a drop
+  reaches a guest one trip after it happens), each with `q`, the host's sequence number: `['p', q, nid]` grant ·
+  `['u', q, nid, x, y, z]` a grant undone · `['b', q, team, x, y, z, byNid]` burst · `['d', q, how, x, y, z]` dropped /
+  moved · `['r', q, x, y, z, why]` reset flight · `['w', q, team, index]` plant · `['x', q, nid, x, y, z, own]` Carp Blast ·
+  `['t', q, losing, why]` overtime · `['e', q, winner, reason, c0, c1, b0, b1]` end. Snapshots on the host's **timeline**
+  as `['ks', …]` events: `'s'` 10× a second (phase, position, holder, meter, fuse, rate, counts, overtime, the window)
+  and `'S'` once a second (plus best metres, reach times, weirs lowered, `touched`, the field state …). A follower applies
+  a snapshot's phase / holder / position only when its `q` is at least the last discrete record's (a late snapshot never
+  undoes a newer grant or drop). The start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
+- **guest → host.** `{ k: 'kc', nid, ts }` a pick-up claim (re-sent every 0.3 s while touching; its kit locked until an
+  answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
+  half, zone }` the carrier's own judgement of its fuse rate / half / free zone (on change, ≤ 1 per tick), `{ k: 'kf',
+  nid, x, y, z, half, zone }` its last footing (≤ 5/s; a half or zone change at once), and **`kh`, a field on the guest's
+  ordinary 20 Hz tick** (`msg.kh = [nid, dmg, …]`): its shell hits since the last tick, summed, already × 0.5 / capped
+  (src/game/objTargets.js `takeHits`; the host's `karp.netHits`). Host → one guest: `{ k: 'kd', nid }` a refused claim.
+- **who judges what.** The shooter's screen decides a hit on the shell, the host applies it; the burst's and the Carp
+  Blast's splats are each victim's owner's (its own players in the radius, from the record's centre); a Carp Shot's
+  blast is judged on each **victim's** screen when the shooter's kit record `[2, gid, x, y, z, c]` plays there (not
+  through `applyHit`, which drops a remote attacker; the victim's owner records `[3, gid, dmg]` on the victim so the
+  shooter gets its hit marker); the carrier's own screen judges its retreat, half, free zone and last footing (`kr` /
+  `kf`); the host scores a remote carrier only from the real samples it sent (`NetWire.samples`, never its drawn
+  position), through the continuity clamp; pick-ups are the host's, from claims checked against the claimant's newest
+  sample. Carp Shots are the owner's kit records `['k', nid, 'karp', [0 | 1 | 2 | 3, gid, …]]` (`KIT_GHOSTS.karp`).
+- **left for WP2:** host migration (`onLeave`'s order, the narrowed flush, `'k'` for adopted actors; `onHostChange` is
+  a stub), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag, the full latency tests
+  (the window's 0.4 s grace for claims sent before its close and declined grants are in the engine and proven offline
+  through LoopWire's guest stub; online they are untested), the results' per-player columns on screen. Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes'
+  NET=tools/botlab/tests/net-karp.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (the smoke test, 11 checks).
+
 **Relay (server/).** One Durable Object per room code: membership, host election, join refusal (unknown / full /
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime
 without waking the room; a sweep drops sockets silent for 10 s during a match (150 s in the lobby).
