@@ -162,6 +162,13 @@ on players — src/game/statusFx.js, online through the actor tick's flags):
 own ledges (`MAP=halyard` / `MAP=calamari`: 'wailmap'). Its pictures: `tools/botlab/scenes/sub-tweaks2.js` through
 shoot.cjs (`PRE=…/sub-tweaks2.js PRE_ARGS=<scene>`, see its header).
 
+Batch 5's four subs, scaffold (`[b5-subscaf]`: the Glide Bomb, Scrap Sentry, Chain Bobber and Dash Pellet registered end to
+end — SUBS, SUB_ORDER, SUB_VIEW_SCALE, placeholder models and icons, stub kits in src/game/kits/<id>.js that refuse with
+"Can't use" until each builder lands its sub):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-scaffold.js tools/botlab/run.sh tools/botlab/page.cjs` (the web of ids
+for every SUB_ORDER id; each stub in hand, refused; bots on stubs) and, online, `CLIENTS=2 Q0=autopilot Q1=autopilot
+NET=tools/botlab/tests/net-subscaf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (stub ids through the lobby into a match).
+
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
 no ink refill for 0.33 s after a shot — src/game/kits/bow.js, config WEAPONS.bow, actor.js; the bots' level lane shots):

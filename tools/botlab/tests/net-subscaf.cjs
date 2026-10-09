@@ -5,6 +5,7 @@
 // model raised in the guest's hand through the actor tick's subAim flag), lets go: "Can't use" on the guest's screen,
 // no ink paid, nothing made, and nothing recorded for the stub kinds on either screen; no console errors.
 //   CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-subscaf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
+// (Once the Dash Pellet is built — its kit no longer flagged `stub` — part 3 is its own net test's to judge and is skipped.)
 module.exports = async (ctx) => {
   const { clients, R, wait, say } = ctx;
   const [A, B] = clients;
@@ -53,27 +54,31 @@ module.exports = async (ctx) => {
   R('turf match: on both screens the host holds the Glide Bomb and the guest the Dash Pellet (sub and the model in hand)', want(kA) && want(kB), { onHost: kA, onGuest: kB });
 
   // ---------------------------------------------------------------- 3. the guest uses it: refused; nothing crosses the wire
-  // (record every kit record each screen sends or receives for the stub kinds, and the guest's own refusals / uses)
-  const watch = `(async () => { const { on } = await import('./src/core/ctx.js'); const NEW = ${JSON.stringify(NEW)}; window.__ss = { cant: 0, use: 0, sent: 0, got: 0 };
-    on('sub:cantuse', (e) => { if (e.actor === __G.match.local) __ss.cant++; }); on('sub:use', (e) => { if (e.actor === __G.match.local) __ss.use++; });
-    const nm = __G.netm, rec = nm.recKit; nm.recKit = function (a, kind, data) { if (NEW.includes(kind)) __ss.sent++; return rec.apply(this, arguments); };
-    const play = nm._play; nm._play = function (from, e) { if (e && e[1] === 'k' && NEW.includes(e[3])) __ss.got++; return play.apply(this, arguments); };
-    const msg = nm.onMessage; nm.onMessage = function (from, d) { if (d && d.k === 'dh' && NEW.includes(d.kind)) __ss.got++; return msg.apply(this, arguments); };
-    return 1; })()`;
-  for (const c of [A, B]) await c.js(watch);
-  await B.js(`(() => { const me = __G.match.local; window.__hold = true; me.bot.update = () => { const it = me.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.special = false; it.sub = window.__hold; }; me.ink = 100; return 1; })()`);
-  let seenHeld = false;
-  for (let i = 0; i < 30 && !seenHeld; i++) { seenHeld = await A.js(`(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(idB)} && !x.isBot); return !!(a && a.character.bomb && a.character.bomb.kind === 'dash' && a.character.bomb.group.visible); })()`); if (!seenHeld) await wait(100); }
-  const inkHeld = await B.js(`__G.match.local.ink`);
-  await B.js(`window.__hold = false; 1`);
-  await wait(1500);
-  const gs = await J(B, `({ ...__ss, ink: __G.match.local.ink, items: __G.subs.items.length, deny: __inkwave.hud && __inkwave.hud.denyIcon ? __inkwave.hud.denyIcon._k : null })`);
-  const hs = await J(A, `({ ...__ss, items: __G.subs.items.length })`);
-  R('the host sees the guest raise the Dash Pellet\'s model while holding the button (the actor tick\'s subAim)', seenHeld);
-  R('the guest lets go: "Can\'t use" on its screen (one refusal, the callout\'s icon), no ink paid, nothing made, no use',
-    gs.cant === 1 && gs.use === 0 && gs.ink >= inkHeld - 0.01 && gs.items === 0 && gs.deny === 'dash', { guest: gs, inkHeld });
-  R('nothing recorded or received for the stub kinds on either screen', gs.sent === 0 && gs.got === 0 && hs.sent === 0 && hs.got === 0 && hs.items === 0, { guest: gs, host: hs });
-  await B.js(`delete __G.match.local.bot.update; 1`);
+  const dashStub = await B.js(`import('./src/game/kits/registry.js').then((K) => !!K.SUB_KITS.dash?.stub)`);
+  if (!dashStub) R('(the Dash Pellet is built: its refusal here is retired — its own net test covers it)', true);
+  else {
+    // (record every kit record each screen sends or receives for the stub kinds, and the guest's own refusals / uses)
+    const watch = `(async () => { const { on } = await import('./src/core/ctx.js'); const NEW = ${JSON.stringify(NEW)}; window.__ss = { cant: 0, use: 0, sent: 0, got: 0 };
+      on('sub:cantuse', (e) => { if (e.actor === __G.match.local) __ss.cant++; }); on('sub:use', (e) => { if (e.actor === __G.match.local) __ss.use++; });
+      const nm = __G.netm, rec = nm.recKit; nm.recKit = function (a, kind, data) { if (NEW.includes(kind)) __ss.sent++; return rec.apply(this, arguments); };
+      const play = nm._play; nm._play = function (from, e) { if (e && e[1] === 'k' && NEW.includes(e[3])) __ss.got++; return play.apply(this, arguments); };
+      const msg = nm.onMessage; nm.onMessage = function (from, d) { if (d && d.k === 'dh' && NEW.includes(d.kind)) __ss.got++; return msg.apply(this, arguments); };
+      return 1; })()`;
+    for (const c of [A, B]) await c.js(watch);
+    await B.js(`(() => { const me = __G.match.local; window.__hold = true; me.bot.update = () => { const it = me.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.special = false; it.sub = window.__hold; }; me.ink = 100; return 1; })()`);
+    let seenHeld = false;
+    for (let i = 0; i < 30 && !seenHeld; i++) { seenHeld = await A.js(`(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(idB)} && !x.isBot); return !!(a && a.character.bomb && a.character.bomb.kind === 'dash' && a.character.bomb.group.visible); })()`); if (!seenHeld) await wait(100); }
+    const inkHeld = await B.js(`__G.match.local.ink`);
+    await B.js(`window.__hold = false; 1`);
+    await wait(1500);
+    const gs = await J(B, `({ ...__ss, ink: __G.match.local.ink, items: __G.subs.items.length, deny: __inkwave.hud && __inkwave.hud.denyIcon ? __inkwave.hud.denyIcon._k : null })`);
+    const hs = await J(A, `({ ...__ss, items: __G.subs.items.length })`);
+    R('the host sees the guest raise the Dash Pellet\'s model while holding the button (the actor tick\'s subAim)', seenHeld);
+    R('the guest lets go: "Can\'t use" on its screen (one refusal, the callout\'s icon), no ink paid, nothing made, no use',
+      gs.cant === 1 && gs.use === 0 && gs.ink >= inkHeld - 0.01 && gs.items === 0 && gs.deny === 'dash', { guest: gs, inkHeld });
+    R('nothing recorded or received for the stub kinds on either screen', gs.sent === 0 && gs.got === 0 && hs.sent === 0 && hs.got === 0 && hs.items === 0, { guest: gs, host: hs });
+    await B.js(`delete __G.match.local.bot.update; 1`);
+  }
   for (const c of [A, B]) await c.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);   // (as found)
   say('done');
 };

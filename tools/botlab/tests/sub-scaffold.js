@@ -6,8 +6,8 @@
 //  - the web of ids: every SUB_ORDER id has a SUBS entry (id, kind, name, blurb, ink cost), its own 64×64 icon, its own
 //    model (getSubDef doesn't fall back to the Splat Bomb), a view scale, and a kit (or is one of the built-in kinds
 //    subs.js / weapons.js run); nothing registered outside SUB_ORDER;
-//  - the four carry the spec's names, blurbs, ink costs and view scales;
-//  - each stub, equipped on the local kid: holding the button raises its placeholder model in the hand and the HUD badge
+//  - the four carry the spec's names; while still stubs, its blurbs, ink costs and view scales too;
+//  - each stub (a kit still flagged `stub`: once a builder lands its sub, its own test judges it and these skip it), equipped on the local kid: holding the button raises its placeholder model in the hand and the HUD badge
 //    shows its icon; the release is refused through the runner's "Can't use" path (one 'sub:cantuse', the HUD callout
 //    with its icon, no ink paid, nothing made, no 'sub:use', a console.warn '[<id>] not built yet'); a direct use()
 //    refunds and refuses the same way; nothing throws;
@@ -71,18 +71,20 @@
     R('nothing registered outside SUB_ORDER (SUBS, SUB_KITS, SUB_VIEW_SCALE)', strays.length === 0, strays);
 
     // ---- 3. the spec's words and numbers
-    const specBad = NEW.filter((id) => { const s = SUBS[id], w = SPEC[id]; return !s || s.name !== w.name || s.inkCost !== w.ink || s.blurb !== w.blurb || SUB_VIEW_SCALE[id] !== w.scale; });
-    R('the four carry the spec\'s names, blurbs, ink costs (65 / 65 / 40 / 55 %) and view scales (1.6 / 1.5 / 1.5 / 2)', specBad.length === 0,
-      { bad: specBad, have: NEW.map((id) => [id, SUBS[id]?.name, SUBS[id]?.inkCost, SUB_VIEW_SCALE[id]]) });
-    R('the four kits are stubs (SUB_KITS[id].stub) whose bot hooks never throw them',
-      NEW.every((id) => SUB_KITS[id]?.stub === true && SUB_KITS[id].bot?.fight?.(me.bot || {}, 8) === false && SUB_KITS[id].bot?.paint?.(me.bot || {}) === false), NEW.map((id) => [id, !!SUB_KITS[id]?.stub]));
+    // (a builder who lands its sub drops `stub`: from then on its own tests judge its numbers and behaviour)
+    const STUBS = NEW.filter((id) => SUB_KITS[id]?.stub === true);
+    const specBad = NEW.filter((id) => { const s = SUBS[id], w = SPEC[id]; return !s || s.name !== w.name || (STUBS.includes(id) && (s.inkCost !== w.ink || s.blurb !== w.blurb || SUB_VIEW_SCALE[id] !== w.scale)); });
+    R('the four carry the spec\'s names; the stubs its blurbs, ink costs (65 / 65 / 40 / 55 %) and view scales (1.6 / 1.5 / 1.5 / 2)', specBad.length === 0,
+      { bad: specBad, stubs: STUBS, have: NEW.map((id) => [id, SUBS[id]?.name, SUBS[id]?.inkCost, SUB_VIEW_SCALE[id]]) });
+    R(`the stubs (${STUBS.join(', ') || 'none left'}): their bot hooks never throw them`,
+      STUBS.every((id) => SUB_KITS[id].bot?.fight?.(me.bot || {}, 8) === false && SUB_KITS[id].bot?.paint?.(me.bot || {}) === false), NEW.map((id) => [id, STUBS.includes(id) ? 'stub' : 'built']));
 
     // ---- 4. each stub in the local kid's hands
     // every brain still (the local kid's too: page.cjs runs it on ?autopilot); the local kid's intent is ours
     let hold = false;
     for (const a of bots) a.bot.update = () => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.special = false; it.sub = a === me && hold; };
     const sameIcon = (el, id) => !!el && norm(el.innerHTML) === norm(SUB_ICONS[id]);
-    for (const id of NEW) {
+    for (const id of STUBS) {
       me.setSub(id); me.ink = 90; hold = false;
       step(8);
       const n0 = { items: G.subs.items.length, bombs: P.bombs.length }, e0 = evs.length, w0 = warns.length;
@@ -116,16 +118,18 @@
     }
 
     // ---- 5. bots with stubs: a live fight
-    m.actors.forEach((a, i) => a.setSub(NEW[i % NEW.length]));
-    freeBrains();
-    me.ink = 100;
-    const e0 = evs.length, w0 = warns.length, n0 = { items: G.subs.items.length, bombs: P.bombs.length };
-    let err = null, frames = 0;
-    try { for (; frames < 1200; frames++) step(1); } catch (e) { err = String(e && e.stack || e).slice(0, 300); }
-    const ev = evs.slice(e0).filter((x) => NEW.includes(x.kind)), ws = warns.slice(w0).filter((w) => /not built yet/.test(w));
-    const splats = m.actors.reduce((s, a) => s + (a.stats?.splats || 0), 0);
-    R('bots on stubs: 20 s of a live 4 v 4 — no stub thrown, refused or warned about (no bot path presses one), no exception',
-      !err && frames === 1200 && ev.length === 0 && ws.length === 0, { err, frames, events: ev.slice(0, 6), warns: ws.slice(0, 3), subs: m.actors.map((a) => a.subId), splats, made: G.subs.items.length - n0.items + P.bombs.length - n0.bombs });
+    if (STUBS.length) {
+      m.actors.forEach((a, i) => a.setSub(STUBS[i % STUBS.length]));
+      freeBrains();
+      me.ink = 100;
+      const e0 = evs.length, w0 = warns.length, n0 = { items: G.subs.items.length, bombs: P.bombs.length };
+      let err = null, frames = 0;
+      try { for (; frames < 1200; frames++) step(1); } catch (e) { err = String(e && e.stack || e).slice(0, 300); }
+      const ev = evs.slice(e0).filter((x) => STUBS.includes(x.kind)), ws = warns.slice(w0).filter((w) => /not built yet/.test(w));
+      const splats = m.actors.reduce((s, a) => s + (a.stats?.splats || 0), 0);
+      R('bots on stubs: 20 s of a live 4 v 4 — no stub thrown, refused or warned about (no bot path presses one), no exception',
+        !err && frames === 1200 && ev.length === 0 && ws.length === 0, { err, frames, events: ev.slice(0, 6), warns: ws.slice(0, 3), subs: m.actors.map((a) => a.subId), splats, made: G.subs.items.length - n0.items + P.bombs.length - n0.bombs });
+    }
   } catch (e) {
     R('HARNESS', false, { error: String(e && e.stack || e).slice(0, 400) });
   } finally {
