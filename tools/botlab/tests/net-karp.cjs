@@ -123,6 +123,9 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   await A.js(`(() => { const a = __G.match.local; a.hp = 100; a.invuln = 0; return 1; })()`);
   await wait(900);
   const hp0 = await J(A, `__G.match.local.hp`);
+  // (fix round 2) A's own screen logs the kid's hp at each Carp Shot hurt as it happens: read 1.9 s and a few round trips
+  // later (seconds on a loaded Mac), the kid had already regenerated (regen starts 1.3 s after a hit, 22 hp/s)
+  await A.js(`(() => { window.__aHurt = []; import('./src/core/ctx.js').then((m) => m.on('damage', (e) => { if (e.victim === __G.match.local && e.source === 'karp') window.__aHurt.push({ dmg: +(+e.amount).toFixed(2), hp: +e.victim.hp.toFixed(2), att: e.attacker && e.attacker.nid }); })); return 1; })()`);
   const pairs = [];
   const shoot = async (yaw) => {
     await B.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = ${yaw}; a.aimPitch = 0; a.intent.fire = true; setTimeout(() => { a.intent.fire = false; }, 60); return 1; })()`);
@@ -132,14 +135,15 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
     for (const m of mine) if (!pairs.some((p) => p.gid === m.gid)) { const g = ghosts.find((q) => q.gid === m.gid); pairs.push({ gid: m.gid, shooter: m.land, ghost: g && g.land, d: g && g.land ? r2(Math.hypot(g.land[0] - m.land[0], g.land[1] - m.land[1], g.land[2] - m.land[2])) : null }); }
   };
   await shoot(Math.PI);
-  const hp1 = await J(A, `({ hp: __G.match.local.hp, alive: __G.match.local.alive })`);
+  const hp1 = await J(A, `({ hp: __G.match.local.hp, alive: __G.match.local.alive, hurt: window.__aHurt })`);
+  const hpLow = Math.min(hp1.hp, ...hp1.hurt.map((h) => h.hp));
   await wait(400);
   await shoot(Math.PI / 2);
   const onKid = pairs.find((p) => p.shooter && Math.hypot(p.shooter[0] - land[0], p.shooter[2] - land[2]) < 1.5), onFloor = pairs.find((p) => p.shooter && p.shooter[0] > bPos[0] + 4);
   R('5. B\'s Carp Shots land in the same spot on the host\'s screen (± 0.3 m): one on A\'s kid, one on the floor ([1] carries the landing, not the raycast\'s direction)',
     !!onKid && !!onFloor && onKid.d != null && onKid.d < 0.3 && onFloor.d != null && onFloor.d < 0.3, { pairs, land });
   const hits = await J(B, `window.__hits`);
-  R('5b. the Splash hurts A\'s kid on A\'s own screen (the victim judges [2])', hp1.hp < hp0 - 15, { hp0, hp1 });
+  R('5b. the Splash hurts A\'s kid on A\'s own screen (the victim judges [2]: B\'s Carp Shot, its hp at that moment)', hpLow < hp0 - 15 && hp1.hurt.some((h) => h.att === bNid && h.dmg > 15), { hp0, hpLow, hp1 });
   R('5c. B gets its hit marker for A (A\'s [3] → a hit event with B as the attacker)', hits.some((h) => h.att === bNid && h.vic === aNid && h.w === 'karp' && h.rv), hits);
 
   // ---- 6. B retreats on its own half: DON'T RETREAT! on B's screen at once, the host's rate ×3 (B's kr)
