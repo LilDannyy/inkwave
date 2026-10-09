@@ -163,7 +163,9 @@ export const RIDGE = [...arc(LR_OUT, 158, 177.5), [-LR_OUT, NH_Z], [-RIDGE_OUT, 
 export const CASTING_BED = [...arc(36.2, -74, -80, 2), ...arc(33, -80, -74, 2)];
 // the casting dock (1.8, fix round 1): a loading stage at the east Lakefront's lake edge, 0.6 m inside the shore like the
 // Moorings, ≥ 1.4 m from the Spillway's bank (the channel floor's hop exits) and clear of the East Steps' foot
-export const CAST_DOCK = [...arc(23.6, -76, -65.5, 2), P(26.9, -65.5), P(26.9, -71.0), P(25.7, -76)];
+// (θ −65.5 … −71.5, r 23.6 → 26.6: a 3.4 m lane behind it along the terrace face, open past its west end to the East
+// Steps — it does not reach the steps' foot, where it closed that lane into a pocket at HIGH)
+export const CAST_DOCK = [...arc(23.6, -71.5, -65.5, 2), P(26.6, -65.5), P(26.6, -71.5)];
 
 // ---------------------------------------------------------------------------------------------- the edges E2–E8 (walls)
 // polylines of the outer edge of walkable floor (Alpha's half); each segment gets a caldera-wall O-box laid outside it

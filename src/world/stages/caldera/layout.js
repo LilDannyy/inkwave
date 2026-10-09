@@ -25,7 +25,7 @@ const HIGH_BUILD = BLOCKOUT_LAVA && LAVA_VIEW === 'high';
 const { SB } = G;   // the Spillway Bridge's centre line, s along the channel (see the bridge)
 const WB_Z0 = 0.3, WB_Z1 = 4.3;   // the West Bridge's sides (z)
 const CUPOLA = [13.5, -46.5];
-const DOCK_CAR = [...P(25.3, -69.0), -69.0], DOCK_TB = [...P(24.3, -74.4), -74.4];   // on the casting dock: [x, z, θ]
+const DOCK_CAR = [...P(25.1, -68.5), -68.5], DOCK_TB = [...P(24.3, -74.4), -74.4];   // the ladle car on the casting dock, the Tide Board by the East Steps: [x, z, θ]
 
 // ------------------------------------------------------------------------------------------------------------ palette
 // the works: pale tuff paving, whitewash, works green iron, buff firebrick; the caldera: basalt, red scoria, glaze
@@ -171,7 +171,8 @@ add(B(2.2, 3.4, 1.2, 2.2, -9.6, -8.4, cover(K.cast, { tag: 'ingot-stack' })));
 // the collar's, as before; none of it stands on a flat where a step link lands (those face north and south). Its first
 // step meets the Pour Floor's south edge.
 const APRON_EDGE = (() => {   // the collars' outer edge, z from −4.9 to −11.4 (a miter offset of the notch's east side)
-  const N = G.NOTCH_EDGES.slice(24).slice(13), d = 0.6, segs = [];
+  // (the notch's east side without its sub-0.4 m kinks: a miter offset of those throws spikes)
+  const N = G.NOTCH_EDGES.slice(24).slice(13).filter((p, i, A) => i === 0 || i === A.length - 1 || Math.hypot(p[0] - A[i - 1][0], p[1] - A[i - 1][1]) > 0.4), d = 0.6, segs = [];
   for (let i = 0; i + 1 < N.length; i++) {
     const [ax, az] = N[i], [bx, bz] = N[i + 1], L = Math.hypot(bx - ax, bz - az); if (L < 0.05) continue;
     let nx = (bz - az) / L, nz = -(bx - ax) / L; if (nx < 0) { nx = -nx; nz = -nz; }   // toward the island (east)
@@ -188,6 +189,7 @@ const APRON_EDGE = (() => {   // the collars' outer edge, z from −4.9 to −11
   pts.push(segs[segs.length - 1][1]);
   return pts.map(([x, z]) => [G.r3(x), G.r3(z)]);
 })();
+export { APRON_EDGE };
 const apronAt = (z) => { for (let i = 0; i + 1 < APRON_EDGE.length; i++) { const [ax, az] = APRON_EDGE[i], [bx, bz] = APRON_EDGE[i + 1]; if ((az - z) * (bz - z) <= 0 && az !== bz) return G.r3(ax + ((bx - ax) * (z - az)) / (bz - az)); } return null; };
 const chainZ = (z0, z1) => [[apronAt(z0), z0], ...APRON_EDGE.filter(([, z]) => z < z0 - 0.02 && z > z1 + 0.02), [apronAt(z1), z1]];
 // three disjoint tiers: 3.0 west of x −5.6 below z −9; 2.4 round it; 1.8 round that, up to the Pour Floor
@@ -196,8 +198,8 @@ const APRON = [
   [[...chainZ(-7.2, -9.0), [-5.6, -9.0], [-5.6, -11.2], [-4.6, -11.2], [-4.6, -7.2]], 2.4, '#5a5e65'],
   [[...chainZ(-5.0, -7.2), [-4.6, -7.2], [-4.6, -11.2], [-3.6, -11.2], [-3.6, -5.0]], 1.8, '#666a71'],
 ];
-// (the collar-side edges are filled to 0.18 m short of the collars: a crack, never a slot)
-for (const [poly, top, c] of APRON) add(fill(poly, { y0: 1.2, top, mk: () => rock({ tag: 'organ-apron', color: c }), edge: () => ({ kind: 'skip', w: 0.6 }) }).cols);
+// (the collar-side edges get the kit's sunk coping, which reaches right to the collars' edge: no slot between them)
+for (const [poly, top, c] of APRON) { const f = fill(poly, { y0: 1.2, top, mk: () => rock({ tag: 'organ-apron', color: c }), edge: () => ({ kind: 'ledge', w: 0.6, sink: true, y0: 1.2 }) }); add(f.cols, f.ledges); }
 // a broken column stub on the apron's top (0.95 m: cover for whoever holds it; the top was an 8.2 m open circle)
 add(OCT(-6.1, -10.55, 0.42, 3.0, 3.95, rock({ tag: 'organ-stump', color: K.basaltDk, roof: true })));
 // the Organ Pipes and (at HIGH) the Pumice Race: static stand-ins at this build's level until the lava engine lands
@@ -349,9 +351,9 @@ add(stack(-10.0, -37.0, 2.4, 1.0, 1.2, 2.4, 'pattern-crates', K.wood),
 // (fix round 1) the casting dock on the east Lakefront: a 0.6 m loading stage at the lake edge (1.8, like the Moorings
 // opposite) with the ladle car on its siding and the Tide Board; a 2 m lane behind it along the terrace face
 { const d = fill(G.CAST_DOCK, { y0: 1.2, top: 1.8, mk: () => iron({ tag: 'cast-dock', color: '#86847e' }), ledgeMk: () => coping({ color: K.basaltDk }), edge: () => ({ kind: 'ledge', w: 0.8, y0: 1.2 }) }); add(d.cols, d.ledges); }
-add(O(G.r3(DOCK_CAR[0]), G.r3(DOCK_CAR[1]), 3.4, 1.7, 1.8, 3.9, -DOCK_CAR[2] - 90, cover('#4f5a52', { tag: 'ladle-car' })),
+add(O(G.r3(DOCK_CAR[0]), G.r3(DOCK_CAR[1]), 2.6, 1.6, 1.8, 3.9, -DOCK_CAR[2] - 90, cover('#4f5a52', { tag: 'ladle-car' })),
   stack(-5.6, -24.2, 1.2, 1.0, 1.1, 1.2, 'chain-bin'),
-  O(G.r3(DOCK_TB[0]), G.r3(DOCK_TB[1]), 2.4, 0.6, 1.8, 4.0, -DOCK_TB[2] - 90, cover('#e6dfcd', { tag: 'tide-board' })));
+  O(G.r3(DOCK_TB[0]), G.r3(DOCK_TB[1]), 2.4, 0.6, 1.2, 3.4, -DOCK_TB[2] - 90, cover('#e6dfcd', { tag: 'tide-board' })));
 add(stack(-14.6, -22.0, 1.4, 1.2, 1.3, 1.8, 'capstan', '#4f5a52'), stack(-11.4, -24.4, 1.0, 1.0, 1.0, 1.8, 'chain-bollard', K.ironDk),
   stack(-17.4, -21.6, 1.2, 1.2, 1.0, 1.8, 'stone-crate', K.pumice));
 // the winch house on the south head: drives the Race's chains
