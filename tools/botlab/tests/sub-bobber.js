@@ -739,6 +739,12 @@
       S.blockShot(V(L[0].spot.x, 2.5, L[0].spot.z), V(L[0].spot.x, 0.4, L[0].spot.z), me.team, 36, me); step(0.5);
       const cx = H?.xh?.querySelector('.iw-bobx');
       R('draw: "CHAIN ×6" by the crosshair when your chain goes off, one tick per foe it caught', !!cx && cx.classList.contains('is-on') && /×6/.test(cx.textContent) && cx.querySelectorAll('span i').length === 1, { text: cx?.textContent, ticks: cx?.querySelectorAll('span i').length });
+      // (the review) it never prints over the turf points the same chain's paint pops up by the crosshair: up and left of
+      // the reticle, the pops below and right of it — at this window's size and at 960 × 600
+      { const rc = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; }, hit = (p, q) => p.l < q.r && q.l < p.r && p.t < q.b && q.t < p.b;
+        const xr = rc(H.xh), bx = rc(cx), pops = [...H.xh.querySelectorAll('.iw-tpop')].map(rc), tank = H.xh.querySelector('.iw-tank'), chip = H.xh.querySelector('.iw-subaim');
+        const others = [...pops, ...(tank ? [rc(tank)] : []), ...(chip ? [rc(chip)] : [])];
+        R(`draw: the CHAIN callout sits up and left of the reticle, clear of the turf pops (${pops.length} on screen), the ink tank and the sub chip`, bx.r <= xr.l - 20 && bx.b <= xr.t - 20 && !others.some((q) => hit(bx, q)), { callout: bx, centre: [xr.l, xr.t], pops }); }
       // the aim guide: the float marker over the landing ring, preview tethers to yours within 5 m, the ×N label
       reset();
       const g1 = drop(me, 0, 4), g2 = drop(me, 2, 4); settle();

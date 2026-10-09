@@ -6,7 +6,8 @@
 //                   label (the chain it would make). Where it would fizzle (by the enemy's spawn, a no-place disc) the
 //                   marker goes grey with "✕".
 //   the count       by the sub badge: your live bobbers ("×7") with a thin ring for the oldest one's time left.
-//   CHAIN ×N        by the crosshair when a chain of yours goes off, with a tick per foe it caught.
+//   CHAIN ×N        by the crosshair (up and left of it, clear of the turf pops) when a chain of yours goes off, with a
+//                   tick per foe it caught.
 //   a disarm        a quiet low "doo" (yours only) when a foe disarms one of yours.
 //   the teammate cue  every player on a chain's team (the owner too): a chain GLOWS (tethers and lamps ×1.6, pulsing at
 //                   3 Hz) while a foe this player can see — on screen, a clear line from the camera to their chest,
@@ -38,9 +39,12 @@ const CSS = `
 .iw-bobc.is-low svg .fg { stroke: #ffcf33; }
 .iw-bobc.is-pop { animation: iw-bobc-pop .35s cubic-bezier(.34, 1.8, .64, 1); }
 @keyframes iw-bobc-pop { 0% { scale: 1.35; } }
-.iw-bobx { position: absolute; left: 34px; top: 26px; display: flex; flex-direction: column; gap: 3px; pointer-events: none; opacity: 0; white-space: nowrap; }
+/* (up and left of the reticle: the turf pops rise at its lower right, the ink tank sits to its right, the sub chip and
+   "can't use" at its lower left, the refusal note at its upper right) */
+.iw-bobx { position: absolute; right: 30px; top: -64px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; pointer-events: none; opacity: 0; white-space: nowrap;
+  transform-origin: 100% 100%; }
 .iw-bobx.is-on { animation: iw-bobx 1.5s forwards; }
-@keyframes iw-bobx { 0% { opacity: 0; translate: -6px 0; scale: 1.35; } 10% { opacity: 1; translate: 0 0; scale: 1; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -6px; } }
+@keyframes iw-bobx { 0% { opacity: 0; translate: 6px 0; scale: 1.35; } 10% { opacity: 1; translate: 0 0; scale: 1; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -6px; } }
 .iw-bobx b { font: 900 17px / 1 'Titan One', 'Rubik', sans-serif; letter-spacing: .04em; color: #fff; -webkit-text-stroke: 4px #15121c; paint-order: stroke fill; }
 .iw-bobx b em { font-style: normal; color: var(--self-light); }
 .iw-bobx span { display: flex; gap: 3px; min-height: 8px; }
