@@ -256,8 +256,9 @@ add(drum(-7.6, -48.6, 0.8, 1.3, 3.6, 'cable-drum', K.ironDk));
 add(B(-27.1, -22.4, 3.6, 4.2, -42.7, -40.5, { color: K.sand, pattern: PATTERN.rubber, tag: 'moulding-floor' }));
 add(B(-26.9, -25.5, 3.6, 5.8, -42.5, -40.7, cover(K.ironDk, { tag: 'lamp-post-rack' })), B(-23.6, -22.6, 3.6, 5.2, -42.3, -41.2, cover('#6b5f55', { tag: 'flask-stack' })));
 add(stack(-21.0, -42.2, 1.2, 1.4, 1.2, 3.6, 'ingot-pile'));
-// the yard front: a railing on the spiral (squids pass), open at the Bay Stair, the Upper Surge Steps and the tower's climb
-{ const gaps = [G.ST_CUPOLA.a, G.ST_UPPER.a, G.CHORD_Y.a];
+// the yard front: a railing on the spiral (squids pass), open at the Bay Stair, the Upper Surge Steps and the tower's climb;
+// none east of the Bay Stair, where the Firebrick Store (on the terrace below, 2.3 m over the yard) closes the yard's tip
+{ const gaps = [[G.ST_CUPOLA.a[0], G.TL + 0.6], G.ST_UPPER.a, G.CHORD_Y.a];
   const runs = []; let a0 = G.TL - 0.6;
   for (const [lo, hi] of gaps.slice().sort((p, q) => q[1] - p[1])) { runs.push([a0, hi + 0.4]); a0 = lo - 0.4; }
   runs.push([a0, G.TW + 0.5]);
@@ -284,14 +285,39 @@ add(stairOn(G.ST_EAST, 2.7, 1.2, 2.4, 2.2, steps({ tag: 'east-steps' })));
   for (const [lo, hi] of gaps.slice().sort((p, q) => q[1] - p[1])) { runs.push([a0, hi + 0.5]); a0 = lo - 0.5; }
   runs.push([a0, -106]);
   for (const [r0, r1] of runs) if (r0 - r1 > 1) add(segsAlong(G.sarcF((a) => G.RT(a) + 0.25, r0, r1, [], 3), 0.5, 2.4, 3.3, { color: '#7a7d82', pattern: PATTERN.concrete, roof: true, tag: 'terrace-parapet' })); }
-// terrace cover
-add(stack(-1.2, -34.0, 1.4, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'), stack(-12.0, -37.0, 1.4, 1.0, 1.0, 2.4, 'pattern-crates', K.wood));
+// the terrace's masses, all clear of the tower's terrace climb (x −19.5 ± 1.75 off the Moorings), its run (z −34 ± 1.75)
+// and its yard climb (x −9 ± 1.75), and of every stair's landing:
+// - the west end: the Pattern Shop, a weatherboard shed built against the Rim Head's face between the Moorings' corner and
+//   the Crest Stair (3 m: its roof 1.2 m over the Rim Head; a lower porch in front, 2.2 m), so the west end splits into
+//   the tower's lane along the Moorings' edge and a lane along the yard face to the Crest Stair; a sand bin closes the
+//   dead sliver between the Crest Stair's foot and the yard face
+// - the middle: the raised casting bed (0.6) in the bay between the Upper Surge Steps and the tower's yard climb, a flask
+//   stack and pattern crates on it
+// - the bay end: the Firebrick Store (3.5 m), the brick store against the Bay Stair's east side on the yard face, closing
+//   the yard's dead tip behind the rail (it stands 2.3 m over the yard: the Bay Stair's landing has its cover)
+{ const ur = [Math.cos(G.TW * G.D), Math.sin(G.TW * G.D)];   // along the Rim Head's face (outward); v into the terrace
+  add(frameBox([0, 0], ur, [38.6, 42.5], [0, 1.7], 2.4, 5.4, { color: K.wood, pattern: PATTERN.planks, roof: true, tag: 'pattern-shop' }),
+    frameBox([0, 0], ur, [40.4, 42.5], [1.7, 2.6], 2.4, 4.6, { color: '#8a6e50', pattern: PATTERN.planks, roof: true, tag: 'pattern-shop-porch' }),
+    frameBox([0, 0], ur, [45.5, 46.2], [0, 1.9], 2.4, 3.7, cover(K.sand, { tag: 'sand-bin' }))); }
+add(B(-14.3, -11.05, 2.4, 3.0, -39.05, -36.95, { color: K.sand, pattern: PATTERN.rubber, tag: 'casting-bed' }));
+add(B(-14.0, -12.8, 2.4, 4.0, -38.8, -37.85, cover('#6b5f55', { tag: 'flask-stack' })), B(-12.2, -11.3, 3.0, 3.9, -38.7, -37.6, cover(K.wood, { tag: 'pattern-crates' })));
+{ const c = G.ST_CUPOLA, u = unit(c.pts[0], c.pts[1]), e = [c.mid[0] + u[0] * 1.2, c.mid[1] + u[1] * 1.2];   // the stair's top east corner
+  add(frameBox(e, u, [0.02, 3.25], [-0.05, 2.3], 2.4, 5.9, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
 
 // ---------------------------------------------------------------------------------------- the Lakefront (1.2), the Moorings (1.8)
 add(ob([-7.8, -23.4], 2.4, 0.6, 1.2, 3.4, 0, cover('#e6dfcd', { tag: 'tide-board' })));   // the Tide Board by the causeway's foot, clear of the tower's run and the weir's room
 add(stack(-4.0, -23.2, 1.0, 1.0, 1.1, 1.2, 'mooring-bollard', K.ironDk));
-add(stack(-14.4, -29.8, 1.4, 1.2, 1.3, 1.8, 'capstan', '#4f5a52'), stack(-17.8, -28.6, 1.0, 1.0, 1.0, 1.8, 'chain-bollard', K.ironDk),
-  stack(-22.7, -26.6, 1.2, 1.2, 1.0, 1.8, 'stone-crate', K.pumice));
+// the Lakefront east of the causeway: a ladle cradle (1.6) at the terrace face's foot, between the weir's 3 m room and
+// the East Steps' west side
+add(polBox(G.RT(-75.95) - 0.52, -75.95, 1.3, 1.0, 1.2, 2.8, cover(K.ironDk, { tag: 'ladle-cradle' })));
+// and a chain bin at the face's foot beside the Lower Surge Steps (3.3 m from the weir)
+add(stack(1.8, -29.3, 1.0, 0.8, 1.1, 1.2, 'chain-bin', '#4f5a52'));
+// the Moorings (the side zone): the capstan, a chain bollard (off the tower's climb lane, x ≥ −17.75), the spare-stone
+// crate and a mooring bollard on its lake edge (north of the tower's run, z ≥ −24.25). Their colliders start 0.2 m down
+// in the Moorings' deck (1.6): the same on screen and to every player, and the cover rule's Lakefront-level measure
+// (bare.mjs reads the Moorings at 1.2) sees them as the pieces they are
+add(stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack(-17.2, -28.6, 1.0, 1.0, 1.2, 1.6, 'chain-bollard', K.ironDk),
+  stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk));
 // the south Slump head: a chain bollard back from the Race's landing; the winch house against the Rim Head's face
 { const [x, z] = G.sp(G.S0, -2.4, -1.4); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
 { const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house' }))); }
