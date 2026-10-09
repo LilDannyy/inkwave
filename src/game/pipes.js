@@ -452,7 +452,7 @@ export class StagePipes {
   // the ride's time base: the owner's performance clock online (its records are stamped with it), the frame time offline;
   // a proxy reads its owner's playback clock (p.Tr, advanced in carryRemote)
   _T(p) {
-    if (p.remote) return p.Tr ?? this._remoteWant(p) ?? p.T;
+    if (p.remote) return p.Tr ?? this._remoteWant(p) ?? (G.netm && p.tP !== undefined ? now() - p.tP : p.T);
     return G.netm ? now() - p.t0 : p.T;
   }
   // a proxy's ride time: its owner's playback time (the moment this screen shows of the owner), but never stalled: when
@@ -470,11 +470,13 @@ export class StagePipes {
     return peer.tr + clamp(e - p.e0, 0, 0.5) - p.t0;
   }
   // once a frame (carryRemote): the drawn ride's clock never runs backward and runs at most 1.5× real time (a re-sync's
-  // jump is ridden out, not jumped)
-  _advanceRemote(p, dt) {
-    const w = this._remoteWant(p);
+  // jump is ridden out, not jumped). Real time, not the frame's dt: on a page so loaded that its frames are clamped, the
+  // dt sum falls behind the clocks the ride is measured on
+  _advanceRemote(p) {
+    const w = this._remoteWant(p), t = now();
     if (w === null) return;
-    p.Tr = p.Tr === undefined ? w : Math.max(p.Tr, Math.min(w, p.Tr + dt * 1.5));
+    p.Tr = p.Tr === undefined ? w : Math.max(p.Tr, Math.min(w, p.Tr + (t - (p.tA ?? t)) * 1.5));
+    p.tA = t;
   }
 
   // ------------------------------------------------------------------------------------------------ the ride (owner)
@@ -715,7 +717,7 @@ export class StagePipes {
       if (was && was.chimed && rebased) p.chimed = true;
       if (was && rebased && was.remote && was.leg === p.leg && was.dir === p.dir && was.phase === 'ride') {
         const T = this._T(p), d = (was.u || 0) - this._uAt(p, T);
-        if (Math.abs(d) < 8) { p.dOff = d; p.dOffT = T; p.dOffD = blendAhead(leg.len, this._uAt(p, T), p.v, d); }
+        p.dOff = d; p.dOffT = T; p.dOffD = blendAhead(leg.len, this._uAt(p, T), p.v, d);   // (any distance: a jump is never better)
         this.events.push(['pipe:rebase', { nid: a.nid, T: r3(T), d: r3(d), wasU: r3(was.u || 0), u0, proj: !!was.proj }]);
       }
       a.pipe = p;
@@ -760,7 +762,7 @@ export class StagePipes {
       const dir = a.vel.x * _q.tx + a.vel.y * _q.ty + a.vel.z * _q.tz >= 0 ? 1 : -1, k = dir > 0 ? 0 : 1;
       const u = dir > 0 ? best.r.s : best.leg.len - best.r.s;
       p = a.pipe = { leg: best.leg.i, k, dir, phase: 'ride', t0: 0, T: 0, u0: u, rebased: true, p0: a.pos.clone(), v: best.leg.speed, chimed: false, lit: false,
-        entry: best.leg.ends[k].i, exit: best.leg.ends[1 - k].i, remote: true, owner: a.owner, s: best.r.s, u, proj: true };
+        entry: best.leg.ends[k].i, exit: best.leg.ends[1 - k].i, remote: true, owner: a.owner, s: best.r.s, u, proj: true, tP: now() };
       this._light(p, a);
       this.events.push(['pipe:project', { nid: a.nid, leg: best.leg.i, u: r3(u) }]);
     }
@@ -768,9 +770,9 @@ export class StagePipes {
     // a host change mid-ride: the old t0 belongs to the old owner's clock — ride on at the leg's speed from where it was
     // drawn (on its own clock: _T kept it from stalling while the old owner's ticks ran out, so there is nothing to catch
     // up) until the new owner's re-based [0] arrives; that record is met with a blend (net(): blendAhead)
-    if (p.owner !== a.owner && !p.proj) { const u = this._uTrue(p, false), u1 = p.u || 0; p.proj = true; p.rebased = true; p.u0 = u; p.dOff = u1 - u; p.dOffT = 0; p.dOffD = blendT(this.legs[p.leg].len, u, p.v); p.T = 0; p.Tr = undefined; p.phase = 'ride'; this.events.push(['pipe:handoff', { nid: a.nid, u: r3(u), d: r3(u1 - u) }]); }
+    if (p.owner !== a.owner && !p.proj) { const u = this._uTrue(p, false), u1 = p.u || 0; p.proj = true; p.rebased = true; p.u0 = u; p.dOff = u1 - u; p.dOffT = 0; p.dOffD = blendT(this.legs[p.leg].len, u, p.v); p.T = 0; p.tP = now(); p.Tr = undefined; p.phase = 'ride'; this.events.push(['pipe:handoff', { nid: a.nid, u: r3(u), d: r3(u1 - u) }]); }
     p.T += dt;
-    this._advanceRemote(p, dt);
+    this._advanceRemote(p);
     const T = this._T(p);
     this._place(a, p, T, dt, false);
   }
@@ -786,7 +788,10 @@ export class StagePipes {
     if (!p || !p.remote) return;
     if (p.phase === 'pop') { p.remote = false; p.popT = p.popT || 0; a.pipeCd = 0; return; }
     // (from where this screen drew it, catching up to where its old owner really had it: see _uTrue)
-    const leg = this.legs[p.leg], u1 = clamp(p.u || 0, 0, leg.len - 0.01), uT = clamp(this._uTrue(p), 0, leg.len - 0.01), chimed = p.chimed;
+    // (at most a third of the way left ahead of where it was drawn: blended there inside the time left, the drawn rider
+    // stays under twice its speed; further — a page so loaded it drew the ride far behind — it pops that much later
+    // instead of lurching: 1.5·d / (0.8·(L − uT)/v) ≤ v ⇔ d ≤ 0.348·(L − u1))
+    const leg = this.legs[p.leg], u1 = clamp(p.u || 0, 0, leg.len - 0.01), uT = clamp(Math.min(this._uTrue(p), u1 + 0.348 * (leg.len - u1)), 0, leg.len - 0.01), chimed = p.chimed;
     this._unlight(p);
     a.pipe = null;
     this._start(a, leg.ends[p.k], { u0: Math.max(0.001, uT), t0: now(), from: u1 });   // (re-based on where it really is: no suck, its exit lit again)

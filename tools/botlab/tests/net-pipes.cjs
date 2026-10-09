@@ -64,7 +64,7 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
             if (pp && t > pp[1]) {
               const du = (p.u || 0) - pp[0], dt = (t - pp[1]) / 1000, lim = 3 * p.v * dt + 0.3;   // (a host change's catch-up runs at up to ~2×)
               if (du - p.v * dt > (s.worstStep || 0)) { s.worstStep = du - p.v * dt; s.worstAt = [+du.toFixed(3), +dt.toFixed(3), +(p.u || 0).toFixed(2), !!p.proj, +(p.dOff || 0).toFixed(2), +(p.cu || 0).toFixed(2), p.owner === a.owner]; }
-              if (du > lim || du < -0.05) { s.pops = (s.pops || 0) + 1; if (s.mark && t > s.mark) s.popsAfter = (s.popsAfter || 0) + 1; }
+              if (du > lim || du < -0.05) { s.pops = (s.pops || 0) + 1; if (s.mark && t > s.mark) s.popsAfter = (s.popsAfter || 0) + 1; if (!s.badAt) s.badAt = [+du.toFixed(3), +dt.toFixed(3), +(p.u || 0).toFixed(2), +(p.Tr ?? -1).toFixed(3), !!p.proj, +(p.dOff || 0).toFixed(2)]; }
             }
             s.prevP = [p.u || 0, t];
           } else s.prevP = null;
@@ -124,7 +124,7 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   const sa = await J(A, `__pp.got(${bNid})`), sb = await J(B, `__pp.got(${bNid})`);
   const hpB = await B.js(`__pp.hp(${bNid})`);
   R('1. B walks into the Express on its own screen (captured), and rides it there exactly on the path (≤ 0.005 m)', capB && sb.ride > 20 && sb.maxD < 0.005, { capB, frames: sb.ride, maxD: sb.maxD, phases: sb.phases });
-  R('1. on A\'s screen B\'s rider is drawn within 0.05 m of the centreline + lane every frame of the ride (from the [0] record; netlag 80 ± 40 on B), with no snap along it (no frame advancing more than 3× the speed × its frame time + 0.3 m, none stepping back)', sa.ride > 20 && sa.maxD < 0.05 && sa.phases.join() === '-,suck,ride,pop,-' && sa.pops === 0, { frames: sa.ride, maxD: sa.maxD, phases: sa.phases, pops: sa.pops, worstKink: sa.worstKink });
+  R('1. on A\'s screen B\'s rider is drawn within 0.05 m of the centreline + lane every frame of the ride (from the [0] record; netlag 80 ± 40 on B), with no snap along it (no frame advancing more than 3× the speed × its frame time + 0.3 m, none stepping back)', sa.ride > 20 && sa.maxD < 0.05 && sa.phases.join() === '-,suck,ride,pop,-' && sa.pops === 0, { frames: sa.ride, maxD: sa.maxD, phases: sa.phases, pops: sa.pops, worstKink: sa.worstKink, worstAt: sa.worstAt, badAt: sa.badAt });
   // (compared on B's timeline, the ride's own time base on both screens: A replays B on a playback clock that steers
   // ±8–25 % to keep its buffer, so A's wall-clock span may differ by that stretch — shown, checked within 0.25 s)
   R('2. A\'s exit ring is lit from B\'s suck end to B\'s pop: on B\'s timeline the lit spans agree within 0.1 s (two frames of either page under load) (A ' + sa.litT + ' s, B ' + sb.litT + ' s; wall clock A ' + sa.lit + ' s, B ' + sb.lit + ' s)',
