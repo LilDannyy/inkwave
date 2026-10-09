@@ -613,6 +613,23 @@
     void bp;
     R('bots: a mouth it can\'t get into (something solid in the way) is given up within 2.5 s of pushing and its key marked bad for 5 s (+60)', !bot.pipe && gaveUp > 0 && gaveUp < 3.5 && marked, { gaveUp, marked, pipe: !!bot.pipe });
     if (bot.pipe) P._abort(bot, 'test');
+    // every leg, both twins: a bot of either team, its goal beside the landing, plans the pipe, walks in and rides it
+    const every = [];
+    for (const lg of P.legs) for (const k of [0, 1]) {
+      const from = lg.ends[k], to = lg.ends[1 - k];
+      if (!P.open(from)) continue;
+      for (const team of [0, 1]) {
+        for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; }
+        const b2 = M.actors.find((a) => a.bot && !a.isLocal && a.team === team);
+        put(b2, [from.approach[0] + from.out[0] * 1.5, from.approach[1], from.approach[2] + from.out[2] * 1.5]);
+        const p3 = goTo(b2.bot, new THREE.Vector3(to.land[0] - to.out[2] * 1.2, to.land[1], to.land[2] + to.out[0] * 1.2));
+        const pl = p3 && p3.some((id, i) => i && __G.nav.edge(p3[i - 1], id)?.type === 'pipe');
+        let rd = false; runBot(b2.bot, 3, () => { if (b2.pipe) rd = true; return rd; });
+        every.push([lg.id, k ? 'B→A' : 'A→B', team, pl ? 1 : 0, rd ? 1 : 0]);
+        if (b2.pipe) P._abort(b2, 'test');
+      }
+    }
+    R('bots: every open leg and direction, a bot of either team plans the pipe and rides it (no side is harder for bots)', every.every((x) => x[3] && x[4]), { 'leg, dir, team, planned, rode': every });
     // the tidal leg's both directed specs exist from load, the closed one masked
     const kl = P.legs.find((l) => l.id === 'kelp'), kk = [kl.i * 2, kl.i * 2 + 1];
     R('bots: both directed Kelp edges exist from load; the closed direction is masked (Infinity) by the tide', W.edgeKeys.has(kk[0]) && W.edgeKeys.has(kk[1]) && (P.keyShut[kk[0]] !== P.keyShut[kk[1]]), { has: kk.map((k) => W.edgeKeys.has(k)), shut: kk.map((k) => P.keyShut[k]) });
