@@ -52,7 +52,7 @@ function buildGlide() {
   P.add(sweep([new V3(0, 0.0945, -0.016), new V3(0, 0.0945, 0.018), new V3(0, 0.0945, 0.052)],
     { seg: 10, radial: 12, capSteps: 3, radius: (t) => 0.0098 + 0.0007 * Math.cos(t * Math.PI * 12), flat: 1, outward: (Pp, o) => o.set(1, 0, 0) }).geo, C.rubber, M.rubber);
   led(P, new V3(0, 0.0705, -0.0505), new V3(0, 0.55, -1).normalize(), C.amber, 0.004);
-  return { kind: 'glide', body: P.build(), ink: I.build(), grip: { pos: GRIP.clone(), handZ: new V3(0, 0, 1), handY: new V3(0, 1, -0.25).normalize() } };
+  return { kind: 'glide', body: P.build(), ink: I.build(), grip: { pos: GRIP.clone(), handZ: new V3(0, -1, 0), handY: new V3(-0.3, -0.1, -1) } };   // (carried upright by its handle: its team dome shows beside the head)
 }
 // a part authored facing +Z at the origin, turned to azimuth az on a circle of radius r at height y
 function at3(g, az, r, y) { g.rotateY(az); g.translate(Math.sin(az) * r, y, Math.cos(az) * r); return g; }
