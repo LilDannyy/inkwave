@@ -1466,7 +1466,7 @@ export class HUD {
         const p = ps[i];
         const el = icons[i];
         const k = `sq${t}${i}`;
-        if (!p) { if (L[k] !== 'none') { L[k] = 'none'; el.classList.add('is-empty'); } continue; }
+        if (!p) { if (L[k] !== 'none') { L[k] = 'none'; el.classList.add('is-empty'); el.classList.remove('is-karp'); } continue; }   // [b5-karp] (a carrier who left: no ring on its empty slot)
         const w = p.weapon || (this._actorFor(t, i) || {}).weaponId || 'shooter';
         const key = `${p.alive ? 1 : 0}|${p.alive ? 0 : Math.ceil(p.respawn || 0)}|${p.specialReady ? 1 : 0}|${p.isSelf ? 1 : 0}|${w}|${p.carrier ? 1 : 0}`;   // [b5-karp] carrier
         if (L[k] === key) continue;

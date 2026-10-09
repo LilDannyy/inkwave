@@ -74,7 +74,7 @@ export class Bazookarp {
     this.restNode = -1;                        // -1: the Pond / a planted weir (exempt from the rest re-check)
     this.from = new V3();                      // a reset flight's start
     this.holder = null; this.holderTeam = -1; this.grantT = -9;
-    this.shell.form(this.pos, K.shell.hp, 0);
+    this.shell.form(this.pos, this.def.shellHp > 0 ? this.def.shellHp : K.shell.hp, 0);   // (LAYOUT shellHp: a per-stage override, balance only)
     this.fuse = K.fuse; this.rate = 1; this.rateWhy = null;
     this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: -1 };   // a remote carrier's own word (kr / kf)
     // weirs and Gates: weirs[t] are the weirs team t lands it on (on the other team's half)

@@ -47,9 +47,9 @@ def main():
     cons = [r.get('console', 0) for r in R]
     lo, hi = wilson(winA, n)
     print(f'== Bazookarp: {n} match(es) on {", ".join(maps)}')
-    print(f'   knockouts {len(ko)}/{n} ({100 * len(ko) / n:.0f}%) | times {koT} | median {st.median(koT) if koT else "-"}')
+    print(f'   knockouts {len(ko)}/{n} ({100 * len(ko) / n:.0f}%) | times {koT} | median {round(st.median(koT), 1) if koT else "-"}')
     print(f'   Alpha wins {winA}/{n} ({100 * winA / n:.0f}%, 95% {100 * lo:.0f}–{100 * hi:.0f}%) | weir planted in {plant}/{n}')
-    print(f'   first pop median {st.median(fp) if fp else "-"} s {fp} | Carp Blasts {st.mean(blasts):.2f}/match | resets {st.mean(resets):.2f}/match | own-zone s {st.mean(zone):.1f}/match')
+    print(f'   first pop median {round(st.median(fp), 1) if fp else "-"} s {fp} | Carp Blasts {st.mean(blasts):.2f}/match | resets {st.mean(resets):.2f}/match | own-zone s {st.mean(zone):.1f}/match')
     print(f'   overtime {len(ots)}/{n} by start {dict((w, sum(1 for o in ots if o["why"] == w)) for w in ("held", "dropped", "planted"))} ends {dict((e, sum(1 for o in ots if o["end"] == e)) for e in set(o["end"] for o in ots))} | losing team won {len(lateWon)}/{len(late)} of S38a/S38c')
     print(f'   stuck mean {st.mean(stuck):.1f}% | carrier > 3 s episodes {sum(cst)} | clamp rejections {sum(clamped)} | carrierRetreatFallback {st.mean(fallback):.2f}/match | console lines {sum(cons)}')
     print(f'   knockouts within 8 s of a shared Bubble Guard {koBub}/{len(ko)}')
@@ -59,10 +59,10 @@ def main():
         print(f'   {tag} {name}: {info}')
     kr = len(ko) / n
     row('knockout rate 20–60%', 0.2 <= kr <= 0.6, f'{100 * kr:.0f}%')
-    row('early knockouts (< 1:15) ≤ 1 of 16; median ≥ 2:30', sum(1 for t in koT if t < 75) <= max(1, n // 16) and (not koT or st.median(koT) >= 150), f'{sum(1 for t in koT if t < 75)} early, median {st.median(koT) if koT else "-"}')
+    row('early knockouts (< 1:15) ≤ 1 of 16; median ≥ 2:30', sum(1 for t in koT if t < 75) <= max(1, n // 16) and (not koT or st.median(koT) >= 150), f'{sum(1 for t in koT if t < 75)} early, median {round(st.median(koT), 1) if koT else "-"}')
     row('weir planted ≥ 75%', plant / n >= 0.75, f'{100 * plant / n:.0f}%')
     row('side balance |A−B| ≤ 4 of 16 (40–60%)', abs(winA - (n - winA)) <= max(4, n // 4), f'A {winA} B {n - winA}')
-    row('first pop median 6–12 s', bool(fp) and 6 <= st.median(fp) <= 12, f'{st.median(fp) if fp else "-"} s')
+    row('first pop median 6–12 s', bool(fp) and 6 <= st.median(fp) <= 12, f'{round(st.median(fp), 1) if fp else "-"} s')
     row('Carp Blasts ≤ 1.5 / match', st.mean(blasts) <= 1.5, f'{st.mean(blasts):.2f}')
     row('resets ≤ 2 / match', st.mean(resets) <= 2, f'{st.mean(resets):.2f}')
     row('own-free-zone time ≤ 3 s / match', st.mean(zone) <= 3, f'{st.mean(zone):.1f} s')
@@ -71,7 +71,7 @@ def main():
     row('shared-bubble knockout share ≤ 25% (flag)', not ko or koBub / len(ko) <= 0.25, f'{koBub}/{len(ko)}')
     row('clamp rejections 0', sum(clamped) == 0, f'{sum(clamped)}')
     row('carrierRetreatFallback ≤ 1 / match (flag)', st.mean(fallback) <= 1, f'{st.mean(fallback):.2f}')
-    print(f'SUMMARY karp n={n} ko={len(ko)} winA={winA} plant={plant} firstPop={st.median(fp) if fp else "-"} stuck={st.mean(stuck):.1f} clamped={sum(clamped)} console={sum(cons)}')
+    print(f'SUMMARY karp n={n} ko={len(ko)} winA={winA} plant={plant} firstPop={round(st.median(fp), 1) if fp else "-"} stuck={st.mean(stuck):.1f} clamped={sum(clamped)} console={sum(cons)}')
     return 0
 
 if __name__ == '__main__': sys.exit(main())

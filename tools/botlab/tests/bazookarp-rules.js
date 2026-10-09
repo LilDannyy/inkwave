@@ -1,7 +1,7 @@
 // [b5-karp] Bazookarp: every rule in the SPEC's rules table (§2.1 S0–S52, §2.2–§2.8, §3) checked on karpbox, deterministic
 // (frozen clock, stepped at 60 Hz, bots off). Groups as SPEC §10.1 karp-rules: A setup · B the shell · C the pick-up and
 // the carrier · D scoring · E the fuse · F drops · G overtime · H passive charge · I the field reading · J state switches
-// · K the Carp Shot. Each check fails without its rule (its comment names the rule).
+// · K the Carp Shot · L the sides, one carrier, the marker / reveal / wake, the zones' data, the stage variant. Each check fails without its rule (its comment names the rule).
 //   MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/bazookarp-rules.js tools/botlab/run.sh tools/botlab/page.cjs
 //   PAGE_ARGS='only=A,B,…' runs some groups.
 (async () => {
@@ -158,7 +158,7 @@
     step(0.1);
     R('C1 S5: nobody picks it up for 0.25 s after the burst; then the player within 1.3 m does', early === null && Kp.holder === A[0], { early: early?.name, holder: Kp.holder?.name });
     fresh(); Kp.shell.add(1, 1000, B[1]); put(B[1], 1.25, 0); step(0.35);
-    R('C2 S5: either team (Bravo after Bravo\'s burst)', Kp.holder === B[1], { holder: Kp.holder?.name });
+    R('C2 S5, S24: either team (Bravo after Bravo\'s burst)', Kp.holder === B[1], { holder: Kp.holder?.name });
     fresh(); Kp.shell.add(1, 1000, B[1]); put(B[1], 1.45, 0); step(0.4);
     R('C3 §2.3: not from 1.45 m (beyond 1.3)', Kp.holder === null, { holder: Kp.holder?.name });
     // from under the raised deck / through the wall
@@ -194,7 +194,7 @@
     for (const w of ['shooter', 'brolly', 'mitts', 'bow', 'blade']) {
       fresh(); const c0 = A[0]; c0.setWeapon(w); carry(c0, -3, 2); runs[w] = speed(c0, () => { c0.intent.move.set(0, 0, 1); });
     }
-    R('C8 S21: a carrier runs at PLAYER × 0.8 (4.8 m/s) with the Splattershot, Brolly, Mitts, Bow and Blade alike', Object.values(runs).every((v) => Math.abs(v - PLAYER.runSpeed * K.speedMul) < 0.15), runs);
+    R('C8 S7, S21: a carrier runs at PLAYER × 0.8 (4.8 m/s) with the Splattershot, Brolly, Mitts, Bow and Blade alike', Object.values(runs).every((v) => Math.abs(v - PLAYER.runSpeed * K.speedMul) < 0.15), runs);
     A[0].setWeapon('shooter');
     // swimming, squid on dry ground, enemy ink, the air, the wall climb
     fresh(); const c0 = A[0];
@@ -476,7 +476,7 @@
     for (const a of m.actors) if (a !== c) { a.special = 0; }
     step(2.0);
     const bGain = B4.filter((a) => a.alive).map((a) => a.special), aGain = A.filter((a) => a !== c).map((a) => a.special);
-    R('H1 S43: while Alpha holds it, Bravo\'s gauges fill at 3 p/s; Alpha\'s don\'t', bGain.every((v) => Math.abs(v - 6) < 0.25) && aGain.every((v) => v < 0.01), { bravo: bGain, alpha: aGain });
+    R('H1 S43, S44: while Alpha holds it, Bravo\'s gauges fill at 3 p/s; Alpha\'s don\'t', bGain.every((v) => Math.abs(v - 6) < 0.25) && aGain.every((v) => v < 0.01), { bravo: bGain, alpha: aGain });
     fresh(); Kp.count = [60, 100]; Kp.reachT = [3, 0];
     for (const a of m.actors) a.special = 0;
     step(2.0);
@@ -536,9 +536,9 @@
     // ranges at level aim from the 1.4 m muzzle, flight times
     const shoot = (cc) => { fresh(); carry(c, 8, -42); step(0.1); c.aimYaw = 0; c.aimPitch = 0; const s = KG._fire(c, cc); const t0 = s.t; let t = 0; while (s.phase === 'fly' && t < 3) { dbg.step(1000 / 60); t += 1 / 60; } return { range: s.land ? s.land.z - s.start.z : -1, t: s.t - t0 }; };
     const r0 = shoot(0), r5 = shoot(0.5), r1 = shoot(1);
-    R('K3 S18: ranges at level aim 7.8 / 13.2 / 20.1 m (±0.5), flights 0.68 / 0.83 / 0.99 s (±0.05)', Math.abs(r0.range - 7.8) < 0.5 && Math.abs(r5.range - 13.2) < 0.5 && Math.abs(r1.range - 20.1) < 0.5 && Math.abs(r0.t - 0.68) < 0.05 && Math.abs(r5.t - 0.83) < 0.05 && Math.abs(r1.t - 0.99) < 0.05, { r0, r5, r1 });
+    R('K3 S16, S18: ranges at level aim 7.8 / 13.2 / 20.1 m (±0.5), flights 0.68 / 0.83 / 0.99 s (±0.05)', Math.abs(r0.range - 7.8) < 0.5 && Math.abs(r5.range - 13.2) < 0.5 && Math.abs(r1.range - 20.1) < 0.5 && Math.abs(r0.t - 0.68) < 0.05 && Math.abs(r5.t - 0.83) < 0.05 && Math.abs(r1.t - 0.99) < 0.05, { r0, r5, r1 });
     // damage: a Big Burst splats within 2.4 m (180), partial centre ≤ 90; no ink spent
-    R('K4 S17: a Big Burst does 180 within 2.4 m, 55 at its 4.0 m edge; below full the centre is at most 90', blastDamage(1, 2.3) === 180 && Math.abs(blastDamage(1, 4.0) - 55) < 0.5 && blastDamage(0.99, 0) <= 90 && blastDamage(0, 0) === 40, { full: blastDamage(1, 2.3), edge: blastDamage(1, 4.0), part: blastDamage(0.99, 0) });
+    R('K4 S16, S17: a Big Burst does 180 within 2.4 m, 55 at its 4.0 m edge; below full the centre is at most 90', blastDamage(1, 2.3) === 180 && Math.abs(blastDamage(1, 4.0) - 55) < 0.5 && blastDamage(0.99, 0) <= 90 && blastDamage(0, 0) === 40, { full: blastDamage(1, 2.3), edge: blastDamage(1, 4.0), part: blastDamage(0.99, 0) });
     fresh(); carry(c, 0, -30); step(0.1); c.ink = 37; c.intent.fire = true; step(0.5); c.intent.fire = false; step(0.1);
     R('K5 S19: Carp Shots cost no ink', c.ink >= 37, { ink: c.ink });
     // the blast on a player: landed, swell 0.45 s, then the damage — a player who steps out during the swell is safe
@@ -557,6 +557,95 @@
     put(c, 5, -25); Kp.base = null; step(0.2); const pK = c.pos.clone(); c.aimYaw = 0; c.aimPitch = 0.2; c.intent.move.set(0, 0, -1);
     for (let i = 0; i < 180; i++) { c.intent.fire = (i % 24) < 3; dbg.step(1000 / 60); } idle(c); const push = (pK.z - c.pos.z) / 3;
     R('K8 S28: Splash shots fired backwards push a carrier through enemy ink faster than walking it (~1.52 m/s)', walk < 1.7 && push > walk * 1.6, { walk, push });
+  }
+
+  // ============================================================================ L. the sides, one carrier, what everyone sees, the zones' data, the
+  // stage pieces (S1, S2, S9, S29–S31, S35, S46, S48, S49, S52)
+  if (want('L')) {
+    const { revealedTo } = await import('./src/game/reveal.js');
+    const { hasVariant, layoutFor } = await import('./src/world/variants.js');
+    const { MAP_LAYOUTS } = await import('./src/world/maps.js');
+    const { KarpField, resolveKarp, placeholderKarp } = await import('./src/game/karpField.js');
+    const { karpKitPieces } = await import('./src/world/bazookarp-kit.js');
+    const me = m.local, hud = () => g.hud?.karp?.state?.() || null, FX = () => G.karpFx;
+    const CARP = 'M4 16 Q11 7 21 10';   // (the carp glyph's outline, hud-karp.js KARP_GLYPH)
+    const badges = () => (g.hud.squads || []).reduce((s, q) => s + [...q.children].filter((el) => el.classList.contains('is-karp')).length, 0);   // (the live squad rows only)
+    const look = () => { FX().build(m); step(2 / 60); };   // (the looks follow the engine a check made: fresh())
+    // S1: Bravo's weirs and Gate and Alpha's zones are the 180° mirror; each Gate stands on the half it attacks
+    fresh();
+    const g0 = Kp.gates[0].pos, g1 = Kp.gates[1].pos, w0 = Kp.weirs[0][0].pos, w1 = Kp.weirs[1][0].pos, z0 = Kp.R.zones[0][0].poly, z1 = Kp.R.zones[1][0].poly;
+    const mirror = Math.abs(g0.x + g1.x) < 0.01 && Math.abs(g0.z + g1.z) < 0.01 && Math.abs(w0.x + w1.x) < 0.01 && Math.abs(w0.z + w1.z) < 0.01 && Math.abs(w0.y - w1.y) < 0.05
+      && z1.every(([x, z], i) => Math.abs(z0[i][0] + x) < 0.01 && Math.abs(z0[i][1] + z) < 0.01);
+    const halves = [F().halfAt(g0), F().halfAt(g1)];
+    // … and Bravo lands its own weir on Alpha's half and walks into its own Gate there: a Bravo knockout
+    const b = B[0]; carry(b, 0, -25); b.intent.move.set(0, 0, -1); step(1.5); idle(b);
+    const bPlant = Kp.lowered[1] && Kp.gateUp[1] && !Kp.lowered[0] && !Kp.gateUp[0];
+    step(1); Kp.shell.add(1, 600, b); step(0.3); carry(b, 0, -26); put(b, g1.x, g1.z + 1.0); Kp.base = null; step(0.1);
+    R('L1 S1: Bravo\'s weir, Gate and Alpha\'s zones mirror Alpha\'s; Alpha\'s Gate is on Bravo\'s half and Bravo\'s on Alpha\'s; Bravo plants its weir and knocks out in its own Gate',
+      mirror && halves[0] === 1 && halves[1] === 0 && bPlant && Kp.winner === 1 && Kp.reason === 'knockout' && Kp.count[1] === 0, { mirror, halves, bPlant, winner: Kp.winner, reason: Kp.reason, count: Kp.count });
+    // S2: exactly one carrier; the Bazookarp moves with it
+    fresh(); const c = A[0]; carry(c, 0, -20); step(0.1);
+    put(A[1], 0.4, -20); put(B[1], -0.4, -20); step(0.4);
+    const one = Kp.holder === c && m.actors.filter((a) => a.carry).length === 1 && !Kp.canPick(A[1]) && !Kp.canPick(B[1]);
+    put(A[1], 6, -20); put(B[1], -6, -20); c.intent.move.set(0, 0, 1); step(1.0); idle(c); step(1 / 60);
+    R('L2 S2: one carrier at a time (a teammate and a foe standing on it take nothing); the Bazookarp goes where its carrier goes (read before the carrier\'s move: ≤ one frame behind, 0.08 m)', one && Kp.holder === c && Kp.pos.distanceTo(c.pos) < 0.1 && c.pos.z > -17, { one, holder: Kp.holder?.name, gap: Kp.pos.distanceTo(c.pos), z: c.pos.z });
+    // S9, S29, S35: the marker over the carrier with its seconds (red under 10, ×3 when fast); the carp on the special orb
+    // and the squad badge
+    fresh(); look();
+    const orb0 = g.hud.spIcon?.innerHTML || '', badge0 = badges();
+    carry(me, 0, -20); step(0.1); me.intent.move.set(0, 0, 1); step(0.5); idle(me); step(0.1);
+    const h1 = hud(), f1 = Kp.hud.fuseShown, orb1 = g.hud.spIcon?.innerHTML || '', badge1 = badges();
+    Kp.fuse = 9.3; step(0.1); const h2 = hud(), red = !!g.hud.karp?.mk?.classList.contains('is-red');
+    put(me, 0, -28); Kp.base = null; step(0.2); const h3 = hud(), r3 = Kp.rate;
+    R('L3 S9, S29, S35: the marker over the carrier shows the fuse\'s whole seconds; red under 10 s; ×3 when fast; the carp on the carrier\'s special orb and the badge on its squad icon',
+      !!h1?.marker && Math.abs(h1.marker.secs - Math.ceil(f1)) <= 1 && h1.marker.secs >= 58 && !!h2?.marker && h2.marker.secs <= 10 && red && r3 === 3 && !!h3?.marker?.fast
+        && /WE CARRY · \d+ s ×3/.test(h3.status) && /DON'T RETREAT/.test(h3.bottom?.[0] || '') && !orb0.includes(CARP) && orb1.includes(CARP) && badge0 === 0 && badge1 === 1,
+      { m1: h1?.marker && { secs: h1.marker.secs, fuse: f1 }, m2: h2?.marker && { secs: h2.marker.secs, red }, m3: h3?.marker && { secs: h3.marker.secs, fast: h3.marker.fast }, status: h3?.status, bottom: h3?.bottom?.[0], rate: r3, orb: [orb0.includes(CARP), orb1.includes(CARP)], badge: [badge0, badge1], doc: document.querySelectorAll('.iw-sq.is-karp').length });
+    // S30: a Bravo carrier in kid form behind the alley's thin wall — revealed to Alpha (the map) and its marker on
+    // Alpha's screen though no line reaches it
+    fresh(); look(); put(me, 3, 12); carry(b, 9.5, 12); step(0.2);
+    const eye = V(me.pos.x, me.pos.y + 1.1, me.pos.z), chest = V(b.pos.x, b.pos.y + 1.1, b.pos.z), seen = G.physics.los(eye, chest);
+    const why30 = revealedTo(b, 0), h30 = hud();
+    R('L4 S30: a carrier in kid form shows to the enemy through walls — the marker on their screen, the map (revealed: karp)', !seen && why30 === 'karp' && !!h30?.marker, { los: seen, reveal: why30, marker: !!h30?.marker });
+    // S31: swimming in its own ink the carrier vanishes for the enemy (no marker, no reveal, no carp, no pillar) and a
+    // wake glows where it swims; squid on dry ground is not swimming
+    b.intent.squid = true; step(0.3);
+    const dry = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker };
+    for (let k = 0; k < 6; k++) G.paint.splat(V(9.5 + (k % 3 - 1) * 1.2, 0.2, 12 + (k < 3 ? -0.8 : 0.8)), 1.6, 1, { seed: k });
+    step(0.3);
+    const swim = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: FX().carp.visible, pillar: FX().pillar.visible, wake: FX().wake.visible };
+    b.intent.squid = false; step(0.3);
+    const up = { reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: FX().carp.visible, wake: FX().wake.visible };
+    // … its own team still sees it swim (an Alpha carrier in Alpha ink: the marker on Alpha's screen)
+    fresh(); look(); put(me, -3, -12); for (let k = 0; k < 3; k++) G.paint.splat(V(-1 + k * 1.2, 0.2, -20), 1.6, 0, { seed: k }); carry(A[1], 0, -20); A[1].intent.squid = true; step(0.4);
+    const own = { sub: A[1].submerged, marker: !!hud()?.marker };
+    idle(A[1]);
+    R('L5 S31: swimming in its ink the carrier loses the enemy\'s marker, map reveal, carp and pillar, and leaves a wake; out of the ink (or squid on dry ground) it\'s back; its own team keeps the marker',
+      !dry.sub && dry.reveal === 'karp' && dry.marker && swim.sub && swim.reveal === null && !swim.marker && !swim.carp && !swim.pillar && swim.wake && up.reveal === 'karp' && up.marker && up.carp && !up.wake && own.sub && own.marker,
+      { dry, swim, up, own });
+    // S46, S49: every Carp-Free Zone lies wholly on its owner's half (each node inside one), and each team has one
+    fresh();
+    const zoneNodes = [0, 0], wrong = [];
+    for (let id = 0; id < G.nav.nodes.length; id++) {
+      if (!F().ok[id]) continue;
+      const n = G.nav.nodes[id];
+      for (const t of [0, 1]) if (F().inFreeZone(t, n) >= 0) { zoneNodes[t]++; if (F().nodeHalf(id) !== t) wrong.push([t, n.x, n.y, n.z]); }
+    }
+    R('L6 S46, S49: each team has Carp-Free Zones, every node in them on the owner\'s own half (so the ×3 never reaches the enemy half)', zoneNodes[0] > 50 && zoneNodes[1] > 50 && wrong.length === 0, { zoneNodes, wrong: wrong.slice(0, 4) });
+    // S48: the data's NO CARP signs become solid posts (the kit); a placeholder zone gets a sign within 2 m of every entrance
+    const kit = karpKitPieces(KARPBOX_DEF, G.level.layout).filter((p) => p.tag === 'karp-sign');
+    const want48 = KARPBOX_DEF.freeZones.reduce((s, z) => s + (z.signs || []).length, 0);
+    const PF = new KarpField(resolveKarp(placeholderKarp(G.level), G.level), {});
+    const miss = [], ents = [];
+    for (const t of [0, 1]) for (const z of PF.R.zones[t]) for (const [x, zz] of PF.zoneEntrances(z)) { ents.push([t, x, zz]); if (!PF.signs.some((s) => s.team === t && Math.hypot(s.x - x, s.z - zz) <= 2)) miss.push([t, x, zz]); }
+    R('L7 S48: a post for every NO CARP sign in the data; the placeholder signs every entrance of its zones (within 2 m)', kit.length === want48 && want48 > 0 && ents.length >= 2 && miss.length === 0 && PF.R.placeholder, { kit: kit.length, want: want48, entrances: ents.length, miss });
+    // S52: the mode's own build — its pieces only in a Bazookarp world; Halyard's wheelhouse cleared only there (and for
+    // the tower); the raw layout lists untouched (thumbnails, piece indexes)
+    const HY = MAP_LAYOUTS.halyard, tags = (L) => [...L.single, ...L.half].map((p) => p.tag || '');
+    const kB = layoutFor(HY, 'bazookarp'), kT = layoutFor(HY, 'turf'), kZ = layoutFor(HY, 'zones');
+    const s52 = { variant: hasVariant(HY, null, 'bazookarp'), turf: hasVariant(HY, null, 'turf'), kitB: tags(kB).filter((t) => t.startsWith('karp-')).length, kitT: tags(kT).filter((t) => t.startsWith('karp-')).length,
+      kitZ: tags(kZ).filter((t) => t.startsWith('karp-')).length, raw: tags(HY).filter((t) => t.startsWith('karp-')).length, wheelB: tags(kB).includes('ferry-wheelhouse'), wheelT: tags(kT).includes('ferry-wheelhouse') };
+    R('L8 S52: the mode builds its own stage variant (kit pieces, Halyard\'s wheelhouse gone) and no other mode\'s build changes', s52.variant && !s52.turf && s52.kitB >= 5 && s52.kitT === 0 && s52.kitZ === 0 && s52.raw === 0 && !s52.wheelB && s52.wheelT, s52);
   }
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }
   offs.forEach((f) => f());
