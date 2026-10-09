@@ -570,6 +570,51 @@
       R('the re-forming shell\'s sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)', n3 === 0 && s2.state === 'slide' && (DEPLOY_STATS.crushed.glide || 0) === c0, { crushed: n3, state: s2.state });
     }
 
+    // ============================================================================================ Boss Battle (bots)
+    // bots.js _bossTick's sub throw asks SUB_KITS.glide.bot.boss first: a slide straight at the boss, at one of five cooks,
+    // that stays on the stage and stops where its blast reaches the boss's body (boss.splash's rule). A stand-in boss
+    // (pos, visible, model.hitShapes: a body sphere r 1.05 at 2.0 m and a claw r 0.85 at 1.2 m)
+    if (want('boss')) {
+      const B = foes[1] || foes[0];
+      const boss = (x, z) => ({ pos: V(x, 0, z), visible: true, dead: false, model: { hitShapes: [{ pos: V(x, 2.0, z), r: 1.05, active: true, weak: false }, { pos: V(x, 1.2, z - 1.5), r: 0.85, active: true, weak: false }, { pos: V(x, 2.2, z - 1.2), r: 0.4, active: true, weak: true }] } });
+      const reach = (o, bs) => Math.min(...bs.model.hitShapes.filter((h) => h.active && !h.weak).map((h) => Math.max(0, h.pos.distanceTo(V(o.x, o.y + 0.25, o.z)) - h.r)));
+      reset();
+      put(B, V(0, 0, -22), 0); B.setSub('glide'); B.ink = 100; step(0.05);
+      const b1 = boss(0, -12);
+      delete B.bot._glideNoT;
+      const ok1 = K.bot.boss(B.bot, b1), plan1 = B.bot._glide && { ...B.bot._glide };
+      let pred = null;
+      if (plan1) { const p = V(), yaw = plan1.yaw; p.set(B.pos.x + Math.sin(yaw) * 0.5, 0, B.pos.z + Math.cos(yaw) * 0.5); const o = MATH.simulate(p, V(Math.sin(yaw) * S.speed0, 0, Math.cos(yaw) * S.speed0), false, MATH.fuseOf(plan1.cook), B.team, null, 99); pred = { x: o.x, y: o.y, z: o.z, sunk: o.sunk }; }
+      const bd1 = pred ? reach(pred, b1) : null;
+      // the bot holds that plan: its sub pressed one frame (the brain's press), the kit holds it to the planned cook
+      let it1 = null, held1 = null;
+      if (plan1) {
+        let fr = 0; B.bot.update = () => { zero(B); B.intent.sub = fr++ === 0; };
+        const u0 = K.items.length;
+        step(3, () => { if (!it1 && K.items.length > u0) { it1 = lastItem(); return false; } });
+        stub(B);
+      }
+      const end1 = it1 ? runOut(it1, 4) : null;
+      const bdReal = end1 ? reach({ x: end1.x, y: end1.y - 0.25, z: end1.z }, b1) : null;
+      R('Boss Battle: a boss 10 m off on the deck — the bot plans a cook whose slide stops in reach of its body (≤ 0.8 R of the nearest body sphere), holds to it, and the stone blows there (within R)',
+        ok1 && plan1 && pred && !pred.sunk && bd1 <= 0.8 * MATH.radiusOf(plan1.cook) + 1e-6 && it1 && Math.abs(it1.cook - plan1.cook) <= 1 / 60 + 1e-6 && it1.owner === B && bdReal != null && bdReal <= it1.R,
+        { ok: ok1, cook: plan1 && r2(plan1.cook), predReach: bd1 != null && r2(bd1), thrownCook: it1 && r3(it1.cook), R: it1 && r2(it1.R), blastReach: bdReal != null && r2(bdReal) });
+      // a boss out over the sea past the deck's edge (x 28): every slide sinks or stops out of reach → no throw, 1 s wait
+      reset(); put(B, V(24, 0, 0), Math.PI / 2); B.setSub('glide'); B.ink = 100; step(0.05);
+      delete B.bot._glideNoT; B.bot._glide = null;
+      const no0 = GLIDE_STATS.bossNo, ok2 = K.bot.boss(B.bot, boss(36, 0)), ok2b = K.bot.boss(B.bot, boss(36, 0));
+      R('a boss out over the sea: every slide sinks or stops out of its reach — no throw (and the refusal waits 1 s before asking again)', !ok2 && !ok2b && !B.bot._glide && GLIDE_STATS.bossNo === no0 + 1, { ok: ok2, again: ok2b, refusals: GLIDE_STATS.bossNo - no0 });
+      // a boss telegraph on the cooking bot: it lets go at once (a thrown stone, not a fizzle) so it can dive
+      reset(); put(B, V(0, 0, -22), 0); B.setSub('glide'); B.ink = 100; step(0.05);
+      B.bot._glide = { mode: 'boss', cook: 1.8, yaw: 0 };
+      let fr2 = 0, it2 = null; B.bot.update = () => { zero(B); B.intent.sub = fr2++ === 0; if (fr2 === 30) B.bot._th = { level: 1, beam: false }; };
+      const u2 = K.items.length;
+      step(2.5, () => { if (!it2 && K.items.length > u2) it2 = lastItem(); });
+      stub(B); B.bot._th = null; B.setSub(B.subId);
+      R('a boss telegraph on a bot cooking for the boss: it lets go at once (thrown, cooked ~0.33 s, not fizzled)', it2 && it2.cook > 0.2 && it2.cook < 0.5 && !ev('glide:fizzle').length, { cook: it2 && r3(it2.cook) });
+      delete B.bot._glide; delete B.bot._glideNoT;
+    }
+
     // ============================================================================================ cost per step
     // the slide's bumpers that aren't level geometry are gathered once a frame / a prediction run, not per step: with a
     // stone sliding and the guide up (20 runs a second of up to 144 steps), the sentry kit's devices() is asked a few times

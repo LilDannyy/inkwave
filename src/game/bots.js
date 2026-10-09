@@ -3277,7 +3277,8 @@ export class BotBrain {
         else it.fire = true;
         this._firing = it.fire;
         this.mode = 'fight';   // (the aim spring's combat stiffness while shooting; reset each frame)
-        if (this.bombCd <= 0 && !T.crab && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }
+        if (this.bombCd <= 0 && !T.crab && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025
+          && (SUB_KITS[a.sub?.kind]?.bot?.boss?.(this, boss) ?? true)) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }   // ([b5-sub-glide] a kit sub may refuse: the Glide throws only a slide that stops by the boss)
       } else if ((w.kind === 'charger' || w.kind === 'splatling' || w.kind === 'spinner' || w.kind === 'bow') && a.weaponRunner.charging && T.los) it.fire = true;   // hold a charge through a blink
       // specials: slam from under its claws, the storm cloud onto it
       if (a.specialReady() && !th.level && !T.crab) {

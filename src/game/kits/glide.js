@@ -66,7 +66,7 @@ const _devs = [], _kd = [], _sph = [];
 const S = () => SUBS.glide;
 
 // counters (tests / match.cjs)
-export const GLIDE_STATS = { uses: 0, cookSum: 0, cooked: 0, slips: 0, fizzles: 0, blasts: 0, popped: 0, sunk: 0, smashed: 0, bounces: 0, kidBounces: 0, hits: 0, dmg: 0, botFight: 0, botPaint: 0 };
+export const GLIDE_STATS = { uses: 0, cookSum: 0, cooked: 0, slips: 0, fizzles: 0, blasts: 0, popped: 0, sunk: 0, smashed: 0, bounces: 0, kidBounces: 0, hits: 0, dmg: 0, botFight: 0, botPaint: 0, botBoss: 0, bossNo: 0, bossHits: 0, bossDmg: 0 };
 export function resetGlideStats() { for (const k in GLIDE_STATS) GLIDE_STATS[k] = 0; }
 
 // ================================================================================================= the numbers
@@ -284,8 +284,8 @@ function spawn(a, sub, p, v, air, fuse, R, cook, ghost, gid) {
 }
 // where a stone is set down: 0.5 m ahead of the feet along the aim's yaw (at the feet if a wall is closer); in the air:
 // the hand, to drop from
-function startOf(a, out) {
-  const fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
+function startOf(a, out, yaw = a.aimYaw) {
+  const fx = Math.sin(yaw), fz = Math.cos(yaw);
   if (!a.grounded) { out.set(a.pos.x + fx * 0.3, a.pos.y + 0.95, a.pos.z + fz * 0.3); return true; }
   const r = G.physics.raycast(_e.set(a.pos.x, a.pos.y + MID, a.pos.z), _q.set(fx, 0, fz), 0.5 + S().bodyRadius, _hit2);
   const ahead = r.hit && Math.abs(r.normal.y) < 0.6 ? 0 : 0.5;
@@ -480,7 +480,9 @@ function blast(it) {
     G.projectiles.applyHit(a, e, dmg, KIND, it.dbw ? it : null, c);   // ([drainbow] the shot through a bubble: halved)
   }
   G.subs?.damageArea(c, R, it.devDmg, team, a);              // enemy devices 40 → 60 ([b5-deploy] by: the hit marker)
+  const bh = G.boss && !G.boss.dead ? G.boss.hp : null;
   G.boss?.splash(a, c, R, s.damageMax, s.damageMin, KIND);  // Boss Battle: the true numbers
+  if (bh != null && G.boss && bh > G.boss.hp) { GLIDE_STATS.bossHits++; GLIDE_STATS.bossDmg += bh - G.boss.hp; }   // (match.cjs: what it did to the boss here)
   G.objTargets?.splash?.(a, c, R, s.damageMax, s.damageMin, KIND);   // Bazookarp's Roe Shell (SPEC §0.6)
 }
 // sunk: a plop (a hiss and steam in lava), no blast, no paint after it
@@ -883,15 +885,45 @@ function paint(brain) {
   return true;
 }
 const _rs = { own: 0, enemy: 0, empty: 0, n: 0 };
+// Boss Battle (bots.js _bossTick's sub throw asks this before pressing): a throw only when a slide straight at the boss's
+// middle, cooked to one of five cooks, stays on the stage (no sea, no liquid) and stops where its blast reaches the boss's
+// body — boss.splash's own rule: the nearest active body sphere's surface within R (here 0.8 R, the boss moves while it
+// slides). The cook that hurts most wins; botHold holds it, botAimAt turns to that yaw at the release. A refusal waits 1 s.
+const _bc = new V3();
+function boss(brain, B) {
+  const a = brain.a, s = a.sub?.kind === KIND ? a.sub : S();
+  if (!B || B.dead || !B.visible || !B.model?.hitShapes || a.ink < s.inkCost + 5 || G.time < (brain._glideNoT ?? -9)) return false;
+  const yaw = Math.atan2(B.pos.x - a.pos.x, B.pos.z - a.pos.z), air = startOf(a, _gp, yaw);
+  let best = null;
+  for (const cook of [0, 0.45, 0.9, 1.35, 1.8]) {
+    _gv.set(Math.sin(yaw) * s.speed0, 0, Math.cos(yaw) * s.speed0);
+    const o = simulate(_gp, _gv, air, fuseOf(cook, s), a.team, null, 99);
+    if (o.sunk) continue;
+    const R = radiusOf(cook, s);
+    _bc.set(o.x, o.y + 0.25, o.z);   // (the blast's centre)
+    let bd = Infinity;
+    for (const h of B.model.hitShapes) if (h.active && !h.weak) bd = Math.min(bd, Math.max(0, h.pos.distanceTo(_bc) - h.r));
+    if (bd > R * 0.8) continue;
+    const dmg = s.damageMax + (s.damageMin - s.damageMax) * clamp(bd / R, 0, 1);
+    if (!best || dmg > best.dmg) best = { cook, dmg };
+  }
+  if (!best) { brain._glideNoT = G.time + 1; GLIDE_STATS.bossNo++; return false; }
+  brain._glide = { mode: 'boss', cook: best.cook, yaw };
+  GLIDE_STATS.botBoss++;
+  return true;
+}
 // the bot's hold (the Shaker's botHold pattern: the press is one frame, the hold is ours): in a fight it holds until the
 // cook stops the stone on its foe — their spot led by their velocity × the fuse left (≤ 2 s), from where the bot stands
 // now (re-solved every frame: it may be strafing), never past full cook (a bot never reaches the slip); painting: a tap
 function botHold(a, st, inp, s) {
   const b = a.bot;
-  if (!st.plan) { const g = b._glide; b._glide = null; st.plan = { mode: g?.mode || 'paint', t: g?.t || null }; }
+  if (!st.plan) { const g = b._glide; b._glide = null; st.plan = { mode: g?.mode || 'paint', t: g?.t || null, cook: g?.cook || 0, yaw: g?.yaw ?? null }; }
   const P = st.plan;
   let keep = false;
-  if (P.mode === 'fight') {
+  // Boss Battle: hold to the planned cook — let go at once (throwing what's cooked) when one of the boss's telegraphs
+  // is on us (a cooking kid can't dive under its beam)
+  if (P.mode === 'boss') keep = st.cook < P.cook - 1e-6 && st.held < s.cookGrace + s.cookMax && !(b._th && (b._th.level > 0.2 || b._th.beam));
+  else if (P.mode === 'fight') {
     const t = P.t && P.t.alive ? P.t : b.target;
     if (t && t.alive && t.pos) {
       P.t = t;
@@ -910,6 +942,7 @@ function botHold(a, st, inp, s) {
 // at the release: a fighting bot turns to its foe's led spot
 function botAimAt(a) {
   const st = a.weaponRunner?.glide, P = st?.plan;
+  if (P?.mode === 'boss' && P.yaw != null) { const B = G.boss; a.aimYaw = B && !B.dead ? Math.atan2(B.pos.x - a.pos.x, B.pos.z - a.pos.z) : P.yaw; return; }   // (at the boss's middle as it is now)
   if (!P || P.mode !== 'fight' || !st.aimAt || !P.t?.alive) return;
   a.aimYaw = Math.atan2(st.aimAt.x - a.pos.x, st.aimAt.z - a.pos.z);
 }
@@ -996,5 +1029,5 @@ SUB_KITS[KIND] = {
     if (actor.weaponRunner?.glide) endHold(actor, false);
     const nc = netCook.get(actor); if (nc) { stopSizzle(nc); netCook.delete(actor); handLook(actor, 0, 0, false); }
   },
-  bot: { fight, paint },
+  bot: { fight, paint, boss },
 };
