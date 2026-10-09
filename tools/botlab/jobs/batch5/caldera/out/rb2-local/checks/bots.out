@@ -1,0 +1,41 @@
+### turf-low
+== caldera [turf 180s]: turf 25.5% vs 42.4%
+   stuck 0% | splats 43 (water 0) | specials 9 | super jumps 18 | turf 25.5/42.4 | sim 180s in 42s (wall 42s) | {"cpuSimMs":1.59}
+   splats by cause {"brolly":10,"blast":8,"drop":4,"roller":2,"bow":8,"sticky":1,"charger":4,"shot":3,"tracer":1,"mine":1,"brush":1}
+   stuck {"t":41,"name":"Drip","w":"bow","mode":"refill","role":"-","pos":[-22.7,1.22,-24.7],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":51.3,"name":"Moxie","w":"charger","mode":"fight","role":"-","pos":[-9.7,3.6,-42.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### turf-high
+== caldera [turf 180s]: turf 35.5% vs 33.6%
+   stuck 0.1% | splats 38 (water 1) | specials 6 | super jumps 17 | turf 35.5/33.6 | sim 180s in 43s (wall 43s) | {"cpuSimMs":1.56}
+   splats by cause {"roller":1,"crab":7,"blast":8,"shot":6,"blaster":1,"brolly":7,"charger":5,"tracer":1,"water":1,"burst":1}
+   stuck {"t":30.3,"name":"Moxie","w":"charger","mode":"paint","role":"-","pos":[-21,1.2,21.3],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":42.5,"name":"Riptide","w":"brolly","mode":"paint","role":"-","pos":[-20.6,2.34,21.5],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":19.8,"name":"Sprinkle","w":"brush","mode":"refill","role":"-","pos":[21.1,2.4,31.7],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":20.3,"name":"Sprinkle","w":"brush","mode":"paint","role":"-","pos":[20.9,2.4,31.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### zones-low
+== caldera [zones]: winner Alpha (neutralised) | final 35 vs 59 (penalty +27.1/+0) | OT 37.4s
+   held A 128.3s B 95s neutral 114s | captures 11 (takeovers 8), control events 22, first capture @18.8s | rotations 7
+   stuck 0.3% | splats 79 (water 0) | specials 26 | super jumps 24 | turf 34.3/23.6 | sim 337.5s in 113s (wall 113s) | {"cpuSimMs":1.27}
+   splats by cause {"shot":44,"mitts":11,"bow":8,"slosh":6,"zooka":2,"blade":5,"surf":1,"seeker":2}
+   stuck {"t":289.3,"name":"Moxie","w":"bow","mode":"fight","role":"watch","pos":[6.3,1.2,-7],"path":false,"hold":false,"pod":"-","dur":1.25}
+   stuck {"t":32.5,"name":"Marlo","w":"spinner","mode":"fight","role":"watch","pos":[1.3,1.2,8.2],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":44.3,"name":"Moxie","w":"bow","mode":"paint","role":"watch","pos":[-7.5,2.4,-0.5],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":45,"name":"P1","w":"spinner","mode":"paint","role":"watch","pos":[-0.3,1.2,-10.1],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":51,"name":"P1","w":"spinner","mode":"paint","role":"watch","pos":[0.3,1.2,-11.1],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":206.3,"name":"Marlo","w":"spinner","mode":"retreat","role":"paint","pos":[7.7,1.2,29.2],"path":true,"hold":false,"pod":"-","dur":0.5}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":337.5,"simMs":113350,"state":"finish","stuckPct":0.3,"splats":79,"water":0,"specials":26,"jumps":24,"cov":[34.3,23.6],"teamKD":[{"k":51,"d":28,"sp":3,"by":{"zooka":2,"surf":1}},{"k":28,"d":51,"sp":2,"by":{"barrage":2}}],"spUses":[{"slam":4,"strike":4,"barrage":7},{"surf":4,"zooka":3,"barrage":1,"wail":3}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"h
+### towermatch-low
+== caldera [tower len 100/100]: winner Alpha (time) | counts 15 vs 83 (score 15/83) | best push A 80m B 24.1m | OT no | sim 300s
+   held A 180s B 106.8s | contested 4.3s (6×) | neutral 13s | control changes 12 (takes 13) | idle→neutral 1
+   checkpoints cleared A 2 B 0 (reached 3/1, refills 0/1) | riders avg while held A 1.58 B 1.28 | mounts 35/39
+   left empty while held: 22× (>2 s: 5, of those with a teammate up within 15 m: 4; team wiped: 1; longest 4.8s; [5,3.75,2.5,2.25,2.25,1.75]) | off the tower {"death":25,"role":32,"retreat":3,"fell":12}, last one off a held tower {"death":12,"fell":5,"role":5,"retreat":1}
+   stuck 0% | by the tower's side 4% of bot-time, stuck there 0.3s (1 episodes) | splats 123 (water 0) | specials 14 (ready 17) | super jumps 50 | turf 31.9/9 | sim 300s in 91s (wall 91s) | {"cpuSimMs":1.51}
+   stuck {"t":232,"name":"Suki","w":"bucket","mode":"fight","role":"ride","pos":[4.4,2.22,-0.5],"tower":7.2,"path":true,"dur":0.25}
+   stuck {"t":293.5,"name":"P1","w":"roller","mode":"paint","role":"escort","pos":[11.4,3.6,46.6],"tower":1.7,"path":true,"dur":0.25}
+   stuck {"t":294,"name":"P1","w":"roller","mode":"paint","role":"escort","pos":[11.4,4.95,47.1],"tower":2.1,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"caldera","winner":0,"reason":"time","counts":[15,83],"best":[80,24.1],"held":[180,106.8],"controlChanges":12,"cpClear":[2,0],"stuckPct":0,"console":1,"frameErrors":0,"mounts":[35,39],"ridersAvg":[1.58,1.28],"x":{"climbs":[33,32],"sjRider":16,"kills":123,"killsNear":[42,77],"attempts":175,"boarded":56,"aborted":117,"climbMounts":45,"sjMounts":2,"toBoard":{"med":1.75,"p80":5},"nearBoard":{"med":1.5,
+RESULT bots done
