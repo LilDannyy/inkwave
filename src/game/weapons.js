@@ -1737,7 +1737,9 @@ export class Projectiles {
     if (p.type === 'drop') dmg = lerp(p.damage, p.dmgFar, clamp(p.start.distanceTo(at) / 7, 0, 1));
     if (p.vol) { if (p.vol.hits.includes(O)) dmg = 0; else p.vol.hits.push(O); }
     if (p.type === 'drop') { const o = p.owner, t = o._flickKarpT ?? -9; if (G.time - t < 0.3) dmg *= 0.12; else o._flickKarpT = G.time; }   // (a flick is one sheet of ink)
-    if (dmg > 0) O.hit(p.owner, dmg, p.wid || p.type, at.clone(), { special: p.sp, target: kh.target });
+    // (its id: a kit's wid, a special gun's weaponId (jetpack, crab), else its owner's main — a shooter's shot, a blaster's
+    // blast, a roller's flick carry none — so a main's shot fired while its owner's special runs still counts whole)
+    if (dmg > 0) O.hit(p.owner, dmg, p.wid || p.weaponId || p.owner?.weaponId || p.type, at.clone(), { special: p.sp, target: kh.target });
     G.fx?.burst(at, _v2.copy(p.vel).normalize().negate(), p.owner.color, { count: 4, speed: 3, size: 0.07 });
     if (p.type !== 'blast') emit('weapon:impact', { pos: at.clone(), normal: _v2.copy(p.vel).normalize().negate().clone(), team: p.team, kind: p.type === 'drop' || p.type === 'slosh' ? 'drop' : 'shot', radius: p.radius * 0.5, victim: null });
     if (p.type === 'blast') this._blastBurst(p, at, 'karp');

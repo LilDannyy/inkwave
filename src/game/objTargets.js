@@ -14,7 +14,7 @@
 // counted hit applies at once; a guest sums its hits per attacker and sends them on its next tick (`kh`, takeHits()).
 import * as THREE from 'three';
 import { G, clamp } from '../core/ctx.js';
-import { SPECIALS, BAZOOKARP as K } from '../config.js';
+import { SPECIALS, WEAPONS, BAZOOKARP as K } from '../config.js';
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3();
 const _seg = { t: 0, point: new THREE.Vector3(), dist: 0, target: null };
@@ -29,7 +29,10 @@ export class ObjTargets {
   }
   add(t) { if (!this.targets.includes(t)) this.targets.push(t); return t; }
   remove(t) { const i = this.targets.indexOf(t); if (i >= 0) this.targets.splice(i, 1); }
-  isSpecial(wid, o) { return !!(o && o.special) || !!(wid && SPECIALS[wid]); }
+  // a special's damage: by its id, or by the sp flag of what it threw / fired (a Bomb Barrage's bombs) — but never a main
+  // weapon's own shot, which carries the flag whenever its owner's special runs (a Bubble Guard, a Drainbow, a Sonar:
+  // the main keeps firing, and its shots counted half into the shell — karp-shell-dps found it)
+  isSpecial(wid, o) { return !!(wid && SPECIALS[wid]) || !!(o && o.special && !(wid && WEAPONS[wid])); }
 
   // the nearest target along a → b (within pad of its surface)
   segHit(a, b, pad = 0) {
