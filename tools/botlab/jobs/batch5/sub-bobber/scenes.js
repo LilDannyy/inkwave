@@ -10,6 +10,8 @@
 //   cue       a foe in a teammate's chain's reach: the chain glows and "Shoot to set off" sits on its nearest bobber
 //   boom      the chain going off: the first blasts, the spark running down the tethers, "CHAIN ×4" by the crosshair
 //   enemy     the other team's chain as you see it (no glow, no hint), its lamps telling you its size
+//   lamps     a lone one (one lamp) and a 4-chain (four), 6–10 m off: what the lamps say at play distance
+//   cueoff    the cue scene's chain with its foe out of reach: the tethers at their normal brightness (against 'cue')
 //   picker    the loadout's sub picker on the Chain Bobber (its tile, name, blurb, 40 %)
 (async () => {
   const g = window.__inkwave, M = g.menus, m = g.match, me = m.local, THREE = await import('three');
@@ -137,6 +139,27 @@
       step(100);
       put(me, 1.2, 1.5, 0); g.rig.dist = 3.2; g.rig.follow(me, true); cam(0.06, -0.18); step(6);
       return { n: K.items.map((x) => x.chain?.n) };
+    } },
+    // (fix round 1) the lamps at play distance: a lone one and a 4-chain, 5.2 m apart (out of linking range), 6–10 m from
+    // the camera
+    { name: 'lamps', wait: 160, set: async () => {
+      await fresh();
+      // (the flat patch is 9 m wide: a lone one on the left, a 4-chain running away on the right, 5.2 m apart)
+      const groups = [[[-2.6, 7.6]], [[2.6, 7.2], [2.6, 8.6], [2.6, 10.0], [2.6, 11.4]]];
+      for (const gp of groups) for (const [x, z] of gp) drop(me, x, z);
+      step(100);
+      put(me, -0.2, 4.3, 0); g.rig.dist = 3.2; g.rig.follow(me, true); cam(0.05, -0.06); step(6);
+      const cp = g.rig.gameCam?.position || me.pos;
+      return { n: K.items.map((x) => x.chain?.n), d: K.items.map((x) => Math.round(x.spot.distanceTo(cp) * 10) / 10) };
+    } },
+    // (fix round 1) the cue's glow, before / after: the same teammate's chain with the foe out of its reach, then in it
+    { name: 'cueoff', wait: 200, set: async () => {
+      await fresh();
+      for (const [x, z] of [[-2.6, 5], [0, 5.6], [2.6, 5]]) drop(mate, x, z);
+      step(100);
+      put(foe, 0.8, 13.5, Math.PI); foe.hp = 100;
+      put(me, 0.6, 2, 0); g.rig.follow(me, true); cam(0, -0.14); step(14);
+      return { glow: K.items.some((x) => x.glow) };
     } },
     { name: 'picker', wait: 400, set: async () => {
       hold = false; G.subs.clear();
