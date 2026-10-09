@@ -329,11 +329,12 @@ export class StagePipes {
     // the looks (riders' glow, lit exits, fans, flaps, signs) and the HUD
     const L = this.W.looks;
     if (L) {
-      const list = [];
+      const list = [], self = G.game?.rig?.target || G.local;
       for (const a of m.actors) {
         const p = a.pipe;
         if (!p || p.phase === 'pop' || !a.alive) continue;
-        list.push({ leg: p.leg, s: p.s ?? 0, team: a.team, dir: p.dir, x: a.pos.x, z: a.pos.z, on: p.phase === 'ride' ? 1 : 0.4 });
+        // (the glow is the telegraph for everyone else: on the rider's own screen, through its own ride camera, it is dimmed)
+        list.push({ leg: p.leg, s: p.s ?? 0, team: a.team, dir: p.dir, x: a.pos.x, z: a.pos.z, on: (p.phase === 'ride' ? 1 : 0.4) * (a === self ? 0.35 : 1) });
       }
       L.setRiders(list);
       for (let i = 0; i < this.lit.length; i++) L.lightEnd(i, this.lit[i].n > 0 ? this.lit[i].team : -1, this.lit[i].fast);
