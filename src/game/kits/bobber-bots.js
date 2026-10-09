@@ -32,7 +32,7 @@ import { items, sizeOf, SB, spotFor, predictFrom, near, srcStat, lobAim } from '
 const V3 = THREE.Vector3;
 const _v = new V3(), _v2 = new V3();
 const wander = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.27 + 1.3) * 0.4;
-const MELEE = { roller: true, brush: true }, CHARGES = { charger: true, spinner: true, splatling: true }, RELEASE = { ...CHARGES, bow: true, blade: true };
+const MELEE = { roller: true, brush: true }, CHARGES = { charger: true, spinner: true, splatling: true };
 export const BOBBER_BOT = { setups: 0, grows: 0, lures: 0, scans: 0, engaged: 0, fired: 0, gaveUp: 0, deferred: 0, discs: 0, armed: 0, maxDiscs: 0, holds: 0, cands: 0,
   why: { calls: 0, ink: 0, hurt: 0, rolls: 0, spot: 0 } };   // (why: paint()'s answers — how often each condition said no)
 // (tests / probes: BOBBER_BOT.logOn = true keeps a short log of the bots' set-up decisions in BOBBER_BOT.log)
@@ -86,7 +86,12 @@ function okSpot(a, x, z, tower, from = a.pos, lob = true) {
   if (lob && !lobOk(a, at, from)) return null;
   return at;
 }
+// (the lob checks one look for a chain may make — each flies the throw up to four times: a frame's cost stays small)
+let _lobLeft = Infinity;
+const lobBudget = (n, fn) => { const k = _lobLeft; _lobLeft = n; try { return fn(); } finally { _lobLeft = k; } };
 function lobOk(a, at, from) {
+  if (_lobLeft <= 0) { NO.lob++; _noWhy = 'lobBudget'; return false; }
+  _lobLeft--;
   if (lobAim(from, at, a.team, SB().throwSpeed, _la).miss <= 1.2) return true;
   NO.lob++; _noWhy = 'lob' + Math.round(_la.miss * 10) / 10; return false;
 }
@@ -300,7 +305,8 @@ function heatAnchors(b, pads) {
 }
 // a chain to lay now: the first anchor with a layout that stands — from here when it's in reach, else from a stand spot
 // on our side of it (a set-up the bot walks to first) → { A, L, stand } | null
-function planChain(b, tp) {
+function planChain(b, tp) { return lobBudget(14, () => planChain0(b, tp)); }
+function planChain0(b, tp) {
   const a = b.a, C = anchors(b, tp), why = BOBBER_BOT.logOn ? [] : null;
   let n = 0;
   for (const A of C) {
@@ -335,7 +341,8 @@ function planOf(b) {
 }
 // (a burst's chain left short of three) the links that grow this bot's newest chain to three: each 3.2–4.2 m from one of
 // its bobbers with a clear line to it (so they tether), ≥ 2.4 m from the rest, clear of the team's other chains → [V3] | null
-function growPlan(b, tp) {
+function growPlan(b, tp) { return lobBudget(8, () => growPlan0(b, tp)); }
+function growPlan0(b, tp) {
   const a = b.a;
   let nw = null;
   for (const it of items) if (it.owner === a && !it.ghost && it.state === 'live' && it.chain && (!nw || it.seq > nw.seq)) nw = it;
@@ -356,7 +363,8 @@ function growPlan(b, tp) {
 // (a burst's next link whose planned spot no longer stands) a spot near it, or 3.2–4.2 m from one of the burst's links,
 // that stands from here, ≥ 2.4 m from the burst's other links, within 4.6 m of one of them with a clear line (they
 // tether), clear of the team's other chains → V3 | null
-function linkNear(b, P, q, tp) {
+function linkNear(b, P, q, tp) { return lobBudget(8, () => linkNear0(b, P, q, tp)); }
+function linkNear0(b, P, q, tp) {
   const a = b.a, T = P.thrown || [P.pts[0]];
   const ok = (x, z) => {
     if (T.some((t) => Math.hypot(t.x - x, t.z - z) < 2.4) || !T.some((t) => Math.hypot(t.x - x, t.z - z) <= 4.6)) return null;
