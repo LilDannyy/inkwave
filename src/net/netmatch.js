@@ -47,6 +47,7 @@ const F = {
   tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks;
                                           // two teams, so tracked = by the other one: the ring's colour and who gets lines)
   stage: 4194304,                         // [b5-stagehooks] a stage module holds this squidkid (a pipe ride: aquarium's F.pipe)
+  dash: 8388608,                          // [b5-sub-dash] mid Dash Pellet dash (29 m/s): never extrapolated (_pathAt)
 };
 // events forwarded from owners (actor-bearing payloads; vectors/actors are packed)
 const FORWARD = ['actor:jump', 'superjump', 'superjump:land', 'special:use', 'special:slam', 'weapon:dodge', 'weapon:fire', 'splatted', 'respawn'];
@@ -350,9 +351,10 @@ export class NetMatch {
     if (s1) { copySample(t >= s1.t ? s1 : s0, S); return 1; }      // teleport between these two: hold, then snap
     const last = buf[buf.length - 1];
     if (t < last.t) { copySample(s0, S); return 3; }
-    // buffer ran dry: a short ballistic extrapolation along the last velocity, then hold
+    // buffer ran dry: a short ballistic extrapolation along the last velocity, then hold ([b5-sub-dash] past a dashing
+    // sample: hold at once — 0.18 s at 29 m/s is 5 m through whatever is ahead; the next sample carries it on)
     copySample(last, S);
-    const e = Math.min(t - last.t, 0.18);
+    const e = last.f & F.dash ? 0 : Math.min(t - last.t, 0.18);
     if (e > 0) {
       S.x += last.vx * e; S.z += last.vz * e;
       if (!(last.f & F.grounded)) { S.y += last.vy * e - 0.25 * PLAYER.gravity * e * e; S.vy = last.vy - 0.5 * PLAYER.gravity * e; }
@@ -919,6 +921,7 @@ function packActor(a) {
   if (a.onEnemy) f |= F.enemy;
   { const sb = statusBits(a); if (sb & NET_TRACKED) f |= F.tracked; if (sb & NET_POISONED) f |= F.poisoned; }
   if (G.match?.stage?.netFlag(a)) f |= F.stage;   // [b5-stagehooks]
+  if (wr.dashT > 0) f |= F.dash;                   // [b5-sub-dash]
   // the visual position (the owner's step smoothing included) — that's what the owner sees
   const y = a.pos.y + (a.smoothY || 0);
   const n = a.climbing ? a.wallN : null;

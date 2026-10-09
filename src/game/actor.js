@@ -31,6 +31,7 @@ export function rumble(actor, strong, weak, ms) {
 }
 
 const _dodgeV = new THREE.Vector3();
+const _dashV = new THREE.Vector3();   // [b5-sub-dash]
 export class Actor {
   constructor({ team, name, weapon = 'shooter', sub = null, special = null, isLocal = false, isBot = false, style = { hair: 0, skin: 0 }, slot = 0, CharacterClass }) {
     this.team = team; this.name = name; this.isLocal = isLocal; this.isBot = isBot; this.slot = slot;
@@ -267,6 +268,7 @@ export class Actor {
     const firePressed = intent.fire && !prev.fire;
     const jumpPressed = intent.jump && !prev.jump;
     const subReleased = !intent.sub && prev.sub;
+    const subPressed = intent.sub && !prev.sub;   // [b5-sub-dash] (onPress subs: trySubPress below)
     const specialPressed = intent.special && !prev.special;
     if (intent.squid && !prev.squid) this._squidPressT = G.time;
     if (firePressed) this._firePressT = G.time;
@@ -277,7 +279,8 @@ export class Actor {
     this.lastDamage += dt; this.lastFire += dt; this.landT += dt; this.kidT += dt;
     this.hurtFlash = Math.max(0, this.hurtFlash - dt * 0.6);
     this.inkWarnCd -= dt;
-    this.jumpBuffer = jumpPressed ? P.jumpBuffer : Math.max(0, this.jumpBuffer - dt);
+    const wr = this.weaponRunner, dashing0 = wr.dashT > 0 && this.grounded;   // [b5-sub-dash] a jump pressed mid ground dash waits for its end
+    this.jumpBuffer = jumpPressed ? P.jumpBuffer : dashing0 ? this.jumpBuffer : Math.max(0, this.jumpBuffer - dt);
     this.fireBuffer = firePressed ? P.fireBuffer : Math.max(0, this.fireBuffer - dt);
     this.hardLand = Math.max(0, this.hardLand - dt / P.hardLandTime);
 
@@ -332,18 +335,24 @@ export class Actor {
     // as big, so every cost and every "enough ink?" check comes to inkMul of what it was (here and round the weapon below)
     const inkMul = spx?.def?.inkUse || 1;
     if (inkMul !== 1) this.ink /= inkMul;
+    // [b5-sub-dash] an onPress sub (the Dash Pellet, SPEC §0.5): the press acts here, before the move, so the press frame
+    // already moves; while a dash runs it owns the horizontal velocity (enemy ink never slows it)
+    wr.trySubPress(intent.sub, subPressed);
+    { const dsv = wr.dashVelocity(_dashV, dt); if (dsv) { this.vel.x = dsv.x; this.vel.z = dsv.z; } }
+    const dashing = wr.dashT > 0;
     if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
-    if (this.jumpBuffer > 0 && !isSquid && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
+    if (this.jumpBuffer > 0 && !isSquid && !dashing && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
     if (inkMul !== 1) this.ink *= inkMul;
 
     // ---- jump (buffered, with coyote time). An off-limits top (a roof) is no ground to jump from: you slide off it, and
     // no coyote jump carries off its edge either (perches, railings and swim-jumps are ground as usual)
+    // ([b5-sub-dash] none during a dash, and no coyote jump off a dash: it never gains height)
     const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && !!G.level.blocks[this.ground.block]?.roof;
-    this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof ? 0 : this.coyote - dt;
+    this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof || (dashing && !this.grounded) ? 0 : this.coyote - dt;
     let jumped = false;
-    if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing) {
+    if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing && !dashing) {
       let jv = this.submerged ? P.swimJumpVel : P.jumpVel;
       if (onEnemy) jv *= 0.72;
       this.vel.y = jv;
@@ -355,10 +364,15 @@ export class Actor {
       emit('actor:jump', { actor: this, surface: this.groundTeam, swim: this.submerged });
     }
 
-    // ---- integrate + collide (feet + body)
-    this._integrate(dt, isSquid, jumped);
-    G.subs?.blockActor(this);
-    this._spawnBarrier();
+    // ---- integrate + collide (feet + body). [b5-sub-dash] a dash moves in substeps of ≤ 0.2 m (SPEC D1.3), so no wall,
+    // curtain, canopy, bubble, shell or spawn barrier is ever passed through at any frame rate
+    if (dashing) this._dashSteps(dt, isSquid, jumped);
+    else {
+      this._integrate(dt, isSquid, jumped);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+    }
+    if (wr.dashT <= 0 && (this.grounded || this.climbing)) wr.airDashUsed = false;   // [b5-sub-dash] the air dash comes back on landing / a climb
 
     // ---- ink / hp
     if (onEnemy) {
@@ -576,11 +590,37 @@ export class Actor {
       let g = P.gravity;
       if (this.vel.y < 0) g *= P.fallGravityMul;
       if (Math.abs(this.vel.y) < P.apexBand) g *= P.apexGravityMul;
+      { const wr = this.weaponRunner; if (this.vel.y < 0 && wr.dashT > 0 && wr.dashAirRule) g *= wr.dashGrav ?? 1; }   // [b5-sub-dash] an air dash flattens the fall (never the rise: no height gain)
       this.vel.y = Math.max(-P.maxFall, this.vel.y - g * dt);
     }
     const prevY = this.pos.y;
     this.pos.addScaledVector(this.vel, dt);
     this._resolve(isSquid, prevY, wasGrounded);
+  }
+
+  // [b5-sub-dash] a dash's frame (SPEC D1.3): `_integrate → blockActor → _spawnBarrier` in n = ceil(|v_h| dt / substep)
+  // substeps of ≤ 0.2 m — less than the body's radius, a curtain's half-width or a canopy's band, so the body is always
+  // pushed back out the side it came from. The velocity is set once, before them (a wall met removes what goes into it,
+  // the rest slides on); `jumped` reaches the first only; airTime grows by one frame's 1/60 when it was airborne in every
+  // substep (_resolve adds 1/60 a call). From the substep it's off the ground, the air rules: vy clamped to
+  // [airVyMin, airVyMax] once, and it counts as the air dash (gravity × airGravMul while falling: _integrate)
+  _dashSteps(dt, isSquid, jumped) {
+    const wr = this.weaponRunner, D = SUBS.dash;
+    const airRule = () => { if (!this.grounded && !wr.dashAirRule) { wr.dashAirRule = true; wr.airDashUsed = true; this.vel.y = clamp(this.vel.y, D.airVyMin, D.airVyMax); } };
+    const n = Math.max(1, Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (D.substep || 0.2)));
+    const air0 = this.airTime;
+    let air = true;
+    for (let i = 0; i < n; i++) {
+      airRule();
+      this._integrate(dt / n, isSquid, jumped && i === 0);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+      if (this.grounded) air = false;
+    }
+    airRule();
+    if (air) this.airTime = air0 + 1 / 60;
+    wr.dashSteps = n;   // (tests)
+    wr.tickDash(dt);
   }
 
   // Standing on a roof block: pushed toward its nearest edge (a pitched top: downhill), picking up speed until you drop

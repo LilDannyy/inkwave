@@ -19,6 +19,7 @@ import { layoutThumbSVG } from './world/mapThumb.js';
 import { dressingFor } from './world/dressing.js';
 import { inMode, layoutFor, variantKey } from './world/variants.js';
 import './game/kits/index.js';   // kit weapons + subs register themselves (game/kits/registry.js)
+import { SUB_KITS } from './game/kits/registry.js';   // [b5-sub-dash] (a kit sub's first-time tip: SUB_KITS[k].prompt)
 import { Physics, Hit } from './game/physics.js';
 import { NavGraph } from './game/nav.js';
 import { Projectiles } from './game/weapons.js';
@@ -1542,12 +1543,14 @@ class Game {
     this._hintT += dt;
     let prompt = null;
     const inkF = a.ink / PLAYER.inkMax;
+    const kitTip = m.state === 'playing' && a.alive && !m.attract ? SUB_KITS[a.sub?.kind]?.prompt?.(a, dt) || null : null;   // [b5-sub-dash]
     if (m.state === 'playing' && a.alive) {
       if (m.controller?.mapHeld) prompt = null;   // the map diorama carries its own super-jump hints
       else if (a.superJumpState) prompt = null;
       else if (this._lowInkFlash > 0) { this._lowInkFlash -= dt; prompt = 'Low ink! Hold SHIFT in your ink to refill'; }
       else if (a.specialReady() && (this._hints.specialT = (this._hints.specialT || 0) + dt) > 2) prompt = `Special ready! Press F`;
       else if (inkF < 0.25 && a.form !== 'squid') prompt = 'Hold SHIFT to swim in your ink and refill';
+      else if (kitTip) prompt = kitTip;   // [b5-sub-dash] (the Dash Pellet's "Tap RMB or E to dash …", the first time it's equipped)
       else if (m.tower?.homing && m.tower.owner === a.team && (this._hints.homeT = (this._hints.homeT || 0) + dt) < 4) prompt = 'Your tower rolls home by itself on your half — go defend it!';
       else if (m.duration - m.time < 8 && !this._hints.shot) prompt = m.zones ? 'Ink the zone and hold it to count down!' : m.tower ? 'Ink the tower\'s side, swim up onto it and ride it into enemy territory!' : 'Paint the ground — most turf wins!';
       if (!a.specialReady()) this._hints.specialT = 0;
@@ -1592,7 +1595,7 @@ class Game {
       poisoned: a.status.poison > 0, tracked: a.status.track > 0,
       special: a.specialActive ? G.specials.remaining(a) : a.specialFrac(), specialReady: a.specialReady(), specialActive: !!a.specialActive, specialId: a.specialId,
       hp: a.hp / PLAYER.hp,
-      weapon: a.weaponId, charge: a.weaponRunner.charge,
+      weapon: a.weaponId, charge: a.weaponRunner.charge, mainLocked: !!a.weaponRunner.mainLocked,   // [b5-sub-dash] (a dash: the reticle dims)
       twin: w.kind === 'twins' ? { planted: !!a.weaponRunner.turret, rolls: a.weaponRunner.rollsLeft() } : null,
       crosshair: { spread, onTarget: m.controller?.onTarget ? 'enemy' : null, inRange: m.controller ? m.controller.inRange !== false : true },
       // corner minimap follows the setting; the TAB map (needed for super jumps) is always available

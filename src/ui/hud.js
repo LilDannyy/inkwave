@@ -271,7 +271,8 @@ export class HUD {
     this.tpops = h('div', { class: 'iw-tpops' });
     // "Can't use": a kit sub refused the throw (sub:cantuse) — a short callout where the sub-aim chip sits
     this.denyIcon = h('span', { class: 'iw-deny__i', html: SUB_ICONS.bomb });
-    this.denyEl = h('div', { class: 'iw-deny' }, h('span', { class: 'iw-deny__b' }, this.denyIcon, h('i', { class: 'iw-deny__no' })), h('b', null, 'CAN’T USE'));
+    this.denyWhy = h('i', { class: 'iw-deny__why' });   // [b5-sub-dash] the reason, a small second line (sub:cantuse.reason)
+    this.denyEl = h('div', { class: 'iw-deny' }, h('span', { class: 'iw-deny__b' }, this.denyIcon, h('i', { class: 'iw-deny__no' })), h('span', { class: 'iw-deny__t' }, h('b', null, 'CAN’T USE'), this.denyWhy));
     this.xh = h('div', { class: 'iw-xh' }, this.shield, this.ret, this.hitEl, this.killEl, this.tank, this.subChip, this.denyEl, this.tpops);
     this.ddLayer = h('div', { class: 'iw-dds' });
 
@@ -399,6 +400,7 @@ export class HUD {
     if (f.teams) this._updSquads(this.boss.on ? this.boss.squadTeams(f.teams) : f.teams);
     this._updCrosshair(f, dt);
     { const nr = !!(f.stage && f.stage.noReticle); if (nr !== !!L.noRet) { L.noRet = nr; this.ret.style.visibility = this.subChip.style.visibility = nr ? 'hidden' : ''; } }   // [b5-stagehooks] (riding a pipe)
+    { const lk = !!f.mainLocked; if (lk !== this.ret.classList.contains('is-locked')) this.ret.classList.toggle('is-locked', lk); }   // [b5-sub-dash] a sub locks the main weapon (a dash): the reticle dims
     this._updTank(f, dt);
     this._updSpecial(f, dt);
     this._updSubBadge(f);
@@ -692,7 +694,7 @@ export class HUD {
       on('lowink', ({ actor }) => { if (actor === this._local() && this._live()) { this._tank.empty = 0.45; this._restart(this.tank, 'is-empty'); } }),
       on('special:ready', ({ actor }) => { if (actor === this._local() && this._live()) this._restart(this.sp, 'is-flare'); }),
       on('superjump', ({ actor, phase, to }) => { if (actor === this._local() && phase === 'charge' && this._live()) this._snd('ui_confirm', { volume: 0.6 }); void to; }),
-      on('sub:cantuse', ({ actor, kind }) => { if (actor && actor === this._local() && this._live()) this._cantUse(kind); }),
+      on('sub:cantuse', ({ actor, kind, reason }) => { if (actor && actor === this._local() && this._live()) this._cantUse(kind, reason); }),
       on('zones:control', (e) => this._zControl(e)),
       on('zones:penalty', (e) => this._zPenalty(e)),
       on('zones:active', (e) => this._zActive(e)),
@@ -1887,12 +1889,13 @@ export class HUD {
 
   // a sub refused the throw (sub:cantuse — e.g. a Torpedo or Boomerang already out): a callout where the aim chip was,
   // the badge shakes, a soft deny bonk
-  _cantUse(kind) {
+  _cantUse(kind, reason = '') {
     const now = performance.now();
     if (now - (this._denyT || -1e9) < 140) return;
     this._denyT = now;
     const icon = SUB_ICONS[kind] || SUB_ICONS[(SUB[kind] || {}).kind] || SUB_ICONS.bomb;
     if (this.denyIcon._k !== kind) { this.denyIcon._k = kind; this.denyIcon.innerHTML = icon; }
+    this.denyWhy.textContent = reason || ''; this.denyWhy.hidden = !reason;   // [b5-sub-dash]
     this._restart(this.denyEl, 'is-on');
     this._restart(this.subBadge, 'is-deny');
     this._snd('sub_cantuse', { volume: 0.75 });

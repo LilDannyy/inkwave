@@ -658,7 +658,7 @@ export class BotBrain {
     // noticed (+ reaction time), line of sight to it, evade heading / sidestep side, canopy steering + flanking state
     this.thr = null; this.thrCand = null; this.thrScanT = Math.random() * 0.25; this._thrMem = new Map(); this._shl = [];
     this.thrLos = false; this.thrLosT = 0; this.thrAct = null; this.thrActs = 0; this.thrFiring = false; this.thrPulse = false;
-    this.thrEvT = 0; this.thrEvYaw = 0; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
+    this.thrEvT = 0; this.thrEvYaw = 0; this.thrEvNew = false; this.thrIn = 9; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
     this.canRef = null; this.canSide = 0; this.canT = 0; this.flankSide = 0; this.blockT = 0; this.flankT = 0;
     this.navBack = null; this.navBackT = 0;   // off-graph recovery (_backOnNav)
   }
@@ -1060,6 +1060,9 @@ export class BotBrain {
     // step into one, no shots into the untouchable; popping our team's bubble on one of theirs (an aim to hold)
     const spAim = this.sp.act(dt, it, move);
     if (spAim) { wantYaw = spAim.yaw; wantPitch = spAim.pitch; if (!thrAim) thrAim = spAim; }
+    // [b5-sub-dash] kit subs' own bot moves (SPEC §0.5 botAct: the Dash Pellet's dodges, break-offs, gap closes), last,
+    // so nothing later in the frame clears what they set; an aim they return is held like a device's
+    { const busy = !!thrAim; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; thrAim = r; } } }
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim, enemyVisible);
   }
 
@@ -2571,6 +2574,7 @@ export class BotBrain {
     const waitIn = !canShoot && !moveOnly && d.ground && d.shootable && this.thrLos && inkOk && d3 > hi && d3 < hi + 4 && hi - (d.trigger || 1.2) > 2.5;
     const mine = d.target === a, ttl = !d.ground && d.state === 'launch' ? d3 / Math.max(2, v.length()) : 9;
     const eta = d.ground ? Math.max(0, dh - (d.trigger || 1.2)) / (d.speed || 4) : ttl;
+    this.thrIn = d.slider ? d.fuse ?? eta : !d.ground ? ttl : eta;   // [b5-sub-dash] s until it lands (the dash's dodge: SUB_KITS.dash.botAct)
     // a duel with an enemy player close by outranks a device that isn't about to arrive
     const T = this.target;
     if (T && this.mode === 'fight' && this.seeTimer > 0) {
@@ -2637,7 +2641,7 @@ export class BotBrain {
     const a = this.a;
     if (!d.ground && d.state === 'launch' && ttl < 0.55) { this._thrSidestep(d, move, it, ttl < 0.35); return; }
     this.thrEvT -= dt;
-    if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); }
+    if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); this.thrEvNew = true; }   // [b5-sub-dash] (thrEvNew: a fresh heading)
     move.set(Math.sin(this.thrEvYaw), 0, Math.cos(this.thrEvYaw));
     const swim = this.groundSeen === 1 && !this._squidWouldDrop(move);
     if (swim && !(this.thrActs & 4)) { this.thrActs |= 4; THREAT_STATS.swim++; }
@@ -2655,6 +2659,7 @@ export class BotBrain {
       let s = rx * px + rz * pz >= 0 ? 1 : -1;
       if (!ok(s) && ok(-s)) s = -s;
       this.thrSide = s;
+      this.thrEvYaw = Math.atan2(px * s, pz * s); this.thrEvNew = true;   // [b5-sub-dash] (the side picked: a dash can take it)
       if (!(this.thrActs & 8)) { this.thrActs |= 8; THREAT_STATS.sidestep++; }
     }
     move.set(px * this.thrSide, 0, pz * this.thrSide);

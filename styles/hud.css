@@ -346,6 +346,11 @@
 .iw-deny__no { position: absolute; inset: 0; border-radius: 50%; border: 2.5px solid #ff3d5e; }
 .iw-deny__no::after { content: ''; position: absolute; left: 50%; top: 6%; bottom: 6%; width: 2.5px; margin-left: -1.25px; background: #ff3d5e; border-radius: 2px; rotate: 45deg; }
 .iw-deny b { font: 900 12px / 1 'Rubik', sans-serif; letter-spacing: .1em; color: #ff8d9c; }
+/* [b5-sub-dash] the refusal's reason, a small second line (sub:cantuse.reason); the reticle dimmed while a sub locks the main weapon */
+.iw-deny__t { display: flex; flex-direction: column; gap: 2px; }
+.iw-deny__why { font: 700 10px / 1 'Rubik', sans-serif; font-style: normal; letter-spacing: .03em; color: #e9e4f2; opacity: .82; white-space: nowrap; }
+.iw-deny__why[hidden] { display: none; }
+.iw-ret.is-locked { opacity: .4; }
 /* ink tank (canvas) */
 .iw-tank { position: absolute; left: 50px; top: -38px; width: 18px; height: 76px; transition: opacity .4s, translate .4s var(--out); }
 .iw-xh--roller .iw-tank { left: 82px; }

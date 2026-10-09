@@ -124,6 +124,7 @@ export const SUB_CUE = {
   waddle: { throw: ['throw_waddle', 0.9], beep: ['waddle_beep', 0.8], warn: ['waddle_prime', 1], boom: ['waddle_explode', 1], end: ['waddle_pop', 0.9] },
   torpedo: { throw: ['torpedo_throw', 1], boom: ['torpedo_burst', 1] },
   boomerang: { beep: ['boomerang_tick', 0.8], boom: ['boomerang_blast', 1] },
+  dash: { throw: ['dash_whoosh', 0.9], boom: ['dash_pop', 1] },   // [b5-sub-dash] the dash's rush of air; the pop it leaves behind (kits/dash.js)
   smash: { end: ['sub_smash', 0.9] },   // a device the Mega Stamp's guard smashed before it went off
 };
 // a special's start (on top of the shared special_activate); the ones missing here start with their own sound already
