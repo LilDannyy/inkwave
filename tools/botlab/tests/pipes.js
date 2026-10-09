@@ -490,14 +490,18 @@
         for (const [a, b] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const v = new THREE.Vector3(c[0] + sx * 0.925 * a, c[1] + 0.35 * b, c[2] + sz * 0.925 * a).project(__G.camera); const x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight; box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y); box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y); }
         const ce = document.querySelector('.iw-pp-ride.is-on'), r0 = ce?.getBoundingClientRect(), mode = P.rideCam.st?.mode;
         const overlap = !!r0 && r0.left < box[2] && r0.right > box[0] && r0.top < box[3] && r0.bottom > box[1];
-        R('hud: in the entry hold (the lens still on the mouth) the ride chip sits low, off the mouth\'s own sign', mode === 'entry' && !!r0 && ce.classList.contains('is-low') && !overlap, { mode, chip: r0 && [Math.round(r0.left), Math.round(r0.top), Math.round(r0.right), Math.round(r0.bottom)], sign: box.map(Math.round), h: innerHeight });
+        const ln = document.querySelector('.iw-pp-line.is-on')?.getBoundingClientRect(), overLine = !!r0 && !!ln && r0.bottom > ln.top && r0.top < ln.bottom;
+        R('hud: in the entry hold (the lens still on the mouth) the ride chip sits low, off the mouth\'s own sign and above the countdown line', mode === 'entry' && !!r0 && ce.classList.contains('is-low') && !overlap && !!ln && !overLine,
+          { mode, chip: r0 && [Math.round(r0.left), Math.round(r0.top), Math.round(r0.right), Math.round(r0.bottom)], sign: box.map(Math.round), line: ln && [Math.round(ln.top), Math.round(ln.bottom)], h: innerHeight });
       }
-      step(0.5);
+      // (then the chase: the chip back in the top band)
+      for (let i = 0; i < 60 && P.rideCam.st?.mode === 'entry'; i++) dbg.step(1000 / 60);
+      step(0.1);
       const chipEl = document.querySelector('.iw-pp-ride.is-on'), cr = chipEl?.getBoundingClientRect();
       const rp = new THREE.Vector3(A2.pos.x, A2.pos.y + 0.4, A2.pos.z).project(__G.camera), riderY = (1 - rp.y) / 2 * innerHeight;
       const ridingLine = line();
-      R('tide: riding through the warning, the countdown stays on screen; the ride chip sits in the top band, clear of the rider',
-        /KELP LINES GOING DOWN IN\s*\d/.test(ridingLine) && !!cr && cr.bottom < innerHeight * 0.4 && riderY > cr.bottom + 20, { ridingLine, chip: cr && [Math.round(cr.top), Math.round(cr.bottom)], riderY: Math.round(riderY), h: innerHeight });
+      R('tide: riding through the warning, the countdown stays on screen; once the chase runs the ride chip sits in the top band, clear of the rider',
+        /KELP LINES GOING DOWN IN\s*\d/.test(ridingLine) && P.rideCam.st?.mode === 'chase' && !!cr && cr.bottom < innerHeight * 0.4 && riderY > cr.bottom + 20, { ridingLine, mode: P.rideCam.st?.mode, chip: cr && [Math.round(cr.top), Math.round(cr.bottom)], riderY: Math.round(riderY), h: innerHeight });
       rideOut(A2); step(0.6);
       P.hudUi.msg = null; dbg.step(1000 / 60);
       const before = line();
