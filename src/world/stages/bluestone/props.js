@@ -154,7 +154,7 @@ for (const c of RAILYARD.channels) {
 }
 placements.push({ type: 'bluestone_tartar', pos: [0, 0, 0], mirror: false });
 for (const z of [-39.75, -32.25]) placements.push({ type: 'bluestone_grille', pos: [-18.75, 0, z], len: 3.5 });   // (the arcade's grilles onto Hoki Lane)
-for (const f of YARD_FENCE_LINES) placements.push({ type: 'bluestone_fence', pos: [f.pos[0], 0, f.pos[2]], rotY: f.rotY, len: f.len, h: f.h, y0: f.pos[1], eras: f.eras, eraGroup: f.eraGroup });   // (the signal yard's fence)
+for (const f of YARD_FENCE_LINES) placements.push({ type: 'bluestone_fence', pos: [f.pos[0], 0, f.pos[2]], rotY: f.rotY, len: f.len, h: f.h, y0: f.pos[1], onlyIn: f.onlyIn });   // (the signal yard's fence: Boss Battle only, fix round 3)
 // the landmark's and the hero buildings' blockout volumes (looks only)
 placements.push({ type: 'bluestone_dome', pos: [0, 0, 0], mirror: false });
 placements.push({ type: 'bluestone_clockrow', pos: [0, 0, -7.575] });
@@ -168,6 +168,6 @@ placements.push({ type: 'bluestone_train', pos: [-46, 0, -72], cars: 2, color: '
 placements.push({ type: 'bluestone_train', pos: [-35.5, 0, -63], cars: 2, loco: true, color: '#6b5a48' });
 { const [x, z] = AL(9, -9); placements.push({ type: 'bluestone_signalbox', pos: [x, 0, z] }); }   // (the old signal box on the embankment behind Prawn Alley)
 // the signal yard's tracks (the 1880s, today: ballast on the yard's 0.9 m bed; the Signal Garden covers it in the 3000s)
-for (const [x, z, len] of [[-31.2, -28.0, 4]]) placements.push({ type: 'bluestone_track', pos: [x, 0, z], rotY: (65 * Math.PI) / 180, len, top: 0.84, eras: '12', eraGroup: tileOf(x, z) });   // (fix round 3: the grown yard)
+for (const [x, z, len] of [[-31.2, -28.0, 4], [-28.0, -22.0, 4]]) placements.push({ type: 'bluestone_track', pos: [x, 0, z], rotY: (65 * Math.PI) / 180, len, top: 0.84, eras: '12', eraGroup: tileOf(x, z) });   // (fix round 3: the grown yard)
 export const BERM_MISS = [...BERM.miss, ...BERM_LOW.miss];
 export const PLACEMENTS = eraFilter(placements);

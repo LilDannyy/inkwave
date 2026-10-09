@@ -23,8 +23,8 @@ const S65 = Math.sin(65 * Math.PI / 180), C65 = Math.cos(65 * Math.PI / 180), AO
 const T = LY.TERMINUS, HS = LY.HOTEL_STAIR;
 const spots = {
   'halo 225 side': [-9.5, 5.3, -9.5], 'halo 270 side': [-12.9, 5.4, 0], 'hotel stair top landing': [-15.2, 5.2, -6.5],
-  'hotel stair mid': [-15.2, 3.8, -11.7], 'garden lawn N': [-28.5, 2.68, -21], 'garden walk E': [-25.5, 2.68, -33.0],
-  'tip stair mid': LY.AL((LY.TS.t0 + LY.TS.t1) / 2, 4).flatMap((v, i) => (i ? [v] : [v, 1.3])),
+  'hotel stair mid': [-15.2, 3.8, -11.7], 'garden lawn N': [-28.5, 1.2, -21], 'garden walk E': [-25.5, 1.2, -33.0],
+  'garden walk W (by the tip)': LY.AL(8, 4).flatMap((v, i) => (i ? [v] : [v, 1.2])), 'garden lawn by the mouth': [-27.5, 1.2, -19.5],
   'terminus platform': [...AO(-52, 6.5)].flatMap((v, i) => (i ? [v] : [v, T.y])), 'tip street': [...AO(-54, -5)].flatMap((v, i) => (i ? [v] : [v, 0])),
   'alley middle': LY.AL(12, 0).flatMap((v, i) => (i ? [v] : [v, 0])),
 };
@@ -38,6 +38,8 @@ for (const [k, [x, y, z]] of Object.entries(spots)) {
 const via = (from, to) => { const p = nav.path(near(...from), near(...to), 0, 400000); return p ? plen(p) : 'UNREACHABLE'; };
 out.landingToHalo = via([-12.5, 2.4, -14], [-12.9, 5.4, -2]);
 out.ringToHalo_viaHotelStair = via([-14, 0, -9], [-12.9, 5.4, -2]);
-out.prowToGardenWalk = via([-21.5, 0, -22], [-28.5, 2.68, -33.0]);
+out.prowToGardenWalk = via([-21.5, 0, -22], [-28.5, 1.2, -33.0]);
+out.armToGarden = via([...AO(-34, 0)].flatMap((v, i) => (i ? [v] : [v, 0])), [-30.5, 1.2, -25.5]);
+out.alleyToGarden = via(LY.AL(14, 0).flatMap((v, i) => (i ? [v] : [v, 0])), [-30.5, 1.2, -25.5]);
 out.prowToTip_street = via([-21.5, 0, -22], [...AO(-54, -3)].flatMap((v, i) => (i ? [v] : [v, 0])));
 console.log(JSON.stringify(out));

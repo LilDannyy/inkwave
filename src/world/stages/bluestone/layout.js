@@ -96,9 +96,8 @@ const rail = (o = {}) => ({ rail: true, paint: false, color: '#333333', ...o });
 //  terrace's outer corners are cut back (the west edge V50 → (−20, −64), the east edge (25, −50) → (25.5, −60)), with the
 //  quay's line from the Plaice down to them)
 export const ARM_END = -56, ARM_S = -4.5, ARM_TIP = -40, ARM_W = 9.5;
-// the Signal Garden's mouth stair (the 3000s; its 1880s / today channel in the yard): along MS.a1 … MS.a0 on the arm's
-// yard edge, off ARM_S − 3 … ARM_S; its foot's outer corner on Prow Place's line (x −24), so the land outline turns
-// round its foot (the yard's old north-east tip by Prow Place is street now)
+// the yard's north-east corner by Prow Place: the land outline turns along along MS.a0 from the arm's yard edge to Prow
+// Place's line (x −24), so the yard ends square there instead of in a sliver (fix round 3)
 export const MS = { a0: +((-24 + (ARM_S - 3) * Math.cos((65 * Math.PI) / 180)) / Math.sin((65 * Math.PI) / 180)).toFixed(4), a1: -36.3, o0: ARM_S - 3, o1: ARM_S };
 const zOnOff = (x, o) => +((o + x * C65) / S65).toFixed(4);                   // the z where the line off = o crosses x
 export const Q = {
@@ -296,7 +295,8 @@ const SWIMSTON = [
   B(-1.38, 1.38, 0, 2.6, -20.6, -14.6, { tag: 'halo-stair-base', color: K.glass, pattern: PATTERN.glasstile, paint: false, eras: '3', eraGroup: 'stair-s2' }),
   // the glass stair's side walls (inside the superstop's footprint: departs from x ±1.5 … ±1.62 so nothing appears
   // outside the old solid)
-  // (fix round 3: the lower flight's sides are open, at most a 2.65 m drop: ENGINE rule 6's 160 blocks per jump)
+  B(1.38, 1.5, 0, 3.65, -26.6, -20.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s1' })),
+  B(-1.5, -1.38, 0, 3.65, -26.6, -20.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s1' })),
   B(1.38, 1.5, 0, 6.3, -20.6, -14.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s2' })),
   B(-1.5, -1.38, 0, 6.3, -20.6, -14.6, rail({ tag: 'stair-glass', eras: '3', eraGroup: 'stair-s2' })),
   // Alpha's parked tram on the east track (the era-slot kit: one collider, three looks)
@@ -425,14 +425,8 @@ const alT = (s, f) => { const [x0, z0] = AL(0, s), [x1, z1] = AL(1, s), f0 = f(x
 const fArm = (o) => (x, z) => offOf(x, z) - o;                               // the arm's off = o line
 const fAlong = (a) => (x, z) => along(x, z) - a;                            // the arm's along = a line
 const fVia = (d) => (x, z) => x + 24 - 0.12 * (z + 33) + d;                  // the viaduct's inner face (d 0), outer (d 0.6043)
-// the Signal Garden's tip stair (the 3000s) stands in the yard along the alley's yard edge, s 2.5 … 5.5, from where its
-// north side meets the arm's edge (TS.t0) up east to TS.t1; the wedge of yard west of its foot is street (the alley's
-// mouth widens), so the foot opens onto both the alley and the arm
-export const TS = { s0: 2.5, s1: 5.5, t0: alT(5.5, fArm(-ARM_W)), len: 6.3 };
-TS.t1 = +(TS.t0 + TS.len).toFixed(4);
 export const ALLEY = { w: 5, quad: [AL(alT(2.5, fArm(-ARM_W)), 2.5), AL(alT(-2.5, fArm(-ARM_W)), -2.5), AL(alT(-2.5, fVia(0)), -2.5), AL(alT(2.5, fVia(0)), 2.5)] };
-// the alley's floor: the quad, and the wedge before the tip stair's foot
-const ALLEY_FLOOR_POLY = [AL(TS.t0, TS.s1), Q.Q3, ALLEY.quad[2], ALLEY.quad[3], AL(TS.t0, TS.s0)];
+const ALLEY_FLOOR_POLY = ALLEY.quad;
 ALLEY.floor = ALLEY_FLOOR_POLY;
 // (for the job folder's tools) a point's alley frame [t, s]
 export const alFrame = (x, z) => { const dx = x - ALY_A0[0], dz = z - ALY_A0[1]; return [dx * ALY_C[0] + dz * ALY_C[1], dx * ALY_N[0] + dz * ALY_N[1]]; };
@@ -446,8 +440,6 @@ const PRAWN_ALLEY = [
   // (each stops where its inner edge meets a mouth, so it never reaches into the arm's or Hoki Lane's kerbs)
   ...bars(ALLEY_FLOOR_POLY, { only: (i) => i === 0 || i === 2, level: () => -0.09, opts: ground({ tag: 'alley-kerb', color: '#535a63' }) }),
   ...[[1.0, 2.5], [-2.5, -1.0]].map(([s0, s1]) => alBox(Math.max(alT(s0, fArm(-ARM_W)), alT(s1, fArm(-ARM_W))), Math.min(alT(s0, fVia(0)), alT(s1, fVia(0))), s0, s1, BOT, -0.18, ground({ tag: 'alley-kerb', color: '#535a63' }))),
-  // (a patch under the wedge's inner corner, where the alley's gutter meets the tip stair's foot)
-  alBox(TS.t0 - 1.5, TS.t0, 2.3, 4.0, BOT, -0.27, ground({ tag: 'alley-kerb', color: '#535a63' })),
   // the railyard wall (4.25 m: a hand over the viaduct it runs into, so no two wall tops meet level), from the tip's end
   alBox(tW0, tW1, -3.1, -2.5, BOT, ATOP, wall({ tag: 'alley-wall' })),
   // piers at the wall's two ends
@@ -469,127 +461,70 @@ const VIADUCT = [
 
 // ------------------------------------------------------------------------------------------------ the signal yard and the Signal Garden
 // (fix round 2: rebuilt in the crook between the arm, Prow Place / Hoki Lane and Prawn Alley; fix round 3: grown with the
-// alley's new line and made a WALK.) The 1880s and today: the railway's SIGNAL YARD, a ballast bed 0.9 m above the street
-// behind a bluestone kerb and an iron fence — off limits (roof: you slide off), but low, so the arm, the alley, Prow Place
-// and Hoki Lane see and shoot across it. The 3000s: the SIGNAL GARDEN, a park deck at 2.68 on the whole yard (ENGINE rule
-// 19b: it buries the yard's roof): a continuous raised walk from the arm's tip to Prow Place over the yard — up the TIP
-// STAIR (it rises along the alley's yard edge from the tip, inside a yard channel the 1880s / today fill: rule 19), along
-// the alley's edge, and down the HOKI STAIR (inside the yard against Hoki Lane, rising south from Prow Place's corner to
-// the walk's east end), with the lawn between the walk and the arm; its arm and alley edges are open (drop anywhere), a
-// glass rail with a drop gap faces Prow Place. It faces away from the base (the alley's railyard wall and the GPO block
-// stand between it and the deck: garden-sight.mjs). Its planters are roof (no standing on them).
-const YARD_Y = 0.9, GY = 2.68;
+// alley's new line and made a WALK on the routes.) The 1880s and today: the railway's SIGNAL YARD, a ballast bed 0.9 m
+// above the street behind a bluestone kerb — off limits (roof: you slide off), low, so the arm, the alley, Prow Place and
+// Hoki Lane see and shoot across it. (In Boss Battle an iron fence on its edge keeps HULLBREAKER off it.) The 3000s: the
+// SIGNAL GARDEN, a park terrace at 1.2 m over the whole yard (ENGINE rule 19b: it buries the yard's roof): a continuous
+// raised walk from the arm's tip, along Prawn Alley's yard edge, to Hoki Lane and Prow Place — a hop up (1.2: nav's jump
+// edges reach 1.25, the GPO terrace's height) from the arm, the alley, Prow Place and Hoki Lane anywhere along its edges,
+// so it is a step of the flank itself, never a detour (round 2's 2.68 m deck with its stairs was 23 % inked, round 3's
+// first, with three stairs, 8–38 %). Its planters are roof (no standing on them).
+const YARD_Y = 0.9, GY = 1.2;
 const YB = AL(alT(2.5, fArm(-ARM_W)), 2.5), YC = AL(alT(2.5, fVia(0)), 2.5);
-// the tip stair's channel (TS: the alley frame) and its corners
-const TSP = { foot0: AL(TS.t0, TS.s0), foot1: AL(TS.t0, TS.s1), top1: AL(TS.t1, TS.s1), top0: AL(TS.t1, TS.s0) };
-// the MOUTH STAIR (the 3000s): in the yard along the arm's edge, off ARM_S … ARM_S − 3, from its foot at along −30 (by
-// the arm's mouth, 10 m from the circus, its outer corner on Prow Place's line) up west-south-west to along −36.3, where
-// the lawn is; the 1880s / today fill its channel (rule 19) and its fence faces the arm and the street at its foot
-const MSP = { foot1: Q.MS1, foot0: Q.MS0, top0: AO(MS.a1, MS.o0), top1: AO(MS.a1, MS.o1) };
-// the yard: the arm's edge (A → R4 → R3 → the tip stair's foot), round the tip stair's channel, the alley's edge, Hoki Lane
-export const YARD = [MSP.foot0, MSP.top0, MSP.top1, Q.R4, Q.R3, TSP.foot1, TSP.top1, TSP.top0, YC, Q.Q5];
-// the Hoki stair: x −27 … −24 (against Hoki Lane), from its foot at z −25 (Prow Place's south-west corner) up SOUTH to
-// z −31, where the walk turns along the alley's edge
-export const HOKI_STAIR = { x0: -27, x1: -24, zFoot: -25, zTop: -31 };
-const HS = HOKI_STAIR, HS_Z0 = Math.min(HS.zFoot, HS.zTop), HS_Z1 = Math.max(HS.zFoot, HS.zTop);
-// the garden is the yard (the lawn and the walk), less the Hoki stair's channel
+// the yard: Prow Place's corner (along MS.a0), the arm's edge (→ R4 → R3 → the alley's mouth), the alley's edge, Hoki Lane
+export const YARD = [Q.MS0, Q.MS1, Q.R4, Q.R3, YB, YC, Q.Q5];
+// the garden is the whole yard (the lawn and the walk along the alley)
 export const GARDEN_POLY = YARD;
 // tiles (each its own era group, ≤ 8 m): the garden's edges are split where they cross a tile line
-const GT_X = [-38, -30, -24], GT_Z = [-37, -30, -23, -16];   // (on the garden's 1 m raster)
+const GT_X = [-41, -35, -30, -24], GT_Z = [-37, -30, -23, -16];   // (on the garden's 1 m raster)
 export const tileOf = (x, z) => { let i = 0, j = 0; while (i < GT_X.length - 2 && x >= GT_X[i + 1]) i++; while (j < GT_Z.length - 2 && z >= GT_Z[j + 1]) j++; return `garden-${i}${j}`; };
-function splitPoly(poly, xs, zs) {   // insert a vertex wherever an edge crosses x = xs[k] or z = zs[k]
-  const out = [];
-  for (let i = 0; i < poly.length; i++) {
-    const a = poly[i], b = poly[(i + 1) % poly.length], ts = [];
-    for (const x of xs) { const t = (x - a[0]) / (b[0] - a[0]); if (t > 1e-3 && t < 1 - 1e-3) ts.push(t); }
-    for (const z of zs) { const t = (z - a[1]) / (b[1] - a[1]); if (t > 1e-3 && t < 1 - 1e-3) ts.push(t); }
-    out.push(a); for (const t of ts.sort((p, q) => p - q)) out.push([+(a[0] + t * (b[0] - a[0])).toFixed(4), +(a[1] + t * (b[1] - a[1])).toFixed(4)]);
-  }
-  return out;
-}
 const yardCol = { color: '#4c4741', pattern: SURF.bluestone, roof: true, paint: false };
-// the signal yard's iron fence (the 1880s, today): 1.4 m of railing on the bed's edge (0.9 → 2.3), see-through (rail:
-// shots, ink, sight and squids pass), so nobody hops onto the bed from the street and HULLBREAKER's nav sees a wall.
-// Every era where it is buried in the Signal Garden's edge (it tops out at 2.3, under the lawn); the stretches round the
-// two stairs' channels go at jump 2 (in the stairs' groups: the stairs are entered over those edges)
+// the signal yard's iron fence: Boss Battle only (onlyIn: 'boss'), 1.4 m of railing on the bed's edge, see-through, so
+// HULLBREAKER's nav sees a wall (round 2: without it the boss walked over the bed into Hoki Lane and on to the bases).
+// In the other modes the bed's edge is open: a kid who hops on slides off its roof; in the 3000s the garden covers it.
 export const YARD_FENCE_LINES = [];
-const fenceSeg = (a, b, inward, h, era, out) => {
-  let dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
-  if (L < 0.4) return;
-  const u = [dx / L, dz / L];
-  a = [a[0] + u[0] * 0.1, a[1] + u[1] * 0.1]; b = [b[0] - u[0] * 0.1, b[1] - u[1] * 0.1]; L -= 0.2;
-  const cx = (a[0] + b[0]) / 2 + inward[0] * 0.1, cz = (a[1] + b[1]) / 2 + inward[1] * 0.1;
-  out.push(O(+cx.toFixed(4), +cz.toFixed(4), 0.1, +L.toFixed(4), YARD_Y, YARD_Y + h, +((Math.atan2(dx, dz) * 180) / Math.PI).toFixed(4), rail({ tag: 'yard-fence', ...era })));
-  YARD_FENCE_LINES.push({ pos: [+cx.toFixed(3), YARD_Y, +cz.toFixed(3)], rotY: Math.atan2(dx, dz), len: +L.toFixed(3), h, ...era });
-};
 const YARD_FENCE = (() => {
-  const yp = splitPoly(YARD, GT_X, [...GT_Z, HS.zFoot, HS.zTop]), out = [], s = polyArea(yp) > 0 ? 1 : -1;   // (split at the Hoki stair's ends too)
-  for (let i = 0; i < yp.length; i++) {
-    const a = yp[i], b = yp[(i + 1) % yp.length], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
+  const out = [], n = YARD.length, s = polyArea(YARD) > 0 ? 1 : -1;
+  for (let i = 0; i < n; i++) {
+    let a = YARD[i], b = YARD[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
     if (L < 0.4) continue;
-    const inw = [(-dz / L) * s, (dx / L) * s], m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-    // (no fence where the yard meets the tip stair's channel: its north side and its top end)
-    const onTS = (P) => { const [x, z] = P, q = Q.Q3, tt = (x - ALY_A0[0]) * ALY_C[0] + (z - ALY_A0[1]) * ALY_C[1], ss = (x - ALY_A0[0]) * ALY_N[0] + (z - ALY_A0[1]) * ALY_N[1]; return tt > TS.t0 - 0.05 && tt < TS.t1 + 0.05 && ss > TS.s0 + 0.05 && ss < TS.s1 + 0.05; };
-    if (onTS(m)) continue;
-    { const al = along(m[0], m[1]), of = offOf(m[0], m[1]); if (al < MS.a0 + 0.05 && al > MS.a1 - 0.05 && of < MS.o1 - 0.05 && of > MS.o0 - 0.05) continue; }   // (the mouth stair's channel)
-    const onStair = Math.abs(a[0] - HS.x1) < 0.2 && Math.abs(b[0] - HS.x1) < 0.2 && Math.min(a[1], b[1]) > HS_Z0 - 0.2 && Math.max(a[1], b[1]) < HS_Z1 + 0.2;
-    const h = i === yp.length - 1 && i % 2 === 0 ? 1.16 : i % 2 ? 1.4 : 1.28;   // (alternate: corner pieces never share a top)
-    fenceSeg(a, b, inw, h, onStair ? { eras: '12', eraGroup: 'garden-hs' } : {}, out);
+    const u = [dx / L, dz / L], inw = [-u[1] * s, u[0] * s];
+    a = [a[0] + u[0] * 0.1, a[1] + u[1] * 0.1]; b = [b[0] - u[0] * 0.1, b[1] - u[1] * 0.1]; L -= 0.2;
+    const cx = (a[0] + b[0]) / 2 + inw[0] * 0.1, cz = (a[1] + b[1]) / 2 + inw[1] * 0.1, h = i === n - 1 && i % 2 === 0 ? 1.16 : i % 2 ? 1.4 : 1.28;
+    out.push(O(+cx.toFixed(4), +cz.toFixed(4), 0.1, +L.toFixed(4), YARD_Y, YARD_Y + h, +((Math.atan2(dx, dz) * 180) / Math.PI).toFixed(4), rail({ tag: 'yard-fence', onlyIn: 'boss' })));
+    YARD_FENCE_LINES.push({ pos: [+cx.toFixed(3), YARD_Y, +cz.toFixed(3)], rotY: Math.atan2(dx, dz), len: +L.toFixed(3), h, onlyIn: 'boss' });
   }
-  // the tip stair's channel (the 1880s, today): its foot and its alley side
-  fenceSeg(TSP.foot0, TSP.foot1, ALY_C, 1.4, { eras: '12', eraGroup: 'garden-ts' }, out);
-  fenceSeg(TSP.foot0, TSP.top0, ALY_N, 1.28, { eras: '12', eraGroup: 'garden-ts' }, out);
-  // the mouth stair's channel: its side on the arm
-  fenceSeg(MSP.foot1, MSP.top1, [C65, -S65], 1.28, { eras: '12', eraGroup: 'garden-ms' }, out);
-  fenceSeg(MSP.foot1, MSP.foot0, [-S65, -C65], 1.4, { eras: '12', eraGroup: 'garden-ms' }, out);
   return out;
 })();
 const YARD_SLAB = (() => {
-  const hard = [[HS.x0, HS.x1, HS_Z0, HS_Z1]];
-  const R0 = coverRects(YARD, { x0: -38, x1: -24, z0: -37, z1: -16 }, { hard });
+  const R0 = coverRects(YARD, { x0: -41, x1: -24, z0: -37, z1: -16 });
   GROUND_MISS.push(...R0.miss);
   const n = YARD.length, diag = (i) => { const a = YARD[i], b = YARD[(i + 1) % n]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
   return [
     ...R0.rects.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y, z0, z1, { tag: 'signal-yard', ...yardCol })),
     ...bars(YARD, { only: diag, trim: true, level: (i) => YARD_Y - 0.1 - 0.08 * (i % 2), opts: { tag: 'signal-yard-kerb', ...yardCol, color: '#5f6870' } }),
     ...reflexPatches(YARD, { only: (i) => diag(i) && diag((i + n - 1) % n), top: YARD_Y - 0.32, opts: { tag: 'signal-yard-kerb', ...yardCol } }),
-    // the two stairs' channels, filled in the 1880s and today (each in its stair's group: the stair appears inside, rule 19)
-    B(HS.x0, HS.x1, BOT, YARD_Y, HS_Z0, HS_Z1, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: 'garden-hs' }),
-    alBox(TS.t0, TS.t1, TS.s0, TS.s1, BOT, YARD_Y, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: 'garden-ts' }),
-    armBox(MS.a1, MS.a0, MS.o0, MS.o1, BOT, YARD_Y, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: 'garden-ms' }),
     ...YARD_FENCE,
   ];
 })();
 const SIGNAL_GARDEN = (() => {
-  const hard = [[HS.x0, HS.x1, HS_Z0, HS_Z1]];
-  const gp = splitPoly(GARDEN_POLY, GT_X, GT_Z), out = [];
+  const out = [];
   const lawn = (g, o = {}) => ({ tag: 'garden-lawn', color: K.lawn, pattern: PATTERN.planter, eras: '3', eraGroup: g, ...o });
-  // the lawn: per tile, the raster cores (on the yard's ballast, 0.9 → 2.68) and the bars along its diagonal edges (2.58 /
-  // 2.49, from the yard's kerb, 0.8), each bar in the tile its middle lies in
+  // the lawn: per tile, the raster cores (on the yard's ballast, 0.9 → 1.2) and the bars along its diagonal edges (1.08 /
+  // 0.98: over the yard's own kerb bars, 0.9 / 0.82, and under the lawn), each bar in the tile its middle lies in
   for (let i = 0; i < GT_X.length - 1; i++) for (let j = 0; j < GT_Z.length - 1; j++) {
-    const R1 = coverRects(gp, { x0: GT_X[i], x1: GT_X[i + 1], z0: GT_Z[j], z1: GT_Z[j + 1] }, { hard, cell: 1.0 });   // (a 1 m raster: fewer blocks, ENGINE rule 6's 160 per jump)
+    const R1 = coverRects(GARDEN_POLY, { x0: GT_X[i], x1: GT_X[i + 1], z0: GT_Z[j], z1: GT_Z[j + 1] }, { cell: 1.0 });   // (a 1 m raster: fewer blocks, ENGINE rule 6's 160 per jump)
     GROUND_MISS.push(...R1.miss);
     for (const [x0, x1, z0, z1] of R1.rects) out.push(B(x0, x1, YARD_Y, GY, z0, z1, lawn(tileOf((x0 + x1) / 2, (z0 + z1) / 2))));
   }
-  // (the bars run along whole edges — only the long arm edge A → R4 is halved — each in the tile its middle lies in:
-  //  fewer blocks than one per tile, ENGINE rule 6; the alley's edge in thirds)
-  const mid = (P, R) => [+((P[0] + R[0]) / 2).toFixed(4), +((P[1] + R[1]) / 2).toFixed(4)];
+  // (the bars run along whole edges — the long ones halved, the alley's edge in thirds — each in the tile its middle lies in; trimmed at acute
+  //  corners so none pokes out over the street)
   const lerp = (P, R, f) => [+(P[0] + (R[0] - P[0]) * f).toFixed(4), +(P[1] + (R[1] - P[1]) * f).toFixed(4)];
-  const ge = [MSP.foot0, MSP.top0, MSP.top1, Q.R4, Q.R3, TSP.foot1, TSP.top1, TSP.top0, lerp(TSP.top0, YC, 1 / 3), lerp(TSP.top0, YC, 2 / 3), YC, Q.Q5];
+  const ge = [Q.MS0, Q.MS1, lerp(Q.MS1, Q.R4, 0.5), Q.R4, Q.R3, lerp(Q.R3, YB, 0.5), YB, lerp(YB, YC, 1 / 3), lerp(YB, YC, 2 / 3), YC, Q.Q5];
   const diag = (i) => { const a = ge[i], b = ge[(i + 1) % ge.length]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
-  for (const d of bars(ge, { only: diag, trim: true, level: (i) => GY - 0.1 - 0.09 * (i % 2), y0: YARD_Y - 0.1, opts: lawn('') })) { d.eraGroup = tileOf(d.center[0], d.center[2]); out.push(d); }
-  // (fix round 3: no rails — every edge of the garden is a drop onto the street (2.68 m, a nav drop): the arm, the alley,
-  //  Prow Place and Hoki Lane; ENGINE rule 6's 160 blocks per jump)
-  // the two stairs (glass treads) and the tip stair's glass base under its top end
-  out.push(R([HS.x0 + 1.5, 0.05, HS.zFoot], [HS.x0 + 1.5, GY, HS.zTop], HS.x1 - HS.x0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-hs' }));
-  { const sm = (TS.s0 + TS.s1) / 2, [lx, lz] = AL(TS.t0, sm), [hx, hz] = AL(TS.t1, sm);
-    // (a thin flight keeps the group within 8 m, ENGINE rule 3; 1.2 m thick, so nobody fits under its top end)
-    out.push(R([lx, 0.0, lz], [hx, GY, hz], TS.s1 - TS.s0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-ts', thin: true, thickness: 1.2 })); }
-  // cover on the lawn and the walk: planters (roof: nobody stands on them, so no top sees over the rails), 1.2 m
-  // the mouth stair (fix round 3: the garden's way up from the arm's mouth, where the bots are)
-  { const om = (MS.o0 + MS.o1) / 2, [lx, lz] = AO(MS.a0, om), [hx, hz] = AO(MS.a1, om);
-    out.push(R([lx, 0.0, lz], [hx, GY, hz], MS.o1 - MS.o0, { tag: 'garden-stair', color: K.glass, pattern: PATTERN.treads, eras: '3', eraGroup: 'garden-ms', thin: true, thickness: 1.2 })); }
-  for (const [x, z, w, d] of [[-27.0, -23.6, 1.2, 2.0], [-29.0, -32.4, 1.2, 1.2]]) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
+  for (const d of bars(ge, { only: diag, trim: true, level: (i) => GY - 0.12 - 0.1 * (i % 2), y0: YARD_Y - 0.1, opts: lawn('') })) { d.eraGroup = tileOf(d.center[0], d.center[2]); out.push(d); }
+  // cover on the lawn and the walk: planters (roof: nobody stands on them), 1.2 m over the lawn, about 6–8 m apart
+  for (const [x, z, w, d] of [[-27.2, -21.6, 1.2, 2.4], [-29.6, -27.0, 2.4, 1.2], [-25.6, -31.4, 1.2, 1.2], [-34.4, -28.4, 1.2, 1.2], [-30.6, -32.0, 1.2, 1.2]]) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
   return out;
 })();
 
