@@ -177,7 +177,11 @@ guide — `PAGE_ARGS='only=deploy,tether,…'`), and its mode runs: `MODE=tower 
 'only=pod'`, `MAP=halyard MODE=zones … 'only=zone'`, `MAP=podbox MODE=boss … 'only=boss'`. Online: `CLIENTS=2
 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-bobber.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`. Its budget
 (192 live, three 8-chains, a live 4 v 4 with 24 a bot): `MAP=testbox PAGE=tools/botlab/tests/perf-bobbers.js …page.cjs`.
-`match.cjs` prints a BOBBER line when any were thrown (`SUBS='all=bobber'`).
+`match.cjs` and `tower-match.cjs` print a BOBBER line when any were thrown (`SUBS='all=bobber'`: chains set off, N at the
+trigger and its median, wasted %, what set each off, how long foes stood in a chain's reach). A human's big web (SPEC C11's
+web arm — bots stop at 4): `MAP=halyard MODE=zones PAGE=tools/botlab/tests/bobber-web.js …page.cjs` (also treehills;
+`PAGE_ARGS='n=12,24 layout=lane,zone variant=trigger,clear reps=10'`: lethal area per trigger, splats per 100 ink, the share
+disarmed first, the time to clear one; the Mac mini's `jobs/batch5/sub-bobber/JOB-1.sh` / `JOB-2.sh` run the full set).
 
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
