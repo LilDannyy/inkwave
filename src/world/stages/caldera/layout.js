@@ -293,7 +293,7 @@ add(stack2(-25.6, -45.6, 1.6, 1.6, 1.3, 4.8, 'pig-iron', '#5b5550', [1.0, 1.2, 0
 add(B(-11.0, -6.5, 3.6, 6.6, -48.0, -45.2, white({ tag: 'weigh-house' })));
 // the core oven between the pit and the Gate: a brick kiln 3.2 m tall, the Gate apron's west block
 add(B(-0.5, 3.0, 3.6, 6.8, -50.5, -47.0, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'core-oven' }));
-add(OCT(1.25, -48.75, 0.45, 6.8, 9.0, { color: '#4b4f55', pattern: PATTERN.metal, roof: true, tag: 'oven-flue' }));
+add(OCT(2.55, -47.55, 0.4, 6.8, 9.0, { color: '#4b4f55', pattern: PATTERN.metal, roof: true, tag: 'oven-flue' }));   // (at the oven's NE corner: off the spawn's line to the Surge Gauge)
 // the yard front railing on the r 39 arc: gaps at the Cupola Stair, the Upper Surge Steps + its hop face, the tower climb;
 // the bastion (θ −116 … −123) has solid parapets instead
 for (const [a0, a1] of [[-63, -67.8], [-72.2, -90], [-101, -105], [-112.2, -116], [-123, -126]]) {
