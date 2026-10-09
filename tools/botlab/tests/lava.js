@@ -43,8 +43,10 @@
   R('A1 schedules (DESIGN §3.3): Turf War 3:00 rises 35 / 110, falls 70 / 140; 1:30 rise 30, fall 55; Zone Control, Tower Command, Bazookarp 35 / 125 / 215 up, 80 / 170 / 260 down (no fourth rise)',
     sch.turf180 === '35r 70f 110r 140f' && sch.turf90 === '30r 55f' && sch.zones === '35r 80f 125r 170f 215r 260f' && sch.tower === sch.zones && sch.karp === sch.zones, sch);
   R('A2 Boss Battle held LOW; Practice loops 20 / 35 / 35 and the menu backdrop 8 / 15 / 15 (found by their flags, not the mode string)',
-    sch.boss.kind === 'fixed' && sch.boss.level === 'low' && sch.practice.kind === 'loop' && sch.practice.first === 20 && sch.practice.high === 35 && sch.practice.low === 35 && sch.attract.first === 8 && sch.attract.high === 15 && sch.attract.low === 15,
-    { boss: sch.boss.level, practice: [sch.practice.first, sch.practice.high, sch.practice.low], attract: [sch.attract.first, sch.attract.high, sch.attract.low] });
+    sch.boss.kind === 'fixed' && sch.boss.level === 'low' && sch.practice.kind === 'loop' && sch.practice.first === 20 && sch.practice.holdHigh === 35 && sch.practice.holdLow === 35 && sch.attract.first === 8 && sch.attract.holdHigh === 15 && sch.attract.holdLow === 15
+      // (and the loops move between the stage's own levels)
+      && [0, 25, 45, 70, 95, 130].every((t) => { const y = C.lavaY(t, sch.practice); return y >= def.low - 1e-9 && y <= def.high + 1e-9; }) && C.lavaY(45, sch.practice) === def.high && C.lavaY(10, sch.attract) === def.low,
+    { boss: sch.boss.level, practice: [sch.practice.first, sch.practice.holdHigh, sch.practice.holdLow, C.lavaY(45, sch.practice)], attract: [sch.attract.first, sch.attract.holdHigh, sch.attract.holdLow, C.lavaY(10, sch.attract)] });
   {
     const bad = [];
     for (const [m, d] of [['turf', 180], ['turf', 90], ['zones', 300]]) {

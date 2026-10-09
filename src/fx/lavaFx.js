@@ -294,8 +294,8 @@ export class LavaLook {
     this.needleIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), nm, G2.length); this.needleIM.name = 'lava:needles'; this.needleIM.frustumCulled = false;
     this.needles = G2.map((gd) => { const big = gd.h > 3; return { gd, h: gd.h, size: big ? [1.4, 0.32, 0.16] : [0.5, 0.14, 0.16], off: [big ? 0.35 : 0.1, 0, 0.22] }; });
     const bl = [];
-    for (const gd of G2) { const big = gd.h > 3; for (const p of big ? [[-1.25, gd.h + 0.3, 0.12], [1.25, gd.h + 0.3, 0.12]] : [[0, gd.h + 0.2, 0.14]]) bl.push({ gd, p, s: big ? 1.4 : 0.8 }); }
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) bl.push({ gd: { pos: [0, 0, 0], yaw: 0 }, p: [sx * 1.4, 20.65, sz * 1.4], s: 1 });
+    for (const gd of G2) { const big = gd.h > 3; for (const p of big ? [[-1.25, gd.h + 0.3, 0.12], [1.25, gd.h + 0.3, 0.12]] : [[0, gd.h + 0.2, 0.14]]) bl.push({ gd, p, s: big ? 2.2 : 1.1 }); }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) bl.push({ gd: { pos: [0, 0, 0], yaw: 0 }, p: [sx * 1.4, 20.65, sz * 1.4], s: 1.7 });
     this.beaconIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.17, 10, 8), this.beaconMat, bl.length); this.beaconIM.name = 'lava:beacons'; this.beaconIM.frustumCulled = false;
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
     bl.forEach((b, i) => { const yaw = b.gd.yaw || 0; v.set(...b.p).applyAxisAngle(UPV, yaw).add(v2.set(...b.gd.pos)); q.setFromAxisAngle(UPV, yaw); this.beaconIM.setMatrixAt(i, m.compose(v, q, sc.setScalar(b.s))); });

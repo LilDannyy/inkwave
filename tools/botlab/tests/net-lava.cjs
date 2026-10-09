@@ -84,14 +84,14 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   await A.js(`__G.net.start()`);
   for (const c of [A, B]) await c.until(`__G.net.state === 'match' && __G.match && __G.match.practice && __G.match.state === 'playing' && !!__G.match.lava`, 120000, 250);
   a = await st(A);
-  R('Practice runs its own loop (practice: rise at 20)', a && a.key === 'practice', a);
+  R('Practice runs its own loop (practice: rise at 20) between the stage\'s own levels', a && a.key === 'practice' && a.y === -0.6, a);
   await A.until(`__G.match.lava.clock.t > 34`, 60000, 500);
   const C = await open(2, '');
   await C.js(`__G.net.join(${JSON.stringify(code)}, 'Latey').then(() => 1)`);
   await C.until(`__G.net.state === 'match' && __G.match && __G.match.practice && __G.match.state === 'playing' && !!__G.match.lava && __G.netm && !__G.netm.stagePending`, 120000, 250);
   let c = null, skew = [];
   for (let i = 0; i < 10; i++) { await wait(1000); a = await st(A); c = await st(C); skew.push(c ? +(c.y - a.y).toFixed(3) : null); if (c && a.phase === 'high' && Math.abs(c.y - a.y) < 0.1 && c.stones === a.stones) break; }
-  R('a late joiner at HIGH: its level and its stones agree with the host\'s (± 0.1 m) once its clock settles', c && a.phase === 'high' && c.phase === 'high' && Math.abs(c.y - a.y) < 0.1 && c.stones === a.stones && /^1+$/.test(c.stones), { host: a, joiner: c, skew });
+  R('a late joiner at HIGH: its level and its stones agree with the host\'s (± 0.1 m) once its clock settles', c && a.phase === 'high' && c.phase === 'high' && Math.abs(a.y - 0.8) < 1e-6 && Math.abs(c.y - a.y) < 0.1 && c.stones === a.stones && /^1+$/.test(c.stones), { host: a, joiner: c, skew });
   // the host leaves in the middle of the second rise (110 – 120)
   await A.until(`__G.match.lava.clock.t > 113`, 120000, 500);
   const before = await st(B);
@@ -99,7 +99,7 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   await B.until(`__G.net.isHost && __G.match && __G.match.lava`, 30000, 250).catch(() => {});
   const after = [];
   for (let i = 0; i < 16; i++) { await wait(500); const bb = await st(B), cc = await st(C); if (bb && cc) after.push([bb.t, bb.y, bb.phase, cc.t, cc.y, cc.phase, bb.host]); }
-  const agree = after.every((x) => Math.abs(x[1] - x[4]) <= 0.1), cont = after.length > 8 && after[0][0] >= before.t - 0.5 && after.some((x) => x[2] === 'high') && after[0][1] > -0.6;
+  const agree = after.every((x) => Math.abs(x[1] - x[4]) <= 0.1 && x[1] >= -0.6 - 1e-9 && x[1] <= 0.8 + 1e-9), cont = after.length > 8 && after[0][0] >= before.t - 0.5 && after.some((x) => x[2] === 'high') && after[0][1] > -0.6;
   R('the host leaves mid-rise: the new host carries the clock on (no jump back), the rise finishes on time, both remaining screens agree (± 0.1 m)', agree && cont && after.every((x) => x[6]), { before, after: after.filter((_, i) => i % 3 === 0) });
   say('done');
 };

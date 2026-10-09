@@ -28,7 +28,8 @@ const warned = new Set();
 // lavaSchedule(def, mode, duration, flags) → Sched | null (the mode turns it off). Lookup: schedule.attract (the menu
 // backdrop) / schedule.practice by the flags, then `${mode}:${duration}`, then `${mode}`, else Zone Control's loop.
 // A string entry names another entry (resolved once) or is 'low' / 'high' (held) / 'off'.
-// Sched: { kind: 'fixed', level } | { kind: 'moves', moves: [{ t0, dir, dur }] } | { kind: 'loop', first, high, low, period }
+// Sched: { low, high (the levels), T, key, kind: 'fixed', level } | { …, kind: 'moves', moves: [{ t0, dir, dur }] } |
+//   { …, kind: 'loop', first, holdHigh, holdLow, period }
 // In a match with a clock a loop is laid out as moves up to time-up: no move whose warning would begin in the last
 // warn + 2 s, nothing moving in the last 12 s, and it ends at LOW (ENGINE §3.3, DESIGN §3.3).
 export function lavaSchedule(def, mode, duration, flags = {}) {
@@ -59,7 +60,8 @@ export function lavaSchedule(def, mode, duration, flags = {}) {
       if (t0s.length % 2) t0s.pop();
       return { ...base, kind: 'moves', moves: buildMoves(t0s, T), overtime, loop: L };
     }
-    return { ...base, kind: 'loop', first: L.first, high: L.high, low: L.low, period: P, overtime };
+    // (the holds as holdHigh / holdLow: `high` / `low` on a Sched are the LEVELS)
+    return { ...base, kind: 'loop', first: L.first, holdHigh: L.high, holdLow: L.low, period: P, overtime };
   }
   return { ...base, kind: 'fixed', level: 'low' };
 }
@@ -71,7 +73,7 @@ function movesIn(S, t0, t1) {
   if (S.kind !== 'loop') return [];
   const T = S.T, out = [], P = S.period;
   const k0 = Math.max(0, Math.floor((t0 - S.first) / P) - 1), k1 = Math.max(0, Math.floor((t1 - S.first) / P) + 1);
-  for (let k = k0; k <= k1; k++) { const b = S.first + k * P; out.push({ t0: b, dir: 1, dur: T.rise }, { t0: b + T.rise + S.high, dir: -1, dur: T.fall }); }
+  for (let k = k0; k <= k1; k++) { const b = S.first + k * P; out.push({ t0: b, dir: 1, dur: T.rise }, { t0: b + T.rise + S.holdHigh, dir: -1, dur: T.fall }); }
   return out;
 }
 
