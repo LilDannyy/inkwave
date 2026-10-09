@@ -878,6 +878,17 @@ export class StageLava {
       } else if (b._lavaEsc && (k === 0 || !need)) b._lavaEsc = false;
       if (b._lavaEsc) { b.repath = Math.max(b.repath || 0, 0.6); b.goalTimer = Math.max(b.goalTimer || 0, 0.6); }
     }
+    // the Organ lookouts: a long-range bot painting (no fight on) near a cluster while it stands at HIGH climbs to the
+    // lookout's top over the step links (its normal paint and fight logic runs from up there); once in a while
+    if (!b._lavaEsc && (b._lookT = (b._lookT || 0) - dt) <= 0) {
+      b._lookT = 2 + Math.random() * 2;
+      const kind = a.weapon?.kind, t = this.clock.t;
+      if (LOOKOUT_KINDS.has(kind) && b.mode === 'paint' && !vis && this.st.phase === 'high' && t - (b._lookAt ?? -99) > 25) {
+        let best = -1, bd = 26;
+        for (const id of this._lookNodes()) { const n = nav.nodes[id], d = Math.hypot(n.x - a.pos.x, n.z - a.pos.z); if (d < bd && this.shut(id, t + 8) === 0) { bd = d; best = id; } }
+        if (best >= 0) { const n = nav.nodes[best]; if (b._pathTo(_v.set(n.x, n.y, n.z), 0.6)) { b._lookAt = t; b.goalTimer = 9; this.stats.lookTrips = (this.stats.lookTrips || 0) + 1; } }
+      }
+    }
     if (b._lavaEsc && b.path) {
       const mv = b._steer(dt); if (mv !== move) move.copy(mv);
       // up the hop out (a 1.2 m step onto the head, the causeway, the island): ask for the jump, and again if it stalls
@@ -887,6 +898,13 @@ export class StageLava {
       it.squid = false;
     }
     return null;
+  }
+  // the lookouts' HIGH-pose nav nodes (the floats whose look says 'lookout')
+  _lookNodes() {
+    if (this._lookN) return this._lookN;
+    const M = this.W.navMeta, out = [];
+    if (M) for (let i = 0; i < M.kind.length; i++) if (M.kind[i] === 2 && M.pose[i] === 1) { const r = this.W.riders[M.rider[i]]; if (r && !r.sink && r.look?.role === 'lookout') out.push(i); }
+    return (this._lookN = out);
   }
   // s until L reaches y from t (looking `horizon` s ahead; Infinity if not)
   _timeTo(y, t, horizon) {
@@ -962,6 +980,8 @@ export class StageLava {
     if (G.game?.screenfx) G.game.screenfx.heat = 0;
   }
 }
+// the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
+const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)
 const DEVICE_STATES = new Set(['spray', 'beacon', 'curtain', 'mine', 'stuck', 'run', 'prime']);
 
