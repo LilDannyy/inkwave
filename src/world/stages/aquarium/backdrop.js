@@ -2,19 +2,17 @@
 // src/world/environment.js). Gets the environment's SCENERY_KIT (+ THREE, bounds, runs, rnd, sceneryMaterial) — it
 // imports nothing that imports three, so layout.js stays importable in Node.
 //
-// BLOCKOUT: no far scenery yet (the art pass). What this draws now is the stage's glass and water as placeholder
-// volumes — the level blocks for them are hidden colliders (layout.js `glass`) — and the Tubeway as placeholder clear
-// tubes along the legs' real centrelines (tubeway.js) with their mouths: a white ring at a two-way end, green at an
-// IN end, red at an OUT end, chevrons along the one-way legs pointing with the flow; on the floor, an arrow on each IN
-// end's apron (white at a two-way end) and a ring round each OUT end's landing point (red; white at a two-way end).
-// The Kelp Lines' tide (UP / DOWN) swaps their rings and chevrons: globalThis.__aqTide = 'down' shows the DOWN state
-// (the pipe engine will own this; the blockout's pictures set it by hand).
-import { PIPES, allLegs, centreline, endsOf } from './tubeway.js';
+// BLOCKOUT: no far scenery yet (the art pass). What this draws is the stage's glass and water as placeholder volumes —
+// the level blocks for them are hidden colliders (layout.js `glass`) — and the kelp in the drums. The Tubeway itself
+// (the clear tubes, mouths, fans, flaps, signs, chevrons, floor arrows) is the pipe engine's (src/game/pipes.js +
+// src/fx/pipesFx.js). The stage's own world cue for the tide is here: the four Tide Gauges (two per gatehouse on its crest
+// at x ±4.5, centre 10.8 m, Ø 2.4 brass, double-faced to the court and the wing): a needle between ▲ UP and ▼ DOWN and a
+// red 10 s countdown sector, driven by the pipe engine's tide (G.match.pipes.flow(), a pure function of the stage clock).
+import { G } from '../../../core/ctx.js';
 
 export function buildBackdrop(kit, data = {}) {
   const T = kit.THREE, DEG = Math.PI / 180;
-  const buckets = { glass: [], water: [], kelp: [], tube: [], two: [], in: [], out: [], upIn: [], upOut: [], dnIn: [], dnOut: [], chev: [], upChev: [], dnChev: [],
-    apTwo: [], landTwo: [], apIn: [], landOut: [], upApIn: [], upLandOut: [], dnApIn: [], dnLandOut: [], spine: [], rider: [], riderGlow: [] };
+  const buckets = { glass: [], water: [], kelp: [] };
   const put = (k, g) => buckets[k].push(g.index ? g.toNonIndexed() : g);
   // ---- glass panels and water volumes (from the layout's hidden glass pieces, both halves)
   for (const d of data.glass || []) {
@@ -40,59 +38,6 @@ export function buildBackdrop(kit, data = {}) {
       const h = 6 + rnd() * 3.3, f = new T.BoxGeometry(0.12, h, 0.55); f.rotateY(rnd() * Math.PI); f.translate(x, 0.4 + h / 2, z); put('kelp', f);
     }
   }
-  // ---- the Tubeway: tubes, mouths, chevrons, landing discs
-  const UP = new T.Vector3(0, 1, 0);
-  for (const leg of allLegs(PIPES)) {
-    const pts = centreline(leg).map((p) => new T.Vector3(p[0], p[1], p[2]));
-    const path = new T.CurvePath();
-    for (let i = 1; i < pts.length; i++) if (pts[i].distanceTo(pts[i - 1]) > 1e-4) path.add(new T.LineCurve3(pts[i - 1], pts[i]));
-    put('tube', new T.TubeGeometry(path, Math.max(8, pts.length * 2), 0.88, 12, false));
-    const tidal = typeof leg.way === 'object', two = leg.way === 'two';
-    for (const e of endsOf(leg)) {
-      const ring = new T.TorusGeometry(0.98, 0.1, 8, 28);
-      const q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 0, 1), new T.Vector3(e.out[0], e.out[1], e.out[2]));
-      ring.applyQuaternion(q); ring.translate(e.pos[0] + e.out[0] * 0.05, e.pos[1], e.pos[2] + e.out[2] * 0.05);
-      if (two) put('two', ring);
-      else if (!tidal) put(e.k === 0 ? 'in' : 'out', ring);
-      else { put(e.k === 0 ? 'upIn' : 'upOut', ring); put(e.k === 0 ? 'dnOut' : 'dnIn', ring.clone()); }
-      // floor marks, legible from the top camera: an arrow on the IN end's apron (2.4 wide, 0.2 … 2.2 m out, pointing
-      // into the mouth) and a ring round the OUT end's landing point (3.1 m out); white at a two-way end
-      const yaw = Math.atan2(e.out[0], e.out[2]);
-      const arrow = new T.Shape([[-1.2, 2.2], [1.2, 2.2], [1.2, 1.0], [0, 0.2], [-1.2, 1.0]].map(([x, y]) => new T.Vector2(x, y)));
-      const ap = new T.ShapeGeometry(arrow); ap.rotateX(-Math.PI / 2); ap.rotateY(yaw + Math.PI); ap.translate(e.pos[0], e.floorY + 0.05, e.pos[2]);
-      const lr = new T.RingGeometry(0.85, 1.3, 24); lr.rotateX(-Math.PI / 2); lr.translate(e.land[0], e.land[1] + 0.05, e.land[2]);
-      if (two) { put('apTwo', ap); put('landTwo', lr); }
-      else if (!tidal) { if (e.k === 0) put('apIn', ap); else put('landOut', lr); }
-      else if (e.k === 0) { put('upApIn', ap); put('dnLandOut', lr); }
-      else { put('dnApIn', ap); put('upLandOut', lr); }
-    }
-    // the Express's sea-green steel spine along the top of its overhead runs (DESIGN.md §5.1) and a lattice strut
-    // where the span bends over the Pump Hall roof; a rider (team colour, its 6 m glow) shown with globalThis.__aqRider
-    if (leg.id.startsWith('express')) {
-      const P = leg.pts;
-      for (let i = 0; i + 1 < P.length; i++) {
-        const a = P[i], b = P[i + 1];
-        if (a[1] !== b[1] || a[1] < 6) continue;
-        const dx = b[0] - a[0], dz = b[2] - a[2], L = Math.hypot(dx, dz), sp = new T.BoxGeometry(L - 2.0, 0.22, 0.34);
-        sp.rotateY(-Math.atan2(dz, dx)); sp.translate((a[0] + b[0]) / 2, a[1] + 0.95, (a[2] + b[2]) / 2); put('spine', sp);
-        if (i + 2 < P.length && P[i + 2][1] === a[1]) { const y0 = 6.4, st = new T.BoxGeometry(0.5, b[1] - 0.85 - y0, 0.5); st.translate(b[0], y0 + (b[1] - 0.85 - y0) / 2, b[2]); put('spine', st); }
-      }
-      const L = path.getLength(), at = 0.38 * L;
-      const p = path.getPointAt(at / L), rb = new T.SphereGeometry(0.45, 14, 10); rb.translate(p.x, p.y, p.z); put('rider', rb);
-      const seg = new T.CurvePath(); for (let k = 0; k < 12; k++) { const u0 = Math.max(0, at - 6 + k * 0.5) / L, u1 = Math.max(0, at - 6 + (k + 1) * 0.5) / L; seg.add(new T.LineCurve3(path.getPointAt(u0), path.getPointAt(u1))); }
-      put('riderGlow', new T.TubeGeometry(seg, 24, 0.9, 12, false));
-    }
-    if (!two) {   // chevrons every 2.5 m along the leg (not in its first / last 3 m), pointing with the flow
-      const L = path.getLength();
-      for (let s = 3; s < L - 3; s += 2.5) {
-        const p = path.getPointAt(s / L), t = path.getTangentAt(s / L);
-        for (const [key, dir] of tidal ? [['upChev', 1], ['dnChev', -1]] : [['chev', 1]]) {
-          const c = new T.ConeGeometry(0.5, 1.1, 10); c.applyQuaternion(new T.Quaternion().setFromUnitVectors(UP, t.clone().multiplyScalar(dir))); c.translate(p.x, p.y, p.z);
-          put(key, c);
-        }
-      }
-    }
-  }
   // ---- merge per look
   const merge = (geos) => {
     if (!geos.length) return null;
@@ -104,31 +49,94 @@ export function buildBackdrop(kit, data = {}) {
   };
   const std = (c, o = {}) => new T.MeshStandardMaterial({ color: c, roughness: 0.25, metalness: 0.05, ...o });
   const see = (c, op, o = {}) => std(c, { transparent: true, opacity: op, depthWrite: false, side: T.DoubleSide, ...o });
-  const glow = (c) => new T.MeshBasicMaterial({ color: c });
   const LOOK = {
     water: new T.MeshBasicMaterial({ color: '#2a5f6c', transparent: true, opacity: 0.72, depthWrite: false, side: T.DoubleSide }), glass: see('#d9eef0', 0.14, { roughness: 0.05 }), kelp: std('#5b5a33', { roughness: 0.8 }),
-    tube: see('#eef8f8', 0.3, { roughness: 0.05 }), two: glow('#f4f1e8'), in: glow('#3cc46a'), out: glow('#c8402f'),
-    chev: glow('#3cc46a'), upIn: glow('#3cc46a'), upOut: glow('#c8402f'), dnIn: glow('#3cc46a'), dnOut: glow('#c8402f'), upChev: glow('#3cc46a'), dnChev: glow('#3cc46a'),
-    apTwo: glow('#f4f1e8'), landTwo: glow('#f4f1e8'), apIn: glow('#3cc46a'), landOut: glow('#c8402f'),
-    upApIn: glow('#3cc46a'), upLandOut: glow('#c8402f'), dnApIn: glow('#3cc46a'), dnLandOut: glow('#c8402f'),
-    spine: std('#6e978a', { roughness: 0.6, metalness: 0.3 }), rider: glow('#ff3d8e'), riderGlow: see('#ff3d8e', 0.35),
   };
-  const objects = [], groups = { up: [], down: [], rider: [] };
+  const objects = [];
   for (const [k, geos] of Object.entries(buckets)) {
     const g = merge(geos); if (!g) continue;
-    const m = new T.Mesh(g, LOOK[k]); m.name = 'aq-' + k; m.renderOrder = k === 'water' ? 1 : k === 'glass' || k === 'tube' || k === 'riderGlow' ? 2 : 0;
-    if (k.startsWith('up')) groups.up.push(m); else if (k.startsWith('dn')) groups.down.push(m); else if (k.startsWith('rider')) groups.rider.push(m);
+    const m = new T.Mesh(g, LOOK[k]); m.name = 'aq-' + k; m.renderOrder = k === 'water' ? 1 : k === 'glass' ? 2 : 0;
     objects.push(m);
   }
-  let shown = null;
+  const gauges = tideGauges(T, merge);
+  objects.push(...gauges.objects);
+  return { static: [], plain: [], terrain: [], instances: [], objects, animate: (t) => gauges.animate(t) };
+}
+
+// ---- the Tide Gauges: two per gatehouse on its crest (x ±4.5, centre 10.8 m, on the Arch Tank's lid), Ø 2.4 brass,
+// double-faced (the court and the wing). The needle points to ▲ UP or ▼ DOWN; from T − 10 a red sector of ten segments
+// counts down (one goes out each second), the needle trembles, and at the flip it swings over. Twins: Bravo's gatehouse.
+export const GAUGES = [[4.5, 10.8, -25], [-4.5, 10.8, -25], [-4.5, 10.8, 25], [4.5, 10.8, 25]];
+function tideGauges(T, merge) {
+  const R = 1.2, faces = [];
+  for (const [x, y, z] of GAUGES) for (const side of [1, -1]) faces.push({ x, y, z: z + side * 0.13, yaw: side > 0 ? 0 : Math.PI });
+  // the brass: rims, the post down to the tank lid (9.0), the hub caps
+  const brass = [];
+  for (const [x, y, z] of GAUGES) {
+    const rim = new T.TorusGeometry(R, 0.1, 8, 40); rim.translate(x, y, z); brass.push(rim);
+    const body = new T.CylinderGeometry(R - 0.02, R - 0.02, 0.24, 40, 1, true); body.rotateX(Math.PI / 2); body.translate(x, y, z); brass.push(body);
+    const post = new T.BoxGeometry(0.22, y - R - 9.0 + 0.1, 0.22); post.translate(x, 9.0 + (y - R - 9.0 + 0.1) / 2, z); brass.push(post);
+  }
+  const brassMesh = new T.Mesh(merge(brass.map((g) => (g.index ? g.toNonIndexed() : g))), new T.MeshStandardMaterial({ color: '#a8895a', roughness: 0.35, metalness: 0.7, side: T.DoubleSide }));
+  brassMesh.name = 'aq-gauge-brass';
+  // the faces: one canvas (▲ UP over, ▼ DOWN under, the ticks), every face a disc of it
+  const cv = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  let tex = null;
+  if (cv) {
+    cv.width = cv.height = 256;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#f4efe1'; c.beginPath(); c.arc(128, 128, 126, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#2c2a30'; c.lineWidth = 3;
+    for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2, r0 = i % 6 ? 108 : 98; c.beginPath(); c.moveTo(128 + Math.cos(a) * r0, 128 + Math.sin(a) * r0); c.lineTo(128 + Math.cos(a) * 120, 128 + Math.sin(a) * 120); c.stroke(); }
+    c.fillStyle = '#15121c'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '900 34px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText('▲ UP', 128, 62); c.fillText('▼ DOWN', 128, 194);
+    c.font = '800 15px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText('KELP LINES', 128, 128 - 26);
+    tex = new T.CanvasTexture(cv); tex.colorSpace = T.SRGBColorSpace;
+  }
+  const discs = faces.map((f) => { const g = new T.CircleGeometry(R - 0.04, 40).toNonIndexed(); g.rotateY(f.yaw); g.translate(f.x, f.y, f.z); return g; });
+  const faceGeo = merge(discs);
+  // (the merge keeps position + normal only: give the discs their uvs back)
+  { const uv = []; for (const f of faces) { const g = new T.CircleGeometry(R - 0.04, 40); const gn = g.toNonIndexed(); const u = gn.attributes.uv.array; for (let i = 0; i < u.length; i += 2) uv.push(u[i], u[i + 1]); void f; } faceGeo.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); }
+  const faceMesh = new T.Mesh(faceGeo, new T.MeshBasicMaterial({ map: tex, color: tex ? '#ffffff' : '#f4efe1' }));
+  faceMesh.name = 'aq-gauge-face';
+  // the needles (instanced) and the red countdown segments (instanced: ten per face round its right half)
+  const ng = new T.BoxGeometry(0.11, 0.95, 0.04); ng.translate(0, 0.42, 0);
+  const needles = new T.InstancedMesh(ng, new T.MeshBasicMaterial({ color: '#15121c' }), faces.length);
+  needles.name = 'aq-gauge-needle';
+  const sg = new T.RingGeometry(0.62, 0.92, 4, 1, 0, (16 * Math.PI) / 180);
+  const segs = new T.InstancedMesh(sg, new T.MeshBasicMaterial({ color: '#d8202c', side: T.DoubleSide, toneMapped: false }), faces.length * 10);
+  segs.name = 'aq-gauge-red';
+  const m4 = new T.Matrix4(), q = new T.Quaternion(), e = new T.Euler(), p = new T.Vector3(), s1 = new T.Vector3(1, 1, 1), s0 = new T.Vector3(1e-4, 1e-4, 1e-4);
+  let ang = 0, shown = -1;
   const animate = () => {
-    const tide = globalThis.__aqTide === 'down' ? 'down' : 'up', key = tide + (globalThis.__aqRider ? '+r' : '');
-    if (key === shown) return;
-    shown = key;
-    for (const m of groups.up) m.visible = tide === 'up';
-    for (const m of groups.down) m.visible = tide === 'down';
-    for (const m of groups.rider) m.visible = !!globalThis.__aqRider;
+    const f = G.match?.pipes?.flow?.() || { dir: 'ab', phase: 'run', left: Infinity };
+    const up = f.dir === 'ab', warn = Number.isFinite(f.left) && f.left <= 10 && f.left > 0;
+    // the needle: at ▲ (0) or ▼ (π); trembles in the warning; swings over at the flip (damped toward its target)
+    const want = up ? 0 : Math.PI, t = performance.now() / 1000;
+    ang += (want - ang) * 0.08;
+    const a = ang + (warn ? 0.06 * Math.sin(t * 31) : 0);
+    faces.forEach((F, i) => {
+      // the needle turns about the face's normal; ▲ is up the face
+      q.setFromEuler(e.set(0, F.yaw, F.yaw ? a : -a, 'YXZ'));
+      p.set(F.x + Math.sin(F.yaw) * 0.03, F.y, F.z + Math.cos(F.yaw) * 0.03);
+      m4.compose(p, q, s1); needles.setMatrixAt(i, m4);
+    });
+    needles.instanceMatrix.needsUpdate = true;
+    const k = warn ? Math.ceil(f.left) : 0;
+    if (k !== shown) {
+      shown = k;
+      faces.forEach((F, i) => {
+        for (let j = 0; j < 10; j++) {
+          // segment j spans 18° from the top round the right half (as seen from its side); lit while j < k
+          const th = Math.PI / 2 - (j + 1) * (18 * Math.PI) / 180 + (1 * Math.PI) / 180;
+          q.setFromEuler(e.set(0, F.yaw, F.yaw ? Math.PI - th - (16 * Math.PI) / 180 : th, 'YXZ'));
+          p.set(F.x + Math.sin(F.yaw) * 0.02, F.y, F.z + Math.cos(F.yaw) * 0.02);
+          m4.compose(p, q, j < k ? s1 : s0); segs.setMatrixAt(i * 10 + j, m4);
+        }
+      });
+      segs.instanceMatrix.needsUpdate = true;
+    }
   };
   animate();
-  return { static: [], plain: [], terrain: [], instances: [], objects, animate };
+  return { objects: [brassMesh, faceMesh, needles, segs], animate };
 }

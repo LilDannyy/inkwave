@@ -1,7 +1,10 @@
 // Gulper Aquarium — the Tubeway's data (LAYOUT.pipes, ENGINE.md §3.3's exact format) and the blockout's reading of it:
-// the centreline with its fillets, the ends, approach and landing points. Pure data (no three.js): layout.js (the
-// Bazookarp noRest circles) and backdrop.js (the placeholder clear tubes) both read it. The pipe engine (src/game/
-// pipes.js + src/world/pipes-data.js, not built yet) will read LAYOUT.pipes itself; nothing here is engine code.
+// the centreline with its fillets, the ends, approach and landing points. Pure data (no three.js): layout.js reads it
+// (the Bazookarp noRest circles). The pipe engine (src/game/pipes.js + src/world/pipes-data.js) reads LAYOUT.pipes
+// itself; nothing here is engine code.
+const r3 = (v) => Math.round(v * 1000) / 1000;
+// a point in Alpha's blade frame (DESIGN.md's conventions: s along the blade from (0, −32.5), w across it)
+const BL = (s, w) => [r3(0.5 * s + 0.866 * w), r3(-32.5 - 0.866 * s + 0.5 * w)];
 
 export const PIPES = {
   label: 'TUBEWAY',              // the HUD's name for the network (≤ 14 characters)
@@ -13,6 +16,14 @@ export const PIPES = {
     bazookarp: { shut: [], carp: [] },   // nothing shut (no end within 15 m of a Gate); carriers refused on every leg
     boss: 'open',                // 'open' | 'off' (every leg shut, still drawn and solid)
   },
+  // device aprons (DECISIONS.md #24; LEAD-NOTES 2026-10-09: "only where DESIGN.md wants an apron: pipe mouths, the deck's
+  // exits"): the engine keeps every mouth's IN apron and every landing free of devices itself; these are the spawn deck's
+  // exits, the 4 m landings at the foot of both pavilion stairs (the stair's 3 m + 1 m either side, to the plaza's
+  // edge), mirrored for Bravo. G.level.noPlace refuses a device there (a Lurk Mine, a Hop Beacon, a sprinkler …)
+  aprons: [
+    { poly: [BL(27, 12), BL(31, 12), BL(31, 16.25), BL(27, 16.25)], y: [-0.5, 2.5], why: 'east stair landing' },
+    { poly: [BL(27, -16.25), BL(31, -16.25), BL(31, -12), BL(27, -12)], y: [-0.5, 2.5], why: 'west stair landing' },
+  ],
   water: [                       // looks only: volumes where the ride camera gets the underwater grade
     { cyl: [0, 0, 7.4], y: [-0.6, 2.3] },                    // the Great Tank, down to its sunken sand bed (its own twin)
     { cyl: [25, 0, 4.4], y: [0, 9.9] },                      // the E kelp drum (twin: the W drum)

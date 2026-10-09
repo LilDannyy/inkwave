@@ -50,8 +50,9 @@ const stair = (o = {}) => ({ color: K.stone, pattern: PATTERN.stonestep, ...o })
 const cover = (c, o = {}) => ({ color: c, pattern: PATTERN.plain, ...o });            // low cover you can hop onto
 // off-limits: never inked (no face of it), anyone landing on it slides off (`roof`)
 const roofR = (c, o = {}) => ({ color: c, pattern: PATTERN.render, roof: true, noPaint: NOPAINT, ...o });
-// glass and water: collision only (`hidden`), never inked, off-limits; drawn by backdrop.js (the blockout's glass)
-const glass = (o = {}) => ({ hidden: true, paint: false, roof: true, color: '#888888', tag: 'glass', ...o });
+// glass and water: collision only (`hidden`), never inked, off-limits; drawn by backdrop.js (the blockout's glass).
+// `bakeClear` (the pipe engine's block field): out of the AO trace, and the ride camera passes it inside a water volume
+const glass = (o = {}) => ({ hidden: true, paint: false, roof: true, bakeClear: true, color: '#888888', tag: 'glass', ...o });
 const railO = (o = {}) => ({ rail: true, color: '#888888', tag: 'rail', ...o });
 // a round piece (Ø 2r): four spokes (0°, 45°, 90°, 135°) whose union is the regular octagon of apothem r; their tops
 // step down 8 cm each (they all overlap at the centre)
@@ -105,8 +106,10 @@ H(radRamp(-135, 13.5, 0, 7.2, TANK.deck, 4.0, stair({ tag: 'deck-stair' })));
 // deck's rim stays 2.0 m above them
 for (const [a, t0, t1] of [[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -0.79, 0.79], [-157.5, -1.3, 0.79]]) H(faceBox(a, TANK.a, 9.0, t0, t1, FL, 0.4, stone({ tag: 'viewing-step' })));
 // the gulper heads (E listed; W = its twin): bronze, jaws facing out, the Gulper Run's mouths at (±12.7, 0.8, 0); their
-// necks run into the tank glass, 0.5 m below the deck's rim
-H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head' })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck' })));
+// necks run into the tank glass, 0.5 m below the deck's rim. `camHollow` (the pipe engine's block field): the Gulper Run
+// rides through them, so the ride camera treats them as the hollow run ENGINE.md §3.6 asks for while the rider is in the
+// Great Tank's water (the lens then stays in the tank, never parked inside the bronze)
+H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head', camHollow: true })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck', camHollow: true })));
 // the Feeding Gantry: four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
 // pads the near legs then hid half the bathysphere), beams at 16.8–17.8, the winch house;
 // Bathysphere No. 1 hangs at 13.05–15.95 (drawn by props.js; this is its off-limits collider)
