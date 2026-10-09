@@ -610,6 +610,8 @@ export class Actor {
     const n = Math.max(1, Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (D.substep || 0.2)));
     const air0 = this.airTime;
     let air = true;
+    this._dashFlat = true;   // (no height from collisions either: pressed into a ledge's corner at 29 m/s, the body's push-out
+                             // along the corner's normal would walk it up over the top a little every substep)
     for (let i = 0; i < n; i++) {
       airRule();
       this._integrate(dt / n, isSquid, jumped && i === 0);
@@ -617,6 +619,7 @@ export class Actor {
       this._spawnBarrier();
       if (this.grounded) air = false;
     }
+    this._dashFlat = false;
     airRule();
     if (air) this.airTime = air0 + 1 / 60;
     wr.dashSteps = n;   // (tests)
@@ -654,7 +657,7 @@ export class Actor {
     const P = PLAYER;
     const lift = isSquid ? P.squidBodyLift : P.stepUp;
     const height = isSquid ? P.squidHeight : P.height;
-    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick, isSquid);
+    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick || this._dashFlat, isSquid);   // [b5-sub-dash] (a dash: walls push it out sideways only, never up over a ledge's corner)
     if (c.ceiling && this.vel.y > 0) this.vel.y = 0;
     if (c.wall) {
       const n = c.wallNormal;

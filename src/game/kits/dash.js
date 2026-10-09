@@ -274,6 +274,7 @@ function use(subs, a, sub) {
   emit('sub:dash', { actor: a, from: _from.clone(), dir: dir.clone(), air });
 }
 const live = new Map();   // actor → its dash on this screen (the owner's: the streak; for the sea count)
+const marks = [];         // (tests: the last streak splats laid)
 const lastDash = new WeakMap();
 
 // the pop at the take-off point: its look, sound and blast (a ghost's: the look and sound only)
@@ -342,7 +343,12 @@ function streak(a, D, dt) {
       const f = 1 - acc / step;   // where along this frame's move the mark falls
       _v.set(D.last.x + dx * f, Math.max(D.last.y, a.pos.y) + 0.5, D.last.z + dz * f);
       const g = G.physics.raycast(_v, DOWN, 1.1, _hit, true);
-      if (g.hit && g.normal.y > 0.6) { DASH_STATS.streak++; credit(a, G.paint.splat(_v2.copy(g.point).addScaledVector(g.normal, 0.12), s.streakRadius, a.team, { seed: Math.random(), kind: 'trail' }), D.sp); }
+      if (g.hit && g.normal.y > 0.6) {
+        DASH_STATS.streak++;
+        _v2.copy(g.point).addScaledVector(g.normal, 0.12);
+        if (marks.length > 31) marks.shift(); marks.push([r2(_v2.x), r2(_v2.y), r2(_v2.z)]);
+        credit(a, G.paint.splat(_v2, s.streakRadius, a.team, { seed: Math.random() }), D.sp);
+      }
     }
     D.acc = acc;
   }
@@ -513,7 +519,7 @@ SUB_KITS[KIND] = {
   },
   bot: { fight: () => false, paint: () => false },  // (every bot use lives in botAct)
   // test handles
-  _live: live, _ribbons: ribbons, why,
+  _live: live, _ribbons: ribbons, _marks: marks, why,
 };
 // a dasher who went into the sea within 2 s of a dash (bots must never: match.cjs counts it)
 on('splatted', ({ victim, cause }) => { if (victim && cause === 'water' && G.time - (lastDash.get(victim) ?? -99) < 2) DASH_STATS.seaAfter++; });
