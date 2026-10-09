@@ -33,12 +33,18 @@ export const PIPES = {
       ends: [{ nozzle: 'level' }, { nozzle: 'level' }],         //   overhangs the promenade's edge by 0.4 m (layout.js)
       hide: [[0, 2.0], [25.4, 27.8]],                         // the end runs inside the pylons (the risers are glazed: drawn)
       look: { tint: 'clear', collars: 'brass' } },
-    { id: 'express', way: 'one', speed: 24, bend: 2.7,        // the Express, across the wing high over the Ticket Hall
+    { id: 'express', way: 'one', speed: 24, bend: 2.7,        // the Express, across the wing over the Pump Hall roof
       names: ['FERRY PLAZA', 'PENGUIN POINT'],
-      pts: [[23.14, 0.8, -48.58], [21.44, 0.8, -45.64], [21.44, 10.1, -45.64], [-14.29, 10.1, -37.75],   // [blockout] A 0.5 m up the blade with the pavilion;
-            [-14.29, 2.0, -37.75], [-15.99, 2.0, -34.8]],     //   the span at 10.1, not 9.4: at 9.4 it crossed the play camera's view
-      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],         //   of the bathysphere from the pad (glass top 10.98 ≤ rule 16's 11.0)
-      hide: [[0, 4.4], [50.96, 56.16]],                       // inside the two Express stops (56.16 m: A moved 0.5 m, the span 0.7 m up)
+      // [fix round 1] A re-seated: the plaza stop closes the Pump Hall bund's south end, its mouth at (s 22.75, w 12.5)
+      // facing across the plaza (−w), 8.3 m from the east stair's foot (DESIGN.md's faced the stair, 2–5 m off); the
+      // end run goes +w into the stop and the riser stands at the sea edge. The span runs at 8.0 m over the Pump Hall's
+      // roof to a bend at (9, −32) in front of the east pylon, then along the gatehouse's wing face to Penguin Point:
+      // from the spawn's play camera it crosses the sight line to the bathysphere 35 m out, under the ball with ~1° to
+      // spare (ball-view.js); one straight span crossed it 25 m out, over the ball, at any height under rule 16's 11 m
+      pts: [[22.2, 0.8, -45.95], [25.14, 0.8, -44.25], [25.14, 8.0, -44.25], [9.0, 8.0, -32.0], [-14.29, 8.0, -37.75],
+            [-14.29, 2.0, -37.75], [-15.99, 2.0, -34.8]],
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
+      hide: [[0, 4.65], [54.2, 59.44]],                       // inside the two Express stops (tops 3.2 and 5.0; 59.44 m)
       look: { tint: 'clear', collars: 'steel', chevrons: true } },
     { id: 'kelp', speed: 24, bend: 2.7,                       // the Kelp Line, up the E drum, along the North Promenade
       way: { flip: { every: 90, first: 'ab', warn: 10, close: 3, reopen: 1, quietEnd: 15 } },   // the tide (E2)

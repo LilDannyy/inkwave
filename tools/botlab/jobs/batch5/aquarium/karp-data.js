@@ -47,6 +47,7 @@
       for (const n of low) for (const id of L.queryBlocks(n.x - 4, n.z - 4, n.x + 4, n.z + 4, [])) {
         const b = L.blocks[id]; if (!b.solid || b.rail || b.hidden || b.dynamic) continue;
         const top = b.center.y + b.half.y, bot = b.center.y - b.half.y; if (top - Math.max(bot, 0) < 1.2 || top > 6 || bot > 0.5) continue;
+        if (top >= pad.y - 0.05) continue;   // (stands on the spawn deck — the skylights: not between the deck's edge and the Gate)
         if (Math.max(b.half.x, b.half.z) > 3) continue;   // (floors and walls aren't apron blocks)
         V.set(n.x, b.center.y, n.z); if (L.distToBlock ? L.distToBlock(b, V) > 4 : Math.hypot(b.center.x - n.x, b.center.z - n.z) > 4 + Math.max(b.half.x, b.half.z)) continue;
         seen.add(b.tag || id);
