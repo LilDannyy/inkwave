@@ -899,6 +899,7 @@ export class BotBrain {
         } else if (!enemyVisible && this._spray(dist, range, aimed, inkFrac)) it.fire = true;   // a short spray where it went
         // out of range with own ink underfoot: swim in (fast, hard to hit) instead of walking
         if (!it.fire && !a.weaponRunner.charging && dist > range * 1.15 && this.groundSeen === 1) it.squid = true;
+        if (a.weaponRunner.mainLocked) { move.multiplyScalar(0.35); it.squid = false; }   // [b5-sub-glide] cooking a held sub (its trigger locked): plant for the throw, stay a kid
         if (w.kind === 'dualies') {
           // dodge roll: while firing, roll sideways when hit or when the fight gets close (the runner locks the turret
           // after) — never toward the sea

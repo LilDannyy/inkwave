@@ -584,10 +584,12 @@ function endHold(a, fizzle) {
   }
   handLook(a, 0, 0, false);
 }
-// SUB_KITS.glide.lockMain: the main weapon is locked while the stone cooks (from one frame after the grace)
+// SUB_KITS.glide.lockMain: the main weapon is locked while the stone cooks — read at the top of the runner's update, so
+// from the frame after the grace (held this frame > 0.15 s; never without the ink: its clock waits, nor in a barrage)
 function lockMain(runner) {
   const st = runner.glide;
-  return !!(runner.aimingSub && st && st.cook > 0 && G.time - st.t1 < 0.15 && runner.a.specialActive?.kind !== 'barrage');
+  if (!runner.aimingSub || !st || G.time - st.t1 > 0.15 || runner.a.specialActive?.kind === 'barrage') return false;
+  return G.time - st.t0 > (runner.a.sub?.kind === KIND ? runner.a.sub : S()).cookGrace + 1e-6;
 }
 on('splatted', ({ victim }) => { if (victim?.weaponRunner?.glide) endHold(victim, true); netCook.delete(victim); });
 
@@ -841,35 +843,34 @@ function paint(brain) {
   return true;
 }
 const _rs = { own: 0, enemy: 0, empty: 0, n: 0 };
-// the bot's hold: the cook that stops the stone within reach of where its foe will be (led by its velocity over the
-// slide), held for cook + the grace (never past full cook: a bot never reaches the slip)
+// the bot's hold (the Shaker's botHold pattern: the press is one frame, the hold is ours): in a fight it holds until the
+// cook stops the stone on its foe — their spot led by their velocity × the fuse left (≤ 2 s), from where the bot stands
+// now (re-solved every frame: it may be strafing), never past full cook (a bot never reaches the slip); painting: a tap
 function botHold(a, st, inp, s) {
   const b = a.bot;
-  if (!st.plan) {
-    const g = b._glide; b._glide = null;
-    let held = 0;
-    const t = g && g.mode === 'fight' ? (g.t?.alive ? g.t : b.target) : null;
-    if (t && t.alive) {
-      // its foe's spot led by their velocity × the fuse left (capped at 2 s: they'll turn), the reach solved for it
+  if (!st.plan) { const g = b._glide; b._glide = null; st.plan = { mode: g?.mode || 'paint', t: g?.t || null }; }
+  const P = st.plan;
+  let keep = false;
+  if (P.mode === 'fight') {
+    const t = P.t && P.t.alive ? P.t : b.target;
+    if (t && t.alive && t.pos) {
+      P.t = t;
       startOf(a, _gp);
-      let f = fuseFor(Math.hypot(t.pos.x - _gp.x, t.pos.z - _gp.z), s);
-      for (let i = 0; i < 3; i++) {
-        const lead = Math.min(2, f), tx = t.pos.x + t.vel.x * lead, tz = t.pos.z + t.vel.z * lead;
-        f = clamp(fuseFor(Math.hypot(tx - _gp.x, tz - _gp.z), s), s.fuse - s.cookMax, s.fuse);
-        st.aimAt = { x: tx, z: tz };
-      }
-      held = s.fuse - f + s.cookGrace;
+      let f = fuseFor(Math.hypot(t.pos.x - _gp.x, t.pos.z - _gp.z), s), ax = t.pos.x, az = t.pos.z;
+      for (let i = 0; i < 2; i++) { const lead = Math.min(2, f); ax = t.pos.x + t.vel.x * lead; az = t.pos.z + t.vel.z * lead; f = fuseFor(Math.hypot(ax - _gp.x, az - _gp.z), s); }
+      st.aimAt = st.aimAt || { x: 0, z: 0 }; st.aimAt.x = ax; st.aimAt.z = az;
+      const need = clamp(s.fuse - f, 0, s.cookMax);
+      keep = st.cook < need - 1e-6 && st.held < s.cookGrace + s.cookMax;
     }
-    st.plan = { held: Math.min(held, s.cookGrace + s.cookMax), t: t || null };
   }
-  const keep = a.alive && a.form === 'kid' && st.held < st.plan.held - 1e-6;
+  keep = keep && a.alive && a.form === 'kid';
   if (keep) { inp.sub = true; inp.subReleased = false; }
   else if (!inp.sub) inp.subReleased = true;   // (the brain let go frames ago: throw now)
 }
 // at the release: a fighting bot turns to its foe's led spot
 function botAimAt(a) {
-  const st = a.weaponRunner?.glide, P = st?.plan, t = P?.t;
-  if (!t || !t.alive || !st.aimAt) return;
+  const st = a.weaponRunner?.glide, P = st?.plan;
+  if (!P || P.mode !== 'fight' || !st.aimAt || !P.t?.alive) return;
   a.aimYaw = Math.atan2(st.aimAt.x - a.pos.x, st.aimAt.z - a.pos.z);
 }
 
