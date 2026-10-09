@@ -38,7 +38,7 @@
   const standable = (x, y, z) => { const ids = L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, []); return !ids.some((id) => { const b = L.blocks[id]; return (b.roof || b.rail) && L.pointInBlock(b, new THREE.Vector3(x, y - 0.02, z), 0.001); }); };
   const sample = (pts, yMax) => pts.map(([x, z]) => [x, floorAt(x, z, yMax), z]).filter((p) => p[1] > -1 && standable(...p));
   // 1. the penguin glass: starts within 1.5 m of its inner face along the whole blade; beyond it = the cove
-  { const pts = []; for (let s = -12; s <= 27; s += 2.5) { const wg = s < -3 ? -17.0 : s < 10 ? -17.8 : s < 24 ? -17.0 : -16.6; for (const dw of [0.5, 1.4]) pts.push(W(s, wg + dw)); }
+  { const pts = []; for (let s = -12; s <= 30.5; s += 2.5) { const wg = s < -3 ? -17.0 : s < 10 ? -17.8 : s < 24 ? -17.0 : -16.6; for (const dw of [0.5, 1.4]) pts.push(W(s, wg + dw)); }
     probe('penguin glass: no way onto the cove', sample(pts, 3.0), (t) => t === 'cove' || t === 'penguin-glass'); }
   // 2. the plant room over the Kelp Balcony (both drums: the W one is on Alpha's promenade)
   { const pts = []; for (const sgn of [1, -1]) for (const b of [18, 30, 45, 60, 72]) for (const r of [5.0, 6.2]) { const a = b * Math.PI / 180; pts.push([sgn * (25 + r * Math.cos(a)), sgn * r * Math.sin(a)]); }
@@ -48,7 +48,7 @@
   { const pts = []; for (const a of [-22.5, -67.5, -112.5, -157.5, 22.5, 67.5, 112.5, 157.5]) for (const r of [8.2, 9.6]) { const q = a * Math.PI / 180; pts.push([r * Math.cos(q), r * Math.sin(q)]); }
     probe('Feeding Deck: no way up from the viewing steps / the court beside the glass', sample(pts, 1.0), (t) => t === 'feeding-deck' || t === 'glass-walk' || t === 'deck-rim'); }
   // 4. the spawn deck from the plaza in front of its fascia (the drop is one-way)
-  { const pts = []; for (const sgn of [1, -1]) for (let w = -11; w <= 11; w += 2.75) { const [x, z] = W(26.6, w); pts.push([sgn * x, sgn * z]); }
+  { const pts = []; for (const sgn of [1, -1]) for (let w = -11; w <= 11; w += 2.75) { const [x, z] = W(30.1, w); pts.push([sgn * x, sgn * z]); }
     probe('spawn deck: the front drop is one-way (no way up from the plaza)', sample(pts, 1.0), (t) => t === 'spawn-deck' || t === 'fascia' || t === 'deck-coping'); }
   // 5. the promenade from Penguin Point below its sea edge (the Penguin Steps are the way: starts ≥ 4 m from them)
   { const pts = []; for (const a of [-142, -138, -110.5]) for (const r of [32.0, 32.6, 33.2]) { const q = a * Math.PI / 180; pts.push([r * Math.cos(q), r * Math.sin(q)]); }
