@@ -134,10 +134,15 @@ export const P = {
 // the tram terminus's loading platform at the arm's tip (1.4; fix round 3): along −56 … −48, off 3.5 … 9.5 (the river side)
 export const TERMINUS = { a0: ARM_END, a1: -48, o0: 3.5, o1: ARM_W, y: 1.4 };
 const TERM_POLY = [AO(TERMINUS.a0, TERMINUS.o0), AO(TERMINUS.a1, TERMINUS.o0), AO(TERMINUS.a1, TERMINUS.o1), AO(TERMINUS.a0, TERMINUS.o1)];
+// the terminus's SIDINGS (round B fix 1, review issue 1: the tips were the stage's barest floor): a 0.9 m ballast bed
+// (roof, like the signal yard) on the track between the platform's south flight and the apron, along −52.8 … −44, off
+// −5 … 3.5 (against the platform's south face and its east flight), with buffer stops at its west end
+export const SIDINGS = { a0: -52.8, a1: -44, o0: -5, o1: TERMINUS.o0, y: 0.9 };
+export const SID_POLY = [AO(SIDINGS.a0, SIDINGS.o0), AO(SIDINGS.a1, SIDINGS.o0), AO(SIDINGS.a1, SIDINGS.o1), AO(SIDINGS.a0, SIDINGS.o1)];
 // the square-built buildings on the street (the street is cut out under them; they stand on a base like the tiers)
 const BLDS = [[7, 10.5, -27, -19], [7, 10.5, -44, -31], [16.5, 19.5, -44, -38], [-13.5, -7, -44, -40], [-14, -7, -22.5, -18.5], [-14, -13.5, -46, -27.5], [-19, -18.5, -46, -27.5]];
 const TIERS = [TERRACE, ...BLDS.map((r) => rectPoly(...r)), rectPoly(...P.deck), rectPoly(...P.engine), rectPoly(...P.boiler), rectPoly(...P.shed),
-  rectPoly(...P.gpo), rectPoly(...P.arcade), rectPoly(...P.degS), rectPoly(...P.degN), rectPoly(...P.boathouse), TERM_POLY];
+  rectPoly(...P.gpo), rectPoly(...P.arcade), rectPoly(...P.degS), rectPoly(...P.degN), rectPoly(...P.boathouse), TERM_POLY];   // (round B fix 1: the sidings bed is not a tier: the street runs on under it, buried — dead paint cells, 40 fewer blocks)
 const mirP = (p) => p.map(([x, z]) => [-x, -z]);
 
 // ------------------------------------------------------------------------------------------------ the ground
@@ -487,6 +492,14 @@ export const GARDEN_POLY = YARD;
 const GT_X = [-41, -35, -30, -24], GT_Z = [-37, -30, -23, -16];   // (on the garden's 1 m raster)
 export const tileOf = (x, z) => { let i = 0, j = 0; while (i < GT_X.length - 2 && x >= GT_X[i + 1]) i++; while (j < GT_Z.length - 2 && z >= GT_Z[j + 1]) j++; return `garden-${i}${j}`; };
 const yardCol = { color: '#4c4741', pattern: SURF.bluestone, roof: true, paint: false };
+// the garden's two ramps (round B fix 1, review issue 1: the garden on the bots' paths — nav prices a 1.2 m hop up at
+// 2.5 m more than the flat, so bots walked round the terrace): 3 m wide, 1.2 m over 4 m (16.7°), rising west from Prow
+// Place's corner and from Hoki Lane by the alley's east end, so the way Hoki Lane ↔ the arm crosses the lawn. In the
+// 1880s and today their footprints are the signal yard's bed, in the same group: the bed there vanishes as the ramp
+// appears (ENGINE rules 19, 29); on the yard's and the lawn's rasters
+export const GARDEN_PLANTERS = [[-29.4, -27.6, 2.4, 1.2], [-25.8, -28.6, 1.2, 1.2], [-34.4, -28.6, 1.2, 1.2], [-30.6, -32.6, 1.2, 1.2]];
+export const GARDEN_RAMPS = [{ x0: -28, x1: -24, z0: -23, z1: -20 }, { x0: -28, x1: -24, z0: -33, z1: -30 }];
+const rampRects = GARDEN_RAMPS.map((r) => [r.x0, r.x1, r.z0, r.z1]);
 // the signal yard's iron fence: Boss Battle only (onlyIn: 'boss'), 1.4 m of railing on the bed's edge, see-through, so
 // HULLBREAKER's nav sees a wall (round 2: without it the boss walked over the bed into Hoki Lane and on to the bases).
 // In the other modes the bed's edge is open: a kid who hops on slides off its roof; in the 3000s the garden covers it.
@@ -505,11 +518,13 @@ const YARD_FENCE = (() => {
   return out;
 })();
 const YARD_SLAB = (() => {
-  const R0 = coverRects(YARD, { x0: -41, x1: -24, z0: -37, z1: -16 });
+  const R0 = coverRects(YARD, { x0: -41, x1: -24, z0: -37, z1: -16 }, { hard: rampRects });
   GROUND_MISS.push(...R0.miss);
   const n = YARD.length, diag = (i) => { const a = YARD[i], b = YARD[(i + 1) % n]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
   const bed = [
     ...R0.rects.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y, z0, z1, { tag: 'signal-yard', ...yardCol })),
+    // (round B fix 1: the bed under the garden's ramps, the 1880s and today only)
+    ...rampRects.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y, z0, z1, { tag: 'signal-yard', ...yardCol, eras: '12', eraGroup: tileOf((x0 + x1) / 2, (z0 + z1) / 2) })),
     ...bars(YARD, { only: diag, trim: true, level: (i) => YARD_Y - 0.1 - 0.08 * (i % 2), opts: { tag: 'signal-yard-kerb', ...yardCol, color: '#5f6870' } }),
     ...reflexPatches(YARD, { only: (i) => diag(i) && diag((i + n - 1) % n), top: YARD_Y - 0.32, opts: { tag: 'signal-yard-kerb', ...yardCol } }),
   ];
@@ -524,7 +539,7 @@ const SIGNAL_GARDEN = (() => {
   // the lawn: per tile, the raster cores (on the yard's ballast, 0.9 → 1.2) and the bars along its diagonal edges (1.08 /
   // 0.98: over the yard's own kerb bars, 0.9 / 0.82, and under the lawn), each bar in the tile its middle lies in
   for (let i = 0; i < GT_X.length - 1; i++) for (let j = 0; j < GT_Z.length - 1; j++) {
-    const R1 = coverRects(GARDEN_POLY, { x0: GT_X[i], x1: GT_X[i + 1], z0: GT_Z[j], z1: GT_Z[j + 1] }, { cell: 1.0 });   // (a 1 m raster: fewer blocks, ENGINE rule 6's 160 per jump)
+    const R1 = coverRects(GARDEN_POLY, { x0: GT_X[i], x1: GT_X[i + 1], z0: GT_Z[j], z1: GT_Z[j + 1] }, { cell: 1.0, hard: rampRects });   // (a 1 m raster: fewer blocks, ENGINE rule 6's 160 per jump)
     GROUND_MISS.push(...R1.miss);
     for (const [x0, x1, z0, z1] of R1.rects) out.push(B(x0, x1, YARD_Y, GY, z0, z1, lawn(tileOf((x0 + x1) / 2, (z0 + z1) / 2))));
   }
@@ -534,8 +549,11 @@ const SIGNAL_GARDEN = (() => {
   const ge = [Q.MS0, Q.MS1, lerp(Q.MS1, Q.R4, 0.5), Q.R4, Q.R3, lerp(Q.R3, YB, 0.5), YB, lerp(YB, YC, 1 / 3), lerp(YB, YC, 2 / 3), YC, Q.Q5];
   const diag = (i) => { const a = ge[i], b = ge[(i + 1) % ge.length]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
   for (const d of bars(ge, { only: diag, trim: true, level: (i) => GY - 0.12 - 0.1 * (i % 2), y0: YARD_Y - 0.1, opts: lawn('') })) { d.eraGroup = tileOf(d.center[0], d.center[2]); out.push(d); }
+  // the ramps (round B fix 1)
+  for (const r of GARDEN_RAMPS) { const zc = (r.z0 + r.z1) / 2; out.push(R([r.x1, 0, zc], [r.x0, GY, zc], r.z1 - r.z0, { tag: 'garden-ramp', color: K.garden, pattern: PATTERN.pavers, eras: '3', eraGroup: tileOf((r.x0 + r.x1) / 2, zc) })); }
   // cover on the lawn and the walk: planters (roof: nobody stands on them), 1.2 m over the lawn, about 6–8 m apart
-  for (const [x, z, w, d] of [[-27.2, -21.6, 1.2, 2.4], [-29.6, -27.0, 2.4, 1.2], [-25.6, -31.4, 1.2, 1.2], [-34.4, -28.4, 1.2, 1.2], [-30.6, -32.0, 1.2, 1.2]]) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
+  // (round B fix 1: off the ramps' heads and out of the terminus platform's view over the garden to Prow Place)
+  for (const [x, z, w, d] of GARDEN_PLANTERS) out.push(B(x - w / 2, x + w / 2, GY, GY + 1.2, z - d / 2, z + d / 2, cover({ tag: 'garden-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: tileOf(x, z) })));
   return out;
 })();
 
@@ -546,44 +564,65 @@ const SIGNAL_GARDEN = (() => {
 const armCover = (a, o, w, d, y0, y1, opts) => { const [x, z] = AO(a, o); return OB(x, z, w, d, y0, y1, 65, opts); };
 // (fix round 2: the arm ended at along −48 and lost its West Wharf. Fix round 3, review issue 2 — the X restored: the
 //  round-2 street (off −6 … 14) runs on to along −40, where Bravo's Iron Bridge lands on the promenade; beyond it the arm
-//  narrows to off ±9.5 and runs to along −56, the TRAM TERMINUS: the tram waits on the track (the era-slot kit), a
-//  loading platform (1.4) on the river side with two ways up (steps from the street at its east end and on its south
-//  side) and cover, looking back down the arm to the circus and over the yard toward Prow Place; Prawn Alley leaves the
-//  tip's south edge (a loop, no dead end), and in the 3000s the Signal Garden's tip stair rises beside it. Review issue 1:
-//  W2 reaches along −31.1, so the arm's river walk is only where the bridge and the boardwalk land)
-const T = TERMINUS;
+//  narrows to off ±9.5 and runs to along −56, the TRAM TERMINUS: a loading platform (1.4) on the river side with two ways
+//  up (steps from the street at its east end and on its south side) and cover, looking back down the arm to the circus
+//  and over the yard toward Prow Place; Prawn Alley leaves the tip's south edge (a loop, no dead end), and in the 3000s
+//  the Signal Garden's edge runs beside the tip's south lane. Review issue 1: W2 reaches along −31.1, so the arm's river
+//  walk is only where the bridge and the boardwalk land)
+// (round B fix 1 — the tip was the stage's barest floor and its tram blocked the platform's view: the tram waits at
+//  the last stop, along −34 … −28, its island and shelter at −40 … −34; the tip's middle is the terminus's SIDINGS, a 0.9 m ballast bed (roof)
+//  against the platform's south face; the street round it is the south lane (off −9.5 … −5) to the turning area at the
+//  tip's end (along −56 … −52.8), Prawn Alley's mouth and the platform's south flight; the east flight is the
+//  platform's full width)
+const T = TERMINUS, TRAM_A = -31, ISLAND_A = -37;
 const ARM = [
   ...(() => { const [x, z] = AO(-26.82, 10); return obld(x, z, 8, 8.64, 65, 7, { tag: 'warehouse', color: K.ware, pattern: PATTERN.brick, noPaint: [[-C65, 0, S65]] }); })(),
-  armCover(-31, 0, 2.4, 6, 0, 0.3, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
-  armCover(-31, 0, 1, 4, 0.3, 2.6, { tag: 'tram-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
-  armCover(-37.4, 3.6, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })), armCover(-26, 3.6, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),
+  // the last stop before the terminus: its island and shelter (round B fix 1: at along −40 … −34, where the tram stood
+  //  in round 2's arm; the tram waits beside it, below)
+  armCover(ISLAND_A, 0, 2.4, 6, 0, 0.3, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
+  armCover(ISLAND_A, 0, 1, 4, 0.3, 2.6, { tag: 'tram-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
+  armCover(-26, 3.6, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),   // (round B fix 1: the cart at along −37.4 gave way to the tram)
   armCover(-23.5, -4, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })),
-  // (fix round 2: the street's middle stretch, the strip test's 30 m line once the south walk's crates went with it)
-  armCover(-31.3, 3.8, 1.2, 2.2, 0, 1.2, cover({ tag: 'cart' })), armCover(-28.4, -3.4, 1.2, 1.6, 0, 1.2, cover({ tag: 'bollards' })),
+  // (fix round 2: a cart and a bollard pair broke the street's middle stretch, the strip test's 30 m line; round B fix 1:
+  //  the tram waits there now, along −34 … −28, so they are gone)
   // the promenade at the bridge landing
   armCover(-36, 12, 0.8, 2, 0, 1, cover({ tag: 'bench', color: '#7d6c5a' })),
-  // ---- the tram terminus (fix round 3)
+  // ---- the tram terminus (fix round 3; round B fix 1: the tram waits 7 m short of the tip, the tip's middle is sidings)
   // the tram at the end of the line (the era-slot kit's collider: a cable tram, a tram, a float-tram; 2.6 × 6 × 3.2, roof)
-  armCover(-44.5, 0, 2.6, 6, 0, 3.2, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
+  // (round B fix 1, review issue 2: at along −34 … −28, at the last stop, 15 m short of the tip, so it no longer stands
+  //  between the platform and Prow Place: tip-sight.py, 9 % → 69 % of the platform's lines to Prow Place clear in the
+  //  1880s; the review's −40.5 … −34.5 still blocked 113 of 480)
+  armCover(TRAM_A, 0, 2.6, 6, 0, 3.2, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
   // the loading platform (1.4: a wall to a kid, so stairs) and its two stair flights; its faces over the water not inkable
   ...(() => { const [x, z] = AO((T.a0 + T.a1) / 2, (T.o0 + T.o1) / 2), w = T.o1 - T.o0, d = T.a1 - T.a0, nP = [[-C65, 0, S65], [-S65, 0, -C65]];
     // (its base stops 0.1 m under the street cores' bases it overlaps: no shared tops)
     return [O(x, z, w, d, BOT, TIER_Y - 0.1, 65, { tag: 'terminus-base', color: K.stone, pattern: SURF.bluestone, paint: false }),
       O(x, z, w, d, TIER_Y - 0.1, T.y, 65, { tag: 'terminus', color: K.planks, pattern: PATTERN.planks, noPaint: nP })]; })(),
-  R(AO(-44.8, 7).flatMap((v, i) => (i ? [v] : [v, 0])), AO(T.a1, 7).flatMap((v, i) => (i ? [v] : [v, T.y])), 3, stair({ tag: 'terminus-steps', color: K.wood, pattern: PATTERN.treads })),
-  R(AO(-53, 0.3).flatMap((v, i) => (i ? [v] : [v, 0])), AO(-53, T.o0).flatMap((v, i) => (i ? [v] : [v, T.y])), 3, stair({ tag: 'terminus-steps', color: K.wood, pattern: PATTERN.treads })),
+  // (round B fix 1: the east flight is the platform's full width, off 3.5 … 9.35, so the sidings bed meets its south side
+  //  and no nook is left between them; the second flight is at the platform's west end, rising from the turning area by
+  //  Prawn Alley's mouth)
+  R(AO(-44.8, (T.o0 + ARM_W - 0.15) / 2).flatMap((v, i) => (i ? [v] : [v, 0])), AO(T.a1, (T.o0 + ARM_W - 0.15) / 2).flatMap((v, i) => (i ? [v] : [v, T.y])), ARM_W - 0.15 - T.o0, stair({ tag: 'terminus-steps', color: K.wood, pattern: PATTERN.treads })),
+  R(AO(-54.35, 0.3).flatMap((v, i) => (i ? [v] : [v, 0])), AO(-54.35, T.o0).flatMap((v, i) => (i ? [v] : [v, T.y])), 3, stair({ tag: 'terminus-steps', color: K.wood, pattern: PATTERN.treads })),
+  // the sidings: the ballast bed (roof, not inkable: you slide off it, as off the signal yard) and its buffer stops
+  ...(() => { const S = SIDINGS, [x, z] = AO((S.a0 + S.a1) / 2, (S.o0 + S.o1) / 2);
+    return [O(x, z, S.o1 - S.o0, S.a1 - S.a0, BOT, S.y, 65, { tag: 'sidings', ...yardCol })]; })(),
+  armCover(SIDINGS.a0 + 0.7, -2.6, 1.8, 1.2, SIDINGS.y, SIDINGS.y + 1.2, { tag: 'buffer-stop', color: '#5b5048', roof: true }),
+  armCover(SIDINGS.a0 + 0.7, 1.2, 1.8, 1.2, SIDINGS.y, SIDINGS.y + 1.2, { tag: 'buffer-stop', color: '#5b5048', roof: true }),
+  armCover(SIDINGS.a1 - 1.6, -3.9, 1.2, 1.8, SIDINGS.y, SIDINGS.y + 1.2, { tag: 'ground-frame', color: K.iron, pattern: PATTERN.metal, roof: true }),
   // on the platform: the terminus shelter (roof) against the river rail, a stack of mail sacks and crates at its east end
   armCover(-52.5, 8.6, 1.0, 3.5, T.y, T.y + 2.2, { tag: 'terminus-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
-  armCover(-49.3, 4.3, 1.2, 1.4, T.y, T.y + 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
-  // the street at the tip: crates by the alley's mouth, a bollard pair past the tip stair's foot
-  armCover(-53, -5.2, 1.2, 2.4, 0, 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
+  armCover(-49.2, 8.4, 1.2, 1.4, T.y, T.y + 1.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
+  // the street at the tip: a bollard pair at the south lane's mouth (the turning area's cover is the buffer stops)
   armCover(-41.5, -7.8, 1.2, 1.6, 0, 1.0, cover({ tag: 'bollards' })),
   // the river railings (every rail's ends on the outline or on another rail): the step in to the tip, the tip's river
-  // edge (on the platform, 1.4 → 2.4), its end, the promenade beside the bridge landing, the boardwalk landing (the 1880s)
+  // edge (beside the east flight 0 → 2.4, on the platform 1.4 → 2.4), its end (beside the south flight 0 → 2.4), the
+  // promenade beside the bridge landing, the boardwalk landing (the 1880s)
   armBox(ARM_TIP, ARM_TIP + 0.15, ARM_W, 14, 0, 1, rail({ tag: 'river-rail' })),
-  armBox(T.a1, ARM_TIP, ARM_W - 0.15, ARM_W, 0, 1, rail({ tag: 'river-rail' })),
+  armBox(-44.8, ARM_TIP, ARM_W - 0.15, ARM_W, 0, 1, rail({ tag: 'river-rail' })),
+  armBox(T.a1, -44.8, ARM_W - 0.15, ARM_W, 0, T.y + 1, rail({ tag: 'river-rail' })),
   armBox(ARM_END, T.a1, ARM_W - 0.15, ARM_W, T.y, T.y + 1, rail({ tag: 'river-rail' })),
-  armBox(ARM_END, ARM_END + 0.15, -ARM_W, T.o0, 0, 1, rail({ tag: 'river-rail' })),
+  armBox(ARM_END, ARM_END + 0.15, -ARM_W, 0.3, 0, 1, rail({ tag: 'river-rail' })),
+  armBox(ARM_END, ARM_END + 0.15, 0.3, T.o0, 0, T.y + 1, rail({ tag: 'river-rail' })),
   armBox(ARM_END, ARM_END + 0.15, T.o0, ARM_W - 0.15, T.y, T.y + 1, rail({ tag: 'river-rail' })),
   armBox(-39.85, -39.23, 14, 14.15, 0, 1, rail({ tag: 'river-rail' })),
   armBox(-22.5, -21.22, 14, 14.15, 0, 1, rail({ tag: 'river-rail' })),
