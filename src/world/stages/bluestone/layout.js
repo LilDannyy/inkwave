@@ -901,8 +901,17 @@ export const RAILYARD = {
   channels: [],
 };
 
+// ------------------------------------------------------------------------------------------------ the sea bed under the yard and the railyard walls
+// (round B fix 1, review issue 1: the bots' nav marks a node "wet" — never a paint goal, and paths pay to pass it — when a
+//  probe 1.2 / 2.2 m from it finds no top under the node's height + 0.6; the signal yard's bed (0.9), the alley's railyard
+//  wall, the viaduct, the yard wall, the arcade's grilles and the embankment stand on the sea bed in one block, so 494
+//  nodes beside them — 166 of the alley's 218, 140 in the west, 130 in the arm and its tip — read as water's edge.
+//  Hidden slabs at −0.8, under the street and over land only, give the probes a top: no node near them is "wet" now.)
+const SEABED = [[-40.73, -23.77, -36.13, -16.63], [-47.03, -40.73, -37.53, -31.53], [-40.73, -23.77, -42.53, -36.13], [-26.53, -18.97, -50.13, -42.53], [-23.03, -19.53, -64.27, -50.13], [-19.07, -18.43, -41.57, -29.93]]
+  .map(([x0, x1, z0, z1]) => B(x0, x1, BOT, TIER_Y - 0.1, z0, z1, { tag: 'sea-bed', hidden: true, paint: false }));
+
 // ------------------------------------------------------------------------------------------------ the whole union, then this build's era
-export const HALF_ALL = [...groundPieces, ...MID, ...haloPieces, ...SWIMSTON, ...WEST, ...VIADUCT, ...PRAWN_ALLEY, ...YARD_SLAB, ...SIGNAL_GARDEN, ...ARM, ...EAST, ...RIVER, ...BASE];
+export const HALF_ALL = [...groundPieces, ...MID, ...haloPieces, ...SWIMSTON, ...WEST, ...VIADUCT, ...PRAWN_ALLEY, ...YARD_SLAB, ...SIGNAL_GARDEN, ...ARM, ...EAST, ...RIVER, ...BASE, ...SEABED];
 export const SINGLE_ALL = SINGLE;
 
 const LAYOUT_BLUESTONE = {
