@@ -749,7 +749,7 @@ export class StagePipes {
     a.pipe = null;
     this._start(a, leg.ends[p.k], { u0: Math.max(0.001, uT), t0: now(), from: u1 });   // (re-based on where it really is: no suck, its exit lit again)
     if (a.pipe) a.pipe.chimed = chimed;
-    this.events.push(['pipe:adopt', { nid: a.nid, leg: leg.i, u: r3(u) }]);
+    this.events.push(['pipe:adopt', { nid: a.nid, leg: leg.i, u: r3(uT), from: r3(u1) }]);
   }
   hostChanged() {}
   // where a proxy's ride really is on its (old) owner's timeline: this screen draws it at the owner's playback time, a
