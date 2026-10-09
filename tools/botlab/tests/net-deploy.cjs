@@ -91,6 +91,10 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
     const hpsA = [];
     let n = 0;
     for (; n < 12; n++) {
+      // ([b5-int1] B's ghost goes on A's end record, a playback delay after A's copy went: under load that can outlast the
+      // 0.3 s between rounds, and one round more was fired at a device already down — 5 / 4 rounds in a local run. So:
+      // A's copy already down → wait for B's ghost to follow (it must, within 3 s), then stop)
+      if (n && hpsA[n - 1] === 0) { await B.until(`(() => { const d = __dep.byGid(${gid}); return !d || d.state === 'dead'; })()`, 3000, 50).catch(() => null); }
       const live = await J(B, `(() => { const d = __dep.byGid(${gid}); return !!(d && d.state !== 'dead'); })()`);
       if (!live) break;
       await B.js(`(() => { const me = __G.match.local, d = __dep.byGid(${gid}), m = __dep.mid(d), T = __dep.THREE; const from = new T.Vector3(m.x + 4, m.y, m.z); __G.projectiles.fireCustom(me, from, new T.Vector3(-1, 0, 0), { type: 'shot', speed: 40, damage: 36, range: 8, straight: 1, grav: 0, drag: 0, weaponId: 'shooter' }); return 1; })()`);
