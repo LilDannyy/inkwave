@@ -363,20 +363,28 @@ rider's own: its owner decides the capture, refusal, ride, pop and touchdown, an
 `KIT_GHOSTS.pipe` (`['k', nid, 'pipe', data]`, no change to `_play`): `[0, leg, k, t0, u0]` at the capture (`t0` its own
 `performance.now()` in seconds; `u0` > 0 a re-based ride, no suck) and `[1, yaw, high]` at the pop (the flap and the splash;
 the pop itself is in the owner's ticks). The tick carries `F.stage` (bit 22) while `a.pipe` is set. Every other screen
-draws the rider exactly on the path at the owner's timeline time from `[0]` (`carryRemote`: `T = peer.tr − t0`), never
+draws the rider exactly on the path at the owner's timeline time from `[0]` (`carryRemote`: `T = peer.tr − t0`, plus
+whatever lag the playback clock builds up behind its own target during the ride — when the owner's ticks run dry it slows
+to half speed and re-syncs with a jump, but a ride is a pure function of its owner's time, so it never stalls; monotonic,
+at most 1.5× real time), never
 from extrapolated samples (a late tick would draw it 1.5–2.8 m outside the glass on a bend), holds it in the exit mouth
 if `[1]` is late (its exit going dark as on the owner's screen), and lights the exit ring and plays the chime from its own
 copy. Nobody can change a ride: riders take no damage (the shooter's `applyHit` drops a shot at a proxy rider before its
 'hit' event; the owner's `damage()` backs it), are never shoved and never pushed. A late joiner (or a screen that missed
-`[0]`) projects a flagged proxy onto the nearest leg within 1.2 m and rides it on at the leg's speed; on a host change the
-new owner of a bot mid-ride re-bases the ride on where it really is on the old owner's clock — its drawn position plus the
-playback delay and any stall while the old owner's ticks ran out (`adopt` → a fresh `[0]` with that `u0`, so it pops when
-it would have) — and draws it blending there from where it had it (≤ 0.4 s, local only); the other screens ride on from
-where they drew it, making up only the old owner's playback stall, and blend onto that record when it arrives: no jump
-on any screen [b5-aquarium, review round 1]. The Kelp Lines' tide is a pure function of the stage clock (the host's match
+`[0]`) projects a flagged proxy onto the nearest leg within 1.2 m and rides it on at the leg's speed; on a host change
+(or a player leaving mid-ride: the host adopts their squidkid) the new owner re-bases the ride on where it really is on
+the old owner's own clock (`now − peer offset − t0`; at most a third of the way left ahead of where it drew it, so its
+catch-up stays under twice the speed — a page that drew it far behind pops a little late instead of lurching) (`adopt` →
+a fresh `[0]` with that `u0`) and draws it blending there from where it had it, local only; the other screens ride on from
+where they drew it (nothing to catch up: the ride never stalled) on their own real-time clock, and blend onto the new
+record when it arrives (only slowing when they drew it ahead, never stepping back): no jump on any screen [b5-aquarium,
+review rounds 1 and 2]. `adopt` must not throw: it runs inside `netmatch.onLeave`'s loop, before `follower = false`
+(review round 2: a ReferenceError there left the new host a follower and the match never ended; net-pipes-leave.cjs
+covers a timed match). The Kelp Lines' tide is a pure function of the stage clock (the host's match
 clock; in Practice its stage clock on the ticks): nothing on the wire. The touchdown splat is an ordinary splat record,
 painted with the record's own rounding (so every screen paints the same cells). About 60 bytes a ride. Tested by
-`tools/botlab/tests/net-pipes.cjs` (two clients and a late joiner).
+`tools/botlab/tests/net-pipes.cjs` (two clients and a late joiner) and `net-pipes-leave.cjs` (a timed Turf War: a guest
+leaving inside a pipe, the host leaving while its bot rides, the match still judged).
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
