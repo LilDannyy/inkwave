@@ -55,15 +55,16 @@ const RMAX = 16, offs = [];
 for (let dj = -2 * RMAX; dj <= 2 * RMAX; dj++) for (let di = -2 * RMAX; di <= 2 * RMAX; di++) { const d = Math.hypot(di, dj) / 2; if (d <= RMAX) offs.push([di / 2, dj / 2, d]); }
 offs.sort((a, b) => a[2] - b[2]);
 const S65 = Math.sin(65 * Math.PI / 180), C65 = Math.cos(65 * Math.PI / 180);
-const region = (x, y, z) => {
+const region = (x, y, z) => {   // (fix round 3: the regions of ink-regions.js)
   if (z > 0) { x = -x; z = -z; }
-  const al = x * S65 + z * C65, off = -x * C65 + z * S65, r = Math.hypot(x, z);
-  if (LY.ALLEY && G.inPoly(LY.ALLEY.quad, x, z)) return 'alley';
-  if (y > 2.5 && y < 3.2 && x < -24 && z < -20 && !G.inPoly(LY.OUTLINE, x, z)) return 'garden';
+  const al = x * S65 + z * C65, off = -x * C65 + z * S65, r = Math.hypot(x, z), HS = LY.HOTEL_STAIR;
+  if (HS && x > HS.x0 - 0.2 && x < HS.x1 + 0.2 && z > HS.zFoot - 0.8 && z < HS.zLand + 0.2 && y > 2.3) return 'halo';
   if (y > 4.5 && r < 16) return 'halo';
+  if (LY.YARD && y > 0.5 && G.inPoly(LY.YARD, x, z)) return 'garden';
+  if (LY.ALLEY && G.inPoly(LY.ALLEY.floor || LY.ALLEY.quad, x, z)) return 'alley';
   if (!G.inPoly(LY.OUTLINE, x, z) && (x > 20 || z > -8)) return 'river-works';
   if (r <= 20) return 'circus';
-  if (Math.abs(off) <= 15 && al <= -20) return al < -46 ? 'arm-end' : Math.abs(off) > 9 ? 'arm-walks' : 'arm';
+  if (Math.abs(off) <= 15 && al <= -20) return al < -40 ? 'arm-tip' : Math.abs(off) > 9 ? 'arm-walks' : 'arm';
   if (z <= -50) return 'base';
   if (Math.abs(x) <= 7) return 'swimston';
   return x < 0 ? 'west' : 'east';

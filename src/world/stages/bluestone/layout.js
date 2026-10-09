@@ -276,8 +276,10 @@ const haloPieces = [];
   //  of the centre zone within 27 m and 51 % within 18 m, against 39 % / 16 % from a balcony and 21 % / 1 % from a
   //  Boathouse deck (halo-sight.mjs), so a perch over the zone keeps little cover of its own; the two kept stop the stair's
   //  head being a 7 m bare circle)
-  for (const [b, g] of [[157.5, 'halo-3'], [202.5, 'halo-5']]) {
-    const [px, pz] = polar(14.4, b);
+  // (fix round 3: and one on the 225° side by the hotel stair's head, clear of the landing's join at the west corner:
+  //  the stair's top was 9 m from cover)
+  for (const [b, g, r] of [[157.5, 'halo-3', 14.4], [202.5, 'halo-5', 14.4], [233, 'halo-7', 13.9]]) {
+    const [px, pz] = polar(r, b);
     haloPieces.push(O(px, pz, 1.2, 1.2, HALO_Y - 0.1, HALO_Y + 1, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g }));
   }
 }
