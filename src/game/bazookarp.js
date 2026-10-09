@@ -107,8 +107,9 @@ export class Bazookarp {
     this.wire.on('decline', ({ actor, q }) => this._decline(actor, q));
     this.wire.on('rate', (d) => { if (d.actor === this.holder) { this.remote.rate = d.rate; this.remote.why = d.why; this.remote.half = d.half; this.remote.zone = d.zone; } });
     this.wire.on('foot', (d) => { if (d.actor === this.holder) this.remote.foot = { pos: new V3(d.x, d.y, d.z), half: d.half, zone: d.zone }; });
-    this.wire.on('refused', ({ actor }) => { if (actor === G.local) this.lockT = 0; });
+    this.wire.on('refused', ({ actor }) => { if (actor && !actor.remote) { this.lockT = 0; this.wire.log.refused = (this.wire.log.refused || 0) + 1; } });   // (kd: our claim was refused)
     this.lockT = 0; this.claimT = 0;          // a guest's kit lock while its claim is out, its re-send clock
+    this.carriedOnce = new Set();             // players whose first carry has ended (the prompt's charge line)
     this.hud = { fuseShown: K.fuse, fast: false, why: null };
   }
 
@@ -281,12 +282,16 @@ export class Bazookarp {
     this.stats.grants++;
     this._rec(['p', best.a.nid ?? -1]);
     this._applyGrant(best.a);
+    // a remote carrier is scored only from samples AFTER the one its claim was judged on (its newest): the ones still
+    // queued from before the pick-up never count (and never set the clamp's baseline)
+    if (best.a.remote) this.remote.sampleT = this._newestT(best.a);
     // S39a: the winning team takes it back in overtime
     if (this.overtime && best.a.team === 1 - this.otLosing) this._end(1 - this.otLosing, 'retake');
   }
+  // (its own vector: canPick() reuses _v / _v2 — with _v2 here every remote claimant once measured 0 m and won every race)
   _newest(a) {
     const s = this.wire.newest?.(a);
-    return s ? _v2.set(s.x, s.y, s.z) : a.pos;
+    return s ? (this._np || (this._np = new V3())).set(s.x, s.y, s.z) : a.pos;
   }
   // every screen: the carry begins (its own Bubble Guard ends on every screen; its owner also ends its special)
   _applyGrant(a) {
@@ -320,6 +325,7 @@ export class Bazookarp {
       if (st && st.dur === 0) { st.dur = +(this.clock - C.since).toFixed(2); st.m = +(this.bestM[a.team] - C.startBest).toFixed(1); }
       a.stats.karpM = (a.stats.karpM || 0) + Math.max(0, this.bestM[a.team] - C.startBest);
     }
+    if (C) this.carriedOnce.add(a);   // (the prompt's first-carry line is done for this player)
     a.carry = null;
     if (a.character && a.character.weaponKind === 'sp_zooka' && !a.specialActive) a.character.setWeapon(a.weaponId);
     if (this.holder === a) { this.holder = null; this.holderTeam = -1; }
@@ -329,15 +335,15 @@ export class Bazookarp {
   _decline(a, q) {
     if (this.follower || this.holder !== a || !this.preGrant) return;
     const P = this.preGrant;
+    if (Number.isFinite(q) && Number.isFinite(P.q) && q !== P.q) return;   // (a decline of an older grant: not this one)
     this.stats.declined++;
     this._release(a);
     this.touched = P.touched; this.lastCarrier = P.lastCarrier; this.overtime = P.overtime; this.otWin = P.otWin;
     this.pos.copy(P.pos); this.restNode = P.restNode;
     this._rec(['u', a.nid ?? -1, r2(this.pos.x), r2(this.pos.y), r2(this.pos.z)]);
     this._setPhase('free', 0);
-    this.pendingLoss = null;
+    this.pendingLoss = null; this.preGrant = null;
     emit('karp:undo', { actor: a });
-    void q;
   }
 
   // ================================================================== the carrier's own screen (§3.3)
@@ -666,8 +672,16 @@ export class Bazookarp {
     this.lastQ = q;
     const byNid = (n) => (n >= 0 ? this.match.actors.find((a) => a.nid === n) || null : null);
     switch (k) {
-      case 'p': { const a = byNid(e[2]); if (a) this._applyGrant(a); break; }
-      case 'u': { const a = byNid(e[2]); if (a) this._release(a); this.pos.set(e[3], e[4], e[5]); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }
+      case 'p': {
+        const a = byNid(e[2]);
+        this.lockT = 0;   // (any grant answers every claim in flight, §7.3 step 5)
+        // a grant to this screen's own player, who died after it claimed: declined (kx), not taken — the host undoes it
+        // ('u') and that death is no carrier's loss (§7.3 step 6)
+        if (a && !a.remote && !a.alive) { this._declined = { nid: a.nid, q }; this.wire.decline(a.nid, q); break; }
+        if (a) this._applyGrant(a);
+        break;
+      }
+      case 'u': { const a = byNid(e[2]); if (a) { if (this.holder === a || a.carry) this._release(a); if (!a.remote) this.lockT = 0; } this.pos.set(e[3], e[4], e[5]); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }
       case 'b': { this.pos.set(e[3], e[4], e[5]); this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
       case 'd': { const H = this.holder; if (H) this._release(H); this._reform(_v.set(e[3], e[4], e[5]), -1); emit('karp:drop', { actor: H, team: H ? H.team : -1, pos: _v.clone(), how: HOWS[e[2]] }); break; }
       case 'r': { const H = this.holder; if (H) this._release(H); this._reset(_v.set(e[2], e[3], e[4]), WHYS[e[5]] || 'none'); break; }
@@ -683,11 +697,14 @@ export class Bazookarp {
     this.count = [c0, c1];
     this.fuse = fuse; this.rate = rate; this.rateWhy = why === 1 ? 'retreat' : why === 2 ? 'zone' : null;
     if (this.overtime) this.overtimeT = otT;
+    this.otWin.open = !!this.overtime && win >= 0;   // (a new host's window carries on from here: onHostChange)
     if (win >= 0) this.otWin.left = win;
     this.hostT = t;
     this._fuseSync(fuse, rate, t);
     if (q < this.lastQ) return;   // (older than the last discrete record: its phase / holder / position are stale)
-    const phase = PHASES[ph];
+    let phase = PHASES[ph];
+    // (the grant this screen declined, until the host's 'u': it stays free here)
+    if (phase === 'carried' && this._declined && this._declined.nid === hn && q <= this._declined.q) phase = 'free';
     if (phase === 'carried') {
       const a = this.match.actors.find((o) => o.nid === hn);
       if (a && this.holder !== a) this._applyGrant(a);
@@ -748,13 +765,32 @@ export class Bazookarp {
       if (a && d > 0) this.shell.add(a.team, Math.min(d, K.shell.hitCap * 8), a);
     }
   }
-  // host migration (WP2 completes it): a holder that's gone is lost as 'left'; an immediate full state
-  onHostChange() {
-    if (this.holder && (!this.match.actors.includes(this.holder) || !this.holder.alive)) this._lose(this.holder, 'left');
-    this.base = null;
+  // host migration (netmatch.onLeave, on the NEW host, once match.follower is false — SPEC §7.6 step 4): records go on
+  // from the old host's sequence (the other guests drop any q at or below the last one they applied); a holder that is
+  // gone (a humans-only stage removed it while this screen was still a follower) or dead is lost as 'left' at its last
+  // real sample; the clamp's baseline resets; a full state at once. (What WP2 still owns: §7.6's narrowed flush and the
+  // onLeave order, the 'k' case for adopted actors, lastCarrier / lastPlant in 'S'.)
+  onHostChange(meHost = true) {
+    if (!meHost || this.follower) {   // (still a guest: a carrier of ours re-sends kr / kf to the new host, step 5)
+      for (const a of this.match.actors) if (a.carry?.j && !a.remote) { a.carry.j.sent = null; a.carry.j.sentFoot = null; }
+      this.claimT = 0;
+      return;
+    }
     this.q = Math.max(this.q, this.lastQ);
+    this.claims.length = 0; this.preGrant = null; this.pendingLoss = null; this._declined = null;
+    const H = this.holder;
+    if (H && (!this.match.actors.includes(H) || !H.alive)) {
+      this.remote.half = -1; this.remote.zone = false;   // (this screen never had its kr: the half from the field)
+      this._lose(H, 'left');
+    } else if (H) {
+      this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: this._newestT(H) };
+      if (H.carry?.j) { const J = H.carry.j; J.mark = NaN; J.ret = false; J.half = -1; }   // (an adopted carrier: read afresh)
+    }
+    this.base = null;
+    this.stats.hostChanges = (this.stats.hostChanges || 0) + 1;
     this.wire.snapshot(this._full());
   }
+  _newestT(a) { const s = this.wire.newest?.(a); return s ? s.t : -1; }
 
   // ================================================================== the HUD / tests / bots
   // the prompt line for actor a (main.js, the light tutorial line)
@@ -762,7 +798,8 @@ export class Bazookarp {
     if (!a || !a.alive || this.winner != null) return null;
     const T = a.team;
     if (this.holder === a) {
-      if (!this.lowered[T]) return this.clock < 20 && !this._toldCharge ? 'Hold [FIRE] to charge a Carp Shot · carry it to a weir' : 'Land it on a weir to open their Dragon Gate';
+      // (the charge line for each player's FIRST carry, whenever it comes — SPEC §1.1)
+      if (!this.lowered[T]) return !this.carriedOnce.has(a) ? 'Hold [FIRE] to charge a Carp Shot · carry it to a weir' : 'Land it on a weir to open their Dragon Gate';
       return 'Into the Dragon Gate for a knockout!';
     }
     if (this.phase === 'free' && Math.hypot(a.pos.x - this.pos.x, a.pos.z - this.pos.z) < 12) return 'Run into the Bazookarp to grab it';

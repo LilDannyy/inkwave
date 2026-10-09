@@ -14,7 +14,7 @@
 import { G } from '../core/ctx.js';
 
 export class KarpWire {
-  constructor() { this.h = {}; this.log = { rec: 0, snap: 0, claim: 0, rate: 0, foot: 0, decline: 0 }; }
+  constructor() { this.h = {}; this.log = { rec: 0, snap: 0, claim: 0, rate: 0, foot: 0, decline: 0, refused: 0 }; }
   on(kind, fn) { (this.h[kind] || (this.h[kind] = [])).push(fn); return () => { const l = this.h[kind]; const i = l.indexOf(fn); if (i >= 0) l.splice(i, 1); }; }
   _emit(kind, d) { for (const f of this.h[kind] || []) f(d); }
   get isHost() { return true; }
@@ -59,17 +59,19 @@ export class NetWire extends KarpWire {
   decline(nid, q) { super.decline(); this._toHost({ k: 'kx', nid, q }); }
   reportRate(nid, rate, why, half, zone) { super.reportRate(); this._toHost({ k: 'kr', nid, rate, why, half, zone: zone ? 1 : 0 }); }
   reportFoot(nid, x, y, z, half, zone) { super.reportFoot(); this._toHost({ k: 'kf', nid, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, z: Math.round(z * 100) / 100, half, zone: zone ? 1 : 0 }); }
-  // host: a guest's message (netmatch onMessage) → the engine's handlers, its sender's clock turned into ours
+  // a message for the engine (netmatch onMessage): the host gets a guest's kc / kx / kr / kf (only for an actor that
+  // guest owns), its sender's clock turned into ours; a guest gets the host's kd (a refused claim, about its own player)
   message(from, d) {
     const a = this.nm?.byNid.get(d.nid);
-    if (!a || (a.owner !== from && d.k !== 'kh')) return;
+    if (!a) return;
+    if (d.k === 'kd') { if (from === this._hostId() && !this.nm.isHost && !a.remote) this._emit('refused', { actor: a, why: d.why }); return; }
+    if (a.owner !== from) return;
     const p = this.nm.peers.get(from);
     switch (d.k) {
       case 'kc': this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0) }); break;
       case 'kx': this._emit('decline', { actor: a, q: d.q }); break;
       case 'kr': this._emit('rate', { actor: a, rate: d.rate, why: d.why, half: d.half, zone: !!d.zone }); break;
       case 'kf': this._emit('foot', { actor: a, x: d.x, y: d.y, z: d.z, half: d.half, zone: !!d.zone }); break;
-      case 'kd': this._emit('refused', { actor: a }); break;
     }
   }
   // host: a remote carrier's real samples (netmatch keeps them in a.net.buf) with since < t ≤ its owner's playback time

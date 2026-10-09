@@ -788,6 +788,7 @@ export class NetMatch {
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
     }
     if (hostChanged && this.isHost) { this.match.follower = false; this.clockT = 0; }
+    if (hostChanged) this.match.karp?.onHostChange(this.isHost);   // [b5-karp] the new host runs the rules; a carrying guest re-reports
     if (hostChanged) this.match.stage?.hostChanged(this.isHost);   // [b5-stagehooks]
     // the boss moves with the host: the new host adopts it from what it was showing; everyone else glides onto its path
     if (hostChanged && this.match.boss) { if (this.isHost) this.match.boss.adopt(); else this.match.boss.handoff(); }
