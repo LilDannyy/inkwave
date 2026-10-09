@@ -185,7 +185,7 @@ function use(subs, a, sub) {
 }
 // Online, a remote player's boomerang is a ghost: out, hover, home and orbit play the same (its ink is its owner's to
 // send, its hits are dropped), but its owner decides how it ends: [3, gid, x, y, z] it caught a foe (armed there),
-// [1, gid, x, y, z, big] the burst, [2, gid] it fizzled
+// [1, gid, x, y, z, big] the burst, [2, gid] it fizzled; [b5-karp] [4, gid, x, y, z] it stopped on the Roe Shell (hovers)
 function spawn(subs, a, s, P, ghost, gid) {
   const mesh = makeMesh(a.team, subViewScale(KIND));   // [sub-view]
   mesh.position.copy(P.start);
@@ -214,6 +214,7 @@ function ghost(a, d) {
   const it = items.find((x) => x.ghost && x.gid === gid && x.state !== 'dead');
   if (!it) return;
   if (op === 3) { it.prev.copy(it.pos); it.pos.set(d[2], d[3], d[4]); arm(it, null); }
+  else if (op === 4) { it.pos.set(d[2], d[3], d[4]); if (it.state === 'out') toHover(it); }   // [b5-karp] its owner's stopped on the Roe Shell
   else if (op === 1) { it.pos.set(d[2], d[3], d[4]); const s = it.sub; if (d[5]) blast(it, s.hitRadius, s.hitDamageMax, s.hitDamageMin, s.hitPaintRadius, true); else burst(it); }
   else if (op === 2 && it.state !== 'fizzle') { it.state = 'fizzle'; it.t = 0; it.vel.multiplyScalar(0.25); setLoop(it, null); }
 }
@@ -255,18 +256,30 @@ function out(it, dt) {
   it.pos.copy(P.start).addScaledVector(P.dir, s);
   it.vel.copy(P.dir).multiplyScalar((2 * P.len / it.outT) * (1 - u));
   it.spinW = lerp(30, 24, u);
+  // [b5-karp] the Roe Shell stops it as a wall does: it hovers on its surface, shredding it (a foe in front still catches it)
+  const kh = G.objTargets?.meet(it.prev, it.pos, SHELL_PAD);
+  if (kh) it.pos.copy(kh.point);
   if (!it.ghost && contact(it)) return;
   streak(it, 0.29);
+  if (kh) {
+    if (!it.ghost) netRec(it.owner, KIND, [4, it.gid, r3(it.pos.x), r3(it.pos.y), r3(it.pos.z)]);   // (where it stopped)
+    if (nearCam(it.pos)) G.fx?.burst(it.pos, kh.normal, color(it), { count: 8, speed: 3, size: 0.07 });
+    return toHover(it);
+  }
   if (u >= 1) {
     if (it.fromWall) {
       // stopped at a wall: a splat of ink on it where it struck
       credit(it, G.paint.splat(_v.copy(P.wallPoint).addScaledVector(P.wallNormal, 0.1), 0.65, it.team, { seed: Math.random() }));
       if (nearCam(it.pos)) { G.fx?.burst(P.wallPoint, P.wallNormal, color(it), { count: 8, speed: 3, size: 0.07 }); G.audio?.play('ink_hit_wall', { pos: P.wallPoint, volume: 0.6 }); }
     }
-    it.state = 'hover'; it.t = 0; it.tickT = 0; it.paintT = 0;
-    setLoop(it, 'boomerang_whirr', 0.75, 1.35);
+    toHover(it);
   }
 }
+function toHover(it) {
+  it.state = 'hover'; it.t = 0; it.tickT = 0; it.paintT = 0;
+  setLoop(it, 'boomerang_whirr', 0.75, 1.35);
+}
+const SHELL_PAD = 0.35;   // [b5-karp] m: how far off the Roe Shell's surface it stops (as it stops 0.4 m short of a wall)
 
 // ---- hover: spin fast in place, shred what's close (ticks + device damage), ink the floor under it
 function hover(it, dt) {
@@ -298,6 +311,15 @@ function shred(it, dt, paintK) {
       any = true;
     }
     G.subs?.damageArea(it.pos, s.hoverRadius, s.tickDamage, it.team, it.owner);   // [b5-deploy] (by)
+    if (G.objTargets && !it.ghost) for (const t of G.objTargets.targets) {   // [b5-karp] the Roe Shell in reach: a tick each
+      if (!t.hittable()) continue;
+      const c = t.center(), d = it.pos.distanceTo(c);
+      if (d - t.radius() > s.hoverRadius) continue;
+      _v4.copy(it.pos).sub(c).multiplyScalar(d > 1e-4 ? (t.radius() * 0.9) / d : 0).add(c);   // (its nearest surface point)
+      if (!G.physics.los(it.pos, _v4)) continue;
+      G.objTargets.hit(it.owner, s.tickDamage, KIND, _v4.clone(), { special: !!it.sp, target: t });
+      any = true;
+    }
     if (any && nearCam(it.pos)) G.audio?.play('boomerang_shred', { pos: it.pos, volume: 0.7 });
   }
   it.paintT -= dt;
@@ -361,6 +383,11 @@ function orbit(it, dt) {
     it.hitCd.set(e, G.time);
     G.projectiles.applyHit(it.owner, e, s.orbitDamage, KIND);
     if (nearCam(it.pos)) G.audio?.play('boomerang_shred', { pos: it.pos, volume: 0.55, pitch: 0.85 });
+  }
+  if (G.objTargets && !it.ghost) for (const t of G.objTargets.targets) {   // [b5-karp] grazing the Roe Shell (the same cooldown)
+    if (!t.hittable() || it.pos.distanceTo(t.center()) > t.radius() + 0.4 || G.time - (it.hitCd.get(t) ?? -9) < s.orbitHitCd) continue;
+    it.hitCd.set(t, G.time);
+    G.objTargets.hit(it.owner, s.orbitDamage, KIND, it.pos.clone(), { special: !!it.sp, target: t });
   }
   it.paintT -= dt;
   if (it.paintT <= 0) {
@@ -458,6 +485,7 @@ function blast(it, radius, dmgMax, dmgMin, paintR, big) {
     G.projectiles.applyHit(it.owner, e, lerp(dmgMin, dmgMax, k * k), KIND);
   }
   G.subs?.damageArea(c, radius, big ? 60 : 35, it.team, it.owner);   // [b5-deploy] (by)
+  G.objTargets?.splash(it.owner, c, radius, dmgMax, dmgMin, KIND, { special: !!it.sp });   // [b5-karp] the Roe Shell (no boss hook here: SPEC §2.2's grep missed it)
   it.state = 'dead';
 }
 

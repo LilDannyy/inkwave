@@ -275,8 +275,11 @@ function advance(b, dist) {
   while (remain > 1e-5 && b.state === 'fly' && guard++ < 24) {
     const step = Math.min(remain, b.left);
     const w = G.physics.raycast(b.pos, b.dir, step, _hit, true);   // grates: straight through
-    const seg = w.hit ? w.dist : step;
+    let seg = w.hit ? w.dist : step;
     _end.copy(b.pos).addScaledVector(b.dir, seg);
+    // [b5-karp] the Roe Shell stops it (before a wall or a foe behind it): this stretch ends on its surface
+    const kh = G.objTargets ? G.objTargets.segHit(b.pos, _end, s.size) : null, kt = kh && kh.target;
+    if (kh) { seg *= kh.t; _end.copy(kh.point); }
     // a foe on this stretch (the earliest one)
     let best = null, bt = 2;
     if (!b.ghost) for (const e of G.actors) {   // (a ghost's foe hit is its owner's call)
@@ -295,6 +298,14 @@ function advance(b, dist) {
     // enemy curtains / shields / devices / bubbles stop it
     if (G.subs?.blockShot(b.pos, _end, b.team, s.directDamage, b.owner) || G.specials?.shotHit?.(b.pos, _end, b.team, s.directDamage, b.owner)) {   // [b5-deploy] (by)
       b.pos.copy(_end); addPoint(b); b.path.push(b.pos.clone());
+      end(b, 'blocked');
+      return;
+    }
+    if (kt) {   // [b5-karp] on the shell: its direct damage counts there (the owner's bolt), and it ends
+      b.pos.copy(_end); addPoint(b); b.path.push(b.pos.clone());
+      b.karp = true;
+      if (!b.ghost) G.objTargets.hit(b.owner, s.directDamage, 'tracer', b.pos.clone(), { special: b.sp, target: kt });
+      if (nearCam(b.pos, 34)) G.fx?.burst(b.pos, _v.copy(b.dir).negate(), G.teamColors[b.team], { count: 10, speed: 4, size: 0.08 });
       end(b, 'blocked');
       return;
     }
@@ -374,6 +385,25 @@ function trailTouch(b) {
       break;
     }
   }
+  // [b5-karp] the trail grazing the Roe Shell: its trail damage once a bolt (a bolt that struck it has counted already)
+  if (G.objTargets && !b.ghost && !b.karp) for (const t of G.objTargets.targets) {
+    if (!t.hittable()) continue;
+    const c = t.center(), reach = t.radius() + s.trailRadius;
+    for (let i = 0; i < n - 1; i++) {
+      const a = P[i], q = P[i + 1];
+      if (clock - a.b > life || segPoint(a.p, q.p, c, _v) >= reach) continue;
+      b.karp = true;
+      G.objTargets.hit(b.owner, s.trailDamage, 'tracer', _v.clone(), { special: b.sp, target: t });
+      break;
+    }
+  }
+}
+// [b5-karp] the distance from p to the segment a → b (out: the nearest point on it)
+function segPoint(a, b, p, out) {
+  out.subVectors(b, a);
+  const L2 = out.lengthSq(), k = L2 > 1e-9 ? clamp(_v2.subVectors(p, a).dot(out) / L2, 0, 1) : 0;
+  out.multiplyScalar(k).add(a);
+  return out.distanceTo(p);
 }
 function poseHead(b) {
   const H = b.head;
