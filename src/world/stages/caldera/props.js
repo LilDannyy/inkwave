@@ -9,7 +9,7 @@
 //   caldera_hall_roof    the Casting Hall's north-light sawtooth roof, chimneys and round furnace window
 //   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
 // No colliders here: every collider is a layout piece (layout.js).
-import { RAILS, GANTRY_RAILS, WALL_BOXES } from './layout.js';
+import { RAILS, GANTRY_RAILS, WALL_BOXES, OFFICE } from './layout.js';
 import { REGION_ALL, inPoly, HALL_LINE, PAD } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA } from './lava.js';
 
@@ -189,9 +189,10 @@ export function register(D, H) {
   D.caldera_office_roof = {
     build(B) {
       // two storeys: a verdigris hipped roof, works-green window bands, the Surge Board frame on its south face
-      B.lathe('paint', K.verd, [[0, 1.8], [0.05, 1.8], [6.1, 0.0], [0, 0.0]], 0, 9.5, 0, { seg: 4, ry: PI / 4 });
-      for (const y of [5.6, 8.0]) for (const sz of [-1, 1]) B.box(NS('paint'), K.green, 7.6, 0.9, 0.08, 0, y, sz * 4.03);
-      B.box('paint', K.cream, 3.0, 1.8, 0.2, 1.2, 6.2, -4.12, { r: 0.03 });
+      const hw = (OFFICE.x1 - OFFICE.x0) / 2;
+      B.lathe('paint', K.verd, [[0, 1.6], [0.05, 1.6], [hw * Math.SQRT2 + 0.3, 0.0], [0, 0.0]], 0, 9.5, 0, { seg: 4, ry: PI / 4 });
+      for (const y of [5.6, 8.0]) for (const s of [-1, 1]) { B.box(NS('paint'), K.green, 2 * hw - 0.4, 0.9, 0.08, 0, y, s * (hw + 0.03)); B.box(NS('paint'), K.green, 0.08, 0.9, 2 * hw - 0.4, s * (hw + 0.03), y, 0); }
+      B.box('paint', K.cream, 0.2, 1.8, 3.0, hw + 0.12, 6.2, 0, { r: 0.03 });   // the Surge Board's frame on its east face
     },
   };
 }
@@ -205,4 +206,6 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
+  { type: 'caldera_cupola_hood', pos: [-3.2, 0, -64.3] },
+  { type: 'caldera_office_roof', pos: [(OFFICE.x0 + OFFICE.x1) / 2, 0, (OFFICE.z0 + OFFICE.z1) / 2] },
 ];

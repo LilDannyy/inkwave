@@ -155,7 +155,9 @@ const IE = (r, dt) => { const a = (RACE2_A - 180) * D, u = [Math.cos(a), Math.si
 const ISLAND_E = [[0, -11.5], [5, -11.5], [7.8, -10.9], [10.4, -9.2], [12.6, -7.2], [14.4, -6.0], IE(16.2, -2.2), IE(16.2, 2.6), [15.4, 5.4], [13.6, 7.6], [12.8, 9.0]];
 const ISLAND_HALF = [...ISLAND_E, ...NOTCH_B, [5, 11.5]];
 export const ISLAND = [...ISLAND_HALF, ...rotPoly(ISLAND_HALF)];
-export const CAUSE_Z = -Math.sqrt(RS * RS - 16);             // the causeway's foot on the shore (x ±4)
+export const CW = 5.0;                                       // the causeway's half-width (10 m: the HIGH middle band ≥ Halyard's floor)
+export const CAUSE_Z = -Math.sqrt(RS * RS - CW * CW);        // the causeway's foot on the shore (x ±5)
+const TC = [angOf(-CW, CAUSE_Z), angOf(CW, CAUSE_Z)];          // the foot's corners on the shore (θ)
 
 // the yard (3.6): the yard front from the bay shore west to θ −126, the Rim Head's edge, the head's west curve, the hall,
 // the gallery's notch and the head's east side back to the bay shore. The Rim Head (4.2, natural rock) is its own crest
@@ -166,10 +168,10 @@ export const RIM_HEAD = [SP(RY, TW), ...RH_FACE, ...HEAD_WEST.slice(12).reverse(
 export const RH_REGION = RIM_HEAD;
 export const ST_LOWER = chordA(RT, -100, -89);               // Lower Surge Steps (Lakefront → terrace), ~6 m
 export const ST_EAST = chordA(RT, -74, -69.5);               // East Steps (Lakefront → terrace), ~2.2 m
-export const ST_UPPER = chordA(RY, -110, -104);              // Upper Surge Steps (terrace → yard), ~4.3 m
-export const ST_CUPOLA = chordA(RY, -95, -91);               // Bay Stair (terrace → yard, by the bay), ~2.6 m
+export const ST_UPPER = chordA(RY, -116, -110);              // Upper Surge Steps (terrace → yard), ~4.8 m
+export const ST_CUPOLA = chordA(RY, -100, -96.5);            // Bay Stair (terrace → yard, by the bay), ~2.3 m
 // the tower's two climbs (Bravo's track on Alpha's half, the turn of TOWER's): a plain 1.2 m face square to the track
-export const TW_X = [-8.0, -22.5];                           // the track's terrace climb (x −8) and yard climb (x −22.5)
+export const TW_X = [-19.5, -9.0];                           // the track's terrace climb (x −19.5, off the Moorings) and yard climb (x −9)
 export const CHORD_T = chordZ(RT, TW_X[0] - 1.6, TW_X[0] + 1.6);
 export const CHORD_Y = chordZ(RY, TW_X[1] - 1.6, TW_X[1] + 1.6);
 export const FRONT_T = (a0, a1) => sarcF(RT, a0, a1, [ST_LOWER, ST_EAST, CHORD_T], 4);
@@ -202,19 +204,23 @@ export const TIP_N = [sp(S1, 0, -FACE), sp(S1, 0, FACE)];
 export const SHELF_S = [P(SH_IN, SA0), SLUMP_SW];            // the shelf's south edge (lake → cliff)
 export const LAKEFRONT = [
   W0, QW, ...FRONT_T(TQ, TW).slice(1), RH_FACE[1], SLUMP_SW, SHELF_S[0], TIP_S[0], TIP_S[1],
-  ...sarcF(RSF, -132, -100.1), [-4, r3(CAUSE_Z)], [4, r3(CAUSE_Z)], ...arc(RS, -79.9, -62).slice(0, -1),
+  ...sarcF(RSF, -132, TC[0] + 0.01), [-CW, r3(CAUSE_Z)], [CW, r3(CAUSE_Z)], ...arc(RS, TC[1] - 0.01, -62).slice(0, -1),
 ];
 // the Pumice Moorings (1.8, on the Lakefront): Alpha's side zone, against the terrace face and the Rim Head's face
 export const MOOR_A = [-113, -132];
+export const MOOR_X = -11.0;                                 // the Moorings' east edge: square to the tower's Lakefront run
 const onSeg = ([ax, az], [bx, bz], a) => {   // where the ray at θ a crosses the segment a → b
   const u = [Math.cos(a * D), Math.sin(a * D)], dx = bx - ax, dz = bz - az, t = (ax * u[1] - az * u[0]) / (dz * u[0] - dx * u[1]);
   return [r3(ax + dx * t), r3(az + dz * t)];
 };
-export const MOORINGS = [...sarcF((a) => RSF(a) + 0.6, MOOR_A[0], MOOR_A[1], [], 2), onSeg(RH_FACE[0], RH_FACE[1], MOOR_A[1]), RH_FACE[0], ...FRONT_T(TW, MOOR_A[0])];
+export const MOORINGS = (() => {
+  const fs = (a) => RSF(a) + 0.6, a0 = thetaAtX(fs, MOOR_X), a1 = thetaAtX(RT, MOOR_X);
+  return [[MOOR_X, r3(SP(fs, a0)[1])], ...sarcF(fs, a0, MOOR_A[1], [], 2).slice(1), onSeg(RH_FACE[0], RH_FACE[1], MOOR_A[1]), RH_FACE[0], ...FRONT_T(TW, a1).slice(0, -1), [MOOR_X, r3(SP(RT, a1)[1])]];
+})();
 // the Casting Floor and the Spillway ford (0, LOW only): one ledge from the causeway's east side across the moat's SE
 // quarter and the arm's mouth to the Horn Step; its NE edge faces the East Pool, its SE edge the arm's lava
 export const E0 = A(S_E0, AW);
-export const LEDGE_E = [[4, r3(CAUSE_Z)], ...arc(RS, -79.9, -62).slice(1), A(FORD_S1, -AW), A(FORD_S1, AW), E0, [14.4, -6.0], [12.6, -7.2], [10.4, -9.2], [7.8, -10.9], [5, -11.5], [4, -11.5]];
+export const LEDGE_E = [[CW, r3(CAUSE_Z)], ...arc(RS, TC[1] - 0.01, -62).slice(1), A(FORD_S1, -AW), A(FORD_S1, AW), E0, [14.4, -6.0], [12.6, -7.2], [10.4, -9.2], [7.8, -10.9], [CW, -11.5]];
 // the Slump shelf (0): the flank that drowns, at the cliff's foot, 4.5 m wide at the south head narrowing to 3.5 m
 export const SHELF = [SHELF_S[0], SHELF_S[1], ...sarcF(SHO, SA0, SA1).slice(1, -1), SP(SHO, SA1), P(SH_IN, SA1), ...arc(SH_IN, SA1, SA0).slice(1, -1)];
 
