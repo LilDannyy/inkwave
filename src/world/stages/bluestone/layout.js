@@ -36,7 +36,7 @@ import { PATTERN, B, R as R0, O, OCT } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { ERA, eraFilter } from './era.js';
-import { BOT, TIER_Y, coverRects, bars, reflexPatches, junctionPatches, coreBoxes, tierBoxes, symOutline, rectPoly, oPoly, polyArea } from './ground.js';
+import { BOT, TIER_Y, coverRects, bars, reflexPatches, junctionPatches, coreBoxes, tierBoxes, symOutline, rectPoly, oPoly, polyArea, uncovered } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------ frames
 // a stair / ramp (a solid wedge): its sides and end caps are buried or hidden, so only its top is turf (paint atlas)
@@ -504,12 +504,15 @@ const YARD_SLAB = (() => {
   const R0 = coverRects(YARD, { x0: -41, x1: -24, z0: -37, z1: -16 });
   GROUND_MISS.push(...R0.miss);
   const n = YARD.length, diag = (i) => { const a = YARD[i], b = YARD[(i + 1) % n]; return Math.abs(a[0] - b[0]) > 1e-3 && Math.abs(a[1] - b[1]) > 1e-3; };
-  return [
+  const bed = [
     ...R0.rects.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y, z0, z1, { tag: 'signal-yard', ...yardCol })),
     ...bars(YARD, { only: diag, trim: true, level: (i) => YARD_Y - 0.1 - 0.08 * (i % 2), opts: { tag: 'signal-yard-kerb', ...yardCol, color: '#5f6870' } }),
     ...reflexPatches(YARD, { only: (i) => diag(i) && diag((i + n - 1) % n), top: YARD_Y - 0.32, opts: { tag: 'signal-yard-kerb', ...yardCol } }),
-    ...YARD_FENCE,
   ];
+  // (fix round 3: the gaps the cores and the trimmed bars leave at the bed's sharp corners — voids down to the water, under
+  //  the garden in the 3000s — filled at 0.76, under the kerb bars' tops)
+  const holes = uncovered(YARD, bed, { x0: -41, x1: -24, z0: -37, z1: -16 }, 0.125);
+  return [...bed, ...holes.map(([x0, x1, z0, z1]) => B(x0, x1, BOT, YARD_Y - 0.14, z0, z1, { tag: 'signal-yard-kerb', ...yardCol })), ...YARD_FENCE];
 })();
 const SIGNAL_GARDEN = (() => {
   const out = [];

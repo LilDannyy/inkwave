@@ -175,6 +175,30 @@ export function junctionPatches(poly, { barred, level, size = 1.2, y0 = BOT, opt
   return out;
 }
 export const coreBoxes = (rects, y1, opts, y0 = BOT) => rects.map(([x0, x1, z0, z1]) => B(x0, x1, y0, y1, z0, z1, opts));
+
+// The cells of `poly` (on a `cell` raster inside `win`, every corner inside the region) that none of `defs` (boxes and
+// oboxes, by their footprints) covers, as rectangles: the gaps a raster of cores and trimmed bars leaves at a region's
+// sharp corners (fix round 3: the signal yard's tips were voids down to the water). Pure geometry, no three.
+export function uncovered(poly, defs, win, cell = 0.25) {
+  const foot = defs.filter((d) => d.kind === 'box' || d.kind === 'obox').map((d) => {
+    if (d.kind === 'box') return { box: [d.min[0], d.max[0], d.min[2], d.max[2]] };
+    const a = (d.rotY * Math.PI) / 180;
+    return { c: [d.center[0], d.center[2]], hw: d.size[0] / 2, hd: d.size[2] / 2, u: [Math.cos(a), -Math.sin(a)], v: [Math.sin(a), Math.cos(a)] };
+  });
+  const covered = (x, z) => foot.some((f) => {
+    if (f.box) return x >= f.box[0] - 1e-6 && x <= f.box[1] + 1e-6 && z >= f.box[2] - 1e-6 && z <= f.box[3] + 1e-6;
+    const dx = x - f.c[0], dz = z - f.c[1];
+    return Math.abs(dx * f.u[0] + dz * f.u[1]) <= f.hw + 1e-6 && Math.abs(dx * f.v[0] + dz * f.v[1]) <= f.hd + 1e-6;
+  });
+  const nx = Math.round((win.x1 - win.x0) / cell), nz = Math.round((win.z1 - win.z0) / cell), mask = new Uint8Array(nx * nz);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const x0 = win.x0 + i * cell, z0 = win.z0 + j * cell, cs = [[x0, z0], [x0 + cell, z0], [x0 + cell, z0 + cell], [x0, z0 + cell], [x0 + cell / 2, z0 + cell / 2]];
+    if (!cs.every(([x, z]) => inPoly(poly, x, z) && edgeDist(poly, x, z) > 0.01)) continue;
+    if (cs.some(([x, z]) => covered(x, z))) continue;   // (only cells nothing touches: a filler never overlaps a piece)
+    mask[j * nx + i] = 1;
+  }
+  return coverRects(poly, win, { cell, inset: () => false, mask }).rects;
+}
 // a raised core: a base below the street (not inkable: its sides are buried or under water) and the tier above it, so
 // the paint atlas only holds what shows
 // (the base stops 0.7 under the street so it never shares a top with the street, its kerb bars or patches; the street's
