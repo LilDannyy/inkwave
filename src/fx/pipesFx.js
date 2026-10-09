@@ -112,7 +112,7 @@ varying vec2 vUv; varying float vGlow;
 void main() { vUv = aRect.xy + uv * aRect.zw; vGlow = aGlow; gl_Position = projectionMatrix * viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0); }`;
 const SIGN_FS = /* glsl */`
 uniform sampler2D uMap; varying vec2 vUv; varying float vGlow;
-void main() { vec4 t = texture2D(uMap, vUv); if (t.a < 0.03) discard; gl_FragColor = vec4(t.rgb * vGlow, t.a); }`;
+void main() { if (vGlow <= 0.001) discard; vec4 t = texture2D(uMap, vUv); if (t.a < 0.03) discard; gl_FragColor = vec4(t.rgb * vGlow, t.a); }`;
 
 // the underwater grade: a full-screen tint, vignette and caustic shimmer
 const UW_VS = /* glsl */`varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
@@ -219,12 +219,15 @@ export class PipeLooks {
     for (const leg of this.X.legs) {
       const color = leg.look.collars === 'brass' ? '#a8895a' : '#5f8a7d';
       const gap = leg.look.collars === 'brass' ? 3.0 : 4.0;
-      for (let s = 1.2; s < leg.len - 0.6; s += gap) {
-        if (hiddenAt(leg, s)) continue;
+      for (let s = 1.2; s < leg.len - 0.6; ) {
         legAt(leg, s, q);
+        const over = Math.abs(q.ty) < 0.2 && q.y > 6;
+        const next = s + (over ? 7.0 : gap);
+        if (hiddenAt(leg, s)) { s = next; continue; }
+        s = next;
         _qt.setFromUnitVectors(UP, _p.set(q.tx, q.ty, q.tz));
         _m.compose(_s.set(q.x, q.y, q.z), _qt, new THREE.Vector3(1, 1, 1));
-        add(new THREE.CylinderGeometry(0.985, 0.985, 0.26, 18, 1, true), color, _m);
+        add(new THREE.CylinderGeometry(0.95, 0.95, 0.14, 18, 1, true), color, _m);
         // under an overhead run: a saddle and a post down to a roof / wall top close below (no spine over the span)
         if (Math.abs(q.ty) < 0.2 && L && q.y > 4) {
           const gy = L.groundHeight(q.x, q.z, q.y - R_GLASS - 0.05);
@@ -253,7 +256,7 @@ export class PipeLooks {
   _mouths() {
     const E = this.X.ends, n = E.length;
     // rings
-    this.rings = new THREE.InstancedMesh(new THREE.TorusGeometry(0.97, 0.085, 8, 30), new THREE.MeshBasicMaterial({ toneMapped: false }), n);
+    this.rings = new THREE.InstancedMesh(this._ringGeo(), new THREE.MeshBasicMaterial({ toneMapped: false, vertexColors: true }), n);
     this.rings.name = 'pipes:rings';
     this.ringCol = E.map(() => new THREE.Color('#fff'));
     this.endQ = E.map((e) => new THREE.Quaternion().setFromUnitVectors(Z, new THREE.Vector3(e.out[0], 0, e.out[2])));
@@ -278,6 +281,18 @@ export class PipeLooks {
     this.lit = E.map(() => ({ team: -1, fast: false }));
     this.pulse = new Float32Array(n);
   }
+  // the mouth: its lit ring and, inside it, the dark bore of the tube (vertex colours: the ring white, the bore near black —
+  // times each instance's colour, so only the ring takes the light)
+  _ringGeo() {
+    const ring = new THREE.TorusGeometry(0.97, 0.085, 8, 30).toNonIndexed(), bore = new THREE.CircleGeometry(0.9, 30).toNonIndexed();
+    bore.translate(0, 0, -0.012);
+    const parts = [[ring, 1], [bore, 0.035]];
+    let n = 0; for (const [g] of parts) n += g.attributes.position.count;
+    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3); let o = 0;
+    for (const [g, c] of parts) { pos.set(g.attributes.position.array, o * 3); col.fill(c, o * 3, (o + g.attributes.position.count) * 3); o += g.attributes.position.count; }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    return geo;
+  }
   _fanGeo() {
     const parts = [new THREE.CylinderGeometry(0.16, 0.16, 0.12, 12)];
     for (let k = 0; k < 4; k++) { const b = new THREE.BoxGeometry(0.2, 0.04, 0.66); b.translate(0, 0, 0.42); b.rotateX(0.35); b.rotateY((k * Math.PI) / 2); parts.push(b); }
@@ -296,7 +311,7 @@ export class PipeLooks {
     // slots: one per end (its sign), then the arrow glyph
     this.signSlot = E.map((e, i) => i);
     this.arrowSlot = E.length;
-    this.arrowEnds = E.filter((e) => this.X.legs[e.leg].way !== 'two');
+    this.arrowEnds = E.filter((e) => this.X.legs[e.leg].way !== 'two' && e.inWhen !== 'never');
     const n = E.length + this.arrowEnds.length;
     const geo = new THREE.PlaneGeometry(1, 1);
     const rect = new THREE.InstancedBufferAttribute(new Float32Array(n * 4), 4), glow = new THREE.InstancedBufferAttribute(new Float32Array(n).fill(1), 1);
@@ -480,7 +495,7 @@ export class PipeLooks {
       this.fanA[j] += this.fanW[j] * dt;
       const q = this.endQ[e.i];
       _qt.setFromAxisAngle(Z, this.fanA[j]); _qt.premultiply(q);
-      _m.compose(_p.set(e.pos[0] - e.out[0] * 0.55, e.pos[1], e.pos[2] - e.out[2] * 0.55), _qt, _s.setScalar(isIn ? 1 : 0.0001));
+      _m.compose(_p.set(e.pos[0] + e.out[0] * 0.07, e.pos[1], e.pos[2] + e.out[2] * 0.07), _qt, _s.setScalar(isIn ? 1 : 0.0001));   // (in the bore's mouth)
       this.fans.setMatrixAt(j, _m);
     }
     this.fans.instanceMatrix.needsUpdate = true;
@@ -493,7 +508,7 @@ export class PipeLooks {
       let ang = this.flapA[i];
       if (this.rattleT[i] > 0) { this.rattleT[i] -= dt; ang += 0.07 * Math.sin(this.t * 60) * (this.rattleT[i] / 0.45); }
       _qt.setFromEuler(_e.set(-ang, 0, 0)); _qt.premultiply(this.endQ[i]);
-      _m.compose(_p.set(e.pos[0] + e.out[0] * 0.02, e.pos[1] + 0.8, e.pos[2] + e.out[2] * 0.02), _qt, _s.setScalar(isOut ? 1 : 0.0001));
+      _m.compose(_p.set(e.pos[0] + e.out[0] * 0.1, e.pos[1] + 0.8, e.pos[2] + e.out[2] * 0.1), _qt, _s.setScalar(isOut ? 1 : 0.0001));
       this.flaps.setMatrixAt(i, _m);
     }
     this.flaps.instanceMatrix.needsUpdate = true;

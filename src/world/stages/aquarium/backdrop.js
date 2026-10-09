@@ -89,8 +89,8 @@ function tideGauges(T, merge) {
     c.strokeStyle = '#2c2a30'; c.lineWidth = 3;
     for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2, r0 = i % 6 ? 108 : 98; c.beginPath(); c.moveTo(128 + Math.cos(a) * r0, 128 + Math.sin(a) * r0); c.lineTo(128 + Math.cos(a) * 120, 128 + Math.sin(a) * 120); c.stroke(); }
     c.fillStyle = '#15121c'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.font = '900 34px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText('▲ UP', 128, 62); c.fillText('▼ DOWN', 128, 194);
-    c.font = '800 15px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText('KELP LINES', 128, 128 - 26);
+    c.font = '900 44px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText('▲ UP', 128, 58); c.fillText('▼ DOWN', 128, 200);
+    c.font = '800 17px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText('KELP LINES', 70, 128); c.fillText('TIDE', 190, 128);
     tex = new T.CanvasTexture(cv); tex.colorSpace = T.SRGBColorSpace;
   }
   const discs = faces.map((f) => { const g = new T.CircleGeometry(R - 0.04, 40).toNonIndexed(); g.rotateY(f.yaw); g.translate(f.x, f.y, f.z); return g; });
@@ -100,7 +100,8 @@ function tideGauges(T, merge) {
   const faceMesh = new T.Mesh(faceGeo, new T.MeshBasicMaterial({ map: tex, color: tex ? '#ffffff' : '#f4efe1' }));
   faceMesh.name = 'aq-gauge-face';
   // the needles (instanced) and the red countdown segments (instanced: ten per face round its right half)
-  const ng = new T.BoxGeometry(0.11, 0.95, 0.04); ng.translate(0, 0.42, 0);
+  // the needle: a shaft and an arrowhead, pointing up its local +y
+  const ng = (() => { const sh = new T.BoxGeometry(0.09, 0.62, 0.04).toNonIndexed(); sh.translate(0, 0.28, 0); const hd = new T.ConeGeometry(0.17, 0.32, 3).toNonIndexed(); hd.translate(0, 0.74, 0); const hub = new T.CylinderGeometry(0.1, 0.1, 0.05, 12).toNonIndexed(); hub.rotateX(Math.PI / 2); return merge([sh, hd, hub]); })();
   const needles = new T.InstancedMesh(ng, new T.MeshBasicMaterial({ color: '#15121c' }), faces.length);
   needles.name = 'aq-gauge-needle';
   const sg = new T.RingGeometry(0.62, 0.92, 4, 1, 0, (16 * Math.PI) / 180);

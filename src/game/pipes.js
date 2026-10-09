@@ -469,7 +469,10 @@ export class StagePipes {
     if (!p.chimed && left <= PIPES.chime) { p.chimed = true; this._chime(p, a); }
     if (u >= L - 1e-6) {
       if (own) this._pop(a, p);
-      else { p.held = true; const e = this.ends[p.exit]; a.pos.set(e.pos[0], e.pos[1] - 0.3, e.pos[2]); a.vel.set(0, 0, 0); }
+      else {   // (a proxy at the end before the owner's [1]: held in the mouth; its exit goes dark now, as on the owner's screen)
+        if (!p.held) { p.held = true; this._unlight(p); }
+        const e = this.ends[p.exit]; a.pos.set(e.pos[0], e.pos[1] - 0.3, e.pos[2]); a.vel.set(0, 0, 0);
+      }
     }
   }
   // no ground, no swim, no climb while the module carries the body (the anim reads these)
