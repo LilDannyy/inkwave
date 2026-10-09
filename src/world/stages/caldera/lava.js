@@ -11,7 +11,7 @@
 //   • at HIGH every floor the lava covers (the Slump shelves, the Spillways, the Casting Floors: tops at 0) is left out
 //     of the build, so the nav, the cover map, spawn-mid and the bots see it as gone,
 //   • props.js draws a placeholder lava surface at the level over the whole region.
-import { P, ch, sp, rot, S0, S1, FACE, S_LIP, LAKE, SPILL, SLUMP, CHUTE, STONES, STONE_YAW, ORG, POSE, DEPTH } from './geo.js';
+import { P, ch, sp, rot, S0, S1, FACE, S_LIP, LAKE, SPILL, SLUMP, CHUTE, STONES, STONE_YAW, ORG, POSE, DEPTH, LIP_C, LIP_N, r3 } from './geo.js';
 
 export const BLOCKOUT_LAVA = true;
 export const LAVA_VIEW = (() => {
@@ -22,6 +22,8 @@ export const LAVA_VIEW = (() => {
 })();
 export const LAVA_Y = LAVA_VIEW === 'high' ? 0.8 : -0.6;
 
+// the boulder on stone 3, in the stone's frame (x across the line, toward the island; z along it)
+export const RACE_BOULDER = { x: 0.85, z: 0, w: 1.0, d: 1.0, y0: 0, y1: 1.0, ink: false };
 export const LAVA = {
   low: -0.6,
   high: 0.8,                                     // the high mark: the stain line (rind) at 0.8 on every face in the region
@@ -40,8 +42,12 @@ export const LAVA = {
   mirror: true,
   riders: [
     // the Pumice Race: sink stones; top = L + 0.45 while up; solid while top ≥ L + 0.15; surface / sink timed to the shelf
+    // (fix round 2: stone 3 carries a 1.0 m pumice boulder on its island side, a rider part like Organ L's stub: cover on
+    // the Race, which was 15 m of bare crossing in full view of the island; 1.8 m of the stone stays walkable beside it,
+    // clear of the overlaps with stones 2 and 4 the steps cross. 32 rider parts of the 40 with the twins)
     ...STONES.map(([x, z, w, d], i) => ({ id: 'race' + (i + 1), kind: 'stone', pos: [x, z], size: [w, d], yaw: STONE_YAW,
       top: [-0.15, 1.25], depth: 0.9, sink: { at: -0.15, ease: 2.4, rel: [-0.45, 0.45] },
+      ...(i === 2 ? { parts: [RACE_BOULDER] } : {}),
       look: { type: 'caldera_pumice', variant: i, chain: [-21.2, -19.6] } })),
     // the Organ Pipes (Alpha's cluster, SSW): hexagonal basalt columns, corners on ±x, in a line along z
     { id: 'organL', kind: 'float', shape: 'hex', pos: [-10, -12.80], r: 2.5, top: [2.3, 4.65], depth: 4.2, ink: 'all',
@@ -64,8 +70,8 @@ export const LAVA = {
   ],
   // (fix round 1: each Spillway's outer half (s 28 → the lip) is lava at both levels, so its lip sits at the LOW level
   // and the lavafall pours at both levels: a thin fall at LOW, a full one at HIGH; the vent there is a pool vent now)
-  cascades: [{ lip: [[18.81, -28.81], [26.69, -21.72]], y: -0.65, drop: 14 }],    // Alpha's Spillway lip (twin: Bravo's)
-  vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [23.27, -0.6, -22.11]],   // pools and floor drains (8 with twins)
+  cascades: [{ lip: [LIP_C.map((v) => r3(v * 0.99)), LIP_N.map((v) => r3(v * 0.99))], y: -0.65, drop: 14 }],    // Alpha's Spillway lip, the fan's whole width (twin: Bravo's)
+  vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [24.6, -0.6, -20.5]],   // pools, a floor drain, the fan (8 with twins)
   flotsam: { count: 48, size: [0.3, 0.9], keepOff: 1.0 },  // cosmetic pumice drifting on the open lava, no collider
   look: { crust: 'ember', cone: [230, 0, 150] },           // warm charcoal-maroon crust, lit seams (§5.3); the Bellows Vent
   text: {
@@ -73,7 +79,7 @@ export const LAVA = {
     rise: ['SURGE!', 'The Pumice Race is coming up'],
     high: ['HIGH MARK', 'Race up · Organ Pipes up'],
     warnFall: ['LAVA FALLING', 'The stones sink in {n}'],
-    low: ['EBB', 'Slump shelf, Spillway and casting floor open'],
+    low: ['EBB', 'Slump shelf and casting floor open'],
     hold: ['LAVA HOLDS', ''],
   },
 };
@@ -100,6 +106,9 @@ export function riderStandIns(mk) {
   }
   if (e === 1) {
     STONES.forEach(([x, z, w, d], i) => out.push({ kind: 'obox', center: [x, (0.35 + 1.25) / 2, z], size: [w, 0.9, d], rotY: STONE_YAW, ...mk('stone', { tag: 'race' + (i + 1), perch: true }) }));
+    // the boulder on stone 3 (a roof: you hide behind it, you slide off it)
+    { const [x, z] = STONES[2], a = STONE_YAW * DEGR, ax = [Math.cos(a), -Math.sin(a)], b = RACE_BOULDER;
+      out.push({ kind: 'obox', center: [x + ax[0] * b.x, 1.25 + (b.y1 - b.y0) / 2, z + ax[1] * b.x], size: [b.w, b.y1 - b.y0, b.d], rotY: STONE_YAW, ...mk('organ-stub', { tag: 'race-boulder', paint: false, color: '#a9a39a' }) }); }
   }
   void DEGR;
   return out;

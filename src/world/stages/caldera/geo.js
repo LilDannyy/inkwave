@@ -6,6 +6,15 @@
 // radius r and angle θ. Alpha spawns at −z. Tiers: 0 ledges (drown) · 1.2 quays, island, causeways, Slump heads · 1.8
 // Pour Floor and Moorings · 2.4 terrace, Ladle Road, horn tips · 3.0 pit and casting bed · 3.6 yard, Rim Head, Rim Ridge
 // · 4.8 spawn gallery. The lava: LOW −0.6, HIGH +0.8.
+//
+// FIX ROUND 2 — the plan is redrawn as two interlocking commas (the review: "concentric rings between two rectangular
+// base ends"). Each half is one comma whose outer edge is a single spiral: it is deepest behind the spawn gallery's
+// east end, sweeps clockwise round the turned Casting Hall, the yard's west side and the Rim Head (r 44.5), bites in at
+// the Slump (cliff r 31.5 → 31.0) and tapers along the Rim Ridge (31 → 27) to the horn's point (r ≤ 24.5) at the
+// enemy's Spillway mouth. Inside it, the base's tier fronts are spirals too, not arcs round the island: they rise
+// from the Spillway side to the Rim Head side (terrace front r 27.5 → 34, yard front r 34.4 → 43), so the Lakefront
+// and the terrace are wedges that fatten toward the comma's root. The spawn gallery and its hall are turned 12° about
+// the pad toward the Rim Head, the hall's front, the side yards' backs and the yard's east side are the head's curve.
 export const D = Math.PI / 180;
 export const r3 = (v) => Math.round(v * 1000) / 1000;
 export const P = (r, a) => [r3(r * Math.cos(a * D)), r3(r * Math.sin(a * D))];
@@ -13,66 +22,131 @@ export const arcN = (a0, a1, step) => Math.max(2, Math.floor(Math.abs(a1 - a0) /
 export const arc = (r, a0, a1, step = 2.5) => { const n = arcN(a0, a1, step); return Array.from({ length: n }, (_, i) => P(r, a0 + ((a1 - a0) * i) / (n - 1))); };
 export const rot = ([x, z]) => [-x, -z];
 export const rotPoly = (poly) => poly.map(rot);
+export const angOf = (x, z) => Math.atan2(z, x) / D;
 
 // Alpha's Spillway: s along the channel (outward, θ −48), t across it (+t toward Bravo's horn tip, θ 42)
 export const SD = [Math.cos(-48 * D), Math.sin(-48 * D)], SN = [Math.cos(42 * D), Math.sin(42 * D)];
 export const ch = (s, t) => [r3(s * SD[0] + t * SN[0]), r3(s * SD[1] + t * SN[1])];
-export const HW = 5.5, S_MOUTH = 22.3, S_LIP = 34.0, S_R30 = Math.sqrt(30 ** 2 - HW ** 2);
+export const toCh = ([x, z]) => [x * SD[0] + z * SD[1], x * SN[0] + z * SN[1]];
+export const HW = 5.5, S_MOUTH = 22.3, S_LIP = 34.0;
 // Alpha's Slump stone line: from the south head (S0) to the north head (S1)
 export const S0 = P(23.5, -143.5), S1 = P(23.5, -178.5);
 export const U = [-0.32555, 0.94552], V = [0.94552, 0.32555];
 export const sp = (b, a, c) => [r3(b[0] + U[0] * a + V[0] * c), r3(b[1] + U[1] * a + V[1] * c)];
 export const FACE = 1.9;
 export const SA0 = -145.5, SA1 = -176.5;          // the Slump shelf's south and north ends (θ)
-// the shelf, r: a 2.1 m cliff-foot path. Fix round 1: the cliff came in from r 31.5 to r 29 (the Slump bites the outline
-// deep: the comma's neck between the Rim Head's r 44 and the tail's r 27–28), and the shelf's lake edge stays 2.5 m from
-// the Pumice Race (stone 5's outer corner is at r 24.41: ENGINE rule 41)
-export const SH_IN = 26.9, SH_OUT = 29.0;
-// the tail (fix round 1: the rim tapers from its root to its tip so the outline spirals instead of holding r 30–31):
-// Ladle Road r 21 → LR_OUT, Rim Ridge LR_OUT → RIDGE_OUT, the horn tip's outer edge HORN_OUT
-export const LR_OUT = 25.5, RIDGE_OUT = 28.0, HORN_OUT = 27.0;
-// Alpha's Spillway Bridge (s along the channel) and how far the enemy horn's landing pad reaches along it
-export const SB = 31.1, PAD_S = 32.9;
-// the Spillway's floor at 0 (LOW only) runs from the mouth to S_FLOOR; beyond it to the lip the channel is lava at both
-// levels (fix round 1: each Spillway is a permanent breach in the outline, the bridge its only crossing)
-export const S_FLOOR = 28.0;
-// the yard's east side (fix round 1: pulled in from x 18 to x 16: each half is lopsided, the Rim Head bulging west)
-export const YARD_E = 16.0, A16 = -Math.acos(16 / 39) / D, Z16 = -Math.sqrt(39 * 39 - 16 * 16);
 
-// ---------------------------------------------------------------------------------------------- arcs with features
-// An arc as a point list (a0 → a1, step 2.5°), with features spliced in: each { a: [lo, hi] (degrees, lo < hi), pts }
-// replaces the arc's points strictly between lo and hi by `pts` (given in increasing-angle order). Built in increasing
-// angle order and reversed when a1 < a0, so two pieces sharing an arc in opposite directions get identical points.
-export function arcF(r, a0, a1, feats = [], step = 2.5) {
+// ---------------------------------------------------------------------------------------------- the spirals
+// (fix round 2) the base's tier fronts: radius linear in θ from TE (the Spillway side: the quay's outer corner at the lip)
+// to TW (the Rim Head side), clamped beyond. The yard front starts exactly at the lip corner.
+export const LIP_C = ch(S_LIP, -HW);
+export const TE = Math.atan2(LIP_C[1], LIP_C[0]) / D, TW = -130;
+const lin = (r0, r1) => (a) => r0 + (r1 - r0) * Math.max(0, Math.min(1, (a - TE) / (TW - TE)));
+// the shore (the Lakefront's lake edge): r 23 from the Spillway's mouth along the causeway's foot (the weir and the
+// causeway keep their places), widening west of θ −98 to 27.6 at the Moorings, so each half's pool is fat on its Rim
+// Head side and thin toward its Casting Floor: at LOW the lava reads as two commas turning round the island, each
+// with its head in a West Pool and the Slump bay and its tail running out through the other works' Spillway fan
+export const RS = (a) => (a >= -98 ? 23 : 23 + (27.6 - 23) * (0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, (a + 98) / -32))));
+export const RT = lin(27.5, 34.0);                         // the terrace front (the Lakefront's back): 6.5 m of spiral
+export const RY = lin(Math.hypot(LIP_C[0], LIP_C[1]), 43.0);   // the yard front (the terrace's back): 8.6 m
+export const SP = (f, a) => P(f(a), a);
+// a spiral as points a0 → a1 (step 2.5°) with features spliced in: { a: [lo, hi], pts } replaces the points strictly
+// between lo and hi by `pts` (given in increasing-angle order); built increasing and reversed when a1 < a0, so two
+// pieces sharing a front in opposite directions get identical points
+export function sarcF(f, a0, a1, feats = [], step = 2.5) {
   const lo = Math.min(a0, a1), hi = Math.max(a0, a1), n = arcN(lo, hi, step);
-  let pts = Array.from({ length: n }, (_, i) => { const a = lo + ((hi - lo) * i) / (n - 1); return { a, p: P(r, a) }; });
-  for (const f of feats) {
-    if (f.a[1] <= lo + 1e-9 || f.a[0] >= hi - 1e-9) continue;   // (a feature outside this arc's range)
-    const keep = pts.filter((q) => q.a <= f.a[0] + 1e-9 || q.a >= f.a[1] - 1e-9);
-    const at = keep.findIndex((q) => q.a >= f.a[1] - 1e-9);
-    const ins = f.pts.map((p) => ({ a: f.a[0], p }));
+  let pts = Array.from({ length: n }, (_, i) => { const a = lo + ((hi - lo) * i) / (n - 1); return { a, p: SP(f, a) }; });
+  for (const ft of feats) {
+    if (ft.a[1] <= lo + 1e-9 || ft.a[0] >= hi - 1e-9) continue;
+    const keep = pts.filter((q) => q.a <= ft.a[0] + 1e-9 || q.a >= ft.a[1] - 1e-9);
+    const at = keep.findIndex((q) => q.a >= ft.a[1] - 1e-9);
+    const ins = ft.pts.map((p) => ({ a: ft.a[0], p }));
     pts = at < 0 ? [...keep, ...ins] : [...keep.slice(0, at), ...ins, ...keep.slice(at)];
   }
   const out = pts.map((q) => q.p);
   return a1 < a0 ? out.reverse() : out;
 }
-const angOf = (x, z) => Math.atan2(z, x) / D;
-// a straight chord across an arc on the south side (z < 0), square to z, from x = xa to x = xb at z = zc: where the
-// tower's track climbs a curved face (the platform never turns, so the face it climbs must be square to the run)
-function chordS(r, xa, xb, zc) {
-  const za = -Math.sqrt(r * r - xa * xa), zb = -Math.sqrt(r * r - xb * xb);
-  const aa = angOf(xa, za), ab = angOf(xb, zb), lo = Math.min(aa, ab), hi = Math.max(aa, ab);
-  const pts = [[r3(xa), r3(za)], [r3(xa), r3(zc)], [r3(xb), r3(zc)], [r3(xb), r3(zb)]];
-  return { a: [lo, hi], pts: aa < ab ? pts : pts.reverse() };
+export const arcF = (r, a0, a1, feats = [], step = 2.5) => sarcF(() => r, a0, a1, feats, step);
+// θ where spiral f crosses x = xa on the south side (z < 0)
+export function thetaAtX(f, xa) {
+  let lo = -179, hi = -1;
+  for (let k = 0; k < 60; k++) { const m = (lo + hi) / 2; if (f(m) * Math.cos(m * D) < xa) lo = m; else hi = m; }
+  return (lo + hi) / 2;
 }
-// The two tower climbs on Alpha's half (Bravo's track, the turn of TOWER's): the terrace face (r 30) at x 3.5 and the
-// yard face (r 39) at x −13. Each is a 3.0–3.2 m chord square to the run, 0.15 / 0.5 m off the arc at most.
-export const CHORD30 = chordS(30, 2.0, 5.0, -Math.sqrt(900 - 3.5 * 3.5));
-export const CHORD39 = chordS(39, -14.6, -11.4, -Math.sqrt(1521 - 13 * 13));
-// the bastion: the yard's balcony out over the terrace (sector r 35.5 → 39, θ −123 → −116)
-export const BASTION = { a: [-123, -116], pts: [P(39, -123), P(35.5, -123), ...arc(35.5, -123, -116, 2).slice(1, -1), P(35.5, -116), P(39, -116)] };
-export const R30 = (a0, a1) => arcF(30, a0, a1, [CHORD30]);
-export const R39 = (a0, a1) => arcF(39, a0, a1, [CHORD39, BASTION]);
+// a straight chord square to z across spiral f, from x = xa to xb, flush with the front at its west end (no jog there:
+// fix round 2, a jog beside the Lower Surge Steps made a nook bots wedged in) and stepping back to the front at the east
+export function chordZ(f, xa, xb) {
+  const aa = thetaAtX(f, xa), ab = thetaAtX(f, xb), pa = SP(f, aa), pb = SP(f, ab), zc = Math.min(pa[1], pb[1]);
+  const pts = [[r3(xa), r3(pa[1])], [r3(xa), r3(zc)], [r3(xb), r3(zc)], [r3(xb), r3(pb[1])]].filter((p, i, A) => i === 0 || Math.hypot(p[0] - A[i - 1][0], p[1] - A[i - 1][1]) > 0.01);
+  const lo = Math.min(aa, ab), hi = Math.max(aa, ab);
+  return { a: [lo, hi], pts: aa < ab ? pts : pts.reverse(), zc: r3(zc), x: [xa, xb] };
+}
+// a straight chord across spiral f between θa and θb (a stair's top edge): its points, its centre and inward normal
+export function chordA(f, a0, a1) {
+  const lo = Math.min(a0, a1), hi = Math.max(a0, a1), pa = SP(f, lo), pb = SP(f, hi);
+  const mx = (pa[0] + pb[0]) / 2, mz = (pa[1] + pb[1]) / 2, L = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]);
+  let nx = -(pb[1] - pa[1]) / L, nz = (pb[0] - pa[0]) / L; if (nx * mx + nz * mz > 0) { nx = -nx; nz = -nz; }   // toward the island
+  return { a: [lo, hi], pts: [pa, pb], mid: [mx, mz], n: [nx, nz], len: L };
+}
+
+// ---------------------------------------------------------------------------------------------- the spawn complex
+// (fix round 2) the gallery, its stairs and the Casting Hall are turned SWING° about the pad (toward the Rim Head:
+// the hall's west end comes forward, its east end goes back), so the base's back is part of the comma's spiral
+export const PAD = [0, -64.5], SWING = -12;
+const cS = Math.cos(SWING * D), sS = Math.sin(SWING * D);
+export const sw = ([x, z]) => { const dx = x - PAD[0], dz = z - PAD[1]; return [r3(PAD[0] + dx * cS - dz * sS), r3(PAD[1] + dx * sS + dz * cS)]; };
+export const swDir = ([x, z]) => [x * cS - z * sS, x * sS + z * cS];
+
+// ---------------------------------------------------------------------------------------------- the comma's outer edge
+// polar control points (θ, r) of the outer edge of Alpha's head, from the lip corner clockwise to the Rim Head's crest;
+// r rises round the head's east cheek to its deepest point behind the gallery's east end, then falls all the way
+const HEAD_CTL = [[TE, Math.hypot(LIP_C[0], LIP_C[1])], [-60.5, 41.5], [-64, 49.5], [-68.5, 57.5], [-73.5, 64.5], [-78.5, 69.2], [-84, 72.0],
+  [-91, 71.4], [-98, 69.0], [-104, 65.5], [-110, 61.0], [-116, 56.2], [-122, 51.6], [-128, 47.6], [-133, 45.4], [-136, 44.5]];
+function headR(a) {   // monotone piecewise-cubic (Fritsch–Carlson) through HEAD_CTL in θ (decreasing)
+  const C = HEAD_CTL, n = C.length;
+  const xs = C.map((c) => -c[0]), ys = C.map((c) => c[1]), x = -a;
+  if (x <= xs[0]) return ys[0]; if (x >= xs[n - 1]) return ys[n - 1];
+  const dk = [], m = [];
+  for (let i = 0; i < n - 1; i++) dk.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+  m[0] = dk[0]; m[n - 1] = dk[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = dk[i - 1] * dk[i] <= 0 ? 0 : (dk[i - 1] + dk[i]) / 2;
+  for (let i = 0; i < n - 1; i++) { if (dk[i] === 0) { m[i] = m[i + 1] = 0; continue; } const al = m[i] / dk[i], be = m[i + 1] / dk[i], s = al * al + be * be; if (s > 9) { const t = 3 / Math.sqrt(s); m[i] = t * al * dk[i]; m[i + 1] = t * be * dk[i]; } }
+  let i = 0; while (x > xs[i + 1]) i++;
+  const h = xs[i + 1] - xs[i], t = (x - xs[i]) / h, t2 = t * t, t3 = t2 * t;
+  return (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * h * m[i + 1];
+}
+export { headR };
+export const HEAD = (a0, a1, step = 2) => sarcF(headR, a0, a1, [], step);
+
+// the gallery (4.8): the rectangle x ±10, z −69 … −57.5 turned about the pad; its back is the head's curve (its sides run
+// on to meet it), and the side yards beside it reach back to the same curve
+export const GAL = { fl: sw([-10, -57.5]), fr: sw([10, -57.5]), bl: sw([-10, -69]), br: sw([10, -69]) };
+function sideHit(f, b) {   // where the gallery's side line f → b, run on past b, meets the head curve
+  const dx = b[0] - f[0], dz = b[1] - f[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
+  let lo = L, hi = L + 12;
+  for (let k = 0; k < 60; k++) { const m = (lo + hi) / 2, x = f[0] + ux * m, z = f[1] + uz * m; if (Math.hypot(x, z) < headR(angOf(x, z))) lo = m; else hi = m; }
+  const m = (lo + hi) / 2; return [r3(f[0] + ux * m), r3(f[1] + uz * m)];
+}
+export const GAL_E = sideHit(GAL.fr, GAL.br), GAL_W = sideHit(GAL.fl, GAL.bl);
+export const TH_GE = angOf(...GAL_E), TH_GW = angOf(...GAL_W);
+const inner = (pts, a0, a1) => pts.filter((p) => { const a = angOf(p[0], p[1]); return a < Math.max(a0, a1) - 0.2 && a > Math.min(a0, a1) + 0.2; });
+export const GAL_BACK = inner(HEAD(TH_GE, TH_GW, 2), TH_GE, TH_GW);   // east → west, strictly between the sides
+export const GALLERY = [GAL.fl, GAL.fr, GAL_E, ...GAL_BACK, GAL_W];
+
+// ---------------------------------------------------------------------------------------------- tier features
+// the tower's two climbs on Alpha's half (Bravo's track, the turn of TOWER's): the terrace face at x 3.5 and the yard
+// face at x −13, each a 3 m chord square to the run
+export const CHORD_T = chordZ(RT, 2.0, 5.0);
+export const CHORD_Y = chordZ(RY, -14.6, -11.4);
+// stairs: a chord across the front between two angles; the stair stands on the lower tier in front of it
+export const ST_LOWER = chordA(RT, -104.5, -89.6);    // the Lower Surge Steps (Lakefront → terrace), ~8 m
+export const ST_EAST = chordA(RT, -71.0, -65.4);      // the East Steps (Lakefront → terrace), ~3 m
+export const ST_UPPER = chordA(RY, -101.0, -95.0);    // the Upper Surge Steps (terrace → yard), ~4 m
+export const ST_CUPOLA = chordA(RY, -72.7, -68.0);    // the Cupola Stair (terrace → yard), ~3 m
+// the bastion: the yard's balcony out over the terrace (sector RY − 3.5 → RY, θ −123 → −116)
+export const BASTION = { a: [-123, -116], pts: [SP(RY, -123), ...sarcF((a) => RY(a) - 3.5, -123, -116, [], 2), SP(RY, -116)] };
+export const FRONT_T = (a0, a1) => sarcF(RT, a0, a1, [CHORD_T, ST_LOWER, ST_EAST]);
+export const FRONT_Y = (a0, a1) => sarcF(RY, a0, a1, [CHORD_Y, BASTION, ST_UPPER, ST_CUPOLA]);
 
 // ---------------------------------------------------------------------------------------------- the Organ Pipes
 export const ORG = { L: [-10, -12.8, 2.5], B: [-10, -9.14, 1.5], A: [-10, -6.34, 1.5] };      // Alpha's cluster (x, z, r)
@@ -90,96 +164,117 @@ const ISLAND_E = [[0, -11.5], [5, -11.5], [7.8, -10.9], [10.4, -9.2], [12.3, -7.
 const ISLAND_HALF = [...ISLAND_E, ...NOTCH_B, [5, 11.5]];
 export const ISLAND = [...ISLAND_HALF, ...rotPoly(ISLAND_HALF)];
 
-// the yard (3.6) with the Rim Head (3.6) joined flat to it (one polygon: DESIGN.md §2.3 "fill it once"), the weighbridge pit
-// cut out of it through a slit along x −14.4 (a hole the column fill reads as two coincident axial edges), the gallery's
-// notch, the bastion out over the terrace, and the tower chord on its front
-const PIT = { x0: -14.4, x1: -2.6, z0: -52, z1: -48 };        // the sunken weighbridge plate (3.0) and its two ramps
-export { PIT };
-// (the Rim Head's north edge runs from the Slump's corner P(29, −145.5) out to P(38.5, −150): the caldera wall stands on
-// it, so from outside the Slump bites in between the Rim Head's bulge and the cliff)
-export const RIMHEAD_OUT = [P(30.5, -126), P(31.5, -133), P(SH_OUT, SA0), P(38.5, -150), P(41, -143), P(44.5, -136), [-34, -35.5], [-31.5, -41], [-27.5, -44]];
+// the Rim Head's crest and its north edge: from the head curve's last point out round the crest to the Slump's corner
+// (the caldera wall stands on its north edge, so from outside the Slump bites in between the crest and the cliff)
+export const SH_IN = 26.9;
+export const SHO = (a) => 31.5 + (31.0 - 31.5) * Math.max(0, Math.min(1, (a - SA0) / (SA1 - SA0)));   // the cliff: 31.5 → 31.0
+export const SH_OUT = SHO(SA0);
+export const RH_FACE = [SP(RT, -126), P(33.6, -133), P(SH_OUT, SA0)];   // the Rim Head's face down to the Lakefront (2.4 m)
+// the weighbridge pit (3.0) and its two ramps, cut out of the yard through a slit along its west end (a hole the column
+// fill reads as two coincident axial edges) from the head curve behind the west side yard
+export const PIT = { x0: -15.4, x1: -3.6, z0: -53.2, z1: -49.2 };
+const SLIT_TH = (() => { let lo = TH_GW - 30, hi = TH_GW; for (let k = 0; k < 60; k++) { const m = (lo + hi) / 2; if (headR(m) * Math.cos(m * D) < PIT.x0) lo = m; else hi = m; } return (lo + hi) / 2; })();
+const SLIT_Z = r3(headR(SLIT_TH) * Math.sin(SLIT_TH * D));
+// the yard (3.6) with the Rim Head (3.6) joined flat to it: the front (spiral) from the lip corner west to θ −126, the
+// Rim Head's face, its north edge and crest, the head's curve back east round the west side yard to the gallery, the
+// gallery's notch, and the head's curve from the gallery round the east cheek back to the lip corner
 export const YARD = [
-  ...R39(A16, -126),
-  ...RIMHEAD_OUT,
-  [-27.5, -47], [-24, -54], [-20.5, -58], [-16, -60.5], [-16, -66],
-  [PIT.x0, -66], [PIT.x0, PIT.z0], [PIT.x0, PIT.z1], [PIT.x1, PIT.z1], [PIT.x1, PIT.z0], [PIT.x0, PIT.z0], [PIT.x0, -66],
-  [-10, -66], [-10, -57.5], [10, -57.5], [10, -66], [YARD_E, -66], [YARD_E, r3(Z16)],
+  ...FRONT_Y(TE, -126),
+  ...RH_FACE, P(38.8, -148.5), P(42.5, -141), P(44.5, -136),
+  ...inner(HEAD(-136, SLIT_TH, 2), -136, SLIT_TH),
+  [PIT.x0, SLIT_Z], [PIT.x0, PIT.z0], [PIT.x0, PIT.z1], [PIT.x1, PIT.z1], [PIT.x1, PIT.z0], [PIT.x0, PIT.z0], [PIT.x0, SLIT_Z],
+  ...inner(HEAD(SLIT_TH, TH_GW, 2), SLIT_TH, TH_GW), GAL_W, GAL.fl, GAL.fr, GAL_E,
+  ...inner(HEAD(TH_GE, TE, 2), TH_GE, TE),
 ];
-// the Moulding Terrace (2.4): r 30 → 39, θ −126 → −58.6, its east end along the channel the Spillway Quay
-export const TERRACE = [...R30(-126, -58.6).slice(0, -1), ch(S_R30, -HW), ch(S_LIP, -HW), [YARD_E, r3(Z16)], ...R39(A16, -126)];
+export const RH_REGION = [SP(RY, -126), ...RH_FACE, P(38.8, -148.5), P(42.5, -141), P(44.5, -136), SP(headR, -128), [-25.4, -36.6]];
+// the Moulding Terrace (2.4): between the two spirals, θ −126 → the channel; its east end along the channel the quay
+export const S_T = (() => { let lo = 22, hi = 34; for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2, p = ch(m, -HW), r = Math.hypot(p[0], p[1]); if (r < RT(angOf(p[0], p[1]))) lo = m; else hi = m; } return (lo + hi) / 2; })();
+const TH_T = angOf(...ch(S_T, -HW));
+export const TERRACE = [...FRONT_T(-126, TH_T).slice(0, -1), ch(S_T, -HW), LIP_C, ...FRONT_Y(TE, -126).slice(1)];
 // the Lakefront (1.2) with the south Slump head (its west end: the tip face square to the stone line)
 export const TIP_S = [sp(S0, 0, -FACE), sp(S0, 0, FACE)];          // outer, inner (lake) corner
 export const TIP_N = [sp(S1, 0, -FACE), sp(S1, 0, FACE)];
+export const SH_M = angOf(...ch(S_MOUTH, -HW));   // the shore's east end: the Spillway mouth's corner
 export const LAKEFRONT = [
-  ch(S_MOUTH, -HW), ch(S_R30, -HW), ...R30(-58.6, -126).slice(1),
-  P(30.5, -126), P(31.5, -133), P(SH_OUT, SA0), TIP_S[0], TIP_S[1],
-  ...arc(23, -137, -100.1), [-4, -22.65], [4, -22.65], ...arc(23, -79.9, -61.9),
+  ch(S_MOUTH, -HW), ch(S_T, -HW), ...FRONT_T(TH_T, -126).slice(1),
+  ...RH_FACE.slice(1), TIP_S[0], TIP_S[1],
+  ...sarcF(RS, -137, -100.1), [-4, -22.65], [4, -22.65], ...sarcF(RS, -79.9, SH_M),
 ];
-// the Pumice Moorings (1.8, on the Lakefront): Alpha's side zone. Its outer corner lies on the Rim Head's face.
-const RH_FACE_134 = (() => {   // the Rim Head's face P(31.5, −133) → P(31.5, −145.5) at θ −134
-  const [ax, az] = P(31.5, -133), [bx, bz] = P(SH_OUT, SA0), u = [Math.cos(-134 * D), Math.sin(-134 * D)];
-  const dx = bx - ax, dz = bz - az, t = (ax * u[1] - az * u[0]) / (dz * u[0] - dx * u[1]);
+// the Pumice Moorings (1.8, on the Lakefront): Alpha's side zone, against the terrace face and the Rim Head's face
+const onSeg = ([ax, az], [bx, bz], a) => {   // where the ray at θ a crosses the segment a → b
+  const u = [Math.cos(a * D), Math.sin(a * D)], dx = bx - ax, dz = bz - az, t = (ax * u[1] - az * u[0]) / (dz * u[0] - dx * u[1]);
   return [r3(ax + dx * t), r3(az + dz * t)];
-})();
-export const MOORINGS = [...arc(23.6, -106, -134, 2), RH_FACE_134, P(31.5, -133), P(30.5, -126), ...R30(-126, -106)];
-// the ledges at 0 east of the causeway: the Casting Floor and the Spillway's floor, one polygon (both at 0, joined along
-// half the Spillway's mouth)
-export const LEDGE_E = [
-  [4, -22.65], ...arc(23, -79.9, -61.9).slice(1), ch(S_MOUTH, -HW), ch(S_FLOOR, -HW), ch(S_FLOOR, HW), ch(S_MOUTH, HW), ch(S_MOUTH, 0),
-  [12.3, -7.4], [10.4, -9.2], [7.8, -10.9], [5, -11.5], [4, -11.5],
-];
-export const CASTING_FLOOR = [[4, -22.65], ...arc(23, -79.9, -61.9).slice(1), ch(S_MOUTH, -HW), ch(S_MOUTH, 0), [12.3, -7.4], [10.4, -9.2], [7.8, -10.9], [5, -11.5], [4, -11.5]];
-export const SPILLWAY = [ch(S_MOUTH, -HW), ch(S_FLOOR, -HW), ch(S_FLOOR, HW), ch(S_MOUTH, HW)];
-// the Slump shelf (0): the flank that drowns. Its south end lies on the south head's west face.
-const SHELF_S_IN = (() => {   // where the head's face P(31.5, SA0) → TIP_S[0] crosses r 27
+};
+export const MOOR_A = [-106, -134];
+export const MOORINGS = [...sarcF((a) => RS(a) + 0.6, MOOR_A[0], MOOR_A[1], [], 2), onSeg(RH_FACE[1], RH_FACE[2], MOOR_A[1]), RH_FACE[1], RH_FACE[0], ...FRONT_T(-126, MOOR_A[0])];
+// the ledge at 0 east of the causeway: the Casting Floor (fix round 2: the Spillway has no floor any more — each Spillway
+// is a permanent lava fan from the mouth to its lip, so the breach splits the comma from the other works at both levels)
+export const CASTING_FLOOR = [[4, -22.65], ...sarcF(RS, -79.9, SH_M).slice(1, -1), ch(S_MOUTH, -HW), ch(S_MOUTH, 0), [12.3, -7.4], [10.4, -9.2], [7.8, -10.9], [5, -11.5], [4, -11.5]];
+export const LEDGE_E = CASTING_FLOOR;
+// the Slump shelf (0): the flank that drowns, 4.6 → 4.1 m wide at the cliff's foot (fix round 2: the cliff back at
+// r 31.5 → 31.0; DESIGN.md's 4.5 m with two hornitos against the cliff). Its south end lies on the south head's face.
+const SHELF_S_IN = (() => {   // where the head's face P(SH_OUT, SA0) → TIP_S[0] crosses r SH_IN
   const [ax, az] = P(SH_OUT, SA0), [bx, bz] = TIP_S[0], dx = bx - ax, dz = bz - az;
   const A = dx * dx + dz * dz, Bq = 2 * (ax * dx + az * dz), Cq = ax * ax + az * az - SH_IN * SH_IN;
   const t = (-Bq - Math.sqrt(Bq * Bq - 4 * A * Cq)) / (2 * A);
   return [r3(ax + dx * t), r3(az + dz * t)];
 })();
-export const SHELF = [SHELF_S_IN, P(SH_OUT, SA0), ...arc(SH_OUT, SA0 - 2.5, SA1 + 2.5), P(SH_OUT, SA1), P(SH_IN, SA1), ...arc(SH_IN, SA1 + 2.5, SA0 - 2.5)];
+export const SHELF = [SHELF_S_IN, P(SH_OUT, SA0), ...sarcF(SHO, SA0 - 2.5, SA1 + 2.5).reverse().reverse(), SP(SHO, SA1), P(SH_IN, SA1), ...arc(SH_IN, SA1 + 2.5, SA0 - 2.5)];
+// the tail (fix round 2: it tapers to a point): the Rim Ridge's outer edge RO from the cliff's r 31 at the north head
+// to 27 at θ 158, the horn's outer edge on to 24.5 at its tip; the Ladle Road's outer edge LR between them
+const lin2 = (a0, a1, r0, r1) => (a) => r0 + (r1 - r0) * Math.max(0, Math.min(1, (a - a0) / (a1 - a0)));
+export const RO = (a) => (a >= 158 ? lin2(178, 158, 31.0, 27.4)(a) : lin2(158, 148.5, 27.4, 24.5)(a));
+export const LR = lin2(178, 158, 25.8, 24.8);
 // the north Slump head (1.2)
-// (fix round 1: its edge to the Ladle Road is one straight hop face on z = TIP_N's z, square to the nav grid, so every
-// nav row along it holds a head node 0.5 m from the face with a road node right above: the hop is 3.8 m wide, not the
-// single lane it was. The road and the Ridge come down to that line)
-// (the head's lake corner is cut square at x NH_X, where the tip face is 0.13 m under the line: the ground kit leaves a
-// corner sharper than 89° unfilled)
 export const NH_Z = TIP_N[1][1], NH_X = -22.1, NH_TIP = [NH_X, r3(TIP_N[1][1] + (NH_X - TIP_N[1][0]) * (TIP_N[1][1] - TIP_N[0][1]) / (TIP_N[1][0] - TIP_N[0][0]))];
-export const NORTH_HEAD = [TIP_N[0], P(SH_IN, SA1), P(SH_OUT, SA1), [-RIDGE_OUT, NH_Z], [NH_X, NH_Z], NH_TIP];
-// the Ladle Road (2.4) joined flat to the horn tip (2.4): Alpha's tail along Bravo's Spillway (z > 0)
-// (the horn: a spit r 21 → 27 from the Ladle Road, hooking out at its tip round the Horn Step to the landing pad of the
-// Spillway Bridge along the channel (to s PAD_S); beyond the pad the channel's bank is caldera wall to the lip. The
-// hook keeps a 3 m lane between the Horn Step and the outer wall)
-export const HORN_PAD = ch(-PAD_S, -7.6), HORN_HOOK = ch(-27, -11);
+const xAtZ = (f, z) => { let lo = 150, hi = 180; for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2; if (f(m) * Math.sin(m * D) > z) lo = m; else hi = m; } return r3(f((lo + hi) / 2) * Math.cos(((lo + hi) / 2) * D)); };
+export const RO_NH = xAtZ(RO, NH_Z), LR_NH = xAtZ(LR, NH_Z);
+const thAtZ = (f, z) => { let lo = 150, hi = 180; for (let k = 0; k < 50; k++) { const m = (lo + hi) / 2; if (f(m) * Math.sin(m * D) > z) lo = m; else hi = m; } return (lo + hi) / 2; };
+export const TH_RO_NH = thAtZ(RO, NH_Z), TH_LR_NH = thAtZ(LR, NH_Z);
+export const NORTH_HEAD = [TIP_N[0], P(SH_IN, SA1), SP(SHO, SA1), [RO_NH, NH_Z], [NH_X, NH_Z], NH_TIP];
+// the horn's tip (Alpha's, on Bravo's Spillway): the Spillway Bridge (Bravo's, the turn of Alpha's) lands on its end
+// face. Alpha's bridge runs diagonally from Alpha's quay (ch s 31.2, t −6.3) to Bravo's horn tip (s 22.3, t 6.1) at the
+// channel's mouth, 3 m wide: the tip stays inside r 25 (the review: no r 34 hook round a landing pad)
+export const SBR = { a: [31.2, -6.3], b: [22.3, 6.1], w: 3.0 };
+export const SB_DIR = (() => { const dx = SBR.b[0] - SBR.a[0], dt = SBR.b[1] - SBR.a[1], L = Math.hypot(dx, dt); return [dx / L, dt / L, L]; })();
+const bEnd = (c, ext) => { const [ux, ut] = SB_DIR, ex = -ut, et = ux; return [[c[0] + ux * ext + ex * SBR.w / 2, c[1] + ut * ext + et * SBR.w / 2], [c[0] + ux * ext - ex * SBR.w / 2, c[1] + ut * ext - et * SBR.w / 2]]; };
+// Bravo's horn tip face (in Alpha's ch frame): p toward the outside (larger t), q toward the lake
+export const TIPF_CH = (() => { const e = bEnd(SBR.b, 0); return e[0][1] > e[1][1] ? { p: e[0], q: e[1] } : { p: e[1], q: e[0] }; })();
+export const QUAYF_CH = bEnd(SBR.a, 0);
+const chA = (s, t) => rot(ch(s, t));   // Alpha's horn lives on Bravo's channel: the turn of Alpha's ch frame
+export const TIP_P = chA(...TIPF_CH.p), TIP_Q = chA(...TIPF_CH.q);
+export const TH_TIP = angOf(...TIP_P), TH_TIPQ = angOf(...TIP_Q);
+// the lip of Bravo's Spillway on Alpha's side (the wall's outer end) and, turned, Alpha's lip's far corner
+export const LIP_N_A = P(Math.hypot(LIP_C[0], LIP_C[1]), TH_TIP), LIP_N = rot(LIP_N_A);
+// Alpha's horn and Ladle Road (2.4), one polygon: the tip face, the outer edge (RO) to θ 158, the Ridge's foot (LR) to
+// the north head, the north head's hop face, the lake edge (r 21) back to the tip
 export const HORN_LADLE = [
-  ch(-27, -HW), ch(-PAD_S, -HW), HORN_PAD, HORN_HOOK, P(HORN_OUT, 155.5), P(HORN_OUT, 157.5),
-  ...arc(LR_OUT, 158, 177.5), [-LR_OUT, NH_Z], [NH_X, NH_Z], TIP_N[1], P(21, 178), ...arc(21, 178, 157.5).slice(1),
-  ...arc(21, 155, 150), P(21.3, 149), ch(-27, -8),
+  TIP_Q, TIP_P, ...inner(sarcF(RO, TH_TIP, 158), TH_TIP, 158), SP(RO, 158), SP(LR, 158),
+  ...inner(sarcF(LR, 158, TH_LR_NH), 158, TH_LR_NH), [LR_NH, NH_Z], [NH_X, NH_Z], TIP_N[1],
+  ...arc(21, 178, TH_TIPQ + 1.5).filter((p) => angOf(p[0], p[1]) < 178.5),
 ];
-// the Horn Step (1.2): a shelf along the horn's channel face (channel 0 → step 1.2 → tip 2.4)
-export const HORN_STEP = [ch(-S_MOUTH, -HW), ch(-27, -HW), ch(-27, -8), P(21.3, 149), P(21.6, 148)];
 // the Rim Ridge (3.6) over the Ladle Road
-export const RIDGE = [...arc(LR_OUT, 158, 177.5), [-LR_OUT, NH_Z], [-RIDGE_OUT, NH_Z], ...arc(RIDGE_OUT, 177.5, 158)];
-export const CASTING_BED = [...arc(36.2, -74, -80, 2), ...arc(33, -80, -74, 2)];
-// the casting dock (1.8, fix round 1): a loading stage at the east Lakefront's lake edge, 0.6 m inside the shore like the
-// Moorings, ≥ 1.4 m from the Spillway's bank (the channel floor's hop exits) and clear of the East Steps' foot
-// (θ −65.5 … −71.5, r 23.6 → 26.6: a 3.4 m lane behind it along the terrace face, open past its west end to the East
-// Steps — it does not reach the steps' foot, where it closed that lane into a pocket at HIGH)
-export const CAST_DOCK = [...arc(23.6, -71.5, -65.5, 2), P(26.6, -65.5), P(26.6, -71.5)];
+export const RIDGE = [SP(LR, 158), ...inner(sarcF(LR, 158, TH_LR_NH), 158, TH_LR_NH), [LR_NH, NH_Z], [RO_NH, NH_Z], ...inner(sarcF(RO, TH_RO_NH, 158), TH_RO_NH, 158), SP(RO, 158)];
+export const CASTING_BED = [...sarcF((a) => RY(a) - 2.2, -74, -80, [], 2), ...sarcF((a) => RT(a) + 2.4, -80, -74, [], 2)];
+// the casting dock (1.8, fix round 2): a loading stage against the terrace face between the Spillway's bank and the
+// East Steps (θ −58.5 … −64.4, r 25.4 → the face), off the Lakefront's lake edge, so the Ladle Gantry's south end and
+// the lane from it west to the weir stay open (the review: at HIGH the dock and its ladle car closed that lane)
+export const CAST_DOCK = [...arc(25.4, -64.4, -59.8, 2), ...sarcF(RT, -59.8, -64.4, [], 2)];
 
 // ---------------------------------------------------------------------------------------------- the edges E2–E8 (walls)
 // polylines of the outer edge of walkable floor (Alpha's half); each segment gets a caldera-wall O-box laid outside it
 export const EDGES = [
-  // (E2 stops square at the Slump's corner, ext1 0: the shelf starts right there)
-  { id: 'E2', pts: [[-16, -66], [-16, -60.5], [-20.5, -58], [-24, -54], [-27.5, -47], [-27.5, -44], [-31.5, -41], [-34, -35.5], P(44.5, -136), P(41, -143), P(38.5, -150), P(SH_OUT, SA0)], t: 1.5, top: 7.0, y0: 0, ext1: 0 },
-  { id: 'E3', pts: [...arc(SH_OUT, SA0, SA1), [-RIDGE_OUT, NH_Z]], t: 1.5, top: 7.6, y0: -1.1, cliff: true },
-  { id: 'E4r', pts: [[-RIDGE_OUT, NH_Z], ...arc(RIDGE_OUT, 177.5, 158, 4), P(HORN_OUT, 157.5)], t: 1.2, top: 6.6, y0: 0 },
-  { id: 'E4h', pts: [P(HORN_OUT, 157.5), P(HORN_OUT, 155.5), HORN_HOOK, HORN_PAD, ch(-PAD_S, -HW), ch(-S_LIP, -HW)], t: 1.2, top: 5.4, y0: -1.1 },
-  // E7 (fix round 1: the charging shed is gone, so the breach reads from outside): a plain caldera wall closes the quay's
-  // outer end, from the lip's corner to the yard's corner
-  { id: 'E7', pts: [ch(S_LIP, -HW), [YARD_E, r3(Z16)]], t: 1.2, top: 5.4, y0: 0 },
-  { id: 'E8', pts: [[YARD_E, r3(Z16)], [YARD_E, -66]], t: 1.5, top: 7.0, y0: 0 },
+  // E8/E2: the head's curve from the lip corner round the east cheek to the gallery, and from the gallery round the west
+  // side to the Rim Head's crest and its north edge, stopping square at the Slump's corner (the shelf starts there)
+  { id: 'E8', pts: [LIP_C, ...inner(HEAD(TE, -74.5, 2), TE, -74.5), SP(headR, -74.5)], t: 1.5, top: 7.0, y0: 0 },
+  { id: 'E2', pts: [SP(headR, -104.5), ...inner(HEAD(-104.5, -136, 2), -104.5, -136), P(44.5, -136), P(42.5, -141), P(38.8, -148.5), P(SH_OUT, SA0)], t: 1.5, top: 7.0, y0: 0, ext1: 0 },
+  { id: 'E3', pts: [...sarcF(SHO, SA0, SA1), [RO_NH, NH_Z]], t: 1.5, top: 7.6, y0: -1.1, cliff: true },
+  { id: 'E4r', pts: [[RO_NH, NH_Z], ...inner(sarcF(RO, TH_RO_NH, TH_TIP, [], 4), TH_RO_NH, TH_TIP), TIP_P], t: 1.2, top: 6.0, y0: 0 },
+  // the breach's far side: from the horn's point straight out (radially) to the lip, so the Spillway opens as a fan
+  { id: 'E4h', pts: [TIP_P, LIP_N_A], t: 1.2, top: 5.4, y0: -1.1 },
 ];
+// the Casting Hall: a curved hall along the gallery's back and the side yards' backs (collision; props.js draws it)
+export const HALL_PTS = HEAD(-74.5, -104.5, 2.5);
 
 // ---------------------------------------------------------------------------------------------- the stones (Pumice Race)
 // [cx, cz, across, along] (DESIGN.md §2.3; the zig-zag offsets are already in the centres); engine yaw −19.0°
@@ -189,14 +284,22 @@ export const STONE_YAW = -19.0;
 // ---------------------------------------------------------------------------------------------- the lava region
 // the lake: one self-symmetric outline (0.5 m into every bank), then the two bays of each half (ENGINE.md §3.3)
 const LAKE_HALF = [
-  ...arc(23.5, -90, -62.6), ch(Math.sqrt(23.5 ** 2 - 6 ** 2), -6), ch(S_MOUTH, 0),
-  ...[P(22.1, 148), P(21.5, 150), ...arc(21.5, 152.5, 177.5), sp(S1, 0.5, FACE), sp(S1, 0.5, -FACE), sp(S0, -0.5, -FACE), sp(S0, -0.5, FACE),
-    ...arc(23.5, -137, -92.5)].map(rot),
+  ...sarcF((a) => RS(a) + 0.5, -90, -62.6), ch(Math.sqrt(22.3 ** 2 - 6 ** 2) + 0.4, -6), ch(S_MOUTH, 0),
+  ...[P(21.9, 147.6), P(21.5, 150), ...arc(21.5, 152.5, 177.5), sp(S1, 0.5, FACE), sp(S1, 0.5, -FACE), sp(S0, -0.5, -FACE), sp(S0, -0.5, FACE),
+    ...sarcF((a) => RS(a) + 0.5, -137, -92.5)].map(rot),
 ];
 export const LAKE = [...LAKE_HALF, ...rotPoly(LAKE_HALF)];
-export const SPILL = [ch(S_MOUTH - 1.5, -6), ch(S_LIP, -6), ch(S_LIP, 6), ch(S_MOUTH - 1.5, 6)];
-export const SLUMP = [sp(S0, -0.5, FACE), sp(S0, -0.5, -FACE), P(SH_OUT + 0.5, -144.4), ...arc(SH_OUT + 0.5, -147, -175), P(SH_OUT + 0.5, -177.6), sp(S1, 0.5, -FACE), sp(S1, 0.5, FACE)];
-export const CHUTE = [ch(S_LIP, -6), ch(S_LIP + 12, -7), ch(S_LIP + 12, 7), ch(S_LIP, 6)];
+// Alpha's Spillway: a fan from the mouth (0.5 m into the quay and the Lakefront on its SW side) to the lip, its NE side
+// 0.5 m inside the horn's tip face and the radial wall beyond it
+const TIP_FACE_B = [rot(TIP_Q), rot(TIP_P)];   // Bravo's horn tip face (in Alpha's half): lake corner, outer corner
+const inset = (p, q, d) => { const dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); return [-dz / L * d, dx / L * d]; };
+export const SPILL = (() => {
+  const w0 = TIP_FACE_B[1], w1 = LIP_N, n = inset(w0, w1, 0.5);   // the wall line, moved 0.5 m into the fan
+  const f0 = TIP_FACE_B[0], f1 = TIP_FACE_B[1], m = inset(f0, f1, 0.5);
+  return [ch(S_MOUTH - 1.5, -6), ch(S_LIP, -6), [r3(w1[0] - n[0]), r3(w1[1] - n[1])], [r3(w0[0] - n[0] - m[0]), r3(w0[1] - n[1] - m[1])], [r3(f0[0] - m[0]), r3(f0[1] - m[1])], ch(S_MOUTH - 1.5, 4.5)];
+})();
+export const SLUMP = [sp(S0, -0.5, FACE), sp(S0, -0.5, -FACE), P(SH_OUT + 0.5, -144.4), ...sarcF((a) => SHO(a) + 0.5, -147, -175), P(SHO(SA1) + 0.5, -177.6), sp(S1, 0.5, -FACE), sp(S1, 0.5, FACE)];
+export const CHUTE = (() => { const a = LIP_C, b = LIP_N, out = (p, k) => [r3(p[0] * k), r3(p[1] * k)]; return [out(a, 0.985), out(a, 1.36), out(b, 1.36), out(b, 0.985)]; })();
 // every region polygon, both halves (for the placeholder lava surface and the checks)
 export const REGION_ALL = [LAKE, SPILL, SLUMP, rotPoly(SPILL), rotPoly(SLUMP)];
 

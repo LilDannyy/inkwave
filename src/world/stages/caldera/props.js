@@ -10,7 +10,7 @@
 //   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
 // No colliders here: every collider is a layout piece (layout.js).
 import { RAILS, GANTRY_RAILS } from './layout.js';
-import { REGION_ALL, inPoly, ch, S_LIP } from './geo.js';
+import { REGION_ALL, inPoly, HEAD, TH_GE, TH_GW, angOf } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA } from './lava.js';
 
 export function register(D, H) {
@@ -52,22 +52,8 @@ export function register(D, H) {
         const a = vert(i, j), b = vert(i + 1, j), c = vert(i + 1, j + 1), d = vert(i, j + 1);
         idx.push(a, c, b, a, d, c);
       }
-      // the lavafalls: past each Spillway's lip the lava pours down the outer flank in a chute (out of play), at both
-      // levels: each breach reads from outside as a river of lava leaving the caldera, fanning out as it runs (the
-      // backdrop's real lavafall and its glow replace this; until ENGINE H22 removes the sea it stays above y −1.5)
-      for (const sg of [1, -1]) {
-        const N = 28, M = 12, base = pos.length / 3, drop = LAVA_Y + 1.45;
-        for (let a = 0; a <= N; a++) for (let b = 0; b <= M; b++) {
-          const u = a / N, s = S_LIP - 0.3 + a * 0.5, t = (-6.3 + (12.6 * b) / M) * (1 + u * 0.35), [x, z] = ch(s, t);
-          const n = vn(x * 0.35 + 3, z * 0.35) * 0.65 + vn(x * 1.1 + 7, z * 1.1 - 3) * 0.35, seam = Math.max(0, 1 - Math.abs(n - 0.5) * 5);
-          tmp.copy(cA).lerp(cB, Math.min(1, 0.25 + seam + u * 0.6));
-          pos.push(sg * x, -Math.sqrt(u) * drop, sg * z); nor.push(0, 1, 0); colr.push(tmp.r, tmp.g, tmp.b); uv.push(0, 0);
-        }
-        for (let a = 0; a < N; a++) for (let b = 0; b < M; b++) {
-          const k = base + a * (M + 1) + b, k2 = k + M + 1;
-          idx.push(k, k + 1, k2, k + 1, k2 + 1, k2);   // (the turn about y keeps the winding)
-        }
-      }
+      // (fix round 2: no lavafall placeholders past the lips — they are out of play, and from above they made a pinwheel
+      // the playable outline did not have; the backdrop's real lavafalls come with the art pass)
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
       g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
@@ -154,24 +140,31 @@ export function register(D, H) {
   // ------------------------------------------------------------------------------------------ the yard's skyline
   D.caldera_hall_roof = {
     build(B) {
-      // north-light sawtooth: five teeth from the gable (z −69) back out of play, glazed faces toward the lake
-      for (let i = 0; i < 5; i++) {
-        const z = -69.2 - i * 3.2;
-        B.push(0, 12.0, z - 1.6, 0, -0.5);
-        B.box('paint', K.verd, 32.6, 0.18, 3.6, 0, 0.95, 0, { r: 0.03 });
+      // (fix round 2) the Casting Hall follows the head's curve behind the turned gallery: a whitewashed bay per segment of
+      // the curve (12 m behind the gallery, 8 m wings behind the side yards) running back out of play, each with a
+      // north-light sawtooth roof whose glazed faces look toward the lake; the round furnace window on the gallery's axis
+      const pts = HEAD(-74.5, -104.5, 2.5);
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2, L = Math.hypot(bx - ax, bz - az) + 0.25;
+        const am = angOf(mx, mz), tall = am < TH_GE - 0.4 && am > TH_GW + 0.4, H = tall ? 12 : 8, ry = Math.atan2(bx - ax, bz - az);
+        const nx = mx / Math.hypot(mx, mz), nz = mz / Math.hypot(mx, mz), D0 = 14;   // outward
+        B.push(mx + nx * D0 / 2, 0, mz + nz * D0 / 2, ry + Math.PI / 2);
+        B.box('paint', K.white, D0, H, L, 0, H / 2, 0, { r: 0.05 });
+        for (let k = 0; k < 4; k++) {
+          const off = -D0 / 2 + 1.75 + k * 3.5;
+          B.push(off, H + 0.95, 0, 0, 0); B.box('paint', K.verd, 3.7, 0.18, L + 0.1, 0, 0, 0, { rz: 0.5, r: 0.03 }); B.pop();
+          B.box(NS('paint'), '#3a5560', 0.12, 1.7, L - 0.2, off - 1.75, H + 0.85, 0, { r: 0.02 });
+        }
         B.pop();
-        B.box(NS('paint'), '#3a5560', 32.0, 1.7, 0.12, 0, 12.85, z - 0.05, { r: 0.02 });
       }
-      B.box('paint', K.white, 32.0, 12.0, 19.0, 0, 6.0, -78.5, { r: 0.05 });   // the hall (its collider is the layout's), running back out of play
-      for (const sx of [-1, 1]) B.box('paint', K.white, 6.0, 8.0 + (sx > 0 ? 0.15 : 0), 3.0, sx * 13, 4.0 + (sx > 0 ? 0.075 : 0), -67.5, { r: 0.05 });   // the wings
-      for (const x of [-11, 11]) { B.box('paint', K.brick, 1.4, 6.0, 1.4, x, 15.5, -74.5, { r: 0.04 }); B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, 18.6, -74.5); }
-      // the gable over the gallery: the round furnace window and the works clock
-      B.push(0, 9.2, -68.9, 0);
-      B.cyl('paint', K.green, 2.3, 0.2, 0, 0, 0, { rx: HP, seg: 28 });
-      B.cyl(NS('glow'), K.glass, 2.0, 0.22, 0, 0, 0.02, { rx: HP, seg: 28, glow: 1.4 });
-      for (let k = 0; k < 4; k++) B.box(NS('paint'), K.green, 0.14, 4.0, 0.25, 0, 0, 0.05, { rz: (k * PI) / 4 });
-      B.pop();
-      B.box('paint', K.white, 33.0, 0.5, 0.6, 0, 12.25, -69.1, { r: 0.05 });
+      for (const a of [TH_GE - 6, TH_GW + 6]) { const r = 76, x = r * Math.cos((a * Math.PI) / 180), z = r * Math.sin((a * Math.PI) / 180); B.box('paint', K.brick, 1.4, 6.0, 1.4, x, 15.5, z, { r: 0.04 }); B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, 18.6, z); }
+      // the gable over the gallery: the round furnace window on the curve behind the pad
+      { const a = (TH_GE + TH_GW) / 2, p = HEAD(a, a - 0.01, 1)[0], ry = Math.atan2(p[0], p[1]);
+        B.push(p[0] * 1.0005, 9.2, p[1] * 1.0005, ry + Math.PI);
+        B.cyl('paint', K.green, 2.3, 0.2, 0, 0, 0, { rx: HP, seg: 28 });
+        B.cyl(NS('glow'), K.glass, 2.0, 0.22, 0, 0, 0.02, { rx: HP, seg: 28, glow: 1.4 });
+        for (let k = 0; k < 4; k++) B.box(NS('paint'), K.green, 0.14, 4.0, 0.25, 0, 0, 0.05, { rz: (k * PI) / 4 });
+        B.pop(); }
     },
   };
   D.caldera_cupola_hood = {
@@ -211,7 +204,7 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
-  { type: 'caldera_cupola_hood', pos: [13.5, 0, -46.5] },
-  { type: 'caldera_jib', pos: [18.2, 0, -56.5] },
-  { type: 'caldera_office_roof', pos: [-19.5, 0, -50.5] },
+  { type: 'caldera_cupola_hood', pos: [16.2, 0, -46.0] },
+  { type: 'caldera_jib', pos: [23.0, 0, -55.8] },
+  { type: 'caldera_office_roof', pos: [-19.6, 0, -49.6] },
 ];
