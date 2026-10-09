@@ -297,6 +297,14 @@ reaches the orb, and the charge reaches everyone through the user's tick (`speci
 only pulses. The gauge gain is the cheerer's own screen's (it owns its gauge). Tested by
 `tools/botlab/tests/net-zipcheer.cjs` (`CLIENTS=2`: a guest cheers the host's orb, and the other way round).
 
+**A special's stand-in** (batch 5, `[b5-int1]`). Another screen learns a player's special runs from two places: the
+owner's tick flag (`F.special`) and the owner's start record (`[0, index]`). When the flag gets there first, or the record
+is lost, `applyRemote` gives that player a stand-in `{ id, def, net: true }` (its special's own numbers, no ghost) until
+the record starts the ghost over it, and drops it with the flag. Anything that reads a running special's numbers for a
+remote player (the cue director's Mega Stamp / Kraken / Bubble Blower loops) finds them on the stand-in; the cue
+director also falls back to `SPECIALS[id]` for a state without them. Tested by `tools/botlab/tests/net-late-special.cjs`
+(`CLIENTS=2`: the guest's screen holds the host's start records back — 1.2 s, or for good).
+
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
 ring (the forced-jump rule, ≤ 3.5 s). `actor.splat()` asks the judge before it emits `'splatted'`; the forwarded event

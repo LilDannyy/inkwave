@@ -435,7 +435,10 @@ export class NetMatch {
     if (S.spx && SPECIAL_ORDER[S.spx - 1]) a.specialId = SPECIAL_ORDER[S.spx - 1];   // their loadout's special
     // a special: its owner's records run a ghost of it here (specials.js netGhost); the flag alone is the fallback, and a
     // ghost whose end never arrived goes when the flag has been off a moment
-    if (f & F.special) { n.spOff = 0; if (!a.specialActive) a.specialActive = { id: a.specialId || a.weapon.special, net: true }; }
+    // ([b5-int1] the stand-in carries its special's numbers, `def`: the flag can come before the start record — late, or
+    // lost — and readers of a running special's numbers (the cue director's s.def.moveSpeed / speed / inflate …) found
+    // none: "Cannot read properties of undefined (reading 'moveSpeed')" every frame; tests/net-late-special.cjs)
+    if (f & F.special) { n.spOff = 0; if (!a.specialActive) { const id = a.specialId || a.weapon.special; a.specialActive = { id, def: SPECIALS[id] || null, net: true }; } }
     else if (a.specialActive?.ghost) { if ((n.spOff = (n.spOff || 0) + dt) > 0.6) G.specials?.end(a, 'net'); }
     else a.specialActive = null;
     specialNetApply(a, S.spst | 0);
