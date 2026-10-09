@@ -1,7 +1,8 @@
 // Pictures of the Tubeway (src/game/pipes.js) on Gulper Aquarium, through hud-shots.cjs (the HUD on where it matters):
 //   MAP=aquarium SCENES=tools/botlab/scenes/pipes.js PRE_ARGS=<set> OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
 // sets: rider (a Kelp Line ride UP as the rider sees it: 6 frames) · bystander (an enemy rider through the Great Tank as a
-// player on the court sees it: 4 frames) · mouths (a two-way and a one-way mouth, its OUT end, a lit exit) · tide (the
+// player on the court sees it: 4 frames) · bystander-kelp (an enemy riding the Kelp Line UP, from the court and from
+// the North Promenade's deck: 4 frames each; the deck's are out/engine/bystander-*.jpg) · mouths (a two-way and a one-way mouth, its OUT end, a lit exit) · tide (the
 // warning in the HUD and in the world) · map (the corner map with the network, a rider and its lit exit) · spawn (the
 // spawn's play camera, both teams, and Alpha's with a teammate riding the Express)
 (() => {
@@ -67,6 +68,29 @@
     S('bystander-2-under-the-glass-walk', go(0.95));
     S('bystander-3-chime', go(1.35));
     S('bystander-4-pop', () => { const a = bot; for (let i = 0; i < 120 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.18); return { phase: a.pipe?.phase, pos: a.pos.toArray().map((v) => +v.toFixed(2)) }; });
+  }
+  if (set === 'bystander-kelp') {
+    // a player watches an enemy ride the Kelp Line UP: out of the E drum, along the North Promenade at 9 m, down to the
+    // promenade — the glow and its trail in the open-air run, the lit exit, the pop. Two vantage points (court, deck).
+    const VP = [['court', [11, 0, 5], [23, 8.5, 12]], ['deck', [15.5, 2.4, 17.5], [25, 8, 2]]];
+    for (const [tag, at, look] of VP) {
+      let bot;
+      const go = (t) => () => { const a = bot; for (let i = 0; i < 300 && a.pipe && P()._T(a.pipe) < t; i++) dbg.step(1000 / 60); return { phase: a.pipe?.phase, s: a.pipe?.s, u: a.pipe?.u, lit: P().lit.map((L) => L.n) }; };
+      S(`bystander-kelp-${tag}-1`, () => {
+        const a = me();
+        bot = M().actors.find((o) => o.team !== a.team && o.bot);
+        for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
+        const ni = __G.nav.nearest({ x: at[0], y: at[1] + 0.3, z: at[2] }, 3), n = __G.nav.nodes[ni] || { x: at[0], y: at[1], z: at[2] };
+        const yaw = Math.atan2(look[0] - n.x, look[2] - n.z), pitch = Math.atan2(look[1] - n.y - 1.6, Math.hypot(look[0] - n.x, look[2] - n.z));
+        put(a, n.x, n.y, n.z, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = Math.min(0.5, pitch * 0.8); step(0.4);
+        const e = leg('kelp').ends[0]; bot.pipeCd = 0; put(bot, e.approach[0], e.approach[1], e.approach[2]); step(0.1);
+        P().debugRide(bot, 'kelp', 0);
+        return { at: [n.x, n.y, n.z], ...go(0.7)() };
+      });
+      S(`bystander-kelp-${tag}-2`, go(1.05));
+      S(`bystander-kelp-${tag}-3`, go(1.45));
+      S(`bystander-kelp-${tag}-4`, () => { const a = bot; for (let i = 0; i < 120 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.18); return { phase: a.pipe?.phase, pos: a.pos.toArray().map((v) => +v.toFixed(2)) }; });
+    }
   }
   if (set === 'mouths') {
     S('mouth-two-way-arch', () => { hud(false); for (const [k, o] of M().actors.entries()) away(o, k); const e = leg('arch').ends[0]; cine([e.pos[0] + e.out[0] * 5.5 + 1.2, 2.1, e.pos[2] + e.out[2] * 5.5 + 1.6], [e.pos[0], 1.3, e.pos[2]]); step(0.3); return 1; });
