@@ -484,8 +484,14 @@ export const SUBS = {
     // the blast by chain size N (index N − 1; every bobber of a chain blows at that size): C2 for 1–4; DECISIONS.md 20 grows
     // the radius on to 8 links (+0.2 m each, 3.8 m) with the centre damage held at 180, and stops there. Past an array's end
     // its last value holds (DECISIONS.md doesn't give min damage, paint or device damage past 4: the bobber builder's call)
+    // [b5-subs] the builder's call: past 4 the edge damage (35), the paint (2.5: a big chain covers more ground already —
+    // every bobber paints) and the device damage (60) hold; only the radius (and its lethal core) grows
     chainRadius: [1.8, 2.2, 2.6, 3.0, 3.2, 3.4, 3.6, 3.8], chainDamageMax: [60, 95, 140, 180], chainDamageMin: [25, 30, 35, 35],
     chainPaint: [1.3, 1.7, 2.1, 2.5], chainDevDamage: [25, 35, 45, 60],
+    // [b5-subs] disarmed: it sags this long, then pops; a chain's explosions share ≤ particleCap particles (C4.1); drawn to
+    // drawDist m from the camera; the bots' danger discs: ≤ dangerCap in all, armed while a foe known within armRange m
+    // has a line to one of the chain (C7)
+    sagTime: 0.4, particleCap: 400, drawDist: 60, dangerCap: 48, armRange: 20,
   },
   dash: {
     id: 'dash', name: 'Dash Pellet', kind: 'dash', blurb: 'Pops under your feet and blasts you a few metres the way you\'re steering, on the ground or in the air. Its blast hits anyone you leave behind.',

@@ -194,9 +194,11 @@ export class NetMatch {
   }
 
   // a ghost device (a remote player's sprinkler, curtain, waddle …) took a hit here: its owner's copy takes it
-  sendDevHit(owner, kind, id, dmg) {
+  sendDevHit(owner, kind, id, dmg, by) {
     if (!owner || !owner.remote || owner.owner === undefined) return;
-    this.s.tr?.sendTo(owner.owner, { k: 'dh', kind, id, d: r2(dmg) });
+    const m = { k: 'dh', kind, id, d: r2(dmg) };
+    if (by && by.nid !== undefined) m.a = by.nid;   // [b5-subs] who hit it (its owner credits them)
+    this.s.tr?.sendTo(owner.owner, m);
   }
 
   // hits land on the victim's owner right away (not on the playback timeline: health must be current)
@@ -256,7 +258,7 @@ export class NetMatch {
       case 'hit': this._hit(d); break;
       case 'dh': {   // a hit on one of our devices, made on another player's screen
         const K = d.kind === 'subs' ? G.subs : SUB_KITS[d.kind] || MAIN_KITS[d.kind] || KIT_GHOSTS[d.kind];
-        try { K?.netHurt?.(d.id, d.d); } catch (err) { console.warn('[inkwave] device hit', d.kind, err); }
+        try { K?.netHurt?.(d.id, d.d, d.a !== undefined ? this.byNid.get(d.a) || null : null); } catch (err) { console.warn('[inkwave] device hit', d.kind, err); }   // [b5-subs] (by)
         break;
       }
       case 'bhit': if (this.isHost) this.match?.boss?.remoteHit(d); break;
@@ -769,6 +771,9 @@ export class NetMatch {
   onLeave(id, hostChanged) {
     if (!this.match) return;
     const drop = mapNoBots(this.cfg.map);
+    // [b5-subs] the leaver's kit devices (bobbers, a sentry …) lived on their screen: they go with them, on every screen,
+    // before anyone takes their squidkid over (subs SPEC §0.4)
+    for (const a of this.byNid.values()) if (a.owner === id) for (const k in SUB_KITS) SUB_KITS[k].dropOwner?.(a);
     for (const a of [...this.byNid.values()]) {
       if (a.owner !== id) continue;
       // (Practice: a player who leaves is gone — nobody plays on in their place; the host's bots move to the new host)
@@ -784,6 +789,7 @@ export class NetMatch {
   }
 
   _remove(a) {
+    for (const k in SUB_KITS) SUB_KITS[k].dropOwner?.(a);   // [b5-subs]
     this.byNid.delete(a.nid);
     this._stopLoops(a);
     this.match.removeActor(a);

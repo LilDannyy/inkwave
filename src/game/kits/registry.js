@@ -36,6 +36,19 @@ import { G } from '../../core/ctx.js';
 //   damageArea?(c, radius, dmg, team)  a blast went off (G.subs.damageArea): kit objects of other teams caught in it
 //   noArc?: true                       no bomb-arc preview while held (the kit draws its own aim guide)
 //   bot?: { fight?(brain, dist) → bool throw now, paint?(brain) → bool }
+//   [b5-subs] (batch 5's kit subs, tools/botlab/jobs/batch5/subs/SPEC.md §0.2–0.5; each optional):
+//   devices?(out) → out                push a device descriptor per live device (deployables.js header: kit: true, pos,
+//                                      aim, r, h, live, prefer(brain), hurt(dmg, by), crush(how), flash(), teamFire?(by))
+//   rideBodies?(out) → out             push a ride body per device resting on a floor (deployables.js moves it)
+//   onPress?: true · lockMain?(runner) · blockActor?(actor) · blockedWhy?(actor, sub) → string   (the other subs)
+//   smash?(c, r, team, front(pos) → bool)   the Mega Stamp's swing guard defuses / disarms the kit's objects in front of it
+//   botAct?(brain, dt, intent, move, busy) → aim | null   a kit's own bot behaviour, every bot, just before bots.js _tail
+//   dangers?({ D, keyOf, disc, see })  add the kit's danger areas to botSpecials.js specialDangers()
+//   drawMap?(c, map, tc, s, hex, viewerTeam)   minimap marks (after the built-in devices)
+//   dropOwner?(actor)                  a player left: end their objects on this screen at once, quietly
+//   lavaSweep?(pred)                   caldera's destroyWhere: end own devices whose pos passes pred (lava)
+//   prompt?(actor) → string | null     a prompt for the local player (main.js, after the built-in ones)
+//   bot.rides?: true                   may be used on the moving tower
 //   threats?(out) → out                push a descriptor for every live object of this kind that hunts / hurts foes
 //                                      (bots.js shoots them down or evades them). Stable per object; getters read live
 //                                      state: { kind, obj, team, owner, pos (live: feet for walkers, centre for flyers),
@@ -51,7 +64,8 @@ import { G } from '../../core/ctx.js';
 //                                      (netmatch mutes paint while ghost() runs; the kit keeps muting in its own tick for
 //                                      ghost objects) and never hurts (a remote attacker's hits are dropped). Shields /
 //                                      curtains stay solid (they block the local player's shots like the owner's do).
-//   netHurt?(id, dmg)                  the owner's side of a device hit made on another screen (registry netHurt)
+//   netHurt?(id, dmg, by?)             the owner's side of a device hit made on another screen (registry netHurt; [b5-subs]
+//                                      by: the shooter's actor on this screen, or null)
 //   MAIN_KITS only: netState?(runner) → int   the pose / state bits other screens need (packed each tick)
 //                   netApply?(runner, bits, dt)   a remote runner: rebuild runner.kit from those bits
 // KIT_GHOSTS[kind] = { ghost } — ghost-only entries for things that aren't a main or sub kit (e.g. a special's objects)
@@ -65,7 +79,8 @@ let _seq = 0;
 export function netId(owner) { return owner && owner.nid !== undefined ? owner.nid * 100000 + (++_seq % 100000) : 0; }
 // a non-owner damaged a ghost device (a remote player's sprinkler, curtain, waddle …): the owner's copy takes it.
 // (kind: 'subs' for SubSystem items, else the kit kind — its netHurt(id, dmg) applies it on the owner's screen)
-export function netHurt(owner, kind, id, dmg) { if (id && dmg > 0) G.netm?.sendDevHit?.(owner, kind, id, dmg); }
+// ([b5-subs] by: who hit it — its owner credits them; amounts are positive only: team fire goes on a channel of its own)
+export function netHurt(owner, kind, id, dmg, by) { if (id && dmg > 0) G.netm?.sendDevHit?.(owner, kind, id, dmg, by); }
 // run fn with paint muted when obj is a ghost (a remote player's copy): its splats are the owner's to send
 // true while a ghost (a remote player's replayed shot / bomb / sub) is being simulated: its damage to devices counts for
 // nothing here — the owner's own copy hits our ghost of the device and that hit arrives by netHurt

@@ -12,6 +12,7 @@
 import { G, on } from '../core/ctx.js';
 import { SPECIALS, SUB } from '../config.js';
 import { INK_ONE, INK_ONE_STATE } from '../world/inkOne.js';
+import { SUB_KITS } from './kits/registry.js';   // [b5-subs] (drawMap)
 
 const TAU = Math.PI * 2;
 let CURRENT = null;          // the live Minimap (a new one is built per stage layout)
@@ -514,6 +515,7 @@ export class Minimap {
         }
       }
     }
+    for (const k in SUB_KITS) SUB_KITS[k].drawMap?.(c, this, tc, s, hex, me);   // [b5-subs] kit subs' devices (bobbers, a sentry)
     G.match?.stage?.drawMap(c, this, tc, s, hex, t, me);   // [b5-stagehooks] stage modules' live layer
     // specials: vortex targets + funnels, sound beams, bubbles, cheer orbs, the local strike cursor
     G.specials?.drawMap(c, this, tc, s, hex, t);

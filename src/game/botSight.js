@@ -269,6 +269,14 @@ export class Sight {
 
 // What team t knows about foe e: a teammate bot seeing it (freshest first), a located one, or the freshest memory no
 // older than maxAge s. Returns that Known (pos / vel / seen / t) or null. No sight lines: it's the bots' own checks.
+// [b5-subs] one sight line a to b from the same per-frame budget as Sight.check (SIGHT.frameRays for every bot together):
+// true / false, or null when this frame's rays are spent (try again next frame) — the kit subs' bot code
+export function sightRay(a, b) {
+  const now = G.time;
+  if (_frameT !== now) { _frameT = now; _frameRays = 0; }
+  if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return null; }
+  return ray(a, b);
+}
 export function teamKnown(t, e, maxAge = SIGHT.keep) {
   let best = null;
   for (const o of G.actors) {

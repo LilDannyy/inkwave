@@ -105,7 +105,7 @@ export const LEVEL = {
   sub_flight: 2.5, danger: 0, alert_slam: -4, alert_strike: -2, alert_kraken: -1.5, alert_storm: -4.5, alert_twister: 4.5, alert_wail: 2,
 };
 // sub_flight's level per voice (dB on top of LEVEL.sub_flight: each kind's flight lands ~+4 dB over your weapon fire)
-export const FLIGHT_DB = { bomb: -7.5, sticky: -4.5, burst: 0, seeker: 1, scan: -4, curtain: -7, sprinkler: 2.5, mist: -4.5, waddle: -3.5, storm: -6 };
+export const FLIGHT_DB = { bomb: -7.5, sticky: -4.5, burst: 0, seeker: 1, scan: -4, curtain: -7, sprinkler: 2.5, mist: -4.5, waddle: -3.5, storm: -6, bobber: -2 };   // [b5-subs] bobber
 // the alarm's level per voice (dB)
 export const DANGER_DB = { slam: 4.5, kraken: 2, orb: -1.5, stamp: 3 };
 const lv = (name) => { const d = LEVEL[name]; return d ? Math.pow(10, d / 20) : 1; };
@@ -124,6 +124,7 @@ export const SUB_CUE = {
   waddle: { throw: ['throw_waddle', 0.9], beep: ['waddle_beep', 0.8], warn: ['waddle_prime', 1], boom: ['waddle_explode', 1], end: ['waddle_pop', 0.9] },
   torpedo: { throw: ['torpedo_throw', 1], boom: ['torpedo_burst', 1] },
   boomerang: { beep: ['boomerang_tick', 0.8], boom: ['boomerang_blast', 1] },
+  bobber: { throw: ['bobber_throw', 0.9], land: ['bobber_inflate', 0.85], boom: ['bobber_boom', 1], end: ['bobber_disarm', 0.9] },   // [b5-subs] (sfx-bobber.js; its boom: bobber.js per hop level)
   smash: { end: ['sub_smash', 0.9] },   // a device the Mega Stamp's guard smashed before it went off
 };
 // a special's start (on top of the shared special_activate); the ones missing here start with their own sound already
@@ -139,9 +140,9 @@ export const SPECIAL_START = { slam: 'slam_leap', storm: 'storm_throw', barrage:
 // falls over its range; the Boomerang's whirr falls going out, rises coming home).
 export const FLY_UP = 4, FLY_DOWN = -9;
 // the sub_flight voice per thrown kind (the Bomb Barrage's bombs are ordinary ones: theirs)
-export const FLIGHT_KIND = { bomb: 'bomb', sticky: 'sticky', burst: 'burst', seeker: 'seeker', scan: 'scan', curtain: 'curtain', sprinkler: 'sprinkler', mist: 'mist', waddle: 'waddle', storm: 'storm' };
+export const FLIGHT_KIND = { bomb: 'bomb', sticky: 'sticky', burst: 'burst', seeker: 'seeker', scan: 'scan', curtain: 'curtain', sprinkler: 'sprinkler', mist: 'mist', waddle: 'waddle', storm: 'storm', bobber: 'bobber' };   // [b5-subs] bobber
 // thrown (a flight sound) · placed (none: a Lurk Mine / Hop Beacon is set down at your feet)
-export const THROWN_SUBS = ['bomb', 'sticky', 'burst', 'seeker', 'scan', 'curtain', 'sprinkler', 'mist', 'shaker', 'waddle', 'torpedo', 'tracer', 'boomerang'];
+export const THROWN_SUBS = ['bomb', 'sticky', 'burst', 'seeker', 'scan', 'curtain', 'sprinkler', 'mist', 'shaker', 'waddle', 'torpedo', 'tracer', 'boomerang', 'bobber'];   // [b5-subs] bobber
 export const PLACED_SUBS = ['mine', 'beacon'];
 
 // ---- the enemy's specials: launch alerts, the "you're in it" alarm (sfx-loud: "a lot of warning special sounds, like
@@ -426,6 +427,7 @@ export class Cues {
         if (k > 0.02) this._want(b, 'hum', 'tracer_hum', { ...o, pos: b.pts[Math.floor(b.pts.length / 2)].p, vol: 0.45 * k, pitch: 0.85 + 0.2 * k });
       }
     }
+    for (const it of K.bobber?.items || []) if (it.state === 'fly') this._fly(it, 'bobber', { pos: it.pos, team: it.team, owner: it.owner, sub: true }, 0.8);   // [b5-subs] a Chain Bobber in the air
     for (const it of K.boomerang?._items || []) {
       const o = { pos: it.pos, team: it.team, owner: it.owner, radius: it.sub.radius, sub: true };
       switch (it.state) {
