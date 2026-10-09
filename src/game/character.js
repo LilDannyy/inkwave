@@ -111,6 +111,7 @@ const _m1 = new THREE.Matrix4(), _m2 = new THREE.Matrix4();
 const _pA = new THREE.Vector3(), _pT = new THREE.Vector3(), _pE = new THREE.Vector3(), _pN = new THREE.Vector3(), _pH = new THREE.Vector3(), _pD = new THREE.Vector3();
 const _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
 const _cP = new THREE.Vector3(), _cQ = new THREE.Quaternion(), _aP = new THREE.Vector3(), _aQ = new THREE.Quaternion();
+const _gA = new THREE.Vector3(), _gP = new THREE.Vector3(), _gS = new THREE.Vector3(), _gD = new THREE.Vector3(), _gN = new THREE.Vector3(), _gE = new THREE.Vector3(), _gY = new THREE.Vector3(), _gQ = new THREE.Quaternion(), _gFlip = new THREE.Quaternion(0, 1, 0, 0);   // [b5-holds] _gripRoll
 const _gO = new THREE.Vector3(), _gHit = { hit: false, dist: 0, point: new THREE.Vector3(), normal: new THREE.Vector3(), block: -1, face: -1, u: 0, v: 0 };
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0), XAX = new THREE.Vector3(1, 0, 0), YAX = new THREE.Vector3(0, 1, 0);
 const _sEnd = new THREE.Quaternion(), _sQp = new THREE.Quaternion(), _sQa = new THREE.Quaternion(), _sQb = new THREE.Quaternion(), _sP = new THREE.Vector3(), _sT = new THREE.Vector3(), _sPole = new THREE.Vector3();
@@ -494,6 +495,74 @@ function poseBow(ch, P, dt) {
   ch._bowCant = damp(ch._bowCant ?? BOW_CANT, ch.grounded ? BOW_CANT : 0, 12, dt);
   P[ANCR + 2] += ch._bowCant * ch.wAim;
 }
+// roller flick keys (_poseFlick): rest [x y z pitch yaw] · coiled · whip · follow-through [x y z pitch]
+const FLICK_ONE = [-0.11, 0.84, 0.18, 0.8, 0.1, -0.13, 1.22, -0.02, -2.3, 0.3, -0.07, 0.98, 0.3, -0.1, 0.05, -0.06, 0.74, 0.3, 0.75];
+// brush swipe (_poseSwipe): anchor x at the middle / per side, y, z · pitch, yaw / side, roll / side · [body turn ×,
+// yaw at the middle]
+const SWIPE_ONE = [-0.06, 0.3, 0.78, 0.28, 0.9, 0.95, -0.2];
+// ---- [b5-holds] two-handed weapons (the user: "make the player hold brush rollers blasters and brollys with both
+// hands"). The brush, the roller, the blaster and the brolly carry their own hold (setWeapon prefers HOLD_BOTH[kind]
+// over the family's, so the held specials that borrow a family — sp_stamp, sp_jetgun — keep theirs). `both`: the off
+// hand stays on the weapon in every state (_bothHands: carry, run, aim, the swings and rolls, the air, landings, the
+// respawn drop, idle fidgets, the locker one-shots, the menu and podium dances); it only lets go to hold and throw a
+// sub (and while a special hides the weapon) and to wave in the lobby's HEY! emote (`wave`: the weapon hand alone,
+// falling back to the family's `raise`). The anchors below are placed so the off hand reaches its grip with a bent
+// elbow; the dances use the two-handed ones (trophy: lifted for a cheer · present: shown off to the viewer,
+// off to the side of the face · droop: hanging low in front; `hang`: the Tidal Slam's raise, where it differs; `ride`:
+// the anchor's chest-follow [translation, rotation] in victory A / C) in place of the free-hand choreography, all clear
+// of the head. `gripRoll` (rad): how far the
+// off hand may turn round its handle toward its own shoulder (a round shaft: all the way round; a pump or a foregrip: a
+// little), so the wrist meets the weapon the way the arm arrives instead of twisting to a fixed grip; `gripAt` (m)
+// slides it along a round shaft. `twist` turns the shoulders toward the weapon outside the aim stance and the roll, `clav` brings
+// the support shoulder forward, `poleC` is the support elbow's bend direction there.
+const SHAFT_BOTH = {   // the roller and the brush: one long shaft, the right fist on the top grip, the left on the mid grip
+  both: true, gripRoll: Math.PI, gripFlip: true, twoCarry: 1, twoAim: 1, lobbyTwo: 1,   // (the left thumb toward the right fist)
+  carry: { p: [-0.1, 0.885, 0.12], r: [0.95, 0.35, 0] },          // (the drum resting on the deck, as the one-handed carry's)
+  roll: { p: [-0.03, 0.84, 0.2], r: [0.95, 0, 0] },              // rolling: the drum square to the path, near the midline (no twist)
+  lobby: { p: [-0.06, 0.95, 0.12], r: [1.05, 0.45, 0] },
+  trophy: { p: [-0.12, 0.8, 0.15], r: [-0.75, 0.75, 0] },      // port arms: the drum up by the left shoulder, clear of the head
+  present: { p: [-0.06, 0.97, 0.15], r: [0.35, 0.4, 0] },
+  droop: { p: [-0.06, 0.86, 0.12], r: [0.9, 0.35, 0] },         // the drum / bristles resting on the deck, not in it
+  run: { p: [-0.1, 0.92, 0.15], r: [0.5, 0.35, 0] },             // running: lifted off the deck (the lean would sink it)
+  smash: { p: [-0.05, 1.05, 0.18], r: [-0.75, 0.05, 0] },        // the Tidal Slam's landing: the head on the deck in front
+  fidget: [-0.05, 0.97, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],   // idle: lean on the shaft (anchor · head · spine)
+  twist: -0.12, clav: 0.12, poleC: [0.8, -0.5, -0.35],
+};
+const HOLD_BOTH = {
+  roller: { ...HOLD.roller, ...SHAFT_BOTH,
+    // flick: a two-handed swing — coiled up by the right shoulder, whipped down in front, the drum following through low
+    flick: [-0.1, 0.86, 0.12, 0.95, 0.35, -0.1, 1.0, 0.1, -1.4, 0.4, -0.05, 0.9, 0.24, 0.25, 0.3, -0.05, 0.8, 0.14, 1.0] },
+  brush: { ...HOLD.roller, ...SHAFT_BOTH,
+    carry: { p: [-0.1, 0.9, 0.12], r: [0.95, 0.35, 0] },   // (a little higher than the roller's: the bristles reach lower than the drum)
+    fidget: [-0.05, 1.0, 0.16, 1.25, 0.3, 0, -0.06, 0.1, 0.08, -0.02],
+    // swipe: a broom's sweep — narrower than the one-handed flail, centred a little left (the off hand's side), the
+    // shoulders turning through it
+    swipe: [-0.01, 0.09, 0.86, 0.14, 0.95, 0.5, -0.2, 1.4, 0.2] },
+  blaster: { ...HOLD.blaster, both: true, gripRoll: Math.PI, gripFlip: true, lobbyTwo: 1,   // (the pump: a round sleeve)
+    aim: { p: [-0.035, -0.09, 0.17], r: [0, 0.04, 0] },   // 3 cm closer in than the one-handed blaster's: the support arm keeps a bend
+    carry: { p: [-0.11, 0.8, 0.14], r: [0.38, 0.34, 0.24] },
+    lobby: { p: [-0.1, 0.8, 0.17], r: [0.25, 0.5, 0.2] },       // low ready, the bell to the front left
+    trophy: { p: [-0.06, 0.88, 0.16], r: [-0.75, -0.5, -0.15] },  // raised up to the right, the bell beside the face, not over it
+    ride: [1, 0.5],   // (in the bouncing victory dances it rides the chest, so the head's sway never meets it)
+    present: { p: [-0.04, 0.86, 0.14], r: [-0.3, -0.55, -0.1] },  // shown off to the right of the face, angled up, not at the viewer
+    hang: { p: [-0.06, 0.8, 0.2], r: [-0.25, 0.15, 0.1] },        // the Tidal Slam's raise / hang (two hands up ahead, the bulb clear of the chin)
+    droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
+    smash: { p: [-0.05, 0.9, 0.2], r: [-0.3, 0.05, 0] },          // the Tidal Slam's landing: the bell off the deck
+    wave: { p: [-0.22, 1.2, 0.15], r: [-1.1, 0.4, -0.4] },       // the HEY! emote, the weapon hand alone: the raise, the bell further out from the head
+    fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
+    twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.12 },
+  brolly: { ...HOLD.shooter, both: true, gripRoll: 0.9, twoCarry: 1, lobbyTwo: 1,
+    aim: { p: [-0.035, -0.08, 0.2], r: [0, 0.035, 0] },   // a little closer in than the shooter's (the foregrip sits further out)
+    carry: { p: [-0.12, 0.8, 0.14], r: [0.55, 0.4, 0.1] },
+    run: { p: [-0.12, 0.83, 0.17], r: [0.3, 0.35, 0.05] },
+    lobby: { p: [-0.03, 0.88, 0.16], r: [1.2, 0.2, 0] },        // held point-down in front, like a walking cane
+    trophy: { p: [-0.14, 0.85, 0.14], r: [-0.9, -0.15, 0] },    // raised by the right shoulder, clear of the head
+    present: { p: [-0.08, 0.88, 0.15], r: [-0.15, -0.6, -0.1] },  // shown off to the right of the face, not at the viewer
+    droop: { p: [-0.06, 0.8, 0.12], r: [1.0, 0.35, 0.2] },
+    smash: { p: [-0.05, 0.95, 0.22], r: [-0.35, 0.05, 0] },      // the Tidal Slam's landing: the tip off the deck
+    fidget: [-0.06, 0.98, 0.2, -0.35, 0.6, -0.3, 0.2, 0.18, 0.02, 0],   // idle: lifted and turned for a look
+    twist: -0.1, clav: 0.08, poleC: [0.8, -0.55, -0.3], aimTwist: -0.15 },
+};
 const HOLD_HERO = { p: [-0.14, 1.05, 0.25], r: [-0.35, 0.35, -0.2] };
 const K_SL_T = [0, 0.13, 0.25, 0.4, 0.62];
 const K_SL_X = [0, -0.08, 0.02, 0.025, 0], K_SL_Y = [0, -0.22, 0.24, 0.33, 0], K_SL_Z = [0, -0.34, 0.04, -0.04, 0];
@@ -597,6 +666,7 @@ export class Character {
     this.lastShot = 99; this.lastRelease = 99; this.charge = 0; this.chargeFlash = 0; this.fullT = 0; this.fireHold = 0; this._fireWant = 0;
     this.lReach = 0; this.ikErrPre = 0; this.leapEnd = -1; this.landAmp = 0; this.hitX = 0; this.hitZ = 1; this.hitAmp = 1; this.hitAcc = 0; this.slamGround = false;
     this.dance = null; this.danceT = 0; this.prevDance = null; this.prevDanceT = 0; this.danceFade = 1; this.lastDance = null;
+    this.waveHand = false; this.prevWave = false;   // [b5-holds] the lobby's HEY! emote (showcase emoteDance) frees the off hand to wave
     this.danceVar = 0; this.danceOfs = frac(seed * 0.61803) * 2.3;
     this.form = 'kid'; this.formPrev = 'kid'; this.formT = 99;
     this.kidScale = 1; this.sqScale = 0; this.kidPop = 1;
@@ -1134,7 +1204,7 @@ export class Character {
     this.bones.handR.add(w.pivot);
     if (w.left) this.bones.handL.add(w.left.pivot);
     if (w.pivotL) this.bones.handL.add(w.pivotL);
-    this.weaponKind = kind; this.animKind = ANIM_OF[kind] || kind; this.weapon = w; this.hold = HOLD[kind] || HOLD[this.animKind];   // a kind may bring its own hold data (bow)
+    this.weaponKind = kind; this.animKind = ANIM_OF[kind] || kind; this.weapon = w; this.hold = HOLD_BOTH[kind] || HOLD[kind] || HOLD[this.animKind];   // a kind may bring its own hold data (bow; [b5-holds] the two-handed four)
     this.dual = !!w.left;
   }
 
@@ -1226,7 +1296,8 @@ export class Character {
   setDance(name) {
     name = name || null;
     if (name === this.dance) return;
-    if (this.dance && name) { this.prevDance = this.dance; this.prevDanceT = this.danceT; this.danceFade = 0; }
+    if (this.dance && name) { this.prevDance = this.dance; this.prevDanceT = this.danceT; this.danceFade = 0; this.prevWave = this.waveHand; }
+    if (name) this.waveHand = false;   // [b5-holds] (a HEY! emote sets it again after: showcase emoteDance)
     this.dance = name; this.danceT = 0;
     const nv = DANCE_VARIANTS[name] || 1;
     this.danceVar = (this.seed >>> 5) % nv;
@@ -1508,6 +1579,8 @@ export class Character {
     if (id === this.lastFidget) id = (id + 1 + ((this.rng() * 3) | 0)) % FIDGETS.length;
     // a pistol in each fist: no free hand for the goggles / tank taps
     if ((this.dual || this.weapon?.pivotL) && (FIDGETS[id] === 'goggles' || FIDGETS[id] === 'tank')) id = FIDGETS.indexOf(this.rng() < 0.5 ? 'twirl' : 'look');
+    // [b5-holds] both hands on the weapon: nor for the goggles, the tank or the big stretch (its 'twirl' is two-handed)
+    if (this.hold.both && (FIDGETS[id] === 'goggles' || FIDGETS[id] === 'tank' || FIDGETS[id] === 'stretch')) id = FIDGETS.indexOf(this.rng() < 0.5 ? 'twirl' : 'look');
     this.fidget = id; this.lastFidget = id; this.fidgetT = 0;
   }
 
@@ -1914,15 +1987,16 @@ export class Character {
     if (this.wDance > 0.001 || this.dance) {
       const D = this.PD;
       if (this.dance) {
-        poseNeutral(D); this._poseDance(D, this.dance, this.danceT + this.danceOfs, dt);
+        poseNeutral(D); this._poseDance(D, this.dance, this.danceT + this.danceOfs, dt, this.waveHand);
         if (this.danceFade < 1 && this.prevDance) {
-          const X = this.PY; poseNeutral(X); this._poseDance(X, this.prevDance, this.prevDanceT + this.danceOfs, 0);
+          const X = this.PY; poseNeutral(X); this._poseDance(X, this.prevDance, this.prevDanceT + this.danceOfs, 0, this.prevWave);
           poseLerp(D, X, D, ease(this.danceFade));
         }
         this.lastDance = this.dance;
-      } else if (this.lastDance) { poseNeutral(D); this._poseDance(D, this.lastDance, this.danceT + this.danceOfs, dt); }
+      } else if (this.lastDance) { poseNeutral(D); this._poseDance(D, this.lastDance, this.danceT + this.danceOfs, dt, this.waveHand); }
       poseLerp(P, P, D, ease(this.wDance));
     }
+    if (this.hold.both) this._bothHands(P);   // [b5-holds] the off hand back on the weapon (see HOLD_BOTH)
     // ---------------- life layer on top of everything (micro-expressions, menu head attention, pupils)
     this._lifePost(dt);
   }
@@ -2078,6 +2152,16 @@ export class Character {
       lerpE(P, POLER, -0.7, -0.35, -0.7, wRoll); lerpE(P, POLEL, 0.7, -0.35, -0.7, wRoll);
       P[HIPS + 1] += H.hip * wRoll * (1 - gw);
     }
+    // [b5-holds] two hands on the weapon outside the aim stance: the shoulders turn toward it (the support shoulder
+    // comes forward) and the support shoulder reaches in, so the off hand gets there with a bent elbow
+    // (aiming: `aimTwist` blades the stance a little more — the support shoulder forward toward the foregrip; rolling:
+    // no turn, so the drum / bristles stay square to the path they paint — the reach comes from `clav` and `poleC`)
+    if (H.both) {
+      const k = 1 - wAim * (1 - wRoll), ka = wAim * (1 - wRoll);
+      const tw = ((H.twist || 0) * k + (H.aimTwist || 0) * ka) * (1 - wRoll);   // (rolling: square to the path, no twist)
+      P[CHEST + 1] += tw; P[SPINE + 1] += tw * 0.5; P[CLAVL + 1] -= (H.clav || 0) * k;
+      if (H.poleC) lerpE(P, POLEL, H.poleC[0], H.poleC[1], H.poleC[2], k);
+    }
     // two hands on one weapon (foregrip IK) — a dual wield is never "two-handed": each fist holds its own pistol
     this.wTwo = dual ? 0 : Math.max(lerp(H.twoCarry, H.twoAim, wAim), H.roll ? 1 : 0);
     P[IKL] = dual ? 1 : this.wTwo;
@@ -2132,6 +2216,28 @@ export class Character {
     }
   }
 
+  /** [b5-holds] A two-handed weapon (hold.both) keeps the off hand on it through every layer and dance: whatever a
+   *  layer asked of the free hand (a fidget, the respawn's hand to the ground, a hand on the hip, a fist pump) gives way
+   *  to the foregrip IK. It lets go only while a sub is held and thrown, while a special hides the weapon, for the
+   *  Tidal Slam's launch (the free arm flung up as the kid springs off, 0.24 s; both hands again for the tuck and hang),
+   *  and for the lobby's HEY! emote (it waves). */
+  _bothHands(P) {
+    const lp = this.tr[T_LEAP], launch = lp < 0.24 ? win(lp, 0, 0.04, 0.12, 0.24) : 0;
+    // the HEY! emote's wave (waveHand), eased in and out with the dance blends it rides
+    let wave = 0;
+    if ((this.waveHand || this.prevWave) && this.wDance > 0.001) {
+      wave = this.dance && this.prevDance && this.danceFade < 1 ? lerp(+this.prevWave, +this.waveHand, ease(this.danceFade)) : +this.waveHand;
+      wave *= ease(this.wDance);
+    }
+    const free = this.weaponHidden ? 1 : Math.max(this.wSub, win(this.tr[T_THROW], 0, 0.03, 0.4, 0.62), launch, wave);
+    const k = 1 - free;
+    if (k <= 0.001) return;
+    // a layer that sent the hand to a target (LTW) also bent the elbow for it: that bend goes with it
+    const lt = clamp(P[LTW], 0, 1) * k, pc = this.hold.poleC || this.hold.poleL;
+    if (lt > 0.001) lerpE(P, POLEL, pc[0], pc[1], pc[2], lt);
+    P[IKL] = lerp(P[IKL], 1, k); P[LTW] *= 1 - k; P[SPIN] *= 1 - k;
+  }
+
   // Moving weapon parts are owned by the arsenal stream: animateWeapon(w, st) (character-weapons.js) runs once per held
   // instance per frame with one reused state object. Near/far LOD by camera distance (far = merged static weapon).
   _animWeapon(dt, s, w) {
@@ -2172,10 +2278,11 @@ export class Character {
     const kWhip = ease((ft - 0.15) / 0.08);      // whip through release (~0.22 s)
     const kFol = easeOut((ft - 0.23) / 0.14);    // follow-through
     const kRec = ease((ft - 0.42) / 0.26);       // recover
-    let ax = -0.11, ay = 0.84, az = 0.18, rx = 0.8, ry = 0.1;
-    ax = lerp(ax, -0.13, kUp); ay = lerp(ay, 1.22, kUp); az = lerp(az, -0.02, kUp); rx = lerp(rx, -2.3, kUp); ry = lerp(ry, 0.3, kUp);
-    ax = lerp(ax, -0.07, kWhip); ay = lerp(ay, 0.98, kWhip); az = lerp(az, 0.3, kWhip); rx = lerp(rx, -0.1, kWhip); ry = lerp(ry, 0.05, kWhip);
-    ax = lerp(ax, -0.06, kFol); ay = lerp(ay, 0.74, kFol); az = lerp(az, 0.3, kFol); rx = lerp(rx, 0.75, kFol);
+    const F = this.hold.flick || FLICK_ONE;      // [b5-holds] the two-handed roller swings closer in (the off hand stays on)
+    let ax = F[0], ay = F[1], az = F[2], rx = F[3], ry = F[4];
+    ax = lerp(ax, F[5], kUp); ay = lerp(ay, F[6], kUp); az = lerp(az, F[7], kUp); rx = lerp(rx, F[8], kUp); ry = lerp(ry, F[9], kUp);
+    ax = lerp(ax, F[10], kWhip); ay = lerp(ay, F[11], kWhip); az = lerp(az, F[12], kWhip); rx = lerp(rx, F[13], kWhip); ry = lerp(ry, F[14], kWhip);
+    ax = lerp(ax, F[15], kFol); ay = lerp(ay, F[16], kFol); az = lerp(az, F[17], kFol); rx = lerp(rx, F[18], kFol);
     const w = 1 - kRec;
     lerpE(X, ANC, ax, ay, az, w); lerpE(X, ANCR, rx, ry, 0, w);
     X[AFOLT] = lerp(X[AFOLT], 0.6, w); X[AFOLR] = lerp(X[AFOLR], 0.25, w);
@@ -2220,10 +2327,11 @@ export class Character {
     const k = ease(ft / 0.13);
     const kRec = ease((ft - 0.15) / 0.2);
     const u = lerp(-sd, sd, k);                       // -1 … 1 across the body
-    const w = 1 - kRec;
-    lerpE(X, ANC, -0.06 + 0.3 * u, 0.78, 0.28, w);
-    lerpE(X, ANCR, 0.9, 0.95 * u, -0.2 * u, w);
-    X[SPINE + 1] += 0.3 * u * w; X[CHEST + 1] += 0.24 * u * w; X[HIPS + 1] += 0.1 * u * w;
+    const w = 1 - kRec, F = this.hold.swipe || SWIPE_ONE;   // [b5-holds] two-handed: a narrower sweep, the body turning more
+    lerpE(X, ANC, F[0] + F[1] * u, F[2], F[3], w);
+    lerpE(X, ANCR, F[4], (F[8] || 0) + F[5] * u, F[6] * u, w);
+    const tb = F[7] ?? 1;
+    X[SPINE + 1] += 0.3 * u * w * tb; X[CHEST + 1] += 0.24 * u * w * tb; X[HIPS + 1] += 0.1 * u * w * tb;
     X[SPINE] += 0.14 * w; X[CHEST] += 0.06 * w; X[HIPS_P + 1] -= 0.03 * w;
     lerpE(X, POLER, -0.7, -0.35, -0.7, w); lerpE(X, POLEL, 0.7, -0.35, -0.7, w);
     this._effort = Math.max(this._effort || 0, 0.5 * w);
@@ -2513,8 +2621,9 @@ export class Character {
     const flip = ease((lt - 0.14) / 0.36);
     X[MODELR] += lt > 0.14 ? wrapA(flip * TAU) : 0;
     // weapon: thrust up on launch, tucked to the chest, raised overhead two-handed for the hang
-    const up = Math.max(launch, hang);
-    lerpE(X, ANC, -0.06, 1.34, 0.06, up); lerpE(X, ANCR, -1.85, 0.05, 0, up);
+    const up = Math.max(launch, hang), T = this.hold.both ? this.hold.hang || this.hold.trophy : null;
+    if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], up); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], up); }   // [b5-holds] two hands reach it
+    else { lerpE(X, ANC, -0.06, 1.34, 0.06, up); lerpE(X, ANCR, -1.85, 0.05, 0, up); }
     lerpE(X, ANC, -0.1, 0.86, 0.2, tuck); lerpE(X, ANCR, -0.6, 0.1, 0, tuck);
     X[AFOLT] = 1; X[AFOLR] = 0.5 + 0.5 * tuck;
     X[IKL] = lerp(X[IKL], 1, Math.max(hang, tuck)); X[IKL] = lerp(X[IKL], 0, launch);
@@ -2538,14 +2647,24 @@ export class Character {
     // diving: legs extended down, weapon whipped from overhead to the front
     lerpE(X, FOOTL, 0.1, 0.1, 0.06, dive); lerpE(X, FOOTLR, 0.5, 0.1, 0, dive);
     lerpE(X, FOOTR, -0.1, 0.12, -0.08, dive); lerpE(X, FOOTRR, 0.7, -0.1, 0, dive);
-    lerpE(X, ANC, -0.06, 1.3, 0.12, dive * (1 - ease(st / 0.12))); lerpE(X, ANCR, -1.9, 0.05, 0, dive * (1 - ease(st / 0.12)));
-    lerpE(X, ANC, -0.05, 0.62, 0.36, ease((st - 0.04) / 0.1) * (1 - imp)); lerpE(X, ANCR, 0.9, 0.05, 0, ease((st - 0.04) / 0.1) * (1 - imp));
+    const T = this.hold.both ? this.hold.hang || this.hold.trophy : null, dv = dive * (1 - ease(st / 0.12));   // [b5-holds] two hands reach it
+    if (T) { lerpE(X, ANC, T.p[0], T.p[1] + 0.05, T.p[2], dv); lerpE(X, ANCR, T.r[0], T.r[1], T.r[2], dv); }
+    else { lerpE(X, ANC, -0.06, 1.3, 0.12, dv); lerpE(X, ANCR, -1.9, 0.05, 0, dv); }
+    // [b5-holds] two-handed: the dive whips the weapon from overhead straight to the landing's (hold.smash: the low whip
+    // would put the head through the deck the frame before the landing), and once down it comes back from the smash to
+    // the hold (not out to the low whip, which the off hand can't reach with the body upright again)
+    const M = T ? this.hold.smash : null;
+    if (M) {   // (on the deck: held there until the impact pose has it, then left to the impact's fade)
+      const k = this.slamGround ? (it < 0.1 ? 1 - imp : 0) : ease((st - 0.04) / 0.1);
+      lerpE(X, ANC, M.p[0], M.p[1], M.p[2], k); lerpE(X, ANCR, M.r[0], M.r[1], M.r[2], k);
+    } else { const wf = ease((st - 0.04) / 0.1) * (1 - imp); lerpE(X, ANC, -0.05, 0.62, 0.36, wf); lerpE(X, ANCR, 0.9, 0.05, 0, wf); }
     X[SPINE] += 0.3 * dive; X[CHEST] += 0.15 * dive;
     // impact: wide low crouch, weapon planted in front, head down
     lerpE(X, FOOTL, 0.2, ANKLE_H, 0.06, imp); lerpE(X, FOOTLR, 0, 0.35, 0, imp);
     lerpE(X, FOOTR, -0.2, ANKLE_H, -0.1, imp); lerpE(X, FOOTRR, 0, -0.5, 0, imp);
     X[HIPS_P + 1] -= 0.25 * imp; X[SPINE] += 0.45 * imp; X[CHEST] += 0.25 * imp; X[HLP] += 0.2 * imp;
-    lerpE(X, ANC, -0.05, this.animKind === 'roller' ? 0.5 : 0.36, 0.4, imp); lerpE(X, ANCR, this.animKind === 'roller' ? 1.2 : 1.35, 0.05, 0, imp);
+    if (M) { lerpE(X, ANC, M.p[0], M.p[1], M.p[2], imp); lerpE(X, ANCR, M.r[0], M.r[1], M.r[2], imp); }   // (the anchor rides the crouching chest)
+    else { lerpE(X, ANC, -0.05, this.animKind === 'roller' ? 0.5 : 0.36, 0.4, imp); lerpE(X, ANCR, this.animKind === 'roller' ? 1.2 : 1.35, 0.05, 0, imp); }
     X[KNEEL] += 0.3 * imp; X[KNEER] -= 0.3 * imp;
     X[IKL] = 1; X[AFOLT] = 1; X[AFOLR] = 0.6; X[EARS] -= 0.6 * dive; X[HANDPL] = -1;
     lerpE(X, POLER, -0.9, -0.2, -0.3, imp); lerpE(X, POLEL, 0.9, -0.2, -0.3, imp);
@@ -2673,7 +2792,13 @@ export class Character {
         break;
       }
       case 'twirl': {
-        if (kind === 'shooter' || kind === 'blaster' || kind === 'dualies') {
+        const B2 = this.hold.both && this.hold.fidget;   // [b5-holds] two-handed: lean on the shaft / lift it for a look
+        if (B2) {
+          const k = win(ft, 0.1, 0.35, 0.8, 1.15), F = B2;
+          lerpE(X, ANC, F[0], F[1], F[2], k); lerpE(X, ANCR, F[3], F[4], F[5], k);
+          X[HLP] += F[6] * k; X[HLY] += F[7] * k; X[LOOKY] -= 0.2 * k * Math.sign(F[6]); X[SPINE] += F[8] * k; X[HIPS_P] += F[9] * k;
+          X[MCURVE] += 0.3 * k; X[BROWY] += 0.3 * k;
+        } else if (kind === 'shooter' || kind === 'blaster' || kind === 'dualies') {
           const k = ease((ft - 0.2) / 0.6), lift = win(ft, 0.1, 0.3, 0.75, 1.0);
           X[SPIN] = wrapA(TAU * 2 * k); if (!this.dual) X[IKL] = 0;
           X[ANC + 1] += 0.08 * lift; X[ANC + 2] += 0.08 * lift; X[ANC] -= 0.03 * lift; X[ANCR] -= 0.7 * lift;
@@ -3043,12 +3168,12 @@ export class Character {
   // ---------------------------------------------------------------------------------------------
   // Dances / showcase poses (kid-space feet; variants picked per character)
   // ---------------------------------------------------------------------------------------------
-  _poseDance(D, name, t, dt) {
+  _poseDance(D, name, t, dt, wave) {
     D[WPL] = 0; D[WPR] = 0; D[STAB] = 0; D[AFOLT] = 0; D[AFOLR] = 0;
     if (name === 'victory') {
       if (this.danceVar === 0) this._dVictoryPump(D, t);
       else if (this.danceVar === 1) this._dVictoryFlourish(D, t);
-      else this._dVictoryHops(D, t);
+      else this._dVictoryHops(D, t, wave);
     } else if (name === 'defeat') {
       if (this.danceVar === 0) this._dDefeatSlump(D, t);
       else if (this.danceVar === 1) this._dDefeatSulk(D, t);
@@ -3072,13 +3197,13 @@ export class Character {
     D[SPINE] = 0.05 - 0.05 * pump; D[CHEST] = -0.08 * pump;
     D[HEAD] = 0.12 * hit - 0.1; D[HEAD + 2] = 0.1 * Math.sin(Math.PI * b * 0.5);
     D[SQY] = 1 - 0.05 * hit; D[SQXZ] = 1 + 0.03 * hit;
-    setAnc(D, H.raise);
+    setAnc(D, H.both ? H.trophy : H.raise);   // [b5-holds] two-handed: the weapon pumped up in both fists (hold.trophy)
     D[IKL] = 0; D[POLER] = -0.8; D[POLER + 1] = 0.1; D[POLER + 2] = -0.5;
     setE(D, FOOTL, 0.11, ANKLE_H, 0.01); setE(D, FOOTR, -0.11, ANKLE_H, -0.01); D[FOOTLR + 1] = 0.2; D[FOOTRR + 1] = -0.2;
     D[FOOTLR] = 0.25 * pump * (b < 4 ? 1 : 0);
     if (b < 4) {
       D[UARML] = -2.6 - 0.35 * pump; D[UARML + 2] = 0.35; D[FARML] = -0.2 - 1.3 * (1 - pump); D[HANDL] = 0; D[HANDPL] = -1;
-      D[ANC + 1] += 0.05 * pump;
+      D[ANC + 1] += (H.both ? 0.03 : 0.05) * pump;   // ([b5-holds] two-handed: a smaller pump, the off hand in reach)
       D[CHEST + 1] = 0.12 * Math.sin(Math.PI * b);
       // anticipation crouch before the spin
       const pre = win(b, 3.4, 3.8, 3.9, 4.0);
@@ -3100,9 +3225,14 @@ export class Character {
       D[UARML] = -2.0; D[UARML + 2] = 1.0 * k; D[FARML] = -0.9; D[HANDL + 2] = 0.3; D[HANDPL] = 1.9;
       D[HEAD + 2] = -0.18 * k; D[HEAD] = -0.1;
       D[WINK] = ease((b - 6.3) / 0.12) * (1 - ease((b - 7.6) / 0.15));
-      setAnc(D, HOLD_HERO);
+      if (!H.both) setAnc(D, HOLD_HERO);
+      else {   // [b5-holds] two-handed: eased from the trophy to the present and back (both hands ride the change)
+        const Q = H.present, k = ease((b - 6) / 0.6) * (1 - ease((b - 7.4) / 0.6));
+        lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], k); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], k);
+      }
     }
     D[MOPEN] = 0.75; D[MCURVE] = 1; D[BROW] = -0.1; D[BROWY] = 0.8; D[EYE] = 0.92; D[LOOKY] = 0.1; D[EARS] = 0.9 + 0.1 * hit;
+    if (H.both && H.ride) { D[AFOLT] = H.ride[0]; D[AFOLR] = H.ride[1]; }   // [b5-holds] the raised weapon rides the chest's bounce
   }
 
   // Victory B: anticipation dip → weapon twirl overhead on tiptoe → point it at the camera, hand on hip, wink
@@ -3117,10 +3247,17 @@ export class Character {
     D[FOOTLR] = 0.45 * rise; D[FOOTRR] = 0.45 * rise; D[FOOTL + 1] += 0.03 * rise; D[FOOTR + 1] += 0.03 * rise;
     // weapon: pulled back → overhead twirl → thrust forward to the camera
     setAnc(D, H.carry);
-    lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);
-    lerpE(D, ANC, -0.15, 1.36, 0.06, rise); lerpE(D, ANCR, -1.6, 0.2, 0, rise);
-    D[SPIN] = wrapA(TAU * 2 * ease((c - 0.55) / 0.85)) * (NO_TWIRL[this.animKind] ? 0 : 1);
-    lerpE(D, ANC, -0.1, 1.02, 0.32, strike); lerpE(D, ANCR, -0.12, -0.05, 0.25, strike);
+    if (H.both) {   // [b5-holds] two-handed: no twirl — dipped low, lifted up, then thrust at the viewer
+      const T = H.trophy, Q = H.present, U = H.droop;
+      lerpE(D, ANC, U.p[0], U.p[1], U.p[2], dip); lerpE(D, ANCR, U.r[0], U.r[1], U.r[2], dip);
+      lerpE(D, ANC, T.p[0], T.p[1] + 0.05, T.p[2] - 0.02, rise); lerpE(D, ANCR, T.r[0], T.r[1], T.r[2], rise);   // (up on tiptoe: higher, closer)
+      lerpE(D, ANC, Q.p[0], Q.p[1], Q.p[2], strike); lerpE(D, ANCR, Q.r[0], Q.r[1], Q.r[2], strike);
+    } else {
+      lerpE(D, ANC, -0.16, 0.8, -0.02, dip); lerpE(D, ANCR, 0.9, 0.3, 0.2, dip);
+      lerpE(D, ANC, -0.15, 1.36, 0.06, rise); lerpE(D, ANCR, -1.6, 0.2, 0, rise);
+      D[SPIN] = wrapA(TAU * 2 * ease((c - 0.55) / 0.85)) * (NO_TWIRL[this.animKind] ? 0 : 1);
+      lerpE(D, ANC, -0.1, 1.02, 0.32, strike); lerpE(D, ANCR, -0.12, -0.05, 0.25, strike);
+    }
     D[IKL] = 0; D[POLER] = -0.9; D[POLER + 1] = 0.05; D[POLER + 2] = -0.3;
     // free hand: up with the twirl, then on the hip
     D[UARML] = -2.4 * rise - 0.4 * dip; D[UARML + 2] = 0.3 + 0.2 * dip; D[FARML] = -0.3 - 0.8 * dip;
@@ -3131,14 +3268,17 @@ export class Character {
     D[WINK] = win(c, 1.75, 1.85, 2.4, 2.55);
     D[MCURVE] = 1; D[MOPEN] = 0.3 + 0.45 * rise + 0.2 * bounce; D[MTILT] = 0.2 * strike; D[BROW] = -0.2 * strike; D[BROWY] = 0.6 * rise;
     D[LOOKX] = -0.05; D[LOOKY] = 0.05 + 0.2 * rise; D[EYE] = 1 - 0.1 * strike;
+    if (H.both && H.ride) { D[AFOLT] = H.ride[0]; D[AFOLR] = H.ride[1]; }   // [b5-holds] the weapon rides the chest's turn
   }
 
   // Victory C: side-to-side happy hops with alternating arm waves → big V jump (8 beats @ 150 bpm)
-  _dVictoryHops(D, t) {
-    const H = this.hold;
+  // ([b5-holds] `wave`: played as the lobby's HEY! emote — a two-handed weapon goes to the weapon hand alone and the off
+  // hand waves, as the one-handed hold does; _bothHands lets go of it for the emote)
+  _dVictoryHops(D, t, wave) {
+    const H = this.hold, two = H.both && !wave;
     const b = (t * 2.5) % 8, bf = frac(b), bi = Math.floor(b);
     const sd = bi % 2 ? -1 : 1;
-    setAnc(D, H.raise);
+    setAnc(D, two ? H.trophy : (wave && H.wave) || H.raise);   // [b5-holds] two-handed: held up in both fists through the hops
     D[IKL] = 0;
     if (b < 6) {
       const hop = Math.sin(Math.PI * clamp(bf / 0.62, 0, 1));
@@ -3162,10 +3302,12 @@ export class Character {
       setE(D, FOOTL, 0.12, ANKLE_H + 0.18 * air, 0.02 * air); setE(D, FOOTR, -0.12, ANKLE_H + 0.18 * air, 0.02 * air);
       D[FOOTLR] = 0.6 * air; D[FOOTRR] = 0.6 * air;
       D[UARML] = lerp(-0.5, -2.7, air); D[UARML + 2] = lerp(0.2, 0.75, air); D[FARML] = -0.2;
-      lerpE(D, ANC, -0.18, 1.4, 0.05, air); lerpE(D, ANCR, -1.9, 0.3, -0.5, air);
+      if (two) D[ANC + 1] += 0.04 * air;   // [b5-holds]
+      else { lerpE(D, ANC, -0.18, 1.4, 0.05, air); lerpE(D, ANCR, -1.9, 0.3, -0.5, air); }
       D[HEAD] = -0.2 * air; D[MOPEN] = 0.9 * air; D[HANDPL] = 2; D[EARS] = 1;
     }
     D[MOPEN] = Math.max(D[MOPEN], 0.65); D[MCURVE] = 1; D[BROWY] = 0.9; D[EYE] = 0.88; D[LOOKY] = 0.12;
+    if (two && H.ride) { D[AFOLT] = H.ride[0]; D[AFOLR] = H.ride[1]; }   // [b5-holds] the raised weapon rides the chest's sway
   }
 
   // Defeat A: slumped sway, big sigh, head drop
@@ -3182,6 +3324,8 @@ export class Character {
     D[UARML] = 0.1 + 0.03 * sw; D[UARML + 2] = 0.05; D[FARML] = -0.12;
     D[UARMR] = 0.1 - 0.03 * sw; D[UARMR + 2] = -0.05; D[FARMR] = -0.12;
     D[IKR] = 0; D[IKL] = 0;
+    // [b5-holds] two-handed: the weapon hangs low in front in both hands, sagging further on the head drop
+    if (H.both) { D[IKR] = 1; setAnc(D, H.droop); D[ANC] += 0.01 * sw; D[ANC + 1] -= 0.025 * drop - 0.015 * sigh; D[ANCR] += 0.12 * drop; }
     D[FOOTL] = 0.075; D[FOOTR] = -0.075; D[FOOTLR + 1] = -0.18; D[FOOTRR + 1] = 0.18;
     D[FOOTLR] = 0.12; D[FOOTL + 2] = 0.02; D[KNEEL] = -0.2; D[KNEER] = 0.2;
     D[MCURVE] = -0.9; D[MWIDTH] = 0.8; D[BROW] = 0.75; D[BROWY] = -0.3; D[EYE] = 0.45 + 0.25 * sigh; D[LOOKY] = -0.4; D[LOOKX] = 0.1 * sw;
@@ -3201,11 +3345,14 @@ export class Character {
     D[HIPS + 2] = -0.06 * stomp;
     // fists clenched down by the sides while stomping
     D[UARML] = 0.15; D[UARML + 2] = 0.2; D[FARML] = -0.5; D[CLAVL + 2] = 0.12 * stomp; D[CLAVR + 2] = -0.12 * stomp;
-    setAnc(D, this.hold.carry); D[ANC + 1] -= 0.05 * stomp; D[ANCR] += 0.4;
+    const H = this.hold;
+    if (H.both) { setAnc(D, H.droop); D[ANC + 1] -= 0.04 * stomp; }   // [b5-holds] two-handed: low in both fists
+    else { setAnc(D, H.carry); D[ANC + 1] -= 0.05 * stomp; D[ANCR] += 0.4; }
     // turned away with the free arm across the chest
     D[MODELR + 1] = -0.9 * ease(turn);
     D[LTW] = turn; setE(D, LTGT, -0.06, 0.9, 0.13); lerpE(D, POLEL, 1, -0.3, 0.2, turn); D[IKL] = 0;
-    lerpE(D, ANC, -0.16, 0.86, 0.1, turn); lerpE(D, ANCR, 1.1, 0.8, 0.4, turn);
+    if (H.both) { D[ANC + 1] += 0.05 * turn; D[ANC + 2] -= 0.02 * turn; D[ANCR] += 0.15 * turn; }   // hugged in low
+    else { lerpE(D, ANC, -0.16, 0.86, 0.1, turn); lerpE(D, ANCR, 1.1, 0.8, 0.4, turn); }
     D[CHEST] -= 0.08 * turn; D[HEAD] = -0.12 * turn + 0.2 * imp; D[HEAD + 2] = 0.1 * turn;
     D[HEAD + 1] = 0.8 * glance * turn - 0.15 * turn; D[NECK + 1] = 0.3 * glance * turn;
     D[LOOKX] = 0.35 * glance - 0.2 * turn * (1 - glance);
@@ -3227,7 +3374,8 @@ export class Character {
     D[SPINE] = 0.18 - 0.08 * sigh; D[CHEST] = 0.13 - 0.1 * sigh; D[NECK] = 0.1; D[HEAD] = 0.2 - 0.16 * sigh - 0.2 * sniff;
     D[CLAVL + 2] = -0.1 + 0.18 * sigh; D[CLAVR + 2] = 0.1 - 0.18 * sigh;
     D[UARML] = 0.05; D[UARML + 2] = 0.04; D[FARML] = -0.15; D[IKL] = 0;
-    setAnc(D, this.hold.carry); D[ANC + 1] -= 0.12; D[ANCR] += 0.55; D[ANC + 2] -= 0.04;
+    if (this.hold.both) { setAnc(D, this.hold.droop); D[ANC + 1] -= 0.015 * sigh; }   // [b5-holds] two-handed
+    else { setAnc(D, this.hold.carry); D[ANC + 1] -= 0.12; D[ANCR] += 0.55; D[ANC + 2] -= 0.04; }
     D[MCURVE] = -1.0; D[MWIDTH] = 0.7; D[BROW] = 0.85; D[BROWY] = -0.2; D[EYE] = 0.5 + 0.3 * sniff; D[LOOKY] = -0.35; D[LOOKX] = -0.1 * scuff;
     D[MOPEN] = 0.35 * sigh; D[HANDPL] = 1.1; D[EARS] = -0.9 + 0.3 * sniff;
   }
@@ -3250,7 +3398,7 @@ export class Character {
     setAnc(D, H.carry);
     D[IKL] = H.twoCarry ? 1 : 0;
     const tw = cyc >= 6.1 && cyc < 7.1 ? (cyc - 6.1) / 1.0 : -1;
-    if (tw >= 0 && !NO_TWIRL[this.animKind]) {
+    if (tw >= 0 && !NO_TWIRL[this.animKind] && !H.both) {   // ([b5-holds]: no one-handed twirl)
       const k = ease(clamp(tw / 0.8, 0, 1));
       const lift = Math.sin(Math.PI * clamp(tw, 0, 1));
       D[SPIN] = wrapA(TAU * 2 * k); D[IKL] = 0;
@@ -3279,7 +3427,7 @@ export class Character {
     D[LTW] = 1; setE(D, LTGT, 0.17, 0.745, -0.005); D[IKL] = 0;
     D[UARML + 2] = 0.9; D[FARML] = -1.6; D[HANDL] = 0.3; D[HANDL + 2] = 0.6; D[POLEL] = 1; D[POLEL + 1] = 0.1; D[POLEL + 2] = -0.35;
     setAnc(D, H.carry); D[ANC + 1] += 0.005 * br;
-    if (H.twoCarry) { D[IKL] = 0; lerpE(D, ANC, -0.19, 0.74, 0.12, 1); }
+    if (H.twoCarry && !H.both) { D[IKL] = 0; lerpE(D, ANC, -0.19, 0.74, 0.12, 1); }   // ([b5-holds]: both hands stay on)
     D[MCURVE] = 0.95; D[MTILT] = 0.12 * tilt; D[BROWY] = 0.2 * tilt; D[EYE] = 0.95; D[HANDPL] = 1.4; D[EARS] = 0.3 + 0.3 * tilt;
   }
 
@@ -3302,8 +3450,8 @@ export class Character {
       D[UARML + 2] = 0.9; D[FARML] = -1.6; D[HANDL] = 0.3; D[HANDL + 2] = 0.6;
       D[POLEL] = 1; D[POLEL + 1] = 0.1; D[POLEL + 2] = -0.35;
     }
-    // flourish: a quick re-grip / twirl and a proud chin-up
-    if (this.animKind === 'shooter' || this.animKind === 'blaster') { D[SPIN] = wrapA(TAU * ease((cyc - 4.8) / 0.55)) * (cyc > 4.8 && cyc < 5.5 ? 1 : 0); D[ANC + 1] += 0.05 * fl; }
+    // flourish: a quick re-grip / twirl and a proud chin-up ([b5-holds]: no twirl with both hands on it)
+    if ((this.animKind === 'shooter' || this.animKind === 'blaster') && !H.both) { D[SPIN] = wrapA(TAU * ease((cyc - 4.8) / 0.55)) * (cyc > 4.8 && cyc < 5.5 ? 1 : 0); D[ANC + 1] += 0.05 * fl; }
     else D[ANCR] -= 0.2 * fl;
     D[HEAD] -= 0.08 * fl; D[HIPS_P + 1] -= 0.015 * fl;
     D[MCURVE] = 1; D[MTILT] = 0.22; D[BROW] = -0.25; D[EYE] = 0.92; D[LOOKX] = -0.12; D[LOOKY] = 0.04;
@@ -3508,6 +3656,7 @@ export class Character {
       _pT.copy(d.handL.pos); if (w.pump) _pT.z -= 0.036 * w.pump;   // blaster: the support hand racks the pump
       _pT.applyQuaternion(_q5).add(_v5);
       _q2.copy(_q5).multiply(d.handL.quat);
+      if (this.hold.gripRoll) this._gripRoll(_pT, _q2, P, dt);   // [b5-holds] the hand turns round the handle to meet the arm
       if (P[LTW] > 0.001) {
         _pT.lerp(_v6.set(P[LTGT], P[LTGT + 1], P[LTGT + 2]), P[LTW]);
         const wgt = Math.max(P[IKL], P[LTW]);
@@ -3764,6 +3913,38 @@ export class Character {
     let o = bone;
     while (o && o !== this.kid) { pos.applyQuaternion(o.quaternion).add(o.position); quat.premultiply(o.quaternion); o = o.parent; }
     return pos;
+  }
+
+  /** [b5-holds] The off hand on a two-handed weapon (hold.gripRoll): turn the grip (hand pos `pT` + orientation `q`, kid
+   *  space, both rewritten) round the handle axis (the hand's Z through the grip hole) so the back of the wrist faces where
+   *  the forearm will come from — the elbow the arm IK is about to place (shoulder, reach, pole) — up to ±gripRoll from
+   *  the weapon's authored grip, eased so the hand slides round the shaft instead of snapping. */
+  _gripRoll(pT, q, P, dt) {
+    const H = this.hold, L = this.limbs.armL, lim = H.gripRoll;
+    _gA.set(0, 0, 1).applyQuaternion(q);                                    // handle axis
+    _gP.copy(GRIP_HOLE_L).applyQuaternion(q).add(pT);                       // grip point on it
+    if (H.gripAt) _gP.addScaledVector(_gA, H.gripAt);                       // slid along a round shaft (m, + toward the head)
+    if (H.gripFlip) { q.multiply(_gFlip); _gA.negate(); }                   // the thumb toward the other end of the shaft
+    if (H.gripAt || H.gripFlip) pT.copy(GRIP_HOLE_L).applyQuaternion(q).negate().add(_gP);
+    this._kidXform(L.up, _gS, _gQ);                                         // shoulder
+    _gD.subVectors(pT, _gS); const len = clamp(_gD.length(), Math.abs(L.a - L.b) + 1e-3, (L.a + L.b) * 0.9995); _gD.normalize();
+    const cosA = clamp((L.a * L.a + len * len - L.b * L.b) / (2 * L.a * len), -1, 1);
+    _gN.set(P[POLEL], P[POLEL + 1], P[POLEL + 2]); _gN.addScaledVector(_gD, -_gN.dot(_gD));
+    if (_gN.lengthSq() < 1e-8) _gN.set(0, -1, 0).addScaledVector(_gD, _gD.y);
+    _gN.normalize();
+    _gE.copy(_gS).addScaledVector(_gD, L.a * cosA).addScaledVector(_gN, L.a * Math.sqrt(1 - cosA * cosA));   // elbow
+    _gE.sub(pT); _gE.addScaledVector(_gA, -_gE.dot(_gA));                   // wrist → elbow, across the handle
+    _gY.set(0, 1, 0).applyQuaternion(q);                                     // the grip's own wrist side
+    let want = this._gRollV || 0;
+    if (_gE.lengthSq() > 4e-4) {
+      const cx = _gY.y * _gE.z - _gY.z * _gE.y, cy = _gY.z * _gE.x - _gY.x * _gE.z, cz = _gY.x * _gE.y - _gY.y * _gE.x;
+      want = clamp(Math.atan2(cx * _gA.x + cy * _gA.y + cz * _gA.z, _gY.dot(_gE)), -lim, lim);
+    }
+    this._gRollV = this._gRollOn ? dampAngle(this._gRollV || 0, want, 16, dt) : want;
+    this._gRollOn = true;
+    _gQ.setFromAxisAngle(_gA, this._gRollV);
+    q.premultiply(_gQ);
+    pT.copy(GRIP_HOLE_L).applyQuaternion(q).negate().add(_gP);
   }
 
   /** Analytic two-bone IK in kid space. target = end-bone origin, pole = bend direction, endQuat = kid-space end orientation. */

@@ -1,0 +1,29 @@
+JOB-4 (holds) @ 50c93f3 (git rev-parse --short HEAD in the run worktree) — verdict: everything full. holds ×3 255/255 each,
+world-build, hud-lead (turf / zones / tower), input-swim, loadout-picker, net-mock, net-holds a + b all full; the three 90 s
+all-bot matches ran with CONSOLE 0; no '[net] cN uncaught:' line in any log; nothing failed, so no log excerpts.
+
+## the script's whole output (SLOTS=3 PAR=3 REP=3 LOG=.botlab/b5-holds-j4 tools/botlab/jobs/batch5/holds/regress.sh)
+== holds-2: RESULT 255/255 0 FAIL
+== holds-1: RESULT 255/255 0 FAIL
+== holds-3: RESULT 255/255 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 27.5% vs 27.3%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 3/7 396p · roller×2 2/4 616p · blaster×2 8/3 492p · brolly×2 6/5 296p
+CONSOLE 0 unique warning/error line(s)
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Bravo (time) | final 73 vs 62 (penalty +20.7/+0) | OT no
+   by weapon (players, splats dealt, deaths, avg turf) brolly×2 12/22 1001p · blaster×2 42/21 1629p · roller×2 35/29 1966p · brush×2 14/32 981p
+CONSOLE 0 unique warning/error line(s)
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 27.8% vs 18.1%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 2/5 474p · mitts×2 6/4 520p · shooter×1 4/2 1158p · bow×1 1/1 636p · bucket×1 0/1 523p · blaster×1 3/3 542p
+CONSOLE 0 unique warning/error line(s)

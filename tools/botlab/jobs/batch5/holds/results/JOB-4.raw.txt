@@ -1,0 +1,21 @@
+JOB-4 raw lines (automatic, written by the Mac mini's queue when the job ended, 2026-10-04 07:28); ran at 50c93f3. A written-up JOB-4.txt follows when a helper session is awake.
+
+## out.txt
+== holds-2: RESULT 255/255 0 FAIL
+== holds-1: RESULT 255/255 0 FAIL
+== holds-3: RESULT 255/255 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 27.5% vs 27.3%
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Bravo (time) | final 73 vs 62 (penalty +20.7/+0) | OT no
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 27.8% vs 18.1%

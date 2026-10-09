@@ -1,0 +1,72 @@
+JOB-7 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 10:30:05
+branch botlab-b5-holds, ran at b48ce79, exit code 0, wall time 5min
+(a written-up JOB-7.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### holds JOB-7 at b48ce79
+== holds-2: RESULT 325/325 0 FAIL
+== holds-1: RESULT 325/325 0 FAIL
+== holds-3: RESULT 325/325 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== lobby-hey: RESULT 3/3 0 FAIL
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 31% vs 26.8%
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Alpha (retake) | final 30 vs 53 (penalty +45.5/+36) | OT 6.2s
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 31.8% vs 23.9%
+SUMMARY 19 runs, 0 FAIL lines
+
+## last 15 lines of job.log
+== net-holds-b: RESULT 7/7 0 FAIL
+== lobby-hey: RESULT 3/3 0 FAIL
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 31% vs 26.8%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 4/5 371p · roller×2 3/4 702p · blaster×2 4/2 517p · brolly×2 2/3 324p
+CONSOLE 0 unique warning/error line(s)
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Alpha (retake) | final 30 vs 53 (penalty +45.5/+36) | OT 6.2s
+   by weapon (players, splats dealt, deaths, avg turf) brolly×2 10/27 953p · blaster×2 53/17 1847p · roller×2 29/27 1975p · brush×2 11/32 944p
+CONSOLE 0 unique warning/error line(s)
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 31.8% vs 23.9%
+   by weapon (players, splats dealt, deaths, avg turf) blade×1 0/2 1193p · shooter×2 11/5 974p · spinner×2 3/2 758p · bucket×2 1/6 409p · bow×1 1/1 607p
+CONSOLE 0 unique warning/error line(s)
+SUMMARY 19 runs, 0 FAIL lines
+
+## fails.txt
+
+## summary.txt
+== holds-2: RESULT 325/325 0 FAIL
+== holds-1: RESULT 325/325 0 FAIL
+== holds-3: RESULT 325/325 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== lobby-hey: RESULT 3/3 0 FAIL
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 31% vs 26.8%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 4/5 371p · roller×2 3/4 702p · blaster×2 4/2 517p · brolly×2 2/3 324p
+CONSOLE 0 unique warning/error line(s)
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Alpha (retake) | final 30 vs 53 (penalty +45.5/+36) | OT 6.2s
+   by weapon (players, splats dealt, deaths, avg turf) brolly×2 10/27 953p · blaster×2 53/17 1847p · roller×2 29/27 1975p · brush×2 11/32 944p
+CONSOLE 0 unique warning/error line(s)
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 31.8% vs 23.9%
+   by weapon (players, splats dealt, deaths, avg turf) blade×1 0/2 1193p · shooter×2 11/5 974p · spinner×2 3/2 758p · bucket×2 1/6 409p · bow×1 1/1 607p
+CONSOLE 0 unique warning/error line(s)

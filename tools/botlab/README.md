@@ -231,3 +231,22 @@ and LOOK chips in the bottom bar, each opening the kit picker above; a pick is s
   the picker: `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/jobs/lobby-kit/mock-shots.cjs
   OUT=tools/botlab/jobs/lobby-kit/out tools/botlab/run.sh tools/botlab/netpage.cjs` (8 checks: the bar has room to spare,
   every weapon / sub / special name fits its chip, READY? / START!'s sub-lines whole at 1280)
+
+Two-handed holds (batch 5, src/game/character.js `HOLD_BOTH` / `_bothHands` / `_gripRoll`: the brush, the roller, the
+blaster and the Canopy Brolly keep the off hand on the weapon in every state, the menu and podium dances included):
+- `MAP=testbox MODE=turf PAGE=tools/botlab/tests/holds.js tools/botlab/run.sh tools/botlab/page.cjs` — the other weapons
+  first (their off hand's role per state against `holds-baseline.json`, recorded on the code before the change), then
+  the four through stand / run / fire / roll / jump / a fall / the respawn / the Tidal Slam / every menu and podium dance /
+  the fidgets: the off hand on its grip, a natural elbow and wrist, the weapon clear of the head and (in the poses that
+  hold still) not through the deck, and the roller's drum / the brush's head square to its path (≤ 5°) and on the
+  midline (± 7 cm) while rolling; then the lobby emotes as the room plays them (HEY! lets the off hand go to wave and
+  takes the weapon back, BOOYAH! / the dance / the flex keep it on); then a 30 s bot fight with them
+  (`PAGE_ARGS='only=both,others,emotes,bots'`, `w=…`, `s=…`, `dump`, `record`)
+- `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-holds.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`
+  — online Practice: each screen sees the other player's squidkid keep its off hand on the weapon (`NET_ARGS='a=brush;b=blaster'`)
+- the room lobby (offline stand-in): `CLIENTS=1 Q0='netmock=1&mockauto=0' NET=tools/botlab/jobs/batch5/holds/lobby-shots.cjs
+  OUT=/dir tools/botlab/run.sh tools/botlab/netpage.cjs` — pictures of the line-up, and everyone's HEY! checked (the off
+  hands let go to wave, back on after)
+- pictures: `tools/botlab/scenes/holds.js` through hud-shots.cjs (`PRE_ARGS='w=… s=… v=front,fq,left,back,right,hand,handb,handd'`;
+  `s=leap,hang,slam` for the Tidal Slam, `s=v0b7` a victory dance at a set beat, `s=hey0.7` the HEY! emote, `v=frontw,top`
+  a roll's drum in frame)
