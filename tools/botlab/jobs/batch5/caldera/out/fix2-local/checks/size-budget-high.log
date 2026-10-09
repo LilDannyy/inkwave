@@ -1,0 +1,5 @@
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1939}
+PASS paint atlas density  {"ppm":4,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4230,"cap":12690,"capNeeded":[3000,3000]}
+RESULT 3/3
+console errors: none

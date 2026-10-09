@@ -1,0 +1,27 @@
+== caldera tower track · heading 0° · length 96 / 96 m (Alpha's / Bravo's side) · speed 1.6 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 16 pieces · 13 runs, 0 inclines, 2 climbs, 1 drops · 96 m
+     run      s=     0  [0,1.8,0] → [0,1.8,6.2]  6.2 m
+     run      s=   6.2  [0,1.8,6.2] → [0,1.8,6.21]  0.01 m
+     DROP     s=  6.21  [0,1.8,6.21] → [0,1.2,6.21]  -0.6 m
+     run      s=  6.81  [0,1.2,6.21] → [0,1.2,25.5]  19.29 m
+     run      s=  26.1  [0,1.2,25.5] → [-3.5,1.2,25.5]  3.5 m
+     run      s=  29.6  [-3.5,1.2,25.5] → [-3.5,1.2,28.76]  3.26 m
+     run      s= 32.86  [-3.5,1.2,28.76] → [-3.5,1.2,28.81]  0.05 m
+     CLIMB    s= 32.91  [-3.5,1.2,28.81] → [-3.5,2.4,28.81]  1.2 m  onto [{"id":1205,"tag":"terrace","centre":[-3.97,1.43,33.84],"size":[2.05,1.95,7.63]},{"id":1204,"tag":"terrace","centre":[-2.47,1.43,33.94],"size":[0.95,1.95,7.84]}]
+     run      s= 34.11  [-3.5,2.4,28.81] → [-3.5,2.4,34.6]  5.79 m
+     run      s=  39.9  [-3.5,2.4,34.6] → [13,2.4,34.6]  16.5 m
+     run      s=  56.4  [13,2.4,34.6] → [13,2.4,37.3]  2.7 m
+     run      s=  59.1  [13,2.4,37.3] → [13,2.4,37.37]  0.07 m
+     CLIMB    s= 59.17  [13,2.4,37.37] → [13,3.6,37.37]  1.2 m  onto [{"id":1081,"tag":"yard","centre":[11.93,2.03,43.89],"size":[1.07,3.15,10.62]},{"id":1079,"tag":"yard","centre":[13,2.03,43.89],"size":[1.07,3.15,10.62]},{"id":1077,"tag":"yard","centre":[14.07,2.03,43.89],"size":[1.07,3.15,10.62]}]
+     run      s= 60.37  [13,3.6,37.37] → [13,3.6,43]  5.63 m
+     run      s=    66  [13,3.6,43] → [-8,3.6,43]  21 m
+     run      s=    87  [-8,3.6,43] → [-8,3.6,52]  9 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 16 pieces · 13 runs, 0 inclines, 2 climbs, 1 drops · 96 m
+   checkpoints [{"team":0,"index":0,"d":23.1,"dur":13.33,"at":[0,1.2,22.5]},{"team":0,"index":1,"d":51.4,"dur":13.33,"at":[8,2.4,34.6]},{"team":0,"index":2,"d":75,"dur":13.33,"at":[4,3.6,43]},{"team":1,"index":0,"d":23.1,"dur":13.33,"at":[0,1.2,-22.5]},{"team":1,"index":1,"d":51.4,"dur":13.33,"at":[-8,2.4,-34.6]},{"team":1,"index":2,"d":75,"dur":13.33,"at":[-4,3.6,-43]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 96 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -96 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/r2b/t1/tower): caldera-top.png, caldera-01-drop-s6.png, caldera-02-checkpoint1-s23.png, caldera-03-corner-s26.png, caldera-04-corner-s30.png, caldera-05-climb-s33.png, caldera-06-corner-s40.png, caldera-07-checkpoint2-s51.png, caldera-08-corner-s56.png, caldera-09-climb-s59.png, caldera-10-corner-s66.png, caldera-11-checkpoint3-s75.png, caldera-12-corner-s87.png, caldera-13-goal-s96.png
+   console errors: none
+RESULT_JSON {"map":"caldera","len":[96,96],"holes":0,"issues":0,"climbs":2,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}

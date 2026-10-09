@@ -1,0 +1,9 @@
+STRETCHES caldera-low: 98.8% of 4660 cells within 5 m; largest open r 6.7 m at [0.5, -64.5]; 8 patch(es) farther than 5.0 m from cover
+  patch   19 cells  r max 6.7 m at (0.5, -64.5)  x -2.5..2.5  z -65.5..-62.5
+  patch   19 cells  r max 6.7 m at (-0.5, 64.5)  x -2.5..2.5  z 62.5..65.5
+  patch    3 cells  r max 5.7 m at (18.5, -19.5)  x 17.5..18.5  z -20.5..-18.5
+  patch    3 cells  r max 5.7 m at (-18.5, 19.5)  x -18.5..-17.5  z 18.5..20.5
+  patch    3 cells  r max 5.6 m at (7.5, -7.5)  x 5.5..7.5  z -7.5..-7.5
+  patch    3 cells  r max 5.6 m at (-7.5, 7.5)  x -7.5..-5.5  z 7.5..7.5
+  patch    1 cells  r max 5.4 m at (-25.5, -32.5)  x -25.5..-25.5  z -32.5..-32.5
+  patch    1 cells  r max 5.4 m at (25.5, 32.5)  x 25.5..25.5  z 32.5..32.5
