@@ -10,7 +10,7 @@
 //   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
 // No colliders here: every collider is a layout piece (layout.js).
 import { RAILS, GANTRY_RAILS } from './layout.js';
-import { REGION_ALL, inPoly } from './geo.js';
+import { REGION_ALL, inPoly, ch, S_LIP } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA } from './lava.js';
 
 export function register(D, H) {
@@ -51,6 +51,22 @@ export function register(D, H) {
         const [i, j] = key.split(',').map(Number);
         const a = vert(i, j), b = vert(i + 1, j), c = vert(i + 1, j + 1), d = vert(i, j + 1);
         idx.push(a, c, b, a, d, c);
+      }
+      // the lavafalls: past each Spillway's lip the lava pours down the outer flank in a chute (out of play), at both
+      // levels: each breach reads from outside as a river of lava leaving the caldera, fanning out as it runs (the
+      // backdrop's real lavafall and its glow replace this; until ENGINE H22 removes the sea it stays above y −1.5)
+      for (const sg of [1, -1]) {
+        const N = 28, M = 12, base = pos.length / 3, drop = LAVA_Y + 1.45;
+        for (let a = 0; a <= N; a++) for (let b = 0; b <= M; b++) {
+          const u = a / N, s = S_LIP - 0.3 + a * 0.6, t = (-6.3 + (12.6 * b) / M) * (1 + u * 0.9), [x, z] = ch(s, t);
+          const n = vn(x * 0.35 + 3, z * 0.35) * 0.65 + vn(x * 1.1 + 7, z * 1.1 - 3) * 0.35, seam = Math.max(0, 1 - Math.abs(n - 0.5) * 5);
+          tmp.copy(cA).lerp(cB, Math.min(1, 0.25 + seam + u * 0.6));
+          pos.push(sg * x, -Math.sqrt(u) * drop, sg * z); nor.push(0, 1, 0); colr.push(tmp.r, tmp.g, tmp.b); uv.push(0, 0);
+        }
+        for (let a = 0; a < N; a++) for (let b = 0; b < M; b++) {
+          const k = base + a * (M + 1) + b, k2 = k + M + 1;
+          idx.push(k, k + 1, k2, k + 1, k2 + 1, k2);   // (the turn about y keeps the winding)
+        }
       }
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -195,7 +211,7 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
-  { type: 'caldera_cupola_hood', pos: [14.0, 0, -46.5] },
-  { type: 'caldera_jib', pos: [16.0, 0, -56.5] },
+  { type: 'caldera_cupola_hood', pos: [13.5, 0, -46.5] },
+  { type: 'caldera_jib', pos: [18.2, 0, -56.5] },
   { type: 'caldera_office_roof', pos: [-19.5, 0, -50.5] },
 ];

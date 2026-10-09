@@ -45,7 +45,7 @@ export const LAVA = {
       look: { type: 'caldera_pumice', variant: i, chain: [-21.2, -19.6] } })),
     // the Organ Pipes (Alpha's cluster, SSW): hexagonal basalt columns, corners on ±x, in a line along z
     { id: 'organL', kind: 'float', shape: 'hex', pos: [-10, -12.80], r: 2.5, top: [2.3, 4.65], depth: 4.2, ink: 'all',
-      inLake: true, parts: [{ x: 0, z: -1.4, w: 1.2, d: 1.2, y0: 0, y1: 0.7, ink: false }],   // the stub on its lake side
+      inLake: true, parts: [{ x: 0, z: -1.4, w: 1.2, d: 1.2, y0: 0, y1: 1.0, ink: false }],   // the stub on its lake side: 1.0 m, cover (rule 25: ≤ 1.0)
       look: { type: 'caldera_organ', role: 'lookout' } },
     { id: 'organB', kind: 'float', shape: 'hex', pos: [-10, -9.14], r: 1.5, top: [1.8, 3.5], depth: 3.7, ink: 'deck',
       look: { type: 'caldera_organ' } },
@@ -94,7 +94,7 @@ export function riderStandIns(mk) {
   for (const k of ['L', 'B', 'A']) {
     const [x, z, r] = ORG[k], top = POSE[k][0] + (POSE[k][1] - POSE[k][0]) * e;
     out.push(...hexBlocks(x, z, r, top, DEPTH[k], (i) => mk('organ', { tag: 'organ-' + k + i })));
-    if (k === 'L') out.push({ kind: 'box', min: [x - 0.6, top, z - 1.4 - 0.6], max: [x + 0.6, top + 0.7, z - 1.4 + 0.6], ...mk('organ-stub', { tag: 'organ-stub', paint: false }) });
+    if (k === 'L') out.push({ kind: 'box', min: [x - 0.6, top, z - 1.4 - 0.6], max: [x + 0.6, top + 1.0, z - 1.4 + 0.6], ...mk('organ-stub', { tag: 'organ-stub', paint: false }) });
   }
   if (e === 1) {
     STONES.forEach(([x, z, w, d], i) => out.push({ kind: 'obox', center: [x, (0.35 + 1.25) / 2, z], size: [w, 0.9, d], rotY: STONE_YAW, ...mk('stone', { tag: 'race' + (i + 1), perch: true }) }));
