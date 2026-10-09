@@ -45,7 +45,7 @@
   // the arc preview from the side (the chase camera sees it edge-on): dots along the flight, the ring over a disc
   add('carrier-arc', () => {
     me.aimPitch = 0.12; me.intent.fire = true; step(1 / 60);
-    cine(V(9.5, 3.4, 13.5), V(0, 2.0, 15), 60);
+    cine(V(-9.5, 3.4, 12.5), V(0, 1.6, 16), 60);   // (from the west: the alley's thin wall stands east of it)
   });
   add('carrier-foe', () => {
     me.intent.fire = false; step(0.3);
