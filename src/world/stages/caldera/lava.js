@@ -8,7 +8,7 @@
 // tools/botlab/offscreen-boot.cjs) or, in Node (check-maps), by the LAVA env var; default LOW. At that level
 //   • the Organ Pipes are static hexagonal columns at that level's pose (LOW 1.4 / 1.8 / 2.3, HIGH 2.35 / 3.5 / 4.65),
 //   • the Pumice Race's stones are static perches (top 1.25) at HIGH, absent at LOW,
-//   • at HIGH every floor the lava covers (the Slump shelves, the Spillways, the Casting Floors: tops at 0) is left out
+//   • at HIGH every floor the lava covers (the Slump shelves, the Casting Floors with the Spillway fords: tops at 0) is left out
 //     of the build, so the nav, the cover map, spawn-mid and the bots see it as gone,
 //   • props.js draws a placeholder lava surface at the level over the whole region.
 import { P, A, sp, rot, S0, S1, FACE, LAKE, SPILL, SLUMP, CHUTE, STONES, STONE_YAW, ORG, POSE, DEPTH, LC, LCE, LIP, AW, r3 } from './geo.js';
@@ -68,8 +68,8 @@ export const LAVA = {
     { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true },           //   and its north board (to Bravo)
     { kind: 'bar', pos: [-35.5, 6.2, -55.75], yaw: Math.PI, h: 1.8 },            // the Surge Board on the Surge Office's south face (twin)
   ],
-  // (fix round 1: each Spillway's outer half (s 28 → the lip) is lava at both levels, so its lip sits at the LOW level
-  // and the lavafall pours at both levels: a thin fall at LOW, a full one at HIGH; the vent there is a pool vent now)
+  // (round 3: each Spillway is a lava arm from the mouth to its lip at both levels — at LOW only its ford (s ≤ 3.5, joined to
+  // the Casting Floor) is dry — so its lip sits at the LOW level and the lavafall pours at both levels, thin at LOW)
   cascades: [{ lip: [A(LIP - 0.2, -AW + 0.2), A(LIP - 0.2, AW - 0.2)], y: -0.65, drop: 14 }],    // Alpha's Spillway lip, the arm's whole width (twin: Bravo's)
   vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [...A(9, 0)].reduce((a, v, i) => (i ? [a[0], -0.6, v] : [v]), [])],   // pools, a floor drain, the arm (8 with twins)
   flotsam: { count: 48, size: [0.3, 0.9], keepOff: 1.0 },  // cosmetic pumice drifting on the open lava, no collider
@@ -79,7 +79,7 @@ export const LAVA = {
     rise: ['SURGE!', 'The Pumice Race is coming up'],
     high: ['HIGH MARK', 'Race up · Organ Pipes up'],
     warnFall: ['LAVA FALLING', 'The stones sink in {n}'],
-    low: ['EBB', 'Slump shelf and casting floor open'],
+    low: ['EBB', 'Slump shelf, Spillway ford and Casting Floor open'],
     hold: ['LAVA HOLDS', ''],
   },
 };
