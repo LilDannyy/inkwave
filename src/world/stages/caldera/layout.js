@@ -224,7 +224,7 @@ add(B(OFFICE.x0, OFFICE.x1, 3.6, 9.5, OFFICE.z0, OFFICE.z1, white({ tag: 'surge-
 const castLine = (x, z0, z1, gap, tag, c) => [stack(x, (z0 + gap[0]) / 2, 1.2, gap[0] - z0, 2.0, 3.6, tag, c), stack(x, (gap[1] + z1) / 2, 1.2, z1 - gap[1], 2.0, 3.6, tag, c)];
 add(castLine(-27.7, G.GAL.z1, -46.6, [-52.6, -49.6], 'ferry-castings', K.cast), castLine(-10.0, G.GAL.z1, -47.6, [-52.6, -49.6], 'ferry-castings', '#5f6a63'));
 // the Gate's apron (Bazookarp: blocks ≥ 1.2 m within 4 m of route 1 between the gallery and the Gate) and centre cover
-add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-13.2, -48.9, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0]));
+add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-14.6, -48.7, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0]));
 // the west lane and the side yards: the Rim Head's approach, the west side yard, the east strip
 add(drum(-34.2, -57.6, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'), stack(-29.6, -41.6, 1.6, 1.6, 1.2, 3.6, 'pig-iron', '#5b5550'),
   stack(-35.6, -42.0, 1.4, 1.2, 1.3, 3.6, 'pig-iron', '#5b5550'));
@@ -269,7 +269,8 @@ add(stairOn(G.ST_EAST, 2.7, 1.2, 2.4, 2.2, steps({ tag: 'east-steps' })));
 add(stack(-1.2, -34.0, 1.4, 0.9, 1.1, 2.4, 'flask-stack', '#6b5f55'), stack(-12.0, -37.0, 1.4, 1.0, 1.0, 2.4, 'pattern-crates', K.wood));
 
 // ---------------------------------------------------------------------------------------- the Lakefront (1.2), the Moorings (1.8)
-add(stack(-6.2, -23.6, 1.2, 1.0, 1.1, 1.2, 'chain-bin'), stack(-9.4, -23.3, 1.2, 1.0, 1.1, 1.2, 'chain-bin'), ob(P(25.0, -80.0), 2.4, 0.6, 1.2, 3.4, 10, cover('#e6dfcd', { tag: 'tide-board' })));
+add(ob([-7.8, -23.4], 2.4, 0.6, 1.2, 3.4, 0, cover('#e6dfcd', { tag: 'tide-board' })));   // the Tide Board by the causeway's foot, clear of the tower's run and the weir's room
+add(stack(-4.0, -23.2, 1.0, 1.0, 1.1, 1.2, 'mooring-bollard', K.ironDk));
 add(stack(-14.4, -29.8, 1.4, 1.2, 1.3, 1.8, 'capstan', '#4f5a52'), stack(-17.8, -28.6, 1.0, 1.0, 1.0, 1.8, 'chain-bollard', K.ironDk),
   stack(-22.7, -26.6, 1.2, 1.2, 1.0, 1.8, 'stone-crate', K.pumice));
 // the south Slump head: a chain bollard back from the Race's landing; the winch house against the Rim Head's face
@@ -277,7 +278,7 @@ add(stack(-14.4, -29.8, 1.4, 1.2, 1.3, 1.8, 'capstan', '#4f5a52'), stack(-17.8, 
 { const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house' }))); }
 
 // ---------------------------------------------------------------------------------------- the Casting Floor (0, LOW only)
-add(stack(6.2, -14.8, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
+add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
 
 // ---------------------------------------------------------------------------------------- the Spillway
 // the Spillway Bridge (deck 2.3: 0.1 under the banks it bears on, underside 1.95): square across the arm's throat at the
@@ -316,10 +317,10 @@ add(HALL_W.flatMap((w) => w.blocks));
 // the Ladle Gantry: the second route to the weir at HIGH, when the Casting Floor is under lava (Lakefront east → the
 // island's south face over the Casting Floor). 1.3 (0.1 over the Lakefront and the island it rests on); chain rails on
 // both sides. Nothing stands on its landing: the mould stack is west of it, the ladle stand east, the Lakefront clear
-add(B(8, 11, -1.1, 1.3, -21.4, -9.6, iron({ tag: 'ladle-gantry', color: '#56685e', onlyIn: 'bazookarp' })));
-add({ ...railSeg([7.875, -20.6], [7.875, -10.4], 1.3), onlyIn: 'bazookarp' }, { ...railSeg([11.125, -19.8], [11.125, -10.4], 1.3), onlyIn: 'bazookarp' });
+add(B(7, 10, -1.1, 1.3, -21.4, -9.6, iron({ tag: 'ladle-gantry', color: '#56685e', onlyIn: 'bazookarp' })));
+add({ ...railSeg([6.875, -20.6], [6.875, -11.4], 1.3), onlyIn: 'bazookarp' }, { ...railSeg([10.125, -19.8], [10.125, -10.4], 1.3), onlyIn: 'bazookarp' });
 RAILS.length -= 2;   // (the gantry's chain rails are drawn only in its own world: props.js reads GANTRY_RAILS)
-export const GANTRY_RAILS = [[7.875, -20.6, 7.875, -10.4, 1.3, 1.0], [11.125, -19.8, 11.125, -10.4, 1.3, 1.0]];
+export const GANTRY_RAILS = [[6.875, -20.6, 6.875, -11.4, 1.3, 1.0], [10.125, -19.8, 10.125, -10.4, 1.3, 1.0]];
 // the outline alone (OUTLINE_ONLY): floors, tiers, walls, crossings and riders — for the lead's shape sign-off shots
 const OUTLINE_TAG = /^(island|gallery|yard|rim-head|terrace|lakefront|moorings|casting-floor|slump-shelf|north-head|horn-step|ladle-road|rim-ridge|coping|socket-collar|footprint|pour-floor|causeway|weighbridge|spillway-bridge|organ|race|caldera-wall|casting-hall)/;
 if (OUTLINE_ONLY) { for (const L of [HALF, SINGLE]) { const keep = L.filter((b) => OUTLINE_TAG.test(b.tag || '')); L.length = 0; L.push(...keep); } RAILS.length = 0; }
@@ -346,15 +347,15 @@ const TOWER = {
 const GAL_B = G.GALLERY.map(([x, z]) => [-x, -z]);
 const BAZOOKARP = {
   start: [0, 1.8, 0],                                  // the Pond on the Pour Floor, under the Surge Gauge
-  weirs: [{ at: [0, 1.2, 24.5] }],                     // Bravo's Lakefront at its causeway's foot (posts at x ±2.7)
-  gate: { at: [17, 3.6, 49] },                         // Bravo's yard, in the centre lane, a level below the gallery
+  weirs: [{ at: [-3, 1.2, 25.5] }],                    // Bravo's Lakefront at its causeway's foot, west of the axis (posts ±2.7)
+  gate: { at: [18, 3.6, 50] },                         // Bravo's yard, in the centre lane, a level below the gallery
   freeZones: [{ poly: GAL_B, y0: 4.6, y1: 6.5,         // Bravo's gallery; a sign at each of its three stairs
     signs: [[-G.PADX, -(G.GAL.z1 - 0.4), 0], [-(G.GAL.x0 - 0.4), -(G.PADZ + 1.5), 90], [-(G.GAL.x1 + 0.4), -(G.PADZ + 4.9), -90]] }],
   routes: {
-    causeway: [[0, 12], [0, 22], [0, 24.5], [2.5, 28.2], [2.5, 31.5], [16.8, 36.7], [16.8, 40.2], [17, 49]],   // Lower + Upper Surge Steps
-    castingFloor: [[-6, 14], [-6, 20.5], [0, 24.5]],                                                   // LOW only
-    gantry: [[-9.5, 10], [-9.5, 20.6], [0, 24.5]],                                                     // the Ladle Gantry (bazookarp only)
-    east: [[0, 24.5], [-8.6, 24.2], [-8.6, 28.5], [-3, 33.5], [4.8, 35.2], [5.5, 38.6], [17, 49]],      // East Steps → Bay Stair
+    causeway: [[0, 12], [0, 22], [-3, 25.5], [2.5, 28.2], [2.5, 31.5], [16.8, 36.7], [16.8, 40.2], [18, 50]],     // Lower + Upper Surge Steps
+    castingFloor: [[-7, 14], [-7, 20.5], [-3, 25.5]],                                                   // LOW only
+    gantry: [[-8.5, 10], [-8.5, 20.6], [-3, 25.5]],                                                     // the Ladle Gantry (bazookarp only)
+    east: [[-3, 25.5], [-8.6, 24.2], [-8.6, 28.5], [-3, 33.5], [4.8, 35.2], [5.5, 38.6], [18, 50]],      // East Steps → Bay Stair
   },
 };
 
