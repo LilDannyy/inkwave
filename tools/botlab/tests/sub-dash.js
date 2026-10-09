@@ -151,33 +151,41 @@
       R(`dashing at a jump's rise, apex and fall never raises its peak above a plain jump's (${r3(plain)} m, ± 0.02)`, rows.every((r) => r.rise <= plain + 0.02), { plain: r3(plain), rows });
       // blocks just over a kid's reach: no jump + dash timing climbs one a plain hop can't (and the probe sees a 1.8 m one climbed with a plain hop)
       let CB = null;   // (one block, moved to each height: thousands of tries never pile up dynamic blocks)
-      const climb = (h, d0, f, dashFirst) => {
+      // a run-up of d0 m at the block (h m tall), then at step dt: a plain running hop (f < 0), a jump with the dash f 60 Hz
+      // frames into it, or (dashFirst) the dash then a jump f frames later — does the kid end up standing on the block?
+      const climb = (h, d0, f, dashFirst, dt = 1 / 60) => {
+        const k = (n) => Math.round(n / (60 * dt)), J = Math.max(1, k(2));
         unbox(); if (!CB) CB = L.addDynamic({ tag: 'test:dash-climb' });
         CB.solid = true; L.moveDynamic(CB, V(4, h / 2, -20), V(1, h / 2, 3), 0); CB.dp.set(0, 0, 0);
         put(me, 3 - 0.38 - d0, 0, -20, Math.PI / 2);
         let onTop = false;
-        sim(me, 100, 1 / 60, (i) => dashFirst ? { sub: i === 0, jump: i === f + 1 || i === f + 2, move: [1, 0] } : { jump: i < 2, sub: f >= 0 && i === f, move: [1, 0] }, () => { if (me.grounded && me.pos.y > h - 0.05) onTop = true; });
+        const fk = f >= 0 ? k(f) : -1;
+        sim(me, k(100), dt, (i) => dashFirst ? { sub: i === 0, jump: i > fk && i <= fk + J, move: [1, 0] } : { jump: i < J, sub: fk >= 0 && i === fk, move: [1, 0] }, () => { if (me.grounded && me.pos.y > h - 0.05) onTop = true; });
         return onTop;
       };
       // (on its own a running hop that meets the wall right at its apex is pushed up over the top edge: testbox's 1.9 m is
       // climbed from a 1.0 m run-up with no dash at all. So the rule is judged against that: with any jump + dash timing,
       // nothing taller than a plain hop's best is climbed)
-      // The plain hop's best is measured to 0.01 m (1.85 … 2.00 m blocks, 7 run-ups); the dash then gets 36 timings × 7
-      // run-ups on every height from a centimetre above that best up to 2.0 m, and must climb none of them. (dash-reach.js
-      // takes its height bar from this number: HOP_BEST there)
-      const RUN = [0.05, 0.3, 0.6, 1.0, 1.5, 2.6, 4.2], c2 = (x) => Math.round(x * 100) / 100;
-      let plainBest = 0; const plainAt = {};
-      for (let h = 1.85; h <= 2.0001; h += 0.01) for (const d0 of RUN) { const hh = c2(h); if (climb(hh, d0, -1, false)) { plainBest = Math.max(plainBest, hh); plainAt[hh + '@' + d0] = true; } }
-      const H2 = []; for (let h = plainBest + 0.01; h <= 2.0001; h += 0.01) H2.push(c2(h));
-      const tries = []; let dashBest = 0; const extra = [];
-      for (const h of H2) for (const d0 of RUN) for (let f = 0; f <= 34; f += 2) for (const df of [false, true]) {
-        const c = climb(h, d0, f, df); tries.push(c);
-        if (c) { dashBest = Math.max(dashBest, h); extra.push({ h, runUp: d0, frame: f, dashFirst: df }); }
-      }
+      // The plain hop's best is measured to 0.01 m (1.60 … 2.20 m blocks, 30 run-ups), at 1/60 and at 1/24; the dash then
+      // gets every timing × the 30 run-ups on every height from a
+      // centimetre above that best up to 0.1 m over it, and must climb none of them. (dash-reach.js takes its height bars
+      // from these numbers: HOP_BEST there)
+      const RUN = Array.from({ length: 30 }, (_, i) => Math.round((0.05 + i * 0.15) * 100) / 100), c2 = (x) => Math.round(x * 100) / 100;   // (run-ups 0.05 … 4.4 m)
       const sane = climb(1.8, 0.3, -1, false);
+      for (const dt of [1 / 60, 1 / 24]) {
+        let plainBest = 0; const plainAt = {};
+        for (let h = 1.6; h <= 2.2001; h += 0.01) for (const d0 of RUN) { const hh = c2(h); if (climb(hh, d0, -1, false, dt)) { plainBest = Math.max(plainBest, hh); plainAt[hh + '@' + d0] = true; } }
+        const H2 = []; for (let h = plainBest + 0.01; h <= plainBest + 0.1001; h += 0.01) H2.push(c2(h));
+        const fs = [...new Set(Array.from({ length: 18 }, (_, i) => Math.round(i * 2 / (60 * dt)) * 60 * dt))];   // (the timings this dt can tell apart)
+        const tries = []; let dashBest = 0; const extra = [];
+        for (const h of H2) for (const d0 of RUN) for (const f of fs) for (const df of [false, true]) {
+          const c = climb(h, d0, f, df, dt); tries.push(c);
+          if (c) { dashBest = Math.max(dashBest, h); extra.push({ h, runUp: d0, frame: f, dashFirst: df }); }
+        }
+        R(`dt 1/${Math.round(1 / dt)}: a plain running hop's best, to 0.01 m, lands on ${plainBest} m (testbox: a running hop meeting the wall at its apex); no jump + dash timing climbs anything higher (${tries.length} tries: ${H2.length} heights ${H2[0]}–${H2[H2.length - 1]} m × ${RUN.length} run-ups × ${fs.length} timings × dash first or jump first)`,
+          sane && plainBest >= 1.6 && dashBest === 0 && H2.length > 0, { plainBest, plainRunUps: Object.keys(plainAt).filter((k) => k.startsWith(plainBest + '@')), dashClimbs: extra.slice(0, 6), sane });
+      }
       unbox(); CB.solid = false; L.moveDynamic(CB, V(1e4, -500, 1e4), V(0.1, 0.1, 0.1), 0);
-      R(`a plain running hop's best, to 0.01 m: it lands on ${plainBest} m (testbox: a running hop meeting the wall at its apex); no jump + dash timing climbs anything higher (${tries.length} tries: ${H2.length} heights ${H2[0]}–${H2[H2.length - 1]} m × 7 run-ups × 18 timings × dash first or jump first)`,
-        sane && plainBest >= 1.85 && dashBest === 0 && H2.length > 0, { plainBest, plainRunUps: Object.keys(plainAt).filter((k) => k.startsWith(plainBest + '@')), dashClimbs: extra.slice(0, 6), sane });
     }
 
     // ================================================================================== 4. limits
