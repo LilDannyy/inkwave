@@ -179,9 +179,9 @@ export function register(D, H) {
   D.caldera_office_roof = {
     build(B) {
       // two storeys: a verdigris hipped roof, works-green window bands, the Surge Board frame on its south face
-      B.lathe('paint', K.verd, [[0, 1.8], [0.05, 1.8], [5.3, 0.0], [0, 0.0]], 0, 9.5, 0, { seg: 4, ry: PI / 4, sx: 0.95, sz: 0.85 });
-      for (const y of [5.6, 8.0]) for (const sz of [-1, 1]) B.box(NS('paint'), K.green, 6.2, 0.9, 0.08, 0, y, sz * 3.02);
-      B.box('paint', K.cream, 3.0, 1.8, 0.2, 3.5 - 3.0, 6.2, -3.1, { r: 0.03 });
+      B.lathe('paint', K.verd, [[0, 1.8], [0.05, 1.8], [6.1, 0.0], [0, 0.0]], 0, 9.5, 0, { seg: 4, ry: PI / 4 });
+      for (const y of [5.6, 8.0]) for (const sz of [-1, 1]) B.box(NS('paint'), K.green, 7.6, 0.9, 0.08, 0, y, sz * 4.03);
+      B.box('paint', K.cream, 3.0, 1.8, 0.2, 1.2, 6.2, -4.12, { r: 0.03 });
     },
   };
 }
@@ -194,4 +194,6 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
+  { type: 'caldera_cupola_hood', pos: [11.0, 0, -50.0] },
+  { type: 'caldera_office_roof', pos: [-35.5, 0, -51.6] },
 ];

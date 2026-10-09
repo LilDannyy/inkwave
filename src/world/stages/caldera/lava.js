@@ -66,7 +66,7 @@ export const LAVA = {
   gauges: [
     { kind: 'bar', pos: [0, 8.0, -2.5], yaw: Math.PI, h: 7.0, single: true },    // the Surge Gauge's south board (to Alpha)
     { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true },           //   and its north board (to Bravo)
-    { kind: 'bar', pos: [-19.5, 6.2, -53.6], yaw: Math.PI, h: 1.8 },             // the Surge Board on the Surge Office (twin)
+    { kind: 'bar', pos: [-35.5, 6.2, -55.75], yaw: Math.PI, h: 1.8 },            // the Surge Board on the Surge Office's south face (twin)
   ],
   // (fix round 1: each Spillway's outer half (s 28 → the lip) is lava at both levels, so its lip sits at the LOW level
   // and the lavafall pours at both levels: a thin fall at LOW, a full one at HIGH; the vent there is a pool vent now)

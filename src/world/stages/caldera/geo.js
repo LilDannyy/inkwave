@@ -149,15 +149,27 @@ export const ST_LOWER = chordA(RT, -102, -88);               // Lower Surge Step
 export const ST_EAST = chordA(RT, -74.5, -69.5);             // East Steps (Lakefront → terrace), ~2.6 m
 export const ST_UPPER = chordA(RY, -100, -94);               // Upper Surge Steps (terrace → yard), ~4.3 m
 export const ST_CUPOLA = chordA(RY, -80, -75.5);             // Cupola Stair (terrace → yard), ~3.1 m
-export const FRONT_T = (a0, a1) => sarcF(RT, a0, a1, [ST_LOWER, ST_EAST], 4);
-export const FRONT_Y = (a0, a1) => sarcF(RY, a0, a1, [ST_UPPER, ST_CUPOLA], 4);
+// the tower's two climbs (Bravo's track on Alpha's half, the turn of TOWER's): a plain 1.2 m face square to the track
+export const TW_X = [4.0, -11];                              // the track's terrace climb (x 4) and yard climb (x −11)
+export const CHORD_T = chordZ(RT, TW_X[0] - 1.6, TW_X[0] + 1.6);
+export const CHORD_Y = chordZ(RY, TW_X[1] - 1.6, TW_X[1] + 1.6);
+export const FRONT_T = (a0, a1) => sarcF(RT, a0, a1, [ST_LOWER, ST_EAST, CHORD_T], 4);
+export const FRONT_Y = (a0, a1) => sarcF(RY, a0, a1, [ST_UPPER, ST_CUPOLA, CHORD_Y], 4);
+// the weighbridge pit (3.0): a sunken iron plate in the yard's west lane, 0.6 m steps round it and a ramp off its east
+// end; cut out of the yard through a slit along z = PIT.z1 from the head's west curve
+export const PIT = { x0: -29.5, x1: -21.5, z0: -54.5, z1: -50.5 };
 export const YARD = [
   ...FRONT_Y(TL, TW), ...RH_FACE,
-  ...HEAD_WEST.slice().reverse(),
+  ...(() => {   // the west curve, from the Rim Head's crest south, with the pit's slit spliced in at z = PIT.z1
+    const W = HEAD_WEST.slice().reverse(), k = W.findIndex((p) => p[1] < PIT.z1), a = W[k - 1], b = W[k];
+    const xs = r3(a[0] + ((b[0] - a[0]) * (PIT.z1 - a[1])) / (b[1] - a[1]));
+    const slit = [[xs, PIT.z1], [PIT.x0, PIT.z1], [PIT.x0, PIT.z0], [PIT.x1, PIT.z0], [PIT.x1, PIT.z1], [PIT.x0, PIT.z1], [xs, PIT.z1]];
+    return [...W.slice(0, k), ...slit, ...W.slice(k)];
+  })(),
   [GAL.x0, -69], [GAL.x0, GAL.z1], [GAL.x1, GAL.z1], [GAL.x1, -69],
   ...HEAD_E.slice().reverse(),
 ];
-export const RH_REGION = [SP(RY, TW), ...RH_FACE, ...HEAD_WEST.slice(-4).reverse(), P(46, -128)];
+export const RH_REGION = [SP(RY, TW), ...RH_FACE, ...HEAD_WEST.slice(-9).reverse(), [-38.2, -38.5], P(48.5, -127.5)];
 export const GALLERY = [[GAL.x0, GAL.z0], [GAL.x1, GAL.z0], [GAL.x1, GAL.z1], [GAL.x0, GAL.z1]];
 // the Moulding Terrace (2.4): the quay along the arm's west bank, then between the two spirals to θ −126
 export const TERRACE = [QW, LC, ...FRONT_Y(TL, TW).slice(1), ...FRONT_T(TW, TQ).slice(0, -1)];
