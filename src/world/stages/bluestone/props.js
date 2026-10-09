@@ -95,6 +95,15 @@ export function register(D, H) {
       }
     },
   };
+  // an iron shopfront grille (blockout look of the arcade's two openings onto Hoki Lane: the layout's rail block collides,
+  // this only shows it; o.len along local z, 3 m tall, bars every 0.25 m)
+  D.bluestone_grille = {
+    build(B, o) {
+      const L = o.len || 3.5, n = Math.round(L / 0.25);
+      for (let i = 0; i <= n; i++) B.box('metal', '#2f3a35', 0.06, 3.0, 0.06, 0, 1.5, -L / 2 + (i * L) / n);
+      for (const y of [0.05, 1.2, 2.95]) B.box('metal', '#2f3a35', 0.08, 0.1, L, 0, y, 0);
+    },
+  };
   // the old signal box (the 1880s, today): where the Signal Garden's glass pavilion stands in the 3000s
   D.bluestone_signalbox = {
     build(B) {
@@ -135,6 +144,7 @@ for (const c of RAILYARD.channels) {
   placements.push({ type: 'bluestone_berm', pos: [+((E0[0] + E1[0]) / 2 + s * nx).toFixed(3), 0, +((E0[1] + E1[1]) / 2 + s * nz).toFixed(3)], rotY: Math.atan2(dx, dz), oboxCols: true, size: [2, +L.toFixed(3)] });
 }
 placements.push({ type: 'bluestone_tartar', pos: [0, 0, 0], mirror: false });
+for (const z of [-39.75, -32.25]) placements.push({ type: 'bluestone_grille', pos: [-18.75, 0, z], len: 3.5 });   // (the arcade's grilles onto Hoki Lane)
 // the landmark's and the hero buildings' blockout volumes (looks only)
 placements.push({ type: 'bluestone_dome', pos: [0, 0, 0], mirror: false });
 placements.push({ type: 'bluestone_clockrow', pos: [0, 0, -7.575] });
