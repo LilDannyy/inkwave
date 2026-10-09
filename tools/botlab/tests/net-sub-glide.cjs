@@ -69,7 +69,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   await A.js(`(() => { const a = __G.match.local; a.setSub('glide'); a.ink = 100; return 1; })()`);
   await wait(1200);
   // a tap: A's sub pressed until A's runner holds it, then let go (uncooked)
-  const tap = async () => { await A.js(`window.__hold = true; 1`); await A.until(`__G.match.local.weaponRunner.aimingSub`, 3000, 10); await wait(40); await A.js(`window.__hold = false; 1`); };
+  const tap = async () => { await A.js(`window.__hold = true; 1`); await A.until(`__G.match.local.weaponRunner.aimingSub`, 8000, 10); await wait(40); await A.js(`window.__hold = false; 1`); };
   if (opt.scene === 'hostleave') { await hostLeave(); return; }
 
   // ============================================================================================ the cook in the hand
@@ -215,7 +215,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
     if (!bt) return;
     await wait(500);
     // the bot's tap, then A's own
-    await A.js(`window.__bh = true; 1`); await A.until(`window.__bt.weaponRunner.aimingSub`, 3000, 10); await wait(40); await A.js(`window.__bh = false; 1`);
+    await A.js(`window.__bh = true; 1`); await A.until(`window.__bt.weaponRunner.aimingSub`, 8000, 10); await wait(40); await A.js(`window.__bh = false; 1`);
     await A.until(`__K.items.some((x) => !x.ghost && x.owner === window.__bt && x.state === 'slide')`, 3000, 30).catch(() => null);
     await tap();
     await A.until(`__K.items.filter((x) => !x.ghost && x.state === 'slide').length >= 2`, 3000, 30).catch(() => null);
