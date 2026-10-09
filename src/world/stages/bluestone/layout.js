@@ -165,13 +165,14 @@ const MID = [
   // diagonals, 1.2 × 3 m and 2.3 m over the concourse (roof), at r 5.65 so the middle (r < 4.7: the Pond, the tower's
   // start) and the N–S and E–W lines (|x|, |z| ≤ 2.5: the Clock Steps' axis, the tower's lane) stay open
   ...[135, 225].map((b) => { const [x, z] = polar(5.65, b); return OB(x, z, 1.2, 3, 1.3, 3.6, b - 90, { tag: 'ticket-booth', color: '#4f5d55', pattern: PATTERN.metalpanel, roof: true }); }),
-  // ring tiers (review issue 2): a raised flower bed (0.7, inkable, a hop) on each diagonal of the ring, with a 1.5 m
-  // planter box at one end (roof): mid-height cover and a step in the ring's floor, clear of the tower's lanes (|z| ≤ 2.5,
+  // ring tiers (review issue 2): a raised flower bed (0.7, inkable, a hop) on each diagonal of the ring, with a 1.3 m
+  // planter box at one end (roof): mid-height cover and a step in the ring's floor (both under the boss's 1.35 m stride,
+  // so the ring stays HULLBREAKER's era-2 arena: the boss check), clear of the tower's lanes (|z| ≤ 2.5,
   // x 11.5 … 15.5) and the concourse's steps and ramps; under the Halo (era 3) the bed is 4.2 m below its deck
   ...[[147, 13.6, -1], [248, 13.6, 1]].flatMap(([b, r, end]) => {
     const [x, z] = polar(r, b), [ex, ez] = polar(r, b), tx = Math.sin((b + 90) * DEG), tz = Math.cos((b + 90) * DEG);
     return [OB(x, z, 2.4, 4.0, 0, 0.7, b + 90, { tag: 'ring-bed', color: '#7f8a6c', pattern: PATTERN.planter }),
-      OB(+(ex + end * 1.6 * tx).toFixed(4), +(ez + end * 1.6 * tz).toFixed(4), 2.4, 0.8, 0, 1.5, b + 90, cover({ tag: 'ring-bed-planter', color: K.planter, pattern: PATTERN.planter, roof: true }))];
+      OB(+(ex + end * 1.6 * tx).toFixed(4), +(ez + end * 1.6 * tz).toFixed(4), 2.4, 0.8, 0, 1.3, b + 90, cover({ tag: 'ring-bed-planter', color: K.planter, pattern: PATTERN.planter, roof: true }))];
   }),
   // ring cover: a cart, the bollards, the arm-mouth planter, the two telephone kiosks (Tartar's), the poster column
   OB(5.99, -16.44, 1.2, 2.2, 0, 1.2, 250, cover({ tag: 'cart', color: '#7a6a58' })),
