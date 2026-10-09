@@ -154,6 +154,10 @@ result on every screen.
 sub, a Waddle …) is recorded by its owner as `['k', nid, kind, data]` and replayed by the kit's `ghost(actor, data)`:
 visual-only (paint muted, hits dropped) and never deciding for itself — its owner's end / lock / path records drive it.
 A hit on a ghost device (curtain, beacon, Waddle, Torpedo …) goes to its owner (`{k:'dh'}` → the kit's `netHurt`).
+(Amounts are positive only. A Bubble Blower bubble's two kinds of hit — enemy fire shrinks it, its own team's charges
+it until it blows — go on two channels: `kind:'sp'` and, `[b5-int1]`, `kind:'spTeam'`; team fire used to be sent as a
+negative `sp` amount and was dropped, so a teammate on another screen could never set off your bubble.
+`tools/botlab/tests/net-blower-team.cjs`.)
 The built-in subs (subs.js) add an update record `[3, gid, …]` from the owner: a Lurk Mine tripped (it pops up on every
 screen — it's invisible to the other team until then, on theirs too), a Skitter Bomb stopping to wind up (ghost Skitters
 never trigger themselves), a Hop Beacon's jumps left, a Drip Curtain's ink after hits (its decay runs everywhere); a

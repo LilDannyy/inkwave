@@ -506,7 +506,10 @@ export class SpecialSystem {
   _bubbleHit(w, team, dmg, owner) {
     if (w.dead || netMuted()) return;   // (a ghost's shot: its owner's copy decides)
     w.mesh.material.uniforms.uHit.value = 0.5;
-    if (w.ghost) { if (!(team === w.team && w.held)) netHurt(w.owner, 'sp', w.gid, team === w.team ? -dmg : dmg); return; }
+    // ([b5-int1] team fire on a ghost bubble goes to its owner on its own channel, 'spTeam', as a positive amount: netHurt
+    // sends dmg > 0 only, so the old -dmg never left this screen — online, a teammate could never set off your bubble.
+    // The subs designer found it; tests/net-blower-team.cjs)
+    if (w.ghost) { if (!(team === w.team && w.held)) netHurt(w.owner, team === w.team ? 'spTeam' : 'sp', w.gid, dmg); return; }
     const d = SPECIALS.blower;
     if (team === w.team) {
       if (w.held) return;
@@ -2198,3 +2201,4 @@ export function specialNetApply(a, v) {
 }
 
 KIT_GHOSTS.sp = { ghost: (a, d) => G.specials?.netGhost(a, d), netHurt: (gid, dmg) => G.specials?.netHurtObj(gid, dmg) };
+KIT_GHOSTS.spTeam = { netHurt: (gid, dmg) => G.specials?.netHurtObj(gid, -Math.abs(dmg)) };   // [b5-int1] (team fire on a bubble: _bubbleHit)
