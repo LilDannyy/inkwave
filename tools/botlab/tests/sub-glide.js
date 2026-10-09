@@ -1,6 +1,6 @@
 // [b5-sub-glide] The Glide Bomb (src/game/kits/glide.js; tools/botlab/jobs/batch5/subs/SPEC.md §A, A10's list):
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-glide.js tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS='only=reach,lane,bounce,ledge,blast,shot,fizzle,guide,bots,stubs,lock,more' for a part
+//   PAGE_ARGS='only=reach,lane,bounce,ledge,blast,shot,fizzle,guide,bots,stubs,lock,crush,boss,start,perf,more' for a part
 // Staged on testbox (a flat deck, top y 0, sea all round; one wall x 14…15, z −8…8); test blocks are moving-block
 // colliders (Level.addDynamic) parked out of the way between scenes. Everyone else's brain is stubbed unless a scene
 // frees one; hits are logged, not dealt (nobody is splatted, so scenes stay alike), unless a scene says so.
@@ -20,12 +20,20 @@
 //    frame, no stone; diving while cooking the same
 //  8 guide: its end ring within 0.3 m of where the real stone stops, 6 throws with 0–2 bounces; grey without the ink
 //  9 bots: a fighting bot throws at a foe 10 m off, its stop within 2 m of the foe's (led) spot; a bot in a predicted
-//    stop disc gets out (SPECIAL_STATS.escapes) or shoots it
+//    stop disc is clear of R at the blast (or popped it) with no damage
 // 11 stubs: a stand-in lava (surface 0.5 m over x > 10): it sinks there, no blast; a stand-in Roe Shell (r 1.6): it
 //    bounces off it like a wall (39° ± 3°) and its blast calls the shell's splash once with 180 / 35 and the cook's R
 // 12 lock: the Spritzer fires no shot from held 0.15 s + 1 frame on; a charger's charge in progress is dropped with no
 //    shot and the stone keeps cooking; a tap never interrupts the fire; a barrage's stone never cooks (R 2.2) and never
 //    stops the main weapon
+//    crush: crushIn (the real one after the merge, else the sentry / bobber branches' kit loop + the crushable line) every
+//    frame of a moving deck / pillar: a stone riding the deck rides on, one hit by the pillar is knocked on — never ended;
+//    the shell's sphere and a lava sweep: nothing
+//    boss: Boss Battle's throw (a stand-in boss): planned only when the slide stops in reach of its body, held to that
+//    cook, blows within R of it; refused over the sea; let go early under a telegraph
+//    start: a mid-air release drops from the hand; a wall closer than 0.5 m: set down at the feet; [4] every 0.25 s and
+//    at every bounce; a 17° ramp followed
+//    perf: devices() asked once a frame / a run, not per step; the guide's points pooled
 //    more: the reticle dims while locked, the HUD cook bar and the reach in the sub chip, the hand's lamps / glow, the
 //    first two taps' hint, the Mega Stamp's guard smash, a splatted owner's stone still blows, a Drainbow pass halves
 //    it, a Bubble Guard takes 0, a stone on a moving floor rides it
@@ -399,8 +407,8 @@
       R('a fighting bot throws one at a foe 10 m off, cooked so it stops within 2 m of them (3 rounds, ≥ 2)', ok >= 2, rows);
       // a bot in a predicted stop disc: out of it before the blast (botSpecials' escape: hard, its awareness on), or it
       // shoots the stone (bots.js threats). The thrower goes behind the wall at once (no fight to distract it). A round
-      // counts when the bot stands in the blast; a good one: clear of it at the blast, the stone popped, or it ran its
-      // escape for this stone and was heading out at the blast
+      // counts when the bot stands in the blast; a good one (SPEC A10.9): it took no damage from it, and it was clear of
+      // the blast radius when it went off, or the stone was popped first
       let good = 0, counted = 0; const rows2 = [];
       const V2 = foes[2] || foes[0], diff0 = V2.bot.diff.id;
       for (let round = 0; round < 4; round++) {
@@ -426,9 +434,9 @@
         rows2.push(row);
         if (d0 == null || d0 > it.R) continue;
         counted++;
-        if (it.why === 'popped' || (dEnd != null && dEnd > it.R) || (esc && dEnd != null && dMin != null && dEnd - dMin > 0.15)) good++;
+        if (dmg === 0 && (it.why === 'popped' || (dEnd != null && dEnd > it.R))) good++;
       }
-      R('a hard bot standing in a cooked stone\'s predicted stop disc gets out before the blast (botSpecials\' escape, SPECIAL_STATS.escapes) or shoots it (4 rounds: ≥ 3 of those it stood in)', counted >= 3 && good >= Math.ceil(counted * 3 / 4), { counted, good, rows: rows2 });
+      R('a hard bot standing in a cooked stone\'s predicted stop disc gets out before the blast (botSpecials\' escape, SPECIAL_STATS.escapes) or shoots it — clear of R at the blast (or popped) and no damage (4 rounds: ≥ 3 of those it stood in)', counted >= 3 && good >= Math.ceil(counted * 3 / 4), { counted, good, rows: rows2 });
       // the threat descriptor
       reset(); put(me, V(0, 0, -30), 0); step(0.05);
       const { it } = throwHeld(1.2);
@@ -615,6 +623,47 @@
       delete B.bot._glide; delete B.bot._glideNoT;
     }
 
+    // ============================================================================================ where it starts, ramps, [4]
+    if (want('start')) {
+      // let go in mid-air: it drops from the hand (gravity 24), lands and slides on
+      reset(); put(me, V(0, 0, -34), 0); step(0.05);
+      ctl.sub = true; step(0.1);
+      const n0 = K.items.length;
+      ctl.sub = false; me.pos.y = 2.4; me.vel.y = 0; frame();
+      const tRel = G.time, s1 = K.items.length > n0 ? lastItem() : null, y0 = s1 ? s1.p.y : null, air0 = s1 ? s1.air : null;
+      let landT = null; until(() => { if (landT == null && s1 && !s1.air) landT = G.time; return !s1 || s1.state === 'dead'; }, 4);
+      const b1 = ev('bomb:explode').pop();
+      R('let go in mid-air: it drops from the hand (0.95 m over the feet) with gravity, lands and slides on, and blows on the floor', s1 && air0 && y0 > 2.4 + 0.5 && landT != null && landT - tRel < 0.8 && b1 && Math.abs(b1.e.pos.y - 0.25) < 0.05 && b1.e.pos.z > -34 + 8,
+        { y0: y0 && r2(y0), air: air0, landedAfter: landT && r3(landT - tRel), blast: b1 && [r2(b1.e.pos.y), r2(b1.e.pos.z)] });
+      // a wall closer than 0.5 m ahead: set down at the feet, never in or past the wall; it bounces back off it
+      reset(); netOn(); put(me, V(13.62, 0, 0), Math.PI / 2); step(0.05);
+      const { it: s2 } = throwHeld(0.1);
+      const r0 = sent.find((x) => x.kind === 'glide' && x.data[0] === 0);
+      step(0.3);
+      R('a wall 0.38 m ahead: it is set down at the feet (not 0.5 m ahead, inside the wall), then bounces back off it', r0 && Math.abs(r0.data[2] - me.pos.x) < 0.03 && s2 && s2.v.x < 0 && s2.p.x < 14 - S.bodyRadius + 0.01, { setX: r0 && r0.data[2], feetX: r2(me.pos.x), vx: s2 && r2(s2.v.x), x: s2 && r2(s2.p.x) });
+      // [4] corrections: every 0.25 s of its fuse and at every bounce (off the testbox wall at 45°)
+      reset(); netOn(); put(me, V(6, 0, -6), Math.PI / 4); step(0.05);
+      const { it: s3 } = throwHeld(0.1);
+      const rel = sent.find((x) => x.kind === 'glide' && x.data[0] === 0);
+      until(() => s3.state === 'dead', 3);
+      const r4 = sent.filter((x) => x.kind === 'glide' && x.data[0] === 4 && x.data[1] === s3.gid), bt = ev('glide:bounce').filter((x) => !x.e.ghost).map((x) => x.t);
+      const gaps = [rel, ...r4].slice(1).map((x, i, A) => r3(x.t - (i ? A[i - 1].t : rel.t)));
+      const atBounce = bt.every((t) => r4.some((x) => Math.abs(x.t - t) < 1e-6));
+      // (its clock is its own slide's: it takes its first step the frame after the release record, so the first gap is one
+      // frame longer)
+      R('its [4] corrections: one at every bounce and one every 0.25 s of its slide (no gap over 0.25 s; the first, from the release record, 0.25 s + 1 frame)', rel && r4.length >= 8 && bt.length >= 1 && atBounce && gaps[0] <= 0.25 + 1 / 60 + 1e-6 && gaps.slice(1).every((g) => g <= 0.25 + 1e-6), { n: r4.length, bounces: bt.length, atBounce, gaps });
+      netOff();
+      // a ramp (rising 1.2 m over 4 m, 17°) then a deck on top: it follows the ramp's surface up and slides on along the top
+      reset();
+      const ramp = L.addDynamic({ kind: 'ramp', low: [0, 0, -26], high: [0, 1.2, -22], width: 3, thickness: 0.4, tag: 'glidetest-ramp' }); blocks.push(ramp); ramp.solid = true;
+      box(-1.5, 1.5, 0, 1.2, -22, -14);
+      put(me, V(0, 0, -30), 0); step(0.05);
+      const { it: s4 } = throwHeld(0.1);
+      let off = 0, onRamp = 0, airOn = 0;
+      until(() => { const z = s4.p.z; if (z > -25.7 && z < -22.3) { onRamp++; const want = 1.2 * (z + 26) / 4; off = Math.max(off, Math.abs(s4.p.y - want)); if (s4.air) airOn++; } return s4.state === 'dead' || z > -16; }, 3);
+      R('a 17° ramp: it follows the ramp\'s surface up (within 0.05 m, never airborne on it) and slides on along the deck above', onRamp >= 10 && off <= 0.05 && airOn === 0 && s4.p.z > -18 && Math.abs(s4.p.y - 1.2) < 0.03, { stepsOnRamp: onRamp, maxOff: r3(off), air: airOn, z: r2(s4.p.z), y: r2(s4.p.y) });
+    }
+
     // ============================================================================================ cost per step
     // the slide's bumpers that aren't level geometry are gathered once a frame / a prediction run, not per step: with a
     // stone sliding and the guide up (20 runs a second of up to 144 steps), the sentry kit's devices() is asked a few times
@@ -654,7 +703,7 @@
       const after = { chip: H?.subChip?.lastChild.textContent, ret: H?.ret?.classList.contains('is-locked'), bar: !!barEl?.classList.contains('is-on') };
       const fullTxt = `${Math.round(MATH.reachOf(S.fuse - S.cookMax))} m`;
       R(`the HUD: the sub chip shows the reach ("15 m" → "${fullTxt}" at full cook), the cook bar fills and flashes at full cook and red before the slip, the reticle dims while locked; all back after`,
-        !H || (tapChip === '15 m' && fullChip === fullTxt && barOn && barFull && warn && ret && after.chip === '65%' && !after.ret && !after.bar), { tapChip, fullChip, barOn, barFull, warn, ret, after });
+        !!H && tapChip === '15 m' && fullChip === fullTxt && barOn && barFull && warn && ret && after.chip === '65%' && !after.ret && !after.bar, { hud: !!H, tapChip, fullChip, barOn, barFull, warn, ret, after });
       // the hand: lamps out one by one, the glow
       reset(); put(me, V(0, 0, -30), 0); step(0.05);
       ctl.sub = true; step(1.2);
