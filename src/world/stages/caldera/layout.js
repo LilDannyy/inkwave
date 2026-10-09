@@ -226,8 +226,7 @@ add(castLine(-27.7, G.GAL.z1, -46.6, [-52.6, -49.6], 'ferry-castings', K.cast), 
 // the Gate's apron (Bazookarp: blocks ≥ 1.2 m within 4 m of route 1 between the gallery and the Gate) and centre cover
 add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-14.6, -48.7, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0]));
 // the west lane and the side yards: the Rim Head's approach, the west side yard, the east strip
-add(drum(-34.2, -57.6, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'), stack(-29.6, -41.6, 1.6, 1.6, 1.2, 3.6, 'pig-iron', '#5b5550'),
-  stack(-35.6, -42.0, 1.4, 1.2, 1.3, 3.6, 'pig-iron', '#5b5550'));
+add(drum(-34.2, -57.6, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'), stack(-28.4, -44.6, 1.6, 1.6, 1.2, 3.6, 'pig-iron', '#5b5550'));   // (clear of the office's NE corner: no pocket behind it)
 // the cupola house: the furnace's shed filling the dead end of the east side yard behind the east side stair (its stack
 // and the hood above, props.js)
 add(B(G.GAL.x1, 0.6, 3.6, 9.4, G.GAL.z0, G.PADZ + 1.0, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'cupola-house' }));
