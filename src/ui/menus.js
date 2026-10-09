@@ -4189,7 +4189,6 @@ export class Menus {
       }
     };
     // your sub / special: the profile's pick, or (none: null) the weapon's own — as the kit picker reads it
-    // (a chip's short name: a three-word name keeps its first and last — Cling Charge Barrage → Cling Barrage)
     const myWeapon = () => { const me = meP(), lo = this._loadout(); return Ws[me && me.weapon] ? me.weapon : lo.weapon; };
     const kitOf = (kind, wid) => {
       const isSub = kind === 'sub', all = isSub ? SBS : SPS, W = Ws[wid] || {};

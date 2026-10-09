@@ -74,6 +74,9 @@
       // one run along +z: `fire` held or not; the speed over [t0, t1] s of it (distance / time on the flat), the top speed
       const run = (wid, fire, t0 = 2, t1 = 3.2) => {
         reset(); me.setWeapon(wid); step(0.2);
+        // ([b5-int1] what the loadout before this one still had in the air — a random start kit's shots, drips and kit
+        // projectiles land in these first frames and were credited to `me`: the walk "painted" 7–21 m² in 4 of 16 runs)
+        G.projectiles?.clear?.(); G.subs?.clear?.(); step(0.1);
         put(me, V(0, 0, -36), 0); G.paint.clear?.();
         const turf0 = me.stats.turf;
         ctl.set(me, { move: [0, 1], fire });
