@@ -382,7 +382,7 @@
     // the gauge needles track e; the beacons: red flashing at warn-rise, steady red at HIGH, white at warn-fall, off at LOW
     const look = W.look, needle = look.needles[0];
     const gs = {};
-    for (const [k, t] of [['low', 10], ['warnRise', 27], ['high', 50], ['warnFall', 62]]) { setT(t); step(0.05); const c = look.beaconMat.color; gs[k] = { e: r3(Lv.st.e), y: r3(needle.needle.position.y), rgb: [r3(c.r), r3(c.g), r3(c.b)] }; }
+    for (const [k, t] of [['low', 10], ['warnRise', 27], ['high', 50], ['warnFall', 62]]) { setT(t); step(0.05); const c = look.beaconMat.color; gs[k] = { e: r3(Lv.st.e), y: r3(needle.y), rgb: [r3(c.r), r3(c.g), r3(c.b)] }; }
     const red = (c) => c.rgb[0] > c.rgb[2] * 2 && c.rgb[0] > 0.1, white = (c) => c.rgb[2] > 0.1 && Math.abs(c.rgb[0] - c.rgb[2]) < c.rgb[0] * 0.3, off = (c) => Math.max(...c.rgb) < 0.05;
     R('G4 the Surge Gauge: the needle at EBB at LOW and at the HIGH MARK at HIGH (7 m of travel); beacons off at LOW, red before and at HIGH, white before a fall',
       gs.low.y < 0.3 && gs.high.y > needle.h - 0.5 && off(gs.low) && (red(gs.warnRise) || off(gs.warnRise)) && red(gs.high) && (white(gs.warnFall) || Math.max(...gs.warnFall.rgb) < 0.6), gs);

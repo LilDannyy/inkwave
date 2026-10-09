@@ -226,34 +226,37 @@ export class LavaLook {
   }
   // ---- the riders: basalt hex columns (their deck ink and the lookout's sides), pumice stones
   _riders() {
+    // (draw calls: every stone rides at the same height — L + its sink offset — so all of them and the boulder are ONE
+    // merged mesh; each column is one mesh, its cap merged in by vertex colour; the shadow pass only for the columns)
     const W = this.W;
     this.rid = [];
-    const basalt = new THREE.MeshStandardMaterial({ color: LOOK.basalt, roughness: 0.86, metalness: 0, flatShading: true });
-    const top = new THREE.MeshStandardMaterial({ color: LOOK.basaltTop, roughness: 0.8, metalness: 0 });
+    const basalt = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.84, metalness: 0, flatShading: true });
     const pumice = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, emissive: '#000000' });
-    this._mats = [basalt, top, pumice];
+    this._mats = [basalt, null, pumice];
+    const stoneGeos = [];
+    const place = (g, x, y, z, yaw) => { g.rotateY(yaw); g.translate(x, y, z); return g; };
     W.riders.forEach((r, i) => {
+      if (r.sink) {
+        const p = r.parts[0];
+        stoneGeos.push(place(rockGeo(p.hx * 2 * 0.98, r.depth, p.hz * 2 * 0.98, i * 7.3 + 1), r.x, 0, r.z, r.yaw));
+        for (const q of r.parts) if (!q.body) { const qq = partPose(r, q, 0, {}); stoneGeos.push(place(rockGeo(q.hx * 2, q.y1 - q.y0, q.hz * 2, i * 3.1 + 9), qq.cx, q.y1, qq.cz, qq.yaw)); }
+        this.rid.push({ r, g: null, ink: null });
+        return;
+      }
       const g = new THREE.Group(); g.name = 'lava:rider:' + r.id;
-      if (r.shape === 'hex') {
-        const col = new THREE.Mesh(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2), basalt);
-        col.position.y = -r.depth / 2; col.castShadow = true; col.receiveShadow = true; g.add(col);
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(r.r - 0.04, r.r - 0.04, 0.06, 6, 1, false, Math.PI / 2), top);
-        cap.position.y = -0.02; cap.receiveShadow = true; g.add(cap);
-      } else {
-        const p = r.parts[0], geo = rockGeo(p.hx * 2 * 0.98, r.depth, p.hz * 2 * 0.98, i * 7.3 + 1);
-        const m = new THREE.Mesh(geo, pumice); m.castShadow = true; m.receiveShadow = true; g.add(m);
-      }
-      for (const p of r.parts) {
-        if (p.body) continue;
-        const geo = r.kind === 'stone' ? rockGeo(p.hx * 2, p.y1 - p.y0, p.hz * 2, i * 3.1 + 9) : new THREE.BoxGeometry(p.hx * 2, p.y1 - p.y0, p.hz * 2);
-        const m = new THREE.Mesh(geo, r.kind === 'stone' ? pumice : basalt);
-        m.position.set(p.ox, r.kind === 'stone' ? p.y1 : (p.y0 + p.y1) / 2, p.oz); m.rotation.y = p.yaw; m.castShadow = true; g.add(m);
-      }
+      const parts = [colourGeo(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2).translate(0, -r.depth / 2, 0), LOOK.basalt),
+        colourGeo(new THREE.CylinderGeometry(r.r - 0.04, r.r - 0.04, 0.06, 6, 1, false, Math.PI / 2).translate(0, -0.02, 0), LOOK.basaltTop)];
+      for (const q of r.parts) if (!q.body) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
+      const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = true; m.receiveShadow = true; g.add(m);
       g.rotation.y = r.yaw;
       g.position.set(r.x, r.top0, r.z);
       this.root.add(g);
       this.rid.push({ r, g, ink: null });
     });
+    if (stoneGeos.length) {
+      this.stones = new THREE.Mesh(mergeGeos(stoneGeos), pumice); this.stones.name = 'lava:stones'; this.stones.receiveShadow = true; this.stones.visible = false;
+      this.root.add(this.stones);
+    }
   }
   // the floats' ink overlays (built once the match runtime has made their paints)
   _inkFor(R, k) {
@@ -273,33 +276,36 @@ export class LavaLook {
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
     const deck = new THREE.Mesh(geo, deckMat); deck.renderOrder = 2;
     e.g.add(deck);
-    const sides = [];
+    const sides = [], sideOf = [];
     if (R.sides) R.sides.forEach((sp, j) => {
       if (!sp) return;
       const m = new THREE.MeshBasicMaterial({ map: sp.texture, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
       const mesh = sp.inkMesh(m); mesh.position.y = -r.depth; mesh.rotation.y = r.parts[j].yaw; mesh.renderOrder = 2;
-      e.g.add(mesh); sides.push(mesh); mats.push(m);
+      e.g.add(mesh); sides.push(mesh); sideOf[j] = mesh; mats.push(m); mesh.visible = false;
     });
-    e.ink = { deck, sides, mats, R };
+    deck.visible = false;
+    e.ink = { deck, sides, sideOf, mats, R };
   }
   // ---- the Surge Gauge's needles and the beacons (the boards are the stage's props)
   _gauges() {
-    this.needles = []; this.beacons = [];
-    const nm = new THREE.MeshStandardMaterial({ color: LOOK.needle, roughness: 0.4, metalness: 0.2, emissive: '#5a0806', emissiveIntensity: 1 });
+    // (one instanced mesh for the needles, one for every beacon: 2 draw calls)
+    const G2 = this.W.gauges, nm = new THREE.MeshStandardMaterial({ color: LOOK.needle, roughness: 0.4, metalness: 0.2, emissive: '#5a0806', emissiveIntensity: 1 });
     this.beaconMat = new THREE.MeshBasicMaterial({ color: '#000000', toneMapped: false });
-    const bgeo = new THREE.SphereGeometry(0.17, 10, 8);
-    for (const gd of this.W.gauges) {
-      const g = new THREE.Group(); g.position.set(gd.pos[0], gd.pos[1], gd.pos[2]); g.rotation.y = gd.yaw || 0;
-      const big = gd.h > 3;
-      const needle = new THREE.Mesh(new THREE.BoxGeometry(big ? 1.4 : 0.5, big ? 0.32 : 0.14, 0.16), nm);
-      needle.position.set(big ? 0.35 : 0.1, 0, 0.22); g.add(needle);
-      this.root.add(g);
-      this.needles.push({ needle, h: gd.h });
-      const bp = big ? [[-1.25, gd.h + 0.3, 0.12], [1.25, gd.h + 0.3, 0.12]] : [[0, gd.h + 0.2, 0.14]];
-      for (const p of bp) { const b = new THREE.Mesh(bgeo, this.beaconMat); b.position.set(...p); b.scale.setScalar(big ? 1.4 : 0.8); g.add(b); this.beacons.push(b); }
-    }
-    // the bell cage's four beacons over the gauge (20.65 m)
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const b = new THREE.Mesh(bgeo, this.beaconMat); b.position.set(sx * 1.4, 20.65, sz * 1.4); this.root.add(b); this.beacons.push(b); }
+    this.needleIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), nm, G2.length); this.needleIM.name = 'lava:needles'; this.needleIM.frustumCulled = false;
+    this.needles = G2.map((gd) => { const big = gd.h > 3; return { gd, h: gd.h, size: big ? [1.4, 0.32, 0.16] : [0.5, 0.14, 0.16], off: [big ? 0.35 : 0.1, 0, 0.22] }; });
+    const bl = [];
+    for (const gd of G2) { const big = gd.h > 3; for (const p of big ? [[-1.25, gd.h + 0.3, 0.12], [1.25, gd.h + 0.3, 0.12]] : [[0, gd.h + 0.2, 0.14]]) bl.push({ gd, p, s: big ? 1.4 : 0.8 }); }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) bl.push({ gd: { pos: [0, 0, 0], yaw: 0 }, p: [sx * 1.4, 20.65, sz * 1.4], s: 1 });
+    this.beaconIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.17, 10, 8), this.beaconMat, bl.length); this.beaconIM.name = 'lava:beacons'; this.beaconIM.frustumCulled = false;
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+    bl.forEach((b, i) => { const yaw = b.gd.yaw || 0; v.set(...b.p).applyAxisAngle(UPV, yaw).add(v2.set(...b.gd.pos)); q.setFromAxisAngle(UPV, yaw); this.beaconIM.setMatrixAt(i, m.compose(v, q, sc.setScalar(b.s))); });
+    this.root.add(this.needleIM, this.beaconIM);
+    this._setNeedles(0);
+  }
+  _setNeedles(e) {
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+    this.needles.forEach((n, i) => { const yaw = n.gd.yaw || 0; v.set(n.off[0], 0.2 + e * (n.h - 0.4), n.off[2]).applyAxisAngle(UPV, yaw).add(v2.set(...n.gd.pos)); q.setFromAxisAngle(UPV, yaw); this.needleIM.setMatrixAt(i, m.compose(v, q, sc.set(...n.size))); n.y = 0.2 + e * (n.h - 0.4); });
+    this.needleIM.instanceMatrix.needsUpdate = true;
   }
   // ---- the lavafalls over the Spillway lips (the only full orange-gold)
   _cascades() {
@@ -318,10 +324,13 @@ export class LavaLook {
         pos.push(a[0] + dx * u + nx * o, y, a[1] + dz * u + nz * o); uv.push(u, v);
       }
       for (let ri = 0; ri + 1 < rows.length; ri++) for (let ci = 0; ci < cols; ci++) { const k = ri * (cols + 1) + ci, k2 = k + cols + 1; idx.push(k, k2, k + 1, k + 1, k2, k2 + 1); }
-      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeBoundingSphere();
-      const m = new THREE.Mesh(geo, fm); m.frustumCulled = false; m.renderOrder = 1;
-      this.root.add(m);
-      this.falls.push({ m, y: c.y });
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
+      this.falls.push({ geo, y: c.y });
+    }
+    // (one draw call for every lavafall: their lips sit at one height, so one mesh moves with the surface)
+    if (this.falls.length) {
+      const m = new THREE.Mesh(mergeGeos(this.falls.map((f) => f.geo.toNonIndexed())), fm); m.frustumCulled = false; m.renderOrder = 1; m.name = 'lava:falls';
+      this.root.add(m); this.fallMesh = m; this.fallY = Math.max(...this.falls.map((f) => f.y));
     }
   }
   // ---- embers (up, on a rise) and steam (down, on a fall): one Points each, simulated here
@@ -375,17 +384,21 @@ export class LavaLook {
     this.mat.uniforms.uTime.value = this.t;
     this.mat.uniforms.uS.value.x = this.mv; this.mat.uniforms.uS.value.y = Math.abs(this.warn); this.mat.uniforms.uS.value.w = st.phase === 'high' ? 1 : 0;
     // riders
+    let stoneTop = null;
     R.riders.forEach((Rr, k) => {
       const e = this.rid[k];
       if (!e) return;
+      if (Rr.r.sink) { if (!Rr.parked) stoneTop = Rr.top; return; }
       if (!e.ink && Rr.deck) this._inkFor(Rr, k);
-      const top = Rr.r.sink ? (Rr.parked ? -60 : Rr.top) : Rr.top;
-      e.g.position.y = top;
-      e.g.visible = !(Rr.r.sink && Rr.parked);
-      // a stone bobs a little (the mesh only), cracks and glows in the fall warning
-      if (Rr.r.sink && !Rr.parked) { e.g.rotation.z = Math.sin(this.t * 0.9 + k) * 0.03; e.g.rotation.x = Math.cos(this.t * 0.7 + k * 1.3) * 0.025; }
-      if (e.ink) { const P = e.ink.R; if (P.deck.dirty) { P.deck.texture.needsUpdate = true; P.deck.dirty = false; } if (P.sides) for (const s of P.sides) if (s && s.dirty) { s.texture.needsUpdate = true; s.dirty = false; } }
+      e.g.position.y = Rr.top;
+      if (e.ink) {
+        const P = e.ink.R;
+        if (P.deck.dirty) { P.deck.texture.needsUpdate = true; P.deck.dirty = false; }
+        e.ink.deck.visible = P.deck.n > 0;   // (an overlay only once there is ink on it)
+        if (P.sides) P.sides.forEach((sp, j) => { if (sp && sp.dirty) { sp.texture.needsUpdate = true; sp.dirty = false; } if (e.ink.sideOf[j]) e.ink.sideOf[j].visible = !!sp && sp.n > 0; });
+      }
     });
+    if (this.stones) { this.stones.visible = stoneTop !== null; if (stoneTop !== null) this.stones.position.y = stoneTop; }
     // the Organs grind as they move: rubble and dust shed at the columns' feet; the stones crack and glow before a fall
     if (st.dir && (this._rubT = (this._rubT || 0) - dt) <= 0) {
       this._rubT = 0.22;
@@ -398,7 +411,7 @@ export class LavaLook {
     const crack = st.warn && st.next.to === 'low' ? 0.5 + 0.5 * Math.sin(this.t * 7) : st.phase === 'fall' ? 0.6 : 0;
     this._mats[2].emissive.setRGB(0.55 * crack, 0.05 * crack, 0.02 * crack);
     // the gauge: the needle climbs 5× the lava's own move; the beacons
-    for (const n of this.needles) n.needle.position.y = 0.2 + st.e * (n.h - 0.4);
+    if (Math.abs((this._ne ?? -1) - st.e) > 1e-4) { this._ne = st.e; this._setNeedles(st.e); }
     const blink = (hz) => (Math.sin(this.t * Math.PI * 2 * hz) > 0 ? 1 : 0.08);
     let bc = null, bk = 0;
     if (st.warn && st.next.to === 'high') { bc = LOOK.beaconRed; bk = blink(2.2); }
@@ -409,8 +422,7 @@ export class LavaLook {
     if (bc) this.beaconMat.color.set(bc).multiplyScalar(0.15 + bk * 1.1); else this.beaconMat.color.set('#1a0a08');
     // the lavafalls: thin at LOW, full while the surface is high over the lip
     this.fallMat.uniforms.uTime.value = this.t;
-    for (const f of this.falls) { const k = Math.max(0, Math.min(1, (st.y - f.y) / Math.max(0.3, W.high - f.y))); f.m.position.y = Math.max(st.y, f.y) - 0.04; f.k = k; }
-    this.fallMat.uniforms.uK.value = this.falls.length ? this.falls[0].k : 0;
+    if (this.fallMesh) { const k = Math.max(0, Math.min(1, (st.y - this.fallY) / Math.max(0.3, W.high - this.fallY))); this.fallMesh.position.y = Math.max(st.y, this.fallY) - 0.04; this.fallMat.uniforms.uK.value = k; }
     this._stepParticles(dt, st);
     this._stepFlotsam(st);
     // the rumble loop
@@ -446,6 +458,7 @@ export class LavaLook {
         aa[i] = E.life[i] ? (1 - k) * (0.6 + 0.4 * Math.sin(this.t * 17 + i)) : 0;
       }
       E.g.attributes.position.needsUpdate = true; E.g.attributes.aA.needsUpdate = true; E.g.attributes.aSize.needsUpdate = true; E.g.attributes.aCol.needsUpdate = true;
+      E.p.visible = E.life.some((l) => l > 0);
     }
     // steam: billowing DOWN off the surfaces a fall leaves (and wisps at the ebb)
     const Sm = this.stm;
@@ -468,6 +481,7 @@ export class LavaLook {
         aa[i] = Sm.life[i] ? Math.sin(Math.PI * k) * 0.32 : 0;
       }
       Sm.g.attributes.position.needsUpdate = true; Sm.g.attributes.aA.needsUpdate = true; Sm.g.attributes.aSize.needsUpdate = true; Sm.g.attributes.aCol.needsUpdate = true;
+      Sm.p.visible = Sm.life.some((l) => l > 0);
     }
   }
   _stepFlotsam(st) {
@@ -504,19 +518,33 @@ export class LavaLook {
   reset() {
     this._rum?.stop(0.4); this._rum = null; this.drain(false);
     for (const e of this.rid) if (e.ink) { e.g.remove(e.ink.deck); for (const s of e.ink.sides) e.g.remove(s); e.ink.deck.geometry.dispose(); for (const s of e.ink.sides) s.geometry.dispose(); for (const m of e.ink.mats) m.dispose(); e.ink = null; }
-    for (const e of this.rid) { e.g.position.y = e.r.sink ? -60 : e.r.top0; e.g.visible = !e.r.sink; }
+    for (const e of this.rid) if (e.g) e.g.position.y = e.r.top0;
+    if (this.stones) this.stones.visible = false;
     this.W.uniforms.uLavaW.value.set(0, 0, 0, 0);
   }
   dispose() {
     this.reset();
     this.scene.remove(this.root);
     this.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
-    for (const m of [this.mat, this.fallMat, this.beaconMat, ...(this._mats || [])]) m?.dispose();
+    for (const m of [this.mat, this.fallMat, this.beaconMat, this.needleIM?.material, ...(this._mats || [])]) m?.dispose();
     for (const P of [this.emb, this.stm]) P?.p.material.dispose();
     this.flot?.im.material.dispose();
   }
 }
 
+const UPV = new THREE.Vector3(0, 1, 0), v2 = new THREE.Vector3();
+// a geometry with a flat vertex colour (non-indexed: merges with the rocks)
+function colourGeo(g, hex) { const n = g.index ? g.toNonIndexed() : g, c = new THREE.Color(hex), col = new Float32Array(n.attributes.position.count * 3); for (let i = 0; i < col.length; i += 3) { col[i] = c.r; col[i + 1] = c.g; col[i + 2] = c.b; } n.setAttribute('color', new THREE.BufferAttribute(col, 3)); return n; }
+// merge non-indexed geometries' position / normal / colour / uv (what they share)
+function mergeGeos(list) {
+  const keys = ['position', 'normal', 'color', 'uv'].filter((k) => list.every((g) => g.attributes[k]));
+  const out = new THREE.BufferGeometry();
+  for (const k of keys) { const size = list[0].attributes[k].itemSize, n = list.reduce((a, g) => a + g.attributes[k].count, 0), arr = new Float32Array(n * size); let o = 0; for (const g of list) { arr.set(g.attributes[k].array, o); o += g.attributes[k].array.length; } out.setAttribute(k, new THREE.BufferAttribute(arr, size)); }
+  if (!out.attributes.normal) out.computeVertexNormals();
+  out.computeBoundingSphere();
+  for (const g of list) g.dispose();
+  return out;
+}
 // a lumpy rock filling a w × h × d box (its top at y = 0, its base at −h), vertex-coloured pumice
 function rockGeo(w, h, d, seed) {
   const g = new THREE.IcosahedronGeometry(1, 2), p = g.attributes.position, col = [];
