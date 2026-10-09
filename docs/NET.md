@@ -358,6 +358,22 @@ ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw).
 gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
 `seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
 
+**Pipes** (Gulper Aquarium's Tubeway: src/game/pipes.js, a stage module; aquarium ENGINE.md §3.9 / §4.7). A ride is the
+rider's own: its owner decides the capture, refusal, ride, pop and touchdown, and records two kit records through
+`KIT_GHOSTS.pipe` (`['k', nid, 'pipe', data]`, no change to `_play`): `[0, leg, k, t0, u0]` at the capture (`t0` its own
+`performance.now()` in seconds; `u0` > 0 a re-based ride, no suck) and `[1, yaw, high]` at the pop (the flap and the splash;
+the pop itself is in the owner's ticks). The tick carries `F.stage` (bit 22) while `a.pipe` is set. Every other screen
+draws the rider exactly on the path at the owner's timeline time from `[0]` (`carryRemote`: `T = peer.tr − t0`), never
+from extrapolated samples (a late tick would draw it 1.5–2.8 m outside the glass on a bend), holds it in the exit mouth
+if `[1]` is late (its exit going dark as on the owner's screen), and lights the exit ring and plays the chime from its own
+copy. Nobody can change a ride: riders take no damage (the shooter's `applyHit` drops a shot at a proxy rider before its
+'hit' event; the owner's `damage()` backs it), are never shoved and never pushed. A late joiner (or a screen that missed
+`[0]`) projects a flagged proxy onto the nearest leg within 1.2 m and rides it on at the leg's speed; on a host change the
+new owner of a bot mid-ride re-bases the ride where it was drawn (`adopt` → a fresh `[0]` with `u0`), and the other screens
+ride on from where they drew it until that record arrives. The Kelp Lines' tide is a pure function of the stage clock
+(the host's match clock; in Practice its stage clock on the ticks): nothing on the wire. The touchdown splat is an ordinary
+splat record. About 60 bytes a ride. Tested by `tools/botlab/tests/net-pipes.cjs` (two clients and a late joiner).
+
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
 tower onto the host's position (dead-reckoned between snapshots); each client carries its own players standing on it

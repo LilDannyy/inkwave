@@ -99,4 +99,10 @@ longer emitted.
 | `zones:overtime` | `{ losing }` | zones.js |
 | `zones:end` | `{ winner, reason, counts }` (reason: knockout · time · comeback · retake · neutralised · overtime-cap) | zones.js |
 | `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
+| `pipe:enter` | `{ actor, leg, k, to, eta }` — a capture (the owner), or the ride's `[0]` record (every other screen) | pipes.js |
+| `pipe:refuse` | `{ actor, end, why }` — why: oneway · shut · carp · special · cooldown · form (the owner's screen only) | pipes.js |
+| `pipe:exit-lit` / `pipe:chime` | `{ actor, end, team }` / `{ actor, end, pos }` — the suck is done, the exit lit in the rider's colour / 1.0 s before the pop (every screen, its own copy) | pipes.js |
+| `pipe:pop` / `pipe:land` | `{ actor, end, pos, dir, high }` / `{ actor, pos }` — out of the OUT mouth / touchdown (the cooldown starts) | pipes.js |
+| `pipe:abort` | `{ actor, why }` — why: splat (in the suck) · removed · reset · test | pipes.js |
+| `pipe:flow` | `{ leg, id, phase, dir, t }` — the tide: phase warn (T − 10) · close (T − 3) · flip (T) · open (T + 1); dir 'ab' UP, 'ba' DOWN (every screen, from its stage clock; the stage's Tide Gauges and the HUD follow it) | pipes.js |
 | `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes |
