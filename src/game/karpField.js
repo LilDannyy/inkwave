@@ -67,7 +67,9 @@ export function resolveKarp(def, level) {
    };
   const padY = level.spawnPads?.[0]?.y ?? 2.4;
   const st = xyz(def.start || [0, 0]);
-  const pond = new V3(0, floorAt({ x: 0, y: st.y, z: 0 }, padY + 0.6), 0);
+  // (the Pond is the exact centre; only a placeholder may move it to the floor nearest the centre: placeholderKarp)
+  const px = def.placeholder ? st.x || 0 : 0, pz = def.placeholder ? st.z || 0 : 0;
+  const pond = new V3(px, floorAt({ x: px, y: st.y, z: pz }, padY + 0.6), pz);
   const weirs = [[], []], zones = [[], []];
   (def.weirs || []).forEach((w, i) => {
     for (const t of [0, 1]) {
@@ -93,17 +95,24 @@ export function resolveKarp(def, level) {
 // the field at load, at each entrance: KarpField.autoSigns)
 export function placeholderKarp(level) {
   const nav = G.nav, pad = level.spawnPads[1], R = (level.spawnBarrier || 4.2) + 4;
-  let gate = [pad.x * 0.7, pad.z * 0.7], weir = [pad.x * 0.35, pad.z * 0.35];
+  let gate = [pad.x * 0.7, pad.z * 0.7], weir = [pad.x * 0.35, pad.z * 0.35], start = [0, 0];
   if (nav && nav.validIds?.length) {
-    let c = -1, cd = INF, g = -1, gd = INF;
+    let c = -1, cd = INF, g = -1, gd = INF, p = -1, pd = INF;
     for (const id of nav.validIds) {
       const n = nav.nodes[id];
       if (n.zone >= 0) continue;
       const dc = Math.hypot(n.x, n.z) + Math.max(0, n.y - 3) * 2;
       if (dc < cd) { cd = dc; c = id; }
+      // (the Pond's floor: the node nearest the centre, kept close to the halfway line — tidewater, saltpan and terraces
+      // have a fixture on the exact centre, where no floor node stands and the field had no reading: L = ∞)
+      const dq = Math.abs(n.z) * 3 + Math.abs(n.x) + Math.max(0, n.y - 3) * 2;
+      if (dq < pd) { pd = dq; p = id; }
       const dp = Math.hypot(n.x - pad.x, n.z - pad.z);
       if (dp >= R && n.wet !== 2) { const v = dp - R + Math.abs(n.y - pad.y) * 0.5; if (v < gd) { gd = v; g = id; } }
     }
+    // the exact centre when a floor node stands within the reading's reach of it, else that nearest floor
+    const P = p >= 0 ? nav.nodes[p] : null, y0 = level.groundHeight(0, 0, (level.spawnPads?.[0]?.y ?? 2.4) + 0.6);
+    if (P && (Math.hypot(P.x, P.z) > K.field.n0R * 0.8 || Math.abs(P.y - y0) > K.field.n0Dy * 0.8)) { start = [+P.x.toFixed(2), +P.y.toFixed(2), +P.z.toFixed(2)]; c = p; }
     const ids = c >= 0 && g >= 0 ? nav.path(c, g, 0, 30000, true) || nav.path(c, g, 0, 30000, false) : null;
     if (ids && ids.length > 4) {
       const G1 = nav.nodes[ids[ids.length - 1]], W = nav.nodes[ids[Math.floor(ids.length / 2)]];
@@ -112,7 +121,7 @@ export function placeholderKarp(level) {
     }
   }
   const circle = (cx, cz, r) => Array.from({ length: 16 }, (_, k) => [+(cx + Math.cos((k / 16) * Math.PI * 2) * r).toFixed(2), +(cz + Math.sin((k / 16) * Math.PI * 2) * r).toFixed(2)]);
-  return { placeholder: true, start: [0, 0], weirs: [{ at: weir }], gate: { at: gate }, freeZones: [{ poly: circle(pad.x, pad.z, 9), y0: pad.y - 0.9, y1: pad.y + 6, auto: true }] };
+  return { placeholder: true, start, weirs: [{ at: weir }], gate: { at: gate }, freeZones: [{ poly: circle(pad.x, pad.z, 9), y0: pad.y - 0.9, y1: pad.y + 6, auto: true }] };
 }
 
 // ---------------------------------------------------------------------------------------------- the field
@@ -233,39 +242,76 @@ export class KarpField {
   // the hop and gap edges (§3.2 step 1): moves a carrier's real jump makes that nav.js has no edge for
   _extraEdges(push) {
     const nav = this.nav, ok = this.ok, H = K.hop, Gp = K.gap, L = this.level;
-    const nodes = nav.nodes, nx = nav.nx;
+    const nodes = nav.nodes, nx = nav.nx, nz = nav.nz, NN = nodes.length;
     let hops = 0, gaps = 0;
+    // every cell's node heights in one flat table (the floor tests below run a few hundred thousand times at load)
+    const NC = nx * nz, cs = new Int32Array(NC + 1);
+    for (let c = 0; c < NC; c++) cs[c + 1] = cs[c] + nav.cells[c].length;
+    const cy = new Float64Array(cs[NC]);
+    for (let c = 0; c < NC; c++) { let k = cs[c]; for (const id of nav.cells[c]) cy[k++] = nodes[id].y; }
+    // a nav node in cell (ix, iz) at about height y (−below … +above): _floorNode on the table
+    const floorNode = (ix, iz, y, below, above) => {
+      if (ix < 0 || iz < 0 || ix >= nx || iz >= nz) return false;
+      const c = iz * nx + ix, lo = y - below, hi = y + above;
+      for (let k = cs[c], e = cs[c + 1]; k < e; k++) { const v = cy[k]; if (v >= lo && v <= hi) return true; }
+      return false;
+    };
     // rim nodes: a neighbour cell with no floor node from 1 m below to 0.6 m above — only those can start or end a gap
     // (a gap leaves solid floor), so the gap scan skips every node inside a floor
-    const rim = new Uint8Array(nodes.length);
-    for (let i = 0; i < nodes.length; i++) {
+    const rim = new Uint8Array(NN);
+    for (let i = 0; i < NN; i++) {
       if (!ok[i]) continue;
       const n = nodes[i];
-      for (let dz = -1; dz <= 1 && !rim[i]; dz++) for (let dx = -1; dx <= 1; dx++) if ((dx || dz) && !this._floorNode(n.ix + dx, n.iz + dz, n.y, Gp.airBelow, 0.6)) { rim[i] = 1; break; }
+      for (let dz = -1; dz <= 1 && !rim[i]; dz++) for (let dx = -1; dx <= 1; dx++) if ((dx || dz) && !floorNode(n.ix + dx, n.iz + dz, n.y, Gp.airBelow, 0.6)) { rim[i] = 1; break; }
     }
-    // the nodes within a 6 m nav walk of a gap candidate's start (a small Dijkstra, once per start node, on demand)
-    let w6id = -1; const w6 = new Map(), w6h = new Heap(64);
-    const walk6 = (id) => {
-      if (id === w6id) return w6;
-      w6id = id; w6.clear(); w6.set(id, 0); w6h.n = 0; w6h.push(id, 0);
-      while (w6h.n) {
-        const k = w6h.pop(), d = w6.get(k), n = nodes[k];
+    // … and each cell's rim nodes (the gap scan's candidates)
+    const rs0 = new Int32Array(NC + 1);
+    for (let c = 0; c < NC; c++) { let k = 0; for (const id of nav.cells[c]) if (ok[id] && rim[id]) k++; rs0[c + 1] = rs0[c] + k; }
+    const rl = new Int32Array(rs0[NC]);
+    for (let c = 0; c < NC; c++) { let k = rs0[c]; for (const id of nav.cells[c]) if (ok[id] && rim[id]) rl[k++] = id; }
+    // "joined by a nav walk of at most 6 m" (a small Dijkstra from the candidate's start, kept per start and run only as
+    // far as a question needs: a node is joined once any walk ≤ 6 m reaches it; typed arrays with a stamp per start)
+    const w6d = new Float64Array(NN), w6s = new Int32Array(NN), w6h = new Heap(64);
+    let w6id = -1, w6k = 0;
+    const within6 = (id, mid) => {
+      if (id !== w6id) { w6id = id; w6k++; w6s[id] = w6k; w6d[id] = 0; w6h.n = 0; w6h.push(id, 0); }
+      while (w6s[mid] !== w6k && w6h.n) {
+        const k = w6h.pop(), d = w6d[k], n = nodes[k];
         for (const e of n.nb) {
           if (!ok[e.to] || e.type === 'climb') continue;
           const m = nodes[e.to], nd = d + Math.hypot(m.x - n.x, m.z - n.z, m.y - n.y);
-          if (nd > Gp.walkMin || nd >= (w6.get(e.to) ?? INF)) continue;
-          w6.set(e.to, nd); w6h.push(e.to, nd);
+          if (nd > Gp.walkMin || (w6s[e.to] === w6k && nd >= w6d[e.to])) continue;
+          w6s[e.to] = w6k; w6d[e.to] = nd; w6h.push(e.to, nd);
         }
       }
-      return w6;
+      return w6s[mid] === w6k;
     };
-    for (let i = 0; i < nodes.length; i++) {
+    // open air somewhere along the line n → m (cheap: nav cells first, then the floor itself)
+    const openAir = (n, m, flat, dy) => {
+      const steps = Math.floor(flat / 0.25);
+      for (let k = 1; k < steps; k++) {
+        const u = (k * 0.25) / flat, x = n.x + (m.x - n.x) * u, z = n.z + (m.z - n.z) * u, y = n.y + Math.max(0, dy) * u + Math.min(0, dy) * Math.max(0, u - 0.5) * 2;
+        const ix = Math.round((x - nav.x0) / nav.step), iz = Math.round((z - nav.z0) / nav.step);
+        if (floorNode(ix, iz, y, Gp.airBelow, 0.3)) continue;
+        if (L.groundHeight(x, z, y + 0.05) >= y - Gp.airBelow) continue;
+        return true;
+      }
+      return false;
+    };
+    // a gap edge a → b once the line is known open and unblocked (the walk and the veto are one-way: per direction)
+    const later = [];
+    const gapEdge = (a, b, flat, dy) => {
+      if (within6(a, b)) return;
+      if (this._veto(nodes[a], nodes[b])) return;
+      push(a, b, flat + 0.5 * Math.max(0, -dy), TYPES.gap); gaps++;
+    };
+    for (let i = 0; i < NN; i++) {
       if (!ok[i]) continue;
       const n = nodes[i];
       // hops: an orthogonal neighbour cell's node 1.25–1.8 m up
       for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const jx = n.ix + dx, jz = n.iz + dz;
-        if (jx < 0 || jz < 0 || jx >= nx || jz >= nav.nz) continue;
+        if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
         for (const mid of nav.cells[jz * nx + jx]) {
           if (!ok[mid]) continue;
           const m = nodes[mid], rise = m.y - n.y;
@@ -278,33 +324,31 @@ export class KarpField {
           push(i, mid, Math.hypot(m.x - n.x, m.z - n.z) + rise, TYPES.hop); hops++;
         }
       }
-      // gaps: across open air, 1.2–3.0 m (rim to rim)
+      // gaps: across open air, 1.2–3.0 m (rim to rim). A level pair (dy 0: the same line both ways, and both ends rim
+      // nodes in each other's window) is tested once, from its lower id; its reverse edge is checked after the scan.
       if (rim[i]) for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
         if (Math.abs(dx) + Math.abs(dz) < 2) continue;
         const jx = n.ix + dx, jz = n.iz + dz;
-        if (jx < 0 || jz < 0 || jx >= nx || jz >= nav.nz) continue;
-        for (const mid of nav.cells[jz * nx + jx]) {
-          if (!ok[mid] || !rim[mid]) continue;
-          const m = nodes[mid], flat = Math.hypot(m.x - n.x, m.z - n.z), dy = m.y - n.y;
-          if (flat <= Gp.flatMin || flat > Gp.flatMax + 1e-6 || dy > Gp.upMax || dy < -Gp.downMax) continue;
-          // open air somewhere along the line (cheap: nav cells first, then the floor itself)
-          const steps = Math.floor(flat / 0.25);
-          let open = false;
-          for (let k = 1; k < steps; k++) {
-            const u = (k * 0.25) / flat, x = n.x + (m.x - n.x) * u, z = n.z + (m.z - n.z) * u, y = n.y + Math.max(0, dy) * u + Math.min(0, dy) * Math.max(0, u - 0.5) * 2;
-            const ix = Math.round((x - nav.x0) / nav.step), iz = Math.round((z - nav.z0) / nav.step);
-            if (this._floorNode(ix, iz, y, Gp.airBelow, 0.3)) continue;
-            if (L.groundHeight(x, z, y + 0.05) >= y - Gp.airBelow) continue;
-            open = true; break;
-          }
-          if (!open) continue;
+        if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
+        const c = jz * nx + jx;
+        for (let q = rs0[c], qe = rs0[c + 1]; q < qe; q++) {
+          const mid = rl[q], m = nodes[mid], dy = m.y - n.y;
+          if (dy > Gp.upMax || dy < -Gp.downMax) continue;
+          const flat = Math.hypot(m.x - n.x, m.z - n.z);
+          if (flat <= Gp.flatMin || flat > Gp.flatMax + 1e-6) continue;
+          const level = dy === 0;
+          if (level && mid < i) continue;
+          if (!openAir(n, m, flat, dy)) continue;
           if (nav._blocked(n, m, Math.max(n.y, m.y))) continue;
-          if (walk6(i).has(mid)) continue;
-          if (this._veto(n, m)) continue;
-          push(i, mid, flat + 0.5 * Math.max(0, -dy), TYPES.gap); gaps++;
+          gapEdge(i, mid, flat, dy);
+          if (level) later.push(mid, i, flat);
         }
       }
     }
+    // the level pairs' reverse edges, grouped by start node (the 6 m walk is cached per start)
+    const ord = []; for (let k = 0; k < later.length; k += 3) ord.push(k);
+    ord.sort((p, q) => later[p] - later[q]);
+    for (const k of ord) gapEdge(later[k], later[k + 1], later[k + 2], 0);
     this.stats.hops = hops; this.stats.gaps = gaps;
   }
 
