@@ -11,16 +11,16 @@ cd "$(dirname "$0")/../../../../.." || exit 1
 mkdir -p "$O" "$W/sheets"
 jpg() { sips -Z ${3:-1400} -s format jpeg -s formatOptions 70 "$1" --out "$2" > /dev/null; [ "$(stat -f %z "$2")" -gt 300000 ] && sips -s format jpeg -s formatOptions 50 "$1" -Z ${3:-1400} --out "$2" > /dev/null; [ "$(stat -f %z "$2")" -gt 300000 ] && sips -s format jpeg -s formatOptions 40 "$1" -Z 1100 --out "$2" > /dev/null; return 0; }
 B=-42,42,-80,80
-COLS=2 python3 $J/rc-sheet.py "$W/sheets/tops.png" "Bluestone Junction (round C, the Z) beside Crossroads Market and Halyard Marina, one scale (+z right, +x up)" 3.2 \
-  "$ST/crossmarket-top.webp=Crossroads Market (crossmarket-top.webp, as shipped)=-31,31,-68,68" \
+COLS=2 python3 $J/rc-sheet.py "$W/sheets/tops.png" "Round C: Bluestone (the Z), Crossroads, Halyard - one scale" 3.2 \
+  "$ST/crossmarket-top.webp=Crossroads Market (crossmarket-top.webp)=-31,31,-68,68" \
   "$L/perfH/halyard-day-top.png=Halyard Marina (the bar)=-24,24,-70,70" \
-  "$W/r4-era1/bluestone-day-top.png=Bluestone era 1, the 1880s (the punt crossing)=$B" \
-  "$W/r4-era2/bluestone-day-top.png=Bluestone era 2, today (+ the Iron Bridge, Degrayling Lane open)=$B" \
-  "$W/r4-era3/bluestone-day-top.png=Bluestone era 3, the 3000s (+ the floating garden, the Halo)=$B"
+  "$W/r4-era1/bluestone-day-top.png=Bluestone era 1, the 1880s=$B" \
+  "$W/r4-era2/bluestone-day-top.png=Bluestone era 2, today (+ Iron Bridge)=$B" \
+  "$W/r4-era3/bluestone-day-top.png=Bluestone era 3, 3000s (+ garden, Halo)=$B"
 CMF=$(grep -o '"floorCells":[0-9]*' "$L/cover-map-crossmarket.log" | head -1 | cut -d: -f2); BLF=$(grep -o '"floorCells":[0-9]*' "$L/cover-map1.log" | head -1 | cut -d: -f2)
 (cd $J && ERA=1 node --import ./three-hook.mjs shape-sheet.mjs "$W/sheets/masks.json" crossmarket bluestone > /dev/null)
-python3 $J/rc-masks.py "$W/sheets/masks.json" "$W/sheets/masks.png" 3.2 "Walkable floor at the same scale (white; grey = roofs, blue = water)" \
-  "crossmarket=Crossroads Market: {n} m² walkable on the 0.5 m raster (cover-map.js floorCells, props included: $CMF)" "bluestone=Bluestone Junction era 1: {n} m² walkable on the 0.5 m raster (cover-map.js floorCells: $BLF)"
+python3 $J/rc-masks.py "$W/sheets/masks.json" "$W/sheets/masks.png" 3.2 "Walkable floor, same scale" \
+  "crossmarket=Crossroads: {n} m² (raster), $CMF floorCells" "bluestone=Bluestone era 1: {n} m² (raster), $BLF floorCells"
 python3 - "$W/sheets" <<'PY'
 import sys
 from PIL import Image
