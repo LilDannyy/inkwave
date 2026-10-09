@@ -67,9 +67,9 @@ const YC = 0.0345;
 const REAR = smoothProfile([[0.001, -0.047], [0.016, -0.0455], [0.026, -0.04], [0.0318, -0.031], [0.0334, -0.024], [0.0334, -0.018]], 9);
 function bolt() {
   // a lightning chevron pointing back along the body (the decal's x runs nose → tail, y round the shell)
-  const s = new THREE.Shape();
-  s.moveTo(0, 0.0058); s.lineTo(0.0098, 0.0012); s.lineTo(0.0081, -0.0004); s.lineTo(0.0205, -0.0062);
-  s.lineTo(0.0106, 0.0001); s.lineTo(0.0123, 0.0015); s.lineTo(0, 0.0058);
+  const s = new THREE.Shape(), Y = 1.5;
+  s.moveTo(0, 0.0058 * Y); s.lineTo(0.0098, 0.0012 * Y); s.lineTo(0.0081, -0.0004 * Y); s.lineTo(0.0208, -0.0062 * Y);
+  s.lineTo(0.0106, 0.0001 * Y); s.lineTo(0.0123, 0.0015 * Y); s.lineTo(0, 0.0058 * Y);
   return s;
 }
 function buildDash() {
@@ -168,7 +168,7 @@ SFX.dash_air = {
 
 // ================================================================================================= looks
 // the speed ribbon: a vertical band of team ink trailing the body's chest line for 0.3 s, fading from its head to its tail
-const RIB_N = 24, RIB_LIFE = 0.3, RIB_H = 0.36;
+const RIB_N = 24, RIB_LIFE = 0.3, RIB_H = 0.27;
 const RIB_VS = `attribute float aK; varying float vK; varying float vV; void main(){ vK = aK; vV = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 const RIB_FS = `uniform vec3 uColor; uniform float uAlpha; varying float vK; varying float vV;
   void main(){ float e = 1.0 - abs(vV * 2.0 - 1.0); float a = vK * smoothstep(0.0, 0.55, e) * uAlpha; if (a < 0.01) discard;
@@ -212,8 +212,9 @@ function ribbonTick(R, dt) {
   const pos = R.mesh.geometry.attributes.position, K = R.mesh.geometry.attributes.aK;
   for (let i = 0; i < RIB_N; i++) {
     const q = R.pts[Math.min(i, n - 1)] || { x: 0, y: -999, z: 0, t: 0 };
-    const k = n ? clamp(1 - (R.t - q.t) / RIB_LIFE, 0, 1) * (i < n ? 1 : 0) : 0;
-    const h = RIB_H * (0.45 + 0.55 * k);
+    // (fading with age, and tapering from the body back to a point at the tail)
+    const k = n ? clamp(1 - (R.t - q.t) / RIB_LIFE, 0, 1) * (i < n ? 1 : 0) * Math.pow(Math.min(i + 1, n) / n, 0.6) : 0;
+    const h = RIB_H * (0.2 + 0.8 * k);
     pos.setXYZ(i * 2, q.x, q.y - h, q.z); pos.setXYZ(i * 2 + 1, q.x, q.y + h, q.z);
     K.setX(i * 2, k); K.setX(i * 2 + 1, k);
   }
