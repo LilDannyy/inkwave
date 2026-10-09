@@ -256,6 +256,39 @@
     const eW = leg('gulper').ends[1], sx = Math.cos(70 * Math.PI / 180), sz = Math.sin(70 * Math.PI / 180);
     const st = popRun('gulper', 0, { steer: [eW.out[0] * sx - eW.out[2] * sz, 0, eW.out[0] * sz + eW.out[2] * sx] });
     R('pop: the stick held in the last 0.5 s steers the pop, by at most 45° (asked 70°)', st.landed && Math.abs(st.turn) > 25 && Math.abs(st.turn) <= 47, { turn: st.turn, d: st.d });
+    // the steer through the real PlayerController (a camera-relative stick, while the exit shot turns toward the heading):
+    // an analog stick held θ right of up turns the pop θ right, not run away to 45° (LEAD-REVIEW round 2: 8° → 40°, 15° →
+    // 45°); keyboard D / A give the full 45° right / left. The Gulper Run east → west, the stick held the whole ride.
+    {
+      const { PlayerController } = await import('./src/game/player.js');
+      const inp = g.input, rig = g.rig, fake = { buttons: [], axes: [0, 0, 0, 0] }, poll0 = inp.pollPad, ctl0 = M.controller;
+      inp.pollPad = function () { this.pad = fake; };
+      M.controller = new PlayerController(A, rig, inp);
+      const rows = [];
+      const gl = leg('gulper'), e = gl.ends[0], x = gl.ends[1], base = Math.atan2(x.out[0], x.out[2]);
+      const wrap = (d) => { while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+      try {
+        for (const [label, deg, key] of [['stick 0°', 0], ['stick 8°', 8], ['stick 15°', 15], ['stick 30°', 30], ['key D', null, 'KeyD'], ['key A', null, 'KeyA']]) {
+          park();
+          const inYaw = Math.atan2(-e.out[0], -e.out[2]);
+          put(A, [e.approach[0] + e.out[0] * 0.15, e.approach[1], e.approach[2] + e.out[2] * 0.15], inYaw);
+          rig.yaw = inYaw; rig.pitch = -0.2;
+          fake.axes = [0, -1, 0, 0];   // (walk straight in)
+          let k = 0;
+          while (!A.pipe && k++ < 90) dbg.step(1000 / 60);
+          const captured = !!A.pipe;
+          if (key) { fake.axes = [0, 0, 0, 0]; dbg.key(key, true); } else { const th = (deg * Math.PI) / 180; fake.axes = [Math.sin(th), -Math.cos(th), 0, 0]; }
+          let popYaw = null, camPop = null, n = 0;
+          while (A.pipe && n++ < 400) { dbg.step(1000 / 60); const p = A.pipe; if (p && p.phase === 'pop' && popYaw === null) { popYaw = p.popYaw; camPop = rig.yaw; } }
+          if (key) dbg.key(key, false);
+          fake.axes = [0, 0, 0, 0];
+          rows.push({ label, want: key ? (key === 'KeyD' ? -45 : 45) : -deg, captured, turn: popYaw === null ? null : Math.round(wrap(popYaw - base) * 573) / 10, cam: camPop === null ? null : Math.round(wrap(camPop - base) * 573) / 10 });
+          step(1.0);
+        }
+      } finally { inp.pollPad = poll0; M.controller = ctl0; for (const kk of ['KeyD', 'KeyA']) dbg.key(kk, false); }
+      R('pop: the steer through the real controller (camera-relative stick, the exit shot turning to show it): a stick held θ right of up turns the pop θ (±5°: 0°, 8°, 15°, 30°), keyboard D / A the full 45° right / left',
+        rows.every((r) => r.captured && r.turn !== null && Math.abs(r.turn - r.want) <= 5), { rows });
+    }
     const sb = popRun('arch', 0, { sub: true });
     R('pop: a sub held through the ride is not thrown at the pop; nothing fires until touchdown (Arch Line to the promenade)', sb.landed && sb.thrown === 0 && !sb.firedDuring, { thrown: sb.thrown, fired: sb.firedDuring, d: sb.d });
     // Express (one-way, 24 m/s) down to Penguin Point's terrace

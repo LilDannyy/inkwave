@@ -496,11 +496,24 @@ export class StagePipes {
     this._pose(a, 1, -Math.asin(clamp(ty, -1, 1)), null);
     this._noBody(a);
     const left = (L - u) / p.v;
-    // the steer window: the move input held in the last 0.5 s picks the pop heading (±45°), jump held a high pop
+    // the steer window: the move input held in the last 0.5 s picks the pop heading (±45°), jump held a high pop.
+    // A player's stick is read against the exit's own out axis (stick up: straight out; right: out turned right), not
+    // against the camera: the exit shot turns toward the heading to show it, and a stick read through that camera chased
+    // it — 8° held popped 40° off, 15° the full 45° (LEAD-REVIEW round 2, item 2). The controller builds intent.move from
+    // the camera's yaw, which it leaves in a.aimYaw, so the stick's own angle is the move's angle less that yaw. (Bots and
+    // scripted moves are world headings: read as they are.)
     if (own && left <= PIPES.pop.steerWin) {
       if (a.bot && !p.botAimed) { p.botAimed = true; this._botPop(a, p); }
       const mv = a.intent.move, mm = Math.hypot(mv.x, mv.z);
-      if (mm > 0.3) { p.steerX = mv.x / mm; p.steerZ = mv.z / mm; p.steerOn = true; }
+      if (mm > 0.3) {
+        let sx = mv.x / mm, sz = mv.z / mm;
+        const pc = this.m.controller;
+        if (pc && pc.a === a && pc.enabled) {
+          const e = this.ends[p.exit], h = Math.atan2(e.out[0], e.out[2]) + Math.atan2(sx, sz) - (a.aimYaw || 0);
+          sx = Math.sin(h); sz = Math.cos(h);
+        }
+        p.steerX = sx; p.steerZ = sz; p.steerOn = true;
+      }
       if (a.intent.jump) p.high = true;
     }
     if (own) { a.intent.move.set(0, 0, 0); a.intent.jump = false; }
