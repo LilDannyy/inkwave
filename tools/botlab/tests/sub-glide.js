@@ -510,6 +510,28 @@
       until(() => it.state === 'dead', 3);
       delete G.match.lava;
       R('a stand-in lava (0.5 m over x > 10): it sinks at its edge — a hiss (lava.fizzle), no blast', it.why === 'sunk:lava' && fz.length === 1 && fz[0][0] > 10 && fz[0][0] < 10.3 && ev('bomb:explode').length === 0, { why: it.why, fizzle: fz });
+      // as caldera will be: its lava IS the stage module's liquid — G.level.liquidY answers the lava's surface over the same
+      // half as G.match.lava (docs/STAGE-MODS.md H23). One hiss (lava.fizzle), no water plop (its sound, its pale splash).
+      // And a module liquid nobody fizzles (a tank's water: liquidY alone): it plops, no hiss
+      const plops = [], ap0 = G.audio?.play, fb0 = G.fx?.burst;
+      if (ap0) G.audio.play = function (n) { if (n === 'glide_plop') plops.push({ t: G.time, what: 'sound' }); return ap0.apply(this, arguments); };
+      if (fb0) G.fx.burst = function (p, d, col) { if (col?.getHexString?.() === 'bfe9ff') plops.push({ t: G.time, what: 'splash' }); return fb0.apply(this, arguments); };
+      const liq = [], ownLq = Object.prototype.hasOwnProperty.call(L, 'liquidY') ? L.liquidY : null;
+      const lqBack = () => { if (ownLq) L.liquidY = ownLq; else delete L.liquidY; };
+      try {
+        for (const withLava of [true, false]) {
+          reset(); put(me, V(0, 0, 0), Math.PI / 2); step(0.05);
+          plops.length = 0; const fz2 = [];
+          L.liquidY = (x) => (x > 10 ? 0.5 : PLAYER.waterY);
+          if (withLava) G.match.lava = { surfaceAt: (x) => (x > 10 ? 0.5 : -Infinity), under: (p, d = 0) => p.x > 10 && p.y < 0.5 + d, covers: () => false, fizzle: (p) => fz2.push([r2(p.x), r2(p.y)]) };
+          const { it: sl } = throwHeld(0.1);
+          until(() => sl.state === 'dead', 3);
+          delete G.match.lava; lqBack();
+          liq.push({ lava: withLava, why: sl.why, fizzles: fz2.length, plops: plops.map((x) => x.what), blasts: ev('bomb:explode').length });
+        }
+      } finally { if (ap0) G.audio.play = ap0; if (fb0) G.fx.burst = fb0; lqBack(); }
+      R('caldera\'s case — G.level.liquidY and G.match.lava over the same half: it hisses once (lava.fizzle) with no water plop; a module liquid alone (a tank\'s water): it plops (its sound and pale splash), no hiss — neither blows',
+        liq[0].why === 'sunk:lava' && liq[0].fizzles === 1 && liq[0].plops.length === 0 && liq[0].blasts === 0 && liq[1].why === 'sunk:liquid' && liq[1].fizzles === 0 && liq[1].plops.includes('sound') && liq[1].plops.includes('splash') && liq[1].blasts === 0, liq);
       // a stand-in Roe Shell (r 1.6 at (6, 1.0, −20)): hit 45° off its normal
       reset();
       const sc = V(6, 1.0, -20), calls = [];

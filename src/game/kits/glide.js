@@ -297,14 +297,18 @@ export function simulate(p, v, air, f, team, pts = null, maxBounces = 3, ctx = n
   return _simOut;
 }
 const _simCtx = { team: -1, kids: false, cd: null, frameDt: 0 };
-// sunk: off the map into the sea, under a stage module's liquid, into lava ('' when not)
+// sunk: off the map into the sea, into lava, under a stage module's other hazard, under its liquid ('' when not). The lava
+// is asked before the liquid: caldera's lava IS its module liquid (G.level.liquidY answers the lava's surface there —
+// docs/STAGE-MODS.md H23), and a stone in it hisses (lava.fizzle) rather than plops; any other module's hazard that
+// answers G.match.stage.under fizzles through the stage (stage.fizzle); a liquid nobody fizzles (a tank's water) plops
 function sinks(p, air) {
   if (p.y < PLAYER.waterY - 1.8) return 'sea';
   if (air && p.y < PLAYER.waterY && G.level.groundHeight(p.x, p.z, p.y + 0.05) === -Infinity) return 'sea';
+  const M = G.match;
+  if (M?.lava?.under?.(p)) return 'lava';
+  if (M?.stage?.under?.(p)) return 'stage';   // [b5-stagehooks] (stage.sink's test; its fizzle in sink())
   const lq = G.level.liquidY?.(p.x, p.z);
   if (lq > PLAYER.waterY + 0.01 && p.y + 0.05 < lq) return 'liquid';
-  const LV = G.match?.lava;
-  if (LV?.under?.(p)) return 'lava';
   return '';
 }
 
@@ -393,9 +397,8 @@ function stepOnce(it) {
   } else it.trail = Math.min(it.trail, s.trailEvery);
   if (b) onBounce(it, b);
   if (it.landed) { it.landed = false; it.pred.t = -9; if (near(p, 30)) G.audio?.play('glide_bounce', { pos: p, volume: 0.35, pitch: 0.7 }); }
-  const sk = sinks(p, it.air);
+  const sk = sinks(p, it.air);   // ([b5-stagehooks] the lava / stage.under first: stage.sink's test, its fizzle in sink())
   if (sk) return sink(it, sk);
-  if (!it.ghost && G.match?.stage?.sink?.(p, KIND)) return sink(it, 'stage');   // [b5-stagehooks] (the lava's own test)
   it.fuse -= h;
   if (!it.ghost && (it.recT -= h) <= 1e-6) rec4(it);   // (15 steps of 1/60 s, not 16: the float sum lands a hair over 0)
   if (it.fuse <= 1e-6) {
@@ -533,12 +536,17 @@ function blast(it) {
   G.objTargets?.splash?.(a, c, R, s.damageMax, s.damageMin, KIND);   // Bazookarp's Roe Shell (SPEC §0.6)
 }
 // sunk: a plop (a hiss and steam in lava), no blast, no paint after it
+// (why: 'sea' / 'liquid' plop; 'lava' → lava.fizzle; 'stage' → stage.fizzle; on a ghost the owner's [2, gid, 0, hot] —
+// hot 1: it went into the lava / a stage hazard there, so this screen hisses too)
 function sink(it, why) {
   if (it.state === 'dead') return;
-  if (!it.ghost) { netRec(it.owner, KIND, [2, it.gid, 0]); GLIDE_STATS.sunk++; }
+  const hot = why === 'lava' || why === 'stage';
+  if (!it.ghost) { netRec(it.owner, KIND, [2, it.gid, 0, hot ? 1 : 0]); GLIDE_STATS.sunk++; if (it.mode) GLIDE_STATS['sunk_' + it.mode]++; }
   it.state = 'dead'; it.why = 'sunk:' + why;
-  const LV = G.match?.lava;
+  const M = G.match, LV = M?.lava;
+  if (why === 'net:hot') why = LV?.fizzle ? 'lava' : 'stage';
   if (why === 'lava' && LV?.fizzle) LV.fizzle(it.p, KIND);
+  else if (why === 'stage' && M?.stage?.fizzle) M.stage.fizzle(it.p, KIND);
   else if (near(it.p, 40)) {
     G.audio?.play('glide_plop', { pos: it.p, volume: 0.7 });
     G.fx?.burst?.(_c.set(it.p.x, Math.max(it.p.y, PLAYER.waterY) + 0.05, it.p.z), UP, new THREE.Color('#bfe9ff'), { count: 10, speed: 3, size: 0.07 });
@@ -840,8 +848,9 @@ function ghost(a, d) {
     if (it.state === 'hold' && it.fuse > 0) it.state = 'slide';
     it.pred.t = -9;
   } else if (op === 1) { it.p.set(d[2], d[3], d[4]); blast(it); }
-  else if (op === 2) { if (d[2] === 0) sink(it, 'net'); else pop(it, d[2]); }
+  else if (op === 2) { if (d[2] === 0) sink(it, d[3] ? 'net:hot' : 'net'); else pop(it, d[2]); }
 }
+const _gb = { kind: '', nx: 0, nz: 0, speed: 0, who: null };
 function netHurtOwn(gid, dmg, by) { const it = items.find((x) => !x.ghost && x.gid === gid && x.state !== 'dead'); if (it) hurt(it, dmg, by); }
 // a Mega Stamp's guard smashed our stone on another screen
 KIT_GHOSTS.glideSmash = { netHurt: (gid) => { const it = items.find((x) => !x.ghost && x.gid === gid && x.state !== 'dead'); if (it) pop(it, 2); } };
