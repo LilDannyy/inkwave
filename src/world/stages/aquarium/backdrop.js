@@ -66,6 +66,12 @@ export function buildBackdrop(kit, data = {}) {
   const LOOK = {
     water: new T.MeshBasicMaterial({ color: '#2a5f6c', transparent: true, opacity: 0.72, depthWrite: false, side: T.DoubleSide }), glass: see('#d9eef0', 0.14, { roughness: 0.05 }),
   };
+  // the water volumes seen from inside (their back faces: a lens in a tank or a drum — the ride camera's) are thin: the
+  // pipe engine's underwater grade gives the in-water look where the lens is really under (pipesFx.js), and a lens at a
+  // drum's open top looking out over the promenade no longer sees the whole world through a 72 % teal wall (LEAD-REVIEW
+  // round 2, item 4: ride-4's teal world was this wall, not the grade). From outside, the near wall is as before
+  LOOK.water.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', 'diffuseColor.a *= gl_FrontFacing ? 1.0 : 0.25;\n#include <opaque_fragment>'); };
+  LOOK.water.customProgramCacheKey = () => 'aq-water-inside';
   const objects = [];
   for (const [k, geos] of Object.entries(buckets)) {
     const g = merge(geos); if (!g) continue;

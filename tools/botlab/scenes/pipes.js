@@ -108,7 +108,7 @@
     // itself (the bubble curtain)
     const drum = () => { hud(false); cine([14.0, 2.8, -9.3], [25, 5.0, 0], 72); };
     S('tide-kelp-up', () => {
-      for (const [k, o] of M().actors.entries()) away(o, k);
+      for (const [k, o] of M().actors.entries()) if (o !== me()) away(o, k);
       M().time = M().duration - 60; P().S.clock.t = 60; dbg.step(1000 / 60);
       drum(); step(2.0); return { flow: P().flow() };
     });
