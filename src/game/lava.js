@@ -485,6 +485,7 @@ export class StageLava {
     this.prev = { phase: st.phase, warn: st.warn, at: st.next?.at ?? null };
     if (this.placed) this._riders(t, st, true);
     this._floors();
+    if (this.placed) this.sweepDevices();
     if (why === 'late') this.burnY = this.y;   // (the imported grid already has no ink under the lava)
     else this._burn(true);
     this.W.setY(this.y, st);
@@ -495,29 +496,29 @@ export class StageLava {
   }
 
   _events(st, t) {
-    const P = this.prev, T = this.sched.T;
+    const P = this.prev, T = this.sched.T, au = this.m.attract ? null : G.audio;   // (the menu backdrop rises and falls in silence)
     if (st.warn && !(P.warn && P.at === st.next.at)) {
       const n = st.next;
       emit('lava:warn', { to: n.to, at: n.at, inS: Math.round(n.inS), dir: n.dir });
       this._log('warn', t, n.to);
-      if (n.to === 'high') { G.audio?.play('lava_bell'); this._rumble(0.9); }
-      else G.audio?.play('lava_whistle', { params: { kind: 'warn' } });
+      if (n.to === 'high') { au?.play('lava_bell'); this._rumble(0.9); }
+      else au?.play('lava_whistle', { params: { kind: 'warn' } });
     }
     // the countdown's last 3 s
-    if (st.warn) { const k = Math.ceil(st.next.inS); if (k <= 3 && k >= 1 && k !== this.tickN) { this.tickN = k; G.audio?.play('lava_tick', { pitch: st.next.to === 'high' ? 1 : 0.8 }); } }
+    if (st.warn) { const k = Math.ceil(st.next.inS); if (k <= 3 && k >= 1 && k !== this.tickN) { this.tickN = k; au?.play('lava_tick', { pitch: st.next.to === 'high' ? 1 : 0.8 }); } }
     else this.tickN = -1;
     if (st.phase !== P.phase) {
       if (st.phase === 'rise' || st.phase === 'fall') {
         const m = st.move;
         emit('lava:move', { dir: st.dir, from: st.dir > 0 ? this.W.low : this.W.high, to: st.dir > 0 ? this.W.high : this.W.low, dur: m ? m.dur : T.rise, at: m ? m.t0 : t });
         this._log('move', t, st.phase);
-        if (st.dir > 0) { G.audio?.play('lava_erupt'); G.audio?.play('lava_siren_up'); emit('shake', { amount: 0.25, dur: 0.6 }); this._rumble(0.9); }
-        else { G.audio?.play('lava_hiss'); G.audio?.play('lava_siren_down'); this._rumble(0.5); this._drain(true); }
+        if (st.dir > 0) { au?.play('lava_erupt'); au?.play('lava_siren_up'); emit('shake', { amount: 0.25, dur: 0.6 }); this._rumble(0.9); }
+        else { au?.play('lava_hiss'); au?.play('lava_siren_down'); this._rumble(0.5); this._drain(true); }
       } else {
         emit('lava:rest', { level: st.phase, y: +st.y.toFixed(3) });
         this._log('rest', t, st.phase);
-        if (st.phase === 'low') { G.audio?.play('lava_whistle', { params: { kind: 'clear' } }); this._drain(false); }
-        else G.audio?.play('lava_lock');
+        if (st.phase === 'low') { au?.play('lava_whistle', { params: { kind: 'clear' } }); this._drain(false); }
+        else au?.play('lava_lock');
         this._rumble(0.15);
       }
     }
@@ -773,7 +774,7 @@ export class StageLava {
     if (!M) return 0;
     const k = M.kind[id];
     if (k === 0) return 0;
-    if (k === 1) { const sy = M.shutY[id]; return this.yAt(t) >= sy || this.yAt(t + 2) >= sy ? 1 : 0; }
+    if (k === 1) { const sy = M.shutY[id]; return this.yAt(t) >= sy || this.maxOver(t, t + LAVA.floorAhead) >= sy ? 1 : 0; }
     const R = this.riders[M.rider[id]];
     if (!R) return 2;
     const off = (tt) => {
@@ -831,8 +832,9 @@ export class StageLava {
       b._lavaT = 0.25;
       const s = nav.nearest(a.pos, 1.2, true), k = s >= 0 ? M.kind[s] : 0, t = this.clock.t;
       let need = false;
-      if (k === 1) { const left = this._timeTo(M.shutY[s], t, 16); need = left < (M.escD[s] || 0) / 5 + 2.5; }
-      else if (k === 2) { const R = this.riders[M.rider[s]]; if (R && R.r.sink) need = this.shut(s, t + 4) === 2 || this.shut(s, t + (M.escD[s] || 0) / 5 + 2.5) === 2; }
+      const esc = (M.escD[s] || 0) / LAVA.escape[0] + LAVA.escape[1];
+      if (k === 1) { const left = this._timeTo(M.shutY[s], t, 16); need = left < esc; }
+      else if (k === 2) { const R = this.riders[M.rider[s]]; if (R && R.r.sink) need = this.shut(s, t + 4) === 2 || this.shut(s, t + esc) === 2; }
       if (need && M.exit[s] >= 0 && M.exit[s] !== s) {
         if (!b._lavaEsc || b.goal !== M.exit[s]) {
           const p = nav.path(s, M.exit[s], a.team);
@@ -854,8 +856,8 @@ export class StageLava {
   }
 
   // ----------------------------------------------------------------------- looks, HUD, maps
-  _rumble(level) { this._rumbleWant = level; this.W.look?.rumble(level); }
-  _drain(on) { this.W.look?.drain(on); }
+  _rumble(level) { this._rumbleWant = level; if (!this.m.attract) this.W.look?.rumble(level); }
+  _drain(on) { if (!this.m.attract) this.W.look?.drain(on); }
   _heat() {
     const sfx = G.game?.screenfx, cam = G.camera, q = G.settings?.quality;
     if (!sfx || !cam || this.m.attract) return;

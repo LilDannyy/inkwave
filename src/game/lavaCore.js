@@ -6,7 +6,9 @@ export const LAVA = {
   kill: 0.15,        // m above the surface where feet splat (the sea's: fallDeathY − waterY)
   navLead: 0.35,     // a floor nav node is shut from when L reaches node.y − navLead
   soft: 60,          // route cost to enter a node shut at arrival (a floor under lava: only as the way out)
-  sPerM: 1 / 7,      // s per metre of route, for a bot's arrival time
+  sPerM: 1 / 5,      // s per metre of route, for a bot's arrival time (a bot painting its way along walks ~5 m/s)
+  floorAhead: 4,     // s: a floor node is soft from this long before L reaches node.y − navLead at the arrival time
+  escape: [4, 3.5],  // a bot on a floor the lava shuts within escD / [0] + [1] s walks the way out
   goalLook: 8,       // s: goals skip floor nodes the lava reaches within this long
   poseTol: 0.3,      // m: a rider node is open while its rider's top is within this of the pose it was built at
   seamMax: 0.3,      // m: the widest gap a nav edge may cross
@@ -138,7 +140,7 @@ export function stoneRel(r, t, S, st) {
   const k = r.sink, kill = LAVA.kill, r0 = k.rel[0], r1 = k.rel[1], span = r1 - r0;
   if (st.phase === 'high') return r1;
   if (st.phase === 'low' || !st.move) return r0;
-  const tc = crossTime(st.move, k.at, S);
+  const mv = st.move, ck = 'tc' + k.at, tc = mv[ck] !== undefined ? mv[ck] : (mv[ck] = crossTime(mv, k.at, S));   // (cached on the move)
   if (tc === null) return st.phase === 'rise' ? r0 : r1;
   if (st.phase === 'rise') { const ts = tc - ((kill - r0) / span) * k.ease; return clamp(r0 + (span * (t - ts)) / k.ease, r0, r1); }
   const ts = tc - ((r1 - kill) / span) * k.ease;

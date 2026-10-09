@@ -21,7 +21,7 @@ export const LOOK = {
   fall: ['#ff8a1e', '#ffc84a'],           // the lavafalls: full orange-gold, out of play
   rind: [0.82, 0.80, 0.76],               // the ash-white crust line at the high mark (linear)
   basalt: '#646870', basaltTop: '#73777e', pumice: '#bdb8ae', pumiceDk: '#8f8a80',
-  needle: '#c8202a', beaconRed: '#ff2a1e', beaconWhite: '#f4f6ff',
+  needle: '#c8202a', beaconRed: '#ff1206', beaconWhite: '#f4f6ff',
 };
 const HOT_INKS = new Set(['#ff8a14', '#ff4150', '#ffb000', '#ff6a00']);   // (orange / red team inks: no orange band in the seams)
 
@@ -102,29 +102,42 @@ varying vec3 vW;
 #include <common>
 #include <fog_pars_fragment>
 float lh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec2 lh2(vec2 p) { return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453); }
 float lvn(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
   return mix(mix(lh(i), lh(i + vec2(1.0, 0.0)), u.x), mix(lh(i + vec2(0.0, 1.0)), lh(i + vec2(1.0, 1.0)), u.x), u.y); }
+// the crust's plates: a cell net (F2 − F1 is 0 on the cracks between plates); the plates drift slowly
+vec2 plates(vec2 x, float t) {
+  vec2 n = floor(x), f = fract(x); float F1 = 8.0, F2 = 8.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 g = vec2(float(i), float(j)), o = lh2(n + g);
+    o = 0.5 + 0.4 * sin(t * 0.12 + 6.2831 * o);
+    vec2 r = g + o - f; float d = dot(r, r);
+    if (d < F1) { F2 = F1; F1 = d; } else if (d < F2) F2 = d;
+  }
+  return vec2(sqrt(F1), sqrt(F2));
+}
 void main() {
   vec2 p = vW.xz; float t = uTime;
-  float sp = 1.0 + 1.6 * max(uS.x, 0.0) + 0.6 * uS.y;
-  vec2 q = p * 0.52 + vec2(t * 0.022, -t * 0.016) * sp;
-  vec2 w = vec2(lvn(q * 1.3 + 3.1 + t * 0.02), lvn(q * 1.3 - 7.7 - t * 0.017));
-  float n = lvn(q + w * 1.7) * 0.6 + lvn(q * 2.6 - w * 1.2 + t * 0.04 * sp) * 0.4;
-  // the plates' seams: where the warped noise crosses 0.5; wider and brighter on a rise / warning, narrow on a fall
-  float sw = 0.085 + 0.055 * max(uS.x, 0.0) + 0.025 * uS.y - 0.035 * max(-uS.x, 0.0);
-  float d = abs(n - 0.5);
-  float seam = 1.0 - smoothstep(sw * 0.3, sw, d);
-  float core = 1.0 - smoothstep(0.0, sw * 0.22, d);
-  vec3 crust = mix(uCrA, uCrB, lvn(p * 1.6)) * (0.85 + 0.3 * lvn(p * 5.3));
-  crust *= 1.0 - 0.35 * max(-uS.x, 0.0);   // (crusting over on a fall: darker plates)
-  vec3 hot = mix(uS0 * 0.75, uS1, smoothstep(0.35, 0.95, seam));
-  if (uS.z < 0.5) hot = mix(hot, uS2, smoothstep(0.85, 0.97, seam) * 0.45);
-  hot = mix(hot, uS3 * 2.4, core * core * core * (0.55 + 0.45 * max(uS.x, 0.0)));
-  float pulse = 0.85 + 0.15 * sin(t * 1.3 + n * 11.0);
-  vec3 col = mix(crust, hot * (0.85 + 0.55 * max(uS.x, 0.0) + 0.25 * uS.y) * pulse, smoothstep(0.0, 0.6, seam));
+  float rise = max(uS.x, 0.0), fall = max(-uS.x, 0.0);
+  vec2 warp = vec2(lvn(p * 0.21 + t * 0.01), lvn(p * 0.21 - 5.3 - t * 0.008)) * 1.6;
+  vec2 c1 = plates(p * 0.62 + warp + vec2(t * 0.025, -t * 0.018) * (1.0 + 2.0 * rise), t * (1.0 + 3.0 * rise));
+  vec2 c2 = plates(p * 1.7 + warp * 2.0 - vec2(t * 0.04, t * 0.03), t * 1.3);
+  float e = c1.y - c1.x, e2 = c2.y - c2.x;
+  // the cracks: wider and hotter on a rise and in its warning, narrow and dull as it crusts over on a fall
+  float sw = 0.26 + 0.16 * rise + 0.06 * uS.y - 0.1 * fall;
+  float seam = (1.0 - smoothstep(0.0, sw, e)) * (0.75 + 0.25 * lvn(p * 0.9 + t * 0.2));
+  seam = max(seam, (1.0 - smoothstep(0.0, sw * 0.35, e2)) * 0.45 * (1.0 - fall));
+  float core = 1.0 - smoothstep(0.0, sw * 0.16, e);
+  vec3 crust = mix(uCrA, uCrB, lvn(p * 1.3)) * (0.82 + 0.36 * lvn(p * 4.7));
+  crust *= 1.0 - 0.3 * fall;
+  vec3 hot = mix(uS0 * 0.55, uS1 * 0.9, smoothstep(0.35, 1.0, seam));
+  if (uS.z < 0.5) hot = mix(hot, uS2, smoothstep(0.9, 0.99, seam) * 0.35);
+  hot = mix(hot, uS3 * 2.3, core * core * (0.45 + 0.55 * rise + 0.2 * uS.y));
+  float pulse = 0.88 + 0.12 * sin(t * 1.3 + e * 23.0);
+  vec3 col = mix(crust, hot * (0.8 + 0.5 * rise + 0.2 * uS.y) * pulse, smoothstep(0.05, 0.75, seam));
   // warning bubbles: sparse bright pops
-  float bub = step(0.985 - 0.02 * uS.y - 0.015 * max(uS.x, 0.0), lh(floor(p * 1.5) + floor(t * 2.0))) * (0.5 + 0.5 * sin(t * 9.0 + lh(floor(p * 1.5)) * 6.28));
-  col += uS1 * bub * 1.4 * (uS.y + max(uS.x, 0.0));
+  float bub = step(0.985 - 0.02 * uS.y - 0.015 * rise, lh(floor(p * 1.5) + floor(t * 2.0))) * (0.5 + 0.5 * sin(t * 9.0 + lh(floor(p * 1.5)) * 6.28));
+  col += uS1 * bub * 1.2 * (uS.y + rise);
   gl_FragColor = vec4(col, 1.0);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
@@ -216,7 +229,7 @@ export class LavaLook {
     this.rid = [];
     const basalt = new THREE.MeshStandardMaterial({ color: LOOK.basalt, roughness: 0.86, metalness: 0, flatShading: true });
     const top = new THREE.MeshStandardMaterial({ color: LOOK.basaltTop, roughness: 0.8, metalness: 0 });
-    const pumice = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+    const pumice = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, emissive: '#000000' });
     this._mats = [basalt, top, pumice];
     W.riders.forEach((r, i) => {
       const g = new THREE.Group(); g.name = 'lava:rider:' + r.id;
@@ -372,6 +385,17 @@ export class LavaLook {
       if (Rr.r.sink && !Rr.parked) { e.g.rotation.z = Math.sin(this.t * 0.9 + k) * 0.03; e.g.rotation.x = Math.cos(this.t * 0.7 + k * 1.3) * 0.025; }
       if (e.ink) { const P = e.ink.R; if (P.deck.dirty) { P.deck.texture.needsUpdate = true; P.deck.dirty = false; } if (P.sides) for (const s of P.sides) if (s && s.dirty) { s.texture.needsUpdate = true; s.dirty = false; } }
     });
+    // the Organs grind as they move: rubble and dust shed at the columns' feet; the stones crack and glow before a fall
+    if (st.dir && (this._rubT = (this._rubT || 0) - dt) <= 0) {
+      this._rubT = 0.22;
+      const cols = this.rid.filter((e) => !e.r.sink && e.r.shape === 'hex'), e = cols[(Math.random() * cols.length) | 0];
+      if (e && G.camera && e.g.position.distanceTo(G.camera.position) < 45) {
+        const a = Math.random() * Math.PI * 2, v = new THREE.Vector3(e.r.x + Math.cos(a) * e.r.r, Math.max(this.y, 1.2) + 0.1, e.r.z + Math.sin(a) * e.r.r);
+        G.fx?.burst(v, new THREE.Vector3(Math.cos(a), 0.6, Math.sin(a)), new THREE.Color('#8d8780'), { count: 5, speed: 2.2, size: 0.09 });
+      }
+    }
+    const crack = st.warn && st.next.to === 'low' ? 0.5 + 0.5 * Math.sin(this.t * 7) : st.phase === 'fall' ? 0.6 : 0;
+    this._mats[2].emissive.setRGB(0.55 * crack, 0.05 * crack, 0.02 * crack);
     // the gauge: the needle climbs 5× the lava's own move; the beacons
     for (const n of this.needles) n.needle.position.y = 0.2 + st.e * (n.h - 0.4);
     const blink = (hz) => (Math.sin(this.t * Math.PI * 2 * hz) > 0 ? 1 : 0.08);
@@ -381,7 +405,7 @@ export class LavaLook {
     else if (st.warn && st.next.to === 'low') { bc = LOOK.beaconWhite; bk = blink(2.2); }
     else if (st.phase === 'fall') { bc = LOOK.beaconWhite; bk = blink(3.5); }
     else if (st.phase === 'high') { bc = LOOK.beaconRed; bk = 1; }
-    if (bc) this.beaconMat.color.set(bc).multiplyScalar(0.25 + bk * 2.4); else this.beaconMat.color.set('#1a0a08');
+    if (bc) this.beaconMat.color.set(bc).multiplyScalar(0.15 + bk * 1.1); else this.beaconMat.color.set('#1a0a08');
     // the lavafalls: thin at LOW, full while the surface is high over the lip
     this.fallMat.uniforms.uTime.value = this.t;
     for (const f of this.falls) { const k = Math.max(0, Math.min(1, (st.y - f.y) / Math.max(0.3, W.high - f.y))); f.m.position.y = Math.max(st.y, f.y) - 0.04; f.k = k; }
@@ -408,8 +432,10 @@ export class LavaLook {
         E.age[i] += dt;
         if (E.age[i] >= E.life[i]) {
           if (Math.random() > rate * dt * 4) { aa[i] = 0; E.life[i] = 0; E.age[i] = 0; continue; }
-          const [x, z] = pick(i);
-          pos[i * 3] = x + (Math.random() - 0.5); pos[i * 3 + 1] = this.y + 0.05; pos[i * 3 + 2] = z + (Math.random() - 0.5);
+          // (before and during a rise a third of them spit from the drains, pools and hornitos: the vents)
+          const vent = (st.warn || st.dir > 0) && this.W.vents.length && Math.random() < 0.33 ? this.W.vents[(Math.random() * this.W.vents.length) | 0] : null;
+          const [x, z] = vent ? [vent[0], vent[2]] : pick(i);
+          pos[i * 3] = x + (Math.random() - 0.5) * (vent ? 0.6 : 1); pos[i * 3 + 1] = vent ? Math.max(vent[1], this.y) + 0.05 : this.y + 0.05; pos[i * 3 + 2] = z + (Math.random() - 0.5) * (vent ? 0.6 : 1);
           E.vel[i * 3] = (Math.random() - 0.5) * 0.6; E.vel[i * 3 + 1] = 1.2 + Math.random() * 2.2 * (st.phase === 'rise' ? 1.4 : 1); E.vel[i * 3 + 2] = (Math.random() - 0.5) * 0.6;
           E.life[i] = 1.2 + Math.random() * 2.2; E.age[i] = 0; sz[i] = 0.05 + Math.random() * 0.07;
           const h = Math.random(); col[i * 3] = 1.0 * 3; col[i * 3 + 1] = (0.18 + 0.4 * h) * 3; col[i * 3 + 2] = 0.05 * 3;
