@@ -98,5 +98,9 @@ longer emitted.
 | `zones:active` | `{ objective, zones, final, moved }` — rotation (final = the last-30-s centre lock) | zones.js |
 | `zones:overtime` | `{ losing }` | zones.js |
 | `zones:end` | `{ winner, reason, counts }` (reason: knockout · time · comeback · retake · neutralised · overtime-cap) | zones.js |
-| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
-| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes |
+| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf · [b5-subs] bobber); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
+| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it); [b5-subs] also 'shell' (the Bazookarp shell's re-form), 'lava', 'flip' (an era flip) — one event per ending, from the code that decided it (wave 1's crushIn / _pushes, or the kit) | deployables.js down / crushIn / _pushes, kits/bobber.js |
+| `bobber:link` | `{ owner, n }` — [b5-subs] an owner's Chain Bobber tether list changed (n tethers now); the owner's screen | kits/bobber.js |
+| `bobber:trigger` | `{ actor, by, n, pos, team, ghost }` — [b5-subs] a Chain Bobber chain set off: its owner, who set it off (null: unknown), its size N, the first bobber; every screen (`ghost` on a replay) | kits/bobber.js |
+| `bobber:disarm` | `{ owner, by, pos, team }` — [b5-subs] enemy fire disarmed a Chain Bobber (it sags and pops, no blast) | kits/bobber.js |
+| `bomb:explode` (`kind: 'bobber'`) | `{ actor, pos, team, radius, kind }` — [b5-subs] one per bobber of a chain, at its hop (radius: the chain's R(N)) | kits/bobber.js |

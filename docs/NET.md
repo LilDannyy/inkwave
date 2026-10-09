@@ -267,6 +267,49 @@ it lands). A mine is tripped by its owner's screen wherever the block has taken 
 as before). Old clients ignore `[4, …]` (no sub kind at `d[2]`). Tested by `tools/botlab/tests/net-deploy.cjs`
 (`CLIENTS=2`; `NET_ARGS='scene=tower'`: the deck, the crush, the mine on the deck) and `tests/deployables.js`.
 
+**Chain Bobber** (batch 5, `[b5-subs]`: src/game/kits/bobber.js, kit kind `bobber`; tools/botlab/jobs/batch5/subs/SPEC.md
+§C, §0.4). **The owner simulates and decides** every bobber of theirs: where it floats, its tethers, when a chain goes,
+which bobber hits the boss / the Bazookarp shell, when one is disarmed, crushed or expires. Its records (`['k', nid,
+'bobber', …]`, rounded numbers):
+- `[0, gid, x, y, z, vx, vy, vz]` thrown — every screen flies a copy (the flight steps at exactly 1/60 s on every screen,
+  the arc preview's own integrator);
+- `[3, gid, x, y, z, hover]` settled (its float spot, rounded to 0.01 m on the owner's screen too, so every screen holds
+  the same spot; `hover` its height over its floor or the liquid) — again when it re-floats (its floor went: a parked
+  block, an era flip), when a ghost eases there over 0.3 s; the lava's rise and fall each screen follows itself (a pure
+  function of the synced clock);
+- `[4, gid, x, y, z (, tag, lx, ly, lz, nx, ny, nz)]` wave 1's ride word for its foot (the moving block it rides, or still
+  ground after a shove), under the kit's own kind (`deployables.js _onRec` writes `it.netKind`); the ghost's ride body
+  takes it through `G.deploy.netOn`;
+- `[5, gidA1, gidB1, gidA2, gidB2, …]` the owner's whole tether list, sent whenever it changes; every other screen draws
+  exactly that list (its chains — and so the lamps' N — are that list's connected groups). **Ghosts never link**;
+- `[1, gid0, N, by, gid, hop, gid, hop, …]` a chain set off: its size at the trigger, the trigger's nid (`-1` none), the
+  blow order as hop levels (gid0 is level 0). Every screen plays the sparks and blasts at its own 0.07 s hops from the
+  moment it hears it;
+- `[2, gid, why]` gone without a blast: 0 expired (or the hidden guard retired it), 1 disarmed (every screen sags it and
+  pops it 0.4 s later), 2 crushed (the tower, a mover, the shell, an era flip, lava, a block through it), 3 refused (too
+  near the enemy pad, a no-place disc);
+- `[6, gid0, dmg, killed]` **from the victim's screen, on the victim** (`['k', victimNid, 'bobber', …]`): a chain caught
+  that player there — the owner's hit marker and its CHAIN ×N callout's tick.
+
+**Damage to players is judged where the victim is owned** (as Surf N' Turf's rings and the vortex): each screen replays
+the chain from `[1]` and applies each blast to the players it owns only (its own squidkid; the host its bots), at their
+true positions, with its own one-explosion-a-victim ledger (a victim caught by several blasts of one chain takes only the
+strongest: each later blast adds its excess), the Drainbow halving from the bobber, the triggering teammate's assist
+window opened on the victim (`G.assists.noteDamage(victim, by)`); the splat and its assist are that screen's, forwarded as
+usual. The owner's screen alone paints the chain's ink (replicated as usual), hurts devices (`G.subs.damageArea`: a ghost
+device's hit goes to its owner), sets off its team's other chains in reach, and makes the one body blast on the boss
+(`boss.splash(…, { body: true })` — the rest `{ body: false }`, crablets only) and the one `G.objTargets.splash` on the
+shell. **Hits on a ghost bobber go to its owner**: enemy fire as a device hit (`{k:'dh', kind:'bobber', id, d, a}`), team
+fire on its own channel (`{k:'dh', kind:'bobberPop', id, d: 1, a}` — positive, so `registry.netHurt` sends it; at most
+one a quarter second a bobber; the ghost flashes "struck" meanwhile). `a` is the shooter's nid (new: `sendDevHit(…, by)`
+adds it, the `'dh'` case hands `byNid.get(a)` to the kit's `netHurt` as `by`; old senders send none: `null`) — the
+owner credits the trigger with it. **Ghost fire never touches a real bobber**: a ghost round, blast or chain replayed on
+the owner's screen (`netMuted()`) is absorbed with a flash and does nothing else (the shooter's screen sent the hit). **A
+player who leaves takes their bobbers with them**: `netmatch.js onLeave` calls `SUB_KITS[k].dropOwner(a)` for every
+squidkid of the leaver before anyone takes it over (and `_remove` does the same), so no inert ghost soaks shots for
+someone gone. A ghost whose owner's end never came goes 3 s past its life. Tested by
+`tools/botlab/tests/net-sub-bobber.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`) and `tests/sub-bobber.js` ('net').
+
 **What outlives its owner** (batch 5, `[b5-sprules]`). A remote splat (`NetMatch._remoteSplat`) emits `'splatted'` with
 `remote: true` on every other screen, after the owner's own records that went before it (a special's end `[1, 'splat']`
 is recorded inside `actor.splat()`, ahead of the forwarded event). The Whirl Boomerang's ghost no longer fizzles on it:
