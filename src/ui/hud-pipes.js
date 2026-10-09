@@ -1,7 +1,8 @@
 // The Tubeway's HUD (src/game/pipes.js; aquarium ENGINE.md §3.6, §3.10, §4.5): module DOM in the HUD layer
 // (G.hud.el, shown only in a match), styled here (its own <style>, as hud-cheer.js does).
-//   • the ride chip, bottom middle while riding: "→ S. PROMENADE", a progress bar, and on a player's first three rides
-//     "Hold a direction to aim your pop · JUMP: high pop" (the reticle and the sub chip hide: frame.stage.noReticle)
+//   • the ride chip, top middle under the tide pill while riding (clear of the rider, whom the ride camera keeps near
+//     the middle of the screen; low, where it was, while the rider is high on the screen, up a riser): "→ S. PROMENADE", a progress bar, and on a player's first three rides "Hold a
+//     direction to aim your pop · JUMP: high pop" (the reticle and the sub chip hide: frame.stage.noReticle)
 //   • the cooldown ring on the ink tank (2.5 s after a touchdown)
 //   • the tide line, bottom middle above the prompt: "KELP LINES GOING DOWN IN 10" counting down from T − 10, then
 //     "KELP LINES DOWN: dive from your promenade" (or UP: lift from your Reef Hall) from T + 1; at match start "TUBEWAY:
@@ -21,7 +22,7 @@ const CSS = `
 .iw-pp-line i { font-style: normal; display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%; background: #f4f1e8; color: #15121c; font-weight: 900; }
 @keyframes iw-pp-throb { 50% { scale: 1.06; } }
 @keyframes iw-pp-flip { 0% { scale: .6; } 100% { scale: 1; } }
-.iw-pp-ride { position: absolute; left: 50%; bottom: calc(var(--u) * 10.5); translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .45);
+.iw-pp-ride { position: absolute; left: 50%; top: calc(var(--u) * 8.4); translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .45);
   pointer-events: none; opacity: 0; transition: opacity .18s; }
 .iw-pp-ride.is-on { opacity: 1; }
 .iw-pp-ride__chip { display: flex; align-items: center; gap: .5em; padding: .5em 1.2em .55em; border-radius: 999px; background: #f4f1e8; color: #15121c;
@@ -43,12 +44,14 @@ const CSS = `
 .iw-pp-pill__bar i { display: block; height: 100%; width: 0; background: #dff6f8; }
 .iw-pp-pill.is-warn { background: rgba(120, 18, 30, .92); }
 .iw-hud.is-zones .iw-pp-pill, .iw-hud.is-tower .iw-pp-pill { top: calc(100% + var(--u) * 6.2); }   /* (under Zone Control's / Tower Command's own chip) */
+.iw-hud.is-zones .iw-pp-ride, .iw-hud.is-tower .iw-pp-ride { top: calc(var(--u) * 15.2); }   /* (under the tide pill there) */
+.iw-hud .iw-pp-ride.is-low { top: auto; bottom: calc(var(--u) * 10.5); }   /* (the rider high on the screen: up a riser) */
 .iw-pp-pill.is-warn .iw-pp-pill__bar i { background: #ff5a4a; }
 .iw-pp-pill.is-shut .iw-pp-pill__tube { opacity: .45; border-style: dashed; }
 `;
 
 const TEXT = {
-  start: 'TUBEWAY: walk into a pipe to ride · ⇄ both ways · ▶ one way · Kelp Lines UP',
+  start: (up) => `TUBEWAY: walk into a pipe to ride · ⇄ both ways · ▶ one way · Kelp Lines ${up ? 'UP' : 'DOWN'}`,
   warn: (up) => `KELP LINES GOING ${up ? 'UP' : 'DOWN'} IN`,
   now: (up) => (up ? 'KELP LINES UP: lift from your Reef Hall' : 'KELP LINES DOWN: dive from your promenade'),
 };
@@ -79,7 +82,9 @@ export class PipesHud {
     this.L = {};          // last values written (no per-frame DOM churn)
     this.msg = null;      // { text, until, kind }
   }
-  start() { if (this.ok && !this.R.m.attract) this._say(TEXT.start, 6, 'info'); }
+  start() { if (this.ok && !this.R.m.attract) this._say(TEXT.start(this.R.flow()?.up !== false), 6, 'info'); }
+  // a late joiner (or a follower's clock snap) inside the 10 s warning: the countdown line, as if it had seen the warning
+  seek(s) { if (this.ok && s && (s.phase === 'warn' || (s.phase === 'shut' && Number.isFinite(s.left) && s.left <= 10))) this.flow('warn', s); }
   // the tide's moments (each screen from its own clock): the countdown from T − 10, the new direction from T + 1
   flow(phase, s) {
     if (!this.ok) return;
@@ -105,6 +110,7 @@ export class PipesHud {
       const w = (o.k * 100).toFixed(1) + '%';
       if (w !== L.w) { L.w = w; this.rideBar.style.width = w; }
       if (o.hint !== L.hint) { L.hint = o.hint; this.rideHint.textContent = o.hint || ''; }
+      if (!!o.chipLow !== L.low) { L.low = !!o.chipLow; this.ride.classList.toggle('is-low', L.low); }
     }
     // the cooldown ring on the ink tank
     const cdOn = o.cd > 0.01;
@@ -119,7 +125,6 @@ export class PipesHud {
     } else if (m && m.kind === 'warn') this.msg = null;
     else if (m && t < m.until) { text = m.text; kind = m.kind; }
     else if (m) this.msg = null;
-    if (riding) text = '';   // (the ride chip owns the bottom middle while riding)
     if (text !== L.text) { L.text = text; if (text) this.line.innerHTML = text; this.line.classList.toggle('is-on', !!text); }
     if (kind !== L.kind) { L.kind = kind; this.line.classList.toggle('is-warn', kind === 'warn'); }
     // the tide pill

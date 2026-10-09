@@ -65,7 +65,7 @@ export const PIPES = {
             [21.28, 3.2, 23.63], [18.94, 3.2, 21.03]],
       ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
       hide: [[0, 0.8], [37.7, 41.8]],                         // the low stop's frame; the deep stop's housing
-      look: { tint: 'clear', collars: 'steel', chevrons: true } },   // tidal: the engine adds the split-flap signs
+      look: { tint: 'clear', collars: 'steel', chevrons: true, tag: 'KELP LINE' } },   // tidal: the engine adds the split-flap signs (tag: over their words)
   ],
 };
 

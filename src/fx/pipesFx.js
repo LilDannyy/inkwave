@@ -11,7 +11,7 @@
 //     last second), an intake fan turning behind every one-way IN end, a glass check-valve flap at every OUT end (both
 //     ends of a two-way leg) that swings open for a pop and rattles at a refusal
 //   • the signs (one instanced quad set on a canvas atlas): over each mouth "⇄ → WEST GULPER", "▶ IN → PENGUIN POINT",
-//     "OUT ONLY", the tidal split-flaps "▲ UP · IN" / "▼ DOWN · IN" / "EXIT ONLY" (riffling in the warning, clattering
+//     "EXIT ONLY", the tidal split-flaps "▲ UP · IN" / "▼ DOWN · IN" / "EXIT ONLY" under "KELP LINE" (riffling in the warning, clattering
 //     over at the flip); and the lit floor arrow on each open one-way IN end's apron
 //   • look.deckLight: an additive quad 0.02 m over a floor strip above a buried run (the Glass Walk), lit at the riders
 //     under it, over any ink
@@ -238,6 +238,9 @@ export class PipeLooks {
           add(new THREE.BoxGeometry(0.2, Math.max(0.05, drop - 0.16), 0.2), color, _m);
         }
         if (over) continue;
+        // high up in open air (a riser's top, a bend over the sky) no collar either: a ring with nothing to hold it reads
+        // as a hoop floating in the spawn's view (LEAD-REVIEW round 2); one beside a wall, a pylon or a housing stays
+        if (q.y > 4.5 && !this._nearSolid(L, q, 1.4)) { this.collarsSkipped = (this.collarsSkipped || 0) + 1; continue; }
         _qt.setFromUnitVectors(UP, _p.set(q.tx, q.ty, q.tz));
         _m.compose(_s.set(q.x, q.y, q.z), _qt, new THREE.Vector3(1, 1, 1));
         add(new THREE.CylinderGeometry(0.95, 0.95, 0.14, 18, 1, true), color, _m);
@@ -249,10 +252,32 @@ export class PipeLooks {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     geo.computeBoundingSphere();
-    this.hw = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide }));
+    const hwMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.55, side: THREE.DoubleSide });
+    // a collar right at the lens dithers away (the ride camera rides the tube's own corridor: a ring sweeping past it
+    // would black out the view for a frame), as the glass fades there
+    hwMat.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+  { float dCam = length(vViewPosition); if (dCam < 2.8 && smoothstep(1.5, 2.8, dCam) < fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453)) discard; }`);
+    };
+    hwMat.customProgramCacheKey = () => 'pipes-hw-lensfade';
+    this.hw = new THREE.Mesh(geo, hwMat);
     this.hw.name = 'pipes:hardware'; this.hw.castShadow = false; this.hw.receiveShadow = true;
     this.group.add(this.hw);
     this.tris += pos.length / 9;
+  }
+  // a wall beside p: a solid, opaque block (not glass, not water, not a railing) within r of p that rises to p's height
+  // (a roof edge below the ring doesn't hold it: the ring still floats against the sky)
+  _nearSolid(L, p, r) {
+    if (!L) return true;
+    const ids = this._ids || (this._ids = []);
+    L.queryBlocks(p.x - r, p.z - r, p.x + r, p.z + r, ids);
+    for (const id of ids) {
+      const b = L.blocks[id];
+      if (!b.solid || b.pipe || b.bakeClear || b.grate || !L.pointInBlock(b, p, r)) continue;
+      const top = b.center.y + Math.abs(b.axes[0].y) * b.half.x + Math.abs(b.axes[1].y) * b.half.y + Math.abs(b.axes[2].y) * b.half.z;
+      if (top >= p.y - 0.3) return true;
+    }
+    return false;
   }
   _mouths() {
     const E = this.X.ends, n = E.length;
@@ -354,7 +379,7 @@ export class PipeLooks {
   _words(e, dir) {
     const leg = this.X.legs[e.leg], to = leg.ends[1 - e.k];
     if (leg.way === 'two') return { top: '⇄', sub: '→ ' + to.name, kind: 'two' };
-    if (leg.way === 'one') return e.k === 0 ? { top: '▶ IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'OUT ONLY', sub: e.name, kind: 'out' };
+    if (leg.way === 'one') return e.k === 0 ? { top: '▶ IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'EXIT ONLY', sub: e.name, kind: 'out' };
     const isIn = endIsIn(e, dir);
     return isIn ? { top: dir === 'ab' ? '▲ UP · IN' : '▼ DOWN · IN', sub: '→ ' + to.name, kind: 'in' } : { top: 'EXIT ONLY', sub: e.name, kind: 'out' };
   }
@@ -375,15 +400,19 @@ export class PipeLooks {
     c.textAlign = 'center'; c.textBaseline = 'middle';
     let top = w.top;
     if (scramble) { const G = '▲▼◀▶⇄IN·OUTUPDOWNEXIT'; top = top.split('').map((ch) => (ch === ' ' ? ' ' : G[Math.floor(Math.random() * G.length)])).join(''); }
+    // a leg's own name over its words (look.tag: the Kelp Lines' "KELP LINE", so a stranger at the mouth can match it to
+    // the HUD's "KELP LINES GOING DOWN IN …")
+    const tag = leg.look?.tag;
+    if (tag) { c.font = '900 17px Rubik, "Helvetica Neue", Arial, sans-serif'; c.fillText(tag, x + W / 2, y + H * 0.15, W - 40); }
     c.font = '900 40px Rubik, "Helvetica Neue", Arial, sans-serif';
-    c.fillText(top, x + W / 2, y + H * 0.38, W - 24);
+    c.fillText(top, x + W / 2, y + H * (tag ? 0.42 : 0.38), W - 24);
     c.font = '800 21px Rubik, "Helvetica Neue", Arial, sans-serif';
     if (w.kind === 'out') { c.fillRect(x + 30, y + H * 0.62, W - 60, 5); c.fillText(w.sub, x + W / 2, y + H * 0.78, W - 24); }
     else c.fillText(phase === 'shut' && leg.flip ? 'CLOSED · TURNING' : w.sub, x + W / 2, y + H * 0.74, W - 24);
     if (leg.flip) {   // split-flap seams
       c.fillStyle = 'rgba(0,0,0,.22)';
       for (let k = 1; k < 9; k++) c.fillRect(x + (W * k) / 9 - 1, y + 10, 2, H - 20);
-      c.fillRect(x + 8, y + H * 0.38 - 1, W - 16, 2);
+      c.fillRect(x + 8, y + H * (tag ? 0.42 : 0.38) - 1, W - 16, 2);
     }
     c.restore();
     this.tex.needsUpdate = true;
@@ -438,6 +467,7 @@ export class PipeLooks {
   // lens is inside is decided at render time (uw.onBeforeRender)
   underwater(V) {
     this.rideVol = V && V.y ? V : null;
+    if (this.rideVol) this.uw.visible = true;   // (its render-time test must run on the very frame the lens enters)
     if (!this.rideVol && this.uwOn) this._setUnder(false);
   }
   _setUnder(on, at) {
