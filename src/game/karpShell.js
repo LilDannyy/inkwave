@@ -7,12 +7,18 @@
 //   • touching it (this screen's own players): 20 damage at most every 0.5 s, never below 1 hp; shoved out at 6 m/s,
 //     never off an edge (the part of the push toward a drop deeper than 1.2 m is removed).
 //   • growing (0.8 s after a drop / plant / reset / move): no hits, no pick-up, no touch damage, but it shoves, and every
-//     frame it calls G.deploy.crushIn({ sphere }, 'shell') — the deploy package's one destroyer (a no-op until it exists).
+//     frame it calls G.deploy.crushIn({ sphere: { c, r } }, 'shell') (deployables.js, the one destroyer): every device of
+//     this screen's whose body it overlaps ends (a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge, the
+//     Surf N' Turf buoy; the owner's end record ends the ghosts). Fix round 2: until then G.deploy.crushIn didn't exist.
+//   • standing (intact): it keeps crushing what ends up inside it — a device its swelling (1.6 → 2.3 m) reaches, one
+//     that slipped in — at its true surface (r − 0.3: the device's body inside the sphere, not merely by it). Thrown subs
+//     glance off it (objTargets.bounce), so nothing comes to rest inside it and sprays from where shots can't reach.
 import * as THREE from 'three';
 import { G, clamp } from '../core/ctx.js';
 import { BAZOOKARP as K, PLAYER } from '../config.js';
 
 const S = K.shell;
+const CRUSH_IN = 0.3;   // m: standing, it crushes a device whose body reaches this far in (crushIn adds the body's radius, 0.25–0.3)
 const _c = new THREE.Vector3(), _v = new THREE.Vector3(), _d = new THREE.Vector3();
 const _seg = { t: 0, point: new THREE.Vector3() };
 
@@ -105,9 +111,9 @@ export class KarpShell {
     if (this.st === 'none') return;
     if (this.st === 'growing') {
       this.grow -= dt;
-      G.deploy?.crushIn?.({ sphere: { c: this.c, r: this.radius() } }, 'shell') && this.stats.crushes++;
+      this._crush(this.radius());
       if (this.grow <= 0) { this.grow = 0; this.st = 'intact'; }
-    }
+    } else if (this.st === 'intact') this._crush(this.radius() - CRUSH_IN);
     if (host && this.st === 'intact') {
       this.quiet += dt;
       if (this.quiet > S.regenDelay && this.m) this.m = Math.sign(this.m) * Math.max(0, Math.abs(this.m) - S.regen * dt);
@@ -149,5 +155,13 @@ export class KarpShell {
       }
     }
     void _v;
+  }
+  // every device of this screen's own overlapping the sphere of radius r ends (deployables.js crushIn)
+  _crush(r) {
+    const D = G.deploy;
+    if (!D || typeof D.crushIn !== 'function' || !(r > 0)) return;
+    const S = this._crushS || (this._crushS = { sphere: { c: this.c, r: 0 } });
+    S.sphere.r = r;
+    this.stats.crushes += D.crushIn(S, 'shell');
   }
 }

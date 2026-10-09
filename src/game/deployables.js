@@ -44,7 +44,7 @@
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
-import { netRec, netMuted } from './kits/registry.js';
+import { netRec, netMuted, SUB_KITS } from './kits/registry.js';
 import { BUOY } from '../fx/surfFx.js';
 import { Hit } from './physics.js';
 import '../audio/sfx-deploy.js';
@@ -59,6 +59,7 @@ export const DEV_R = { sprinkler: 0.3, beacon: 0.3, seeker: 0.25 };   // m: the 
 export const ROLL_CD = 0.5;                                          // s between one roller's drum hits on one device
 const LIFT = 0.7;                                                    // m: a moving block's top this far over a device, rising into it, lifts it on (sp-surf.js LIFT)
 const CRUSHED = { spray: true, beacon: true, curtain: true };        // (subs states the tower crushes; the user's list — the buoy too)
+const PLACED = { spray: true, beacon: true, curtain: true, mine: true, stuck: true };   // [b5-karp] (… and what crushIn's sphere / where shapes end)
 const _tries = [], _B = [null, null], _hs = [0.06, 0.5, 1], _l = [0, 0, 0];
 
 // counters (tests / match.cjs / tower-match.cjs)
@@ -303,13 +304,66 @@ class Deployables {
       this.crushBuoy(w);
     }
   }
-  crushBuoy(w) {
+  // [b5-karp] THE ONE DESTROYER (subs SPEC §0.3, Bazookarp SPEC §2.2): G.deploy.crushIn(shape, how) → how many it ended.
+  // Every device of this screen's own (never a ghost: its owner's end record [2, gid, 2] / the buoy's [4, gid, 2] ends it
+  // everywhere) still standing whose body is in `shape` ends now with the crunch, one 'device:down' { how } and one
+  // DEPLOY_STATS.crushed step each:
+  //   { sphere: { c, r } }        its body overlapping the sphere — every placed / stuck device: a Twirl Sprinkler, a Hop
+  //                               Beacon, a Drip Curtain (its sheet), a Lurk Mine, a stuck Cling Charge, the buoy
+  //   { blocks: [b, …], rider? }  its body inside any of the blocks (the tower's rule: the user's list only — a mine or a
+  //                               floor charge in its way is _pushes' to shove aside); anything riding them is left alone
+  //   { where: (pos) => bool }    true at its pos (a lava's surface)
+  // Kit devices (SUB_KITS[k].devices: batch 5's sentry / bobber descriptors) end through their own crush(how). how:
+  // 'shell' (the Bazookarp's Roe Shell: karpShell.js, every frame it grows and while it stands) · 'crush' · 'lava'. The
+  // tower keeps its own crush(T) above, unchanged: the subs packages route it through here (their own crushIn is this
+  // one's superset — keep theirs at integration; the shell needs only the sphere shape with mines and charges in it).
+  crushIn(shape, how = 'crush') {
+    if (!shape) return 0;
+    const B = shape.blocks || null, S = shape.sphere || null, W = typeof shape.where === 'function' ? shape.where : null, T = shape.rider || null;
+    if (!B && !S && !W) return 0;
+    const rides = (b) => !!b && ((B && B.includes(b)) || (T && this.isTowerBlock(b, T)));
+    const inBody = (pos, base, h, r) => (B ? this._bodyIn(B, base, h, r) : S ? segSphere(base, h, S.c) < S.r + r : !!W(pos));
+    let n = 0;
+    for (const it of G.subs?.items || []) {
+      const st = it.state;
+      if (it.ghost || st === 'dead' || !(B ? CRUSHED[st] : PLACED[st]) || (it.on && rides(it.on.b))) continue;
+      let hit;
+      if (st === 'curtain') hit = B ? curtainIn(B, it) : S ? curtainSphere(it, S.c, S.r) : !!W(it.pos);
+      else if (st === 'spray' || st === 'beacon') { const h = devBody(it, _v); hit = inBody(it.pos, _v, h, DEV_R[devKind(it)]); }
+      else hit = inBody(it.pos, it.pos, 0.2, st === 'stuck' ? 0.25 : 0.3);   // (a mine, a stuck charge)
+      if (!hit) continue;
+      n++;
+      bump(DEPLOY_STATS.crushed, it.kind);
+      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how });
+      it.endWhy = 2;
+      this.endLook(it, 2);
+    }
+    for (const w of G.specials?.world || []) {
+      if (w.kind !== 'surf' || w.ghost || w.dead || w.phase !== 'live' || (w.on && rides(w.on.b))) continue;
+      if (!inBody(w.pos, w.pos, BUOY.hitH, BUOY.hitR * 0.8)) continue;
+      n++;
+      this.crushBuoy(w, how);
+    }
+    const L = _kitDev; L.length = 0;
+    for (const k in SUB_KITS) SUB_KITS[k].devices?.(L);
+    for (const d of L) {
+      if (d.ghost || !d.live || d.crushable === false || rides(d.rides)) continue;
+      if (!inBody(d.pos, d.pos, d.h || 0.3, d.r || 0.3)) continue;
+      n++;
+      bump(DEPLOY_STATS.crushed, d.kind);
+      emit('device:down', { kind: d.kind, team: d.team, pos: d.pos.clone(), by: null, how });
+      d.crush?.(how);
+    }
+    L.length = 0;
+    return n;
+  }
+  crushBuoy(w, how = 'crush') {
     if (w.gid) netRec(w.owner, 'surf', [4, w.gid, 2]);
     this.crushLook(w);
     if (G.surf?.SURF_STATS) G.surf.SURF_STATS.crushed++;
     w.pop();
     bump(DEPLOY_STATS.crushed, 'surf');
-    emit('device:down', { kind: 'surf', team: w.team, pos: w.pos.clone(), by: null, how: 'crush' });
+    emit('device:down', { kind: 'surf', team: w.team, pos: w.pos.clone(), by: null, how });   // [b5-karp] (how: crushIn's)
   }
   // the crunch on a buoy (the owner's, or a ghost on its owner's word: sp-surf.js KIT_GHOSTS.surf [4, gid, 2])
   crushLook(w) { w.crushed = true; this._crunch(_c.copy(w.pos).setY(w.pos.y + 0.5), w.team, w.owner); }
@@ -543,6 +597,20 @@ class Deployables {
     for (const it of G.subs?.items || []) if (it.kind === 'seeker' && it.state !== 'dead' && it.state !== 'fly') out.push(seekerThreat(it));
     return out;
   }
+}
+
+// [b5-karp] crushIn's scratch (the kit descriptors), the distance from point c to the vertical body base … base + h (a
+// sphere overlaps a body when it's under r + the body's radius), and the Drip Curtain's sheet against a sphere (the
+// sheet's nearest point to c: pos + tan·u + up·v, |u| ≤ width/2, 0 ≤ v ≤ height)
+const _kitDev = [];
+function segSphere(base, h, c) {
+  const y = clamp(c.y, base.y, base.y + h);
+  return Math.hypot(c.x - base.x, c.y - y, c.z - base.z);
+}
+function curtainSphere(it, c, r) {
+  const s = it.sub, dx = c.x - it.pos.x, dz = c.z - it.pos.z;
+  const u = clamp(dx * it.tan.x + dz * it.tan.z, -s.width / 2, s.width / 2), v = clamp(c.y - it.pos.y, 0, s.height);
+  return Math.hypot(dx - it.tan.x * u, c.y - it.pos.y - v, dz - it.tan.z * u) < r;
 }
 
 // the Drip Curtain's sheet (its base line ± width/2 along tan, pos.y … + height) against any of the blocks
