@@ -10,9 +10,12 @@
 //    frame (ink −65, a full-cook slide), then no second stone, no "Can't use", no second payment; the tap at dt 1/60,
 //    1/30, 1/24 stops within 0.05 m of the same spot (the fixed step)
 //  2 lane: ≥ 90 % of the ground track inked, the lane ≥ 1.0 m wide at the middle of the slide
-//  3 bounce: off the wall at 45° it leaves at 39° ± 3° with speed × 0.83 ± 0.03; a 0.4 m riser bounces it, a 0.25 m step
-//    it rides over; off an enemy kid × 0.6 (e 0.5), no damage on contact; through a teammate it passes; off an enemy Drip
-//    Curtain and a Scrap Sentry (a stand-in device) it bounces; a moving block running into it carries it off
+//  3 bounce: off the wall at 45° it leaves at 39° ± 3° with speed × 0.83 ± 0.03; its body's circle, not its centre line,
+//    meets walls: at 6° / 10° / 20° to the wall never more than 0.03 m of it in, a slide along the wall 0.15 m off its
+//    face pushed clear on its first step (no clonk), a graze 0.2 m off a corner (the wall's end, a crate turned 30°)
+//    bounces away; a 0.4 m riser bounces it, a 0.25 m step it rides over; off an enemy kid × 0.6 (e 0.5), no damage on
+//    contact; through a teammate it passes; off an enemy Drip Curtain and a Scrap Sentry (a stand-in device) it bounces;
+//    a moving block running into it carries it off
 //  4 ledge: off a ledge it falls and keeps sliding; into the sea: no blast, no paint after the plop
 //  5 blast: 180 within 0.8 m, the k² falloff, 35 at R; none behind a wall; enemy devices take 40 (uncooked) → 60 (full)
 //  6 shot: popped by 2 Spritzer shots — a puff, no blast, 'device:hit' ×2 and one 'device:down'; a teammate's do nothing
@@ -193,6 +196,58 @@
       const ratio = vb && va ? Math.hypot(va.x, va.z) / Math.hypot(vb.x, vb.z) : 0;
       R('off the wall at 45° it leaves at 39° ± 3° (normal part × 0.8) with speed × 0.83 ± 0.03', bk && vb && Math.abs(ang(va) - 38.66) <= 3 && Math.abs(ratio - 0.83) <= 0.03 && va.x < 0,
         { kind: bk?.e.kind, inDeg: vb && r2(ang(vb)), outDeg: va && r2(ang(va)), ratio: r3(ratio) });
+      // its body's circle (bodyRadius round its axis), not its centre line, meets the wall: shallow bounces at 6°, 10°, 20°
+      // to the wall's plane, each meeting the wall about z 0 — its body never more than 0.03 m into the wall (every frame,
+      // the face at x 14). (Its centre ray alone sees a 6° wall only 0.05 m off: the body was 0.23 m in — the review's probe)
+      const RB = S.bodyRadius, shallow = [];
+      // (the 2-D distance from p to a box's footprint — centre, half extents, turned yaw as Level.moveDynamic; < 0 inside)
+      const boxDist = (p, cx, cz, hx, hz, yw = 0) => { const c = Math.cos(yw), s2 = Math.sin(yw), rx = p.x - cx, rz = p.z - cz, u = rx * c - rz * s2, w = rx * s2 + rz * c;
+        if (Math.abs(u) < hx && Math.abs(w) < hz) return -Math.min(hx - Math.abs(u), hz - Math.abs(w));
+        return Math.hypot(u - Math.max(-hx, Math.min(hx, u)), w - Math.max(-hz, Math.min(hz, w))); };
+      for (const deg of [6, 10, 20]) {
+        const th = deg * Math.PI / 180, x0 = 14 - RB - 6.5 * Math.tan(th) - 0.5 * Math.sin(th);
+        reset(); put(me, V(x0, 0, -7), th); step(0.05);
+        const { it: sw } = throwHeld(0.1);
+        let deep = -9, first = null, after = 0;
+        until(() => { deep = Math.max(deep, sw.p.x + RB - 14); if (!first && ev('glide:bounce').length) first = { z: r2(sw.p.z), vx: r2(sw.v.x) }; if (first) after++; return sw.state === 'dead' || sw.p.z > 7.5 || after > 30; }, 3);
+        shallow.push({ deg, bounced: !!first && first.vx < 0, kind: ev('glide:bounce')[0]?.e.kind, deepest: r3(deep), at: first });
+      }
+      R('shallow bounces (6°, 10°, 20° to the wall): it bounces off the wall with its body\'s circle — never more than 0.03 m of it into the wall', shallow.every((r) => r.bounced && r.kind === 'wall' && r.deepest <= 0.03), shallow);
+      // sliding parallel to the wall with its centre 0.15 m from the face (its body half in it): pushed clear on its first
+      // step, then on along the wall clear of it (grazing it: no clonk)
+      reset(); put(me, V(10, 0, -7), 0); step(0.05);
+      const { it: sp } = throwHeld(0.1);
+      sp.p.set(14 - 0.15, 0, -7.5); sp.v.set(0, 0, 8);
+      frame();
+      const x1 = sp.p.x, zp = sp.p.z; let deepP = -9;
+      step(0.9, () => { deepP = Math.max(deepP, sp.p.x + RB - 14); return sp.state !== 'dead' && sp.p.z < 7.5; });
+      R('sliding along the wall with its centre 0.15 m off the face: pushed clear on its first step (its body out of the wall), then on along it, never back in, no clonk',
+        x1 + RB - 14 <= 0.002 && deepP <= 0.002 && sp.p.z - zp > 4 && ev('glide:bounce').length === 0, { afterFirstStep: r3(x1 + RB - 14), deepest: r3(deepP), slid: r2(sp.p.z - zp), bounces: ev('glide:bounce').length });
+      // a graze 0.2 m off a corner: the testbox wall's end (x 14…15, z −8: static level geometry), and a 1 m crate turned
+      // 30° (an oriented box). Its centre line misses each by 0.2 m; its body's circle strikes the corner and bounces away
+      // from the block (vx < 0), never more than 0.03 m of it inside
+      const corner = [];
+      {
+        reset(); put(me, V(14 - 0.2, 0, -14), 0); step(0.05);
+        const { it: sc } = throwHeld(0.1);
+        let dMin = 9; until(() => { dMin = Math.min(dMin, boxDist(sc.p, 14.5, 0, 0.5, 8)); return sc.state === 'dead'; }, 3);
+        const b0 = ev('glide:bounce')[0];
+        corner.push({ what: 'the wall\'s end (x 14, z −8)', bounced: !!b0 && b0.e.kind === 'wall', vx: r2(sc.v.x), clearance: r3(dMin), at: b0 && [r2(b0.e.pos.x), r2(b0.e.pos.z)] });
+      }
+      {
+        reset();
+        const cx = -2, cz = -18, yawC = Math.PI / 6, hC = 0.5, cb = box(-0.1, 0.1, 0, 0.1, -0.1, 0.1);
+        L.moveDynamic(cb, V(cx, 0.5, cz), V(hC, 0.5, hC), yawC); cb.dp.set(0, 0, 0); cb.solid = true;
+        // (its corner furthest −x: its local corners in the world — local x along (cos, −sin), local z along (sin, cos))
+        const cs = [[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([i, k]) => V(cx + (Math.cos(yawC) * i + Math.sin(yawC) * k) * hC, 0, cz + (-Math.sin(yawC) * i + Math.cos(yawC) * k) * hC));
+        const cn = cs.reduce((m, q) => (q.x < m.x ? q : m));
+        put(me, V(cn.x - 0.2, 0, cz - 9), 0); step(0.1);
+        const { it: sk } = throwHeld(0.1);
+        let dMin = 9; until(() => { dMin = Math.min(dMin, boxDist(sk.p, cx, cz, hC, hC, yawC)); return sk.state === 'dead'; }, 3);
+        const b0 = ev('glide:bounce')[0];
+        corner.push({ what: 'a 1 m crate turned 30°', bounced: !!b0 && (b0.e.kind === 'wall' || b0.e.kind === 'mover'), vx: r2(sk.v.x), clearance: r3(dMin), corner: [r2(cn.x), r2(cn.z)], at: b0 && [r2(b0.e.pos.x), r2(b0.e.pos.z)] });
+      }
+      R('a graze 0.2 m off a corner (the wall\'s end; a crate turned 30°): its body\'s circle strikes the corner and bounces away from it (never more than 0.03 m inside)', corner.every((r) => r.bounced && r.vx < 0 && r.clearance >= RB - 0.03), corner);
       // a 0.25 m step (rides up), then a 0.4 m riser (bounces)
       reset();
       box(-6, 6, 0, 0.25, -30, -26); box(-6, 6, 0, 0.4, -21, -19);

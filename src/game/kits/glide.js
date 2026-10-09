@@ -134,7 +134,10 @@ export function slideStep(s, h, ctx) {
       if (gy > p.y + 0.02 && gy <= p.y + STEP_UP + 1e-3) wall = false;
     }
     if (wall) {
-      const adv = Math.max(0, r.dist - sb.bodyRadius - 0.005);
+      // (stopped where its circle meets the face's plane: bodyRadius over the cosine of the angle of incidence — head-on
+      // that is bodyRadius along the ray, at a slant further back, so it never noses into the wall)
+      const nh = Math.hypot(r.normal.x, r.normal.z) || 1, cosA = Math.max(1e-3, -(ux * r.normal.x + uz * r.normal.z) / nh);
+      const adv = clamp(r.dist - sb.bodyRadius / cosA - 0.005, 0, len);
       p.x += ux * adv; p.z += uz * adv;
       const b = L.blocks[r.block], bv = b?.dynamic ? dynVel(b) : null;
       if (bv) { v.x -= bv.x; v.z -= bv.z; }   // (off a mover: in its own frame, then its velocity back on)
@@ -143,6 +146,10 @@ export function slideStep(s, h, ctx) {
       if (hit) _bounce.kind = b?.dynamic ? 'mover' : 'wall';
     } else { p.x += dx; p.z += dz; }
   }
+  // ---- its body's circle against level geometry (bodyRadius round its axis at its middle): a shallow graze, a slide along
+  // a wall, a crate's corner off its line — the centre ray above only sees what is ahead of its axis
+  const hc = bodyWalls(s, hit);
+  if (hc > hit) hit = hc;
   // ---- what isn't level geometry
   if (!hit) hit = bumpers(s, ctx);
   // ---- the floor: follow it (steps, ramps), or sail off a ledge
@@ -160,6 +167,45 @@ export function slideStep(s, h, ctx) {
   if (!hit) return null;
   _bounce.speed = hit;
   return _bounce;
+}
+// the body's circle (bodyRadius, at its middle) kept out of every block's sides: each block near it whose closest point to
+// the middle is a side (not its top or underside) within bodyRadius, and which rises past a step there (grounded: over
+// STEP_UP, the riser rule; in the air: at its middle), pushes the centre straight out to bodyRadius along that side's
+// normal; moving into it (faster than 5 cm/s) it bounces as off any wall (a mover's: in its frame), slower it slides
+// along. Returns the bounce's speed (0: none); best: a bounce this step already had (its kind / normal win if bigger)
+const _ids = [], _cq = new V3(), _cp = new V3(), _cin = new V3();
+function bodyWalls(s, best = 0) {
+  const sb = S(), L = G.level, PH = G.physics, p = s.p, v = s.v, rb = sb.bodyRadius;
+  const n0x = _bounce.nx, n0z = _bounce.nz, k0 = _bounce.kind;   // (the centre ray's bounce this step, if any)
+  let hit = 0, hx = 0, hz = 0, hk = '';
+  for (let pass = 0; pass < 2; pass++) {
+    const cy = p.y + MID, top = s.air ? cy : p.y + STEP_UP + 0.002;
+    const ids = L.queryBlocks(p.x - rb, p.z - rb, p.x + rb, p.z + rb, _ids);
+    let moved = false;
+    for (let i = 0; i < ids.length; i++) {
+      const b = L.blocks[ids[i]];
+      if (!b || !b.solid || b.aabbMax.y < cy - rb || b.aabbMin.y > cy + rb) continue;
+      PH.closestOnBlock(b, _cp.set(p.x, cy, p.z), _cq);
+      const dx = p.x - _cq.x, dy = cy - _cq.y, dz = p.z - _cq.z, dh = Math.hypot(dx, dz);
+      if (dh < 1e-5 || dh >= rb || Math.abs(dy) > 0.6 * Math.hypot(dh, dy)) continue;   // (inside its footprint / its top / its underside)
+      const nx = dx / dh, nz = dz / dh;
+      if (!L.pointInBlock(b, _cin.set(_cq.x - nx * 0.02, top, _cq.z - nz * 0.02))) continue;   // (a step it rides over, a kerb)
+      p.x += nx * (rb - dh + 0.001); p.z += nz * (rb - dh + 0.001); moved = true;
+      const bv = b.dynamic ? dynVel(b) : null;
+      if (bv) { v.x -= bv.x; v.z -= bv.z; }
+      const vn = v.x * nx + v.z * nz;
+      if (vn < -0.05) {
+        const h = reflect(v, nx, nz, sb.restitution, sb.scrape);
+        if (h > hit) { hit = h; hx = nx; hz = nz; hk = b.dynamic ? 'mover' : 'wall'; }
+      } else if (vn < 0) { v.x -= vn * nx; v.z -= vn * nz; }   // (grazing it: slides along it, no clonk)
+      if (bv) { v.x += bv.x; v.z += bv.z; }
+    }
+    if (!moved) break;
+  }
+  // (the bigger of this step's bounces speaks for it: its normal, its kind)
+  if (hit > best) { _bounce.nx = hx; _bounce.nz = hz; _bounce.kind = hk; }
+  else { _bounce.nx = n0x; _bounce.nz = n0z; _bounce.kind = k0; }
+  return hit;
 }
 // enemy kids, an enemy Drip Curtain, any Scrap Sentry, an intact Roe Shell
 function bumpers(s, ctx) {
