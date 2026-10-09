@@ -113,6 +113,28 @@ What "definitely different" means here (the lead's reading; the reviewer judges 
    scale, in all three eras, and a mid-height picture of each stage's mid side by side. The reviewer answers: "could a
    player confuse these two from the top-down or from mid?" If yes, the blockout goes back.
 
+
+#### The lead's correction (2026-10-10), binding: the macro shape changes
+The user looked at the round-B top-downs next to Crossroads Market and was still not satisfied, and they are right.
+The lead had described Crossroads Market as "a straight grid round one hall": wrong. Look at
+`stages/bluestone/crossmarket-top.webp` (Crossroads as shipped, from above): it is a band with the glass Market Hall
+and its tram line set DIAGONALLY across the middle, plus two diagonal jetties off the mid. Bluestone's X (a band with a
+diagonal street across the middle) is the same macro read with a dome instead of a hall. The time travel does not fix
+that from above. So the macro shape changes now, before any art:
+1. **Bluestone becomes a dog-leg: a kinked Z.** Each team's main street (Swimston) comes in from its spawn, but the
+   two halves are OFFSET sideways (Alpha's on the west, Bravo's on the east), and they are joined at mid by Flounders
+   Street Station's concourse running ACROSS (east–west) as the Z's crossbar. There is no straight sightline from
+   base to base. Mid keeps everything the reviewers praised (the dome, the row of clocks, the concourse, Tartar's
+   telephone, the Halo in era 3): it just sits on the crossbar.
+2. **The river fills the two re-entrant corners of the Z**, with the bridges as flank routes (era 1: one punt
+   crossing; era 2: the Iron Bridge; era 3: the floating garden). The diagonal Flathead Street may survive as one
+   flank, but it is no longer the shape's main read.
+3. **Size:** era 1's walkable floor between Crossroads' 4,700 m² and about 5,500 m², era 3 at most +15 % over
+   that; spawn → mid about 6 s; cover within 5 m at or above Halyard's.
+4. **Proof the reviewer must see:** the shape sheet with Bluestone's three eras next to `crossmarket-top.webp` and
+   the walkable-floor masks of both at one scale, and the reviewer's answer to "could a player confuse these from
+   above?" must be no. Points 1–5 of the user's note above still apply.
+
 ### `aquarium`: clear pipes
 The user was deliberately brief: "an aquarium. there's a gimmick on this map too, there's clear pipes that can suck you
 in one end and pop you out the other, similar to Super Mario 3D World. Some pipes are bi-directional, and some are one
