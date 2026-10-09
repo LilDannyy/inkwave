@@ -33,6 +33,14 @@
   freeze();
   const X = W.X, L = __G.level, nav = __G.nav;
   const leg = (id) => X.legs.find((l) => l.id === id);
+  // the ride camera's plans are built in idle time once the world rests (W.ready), before anyone rides: no leg's first ride
+  // pays 1–3 ms for its own (LEAD-REVIEW round 2, item 5)
+  {
+    for (let i = 0; i < 100 && !W.camWarm; i++) await new Promise((r) => setTimeout(r, 100));
+    const directed = X.legs.reduce((n, l) => n + l.ends.filter((e) => e.inWhen !== 'never').length, 0);
+    R('0. the ride camera\'s plans are built in idle time once the world rests: every directed leg (' + directed + ') and every end\'s exit shot (' + X.ends.length + ')', !!W.camWarm && W._camPlans?.size === directed && W._camExits?.size === X.ends.length,
+      { warm: !!W.camWarm, plans: W._camPlans?.size, exits: W._camExits?.size });
+  }
   const team0 = M.actors.filter((a) => a.team === 0), team1 = M.actors.filter((a) => a.team === 1);
   const A = M.local || team0[0], B = team0.find((a) => a !== A), E1 = team1[0], E2 = team1[1];
   const park = () => { P.refused.clear(); for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; a.respawn?.(); a.invuln = 0; a.intent.move.set(0, 0, 0); a.intent.jump = a.intent.fire = a.intent.sub = a.intent.squid = a.intent.special = false; a.hp = 100; a.carry = null; a.specialActive = null; a.superJumpState = null; a.form = 'kid'; } step(0.1); };
@@ -474,7 +482,17 @@
       for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
       setT(84.5);   // (inside the 90 s flip's warning)
       const gl = P.legs.find((l) => l.id === 'gulper');
-      g.rig.follow(A2, true); atApproach(A2, gl.ends[0], 0.1); pushIn(A2, gl.ends[0]); step(0.6);
+      g.rig.follow(A2, true); atApproach(A2, gl.ends[0], 0.1); pushIn(A2, gl.ends[0]); step(0.1);
+      // (in the entry hold — the lens still on the mouth it took the rider in by — the chip drops to the bottom, off the
+      // mouth's own sign, which it sat exactly over: LEAD-REVIEW round 2, item 4)
+      {
+        const e = gl.ends[0], sx = -e.out[2], sz = e.out[0], c = [e.pos[0], e.pos[1] + 1.32, e.pos[2]], box = [Infinity, Infinity, -Infinity, -Infinity];
+        for (const [a, b] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const v = new THREE.Vector3(c[0] + sx * 0.925 * a, c[1] + 0.35 * b, c[2] + sz * 0.925 * a).project(__G.camera); const x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight; box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y); box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y); }
+        const ce = document.querySelector('.iw-pp-ride.is-on'), r0 = ce?.getBoundingClientRect(), mode = P.rideCam.st?.mode;
+        const overlap = !!r0 && r0.left < box[2] && r0.right > box[0] && r0.top < box[3] && r0.bottom > box[1];
+        R('hud: in the entry hold (the lens still on the mouth) the ride chip sits low, off the mouth\'s own sign', mode === 'entry' && !!r0 && ce.classList.contains('is-low') && !overlap, { mode, chip: r0 && [Math.round(r0.left), Math.round(r0.top), Math.round(r0.right), Math.round(r0.bottom)], sign: box.map(Math.round), h: innerHeight });
+      }
+      step(0.5);
       const chipEl = document.querySelector('.iw-pp-ride.is-on'), cr = chipEl?.getBoundingClientRect();
       const rp = new THREE.Vector3(A2.pos.x, A2.pos.y + 0.4, A2.pos.z).project(__G.camera), riderY = (1 - rp.y) / 2 * innerHeight;
       const ridingLine = line();
@@ -488,8 +506,11 @@
       R('tide: a late joiner (a clock seek) inside the warning sees the countdown line, not only the red pill', !/GOING/.test(before) && /KELP LINES GOING DOWN IN\s*\d/.test(after), { before, after });
       const kOut = P.legs.find((l) => l.id === 'kelp').ends[1], xOut = P.legs.find((l) => l.id === 'express').ends[1], kIn = P.legs.find((l) => l.id === 'kelp').ends[0];
       const wK = W.looks._words(kOut, 'ab'), wX = W.looks._words(xOut, 'ab'), wIn = W.looks._words(kIn, 'ab');
-      R('tide: the Kelp Lines\' split-flaps carry "KELP LINE" over their words; both one-way kinds say the same at their OUT end ("EXIT ONLY")',
-        P.legs.filter((l) => l.flip).every((l) => l.look.tag === 'KELP LINE') && !P.legs.some((l) => !l.flip && l.look.tag) && wK.top === 'EXIT ONLY' && wX.top === 'EXIT ONLY' && /UP · IN/.test(wIn.top), { kelpOut: wK, expressOut: wX, kelpIn: wIn });
+      // (an OUT end names where its riders come from, not itself: "EXIT ONLY / PENGUIN POINT" read like a way there)
+      const xFrom = P.ends[P.legs[xOut.leg].ends[1 - xOut.k].i].name, kFrom = P.ends[P.legs[kOut.leg].ends[1 - kOut.k].i].name;
+      R('tide: the Kelp Lines\' split-flaps carry "KELP LINE" over their words; both one-way kinds say the same at their OUT end ("EXIT ONLY"), under it where riders come FROM (not the exit\'s own name)',
+        P.legs.filter((l) => l.flip).every((l) => l.look.tag === 'KELP LINE') && !P.legs.some((l) => !l.flip && l.look.tag) && wK.top === 'EXIT ONLY' && wX.top === 'EXIT ONLY' && /UP · IN/.test(wIn.top)
+          && wX.sub === 'FROM ' + xFrom && wK.sub === 'FROM ' + kFrom && wX.sub !== 'FROM ' + xOut.name, { kelpOut: wK, expressOut: wX, kelpIn: wIn });
       setT(120); P.hudUi.start(); dbg.step(1000 / 60);
       const startDown = line();
       R('tide: the match-start line names the tide as it is (a joiner in a DOWN phase reads "Kelp Lines DOWN")', /Kelp Lines DOWN/.test(startDown), { startDown });
@@ -634,7 +655,7 @@
           if (popT >= 0 && n - popT >= 6 && (landT < 0 || n - landT <= 30)) { const d = L.distanceTo(body); r.popMin = Math.min(r.popMin, d); if (d < 1.5) r.popNear++; }
           // through the Great Tank, while the chase runs: the lens in the tank's water (y ≤ 2.0); the grade exactly on then
           if (lg.id === 'gulper' && p && p.phase === 'ride' && mode === 'chase' && Math.hypot(A5.pos.x, A5.pos.z) < tankV.cyl[2] - 1.6) { tankFrames++; if (!D.inWaterVol(tankV, L.x, L.y, L.z, 0) || L.y > 2.01) tankOut++; }
-          const inV = !!W.inWater(L), edge = W.X.water.some((v) => D.inWaterVol(v, L.x, L.y, L.z, -0.06) && !D.inWaterVol(v, L.x, L.y, L.z, 0.06));   // (within 6 cm of a volume's skin: the render test's own 5 cm margin)
+          const inV = W.X.water.some((v) => D.inWaterVol(v, L.x, L.y, L.z, 0, true)), edge = W.X.water.some((v) => D.inWaterVol(v, L.x, L.y, L.z, -0.06, true) && !D.inWaterVol(v, L.x, L.y, L.z, 0.06, true));   // (within 6 cm of a volume's graded skin: the render test's own 5 cm margin; an open top's grade starts `open` below it)
           if (p && p.phase !== 'pop' && !edge && inV !== !!W.looks.uwOn && W.looks.rideVol) { gradeBad++; if (gradeWhy.length < 12) gradeWhy.push([lg.id, k, n, mode, +L.x.toFixed(2), +L.y.toFixed(2), +L.z.toFixed(2), inV, W.looks.uwOn]); }
           // the Kelp riser: lens and sight line inside the frond-free cylinder (backdrop.js clears 1.6 m round it; a frond
           // reaches 0.28 m from its centre) while the rider is on the riser

@@ -27,7 +27,7 @@ import { Hit } from './physics.js';
 import { expandPipes, legAt, nearestOnLeg, pipeColliderDefs, tideAt, endIsIn, inWaterVol, polyDist, PIPE as PD } from '../world/pipes-data.js';
 import { PipeLooks } from '../fx/pipesFx.js';
 import { PipesHud } from '../ui/hud-pipes.js';
-import { RideCam } from './pipesCam.js';
+import { RideCam, planLeg, exitShot } from './pipesCam.js';
 
 export const PIPES = {
   suck: 0.25,                          // s, can be hit
@@ -187,7 +187,18 @@ export class PipeNet {
     if (on) { this._bake = []; for (const b of L.blocks) if ((b.pipe || b.bakeClear) && b.solid) { b.solid = false; this._bake.push(b); } }
     else if (this._bake) { for (const b of this._bake) b.solid = true; this._bake = null; }
   }
-  dispose() { this.looks?.dispose(); this.looks = null; }
+  // the ride camera's plans (pipesCam.js: one per directed leg, one exit shot per end, ≈ 1–3 ms each) built once the world
+  // rests, one an idle slice, so no leg's first ride pays for its own (a hitch the first time each was ridden: LEAD-REVIEW
+  // round 2, item 5). A ride that starts before they are done builds its own, as before
+  ready() {
+    if (!this.level) return;
+    const jobs = [], gen = (this._warm = (this._warm || 0) + 1);
+    for (const leg of this.X.legs) for (const k of [0, 1]) { if (leg.ends[k].inWhen !== 'never') jobs.push(() => planLeg(this, leg, k === 0 ? 1 : -1)); jobs.push(() => exitShot(this, leg.ends[k])); }
+    const later = typeof requestIdleCallback === 'function' ? (f) => requestIdleCallback(f, { timeout: 400 }) : (f) => setTimeout(f, 20);
+    const next = () => { if (gen !== this._warm || !jobs.length) return; jobs.shift()(); if (!jobs.length) this.camWarm = true; else later(next); };
+    later(next);
+  }
+  dispose() { this._warm = (this._warm || 0) + 1; this.looks?.dispose(); this.looks = null; }
 }
 
 // ================================================================================================ the match (R)
@@ -1050,7 +1061,10 @@ export class StagePipes {
         const v = _w.set(a.pos.x, a.pos.y + 0.4, a.pos.z).project(cam), hi = v.z < 1 && Math.abs(v.x) < 0.7 ? v.y : -1;
         this._chipLow = this._chipLow ? hi > 0.08 : hi > 0.22;
       }
-      o.chipLow = !!this._chipLow;
+      // (and while the ride camera still holds on the mouth it entered: the chip in the top band sat exactly over that
+      // mouth's own sign — LEAD-REVIEW round 2, item 4; the bottom is the floor in front of the mouth)
+      const st = this.rideCam?.st, entry = !!(st && st.a === a && st.mode === 'entry');
+      o.chipLow = !!this._chipLow || entry;
     } else this._chipLow = false;
     this.hudUi?.update(o, a);
     return o;

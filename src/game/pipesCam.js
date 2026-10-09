@@ -183,21 +183,33 @@ export function exitShot(W, e) {
     const d = 0.45 + vo * t, y = e.pos[1] - 0.3 + 0.5 + vu * t - 12.5 * t * t;
     flight.push([e.pos[0] + o[0] * d, Math.max(y, e.land[1] + 0.5), e.pos[2] + o[2] * d]);
   }
-  let best = null, bs = -Infinity;
-  for (const d of [0.35, 0.6, 0.9, 1.3, 1.8, 2.4]) for (const hh of [3.0, 2.8, 2.6, 3.2, 2.4]) for (const sd of [0, -0.7, 0.7]) {
+  // where someone waiting for the rider would stand: a ring of chest-high points 2.5 and 4.5 m round the landing, on its
+  // floor, in front of the mouth's wall (the lens is scored by how many of them it sees: the S. Promenade's shot looked
+  // mostly at the side of the kiosk 0.8 m from its landing — LEAD-REVIEW round 2, item 4)
+  const watch = [];
+  for (const r of [2.5, 4.5]) for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2, x = e.land[0] + Math.sin(a) * r, z = e.land[2] + Math.cos(a) * r;
+    if ((x - e.pos[0]) * o[0] + (z - e.pos[2]) * o[2] < 0.6) continue;
+    const gy = L.groundHeight(x, z, e.land[1] + 1.5);
+    if (Math.abs(gy - e.land[1]) > 1.5) continue;
+    watch.push(new THREE.Vector3(x, gy + 1.0, z));
+  }
+  let best = null, bs = -Infinity, seen = 0;
+  for (const d of [0.35, 0.6, 0.9, 1.3, 1.8, 2.4]) for (const hh of [3.0, 2.8, 2.6, 3.2, 2.4]) for (const sd of [0, -0.7, 0.7, -1.2, 1.2]) {
     const p = _a.set(e.pos[0] + o[0] * d + sx * sd, fy + hh, e.pos[2] + o[2] * d + sz * sd);
     if (!lensClear(L, p)) continue;
     let dmin = Infinity; for (const q of flight) dmin = Math.min(dmin, Math.hypot(p.x - q[0], p.y - q[1], p.z - q[2]));
     if (dmin < 1.6) continue;
     if (!sightClear(L, p, land, 0.3)) continue;
-    const score = -Math.abs(d - 0.5) - 0.6 * Math.abs(hh - 2.9) - 0.4 * Math.abs(sd);
-    if (score > bs) { bs = score; best = p.clone(); }
+    let n = 0; for (const w of watch) if (sightClear(L, p, w, 0.2)) n++;
+    const score = -Math.abs(d - 0.5) - 0.6 * Math.abs(hh - 2.9) - 0.4 * Math.abs(sd) + 0.12 * n;
+    if (score > bs) { bs = score; best = p.clone(); seen = n; }
   }
   const ok = !!best;
   if (!best) best = new THREE.Vector3(e.pos[0] + o[0] * 2.4, fy + 2.8, e.pos[2] + o[2] * 2.4);   // (never on this stage: the test reports it)
   const hd = Math.hypot(e.land[0] - best.x, e.land[2] - best.z);
   const pitch = clamp(-Math.atan2(best.y - (e.land[1] + 0.3), hd) + 0.22, -0.95, -0.15);
-  const X = { end: e.i, pos: best, pitch, ok };
+  const X = { end: e.i, pos: best, pitch, ok, seen, of: watch.length };
   cache.set(e.i, X);
   return X;
 }
