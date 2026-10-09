@@ -6,6 +6,7 @@ import { ZoneControl } from './zones.js';
 import { TowerCommand } from './tower.js';
 import { StageMovers } from './movers.js';
 import { StagePods } from './pods.js';
+import { StageRun } from './stageMods.js';   // [b5-stagehooks] stage modules (docs/STAGE-MODS.md)
 import { randomStyle } from './character-style.js';
 import { Actor } from './actor.js';
 import { BotBrain } from './bots.js';
@@ -103,6 +104,7 @@ export class Match {
     this.unsubs = [
       on('splatted', (e) => this._onSplatted(e)),
     ];
+    this.stage = StageRun.create(this);   // [b5-stagehooks] stage modules, before the modes (zone cells, the tower, BossNav see their start)
     if (this.mode === 'zones') {
       this.zones = new ZoneControl(this);
       this.unsubs.push(on('turf', (e) => this._zoneTurf(e)));
@@ -138,6 +140,7 @@ export class Match {
       if (a.bot) { a.bot.aimYaw = a.yaw; a.bot.aimPitch = 0; }
     }
     this.unsubs = [on('splatted', (e) => this._onSplatted(e))];
+    this.stage = StageRun.create(this);   // [b5-stagehooks] (a pure function of the synced clock, + module records)
     if (this.mode === 'zones') {   // Zone Control online: the host runs the rules, guests follow (zones.js netEvent)
       this.zones = new ZoneControl(this);
       this.unsubs.push(on('turf', (e) => this._zoneTurf(e)));
@@ -189,6 +192,7 @@ export class Match {
   }
 
   dispose() {
+    this.stage?.dispose(); this.stage = null;   // [b5-stagehooks]
     this.movers?.dispose(); this.movers = null;
     this.pods?.dispose(); this.pods = null;
     this.bossMode?.dispose(); this.bossMode = null; this.boss = null;
@@ -258,10 +262,12 @@ export class Match {
         if (this.stateT > (this.bossMode ? (this.bossMode.boss.dead ? BOSS_MODE.finishWin : BOSS_MODE.finishLose) : 2.6) && !this.follower && !this.result) this._judge();
         break;
     }
+    this.stage?.update(dt);   // [b5-stagehooks] stage modules (eras, lava …) before anyone moves
     // stage movers (a railcar pulling out) move — and shove anyone in their way — before anyone else moves
     this.movers?.update(dt);
     // sprout pods: meters, hedges growing (shoving anyone where they grow) / wilting (carrying their riders down)
     this.pods?.update(dt);
+    this.stage?.lateUpdate(dt);   // [b5-stagehooks] (pipes: captures after the pods)
     // actors (the local controller runs once per rendered frame via updateController)
     const live = this.state === 'playing';
     for (const a of this.actors) {
@@ -277,6 +283,7 @@ export class Match {
     for (let i = 0; i < this.actors.length; i++) for (let j = i + 1; j < this.actors.length; j++) {
       const a = this.actors[i], b = this.actors[j];
       if (!a.alive || !b.alive) continue;
+      if (this.stage && (this.stage.noPush(a) || this.stage.noPush(b))) continue;   // [b5-stagehooks] (pipe riders)
       const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, dy = b.pos.y - a.pos.y;
       const d2 = dx * dx + dz * dz;
       const r = PLAYER.radius * 1.7;

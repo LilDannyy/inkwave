@@ -1,0 +1,28 @@
+JOB-8 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:06:47
+branch botlab-b5-jumpui, ran at 360914a, exit code 0, wall time 2min
+(a written-up JOB-8.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bot-specials x4 @ 360914a
+== bot-specials-3: RESULT 19/19 0 FAIL
+== bot-specials-2: RESULT 19/19 0 FAIL
+== bot-specials-1: RESULT 18/19 1 FAIL
+== bot-specials-4: RESULT 19/19 0 FAIL
+
+## last 15 lines of job.log
+### bot-specials x4 @ 360914a
+== bot-specials-3: RESULT 19/19 0 FAIL
+== bot-specials-2: RESULT 19/19 0 FAIL
+== bot-specials-1: RESULT 18/19 1 FAIL
+== bot-specials-4: RESULT 19/19 0 FAIL
+bot-specials-1: FAIL Crab Rig: out of its gun lane, no shots into the armoured front (off: stands in the lane shooting the hull); from behind it shoots the rider  {"on":{"dead":false,"sInLane":0.1,"frontShots":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":1,"goalMove
+
+## fails.txt
+bot-specials-1: FAIL Crab Rig: out of its gun lane, no shots into the armoured front (off: stands in the lane shooting the hull); from behind it shoots the rider  {"on":{"dead":false,"sInLane":0.1,"frontShots":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":0,"guard":0,"backedOff":0,"retargeted":0,"heldFire":2.249999999999997,"knockShots":0,"reengaged":
+
+## summary.txt
+### bot-specials x4 @ 360914a
+== bot-specials-3: RESULT 19/19 0 FAIL
+== bot-specials-2: RESULT 19/19 0 FAIL
+== bot-specials-1: RESULT 18/19 1 FAIL
+== bot-specials-4: RESULT 19/19 0 FAIL

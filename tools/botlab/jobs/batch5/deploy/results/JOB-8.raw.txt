@@ -1,0 +1,138 @@
+JOB-8 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 12:10:53
+branch botlab-b5-deploy, ran at a957b4f, exit code 0, wall time 8min
+(a written-up JOB-8.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### deploy JOB-8 at a957b4f
+### zones halyard 2 DEV_AI=1
+== halyard [zones]: winner Alpha (time) | final 92 vs 94 (penalty +0.5/+5.3) | OT no
+### zones halyard 1 DEV_AI=1
+== halyard [zones]: winner Bravo (time) | final 100 vs 2 (penalty +0/+0) | OT no
+### zones halyard 1 DEV_AI=0
+== halyard [zones]: winner Alpha (time) | final 61 vs 100 (penalty +0/+0) | OT no
+### zones halyard 2 DEV_AI=0
+== halyard [zones]: winner Bravo (time) | final 100 vs 3 (penalty +0/+0) | OT no
+### zones saltpan 1 DEV_AI=1
+== saltpan [zones]: winner Alpha (time) | final 76 vs 100 (penalty +0/+0) | OT no
+### zones saltpan 1 DEV_AI=0
+== saltpan [zones]: winner Alpha (time) | final 72 vs 84 (penalty +22/+0) | OT no
+### zones saltpan 2 DEV_AI=1
+== saltpan [zones]: winner Bravo (time) | final 90 vs 79 (penalty +0/+5) | OT no
+### zones saltpan 2 DEV_AI=0
+== saltpan [zones]: winner Bravo (time) | final 100 vs 83 (penalty +0/+0) | OT no
+### zones calamari 1 DEV_AI=1
+== calamari [zones]: winner Bravo (neutralised) | final 81 vs 20 (penalty +0/+7) | OT 5.8s
+### zones calamari 1 DEV_AI=0
+== calamari [zones]: winner Bravo (time) | final 76 vs 32 (penalty +19/+40.3) | OT no
+### zones calamari 2 DEV_AI=1
+== calamari [zones]: winner Bravo (time) | final 85 vs 37 (penalty +9.9/+0) | OT no
+### zones calamari 2 DEV_AI=0
+== calamari [zones]: winner Alpha (comeback) | final 47 vs 47 (penalty +0/+31.9) | OT 37.3s
+### zones treehills 1 DEV_AI=1
+== treehills [zones]: winner Alpha (time) | final 50 vs 82 (penalty +9.1/+10.2) | OT no
+### zones treehills 1 DEV_AI=0
+== treehills [zones]: winner Alpha (time) | final 67 vs 74 (penalty +0/+18.1) | OT no
+### zones treehills 2 DEV_AI=1
+== treehills [zones]: winner Alpha (comeback) | final 54 vs 54 (penalty +0/+32) | OT 9.2s
+### zones treehills 2 DEV_AI=0
+== treehills [zones]: winner Bravo (comeback) | final 63 vs 63 (penalty +21/+0) | OT 4.5s
+SUMMARY zones 16/16; frame errors 0, console 0
+
+## last 15 lines of job.log
+== treehills [zones]: winner Alpha (time) | final 67 vs 74 (penalty +0/+18.1) | OT no
+   held A 46s B 73s neutral 180.8s | captures 6 (takeovers 3), control events 11, first capture @51.6s | rotations 6
+   bots in the active zone 65.5% of the time | avg inside A 0.52 B 0.57 | within 12 m A 1.03 B 1.32
+   DEPLOY hits 48 (627 dmg) | shot down {"sprinkler":2,"seeker":1} | crushed {} | rides 0 lifts 0 shoves 9 drops 0 | skitter thrown 9 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones treehills 2 DEV_AI=1
+== treehills [zones]: winner Alpha (comeback) | final 54 vs 54 (penalty +0/+32) | OT 9.2s
+   held A 115.8s B 90.8s neutral 102.5s | captures 7 (takeovers 4), control events 13, first capture @23s | rotations 6
+   bots in the active zone 41.2% of the time | avg inside A 0.34 B 0.32 | within 12 m A 1.22 B 1.15
+   DEPLOY hits 47 (1159 dmg) | shot down {"seeker":3,"beacon":7} | crushed {} | rides 9 lifts 6 shoves 0 drops 6 | skitter thrown 8 popped 3 | bots (device AI on): device mode 3.6 s/bot (walking 0.5) | picks 15 (beacon 14, sprinkler 1, buoy 0) re-picks 14 gave up 0
+### zones treehills 2 DEV_AI=0
+== treehills [zones]: winner Bravo (comeback) | final 63 vs 63 (penalty +21/+0) | OT 4.5s
+   held A 68.8s B 63s neutral 172.5s | captures 10 (takeovers 6), control events 19, first capture @37.3s | rotations 6
+   bots in the active zone 70.7% of the time | avg inside A 0.42 B 0.81 | within 12 m A 1.1 B 1.51
+   DEPLOY hits 22 (1014 dmg) | shot down {"beacon":5} | crushed {} | rides 0 lifts 0 shoves 9 drops 0 | skitter thrown 12 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+SUMMARY zones 16/16; frame errors 0, console 0
+
+## zones.txt
+### zones halyard 2 DEV_AI=1
+== halyard [zones]: winner Alpha (time) | final 92 vs 94 (penalty +0.5/+5.3) | OT no
+   held A 33.5s B 13.3s neutral 253s | captures 5 (takeovers 4), control events 10, first capture @61.2s | rotations 6
+   bots in the active zone 65.4% of the time | avg inside A 0.53 B 0.54 | within 12 m A 1.72 B 1.52
+   DEPLOY hits 33 (883 dmg) | shot down {"beacon":4,"seeker":1,"sprinkler":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 20 popped 1 | bots (device AI on): device mode 4.0 s/bot (walking 0.0) | picks 10 (beacon 8, sprinkler 2, buoy 0) re-picks 16 gave up 1
+### zones halyard 1 DEV_AI=1
+== halyard [zones]: winner Bravo (time) | final 100 vs 2 (penalty +0/+0) | OT no
+   held A 0s B 61s neutral 238.8s | captures 4 (takeovers 0), control events 8, first capture @92.5s | rotations 6
+   bots in the active zone 63.1% of the time | avg inside A 0.27 B 0.74 | within 12 m A 0.92 B 1.87
+   DEPLOY hits 25 (406 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 11 popped 1 | bots (device AI on): device mode 3.1 s/bot (walking 0.0) | picks 5 (beacon 2, sprinkler 3, buoy 0) re-picks 9 gave up 0
+### zones halyard 1 DEV_AI=0
+== halyard [zones]: winner Alpha (time) | final 61 vs 100 (penalty +0/+0) | OT no
+   held A 64s B 0s neutral 235.8s | captures 3 (takeovers 0), control events 6, first capture @61.1s | rotations 6
+   bots in the active zone 67.1% of the time | avg inside A 0.72 B 0.39 | within 12 m A 1.85 B 1.18
+   DEPLOY hits 36 (913 dmg) | shot down {"beacon":1,"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 14 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones halyard 2 DEV_AI=0
+== halyard [zones]: winner Bravo (time) | final 100 vs 3 (penalty +0/+0) | OT no
+   held A 0s B 118s neutral 181.8s | captures 6 (takeovers 0), control events 12, first capture @26.2s | rotations 7
+   bots in the active zone 70.7% of the time | avg inside A 0.15 B 0.98 | within 12 m A 0.51 B 2.23
+   DEPLOY hits 12 (722 dmg) | shot down {"sprinkler":1,"beacon":3} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 11 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones saltpan 1 DEV_AI=1
+== saltpan [zones]: winner Alpha (time) | final 76 vs 100 (penalty +0/+0) | OT no
+   held A 44.3s B 0s neutral 255.5s | captures 3 (takeovers 0), control events 6, first capture @76.2s | rotations 6
+   bots in the active zone 69.8% of the time | avg inside A 0.78 B 0.51 | within 12 m A 1.92 B 1.31
+   DEPLOY hits 25 (735 dmg) | shot down {"seeker":1,"beacon":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 19 popped 1 | bots (device AI on): device mode 1.6 s/bot (walking 0.2) | picks 12 (beacon 8, sprinkler 4, buoy 0) re-picks 8 gave up 0
+### zones saltpan 1 DEV_AI=0
+== saltpan [zones]: winner Alpha (time) | final 72 vs 84 (penalty +22/+0) | OT no
+   held A 41.3s B 32.5s neutral 226s | captures 4 (takeovers 1), control events 8, first capture @68.6s | rotations 6
+   bots in the active zone 62.1% of the time | avg inside A 0.73 B 0.55 | within 12 m A 1.8 B 1.44
+   DEPLOY hits 6 (370 dmg) | shot down {"beacon":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 14 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones saltpan 2 DEV_AI=1
+== saltpan [zones]: winner Bravo (time) | final 90 vs 79 (penalty +0/+5) | OT no
+   held A 30.5s B 14.8s neutral 254.5s | captures 4 (takeovers 2), control events 8, first capture @44.9s | rotations 7
+   bots in the active zone 63.1% of the time | avg inside A 0.83 B 0.6 | within 12 m A 2 B 1.46
+   DEPLOY hits 13 (486 dmg) | shot down {"seeker":1,"beacon":2} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 16 popped 1 | bots (device AI on): device mode 1.1 s/bot (walking 0.1) | picks 6 (beacon 5, sprinkler 1, buoy 0) re-picks 9 gave up 0
+### zones saltpan 2 DEV_AI=0
+== saltpan [zones]: winner Bravo (time) | final 100 vs 83 (penalty +0/+0) | OT no
+   held A 0s B 36s neutral 263.8s | captures 2 (takeovers 0), control events 4, first capture @78s | rotations 6
+   bots in the active zone 66.9% of the time | avg inside A 0.29 B 0.88 | within 12 m A 1.03 B 2.12
+   DEPLOY hits 22 (668 dmg) | shot down {"beacon":2,"sprinkler":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 22 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones calamari 1 DEV_AI=1
+== calamari [zones]: winner Bravo (neutralised) | final 81 vs 20 (penalty +0/+7) | OT 5.8s
+   held A 35s B 74.5s neutral 196s | captures 8 (takeovers 2), control events 16, first capture @82.7s | rotations 6
+   bots in the active zone 48.1% of the time | avg inside A 0.26 B 0.44 | within 12 m A 0.89 B 1.32
+   DEPLOY hits 35 (871 dmg) | shot down {"beacon":4,"seeker":1} | crushed {} | rides 1 lifts 0 shoves 125 drops 0 | skitter thrown 16 popped 1 | bots (device AI on): device mode 4.4 s/bot (walking 0.7) | picks 11 (beacon 7, sprinkler 4, buoy 0) re-picks 20 gave up 2
+### zones calamari 1 DEV_AI=0
+== calamari [zones]: winner Bravo (time) | final 76 vs 32 (penalty +19/+40.3) | OT no
+   held A 33.8s B 111.3s neutral 154.8s | captures 7 (takeovers 2), control events 14, first capture @42.3s | rotations 7
+   bots in the active zone 67.1% of the time | avg inside A 0.43 B 0.72 | within 12 m A 1.02 B 1.5
+   DEPLOY hits 77 (942 dmg) | shot down {"seeker":2,"beacon":4,"sprinkler":1} | crushed {} | rides 2 lifts 0 shoves 493 drops 0 | skitter thrown 16 popped 2 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones calamari 2 DEV_AI=1
+== calamari [zones]: winner Bravo (time) | final 85 vs 37 (penalty +9.9/+0) | OT no
+   held A 46.5s B 102.5s neutral 150.8s | captures 7 (takeovers 4), control events 13, first capture @31.6s | rotations 6
+   bots in the active zone 57.5% of the time | avg inside A 0.21 B 0.72 | within 12 m A 0.8 B 1.51
+   DEPLOY hits 13 (627 dmg) | shot down {"sprinkler":1,"beacon":3} | crushed {} | rides 0 lifts 0 shoves 563 drops 0 | skitter thrown 11 popped 0 | bots (device AI on): device mode 1.4 s/bot (walking 0.0) | picks 11 (beacon 8, sprinkler 3, buoy 0) re-picks 11 gave up 0
+### zones calamari 2 DEV_AI=0
+== calamari [zones]: winner Alpha (comeback) | final 47 vs 47 (penalty +0/+31.9) | OT 37.3s
+   held A 92.5s B 86.8s neutral 157.8s | captures 9 (takeovers 5), control events 17, first capture @41.2s | rotations 6
+   bots in the active zone 54.2% of the time | avg inside A 0.36 B 0.46 | within 12 m A 1.1 B 1.19
+   DEPLOY hits 8 (361 dmg) | shot down {"sprinkler":1,"beacon":1} | crushed {} | rides 2 lifts 0 shoves 441 drops 0 | skitter thrown 15 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones treehills 1 DEV_AI=1
+== treehills [zones]: winner Alpha (time) | final 50 vs 82 (penalty +9.1/+10.2) | OT no
+   held A 74.5s B 67.8s neutral 157.5s | captures 8 (takeovers 5), control events 15, first capture @30.5s | rotations 6
+   bots in the active zone 60.1% of the time | avg inside A 0.42 B 0.47 | within 12 m A 1.25 B 1.15
+   DEPLOY hits 107 (461 dmg) | shot down {"seeker":1,"beacon":1} | crushed {} | rides 1 lifts 0 shoves 0 drops 0 | skitter thrown 11 popped 1 | bots (device AI on): device mode 0.4 s/bot (walking 0.1) | picks 4 (beacon 4, sprinkler 0, buoy 0) re-picks 1 gave up 0
+### zones treehills 1 DEV_AI=0
+== treehills [zones]: winner Alpha (time) | final 67 vs 74 (penalty +0/+18.1) | OT no
+   held A 46s B 73s neutral 180.8s | captures 6 (takeovers 3), control events 11, first capture @51.6s | rotations 6
+   bots in the active zone 65.5% of the time | avg inside A 0.52 B 0.57 | within 12 m A 1.03 B 1.32
+   DEPLOY hits 48 (627 dmg) | shot down {"sprinkler":2,"seeker":1} | crushed {} | rides 0 lifts 0 shoves 9 drops 0 | skitter thrown 9 popped 1 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+### zones treehills 2 DEV_AI=1
+== treehills [zones]: winner Alpha (comeback) | final 54 vs 54 (penalty +0/+32) | OT 9.2s
+   held A 115.8s B 90.8s neutral 102.5s | captures 7 (takeovers 4), control events 13, first capture @23s | rotations 6
+   bots in the active zone 41.2% of the time | avg inside A 0.34 B 0.32 | within 12 m A 1.22 B 1.15
+   DEPLOY hits 47 (1159 dmg) | shot down {"seeker":3,"beacon":7} | crushed {} | rides 9 lifts 6 shoves 0 drops 6 | skitter thrown 8 popped 3 | bots (device AI on): device mode 3.6 s/bot (walking 0.5) | picks 15 (beacon 14, sprinkler 1, buoy 0) re-picks 14 gave up 0
+### zones treehills 2 DEV_AI=0
+== treehills [zones]: winner Bravo (comeback) | final 63 vs 63 (penalty +21/+0) | OT 4.5s
+   held A 68.8s B 63s neutral 172.5s | captures 10 (takeovers 6), control events 19, first capture @37.3s | rotations 6
+   bots in the active zone 70.7% of the time | avg inside A 0.42 B 0.81 | within 12 m A 1.1 B 1.51
+   DEPLOY hits 22 (1014 dmg) | shot down {"beacon":5} | crushed {} | rides 0 lifts 0 shoves 9 drops 0 | skitter thrown 12 popped 0 | bots (device AI off): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0

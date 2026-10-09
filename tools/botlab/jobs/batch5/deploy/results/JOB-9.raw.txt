@@ -1,0 +1,168 @@
+JOB-9 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 10:45:21
+branch botlab-b5-deploy, ran at 542c932, exit code 0, wall time 13min
+(a written-up JOB-9.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### deploy JOB-9 at 542c932
+== deployables-rail: RESULT 2/2 0 FAIL
+== deployables-tower: RESULT 11/11 0 FAIL
+== deployables: RESULT 33/34 1 FAIL
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.15 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not)  {"during":{"deviceSecs":0.15,"deviceFramesWhileSeen":0,"beaconLost":0,"framesOnFoe":171},"after":{"gone":false,"s":16,"deviceSecs":0.15,"tra
+== deployables-hedge: RESULT 3/3 0 FAIL
+== sub-tweaks: RESULT 28/29 1 FAIL
+FAIL its drops land evenly over the disc's area, out to sprayRadius − 0.75 m (their own splat reaches the rest): the far ring isn't thinner than the middle  {"landed":267,"outerHalf":0.39,"maxLanding":4.75,"meanLanding":2.98}
+== sub-tweaks2: RESULT 22/23 1 FAIL
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.96,"widthMed":1.25,"width10":1},{"line":0.94,"widthMed":1.25,"width10":1},{"line":1,"widthMed":1.25,"width10":1}]
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 41/42 1 FAIL
+FAIL with no foe in sight a bot shoots an enemy buoy down (hp 350 → 350)  {"hp":350,"phase":"live","weapon":"blaster"}
+== sub-scale: RESULT 66/66 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== net-deploy-leave: RESULT 6/6 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== tm-halyard
+== halyard [tower len 117.8/117.8]: winner Alpha (time) | counts 5 vs 62 (score 5/62) | best push A 109.7m B 45.2m | OT no | sim 300s
+== tm-saltpan
+== saltpan [tower len 179.2/179.2]: winner Alpha (neutralised) | counts 11 vs 99 (score 11/99) | best push A 155.1m B 2.5m | OT 37.4s | sim 337.5s
+### repeat 2
+== deployables-tower: RESULT 11/11 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== deployables: RESULT 34/34 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":240,"bubbleHold":0.9,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":3,"guard":0,"backedOff":0,"re
+== net-deploy-leave: RESULT 6/6 0 FAIL
+### repeat 3
+== deployables-tower: RESULT 11/11 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== deployables: RESULT 34/34 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== net-deploy-leave: RESULT 6/6 0 FAIL
+== windup 3: RESULT 10/10
+== windup 1: RESULT 10/10
+== windup 2: RESULT 10/10
+== windup 4: RESULT 10/10
+== windup 5: RESULT 10/10
+== windup 6: RESULT 10/10
+== bots 1: RESULT 5/5
+== bots 3: RESULT 5/5
+== bots 2: RESULT 5/5
+== bots 4: RESULT 5/5
+SUMMARY 44 runs, 5 FAIL lines; repeats: 10 runs, 0 FAIL lines
+
+## last 15 lines of job.log
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== net-deploy-leave: RESULT 6/6 0 FAIL
+== windup 3: RESULT 10/10
+== windup 1: RESULT 10/10
+== windup 2: RESULT 10/10
+== windup 4: RESULT 10/10
+== windup 5: RESULT 10/10
+== windup 6: RESULT 10/10
+== bots 1: RESULT 5/5
+== bots 3: RESULT 5/5
+== bots 2: RESULT 5/5
+== bots 4: RESULT 5/5
+SUMMARY 44 runs, 5 FAIL lines; repeats: 10 runs, 0 FAIL lines
+
+## fails.txt
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/deploy-JOB-9-1004-1031/logs-2/bot-specials.log
+FAIL Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":240,"bubbleHold":0.9,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":3,"guard":0,"backedOff":0,"re
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/deploy-JOB-9-1004-1031/logs/deployables.log
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.15 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not)  {"during":{"deviceSecs":0.15,"deviceFramesWhileSeen":0,"beaconLost":0,"framesOnFoe":171},"after":{"gone":false,"s":16,"deviceSecs":0.15,"tra
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/deploy-JOB-9-1004-1031/logs/sub-tweaks.log
+FAIL its drops land evenly over the disc's area, out to sprayRadius − 0.75 m (their own splat reaches the rest): the far ring isn't thinner than the middle  {"landed":267,"outerHalf":0.39,"maxLanding":4.75,"meanLanding":2.98}
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/deploy-JOB-9-1004-1031/logs/sub-tweaks2.log
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.96,"widthMed":1.25,"width10":1},{"line":0.94,"widthMed":1.25,"width10":1},{"line":1,"widthMed":1.25,"width10":1}]
+--- /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/deploy-JOB-9-1004-1031/logs/surf.log
+FAIL with no foe in sight a bot shoots an enemy buoy down (hp 350 → 350)  {"hp":350,"phase":"live","weapon":"blaster"}
+
+## repeats.txt
+== windup 3: RESULT 10/10
+== windup 1: RESULT 10/10
+== windup 2: RESULT 10/10
+== windup 4: RESULT 10/10
+== windup 5: RESULT 10/10
+== windup 6: RESULT 10/10
+== bots 1: RESULT 5/5
+== bots 3: RESULT 5/5
+== bots 2: RESULT 5/5
+== bots 4: RESULT 5/5
+
+## summary.txt
+### deploy JOB-9 at 542c932
+== deployables-rail: RESULT 2/2 0 FAIL
+== deployables-tower: RESULT 11/11 0 FAIL
+== deployables: RESULT 33/34 1 FAIL
+FAIL a foe in sight comes first: a bot with an enemy beacon 6 m off and a foe in the open fights the foe (frames on the beacon while it sees the foe: 0; device mode 0.15 s before it had seen it; the beacon −0); the foe gone, it shoots the beacon down (not)  {"during":{"deviceSecs":0.15,"deviceFramesWhileSeen":0,"beaconLost":0,"framesOnFoe":171},"after":{"gone":false,"s":16,"deviceSecs":0.15,"tra
+== deployables-hedge: RESULT 3/3 0 FAIL
+== sub-tweaks: RESULT 28/29 1 FAIL
+FAIL its drops land evenly over the disc's area, out to sprayRadius − 0.75 m (their own splat reaches the rest): the far ring isn't thinner than the middle  {"landed":267,"outerHalf":0.39,"maxLanding":4.75,"meanLanding":2.98}
+== sub-tweaks2: RESULT 22/23 1 FAIL
+FAIL …the centre arrow's trail is a swimmable line: its ground track ≥ 95 % inked (each volley), two ink cells (≥ 0.45 m) wide at the median  [{"line":0.96,"widthMed":1.25,"width10":1},{"line":0.94,"widthMed":1.25,"width10":1},{"line":1,"widthMed":1.25,"width10":1}]
+== surf-tower: RESULT 11/11 0 FAIL
+== surf: RESULT 41/42 1 FAIL
+FAIL with no foe in sight a bot shoots an enemy buoy down (hp 350 → 350)  {"hp":350,"phase":"live","weapon":"blaster"}
+== sub-scale: RESULT 66/66 0 FAIL
+== surf-hedge: RESULT 2/2 0 FAIL
+== surf-calamari: RESULT 7/7 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-deploy: RESULT 7/7 0 FAIL
+== net-deploy-tower: RESULT 7/7 0 FAIL
+== net-deploy-leave: RESULT 6/6 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-surf-tower: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-turf: RESULT 9/9 0 FAIL
+== tm-halyard
+== halyard [tower len 117.8/117.8]: winner Alpha (time) | counts 5 vs 62 (score 5/62) | best push A 109.7m B 45.2m | OT no | sim 300s
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed by the tower {"curtain":2} | pushed aside by it 0 | rides 6 lifts 0 shoves 0 drops 0 | skitter thrown 13 popped 0 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+CONSOLE 0 unique warning/error line(s)
+== tm-saltpan
+== saltpan [tower len 179.2/179.2]: winner Alpha (neutralised) | counts 11 vs 99 (score 11/99) | best push A 155.1m B 2.5m | OT 37.4s | sim 337.5s
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed by the tower {"curtain":3} | pushed aside by it 0 | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 1 popped 0 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+CONSOLE 0 unique warning/error line(s)
+### repeat 2
+== deployables-tower: RESULT 11/11 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== deployables: RESULT 34/34 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":240,"bubbleHold":0.9,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":3,"guard":0,"backedOff":0,"re
+== net-deploy-leave: RESULT 6/6 0 FAIL
+### repeat 3
+== deployables-tower: RESULT 11/11 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== deployables: RESULT 34/34 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== surf: RESULT 42/42 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== net-deploy-leave: RESULT 6/6 0 FAIL

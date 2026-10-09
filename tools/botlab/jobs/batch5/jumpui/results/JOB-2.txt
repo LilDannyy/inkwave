@@ -1,0 +1,23 @@
+JOB-2 (jumpui) @ 24db462 — verdict: ALL PASS (every test full, incl. jump-ui ×3 + zones, net-jump-ui ×3, net-jump-ui scene=tower ×3). Run on the Mac mini, SLOTS=3 PAR=3, caffeinate.
+JOB-1 was skipped as you allowed: it had not started when JOB-2 arrived.
+
+## REP=3 regress.sh output
+== jump-ui-1: RESULT 43/43 0 FAIL
+== jump-ui-zones: RESULT 43/43 0 FAIL
+== jump-ui-2: RESULT 43/43 0 FAIL
+== jump-ui-3: RESULT 43/43 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-2: RESULT 21/21 0 FAIL
+== net-jump-ui-3: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-jump-ui-tower-2: RESULT 7/7 0 FAIL
+== net-jump-ui-tower-3: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL

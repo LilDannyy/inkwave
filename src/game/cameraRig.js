@@ -306,17 +306,19 @@ export class CameraRig {
     const sj = a.superJumpState;
     const flying = !!(sj && sj.phase === 'flight');
     const special = !!a.specialActive && !a.specialActive.free;   // ([drainbow] free: a special that leaves you be)
+    // [b5-stagehooks] a stage module's camera this frame (a pipe ride): { glide, boom, fov, skip } or null
+    const ov = G.match?.stage ? G.match.stage.cam(this, a, dt) : null, glide = flying || !!(ov && ov.glide);
     const p = a.visualPos ? a.visualPos(_v3) : _v3.copy(a.pos);
     // ---- pivot height above the feet (form changes glide)
     const hT = swim ? 1.15 : squid ? 1.3 : 1.85;
     const h = this.hgt.step(hT, 11, dt);
     // ---- horizontal: critically-damped with 72 % velocity feed-forward (fluid, no persistent lag)
-    const omegaH = flying ? 20 : 30, lead = 0.72 * 2 / omegaH;
+    const omegaH = glide ? 20 : 30, lead = 0.72 * 2 / omegaH;
     const fwd = this.forward(_fwd);
     _right.set(-Math.cos(this.yaw), 0, Math.sin(this.yaw));   // camera right on the ground plane
     // strafe look-ahead: a hair more view where you're heading sideways
     const lat = a.vel.x * _right.x + a.vel.z * _right.z;
-    const sideT = clamp(lat * 0.045, -0.32, 0.32) * (flying ? 0 : 1);
+    const sideT = clamp(lat * 0.045, -0.32, 0.32) * (glide ? 0 : 1);
     const so = this.side.step(sideT, 3.2, dt);
     const tx = p.x + a.vel.x * lead + _right.x * so, tz = p.z + a.vel.z * lead + _right.z * so;
     // snap if the target teleported (respawn, NaN recovery)
@@ -364,6 +366,7 @@ export class CameraRig {
     if (swim) fk = clamp((hs - 6) * 1.1, 0, 7);
     else if (flying) fk = 6;
     else if (!a.grounded && a.vel.y > 2) fk = 1.2;
+    if (ov && ov.fov) fk += ov.fov;   // [b5-stagehooks]
     this.fovKick = damp(this.fovKick, fk, 5, dt);
     const charging = a.weaponRunner?.charging ? a.weaponRunner.charge : 0;
     this.zoom = damp(this.zoom, charging > 0.99 ? 14 : charging * 6, 8, dt);
@@ -371,9 +374,11 @@ export class CameraRig {
     let want = (squid ? 4.1 : this.dist) - charging * 0.6;
     if (swim) want += clamp((hs - 6) / 6, 0, 1) * 0.35;
     if (flying) want += 1.2;
+    if (ov && ov.boom) want += ov.boom;   // [b5-stagehooks]
     this.wantDist = damp(this.wantDist, want, 6, dt);
     _back.copy(fwd).negate();
-    G.physics.cameraProbe(this.pivot, _back, this.wantDist, 0.62, _probe);
+    if (ov && ov.skip) { G.physics.skip = ov.skip; try { G.physics.cameraProbe(this.pivot, _back, this.wantDist, 0.62, _probe); } finally { G.physics.skip = null; } }   // [b5-stagehooks]
+    else G.physics.cameraProbe(this.pivot, _back, this.wantDist, 0.62, _probe);
     const tgt = _probe.soft;
     // fast in / slow out. The lens may trail a fast-closing obstacle for a few frames (bounded to 1.2 m past the line of
     // sight — back faces cull and the level's see-through dither covers the brief occlusion) instead of popping.
@@ -383,10 +388,12 @@ export class CameraRig {
     if (_probe.floor && this.boom.x > _probe.hard) { this.boom.x = _probe.hard; this.boom.v = Math.min(this.boom.v, 0); }
     if (this.boom.x < 0.45) { this.boom.x = 0.45; this.boom.v = Math.max(0, this.boom.v); }
     this.curDist = this.boom.x;
+    if (ov) G.match.stage.camAfter(this, a, ov);   // [b5-stagehooks] (the water clamp: may shorten curDist / boom)
     cam.position.copy(this.pivot).addScaledVector(fwd, -this.curDist);
     cam.position.y += 0.15;
     // keep the lens off the floor under it (only real floors well below the pivot — not wall tops at head height)
-    const gy = G.level?.groundHeight(cam.position.x, cam.position.z, cam.position.y + 0.2) ?? -Infinity;
+    let gy = G.level?.groundHeight(cam.position.x, cam.position.z, cam.position.y + 0.2) ?? -Infinity;
+    if (G.stageWorld?.liquid) gy = Math.max(gy, G.stageWorld.surfaceY(cam.position.x, cam.position.z) - 0.09);   // [b5-stagehooks] (lens ≥ a module's liquid + 0.15)
     const liftT = gy > -Infinity && gy < this.pivot.y - 0.6 ? Math.max(0, gy + 0.24 - cam.position.y) : 0;
     this.lensLift.step(liftT, liftT > this.lensLift.x ? 34 : 7, dt);
     cam.position.y += this.lensLift.x;

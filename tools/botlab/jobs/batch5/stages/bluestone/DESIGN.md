@@ -72,7 +72,7 @@ the 1880s to today to the 3000s, opening new routes and raising new ground as th
 **Identity.** A southern river city paid for by a gold boom and paved in dark blue-grey basalt: every kerb, gutter,
 laneway and plinth is bluestone, in 1888, today and in the 3000s. The stage is its heart, **Clockface Circus**: the round
 plaza where the tram boulevard, **Swimston Street**, meets the old river road, **Flathead Street**, which cuts across the
-grid on the diagonal because it follows the river bend. In the middle stands **Flathead Street Station's dome**: an open
+grid on the diagonal because it follows the river bend. In the middle stands **Flounders Street Station's dome**: an open
 domed booking hall on eight cast-iron columns, with a **row of five clocks over each flight of steps**. "Meet you under
 the clocks." Around the circus stand the city everyone knows without its name: the flatiron corner pub (**the Young &
 Jackfish**) with its iron-lace balcony, the **General Post Office** with its colonnaded steps, the glass-roofed **Royal
@@ -1338,7 +1338,7 @@ flames, the furnace door), never across a sky or a floor: two team inks are Tang
 
 | Building / area | 1880s | Today | 3000s |
 |---|---|---|---|
-| **Flathead Street Station dome** (the centre) | Fresh copper dome (a warm bronze), ochre-and-cream drum, cast-iron columns in green, clock cases in timber with Roman numerals, gas globes | Weathered verdigris dome, gold lettering "FLATHEAD STREET STATION" on the drum, the clocks lit from behind, the famous row over each flight | A lattice of white light over the old drum rising to 22 m, the clocks as rings of light, vertical gardens on the columns; **Tartar unchanged** |
+| **Flounders Street Station dome** (the centre) | Fresh copper dome (a warm bronze), ochre-and-cream drum, cast-iron columns in green, clock cases in timber with Roman numerals, gas globes | Weathered verdigris dome, gold lettering "FLATHEAD STREET STATION" on the drum, the clocks lit from behind, the famous row over each flight | A lattice of white light over the old drum rising to 22 m, the clocks as rings of light, vertical gardens on the columns; **Tartar unchanged** |
 | **The Young & Jackfish** (the flatiron hotel: the Swimston wing to 9 m, the prow with its corner turret to 13 m, the arch over the arcade, the iron-lace balcony and gallery) | Bluestone and render, iron-lace balcony and gallery in dark green, gilt "HOTEL" lettering, a coach lamp in the arch | Repainted cream and ochre, gold signs, beer-garden umbrellas on the balcony, a glass hotel extension rising behind the turret | The facade kept under a glass crown; a 20 m pearl-glass spire grows out of the prow; the balcony's iron lace lit from inside |
 | **The General Post Office** (terrace, colonnade, clock tower at its NE corner to 16 m) | Sandstone, a time ball on a mast, mail carts | A shopping gallery with banners; a glass office tower set back behind the facade | A white ceramic shell over the old roof to 16 m; the time ball a light orb |
 | **The Royal Arcade** (glass roof at 6.0, shopfronts, the striker clock over the north mouth, the arch under the hotel) | Under construction: timber hoardings at both mouths ("THE ROYAL ARCADE: GRAND OPENING 1889"), scaffold and stacked bricks inside under a half-glazed roof | Mosaic floor, glass vault, chocolatier, toy shop, barber; a kiosk, a flower stall and benches; the two fish-folk giants on the striker clock | Light-wrapped gallery, plants climbing the iron |

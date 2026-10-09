@@ -1,0 +1,12 @@
+JOB-3 (holds) results — ran at 6ae3edb (git rev-parse --short HEAD), Mac mini, SLOTS=3 PAR=3, caffeinate.
+
+## ONLY="holds net-holds" REP=3, then ONLY="net-holds" twice
+== holds-2: RESULT 243/243 0 FAIL
+== holds-3: RESULT 243/243 0 FAIL
+== holds-1: RESULT 243/243 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL

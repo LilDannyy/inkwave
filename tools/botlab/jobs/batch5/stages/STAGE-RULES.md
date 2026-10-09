@@ -87,6 +87,32 @@ go back and tell his creator, The Professor, how to do it and start the world an
 - When the jumps happen in each mode, what happens to ink and to players and devices standing where something appears,
   and how each mode's objective lives through the jumps, are yours to design and justify.
 
+
+#### The user's note on the blockout (2026-10-09), binding
+The user, seeing the blockout top-downs: "My concern with bluestone junction, at least from the top down it looks like
+that other stage that already has a stationary tram on it. Make sure it's definitely different, the time travel
+mechanic should help with that too". That stage is **Crossroads Market** (`crossmarket`: narrow shop streets and an
+iron gallery close in on the glass Market Hall, where the No. 3 tram waits under the clock; golden light). And: "can
+the station be called **Flounders Street Station**" (yes: that is its name from now on, in every document, sign and
+blurb).
+
+What "definitely different" means here (the lead's reading; the reviewer judges against it):
+1. **Nothing of Crossroads' signature at mid.** No tram parked at mid, no glass hall at mid. Mid is the open station
+   concourse under the dome of Flounders Street Station, with the row of clocks over the steps and Tartar's telephone
+   hanging under the dome. Trams live at the stops on the diagonal street, and they change with the era (a horse or
+   cable tram, then an electric tram, then something that floats); if the budget allows, one tram moves on a timetable
+   (as Calamari's trains do) so it is never a parked prop.
+2. **The top-down must read as a different shape at a glance:** the diagonal street cutting the grid at its angle,
+   the river bend with its bridge inside the footprint on two corners, the wharf ends. Crossroads is a straight grid of
+   streets round one hall; Bluestone is a skewed X with water in it.
+3. **Different materials and light:** blue-grey bluestone, cream sandstone, red brick, iron lace and timber, under a
+   plain 'day' theme (Crossroads is golden stone and glass). The dusk looks must differ as much.
+4. **The eras must show from above:** era 1 and era 3 top-downs must be tellable apart in a second (the arcade and
+   crates gone, the bridge, the Halo, the new gardens and glass stairs).
+5. **Prove it:** the shape sheet must put Bluestone's top-down next to Crossroads Market's (`crossmarket`) at the same
+   scale, in all three eras, and a mid-height picture of each stage's mid side by side. The reviewer answers: "could a
+   player confuse these two from the top-down or from mid?" If yes, the blockout goes back.
+
 ### `aquarium`: clear pipes
 The user was deliberately brief: "an aquarium. there's a gimmick on this map too, there's clear pipes that can suck you
 in one end and pop you out the other, similar to Super Mario 3D World. Some pipes are bi-directional, and some are one

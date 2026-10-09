@@ -1,0 +1,110 @@
+JOB-1 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:03:05
+branch botlab-b5-stages, ran at 6172e3d, exit code 0, wall time 12min
+(a written-up JOB-1.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### stages JOB-1 at 6172e3d
+== world-build: RESULT 5/5 0 FAIL
+== stage-mods-2: RESULT 27/27 0 FAIL
+== stage-mods-1: RESULT 27/27 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== treehills-pods-tower: RESULT 7/7 0 FAIL
+== surf-movers: RESULT 11/11 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== surf-movers-hedge: RESULT 2/2 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== climb-audit: RESULT 1/1 0 FAIL
+== climb-audit-treehills: RESULT 1/1 0 FAIL
+== wip-stages: RESULT 22/22 0 FAIL
+== treehills-pods: RESULT 14/14 0 FAIL
+== net-stagemods-1: RESULT 10/10 0 FAIL
+== net-stagemods-2: RESULT 10/10 0 FAIL
+== net-stageclock: RESULT 3/3 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== check-maps: 1
+== match-calamari-turf: stuck 0.2% | 1 result line(s)
+== match-calamari-tower: stuck 0.7% | 1 result line(s)
+== match-calamari-zones: stuck 0.6% | 1 result line(s)
+== match-treehills-turf: stuck 0.3% | 1 result line(s)
+== match-treehills-tower: stuck 2.3% | 1 result line(s)
+== match-treehills-zones: stuck 0.7% | 1 result line(s)
+== match-halyard-turf: stuck 0.1% | 1 result line(s)
+== match-halyard-zones: stuck 0.1% | 1 result line(s)
+== match-halyard-tower: stuck 1.7% | 1 result line(s)
+== perf-head-1: {"raycast20k":8.4,"pointInside20k":2.1,"groundHeight20k":2.8,"navPath300":61.8,"navNearest5k":0.6,"splat1500":13,"regionStats5k":3.9,"minimap200":0.4,"frameMedian":1.1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-1: {"raycast20k":9.5,"pointInside20k":2.5,"groundHeight20k":3.3,"navPath300":58.9,"navNearest5k":0.5,"splat1500":13.4,"regionStats5k":4.5,"minimap200":0.5,"frameMedian":1.2,"frameP90":2.5,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-2: {"raycast20k":8.5,"pointInside20k":2.1,"groundHeight20k":3.1,"navPath300":63.7,"navNearest5k":0.5,"splat1500":13.3,"regionStats5k":4,"minimap200":0.5,"frameMedian":1.1,"frameP90":2.6,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-2: {"raycast20k":8.5,"pointInside20k":2,"groundHeight20k":2.9,"navPath300":60.5,"navNearest5k":0.5,"splat1500":12.9,"regionStats5k":4.3,"minimap200":0.4,"frameMedian":1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-3: {"raycast20k":8.7,"pointInside20k":2.1,"groundHeight20k":2.9,"navPath300":62.6,"navNearest5k":0.6,"splat1500":13,"regionStats5k":4,"minimap200":0.4,"frameMedian":1.1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-3: {"raycast20k":9.3,"pointInside20k":2.4,"groundHeight20k":3.3,"navPath300":59.2,"navNearest5k":0.5,"splat1500":13.4,"regionStats5k":4.6,"minimap200":0.4,"frameMedian":1.2,"frameP90":2.6,"hasStageWorld":false,"hasStageRun":false}
+SUMMARY 35 runs, 0 FAIL lines
+
+## last 15 lines of job.log
+== match-treehills-zones: stuck 0.7% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-turf: stuck 0.1% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-zones: stuck 0.1% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-tower: stuck 1.7% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== perf-head-1: {"raycast20k":8.4,"pointInside20k":2.1,"groundHeight20k":2.8,"navPath300":61.8,"navNearest5k":0.6,"splat1500":13,"regionStats5k":3.9,"minimap200":0.4,"frameMedian":1.1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-1: {"raycast20k":9.5,"pointInside20k":2.5,"groundHeight20k":3.3,"navPath300":58.9,"navNearest5k":0.5,"splat1500":13.4,"regionStats5k":4.5,"minimap200":0.5,"frameMedian":1.2,"frameP90":2.5,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-2: {"raycast20k":8.5,"pointInside20k":2.1,"groundHeight20k":3.1,"navPath300":63.7,"navNearest5k":0.5,"splat1500":13.3,"regionStats5k":4,"minimap200":0.5,"frameMedian":1.1,"frameP90":2.6,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-2: {"raycast20k":8.5,"pointInside20k":2,"groundHeight20k":2.9,"navPath300":60.5,"navNearest5k":0.5,"splat1500":12.9,"regionStats5k":4.3,"minimap200":0.4,"frameMedian":1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-3: {"raycast20k":8.7,"pointInside20k":2.1,"groundHeight20k":2.9,"navPath300":62.6,"navNearest5k":0.6,"splat1500":13,"regionStats5k":4,"minimap200":0.4,"frameMedian":1.1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-3: {"raycast20k":9.3,"pointInside20k":2.4,"groundHeight20k":3.3,"navPath300":59.2,"navNearest5k":0.5,"splat1500":13.4,"regionStats5k":4.6,"minimap200":0.4,"frameMedian":1.2,"frameP90":2.6,"hasStageWorld":false,"hasStageRun":false}
+SUMMARY 35 runs, 0 FAIL lines
+
+## fails.txt
+
+## summary.txt
+== world-build: RESULT 5/5 0 FAIL
+== stage-mods-2: RESULT 27/27 0 FAIL
+== stage-mods-1: RESULT 27/27 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== treehills-pods-tower: RESULT 7/7 0 FAIL
+== surf-movers: RESULT 11/11 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== surf-movers-hedge: RESULT 2/2 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== climb-audit: RESULT 1/1 0 FAIL
+== climb-audit-treehills: RESULT 1/1 0 FAIL
+== wip-stages: RESULT 22/22 0 FAIL
+== treehills-pods: RESULT 14/14 0 FAIL
+== net-stagemods-1: RESULT 10/10 0 FAIL
+== net-stagemods-2: RESULT 10/10 0 FAIL
+== net-stageclock: RESULT 3/3 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-turf: RESULT 9/9 0 FAIL
+== check-maps: 1
+halyard      96 pieces  1 issue(s)
+   - half[41] ramp is 25.7° (max 24)
+== match-calamari-turf: stuck 0.2% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-calamari-tower: stuck 0.7% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-calamari-zones: stuck 0.6% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-treehills-turf: stuck 0.3% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-treehills-tower: stuck 2.3% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-treehills-zones: stuck 0.7% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-turf: stuck 0.1% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-zones: stuck 0.1% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-tower: stuck 1.7% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== perf-head-1: {"raycast20k":8.4,"pointInside20k":2.1,"groundHeight20k":2.8,"navPath300":61.8,"navNearest5k":0.6,"splat1500":13,"regionStats5k":3.9,"minimap200":0.4,"frameMedian":1.1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-1: {"raycast20k":9.5,"pointInside20k":2.5,"groundHeight20k":3.3,"navPath300":58.9,"navNearest5k":0.5,"splat1500":13.4,"regionStats5k":4.5,"minimap200":0.5,"frameMedian":1.2,"frameP90":2.5,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-2: {"raycast20k":8.5,"pointInside20k":2.1,"groundHeight20k":3.1,"navPath300":63.7,"navNearest5k":0.5,"splat1500":13.3,"regionStats5k":4,"minimap200":0.5,"frameMedian":1.1,"frameP90":2.6,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-2: {"raycast20k":8.5,"pointInside20k":2,"groundHeight20k":2.9,"navPath300":60.5,"navNearest5k":0.5,"splat1500":12.9,"regionStats5k":4.3,"minimap200":0.4,"frameMedian":1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-3: {"raycast20k":8.7,"pointInside20k":2.1,"groundHeight20k":2.9,"navPath300":62.6,"navNearest5k":0.6,"splat1500":13,"regionStats5k":4,"minimap200":0.4,"frameMedian":1.1,"frameP90":2.4,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-3: {"raycast20k":9.3,"pointInside20k":2.4,"groundHeight20k":3.3,"navPath300":59.2,"navNearest5k":0.5,"splat1500":13.4,"regionStats5k":4.6,"minimap200":0.4,"frameMedian":1.2,"frameP90":2.6,"hasStageWorld":false,"hasStageRun":false}

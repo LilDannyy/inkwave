@@ -8,9 +8,10 @@
 //   line, Drainbow runs the Drainbow's counters (special uses …).
 //   TRACK=<weapon> (+ TRACK_TEAM=0|1): a closer look at the players on that weapon (see trk below).
 //   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS / SPECIALS values;
-//   an array as 'bow.burstPaint=1/1.2').
+//   an array as 'bow.burstPaint=1/1.2'; 'zones.control=0.8' for the Zone Control rules, config ZONES).
 //   SPECIAL_AI=0 turns the bots' awareness of enemy specials off (src/game/botSpecials.js; an A/B on the same code),
 //   team0 / team1: on for that team only (head to head); unset: as shipped.
+//   DEV_AI=0: bots leave enemy devices alone ([b5-deploy] src/game/deployables-bots.js; an A/B on the same code).
 //   SPCHARGE=3: the special gauge fills 3× as fast (PLAYER.specialChargeRate; this run only) — more specials per match.
 //   DIAG=1: every stuck episode also records the bot's nav plan, snapshotted at its start and every 5 s after: mode,
 //   route length, pi, the next two route nodes, the edge into the next one (nav.edge: 'none' when there's no such
@@ -46,7 +47,7 @@ app.on('browser-window-created', (_, win) => {
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     // what-if tuning (TUNE, see the header): patched into the live config before the loadouts
     const tuned = TUNE ? await js(`(async () => { const C = await import('./src/config.js'); const out = [];
-      for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id] || C.SPECIALS[id];
+      for (const kv of ${JSON.stringify(TUNE)}.split(',')) { const [path, v] = kv.split('='); const [id, key] = path.split('.'); const o = C.WEAPONS[id] || C.SUBS[id] || C.SPECIALS[id] || (id === 'zones' ? C.ZONES : null);
         if (!o || !(key in o)) { out.push('?' + path); continue; } o[key] = v.includes('/') ? v.split('/').map(Number) : isNaN(+v) ? v : +v; out.push(path + '=' + o[key]); }
       return out.join(','); })()`) : '';
     // loadouts: WEAPONS / SUBS (see the header)
@@ -64,6 +65,8 @@ app.on('browser-window-created', (_, win) => {
       if (v === '0') S.enabled = false; else if (v === 'team0') S.teams = [true, false]; else if (v === 'team1') S.teams = [false, true];
       M.resetSpecialStats(); return S.enabled ? (S.teams ? 'team' + S.teams.indexOf(true) : 'on') : 'off'; } catch (e) { return 'n/a'; } })()`);
     if (SPCHARGE !== 1) await js(`(async () => { const C = await import('./src/config.js'); C.PLAYER.specialChargeRate *= ${SPCHARGE}; return 0; })()`);
+    // [b5-deploy] the device counters from this match on (the menus' backdrop match ran before it); DEV_AI=0: bots leave enemy devices alone (an A/B)
+    await js(`(async () => { try { (await import('./src/game/deployables.js')).resetDeployStats(); const B = await import('./src/game/deployables-bots.js'); B.resetDevBot(); if (${JSON.stringify(process.env.DEV_AI || '')} === '0') B.DEV_AI.enabled = false; } catch (e) { /* an older checkout */ } return 0; })()`);
     await js(`(async () => { try { (await import('./src/game/sp-surf.js')).resetSurfStats(); (await import('./src/game/sp-surf-bots.js')).resetSurfBot(); const A = (await import('./src/game/assists.js')).ASSIST_STATS; for (const k in A) A[k] = 0; } catch (e) { /* an older checkout */ } return 0; })()`);
     const t0 = Date.now();
     const r = await js(`(async () => {
@@ -80,11 +83,13 @@ app.on('browser-window-created', (_, win) => {
         on('special:use', (e) => { ev.specials++; const U = ev.uses || (ev.uses = [{}, {}]), id = /^barrage/.test(String(e.id)) ? 'barrage' : String(e.id); if (e.actor) U[e.actor.team][id] = (U[e.actor.team][id] || 0) + 1; }),
         on('superjump', (e) => { if (e.phase === 'charge') ev.jumps++; }),
         on('special:end', (e) => { if (/^barrage/.test(String(e.id))) (ev.barEnd || (ev.barEnd = new Map())).set(e.actor, simT); }),
+        // [b5-zipcheer] how each team's specials ended, by special and reason (a Cheer Orb: 'throw' or cut short by a 'splat' …)
+        on('special:end', (e) => { if (!e.actor || e.actor.team > 1) return; const E = ev.ends || (ev.ends = [{}, {}]), o = E[e.actor.team][e.id] || (E[e.actor.team][e.id] = {}); o[e.reason] = (o[e.reason] || 0) + 1; }),
         on('splatted', (e) => {
           // splats by special, per victim team (Bomb Barrage: its thrower's bombs during it or within 3.5 s after), K / D per team
           const SP = ['slam', 'storm', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf'];
           const c = String(e.cause || ''), at = e.attacker, v = e.victim;
-          const bar = /^(bomb|sticky|burst|seeker|mist)$/.test(c) && at && (at.specialActive?.kind === 'barrage' || simT - ((ev.barEnd && ev.barEnd.get(at)) ?? -99) < 3.5);
+          const bar = /^(bomb|sticky|burst|seeker|mist|waddle)$/.test(c) && at && (at.specialActive?.kind === 'barrage' || simT - ((ev.barEnd && ev.barEnd.get(at)) ?? -99) < 3.5);
           const sp = SP.includes(c) ? c : bar ? 'barrage' : null;
           if (v) { const T = ev.team || (ev.team = [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }]); T[v.team].d++; if (at && at !== v && at.team !== v.team) T[at.team].k++;
             if (sp) { T[v.team].sp++; T[v.team].by[sp] = (T[v.team].by[sp] || 0) + 1; } }
@@ -99,6 +104,7 @@ app.on('browser-window-created', (_, win) => {
       const inPoly = (poly, x, z) => { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) ins = !ins; } return ins; };
       const inZone = (zn, p) => { const d = zn.def, parts = d.polys || [d.poly]; return p.y > (d.y0 ?? -2) - 0.6 && p.y < (d.y1 ?? 6) + 1.6 && parts.some((q) => inPoly(q, p.x, p.z)); };
       const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, anyIn = 0, insideN = [0, 0], nearN = [0, 0], held = [0, 0], neutral = 0, zs = 0;
+      const __ZC = (await import('./src/config.js')).ZONES, zLead = { cur: -1, changes: 0, contested: 0, dispute: 0, pending: 0 };
       const eps = []; let holdS = 0; const roleS = {}; const frameErr = { n: 0, msg: '' }; const where = {}; let whereN = 0; const whereT = [{}, {}]; const farMode = {}; let ready = 0;
       offs.push(on('special:ready', () => ready++));
       const open = new Map();
@@ -237,6 +243,15 @@ app.on('browser-window-created', (_, win) => {
           noteShares();
           zs++;
           if (Z.owner >= 0) held[Z.owner] += 0.25; else neutral += 0.25;
+          // [b5-tuning] lead changes (the count alone is the score: the lower count leads; a tie keeps the last leader) and
+          // contested time: a held zone of the live objective with the other team at / over the HUD's warn line (ZONES.warn)
+          // — and, the same for every rule set, at / over 25 % (dispute)
+          { const c0 = Math.ceil(Z.count[0] - 1e-6), c1 = Math.ceil(Z.count[1] - 1e-6), ld = c0 < c1 ? 0 : c1 < c0 ? 1 : -1;
+            if (ld >= 0 && ld !== zLead.cur) { if (zLead.cur >= 0) zLead.changes++; zLead.cur = ld; }
+            const hz = Z.active.zones.filter((zn) => zn.owner >= 0), W = __ZC.warn ?? 0.3;
+            if (hz.some((zn) => zn.share[1 - zn.owner] >= W)) zLead.contested += 0.25;
+            if (hz.some((zn) => zn.share[1 - zn.owner] >= 0.25)) zLead.dispute += 0.25;
+            if (Z.active.zones.some((zn) => zn.pend)) zLead.pending += 0.25; }
           const act = Z.active.zones;
           let any = false;
           for (const a of m.actors) {
@@ -266,7 +281,7 @@ app.on('browser-window-created', (_, win) => {
           const holding = !!((a.bot.zHoldUntil > a.bot.t && (!a.bot.path || a.bot.pi >= a.bot.path.length)) || a.bot.perchUntil > a.bot.t);
           if (holding && a.alive) holdS += 0.25;
           if (a.alive && a.bot.zRole) roleS[a.bot.zRole] = (roleS[a.bot.zRole] || 0) + 0.25;
-          const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !holding;
+          const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !holding && !(a.specialActive && a.specialActive.pin);   // ([b5-zipcheer] pin: held up in the air by a Cheer Orb)
           samples++;
           const span = h.length > 1 ? Math.max(...h.map((p) => Math.hypot(p.x - a.pos.x, p.z - a.pos.z))) : 99;
           const stuck = wants && h.length >= 11 && span < 1.0;
@@ -290,6 +305,8 @@ app.on('browser-window-created', (_, win) => {
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, jumps: ev.jumps, cov,
         teamKD: ev.team || [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }],
         spUses: ev.uses || [{}, {}],   // (specials used, per team, by special)
+        spEnds: ev.ends || [{}, {}],   // [b5-zipcheer] (how they ended, per team, by special and reason)
+        zipcheer: await (async () => { try { const M = await import('./src/game/sp-cheer.js'); return M.ZC_STATS ? JSON.parse(JSON.stringify(M.ZC_STATS)) : null; } catch (e) { return null; } })(),   // [b5-zipcheer] (an older checkout: null)
         drainbow: __G.drainbow ? { ...__G.drainbow.stats } : null,   // (src/game/sp-drainbow.js: placed, shots halved, crossings, life added …)
         spStats: await (async () => { try { const M = await import('./src/game/botSpecials.js'); return JSON.parse(JSON.stringify(M.SPECIAL_STATS)); } catch (e) { return null; } })(),
         // Surf N' Turf (sp-surf.js SURF_STATS, the bots' sp-surf-bots.js SURF_BOT) and the assists (assists.js), per team
@@ -298,6 +315,10 @@ app.on('browser-window-created', (_, win) => {
           const T = [0, 1].map((t) => { const L = m.actors.filter((a) => a.team === t); return { assists: L.reduce((s, a) => s + (a.stats.assists || 0), 0), surfTurf: Math.round(L.reduce((s, a) => s + (a.stats.surfTurf || 0), 0)), turf: Math.round(L.reduce((s, a) => s + a.stats.turf, 0)) }; });
           return { stats: { ...S, turf: Math.round(S.turf) }, bots: { ...B }, assists: { ...A }, teams: T };
         } catch (e) { return null; } })(),
+        // [b5-sprules] the Bomb Barrages' throws per bomb kind (sp-barrage.js; the Mystery's draws) and Bubble Guard shares
+        // (sp-bubble.js: shares, chained = passed on by a copy, botSteps = bot-frames walking over to pass it on)
+        barrage: await (async () => { try { const B = (await import('./src/game/sp-barrage.js')).BARRAGE_STATS, C = (await import('./src/game/sp-bubble.js')).CHAIN_STATS;
+          return { throws: { ...B.throws }, draws: B.draws, repeats: B.repeats, chain: { ...C } }; } catch (e) { return null; } })(),
         byCause: ev.byCause || {},
         byWeapon: (() => { const W = ev.byW || {}, out = {}; for (const a of m.actors) { const w = a.weaponId, o = out[w] || (out[w] = { n: 0, splats: 0, deaths: 0, turf: 0 }); o.n++; o.turf += a.stats.turf; }
           for (const w in out) { const o = out[w]; o.splats = (W[w] || {}).splats || 0; o.deaths = (W[w] || {}).deaths || 0; o.turf = Math.round(o.turf / o.n); } return out; })(),
@@ -321,6 +342,8 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
       };
       if (Z) Object.assign(res, {
         held: held.map((h) => +h.toFixed(1)), neutral: +neutral.toFixed(1), captures: flips, controlEvents: ev.control.length,
+        leadChanges: zLead.changes, contestedS: +zLead.contested.toFixed(1), disputeS: +zLead.dispute.toFixed(1), pendingS: +zLead.pending.toFixed(1),
+        rules: { control: __ZC.control, contest: __ZC.contest, warn: __ZC.warn, flipHold: __ZC.flipHold ?? 0 },
         takeovers: ev.control.filter((c, i) => c.owner >= 0 && ev.control.slice(0, i).reverse().find((q) => q.owner >= 0)?.owner === 1 - c.owner).length,
         firstCapture: ev.control.find((c) => c.owner >= 0)?.t ?? null,
         counts: st.count, penalty: st.penalty.map((p) => +p.toFixed(1)), total: st.total, winner: st.winner, reason: st.reason, overtime: st.overtime, overtimeT: st.overtimeT,
@@ -340,6 +363,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     if (MODE === 'zones') {
       console.log(`== ${MAP} [zones]: winner ${r.winner === 0 ? 'Alpha' : r.winner === 1 ? 'Bravo' : '-'} (${r.reason}) | final ${r.counts[0]} vs ${r.counts[1]} (penalty +${r.penalty.join('/+')}) | OT ${r.overtime ? r.overtimeT + 's' : 'no'}`);
       console.log(`   held A ${r.held[0]}s B ${r.held[1]}s neutral ${r.neutral}s | captures ${r.captures} (takeovers ${r.takeovers}), control events ${r.controlEvents}, first capture @${r.firstCapture}s | rotations ${r.rotations}`);
+      console.log(`   lead changes ${r.leadChanges} | contested ${r.contestedS}s (other team ≥ warn on a held zone; ≥ 25 %: ${r.disputeS}s) | a flip pending ${r.pendingS}s | rules ${JSON.stringify(r.rules)} | match ${r.simT}s`);
       console.log(`   teams: A [${r.teams[0]}] ${r.whereT[0]} | B [${r.teams[1]}] ${r.whereT[1]}`);
       console.log(`   bot-time: ${JSON.stringify(r.where)} (far by mode ${JSON.stringify(r.farMode)}) | specials ready ${r.ready}`);
       console.log(`   bots in the active zone ${r.zonePct}% of the time | avg inside A ${r.insideAvg[0]} B ${r.insideAvg[1]} | within 12 m A ${r.nearAvg[0]} B ${r.nearAvg[1]}`);
@@ -354,6 +378,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log('   by weapon (players, splats dealt, deaths, avg turf) ' + Object.entries(r.byWeapon).map(([w, o]) => `${w}×${o.n} ${o.splats}/${o.deaths} ${o.turf}p`).join(' · '));
     console.log('   splats by cause ' + JSON.stringify(r.byCause));
     console.log('   special uses A ' + JSON.stringify(r.spUses[0]) + ' B ' + JSON.stringify(r.spUses[1]) + (r.drainbow && r.drainbow.placed ? ' | drainbow ' + JSON.stringify(r.drainbow) : ''));
+    console.log('   special ends A ' + JSON.stringify(r.spEnds[0]) + ' B ' + JSON.stringify(r.spEnds[1]) + (r.zipcheer ? ' | zipcheer ' + JSON.stringify(r.zipcheer) : ''));   // [b5-zipcheer]
     if (r.surf) { const S = r.surf; console.log(`   SURF uses ${S.stats.uses} thrown ${S.stats.throws} anchored ${S.stats.lands} lost ${S.stats.lost} popped ${S.stats.popped} | rings ${S.stats.rings} hits ${S.stats.hits} (marks ${S.stats.marks}, ring splats ${S.stats.kills}) dodged ${S.stats.dodges} | ink ${S.stats.turf} m² in ${S.stats.splats} splats | turf from it A ${S.teams[0].surfTurf} of ${S.teams[0].turf} · B ${S.teams[1].surfTurf} of ${S.teams[1].turf} | assists A ${S.teams[0].assists} B ${S.teams[1].assists} ${JSON.stringify(S.assists)} | bots ${JSON.stringify(S.bots)}`); }
     { const T = r.teamKD; console.log(`   enemy specials AI ${spAI} | splatted by specials: A ${T[0].sp} ${JSON.stringify(T[0].by)} · B ${T[1].sp} ${JSON.stringify(T[1].by)} | K/D A ${T[0].k}/${T[0].d} B ${T[1].k}/${T[1].d}${r.spStats ? ' | ' + JSON.stringify(r.spStats) : ''}`); }
     { const s = r.sight; console.log(`   sight: fighting ${s.fightS} bot-s, trigger held ${s.fireS} s | foe out of sight ${s.hidPct}% of fight time, aim still on it ${s.trackPct}% of that | shooting at nothing ${s.blindPct}% of trigger time (${s.blindTrackPct}% straight at the hidden foe; ${s.blindBelievedPct}% while it still thinks it sees it, ${s.blindChargePct}% a charge held, ${s.blindShotPct}% shots) | bots ${r.botMsPerS} ms per sim s (looking ${r.seeMsPerS})${s.stats ? ' | ' + JSON.stringify(s.stats) : ''}`); }
@@ -363,6 +388,10 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     if (r.track) { const t = r.track; console.log(`   TRACK ${t.weapon}×${t.n} (team ${t.team}): ${t.kills} splats / ${t.deaths} deaths | damage out ${JSON.stringify(t.dmgOut)} in ${t.dmgIn} (armour saved ${t.armour}) | median dist: hits out ${t.distOut} m, hits in ${t.distIn} m, kills ${t.killDist} m, deaths ${t.deathDist} m`);
       console.log(`         died while ${JSON.stringify(t.deathState)} | by ${JSON.stringify(t.deathBy)} | ${t.deathClean} deaths without touching the killer | nearest enemy <4.5/<8/<14/far m: ${t.reach.join('/')}% | fighting ${t.fightS}s of ${t.aliveS}s alive | fired ${t.fired}${t.leaps ? ` | leaps ${t.leaps} ${JSON.stringify(t.leapKind)}, hit on landing ${t.leapHits}, landing kills ${t.leapKills}, clings ${t.clings}` : ''}`); }
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
+    // [b5-deploy] devices: shot at / down, crushed, riding moving floors; the bots' picks
+    const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT, on: B.DEV_AI.enabled, n: window.__inkwave.match.actors.filter((a) => a.bot).length } }; } catch (e) { return null; } })()`);
+    if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter thrown ${dep.seekerThrows} popped ${dep.seekerPops}`
+      + ` | bots (device AI ${dep.bot.on ? 'on' : 'off'}): device mode ${(dep.bot.secs / Math.max(1, dep.bot.n)).toFixed(1)} s/bot (walking ${(dep.bot.walkSecs / Math.max(1, dep.bot.n)).toFixed(1)}) | picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}) re-picks ${dep.bot.repicks} gave up ${dep.bot.gaveUp}`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     r.map = MAP; r.mode = MODE; r.loadouts = equip; r.tune = tuned; r.consoleLines = uniq.length; r.specialAI = spAI; r.spCharge = SPCHARGE;

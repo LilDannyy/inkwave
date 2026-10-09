@@ -1,0 +1,60 @@
+batch5 stages: LOCAL runs on this Mac, 2026-10-09 (the Mac mini's runner had returned nothing on any branch since 2026-10-04; JOB-3 queued
+on botlab-b5-stages at 10:23 got no result within 20 min). One Electron instance at a time (regress.sh PAR=1 REP=1), slots shared with
+other builders. Head 5693e7a (code = ea4be88; the README commit after it changes no code). BOTLAB_OUT=inkwave-upstream/.botlab SLOTS=3.
+
+## regress.sh (10:45 → 11:23)
+== stage-mods-1: RESULT 33/33 0 FAIL
+== stage-mods-bake: RESULT 6/6 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== treehills-pods: RESULT 14/14 0 FAIL
+== treehills-pods-tower: RESULT 7/7 0 FAIL
+== surf-movers: RESULT 11/11 0 FAIL
+== surf-movers-hedge: RESULT 2/2 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== bot-sight: RESULT 13/13 0 FAIL
+== climb-audit: RESULT 1/1 0 FAIL
+== climb-audit-treehills: RESULT 1/1 0 FAIL
+== wip-stages: RESULT 22/22 0 FAIL
+== net-stagemods-1: RESULT 10/10 0 FAIL
+== net-stageclock: RESULT 3/3 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== check-maps: 1
+halyard      96 pieces  1 issue(s)
+- half[41] ramp is 25.7° (max 24)
+== match-calamari-turf: stuck 0.1% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-calamari-zones: stuck 0.4% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-calamari-tower: stuck 0.8% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-treehills-turf: stuck 0.2% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-treehills-zones: stuck 0.5% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-treehills-tower: stuck 1.5% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-turf: stuck 0.3% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-zones: stuck 0.2% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== match-halyard-tower: stuck 5.4% | 1 result line(s)
+CONSOLE 0 unique warning/error line(s)
+== perf-head-1: {"raycast20k":15.4,"pointInside20k":3.5,"groundHeight20k":4.9,"navPath300":111.1,"navNearest5k":1.2,"splat1500":22.4,"regionStats5k":8,"minimap200":0.8,"frameMedian":2.6,"frameP90":4.3,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-1: {"raycast20k":16,"pointInside20k":3.4,"groundHeight20k":5.1,"navPath300":137.5,"navNearest5k":8.9,"splat1500":22.3,"regionStats5k":8.7,"minimap200":0.7,"frameMedian":3.2,"frameP90":7.6,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-2: {"raycast20k":14.7,"pointInside20k":3.5,"groundHeight20k":5,"navPath300":104.5,"navNearest5k":1.4,"splat1500":26.6,"regionStats5k":7.7,"minimap200":0.7,"frameMedian":2.7,"frameP90":4.7,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-2: {"raycast20k":13.7,"pointInside20k":3.2,"groundHeight20k":4.6,"navPath300":106.5,"navNearest5k":0.8,"splat1500":21.3,"regionStats5k":7.7,"minimap200":0.8,"frameMedian":2.9,"frameP90":5.1,"hasStageWorld":false,"hasStageRun":false}
+== perf-head-3: {"raycast20k":13.9,"pointInside20k":3.1,"groundHeight20k":5.2,"navPath300":151.3,"navNearest5k":1.6,"splat1500":21.7,"regionStats5k":8.7,"minimap200":0.6,"frameMedian":3.7,"frameP90":12.2,"hasStageWorld":false,"hasStageRun":false}
+== perf-base-3: {"raycast20k":15.5,"pointInside20k":3.3,"groundHeight20k":6,"navPath300":163.9,"navNearest5k":1.5,"splat1500":23.9,"regionStats5k":8.7,"minimap200":0.9,"frameMedian":3.8,"frameP90":12.9,"hasStageWorld":false,"hasStageRun":false}
+(check-maps: the one issue, halyard half[41] ramp 25.7°, is on 9f2cdef too)
+
+## earlier single runs today (same code paths): stage-mods 33/33 at 1cd497b and at f4bc8a4; the page test with the climb / minimap fixes reverted: 31/33 (those two FAIL)
+## stage-mods-bake 6/6 at aa21534 (one pass byte-identical to 9f2cdef's page code: hash 48510953, same pixels)
+
+## halyard Tower Command, head vs 9f2cdef alternated (the 5.4 % above was a one-sided knockout at 105 s)
+head 1: stuck 0.9% | CONSOLE 0 unique warning/error line(s) | "simT":180
+base 1: stuck 3.1% | CONSOLE 0 unique warning/error line(s) | "simT":119.8
+head 2: stuck 2% | CONSOLE 0 unique warning/error line(s) | "simT":180
+base 2: stuck 1.6% | CONSOLE 0 unique warning/error line(s) | "simT":180

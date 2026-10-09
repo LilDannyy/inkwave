@@ -20,6 +20,7 @@ import { rumble } from './actor.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
 import { KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';
 import { teamKnown } from './botSight.js';
+import { joinChain, shareShield, shieldNet, chainPrompt } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain
 
 // world props for the big specials (kraken, speaker, missile, jetpack, crab) — optional until they exist
 let PROPS = null;
@@ -27,6 +28,7 @@ import('./special-props.js').then((m) => { PROPS = m; }).catch(() => { /* placeh
 const prop = (kind) => { try { return PROPS && PROPS.getSpecialProp ? PROPS.getSpecialProp(kind) : null; } catch (e) { console.warn('[specials] prop', kind, e); return null; } };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _v4 = new THREE.Vector3();
+const _zb = new THREE.Vector3();   // [b5-zipcheer] (a zip step's start)
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _hit = new Hit(), _hit2 = new Hit();
 const _res = { t: 0, dist: 0 };
@@ -63,6 +65,9 @@ function stampFront(a, s, p, arcDeg) {
   if (l < 0.3) return true;
   return (dx * Math.sin(s.bodyYaw) + dz * Math.cos(s.bodyYaw)) / l >= Math.cos((arcDeg * Math.PI) / 180);
 }
+// [b5-zipcheer] counters (tests / botlab match.cjs, through src/game/sp-cheer.js): the Zipline's zips, hits taken mid-zip and
+// the damage that saved; the Cheer Orb's orbs, lifts, cheers, wisps, gauge gains, splats while held up
+export const ZC_STATS = { zipUses: 0, zips: 0, zipHits: 0, zipSaved: 0, orbs: 0, lifted: 0, liftM: 0, cheers: 0, helped: 0, orbCharge: 0, gains: 0, gainPts: 0, splatHeld: 0, dmgHeld: 0, thrown: 0 };
 // specials that transform you / take over your weapon for a while: they sound a "wearing off" cue before they end
 const TRANSFORMS = new Set(['jetpack', 'crab', 'kraken', 'stamp', 'zipcaster', 'zooka', 'blower', 'bubbler']);
 const ENDING_CUE = 2.0;   // seconds left when it sounds
@@ -77,7 +82,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
     const k = d <= killRadius ? 0 : clamp((d - killRadius) / Math.max(0.01, radius - killRadius), 0, 1);
     G.projectiles.applyHit(owner, e, lerp(dmgMax, dmgMin, k * k), weaponId, null, c);   // ([drainbow] c: the blast's way to them)
   }
-  G.subs?.damageArea(c, radius, 60, team);
+  G.subs?.damageArea(c, radius, 60, team, owner);   // [b5-deploy] (by: the hit marker)
   G.boss?.splash(owner, c, radius, dmgMax, dmgMin, weaponId);   // Boss Battle
 }
 // continuous damage (tornado, sound beam): no per-frame hit events, only the splat
@@ -277,6 +282,7 @@ export class SpecialSystem {
       case 2: this._ghostObj(a, d); break;
       case 3: { const w = this.world.find((x) => x.ghost && x.gid === d[1] && !x.dead); if (w) w.netEvent?.(d); break; }
       case 4: { const s = a.specialActive; if (s?.ghost) GHOST[s.kind]?.event?.call(this, a, s, d); break; }
+      case 5: shieldNet(this, a, d); break;   // [b5-sprules] a Bubble Guard passed on to a (sp-bubble.js)
     }
   }
   _startGhost(a, id) {
@@ -352,10 +358,11 @@ export class SpecialSystem {
     this._endCue(a, s);
     IMPL[s.kind]?.body?.call(this, a, s, dt);
     if (a.specialActive === s && s.dur && s.t >= s.dur) this.end(a, 'time');
-    // the sea still wins
+    // the sea still wins ([b5-sprules] the gauge keeps its share of what was left, as for any splat mid-special)
     if (a.alive && a.pos.y < PLAYER.fallDeathY && G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.6) === -Infinity) {
+      const left = this.splatShare(a);
       if (a.specialActive) this.end(a, 'splat');
-      a.splat(a.lastDamage < 4 ? a.lastAttacker : null, 'water');
+      a.splat(a.lastDamage < 4 ? a.lastAttacker : null, 'water', left);
     }
   }
   // before the actor moves: a special may steer / shape the movement input (Mega Stamp)
@@ -393,6 +400,17 @@ export class SpecialSystem {
     if (s.dur) return Math.max(0, 1 - s.t / s.dur);
     return 1;
   }
+  // [b5-sprules] what a splat right now cuts short of the running special, as a share of a full gauge (actor.splat
+  // keeps PLAYER.specialKeepOnSplat of it): what's left of it as its gauge shows (remaining), less what carries on
+  // without its owner — a registered special's own splatShare (Drainbow: its bubble stands on), the Ink Tempest (thrown
+  // the moment it starts). null: none running.
+  splatShare(a) {
+    const s = a.specialActive;
+    if (!s) return null;
+    if (s.id === 'storm') return 0;
+    const f = IMPL[s.kind]?.splatShare;
+    return clamp(f ? f.call(this, a, s) : this.remaining(a), 0, 1);
+  }
   // HUD hint for the local player while a special runs
   prompt(a) {
     const s = a.specialActive;
@@ -421,6 +439,9 @@ export class SpecialSystem {
     const onTower = !!(G.match?.tower && G.match.tower.riderList.includes(v));
     if (s && s.id === 'kraken') { this._knock(v, attacker, onTower ? Math.min(10, amount * s.def.knockPerDamage * 4) : Math.min(4, amount * s.def.knockPerDamage)); this._hitFlash(v); return 0; }
     if (s && s.id === 'crab') return IMPL.crab.hurt.call(this, v, s, amount, attacker);
+    // [b5-zipcheer] travelling along a zip: a quarter of the damage (the owner's screen judges: it applies every hit on its player)
+    if (s && s.kind === 'zipcaster' && s.zip && !s.ghost) { ZC_STATS.zipHits++; ZC_STATS.zipSaved += amount * (1 - s.def.zipDamage); amount *= s.def.zipDamage; }
+    if (s && s.kind === 'booyah' && s.pin && s.def.heldDamage !== 1) amount *= s.def.heldDamage ?? 1;   // [b5-zipcheer] held up by a Cheer Orb (1: as before; a botlab what-if)
     // Mega Stamp mid-swing: anything coming from the front is deflected (sides + back stay open)
     if (s && s.id === 'stamp' && s.guard > 0 && attacker && attacker !== v && stampFront(v, s, attacker.pos, s.def.deflectArc)) {
       if (near(v.pos, 40)) { play('shield_hit', { pos: v.isLocal ? undefined : v.pos, volume: 0.6, pitch: 1.3 }); G.fx?.burst(_v.copy(v.pos).setY(v.pos.y + 1.1).addScaledVector(stampFwd(s), 0.9), UP, v.color, { count: 6, speed: 4, size: 0.07 }); }
@@ -485,7 +506,10 @@ export class SpecialSystem {
   _bubbleHit(w, team, dmg, owner) {
     if (w.dead || netMuted()) return;   // (a ghost's shot: its owner's copy decides)
     w.mesh.material.uniforms.uHit.value = 0.5;
-    if (w.ghost) { if (!(team === w.team && w.held)) netHurt(w.owner, 'sp', w.gid, team === w.team ? -dmg : dmg); return; }
+    // ([b5-int1] team fire on a ghost bubble goes to its owner on its own channel, 'spTeam', as a positive amount: netHurt
+    // sends dmg > 0 only, so the old -dmg never left this screen — online, a teammate could never set off your bubble.
+    // The subs designer found it; tests/net-blower-team.cjs)
+    if (w.ghost) { if (!(team === w.team && w.held)) netHurt(w.owner, team === w.team ? 'spTeam' : 'sp', w.gid, dmg); return; }
     const d = SPECIALS.blower;
     if (team === w.team) {
       if (w.held) return;
@@ -495,9 +519,10 @@ export class SpecialSystem {
   }
 
   // ---------------------------------------------------------------------------------------------- shields
-  giveShield(a, time, owner) {
+  giveShield(a, time, owner, chain = null) {
     a.status.shield = Math.max(a.status.shield, time);
     a._shieldOwner = !!owner;
+    joinChain(a, chain, owner);   // [b5-sprules] the chain this field belongs to (its own new one for the user's)
     if (!this.shieldMeshes.has(a)) {
       const m = new THREE.Mesh(this.sphereGeo, bubbleMat(G.teamColors[a.team]));
       m.renderOrder = 4;
@@ -519,28 +544,8 @@ export class SpecialSystem {
   }
 
   // ---------------------------------------------------------------------------------------------- "Yeah!" cheers
-  cheer(a) {
-    if (!a.alive || G.time - (a._cheerT || -9) < 0.4) return;
-    a._cheerT = G.time;
-    if (hearable(a)) play('booyah_cheer', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.7 : 0.5, pitch: 0.95 + Math.random() * 0.15 });
-    this.cheers.push({ a, t: 0 });
-    const d = SPECIALS.booyah;
-    let helped = false;
-    for (const o of G.actors) {
-      const s = o.specialActive;
-      if (o.team !== a.team || !o.alive || !s || s.id !== 'booyah' || s.thrown) continue;
-      s.charge = Math.min(1, (s.charge || 0) + d.cheer);
-      s.cheered = 0.35;
-      helped = true;
-    }
-    // cheering on a teammate's orb tops up your own special a little
-    if (helped && !a.specialActive) {
-      const was = a.specialReady();
-      a.special = Math.min(a.specialCost(), a.special + d.cheerSpecial);
-      if (!was && a.specialReady()) emit('special:ready', { actor: a });
-    }
-    emit('actor:cheer', { actor: a, helped });
-  }
+  // [b5-zipcheer] the cheer, its wisps to the orbs and the gauge, and online: src/game/sp-cheer.js
+  cheer(a) { G.cheerOrb?.cheer(a); }
   // ---------------------------------------------------------------------------------------------- per frame
   update(dt) {
     // cheer input (controllers set intent.cheer for one frame)
@@ -565,12 +570,7 @@ export class SpecialSystem {
         m.material.uniforms.uHit.value = Math.max(0, m.material.uniforms.uHit.value - dt * 3);
         m.material.uniforms.uAlpha.value = a.status.shield < 1 ? 0.5 + 0.5 * Math.abs(Math.sin(G.time * 14)) : 1;
       }
-      if (a._shieldOwner && a.specialActive && a.specialActive.id === 'bubbler') {
-        for (const o of G.actors) {
-          if (o === a || o.team !== a.team || !o.alive || o.status.shield > 0) continue;
-          if (o.pos.distanceTo(a.pos) < SPECIALS.bubbler.shareRange) this.giveShield(o, a.status.shield, false);
-        }
-      }
+      shareShield(this, a);   // [b5-sprules] passing it on by touch, down the chain (sp-bubble.js)
       if (a.status.shield <= 0) this._dropShield(a, true);
     }
     this._ghostTick(dt);
@@ -758,6 +758,9 @@ class ReturnMarker {
     this.t += dt;
     if (this.done) { this.fade -= dt * 3; if (this.fade <= 0) return false; }
     if (this.t > 30) this.done = true;          // safety net
+    // [b5-jumpui] heading home but no jump shows (a ghost whose owner ended it within 2.5 m of here and walked, or
+    // whose landing we missed): gone, not stuck grey for 30 s
+    if (this.back && !this.done) { this._noJump = this.owner.superJumpState ? 0 : (this._noJump || 0) + dt; if (this._noJump > 0.6) this.finish(); }
     const p = 0.5 + 0.5 * Math.sin(this.t * (this.back ? 12 : 4));
     this.ring.material.opacity = (0.45 + 0.4 * p) * this.fade;
     const k = (this.t * 0.8) % 1;
@@ -906,7 +909,7 @@ class Twister {
     // walls end it
     const hit = G.physics.segment(this.prev, this.pos, _hit, true);
     if (hit.hit) { this._burst(hit.point, hit.normal); return false; }
-    if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120)) { this._burst(this.pos, UP); return false; }
+    if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }   // [b5-deploy] (by)
     if (this.sys.shotHit(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }
     if (G.drainbow?.live && !this.dbw) G.drainbow.pass(this, this.prev, this.pos, this.team);   // [drainbow] (once a twister)
     // players inside the column
@@ -1259,18 +1262,13 @@ class Orb {
 // ================================================================================================ specials
 const IMPL = {
   // ---------------------------------------------------------------------------------------------- Bomb Barrage
-  barrage: {
-    start(a, s) {
-      s.bomb = SUBS[s.def.bomb] || SUBS.bomb; s.nextThrow = 0;
-      a.character.setSub?.(s.bomb.kind);
-    },
-    end(a) { a.character.setSub?.(a.sub.kind); a.weaponRunner.aimingSub = false; },
-  },
+  // [b5-sprules] src/game/sp-barrage.js (registerSpecial('barrage'): every variant, the Waddle and the Mystery)
 
   // ---------------------------------------------------------------------------------------------- Bubble Guard
   bubbler: {
     start(a, s) { this.giveShield(a, s.def.duration, true); },
     end(a, s, reason) { if (reason !== 'time') return; /* the field runs out on its own timer */ },
+    prompt(a) { return chainPrompt(a); },   // [b5-sprules] "… touch teammates to share it"
   },
 
   // ---------------------------------------------------------------------------------------------- Deep Sonar
@@ -1557,6 +1555,9 @@ const IMPL = {
       s.inflate?.stop?.(0.05);
       this._restoreWeapon(a);
     },
+    // [b5-sprules] a splat: the bubble being blown is let go (end) and floats on like the others — only the ones not
+    // yet started are cut short
+    splatShare(a, s) { return Math.max(0, 1 - ((s.count || 0) + (s.cur ? 1 : 0)) / s.def.max) * (s.dur ? Math.max(0, 1 - s.t / s.dur) : 1); },
   },
 
   // ---------------------------------------------------------------------------------------------- Ink Jet
@@ -1759,7 +1760,7 @@ const IMPL = {
         if (!G.physics.los(_v2.copy(at).setY(at.y + 0.5), _v3.copy(e.pos).setY(e.pos.y + 0.6))) continue;
         G.projectiles.applyHit(a, e, s.def.damage, 'stamp');
       }
-      G.subs?.damageArea(at, radius, 80, a.team);
+      G.subs?.damageArea(at, radius, 80, a.team, a);   // [b5-deploy] (by)
     },
     end(a) { this._restoreWeapon(a); },
   },
@@ -1774,7 +1775,9 @@ const IMPL = {
       s.halo = new THREE.Mesh(this.sphereGeo, bubbleMat(a.color));
       this._add(s.ball, s.halo);
       s.loop = null;   // sfx-cues: the charge loop comes from src/audio/cues.js
+      if (!s.ghost) G.cheerOrb?.lift(a, s);   // [b5-zipcheer] up into the air, held there (sp-cheer.js)
     },
+    move(a, s, dt) { G.cheerOrb?.hold(a, s, dt); },   // [b5-zipcheer] (the owner, each frame before it moves)
     weapon(a, s, dt, inp) {
       const d = s.def;
       s.charge = Math.min(1, s.charge + dt / d.charge);
@@ -1800,6 +1803,7 @@ const IMPL = {
       s.halo.scale.setScalar(r * 1.3 * pulse);
       s.halo.material.uniforms.uTime.value = s.t;
       s.loop?.set?.({ pitch: 1 + s.charge, pos: a.isLocal ? undefined : a.pos });
+      G.cheerOrb?.cue(a, s, dt);   // [b5-zipcheer] held up: the ground cue under it (every screen, a ghost's too; sp-cheer.js)
     },
     throwIt(a, s) {
       s.thrown = true;
@@ -1811,11 +1815,12 @@ const IMPL = {
       if (hearable(a)) play('booyah_throw', { pos: a.isLocal ? undefined : a.pos, volume: 0.9 });
       this.end(a, 'throw');
     },
-    end(a, s) {
+    end(a, s, reason) {
       s.loop?.stop?.(0.2);
       this._remove(s.ball, s.halo);
       s.ball?.material.dispose(); s.halo?.material.dispose();
       a.character.subPropHidden = false;
+      if (!s.ghost) G.cheerOrb?.release(a, s, reason);   // [b5-zipcheer] let go: down you come
     },
   },
 
@@ -1852,7 +1857,7 @@ const IMPL = {
       const to = g.point.clone().addScaledVector(n, PLAYER.radius + 0.08);
       if (wall) to.y -= 1.0; else to.y = g.point.y;
       s.zip = { to, n, wall, anchor: g.point.clone(), t: 0, stuck: 0 };
-      s.anchor = s.zip.anchor;
+      s.anchor = s.zip.anchor; ZC_STATS.zips++;   // [b5-zipcheer]
       rec(a, [4, 'zf', ...v3(s.anchor), r2(n.x), r2(n.y), r2(n.z)]);
       s.body = true; s.hang = 0;
       paint(a, g.point.clone().addScaledVector(n, 0.1), 1.0, a.team);
@@ -1863,31 +1868,36 @@ const IMPL = {
       const z = s.zip;
       if (!z) { s.body = false; return; }
       z.t += dt;
-      _v.copy(z.to).sub(a.pos);
-      const dist = _v.length(), step = s.def.speed * dt;
-      // an enemy in the way: the body slams into them and the zip stops there
-      for (const e of G.actors) {
-        if (e.team === a.team || !e.alive) continue;
-        if (Math.hypot(e.pos.x - a.pos.x, e.pos.z - a.pos.z) < PLAYER.radius * 2 + 0.2 && Math.abs(e.pos.y - a.pos.y) < 1.4) {
+      // [b5-zipcheer] (1.5× the speed now) the frame's travel in pieces of ≤ 0.35 m: never through a thin wall, never past an enemy
+      const nSub = Math.max(1, Math.ceil((s.def.speed * dt) / 0.35)), h = dt / nSub;
+      for (let k = 0; k < nSub; k++) {
+        _v.copy(z.to).sub(a.pos);
+        const dist = _v.length(), step = s.def.speed * h;
+        // an enemy in the way: the body slams into them and the zip stops there
+        for (const e of G.actors) {
+          if (e.team === a.team || !e.alive) continue;
+          if (Math.hypot(e.pos.x - a.pos.x, e.pos.z - a.pos.z) < PLAYER.radius * 2 + 0.2 && Math.abs(e.pos.y - a.pos.y) < 1.4) {
+            a.vel.set(0, 0, 0);
+            s.body = false; s.zip = null; s.faceYaw = null;
+            IMPL.zipcaster.impact.call(this, a, s, e);
+            return;
+          }
+        }
+        if (dist <= step || z.t > 1.6 || z.stuck > 0.15) {
           a.vel.set(0, 0, 0);
+          if (dist <= step) a.pos.copy(z.to);
           s.body = false; s.zip = null; s.faceYaw = null;
-          IMPL.zipcaster.impact.call(this, a, s, e);
+          if (z.wall) { s.hang = s.def.hang; s.hangN = z.n; a.grounded = false; }
+          IMPL.zipcaster.impact.call(this, a, s, null);
           return;
         }
+        a.vel.copy(_v).multiplyScalar(s.def.speed / dist);
+        const py = a.pos.y;
+        _zb.copy(a.pos);
+        a.pos.addScaledVector(a.vel, h);
+        a._resolve(false, py, false);
+        if (a.pos.distanceTo(_zb) < step * 0.3) z.stuck += h; else z.stuck = 0;
       }
-      if (dist <= step || z.t > 1.6 || z.stuck > 0.15) {
-        a.vel.set(0, 0, 0);
-        if (dist <= step) a.pos.copy(z.to);
-        s.body = false; s.zip = null; s.faceYaw = null;
-        if (z.wall) { s.hang = s.def.hang; s.hangN = z.n; a.grounded = false; }
-        IMPL.zipcaster.impact.call(this, a, s, null);
-        return;
-      }
-      a.vel.copy(_v).multiplyScalar(s.def.speed / dist);
-      const before = a.pos.clone(), py = a.pos.y;
-      a.pos.addScaledVector(a.vel, dt);
-      a._resolve(false, py, false);
-      if (a.pos.distanceTo(before) < step * 0.3) z.stuck += dt; else z.stuck = 0;
       s.faceYaw = Math.atan2(a.vel.x, a.vel.z);
       s.anchor = z.anchor;
       IMPL.zipcaster.tick.call(this, a, s, dt);
@@ -1905,7 +1915,7 @@ const IMPL = {
         if (e !== direct && !G.physics.los(_v2.copy(c), _v)) continue;
         G.projectiles.applyHit(a, e, hitDirect ? d.impactDirect : d.impactSplash, 'zipcaster');
       }
-      G.subs?.damageArea(c, d.impactRadius, d.impactSplash, a.team);
+      G.subs?.damageArea(c, d.impactRadius, d.impactSplash, a.team, a);   // [b5-deploy] (by)
       const g = groundBelow(c, 3);
       paint(a, (g || c).clone().setY((g || c).y + 0.2), d.impactRadius * 0.75, a.team);
       G.fx?.explosion(c, a.color, d.impactRadius);
@@ -2191,3 +2201,4 @@ export function specialNetApply(a, v) {
 }
 
 KIT_GHOSTS.sp = { ghost: (a, d) => G.specials?.netGhost(a, d), netHurt: (gid, dmg) => G.specials?.netHurtObj(gid, dmg) };
+KIT_GHOSTS.spTeam = { netHurt: (gid, dmg) => G.specials?.netHurtObj(gid, -Math.abs(dmg)) };   // [b5-int1] (team fire on a bubble: _bubbleHit)

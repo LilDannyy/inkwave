@@ -30,6 +30,7 @@ import {
 import { defineCueSounds, CUE_GROUPS } from './sfx-cues.js';   // sfx-cues: every sub / special's own sounds (src/audio/cues.js plays them)
 import { defineAlertSounds, ALERT_GROUPS } from './sfx-alerts.js';   // sfx-loud: the flight glides, the special alerts / alarms / stings
 import { defineDrainbowSounds, DRAINBOW_SOUNDS } from './sfx-drainbow.js';   // [drainbow] the Drainbow's own sounds
+import { defineCheerSounds, CHEER_SOUNDS } from './sfx-cheer.js';   // [b5-zipcheer] the Cheer Orb's lift / cheer wisp sounds
 
 const MAX_VOICES = 48;   // one-shots alive at once (oldest stolen beyond this)
 const MAX_LOOPS = 32;   // sfx-cues: the cue director keeps up to 13 of its own (src/audio/cues.js) beside the weapons', zones' and ambience's
@@ -2682,6 +2683,7 @@ def('lead_theirs', {
 defineCueSounds(def, { texture, bloops, plips, bigSplat, inkBoom, clank, whoosh, vox });
 defineAlertSounds(def, { texture, bloops, whoosh, vox, clank });
 defineDrainbowSounds(def, { texture, bloops, plips, whoosh });   // [drainbow]
+defineCheerSounds(def);   // [b5-zipcheer]
 
 export const SFX_GROUPS = {
   UI: ['ui_hover', 'ui_click', 'ui_back', 'ui_confirm', 'ui_toggle', 'ui_slider', 'ui_error'],
@@ -2700,6 +2702,7 @@ export const SFX_GROUPS = {
     'crab_roll', 'crab_hit', 'crab_break',
     ...CUE_GROUPS.Specials,   // sfx-cues
     ...DRAINBOW_SOUNDS,       // [drainbow]
+    ...CHEER_SOUNDS,          // [b5-zipcheer] (the cue bus: isCue)
   ],
   Subs: CUE_GROUPS.Subs,      // sfx-cues: throws, landings, fuses, loops and blasts of every sub
   Flight: ALERT_GROUPS.Flight,          // sfx-loud: every thrown sub in the air (one def, a voice per kind: params.kind)

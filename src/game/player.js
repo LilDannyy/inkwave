@@ -5,7 +5,9 @@
 // turn-arounds. Aim assist (gamepad by default; settings.aimAssistMouse opts mouse in, gentler): friction slows the
 // look near an enemy under the crosshair, tracking assist carries a fraction of the target's angular motion while
 // you are actively aiming or moving — never an auto-snap. Bullet magnetism pulls shots onto the body line of an enemy
-// the crosshair is actually touching (at the height you aimed), so hits register exactly as they look.
+// the crosshair is actually touching (at the height you aimed), so hits register exactly as they look. A weapon's
+// `assist` ({ stick, pull, cone } × the usual friction depth / tracking share / engage window) lightens it per weapon:
+// the Glint Charger's one-shot splat gets half the stick, 40 % of the pull and a narrower window.
 import * as THREE from 'three';
 import { G, clamp, lerp, angleDiff } from '../core/ctx.js';
 import { PLAYER, weaponRange } from '../config.js';
@@ -54,7 +56,8 @@ export class PlayerController {
     const as = this._assistTarget(usingPad ? (s.aimAssist ?? 1) : (s.aimAssistMouse ? 0.5 : 0));
     // ---- look
     const inv = s.invertY ? -1 : 1;
-    const friction = as ? lerp(1, 0.58, as.closeness * as.strength) : 1;
+    const AW = a.weapon?.assist;   // [b5-tuning] per-weapon assist scale (the Glint Charger's is lighter: config WEAPONS.charger.assist)
+    const friction = as ? lerp(1, 0.58, as.closeness * as.strength * (AW?.stick ?? 1)) : 1;
     let lookActive = false;
     const mdx = inp.mouse.dx, mdy = inp.mouse.dy;
     // Vortex Strike targeting: the mouse / right stick drives a cursor over the (opened) stage map, fire launches
@@ -108,7 +111,7 @@ export class PlayerController {
     if (ml > 1) { mx /= ml; mz /= ml; }
     // tracking assist: carry a share of the target's angular motion while the player is engaging (look or move input)
     if (as && as.prevValid && (lookActive || ml > 0.2 || it.fire)) {
-      const share = 0.42 * as.strength * as.closeness;
+      const share = 0.42 * as.strength * as.closeness * (AW?.pull ?? 1);
       rig.yaw += angleDiff(as.prevYaw, as.yaw) * share;
       rig.pitch += (as.pitch - as.prevPitch) * share * 0.7;
     }
@@ -228,7 +231,7 @@ export class PlayerController {
       if (a.pos.distanceTo(e.pos) > maxR) continue;
       _v.multiplyScalar(1 / d);
       const ang = Math.acos(clamp(_v.dot(fwd), -1, 1));
-      const cone = clamp(Math.atan2(1.0, d), 2.5 * DEG, 10 * DEG);
+      const cone = clamp(Math.atan2(1.0, d), 2.5 * DEG, 10 * DEG) * (w.assist?.cone ?? 1);   // [b5-tuning]
       if (ang > cone) continue;
       if (!G.physics.los(cam.position, _c)) continue;
       const score = ang / cone + d * 0.01;

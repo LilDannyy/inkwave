@@ -1,0 +1,25 @@
+JOB-5 raw lines (automatic, written by the Mac mini's queue when the job ended, 2026-10-04 07:23); ran at 17224bc. A written-up JOB-5.txt follows when a helper session is awake.
+
+## out.txt
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-tower: RESULT 65/65 0 FAIL
+== jump-ui-zones: RESULT 65/65 0 FAIL
+== jump-ui-960: RESULT 61/62 1 FAIL
+FAIL an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true}
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":0,"bubbleHold":0,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retarg
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
