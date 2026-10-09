@@ -44,7 +44,7 @@
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
-import { netRec, netMuted } from './kits/registry.js';
+import { netRec, netMuted, SUB_KITS } from './kits/registry.js';
 import { BUOY } from '../fx/surfFx.js';
 import { Hit } from './physics.js';
 import '../audio/sfx-deploy.js';
@@ -343,6 +343,7 @@ class Deployables {
     const fx = Math.sin(a.yaw), fz = Math.cos(a.yaw);
     for (const it of G.subs?.items || []) { const k = devKind(it); if (k && swept(a, fx, fz, width, reach, hits, cd, it, it.pos, DEV_R[k])) G.subs._hurt(it, dmg, a); }
     for (const w of G.specials?.world || []) if (w.kind === 'surf' && !w.dead && w.phase === 'live' && swept(a, fx, fz, width, reach, hits, cd, w, w.pos, BUOY.hitR)) w._shot(dmg, a);
+    for (const d of kitDevices()) if (d.live && swept(a, fx, fz, width, reach, hits, cd, d.obj, d.pos, d.r)) d.hurt(dmg, a);   // [b5-sub-glide] kit devices (SPEC §0.2)
   }
 
   // ---------------------------------------------------------------------------------------------- per frame
@@ -458,6 +459,7 @@ class Deployables {
     let n = 0;
     for (const it of G.subs?.items || []) { const k = devKind(it); if (k && !it.ghost) { devMid(it, _c); n = addOwn(n, it, k, it.team, it.pos, _c.x, _c.y, _c.z, DEV_R[k]); } }
     for (const w of W) if (w.kind === 'surf' && !w.ghost && !w.dead && w.phase === 'live') n = addOwn(n, w, 'surf', w.team, w.pos, w.pos.x, w.pos.y + BUOY.hitH * 0.5, w.pos.z, BUOY.hitR);
+    for (const d of kitDevices()) if (!d.ghost && d.live) { const m = d.aim; n = addOwn(n, d, d.kind, d.team, d.pos, m.x, m.y, m.z, d.r); }   // [b5-sub-glide] (SPEC §0.2)
     if (!n) return;
     // the Ink Tempest (weapons.js _updateClouds): under its cloud with nothing between
     const sp = SPECIALS.storm;
@@ -535,6 +537,7 @@ class Deployables {
       if (w.kind !== 'surf' || w.dead || w.phase !== 'live') continue;
       out.push({ kind: 'surf', obj: w, team: w.team, owner: w.owner, pos: w.pos, aim: (w._aimV || (w._aimV = new THREE.Vector3())).set(w.pos.x, w.pos.y + 0.6, w.pos.z), r: BUOY.hitR, ghost: !!w.ghost });
     }
+    for (const k in SUB_KITS) SUB_KITS[k].devices?.(out);   // [b5-sub-glide] kit devices: stable descriptors (SPEC §0.2)
     return out;
   }
   // Skitter Bombs hunting players, for the bots' threat system (bots.js _threatScan; the descriptor: kits/registry.js
@@ -585,7 +588,10 @@ function addOwn(n, obj, kind, team, pos, mx, my, mz, r) {
   return n + 1;
 }
 // a hit on one of them: a subs device (subs.js _hurt) or the buoy (sp-surf.js _shot)
-function hurtDev(d, dmg, by) { if (d.kind === 'surf') d.obj._shot(dmg, by); else G.subs._hurt(d.obj, dmg, by); }
+function hurtDev(d, dmg, by) { if (d.kind === 'surf') d.obj._shot(dmg, by); else if (d.obj.kit) d.obj.hurt(dmg, by); else G.subs._hurt(d.obj, dmg, by); }   // ([b5-sub-glide] d.obj.kit: a kit device's descriptor)
+// [b5-sub-glide] every kit's device descriptors (SPEC §0.2; a pooled list: rolling and standing fire run every frame)
+const _kd = [];
+function kitDevices() { _kd.length = 0; for (const k in SUB_KITS) SUB_KITS[k].devices?.(_kd); return _kd; }
 function standHit(d, dmg, by) { DEPLOY_STATS.standing++; hurtDev(d, dmg, by); }
 
 function seekerThreat(it) {

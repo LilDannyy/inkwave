@@ -573,6 +573,21 @@
       const hp0 = foe.hp; runOut(s4);
       dealHits = false; const hpAfter = foe.hp; foe.status.shield = 0;
       R('a foe in a Bubble Guard takes 0 from its blast', hits.some((h) => h.vic === foe && h.wid === 'glide') && hpAfter === hp0, { hp0, hpAfter });
+      // a roller's drum / a brush (wave 1's sweep) and standing fire (an Ink Tempest's rain: wave 1's _standing) hurt it —
+      // through its device descriptor; the bots never pick it as a device (prefer 0: it's a threat to them)
+      reset(); put(me, V(0, 0, -30), 0); step(0.05);
+      const { it: s6 } = throwHeld(0.1); s6.p.set(0, 0, -20); s6.v.set(0, 0, 0); s6.fuse = 3;
+      put(foe, V(0, 0, -21.2), 0); step(0.05);
+      const dsc = G.deploy.devices().find((d) => d.obj === s6);
+      G.deploy.sweep(foe, 1.2, 1.6, 30, new Map(), 0.5);
+      const hpRoll = s6.hp;
+      const cl0 = P.clouds.slice(); P.clouds.length = 0;
+      P.clouds.push({ group: { position: V(0, 4, -20) }, team: foe.team, t: 0, dur: 5, owner: foe });
+      for (let k = 0; k < 30 && s6.state !== 'dead'; k++) G.deploy._standing(1 / 30);
+      P.clouds.length = 0; P.clouds.push(...cl0);
+      step(0.05);
+      R('a roller\'s drum (wave 1\'s sweep) and an Ink Tempest\'s rain (standing fire) hurt it — 30 off its 40, then the rain pops it; the bots never pick it as a device (prefer 0)',
+        !!dsc && dsc.kit && dsc.prefer({}) === 0 && Math.abs(hpRoll - (S.hp - 30)) < 1e-6 && s6.why === 'popped', { hpRoll, why: s6.why, listed: !!dsc });
       // a moving floor carries it
       reset();
       const pl = box(-3, 3, -0.4, 0.3, -30, -18);

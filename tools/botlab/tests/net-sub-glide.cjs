@@ -67,31 +67,50 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
 
   // ============================================================================================ the cook in the hand
   // B polls what it shows for A's hand (its own frames), wall-clock stamped
-  await B.js(`(() => { const a = __G.match.actors.find((q) => q.nid === ${ids.a}); const S = window.__seen = []; let last = 0;
-    window.__poll = setInterval(() => { const lv = __K.levelShown(a); if (lv !== last) { S.push({ lv, at: Date.now(), aim: !!a.weaponRunner.aimingSub }); last = lv; } }, 8); return 1; })()`);
+  // (both screens log A's hand: its cook level and its sub-held flag — on B that flag rides A's actor tick, the same
+  // timeline as the [5] records, so the level's lag behind the flag isolates what the records add from the load)
+  const poll = (c) => c.js(`(() => { const a = __G.match.actors.find((q) => q.nid === ${ids.a}); const S = window.__seen = []; let last = 0, aim = false;
+    window.__aimOn = null;
+    window.__poll = setInterval(() => { const lv = __K.levelShown(a), am = !!a.weaponRunner.aimingSub; if (am && !aim && window.__aimOn == null) window.__aimOn = Date.now(); aim = am; if (lv !== last) { S.push({ lv, at: Date.now(), aim: am }); last = lv; } }, 8); return 1; })()`);
+  await poll(A); await poll(B);
   await A.js(`window.__hold = true; 1`);
-  await wait(2150);   // (past full cook at held 1.95 s; well before the slip at 2.95 s)
+  // (held until A's own cook is full — game time, whatever the machine's load — then 0.4 s more: well before the slip)
+  await A.until(`__K.levelShown(__G.match.local) === 3`, 8000, 20);
+  await wait(400);
   const seenMid = await J(B, `window.__seen.slice()`);
   await A.js(`window.__hold = false; 1`);
   await wait(400);
   const chA = (await J(A, `window.__g.charge`)).filter((c) => c.who === ids.a), seenB = await J(B, `window.__seen`);
+  const aimA = await J(A, `window.__aimOn`), aimB = await J(B, `window.__aimOn`);
+  await A.js(`clearInterval(window.__poll); 1`);
   const lag = [1, 2, 3].map((lv) => { const a = chA.find((c) => c.lv === lv), b = seenB.find((s) => s.lv === lv); return a && b ? b.at - a.at : null; });
-  R('A cooks: B\'s copy of A\'s hand shows cook levels 1, 2, 3 in order (the [5] records), each within 0.3 s of A\'s own, A\'s sub held there',
-    chA.map((c) => c.lv).join() === '1,2,3' && seenMid.map((s) => s.lv).join() === '1,2,3' && lag.every((x) => x != null && x >= -50 && x <= 300) && seenMid.every((s) => s.aim), { a: chA.map((c) => c.lv), b: seenMid.map((s) => [s.lv, s.aim]), lagMs: lag });
+  // (the records ride A's timeline: B plays them back as late as everything else of A's — its playback delay, which grows
+  // with the machine's load. Judged: each level within 0.3 s of A's mark, or — on a loaded machine — within 0.15 s of
+  // where A's own sub-held flag (the actor tick, the same timeline) puts it: the records add no lag of their own)
+  const pd = await J(B, `(() => { const nm = __G.netm, a = __G.match.actors.find((q) => q.nid === ${ids.a}), p = nm.peers.get(a.owner); return p ? Math.round((p.delay || 0) * 1000) : null; })()`);
+  const tickLag = aimA != null && aimB != null ? aimB - aimA : null;
+  const rel = lag.map((x) => (x != null && tickLag != null ? x - tickLag : null));
+  const okLv = lag.every((x, i) => x != null && x >= -50 && (x <= 300 || (rel[i] != null && Math.abs(rel[i]) <= 150)));
+  R(`A cooks: B's copy of A's hand shows cook levels 1, 2, 3 in order (the [5] records), each within 0.3 s of A's own (or, loaded, of A's sub-held flag on the same timeline), A's sub held there`,
+    chA.map((c) => c.lv).join() === '1,2,3' && seenMid.map((s) => s.lv).join() === '1,2,3' && okLv && seenMid.every((s) => s.aim), { a: chA.map((c) => c.lv), b: seenMid.map((s) => [s.lv, s.aim]), lagMs: lag, flagLagMs: tickLag, beyondFlagMs: rel, playbackDelayMs: pd });
   R('…and back to 0 on B once A lets go (the stone thrown)', seenB.length && seenB[seenB.length - 1].lv === 0, seenB.map((s) => s.lv));
 
   // ============================================================================================ the slide and the blast
   // (B pinned 9 m out: A's full-cook stone stops short of B — 5.5 m; the next one is aimed to blow at B's feet)
-  await wait(1500);
+  await A.until(`!__K.items.some((x) => x.state !== 'dead')`, 8000, 50);
+  await B.until(`!__K.items.some((x) => x.state !== 'dead')`, 8000, 50);
+  await wait(300);
   const boomA = await J(A, `window.__g.boom`), boomB = await J(B, `window.__g.boom`);
   const bA = boomA.find((x) => !x.ghost), bB = boomB.find((x) => x.ghost);
   const dBoom = bA && bB ? Math.hypot(bA.p[0] - bB.p[0], bA.p[1] - bB.p[1], bA.p[2] - bB.p[2]) : null;
   R('the ghost on B slides with the same fixed step and blows within 0.3 m of A\'s blast (A\'s [1] record; the ghost never blows itself)', dBoom != null && dBoom <= 0.3 && boomB.filter((x) => !x.ghost).length === 0, { dBoom, a: bA, b: bB });
   // a stone that blows at B's feet: B's hp falls once, by the hit A judged
+  await B.until(`__G.match.local.alive`, 12000, 100);
   await B.js(`(() => { const me = __G.match.local; me.hp = 1000; window.__g.hits.length = 0; return 1; })()`);
   await A.js(`(() => { window.__g.hits.length = 0; const a = __G.match.local; a.ink = 100; return 1; })()`);
-  // (an uncooked stone; on A it's set to stop by B: pushed to 0.4 m short of B and stilled, its fuse then runs out there)
-  await A.js(`window.__hold = true; 1`); await wait(90); await A.js(`window.__hold = false; 1`);
+  // (an uncooked stone; on A it's set to stop by B: pushed to 0.75 m short of B and stilled, its fuse then runs out there)
+  const tap = async () => { await A.js(`window.__hold = true; 1`); await A.until(`__G.match.local.weaponRunner.aimingSub`, 3000, 10); await wait(40); await A.js(`window.__hold = false; 1`); };
+  await tap();
   await A.until(`__K.items.some((x) => !x.ghost && x.state === 'slide')`, 3000, 30);
   await A.js(`(() => { const it = __K.items.find((x) => !x.ghost && x.state === 'slide'); const b = __G.match.actors.find((q) => q.nid === ${ids.b}); const dx = it.p.x - b.pos.x, dz = it.p.z - b.pos.z, l = Math.hypot(dx, dz) || 1;
     it.p.set(b.pos.x + dx / l * 0.75, it.p.y, b.pos.z + dz / l * 0.75); it.v.set(0, 0, 0); it.fuse = 0.6; it.recT = 0; return 1; })()`);
@@ -105,7 +124,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   // ============================================================================================ B pops A's stone on B's screen
   await A.js(`(() => { window.__g.down.length = 0; window.__g.end.length = 0; window.__g.boom.length = 0; const a = __G.match.local; a.ink = 100; return 1; })()`);
   await B.js(`(() => { window.__g.end.length = 0; window.__g.boom.length = 0; return 1; })()`);
-  await A.js(`window.__hold = true; 1`); await wait(90); await A.js(`window.__hold = false; 1`);
+  await tap();
   await A.until(`__K.items.some((x) => !x.ghost && x.state === 'slide')`, 3000, 30);
   // A stills its stone 4 m out (its word reaches B within 0.25 s), then B fires at B's ghost of it
   await A.js(`(() => { const it = __K.items.find((x) => !x.ghost && x.state === 'slide'); const [x, z] = ${JSON.stringify(at(4))}; it.p.set(x, it.p.y, z); it.v.set(0, 0, 0); it.fuse = 4; it.recT = 0; return 1; })()`);

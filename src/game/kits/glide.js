@@ -528,6 +528,22 @@ function hurt(it, dmg, by) {
   if (it.hp <= 0) pop(it, 1, by);
 }
 // (the shot shape: hitR round its middle — hitH 0.24 is under 2 × hitR, so the capsule is a ball at the middle)
+// its device descriptor (deployables.js: wave 1's rolling and standing fire, the device list — SPEC §0.2's shape). The
+// bots never pick it as a device to shoot (prefer 0): it's a threat to them (threats() / bots.js), shot down from there.
+// The tower never crushes it (it bounces off the tower's sides); should anything crush it, it pops
+function devOf(it) {
+  if (it.dev) return it.dev;
+  const aim = new V3(), s = it.sub;
+  it.dev = { kind: KIND, kit: true, obj: it, team: it.team, owner: it.owner, pos: it.p, r: s.hitR, h: s.hitH, hitH: s.hitH, normal: UP, floor: -1, rides: null,
+    get aim() { return aim.set(it.p.x, it.p.y + MID, it.p.z); },
+    get ghost() { return it.ghost; },
+    get live() { return it.state === 'slide' || it.state === 'hold'; },
+    prefer: () => 0,
+    hurt: (dmg, by) => hurt(it, dmg, by),
+    crush: () => pop(it, 2),
+    flash: () => { it.flash = 1; } };
+  return it.dev;
+}
 const capFoot = (it, out) => out.set(it.p.x, it.p.y + MID - it.sub.hitR, it.p.z);
 
 // ================================================================================================= holding (the cook)
@@ -543,7 +559,10 @@ function hold(runner, dt, inp, sub) {
   if (!st) st = runner.glide = newHold(a);
   st.t1 = G.time;
   const s = sub || S();
-  if (a.ink < s.inkCost) { st.t0 = G.time; st.held = 0; st.cook = 0; }   // without the ink it never cooks (no lock, no slip)
+  if (a.ink < s.inkCost) {   // without the ink it never cooks (no lock, no slip)
+    if (st.level > 0) { st.level = 0; st.full = false; netRec(a, KIND, [5, 0]); }   // (drained mid-cook — poison: the cook is gone)
+    st.t0 = G.time; st.held = 0; st.cook = 0;
+  }
   else {
     st.held = G.time - st.t0;
     st.cook = cookOf(st.held, s);
@@ -890,6 +909,7 @@ SUB_KITS[KIND] = {
   // exposed for tests / tools: the numbers and the step function
   math: { cookOf, radiusOf, paintOf, devDmgOf, fuseOf, levelOf, reachOf, fuseFor, simulate, slideStep, dangerOf, guide, bar },
   threats(out) { for (const it of items) if (it.state !== 'dead') out.push(threatOf(it)); return out; },
+  devices(out) { for (const it of items) if (it.state !== 'dead') out.push(devOf(it)); return out; },
   tick(dt) {
     trackDyn(dt);
     for (let i = items.length - 1; i >= 0; i--) {
