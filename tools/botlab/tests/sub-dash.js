@@ -223,6 +223,13 @@
       let rolled = 0;
       sim(me, 40, 1 / 60, (i) => ({ sub: i === 0, fire: i > 2, jump: i === 4 || i === 5, move: [1, 0] }), () => { if (wr.dodgeT > 0) rolled++; });
       R('a Twinfire roll pressed mid-dash is refused: no roll, no jump after it', rolled === 0 && since(e0, 'actor:jump', (e) => e.actor === me).length === 0 && since(e0, 'actor:dodge', (e) => e.actor === me).length === 0, { rolled, jumps: since(e0, 'actor:jump', (e) => e.actor === me).length });
+      // a special that took the trigger (the previous frame's _spWeapon: a Crab Rig, a Zooka …) owns the sub button too:
+      // the press does nothing, not even "Can't use"
+      put(me, 0, 0, -4, 0); e0 = ev.length;
+      me._spWeapon = true; sim(me, 1, 1 / 60, { sub: true, move: [1, 0] });
+      const spDash = since(e0, 'sub:dash', (e) => e.actor === me).length, spCant = since(e0, 'sub:cantuse', (e) => e.actor === me).length;
+      R('while a special has taken the main weapon (its _spWeapon), a press does nothing: no dash, no "Can\'t use", no ink', spDash === 0 && spCant === 0 && me.ink === 100, { dashes: spDash, cantuse: spCant, ink: r2(me.ink) });
+      sim(me, 2, 1 / 60, {});
       // the sub held through a stand-in pipe ride: no dash on the exit until a release and a new press
       me.setWeapon('shooter'); put(me, 0, 0, -4, 0);
       e0 = ev.length;
