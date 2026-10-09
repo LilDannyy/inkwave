@@ -55,6 +55,9 @@ export const REFUSE = {
 };
 
 const UP = new THREE.Vector3(0, 1, 0);
+// PAGEQ='pipestats' (any botlab harness): at the match's end the module prints its counters as console warnings, which
+// match.cjs lists — the rides per leg and team, refusals, bots at mouths, deaths just after a touchdown (the camping metric)
+const STATS_Q = typeof location !== 'undefined' && /[?&]pipestats\b/.test(location.search || '');
 const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _q = {}, _q2 = {};
 const now = () => performance.now() / 1000;
 const r3 = (v) => Math.round(v * 1000) / 1000;
@@ -209,8 +212,11 @@ export class StagePipes {
     this.started = false;
     this._tideSync(S.clock.t, true);
     this.hudUi = m.attract ? null : new PipesHud(this);
+    this.lastLand = new Map();   // actor → this.t of its last touchdown (the camping metric)
+    Object.assign(this.stats, { deaths: 0, deathsAfterLand: 0, pushMax: 0, giveUps: 0, botRides: 0, playT: 0 });
     this.unsubs = [
       on('actor:removed', (e) => this._removed(e && e.actor)),
+      on('splatted', (e) => { const v = e && e.victim; if (!v || !this.m.playing()) return; this.stats.deaths++; const lt = this.lastLand.get(v); if (lt !== undefined && this.t - lt < 2) this.stats.deathsAfterLand++; }),
     ];
     this.loops = new Map();      // actor → ride whoosh loop
   }
@@ -302,6 +308,8 @@ export class StagePipes {
     this.t += dt;
     this._tideSync(t, false);
     if (!this.started && this.m.state === 'playing') { this.started = true; this.hudUi?.start(); }
+    if (this.m.state === 'playing') this.stats.playT += dt;
+    if (STATS_Q && !this._reported && this.started && this.m.state !== 'playing' && this.m.state !== 'intro') { this._reported = true; this._report(); }
     const ct = G.game?.rig?.target || G.local;   // (the camera's rider: the grade only while its ride camera is in a water volume)
     if (this.W.looks?.rideVol && !(ct && ct.pipe && ct.pipe.phase !== 'pop')) { this.camInWater = false; this.W.looks.underwater(null); }
   }
@@ -397,6 +405,7 @@ export class StagePipes {
       this.stats.team[a.team ? 1 : 0]++;
       this.rides++;
       if (a.isLocal) { this.stats.firstRides++; this.myRides = (this.myRides || 0) + 1; }
+      if (a.bot) { this.stats.botRides++; const pp = this.push.get(a.bot); if (pp) { this.stats.pushMax = Math.max(this.stats.pushMax, G.time - pp.t0); this.push.delete(a.bot); } }
       G.audio?.play('pipe_suck', { pos: _v.fromArray(e.pos), volume: a.isLocal ? 0.9 : 0.6 });
     } else this._light(p, a);
     this.events.push(['pipe:enter', { nid: a.nid, leg: leg.i, k: e.k, rebased }]);
@@ -565,6 +574,7 @@ export class StagePipes {
       a.addTurfNoSpecial?.(area);
     }
     this.stats.landings.push([+this.t.toFixed(2), a.nid ?? -1, a.team, r3(a.pos.x), r3(a.pos.y), r3(a.pos.z), p.exit]);
+    this.lastLand.set(a, this.t);
     this.events.push(['pipe:land', { nid: a.nid, end: p.exit }]);
     emit('pipe:land', { actor: a, pos: a.pos.clone() });
   }
@@ -774,7 +784,8 @@ export class StagePipes {
     if (!pp || pp.key !== edge.key || G.time - pp.last > 0.5) this.push.set(b, (pp = { key: edge.key, t0: G.time, last: G.time }));
     pp.last = G.time;
     if (G.time - pp.t0 > PIPES.bot.push) {   // pushing for 2 s without a capture (a body, a curtain): drop the path, the key is bad for 5 s
-      this._markBad(b, from); this.push.delete(b); b.path = null; b.repath = 0;
+      this._markBad(b, from); this.push.delete(b); b.path = null; b.repath = 0; this.stats.giveUps++;
+      this.stats.pushMax = Math.max(this.stats.pushMax, G.time - pp.t0);
       return out.set(0, 0, 0);
     }
     if (Math.abs(side) > 0.45 && along > 0.3) out.set(from.approach[0] - a.pos.x, 0, from.approach[2] - a.pos.z).normalize().addScaledVector(_v.set(-from.out[0], 0, -from.out[2]), 0.3).normalize();
@@ -933,6 +944,18 @@ export class StagePipes {
   }
   _stopLoop(a) { const h = this.loops.get(a); if (h) { h.stop?.(0.2); this.loops.delete(a); } }
   _stopLoops() { for (const h of this.loops.values()) h?.stop?.(0.2); this.loops.clear(); if (this._fans) { for (const h of this._fans.values()) h?.stop?.(0.2); this._fans.clear(); } }
+
+  // the counters for match.cjs (PAGEQ='pipestats'): one console line each, under its 300-character cut
+  _report() {
+    const S = this.stats, mins = Math.max(1e-6, S.playT / 60), bots = this.m.actors.filter((a) => a.bot).length || 1;
+    const legs = Object.fromEntries(Object.entries(S.rides).map(([k, v]) => [k, v]));
+    console.warn('[pipes] STATS rides ' + JSON.stringify({ total: S.team[0] + S.team[1], team: S.team, perBotMin: +(S.botRides / bots / mins).toFixed(3), mins: +mins.toFixed(2) }));
+    console.warn('[pipes] STATS legs [A→B t0, A→B t1, B→A t0, B→A t1] ' + JSON.stringify(legs));
+    console.warn('[pipes] STATS mouths ' + JSON.stringify({ pushMaxS: +S.pushMax.toFixed(2), giveUps: S.giveUps, refusals: S.refusals, pops: S.pops, aborts: S.aborts }));
+    const rate = S.deaths / Math.max(1, S.playT / 2) / Math.max(1, this.m.actors.length);
+    console.warn('[pipes] STATS camping ' + JSON.stringify({ deaths: S.deaths, landings: S.landings.length, deathsWithin2sOfTouchdown: S.deathsAfterLand, perLanding: +(S.deathsAfterLand / Math.max(1, S.landings.length)).toFixed(3), basePer2sPerActor: +rate.toFixed(4) }));
+    console.warn('[pipes] STATS tide ' + JSON.stringify(S.flips.filter((f) => f.phase === 'flip').map((f) => [f.t, f.dir])));
+  }
 
   // ------------------------------------------------------------------------------------------------ tests
   state() {
