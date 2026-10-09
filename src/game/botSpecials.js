@@ -63,6 +63,7 @@ import { Hit } from './physics.js';
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { SIGHT } from './botSight.js';
 import { surfDanger, surfDodge, surfOwnAim, surfShootAim } from './sp-surf-bots.js';   // Surf N' Turf (sp-surf.js): its rings, our own throw
+import { botShare } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain: bots pass it on
 
 export const SPECIAL_AI = { enabled: true, teams: null };
 // engagements, not frames (heldFire / bubbleHold are seconds); splattedBy: bots splatted per special (Bomb Barrage:
@@ -74,7 +75,7 @@ export function resetSpecialStats() { for (const k in SPECIAL_STATS) SPECIAL_STA
 const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _d = new THREE.Vector3(), _h = new Hit();
 const _st = { own: 0, enemy: 0, empty: 0, n: 0 };
 const CHARGE = { charger: true, spinner: true, splatling: true };
-const BOMB = { bomb: true, sticky: true, burst: true, seeker: true, mist: true };
+const BOMB = { bomb: true, sticky: true, burst: true, seeker: true, mist: true, waddle: true };   // ([b5-sprules] + the Waddle Barrage's)
 const MISS = { easy: 0.35, normal: 0.18, hard: 0.06 };    // chance a fast projectile goes unnoticed (by difficulty)
 const LEAVE = 0.45;                                          // (m past an area's edge counts as out of it)
 
@@ -309,7 +310,7 @@ export function specialDangers() {
   // ---- (sub-tweaks) a Waddle Bomb winding up to burst where it stands
   for (const it of SUB_KITS.waddle?.items || []) {
     if (it.state !== 'prime') continue;
-    const S = it.sub, d = D(keyOf(it), 'sub', it.team, it.owner);
+    const S = it.sub, d = D(keyOf(it), it.sp || barrage(it.owner) ? 'barrage' : 'sub', it.team, it.owner);   // ([b5-sprules] a barrage's: the barrage's)
     d.hit = 'waddle';
     disc(d, it.pos.x, it.pos.y, it.pos.z, S.radius + 0.3, 1.6);
     d.tIn = Math.max(0, it.fuse); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.3;
@@ -720,6 +721,7 @@ export class SpecialSense {
       if (this.esc) this._endEsc();
       if (!safe) this._guard(move);
       if (G.drainbow?.live) G.drainbow.botHold(this.b, move);   // [drainbow] fight from inside our team's bubble
+      botShare(this.b, move);   // [b5-sprules] pass our Bubble Guard on to a teammate close by (sp-bubble.js)
     }
     if (!safe) surfDodge(this, it);   // Surf N' Turf: jump the enemy rings coming at us
     this._fire(it, dt);

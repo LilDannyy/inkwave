@@ -87,7 +87,7 @@ app.on('browser-window-created', (_, win) => {
           // splats by special, per victim team (Bomb Barrage: its thrower's bombs during it or within 3.5 s after), K / D per team
           const SP = ['slam', 'storm', 'bubbler', 'sonar', 'strike', 'zooka', 'wail', 'kraken', 'blower', 'jetpack', 'stamp', 'booyah', 'zipcaster', 'crab', 'surf'];
           const c = String(e.cause || ''), at = e.attacker, v = e.victim;
-          const bar = /^(bomb|sticky|burst|seeker|mist)$/.test(c) && at && (at.specialActive?.kind === 'barrage' || simT - ((ev.barEnd && ev.barEnd.get(at)) ?? -99) < 3.5);
+          const bar = /^(bomb|sticky|burst|seeker|mist|waddle)$/.test(c) && at && (at.specialActive?.kind === 'barrage' || simT - ((ev.barEnd && ev.barEnd.get(at)) ?? -99) < 3.5);
           const sp = SP.includes(c) ? c : bar ? 'barrage' : null;
           if (v) { const T = ev.team || (ev.team = [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }]); T[v.team].d++; if (at && at !== v && at.team !== v.team) T[at.team].k++;
             if (sp) { T[v.team].sp++; T[v.team].by[sp] = (T[v.team].by[sp] || 0) + 1; } }
@@ -311,6 +311,10 @@ app.on('browser-window-created', (_, win) => {
           const T = [0, 1].map((t) => { const L = m.actors.filter((a) => a.team === t); return { assists: L.reduce((s, a) => s + (a.stats.assists || 0), 0), surfTurf: Math.round(L.reduce((s, a) => s + (a.stats.surfTurf || 0), 0)), turf: Math.round(L.reduce((s, a) => s + a.stats.turf, 0)) }; });
           return { stats: { ...S, turf: Math.round(S.turf) }, bots: { ...B }, assists: { ...A }, teams: T };
         } catch (e) { return null; } })(),
+        // [b5-sprules] the Bomb Barrages' throws per bomb kind (sp-barrage.js; the Mystery's draws) and Bubble Guard shares
+        // (sp-bubble.js: shares, chained = passed on by a copy, botSteps = bot-frames walking over to pass it on)
+        barrage: await (async () => { try { const B = (await import('./src/game/sp-barrage.js')).BARRAGE_STATS, C = (await import('./src/game/sp-bubble.js')).CHAIN_STATS;
+          return { throws: { ...B.throws }, draws: B.draws, repeats: B.repeats, chain: { ...C } }; } catch (e) { return null; } })(),
         byCause: ev.byCause || {},
         byWeapon: (() => { const W = ev.byW || {}, out = {}; for (const a of m.actors) { const w = a.weaponId, o = out[w] || (out[w] = { n: 0, splats: 0, deaths: 0, turf: 0 }); o.n++; o.turf += a.stats.turf; }
           for (const w in out) { const o = out[w]; o.splats = (W[w] || {}).splats || 0; o.deaths = (W[w] || {}).deaths || 0; o.turf = Math.round(o.turf / o.n); } return out; })(),

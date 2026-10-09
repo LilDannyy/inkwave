@@ -30,23 +30,28 @@ module.exports = async (ctx) => {
   say('practice up in', ((Date.now() - t0) / 1000).toFixed(1), 's');
   const idB = await B.js('__G.net.myId');
   await wait(800);
+  // the last special in SPECIAL_ORDER (← from the first tile wraps round to it): it only ever grows at its end, so this
+  // follows whichever is last ([b5-sprules]: it was Drainbow, now the Mystery Bomb Barrage — as loadout-picker.js)
+  const [LAST, LN] = JSON.parse(await B.js(`(async () => { const { SPECIAL_ORDER, SPECIALS } = await import('./src/config.js'); const k = SPECIAL_ORDER[SPECIAL_ORDER.length - 1]; return JSON.stringify([k, SPECIALS[k].name]); })()`));
+  const LT = `kp-special-${LAST}`;
+  say('the last special:', LAST, LN);
 
-  // 1. L → the loadout over the game (the session runs on underneath); the special picker → Drainbow
+  // 1. L → the loadout over the game (the session runs on underneath); the special picker → the last special
   await key(B, 'KeyL', 300);
   await B.until(`__inkwave.menus.current === 'loadout'`, 8000);
   await wait(800);
   const quick = await J(B, `({ screen: __inkwave.menus.current, paused: !!__G.match.paused })`);
   await openPicker(B, 'specialpick');
   const start = await focusId(B);
-  await key(B, 'ArrowLeft');   // (from the weapon's own, the first tile, ← wraps round to the last: Drainbow)
+  await key(B, 'ArrowLeft');   // (from the weapon's own, the first tile, ← wraps round to the last: LAST)
   const f1 = await focusId(B);
   await key(B, 'Enter', 700);
   const g1 = await J(B, `({ special: __G.match.local.specialId, screen: __inkwave.menus.current, open: !!__inkwave.menus._modal, focus: __inkwave.menus._focus && __inkwave.menus._focus.dataset.id })`);
-  R('guest: L opens the loadout over the online Practice (not paused); the special picker starts on the weapon\'s own, ← Drainbow, Enter equips it',
-    quick.screen === 'loadout' && !quick.paused && start === 'kp-special-own' && f1 === 'kp-special-drainbow' && g1.special === 'drainbow' && !g1.open && g1.focus === 'specialpick', { quick, start, f1, g1 });
-  await A.until(`(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(idB)} && !x.isBot); const p = __G.net.lobby.players.find((q) => q.id === ${JSON.stringify(idB)}); return a && a.specialId === 'drainbow' && p && p.special === 'drainbow'; })()`, 8000).catch(() => null);
+  R(`guest: L opens the loadout over the online Practice (not paused); the special picker starts on the weapon's own, ← ${LN} (the last), Enter equips it`,
+    quick.screen === 'loadout' && !quick.paused && start === 'kp-special-own' && f1 === LT && g1.special === LAST && !g1.open && g1.focus === 'specialpick', { quick, start, f1, g1 });
+  await A.until(`(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(idB)} && !x.isBot); const p = __G.net.lobby.players.find((q) => q.id === ${JSON.stringify(idB)}); return a && a.specialId === ${JSON.stringify(LAST)} && p && p.special === ${JSON.stringify(LAST)}; })()`, 8000).catch(() => null);
   const h1 = await guestOnHost(idB);
-  R('host: the guest\'s kid holds Drainbow, and the room has it (setMe)', h1.kid && h1.kid[2] === 'drainbow' && h1.room[2] === 'drainbow', h1);
+  R(`host: the guest's kid holds ${LN}, and the room has it (setMe)`, h1.kid && h1.kid[2] === LAST && h1.room[2] === LAST, h1);
 
   // 2. the sub picker: → → from the weapon's own = Pop Pellet (bomb, sticky, burst …)
   await openPicker(B, 'subpick');
@@ -60,12 +65,12 @@ module.exports = async (ctx) => {
   // 3. the weapon's own special (null): the kid goes back to the Spritzer's Twister Zooka, the room to null
   await openPicker(B, 'specialpick');
   const f3a = await focusId(B);
-  await key(B, 'ArrowRight');   // (Drainbow → round to the first tile: the weapon's own)
+  await key(B, 'ArrowRight');   // (the last special → round to the first tile: the weapon's own)
   const f3 = await focusId(B);
   await key(B, 'Enter', 700);
   await A.until(`(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(idB)} && !x.isBot); const p = __G.net.lobby.players.find((q) => q.id === ${JSON.stringify(idB)}); return a && a.specialId === 'zooka' && p && !p.special; })()`, 8000).catch(() => null);
   const h3 = await guestOnHost(idB);
-  R('the weapon\'s own special: the guest\'s kid is back on Twister Zooka on the host, the room\'s pick is null', f3a === 'kp-special-drainbow' && f3 === 'kp-special-own' && h3.kid && h3.kid[2] === 'zooka' && h3.room[2] === null, { f3a, f3, h3 });
+  R('the weapon\'s own special: the guest\'s kid is back on Twister Zooka on the host, the room\'s pick is null', f3a === LT && f3 === 'kp-special-own' && h3.kid && h3.kid[2] === 'zooka' && h3.room[2] === null, { f3a, f3, h3 });
 
   // 4. Esc leaves the picker without a change, the next Esc drops the guest back into the game
   await openPicker(B, 'subpick');

@@ -20,8 +20,11 @@
 //              skip a running special. Your share of the drained special turns into bubble time instead
 //              (extendPerMeter s per full meter, total life ≤ maxLife), shown on the bubble (it brightens and swirls
 //              faster), with a chime, and on your HUD gauge (remaining() reads the longer life). Your ink share is
-//              ink as usual. It pops when its time runs out, when you're splatted (popOnOwnerSplat; your meter then
-//              restarts from the splat share, as for any special cut short) or you change loadout.
+//              ink as usual. It pops when its time runs out or you change loadout. [b5-sprules] Splatted, you leave it
+//              standing (popOnOwnerSplat false — the user: "make the following survive after the user is splatted"):
+//              it runs out its life on its own clock (every screen: the end record [1, 'splat'] orphans the ghosts
+//              too), your share stops growing it, and back from the respawn you're any teammate in it (your meter fills,
+//              starting from nothing: none of it was cut short — splatShare 0).
 //   your view  inside an enemy's: the clear-ink wave's look sweeps the colour out of your view from where you crossed,
 //              everything goes grey and your hearing is muffled (master low-pass + dip); out again, the wave sweeps the
 //              colour back (drainbowFx.js DrainView). Under the same front both teams' ink turns one shade (the user: "make
@@ -138,6 +141,7 @@ class Drainbow {
       if (this.popT >= POP) { this.dead = true; return false; }
       return true;
     }
+    if (this.ghost && this.orphan && this.t >= this.life) { this.pop('time'); return true; }   // [b5-sprules] (its owner splatted: on its own clock here too)
     if (this.ghost && this.t > this.life + 3) { this.pop('lost'); return true; }           // (its owner's end never came)
     if (!this.ghost && !this.owned() && this.t >= this.life) { this.pop('time'); return true; }   // (orphaned)
     const R = this.radius();
@@ -393,6 +397,9 @@ registerSpecial('drainbow', {
     if (reason === 'splat' && !D().popOnOwnerSplat) { b.orphan = true; return; }   // (runs out on its own clock)
     b.pop(reason);
   },
+  // [b5-sprules] a splat cuts nothing short while the bubble stands on by itself (it keeps the rest of its life): the
+  // meter keeps no share of it (specials.js splatShare); with popOnOwnerSplat it pops, and half of what was left comes back
+  splatShare(a, s) { return D().popOnOwnerSplat ? G.specials.remaining(a) : 0; },
   prompt(a, s) {
     const left = Math.max(0, Math.ceil((s.dur || 0) - s.t)), b = s.bubble;
     if (b && b.boostT > 0) return `Drainbow ${left}s — draining them keeps it up!`;

@@ -26,6 +26,7 @@ import { SpecialSystem } from './game/specials.js';
 import './game/sp-surf.js';   // Surf N' Turf registers itself (specials.js registerSpecial)
 import './game/assists.js';   // assists: G.assists (actor.splat asks it; the results show it)
 import './game/sp-drainbow.js';   // [drainbow] the Drainbow special registers itself (specials.js registerSpecial)
+import './game/sp-barrage.js';   // [b5-sprules] the Bomb Barrages (+ Waddle / Mystery) register themselves
 import { CameraRig } from './game/cameraRig.js';
 import { Match } from './game/match.js';
 import { podColliders, PodLooks } from './game/pods.js';
@@ -1557,6 +1558,7 @@ class Game {
     }
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
     else if (m.state === 'playing' && a.alive && m.actors.some((o) => o !== a && o.team === a.team && o.specialActive?.id === 'booyah' && !o.specialActive.thrown)) prompt = 'A teammate is charging a Cheer Orb — press C to cheer it on!';
+    if (!prompt && !a.specialActive && m.state === 'playing') prompt = G.bubbleChain?.prompt(a, true) || null;   // [b5-sprules] a shared Bubble Guard: pass it on, a teammate close by (sp-bubble.js; the last word: every other hint comes first, and none while a teammate charges a Cheer Orb)
     const frame = {
       time: m.practice ? null : m.time,
       teams: a.team === 1 ? m.teamSummary().reverse() : m.teamSummary(),   // HUD: [your team, theirs]

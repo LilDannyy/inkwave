@@ -256,6 +256,35 @@ it lands). A mine is tripped by its owner's screen wherever the block has taken 
 as before). Old clients ignore `[4, …]` (no sub kind at `d[2]`). Tested by `tools/botlab/tests/net-deploy.cjs`
 (`CLIENTS=2`; `NET_ARGS='scene=tower'`: the deck, the crush, the mine on the deck) and `tests/deployables.js`.
 
+**What outlives its owner** (batch 5, `[b5-sprules]`). A remote splat (`NetMatch._remoteSplat`) emits `'splatted'` with
+`remote: true` on every other screen, after the owner's own records that went before it (a special's end `[1, 'splat']`
+is recorded inside `actor.splat()`, ahead of the forwarded event). The Whirl Boomerang's ghost no longer fizzles on it:
+like the owner's copy it notes where its thrower went down (`it.home`, from that screen's copy of the thrower) and whirls
+back there; the owner's burst record `[1, gid, x, y, z, big]` still says where and when it goes off. A Drainbow whose
+owner is splatted is orphaned by the end record (`popOnOwnerSplat: false`) and runs out its life on its own clock on
+every screen (pop 'time', not the 3 s 'lost' fallback). The Ink Tempest's cloud and the Surf N' Turf buoy never
+depended on their thrower (their own records). The gauge a splat leaves (half of what was left of a running special,
+`specials.js splatShare`) is the victim's own screen's, synced as usual (`sp` in the actor tick).
+
+**Bubble Guard chain** (src/game/sp-bubble.js). The user's own field comes from the special's start record (every
+screen runs `IMPL.bubbler.start`). Passing a field on by touch is decided by the **receiver's owner** (its own squidkid;
+the host its bots), from its view of everyone's synced positions — the same rule as damage: each screen hands copies
+only to the players it owns and records it on the receiver, `['k', receiverNid, 'sp', [5, giverNid, timeLeft,
+chainOwnerNid]]`; every other screen gives that player the same copy with that time (`netGhost` case 5 → `shieldNet`),
+joined to its own copy of that chain (keyed by the chain owner's nid), so "each chain once a player" holds everywhere.
+A copy heard that way runs to the chain's end on that screen (when its copy of the user's field runs out there), not to
+the record's time, which is a playback delay late by then: so every copy of a chain runs out together on each screen,
+however many hops it took (the record's time only for a chain the screen hasn't seen).
+Tested by `tools/botlab/tests/net-sprules.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`).
+
+**Bomb Barrages** (src/game/sp-barrage.js). The variant is the special's start record (`[0, index]`; Waddle and Mystery
+appended to `SPECIAL_ORDER`). The bombs are their own records as ever (`'b'` for the Splat Bomb, the subs' and kits'
+`'k'` for the rest, the Waddle's `[0 …]`). The Mystery Bomb Barrage's owner records each next bomb as the special's
+moment `[4, 'nb', SUB_ORDER index]` (at the start and after every throw), so every screen shows the same bomb in that
+player's hand. A barrage's Waddle senses and chases with the Waddle Bomb Barrage's own numbers (`barrageBomb`:
+`waddleSense` / `waddleLife`); its ghost reads them from the owner's barrage running on that screen when its `[0 …]`
+record arrives (records keep their order, so a Mystery's `'nb'` after the throw never gets there first).
+
 **Assists (src/game/assists.js).** Judged where the splat is: on the victim's owner's screen, which applies every hit
 on that player (its 'damage' events: the damage rule, ≤ 3 s before the splat) and judges every dodge of a Surf N' Turf
 ring (the forced-jump rule, ≤ 3.5 s). `actor.splat()` asks the judge before it emits `'splatted'`; the forwarded event

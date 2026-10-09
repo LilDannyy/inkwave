@@ -206,16 +206,20 @@ export class Actor {
     return false;
   }
 
-  splat(attacker, cause = 'weapon') {
+  // (cutLeft: [b5-sprules] the share of the gauge a special ended just before this splat had left — specials.js body(),
+  // the sea — else null)
+  splat(attacker, cause = 'weapon', cutLeft = null) {
     if (!this.alive) return;
     this.alive = false;
     this.hp = 0;
     this.respawnTimer = PLAYER.respawnTime;
     this.stats.deaths++;
-    // keep a share of the gauge (PLAYER.specialKeepOnSplat); a special cut short by the splat restarts the gauge from
-    // that share of full (its points were spent when it started). Carried through respawn() (reset() zeroes it).
+    // keep a share of the gauge (PLAYER.specialKeepOnSplat); [b5-sprules] a special cut short by the splat restarts the
+    // gauge from that share of what was LEFT of it (G.specials.splatShare: its gauge as the HUD shows it, less what
+    // carries on without you), not of a full one. Carried through respawn() (reset() zeroes it).
     const keep = PLAYER.specialKeepOnSplat ?? 0.5;
-    this.special = this.specialActive ? this.specialCost() * keep : Math.min(this.specialCost(), this.special) * keep;
+    const left = this.specialActive ? (G.specials?.splatShare?.(this) ?? 1) : cutLeft;
+    this.special = left != null ? this.specialCost() * left * keep : Math.min(this.specialCost(), this.special) * keep;
     G.specials?.onSplat(this);
     this.specialActive = null;
     this.climbing = false;

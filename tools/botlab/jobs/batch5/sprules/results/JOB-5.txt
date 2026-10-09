@@ -1,0 +1,62 @@
+JOB-5 (sprules) @ 64b7d3d (fix round 1, final code) — Mac mini b5-runner, 10:09–10:23 (14 min), exit 0.
+
+VERDICT: everything full except one surf check once; surf passed 4 of 4 on a rerun, but its number is on the low side.
+- round 1, regress.sh: 23 of 24 tests full — drainbow 44/44, sp-rules 44/44, sub-tweaks2, bot-specials 19/19, sub-scale 66/66,
+  loadout-picker 23/23, sub-tweaks 29/29, track-arrows, hud-lead turf + zones, sfx-cues 54/54 and audio-pause 10/10 alone,
+  net-sprules 14/14, net-drainbow, net-surf, net-practice, net-splatfeed, net-picker 5/5, net-lobbykit 14/14, net-mock, net-turf.
+- rounds 2 and 3: sp-rules 44/44, net-sprules 14/14, net-picker 5/5, net-lobbykit 14/14 both times.
+- surf 41/42 in round 1: 'bots in a ring's way jump it' — hard 27 jumped / 24 hit (share 0.53, the check wants ≥ 0.65), and
+  easy 0.54 (the check also wants easy below hard). surf isn't in the repeats, so I ran it 4 more times on the Mac mini at
+  64b7d3d: 42/42 ×4, hard shares 0.69, 0.81, 0.72, 0.69 (easy 0.52–0.57).
+  For scale: the same check over 20 earlier runs on this Mac (other branches' heads) had hard shares 0.67–0.94, mean 0.77;
+  the five runs at 64b7d3d average 0.69. That's about 2 standard errors lower — maybe nothing, maybe a small drop.
+  One thing in this diff that sits right next to it: SpecialSense now calls botShare(this.b, move) (the Bubble Guard
+  hand-on, sp-bubble.js) just before surfDodge(this, it). If botShare can steer a bot while a ring is coming, that could
+  cost a jump now and then. Not checked — a pointer only.
+
+## the job's summary
+### round 1 @ 64b7d3d: the whole regress.sh
+== drainbow: RESULT 44/44 0 FAIL
+== sp-rules: RESULT 44/44 0 FAIL
+== sub-tweaks2: RESULT 23/23 0 FAIL
+== surf: RESULT 41/42 1 FAIL
+FAIL bots in a ring's way jump it: hard 27 jumped / 24 hit (≥ 65 %), easy 29 / 25 (fewer)  {"hard":{"jumps":27,"hits":24,"share":0.53},"easy":{"jumps":29,"hits":25,"share":0.54},"stats":{"throws":1,"atFoes":1,"atObj":0,"atTurf":0,"noticed":109,"missed":23,"jumps":52,"shots":1}}
+== bot-specials: RESULT 19/19 0 FAIL
+== sub-scale: RESULT 66/66 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== track-arrows: RESULT 24/24 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-turf: RESULT 22/22 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-drainbow: RESULT 11/11 0 FAIL
+== net-surf: RESULT 13/13 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-splatfeed: RESULT 4/4 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+### round 3: sp-rules net-sprules net-picker net-lobbykit
+== sp-rules: RESULT 44/44 0 FAIL
+== net-sprules: RESULT 14/14 0 FAIL
+== net-picker: RESULT 5/5 0 FAIL
+== net-lobbykit: RESULT 14/14 0 FAIL
+
+## the extra surf runs (hand-made on the Mac mini, 10:24, at 64b7d3d)
+== surf-1: RESULT 42/42 0 FAIL
+PASS bots in a ring's way jump it: hard 37 jumped / 17 hit (≥ 65 %), easy 25 / 23 (fewer)  {"hard":{"jumps":37,"hits":17,"share":0.69},"easy":{"jumps":25,"hits":23,"share":0.52},"stats":{"throws":1,
+== surf-2: RESULT 42/42 0 FAIL
+PASS bots in a ring's way jump it: hard 44 jumped / 10 hit (≥ 65 %), easy 31 / 23 (fewer)  {"hard":{"jumps":44,"hits":10,"share":0.81},"easy":{"jumps":31,"hits":23,"share":0.57},"stats":{"throws":1,
+== surf-3: RESULT 42/42 0 FAIL
+PASS bots in a ring's way jump it: hard 39 jumped / 15 hit (≥ 65 %), easy 25 / 23 (fewer)  {"hard":{"jumps":39,"hits":15,"share":0.72},"easy":{"jumps":25,"hits":23,"share":0.52},"stats":{"throws":1,
+== surf-4: RESULT 42/42 0 FAIL
+PASS bots in a ring's way jump it: hard 37 jumped / 17 hit (≥ 65 %), easy 28 / 23 (fewer)  {"hard":{"jumps":37,"hits":17,"share":0.69},"easy":{"jumps":28,"hits":23,"share":0.55},"stats":{"throws":1,

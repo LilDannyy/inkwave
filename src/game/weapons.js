@@ -165,11 +165,12 @@ export class WeaponRunner {
       if (refused) emit('sub:cantuse', { actor: a, kind: sub.kind });
       const ok = !refused && (bar ? G.time >= (bar.nextThrow || 0) : a.ink >= sub.inkCost);
       if (ok) {
-        if (bar) bar.nextThrow = G.time + bar.def.gap; else a.ink -= sub.inkCost;
+        if (bar) bar.nextThrow = G.time + (bar.gap ?? bar.def.gap); else a.ink -= sub.inkCost;   // ([b5-sprules] gap: the bomb's own — sp-barrage.js)
         a.lastFire = 0;
         a.character.trigger('throw');
         if (sub.kind === 'bomb') G.projectiles.throwBomb(a); else G.subs.use(a, sub);
         rumble(a, 0.08, 0.22, 70);
+        if (bar) emit('barrage:throw', { actor: a, special: bar, kind: sub.kind });   // [b5-sprules] (the Mystery draws its next)
       }
     }
     if (!inp.sub && !inp.subReleased) this.aimingSub = false;
