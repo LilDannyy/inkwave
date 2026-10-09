@@ -428,6 +428,11 @@ export class SubSystem {
       it.pos.copy(hit.point).addScaledVector(n, 0.12);
       const vn = it.vel.dot(n);
       it.vel.addScaledVector(n, -vn * 1.4).multiplyScalar(0.55);
+    } else if (G.objTargets) {   // [b5-karp] the Roe Shell: a pellet / cloud bursts on it, the rest glance off (never inside it)
+      const M = G.objTargets.meet(_v, it.pos, 0.15);
+      if (M && it.kind === 'burst') { this._pelletBlast(it, null, M.point); it.state = 'dead'; return; }
+      if (M && (it.kind === 'scan' || it.kind === 'mist')) { it.pos.copy(M.point); return it.kind === 'scan' ? this._startCloud(it) : this._startMist(it); }
+      if (M) G.objTargets.bounce(_v, it.pos, it.vel, 0.15);
     }
     if (it.pos.y < PLAYER.waterY - 1.8) { it.state = 'dead'; return; }
     if (G.match?.stage?.sink(it.pos, 'sub')) { it.state = 'dead'; return; }   // [b5-stagehooks] (sinks in the lava)
@@ -512,9 +517,10 @@ export class SubSystem {
     // walls: turn away along them
     _v.copy(it.pos); _v.y += 0.2;
     const w = G.physics.raycast(_v, _v2.set(hx, 0, hz), step + 0.3, _hit2, true);
-    if (w.hit && Math.abs(w.normal.y) < 0.5) {
+    const wn = w.hit && Math.abs(w.normal.y) < 0.5 ? w.normal : G.objTargets?.meet(_v, _v3.copy(_v).addScaledVector(_v2, step + 0.3), 0.2)?.normal || null;   // [b5-karp] the Roe Shell is a wall to it
+    if (wn) {
       it.stuckT += dt;
-      const side = hx * w.normal.z - hz * w.normal.x >= 0 ? 1 : -1;
+      const side = hx * wn.z - hz * wn.x >= 0 ? 1 : -1;
       it.heading += side * 6 * dt;
     } else {
       it.stuckT = Math.max(0, it.stuckT - dt);
@@ -799,6 +805,7 @@ export class SubSystem {
       this.track(e, it.team, s.trackTime, c);   // (from the mine)
     }
     this.damageArea(c, s.radius, 30, it.team, it.owner);   // [b5-deploy] (by: the hit marker)
+    G.objTargets?.splash(it.owner, c, s.radius, s.damage, s.damage, 'mine', { special: !!it.sp });   // [b5-karp] the Roe Shell (no boss hook here: SPEC §2.2's grep missed it)
     it.state = 'dead';
   }
 

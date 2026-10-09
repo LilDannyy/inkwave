@@ -251,7 +251,7 @@ export class Buoy {
       const vn = this.vel.dot(h.normal);
       if (vn < 0) this.vel.addScaledVector(h.normal, -1.3 * vn);
       this.vel.x *= 0.35; this.vel.z *= 0.35; if (h.normal.y < -0.5) this.vel.y = Math.min(0, this.vel.y);
-    }
+    } else if (this.phase === 'fly') G.objTargets?.bounce(this.prev, this.pos, this.vel, 0.25, 1.3, 0.5);   // [b5-karp] off the Roe Shell (a buoy inside it would be crushed: karpShell.js)
     if (this.pos.y < PLAYER.waterY - 1 || this.airT > 5 || G.match?.stage?.under(this.pos)) return 'lost';   // [b5-stagehooks] (the lava)
     return null;
   }

@@ -345,7 +345,7 @@ function fly(it, dt) {
     it.pos.copy(h.point).addScaledVector(n, 0.15);
     const vn = it.vel.dot(n);
     it.vel.addScaledVector(n, -vn * 1.45).multiplyScalar(0.55);
-  }
+  } else G.objTargets?.bounce(_v, it.pos, it.vel, 0.15, 1.45);   // [b5-karp] off the Roe Shell (never into it)
   if (it.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(it.pos, 'waddle')) { it.why = 'sea'; plop(it); return; }   // [b5-stagehooks]
   it.m.outer.position.copy(it.pos).setY(it.pos.y - MID * it.vs);   // (the drawn middle on the flight path)
   it.m.tilt.rotation.x += it.spin.x * dt; it.m.tilt.rotation.z += it.spin.z * dt;
@@ -514,6 +514,9 @@ function stepWalk(it, dt, spd) {
   let mx = hx * step, mz = hz * step;
   _v.copy(it.pos); _v.y += 0.42;
   const w = G.physics.raycast(_v, _v2.set(hx, 0, hz), step + 0.2, _hit);
+  // [b5-karp] the Roe Shell is a wall to it: it slides round it (pressed into it, the stuck rule sets it off there)
+  const kn = w.hit && Math.abs(w.normal.y) < 0.5 ? null : G.objTargets?.meet(_v, _c.copy(_v).addScaledVector(_v2, step + 0.2), 0.2)?.normal;
+  if (kn) { const l = Math.hypot(kn.x, kn.z) || 1, nx = kn.x / l, nz = kn.z / l, dn = mx * nx + mz * nz; if (dn < 0) { mx -= dn * nx; mz -= dn * nz; } }
   if (w.hit && Math.abs(w.normal.y) < 0.5) {
     const n = w.normal, dn = mx * n.x + mz * n.z;
     mx -= dn * n.x; mz -= dn * n.z;

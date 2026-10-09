@@ -10,6 +10,11 @@
 //   tick(owner, shape, dmg, wid, o)                          continuous damage ({ c, r }: a sphere, or { x, z, r }: a column);
 //                                                            batched per owner like boss.rain (0.3 s)
 //   spheres(out) → out                                       { c, r, solid: true } per intact target (the subs read it)
+//   meet(a, b, pad) → { t, point, normal, target } | null    a thrown / walking / flying object (pad: its radius) meets
+//                                                            it like a wall: the point on its padded surface, the
+//                                                            outward normal there (fix round 2: the subs went through it)
+//   bounce(a, b, vel, pad, e, keep) → normal | null          meet(), then b put on the padded surface and vel reflected
+//                                                            (e: 1 + restitution, keep: speed kept) — Splat Bomb's glance
 // Who decides: the shooter's screen (ghost shots never hit: a remote attacker is ignored). Offline and on the host a
 // counted hit applies at once; a guest sums its hits per attacker and sends them on its next tick (`kh`, takeHits()).
 import * as THREE from 'three';
@@ -18,6 +23,7 @@ import { SPECIALS, WEAPONS, BAZOOKARP as K } from '../config.js';
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3();
 const _seg = { t: 0, point: new THREE.Vector3(), dist: 0, target: null };
+const _meet = { t: 0, point: new THREE.Vector3(), normal: new THREE.Vector3(), target: null };
 
 export class ObjTargets {
   constructor() {
@@ -92,6 +98,31 @@ export class ObjTargets {
   }
   spheres(out = []) { for (const t of this.targets) t.spheres(out); return out; }
   shields(out = []) { for (const t of this.targets) t.shields?.(out); return out; }
+  // a thrown / walking / flying thing (radius pad) moving a → b meets an intact target like a wall → the meeting point
+  // on its padded surface and the outward normal there (a segment that starts inside: pushed out from where it is)
+  meet(a, b, pad = 0.15) {
+    const h = this.segHit(a, b, pad);
+    if (!h) return null;
+    const c = h.target.center();
+    _meet.t = h.t; _meet.target = h.target;
+    _meet.normal.copy(h.point).sub(c);
+    if (_meet.normal.lengthSq() < 1e-8) _meet.normal.copy(b).sub(a).negate();
+    if (_meet.normal.lengthSq() < 1e-8) _meet.normal.set(0, 1, 0);
+    _meet.normal.normalize();
+    _meet.point.copy(c).addScaledVector(_meet.normal, h.target.radius() + pad + 0.01);
+    return _meet;
+  }
+  // meet(), then b on the padded surface and vel's part into it reflected (× e) and the whole kept × keep — the Splat
+  // Bomb's glance (weapons.js _updateBombs) for every thrown sub → the normal, or null
+  bounce(a, b, vel, pad = 0.15, e = 1.4, keep = 0.55) {
+    const M = this.meet(a, b, pad);
+    if (!M) return null;
+    b.copy(M.point);
+    const vn = vel.dot(M.normal);
+    if (vn < 0) vel.addScaledVector(M.normal, -vn * e);
+    vel.multiplyScalar(keep);
+    return M.normal;
+  }
 
   _at(point) {
     if (this.targets.length === 1 || !point) return this.targets[0] || null;
