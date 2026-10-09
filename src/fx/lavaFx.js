@@ -247,7 +247,8 @@ export class LavaLook {
       const parts = [colourGeo(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2).translate(0, -r.depth / 2, 0), LOOK.basalt),
         colourGeo(new THREE.CylinderGeometry(r.r - 0.04, r.r - 0.04, 0.06, 6, 1, false, Math.PI / 2).translate(0, -0.02, 0), LOOK.basaltTop)];
       for (const q of r.parts) if (!q.body) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
-      const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = true; m.receiveShadow = true; g.add(m);
+      // (only the lookouts cast shadows: the short columns' shadows cost a draw call per cascade for little)
+      const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = r.look?.role === 'lookout'; m.receiveShadow = true; g.add(m);
       g.rotation.y = r.yaw;
       g.position.set(r.x, r.top0, r.z);
       this.root.add(g);
