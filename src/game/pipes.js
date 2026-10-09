@@ -817,13 +817,17 @@ export class StagePipes {
     const V = this._camWater, cam = this._camP || (this._camP = new THREE.Vector3());
     // the boom comes back out quickly once the way behind is clear (the rig's own ease-out is for walking: at 18–24 m/s
     // a boom pulled in at a housing would otherwise trail at half length for a second)
+    // (its own probe every third frame: the way behind changes slowly next to a 1/60 s frame)
     if (rig.boom && rig.wantDist > rig.boom.x + 0.05) {
-      const pr = this._pr || (this._pr = {}), back = rig.forward(_v).negate();
-      G.physics.skip = (o && o.skip) || 'pipe';
-      try { G.physics.cameraProbe(rig.pivot, back, rig.wantDist, 0.62, pr); } finally { G.physics.skip = null; }
+      const pr = this._pr || (this._pr = { soft: 0 });
+      if (((this._camN = (this._camN || 0) + 1) % 3) === 1) {
+        const back = rig.forward(_v).negate();
+        G.physics.skip = (o && o.skip) || 'pipe';
+        try { G.physics.cameraProbe(rig.pivot, back, rig.wantDist, 0.62, pr); } finally { G.physics.skip = null; }
+      }
       const dt = this._camDt || 1 / 60;
       if (pr.soft > rig.boom.x) { rig.boom.x = Math.min(pr.soft, rig.boom.x + 10 * dt); rig.curDist = rig.boom.x; }
-    }
+    } else this._camN = 0;
     let inside = false;
     if (V) {
       const fwd = rig.forward(_v);
