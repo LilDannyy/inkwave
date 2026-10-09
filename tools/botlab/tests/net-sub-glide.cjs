@@ -1,16 +1,19 @@
 // [b5-sub-glide] The Glide Bomb online (src/game/kits/glide.js; SPEC §A8, A10.10), real clients on the local relay:
 //   CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-glide.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
-//   NET_ARGS: 'map=<id>' (default saltpan)
+//   NET_ARGS: 'map=<id>' (default saltpan); 'scene=hostleave': the host leaves instead (below)
 // Practice; A (the host) and B (the guest) on different teams, everyone's brains stubbed. Checks:
 //  - A cooks a stone: B's copy of A's hand shows cook levels 1, 2, 3 in order, each within 0.3 s of A's own (the [5]
 //    records on A's timeline), A's sub held (its subAim flag) — and back to 0 once A lets go;
-//  - the release: B's ghost slides with the same fixed step and blows within 0.3 m of A's blast, a ghost never paints or
+//  - the release: B's ghost slides with the same fixed step and blows within 0.3 m of A's blast; a tap at B bounces off
+//    B on both screens and the ghost's blast is still within 0.3 m (the [4] corrections); a ghost never paints or
 //    hurts: the blast's hit on B is judged on A's screen and applied once, by B's screen (B's hp falls by that hit);
 //  - B shoots A's next stone on B's screen: the hit goes to A ('dh', with B's actor as the attacker on A's screen), A's
 //    copy pops ('device:down' how 'shot', by B) and the end record ends B's ghost (popped, no blast anywhere);
 //  - a cook that fizzles in A's hand (A splatted while holding): B's copy of the hand drops to 0;
 //  - B leaves with a stone sliding: on A every ghost of B's is gone within a frame of onLeave (dropOwner), no blast;
 //  - no console errors.
+// scene=hostleave: A's bot and A's own kid each have a stone sliding when A (the host) leaves: on B both ghosts are gone
+// at onLeave (before B adopts the bot), no ghost blast after, B hosts and runs the bot.
 module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   for (const c of clients.slice(0, 2)) {
     if (/[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
@@ -37,9 +40,10 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   await still(A); await still(B);
   // listeners (wall-clock times: both pages share this machine's clock)
   const listen = (c) => c.js(`(async () => { const { on } = await import('./src/core/ctx.js'); const { SUB_KITS } = await import('./src/game/kits/registry.js'); window.__K = SUB_KITS.glide;
-    const L = window.__g = { charge: [], boom: [], hits: [], down: [], end: [], dh: [] };
+    const L = window.__g = { charge: [], boom: [], hits: [], down: [], end: [], dh: [], bounce: [] };
     on('sub:charge', (e) => { if (e.kind === 'glide') L.charge.push({ lv: e.level, at: Date.now(), who: e.actor?.nid }); });
-    on('bomb:explode', (e) => { if (e.kind === 'glide') L.boom.push({ p: [e.pos.x, e.pos.y, e.pos.z], ghost: !!e.ghost, at: Date.now() }); });
+    on('bomb:explode', (e) => { if (e.kind === 'glide') L.boom.push({ p: [e.pos.x, e.pos.y, e.pos.z], ghost: !!e.ghost, at: Date.now(), who: e.actor?.nid }); });
+    on('glide:bounce', (e) => L.bounce.push({ kind: e.kind, ghost: !!e.ghost, who: e.who?.nid ?? null, at: Date.now() }));
     on('hit', (e) => { if (e.weaponId === 'glide') L.hits.push({ vic: e.victim?.nid, att: e.attacker?.nid, d: e.damage, local: !!e.victim?.isLocal }); });
     on('device:down', (e) => { if (e.kind === 'glide') L.down.push({ how: e.how, by: e.by?.nid ?? null }); });
     on('glide:end', (e) => L.end.push({ why: e.why }));
@@ -64,6 +68,9 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   await pin(B, ids.b, 9, 0.2, yaw + Math.PI);
   await A.js(`(() => { const a = __G.match.local; a.setSub('glide'); a.ink = 100; return 1; })()`);
   await wait(1200);
+  // a tap: A's sub pressed until A's runner holds it, then let go (uncooked)
+  const tap = async () => { await A.js(`window.__hold = true; 1`); await A.until(`__G.match.local.weaponRunner.aimingSub`, 3000, 10); await wait(40); await A.js(`window.__hold = false; 1`); };
+  if (opt.scene === 'hostleave') { await hostLeave(); return; }
 
   // ============================================================================================ the cook in the hand
   // B polls what it shows for A's hand (its own frames), wall-clock stamped
@@ -79,7 +86,8 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   await wait(400);
   const seenMid = await J(B, `window.__seen.slice()`);
   await A.js(`window.__hold = false; 1`);
-  await wait(400);
+  // (B shows it once A's tick, its subAim flag down, plays back there: ~0.1 s idle, 0.3 s and more on a loaded machine)
+  await B.until(`(() => { const S = window.__seen; return S.length > 0 && S[S.length - 1].lv === 0; })()`, 3000, 20).catch(() => null);
   const chA = (await J(A, `window.__g.charge`)).filter((c) => c.who === ids.a), seenB = await J(B, `window.__seen`);
   const aimA = await J(A, `window.__aimOn`), aimB = await J(B, `window.__aimOn`);
   await A.js(`clearInterval(window.__poll); 1`);
@@ -104,12 +112,31 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const bA = boomA.find((x) => !x.ghost), bB = boomB.find((x) => x.ghost);
   const dBoom = bA && bB ? Math.hypot(bA.p[0] - bB.p[0], bA.p[1] - bB.p[1], bA.p[2] - bB.p[2]) : null;
   R('the ghost on B slides with the same fixed step and blows within 0.3 m of A\'s blast (A\'s [1] record; the ghost never blows itself)', dBoom != null && dBoom <= 0.3 && boomB.filter((x) => !x.ghost).length === 0, { dBoom, a: bA, b: bB });
+
+  // ============================================================================================ a kid bounce, both screens
+  // an uncooked tap straight down the line at B (pinned 9 m out, 0.2 m off it): it clonks off B's shins on A's screen (A's
+  // copy of B) and on B's (B's own kid, where it really is); A's [4] at the bounce and every 0.25 s keeps B's ghost on
+  // A's path — the ghost's blast still within 0.3 m of A's
+  await B.until(`__G.match.local.alive`, 12000, 100);
+  await B.js(`(() => { __G.match.local.hp = 1000; window.__g.boom.length = 0; window.__g.bounce.length = 0; return 1; })()`);
+  await A.js(`(() => { window.__g.boom.length = 0; window.__g.bounce.length = 0; __G.match.local.ink = 100; return 1; })()`);
+  await tap();
+  await A.until(`__K.items.some((x) => !x.ghost && x.state === 'slide')`, 3000, 30).catch(() => null);
+  await A.until(`!__K.items.some((x) => x.state !== 'dead')`, 8000, 50).catch(() => null);
+  await B.until(`!__K.items.some((x) => x.state !== 'dead')`, 8000, 50).catch(() => null);
+  await wait(300);
+  const kb = { A: await J(A, `{ boom: window.__g.boom, bounce: window.__g.bounce }`), B: await J(B, `{ boom: window.__g.boom, bounce: window.__g.bounce }`) };
+  const kA = kb.A.boom.find((x) => !x.ghost), kB = kb.B.boom.find((x) => x.ghost);
+  const dKid = kA && kB ? Math.hypot(kA.p[0] - kB.p[0], kA.p[1] - kB.p[1], kA.p[2] - kB.p[2]) : null;
+  R('a tap at B: it bounces off B on A\'s screen and B\'s ghost bounces off B too; the ghost\'s blast is within 0.3 m of A\'s (no drift past the [4] corrections)',
+    kb.A.bounce.some((x) => !x.ghost && x.kind === 'kid' && x.who === ids.b) && kb.B.bounce.some((x) => x.ghost && x.kind === 'kid' && x.who === ids.b) && dKid != null && dKid <= 0.3,
+    { dKid: dKid != null && Math.round(dKid * 1000) / 1000, bouncesA: kb.A.bounce.map((x) => x.kind), bouncesB: kb.B.bounce.map((x) => x.kind), a: kA && kA.p, b: kB && kB.p });
+
   // a stone that blows at B's feet: B's hp falls once, by the hit A judged
   await B.until(`__G.match.local.alive`, 12000, 100);
   await B.js(`(() => { const me = __G.match.local; me.hp = 1000; window.__g.hits.length = 0; return 1; })()`);
   await A.js(`(() => { window.__g.hits.length = 0; const a = __G.match.local; a.ink = 100; return 1; })()`);
   // (an uncooked stone; on A it's set to stop by B: pushed to 0.75 m short of B and stilled, its fuse then runs out there)
-  const tap = async () => { await A.js(`window.__hold = true; 1`); await A.until(`__G.match.local.weaponRunner.aimingSub`, 3000, 10); await wait(40); await A.js(`window.__hold = false; 1`); };
   await tap();
   await A.until(`__K.items.some((x) => !x.ghost && x.state === 'slide')`, 3000, 30);
   await A.js(`(() => { const it = __K.items.find((x) => !x.ghost && x.state === 'slide'); const b = __G.match.actors.find((q) => q.nid === ${ids.b}); const dx = it.p.x - b.pos.x, dz = it.p.z - b.pos.z, l = Math.hypot(dx, dz) || 1;
@@ -147,7 +174,9 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   // ============================================================================================ a fizzle in A's hand
   await B.js(`(() => { window.__seen.length = 0; return 1; })()`);
   await A.js(`(() => { const a = __G.match.local; a.ink = 100; window.__hold = true; return 1; })()`);
-  await wait(1000);
+  // (until A's own cook reaches level 1 — game time, whatever the machine's load — and B shows it, then splat A)
+  await A.until(`__K.levelShown(__G.match.local) >= 1`, 8000, 20).catch(() => null);
+  await B.until(`window.__seen.some((s) => s.lv >= 1)`, 3000, 20).catch(() => null);
   await A.js(`(() => { const a = __G.match.local; a.damage(500, null); return 1; })()`);
   await A.js(`window.__hold = false; 1`);
   await wait(700);
@@ -170,4 +199,43 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
 
   const errs = [...A.log, ...B.log].filter((l) => !/lightmap|WebGL|GPU|ERR_FAILED|net::/i.test(l));
   R('no console errors on either screen', !errs.length, errs.slice(0, 6));
+
+  // ============================================================================================ scene=hostleave
+  // A (the host) leaves while its stones are out — one thrown by a bot A's screen runs, one by A's own kid (their fuses
+  // stretched to 6 s on A, so they are still sliding when the relay tells B). On B every ghost of theirs is gone at
+  // onLeave (SUB_KITS.glide.dropOwner, called for every actor A owned before B adopts them), no ghost blast follows, B
+  // is the host and runs A's bot now
+  async function hostLeave() {
+    const bt = await J(A, `(() => { const m = __G.match, me = m.local, b = m.actors.find((q) => q.bot && !q.remote && q !== me); if (!b) return null; window.__bt = b;
+      b.setSub('glide'); b.ink = 100; const [x, z] = ${JSON.stringify(at(-1.5, 2.5))};
+      b.pos.set(x, ${py} + 0.02, z); b.vel.set(0, 0, 0);
+      const h0 = window.__hook; window.__hook = (q, it) => { h0?.(q, it); if (q === b) { q.pos.x = x; q.pos.z = z; q.vel.x = q.vel.z = 0; q.aimYaw = q.yaw = ${yaw}; q.aimPitch = 0; if (q.bot) { q.bot.aimYaw = ${yaw}; q.bot.aimPitch = 0; } it.sub = !!window.__bh; } };
+      return { nid: b.nid, team: b.team }; })()`);
+    R('A runs a bot of its own (practice, 2 bots)', !!bt, bt);
+    if (!bt) return;
+    await wait(500);
+    // the bot's tap, then A's own
+    await A.js(`window.__bh = true; 1`); await A.until(`window.__bt.weaponRunner.aimingSub`, 3000, 10); await wait(40); await A.js(`window.__bh = false; 1`);
+    await A.until(`__K.items.some((x) => !x.ghost && x.owner === window.__bt && x.state === 'slide')`, 3000, 30).catch(() => null);
+    await tap();
+    await A.until(`__K.items.filter((x) => !x.ghost && x.state === 'slide').length >= 2`, 3000, 30).catch(() => null);
+    const gids = await J(A, `(() => { const out = []; for (const it of __K.items) if (!it.ghost && it.state === 'slide') { it.fuse = 6; it.recT = 0; out.push({ gid: it.gid, who: it.owner.nid }); } return out; })()`);
+    const owners = JSON.stringify([ids.a, bt.nid]), G2 = JSON.stringify(gids.map((g) => g.gid));
+    await B.until(`(() => { const L = __K.items.filter((x) => x.ghost && x.state === 'slide' && ${G2}.includes(x.gid)); return L.length >= 2 && L.every((x) => x.fuse > 3); })()`, 4000, 30).catch(() => null);
+    await B.js(`(() => { const nm = __G.netm, o = nm.onLeave.bind(nm), mine = (x) => ${G2}.includes(x.gid) && x.state !== 'dead';
+      window.__left = null; window.__g.boom.length = 0; window.__g.end.length = 0;
+      nm.onLeave = (id, hc) => { const pre = __K.items.filter(mine).length; o(id, hc); window.__left = { pre, live: __K.items.filter(mine).length, hostChanged: !!hc }; }; return 1; })()`);
+    const before = await J(B, `__K.items.filter((x) => x.ghost && ${G2}.includes(x.gid) && x.state !== 'dead').map((x) => ({ gid: x.gid, who: x.owner?.nid, fuse: Math.round(x.fuse * 100) / 100 }))`);
+    close(0);
+    await B.until(`!!window.__left`, 20000, 50).catch(() => null);
+    await wait(2500);
+    const after = await J(B, `(() => { const nm = __G.netm, b = __G.match.actors.find((q) => q.nid === ${bt.nid});
+      return { left: window.__left, ghostBooms: window.__g.boom.filter((x) => x.ghost).length, live: __K.items.filter((x) => ${G2}.includes(x.gid) && x.state !== 'dead').length,
+        host: !!nm.isHost, botRunHere: !!b && !b.remote }; })()`);
+    R(`A (the host) leaves with two stones sliding (its bot's and its own): on B both ghosts are gone at onLeave (dropOwner before the bot is adopted), no ghost blast after, B hosts and runs A's bot`,
+      gids.length >= 2 && new Set(gids.map((g) => g.who)).size === 2 && before.length >= 2 && after.left && after.left.pre >= 2 && after.left.live === 0 && after.live === 0 && after.ghostBooms === 0 && after.host && after.botRunHere,
+      { owners: JSON.parse(owners), gids, before, ...after });
+    const errs2 = B.log.filter((l) => !/lightmap|WebGL|GPU|ERR_FAILED|net::/i.test(l));
+    R('no console errors on B', !errs2.length, errs2.slice(0, 6));
+  }
 };
