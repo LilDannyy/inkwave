@@ -71,7 +71,11 @@
     if (kind === 'g') { tick({ sub: true, move: true }); for (let k = 0; k < fr(16) && ok; k++) tick({ move: false }); }
     else if (kind === 'w') { for (let k = 0; k < fr(16) && ok; k++) tick({ move: true }); }
     else if (kind === 'h') { for (let k = 0; k < fr(54) && ok; k++) { tick({ move: true, jump: k < 2 }); if (k > fr(6) && kid.grounded && !onRoof()) break; } }
-    else { const f = fr(kind); for (let k = 0; k <= f && ok; k++) tick({ move: true, jump: k < 2, sub: k === f }); for (let k = 0; k < fr(16) && ok; k++) tick({ move: true }); }   // (a running jump, the air dash the same way: the furthest it goes)
+    else {   // a running jump, the air dash the same way (the furthest it goes); the stick held only until it lands (never a
+             // walk on up a ramp or a stair after it: what's measured is where the dash put it)
+      const f = fr(kind); for (let k = 0; k <= f && ok; k++) tick({ move: true, jump: k < 2, sub: k === f });
+      for (let k = 0; k < fr(30) && ok && (!kid.grounded || kid.weaponRunner.dashT > 0); k++) tick({ move: true });
+    }
     for (let k = 0; k < fr(90) && ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) tick({});
     if (!ok) return { dead: true, roofT };
     const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
