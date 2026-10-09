@@ -10,10 +10,10 @@
 //  3 the three 8-chains set off at once — the 60 frames that follow (and the records a second they make: the wire);
 //  4 a live 4 v 4 bot Turf match on the testbox (fighting, routing, scanning devices), 1800 frames, first with no bobbers,
 //    then with 24 per bot kept topped up by the script: p95 frame time, the bots' think time (every BotBrain.update a frame,
-//    summed), the bobber danger discs, SIGHT_STATS.deferred a second.
+//    summed), the bobber danger discs, the bots' own sight deferrals a second (SIGHT_STATS.deferred − kitDeferred).
 // Pass: phase 2's p95 within +2 ms of phase 1's, phase 3's within +4 ms; draw calls up by ≤ 20; the kit's own tick
 // < 0.5 ms a frame (p95); phase 4 with bobbers within +3 ms (p95) of without, the bots' think p95 within +1.0 ms, and
-// SIGHT_STATS.deferred at most doubled.
+// the bots' own sight deferrals at most doubled.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, THREE = await import('three');
   const { PLAYER } = await import('./src/config.js');
@@ -102,7 +102,10 @@
     S.clear(); run(30);
     for (const a of A) { if (!a.alive) a.respawn(); a.setSub('bobber'); a.ink = PLAYER.inkMax; }
     live();
-    const sight = () => SIGHT_STATS.deferred;
+    // (the bots' own looks deferred — what the budget must not starve: botSight's sightRay counts the kit subs' deferrals
+    // in SIGHT_STATS.deferred too, and apart in kitDeferred, which is their own per-frame share running out; reported)
+    const sight = () => SIGHT_STATS.deferred - (SIGHT_STATS.kitDeferred || 0), kitDef = () => SIGHT_STATS.kitDeferred || 0;
+    const k0 = kitDef();
     run(120);
     let d0 = sight();
     const F4a = run(N4), s4a = stats(F4a), defA = (sight() - d0) / (N4 * DT);
@@ -126,7 +129,7 @@
     const F4b = run(N4, (i) => { if (i % 30 === 0) { liveB.push(liveN()); discs.push(specialDangers().filter((x) => x.src === 'bobber').length); } }), s4b = stats(F4b), defB = (sight() - d0) / (N4 * DT);
     hook = null; still();
     const meanLive = Math.round(liveB.reduce((a, b) => a + b, 0) / Math.max(1, liveB.length));
-    R(`phase 4: a live 4 v 4 (${N4} frames) — with ${meanLive} live bobbers on average (topped up to 24 a bot): p95 ${s4b.p95} ms vs ${s4a.p95} without (≤ +3), the bots' think p95 ${s4b.think95} vs ${s4a.think95} ms (≤ +1.0), sight deferrals ${r2(defB)} vs ${r2(defA)} a second (≤ 2×, or ≤ 1 a second)`,
+    R(`phase 4: a live 4 v 4 (${N4} frames) — with ${meanLive} live bobbers on average (topped up to 24 a bot): p95 ${s4b.p95} ms vs ${s4a.p95} without (≤ +3), the bots' think p95 ${s4b.think95} vs ${s4a.think95} ms (≤ +1.0), the bots' own sight deferrals ${r2(defB)} vs ${r2(defA)} a second (≤ 2×, or ≤ 1 a second; the kit's own share ran out ${r2((kitDef() - k0) / (N4 * DT))} times a second)`,
       s4b.p95 <= s4a.p95 + 3 && s4b.think95 <= s4a.think95 + 1.0 && (defB <= Math.max(1, 2 * defA)), { without: s4a, with: s4b, defA: r2(defA), defB: r2(defB), live: liveB, discsMax: Math.max(0, ...discs), discsMean: r2(discs.reduce((a, b) => a + b, 0) / Math.max(1, discs.length)), stats: { triggers: K.BOBBER_STATS.triggers, disarmed: K.BOBBER_STATS.disarmed } });
     R(`phase 4: the bobber danger discs stay ≤ ${K.items.length ? 48 : 48} a frame (max ${Math.max(0, ...discs)})`, Math.max(0, ...discs) <= 48, discs);
   } catch (e) { R('harness error: ' + e.message, false, String(e.stack).slice(0, 900)); }
