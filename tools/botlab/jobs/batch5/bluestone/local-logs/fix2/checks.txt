@@ -1,0 +1,164 @@
+# Bluestone blockout fix round 2 — Node checks at 140a7a6 (2026-10-09 16:03:17)
+### check-maps ERA=1
+bluestone    1108 pieces  ok
+bluestone.tower 1076 pieces  ok
+### check-maps ERA=2
+bluestone    1164 pieces  ok
+bluestone.tower 1132 pieces  ok
+### check-maps ERA=3
+bluestone    1292 pieces  ok
+bluestone.tower 1260 pieces  ok
+### cover-node ERA=1 (cover-map.js's rules in Node)
+{"map":"bluestone","era":"1","mode":"turf","floorCells":6114,"within5m_pct":98.8,"largestOpen":[9.7,[19.5,-15.5,3.4]],"largestOpenGround":[4.5,[-1.5,-69.5,3.3]],"regions":{"base":1766,"circus":1120,"east":836,"arm":674,"swimston":632,"west":580,"arm-walks":228,"alley":184,"river-works":60,"arm-end":34}}
+### check-blockout ERA=1
+{"blocks": 1264, "layoutBlocks": 1108, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 7195, "floorByHeight": {"<0.5": "4055 (56%)", "0.5-1.1": "1652 (23%)", "1.1-2": "648 (9%)", "2-3": "338 (5%)", "3-4": "485 (7%)", "4-6": "18 (0%)"}, "paint_m2": 15031, "lightmapFits": true, "lightRows": 1384}
+### nav-measure ERA=1
+{"era":"1","nodes":5980,"spawnMid_t0":{"centre":[74.4,6.31],"alphaSide":[73,6.19],"bravoSide":[74.4,6.31]},"spawnMid_t1":{"centre":[73.5,6.23],"alphaSide":[75,6.36],"bravoSide":[73.5,6.23]},"bazookarp":{"alphaAttack":{"L":59,"pondWeir":39.1,"weirGate":28.7},"bravoAttack":{"L":59.8,"pondWeir":39.5,"weirGate":29.1}},"bazookarpRoutes":{"alphaAttack":{"pondWeir":{"route1":39.1,"route2":48.6,"ratio":1.24,"ok":true,"via1":[3.5,18.5],"via2":[16.5,13.5]},"weirGate":{"route1":28.7,"route2":32.9,"ratio":1.15,"ok":true,"via1":[5.5,45.5],"via2":[0.5,42.5]}},"bravoAttack":{"pondWeir":{"route1":39.5,"route2":49,"ratio":1.24,"ok":true,"via1":[-3.5,-17.5],"via2":[-16.5,-12.5]},"weirGate":{"route1":29.1,"route2":32.8,"ratio":1.13,"ok":true,"via1":[-4.5,-44.5],"via2":[-0.5,-42.5]}}}}
+### cover-node ERA=2 (cover-map.js's rules in Node)
+{"map":"bluestone","era":"2","mode":"turf","floorCells":6754,"within5m_pct":98.7,"largestOpen":[9.7,[19.5,-15.5,3.4]],"largestOpenGround":[4.5,[-1.5,-69.5,3.3]],"regions":{"base":1766,"circus":1122,"east":916,"west":772,"arm":674,"swimston":632,"river-works":426,"arm-walks":228,"alley":184,"arm-end":34}}
+### check-blockout ERA=2
+{"blocks": 1320, "layoutBlocks": 1164, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 7918, "floorByHeight": {"<0.5": "4526 (57%)", "0.5-1.1": "1867 (24%)", "1.1-2": "685 (9%)", "2-3": "338 (4%)", "3-4": "485 (6%)", "4-6": "18 (0%)"}, "paint_m2": 15983, "lightmapFits": true, "lightRows": 1408}
+### nav-measure ERA=2
+{"era":"2","nodes":6574,"spawnMid_t0":{"centre":[74.4,6.31],"alphaSide":[73,6.19],"bravoSide":[74.4,6.31]},"spawnMid_t1":{"centre":[73.5,6.23],"alphaSide":[75,6.36],"bravoSide":[73.5,6.23]},"bazookarp":{"alphaAttack":{"L":59,"pondWeir":39.1,"weirGate":28.7},"bravoAttack":{"L":59.8,"pondWeir":39.5,"weirGate":29.1}},"bazookarpRoutes":{"alphaAttack":{"pondWeir":{"route1":39.1,"route2":48.6,"ratio":1.24,"ok":true,"via1":[3.5,18.5],"via2":[16.5,13.5]},"weirGate":{"route1":28.7,"route2":32.9,"ratio":1.15,"ok":true,"via1":[5.5,45.5],"via2":[0.5,42.5]}},"bravoAttack":{"pondWeir":{"route1":39.5,"route2":49,"ratio":1.24,"ok":true,"via1":[-3.5,-17.5],"via2":[-16.5,-12.5]},"weirGate":{"route1":29.1,"route2":32.8,"ratio":1.13,"ok":true,"via1":[-4.5,-44.5],"via2":[-0.5,-42.5]}}}}
+### cover-node ERA=3 (cover-map.js's rules in Node)
+{"map":"bluestone","era":"3","mode":"turf","floorCells":7088,"within5m_pct":97.5,"largestOpen":[9.7,[19.5,-15.5,3.4]],"largestOpenGround":[7.9,[-15.5,-6.5,5.5]],"regions":{"base":1766,"circus":948,"east":916,"west":794,"arm":732,"swimston":688,"river-works":426,"arm-walks":246,"halo":232,"alley":186,"garden":120,"arm-end":34}}
+### check-blockout ERA=3
+{"blocks": 1448, "layoutBlocks": 1292, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 8531, "floorByHeight": {"<0.5": "4569 (54%)", "0.5-1.1": "1894 (22%)", "1.1-2": "722 (8%)", "2-3": "567 (7%)", "3-4": "500 (6%)", "4-6": "282 (3%)"}, "paint_m2": 17121, "lightmapFits": true, "lightRows": 1457}
+### nav-measure ERA=3
+{"era":"3","nodes":7100,"spawnMid_t0":{"centre":[74.4,6.31],"alphaSide":[73,6.19],"bravoSide":[74.4,6.31]},"spawnMid_t1":{"centre":[73.5,6.23],"alphaSide":[75,6.36],"bravoSide":[73.5,6.23]},"bazookarp":{"alphaAttack":{"L":59,"pondWeir":39.1,"weirGate":28.7},"bravoAttack":{"L":59.8,"pondWeir":39.5,"weirGate":29.1}},"bazookarpRoutes":{"alphaAttack":{"pondWeir":{"route1":39.1,"route2":48.6,"ratio":1.24,"ok":true,"via1":[3.5,18.5],"via2":[16.5,13.5]},"weirGate":{"route1":28.7,"route2":32.9,"ratio":1.15,"ok":true,"via1":[5.5,45.5],"via2":[0.5,42.5]}},"bravoAttack":{"pondWeir":{"route1":39.5,"route2":49,"ratio":1.24,"ok":true,"via1":[-3.5,-17.5],"via2":[-16.5,-12.5]},"weirGate":{"route1":29.1,"route2":32.8,"ratio":1.13,"ok":true,"via1":[-4.5,-44.5],"via2":[-0.5,-42.5]}}}}
+### check-blockout ERA=all (era groups)
+arcade-1:a       blocks  2 props 0 aabb 4.5 x 6.7  r_g 45.7  eras 1/23
+arcade-2:a       blocks  2 props 0 aabb 4.5 x 6.7  r_g 39.5  eras 1/23
+arcade-3:a       blocks  2 props 0 aabb 4.5 x 5.2  r_g 34.2  eras 1/23
+bridge-1:a       blocks  2 props 0 aabb 7.0 x 7.5  r_g 32.3  eras 23
+bridge-2:a       blocks  4 props 0 aabb 7.0 x 7.5  r_g 31.7  eras 23
+bridge-3:a       blocks  4 props 0 aabb 7.1 x 7.5  r_g 32.2  eras 23
+bridge-4:a       blocks  5 props 0 aabb 7.1 x 7.5  r_g 33.9  eras 23
+bridge-5:a       blocks  3 props 0 aabb 5.8 x 5.1  r_g 35.8  eras 23
+bridge-6:a       blocks  3 props 0 aabb 5.6 x 5.1  r_g 37.4  eras 23
+bridge-7:a       blocks  2 props 0 aabb 5.3 x 4.6  r_g 39.1  eras 23
+bw-1:a           blocks  5 props 0 aabb 3.6 x 6.8  r_g 35.5  eras 1/23
+bw-2:a           blocks  1 props 0 aabb 3.5 x 6.6  r_g 30.7  eras 23
+bw-3:a           blocks  4 props 0 aabb 3.6 x 6.6  r_g 27.0  eras 1/23
+bw-4:a           blocks  4 props 0 aabb 3.7 x 6.7  r_g 24.3  eras 1/23
+crates-1:a       blocks  2 props 0 aabb 3.0 x 4.8  r_g 26.3  eras 1/23
+crates-2:a       blocks  2 props 0 aabb 3.0 x 4.8  r_g 22.6  eras 1/23
+crossing:a       blocks  2 props 0 aabb 3.5 x 3.6  r_g 49.0  eras 1/23
+garden-00:a      blocks  1 props 0 aabb 2.7 x 2.7  r_g 41.5  eras 3
+garden-01:a      blocks  8 props 1 aabb 7.9 x 6.8  r_g 40.5  eras 3/12
+garden-10:a      blocks 11 props 1 aabb 7.4 x 6.1  r_g 40.4  eras 3/12
+garden-11:a      blocks  9 props 1 aabb 7.9 x 7.7  r_g 37.1  eras 3/12
+garden-12:a      blocks  5 props 0 aabb 7.5 x 4.5  r_g 33.7  eras 3
+garden-as:a      blocks  3 props 0 aabb 7.9 x 5.8  r_g 36.2  eras 3/12
+garden-hs:a      blocks  4 props 2 aabb 3.0 x 7.7  r_g 38.0  eras 12/3
+halo-1:a         blocks  3 props 0 aabb 2.6 x 6.1  r_g 13.7  eras 3
+halo-2:a         blocks  3 props 0 aabb 6.1 x 6.0  r_g 13.8  eras 3
+halo-3:a         blocks  4 props 0 aabb 6.0 x 6.1  r_g 13.8  eras 3
+halo-4:a         blocks  3 props 0 aabb 6.1 x 2.6  r_g 13.7  eras 3
+halo-5:a         blocks  4 props 0 aabb 6.3 x 2.6  r_g 13.8  eras 3
+halo-6:a         blocks  3 props 0 aabb 6.0 x 6.1  r_g 13.8  eras 3
+halo-7:a         blocks  3 props 0 aabb 6.0 x 6.0  r_g 13.8  eras 3
+halo-8:a         blocks  3 props 0 aabb 2.6 x 6.0  r_g 13.7  eras 3
+landing:a        blocks  1 props 0 aabb 7.4 x 3.6  r_g 37.9  eras 1
+pylon-w:a        blocks  2 props 0 aabb 1.4 x 1.4  r_g 16.5  eras 12/3
+stair-s1:a       blocks  4 props 0 aabb 3.0 x 7.7  r_g 23.3  eras 12/3
+stair-s2:a       blocks  5 props 0 aabb 3.0 x 7.7  r_g 17.3  eras 12/3
+{
+ "era": 0,
+ "mode": "turf",
+ "blocks": 1484,
+ "layoutBlocks": 1328,
+ "groundMiss": 0,
+ "bermMiss": 0,
+ "holes": 0,
+ "holeSample": [],
+ "floor_m2": 8186,
+ "floorByHeight": {
+  "<0.5": "4509 (55%)",
+  "0.5-1.1": "1670 (20%)",
+  "1.1-2": "678 (8%)",
+  "2-3": "549 (7%)",
+  "3-4": "500 (6%)",
+  "4-6": "282 (3%)"
+ },
+ "paint_m2": 16750,
+ "lightmapFits": true,
+ "lightRows": 1481,
+ "groups": 72,
+ "groupFails": 0,
+ "jump12": {
+  "groupsPerHalf": [
+   18,
+   18
+  ],
+  "blocks": 100
+ },
+ "jump23": {
+  "groupsPerHalf": [
+   18,
+   18
+  ],
+  "blocks": 156
+ },
+ "eraBlocks": 256,
+ "eraShare": 0.193
+}
+### appear-check (union, turf / tower)
+== jump 1 -> 2: 78 appearing pieces, 0 violations
+== jump 2 -> 3: 142 appearing pieces, 0 violations
+RESULT 0 violations
+== jump 1 -> 2: 74 appearing pieces, 0 violations
+== jump 2 -> 3: 142 appearing pieces, 0 violations
+RESULT 0 violations
+### strips-check era 1
+RESULT longest 0.0 m; 0 strips over 25 m
+### deadend era 1
+floor 6694 m2 (standable, every level, this build)
+Alpha: dead-end floor 59 m2 (beyond along -44.0)
+Bravo: dead-end floor 59 m2 (beyond along -44.0)
+### strips-check era 1 (tower build)
+    34.6 m  dir  90°  tier -0.09  from [-25.5, 48.8] to [9.0, 48.8]
+    34.6 m  dir  90°  tier  0.00  from [-8.9, -48.8] to [25.6, -48.8]
+    34.4 m  dir   0°  tier  0.00  from [3.0, 16.1] to [3.0, 50.4]
+    34.4 m  dir   0°  tier  0.00  from [3.2, 16.1] to [3.2, 50.4]
+    29.6 m  dir  90°  tier  1.00  from [-26.9, 56.0] to [2.6, 56.0]
+    29.6 m  dir  90°  tier  1.00  from [-2.5, -55.8] to [27.0, -55.8]
+RESULT longest 39.1 m; 7 strips over 25 m
+### strips-check era 2
+RESULT longest 0.0 m; 0 strips over 25 m
+### deadend era 2
+floor 7350 m2 (standable, every level, this build)
+Alpha: dead-end floor 59 m2 (beyond along -44.0)
+Bravo: dead-end floor 59 m2 (beyond along -44.0)
+### strips-check era 2 (tower build)
+    35.3 m  dir  90°  tier -0.09  from [-25.5, 48.8] to [9.7, 48.8]
+    35.3 m  dir  90°  tier  0.00  from [-9.6, -48.8] to [25.6, -48.8]
+    34.4 m  dir   0°  tier  0.00  from [3.0, 16.1] to [3.0, 50.4]
+    34.4 m  dir   0°  tier  0.00  from [3.2, 16.1] to [3.2, 50.4]
+    29.6 m  dir  90°  tier  1.00  from [-26.9, 56.0] to [2.6, 56.0]
+    29.6 m  dir  90°  tier  1.00  from [-2.5, -55.8] to [27.0, -55.8]
+RESULT longest 39.1 m; 7 strips over 25 m
+### strips-check era 3
+RESULT longest 0.0 m; 0 strips over 25 m
+### deadend era 3
+floor 7884 m2 (standable, every level, this build)
+Alpha: dead-end floor 59 m2 (beyond along -44.0)
+Bravo: dead-end floor 59 m2 (beyond along -44.0)
+### strips-check era 3 (tower build)
+    35.3 m  dir  90°  tier -0.09  from [-25.5, 48.8] to [9.7, 48.8]
+    35.3 m  dir  90°  tier  0.00  from [-9.6, -48.8] to [25.6, -48.8]
+    34.4 m  dir   0°  tier  0.00  from [3.0, 16.1] to [3.0, 50.4]
+    34.4 m  dir   0°  tier  0.00  from [3.2, 16.1] to [3.2, 50.4]
+    29.6 m  dir  90°  tier  1.00  from [-26.9, 56.0] to [2.6, 56.0]
+    29.6 m  dir  90°  tier  1.00  from [-2.5, -55.8] to [27.0, -55.8]
+RESULT longest 35.7 m; 7 strips over 25 m
+### boss-nav ERA=2
+{"home_m2":600.5,"box":[-25.8,25.8,-17.3,17.3],"ringHome_m2":447,"ringPlannable_m2":447}
+{"overhangs":{"balconyN:a":{"d":3.26,"at":[-17.25,-15.25]},"balconyN:b":{"d":3.26,"at":[17.25,15.25]},"landing:a":{"d":3.25,"at":[-17.25,-15.25]},"landing:b":{"d":3.25,"at":[11.25,9.25]},"gallery:a":{"d":6.49,"at":[-3.25,-12.25]},"gallery:b":{"d":6.49,"at":[3.25,12.25]},"verandaE1:a":{"d":3.25,"at":[4.75,-15.75]},"verandaE1:b":{"d":3.25,"at":[-6.75,15.75]},"verandaE2:a":{"d":15.25,"at":[4.75,-15.75]},"verandaE2:b":{"d":15.25,"at":[-6.75,15.75]},"verandaW:a":{"d":25.95,"at":[4.75,-15.75]},"verandaW:b":{"d":25.95,"at":[-4.75,15.75]}}}
+{"posePenetration_m":{"balconyN:a":{"pen":0.01,"at":[-18.25,-15.25,293]},"balconyN:b":{"pen":0.01,"at":[18.25,15.25,113]},"landing:a":{"pen":0.04,"at":[-10.25,-9.25,68]},"landing:b":{"pen":0.04,"at":[9.75,9.25,247]},"gallery:a":{"pen":null,"at":null},"gallery:b":{"pen":null,"at":null},"verandaE1:a":{"pen":0.04,"at":[6.25,-15.75,68]},"verandaE1:b":{"pen":0.04,"at":[-8.25,15.75,247]},"verandaE2:a":{"pen":null,"at":null},"verandaE2:b":{"pen":null,"at":null},"verandaW:a":{"pen":null,"at":null},"verandaW:b":{"pen":null,"at":null}}}
+### garden-sight ERA=3 (Alpha; Bravo)
+{"terraceDeckPointsSeenWithin27m":{"fromGarden":68,"fromStreetHokiProw":95,"onlyFromGarden":5,"onlyFromGardenSample":["-15.5,-54.5","-11.5,-51.5","-11.5,-50.5","-10.5,-51.5","-10.5,-50.5"]},"era":"3","side":"Alpha","standable":428,"targets":930,"coverTops":{"n":29,"standable":0,"tags":["garden-planter(roof)"]},"kidEye":{"deck":5371,"terrace":25277,"deck27":0,"terrace27":3632,"nearest":{"deck":35.6,"terrace":18.7},"sample":{"from":[-27,3.94,-32.5],"to":[-22.5,2,-50.5],"d":18.7}},"camera":{"deck":7658,"terrace":28545,"deck27":0,"terrace27":3712,"nearest":{"deck":35.6,"terrace":18.7},"sample":{"from":[-27,4.34,-32.5],"to":[-22.5,2,-50.5],"d":18.7}},"standableCoverTops":{"deck":0,"terrace":0,"deck27":0,"terrace27":0,"nearest":{"deck":null,"terrace":null},"sample":null}}
+{"terraceDeckPointsSeenWithin27m":{"fromGarden":68,"fromStreetHokiProw":95,"onlyFromGarden":5,"onlyFromGardenSample":["-15.5,-54.5","-11.5,-51.5","-11.5,-50.5","-10.5,-51.5","-10.5,-50.5"]},"era":"3","side":"Bravo","standable":428,"targets":930,"coverTops":{"n":29,"standable":0,"tags":["garden-plant
+### halo-sight ERA=3 / ERA=2
+{"era":"3","targets":{"zone":440,"steps":196},"halo":{"points":892,"zone27":{"anyPoint":1,"onePoint":0.64},"steps27":{"anyPoint":1,"onePoint":0.44},"zone18":{"anyPoint":1,"onePoint":0.52},"steps18":{"anyPoint":1,"onePoint":0.27}},"balconies":{"points":308,"zone27":{"anyPoint":1,"onePoint":0.39},"steps27":{"anyPoint":1,"onePoint":0.5},"zone18":{"anyPoint":0.88,"onePoint":0.16},"steps18":{"anyPoint":1,"onePoint":0.49}},"boathouseDecks":{"points":512,"zone27":{"anyPoint":0.96,"onePoint":0.21},"steps27":{"anyPoint":1,"onePoint":0.49},"zone18":{"anyPoint":0.25,"onePoint":0.01},"steps18":{"anyPoint":0.69,"onePoint":0.08}},"concourseEdge":{"points":356,"zone27":{"anyPoint":1,"onePoint":0.58},"steps27":{"anyPoint":1,"onePoint":0.44},"zone18":{"anyPoint":1,"onePoint":0.58},"steps18":{"anyPoint":1,"onePoint":0.38}}}
+{"era":"2","targets":{"zone":440,"steps":196},"halo":{"points":0,"zone27":{"anyPoint":0,"onePoint":0},"steps27":{"anyPoint":0,"onePoint":0},"zone18":{"anyPoint":0,"onePoint":0},"steps18":{"anyPoint":0,"onePoint":0}},"balconies":{"points":308,"zone27":{"anyPoint":1,"onePoint":0.39},"steps27":{"anyPoint":1,"onePoint":0.51},"zone18":{"anyPoint":0.88,"onePoint":0.16},"steps18":{"anyPoint":1,"onePoint":0.49}},"boathouseDecks":{"points":512,"zone27":{"anyPoint":0.96,"onePoint":0.21},"steps27":{"anyPoint":1,"onePoint":0.49},"zone18":{"anyPoint":0.25,"onePoint":0.01},"steps18":{"anyPoint":0.69,"onePoint":0.08}},"concourseEdge":{"points":356,"zone27":{"anyPoint":1,"onePoint":0.58},"steps27":{"anyPoint":1,"onePoint":0.44},"zone18":{"anyPoint":1,"onePoint":0.58},"steps18":{"anyPoint":1,"onePoint":0.38}}}

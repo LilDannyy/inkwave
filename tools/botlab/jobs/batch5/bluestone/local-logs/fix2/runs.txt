@@ -1,0 +1,481 @@
+### turf1a
+== bluestone [turf 180s]: turf 23.7% vs 36.3%
+   stuck 0.1% | splats 43 (water 0) | specials 3 | super jumps 23 | turf 23.7/36.3 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.9}
+   splats by cause {"shot":12,"mitts":16,"jetpack":3,"mine":1,"blast":4,"brolly":3,"brush":1,"drop":1,"blaster":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf2a
+== bluestone [turf 180s]: turf 31.4% vs 22.5%
+   stuck 0.2% | splats 38 (water 0) | specials 4 | super jumps 20 | turf 31.4/22.5 | sim 180s in 28s (wall 28s) | {"cpuSimMs":1.02}
+   splats by cause {"shot":11,"tracer":4,"brush":3,"slosh":8,"brolly":6,"drop":2,"charger":4}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf3a
+== bluestone [turf 180s]: turf 25.8% vs 28.9%
+   stuck 0% | splats 47 (water 0) | specials 6 | super jumps 27 | turf 25.8/28.9 | sim 180s in 35s (wall 35s) | {"cpuSimMs":1.72}
+   splats by cause {"blade":9,"charger":6,"zipcaster":1,"mitts":5,"bow":6,"roller":1,"boomerang":2,"drop":6,"tracer":3,"seeker":1,"shot":3,"brolly":1,"brush":3}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turfHa
+== halyard [turf 180s]: turf 38.2% vs 33.5%
+   stuck 0% | splats 35 (water 1) | specials 2 | super jumps 17 | turf 38.2/33.5 | sim 180s in 28s (wall 28s) | {"cpuSimMs":1.22}
+   splats by cause {"bow":3,"charger":8,"blade":5,"slosh":5,"shot":3,"mitts":5,"blast":5,"water":1}
+CONSOLE 0 unique warning/error line(s)
+### turf1b
+== bluestone [turf 180s]: turf 35.5% vs 31.7%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 21 | turf 35.5/31.7 | sim 180s in 29s (wall 29s) | {"cpuSimMs":1}
+   splats by cause {"shot":5,"blast":9,"mitts":11,"burst":3,"drop":3,"seeker":1,"charger":4,"brush":1,"zooka":1,"tracer":2,"blaster":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf2b
+== bluestone [turf 180s]: turf 31.2% vs 31.6%
+   stuck 0% | splats 35 (water 0) | specials 5 | super jumps 14 | turf 31.2/31.6 | sim 180s in 31s (wall 31s) | {"cpuSimMs":1.38}
+   splats by cause {"shot":12,"mitts":11,"blaster":1,"charger":5,"bow":1,"zooka":3,"slosh":1,"mine":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf3b
+== bluestone [turf 180s]: turf 29.6% vs 30.9%
+   stuck 0.1% | splats 36 (water 0) | specials 8 | super jumps 13 | turf 29.6/30.9 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.92}
+   splats by cause {"zipcaster":1,"blade":3,"shot":9,"zooka":3,"roller":1,"drop":3,"mitts":9,"charger":3,"slosh":2,"tracer":1,"brush":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turfHb
+== halyard [turf 180s]: turf 42.6% vs 26.2%
+   stuck 0.1% | splats 39 (water 1) | specials 3 | super jumps 20 | turf 42.6/26.2 | sim 180s in 21s (wall 21s) | {"cpuSimMs":1}
+   splats by cause {"blast":14,"shot":1,"roller":2,"brolly":6,"water":1,"drop":2,"blaster":4,"jetpack":2,"charger":1,"burst":2,"mitts":4}
+CONSOLE 0 unique warning/error line(s)
+### turf1c
+== bluestone [turf 180s]: turf 34.8% vs 36.8%
+   stuck 0.1% | splats 39 (water 0) | specials 9 | super jumps 16 | turf 34.8/36.8 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.9}
+   splats by cause {"blast":7,"mitts":8,"boomerang":1,"kraken":1,"blade":6,"shot":8,"stamp":2,"seeker":2,"zooka":2,"slam":1,"mine":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf2c
+== bluestone [turf 180s]: turf 37.8% vs 25.2%
+   stuck 0% | splats 47 (water 0) | specials 6 | super jumps 25 | turf 37.8/25.2 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.94}
+   splats by cause {"shot":17,"mitts":7,"drop":10,"kraken":2,"blade":4,"bow":2,"brush":5}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf3c
+== bluestone [turf 180s]: turf 33.7% vs 18.1%
+   stuck 0% | splats 43 (water 0) | specials 4 | super jumps 24 | turf 33.7/18.1 | sim 180s in 26s (wall 26s) | {"cpuSimMs":1.1}
+   splats by cause {"shot":25,"charger":5,"brolly":7,"blast":2,"tracer":2,"crab":1,"blaster":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turfHc
+== halyard [turf 180s]: turf 38.6% vs 34.2%
+   stuck 0.1% | splats 36 (water 2) | specials 2 | super jumps 15 | turf 38.6/34.2 | sim 180s in 19s (wall 19s) | {"cpuSimMs":1}
+   splats by cause {"mitts":7,"bow":4,"blast":4,"shot":12,"burst":1,"charger":4,"drop":1,"water":2,"jetpack":1}
+CONSOLE 0 unique warning/error line(s)
+### turf1d
+== bluestone [turf 180s]: turf 41% vs 24.8%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 20 | turf 41/24.8 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.99}
+   splats by cause {"drop":5,"shot":12,"blast":3,"slosh":1,"jetpack":3,"mitts":9,"brush":3,"blaster":1,"bow":4,"waddle":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf2d
+== bluestone [turf 180s]: turf 20% vs 41.5%
+   stuck 0% | splats 40 (water 0) | specials 3 | super jumps 13 | turf 20/41.5 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.84}
+   splats by cause {"shot":16,"drop":5,"brolly":2,"bow":3,"roller":3,"charger":4,"brush":2,"tracer":1,"burst":1,"slosh":2,"mine":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turf3d
+== bluestone [turf 180s]: turf 27.2% vs 30.9%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 22 | turf 27.2/30.9 | sim 180s in 26s (wall 26s) | {"cpuSimMs":0.96}
+   splats by cause {"drop":6,"blaster":3,"shot":8,"slosh":2,"crab":3,"blast":4,"mitts":7,"boomerang":2,"zipcaster":1,"blade":2,"brush":1,"roller":1,"seeker":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### turfHd
+== halyard [turf 180s]: turf 28.2% vs 48.4%
+   stuck 0.1% | splats 43 (water 3) | specials 4 | super jumps 18 | turf 28.2/48.4 | sim 180s in 19s (wall 19s) | {"cpuSimMs":0.52}
+   splats by cause {"blade":6,"blast":11,"shot":6,"water":3,"mitts":10,"bow":4,"boomerang":1,"zooka":1,"blaster":1}
+CONSOLE 0 unique warning/error line(s)
+### spawn-mid era 1
+PASS spawn to mid  {"t0":{"m":72,"s":6.1,"straight":70},"t1":{"m":76,"s":6.44,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid era 2
+PASS spawn to mid  {"t0":{"m":72,"s":6.1,"straight":70},"t1":{"m":76,"s":6.44,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid era 3
+PASS spawn to mid  {"t0":{"m":72,"s":6.1,"straight":70},"t1":{"m":76,"s":6.44,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+### tower-check era 1
+== bluestone tower track · heading 0° · length 151.8 / 151.8 m (Alpha's / Bravo's side) · speed 1.9 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 151.8 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -151.8 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[151.8,151.8],"holes":0,"issues":0,"climbs":4,"drops":4,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### tower-check era 2
+== bluestone tower track · heading 0° · length 151.8 / 151.8 m (Alpha's / Bravo's side) · speed 1.9 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 151.8 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -151.8 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[151.8,151.8],"holes":0,"issues":0,"climbs":4,"drops":4,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### tower-check era 3
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### boss1
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":553,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6607,"wall":959,"drop":13588,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":439.5}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":28,"cells4m":6,"trail":[[9.2,-9.8],[8,-11.8],[8.2,-11.8],[10.1,-10.9],[10.1,-10.8],[11.1,-8.8],[11.7,7.5],[11.7,7.5],[11.3,3.6],[11.3,3.6],[11.3,3.3],[11.3,3.3]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":6}
+PASS it plays its moves (charges included)  {"played":{"barrage":11,"slam":5,"sweep":2,"charge":1,"crablets":1},"stuns":1,"hp":0.59,"dead":false}
+RESULT 6/7
+### boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":553,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6607,"wall":959,"drop":13588,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":439.5}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":58,"cells4m":8,"trail":[[9.3,-9.8],[6.2,-13.7],[6.8,-13.8],[20.3,15.3],[20.5,15.3],[20.5,15.3],[20.7,15.1],[20.7,15.1],[20.7,15.1],[22.5,12.9],[17.3,2.3],[17.1,4]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":13,"slam":4,"charge":2,"crablets":1},"stuns":2,"hp":0.53,"dead":false}
+RESULT 6/7
+### done Fri Oct  9 15:58:27 AEDT 2026
+### ink-regions era 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":6851,"inked":0.707,"regions":{"base":{"m2":1852,"share":0.27,"inked":0.78},"circus":{"m2":1243,"share":0.181,"inked":0.88},"east":{"m2":1011,"share":0.148,"inked":0.54},"swimston":{"m2":783,"share":0.114,"inked":0.81},"arm":{"m2":777,"share":0.113,"inked":0.57},"west":{"m2":692,"share":0.101,"inked":0.64},"arm-walks":{"m2":291,"share":0.042,"inked":0.33},"alley":{"m2":200,"share":0.029,"inked":0.73},"river-works":{"m2":1,"share":0,"inked":0.5}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 ......010018989999998620","  -8 ....022644387789879973.."," -12 ...00.3765998999999920.."," -16 ....012753796499999902.."," -20 ....025855574369988803.."," -24 .....4920.446989958801.."," -28 .....179..624859956750.."," -32 ......295.518848966685.."," -36 .......876437889948663.."," -40 ........27705688985445.."," -44 .........875..987664850."," -48 .........67856899788752."," -52 .........78867998868863."," -56 .........45998798889755."," -60 .........25798899888786."," -64 .........02768888886648."," -68 .............788899....."," -72 .............985588....."," -76 .............767366....."," -80 ........................"," -84 ........................"," -88 ........................"]
+RESULT 2/2
+### ink-regions era 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"2","simS":180,"total_m2":7510,"inked":0.641,"regions":{"base":{"m2":1852,"share":0.247,"inked":0.71},"circus":{"m2":1243,"share":0.165,"inked":0.79},"east":{"m2":1069,"share":0.142,"inked":0.61},"west":{"m2":886,"share":0.118,"inked":0.65},"swimston":{"m2":783,"share":0.104,"inked":0.73},"arm":{"m2":777,"share":0.103,"inked":0.47},"river-works":{"m2":410,"share":0.055,"inked":0.4},"arm-walks":{"m2":291,"share":0.039,"inked":0.5},"alley":{"m2":200,"share":0.027,"inked":0.15}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 .....0112089879887799601","  -8 ....02486478459983798672"," -12 ...00.395787799899885552"," -16 ....01365365437999862342"," -20 ....00012396424877772450"," -24 .....0000.7978697376363."," -28 .....000..7998598787754."," -32 ......000.6687577899832."," -36 .......030538679729666.."," -40 ........06638577566775.."," -44 .........9547.966556555."," -48 .........47677988689761."," -52 .........58633578867531."," -56 .........65897788587745."," -60 .........23688899759951."," -64 .........13667678788740."," -68 .............888988....."," -72 .............785786....."," -76 .............540355....."," -80 ........................"," -84 ........................"," -88 ........................"]
+RESULT 2/2
+### ink-regions era 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":8050,"inked":0.513,"regions":{"base":{"m2":1852,"share":0.23,"inked":0.65},"circus":{"m2":1273,"share":0.158,"inked":0.73},"east":{"m2":1069,"share":0.133,"inked":0.52},"west":{"m2":886,"share":0.11,"inked":0.48},"swimston":{"m2":830,"share":0.103,"inked":0.62},"arm":{"m2":786,"share":0.098,"inked":0.34},"river-works":{"m2":410,"share":0.051,"inked":0.15},"arm-walks":{"m2":291,"share":0.036,"inked":0.23},"garden":{"m2":228,"share":0.028,"inked":0.08},"halo":{"m2":224,"share":0.028,"inked":0.06},"alley":{"m2":201,"share":0.025,"inked":0.37}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 .....0001045359998634300","  -8 ....00012446469985556210"," -12 ...00.011367768984454300"," -16 ....00024544456662534200"," -20 ....00354445547763223310"," -24 .....241003464476246356."," -28 .....132003421474378634."," -32 ......04101542556578732."," -36 .......343236646849776.."," -40 ........24445366847744.."," -44 .........5447.756446311."," -48 .........37746979648860."," -52 .........24636576755431."," -56 .........25758678787562."," -60 .........23768699868775."," -64 .........02776668766654."," -68 .............577986....."," -72 .............665468....."," -76 .............330345....."," -80 ........................"," -84 ........................"," -88 ........................"]
+RESULT 2/2
+### tower-check era 1
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### tower-check era 2
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### boss Halyard 1
+PASS home ground (plannable area for the boss)  {"area_m2":267,"floorY":0,"box":[-21.8,21.8,25.3,66.3],"cells":{"floor":3872.5,"wall":953,"drop":1869,"pad":25.5}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":16,"cells4m":5,"trail":[[0.2,51.7],[-0.5,46.3],[-1.2,40.5],[-0.9,37.3],[-0.4,35.7],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":19,"sweep":1,"slam":1},"stuns":0,"hp":0.7,"dead":false}
+RESULT 4/7
+### boss Halyard 2
+PASS home ground (plannable area for the boss)  {"area_m2":267,"floorY":0,"box":[-21.8,21.8,25.3,66.3],"cells":{"floor":3872.5,"wall":953,"drop":1869,"pad":25.5}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":25,"cells4m":6,"trail":[[-0.1,49.6],[-0.8,43.4],[-1,38.2],[-0.7,34.9],[-0.7,31],[-1.1,31.1],[-0.6,29.4],[-0.6,29.4],[-0.6,29.4],[-0.6,29.4],[-0.6,29.4],[-0.3,27.4]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS it plays its moves (charges included)  {"played":{"barrage":16,"slam":2,"sweep":3},"stuns":0,"hp":0.76,"dead":false}
+RESULT 4/7
+### done Fri Oct  9 16:05:26 AEDT 2026
+### head 140a7a6 Fri Oct  9 16:05:35 AEDT 2026
+### turf1a
+== bluestone [turf 180s]: turf 27% vs 41.5%
+   stuck 0% | splats 30 (water 0) | specials 8 | super jumps 17 | turf 27/41.5 | sim 180s in 31s (wall 31s) | {"cpuSimMs":1.09}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf2a
+== bluestone [turf 180s]: turf 30.4% vs 33.5%
+   stuck 0% | splats 46 (water 0) | specials 7 | super jumps 16 | turf 30.4/33.5 | sim 180s in 26s (wall 26s) | {"cpuSimMs":0.89}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf3a
+== bluestone [turf 180s]: turf 30.3% vs 25.8%
+   stuck 0% | splats 41 (water 0) | specials 6 | super jumps 17 | turf 30.3/25.8 | sim 180s in 26s (wall 26s) | {"cpuSimMs":0.82}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turfHa
+== halyard [turf 180s]: turf 36.9% vs 40.4%
+   stuck 0.2% | splats 41 (water 3) | specials 2 | super jumps 18 | turf 36.9/40.4 | sim 180s in 18s (wall 19s) | {"cpuSimMs":0.61}
+### turf1b
+== bluestone [turf 180s]: turf 44% vs 25.9%
+   stuck 0% | splats 36 (water 0) | specials 9 | super jumps 13 | turf 44/25.9 | sim 180s in 25s (wall 25s) | {"cpuSimMs":0.77}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf2b
+== bluestone [turf 180s]: turf 36.1% vs 24.3%
+   stuck 0% | splats 32 (water 0) | specials 6 | super jumps 17 | turf 36.1/24.3 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.86}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf3b
+== bluestone [turf 180s]: turf 34.4% vs 27.1%
+   stuck 0% | splats 38 (water 0) | specials 9 | super jumps 18 | turf 34.4/27.1 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.91}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turfHb
+== halyard [turf 180s]: turf 30.8% vs 45.7%
+   stuck 0.5% | splats 36 (water 2) | specials 4 | super jumps 14 | turf 30.8/45.7 | sim 180s in 19s (wall 19s) | {"cpuSimMs":0.85}
+### turf1c
+== bluestone [turf 180s]: turf 29.1% vs 33%
+   stuck 0% | splats 39 (water 0) | specials 4 | super jumps 21 | turf 29.1/33 | sim 180s in 24s (wall 24s) | {"cpuSimMs":0.9}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf2c
+== bluestone [turf 180s]: turf 40.4% vs 24.7%
+   stuck 0% | splats 38 (water 0) | specials 7 | super jumps 13 | turf 40.4/24.7 | sim 180s in 25s (wall 25s) | {"cpuSimMs":0.73}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf3c
+== bluestone [turf 180s]: turf 19.6% vs 25.2%
+   stuck 0% | splats 50 (water 0) | specials 5 | super jumps 27 | turf 19.6/25.2 | sim 180s in 23s (wall 23s) | {"cpuSimMs":0.69}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf1d
+== bluestone [turf 180s]: turf 22.5% vs 38.9%
+   stuck 0% | splats 38 (water 0) | specials 5 | super jumps 16 | turf 22.5/38.9 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.66}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf2d
+== bluestone [turf 180s]: turf 28.5% vs 35.8%
+   stuck 0% | splats 36 (water 0) | specials 5 | super jumps 18 | turf 28.5/35.8 | sim 180s in 25s (wall 25s) | {"cpuSimMs":0.7}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### turf3d
+== bluestone [turf 180s]: turf 30.9% vs 21.4%
+   stuck 0% | splats 37 (water 0) | specials 6 | super jumps 22 | turf 30.9/21.4 | sim 180s in 23s (wall 23s) | {"cpuSimMs":0.81}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### done Fri Oct  9 16:15:21 AEDT 2026
+### boss1
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":601,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6565.5,"wall":999,"drop":13589.5,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":447}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":17,"cells4m":5,"trail":[[9.3,-9.8],[9.9,-8.9],[9,-10.1],[9,-10.1],[9.2,-11.6],[11.4,-12.8],[10.9,-5],[11,-5],[11.1,-4.6],[11.1,-4.6],[11.1,-4.6],[11.1,-4.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":11,"slam":7,"charge":1,"crablets":3},"stuns":1,"hp":0.4,"dead":false}
+RESULT 6/7
+### boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":601,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6565.5,"wall":999,"drop":13589.5,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":447}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":13,"cells4m":3,"trail":[[9.5,-9.9],[8.2,-12.8],[8.2,-12.8],[13.1,-6.3],[13.1,-6.3],[13.1,-6.3],[13.2,-6.2],[13.2,-6.2],[13.2,-6.2],[13.2,-6.2],[13.2,-6.2],[13.3,-6.2]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":8}
+PASS it plays its moves (charges included)  {"played":{"barrage":15,"sweep":2,"charge":1,"crablets":1},"stuns":1,"hp":0.46,"dead":false}
+RESULT 6/7
+### size-budget era 1
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1384}
+PASS paint atlas density  {"ppm":10,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5980,"cap":17940,"capNeeded":[1500,1500]}
+RESULT 3/3
+### climb-audit era 1
+PASS climb edges barred by a railing  {"climbs":140,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 1
+PASS cover map  {"map":"bluestone","floorCells":6114,"within5m_pct":98.8,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+### stage-audit turf era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+### stage-audit tower era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+### size-budget era 2
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1408}
+PASS paint atlas density  {"ppm":9.2,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":6574,"cap":19722,"capNeeded":[1500,1500]}
+RESULT 3/3
+### climb-audit era 2
+PASS climb edges barred by a railing  {"climbs":211,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 2
+PASS cover map  {"map":"bluestone","floorCells":6754,"within5m_pct":98.7,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+### stage-audit turf era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+### stage-audit tower era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+### size-budget era 3
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1457}
+PASS paint atlas density  {"ppm":8.5,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":7100,"cap":21300,"capNeeded":[1500,1500]}
+RESULT 3/3
+### climb-audit era 3
+PASS climb edges barred by a railing  {"climbs":226,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 3
+PASS cover map  {"map":"bluestone","floorCells":7088,"within5m_pct":97.5,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+### stage-audit turf era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+### stage-audit tower era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+### ink-regions era 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":6821,"inked":0.634,"regions":{"base":{"m2":1852,"share":0.272,"inked":0.77},"circus":{"m2":1243,"share":0.182,"inked":0.75},"east":{"m2":996,"share":0.146,"inked":0.51},"swimston":{"m2":783,"share":0.115,"inked":0.75},"arm":{"m2":783,"share":0.115,"inked":0.3},"west":{"m2":692,"share":0.102,"inked":0.67},"arm-walks":{"m2":270,"share":0.04,"inked":0.45},"alley":{"m2":200,"share":0.029,"inked":0.29},"river-works":{"m2":1,"share":0,"inked":0.31}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 ......112.12569697885100","  -8 ....003101765897869941.."," -12 ...00.2002588998889841.."," -16 ....011113673389789822.."," -20 ....001102583058667842.."," -24 .....1200.974768747532.."," -28 .....010..866758868642.."," -32 ......022.648768757662.."," -36 .......313877799718442.."," -40 ........27743586616651.."," -44 .........786..987487733."," -48 .........39876989987733."," -52 .........86898988645666."," -56 .........44778888867775."," -60 .........35798899658974."," -64 .........26768788698999."," -68 .............888978....."," -72 .............975778....."," -76 .............546527....."," -80 ........................"," -84 ........................"," -88 ........................"]
+RESULT 2/2
+### ink-regions era 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"2","simS":180,"total_m2":7480,"inked":0.656,"regions":{"base":{"m2":1852,"share":0.248,"inked":0.69},"circus":{"m2":1243,"share":0.166,"inked":0.76},"east":{"m2":1053,"share":0.141,"inked":0.76},"west":{"m2":886,"share":0.118,"inked":0.7},"swimston":{"m2":783,"share":0.105,"inked":0.68},"arm":{"m2":783,"share":0.105,"inked":0.41},"river-works":{"m2":410,"share":0.055,"inked":0.56},"arm-walks":{"m2":270,"share":0.036,"inked":0.41},"alley":{"m2":200,"share":0.027,"inked":0.38}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 .....0331.79788997888740","  -8 ....00003699877894898612"," -12 ...00.004789985797684424"," -16 ....00034378725868873672"," -20 ....00232038523975765783"," -24 .....2310.3899485287488."," -28 .....004..6688495589776."," -32 ......042.7369368899982."," -36 .......444636998648789.."," -40 ........17626796659986.."," -44 .........9645.963469872."," -48 .........89887989899996."," -52 .........78744788758672."," -56 .........25997778659887."," -60 .........06698899778982."," -64 .........16778678688851."," -68 .............688874....."," -72 .............882234....."," -76 .............230012....."," -80 ........................"," -84 ........................"," -88 ........................"]
+RESULT 2/2
+### ink-regions era 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":8022,"inked":0.581,"regions":{"base":{"m2":1852,"share":0.231,"inked":0.71},"circus":{"m2":1273,"share":0.159,"inked":0.72},"east":{"m2":1053,"share":0.131,"inked":0.58},"west":{"m2":886,"share":0.11,"inked":0.57},"swimston":{"m2":830,"share":0.104,"inked":0.8},"arm":{"m2":792,"share":0.099,"inked":0.37},"river-works":{"m2":410,"share":0.051,"inked":0.23},"arm-walks":{"m2":270,"share":0.034,"inked":0.26},"garden":{"m2":230,"share":0.029,"inked":0.23},"halo":{"m2":224,"share":0.028,"inked":0.24},"alley":{"m2":201,"share":0.025,"inked":0.41}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 .....0100.52269998743420","  -8 ....00110232259996653660"," -12 ...00.332353668997673460"," -16 ....01246456335767961230"," -20 ....01351235202976880140"," -24 .....043323448599354123."," -28 .....022146545599788531."," -32 ......03135334499886760."," -36 .......256724879619687.."," -40 ........27654289728785.."," -44 .........9856.998657942."," -48 .........68876799888772."," -52 .........45876898636451."," -56 .........77996668688686."," -60 .........03696799669973."," -64 .........05677588988731."," -68 .............789986....."," -72 .............775446....."," -76 .............353434....."," -80 ........................"," -84 ........................"," -88 ........................"]
+RESULT 2/2
+### zones1
+== bluestone [zones]: winner Alpha (time) | final 22 vs 67 (penalty +60/+0) | OT no
+   held A 98.5s B 42s neutral 159.3s | captures 5 (takeovers 1), control events 10, first capture @21.4s | rotations 6
+   stuck 0.5% | splats 83 (water 0) | specials 9 | super jumps 34 | turf 21.1/18.5 | sim 300s in 37s (wall 37s) | {"cpuSimMs":0.79}
+   splats by cause {"roller":7,"drop":13,"mitts":20,"charger":13,"shot":22,"burst":1,"boomerang":1,"crab":2,"mine":1,"brush":3}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### zones3
+== bluestone [zones]: winner Alpha (time) | final 16 vs 85 (penalty +30.3/+9.1) | OT no
+   held A 83.5s B 56s neutral 160.3s | captures 11 (takeovers 5), control events 21, first capture @53.2s | rotations 6
+   stuck 0.2% | splats 95 (water 0) | specials 10 | super jumps 47 | turf 20.3/14 | sim 300s in 41s (wall 41s) | {"cpuSimMs":0.88}
+   splats by cause {"mitts":23,"blaster":2,"blast":9,"drop":21,"roller":8,"slosh":18,"stamp":3,"charger":5,"brush":1,"bomb":1,"boomerang":1,"sprinkler":1,"jetpack":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+### towermatch1
+== bluestone [tower len 146.5/146.5]: winner Alpha (time) | counts 30 vs 78 (score 30/78) | best push A 95m B 41.1m | OT no | sim 300s
+   held A 171s B 117.8s | contested 9.3s (6×) | neutral 11s | control changes 9 (takes 10) | idle→neutral 0
+   stuck 0.2% | by the tower's side 3.6% of bot-time, stuck there 0s (0 episodes) | splats 113 (water 0) | specials 13 (ready 16) | super jumps 49 | turf 27.2/15.6 | sim 300s in 51s (wall 51s) | {"cpuSimMs":1.49}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"time","counts":[30,78],"best":[95,41.1],"held":[171,117.8],"controlChanges":9,"cpClear":[1,0],"stuckPct":0.2,"console":1,"frameErrors":0,"mounts":[26,26],"ridersAvg":[1.24,1.22],"x":{"climbs":[12,18],"sjRider":17,"kills":113,"killsNear":[53,60],"at
+### done Fri Oct  9 16:26:14 AEDT 2026
+### era 1 turf
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6240,"blocks":1264,"solidBlocks":1264,"propMeshes":4,"navNodes":5980,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":125,"tris":401927,"cpuRenderMs":1.68,"cpuSimMs":1.94},"coverage":[1.8,2.7]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 1 zones
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6164,"blocks":1264,"solidBlocks":1264,"propMeshes":4,"navNodes":5980,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":99,"tris":241966,"cpuRenderMs":1.93,"cpuSimMs":1.68},"coverage":[2.4,2.3]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 1 tower
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6321,"blocks":1234,"solidBlocks":1234,"propMeshes":4,"navNodes":6146,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":146,"tris":214452,"cpuRenderMs":1.87,"cpuSimMs":1.54},"coverage":[1.3,1.7]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+### era 1 play
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6130,"blocks":1264,"solidBlocks":1264,"propMeshes":4,"navNodes":5980,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":116,"tris":360392,"cpuRenderMs":1.56,"cpuSimMs":1.23},"coverage":[7,7.5]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+-rw-r--r--@  1 danielosling  staff  176778 Oct  9 16:28 era1-aerialA.jpg
+-rw-r--r--@  1 danielosling  staff  180064 Oct  9 16:28 era1-aerialB.jpg
+-rw-r--r--@  1 danielosling  staff  148903 Oct  9 16:27 era1-cover-map.jpg
+-rw-r--r--@  1 danielosling  staff  197065 Oct  9 16:28 era1-ink-play20-aerialA.jpg
+-rw-r--r--@  1 danielosling  staff   86196 Oct  9 16:28 era1-ink-play20-top.jpg
+-rw-r--r--@  1 danielosling  staff   90696 Oct  9 16:28 era1-mid-4oclock.jpg
+-rw-r--r--@  1 danielosling  staff  124076 Oct  9 16:28 era1-mid-6oclock.jpg
+-rw-r--r--@  1 danielosling  staff  109310 Oct  9 16:28 era1-mid-8oclock.jpg
+-rw-r--r--@  1 danielosling  staff   92309 Oct  9 16:28 era1-mid-concourse.jpg
+-rw-r--r--@  1 danielosling  staff  132926 Oct  9 16:08 era1-plan-svg.jpg
+-rw-r--r--@  1 danielosling  staff  180284 Oct  9 16:28 era1-play.jpg
+-rw-r--r--@  1 danielosling  staff  160539 Oct  9 16:28 era1-sideL.jpg
+-rw-r--r--@  1 danielosling  staff  170940 Oct  9 16:28 era1-sideR.jpg
+-rw-r--r--@  1 danielosling  staff   79762 Oct  9 16:28 era1-top-tower.jpg
+-rw-r--r--@  1 danielosling  staff   78369 Oct  9 16:28 era1-top-zones.jpg
+-rw-r--r--@  1 danielosling  staff   77767 Oct  9 16:28 era1-top.jpg
+-rw-r--r--@  1 danielosling  staff  116387 Oct  9 13:41 era1-tower-check-rail.jpg
+-rw-r--r--@  1 danielosling  staff  134308 Oct  9 13:52 era1-zones-mid.jpg
+-rw-r--r--@  1 danielosling  staff  100688 Oct  9 13:52 era1-zones-side.jpg
+-rw-r--r--@  1 danielosling  staff   77361 Oct  9 13:52 fix1-era1-alley-from-arm.jpg
+-rw-r--r--@  1 danielosling  staff   56442 Oct  9 13:52 fix1-era1-alley-from-hoki.jpg
+-rw-r--r--@  1 danielosling  staff  109422 Oct  9 13:52 fix1-era1-alley-high.jpg
+-rw-r--r--@  1 danielosling  staff  111543 Oct  9 13:52 fix1-era1-hoki-grilles.jpg
+-rw-r--r--@  1 danielosling  staff   71365 Oct  9 13:52 fix1-era1-ring-beds.jpg
+-rw-r--r--@  1 danielosling  staff   98784 Oct  9 13:52 fix1-era1-rv-arm-out.jpg
+-rw-r--r--@  1 danielosling  staff  112403 Oct  9 13:52 fix1-era1-rv-customs.jpg
+-rw-r--r--@  1 danielosling  staff   98524 Oct  9 13:52 fix1-era1-rv-hoki.jpg
+-rw-r--r--@  1 danielosling  staff   88561 Oct  9 13:52 fix1-era1-rv-hotel-lane.jpg
+-rw-r--r--@  1 danielosling  staff  147541 Oct  9 13:52 fix1-era1-rv-mid-high.jpg
+-rw-r--r--@  1 danielosling  staff   82014 Oct  9 13:52 fix1-era1-rv-ring-east.jpg
+-rw-r--r--@  1 danielosling  staff   97209 Oct  9 13:52 fix1-era1-rv-ring-south.jpg
+-rw-r--r--@  1 danielosling  staff  164805 Oct  9 13:52 fix1-era1-rv-wharf-back.jpg
+### era 2 turf
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6182,"blocks":1320,"solidBlocks":1320,"propMeshes":4,"navNodes":6574,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":129,"tris":419283,"cpuRenderMs":1.86,"cpuSimMs":1.79},"coverage":[1.1,2.8]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 2 zones
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6331,"blocks":1320,"solidBlocks":1320,"propMeshes":4,"navNodes":6574,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":92,"tris":237309,"cpuRenderMs":1.97,"cpuSimMs":1.64},"coverage":[2.4,2]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 2 tower
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6487,"blocks":1290,"solidBlocks":1290,"propMeshes":4,"navNodes":6660,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":122,"tris":200032,"cpuRenderMs":2.02,"cpuSimMs":1.36},"coverage":[1.4,1.4]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+### era 2 play
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6332,"blocks":1320,"solidBlocks":1320,"propMeshes":4,"navNodes":6574,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":85,"tris":216721,"cpuRenderMs":1.69,"cpuSimMs":1.39},"coverage":[6.2,8.8]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+-rw-r--r--@  1 danielosling  staff  178714 Oct  9 16:29 era2-aerialA.jpg
+-rw-r--r--@  1 danielosling  staff  182469 Oct  9 16:29 era2-aerialB.jpg
+-rw-r--r--@  1 danielosling  staff  159301 Oct  9 16:27 era2-cover-map.jpg
+-rw-r--r--@  1 danielosling  staff  202057 Oct  9 16:29 era2-ink-play20-aerialA.jpg
+-rw-r--r--@  1 danielosling  staff   91901 Oct  9 16:29 era2-ink-play20-top.jpg
+-rw-r--r--@  1 danielosling  staff   90967 Oct  9 16:29 era2-mid-4oclock.jpg
+-rw-r--r--@  1 danielosling  staff  124324 Oct  9 16:29 era2-mid-6oclock.jpg
+-rw-r--r--@  1 danielosling  staff  109603 Oct  9 16:29 era2-mid-8oclock.jpg
+-rw-r--r--@  1 danielosling  staff   92490 Oct  9 16:29 era2-mid-concourse.jpg
+-rw-r--r--@  1 danielosling  staff  136884 Oct  9 16:08 era2-plan-svg.jpg
+-rw-r--r--@  1 danielosling  staff  185462 Oct  9 16:29 era2-play.jpg
+-rw-r--r--@  1 danielosling  staff  161281 Oct  9 16:29 era2-sideL.jpg
+-rw-r--r--@  1 danielosling  staff  171751 Oct  9 16:29 era2-sideR.jpg
+-rw-r--r--@  1 danielosling  staff   82582 Oct  9 16:29 era2-top-tower.jpg
+-rw-r--r--@  1 danielosling  staff   80705 Oct  9 16:29 era2-top-zones.jpg
+-rw-r--r--@  1 danielosling  staff   80047 Oct  9 16:29 era2-top.jpg
+-rw-r--r--@  1 danielosling  staff  118852 Oct  9 13:41 era2-tower-check-rail.jpg
+-rw-r--r--@  1 danielosling  staff  130385 Oct  9 13:52 fix1-era2-boardwalk.jpg
+-rw-r--r--@  1 danielosling  staff   78907 Oct  9 13:52 fix1-era2-boss-balcony.jpg
+-rw-r--r--@  1 danielosling  staff  162956 Oct  9 13:52 fix1-era2-boss-ring.jpg
+-rw-r--r--@  1 danielosling  staff  164736 Oct  9 13:52 fix1-era2-bridge-landing.jpg
+-rw-r--r--@  1 danielosling  staff   81365 Oct  9 13:52 fix1-era2-grille-from-arcade.jpg
+-rw-r--r--@  1 danielosling  staff  138170 Oct  9 13:52 fix1-era2-grille-perp.jpg
+### era 3 turf
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6192,"blocks":1448,"solidBlocks":1448,"propMeshes":4,"navNodes":7100,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":87,"tris":221259,"cpuRenderMs":1.78,"cpuSimMs":1.78},"coverage":[2.2,2]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 3 zones
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6213,"blocks":1448,"solidBlocks":1448,"propMeshes":4,"navNodes":7100,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":93,"tris":232001,"cpuRenderMs":1.78,"cpuSimMs":1.65},"coverage":[1.6,2]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 3 tower
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6223,"blocks":1418,"solidBlocks":1418,"propMeshes":4,"navNodes":7186,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":185,"tris":387334,"cpuRenderMs":1.98,"cpuSimMs":1.39},"coverage":[0.4,0.6]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+### era 3 play
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6276,"blocks":1448,"solidBlocks":1448,"propMeshes":4,"navNodes":7100,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":87,"tris":229578,"cpuRenderMs":1.76,"cpuSimMs":1.35},"coverage":[6.9,8.5]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+-rw-r--r--@  1 danielosling  staff  181187 Oct  9 16:31 era3-aerialA.jpg
+-rw-r--r--@  1 danielosling  staff  183803 Oct  9 16:31 era3-aerialB.jpg
+-rw-r--r--@  1 danielosling  staff  160838 Oct  9 16:27 era3-cover-map.jpg
+-rw-r--r--@  1 danielosling  staff  205343 Oct  9 16:31 era3-ink-play20-aerialA.jpg
+-rw-r--r--@  1 danielosling  staff   95722 Oct  9 16:31 era3-ink-play20-top.jpg
+-rw-r--r--@  1 danielosling  staff   96007 Oct  9 16:31 era3-mid-4oclock.jpg
+-rw-r--r--@  1 danielosling  staff  125007 Oct  9 16:31 era3-mid-6oclock.jpg
+-rw-r--r--@  1 danielosling  staff  144430 Oct  9 16:31 era3-mid-8oclock.jpg
+-rw-r--r--@  1 danielosling  staff   99946 Oct  9 16:31 era3-mid-concourse.jpg
+-rw-r--r--@  1 danielosling  staff  138611 Oct  9 16:08 era3-plan-svg.jpg
+-rw-r--r--@  1 danielosling  staff  185019 Oct  9 16:31 era3-play.jpg
+-rw-r--r--@  1 danielosling  staff  162164 Oct  9 16:31 era3-sideL.jpg
+-rw-r--r--@  1 danielosling  staff  172683 Oct  9 16:31 era3-sideR.jpg
+-rw-r--r--@  1 danielosling  staff   85060 Oct  9 16:31 era3-top-tower.jpg
+-rw-r--r--@  1 danielosling  staff   83726 Oct  9 16:31 era3-top-zones.jpg
+-rw-r--r--@  1 danielosling  staff   83021 Oct  9 16:31 era3-top.jpg
+-rw-r--r--@  1 danielosling  staff  123670 Oct  9 13:41 era3-tower-check-rail.jpg
+-rw-r--r--@  1 danielosling  staff  127624 Oct  9 13:52 era3-zones-mid.jpg
+-rw-r--r--@  1 danielosling  staff  100706 Oct  9 13:52 era3-zones-side.jpg
+-rw-r--r--@  1 danielosling  staff   81795 Oct  9 13:52 fix1-era3-alley-from-arm.jpg
+-rw-r--r--@  1 danielosling  staff   78710 Oct  9 13:52 fix1-era3-alley-stairs.jpg
+-rw-r--r--@  1 danielosling  staff   56423 Oct  9 13:52 fix1-era3-garden-camera.jpg
+-rw-r--r--@  1 danielosling  staff   91344 Oct  9 13:52 fix1-era3-garden-from-w.jpg
+-rw-r--r--@  1 danielosling  staff  167787 Oct  9 13:52 fix1-era3-garden-high.jpg
+-rw-r--r--@  1 danielosling  staff   33480 Oct  9 13:52 fix1-era3-garden-kid-eye.jpg
+-rw-r--r--@  1 danielosling  staff   86886 Oct  9 13:52 fix1-era3-rv-ring-east.jpg
+-rw-r--r--@  1 danielosling  staff   89585 Oct  9 13:52 fix1-era3-rv3-garden-over-base.jpg
+-rw-r--r--@  1 danielosling  staff  127391 Oct  9 13:52 fix1-era3-rv3-halo-walk.jpg
+-rw-r--r--@  1 danielosling  staff  163819 Oct  9 13:52 fix1-era3-rv3-mid-sw.jpg
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6184,"blocks":1264,"solidBlocks":1264,"propMeshes":4,"navNodes":5980,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":78,"tris":219134,"cpuRenderMs":1.61,"cpuSimMs":1.51},"coverage":[2,2.8]}
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6031,"blocks":1320,"solidBlocks":1320,"propMeshes":4,"navNodes":6574,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":77,"tris":216336,"cpuRenderMs":1.59,"cpuSimMs":1.75},"coverage":[1.7,2.9]}
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6133,"blocks":1448,"solidBlocks":1448,"propMeshes":4,"navNodes":7100,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":95,"tris":231337,"cpuRenderMs":1.69,"cpuSimMs":1.69},"coverage":[2.1,2.2]}
+PRE {"pose":[-18.25,-15.25,5.105088062083414],"penetration":0.01}
+REPORT {"map":"bluestone","mode":"boss","time":"day","loadMs":9792,"blocks":1318,"solidBlocks":1318,"propMeshes":4,"navNodes":6578,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":92,"tris":255335,"cpuRenderMs":1.61,"cpuSimMs":1.25},"coverage":[0,0]}
+PRE {"pose":[6.25,-15.75,1.1780972450961724],"penetration":0.04}
+REPORT {"map":"bluestone","mode":"boss","time":"day","loadMs":9931,"blocks":1318,"solidBlocks":1318,"propMeshes":4,"navNodes":6578,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":146,"tris":425020,"cpuRenderMs":1.85,"cpuSimMs":1.37},"coverage":[0,0]}
+mid sheet ok
+114
+### pictures done Fri Oct  9 16:36:05 AEDT 2026
+### all done Fri Oct  9 16:36:05 AEDT 2026
