@@ -787,10 +787,12 @@
     R('M4 §2.2: the standing shell crushes a device its swelling reaches (r 1.6 → 2.2 m), not one by it at rest or further off', rest4 === 'beacon' && gone(near4) && !gone(far4) && down.some((e) => e.how === 'shell' && e.kind === 'beacon'),
       { rest: rest4, after: near4.state, far: far4.state, r: +Kp.shell.radius().toFixed(2), down: down.slice() });
     // M5: every damaging sub in SUB_ORDER, thrown / fired / placed at a lone shell from 2.6 m (a mine: tripped by a foe in
-    // front), with a Bravo kid 2.5 m behind it: it counts into the shell (> 0), nothing of it is ever inside the shell
-    // (its flight, its hover; the boomerang's way home flies through anything by design, as through walls), and the kid
-    // behind is never hurt — but by a walker (Skitter, Waddle) that went round it. (2.5 m: no sub's blast from the near
-    // side reaches it — the SPEC lets blasts past the shell, only shots stop — while a sub through it would.)
+    // front), with a Bravo kid 0.9 m behind its far side (the review's probe spot): it counts into the shell (> 0),
+    // nothing of it is ever inside the shell (its flight, its hover; the boomerang's way home flies through anything by
+    // design, as through walls), and the kid behind is never hurt — but by a walker (Skitter, Waddle) that went round it
+    // (where each blast went off is logged). No sub's blast from the near side reaches 0.9 m behind the far side — the
+    // SPEC lets blasts past the shell, only shots stop; the widest, the Cling Charge's 4.0 m, goes off ≥ 1.76 m out from
+    // the centre on the near side, 4.26 m from the kid — while a sub that went through it would.
     const NOHURT = { scan: 1, curtain: 1, beacon: 1, mist: 1 }, WALKER = { seeker: 1, waddle: 1 };
     let thrower = A[1];
     const kitPos = () => {
@@ -814,7 +816,7 @@
       G.projectiles.clear(); G.subs.clear(); G.specials.clear();
       thrower = id === 'shaker' ? m.local : A[1];
       fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
-      const sc = Kp.shell.center(), r0 = Kp.shell.radius(), foe = B[0], fz = sc.z + r0 + 2.5;
+      const sc = Kp.shell.center(), r0 = Kp.shell.radius(), foe = B[0], fz = sc.z + r0 + 0.9;
       thrower.setSub(id);
       const mine = id === 'mine';
       // (the Shaker is lobbed onto it, 0.3 rad up: thrown flat from 2.6 m it bounces 2 m back off the shell, as off a
@@ -823,6 +825,7 @@
       thrower.aimPoint.copy(sc); thrower.aimDir?.set(0, Math.sin(Math.atan2(sc.y - thrower.pos.y - 1.2, 2.6)), 1).normalize();
       put(foe, sc.x, fz); step(0.05);
       const n0 = Kp.shell.stats.counted[0]; let inn = 0;
+      const booms = [], offB = on('bomb:explode', (e) => { if (e.actor === thrower) booms.push([+(e.pos.x - sc.x).toFixed(2), +(e.pos.z - sc.z).toFixed(2)]); });   // (where its blasts went off, from the centre)
       const hold = id === 'shaker' ? 70 : 8;
       for (let i = 0; i < 400; i++) {
         thrower.intent.sub = i < hold; thrower.ink = PLAYER.inkMax; thrower.aimPoint.copy(sc); thrower.aimYaw = 0; thrower.aimPitch = id === 'shaker' ? 0.3 : 0;
@@ -831,13 +834,13 @@
         dbg.step(1000 / 60);
         for (const p of kitPos()) if (inside(p)) inn++;
       }
-      idle(thrower);
+      idle(thrower); offB();
       const counted = Math.round(Kp.shell.stats.counted[0] - n0), hurt = foe.hp < PLAYER.hp - 0.01 || !foe.alive;
       const ok = counted > 0 && inn === 0 && (WALKER[id] || !hurt);
       m5ok = m5ok && ok;
-      m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits };
+      m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits, booms: booms.slice(0, 4) };
     }
-    R('M5 §2.2: every damaging sub (bomb, Cling Charge, Pop Pellet, Shaker, Skitter, Waddle, Torpedo, Tracer Bolt, Whirl Boomerang, sprinkler, Lurk Mine) counts into a lone shell, is never inside it, and never hurts a kid 2.5 m behind it (a walker may go round it)', m5ok && Object.keys(m5).length === 11, m5);
+    R('M5 §2.2: every damaging sub (bomb, Cling Charge, Pop Pellet, Shaker, Skitter, Waddle, Torpedo, Tracer Bolt, Whirl Boomerang, sprinkler, Lurk Mine) counts into a lone shell, is never inside it, and never hurts a kid 0.9 m behind it (a walker may go round it)', m5ok && Object.keys(m5).length === 11, m5);
     offD();
   }
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }
