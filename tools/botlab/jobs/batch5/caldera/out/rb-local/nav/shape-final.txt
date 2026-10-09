@@ -1,5 +1,5 @@
-cal-low   floor  4716  footprint  5984  solidity 0.790  holes(lake)   622
-cal-high  floor  4380  footprint  5848  solidity 0.772  holes(lake)   862
+cal-low   floor  4720  footprint  5984  solidity 0.790  holes(lake)   622
+cal-high  floor  4384  footprint  5848  solidity 0.772  holes(lake)   862
 halyard   floor  4666  footprint  6494  solidity 0.980  holes(lake)  1360
 cal-low IoU halyard 0.527  craters 0.596  aquarium 0.406
 cal-high IoU halyard 0.529  craters 0.579  aquarium 0.392

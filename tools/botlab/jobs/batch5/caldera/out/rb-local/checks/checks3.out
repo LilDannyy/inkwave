@@ -1,0 +1,7 @@
+== towercheck-low: == caldera tower track · heading 0° · length 100.71 / 100.71 m (Alpha's / Bravo's side) · speed 1.68 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean RESULT_JSON {"map":"caldera","len":[100.71,100.71],"holes":0,"issues":0,"climbs":3,"drops":1,"rides":[]} 
+== towercheck-high: == caldera tower track · heading 0° · length 100.71 / 100.71 m (Alpha's / Bravo's side) · speed 1.68 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean RESULT_JSON {"map":"caldera","len":[100.71,100.71],"holes":0,"issues":0,"climbs":3,"drops":1,"rides":[]} 
+== climb-audit-low: PASS climb edges barred by a railing  {"climbs":69,"bad":[],"n":0} RESULT 1/1 
+== cover-map-low: PASS cover map  {"map":"caldera","floorCells":4720,"within5m_pct":99.4,"largestOpenRadius_m":5.8,"at":[-15.5,-31.5],"skip":[],"grid":{"x0":-44,"z0":-76,"nx":88,"nz":152,"b64":"//////////////////////////////////////////////////////////////////////////////////// RESULT 1/1 
+== climb-audit-high: PASS climb edges barred by a railing  {"climbs":95,"bad":[],"n":0} RESULT 1/1 
+== cover-map-high: PASS cover map  {"map":"caldera","floorCells":4384,"within5m_pct":99.4,"largestOpenRadius_m":5.8,"at":[-15.5,-31.5],"skip":[],"grid":{"x0":-44,"z0":-76,"nx":88,"nz":152,"b64":"//////////////////////////////////////////////////////////////////////////////////// RESULT 1/1 
+RESULT checks done

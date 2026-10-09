@@ -18,6 +18,6 @@ shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-89
 shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/low/caldera-day-yard.png
 shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/low/caldera-day-terrace.png
 shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/low/caldera-day-rim.png
-REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":6429,"blocks":1737,"solidBlocks":1737,"propMeshes":6,"navNodes":4558,"bounds":{"minX":-44,"maxX":44,"minZ":-76,"maxZ":76},"perf":{"calls":125,"tris":381349,"cpuRenderMs":1.68,"cpuSimMs":1.55},"coverage":[2.5,3.9]}
+REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":6901,"blocks":1735,"solidBlocks":1735,"propMeshes":6,"navNodes":4570,"bounds":{"minX":-44,"maxX":44,"minZ":-76,"maxZ":76},"perf":{"calls":122,"tris":358563,"cpuRenderMs":1.81,"cpuSimMs":1.87},"coverage":[2.9,2.8]}
 CONSOLE 1 unique warning/error line(s)
   [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
