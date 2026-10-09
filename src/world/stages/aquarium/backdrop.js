@@ -1,22 +1,41 @@
 // Gulper Aquarium — the stage's own looks outside the level geometry (layout.env.backdrop; see the top of
-// src/world/environment.js). Gets the environment's SCENERY_KIT (+ THREE, bounds, runs, rnd, sceneryMaterial) — it
+// src/world/environment.js). Gets the environment's SCENERY_KIT (+ THREE, bounds, runs, rnd, U, sceneryMaterial) — it
 // imports nothing that imports three, so layout.js stays importable in Node.
 //
-// BLOCKOUT: no far scenery yet (the art pass). What this draws is the stage's glass and water as placeholder volumes —
-// the level blocks for them are hidden colliders (layout.js `glass`) — and the kelp in the drums. The Tubeway itself
-// (the clear tubes, mouths, fans, flaps, signs, chevrons, floor arrows) is the pipe engine's (src/game/pipes.js +
-// src/fx/pipesFx.js). The stage's own world cue for the tide is here: the four Tide Gauges (two per gatehouse on its crest
-// at x ±4.5, centre 10.8 m, Ø 2.4 brass, double-faced to the court and the wing): a needle between ▲ UP and ▼ DOWN and a
-// red 10 s countdown sector, driven by the pipe engine's tide (G.match.pipes.flow(), a pure function of the stage clock).
+// What this draws (the level blocks for every glass and water volume are hidden colliders: layout.js `glass`, and the
+// stand-ins it makes `hidden`): the glass panels, the water of the Great Tank, the kelp drums, the Arch Tanks, the Reef
+// Windows, the bubble columns, the touch pools and the penguins' pools (one shared water material: looks.js), the kelp and
+// its tide (here), the fish, the moon jellies, the penguins, Bathysphere No. 1 and Feeding Time (looks.js), the four Tide
+// Gauges (here), and the islet's sea wall, the Deep Dome and the breakwater light (far.js). The Inkopolis-bay scenery
+// stays on (env.bay). The Tubeway itself (tubes, mouths, fans, flaps, signs, chevrons, floor arrows) is the pipe engine's
+// (src/game/pipes.js + src/fx/pipesFx.js). The Tide Gauges are the stage's own world cue for the tide (two per gatehouse
+// on its crest at x ±4.5, centre 10.8 m, Ø 2.4 brass, double-faced): a needle between ▲ UP and ▼ DOWN and a red 10 s
+// countdown, driven by the pipe engine's tide (G.match.pipes.flow(), a pure function of the stage clock).
 import { G } from '../../../core/ctx.js';
+import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill } from './looks.js';
+import { buildFar } from './far.js';
+
+const C30 = Math.cos(Math.PI / 6);
+const W = (s, w) => [0.5 * s + C30 * w, -32.5 - C30 * s + 0.5 * w];
+// the tube runs inside water volumes (the water clears round them along the eye ray): the Gulper Run across the Great
+// Tank, the Kelp Lines' risers and top runs in the drums, the Arch Lines' overhead runs in the Arch Tanks
+const TUBE_RUNS = [
+  [-7.6, 0.5, 0, 7.6, 0.5, 0],
+  [27.4, 0.8, -1.2, 27.4, 9.0, -1.2], [27.4, 9.0, -1.2, 26.05, 9.0, 4.28],
+  [-27.4, 0.8, 1.2, -27.4, 9.0, 1.2], [-27.4, 9.0, 1.2, -26.05, 9.0, -4.28],
+  [7.32, 7.5, -27.13, -7.32, 7.5, -27.13], [7.32, 7.5, 27.13, -7.32, 7.5, 27.13],
+];
+// the stand-ins drawn here in their own way (not as plain glass boxes)
+const OWN = new Set(['drum-glass', 'bathysphere', 'jelly', 'bubble-column', 'reef-window']);
 
 export function buildBackdrop(kit, data = {}) {
   const T = kit.THREE, DEG = Math.PI / 180;
-  const buckets = { glass: [], water: [] };
+  const U = { uFT: { value: 0 }, uFT2: { value: 0 }, uKrill: { value: 0 }, uNight: kit.U ? kit.U.uNight : { value: 0 } };
+  const buckets = { glass: [], water: [], clear: [] };
   const put = (k, g) => buckets[k].push(g.index ? g.toNonIndexed() : g);
   // ---- glass panels and water volumes (from the layout's hidden glass pieces, both halves)
   for (const d of data.glass || []) {
-    if (d.tag === 'drum-glass' || d.tag === 'bathysphere') continue;
+    if (OWN.has(d.tag)) continue;
     let g;
     if (d.kind === 'box') { g = new T.BoxGeometry(d.max[0] - d.min[0], d.max[1] - d.min[1], d.max[2] - d.min[2]); g.translate((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2); }
     else if (d.kind === 'obox') { g = new T.BoxGeometry(d.size[0], d.size[1], d.size[2]); g.rotateY(d.rotY * DEG); g.translate(d.center[0], d.center[1], d.center[2]); }
@@ -27,6 +46,23 @@ export function buildBackdrop(kit, data = {}) {
   // the Great Tank's water (a 16-gon prism inside its glass, down to the sunk sand bed)
   const tank = data.tank || { a: 7.5 };
   { const g = new T.CylinderGeometry((tank.a - 0.3) / Math.cos(Math.PI / 16), (tank.a - 0.3) / Math.cos(Math.PI / 16), 2.7, 16, 1, false, 78.75 * DEG); g.translate(0, 0.75, 0); put('water', g); }
+  // the Reef Windows (r 30.5 → 32.5, glass 0.6 … 3.4; Alpha's α −70 … −67 and −58 … −2.6, and the twins): the glass on
+  // the court face, the water behind it
+  const arcGeo = (r, a0, a1, y0, y1, n, cap = false) => { const g = new T.CylinderGeometry(r, r, y1 - y0, n, 1, !cap, Math.PI / 2 - a1 * DEG, (a1 - a0) * DEG); g.translate(0, (y0 + y1) / 2, 0); return g; };
+  for (const [a0, a1] of [[-70, -67], [-58, -2.6], [110, 113], [122, 177.4]]) {
+    const n = Math.max(2, Math.round((a1 - a0) / 2));
+    put('glass', arcGeo(30.47, a0, a1, 0.64, 3.36, n));
+    put('clear', arcGeo(30.56, a0, a1, 0.64, 3.36, n));
+  }
+  // the bubble columns (the Shark Arch's court mouths) and the touch pools: water, glass
+  for (const s of [1, -1]) {
+    const gl = new T.CylinderGeometry(1.29, 1.29, 5.28, 28, 1, true); gl.translate(0, 0.37 + 2.64, s * -21.5); put('glass', gl);
+    const wa = new T.CylinderGeometry(1.22, 1.22, 5.2, 24, 1, false); wa.translate(0, 0.4 + 2.6, s * -21.5); put('clear', wa);
+    const tp = new T.BoxGeometry(4.9, 0.05, 2.5); tp.translate(s * -9.0, 2.04, s * -14.3); put('clear', tp);
+  }
+  // the penguins' pool in each cove (blade frame s 6.4, w −20.0: Ø 2.4, its water at 0.52)
+  const POOL = [6.4, -20.0, 1.15, 0.52];
+  for (const s of [1, -1]) { const [x, z] = W(POOL[0], POOL[1]); const pw = new T.CylinderGeometry(POOL[2], POOL[2], 0.04, 24); pw.translate(s * x, POOL[3], s * z); put('clear', pw); }
   // the kelp drums: glass cylinders, water, kelp fronds (thinned to clear water round the Kelp Line's run through the drum)
   const segD = (x, z, ax, az, bx, bz) => { const dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - ax - dx * t, z - az - dz * t); };
   const kelpRun = (x, z) => segD(x, z, 27.4, -4.6, 27.4, -1.2), kelpTop = (x, z) => segD(x, z, 27.4, -1.2, 26.05, 4.28);   // (the E drum's; the W drum's turned)
@@ -61,28 +97,42 @@ export function buildBackdrop(kit, data = {}) {
     const m = new T.BufferGeometry(); m.setAttribute('position', new T.BufferAttribute(pos, 3)); m.setAttribute('normal', new T.BufferAttribute(nor, 3)); m.computeBoundingSphere();
     return m;
   };
-  const std = (c, o = {}) => new T.MeshStandardMaterial({ color: c, roughness: 0.25, metalness: 0.05, ...o });
-  const see = (c, op, o = {}) => std(c, { transparent: true, opacity: op, depthWrite: false, side: T.DoubleSide, ...o });
-  const LOOK = {
-    water: new T.MeshBasicMaterial({ color: '#2a5f6c', transparent: true, opacity: 0.72, depthWrite: false, side: T.DoubleSide }), glass: see('#d9eef0', 0.14, { roughness: 0.05 }),
-  };
-  // the water volumes seen from inside (their back faces: a lens in a tank or a drum — the ride camera's) are thin: the
-  // pipe engine's underwater grade gives the in-water look where the lens is really under (pipesFx.js), and a lens at a
-  // drum's open top looking out over the promenade no longer sees the whole world through a 72 % teal wall (LEAD-REVIEW
-  // round 2, item 4: ride-4's teal world was this wall, not the grade). From outside, the near wall is as before
-  LOOK.water.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', 'diffuseColor.a *= gl_FrontFacing ? 1.0 : 0.25;\n#include <opaque_fragment>'); };
-  LOOK.water.customProgramCacheKey = () => 'aq-water-inside';
+  // the deep water (the tanks, the drums, the Arch Tanks: dull, deep, clear round the tubes, thin from inside) and the
+  // clear water (the Reef Windows, the bubble columns, the pools: shallow, lighter)
+  const LOOK = { water: waterMaterial(T, U, TUBE_RUNS), clear: waterMaterial(T, U, []), glass: glassMaterial(T) };
+  LOOK.clear.opacity = 0.3; LOOK.clear.color.set('#3d7480');
   const objects = [];
   for (const [k, geos] of Object.entries(buckets)) {
     const g = merge(geos); if (!g) continue;
-    const m = new T.Mesh(g, LOOK[k]); m.name = 'aq-' + k; m.renderOrder = k === 'water' ? 1 : k === 'glass' ? 2 : 0;
+    const m = new T.Mesh(g, LOOK[k]); m.name = 'aq-' + k; m.renderOrder = k === 'glass' ? 2 : 1;
     objects.push(m);
   }
   const tide = tideDrums(T, kelp, bubbles);
   objects.push(...tide.objects);
   const gauges = tideGauges(T, merge);
   objects.push(...gauges.objects);
-  return { static: [], plain: [], terrain: [], instances: [], objects, animate: (t) => { gauges.animate(t); tide.animate(t); } };
+  // ---- what lives in the water, the jellies, the bubble columns, the penguins, the bathysphere, Feeding Time
+  const rnd = kit.rnd(4242);
+  objects.push(...buildFish(T, rnd, U));
+  objects.push(buildJellies(T, U, [[6.5, -17.0, 1.58, 0.37, 4.04], [-16.25, -2.9, 1.58, 0.37, 4.04], [-6.5, 17.0, 1.58, 0.37, 4.04], [16.25, 2.9, 1.58, 0.37, 4.04]]));
+  objects.push(buildBubbleCols(T, U, rnd, [[0, -21.5, 1.2, 0.4, 5.6], [0, 21.5, 1.2, 0.4, 5.6]]));
+  const spots = [[-12, -19.0, 0.3], [-9, -19.6, 0.3], [-5.5, -20.6, 0.3], [-1, -21.2, 0.3], [2.5, -19.4, 0.3], [9.5, -21.5, 0.3], [12.5, -19.2, 0.3], [15.5, -21.0, 0.3], [19, -19.4, 0.3], [23, -20.5, 0.3], [27, -19.0, 0.3]];
+  objects.push(buildPenguins(T, rnd, U, W, spots, POOL));
+  objects.push(buildKrill(T, U, rnd));
+  const bathy = buildBathysphere(T);
+  objects.push(bathy.group);
+  const feed = feedingTime();
+  const far = buildFar(kit, { W });
+  objects.push(...far.objects);
+  let last = performance.now() / 1000;
+  const animate = (t) => {
+    const nowS = performance.now() / 1000, dt = Math.min(0.1, Math.max(0, nowS - last)); last = nowS;
+    const f = feed(nowS), night = U.uNight.value || 0;
+    U.uFT.value += dt; U.uFT2.value += dt * (1 + 1.8 * f.wheel); U.uKrill.value = f.krill;
+    bathy.set(0.5 * f.bob, night);
+    gauges.animate(t); tide.animate(t); far.animate(nowS, night);
+  };
+  return { static: far.static, plain: far.plain, terrain: [], instances: [], objects, animate };
 }
 
 // ---- the tide in the kelp drums (DESIGN.md §3.3 / §3.4: one of the five ways the tide is shown; LEAD-REVIEW round 2,
