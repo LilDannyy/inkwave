@@ -1,0 +1,2 @@
+### zones low: 8 matches, Alpha 4 / Bravo 4; held A 535.2 s / B 545.1 s; side-zone activations sideA 9 / sideB 15
+### zones high: 8 matches, Alpha 0 / Bravo 8; held A 482.9 s / B 711.8 s; side-zone activations sideA 8 / sideB 16

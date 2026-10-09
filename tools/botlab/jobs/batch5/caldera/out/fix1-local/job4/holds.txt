@@ -1,0 +1,18 @@
+zones-high-L0-1.log          win B (neutralised) | centre A  63.7 B  31.9 | own side A  27.1 B  40.5 | enemy side A  4.5 B  9.0 | sideA x1 sideB x2
+zones-high-L0-2.log          win B (time) | centre A  50.5 B  25.5 | own side A  13.9 B  29.6 | enemy side A  0.0 B 15.5 | sideA x1 sideB x2
+zones-high-L1-1.log          win B (time) | centre A  43.2 B  25.0 | own side A   0.0 B  54.7 | enemy side A  0.0 B  0.0 | sideA x1 sideB x2
+zones-high-L1-2.log          win B (time) | centre A  18.8 B  58.1 | own side A  39.4 B  19.5 | enemy side A  0.0 B  0.0 | sideA x2 sideB x1
+zones-high-L2-1.log          win B (comeback) | centre A  44.4 B  69.8 | own side A   0.0 B  60.3 | enemy side A 12.1 B  0.0 | sideA x0 sideB x3
+zones-high-L2-2.log          win B (time) | centre A  33.5 B  62.3 | own side A  40.7 B   7.4 | enemy side A  0.0 B 11.7 | sideA x2 sideB x1
+zones-high-L3-1.log          win B (time) | centre A  34.8 B  69.2 | own side A  20.4 B  42.2 | enemy side A  1.0 B  0.0 | sideA x1 sideB x2
+zones-high-L3-2.log          win B (retake) | centre A  34.1 B  31.4 | own side A   0.0 B  68.0 | enemy side A  0.0 B  0.0 | sideA x0 sideB x3
+zones-low-L0-1.log           win A (time) | centre A  44.4 B  25.2 | own side A  16.1 B  17.7 | enemy side A  4.1 B  0.0 | sideA x1 sideB x2
+zones-low-L0-2.log           win B (time) | centre A  12.0 B   2.7 | own side A   0.0 B  47.5 | enemy side A  0.0 B  0.0 | sideA x0 sideB x3
+zones-low-L1-1.log           win B (time) | centre A   7.1 B  39.4 | own side A  29.8 B  18.2 | enemy side A  6.6 B  0.0 | sideA x2 sideB x1
+zones-low-L1-2.log           win A (retake) | centre A  56.4 B  50.5 | own side A  26.8 B  48.4 | enemy side A  7.8 B  0.0 | sideA x1 sideB x2
+zones-low-L2-1.log           win A (time) | centre A  90.8 B   9.5 | own side A   8.2 B  52.1 | enemy side A  0.0 B 20.6 | sideA x1 sideB x2
+zones-low-L2-2.log           win A (time) | centre A  78.5 B  11.0 | own side A  19.2 B  33.0 | enemy side A  0.0 B  7.9 | sideA x1 sideB x2
+zones-low-L3-1.log           win B (neutralised) | centre A  22.8 B   1.1 | own side A  45.1 B  65.8 | enemy side A  0.0 B  0.0 | sideA x1 sideB x2
+zones-low-L3-2.log           win B (time) | centre A   0.0 B  68.5 | own side A  70.3 B  25.3 | enemy side A  0.0 B  0.0 | sideA x2 sideB x1
+### high: 8 matches, wins A 0 / B 8; centre held A 323 s / B 373 s; own side zone A 142 / B 322; enemy side zone A 18 / B 36; side activations sideA 8 / sideB 16
+### low: 8 matches, wins A 4 / B 4; centre held A 312 s / B 208 s; own side zone A 216 / B 308; enemy side zone A 18 / B 28; side activations sideA 9 / sideB 15
