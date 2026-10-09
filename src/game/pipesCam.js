@@ -67,6 +67,14 @@ function segHit(bl, a, d, len) {
   if (tmax < 0 || tmin > len) return -1;
   return Math.max(0, tmin);
 }
+// how far from p along the unit direction d nothing opaque stands (up to max metres)
+export function freeDist(L, p, d, max) {
+  const bx = p.x + d.x * max, bz = p.z + d.z * max;
+  L.queryBlocks(Math.min(p.x, bx) - 0.01, Math.min(p.z, bz) - 0.01, Math.max(p.x, bx) + 0.01, Math.max(p.z, bz) + 0.01, _ids);
+  let t = max;
+  for (const id of _ids) { const bl = L.blocks[id]; if (!opaque(bl)) continue; const h = segHit(bl, p, d, t); if (h >= 0 && h < t) t = h; }
+  return t;
+}
 // nothing opaque between a and b (the last `skipEnd` metres before b are not tested: the target's own surroundings)
 export function sightClear(L, a, b, skipEnd = 0.05) {
   const d = _d.subVectors(b, a), len = d.length();
@@ -194,7 +202,11 @@ export function exitShot(W, e) {
     if (Math.abs(gy - e.land[1]) > 1.5) continue;
     watch.push(new THREE.Vector3(x, gy + 1.0, z));
   }
-  let best = null, bs = -Infinity, seen = 0;
+  // … and by how open its view is: the mean free distance (to 12 m) along 14 rays fanned ±30° about the out axis, level
+  // and pitched down at the landing — a block filling half the frame close in (the kiosk) costs what it hides
+  const fan = [];
+  for (const yd of [-30, -20, -10, 0, 10, 20, 30]) for (const pd of [-0.12, -0.32]) { const y = Math.atan2(o[0], o[2]) + (yd * Math.PI) / 180; fan.push(new THREE.Vector3(Math.sin(y) * Math.cos(pd), Math.sin(pd), Math.cos(y) * Math.cos(pd))); }
+  let best = null, bs = -Infinity, seen = 0, open = 0;
   for (const d of [0.35, 0.6, 0.9, 1.3, 1.8, 2.4]) for (const hh of [3.0, 2.8, 2.6, 3.2, 2.4]) for (const sd of [0, -0.7, 0.7, -1.2, 1.2]) {
     const p = _a.set(e.pos[0] + o[0] * d + sx * sd, fy + hh, e.pos[2] + o[2] * d + sz * sd);
     if (!lensClear(L, p)) continue;
@@ -202,14 +214,15 @@ export function exitShot(W, e) {
     if (dmin < 1.6) continue;
     if (!sightClear(L, p, land, 0.3)) continue;
     let n = 0; for (const w of watch) if (sightClear(L, p, w, 0.2)) n++;
-    const score = -Math.abs(d - 0.5) - 0.6 * Math.abs(hh - 2.9) - 0.4 * Math.abs(sd) + 0.12 * n;
-    if (score > bs) { bs = score; best = p.clone(); seen = n; }
+    let fr = 0; for (const f of fan) fr += freeDist(L, p, f, 12); fr /= fan.length;
+    const score = -Math.abs(d - 0.5) - 0.6 * Math.abs(hh - 2.9) - 0.25 * Math.abs(sd) + 0.12 * n + 0.1 * fr;
+    if (score > bs) { bs = score; best = p.clone(); seen = n; open = fr; }
   }
   const ok = !!best;
   if (!best) best = new THREE.Vector3(e.pos[0] + o[0] * 2.4, fy + 2.8, e.pos[2] + o[2] * 2.4);   // (never on this stage: the test reports it)
   const hd = Math.hypot(e.land[0] - best.x, e.land[2] - best.z);
   const pitch = clamp(-Math.atan2(best.y - (e.land[1] + 0.3), hd) + 0.22, -0.95, -0.15);
-  const X = { end: e.i, pos: best, pitch, ok, seen, of: watch.length };
+  const X = { end: e.i, pos: best, pitch, ok, seen, of: watch.length, open: +open.toFixed(2) };
   cache.set(e.i, X);
   return X;
 }
