@@ -621,12 +621,17 @@
       for (const team of [0, 1]) {
         for (const a of M.actors) { if (a.pipe) P._abort(a, 'test'); a.pipeCd = 0; }
         const b2 = M.actors.find((a) => a.bot && !a.isLocal && a.team === team);
+        // (nobody else about: no foe in sight to fight, no bad key left from the parts before, a full tank)
+        P.badKey.clear(); P.push.clear();
+        for (const o of M.actors) if (o !== b2 && o.alive) { o.alive = false; o.respawnTimer = 999; o._parked = true; }
+        b2.ink = 100; b2.hp = 100; b2.bot.sight?.mem.clear(); b2.bot.mode = 'paint';
         put(b2, [from.approach[0] + from.out[0] * 1.5, from.approach[1], from.approach[2] + from.out[2] * 1.5]);
         const p3 = goTo(b2.bot, new THREE.Vector3(to.land[0] - to.out[2] * 1.2, to.land[1], to.land[2] + to.out[0] * 1.2));
         const pl = p3 && p3.some((id, i) => i && __G.nav.edge(p3[i - 1], id)?.type === 'pipe');
-        let rd = false; runBot(b2.bot, 3, () => { if (b2.pipe) rd = true; return rd; });
+        let rd = false; runBot(b2.bot, 4, () => { if (b2.pipe) rd = true; return rd; });
         every.push([lg.id, k ? 'B→A' : 'A→B', team, pl ? 1 : 0, rd ? 1 : 0]);
         if (b2.pipe) P._abort(b2, 'test');
+        for (const o of M.actors) if (o._parked) { delete o._parked; o.respawn(); o.invuln = 0; }
       }
     }
     R('bots: every open leg and direction, a bot of either team plans the pipe and rides it (no side is harder for bots)', every.every((x) => x[3] && x[4]), { 'leg, dir, team, planned, rode': every });

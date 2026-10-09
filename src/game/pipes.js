@@ -935,6 +935,8 @@ export class StagePipes {
   _loopsTick() {
     const au = G.audio, cam = G.camera?.position;
     if (!au || !cam || this.m.attract) { this._stopLoops(); return; }
+    for (const [a, h] of this.loops) h?.set?.({ pos: a.pos });   // (the whoosh follows its rider every frame; who gets one, 6× a second)
+    if (((this._loopN = (this._loopN || 0) + 1) % 10) !== 1) return;
     const riders = this.m.actors.filter((a) => a.pipe && a.pipe.phase === 'ride' && a.alive).sort((x, y) => x.pos.distanceToSquared(cam) - y.pos.distanceToSquared(cam)).slice(0, 3);
     for (const [a, h] of this.loops) if (!riders.includes(a)) { h?.stop?.(0.25); this.loops.delete(a); }
     for (const a of riders) {
