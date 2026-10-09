@@ -368,7 +368,7 @@ export class KarpField {
         if (Math.abs(n.y - pos.y) > K.field.n0Dy) continue;
         const h = Math.hypot(n.x - pos.x, n.z - pos.z);
         if (h > K.field.n0R) continue;
-        cand.push(h, id);
+        cand.push(h + Math.abs(n.y - pos.y), id);   // (nearest in 3D: a node right under / over another at the same spot)
       }
     }
     // nearest first, the first with a clear waist line

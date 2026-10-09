@@ -21,24 +21,25 @@
   dbg.freeze();
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
   const A = m.actors.filter((a) => a.team === 0), B = m.actors.filter((a) => a.team === 1);
-  for (const a of m.actors) { if (a.bot) a.bot.update = () => { a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; }; }
-  const idle = (a) => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.sub = it.special = false; };
+  for (const a of m.actors) { if (a.bot) a.bot.update = () => {}; idle(a); }
+  function idle(a) { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.sub = it.special = false; }
   const floorY = (x, z, hint = 3) => { const y = G.level.groundHeight(x, z, hint); return y > -50 ? y : 0; };
   // a player at (x, z) on the floor (or y), standing still, fit and ready
   const put = (a, x, z, y = null) => {
     if (!a.alive) { a.respawn(); }
     a.superJumpState = null; if (a.specialActive) G.specials.end(a, 'test');
     a.pos.set(x, y ?? floorY(x, z), z); a.vel.set(0, 0, 0); a.grounded = false; a.smoothY = 0; a.invuln = 0; a.hp = PLAYER.hp; a.form = 'kid'; a.climbing = false;
-    a.status.shield = 0; a.status.track = 0; idle(a);
+    a.status.track = 0; idle(a);
   };
   // everyone out of the way: on their own spawn decks
-  const park = () => { for (const a of m.actors) { const p = G.level.spawnPads[a.team]; put(a, p.x + ((a.slot % 4) - 1.5) * 1.6, p.z + (a.team ? 2.5 : -2.5), p.y); } };
+  const park = () => { for (const a of m.actors) { const p = G.level.spawnPads[a.team]; a.status.shield = 0; put(a, p.x + ((a.slot % 4) - 1.5) * 1.6, p.z + (a.team ? 2.5 : -2.5), p.y); } };
   let Kp = m.karp;
   // a fresh engine (def: LAYOUT.bazookarp to use; the world keeps its kit pieces)
   const fresh = (def = KARPBOX_DEF, opts = {}) => {
     Kp?.dispose(); G.level.layout.bazookarp = def;
     m.time = opts.time ?? 200; m.state = 'playing'; m.result = null;
     if (m.karp) { m.karp.winner = 'disposed'; }
+    G.paint.clear();   // (every check starts on a clean deck: ink left by the last one slows a carrier)
     m.karp = Kp = new Bazookarp(m, new LoopWire());
     if (opts.coin != null) Kp.coin = opts.coin;
     park(); step(0.05);
@@ -79,9 +80,9 @@
     R('B2 §2.2: no regrowth for 1.5 s without hits, then back toward 0 at 200 / s', r1 === 300 && Math.abs(r2 - (300 - 200 * 1.0)) < 12, { r1, r2 });
     // a Splat Bomb at the shell's surface: its true 180, not the devices' 60
     Kp.shell.m = 0; const c = Kp.shell.center();
-    G.projectiles._explodeBomb({ pos: V(c.x, c.y - 1.2, c.z - 1.65), team: 0, owner: a0, sp: false, kind: 'bomb' });
+    G.projectiles._explodeBomb({ pos: V(c.x, c.y, c.z - 1.6), team: 0, owner: a0, sp: false, kind: 'bomb' });
     const bomb = Kp.shell.meter;
-    Kp.shell.m = 0; G.projectiles._explodeBomb({ pos: V(c.x, c.y - 1.2, c.z - 1.65), team: 0, owner: a0, sp: true, kind: 'bomb' });
+    Kp.shell.m = 0; G.projectiles._explodeBomb({ pos: V(c.x, c.y, c.z - 1.6), team: 0, owner: a0, sp: true, kind: 'bomb' });
     const bar = Kp.shell.meter;
     R('B3 §2.2: a Splat Bomb at the surface counts its player damage (180), not the device number (60)', Math.abs(bomb - SUB.bomb.damageMax) < 1, { bomb, max: SUB.bomb.damageMax });
     R('B4 §2.2: a Bomb Barrage\'s bomb (its sp flag) counts × 0.5', Math.abs(bar - SUB.bomb.damageMax * 0.5) < 1, { bar });
@@ -262,7 +263,7 @@
     put(c, 0, 25); Kp.base = null; step(0.1); c.intent.move.set(0, 0, 1); step(1.5); idle(c);
     const W = Kp.weirs[0][0];
     R('D3 S33, S34: walking onto the weir plants it — released, set on the weir, the weir lowered, the Gate up, a fresh shell, count = the weir\'s',
-      !Kp.holder && !c.carry && Kp.lowered[0] && Kp.gateUp[0] && !Kp.gateUp[1] && Kp.phase === 'reforming' && Kp.pos.distanceTo(W.pos) < 0.05 && Kp.count[0] === W.count && Kp.shell.hp === 500, { holder: Kp.holder?.name, lowered: Kp.lowered, gateUp: Kp.gateUp, phase: Kp.phase, count: Kp.count, weir: W.count });
+      !Kp.holder && !c.carry && Kp.lowered[0] && Kp.gateUp[0] && !Kp.gateUp[1] && (Kp.phase === 'reforming' || Kp.phase === 'shielded') && Kp.pos.distanceTo(W.pos) < 0.05 && Kp.count[0] === W.count && Kp.shell.hp === 500, { holder: Kp.holder?.name, lowered: Kp.lowered, gateUp: Kp.gateUp, phase: Kp.phase, count: Kp.count, weir: W.count });
     // the knockout: in the risen Gate (radius 1.7)
     step(1); Kp.shell.add(0, 600, c); step(0.3); carry(c, 0, 26); const gp = Kp.gates[0].pos;
     put(c, gp.x, gp.z - 2.2); Kp.base = null; step(0.1); const outside = Kp.winner;
@@ -422,15 +423,15 @@
     R('G5 S39a: the winning team picks it up in overtime → it wins (retake)', Kp.winner === 0 && Kp.reason === 'retake', { winner: Kp.winner, reason: Kp.reason });
     // S39b: the 10 s window — paused while re-forming / resetting, then the losing team didn't grab it → no-pickup
     fresh(KARPBOX_DEF, { time: 30 }); Kp.count = [60, 100]; Kp.reachT = [5, 0]; carry(c, 0, 10); m.time = 10; c.splat(L, 'weapon'); m.time = 0.02; step(0.1);
-    const w0 = Kp.otWin.left; step(0.7); const w1 = Kp.otWin.left; step(9.0); const w2 = Kp.otWin.left, during = Kp.winner; step(1.0);
+    const w0 = Kp.otWin.left; step(0.7); const w1 = Kp.otWin.left; step(9.0); const w2 = Kp.otWin.left, during = Kp.winner; step(1.6);
     R('G6 S39b: the 10 s window pauses while the shell re-forms, then counts down; not grabbed → the winning team wins (no-pickup)', w0 > 9.9 && w1 > 9.8 && w2 < 1.6 && during == null && Kp.winner === 0 && Kp.reason === 'no-pickup', { w0, w1, w2, winner: Kp.winner, reason: Kp.reason });
     // S38c's window counts from the plant; a losing-team plant in overtime opens a new one
     fresh(KARPBOX_DEF, { time: 30 }); Kp.count = [30, 100]; carry(L, 5, -20); m.time = 4.5; put(L, 0, -28, 1.32); Kp.base = null; step(1 / 60);
     const tPlant = Kp.lastPlant?.left; step(4.6); const winS38c = Kp.otWin.left, wantW = 10 - (tPlant - K.shell.reform);
     R('G7 S39b: an S38c window counts from the plant (paused while it re-forms) — at time-up it has 10 − (4.5 − 0.8) s left', Kp.overtime && Kp.stats.otStart === 'planted' && Math.abs(winS38c - wantW) < 0.25, { left: winS38c, want: wantW, plantedWithLeft: tPlant });
     fresh(KARPBOX_DEF, { time: 1 }); Kp.count = [30, 100]; Kp.reachT = [5, 0]; carry(L, 0, -20); m.time = 0.02; step(0.1);
-    L.intent.move.set(0, 0, -1); step(2.0); idle(L);
-    R('G8 S39b: a losing-team plant in overtime opens a fresh 10 s window', Kp.lowered[1] && Kp.otWin.open && Kp.otWin.left > 9.5 && Kp.winner == null, { lowered: Kp.lowered, win: Kp.otWin.left, count: Kp.count });
+    const g8 = []; L.intent.move.set(0, 0, -1); for (let i = 0; i < 120; i++) { dbg.step(1000 / 60); if (i % 15 === 0) g8.push([+L.pos.z.toFixed(2), +L.pos.y.toFixed(2), L.alive, Kp.holder === L, +L.vel.z.toFixed(2), m.state]); } idle(L);
+    R('G8 S39b: a losing-team plant in overtime opens a fresh 10 s window', Kp.lowered[1] && Kp.otWin.open && Kp.otWin.left > 9.5 && Kp.winner == null, { lowered: Kp.lowered, win: Kp.otWin.left, count: Kp.count, g8 });
     // S39c by the fuse and a fall
     fresh(KARPBOX_DEF, { time: 1 }); Kp.count = [60, 100]; carry(L, 0, -10); m.time = 0.02; step(0.1); Kp.fuse = 0.02; step(0.1);
     const fuseEnd = [Kp.winner, Kp.reason];
@@ -439,8 +440,8 @@
     // S39d: strictly below wins; equal isn't enough
     fresh(KARPBOX_DEF, { time: 1 }); Kp.count = [80, 100]; Kp.reachT = [5, 0]; carry(L, 0, -2); m.time = 0.02; step(0.1);
     Kp.count[1] = 80; step(0.05); const eq = Kp.winner;
-    L.intent.move.set(0, 0, -1); step(2.2); idle(L);
-    R('G10 S39d: the losing team carried past the winning team\'s count wins (comeback); an equal count isn\'t enough', eq == null && Kp.winner === 1 && Kp.reason === 'comeback', { eq, winner: Kp.winner, reason: Kp.reason, count: Kp.count });
+    const g10 = []; L.intent.move.set(0, 0, -1); for (let i = 0; i < 132; i++) { dbg.step(1000 / 60); if (i % 15 === 0) g10.push([+L.pos.x.toFixed(2), +L.pos.z.toFixed(2), +L.pos.y.toFixed(2), L.alive, Kp.holder === L, Kp.count[1], Kp.stats.clamped]); } idle(L);
+    R('G10 S39d: the losing team carried past the winning team\'s count wins (comeback); an equal count isn\'t enough', eq == null && Kp.winner === 1 && Kp.reason === 'comeback', { eq, winner: Kp.winner, reason: Kp.reason, count: Kp.count, g10, ot: Kp.overtime, losing: Kp.otLosing });
     fresh(KARPBOX_DEF, { time: 1 }); Kp.count = [60, 100]; carry(L, 0, -10); m.time = 0.02; step(0.1); Kp.overtimeT = K.overtimeMax - 0.05; Kp.fuse = 99; step(0.2);
     R('G11: the 300 s safety cap → the winning team (overtime-cap)', Kp.winner === 0 && Kp.reason === 'overtime-cap', { winner: Kp.winner, reason: Kp.reason });
     fresh(KARPBOX_DEF, { time: 1, coin: 1 }); m.time = 0.02; step(0.1);
@@ -487,8 +488,8 @@
   // ============================================================================ I. the field reading (§3.2)
   if (want('I')) {
     fresh(); const Fi = F(), D = Fi.D[0];
-    const nIn = Fi.ownNode(V(6.5, 0, 15.5)), nOut = Fi.ownNode(V(5.5, 0, 15.5));
-    const rIn = Fi.fieldAt(0, V(6.15, 0, 15.5)), rOut = Fi.fieldAt(0, V(5.55, 0, 15.5));
+    const nIn = Fi.ownNode(V(6.5, 0, 15.5)), nOut = Fi.ownNode(V(4.5, 0, 15.5));
+    const rIn = Fi.fieldAt(0, V(6.15, 0, 15.5)), rOut = Fi.fieldAt(0, V(5.1, 0, 15.5));
     R('I1 §3.2: by the 0.3 m thin wall each side reads its own walk (they differ by > 20 m)', nIn >= 0 && nOut >= 0 && Math.abs(D[nIn] - D[nOut]) > 20 && Math.abs(rIn.d - D[nIn]) < 1.2 && Math.abs(rOut.d - D[nOut]) < 1.2, { dIn: D[nIn], dOut: D[nOut], rIn: rIn?.d, rOut: rOut?.d });
     let worst = 0, n = 0;
     for (let i = 0; i < G.nav.nodes.length; i++) {

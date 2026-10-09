@@ -1346,7 +1346,7 @@ class Game {
       m.updateController(dt);
       const sub = dt > 1 / 45 ? 2 : 1; // substep physics on slow frames
       for (let i = 0; i < sub; i++) m.update(dt / sub);
-      if (!m.paused) { G.projectiles.update(dt); G.subs.update(dt); G.specials.update(dt); this.towerFx?.update(dt); if (m.karp) { G.karpGun?.tick(dt); this.karpFx?.update(dt); } }   // [b5-karp]
+      if (!m.paused) { G.projectiles.update(dt); G.subs.update(dt); G.specials.update(dt); this.towerFx?.update(dt); if (m.karp) { G.karpGun?.tick(dt); m.karp.lateUpdate(); this.karpFx?.update(dt); } }   // [b5-karp] (the carrier's gauge guard after the specials too)
       if (m.attract) this._updateAttract(dt);
       else if (m.state === 'playing' && m.local?.alive && this.rig.mode !== 'follow' && this.rig.mode !== 'path') this.rig.follow(m.local, true);
     }
