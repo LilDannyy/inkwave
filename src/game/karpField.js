@@ -139,12 +139,16 @@ export class KarpField {
     this.R = R;
     this.nav = G.nav; this.level = G.level; this.physics = G.physics;
     this.state = 0;
-    this.stats = { buildMs: 0, hops: 0, gaps: 0, clearRays: 0, maxHopGain: 0 };
+    this.stats = { buildMs: 0, hops: 0, gaps: 0, clearRays: 0, maxHopGain: null };
     const t0 = performance.now();
     this._graph(opts);
+    const t1 = performance.now();
     this._dist();
+    const t2 = performance.now();
     this._rest();
-    this.stats.buildMs = +(performance.now() - t0).toFixed(1);
+    const t3 = performance.now();
+    this.stats.buildMs = +(t3 - t0).toFixed(1);
+    this.stats.ms = { graph: +(t1 - t0).toFixed(1), extra: +(this._xMs || 0).toFixed(1), dist: +(t2 - t1).toFixed(1), rest: +(t3 - t2).toFixed(1), perState: +((t3 - t0) / this.states.length).toFixed(1) };
     this.signs = this.autoSigns();
   }
 
@@ -187,7 +191,9 @@ export class KarpField {
         push(i, e.to, l, t);
       }
     }
+    const tx = performance.now();
     this._extraEdges(push);
+    this._xMs = performance.now() - tx;
     const E = from.length;
     const fs = (this.fs = new Int32Array(N + 1)), ft = (this.ft = new Int32Array(E)), fl = (this.fl = new Float32Array(E)), fy = (this.fy = new Uint8Array(E));
     for (let k = 0; k < E; k++) fs[from[k] + 1]++;
@@ -229,26 +235,29 @@ export class KarpField {
     const nav = this.nav, ok = this.ok, H = K.hop, Gp = K.gap, L = this.level;
     const nodes = nav.nodes, nx = nav.nx;
     let hops = 0, gaps = 0;
-    const near6 = new Map();   // node → Set of nodes within a 6 m nav walk (lazy, only for gap candidates)
+    // rim nodes: a neighbour cell with no floor node from 1 m below to 0.6 m above — only those can start or end a gap
+    // (a gap leaves solid floor), so the gap scan skips every node inside a floor
+    const rim = new Uint8Array(nodes.length);
+    for (let i = 0; i < nodes.length; i++) {
+      if (!ok[i]) continue;
+      const n = nodes[i];
+      for (let dz = -1; dz <= 1 && !rim[i]; dz++) for (let dx = -1; dx <= 1; dx++) if ((dx || dz) && !this._floorNode(n.ix + dx, n.iz + dz, n.y, Gp.airBelow, 0.6)) { rim[i] = 1; break; }
+    }
+    // the nodes within a 6 m nav walk of a gap candidate's start (a small Dijkstra, once per start node, on demand)
+    let w6id = -1; const w6 = new Map(), w6h = new Heap(64);
     const walk6 = (id) => {
-      let s = near6.get(id);
-      if (s) return s;
-      s = new Map([[id, 0]]);
-      const q = [[id, 0]];
-      while (q.length) {
-        q.sort((a, b) => a[1] - b[1]);
-        const [k, d] = q.shift();
-        if (d > (s.get(k) ?? INF)) continue;
-        const n = nodes[k];
+      if (id === w6id) return w6;
+      w6id = id; w6.clear(); w6.set(id, 0); w6h.n = 0; w6h.push(id, 0);
+      while (w6h.n) {
+        const k = w6h.pop(), d = w6.get(k), n = nodes[k];
         for (const e of n.nb) {
           if (!ok[e.to] || e.type === 'climb') continue;
           const m = nodes[e.to], nd = d + Math.hypot(m.x - n.x, m.z - n.z, m.y - n.y);
-          if (nd > Gp.walkMin || nd >= (s.get(e.to) ?? INF)) continue;
-          s.set(e.to, nd); q.push([e.to, nd]);
+          if (nd > Gp.walkMin || nd >= (w6.get(e.to) ?? INF)) continue;
+          w6.set(e.to, nd); w6h.push(e.to, nd);
         }
       }
-      near6.set(id, s);
-      return s;
+      return w6;
     };
     for (let i = 0; i < nodes.length; i++) {
       if (!ok[i]) continue;
@@ -269,15 +278,15 @@ export class KarpField {
           push(i, mid, Math.hypot(m.x - n.x, m.z - n.z) + rise, TYPES.hop); hops++;
         }
       }
-      // gaps: across open air, 1.2–3.0 m
-      for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
+      // gaps: across open air, 1.2–3.0 m (rim to rim)
+      if (rim[i]) for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
         if (Math.abs(dx) + Math.abs(dz) < 2) continue;
         const jx = n.ix + dx, jz = n.iz + dz;
         if (jx < 0 || jz < 0 || jx >= nx || jz >= nav.nz) continue;
         for (const mid of nav.cells[jz * nx + jx]) {
-          if (!ok[mid]) continue;
+          if (!ok[mid] || !rim[mid]) continue;
           const m = nodes[mid], flat = Math.hypot(m.x - n.x, m.z - n.z), dy = m.y - n.y;
-          if (flat <= Gp.flatMin || flat > Gp.flatMax || dy > Gp.upMax || dy < -Gp.downMax) continue;
+          if (flat <= Gp.flatMin || flat > Gp.flatMax + 1e-6 || dy > Gp.upMax || dy < -Gp.downMax) continue;
           // open air somewhere along the line (cheap: nav cells first, then the floor itself)
           const steps = Math.floor(flat / 0.25);
           let open = false;
@@ -331,13 +340,18 @@ export class KarpField {
     this.setState(0);
     const p = this.R.pond;
     this.L = [0, 1].map((t) => { const r = this.fieldAt(t, p); return r ? r.d : INF; });
-    // the largest gain the hop and gap edges give (the field with them vs without them, both teams, the start state:
-    // the checker's number; the tests read it). this.plainD: the field without them (the tests compare)
-    this.plainD = [0, 1].map((t) => this._dijkstra(this.states[0].okN, this.seeds[t], true));
+  }
+  // the field without the hop and gap edges (the start state; computed on demand: the checker's "gain" and the tests)
+  get plainD() { return this._plainD || (this._plainD = [0, 1].map((t) => this._dijkstra(this.states[0].okN, this.seeds[t], true))); }
+  // the largest gain the hop and gap edges give anywhere (both teams, the start state)
+  hopGain() {
+    let best = 0, at = -1;
     for (let t = 0; t < 2; t++) {
       const D = this.states[0].D[t], P = this.plainD[t];
-      for (let i = 0; i < this.N; i++) { const g = P[i] - D[i]; if (Number.isFinite(g) && g > this.stats.maxHopGain) { this.stats.maxHopGain = +g.toFixed(2); this.stats.maxHopAt = i; } }
+      for (let i = 0; i < this.N; i++) { const g = P[i] - D[i]; if (Number.isFinite(g) && g > best) { best = g; at = i; } }
     }
+    this.stats.maxHopGain = +best.toFixed(2); this.stats.maxHopAt = at;
+    return best;
   }
   setState(s) {
     s = Math.max(0, Math.min(this.states.length - 1, s | 0));

@@ -421,7 +421,11 @@ export class Bazookarp {
     const r = this.field.fieldAt(T, pos, this._rh || (this._rh = { d: 0, node: -1 }));
     if (!r || !Number.isFinite(r.d)) return;
     const D = r.d, B = this.base;
-    if (B && D < B.D - (K.clamp.vMax * Math.max(0, t - B.t) + K.clamp.slack)) { this.stats.clamped++; return; }
+    if (B && D < B.D - (K.clamp.vMax * Math.max(0, t - B.t) + K.clamp.slack)) {
+      this.stats.clamped++;
+      if ((this.stats.clampLog || (this.stats.clampLog = [])).length < 8) this.stats.clampLog.push({ t: +t.toFixed(2), from: +B.D.toFixed(2), to: +D.toFixed(2), dt: +(t - B.t).toFixed(3), pos: [+pos.x.toFixed(2), +pos.y.toFixed(2), +pos.z.toFixed(2)], node: r.node, grounded: !!a.grounded, form: a.form, w: a.weaponId });
+      return;
+    }
     this.base = { D, t };
     const now = Math.max(this.capCount(T), this.field.count(T, D));
     if (now < this.count[T]) { this.count[T] = now; this.reachT[T] = this.clock; }

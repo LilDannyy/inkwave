@@ -111,7 +111,7 @@ export class KarpGun {
       this.stats.kicks++;
     }
     netRec(a, 'karp', [0, gid, r2(L.from.x), r2(L.from.y), r2(L.from.z), r2(L.vel.x), r2(L.vel.y), r2(L.vel.z), r2(c)]);
-    G.audio?.play?.('blaster_fire', { pos: a.isLocal ? undefined : a.pos, volume: 0.7, pitch: 0.7 });
+    G.audio?.play?.('zooka_fire', { pos: a.isLocal ? undefined : a.pos, volume: 0.7, pitch: 0.8 });
     emit('karp:shot', { actor: a, charge: c, from: s.start.clone(), vel: s.vel.clone() });
     return s;
   }

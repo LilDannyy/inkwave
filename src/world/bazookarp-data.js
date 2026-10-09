@@ -19,19 +19,21 @@
 // both until the checker passes.
 export const BAZOOKARP_DEFS = {
   halyard: {
-    start: [0, 0],
-    weirs: [{ at: [-8.5, 0, 28.0], yaw: 0 }],
-    gate: { at: [0, 0, 52.5], yaw: 0 },
+    // the Pond on the ferry's cabin roof (3.8 m: its wheelhouse is cleared for this mode, as for Tower Command)
+    start: [0, 3.8, 0],
+    weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
+    gate: { at: [0, 0, 52.5], yaw: 0 },                 // in front of Bravo's spawn (13.5 m from the pad)
     freeZones: [
-      { poly: [[-9, 59], [9, 59], [9, 72], [-9, 72]], y0: 2.0, y1: 3.2, signs: [[-8.6, 59.4, 180], [8.6, 59.4, 180]] },
+      { poly: [[-8, 60], [8, 60], [8, 72], [-8, 72]], y0: 2.0, y1: 3.2, signs: [[-7.6, 60.4, 180], [7.6, 60.4, 180]] },   // the spawn deck
     ],
   },
   lockgate: {
-    start: [0, 0],
-    weirs: [{ at: [8.0, 0, 30.0], yaw: 0 }],
-    gate: { at: [2, 0, 57.5], yaw: 0 },
+    // the Pond on the bridge over the lock at the centre (3.3 m)
+    start: [0, 3.3, 0],
+    weirs: [{ at: [0, 0, 24], yaw: 0 }],
+    gate: { at: [0, 0, 52], yaw: 0 },                   // in front of Bravo's spawn (12.6 m from the pad)
     freeZones: [
-      { poly: [[-13, 62], [5, 62], [5, 74], [-13, 74]], y0: 2.0, y1: 3.2, signs: [[-12.6, 62.4, 180], [4.6, 62.4, 180]] },
+      { poly: [[-12, 58], [4, 58], [4, 70], [-12, 70]], y0: 2.0, y1: 3.2, signs: [[-11.6, 58.4, 180], [3.6, 58.4, 180]] },   // the spawn deck
     ],
   },
 };

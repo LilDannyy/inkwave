@@ -714,7 +714,11 @@ export const BAZOOKARP = {
   field: { n0R: 0.9, n0Dy: 0.5 },
   hop: { riseMin: 1.25, riseMax: 1.8, flatMax: 1.2, head: 1.6 },   // a kid lands on up to ~1.8 m
   gap: { flatMin: 1.2, flatMax: 3.0, upMax: 0.6, downMax: 3.4, airBelow: 1.0, walkMin: 6 },
-  clamp: { vMax: 15.5, slack: 0.5 },      // m/s (swim 9.44 + kick 6.0, rounded up); m
+  // [b5-karp] slack 2.0 (the SPEC's 0.5): the reading itself steps by up to ~1–2 m where the own node changes between
+  // neighbours the nav graph doesn't join (SPEC §3.2's own sweep: 1 m worst, 2.08 m on kelpline) — 0.5 refused those
+  // honest steps (42 in one halyard match, each accepted 3–5 frames later); 2.0 still refuses every jump it exists for
+  // (a remote carrier's 4 m correction, a wall's far side)
+  clamp: { vMax: 15.5, slack: 2.0 },      // m/s (swim 9.44 + kick 6.0, rounded up); m
   // the drop spot (§2.7)
   rest: { clear: 2.3, padR: 9.7, weirR: 2.8, gateR: 2.7, band: 1.6, near: 4, check: 0.5 },
   // the carrier's HUD fuse (§7.2): snap forward when > fwd s long; give time back at most back s per second

@@ -56,10 +56,11 @@ class KarpPlan {
     this.t = now;
     const Kp = this.Kp, H = Kp.holder;
     // the shell's footprint (nobody routes through it)
-    const key = Kp.shell.state === 'none' ? '' : `${Kp.pos.x.toFixed(1)},${Kp.pos.z.toFixed(1)}`;
+    // (its current radius + 0.6 m, SPEC §8.2: a melee breaker's stand spot stays outside it)
+    const R = Kp.shell.radius() + 0.6, key = Kp.shell.state === 'none' ? '' : `${Kp.pos.x.toFixed(1)},${Kp.pos.z.toFixed(1)},${R.toFixed(1)}`;
     if (key !== this.shellKey) {
       this.shellKey = key; this.shellMask.fill(0);
-      if (key) { const c = Kp.shell.center(), R = K.shell.rMax + 0.6; for (let i = 0; i < this.shellMask.length; i++) { const n = G.nav.nodes[i]; if (Math.hypot(n.x - c.x, n.z - c.z) < R && Math.abs(n.y - Kp.pos.y) < 2) this.shellMask[i] = 1; } }
+      if (key) { const c = Kp.shell.center(); for (let i = 0; i < this.shellMask.length; i++) { const n = G.nav.nodes[i]; if (Math.hypot(n.x - c.x, n.z - c.z) < R && Math.abs(n.y - Kp.pos.y) < 2) this.shellMask[i] = 1; } }
     }
     this.roles.clear();
     for (let t = 0; t < 2; t++) {
@@ -90,13 +91,22 @@ class KarpPlan {
   breakSpot(a) {
     const Kp = this.Kp, c = Kp.pos, pad = G.level.spawnPads[a.team];
     const base = Math.atan2(pad.x - c.x, pad.z - c.z), ang = base + ((a.slot % 4) - 1.5) * 0.55;
-    const melee = MELEE.has(a.weapon.kind), want = melee ? Math.max(2.5, Kp.shell.radius() + 0.9) : 7;
-    for (const r of [want, want + 1, want - 1, want + 2.5]) {
-      _v.set(c.x + Math.sin(ang) * r, c.y + 0.5, c.z + Math.cos(ang) * r);
-      const id = G.nav.nearest(_v, 1.0);
-      if (id >= 0) { const n = G.nav.nodes[id]; if (Math.hypot(n.x - c.x, n.z - c.z) > Kp.shell.radius() + 0.6) return n; }
+    const melee = MELEE.has(a.weapon.kind), want = melee ? Math.max(2.5, Kp.shell.radius() + PLAYER.radius + 0.5) + 0.3 : 7;
+    // the first spot on our side, spread by slot, with a clear line from a kid's eyes there to the shell (a raised Pond:
+    // the deck round it, not the floor under it); none → the nearest one at all
+    const sc = Kp.shell.center(), eye = new THREE.Vector3();
+    let any = null;
+    for (const da of [0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6, 2.4, -2.4, Math.PI]) for (const r of [want, want + 1.5, want - 1.5, want + 3, want + 5]) {
+      if (r < 2.4) continue;
+      _v.set(c.x + Math.sin(ang + da) * r, c.y + 0.5, c.z + Math.cos(ang + da) * r);
+      const id = G.nav.nearest(_v, 1.2);
+      if (id < 0) continue;
+      const n = G.nav.nodes[id];
+      if (Math.hypot(n.x - c.x, n.z - c.z) <= Kp.shell.radius() + 0.6) continue;
+      any = any || n;
+      if (G.physics.los(eye.set(n.x, n.y + 1.1, n.z), sc)) return n;
     }
-    return null;
+    return any;
   }
 }
 
@@ -226,4 +236,3 @@ export function karpPathFallback(b) {
 }
 // everyone else in a Bazookarp match: no route through the shell
 export function karpShellAvoid() { const P = karpPlan(); return P && P.shellKey ? P.shellMask : null; }
-void PLAYER;
