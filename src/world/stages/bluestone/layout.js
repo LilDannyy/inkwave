@@ -80,11 +80,12 @@ export const P = {
   gpo: [-13, -9.5, -42, -29],       // the GPO's portico terrace (1.2)
   gpoB: [-16, -9.5, -46, -42],        // the GPO (its clock tower on Customs Lane's corner)
   customs: [-33, -26, -12, -2],       // the Customs House in the knee
+  prow: [-36.5, -27, -25, -14],         // Prow Place (1.0), at the head of Hoki Lane and the arcade
   boathouse: [14.5, 21.5, -24, -12],  // the Boathouse (deck 2.4), standing in the river at the crossbar's SE
 };
 export const TERRACE = [[-37, -60], [-6, -60], [-6, -50], [-16.5, -50], [-16.5, -52.5], [-26.5, -52.5], [-26.5, -50], [-37, -50]];
 const BLDS = [P.engine, P.boiler, P.shed, [-14, -9.5, -22.5, -18.5], P.gpoB, P.customs, [-31, -30.5, -42, -28], [-26.5, -26, -42, -28], [-37, -36.5, -50, -14]];   // (the street is cut out under them)
-const TIERS = [TERRACE, ...BLDS.map((r) => rectPoly(...r)), rectPoly(...P.deck), rectPoly(...P.boathouse), rectPoly(...P.arcade), rectPoly(...P.gpo)];
+const TIERS = [TERRACE, ...BLDS.map((r) => rectPoly(...r)), rectPoly(...P.deck), rectPoly(...P.boathouse), rectPoly(...P.arcade), rectPoly(...P.gpo), rectPoly(...P.prow)];
 const mirP = (p) => p.map(([x, z]) => [-x, -z]);
 
 // ------------------------------------------------------------------------------------------------ the ground
@@ -164,9 +165,9 @@ const MID = [
   B(-11, -5, 2.4, 3.4, -16.0, -15.5, rail({ tag: 'balustrade' })),
   B(-5.5, -5, 2.4, 3.3, -18.5, -16.0, rail({ tag: 'balustrade' })),
   B(-14, -11, 2.4, 3.3, -13.0, -12.5, rail({ tag: 'balustrade' })),
-  B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-14, -13.4, 0, 1.5, -15.4, -13.4, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-14, -13.4, 0, 1.5, -15.4, -13.4, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // the Boathouse: its roof deck is Alpha's raised corner by the river (2.4)
   ...tierBoxes([P.boathouse], 2.4, { tag: 'boathouse', color: '#8a7158', pattern: PATTERN.weatherboard }),
   R([18.6, 0, -6], [18.6, 2.4, -12], 3, stair({ tag: 'boathouse-stair', color: K.wood, pattern: PATTERN.treads })),   // (round C: flush with the boat shed)
@@ -195,7 +196,7 @@ const MID = [
   B(RIVER_STAIR.xLand, RIVER_STAIR.xTop, 5.3, 6.3, RIVER_STAIR.z0, RIVER_STAIR.z0 + 0.12, rail({ tag: 'river-stair-glass', eras: '3', eraGroup: 'stair-s3' })),
   B(RIVER_STAIR.xLand, RIVER_STAIR.xLand + 0.12, 5.3, 6.3, RIVER_STAIR.z0 + 0.12, -AP_OUT, rail({ tag: 'river-stair-glass', eras: '3', eraGroup: 'stair-s3' })),
   B(17, 19.4, 2.4, 3.4, -22.6, -21.8, cover({ tag: 'deck-racks', color: '#7d6c5a', roof: true })),
-  B(18.4, 19.6, 2.4, 3.4, -16.2, -14.6, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(18.4, 19.6, 2.4, 3.4, -16.2, -14.6, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the Halo (the 3000s)
@@ -231,7 +232,7 @@ const haloPieces = [];
   // (round C: and one on each of the 90°, 125° and 270° sides — the 3000s cover map's open stretches on the Halo)
   for (const [b, g, r] of [[157.5, 'halo-3', 14.4], [202.5, 'halo-5', 14.4], [233, 'halo-7', 13.9], [98.5, 'halo-1', 13.2], [125, 'halo-2', 13.6], [261, 'halo-8', 13.2]]) {
     const [px, pz] = polar(r, b);
-    haloPieces.push(O(px, pz, 1.2, 1.2, HALO_Y - 0.1, HALO_Y + 1, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g }));
+    haloPieces.push(O(px, pz, 1.2, 1.2, HALO_Y - 0.1, HALO_Y + 1, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, roof: true, eras: '3', eraGroup: g }));
   }
 }
 
@@ -267,20 +268,21 @@ const LEG_PIECES = [
   B(-24.2, -21.6, 0, 3.2, -34, -28, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
   B(-26, -24.6, 0, 0.3, -35, -27, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
   B(-25.8, -24.8, 0.3, 2.6, -33, -29, { tag: 'tram-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
-  B(-25.9, -24.7, 0, 1.5, -45, -43, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-25.9, -24.7, 0, 1.5, -24, -22, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-15.9, -14.7, 0, 1.5, -27.5, -25.5, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-25.9, -24.7, 0, 1.5, -45, -43, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-25.9, -24.7, 0, 1.5, -24, -22, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-15.9, -14.7, 0, 1.5, -27.5, -25.5, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-21.2, -19.8, 0, 2.2, -41.5, -39.5, { tag: 'news-kiosk', color: '#4d5f57', pattern: PATTERN.metal, roof: true, notIn: 'tower' }),
   OB(-22.4, -24, 1.2, 2.2, 0, 1.2, 0, cover({ tag: 'cart' })),
   // the GPO: the building on Customs Lane's corner (its clock tower to 16 m), the portico terrace (1.2) with its steps
   // down to Swimston and its piers, the hop down to the quay on its east face
-  ...bld(P.gpoB[0], P.gpoB[1], P.gpoB[2], P.gpoB[3], 9, { tag: 'gpo', color: K.gpo }, BOT),
-  B(-16, -13, 9, 16, -46, -43, { tag: 'gpo-clocktower', color: K.gpo, pattern: PATTERN.render, roof: true, paint: false }),
+  // (6 m and its tower on the quay corner: from the spawn deck the dome shows over it, up Swimston's east side)
+  ...bld(P.gpoB[0], P.gpoB[1], P.gpoB[2], P.gpoB[3], 6, { tag: 'gpo', color: K.gpo }, BOT),
+  B(-12.5, -9.5, 6, 16, -46, -43, { tag: 'gpo-clocktower', color: K.gpo, pattern: PATTERN.render, roof: true, paint: false }),
   ...tierBoxes([P.gpo], 1.2, sand({ tag: 'gpo-terrace' })),
   R([-16, 0, -35.5], [-13, 1.2, -35.5], 9, stair({ tag: 'gpo-steps' })),
   B(-13, -12.2, 1.2, 3.2, -41.5, -40.7, { tag: 'gpo-pier', color: '#bdb196', pattern: PATTERN.render, roof: true }),
   B(-13, -12.2, 1.2, 3.2, -30.3, -29.5, { tag: 'gpo-pier', color: '#bdb196', pattern: PATTERN.render, roof: true }),
-  B(-10.9, -9.7, 1.2, 2.2, -36.4, -34.6, cover({ tag: 'gpo-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-10.9, -9.7, 1.2, 2.2, -36.4, -34.6, cover({ tag: 'gpo-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // Degrayling Lane (Swimston ↔ the quay, north of the GPO): the 1880s produce stacks shut its west half (2.8, roof, not
   // inkable) → today café tables in their footprint (the same group)
   B(-14.5, -10, 0, 2.8, -28.5, -23.5, { tag: 'crates-stack', color: K.crate, pattern: PATTERN.wood, roof: true, paint: false, eras: '1', eraGroup: 'crates-1' }),
@@ -295,7 +297,7 @@ const LEG_PIECES = [
   B(-12.4, -9, 0, 2.8, -49.6, -46.4, { tag: 'goods-wagon', color: K.wagon, pattern: PATTERN.wood, roof: true, paint: false, eras: '12', eraGroup: 'crossing' }),
   B(-11.8, -9.6, 0, 1, -48.6, -47.4, cover({ tag: 'bike-dock', color: '#4e5a5f', pattern: PATTERN.metal, eras: '3', eraGroup: 'crossing' })),
   B(-33, -30.6, 0, 1, -48.4, -47.6, cover({ tag: 'bench', color: '#7d6c5a' })),
-  B(-27.8, -26.6, 0, 1.2, -46, -44.6, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-27.8, -26.6, 0, 1.2, -46, -44.6, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the knee (Alpha's end of the crossbar)
@@ -303,22 +305,30 @@ const LEG_PIECES = [
 // the river walk round its west side to the chamfer and the circus's north-west; the hotel's arch over the quay
 const KNEE = [
   // the Young & Jackfish's east wing on an arch over the quay (soffit 3.8): the quay runs under it into the circus
-  B(-9.5, -6, 3.8, 9, -22.5, -18.5, { tag: 'hotel-arch', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
+  // (round C: carried 2.5 m out over the river corner on iron brackets, and an oriel bay over Swimston's east footpath
+  //  (2.6 – 9): with the hotel they close the Z's throat, so no line from one spawn deck reaches the other — rc-sight.mjs)
+  B(-9.5, -3.5, 3.8, 9, -22.5, -18.5, { tag: 'hotel-arch', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
+  B(-17, -14, 2.6, 9, -22.5, -18.5, { tag: 'hotel-oriel', color: K.hotel, pattern: PATTERN.render, roof: true, paint: false }),
   B(-6.4, -6, 0, 3.8, -22.5, -21.7, { tag: 'arch-pier', color: K.hotel, pattern: PATTERN.render, roof: true }),
   // the Customs House (9 m)
   ...bld(P.customs[0], P.customs[1], P.customs[2], P.customs[3], 9, { tag: 'customs-house', color: K.customs, pattern: SURF.bluestone }, BOT),
-  // Prow Place: the fountain, a horse trough
-  B(-31.6, -29.4, 0, 1.2, -21.6, -19.4, cover({ tag: 'fountain', color: '#8a8e8c' })),
-  B(-36.4, -35.4, 0, 1.0, -22, -19.6, cover({ tag: 'trough', color: '#6f726f' })),
+  // Prow Place: a 1.0 m bluestone terrace at the head of Hoki Lane and the arcade (steps up from Hoki Lane, a hop from
+  // the arcade's mouth, a drop to the cab rank and the river walk), its fountain and a horse trough: the outer flank
+  // arrives above the knee and looks over the cab rank to the circus
+  ...tierBoxes([P.prow], 1.0, ground({ tag: 'prow-place', color: K.blueT })),
+  R([-34, 0, -27.5], [-34, 1.0, -25], 5, stair({ tag: 'prow-steps', color: '#7c8088' })),
+  B(-31.6, -29.4, 1.0, 2.2, -21.6, -19.4, cover({ tag: 'fountain', color: '#8a8e8c' })),
+  B(-36.4, -35.4, 1.0, 2.0, -18, -15.6, cover({ tag: 'trough', color: '#6f726f' })),
+  B(-28.4, -27.2, 1.0, 2.0, -24.4, -23, cover({ tag: 'bollards' })),
   // the cab rank: a cabmen's shelter, a statue on its plinth, bollards
   B(-24.6, -22.4, 0, 2.6, -14.5, -11.5, { tag: 'cabmen-shelter', color: K.kiosk, pattern: PATTERN.metal, roof: true }),
   B(-23.8, -22.2, 0, 1.6, -4.8, -3.2, cover({ tag: 'statue-plinth', color: '#8b8579' })),
-  B(-16.8, -15.6, 0, 1.2, -4.2, -2.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-16.8, -15.6, 0, 1.2, -4.2, -2.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-26, -24.8, 0, 1.0, 1.0, 2.2, cover({ tag: 'bollards' })),
   // the river walk west of the Customs House and the chamfer: crates, a bench
   B(-36.4, -35.2, 0, 1.0, -9, -7.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-31.5, -29.5, 0, 1.0, 1.5, 2.3, cover({ tag: 'bench', color: '#7d6c5a' })),
-  B(-33.2, -31.8, 0, 1.2, 6.6, 9, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-33.2, -31.8, 0, 1.2, 6.6, 9, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-28.2, -26.8, 0, 1.0, 10.4, 12.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-25, -23.6, 0, 1.5, 15.4, 16.8, cover({ tag: 'lamp-plinth', color: '#8b8579' })),
 ];
@@ -351,7 +361,7 @@ const RIVER = [];
     RIVER.push(B(spans[k], spans[k + 1], -0.6, BRIDGE.y, BRIDGE.z0, BRIDGE.z1, { tag: 'iron-bridge', color: K.bridge, pattern: PATTERN.planks, eras: '23', eraGroup: g }));
     for (const [z0, z1] of [[BRIDGE.z0, BRIDGE.z0 + 0.12], [BRIDGE.z1 - 0.12, BRIDGE.z1]]) RIVER.push(B(spans[k], spans[k + 1], BRIDGE.y, BRIDGE.y + 1, z0, z1, rail({ tag: 'bridge-rail', eras: '23', eraGroup: g })));
   }
-  RIVER.push(B(2, 2.8, BRIDGE.y, 1.2, BRIDGE.z0 + 0.15, BRIDGE.z0 + 0.95, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, eras: '23', eraGroup: 'bridge-2' })));
+  RIVER.push(B(2, 2.8, BRIDGE.y, 1.2, BRIDGE.z0 + 0.15, BRIDGE.z0 + 0.95, cover({ tag: 'bridge-lamp', color: '#3f4a48', pattern: PATTERN.metal, roof: true, eras: '23', eraGroup: 'bridge-2' })));
   // the floating garden (the 3000s): tiles ≤ 8 m (one group each), its planters and glasshouse (roof) on them
   const gt = (o) => ({ tag: 'floating-garden', color: K.lawn, pattern: PATTERN.planter, eras: '3', ...o });
   const xs = [-6, -0.33, 5.33, PUNT.xN0];
@@ -375,12 +385,12 @@ const BASE = [
   ...bld(P.boiler[0], P.boiler[1], P.boiler[2], P.boiler[3], 6, { tag: 'boiler-house', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [-1, 0, 0]] }, BOT),
   ...bld(P.shed[0], P.shed[1], P.shed[2], P.shed[3], 6, { tag: 'tram-shed', color: K.engine, pattern: SURF.bluestone, noPaint: [[0, 0, -1], [1, 0, 0]] }, BOT),
   // the gallery's own cover: planters beside the stair heads, benches at the back (the pad keeps 4.2 m clear)
-  B(-26.8, -25.6, 3.3, 4.3, -68.4, -66.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-17.4, -16.2, 3.3, 4.3, -68.4, -66.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-30.6, -29.4, 3.3, 4.3, -64.4, -62.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-13.6, -12.4, 3.3, 4.3, -64.4, -62.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter })),
-  B(-23.9, -22.7, 3.3, 4.3, -60.9, -60.3, cover({ tag: 'deck-plinth', color: '#8b8579' })),
-  B(-20.3, -19.1, 3.3, 4.3, -60.9, -60.3, cover({ tag: 'deck-plinth', color: '#8b8579' })),
+  B(-26.8, -25.6, 3.3, 4.3, -68.4, -66.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-17.4, -16.2, 3.3, 4.3, -68.4, -66.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-30.6, -29.4, 3.3, 4.3, -64.4, -62.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-13.6, -12.4, 3.3, 4.3, -64.4, -62.2, cover({ tag: 'deck-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  B(-23.9, -22.7, 3.3, 4.3, -60.9, -60.3, cover({ tag: 'deck-plinth', color: '#8b8579', roof: true })),
+  B(-20.3, -19.1, 3.3, 4.3, -60.9, -60.3, cover({ tag: 'deck-plinth', color: '#8b8579', roof: true })),
   // the forecourt terrace: the grip car on the turntable road, a coal bin, the turntable's benches and buffers, banks,
   // troughs, the ticket booth (cover every 6–8 m; the tower's lane on the east track, x −19.5 … −17, stays clear)
   B(-36, -33.4, 1, 4, -59.4, -54, { tag: 'grip-car', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
