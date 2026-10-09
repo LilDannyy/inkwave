@@ -130,7 +130,7 @@ export class LavaWorld {
         if (!this.inRegion(x, z)) { all = false; break; }
       }
       void ex; void ez;
-      if (all) this.drown.push({ b, top });
+      if (all) { this.drown.push({ b, top }); b.lavaDrown = true; }
     }
   }
 
@@ -202,7 +202,9 @@ export class LavaWorld {
     this.look = new LavaLook(this, o);
     if (o.props?.mat) for (const k of ['paint', 'gloss', 'metal', 'wood', 'rubber']) if (o.props.mat[k]) patchStain(o.props.mat[k], this.uniforms);
   }
-  attachMinimap(mm) { this.minimap = mm; }
+  // (the minimap's base raster keeps the drowned floors whenever it is rebuilt — a side flip at HIGH — the lava layer
+  // covers them while they are under)
+  attachMinimap(mm) { this.minimap = mm; const prev = mm.blockOk; mm.blockOk = (b) => (prev ? prev(b) : b.solid) || !!b.lavaDrown; }
   ready() { this.setY(this.low, null); }
   // push the height into the uniforms and the look (the menu backdrop, a match, the audits)
   setY(y, st) { this.y = y; this.uniforms.uLavaS.value.x = y; this.look?.setY(y, st); }
@@ -774,7 +776,11 @@ export class StageLava {
     if (!M) return 0;
     const k = M.kind[id];
     if (k === 0) return 0;
-    if (k === 1) { const sy = M.shutY[id]; return this.yAt(t) >= sy || this.maxOver(t, t + LAVA.floorAhead) >= sy ? 1 : 0; }
+    if (k === 1) {   // (from the cached intervals of time the lava stands at or over this height: A* asks this per edge)
+      const iv = this._floorIv(M.shutY[id]), t1 = t + LAVA.floorAhead;
+      for (let i = 0; i < iv.length; i += 2) if (iv[i] <= t1 && iv[i + 1] >= t) return 1;
+      return 0;
+    }
     const R = this.riders[M.rider[id]];
     if (!R) return 2;
     const off = (tt) => {
@@ -786,6 +792,30 @@ export class StageLava {
     };
     if (off(t)) return 2;
     return off(t + 2) ? 1 : 0;
+  }
+  // the intervals of stage time over the next minute when L ≥ y (flat [a0, b0, a1, b1, …]), cached for this clock time
+  _floorIv(y) {
+    const now = this.clock.t;
+    if (this._ivT !== now) { this._ivT = now; this._iv = new Map(); }
+    let iv = this._iv.get(y);
+    if (iv) return iv;
+    iv = [];
+    const S = this.sched, hz = now + 60;
+    if (this.held || S.kind === 'fixed') { if (this.yAt(now) >= y) iv.push(-Infinity, Infinity); }
+    else {
+      // L is monotone between move boundaries: walk the boundaries, find the crossings
+      const pts = [now]; for (let t = now; t < hz; ) { const st = lavaAt(t, S, this.otAt); if (!Number.isFinite(st.toGo)) break; t += Math.max(1e-3, st.toGo); pts.push(Math.min(t, hz)); }
+      if (pts[pts.length - 1] < hz) pts.push(hz);
+      let open = this.yAt(now) >= y ? -Infinity : null;
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const a = pts[i], b = pts[i + 1], ya = this.yAt(a), yb = this.yAt(b + 1e-4 > b ? b : b);
+        if (open === null && yb >= y) { let lo = a, hi = b; for (let k = 0; k < 24; k++) { const c = (lo + hi) / 2; if (this.yAt(c) >= y) hi = c; else lo = c; } open = hi; }
+        else if (open !== null && yb < y && ya >= y) { let lo = a, hi = b; for (let k = 0; k < 24; k++) { const c = (lo + hi) / 2; if (this.yAt(c) >= y) lo = c; else hi = c; } iv.push(open, lo); open = null; }
+      }
+      if (open !== null) iv.push(open, Infinity);
+    }
+    this._iv.set(y, iv);
+    return iv;
   }
   navEdge(e, to, metres) {
     const M = this.W.navMeta;
@@ -810,6 +840,7 @@ export class StageLava {
   _replanBots(t) {
     const M = this.W.navMeta, nav = G.nav;
     if (!M || !nav || nav !== this.W.nav) return;
+    let k = 0;
     for (const a of this.m.actors) {
       const b = a.bot;
       if (!b || !b.path || !a.alive) continue;
@@ -820,7 +851,7 @@ export class StageLava {
         metres += Math.hypot(v.x - u.x, v.z - u.z);
         if (M.kind[v.id] && this.shut(v.id, t + metres * LAVA.sPerM)) { bad = true; break; }
       }
-      if (bad && !b._lavaEsc) { b.path = null; b.repath = 0; b.goalTimer = 0; }
+      if (bad && !b._lavaEsc) { b.path = null; b.repath = 0.06 * (k++ % 6); b.goalTimer = 0; }   // (staggered: not every route in one frame)
     }
   }
   // bots.js: escape a drowning floor or a sinking stone (still shooting: the aim is the brain's), else null
@@ -843,7 +874,13 @@ export class StageLava {
       } else if (b._lavaEsc && (k === 0 || !need)) b._lavaEsc = false;
       if (b._lavaEsc) { b.repath = Math.max(b.repath || 0, 0.6); b.goalTimer = Math.max(b.goalTimer || 0, 0.6); }
     }
-    if (b._lavaEsc && b.path) { const mv = b._steer(dt); if (mv !== move) move.copy(mv); if (b._needJump) it.jump = true; }
+    if (b._lavaEsc && b.path) {
+      const mv = b._steer(dt); if (mv !== move) move.copy(mv);
+      // up the hop out (a 1.2 m step onto the head, the causeway, the island): jump at it, and again if it stalls there
+      const nx = b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : null;
+      if (b._needJump || (nx && nx.y - a.pos.y > 0.4 && Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) < 1.8 && a.grounded) || (b.noProg > 0.8 && a.grounded)) it.jump = true;
+      it.squid = false;
+    }
     return null;
   }
   // s until L reaches y from t (looking `horizon` s ahead; Infinity if not)

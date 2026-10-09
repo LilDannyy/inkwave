@@ -11,14 +11,18 @@
   // the lava's own update, timed (wrapping it for this test only)
   const upd = L.update.bind(L), lt = { n: 0, ms: 0, max: 0 };
   L.update = (dt, t) => { const a = performance.now(); upd(dt, t); const d = performance.now() - a; lt.n++; lt.ms += d; lt.max = Math.max(lt.max, d); };
+  // (where a slow frame's time goes: A* routes, the minimap layer, the burn's atlas pass, the looks)
+  const prof = { path: 0, map: 0, burn: 0, look: 0 }, wrapT = (o, k, key) => { const f = o[k].bind(o); o[k] = (...a) => { const t = performance.now(); try { return f(...a); } finally { prof[key] += performance.now() - t; } }; };
+  wrapT(__G.nav, 'path', 'path'); wrapT(L, 'drawMap', 'map'); wrapT(__G.lavaWorld, 'burnAtlas', 'burn'); if (__G.lavaWorld.look) wrapT(__G.lavaWorld.look, 'update', 'look');
   const run = (t0, secs) => {
     L.debugT(t0); for (let i = 0; i < 20; i++) dbg.step(1000 / 60);
     lt.n = 0; lt.ms = 0; lt.max = 0;
     const fr = []; const n = Math.round(secs * 60);
-    for (let i = 0; i < n; i++) { const a = performance.now(); dbg.step(1000 / 60); fr.push(performance.now() - a); }
+    let worst = null;
+    for (let i = 0; i < n; i++) { for (const k in prof) prof[k] = 0; const a = performance.now(); dbg.step(1000 / 60); const d = performance.now() - a; fr.push(d); if (!worst || d > worst.ms) worst = { ms: +d.toFixed(1), t: +L.clock.t.toFixed(2), ...Object.fromEntries(Object.entries(prof).map(([k, v]) => [k, +v.toFixed(1)])) }; }
     fr.sort((x, y) => x - y);
     const info = __G.renderer.info.render;
-    return { med: +fr[fr.length >> 1].toFixed(2), p90: +fr[Math.floor(fr.length * 0.9)].toFixed(2), max: +fr[fr.length - 1].toFixed(2), lavaMs: +(lt.ms / Math.max(1, lt.n)).toFixed(3), lavaMax: +lt.max.toFixed(2), calls: info.calls, tris: info.triangles, perf: g.perf ? { render: +g.perf.render.toFixed(2), sim: +g.perf.sim.toFixed(2) } : null };
+    return { worst, med: +fr[fr.length >> 1].toFixed(2), p90: +fr[Math.floor(fr.length * 0.9)].toFixed(2), max: +fr[fr.length - 1].toFixed(2), lavaMs: +(lt.ms / Math.max(1, lt.n)).toFixed(3), lavaMax: +lt.max.toFixed(2), calls: info.calls, tris: info.triangles, perf: g.perf ? { render: +g.perf.render.toFixed(2), sim: +g.perf.sim.toFixed(2) } : null };
   };
   const res = {};
   for (let k = 0; k < 2; k++) {   // (twice, alternated: the machine is shared)

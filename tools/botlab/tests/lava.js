@@ -326,25 +326,38 @@
   // the fall warning step off before they sink
   {
     setT(24.7);
-    const crew = bots.slice(0, 7).concat([]), spots = [shelf, V(-24.0, 0, -10.5), V(-26.4, 0, -6.3), cast, V(10.5, 0, -13.5), V(7.5, 0, -12.5), V(-23.2, 0, -12)];
+    // (each team on its own half's ledges — Alpha's Slump and Casting Floor, Bravo's twins — 30–50 m apart: the escape is
+    // what is measured here, not a fight at the lava's edge, which is the bot matches' business: tests/lava-match.js)
+    const mates = bots.filter((b) => b.team === bots[0].team), others = bots.filter((b) => b.team !== bots[0].team);
+    const crew = [...mates, ...others].slice(0, 7), sA = [shelf, cast, V(-24.0, 0, -10.5), V(10.5, 0, -13.5)], sB = [V(25.2, 0, 8.19), V(-8.5, 0, 16), V(24.0, 0, 10.5), V(-10.5, 0, 13.5)];
+    const spots = crew.map((b) => (b.team === mates[0].team ? sA : sB)[(b.team === mates[0].team ? mates : others).indexOf(b) % 4]);
     // (no weapon deaths in this trial: the crew can't be hurt by each other — the lava ignores that, as it ignores armour)
     crew.forEach((b, i) => { put(b, V(spots[i].x, 0.02, spots[i].z)); b.bot.update = idle.get(b); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.invuln = 1e6; });
-    let deaths = []; const o3 = on('splatted', (e) => { if (crew.includes(e.victim)) deaths.push([e.victim.name, e.cause, r3(Lv.clock.t), r3(e.victim.pos.x), r3(e.victim.pos.y), r3(e.victim.pos.z), crew.indexOf(e.victim)]); });
+    // (a death counts against the escape when it happens on drowning ground or a stone — the nearest nav node a ledge or a
+    // rider; a fall off a dry bank into the lake is listed apart)
+    const kindAt = (a) => { const s2 = nav.nearest(a.pos, 1.5, true); return s2 >= 0 ? M.kind[s2] : -1; };
+    let deaths = []; const o3 = on('splatted', (e) => { if (crew.includes(e.victim)) deaths.push([e.victim.name, e.cause, r3(Lv.clock.t), r3(e.victim.pos.x), r3(e.victim.pos.y), r3(e.victim.pos.z), crew.indexOf(e.victim), kindAt(e.victim)]); });
+    const drowned = (d) => d[1] === 'lava' && (d[7] === 1 || d[7] === 2);
     for (let i = 0; i < 30 * 20; i++) dbg.step(1000 / 30);   // (to t ≈ 44.7: past the drowning)
     const offLedge = crew.filter((b) => b.alive && b.pos.y > 0.5).length;
-    R('F7 bots on the drowning ledges at the rise warning are off them before they drown (7 of 7 alive and up; escape routes walked)', deaths.filter((d) => d[1] === 'lava').length === 0 && offLedge === crew.length,
+    R('F7 bots on the drowning ledges at the rise warning are off them before they drown (7 of 7: none dies on the drowning ground; escape routes walked)', !deaths.some(drowned) && crew.every((b) => !b.alive || b.pos.y > 0.5),
       { deaths, offLedge, n: crew.length, esc: crew.map((b) => b.bot.escN || 0) });
     // the stones: four bots on them at HIGH; the fall warning comes at 60, the stones sink at 76.2
     setT(58);
     const sto = W.riders.filter((r) => r.sink && !r.id.endsWith('~')).slice(0, 4);
-    crew.slice(0, 4).forEach((b, i) => { const R2 = rid(sto[i].id); put(b, V(sto[i].x, R2.top + 0.02, sto[i].z)); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.invuln = 1e6; });
+    // (each on its stone's own nav node: clear of race 3's boulder)
+    // (Alpha's Race for one team, Bravo's for the other)
+    const stoB = W.riders.filter((r) => r.sink && r.id.endsWith('~')).slice(0, 4);
+    crew.slice(0, 4).forEach((b, i) => { const r = b.team === mates[0].team ? sto[i] : stoB[i], ri = W.riders.indexOf(r), n = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1); put(b, V(n.x, rid(r.id).top + 0.02, n.z)); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.invuln = 1e6; });
     for (const b of crew.slice(4)) { b.bot.update = () => {}; b.invuln = 1e6; put(b, V(-10, 1.22, -3.2 + crew.indexOf(b))); b.invuln = 1e6; }
     deaths = [];
     const trail = crew.slice(0, 4).map(() => []);
-    for (let i = 0; i < 30 * 21; i++) { dbg.step(1000 / 30); if (i % 15 === 0) crew.slice(0, 4).forEach((b, k) => { const s2 = nav.nearest(b.pos, 1.2, true); trail[k].push([r3(Lv.clock.t), r3(b.pos.x), r3(b.pos.y), r3(b.pos.z), s2 >= 0 ? M.kind[s2] : -1, b.bot._lavaEsc ? 'E' : '', b.bot.mode]); }); }   // (to t ≈ 79)
+    const dead = new Set(); const o5 = on('splatted', (e) => dead.add(e.victim));
+    for (let i = 0; i < 30 * 21; i++) { dbg.step(1000 / 30); if (i % 15 === 0) crew.slice(0, 4).forEach((b, k) => { if (dead.has(b)) return; const s2 = nav.nearest(b.pos, 1.2, true); trail[k].push([r3(Lv.clock.t), r3(b.pos.x), r3(b.pos.y), r3(b.pos.z), s2 >= 0 ? M.kind[s2] : -1, b.bot._lavaEsc ? 'E' : '', b.bot.mode]); }); }   // (to t ≈ 79)
+    o5();
     o3();
     const deadK = deaths.length ? deaths[0][6] : -1;
-    R('F8 bots on the stones at the fall warning step off before they sink (4 of 4)', deaths.filter((d) => d[1] === 'lava').length === 0 && crew.slice(0, 4).every((b) => b.alive), { deaths, alive: crew.slice(0, 4).map((b) => b.alive), trail: deadK >= 0 ? trail[deadK].slice(-14) : undefined });
+    R('F8 bots on the stones at the fall warning step off before they sink (4 of 4: none dies on a stone or the drowning ground)', !deaths.some(drowned), { deaths, alive: crew.slice(0, 4).map((b) => b.alive), trail: deadK >= 0 ? trail[deadK].slice(-14) : undefined });
     freezeBots();
   }
 

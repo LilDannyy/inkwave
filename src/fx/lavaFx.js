@@ -119,12 +119,13 @@ vec2 plates(vec2 x, float t) {
 void main() {
   vec2 p = vW.xz; float t = uTime;
   float rise = max(uS.x, 0.0), fall = max(-uS.x, 0.0);
-  vec2 warp = vec2(lvn(p * 0.21 + t * 0.01), lvn(p * 0.21 - 5.3 - t * 0.008)) * 1.6;
+  vec2 warp = vec2(lvn(p * 0.21 + t * 0.01), lvn(p * 0.21 - 5.3 - t * 0.008)) * 2.4 + vec2(lvn(p * 0.7 + 3.1), lvn(p * 0.7 - 1.7)) * 0.5;
   vec2 c1 = plates(p * 0.62 + warp + vec2(t * 0.025, -t * 0.018) * (1.0 + 2.0 * rise), t * (1.0 + 3.0 * rise));
   vec2 c2 = plates(p * 1.7 + warp * 2.0 - vec2(t * 0.04, t * 0.03), t * 1.3);
   float e = c1.y - c1.x, e2 = c2.y - c2.x;
   // the cracks: wider and hotter on a rise and in its warning, narrow and dull as it crusts over on a fall
-  float sw = 0.26 + 0.16 * rise + 0.06 * uS.y - 0.1 * fall;
+  // (lit share of the open lava, the blend weight over 0.25: ≈ 42 % at rest, ≈ 53 % on a rise, ≈ 24 % on a fall)
+  float sw = 0.26 + 0.09 * rise + 0.06 * uS.y - 0.1 * fall;
   float seam = (1.0 - smoothstep(0.0, sw, e)) * (0.75 + 0.25 * lvn(p * 0.9 + t * 0.2));
   seam = max(seam, (1.0 - smoothstep(0.0, sw * 0.35, e2)) * 0.45 * (1.0 - fall));
   float core = 1.0 - smoothstep(0.0, sw * 0.16, e);

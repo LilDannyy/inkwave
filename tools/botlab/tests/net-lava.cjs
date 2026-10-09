@@ -12,6 +12,7 @@
 module.exports = async ({ clients, R, wait, say, open, close }) => {
   const [A, B] = clients;
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
+  const JA = async (c, code) => JSON.parse(await c.js(`(async () => JSON.stringify(await (${code})))()`));   // (an async page expression)
   const st = (c) => J(c, `(() => { const m = __G.match, L = m && m.lava; return L ? { t: +L.clock.t.toFixed(3), y: +L.y.toFixed(4), phase: L.st.phase, stones: L.riders.filter((r) => r.r.sink).map((r) => r.solid ? 1 : 0).join(''), host: !!__G.net.isHost, key: L.sched.key } : null; })()`);
   // ---- 1) Turf War 1:30
   const code = await A.js(`__G.net.create('Hosty')`);
@@ -30,7 +31,7 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   let a = await st(A), b = await st(B);
   R('both screens run the lava on the same schedule (turf:90)', a && b && a.key === 'turf:90' && b.key === 'turf:90' && a.host && !b.host, { a, b });
   // the guest's devices on the shelf, early (before the rise's no-place window)
-  const dev = await J(B, `(async () => { const { SUBS } = await import('./src/config.js'); const me = __G.local, V = me.pos.constructor;
+  const dev = await JA(B, `(async () => { const { SUBS } = await import('./src/config.js'); const me = __G.local, V = me.pos.constructor;
     const put = (x, z) => { me.pos.set(x, 0.02, z); me.vel.set(0, 0, 0); me.grounded = true; me.ink = 100; };
     put(-25.2, -8.19); __G.subs.use(me, SUBS.mine); await new Promise((r) => setTimeout(r, 300));
     put(-24.0, -10.4); __G.subs.use(me, SUBS.beacon); await new Promise((r) => setTimeout(r, 300));
