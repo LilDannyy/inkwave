@@ -189,8 +189,11 @@ A ghost never paints, hurts, blows or pops by itself: at the end of its fuse it 
 (2 s at most). Enemy fire on a ghost goes to the owner (`netHurt(owner, 'glide', gid, dmg, by)`; while `netMuted()` — a
 ghost's shot or blast being replayed — it only flashes). A Mega Stamp's guard that smashes a ghost on the stamper's
 screen ends it there at once and tells the owner on the `glideSmash` channel. Players in the blast are judged on the
-owner's screen and applied by each victim's owner (`applyHit`, as every bomb). Tested by
-`tools/botlab/tests/net-sub-glide.cjs` (`CLIENTS=2`).
+owner's screen and applied by each victim's owner (`applyHit`, as every bomb). It is a bomb, not a device: nothing
+crushes it (its kit device descriptor says `crushable: false`, which `G.deploy.crushIn` skips — the tower, the re-forming
+Roe Shell, lava and era-flip sweeps); a moving floor carries it on every screen alike, and the tower's and every mover's
+sides are walls it bounces off. Tested by `tools/botlab/tests/net-sub-glide.cjs` (`CLIENTS=2`; `NET_ARGS='scene=hostleave'`:
+the host leaves with its bot's stone and its own sliding — both ghosts end at `onLeave` on the guest, no blast).
 Statuses: every screen's ghost subs track / poison the players they touch there too (the timers run out on remote
 players as well); the owner's own word — tracked, poisoned — rides the actor tick's flags (`F.tracked`, `F.poisoned` →
 `a.netStatus`), so the tracked look and the poison bubbles (src/game/statusFx.js) show on every screen while they last.

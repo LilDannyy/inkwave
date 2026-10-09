@@ -263,7 +263,7 @@ function spawn(a, sub, p, v, air, fuse, R, cook, ghost, gid) {
     p: p.clone(), v: v.clone(), air: !!air, t: 0, age: 0, acc: 0, trail: s.trailEvery, fuse, fuse0: Math.max(0.05, fuse), R, cook,
     paintR: paintOf(cook, s), devDmg: devDmgOf(cook, s), hp: s.hp, state: 'slide', recT: 0.25, bounces: 0, cd: new Map(),
     err: new V3(), m, vs, spin: m.outer.rotation.y, flash: 0, flashT: 0, holdT: 0, why: null, dbw: 0, thr: null,
-    pred: { t: -9, x: 0, y: 0, z: 0, n: -1 }, floorB: null, ctx: null };
+    pred: { t: -9, x: 0, y: 0, z: 0, n: -1 }, floorB: null, floorId: -1, ctx: null };
   it.pos = it.p;   // (the generic name: cues, tests, liveIn)
   it.ctx = { team: it.team, kids: true, cd: it.cd, frameDt: 1 / 60 };
   items.push(it);
@@ -359,9 +359,10 @@ function rec4(it) {
 }
 // a moving floor under it carries it (its block's move since our last look)
 function ride(it) {
-  if (it.air) { it.floorB = null; return; }
+  if (it.air) { it.floorB = null; it.floorId = -1; return; }
   const r = G.physics.raycast(_e.set(it.p.x, it.p.y + 0.2, it.p.z), DOWN, 0.5, _hit2);
   const b = r.hit ? G.level.blocks[r.block] : null;
+  it.floorId = b ? b.id : -1;   // (its device descriptor's floor)
   if (!b || !b.dynamic || b.solid === false) { it.floorB = null; return; }
   if (it.floorB === b && it.floorC) { it.p.x += b.center.x - it.floorC.x; it.p.y += b.center.y - it.floorC.y; it.p.z += b.center.z - it.floorC.z; }
   it.floorB = b; (it.floorC || (it.floorC = new V3())).copy(b.center);
@@ -530,17 +531,22 @@ function hurt(it, dmg, by) {
 // (the shot shape: hitR round its middle — hitH 0.24 is under 2 × hitR, so the capsule is a ball at the middle)
 // its device descriptor (deployables.js: wave 1's rolling and standing fire, the device list — SPEC §0.2's shape). The
 // bots never pick it as a device to shoot (prefer 0): it's a threat to them (threats() / bots.js), shot down from there.
-// The tower never crushes it (it bounces off the tower's sides); should anything crush it, it pops
+// It is a bomb, not a device (SPEC A5): nothing crushes it — `crushable: false` keeps it out of G.deploy.crushIn (the
+// tower, the re-forming Roe Shell, a lava / era-flip sweep: crushIn skips a descriptor with it, one tagged line at
+// integration). The tower's and every mover's sides are walls it bounces off (pushed, slideStep), a moving floor carries
+// it (ride: `rides` / `floor` are that block), lava sinks it on its own (sinks), the shell shoves it out once solid.
 function devOf(it) {
   if (it.dev) return it.dev;
   const aim = new V3(), s = it.sub;
-  it.dev = { kind: KIND, kit: true, obj: it, team: it.team, owner: it.owner, pos: it.p, r: s.hitR, h: s.hitH, hitH: s.hitH, normal: UP, floor: -1, rides: null,
+  it.dev = { kind: KIND, kit: true, obj: it, team: it.team, owner: it.owner, pos: it.p, r: s.hitR, h: s.hitH, hitH: s.hitH, normal: UP, crushable: false,
+    get rides() { return it.floorB || null; },
+    get floor() { return it.floorId ?? -1; },
     get aim() { return aim.set(it.p.x, it.p.y + MID, it.p.z); },
     get ghost() { return it.ghost; },
     get live() { return it.state === 'slide' || it.state === 'hold'; },
     prefer: () => 0,
     hurt: (dmg, by) => hurt(it, dmg, by),
-    crush: () => pop(it, 2),
+    crush: () => {},   // (never: crushable false — a crushIn that ignored the flag would only have emitted its event)
     flash: () => { it.flash = 1; } };
   return it.dev;
 }

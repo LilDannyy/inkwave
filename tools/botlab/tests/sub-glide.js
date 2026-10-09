@@ -509,6 +509,67 @@
       me.setWeapon(me.weaponId);
     }
 
+    // ============================================================================================ crushIn (SPEC A5, §0.3)
+    // "It is not crushed: it is a bomb … On a moving floor it rides." The one destroyer, G.deploy.crushIn, walks every kit's
+    // device descriptors (the sentry / bobber builders' deployables.js); the tower calls it with its platform and pillar
+    // every frame it moves. Here: the real crushIn when this tree has it (after the merge), else a stand-in that is that
+    // crushIn's kit-descriptor loop verbatim (b5-sub-sentry / b5-sub-bobber deployables.js) plus the one line the Glide
+    // asks of it (`d.crushable === false` → skipped). A deck moving at 2 m/s with a stone at rest on it, crushIn every
+    // frame (as tower.js): it rides and is never ended; a pillar driven into a stone on the floor: knocked on, never ended;
+    // the re-forming shell's sphere and a lava sweep over it: nothing; no 'device:down', no DEPLOY_STATS.crushed step.
+    if (want('crush')) {
+      const { emit } = await import('./src/core/ctx.js');
+      const HS = [0.06, 0.5, 1];
+      const bodyIn = (B, base, h, r) => { for (const b of B) for (const k of HS) { if (!b) continue; if (L.pointInBlock(b, V(base.x, base.y + Math.min(h, Math.max(0.06, h * k)), base.z), r)) return true; } return false; };
+      const segPt = (base, h, c) => { const y = Math.max(base.y, Math.min(base.y + h, c.y)); return Math.hypot(c.x - base.x, c.y - y, c.z - base.z); };
+      const standIn = (shape, how = 'crush') => {
+        const B = shape.blocks || null, Sp = shape.sphere || null, W = typeof shape.where === 'function' ? shape.where : null, T = shape.rider || null;
+        const rides = (b) => !!b && ((B && B.includes(b)) || (T && (b === T.block || b === T.pillar)));
+        const inBody = (pos, base, h, r) => (B ? bodyIn(B, base, h, r) : Sp ? segPt(base, h, Sp.c) < Sp.r + r : W ? !!W(pos) : false);
+        const kd = []; let n = 0;
+        for (const k in SUB_KITS) SUB_KITS[k].devices?.(kd);
+        for (const d of kd) {
+          if (d.ghost || !d.live || d.crushable === false || rides(d.rides)) continue;   // (the Glide's line: crushable false)
+          if (!inBody(d.pos, d.pos, d.h, d.r)) continue;
+          n++; DEPLOY_STATS.crushed[d.kind] = (DEPLOY_STATS.crushed[d.kind] || 0) + 1;
+          emit('device:down', { kind: d.kind, team: d.team, pos: d.pos.clone(), by: null, how });
+          d.crush(how);
+        }
+        return n;
+      };
+      const real = typeof G.deploy?.crushIn === 'function';
+      const crushIn = real ? (s, h) => G.deploy.crushIn(s, h) : standIn;
+      // a deck (top y 1.0) moving +x at 2 m/s, a stone at rest on it, crushIn({ blocks: [deck], rider }) every frame it moves
+      reset();
+      const deck = box(-2, 2, 0, 1.0, -26, -22);
+      put(me, V(0, 1.0, -25.5), 0); step(0.2);
+      const { it: s1 } = throwHeld(0.1);
+      s1.v.set(0, 0, 0); s1.p.set(0, 1.0, -24); s1.fuse = 1.6;
+      const c0 = DEPLOY_STATS.crushed.glide || 0, t0 = G.time;
+      let dx = 0, n1 = 0, rideOk = true, desc = null; const T1 = { block: deck, pillar: null };
+      hook = () => { dx += 2 / 60; L.moveDynamic(deck, V(dx, 0.5, -24), V(2, 0.5, 2)); n1 += crushIn({ blocks: [deck], rider: T1 }, 'crush'); };
+      step(1.0, () => { desc = desc || K.devices([]).find((d) => d.obj === s1); if (s1.state === 'slide' && Math.abs(s1.p.x - dx) > 0.08) rideOk = false; });
+      const ridesDeck = desc ? desc.rides === deck && desc.floor === deck.id : false;
+      until(() => s1.state === 'dead', 1.5); hook = null;
+      R(`a stone at rest on a deck moving at 2 m/s, ${real ? 'the real G.deploy.crushIn' : 'crushIn (the stand-in: the sentry / bobber branches\' kit loop + the crushable line)'} every frame it moves: it rides the deck (descriptor rides / floor = the deck), is never ended, blows at its fuse`,
+        n1 === 0 && rideOk && ridesDeck && s1.why === 'blast' && !ev('device:down', t0).some((x) => x.e.kind === 'glide') && (DEPLOY_STATS.crushed.glide || 0) === c0,
+        { real, crushed: n1, rideOk, ridesDeck, why: s1.why, x: r2(s1.p.x), deckX: r2(dx) });
+      // a pillar driven at 2 m/s into a stone on the floor, crushIn({ blocks: [pillar] }) every frame
+      reset(); put(me, V(0, 0, -30), 0); step(0.05);
+      const { it: s2 } = throwHeld(0.1);
+      s2.p.set(0, 0, -20); s2.v.set(0, 0, 0); s2.fuse = 2;
+      const pil = box(-0.5, 0.5, 0, 2.5, -22.5, -21.5);
+      let pz = -22, n2 = 0; const t2 = G.time;
+      hook = () => { pz += 2 / 60; L.moveDynamic(pil, V(0, 1.25, pz), V(0.5, 1.25, 0.5)); n2 += crushIn({ blocks: [pil], rider: { block: pil, pillar: null } }, 'crush'); };
+      step(1.0); hook = null;
+      R('a pillar (2 m/s) driven into a stone on the floor, crushIn every frame: knocked on ahead of it (a mover\'s side is a wall), never ended', n2 === 0 && s2.state === 'slide' && s2.v.z > 1.5 && s2.p.z > pz + 0.5 && ev('glide:bounce', t2).some((b) => b.e.kind === 'mover') && !ev('device:down', t2).some((x) => x.e.kind === 'glide'),
+        { crushed: n2, state: s2.state, vz: r2(s2.v.z), z: r2(s2.p.z), pillarFront: r2(pz + 0.5) });
+      // the re-forming Roe Shell's sphere and a lava sweep (crushIn { sphere } 'shell', { where } 'lava') over a stone
+      const n3 = crushIn({ sphere: { c: s2.p.clone().setY(s2.p.y + 0.5), r: 1.6 } }, 'shell') + crushIn({ where: () => true }, 'lava');
+      step(0.05);
+      R('the re-forming shell\'s sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)', n3 === 0 && s2.state === 'slide' && (DEPLOY_STATS.crushed.glide || 0) === c0, { crushed: n3, state: s2.state });
+    }
+
     // ============================================================================================ the rest
     if (want('more')) {
       // the HUD: the reticle dims while locked; the cook bar; the reach in the sub chip
@@ -606,7 +667,7 @@
     offs.forEach((f) => f());
     netOff(); park();
     delete G.match.lava; delete G.objTargets;
-    for (const a of m.actors) { delete a.bot?.update; if (a.bot) delete a.bot._glide; }
+    for (const a of m.actors) { delete a.bot?.update; if (a.bot) { delete a.bot._glide; delete a.bot._glideNoT; } }
     G.subs.clear(); P.clear();
   }
   return out;
