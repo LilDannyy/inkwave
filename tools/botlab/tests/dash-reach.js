@@ -1,35 +1,46 @@
 // [b5-sub-dash] The dash-reach audit (SPEC D10.6): the Dash Pellet must not open up a roof, a perch or an out-of-bounds
 // spot. Any stage:
 //   MAP=<id> MODE=turf PAGE=tools/botlab/tests/dash-reach.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS: 'dt=24' runs the movement at 1/24 s a step (default 1/60); 'step=2' takes every 2nd start (a quick look);
-//   'air=2.5' a what-if air dash length (this run only)
+//   PAGE_ARGS: 'dt=24' runs the movement at 1/24 s a step (default 1/60); 'step=4;off=1' takes every 4th edge node from
+//   the 2nd (a stage's full audit is step=N run once for each off=0 … N−1: the parts tile every edge node exactly once);
+//   'air=2.5' a what-if air dash length (this run only); 'climb=0' leaves out the wall-climb dashes
 // What: the nodes a kid reaches on foot (the stage's nav graph from both spawn pads: walks, jumps, drops, climbs); of
 // those, the ones by a change of level or a drop within 6 m (where a dash could lead somewhere new). From each, a kid
 // stepped on its own (actor.update, the real dash) tries, in 8 headings: a ground dash (off a ledge too, when there is
-// one), and a jump with an air dash on its rise, at its apex and on its fall. Where each comes to rest:
+// one), and a running jump with an air dash on its rise, at its apex and on its fall. Where a wall ≥ 1.6 m tall stands
+// within 1.2 m in that heading, also: the wall inked, a squid climb up it, and at 1 m up and just under its top a sub
+// press (SPEC D1.5: the press makes it a kid off the wall, an air dash) along the wall both ways, away from it both
+// diagonals, and straight off it. Where each comes to rest:
 //   on foot ground       a nav node the kid reaches on foot anyway: fine
-//   a roof               an off-limits top: it slides off (counted, harmless)
-//   a stranded node      a nav node NOT reachable on foot, higher than the start: a leak — unless a plain walk or hop
-//                        from the same start, or from any spot reached on foot within 5 m of it, lands there too (then
-//                        the nav graph just lacks the edge: its jump edges are short; listed). Lower
-//                        than the start: listed (a walk off that edge drops there too; the graph lacks the drop)
-//   off the graph        no nav node there (a narrow top, a kerb …): listed for the lead with its height over the start
-//   out of bounds        a leak
+//   a roof               an off-limits top: it slides off (counted; one still on a roof after 3 s is listed)
+//   a perch              a walkable, never-inkable lookout: a LEAK unless a plain walk or hop from a spot reached on foot
+//                        within 5 m (or, off a wall, the same climb without the dash) gets onto that block too
+//   a stranded node      a nav node NOT reachable on foot, higher than the start: listed for the lead (SPEC D10.6: "list
+//                        any spot newly reachable") unless a plain walk / hop from within 5 m (or the same climb) lands
+//                        there too, then it's only the graph lacking an edge. Lower than the start: a drop, counted
+//   off the graph        no nav node there (a narrow top, a kerb …): listed for the lead
+//   out of bounds        a LEAK unless a plain walk or hop from nearby (or the same climb) ends past the line too
 //   the sea / lava       the player's own risk (counted)
-// Pass: no leak, nothing out of bounds.
+// And the height: where a jump + dash first comes down, over the kid's own standing height at the start, must be no
+// higher than a plain running hop ever gets — HOP_BEST, measured by sub-dash.js 'height' to 0.01 m — + 0.02 m (the
+// spec's own ± 0.02 for heights). (A climb's height is the wall's: not judged.)
+// Pass: no perch leak, no out-of-bounds leak, no first landing over the height bar.
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const THREE = await import('three'); const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const { PLAYER, SUBS } = await import('./src/config.js');
+  const { Hit } = await import('./src/game/physics.js');
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const args = Object.fromEntries((window.__pageArgs || '').split(/[;,&]/).filter(Boolean).map((kv) => kv.split('=')));
-  const DT = args.dt ? 1 / +args.dt : 1 / 60, EVERY = +(args.step || 1);
+  const DT = args.dt ? 1 / +args.dt : 1 / 60, EVERY = +(args.step || 1), OFF = +(args.off || 0), CLIMB = args.climb !== '0';
+  const HOP_BEST = 1.9, BAR = HOP_BEST + 0.02;   // (sub-dash.js 'height': a plain running hop lands on 1.90 m, never on 1.91)
   const air0 = SUBS.dash.airDashDist; if (args.air) SUBS.dash.airDashDist = +args.air;   // ('air=2.5': a what-if air dash length, this run only)
+  const AIR = SUBS.dash.airDashDist;
   const L = G.level, nav = G.nav, N = nav.nodes, r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100;
   dbg.freeze();
   for (const a of m.actors) if (a.bot) a.bot.update = () => {};
   const kid = m.actors.find((a) => a.bot && !a.isLocal) || m.actors.find((a) => a.bot), it = kid.intent;
-  m.actors.forEach((a, i) => { if (a !== kid) { a.update = () => {}; } });
+  m.actors.forEach((a) => { if (a !== kid) { a.update = () => {}; } });
   kid.setSub('dash'); kid.setWeapon('shooter');
   const t0 = performance.now();
   // ---- on foot: the nav graph's reach from both pads
@@ -59,10 +70,33 @@
     for (const [dx, dz] of DIRS) { for (const s of [1.5, 3, 4.5, 6]) { const gy = L.groundHeight(n.x + dx * s, n.z + dz * s, n.y + 2.2); if (gy === -Infinity || Math.abs(gy - n.y) > 0.3) { edge = true; break; } } if (edge) break; }
     if (edge) starts.push(n);
   }
-  const use = starts.filter((_, i) => i % EVERY === 0);
+  const use = starts.filter((_, i) => i % EVERY === OFF);
   // ---- the kid
-  const put = (n) => { kid.spawnAt(V(n.x, n.y + 0.02, n.z), 0); kid.invuln = 99; kid.vel.set(0, 0, 0); kid.form = 'kid'; it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false; for (let i = 0; i < 2; i++) { G.time += DT; kid.update(DT); } };
+  let startY = 0;
+  const put = (n) => { kid.spawnAt(V(n.x, n.y + 0.02, n.z), 0); kid.invuln = 99; kid.vel.set(0, 0, 0); kid.form = 'kid'; it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false; for (let i = 0; i < 2; i++) { G.time += DT; kid.update(DT); } startY = kid.pos.y; };
   const onRoof = () => kid.grounded && kid.ground && L.blocks[kid.ground.block] && L.blocks[kid.ground.block].roof;
+  const fr = (f) => Math.max(1, Math.round(f / (60 * DT)));   // a 60 Hz frame count at this step
+  // the end of a move: wait out a roof's slide, a fall, the dash (≤ 3 s), and read where it came to rest
+  const settle = (st) => {
+    for (let k = 0; k < fr(180) && st.ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) st.tick({});
+    if (!st.ok) return { dead: true, roofT: st.roofT };
+    const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
+    return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT: st.roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY: st.landY, y0: startY };
+  };
+  const ticker = (mv) => {
+    const st = { ok: true, roofT: null, wasAir: false, landY: null, i: 0 };
+    // (landY: where it first comes down after leaving the ground — the height the jump + dash got it to; a dash that
+    // carries on along the ground after that, up a ramp or a stair, is a run, judged by where it ends like any walk)
+    st.tick = (w) => {
+      const q = w.dir || mv;
+      it.move.set(w.move ? q[0] : 0, 0, w.move ? q[1] : 0); it.jump = !!w.jump; it.sub = !!w.sub; it.squid = !!w.squid;
+      G.time += DT; kid.update(DT); st.i++;
+      if (!kid.alive) st.ok = false;
+      else { if (!st.roofT && onRoof()) st.roofT = kid.pos.clone(); if (!kid.grounded) st.wasAir = true; else if (st.wasAir && st.landY === null) st.landY = kid.pos.y; }
+      return st.ok;
+    };
+    return st;
+  };
   // a move from n along d: kind 'g' a ground dash, 'h' a plain hop, 'w' a walk, or a frame number: jump, air dash then
   const move = (n, d, kind) => {
     put(n);
@@ -70,87 +104,146 @@
     // (a running start for the hop and the jumps: already at run speed along d — a hop from a standstill would make the
     // baseline look shorter than what a player does)
     if (kind !== 'g' && kind !== 'w') kid.vel.set(d[0] * PLAYER.runSpeed, 0, d[1] * PLAYER.runSpeed);
-    const fr = (f) => Math.round(f / (60 * DT));   // a 60 Hz frame count at this step
-    let i = 0, ok = true, roofT = null, wasAir = false, landY = null;
-    // (landY: where it first comes down after leaving the ground — the height the jump + dash got it to; a dash that
-    // carries on along the ground after that, up a ramp or a stair, is a run, judged by where it ends like any walk)
-    const tick = (w) => { it.move.set(w.move ? d[0] : 0, 0, w.move ? d[1] : 0); it.jump = !!w.jump; it.sub = !!w.sub; G.time += DT; kid.update(DT); i++;
-      if (!kid.alive) ok = false; else { if (!roofT && onRoof()) roofT = kid.pos.clone(); if (!kid.grounded) wasAir = true; else if (wasAir && landY === null) landY = kid.pos.y; } return ok; };
-    if (kind === 'g') { tick({ sub: true, move: true }); for (let k = 0; k < fr(16) && ok; k++) tick({ move: false }); }
-    else if (kind === 'w') { for (let k = 0; k < fr(16) && ok; k++) tick({ move: true }); }
-    else if (kind === 'h') { for (let k = 0; k < fr(54) && ok; k++) { tick({ move: true, jump: k < 2 }); if (k > fr(6) && kid.grounded && !onRoof()) break; } }
+    const st = ticker(d);
+    if (kind === 'g') { st.tick({ sub: true, move: true }); for (let k = 0; k < fr(16) && st.ok; k++) st.tick({ move: false }); }
+    else if (kind === 'w') { for (let k = 0; k < fr(16) && st.ok; k++) st.tick({ move: true }); }
+    else if (kind === 'h') { for (let k = 0; k < fr(54) && st.ok; k++) { st.tick({ move: true, jump: k < 2 }); if (k > fr(6) && kid.grounded && !onRoof()) break; } }
     else {   // a running jump, the air dash the same way (the furthest it goes); the stick held only until it lands (never a
              // walk on up a ramp or a stair after it: what's measured is where the dash put it)
-      const f = fr(kind); for (let k = 0; k <= f && ok; k++) tick({ move: true, jump: k < 2, sub: k === f });
-      for (let k = 0; k < fr(30) && ok && (!kid.grounded || kid.weaponRunner.dashT > 0); k++) tick({ move: true });
+      const f = fr(kind); for (let k = 0; k <= f && st.ok; k++) st.tick({ move: true, jump: k < 2, sub: k === f });
+      for (let k = 0; k < fr(30) && st.ok && (!kid.grounded || kid.weaponRunner.dashT > 0); k++) st.tick({ move: true });
     }
-    for (let k = 0; k < fr(180) && ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) tick({});
-    if (!ok) return { dead: true, roofT };
-    const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
-    return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY };
+    return settle(st);
+  };
+  // ---- off a wall: an inkable wall ≥ 1.6 m tall within 1.2 m of n in heading d → its face, normal and top height
+  const H = new Hit(), H2 = new Hit(), DIR = V(0, 0, 0), O = V(0, 0, 0);
+  const walls = new Map();
+  const wallAt = (n, d) => {
+    DIR.set(d[0], 0, d[1]);
+    const h = G.physics.raycast(O.set(n.x, n.y + 0.3, n.z), DIR, 1.2, H);
+    if (!h.hit || Math.abs(h.normal.y) > 0.5) return null;
+    const h2 = G.physics.raycast(O.set(n.x, n.y + 1.6, n.z), DIR, 1.6, H2);
+    if (!h2.hit || Math.abs(h2.normal.y) > 0.5) return null;
+    let top = n.y + 1.6;
+    for (let y = n.y + 2.1; y < n.y + 14; y += 0.5) { const h3 = G.physics.raycast(O.set(n.x, y, n.z), DIR, 1.8, H2); if (!h3.hit || Math.abs(h3.normal.y) > 0.5) break; top = y; }
+    return { p: h.point.clone(), n: h.normal.clone(), top };
+  };
+  // paint the wall's face (own ink, instantly) from its foot to its top, where the climb goes
+  const inkWall = (w) => { for (let y = w.p.y - 0.2; y <= w.top + 0.6; y += 0.7) G.paint.splat(V(w.p.x + w.n.x * 0.1, y, w.p.z + w.n.z * 0.1), 1.0, kid.team, { instant: true, seed: 0.5 }); };
+  // a climb from n up the wall in heading d: 'mid' (1 m up) or 'top' (just under its edge), then a dash along q; q null:
+  // the plain climb (no dash): on over the top
+  const climbMove = (n, d, w, at, q) => {
+    put(n);
+    if (!kid.grounded) return null;
+    const st = ticker(d);
+    let k = 0;
+    for (; k < fr(60) && st.ok && !kid.climbing; k++) st.tick({ squid: true, move: true });
+    if (!kid.climbing) return { noClimb: true };
+    const wn = kid.wallN.clone(), up = V(0, 0, 0);
+    const nearTop = () => !G.physics.raycast(O.set(kid.pos.x, kid.pos.y + 0.85, kid.pos.z), up.set(-wn.x, 0, -wn.z), PLAYER.radius + 0.45, H2).hit;
+    if (q) {
+      for (k = 0; k < fr(240) && st.ok && kid.climbing; k++) { if (at === 'mid' ? kid.pos.y >= startY + 1.0 : nearTop()) break; st.tick({ squid: true, move: true }); }
+      if (!kid.climbing) return { lost: true };   // (off the wall before that height: over its top, or its ink ran out)
+      // the press: swim still held, the sub the latest press (a kid off the wall), the stick along the dash
+      const dq = [q[0], q[1]];
+      st.tick({ squid: true, sub: true, move: true, dir: dq });
+      for (k = 0; k < fr(40) && st.ok && (!kid.grounded || kid.weaponRunner.dashT > 0); k++) st.tick({ move: true, dir: dq });
+    } else {
+      for (k = 0; k < fr(240) && st.ok && (kid.climbing || !kid.grounded); k++) st.tick({ squid: true, move: true });
+      for (k = 0; k < fr(10) && st.ok; k++) st.tick({ move: true });
+    }
+    return settle(st);
   };
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
-  const count = { sims: 0, oobOnFoot: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
+  const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, onFoot: 0, roof: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
   const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], perches = [], perchOk = new Map();
   const KINDS = ['g', 4, 18, 30];
-  for (const n of use) {
-    for (const d of DIRS) for (const kind of KINDS) {
-      count.sims++;
-      const r = move(n, d, kind);
-      if (!r) continue;
-      if (r.roofT) { count.roofTouch++; if (roofs.length < 200) roofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, roofAt: [r1(r.roofT.x), r2(r.roofT.y), r1(r.roofT.z)] }); }
-      if (r.dead) { count.sea++; continue; }
-      if (!r.grounded) { count.air++; continue; }
-      if (r.roof) { count.roof++; if (onRoofs.length < 40) onRoofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, at: [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)], up: r2(r.pos.y - n.y) }); continue; }
-      const p = r.pos, what = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, to: [r1(p.x), r2(p.y), r1(p.z)], up: r2(p.y - n.y) };
-      if (!inB(p)) {
-        // past the bounds line: a leak unless a plain walk or hop from a spot reached on foot within 5 m ends there too
-        const near = N.filter((q) => reach[q.id] && Math.hypot(q.x - p.x, q.z - p.z) < 5 && p.y - q.y < 2.4).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z));
+  const label = (kind) => (typeof kind === 'string' && kind.startsWith('c') ? kind.slice(2) : kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`);
+  const near = (p, lo = -99) => N.filter((q) => reach[q.id] && Math.hypot(q.x - p.x, q.z - p.z) < 5 && p.y - q.y < 2.4 && p.y - q.y > lo).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z));
+  // where one move came to rest, sorted into the buckets above; plain: the same climb without the dash (off a wall)
+  const classify = (n, d, kind, r, plain) => {
+    if (!r) return;
+    if (r.roofT) { count.roofTouch++; if (roofs.length < 200) roofs.push({ from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), roofAt: [r1(r.roofT.x), r2(r.roofT.y), r1(r.roofT.z)] }); }
+    if (r.dead) { count.sea++; return; }
+    if (!r.grounded) { count.air++; return; }
+    const what = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), to: [r1(r.pos.x), r2(r.pos.y), r1(r.pos.z)], up: r2(r.pos.y - r.y0), block: r.block, tag: bTag(r.block) };
+    if (r.roof) { count.roof++; if (onRoofs.length < 40) onRoofs.push(what); return; }
+    const p = r.pos;
+    const plainHere = (test) => { const q = plain && plain(); return !!(q && q.pos && test(q)); };
+    if (!inB(p)) {
+      // past the bounds line: a leak unless a plain walk or hop from a spot reached on foot within 5 m ends there too
+      let by = plainHere((q) => !inB(q.pos) && Math.abs(q.pos.y - p.y) < 0.4);
+      for (const q of near(p).slice(0, 30)) { for (const dd of DIRS) for (const k2 of ['h', 'w']) { if (by) break; const qq = move(q, dd, k2); if (qq && qq.pos && !inB(qq.pos) && Math.abs(qq.pos.y - p.y) < 0.4) by = true; } if (by) break; }
+      if (by) count.oobOnFoot++; else { count.oob++; oob.push(what); }
+      return;
+    }
+    if (r.perch) {
+      // a perch (a crane top …): a leak unless a plain walk or hop from some spot reached on foot gets onto that block too
+      if (!perchOk.has(r.block)) {
         let by = false;
-        for (const q of near.slice(0, 30)) { for (const dd of DIRS) for (const k2 of ['h', 'w']) { if (by) break; const qq = move(q, dd, k2); if (qq && qq.pos && !inB(qq.pos) && Math.abs(qq.pos.y - p.y) < 0.4) by = true; } if (by) break; }
-        if (by) count.oobOnFoot++; else { count.oob++; oob.push(what); }
-        continue;
+        for (const q of near(p).slice(0, 30)) { for (const dd of DIRS) for (const k2 of ['h', 'w']) { if (by) break; const qq = move(q, dd, k2); if (qq && qq.block === r.block) by = true; } if (by) break; }
+        perchOk.set(r.block, by);
       }
-      if (r.perch) {
-        // a perch (a crane top …): a leak unless a plain walk or hop from some spot reached on foot gets onto that block too
-        if (!perchOk.has(r.block)) {
-          let by = false;
-          const near = N.filter((q) => reach[q.id] && Math.hypot(q.x - p.x, q.z - p.z) < 5 && p.y - q.y < 2.4).sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z));
-          for (const q of near.slice(0, 30)) { for (const dd of DIRS) for (const k2 of ['h', 'w']) { if (by) break; const qq = move(q, dd, k2); if (qq && qq.block === r.block) by = true; } if (by) break; }
-          perchOk.set(r.block, by);
+      // (off a wall: the same climb without the dash getting onto it says the climb reaches it anyway)
+      if (!perchOk.get(r.block) && plainHere((q) => q.block === r.block)) perchOk.set(r.block, true);
+      if (perchOk.get(r.block)) count.perchOnFoot++; else { count.perch++; perches.push(what); }
+      return;
+    }
+    const id = nodeAt(p);
+    if (id >= 0 && reach[id]) { count.onFoot++; return; }
+    if (!plain) { const upL = (r.landY ?? r.y0) - r.y0; if (upL > count.maxUp) { count.maxUp = r2(upL); count.maxUpAt = { ...what, landedAt: r.landY != null ? r2(r.landY) : null, startY: r2(r.y0) }; } }   // (how high over its start it first came down, of the landings a walk doesn't reach)
+    if (id >= 0) {
+      // a node the graph says isn't reachable: does a plain walk or hop from here (or the same climb) land on it too?
+      let base = plainHere((q) => nodeAt(q.pos) === id);
+      for (const dd of DIRS) { if (base) break; for (const k2 of ['w', 'h']) { const q = move(n, dd, k2); if (q && q.pos && nodeAt(q.pos) === id) { base = true; break; } } }
+      if (base) { count.strandedBaseline++; if (strandedOk.length < 12) strandedOk.push(what); }
+      else if (p.y - n.y > 0.3) { count.stranded++; leaks.push({ ...what, firstLanding: r.landY != null ? r2(r.landY - r.y0) : null }); }   // up onto a top the graph can't reach: listed
+      else { count.strandedDown++; if (down.length < 300) down.push(what); }   // down into a spot the graph doesn't reach (a walk off its edge goes there too)
+      return;
+    }
+    count.offGraph++;
+    if (offs.length < 400) offs.push(what);
+  };
+  // a block's name for the lists: its layout tag, else a prop collider's size (w × h × d m) and flags
+  function bTag(id) { const b = L.blocks[id]; if (!b) return null; if (b.tag) return b.tag; return `${b.hidden ? 'prop collider' : 'block'} ${r1(b.half.x * 2)}×${r1(b.half.y * 2)}×${r1(b.half.z * 2)}${b.perch ? ' perch' : ''}${b.roof ? ' roof' : ''}${b.rail ? ' rail' : ''}${b.paint ? '' : ' no-ink'}`; }
+  const T = (a) => [-a[1], a[0]];   // (a quarter turn: along the wall)
+  const nrm = (x, z) => { const l = Math.hypot(x, z) || 1; return [x / l, z / l]; };
+  for (const n of use) {
+    for (const d of DIRS) {
+      for (const kind of KINDS) { count.sims++; classify(n, d, kind, move(n, d, kind), null); }
+      if (!CLIMB) continue;
+      const w = wallAt(n, d);
+      if (!w) continue;
+      count.walls++;
+      inkWall(w);
+      const wn = [w.n.x, w.n.z], t = T(wn);
+      let plainR;   // the same climb with no dash: on over the top (computed once, if a landing needs it)
+      const plain = () => (plainR === undefined ? (plainR = climbMove(n, d, w, 'top', null)) : plainR);
+      climbs: for (const at of ['mid', 'top']) {
+        if (at === 'mid' && w.top - n.y < 2.2) continue;   // (a low wall: its top is its middle)
+        for (const [nm, q] of [['along', t], ['along back', [-t[0], -t[1]]], ['off, along', nrm(t[0] + wn[0], t[1] + wn[1])], ['off, along back', nrm(-t[0] + wn[0], -t[1] + wn[1])], ['straight off', wn]]) {
+          count.sims++; count.climbSims++;
+          const r = climbMove(n, d, w, at, q);
+          if (r && r.noClimb) { count.noClimb++; break climbs; }   // (no climb here: a never-inkable wall — a kid can't either)
+          if (r && r.lost) { count.lost = (count.lost || 0) + 1; continue; }
+          count.climbed++;
+          classify(n, d, `c:dash off a wall climb (${at}), ${nm}`, r, plain);
         }
-        if (perchOk.get(r.block)) count.perchOnFoot++; else { count.perch++; perches.push({ ...what, block: r.block, tag: L.blocks[r.block]?.tag || null }); }
-        continue;
       }
-      const id = nodeAt(p);
-      if (id >= 0 && reach[id]) { count.onFoot++; continue; }
-      { const up = (r.landY ?? n.y) - n.y; if (up > count.maxUp) { count.maxUp = r2(up); count.maxUpAt = { ...what, landedAt: r.landY != null ? r2(r.landY) : null }; } }   // (how high over its start it first came down, of the landings a walk doesn't reach)
-      if (id >= 0) {
-        // a node the graph says isn't reachable: does a plain walk or hop from here land on it too?
-        let base = false;
-        for (const dd of DIRS) { for (const k2 of ['w', 'h']) { const q = move(n, dd, k2); if (q && q.pos && nodeAt(q.pos) === id) { base = true; break; } } if (base) break; }
-        if (base) { count.strandedBaseline++; if (strandedOk.length < 12) strandedOk.push(what); }
-        else if (p.y - n.y > 0.3) { count.stranded++; leaks.push(what); }       // up onto a top the graph can't reach: a leak
-        else { count.strandedDown++; if (down.length < 300) down.push(what); }   // down into a spot the graph doesn't reach (a walk off its edge goes there too)
-        continue;
-      }
-      count.offGraph++;
-      if (offs.length < 400) offs.push(what);
     }
   }
-  // a leak's top, looked at again: does a plain walk or hop from ANY spot reached on foot within 5 m of it land on it?
+  // a listed top, looked at again: does a plain walk or hop from ANY spot reached on foot within 5 m of it land on it?
   // (the graph's jump edges are short: a top a kid hops onto from beside it isn't in its reach either)
   const tops = new Map();
   for (const l of leaks) { const id = nodeAt(V(l.to[0], l.to[1], l.to[2])); if (id >= 0 && !tops.has(id)) tops.set(id, l); }
   const realLeaks = [], hopOn = [];
   for (const [id, l] of tops) {
-    const T = N[id]; let by = null;
-    const near = N.filter((q) => reach[q.id] && Math.hypot(q.x - T.x, q.z - T.z) < 5 && T.y - q.y < 2.4 && T.y - q.y > -0.5).sort((a, b) => Math.hypot(a.x - T.x, a.z - T.z) - Math.hypot(b.x - T.x, b.z - T.z));
-    for (const q of near.slice(0, 40)) {
+    const Tn = N[id]; let by = null;
+    for (const q of near(Tn, -0.5).slice(0, 40)) {
       for (const dd of DIRS) { for (const k2 of ['h', 'w']) { const r = move(q, dd, k2); if (r && r.pos && nodeAt(r.pos) === id) { by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'hop' : 'walk' }; break; } } if (by) break; }
       if (by) break;
     }
-    if (by) hopOn.push({ top: [r1(T.x), r2(T.y), r1(T.z)], dashFrom: l.from, onFootBy: by });
+    if (by) hopOn.push({ top: [r1(Tn.x), r2(Tn.y), r1(Tn.z)], dashFrom: l.from, onFootBy: by });
     else realLeaks.push(l);
   }
   count.stranded = realLeaks.length; count.strandedHopOn = hopOn.length;
@@ -161,12 +254,14 @@
   const spots = [...seen.values()].sort((a, b) => b.up - a.up);
   const ms = Math.round(performance.now() - t0);
   const roofSeen = new Map(); for (const o of roofs) { const k = Math.round(o.roofAt[0]) + ',' + Math.round(o.roofAt[2]); if (!roofSeen.has(k)) roofSeen.set(k, o); }
-  R(`${g.mapDef?.id}: no dash (ground, off a ledge, air on a running jump's rise / apex / fall; 8 headings; dt 1/${Math.round(1 / DT)}) from ${use.length} edge nodes reached on foot (of ${starts.length}; ${N.length} nodes) comes to rest on a perch a kid can't get onto on foot, or out of bounds, or first coming down higher than a plain hop ever gets (1.95 m: sub-dash.js finds a running hop lands on 1.9 m, nothing on 1.95) over its start; a roof slides it off (any still on one after 3 s are listed)`,
-    perches.length === 0 && oob.length === 0 && count.maxUp < 1.95, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks: [...new Set(perches.map((q) => q.block))].map((b) => { const B = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, top: [r1(B.center.x), r2(B.center.y + B.half.y), r1(B.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms });
-  R(`${g.mapDef?.id}: tops the nav graph doesn't reach that a dash lands on and no plain walk / hop from within 5 m does (${realLeaks.length}; the lead's list — none is higher than a jump reaches: the dash adds no height)`, true,
-    { tops: realLeaks.slice(0, 16), topsAKidHopsOnto: hopOn.length });
+  const part = EVERY > 1 ? `every ${EVERY}th edge node from the ${OFF + 1}${['st', 'nd', 'rd'][OFF] || 'th'}` : 'every edge node';
+  const perchBlocks = [...new Set(perches.map((q) => q.block))].map((b) => { const Bk = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, tag: bTag(b), top: [r1(Bk.center.x), r2(Bk.center.y + Bk.half.y), r1(Bk.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; });
+  R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch or out of bounds where no plain walk / hop gets, and no jump + dash first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02); roofs slide it off (one still on after 3 s is listed)`,
+    perches.length === 0 && oob.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), perchBlocks, perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms });
+  R(`${g.mapDef?.id}: listed for the lead (SPEC D10.6: newly reachable spots are listed, not judged) — tops the nav graph doesn't reach that a dash ends on and no plain walk / hop from within 5 m (or the same climb) does: ${realLeaks.length}; with their block, its tag, the first landing's height over the start (judged in the line above) and where it came to rest (it may run on up a ramp or a stair after landing)`, true,
+    { tops: realLeaks.slice(0, 24), topsAKidHopsOnto: hopOn.length });
   const downSeen = new Map(); for (const o of down) { const k = Math.round(o.to[0]) + ',' + Math.round(o.to[2]); if (!downSeen.has(k)) downSeen.set(k, o); }
-  R(`${g.mapDef?.id}: landings off the nav graph (${spots.length} distinct spots; highest over their start first), and drops into nav nodes the graph doesn't reach (${downSeen.size} spots) — for the lead's look`, true,
+  R(`${g.mapDef?.id}: listed for the lead — landings off the nav graph (${spots.length} distinct spots; highest over their start first), and drops into nav nodes the graph doesn't reach (${downSeen.size} spots)`, true,
     { offGraphTop: spots.slice(0, 10), downInto: [...downSeen.values()].slice(0, 8), strandedButReachedOnFoot: strandedOk.slice(0, 4) });
   return out;
 })();
