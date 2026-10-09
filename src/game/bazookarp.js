@@ -427,12 +427,12 @@ export class Bazookarp {
     const r = this.field.fieldAt(T, pos, this._rh || (this._rh = { d: 0, node: -1 }));
     if (!r || !Number.isFinite(r.d)) return;
     const D = r.d, B = this.base;
-    if (B && D < B.D - (K.clamp.vMax * Math.max(0, t - B.t) + K.clamp.slack)) {
+    if (B && D < B.D - (K.clamp.vMax * Math.max(0, t - B.t) + K.clamp.slack + this._holeStep(T, B.node, r.node))) {
       this.stats.clamped++;
       if ((this.stats.clampLog || (this.stats.clampLog = [])).length < 8) this.stats.clampLog.push({ t: +t.toFixed(2), from: +B.D.toFixed(2), to: +D.toFixed(2), dt: +(t - B.t).toFixed(3), pos: [+pos.x.toFixed(2), +pos.y.toFixed(2), +pos.z.toFixed(2)], node: r.node, grounded: !!a.grounded, form: a.form, w: a.weaponId });
       return;
     }
-    this.base = { D, t };
+    this.base = { D, t, node: r.node };
     const now = Math.max(this.capCount(T), this.field.count(T, D));
     if (now < this.count[T]) { this.count[T] = now; this.reachT[T] = this.clock; }
     // best metres of progress (results): never past the weirs' cap until they're planted
@@ -455,6 +455,17 @@ export class Bazookarp {
     }
     // overtime: carried past the winning team's count
     if (this.overtime && T === this.otLosing && this.count[T] < this.count[1 - T]) this._end(T, 'comeback');
+  }
+  // the clamp's allowance for a small nav hole (a post, a bollard: a missing cell the graph walks round): two own nodes
+  // ≤ clamp.holeR apart on one floor with a clear waist line between them are a straight walk of that length, so the
+  // reading may drop by the graph's detour beyond it at once (lockgate, a missing cell at (1.5, 28.5): two nodes 2 m
+  // apart whose D differ by 3.4 m). Never across a wall or a thin wall (their waist line is blocked), never a far jump.
+  _holeStep(T, a, b) {
+    if (a == null || a < 0 || b < 0 || a === b) return 0;
+    const nav = G.nav, n = nav.nodes[a], m = nav.nodes[b], d = Math.hypot(n.x - m.x, n.y - m.y, n.z - m.z);
+    if (d > K.clamp.holeR || Math.abs(n.y - m.y) > 0.6 || nav._blocked(n, m, Math.max(n.y, m.y))) return 0;
+    const D = this.field.D[T];
+    return Number.isFinite(D[a]) && Number.isFinite(D[b]) ? Math.max(0, D[a] - D[b] - d) : 0;
   }
   _plant(a, T, i) {
     const w = this.weirs[T][i];
