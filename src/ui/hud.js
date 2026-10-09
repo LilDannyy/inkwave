@@ -97,7 +97,7 @@ export function splatCause(cause, attacker) {
   const c = typeof cause === 'string' ? cause : null;
   if (c && ENV_CAUSES[c]) return { kind: 'env', id: c, name: attacker ? 'Knocked into the sea' : ENV_CAUSES[c], tag: '', icon: SEA_ICON };
   { const ec = envCause(c); if (ec) return { kind: 'env', id: c, name: attacker ? ec.knocked || ec.name : ec.name, tag: '', icon: ec.icon || SEA_ICON }; }   // [b5-stagehooks]
-  { const kc = c && KARP_CAUSES[c]; if (kc) return { kind: kc.kind, id: c, name: kc.name, tag: kc.tag, icon: kc.icon }; }   // [b5-karp] Carp Shot / shell burst / Carp Blast
+  { const kc = c && Object.hasOwn(KARP_CAUSES, c) ? KARP_CAUSES[c] : null; if (kc) return { kind: kc.kind, id: c, name: kc.name, tag: kc.tag, icon: kc.icon }; }   // [b5-karp] Carp Shot / shell burst / Carp Blast
   if (c && SUB[c]) return { kind: 'sub', id: c, name: SUB[c].name || c, tag: 'SUB', icon: SUB_ICONS[SUB[c].kind] || SUB_ICONS[c] || SUB_ICONS.bomb };
   if (c && SPECIALS[c]) return { kind: 'special', id: c, name: SPECIALS[c].name || c, tag: 'SPECIAL', icon: specialIcon(c) };
   const w = (attacker && attacker.weaponId) || (c && WEAPONS[c] ? c : null);
