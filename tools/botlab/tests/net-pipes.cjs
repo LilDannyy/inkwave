@@ -47,13 +47,16 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
           s.rows++;
           const ph = p ? p.phase : '-';
           if (s.phases[s.phases.length - 1] !== ph) s.phases.push(ph);
-          if (p && s.enterT === null) s.enterT = t;
+          // (a proxy's ride starts on this screen a playback delay after its owner started it: that delay, to put the
+          // pop on the owner's clock)
+          if (p && s.enterT === null) { s.enterT = t; const pr = a.remote && __G.netm && __G.netm._peer(a.owner); s.enterLag = pr && pr.init && pr.tr !== undefined ? t / 1000 - pr.off - pr.tr : 0; }
           if (p && p.phase === 'ride' && !p.held) {
             const lg = P().legs[p.leg], c = centre(lg, p.s, p.dir), d = Math.hypot(a.pos.x - c[0], a.pos.y - c[1], a.pos.z - c[2]);
             s.ride++; s.maxD = Math.max(s.maxD, d); s.exit = p.exit;
             if (s.mark && t > s.mark) { s.after++; s.maxDAfter = Math.max(s.maxDAfter, d); }
           }
-          if (s.exit >= 0) { const L = P().lit[s.exit]; if (L.n && s.litOn === null) s.litOn = t; if (!L.n && s.litOn !== null && s.litOff === null) s.litOff = t; }
+          // (the lit span on this screen's wall clock, and on the rider's owner's timeline: the ride's own time base)
+          if (s.exit >= 0) { const L = P().lit[s.exit]; if (L.n && s.litOn === null) { s.litOn = t; s.litOnT = p ? P()._T(p) : null; } if (!L.n && s.litOn !== null && s.litOff === null) { s.litOff = t; s.litOffT = p ? P()._T(p) : null; } }
           if (p && p.phase === 'pop' && s.popT === null) { s.popT = t; s.popEnd = p.exit; }
           if (s.enterT !== null && !p && s.popT === null && ph === '-') s.gaps++;
           if (t - t0 < secs * 1000) requestAnimationFrame(f);
@@ -63,7 +66,7 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
         return 1;
       },
       mark(n) { S[n].mark = performance.now(); return 1; },
-      got(n) { const s = S[n]; return s ? { ...s, lit: s.litOn !== null && s.litOff !== null ? +((s.litOff - s.litOn) / 1000).toFixed(3) : null } : null; },
+      got(n) { const s = S[n]; return s ? { ...s, lit: s.litOn !== null && s.litOff !== null ? +((s.litOff - s.litOn) / 1000).toFixed(3) : null, litT: s.litOnT != null && s.litOffT != null ? +(s.litOffT - s.litOnT).toFixed(3) : null } : null; },
       flow() { const f = P().flow(); return f && { dir: f.dir, phase: f.phase, t: +m().stage.t.toFixed(2) }; },
       period(T) { for (const l of P().legs) if (l.flip) l.flip.every = T; P()._tideSync(m().stage.t, true); return 1; },
       hp(n) { return byNid(n).hp; },
@@ -106,7 +109,10 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   const hpB = await B.js(`__pp.hp(${bNid})`);
   R('1. B walks into the Express on its own screen (captured), and rides it there exactly on the path (≤ 0.005 m)', capB && sb.ride > 20 && sb.maxD < 0.005, { capB, frames: sb.ride, maxD: sb.maxD, phases: sb.phases });
   R('1. on A\'s screen B\'s rider is drawn within 0.05 m of the centreline + lane every frame of the ride (from the [0] record; netlag 80 ± 40 on B)', sa.ride > 20 && sa.maxD < 0.05 && sa.phases.join() === '-,suck,ride,pop,-', { frames: sa.ride, maxD: sa.maxD, phases: sa.phases });
-  R('2. A\'s exit ring is lit from B\'s suck end to B\'s pop: the lit spans agree within 0.15 s (A ' + sa.lit + ' s, B ' + sb.lit + ' s)', sa.lit !== null && sb.lit !== null && Math.abs(sa.lit - sb.lit) <= 0.15 && sa.popEnd === sb.popEnd, { a: sa.lit, b: sb.lit, popEnd: [sa.popEnd, sb.popEnd] });
+  // (compared on B's timeline, the ride's own time base on both screens: A replays B on a playback clock that steers
+  // ±8–25 % to keep its buffer, so A's wall-clock span may differ by that stretch — shown, checked within 0.25 s)
+  R('2. A\'s exit ring is lit from B\'s suck end to B\'s pop: on B\'s timeline the lit spans agree within 0.05 s (A ' + sa.litT + ' s, B ' + sb.litT + ' s; wall clock A ' + sa.lit + ' s, B ' + sb.lit + ' s)',
+    sa.litT !== null && sb.litT !== null && Math.abs(sa.litT - sb.litT) <= 0.05 && Math.abs(sa.lit - sb.lit) <= 0.25 && sa.popEnd === sb.popEnd, { a: [sa.litOnT, sa.litOffT], b: [sb.litOnT, sb.litOffT], wall: [sa.lit, sb.lit], popEnd: [sa.popEnd, sb.popEnd] });
   R('3. A\'s bot shooting B mid-ride: the shooter\'s screen drops it (behind the glass: no \'hit\' event), B\'s hp unchanged', shot.riding && shot.guard && shot.hitEvents === 0 && hpB >= 99.5, { shot, hpB });
   // after touchdown the same shot hurts (the shooter's screen sends it; B's screen applies it)
   await A.js(`(() => { const m = __G.match; __G.projectiles.applyHit(m.actors.find((x) => x.nid === ${enemyBot}), m.actors.find((x) => x.nid === ${bNid}), 30, 'shooter'); return 1; })()`);
@@ -191,8 +197,9 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   await wait(4500);
   const s7b = await J(B, `__pp.got(${otherBot})`), s7c = await J(C, `__pp.got(${otherBot})`);
   const expectPop = 0.25 + 25.44 / 18;   // s from the capture
-  const popB = s7b.popT !== null && s7b.enterT !== null ? (s7b.popT - s7b.enterT) / 1000 : null;
-  R('7. after the host leaves mid-ride, the new host (B) adopts the bot and it pops at the far end within ±0.3 s of when it would have', s7b.popEnd === gW && popB !== null && Math.abs(popB - expectPop) < 0.35, { popB, expectPop, end: s7b.popEnd, phases: s7b.phases, wall: (Date.now() - t0) / 1000 });
+  // (B saw the ride start a playback delay after A started it: B's pop is measured from A's start, on A's clock)
+  const popB = s7b.popT !== null && s7b.enterT !== null ? (s7b.popT - s7b.enterT) / 1000 + (s7b.enterLag || 0) : null;
+  R('7. after the host leaves mid-ride, the new host (B) adopts the bot and it pops at the far end within ±0.3 s of when it would have (on the old host\'s clock)', s7b.popEnd === gW && popB !== null && Math.abs(popB - expectPop) < 0.3, { popB, expectPop, enterLag: s7b.enterLag, raw: s7b.popT !== null ? (s7b.popT - s7b.enterT) / 1000 : null, end: s7b.popEnd, phases: s7b.phases, wall: (Date.now() - t0) / 1000 });
   R('7. the remaining guest (C) draws the rider within 0.1 m of the centreline across the handoff', s7c.after > 5 && s7c.maxDAfter < 0.1 && s7c.popEnd === gW, { after: s7c.after, maxDAfter: s7c.maxDAfter, maxD: s7c.maxD, phases: s7c.phases });
   // the tide carries on under the new host: B and C agree through the next change
   const fl = [];

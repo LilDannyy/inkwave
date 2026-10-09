@@ -585,7 +585,9 @@ export class StagePipes {
     a.pipeCd = this.X.cooldown ?? PIPES.cooldown;
     a.kidT = 0; a.hardLand = 0;
     if (G.paint && a.alive) {
-      const area = G.paint.splat(_v.set(a.pos.x, a.pos.y + 0.3, a.pos.z), PIPES.splat, a.team, { seed: Math.random() });
+      // (rounded as the splat record rounds them: every screen paints exactly the cells this one does)
+      const r2 = (x) => Math.round(x * 100) / 100;
+      const area = G.paint.splat(_v.set(r2(a.pos.x), r2(a.pos.y + 0.3), r2(a.pos.z)), PIPES.splat, a.team, { seed: r3(Math.random()) });
       a.addTurfNoSpecial?.(area);
     }
     this.stats.landings.push([+this.t.toFixed(2), a.nid ?? -1, a.team, r3(a.pos.x), r3(a.pos.y), r3(a.pos.z), p.exit]);
@@ -705,7 +707,8 @@ export class StagePipes {
     if (p.phase === 'pop') { p.popT += dt; return; }
     // a host change mid-ride: the old t0 belongs to the old owner's clock — ride on at the leg's speed from where it was
     // drawn until the new owner's re-based [0] arrives
-    if (p.owner !== a.owner && !p.proj) { p.proj = true; p.rebased = true; p.u0 = p.u || 0; p.T = 0; p.phase = 'ride'; }
+    // (and from where the old owner really was: this screen drew it a playback delay behind — LEAD-REVIEW round 1 item 5)
+    if (p.owner !== a.owner && !p.proj) { const u = this._uTrue(p); p.proj = true; p.rebased = true; p.u0 = u; p.T = 0; p.phase = 'ride'; }
     p.T += dt;
     const T = this._T(p);
     this._place(a, p, T, dt, false);
@@ -721,7 +724,7 @@ export class StagePipes {
     const p = a.pipe;
     if (!p || !p.remote) return;
     if (p.phase === 'pop') { p.remote = false; p.popT = p.popT || 0; a.pipeCd = 0; return; }
-    const leg = this.legs[p.leg], u = clamp(p.u || 0, 0, leg.len - 0.01), chimed = p.chimed;
+    const leg = this.legs[p.leg], u = clamp(p.proj ? p.u || 0 : this._uTrue(p), 0, leg.len - 0.01), chimed = p.chimed;
     this._unlight(p);
     a.pipe = null;
     this._start(a, leg.ends[p.k], { u0: Math.max(0.001, u), t0: now() });   // (re-based: no suck, its exit lit again)
@@ -729,6 +732,15 @@ export class StagePipes {
     this.events.push(['pipe:adopt', { nid: a.nid, leg: leg.i, u: r3(u) }]);
   }
   hostChanged() {}
+  // where a proxy's ride really is on its (old) owner's timeline: this screen draws it at the owner's playback time, a
+  // playback delay (0.07–0.3 s) behind the owner's own clock; a ride is a pure function of time, so add that delay back
+  // (an adopted ride then pops when it would have, not a delay late)
+  _uTrue(p) {
+    const leg = this.legs[p.leg], peer = G.netm?._peer?.(p.owner);
+    let T = this._T(p);
+    if (peer && peer.init && peer.tr !== undefined) T += clamp(now() - peer.off - peer.tr, 0, 0.5);
+    return Math.min(leg.len, p.rebased ? p.u0 + T * p.v : p.u0 + Math.max(0, T - PIPES.suck) * p.v);
+  }
 
   // ------------------------------------------------------------------------------------------------ nav + bots
   navEdge(e) {
