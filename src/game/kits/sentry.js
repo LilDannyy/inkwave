@@ -656,10 +656,12 @@ function bump(o) { o[KIND] = (o[KIND] || 0) + 1; }
 const CODE = { time: 0, shot: 1, crush: 2, lava: 2, flip: 2, shell: 2, fold: 3, owner: 3, replaced: 3, carried: 3 };
 function end(it, why, by) {
   if (!live(it)) return;
+  const s0 = it.sub;
   it.state = 'dead'; it.why = why; it.rb.state = 'dead';
   if (!it.ghost && CODE[why] !== undefined) netRec(it.owner, KIND, [2, it.gid, CODE[why]]);
   SENTRY_STATS.ends[why] = (SENTRY_STATS.ends[why] || 0) + 1;
-  const c = _v.copy(it.pos).setY(it.pos.y + 0.35 * it.vs).clone(), col = G.teamColors[it.team];
+  // (c: the look's middle, drawn size; ce: the events', gameplay size — [sub-view] the same at any view scale)
+  const c = _v.copy(it.pos).setY(it.pos.y + 0.35 * it.vs).clone(), ce = it.pos.clone().setY(it.pos.y + s0.hitH * 0.5), col = G.teamColors[it.team];
   if (why === 'shot') {
     if (near(c, 45)) {
       G.fx?.explosion?.(c, col, 0.8);
@@ -668,9 +670,9 @@ function end(it, why, by) {
       G.fx?.burst?.(c, UP, new THREE.Color(0.37, 0.7, 0.66), { count: 5, speed: 3.5, size: 0.07, sheet: false });
       G.cues?.sub(KIND, 'end', { owner: it.owner, team: it.team, at: c });   // sfx-cues: the can crumple
     }
-    emit('sub:destroyed', { kind: KIND, pos: c, team: it.team });
+    emit('sub:destroyed', { kind: KIND, pos: ce, team: it.team });
   } else if (why === 'lava') G.deploy?.sizzle?.(c, it.team, it.owner);
-  else if (CODE[why] === 2) { G.deploy?._crunch?.(c, it.team, it.owner); emit('sub:destroyed', { kind: KIND, pos: c, team: it.team }); }
+  else if (CODE[why] === 2) { G.deploy?._crunch?.(c, it.team, it.owner); emit('sub:destroyed', { kind: KIND, pos: ce, team: it.team }); }
   else if (why !== 'drop') {
     if (near(c, 40)) G.cues?.one('sentry_fold', { at: c, owner: it.owner, team: it.team, kind: 'end', sub: true, vol: 0.8 });
   }
