@@ -71,7 +71,7 @@ const TETHER_VS = `
     vec3 up = abs(T.y) > 0.97 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
     vec3 N = normalize(cross(T, up)), Bn = cross(N, T);
     vec3 off = N * position.x + Bn * position.y;
-    P += off * uR;
+    P += off * uR * (1.0 + 0.9 * aS.z);                                          // (the teammate glow: a fatter line)
     vT = t; vLen = L; vS = aS; vBright = aP.w;
     vec4 mv = modelViewMatrix * vec4(P, 1.0);
     vNr = normalize(normalMatrix * off); vV = -mv.xyz;
@@ -87,6 +87,7 @@ const TETHER_FS = `
     vec3 c = uColor * (0.55 + 0.45 * sh) * k;
     float rim = pow(1.0 - abs(dot(normalize(vNr), normalize(vV))), 2.0);
     c += uColor * rim * 0.35 * k;
+    c = mix(c, vec3(1.7, 1.65, 1.5), vS.z * (0.32 + 0.22 * sin(TAU * 3.0 * uNow)));   // (… with a hot white core, pulsing)
     float s = (uNow - vS.x) / uHop;                                             // the spark: from the end that blew first
     if (vS.y != 0.0 && s >= 0.0 && s <= 1.0) {
       float at = vS.y > 0.0 ? s : 1.0 - s, d = abs(vT - at) * vLen;
