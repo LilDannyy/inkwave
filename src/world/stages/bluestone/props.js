@@ -9,7 +9,7 @@
 //     the stair's group: ENGINE rule 19).
 //   • a placeholder of Commander Tartar under the dome (no collider), so mid reads as the place it is.
 // Placements carry the era engine's tags (eras / eraGroup) and are filtered by era.js like the layout.
-import { RAILYARD } from './layout.js';
+import { RAILYARD, AL } from './layout.js';
 import { rasterRects, inPoly, edgeDist } from './ground.js';
 import { eraFilter } from './era.js';
 
@@ -111,14 +111,19 @@ const grow = (poly, x, z, d) => inPoly(poly, x, z) || edgeDist(poly, x, z) <= d;
 // raster stays 1.2 m behind it (no saw-tooth over the water)
 const RP = RAILYARD.poly, E0 = RP[RP.length - 1], E1 = RP[0];
 const riverEdge = (x, z) => { const dx = E1[0] - E0[0], dz = E1[1] - E0[1], L = Math.hypot(dx, dz); const t = ((x - E0[0]) * dx + (z - E0[1]) * dz) / (L * L); return t > -0.05 && t < 1.05 ? Math.abs((x - E0[0]) * dz - (z - E0[1]) * dx) / L : Infinity; };
-const BERM = rasterRects((x, z) => grow(RAILYARD.poly, x, z, 0.15) && riverEdge(x, z) > 1.2 && !RAILYARD.channels.some((c) => grow(c.poly, x, z, 0.25)), { x0: -63, x1: -24, z0: -85, z1: -27 });
+// (fix round 1: the embankment stands lower, at RAILYARD.low.top, under the Signal Garden; its cells there are laid apart)
+const LOW = RAILYARD.low, inLow = (x, z) => inPoly(LOW.poly, x, z);
+const bermCell = (x, z) => grow(RAILYARD.poly, x, z, 0.15) && riverEdge(x, z) > 1.2 && !RAILYARD.channels.some((c) => grow(c.poly, x, z, 0.25));
+const BERM = rasterRects((x, z) => bermCell(x, z) && !inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 });
+const BERM_LOW = rasterRects((x, z) => bermCell(x, z) && inLow(x, z), { x0: -63, x1: -24, z0: -85, z1: -27 });
 const placements = [];
-for (const [x0, x1, z0, z1] of BERM.rects) placements.push({ type: 'bluestone_berm', pos: [+((x0 + x1) / 2).toFixed(3), 0, +((z0 + z1) / 2).toFixed(3)], size: [+(x1 - x0).toFixed(3), +(z1 - z0).toFixed(3)] });
-// a block over a quad (a rectangle in the world or the arm's frame), turned with it
+for (const [rects, top] of [[BERM.rects, undefined], [BERM_LOW.rects, LOW.top]]) for (const [x0, x1, z0, z1] of rects) placements.push({ type: 'bluestone_berm', pos: [+((x0 + x1) / 2).toFixed(3), 0, +((z0 + z1) / 2).toFixed(3)], size: [+(x1 - x0).toFixed(3), +(z1 - z0).toFixed(3)], top });
+// a block over a quad (a rectangle in the world or the arm's frame), turned with it (top: the low embankment's where the
+// quad's centre lies under the garden)
 const quadBerm = (q, o = {}) => {
   const [a, b, , d] = q, w = Math.hypot(b[0] - a[0], b[1] - a[1]), dd = Math.hypot(d[0] - a[0], d[1] - a[1]);
   const cx = (q[0][0] + q[2][0]) / 2, cz = (q[0][1] + q[2][1]) / 2, rot = Math.atan2(d[0] - a[0], d[1] - a[1]);   // local z along a → d
-  return { type: 'bluestone_berm', pos: [+cx.toFixed(3), 0, +cz.toFixed(3)], rotY: rot, oboxCols: true, size: [+w.toFixed(3), +dd.toFixed(3)], ...o };
+  return { type: 'bluestone_berm', pos: [+cx.toFixed(3), 0, +cz.toFixed(3)], rotY: rot, oboxCols: true, size: [+w.toFixed(3), +dd.toFixed(3)], top: inLow(cx, cz) ? LOW.top : undefined, ...o };
 };
 for (const c of RAILYARD.channels) {
   for (const [q, group] of c.fills) placements.push(quadBerm(q, { eras: '12', eraGroup: group }));   // the 1880s / today filler
@@ -141,6 +146,6 @@ for (const x of [-60, -56.5, -53, -49.5, -46, -42.5, -39, -35.5, -32]) placement
 placements.push({ type: 'bluestone_train', pos: [-56.5, 0, -66], cars: 3, loco: true, color: '#5a4a3c' });
 placements.push({ type: 'bluestone_train', pos: [-46, 0, -72], cars: 2, color: '#4d5a52' });
 placements.push({ type: 'bluestone_train', pos: [-35.5, 0, -63], cars: 2, loco: true, color: '#6b5a48' });
-placements.push({ type: 'bluestone_signalbox', pos: [-38.1, 0, -39.55], size: [4.2, 4.2], eras: '12', eraGroup: 'garden-t9' });
-export const BERM_MISS = BERM.miss;
+{ const [x, z] = AL(9.8, -10.9); placements.push({ type: 'bluestone_signalbox', pos: [x, 0, z], size: [4.2, 4.2], eras: '12', eraGroup: 'garden-s2' }); }   // (where the 3000s' signal mast stands)
+export const BERM_MISS = [...BERM.miss, ...BERM_LOW.miss];
 export const PLACEMENTS = eraFilter(placements);
