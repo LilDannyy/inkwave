@@ -19,6 +19,7 @@
   const want = (k) => !only || only.includes(k);
   if (m.mode !== 'bazookarp' || !m.karp) { R('A: a Bazookarp match on karpbox', false, { mode: m.mode }); return out; }
   dbg.freeze();
+  const devices0 = (G.subs?.items || []).map((it) => [it.kind, it.team, it.state, +it.pos.x.toFixed(1), +it.pos.z.toFixed(1)]);   // (what the bots left in play before the test began)
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
   const A = m.actors.filter((a) => a.team === 0), B = m.actors.filter((a) => a.team === 1);
   for (const a of m.actors) { if (a.bot) a.bot.update = () => {}; idle(a); }
@@ -40,6 +41,8 @@
     m.time = opts.time ?? 200; m.state = 'playing'; m.result = null;
     if (m.karp) { m.karp.winner = 'disposed'; }
     G.paint.clear();   // (every check starts on a clean deck: ink left by the last one slows a carrier)
+    // … and with no device left in play (the bots' own subs from the seconds of real play before the clock froze)
+    for (const it of [...(G.subs?.items || [])]) G.subs._destroy?.(it);
     m.karp = Kp = new Bazookarp(m, new LoopWire());
     if (opts.coin != null) Kp.coin = opts.coin;
     park(); step(0.05);
@@ -59,7 +62,7 @@
   // ============================================================================ A. setup (S0, S3, S41, §3.2)
   if (want('A')) {
     fresh();
-    R('A1 S0: the mode, its engine and the objective-target registry', m.mode === 'bazookarp' && !!Kp && G.objTargets?.targets.includes(Kp.shell), { mode: m.mode });
+    R('A1 S0: the mode, its engine and the objective-target registry', m.mode === 'bazookarp' && !!Kp && G.objTargets?.targets.includes(Kp.shell), { mode: m.mode, devicesBefore: devices0 });
     const E = F().extraEdgeList();
     const hop = E.find((e) => e.type === 'hop' && e.a[2] > 13 && e.a[2] < 14 && e.b[2] > 14 && e.b[2] < 15 && e.a[0] < -14.5 && Math.abs(e.b[1] - e.a[1] - 1.5) < 0.05);
     const gap = E.find((e) => e.type === 'gap' && e.a[0] > 21 && e.a[0] < 22 && e.b[0] > 24 && e.b[0] < 25);
@@ -100,16 +103,33 @@
     R('B7 §2.2: a roller rolling into it is a touch (stung, shoved), not a hit (the meter stays)', roll === 0 && Kp.shell.stats.touches > 0, { roll, touches: Kp.shell.stats.touches, z: a0.pos.z });
     a0.setWeapon('shooter');
     // it blocks shots: a shot fired through it at a player right behind it stops on it
-    park(); Kp.shell.m = 0;
+    // (on a clean deck: B3–B7's random splats sometimes reached the victim's spot, and Alpha ink under a Bravo player
+    // hurts it — 27.7 hp in 1.3 s — and slows its walk into the shell for B9: 2 stings + ink, 52.8 taken)
+    G.paint.clear(); park(); Kp.shell.m = 0; b0.setWeapon('shooter');
     put(a0, 0, -7); put(b0, 0, 2.3); step(0.1);
     a0.yaw = a0.aimYaw = 0; a0.aimPitch = Math.atan2(Kp.shell.center().y - (a0.pos.y + 1.2), 7);
     a0.intent.fire = true; step(1.0); a0.intent.fire = false; step(0.3);
-    R('B8 §2.2: it blocks shots — a stream fired through it hits it and never the player right behind it', b0.hp === PLAYER.hp && Kp.shell.meter > 0, { victimHp: b0.hp, meter: Kp.shell.meter });
-    // touching it: 20 at most every 0.5 s, shoved out, never below 1 hp
-    park(); Kp.shell.m = 0; Kp.shell.touchT.clear();
-    put(b0, 0, -1.9); b0.intent.move.set(0, 0, 1); const hp0 = b0.hp; step(1.02); const hp1 = b0.hp; const d1 = Math.hypot(b0.pos.x, b0.pos.z);
-    b0.hp = 15; let hpLow = 99; for (let i = 0; i < 180; i++) { dbg.step(1000 / 60); hpLow = Math.min(hpLow, b0.hp); } idle(b0);
-    R('B9 S6: touch 20 every 0.5 s (3 stings in 1 s), shoved out to its surface, never below 1 hp', hp0 - hp1 >= 59 && hp0 - hp1 <= 61 && d1 > Kp.shell.radius() + PLAYER.radius - 0.15 && hpLow === 1 && b0.alive, { taken: hp0 - hp1, dist: d1, reach: Kp.shell.radius() + PLAYER.radius, hpLow });
+    R('B8 §2.2: it blocks shots — a stream fired through it hits it and never the player right behind it', b0.hp === PLAYER.hp && Kp.shell.meter > 0, { victimHp: b0.hp, meter: Kp.shell.meter, kit: [a0.weaponId, b0.weaponId, b0.subId, b0.specialId] });
+    // touching it: 20 a sting, at most one every 0.5 s, shoved out, never below 1 hp. Every sting is logged while the
+    // player keeps walking into it for 2.5 s (a shoved player bounces off and comes back: how many stings land in a
+    // given second depends on the bounce — the first cut counted the stings in 1.02 s, which passed or failed with the
+    // floor's ink and the bot's weapon; the rule is the size and the spacing)
+    G.paint.clear(); park(); Kp.shell.m = 0; Kp.shell.touchT.clear(); b0.setWeapon('shooter');
+    const stings = [], dmg0 = b0.damage; let tS = 0;
+    b0.damage = function (d, by, w, ...r) { if (w === 'karp-touch') stings.push([+tS.toFixed(3), +d.toFixed(3), +this.hp.toFixed(3)]); return dmg0.call(this, d, by, w, ...r); };
+    let dMin = 99, dOut = 0;
+    try {
+      // (it keeps walking at the shell's centre, as a player pressing into it would — not past it after a shove)
+      const press = () => { const c = Kp.shell.center(), dx = c.x - b0.pos.x, dz = c.z - b0.pos.z, l = Math.hypot(dx, dz) || 1; b0.intent.move.set(dx / l, 0, dz / l); };
+      put(b0, 0, -1.9); press();
+      for (let i = 0; i < 150; i++) { dbg.step(1000 / 60); tS += 1 / 60; press(); const d = Math.hypot(b0.pos.x, b0.pos.z); dMin = Math.min(dMin, d); if (i === 0) dOut = d; }
+      b0.hp = 15; let hpLow = 99; for (let i = 0; i < 180; i++) { dbg.step(1000 / 60); tS += 1 / 60; press(); hpLow = Math.min(hpLow, b0.hp); } idle(b0);
+      const gaps = stings.slice(1).map((x, i) => +(x[0] - stings[i][0]).toFixed(3)), first = stings.filter((x) => x[0] < 2.5);
+      R('B9 S6: touch — 20 a sting (min(20, hp − 1): never below 1 hp), never two within 0.5 s, it keeps stinging a player who keeps walking in (≥ 3 in 2.5 s), shoved out to its surface, never below 1 hp',
+        // (each sting is 20, or what leaves exactly 1 hp: min(20, hp − 1))
+        first.length >= 3 && stings.every((x) => Math.abs(x[1] - Math.min(20, x[2] - 1)) < 0.01) && gaps.every((x) => x >= 0.5 - 1 / 60 - 1e-6) && dOut > Kp.shell.radius() + PLAYER.radius - 0.15 && hpLow === 1 && b0.alive,
+        { stings, gaps, firstShove: dOut, closest: dMin, reach: Kp.shell.radius() + PLAYER.radius, hpLow });
+    } finally { b0.damage = dmg0; }
     // the shove never pushes off an edge: a shell resting at the pier's middle, a player at its north edge walking in
     park(); restAt(V(15.5, 0, 37.0), -1, 500);
     put(b0, 15.5, 37.85); b0.intent.move.set(0, 0, -1); step(2.0); idle(b0);
@@ -568,7 +588,7 @@
     const { KarpField, resolveKarp, placeholderKarp } = await import('./src/game/karpField.js');
     const { karpKitPieces } = await import('./src/world/bazookarp-kit.js');
     const me = m.local, hud = () => g.hud?.karp?.state?.() || null, FX = () => G.karpFx;
-    const CARP = 'M4 16 Q11 7 21 10';   // (the carp glyph's outline, hud-karp.js KARP_GLYPH)
+    const CARP = 'M8 16 Q14 8.4 23 9.4';   // (the carp glyph's body, hud-karp.js KARP_GLYPH)
     const badges = () => (g.hud.squads || []).reduce((s, q) => s + [...q.children].filter((el) => el.classList.contains('is-karp')).length, 0);   // (the live squad rows only)
     const look = () => { FX().build(m); step(2 / 60); };   // (the looks follow the engine a check made: fresh())
     // S1: Bravo's weirs and Gate and Alpha's zones are the 180° mirror; each Gate stands on the half it attacks
@@ -601,6 +621,20 @@
       !!h1?.marker && Math.abs(h1.marker.secs - Math.ceil(f1)) <= 1 && h1.marker.secs >= 58 && !!h2?.marker && h2.marker.secs <= 10 && red && r3 === 3 && !!h3?.marker?.fast
         && /WE CARRY · \d+ s ×3/.test(h3.status) && /DON'T RETREAT/.test(h3.bottom?.[0] || '') && !orb0.includes(CARP) && orb1.includes(CARP) && badge0 === 0 && badge1 === 1,
       { m1: h1?.marker && { secs: h1.marker.secs, fuse: f1 }, m2: h2?.marker && { secs: h2.marker.secs, red }, m3: h3?.marker && { secs: h3.marker.secs, fast: h3.marker.fast }, status: h3?.status, bottom: h3?.bottom?.[0], rate: r3, orb: [orb0.includes(CARP), orb1.includes(CARP)], badge: [badge0, badge1], doc: document.querySelectorAll('.iw-sq.is-karp').length });
+    // §1.1, DECISIONS.md: in its own Carp-Free Zone the carrier's bottom line is "CARP-FREE ZONE!" (the lead's name)
+    fresh(); look(); carry(me, 13, -43); step(0.3); const hz = hud();
+    R('L3b S12: in its own Carp-Free Zone the carrier\'s screen shows CARP-FREE ZONE! with its sub-line (DECISIONS.md\'s name)', Kp.rate === 3 && hz?.bottom?.[0] === 'CARP-FREE ZONE!' && /3× — get out/.test(hz.bottom[1] || ''), { rate: Kp.rate, bottom: hz?.bottom });
+    // §1.1: the charge prompt on each player's FIRST carry, whenever it comes (not the match's first 20 s)
+    fresh(); Kp.clock = 95; carry(me, 0, -20); step(0.1); const p1 = Kp.prompt(me);
+    Kp._release(me); Kp._setPhase('free', 0); step(1 / 60); carry(me, 0, -20); step(0.1); const p2 = Kp.prompt(me);
+    const pA = (() => { Kp._release(me); put(me, 0, -32); carry(A[1], 2, -20); step(0.1); return Kp.holder === A[1] ? Kp.prompt(A[1]) : `(holder: ${Kp.holder?.name})`; })();
+    R('L10 §1.1: "Hold [FIRE] to charge a Carp Shot" on a player\'s first carry (95 s into the match), the weir line on its next; another player\'s first carry gets it too',
+      /Hold \[FIRE\] to charge a Carp Shot/.test(p1 || '') && /Land it on a weir/.test(p2 || '') && /Hold \[FIRE\]/.test(pA || ''), { p1, p2, pA });
+    // call-outs come in bursts (SHELL BURST! then YOU'VE GOT THE BAZOOKARP! 0.25 s later): the newer replaces the older
+    fresh(); look(); g.hud.zcalls && [...g.hud.zcalls.children].forEach((el) => el.remove());
+    put(me, 0, -3); step(0.05); Kp.shell.add(0, 2000, me); put(me, 0, -0.4); step(0.35);
+    const calls = g.hud.zcalls ? [...g.hud.zcalls.children].map((el) => el.querySelector('.iw-zcall__txt')?.textContent) : null;
+    R('L11 §1.1: call-outs in a burst replace each other instead of stacking (the shell bursts, the grab 0.25 s later: one banner, the grab\'s)', Kp.holder === me && !!calls && calls.length === 1 && /YOU'VE GOT THE BAZOOKARP/.test(calls[0] || ''), { calls, holder: Kp.holder?.name });
     // S30: a Bravo carrier in kid form behind the alley's thin wall — revealed to Alpha (the map) and its marker on
     // Alpha's screen though no line reaches it
     fresh(); look(); put(me, 3, 12); carry(b, 9.5, 12); step(0.2);
