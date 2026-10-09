@@ -2,16 +2,18 @@
 // unless `mirror: false`).
 //
 // BLOCKOUT: only what the blockout needs to read as this place before the art pass —
-//   caldera_lava         the placeholder lava surface over the whole region at this build's level (lava.js LAVA_Y);
-//                        the lava engine's LavaLook replaces it (delete with BLOCKOUT_LAVA)
+//   caldera_lava         the blockout's placeholder lava surface (only with BLOCKOUT_LAVA: the lava engine's LavaLook
+//                        draws the real one — src/fx/lavaFx.js)
+//   caldera_highmark     the works' painted HIGH MARK stripes (causeway faces, quay walls)
 //   caldera_rails        every railing's look (the layout's rail colliders are invisible by design)
 //   caldera_surge_gauge  the landmark's silhouette: lattice, gauge boards and needle, clock house, bell cage, pyramid
 //   caldera_hall_roof    the Casting Hall's north-light sawtooth roof, chimneys and round furnace window
 //   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
 // No colliders here: every collider is a layout piece (layout.js).
 import { RAILS, GANTRY_RAILS, WALL_BOXES, OFFICE } from './layout.js';
-import { REGION_ALL, inPoly, HALL_LINE, PAD } from './geo.js';
-import { LAVA_Y, BLOCKOUT_LAVA } from './lava.js';
+import { REGION_ALL, inPoly, HALL_LINE, PAD, CW, CAUSE_Z, RSF } from './geo.js';
+import { LAVA_Y, BLOCKOUT_LAVA, LAVA } from './lava.js';
+const HIGH_MARK = LAVA.high, D_ = Math.PI / 180;
 
 export function register(D, H) {
   const { THREE, PI, HP } = H;
@@ -127,7 +129,8 @@ export function register(D, H) {
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) strut(B, [sx * 1.4, 18.5, sz * 1.4], [sx * 1.4, 20.5, sz * 1.4], 0.2);
       B.lathe('metal', '#8a6a3a', [[0, 0.95], [0.18, 0.95], [0.35, 0.8], [0.45, 0.3], [0.62, 0.0], [0.8, -0.12], [0, -0.12]], 0, 19.0, 0, { seg: 18 });
       for (const sx of [-1, 1]) { B.push(sx * 1.0, 20.2, 0, sx > 0 ? HP : -HP); B.cyl('metal', K.iron, 0.28, 0.9, 0, 0, 0.4, { r2: 0.08, rx: HP, seg: 12 }); B.pop(); }
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) B.sph(NS('glow'), K.red, 0.16, sx * 1.4, 20.65, sz * 1.4, { ws: 8, hs: 6, glow: 1.6 });
+      // (the four beacons at the cage's corners (±1.4, 20.65, ±1.4) are the lava engine's: src/fx/lavaFx.js lights them)
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) B.cyl(NS('metal'), K.iron, 0.2, 0.12, sx * 1.4, 20.5, sz * 1.4, { seg: 8 });
       // the cap (20.5 → 22): verdigris pyramid, the weathervane (a ladle pouring a flame)
       B.box('paint', K.green, 3.0, 0.2, 3.0, 0, 20.6, 0, { r: 0.04 });
       B.lathe('paint', K.verd, [[0, 1.6], [0.02, 1.6], [1.75, 0.0], [0, 0.0]], 0, 20.7, 0, { seg: 4, ry: PI / 4 });
@@ -141,8 +144,32 @@ export function register(D, H) {
         B.box(NS('paint'), K.ash, 2.3, 0.7, 0.07, 0, 3.0, 0.13, { r: 0.01 });
         for (let i = 0; i < 6; i++) B.box(NS('paint'), K.iron, 0.9, 0.06, 0.07, -0.55, -3.0 + i * 1.2, 0.14, { r: 0.01 });
         B.box(NS('metal'), K.iron, 0.12, 6.4, 0.08, 0.35, 0, 0.15);
-        B.box('metal', K.red, 1.4, 0.3, 0.16, 0.35, -2.8, 0.22, { r: 0.05 });   // the float needle (at EBB)
+        // (the float needle is the lava engine's: it climbs the board as the lake rises — src/fx/lavaFx.js)
         B.pop();
+      }
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ the works' HIGH MARK lines
+  // DESIGN §5.4 mural 5: the works paint their own white stripe at the high mark on what they own — the causeway's lake
+  // faces, the quay walls of the Lakefront, the island's quay either side of the causeway's root — just over the
+  // shader's rind (0.81–0.89), broken every 2.4 m where the stencilled words go (the art pass letters them)
+  D.caldera_highmark = {
+    build(B) {
+      const y = HIGH_MARK + 0.05, h = 0.08, col = '#f4f1ea';
+      const dash = (ax, az, bx, bz, nx, nz) => {
+        const L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.round(L / 2.4)), ry = Math.atan2(bx - ax, bz - az);
+        for (let i = 0; i < n; i++) {
+          const t0 = (i + 0.08) / n, t1 = (i + 0.92) / n, cx = ax + (bx - ax) * (t0 + t1) / 2 + nx * 0.03, cz = az + (bz - az) * (t0 + t1) / 2 + nz * 0.03;
+          B.push(cx, y, cz, ry); B.box('paint', col, 0.04, h, L * (t1 - t0), 0, 0, 0); B.pop();
+        }
+      };
+      // the causeway's two lake faces (x ±5, the island's root to the Lakefront)
+      for (const s of [-1, 1]) dash(s * CW, CAUSE_Z + 0.6, s * CW, -11.8, s, 0);
+      // the Lakefront's quay wall either side of the causeway's foot (r 23), and the island's root faces
+      for (const [a0, a1] of [[-110, -98], [-82, -64]]) for (let a = a0; a < a1; a += 3) {
+        const r0 = RSF(a), r1 = RSF(a + 3), p = [r0 * Math.cos(a * D_), r0 * Math.sin(a * D_)], q = [r1 * Math.cos((a + 3) * D_), r1 * Math.sin((a + 3) * D_)];
+        dash(p[0], p[1], q[0], q[1], -Math.cos((a + 1.5) * D_), -Math.sin((a + 1.5) * D_));
       }
     },
   };
@@ -205,6 +232,7 @@ export const PLACEMENTS = [
   { type: 'caldera_walls', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
+  { type: 'caldera_highmark', pos: [0, 0, 0] },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
   { type: 'caldera_cupola_hood', pos: [-3.2, 0, -64.3] },
   { type: 'caldera_office_roof', pos: [(OFFICE.x0 + OFFICE.x1) / 2, 0, (OFFICE.z0 + OFFICE.z1) / 2] },

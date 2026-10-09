@@ -96,6 +96,35 @@ for (const f of FLOORS) {
     : { kind: 'ledge', w: f.w || 1.0 }));
   GROUNDS[f.id] = fill(f.poly, { y0: f.y0, top: f.top, mk: f.mk, ledgeMk: () => coping({ color: f.drown ? '#4f4a47' : K.basaltDk }), edge: kinds });
 }
+// (lava engine: ENGINE rule 6 — no flat top in the region within 0.3 m of LOW or HIGH. A gutter coping sunk 0.2 / 0.3 m
+// below a 1.2 floor where it meets a drowning ledge would stand 0.2 / 0.1 m over the HIGH surface: pale, above the rind,
+// and the 0.9 one deadly at HIGH (feet under L + 0.15). Each sinks 0.1 instead (1.10, a 1.1 m hop from the ledge), or
+// where it overlaps another such coping stands proud 0.2 / 0.3 (1.40 / 1.50, a kerb on the 1.2 floor; the hop there is a
+// kid's, the bots use the next coping))
+{
+  const inR = (x, z) => G.REGION_ALL.some((Pl) => inPoly(Pl, x, z)), HI = LAVA.high;
+  const fixed = [];
+  const fp = (d) => { const a = (d.rotY * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), hx = d.size[0] / 2, hz = d.size[2] / 2;
+    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, k]) => [d.center[0] + c * hx * i + s * hz * k, d.center[2] - s * hx * i + c * hz * k]); };
+  const near = (A, Bd) => { const a = fp(A), b = fp(Bd); const cx = (p) => p.reduce((s, q) => s + q[0], 0) / 4, cz = (p) => p.reduce((s, q) => s + q[1], 0) / 4;
+    return Math.hypot(cx(a) - cx(b), cz(a) - cz(b)) < (Math.max(A.size[0], A.size[2]) + Math.max(Bd.size[0], Bd.size[2])) / 2 + 0.05; };
+  for (const f of FLOORS) {
+    if (f.top < HI + 0.3 || !GROUNDS[f.id]) continue;
+    for (const d of GROUNDS[f.id].ledges) {
+      if (d.kind !== 'obox') continue;
+      const top = d.center[1] + d.size[1] / 2, y0 = d.center[1] - d.size[1] / 2;
+      if (top >= f.top || Math.abs(top - HI) >= 0.3) continue;
+      if (![d.center, ...fp(d).map(([x, z]) => [x, 0, z])].some((p) => inR(p[0], p[2]))) continue;
+      // (the first of 1.10 / 1.40 / 1.50 no overlapping coping — nor the Bazookarp gantry at 1.3 — shares within 8 cm)
+      const tops = [];
+      for (const g of FLOORS) for (const o of GROUNDS[g.id]?.ledges || []) if (o !== d && o.kind === 'obox' && near(o, d)) tops.push(o.center[1] + o.size[1] / 2);
+      if (d.center[0] > 5 && d.center[0] < 12 && d.center[2] > -23 && d.center[2] < -8) tops.push(1.3);
+      const t2 = [f.top - 0.1, f.top + 0.2, f.top + 0.3].find((t) => tops.every((u) => Math.abs(u - t) >= 0.08)) ?? f.top - 0.1;
+      d.center[1] = G.r3((y0 + t2) / 2); d.size[1] = G.r3(t2 - y0);
+      fixed.push({ d, top: t2 });
+    }
+  }
+}
 // a lower floor's tucked columns are cut round the higher floors' columns they meet (both halves)
 for (const f of FLOORS) {
   const blockers = [];
@@ -298,7 +327,11 @@ add(stairOn(G.ST_EAST, 2.7, 1.2, 2.4, 2.2, steps({ tag: 'east-steps' })));
 { const ur = [Math.cos(G.TW * G.D), Math.sin(G.TW * G.D)];   // along the Rim Head's face (outward); v into the terrace
   add(frameBox([0, 0], ur, [38.6, 42.5], [0, 1.7], 2.4, 5.4, { color: K.wood, pattern: PATTERN.planks, roof: true, tag: 'pattern-shop' }),
     frameBox([0, 0], ur, [40.4, 42.5], [1.7, 2.6], 2.4, 4.6, { color: '#8a6e50', pattern: PATTERN.planks, roof: true, tag: 'pattern-shop-porch' }),
-    frameBox([0, 0], ur, [45.5, 46.2], [0, 1.9], 2.4, 3.7, cover(K.sand, { tag: 'sand-bin' }))); }
+    frameBox([0, 0], ur, [45.5, 46.2], [0, 4.11], 2.4, 3.7, cover(K.sand, { tag: 'sand-bin' })),
+    // (the lava phase's fix for the last review's bot snag at the Crest Stair's foot: the bin runs on along the stair's
+    // side to its foot, closing the triangle between the stair, the bin and the yard face — bots no longer try the
+    // stair → yard hop across it — and a sand box squares off the wedge in front of the foot's yard-face corner)
+    frameBox([0, 0], ur, [45.0, 46.2], [4.11, 5.4], 2.4, 3.7, cover(K.sand, { tag: 'sand-bin' }))); }
 add(B(-14.3, -11.05, 2.4, 3.0, -39.05, -36.95, { color: K.sand, pattern: PATTERN.rubber, tag: 'casting-bed' }));
 add(B(-14.15, -12.95, 2.4, 4.0, -37.95, -37.05, cover('#6b5f55', { tag: 'flask-stack' })), B(-12.3, -11.3, 3.0, 3.9, -38.8, -37.6, cover(K.wood, { tag: 'pattern-crates' })));
 { const c = G.ST_CUPOLA, u = unit(c.pts[0], c.pts[1]), e = [c.mid[0] + u[0] * 1.2, c.mid[1] + u[1] * 1.2];   // the stair's top east corner
