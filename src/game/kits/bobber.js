@@ -568,7 +568,7 @@ export function trigger(it, by, how = 'shot') {
   const k = `${how === 'blast' && _chainBlast ? 'chain' : how}:${by?.specialActive ? 'sp-' + (by.specialActive.kind || by.specialActive.id || '?') : by?.weapon?.kind || '-'}${by?.bot?._bob ? '(aimed)' : ''}`;
   BOBBER_STATS.via[k] = (BOBBER_STATS.via[k] || 0) + 1;
   g.src = it.chain?.items?.[0]?.src || it.src || '-'; srcStat(g.src).trig++;
-  if (by?.bot && !by.bot._bob && !_chainBlast && BOBBER_STATS.strays.length < 60) strayNote(it, by, k);
+  if (by?.bot && !by.bot._bob && !_chainBlast && BOBBER_STATS.strays.length < 60) { try { strayNote(it, by, k); } catch (e) { /* a counter: never the chain */ } }
   schedule(g);
   return g;
 }
@@ -580,7 +580,7 @@ function strayNote(it, by, via) {
   let ang = Math.atan2(dx, dz) - b.aimYaw; while (ang > Math.PI) ang -= 2 * Math.PI; while (ang < -Math.PI) ang += 2 * Math.PI;
   BOBBER_STATS.strays.push({ via, w: by.weapon?.kind, mode: b.mode, d: r2(d), dy: r2(it.spot.y - by.pos.y), ang: r2(ang), pitch: r2(b.aimPitch),
     hf: b._bobHF ? (b._bobHF.o ? 1 : 0) : -1, hfAge: b._bobHF ? r2(G.time - b._bobHF.t) : -1, age: r2(G.time - it.born), n: it.chain?.n || 1,
-    own: by === it.owner ? 1 : 0, gr: by.grounded ? 1 : 0, sp: by.specialActive ? (by.specialActive.kind || '?') : '', tgt: b.target ? r2(Math.hypot(b.target.pos.x - by.pos.x, b.target.pos.z - by.pos.z)) : -1 });
+    own: by === it.owner ? 1 : 0, gr: by.grounded ? 1 : 0, sp: by.specialActive ? (by.specialActive.kind || '?') : '', tgt: b.target?.pos ? r2(Math.hypot(b.target.pos.x - by.pos.x, b.target.pos.z - by.pos.z)) : -1 });   // (a boss bot's target is the boss: no pos)
 }
 function makeGroup(id, owner, n, by, levels, t0, ghost) {
   return { id, owner, team: owner.team, by, levels, t0, ghost, ...sizeOf(n), n, taken: new Map(), lvl: 0, boss: null, shell: null, caught: new Set(), hit: 0, sparks: [], done: false, endT: 0, local: !!owner.isLocal };
