@@ -4,9 +4,9 @@
 //   gauge     splatted mid-special, the gauge restarts from PLAYER.specialKeepOnSplat (½) of what was LEFT of it (its
 //             gauge as the HUD shows it: G.specials.remaining) — several shares (a Crab Rig 0.8 / 0.5 / 0.2, a Twister
 //             Zooka, a held Cheer Orb 1.0, a Bubble Blower with one bubble blown, a Howl Box falling into the sea) — not
-//             ½ of a full gauge (the old rule; each check shows what it would have given); what carries on without
-//             you keeps nothing (an orphaned Drainbow, a Tempest already thrown: 0); it's still there after the
-//             respawn. No special running: ½ of what you had (0.6 → 0.3, full → 0.5, 0.25 → 0.125), as before.
+//             ½ of a full gauge (the old rule; each check shows what it would have given); a Drainbow keeps ½ of what
+//             its gauge showed too while its bubble stands on ([b5-int2] the lead's decision; was 0); a Tempest
+//             already thrown keeps nothing (it carries on without you: 0); it's still there after the respawn. No special running: ½ of what you had (0.6 → 0.3, full → 0.5, 0.25 → 0.125), as before.
 //   survive   the owner splatted, each carries on and finishes as it would have: the Whirl Boomerang (no fizzle: home
 //             to where they went down — not to their respawn — circles it, bursts there, hurting a foe), the Ink
 //             Tempest (its cloud rains its whole life, inks, hurts), Surf N' Turf (all its rings go out, still hitting;
@@ -121,11 +121,17 @@
       okShare(zk, 0.6) && Math.abs(bo.share - 1) < 1e-6 && Math.abs(bo.k - 0.5) < 0.002, rows.slice(3, 5));
     R('gauge: a Bubble Blower with one bubble blown of three: ½ × (2/3 × the time left) — the bubble being blown counts as blown (it floats on: let go at the splat)',
       bl.share > 0.5 && bl.share < 0.67 && Math.abs(bl.k - 0.5 * bl.share) < 0.002 && Math.abs(bl.hud - bl.share) < 0.002, rows[5]);
-    // what carries on without you: nothing cut short
+    // [b5-int2] a Drainbow: its bubble stands on after the splat, and the gauge still keeps ½ of what it showed, like
+    // every other special (the lead's decision, 2026-10-09: the user's "half back of how much you currently have";
+    // b5-sprules kept 0 here)
     const db = mid('drainbow', 2.0);
+    const dbUp = (G.drainbow?.bubbles || []).some((b) => b.live && b.orphan);
+    R('gauge: a Drainbow splatted mid-special keeps ½ of what its gauge showed (' + r2(db.hud) + ' → ' + r2(db.k) + '), like every other special, while its bubble stands on by itself',
+      okShare(db, db.hud) && db.hud > 0.6 && db.k > 0.3 && dbUp, { ...rows[6], bubbleStandsOn: dbUp });
+    // what carries on without you from the start: nothing cut short
     const st = mid('storm', 0.1, null, 'storm (thrown)');
-    R('gauge: what carries on after the splat keeps nothing back — a Drainbow (its bubble stands on: its HUD gauge showed ' + r2(db.hud) + ') and an Ink Tempest already thrown → 0',
-      db.share === 0 && db.k === 0 && db.hud > 0.6 && st.share === 0 && st.k === 0, rows.slice(6, 8));
+    R('gauge: an Ink Tempest already thrown (it carries on without you) keeps nothing back → 0',
+      st.share === 0 && st.k === 0, rows[7]);
     // into the sea mid-special (a body special: the Ink Jet — specials.js body(): the special ends, then the splat)
     reset(); place(me, 0, -10); aim(me, 0);
     start(me, 'jetpack'); step(2.0);

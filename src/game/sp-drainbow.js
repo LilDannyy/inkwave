@@ -23,8 +23,9 @@
 //              ink as usual. It pops when its time runs out or you change loadout. [b5-sprules] Splatted, you leave it
 //              standing (popOnOwnerSplat false — the user: "make the following survive after the user is splatted"):
 //              it runs out its life on its own clock (every screen: the end record [1, 'splat'] orphans the ghosts
-//              too), your share stops growing it, and back from the respawn you're any teammate in it (your meter fills,
-//              starting from nothing: none of it was cut short — splatShare 0).
+//              too), your share stops growing it, and back from the respawn you're any teammate in it (your meter fills).
+//              [b5-int2] Your gauge keeps half of what it showed at the splat, like every other special (the user: "half
+//              back of how much you currently have"; the lead, 2026-10-09: the bubble standing on doesn't change that).
 //   your view  inside an enemy's: the clear-ink wave's look sweeps the colour out of your view from where you crossed,
 //              everything goes grey and your hearing is muffled (master low-pass + dip); out again, the wave sweeps the
 //              colour back (drainbowFx.js DrainView). Under the same front both teams' ink turns one shade (the user: "make
@@ -397,9 +398,10 @@ registerSpecial('drainbow', {
     if (reason === 'splat' && !D().popOnOwnerSplat) { b.orphan = true; return; }   // (runs out on its own clock)
     b.pop(reason);
   },
-  // [b5-sprules] a splat cuts nothing short while the bubble stands on by itself (it keeps the rest of its life): the
-  // meter keeps no share of it (specials.js splatShare); with popOnOwnerSplat it pops, and half of what was left comes back
-  splatShare(a, s) { return D().popOnOwnerSplat ? G.specials.remaining(a) : 0; },
+  // [b5-int2] a splat keeps half of what the gauge showed (specials.js splatShare → actor.splat's specialKeepOnSplat), as
+  // for every other special, though the bubble stands on by itself for the rest of its life (b5-sprules had 0 here: "it
+  // survives, so nothing comes back"; the lead's decision for the user's "half back of how much you currently have")
+  splatShare(a, s) { return G.specials.remaining(a); },
   prompt(a, s) {
     const left = Math.max(0, Math.ceil((s.dur || 0) - s.t)), b = s.bubble;
     if (b && b.boostT > 0) return `Drainbow ${left}s — draining them keeps it up!`;
