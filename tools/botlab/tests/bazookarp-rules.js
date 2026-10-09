@@ -645,6 +645,19 @@
     const kB = layoutFor(HY, 'bazookarp'), kT = layoutFor(HY, 'turf'), kZ = layoutFor(HY, 'zones');
     const s52 = { variant: hasVariant(HY, null, 'bazookarp'), turf: hasVariant(HY, null, 'turf'), kitB: tags(kB).filter((t) => t.startsWith('karp-')).length, kitT: tags(kT).filter((t) => t.startsWith('karp-')).length,
       kitZ: tags(kZ).filter((t) => t.startsWith('karp-')).length, raw: tags(HY).filter((t) => t.startsWith('karp-')).length, wheelB: tags(kB).includes('ferry-wheelhouse'), wheelT: tags(kT).includes('ferry-wheelhouse') };
+    // S32 (the engine's part): one or two weirs a side between the Pond and the Gate, each with its count read off the
+    // field, Bravo's the mirror at the same count; two weirs stand apart (different routes). (The 40–55 % band, the
+    // ±2 between two weirs and the two workable routes are placement rules: the checker's, WP4a — karpbox is a test
+    // field, not a stage layout: its weirs sit at counts 41 and 48.)
+    const wInfo = (E) => E.weirs.map((l) => l.map((w) => ({ c: w.count, d: Math.hypot(w.pos.x, w.pos.z), g: w.pos.distanceTo(E.gates[w.team].pos) })));
+    fresh(); const one1 = wInfo(Kp), L1 = Kp.L.slice();
+    fresh(KARPBOX_TWO); const two = wInfo(Kp), apart = Kp.weirs[0].length === 2 ? Kp.weirs[0][0].pos.distanceTo(Kp.weirs[0][1].pos) : 0;
+    const between = (l, E) => l.every((w) => w.c > 0 && w.c < 100 && w.d > 3 && w.g > 3);
+    const s32 = { one: one1, two, apart, L: L1 };
+    R('L9 S32: 1 or 2 weirs a side between the Pond and the Gate (counts from the field, the two sides\' the same); two weirs stand apart',
+      one1[0].length === 1 && one1[1].length === 1 && Math.abs(one1[0][0].c - one1[1][0].c) <= 1 && between(one1[0]) && between(one1[1])
+        && two[0].length === 2 && two[1].length === 2 && two[0].every((w, i) => Math.abs(w.c - two[1][i].c) <= 1) && apart > 6, s32);
+    fresh();
     R('L8 S52: the mode builds its own stage variant (kit pieces, Halyard\'s wheelhouse gone) and no other mode\'s build changes', s52.variant && !s52.turf && s52.kitB >= 5 && s52.kitT === 0 && s52.kitZ === 0 && s52.raw === 0 && !s52.wheelB && s52.wheelT, s52);
   }
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }
