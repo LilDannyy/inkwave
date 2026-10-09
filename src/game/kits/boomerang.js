@@ -275,7 +275,7 @@ function out(it, dt) {
     toHover(it);
   }
 }
-function toHover(it) {
+function toHover(it) {   // [b5-karp] (the hover's start, shared by a wall's stop and the Roe Shell's)
   it.state = 'hover'; it.t = 0; it.tickT = 0; it.paintT = 0;
   setLoop(it, 'boomerang_whirr', 0.75, 1.35);
 }

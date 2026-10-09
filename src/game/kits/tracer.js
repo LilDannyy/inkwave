@@ -275,7 +275,7 @@ function advance(b, dist) {
   while (remain > 1e-5 && b.state === 'fly' && guard++ < 24) {
     const step = Math.min(remain, b.left);
     const w = G.physics.raycast(b.pos, b.dir, step, _hit, true);   // grates: straight through
-    let seg = w.hit ? w.dist : step;
+    let seg = w.hit ? w.dist : step;   // [b5-karp] (let: the Roe Shell may cut it below)
     _end.copy(b.pos).addScaledVector(b.dir, seg);
     // [b5-karp] the Roe Shell stops it (before a wall or a foe behind it): this stretch ends on its surface
     const kh = G.objTargets ? G.objTargets.segHit(b.pos, _end, s.size) : null, kt = kh && kh.target;
