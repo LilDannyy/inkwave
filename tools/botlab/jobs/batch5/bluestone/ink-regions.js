@@ -21,6 +21,8 @@
     if (y > 4.5 && r < 16) return 'halo';
     if (LY.YARD && y > 0.5 && G.inPoly(LY.YARD, x, z)) return 'garden';
     if (inTS(x, z) && y > 0.02) return 'garden';
+    // (round B fix 1: the garden's two ramps count with the garden, their low ends too)
+    if (LY.GARDEN_RAMPS && y > 0.02 && LY.GARDEN_RAMPS.some((q) => x > q.x0 && x < q.x1 && z > q.z0 && z < q.z1)) return 'garden';
     if (G.inPoly(LY.ALLEY.floor || LY.ALLEY.quad, x, z)) return 'alley';
     if (!G.inPoly(LY.OUTLINE, x, z) && (x > 20 || z > -8)) return 'river-works';
     if (r <= 20) return 'circus';
