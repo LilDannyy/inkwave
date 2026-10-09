@@ -334,6 +334,7 @@ function use(subs, a, sub) {
   if (a.bot) a.bot._sentryAim = null;
   const it = spawn(a, sub, p, yaw, false, netId(a), S.block);
   netRec(a, KIND, [0, it.gid, r2(p.x), r2(p.y), r2(p.z), r2(n.x), r2(n.y), r2(n.z), r2(yaw)]);
+  SENTRY_STATS.uses++;
   G.cues?.sub(KIND, 'throw', { owner: a, at: p, range: 30 });   // sfx-cues: the tin clatter (cues.js SUB_CUE.sentry)
   emit('sub:use', { actor: a, kind: KIND, pos: p.clone() });
 }
@@ -661,7 +662,7 @@ function end(it, why, by) {
   const s0 = it.sub;
   it.state = 'dead'; it.why = why; it.rb.state = 'dead';
   if (!it.ghost && CODE[why] !== undefined) netRec(it.owner, KIND, [2, it.gid, CODE[why]]);
-  SENTRY_STATS.ends[why] = (SENTRY_STATS.ends[why] || 0) + 1;
+  if (!it.ghost) { SENTRY_STATS.ends[why] = (SENTRY_STATS.ends[why] || 0) + 1; if (why === 'time') { SENTRY_STATS.timeOuts++; SENTRY_STATS.hpAtTime += Math.max(0, it.hp); } }
   // (c: the look's middle, drawn size; ce: the events', gameplay size — [sub-view] the same at any view scale)
   const c = _v.copy(it.pos).setY(it.pos.y + 0.35 * it.vs).clone(), ce = it.pos.clone().setY(it.pos.y + s0.hitH * 0.5), col = G.teamColors[it.team];
   if (why === 'shot') {
@@ -980,7 +981,9 @@ const BOT = {
 // a bot hit by its rounds notices that sentry at once (its spot becomes threat memory; it doesn't reveal the owner:
 // botSight treats sub ids as "not a weapon")
 on('hit', (e) => {
-  if (e.weaponId !== KIND || !e.victim?.bot || !e.attacker) return;
+  if (e.weaponId !== KIND) return;
+  SENTRY_STATS.hits++; SENTRY_STATS.dmg += e.damage || 0; if (e.killed) SENTRY_STATS.splats++;
+  if (!e.victim?.bot || !e.attacker) return;
   const it = items.find((x) => x.owner === e.attacker && live(x));
   const b = e.victim.bot;
   if (!it || !b._thrMem) return;
@@ -988,7 +991,13 @@ on('hit', (e) => {
   b.thrCand = it.thr; b.thrScanT = Math.min(b.thrScanT ?? 0, 0.05);
 });
 // its owner splatted: it folds at once (like the Twirl Sprinkler); the owner's screen decides (a ghost waits for [2])
-on('splatted', ({ victim }) => { for (const it of items) if (it.owner === victim && !it.ghost && live(it)) end(it, 'owner', null); });
+on('splatted', ({ victim }) => {
+  for (const it of items) {
+    if (!live(it) || it.ghost) continue;
+    if (it.owner === victim) end(it, 'owner', null);
+    else if (victim && victim.team !== it.team && victim.pos.distanceTo(it.pos) < it.sub.range) SENTRY_STATS.deathsNear++;   // (a foe down within its reach)
+  }
+});
 // bluestone's era flips (its payload: block ids): a sentry whose floor went, or whose body a new block fills, ends
 on('era:flip', (e) => {
   const offs = new Set(e?.off || []), ons = (e?.on || []).map((id) => G.level.blocks[id]).filter(Boolean);
@@ -1030,8 +1039,11 @@ function drawMap(c, mm, tc, s, hex, viewer) {
 const _bar = { x: 0, y: 0 };
 
 // ================================================================================================= registration
-export const SENTRY_STATS = { shots: 0, botUses: 0, noticed: 0, ends: {} };
-export function resetSentryStats() { SENTRY_STATS.shots = 0; SENTRY_STATS.botUses = 0; SENTRY_STATS.noticed = 0; SENTRY_STATS.ends = {}; }
+// counters (tests, tools/botlab/match.cjs's SENTRY line; this screen's own sentries): uses, rounds, their hits / damage /
+// splats, how they ended, seconds standing and locked, hp left at a time-out, foes splatted within its reach while it
+// stood, bots' uses and the foes it made notice it by a hit
+export const SENTRY_STATS = { uses: 0, botUses: 0, shots: 0, hits: 0, dmg: 0, splats: 0, ends: {}, aliveS: 0, lockedS: 0, hpAtTime: 0, timeOuts: 0, deathsNear: 0, noticed: 0 };
+export function resetSentryStats() { for (const k in SENTRY_STATS) SENTRY_STATS[k] = typeof SENTRY_STATS[k] === 'object' ? {} : 0; }
 SUB_KITS[KIND] = {
   noArc: true,                    // (SUBS.sentry.placed hides the bomb arc too: the kit draws its own guide)
   blocked: (a, sub) => !findSpot(a, sub).ok,
@@ -1048,6 +1060,7 @@ SUB_KITS[KIND] = {
       }
       if (live(it)) {
         it.t += dt; it.age += dt;
+        if (!it.ghost) { SENTRY_STATS.aliveS += dt; if (it.locked && it.target) SENTRY_STATS.lockedS += dt; }
         if (it.state === 'unfold' && it.t >= 0.06 && !it.unfoldSnd) { it.unfoldSnd = true; G.cues?.sub(KIND, 'land', { owner: it.owner, team: it.team, at: it.pos }); }
         ghostMute(it, () => step(it, dt));
       }

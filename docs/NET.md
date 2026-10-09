@@ -267,6 +267,38 @@ it lands). A mine is tripped by its owner's screen wherever the block has taken 
 as before). Old clients ignore `[4, …]` (no sub kind at `d[2]`). Tested by `tools/botlab/tests/net-deploy.cjs`
 (`CLIENTS=2`; `NET_ARGS='scene=tower'`: the deck, the crush, the mine on the deck) and `tests/deployables.js`.
 
+**The Scrap Sentry** (batch 5, `[b5-subs]`; src/game/kits/sentry.js, kit kind `sentry`). **Its owner simulates it**: the
+spot rules, its eyes (the bots' sight rules: botSight's shared ray budget, against the positions the owner's screen
+shows), the lock and the bursts all run on the owner's screen only (the host for its bots); its rounds are the owner's
+ordinary projectiles (`recProj`: every other screen flies them as ghosts that never paint or hurt), so **a hit on a
+player is judged on the owner's screen and applied by the victim's owner** (`{k:'hit'}`, weaponId `'sentry'`), its ink
+replicates as the owner's splats. The records (`['k', nid, 'sentry', …]`): `[0, gid, x, y, z, nx, ny, nz, yaw]` set down
+(the ghost unfolds there, riding the block under it if that moves); `[4, gid, x, y, z (, tag, lx, ly, lz, nx, ny, nz)]`
+wave 1's word on where it sits on a moving block or back on still ground (the ghost hands it to `G.deploy.netOn`, so it
+rides its own screen's copy of the tower / railcar / pod at the owner's spot); `[3, gid, nid | -1]` locked onto / lost
+(the ghost turns its head to that player as its screen shows them and plays the tell: the white lamp, "bip-bip", the
+aim line); `[6, gid, yaw, pitch]` a burst starts (the ghost plays its three flashes and pfts, 0.11 s apart; the rounds
+arrive by themselves); `[5, gid, hp]` its hp after hits (the damaged look everywhere); `[2, gid, why]` gone — 0 timed
+out, 1 shot down, 2 crushed (the tower, a mover, the Bazookarp shell, an era flip, the lava), 3 folded (its owner
+splatted, replaced, carried within `spawnBarrier + 4` m of the enemy pad). A ghost never decides an ending (a fallback:
+`life + 3 s` with no record). **Hits on it**: a shot / beam / blast / roll on a ghost goes to its owner as
+`{k:'dh', kind:'sentry', id, d, a}` — `a` (new, `[b5-subs]`, every kit device: `registry.js netHurt(…, by)` →
+`sendDevHit(…, by)`) is the attacker's nid, so the owner's `'device:down'.by` names the guest who shot it down; old
+senders send no `a` (null). A ghost shot, ghost blast or ghost roll replayed on a screen (`netMuted()`) only flashes a
+real sentry there, never hurts it. The tower, movers, standing fire and `G.deploy.crushIn` act on each screen's own
+sentries only (the owner's `[2, gid, 2]` ends the ghosts). **A player who leaves takes it with them**: `netmatch.js
+onLeave` (before the leaver's squidkid is handed to the host) and `_remove` call every kit's `dropOwner(actor)`, so every
+screen ends that player's sentry ghosts at once, quietly (no `'device:down'`) — unlike wave 1's subs devices, which the
+host adopts. Tested by `tools/botlab/tests/net-sub-sentry.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`; `NET_ARGS='scene=tower'`:
+the deck ride, the ghost at the owner's spot of the deck).
+
+**The one destroyer** (`[b5-subs]`, subs SPEC §0.3). `G.deploy.crushIn(shape, how)` ends every device of this screen's own
+whose body is in the shape — `{ blocks, rider }` (the tower's call: the user's list — sprinkler, beacon, curtain, buoy,
+the kits' devices; a Lurk Mine or a floor Cling Charge is pushed aside instead), `{ sphere: { c, r } }` (the Bazookarp's
+re-forming shell), `{ where: (pos) => bool }`, `{ standingOn: [blocks] }`, `{ liquid: depth }` — with one
+`'device:down'` { how } each; each device's owner's own end record ends its ghosts (subs `[2, gid, 2]`, the buoy
+`[4, gid, 2]`, the sentry `[2, gid, 2]`). Ghosts are never touched: every screen runs it on its own devices.
+
 **What outlives its owner** (batch 5, `[b5-sprules]`). A remote splat (`NetMatch._remoteSplat`) emits `'splatted'` with
 `remote: true` on every other screen, after the owner's own records that went before it (a special's end `[1, 'splat']`
 is recorded inside `actor.splat()`, ahead of the forwarded event). The Whirl Boomerang's ghost no longer fizzles on it:

@@ -5,7 +5,9 @@
 //   WEAPONS / SUBS equip the 8 players (slot order = team 0 first): 'all=bow' · 'team0=blade;team1=shooter' ·
 //   'blade,blade,shooter,…' (per slot, blank = keep) · unset = the usual random loadouts.
 //   SPECIALS likewise for the specials ('all=surf', 'team0=drainbow;team1=storm', per slot) — Surf N' Turf runs add a SURF
-//   line, Drainbow runs the Drainbow's counters (special uses …).
+//   line, Drainbow runs the Drainbow's counters (special uses …). [b5-subs] A match with a Scrap Sentry used (SUBS='all=sentry')
+//   adds a SENTRY line (uses, rounds, hits, damage, splats, how they ended, time locked, hp left at a time-out, foes down
+//   within its reach).
 //   TRACK=<weapon> (+ TRACK_TEAM=0|1): a closer look at the players on that weapon (see trk below).
 //   TUNE='mitts.punchInterval=0.12,mitts.punchDamage=45': what-if tuning for this run only (WEAPONS / SUBS / SPECIALS values;
 //   an array as 'bow.burstPaint=1/1.2'; 'zones.control=0.8' for the Zone Control rules, config ZONES).
@@ -67,6 +69,7 @@ app.on('browser-window-created', (_, win) => {
     if (SPCHARGE !== 1) await js(`(async () => { const C = await import('./src/config.js'); C.PLAYER.specialChargeRate *= ${SPCHARGE}; return 0; })()`);
     // [b5-deploy] the device counters from this match on (the menus' backdrop match ran before it); DEV_AI=0: bots leave enemy devices alone (an A/B)
     await js(`(async () => { try { (await import('./src/game/deployables.js')).resetDeployStats(); const B = await import('./src/game/deployables-bots.js'); B.resetDevBot(); if (${JSON.stringify(process.env.DEV_AI || '')} === '0') B.DEV_AI.enabled = false; } catch (e) { /* an older checkout */ } return 0; })()`);
+    await js(`(async () => { try { (await import('./src/game/kits/sentry.js')).resetSentryStats(); } catch (e) { /* an older checkout */ } return 0; })()`);   // [b5-subs]
     await js(`(async () => { try { (await import('./src/game/sp-surf.js')).resetSurfStats(); (await import('./src/game/sp-surf-bots.js')).resetSurfBot(); const A = (await import('./src/game/assists.js')).ASSIST_STATS; for (const k in A) A[k] = 0; } catch (e) { /* an older checkout */ } return 0; })()`);
     const t0 = Date.now();
     const r = await js(`(async () => {
@@ -315,6 +318,8 @@ app.on('browser-window-created', (_, win) => {
           const T = [0, 1].map((t) => { const L = m.actors.filter((a) => a.team === t); return { assists: L.reduce((s, a) => s + (a.stats.assists || 0), 0), surfTurf: Math.round(L.reduce((s, a) => s + (a.stats.surfTurf || 0), 0)), turf: Math.round(L.reduce((s, a) => s + a.stats.turf, 0)) }; });
           return { stats: { ...S, turf: Math.round(S.turf) }, bots: { ...B }, assists: { ...A }, teams: T };
         } catch (e) { return null; } })(),
+        // [b5-subs] the Scrap Sentry (kits/sentry.js SENTRY_STATS; the bots' picks of it, deployables-bots.js)
+        sentry: await (async () => { try { const S = (await import('./src/game/kits/sentry.js')).SENTRY_STATS; return S.uses ? JSON.parse(JSON.stringify(S)) : null; } catch (e) { return null; } })(),
         // [b5-sprules] the Bomb Barrages' throws per bomb kind (sp-barrage.js; the Mystery's draws) and Bubble Guard shares
         // (sp-bubble.js: shares, chained = passed on by a copy, botSteps = bot-frames walking over to pass it on)
         barrage: await (async () => { try { const B = (await import('./src/game/sp-barrage.js')).BARRAGE_STATS, C = (await import('./src/game/sp-bubble.js')).CHAIN_STATS;
@@ -380,6 +385,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log('   special uses A ' + JSON.stringify(r.spUses[0]) + ' B ' + JSON.stringify(r.spUses[1]) + (r.drainbow && r.drainbow.placed ? ' | drainbow ' + JSON.stringify(r.drainbow) : ''));
     console.log('   special ends A ' + JSON.stringify(r.spEnds[0]) + ' B ' + JSON.stringify(r.spEnds[1]) + (r.zipcheer ? ' | zipcheer ' + JSON.stringify(r.zipcheer) : ''));   // [b5-zipcheer]
     if (r.surf) { const S = r.surf; console.log(`   SURF uses ${S.stats.uses} thrown ${S.stats.throws} anchored ${S.stats.lands} lost ${S.stats.lost} popped ${S.stats.popped} | rings ${S.stats.rings} hits ${S.stats.hits} (marks ${S.stats.marks}, ring splats ${S.stats.kills}) dodged ${S.stats.dodges} | ink ${S.stats.turf} m² in ${S.stats.splats} splats | turf from it A ${S.teams[0].surfTurf} of ${S.teams[0].turf} · B ${S.teams[1].surfTurf} of ${S.teams[1].turf} | assists A ${S.teams[0].assists} B ${S.teams[1].assists} ${JSON.stringify(S.assists)} | bots ${JSON.stringify(S.bots)}`); }
+    if (r.sentry) { const S = r.sentry, n = Math.max(1, S.uses); console.log(`   SENTRY uses ${S.uses} (bots ${S.botUses}) | rounds ${S.shots} hits ${S.hits} (${Math.round(100 * S.hits / Math.max(1, S.shots))}%) dmg ${Math.round(S.dmg)} (${Math.round(S.dmg / n)}/use) splats ${S.splats} (${(S.splats / n).toFixed(2)}/use) | ended ${JSON.stringify(S.ends)} (shot down ${Math.round(100 * (S.ends.shot || 0) / n)}%) | stood ${(S.aliveS / n).toFixed(1)} s/use, locked ${Math.round(100 * S.lockedS / Math.max(1e-6, S.aliveS))}% | hp left at a time-out ${S.timeOuts ? Math.round(S.hpAtTime / S.timeOuts) : '-'} | foes splatted within its reach ${S.deathsNear} | bots noticed by a hit ${S.noticed}`); }   // [b5-subs]
     { const T = r.teamKD; console.log(`   enemy specials AI ${spAI} | splatted by specials: A ${T[0].sp} ${JSON.stringify(T[0].by)} · B ${T[1].sp} ${JSON.stringify(T[1].by)} | K/D A ${T[0].k}/${T[0].d} B ${T[1].k}/${T[1].d}${r.spStats ? ' | ' + JSON.stringify(r.spStats) : ''}`); }
     { const s = r.sight; console.log(`   sight: fighting ${s.fightS} bot-s, trigger held ${s.fireS} s | foe out of sight ${s.hidPct}% of fight time, aim still on it ${s.trackPct}% of that | shooting at nothing ${s.blindPct}% of trigger time (${s.blindTrackPct}% straight at the hidden foe; ${s.blindBelievedPct}% while it still thinks it sees it, ${s.blindChargePct}% a charge held, ${s.blindShotPct}% shots) | bots ${r.botMsPerS} ms per sim s (looking ${r.seeMsPerS})${s.stats ? ' | ' + JSON.stringify(s.stats) : ''}`); }
     if (r.climbs) console.log('   wall climbs (at the wall): ' + JSON.stringify(r.climbs));
@@ -391,7 +397,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     // [b5-deploy] devices: shot at / down, crushed, riding moving floors; the bots' picks
     const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT, on: B.DEV_AI.enabled, n: window.__inkwave.match.actors.filter((a) => a.bot).length } }; } catch (e) { return null; } })()`);
     if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter thrown ${dep.seekerThrows} popped ${dep.seekerPops}`
-      + ` | bots (device AI ${dep.bot.on ? 'on' : 'off'}): device mode ${(dep.bot.secs / Math.max(1, dep.bot.n)).toFixed(1)} s/bot (walking ${(dep.bot.walkSecs / Math.max(1, dep.bot.n)).toFixed(1)}) | picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}) re-picks ${dep.bot.repicks} gave up ${dep.bot.gaveUp}`);
+      + ` | bots (device AI ${dep.bot.on ? 'on' : 'off'}): device mode ${(dep.bot.secs / Math.max(1, dep.bot.n)).toFixed(1)} s/bot (walking ${(dep.bot.walkSecs / Math.max(1, dep.bot.n)).toFixed(1)}) | picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}${dep.bot.sentry != null ? `, sentry ${dep.bot.sentry}` : ''}) re-picks ${dep.bot.repicks} gave up ${dep.bot.gaveUp}`);
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     r.map = MAP; r.mode = MODE; r.loadouts = equip; r.tune = tuned; r.consoleLines = uniq.length; r.specialAI = spAI; r.spCharge = SPCHARGE;

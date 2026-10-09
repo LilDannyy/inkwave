@@ -41,6 +41,15 @@
 // BOTS: with nothing better to shoot (no foe in sight or on their mind) they shoot enemy beacons, sprinklers and buoys
 // in sight (deployables-bots.js: walking up to one only when free to roam, never into a noticed danger); a Skitter Bomb
 // hunting them is a threat to shoot down (threats → bots.js _threatScan).
+//
+// [b5-subs] KIT DEVICES (batch 5's Scrap Sentry, Chain Bobber; subs SPEC §0.2): a kit lists each live device as a stable
+// descriptor (SUB_KITS[k].devices(out): { kind, kit: true, obj, team, owner, pos, aim, r, h, live, rides, floor, ghost,
+// prefer(brain), hurt(dmg, by), crush(how), flash(), teamFire? }) and a ride body (rideBodies(out): wave 1's own riding
+// fields + kill(why) / lost?()). Every rule here takes them: devices() lists them, struck() flashes them and fires the
+// marker, sweep / standing fire hurt the enemy's (team fire → teamFire), the tower and movers carry / lift / shove /
+// crush their ride bodies, _lost ends or re-floats them. THE ONE DESTROYER, crushIn(shape, how): blocks (the tower's
+// crush(T) — the user's list), sphere (the Bazookarp shell), where / standingOn / liquid (stages) — one 'device:down'
+// per ending, from whoever decides the ending (here, or the kit for its own: shot down, an era flip, a lava sweep).
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
