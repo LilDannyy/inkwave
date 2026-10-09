@@ -94,12 +94,18 @@ export class BazookarpFx {
       board.position.set(s.x, (s.y > -50 ? s.y : 0) + 1.7, s.z);
       root.add(post, board);
     }
-    // the arc preview
-    this.arc = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 40 }, () => new THREE.Vector3())), new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85 }));
+    // the arc preview: dots along the flight (a 1 px line in the aim's plane read edge-on from the chase camera, review
+    // round 1) and, where it lands, the blast's ring over a filled disc (WP2 draws the finished one)
+    this.arc = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 40 }, () => new THREE.Vector3())), new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5 }));
     this.arc.visible = false; this.arc.frustumCulled = false;
-    this.arcRing = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 40), basic('#ffffff', { opacity: 0.7, side: THREE.DoubleSide }));
+    this.arcDots = new THREE.InstancedMesh(new THREE.SphereGeometry(0.08, 8, 6), basic('#ffffff', { opacity: 0.95 }), 20);
+    this.arcDots.visible = false; this.arcDots.frustumCulled = false;
+    this.arcRing = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 40), basic('#ffffff', { opacity: 0.85, side: THREE.DoubleSide }));
     this.arcRing.rotation.x = -Math.PI / 2; this.arcRing.visible = false;
-    root.add(this.arc, this.arcRing);
+    this.arcDisc = new THREE.Mesh(new THREE.CircleGeometry(0.86, 40), basic('#ffffff', { opacity: 0.32, side: THREE.DoubleSide }));
+    this.arcDisc.rotation.x = -Math.PI / 2; this.arcDisc.visible = false;
+    root.add(this.arc, this.arcDots, this.arcRing, this.arcDisc);
+    this._m4 = new THREE.Matrix4();
     this.shotGeo = new THREE.SphereGeometry(0.22, 12, 8);
     this.ringGeo = new THREE.RingGeometry(0.9, 1, 40);
     this.scene.add(root);
@@ -170,12 +176,14 @@ export class BazookarpFx {
     // the local carrier's arc preview while charging
     const me = G.match?.local, g = me && me.carry?.gun;
     const show = !!(me && me === H && g && (g.charging || g.tap) && me.form !== 'squid');
-    this.arc.visible = this.arcRing.visible = show;
+    this.arc.visible = this.arcRing.visible = this.arcDots.visible = this.arcDisc.visible = show;
     if (show) {
       const L = launch(me, g.c), pos = this.arc.geometry.attributes.position, p = L.from.clone(), v = L.vel.clone();
-      let landed = null;
+      let landed = null, nd = 0;
       for (let i = 0; i < 40; i++) {
         pos.setXYZ(i, p.x, p.y, p.z);
+        // (a dot every other step, from the third on: the first ones sit on the carp's mouth)
+        if (!landed && i >= 2 && i % 2 === 0 && nd < 20) this.arcDots.setMatrixAt(nd++, this._m4.makeTranslation(p.x, p.y, p.z));
         if (!landed) {
           const n = p.clone().addScaledVector(v, 0.04);
           v.y -= K.gun.gravity * 0.04;
@@ -183,10 +191,11 @@ export class BazookarpFx {
         }
       }
       pos.needsUpdate = true;
-      const end = landed || p;
-      this.arcRing.position.set(end.x, end.y + 0.06, end.z);
-      this.arcRing.scale.setScalar(radiusOf(g.c));
-      this.arc.material.color.copy(G.teamColors[me.team]); this.arcRing.material.color.copy(G.teamColors[me.team]);
+      this.arcDots.count = nd; this.arcDots.instanceMatrix.needsUpdate = true;
+      const end = landed || p, R = radiusOf(g.c), col = G.teamColors[me.team];
+      this.arcRing.position.set(end.x, end.y + 0.06, end.z); this.arcRing.scale.setScalar(R);
+      this.arcDisc.position.set(end.x, end.y + 0.05, end.z); this.arcDisc.scale.setScalar(R);
+      for (const o of [this.arc, this.arcDots, this.arcRing, this.arcDisc]) o.material.color.copy(col);
     }
   }
 }

@@ -1,7 +1,8 @@
 // [b5-karp] Bazookarp pictures (WP1's placeholder look and HUD) through hud-shots.cjs, on karpbox:
 //   MAP=karpbox MODE=bazookarp PLAY=1 SCENES=tools/botlab/scenes/karp.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
 // shell-pond (the Roe Shell on the Pond, swelling Alpha's way) · carrier (an Alpha carrier with the marker and its fuse
-// seconds, charging a Carp Shot: the arc preview) · carrier-foe (the same carrier seen by Bravo: the marker over its head)
+// seconds, charging a Carp Shot: the arc preview) · carrier-arc (the same charge from the side: the arc's dots and the
+// landing disc) · carrier-foe (the same carrier seen by Bravo: the marker over its head)
 // · carp-blast (a Big Burst going off) · weir-plant (the moment it lands on the weir: the shell re-forming there, the
 // curtain gone) · gate (the risen Dragon Gate's light column, the carrier walking in) · score-bar (the count badges and
 // the status line: "WE CARRY · 37 s ×3", "DON'T RETREAT!")
@@ -41,12 +42,20 @@
     me.aimPitch = 0.12; me.intent.fire = true; step(0.9);   // (charging: the arc preview)
     Kp.fuse = 42.4; follow(); step(1 / 60);
   });
+  // the arc preview from the side (the chase camera sees it edge-on): dots along the flight, the ring over a disc
+  add('carrier-arc', () => {
+    me.aimPitch = 0.12; me.intent.fire = true; step(1 / 60);
+    cine(V(9.5, 3.4, 13.5), V(0, 2.0, 15), 60);
+  });
   add('carrier-foe', () => {
     me.intent.fire = false; step(0.3);
     put(B[0], 0.5, 19, Math.PI); step(0.05);
+    // (Bravo's screen: the HUD follows the local player — Bravo's kid stands in for it for this picture)
+    m.local = B[0]; if (g.hud.zcalls) [...g.hud.zcalls.children].forEach((el) => el.remove()); step(2 / 60);   // (Alpha's last banner is not Bravo's)
     cine(V(1.5, 2.3, 21.5), V(0, 1.5, 9.5), 60);
   });
   add('carp-blast', () => {
+    m.local = me;
     park(); G.paint.clear();
     put(me, 0, 4, 0); step(0.05);
     Kp.shell.clear(); Kp.pos.copy(me.pos); Kp._setPhase('free', 0); step(2 / 60);

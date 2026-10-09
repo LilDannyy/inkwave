@@ -12,7 +12,9 @@ import { h } from './ui-util.js';
 import { G, on } from '../core/ctx.js';
 import { SPECIAL_ICONS } from './ui-icons.js';
 
-export const KARP_GLYPH = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 16 Q11 7 21 10 Q26 12 28 16 Q26 20 21 22 Q11 25 4 16 Z" fill="currentColor" stroke="#15121c" stroke-width="2.2" stroke-linejoin="round"/><path d="M4 16 L1 11 M4 16 L1 21" stroke="#15121c" stroke-width="2.4" stroke-linecap="round"/><circle cx="22.5" cy="14.5" r="1.7" fill="#15121c"/><path d="M28 16 L31 16" stroke="#15121c" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+// the carp, side on, facing right: a big forked tail and a dorsal fin so it reads as a fish at 16–24 px (the first cut,
+// an almond with a dot, read as an eye); the eye and a barbel at the head
+export const KARP_GLYPH = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M10 16 L1.5 7.5 Q4.2 16 1.5 24.5 Z" fill="currentColor" stroke="#15121c" stroke-width="2" stroke-linejoin="round"/><path d="M12.5 10.8 Q16.5 3.8 22.5 8.6 Z" fill="currentColor" stroke="#15121c" stroke-width="2" stroke-linejoin="round"/><path d="M8 16 Q14 8.4 23 9.4 Q29.4 10.8 30.5 16 Q29.4 21.2 23 22.6 Q14 23.6 8 16 Z" fill="currentColor" stroke="#15121c" stroke-width="2.2" stroke-linejoin="round"/><path d="M21.6 11.6 Q19.6 16 21.6 20.4" fill="none" stroke="#15121c" stroke-width="1.6" stroke-linecap="round"/><circle cx="25.6" cy="14.2" r="1.7" fill="#15121c"/><path d="M29.6 17.6 Q30.8 20.2 28.6 21.8" fill="none" stroke="#15121c" stroke-width="1.4" stroke-linecap="round"/></svg>`;
 
 // the carp on a carrier's special gauge (S35: frame.specialId is 'karp' while carrying)
 SPECIAL_ICONS.karp = KARP_GLYPH;
@@ -55,7 +57,7 @@ export class KarpHud {
     this.bot = h('div', { class: 'iw-kbot' }, h('b'), h('span'));
     this.no = h('div', { class: 'iw-kno' });
     hud.el.append(this.mk, this.bot, this.no);
-    this.on = false; this._noT = 0; this.show = { status: '', marker: null, bottom: null, no: null };
+    this.on = false; this._noT = 0; this.show = { status: '', marker: null, bottom: null, no: null, call: null };
     this._unsubs = [
       on('sub:cantuse', ({ actor, kind }) => { if (kind === 'karp' && actor === G.match?.local) this._note("Can't use your kit while carrying"); }),
       on('karp:refuse', ({ actor, why }) => { if (actor === G.match?.local && why === 'special') this._note('Finish your special first'); }),
@@ -64,18 +66,25 @@ export class KarpHud {
       on('karp:drop', ({ team, how }) => { if (how !== 'moved' && team >= 0) this._call(team, 'WE LOST THE BAZOOKARP!', null, 'CARRIER DOWN!', null); }),
       on('karp:plant', ({ team }) => this._call(team, 'WEIR DOWN!', 'Their Dragon Gate is open!', 'THEY TOOK A WEIR!', 'Our Dragon Gate is open — defend it!')),
       on('karp:explode', ({ actor }) => actor && this._call(actor.team, 'IT BLEW UP ON US!', null, 'THEIR BAZOOKARP BLEW UP!', null)),
-      on('karp:reset', () => this.hud._zLive?.() && this.hud._zCall?.('BACK TO THE POND!', { small: true, icon: KARP_GLYPH })),
-      on('karp:overtime', ({ losing }) => { const me = G.match?.local?.team ?? 0; this.hud._zLive?.() && this.hud._zCall?.('OVERTIME!', { sub: me === losing ? 'Grab it within 10 s!' : 'Stop them — 10 s to hold!', icon: KARP_GLYPH }); }),
+      on('karp:reset', () => this.hud._zLive?.() && this._say('BACK TO THE POND!', { small: true, icon: KARP_GLYPH })),
+      on('karp:overtime', ({ losing }) => { const me = G.match?.local?.team ?? 0; this.hud._zLive?.() && this._say('OVERTIME!', { sub: me === losing ? 'Grab it within 10 s!' : 'Stop them — 10 s to hold!', icon: KARP_GLYPH }); }),
     ];
   }
   _note(t) { this.no.textContent = t; this.no.classList.add('is-on'); this._noT = 1.6; this.show.no = t; }
   // a call-out: ours (us) / theirs (them) by the event's team
   _call(team, us, usSub, them, themSub) {
-    const H = this.hud;
-    if (!H._zLive?.()) return;
+    if (!this.hud._zLive?.()) return;
     const me = G.match?.local?.team ?? 0, mine = team === me;
     if (!mine && !them) return;
-    H._zCall(mine ? us : them, { team, sub: mine ? usSub : themSub, kind: mine ? '' : 'bad', icon: KARP_GLYPH });
+    this._say(mine ? us : them, { team, sub: mine ? usSub : themSub, kind: mine ? '' : 'bad', icon: KARP_GLYPH });
+  }
+  // Bazookarp's events come in bursts (SHELL BURST! then YOU'VE GOT THE BAZOOKARP! 0.25 s later; a plant's WEIR DOWN!
+  // with the re-form): a call-out within 1.5 s of the last one replaces it instead of stacking under it
+  _say(text, opts) {
+    const H = this.hud, now = performance.now();
+    if (now - (this._sayT || -1e9) < 1500 && H.zcalls) for (const el of [...H.zcalls.children]) el.remove();
+    this._sayT = now; this.show.call = text;
+    H._zCall(text, opts);
   }
 
   update(dt, f) {
