@@ -27,14 +27,15 @@ import { TOWER, weaponRange } from '../../config.js';
 import { THREAT_STATS, zonePlan, towerPlan } from '../bots.js';
 import { sightRay, teamKnown } from '../botSight.js';
 import { MAIN_KITS } from './registry.js';
-import { items, sizeOf, SB, spotFor } from './bobber.js';
+import { items, sizeOf, SB, spotFor, predictFrom } from './bobber.js';
 
 const V3 = THREE.Vector3;
 const _v = new V3(), _v2 = new V3();
 const wander = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.27 + 1.3) * 0.4;
 const MELEE = { roller: true, brush: true };
-export const BOBBER_BOT = { setups: 0, grows: 0, lures: 0, scans: 0, engaged: 0, fired: 0, gaveUp: 0, deferred: 0, discs: 0, armed: 0, maxDiscs: 0 };
-export function resetBobberBot() { for (const k in BOBBER_BOT) BOBBER_BOT[k] = 0; THREAT_STATS.chainShots = 0; THREAT_STATS.chainWasted = 0; }
+export const BOBBER_BOT = { setups: 0, grows: 0, lures: 0, scans: 0, engaged: 0, fired: 0, gaveUp: 0, deferred: 0, discs: 0, armed: 0, maxDiscs: 0,
+  why: { calls: 0, ink: 0, hurt: 0, rolls: 0, spot: 0 } };   // (why: paint()'s answers — how often each condition said no)
+export function resetBobberBot() { for (const k in BOBBER_BOT) BOBBER_BOT[k] = k === 'why' ? { calls: 0, ink: 0, hurt: 0, rolls: 0, spot: 0 } : 0; THREAT_STATS.chainShots = 0; THREAT_STATS.chainWasted = 0; }
 THREAT_STATS.chainShots = THREAT_STATS.chainShots || 0; THREAT_STATS.chainWasted = THREAT_STATS.chainWasted || 0;
 
 // ---- prefer(brain): wave 1's pick multiplier for this bot (§0.2)
@@ -62,15 +63,16 @@ function segDist(x, z, ax, az, bx, bz) {
 const mine = (a) => items.filter((it) => it.owner === a && !it.ghost && it.state === 'live');
 const _spot = { x: 0, y: 0, z: 0, hover: 0, base: 0, block: -1, refused: false, kind: '' };
 // a spot to throw one at, on the floor at (x, z): ok to stand a bobber on? → { x, y, z } or null
+const NO = BOBBER_BOT.no = { floor: 0, reach: 0, refused: 0, track: 0, line: 0, lob: 0 };
 function okSpot(a, x, z, tower) {
   const gy = G.level.groundHeight(x, z, a.pos.y + 3);
-  if (gy === -Infinity || gy < a.pos.y - 3) return null;
+  if (gy === -Infinity || gy < a.pos.y - 3) { NO.floor++; return null; }
   const d = Math.hypot(x - a.pos.x, z - a.pos.z);
-  if (d < 2.5 || d > 10.5) return null;
+  if (d < 2.5 || d > 10.5) { NO.reach++; return null; }
   spotFor(x, gy, z, 0, 1, 0, 'floor', -1, a.team, _spot);
-  if (_spot.refused || _spot.base > gy + 0.05) return null;   // (refused, or over the liquid: a dry floor only)
-  if (tower && trackDist(tower, x, z) < (TOWER.platformR ?? 1.25) + 2.0 + 0.25) return null;
-  if (!G.physics.los(_v.set(a.pos.x, a.pos.y + 1.6, a.pos.z), _v2.set(x, gy + 1.0, z))) return null;   // (a lob over a wall lands who knows where)
+  if (_spot.refused || _spot.base > gy + 0.05) { NO.refused++; return null; }   // (refused, or over the liquid: a dry floor only)
+  if (tower && trackDist(tower, x, z) < (TOWER.platformR ?? 1.25) + 2.0 + 0.25) { NO.track++; return null; }
+  if (!G.physics.los(_v.set(a.pos.x, a.pos.y + 1.6, a.pos.z), _v2.set(x, gy + 1.0, z))) { NO.line++; return null; }   // (a lob over a wall lands who knows where)
   return new V3(x, gy, z);
 }
 // how far (x, z) is from the tower track's centre line (its metre points)
@@ -79,6 +81,16 @@ function trackDist(P, x, z) {
   const pts = P.pts;
   for (let i = 1; i < pts.length; i++) { const d = segDist(x, z, pts[i - 1].x, pts[i - 1].z, pts[i].x, pts[i].z); if (d < best) best = d; }
   return best;
+}
+// (bobber.js use, a bot's throw at the release) where it will float is fine for a bot: not refused, and in Tower Command
+// not within TOWER.platformR + 2.0 of the track's centre line (the tower would crush it)
+const _ps = { x: 0, y: 0, z: 0 };
+export function botThrowOk(a, pos, vel) {
+  const tp = zonePlan() ? null : towerPlan();
+  const s = predictFrom(pos, vel, a.team, _ps);
+  if (!s) return true;
+  if (s.refused) return false;
+  return !tp || trackDist(tp, s.x, s.z) >= (TOWER.platformR ?? 1.25) + 2.0;
 }
 // the mode's spot for a new chain (null: not now)
 function modeSpot(b) {
@@ -89,10 +101,18 @@ function modeSpot(b) {
     const [ex, ez] = zp.enemyDir(z, a.team), side = (r() - 0.5) * I.R * 1.2, out = I.R - 0.5 + r() * 1.8;
     return okSpot(a, z.center[0] + ex * out - ez * side, z.center[2] + ez * out + ex * side, null);
   }
-  if (tp) {
-    const T = tp.T, f = tp.fwdOf(a.team), p = tp.at(T.s + f * (2 + r() * 6)), q = tp.at(T.s + f * (2 + r() * 6) + 1);
-    const tx = q.x - p.x, tz = q.z - p.z, tl = Math.hypot(tx, tz) || 1, s = r() < 0.5 ? -1 : 1, off = 3.7 + r() * 2;
-    return okSpot(a, p.x - (tz / tl) * off * s, p.z + (tx / tl) * off * s, tp);
+  if (tp) {   // (by the track ahead of the tower — its next 24 m — 3.7–5.7 m off its line: within 6 m of it, never in its
+    // swept body; the ones in this bot's throwing reach, one at random)
+    const T = tp.T, f = tp.fwdOf(a.team), C = [];
+    for (let ds = 2; ds <= 24; ds += 1.5) {
+      const p = tp.at(T.s + f * ds), q = tp.at(T.s + f * (ds + 1)), tx = q.x - p.x, tz = q.z - p.z, tl = Math.hypot(tx, tz) || 1;
+      for (const sd of [-1, 1]) {
+        const off = 3.7 + r() * 2, x = p.x - (tz / tl) * off * sd, z = p.z + (tx / tl) * off * sd, d = Math.hypot(x - a.pos.x, z - a.pos.z);
+        if (d >= 3 && d <= 10) C.push([x, z]);
+      }
+    }
+    for (let i = 0; i < 4 && C.length; i++) { const [x, z] = C.splice(Math.floor(r() * C.length), 1)[0]; const at = okSpot(a, x, z, tp); if (at) return at; }
+    return null;
   }
   const pads = G.level.spawnPads; if (!pads?.[1]) return null;
   const total = pads[0].distanceTo(pads[1]), prog = 1 - Math.hypot(a.pos.x - pads[1 - a.team].x, a.pos.z - pads[1 - a.team].z) / total;
@@ -102,10 +122,20 @@ function modeSpot(b) {
 }
 export const botKit = {
   paint(b) {
-    const a = b.a;
-    if (a.ink < 60 || a.lastDamage < 1.5 || Math.random() > 0.02) return false;
+    const a = b.a, W = BOBBER_BOT.why;
+    if (b._bobRollT === G.time) return false;   // (one roll a frame: bots.js _paintSub and botAct both ask)
+    b._bobRollT = G.time;
+    W.calls++;
+    if (a.lastDamage < 1.5) { W.hurt++; return false; }
     const L = mine(a);
     let newest = null; for (const it of L) if (!newest || it.seq > newest.seq) newest = it;
+    // (a new chain: ink ≥ 60 and 2 % a frame; the next link of one under way: ink ≥ 50 and 6 % — a chain is three or four
+    // throws in a row; a Zone Control guard on its zone builds its web in earnest: 15 %)
+    const grow = !!newest && (newest.chain?.n || 1) < 4, guard = b.zRole === 'guard';
+    if (guard) W.g = (W.g || 0) + 1;
+    if (a.ink < (grow ? 50 : 60)) { W.ink++; return false; }
+    if (Math.random() > (guard ? 0.15 : grow ? 0.06 : 0.02)) return false;
+    W.rolls++;
     if (newest && (newest.chain?.n || 1) >= 4) {   // a chain done: a long breather (once per chain), then a new one
       if (newest.chain && !newest.chain.botDone) { newest.chain.botDone = true; b.bombCd = 10 + Math.random() * 6; }
       newest = null;
@@ -120,7 +150,7 @@ export const botKit = {
       }
       if (at) BOBBER_BOT.grows++;
     } else { at = modeSpot(b); if (at) BOBBER_BOT.setups++; }
-    if (!at) return false;
+    if (!at) { W.spot++; return false; }
     b._bobberAt = at;
     b.bombCd = 1.5 + Math.random() * 1.5;
     return true;
@@ -138,6 +168,12 @@ export const botKit = {
   },
 };
 
+// its own live chain still short of four (or none yet)
+function webToBuild(a) {
+  let newest = null;
+  for (const it of items) if (it.owner === a && !it.ghost && it.state === 'live' && (!newest || it.seq > newest.seq)) newest = it;
+  return !newest || (newest.chain?.n || 1) < 4;
+}
 // ---- setting them off: botAct (bots.js, just before _tail; busy: a threat / canopy / pod / escape owns the aim)
 const _aim = { yaw: 0, pitch: 0, dist: 6 };
 export function botAct(b, dt, it, move, busy) {
@@ -149,6 +185,15 @@ export function botAct(b, dt, it, move, busy) {
     S = b._bob = null;
   }
   if (busy) return null;
+  // a Zone Control guard with its web to build tops its tank up first: a quick dive in its own ink (42 ink/s) — painting
+  // the zone keeps a guard's tank low, and a link costs 40
+  if (!S && a.sub?.kind === 'bobber' && b.zRole === 'guard' && b.mode === 'paint' && b.groundSeen === 1 && !(b.target && b.seeTimer > 0) && a.ink < 62 && webToBuild(a)) {
+    it.squid = true; it.fire = false; BOBBER_BOT.tops = (BOBBER_BOT.tops || 0) + 1; return null;
+  }
+  // setting one up outside the paint branch too (an escort by the tower, a guard on its zone, a bot on its way): the
+  // same rules as bot.paint, never mid-fight, refilling, on the tower or with a throw already under way
+  if (!S && a.sub?.kind === 'bobber' && b.bombCd <= 0 && b.mode !== 'refill' && !(b.target && b.seeTimer > 0) && !b._bombAim && !b._releaseBomb && !a.weaponRunner?.aimingSub
+    && a.ink >= a.sub.inkCost + 4 && !G.match?.tower?.riderList?.includes(a) && botKit.paint(b)) { b._bombAim = true; BOBBER_BOT.actSetups = (BOBBER_BOT.actSetups || 0) + 1; return null; }
   if (!S) {
     if ((b._bobScanT = (b._bobScanT ?? Math.random() * 0.1) - dt) > 0) return null;
     b._bobScanT = 0.1;

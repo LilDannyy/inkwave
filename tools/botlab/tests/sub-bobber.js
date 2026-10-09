@@ -735,22 +735,24 @@
         const offs1 = rel();
         const downs = ev('device:down').map((x) => x.e.how);
         R('tower: a bobber in the tower\'s way is crushed (one \'device:down\' how \'crush\'); one on its deck rides it (its spot on the deck kept); one 3.6 m off its line is left alone',
-          way.state === 'dead' && ridingDeck && deckB.state === 'live' && offs0.distanceTo(offs1) < 0.2 && side.state === 'live' && downs.length === 1 && downs[0] === 'crush', { way: way.state, deck: deckB.state, riding: ridingDeck, drift: r2(offs0.distanceTo(offs1)), side: side.state, downs });
+          way.state === 'dead' && ridingDeck && deckB.state === 'live' && offs0.distanceTo(offs1) < 0.2 && side.state === 'live' && downs.length === 1 && downs[0] === 'crush', { way: way.state, deck: deckB.state, riding: ridingDeck, drift: r2(offs0.distanceTo(offs1)), side: side.state, downs, s: [r2(s0), r2(T.s)], wayAt: v3(way.spot), state: m.state, winner: T.winner });
       } finally { T._rules = rules0; netOff(); }
       // bots in Tower Command: no bot bobber settles within 3.25 m of the track's centre line
       reset();
       const { towerPlan } = await import('./src/game/bots.js');
-      const bots = m.actors.filter((a) => a.bot);
-      for (const a of bots) { a.setSub('bobber'); wake(a); }
+      // (one team's bots playing it out — the other team parked: a free run to the tower's way, and every throw they make
+      // is one to judge; a full 4 v 4 fight on this small deck leaves them few quiet moments to set one up)
+      const bots = m.actors.filter((a) => a.bot && a.team === me.team && a !== me);
+      for (const a of bots) { a.setSub('bobber'); a.ink = 100; wake(a); }
       const spots = [];
       const offL = on('sub:land', (e) => { if (e.kind === 'bobber') spots.push(e.pos.clone()); });
-      m.duration = 9999; m.time = 0;
+      m.duration = 9999; m.time = 9999;
       step(60);
       offL(); for (const a of bots) stub(a);
       const P2 = towerPlan();
       const dTrack = (p) => { let best = 1e9; for (let i = 1; i < P2.pts.length; i++) { const A = P2.pts[i - 1], Bp = P2.pts[i], dx = Bp.x - A.x, dz = Bp.z - A.z, Lq = dx * dx + dz * dz, t = Lq > 1e-9 ? Math.max(0, Math.min(1, ((p.x - A.x) * dx + (p.z - A.z) * dz) / Lq)) : 0; best = Math.min(best, Math.hypot(A.x + dx * t - p.x, A.z + dz * t - p.z)); } return best; };
       const near = spots.filter((p) => dTrack(p) < 3.25);
-      R(`tower: bots playing Tower Command with the bobber never settle one within 3.25 m of the track's centre line (${spots.length} settled in 60 s)`, spots.length >= 2 && near.length === 0, { settled: spots.length, nearest: spots.length ? r2(Math.min(...spots.map(dTrack))) : null, near: near.map(v3) });
+      R(`tower: bots playing Tower Command with the bobber never settle one within 3.25 m of the track's centre line (${spots.length} settled in 60 s)`, spots.length >= 2 && near.length === 0, { settled: spots.length, nearest: spots.length ? r2(Math.min(...spots.map(dTrack))) : null, near: near.map(v3), BOBBER_BOT, stats: K.BOBBER_STATS, state: m.state, subs: bots.map((a) => a.sub?.kind) });
     }
 
     // ============================================================================================ MODE=turf on podbox: a pod
@@ -777,19 +779,21 @@
     if (want('zone') && m.zones) {
       S.clear(); P.clear(); K.resetBobberStats(); evs.length = 0;
       const { zonePlan } = await import('./src/game/bots.js');
-      const team = me.team, bots = m.actors.filter((a) => a.bot && a.team === team);
-      for (const a of bots) { a.setSub('bobber'); wake(a); a.ink = 100; }
-      m.duration = 9999; m.time = 0;
-      const guardAt = new Map();
-      let best = 0;
-      step(40, () => {
-        const zp = zonePlan();
+      // (my team's bots — mid-range kits: guards are mid-range kits on a zone their team holds — against nobody: they take
+      // the zone, some turn guard; then each guard's next 20 s)
+      const team = me.team, bots = m.actors.filter((a) => a.bot && a.team === team && a !== me);
+      for (const a of bots) { a.setWeapon('shooter'); a.setSub('bobber'); wake(a); a.ink = 100; }
+      m.duration = 9999; m.time = 9999;
+      const guardAt = new Map(), bestOf = new Map();
+      step(80, () => {
+        void zonePlan();
         for (const a of bots) if (a.bot.zRole === 'guard' && !guardAt.has(a)) guardAt.set(a, G.time);
-        for (const [a, t] of guardAt) if (G.time - t <= 20) { const mine = K.items.filter((x) => x.owner === a && x.state === 'live'); for (const x of mine) best = Math.max(best, x.chain?.n || 1); }
-        void zp;
+        for (const [a, t] of guardAt) if (G.time - t <= 20) { for (const x of K.items) if (x.owner === a && x.state === 'live') bestOf.set(a, Math.max(bestOf.get(a) || 0, x.chain?.n || 1)); }
+        if (guardAt.size && [...guardAt.values()].every((t) => G.time - t > 20)) return false;
       });
       for (const a of bots) stub(a);
-      R('zone: a guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard', guardAt.size > 0 && best >= 3, { guards: guardAt.size, best, BOBBER_BOT });
+      const best = Math.max(0, ...bestOf.values());
+      R('zone: a guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard', guardAt.size > 0 && best >= 3, { guards: guardAt.size, best: [...bestOf.values()], BOBBER_BOT });
     }
 
     // ============================================================================================ MODE=boss: HULLBREAKER

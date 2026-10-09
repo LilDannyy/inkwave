@@ -54,7 +54,7 @@ import { THROWN, THREAT_STATS } from '../bots.js';
 import { DEPLOY_STATS } from '../deployables.js';
 import { BobberDraw, bobAt, DRAW_STATS } from './bobber-draw.js';
 import { WSCALE, B_EYE, worldGeometry } from './bobber-model.js';
-import { botKit, botAct, botDangers, preferFor } from './bobber-bots.js';
+import { botKit, botAct, botDangers, preferFor, botThrowOk } from './bobber-bots.js';
 import { hudTick, hudClear, kitPrompt, guideOff, onChainHud, onDisarmHud, onRefusedHud, onThrowHud } from './bobber-hud.js';
 import '../../audio/sfx-bobber.js';
 
@@ -219,6 +219,13 @@ function flyStep(p, v, prev, team, out) {
   if (p.y <= liquidTop(p.x, p.z)) return spotFor(p.x, p.y, p.z, 0, 1, 0, 'liquid', -1, team, out);
   return null;
 }
+// (bots) where a throw from pos at vel would float → out or null
+const _bp = new V3(), _bv = new V3(), _bq = new V3();
+export function predictFrom(pos, vel, team, out = _gs) {
+  _bp.copy(pos); _bv.copy(vel);
+  for (let i = 0; i < 240; i++) { const r = flyStep(_bp, _bv, _bq, team, out); if (r) return r; }
+  return null;
+}
 // (the aim guide: where a throw by a from now would float — the same flight) → out or null
 const _gp = new V3(), _gv = new V3(), _gq = new V3(), _gs = { ..._spot };
 export function predictSpot(a, out = _gs) {
@@ -251,6 +258,9 @@ function use(subs, a, sub) {
   }
   const pos = a.pos.clone(); pos.y += 1.35;
   const vel = G.projectiles.throwVelocity(a, sub.throwSpeed, new V3());
+  if (P) { vel.x -= a.vel.x * 0.4; vel.z -= a.vel.z * 0.4; }   // (a bot throwing at its pick allows for its own run, as a player would)
+  // a bot never throws one that would settle where it can't stand (Tower Command: in the tower's way) — the ink back
+  if (a.bot && !botThrowOk(a, pos, vel)) { if (a.specialActive?.kind !== 'barrage') a.ink = Math.min(PLAYER.inkMax, a.ink + sub.inkCost); return; }
   // the hidden guard (C1.9): past maxPerPlayer the oldest fizzles
   const mine = ownerLive(a);
   if (mine.length >= sub.maxPerPlayer) { mine.sort((x, y) => x.seq - y.seq); for (let i = 0; i <= mine.length - sub.maxPerPlayer; i++) { BOBBER_STATS.guard++; finish(mine[i], 0, 'fizzle'); } }

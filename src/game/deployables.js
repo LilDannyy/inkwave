@@ -443,7 +443,7 @@ class Deployables {
       for (const b of L.dyn) {
         if (b.solid === false) continue;
         const tw = this.isTowerBlock(b, T);
-        if (tw && CRUSHED[it.state]) continue;   // (the tower crushes those: crush)
+        if (tw && (CRUSHED[it.state] || it.kit)) continue;   // (the tower crushes those: crush — [b5-subs] and every kit device: crushIn)
         if (p.x < b.aabbMin.x - r || p.x > b.aabbMax.x + r || p.z < b.aabbMin.z - r || p.z > b.aabbMax.z + r || p.y + 0.3 < b.aabbMin.y || p.y > b.aabbMax.y - 0.04) continue;
         const ax = b.axes[0], az = b.axes[2], dx = p.x - b.center.x, dz = p.z - b.center.z;
         const lx = dx * ax.x + dz * ax.z, lz = dx * az.x + dz * az.z, ex = b.half.x + r - Math.abs(lx), ez = b.half.z + r - Math.abs(lz);
