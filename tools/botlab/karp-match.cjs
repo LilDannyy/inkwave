@@ -121,7 +121,7 @@ app.on('browser-window-created', (_, win) => {
       return {
         simT: +simT.toFixed(1), simMs: Math.round(simMs), state: m.state, map: '${MAP}', placeholder: Kp.placeholder, L: Kp.L.map((x) => +x.toFixed(1)),
         winner: Kp.winner, reason: Kp.reason, koT: koT, counts: [...Kp.count], best: Kp.bestM.map((b) => +b.toFixed(1)),
-        pops: S.pops, firstPop: S.firstPop, popT: S.popT, burstSplats: X.burstSplats, reforms: S.reforms,
+        pops: S.pops, firstPop: S.firstPop, popT: S.popT, burstSplats: X.burstSplats, reforms: S.reforms, crushes: Kp.shell.stats.crushes,
         pickups: S.pickups, carries: X.carries, blasts: S.blasts, resets: S.resets, moves: S.moves, plants: X.plants, gates: X.gates,
         ot: X.ot ? { why: X.ot.why, losing: X.ot.losing, len: +((X.end ? X.end.t : clock()) - X.ot.t).toFixed(1), end: Kp.reason, windows: S.windows } : null,
         fastT: { retreat: +(S.fastT.retreat || 0).toFixed(1), zone: +(S.fastT.zone || 0).toFixed(1) },
@@ -138,7 +138,7 @@ app.on('browser-window-created', (_, win) => {
     if (r.err) { console.log('HARNESS ' + r.err); app.exit(2); return; }
     const W = (t) => (t === 0 ? 'A' : t === 1 ? 'B' : '-');
     console.log(`== ${MAP} [bazookarp${r.placeholder ? ', placeholder data' : ''} L ${r.L.join('/')} m]: winner ${W(r.winner)} (${r.reason}) | counts ${r.counts.join(' vs ')} | best A ${r.best[0]} m B ${r.best[1]} m | ko ${r.koT ?? '-'} | OT ${r.ot ? r.ot.why + ' ' + r.ot.len + ' s → ' + r.ot.end : 'no'} | sim ${r.simT} s`);
-    console.log(`   shell: pops A ${r.pops[0]} B ${r.pops[1]} | first pop ${r.firstPop ?? '-'} s | pops at ${JSON.stringify(r.popT)} | burst splats ${r.burstSplats} | re-formed ${r.reforms}`);
+    console.log(`   shell: pops A ${r.pops[0]} B ${r.pops[1]} | first pop ${r.firstPop ?? '-'} s | pops at ${JSON.stringify(r.popT)} | burst splats ${r.burstSplats} | re-formed ${r.reforms} | devices crushed ${r.crushes}`);
     console.log(`   pick-ups A ${r.pickups[0]} B ${r.pickups[1]} | carries ${r.carries.length}: ${r.carries.map((c) => `${W(c.team)}:${c.how}/${c.dur}s/${c.m}m`).join(' ')}`);
     console.log(`   plants ${JSON.stringify(r.plants)} | gates ${JSON.stringify(r.gates)} | Carp Blasts own ${r.blasts.own} enemy ${r.blasts.enemy} | resets ${JSON.stringify(r.resets)} | moved ${r.moves}`);
     console.log(`   fast fuse (s): retreat ${r.fastT.retreat} zone ${r.fastT.zone} | clamp rejections ${r.clamped} | carrierRetreatFallback ${r.retreatFallback} | carrier stuck ${r.carrierStuck.s} s (> 3 s episodes ${r.carrierStuck.eps.length}) | bots stuck ${r.stuckPct}%`);
@@ -154,7 +154,7 @@ app.on('browser-window-created', (_, win) => {
     const ot = r.ot ? `${r.ot.end}/${r.ot.why}` : 'no';
     console.log(`RESULT karp ${MAP} win=${W(r.winner)} reason=${r.reason} ko=${r.koT ?? '-'} c=${r.counts.join('/')} pops=${r.pops.join('/')} carries=${r.carries.length} blasts=${r.blasts.own + r.blasts.enemy} ot=${ot}`);
     const J = { ...r, console: uniq.length, lightmapWarnings: lightmap.length, wallS: +wallS, diff: DIFF, human: HUMAN || null };
-    console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, koT: r.koT, counts: r.counts, pops: r.pops, firstPop: r.firstPop, carries: r.carries.length, plants: r.plants.length, blasts: r.blasts, resets: r.resets, ot: r.ot, stuckPct: r.stuckPct, clamped: r.clamped, console: uniq.length, frameErrors: r.frameErr.n }));
+    console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, koT: r.koT, counts: r.counts, pops: r.pops, firstPop: r.firstPop, carries: r.carries.length, plants: r.plants.length, blasts: r.blasts, resets: r.resets, ot: r.ot, stuckPct: r.stuckPct, clamped: r.clamped, crushes: r.crushes, console: uniq.length, frameErrors: r.frameErr.n }));
     if (OUT) fs.writeFileSync(OUT, JSON.stringify(J, null, 1));
     app.quit();
   });
