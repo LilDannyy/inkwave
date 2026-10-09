@@ -66,10 +66,12 @@ for (const k of ['dashDodge', 'dashBreak', 'dashClose', 'dashRush']) if (THREAT_
 const YC = 0.0345;
 const REAR = smoothProfile([[0.001, -0.047], [0.016, -0.0455], [0.026, -0.04], [0.0318, -0.031], [0.0334, -0.024], [0.0334, -0.018]], 9);
 function bolt() {
-  // a lightning chevron pointing back along the body (the decal's x runs nose → tail, y round the shell)
-  const s = new THREE.Shape(), Y = 1.5;
-  s.moveTo(0, 0.0058 * Y); s.lineTo(0.0098, 0.0012 * Y); s.lineTo(0.0081, -0.0004 * Y); s.lineTo(0.0208, -0.0062 * Y);
-  s.lineTo(0.0106, 0.0001 * Y); s.lineTo(0.0123, 0.0015 * Y); s.lineTo(0, 0.0058 * Y);
+  // a lightning chevron pointing back along the body (the decal's x runs nose → tail, y round the shell): bold ~5 mm
+  // strokes, 2.8 cm round the shell, so it reads at play distance
+  const P = [[0, 0.0135], [0.0096, 0.0016], [0.0068, -0.0002], [0.0204, -0.0142], [0.0118, 0.0010], [0.0147, 0.0030]];
+  const s = new THREE.Shape();
+  P.forEach(([x, y], i) => (i ? s.lineTo(x, y) : s.moveTo(x, y)));
+  s.closePath();
   return s;
 }
 function buildDash() {
@@ -101,11 +103,12 @@ function buildDash() {
   P.add(Z(stub), C.rubber, M.rubber);
   P.add(Z(latheZ([[0, -0.0785], [0.0082, -0.0785], [0.0104, -0.0768], [0.0106, -0.0738], [0, -0.0738]], 12)), C.metal, M.metal);
   // the lightning chevrons, one per flank, wrapped onto the tail shell (they follow its taper)
+  const onRear = (g, az, lift) => deformG(wrapZ(g, 0.0334, az, -0.0244, YC), (v) => {
+    const a = Math.atan2(v.y - YC, v.x), R = Math.hypot(v.x, v.y - YC) - 0.0334 + profR(REAR, v.z) + lift;
+    v.set(R * Math.cos(a), YC + R * Math.sin(a), v.z);
+  });
   for (const az of [0, Math.PI]) {
-    I.add(deformG(wrapZ(decal(bolt(), 0.0007), 0.0334, az, -0.0246, YC), (v) => {
-      const a = Math.atan2(v.y - YC, v.x), R = Math.hypot(v.x, v.y - YC) - 0.0334 + profR(REAR, v.z) + 0.0003;
-      v.set(R * Math.cos(a), YC + R * Math.sin(a), v.z);
-    }));
+    I.add(onRear(decal(bolt(), 0.0007), az, 0.0003));
   }
   led(P, new V3(0, YC + 0.0322, -0.029), new V3(0, 1, 0.12), C.green, 0.0031);   // the ready light (green: go)
   return { kind: KIND, body: P.build(), ink: I.build(), grip: { pos: new V3(0, YC, -0.0625), handZ: new V3(0, 0, -1), handY: new V3(0.3, -1, 0.1) } };
