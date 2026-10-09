@@ -1,0 +1,29 @@
+### spawn-mid-turf era 2
+PASS spawn to mid  {"t0":{"m":74,"s":6.27,"straight":72},"t1":{"m":77.9,"s":6.6,"straight":72},"spawns":[[0,-72],[0,72]],"mid":[0,0]}
+RESULT 1/1
+### size-budget-turf era 2
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1493}
+PASS paint atlas density  {"ppm":9.2,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":7554,"cap":22662,"capNeeded":[1500,1500]}
+RESULT 3/3
+### stage-audit-turf era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.27,6.6],"avg":6.43,"straight":72}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-tower era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.27,6.61],"avg":6.44,"straight":72}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":152.5,"cps":["41%","62%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### climb-audit-turf era 2
+PASS climb edges barred by a railing  {"climbs":223,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 2
+RESULT 1/1
+era 2: 98.5% of 7760 floor cells within 5 m of cover; largest open circle r 10.5 m at [-3.5, -54.5]
+  open stretches over 10 m across (cells > 5 m from cover): 56
+   r 10.5 m    1 m²  centre [-3.5, -54.5]  farthest [-3.5, -54.5]
+bluestone era 2: 98.5% of 7760 floor cells within 5 m of cover; largest open circle r 10.5 m at [-3.5,-54.5]
+  open stretches over 10 m across (cells > 5 m from cover) on open ground: 0 (and 56 on object tops, the tool's artefact)

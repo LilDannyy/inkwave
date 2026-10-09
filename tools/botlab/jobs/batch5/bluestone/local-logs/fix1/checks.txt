@@ -1,0 +1,122 @@
+# Bluestone blockout fix round 1 — Node checks at 28f45eb (2026-10-09 13:33:53)
+### check-maps
+ERA=1
+bluestone    1050 pieces  ok
+bluestone.tower 1018 pieces  ok
+ERA=2
+bluestone    1106 pieces  ok
+bluestone.tower 1074 pieces  ok
+ERA=3
+bluestone    1196 pieces  ok
+bluestone.tower 1164 pieces  ok
+### check-blockout ERA=1
+{"era": 1, "mode": "turf", "blocks": 1320, "layoutBlocks": 1050, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 8257, "floorByHeight": {"<0.5": "4258 (52%)", "0.5-1.1": "2304 (28%)", "1.1-2": "777 (9%)", "2-3": "401 (5%)", "3-4": "501 (6%)", "4-6": "18 (0%)"}, "paint_m2": 17395, "lightmapFits": true, "lightRows": 1477}
+### check-blockout ERA=2
+{"era": 2, "mode": "turf", "blocks": 1376, "layoutBlocks": 1106, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 9034, "floorByHeight": {"<0.5": "4729 (52%)", "0.5-1.1": "2573 (28%)", "1.1-2": "814 (9%)", "2-3": "401 (4%)", "3-4": "501 (6%)", "4-6": "18 (0%)"}, "paint_m2": 18346, "lightmapFits": true, "lightRows": 1501}
+### check-blockout ERA=3
+{"era": 3, "mode": "turf", "blocks": 1462, "layoutBlocks": 1196, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 9719, "floorByHeight": {"<0.5": "4798 (49%)", "0.5-1.1": "2599 (27%)", "1.1-2": "849 (9%)", "2-3": "608 (6%)", "3-4": "532 (5%)", "4-6": "335 (3%)"}, "paint_m2": 19308, "lightmapFits": true, "lightRows": 1557}
+### check-blockout ERA=all
+{"era": 0, "mode": "turf", "blocks": 1500, "layoutBlocks": 1230, "groundMiss": 0, "bermMiss": 0, "holes": 0, "floor_m2": 9304, "floorByHeight": {"<0.5": "4747 (51%)", "0.5-1.1": "2313 (25%)", "1.1-2": "792 (9%)", "2-3": "587 (6%)", "3-4": "532 (6%)", "4-6": "335 (4%)"}, "paint_m2": 18892, "lightmapFits": true, "lightRows": 1577, "groups": 72, "groupFails": 0, "jump12": {"groupsPerHalf": [19, 19], "blocks": 100}, "jump23": {"groupsPerHalf": [18, 18], "blocks": 118}, "eraBlocks": 212, "eraShare": 0.172}
+### appear-check (union; turf build)
+== jump 1 -> 2: 78 appearing pieces, 0 violations
+== jump 2 -> 3: 102 appearing pieces, 0 violations
+RESULT 0 violations
+### appear-check (union; tower build)
+== jump 1 -> 2: 74 appearing pieces, 0 violations
+== jump 2 -> 3: 102 appearing pieces, 0 violations
+RESULT 0 violations
+### appear-check on the review's head (d9e07f3), for calibration
+== jump 1 -> 2: 78 appearing pieces, 6 violations
+   iron-bridge [bridge-6] over kerb (top -0.26): 3.12 m2, gap 0.0 m, at [34.62, 1.12]
+   iron-bridge [bridge-7] over kerb (top -0.26): 3.00 m2, gap 0.0 m, at [38.62, 2.62]
+   boardwalk [bw-4] over kerb (top -0.26): 2.88 m2, gap 0.0 m, at [21.62, -5.12]
+   bridge-lamp [bridge-6] over kerb (top -0.26): 1.00 m2, gap 0.1 m, at [35.88, 1.38]
+   bridge-lamp [bridge-6] over street (top 0.0): 0.25 m2, gap 0.0 m, at [35.62, 2.12]
+   iron-bridge [bridge-5] over kerb (top -0.26): 0.19 m2, gap 0.0 m, at [34.38, 0.62]
+== jump 2 -> 3: 134 appearing pieces, 2 violations
+   garden-stair [garden-sa] over kerb (top -0.09): 2.69 m2, gap 0.0 m, at [-34.38, -31.38]
+   garden-stair [garden-sa] over street (top 0.0): 0.25 m2, gap 0.0 m, at [-34.12, -30.38]
+RESULT 8 violations
+### strips-check era 1 (turf build)
+RESULT longest 0.0 m; 0 strips over 25 m
+### strips-check era 2 (turf build)
+RESULT longest 0.0 m; 0 strips over 25 m
+### strips-check era 3 (turf build)
+RESULT longest 0.0 m; 0 strips over 25 m
+### strips-check era 1 (tower build: only the tower's lanes may exceed 25 m)
+    39.1 m  dir   0°  tier  0.14  from [2.5, 11.7] to [2.5, 50.7]
+    39.1 m  dir   0°  tier  0.14  from [3.2, 11.7] to [3.2, 50.7]
+    34.6 m  dir  90°  tier -0.09  from [-25.5, 48.8] to [9.0, 48.8]
+    34.6 m  dir  90°  tier  0.00  from [-8.9, -48.8] to [25.6, -48.8]
+    29.6 m  dir  90°  tier  1.00  from [-26.9, 55.8] to [2.6, 55.8]
+    29.6 m  dir  90°  tier  1.00  from [-2.5, -55.8] to [27.0, -55.8]
+RESULT longest 39.1 m; 6 strips over 25 m
+### strips-check era 3 (tower build: only the tower's lanes may exceed 25 m)
+    35.7 m  dir   0°  tier  0.00  from [2.5, 14.8] to [2.5, 50.4]
+    35.7 m  dir   0°  tier  0.00  from [3.2, 14.8] to [3.2, 50.4]
+    35.3 m  dir  90°  tier -0.09  from [-25.5, 48.8] to [9.7, 48.8]
+    35.3 m  dir  90°  tier  0.00  from [-9.6, -48.8] to [25.6, -48.8]
+    29.6 m  dir  90°  tier  1.00  from [-26.9, 55.8] to [2.6, 55.8]
+    29.6 m  dir  90°  tier  1.00  from [-2.5, -55.8] to [27.0, -55.8]
+RESULT longest 35.7 m; 6 strips over 25 m
+### deadend era 1 (now)
+floor 7730 m2 (standable, every level, this build)
+Alpha: dead-end floor 148 m2 (beyond along -47.0)
+Bravo: dead-end floor 148 m2 (beyond along -47.0)
+### deadend era 1 (the review's head d9e07f3)
+floor 8050 m2 (standable, every level, this build)
+Alpha: dead-end floor 682 m2 (beyond along -32.5)
+Bravo: dead-end floor 682 m2 (beyond along -32.5)
+### deadend era 2 (now)
+floor 8444 m2 (standable, every level, this build)
+Alpha: dead-end floor 148 m2 (beyond along -47.0)
+Bravo: dead-end floor 148 m2 (beyond along -47.0)
+### deadend era 2 (the review's head d9e07f3)
+floor 8777 m2 (standable, every level, this build)
+Alpha: dead-end floor 603 m2 (beyond along -36.5)
+Bravo: dead-end floor 603 m2 (beyond along -36.5)
+### deadend era 3 (now)
+floor 9082 m2 (standable, every level, this build)
+Alpha: dead-end floor 148 m2 (beyond along -47.0)
+Bravo: dead-end floor 148 m2 (beyond along -47.0)
+### deadend era 3 (the review's head d9e07f3)
+floor 9790 m2 (standable, every level, this build)
+Alpha: dead-end floor 112 m2 (beyond along -57.5)
+Bravo: dead-end floor 112 m2 (beyond along -57.5)
+### boss-nav era 2 (now; and the review's head)
+{"home_m2":480,"box":[-25.8,25.8,-18.3,18.3],"ringHome_m2":347,"ringPlannable_m2":347}
+{"overhangs":{"balconyN:a":{"d":2.37,"at":[-4.25,-13.25]},"balconyN:b":{"d":2.37,"at":[4.25,13.25]},"landing:a":{"d":2.85,"at":[-16.75,-11.75]},"landing:b":{"d":2.85,"at":[16.75,11.75]},"gallery:a":{"d":5.3,"at":[-4.25,-13.25]},"gallery:b":{"d":5.3,"at":[4.25,13.25]},"verandaE1:a":{"d":2.75,"at":[5.75,-16.25]},"verandaE1:b":{"d":2.75,"at":[-6.25,16.25]},"verandaE2:a":{"d":14.75,"at":[5.75,-16.25]},"verandaE2:b":{"d":14.75,"at":[-6.25,16.25]},"verandaW:a":{"d":25.87,"at":[5.75,-16.25]},"verandaW:b":{"d":25.87,"at":[-5.75,16.25]}}}
+{"home_m2":500.5,"box":[-25.8,25.8,-20.8,20.8],"ringHome_m2":353,"ringPlannable_m2":353}
+node:events:502
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: write EPIPE
+    at afterWriteDispatched (node:internal/stream_base_commons:161:15)
+    at writeGeneric (node:internal/stream_base_commons:152:3)
+    at Socket._writeGeneric (node:net:958:11)
+    at Socket._write (node:net:970:8)
+    at writeOrBuffer (node:internal/streams/writable:572:12)
+    at _write (node:internal/streams/writable:501:10)
+    at Writable.write (node:internal/streams/writable:510:10)
+    at console.value (node:internal/console/constructor:303:16)
+    at console.log (node:internal/console/constructor:378:26)
+    at file:///Users/danielosling/Desktop/1/st-b5-bluestone/tools/botlab/jobs/batch5/bluestone/boss-nav.mjs:33:9
+Emitted 'error' event on Socket instance at:
+    at Socket.onerror (node:internal/streams/readable:1028:14)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  errno: -32,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+
+Node.js v20.20.0
+### nav-measure era 1
+{"era":"1","nodes":6904,"spawnMid_t0":{"centre":[76.4,6.47],"alphaSide":[75,6.36],"bravoSide":[76.4,6.47]},"spawnMid_t1":{"centre":[75.5,6.4],"alphaSide":[76.9,6.52],"bravoSide":[75.5,6.4]},"bazookarp":{"alphaAttack":{"L":61,"pondWeir":39.1,"weirGate":30.7},"bravoAttack":{"L":61.8,"pondWeir":39.5,"weirGate":31.1}}}
+### nav-measure era 2
+{"era":"2","nodes":7538,"spawnMid_t0":{"centre":[76.4,6.47],"alphaSide":[75,6.36],"bravoSide":[76.4,6.47]},"spawnMid_t1":{"centre":[75.5,6.4],"alphaSide":[76.9,6.52],"bravoSide":[75.5,6.4]},"bazookarp":{"alphaAttack":{"L":61,"pondWeir":39.1,"weirGate":30.7},"bravoAttack":{"L":61.8,"pondWeir":39.5,"weirGate":31.1}}}
+### nav-measure era 3
+{"era":"3","nodes":8106,"spawnMid_t0":{"centre":[76.4,6.47],"alphaSide":[75,6.36],"bravoSide":[76.4,6.47]},"spawnMid_t1":{"centre":[75.5,6.4],"alphaSide":[76.9,6.52],"bravoSide":[75.5,6.4]},"bazookarp":{"alphaAttack":{"L":61,"pondWeir":39.1,"weirGate":30.7},"bravoAttack":{"L":61.8,"pondWeir":39.5,"weirGate":31.1}}}

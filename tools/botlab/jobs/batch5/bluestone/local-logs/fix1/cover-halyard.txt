@@ -1,0 +1,5 @@
+# Halyard cover map (same tool, same machine, same session)
+RESULT 1/1
+halyard: 96.4% of 4252 floor cells within 5 m of cover; largest open circle r 17 m at [-15.5, -19.5]
+  open stretches over 10 m across (cells > 5 m from cover): 20
+   r 17.0 m    6 m²  centre [-15.0, -18.5]  farthest [-15.5, -19.5]
