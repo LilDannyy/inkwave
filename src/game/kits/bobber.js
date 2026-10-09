@@ -54,7 +54,7 @@ import { THROWN, THREAT_STATS } from '../bots.js';
 import { DEPLOY_STATS } from '../deployables.js';
 import { BobberDraw, bobAt, DRAW_STATS } from './bobber-draw.js';
 import { WSCALE, B_EYE, worldGeometry } from './bobber-model.js';
-import { botKit, botAct, botDangers, preferFor, botThrowOk } from './bobber-bots.js';
+import { botKit, botAct, botDangers, preferFor, botThrowOk, botLog } from './bobber-bots.js';
 import { hudTick, hudClear, kitPrompt, guideOff, onChainHud, onDisarmHud, onRefusedHud, onThrowHud } from './bobber-hud.js';
 import '../../audio/sfx-bobber.js';
 
@@ -85,8 +85,12 @@ export function liquidTop(x, z) {
 
 // counters (tests / match.cjs BOBBER line)
 export const BOBBER_STATS = { thrown: 0, settled: 0, refused: 0, triggers: 0, hist: {}, hitTriggers: 0, wasted: 0, splats: 0, hits: 0, disarmed: 0, expired: 0,
-  crushed: 0, guard: 0, blasts: 0, links: 0, by: { owner: 0, mate: 0, blast: 0, other: 0 }, via: {}, records: {}, maxLive: 0, tickMs: 0, tickN: 0, pops: 0, refloats: 0 };
-export function resetBobberStats() { for (const k in BOBBER_STATS) BOBBER_STATS[k] = typeof BOBBER_STATS[k] === 'object' ? (k === 'by' ? { owner: 0, mate: 0, blast: 0, other: 0 } : {}) : 0; }
+  crushed: 0, guard: 0, blasts: 0, links: 0, by: { owner: 0, mate: 0, blast: 0, other: 0 }, via: {}, records: {}, maxLive: 0, tickMs: 0, tickN: 0, pops: 0, refloats: 0,
+  // (per placement source — the bot plan that laid a chain: chain-seconds, foe-seconds within 3 m of its reach and in it,
+  // chains set off and those that caught a foe; strays: what a bot's unaimed fire was doing as it set one off)
+  src: {}, strays: [] };
+export function resetBobberStats() { for (const k in BOBBER_STATS) BOBBER_STATS[k] = Array.isArray(BOBBER_STATS[k]) ? [] : typeof BOBBER_STATS[k] === 'object' ? (k === 'by' ? { owner: 0, mate: 0, blast: 0, other: 0 } : {}) : 0; }
+export const srcStat = (s) => BOBBER_STATS.src[s] || (BOBBER_STATS.src[s] = { chainS: 0, nearS: 0, inS: 0, trig: 0, caught: 0, splats: 0 });
 const rec = (a, data) => { BOBBER_STATS.records[data[0]] = (BOBBER_STATS.records[data[0]] || 0) + 1; netRec(a, KIND, data); };
 
 // ================================================================================================= the bobbers
@@ -250,14 +254,48 @@ function lobPitch(d, dy, speed) {
   }
   return be < 1.0 ? best : null;
 }
+// (bots) the lob from a kid standing at `from` that settles nearest the pick P (a floor spot): its aim checked against
+// the real flight — predictFrom, the step every screen flies — and corrected up to three times (a ledge's lip, a rail, a
+// slope move where it settles) → out { yaw, pitch, miss: the predicted float spot's miss in metres (Infinity: none) }.
+// (A bot's throw cancels the run it would inherit — use() — so this is the whole of it.)
+const _lv = new V3(), _ls = { x: 0, y: 0, z: 0 }, _lo = new V3();
+export function lobAim(from, P, team, speed, out = { yaw: 0, pitch: 0, miss: Infinity }) {
+  const want = Math.hypot(P.x - from.x, P.z - from.z), wy = Math.atan2(P.x - from.x, P.z - from.z);
+  let yaw = wy, d = want;
+  out.yaw = wy; out.pitch = 0; out.miss = Infinity;
+  _lo.set(from.x, from.y + 1.35, from.z);
+  for (let k = 0; k < 4; k++) {
+    const pitch = lobPitch(d, P.y - from.y, speed);
+    if (pitch == null) break;
+    const tp = clamp(pitch + 0.28, -0.3, 1.1), cp = Math.cos(tp);
+    _lv.set(Math.sin(yaw) * cp * speed, Math.sin(tp) * speed + 1.5, Math.cos(yaw) * cp * speed);
+    const s = predictFrom(_lo, _lv, team, _ls);
+    if (!s || s.refused) break;
+    const miss = Math.hypot(s.x - P.x, s.z - P.z) + Math.max(0, Math.abs(s.base - P.y) - 0.6);   // (and not up on a ledge above it, nor down below)
+    if (miss < out.miss) { out.miss = miss; out.yaw = yaw; out.pitch = pitch; }
+    if (miss < 0.5) break;
+    // (short or long: ask for the distance it's off by; off to a side: turn by the angle it's off by)
+    const got = Math.hypot(s.x - from.x, s.z - from.z);
+    if (got < 1) break;
+    d = clamp(d + (want - got), want * 0.6, want * 1.6);
+    let da = wy - Math.atan2(s.x - from.x, s.z - from.z); while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+    yaw += clamp(da, -0.4, 0.4);
+  }
+  return out;
+}
+const _la = { yaw: 0, pitch: 0, miss: Infinity };
 function use(subs, a, sub) {
   const P = a.bot?._bobberAt;
+  const pos = a.pos.clone(); pos.y += 1.35;
   if (P) {
     a.bot._bobberAt = null;
-    const pitch = lobPitch(Math.hypot(P.x - a.pos.x, P.z - a.pos.z), P.y - a.pos.y, sub.throwSpeed);
-    if (pitch != null) { a.aimYaw = Math.atan2(P.x - a.pos.x, P.z - a.pos.z); a.aimPitch = pitch; }
+    // (no lob lands within 1.6 m of the pick — a wall's lip or a ledge in the way: not thrown, the ink back; its plan
+    // skips that link)
+    const la = lobAim(a.pos, P, a.team, sub.throwSpeed, _la), miss = la.miss;
+    a.aimYaw = la.yaw; a.aimPitch = la.pitch;
+    botLog(a, 'throw', { miss: Math.round(miss * 10) / 10, d: Math.round(Math.hypot(P.x - a.pos.x, P.z - a.pos.z) * 10) / 10 });
+    if (!(miss <= 1.6)) { BOBBER_STATS.badLobs = (BOBBER_STATS.badLobs || 0) + 1; if (a.specialActive?.kind !== 'barrage') a.ink = Math.min(PLAYER.inkMax, a.ink + sub.inkCost); return; }
   }
-  const pos = a.pos.clone(); pos.y += 1.35;
   const vel = G.projectiles.throwVelocity(a, sub.throwSpeed, new V3());
   if (P) { vel.x -= a.vel.x * 0.4; vel.z -= a.vel.z * 0.4; }   // (a bot throwing at its pick allows for its own run, as a player would)
   // a bot never throws one that would settle where it can't stand (Tower Command: in the tower's way) — the ink back
@@ -266,6 +304,8 @@ function use(subs, a, sub) {
   const mine = ownerLive(a);
   if (mine.length >= sub.maxPerPlayer) { mine.sort((x, y) => x.seq - y.seq); for (let i = 0; i <= mine.length - sub.maxPerPlayer; i++) { BOBBER_STATS.guard++; finish(mine[i], 0, 'fizzle'); } }
   const it = spawn(a, sub, pos, vel, false, netId(a) || 9e8 + ++LOCAL_GID);   // (offline: netId is 0 — an id of its own)
+  it.src = a.bot ? (P && a.bot._bobSrc) || 'bot' : 'player';   // (the counters' placement source: the bot plan it was laid by)
+  if (P) it.planned = new V3(P.x, P.y + sub.floatH, P.z);   // (where a bot's pick will float: its team's bots hold fire into it on the way)
   rec(a, [0, it.gid, r2(pos.x), r2(pos.y), r2(pos.z), r2(vel.x), r2(vel.y), r2(vel.z)]);
   BOBBER_STATS.thrown++;
   G.cues?.sub(KIND, 'throw', { owner: a, at: a.pos });
@@ -327,6 +367,7 @@ function settle(it) {
   if (!it.ghost) relink(it.owner);
   else applyTethers(it.owner);
   tethersDirty = true;
+  botLog(it.owner, 'land', { at: [r2(it.spot.x), r2(it.spot.y), r2(it.spot.z)], n: it.chain?.n || 1 });
 }
 // the ride body (§0.2): what wave 1 moves like one of its own floor devices — its foot on the floor, the bobber
 // floating `hover` over it
@@ -523,9 +564,23 @@ export function trigger(it, by, how = 'shot') {
   BOBBER_STATS.triggers++;
   BOBBER_STATS.hist[g.n] = (BOBBER_STATS.hist[g.n] || 0) + 1;
   BOBBER_STATS.by[how === 'blast' ? 'blast' : !by ? 'other' : by === it.owner ? 'owner' : by.team === it.team ? 'mate' : 'other']++;
-  { const k = `${how}:${by?.specialActive ? 'sp-' + (by.specialActive.kind || by.specialActive.id || '?') : by?.weapon?.kind || '-'}${by?.bot?._bob ? '(aimed)' : ''}`; BOBBER_STATS.via[k] = (BOBBER_STATS.via[k] || 0) + 1; }   // (what set it off)
+  // (what set it off: 'chain' — another chain's blast — apart from the other blasts)
+  const k = `${how === 'blast' && _chainBlast ? 'chain' : how}:${by?.specialActive ? 'sp-' + (by.specialActive.kind || by.specialActive.id || '?') : by?.weapon?.kind || '-'}${by?.bot?._bob ? '(aimed)' : ''}`;
+  BOBBER_STATS.via[k] = (BOBBER_STATS.via[k] || 0) + 1;
+  g.src = it.chain?.items?.[0]?.src || it.src || '-'; srcStat(g.src).trig++;
+  if (by?.bot && !by.bot._bob && !_chainBlast && BOBBER_STATS.strays.length < 60) strayNote(it, by, k);
   schedule(g);
   return g;
+}
+// (the counters) a bot's unaimed fire set one off: where it stood and aimed, what it was doing, whether its hold-fire
+// check had just said hold
+let _chainBlast = false;
+function strayNote(it, by, via) {
+  const b = by.bot, dx = it.spot.x - by.pos.x, dz = it.spot.z - by.pos.z, d = Math.hypot(dx, dz);
+  let ang = Math.atan2(dx, dz) - b.aimYaw; while (ang > Math.PI) ang -= 2 * Math.PI; while (ang < -Math.PI) ang += 2 * Math.PI;
+  BOBBER_STATS.strays.push({ via, w: by.weapon?.kind, mode: b.mode, d: r2(d), dy: r2(it.spot.y - by.pos.y), ang: r2(ang), pitch: r2(b.aimPitch),
+    hf: b._bobHF ? (b._bobHF.o ? 1 : 0) : -1, hfAge: b._bobHF ? r2(G.time - b._bobHF.t) : -1, age: r2(G.time - it.born), n: it.chain?.n || 1,
+    own: by === it.owner ? 1 : 0, gr: by.grounded ? 1 : 0, sp: by.specialActive ? (by.specialActive.kind || '?') : '', tgt: b.target ? r2(Math.hypot(b.target.pos.x - by.pos.x, b.target.pos.z - by.pos.z)) : -1 });
 }
 function makeGroup(id, owner, n, by, levels, t0, ghost) {
   return { id, owner, team: owner.team, by, levels, t0, ghost, ...sizeOf(n), n, taken: new Map(), lvl: 0, boss: null, shell: null, caught: new Set(), hit: 0, sparks: [], done: false, endT: 0, local: !!owner.isLocal };
@@ -645,7 +700,7 @@ function blowLevel(g, k) {
       const pc = f.hit ? _v2.copy(f.point).setY(f.point.y + 0.2) : _v2.copy(c);
       area += G.paint.splat(pc, g.paint, g.team, { seed: Math.random() });   // (one splat a bobber, C4.1: a big chain paints a lot already)
       if (b.sp) a.addTurfNoSpecial?.(area); else a.addTurf?.(area);
-      G.subs?.damageArea(c, g.R, g.dev, g.team, a);
+      _chainBlast = true; try { G.subs?.damageArea(c, g.R, g.dev, g.team, a); } finally { _chainBlast = false; }
       if (G.boss) G.boss.splash(a, c, g.R, g.dmax, g.dmin, KIND, { body: b === g.boss });
       if (b === g.shell) G.objTargets?.splash?.(a, c, g.R, g.dmax, g.dmin, KIND);
     }
@@ -666,12 +721,12 @@ function hitVictim(g, e, dmg, c) {
   const killed = e.damage(d2, g.owner, KIND);
   emit('hit', { attacker: g.owner, victim: e, damage: d2, killed, weaponId: KIND });
   g.caught.add(e); g.hit++;
-  BOBBER_STATS.hits++; if (killed) BOBBER_STATS.splats++;
+  BOBBER_STATS.hits++; if (killed) { BOBBER_STATS.splats++; if (g.src) srcStat(g.src).splats++; }
   if (G.netm && !e.remote && e.nid !== undefined && g.owner.remote) rec(e, [6, g.id, r2(d2), killed ? 1 : 0]);
 }
 function chainDone(g) {
   if (!g.ghost) {
-    if (g.caught.size) BOBBER_STATS.hitTriggers++; else { BOBBER_STATS.wasted++; THREAT_STATS.chainWasted = (THREAT_STATS.chainWasted || 0) + 1; }
+    if (g.caught.size) { BOBBER_STATS.hitTriggers++; if (g.src) srcStat(g.src).caught++; } else { BOBBER_STATS.wasted++; THREAT_STATS.chainWasted = (THREAT_STATS.chainWasted || 0) + 1; }
     relink(g.owner);
   } else applyTethers(g.owner);
   tethersDirty = true;

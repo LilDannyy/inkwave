@@ -858,25 +858,37 @@
       } finally { netOff(); }
     }
 
-    // ============================================================================================ MODE=zones: a guard sets up a chain
+    // ============================================================================================ MODE=zones: every guard sets up a chain
     if (want('zone') && m.zones) {
       S.clear(); P.clear(); K.resetBobberStats(); evs.length = 0;
       const { zonePlan } = await import('./src/game/bots.js');
-      // (my team's bots — mid-range kits: guards are mid-range kits on a zone their team holds — against nobody: they take
-      // the zone, some turn guard; then each guard's next 20 s)
+      // (my team's three bots — mid-range kits — against nobody: they take the zone until the plan makes one a guard; from
+      // then all three are held guards of the active zone (the plan reshuffles roles every few seconds: a bot it made guard
+      // for 2 s isn't a guard's test), and each must have a 3–4 chain at its zone within 20 s)
       const team = me.team, bots = m.actors.filter((a) => a.bot && a.team === team && a !== me);
       for (const a of bots) { a.setWeapon('shooter'); a.setSub('bobber'); wake(a); a.ink = 100; }
       m.duration = 9999; m.time = 9999;
-      const guardAt = new Map(), bestOf = new Map();
-      step(80, () => {
-        void zonePlan();
-        for (const a of bots) if (a.bot.zRole === 'guard' && !guardAt.has(a)) guardAt.set(a, G.time);
-        for (const [a, t] of guardAt) if (G.time - t <= 20) { for (const x of K.items) if (x.owner === a && x.state === 'live') bestOf.set(a, Math.max(bestOf.get(a) || 0, x.chain?.n || 1)); }
-        if (guardAt.size && [...guardAt.values()].every((t) => G.time - t > 20)) return false;
-      });
+      const t0 = G.time;
+      step(75, () => { void zonePlan(); if (bots.some((a) => a.bot.zRole === 'guard')) return false; });
+      const zp = zonePlan(), roleOf0 = zp?.roleOf;
+      const guardsAt = G.time - t0, bestOf = new Map(), atZone = new Map();
+      if (zp) zp.roleOf = function (a) { return bots.includes(a) ? { role: 'guard', zone: this.Z.active.zones[0].id } : roleOf0.call(this, a); };
+      BOBBER_BOT.logOn = true; BOBBER_BOT.log.length = 0;   // (the bots' set-up decisions: printed for a guard that falls short)
+      const tg = G.time;
+      try {
+        step(20, () => {
+          const zi = zp.Z.active.zones[0].id, c = zp.Z.zones[zi].center, Rz = zp.info[zi].R;
+          for (const a of bots) {
+            if (a.bot.zRole === 'guard') atZone.set(a, (atZone.get(a) || 0) + 1 / 60);
+            for (const x of K.items) if (x.owner === a && x.state === 'live' && Math.hypot(x.spot.x - c[0], x.spot.z - c[2]) < Rz + 6) bestOf.set(a, Math.max(bestOf.get(a) || 0, x.chain?.n || 1));
+          }
+        });
+      } finally { if (zp) zp.roleOf = roleOf0; BOBBER_BOT.logOn = false; }
       for (const a of bots) stub(a);
-      const best = Math.max(0, ...bestOf.values());
-      R('zone: a guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard', guardAt.size > 0 && best >= 3, { guards: guardAt.size, best: [...bestOf.values()], BOBBER_BOT });
+      const bests = bots.map((a) => bestOf.get(a) || 0);
+      const short = bots.filter((a) => (bestOf.get(a) || 0) < 3).map((a) => ({ who: a.name, log: BOBBER_BOT.log.filter((e) => e.who === a.name).map((e) => ({ ...e, t: r2(e.t - tg) })) }));
+      R(`zone: every guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard (${bots.length} guards from ${r2(guardsAt)} s, best chains ${bests.join(', ')})`,
+        guardsAt < 75 && bots.length === 3 && bests.every((n) => n >= 3), { guardsAt: r2(guardsAt), best: bests, guardS: bots.map((a) => r2(atZone.get(a) || 0)), short, BOBBER_BOT: { ...BOBBER_BOT, log: undefined } });
     }
 
     // ============================================================================================ MODE=boss: HULLBREAKER
