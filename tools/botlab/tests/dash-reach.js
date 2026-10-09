@@ -38,7 +38,8 @@
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const args = Object.fromEntries((window.__pageArgs || '').split(/[;,&]/).filter(Boolean).map((kv) => kv.split('=')));
   const DT = args.dt ? 1 / +args.dt : 1 / 60, EVERY = +(args.step || 1), OFF = +(args.off || 0), CLIMB = args.climb !== '0';
-  const HOP_BEST = 1.9, BAR = HOP_BEST + 0.02;   // (sub-dash.js 'height': a plain running hop lands on 1.90 m, never on 1.91)
+  // (sub-dash.js 'height', 30 run-ups, to 0.01 m: a plain running hop lands on 1.90 m at 1/60, 1.86 m at 1/24)
+  const HOP_BEST = Math.abs(DT - 1 / 24) < 1e-9 ? 1.86 : 1.9, BAR = Math.round((HOP_BEST + 0.02) * 100) / 100;
   const air0 = SUBS.dash.airDashDist; if (args.air) SUBS.dash.airDashDist = +args.air;   // ('air=2.5': a what-if air dash length, this run only)
   const AIR = SUBS.dash.airDashDist;
   const L = G.level, nav = G.nav, N = nav.nodes, r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100;
@@ -79,7 +80,7 @@
   const use = starts.filter((_, i) => i % EVERY === OFF).slice(+(args.skip || 0), args.max ? +(args.skip || 0) + +args.max : Infinity);   // ('skip=<k>;max=<n>': n starts from the k-th, a diagnostic)
   // ---- the kid
   let startY = 0;
-  const put = (n) => { kid.spawnAt(V(n.x, n.y + 0.02, n.z), 0); kid.invuln = 99; kid.vel.set(0, 0, 0); kid.form = 'kid'; it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false; for (let i = 0; i < 2; i++) { G.time += DT; kid.update(DT); } startY = kid.pos.y; };
+  const put = (n) => { LH = null; kid.spawnAt(V(n.x, n.y + 0.02, n.z), 0); kid.invuln = 99; kid.vel.set(0, 0, 0); kid.form = 'kid'; it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false; for (let i = 0; i < 2; i++) { G.time += DT; kid.update(DT); } startY = kid.pos.y; };
   const onRoof = () => kid.grounded && kid.ground && L.blocks[kid.ground.block] && L.blocks[kid.ground.block].roof;
   const fr = (f) => Math.max(1, Math.round(f / (60 * DT)));   // a 60 Hz frame count at this step
   // the end of a move: wait out a roof's slide, a fall, the dash (≤ 3 s), and read where it came to rest
@@ -89,8 +90,13 @@
     const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
     return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT: st.roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY: st.landY, y0: startY };
   };
+  // the first landing is caught inside the move's substeps (a dash runs 3–7 a frame): a frame that lands on a stair's
+  // first step and steps on up it at dash speed comes down where it first touched, not where the frame ended
+  const integ0 = kid._integrate; let LH = null;
+  kid._integrate = function (dt, sq, j) { integ0.call(this, dt, sq, j); const s = LH; if (s) { if (!this.grounded) s.wasAir = true; else if (s.wasAir && s.landY === null) s.landY = this.pos.y; } };
   const ticker = (mv) => {
     const st = { ok: true, roofT: null, wasAir: false, landY: null, i: 0 };
+    LH = st;
     // (landY: where it first comes down after leaving the ground — the height the jump + dash got it to; a dash that
     // carries on along the ground after that, up a ramp or a stair, is a run, judged by where it ends like any walk)
     st.tick = (w) => {
@@ -98,7 +104,7 @@
       it.move.set(w.move ? q[0] : 0, 0, w.move ? q[1] : 0); it.jump = !!w.jump; it.sub = !!w.sub; it.squid = !!w.squid;
       G.time += DT; kid.update(DT); st.i++;
       if (!kid.alive) st.ok = false;
-      else { if (!st.roofT && onRoof()) st.roofT = kid.pos.clone(); if (!kid.grounded) st.wasAir = true; else if (st.wasAir && st.landY === null) st.landY = kid.pos.y; }
+      else if (!st.roofT && onRoof()) st.roofT = kid.pos.clone();
       return st.ok;
     };
     return st;
@@ -306,7 +312,7 @@
   }
   count.stranded = realLeaks.length; count.strandedHopOn = hopOn.length; tm.tops = performance.now() - t4;
   for (const k in tm) tm[k] = Math.round(tm[k]);
-  kid.setSub('bomb'); SUBS.dash.airDashDist = air0;
+  kid.setSub('bomb'); SUBS.dash.airDashDist = air0; LH = null; delete kid._integrate;
   for (const a of m.actors) { delete a.update; if (a.bot) delete a.bot.update; }
   // off the graph: the distinct spots (0.5 m), highest first
   const seen = new Map(); for (const o of offs) { const k = Math.round(o.to[0] * 2) + ',' + Math.round(o.to[2] * 2) + ',' + Math.round(o.to[1] * 2); if (!seen.has(k)) seen.set(k, o); }
