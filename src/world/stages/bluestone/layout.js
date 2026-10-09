@@ -230,8 +230,12 @@ const haloPieces = [];
       haloPieces.push(O(rx, rz, 0.12, +(s1 - s0).toFixed(4), top, top + 1, b + 90, hrail({ eraGroup: g })));
     }
   }
-  // planters at the corners (1.0 above the deck), with the half-side group on the corner's clockwise side
-  for (const [b, g] of [[112.5, 'halo-1'], [157.5, 'halo-3'], [202.5, 'halo-5'], [247.5, 'halo-7']]) {
+  // planters at the two corners flanking the glass stair's landing (1.0 above the deck). (fix round 2, review issue 5:
+  //  fewer planters, DESIGN.md §6.2 #1's first lever: the 112.5° and 247.5° ones are gone. One point of the Halo sees 60 %
+  //  of the centre zone within 27 m and 51 % within 18 m, against 39 % / 16 % from a balcony and 21 % / 1 % from a
+  //  Boathouse deck (halo-sight.mjs), so a perch over the zone keeps little cover of its own; the two kept stop the stair's
+  //  head being a 7 m bare circle)
+  for (const [b, g] of [[157.5, 'halo-3'], [202.5, 'halo-5']]) {
     const [px, pz] = polar(13.4, b);
     haloPieces.push(O(px, pz, 1.2, 1.2, HALO_Y - 0.1, HALO_Y + 1, b, { tag: 'halo-planter', color: K.planter, pattern: PATTERN.planter, eras: '3', eraGroup: g }));
   }
@@ -263,6 +267,9 @@ const SWIMSTON = [
   B(-3.6, -2.4, 0, 1.2, -31.5, -30.3, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, notIn: 'tower' })),
   // iron-lace verandas over the footpaths (off-limits tops) and their posts on the kerb line (x ±4.7)
   B(4.5, 7, 3.2, 3.4, -27, -19, { tag: 'veranda', color: K.iron, pattern: PATTERN.metal, roof: true, paint: false }),
+  // (fix round 2, review issue 3: veranda E1's cast-iron frieze along its kerb edge and north end, 2.55–3.2, see-through:
+  //  the boss's nav sees it at 2.6 m, so its shell stays out from under the veranda)
+  B(4.5, 5.0, 2.55, 3.1, -27, -19.5, rail({ tag: 'veranda-frieze' })), B(4.5, 7, 2.55, 3.0, -19.5, -19, rail({ tag: 'veranda-frieze' })),
   B(4.5, 7, 3.2, 3.4, -44, -31, { tag: 'veranda', color: K.iron, pattern: PATTERN.metal, roof: true, paint: false }),
   B(-7, -4.5, 3.2, 3.4, -44, -40, { tag: 'veranda', color: K.iron, pattern: PATTERN.metal, roof: true, paint: false }),
   ...[-26.85, -23.2, -19.15, -43.85, -40.4, -37, -31.15].map((z) => B(4.6, 4.8, 0, 3.2, z - 0.1, z + 0.1, { tag: 'veranda-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
@@ -320,7 +327,15 @@ const WEST = [
   B(-14, -11, 2.1, 2.4, -15.5, -12.5, { tag: 'balcony-landing', color: K.planks, pattern: PATTERN.planks }),
   R([-5, 0, -14], [-11, 2.4, -14], 3, stair({ tag: 'balcony-stair', color: K.iron, pattern: PATTERN.treads })),
   ...[[-13.85, -12.65], [-13.85, -15.4], [-5.1, -30.35], [-5.1, -27.8], [-5.1, -25.25], [-5.1, -21], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
-  B(-14, -13.2, 2.4, 3.4, -13.3, -12.5, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),   // (adds: cover on the landing)
+  B(-13.5, -12.5, 2.4, 3.4, -15.5, -14.7, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),   // (adds: cover on the landing)
+  // (fix round 2, review issue 3: the iron-lace balustrade with its flower boxes on the balcony's and the landing's open
+  //  edges, 1.0 / 0.9 m tall, 0.5 m deep, see-through (rail: shots, ink, sight and squids pass; you hop it to drop off).
+  //  HULLBREAKER's nav samples 2.6 m on a 0.5 m grid, so to it the edges are walls and its shell can no longer reach
+  //  under the balcony or the landing)
+  B(-11, -5, 2.4, 3.4, -16.0, -15.5, rail({ tag: 'balustrade' })),
+  B(-5.5, -5, 2.4, 3.3, -18.5, -16.0, rail({ tag: 'balustrade' })),
+  B(-13.5, -11, 2.4, 3.3, -13.0, -12.5, rail({ tag: 'balustrade' })),
+  B(-14, -13.5, 2.4, 3.4, -15.5, -12.5, rail({ tag: 'balustrade' })),
   B(-6.6, -5.4, 2.4, 3.4, -27.1, -26.5, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),    // (adds: the gallery's south end, 6 m from cover in the 3000s once the superstop is a glass stair)
   B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
@@ -329,6 +344,7 @@ const WEST = [
   //  under them; these 1.5 m planters, which its nav sees, are the design's own fix)
   B(-14, -13.4, 0, 1.5, -15.4, -13.4, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
   B(-6.2, -5.2, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-4.8, -4.0, 0, 1.5, -16.0, -15.2, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter })),   // (fix round 2: the balcony's NE corner, against the boss's claws)
   // Prow Place's fountain; Hoki Lane's cover, alternating sides
   B(-23.6, -22, 0, 1.2, -24.6, -23, cover({ tag: 'fountain', color: '#8a8e8c' })),
   B(-22.9, -21.9, 0, 1, -31.7, -29.3, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
