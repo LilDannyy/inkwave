@@ -94,7 +94,6 @@
       if (r.dead) { count.sea++; continue; }
       if (!r.grounded) { count.air++; continue; }
       if (r.roof) { count.roof++; continue; }
-      if (r.grounded && !r.dead) count.maxUp = Math.max(count.maxUp, r2(r.pos.y - n.y));
       const p = r.pos, what = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`, to: [r1(p.x), r2(p.y), r1(p.z)], up: r2(p.y - n.y) };
       if (!inB(p)) { count.oob++; oob.push(what); continue; }
       if (r.perch) {
@@ -110,6 +109,7 @@
       }
       const id = nodeAt(p);
       if (id >= 0 && reach[id]) { count.onFoot++; continue; }
+      count.maxUp = Math.max(count.maxUp, r2(p.y - n.y));   // (how high over its start, of the landings a walk doesn't reach: a ground dash up a stair is a walk)
       if (id >= 0) {
         // a node the graph says isn't reachable: does a plain walk or hop from here land on it too?
         let base = false;
