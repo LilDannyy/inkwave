@@ -460,6 +460,7 @@ export class StageLava {
 
   update(dt, t) {
     const m = this.m;
+    this._wb = null;   // (whose update `wet` reads for: set by botHold inside each bot's own update)
     if (!this.placed && (m.state === 'playing' || m.attract || m.practice)) this.placeRiders();
     // overtime: a move already running finishes, then the lava holds; a warning not yet at its move is cancelled
     if (this.otAt === Infinity && (m.zones?.overtime || m.tower?.overtime || m.karp?.overtime || m.bazookarp?.overtime)) {
@@ -644,7 +645,20 @@ export class StageLava {
   under(p, depth = 0) { return p.y < this.y + LAVA.kill - depth && this.W.inRegion(p.x, p.z); }
   // feet on a floor at gy at (x, z) would splat now or within `ahead` s
   covers(x, z, gy, ahead = 0) { if (!this.W.inRegion(x, z)) return false; const y = ahead > 0 ? this.maxOver(this.clock.t, this.clock.t + ahead) : this.y; return gy < y + LAVA.kill; }
-  wet(x, z, gy, ahead = 0) { return this.covers(x, z, gy, ahead); }
+  // the bot brain's edge and water guards (bots.js _avoidWater / _edgeGuard / _wet, all inside one bot's update) read the
+  // ground with that bot's eyes: one on dry ground never steps down onto floor the lava takes within 8 s (a fight's
+  // strafe walked bots off the causeway onto the Casting Floor a second before it drowned); one escaping is never
+  // stopped by its own drowning floor (the guards froze bots 2 m from the hop in the last 0.5 s) — only by lava there now
+  wet(x, z, gy, ahead = 0) {
+    const b = this._wb, a = b && b.a;
+    if (a && ahead > 0 && a.alive && Math.abs(a.pos.x - x) < 3 && Math.abs(a.pos.z - z) < 3) {
+      if (b._lavaEsc) ahead = 0;
+      else if (!this.covers(a.pos.x, a.pos.z, a.pos.y - 0.05, LAVA.goalLook)) ahead = Math.max(ahead, LAVA.goalLook);
+    }
+    return this.covers(x, z, gy, ahead);
+  }
+  // (bots.js asks this first thing in every bot's update: the lava never holds a bot; it notes whose update this is)
+  botHold(b) { this._wb = b; return false; }
   burns(a) { return !!a && a.alive && !a.superJumpState && this.under(a.pos); }
   // no device is placed where the lava will be within the next warning + move (the rising surface's reach)
   noPlace(p, r = 0) { if (!this.W.inRegion(p.x, p.z)) return false; const T = this.sched.T; return p.y < this.maxOver(this.clock.t, this.clock.t + T.warn + T.rise + 1) + LAVA.kill + 0.05; }
@@ -871,7 +885,7 @@ export class StageLava {
       if (k === 1) { const left = this._timeTo(M.shutY[s], t, 16); need = left < esc; }
       else if (k === 2) { const R = this.riders[M.rider[s]]; if (R && R.r.sink) need = this.shut(s, t + 4) === 2 || this.shut(s, t + esc) === 2; }
       if (need && M.exit[s] >= 0 && M.exit[s] !== s) {
-        if (!b._lavaEsc || b.goal !== M.exit[s]) {
+        if (!b._lavaEsc || b.goal !== M.exit[s] || !b.path) {
           const p = nav.path(s, M.exit[s], a.team);
           if (p) { b.path = p; b.pi = Math.min(1, p.length - 1); b.goal = M.exit[s]; b.bestD = Infinity; b.noProg = 0; b._lavaEsc = true; b.escN = (b.escN || 0) + 1; }
         }
@@ -889,14 +903,24 @@ export class StageLava {
         if (best >= 0) { const n = nav.nodes[best]; if (b._pathTo(_v.set(n.x, n.y, n.z), 0.6)) { b._lookAt = t; b.goalTimer = 9; this.stats.lookTrips = (this.stats.lookTrips || 0) + 1; } }
       }
     }
-    if (b._lavaEsc && b.path) {
-      const mv = b._steer(dt); if (mv !== move) move.copy(mv);
-      // up the hop out (a 1.2 m step onto the head, the causeway, the island): ask for the jump, and again if it stalls
-      // there — the brain presses it (its own cool-down: a held button would never jump twice)
-      const nx = b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : null;
-      if ((nx && nx.y - a.pos.y > 0.4 && Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) < 1.6) || b.noProg > 0.8) b._needJump = true;
+    if (b._lavaEsc) {
+      // up the hop out (a 1.2 m step onto the head, the causeway, the island): straight at it, asking for the jump (the
+      // brain presses it, on its own cool-down). The brain's steering drops a route whose next node stands that far
+      // above it within 1.2 m (its slip rule), so that last metre is steered here, never left to _steer
+      const ex = b.goal >= 0 ? nav.nodes[b.goal] : null;
+      const nx = b.path && b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : (b._escNx || ex);
+      const dh = nx ? Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) : Infinity;
+      if (nx && nx.y - a.pos.y > 0.4 && dh < 2.0) {
+        b._escNx = nx;
+        if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
+        b._needJump = true;
+      } else if (b.path) {
+        b._escNx = null;
+        const mv = b._steer(dt); if (mv !== move) move.copy(mv);
+        if (b.noProg > 0.8) b._needJump = true;
+      } else b._lavaT = Math.min(b._lavaT, 0.05);   // (the route was dropped: plan it again now)
       it.squid = false;
-    }
+    } else b._escNx = null;
     return null;
   }
   // the lookouts' HIGH-pose nav nodes (the floats whose look says 'lookout')
