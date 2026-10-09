@@ -67,6 +67,13 @@ const now = () => performance.now() / 1000;
 // how long a drawn ride takes to blend from where this screen had it onto its schedule: 0.4 s, or less on a short way
 // left (done before the pop)
 const blendT = (L, u, v) => Math.max(0.05, Math.min(0.4, ((L - u) / v) * 0.8));
+// … and onto a new owner's record on a screen that drew the ride AHEAD of it (d = drawn − schedule > 0): long enough that
+// the drawn rider only slows (to ≥ 0.4 of its speed), never steps back — it need not be done before the pop: a rider drawn
+// ahead reaches the mouth first and waits there for the pop record (LEAD-REVIEW round 2, item 3)
+// … and BEHIND it (d < 0: a new host catching an adopted ride up to where its old owner had it, a playback delay ahead):
+// slow enough that the drawn rider runs at most twice its speed where the way left allows, still done before the pop
+const blendBehind = (L, u, v, d) => Math.max(0.05, Math.min(Math.max(0.4, (1.5 * -d) / v), ((L - u) / v) * 0.8));
+const blendAhead = (L, u, v, d) => (d > 0 ? Math.min(1.5, Math.max(blendT(L, u, v), (2.5 * d) / v)) : blendBehind(L, u, v, d));
 const r3 = (v) => Math.round(v * 1000) / 1000;
 const ease = (k) => k * k;
 
@@ -414,7 +421,7 @@ export class StagePipes {
       v: leg.speed * (carp ? PIPES.carpMul : 1), steerX: 0, steerZ: 0, steerOn: false, high: false, chimed: false, lit: false,
       entry: e.i, exit: exit.i, remote: false, owner: a.owner, s: dir > 0 ? opts.u0 || 0 : leg.len - (opts.u0 || 0), u: opts.u0 || 0, camYaw: null };
     a.pipe = p; a.pipeNet = true;
-    if (opts.from !== undefined) { p.dOff = opts.from - p.u0; p.dOffT = 0; p.dOffD = blendT(leg.len, p.u0, p.v); }   // (drawn from there, blending on)
+    if (opts.from !== undefined) { p.dOff = opts.from - p.u0; p.dOffT = 0; p.dOffD = blendAhead(leg.len, p.u0, p.v, p.dOff); }   // (drawn from there, blending on)
     netRec(a, 'pipe', [0, leg.i, e.k, r3(p.t0), r3(p.u0)]);
     if (!rebased) {
       this.stats.rides[leg.id][(dir > 0 ? 0 : 2) + (a.team ? 1 : 0)]++;
@@ -443,10 +450,31 @@ export class StagePipes {
   }
   _eta(p) { return Math.max(0, this._popAt(p) - this._T(p)); }
   // the ride's time base: the owner's performance clock online (its records are stamped with it), the frame time offline;
-  // a proxy reads its owner's playback clock
+  // a proxy reads its owner's playback clock (p.Tr, advanced in carryRemote)
   _T(p) {
-    if (p.remote) { const peer = G.netm?._peer?.(p.owner); return peer && peer.tr !== undefined && !p.proj ? peer.tr - p.t0 : p.T; }
+    if (p.remote) return p.Tr ?? this._remoteWant(p) ?? p.T;
     return G.netm ? now() - p.t0 : p.T;
+  }
+  // a proxy's ride time: its owner's playback time (the moment this screen shows of the owner), but never stalled: when
+  // the owner's ticks run dry (a lag spike, or a host that has just left) that playback clock slows to half speed and
+  // then re-syncs with a jump, while a ride is a pure function of its owner's time — so the lag the playback clock builds
+  // up behind its own target (now − offset − delay) during this ride is added back (at most 0.5 s: the clock re-syncs
+  // there). Normally that lag is nil and this is the playback time exactly. (A remaining guest so never stalls a rider
+  // in the tube while the old host's ticks run out, and has nothing to catch up when the new owner takes it over: before,
+  // it caught up 10 m in 0.08 s: LEAD-REVIEW round 2, item 3)
+  _remoteWant(p) {
+    const peer = !p.proj && G.netm?._peer?.(p.owner);
+    if (!peer || peer.tr === undefined) return null;
+    const e = peer.init ? now() - peer.off - (peer.delay || 0) - peer.tr : 0;
+    if (p.e0 === undefined) p.e0 = Math.max(0, e);   // (a lag already there when the ride began is the playback's, not ours)
+    return peer.tr + clamp(e - p.e0, 0, 0.5) - p.t0;
+  }
+  // once a frame (carryRemote): the drawn ride's clock never runs backward and runs at most 1.5× real time (a re-sync's
+  // jump is ridden out, not jumped)
+  _advanceRemote(p, dt) {
+    const w = this._remoteWant(p);
+    if (w === null) return;
+    p.Tr = p.Tr === undefined ? w : Math.max(p.Tr, Math.min(w, p.Tr + dt * 1.5));
   }
 
   // ------------------------------------------------------------------------------------------------ the ride (owner)
@@ -687,7 +715,7 @@ export class StagePipes {
       if (was && was.chimed && rebased) p.chimed = true;
       if (was && rebased && was.remote && was.leg === p.leg && was.dir === p.dir && was.phase === 'ride') {
         const T = this._T(p), d = (was.u || 0) - this._uAt(p, T);
-        if (Math.abs(d) < 8) { p.dOff = d; p.dOffT = T; p.dOffD = blendT(leg.len, this._uAt(p, T), p.v); }
+        if (Math.abs(d) < 8) { p.dOff = d; p.dOffT = T; p.dOffD = blendAhead(leg.len, this._uAt(p, T), p.v, d); }
         this.events.push(['pipe:rebase', { nid: a.nid, T: r3(T), d: r3(d), wasU: r3(was.u || 0), u0, proj: !!was.proj }]);
       }
       a.pipe = p;
@@ -738,10 +766,11 @@ export class StagePipes {
     }
     if (p.phase === 'pop') { p.popT += dt; return; }
     // a host change mid-ride: the old t0 belongs to the old owner's clock — ride on at the leg's speed from where it was
-    // drawn until the new owner's re-based [0] arrives
-    // (and from where the old owner really was: this screen drew it a playback delay behind — LEAD-REVIEW round 1 item 5)
-    if (p.owner !== a.owner && !p.proj) { const u = this._uTrue(p, false), u1 = p.u || 0; p.proj = true; p.rebased = true; p.u0 = u; p.dOff = u1 - u; p.dOffT = 0; p.dOffD = blendT(this.legs[p.leg].len, u, p.v); p.T = 0; p.phase = 'ride'; }
+    // drawn (on its own clock: _T kept it from stalling while the old owner's ticks ran out, so there is nothing to catch
+    // up) until the new owner's re-based [0] arrives; that record is met with a blend (net(): blendAhead)
+    if (p.owner !== a.owner && !p.proj) { const u = this._uTrue(p, false), u1 = p.u || 0; p.proj = true; p.rebased = true; p.u0 = u; p.dOff = u1 - u; p.dOffT = 0; p.dOffD = blendT(this.legs[p.leg].len, u, p.v); p.T = 0; p.Tr = undefined; p.phase = 'ride'; this.events.push(['pipe:handoff', { nid: a.nid, u: r3(u), d: r3(u1 - u) }]); }
     p.T += dt;
+    this._advanceRemote(p, dt);
     const T = this._T(p);
     this._place(a, p, T, dt, false);
   }
@@ -768,13 +797,15 @@ export class StagePipes {
   // where a proxy's ride really is on its (old) owner's timeline: this screen draws it at the owner's playback time, a
   // playback delay (0.07–0.3 s) behind the owner's own clock; a ride is a pure function of time, so add that delay back
   // (an adopted ride then pops when it would have, not a delay late)
-  // full: where it is now on the owner's own clock (a new owner riding it on); not full: where this screen's playback of
-  // the old owner would have it had that clock not stalled as the old owner's ticks ran out (a screen that goes on
-  // drawing it as a proxy: proxies are drawn a playback delay behind, so the new owner's records will meet it there)
+  // full: where it is now on the owner's own clock (now − the peer's offset: a new owner riding it on; not capped at 0.5 s
+  // any more — with a lagged page's delay on top of a stalled playback clock the cap re-based it up to 0.25 s late, and the
+  // remaining guest then met the new record 4.5 m behind where it drew it); not full: where this screen draws it, which
+  // _T keeps from stalling as the old owner's ticks run out (a screen that goes on drawing it as a proxy: proxies are
+  // drawn a playback delay behind, so the new owner's records meet it there)
   _uTrue(p, full = true) {
     const L = this.legs[p.leg].len, peer = !p.proj && G.netm?._peer?.(p.owner);
     let T = this._T(p);
-    if (peer && peer.init && peer.tr !== undefined) T += clamp(now() - peer.off - (full ? 0 : peer.delay || 0) - peer.tr, 0, 0.5);
+    if (full && peer && peer.init && peer.tr !== undefined) T = Math.max(T, now() - peer.off - p.t0);
     return Math.min(L, p.rebased ? p.u0 + T * p.v : p.u0 + Math.max(0, T - PIPES.suck) * p.v);
   }
 

@@ -13,9 +13,12 @@
 //      same flow() state at the same stage-clock times
 //   6. a late joiner C, opening while a bot is mid-ride: C draws it within 0.3 m of the centreline (projection from
 //      the tick flag), C's applyHit drops a shot at it, and C's first frame has the host's tide state
-//   7. a host change mid-ride and mid-tide: a bot enters the Gulper Run, A leaves; B adopts the bot mid-ride and it
-//      pops within ±0.3 s of when it would have; C draws it within 0.1 m of the centreline across the handoff; the
-//      tide's next flip lands on the same tick on B and C
+//   7. a host change mid-ride and mid-tide: a bot enters the Gulper Run, A leaves; B is the host, not a follower, and
+//      owns every squidkid A ran, with no error on B or C; B adopts the bot mid-ride and it pops within ±0.3 s of when
+//      it would have; C draws it within 0.1 m of the centreline across the handoff with no snap; the tide turns under
+//      the new host and B and C agree through the turn
+//   and no page logs an error or a warning all test long
+// (A host change in a timed match, and a guest leaving mid-ride: net-pipes-leave.cjs)
 module.exports = async ({ clients, R, wait, open, close, say }) => {
   const [A, B] = clients;
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
@@ -200,29 +203,54 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   await A.js(`__pp.approach(${otherBot}, ${gE}, 0)`);
   await wait(500);
   for (const c of [B, C]) await c.js(`__pp.sample(${otherBot}, 6)`);
+  // (everything A runs, as B sees it: after the handoff each must be B's own, not a proxy, with a brain)
+  const aOwned = await J(B, `(() => { const hid = __G.net.hostId ?? __G.netm.s.hostId; return __G.match.actors.filter((x) => x.owner === hid && x.isBot).map((x) => x.nid); })()`);
   const t0 = Date.now();
   await A.js(`__pp.ride(${otherBot}, 'gulper', 0)`);
   await wait(600);
   await C.js(`__pp.mark(${otherBot})`);
   const fBefore = await J(B, `__pp.flow()`);
+  const logB0 = B.log.length, logC0 = C.log.length;
   close(0);
   await B.until(`__G.net.isHost`, 20000, 100).catch(() => {});
-  await wait(4500);
+  await wait(1500);
+  // the handoff itself: B is the host and no longer a follower (its clock, judge and bots run), every squidkid A ran is
+  // B's now, and neither remaining page logged an error doing it (LEAD-REVIEW round 2: adopt() threw, onLeave stopped
+  // half-way, B stayed a follower and A's other bots froze)
+  const hand = await J(B, `(() => { const m = __G.match, me = __G.netm.myId, want = ${JSON.stringify(aOwned)}; return { isHost: !!__G.net.isHost, follower: m.follower, practice: !!m.practice, bots: want.map((n) => { const a = m.actors.find((x) => x.nid === n); return a ? [n, a.owner === me, !!a.remote, !!a.bot] : [n, 'gone']; }) }; })()`);
+  const errAt = (c, n) => c.log.slice(n).filter((l) => /error|TypeError|ReferenceError|Uncaught/i.test(l));
+  R('7. the handoff: B is the host and no longer a follower, every squidkid A ran (' + aOwned.length + ') is B\'s own (not a proxy, with a brain), and neither B nor C logged an error',
+    hand.isHost && hand.follower === false && aOwned.length > 0 && hand.bots.every((b) => b[1] === true && b[2] === false && b[3] === true) && !errAt(B, logB0).length && !errAt(C, logC0).length,
+    { ...hand, errB: errAt(B, logB0).slice(0, 3), errC: errAt(C, logC0).slice(0, 3) });
+  await wait(3000);
   const s7b = await J(B, `__pp.got(${otherBot})`), s7c = await J(C, `__pp.got(${otherBot})`);
   const expectPop = 0.25 + 25.44 / 18;   // s from the capture
   // (B saw the ride start a playback delay after A started it: B's pop is measured from A's start, on A's clock)
   const popB = s7b.popT !== null && s7b.enterT !== null ? (s7b.popT - s7b.enterT) / 1000 + (s7b.enterLag || 0) : null;
   R('7. after the host leaves mid-ride, the new host (B) adopts the bot and it pops at the far end within ±0.3 s of when it would have (on the old host\'s clock)', s7b.popEnd === gW && popB !== null && Math.abs(popB - expectPop) < 0.3, { popB, expectPop, enterLag: s7b.enterLag, raw: s7b.popT !== null ? (s7b.popT - s7b.enterT) / 1000 : null, end: s7b.popEnd, phases: s7b.phases, wall: (Date.now() - t0) / 1000 });
   R('7. the remaining guest (C) draws the rider within 0.1 m of the centreline across the handoff, and without a jump (it catches up smoothly to where the old host had it: no snap)', s7c.after > 5 && s7c.maxDAfter < 0.1 && s7c.popEnd === gW && s7c.popsAfter === 0, { after: s7c.after, maxDAfter: s7c.maxDAfter, maxD: s7c.maxD, phases: s7c.phases, pops: s7c.pops, popsAfter: s7c.popsAfter, worstKink: s7c.worstKink, worstAt: s7c.worstAt });
-  say('C rebase', JSON.stringify(await J(C, `__G.match.pipes.events.filter((e) => e[0] === 'pipe:rebase' || e[0] === 'pipe:adopt' || e[0] === 'pipe:project').slice(-6)`)));
+  say('C rebase', JSON.stringify(await J(C, `__G.match.pipes.events.filter((e) => e[0] === 'pipe:rebase' || e[0] === 'pipe:adopt' || e[0] === 'pipe:project' || e[0] === 'pipe:handoff').slice(-6)`)));
+  say('B adopt', JSON.stringify(await J(B, `__G.match.pipes.events.filter((e) => e[0] === 'pipe:adopt').slice(-3)`)));
   R('7. the new host (B) draws its adopted rider without a jump either', s7b.pops === 0, { pops: s7b.pops, worstKink: s7b.worstKink, worstAt: s7b.worstAt });
-  // the tide carries on under the new host: B and C agree through the next change
+  // the tide carries on under the new host: B and C agree through the next change, and there IS a change (sampled until
+  // the direction has turned on B, up to 26 s: the test's period is 20 s)
   const fl = [];
-  for (let i = 0; i < 8; i++) { const [fb, fc] = await Promise.all([J(B, `__pp.flow()`), J(C, `__pp.flow()`)]); fl.push([fb, fc]); await wait(1500); }
+  for (let i = 0; i < 18; i++) {
+    const [fb, fc] = await Promise.all([J(B, `__pp.flow()`), J(C, `__pp.flow()`)]);
+    fl.push([fb, fc]);
+    if (fl.length >= 8 && new Set(fl.map(([x]) => x.dir)).size > 1 && fb.phase === 'run') break;
+    await wait(1500);
+  }
   // (the remaining guest's clock settles onto the new host's within a few seconds: the clocks are compared from the 4th
-  // sample on, the flow states on every sample)
-  const ag = fl.filter(([fb, fc]) => fb.dir === fc.dir && fb.phase === fc.phase).length, sk = Math.max(...fl.slice(3).map(([fb, fc]) => Math.abs(fb.t - fc.t)));
-  const dirs = new Set(fl.map(([fb]) => fb.dir));
-  R('7. the tide carries on under the new host: B and C report the same flow() through the next change (clocks within 0.4 s once settled)', sk < 0.4 && ag >= 7 && fBefore, { agree: ag, of: fl.length, skewSettled: sk, skewAll: fl.map(([fb, fc]) => +Math.abs(fb.t - fc.t).toFixed(2)), dirs: [...dirs], before: fBefore });
+  // sample on, the flow states on every sample but those within 0.6 s of a change instant)
+  const edge = (t) => { const k = t % 20; return [10, 17, 20, 0, 1].some((x) => Math.abs(k - x) < 0.6); };
+  const ag = fl.filter(([fb, fc]) => (fb.dir === fc.dir && fb.phase === fc.phase) || edge(fb.t)).length, sk = Math.max(...fl.slice(3).map(([fb, fc]) => Math.abs(fb.t - fc.t)));
+  const dirsB = [...new Set(fl.map(([fb]) => fb.dir))], dirsC = [...new Set(fl.map(([, fc]) => fc.dir))];
+  R('7. the tide carries on under the new host: its direction turns on B after the handoff, and B and C report the same flow() through that change (clocks within 0.4 s once settled)',
+    sk < 0.4 && ag === fl.length && dirsB.length === 2 && dirsC.length === 2 && fBefore, { agree: ag, of: fl.length, skewSettled: sk, skewAll: fl.map(([fb, fc]) => +Math.abs(fb.t - fc.t).toFixed(2)), dirsB, dirsC, before: fBefore, last: fl[fl.length - 1] });
+  // nothing on any page logged an error or a warning all test long (TypeError, ReferenceError, Uncaught …: netpage keeps
+  // every error / warning line but the lightmap's and Electron's own)
+  const logs = [A, B, C].map((c) => [...new Set(c.log)].slice(0, 4));
+  R('no page (A, B or C) logged an error or a warning', logs.every((l) => !l.length), { logs });
   say('done');
 };
