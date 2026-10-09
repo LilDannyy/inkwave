@@ -30,6 +30,9 @@ export const PIPES = {
                                                              //   in its top 1.2 m (a lens there looks out over the promenade)
     { box: [-5.9, 5.9, -30.9, -19.1], y: [6.05, 8.95] },     // the South Arch Tank over the hall (twin: the North)
   ],
+  // mid's high ground for PAGEQ=pipestats' arrival share (DESIGN.md §6.2(e)): the Feeding Deck (in the Great Tank's 16-gon,
+  // 2.4) and both Sea Promenades with their Lookouts, telescope bays and the Kelp Balconies over them (2.4 and up)
+  highGround: { y: 2.3, cyl: [[0, 0, 7.6]], sector: [[20.6, 33.5, -175, -105], [20.6, 33.5, 5, 75]] },
   legs: [
     { id: 'gulper', way: 'two', single: true, bend: 2.0,    // the Gulper Run, through the Great Tank under the deck
       names: ['EAST GULPER', 'WEST GULPER'],

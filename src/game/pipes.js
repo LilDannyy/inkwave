@@ -238,6 +238,7 @@ export class StagePipes {
     this._tideSync(S.clock.t, true);
     this.hudUi = m.attract ? null : new PipesHud(this);
     this.lastLand = new Map();   // actor → this.t of its last touchdown (the camping metric)
+    this.hiGround = (STATS_Q && G.level?.layout?.pipes?.highGround) || null;   // (PAGEQ=pipestats: the high-ground arrivals)
     Object.assign(this.stats, { deaths: 0, deathsAfterLand: 0, pushMax: 0, giveUps: 0, botRides: 0, playT: 0 });
     this.unsubs = [
       on('actor:removed', (e) => this._removed(e && e.actor)),
@@ -341,6 +342,7 @@ export class StagePipes {
     this._tideSync(t, false);
     if (!this.started && this.m.state === 'playing') { this.started = true; this.hudUi?.start(); }
     if (this.m.state === 'playing') this.stats.playT += dt;
+    if (this.m.state === 'playing' && this.hiGround && (this._hgT = (this._hgT || 0) - dt) <= 0) { this._hgT = 0.1; this._highGround(); }
     if ((this._errT = (this._errT || 0) - dt) <= 0) { this._errT = 1; this._errands(); }
     if (STATS_Q && !this._reported && this.started && this.m.state !== 'playing' && this.m.state !== 'intro') { this._reported = true; this._report(); }
     // (the grade only while the ride camera runs: it sets it each frame from its lens)
@@ -413,7 +415,7 @@ export class StagePipes {
     this.stats.refusals[why] = (this.stats.refusals[why] || 0) + 1;
     this.events.push(['pipe:refuse', { end: e.i, why }]);
     emit('pipe:refuse', { actor: a, end: e.i, why });
-    if (a.bot) this._markBad(a.bot, e);
+    if (a.bot) { this._markBad(a.bot, e); a.bot.path = null; a.bot.repath = 0; this.push.delete(a.bot); }   // (drop the path: replan at once)
     if (a.isLocal || this._near(a.pos, 14)) G.audio?.play('pipe_tok', { pos: _v.fromArray(e.pos), volume: 0.8 });
     this.W.looks?.rattle(e.i);
   }
@@ -865,6 +867,9 @@ export class StagePipes {
       const key = leg.i * 2 + k, from = leg.ends[k], to = leg.ends[1 - k];
       if (from.inWhen === 'never') continue;
       if ((a.carry && !this.carpOpen.has(leg.i)) || this.m.tower?.riderList?.includes(a)) { X[key] = Infinity; continue; }
+      // (its own cooldown or an active special would refuse it at the mouth: never plan through a pipe then — the bots
+      // pushed at a mouth for up to 2 s before; LEAD-NOTES 2026-10-10 item 1)
+      if (a.pipeCd > 0 || (a.specialActive && !a.specialActive.free) || a.superJumpState) { X[key] = Infinity; continue; }
       let c = 0;
       if (mem) for (const [e, kn] of mem) { if (!e.alive || tnow - kn.t > B.seenT) continue; if (Math.hypot(kn.pos.x - to.land[0], kn.pos.z - to.land[2]) < B.seenR) c += B.seen; }
       c += this._inkDanger(to, a.team);
@@ -1164,6 +1169,30 @@ export class StagePipes {
   _stopLoop(a) { const h = this.loops.get(a); if (h) { h.stop?.(0.2); this.loops.delete(a); } }
   _stopLoops() { for (const h of this.loops.values()) h?.stop?.(0.2); this.loops.clear(); if (this._fans) { for (const h of this._fans.values()) h?.stop?.(0.2); this._fans.clear(); } }
 
+  // arrivals at mid's high ground (the layout's `pipes.highGround`: { y, cyl: [[x, z, r]], sector: [[r0, r1, a0, a1]] } —
+  // the Feeding Deck, the promenades, the Lookouts): an actor standing there now that wasn't 0.1 s ago arrived; it came by
+  // pipe when it touched down from a pop in the last 2.5 s (DESIGN.md §6.2(e): the share should be 10–35 %)
+  _onHigh(p) {
+    const H = this.hiGround;
+    if (p.y < H.y) return false;
+    for (const [x, z, r] of H.cyl || []) if (Math.hypot(p.x - x, p.z - z) <= r) return true;
+    const r = Math.hypot(p.x, p.z), b = (Math.atan2(p.z, p.x) * 180) / Math.PI;
+    for (const [r0, r1, a0, a1] of H.sector || []) if (r >= r0 && r <= r1 && b >= a0 && b <= a1) return true;
+    return false;
+  }
+  _highGround() {
+    const S = this.stats, hg = S.hg || (S.hg = { arr: 0, pipe: 0, team: [[0, 0], [0, 0]], prev: new Map() });
+    for (const a of this.m.actors) {
+      if (a.remote) continue;
+      const was = hg.prev.get(a) || false, on = a.alive && !a.pipe && this._onHigh(a.pos) && (a.grounded || was);   // (a hop on it is no new arrival)
+      if (on && !was) {
+        const l = this.lastLand.get(a), byPipe = l !== undefined && this.t - l < 2.5;
+        hg.arr++; if (byPipe) hg.pipe++;
+        const tm = hg.team[a.team] || (hg.team[a.team] = [0, 0]); tm[0]++; if (byPipe) tm[1]++;
+      }
+      hg.prev.set(a, on);
+    }
+  }
   // the counters for match.cjs (PAGEQ='pipestats'): one console line each, under its 300-character cut
   _report() {
     const S = this.stats, mins = Math.max(1e-6, S.playT / 60), bots = this.m.actors.filter((a) => a.bot).length || 1;
@@ -1174,6 +1203,7 @@ export class StagePipes {
     const rate = S.deaths / Math.max(1, S.playT / 2) / Math.max(1, this.m.actors.length);
     console.warn('[pipes] STATS camping ' + JSON.stringify({ deaths: S.deaths, landings: S.landings.length, deathsWithin2sOfTouchdown: S.deathsAfterLand, perLanding: +(S.deathsAfterLand / Math.max(1, S.landings.length)).toFixed(3), basePer2sPerActor: +rate.toFixed(4) }));
     console.warn('[pipes] STATS perExit [landings, deaths ≤ 2 s] ' + JSON.stringify(Object.fromEntries(Object.entries(S.perExit || {}).map(([i, v]) => [`${this.legs[this.ends[i].leg].id}:${this.ends[i].k ? 'B' : 'A'}`, v]))));
+    if (S.hg) console.warn('[pipes] STATS highground ' + JSON.stringify({ arrivals: S.hg.arr, byPipe: S.hg.pipe, share: +(S.hg.pipe / Math.max(1, S.hg.arr)).toFixed(3), team: S.hg.team }));
     console.warn('[pipes] STATS tide ' + JSON.stringify(S.flips.filter((f) => f.phase === 'flip').map((f) => [f.t, f.dir])) + ' kelp rides per tide phase [team0, team1] ' + JSON.stringify(Array.from(S.kelpPhase || [], (x) => x || [0, 0])));
   }
 
