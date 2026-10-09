@@ -127,7 +127,6 @@ placements.push({ type: 'bluestone_tartar', pos: [0, 0, 0], mirror: false });
 placements.push({ type: 'bluestone_dome', pos: [0, 0, 0], mirror: false });
 placements.push({ type: 'bluestone_clockrow', pos: [0, 0, -7.575] });
 placements.push({ type: 'bluestone_turret', pos: [-12.75, 0, -19.75] });
-placements.push({ type: 'bluestone_gpotower', pos: [-11, 0, -44.5] });   // (round C: the GPO's tower on the quay corner, 6 → 16 m)
 for (const z of [-36.75, -31.25]) placements.push({ type: 'bluestone_grille', pos: [-30.75, 0, z], len: 3.5 });   // (the arcade's grilles onto Hoki Lane)
 export const BERM_MISS = [];
 export const PLACEMENTS = eraFilter(placements);

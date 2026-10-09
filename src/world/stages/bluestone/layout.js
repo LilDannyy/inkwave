@@ -280,9 +280,9 @@ const LEG_PIECES = [
   B(-17.2, -16.2, 0, 1.5, -30, -28, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // the GPO: the building on Customs Lane's corner (its clock tower to 16 m), the portico terrace (1.2) with its steps
   // down to Swimston and its piers, the hop down to the quay on its east face
-  // (6 m and its tower on the quay corner: from the spawn deck the dome shows over it, up Swimston's east side)
+  // (6 m, no clock tower: in the Z the dome stands off Swimston's axis, 10–22° right of it from the spawn deck, exactly
+  //  behind the GPO's corner; a tower there hid it. The art pass puts the GPO's clock on its parapet, under the dome's line)
   ...bld(P.gpoB[0], P.gpoB[1], P.gpoB[2], P.gpoB[3], 6, { tag: 'gpo', color: K.gpo }, BOT),
-  B(-12.5, -9.5, 6, 16, -46, -43, { tag: 'gpo-clocktower', color: K.gpo, pattern: PATTERN.render, roof: true, paint: false }),
   ...tierBoxes([P.gpo], 1.2, sand({ tag: 'gpo-terrace' })),
   R([-16, 0, -35.5], [-13, 1.2, -35.5], 9, stair({ tag: 'gpo-steps' })),
   B(-13, -12.2, 1.2, 3.2, -41.5, -40.7, { tag: 'gpo-pier', color: '#bdb196', pattern: PATTERN.render, roof: true }),
