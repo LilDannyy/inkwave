@@ -831,10 +831,14 @@ export class StageLava {
     if (start) return true;
     return this.maxOver(t, t + LAVA.goalLook) < M.shutY[id];
   }
+  // paint goals: never floor the lava takes soon, nor a rider leaving its pose; the Organ lookouts while they stand at a
+  // pose are worth going up (the lookout ×2.2, the steps ×1.4: the matches showed bots seldom went up on their own)
   goalWeight(id) {
     const M = this.W.navMeta;
     if (!M || !M.kind[id]) return 1;
-    return this.navNode(id, false) ? 1 : 0.02;
+    if (!this.navNode(id, false)) return 0.02;
+    if (M.kind[id] === 2) { const r = this.W.riders[M.rider[id]]; if (r && !r.sink) return r.look?.role === 'lookout' ? 2.2 : 1.4; }
+    return 1;
   }
   // every bot whose route runs onto a node shut at its arrival re-plans (the warning, the rise, a window closing)
   _replanBots(t) {

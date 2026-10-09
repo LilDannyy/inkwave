@@ -49,7 +49,7 @@
       const span = h.length > 1 ? Math.max(...h.map((p) => Math.hypot(p.x - a.pos.x, p.z - a.pos.z))) : 99;
       if (wants && h.length >= 11 && span < 1.0) {
         stuckS += 0.25;
-        if (!open.has(a)) { const ep = { t: r1(simT), name: a.name, pos: [r1(a.pos.x), +a.pos.y.toFixed(2), r1(a.pos.z)], mode: a.bot.mode, dur: 0.25, stone: near(a.pos.x, a.pos.z, stones, 2), organ: near(a.pos.x, a.pos.z, organs, 2), lava: L.st.phase }; open.set(a, ep); eps.push(ep); }
+        if (!open.has(a)) { const ep = { t: r1(simT), name: a.name, pos: [r1(a.pos.x), +a.pos.y.toFixed(2), r1(a.pos.z)], mode: a.bot.mode, dur: 0.25, stone: near(a.pos.x, a.pos.z, stones, 2), organ: near(a.pos.x, a.pos.z, organs, 2), crest: Math.hypot(Math.abs(a.pos.x) - 23.5, Math.abs(a.pos.z) - 38.7) < 2 && a.pos.x * a.pos.z > 0, lava: L.st.phase }; open.set(a, ep); eps.push(ep); }
         else open.get(a).dur += 0.25;
       } else open.delete(a);
       // Slump crossings
@@ -70,7 +70,7 @@
   R('no bot drowned by a rise it was warned of (a lava death on drowning ground in an announced surge, not knocked in)', warnedNoAttacker.filter((d) => d.node !== 'dry' || d.at[1] < 0.5).length === 0, { n: warnedNoAttacker.length, list: warnedNoAttacker });
   R('no falls into the sea', water.length === 0, water);
   R('stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races', eps.every((e) => e.dur < 10) && !eps.some((e) => e.stone && e.dur >= 2),
-    { stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(2), longest: longEps.slice(0, 6), atStones: eps.filter((e) => e.stone), atOrgans: eps.filter((e) => e.organ) });
+    { stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(2), longest: longEps.slice(0, 6), atStones: eps.filter((e) => e.stone), atOrgans: eps.filter((e) => e.organ), atCrestStair: eps.filter((e) => e.crest) });
   R('the Slumps crossed (the shelf or a Race) and the Organ lookouts used', true, { crossings, lookout: Object.fromEntries(Object.entries(S.lookout).map(([k, v]) => [k, r1(v)])), burned: S.burned, devices: S.devices, redirects: S.redirects || 0 });
   R('the match', true, { mode: MODE, simT: r1(simT), wallS: r1((performance.now() - t0) / 1000), state: m.state, cov, winner: m.result?.winner ?? null, phaseAtEnd: L.st.phase, yAtEnd: L.y });
   return out;
