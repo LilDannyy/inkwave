@@ -858,7 +858,9 @@ export function dangerOf(it) {
 function fight(brain, dist) {
   const a = brain.a, t = brain.target, s = a.sub?.kind === KIND ? a.sub : S();
   if (!t || !t.alive || !(brain.seeTimer > 0) || dist < 5 || dist > 15 || Math.abs(t.pos.y - a.pos.y) > 1.2 || a.ink < s.inkCost + 5) return false;
-  if (Math.random() > 0.03 * (1 + brain.diff.fireDiscipline)) return false;
+  // (mostly 5–11 m, where the cook shortens the fuse and grows the blast; past 11 m it is a near-uncooked 2.2 m blast that
+  // a foe has two seconds to step out of: a quarter of the chance)
+  if (Math.random() > 0.03 * (1 + brain.diff.fireDiscipline) * (dist <= 11 ? 1 : 0.25)) return false;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, t.pos.x, t.pos.z) || !brain._fatLos(a.pos.x, a.pos.y - 0.15, a.pos.z, t.pos.x, t.pos.y - 0.15, t.pos.z)) return false;
   brain.bombCd = 6 + Math.random() * 5;
   brain._glide = { mode: 'fight', t };
