@@ -309,7 +309,9 @@ const RF = roofR(K.steel, { tag: 'pump-roof' });
 // 8.0 m, its glass 0.22 m above the teeth, low enough to pass under the bathysphere from the spawn; the tower keeps
 // 1.7 m over its swept volume)
 for (const [s0, s1, top] of [[3.6, 6.8, 6.9], [6.8, 10.0, 6.6], [10.0, 13.0, 6.9], [13.0, 16.0, 6.6], [16.0, 19.0, 6.9], [19.0, 21.0, 6.6]]) H(bladeBox(s0, s1, 6.5, wE(s0 + 0.01) - (s0 >= 19 ? 0.6 : 0), 6.4, top, RF));
-H(B(17.99, 18.59, 0, 6.4, -46.49, -45.89, roofR(K.steel, { tag: 'truss-column' })));
+// (the truss column at s 20.0: at s 21.0 it stood 27° off the Express plaza mouth's axis and hid it from 2 of the 16
+// floor points in front — ENGINE.md rule 13 wants 90 %; 1 m up the shed it is 38° off and hides none: pipes-audit.js)
+H(B(17.49, 18.09, 0, 6.4, -45.62, -45.02, roofR(K.steel, { tag: 'truss-column' })));
 const BUND = { color: K.bund, pattern: PATTERN.metalpanel, tag: 'bund' };
 // (the bund ends at s 21, the shed's south end: the Express's plaza stop closes it against the sea edge)
 H(bladeBox(8, 10, 13, 18.9, FL, 1.2, BUND), bladeBox(10, 19, 13, 17.4, FL, 1.2, BUND), bladeBox(19, 21, 13, 15.9, FL, 1.2, BUND));

@@ -86,7 +86,7 @@ void main() {
   #include <colorspace_fragment>
 }`;
 
-// the deck light: an additive floor quad lit at the riders under it
+// the deck light: a floor quad lit in the colour of the riders under it
 const DECK_VS = /* glsl */`varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
 const DECK_FS = /* glsl */`
 uniform vec4 uRP[${MAXR}];   // x, z, dirX, dirZ
@@ -104,7 +104,12 @@ void main() {
     g *= uRT[i].y;
     c += (uRT[i].x > 0.5 ? uTeam1 : uTeam0) * g; k = max(k, g);
   }
-  gl_FragColor = vec4(c * (1.6 + 0.2 * sin(uTime * 9.0)), 1.0);
+  if (k <= 0.002) discard;
+  // the rider's own colour laid over the floor (not added to it: over the other team's ink an added glow washes out to
+  // white; laid over, it reads as the rider's ink on any floor), a touch brighter than ink and pulsing
+  vec3 col = c / max(k, 1e-3);
+  gl_FragColor = vec4(col * (1.2 + 0.15 * sin(uTime * 9.0)), min(0.9, k * 1.15));
+  #include <colorspace_fragment>
 }`;
 
 // the signs and floor arrows: per-instance rects of one canvas atlas
@@ -424,7 +429,7 @@ export class PipeLooks {
       if (!D || (leg.single && leg.isTwin)) continue;
       const [x0, x1, z0, z1, y] = D;
       const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0); g.rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, y + 0.02, (z0 + z1) / 2);
-      const mat = new THREE.ShaderMaterial({ vertexShader: DECK_VS, fragmentShader: DECK_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+      const mat = new THREE.ShaderMaterial({ vertexShader: DECK_VS, fragmentShader: DECK_FS, transparent: true, depthWrite: false, blending: THREE.NormalBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
         uniforms: { uRP: { value: Array.from({ length: MAXR }, () => new THREE.Vector4()) }, uRT: { value: Array.from({ length: MAXR }, () => new THREE.Vector4()) }, uLeg: { value: leg.i }, uTeam0: this.uniforms.uTeam0, uTeam1: this.uniforms.uTeam1, uTime: this.uniforms.uTime } });
       const mesh = new THREE.Mesh(g, mat); mesh.name = 'pipes:deck-light'; mesh.renderOrder = 2; mesh.onBeforeRender = noAO; mesh.frustumCulled = false;
       this.group.add(mesh); this.decks.push(mesh);

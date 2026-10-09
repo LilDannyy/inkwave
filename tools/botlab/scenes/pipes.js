@@ -211,6 +211,27 @@
       }
     }
   }
+  if (set === 'glowprobe') {
+    // the frames tests/pipes-audit.js's glow part reads its pixels from (a team-1 bot mid-ride, the camera held still)
+    const PROBES = [
+      ['glowprobe-1-tank-from-court', 'gulper', 12.5, [0, 1.6, -12.5], [0, 0.5, 0], false],
+      ['glowprobe-2-glass-walk-through-enemy-ink', 'gulper', 12.5, [0, 4.0, -6.5], [0, 2.4, 0], true],
+      ['glowprobe-3-express-from-the-terrace', 'express~', 30, [-1, 1.6, 31], [-5, 8, 37], false],
+    ];
+    for (const [name, id, u, from, look, ink] of PROBES) S(name, () => {
+      const a = me(), bot = M().actors.find((o) => o.team === 1 && o.bot);
+      for (const [k, o] of M().actors.entries()) if (o !== bot) away(o, k, 0);
+      for (const o of M().actors) { o.pipeCd = 0; if (o.pipe) P()._abort(o, 'shots'); }
+      if (ink) for (let x = -8; x <= 8; x += 0.8) for (let z = -2; z <= 2; z += 0.8) __G.paint.splat(new THREE.Vector3(x, 2.5, z), 1.0, 0, { seed: 0.5 });
+      hud(false); cine(from, look, window.__fov0);
+      const e = leg(id).ends[0]; put(bot, e.approach[0], e.approach[1], e.approach[2]); step(0.1);
+      P().debugRide(bot, id, 0);
+      for (let i = 0; i < 400 && bot.pipe && !(bot.pipe.phase === 'ride' && bot.pipe.u >= u); i++) dbg.step(1000 / 60);
+      const v = new THREE.Vector3(bot.pos.x, bot.pos.y + 0.3, bot.pos.z).project(__G.camera);
+      void a;
+      return { px: [Math.round((v.x + 1) / 2 * innerWidth), Math.round((1 - v.y) / 2 * innerHeight)], pos: bot.pos.toArray().map((x) => +x.toFixed(2)) };
+    });
+  }
   window.__hudScenes = scenes;
   return scenes.map((s) => ({ name: s.name, wait: s.wait }));
 })()
