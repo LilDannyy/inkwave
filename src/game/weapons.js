@@ -162,7 +162,7 @@ export class WeaponRunner {
       this.aimingSub = false;
       // "Can't use": a kit sub that only allows one out at a time (or similar) refuses the throw, ink untouched
       const refused = !!SK?.blocked?.(a, sub);
-      if (refused) emit('sub:cantuse', { actor: a, kind: sub.kind });
+      if (refused) emit('sub:cantuse', { actor: a, kind: sub.kind, reason: SK.blockedWhy?.(a, sub) || '' });   // [b5-subs] (the reason line)
       const ok = !refused && (bar ? G.time >= (bar.nextThrow || 0) : a.ink >= sub.inkCost);
       if (ok) {
         if (bar) bar.nextThrow = G.time + (bar.gap ?? bar.def.gap); else a.ink -= sub.inkCost;   // ([b5-sprules] gap: the bomb's own — sp-barrage.js)

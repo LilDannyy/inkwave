@@ -51,7 +51,23 @@ import { G } from '../../core/ctx.js';
 //                                      (netmatch mutes paint while ghost() runs; the kit keeps muting in its own tick for
 //                                      ghost objects) and never hurts (a remote attacker's hits are dropped). Shields /
 //                                      curtains stay solid (they block the local player's shots like the owner's do).
-//   netHurt?(id, dmg)                  the owner's side of a device hit made on another screen (registry netHurt)
+//   netHurt?(id, dmg, by)              the owner's side of a device hit made on another screen (registry netHurt; [b5-subs]
+//                                      by: the attacker's actor on this screen, or null)
+// [b5-subs] batch 5's kit-device hooks (tools/botlab/jobs/batch5/subs/SPEC.md §0.2–0.5), SUB_KITS[kind]:
+//   devices?(out)                      push one stable descriptor per live device (deployables.js walks them: shots, the
+//                                      tower, rolls, standing fire, crushIn, the bots' device shooting): { kind, kit: true,
+//                                      obj, team, owner, pos (the hit capsule's foot), aim (its centre), r, h, hitH, normal,
+//                                      floor (block id under it or −1), ghost, rides (the block it rides or null), live,
+//                                      prefer(brain), hurt(dmg, by), crush(how), flash(), teamFire?(by) }
+//   rideBodies?(out)                   push one ride body per live device on this screen (wave 1's attach / carry / netOn /
+//                                      _pushes / _lost move it): { pos, normal, mesh, state: 'kit', floor: true, kind, team,
+//                                      ghost, gid, owner, netKind, kill(why), lost?() }
+//   dropOwner?(actor)                  end every object of this kit owned by actor here, quietly (netmatch onLeave / _remove)
+//   lavaSweep?(pred)                   own devices whose pos passes pred end in the lava (caldera's destroyWhere)
+//   drawMap?(c, map, tc, s, hex, viewerTeam)   minimap marks, after the built-in devices
+//   blockedWhy?(actor, sub) → string   the reason line under "CAN'T USE" ('sub:cantuse'.reason)
+//   bot.rides?: true                   this sub may be used on a moving tower (bots.js)
+//   threats(out) descriptors may carry turret: true (a standing gun: range, locked, target — bots.js _threatScore)
 //   MAIN_KITS only: netState?(runner) → int   the pose / state bits other screens need (packed each tick)
 //                   netApply?(runner, bits, dt)   a remote runner: rebuild runner.kit from those bits
 // KIT_GHOSTS[kind] = { ghost } — ghost-only entries for things that aren't a main or sub kit (e.g. a special's objects)
@@ -65,7 +81,8 @@ let _seq = 0;
 export function netId(owner) { return owner && owner.nid !== undefined ? owner.nid * 100000 + (++_seq % 100000) : 0; }
 // a non-owner damaged a ghost device (a remote player's sprinkler, curtain, waddle …): the owner's copy takes it.
 // (kind: 'subs' for SubSystem items, else the kit kind — its netHurt(id, dmg) applies it on the owner's screen)
-export function netHurt(owner, kind, id, dmg) { if (id && dmg > 0) G.netm?.sendDevHit?.(owner, kind, id, dmg); }
+// ([b5-subs] by: who fired it — it rides as the 'dh' message's attacker, so the owner's 'device:down'.by / assist knows)
+export function netHurt(owner, kind, id, dmg, by = null) { if (id && dmg > 0) G.netm?.sendDevHit?.(owner, kind, id, dmg, by); }
 // run fn with paint muted when obj is a ghost (a remote player's copy): its splats are the owner's to send
 // true while a ghost (a remote player's replayed shot / bomb / sub) is being simulated: its damage to devices counts for
 // nothing here — the owner's own copy hits our ghost of the device and that hit arrives by netHurt

@@ -105,7 +105,7 @@ function D(key, src, team, owner) {
   d.shape = 0; d.x = 0; d.y = 0; d.z = 0; d.dx = 0; d.dz = 1; d.len = 0; d.d3 = false; d.ux = 0; d.uy = 0; d.uz = 1; d.back = 0.4;
   d.r = 1; d.core = 1; d.yLo = -1e9; d.yHi = 1e9; d.vx = 0; d.vz = 0; d.vt = 0; d.tIn = 0; d.tOut = 60; d.lethal = 2;
   d.los = false; d.losY = 0.35; d.vis = 'near'; d.sx = 0; d.sy = 0; d.sz = 0; d.linger = false; d.actor = null;
-  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false;
+  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false; d.turret = false;
   _list.push(d);
   return d;
 }
@@ -316,6 +316,19 @@ export function specialDangers() {
     d.tIn = Math.max(0, it.fuse); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.3;
     see(d, it.pos.x, it.pos.y + 0.3, it.pos.z);
   }
+  // ---- [b5-subs] an enemy Scrap Sentry (kits/sentry.js): its reach (11 m) as far as it can see — routes go round it
+  // (linger; the nodes it has a line on: turretSees). It's a turret the threat system shoots or evades (bots.js
+  // _threatScore's turret branch), so no escape, guard or "you're in it" from it (turret); a bot holding the objective
+  // takes it (not in the hard layer). A visible machine: big
+  for (const it of SUB_KITS.sentry?.items || []) {
+    if (it.state !== 'watch' && it.state !== 'unfold') continue;
+    const S = it.sub, d = D(keyOf(it), 'sentry', it.team, it.owner);
+    d.hit = 'sentry'; d.obj = it;
+    disc(d, it.pos.x, it.pos.y, it.pos.z, S.range, S.range);
+    d.yLo = it.pos.y - 4; d.yHi = it.pos.y + 4.5;
+    d.tIn = 0; d.tOut = Math.max(0, S.life - it.t); d.los = true; d.losY = S.eyeH; d.lethal = 1; d.linger = true; d.vis = 'big'; d.hear = 10; d.turret = true;
+    see(d, it.pos.x, it.pos.y + 0.45, it.pos.z);
+  }
   // ---- specials on players (and the untouchable)
   for (const e of G.actors) {
     if (!e.alive || e.superJumpState) continue;
@@ -516,6 +529,14 @@ function rebuild(L, team) {
     }
   }
 }
+// [b5-subs] does a Scrap Sentry have a line from its eye to nav node n? (cached per node while it stands where it is)
+function turretSees(it, n, id) {
+  let V = it._navVis;
+  if (!V || Math.abs(V.x - it.pos.x) + Math.abs(V.y - it.pos.y) + Math.abs(V.z - it.pos.z) > 0.3) V = it._navVis = { x: it.pos.x, y: it.pos.y, z: it.pos.z, m: new Map() };
+  let v = V.m.get(id);
+  if (v === undefined) { v = G.physics.los(_p.set(V.x, V.y + it.sub.eyeH, V.z), _q.set(n.x, n.y + 1.0, n.z)); V.m.set(id, v); }
+  return v;
+}
 function mark(nav, d, c, L) {
   const r = d.r + 0.4, st = nav.step;
   let x0, x1, z0, z1, ex = 0, ez = 0;
@@ -528,7 +549,7 @@ function mark(nav, d, c, L) {
   }
   const ix0 = Math.max(0, Math.floor((x0 - nav.x0) / st)), ix1 = Math.min(nav.nx - 1, Math.ceil((x1 - nav.x0) / st));
   const iz0 = Math.max(0, Math.floor((z0 - nav.z0) / st)), iz1 = Math.min(nav.nz - 1, Math.ceil((z1 - nav.z0) / st));
-  const hard = d.lethal >= 1, sl = ex * ex + ez * ez;
+  const hard = d.lethal >= 1 && !d.turret, sl = ex * ex + ez * ez;   // ([b5-subs] a turret: not in the objective holders' layer)
   for (let iz = iz0; iz <= iz1; iz++) for (let ix = ix0; ix <= ix1; ix++) {
     const cell = nav.cells[iz * nav.nx + ix];
     if (!cell) continue;
@@ -542,7 +563,7 @@ function mark(nav, d, c, L) {
         if (sl > 1e-4) { const u = clamp((px * ex + pz * ez) / sl, 0, 1); px -= ex * u; pz -= ez * u; }
         hit = px * px + pz * pz < r * r;
       } else { const r0 = d.r; d.r = r; hit = inside(d, n.x, n.y, n.z, 0) > 0; d.r = r0; }
-      if (!hit) continue;
+      if (!hit || (d.turret && d.obj && !turretSees(d.obj, n, id))) continue;   // ([b5-subs] only where it has a line)
       if (L.all[id] < c) L.all[id] = c;
       L.any = true;
       if (hard) { if (L.hard[id] < c) L.hard[id] = c; L.anyHard = true; }
@@ -680,6 +701,7 @@ export class SpecialSense {
   }
   // does d count right now, here (tIn: when it hurts here)? obj: holding the objective
   _urgent(d, r, tIn, obj) {
+    if (d.turret) return false;  // ([b5-subs] a turret: the threat system's — shoot it or leave its reach / sight)
     if (r.cover) return false;   // (a wall between us and its centre / its gun: cover)
     if (d.jump) return false;    // (Surf N' Turf's rings: jumped, not run from — surfDodge)
     if (d.shot) return d.delay + r.jit < 0.4;   // (a zooka's line: out of it just before the shot, at any range)
@@ -700,7 +722,7 @@ export class SpecialSense {
   _inAny(x, y, z, tau, skip) {
     for (const r of this.known) {
       const d = r.d;
-      if (d === skip || d.lethal < 1 || (d.pop && !this._popper(d.x, d.z))) continue;
+      if (d === skip || d.lethal < 1 || d.turret || (d.pop && !this._popper(d.x, d.z))) continue;   // ([b5-subs] turret: routes only)
       if (inside(d, x, y, z, tau) && tInAt(d, x, z) - tau < 2.5) return true;
     }
     return false;
@@ -856,7 +878,7 @@ export class SpecialSense {
       const sx = Math.sin(yw), sz = Math.cos(yw);
       for (const r of this.known) {
         const d = r.d;
-        if (d.lethal < 1 || (d.pop && !this._popper(d.x, d.z)) || inside(d, x0, y0, z0, 0)) continue;
+        if (d.lethal < 1 || d.turret || (d.pop && !this._popper(d.x, d.z)) || inside(d, x0, y0, z0, 0)) continue;   // ([b5-subs] turret: routes only)
         for (const s of [0.8, 1.7]) {
           const px = x0 + sx * s, pz = z0 + sz * s, tA = s / PLAYER.runSpeed;
           if (!inside(d, px, y0, pz, tA)) continue;
