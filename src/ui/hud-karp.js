@@ -4,7 +4,7 @@
 //   the status line   under the clock: CARRIER 42 s ×3 · SHELL 62% THEM · FREE · BACK TO THE POND · OVERTIME 7
 //   the marker        the carp glyph + the fuse's whole seconds over the carrier's head, for both teams — hidden from the
 //                     enemy while the carrier swims (S31); off screen: pinned to the edge with an arrow and the distance
-//   the bottom line   DON'T RETREAT! / BAZOOKARP-FREE ZONE! on the carrier's own screen, the moment its rate changes
+//   the bottom line   DON'T RETREAT! / CARP-FREE ZONE! (DECISIONS.md's name) on the carrier's own screen, the moment its rate changes
 //   call-outs         hud._zCall on the events (shell burst, pick-ups, weirs, the Carp Blast, overtime)
 //   "Can't use"       a carrier's sub / special press (sub:cantuse kind 'karp'): "Can't use your kit while carrying"
 // hud.karp.state() reports what is showing (tests).
@@ -138,7 +138,7 @@ export class KarpHud {
     this.show.marker = mk;
     // ---- the carrier's own bottom line
     let bt = null;
-    if (f.carrying && f.rate > 1) bt = f.why === 'zone' ? ['BAZOOKARP-FREE ZONE!', 'Fuse burning 3× — get out'] : ["DON'T RETREAT!", 'Fuse burning 3× — turn around'];
+    if (f.carrying && f.rate > 1) bt = f.why === 'zone' ? ['CARP-FREE ZONE!', 'Fuse burning 3× — get out'] : ["DON'T RETREAT!", 'Fuse burning 3× — turn around'];
     if ((bt && bt[0]) !== (this.show.bottom && this.show.bottom[0])) { this.show.bottom = bt; if (bt) { this.bot.children[0].textContent = bt[0]; this.bot.children[1].textContent = bt[1]; } }
     this.bot.classList.toggle('is-on', !!bt);
   }

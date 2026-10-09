@@ -316,7 +316,7 @@
     R('E2 S10, S11: own half — 7.5 m back ×1, 8.6 m back ×3 ("DON\'T RETREAT!"), 4.2 m back still ×3, within 3 m ×1', r7 === 1 && r8 === 3 && why8 === 'retreat' && r4 === 3 && r2 === 1, { r7, r8, why8, r4, r2 });
     fresh(); carry(c, 0, 20); step(0.2); put(c, 0, 8); Kp.base = null; step(0.2);
     R('E3 S10: nothing on the enemy half (12 m back)', Kp.rate === 1, { rate: Kp.rate });
-    // the own free zone ×3 ("BAZOOKARP-FREE ZONE!"), not the enemy's
+    // the own free zone ×3 ("CARP-FREE ZONE!"), not the enemy's
     fresh(); carry(c, 13, -43); step(0.2); const zr = Kp.rate, zw = c.carry.j.why;
     put(c, -13, 43); Kp.base = null; step(0.2); const ez = Kp.rate;
     R('E4 S12, S51: ×3 in its own Carp-Free Zone; nothing in the enemy\'s', zr === 3 && zw === 'zone' && ez === 1, { own: zr, why: zw, enemy: ez });
