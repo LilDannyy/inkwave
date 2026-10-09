@@ -1068,6 +1068,7 @@ export class BotBrain {
   // thrAim: a device / canopy the turf code is drawing a bead on; enemyVisible: in a duel (both unset in boss play)
   _tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim = null, enemyVisible = false) {
     const a = this.a, it = a.intent, w = a.weapon;
+    if ((a.weaponRunner.mainLocked || a.weaponRunner.glide) && !this.sp.esc) it.squid = false;   // [b5-sub-glide] cooking a held sub (a Glide Bomb, its grace too): no dive (it would drop the cook) — but out of a danger, yes
     // throws and placements only happen in humanoid form: stay upright for the press and the release
     if (this._bombAim) { it.sub = true; it.squid = false; this._bombAim = false; this._releaseBomb = true; }
     else if (this._releaseBomb) { it.sub = false; it.squid = false; this._releaseBomb = false; }

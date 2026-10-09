@@ -856,6 +856,9 @@ function paint(brain) {
   }
   if (!n || own / n >= 0.4) return false;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, a.pos.x + fx * 10, a.pos.z + fz * 10)) return false;
+  // (the whole uncooked slide: not off the stage into the sea or a liquid — the guide's own prediction, ignoring kids)
+  const air = startOf(a, _gp); _gv.set(fx * s.speed0, 0, fz * s.speed0);
+  if (simulate(_gp, _gv, air, s.fuse, a.team, null, 99).sunk) return false;
   brain.bombCd = 9 + Math.random() * 6;
   brain._glide = { mode: 'paint' };
   GLIDE_STATS.botPaint++;
