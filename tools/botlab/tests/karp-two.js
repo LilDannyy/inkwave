@@ -4,6 +4,7 @@
 // tug-of-war), grabs the Bazookarp, carries it to its weir and lands it, Bravo splats the carrier once on the way to
 // the Gate (a drop, a re-formed shell), Alpha re-bursts, re-grabs and walks into the risen Dragon Gate: a knockout.
 //   MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-two.js tools/botlab/run.sh tools/botlab/page.cjs   (and MAP=halyard)
+// (6 checks; the match timeline rides on the last one's info)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const { PLAYER } = await import('./src/config.js');
@@ -98,18 +99,28 @@
     const gp = Kp.gates[0].pos;
     const mid = new THREE.Vector3((A0.pos.x + gp.x) / 2, A0.pos.y, (A0.pos.z + gp.z) / 2);
     walk(B0, gp, 3, 30);
+    // (where the carrier stood when it was splatted, and where the engine dropped it)
+    let death = null, drop = null;
+    const offD = [on('splatted', (e) => { if (e.victim === A0 && !death) death = { pos: A0.pos.clone(), half: A0.carry?.j?.half ?? -1 }; }), on('karp:drop', (e) => { if (!drop) drop = { pos: e.pos.clone(), how: e.how }; })];
     let hunt = 0; while (hunt < 12 && A0.alive) { walk(A0, gp, 1.0, 0.1); aimAt(B0, new THREE.Vector3(A0.pos.x, A0.pos.y + 0.9, A0.pos.z)); B0.intent.fire = true; B0.ink = PLAYER.inkMax; freeze(); dbg.step(1000 / 60); hunt += 1 / 60; }
-    idle(B0);
+    idle(B0); offD.forEach((f) => f());
     const dropped = !A0.alive && !Kp.holder && (Kp.phase === 'reforming' || Kp.phase === 'shielded');
-    R('Bravo splats the carrier on the way to the Gate: it drops where the carrier fell and a shell re-forms', dropped, { alive: A0.alive, phase: Kp.phase, pos: Kp.pos.toArray(), mid: mid.toArray() });
+    // the drop spot is the field's drop spot from the death spot on the carrier's half (§2.7): the same node, a short
+    // step from where it fell (the nearest wide, clear rest node)
+    const want = death ? Kp.field.dropSpot(death.pos, death.half >= 0 ? death.half : Kp.field.halfAt(death.pos)) : -1, wn = want >= 0 ? G.nav.nodes[want] : null;
+    const dDeath = death && drop ? Math.hypot(drop.pos.x - death.pos.x, drop.pos.z - death.pos.z) : null;
+    R('Bravo splats the carrier on the way to the Gate: it drops at the drop spot of where the carrier fell (that node, ≤ 4 m away) and a shell re-forms there',
+      dropped && !!death && !!drop && drop.how === 'splat' && !!wn && Math.hypot(wn.x - drop.pos.x, wn.z - drop.pos.z) < 0.05 && dDeath <= 4 && Kp.pos.distanceTo(drop.pos) < 0.05,
+      { alive: A0.alive, phase: Kp.phase, death: death && death.pos.toArray(), half: death && death.half, drop: drop && drop.pos.toArray(), want: wn && [wn.x, wn.y, wn.z], dDeath, rest: Kp.pos.toArray(), mid: mid.toArray() });
     // Bravo walks back home; Alpha respawns, comes back, bursts and grabs, walks into the risen Gate
     walk(B0, G.level.spawnPads[1], 6, 20);
     step(6); idle(A0);
     const sa3 = spotFor(A0, 6.5); if (sa3) walk(A0, sa3, 0.8, 40);
     const burst3 = shoot([A0], 30); step(0.3); grab(A0);
     const ko = walk(A0, gp, 0.5, 40, () => Kp.winner != null);
-    R('… Alpha re-bursts, re-grabs and walks into the risen Dragon Gate: a knockout, Alpha wins', burst3 && ko && Kp.winner === 0 && Kp.reason === 'knockout' && Kp.count[0] === 0, { winner: Kp.winner, reason: Kp.reason, count: Kp.count, state: m.state });
-    R('the match timeline', true, { log, clamped: Kp.stats.clamped, t: T() });
+    // (the match timeline is information, not a check: it rides on the last row)
+    R('… Alpha re-bursts, re-grabs and walks into the risen Dragon Gate: a knockout, Alpha wins (no clamp rejection all match)', burst3 && ko && Kp.winner === 0 && Kp.reason === 'knockout' && Kp.count[0] === 0 && Kp.stats.clamped === 0,
+      { winner: Kp.winner, reason: Kp.reason, count: Kp.count, state: m.state, clamped: Kp.stats.clamped, timeline: log, t: T() });
   } catch (e) { R('HARNESS: the script threw', false, { err: String(e && e.stack || e).slice(0, 500), log }); }
   offs.forEach((f) => f());
   return out;
