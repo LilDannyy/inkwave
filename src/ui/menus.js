@@ -100,7 +100,7 @@ const TIPS = [
   'Rollers paint huge stripes. Flick the roller to splash foes at range.',
   'Low on ink? Dive in, refill, then push again.',
   'Hold [TAB] to open the big map and spot unpainted turf.',
-  'Zone Control: ink 80% of the live zone to take it — 40% of theirs knocks it back to neutral.',
+  `Zone Control: ink ${Math.round(ZONES.control * 100)}% of the live zone to take it — ${Math.round(ZONES.contest * 100)}% of theirs knocks it back to neutral.`,   // [b5-tuning] (was 80 / 40, written out)
   'Zone Control: a side zone on their half counts you down 4× faster than the one on yours.',
   'Zone Control: lose the zone to the other team and you get a penalty to count off before your count moves again.',
   'Zone Control: while they hold the zone your special charges fast. Team up and break their hold!',
@@ -146,8 +146,8 @@ const ZONE_RULE_ART = {
   take: `<svg viewBox="0 0 120 80" aria-hidden="true">${ZONE_FLOOR}
     <clipPath id="iw-zr-take"><path d="M30 58 L60 43 L90 58 L60 71 Z"/></clipPath>
     <g clip-path="url(#iw-zr-take)"><path class="iw-fa" d="${blobPath(54, 58, 26, { seed: 3, sy: 0.55, points: 11, wobble: 0.16 })}"/><path class="iw-fb" d="${blobPath(84, 60, 6, { seed: 8, sy: 0.55, points: 8, wobble: 0.25 })}"/></g>${ZONE_EDGE}
-    <g transform="translate(12 9)"><rect width="66" height="13" rx="6.5" fill="${ZK}"/><rect x="3" y="3" width="48" height="7" rx="3.5" class="iw-fa"/><path d="M51.5 1 L51.5 12" stroke="#fff" stroke-width="2"/></g>
-    <g transform="translate(82 6)"><rect width="30" height="19" rx="6" fill="${ZK}"/>${zNum(15, 14.5, '80%', 11)}</g>
+    <g transform="translate(12 9)"><rect width="66" height="13" rx="6.5" fill="${ZK}"/><rect x="3" y="3" width="${60 * ZONES.control}" height="7" rx="3.5" class="iw-fa"/><path d="M${3.5 + 60 * ZONES.control} 1 L${3.5 + 60 * ZONES.control} 12" stroke="#fff" stroke-width="2"/></g>
+    <g transform="translate(82 6)"><rect width="30" height="19" rx="6" fill="${ZK}"/>${zNum(15, 14.5, Math.round(ZONES.control * 100) + '%', 11)}</g>
   </svg>`,
   count: `<svg viewBox="0 0 120 80" aria-hidden="true">
     ${zPill(8, 10, 48, 30, 'iw-fa', '37', 17)}${zPill(64, 10, 48, 30, 'iw-fb', '100', 15)}
@@ -1926,7 +1926,15 @@ export class Menus {
     // sub / special: Enter / A / a click opens the picker (_openKitPicker: every option in a grid); ← → still step
     // through them one at a time (saved to the profile either way)
     const kitHint = () => h('i', { class: 'iw-kit__hint' }, h('i', { class: 'iw-kbm', html: keycap('Enter') }), h('i', { class: 'iw-padg', html: padGlyph('A') }), 'CHOOSE');
-    const subIcon = h('span', { class: 'iw-kit__icon' }), subName = h('b'), subBlurb = h('span');
+    // [b5-tuning] the panel's description is the focused thing's: the shown weapon's blurb, or the SUB / SPECIAL chip's
+    // own while that chip has the focus (their blurbs left the chips so the panel fits a 16:9 screen with every name whole)
+    let aboutKit = null;
+    const describe = () => {
+      const t = aboutKit === 'sub' ? subBlurb.textContent : aboutKit === 'special' ? spBlurb.textContent : (Ws[shown] && Ws[shown].blurb) || '';
+      if (blurb.textContent !== t) blurb.textContent = t;
+      blurb.classList.toggle('is-kit', !!aboutKit);
+    };
+    const subIcon = h('span', { class: 'iw-kit__icon' }), subName = h('b'), subBlurb = h('span', { class: 'iw-kit__blurb' });
     const subChip = h('div', { class: 'iw-kit iw-kit--pick' }, subIcon,
       h('div', null, h('small', null, 'SUB ', kitHint()), subName, subBlurb));
     const subOrder = (this.api.subOrder || SUB_ORDER).filter((id) => (this.api.subs || SUB)[id]);
@@ -1935,6 +1943,7 @@ export class Menus {
       subIcon.innerHTML = SUB_ICONS[sb.id] || SUB_ICONS.bomb;
       subName.textContent = sb.name;
       subBlurb.textContent = `${sb.blurb || ''} Uses ${Math.round(sb.inkCost)}% of your ink.`;
+      describe();
     };
     const cycleSub = (d) => {
       const i = subOrder.indexOf(this._sub().id);
@@ -1956,7 +1965,7 @@ export class Menus {
     this._bind(subChip, { id: 'subpick', type: 'row', accept: () => openKit('sub'), adjust: (d) => cycleSub(d) });
     renderSub();
     const spIcon = h('span', { class: 'iw-kit__icon' });
-    const spName = h('b'); const spBlurb = h('span'); const spCost = h('em', { class: 'iw-kit__cost' });
+    const spName = h('b'); const spBlurb = h('span', { class: 'iw-kit__blurb' }); const spCost = h('em', { class: 'iw-kit__cost' });
     const spChip = h('div', { class: 'iw-kit iw-kit--pick' }, spIcon, h('div', null, h('small', null, 'SPECIAL ', kitHint()), h('div', { class: 'iw-kit__row' }, spName, spCost), spBlurb));
     const spOrder = (this.api.specialOrder || SPECIAL_ORDER).filter((id) => specials[id]);
     const renderSp = () => {
@@ -1964,6 +1973,7 @@ export class Menus {
       spIcon.innerHTML = specialIcon(sp.id);
       spName.textContent = sp.name;
       spBlurb.textContent = sp.blurb || '';
+      describe();
     };
     const cycleSp = (d) => {
       const i = spOrder.indexOf(this._special().id);
@@ -1986,7 +1996,6 @@ export class Menus {
       const w = Ws[id], eqW = Ws[equipped];
       kind.textContent = classOf(w).toUpperCase();
       nm.textContent = w.name;
-      blurb.textContent = w.blurb || '';
       detail.classList.toggle('is-equipped', id === equipped);
       detail.classList.toggle('is-compare', id !== equipped);
       cmpBadge.lastChild.textContent = eqW.name;
@@ -2005,6 +2014,7 @@ export class Menus {
       }
       renderSp();
       renderSub();
+      describe();
       spCost.textContent = w.specialCost ? `${Math.round(w.specialCost)}p` : '';
       spCost.title = 'Turf points to fill the special gauge';
       markSeen(id);
@@ -2062,6 +2072,7 @@ export class Menus {
       // opened straight from practice play (L / View): back goes back into the game
       onBack: opts.quick ? () => { if (performance.now() - this._shownAt > 200) this._resume(); } : undefined,
       onFocus: (f) => {
+        aboutKit = f === subChip ? 'sub' : f === spChip ? 'special' : null; describe();   // [b5-tuning]
         if (f._wid && f._wid !== shown) render(f._wid);
         if (f._wid) { countEl.textContent = `${order.indexOf(f._wid) + 1} / ${n}`; if (f.classList.contains('is-new')) { f.classList.remove('is-new'); f.classList.add('was-new'); } }
       },
@@ -2806,7 +2817,7 @@ export class Menus {
       ['climb', 'Climb inked walls', 'Ink a wall, then swim straight up it as a squid to reach high ground.'],
     ];
     const zoneRules = [
-      ['take', 'Take the zone', 'Ink 80% of the live zone to take it. Ink 40% of a zone they hold to knock it back to neutral.'],
+      ['take', 'Take the zone', `Ink ${Math.round(ZONES.control * 100)}% of the live zone to take it. Ink ${Math.round(ZONES.contest * 100)}% of a zone they hold to knock it back to neutral.`],   // [b5-tuning]
       ['count', 'Count down from 100', 'Hold the zone and your count ticks down — 1 a second at the centre. First to 0, or lowest count at time up, wins.'],
       ['rotate', 'Zones rotate', 'Every 30–60 s the live zone swaps between the centre and a side zone: 1 point per 2 s on your half, per ½ s on theirs.'],
       ['penalty', 'Don’t lose it', 'If they take the zone from you, ¾ of what you counted since you took it becomes a penalty: your count won’t move until you count it off.'],
@@ -3968,7 +3979,7 @@ export class Menus {
       const drawer = h('div', { class: 'iw-ldr' },
         h('div', { class: 'iw-ldr__card' },
           h('div', { class: 'iw-ldr__head' }, h('span', { class: 'iw-seclabel' }, h('i', { html: WEAPON_ICONS.shooter }), 'CHOOSE YOUR WEAPON'), h('span', { class: 'iw-ldr__hint' }, this._hint('Enter', 'A', 'Equip'), this._hint('Esc', 'B', 'Close'))),
-          h('div', { class: 'iw-ldr__grid', style: { '--cols': order.length > 8 ? 5 : 4 } }, cards),
+          h('div', { class: 'iw-ldr__grid', style: { '--cols': order.length > 10 ? 6 : order.length > 8 ? 5 : 4 } }, cards),   // [b5-tuning] 12 weapons: two rows of 6 (three rows ran the drawer off the top at 960×600)
           detail));
       drawer.addEventListener('pointerdown', (e) => { if (e.target === drawer) this._closeModal(); });
       drawer._show = show;
@@ -4179,7 +4190,6 @@ export class Menus {
     };
     // your sub / special: the profile's pick, or (none: null) the weapon's own — as the kit picker reads it
     // (a chip's short name: a three-word name keeps its first and last — Cling Charge Barrage → Cling Barrage)
-    const shortKit = (n) => { const w = String(n).split(' '); return w.length > 2 ? `${w[0]} ${w[w.length - 1]}` : String(n); };
     const myWeapon = () => { const me = meP(), lo = this._loadout(); return Ws[me && me.weapon] ? me.weapon : lo.weapon; };
     const kitOf = (kind, wid) => {
       const isSub = kind === 'sub', all = isSub ? SBS : SPS, W = Ws[wid] || {};
@@ -4198,8 +4208,8 @@ export class Menus {
         const first = !K.sig;
         K.sig = sig;
         K.icon.innerHTML = K.kind === 'sub' ? SUB_ICONS[k.id] || SUB_ICONS.bomb : specialIcon(k.id);
-        K.name.textContent = shortKit(k.def.name || k.id);
-        const n = K.name.textContent.length;   // (longer names a size down: Twister Zooka, Whirl Boomerang)
+        K.name.textContent = k.def.name || k.id;   // [b5-tuning] the whole name (was cut to its first and last words: "Splat Barrage")
+        const n = K.name.textContent.length;   // (longer names a size down: Twister Zooka, Whirl Boomerang; the longest wrap to two lines, ui.css)
         c.classList.toggle('is-long', n > 11 && n <= 13); c.classList.toggle('is-xlong', n > 13);
         c.classList.toggle('is-own', k.own);
         const what = K.kind === 'sub' ? 'Sub' : 'Special';

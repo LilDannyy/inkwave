@@ -947,13 +947,13 @@ body.iw-dio-on .iw-xh, body.iw-dio-on .iw-mks, body.iw-dio-on .iw-map, body.iw-d
 @keyframes iw-zo-held { 50% { scale: 1.1; } }
 .iw-zo__z.is-flip .iw-zo__zi { animation: iw-zo-flip .5s var(--spring2); }
 @keyframes iw-zo-flip { 0% { scale: 1.6; rotate: -20deg; } }
-/* live ink share: Alpha from the left, Bravo from the right; the ticks mark the 80 % that takes it */
+/* live ink share: Alpha from the left, Bravo from the right; the ticks mark the share that takes it (--zt = ZONES.control, hud.js) */
 .iw-zo__sh { position: relative; width: calc(var(--u) * 2.3); height: calc(var(--u) * .36); border-radius: 99px; background: rgba(255, 255, 255, .16); overflow: hidden; }
 .iw-zo__sh i { position: absolute; top: 0; bottom: 0; width: 100%; transition: transform .25s linear; }
 .iw-zo__sh .a { left: 0; background: var(--self); transform-origin: left center; transform: scaleX(var(--sa, 0)); }
 .iw-zo__sh .b { right: 0; background: var(--enemy); transform-origin: right center; transform: scaleX(var(--sb, 0)); }
 .iw-zo__sh em { position: absolute; top: 0; bottom: 0; width: 1.5px; background: #fff; opacity: .85; }
-.iw-zo__sh .ta { left: 80%; } .iw-zo__sh .tb { left: 20%; }
+.iw-zo__sh .ta { left: calc(var(--zt, .8) * 100%); } .iw-zo__sh .tb { left: calc((1 - var(--zt, .8)) * 100%); }
 .iw-zo__lbl { font: 900 calc(var(--u) * 1.02) / 1 'Rubik', sans-serif; letter-spacing: .14em; color: #fff; }
 .iw-zo__shift, .iw-zo__ot { display: none; }
 .iw-zo.is-shift .iw-zo__shift { display: flex; align-items: center; gap: .35em; padding: .3em .7em .28em .45em; border-radius: 999px; background: rgba(14, 11, 22, .82);

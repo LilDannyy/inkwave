@@ -88,7 +88,7 @@ longer emitted.
 | `sub:land` / `sub:arm` / `sub:cloud` / `sub:destroyed` | `{ kind, pos, team, radius? }` | subs.js |
 | `sub:charge` | `{ actor, kind: 'shaker', level, max }` — the Shaker Bomb in hand reached a new charge (2, then 3 = max) | kits/shaker.js |
 | `sub:lock` / `sub:end` | `{ kind: 'waddle', pos, team, actor, target }` / `{ kind, why, team, pos }` (why: reached · travel · life · lost · stuck · fuse · popped · sea · fell · cleared) | kits/waddle.js |
-| `zones:zone` | `{ zone, owner }` — one zone taken (≥ 80 % ink); it is then flooded with the taker's ink | zones.js |
+| `zones:zone` | `{ zone, owner }` — one zone taken (≥ ZONES.control ink, 70 %, kept over that line for ZONES.flipHold s) or neutralised (owner −1: the other team ≥ ZONES.contest, likewise held); a taken zone is then flooded with the taker's ink | zones.js |
 | `zones:control` | `{ owner, prev, objective }` — the live objective's holder changed (owner −1 = neutral) | zones.js |
 | `zones:contest` | `{ zone, holder, share }` — the other team has inked a held zone to the warning share (ZONES.warn) | zones.js |
 | `zones:penalty` | `{ team, penalty, total, start, end }` | zones.js |
