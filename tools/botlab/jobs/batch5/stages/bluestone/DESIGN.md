@@ -370,7 +370,7 @@ Rules this layout keeps:
 
 ### 2.6 The pieces (Alpha's half plus the single pieces; Bravo's half is the 180° twin)
 
-*As built (fix round 3): where the blockout departs from these tables, §2.6a lists it, with its numbers.*
+*As built (round B fix 1): where the blockout departs from these tables, §2.6a lists it, with its numbers.*
 
 Shapes are `B` boxes (x, z extents), `O` oriented boxes (w across × d along, turned rotY° = the bearing of the box's
 long axis, mapkit `O()`), `R` ramps (`R(low, high, width)`; the slope is shown), `OCT` octagons (mapkit `OCT`). Flags:
@@ -427,7 +427,7 @@ mirror. The 202.5° poster column of revision 1 is gone: the balcony's front sta
 
 **The Halo, the superstops and their stairs (the Halo is era 3; the superstops eras 1–2)**
 
-*As built: 3.5 m wide (apothem 11.1–14.6), three planters per half (157.5°, 202.5°, 233°); a third way up per team, the hotel stair from the balcony landing in an era-1/2 cab shelter (§2.6a).*
+*As built: 3.5 m wide (apothem 11.1–14.6), three planters per half (157.5°, 202.5°, 233°); a third way up per team, the hotel stair from the balcony landing in an era-1/2 cab shelter (§2.6a). The lower superstop flight has no glass sides; the light-pylon is the poster column's look (no collider of its own).*
 
 | Piece | Centre (x, z) | Shape / size | y | Flags | Era / group | Purpose |
 |---|---|---|---|---|---|---|
@@ -521,7 +521,7 @@ Notes:
 
 **The viaduct, the railyard and the Signal Garden (era 3)**
 
-*As built: no viaduct north of Prawn Alley; the signal yard (0.9, `roof`, 168 m² per half) between the arm, Prow Place / Hoki Lane and the alley; the Signal Garden a 1.2 m terrace over the whole yard, stepped onto from every side, no stairs (§2.6a).*
+*As built: no viaduct north of Prawn Alley; south of it the viaduct bends in to the terrace's corner at (−22, −50); the signal yard (0.9, `roof`, 168 m² per half, four relay cabinets) between the arm, Prow Place / Hoki Lane and the alley; the Signal Garden a 1.2 m terrace over the whole yard, stepped onto from every side, with two ramps from Prow Place and Hoki Lane and no stairs (§2.6a).*
 
 | Piece | Centre (x, z) | Shape / size | y | Flags | Era / group | Purpose |
 |---|---|---|---|---|---|---|
@@ -555,7 +555,7 @@ z −42…−34; t5 x −40.5…−32.5, z −50…−42; t6 x −48.5…−40.5
 
 **Alpha's arm: Flathead Street WSW and the West Wharf** (along −62 … −17)
 
-*As built: no West Wharf, Customs House, south walk or W1; the street off −4.5 … 14 to along −40, then off ±9.5 to the tram terminus at along −56 (a 1.4 m platform with two flights, the tram, a shelter); Prawn Alley leaves the tip's south edge for Hoki Lane (§2.6a).*
+*As built: no West Wharf, Customs House, south walk or W1; the street off −4.5 … 14 to along −40, then off ±9.5 to the tram terminus at along −56 (a 1.4 m platform with two flights, a shelter, the sidings bed); the tram waits at the last stop (along −34 … −28); Prawn Alley leaves the tip's south edge for Hoki Lane (§2.6a).*
 
 | Piece | Centre (x, z) | Shape / size | y | Flags | Era / group | Purpose |
 |---|---|---|---|---|---|---|
@@ -618,7 +618,7 @@ Notes:
 
 **The river works: the boardwalk (eras 2–3), the Iron Bridge (eras 2–3) and the Tide Steps (era 3)**
 
-*As built: no Tide Steps (the boardwalk's rail 1a is `'23'`).*
+*As built: no Tide Steps (the boardwalk's rail 1a is `'23'`); the boardwalk 3.05 m wide, the Iron Bridge's deck 3 m (§2.6a).*
 
 | Piece | Centre (x, z) | Shape / size | y | Flags | Era / group | Purpose |
 |---|---|---|---|---|---|---|
@@ -642,7 +642,7 @@ x = 25 at z −24.5 and −15.5, which is the boardwalk rail's gap.
 
 **Customs Lane and the base: the Cable Tram Engine House and its forecourt terrace**
 
-*As built: the base 2 m shallower (pad z −70, turntable −57, tower goal −58.5); no yards or side ramps; the terrace's outer corners and the quay cut back (§2.6a).*
+*As built: the base 2 m shallower (pad z −70, turntable −57, tower goal −58.5); no yards or side ramps; the terrace's outer corners and the quay cut back; the spawn deck's back corners are the engine house's (§2.6a).*
 
 | Piece | Centre (x, z) | Shape / size | y | Flags | Era / group | Purpose |
 |---|---|---|---|---|---|---|
@@ -683,37 +683,51 @@ Notes:
 - **Customs Lane** (z −50 … −44) runs from Hoki Lane's mouth to the quay. The arcade's walls step 2 m into it
   (z −46 … −44), a canopied porch at its south mouth.
 
-### 2.6a As built (the blockout after fix round 3, 2026-10-09)
+### 2.6a As built (the blockout after round B fix 1, 2026-10-09)
 
 The tables in §2.1–§2.6 are the design. The blockout (`src/world/stages/bluestone/layout.js`) departs from them as
 listed here, Alpha's half (Bravo's is the twin). Everything else is as designed. Floor (check-blockout, walkable tops):
-7,462 / 8,185 / 9,055 m² in eras 1 / 2 / 3 (era 3 +10.6 % over era 2).
+6,952 / 7,551 / 8,413 m² in eras 1 / 2 / 3 (era 3 +11.4 % over era 2). Round B fix 1 cut 510 / 634 / 642 m² from fix
+round 3's 7,462 / 8,185 / 9,055, all of it from floor eras 1–2 have (the review: pay for the 3000s with it).
 - **The arm (Flathead WSW).** The street runs off −4.5 … 14 from the circus to along −40 (the yard's edge was off −6,
-  the design's south walk to −14). Bravo's Iron Bridge lands on the promenade at along −39.2 … −31.1, and Bravo's
-  boardwalk at −21.2 … −17.4. Warehouse W2 covers along −31.1 … −22.5, off 6 … 14. W1, the Customs House, the south walk,
-  the West Wharf and its loading platform are gone. **Beyond along −40 the arm narrows to off ±9.5 and runs to along −56**
-  (the outline steps in at along −40). The **tram terminus** is there:
-  - a 1.4 m loading platform at along −56 … −48, off 3.5 … 9.5;
-  - two 3 m flights: one at the east end (along −44.8 → −48, off 5.5 … 8.5) and one on the south side (off 0.3 → 3.5,
-    along −54.5 … −51.5);
-  - a shelter (roof, to 3.6) and crates on the platform;
-  - the tram on the track at along −47.5 … −41.5 (2.6 × 6 × 3.2, `roof`);
-  - crates and bollards in the street;
-  - river rails along off 9.5 and the end rail at along −56.
+  the design's south walk to −14: the 1.5 m strip off −6 … −4.5 went to the yard and the garden in fix round 3).
+  Bravo's Iron Bridge lands on the promenade at along −37.9 … −32.5 (railed either side), and Bravo's boardwalk at
+  −21.2 … −17.4. Warehouse W2 covers along −31.1 … −22.5, off 6 … 14. W1, the Customs House, the south walk, the West
+  Wharf and its loading platform are gone. The last tram stop (island and shelter) is at along −40 … −34; **the tram
+  waits beside it at along −34 … −28** (2.6 × 6 × 3.2, `roof`). **Beyond along −40 the arm narrows to off ±9.5 and runs to
+  along −56** (the outline steps in at along −40). The **tram terminus** is there:
+  - a 1.4 m loading platform at along −56 … −48, off 3.5 … 9.5, with a shelter and crates on its river side;
+  - two flights: one the platform's full width at its east end (along −44.8 → −48, off 3.5 … 9.35) and one at its west
+    end (along −55.85 … −52.85, off 0.3 → 3.5, from the turning area by Prawn Alley's mouth);
+  - **the sidings**: a 0.9 m ballast bed (`roof`, like the signal yard) at along −52.8 … −44, off −5 … 3.5, against the
+    platform's south face and the east flight, with two buffer stops and a ground frame on it (2.1 m);
+  - round it: the south lane (off −9.5 … −5, 4.5 m), the turning area at the tip's end (along −56 … −52.8) and the apron
+    at along −44 … −40; a bollard pair; river rails along off 9.5 (rising with the east flight) and the end rail.
+  - From the platform 69 % of kid-eye lines to Prow Place are clear in eras 1–2, 45 % in era 3 (the garden's 1.2 m edge
+    hides the near half of Prow Place); 52 % down the arm (`tip-sight.py`).
 - **Prawn Alley.** 5 m wide. It leaves the tip's south edge at along −56 … −49.2, on bearing 112°, and meets Hoki Lane at
   z −35.9 … −41.1. It is about 17 m on its yard side and 23.5 m on its wall side. The railyard wall (4.25 m) runs on its
   south-west side, from the tip's end to the viaduct.
+- **The viaduct south of the alley** bends in at the alley's wall-side corner (−24.97, −41.07) and runs to the terrace's
+  north-west corner at (−22, −50) (was (−26.04, −50)): Hoki Lane's south end is 4.3–5 m wide, Customs Lane's west end
+  4 m shorter. The terrace's west edge runs (−22, −50) → (−20, −64); the wall behind it and the railyard follow.
 - **The signal yard (eras 1–2).**
   - A 0.9 m `roof` bed with a bluestone kerb, 168 m² per half. Corners: (−24, −19.47), (−25.27, −16.75),
     (−34.35, −20.98), (−32.24, −25.51), (−40.54, −29.39), (−24.35, −35.93), (−24, −33).
   - The outline turns at along −29.98 so that the bed's corner by Prow Place is square.
+  - Four relay cabinets stand on it (1.5 m over the bed, `roof`); they are the garden's planters in the 3000s.
   - Its iron fence (1.4 m, `rail`) exists in Boss Battle only (`onlyIn: 'boss'`).
 - **The Signal Garden (era 3).**
   - A **1.2 m park terrace over the whole yard**, 168 m² per half. It is a raised walk from the tip, along the alley's
     yard edge, to Hoki Lane and Prow Place.
   - You hop up onto it from the arm, the alley, Prow Place and Hoki Lane anywhere along its edges (nav's jump edges reach
-    1.25 m).
-  - It has 5 planters (`roof`), no rails and no stairs.
+    1.25 m), and **two 3 m ramps** (1.2 m over 4 m) climb onto it from Prow Place's corner (x −28 … −24, z −23 … −20)
+    and from Hoki Lane by the alley's east end (z −33 … −30). In eras 1–2 their footprints are the yard's bed (the same
+    group). On the bots' nav (`rb1-nav.mjs`) Prow Place ↔ the tip's south lane, Hoki Lane → the turning area, Hoki
+    Lane → the arm at along −40 and the alley's east end → the arm all cross the lawn; Hoki Lane ↔ the arm at along −35
+    keeps to Prow Place (shorter).
+  - Its four planters are the yard's relay cabinets (`roof`), out of the terminus platform's view toward Prow Place. No
+    rails, no stairs.
   - It replaces the design's 3.18 m deck with three stairs and round 2's 2.68 m deck with two stairs.
 - **The Halo (era 3).**
   - 3.5 m wide (apothem 11.1 … 14.6), with glass rails on both edges and three planters per half (157.5°, 202.5°, and 233° by the hotel stair's head).
@@ -722,20 +736,31 @@ listed here, Alpha's half (Bravo's is the twin). Everything else is as designed.
   - The 90°, 180° and 270° sides are 0.3 m thick (underside 5.1; the diagonal sides 0.4). In Tower Command the tower
     leaves the concourse (1.3) under the 90° / 270° sides' inner edge, and it climbs anything less than 3.72 m over its
     base: at 5.0 it rode up onto the Halo.
+  - The superstop stairs: the lower flight has no glass sides; superstop B's lower 2.6 m is the same in every era (the
+    upper flight's base in era 3).
 - **The hotel stair (era 3): the Halo's third way up.**
   - A 2.5 m glass flight at x −16.5 … −14. It runs from the balcony landing's west edge (z −15, 2.4) north to z −8.4
     (5.2), at 23°, then a top landing on to z −4.5, which overlaps the Halo's 270° side 0.2 m under it.
-  - The light-pylon is now the column under that landing (0 … 4.8). The poster column (eras 1–2) is unchanged.
+  - The poster column (0 … 2.6, every era, not in Boss Battle) stands under the top landing; the light-pylon is its
+    3000s look (no collider of its own).
   - In eras 1–2 a **cab shelter** (x −16.5 … −14, z −15.8 … −10.2, 3.0 m, `roof`, not inkable) stands against the
-    landing's west side. The stair appears inside it (rule 19). The flight's underside is 3.4 m or more over the ring
-    beyond it.
+    landing's west side; its lower 2.1 m is the same in every era (the flight's base in era 3). The stair appears inside
+    it (rule 19). The flight's underside is 3.4 m or more over the ring beyond it.
   - The landing's west balustrade is gone. Phone kiosk 232 stands at (−17.7 … −16.5, −13.4 … −12.2).
+- **The west side.** The GPO's front is at x −11 (the GPO building x −13.5 … −11): its terrace is 4 m deep (x −11 … −7,
+  was 6.5) and its piers stand against the front as the portico's columns.
+- **The river works.** The boardwalk is 3.05 m wide (x 21.5 … 24.55, was 3.5); the Iron Bridge's deck 3 m (was 4.5),
+  rails at ±1.57, lamp plinths 0.7 m. The quay is cut back to the bond store (its east face is the river wall: the
+  outline runs (21.5, −30) → (19.5, −38) → (19.5, −44) → (23.4, −45.4) → (24, −50)), clear of the tower's turn at
+  (21.5, −47).
 - **The base.**
   - The base is 2 m shallower: the pad is at z −70, the turntable (Gate) at z −57, the tower goal at z −58.5.
   - There are no yards beside the deck and no side ramps. The boiler house is at x −20 … −12 and the tram shed at
     x 12 … 22.
-  - The terrace's west edge runs (−26.04, −50) → (−20, −64). Its east edge runs (25, −50) → (25.5, −60) → (22, −64).
-    The quay runs from (21.5, −30) to (25, −50).
+  - The terrace's west edge runs (−22, −50) → (−20, −64). Its east edge runs (24, −50) → (23.6, −60) → (22, −64): the
+    tower's lane at x 21.5 keeps 0.35 m or more.
+  - The spawn deck's back corners (|x| 4.5 … 12, z −74 … −72) are the engine house's wings; the pad keeps its 4.2 m and
+    the benches 6 m. The Bazookarp free zone follows the deck's new outline.
 - **Mid.**
   - The clock beams are at 5.3 … 6.6.
   - The poster column is not in Boss Battle.
@@ -744,6 +769,8 @@ listed here, Alpha's half (Bravo's is the twin). Everything else is as designed.
   - Degrayling Lane's 1880s crates fill only its east half (x 13.5 … 16.5), leaving a 3 m passage.
 - **Gone:** the Tide Steps.
 - **The side zone** (unchanged) is 34.8 m from mid and 40.8 m from the pad at (0, −70).
+- **The eras' blocks** (check-blockout, the union): jump 1 changes 18 groups per half and 104 blocks, jump 2 20 groups
+  per half and 134 blocks (ENGINE rule 6: 24, 160); era-only blocks 17.3 %.
 
 ### 2.7 Spawn to mid
 
@@ -783,6 +810,13 @@ Alpha's pad to the point where it enters the circus; "—" means the corridor is
 west yard (−22, −62) → the home arm's south walk at along −44: 46.5 → 38.8 (17 %); Swimston → the Halo: no way → 16.6 m
 up the superstop's glass stair.
 
+*As built (round B fix 1): the Signal Garden is a 1.2 m terrace over the signal yard with no stairs and two ramps (from
+Prow Place's corner and from Hoki Lane), the Tide Steps are gone, the West Wharf and the arm's south walk are gone, so
+the jump-2 lengths above are struck. Measured on the current layout with the bots' nav (`rb1-nav.mjs`, era 2 → era 3):
+Prow Place → the tip's south lane 28.6 → 23.5 m (18 % shorter, 10.4 m of it on the garden); Hoki Lane → the tip's
+turning area 38.0 → 30.1 m (21 %, over the garden); the alley's east end → the arm 34.2 → 22.8 m (33 %); Swimston → the
+Halo: no way → up the superstop's glass stair or the hotel stair.*
+
 **Why the pad-to-mid lengths barely move, and what does change.** Swimston runs straight from each pad to the centre and
 is open in every era, so every point at mid is 59–72 m from a pad by some route in every era; a closure can only make a
 pad-to-mid route ≥ 15 % longer by blocking Swimston itself, which would break the spawn-to-mid budget (ENGINE rule 33)
@@ -803,11 +837,11 @@ What it means in play:
   arch is a separate 4.5 m passage to 7:30, and Degrayling and the boardwalk leave the Plaice on opposite sides of the
   Boathouse.
 - **The X's arms are where flanks cross.** Alpha's arm (8 o'clock) is fed by Alpha's Hoki Lane (home) and, from era 2,
-  by Bravo's Iron Bridge landing on it (away); from era 3 Alpha's own Signal Garden overlooks it and has a stair down
-  onto it. Bravo's arm is the mirror. Holding the enemy's arm at a jump pays off.
+  by Bravo's Iron Bridge landing on it (away); from era 3 Alpha's own Signal Garden overlooks it and steps down onto it
+  all along its edge. Bravo's arm is the mirror. Holding the enemy's arm at a jump pays off.
 - **Era 1 is the tight version** (one left flank, over the Boathouse; no arcade; no river crossing). **Era 2 is the open
   version** (every lane, the boardwalk and the bridges). **Era 3 is the vertical version** (the Halo over mid, glass
-  stairs out of Swimston, the Signal Garden over each railyard, the Tide Steps).
+  stairs out of Swimston and the hotel stair, the Signal Garden over each signal yard).
 
 ### 2.9 Mid: Clockface Circus
 
