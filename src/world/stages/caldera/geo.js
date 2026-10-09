@@ -97,7 +97,7 @@ export const RIM_SHORE = 21.5;
 export const S_E0 = (() => { let lo = -12, hi = 0; for (let k = 0; k < 60; k++) { const m = (lo + hi) / 2; if (radOf(A(m, AW)) < RIM_SHORE) lo = m; else hi = m; } return (lo + hi) / 2; })();
 export const HS_W = 2.2;                                    // the Horn Step's width (t 4.5 → 6.7)
 export const S_HS0 = (() => { let lo = -14, hi = 0; for (let k = 0; k < 60; k++) { const m = (lo + hi) / 2; if (radOf(A(m, AW + HS_W)) < RIM_SHORE) lo = m; else hi = m; } return (lo + hi) / 2; })();
-export const FORD_S1 = 3.0;                                 // the Spillway ford (LOW floor at 0): mouth → s 3
+export const FORD_S1 = 3.3;                                 // the Spillway ford (LOW floor at 0): mouth → s 3.3 (0.2 m short of the bridge)
 export const BR_S = [3.5, 9.0];                             // the Spillway Bridge (2.3) at the mouth: 5.5 m wide, 9 m bank to bank
 export const QW = A(BR_S[0], -AW);                          // the bank where the Lakefront meets the quay (the bridge's lake edge)
 export const QB = A(BR_S[1], -AW);                          // the bank at the bridge's outer edge: the bay shore starts here
@@ -137,10 +137,10 @@ export const HEAD_E = [...BAY_SHORE, ...CHEEK.slice(1)];    // QB → the hall's
 const HEAD_W = [[GAL.x0 - 6, GAL.z0], [-36.0, -63.5], [-38.0, -57.0], [-38.6, -49.0], [-38.4, -41.0], [-37.2, -34.0], [-35.0, -28.5]];
 export const HEAD_WEST = smooth(HEAD_W, 3);                 // the hall's west end → the Rim Head's crest
 export const HALL_LINE = [[GAL.x1 + 7.5, GAL.z0], [GAL.x0 - 6, GAL.z0]];   // the Casting Hall's front (east → west)
-// the Slump: its cliff a spiral r 29.5 → 28.5 between θ −147 and −174, a 4 m shelf at its foot
+// the Slump: its cliff a spiral r 31.5 → 28.5 between θ −147 and −174, a 6.7 → 3.7 m shelf at its foot
 export const SA0 = -147, SA1 = -174;
-export const SHO = lin(SA0, SA1, 30.5, 28.5);
-export const SH_IN = 25.0;                                  // the shelf's lake edge
+export const SHO = lin(SA0, SA1, 31.5, 28.5);
+export const SH_IN = 24.8;                                  // the shelf's lake edge (0.4 m clear of the Race's stones)
 export const SLUMP_SW = P(SHO(SA0), SA0);                   // the cliff's south end (the Rim Head's north tip)
 
 // ---------------------------------------------------------------------------------------------- the floors (Alpha's half)
@@ -221,7 +221,7 @@ export const MOORINGS = (() => {
 // quarter and the arm's mouth to the Horn Step; its NE edge faces the East Pool, its SE edge the arm's lava
 export const E0 = A(S_E0, AW);
 export const LEDGE_E = [[CW, r3(CAUSE_Z)], ...arc(RS, TC[1] - 0.01, -62).slice(1), A(FORD_S1, -AW), A(FORD_S1, AW), E0, [14.4, -6.0], [12.6, -7.2], [10.4, -9.2], [7.8, -10.9], [CW, -11.5]];
-// the Slump shelf (0): the flank that drowns, at the cliff's foot, 4.5 m wide at the south head narrowing to 3.5 m
+// the Slump shelf (0): the flank that drowns, at the cliff's foot, 6.7 m wide at the south head narrowing to 3.7 m
 export const SHELF = [SHELF_S[0], SHELF_S[1], ...sarcF(SHO, SA0, SA1).slice(1, -1), SP(SHO, SA1), P(SH_IN, SA1), ...arc(SH_IN, SA1, SA0).slice(1, -1)];
 
 // ---------------------------------------------------------------------------------------------- the tail
