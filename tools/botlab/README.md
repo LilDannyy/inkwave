@@ -131,7 +131,9 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
 - The same with `karp-gun.js` (the Carp Shot: charge, ranges, ink, swell, blast radius, damage, kick, enemy ink, a
   Drip Curtain, its records with a stub net), `karp-loop.js` (a shadow follower engine on LoopWire through a scripted
   match: after every discrete record it agrees with the host; late snapshots, declined grants) and `karp-two.js` (two
-  scripted humans play a match to a knockout; also `MAP=halyard`).
+  scripted humans play a match to a knockout; also `MAP=halyard`), and `karp-shell-dps.js` (the Roe Shell's tuning
+  table: every main, special, barrage and the Tidal Slam against a lone shell, damage counted per second;
+  `PAGE_ARGS='only=shooter,zooka'`).
 - The Carp Field: `DEVSTAGE=1 MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-field.js tools/botlab/run.sh
   tools/botlab/page.cjs` — karpbox's field cases, then every stage in its Bazookarp build: L, holes, the halfway line,
   hop / gap edges, checker #2's reading sweep, the load cost per state (budget 60 ms) (`PAGE_ARGS='only=halyard,…'`).
