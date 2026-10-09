@@ -1170,7 +1170,7 @@ export class StagePipes {
     const legs = Object.fromEntries(Object.entries(S.rides).map(([k, v]) => [k, v]));
     console.warn('[pipes] STATS rides ' + JSON.stringify({ total: S.team[0] + S.team[1], team: S.team, perBotMin: +(S.botRides / bots / mins).toFixed(3), mins: +mins.toFixed(2) }));
     console.warn('[pipes] STATS legs [A→B t0, A→B t1, B→A t0, B→A t1] ' + JSON.stringify(legs));
-    console.warn('[pipes] STATS mouths ' + JSON.stringify({ pushMaxS: +S.pushMax.toFixed(2), giveUps: S.giveUps, refusals: S.refusals, pops: S.pops, aborts: S.aborts, botPops: [S.botPopLooks || 0, S.botPopSteers || 0], errands: S.errands || 0, errandRides: S.errandRides || 0, errandLog: (S.errandLog || []).slice(0, 12) }));
+    console.warn('[pipes] STATS mouths ' + JSON.stringify({ pushMaxS: +S.pushMax.toFixed(2), giveUps: S.giveUps, refusals: S.refusals, pops: S.pops, aborts: S.aborts, botPops: [S.botPopLooks || 0, S.botPopSteers || 0], errands: S.errands || 0, errandRides: S.errandRides || 0, glassBeads: S.beads || 0, errandLog: (S.errandLog || []).slice(0, 12) }));
     const rate = S.deaths / Math.max(1, S.playT / 2) / Math.max(1, this.m.actors.length);
     console.warn('[pipes] STATS camping ' + JSON.stringify({ deaths: S.deaths, landings: S.landings.length, deathsWithin2sOfTouchdown: S.deathsAfterLand, perLanding: +(S.deathsAfterLand / Math.max(1, S.landings.length)).toFixed(3), basePer2sPerActor: +rate.toFixed(4) }));
     console.warn('[pipes] STATS perExit [landings, deaths ≤ 2 s] ' + JSON.stringify(Object.fromEntries(Object.entries(S.perExit || {}).map(([i, v]) => [`${this.legs[this.ends[i].leg].id}:${this.ends[i].k ? 'B' : 'A'}`, v]))));
