@@ -77,7 +77,7 @@ export const LAVA = {
   ],
   // (each Spillway is a lava arm from the mouth into its bay at both levels — at LOW only its ford (s ≤ 3, joined to the
   // Casting Floor) is dry — so the bay's lip sits at the LOW level and the lavafall pours at both levels, thin at LOW)
-  cascades: [{ lip: [LIP_LINE[0], LIP_LINE[Math.floor(LIP_LINE.length / 2)]], y: -0.65, drop: 14 }, { lip: [LIP_LINE[Math.floor(LIP_LINE.length / 2)], LIP_LINE[LIP_LINE.length - 1]], y: -0.65, drop: 14 }],    // Alpha's Spillway Bay's lip in two runs (4 with Bravo's)
+  cascades: [{ lip: LIP_LINE, y: -0.65, drop: 14 }],    // Alpha's Spillway Bay's lip, the whole curve (2 with Bravo's): the lavafall pours off it
   vents: [[-9.5, -0.6, -18.5], [17.5, -0.6, -5.0], [10.0, 0, -15.0], [...A(15, -3)].reduce((a, v, i) => (i ? [a[0], -0.6, v] : [v]), [])],   // pools, a floor drain, the bay (8 with twins)
   flotsam: { count: 48, size: [0.3, 0.9], keepOff: 1.0 },  // cosmetic pumice drifting on the open lava, no collider
   look: { crust: 'ember', cone: [230, 0, 150] },           // warm charcoal-maroon crust, lit seams (§5.3); the Bellows Vent

@@ -257,11 +257,11 @@
     const items = __G.subs.items.filter((it) => it.owner === me && it.state !== 'dead');
     const downs = []; const o2 = on('device:down', (e) => downs.push(e.how));
     put(me, V(-10, 1.22, -3.2));   // (the owner off the floor: a sprinkler also goes when its owner is splatted)
-    setT(38.5); step(0.6);
+    setT(38.4); step(1.0);
     o2();
-    const gone = items.filter((it) => it.state === 'dead').length;
+    const gone = items.filter((it) => it.state === 'dead').length, states = items.map((it) => [it.kind, it.state, it.pos && +it.pos.y.toFixed(3)]);
     R('E1 devices the lava reaches are destroyed (a Lurk Mine and a Hop Beacon on the shelf, a Twirl Sprinkler on the Casting Floor): no blast, device:down how lava', placed.mine === 1 && placed.beacon === 1 && tossSt === 'spray' && items.length >= 3 && gone === items.length && downs.filter((h) => h === 'lava').length >= 3,
-      { placed, sprinkler: tossSt, at: tossAt, items: items.length, gone, downs });
+      { placed, sprinkler: tossSt, at: tossAt, items: items.length, gone, states, downs });
     __G.subs.clear();
     const np = (t) => { setT(t); return lvl.noPlace(V(shelf.x, 0.02, shelf.z), 0.3); };
     const npr = { t2: np(2), t20: np(20), t27: np(27), t46: np(46), t90: np(90), t150: np(150), dry: (setT(27), lvl.noPlace(V(-10, 1.22, -3.2), 0.3)) };

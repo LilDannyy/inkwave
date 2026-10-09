@@ -880,9 +880,10 @@ export class StageLava {
     }
     if (b._lavaEsc && b.path) {
       const mv = b._steer(dt); if (mv !== move) move.copy(mv);
-      // up the hop out (a 1.2 m step onto the head, the causeway, the island): jump at it, and again if it stalls there
+      // up the hop out (a 1.2 m step onto the head, the causeway, the island): ask for the jump, and again if it stalls
+      // there — the brain presses it (its own cool-down: a held button would never jump twice)
       const nx = b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : null;
-      if (b._needJump || (nx && nx.y - a.pos.y > 0.4 && Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) < 1.8 && a.grounded) || (b.noProg > 0.8 && a.grounded)) it.jump = true;
+      if ((nx && nx.y - a.pos.y > 0.4 && Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) < 1.6) || b.noProg > 0.8) b._needJump = true;
       it.squid = false;
     }
     return null;

@@ -153,7 +153,7 @@ float lvn(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0
 void main() {
   float s = lvn(vec2(vUv.x * 9.0, vUv.y * 3.0 + uTime * 1.8)) * 0.6 + lvn(vec2(vUv.x * 23.0, vUv.y * 7.0 + uTime * 3.1)) * 0.4;
   vec3 col = mix(uA, uB, smoothstep(0.35, 0.8, s)) * (1.6 + 0.8 * s);
-  float edge = smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.92, vUv.x);
+  float edge = 1.0;
   float a = clamp((0.45 + 0.55 * uK) * edge * (0.7 + 0.5 * s) * smoothstep(1.0, 0.75, vUv.y), 0.0, 1.0);
   gl_FragColor = vec4(col, a);
 #include <tonemapping_fragment>
@@ -312,18 +312,28 @@ export class LavaLook {
     this.falls = [];
     const fm = (this.fallMat = new THREE.ShaderMaterial({ uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uTime: { value: 0 }, uK: { value: 0 }, uA: { value: lin(LOOK.fall[0]) }, uB: { value: lin(LOOK.fall[1]) } },
       vertexShader: FALL_VS, fragmentShader: FALL_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: true }));
+    // a lip is a polyline (the stage's lip line) or a pair of points; each segment's curtain pours to the side that is not
+    // lava (tested 0.6 m off each side), out 1.7 m and down `drop`
     for (const c of this.W.cascades) {
-      const [a, b] = c.lip, dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
-      let nx = -dz / len, nz = dx / len;
-      const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
-      if (this.W.inRegion(mx + nx * 1.2, mz + nz * 1.2)) { nx = -nx; nz = -nz; }   // outward: away from the lava
-      const cols = Math.max(2, Math.ceil(len / 1.5)), rows = [[0, 0, 0], [0.5, -0.25, 0.15], [1.0, -1.2, 0.35], [1.4, -c.drop * 0.5, 0.65], [1.7, -c.drop, 1]];
-      const pos = [], uv = [], idx = [];
-      for (let ri = 0; ri < rows.length; ri++) for (let ci = 0; ci <= cols; ci++) {
-        const u = ci / cols, [o, y, v] = rows[ri];
-        pos.push(a[0] + dx * u + nx * o, y, a[1] + dz * u + nz * o); uv.push(u, v);
+      const L = c.lip, pos = [], uv = [], idx = [];
+      // (the first row reaches 0.4 m back over the lava: it covers the surface grid's cells that overhang the lip)
+      const rows = [[-0.4, 0.03, 0], [0, 0.02, 0.02], [0.45, -0.22, 0.12], [0.95, -1.1, 0.32], [1.35, -c.drop * 0.5, 0.65], [1.7, -c.drop, 1]];
+      let run = 0, total = 0; for (let i = 0; i + 1 < L.length; i++) total += Math.hypot(L[i + 1][0] - L[i][0], L[i + 1][1] - L[i][1]);
+      for (let i = 0; i + 1 < L.length; i++) {
+        const a = L[i], b = L[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
+        if (len < 0.05) continue;
+        let nx = -dz / len, nz = dx / len;
+        const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, inP = this.W.inRegion(mx + nx * 0.6, mz + nz * 0.6), inM = this.W.inRegion(mx - nx * 0.6, mz - nz * 0.6);
+        if (inP && !inM) { nx = -nx; nz = -nz; } else if (inP === inM && nx * mx + nz * mz < 0) { nx = -nx; nz = -nz; }   // (else: away from the lake's middle)
+        const cols = Math.max(1, Math.ceil(len / 1.5)), base = pos.length / 3;
+        for (let ri = 0; ri < rows.length; ri++) for (let ci = 0; ci <= cols; ci++) {
+          const u = ci / cols, [o, y, v] = rows[ri];
+          pos.push(a[0] + dx * u + nx * o, y, a[1] + dz * u + nz * o); uv.push((run + len * u) / Math.max(1, total) * Math.max(1, total / 6), v);
+        }
+        for (let ri = 0; ri + 1 < rows.length; ri++) for (let ci = 0; ci < cols; ci++) { const k = base + ri * (cols + 1) + ci, k2 = k + cols + 1; idx.push(k, k2, k + 1, k + 1, k2, k2 + 1); }
+        run += len;
       }
-      for (let ri = 0; ri + 1 < rows.length; ri++) for (let ci = 0; ci < cols; ci++) { const k = ri * (cols + 1) + ci, k2 = k + cols + 1; idx.push(k, k2, k + 1, k + 1, k2, k2 + 1); }
+      if (!idx.length) continue;
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
       this.falls.push({ geo, y: c.y });
     }
