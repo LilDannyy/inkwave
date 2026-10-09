@@ -9,8 +9,8 @@
 // LoopWire: offline — a host whose records go nowhere, except (tests) to a follower engine `delay` s later, and whose
 // guest side can be driven by a test (its _emit plays a guest's message on the host).
 // NetWire: online through G.netm (net/netmatch.js: 'bk' records at once, 'ks' snapshots on the timeline, the guest
-// messages). WP2 (karp-face) owns the full netcode (migration, the fuse hold, the window's grace for late claims …);
-// this is the shape it builds on.
+// messages, kd to one guest). WP2 (karp-face) completes the netcode on this shape (the narrowed flush at a host change,
+// the fuse hold for a remote Carp Blast, latency: docs/NET.md's Bazookarp section lists what is left).
 import { G } from '../core/ctx.js';
 
 export class KarpWire {

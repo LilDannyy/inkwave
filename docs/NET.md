@@ -389,11 +389,28 @@ and fills its own players' gauges. The start config carries `mode: 'tower'` and 
   `kf`); the host scores a remote carrier only from the real samples it sent (`NetWire.samples`, never its drawn
   position), through the continuity clamp; pick-ups are the host's, from claims checked against the claimant's newest
   sample. Carp Shots are the owner's kit records `['k', nid, 'karp', [0 | 1 | 2 | 3, gid, …]]` (`KIT_GHOSTS.karp`).
-- **left for WP2:** host migration (`onLeave`'s order, the narrowed flush, `'k'` for adopted actors; `onHostChange` is
-  a stub), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag, the full latency tests
-  (the window's 0.4 s grace for claims sent before its close and declined grants are in the engine and proven offline
-  through LoopWire's guest stub; online they are untested), the results' per-player columns on screen. Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes'
-  NET=tools/botlab/tests/net-karp.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (the smoke test, 11 checks).
+- **declines, refusals, the grant's samples.** A guest whose own player is dead when its grant (`p`) plays answers
+  `kx` and takes nothing; the host restores its pre-grant state (`touched`, the last carrier, overtime and its window,
+  the spot) and records `u`; a host-side death record for that player inside 1.5 s of the grant waits 0.4 s for the
+  `kx` first, so a declined grant is never a carrier's loss (S39c). `kd` reaches the guest's engine (its claim lock
+  ends). A remote carrier is scored only from samples after the one its claim was judged on (never its samples from
+  before the pick-up). Remote claimants are measured where their newest sample is (nearest wins, host bots included).
+- **host migration (built here: the new host takes over the rules).** `netmatch.onLeave` calls
+  `match.karp.onHostChange(isHost)` once `match.follower` is false: the new host's records carry on from the old host's
+  `q` (the other guests drop anything at or below the last `q` they applied), a holder that is gone (a humans-only
+  stage removed it while this screen was still a follower) or dead is lost as `left` at its last real sample, an adopted
+  carrier (a stage with bots) keeps carrying with its own screen's judgement read afresh, the clamp's baseline resets,
+  the window carries on (followers keep `otWin.open` from snapshots), and a full `S` goes out at once. A carrying guest
+  re-sends `kr` / `kf` to the new host. **Left for WP2:** §7.6's narrowed flush of the departed host's queued `'ks'`
+  and the reordered `onLeave` (today's order works because `onHostChange` handles the removed holder), the `'k'` case
+  for an adopted actor's queued Carp Shots, `lastCarrier` / `lastPlant` in `S` (a new host's S38 decision at time-up
+  uses what its follower saw), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag,
+  the latency steps (`netlag`), three-client rooms beyond the migration test, the results' per-player columns on screen.
+- Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
+  tools/botlab/run.sh tools/botlab/netpage.cjs` (19 checks: the host's view of a guest carrier, ghost landings, the
+  victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result) and
+  `tools/botlab/tests/net-karp-host.cjs` (`CLIENTS=3 NET_ARGS='part=bots'`: the host leaves mid-carry; `CLIENTS=2
+  NET_ARGS='part=cargo'`: a humans-only room).
 
 **Relay (server/).** One Durable Object per room code: membership, host election, join refusal (unknown / full /
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime
