@@ -434,6 +434,34 @@
     const hudNow = txt.some(([t, l]) => t > 91.2 && /KELP LINES DOWN: dive from your promenade/.test(l));
     const pillOk = txt.some(([t, , p]) => t < 89 && /KELP UP/.test(p)) && txt.some(([t, , p]) => t > 90.5 && /KELP DOWN/.test(p));
     R('tide: the HUD says "KELP LINES GOING DOWN IN 10" counting down, then "KELP LINES DOWN: dive from your promenade"; the pill under the clock turns ▲ UP → ▼ DOWN', hudWarn && hudNow && pillOk, { txt: txt.filter((_, i) => i % 2 === 0) });
+    // readability (LEAD-REVIEW round 2 item 7): riding through the warning keeps the countdown on screen, with the ride chip
+    // in the top band (not over the rider); a late joiner inside the warning gets the countdown line too; the tidal
+    // mouths say "KELP LINE"; one OUT wording on both one-way kinds; the match-start line names the tide's real direction
+    {
+      for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
+      setT(84.5);   // (inside the 90 s flip's warning)
+      const gl = P.legs.find((l) => l.id === 'gulper');
+      g.rig.follow(A2, true); atApproach(A2, gl.ends[0], 0.1); pushIn(A2, gl.ends[0]); step(0.6);
+      const chipEl = document.querySelector('.iw-pp-ride.is-on'), cr = chipEl?.getBoundingClientRect();
+      const rp = new THREE.Vector3(A2.pos.x, A2.pos.y + 0.4, A2.pos.z).project(__G.camera), riderY = (1 - rp.y) / 2 * innerHeight;
+      const ridingLine = line();
+      R('tide: riding through the warning, the countdown stays on screen; the ride chip sits in the top band, clear of the rider',
+        /KELP LINES GOING DOWN IN\s*\d/.test(ridingLine) && !!cr && cr.bottom < innerHeight * 0.4 && riderY > cr.bottom + 20, { ridingLine, chip: cr && [Math.round(cr.top), Math.round(cr.bottom)], riderY: Math.round(riderY), h: innerHeight });
+      rideOut(A2); step(0.6);
+      P.hudUi.msg = null; dbg.step(1000 / 60);
+      const before = line();
+      M.time = M.duration - 85.2; P.S.clock.t = 85.2; P.seek(85.2); dbg.step(1000 / 60); dbg.step(1000 / 60);
+      const after = line();
+      R('tide: a late joiner (a clock seek) inside the warning sees the countdown line, not only the red pill', !/GOING/.test(before) && /KELP LINES GOING DOWN IN\s*\d/.test(after), { before, after });
+      const kOut = P.legs.find((l) => l.id === 'kelp').ends[1], xOut = P.legs.find((l) => l.id === 'express').ends[1], kIn = P.legs.find((l) => l.id === 'kelp').ends[0];
+      const wK = W.looks._words(kOut, 'ab'), wX = W.looks._words(xOut, 'ab'), wIn = W.looks._words(kIn, 'ab');
+      R('tide: the Kelp Lines\' split-flaps carry "KELP LINE" over their words; both one-way kinds say the same at their OUT end ("EXIT ONLY")',
+        P.legs.filter((l) => l.flip).every((l) => l.look.tag === 'KELP LINE') && !P.legs.some((l) => !l.flip && l.look.tag) && wK.top === 'EXIT ONLY' && wX.top === 'EXIT ONLY' && /UP · IN/.test(wIn.top), { kelpOut: wK, expressOut: wX, kelpIn: wIn });
+      setT(120); P.hudUi.start(); dbg.step(1000 / 60);
+      const startDown = line();
+      R('tide: the match-start line names the tide as it is (a joiner in a DOWN phase reads "Kelp Lines DOWN")', /Kelp Lines DOWN/.test(startDown), { startDown });
+      P.hudUi.msg = null;
+    }
     // refusals in the shut window, and a rider who entered at T − 3.1 finishes the old way
     for (const a of M.actors) { a.pipeCd = 0; }
     const kA = P.legs.find((l) => l.id === 'kelp').ends[0], kB = P.legs.find((l) => l.id === 'kelp').ends[1];
@@ -521,53 +549,89 @@
     W = __G.pipes; M = g.match; P = M.pipes;
     const A5 = M.local;
     if (A5) {
-      for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
-      const rig = g.rig;
-      // the Express (open air): the boom never comes in for pipe pieces; the yaw ends within 15° of the pop heading
-      const xe = P.legs.find((l) => l.id === 'express');
-      atApproach(A5, xe.ends[0], 0.1); pushIn(A5, xe.ends[0]);
-      let minBoom = Infinity, skipLeak = false, yawAtPop = null, glassWould = 0;
-      for (let i = 0; i < 300 && A5.pipe && A5.pipe.phase !== 'pop'; i++) {
-        dbg.step(1000 / 60);
-        if (__G.physics.skip !== null) skipLeak = true;
-        if (A5.pipe?.phase === 'ride' && A5.pipe.u > 20 && A5.pipe.u < xe.len - 10 && A5.pos.y > 7) {
-          const back = rig.forward(new THREE.Vector3()).negate(), p1 = {}, p0 = {};
-          __G.physics.skip = 'pipe'; __G.physics.cameraProbe(rig.pivot, back, 5.3, 0.62, p1); __G.physics.skip = null;
-          __G.physics.cameraProbe(rig.pivot, back, 5.3, 0.62, p0);
-          if (p1.hard >= 2.5) minBoom = Math.min(minBoom, rig.curDist);   // (where real walls / roofs allow 2.5 m)
-          if (p0.hard < p1.hard - 0.5) glassWould = (glassWould || 0) + 1;
+      const C = await import('./src/game/pipesCam.js');
+      const rig = g.rig, cam = __G.camera, Lv = __G.level;
+      const ids = [];
+      // the reviewer's definition (a visible solid: not hidden, not glass) and the stricter one the camera plans with
+      const insideVis = (p) => { Lv.queryBlocks(p.x - 0.01, p.z - 0.01, p.x + 0.01, p.z + 0.01, ids); for (const id of ids) { const b = Lv.blocks[id]; if (b.solid && !b.hidden && !b.pipe && Lv.pointInBlock(b, p, -0.02)) return b.tag || '#' + id; } return null; };
+      const insideOpq = (p) => { Lv.queryBlocks(p.x - 0.01, p.z - 0.01, p.x + 0.01, p.z + 0.01, ids); for (const id of ids) { const b = Lv.blocks[id]; if (b.solid && !b.pipe && !b.bakeClear && !b.grate && Lv.pointInBlock(b, p, 0)) return b.tag || '#' + id; } return null; };
+      const inFrame = (p) => { const v = p.clone().project(cam); return v.z < 1 && Math.abs(v.x) < 0.98 && Math.abs(v.y) < 0.98; };
+      const tankV = W.X.water[0], kelpLeg = P.legs.find((l) => l.id === 'kelp');
+      // (the Kelp Line's run through its drum, in plan: the foot run and the riser, x ±27.4, z ∓4.6 … ∓1.2; backdrop.js
+      //  keeps fronds 1.6 m off it (a frond reaches 0.28 m from its centre) and under 9.0 m)
+      const segD = (x, z, ax, az, bx, bz) => { const dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - ax - dx * t, z - az - dz * t); };
+      const drumRun = (lg) => { const sg = lg.pts[0][0] > 0 ? 1 : -1; return (x, z) => segD(sg * x, sg * z, 27.4, -4.6, 27.4, -1.2); };
+      const drumTop = (lg) => { const sg = lg.pts[0][0] > 0 ? 1 : -1; return (x, z) => segD(sg * x, sg * z, 27.4, -1.2, 26.05, 4.28); };
+      // a point a frond could be at: in the drum, under 9.0, outside the cleared foot-and-riser corridor, and (under 8.0)
+      // outside the top run's corridor
+      const frondCould = (lg, q) => q.y < 9.05 && Math.hypot(q.x - (lg.pts[0][0] > 0 ? 25 : -25), q.z) < 4.4 && drumRun(lg)(q.x, q.z) > 1.6 - 0.28 && (q.y < 8.05 || drumTop(lg)(q.x, q.z) > 1.6 - 0.28);
+      const rows = [], fails = [];
+      let tankFrames = 0, tankOut = 0, gradeBad = 0, frondRisk = 0, riserFrames = 0; const gradeWhy = [], frondWhy = [];
+      for (const lg of P.legs) for (const k of [0, 1]) {
+        if (lg.ends[k].inWhen === 'never') continue;
+        for (const a of M.actors) { a.pipeCd = 0; if (a.pipe) P._abort(a, 'test'); }
+        if (!A5.alive) A5.respawn();
+        A5.hp = 100; A5.invuln = 9; A5.form = 'kid';
+        const e = lg.ends[k];
+        atApproach(A5, e, 0.3); rig.follow(A5, true); rig.yaw = A5.yaw; rig.pitch = -0.12; step(0.6);
+        const dir = k ? -1 : 1, plan = C.planLeg(W, lg, dir), ex = C.exitShot(W, P.ends[lg.ends[1 - k].i]);
+        P.debugRide(A5, lg.id, k);
+        const r = { leg: lg.id + (k ? '←' : '→'), frames: 0, inVis: 0, inOpq: 0, seen: 0, landing: 0, hidden: 0, unseen: 0, popNear: 0, popMin: Infinity, modes: {}, cuts: 0, uIn: +plan.uIn.toFixed(2), uExit: +plan.uExit.toFixed(2), holes: plan.holes, exitOk: ex.ok, tags: {} };
+        let popT = -1, landT = -1, lastLens = null, landed = false, n = 0;
+        const rider = new THREE.Vector3(), body = new THREE.Vector3(), land = new THREE.Vector3(...P.ends[lg.ends[1 - k].i].land).add(new THREE.Vector3(0, 0.4, 0));
+        for (; n < 480; n++) {
+          dbg.step(1000 / 60);
+          const p = A5.pipe, st = P.rideCam.st;
+          if (!p && !st) break;
+          const L = cam.position.clone();
+          rider.set(A5.pos.x, A5.pos.y + 0.3, A5.pos.z); body.set(A5.pos.x, A5.pos.y + 0.5, A5.pos.z);
+          r.frames++;
+          const mode = st ? st.mode : 'off'; r.modes[mode] = (r.modes[mode] || 0) + 1;
+          if (lastLens && L.distanceTo(lastLens) > 1.2) r.cuts++;
+          lastLens = L;
+          const iv = insideVis(L), io = insideOpq(L);
+          if (iv) { r.inVis++; r.tags[iv] = (r.tags[iv] || 0) + 1; }
+          if (io) { r.inOpq++; r.tags['opq:' + io] = (r.tags['opq:' + io] || 0) + 1; }
+          const hiddenRider = !!insideOpq(rider);
+          const sees = !hiddenRider && inFrame(rider) && C.sightClear(Lv, L, rider, 0.3);
+          const showsLanding = mode === 'exit' && inFrame(land) && C.sightClear(Lv, L, land, 0.3);
+          if (sees) r.seen++; else if (showsLanding) r.landing++; else if (hiddenRider) r.hidden++; else { r.unseen++; if ((r.why || (r.why = [])).length < 30) r.why.push([n, mode, p ? p.phase : '-', +(p?.u ?? 0).toFixed(1), inFrame(rider) ? 'F' : 'f', C.sightClear(Lv, L, rider, 0.3) ? 'S' : 's']); }
+          if (p && p.phase === 'pop' && popT < 0) popT = n;
+          if (!p && !landed) { landed = true; landT = n; }
+          if (popT >= 0 && n - popT >= 6 && (landT < 0 || n - landT <= 30)) { const d = L.distanceTo(body); r.popMin = Math.min(r.popMin, d); if (d < 1.5) r.popNear++; }
+          // through the Great Tank, while the chase runs: the lens in the tank's water (y ≤ 2.0); the grade exactly on then
+          if (lg.id === 'gulper' && p && p.phase === 'ride' && mode === 'chase' && Math.hypot(A5.pos.x, A5.pos.z) < tankV.cyl[2] - 1.6) { tankFrames++; if (!D.inWaterVol(tankV, L.x, L.y, L.z, 0) || L.y > 2.01) tankOut++; }
+          const inV = !!W.inWater(L), edge = W.X.water.some((v) => D.inWaterVol(v, L.x, L.y, L.z, -0.06) && !D.inWaterVol(v, L.x, L.y, L.z, 0.06));   // (within 6 cm of a volume's skin: the render test's own 5 cm margin)
+          if (p && p.phase !== 'pop' && !edge && inV !== !!W.looks.uwOn && W.looks.rideVol) { gradeBad++; if (gradeWhy.length < 12) gradeWhy.push([lg.id, k, n, mode, +L.x.toFixed(2), +L.y.toFixed(2), +L.z.toFixed(2), inV, W.looks.uwOn]); }
+          // the Kelp riser: lens and sight line inside the frond-free cylinder (backdrop.js clears 1.6 m round it; a frond
+          // reaches 0.28 m from its centre) while the rider is on the riser
+          if (lg.id.startsWith('kelp') && p && p.phase === 'ride' && mode === 'chase') {
+            const dr = drumRun(lg);
+            if (dr(A5.pos.x, A5.pos.z) < 0.5 && A5.pos.y > 1.5 && A5.pos.y < 8.5) {
+              riserFrames++;
+              for (let t = 0; t <= 1.0001; t += 0.1) { const q = L.clone().lerp(rider, t); if (frondCould(lg, q)) { frondRisk++; if (frondWhy.length < 6) frondWhy.push([lg.id, k, +q.x.toFixed(2), +q.y.toFixed(2), +q.z.toFixed(2)]); break; } }
+            }
+          }
         }
-        if (A5.pipe?.phase === 'pop' && yawAtPop === null) yawAtPop = rig.yaw;
+        const visible = r.frames - r.hidden;
+        r.inViewOfVisible = +((r.seen + r.landing) / Math.max(1, visible)).toFixed(3);
+        r.popMin = +r.popMin.toFixed(2);
+        rows.push(r);
+        if (r.inVis || r.inOpq || r.popNear || r.inViewOfVisible < 0.9 || !r.exitOk || r.holes) fails.push(r.leg);
+        step(0.4);
       }
-      if (yawAtPop === null) yawAtPop = rig.yaw;
-      const pe = xe.ends[1], pd = Math.atan2(pe.out[0], pe.out[2]);
-      let dy = yawAtPop - pd; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI;
-      rideOut(A5);
-      R('cam: on the Express the boom is never pulled in by pipe glass (≥ 2.5 m), physics.skip is cleared every frame, the yaw is within 15° of the pop heading at the pop',
-        minBoom >= 2.5 && !skipLeak && Math.abs(dy) < (15 * Math.PI) / 180, { minBoom, skipLeak, yawErrDeg: (dy * 180) / Math.PI, framesGlassWouldPullIn: glassWould });
-      // the Gulper Run: the lens stays inside the Great Tank's water volume whenever the rider's centreline is in the tank,
-      // boom ≥ 1.2 m, y ≤ 2.0; the underwater grade exactly then
-      step(3);
-      const gl = P.legs.find((l) => l.id === 'gulper'), tankV = W.X.water[0];
-      atApproach(A5, gl.ends[0], 0.1); pushIn(A5, gl.ends[0]);
-      let n = 0, bad = 0, minB = Infinity, maxY = -Infinity, gradeBad = 0; const gradeWhy = [];
-      for (let i = 0; i < 200 && A5.pipe && A5.pipe.phase !== 'pop'; i++) {
-        dbg.step(1000 / 60);
-        const cx = A5.pos.x, cz = A5.pos.z, inTank = Math.hypot(cx, cz) < tankV.cyl[2] - 1.6 && A5.pipe?.phase === 'ride';
-        const cam = __G.camera.position;
-        if (inTank) {
-          n++;
-          if (!D.inWaterVol(tankV, cam.x, cam.y, cam.z, 0.0)) bad++;
-          minB = Math.min(minB, rig.curDist); maxY = Math.max(maxY, cam.y);
-        }
-        const riderIn = D.inWaterVol(tankV, A5.pos.x, A5.pos.y + 0.3, A5.pos.z, 0), inV = riderIn && D.inWaterVol(tankV, cam.x, cam.y, cam.z, 0.05);
-        if (A5.pipe?.phase === 'ride' && inV !== !!W.looks.uwOn && Math.abs(Math.hypot(cam.x, cam.z) - tankV.cyl[2]) > 0.1 && Math.abs(cam.y - tankV.y[1]) > 0.1) { gradeBad++; if (gradeBad < 4) gradeWhy.push([+cam.x.toFixed(2), +cam.y.toFixed(2), +cam.z.toFixed(2), inV, W.looks.uwOn, !!W.looks.rideVol, W.looks.uw.visible]); }
-      }
-      rideOut(A5);
-      R('cam: through the Great Tank (the rider 1.6 m or more inside its water) the lens stays inside the volume (boom ≥ 1.2 m, y ≤ 2.0); the underwater grade is on exactly while the rider and the lens are both in the water',
-        n > 20 && bad === 0 && minB >= 1.19 && maxY <= 2.01 && gradeBad === 0, { frames: n, outside: bad, minBoom: minB, maxY, gradeBad, gradeWhy });
+      R('cam: every directed leg ridden by the local player, frame by frame: the lens is never inside a visible solid (nor inside any opaque block: stone, bronze, teak), the exit shot found a clear spot over every OUT mouth, no hole in the chase',
+        rows.length === 12 && rows.every((r) => !r.inVis && !r.inOpq && r.exitOk && !r.holes), rows.map((r) => [r.leg, r.frames, r.inVis, r.inOpq, r.exitOk, r.holes, r.tags]));
+      R('cam: the rider (or, in the exit shot, its landing) is in view on ≥ 90 % of the frames it can be seen at all (the rest: inside a housing, where the lens watches the mouth it entered)',
+        rows.every((r) => r.inViewOfVisible >= 0.9), rows.map((r) => [r.leg, r.inViewOfVisible, `seen ${r.seen} landing ${r.landing} hidden ${r.hidden} unseen ${r.unseen}`, r.modes, `cuts ${r.cuts}`, `uIn ${r.uIn} uExit ${r.uExit}`, JSON.stringify(r.why || [])]));
+      R('cam: from 0.1 s after every pop to 0.5 s after touchdown the lens stays ≥ 1.5 m from the rider (the exit shot holds over the mouth; no boom jammed against its head)',
+        rows.every((r) => r.popNear === 0 && r.popMin >= 1.5), rows.map((r) => [r.leg, r.popMin, r.popNear]));
+      R('cam: through the Great Tank, while the chase runs, the lens is inside the tank\'s water (y ≤ 2.0); the underwater grade is on exactly while the lens is in a water volume',
+        tankFrames > 20 && tankOut === 0 && gradeBad === 0, { tankFrames, tankOut, gradeBad, gradeWhy });
+      R('cam: up and down the kelp drums no frond can stand between the lens and the rider (backdrop.js keeps the Kelp Line\'s corridor through the drum clear)',
+        riserFrames > 10 && frondRisk === 0, { riserFrames, frondRisk, frondWhy });
       step(0.5);
-      R('cam: the grade is off once the ride camera is out of the water (and the fog is the stage\'s again)', !W.looks.uwOn && !W.looks.rideVol && !W.looks._fogSave);
+      R('cam: the ride camera lets go after the blend (the grade off, the stage\'s fog back), physics.skip cleared', !P.rideCam.st && !W.looks.uwOn && !W.looks.rideVol && !W.looks._fogSave && __G.physics.skip === null);
     } else R('cam: (no local player in this run)', true);
   } catch (err) { R('ERROR in a part: ' + err.message, false, String(err.stack).split('\n').slice(0, 4)); }
 
