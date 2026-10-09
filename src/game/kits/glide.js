@@ -885,6 +885,8 @@ SUB_KITS[KIND] = {
   prompt,
   items,
   sounds: GLIDE_SOUNDS,
+  // the cook level this screen shows in a player's hand (0 … 3: its own cook, or a remote player's last [5] record)
+  levelShown(a) { const st = a?.weaponRunner?.glide; if (st) return levelOf(st.cook, a.sub?.kind === KIND ? a.sub : S()); return netCook.get(a)?.level || 0; },
   // exposed for tests / tools: the numbers and the step function
   math: { cookOf, radiusOf, paintOf, devDmgOf, fuseOf, levelOf, reachOf, fuseFor, simulate, slideStep, dangerOf, guide, bar },
   threats(out) { for (const it of items) if (it.state !== 'dead') out.push(threatOf(it)); return out; },
