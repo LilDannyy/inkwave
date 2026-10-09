@@ -358,6 +358,19 @@ ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw).
 gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
 `seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
 
+*The lava* (Highmark Foundry: src/game/lava.js, [b5-caldera]) adds no record at all. The level, the warnings, the
+riders (the Pumice Race's stones, the Organ Pipes: dynamic blocks each screen moves itself), the floors switched out of
+play under the surface, the nav windows and the burn are pure functions of the stage clock on every screen; a clock snap
+(a follower catching up, a late joiner) re-derives them at once (`seek`: a late joiner does not burn — its imported grid
+already has no ink under the lava). Each screen judges its own: a squidkid's lava death is its owner's (`R.kill`, cause
+`lava`, the attacker credited by the sea's 4 s rule, forwarded like any splat), a device's destruction is its owner's
+(the 4 Hz sweep while the lava rises: the owner's end record ends the ghosts), shots fizzle where they are simulated. A
+splat near the region below the high mark carries its painter's stage time (field 15), so ink under the lava is refused —
+and burned ink stays burned — identically everywhere whatever order the records arrive in. Tested by
+`tools/botlab/tests/net-lava.cjs` (`WIPSTAGES=1 CLIENTS=2`: the level in step through a Turf War, a guest's lava death on
+the host's feed, devices gone on both screens, the lava cells identical; in Practice a late joiner at HIGH and a host
+change in the middle of a rise).
+
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
 tower onto the host's position (dead-reckoned between snapshots); each client carries its own players standing on it
