@@ -396,7 +396,7 @@ const BASE = [
   B(-36, -33.4, 1, 4, -59.4, -54, { tag: 'grip-car', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
   B(-36.6, -35.4, 1, 2.4, -52.6, -51, cover({ tag: 'coal-bin', color: '#4a4744' })),
   B(-27.6, -26.4, 1, 2.25, -58.4, -56.4, cover({ tag: 'turntable-bench', color: '#7d6c5a' })),
-  B(-23, -21.8, 1, 2.25, -56, -54.8, cover({ tag: 'buffer', color: '#5b5048' })),
+  B(-25, -23.8, 1, 2.25, -57.6, -56.4, cover({ tag: 'buffer', color: '#5b5048' })),   // (3 m clear of the Bazookarp Gate)
   B(-12.4, -11.2, 1, 2.25, -58.4, -56.4, cover({ tag: 'turntable-bench', color: '#7d6c5a' })),
   B(-9, -6.6, 1, 2, -59, -58, cover({ tag: 'trough', color: '#6f726f' })),
   B(-9.4, -7, 1, 2, -53.4, -52.4, cover({ tag: 'trough', color: '#6f726f' })),
@@ -424,7 +424,7 @@ const TOWER = {
 const BAZOOKARP = {
   start: [0, 1.3, 0],
   weirs: [{ at: [21.5, 0, 18] }],                       // Bravo's knee, where its Swimston meets the crossbar (y 0)
-  gate: { at: [21.5, 53.5], yaw: 0 },                   // Bravo's forecourt terrace (y 1.0), 11.5 m in front of its pad
+  gate: { at: [22, 53], yaw: 0 },                       // Bravo's forecourt terrace (y 1.0), 12 m in front of its pad
   freeZones: [{ poly: [[12, 60], [31, 60], [31, 70], [12, 70]], y0: 2.9, y1: 5.9, signs: [[15, 60.3, 0], [28, 60.3, 0]], eras: null }],   // Bravo's spawn deck
   routes: {},
   noRetreat: [], carrierBlock: [], noRest: [], hopVeto: [],
@@ -441,9 +441,13 @@ const ERAS = {
   modes: { boss: { fixed: 2 }, practice: { cycle: 60 }, attract: { cycle: 40 } },
   tartar: { type: 'bluestone_tartar', pos: [0, 5.4, 0], rotY: 0 },
   clocks: [{ type: 'bluestone_clockhands', pos: [0, 5.95, -7.88], rotY: 180, faces: 5 }],
-  phones: [[17.73, 1.2, -3.13], [-17.1, 1.2, -12.8]],
-  pulses: [
-    [[0, 9, 0], [-22, 6.5, -10], [-22, 6.5, -50], [-22, 7, -62]],
+  phones: [[17.73, 1.2, -3.13], [-17.1, 1.2, -12.8], [-15, 2.1, -51.8]],   // (round C: the third on the forecourt terrace's ticket booth)
+  pulses: [                                                                  // (round C: the overhead wires on the Z, Alpha's half)
+    [[0, 9, 0], [-20, 6.5, -10], [-20, 6.5, -50], [-21.5, 7, -62]],          //   up Swimston to the engine house
+    [[0, 9, 0], [-30, 6.5, -18], [-34, 6.5, -45]],                          //   Prow Place and Hoki Lane
+    [[0, 9, 0], [-8, 6, -24], [-8, 6, -45]],                                //   the quay
+    [[0, 9, 0], [12.5, 6, -20], [12.5, 6, -42]],                            //   the punt crossing
+    [[0, 9, 0], [-30, 6.5, 2], [-35, 6.5, -10]],                            //   the knee's river walk
   ],
   tint: { 1: [1.05, 0.99, 0.90, 0.20], 2: [1, 1, 1, 0], 3: [0.97, 1.0, 1.03, 0.08] },
   remap: [
