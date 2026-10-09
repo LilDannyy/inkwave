@@ -132,14 +132,17 @@ export function registerDress(D, H, KIT) {
   };
   // the penguin glass's brass frames: a bay of glass along local x (len), standing from y0 to y1, 0.4 m thick
   D.aquarium_glassframe = {
-    desc: 'brass frames over a bay of the penguin glass (len along local x, h)',
+    desc: 'brass frames over a bay of the penguin glass (len along local x, h): thin strips on both faces',
     build(B, o) {
       const L = o.len, h = o.h ?? 3.2, n = Math.max(2, Math.round(L / 2.4));
-      for (let i = 0; i <= n; i++) pbox(B, 'metal', K.brassLt, 0.08, h - 0.35, 0.44, -L / 2 + (i * L) / n, (h + 0.35) / 2, 0);
-      pbox(B, 'metal', K.brassLt, L + 0.1, 0.1, 0.44, 0, h - 0.05, 0);
-      pbox(B, 'metal', K.brass, L + 0.1, 0.08, 0.44, 0, 1.24, 0);
+      for (const s of [-1, 1]) {
+        for (let i = 0; i <= n; i++) pbox(B, 'metal', K.brassLt, 0.07, h - 0.3, 0.04, -L / 2 + (i * L) / n, (h + 0.3) / 2, s * 0.22);
+        pbox(B, 'metal', K.brassLt, L + 0.08, 0.08, 0.05, 0, h - 0.04, s * 0.22);
+      }
+      pbox(B, 'metal', K.brass, L + 0.1, 0.06, 0.46, 0, h + 0.03, 0);
     },
   };
+
   // the penguins' cove (Alpha's, world frame; the twin turns it): boulders along the shore, ice floes on the cove floor (0.3),
   // the penguins' pool with its rim (its water: backdrop.js), a slide into it, two nest boxes against the glass
   D.aquarium_cove = {

@@ -94,8 +94,8 @@ H(RIM);
 const tang = (x, z) => -(bearing(x, z) + 90);                       // O() angle that lays a box's long side tangentially
 H(O(3.6, -2.52, 2.0, 1.0, TANK.deck, 3.6, tang(3.6, -2.52), cover(K.teak, { tag: 'hatch', pattern: SURF.teak })));
 H(O(-3.6, -2.52, 2.0, 1.0, TANK.deck, 3.6, tang(-3.6, -2.52), cover(K.teak, { tag: 'hatch', pattern: SURF.teak })));
-H(B(5.43, 6.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper' })), B(-6.43, -5.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper' })));
-H(O(3.24, -6.09, 2.0, 0.4, TANK.deck, 3.4, tang(3.24, -6.09), cover(K.seagreen, { tag: 'pole-rack' })));
+H(B(5.43, 6.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper', pattern: PATTERN.metalpanel })), B(-6.43, -5.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper', pattern: PATTERN.metalpanel })));
+H(O(3.24, -6.09, 2.0, 0.4, TANK.deck, 3.4, tang(3.24, -6.09), cover(K.seagreen, { tag: 'pole-rack', pattern: PATTERN.metalpanel })));
 // the sand bed in the tank (seen through the glass; the Gulper Run dips to y 0.5 above it)
 const TANK_IN = (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.32);
 // the Feeding Steps (1.2 + 1.2 onto the deck on the axis: the tower's double drop)
@@ -179,7 +179,7 @@ H(PYLONS);
 H(B(-6, 6, 6.0, 9.0, -31, -19, glass({ tag: 'arch-tank' })));
 for (const z of [-19.15, -22.1, -25.0, -27.9, -30.85]) H(B(-6, 6, 5.8, 6.0, z - 0.15, z + 0.15, roofR(K.brass, { tag: 'vault-rib' })));
 H(rnd(0, -21.5, 1.2, FL, 5.8, roofR(K.glassblock, { tag: 'bubble-column', hidden: true })));
-H(B(3.0, 5.4, 0, 0.9, -30.3, -29.7, cover(K.teak, { tag: 'shark-bench' })));
+H(B(3.0, 5.4, 0, 0.9, -30.3, -29.7, cover(K.teak, { tag: 'shark-bench', pattern: PATTERN.wood })));
 
 // ============================================================================================================ the SE Reef Hall
 // Alpha's low covered flank: a 0.45 colonnade plinth along the court edge (7° gaps with a 0.22 step), slim lamp columns
@@ -241,7 +241,7 @@ H(arcBand(EK, 4.6, 7.2, 15, 75, 4, FL, [3.6, 3.7], teak({ tag: 'kelp-balcony' })
 H(arcBandIn(EK, 7.15, 7.45, 15, 47, 2, 3.6, 4.6, railO()));
 // the Kelp Line's low stop (A end): a brass bell in the drum's foot facing Alpha's arcade; beside it the pump housing
 // closes the pocket between the stop, the drum and the Reef Window
-H(B(26.2, 28.6, 0, 2.6, -4.6, -2.8, roofR(K.brass, { tag: 'kelp-stop' })), B(28.6, 30.4, 0, 2.6, -4.6, -1.5, roofR(K.pump, { tag: 'pump-housing' })));
+H(B(26.2, 28.6, 0, 2.6, -4.6, -2.8, roofR(K.render, { tag: 'kelp-stop' })), B(28.6, 30.4, 0, 2.6, -4.6, -1.5, roofR(K.pump, { tag: 'pump-housing' })));
 
 // ============================================================================================================ the SW Sea Promenade
 // Alpha's high open flank over the sea (2.4): its inner face (r 21, white render) a squid can climb; balustrades and a
@@ -269,7 +269,7 @@ PROM.push(radBox(-145, 25.75, 28.25, 2.5, FL, 5.0, roofR(K.kiosk, { tag: 'kiosk'
 // (the stacked deckchairs: a hop-up, walkable as DESIGN.md has them)
 PROM.push(radBox(-158, 28.3, 29.7, 1.4, FL, 3.6, cover(K.coral, { tag: 'deckchairs' })));
 // the deep Kelp stop (Bravo's Kelp Line comes down into it from 9 m; its mouth at r 28.3 faces the court)
-PROM.push(radBox(-132, 28.3, 33.2, 2.4, FL, 5.0, roofR(K.brass, { tag: 'kelp-stop-deep' })));
+PROM.push(radBox(-132, 28.3, 33.2, 2.4, FL, 5.0, roofR(K.render, { tag: 'kelp-stop-deep' })));
 // the grand stair (6 wide, 0 → 2.4) and the Penguin Steps (5 wide, 2.4 → 1.2 onto the rock terrace)
 PROM.push(radRamp(-152, 15.6, 0, 21.4, PR.y, 6.0, stair({ tag: 'grand-stair' })));
 PROM.push(radRamp(-120, 34.6, 1.2, 31.0, PR.y, 5.0, stair({ tag: 'penguin-steps' })));
@@ -298,11 +298,11 @@ const wE = (s) => (s < 10 ? 19.5 : s < 19 ? 18.0 : 16.5);           // the leadi
 H(B(2.0, 10.0, 0, 1.2, -46.0, -39.0, floor0({ tag: 'ticket-hall', color: '#cfc6b4', mural: [{ n: [0, 0, 1], id: 5 }] })));
 H(R([9.0, 0, -36.2], [9.0, 1.2, -39.0], 2.0, stair({ tag: 'ticket-stair' })));
 H(B(7.4, 10.0, 0, 0.6, -47.2, -46.0, stone({ tag: 'queue-step' })));
-H(B(8.2, 10.0, 1.2, 3.7, -42.0, -40.0, roofR(K.kiosk, { tag: 'ticket-booth' })), B(2.6, 3.8, 1.2, 2.4, -40.3, -39.3, cover(K.brass, { tag: 'luggage-scale' })));
+H(B(8.2, 10.0, 1.2, 3.7, -42.0, -40.0, roofR(K.kiosk, { tag: 'ticket-booth' })), B(2.6, 3.8, 1.2, 2.4, -40.3, -39.3, cover(K.brass, { tag: 'luggage-scale', pattern: PATTERN.metal })));
 // (the school-trip coat-peg stand: cover on the hall's west half, clear of the tower's lane by 0.95 m; a hop-up, so
 // walkable like every hop-height top)
-H(B(2.4, 3.8, 1.2, 2.3, -44.8, -44.2, cover(K.teak, { tag: 'coat-pegs' })));
-H(B(8.0, 8.6, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile' })), B(9.2, 9.8, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile' })));
+H(B(2.4, 3.8, 1.2, 2.3, -44.8, -44.2, cover(K.teak, { tag: 'coat-pegs', pattern: PATTERN.wood })));
+H(B(8.0, 8.6, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile', pattern: PATTERN.metal })), B(9.2, 9.8, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile', pattern: PATTERN.metal })));
 for (const [x, z] of [[3.0, -39.3], [9.7, -39.3], [3.0, -45.7], [9.7, -45.7]]) H(B(x - 0.25, x + 0.25, 1.2, 6.6, z - 0.25, z + 0.25, roofR(K.brass, { tag: 'canopy-column' })));
 H(B(2.5, 10.2, 6.6, 6.8, -46.2, -38.8, roofR('#c9dcdc', { tag: 'ticket-canopy', pattern: PATTERN.glasstile })));
 // --- the Pump Hall: the back-of-house shed along the blade's leading edge (open on its west side), its back wall in
@@ -326,13 +326,13 @@ H(bladeBox(8, 10, 13, 18.9, FL, 1.2, BUND), bladeBox(10, 19, 13, 17.4, FL, 1.2, 
 for (const [x, z] of [[19.11, -33.59], [20.66, -37.89], [22.39, -42.09]]) H(rnd(x, z, 1.3, FL, 4.3, roofR(K.steel, { tag: 'sand-filter' })));
 // (the second pump set stands against the bund at the shed's south end, s 18.7 … 20.2: DESIGN.md's spot is now the
 // apron of the Express's plaza mouth)
-H(B(17.05, 18.55, 0, 1.0, -42.0, -40.0, cover(K.pump, { tag: 'pump-set' })), bladeBox(18.7, 20.2, 11.0, 13.0, FL, 1.0, cover(K.pump, { tag: 'pump-set' })));
+H(B(17.05, 18.55, 0, 1.0, -42.0, -40.0, cover(K.pump, { tag: 'pump-set', pattern: PATTERN.metalpanel })), bladeBox(18.7, 20.2, 11.0, 13.0, FL, 1.0, cover(K.pump, { tag: 'pump-set', pattern: PATTERN.metalpanel })));
 H(B(17.7, 19.3, 0, 1.4, -31.8, -30.2, cover(K.crate, { tag: 'salt-crates', pattern: PATTERN.wood, mural: [{ n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 6 }, { n: [0, 0, -1], id: 6 }] })));
 // --- the Gate Terrace's cross-cover: bollard planters at both ends, the ice-cream cart, the Tubeway post-box column,
 //     the ticket-machine bank in front of the hall's wing mouth (not in Tower Command: the track runs there)
-H(rnd(-8.5, -33.5, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter' })), rnd(11.0, -36.6, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter' })));
+H(rnd(-8.5, -33.5, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter', pattern: PATTERN.planter })), rnd(11.0, -36.6, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter', pattern: PATTERN.planter })));
 H(B(-6.2, -4.8, 0, 1.4, -40.5, -39.0, cover('#e7b7a8', { tag: 'icecream-cart' })), rnd(-1.0, -39.8, 0.6, FL, 2.4, roofR('#b0473a', { tag: 'post-box', hidden: true })));
-H(B(-0.7, 1.7, 0, 1.5, -35.6, -34.8, cover(K.steel, { tag: 'ticket-machines', notIn: 'tower' })));
+H(B(-0.7, 1.7, 0, 1.5, -35.6, -34.8, cover(K.steel, { tag: 'ticket-machines', notIn: 'tower', pattern: PATTERN.metalpanel })));
 // --- Penguin Point: the faux-Antarctic rockery along the trailing edge (1.2; the upper rock 2.4 over the plaza), the
 //     keeper's hut, feeding buckets, the ice pile, the basking rock (not in Tower Command), an outcrop, the feeding chute;
 //     the penguin glass in four angled bays (≥ 2.0 m over everything standable within 3 m), the cove behind it
@@ -345,7 +345,7 @@ H(bladeBox(-16, -3, -17.4, -17.0, FL, 3.2, GL), bladeBox(-3, 7, -18.2, -17.8, FL
 H(bladeBox(-3.4, -3.0, -18.2, -17.4, FL, 3.2, GL), bladeBox(10.0, 10.4, -18.2, -17.4, FL, 4.4, GL), bladeBox(23.6, 24.0, -17.0, -16.6, FL, 4.4, GL));
 H(bladeBox(21.0, 31.2, -17.4, -16.3, FL, 0.4, cover(K.granite, { tag: 'glass-sill', paint: false })));
 H(bladeBox(-1, 1, -16.6, -14.6, FL, 3.9, roofR('#c9b79a', { tag: 'keeper-hut' })), B(-9.6, -8.4, 0, 2.4, -46.6, -45.4, roofR('#c4a35a', { tag: 'buckets', hidden: true })));
-H(B(-7.7, -6.3, 0, 2.2, -49.2, -47.8, cover('#e6f0f2', { tag: 'ice-pile' })), B(-8.2, -7.0, 0, 2.2, -40.5, -39.3, cover(K.rockUp, { tag: 'basking-rock', notIn: 'tower' })));
+H(B(-7.7, -6.3, 0, 2.2, -49.2, -47.8, cover('#e6f0f2', { tag: 'ice-pile' })), B(-8.2, -7.0, 0, 2.2, -40.5, -39.3, cover(K.rockUp, { tag: 'basking-rock', notIn: 'tower', pattern: PATTERN.concrete })));
 H(bladeBox(16, 18, -14.5, -13.1, FL, 3.6, roofR(K.rock, { tag: 'outcrop', hidden: true })), bladeBox(9, 10.4, -17.6, -16.2, FL, 2.6, roofR(K.steel, { tag: 'feeding-chute', hidden: true })));
 // the cove (out of bounds: rocks, a pool, the colony; anyone landing there slides off into the sea)
 const shore = (s) => -20 - 2.5 * (1 - ((s - 7.5) / 23.5) ** 2);
@@ -364,18 +364,18 @@ H(layer({ key: 'cove', frame: 'blade', rect: [-23, -16.6, -16, 31], res: 0.25, i
 //     crates are gone: on the east stair's line, and nowhere else free of the stop's mouth.)
 H(bladeBox(24, 27, -17.0, -8.5, FL, 0.6, stone({ tag: 'queue-terrace' })));
 H(bladeBox(24.5, 26.5, -10.5, -8.5, FL, 3.0, roofR(K.kiosk, { tag: 'ferry-kiosk' })), bladeBox(24.5, 25.7, -8.5, -7.3, FL, 2.2, roofR(K.seagreen, { tag: 'timetable' })));
-H(bladeBox(24.9, 26.1, -12.0, -10.5, FL, 1.5, cover(K.steel, { tag: 'trolleys' })));
-H(B(-2.5, 0.5, 0, 1.2, -58.6, -57.4, cover(K.teak, { tag: 'whale-bench' })));
-H(rnd(...W(27.4, -2.4), 1.0, FL, 1.2, cover(K.planter, { tag: 'topiary' })));
-H(bladeBox(27.6, 28.8, -7.8, -5.8, FL, 1.4, cover(K.crate, { tag: 'trolley-stack' })), bladeBox(28.1, 28.9, 1.2, 3.6, FL, 1.3, cover(K.planter, { tag: 'queue-planter' })));
-H(B(6.2, 8.2, 0, 1.4, -52.3, -51.3, cover(K.steel, { tag: 'trolley', notIn: 'tower' })));
+H(bladeBox(24.9, 26.1, -12.0, -10.5, FL, 1.5, cover(K.steel, { tag: 'trolleys', pattern: PATTERN.metal })));
+H(B(-2.5, 0.5, 0, 1.2, -58.6, -57.4, cover(K.teak, { tag: 'whale-bench', pattern: PATTERN.wood })));
+H(rnd(...W(27.4, -2.4), 1.0, FL, 1.2, cover(K.planter, { tag: 'topiary', pattern: PATTERN.planter })));
+H(bladeBox(27.6, 28.8, -7.8, -5.8, FL, 1.4, cover(K.crate, { tag: 'trolley-stack', pattern: PATTERN.wood })), bladeBox(28.1, 28.9, 1.2, 3.6, FL, 1.3, cover(K.planter, { tag: 'queue-planter', pattern: PATTERN.planter })));
+H(B(6.2, 8.2, 0, 1.4, -52.3, -51.3, cover(K.steel, { tag: 'trolley', notIn: 'tower', pattern: PATTERN.metal })));
 // the forklift with a fish tank, parked in front of the Ticket Hall's queue step at the shed's mouth (the tower's track
 // turns here: not in Tower Command)
 H(B(10.0, 12.0, 0, 2.2, -52.3, -49.3, roofR('#d9a441', { tag: 'forklift', notIn: 'tower', hidden: true })));
 H(bladeBox(25.5, 28, 7, 9.5, FL, 2.6, roofR(K.kiosk, { tag: 'souvenir-kiosk' })));
 // the Express's stops: the plaza's (IN) closes the bund's south end against the sea edge, mouth on its west face at
 // (s 22.75, w 12.5) facing −w (8.3 m from the east stair's foot); Penguin Point's (OUT) at the foot of the Penguin Steps
-H(bladeBox(21, 24.5, 12.5, 16.8, FL, 3.2, roofR(K.brass, { tag: 'express-stop-in' })), bladeBox(-6.0, -1.4, -16.2, -13.8, FL, 5.0, roofR(K.brass, { tag: 'express-stop-out' })));
+H(bladeBox(21, 24.5, 12.5, 16.8, FL, 3.2, roofR(K.render, { tag: 'express-stop-in' })), bladeBox(-6.0, -1.4, -16.2, -13.8, FL, 5.0, roofR(K.render, { tag: 'express-stop-out' })));
 // the plaza's sea edge: a granite coping (s 24.5 … 31) with the sea rail on it
 H(bladeBox(24.5, 31.2, 16.3, 16.85, FL, 0.1, cover(K.granite, { tag: 'sea-coping', paint: false })));
 H(bladeBox(24.5, 31.0, 16.5, 16.8, 0.1, 1.1, railO()));
@@ -397,7 +397,7 @@ SPB.push(bladeBox(SP.land, back(16) - 0.1, 15.5, 16.0, FL, 3.7, stone({ tag: 'de
 H(SPB);
 H(layer({ key: 'spawn-deck', frame: 'blade', rect: [-16.5, 16.5, 30.85, 43.35], res: 0.25, cover: new Cover(SPB, SP.y), y0: FL, y1: SP.y, o: teak({ tag: 'spawn-deck', color: '#a08a70' }),
   inside: (x, z) => { const [s, w] = toBlade(x, z), a = Math.abs(w); return s <= back(w) - 0.2 && ((a <= SP.half && s >= SP.front + SP.fascia) || (a <= 15.8 && s >= SP.land)); } }));
-H(bladeBox(34, 36, 9.5, 11.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })), bladeBox(34, 36, -11.5, -9.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter' })));
+H(bladeBox(34, 36, 9.5, 11.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter', pattern: PATTERN.planter })), bladeBox(34, 36, -11.5, -9.5, FL, 4.5, cover(K.planter, { tag: 'deck-planter', pattern: PATTERN.planter })));
 // the foyer's two glass-block skylights flanking the pad (1.1 m, a hop-up: walkable and inkable like the Glass Walk),
 // 4.8 m out from it (outside the 4.2 m barrier): cover for defenders re-forming on the deck (without them the deck's
 // barrier ring was 5–10 m from any cover)
@@ -484,7 +484,7 @@ const LAYOUT_AQUARIUM = {
   // the stage adds its sea wall, the Deep Dome and the breakwater light (backdrop.js / far.js) and its ferries at the
   // piers (props.js). The day sea a little deeper and less cyan (DESIGN.md §5.6: nothing near the ink is bright aqua)
   env: {
-    backdrop: (kit) => buildBackdrop(kit, { glass: ALL().filter((d) => d.tag && d.hidden && !d.rail), tank: TANK }),
+    backdrop: (kit) => buildBackdrop(kit, { glass: ALL().filter((d) => d.tag && d.hidden && d.bakeClear && !d.rail), tank: TANK }),
     edge: 'none', boats: false, buoys: false, stars: true,
     theme: { day: { seaDeep: '#1b4f63', seaShallow: '#2c8287', seaCrest: '#6fc4b8', sunEl: 44 } },
   },

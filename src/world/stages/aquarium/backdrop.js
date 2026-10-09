@@ -78,8 +78,8 @@ export function buildBackdrop(kit, data = {}) {
       // of its top run across the drum (to (26.05, 4.28) at the drum's rim), and none over 9.0 m anywhere (the top run's axis)
       if (kelpRun(sg * x, sg * z) < 1.6) continue;
       const top = kelpTop(sg * x, sg * z) < 1.6 ? 8.0 : 9.0;
-      const h = Math.min(top - 0.4, 6 + rnd() * 2.6), f = new T.BoxGeometry(0.12, h, 0.55, 1, 10, 1);
-      f.rotateY(rnd() * Math.PI); f.translate(x, 0.4 + h / 2, z);
+      const h = Math.min(top - 1.0, 5.6 + rnd() * 2.4), f = frondGeo(T, h, rnd);
+      f.rotateY(rnd() * Math.PI); f.translate(x, 0.4, z);
       // (streaming with the tide moves a frond by at most 1.08 m: scaled down near the line's corridor so its centre never
       // comes inside the 1.6 m the ride camera's lens keeps clear — tests/pipes.js's frond model holds while it streams)
       const clear = Math.min(kelpRun(sg * x, sg * z), top > 8.5 ? kelpTop(sg * x, sg * z) : Infinity) - 1.6;
@@ -100,7 +100,7 @@ export function buildBackdrop(kit, data = {}) {
   // the deep water (the tanks, the drums, the Arch Tanks: dull, deep, clear round the tubes, thin from inside) and the
   // clear water (the Reef Windows, the bubble columns, the pools: shallow, lighter)
   const LOOK = { water: waterMaterial(T, U, TUBE_RUNS), clear: waterMaterial(T, U, []), glass: glassMaterial(T) };
-  LOOK.clear.opacity = 0.3; LOOK.clear.color.set('#3d7480');
+  LOOK.clear.opacity = 0.26; LOOK.clear.color.set('#3d7480'); LOOK.clear.userData.glow = 0.07;
   const objects = [];
   for (const [k, geos] of Object.entries(buckets)) {
     const g = merge(geos); if (!g) continue;
@@ -122,6 +122,8 @@ export function buildBackdrop(kit, data = {}) {
   const bathy = buildBathysphere(T);
   objects.push(bathy.group);
   const feed = feedingTime();
+  bathy.group.userData.feeding = () => feed.state;   // (tests: Feeding Time's state; the clocks)
+  bathy.group.userData.clocks = U;
   const far = buildFar(kit, { W });
   objects.push(...far.objects);
   let last = performance.now() / 1000;
@@ -133,6 +135,34 @@ export function buildBackdrop(kit, data = {}) {
     gauges.animate(t); tide.animate(t); far.animate(nowS, night);
   };
   return { static: far.static, plain: far.plain, terrain: [], instances: [], objects, animate };
+}
+
+// a giant-kelp frond: a thin stipe and blade leaves on short stalks up it (alternating, a golden-angle turn each), from y 0
+// to h + 0.4, leaves within 0.26 m of the stipe (tests/pipes.js's frond model: 0.28 m from the centre); non-indexed
+function frondGeo(T, h, rnd) {
+  const P = [], N = [];
+  const quad = (a, b, c, d, n) => { for (const v of [a, b, c, a, c, d]) { P.push(...v); N.push(...n); } };
+  // the stipe: a square rod 6 cm
+  const r = 0.03, seg = 8;
+  for (let i = 0; i < seg; i++) {
+    const y0 = (h * i) / seg, y1 = (h * (i + 1)) / seg;
+    for (const [nx, nz] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+      const tx = -nz, tz = nx;
+      quad([nx * r + tx * r, y0, nz * r + tz * r], [nx * r - tx * r, y0, nz * r - tz * r], [nx * r - tx * r, y1, nz * r - tz * r], [nx * r + tx * r, y1, nz * r + tz * r], [nx, 0, nz]);
+    }
+  }
+  // the blades: 0.55 long, 0.17 wide, tilted up, every 0.42 m
+  let a = rnd() * 6.28;
+  for (let y = 0.45; y < h - 0.2; y += 0.3) {
+    a += 2.4;
+    const c = Math.cos(a), sn = Math.sin(a), L = 0.2 * (0.8 + 0.4 * rnd()), up = 0.3, w = 0.12;
+    const ox = c * L, oz = sn * L, px = -sn * w, pz = c * w;
+    quad([px, y, pz], [-px, y, -pz], [ox - px * 0.6, y + up, oz - pz * 0.6], [ox + px * 0.6, y + up, oz + pz * 0.6], [-sn, 0.3, c]);
+    quad([ox + px * 0.6, y + up, oz + pz * 0.6], [ox - px * 0.6, y + up, oz - pz * 0.6], [ox * 1.05, y + up + 0.28, oz * 1.05], [ox * 1.05, y + up + 0.28, oz * 1.05], [-sn, 0.3, c]);
+  }
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.BufferAttribute(new Float32Array(P), 3)); g.setAttribute('normal', new T.BufferAttribute(new Float32Array(N), 3));
+  return g;
 }
 
 // ---- the tide in the kelp drums (DESIGN.md §3.3 / §3.4: one of the five ways the tide is shown; LEAD-REVIEW round 2,
@@ -156,7 +186,7 @@ function tideDrums(T, kelp, bubbles) {
   kg.setAttribute('position', new T.BufferAttribute(pos, 3)); kg.setAttribute('normal', new T.BufferAttribute(nor, 3));
   kg.setAttribute('aK', new T.BufferAttribute(aK, 1)); kg.setAttribute('aS', new T.BufferAttribute(aS, 1)); kg.setAttribute('aA', new T.BufferAttribute(aA, 1)); kg.setAttribute('aC', new T.BufferAttribute(aC, 2));
   kg.computeBoundingSphere(); kg.boundingSphere.radius += 2;
-  const km = new T.MeshStandardMaterial({ color: '#5b5a33', roughness: 0.8, metalness: 0.05, side: T.DoubleSide });
+  const km = new T.MeshStandardMaterial({ color: '#8a8238', roughness: 0.7, metalness: 0.0, side: T.DoubleSide, emissive: '#1d1b08' });
   km.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = 'attribute float aK; attribute float aS; attribute float aA; attribute vec2 aC; uniform float uTime; uniform float uStream;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>

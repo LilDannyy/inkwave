@@ -25,15 +25,17 @@ const TAU = Math.PI * 2, HP = Math.PI / 2;
 // ------------------------------------------------------------------------------------------------ water
 // segs: [[ax, ay, az, bx, by, bz], …] the tube runs inside the stage's water volumes (≤ 8)
 export function waterMaterial(T, U, segs) {
-  const m = new T.MeshStandardMaterial({ color: '#285865', roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.66, depthWrite: false, side: T.DoubleSide });
+  const m = new T.MeshStandardMaterial({ color: '#285865', roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.6, depthWrite: false, side: T.DoubleSide });
+  const uGlow = { value: 0.1 };   // (the dusk glow from within: warm white × night × this)
+  Object.defineProperty(m.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
   const N = Math.min(8, segs.length);
   const uA = { value: Array.from({ length: 8 }, (_, i) => new T.Vector3(...(segs[i] ? segs[i].slice(0, 3) : [0, -99, 0]))) };
   const uB = { value: Array.from({ length: 8 }, (_, i) => new T.Vector3(...(segs[i] ? segs[i].slice(3, 6) : [0, -99, 0.01]))) };
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSegA = uA; sh.uniforms.uSegB = uB; sh.uniforms.uNightW = U ? U.uNight : { value: 0 };
+    sh.uniforms.uSegA = uA; sh.uniforms.uSegB = uB; sh.uniforms.uNightW = U ? U.uNight : { value: 0 }; sh.uniforms.uGlowW = uGlow;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWW;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vWW; uniform vec3 uSegA[8]; uniform vec3 uSegB[8]; uniform float uNightW;
+varying vec3 vWW; uniform vec3 uSegA[8]; uniform vec3 uSegB[8]; uniform float uNightW; uniform float uGlowW;
 float aqRaySeg(vec3 ro, vec3 rd, vec3 a, vec3 b) {
   vec3 ba = b - a, w = ro - a; float d = dot(rd, ba), e = max(dot(ba, ba), 1e-5), c = dot(rd, w), f = dot(ba, w);
   float s = clamp((f - c * d) / max(e - d * d, 1e-5), 0.0, 1.0);
@@ -49,7 +51,7 @@ float aqRaySeg(vec3 ro, vec3 rd, vec3 a, vec3 b) {
     diffuseColor.a *= mix(0.22, 1.0, clear) * (gl_FrontFacing ? 1.0 : 0.25);
   }
 #include <opaque_fragment>`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-  totalEmissiveRadiance += vec3(0.95, 0.92, 0.86) * 0.16 * uNightW;`);
+  totalEmissiveRadiance += vec3(0.95, 0.92, 0.86) * uGlowW * uNightW;`);
   };
   m.customProgramCacheKey = () => 'aq-water-' + N;
   return m;
@@ -313,13 +315,32 @@ export function buildBathysphere(T) {
 
 // ------------------------------------------------------------------------------------------------ Feeding Time
 // state machine on the match clock (looks only): returns per frame { bob, krill, wheel } in 0 … 1
+// the bathysphere's bell (a ship's bell over the PA: a struck partial series, a long ring), registered with the game's
+// synthesised voices on first use (a dynamic import: this file stays importable in Node)
+let bellVoice = 0;
+function ensureBell() {
+  if (bellVoice) return;
+  bellVoice = 1;
+  import('../../../audio/audio.js').then((A) => {
+    if (!A.SFX.aq_bell) A.SFX.aq_bell = {
+      gain: 0.5, max: 3, jitter: 0, reverb: 0.45, minGap: 0.3,
+      build(v, p) {
+        v.tone({ type: 'sine', f: 784 * p, a: 0.002, h: 0.02, d: 1.8, peak: 0.6 });
+        v.tone({ type: 'sine', f: 784 * 2.76 * p, a: 0.002, d: 1.0, peak: 0.24 });
+        v.tone({ type: 'sine', f: 784 * 5.4 * p, a: 0.001, d: 0.4, peak: 0.1 });
+        v.nz({ kind: 'white', f: 4200, q: 1.4, a: 0.001, d: 0.05, peak: 0.18 });
+      },
+    };
+    bellVoice = 2;
+  }).catch(() => { bellVoice = 3; });
+}
 export function feedingTime() {
   let m0 = null, t0 = -1, rung = 0;
   const S = { bob: 0, krill: 0, wheel: 0, active: false };
-  const bell = () => { const au = G.audio; if (!au) return; au.play(G.audioHas?.('aq_bell') ? 'aq_bell' : 'pipe_chime', { volume: 0.75 }); };
-  return (nowS) => {
+  const bell = () => { const au = G.audio; if (!au) return; au.play(bellVoice === 2 ? 'aq_bell' : 'pipe_chime', { volume: 0.75, pos: undefined }); };
+  const f = (nowS) => {
     const m = G.match;
-    if (m !== m0) { m0 = m; t0 = -1; rung = 0; }
+    if (m !== m0) { m0 = m; t0 = -1; rung = 0; if (m) ensureBell(); }
     if (m && t0 < 0 && m.state === 'playing' && !m.practice && !m.attract && Number.isFinite(m.duration) && m.duration > 60 && m.time <= 60 && m.time > 45) t0 = nowS;
     if (t0 < 0) { S.bob = S.krill = S.wheel = 0; S.active = false; return S; }
     const e = nowS - t0;
@@ -329,8 +350,11 @@ export function feedingTime() {
     S.bob = e < 9 ? Math.sin(Math.min(1, e / 9) * Math.PI) : 0;
     S.krill = e < 16 ? Math.min(1, e / 2) * Math.min(1, (16 - e) / 3) : 0;
     S.wheel = e < 14 ? Math.min(1, e / 2) * Math.min(1, (14 - e) / 3) : 0;
+    S.rung = rung; S.t = e;
     return S;
   };
+  f.state = S;
+  return f;
 }
 // the krill cloud: tiny flecks drifting down from the Glass Walk's edge into the Great Tank (visible while uKrill > 0)
 export function buildKrill(T, U, rnd) {
