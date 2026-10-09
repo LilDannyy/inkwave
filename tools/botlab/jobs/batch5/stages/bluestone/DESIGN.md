@@ -110,6 +110,8 @@ floats round it, and a glass stair rises to it out of each team's superstop.
 
 ### 2.1 Macro shape: a skewed X
 
+*Superseded in round C (2026-10-10): the stage is now a dog-leg, a kinked Z; see §8, "As built, round C".*
+
 Two streets cross at the circus, and each is drawn as two strokes that reach out from it:
 - **Swimston Street** runs along z (the spawn axis). Each team's **Swimston stroke** is a fan that narrows toward the
   circus: 54 m wide across its base (x ±27), **45.5 m at its waist** (x −24 … 21.5). Its river side is a diagonal quay
@@ -1752,3 +1754,171 @@ the revision-2 plan model (`geo2.py`, `plan2.py` and the measuring scripts), whi
 | B14 | minor | Murals and texlib slots don't fit the engine | One image per mural id on one face, each face named (§5.4): the circus floor and the concourse's centre are built as single blocks for the two floor murals, street names and lettering moved to props. Bluestone now needs the standard three texlib slots (the fourth became the shared `PATTERN.pavers`), and §5.3 says the slot table must grow for all three batch-5 stages, a shared change for the batch lead. | Resolved (slot numbers from the batch lead) |
 | B15 | minor | Things the builder would have to guess | §2.6 opens with the answers: two stacked blocks per building (0–3 inkable, 3–top `paint:false`); every ramp solid, and the one custom thickness; the railyards as a hidden `roof` embankment at 3.1; the balcony as non-overlapping boxes with posts; every rail with its ends and gaps; piers at wall corners. | Resolved |
 | B16 | minor | Numeric slips; load time | Re-measured everything on the new plan: the side zone is 42.7 m from the pad (its centre moved); jump 1 changes 20 groups per half and jump 2 changes 20, about 47 and 76 blocks per half; done is J + 4.0 s (R_max 84.9 + 2 m). Load: step 2 now measures loadMs and draw calls per era on the blockout and decides ENGINE step 4b there, and §6.1 #12 sets a per-era budget of ≤ 60 draw calls for era props, superstructures and the backdrop set. The plan is bigger than revision 1 (10,025 m² of floor in era 3), so the load risk is higher, not lower: §6.2 #4 lists the cuts. | Resolved as a plan; the measurement is step 2 |
+
+---
+
+## 8. As built, round C (2026-10-10): the plan moves to the Z
+
+**Why.** The user put the round-B top-down next to Crossroads Market and said: "see what i mean now how from the top down
+it looks familiar". From above, Crossroads Market (`crossmarket-top.webp`) is a band with its glass hall and tram line
+set diagonally across the middle. The X of §2.1 is the same read: a band with a diagonal street across the middle and a
+dome instead of a hall. The time travel does not change that from above. So, following the lead's correction in
+`../STAGE-RULES.md` ("The lead's correction (2026-10-10)"), round C changes the macro shape before any art. It keeps
+the place, mid, the eras and the look of this document. **§2.1–§2.8's macro shape, outline, piece tables and route
+lengths are superseded by this section** wherever they describe the X: the two Flathead arms, the terminus, Prawn
+Alley, the signal yard and Signal Garden, the railyard embankment, Little Lane, Centre Plaice, the Yabby quay, the
+boardwalk and the old Iron Bridge. §2.9 (mid), §3 (the gimmick) and §5 (the look) still hold.
+
+### 8.1 The shape: a dog-leg, a kinked Z
+
+The streets were built shape first: the outline, the river, the station block and the spawn terraces with nothing
+else, shot from above beside `crossmarket-top.webp` (`out/blockout/r4-shape-phase1.jpg`). Only after that did the lanes,
+cover, heights and mode data go back.
+
+- **The two legs.** Alpha's Swimston Street runs from its base at z −76 north to the crossbar at z −20, between
+  x −37 and −6 (31 m). Bravo's is the 180° twin, x 6 … 37, z 20 … 76. The legs are **offset by 43 m** (their centre
+  lines at x ∓21.5), so their inner edges are 12 m apart in x and no street looks down the other.
+- **The crossbar.** Flounders Street Station's concourse and its circus run across, x −37 … 37, z −20 … 20. Mid is
+  the circus at its middle (unchanged, at the origin, unrotated). Each knee's outer corner is chamfered on 45°, from
+  (∓22, ±20) to (∓37, ±5), so the crossbar tapers into each leg and the Z's stroke reads.
+- **The river** fills the two re-entrant corners: Alpha's side of it is the SE corner (x > −6, z < −20), Bravo's the
+  NW corner. The water also runs along every outer edge; there is no railyard mass.
+- **Outline** (Alpha's chain; the full outline is the chain and its mirror): (−22, 20) → (−37, 5) → (−37, −76) →
+  (−6, −76) → (−6, −20), then the mirror from (22, −20). Bounds x −42 … 42, z −80 … 80. The farthest arena point is
+  the base's corner (−37, −76), 84.5 m from Tartar (ENGINE rule 37).
+- **No straight sightline from base to base.** Every line from a kid's eye (1.5 m over the 3.3 m deck) on a 1 m grid
+  over one spawn deck to every such eye on the other is blocked by something solid, in every era: 0 of 36,100 lines
+  are clear (`rc-sight.mjs`). The hotel closes the Z's throat (see 8.2).
+- **Size.** Walkable floor (`cover-map.js` floorCells) is 4,828 / 4,988 / 5,508 m² in eras 1 / 2 / 3. Era 1 sits between
+  Crossroads' 4,700 m² and 5,500 m². Era 2 is +3.3 %. Era 3 is **+14.1 % over era 1 and +10.4 % over era 2**.
+
+### 8.2 Mid, kept as built
+
+Mid stays at the origin, unrotated: the circus slab (±20), the octagonal concourse (1.3) with its eight ways up, the
+eight columns, the dome, drum and lantern, the clock rows over the Clock Steps, Tartar's telephone under the dome, the
+ticket booths, the ring beds, both phone kiosks, the poster column, the cab shelter and hotel stair, the Halo (5.4) with
+its planters, the hotel balcony and landing (2.4) and the Boathouse deck (2.4). Alpha now arrives from the south-west
+(the knee), so the SW ramp and the Clock Steps face its two ways in. What changed at mid's edges, and why:
+- **Swimston's superstop and its glass stair are gone** with the old Swimston. The south side of the circus is now the
+  river edge. The stair moves there: the **ferry booking office** (eras 1–2, 3.2 m, `roof`, two 6 m groups) stands on
+  the circus's river edge at x −2.4 … 9.6, z −20 … −17. In the 3000s a glass flight grows inside it, rising west to
+  5.3, with a landing (underside 4.9) onto the Halo's 180° side at x −5.4 … −2.4.
+- **The Halo's third way up** (the round-B review's open item): the **boat shed** (eras 1–2, 3.2 m, `roof`) stands on
+  the ring against the Boathouse's north edge at x 14.6 … 17.1, z −12 … −5. In the 3000s a glass flight grows inside it
+  from the deck (2.4) north to 5.4, with a landing over the ring (underside 5.0) onto the Halo's 90° side. The Boathouse
+  is 2 m wider (x 14.5 … 21.5) so the flight starts on the deck. Its south stair is gone (it stood over the water), and
+  its north stair (x 17.1 … 20.1) is flush with the shed. The bots' nav enters the Halo from Alpha's side at three
+  places, the river stair, the hotel stair and the boat stair, and from Bravo's at their three twins (`rc-halo-entries.mjs`).
+- **The Young & Jackfish** closes the Z's throat. Its main block is x −14 … −9.5. Its east wing is on an **arch over
+  the quay** (soffit 3.8), carried 2.5 m out over the river corner on iron brackets (x −9.5 … −3.5). An **oriel bay**
+  over Swimston's east footpath sits at x −17 … −14, from 2.6 m to 9 m. The quay runs under the arch into the circus.
+  The gallery, the GPO stair and the arch over the arcade are gone.
+- Removed: the cart moved off the booking office, and two kerb planters left the river stair's landing.
+
+### 8.3 The legs (Alpha's; Bravo's is the twin)
+
+West to east:
+- **the railway viaduct** (the outer wall, 4.1 m, `roof`, from z −50 to −14);
+- **Hoki Lane** under it (5.5 m), with bins, crates and planters on alternate sides;
+- **the Royal Arcade** (x −30.5 … −26.5, z −42 … −28): a 0.6 m mosaic floor under a glass vault at 6 m. Its west wall
+  has two shopfront grilles onto Hoki Lane (rail). Inside are a kiosk and a flower stall. It is **open in every era**
+  (see 8.5);
+- **Swimston Street**: 1.5 m footpaths and an 8.5 m granite carriageway. The **tram stop** is on the west track: the
+  island and shelter on the footpath, and **the tram** (the era-slot kit: one 2.6 × 6 × 3.2 `roof` collider, three
+  looks) waits at z −34 … −28. Nothing is parked at mid. Also a news kiosk (not in Tower Command), kerb planters, a cart,
+  and the strip test's bollards and trough on the east track (not in Tower Command);
+- **the GPO**: its building (6 m) on Customs Lane's corner. **It has no clock tower in the blockout.** In the Z, the
+  dome stands 10–22° east of Swimston's axis as seen from the spawn deck, exactly behind the GPO's corner, so any tower
+  there hides the landmark. The art pass puts the GPO's clock on its parapet, under the dome's line. Its **portico terrace** (1.2) runs along x −13 … −9.5, z −42 … −29, with
+  steps down to Swimston (3 m, 21.8°), two piers and a planter;
+- **Degrayling Lane**, Swimston ↔ the quay at z −29 … −22.5: produce stacks shut its west half in the 1880s; from
+  today it has café tables in their footprint;
+- **the quay** (3.5 m) along the river corner, with bollards and crates, from Customs Lane to the hotel's arch.
+
+At the base, **Customs Lane** runs along the forecourt terrace's front. It has the goods wagon on the GPO siding
+(eras 1–2; a bike dock in the 3000s), benches and planters. **The base** is the Cable Tram Engine House (9 m, the
+chimney to 24 m), the boiler house and the tram shed. The spawn deck (3.3) is x −31 … −12, z −70 … −60, with the pad
+at (−18, −64.5). The deck has two grand stairs and a centre drop to the forecourt terrace (1.0, z −60 … −50), which
+has the grip car, troughs, benches, the turntable's benches and buffers, and a ticket booth. Full-width forecourt
+steps go down to Swimston.
+
+### 8.4 The knee (Alpha's end of the crossbar)
+
+- **Prow Place** (1.0 m terrace, x −36.5 … −27, z −25 … −14) at the head of Hoki Lane and the arcade. Steps go up
+  from Hoki Lane, the fountain and a trough stand on it, and it looks over the cab rank to the circus.
+- **The cab rank** where Swimston meets the circus: a cabmen's shelter, a statue on its plinth, bollards, a planter.
+- **The Customs House** (x −33 … −26, z −12 … −2, 9 m), with **the river walk** round its west side to the chamfer
+  and the circus's north-west. The walk has crates, a bench, a planter and a lamp plinth.
+
+### 8.5 The river corner per era (Alpha's: the SE corner)
+
+All decks over the water stand on prop columns, with their bottoms at −0.6 (ENGINE rule 36). Nothing over the water
+ever vanishes (rule 28).
+- **The punt crossing (every era).** A chain ferry's pontoons, 3 m wide, top −0.34. It runs from the quay's south end
+  (z −44 … −41) east to x 14, then north to the circus's river edge at 5 o'clock (x 11 … 14). It is railed on the open
+  river side and has a ferryman's box and mooring posts. This is Alpha's away flank in every era.
+- **The Iron Bridge (today, the 3000s).** It runs from the quay by the GPO (z −33 … −30) straight across to the punt's
+  north leg, as three 5.7 m spans with rails and a lamp. It opens a second, shorter crossing in era 2.
+- **The floating garden (the 3000s).** Lawn on pontoons (top −0.2) fills the harbour basin that the quay, the punt
+  and the bridge enclose: x −6 … 11, z −41 … −33 and z −30 … −26, six tiles of 5.7 × 8 / 4 m, with planters and a
+  glasshouse (`roof`). It is a new area on the flank route. It is reached from the quay, the punt (a 0.14 m step) and
+  the bridge's ends. The bridge's rails stay, so the bridge runs through the garden as a railed walk.
+
+The crossings are drawn orthogonal (an L and a straight span), so from above they read as harbour piers, never as
+Crossroads' diagonal jetties.
+
+### 8.6 The eras on the Z
+
+- **Era 1 (the 1880s)** has three flank routes per team besides Swimston into the knee:
+  - Hoki Lane or the arcade → Prow Place → the river walk → the circus's NW (10 o'clock);
+  - the quay → under the hotel's arch → the circus's south (6:30);
+  - the punt → the circus's river edge (5 o'clock, the away flank by the Boathouse).
+  Degrayling Lane is shut by the produce stacks, and the wagon shuts most of Customs Lane by the GPO.
+- **Era 2 (today)** opens Degrayling Lane (Swimston ↔ the quay at mid-leg) and the Iron Bridge (the quay → the punt's
+  north leg). That is four flanks.
+- **Era 3 (the 3000s)** adds the floating garden (the corner's harbour, on the flank route), the Halo with three ways
+  up per team (the river stair, the hotel stair, the boat stair) and clears the level crossing.
+- **Appear-check: 0 violations** in the Turf War, Tower Command, Bazookarp and Boss builds. The jumps change 4 / 22
+  groups per half and 26 / 130 blocks (ENGINE rule 6: 24 per half, 160 blocks). Era-only blocks are 22.9 % (rule 7:
+  35 %). Every group is ≤ 8 m, with 0 group failures.
+- **Departures:**
+  - the arcade is open in every era (its era-1 hoardings would have added 112 m² of floor in era 2, and the era-3
+    window of the lead's size rule is narrow);
+  - the wagon clears in the 3000s rather than today, for the same reason;
+  - Degrayling Lane's stacks are the era-1 closure.
+
+### 8.7 The modes on the Z
+
+- **Zone Control.** The centre zone is the concourse octagon (unchanged). Alpha's side zone is on Swimston at the GPO's
+  corner (x −24.5 … −16, z −47 … −37, 85 m²), 21 m from the pad and 46 m from the centre. The GPO terrace (1.2) and
+  the forecourt terrace (1.0) overlook it. Its ways in are Swimston, Customs Lane both ways, the forecourt steps and the
+  GPO steps.
+- **Tower Command, "the tower takes the tram line".** The track runs off the concourse's east face, east across the
+  circus under the Halo's 90° side (underside 5.1), turns a square corner at Bravo's knee onto Swimston's east track
+  (x 19.5), runs north past the GPO and the tram stop, and goes up the forecourt steps to the goal 11.6 m short of
+  Bravo's pad. The path is [[0, 1.3, 0], [19.5, 0], [19.5, 53]] with checkpoints [19.5, 8] and [19.5, 30]: 74.0 m, one
+  drop, one incline. Nothing that changes with the eras is within 1 m of its swept volume.
+- **Bazookarp** (data). The Pond is the concourse centre (1.3). The weir is at Bravo's knee (21, 0, 15), where its
+  Swimston meets the crossbar. The Gate is on Bravo's forecourt terrace (22, 53), 12.2 m from the pad and a level below
+  it. The free zone is Bravo's spawn deck, signed at both stair heads.
+- **Boss Battle**: era 2, as before. The circus ring is the arena, with the booking office and the boat shed on its
+  river and Boathouse edges.
+
+### 8.8 The numbers
+
+(the round's final numbers; LEAD-REPORT.md has every run)
+
+| | Era 1 | Era 2 | Era 3 | Halyard | Crossroads |
+|---|---|---|---|---|---|
+| Walkable floor (`cover-map.js` floorCells) | 4,828 | 4,988 (+3.3 %) | 5,508 (+14.1 % on era 1, +10.4 % on era 2) | 4,252 | 4,690 |
+| Within 5 m of cover | 99.4 % | 99.4 % | 99.2 % | 96.4 % | 95.4 % |
+| Spawn → mid (`spawn-mid.js`, Alpha / Bravo) | 6.09 / 6.41 s | 6.09 / 6.41 s | 6.09 / 6.41 s | | |
+| Deck-to-deck sightlines clear (`rc-sight.mjs`) | 0 of 36,100 | 0 | 0 | | |
+| Strips over 25 m with no free-standing cover (turf build) | 0 | 0 | 0 | | |
+| climb-audit | 168 climbs, 0 barred | 168, 0 | 182, 0 | | |
+
+Jump 1 changes 4 groups per half (26 blocks) and jump 2 changes 22 (130 blocks). Appear-check reads 0 in every build.
+On the bots' nav, jump 1 shortens Swimston → the quay at mid-leg from 22.4 to 11.7 m (Degrayling Lane) and the
+quay → the punt's north leg from 49.3 to 20.0 m (the Iron Bridge). Jump 2 shortens the quay → the punt from 20.1 to
+15.5 m (the garden) and puts the Halo 77 m from the pad by the hotel stair (`rc-routes.mjs`). The bot matches,
+regions and performance are in `LEAD-REPORT.md`.
