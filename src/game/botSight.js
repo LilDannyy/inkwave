@@ -268,20 +268,21 @@ export class Sight {
   }
 }
 
-// What team t knows about foe e: a teammate bot seeing it (freshest first), a located one, or the freshest memory no
-// older than maxAge s. Returns that Known (pos / vel / seen / t) or null. No sight lines: it's the bots' own checks.
 // [b5-subs] one sight line a to b from the same per-frame budget as Sight.check (SIGHT.frameRays for every bot together),
 // the kit subs' bot code taking at most SIGHT.kitRays of it a frame (so the bots' own looks are never starved): true /
-// false, or null when its share is spent (try again next frame; counted apart: SIGHT_STATS.kitDeferred)
+// false, or null when its share is spent (try again next frame). A deferral counts where Sight.check's do (subs SPEC
+// §0.5: SIGHT_STATS.deferred) and apart as well (SIGHT_STATS.kitDeferred), as the rays do (rays, kitRays)
 let _kitRays = 0, _kitT = -1;
 export function sightRay(a, b) {
   const now = G.time;
   if (_frameT !== now) { _frameT = now; _frameRays = 0; }
   if (_kitT !== now) { _kitT = now; _kitRays = 0; }
-  if (_frameRays >= SIGHT.frameRays || _kitRays >= SIGHT.kitRays) { SIGHT_STATS.kitDeferred = (SIGHT_STATS.kitDeferred || 0) + 1; return null; }
+  if (_frameRays >= SIGHT.frameRays || _kitRays >= SIGHT.kitRays) { SIGHT_STATS.deferred++; SIGHT_STATS.kitDeferred = (SIGHT_STATS.kitDeferred || 0) + 1; return null; }
   _kitRays++; SIGHT_STATS.kitRays = (SIGHT_STATS.kitRays || 0) + 1;
   return ray(a, b);
 }
+// What team t knows about foe e: a teammate bot seeing it (freshest first), a located one, or the freshest memory no
+// older than maxAge s. Returns that Known (pos / vel / seen / t) or null. No sight lines: it's the bots' own checks.
 export function teamKnown(t, e, maxAge = SIGHT.keep) {
   let best = null;
   for (const o of G.actors) {

@@ -333,7 +333,7 @@ class Deployables {
       it.endWhy = 2;
       this.endLook(it, 2);
       bump(DEPLOY_STATS.crushed, it.kind);
-      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how });
+      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how });   // [b5-subs]
       n++;
     }
     for (const w of G.specials?.world || []) {
@@ -350,20 +350,20 @@ class Deployables {
       if (T && d.rides && this.isTowerBlock(d.rides, T)) continue;
       if (!inside(d.pos, d.h, d.r)) continue;
       bump(DEPLOY_STATS.crushed, d.kind);
-      emit('device:down', { kind: d.kind, team: d.team, pos: d.pos.clone(), by: null, how });
+      emit('device:down', { kind: d.kind, team: d.team, pos: d.pos.clone(), by: null, how });   // [b5-subs]
       d.crush(how);
       n++;
     }
     L.length = 0;
     return n;
   }
-  crushBuoy(w, how = 'crush') {
+  crushBuoy(w, how = 'crush') {   // [b5-subs]
     if (w.gid) netRec(w.owner, 'surf', [4, w.gid, 2]);
     this.crushLook(w);
     if (G.surf?.SURF_STATS) G.surf.SURF_STATS.crushed++;
     w.pop();
     bump(DEPLOY_STATS.crushed, 'surf');
-    emit('device:down', { kind: 'surf', team: w.team, pos: w.pos.clone(), by: null, how });
+    emit('device:down', { kind: 'surf', team: w.team, pos: w.pos.clone(), by: null, how });   // [b5-subs]
   }
   // the crunch on a buoy (the owner's, or a ghost on its owner's word: sp-surf.js KIT_GHOSTS.surf [4, gid, 2])
   crushLook(w) { w.crushed = true; this._crunch(_c.copy(w.pos).setY(w.pos.y + 0.5), w.team, w.owner); }
@@ -538,12 +538,12 @@ class Deployables {
       if (c.t >= c.dur - 0.3) continue;
       const P = c.group.position;
       for (let i = 0; i < n; i++) {
-        const d = _own[i], mate = d.team === c.team;
-        if ((mate && !d.tf) || d.pos.y > P.y) continue;
+        const d = _own[i], mate = d.team === c.team;   // [b5-subs]
+        if ((mate && !d.tf) || d.pos.y > P.y) continue;   // [b5-subs]
         const dx = d.pos.x - P.x, dz = d.pos.z - P.z;
         if (dx * dx + dz * dz > sp.radius * sp.radius) continue;
         if (!G.physics.los(_v.copy(d.mid), _v2.set(d.pos.x, P.y - 0.6, d.pos.z))) continue;
-        if (mate) teamHit(d, c.owner); else standHit(d, sp.dps * dt, null);
+        if (mate) teamHit(d, c.owner); else standHit(d, sp.dps * dt, null);   // [b5-subs]
       }
     }
     for (const w of W) {
@@ -551,21 +551,21 @@ class Deployables {
       if (w.kind === 'tornado') {   // the Vortex Strike (specials.js Tornado)
         const D = SPECIALS.strike, fade = clamp((w.dur - w.t) / 0.6, 0, 1);
         for (let i = 0; i < n; i++) {
-          const d = _own[i], mate = d.team === w.team;
-          if (mate && !d.tf) continue;
+          const d = _own[i], mate = d.team === w.team;   // [b5-subs]
+          if (mate && !d.tf) continue;   // [b5-subs]
           const dh = Math.hypot(w.pos.x - d.pos.x, w.pos.z - d.pos.z);
           if (dh > w.radius + d.r || d.pos.y < w.pos.y - 1.5 || d.pos.y > w.pos.y + 7) continue;
-          if (mate) teamHit(d, w.owner); else standHit(d, D.dps * dt * fade, null);
+          if (mate) teamHit(d, w.owner); else standHit(d, D.dps * dt * fade, null);   // [b5-subs]
         }
       } else if (w.kind === 'speaker' && w.phase === 'blast') {   // the Howl Box's beam (through walls)
         const D = SPECIALS.wail;
         for (let i = 0; i < n; i++) {
-          const d = _own[i], mate = d.team === w.team;
-          if (mate && !d.tf) continue;
+          const d = _own[i], mate = d.team === w.team;   // [b5-subs]
+          if (mate && !d.tf) continue;   // [b5-subs]
           _v.copy(d.mid).sub(w.mouth);
           const along = _v.dot(w.dir);
           if (along < -0.5 || along > w.range) continue;
-          if (_v.addScaledVector(w.dir, -along).length() < w.radius + d.r + 0.15) { if (mate) teamHit(d, w.owner); else standHit(d, D.dps * dt, null); }
+          if (_v.addScaledVector(w.dir, -along).length() < w.radius + d.r + 0.15) { if (mate) teamHit(d, w.owner); else standHit(d, D.dps * dt, null); }   // [b5-subs]
         }
       } else if (w.kind === 'surf' && w.phase === 'live') this._rings(w, n);
     }
@@ -578,8 +578,8 @@ class Deployables {
       if (R.state !== 'travel' || !R.polar) continue;
       const J = R.devs || (R.devs = new Set());
       for (let i = 0; i < n; i++) {
-        const d = _own[i], mate = d.team === w.team;
-        if ((mate && !d.tf) || d.obj === w || J.has(d.obj)) continue;
+        const d = _own[i], mate = d.team === w.team;   // [b5-subs]
+        if ((mate && !d.tf) || d.obj === w || J.has(d.obj)) continue;   // [b5-subs]
         const dx = d.pos.x - R.c.x, dz = d.pos.z - R.c.z, dist = Math.hypot(dx, dz);
         if (dist - d.r > R.r) continue;
         J.add(d.obj);
@@ -589,7 +589,7 @@ class Deployables {
         const g = R.polar.groundAt(th, Math.min(dist, reach));
         if (d.pos.y < g - 1.2 || d.pos.y > g + D.height) continue;
         DEPLOY_STATS.rings++;
-        if (mate) teamHit(d, w.owner); else hurtDev(d, D.damage, w.owner);
+        if (mate) teamHit(d, w.owner); else hurtDev(d, D.damage, w.owner);   // [b5-subs]
       }
     }
   }
@@ -670,7 +670,7 @@ function addOwn(n, obj, kind, team, pos, mx, my, mz, r, tf = false) {
 function hurtDev(d, dmg, by) { if (d.kind === 'surf') d.obj._shot(dmg, by); else if (d.obj.kit) d.obj.hurt(dmg, by); else G.subs._hurt(d.obj, dmg, by); }
 function standHit(d, dmg, by) { DEPLOY_STATS.standing++; hurtDev(d, dmg, by); }
 // [b5-subs] the device's own team's standing fire on it: a bobber goes off (its teamFire), crediting the source's owner
-function teamHit(d, by) { DEPLOY_STATS.standing++; d.obj.teamFire(by || null); }
+function teamHit(d, by) { DEPLOY_STATS.standing++; d.obj.teamFire(by || null); }   // [b5-subs]
 
 function seekerThreat(it) {
   if (it.thr) return it.thr;
