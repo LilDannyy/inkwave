@@ -126,7 +126,7 @@
       }
       R('ground: 4.5 ± 0.2 m in 0.22 s ± 1 frame, in 8 directions relative to the camera (WASD through the real controller, the camera turned 0.7 rad); no stick: the way the kid faces; the end speed ≤ 7',
         rows.every((r) => Math.abs(r.dist - 4.5) <= 0.2 && r.angDeg < 1 && Math.abs(r.frames - 0.22 * 60) <= 1 && r.endV <= 7 + 1e-6), rows);
-      // the air: a jump, then at its apex a dash (3.5 m)
+      // the air: a jump, then at its apex a dash (D.airDashDist)
       const air = [];
       for (const dir of [[1, 0], [0, -1], [-0.6, 0.8]]) {
         put(me, 0, 0, -4, 0);
@@ -138,7 +138,7 @@
         const dist = Math.hypot(endP.x - p0.x, endP.z - p0.z);
         air.push({ dir, dist: r3(dist), frames, endV: r2(endV), wasAir: wr.airDashUsed || !me.grounded });
       }
-      R('air: 3.5 ± 0.2 m (a dash at a jump\'s apex), the end speed ≤ 7', air.every((r) => Math.abs(r.dist - 3.5) <= 0.2 && r.endV <= 7 + 1e-6 && Math.abs(r.frames - 0.22 * 60) <= 1), air);
+      R(`air: ${D.airDashDist} ± 0.2 m (a dash at a jump's apex), the end speed ≤ 7`, air.every((r) => Math.abs(r.dist - D.airDashDist) <= 0.2 && r.endV <= 7 + 1e-6 && Math.abs(r.frames - 0.22 * 60) <= 1), air);
     }
 
     // ================================================================================== 3. no height gain
@@ -449,7 +449,7 @@
       const turret = wr.turret; const e1 = ev.length;
       sim(me, 1, 1 / 60, { fire: true, sub: true, move: [0, 1] });
       R('during a Twinfire roll: "Can\'t use" (Rolling); during its post-roll turret: the turret ends and the dash goes', rolling && c2.length === 1 && c2[0] === 'Rolling' && turret && !wr.turret && since(e1, 'sub:dash', (e) => e.actor === me).length === 1, { rolling, cantuse: c2, turret, after: wr.turret });
-      // a Mitts wall cling: the cling drops and the kid moves 3.5 ± 0.2 m away from the wall (an air dash)
+      // a Mitts wall cling: the cling drops and the kid moves the air dash's length ± 0.2 m away from the wall
       me.setWeapon('mitts'); unbox(); box(3.25, 2, -20, 0.25, 2, 3);
       put(me, 3 - 0.4, 0, -20, Math.PI / 2); me.pos.y = 1.4; me.grounded = false;
       const k = MITTS.K(wr); k.cling = true; k.hang = true; k.clingN.set(-1, 0, 0); k.clingPt.set(3, 2.2, -20); k.seen = G.time;
@@ -457,7 +457,7 @@
       const x0 = me.pos.x;
       let endX = null, airUsed = null;
       sim(me, 30, 1 / 60, (i) => ({ sub: i === 0, move: [1, 0] }), (i) => { if (i === 0) airUsed = wr.airDashUsed; if (!(wr.dashT > 0) && endX === null) endX = me.pos.x; });
-      R('a dash from a Mitts wall cling: the cling drops and the kid dashes 3.5 ± 0.2 m away from the wall (steering into it: its normal; the air dash)', !k.cling && endX !== null && Math.abs((x0 - endX) - 3.5) <= 0.2 && airUsed, { from: r3(x0), moved: r3(x0 - endX), cling: k.cling, airUsed });
+      R(`a dash from a Mitts wall cling: the cling drops and the kid dashes ${D.airDashDist} ± 0.2 m away from the wall (steering into it: its normal; the air dash)`, !k.cling && endX !== null && Math.abs((x0 - endX) - D.airDashDist) <= 0.2 && airUsed, { from: r3(x0), moved: r3(x0 - endX), cling: k.cling, airUsed });
       unbox();
       // a Mitts leap in flight: "Can't use" (Mid-leap)
       put(me, 0, 0, -4, 0); e0 = ev.length;
