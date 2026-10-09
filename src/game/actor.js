@@ -807,7 +807,14 @@ export class Actor {
     const s = this.specialActive;
     if (s && s.jumpBack && s.origin) return s.origin;
     const j = this.superJumpState;
-    return j && j.phase === 'flight' && j.to ? j.to : this.pos;   // [b5-jumpui] (a remote jump before its flight record: here)
+    if (j && j.phase === 'flight' && j.to) return j.to;   // [b5-jumpui] (a remote jump before its flight record: here)
+    // [b5-int1] held up in the air by a Cheer Orb (b5-zipcheer: up to 2.2 m over the ground, a ghost's too): the floor
+    // under them — a jump to them lands beside them there (as on Splatoon's Booyah Bomb), not up where they hang
+    if (s && (s.kind || s.id) === 'booyah' && !s.thrown) {
+      const gy = G.level?.groundHeight?.(this.pos.x, this.pos.z, this.pos.y + 0.1);
+      if (gy > -Infinity && this.pos.y - gy > 0.3) return (this._anchor || (this._anchor = new THREE.Vector3())).set(this.pos.x, gy, this.pos.z);
+    }
+    return this.pos;
   }
   canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing(); }   // ([drainbow] free: a special that leaves you be)
 
