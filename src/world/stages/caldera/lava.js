@@ -62,8 +62,10 @@ export const LAVA = {
     { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true },           //   and its north board (to Bravo)
     { kind: 'bar', pos: [-19.5, 6.2, -53.6], yaw: Math.PI, h: 1.8 },             // the Surge Board on the Surge Office (twin)
   ],
-  cascades: [{ lip: [[18.81, -28.81], [26.69, -21.72]], y: 0.0, drop: 14 }],      // Alpha's Spillway lip (twin: Bravo's)
-  vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [23.27, 0, -22.11]],   // pools and floor drains (8 with twins)
+  // (fix round 1: each Spillway's outer half (s 28 → the lip) is lava at both levels, so its lip sits at the LOW level
+  // and the lavafall pours at both levels: a thin fall at LOW, a full one at HIGH; the vent there is a pool vent now)
+  cascades: [{ lip: [[18.81, -28.81], [26.69, -21.72]], y: -0.65, drop: 14 }],    // Alpha's Spillway lip (twin: Bravo's)
+  vents: [[-9.5, -0.6, -18.5], [17.0, -0.6, -5.0], [10.0, 0, -15.0], [23.27, -0.6, -22.11]],   // pools and floor drains (8 with twins)
   flotsam: { count: 48, size: [0.3, 0.9], keepOff: 1.0 },  // cosmetic pumice drifting on the open lava, no collider
   look: { crust: 'ember', cone: [230, 0, 150] },           // warm charcoal-maroon crust, lit seams (§5.3); the Bellows Vent
   text: {

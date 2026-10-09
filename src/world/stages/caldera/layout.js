@@ -198,6 +198,8 @@ const APRON = [
 ];
 // (the collar-side edges are filled to 0.18 m short of the collars: a crack, never a slot)
 for (const [poly, top, c] of APRON) add(fill(poly, { y0: 1.2, top, mk: () => rock({ tag: 'organ-apron', color: c }), edge: () => ({ kind: 'skip', w: 0.6 }) }).cols);
+// a broken column stub on the apron's top (0.95 m: cover for whoever holds it; the top was an 8.2 m open circle)
+add(OCT(-6.1, -10.55, 0.42, 3.0, 3.95, rock({ tag: 'organ-stump', color: K.basaltDk, roof: true })));
 // the Organ Pipes and (at HIGH) the Pumice Race: static stand-ins at this build's level until the lava engine lands
 if (BLOCKOUT_LAVA) {
   add(riderStandIns((what, o) => (what === 'stone' ? { color: K.pumice, pattern: PATTERN.rubber, ...o }
