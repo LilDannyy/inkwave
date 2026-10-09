@@ -255,6 +255,9 @@ export const botKit = {
     const guard = b.zRole === 'guard';
     if (guard) W.g = (W.g || 0) + 1;
     if (a.ink < 72) { W.ink++; return false; }
+    // (a bot with a dozen of its own out already doesn't start another chain: past the hidden guard each throw would only
+    // retire its oldest — its web is big enough, and every throw, relink and fizzle costs the frame)
+    if (mine(a).length >= 12) { W.many = (W.many || 0) + 1; return false; }
     if (G.time < (b._bobNoSpotT || 0) || Math.random() > (guard ? 0.1 : 0.02)) return false;
     W.rolls++;
     const A = modeAnchor(b), L = A && layout(a, A, tp);
@@ -276,7 +279,7 @@ export const botKit = {
       while (P.i < P.pts.length) { const q = P.pts[P.i++], at = okSpot(a, q.x, q.z, zonePlan() ? null : towerPlan()); if (at) { b._bobberAt = at; BOBBER_BOT.grows++; if (P.i >= P.pts.length) { b._bobPlan = null; b.bombCd = 6 + Math.random() * 4; } else b.bombCd = 0.3 + Math.random() * 0.15; return true; } }
       b._bobPlan = null; b.bombCd = 3; return false;
     }
-    if (t && t.alive && dist >= 5 && dist <= 11 && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025
+    if (t && t.alive && dist >= 5 && dist <= 11 && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025 && mine(a).length < 12
       && !items.some((o) => o.team === a.team && o.state !== 'dead' && Math.hypot(o.spot.x - t.pos.x, o.spot.z - t.pos.z) < 3.5)) {
       const k = 0.8, px = t.pos.x + t.vel.x * k, pz = t.pos.z + t.vel.z * k, dx = px - a.pos.x, dz = pz - a.pos.z, l = Math.hypot(dx, dz) || 1;
       // (a metre short of it, toward us, 1.3 m either side of the line: both within a 2-chain's reach of it — R 2.2 − 0.3)
