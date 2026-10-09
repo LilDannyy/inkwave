@@ -38,6 +38,10 @@ const iron = (o = {}) => ({ color: K.iron, pattern: PATTERN.metalpanel, ...o });
 const cover = (c = K.cast, o = {}) => ({ color: c, pattern: PATTERN.rubber, roof: true, ...o });
 const white = (o = {}) => ({ color: K.white, pattern: PATTERN.render, roof: true, ...o });
 const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, tag: 'caldera-wall' });
+// (the caldera walls round the dry floors are collision-only here and drawn by props.js — caldera_walls — so they cost
+// the lightmap nothing: the art pass replaces them with the backdrop's cliffs. The Slump's cliff stays a level block: it
+// stands in the lava region and carries the high-mark rind)
+const calWallHidden = () => ({ ...calWall(), hidden: true, paint: false });
 
 // ============================================================================================================ floors
 // the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`. Floors with nothing open
@@ -70,8 +74,8 @@ const BOXES = [
 const ALL0 = [];
 for (const f of [...FLOORS, ...BOXES]) { ALL0.push(f); if (!f.single) ALL0.push({ ...f, poly: rotPoly(f.poly), twin: f }); }
 const floorAt = (x, z) => ALL0.some((f) => !f.wall && inPoly(f.poly, x, z));
-const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: calWall }, floorAt) }));
-const hallMk = () => white({ tag: 'casting-hall' });
+const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: e.cliff ? calWall : calWallHidden }, floorAt) }));
+const hallMk = () => white({ tag: 'casting-hall', hidden: true, paint: false });   // (props.js draws the hall)
 const HALL_W = [walls(G.HALL_LINE, { t: 4.0, top: 12.0, y0: 0, ext0: 0.3, ext1: 0.3, mk: hallMk }, floorAt)];
 const WALL_FEET = [...EDGE_WALLS.flatMap((x) => x.w.feet), ...HALL_W.flatMap((w) => w.feet)];
 const ALL = [...ALL0];
@@ -317,6 +321,8 @@ add({ ...railSeg([7.875, -20.6], [7.875, -10.4], 1.3), onlyIn: 'bazookarp' }, { 
 RAILS.length -= 2;   // (the gantry's chain rails are drawn only in its own world: props.js reads GANTRY_RAILS)
 export const GANTRY_RAILS = [[7.875, -20.6, 7.875, -10.4, 1.3, 1.0], [11.125, -19.8, 11.125, -10.4, 1.3, 1.0]];
 export { RAILS };
+// the drawn caldera walls (props.js caldera_walls): every hidden wall O-box of Alpha's half (the builder draws the turn)
+export const WALL_BOXES = EDGE_WALLS.filter((x) => !x.e.cliff).flatMap((x) => x.w.blocks).map((b) => [b.center[0], b.center[1], b.center[2], b.size[0], b.size[1], b.size[2], b.rotY]);
 
 // ============================================================================================================ modes
 // Zone Control: the Pour Floor (centre, 94 m² net of the piers) and the Pumice Moorings (Alpha's side; Bravo's turned)

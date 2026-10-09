@@ -9,7 +9,7 @@
 //   caldera_hall_roof    the Casting Hall's north-light sawtooth roof, chimneys and round furnace window
 //   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
 // No colliders here: every collider is a layout piece (layout.js).
-import { RAILS, GANTRY_RAILS } from './layout.js';
+import { RAILS, GANTRY_RAILS, WALL_BOXES } from './layout.js';
 import { REGION_ALL, inPoly, HALL_LINE, PAD } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA } from './lava.js';
 
@@ -82,6 +82,16 @@ export function register(D, H) {
         const [x0, z0, x1, z1, y, h, y1] = r;
         railLine(B, x0, z0, x1, z1, y, h, y1 ?? y);
         railLine(B, -x0, -z0, -x1, -z1, y, h, y1 ?? y);
+      }
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ the caldera walls
+  // the walls round the dry floors (collision-only layout blocks): raw basalt, both halves
+  D.caldera_walls = {
+    build(B) {
+      for (const [cx, cy, cz, w, h, d, ry] of WALL_BOXES) for (const s of [1, -1]) {
+        B.push(s * cx, 0, s * cz, (ry * PI) / 180); B.box('paint', '#4b4e54', w, h, d, 0, cy, 0, { r: 0.04 }); B.pop();
       }
     },
   };
@@ -191,6 +201,7 @@ export function register(D, H) {
 export const PLACEMENTS = [
   ...(BLOCKOUT_LAVA ? [{ type: 'caldera_lava', pos: [0, 0, 0], mirror: false }] : []),
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false },
+  { type: 'caldera_walls', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
