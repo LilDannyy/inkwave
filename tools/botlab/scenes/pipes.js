@@ -58,8 +58,8 @@
       for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
       const gl = leg('gulper');
       // (on the court's SW side, looking past the west gulper head into the Great Tank)
-      const yaw = 0.62;   // (from (−18, −6.5): the west jaws ahead, their landing to the left, the tank beyond)
-      put(a, -18, 0, -6.5, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = -0.1; step(0.4);
+      const yaw = Math.atan2(-12.7 + 21, 0 - 7.2);   // (from the court's NW side: the west jaws' face ahead, the landing between, the tank beyond)
+      put(a, -21, 0, 7.2, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = -0.12; step(0.4);
       const eE = gl.ends[0]; put(bot, eE.approach[0], eE.approach[1], eE.approach[2]); step(0.1);
       P().debugRide(bot, 'gulper', 0);
       return go(0.45)();
