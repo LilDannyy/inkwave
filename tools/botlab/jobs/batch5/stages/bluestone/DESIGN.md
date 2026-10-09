@@ -767,6 +767,11 @@ round 3's 7,462 / 8,185 / 9,055, all of it from floor eras 1–2 have (the revie
   - There is an iron-lace balustrade on the balcony and the landing, and a frieze on veranda E1.
   - Ticket booths (2.3 m) and ring beds (0.7 m with a 1.3 m planter) are on the diagonals.
   - Degrayling Lane's 1880s crates fill only its east half (x 13.5 … 16.5), leaving a 3 m passage.
+- **The sea bed.** Six hidden slabs (collision only, top −0.8, under the street and over land only) under the signal
+  yard, Prawn Alley's railyard wall, the viaduct south of the alley, the yard wall and the arcade's grilles. The bots'
+  nav calls a node "wet" (never a paint goal; paths pay extra to pass it) when a probe 1.2 / 2.2 m away finds no top under
+  the node's height + 0.6, and the beds and walls standing on the sea bed in one block read as the water's edge: 494
+  nodes (166 of the alley's 218) were wet with no water near; now none outside the river works (`rb1-wet.mjs`).
 - **Gone:** the Tide Steps.
 - **The side zone** (unchanged) is 34.8 m from mid and 40.8 m from the pad at (0, −70).
 - **The eras' blocks** (check-blockout, the union): jump 1 changes 18 groups per half and 104 blocks, jump 2 20 groups
