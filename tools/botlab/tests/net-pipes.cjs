@@ -54,7 +54,17 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
             const lg = P().legs[p.leg], c = centre(lg, p.s, p.dir), d = Math.hypot(a.pos.x - c[0], a.pos.y - c[1], a.pos.z - c[2]);
             s.ride++; s.maxD = Math.max(s.maxD, d); s.exit = p.exit;
             if (s.mark && t > s.mark) { s.after++; s.maxDAfter = Math.max(s.maxDAfter, d); }
-          }
+            // (a snap in the drawn ride: the rider is drawn exactly on its path, so a kink can only be a jump along it —
+            // a frame's advance more than three times the leg's speed × the frame time + 0.3 m, or a step back over 5 cm;
+            // the playback clock's ±8–25 % steering and a host change's catch-up are not one)
+            const pp = s.prevP;
+            if (pp && t > pp[1]) {
+              const du = (p.u || 0) - pp[0], dt = (t - pp[1]) / 1000, lim = 3 * p.v * dt + 0.3;   // (a host change's catch-up runs at up to ~2×)
+              if (du - p.v * dt > (s.worstStep || 0)) { s.worstStep = du - p.v * dt; s.worstAt = [+du.toFixed(3), +dt.toFixed(3), +(p.u || 0).toFixed(2), !!p.proj, +(p.dOff || 0).toFixed(2), +(p.cu || 0).toFixed(2), p.owner === a.owner]; }
+              if (du > lim || du < -0.05) { s.pops = (s.pops || 0) + 1; if (s.mark && t > s.mark) s.popsAfter = (s.popsAfter || 0) + 1; }
+            }
+            s.prevP = [p.u || 0, t];
+          } else s.prevP = null;
           // (the lit span on this screen's wall clock, and on the rider's owner's timeline: the ride's own time base)
           if (s.exit >= 0) { const L = P().lit[s.exit]; if (L.n && s.litOn === null) { s.litOn = t; s.litOnT = p ? P()._T(p) : null; } if (!L.n && s.litOn !== null && s.litOff === null) { s.litOff = t; s.litOffT = p ? P()._T(p) : null; } }
           if (p && p.phase === 'pop' && s.popT === null) { s.popT = t; s.popEnd = p.exit; }
@@ -66,7 +76,10 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
         return 1;
       },
       mark(n) { S[n].mark = performance.now(); return 1; },
-      got(n) { const s = S[n]; return s ? { ...s, lit: s.litOn !== null && s.litOff !== null ? +((s.litOff - s.litOn) / 1000).toFixed(3) : null, litT: s.litOnT != null && s.litOffT != null ? +(s.litOffT - s.litOnT).toFixed(3) : null } : null; },
+      got(n) {
+        const s = S[n]; if (!s) return null;
+        return { ...s, prevP: undefined, pops: s.pops || 0, popsAfter: s.popsAfter || 0, worstKink: +(s.worstStep || 0).toFixed(3), lit: s.litOn !== null && s.litOff !== null ? +((s.litOff - s.litOn) / 1000).toFixed(3) : null, litT: s.litOnT != null && s.litOffT != null ? +(s.litOffT - s.litOnT).toFixed(3) : null };
+      },
       flow() { const f = P().flow(); return f && { dir: f.dir, phase: f.phase, t: +m().stage.t.toFixed(2) }; },
       period(T) { for (const l of P().legs) if (l.flip) l.flip.every = T; P()._tideSync(m().stage.t, true); return 1; },
       hp(n) { return byNid(n).hp; },
@@ -108,11 +121,11 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   const sa = await J(A, `__pp.got(${bNid})`), sb = await J(B, `__pp.got(${bNid})`);
   const hpB = await B.js(`__pp.hp(${bNid})`);
   R('1. B walks into the Express on its own screen (captured), and rides it there exactly on the path (≤ 0.005 m)', capB && sb.ride > 20 && sb.maxD < 0.005, { capB, frames: sb.ride, maxD: sb.maxD, phases: sb.phases });
-  R('1. on A\'s screen B\'s rider is drawn within 0.05 m of the centreline + lane every frame of the ride (from the [0] record; netlag 80 ± 40 on B)', sa.ride > 20 && sa.maxD < 0.05 && sa.phases.join() === '-,suck,ride,pop,-', { frames: sa.ride, maxD: sa.maxD, phases: sa.phases });
+  R('1. on A\'s screen B\'s rider is drawn within 0.05 m of the centreline + lane every frame of the ride (from the [0] record; netlag 80 ± 40 on B), with no snap along it (no frame advancing more than 3× the speed × its frame time + 0.3 m, none stepping back)', sa.ride > 20 && sa.maxD < 0.05 && sa.phases.join() === '-,suck,ride,pop,-' && sa.pops === 0, { frames: sa.ride, maxD: sa.maxD, phases: sa.phases, pops: sa.pops, worstKink: sa.worstKink });
   // (compared on B's timeline, the ride's own time base on both screens: A replays B on a playback clock that steers
   // ±8–25 % to keep its buffer, so A's wall-clock span may differ by that stretch — shown, checked within 0.25 s)
-  R('2. A\'s exit ring is lit from B\'s suck end to B\'s pop: on B\'s timeline the lit spans agree within 0.05 s (A ' + sa.litT + ' s, B ' + sb.litT + ' s; wall clock A ' + sa.lit + ' s, B ' + sb.lit + ' s)',
-    sa.litT !== null && sb.litT !== null && Math.abs(sa.litT - sb.litT) <= 0.05 && Math.abs(sa.lit - sb.lit) <= 0.25 && sa.popEnd === sb.popEnd, { a: [sa.litOnT, sa.litOffT], b: [sb.litOnT, sb.litOffT], wall: [sa.lit, sb.lit], popEnd: [sa.popEnd, sb.popEnd] });
+  R('2. A\'s exit ring is lit from B\'s suck end to B\'s pop: on B\'s timeline the lit spans agree within 0.1 s (two frames of either page under load) (A ' + sa.litT + ' s, B ' + sb.litT + ' s; wall clock A ' + sa.lit + ' s, B ' + sb.lit + ' s)',
+    sa.litT !== null && sb.litT !== null && Math.abs(sa.litT - sb.litT) <= 0.1 && Math.abs(sa.lit - sb.lit) <= 0.25 && sa.popEnd === sb.popEnd, { a: [sa.litOnT, sa.litOffT], b: [sb.litOnT, sb.litOffT], wall: [sa.lit, sb.lit], popEnd: [sa.popEnd, sb.popEnd] });
   R('3. A\'s bot shooting B mid-ride: the shooter\'s screen drops it (behind the glass: no \'hit\' event), B\'s hp unchanged', shot.riding && shot.guard && shot.hitEvents === 0 && hpB >= 99.5, { shot, hpB });
   // after touchdown the same shot hurts (the shooter's screen sends it; B's screen applies it)
   await A.js(`(() => { const m = __G.match; __G.projectiles.applyHit(m.actors.find((x) => x.nid === ${enemyBot}), m.actors.find((x) => x.nid === ${bNid}), 30, 'shooter'); return 1; })()`);
@@ -200,7 +213,9 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   // (B saw the ride start a playback delay after A started it: B's pop is measured from A's start, on A's clock)
   const popB = s7b.popT !== null && s7b.enterT !== null ? (s7b.popT - s7b.enterT) / 1000 + (s7b.enterLag || 0) : null;
   R('7. after the host leaves mid-ride, the new host (B) adopts the bot and it pops at the far end within ±0.3 s of when it would have (on the old host\'s clock)', s7b.popEnd === gW && popB !== null && Math.abs(popB - expectPop) < 0.3, { popB, expectPop, enterLag: s7b.enterLag, raw: s7b.popT !== null ? (s7b.popT - s7b.enterT) / 1000 : null, end: s7b.popEnd, phases: s7b.phases, wall: (Date.now() - t0) / 1000 });
-  R('7. the remaining guest (C) draws the rider within 0.1 m of the centreline across the handoff', s7c.after > 5 && s7c.maxDAfter < 0.1 && s7c.popEnd === gW, { after: s7c.after, maxDAfter: s7c.maxDAfter, maxD: s7c.maxD, phases: s7c.phases });
+  R('7. the remaining guest (C) draws the rider within 0.1 m of the centreline across the handoff, and without a jump (it catches up smoothly to where the old host had it: no snap)', s7c.after > 5 && s7c.maxDAfter < 0.1 && s7c.popEnd === gW && s7c.popsAfter === 0, { after: s7c.after, maxDAfter: s7c.maxDAfter, maxD: s7c.maxD, phases: s7c.phases, pops: s7c.pops, popsAfter: s7c.popsAfter, worstKink: s7c.worstKink, worstAt: s7c.worstAt });
+  say('C rebase', JSON.stringify(await J(C, `__G.match.pipes.events.filter((e) => e[0] === 'pipe:rebase' || e[0] === 'pipe:adopt' || e[0] === 'pipe:project').slice(-6)`)));
+  R('7. the new host (B) draws its adopted rider without a jump either', s7b.pops === 0, { pops: s7b.pops, worstKink: s7b.worstKink, worstAt: s7b.worstAt });
   // the tide carries on under the new host: B and C agree through the next change
   const fl = [];
   for (let i = 0; i < 8; i++) { const [fb, fc] = await Promise.all([J(B, `__pp.flow()`), J(C, `__pp.flow()`)]); fl.push([fb, fc]); await wait(1500); }
