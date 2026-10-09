@@ -181,6 +181,14 @@ function modeAnchor(b) {
       const A = entryOf(pts, c[0], c[2], I.R + 0.5, 1.2 + r() * 1.3);
       if (A && Math.hypot(A.x - a.pos.x, A.z - a.pos.z) <= 9.5) return A;
     }
+    // (no door in throwing reach from where it stands: its zone's edge toward the foes' side, a few tries — a raised
+    // zone's edge is often a drop — laid across their way in)
+    for (let i = 0; i < 5; i++) {
+      const side = (r() - 0.5) * I.R * 1.2, out = I.R - 0.5 + r() * 1.8, x = c[0] + ex * out - ez * side, z = c[2] + ez * out + ex * side;
+      if (Math.hypot(x - a.pos.x, z - a.pos.z) > 9.5) continue;
+      const gy = G.level.groundHeight(x, z, a.pos.y + 3);
+      if (Number.isFinite(gy)) { BOBBER_BOT.edgeAnchors = (BOBBER_BOT.edgeAnchors || 0) + 1; return { x, y: gy, z, dx: -ex, dz: -ez }; }
+    }
     return null;
   }
   if (tp) {   // Tower Command: by the track ahead of the tower (its next 24 m), 3.7–5.7 m off its line — within 6 m of it, never

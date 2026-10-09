@@ -91,6 +91,7 @@
   const HP = 1e6;
   const reset = () => {
     hook = null; S.viewer = null;
+    if (m.time < 120) m.time = 170;   // (the whole file runs past a 3:00 match: the clock is kept from running out)
     S.clear(); P.clear(); G.paint.clear?.();
     for (const a of m.actors) { if (!a.alive) a.respawn(); a.hp = HP; a.invuln = 0; a.status.shield = 0; zero(a); a.form = 'kid'; a.superJumpState = null; stub(a); a.ink = PLAYER.inkMax; }
     parkAll(); put(me, HOME, Math.PI); me.setSub('bobber');
@@ -826,7 +827,7 @@
         const tx = Bq.x - A.x, tz = Bq.z - A.z, tl = Math.hypot(tx, tz) || 1, off = (1 + (i % 5) * 2) * (i % 2 ? 1 : -1);
         const x = A.x - (tz / tl) * off, z = A.z + (tx / tl) * off;
         put(a0, V(x, G.level.groundHeight(x, z, 5), z), Math.atan2(tx, tz));
-        a0.ink = 100; a0.lastDamage = 99; b0.bombCd = 0; b0._bobRollT = -1; b0._bobberAt = null;
+        a0.ink = 100; a0.lastDamage = 99; b0.bombCd = 0; b0._bobRollT = -1; b0._bobberAt = null; b0._bobPlan = null; b0._bobNoSpotT = 0;   // (each a new chain's first link)
         let first = true; Math.random = () => (first ? ((first = false), 0) : rnd0());
         try { K.bot.paint(b0); } finally { Math.random = rnd0; }
         if (b0._bobberAt) plans.push(b0._bobberAt.clone());
