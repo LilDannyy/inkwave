@@ -205,6 +205,4 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
-  { type: 'caldera_cupola_hood', pos: [11.0, 0, -50.0] },
-  { type: 'caldera_office_roof', pos: [-35.5, 0, -51.6] },
 ];
