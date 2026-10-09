@@ -161,6 +161,12 @@ const ob = (p, w, d, y0, y1, deg, o) => O(G.r3(p[0]), G.r3(p[1]), w, d, y0, y1, 
 const armBox = (s, t, ls, lt, y0, y1, o) => ob(G.A(s, t), ls, lt, y0, y1, -G.AU, o);
 // a box at polar (r, θ), turned to face the island (w along the arc, d along the radius)
 const polBox = (r, a, w, d, y0, y1, o) => ob(P(r, a), w, d, y0, y1, -(a + 90), o);
+// a box in a local frame: origin `org`, unit axis u (its length), v = u turned +90° (its depth); spans u0…u1 × v0…v1
+const unit = (a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); return [dx / L, dz / L]; };
+function frameBox(org, u, [u0, u1], [v0, v1], y0, y1, o) {
+  const v = [-u[1], u[0]], cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+  return O(G.r3(org[0] + u[0] * cu + v[0] * cv), G.r3(org[1] + u[1] * cu + v[1] * cv), G.r3(u1 - u0), G.r3(v1 - v0), y0, y1, G.r3((-Math.atan2(u[1], u[0]) * 180) / Math.PI), o);
+}
 // a mound you climb: an octagon top and eight radial ramp facets (≤ 24°)
 function cone(cx, cz, rTop, yTop, rBase, yBase, tag) {
   const out = [...OCT(cx, cz, rTop, yBase, yTop, rock({ tag, color: K.scoria }))];
@@ -219,23 +225,37 @@ for (const [x, z] of [[G.GAL.x0 + 1.6, GZ1 - 1.9], [G.GAL.x1 - 1.6, G.GAL.z0 + 2
 // north side (props.js: its roof; the Surge Board on its east face, toward the yard)
 export const OFFICE = { x0: -38.3, x1: -31.3, z0: G.PIT.z1, z1: G.PIT.z1 + 7.0 };
 add(B(OFFICE.x0, OFFICE.x1, 3.6, 9.5, OFFICE.z0, OFFICE.z1, white({ tag: 'surge-office' })));
-// the lines of castings: the west line (x −27.7, north of the gallery's NW corner) and the east line (x −10, north of
-// the gallery's front east of the stair), each 2 m tall with one 3 m gap
-const castLine = (x, z0, z1, gap, tag, c) => [stack(x, (z0 + gap[0]) / 2, 1.2, gap[0] - z0, 2.0, 3.6, tag, c), stack(x, (gap[1] + z1) / 2, 1.2, z1 - gap[1], 2.0, 3.6, tag, c)];
-add(castLine(-27.7, G.GAL.z1, -46.6, [-52.6, -49.6], 'ferry-castings', K.cast), castLine(-10.0, G.GAL.z1, -47.6, [-52.6, -49.6], 'ferry-castings', '#5f6a63'));
-// the Gate's apron (Bazookarp: blocks ≥ 1.2 m within 4 m of route 1 between the gallery and the Gate) and centre cover
+// the lines of castings stacked for the ferry: two walls of castings (2.2–2.4 m: nobody climbs or sees over them) that
+// split the yard into its three lanes, each from the gallery's front to the tower's yard lane (z −45 ± 1.75). The east
+// line stands against the Gallery Stair's east side (x −12.4), clear of the tower's climb lane at x −9 (± 1.75): broken
+// only where the tower crosses, it goes on to within 1.5 m of the yard-front rail. The west line stands off the
+// gallery's NW corner (x −27.7) and stops at the tower's lane: north of it the moulding floor's rack carries the line on,
+// leaving the west lane's mouth at the Rim Head's foot in sight of the gallery (Bazookarp: every way into the Gate's
+// 15 m ring is seen from the deck)
+const LANE_Z = [-46.75, -43.25];   // the tower's yard run (z −45: platform ± 1.25 and 0.5 m clear)
+const castWall = (x, z0, z1, h, tag, c) => B(G.r3(x - 0.6), G.r3(x + 0.6), 3.6, G.r3(3.6 + h), G.r3(z0), G.r3(z1), cover(c, { tag }));
+add(castWall(-27.7, G.GAL.z1, LANE_Z[0], 2.4, 'ferry-castings', K.cast));
+add(castWall(-12.4, G.GAL.z1, LANE_Z[0], 2.3, 'ferry-castings', '#5f6a63'), castWall(-12.4, LANE_Z[1], -40.85, 2.4, 'ferry-castings', '#5f6a63'));
+// the Gate's apron (Bazookarp: blocks ≥ 1.2 m within 4 m of route 1 between the gallery and the Gate): the centre lane's
+// cluster, two stepped stacks (1.8 and 1.9 m to the top)
 add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-14.6, -48.7, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0]));
-// the west lane and the side yards: the Rim Head's approach, the west side yard, the east strip
-add(drum(-34.2, -57.6, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'), stack(-28.4, -44.6, 1.6, 1.6, 1.2, 3.6, 'pig-iron', '#5b5550'));   // (clear of the office's NE corner: no pocket behind it)
+// the west side yard's cluster: the bay of patterns south of the gallery's west side stair (2.0 m, filling the dead end
+// between the stair, the gallery and the hall) and the drum stack
+add(B(-30.6, G.GAL.x0, 3.6, 5.6, G.GAL.z0, SWZ - 1.5, cover('#6a6258', { tag: 'pattern-bay' })), drum(-36.0, -59.8, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'));
 // the cupola house: the furnace's shed filling the dead end of the east side yard behind the east side stair (its stack
 // and the hood above, props.js)
 add(B(G.GAL.x1, 0.6, 3.6, 9.4, G.GAL.z0, G.PADZ + 1.0, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'cupola-house' }));
 add(OCT(-3.2, -64.3, 1.0, 9.4, 15.0, { color: '#4b4f55', pattern: PATTERN.metal, roof: true, tag: 'cupola-stack' }));
-// the yard's front band: the moulding floor (a 0.6 m dais of sand moulds at the Rim Head's foot, flasks on it) and cover in
-// front of the Upper Surge Steps, all clear of the tower's run across the front (z −43.75…−46.25)
-add(polBox(47.0, -121.5, 5.6, 2.6, 3.6, 4.2, { color: K.sand, pattern: PATTERN.rubber, tag: 'moulding-floor' }));
-add(polBox(47.2, -120.6, 1.4, 1.0, 4.2, 5.3, cover('#6b5f55', { tag: 'flask-stack' })));
-add(stack(-17.0, -42.4, 1.6, 1.0, 1.2, 3.6, 'ingot-pile'), drum(-12.6, -41.9, 0.8, 1.3, 3.6, 'cable-drum', K.ironDk));
+// the east lane's cluster, against the head's cheek half-way to the Bay Stair: a ladle stand (1.8) and a cable drum
+{ const u = unit(G.LC, [-4.6, -53.5]);
+  add(frameBox(G.LC, u, [2.6, 4.4], [-1.95, -0.1], 3.6, 5.4, cover(K.ironDk, { tag: 'ladle-stand' }))); }
+add(drum(-7.6, -48.6, 0.8, 1.3, 3.6, 'cable-drum', K.ironDk));
+// the yard's front band, the west lane's end: the moulding floor (a 0.6 m dais of sand moulds against the west line, west of
+// the Upper Surge Steps' landing) with a lamp-post rack (2.2 m over the yard) and flasks on it, and an ingot pile beside
+// it — the front's cluster, clear of the tower's run (z ≥ −43.25) and of the steps' landing (x ≤ −19.8)
+add(B(-27.1, -22.4, 3.6, 4.2, -42.7, -40.5, { color: K.sand, pattern: PATTERN.rubber, tag: 'moulding-floor' }));
+add(B(-26.9, -25.5, 3.6, 5.8, -42.5, -40.7, cover(K.ironDk, { tag: 'lamp-post-rack' })), B(-23.6, -22.6, 3.6, 5.2, -42.3, -41.2, cover('#6b5f55', { tag: 'flask-stack' })));
+add(stack(-21.0, -42.2, 1.2, 1.4, 1.2, 3.6, 'ingot-pile'));
 // the yard front: a railing on the spiral (squids pass), open at the Bay Stair, the Upper Surge Steps and the tower's climb
 { const gaps = [G.ST_CUPOLA.a, G.ST_UPPER.a, G.CHORD_Y.a];
   const runs = []; let a0 = G.TL - 0.6;
