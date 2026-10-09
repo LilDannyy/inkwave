@@ -296,9 +296,8 @@ for (const [x, z] of [[3.0, -39.3], [9.7, -39.3], [3.0, -45.7], [9.7, -45.7]]) H
 H(B(2.5, 10.2, 6.6, 6.8, -46.2, -38.8, roofR(K.canopy, { tag: 'ticket-canopy' })));
 // --- the Pump Hall: the back-of-house shed along the blade's leading edge (open on its west side), its back wall in
 //     three Deco bays with 1.5 m returns, the filter bund (1.2) along it with three sand filters, pumps, sea-salt
-//     crates; the sawtooth roof cantilevered from the back wall on one truss column (DESIGN.md's forklift at the shed's
-//     mouth is gone: fix round 1 found it standing in the souvenir kiosk, and every free spot round the mouth is the
-//     tower's track or the Express mouth's sight lines)
+//     crates; the sawtooth roof cantilevered from the back wall on one truss column (the forklift now stands on the
+//     plaza in front of the Ticket Hall's queue step: fix round 1 found it inside the souvenir kiosk)
 const BW = roofR(K.render, { tag: 'pump-wall' });
 H(bladeBox(3.6, 10.0, 18.9, 19.5, FL, 7.0, BW), bladeBox(10.0, 10.6, 17.4, 19.5, FL, 7.0, BW), bladeBox(10.6, 19.0, 17.4, 18.0, FL, 7.0, BW),
   bladeBox(19.0, 19.6, 15.9, 18.0, FL, 7.0, BW), bladeBox(19.6, 21.0, 15.9, 16.5, FL, 7.0, BW));
@@ -344,10 +343,10 @@ H(chainBand(covePts, 0.6, 1, FL, [0.45, 0.55], COVE));
 H(layer({ key: 'cove', frame: 'blade', rect: [-23, -16.6, -16, 31], res: 0.25, inside: (x, z) => { const [s, w] = toBlade(x, z); return s >= -16 && s <= 31 && w >= shore(s) + 0.2 && w <= glassOut(s) + 0.2; }, y0: FL, y1: 0.3, o: COVE }));
 // --- the ferry plaza (s 16.5 … 31, 14.5 m deep). Each pavilion stair lands on ≥ 4 m of clear floor (s 27 … 31) across
 //     its width and 1 m either side; the front row stands ≥ 2 m off the deck's fascia. West: the queue terrace (0.6, a
-//     step) runs from the penguin glass past the west stair's landing, its ferry-ticket kiosk, timetable pillar and
+//     step) runs from the penguin glass just north of the west stair's landing, its ferry-ticket kiosk, timetable pillar and
 //     luggage trolleys at its inner end (w ≥ −12, off the stair's line); the whale-tail bench at the upper rock's foot.
 //     Middle: the fish topiary, the trolley stack and the queue-barrier planter (the Bazookarp's apron blocks round the
-//     Gate), a luggage trolley behind the Ticket Hall (not in Tower Command). East: the souvenir kiosk, and the Express's
+//     Gate), a luggage trolley and the forklift behind the Ticket Hall (not in Tower Command). East: the souvenir kiosk, and the Express's
 //     plaza stop at the Pump Hall's south end, its IN mouth facing across the plaza (west). (DESIGN.md's tank-delivery
 //     crates are gone: on the east stair's line, and nowhere else free of the stop's mouth.)
 H(bladeBox(24, 27, -17.0, -8.5, FL, 0.6, stone({ tag: 'queue-terrace' })));
