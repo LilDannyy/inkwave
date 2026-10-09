@@ -85,7 +85,7 @@ export function liquidTop(x, z) {
 
 // counters (tests / match.cjs BOBBER line)
 export const BOBBER_STATS = { thrown: 0, settled: 0, refused: 0, triggers: 0, hist: {}, hitTriggers: 0, wasted: 0, splats: 0, hits: 0, disarmed: 0, expired: 0,
-  crushed: 0, guard: 0, blasts: 0, links: 0, by: { owner: 0, mate: 0, blast: 0, other: 0 }, records: {}, maxLive: 0, tickMs: 0, tickN: 0, pops: 0, refloats: 0 };
+  crushed: 0, guard: 0, blasts: 0, links: 0, by: { owner: 0, mate: 0, blast: 0, other: 0 }, via: {}, records: {}, maxLive: 0, tickMs: 0, tickN: 0, pops: 0, refloats: 0 };
 export function resetBobberStats() { for (const k in BOBBER_STATS) BOBBER_STATS[k] = typeof BOBBER_STATS[k] === 'object' ? (k === 'by' ? { owner: 0, mate: 0, blast: 0, other: 0 } : {}) : 0; }
 const rec = (a, data) => { BOBBER_STATS.records[data[0]] = (BOBBER_STATS.records[data[0]] || 0) + 1; netRec(a, KIND, data); };
 
@@ -523,6 +523,7 @@ export function trigger(it, by, how = 'shot') {
   BOBBER_STATS.triggers++;
   BOBBER_STATS.hist[g.n] = (BOBBER_STATS.hist[g.n] || 0) + 1;
   BOBBER_STATS.by[how === 'blast' ? 'blast' : !by ? 'other' : by === it.owner ? 'owner' : by.team === it.team ? 'mate' : 'other']++;
+  { const k = `${how}:${by?.specialActive ? 'sp-' + (by.specialActive.kind || by.specialActive.id || '?') : by?.weapon?.kind || '-'}${by?.bot?._bob ? '(aimed)' : ''}`; BOBBER_STATS.via[k] = (BOBBER_STATS.via[k] || 0) + 1; }   // (what set it off)
   schedule(g);
   return g;
 }
@@ -690,7 +691,7 @@ function descOf(it) {
     hurt: (dmg, by) => hurt(it, dmg, by),
     crush: (how) => finish(it, 2, how === 'lava' ? 'sizzle' : 'crunch'),
     flash: () => { it.flash = 1; },
-    teamFire: (by) => teamFire(it, by),
+    teamFire: (by) => teamFire(it, by, 'sweep'),   // (wave 1: a roller / brush sweep, standing fire)
   });
 }
 function syncDesc(it) { it.aim.copy(it.spot); it.dpos.set(it.spot.x, it.spot.y - SB().hitR, it.spot.z); }
@@ -990,7 +991,7 @@ const kit = SUB_KITS[KIND] = {
     if (!liveN || !(dmg > 0)) return false;
     const it = shotProbe(prev, pos);
     if (!it) return false;
-    if (it.team === team) teamFire(it, by || null); else hurt(it, dmg, by || null);
+    if (it.team === team) teamFire(it, by || null, 'shot'); else hurt(it, dmg, by || null);
     return true;
   },
   blockRay(from, dir, len, team, dmg, by) {
@@ -1004,7 +1005,7 @@ const kit = SUB_KITS[KIND] = {
       if (_v2.copy(from).addScaledVector(dir, t).distanceTo(it.spot) < R + 0.04) { best = t; hit = it; }
     }
     if (!hit) return len;
-    if (hit.team === team) teamFire(hit, by || null); else hurt(hit, dmg, by || null);
+    if (hit.team === team) teamFire(hit, by || null, 'beam'); else hurt(hit, dmg, by || null);
     return Math.max(0.1, best - R * 0.5);
   },
   // a blast (G.subs.damageArea, never a ghost's): every bobber whose centre is within its radius + hitR (no line test)

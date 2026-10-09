@@ -665,9 +665,12 @@
         // the better shot: the chain is)
         const C = []; for (let i = 0; i < 3; i++) C.push(drop(me, 0, 3.5 + i * 3));
         settle();
-        put(mate, V(0, 0, -2.0), 0); mate.setWeapon('shooter'); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobSkip = null; wake(mate);
+        put(mate, V(0, 0, -2.0), 0); mate.setWeapon('shooter'); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobSkip = null;
+        // (it holds its ground — its brain runs, its legs don't: what it looks at and shoots is its own call. Not pinned in
+        // place: a pinned bot that wants to walk hops to get unstuck, which no player standing there would do)
+        { const up = brain0.get(mate); mate.bot.update = function (dt) { const r = up.call(this, dt); mate.intent.move.set(0, 0, 0); mate.intent.jump = false; return r; }; }
         put(foe, V(0, 0, 17.5), Math.PI);   // (in its sight first — it turns to face it — out of its reach, no chain near it)
-        hook = () => { mate.pos.x = 0; mate.pos.z = -2.0; };   // (it holds its ground: what it looks at is its own call)
+        hook = null;
         step(1.0);
         const before = ev('bobber:trigger').length, cs0 = THREAT_STATS.chainShots || 0, bb0 = { ...BOBBER_BOT };
         put(foe, V(0.5, 0, 10.4), Math.PI);   // (12.4 m off: well in its sight, just out of its reach, 11.9)
