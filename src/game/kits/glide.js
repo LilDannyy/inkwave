@@ -46,6 +46,7 @@ import { Physics, Hit } from '../physics.js';
 import { DEPLOY_STATS } from '../deployables.js';
 import { makeMesh, disposeMesh, setLamps, litFor, LAMPS, GRIP, LAMP_GEO, lampAt, lampMats, SUB_SCALE } from './glide-model.js';
 import { Guide, CookBar, makeGlow } from './glide-guide.js';
+import { GRIP_HOLE_L } from '../character-weapons.js';
 import { GLIDE_SOUNDS } from '../../audio/sfx-glide.js';
 
 const KIND = 'glide';
@@ -674,10 +675,24 @@ function handLook(a, lit, k, throb) {
   gl.position.copy(p); gl.visible = true;
 }
 const _white = new THREE.Color(1, 1, 1);
+// the stone in the fist hangs level under it, facing where the kid faces, whatever the arm does (glide-model.js HOLD:
+// carried low by its handle beside the hip): the prop's turn in the hand is set each frame so its up is the world's up,
+// the grip bar staying in the fist (GRIP at the fist's hole, the pop-in scale kept)
+const _qh = new THREE.Quaternion(), _qy = new THREE.Quaternion();
+function levelProp(a) {
+  const b = a.character?.bomb;
+  if (!b || b.kind !== KIND || !b.group.visible || !b.group.parent) return;
+  const g = b.group;
+  g.parent.getWorldQuaternion(_qh);
+  _qy.setFromAxisAngle(UP, a.character.yaw ?? a.yaw ?? 0);
+  g.quaternion.copy(_qh.invert()).multiply(_qy);
+  g.position.copy(GRIP).multiplyScalar(g.scale.x).applyQuaternion(g.quaternion).negate().add(GRIP_HOLE_L);
+}
 // remote players' cook levels ([5, level] records), until their subAim flag drops
 const netCook = new Map();
 function handsTick(dt) {
   for (const a of G.actors || []) {
+    levelProp(a);
     const r = a.weaponRunner;
     if (!r) continue;
     const st = r.glide;

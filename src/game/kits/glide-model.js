@@ -52,8 +52,16 @@ function buildGlide() {
   P.add(sweep([new V3(0, 0.0945, -0.016), new V3(0, 0.0945, 0.018), new V3(0, 0.0945, 0.052)],
     { seg: 10, radial: 12, capSteps: 3, radius: (t) => 0.0098 + 0.0007 * Math.cos(t * Math.PI * 12), flat: 1, outward: (Pp, o) => o.set(1, 0, 0) }).geo, C.rubber, M.rubber);
   led(P, new V3(0, 0.0705, -0.0505), new V3(0, 0.55, -1).normalize(), C.amber, 0.004);
-  return { kind: 'glide', body: P.build(), ink: I.build(), grip: { pos: GRIP.clone(), handZ: new V3(0, -1, 0), handY: new V3(-0.3, -0.1, -1) } };   // (carried upright by its handle: its team dome shows beside the head)
+  return { kind: 'glide', body: P.build(), ink: I.build(), grip: { pos: GRIP.clone(), handZ: HOLD.handZ.clone(), handY: HOLD.handY.clone() }, low: HOLD.low };
 }
+// In the hand: carried low by its handle, the curling stone hanging upright from the fist beside the hip, clear of the
+// leg and of the head, so its lamps and team dome read from the front, the side and the thrower's own camera behind;
+// rolled underhand on the release (character.js _poseSubAim / _poseRoll read `low`). The wrist lies up the handle (handY
+// +Y: the stone hangs under the fist), the thumb runs along the grip bar toward the stone's front (handZ +Z).
+export const HOLD = {
+  handZ: new V3(0, 0, 1), handY: new V3(0, 1, 0),
+  low: { arm: [-0.22, 0, 0.55, -0.3, 0, 0, 0], lean: [0.06, 0, 0], roll: [0.85, -0.55, -0.9] },
+};
 // a part authored facing +Z at the origin, turned to azimuth az on a circle of radius r at height y
 function at3(g, az, r, y) { g.rotateY(az); g.translate(Math.sin(az) * r, y, Math.cos(az) * r); return g; }
 registerSubModel('glide', buildGlide);
