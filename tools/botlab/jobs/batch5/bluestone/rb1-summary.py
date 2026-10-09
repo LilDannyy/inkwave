@@ -21,6 +21,7 @@ for era in '123':
         g = re.search(r'PASS garden / Halo at 1.5 m[^\[]*(\[.*?\])\s*$', t, re.M); c = re.search(r'PASS map \(x[^\[]*(\[.*?\])\s*$', t, re.M)
         if g: G.append(json.loads(g.group(1)))
         if c: M.append(json.loads(c.group(1)))
+    if not tot: continue
     print(f'\nink-regions era {era}: n={len(tot)} turf {tot[0][0]} m2, total inked ' + ', '.join(f'{x * 100:.1f}' for _, x in tot) + f'  mean {100 * st.mean(x for _, x in tot):.1f} %')
     for k, l in sorted(regs.items(), key=lambda kv: -kv[1][0][0]):
         print(f'  {k:12s} {l[0][0]:5d} m2  ' + ' '.join(f'{x * 100:3.0f}' for _, x in l) + f'   mean {100 * st.mean(x for _, x in l):.0f} %')

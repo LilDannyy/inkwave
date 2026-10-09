@@ -44,12 +44,12 @@ fi
 if has rb; then
   # round B fix 1: the cut-back floors and the garden's ramps (era 1: the west corner, the quay, the GPO, the deck; era 2:
   # the river works; era 3: the ramps, the superstop stairs)
-  RB1='{"name":"west-corner-high","from":[-8,16,-60],"look":[-22,0,-45],"fov":70},{"name":"west-corner","from":[-13,1.75,-48.5],"look":[-25,1,-43],"fov":75},{"name":"quay-high","from":[6,15,-56],"look":[21,0,-41],"fov":70},{"name":"gpo-terrace","from":[-4.5,1.75,-41.5],"look":[-10,2.2,-31],"fov":75},{"name":"deck-back","from":[0,5.0,-64.5],"look":[0,4.2,-74],"fov":80},{"name":"tip-sidings-from-turning","from":[-47.5,1.75,-31],"look":[-37,1.0,-17],"fov":75}'
+  RB1='{"name":"west-corner-high","from":[-8,16,-60],"look":[-22,0,-45],"fov":70},{"name":"west-corner","from":[-13,1.75,-48.5],"look":[-25,1,-43],"fov":75},{"name":"quay-high","from":[6,15,-56],"look":[21,0,-41],"fov":70},{"name":"gpo-terrace","from":[-4.5,1.75,-41.5],"look":[-10,2.2,-31],"fov":75},{"name":"deck-back","from":[0,5.0,-64.5],"look":[0,4.2,-74],"fov":80},{"name":"tip-sidings-from-turning","from":[-47.3,1.75,-28.7],"look":[-39.9,1.0,-18.6],"fov":75}'
   RB2='{"name":"river-works-high","from":[8,18,-38],"look":[28,0,-12],"fov":70},{"name":"bridge-deck","from":[23.4,1.15,-21.5],"look":[34,0.6,-3],"fov":75}'
   RB3='{"name":"garden-ramp-prow","from":[-19.5,1.75,-21.5],"look":[-31,1.6,-22.5],"fov":75},{"name":"garden-ramp-hoki","from":[-20,1.75,-31.5],"look":[-31,1.6,-28.5],"fov":75},{"name":"garden-ramps-high","from":[-14,15,-27],"look":[-30,0.8,-27],"fov":70},{"name":"superstop-stair","from":[4,1.75,-31],"look":[0,2.5,-19],"fov":75}'
   shot 1 turf r3-era1 "[$RB1]"
-  shot 2 turf r3-era2 "[$RB2,{\"name\":\"tip-sidings-from-turning\",\"from\":[-47.5,1.75,-31],\"look\":[-37,1.0,-17],\"fov\":75}]"
-  shot 3 turf r3-era3 "[$RB3,{\"name\":\"tip-sidings-from-turning\",\"from\":[-47.5,1.75,-31],\"look\":[-37,1.0,-17],\"fov\":75}]"
+  shot 2 turf r3-era2 "[$RB2,{\"name\":\"tip-sidings-from-turning\",\"from\":[-47.3,1.75,-28.7],\"look\":[-39.9,1.0,-18.6],\"fov\":75}]"
+  shot 3 turf r3-era3 "[$RB3,{\"name\":\"tip-sidings-from-turning\",\"from\":[-47.3,1.75,-28.7],\"look\":[-39.9,1.0,-18.6],\"fov\":75}]"
 fi
 if has derived; then
   # tower-check's rail (its top picture) and the cover maps, from rb1-local.sh's run dirs (RUNS: the dirs, newest last)
