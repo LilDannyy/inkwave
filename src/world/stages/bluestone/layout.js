@@ -261,7 +261,11 @@ const haloPieces = [];
     const nx = Math.sin(b * DEG), nz = Math.cos(b * DEG), tx = Math.cos(b * DEG), tz = -Math.sin(b * DEG);   // radial n, tangent t
     const at = (ap, m) => [+(ap * nx + k * m * tx).toFixed(4), +(ap * nz + k * m * tz).toFixed(4)];
     const [cx, cz] = at(AP_MID, HOUT / 2);
-    haloPieces.push(O(cx, cz, +(AP_OUT - AP_IN).toFixed(4), +HOUT.toFixed(4), top - 0.4, top, b + 90, halo({ eraGroup: g })));
+    // (fix round 3: the 90°, 180° and 270° sides 0.3 thick, underside 5.1: Tower Command's tower leaves the concourse
+    //  (1.3) under the 90° / 270° sides' inner edge, now 11.1 out, and climbs onto anything whose underside is less than
+    //  its 3.72 m of headroom over its base (tower.js baseAt): 5.0 was 2 cm short, so the tower rode up onto the Halo)
+    const thick = b % 90 === 0 ? 0.3 : 0.4;
+    haloPieces.push(O(cx, cz, +(AP_OUT - AP_IN).toFixed(4), +HOUT.toFixed(4), top - thick, top, b + 90, halo({ eraGroup: g })));
     // balustrades: the inner edge to its corner, the outer edge to its corner (the two outer rails cross there)
     let inner = [0.02, HIN - 0.12], outer = [0.02, HOUT + 0.03];
     if (b === 135 || b === 225) inner = [1.0, HIN - 0.12];        // the 2 m drop gaps (1 m each side of the middle)
