@@ -14,7 +14,8 @@
   const freeze = () => { dbg.freeze(); for (const a of M().actors) { if (a.bot) a.bot.update = () => {}; a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; if (a.specialActive) __G.specials?.end?.(a, 'shots'); a.pipeCd = 0; } };
   const leg = (id) => P().legs.find((l) => l.id === id);
   const put = (a, x, y, z, yaw) => { a.pos.set(x, y, z); a.vel.set(0, 0, 0); if (yaw !== undefined) { a.yaw = yaw; a.aimYaw = yaw; } };
-  const away = (a, k) => put(a, -30 + k * 4, 0, k % 2 ? -12 : 12);
+  // (out of the way: on a spawn deck — Bravo's by default — never the sea)
+  const away = (a, k, team = 1) => { const pad = __G.level.spawnPads[team]; put(a, pad.x + ((k % 4) - 1.5) * 1.7, pad.y, pad.z + (k < 4 ? -1.6 : 1.6)); };
   const cine = (from, look, fov = 62) => { g.settings.fov = fov; g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); step(1 / 60); };
   const follow = () => { g.settings.fov = window.__fov0 ?? g.settings.fov; g.rig.follow(me(), true); };
   const hud = (on) => { g.hud?.setVisible(on); };
@@ -139,6 +140,7 @@
     });
     S('spawn-play-camera-bravo', () => {
       const c = window.__spawnCam, p = c.p, d = c.d;
+      for (const [k, o] of M().actors.entries()) if (o !== me()) away(o, k, 0);
       step(2.5);
       cine([-p[0], p[1], -p[2]], [-p[0] - d[0] * 20, p[1] + d[1] * 20, -p[2] - d[2] * 20], window.__fov0);
       step(0.2);

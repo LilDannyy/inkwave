@@ -227,24 +227,20 @@ export class PipeLooks {
         const next = s + (over ? 7.0 : gap);
         if (hiddenAt(leg, s)) { s = next; continue; }
         s = next;
-        // under an overhead run: a saddle and a post down to a roof / wall top close below (no spine over the span); in
-        // open air over the sky the tube runs bare between them (LEAD-NOTES 2026-10-09: only clear tube across the
-        // spawn's view), so a collar there only where it is held
+        // under an overhead run: a saddle and a post down to a roof / wall top close below (no spine over the span); over
+        // open air no collar at all, only clear tube across the sky (LEAD-NOTES 2026-10-09: the spawn's view)
         let held = false, gy = -Infinity, drop = 0;
         if (Math.abs(q.ty) < 0.2 && L && q.y > 4) { gy = L.groundHeight(q.x, q.z, q.y - R_GLASS - 0.05); drop = q.y - R_GLASS - gy; held = gy > -Infinity && drop > 0.05 && drop < 3.2; }
-        if (over && !held) continue;
+        if (held) {
+          _m.compose(_s.set(q.x, q.y - R_GLASS - 0.08, q.z), _qt.setFromEuler(_e.set(0, Math.atan2(q.tx, q.tz), 0)), new THREE.Vector3(1, 1, 1));
+          add(new THREE.BoxGeometry(1.5, 0.16, 0.22), color, _m);
+          _m.compose(_s.set(q.x, gy + (drop - 0.16) / 2, q.z), _qt, new THREE.Vector3(1, 1, 1));
+          add(new THREE.BoxGeometry(0.2, Math.max(0.05, drop - 0.16), 0.2), color, _m);
+        }
+        if (over) continue;
         _qt.setFromUnitVectors(UP, _p.set(q.tx, q.ty, q.tz));
         _m.compose(_s.set(q.x, q.y, q.z), _qt, new THREE.Vector3(1, 1, 1));
         add(new THREE.CylinderGeometry(0.95, 0.95, 0.14, 18, 1, true), color, _m);
-        {
-          if (held) {
-            const yaw = Math.atan2(q.tx, q.tz);
-            _m.compose(_s.set(q.x, q.y - R_GLASS - 0.08, q.z), _qt.setFromEuler(_e.set(0, yaw, 0)), new THREE.Vector3(1, 1, 1));
-            add(new THREE.BoxGeometry(1.5, 0.16, 0.22), color, _m);
-            _m.compose(_s.set(q.x, gy + (drop - 0.16) / 2, q.z), _qt, new THREE.Vector3(1, 1, 1));
-            add(new THREE.BoxGeometry(0.2, Math.max(0.05, drop - 0.16), 0.2), color, _m);
-          }
-        }
       }
     }
     let n = 0; for (const g of parts) n += g.attributes.position.count;
