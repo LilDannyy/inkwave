@@ -7,7 +7,6 @@
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const g = window.__inkwave, G = window.__G, L = G.level, m = g.match;
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   // 1. the dressing: a headless build of every placement — no colliders
   const { PropKit } = await import('./src/world/props.js');
   const { dressingFor } = await import('./src/world/dressing.js');
@@ -36,18 +35,20 @@
   // 5. Feeding Time at 1:00 left: looks only
   const plays = []; const play0 = G.audio?.play?.bind(G.audio);
   if (G.audio) G.audio.play = (name, o) => { plays.push(name); return play0(name, o); };
-  const snap = () => ({ hp: m.actors.map((a) => +a.hp.toFixed(1)), pos: m.actors.map((a) => [+a.pos.x.toFixed(2), +a.pos.z.toFixed(2)]), cov: G.paint.coverage().map((c) => +c.toFixed(4)) });
+  // (stepped: the backdrop runs on the environment's clock, which the audit step advances with the sim)
+  const blk = L.blocks.find((b) => b.tag === 'bathysphere'), blk0 = blk ? blk.center.toArray().join() : null, nBlocks = L.blocks.length;
   g.debug.freeze?.();
   m.time = 60.4;
   const y0 = bathy.position.y, c0 = bathy.userData.clocks.uFT.value, c20 = bathy.userData.clocks.uFT2.value;
-  const before = snap();
-  await wait(4000);
-  const S = bathy.userData.feeding(), y1 = bathy.position.y, after = snap();
+  const t0 = m.time;
+  for (let i = 0; i < 240; i++) g.debug.step(1000 / 60);
+  const S = bathy.userData.feeding(), y1 = bathy.position.y;
   const dT = bathy.userData.clocks.uFT.value - c0, dT2 = bathy.userData.clocks.uFT2.value - c20;
   R('Feeding Time starts at 1:00 left: the bathysphere bobs, the bell rings three times, krill drift down, the sharks wheel faster',
     S.t > 2 && y1 > y0 + 0.1 && S.rung === 3 && S.krill > 0.3 && dT2 > dT * 1.3 && plays.filter((p) => p === 'aq_bell' || p === 'pipe_chime').length >= 3,
     { t: +(S.t || 0).toFixed(2), bob: +(y1 - y0).toFixed(3), rung: S.rung, krill: +S.krill.toFixed(2), clock: +dT.toFixed(2), sharkClock: +dT2.toFixed(2), sounds: plays.slice(0, 6) });
-  R('Feeding Time changes no rule (frozen match: the clock, hp, positions and turf untouched)', JSON.stringify(before) === JSON.stringify(after) && Math.abs(m.time - 60.4) < 1e-6, { time: m.time });
+  R('Feeding Time changes no rule: the clock runs on as stepped (4 s), the bathysphere\'s collider stays where it was, no block is added',
+    Math.abs((t0 - m.time) - 4) < 0.2 && blk && blk.center.toArray().join() === blk0 && L.blocks.length === nBlocks, { ran: +(t0 - m.time).toFixed(2), blocks: L.blocks.length });
   if (G.audio && play0) G.audio.play = play0;
   return out;
 })()

@@ -496,7 +496,11 @@ const LAYOUT_AQUARIUM = {
   bazookarp: BAZOOKARP,
   boss: { floorY: 0 },
   intro: { from: [24, 16, 18], lookFrom: [0, 13, 0], toBack: 3.0 },
-  art: { from: [40, 26, -58], look: [0, 4, -6], fov: 56 },
+  // the stage-select hero shot: high over the sea off Alpha's Penguin Point (south-west), across the promenade and the
+  // court — the Great Tank under Bathysphere No. 1 on its gantry, both kelp drums, the South Gate — to Inkopolis across the
+  // bay, the Deep Dome and its tube on the horizon (DESIGN.md §5.8 framed it from the east; the bay's city stands east, so
+  // the frame turned round to put the city behind the stage)
+  art: { from: [-42, 21, -50], look: [5, 3, -5], fov: 54 },
   // promenade lamps at the sea rail (2), the ferry plaza (2), the Gate Terrace (1): their pools light the floor at dusk
   // (the colonnade's globes, the canopy pendants, the portholes and the neon are the props' own glow)
   decor: { lamps: [[-28.47, -10.36], [-22.16, -20.66], [26.54, -46.27], [-1.78, -61.82], [-9.6, -31.6]], palms: [], flags: [] },

@@ -126,10 +126,11 @@ export function buildBackdrop(kit, data = {}) {
   bathy.group.userData.clocks = U;
   const far = buildFar(kit, { W });
   objects.push(...far.objects);
-  let last = performance.now() / 1000;
+  // (on the environment's clock t: real time in play, the stepped clock in an audit — deterministic pictures and tests)
+  let last = null;
   const animate = (t) => {
-    const nowS = performance.now() / 1000, dt = Math.min(0.1, Math.max(0, nowS - last)); last = nowS;
-    const f = feed(nowS), night = U.uNight.value || 0;
+    const dt = last === null ? 0 : Math.min(0.1, Math.max(0, t - last)); last = t;
+    const nowS = t, f = feed(nowS), night = U.uNight.value || 0;
     U.uFT.value += dt; U.uFT2.value += dt * (1 + 1.8 * f.wheel); U.uKrill.value = f.krill;
     bathy.set(0.5 * f.bob, night);
     gauges.animate(t); tide.animate(t); far.animate(nowS, night);

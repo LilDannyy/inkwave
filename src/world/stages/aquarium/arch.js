@@ -456,18 +456,9 @@ export function registerArch(D, H, KIT, G) {
       for (const z of [-46.25, -38.75]) pbox(B, 'metal', K.brass, 7.85, 0.26, 0.1, 6.35, 6.7, z);
       for (const x of [2.45, 10.25]) pbox(B, 'metal', K.brass, 0.1, 0.26, 7.6, x, 6.7, -42.5);
       for (let x = 3.4; x < 10.0; x += 0.95) pbox(B, NS('metal'), K.brassDk, 0.05, 0.04, 7.4, x, 6.82, -42.5);
-      // the clock on the canopy (double faced, to the plaza and the gate) and TICKET HALL on both fascias
+      // TICKET HALL on both fascias (the station clock stands on the booth: on the canopy it sat in the spawn's view of the
+      // South Gate's shark window — LEAD-NOTES 2026-10-09 item 2)
       {
-        const x = 6.35, y = 7.55, z = -42.5;
-        pbox(B, 'paint', K.render, 1.6, 0.55, 0.5, x, 7.08, z);
-        cyl(B, 'paint', K.render, 0.7, 0.4, x, y, z, { rx: HP, seg: 28 });
-        for (const s of [-1, 1]) {
-          B.add('metal', torG(0.7, 0.05, 6, 28), K.brass, x, y, z + s * 0.2, {});
-          B.add(NS('glow'), cylGeo(0.62, 0.62, 0.02, 28), K.cream, x, y, z + s * 0.205, { rx: HP, glow: 0.9 });
-          for (let i = 0; i < 12; i++) { const a = (i / 12) * TAU; pbox(B, NS('paint'), K.ink, 0.03, i % 3 ? 0.06 : 0.12, 0.01, x + Math.sin(a) * 0.52, y + Math.cos(a) * 0.52, z + s * 0.22, { rz: -a }); }
-          pbox(B, NS('paint'), K.ink, 0.04, 0.34, 0.012, x - 0.08, y + 0.12, z + s * 0.23, { rz: 0.5 });
-          pbox(B, NS('paint'), K.ink, 0.035, 0.46, 0.012, x + 0.1, y - 0.15, z + s * 0.232, { rz: 2.4 });
-        }
         face(B, 6.35, 0, -38.68, 0, 1, () => letters(B, 'TICKET HALL', { h: 0.32, y: 6.86, z: 0, c: K.brassLt, lit: true, glow: 1.0, track: 0.16 }));
         face(B, 6.35, 0, -46.32, 0, -1, () => letters(B, 'TICKET HALL', { h: 0.32, y: 6.86, z: 0, c: K.brassLt, lit: true, glow: 1.0, track: 0.16 }));
       }
@@ -481,6 +472,19 @@ export function registerArch(D, H, KIT, G) {
         B.box('paint', K.render, 2.1, 0.32, 2.3, cx, 3.58, cz, { r: 0.08 });
         for (const z of [-42.17, -39.83]) face(B, cx, 0, z, 0, z < cz ? -1 : 1, () => letters(B, 'TICKETS', { h: 0.17, y: 3.5, c: K.lit, lit: true, glow: 1.2, flat: true }));
         face(B, 8.18, 0, -41.0, -1, 0, () => sign(B, "TODAY'S FEEDINGS", 0, 2.25, { h: 0.1, board: K.navy, c: K.cream, border: K.brass, w: 1.6, hh: 0.62, sub: '11:00 · 15:00', subH: 0.12, subC: K.brassLt }));
+        // the station clock on the booth's roof, double faced (to the plaza and the gate)
+        {
+          const y = 4.25, r = 0.36;
+          pbox(B, 'paint', K.render, 0.5, 0.3, 0.3, cx, 3.85, cz);
+          cyl(B, 'paint', K.render, r + 0.07, 0.24, cx, y, cz, { rx: HP, seg: 24 });
+          for (const s2 of [-1, 1]) {
+            B.add('metal', torG(r + 0.07, 0.03, 6, 24), K.brass, cx, y, cz + s2 * 0.12, {});
+            B.add(NS('glow'), cylGeo(r, r, 0.02, 24), K.cream, cx, y, cz + s2 * 0.125, { rx: HP, glow: 0.9 });
+            for (let i = 0; i < 12; i++) { const a = (i / 12) * TAU; pbox(B, NS('paint'), K.ink, 0.02, i % 3 ? 0.035 : 0.07, 0.01, cx + Math.sin(a) * r * 0.82, y + Math.cos(a) * r * 0.82, cz + s2 * 0.135, { rz: -a }); }
+            pbox(B, NS('paint'), K.ink, 0.025, r * 0.55, 0.01, cx - 0.04, y + 0.08, cz + s2 * 0.14, { rz: 0.5 });
+            pbox(B, NS('paint'), K.ink, 0.02, r * 0.75, 0.01, cx + 0.05, y - 0.08, cz + s2 * 0.142, { rz: 2.4 });
+          }
+        }
       }
       // the stair's brass handrails (the stair x 8 … 10, z −36.2 → −39.0: at its two edges, 0.9 m over the treads)
       for (const x of [8.05, 9.95]) handrail(B, [x, 0.95, -36.25], [x, 2.15, -38.95], { r: 0.03 });
