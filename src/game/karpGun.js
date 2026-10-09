@@ -23,6 +23,7 @@ import { KIT_GHOSTS, netRec, netId } from './kits/registry.js';
 
 const GN = BAZOOKARP.gun;
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _hit = new Hit(), _res = { t: 0, dist: 0 };
+const _DOWN = new THREE.Vector3(0, -1, 0);   // (a raycast's direction: never a scratch vector a caller may hold)
 const DEG = Math.PI / 180;
 
 export const speedOf = (c) => (c >= 1 ? GN.speed[1] : GN.speed[0] + (GN.speed[1] - GN.speed[0]) * c);
@@ -164,18 +165,20 @@ export class KarpGun {
     if (s.pos.y < PLAYER.waterY - 1.5 || G.match?.stage?.sink(s.pos, 'shot') || s.t > 6) { s.phase = 'done'; netRec(s.owner, 'karp', [1, s.gid, 0, -99, 0]); }
   }
   _land(s, at, fromNet = false) {
-    s.pos.copy(at); s.vel.set(0, 0, 0);
-    s.land = at.clone();
+    // (copy the point FIRST: callers pass the shared scratch vectors _v / _v2, which the raycast below reuses — the
+    // landing record once went out as (0, −1, 0), the ray's direction)
+    const L = (s.land = at.clone());
+    s.pos.copy(L); s.vel.set(0, 0, 0);
     s.phase = 'swell'; s.swell = 0;
     this.stats.landed++;
     if (!s.ghost && !fromNet) {
       // its landing ink (the shooter's: replicated as its paint)
-      const g = G.physics.raycast(_v.copy(at).setY(at.y + 0.3), _v2.set(0, -1, 0), 2.5, _hit, true);
+      const g = G.physics.raycast(_v.copy(L).setY(L.y + 0.3), _DOWN, 2.5, _hit, true);
       if (g.hit) s.owner.addTurf?.(G.paint.splat(_v.copy(g.point).addScaledVector(g.normal, 0.1), landPaintOf(s.c), s.team, { seed: Math.random() }));
-      netRec(s.owner, 'karp', [1, s.gid, r2(at.x), r2(at.y), r2(at.z)]);
+      netRec(s.owner, 'karp', [1, s.gid, r2(L.x), r2(L.y), r2(L.z)]);
     }
-    G.audio?.play?.('splat_big', { pos: at, volume: 0.5, pitch: 1.3 });
-    emit('karp:land', { actor: s.owner, pos: at.clone(), charge: s.c, ghost: s.ghost });
+    G.audio?.play?.('splat_big', { pos: L, volume: 0.5, pitch: 1.3 });
+    emit('karp:land', { actor: s.owner, pos: L.clone(), charge: s.c, ghost: s.ghost });
   }
   // the shooter's screen: the blast. Its own players are judged here; the record [2] has every other screen judge theirs
   _blow(s) {
@@ -183,7 +186,7 @@ export class KarpGun {
     s.phase = 'done';
     this.stats.blasts++;
     // its ink
-    const g = G.physics.raycast(_v2.copy(c).setY(c.y + 0.2), new THREE.Vector3(0, -1, 0), 3, _hit, true);
+    const g = G.physics.raycast(_v2.copy(c).setY(c.y + 0.2), _DOWN, 3, _hit, true);
     if (g.hit) s.owner.addTurf?.(G.paint.splat(_v2.copy(g.point).addScaledVector(g.normal, 0.1), R * GN.paintK, s.team, { seed: Math.random() }));
     // enemy devices and special objects (the shooter's screen, as every blast)
     if (G.subs) G.subs.damageArea(c, R, blastDamage(s.c, R * 0.5), s.team, s.owner); else G.specials?.areaHit?.(c, R, blastDamage(s.c, R * 0.5), s.team, s.owner);
