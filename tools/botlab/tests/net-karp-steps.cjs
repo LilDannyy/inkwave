@@ -268,7 +268,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     const l3a = await info(A), l3b = await info(B);
     R('lag 3. B\'s claim is granted under lag, the same on both screens', l3a.holder === bNid && l3b.holder === bNid, { host: l3a.holder, guest: l3b.holder });
     // ---- 9 / 9b. B retreats on its own half: DON'T RETREAT! at once on B; the shown fuse never rewinds > 0.2 s a second
-    await B.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, 4); a.vel.set(0, 0, 0); window.__fz = []; window.__fzT = setInterval(() => { const K = __G.match.karp; window.__fz.push([Math.round(performance.now()), +K.hud.fuseShown.toFixed(3), K.state().rate]); }, 50); return 1; })()`);
+    await B.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, 4); a.vel.set(0, 0, 0); window.__fz = []; window.__fzT = setInterval(() => { const K = __G.match.karp; window.__fz.push([Math.round(performance.now()), +K.hud.fuseShown.toFixed(3), K.state().rate, K.holder === __G.match.local ? 1 : 0]); }, 50); return 1; })()`);
     await wait(500);
     await B.js(`(() => { const a = __G.match.local; a.intent.move.set(0, 0, 1); return 1; })()`);
     await B.until(`__G.match.karp.state().rate === 3`, 6000, 16).catch(() => {});
@@ -284,7 +284,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     await wait(300);
     const fz = await J(B, `(() => { clearInterval(window.__fzT); return { fz: window.__fz, xF: window.__xF }; })()`);
     let worst = 0;
-    const s9 = fz.fz.filter((q) => q[2] === 3 || q[1] < 59.5);
+    const s9 = fz.fz.filter((q) => q[3] === 1);   // (while B carries)
     for (let i = 0; i < s9.length; i++) for (let j = i + 1; j < s9.length && s9[j][0] - s9[i][0] <= 1000; j++) worst = Math.max(worst, s9[j][1] - s9[i][1]);
     R('lag 9b. the fuse ring under ×3: in any 1 s it never goes up by more than 0.2 s, and at the Carp Blast B\'s ring shows ≤ 0.3 s', worst <= 0.2 + 1e-6 && fz.xF != null && fz.xF <= 0.3, { worstRise: r2(worst), atBlast: fz.xF, samples: s9.length });
     await alive(B);
