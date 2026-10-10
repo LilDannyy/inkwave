@@ -871,11 +871,19 @@
       reset();
       const pl = box(-3, 3, -0.4, 0.3, -30, -18);
       put(me, V(0, 0.3, -29), 0); step(0.2);
+      const ev5 = evs.length, g5 = { ...GLIDE_STATS };
       const { it: s5 } = throwHeld(0.1);
-      s5.v.set(0, 0, 0); s5.p.set(0, 0.3, -24);
-      let px = 0; hook = () => { px += 2 / 60; L.moveDynamic(pl, V(px, -0.05, -24), V(3, 0.35, 6)); };
-      step(1.0); hook = null;
-      R('on a moving floor (2 m/s) it rides along with it', Math.abs(s5.p.x - px) < 0.1 && Math.abs(s5.p.y - 0.3) < 0.03, { stoneX: r2(s5.p.x), floorX: r2(px), y: r2(s5.p.y) });
+      // ([b5-int3] no stone from this throw — seen 1 run in 9 on the merged tree, 2 in 2 for the round-2 reviewer — is a
+      // FAIL with what the kid and the kit were doing, not a HARNESS TypeError that hides it)
+      if (!s5) R('on a moving floor (2 m/s) it rides along with it — the throw made no stone', false, { me: [r2(me.pos.x), r2(me.pos.y), r2(me.pos.z)], grounded: me.grounded, form: me.form, alive: me.alive, ink: r2(me.ink),
+        sub: me.sub?.kind, items: K.items.map((x) => [x.state, x.why]), events: evs.slice(ev5).map((x) => [x.n, x.e.kind, x.e.why, x.e.reason]), wr: { aiming: me.weaponRunner.aimingSub, spent: me.weaponRunner.subSpent, glide: !!me.weaponRunner.glide },
+        stats: Object.fromEntries(Object.keys(GLIDE_STATS).filter((k) => GLIDE_STATS[k] !== g5[k]).map((k) => [k, GLIDE_STATS[k] - g5[k]])) });
+      else {
+        s5.v.set(0, 0, 0); s5.p.set(0, 0.3, -24);
+        let px = 0; hook = () => { px += 2 / 60; L.moveDynamic(pl, V(px, -0.05, -24), V(3, 0.35, 6)); };
+        step(1.0); hook = null;
+        R('on a moving floor (2 m/s) it rides along with it', Math.abs(s5.p.x - px) < 0.1 && Math.abs(s5.p.y - 0.3) < 0.03, { stoneX: r2(s5.p.x), floorX: r2(px), y: r2(s5.p.y) });
+      }
     }
   } catch (e) {
     R('HARNESS', false, { error: String(e && e.stack || e).slice(0, 600) });
