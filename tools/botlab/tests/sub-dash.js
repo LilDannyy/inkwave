@@ -406,7 +406,8 @@
     // screen area where the old vertical band (the same points, offsets straight up and down) covers next to none; the
     // speed lines show and fade; the FOV kicks up and settles back
     if (run('look')) {
-      unbox(); home(); put(me, 0, 0, -12, 0); W.set(me, {}); step(40);
+      // (the follow camera put behind the kid — earlier sections leave it anywhere: a side-on camera sees the old band too)
+      unbox(); home(); put(me, 0, 0, -12, 0); W.set(me, {}); g.rig?.follow?.(me, true); if (g.rig) { g.rig.yaw = Math.PI; g.rig.pitch = 0.16; } step(40);
       const cam = G.camera, fov0 = cam.fov;
       W.set(me, { sub: true, move: [0, 1] }); step(1); W.set(me, { move: [0, 1] }); step(6);
       const Rb = K._ribbons[K._ribbons.length - 1];
