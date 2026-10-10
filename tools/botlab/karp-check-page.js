@@ -1097,27 +1097,31 @@ export async function carryWalk(team, o = {}) {
     // ---- falls from the water edge nearest the Pond on each half: own half → the Pond, enemy half → by the last footing
     res.walks.falls = [];
     for (const side of [team, 1 - team]) {
-      let best = -1, bd = Infinity, dir = null;
+      // the wet nodes of this half nearest the Pond with open water within 1.2 m, nearest first; a railing may stand in
+      // the way, so the next is tried until a carrier really falls (at most 8)
+      const cands = [];
       for (let i = 0; i < N; i++) {
         const n = nodes[i]; if (!C.okN[i] || n.wet !== 2 || halfN(i) !== side || n.zone >= 0) continue;
         if (R.zones[team].some((z) => volNode(z, n.x, n.y, n.z))) continue;
-        const d = hd(n, R.pond); if (d >= bd) continue;
-        for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; if (L.groundHeight(n.x + Math.cos(a) * 1.2, n.z + Math.sin(a) * 1.2, n.y + 0.6) === -Infinity) { best = i; bd = d; dir = [Math.cos(a), Math.sin(a)]; break; } }
+        for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; if (L.groundHeight(n.x + Math.cos(a) * 1.2, n.z + Math.sin(a) * 1.2, n.y + 0.6) === -Infinity) { cands.push({ i, d: hd(n, R.pond), dir: [Math.cos(a), Math.sin(a)] }); break; } }
       }
-      const W = { side: side === team ? 'own' : 'enemy', ran: best >= 0 };
-      if (best >= 0) {
+      cands.sort((p, q) => p.d - q.d);
+      const W = { side: side === team ? 'own' : 'enemy', ran: cands.length > 0, tries: 0 };
+      for (const cd of cands.slice(0, 8)) {
         settle();
         const B = mine.find((a) => a !== A && a.alive) || mine.find((a) => a !== A); alive(B);
-        put(B, nodes[best]); grant(B); step(0.15);
-        const n0 = ev.length; let t = 0;
-        while (B.alive && t < 5) { B.intent.move.set(dir[0], 0, dir[1]); park(); dbg.step(1000 / 60); t += 1 / 60; }
+        put(B, nodes[cd.i]); grant(B); step(0.15);
+        const n0 = ev.length; let t = 0; W.tries++;
+        while (B.alive && t < 4) { B.intent.move.set(cd.dir[0], 0, cd.dir[1]); park(); dbg.step(1000 / 60); t += 1 / 60; }
         idle(B); step(0.1);
-        const after = ev.slice(n0).filter((e) => e.k === 'reset' || e.k === 'drop');
-        const e = after[0];
-        W.at = P3(nodes[best]); W.died = !B.alive; W.event = e ? `${e.k} ${e.how}` : 'none';
+        if (B.alive) { if (Kp.holder === B) Kp._release(B); continue; }   // (a railing: no fall here — the next one)
+        const e = ev.slice(n0).find((q) => q.k === 'reset' || q.k === 'drop');
+        W.at = P3(nodes[cd.i]); W.died = true; W.event = e ? `${e.k} ${e.how}` : 'none';
         if (side === team) W.ok = !!e && e.k === 'reset';
-        else { settle(); const rn = Kp.restNode; W.rest = rn >= 0 ? P3(nodes[rn]) : null; W.restHalf = rn >= 0 ? F.halfOf[rn] : null; W.dist = rn >= 0 ? r1(hd(nodes[rn], nodes[best])) : null; W.ok = !!e && e.k === 'drop' && rn >= 0 && F.halfOf[rn] === side && W.dist <= CK.dropNear; }
+        else { settle(); const rn = Kp.restNode; W.rest = rn >= 0 ? P3(nodes[rn]) : null; W.restHalf = rn >= 0 ? F.halfOf[rn] : null; W.dist = rn >= 0 ? r1(hd(nodes[rn], nodes[cd.i])) : null; W.ok = !!e && e.k === 'drop' && rn >= 0 && F.halfOf[rn] === side && W.dist <= CK.dropNear; }
+        break;
       }
+      if (W.ran && !W.died) { W.ran = false; W.why = `no carrier fell from ${W.tries} water edges (railed)`; }
       res.walks.falls.push(W);
     }
     // ---- a splat on the narrowest walkway near each weir: the drop lands on wide floor
@@ -1151,6 +1155,7 @@ export async function carryWalk(team, o = {}) {
       if (Kp.holder !== A) { put(A, Kp.pos); step(0.4); }
       W.picked = Kp.holder === A;
       const pw = kc.legs.find((l) => l.team === team && l.kind === 'pw' && l.i === 0), wg = kc.legs.find((l) => l.team === team && l.kind === 'wg' && l.i === 0);
+      if (W.picked && !pw?.path1) W.why = 'no climb-free route 1 to weir 1 to walk (#4)';
       if (W.picked && pw?.path1) {
         const w1 = walk(A, pw.path1, () => Kp.lowered[team], 45, mask(N, trig(C, R.weirs[team][0].pos, 1.6)), R.weirs[team][0].pos);
         W.plant = !!Kp.lowered[team]; W.tWeir = r1(Kp.clock - t0); W.w1 = w1;

@@ -94,7 +94,7 @@ app.on('browser-window-created', (_, win) => {
       if (carry.length) for (const c of carry) {
         const W = c.walks || {};
         if (c.err) bad.push(`team ${c.team}: the walk threw: ${c.err.slice(0, 160)}`);
-        if (!W.main?.ok) bad.push(`team ${c.team}: the carry ${W.main ? `picked ${W.main.picked}, planted ${W.main.plant}, re-picked ${W.main.repicked}, knockout ${W.main.knockout}` : 'did not run'}`);
+        if (!W.main?.ok) bad.push(`team ${c.team}: the carry ${W.main ? (W.main.why || `picked ${W.main.picked}, planted ${W.main.plant}, re-picked ${W.main.repicked}, knockout ${W.main.knockout}`) : 'did not run'}`);
         if (c.stuck) bad.push(`team ${c.team}: ${c.stuck} stuck episode(s)`);
         if (W.retreat?.ran && !W.retreat.ok) bad.push(`team ${c.team}: retreat ×3 on at ${W.retreat.on} m / off at ${W.retreat.off} m (8 / 3)`);
         if (W.zone?.ran && !W.zone.ok) bad.push(`team ${c.team}: in its own zone the fuse ran ×${W.zone.rate} (${W.zone.why})`);
@@ -115,7 +115,7 @@ app.on('browser-window-created', (_, win) => {
       const w = rep.checks[3]?.nums?.teams?.[0], hops = rep.checks[2]?.nums;
       const zoneN = rep.checks[9]?.nums?.zones?.filter((z) => z.team === 1).length ?? 0;
       const rt = rep.checks[5]?.nums?.rows?.filter((r) => r.team === 0).map((r) => (r.r2 ? 2 : 1));
-      console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
+      console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
       if (shots.length) console.log(`  pictures (${OUT}): ${shots.join(', ')}`);
       const json = { ...rep, carry, drop, shots, result: ok ? 'ok' : 'fail', fails, skips };
       fs.writeFileSync(path.join(OUT, `${tag ? tag + '-' : ''}${id}${rep.states.length > 1 ? '-s' + rep.key : ''}-karp.json`), JSON.stringify(json, null, 1));
