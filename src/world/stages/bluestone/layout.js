@@ -313,6 +313,12 @@ const LEG_PIECES = [
 // ------------------------------------------------------------------------------------------------ the knee (Alpha's end of the crossbar)
 // Prow Place (where Hoki Lane and the arcade come out), the cab rank where Swimston meets the circus, the Customs House,
 // the river walk round its west side to the chamfer and the circus's north-west; the hotel's arch over the quay
+// (round C fix 1: the customs loading dock along the chamfer, placed in the chamfer's own frame: a metres along it from
+//  its west end (−37, 5), c metres in from its water edge)
+const S2 = Math.SQRT1_2;
+const CH = (a, c) => [+(-37 + S2 * (a + c)).toFixed(4), +(5 + S2 * (a - c)).toFixed(4)];
+const CH3 = (a, c, y) => { const [x, z] = CH(a, c); return [x, y, z]; };
+export const DOCK = { a0: 0, len: 14, c0: 0.05, w: 4.2, y: 1.2 };
 const KNEE = [
   // the Young & Jackfish's east wing on an arch over the quay (soffit 3.8): the quay runs under it into the circus
   // (round C: carried 2.5 m out over the river corner on iron brackets, and an oriel bay over Swimston's east footpath
@@ -335,13 +341,23 @@ const KNEE = [
   B(-23.8, -22.2, 0, 1.6, -4.8, -3.2, cover({ tag: 'statue-plinth', color: '#8b8579' })),
   B(-16.8, -15.6, 0, 1.2, -4.2, -2.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-26, -24.8, 0, 1.0, 1.0, 2.2, cover({ tag: 'bollards' })),
-  // the river walk west of the Customs House and the chamfer: crates, a bench
+  // the river walk west of the Customs House and the apron behind it: crates, a bench against the house
   B(-36.4, -35.2, 0, 1.0, -9, -7.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
-  B(-31.5, -29.5, 0, 1.0, 1.5, 2.3, cover({ tag: 'bench', color: '#7d6c5a' })),
+  B(-32.6, -30.6, 0, 1.0, -1.6, -0.8, cover({ tag: 'bench', color: '#7d6c5a' })),   // (round C fix 1: off the dock stair's foot)
   B(-29.6, -28.4, 0, 1.2, -1.6, -0.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),   // (the strip test: the knee's east–west line)
-  B(-33.2, -31.8, 0, 1.2, 6.6, 9, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
-  B(-28.2, -26.8, 0, 1.0, 10.4, 12.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-25, -23.6, 0, 1.5, 15.4, 16.8, cover({ tag: 'lamp-plinth', color: '#8b8579' })),
+  // ---- the CUSTOMS LOADING DOCK (round C fix 1; the review: the apron behind the Customs House was the emptiest floor
+  // on the stage, flat to the water and right under the enemy's Boathouse deck): a 1.2 m bluestone dock along the
+  // chamfer's water edge, 14 × 4.2 m, from the west corner to 7 m short of the enemy Boathouse; two stairs down its inner
+  // face to the apron (the rest of that face is a 1.2 m hop). It looks over the apron, the cab rank's north end and the
+  // circus ring at 9–10 o'clock, and answers the Boathouse deck from 1.2 m under it instead of 2.4 m. Its cover: a crate
+  // stack, the planter and the crates that stood on the apron, a crane's plinth.
+  OB(...CH(DOCK.a0 + DOCK.len / 2, DOCK.c0 + DOCK.w / 2), DOCK.w, DOCK.len, BOT, DOCK.y, 45, ground({ tag: 'customs-dock', color: '#6a717a', noPaint: [[-0.7071, 0, 0.7071]] })),
+  ...[3.0, 10.5].map((a) => R(CH3(a, DOCK.c0 + DOCK.w + 3, 0), CH3(a, DOCK.c0 + DOCK.w, DOCK.y), 2.5, stair({ tag: 'dock-stair', color: '#7c8088' }))),
+  OB(...CH(1.6, 1.6), 1.2, 1.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
+  OB(...CH(5.6, 1.6), 1.2, 2.4, DOCK.y, DOCK.y + 1.2, 45, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
+  OB(...CH(8.6, 2.0), 1.2, 1.2, DOCK.y, DOCK.y + 2.0, 45, { tag: 'crane-plinth', color: '#5b5048', pattern: PATTERN.metal, roof: true }),
+  OB(...CH(12.4, 2.0), 1.4, 2.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the river corner (Alpha's: x > −6, z < −20)
