@@ -146,7 +146,7 @@ app.on('browser-window-created', (_, win) => {
         // the known carrier, super jumps to the carrier, specials by the karp rules
         routes: KARP_BOT.stats.routes, picks: KARP_BOT.stats.picks, caughtNoticed: (SPECIAL_STATS.bySrc || {}).karp || { caught: 0, evaded: 0 }, shellDanger: (SPECIAL_STATS.bySrc || {}).karpshell || null, fuseDanger: (SPECIAL_STATS.bySrc || {}).karpfuse || null,
         kShots: { push: KARP_BOT.stats.push, dodge: KARP_BOT.stats.dodges, splash: KARP_BOT.stats.splashes, ink: KARP_BOT.stats.routeInk }, roles: Object.fromEntries(Object.entries(KARP_BOT.stats.roles).map(([k, v]) => [k, Math.round(v)])),
-        keeperT: +KARP_BOT.stats.keeperT.toFixed(0), icptT: +KARP_BOT.stats.icptT.toFixed(0), botJumps: KARP_BOT.stats.jumps, kSpecials: KARP_BOT.stats.specials, ai: KARP_AI.enabled,
+        fbAt: KARP_BOT.stats.fbAt || [], keeperT: +KARP_BOT.stats.keeperT.toFixed(0), icptT: +KARP_BOT.stats.icptT.toFixed(0), botJumps: KARP_BOT.stats.jumps, kSpecials: KARP_BOT.stats.specials, ai: KARP_AI.enabled,
       };
     })()`);
     const wallS = ((Date.now() - t0) / 1000).toFixed(0);
@@ -165,6 +165,7 @@ app.on('browser-window-created', (_, win) => {
     console.log(`   bots [${r.ai ? 'WP3' : 'WP1 minimal'} ${DIFF}]: route picks ${r.picks} shares ${JSON.stringify(r.routes)} | Carp Shots noticed: escaped ${r.caughtNoticed.evaded} caught ${r.caughtNoticed.caught} | carrier shots ${JSON.stringify(r.kShots)} | keepers on spot ${r.keeperT} s, interceptors on the carrier ${r.icptT} s | jumps to the carrier ${r.botJumps} | karp specials ${r.kSpecials}`);
     console.log(`   roles (bot-s): ${JSON.stringify(r.roles)} | shell danger ${JSON.stringify(r.shellDanger)} | fuse danger ${JSON.stringify(r.fuseDanger)}`);
     for (const e of r.clampLog) console.log('   clamp ' + JSON.stringify(e));
+    if (r.fbAt && r.fbAt.length) console.log('   carrierRetreatFallback at [x, y, z, level] ' + JSON.stringify(r.fbAt));
     for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
     for (const e of r.carrierStuck.eps) console.log('   carrier-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);

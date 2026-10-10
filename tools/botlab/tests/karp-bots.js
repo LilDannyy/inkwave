@@ -14,7 +14,11 @@
 //   I  the keeper holds the Gate when it opens, and the weir on the carrier's route when there are two
 //   J  interceptors don't track a hidden carrier through walls; a wake is noticed at ≤ 20 m with a line, not through a wall
 //   K  the knockback push through enemy ink (normal and hard; never easy)
-//   L  the danger areas and the hooks exist (no wall-hack: the wake rule is the carrier's only, the shell danger's threshold)
+//   L  our carrier's last fuse seconds: a danger to its teammates, never to itself
+//   M  the layout's route hints are the carrier's candidates; known foes on one move the pick
+//   N  a respawned bot super jumps to our carrier ≥ 35 m off; defenders stay home
+//   O  a fuse that can't make it: over the halfway line first
+//   P  walkers (Skitter, Waddle) go round the shell to a foe behind it
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const { BAZOOKARP: K, PLAYER } = await import('./src/config.js');
@@ -26,6 +30,7 @@
   const { KARP_BOT, KARP_AI, karpPlan, resetKarpStats } = await import('./src/game/botsKarp.js');
   const { SIGHT } = await import('./src/game/botSight.js');
   const { specialDangers } = await import('./src/game/botSpecials.js');
+  const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const THREE = await import('three');
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info, (k, v) => (typeof v === 'number' ? +v.toFixed(2) : v))) });
@@ -150,7 +155,7 @@
     for (let k = 0; k < 5; k++) {
       fresh();
       const gA = A[k % A.length];
-      gA.setWeapon(['shooter', 'roller', 'blaster', 'twins', 'charger'][k]); gA.setSub('bomb');   // (a plain sub: no kit dodge to carry it off its spot)
+      gA.setWeapon(['shooter', 'roller', 'blaster', 'twins', 'spinner'][k]); gA.setSub('bomb');   // (a plain sub: no kit dodge to carry it off its spot)
       wake(gA, 'normal');
       put(gA, 0, -9);
       restAt(Kp.R.pond.clone(), 500);
@@ -396,6 +401,66 @@
     const costs = RT ? RT.cands.map((r) => ({ n: r.name, len: +r.len.toFixed(1), cost: +P.routeCost(r, 0, c.pos, null).toFixed(1) })) : null;
     R('M debug', true, { costs, foes: P.foes[0].map((f) => [f.e.name, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1), f.seen]) });
     R('M the layout\'s route hints are the carrier\'s candidates (and no other); two foes known on one move the pick to the other, and the carrier walks it', names.length === 2 && names.includes('west') && names.includes('east') && picks[picks.length - 1] === 'east' && Math.max(...xs) > 3, { names, first, picks, maxX: Math.max(...xs), shares: KARP_BOT.stats.routes });
+  }
+
+  // ============================================================================ N. super jumps to the carrier
+  if (want('N')) {
+    fresh();
+    const c = A[0], j = A[1]; c.setWeapon('shooter'); put(c, 0, 18); step(1 / 60); grant(c);   // (the carrier still, 78 m from Alpha's pad)
+    wake(j, 'normal');
+    let jumpT = null; const off = on('superjump', (e) => { if (e.actor === j && e.phase === 'charge') jumpT = e.target; });
+    j.splat(null, 'test'); j.respawnTimer = 0.05;
+    step(3, () => { c.hp = PLAYER.hp; c.pos.set(0, floorY(0, 18), 18); });
+    off();
+    // …and none for a defender when the other team carries (it stays home)
+    fresh();
+    const c2 = B[0], d = A[2]; put(c2, 0, -10); step(1 / 60); grant(c2); wake(d, 'normal');
+    let jump2 = null; const off2 = on('superjump', (e) => { if (e.actor === d && e.phase === 'charge') jump2 = e.target; });
+    d.splat(null, 'test'); d.respawnTimer = 0.05;
+    step(3, () => { c2.hp = PLAYER.hp; c2.invuln = 99; c2.pos.set(0, 0, -10); });
+    off2();
+    R('N a respawned bot super jumps to our carrier ≥ 35 m away; a defender respawning while they carry stays home', jumpT === c && !jump2, { jumpedTo: jumpT ? jumpT.name : null, carrier: c.name, defenderJumped: !!jump2 });
+  }
+
+  // ============================================================================ O. the fuse: over the halfway line first
+  if (want('O')) {
+    fresh();
+    const c = A[0]; c.setWeapon('shooter'); wake(c, 'normal'); put(c, -2, -30); step(1 / 60); grant(c);
+    step(0.3, () => { c.hp = PLAYER.hp; });
+    Kp.fuse = 4;   // (4 s: its weir is ~58 m away — it can't make it; the halfway line (z ≈ 0) it can)
+    let half = false; const gz = [];
+    step(1.5, () => { c.hp = PLAYER.hp; Kp.fuse = Math.max(Kp.fuse, 3.5); if (c.bot.kHalf) half = true; if (c.bot.goal >= 0) gz.push(G.nav.nodes[c.bot.goal].z); });
+    const F = Kp.field, g = c.bot.goal >= 0 ? G.nav.nodes[c.bot.goal] : null;
+    R('O a fuse that can\'t reach the weir at this pace on its own half: the carrier heads 2 m past the halfway line first (a blast there drops it forward)', half && !!g && F.D[1][g.id] - F.D[0][g.id] >= 3 && g.z < 12, { kHalf: half, goal: g ? [g.x, g.z] : null, margin: g ? +(F.D[1][g.id] - F.D[0][g.id]).toFixed(1) : null });
+  }
+
+  // ============================================================================ P. walkers round the shell
+  if (want('P')) {
+    const res = {};
+    for (const id of ['seeker', 'waddle']) {
+      fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
+      const sc = Kp.shell.center(), r0 = Kp.shell.radius(), foe = B[0], th = A[1];
+      // (thrown short from 7 m in front of the shell: it lands before it, its foe straight behind it — the straight way is through)
+      th.setSub(id); put(th, sc.x, sc.z - 7); th.yaw = th.aimYaw = 0; th.aimPitch = -0.35; th.aimPoint.set(sc.x, 0, sc.z - 3.5);
+      put(foe, sc.x, sc.z + r0 + 2.4); step(0.05);
+      let inside = 0, contact = 0, minFoe = 99, seen = 0;
+      const items = () => (id === 'waddle' ? SUB_KITS.waddle?.items || [] : G.subs.items.filter((it) => it.kind === 'seeker')).filter((it) => it.owner === th && it.state !== 'dead');
+      for (let i = 0; i < 360; i++) {
+        th.intent.sub = i < 8; th.ink = PLAYER.inkMax; th.aimYaw = 0; th.aimPitch = -0.35; th.aimPoint.set(sc.x, 0, sc.z - 3.5);
+        foe.pos.set(sc.x, floorY(sc.x, sc.z + r0 + 2.4), sc.z + r0 + 2.4); foe.vel.set(0, 0, 0); foe.hp = PLAYER.hp;
+        dbg.step(1000 / 60);
+        for (const it of items()) {
+          if (it.state === 'fly') continue;
+          seen++;
+          const d = Math.hypot(it.pos.x - sc.x, it.pos.z - sc.z);
+          if (d < r0) inside++; else if (d < r0 + 0.3) contact++;
+          minFoe = Math.min(minFoe, Math.hypot(it.pos.x - foe.pos.x, it.pos.z - foe.pos.z));
+        }
+      }
+      th.intent.sub = false;
+      res[id] = { inside, contactFrames: contact, walkFrames: seen, closestToFoe: +minFoe.toFixed(2) };
+    }
+    R('P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, hardly pressed against it) and reach the foe', Object.values(res).every((r) => r.walkFrames > 20 && r.inside === 0 && r.contactFrames < 12 && r.closestToFoe < 1.6), res);
   }
   } catch (e) { R('HARNESS ' + e.message, false, String(e.stack).slice(0, 600)); }
   offs.forEach((f) => f());

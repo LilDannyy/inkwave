@@ -148,6 +148,16 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
 - Bot matches: `MAP=<id> tools/botlab/run.sh tools/botlab/karp-match.cjs` (an all-bot match stepped at 60 Hz: SPEC
   §10.3's numbers, a `RESULT karp …` line; env `DUR`, `OTMAX`, `DIFF`, `HUMAN=still|carry`, `KARP_DEF`, `OUT=file.json`),
   and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
+  [b5-karp-bots] `KARP_AI=0` plays WP1's minimal bots (the A/B baseline); the report adds the bots' route shares, the Carp
+  Shots they noticed (escaped / caught), the carrier's shots by kind, roles, keepers on their spot and holds (bots
+  standing on purpose are not "stuck"). The shared balance pass: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (the Mac
+  mini template: `STAGES`, `HARD`, `N`).
+- The bots (SPEC §8, src/game/botsKarp.js): `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-bots.js
+  tools/botlab/run.sh tools/botlab/page.cjs` — WP3's scenarios: breakers out of the burst at ≥ 70 % (60 % hard), melee
+  breakers' ring, no touch damage in 20 bursts, the grabber's 3.0–3.2 m wait and grab, an autopilot carrier's 3 carries,
+  kit-weapon carriers fire nothing of their own, the ×3 fallback, out of a Big Burst ≥ 16 of 20, the keeper at the Gate
+  and the weir on the route, no wall-hack and the 20 m wake, the knockback push, the layout's route hints
+  (`PAGE_ARGS='only=A,…'`).
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
 
 Stage set pieces:

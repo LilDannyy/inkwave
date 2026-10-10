@@ -1100,10 +1100,10 @@ export function shellRound(p, yaw, dist) {
   const c = S.center(), R = S.radius() + 0.5;
   if (Math.abs(p.y + 0.2 - c.y) > R + 0.6) return yaw;
   const cx = c.x - p.x, cz = c.z - p.z, cl = Math.hypot(cx, cz);
-  if (cl <= R) return Math.atan2(-cx, -cz);   // (inside its reach: straight out)
   const ux = Math.sin(yaw), uz = Math.cos(yaw), along = cx * ux + cz * uz;
-  if (along <= 0 || along > dist + R || Math.abs(cx * uz - cz * ux) >= R) return yaw;
-  const th = Math.atan2(cx, cz), al = Math.asin(Math.min(1, R / cl));
+  if (along <= 0 || along > dist + R || Math.abs(cx * uz - cz * ux) >= R) return yaw;   // (the way is clear)
+  // (close to it already: along its side, whichever way is nearer the foe; else past the nearer tangent)
+  const th = Math.atan2(cx, cz), al = cl <= R ? Math.PI / 2 : Math.asin(Math.min(1, R / cl));
   const a1 = th + al, a2 = th - al, df = (q) => Math.abs(Math.atan2(Math.sin(q - yaw), Math.cos(q - yaw)));
   return df(a1) < df(a2) ? a1 : a2;
 }

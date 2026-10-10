@@ -56,8 +56,8 @@ export const KARP_AI = {
     hard:   { id: 'hard',   full: false, lob: true,  lead: true,  push: 2, repick: 1.0, danger: 0.6,  icpt: 2, grab: 0, sides: true, threat: true },
   },
 };
-export const KARP_BOT = { stats: { carrierShots: 0, retreatFallback: 0, grabs: 0, breakT: 0, push: 0, dodges: 0, splashes: 0, routeInk: 0, picks: 0, routes: {}, keeperT: 0, icptT: 0, jumps: 0, specials: 0, roles: {} } };
-export function resetKarpStats() { const S = KARP_BOT.stats; for (const k in S) S[k] = typeof S[k] === 'object' ? {} : 0; }
+export const KARP_BOT = { stats: { fbAt: [], carrierShots: 0, retreatFallback: 0, grabs: 0, breakT: 0, push: 0, dodges: 0, splashes: 0, routeInk: 0, picks: 0, routes: {}, keeperT: 0, icptT: 0, jumps: 0, specials: 0, roles: {} } };
+export function resetKarpStats() { const S = KARP_BOT.stats; for (const k in S) S[k] = Array.isArray(S[k]) ? [] : typeof S[k] === 'object' ? {} : 0; }
 
 const V3 = THREE.Vector3;
 const _v = new V3(), _v2 = new V3(), _v3 = new V3(), _sc = new V3(), _e = new V3(), _q = new V3();
@@ -710,6 +710,10 @@ export function karpCarrierAct(b, P, { dt, it, move }) {
     return r;
   }
   if (S.back > 0) { move.set(S.backX, 0, S.backZ); it.squid = false; }
+  // (just picked up, in our ink — the burst's — with foes round the shell: under the ink and away first, hidden, at
+  // swim speed; the escorts take the fight)
+  const justGot = Kp.clock - (C.since ?? -9) < 1.8 && b.groundSeen === 1 && S.back <= 0;
+  if (justGot) { if (charging) it.fire = false; it.squid = b._pathRemaining() > 2; return null; }
   // 4. a known foe 6–22 m out: charge (full unless another is close, then a Burst) and lob it at where it is (easy: only
   // with a line on it, always full; hard: leads a moving one)
   const tgt = foes.find((f) => f.d >= 6 && f.d < 22 && (f.seen || df.lob));
@@ -945,7 +949,7 @@ export function karpPathFallback(b, level = 1) {
   if (!P) return null;
   const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask, Z = P.zoneN[a.team], avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
   for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(level >= 2 && Z[i])) || sm[i] ? 1 : 0;
-  if (!(G.time - (b.kFbT ?? -9) < 3)) KARP_BOT.stats.retreatFallback++;
+  if (!(G.time - (b.kFbT ?? -9) < 3)) { KARP_BOT.stats.retreatFallback++; const L = Array.isArray(KARP_BOT.stats.fbAt) ? KARP_BOT.stats.fbAt : (KARP_BOT.stats.fbAt = []); if (L.length < 6) L.push([+a.pos.x.toFixed(1), +a.pos.y.toFixed(1), +a.pos.z.toFixed(1), level]); }   // (where: a stage builder's flag)
   b.kFbT = G.time;
   let cost = b.kArgs ? b.kArgs.cost : b.sp.cost();
   if (level >= 2) { const c = b.kFbC && b.kFbC.length === N ? b.kFbC : (b.kFbC = new Float32Array(N)); for (let i = 0; i < N; i++) c[i] = (cost ? cost[i] : 0) + (Z[i] ? 6 : 0); cost = c; }
