@@ -384,6 +384,13 @@ function linkNear0(b, P, q, tp) {
   for (const t of T) for (let k = 0; k < 8; k++) { const th = (k * Math.PI) / 4 + 0.3, rr = 3.4 + (k % 2) * 0.7; const at = ok(t.x + Math.cos(th) * rr, t.z + Math.sin(th) * rr); if (at) return at; }
   return null;
 }
+// [b5-int3] how far this bot's own shot sets a bobber off (its weapon's reach; a melee kit's swing window), or 0 when that
+// is inside the 4.5 m a fight's pair keeps clear of its swing (it could never shoot its own pair)
+function shotReach(b) {
+  const w = b.a.weapon, melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee);
+  const hi = melee && b._meleeWindow ? b._meleeWindow(w, { ground: false, state: 'still' })[1] : weaponRange(w) * 0.95;
+  return hi >= (melee ? 5.0 : 4.0) ? hi : 0;
+}
 // [b5-int3] (bot.fight) a link that runs one of our team's chains out onto foe t standing just outside its reach: where t
 // will be when it floats (~0.9 s), a chain whose nearest link is within R(N) − 0.3 + 4.4 m of that but not over it; the
 // new link up to 4.4 m from that link toward t (it tethers: linkRange 5, a clear line), landing with t inside the grown
@@ -406,7 +413,7 @@ function extendSpot(b, t) {
     for (const k of [Math.min(4.4, dl - 0.4), Math.min(4.4, dl - 1.0), Math.max(dl - R1, 1.0)]) {
       if (k < 1.0 || dl - k > R1 || ++tries > 3) continue;
       const x = L.spot.x + ux * k, z = L.spot.z + uz * k;
-      if (Math.hypot(x - a.pos.x, z - a.pos.z) < minD) continue;
+      if (Math.hypot(x - a.pos.x, z - a.pos.z) < minD || Math.hypot(x - a.pos.x, z - a.pos.z) > shotReach(b) - 0.5) continue;
       const at = lobBudget(2, () => okSpot(a, x, z, tp));
       if (at && Math.abs(at.y + SB().floatH - L.spot.y) < 1.6 && G.physics.los(L.spot, _v.set(at.x, at.y + SB().floatH, at.z))) return at;
     }
@@ -523,12 +530,15 @@ export const botKit = {
     // [b5-int3] a link run out onto it: the foe stands just outside one of our team's chains (bots step round an armed
     // web: the matches had foes within 3 m of a chain's reach 15–20× as long as in it) — one more link between them grows
     // that chain and its reach over the foe; shot as it floats (snap)
-    if (t && t.alive && dist >= 3.5 && dist <= 12 && a.ink >= a.sub.inkCost + 4 && G.time >= (b._bobExtT || 0)) {
+    // ([b5-int3] only a bot that can then shoot it: the spot within its own reach at a bobber — a melee kit's swing window
+    // is under the 4.5 m it keeps clear, so its pairs went off by nobody's hand: snapIn 9, no bobber in its reach 9)
+    const reach = shotReach(b);
+    if (t && t.alive && reach && dist >= 3.5 && dist <= 12 && a.ink >= a.sub.inkCost + 4 && G.time >= (b._bobExtT || 0)) {
       b._bobExtT = G.time + 0.3;
       const S = extendSpot(b, t);
       if (S) { b._bobberAt = S; b._bobSrc = 'ext'; b._bobSnap = true; b.bombCd = 2.5 + Math.random(); BOBBER_BOT.exts = (BOBBER_BOT.exts || 0) + 1; return true; }
     }
-    if (t && t.alive && dist >= 5 && dist <= 11 && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025 && mine(a).length < 12
+    if (t && t.alive && reach && dist >= 5 && dist <= Math.min(11, reach - 0.5) && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025 && mine(a).length < 12
       && !items.some((o) => o.team === a.team && o.state !== 'dead' && Math.hypot(o.spot.x - t.pos.x, o.spot.z - t.pos.z) < 3.5)) {
       const k = 0.8, px = t.pos.x + t.vel.x * k, pz = t.pos.z + t.vel.z * k, dx = px - a.pos.x, dz = pz - a.pos.z, l = Math.hypot(dx, dz) || 1;
       // (a metre short of it, toward us, 1.3 m either side of the line: both within a 2-chain's reach of it — R 2.2 − 0.3)
@@ -599,7 +609,9 @@ function wSpec(w) {
   let o = _ws.get(w);
   if (!o) {
     const K = MAIN_KITS[w.kind], sr = Math.max(big(w.splashRadius), big(w.burstRadius), big(w.waveWidth), big(w.impactRadius), K ? 1.4 : 0);
-    o = { sr, cone: Math.max(big(w.fanTap), big(w.fanRing), big(w.spreadDeg), big(w.spreadGround), big(w.swipeSpreadDeg) / 2), gap: big(w.fanGap), bursts: !!(w.burstRadius || w.fuseFull || w.kind === 'blaster') };
+    // ([b5-int3] a kit weapon's shot with a splash — the Mitts' fist — goes off wherever a miss ends too: its whole reach,
+    // not the foe's distance — the matches' 'blast:mitts' strays were fists past their target)
+    o = { sr, cone: Math.max(big(w.fanTap), big(w.fanRing), big(w.spreadDeg), big(w.spreadGround), big(w.swipeSpreadDeg) / 2), gap: big(w.fanGap), bursts: !!(w.burstRadius || w.fuseFull || w.kind === 'blaster' || (K && w.splashRadius)) };
     _ws.set(w, o);
   }
   return o;
@@ -950,9 +962,12 @@ export function botAct(b, dt, it, move, busy) {
 }
 // a foe in a bobber's reach R (R(N) − 0.3) for a shot now, by where it will be when the blast gets there (about 0.35 s:
 // the shot's flight and the hops): in it and not on its way out fast, or walking into it from just outside
+// ([b5-int3] where it will be when the blast reaches it: the shot's flight and the hops — 0.35 s — and comfortably inside
+// then, R − 0.35: a foe at the rim walking out was most of the aimed shots that blew a chain on nobody — the matches had
+// 'ready → fired 0' and aimed triggers wasted; a foe that knows of the web steps out of it within ~0.5 s)
 function inReach(e, o, d, R) {
   const px = e.x + e.vx * 0.35, pz = e.z + e.vz * 0.35, dp = Math.hypot(px - o.spot.x, pz - o.spot.z);
-  return (d < R && dp < R + 0.3) || (dp < R - 0.2 && d < R + 1.2);
+  return (d < R && dp < R - 0.35) || (dp < R - 0.5 && d < R + 1.2);
 }
 // [b5-int3] the foes a bot can set a chain off on: those it sees (where they are), and those its team sees or saw a moment
 // ago (teamKnown, ≤ 0.35 s: where they were seen, run on along their heading for the age) — a teammate's sighting is what
@@ -1018,11 +1033,11 @@ function scan(b) {
     seen.add(ch);
     if (b._bobSkip === ch && G.time < (b._bobSkipT || 0)) continue;
     const R = sizeOf(ch.n).R - 0.3;
-    let foeIn = false, tIn = false, close = null, cd = Infinity;
+    let foeIn = false, tIn = false, close = null, cd = Infinity, foeNear = null;
     for (const e of foes) for (const o of ch.items) {
       if (o.state !== 'live' || Math.abs(e.y + 0.7 - o.spot.y) >= 1.6) continue;
       const d = Math.hypot(e.x - o.spot.x, e.z - o.spot.z);
-      if (inReach(e, o, d, R)) { foeIn = true; if (e.e === better) tIn = true; break; }
+      if (inReach(e, o, d, R)) { foeIn = true; foeNear = e; if (e.e === better) tIn = true; break; }
       if (d < R + 3.2 && d < cd) { cd = d; close = e; }
     }
     // [b5-int3] one it threw at a foe a moment ago (a fight's pair, a link run out onto a foe by a chain, a lure): shot the
@@ -1035,7 +1050,10 @@ function scan(b) {
     if (snap && foeIn) X.snapIn = (X.snapIn || 0) + 1;
     if (better && !(tIn && (ch.n >= 2 || snap))) { X.better++; continue; }
     // a bobber of it in our reach with a line: the nearest first (rays from the shared budget)
-    const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez) })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => x.d - y.d);
+    // ([b5-int3] the one nearest the foe first — its blast reaches the foe without waiting on the hops down the chain —
+    // then by distance from here)
+    const fo = foeIn || ready ? (foeIn ? foeNear : close) : null;
+    const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez), f: fo ? Math.hypot(o.spot.x - fo.x, o.spot.z - fo.z) : 0 })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => (x.f - y.f) * 2 + (x.d - y.d) * 0.25);
     // (one sight line a chain a scan: its nearest bobber in reach — the biggest target — unless that one had no line a
     // moment ago, then the next)
     const c = cand.find((q) => !(b._bobNoLos === q.o && G.time - (b._bobNoLosT || 0) < 0.4)) || cand[0];
