@@ -38,6 +38,16 @@
 // dash's flatter arc reached from further off). (A climb's height is the wall's: the dashes off one aren't judged.)
 // Pass: no perch leak, no out-of-bounds leak, no kid stuck on a roof where no plain walk / hop gets stuck, no first
 // landing over the height bar.
+// [b5-int3] the moves that reach furthest (the sub-dash review's four points), on top of the above:
+//   swim jump + air dash  from own ink at swim speed (11.8 m/s), squid held until the press, presses at frames 18 / 30 /
+//                         38 / 46 / 56; its height judged against a plain swim jump from the same start and heading (as a
+//                         running jump's is against the plain running hop). The kid's paint is cleared before every swim
+//                         move and only a lane under its start inked, so a held squid can't climb a wall the last move inked
+//   late presses          an air dash late in a long fall: the running jump pressed at frames 36 / 42 / 48 / 54 / 60 / 66
+//                         while the plain running hop from there is still in the air then (off a ledge: the vy clamp
+//                         arrests a fast fall, so the late press goes furthest)
+//   climb dash at the top toward the wall: just under its edge, the dash straight into the wall (over its top)
+// ('swim=0' leaves the swim kinds out; 'late=0' the late presses.)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const THREE = await import('three'); const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -129,17 +139,54 @@
     if (!kid.grounded) return null;
     // (a running start for the hop and the jumps: already at run speed along d — a hop from a standstill would make the
     // baseline look shorter than what a player does)
-    if (kind !== 'g' && kind !== 'w') kid.vel.set(d[0] * PLAYER.runSpeed, 0, d[1] * PLAYER.runSpeed);
+    const swim = typeof kind === 'string' && kind[0] === 's';
+    if (swim) {
+      // ([b5-int3] a swim jump: the kid's paint cleared first — a held squid climbs any wall it touches in its own ink, and
+      // the last move's inked walls polluted the review's swim copy — then a lane of own ink under its start, the kid a
+      // squid in it already at swim speed along d)
+      G.paint.clear?.();
+      for (const k of [-1.2, 0, 1.2]) G.paint.splat(V(n.x + d[0] * k, n.y + 0.1, n.z + d[1] * k), 1.0, kid.team, { instant: true, seed: 0.5 });
+      kid.form = 'squid'; it.squid = true;
+      for (let i = 0; i < 2; i++) { G.time += DT; kid.update(DT); }
+      kid.vel.set(d[0] * PLAYER.swimSpeed, 0, d[1] * PLAYER.swimSpeed);
+    }
+    else if (kind !== 'g' && kind !== 'w') kid.vel.set(d[0] * PLAYER.runSpeed, 0, d[1] * PLAYER.runSpeed);
     const st = ticker(d);
     if (kind === 'g') { st.tick({ sub: true, move: true }); for (let k = 0; k < fr(16) && st.ok; k++) st.tick({ move: false }); }
     else if (kind === 'w') { for (let k = 0; k < fr(16) && st.ok; k++) st.tick({ move: true }); }
     else if (kind === 'h') { for (let k = 0; k < fr(54) && st.ok; k++) { st.tick({ move: true, jump: k < 2 }); if (k > fr(6) && kid.grounded && !onRoof()) break; } }
+    else if (swim) {   // [b5-int3] the swim jump (squid held until the press, then the stick only until it lands); 'sj': no press
+      const f = kind === 'sj' ? Infinity : fr(+kind.slice(1));
+      for (let k = 0; k < fr(80) && st.ok; k++) {
+        const press = k === f;
+        st.tick({ move: true, jump: k < 2, squid: k < f && !press, sub: press });
+        if (k > fr(6) && kid.grounded && !onRoof() && (kind === 'sj' || k > f) && kid.weaponRunner.dashT <= 0) break;
+      }
+    }
     else {   // a running jump, the air dash the same way (the furthest it goes); the stick held only until it lands (never a
              // walk on up a ramp or a stair after it: what's measured is where the dash put it)
       const f = fr(kind); for (let k = 0; k <= f && st.ok; k++) st.tick({ move: true, jump: k < 2, sub: k === f });
       for (let k = 0; k < fr(30) && st.ok && (!kid.grounded || kid.weaponRunner.dashT > 0); k++) st.tick({ move: true });
     }
     return settle(st);
+  };
+  // [b5-int3] how many 60 Hz frames the plain running hop from n along d stays in the air (the late presses go only while it's
+  // still falling), once per start and heading
+  const airF = new Map();
+  const airFrames = (n, d) => {
+    const key = n.id * 8 + DIRS.findIndex((q) => q[0] === d[0] && q[1] === d[1]);
+    if (airF.has(key)) return airF.get(key);
+    put(n);
+    let k = 0;
+    if (kid.grounded) {
+      kid.vel.set(d[0] * PLAYER.runSpeed, 0, d[1] * PLAYER.runSpeed);
+      const st = ticker(d);
+      for (; k < fr(120) && st.ok; k++) { st.tick({ move: true, jump: k < 2 }); if (k > fr(6) && kid.grounded) break; }
+      LH = null;
+    }
+    const f = Math.round(k * 60 * DT);
+    airF.set(key, f);
+    return f;
   };
   // ---- off a wall: an inkable wall ≥ 1.6 m tall within 1.2 m of n in heading d → its face, normal and top height
   const H = new Hit(), H2 = new Hit(), DIR = V(0, 0, 0), O = V(0, 0, 0);
@@ -184,7 +231,9 @@
   const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, judgedUp: 0, hopAsHigh: 0, hopAsHighNear: 0, onFoot: 0, roof: 0, roofOnFoot: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
   const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], roofsOnFoot = [], roofReach = new Map(), perches = [], perchOk = new Map();
   const KINDS = ['g', 4, 18, 30];
-  const label = (kind) => (typeof kind === 'string' && kind.startsWith('c') ? kind.slice(2) : kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`);
+  const SWIM = args.swim !== '0', LATE = args.late !== '0';
+  const SWIM_KINDS = ['s18', 's30', 's38', 's46', 's56'], LATE_KINDS = [36, 42, 48, 54, 60, 66];   // [b5-int3]
+  const label = (kind) => (typeof kind === 'string' && kind.startsWith('c') ? kind.slice(2) : kind === 'g' ? 'ground dash' : kind === 'sj' ? 'plain swim jump' : typeof kind === 'string' && kind.startsWith('s') ? `swim jump, air dash at frame ${kind.slice(1)}` : `air dash at frame ${kind}`);
   // perch pieces: perch blocks a kid walks between (touching within 0.15 m, tops within a step, stepUp, of each other: a
   // reach stacker's boom is a stair of 0.3 m steps, kelpline/props.js) — a piece any of whose blocks a plain walk / hop
   // gets onto is reached on foot, all of it
@@ -236,7 +285,7 @@
     if (upL > BAR) {
       // the same running hop from the same start and heading, or a plain hop / walk from any spot reached on foot near the
       // block it first came down on, coming down on that block as high: then it's a top a jump reaches, not the dash's
-      const h = move(n, d, 'h');
+      const h = move(n, d, typeof kind === 'string' && kind[0] === 's' && kind[1] !== 'j' ? 'sj' : 'h');   // ([b5-int3] a swim jump's: the plain swim jump)
       if (h && h.landY != null && h.landY >= r.landY - 0.02) {
         count.hopAsHigh++;
         if (!count.hopAsHighAt) count.hopAsHighAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), hopLandedAt: r2(h.landY), startY: r2(r.y0) };
@@ -344,6 +393,12 @@
     if (nStart % (+args.every || 500) === 0 && prog.length < 40) prog.push({ starts: nStart, s: Math.round((performance.now() - t0) / 1000), cues: G.cues?.slots?.size ?? null, tracks: G.cues?.tracks?.size ?? null, stats: Object.keys(G.audio?.voices || {}).length || null, scene: G.scene?.children?.length, growing: G.paint.growing?.length ?? null, heapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : null, gtime: Math.round(G.time) });
     for (const d of DIRS) {
       for (const kind of KINDS) { count.sims++; const t1 = performance.now(), rr = move(n, d, kind), t2 = performance.now(); tm.dash += t2 - t1; classify(n, d, kind, rr, null); tm.judge += performance.now() - t2; }
+      // [b5-int3] the swim jump + air dash; late presses while the plain running hop is still falling
+      if (SWIM) for (const kind of SWIM_KINDS) { count.sims++; count.swimSims = (count.swimSims || 0) + 1; const t1 = performance.now(), rr = move(n, d, kind), t2 = performance.now(); tm.dash += t2 - t1; classify(n, d, kind, rr, null); tm.judge += performance.now() - t2; }
+      if (LATE) {
+        const hf = airFrames(n, d);
+        for (const kind of LATE_KINDS) { if (fr(kind) >= hf) break; count.sims++; count.lateSims = (count.lateSims || 0) + 1; const t1 = performance.now(), rr = move(n, d, kind), t2 = performance.now(); tm.dash += t2 - t1; classify(n, d, kind, rr, null); tm.judge += performance.now() - t2; }
+      }
       if (!CLIMB) continue;
       const w = wallAt(n, d);
       if (!w) continue;
@@ -354,7 +409,7 @@
       const plain = () => (plainR === undefined ? (plainR = climbMove(n, d, w, 'top', null)) : plainR);
       climbs: for (const at of ['mid', 'top']) {
         if (at === 'mid' && w.top - n.y < 2.2) continue;   // (a low wall: its top is its middle)
-        for (const [nm, q] of [['along', t], ['along back', [-t[0], -t[1]]], ['off, along', nrm(t[0] + wn[0], t[1] + wn[1])], ['off, along back', nrm(-t[0] + wn[0], -t[1] + wn[1])], ['straight off', wn]]) {
+        for (const [nm, q] of [['along', t], ['along back', [-t[0], -t[1]]], ['off, along', nrm(t[0] + wn[0], t[1] + wn[1])], ['off, along back', nrm(-t[0] + wn[0], -t[1] + wn[1])], ['straight off', wn], ...(at === 'top' ? [['toward the wall, over its top', [-wn[0], -wn[1]]]] : [])]) {   // ([b5-int3] toward the top)
           count.sims++; count.climbSims++;
           const t1 = performance.now(), r = climbMove(n, d, w, at, q); tm.climb += performance.now() - t1;
           if (r && r.noClimb) { count.noClimb++; break climbs; }   // (no climb here: a never-inkable wall — a kid can't either)
@@ -397,7 +452,7 @@
   const roofSeen = new Map(); for (const o of roofs) { const k = Math.round(o.roofAt[0]) + ',' + Math.round(o.roofAt[2]); if (!roofSeen.has(k)) roofSeen.set(k, o); }
   const part = EVERY > 1 ? `every ${EVERY}th edge node from the ${OFF + 1}${['st', 'nd', 'rd'][OFF] || 'th'}` : 'every edge node';
   const perchBlocks = [...new Set(perches.map((q) => q.block))].map((b) => { const Bk = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, tag: bTag(b), top: [r1(Bk.center.x), r2(Bk.center.y + Bk.half.y), r1(Bk.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; });
-  R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02; ${count.judgedUp} landings judged)`,
+  R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${LATE ? ', late in a long fall' : ''}${SWIM ? ', a swim jump' : ''}${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02; ${count.judgedUp} landings judged)`,
     perches.length === 0 && oob.length === 0 && onRoofs.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), stillOnARoofReachedOnFoot: roofsOnFoot, perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
   R(`${g.mapDef?.id}: listed for the lead (SPEC D10.6: newly reachable spots are listed, not judged) — tops the nav graph doesn't reach that a dash ends on and no plain walk / hop from within 5 m (or the same climb) does: ${realLeaks.length}; with their block, its tag, the first landing's height over the start (judged in the line above) and where it came to rest (it may run on up a ramp or a stair after landing)`, true,
     { tops: realLeaks.slice(0, 24), topsAKidHopsOnto: hopOn.length });
