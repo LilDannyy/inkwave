@@ -461,8 +461,40 @@ export const SUBS = {
     radius: 2.4, damageMax: 100, damageMin: 30, paintRadius: 2.2,                 // the burst beside you at the end
     contact: 0.3, hitFuse: 0.6, hitRadius: 3.1, hitDamageMax: 180, hitDamageMin: 35, hitPaintRadius: 2.7,   // hit a foe in flight: Splat Bomb
   },
+  // ---- [b5-subscaf] batch 5's four kit subs (tools/botlab/jobs/batch5/subs/SPEC.md §A–D, DECISIONS.md). Each kind lives in
+  // src/game/kits/<kind>.js, a stub until its builder lands it (using one says "Can't use"). The numbers are the spec's
+  // tables (A2, B2, C2, D2); each builder owns its entry from here. pad*: metres added to G.level.spawnBarrier.
+  glide: {
+    id: 'glide', name: 'Glide Bomb', kind: 'glide', blurb: 'Slides straight along the floor, inking a lane and bouncing off walls, then blows when its fuse runs out. Hold to cook it: a shorter slide and a bigger blast.',
+    inkCost: 65, speed0: 10, decel: 3.0, minSpeed: 1.2, fuse: 2.4, cookGrace: 0.15, cookMax: 1.8, overHold: 1.0,
+    radius: 2.2, radiusMax: 3.2, damageMax: 180, damageMin: 35, paintRadius: 1.8, paintRadiusMax: 2.8, devDamage: 40, devDamageMax: 60,   // uncooked → full cook (linear in cook / cookMax)
+    trailEvery: 0.35, trailRadius: 0.55, bodyRadius: 0.28, hitR: 0.22, hitH: 0.24, hp: 40,
+    restitution: 0.8, scrape: 0.92, playerE: 0.5, playerKeep: 0.6, step: 1 / 60,
+  },
+  sentry: {
+    id: 'sentry', name: 'Scrap Sentry', kind: 'sentry', blurb: 'A turret built from junk. Set it down and for 15 s it shoots foes it can see with a little ink gun, until it\'s shot down. One at a time.',
+    inkCost: 65, placed: true, max: 1, spacing: 4.0, padPlace: 4, padTarget: 1,
+    hp: 120, setup: 0.6, life: 15, range: 11, lock: 0.4, burst: 3, burstGap: 0.11, burstPause: 0.5, damage: 22,
+    speed: 30, straight: 0.12, spread: 4.5, turnYaw: 4, turnPitch: 3, fireCone: 6, eyeH: 0.55, muzzleH: 0.5, hitR: 0.32, hitH: 0.72,
+  },
+  bobber: {
+    id: 'bobber', name: 'Chain Bobber', kind: 'bobber', blurb: 'A floating bomb that tethers to your others close by. Your team\'s shots set the chain off; foes\' shots disarm it. The longer the chain, the bigger every blast. Throw as many as you like.',
+    inkCost: 40, throwSpeed: 12, floatH: 1.0, wallOut: 0.45, floatMin: 0.6, floatMax: 2.2, deployTime: 0.35,
+    linkRange: 5.0, linkSnap: 5.5, maxTethers: 3, hopDelay: 0.07, hp: 25, life: 30, hitR: 0.2, maxPerPlayer: 24, padNoDeploy: 2,
+    // the blast by chain size N (index N − 1; every bobber of a chain blows at that size): C2 for 1–4; DECISIONS.md 20 grows
+    // the radius on to 8 links (+0.2 m each, 3.8 m) with the centre damage held at 180, and stops there. Past an array's end
+    // its last value holds (DECISIONS.md doesn't give min damage, paint or device damage past 4: the bobber builder's call)
+    chainRadius: [1.8, 2.2, 2.6, 3.0, 3.2, 3.4, 3.6, 3.8], chainDamageMax: [60, 95, 140, 180], chainDamageMin: [25, 30, 35, 35],
+    chainPaint: [1.3, 1.7, 2.1, 2.5], chainDevDamage: [25, 35, 45, 60],
+  },
+  dash: {
+    id: 'dash', name: 'Dash Pellet', kind: 'dash', blurb: 'Pops under your feet and blasts you a few metres the way you\'re steering, on the ground or in the air. Its blast hits anyone you leave behind.',
+    inkCost: 55, dashDist: 4.5, airDashDist: 3.5, dashTime: 0.22, endSpeed: 7, airVyMin: -1.5, airVyMax: 1.0, airGravMul: 0.3,
+    radius: 2.2, damageMax: 50, damageMin: 25, paintRadius: 2.0, devDamage: 25, substep: 0.2, streakEvery: 0.6, streakRadius: 0.45, airDashes: 1,
+  },
 };
-export const SUB_ORDER = ['bomb', 'sticky', 'burst', 'shaker', 'seeker', 'waddle', 'torpedo', 'tracer', 'boomerang', 'scan', 'curtain', 'sprinkler', 'mine', 'beacon', 'mist'];
+export const SUB_ORDER = ['bomb', 'sticky', 'burst', 'shaker', 'seeker', 'waddle', 'torpedo', 'tracer', 'boomerang', 'scan', 'curtain', 'sprinkler', 'mine', 'beacon', 'mist',
+  'glide', 'sentry', 'bobber', 'dash'];   // [b5-subscaf] (online records index into this: it only ever grows at the end)
 export const SUB = SUBS; // older code reads SUB.bomb
 // ---- [sub-view] Sub weapons' world models: how many times bigger than before each one is drawn in the world — what
 // flies, lands, sticks, rolls, walks, hovers or stands there (the Bomb Barrage's Splat Bombs too). VISUAL ONLY: every
@@ -474,6 +506,7 @@ export const SUB = SUBS; // older code reads SUB.bomb
 export const SUB_VIEW_SCALE = {
   bomb: 2, sticky: 2, burst: 2, seeker: 2, scan: 2, curtain: 1.5, sprinkler: 2, mine: 2, beacon: 2, mist: 2,
   shaker: 2, waddle: 2, torpedo: 2, tracer: 2, boomerang: 1.5,
+  glide: 1.6, sentry: 1.5, bobber: 1.5, dash: 2,   // [b5-subscaf] (SPEC §F)
 };
 export const subViewScale = (kind) => SUB_VIEW_SCALE[kind] ?? 1;
 
