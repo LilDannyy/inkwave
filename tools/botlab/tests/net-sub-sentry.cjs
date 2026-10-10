@@ -77,20 +77,25 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   // screen builds the ghost where A's stands, with A's hp, instead of an invisible gun shooting it
   if (LATE) {
     await A.js(`(async () => { const { SUB_KITS } = await import('./src/game/kits/registry.js'); const it = SUB_KITS.sentry.items.find((x) => x.gid === ${sA.gid}); it.hp = 70; return 1; })()`);
+    // (a joiner's room and stage take longer than a sentry's 15 s life: A's sentry and B's ghost of it are kept young while
+    // C joins — its life isn't what's tested here)
+    const keep = (c) => c.js(`(async () => { const { SUB_KITS } = await import('./src/game/kits/registry.js'); window.__young = setInterval(() => { for (const x of SUB_KITS.sentry.items) if (x.gid === ${sA.gid}) { x.t = Math.min(x.t, 4); x.age = Math.min(x.age, 4); } }, 100); return 1; })()`);
+    await keep(A); await keep(B);
     const C = await open(2, 'autopilot');
     await C.js(`__G.net.join(${JSON.stringify(code)}, 'Latey').then(() => 1)`);
     await C.until(`__G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing' && __G.netm && !__G.netm.inkWait`, 90000, 250);
     const tJoin = Date.now();
-    const got = await C.until(`import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.items.some((x) => x.gid === ${sA.gid} && x.ghost && x.state !== 'dead'))`, 12000, 100).then(() => true).catch(() => false);
+    const got = await C.until(`import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.items.some((x) => x.gid === ${sA.gid} && x.ghost && x.state !== 'dead'))`, 20000, 100).then(() => true).catch(() => false);
     const tGot = Date.now() - tJoin;
     await wait(4500);   // (the 4 s restatement: its hp)
     const gC = got ? JSON.parse(await C.js(ghostOn(C, sA.gid))) : null;
     const hpC = got ? await JA(C, `import('./src/game/kits/registry.js').then((K) => { const it = K.SUB_KITS.sentry.items.find((x) => x.gid === ${sA.gid}); return it ? it.hp : null; })`) : null;
-    const rs = await JA(A, `import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.SENTRY_STATS ? K.SUB_KITS.sentry.SENTRY_STATS.restated || 0 : null)`);
+    const rs = await JA(A, `import('./src/game/kits/sentry.js').then((K) => K.SENTRY_STATS.restated || 0)`);
     const gBn = await JA(B, `import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.items.filter((x) => x.gid === ${sA.gid}).length)`);
-    R(`the late joiner (C) gets a ghost of A's sentry already out (${got ? 'within ' + tGot + ' ms of its match being up' : 'none in 12 s'}), where A's stands, with A's hp (70): the owner's restated [0] / [5] (${rs} restated)`,
+    R(`the late joiner (C) gets a ghost of A's sentry already out (${got ? 'within ' + tGot + ' ms of its match being up' : 'none in 20 s'}), where A's stands, with A's hp (70): the owner's restated [0] / [5] (${rs} restated)`,
       got && gC && gC.ghost && Math.hypot(gC.pos[0] - sA.pos[0], gC.pos[2] - sA.pos[2]) < 0.05 && hpC === 70, { gC, hpC, rs });
     R(`B, which already had the ghost, still has exactly one (a repeated [0] is ignored: ${gBn})`, gBn === 1, { gBn });
+    for (const c of [A, B]) await c.js(`clearInterval(window.__young); 1`);
     const errs = [...A.log, ...B.log, ...C.log].filter((l) => !/lightmap|WebGL|GPU|net\]|relay|WebSocket/i.test(l));
     R('no console errors on any screen', !errs.length, errs.slice(0, 5));
     return;

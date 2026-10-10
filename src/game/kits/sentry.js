@@ -1121,11 +1121,12 @@ const srcOf = (k) => SENTRY_STATS.src[k] || (SENTRY_STATS.src[k] = { n: 0, alive
 export function resetSentryStats() { for (const k in SENTRY_STATS) SENTRY_STATS[k] = typeof SENTRY_STATS[k] === 'object' ? {} : 0; }
 // [b5-int3] a squidkid joining a running Practice session (netmatch 'pj' → 'actor:added' on every screen) never saw the [0]
 // of a sentry already out — an invisible gun that shot them for up to 15 s (the sub-sentry review). Each owner re-records
-// its live sentries — [0] where it stands now, [4] where it rides (deployables _onRec), [5] its hp — 1.5, 4 and 8 s after
-// the join (the joiner's stage may still be building when the first goes out); a screen that already has the ghost
-// ignores a repeated [0] (ghost()), and its [4] / [5] only restate what it has
+// its live sentries — [0] where it stands now, [4] where it rides (deployables _onRec), [5] its hp — 1.5, 4, 8, 15, 25 and
+// 40 s after the join (the joiner's room and stage take seconds to tens of seconds to build after the host's 'pj': what
+// arrives before it listens is lost); a screen that already has the ghost ignores a repeated [0] (ghost()), and its
+// [4] / [5] only restate what it has. A few short records a sentry, only after a join
 const rejoin = [];
-on('actor:added', () => { if (!G.netm || !items.length) return; rejoin.length = 0; for (const d of [1.5, 4, 8]) rejoin.push(G.time + d); });
+on('actor:added', () => { if (!G.netm) return; rejoin.length = 0; for (const d of [1.5, 4, 8, 15, 25, 40]) rejoin.push(G.time + d); });
 function restate() {
   if (!rejoin.length || G.time < rejoin[0]) return;
   rejoin.shift();
