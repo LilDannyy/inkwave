@@ -1301,3 +1301,39 @@ export async function pictures(o = {}) {
   }
   return shots;
 }
+
+// ================================================================================================= the kit, close up
+// KITSHOTS=1: the kit pieces of this stage up close (Alpha's attack: Bravo's half) — a weir from the attackers' side and
+// from 45°, the Dragon Gate, a NO CARP sign, a carrierBlock's shimmer — for the kit's review
+export async function kitPictures() {
+  const C = ctx(0), { G, m, R, L } = C, shots = [];
+  for (const a of m.actors) a.character.root.visible = false;
+  const fog = G.scene.fog; G.scene.fog = null;
+  const r = G.renderer, cv = r.domElement, size0 = r.getSize(new THREE.Vector2()), pr0 = r.getPixelRatio();
+  const img = (url) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.src = url; });
+  const shot = async (name, from, look, label) => {
+    const W = 1280, H = 720, cam = new THREE.PerspectiveCamera(50, W / H, 0.1, 2000);
+    cam.position.copy(from); cam.lookAt(look); cam.updateMatrixWorld();
+    r.setPixelRatio(1); r.setSize(W, H, false); r.render(G.scene, cam); const url = cv.toDataURL('image/png'); r.setPixelRatio(pr0); r.setSize(size0.x, size0.y, false);
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(await img(url), 0, 0);
+    x.fillStyle = 'rgba(0,0,0,0.6)'; x.fillRect(0, 0, W, 34); x.fillStyle = '#fff'; x.font = 'bold 18px sans-serif'; x.fillText(`${C.id} · the kit: ${label}`, 12, 23);
+    let u = null; for (const q of [0.86, 0.76, 0.66, 0.56]) { u = c.toDataURL('image/jpeg', q); if (u.length * 0.75 < 290000) break; }
+    shots.push({ name: `${C.id}-kit-${name}.jpg`, url: u });
+  };
+  try {
+    const w = R.weirs[0][0];
+    if (w) {
+      const f = new V3(Math.sin(w.yaw), 0, Math.cos(w.yaw));   // the walking direction
+      await shot('weir', new V3(w.pos.x - f.x * 7, w.pos.y + 1.7, w.pos.z - f.z * 7), new V3(w.pos.x, w.pos.y + 1.1, w.pos.z), 'a weir from the attackers\' side (posts 5.4 m apart, the sill, the curtain)');
+      const s = new V3(Math.cos(w.yaw), 0, -Math.sin(w.yaw));
+      await shot('weir-post', new V3(w.pos.x + s.x * 2.7 - f.x * 2.2 + s.x * 1.4, w.pos.y + 1.5, w.pos.z + s.z * 2.7 - f.z * 2.2 + s.z * 1.4), new V3(w.pos.x + s.x * 2.7, w.pos.y + 1.2, w.pos.z + s.z * 2.7), 'a weir post: footing, shaft, band, capital (roof, no ink)');
+    }
+    const g = R.gates[0].pos, fg = new V3(Math.sin(R.gates[0].yaw), 0, Math.cos(R.gates[0].yaw));
+    await shot('gate', new V3(g.x - fg.x * 7 + 2, g.y + 2.2, g.z - fg.z * 7), new V3(g.x, g.y + 0.9, g.z), 'the Dragon Gate: the octagonal plinth, the gold-banded posts');
+    const sb = L.blocks.find((b) => b.tag === 'karp-sign-board' && b.center.z > 0);
+    if (sb) { const n = sb.axes[2]; await shot('sign', new V3(sb.center.x + n.x * 2.6 + n.z * 0.6, sb.center.y - 0.1, sb.center.z + n.z * 2.6 - n.x * 0.6), sb.center.clone(), 'a NO CARP sign'); }
+    const cb = (R.carrierBlock || []).find((v) => v.poly.every((p) => p[1] > 0)) || (R.carrierBlock || [])[0];
+    if (cb) { const cx = cb.poly.reduce((a, p) => a + p[0], 0) / cb.poly.length, cz = cb.poly.reduce((a, p) => a + p[1], 0) / cb.poly.length, y = L.groundHeight(cx, cz, (cb.y1 ?? 1) + 0.5); await shot('carrierblock', new V3(cx + 6, (y > -50 ? y : 0) + 3.2, cz - 7), new V3(cx, (y > -50 ? y : 0) + 0.9, cz), 'a carrierBlock: the shimmer and the NO CARP glyph (carriers are pushed out, others pass)'); }
+  } finally { G.scene.fog = fog; for (const a of m.actors) a.character.root.visible = true; }
+  return shots;
+}

@@ -14,6 +14,7 @@
 //        ERA=1|2|3, LAVA=low|high, KSTATE=<key>  one stage state (its key in G.match.stage.karpStates()); the page loads
 //        with the module's audit switch (?era= / ?lava=, or the state's own `query`). Without one: every state in turn.
 //        CASES=clean,f1,…  (self-test) some cases   FLAGSHOTS=n  pictures of the first n flagged places (default 8)
+//        KITSHOTS=1  the kit up close too (a weir and a post, the Gate, a NO CARP sign, a carrierBlock's shimmer)
 // Prints one line per check (OK / WARN / FAIL / SKIP with numbers), then
 //   RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=…
 // and writes <id>-karp.json (every number) and the pictures (JPEG < 300 KB) to OUT.
@@ -72,6 +73,10 @@ app.on('browser-window-created', (_, win) => {
     // ------------------------------------------------------------------------------------------- one stage, one state
     const checkOne = async (id, st, setup, tag, opts = {}) => {
       const o = { state: st.i, phys: PHYS && opts.phys !== false };
+      if (process.env.KITSHOTS === '1' && st.i === 0) {   // the kit up close (a weir, a post, the Gate, a sign, a carrierBlock)
+        const list = await js(`${mod}.then((m) => m.kitPictures())`);
+        for (const s of list) { const name = (tag ? tag + '-' : '') + s.name; fs.writeFileSync(path.join(OUT, name), Buffer.from(s.url.split(',')[1], 'base64')); console.log(`  kit picture: ${name}`); }
+      }
       const rep = await js(`${mod}.then((m) => m.runChecks(${JSON.stringify(o)}))`);
       const drop = await js(`${mod}.then((m) => m.dropCoverage(${JSON.stringify(o)}))`);
       const shots = [];

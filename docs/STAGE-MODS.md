@@ -343,6 +343,7 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 | `G.match.stage?.sweeps(out)` | R `sweeps(out)` | [] (Bazookarp rest flags: the boxes a module's moving pieces cover over their whole travel) |
 | `G.match.stage?.restMask(state)` | R `restMask` | null (Bazookarp: `Uint8Array` over nav nodes, 1 = standable in that state) |
 | `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots) |
+| `G.match.stage?.karpStates()` | R `karpStates` (the first module with any) | [] ([b5-karp-checker] Bazookarp's field states, SPEC §3.2 step 6: `[{ key, nodeOk(id), query }]` — `key` what `era:done` / `lava:warn` name, `nodeOk` the nav nodes standing in that state, `query` the page query of your audit switch that shows the world in that state (`'era=2'`, `'lava=high'`): `tools/botlab/bazookarp-check.cjs` checks each state on a page loaded with it; `ERA=` / `LAVA=` pick one) |
 | `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | [b5-subs] the real one (deployables.js): `{ blocks, rider }` (the user's list — a Lurk Mine is pushed aside, not crushed: the lead's rule), `{ sphere }`, `{ where }`, `{ standingOn }`, `{ liquid }` → the count destroyed, each with one `'device:down'` { how }; the tower's `crush(T)` is now a call of it. The page test proves the forwarding with a stand-in; `tests/sub-sentry.js` 'crush' runs the real one |
 | `G.match.stage?.state()` | R `state` | `{ t, keys }` (tests) |
 
@@ -443,7 +444,7 @@ Three conventions the contracts did not use, used here:
 | T1 | bake ×3 into R / G / B | **served**: `W.bakePasses()` → `[() => apply(1, { instant: true }), () => apply(2, …), () => apply(3, …)]`; the bake writes an RGB PNG (channel e−1 = era e) and `channels: 3` in the JSON (the contract's `eras: 3`); `W.bakeMode(false)` returns to era 1. The loader takes an RGB PNG as it is |
 | T2 | `check-maps`: era-aware overlaps, per-era builds, the static rules | **served**: `registerStageData('eras', { overlapOk(a, b), check(layout, api) })` (`api` = `{ id, mode, defs, solids, shape, corners, overlap2D }`: build `bluestone#1…#3` there) |
 | T3 | `ERA=` in shoot / stageart / tests; `ERA_FROM` / `ERA_TO` / `FRONT` | **served**: `PAGEQ='era=2'` (or `'erafrom=1&erato=2&front=30'`), read by the module from `location.search` |
-| T4 | `bazookarp-check.cjs ERA=` | the Bazookarp checker (`PAGEQ` serves it too) |
+| T4 | `bazookarp-check.cjs ERA=` | **served** ([b5-karp-checker]): `ERA=2 MAP=bluestone tools/botlab/run.sh tools/botlab/bazookarp-check.cjs` loads the page with `?era=2` and checks the field state keyed 2; without `ERA` every state your `R.karpStates()` offers, each on a page loaded with its `query` |
 
 Nothing by hand.
 
