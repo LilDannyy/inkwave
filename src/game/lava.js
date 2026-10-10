@@ -1271,6 +1271,9 @@ export class StageLava {
       if (nx && nx.y - a.pos.y > 0.4 && dh < 2.0) {
         b._escNx = nx;
         if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
+        // (standing in enemy ink a jump reaches 0.73 m, not the step's 1.2: a roller escaping off the Casting Floor hopped
+        // at the causeway's foot until the lava had it — ink the floor at its feet first, then hop)
+        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6) { b._needJump = false; it.fire = true; it.squid = false; b.guardOff = true; return { yaw: Math.atan2(nx.x - a.pos.x, nx.z - a.pos.z), pitch: -1.05, dist: 1.0 }; }
         b._needJump = true;
         // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
         // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot)

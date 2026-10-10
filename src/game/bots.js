@@ -1142,13 +1142,11 @@ export class BotBrain {
     if (it.jump && pathHop && it.fire && w.rollDist) it.fire = false;
     const rolls = it.jump && it.fire && w.rollDist && !pathHop;
     if (it.jump && a.grounded && !a.climbing && !this._clHop && !gOff && (rolls ? !this._rollSafe(a, it.move, w.rollDist) : (!this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0))))) it.jump = false;
-    // [b5-caldera] in the air (no hop of its own just now): never steer the flight down onto the sea or the lava — if the
-    // arc as it flies comes down there, steer back the way it came; if only the steering would put it there, hold still
-    if (!a.grounded && !gNear && !a.climbing && !gOff && !a.superJumpState) {
-      if (a.grounded === false && this._arcWet(a, a.vel.x, a.vel.z)) {
-        const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
-        if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
-      } else if (Math.hypot(it.move.x, it.move.z) > 0.05 && this._arcWet(a, a.vel.x + it.move.x * 2.5, a.vel.z + it.move.z * 2.5)) it.move.set(0, 0, 0);
+    // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
+    // land there, steer back the way it came (air control pulls it back over the floor it left)
+    if (!a.grounded && !gNear && !a.climbing && !gOff && !a.superJumpState && this._arcWet(a, a.vel.x, a.vel.z)) {
+      const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
+      if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
     }
     if (a.grounded) (this._lastFoot ||= new THREE.Vector3()).copy(a.pos);
     // displacement watchdog: asking to move for 1.5 s but covering < 0.4 m means something the waypoint logic can't
@@ -1381,10 +1379,15 @@ export class BotBrain {
     let ux, uz, s;
     if (sp > 1) { ux = vx / sp; uz = vz / sp; s = Math.max(sp, ml * PLAYER.runSpeed); } else if (ml > 0.05) { ux = mv.x / ml; uz = mv.z / ml; s = ml * PLAYER.runSpeed; } else return true;
     const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = PLAYER.jumpVel, y0 = a.pos.y;
+    let px = a.pos.x, pz = a.pos.z, ox = 0, oz = 0;
     for (let t = 0.05; t <= 1.4; t += 0.05) {
-      const x = a.pos.x + ux * s * t, z = a.pos.z + uz * s * t, y = y0 + vy0 * t - 0.5 * g * t * t;
-      if (vy0 - g * t > 0) continue;   // (still rising)
-      const gh = L.groundHeight(x, z, y + 0.3);
+      let x = a.pos.x + ux * s * t + ox, z = a.pos.z + uz * s * t + oz;
+      const y = y0 + vy0 * t - 0.5 * g * t * t, down = vy0 - g * t <= 0;
+      let gh = down ? L.groundHeight(x, z, y + 0.3) : -Infinity;
+      // (into a wall or a higher column's side: the body stops there and drops — it lands under where it was)
+      if (!(gh > -Infinity && y <= gh + 0.05) && L.pointInside(_wv.set(x, y + 0.25, z), 0)) { ox += px - x; oz += pz - z; x = px; z = pz; if (down) gh = L.groundHeight(x, z, y + 0.3); }
+      px = x; pz = z;
+      if (!down) continue;   // (still rising)
       if (gh > -Infinity && y <= gh + 0.05) {
         if (SM && SM.wet(x, z, gh, 0.5)) return false;
         // (up onto something: only a top a route can stand on — a roof-flagged stub slides you off into whatever is below)
@@ -1405,10 +1408,14 @@ export class BotBrain {
   // (or on nothing within 1.5 s)?
   _arcWet(a, vx, vz) {
     const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = a.vel.y;
+    let px = a.pos.x, pz = a.pos.z, ox = 0, oz = 0;
     for (let t = 0.05; t <= 1.5; t += 0.05) {
-      const x = a.pos.x + vx * t, z = a.pos.z + vz * t, y = a.pos.y + vy0 * t - 0.5 * g * t * t;
-      if (vy0 - g * t > 0) continue;
-      const gh = L.groundHeight(x, z, y + 0.3);
+      let x = a.pos.x + vx * t + ox, z = a.pos.z + vz * t + oz;
+      const y = a.pos.y + vy0 * t - 0.5 * g * t * t, down = vy0 - g * t <= 0;
+      let gh = down ? L.groundHeight(x, z, y + 0.3) : -Infinity;
+      if (!(gh > -Infinity && y <= gh + 0.05) && L.pointInside(_wv.set(x, y + 0.25, z), 0)) { ox += px - x; oz += pz - z; x = px; z = pz; if (down) gh = L.groundHeight(x, z, y + 0.3); }   // (a wall stops it: it drops where it was)
+      px = x; pz = z;
+      if (!down) continue;
       if (gh > -Infinity && y <= gh + 0.05) return !!(SM && SM.wet(x, z, gh, 0.5));
     }
     return true;
@@ -1440,6 +1447,12 @@ export class BotBrain {
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.17;
     const bad = (ux, uz) => this._wet(px + ux * 0.45, pz + uz * 0.45, py) || this._wet(px + ux * look, pz + uz * look, py);
     if (!bad(dx, dz)) return;
+    // [b5-caldera] on a tip (half or more of a 0.55 m ring round it over the sea or the lava — a coping wedge's point):
+    // back toward the floor (the dry samples' mean), not along the edge to the point
+    { let wn = 0, sx = 0, sz = 0;
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (this._wet(px + cx * 0.55, pz + cz * 0.55, py)) wn++; else { sx += cx; sz += cz; } }
+      const sl = Math.hypot(sx, sz);
+      if (wn >= 4 && sl > 0.1) { mv.set((sx / sl) * m, 0, (sz / sl) * m); return; } }
     for (const ang of [0.8, -0.8, 1.45, -1.45]) {
       const c = Math.cos(ang), s = Math.sin(ang), nx = dx * c + dz * s, nz = -dx * s + dz * c;
       if (!bad(nx, nz)) { mv.set(nx * m, 0, nz * m); return; }
