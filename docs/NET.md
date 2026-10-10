@@ -336,8 +336,15 @@ real sentry there, never hurts it. The tower, movers, standing fire and `G.deplo
 sentries only (the owner's `[2, gid, 2]` ends the ghosts). **A player who leaves takes it with them**: `netmatch.js
 onLeave` (before the leaver's squidkid is handed to the host) and `_remove` call every kit's `dropOwner(actor)`, so every
 screen ends that player's sentry ghosts at once, quietly (no `'device:down'`) — unlike wave 1's subs devices, which the
-host adopts. Tested by `tools/botlab/tests/net-sub-sentry.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`; `NET_ARGS='scene=tower'`:
-the deck ride, the ghost at the owner's spot of the deck).
+host adopts. **A Practice late joiner** (`[b5-int3]`) never saw the `[0]` of a sentry already out (the late-join path
+copies the turf and the stage modules, no devices), so every owner **restates** its live sentries after a join: on
+`'actor:added'` (the host's `pj`, on every screen) it re-records `[0]` (where it stands now), `[4]` (where it rides,
+`G.deploy._onRec`) and `[5]` (its hp, when hurt) 1.5, 4, 8, 15, 25 and 40 s later — the joiner's stage takes seconds to
+tens of seconds to build and what arrives before it listens is lost; a screen that already has the ghost ignores a
+repeated `[0]`. (Wave 1's devices and the Chain Bobber still have the gap: a joiner sees them only once their owner
+records them again — a known limit.) Tested by `tools/botlab/tests/net-sub-sentry.cjs` (`CLIENTS=2 Q0=autopilot
+Q1=autopilot`; `NET_ARGS='scene=tower'`: the deck ride, the ghost at the owner's spot of the deck; `NET_ARGS='scene=latejoin'`:
+a third client joins with A's sentry out and builds its ghost at A's spot with A's hp).
 
 **The one destroyer** (`[b5-subs]`, subs SPEC §0.3). `G.deploy.crushIn(shape, how)` ends every device of this screen's own
 whose body is in the shape — `{ blocks, rider }` (the tower's call: the user's list — sprinkler, beacon, curtain, buoy,
