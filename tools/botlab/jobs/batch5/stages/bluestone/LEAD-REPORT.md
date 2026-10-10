@@ -122,7 +122,8 @@ error besides the known "no lightmap". eras-bots.js and the sweeps are step 10 (
 - `eras-world.js` **19/19** (parts 1–5; part 5: halyard / calamari / treehills build with the level program key
   `inkwave-level-v8`, no aEra, no presence).
 - `eras-look.js` **9/9**. `eras-hud.js` **7/7**.
-- `eras-jump.js` **15 checks** (the roof branch of the rescue added last): 14/14 and 15/15-but-frames runs. The
+- `eras-jump.js` **15 checks** (the roof branch of the rescue added last): the final full run is **14/15** (only the
+  frames check failed); an earlier full run was 14/14 (before the roof check), the last subset run 3/3. The
   frames check (no frame > 50 ms from J − 0.5 to done + 1.5) passed at **max 10.3 ms** on a quiet machine (no-jump
   baseline 3.1 ms) and at 22.7 ms in another run; it failed in two runs on the loaded Mac — one 625 ms and one 58.6 ms
   frame — while the same runs' no-jump baselines had 442–649 ms frames; the era update never took more than 8.3 ms
@@ -147,7 +148,7 @@ the Swimston camera is half blocked by a news kiosk.
 ## 6. Commits; files
 2b0dd6c1 (static rules), f00a30c2 (the engine), aed8aff2 (eras-world), 81f88b12 (runtime fixes, eras-look, eras-jump),
 67444e02 (eras-hud), eb52adff (curtain), c0977466 (Flounders), 2c3cef62 (NET.md, part 5), 4d70601a; scratch 06569ead
-(pictures), 729fc6d9 (logs), and this report. Files: new `src/fx/eraFx.js`, `src/audio/sfx-eras.js`,
+(pictures), 729fc6d9 (logs), c536e29c (the roof-rescue check), d5afd821 and the next commit (this report). Files: new `src/fx/eraFx.js`, `src/audio/sfx-eras.js`,
 `tools/botlab/tests/eras-{world,look,jump,hud}.js`; the stubs `src/game/eras.js`, `src/world/eras-data.js` replaced;
 stage files `era.js`, `layout.js` (tram collision-only, `ERAS.source`), `props.js`, `backdrop.js`, `surfaces.js`;
 docs/NET.md (one paragraph, [b5-eras]).
