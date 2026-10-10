@@ -143,6 +143,15 @@
     R('step 8: a kid on a piece that vanishes over water (the floating garden in the rewind) is rescued to a valid node, never splatted',
       on && E.stats.rescues > r0 && a.alive && gh > PLAYER.waterY + 0.3 && (a.stats?.deaths ?? 0) === deaths0, { on, rescues: E.stats.rescues - r0, alive: a.alive, at: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], floor: gh });
     tAt(J.doneAt + 1.2);
+    // the roof branch (ENGINE §4.2 rev 2; no garden-on-roof on the Z): a kid left on a roof top with nothing walkable
+    // within 3.4 m under it after a flip — the Customs House's roof (9 m over its 3 m block) stands in for the vanished deck
+    const roof = L.blocks.find((b) => b.tag === 'customs-house' && b.roof && b.center.z < 0), ry = roof.center.y + roof.half.y, r1 = E.stats.rescues;
+    calm(); put(a, roof.center.x, ry + 0.02, roof.center.z); a.pos.y = ry + 0.02;
+    E._rescue([roof.id]);
+    const ghR = L.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.5);
+    R('step 8: … and a kid left on a roof with nothing walkable within 3.4 m below it is rescued the same way (the roof branch)', E.stats.rescues === r1 + 1 && a.pos.y < ry - 3 && ghR > PLAYER.waterY + 0.3,
+      { roofTop: ry, at: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], floor: ghR });
+    step(0.5);
   }
 
   // ------------------------------------------------------------------------------------------- device

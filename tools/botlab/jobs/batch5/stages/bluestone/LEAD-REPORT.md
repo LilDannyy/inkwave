@@ -122,9 +122,13 @@ error besides the known "no lightmap". eras-bots.js and the sweeps are step 10 (
 - `eras-world.js` **19/19** (parts 1–5; part 5: halyard / calamari / treehills build with the level program key
   `inkwave-level-v8`, no aEra, no presence).
 - `eras-look.js` **9/9**. `eras-hud.js` **7/7**.
-- `eras-jump.js` **14/14** in one run, **13/14** in the final one: the frames check (no frame > 50 ms from J − 0.5 to
-  done + 1.5) passed at max 22.7 ms, then failed on a 625 ms frame while the same run's no-jump baselines had 556 and
-  649 ms frames; the era update itself never took more than 8.3 ms. Flaky on this shared Mac; re-run on the Mac mini.
+- `eras-jump.js` **15 checks** (the roof branch of the rescue added last): 14/14 and 15/15-but-frames runs. The
+  frames check (no frame > 50 ms from J − 0.5 to done + 1.5) passed at **max 10.3 ms** on a quiet machine (no-jump
+  baseline 3.1 ms) and at 22.7 ms in another run; it failed in two runs on the loaded Mac — one 625 ms and one 58.6 ms
+  frame — while the same runs' no-jump baselines had 442–649 ms frames; the era update never took more than 8.3 ms
+  (1.2 ms when quiet). The recurring loaded-machine frame near J + 1.6 allocates ~3.6 MB outside the era update (the
+  minimap's ordinary ink redraw after the flips bump the paint version, I believe; unproven). Flaky here: re-run on
+  the Mac mini.
 - check-maps: every stage ok except halyard's half[41] ramp 25.7° (also on new-stages; not mine).
 - stage-mods **36/36**, world-build **5/5**, ink-wipe **8/8**, movers **17/17**, pods **39/39**, stage-audit halyard /
   calamari / treehills **3/3** each (lightmap applied).
@@ -153,7 +157,7 @@ docs/NET.md (one paragraph, [b5-eras]).
   11 (net-eras.cjs: two clients, late join, host change), 12 (eras-modes.js: zones / tower per era, the era-3 BossNav
   record, Bazookarp H21 against a stub), 12c (no stage murals exist yet to probe `uMurEra`).
 - The frames check is flaky on the loaded Mac (above). Nav ×3 sits near the 700 ms line here (599–793 ms).
-- The roof rescue is built but untested (no garden-on-roof on the Z). The striker clock's `era_strike` exists but
+- The roof rescue is tested only by a direct call (no garden-on-roof on the Z). The striker clock's `era_strike` exists but
   nothing plays it (no striker prop on the Z). Era ambiences and the end-of-match cosmetic (§3.10) are not built.
 - A re-skinned face loses its mural (none today; DESIGN's mural 8 was on the X's carriageway).
 - `stats.eraShoves` is not in match.cjs's RESULT_JSON (the two matches can't show it).
