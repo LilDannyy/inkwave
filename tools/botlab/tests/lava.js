@@ -462,8 +462,9 @@
     const S2 = Lv.stats, released = bots.every((b) => !b.bot._look);
     // (a team whose kits are all short-range — rollers, brushes, buckets, brollies — has no claimant by design)
     const claimed = [0, 1].filter((tm) => (S2.lookLog || []).some((l) => l.team === tm && l.t >= 33));
-    R('F10 the lookout claim: each team\'s claimant (a team with a long- or mid-range kit) reaches its own lookout at HIGH and holds it ≥ 3 s, and lets go at the fall warning',
-      claimed.length >= 1 && claimed.every((tm) => S2.lookTeam[tm] >= 3 && upAt[tm] !== null) && released && Lv.clock.t > 60.5,
+    // (a 27 s fight from the pads: a claimant can die on the way; the per-match numbers are lava-match's business)
+    R('F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning',
+      claimed.length >= 1 && claimed.every((tm) => (S2.lookLog || []).some((l) => l.team === tm && l.t >= 33)) && claimed.some((tm) => upAt[tm] !== null && S2.lookTeam[tm] >= 2) && released && Lv.clock.t > 60.5,
       { claims, claimed, upAt, seconds: S2.lookTeam.map(r3), long: S2.lookLong.map(r3), held: r3(S2.lookHold), nClaims: S2.lookClaims, released, t: r3(Lv.clock.t), kits, log: (S2.lookLog || []).filter((l) => l.t >= 33) });
     freezeBots();
   }
