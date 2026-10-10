@@ -248,7 +248,8 @@
     const bs = PB.filter((b) => piece.get(b.id) === pc), lo = Math.min(...bs.map(ptop));
     const ns = N.filter((q) => reach[q.id] && lo - q.y < 2.4 && bs.some((b) => Math.max(b.aabbMin.x - q.x, 0, q.x - b.aabbMax.x) ** 2 + Math.max(b.aabbMin.z - q.z, 0, q.z - b.aabbMax.z) ** 2 < 36)).sort((a, b) => b.y - a.y);
     let by = null;
-    for (const q of ns.slice(0, 80)) { for (const dd of DIRS16) { for (const k2 of ['h', 'w']) { const qq = move(q, dd, k2); if (qq && qq.block >= 0 && piece.get(qq.block) === pc) { by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : 'walk', onto: qq.block }; break; } } if (by) break; } if (by) break; }
+    // ([b5-int3] a plain swim jump too: a perch a swim jump reaches without the dash is the stage's business, listed)
+    for (const q of ns.slice(0, 80)) { for (const dd of DIRS16) { for (const k2 of ['h', 'w', 'sj']) { const qq = move(q, dd, k2); if (qq && qq.block >= 0 && piece.get(qq.block) === pc) { by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : k2 === 'sj' ? 'plain swim jump' : 'walk', onto: qq.block }; break; } } if (by) break; } if (by) break; }
     pieceOk.set(pc, by);
     return by;
   };
@@ -267,14 +268,17 @@
   // the highest a plain running hop or walk first comes down on block b, from the spots reached on foot within 6 m of it (and
   // under 2.4 m below its top; the highest 80, 16 headings each): once per block
   const hopBestOn = new Map();
-  const blockHopBest = (b) => {
-    if (hopBestOn.has(b)) return hopBestOn.get(b);
+  // ([b5-int3] swim: true — a swim jump + dash's first landing: a plain swim jump from those spots counts too, a top a
+  // swim jump reaches is no more the dash's than one a running hop reaches)
+  const blockHopBest = (b, swim = false) => {
+    const key = swim ? 'S' + b : b;
+    if (hopBestOn.has(key)) return hopBestOn.get(key);
     const B0 = L.blocks[b]; let best = null;
     if (B0) {
       const ns = N.filter((q) => reach[q.id] && B0.aabbMax.y - q.y < 2.4 && Math.max(B0.aabbMin.x - q.x, 0, q.x - B0.aabbMax.x) ** 2 + Math.max(B0.aabbMin.z - q.z, 0, q.z - B0.aabbMax.z) ** 2 < 36).sort((a, c) => c.y - a.y).slice(0, 80);
-      for (const q of ns) for (const dd of DIRS16) for (const k2 of ['h', 'w']) { const h = move(q, dd, k2); if (h && h.landY != null && h.landBlock === b && (!best || h.landY > best.y)) best = { y: h.landY, from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : 'walk' }; }
+      for (const q of ns) for (const dd of DIRS16) for (const k2 of swim ? ['h', 'w', 'sj'] : ['h', 'w']) { const h = move(q, dd, k2); if (h && h.landY != null && h.landBlock === b && (!best || h.landY > best.y)) best = { y: h.landY, from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : k2 === 'sj' ? 'plain swim jump' : 'walk' }; }
     }
-    hopBestOn.set(b, best);
+    hopBestOn.set(key, best);
     return best;
   };
   let maxUpMove = null;   // (the highest first landing's start and heading: its plain hops are told beside it at the end)
@@ -291,7 +295,7 @@
         if (!count.hopAsHighAt) count.hopAsHighAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), hopLandedAt: r2(h.landY), startY: r2(r.y0) };
         return;
       }
-      const hb = r.landBlock >= 0 ? blockHopBest(r.landBlock) : null;
+      const hb = r.landBlock >= 0 ? blockHopBest(r.landBlock, typeof kind === 'string' && kind[0] === 's' && kind[1] !== 'j') : null;
       if (hb && hb.y >= r.landY - 0.02) {
         count.hopAsHighNear++;
         if (!count.hopAsHighNearAt) count.hopAsHighNearAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), startY: r2(r.y0), block: r.landBlock, tag: bTag(r.landBlock), plainOnIt: { ...hb, y: r2(hb.y) } };
@@ -323,7 +327,7 @@
       let by = plainHere(touches) ? { move: 'the same climb' } : roofReach.get(r.block) || null;
       if (!by) {
         for (const q of [n, ...near(r.roofT || p).slice(0, 30)]) {
-          for (const dd of DIRS16) for (const k2 of ['h', 'w']) { if (by) break; if (touches(move(q, dd, k2))) by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : 'walk' }; }
+          for (const dd of DIRS16) for (const k2 of ['h', 'w', 'sj']) { if (by) break; if (touches(move(q, dd, k2))) by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : k2 === 'sj' ? 'plain swim jump' : 'walk' }; }   // ([b5-int3] + a plain swim jump)
           for (const dd of DIRS) { if (by) break; const w = wallAt(q, dd); if (!w) continue; inkWall(w); if (touches(climbMove(q, dd, w, 'top', null))) by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: 'climb' }; }
           if (by) break;
         }
@@ -338,7 +342,7 @@
       // ends on the same block within a metre of it (the edge of a bollard on a walkable sea wall, its centre a hair out)
       const same = (q) => !!(q && q.pos && ((!inB(q.pos) && Math.abs(q.pos.y - p.y) < 0.4) || (r.block >= 0 && q.block === r.block && Math.hypot(q.pos.x - p.x, q.pos.z - p.z) < 1)));
       let by = plainHere(same);
-      for (const q of near(p).slice(0, 30)) { for (const dd of DIRS16) for (const k2 of ['h', 'w']) { if (by) break; if (same(move(q, dd, k2))) by = true; } if (by) break; }
+      for (const q of near(p).slice(0, 30)) { for (const dd of DIRS16) for (const k2 of ['h', 'w', 'sj']) { if (by) break; if (same(move(q, dd, k2))) by = true; } if (by) break; }   // ([b5-int3] + a plain swim jump)
       if (by) count.oobOnFoot++; else { count.oob++; oob.push(what); }
       return;
     }
