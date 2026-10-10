@@ -1037,6 +1037,7 @@ export class StageLava {
       // at the foot, the column still on its way up: wait there (a one-node route, so the brain doesn't pick a paint goal
       // every frame meanwhile)
       b.path = [L.foot]; b.pi = 0; b.goal = L.foot;
+      b.perchUntil = b.t + 0.3;   // (waiting on purpose: not stuck)
       if (b.mode !== 'fight') move.set(0, 0, 0);
     }
   }
