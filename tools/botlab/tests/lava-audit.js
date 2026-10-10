@@ -35,7 +35,7 @@
 
   // ---------------------------------------------------------------------------------------------- rule 14: exits
   try {
-    let worst = 0, worstAt = null, drops = [], none = [], n = 0;
+    let worst = 0, worstAt = null, drops = [], none = [], n = 0, maxDip = 0;
     for (const nd of nav.nodes) {
       if (!nav.valid[nd.id] || M.kind[nd.id] !== 1) continue;
       n++;
@@ -46,10 +46,12 @@
       let m = 0, lowest = Infinity;
       for (let i = 1; i < p.length; i++) { const a = nav.nodes[p[i - 1]], b = nav.nodes[p[i]]; m += Math.hypot(b.x - a.x, b.z - a.z); lowest = Math.min(lowest, b.y); }
       if (m > worst) { worst = m; worstAt = [r2(nd.x), r2(nd.y), r2(nd.z)]; }
-      if (lowest < nd.y - 0.05) drops.push([r2(nd.x), r2(nd.y), r2(nd.z), r2(lowest)]);
+      // (a dip down a step's height to the same floor — a 0.1–0.2 m stair foot onto the shelf — is no drop toward the lava)
+      if (lowest < nd.y - 0.25) drops.push([r2(nd.x), r2(nd.y), r2(nd.z), r2(lowest)]);
+      maxDip = Math.max(maxDip, nd.y - lowest);
     }
-    R('rule 14: every drowning floor is ≤ 12 m walking from floor that never drowns (the paper said ≤ 10.0), and the way out never drops below it', n > 300 && !none.length && worst <= 12 && !drops.length,
-      { nodes: n, worstM: r2(worst), worstAt, noWay: none.slice(0, 6), drops: drops.slice(0, 6), nDrops: drops.length });
+    R('rule 14: every drowning floor is ≤ 12 m walking from floor that never drowns (the paper said ≤ 10.0), and the way out never drops below it (by more than a step, 0.25 m)', n > 300 && !none.length && worst <= 12 && !drops.length,
+      { nodes: n, worstM: r2(worst), worstAt, noWay: none.slice(0, 6), drops: drops.slice(0, 6), nDrops: drops.length, maxDipM: r2(maxDip) });
   } catch (e) { R('rule 14: exits: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 22: clear sky
@@ -126,6 +128,7 @@
   // ---------------------------------------------------------------------------------------------- rule 45: the outline
   try {
     const B = W.box, nx = B.nx, nz = B.nz, Mk = W.mask, RES = B.res, bad = [], lips = [];
+    let minIn = Infinity;
     let n = 0;
     for (let j = 1; j < nz - 1; j += 2) for (let i = 1; i < nx - 1; i += 2) {
       const k = j * nx + i;
@@ -141,16 +144,17 @@
         // inside a bank: how far in from its face toward the lava (march inward until no solid at the high mark)
         let d = 0; while (d < 1.5 && solidAt(x - ox * d, H + 0.05, z - oz * d)) d += 0.05;
         const top = lvl.groundHeight(x, z, 60);
+        minIn = Math.min(minIn, d);
         if (d < 0.45 - 1e-6 || top < H + 0.3 - 1e-6) bad.push({ at: [r2(x), r2(z)], inset: r2(d), top: r2(top), tag: bank.tag || '#' + bank.id });
       } else {
         const gh = lvl.groundHeight(x, z, H + 0.05);
         if (gh > -Infinity && gh > LO - 0.5) bad.push({ at: [r2(x), r2(z)], floorAtOutline: r2(gh) });
-        else if (W.fallsIn(x + ox * 0.6, z + oz * 0.6)) lips.push([r2(x), r2(z)]);
+        else if (W.fallsIn(x, z) || [0, 1, 2, 3, 4, 5, 6, 7].some((q) => W.fallsIn(x + Math.cos(q * 0.785) * 0.8, z + Math.sin(q * 0.785) * 0.8))) lips.push([r2(x), r2(z)]);
         else bad.push({ at: [r2(x), r2(z)], open: true });
       }
     }
     R('rule 45: the region\'s outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every 2nd outline texel)', n > 500 && !bad.length && lips.length > 0,
-      { outline: n, lips: lips.length, bad: bad.slice(0, 12), nBad: bad.length });
+      { outline: n, lips: lips.length, minInsetM: r2(minIn), bad: bad.slice(0, 12), nBad: bad.length });
   } catch (e) { R('rule 45: the outline: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 42: views out
@@ -190,7 +194,11 @@
   for (const level of ['low', 'high']) {
     setT(level === 'low' ? 10 : 50);
     // edge nodes over lava, and in 16 directions the first floor across (a march in 0.1 m over the region's lava)
-    const floorNear = (x, z, y) => { const gh = lvl.groundHeight(x, z, y + 1.3); return gh > -Infinity && gh > y - 1.3 && gh > Lv.y + K - 0.01 ? gh : null; };
+    // (a floor within a hop of the node's level, standable now; open lava = nothing standable at all above the surface —
+    // a drop to a lower dry floor is no lava gap)
+    const ghAt = (x, z, y) => lvl.groundHeight(x, z, y + 1.3);
+    const floorNear = (x, z, y) => { const gh = ghAt(x, z, y); return gh > -Infinity && gh > y - 1.3 && gh > Lv.y + K - 0.01 ? gh : null; };
+    const lavaAt = (x, z, y) => { const gh = ghAt(x, z, y); return (gh === -Infinity || gh <= Lv.y + K - 0.01) && (W.inRegion(x, z) || W.fallsIn(x, z)); };
     const gaps = [], cands = [];
     for (const nd of nav.nodes) {
       if (!nav.valid[nd.id]) continue;
@@ -200,9 +208,9 @@
         let edge = null, far = null, gy = null;
         for (let s = 0.1; s <= 9.0; s += 0.1) {
           const x = nd.x + dx * s, z = nd.z + dz * s, f = floorNear(x, z, nd.y);
-          if (edge === null) { if (f === null) { if (!W.inRegion(x, z)) break; edge = s; } continue; }
+          if (edge === null) { if (f === null) { if (!lavaAt(x, z, nd.y)) break; edge = s; } continue; }
           if (f !== null) { far = s; gy = f; break; }
-          if (!W.inRegion(x, z) && !W.fallsIn(x, z)) break;
+          if (!lavaAt(x, z, nd.y)) break;   // (not over lava any more: a lower floor, a wall)
         }
         if (edge === null || far === null) continue;
         const gap = far - edge;
@@ -232,7 +240,8 @@
         if (jumped && f > 4 && kid.grounded) break;
       }
       const along = (kid.pos.x - c.x) * c.dx + (kid.pos.z - c.z) * c.dz;
-      return { crossed: kid.alive && kid.grounded && along > c.edge + 0.5 && Math.abs(kid.pos.y - c.gy) < 0.3, along: r2(along), y: r2(kid.pos.y), alive: kid.alive };
+      const gb = kid.ground && lvl.blocks[kid.ground.block];
+      return { crossed: kid.alive && kid.grounded && along > c.edge + 0.5 && Math.abs(kid.pos.y - c.gy) < 0.3, along: r2(along), y: r2(kid.pos.y), alive: kid.alive, at: [r2(kid.pos.x), r2(kid.pos.z)], on: gb ? (gb.tag || (gb.dynamic ? 'rider' : '#' + gb.id)) : null };
     };
     // one candidate per node and heading band (the shortest gap), up to 260
     cands.sort((a, b) => a.gap - b.gap);
@@ -242,7 +251,7 @@
     // the run-jump's reach on the flat (from the physics, at 6 m/s): the air dash adds 3.5 m (subs SPEC: airDashDist)
     for (const c of pick) {
       const run = tryJump(c, false);
-      if (run && run.crossed) runX.push([r2(c.x), r2(c.y), r2(c.z), r2(c.gap), run.along]);
+      if (run && run.crossed) runX.push({ from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), edge: r2(c.edge), far: r2(c.far), gap: r2(c.gap), landed: run.at, along: run.along, on: run.on });
       const sw = tryJump(c, true);
       if (sw && sw.crossed) swimX.push(c);
       if (run && run.along != null && run.along >= c.edge - 0.4 && (run.along - c.edge) + 3.5 >= c.gap) dashX.push(c);

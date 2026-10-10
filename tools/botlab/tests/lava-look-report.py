@@ -53,7 +53,7 @@ def main(d):
         lit = val >= 0.40
         share = float(lit.mean())
         lp = px[lit] if lit.any() else px
-        h, s, v = colorsys.rgb_to_hsv(*lp.mean(axis=0))
+        h, s, v = (float(q) for q in colorsys.rgb_to_hsv(*(float(c) for c in lp.mean(axis=0))))
         crust = float(np.median(val[~lit])) if (~lit).any() else None
         row = {'shot': name, 'lavaPx': n, 'litShare': round(share, 3), 'litHue': round(h * 360), 'litSat': round(s, 2), 'litVal': round(v, 2), 'litChroma': round(s * v, 2), 'crustVal': crust and round(crust, 2)}
         pal = next((k for k in PAL if name.startswith(k)), None)

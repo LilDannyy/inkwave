@@ -26,8 +26,10 @@ const OUTLINE_ONLY = false;
 // ------------------------------------------------------------------------------------------------------------ palette
 // the works: pale tuff paving, whitewash, works green iron, buff firebrick; the caldera: basalt, red scoria, glaze
 const K = {
-  tuff: '#aaa49a', tuffDk: '#97928a', basalt: '#646870', basaltDk: '#4f535a', scoria: '#5d5450', glaze: '#4d4542',
-  pave: '#85878b', wall: '#45484e', iron: '#7c8186', ironDk: '#5d6268', white: '#e9e4d8', green: '#2f5a48', brick: '#c9b08a',
+  // (the lava fix round: the region's rock lifted to mid value, ENGINE rule 38 — sRGB luminance ≥ 0.35 — so the stain's
+  // ×0.7 darkening below the high mark reads; the glaze is ENGINE's #6e6862. They were near-black: only the rind read)
+  tuff: '#aaa49a', tuffDk: '#97928a', basalt: '#646870', basaltDk: '#5f636b', scoria: '#675d58', glaze: '#6e6862',
+  pave: '#85878b', wall: '#5f6268', iron: '#7c8186', ironDk: '#5d6268', white: '#e9e4d8', green: '#2f5a48', brick: '#c9b08a',
   spawn: '#ece7dc', pumice: '#bdb8ae', wood: '#9a7b58', cast: '#6d7176', sand: '#b9a68a', rope: '#a78f6c',
 };
 // (blockout patterns: never the ones the level shader caps with pale stone coping on narrow tops — plain, tiles,
@@ -92,9 +94,9 @@ const GROUNDS = {};
 for (const f of FLOORS) {
   const self = ALL.find((g) => g === f) || f;
   const kinds = edgeKinds(self, ALL, (a, b) => (onNotch(a, b)
-    ? { kind: 'ledge', w: 0.6, mk: () => ({ color: '#4a4d52', pattern: PATTERN.metalpanel, tag: 'socket-collar' }) }   // iron-bound socket collars
+    ? { kind: 'ledge', w: 0.6, mk: () => ({ color: '#5f6368', pattern: PATTERN.metalpanel, tag: 'socket-collar' }) }   // iron-bound socket collars
     : { kind: 'ledge', w: f.w || 1.0 }));
-  GROUNDS[f.id] = fill(f.poly, { y0: f.y0, top: f.top, mk: f.mk, ledgeMk: () => coping({ color: f.drown ? '#4f4a47' : K.basaltDk }), edge: kinds });
+  GROUNDS[f.id] = fill(f.poly, { y0: f.y0, top: f.top, mk: f.mk, ledgeMk: () => coping({ color: f.drown ? '#625c58' : K.basaltDk }), edge: kinds });
 }
 // (lava engine: ENGINE rule 6 — no flat top in the region within 0.3 m of LOW or HIGH. A gutter coping sunk 0.2 / 0.3 m
 // below a 1.2 floor where it meets a drowning ledge would stand 0.2 / 0.1 m over the HIGH surface: pale, above the rind,

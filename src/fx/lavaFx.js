@@ -133,8 +133,9 @@ void main() {
   vec2 c2 = plates(p * 1.7 + warp * 2.0 - vec2(t * 0.04, t * 0.03), t * 1.3);
   float e = c1.y - c1.x, e2 = c2.y - c2.x;
   // the cracks: wider and hotter on a rise and in its warning, narrow and dull as it crusts over on a fall
-  // (lit share of the open lava, the blend weight over 0.25: ≈ 42 % at rest, ≈ 53 % on a rise, ≈ 24 % on a fall)
-  float sw = 0.26 + 0.09 * rise + 0.06 * uS.y - 0.1 * fall;
+  // (lit share of the open lava — pixels whose brightest channel is ≥ 0.40, lava-look-report.py — at 0.26 it measured 25–29 %
+  // at rest against ENGINE R1's ≥ 35 %, 42 % on a rise, 17 % on a fall: the seams are wider by a quarter)
+  float sw = 0.32 + 0.08 * rise + 0.06 * uS.y - 0.1 * fall;
   float seam = (1.0 - smoothstep(0.0, sw, e)) * (0.75 + 0.25 * lvn(p * 0.9 + t * 0.2));
   seam = max(seam, (1.0 - smoothstep(0.0, sw * 0.35, e2)) * 0.45 * (1.0 - fall));
   float core = 1.0 - smoothstep(0.0, sw * 0.16, e);
@@ -194,7 +195,9 @@ export class LavaLook {
     this.root = new THREE.Group(); this.root.name = 'lava'; this.scene.add(this.root);
     this.t = 0; this.e = 0; this.mv = 0; this.warn = 0;
     const q = G.settings?.quality || 'high';
-    this.nEmb = q === 'low' ? 0 : q === 'medium' ? 300 : 600;
+    // (low quality keeps a quarter: with none, the fall's steam and the rise's embers — the world's direction cue — were
+    // gone, and the harness profiles run at low: no still ever showed them)
+    this.nEmb = q === 'low' ? 150 : q === 'medium' ? 300 : 600;
     this._surface();
     this._riders();
     this._gauges();

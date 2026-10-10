@@ -283,7 +283,10 @@ const offsetRight = (pts, d) => pts.map((p, i) => {
   const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1;
   return [r3(p[0] + (dz / L) * d), r3(p[1] - (dx / L) * d)];
 });
-export const SPILL = [A(-2, -AW - 0.5), ...offsetRight(BAY_SHORE.slice(0, iBay + 1), 0.5), ...LIP_LINE.slice(1, -1).reverse(), A(11.6 - 0.37, 7.4 + 0.33), A(BR_S[1] - 0.37, AW + 0.5), A(S_E0 - 1, AW + 0.5)];
+// (the lava fix round, ENGINE rule 45: the arm's quay side runs 1.1 m out — under the Spillway Bridge the Lakefront's
+// face stands ~0.55 m behind −AW, and the outline met it there — and the bay shore and the horn side 1.0 m into their
+// banks: the bay's copings stand up to 0.4 m lake-side of the shore curve, and the outline met them at 0.1–0.4 m)
+export const SPILL = [A(-2, -AW - 1.1), ...offsetRight(BAY_SHORE.slice(0, iBay + 1), 1.0), ...LIP_LINE.slice(1, -1).reverse(), A(11.6 - 0.37, 7.4 + 0.33), A(BR_S[1] - 0.37, AW + 1.0), A(S_E0 - 1, AW + 1.0)];
 export const SLUMP = [sp(S0, -0.5, FACE), sp(S0, -0.5, -FACE), P(SHO(SA0) + 0.5, SA0 + 1.1), ...sarcF((a) => SHO(a) + 0.5, SA0 - 1, SA1 + 1), P(SHO(SA1) + 0.5, SA1 - 1.1), sp(S1, 0.5, -FACE), sp(S1, 0.5, FACE)];
 // past the lip: the breach (a fall there is a fall into lava): the void beyond the lip and south of the horn's point
 export const CHUTE = [...LIP_LINE.slice().reverse(), ...BAY_SHORE.slice(iBay + 1), [LC[0] + 4.5, LC[1] - 10], A(30, 16), A(12, 16)];
