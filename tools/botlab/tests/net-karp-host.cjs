@@ -30,7 +30,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   for (const c of cs) await c.js(`(async () => { const m = await import('./tools/botlab/karpbox.js'); await m.defineKarpbox(null); const { MAPS } = await import('./src/config.js'); MAPS.find((x) => x.id === 'karpbox').noBots = ${part === 'cargo'}; return 1; })()`);
   const code = await A.js(`__G.net.create('Hosty')`);
-  await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: 'karpbox', time: 'day', botCount: 2, difficulty: 'easy' }); 1`);
+  await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: 'karpbox', time: 'day', botCount: ${part === 'shot' ? 5 : 2}, difficulty: 'easy' }); 1`);   // ([karp-face] shot: bots on both teams)
   for (let i = 1; i < n; i++) await cs[i].js(`__G.net.join(${JSON.stringify(code)}, 'Guest${i}').then(() => 1)`);
   await A.until(`__G.net.lobby.players.length === ${n}`, 15000);
   // A on Alpha, the guests on Bravo
@@ -164,6 +164,7 @@ async function more({ cs, A, J, info, R, wait, say, close, part, aNid }) {
   } else {
     // a Big Burst from the bot at a spot where the other guest's kid and a Bravo host bot stand; A leaves 0.1 s later
     const bravo = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    if (bravo < 0) { R('13b. a Bravo bot of the host\'s to stand in the blast', false, await J(A, `__G.match.actors.map((a) => [a.nid, a.team, !!a.bot])`)); return; }
     await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(0, 0, -4); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = 0; b.aimPitch = 0; const v = __G.match.actors.find((o) => o.nid === ${bravo}); v.pos.set(1.0, 0, 16.6); v.vel.set(0, 0, 0); v.hp = 100; v.invuln = 0; return 1; })()`);
     // every remaining screen logs the shot's landing and blast (performance.now), and its own splats
     // (the bots the new host adopts stand still: their brains are stubbed on both guests before the leave)
