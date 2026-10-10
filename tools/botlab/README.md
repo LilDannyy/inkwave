@@ -243,6 +243,17 @@ full audit; `air=<m>` a what-if air dash; `climb=0` leaves out the dashes off a 
 `DEVSTAGE=1`); in matches, `SUBS='all=dash'` adds a DASH line to match.cjs
 (`DASH_AI=0`: bots never dash).
 
+Batch 5 wave 2's integration (`[b5-int3]`: the four subs and the Bazookarp engine together): `MAP=karpbox MODE=bazookarp
+PAGE=tools/botlab/tests/int3.js tools/botlab/run.sh tools/botlab/page.cjs` (each sub against the real Roe Shell — the
+Glide's bounce and blast, the dash held outside it, a bobber deployed outside it and one splash a chain, a sentry blind
+through it; the re-form's crushIn ending a sentry and bobbers but never a Glide or a curtain 3 m off; the carrier's bonk,
+a dash ending at the pick-up, a cook fizzling, devices working on), `MAP=testbox MODE=tower` (the tower crushing a sentry
+and bobbers on its track, riding ones on its deck), `MAP=testbox MODE=turf` (a dash into an enemy Drip Curtain; a bot's
+bomb press held off a human's idle chain; DECISIONS #22, a Twinfire roll and a Mitts leap into a 0.10 m wall at 60 / 24
+fps) and `MAP=calamari MODE=turf PAGE_ARGS='only=rail'` (a bobber riding a railcar, a sentry refused on its roof and never
+left inside it); `PAGE_ARGS='only=shell,reform,carrier,tower,curtain,throwhold,thinwall,rail'`. `karp-match.cjs` takes
+`SUBS=` as tower-match.cjs does.
+
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,
 no ink refill for 0.33 s after a shot — src/game/kits/bow.js, config WEAPONS.bow, actor.js; the bots' level lane shots):

@@ -8,6 +8,7 @@
 //   Shots by charge tier, their hits and splats · specials, super jumps to the carrier, shared Bubble Guards on the
 //   carrier and knockouts within 8 s of one · console warnings / errors, sim cost.
 //   MAP=halyard tools/botlab/run.sh tools/botlab/karp-match.cjs
+//   env: SUBS='all=bobber' · 'team0=…;team1=…' · per slot 'a,b,…' equips the subs ([b5-int3], as tower-match.cjs)
 //   env: DUR=300  OTMAX=120 (a stalled overtime isn't simulated to its 300 s cap)  OUT=file.json  DIFF=easy|normal|hard
 //        HUMAN=still|carry (Alpha's first kid: AFK at spawn / its own brain, never re-dealt)  KARP_DEF='two' | JSON (karpbox)
 // Ends with `RESULT karp <id> win=A|B reason=… ko=… c=…/… pops=… carries=… blasts=… ot=…/<why>` and RESULT_JSON {…}.
@@ -37,6 +38,10 @@ app.on('browser-window-created', (_, win) => {
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', mode: 'bazookarp', duration: ${DUR}, difficulty: '${DIFF}' })`);
     { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got}`); app.exit(3); return; } }
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
+    // [b5-int3] SUBS equips the subs as tower-match.cjs / match.cjs do ('all=sprinkler' · 'team0=beacon;team1=curtain' · per slot 'a,b,…')
+    if (process.env.SUBS) console.log('   subs ' + await js(`(() => { const A = window.__inkwave.match.actors, spec = ${JSON.stringify(process.env.SUBS)};
+      const S = spec.startsWith('all=') ? A.map(() => spec.slice(4)) : spec.includes('team') ? (() => { const t = {}; for (const p of spec.split(';')) { const [k, v] = p.split('='); t[+k.replace('team', '')] = v; } return A.map((a) => t[a.team] || null); })() : A.map((a, i) => spec.split(',')[i] || null);
+      A.forEach((a, i) => { if (S[i]) a.setSub(S[i]); }); return A.map((a) => 'AB'[a.team] + ':' + (a.subId || '-')).join(' '); })()`));
     const t0 = Date.now();
     const r = await js(`(async () => {
       const g = window.__inkwave, m = g.match, Kp = m.karp;
