@@ -13,6 +13,7 @@
 import * as THREE from 'three';
 import { G } from '../core/ctx.js';
 import { partPose } from '../game/lavaCore.js';
+const FIZ_SPARK = new THREE.Color('#ff7424'), FIZ_ASH = new THREE.Color('#5e524c');   // (fizzles: never steam-white)
 
 // ---------------------------------------------------------------------------------------------------- palette
 export const LOOK = {
@@ -527,7 +528,12 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
     // floors as the surface drops below them (their tops 0–0.6 m above it)
     const Sm = this.stm;
     if (Sm) {
-      const rate = st.phase === 'fall' ? 2.6 : st.warn && st.next.to === 'low' ? 0.5 : st.phase === 'low' ? 0.05 : 0.02;
+      // (fix round 2: steam only on the way down — the fall's warning, the fall, the first 6 s of the ebb fading out; none
+      // at HIGH, none in a rise or its warning, none at rest at LOW: embers up = rising, steam down = falling)
+      if (st.phase === 'low' && this._stPh === 'fall') this._ebbT = this.t;
+      this._stPh = st.phase;
+      const ebb = st.phase === 'low' && this._ebbT != null ? Math.max(0, 1 - (this.t - this._ebbT) / 6) : 0;
+      const rate = st.phase === 'fall' ? 2.6 : st.warn && st.next.to === 'low' ? 0.5 : st.phase === 'low' && !(st.warn && st.next.to === 'high') ? 0.35 * ebb : 0;
       const pos = Sm.g.attributes.position.array, sz = Sm.g.attributes.aSize.array, aa = Sm.g.attributes.aA.array, col = Sm.g.attributes.aCol.array;
       const wet = st.phase === 'fall' ? this.dryTops.filter((d) => d.top - this.y > -0.05 && d.top - this.y < 0.6 && Math.hypot(d.cx - cx, d.cz - cz) < 50) : null;
       for (let i = 0; i < Sm.n; i++) {
@@ -574,7 +580,9 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
       if (col) G.fx?.burst(v.setY(v.y + 0.08), up, col, { count: 3, speed: 1.4, size: 0.12, mist: true });
     }
   }
-  fizzle(p, what) { const v = new THREE.Vector3(p.x, this.y + 0.08, p.z); G.fx?.burst(v, new THREE.Vector3(0, 1, 0), new THREE.Color('#d9d6d2'), { count: what === 'device' ? 10 : 5, speed: 2, size: 0.1, mist: true }); }
+  // a shot, bomb or device meeting the lava: ember sparks and a puff of dark ash smoke (fix round 2: the white puffs read as
+  // steam, the fall's cue, at HIGH and in a rise)
+  fizzle(p, what) { const v = new THREE.Vector3(p.x, this.y + 0.08, p.z), up = new THREE.Vector3(0, 1, 0), dev = what === 'device'; G.fx?.burst(v, up, FIZ_SPARK, { count: dev ? 7 : 3, speed: 3, size: 0.06 }); G.fx?.burst(v, up, FIZ_ASH, { count: dev ? 6 : 3, speed: 1.6, size: 0.12, mist: true }); }
   splash(p, team) { const v = new THREE.Vector3(p.x, this.y + 0.1, p.z); G.fx?.burst(v, new THREE.Vector3(0, 1, 0), new THREE.Color('#ff5a24'), { count: 22, speed: 5.5, size: 0.11 }); G.fx?.burst(v, new THREE.Vector3(0, 1, 0), new THREE.Color('#e8e4de'), { count: 10, speed: 2.4, size: 0.2, mist: true }); void team; }
   rumble(level) {
     this._rumW = level;
@@ -657,7 +665,9 @@ const CSS = `
 .lv-mine i { display: inline-block; font-style: normal; font-size: 1.4em; line-height: 1; }
 .lv-mine span { opacity: .85; }`;
 let cssOn = false;
-const DOCKS = { zones: 'zo', tower: 'tw' };   // the Hud fields holding each mode's objective HUD under the timer
+// the Hud fields holding each mode's objective HUD under the timer (fix round 2: Bazookarp's is hud.karpDock — the
+// finished HUD (karp-face, SPEC §6) exposes its column under the clock there; until then the chip keeps its Turf War spot)
+const DOCKS = { zones: 'zo', tower: 'tw', bazookarp: 'karpDock' };
 const fmt =(s) => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 export class LavaHud {
   constructor(R) {
