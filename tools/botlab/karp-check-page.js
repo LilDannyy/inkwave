@@ -552,6 +552,7 @@ export async function runChecks(o = {}) {
           const dy = q.y - n.y, flat = hd(n, q);
           if (dy > 0.6 || dy < -3.4 || flat <= CK.gapLong[0] || flat > CK.gapLong[1]) return;
           if (!openAir(n, q, flat, dy) || nav._blocked(n, q, Math.max(n.y, q.y))) return;
+          if (dy < -K.gap.upMax && !nav._openAbove(q, n.y)) return;   // (not down through the deck it leaves)
           if (walkSet(C, i, 6).has(j)) return;
           cand.long.push({ kind: 'long gap', from: i, to: j, gain: gainOf(C, i, j) });
         });
@@ -922,8 +923,9 @@ const polyPolyDist = (a, b) => Math.min(...a.map((p) => polyDist(b, p[0], p[1]))
 
 // ================================================================================================= #16: a kid's real jump
 // For each edge: a kid with `carry` set (4.8 m/s, the carrier's jump) stepped through actor.update at 1/60 s alone, from
-// 1.5 m and 3 m before the low end facing the far end; it runs and presses jump at each of 5 distances before the edge;
-// success = grounded on the far node's floor within 0.5 m of it inside 2 s.
+// 1.5 m and 3 m before the low end facing the far end; it runs and presses jump at each of 5 distances before the edge
+// (a move down is first tried running off, no jump); success = grounded on the far node's floor inside 2 s: within 0.5 m
+// of it, or on that floor within 3 m with a clear waist line to it (it landed past the node: the last steps are a walk).
 function proveEdges(C, list, o = {}) {
   const t0 = performance.now(), { m, nodes, L, G } = C;
   const kid = m.actors.find((a) => a.bot && a.team === 0) || m.actors.find((a) => a.bot) || m.actors[0];
@@ -946,11 +948,13 @@ function proveEdges(C, list, o = {}) {
       const dx = b.x - kid.pos.x, dz = b.z - kid.pos.z, hb = Math.hypot(dx, dz);
       if (hb > 0.35) it.move.set(dx / hb, 0, dz / hb); else it.move.set(0, 0, 0);
       const along = (edgeP.x - kid.pos.x) * dir.x + (edgeP.z - kid.pos.z) * dir.z;   // metres still to go to the edge
-      if (!jumped && along <= jumpAt && kid.grounded) jumped = 1;
+      if (!jumped && jumpAt != null && along <= jumpAt && kid.grounded) jumped = 1;
       it.jump = jumped > 0 && jumped <= 4; if (jumped) jumped++;
       kid.update(dt);
       if (!kid.alive) break;
-      if (kid.grounded && Math.abs(kid.pos.y - b.y) <= 0.3 && Math.hypot(kid.pos.x - b.x, kid.pos.z - b.z) <= 0.5) { ok = true; break; }
+      // made: grounded on the far node's floor — within 0.5 m of it, or on that floor within 3 m with a clear waist line
+      // to it (a run-off or a jump that lands past the node is on its floor: a carrier walks the last steps)
+      if (kid.grounded && Math.abs(kid.pos.y - b.y) <= 0.3) { const hb2 = Math.hypot(kid.pos.x - b.x, kid.pos.z - b.z); if (hb2 <= 0.5 || (hb2 <= 3 && !C.nav._blocked(b, kid.pos, Math.max(b.y, kid.pos.y)) && Math.abs(L.groundHeight((b.x + kid.pos.x) / 2, (b.z + kid.pos.z) / 2, b.y + 0.3) - b.y) <= 0.3)) { ok = true; break; } }
       if (kid.pos.y < -3) break;
     }
     it.jump = false; it.move.set(0, 0, 0);
@@ -967,9 +971,12 @@ function proveEdges(C, list, o = {}) {
     for (const back of [1.5, 3.0]) {
       // the run-up's start: back along the line from the low end, on floor at about its height (shortened if not)
       let st = null;
-      for (let bb = back; bb >= 0.3 && !st; bb -= 0.3) { const x = a.x - dir.x * bb, z = a.z - dir.z * bb, f = L.groundHeight(x, z, a.y + 0.4); if (f > a.y - 0.45 && f < a.y + 0.4 && G.physics.bodyFits(V.set(x, f + 0.02, z), PLAYER.radius, PLAYER.stepUp, PLAYER.height, false, 0.04)) st = { x, y: f, z }; }
+      // (down to standing on the low end itself: a narrow top with no floor behind it is still stepped off)
+      for (const bb of [...Array.from({ length: Math.round(back / 0.3) }, (_, k) => back - k * 0.3), 0]) { if (st) break; const x = a.x - dir.x * bb, z = a.z - dir.z * bb, f = L.groundHeight(x, z, a.y + 0.4); if (f > a.y - 0.45 && f < a.y + 0.4 && G.physics.bodyFits(V.set(x, f + 0.02, z), PLAYER.radius, PLAYER.stepUp, PLAYER.height, false, 0.04)) st = { x, y: f, z }; }
+      if (!st && back === 3.0) st = { x: a.x, y: a.y, z: a.z };   // (the node itself: nav put it where a body fits)
       if (!st) continue;
-      for (const j of [0.2, 0.5, 0.8, 1.1, 1.4]) { if (one(a, b, st, j, edgeP, dir)) { ok = true; break; } }
+      // a down move is tried running off the edge first (no jump), then with the jump at the five distances
+      for (const j of [...(b.y < a.y - 0.6 ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4]) { if (one(a, b, st, j, edgeP, dir)) { ok = true; break; } }
       if (ok) break;
     }
     out.push({ kind: e.kind, from: e.from, to: e.to, ok, beyond: !!e.beyond });
