@@ -9,8 +9,8 @@
 // LoopWire: offline — a host whose records go nowhere, except (tests) to a follower engine `delay` s later, and whose
 // guest side can be driven by a test (its _emit plays a guest's message on the host).
 // NetWire: online through G.netm (net/netmatch.js: 'bk' records at once, 'ks' snapshots on the timeline, the guest
-// messages, kd to one guest). WP2 (karp-face) completes the netcode on this shape (the narrowed flush at a host change,
-// the fuse hold for a remote Carp Blast, latency: docs/NET.md's Bazookarp section lists what is left).
+// messages, kd to one guest; a remote carrier's real samples pushed by netmatch _sample → engine.onSamples; holdFor:
+// the fuse hold before a remote carrier's Carp Blast). docs/NET.md's Bazookarp section is the whole protocol.
 import { G } from '../core/ctx.js';
 
 export class KarpWire {
@@ -84,4 +84,7 @@ export class NetWire extends KarpWire {
   }
   // the newest sample a remote claimant sent (§7.3: claims are judged where it really is, not where we draw it)
   newest(a) { const b = a?.net?.buf; return b && b.length ? b[b.length - 1] : null; }
+  // [karp-face] how long the host waits for a remote carrier's timeline to catch up before its Carp Blast (§7.5): that
+  // peer's playback delay plus a frame, at most 0.3 s
+  holdFor(a) { const p = this.nm?.peers.get(a?.owner); return Math.min(0.3, (p ? p.delay : 0.1) + 1 / 60); }
 }

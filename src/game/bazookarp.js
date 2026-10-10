@@ -47,6 +47,7 @@ const HOWS = ['splat', 'fall', 'fuse', 'left', 'moved'];
 const WHYS = ['fall', 'fuse', 'zone', 'left', 'none'];
 const REASONS = ['knockout', 'time', 'untouched', 'comeback', 'retake', 'no-pickup', 'stopped', 'overtime-cap'];
 const OT_WHYS = ['held', 'dropped', 'planted'];
+const LC_HOWS = ['splat', 'fall', 'fuse', 'left', 'plant', null];   // [karp-face] lastCarrier.how on the wire ('S')
 const FALLS = new Set(['water', 'lava', 'void', 'fall', 'sea']);
 const _v = new V3(), _v2 = new V3();
 
@@ -139,7 +140,9 @@ export class Bazookarp {
     this.phase = p; this.phaseT = t;
     if (p !== prev) emit('karp:phase', { phase: p, prev });
   }
-  _rec(e) { if (this.follower) return; e.splice(1, 0, ++this.q); this.lastQ = this.q; this.wire.record(e); }
+  // (q carries on above the last one this screen applied as a follower: a new host's first record — even one made while
+  // its leave handling still runs, before onHostChange — is never at or below what the other guests already applied)
+  _rec(e) { if (this.follower) return; this.q = Math.max(this.q, this.lastQ) + 1; e.splice(1, 0, this.q); this.lastQ = this.q; this.wire.record(e); }
 
   // ================================================================== per frame (Match.update, before the actors move)
   update(dt) {
@@ -300,8 +303,9 @@ export class Bazookarp {
     if (!a.remote && a.specialActive && !a.specialActive.free) G.specials?.end(a, 'karp');
     a.weaponRunner.reset();
     a.carry = { since: this.clock, sp: a.special, gun: null, kick: new V3(), j: { mark: NaN, ret: false, half: -1, zone: false, rate: 1, why: null, foot: null, sent: null, sentFoot: null, sentFootT: 0 }, startBest: this.bestM[a.team] };
-    a.character?.setWeapon?.('sp_zooka');
+    a.character?.setWeapon?.('sp_karp');   // [karp-face] the carp launcher (karpModel.js)
     this.holder = a; this.holderTeam = a.team; this.grantT = this.clock;
+    this._hr = a.remote; this._sampQ = null; this.blastHold = null;   // [karp-face]
     this.fuse = K.fuse; this.rate = 1; this.rateWhy = null;
     this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: -1 };
     this.base = null;
@@ -327,8 +331,8 @@ export class Bazookarp {
     }
     if (C) this.carriedOnce.add(a);   // (the prompt's first-carry line is done for this player)
     a.carry = null;
-    if (a.character && a.character.weaponKind === 'sp_zooka' && !a.specialActive) a.character.setWeapon(a.weaponId);
-    if (this.holder === a) { this.holder = null; this.holderTeam = -1; }
+    if (a.character && (a.character.weaponKind === 'sp_karp' || a.character.weaponKind === 'sp_zooka') && !a.specialActive) a.character.setWeapon(a.weaponId);
+    if (this.holder === a) { this.holder = null; this.holderTeam = -1; this.blastHold = null; this._sampQ = null; }   // [karp-face]
     emit('karp:rate', { actor: a, rate: 1, why: null });
   }
   // a guest declined a grant its player could no longer take (it died first): undo it (§7.3 step 6)
@@ -408,19 +412,38 @@ export class Bazookarp {
   // ================================================================== carried (host)
   _carried(dt, a) {
     const T = a.team;
+    // [karp-face] the carrier changed hands (a guest's carrier adopted by this host as a bot): the clamp's baseline was
+    // in that guest's sample clock — start it afresh in ours, and the mark is read afresh on the new owner's first frame
+    if (this._hr !== a.remote) { if (this._hr !== undefined) { this.base = null; this._sampQ = null; } this._hr = a.remote; }
     // readings: the host's own carrier each frame; a remote one from each real sample it sent (never its drawn position)
     if (!a.remote) { if (a.alive) this._reading(a, T, a.pos, this.clock); }
     else {
-      const ss = this.wire.samples(a, this.remote.sampleT);
-      if (ss) for (const s of ss) { this.remote.sampleT = s.t; if (s.alive && this.holder === a && this.winner == null) this._reading(a, T, _v.set(s.x, s.y, s.z), s.t); }
+      const ss = this._sampQ && this._sampQ.length ? this._sampQ : this.wire.samples(a, this.remote.sampleT);
+      if (ss) for (const s of ss) { if (s.t <= this.remote.sampleT) continue; this.remote.sampleT = s.t; if (s.alive && this.holder === a && this.winner == null) this._reading(a, T, _v.set(s.x, s.y, s.z), s.t); }
+      if (this._sampQ) this._sampQ.length = 0;
     }
     if (this.holder !== a || this.winner != null) return;
     // the fuse: the carrier's own judgement (a remote one: its newest kr)
     const rate = a.remote ? this.remote.rate : this.rate;
-    this.fuse -= dt * rate;
+    this.fuse = Math.max(0, this.fuse - dt * rate);
     const whole = Math.ceil(this.fuse);
     if (whole !== this._fuseWhole) { this._fuseWhole = whole; if (whole <= K.fuseWarn && whole >= 0) emit('karp:fuse', { actor: a, left: whole }); }
-    if (this.fuse <= 0 && a.alive) this._carpBlast(a);
+    if (this.fuse <= 0 && a.alive) {
+      // [karp-face] a REMOTE carrier: wait for its timeline to catch up (its playback delay, ≤ 0.3 s) before the Carp
+      // Blast — a death record of it that plays meanwhile means it was splatted (or fell) before its fuse ran out on its
+      // own screen: then §2.6's splat / fall row applies and there is no blast (SPEC §7.5). The host's own: at once.
+      if (!a.remote) this._carpBlast(a);
+      else if (!this.blastHold || this.blastHold.a !== a) this.blastHold = { a, t: this.clock + (this.wire.holdFor?.(a) ?? 0) };
+      else if (this.clock >= this.blastHold.t) { this.blastHold = null; this._carpBlast(a); }
+    }
+  }
+  // [karp-face] host: a remote carrier's newly played REAL samples (netmatch _sample, SPEC §3.4: prevTr < s.t ≤ tr,
+  // with its alive flag), scored in order by _carried — never its drawn position
+  onSamples(a, ss) {
+    if (this.follower || a !== this.holder || !ss || !ss.length) return;
+    const Q = this._sampQ || (this._sampQ = []);
+    for (const s of ss) if (s.t > this.remote.sampleT && (!Q.length || s.t > Q[Q.length - 1].t)) Q.push(s);
+    if (Q.length > 90) Q.splice(0, Q.length - 90);
   }
   // one reading at pos (time t): the clamp, then count / best, a plant on a standing weir, the risen Gate
   _reading(a, T, pos, t) {
@@ -673,6 +696,17 @@ export class Bazookarp {
     s[0] = 'S';
     s.push(r2(this.bestM[0]), r2(this.bestM[1]), r2(this.reachT[0]), r2(this.reachT[1]), this.lowered[0] ? 1 : 0, this.lowered[1] ? 1 : 0, this.touched ? 1 : 0,
       this.otLosing, r2(this.phaseT), this.shell.hp, this.field.state, this.restNode, this.overtime ? 1 : 0);
+    // [karp-face] what a NEW host needs to carry on (SPEC §7.2 'S', §7.6): the last carrier and plant (its S38 decision
+    // at time-up), the overtime window, the burst's credit (lastHit per team), a remote carrier's own word (kr / kf), the
+    // reset flight's start. Indices 29 … 35.
+    const lc = this.lastCarrier, lp = this.lastPlant, W = this.otWin, R = this.remote, f = R.foot, lh = this.shell.lastHit;
+    s.push(lc ? [lc.team, LC_HOWS.indexOf(lc.how), r2(lc.left)] : -1,
+      lp ? [lp.team, r2(lp.left), r2(lp.win), lp.ot ? 1 : 0] : -1,
+      [r2(W.left), W.open ? 1 : 0, W.closeT != null ? r2(W.grace) : -1],
+      [lh[0]?.nid ?? -1, lh[1]?.nid ?? -1],
+      [R.half, R.zone ? 1 : 0, R.rate, R.why === 'retreat' ? 1 : R.why === 'zone' ? 2 : 0],
+      f ? [r2(f.pos.x), r2(f.pos.y), r2(f.pos.z), f.half, f.zone ? 1 : 0] : -1,
+      [r2(this.from.x), r2(this.from.y), r2(this.from.z)]);
     return s;
   }
   netEvent(e, snap = false) {
@@ -694,10 +728,10 @@ export class Bazookarp {
       }
       case 'u': { const a = byNid(e[2]); if (a) { if (this.holder === a || a.carry) this._release(a); if (!a.remote) this.lockT = 0; } this.pos.set(e[3], e[4], e[5]); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }
       case 'b': { this.pos.set(e[3], e[4], e[5]); this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
-      case 'd': { const H = this.holder; if (H) this._release(H); this._reform(_v.set(e[3], e[4], e[5]), -1); emit('karp:drop', { actor: H, team: H ? H.team : -1, pos: _v.clone(), how: HOWS[e[2]] }); break; }
-      case 'r': { const H = this.holder; if (H) this._release(H); this._reset(_v.set(e[2], e[3], e[4]), WHYS[e[5]] || 'none'); break; }
-      case 'w': { const H = this.holder; this.count[e[2]] = Math.min(this.count[e[2]], this.weirs[e[2]][e[3]]?.count ?? this.count[e[2]]); this._applyPlant(H && H.team === e[2] ? H : null, e[2], e[3]); if (H && H.carry) this._release(H); break; }
-      case 'x': { const a = byNid(e[2]); const c = new V3(e[3], e[4], e[5]); if (a) { this._release(a); this._explode(a, c, !!e[6]); } break; }
+      case 'd': { const H = this.holder; if (H) { this.lastCarrier = { team: H.team, how: HOWS[e[2]], left: this.match.time }; this._release(H); } this._reform(_v.set(e[3], e[4], e[5]), -1); emit('karp:drop', { actor: H, team: H ? H.team : -1, pos: _v.clone(), how: HOWS[e[2]] }); break; }
+      case 'r': { const H = this.holder; if (H) { const w = WHYS[e[5]]; this.lastCarrier = { team: H.team, how: w === 'zone' || w === 'none' ? 'splat' : w, left: this.match.time }; this._release(H); } this._reset(_v.set(e[2], e[3], e[4]), WHYS[e[5]] || 'none'); break; }
+      case 'w': { const H = this.holder; this.lastPlant = { team: e[2], left: this.match.time, win: K.otPick, ot: this.overtime }; this.count[e[2]] = Math.min(this.count[e[2]], this.weirs[e[2]][e[3]]?.count ?? this.count[e[2]]); this._applyPlant(H && H.team === e[2] ? H : null, e[2], e[3]); if (H && H.carry) this._release(H); break; }
+      case 'x': { const a = byNid(e[2]); const c = new V3(e[3], e[4], e[5]); if (a) { this.lastCarrier = { team: a.team, how: 'fuse', left: this.match.time }; this._release(a); this._explode(a, c, !!e[6]); } break; }
       case 't': this.overtime = true; this.otLosing = e[2]; this.overtimeT = 0; emit('karp:overtime', { losing: e[2], why: OT_WHYS[e[3]] }); break;
       case 'e': { this.count = [e[4], e[5]]; this.bestM = [e[6], e[7]]; this.winner = e[2]; this.reason = REASONS[e[3]]; emit('karp:end', { winner: e[2], reason: this.reason, counts: [...this.count] }); this.match.endKarp?.(e[2], this.reason); break; }
     }
@@ -737,6 +771,19 @@ export class Bazookarp {
       this.touched = !!e[22]; this.otLosing = e[23];
       if (e[26] !== this.field.state) this.field.setState(e[26]);
       if (e[28] && !this.overtime) this.overtime = true;
+      // [karp-face] the rest a new host carries on from (older hosts send none of it)
+      if (e.length > 29) {
+        const byNid = (n) => (n >= 0 ? this.match.actors.find((a) => a.nid === n) || null : null);
+        this.lastCarrier = Array.isArray(e[29]) ? { team: e[29][0], how: LC_HOWS[e[29][1]] ?? null, left: e[29][2] } : null;
+        this.lastPlant = Array.isArray(e[30]) ? { team: e[30][0], left: e[30][1], win: e[30][2], ot: !!e[30][3] } : null;
+        if (Array.isArray(e[31])) { this.otWin.left = e[31][0]; this.otWin.open = !!e[31][1]; if (e[31][2] >= 0) { this.otWin.closeT = this.otWin.closeT ?? this.wire.now(); this.otWin.grace = e[31][2]; } else { this.otWin.closeT = null; this.otWin.grace = 0; } }
+        if (Array.isArray(e[32])) this.shell.lastHit = [byNid(e[32][0]), byNid(e[32][1])];
+        if (Array.isArray(e[33])) { const R = this.remote; R.half = e[33][0]; R.zone = !!e[33][1]; R.rate = e[33][2] || 1; R.why = e[33][3] === 1 ? 'retreat' : e[33][3] === 2 ? 'zone' : null; }
+        this.remote.foot = Array.isArray(e[34]) ? { pos: new V3(e[34][0], e[34][1], e[34][2]), half: e[34][3], zone: !!e[34][4] } : null;
+        if (Array.isArray(e[35]) && this.phase === 'resetting') this.from.set(e[35][0], e[35][1], e[35][2]);
+        if (this.phase === 'resetting' || this.phase === 'free') this.phaseT = e[24];
+        this.restNode = e[27];
+      }
     }
   }
   _followerTick(dt) {
@@ -788,16 +835,20 @@ export class Bazookarp {
       return;
     }
     this.q = Math.max(this.q, this.lastQ);
-    this.claims.length = 0; this.preGrant = null; this.pendingLoss = null; this._declined = null;
+    this.claims.length = 0; this.preGrant = null; this.pendingLoss = null; this._declined = null; this.blastHold = null; this._sampQ = null;
+    // [karp-face] shell hits this screen batched for the old host (its kh) count here now
+    const kh = G.objTargets?.takeHits?.(); if (kh) this.netHits(kh);
     const H = this.holder;
-    if (H && (!this.match.actors.includes(H) || !H.alive)) {
-      this.remote.half = -1; this.remote.zone = false;   // (this screen never had its kr: the half from the field)
-      this._lose(H, 'left');
-    } else if (H) {
-      this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: this._newestT(H) };
-      if (H.carry?.j) { const J = H.carry.j; J.mark = NaN; J.ret = false; J.half = -1; }   // (an adopted carrier: read afresh)
+    // (a remote carrier's half / zone / rate / last footing: the old host's word from its last 'S', until the carrier's
+    // own re-sent kr / kf arrive — SPEC §7.6 step 5)
+    if (H && (!this.match.actors.includes(H) || !H.alive)) this._lose(H, 'left');
+    else if (H) {
+      this.remote.sampleT = this._newestT(H);
+      if (H.carry?.j && !H.remote) { const J = H.carry.j; J.mark = NaN; J.ret = false; J.half = -1; }   // (an adopted carrier: read afresh)
     }
+    this._hr = this.holder ? this.holder.remote : undefined;
     this.base = null;
+    this.snapT = 0; this.stateT = 0; this.checkT = 0;
     this.stats.hostChanges = (this.stats.hostChanges || 0) + 1;
     this.wire.snapshot(this._full());
   }
