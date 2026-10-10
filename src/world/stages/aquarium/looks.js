@@ -26,7 +26,9 @@ const TAU = Math.PI * 2, HP = Math.PI / 2;
 // segs: [[ax, ay, az, bx, by, bz], …] the tube runs inside the stage's water volumes (≤ 8)
 export function waterMaterial(T, U, segs, perVertex = false) {
   const m = new T.MeshStandardMaterial({ color: perVertex ? '#ffffff' : '#285865', vertexColors: perVertex, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.6, depthWrite: false, side: T.DoubleSide });
-  const uGlow = { value: 0.1 };   // (the dusk glow from within: warm white × night × this)
+  // (the dusk glow from within: warm white × night × this; the clear water — the Reef Windows, the columns, the pools —
+  // glows a little less (× its density). Measured against a fresh splat at dusk: tests/aquarium-art.js holds it under 60 %)
+  const uGlow = { value: 0.62 };
   Object.defineProperty(m.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
   const N = Math.min(8, segs.length);
   const uA = { value: Array.from({ length: 8 }, (_, i) => new T.Vector3(...(segs[i] ? segs[i].slice(0, 3) : [0, -99, 0]))) };
@@ -51,7 +53,7 @@ float aqRaySeg(vec3 ro, vec3 rd, vec3 a, vec3 b) {
     diffuseColor.a *= mix(0.22, 1.0, clear) * (gl_FrontFacing ? 1.0 : 0.25) * vDense;
   }
 #include <opaque_fragment>`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-  totalEmissiveRadiance += vec3(0.95, 0.92, 0.86) * uGlowW * uNightW;`);
+  totalEmissiveRadiance += vec3(0.98, 0.9, 0.78) * uGlowW * uNightW * mix(0.7, 1.0, vDense);`);
   };
   m.customProgramCacheKey = () => 'aq-water-' + N + (perVertex ? 'v' : '');
   return m;
@@ -126,37 +128,57 @@ function penguinGeo(T) {
   ]);
 }
 // one path per swimmer: aP0 = (cx, cy, cz, R), aP1 = (θ0, A, ω, φ): A = 0 a circle at ω, else θ0 + A sin(ωt + φ) (to and
-// fro along an arc); aP2 = (bob, bob rate, scale, flex); aP3 = (clock: 0 the house clock, 1 Feeding Time's, waddle, tilt).
-// Every swimmer of every kind is ONE instanced mesh: its geometry holds every kind's body (aPart), each instance keeps only
-// its own kind's vertices (aKind; the rest collapse to a point and are culled) — the fish and the penguins cost one draw
-// call together, and the vertex data stays a few thousand vertices
+// fro along an arc); aP2 = (bob, bob rate, scale, flex); aP3 = (clock + 2 · kind: clock 0 the house clock, 1 Feeding
+// Time's; its colour packed as 0xRRGGBB; waddle, tilt).
+// Every swimmer of every kind is ONE instanced draw: its geometry holds every kind's body (aV.w = the part's kind), each
+// instance keeps only its own kind's vertices (the rest collapse to a point and are culled) — the fish and the penguins
+// cost one draw call together, and the vertex data stays a few thousand vertices.
+// It is a plain Mesh on an InstancedBufferGeometry, not an InstancedMesh: an InstancedMesh's identity instanceMatrix
+// (4 attribute slots) and instanceColor (1) took the program to 16 vertex attributes, over the limit of the Mac's GL —
+// the program failed to link and nothing swam at all (LEAD-REVIEW art round 1, the blocker). Now 8: position, normal,
+// color, aV (tail flex, wing flex, wing rate, part), aP0 … aP3.
 function swimmers(T, kinds, U) {
   let nv = 0, ni = 0; for (const k of kinds) { nv += k.geo.attributes.position.count; ni += k.list.length; }
-  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), w = new Float32Array(nv * 2), part = new Float32Array(nv), wg = new Float32Array(nv);
+  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), av = new Float32Array(nv * 4);
   let o = 0;
   kinds.forEach((k, ki) => {
-    const g = k.geo, m = g.attributes.position.count;
-    pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); col.set(g.attributes.color.array, o * 3); w.set(g.attributes.aW.array, o * 2);
-    part.fill(ki, o, o + m); wg.fill(k.wing, o, o + m); o += m;
+    const g = k.geo, m = g.attributes.position.count, w = g.attributes.aW.array;
+    pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); col.set(g.attributes.color.array, o * 3);
+    for (let i = 0; i < m; i++) { av[(o + i) * 4] = w[i * 2]; av[(o + i) * 4 + 1] = w[i * 2 + 1]; av[(o + i) * 4 + 2] = k.wing; av[(o + i) * 4 + 3] = ki; }
+    o += m;
   });
-  const geo = new T.BufferGeometry();
+  const geo = new T.InstancedBufferGeometry();
   geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
-  geo.setAttribute('aW', new T.BufferAttribute(w, 2)); geo.setAttribute('aPart', new T.BufferAttribute(part, 1)); geo.setAttribute('aWg', new T.BufferAttribute(wg, 1));
-  const a0 = new Float32Array(ni * 4), a1 = new Float32Array(ni * 4), a2 = new Float32Array(ni * 4), a3 = new Float32Array(ni * 4), kd = new Float32Array(ni);
-  const im = new T.InstancedMesh(geo, null, ni);
-  const c = new T.Color(), id = new T.Matrix4();
+  geo.setAttribute('aV', new T.BufferAttribute(av, 4));
+  const a0 = new Float32Array(ni * 4), a1 = new Float32Array(ni * 4), a2 = new Float32Array(ni * 4), a3 = new Float32Array(ni * 4);
+  const c = new T.Color();
   let i = 0;
-  kinds.forEach((k, ki) => { for (const f of k.list) { a0.set(f.p0, i * 4); a1.set(f.p1, i * 4); a2.set(f.p2, i * 4); a3.set(f.p3 || [0, 0, 0, 0], i * 4); kd[i] = ki; im.setMatrixAt(i, id); im.setColorAt(i, c.set(f.c || '#ffffff')); i++; } });
+  kinds.forEach((k, ki) => {
+    for (const f of k.list) {
+      const p3 = f.p3 || [0, 0, 0, 0];
+      c.set(f.c || '#ffffff');
+      const rgb = (Math.round(c.r * 255) << 16) | (Math.round(c.g * 255) << 8) | Math.round(c.b * 255);   // (linear: as setColorAt stored it)
+      a0.set(f.p0, i * 4); a1.set(f.p1, i * 4); a2.set(f.p2, i * 4); a3.set([(p3[0] > 0.5 ? 1 : 0) + 2 * ki, rgb, p3[2], p3[3]], i * 4);
+      i++;
+    }
+  });
   geo.setAttribute('aP0', new T.InstancedBufferAttribute(a0, 4)); geo.setAttribute('aP1', new T.InstancedBufferAttribute(a1, 4));
-  geo.setAttribute('aP2', new T.InstancedBufferAttribute(a2, 4)); geo.setAttribute('aP3', new T.InstancedBufferAttribute(a3, 4)); geo.setAttribute('aKind', new T.InstancedBufferAttribute(kd, 1));
+  geo.setAttribute('aP2', new T.InstancedBufferAttribute(a2, 4)); geo.setAttribute('aP3', new T.InstancedBufferAttribute(a3, 4));
+  geo.instanceCount = ni;
+  geo.boundingSphere = new T.Sphere(new T.Vector3(0, 2, 0), 80);
+  const im = new T.Mesh(geo, null);
   const mat = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.0 });
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
-    sh.vertexShader = `attribute vec4 aP0; attribute vec4 aP1; attribute vec4 aP2; attribute vec4 aP3; attribute vec2 aW; attribute float aWg; attribute float aPart; attribute float aKind; uniform float uFT; uniform float uFT2;
+    sh.vertexShader = `attribute vec4 aP0; attribute vec4 aP1; attribute vec4 aP2; attribute vec4 aP3; attribute vec4 aV; uniform float uFT; uniform float uFT2;
 mat3 aqYaw(float a) { float c = cos(a), s = sin(a); return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c); }
+vec3 aqRGB(float p) { float r = floor(p / 65536.0), g = floor((p - r * 65536.0) / 256.0); return vec3(r, g, p - r * 65536.0 - g * 256.0) / 255.0; }
 ` + sh.vertexShader
+      .replace('#include <color_vertex>', `#include <color_vertex>
+  vColor.rgb *= aqRGB(aP3.y);`)
       .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
-  float aqT = aP3.x > 0.5 ? uFT2 : uFT;
+  vec2 aW = aV.xy; float aWg = aV.z, aPart = aV.w, aKind = floor(aP3.x * 0.5);
+  float aqT = mod(aP3.x, 2.0) > 0.5 ? uFT2 : uFT;
   float aqTh = aP1.y > 0.0 ? aP1.x + aP1.y * sin(aP1.z * aqT + aP1.w) : aP1.x + aP1.z * aqT + aP1.w;
   float aqD = aP1.y > 0.0 ? aP1.y * aP1.z * cos(aP1.z * aqT + aP1.w) : aP1.z;
   vec2 aqTn = vec2(-sin(aqTh), cos(aqTh)) * (aqD >= 0.0 ? 1.0 : -1.0);
@@ -173,9 +195,10 @@ mat3 aqYaw(float a) { float c = cos(a), s = sin(a); return mat3(c, 0.0, -s, 0.0,
     if (abs(aPart - aKind) > 0.5) transformed = c;   // (another kind's body: collapsed, culled)
   }`);
   };
-  mat.customProgramCacheKey = () => 'aq-swim-union';
+  mat.customProgramCacheKey = () => 'aq-swim-union2';
   im.material = mat;
   im.frustumCulled = false; im.castShadow = false; im.receiveShadow = false; im.name = 'aq-swimmers';
+  im.userData.count = ni;   // (tests: how many swim)
   return im;
 }
 
