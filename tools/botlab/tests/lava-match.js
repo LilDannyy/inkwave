@@ -75,7 +75,7 @@
   // (fix round 1: the DESIGN §3.7 target — a lookout used by a long-range bot at least once a match; seconds on each
   // team's lookout at HIGH, the long-range kits' share, the claims made and the seconds the claimants held the top)
   const LT = S.lookTeam || [0, 0], LL = S.lookLong || [0, 0];
-  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)', LT[0] + LT[1] >= 1, { lookTeam: LT.map(r1), lookLong: LL.map(r1), claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0) });
+  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)', LT[0] + LT[1] >= 1, { lookTeam: LT.map(r1), lookLong: LL.map(r1), claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0), log: S.lookLog || [] });
   R('the match', true, { mode: MODE, simT: r1(simT), wallS: r1((performance.now() - t0) / 1000), state: m.state, cov, winner: m.result?.winner ?? null, phaseAtEnd: L.st.phase, yAtEnd: L.y });
   return out;
 })();

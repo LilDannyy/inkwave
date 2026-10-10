@@ -955,7 +955,12 @@ export class StageLava {
         s -= Math.hypot(a.pos.x - T.x, a.pos.z - T.z) / 60;
         if (s > bs) { bs = s; best = b; }
       }
-      if (best) { T.L = { ri: T.ri, ids: T.ids, foot: T.foot, path: null, goal: -1, pi: 0, reT: 0, held: 0 }; best._look = T.L; T.claim = best; this.stats.lookClaims = (this.stats.lookClaims || 0) + 1; }
+      if (best) {
+        T.L = { ri: T.ri, ids: T.ids, foot: T.foot, path: null, goal: -1, pi: 0, reT: 0, held: 0, log: null };
+        best._look = T.L; T.claim = best; this.stats.lookClaims = (this.stats.lookClaims || 0) + 1;
+        const LG = (this.stats.lookLog ||= []);
+        if (LG.length < 40) { T.L.log = { t: +t.toFixed(1), team, who: best.a.name, kit: best.a.weapon?.kind, up: null, held: 0, end: null }; LG.push(T.L.log); }
+      }
     }
   }
   _lookSetup() {
@@ -980,6 +985,7 @@ export class StageLava {
   _lookRelease(b) {
     const L = b._look;
     b._look = null;
+    if (L?.log && !L.log.end) { L.log.end = !b.a.alive ? 'splatted' : b.mode === 'refill' ? 'refill' : 'released'; L.log.at = +this.clock.t.toFixed(1); L.log.held = +L.held.toFixed(1); }
     if (L && b.path && (b.path === L.path || L.on)) { b.path = null; b.goalTimer = 0; b.repath = 0; }
   }
   _onLookout(a, ri) { if (!a.grounded || a.ground?.block === undefined) return false; const b = G.level.blocks[a.ground.block]; return !!b && b.lavaRider === this.riders[ri]; }
@@ -992,6 +998,8 @@ export class StageLava {
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
     if (this._onLookout(a, L.ri)) {
       L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt;
+      if (L.log && L.log.up === null) L.log.up = +t.toFixed(1);
+      b.perchUntil = b.t + 0.3;   // (holding a spot on purpose: not stuck — the harnesses' stuck rule reads it)
       const here = nav.nearest(a.pos, 1.2, true);
       if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; }
       if (b.mode !== 'fight') move.set(0, 0, 0);
@@ -1000,7 +1008,9 @@ export class StageLava {
       return;
     }
     L.on = false;
-    if (L.path && b.path !== L.path && b.path !== null) { b.path = L.path; b.pi = L.pi; b.goal = L.goal; }   // (the brain replaced it)
+    // (the brain replaced or dropped it — a goal pick, a zone guard holding its ground: put it back; a route the lava
+    // shuts is dropped by _replanBots, one the body can't follow by _steer's slip rule below)
+    if (L.path && b.path !== L.path) { b.path = L.path; b.pi = L.pi; b.goal = L.goal; }
     const atEnd = !L.path || !b.path || b.pi >= b.path.length;
     if ((atEnd || L.goal === L.foot) && (L.reT -= dt) <= 0) {
       L.reT = 0.8;
@@ -1112,7 +1122,7 @@ export class StageLava {
         metres += Math.hypot(v.x - u.x, v.z - u.z);
         if (M.kind[v.id] && this.shut(v.id, t + metres * LAVA.sPerM)) { bad = true; break; }
       }
-      if (bad && !b._lavaEsc) { b.path = null; b.repath = 0.06 * (k++ % 6); b.goalTimer = 0; }   // (staggered: not every route in one frame)
+      if (bad && !b._lavaEsc) { if (b._look) b._look.path = null; b.path = null; b.repath = 0.06 * (k++ % 6); b.goalTimer = 0; }   // (staggered: not every route in one frame)
     }
   }
   // bots.js: escape a drowning floor or a sinking stone (still shooting: the aim is the brain's), else null
