@@ -12,7 +12,7 @@
 // on its crest at x ±4.5, centre 10.8 m, Ø 2.4 brass, double-faced): a needle between ▲ UP and ▼ DOWN and a red 10 s
 // countdown, driven by the pipe engine's tide (G.match.pipes.flow(), a pure function of the stage clock).
 import { G } from '../../../core/ctx.js';
-import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill } from './looks.js';
+import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildSwimmers, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill } from './looks.js';
 import { buildFar } from './far.js';
 
 const C30 = Math.cos(Math.PI / 6);
@@ -93,14 +93,21 @@ export function buildBackdrop(kit, data = {}) {
     if (!geos.length) return null;
     let n = 0; for (const g of geos) n += g.attributes.position.count;
     const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3); let o = 0;
-    for (const g of geos) { pos.set(g.attributes.position.array, o * 3); if (g.attributes.normal) nor.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; }
-    const m = new T.BufferGeometry(); m.setAttribute('position', new T.BufferAttribute(pos, 3)); m.setAttribute('normal', new T.BufferAttribute(nor, 3)); m.computeBoundingSphere();
+    const extra = ['color', 'aDense'].filter((k) => geos.every((g) => g.attributes[k]));
+    const X = extra.map((k) => new Float32Array(n * geos[0].attributes[k].itemSize));
+    for (const g of geos) { extra.forEach((k, j) => X[j].set(g.attributes[k].array, o * g.attributes[k].itemSize)); pos.set(g.attributes.position.array, o * 3); if (g.attributes.normal) nor.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; }
+    const m = new T.BufferGeometry(); m.setAttribute('position', new T.BufferAttribute(pos, 3)); m.setAttribute('normal', new T.BufferAttribute(nor, 3));
+    extra.forEach((k, j) => m.setAttribute(k, new T.BufferAttribute(X[j], geos[0].attributes[k].itemSize)));
+    m.computeBoundingSphere();
     return m;
   };
   // the deep water (the tanks, the drums, the Arch Tanks: dull, deep, clear round the tubes, thin from inside) and the
-  // clear water (the Reef Windows, the bubble columns, the pools: shallow, lighter)
-  const LOOK = { water: waterMaterial(T, U, TUBE_RUNS), clear: waterMaterial(T, U, []), glass: glassMaterial(T) };
-  LOOK.clear.opacity = 0.26; LOOK.clear.color.set('#3d7480'); LOOK.clear.userData.glow = 0.07;
+  // clear water (the Reef Windows, the bubble columns, the pools: shallow, lighter) in ONE mesh: the clear water's colour
+  // and density ride on its vertices (one draw call)
+  const tag = (geos, hex, dense) => { const c = new T.Color(hex); for (const g of geos) { const n = g.attributes.position.count, a = new Float32Array(n * 3), d = new Float32Array(n).fill(dense); for (let i = 0; i < n; i++) a.set([c.r, c.g, c.b], i * 3); g.setAttribute('color', new T.BufferAttribute(a, 3)); g.setAttribute('aDense', new T.BufferAttribute(d, 1)); } };
+  tag(buckets.water, '#285865', 1.0); tag(buckets.clear, '#3d7480', 0.43);
+  buckets.water.push(...buckets.clear); buckets.clear = [];
+  const LOOK = { water: waterMaterial(T, U, TUBE_RUNS, true), glass: glassMaterial(T) };
   const objects = [];
   for (const [k, geos] of Object.entries(buckets)) {
     const g = merge(geos); if (!g) continue;
@@ -113,12 +120,13 @@ export function buildBackdrop(kit, data = {}) {
   objects.push(...gauges.objects);
   // ---- what lives in the water, the jellies, the bubble columns, the penguins, the bathysphere, Feeding Time
   const rnd = kit.rnd(4242);
-  objects.push(...buildFish(T, rnd, U));
+  const fishKinds = buildFish(T, rnd, U);
   objects.push(buildJellies(T, U, [[6.5, -17.0, 1.58, 0.37, 4.04], [-16.25, -2.9, 1.58, 0.37, 4.04], [-6.5, 17.0, 1.58, 0.37, 4.04], [16.25, 2.9, 1.58, 0.37, 4.04]]));
   objects.push(buildBubbleCols(T, U, rnd, [[0, -21.5, 1.2, 0.4, 5.6], [0, 21.5, 1.2, 0.4, 5.6]]));
   const spots = [[-12, -19.0, 0.3], [-9, -19.6, 0.3], [-5.5, -20.6, 0.3], [-1, -21.2, 0.3], [2.5, -19.4, 0.3], [9.5, -21.5, 0.3], [12.5, -19.2, 0.3], [15.5, -21.0, 0.3], [19, -19.4, 0.3], [23, -20.5, 0.3], [27, -19.0, 0.3]];
-  objects.push(buildPenguins(T, rnd, U, W, spots, POOL));
-  objects.push(buildKrill(T, U, rnd));
+  objects.push(buildSwimmers(T, U, [...fishKinds, buildPenguins(T, rnd, U, W, spots, POOL)]));   // (every fish and penguin: one draw call)
+  const krill = buildKrill(T, U, rnd); krill.visible = false;   // (drawn only in Feeding Time)
+  objects.push(krill);
   const bathy = buildBathysphere(T);
   objects.push(bathy.group);
   const feed = feedingTime();
@@ -131,7 +139,7 @@ export function buildBackdrop(kit, data = {}) {
   const animate = (t) => {
     const dt = last === null ? 0 : Math.min(0.1, Math.max(0, t - last)); last = t;
     const nowS = t, f = feed(nowS), night = U.uNight.value || 0;
-    U.uFT.value += dt; U.uFT2.value += dt * (1 + 1.8 * f.wheel); U.uKrill.value = f.krill;
+    U.uFT.value += dt; U.uFT2.value += dt * (1 + 1.8 * f.wheel); U.uKrill.value = f.krill; krill.visible = f.krill > 0.001;
     bathy.set(0.5 * f.bob, night);
     gauges.animate(t); tide.animate(t); far.animate(nowS, night);
   };
@@ -302,6 +310,7 @@ function tideGauges(T, merge) {
       m4.compose(p, q, s1); needles.setMatrixAt(i, m4);
     });
     needles.instanceMatrix.needsUpdate = true;
+    segs.visible = warn;   // (drawn only in the warning: no draw call the rest of the time)
     const k = warn ? Math.ceil(f.left) : 0;
     if (k !== shown) {
       shown = k;

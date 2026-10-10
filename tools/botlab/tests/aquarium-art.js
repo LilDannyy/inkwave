@@ -29,8 +29,10 @@
   R('the murals sit on faces (portholes on the promenades\' court faces, the board, the crates, the riser, the bund)', muralFaces[4] >= 20 && muralFaces[5] >= 2 && muralFaces[6] >= 6 && muralFaces[7] >= 2 && muralFaces[8] >= 2, muralFaces);
   // 4. the looks in the scene
   const names = new Set(); G.scene.traverse((o) => { if (o.name) names.add(o.name); });
-  const want = ['aq-glass', 'aq-water', 'aq-clear', 'aq-kelp', 'aq-sharks', 'aq-rays', 'aq-turtle', 'aq-smallfish', 'aq-jellies', 'aq-colbubbles', 'aq-penguins', 'aq-krill', 'aq-bathysphere', 'aq-dome-streak'];
-  R('the glass, water, fish, jellies, bubble columns, penguins, krill, bathysphere and the Deep Dome\'s streak are built', want.every((w) => names.has(w)), { missing: want.filter((w) => !names.has(w)) });
+  const want = ['aq-glass', 'aq-water', 'aq-kelp', 'aq-swimmers', 'aq-jellies', 'aq-colbubbles', 'aq-krill', 'aq-bathysphere', 'aq-dome-streak'];
+  R('the glass, water, fish and penguins (one mesh), jellies, bubble columns, krill, bathysphere and the Deep Dome\'s streak are built', want.every((w) => names.has(w)), { missing: want.filter((w) => !names.has(w)) });
+  let sw = null; G.scene.traverse((o) => { if (o.name === 'aq-swimmers') sw = o; });
+  R('every fish and penguin swims in one draw call (sharks, rays, the turtle, reef fish, garibaldi, the silver school, penguins)', sw && sw.isInstancedMesh && sw.count >= 120, { swimmers: sw?.count, verts: sw?.geometry.attributes.position.count });
   let bathy = null; G.scene.traverse((o) => { if (o.name === 'aq-bathysphere') bathy = o; });
   // 5. Feeding Time at 1:00 left: looks only
   const plays = []; const play0 = G.audio?.play?.bind(G.audio);

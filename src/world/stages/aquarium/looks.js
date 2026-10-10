@@ -24,8 +24,8 @@ const TAU = Math.PI * 2, HP = Math.PI / 2;
 
 // ------------------------------------------------------------------------------------------------ water
 // segs: [[ax, ay, az, bx, by, bz], …] the tube runs inside the stage's water volumes (≤ 8)
-export function waterMaterial(T, U, segs) {
-  const m = new T.MeshStandardMaterial({ color: '#285865', roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.6, depthWrite: false, side: T.DoubleSide });
+export function waterMaterial(T, U, segs, perVertex = false) {
+  const m = new T.MeshStandardMaterial({ color: perVertex ? '#ffffff' : '#285865', vertexColors: perVertex, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.6, depthWrite: false, side: T.DoubleSide });
   const uGlow = { value: 0.1 };   // (the dusk glow from within: warm white × night × this)
   Object.defineProperty(m.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
   const N = Math.min(8, segs.length);
@@ -33,9 +33,9 @@ export function waterMaterial(T, U, segs) {
   const uB = { value: Array.from({ length: 8 }, (_, i) => new T.Vector3(...(segs[i] ? segs[i].slice(3, 6) : [0, -99, 0.01]))) };
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uSegA = uA; sh.uniforms.uSegB = uB; sh.uniforms.uNightW = U ? U.uNight : { value: 0 }; sh.uniforms.uGlowW = uGlow;
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWW;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWW; varying float vDense;' + (perVertex ? ' attribute float aDense;' : '')).replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWW = (modelMatrix * vec4(transformed, 1.0)).xyz; vDense = ' + (perVertex ? 'aDense' : '1.0') + ';');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vWW; uniform vec3 uSegA[8]; uniform vec3 uSegB[8]; uniform float uNightW; uniform float uGlowW;
+varying vec3 vWW; varying float vDense; uniform vec3 uSegA[8]; uniform vec3 uSegB[8]; uniform float uNightW; uniform float uGlowW;
 float aqRaySeg(vec3 ro, vec3 rd, vec3 a, vec3 b) {
   vec3 ba = b - a, w = ro - a; float d = dot(rd, ba), e = max(dot(ba, ba), 1e-5), c = dot(rd, w), f = dot(ba, w);
   float s = clamp((f - c * d) / max(e - d * d, 1e-5), 0.0, 1.0);
@@ -48,12 +48,12 @@ float aqRaySeg(vec3 ro, vec3 rd, vec3 a, vec3 b) {
     float dm = 99.0;
     for (int i = 0; i < ${Math.max(1, N)}; i++) dm = min(dm, aqRaySeg(vWW, rd, uSegA[i], uSegB[i]));
     float clear = smoothstep(0.95, 1.7, dm);
-    diffuseColor.a *= mix(0.22, 1.0, clear) * (gl_FrontFacing ? 1.0 : 0.25);
+    diffuseColor.a *= mix(0.22, 1.0, clear) * (gl_FrontFacing ? 1.0 : 0.25) * vDense;
   }
 #include <opaque_fragment>`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
   totalEmissiveRadiance += vec3(0.95, 0.92, 0.86) * uGlowW * uNightW;`);
   };
-  m.customProgramCacheKey = () => 'aq-water-' + N;
+  m.customProgramCacheKey = () => 'aq-water-' + N + (perVertex ? 'v' : '');
   return m;
 }
 export function glassMaterial(T) { return new T.MeshStandardMaterial({ color: '#d4ecef', roughness: 0.04, metalness: 0.1, transparent: true, opacity: 0.2, depthWrite: false, side: T.DoubleSide, envMapIntensity: 1.6 }); }
@@ -86,7 +86,7 @@ const tx = (g, x, y, z, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { g.s
 function sharkGeo(T) {
   const belly = (x, y) => (y < -0.02 ? 1.55 : 1);
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 14, 10), 0, 0, 0, 0, 0, 0, 0.42, 0.42, 2.1), c: '#7d878c', tail: true, shade: belly },
+    { g: tx(new T.SphereGeometry(0.5, 10, 7), 0, 0, 0, 0, 0, 0, 0.42, 0.42, 2.1), c: '#7d878c', tail: true, shade: belly },
     { g: tx(new T.ConeGeometry(0.22, 0.75, 6), 0, 0.38, 0.05, -0.5, 0, 0, 0.25, 1, 1.4), c: '#6b757a', tail: true },
     { g: tx(new T.ConeGeometry(0.2, 0.9, 6), 0, 0.12, -1.38, -1.2, 0, 0, 0.18, 1, 1.2), c: '#3a3f42', tail: true },
     { g: tx(new T.ConeGeometry(0.16, 0.6, 6), 0, -0.18, -1.3, -2.1, 0, 0, 0.18, 1, 1), c: '#3a3f42', tail: true },
@@ -96,49 +96,63 @@ function sharkGeo(T) {
 }
 function rayGeo(T) {
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 12, 6), 0, 0, 0, 0, Math.PI / 4, 0, 1.4, 0.16, 1.4), c: '#4d4a45', wing: true, shade: (x, y) => (y < 0 ? 1.9 : 1) },
+    { g: tx(new T.SphereGeometry(0.5, 10, 5), 0, 0, 0, 0, Math.PI / 4, 0, 1.4, 0.16, 1.4), c: '#4d4a45', wing: true, shade: (x, y) => (y < 0 ? 1.9 : 1) },
     { g: tx(new T.CylinderGeometry(0.02, 0.05, 1.6, 5), 0, 0, -1.2, HP, 0, 0), c: '#3a3733', tail: true },
   ]);
 }
 function turtleGeo(T) {
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 12, 8), 0, 0, 0, 0, 0, 0, 1.0, 0.36, 1.2), c: '#6f6a48', shade: (x, y) => (y < -0.03 ? 1.6 : 1) },
-    { g: tx(new T.SphereGeometry(0.18, 10, 8), 0, 0.02, 0.68, 0, 0, 0, 1, 0.8, 1.1), c: '#8a8a6a' },
-    ...[[0.5, 0.3, -0.5], [-0.5, 0.3, 0.5], [0.42, -0.4, -0.3], [-0.42, -0.4, 0.3]].map(([x, z, r]) => ({ g: tx(new T.SphereGeometry(0.2, 8, 6), x, -0.02, z, 0, r, 0, 1.6, 0.25, 0.7), c: '#7d7a5a', wing: true })),
+    { g: tx(new T.SphereGeometry(0.5, 9, 6), 0, 0, 0, 0, 0, 0, 1.0, 0.36, 1.2), c: '#6f6a48', shade: (x, y) => (y < -0.03 ? 1.6 : 1) },
+    { g: tx(new T.SphereGeometry(0.18, 7, 5), 0, 0.02, 0.68, 0, 0, 0, 1, 0.8, 1.1), c: '#8a8a6a' },
+    ...[[0.5, 0.3, -0.5], [-0.5, 0.3, 0.5], [0.42, -0.4, -0.3], [-0.42, -0.4, 0.3]].map(([x, z, r]) => ({ g: tx(new T.SphereGeometry(0.2, 6, 4), x, -0.02, z, 0, r, 0, 1.6, 0.25, 0.7), c: '#7d7a5a', wing: true })),
   ]);
 }
 function smallFishGeo(T) {
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 10, 8), 0, 0, 0, 0, 0, 0, 0.16, 0.34, 0.5), c: '#ffffff', tail: true, shade: (x, y) => (y < -0.05 ? 1.15 : 0.92) },
+    { g: tx(new T.SphereGeometry(0.5, 7, 5), 0, 0, 0, 0, 0, 0, 0.16, 0.34, 0.5), c: '#ffffff', tail: true, shade: (x, y) => (y < -0.05 ? 1.15 : 0.92) },
     { g: tx(new T.ConeGeometry(0.12, 0.2, 4), 0, 0, -0.32, -HP, 0, 0, 0.3, 1, 1.4), c: '#ffffff', tail: true },
   ]);
 }
 function penguinGeo(T) {
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 12, 10), 0, 0.42, 0, 0, 0, 0, 0.42, 0.8, 0.4), c: '#24262b' },
-    { g: tx(new T.SphereGeometry(0.5, 12, 10), 0, 0.4, 0.06, 0, 0, 0, 0.34, 0.68, 0.32), c: '#f1efe8' },
-    { g: tx(new T.SphereGeometry(0.17, 10, 8), 0, 0.92, 0.02), c: '#24262b' },
+    { g: tx(new T.SphereGeometry(0.5, 9, 7), 0, 0.42, 0, 0, 0, 0, 0.42, 0.8, 0.4), c: '#24262b' },
+    { g: tx(new T.SphereGeometry(0.5, 9, 7), 0, 0.4, 0.06, 0, 0, 0, 0.34, 0.68, 0.32), c: '#f1efe8' },
+    { g: tx(new T.SphereGeometry(0.17, 7, 5), 0, 0.92, 0.02), c: '#24262b' },
     { g: tx(new T.ConeGeometry(0.04, 0.16, 5), 0, 0.9, 0.2, HP, 0, 0), c: '#b07a4a' },
-    { g: tx(new T.SphereGeometry(0.2, 8, 6), 0.21, 0.5, 0, 0, 0, 0.3, 0.2, 1.1, 0.5), c: '#24262b', wing: true },
-    { g: tx(new T.SphereGeometry(0.2, 8, 6), -0.21, 0.5, 0, 0, 0, -0.3, 0.2, 1.1, 0.5), c: '#24262b', wing: true },
-    { g: tx(new T.SphereGeometry(0.08, 6, 4), 0.08, 0.04, 0.08, 0, 0, 0, 1, 0.4, 1.4), c: '#b07a4a' },
-    { g: tx(new T.SphereGeometry(0.08, 6, 4), -0.08, 0.04, 0.08, 0, 0, 0, 1, 0.4, 1.4), c: '#b07a4a' },
+    { g: tx(new T.SphereGeometry(0.2, 5, 4), 0.21, 0.5, 0, 0, 0, 0.3, 0.2, 1.1, 0.5), c: '#24262b', wing: true },
+    { g: tx(new T.SphereGeometry(0.2, 5, 4), -0.21, 0.5, 0, 0, 0, -0.3, 0.2, 1.1, 0.5), c: '#24262b', wing: true },
+    { g: tx(new T.SphereGeometry(0.08, 5, 3), 0.08, 0.04, 0.08, 0, 0, 0, 1, 0.4, 1.4), c: '#b07a4a' },
+    { g: tx(new T.SphereGeometry(0.08, 5, 3), -0.08, 0.04, 0.08, 0, 0, 0, 1, 0.4, 1.4), c: '#b07a4a' },
   ]);
 }
-// one path per instance: aP0 = (cx, cy, cz, R), aP1 = (θ0, A, ω, φ): A = 0 a circle at ω, else θ0 + A sin(ωt + φ) (to and
-// fro along an arc); aP2 = (bob, bob rate, scale, flex); aP3 = (clock: 0 the house clock, 1 Feeding Time's, waddle, tilt)
-function swimmers(T, geo, list, U, opts = {}) {
-  const n = list.length;
-  const im = new T.InstancedMesh(geo, null, n);
-  const a0 = new Float32Array(n * 4), a1 = new Float32Array(n * 4), a2 = new Float32Array(n * 4), a3 = new Float32Array(n * 4);
-  const col = new T.Color(), id = new T.Matrix4();
-  list.forEach((f, i) => { a0.set(f.p0, i * 4); a1.set(f.p1, i * 4); a2.set(f.p2, i * 4); a3.set(f.p3 || [0, 0, 0, 0], i * 4); im.setMatrixAt(i, id); im.setColorAt(i, col.set(f.c || '#ffffff')); });
+// one path per swimmer: aP0 = (cx, cy, cz, R), aP1 = (θ0, A, ω, φ): A = 0 a circle at ω, else θ0 + A sin(ωt + φ) (to and
+// fro along an arc); aP2 = (bob, bob rate, scale, flex); aP3 = (clock: 0 the house clock, 1 Feeding Time's, waddle, tilt).
+// Every swimmer of every kind is ONE instanced mesh: its geometry holds every kind's body (aPart), each instance keeps only
+// its own kind's vertices (aKind; the rest collapse to a point and are culled) — the fish and the penguins cost one draw
+// call together, and the vertex data stays a few thousand vertices
+function swimmers(T, kinds, U) {
+  let nv = 0, ni = 0; for (const k of kinds) { nv += k.geo.attributes.position.count; ni += k.list.length; }
+  const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), w = new Float32Array(nv * 2), part = new Float32Array(nv), wg = new Float32Array(nv);
+  let o = 0;
+  kinds.forEach((k, ki) => {
+    const g = k.geo, m = g.attributes.position.count;
+    pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); col.set(g.attributes.color.array, o * 3); w.set(g.attributes.aW.array, o * 2);
+    part.fill(ki, o, o + m); wg.fill(k.wing, o, o + m); o += m;
+  });
+  const geo = new T.BufferGeometry();
+  geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
+  geo.setAttribute('aW', new T.BufferAttribute(w, 2)); geo.setAttribute('aPart', new T.BufferAttribute(part, 1)); geo.setAttribute('aWg', new T.BufferAttribute(wg, 1));
+  const a0 = new Float32Array(ni * 4), a1 = new Float32Array(ni * 4), a2 = new Float32Array(ni * 4), a3 = new Float32Array(ni * 4), kd = new Float32Array(ni);
+  const im = new T.InstancedMesh(geo, null, ni);
+  const c = new T.Color(), id = new T.Matrix4();
+  let i = 0;
+  kinds.forEach((k, ki) => { for (const f of k.list) { a0.set(f.p0, i * 4); a1.set(f.p1, i * 4); a2.set(f.p2, i * 4); a3.set(f.p3 || [0, 0, 0, 0], i * 4); kd[i] = ki; im.setMatrixAt(i, id); im.setColorAt(i, c.set(f.c || '#ffffff')); i++; } });
   geo.setAttribute('aP0', new T.InstancedBufferAttribute(a0, 4)); geo.setAttribute('aP1', new T.InstancedBufferAttribute(a1, 4));
-  geo.setAttribute('aP2', new T.InstancedBufferAttribute(a2, 4)); geo.setAttribute('aP3', new T.InstancedBufferAttribute(a3, 4));
-  const mat = new T.MeshStandardMaterial({ vertexColors: true, roughness: opts.rough ?? 0.55, metalness: 0.0 });
+  geo.setAttribute('aP2', new T.InstancedBufferAttribute(a2, 4)); geo.setAttribute('aP3', new T.InstancedBufferAttribute(a3, 4)); geo.setAttribute('aKind', new T.InstancedBufferAttribute(kd, 1));
+  const mat = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.0 });
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
-    sh.vertexShader = `attribute vec4 aP0; attribute vec4 aP1; attribute vec4 aP2; attribute vec4 aP3; attribute vec2 aW; uniform float uFT; uniform float uFT2; uniform float uWing;
+    sh.vertexShader = `attribute vec4 aP0; attribute vec4 aP1; attribute vec4 aP2; attribute vec4 aP3; attribute vec2 aW; attribute float aWg; attribute float aPart; attribute float aKind; uniform float uFT; uniform float uFT2;
 mat3 aqYaw(float a) { float c = cos(a), s = sin(a); return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c); }
 ` + sh.vertexShader
       .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
@@ -152,16 +166,16 @@ mat3 aqYaw(float a) { float c = cos(a), s = sin(a); return mat3(c, 0.0, -s, 0.0,
   {
     vec3 p = transformed * aP2.z;
     p.x += sin(aqT * 7.0 + p.z * 3.0 + aP1.w * 9.0) * aP2.w * aW.x * 0.35 * aP2.z;
-    p.y += sin(aqT * uWing + aP1.w * 4.0) * aW.y * aW.y * 0.6 * aP2.z;
+    p.y += sin(aqT * aWg + aP1.w * 4.0) * aW.y * aW.y * 0.6 * aP2.z;
     p.z += aP3.w * p.y;
     vec3 c = vec3(aP0.x + aP0.w * cos(aqTh), aP0.y + aP2.x * sin(aqT * aP2.y + aP1.w * 3.0), aP0.z + aP0.w * sin(aqTh));
     transformed = aqYaw(aqYw) * p + c;
+    if (abs(aPart - aKind) > 0.5) transformed = c;   // (another kind's body: collapsed, culled)
   }`);
   };
-  mat.customProgramCacheKey = () => 'aq-swim-' + (opts.key || '');
+  mat.customProgramCacheKey = () => 'aq-swim-union';
   im.material = mat;
-  im.frustumCulled = false; im.castShadow = false; im.receiveShadow = false;
-  im.name = 'aq-' + (opts.key || 'fish');
+  im.frustumCulled = false; im.castShadow = false; im.receiveShadow = false; im.name = 'aq-swimmers';
   return im;
 }
 
@@ -189,14 +203,15 @@ export function buildFish(T, rnd, U) {
     const a = (-55 + rnd() * 50) * Math.PI / 180, amp = (4 + rnd() * 6) * Math.PI / 180;
     both(small, { p0: [0, 1.1 + rnd() * 1.9, 0, 30.9 + rnd() * 1.0], p1: [a, amp, 0.12 + rnd() * 0.12, rnd() * 6], p2: [0.08, 0.8, 0.3 + rnd() * 0.18, 1.3], p3: [0, 0, 0, 0], c: reefC[i % reefC.length] });
   }
-  const U2 = { uFT: U.uFT, uFT2: U.uFT2, uWing: { value: 1.8 } };
   return [
-    swimmers(T, sharkGeo(T), sharks, U2, { key: 'sharks', rough: 0.45 }),
-    swimmers(T, rayGeo(T), rays, U2, { key: 'rays' }),
-    swimmers(T, turtleGeo(T), turtles, U2, { key: 'turtle' }),
-    swimmers(T, smallFishGeo(T), small, U2, { key: 'smallfish', rough: 0.35 }),
+    { geo: sharkGeo(T), list: sharks, wing: 1.8 },
+    { geo: rayGeo(T), list: rays, wing: 1.8 },
+    { geo: turtleGeo(T), list: turtles, wing: 1.8 },
+    { geo: smallFishGeo(T), list: small, wing: 1.8 },
   ];
 }
+// every swimmer (the fish and the penguins) in one mesh
+export function buildSwimmers(T, U, kinds) { return swimmers(T, kinds, { uFT: U.uFT, uFT2: U.uFT2 }); }
 // the penguins: both coves (Alpha's along the blade's trailing edge; the twin turned), standing, waddling, a few swimming
 // in the pool. toWorld(s, w) maps the blade frame; pool = [s, w, r, y]
 export function buildPenguins(T, rnd, U, toWorld, spots, pool) {
@@ -208,8 +223,7 @@ export function buildPenguins(T, rnd, U, toWorld, spots, pool) {
   }
   const [px, pz] = toWorld(pool[0], pool[1]);
   for (let i = 0; i < 3; i++) list.push(...twin({ p0: [px, pool[3] - 0.38, pz, pool[2] * (0.45 + 0.2 * i)], p1: [rnd() * TAU, 0, (i % 2 ? -1 : 1) * (0.5 + 0.2 * i), 0], p2: [0.02, 3, 0.75, 0], p3: [0, 0, 0, 0.9] }));
-  const U2 = { uFT: U.uFT, uFT2: U.uFT2, uWing: { value: 6.0 } };
-  return swimmers(T, penguinGeo(T), list, U2, { key: 'penguins', rough: 0.4 });
+  return { geo: penguinGeo(T), list, wing: 6.0 };
 }
 
 // ------------------------------------------------------------------------------------------------ the moon-jelly columns
@@ -277,36 +291,43 @@ export function buildBubbleCols(T, U, rnd, cols) {
 // ------------------------------------------------------------------------------------------------ Bathysphere No. 1
 export function buildBathysphere(T) {
   const g = new T.Group(); g.name = 'aq-bathysphere';
-  const steel = new T.MeshStandardMaterial({ color: '#6d7a80', roughness: 0.38, metalness: 0.65 });
-  const dark = new T.MeshStandardMaterial({ color: '#3e474b', roughness: 0.5, metalness: 0.6 });
-  const brass = new T.MeshStandardMaterial({ color: '#a8895a', roughness: 0.32, metalness: 0.75 });
-  const lit = new T.MeshBasicMaterial({ color: '#f3e3c0' });
-  const ball = new T.Mesh(new T.SphereGeometry(1.45, 32, 22), steel); g.add(ball);
-  // the equator and the hatch flanges, the bolts, three portholes (the front three, round the face), the hatch on top
-  const eq = new T.Mesh(new T.TorusGeometry(1.46, 0.06, 8, 48), dark); eq.rotation.x = HP; g.add(eq);
-  const ports = [];
+  const parts = [], glass = [];
+  const add = (geo, hex, m4) => { const gg = geo.index ? geo.toNonIndexed() : geo; if (m4) gg.applyMatrix4(m4); const c = new T.Color(hex), n = gg.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) a.set([c.r, c.g, c.b], i * 3); gg.setAttribute('color', new T.BufferAttribute(a, 3)); parts.push(gg); };
+  const M = (x, y, z, rx = 0, ry = 0, rz = 0) => new T.Matrix4().compose(new T.Vector3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(rx, ry, rz)), new T.Vector3(1, 1, 1));
+  const look = (p, n) => { const o = new T.Object3D(); o.position.copy(p); o.lookAt(n); o.updateMatrix(); return o.matrix; };
+  const STEEL = '#6d7a80', DARK = '#3e474b', BRASS = '#a8895a';
+  add(new T.SphereGeometry(1.45, 32, 22), STEEL);
+  add(new T.TorusGeometry(1.46, 0.06, 8, 48), DARK, M(0, 0, 0, HP));
   for (const [a, y] of [[0, 0.15], [0.75, 0.05], [-0.75, 0.05], [Math.PI, 0.15], [Math.PI + 0.75, 0.05], [Math.PI - 0.75, 0.05]]) {
     const n = new T.Vector3(Math.sin(a), y, Math.cos(a)).normalize();
-    const ring = new T.Mesh(new T.TorusGeometry(0.22, 0.06, 8, 20), brass);
-    ring.position.copy(n.clone().multiplyScalar(1.46)); ring.lookAt(n.clone().multiplyScalar(3)); g.add(ring);
-    const glass = new T.Mesh(new T.CircleGeometry(0.2, 18), lit); glass.position.copy(n.clone().multiplyScalar(1.47)); glass.lookAt(n.clone().multiplyScalar(3)); g.add(glass);
-    ports.push(glass);
+    add(new T.TorusGeometry(0.22, 0.06, 8, 20), BRASS, look(n.clone().multiplyScalar(1.46), n.clone().multiplyScalar(3)));
+    const gl = new T.CircleGeometry(0.2, 18).toNonIndexed(); gl.applyMatrix4(look(n.clone().multiplyScalar(1.47), n.clone().multiplyScalar(3))); glass.push(gl);
   }
-  const bolts = new T.InstancedMesh(new T.SphereGeometry(0.035, 6, 4), dark, 48);
-  const m4 = new T.Matrix4();
-  for (let i = 0; i < 48; i++) { const a = (i / 48) * TAU; m4.makeTranslation(Math.cos(a) * 1.5, 0.1 * (i % 2 ? 1 : -1), Math.sin(a) * 1.5); bolts.setMatrixAt(i, m4); }
-  g.add(bolts);
-  const hatch = new T.Mesh(new T.CylinderGeometry(0.55, 0.6, 0.32, 20), dark); hatch.position.y = 1.5; g.add(hatch);
-  const eye = new T.Mesh(new T.TorusGeometry(0.16, 0.05, 8, 16), dark); eye.position.y = 1.78; g.add(eye);
-  // the plaque: 923 m · 1934 (a brass plate on the equator, court-facing both ways)
-  for (const a of [HP, -HP]) { const p = new T.Mesh(new T.BoxGeometry(0.5, 0.22, 0.03), brass); p.position.set(Math.sin(a) * 1.49, -0.35, Math.cos(a) * 1.49); p.rotation.y = a; g.add(p); }
-  // the cables: from the eye up to the cross girder (16.8): scaled each frame as the ball bobs
-  const cables = [];
-  for (const x of [-0.45, 0.45]) { const c = new T.Mesh(new T.CylinderGeometry(0.035, 0.035, 1, 6), dark); c.position.set(x * 0.4, 0, 0); g.add(c); cables.push([c, x]); }
+  for (let i = 0; i < 48; i++) { const a = (i / 48) * TAU; add(new T.SphereGeometry(0.035, 6, 4), DARK, M(Math.cos(a) * 1.5, 0.1 * (i % 2 ? 1 : -1), Math.sin(a) * 1.5)); }
+  add(new T.CylinderGeometry(0.55, 0.6, 0.32, 20), DARK, M(0, 1.5, 0));
+  add(new T.TorusGeometry(0.16, 0.05, 8, 16), DARK, M(0, 1.78, 0));
+  for (const a of [HP, -HP]) add(new T.BoxGeometry(0.5, 0.22, 0.03), BRASS, M(Math.sin(a) * 1.49, -0.35, Math.cos(a) * 1.49, 0, a, 0));
+  const mergeAll = (list, withColor) => {
+    let n = 0; for (const q of list) n += q.attributes.position.count;
+    const P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = withColor ? new Float32Array(n * 3) : null; let o = 0;
+    for (const q of list) { P.set(q.attributes.position.array, o * 3); N.set(q.attributes.normal.array, o * 3); if (C) C.set(q.attributes.color.array, o * 3); o += q.attributes.position.count; }
+    const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(P, 3)); geo.setAttribute('normal', new T.BufferAttribute(N, 3)); if (C) geo.setAttribute('color', new T.BufferAttribute(C, 3)); geo.computeBoundingSphere();
+    return geo;
+  };
+  const body = new T.Mesh(mergeAll(parts, true), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.65 }));
+  const lit = new T.MeshBasicMaterial({ color: '#f3e3c0' });
+  const ports = new T.Mesh(mergeAll(glass, false), lit);
+  g.add(body, ports);
+  // the cables: from the eye up to the cross girder (16.8), drawn with the body's steel as two thin rods (one mesh),
+  // stretched each frame as the ball bobs
+  const cg = mergeAll([new T.CylinderGeometry(0.035, 0.035, 1, 6).toNonIndexed().translate(-0.27, 0.5, 0), new T.CylinderGeometry(0.035, 0.035, 1, 6).toNonIndexed().translate(0.27, 0.5, 0)], false);
+  const cables = new T.Mesh(cg, new T.MeshStandardMaterial({ color: DARK, roughness: 0.5, metalness: 0.6 }));
+  g.add(cables);
   g.position.set(0, 14.5, 0);
   const set = (dy, night) => {
     g.position.y = 14.5 + dy;
-    for (const [c, x] of cables) { const top = 16.75 - g.position.y, bot = 1.78; const L = top - bot; c.scale.y = Math.max(0.05, L); c.position.set(x * 0.6, bot + L / 2, 0); c.rotation.z = -x * 0.08; }
+    const bot = 1.78, L = 16.75 - g.position.y - bot;
+    cables.position.y = bot; cables.scale.y = Math.max(0.05, L);
     lit.color.setRGB(0.95, 0.89, 0.75).multiplyScalar(0.55 + 0.6 * night);
   };
   set(0, 0);

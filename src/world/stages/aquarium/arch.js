@@ -509,19 +509,21 @@ export function registerArch(D, H, KIT, G) {
           }
         });
       }
-      // the valve wall (the long middle bay, over the bund: 2.6 m and up), handwheels, gauges, a stencil
-      bl(B, 14.8, 17.2, 0, () => {
+      // the valve wall between two pilasters of the long middle bay (s 13.9 … 16.8, over the bund: 2.6 m and up),
+      // handwheels, gauges, the PUMP HALL · NO ADMITTANCE stencil and a hazard band (all clear of the pilasters)
+      bl(B, 15.35, 17.2, 0, () => {
         B.push(0, 0, 0, -HP);
-        pbox(B, 'paint', '#5f7f75', 6.0, 1.3, 0.05, 0, 3.15, 0.0);
-        for (let i = 0; i < 5; i++) {
-          const x = -2.4 + i * 1.2;
+        pbox(B, 'paint', '#5f7f75', 2.2, 1.3, 0.05, 0, 3.15, 0.0);
+        for (let i = 0; i < 2; i++) {
+          const x = -0.55 + i * 1.1;
           rod(B, 'metal', K.steel, [x, 2.6, 0.1], [x, 4.2, 0.1], 0.08, { seg: 8 });
           B.add('metal', torG(0.2, 0.03, 6, 16), K.red, x, 3.35, 0.24, {});
           for (let k = 0; k < 3; k++) pbox(B, NS('metal'), K.red, 0.02, 0.4, 0.02, x, 3.35, 0.24, { rz: (k * PI) / 3 });
-          if (i % 2 === 0) { B.add('metal', torG(0.11, 0.02, 6, 14), K.brass, x + 0.5, 3.8, 0.1, {}); B.add(NS('glow'), cylGeo(0.1, 0.1, 0.02, 12), K.cream, x + 0.5, 3.8, 0.09, { rx: HP, glow: 0.7 }); }
+          B.add('metal', torG(0.11, 0.02, 6, 14), K.brass, x + 0.4, 3.85, 0.1, {}); B.add(NS('glow'), cylGeo(0.1, 0.1, 0.02, 12), K.cream, x + 0.4, 3.85, 0.09, { rx: HP, glow: 0.7 });
         }
-        letters(B, 'PUMP HALL · NO ADMITTANCE', { h: 0.2, y: 5.65, z: 0.02, c: K.ink, flat: true, mat: 'paint', track: 0.14 });
-        for (let i = 0; i < 12; i++) pbox(B, NS('paint'), i % 2 ? K.ink : K.hazard, 0.5, 0.12, 0.02, -2.75 + i * 0.5, 5.45, 0.02, { rz: 0 });
+        letters(B, 'PUMP HALL', { h: 0.28, y: 5.75, z: 0.02, c: K.ink, flat: true, mat: 'paint', track: 0.16 });
+        letters(B, 'NO ADMITTANCE', { h: 0.15, y: 5.45, z: 0.02, c: K.ink, flat: true, mat: 'paint', track: 0.14 });
+        for (let i = 0; i < 4; i++) pbox(B, NS('paint'), i % 2 ? K.ink : K.hazard, 0.5, 0.12, 0.02, -0.75 + i * 0.5, 5.25, 0.02);
         B.pop();
       });
       // the sawtooth roof: on each tooth a glazed north light (toward the court) and a sloped steel back
@@ -569,7 +571,7 @@ export function registerArch(D, H, KIT, G) {
         B.box('gloss', K.mustard, 1.5, 0.5, 0.9, x, 1.45, z + 0.75, { r: 0.06 });
         pbox(B, 'metal', K.ink, 1.4, 0.06, 1.1, x, 2.18, z + 0.4);
         for (const [dx, dz] of [[-0.68, -0.2], [0.68, -0.2], [-0.68, 0.95], [0.68, 0.95]]) rod(B, 'metal', K.ink, [x + dx, 1.2, z + dz], [x + dx, 2.15, z + dz], 0.025);
-        for (const [dx, dz] of [[-0.62, -0.45], [0.62, -0.45], [-0.62, 1.05], [0.62, 1.05]]) cyl(B, 'rubber', K.rubber, 0.3, 0.24, x + dx * 1.05, 0.3, z + dz, { rz: HP, seg: 12 });
+        for (const [dx, dz] of [[-0.62, -0.45], [0.62, -0.45], [-0.62, 1.05], [0.62, 1.05]]) cyl(B, 'paint', K.rubber, 0.3, 0.24, x + dx * 1.05, 0.3, z + dz, { rz: HP, seg: 12 });
         for (const dx of [-0.45, 0.45]) pbox(B, 'metal', K.steelDk, 0.1, 2.0, 0.1, x + dx, 1.05, z - 0.75);
         for (const dx of [-0.3, 0.3]) pbox(B, 'metal', K.steelDk, 0.12, 0.05, 1.0, x + dx, 0.35, z - 1.2);
         pbox(B, 'wood', K.wood, 1.0, 0.12, 1.0, x, 0.43, z - 1.25);
@@ -653,7 +655,7 @@ export function registerArch(D, H, KIT, G) {
         // (local: x = w, z = −s; the pier runs along z from s 46.5 (z +17.75) to s 82 (z −17.75))
         const L = 35.5;
         pbox(B, 'wood', K.teak, 5.0, 0.22, L, 0, -0.26, 0);
-        for (let z = -L / 2 + 0.4; z < L / 2; z += 0.9) pbox(B, NS('wood'), K.teakDk, 5.02, 0.02, 0.03, 0, -0.14, z);
+        for (let z = -L / 2 + 0.4; z < L / 2; z += 0.9) pbox(B, 'wood', K.teakDk, 5.02, 0.02, 0.03, 0, -0.14, z);
         for (let z = -L / 2 + 1; z < L / 2; z += 4) for (const x of [-2.3, 2.3]) cyl(B, 'wood', K.woodDk, 0.18, 2.4, x, -1.5, z, { seg: 8 });
         for (let z = -L / 2 + 2; z < L / 2 - 2; z += 7) for (const x of [-2.35, 2.35]) { cyl(B, 'metal', K.ink, 0.06, 3.2, x, 1.45, z, { seg: 8 }); globe(B, x, 3.2, z, 0.18, { glow: 1.3 }); }
         for (let z = -L / 2 + 3; z < L / 2 - 3; z += 6) B.add('metal', latheG('bollard', [[0, 0], [0.18, 0], [0.18, 0.35], [0.24, 0.42], [0.2, 0.48], [0, 0.48]], 10), K.ink, 2.2, -0.15, z, {});

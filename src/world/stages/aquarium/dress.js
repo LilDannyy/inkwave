@@ -287,7 +287,7 @@ export function registerDress(D, H, KIT) {
   D.aquarium_cart = {
     desc: "the ice-cream cart's wheels and parasol (pos = the cart block's foot centre, 1.4 × 1.5, to 1.4)",
     build(B) {
-      for (const s of [-1, 1]) { cyl(B, 'rubber', K.rubber, 0.3, 0.08, s * 0.74, 0.3, 0.3, { rz: HP, seg: 14 }); B.add('metal', torG(0.22, 0.02, 4, 14), K.brass, s * 0.79, 0.3, 0.3, { ry: HP }); }
+      for (const s of [-1, 1]) { cyl(B, 'paint', K.rubber, 0.3, 0.08, s * 0.74, 0.3, 0.3, { rz: HP, seg: 14 }); B.add('metal', torG(0.22, 0.02, 4, 14), K.brass, s * 0.79, 0.3, 0.3, { ry: HP }); }
       rod(B, 'metal', K.brass, [0.55, 1.4, -0.6], [0.55, 3.25, -0.6], 0.03);
       B.push(0.55, 3.2, -0.6, 0.3);
       for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; B.add('paint', cylGeo(0, 1.1, 0.35, 3, true, a, TAU / 8), i % 2 ? K.stripeA : K.coral, 0, 0.17, 0, {}); }

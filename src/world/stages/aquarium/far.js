@@ -48,7 +48,7 @@ export function buildFar(kit, P) {
   const A = [33.5, 4.2, 2.0], Bq = [dx - 19.5, dy + 3.0, dz];
   const tubeG = new T.CylinderGeometry(0.9, 0.9, 1, 14, 1, true);
   const L = Math.hypot(Bq[0] - A[0], Bq[1] - A[1], Bq[2] - A[2]);
-  { const g = prep(tubeG, '#cfe3e6', 0.15); g.scale(1, L, 1); g.rotateZ(-Math.PI / 2); g.rotateZ(Math.atan2(Bq[1] - A[1], Math.hypot(Bq[0] - A[0], Bq[2] - A[2]))); g.rotateY(-Math.atan2(Bq[2] - A[2], Bq[0] - A[0])); g.translate((A[0] + Bq[0]) / 2, (A[1] + Bq[1]) / 2, (A[2] + Bq[2]) / 2); plain.push(g); }
+  { const g = prep(tubeG, '#cfe3e6', 0.15); g.scale(1, L, 1); g.rotateZ(-Math.PI / 2); g.rotateZ(Math.atan2(Bq[1] - A[1], Math.hypot(Bq[0] - A[0], Bq[2] - A[2]))); g.rotateY(-Math.atan2(Bq[2] - A[2], Bq[0] - A[0])); g.translate((A[0] + Bq[0]) / 2, (A[1] + Bq[1]) / 2, (A[2] + Bq[2]) / 2); st.push(g); }
   for (let i = 1; i < 10; i++) {
     const t = i / 10, x = A[0] + (Bq[0] - A[0]) * t, y = A[1] + (Bq[1] - A[1]) * t, z = A[2] + (Bq[2] - A[2]) * t;
     st.push(xf(box(0.7, y + 1.6 - 0.9, 0.7, GL), x, (y - 0.9 - 1.6) / 2, z));
@@ -70,6 +70,7 @@ export function buildFar(kit, P) {
     const k = Math.min(1, u * 6) * Math.min(1, (1 - u) * 6);
     streak.position.set(A[0] + (Bq[0] - A[0]) * u, A[1] + (Bq[1] - A[1]) * u, A[2] + (Bq[2] - A[2]) * u);
     streakMat.opacity = (0.45 + 0.4 * night) * k;
+    streak.visible = night > 0.3;   // (a dusk sight: no draw call by day)
   };
   return { static: st, plain, objects: [streak], animate };
 }
