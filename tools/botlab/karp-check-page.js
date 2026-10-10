@@ -254,7 +254,7 @@ export async function runChecks(o = {}) {
     const seen = new Uint8Array(N), st = [...pondNodes]; for (const s of st) seen[s] = 1;
     while (st.length) { const u = st.pop(); for (let k = F.fs[u]; k < F.fs[u + 1]; k++) { const v = F.ft[k]; if (!seen[v] && C.okN[v]) { seen[v] = 1; st.push(v); } } }
     const holes = []; let reach = 0;
-    for (let i = 0; i < N; i++) if (seen[i]) { reach++; if (!fin(C.D[0][i]) || !fin(C.D[1][i])) holes.push(i); }
+    for (let i = 0; i < N; i++) if (seen[i]) { reach++; if ((!fin(C.D[0][i]) || !fin(C.D[1][i])) && !waived(C, '2', nodes[i])) holes.push(i); }
     // the reading sweep (§3.2): exact at every node; on walk edges never more than 2.5 m low
     let nodeWorst = 0, low15 = 0, low25 = 0, worstLow = 0, pts = 0;
     const p = new V3(), q = new V3(), lowAt = [], bar = L.spawnBarrier + 0.4;
@@ -770,11 +770,13 @@ export async function runChecks(o = {}) {
       let best = -1, bd = Infinity; for (const e of dk.edge) if (Dg[e] < bd) { bd = Dg[e]; best = e; }
       const path = []; for (let k = best; k >= 0; k = prev[k]) { path.push(k); if (path.length > 4000) break; }
       const cover = new Map();
+      // (the spawn deck's own blocks — what its nodes stand on — are not cover on the apron in front of it)
+      const deckB = new Set(); for (const id of dk.deck) { const n = nodes[id], f = floorAt(L, n.x, n.z, n.y + 0.05); if (f.b) deckB.add(f.b.id); }
       for (const i of path) {
         const n = nodes[i];
         for (const id of L.queryBlocks(n.x - CK.apronR, n.z - CK.apronR, n.x + CK.apronR, n.z + CK.apronR, [])) {
           const b = L.blocks[id];
-          if (!b.solid || b.dynamic || b.grate || String(b.tag || '').startsWith('karp-')) continue;
+          if (!b.solid || b.dynamic || b.grate || deckB.has(id) || String(b.tag || '').startsWith('karp-')) continue;
           if (Math.min(b.half.x, b.half.z) * 2 < 0.45) continue;
           const top = b.aabbMax.y, bot = b.aabbMin.y;
           if (top < n.y + CK.apronH || bot > n.y + 1.0) continue;
@@ -1289,6 +1291,7 @@ export async function pictures(o = {}) {
       const dk = deckOf(C, 1); let eye = null, bd = Infinity; for (const e of dk.eyes) { const d = hd(e, gp); if (d < bd && losClear(G, e, lookG)) { bd = d; eye = e; } }
       if (eye) await persp('gate-deck', eye, lookG, 'the Dragon Gate from Bravo\'s spawn deck');
       for (const [i, z] of R.zones[1].entries()) { const cx = z.poly.reduce((s2, p) => s2 + p[0], 0) / z.poly.length, czz = z.poly.reduce((s2, p) => s2 + p[1], 0) / z.poly.length, cy = L.groundHeight(cx, czz, (z.y1 ?? 5) + 0.5); const dir = Math.sign(pond.z - czz) || -1; await persp(`zone-${i + 1}`, new V3(cx + 6, (cy > -50 ? cy : 0) + 10, czz + dir * 12), new V3(cx, cy > -50 ? cy : 0, czz), `Bravo's Carp-Free Zone ${i + 1} and its signs`); }
+      for (const [i, v] of (R.def.noRetreat || []).entries()) { const cx = v.poly.reduce((s2, p) => s2 + p[0], 0) / v.poly.length, czz = v.poly.reduce((s2, p) => s2 + p[1], 0) / v.poly.length, cy = L.groundHeight(cx, czz, (v.y1 ?? 5) + 0.5); const dir = Math.sign(pond.z - czz) || -1; await persp(`noretreat-${i + 1}`, new V3(cx + 6, (cy > -50 ? cy : 0) + 10, czz + dir * 12), new V3(cx, cy > -50 ? cy : 0, czz), `noRetreat ${i + 1} (Bravo's half): no retreat test inside it`); }
       const flags = rep._flags || [];
       for (const [i, f] of flags.slice(0, o.flagShots ?? 8).entries()) { const at = new V3(f.at[0], f.at[1], f.at[2]), lk = f.look ? new V3(f.look.x ?? f.look[0], (f.look.y ?? f.look[1]) + 0.6, f.look.z ?? f.look[2]) : at.clone().setY(at.y + 0.6); const dir = new V3(at.x - R.pond.x, 0, at.z - R.pond.z).normalize(); await persp(`flag-${i + 1}`, new V3(at.x - dir.x * 7 + 2, at.y + 4.5, at.z - dir.z * 7 + 2), lk, `flag ${i + 1} (#${f.n}): ${f.what}`); }
     }
