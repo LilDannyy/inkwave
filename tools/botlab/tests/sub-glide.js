@@ -105,6 +105,11 @@
   const box = (x0, x1, y0, y1, z0, z1) => { const b = L.addDynamic({ tag: 'glidetest' + blocks.length }); L.moveDynamic(b, V((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), V((x1 - x0) / 2, (y1 - y0) / 2, (z1 - z0) / 2)); b.dp.set(0, 0, 0); blocks.push(b); return b; };
   const park = () => { for (const b of blocks) { L.moveDynamic(b, V(0, -300 - b.id, 0), V(0.1, 0.1, 0.1)); b.dp.set(0, 0, 0); b.solid = false; } };
   const reset = () => {
+    // ([b5-int3] THE missing stone: the file runs past a 3:00 match — once the clock ran out the match left 'playing',
+    // match.js stopped calling the brains and zeroed every intent, so the scripted kid's press never reached its runner
+    // (the trace: the runner ran, intent.sub false, the stub never called) — 1 full run in 3–11, always late in 'more'.
+    // The clock is kept from running out, as sub-bobber.js does)
+    if (m.time < 120) m.time = 170;
     hook = null; DT = 1 / 60; ctl.sub = ctl.fire = ctl.squid = false;
     G.subs.clear(); P.clear(); G.paint.clear?.(); park();
     for (const a of m.actors) { if (!a.alive) a.respawn(); a.hp = PLAYER.hp; a.invuln = 0; a.status.shield = 0; zero(a); a.form = 'kid'; a.superJumpState = null; if (a.specialActive) G.specials.end?.(a, 'test'); a.specialActive = null; stub(a); a.weaponRunner.reset(); }
@@ -494,8 +499,8 @@
       };
       for (const [wid, n] of [['blade', 2], ['mitts', 2]]) {
         const rr = fightRounds(wid, n);
-        R(`a ${wid === 'blade' ? 'Cutlass' : 'Mitts'} bot's fight throw plants: let go ≥ 5 m from the foe (or early), never a fizzle (${n} rounds) — released at ${rr.map((x) => x.relD).join(' / ')} m`,
-          rr.every((x) => x.thrown && x.relD >= 5 && !x.fizzled), rr);
+        R(`a ${wid === 'blade' ? 'Cutlass' : 'Mitts'} bot's fight throw plants: let go ≥ 5 m from the foe (or early, short of a full cook), never a fizzle (${n} rounds) — released at ${rr.map((x) => x.relD).join(' / ')} m`,
+          rr.every((x) => x.thrown && !x.fizzled && (x.relD >= 5 || x.cook < S.cookMax - 0.05)), rr);   // (the review's rule: ≥ 5 m out, or let go early — not cooked on to full point-blank)
       }
       B.setWeapon('shooter');
       let ok = 0; const rows = [];
