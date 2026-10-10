@@ -415,12 +415,14 @@ const BASE = [
 ];
 
 // ------------------------------------------------------------------------------------------------ the modes
-// Zone Control: the centre is the octagon under the telephone (the concourse top); the side zone on Alpha's leg
+// Zone Control: the centre is the octagon under the telephone (the concourse top); the side zone at Alpha's knee
 const ZONES = {
   center: [{ poly: [[2.49, 6.01], [6.01, 2.49], [6.01, -2.49], [2.49, -6.01], [-2.49, -6.01], [-6.01, -2.49], [-6.01, 2.49], [-2.49, 6.01]], y0: 1.0, y1: 1.8 }],
-  // the side zone: Swimston at the GPO's corner (the carriageway, 8.5 × 10 m), overlooked by the GPO terrace (1.2) and the
-  // forecourt terrace (1.0); in from Swimston, Customs Lane both ways, the forecourt steps and the GPO steps
-  side: { poly: [[-24.5, -47], [-16, -47], [-16, -37], [-24.5, -37]], y0: -0.2, y1: 0.4 },
+  // the side zone: the knee (round C fix 1; it stood at the GPO's corner, 22.6 m from the pad): the cab rank where
+  // Swimston meets the circus and Prow Place's east end (1.0) with its fountain, 12 × 9 m, about 32 m from mid and 46 m
+  // from the pad; both floors count (the street 0, the terrace 1.0, not the 1.2 m cover tops). In from Swimston, Prow
+  // Place's steps (Hoki Lane), the arcade's mouth, the circus ring, the cab rank from the north and the river walk
+  side: { poly: [[-32, -24], [-20, -24], [-20, -15], [-32, -15]], y0: -0.2, y1: 1.1 },
 };
 // Tower Command, "the tower takes the tram line" (drawn on Bravo's half: Alpha's goal): off the concourse's east face,
 // east across the circus to Bravo's knee, a square corner onto Swimston's east track, north up it past the GPO and the
