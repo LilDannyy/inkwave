@@ -5,7 +5,7 @@
 // level shader draws them as concrete tinted by each block's colour (levelMaterial.js: "concrete where a slot is unused").
 // The three materials are the art pass (DESIGN.md §5.3):
 //   bluestone  dark blue-grey basalt setts #57606b, paler joints, a dished gutter: lanes, the circus, kerbs, the terrace
-//   granite    grey granite setts #8a8478 with cable-tram slot rails: Swimston and Flathead carriageways (1880s; remapped
+//   granite    grey granite setts #8a8478 with cable-tram slot rails: Swimston and Flounders carriageways (1880s; remapped
 //              to PATTERN.asphalt today and PATTERN.pavers in the 3000s)
 //   sandstone  pale sandstone flags #b5a990: the concourse, the GPO terrace and steps
 export const SURF = { bluestone: 64, granite: 65, sandstone: 66 };

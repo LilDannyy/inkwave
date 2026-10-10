@@ -16,7 +16,7 @@ facing +z has +x on its *left*. Every `half` piece is Alpha's, and Bravo's is it
 are tops. Water (the river) is the death plane at y −1.6. "Era 1" is the 1880s, "era 2" is today and "era 3" is the
 3000s. An era tag uses the engine's format: `'1'`, `'12'`, `'2'`, `'23'` or `'3'`, and no tag means all three. Bearings
 are measured from +z toward +x (0° = north, 90° = east, 180° = Alpha's spawn), so they read as a clock face: 12 o'clock
-is Bravo's spawn, 6 o'clock is Alpha's. Flathead Street's frame: "along" = p·(0.9063, 0.4226) and "off" =
+is Bravo's spawn, 6 o'clock is Alpha's. Flounders Street's frame: "along" = p·(0.9063, 0.4226) and "off" =
 p·(−0.4226, 0.9063); `AO(a, o)` is the world point at along a, off o.
 
 Every number in §2 to §4 comes out of one plan model (revision 2: `geo2.py` is the piece list; `plan2.py` rasterises it
@@ -42,17 +42,17 @@ measurements agree. They are raster estimates. The real tools (`spawn-mid.js`, `
 ### 0.2 What I took from whom (five lines)
 
 1. **Base: gimmick.** I kept its layout: Swimston Street on the spawn axis, a round circus with a 1.3 m octagonal concourse under the dome, a diagonal street out to a wharf on each side, river corners and railyard corners, era-1 gates and era-3 builds, the Halo, the tower riding the tram line and the weir by the Post Office steps.
-2. **From play:** I took the real corner's names and buildings (Swimston / Flathead Streets, Degrayling and Hoki Lanes, Centre Plaice, the Young & Jackfish, the Yabby) and the era-slot kit (one collider, three looks). I also took the home-arm / away-arm reading of the X, the early bell at J − 20 with the clocks counting down, phone kiosks ringing with Tartar, Tartar's lines and (revision 2) its "living" idea of a second storey that only the future builds.
+2. **From play:** I took the real corner's names and buildings (Swimston / Flounders Streets, Degrayling and Hoki Lanes, Centre Plaice, the Young & Jackfish, the Yabby) and the era-slot kit (one collider, three looks). I also took the home-arm / away-arm reading of the X, the early bell at J − 20 with the clocks counting down, phone kiosks ringing with Tartar, Tartar's lines and (revision 2) its "living" idea of a second storey that only the future builds.
 3. **From place:** I took the identity (bluestone and the telephone are the only things that never change), the light pulses that run out along the overhead wires before the wave and the Royal Arcade's striker clock. I also took the flood marks and storm bank as Tartar's clue, the frozen-wave hero shot and the rewind under the results.
 4. **From the engine draft:** I kept the union world, the radial front from Tartar at 25 m/s and every hard rule. What I changed (in `ENGINE.md`): Boss Battle runs in era 2, highlights use neutral colours, a roof-to-floor rule for appearing on roofs (19b), a pre-bell, era masks on murals, and rule 4 is restated.
-5. **Mine:** I redrew and measured the whole plan twice. Revision 2 tapers the Swimston strokes and lengthens the Flathead strokes so the stage reads as an X, closes real routes in the 1880s, builds a real new area in the 3000s (the Signal Garden over the railyards), raises the base onto a terrace and puts free-standing cover in every lane.
+5. **Mine:** I redrew and measured the whole plan twice. Revision 2 tapers the Swimston strokes and lengthens the Flounders strokes so the stage reads as an X, closes real routes in the 1880s, builds a real new area in the 3000s (the Signal Garden over the railyards), raises the base onto a terrace and puts free-standing cover in every lane.
 
 ### 0.3 Revision 2 in one paragraph
 
 The reviewers were right that revision 1 was a 54 m band with stubs, that its lanes were bare, that its 1880s closures
 closed nothing, that its 3000s added 5 % and that its sky-bridge appeared over the hotel balcony. Revision 2 tapers both
 Swimston strokes toward the circus (the river quay comes in from x 27 to 21.5 and the viaduct from x −27 to −24),
-lengthens the Flathead strokes from along ±50 to ±62, and cuts the hotel's low wing so Prow Place opens north. Era 1 now
+lengthens the Flounders strokes from along ±50 to ±62, and cuts the hotel's low wing so Prow Place opens north. Era 1 now
 has three routes per team: Degrayling Lane north is stacked with crates, the Royal Arcade is a building site, and the
 river side has neither its boardwalk nor its bridge. Jump 1 opens all of them. Jump 2 builds the Halo, two glass stairs up
 to it out of the Swimston superstops, the **Signal Garden** (about 300 m² of park on a deck over each team's railyard,
@@ -71,7 +71,7 @@ the 1880s to today to the 3000s, opening new routes and raising new ground as th
 
 **Identity.** A southern river city paid for by a gold boom and paved in dark blue-grey basalt: every kerb, gutter,
 laneway and plinth is bluestone, in 1888, today and in the 3000s. The stage is its heart, **Clockface Circus**: the round
-plaza where the tram boulevard, **Swimston Street**, meets the old river road, **Flathead Street**, which cuts across the
+plaza where the tram boulevard, **Swimston Street**, meets the old river road, **Flounders Street**, which cuts across the
 grid on the diagonal because it follows the river bend. In the middle stands **Flounders Street Station's dome**: an open
 domed booking hall on eight cast-iron columns, with a **row of five clocks over each flight of steps**. "Meet you under
 the clocks." Around the circus stand the city everyone knows without its name: the flatiron corner pub (**the Young &
@@ -116,13 +116,13 @@ Two streets cross at the circus, and each is drawn as two strokes that reach out
 - **Swimston Street** runs along z (the spawn axis). Each team's **Swimston stroke** is a fan that narrows toward the
   circus: 54 m wide across its base (x ±27), **45.5 m at its waist** (x −24 … 21.5). Its river side is a diagonal quay
   from (27, −54) to (21.5, −30), its railyard side a diagonal viaduct from (−27, −58) to (−24, −33).
-- **Flathead Street** runs through (0, 0) on bearing **65°**. Its land is the band **|off| ≤ 14** out to **along ±62**
+- **Flounders Street** runs through (0, 0) on bearing **65°**. Its land is the band **|off| ≤ 14** out to **along ±62**
   (the wharves). Alpha's arm is along < 0 (west-south-west, 8 o'clock); Bravo's arm is along > 0.
 - The four corners between them are out of play and reach in close to the circus. The **river bends** fill the
   north-west and south-east corners: the water comes up to the circus's edge at 4 and 10 o'clock (the apex is 22 m from
   the centre). The **railyards** fill the south-west and north-east corners, raised behind a bluestone viaduct wall; their
   apex is 36 m from the centre.
-- The X is skewed (65° / 115°). The Swimston strokes are 83 m long (to the engine house), the Flathead strokes 62 m (to
+- The X is skewed (65° / 115°). The Swimston strokes are 83 m long (to the engine house), the Flounders strokes 62 m (to
   the wharf ends). In era 2 a boardwalk and a bridge web each river corner; in era 3 a garden deck fills the inner part of
   each railyard corner and a ring floats over the middle.
 
@@ -160,7 +160,7 @@ top 0 (it carries the hour-ring mural, §5.4); the ground helper leaves that squ
 sides close in on the circus; the water reaches the circus at 4 and 10 o'clock. A plain band with jagged edges
 (revision 1, Kelpline, Cargo) has long straight sides; this has none: the longest
 straight stretch of either Swimston stroke's side is 25 m (the quay beside the Plaice and the Boathouse), and the
-Flathead strokes run 30–45 m past the Swimston strokes' sides.
+Flounders strokes run 30–45 m past the Swimston strokes' sides.
 §6.1 #1 makes this a check: the `check-maps --svg` thumbnail, side by side with Kelpline's and Treehills'.
 
 **Unlike every other stage:** Kelpline and Cargo are one skewed band, Treehills a diamond, Terraces and Spirhalite an S,
@@ -326,7 +326,7 @@ exist at the same time.
 |---|---|---|
 | −0.16 … −0.08 | the boardwalk (eras 2–3), the Iron Bridge (eras 2–3), the Tide Steps (era 3) | level with the quay (an 8–16 cm step) |
 | 0 | streets, lanes, the circus, Customs Lane, Centre Plaice, Prow Place, the arms | — |
-| 0.3 | the tram islands (Flathead), the west-track stop (Swimston, not in Tower Command) | a step |
+| 0.3 | the tram islands (Flounders), the west-track stop (Swimston, not in Tower Command) | a step |
 | 0.6 | Degrayling Lane's raised pavements (both ends of the Plaice), the Royal Arcade's floor and arch, the West Wharf | a step-hop from anywhere |
 | 1.0 | the forecourt terraces and yards round each base | hop up anywhere; full-width steps from Swimston |
 | 1.2 | the GPO terrace | hop up its north and east faces; the GPO steps (8 m wide) |
@@ -515,7 +515,7 @@ Notes:
   0.6, soffit 3.8 (3.2 m headroom). It is open in every era: from Hotel Lane and Prow Place it leads straight north onto
   the circus at 7:30. From era 2 the whole arcade feeds it.
 - **Prow Place** is the square west of the hotel, x −24 … −19.1, z −26.6 … −18.6: Hoki Lane's north end, Hotel Lane's
-  west end and the arm's south walk meet there. It opens north across its full 4.9 m width onto Flathead's carriageway
+  west end and the arm's south walk meet there. It opens north across its full 4.9 m width onto Flounders's carriageway
   (8 o'clock), and the arch beside it gives a second, separate exit to 7:30. The revision-1 low wing and the 3 m gap are
   gone.
 - **Hoki Lane** runs from the forecourt terrace (z −50, a 1.0 m hop down) north to Prow Place, between the arcade's
@@ -555,7 +555,7 @@ keeps a strip of railyard roof between the garden and the wall there). The tile 
 one): t1 x −32.5…−24.6, z −34…−27.58; t2 x −32.5…−24.6, z −42…−34; t3 x −32.5…−25.6, z −50…−42; t4 x −40.5…−32.5,
 z −42…−34; t5 x −40.5…−32.5, z −50…−42; t6 x −48.5…−40.5, z −42…−35; t7 x −48…−40.5, z −50…−42.
 
-**Alpha's arm: Flathead Street WSW and the West Wharf** (along −62 … −17)
+**Alpha's arm: Flounders Street WSW and the West Wharf** (along −62 … −17)
 
 *As built: no West Wharf, Customs House, south walk or W1; the street off −4.5 … 14 to along −40, then off ±9.5 to the tram terminus at along −56 (a 1.4 m platform with two flights, a shelter, the sidings bed); the tram waits at the last stop (along −34 … −28); Prawn Alley leaves the tip's south edge for Hoki Lane (§2.6a).*
 
@@ -564,7 +564,7 @@ z −42…−34; t5 x −40.5…−32.5, z −50…−42; t6 x −48.5…−40.5
 | customs house | (−31.97, −23.73) | 4 × 14 @ 65° (along −46…−32, off −10…−6) | 0–8 | roof | | the Customs House: the arm's south frontage |
 | warehouse W1 | (−38.73, −9.23) | 4 × 14 @ 65° (along −46…−32, off 6…10) | 0–7 | roof | | riverside bond warehouse |
 | warehouse W2 | (−25.59, −3.1) | 4 × 7 @ 65° (along −28…−21, off 6…10) | 0–7 | roof | | riverside warehouse; its end faces the circus |
-| tram island arm / shelter | (−28.1, −13.1) | 2.4 × 6 / 1 × 4 @ 65° | 0–0.3 / 0.3–2.6 | — / roof | | Flathead tram stop |
+| tram island arm / shelter | (−28.1, −13.1) | 2.4 × 6 / 1 × 4 @ 65° | 0–0.3 / 0.3–2.6 | — / roof | | Flounders tram stop |
 | tram island arm 2 / arm planter 2 | (−39.42, −18.38) | 2.4 × 5 / 1.2 × 3 @ 65° | 0–0.3 / 0.3–1.5 | | | a second kerb island with a planter |
 | arm cover N / N2 / S / S2 | (−35.42, −12.54) / (−25.09, −7.73) / (−19.61, −13.56) / (−31.84, −19.26) | 1.2 × 2.2 @ 65° | 0–1.2 | | | carriageway kerb cover (era kit) |
 | north walk benches 1 / 2, north walk bollards | (−44.95, −7.72), (−37.7, −4.34), (−27.73, 0.31) | 0.8–1.2 × 2 @ 65° | 0–1 | | | the riverside promenade's cover |
@@ -691,7 +691,7 @@ The tables in §2.1–§2.6 are the design. The blockout (`src/world/stages/blue
 listed here, Alpha's half (Bravo's is the twin). Everything else is as designed. Floor (check-blockout, walkable tops):
 6,952 / 7,551 / 8,413 m² in eras 1 / 2 / 3 (era 3 +11.4 % over era 2). Round B fix 1 cut 510 / 634 / 642 m² from fix
 round 3's 7,462 / 8,185 / 9,055, all of it from floor eras 1–2 have (the review: pay for the 3000s with it).
-- **The arm (Flathead WSW).** The street runs off −4.5 … 14 from the circus to along −40 (the yard's edge was off −6,
+- **The arm (Flounders WSW).** The street runs off −4.5 … 14 from the circus to along −40 (the yard's edge was off −6,
   the design's south walk to −14: the 1.5 m strip off −6 … −4.5 went to the yard and the garden in fix round 3).
   Bravo's Iron Bridge lands on the promenade at along −37.9 … −32.5 (railed either side), and Bravo's boardwalk at
   −21.2 … −17.4. Warehouse W2 covers along −31.1 … −22.5, off 6 … 14. W1, the Customs House, the south walk, the West
@@ -914,7 +914,7 @@ What it means in play:
 | 3 | 93.8 % | 79.8 % | **0** |
 
   The strip test scans every 2 m-wide straight strip on every floor tier (0, 0.6, 1.0, 1.2) along four directions (N–S,
-  E–W, along Flathead, across Flathead) and finds none longer than 25 m without a 0.9 m object standing in it, in the
+  E–W, along Flounders, across Flounders) and finds none longer than 25 m without a 0.9 m object standing in it, in the
   Turf War / Zone Control / Bazookarp build. Revision 1 had 49 m in Swimston's west track, Degrayling and the Yabby walk.
   In the Tower Command build the ten longest strips are all the tower's own lane (Swimston's west track, Customs Lane,
   Little Lane, the terrace's north strip): the tower stands in them. Halyard measures 94.2 % with `cover-map.js`; the
@@ -972,7 +972,7 @@ eras: {
   phones: [[17.73, 1.2, -3.13], [-13.4, 1.2, -10.47], [-20.7, 2.1, -55.0]],               // Alpha's kiosks; mirrored
   pulses: [                                                       // overhead-wire routes for the warn's light pulses
     [[0, 9, 0], [0, 6.5, -20], [0, 6.5, -50], [0, 7, -64]],                        // Swimston's tram wire
-    [[0, 9, 0], [-17, 6.5, -8], [-52, 6.5, -24]],                                   // Flathead's tram wire, to the wharf
+    [[0, 9, 0], [-17, 6.5, -8], [-52, 6.5, -24]],                                   // Flounders's tram wire, to the wharf
     [[0, 9, 0], [13.5, 6, -14], [13.5, 6, -45]],                                    // Degrayling's telephone wire
     [[0, 9, 0], [21, 6, -8], [24, 6, -40], [26, 7, -56]],                           // the river lamps, quay to terrace
     [[0, 9, 0], [-16, 7, -20], [-21.5, 6, -26], [-22, 6, -48]],                     // the arch, Prow Place, Hoki Lane
@@ -1461,7 +1461,7 @@ flames, the furnace door), never across a sky or a floor: two team inks are Tang
 
 | Building / area | 1880s | Today | 3000s |
 |---|---|---|---|
-| **Flounders Street Station dome** (the centre) | Fresh copper dome (a warm bronze), ochre-and-cream drum, cast-iron columns in green, clock cases in timber with Roman numerals, gas globes | Weathered verdigris dome, gold lettering "FLATHEAD STREET STATION" on the drum, the clocks lit from behind, the famous row over each flight | A lattice of white light over the old drum rising to 22 m, the clocks as rings of light, vertical gardens on the columns; **Tartar unchanged** |
+| **Flounders Street Station dome** (the centre) | Fresh copper dome (a warm bronze), ochre-and-cream drum, cast-iron columns in green, clock cases in timber with Roman numerals, gas globes | Weathered verdigris dome, gold lettering "FLOUNDERS STREET STATION" on the drum, the clocks lit from behind, the famous row over each flight | A lattice of white light over the old drum rising to 22 m, the clocks as rings of light, vertical gardens on the columns; **Tartar unchanged** |
 | **The Young & Jackfish** (the flatiron hotel: the Swimston wing to 9 m, the prow with its corner turret to 13 m, the arch over the arcade, the iron-lace balcony and gallery) | Bluestone and render, iron-lace balcony and gallery in dark green, gilt "HOTEL" lettering, a coach lamp in the arch | Repainted cream and ochre, gold signs, beer-garden umbrellas on the balcony, a glass hotel extension rising behind the turret | The facade kept under a glass crown; a 20 m pearl-glass spire grows out of the prow; the balcony's iron lace lit from inside |
 | **The General Post Office** (terrace, colonnade, clock tower at its NE corner to 16 m) | Sandstone, a time ball on a mast, mail carts | A shopping gallery with banners; a glass office tower set back behind the facade | A white ceramic shell over the old roof to 16 m; the time ball a light orb |
 | **The Royal Arcade** (glass roof at 6.0, shopfronts, the striker clock over the north mouth, the arch under the hotel) | Under construction: timber hoardings at both mouths ("THE ROYAL ARCADE: GRAND OPENING 1889"), scaffold and stacked bricks inside under a half-glazed roof | Mosaic floor, glass vault, chocolatier, toy shop, barber; a kiosk, a flower stall and benches; the two fish-folk giants on the striker clock | Light-wrapped gallery, plants climbing the iron |
@@ -1532,7 +1532,7 @@ nearest roofs grow spires, shells and farms and the Halo and the glass stairs gl
 | Slot | Name | Look | Where |
 |---|---|---|---|
 | stage slot 1 | `bluestone` | dark blue-grey basalt setts #57606b, paler joints #3d434b, a dished gutter channel | laneways, the circus, kerbs, plinths, the terrace: **the constant** in every era, so ink always reads against the same dark mid-grey |
-| stage slot 2 | `granite` | grey granite setts #8a8478 with cable-tram slot rails | Swimston and Flathead carriageways in the 1880s |
+| stage slot 2 | `granite` | grey granite setts #8a8478 with cable-tram slot rails | Swimston and Flounders carriageways in the 1880s |
 | stage slot 3 | `sandstone` | pale sandstone flags **#b5a990** (saturation 0.20, value 0.71) | the concourse, the GPO terrace and steps, the station's bases |
 
 Shared patterns: `asphalt` (the carriageways today), `pavers` (the carriageways in the 3000s, replacing revision 1's
@@ -1559,11 +1559,11 @@ face, chosen so the face is big enough:
 | 6 | 2–3 | a café-lane mural (cups, fish-folk, the dome) | shops E2's east face on Degrayling Lane (x 10.5, z −44 … −31, 0–3 m) |
 | 7 | 2–3 | Hoki Lane's street art (squids, fish-folk, a giant telephone): chalky, ≤ 35 % saturation, painted in by the wave | the arcade's west wall, west face (x −19.1, z −46 … −26, 0–3 m) |
 | 8 | 2 | the superstop's road markings: TRAM STOP and the yellow platform lines | the top face of Swimston's carriageway block round the superstop (the ground helper keeps x −4.5 … 4.5, z −30 … −12 one block) |
-| 9 | 1 | a painted 1880s ghost sign, "CABLE TRAMS 3d · FLATHEAD ST" (painted out by the wave at jump 1) | the bond store's north face on the Plaice (z −38, x 16.5 … 19.5, 0–3 m) |
+| 9 | 1 | a painted 1880s ghost sign, "CABLE TRAMS 3d · FLOUNDERS ST" (painted out by the wave at jump 1) | the bond store's north face on the Plaice (z −38, x 16.5 … 19.5, 0–3 m) |
 | 10 | all | the turntable ring | the top face of the forecourt terrace's centre block (x −5 … 5, z −66 … −52.4) |
 | 11 | 3 | "FLOOD LEVEL 3026 ▲" tide marks | the Boathouse's river face (x 21.5, z −24 … −12) |
 
-Everything else is on props, per era: the street names (enamel plates on corners: SWIMSTON ST, FLATHEAD ST, DEGRAYLING
+Everything else is on props, per era: the street names (enamel plates on corners: SWIMSTON ST, FLOUNDERS ST, DEGRAYLING
 LANE, HOKI LANE, LITTLE LANE, HOTEL LANE, CUSTOMS LANE, CENTRE PLAICE), the GPO's lettering, "CABLE TRAMWAY ENGINE HOUSE
 1885" on the spawn deck's face, the hoarding posters, "H.M. CUSTOMS: BONDED", "BRIDGE OPENS 1889", café menus,
 tram-stop flags, "FREE TRAM ZONE", the 3000s' light seams (light-strip props along the kerbs). Every telephone kiosk
@@ -1621,7 +1621,7 @@ Alpha's half, mirrored:
 ### 5.8 The intro and the hero shot
 
 - **Intro** (era 1, since every match starts there): `intro: { from: [-58, 16, -24], lookFrom: [0, 7, 0], toBack: 3.2 }`.
-  It starts high over Alpha's West Wharf, looking east-north-east along Flathead Street at the dome with Tartar hanging
+  It starts high over Alpha's West Wharf, looking east-north-east along Flounders Street at the dome with Tartar hanging
   under it; **Tartar rings once** as the camera passes the clocks, teaching the sound; then it swings back to the team's
   spawn deck, the chimney smoking.
 - **Stage-select art:** `art: { from: [44, 26, -46], look: [0, 4, -6], fov: 56 }`: high over the south-east river bend,
@@ -1652,7 +1652,7 @@ engine from step 4.
 ### 6.1 What the lead will judge against (all with `ERA=1/2/3` unless said otherwise)
 
 1. **Shape.** The `check-maps --svg` thumbnail, side by side with Kelpline's and Treehills': it reads as a skewed X
-   (each Swimston stroke a fan narrowing onto the circus, the Flathead strokes running 30–45 m past them, river corners
+   (each Swimston stroke a fan narrowing onto the circus, the Flounders strokes running 30–45 m past them, river corners
    reaching the circus at 4 and 10 o'clock, railyard corners behind the viaduct). A band with jagged edges fails.
 2. **No empty areas.** Every area listed in §5.2 is dressed. **No 2 m-wide straight strip at floor level (any tier) longer
    than 25 m without a free-standing object of 0.9 m or more in it**, measured per era in the Turf War build (in the
@@ -1731,13 +1731,13 @@ the revision-2 plan model (`geo2.py`, `plan2.py` and the measuring scripts), whi
 
 | # | Severity | Issue | What I did | Status |
 |---|---|---|---|---|
-| A1 | blocker | The silhouette is a 54 m band with two short stubs, not a skewed X | Redrew the outline (§2.1). Each Swimston stroke is now a fan that narrows onto the circus: the river quay runs diagonally from (27, −54) to (21.5, −30) and the viaduct from (−27, −58) to (−24, −33), so the waist is 45.5 m against the base's 54 m. The water reaches the circus at 4 and 10 o'clock (the apex 22 m from the centre, was 27). The Flathead strokes run to along ±62 (were ±50), 30–45 m past the Swimston strokes. No straight side is longer than 25 m. Re-measured spawn-mid (71.5 m), L (59.4 m) and the tower (149.0 m). §6.1 #1 now compares the `check-maps --svg` thumbnail with Kelpline's and Treehills'. I tried the review's notches literally first (river cut to x 17 at z −8…−36, railyard to x −21 at z −30…−52): drawn, it still read as a jagged band and it deleted Hoki Lane and the Boathouse, so I used the tapered fans instead. | Resolved |
+| A1 | blocker | The silhouette is a 54 m band with two short stubs, not a skewed X | Redrew the outline (§2.1). Each Swimston stroke is now a fan that narrows onto the circus: the river quay runs diagonally from (27, −54) to (21.5, −30) and the viaduct from (−27, −58) to (−24, −33), so the waist is 45.5 m against the base's 54 m. The water reaches the circus at 4 and 10 o'clock (the apex 22 m from the centre, was 27). The Flounders strokes run to along ±62 (were ±50), 30–45 m past the Swimston strokes. No straight side is longer than 25 m. Re-measured spawn-mid (71.5 m), L (59.4 m) and the tower (149.0 m). §6.1 #1 now compares the `check-maps --svg` thumbnail with Kelpline's and Treehills'. I tried the review's notches literally first (river cut to x 17 at z −8…−36, railyard to x −21 at z −30…−52): drawn, it still read as a jagged band and it deleted Hoki Lane and the Boathouse, so I used the tapered fans instead. | Resolved |
 | A2 | blocker | The lanes are long and bare; the cover number counts building walls; the §2.10 sightline claims are false | Free-standing cover in every lane at ≤ 25 m: Swimston's superstop median, the west-track stop and lane planter, kerb planters on both footpaths; café islands in Degrayling; crates, bins and a planter alternating sides of Hoki Lane; benches and planters in Customs Lane; quay bench and bollards; a second kerb island, kerb cover, promenade benches and wharf crates in the arm; banks, benches and a kiosk on the forecourt terrace; ring bollards and a third cart in the circus. The plan model's strip test (every 2 m strip on every tier, four directions, every era) finds **0 strips over 25 m** in the Turf War build (revision 1: 49.5 m in Swimston, 49 m in Degrayling, 44 m on the Yabby walk, 47.5 m on the forecourt). Where the tower's 0.75 m keep-clear band forbids cover I took the review's first option: those 17 pieces per half are `notIn: 'tower'` (a `bluestone.tower` key, 3 more AO passes); in Tower Command only the track's own lane exceeds 25 m. §2.10 now reports both cover numbers (walls counted 93.6–93.8 %; free-standing only 77–81 %) and the per-area longest bare strips. §2.9's sightline claim is corrected: the superstop hides the concourse's centre and the zone from the deck; lines along the tram tracks still reach the concourse's front corners at 60 m. The acceptance line is §6.1 #2. | Resolved |
 | A3 | major | Era 3 barely adds new areas (+5.4 %) | Era 3 now adds **+12.0 %** floor over era 2 (8,954 → 10,025 m²). The new area per half is the **Signal Garden** (§2.6): a park on a deck over the railyard, outline area 359 m² (about 330 m² of floor), with its own landmark (the glass shard pavilion round the old signal box), cover at 6–10 m (five planters, the pavilion, a lawn mound), **three** ways in on foot (stairs from Hoki Lane, the arm's south walk and the West Wharf, all 3 m wide) and reasons to fight (it overlooks Hoki Lane, the arm where the enemy's bridge lands and the home wharf, and it is a raised short cut: Hoki Lane → wharf 13 % shorter, west yard → arm 17 %). It is the Federation-Square answer to the railyards beside the real crossing. Also new: the Tide Steps on the river and two glass stairs. Paid for by dropping revision 1's floating gardens and roof garden; the forecourt was not trimmed (it became a terrace instead). | Resolved |
 | A4 | major | The 3000s are not "super futuristic" inside the arena; no buildable superstructures | §5.2 now lists, per arena building, an era-2 and an era-3 rooftop superstructure with heights and materials (e.g. the hotel's 20 m pearl-glass spire to 29 m, the GPO's white ceramic shell to 16 m, vertical-farm towers to 25 m on the bond store and warehouses, a sky-bridge at 12 m between the Customs House and W1, the maglev guideway, the dome's lattice to 22 m; today's glass towers to 22–40 m behind the facades). They are static era props without colliders, ≤ 5 materials per era mask. Checkpoint C and §6.1 #14 add the test: with the backdrop hidden, each era is recognisable from the spawn by the arena buildings alone. | Resolved |
 | A5 | major | Jump 1's "new routes" change almost nothing | Real era-1 closures now: **Degrayling Lane north** is stacked with crates (the user's "a lane full of crates"), **the Royal Arcade** is a building site and now runs straight under the hotel through an arch to 7:30 (the review's second option), **the river side has neither the boardwalk nor the Iron Bridge** (the review's first option, adapted to the new quay). The goods fence is gone (it leaked); the wagon stays as era-1 cover (B9). Era 1 has the centre plus three flanks per team, eras 2–3 the centre plus four flanks and the away bridge. Shortcuts between the places each closure separates: Centre Plaice → 5 o'clock **24 % shorter** after jump 1 (left side); the arcade's mouth → the arch **12 %** (right side); Centre Plaice → Bravo's arm without crossing mid: no way → 47.7 m. **Where the review is wrong:** a pad-to-mid route cannot get ≥ 15 % shorter on this layout without closing Swimston, because Swimston runs straight from each pad to the centre and is open in every era (the spawn-to-mid budget, ENGINE rule 33, and the Bazookarp's ±5 % rule both need it). §2.8 explains this and shows both kinds of measure. The right side's 12 % could only reach 15 % by also closing the hotel arch in era 1, which would make Prow Place's single 4.9 m exit carry both right flanks again (A7). | Resolved for the left side and in spirit; right side 12 % (see the note) |
 | A6 | major | The era-3 sky-bridge appears 1.75–2.6 m over the hotel balcony | The sky-bridge, its ramp and the roof garden are gone. The Halo is reached by a glass stair that grows inside each team's Swimston superstop (eras 1–2: a solid 3.2 m `roof` median; ENGINE rule 19) and by the light-pylon. The plan model now checks every appearing piece against every walkable top beneath it in the era before, in the Turf War and Tower Command builds: 0 violations; the Halo's smallest clearance over anything walkable is 3.8 m. The check is in §6.1 #4 and ENGINE T2. | Resolved |
-| A7 | major | Both right-side flanks squeeze through one 3 m gap; the 7 o'clock length is mismeasured | The hotel's low wing is gone: Prow Place opens north across its full 4.9 m onto Flathead's carriageway (8 o'clock), and the new **hotel arch** (4.5 m wide, soffit 3.8 m) gives a separate exit to 7:30, fed by Hotel Lane in every era and by the arcade from era 2. §2.8 is re-measured to distinct circus entries (4, 5, 6, 6:30 balcony, 7:30, 8). The balcony has two 3 m ways up (the front stair from the circus, and the GPO stair from the terrace onto its new gallery); the Boathouse deck has two 3 m stairs (from the Plaice and from the ring). | Resolved |
+| A7 | major | Both right-side flanks squeeze through one 3 m gap; the 7 o'clock length is mismeasured | The hotel's low wing is gone: Prow Place opens north across its full 4.9 m onto Flounders's carriageway (8 o'clock), and the new **hotel arch** (4.5 m wide, soffit 3.8 m) gives a separate exit to 7:30, fed by Hotel Lane in every era and by the arcade from era 2. §2.8 is re-measured to distinct circus entries (4, 5, 6, 6:30 balcony, 7:30, 8). The balcony has two 3 m ways up (the front stair from the circus, and the GPO stair from the terrace onto its new gallery); the Boathouse deck has two 3 m stairs (from the Plaice and from the ring). | Resolved |
 | A8 | major | The ground is mostly flat (78 % at y 0) | **47–48 % at y 0** in every era (§2.5): the base stands on a 1.0 m forecourt terrace (with full-width steps), Degrayling Lane's pavements are 0.6 m above the Plaice (the review's idea), the Royal Arcade and its arch are 0.6 m up, the West Wharf is a 0.6 m timber deck with a 1.6 m loading platform, the GPO terrace is 1.2 m, and the garden adds 3.18 m in era 3. The tower's climbs and drops follow these (§4.3); the zones stay flat. The riverside promenade 0.8 m below the street was not used: the boardwalk and the bridge would then have needed 0.8 m steps at every join. | Resolved |
 | A9 | minor | The sandstone at mid and the 1880s dusk compete with orange and yellow inks | Sandstone → #b5a990 (saturation 0.20). The 1880s dusk is a violet twilight with warm-white gas lamps #ffe0b8; orange only in small flames (§5.6, §5.7, `eras.look`). §6.1 #13 adds era-1 dusk pictures after `PLAY=20` with the tangerine-cobalt and lemon-grape palettes. | Resolved |
 | A10 | minor | The era-2 arcade and the wagon's footprint open up bare | Era-'23' cover inside the old footprints (rule 19): a kiosk, a flower stall and a bench island in the arcade (1.0–1.2 m), and a bike-share dock in the wagon's footprint. | Resolved |
@@ -1774,7 +1774,7 @@ set diagonally across the middle. The X of §2.1 is the same read: a band with a
 dome instead of a hall. The time travel does not change that from above. So, following the lead's correction in
 `../STAGE-RULES.md` ("The lead's correction (2026-10-10)"), round C changes the macro shape before any art. It keeps
 the place, mid, the eras and the look of this document. **§2.1–§2.8's macro shape, outline, piece tables and route
-lengths are superseded by this section** wherever they describe the X: the two Flathead arms, the terminus, Prawn
+lengths are superseded by this section** wherever they describe the X: the two Flounders arms, the terminus, Prawn
 Alley, the signal yard and Signal Garden, the railyard embankment, Little Lane, Centre Plaice, the Yabby quay, the
 boardwalk and the old Iron Bridge. §2.9 (mid), §3 (the gimmick) and §5 (the look) still hold. **§4.2–§4.4 (the X's
 Zone Control side zone, its City Loop tower track and its Bazookarp) are superseded by §8.7.**
