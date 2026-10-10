@@ -1974,4 +1974,5 @@ export function getWeaponDef(kind) {
 export const GEO_KIT = {
   Parts, C, M, latheZ, torus, at, rbox, orient, screw, decal, placeXY, squidShape, chevronShape, chevrons, deformG, rng, seX,
   hring, wrapY, wrapZ, profR, wrapLathe, onSphere, sphDir, sphZone, swirlShapes, gripSleeve, led, roundRect, refine,
+  pistolGrip, GRIP_PISTOL,   // [karp-face] (the Bazookarp's held model, karpModel.js)
 };

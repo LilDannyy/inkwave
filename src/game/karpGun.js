@@ -14,12 +14,14 @@
 //     × 0.6 in the air); actor.js adds it after the movement model (enemy ink's cap never cancels it).
 //   • records (the owner's kit records, KIT_GHOSTS.karp): [0, gid, x, y, z, vx, vy, vz, c] launch · [1, gid, x, y, z]
 //     landed · [2, gid, x, y, z, c] the blast · [3, gid, dmg] a victim's owner: this player took dmg from shot gid.
-// G.karpGun.shots: every live shot (real and ghost) — bots read their dangers from it (§8.6).
+// G.karpGun.shots: every live shot (real and ghost) — bots read their dangers from it (§8.6). [karp-face] Its sounds:
+// src/audio/sfx-karp.js (karp:shot / karp:land / karp:blast / karp:full); its looks: src/fx/bazookarpFx.js.
 import * as THREE from 'three';
 import { G, emit, clamp, lerp } from '../core/ctx.js';
 import { BAZOOKARP, PLAYER } from '../config.js';
 import { Physics, Hit } from './physics.js';
 import { KIT_GHOSTS, netRec, netId } from './kits/registry.js';
+import './karpModel.js';   // [karp-face] the held carp ('sp_karp')
 
 const GN = BAZOOKARP.gun;
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _hit = new Hit(), _res = { t: 0, dist: 0 };
@@ -85,13 +87,13 @@ export class KarpGun {
       if (!g.charging) { g.charging = true; g.held = 0; g.dinged = false; }
       g.held += dt;
       g.c = clamp((g.held - GN.tapMin) / (GN.chargeTime - GN.tapMin), 0, 1);
-      if (g.c >= 1 && !g.dinged) { g.dinged = true; if (a.isLocal) G.audio?.play?.('charger_full', { volume: 0.6 }); emit('karp:full', { actor: a }); }
+      if (g.c >= 1 && !g.dinged) { g.dinged = true; emit('karp:full', { actor: a }); }   // [karp-face] (its ding: sfx-karp.js)
     } else if (g.charging) {
       if (g.held < GN.tapMin) { g.tap = true; return true; }
       this._fire(a, g.c);
       g.charging = false; g.held = 0; g.c = 0; g.cd = GN.cooldown;
     }
-    a.weaponRunner.charge = g.charging ? g.c : 0;
+    a.weaponRunner.charge = g.charging ? Math.max(0.02, g.c) : 0;   // [karp-face] (rides the tick: the mouth's glow on every screen)
     return true;
   }
   charging(a) { return !!(a.carry?.gun?.charging || a.carry?.gun?.tap); }
@@ -112,7 +114,6 @@ export class KarpGun {
       this.stats.kicks++;
     }
     netRec(a, 'karp', [0, gid, r2(L.from.x), r2(L.from.y), r2(L.from.z), r2(L.vel.x), r2(L.vel.y), r2(L.vel.z), r2(c)]);
-    G.audio?.play?.('zooka_fire', { pos: a.isLocal ? undefined : a.pos, volume: 0.7, pitch: 0.8 });
     emit('karp:shot', { actor: a, charge: c, from: s.start.clone(), vel: s.vel.clone() });
     return s;
   }
@@ -177,7 +178,6 @@ export class KarpGun {
       if (g.hit) s.owner.addTurf?.(G.paint.splat(_v.copy(g.point).addScaledVector(g.normal, 0.1), landPaintOf(s.c), s.team, { seed: Math.random() }));
       netRec(s.owner, 'karp', [1, s.gid, r2(L.x), r2(L.y), r2(L.z)]);
     }
-    G.audio?.play?.('splat_big', { pos: L, volume: 0.5, pitch: 1.3 });
     emit('karp:land', { actor: s.owner, pos: L.clone(), charge: s.c, ghost: s.ghost });
   }
   // the shooter's screen: the blast. Its own players are judged here; the record [2] has every other screen judge theirs
@@ -193,7 +193,6 @@ export class KarpGun {
     netRec(s.owner, 'karp', [2, s.gid, r2(s.land.x), r2(s.land.y), r2(s.land.z), r2(s.c)]);
     this._judge(s, c, R);
     G.fx?.explosion?.(c.clone(), s.owner.color, R);
-    G.audio?.play?.('blaster_boom', { pos: c, volume: 0.6 + 0.4 * s.c, pitch: 0.75 });
     emit('karp:blast', { actor: s.owner, pos: c.clone(), radius: R, charge: s.c });
   }
   // a blast on THIS screen's own players of the other team (offline: everyone; the host: its player and bots; a guest:
