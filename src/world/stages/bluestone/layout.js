@@ -506,7 +506,7 @@ const BAZOOKARP = {
 };
 
 // ------------------------------------------------------------------------------------------------ the eras (the engine's data)
-// ENGINE.md §3.3 exactly; the era engine (src/game/eras.js) is not built yet: nothing reads `eras` until it lands.
+// ENGINE.md §3.3 exactly; the era engine (src/game/eras.js) reads it (the registry key `eras` switches the module on).
 const ERAS = {
   names: ['1880s', 'TODAY', '3000s'],
   at: [1 / 3, 2 / 3],
@@ -540,6 +540,8 @@ const ERAS = {
 // ------------------------------------------------------------------------------------------------ the whole union, then this build's era
 export const HALF_ALL = [...groundPieces, ...MID, ...haloPieces, ...LEG_PIECES, ...KNEE, ...RIVER, ...BASE];
 export const SINGLE_ALL = SINGLE;
+// (the unfiltered lists, every mode's pieces: build/check-maps.mjs runs the era rules on each mode variant from them)
+ERAS.source = { single: SINGLE_ALL, half: HALF_ALL };
 
 const LAYOUT_BLUESTONE = {
   id: 'bluestone',
@@ -555,7 +557,7 @@ const LAYOUT_BLUESTONE = {
   tower: TOWER,
   bazookarp: BAZOOKARP,
   eras: ERAS,
-  era: ERA,   // (the blockout: the era this build was filtered to, 0 = the union; era.js)
+  era: ERA,   // (always 0: the union; the audit option ?era=n is the engine's, era.js)
   decor: { lamps: [], palms: [], flags: [] },
 };
 
