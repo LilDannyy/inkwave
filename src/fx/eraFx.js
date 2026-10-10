@@ -322,6 +322,11 @@ export class EraFx {
     this._buildPulses();
     this.holo = null; this.curtain = null;
     this.stats = { holoPieces: 0, rings: 0 };
+    // the shared materials, made now (their programs compile at load: EraWorld._precompile), never mid-jump
+    const hm = () => new THREE.ShaderMaterial({ uniforms: { uCol: { value: this.colA }, uA: { value: 0 }, uT: { value: 0 }, uFront: { value: -1 }, uD: { value: W.dissolve } }, vertexShader: HOLO_VS, fragmentShader: HOLO_FS,
+      transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
+    this.holoMat = [hm(), hm()];
+    this._curtainOn({ from: 1, to: 2 }); this.curtain.visible = false;
   }
 
   // ---- Tartar (a shared prop, animated): body + dials + handset parts hung from the drum's ceiling by his cord
@@ -425,8 +430,7 @@ export class EraFx {
     const mk = (pos, r, lines) => {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('aR', new THREE.Float32BufferAttribute(r, 1));
-      const mat = new THREE.ShaderMaterial({ uniforms: { uCol: { value: this.colA }, uA: { value: 0 }, uT: { value: 0 }, uFront: { value: -1 }, uD: { value: this.W.dissolve } }, vertexShader: HOLO_VS, fragmentShader: HOLO_FS,
-        transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
+      const mat = this.holoMat[lines ? 0 : 1];
       const m = lines ? new THREE.LineSegments(geo, mat) : new THREE.Mesh(geo, mat);
       m.frustumCulled = false; m.renderOrder = 13; m.visible = false; m.name = lines ? 'EraHoloLines' : 'EraHoloFaces';
       m.onBeforeRender = (r, s, c, g) => { g.drawRange.count = s.overrideMaterial ? 0 : Infinity; };   // (out of the GTAO pass)
@@ -435,7 +439,7 @@ export class EraFx {
     };
     this.holo = [mk(pl, rl, true), mk(pf, rf, false)];
   }
-  _disposeHolo() { for (const m of this.holo || []) { this.group.remove(m); m.geometry.dispose(); m.material.dispose(); } this.holo = null; }
+  _disposeHolo() { for (const m of this.holo || []) { this.group.remove(m); m.geometry.dispose(); } this.holo = null; }
 
   _curtainOn(jump) {
     if (!this.curtain) {
@@ -508,10 +512,16 @@ export class EraFx {
       const Uc = this.curtain.material.uniforms;
       Uc.uTime.value = U.uEraT.value; Uc.uA.value = (0.55 + 0.45 * (1 - x)) * Math.min(1, (t - J.at) / 0.12) * (st.front > this.W.reach ? 0 : 1);
       this.curtain.visible = Uc.uA.value > 0.002;
-    } else if (this.curtain) this.curtain.visible = false;
+    } else if (this.curtain) {
+      // (in the warning it is already drawn, empty: its program is the one the jump uses, compiled before J)
+      const pre = st.phase === 'warn';
+      this.curtain.visible = pre;
+      if (pre) { this.curtain.material.uniforms.uA.value = 0; this.curtain.scale.set(0.01, 0.01, 0.01); }
+    }
   }
   dispose() {
     this._disposeHolo();
+    for (const m of this.holoMat || []) m.dispose();
     this.scene.remove(this.group);
     this.group.traverse((o) => { if (o.isMesh || o.isLineSegments || o.isSprite) { o.geometry?.dispose?.(); if (o.material && !o.material._shared) o.material.dispose?.(); } });
     this._glyph?.dispose?.();

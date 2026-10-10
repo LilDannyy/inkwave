@@ -80,7 +80,9 @@ export class EraWorld {
     this.era = 0; this.navEra = 0; this.envEra = 1; this.jumping = false;
     this.run = null; this.meshes = []; this.propMeshes = []; this.fx = null; this.mm = null; this.nav = null;
     this.stats = { navMs: 0, mergeMs: 0, navBuilds: [], paintMs: 0, meshMs: 0, levelMs: 0, baseMs: [] };
-    this._aoGate = (r, s, c, g) => { g.drawRange.count = s.overrideMaterial && this.jumping ? 0 : Infinity; };
+    // era meshes sit out the GTAO override pass (it draws them without the collapse) while both eras' meshes are up
+    this._aoGate = (r, s, c, g) => { g.drawRange.count = s.overrideMaterial && (this.jumping || this.warming) ? 0 : Infinity; };
+    this.warming = false;
   }
 
   // ---------------------------------------------------------------- build chain
@@ -363,9 +365,25 @@ export class EraWorld {
   ready() {
     this.apply(this.audit || 1, { why: 'start' });
     const idle = typeof requestIdleCallback === 'function' ? (fn) => requestIdleCallback(fn, { timeout: 2500 }) : (fn) => setTimeout(fn, 200);
-    idle(() => { if (G.eraWorld === this && !this.jumping) this._prebuildBases(); });
+    idle(() => { if (G.eraWorld === this && !this.jumping) { this._prebuildBases(); this._precompile(); } });
   }
 
+  // every era material's program (and its shadow depth program) compiled now, at load, not when a piece first shows
+  // mid-jump: each era mesh shown once, collapsed, for a compile pass
+  _precompile() {
+    const r = G.renderer, sc = G.scene, cam = G.camera;
+    if (!r || !sc || !cam || !r.compile) return;
+    const fx = [];
+    this.fx?.group.traverse((o) => { if (o !== this.fx.group && !o.isSprite) fx.push(o); });
+    if (this.fx?.curtain) { this.fx.curtain.material.uniforms.uA.value = 0; this.fx.curtain.scale.set(0.01, 0.01, 0.01); }
+    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx], was = ms.map((m) => m.visible);
+    for (const m of ms) m.visible = true;
+    // a real frame (the game's own post stack: the exact program variants, the shadow depth and the GTAO passes), every
+    // era mesh up but collapsed by the shader (uEra holds the world's era: a piece of another era draws nothing)
+    try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
+    ms.forEach((m, i) => { m.visible = was[i]; });
+    this.stats.compileMs = Math.round(now() - t);
+  }
   // ---------------------------------------------------------------- switches
   // one group to era e now: its blocks solid or not (returns the block ids that came / went)
   _setGroup(g, e) {
@@ -391,7 +409,9 @@ export class EraWorld {
     const U = this.uniforms;
     U.uEra.value.set(eraBit(from), eraBit(to), front, this.dissolve);
     U.uEraW.value.set(eraBit(nextFrom), eraBit(nextTo), warnK, pulseK);
-    const vis = (m) => hasEra(m, from) || (front >= 0 && hasEra(m, to));
+    // (in the warning the coming era's meshes are already up, collapsed by the shader: no program is first used mid-jump)
+    this.warming = warnK > 0 && front < 0;
+    const vis = (m) => hasEra(m, from) || (front >= 0 && hasEra(m, to)) || (this.warming && hasEra(m, nextTo));
     for (const m of this.meshes) m.visible = vis(m.userData.eraMask);
     for (const m of this.propMeshes) m.visible = vis(m.userData.eraMask);
   }
@@ -582,7 +602,7 @@ export class StageEras {
         emit('era:done', { era: J.to });
         break;
       }
-      case 'env': W._envEra(J.to, true); this._envBase = null; break;
+      case 'env': W._envEra(J.to, false); this._envFinal(J); break;
       case 'clear':
         // what vanished goes blank (all late replays have landed): a rewind brings it back clean
         if (J.vanishFaces.length && W.paint) W.paint.clearFaces(J.vanishFaces);
@@ -594,7 +614,8 @@ export class StageEras {
     this._ringAt = this.S.clock.t; this._ringLen = n === 'short' ? 0.4 : 1.6;
     emit('era:ring', { n, pos: [0, 6.6, 0] });
     this._snd('era_ring', { pos: new THREE.Vector3(0, 6.6, 0), volume: 1, n: n === 'short' ? 'short' : 'long' });
-    if (n !== 'short') for (const p of this.W.fx?.phones || []) this._snd('era_kiosk', { pos: p.pos, volume: 0.8 });
+    // (the two kiosks nearest the camera ring aloud; the rest are too far to hear over Tartar)
+    if (n !== 'short' && G.camera) { const cam = G.camera.position; for (const p of [...(this.W.fx?.phones || [])].sort((a, b) => a.pos.distanceToSquared(cam) - b.pos.distanceToSquared(cam)).slice(0, 2)) this._snd('era_kiosk', { pos: p.pos, volume: 0.8 }); }
     if (this.W.fx) this.W.fx.stats.rings++;
   }
   // the warning's state: appearing faces cleared (they arrive blank), the bots' danger layer, the holograms
@@ -700,7 +721,7 @@ export class StageEras {
         for (const n of nav.nodes) {
           if (!nav.valid[n.id]) continue;
           const d2 = (n.x - a.pos.x) ** 2 + (n.z - a.pos.z) ** 2;
-          if (d2 >= bd || L.pointInBlock(b, _p.set(n.x, n.y + 0.5, n.z), 0.6)) continue;
+          if (d2 >= bd || L.pointInBlock(b, _p.set(n.x, n.y + 0.5, n.z), 0.6) || !this._floorOk(n)) continue;
           if (Ph && !Ph.bodyFits(_p.set(n.x, n.y + 0.02, n.z), PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9, squid)) continue;
           bd = d2; best = n.id;
         }
@@ -711,6 +732,8 @@ export class StageEras {
       if (!done) console.warn('[eras] a shove found nowhere to go', a.name, b.tag);
     }
   }
+  // a nav node with its floor in play now (the graph keeps the era before until done): solid ground under it, above water
+  _floorOk(n) { const gh = this.W.level.groundHeight(n.x, n.z, n.y + 0.3); return gh > n.y - 0.25 && gh > PLAYER.waterY + 0.3; }
   // the highest top under (x, z) at or below y: { y, roof } (y −Infinity: nothing — water)
   _floorBelow(x, z, y, skipRoof = false) {
     const L = this.W.level, ids = L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, this._qb || (this._qb = []));
@@ -738,7 +761,12 @@ export class StageEras {
       if (!bad) continue;
       const nav = G.nav;
       let best = -1, bd = 100;
-      for (const n of nav.nodes) { if (!nav.valid[n.id]) continue; const d2 = (n.x - a.pos.x) ** 2 + (n.z - a.pos.z) ** 2 + ((n.y - a.pos.y) * 0.5) ** 2; if (d2 < bd) { bd = d2; best = n.id; } }
+      for (const n of nav.nodes) {
+        if (!nav.valid[n.id]) continue;
+        const d2 = (n.x - a.pos.x) ** 2 + (n.z - a.pos.z) ** 2 + ((n.y - a.pos.y) * 0.5) ** 2;
+        // (the nav still describes the era before until done: only a node whose floor stands now, over dry land)
+        if (d2 < bd && this._floorOk(n)) { bd = d2; best = n.id; }
+      }
       if (best < 0) continue;
       const n = nav.nodes[best];
       a.pos.set(n.x, n.y + 0.05, n.z); if (a.vel) a.vel.set(0, 0, 0); a.netTp = (a.netTp || 0) + 1;
@@ -808,6 +836,26 @@ export class StageEras {
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
     U.uCloudParams.value.z = B.cloud * (1 + (TL.cloudRate - 1) * bump);
     env._fitShadow?.();
+  }
+  // done + 0.7 s: the new era's look settles — the uniforms the time-lapse blended are set to the new theme exactly, the
+  // fog colour follows, and the env map (PMREM, 256) is rebuilt once; no cloud re-bake (the eras' looks never change the
+  // clouds), so this costs a few ms where a full setTheme costs tens (ENGINE §7 risk 10)
+  _envFinal(J) {
+    const env = G.env, B = this._envBase;
+    this._envBase = null;
+    if (!env || !env.U || !B) return;
+    const t = now(), U = env.U, T = B.Tt;
+    U.uZenith.value.set(T.zenith); U.uSkyMid.value.set(T.skyMid); U.uHorizon.value.set(T.horizon);
+    if (T.haze) U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0);
+    const el = T.sunEl * DEG, az = T.sunAz * DEG;
+    U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
+    U.uCloudParams.value.z = B.cloud;
+    if (U.uSeaAmbient && T.seaAmbientK !== undefined) U.uSeaAmbient.value.copy(U.uSkyMid.value).lerp(U.uHorizon.value, 0.5).multiplyScalar(T.seaAmbientK);
+    if (env.fogColor) env.fogColor.copy(U.uHorizon.value).lerp(U.uSkyMid.value, 0.15);
+    if (env.scene?.fog?.isFog) { env.scene.fog.color.copy(env.fogColor); if (T.fog) { env.scene.fog.near = T.fog[0]; env.scene.fog.far = T.fog[1]; } }
+    env._fitShadow?.();
+    env._rebuildEnvMap?.();
+    this.W.stats.envFinalMs = Math.round((now() - t) * 10) / 10;
   }
   _envRestore() {
     const env = G.env, B = this._envBase;

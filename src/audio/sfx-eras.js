@@ -16,7 +16,7 @@ import { pts, sweep, bell } from './music.js';
 const def = (name, o) => { if (!SFX[name]) SFX[name] = o; };
 
 // the telephone's double gong: two bells struck alternately by a hammer at ~20 Hz for `dur` seconds
-function gong(v, T, dur, f1, f2, vel, rate = 20) {
+function gong(v, T, dur, f1, f2, vel, rate = 14) {
   const n = Math.max(2, Math.round(dur * rate));
   for (let i = 0; i < n; i++) bell(v, T + i / rate, i % 2 ? f2 : f1, vel * (0.75 + 0.25 * Math.sin((i / n) * Math.PI)), { d: 0.22, ratio: 2.76, index: 1.2 });
   // the wooden case's resonance under it
@@ -27,7 +27,7 @@ function gong(v, T, dur, f1, f2, vel, rate = 20) {
 
 def('era_bell', {
   gain: 0.42, max: 1, jitter: 0, reverb: 0.75,
-  build(v, p) { gong(v, v.t, 1.1, 400 * p, 480 * p, 0.5, 16); },
+  build(v, p) { gong(v, v.t, 1.0, 400 * p, 480 * p, 0.5, 12); },
 });
 def('era_ring', {
   gain: 0.62, max: 2, jitter: 0, reverb: 0.45,
@@ -39,7 +39,7 @@ def('era_ring', {
 });
 def('era_kiosk', {
   gain: 0.5, max: 6, jitter: 0.03, reverb: 0.3,
-  build(v, p) { gong(v, v.t, 1.2, 640 * p, 760 * p, 0.6, 24); },
+  build(v, p) { gong(v, v.t, 1.0, 640 * p, 760 * p, 0.6, 16); },
 });
 def('era_strike', {
   gain: 0.55, max: 2, jitter: 0.01, reverb: 0.6,
