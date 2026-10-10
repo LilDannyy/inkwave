@@ -134,8 +134,8 @@ void main() {
   float e = c1.y - c1.x, e2 = c2.y - c2.x;
   // the cracks: wider and hotter on a rise and in its warning, narrow and dull as it crusts over on a fall
   // (lit share of the open lava — pixels whose brightest channel is ≥ 0.40, lava-look-report.py — at 0.26 it measured 25–29 %
-  // at rest against ENGINE R1's ≥ 35 %, 42 % on a rise, 17 % on a fall: the seams are wider by a quarter)
-  float sw = 0.32 + 0.08 * rise + 0.06 * uS.y - 0.1 * fall;
+  // at rest against ENGINE R1's ≥ 35 %, 42 % on a rise, 17 % on a fall; at 0.32 31–35 % / 48 % / 23 %: now 0.36)
+  float sw = 0.36 + 0.07 * rise + 0.06 * uS.y - 0.1 * fall;
   float seam = (1.0 - smoothstep(0.0, sw, e)) * (0.75 + 0.25 * lvn(p * 0.9 + t * 0.2));
   seam = max(seam, (1.0 - smoothstep(0.0, sw * 0.35, e2)) * 0.45 * (1.0 - fall));
   float core = 1.0 - smoothstep(0.0, sw * 0.16, e);

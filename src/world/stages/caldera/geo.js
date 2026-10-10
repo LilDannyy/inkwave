@@ -274,8 +274,10 @@ export const STONE2_YAW = r3(90 - (RACE2_A - 180));         // local z along the
 // face and a fall off the Ladle Road / horn into that strip reported the sea), the Slump bays to the cliff + 0.5, the
 // arms and bays 0.5 m into both banks out to the lip
 const LAKE_HALF = [
-  ...arc(RS + 0.5, -90, -62.5), A(0, -AW - 0.5), A(S_E0 - 0.6, AW + 0.5),
-  ...[...arc(RIM_SHORE + 0.5, 148, 179.5), sp(S1, 0.5, FACE), sp(S1, 0.5, -FACE), sp(S0, -0.5, -FACE), sp(S0, -0.5, FACE), ...sarcF((a) => RSF(a) + 0.5, -132, -92.5)].map(rot),
+  // (the lava fix round, ENGINE rule 45: the Lakefronts and the arm's mouth 0.9–1.1 m into their banks — the Lakefront's
+  // copings stand lake-side of its shore and the outline met them at 0.3–0.4 m; the rims and the Slump heads keep 0.5)
+  ...arc(RS + 0.9, -90, -62.5), A(0, -AW - 1.1), A(S_E0 - 0.6, AW + 1.0),
+  ...[...arc(RIM_SHORE + 0.5, 148, 179.5), sp(S1, 0.5, FACE), sp(S1, 0.5, -FACE), sp(S0, -0.5, -FACE), sp(S0, -0.5, FACE), ...sarcF((a) => RSF(a) + 0.9, -132, -92.5)].map(rot),
 ];
 export const LAKE = [...LAKE_HALF, ...rotPoly(LAKE_HALF)];
 // the shore pushed d metres to the right of travel (into the bank, for a bank walked lake-side on its left)

@@ -198,7 +198,8 @@
     // a drop to a lower dry floor is no lava gap)
     const ghAt = (x, z, y) => lvl.groundHeight(x, z, y + 1.3);
     const floorNear = (x, z, y) => { const gh = ghAt(x, z, y); return gh > -Infinity && gh > y - 1.3 && gh > Lv.y + K - 0.01 ? gh : null; };
-    const lavaAt = (x, z, y) => { const gh = ghAt(x, z, y); return (gh === -Infinity || gh <= Lv.y + K - 0.01) && (W.inRegion(x, z) || W.fallsIn(x, z)); };
+    // (the region only: a falls polygon past a lip is a chute to fall down, not lava to jump over)
+    const lavaAt = (x, z, y) => { const gh = ghAt(x, z, y); return (gh === -Infinity || gh <= Lv.y + K - 0.01) && W.inRegion(x, z); };
     const gaps = [], cands = [];
     for (const nd of nav.nodes) {
       if (!nav.valid[nd.id]) continue;
