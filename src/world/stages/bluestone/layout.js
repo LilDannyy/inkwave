@@ -360,14 +360,15 @@ const KNEE = [
   // on the stage, flat to the water and right under the enemy's Boathouse deck): a 1.2 m bluestone dock along the
   // chamfer's water edge, 14 × 4.2 m, from the west corner to 7 m short of the enemy Boathouse; two stairs down its inner
   // face to the apron (the rest of that face is a 1.2 m hop). It looks over the apron, the cab rank's north end and the
-  // circus ring at 9–10 o'clock, and answers the Boathouse deck from 1.2 m under it instead of 2.4 m. Its cover: a crate
-  // stack, the planter and the crates that stood on the apron, a crane's plinth.
+  // circus ring at 9–10 o'clock, and answers the Boathouse deck from 1.2 m under it instead of 2.4 m (a kid on it sees 81 %
+  // of that deck's floor against 47 % from the apron: rcf1-dock-sight.mjs). Its cover, all low so it sees over it: a crate
+  // stack, the planter and the crates that stood on the apron, mooring posts (their tops are roofs: no perch on the dock).
   OB(...CH(DOCK.a0 + DOCK.len / 2, DOCK.c0 + DOCK.w / 2), DOCK.w, DOCK.len, BOT, DOCK.y, 45, ground({ tag: 'customs-dock', color: '#6a717a', noPaint: [[-0.7071, 0, 0.7071]] })),
   ...[3.0, 10.5].map((a) => R(CH3(a, DOCK.c0 + DOCK.w + 3, 0), CH3(a, DOCK.c0 + DOCK.w, DOCK.y), 2.5, stair({ tag: 'dock-stair', color: '#7c8088' }))),
-  OB(...CH(1.6, 1.6), 1.2, 1.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
+  OB(...CH(1.6, 1.6), 1.2, 1.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood, roof: true })),
   OB(...CH(5.6, 1.6), 1.2, 2.4, DOCK.y, DOCK.y + 1.2, 45, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
-  OB(...CH(8.6, 2.0), 1.2, 1.2, DOCK.y, DOCK.y + 2.0, 45, { tag: 'crane-plinth', color: '#5b5048', pattern: PATTERN.metal, roof: true }),
-  OB(...CH(12.4, 2.0), 1.4, 2.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
+  OB(...CH(8.6, 0.7), 0.8, 1.6, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'mooring-post', color: '#5b5048', roof: true })),   // (low: a crane's plinth here hid the Boathouse deck from the dock)
+  OB(...CH(12.4, 2.0), 1.4, 2.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood, roof: true })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the river corner (Alpha's: x > −6, z < −20)
