@@ -416,14 +416,15 @@ const RIVER = [];
   pr(PUNT.x1 - 0.12, PUNT.x1, L.z1, PUNT.zTop);
   // its cover, along the edges so each leg's middle row stays dry for the nav: on the landing the ferryman's box against
   // the south rail and a crate stack against the east rail; on the legs mooring posts and rope crates on alternate sides
-  // every 6–9 m
+  // every 6–9 m (the north leg's two posts leave 1.85 m between their faces, so no 2 m strip runs its 26 m from the
+  // ferryman's box to the circus: the strip test)
   const post = (x0, x1, z0, z1, tag = 'mooring-post', h = 1.0, color = '#5b5048') => RIVER.push(B(x0, x1, PUNT.y, PUNT.y + h, z0, z1, cover({ tag, color, roof: true })));
   post(13.4, 15.4, L.z0 + 0.15, L.z0 + 1.95, 'ferry-box', 2.2, '#6f5a46');
   post(L.x1 - 1.4, L.x1 - 0.15, -44.6, -42.6, 'crates', 1.2, K.crate);
   post(-0.6, 0.6, PUNT.zE0 + 0.15, PUNT.zE0 + 1.35, 'crates', 1.0, K.crate);
   post(6.4, 7.6, PUNT.zE1 - 1.4, PUNT.zE1 - 0.2);
-  post(PUNT.x1 - 1.35, PUNT.x1 - 0.15, -36.6, -35.4);
-  post(PUNT.xN0 + 0.2, PUNT.xN0 + 1.4, -29.6, -28.4);
+  post(PUNT.x1 - 1.5, PUNT.x1 - 0.3, -36.6, -35.4);
+  post(PUNT.xN0 + 0.15, PUNT.xN0 + 1.65, -29.6, -28.4);
   // the Iron Bridge (today, the 3000s): three spans (≤ 8 m, one group each) and their rails; in the 3000s the garden
   // fills the basin either side of it, reached from the quay and the punt
   const spans = [-6, -0.33, 5.33, PUNT.xN0];
