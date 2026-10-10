@@ -15,8 +15,9 @@
 //   on foot ground       a nav node the kid reaches on foot anyway: fine
 //   a roof               an off-limits top: it slides off (counted). Still on one after 3 s (its slide stalled): a LEAK
 //                        unless a kid gets onto that roof block on foot anyway — a plain walk / hop (16 headings) or a plain
-//                        climb up an inkable wall (8 headings) from a spot reached on foot within 5 m, or the same climb,
-//                        touches it (then the slide is the stage's business: listed for the lead)
+//                        climb up an inkable wall (8 headings) from the move's start or a spot reached on foot within 5 m of
+//                        where it first touched a roof, or the same climb, touches it (then the slide is the stage's
+//                        business: listed for the lead)
 //   a perch              a walkable, never-inkable lookout: a LEAK unless its piece (the perch blocks a kid walks between:
 //                        a reach stacker's boom is a stair of them) is reached on foot — a plain running hop or walk (16
 //                        headings) from a spot reached on foot within 6 m gets onto any block of it (or, off a wall, the
@@ -267,15 +268,17 @@
       // still on a roof after 3 s (its slide stalled, or a long one still going): a leak unless a kid gets onto that roof
       // block on foot anyway — a plain walk or hop (16 headings) or a plain climb up an inkable wall (8 headings) from a spot
       // reached on foot within 5 m, or the same climb, touches it; then how it slides is the stage's business (listed)
+      // (from the move's own start, then the spots near where it first touched a roof: a slide can carry a kid far along a
+      // long roof before it stalls)
       const touches = (q) => !!(q && q.roofs && q.roofs.has(r.block));
       let by = plainHere(touches) ? { move: 'the same climb' } : roofReach.get(r.block) || null;
-      if (!by && !roofReach.has(r.block)) {
-        for (const q of near(p).slice(0, 30)) {
+      if (!by) {
+        for (const q of [n, ...near(r.roofT || p).slice(0, 30)]) {
           for (const dd of DIRS16) for (const k2 of ['h', 'w']) { if (by) break; if (touches(move(q, dd, k2))) by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : 'walk' }; }
           for (const dd of DIRS) { if (by) break; const w = wallAt(q, dd); if (!w) continue; inkWall(w); if (touches(climbMove(q, dd, w, 'top', null))) by = { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: 'climb' }; }
           if (by) break;
         }
-        roofReach.set(r.block, by);
+        if (by) roofReach.set(r.block, by);
       }
       if (by) { count.roofOnFoot++; if (roofsOnFoot.length < 12 && !roofsOnFoot.some((x) => x.block === r.block)) roofsOnFoot.push({ ...what, onFootBy: by }); }
       else { count.roof++; if (onRoofs.length < 40) onRoofs.push(what); }
