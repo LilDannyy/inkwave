@@ -688,6 +688,7 @@ function landingOk(a, P) {
   const b = P.block >= 0 ? G.level.blocks[P.block] : null;
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;
+  if (G.match?.stage?.wet(P.pos.x, P.pos.z, P.pos.y, 2)) return false;   // [b5-caldera] never onto floor a stage hazard takes (lava)
   if (!G.nav) return true;
   const id = G.nav.nearest(P.pos, 0.6);
   if (id < 0) return false;

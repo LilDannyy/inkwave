@@ -106,6 +106,7 @@ function lungeSafe(a, fx, fz, d) {
     const gy = L.groundHeight(a.pos.x + fx * d * k, a.pos.z + fz * d * k, a.pos.y + 0.6);
     if (!(gy > PLAYER.waterY + 0.25)) return false;             // sea / void ahead
     if (a.bot && !a.isLocal && gy < a.pos.y - 1.6) return false;  // bots don't lunge off ledges
+    if (a.bot && !a.isLocal && G.match?.stage?.wet(a.pos.x + fx * d * k, a.pos.z + fz * d * k, gy, 1)) return false;   // [b5-caldera] … nor onto a stage hazard's floor (lava)
   }
   return true;
 }
