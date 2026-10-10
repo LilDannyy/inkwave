@@ -122,7 +122,7 @@ app.on('browser-window-created', (_, win) => {
       if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
-        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, phys: !!c.phys, carry: !!c.carry })))`);
+        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
         const want = process.env.CASES ? process.env.CASES.split(',') : null;
         const res = [];
         for (const c of cases.filter((q) => !want || want.includes(q.id))) {
@@ -130,6 +130,21 @@ app.on('browser-window-created', (_, win) => {
           const setup = `${box}.then((m) => m.defineCase('${c.id}'))`;
           await start('karpbox', setup);
           const sts = await listStates();
+          if (c.allStates) {
+            // every state the module offers (karpbox's own test state 1 comes first in the field's list), each world from
+            // its query: #15 passes in the state as built and FAILs in the module's state 'w'
+            const runs = [];
+            for (const st of sts.filter((q) => q.i === 0 || q.query)) {
+              if ((st.query || '') !== (pageQ || '')) { await boot(st.query || ''); await start('karpbox', setup); }
+              const j = await checkOne('karpbox', st, setup, `self-${c.id}`, { carry: false, phys: false, shots: true, topOnly: true });
+              runs.push({ key: j.key, query: st.query, c15: j.checks[15].status, fails: j.fails });
+            }
+            const s0 = runs.find((r) => String(r.key) === '0'), sw = runs.find((r) => String(r.key) === 'w');
+            const pass = !!s0 && !!sw && s0.c15 === 'OK' && sw.c15 === 'FAIL' && sw.query === 'kcstate=w';
+            res.push({ ...c, pass, runs, states: sts.map((q) => ({ key: q.key, query: q.query })) });
+            console.log(`SELFTEST ${c.id.padEnd(10)} the module's states ${JSON.stringify(sts.map((q) => [q.key, q.query]))}: #15 ${runs.map((r) => `${r.key} ${r.c15}`).join(', ')} (state 'w' must FAIL, built from ?${sw?.query}) → ${pass ? 'PASS' : 'FAIL'}`);
+            continue;
+          }
           const j = await checkOne('karpbox', sts[0], setup, `self-${c.id}`, { carry: c.id === 'clean' || c.carry, phys: c.id === 'clean' || c.phys, shots: c.id === 'clean' ? true : c.check ? true : false, topOnly: c.id !== 'clean' });
           const failing = j.fails;
           const pass = c.id === 'clean' ? j.result === 'ok' : failing.includes(c.check);

@@ -29,7 +29,7 @@ export const CK = {
   dip: 6, deckWays: 3, apron: 2, apronH: 1.2, apronR: 4, pondRing: [4.5, 10], pondCover: 0.7, pondSeen: 6, weirRoom: 3.0, weirSeen: 3,
   dropNear: 12, hopHigh: [1.8, 2.1], gapLong: [3.0, 3.8],
 };
-const TYPE_NAME = ['', 'walk', 'jump', 'drop', 'climb', 'hop', 'gap', 'pipe'];
+const TYPE_NAME = ['', 'walk', 'jump', 'drop', 'climb', 'hop', 'gap', 'pipe', 'ride', 'hop over off-field ground'];
 const volNode = (v, x, y, z) => y >= (v.y0 ?? -50) - 0.25 && y <= (v.y1 ?? 50) + 0.25 && inPoly(v.poly, x, z);
 
 class Heap {
@@ -399,7 +399,7 @@ export async function runChecks(o = {}) {
   }
   tm('6');
   // ----------------------------------------------------------------------------------------------- #7 no shortcut into a base
-  const cand = { high: [], long: [] };   // #7d's candidates beyond the hop / gap rules (#16 tries them)
+  const cand = { high: [], long: [], off: [] };   // #7d's candidates beyond the hop / gap rules, and hops onto off-field ground (#16 tries them)
   {
     const fl = [], bad = [], nums = { teams: [] };
     // (a) entrances into each Gate's 15 m ring
@@ -415,16 +415,7 @@ export async function runChecks(o = {}) {
         }
       }
       for (const car of C.m.movers?.cars || []) if (car.def?.roof === false) for (const s of car.stops || car.def.stops || []) if (Math.hypot(s[0] - g.x, s[1] - g.z) <= CK.ring) cross.push({ x: s[0], y: car.def.y ?? 0, z: s[1], type: 8 });
-      const ents = groups(cross, CK.entGroup).map((e) => {
-        const types = [...new Set(e.pts.map((p) => TYPE_NAME[p.type] || 'ride'))];
-        const seen = e.pts.some((p) => seenFrom(G, deck.eyes, new V3(p.x, p.y + 1, p.z)));
-        return { c: [r1(e.c.x), r1(e.c.y), r1(e.c.z)], w: r1(e.w), n: e.pts.length, types, seen, from: P3(nodes[e.pts[0].from] || e.c) };
-      });
-      const unseen = ents.filter((e) => !e.seen);
-      if (ents.length < CK.ents[0] || ents.length > CK.ents[1]) bad.push(`(a) team ${t}: ${ents.length} entrances into its Gate's 15 m ring (2–5)`);
-      for (const e of unseen) if (!waived(C, '7a', { x: e.c[0], z: e.c[2] })) { bad.push(`(a) team ${t}: an entrance at (${e.c[0]}, ${e.c[2]}) [${e.types}] not seen from the spawn deck`); fl.push({ at: e.c, what: `7a: entrance unseen from the deck (${e.types})`, look: g }); }
-      draw.entrances.push({ team: t, g: P3(g), ents });
-      nums.teams.push({ team: t, entrances: ents });
+      (out._aCross || (out._aCross = []))[t] = cross;
     }
     // (b) climb shortcuts: the field with climbs vs without, from the halfway line to each Gate
     const climbs = new Map();
@@ -525,6 +516,27 @@ export async function runChecks(o = {}) {
           if (!C.okN[j] || rise <= CK.hopHigh[0] || rise > CK.hopHigh[1] || hd(n, q) > 1.2 || n.nb.some((e) => e.to === j)) continue;
           if (nav._blocked(n, q, q.y) || !ray(n.x, n.y + 0.3, n.z, n.x, q.y + 1.6, n.z) || !ray(n.x, q.y + 1.0, n.z, q.x, q.y + 1.0, q.z)) continue;
           cand.high.push({ kind: 'high hop', from: i, to: j, gain: gainOf(C, i, j) });
+        }
+      }
+    }
+    // hops onto off-field ground: a 1.25–1.8 m hop from the field onto nodes the field doesn't hold (nav-invalid: a top
+    // only a hop reaches), and the walks / drops from that ground back onto the field (its exits). The field has no such
+    // move (its hop edges join field nodes only), so a ledge like that is a real way in nobody sees: #16 tries the hop,
+    // and a made one is a #7d find (gain) and, ending in a Gate's ring, a #7a entrance
+    for (let i = 0; i < N; i++) {
+      if (!C.okN[i]) continue;
+      const n = nodes[i];
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const jx = n.ix + dx, jz = n.iz + dz; if (jx < 0 || jz < 0 || jx >= nav.nx || jz >= nav.nz) continue;
+        for (const j of nav.cells[jz * nav.nx + jx]) {
+          const q = nodes[j], rise = q.y - n.y;
+          if (C.okN[j] || q.zone >= 0 || rise < K.hop.riseMin || rise > K.hop.riseMax || hd(n, q) > 1.2) continue;
+          if (nav._blocked(n, q, q.y) || !ray(n.x, n.y + 0.3, n.z, n.x, q.y + 1.6, n.z) || !ray(n.x, q.y + 1.0, n.z, q.x, q.y + 1.0, q.z)) continue;
+          // the off-field ground's exits back onto the field (nav edges, no climbs; at most 400 nodes)
+          const seen = new Set([j]), st = [j], exits = new Set();
+          while (st.length && seen.size < 400) { const u = st.pop(); for (const e of nodes[u].nb) { if (e.type === 'climb' || seen.has(e.to)) continue; if (C.okN[e.to]) { exits.add(e.to); continue; } if (nodes[e.to].zone >= 0) continue; seen.add(e.to); st.push(e.to); } }
+          if (!exits.size) continue;
+          cand.off.push({ kind: 'off hop', from: i, to: j, exits: [...exits] });
         }
       }
     }
@@ -827,35 +839,64 @@ export async function runChecks(o = {}) {
     const tests = extra.map((e) => ({ kind: e.type, from: e.from, to: e.to, len: e.len }));
     const beyond = [...cand.high, ...cand.long];
     let res = null;
-    if (o.phys !== false) res = proveEdges(C, [...tests, ...beyond.map((b) => ({ kind: b.kind, from: b.from, to: b.to, beyond: true, gain: b.gain }))], o);
+    if (o.phys !== false) res = proveEdges(C, [...tests, ...beyond.map((b) => ({ kind: b.kind, from: b.from, to: b.to, beyond: true, gain: b.gain })), ...cand.off.map((b) => ({ kind: b.kind, from: b.from, to: b.to, beyond: true, off: b }))], o);
     const fails = [], made = [], fl = [];
     if (res) {
       for (const r of res.list) {
         if (!r.beyond && !r.ok) fails.push(r);
-        if (r.beyond && r.ok) made.push(r);
+        if (r.beyond && r.ok && r.kind !== 'off hop') made.push(r);
       }
     }
     const veto = fails.map((r) => { const a = nodes[r.from], b = nodes[r.to]; return [r2(a.x), r2(a.y), r2(a.z), r2(b.x), r2(b.y), r2(b.z)]; });
     // the made candidates beyond the rules go to #7d with their gain
     for (const r of made) { const g2 = gainOf(C, r.from, r.to); if (g2 > CK.gain && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: r.kind === 'high hop' ? 'highHop' : 'longGap', a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: fin(g2) ? r1(g2) : 'off-field', warnOnly: !fin(g2) }); }
+    const offMade = res ? res.list.filter((r) => r.kind === 'off hop' && r.ok) : [];
+    out._offMade = [];
+    for (const r of offMade) {
+      const off = cand.off.find((b) => b.from === r.from && b.to === r.to);
+      for (const t of [0, 1]) {
+        let best = -1, bd = Infinity; for (const q of off.exits) if (C.D[t][q] < bd) { bd = C.D[t][q]; best = q; }
+        const g2 = C.D[t][r.from] - bd;
+        if (fin(g2) && g2 > CK.gain && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: 'offHop', team: t, a: P3(nodes[r.from]), b: P3(nodes[r.to]), exit: P3(nodes[best]), gain: r1(g2), warnOnly: false });
+        // a way into team t's ring over off-field ground: from outside the ring to an exit inside it
+        const gp = gates[t].pos;
+        for (const q of off.exits) if (hd(nodes[r.from], gp) > CK.ring && hd(nodes[q], gp) <= CK.ring) out._aCross[t].push({ x: nodes[q].x, y: nodes[q].y, z: nodes[q].z, type: 9, from: r.from, to: q });
+      }
+      out._offMade.push({ a: P3(nodes[r.from]), top: P3(nodes[r.to]), exits: off.exits.length });
+    }
     for (const r of fails.slice(0, 8)) fl.push({ at: P3(nodes[r.from]), what: `16: a ${r.kind} edge no kid makes`, look: nodes[r.to] });
     draw.extra = extra.map((e) => { const r = res?.list.find((x) => x.from === e.from && x.to === e.to && !x.beyond); return { a: [r1(e.a[0]), r1(e.a[2])], b: [r1(e.b[0]), r1(e.b[2])], type: e.type, ok: r ? r.ok : null }; });
     draw.beyond = made.map((r) => ({ a: [r1(nodes[r.from].x), r1(nodes[r.from].z)], b: [r1(nodes[r.to].x), r1(nodes[r.to].z)] }));
     const ran = !!res;
     chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length ? 'FAIL' : 'OK',
-      !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d)` + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s` : ''),
-      { tried: tests.length, failed: fails.length, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, trials: res?.trials, ms: res?.ms, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
+      !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s` : ''),
+      { tried: tests.length, failed: fails.length, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
   }
   tm('16');
   // ----------------------------------------------------------------------------------------------- #7 finished (with #16's made candidates)
   {
-    const bad = [...out._7bad], fl = [...out._7fl], d = out._7d;
+    const bad = [], fl = [], d = out._7d, nums = out._7nums;
+    // (a) the entrances (every crossing into the 15 m ring; a made hop over off-field ground counts at its exit)
+    draw.entrances = []; nums.teams = [];
+    for (const t of [0, 1]) {
+      const g = gates[t].pos, deck = deckOf(C, 1 - t), cross = out._aCross[t];
+      const ents = groups(cross, CK.entGroup).map((e) => {
+        const types = [...new Set(e.pts.map((p) => TYPE_NAME[p.type] || 'ride'))];
+        const seen = e.pts.some((p) => seenFrom(G, deck.eyes, new V3(p.x, p.y + 1, p.z)));
+        return { c: [r1(e.c.x), r1(e.c.y), r1(e.c.z)], w: r1(e.w), n: e.pts.length, types, seen, from: P3(nodes[e.pts[0].from] || e.c) };
+      });
+      if (ents.length < CK.ents[0] || ents.length > CK.ents[1]) bad.push(`(a) team ${t}: ${ents.length} entrances into its Gate's 15 m ring (2–5)`);
+      for (const e of ents.filter((q) => !q.seen)) if (!waived(C, '7a', { x: e.c[0], z: e.c[2] })) { bad.push(`(a) team ${t}: an entrance at (${e.c[0]}, ${e.c[2]}) [${e.types}] not seen from the spawn deck`); fl.push({ at: e.c, what: `7a: entrance unseen from the deck (${e.types})`, look: g }); }
+      draw.entrances.push({ team: t, g: P3(g), ents });
+      nums.teams.push({ team: t, entrances: ents });
+    }
+    bad.push(...out._7bad); fl.push(...out._7fl);
     const hard = d.filter((f) => !f.warnOnly), soft = d.filter((f) => f.warnOnly);
     if (hard.length) bad.push(`(d) ${hard.length} connection(s) the graph lacks gaining > 10 m: ${hard.slice(0, 5).map((f) => `${f.probe} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m`).join(', ')}`);
     const warnTxt = soft.length ? `WARN (d) ${soft.length} to ground off the field (a hiding place for #9): ${soft.slice(0, 3).map((f) => `${f.probe} ${JSON.stringify(f.b)}`).join(', ')}` : '';
-    const nums = out._7nums; nums.drops = out._7drops.length; nums.climbShortcuts = out._7climbs.length; nums.d = d.map((f) => ({ probe: f.probe, a: f.a, b: f.b, gain: f.gain }));
+    nums.drops = out._7drops.length; nums.climbShortcuts = out._7climbs.length; nums.d = d.map((f) => ({ probe: f.probe, a: f.a, b: f.b, gain: f.gain }));
     chk(7, 'No shortcut into a base', bad.length ? 'FAIL' : soft.length ? 'WARN' : 'OK', [bad.join('; '), warnTxt, !bad.length ? nums.teams.map((t) => `team ${t.team}: ${t.entrances.length} entrances [${t.entrances.map((e) => e.types.join('/')).join(', ')}], all seen`).join(' | ') + `; no climb shortcut, no drop > 2.5 m into a ring, #7d: ${Object.entries(nums.finds).map(([k, v]) => `${k} ${v}`).join(', ')}` : ''].filter(Boolean).join(' · '), nums, fl);
-    delete out._7bad; delete out._7fl; delete out._7nums; delete out._7drops; delete out._7climbs; delete out._finds; delete out._7d;
+    delete out._7bad; delete out._7fl; delete out._7nums; delete out._7drops; delete out._7climbs; delete out._finds; delete out._7d; delete out._aCross; delete out._offMade;
   }
   // the routes for the picture
   draw.routes = legs.filter((l) => l.kind !== 'pg').map((l) => ({ team: l.team, leg: l.name, r1: (l.rt.r1 || []).map((i) => [r1(nodes[i].x), r1(nodes[i].z)]), r2: (l.rt.r2 || []).map((i) => [r1(nodes[i].x), r1(nodes[i].z)]) }));
@@ -1219,20 +1260,32 @@ export async function pictures(o = {}) {
       shots.push({ name: `${rep.id}${rep.states.length > 1 ? '-s' + rep.key : ''}-${name}.jpg`, url: jpeg(c) });
     };
     const eyeAt = (p, up = 1.6) => { const f = L.groundHeight(p.x, p.z, p.y + 1.0); return new V3(p.x, (f > p.y - 3 ? f : p.y) + up, p.z); };
+    // a view point back along a route: the farthest node 6–14 m back with a clear line to the target (else 8 m back, raised)
+    const viewFrom = (path, fromEnd, look) => {
+      if (!path?.length) return null;
+      const seq = fromEnd ? [...path].reverse() : path; let acc = 0, best = null, at8 = null;
+      for (let k = 1; k < seq.length; k++) {
+        acc += d3(nodes[seq[k - 1]], nodes[seq[k]]); if (acc < 6) continue; if (acc > 14) break;
+        const n = nodes[seq[k]], e = eyeAt(n); if (!at8 && acc >= 8) at8 = e;
+        if (losClear(G, e, look)) best = e;
+      }
+      if (best) return best;
+      const e = at8 || eyeAt(nodes[seq[Math.min(seq.length - 1, 6)]]); e.y += 3; return e;
+    };
     const along = (path, metres, fromEnd) => { if (!path?.length) return null; const seq = fromEnd ? [...path].reverse() : path; let acc = 0; for (let k = 1; k < seq.length; k++) { acc += d3(nodes[seq[k - 1]], nodes[seq[k]]); if (acc >= metres) return nodes[seq[k]]; } return nodes[seq[seq.length - 1]]; };
     if (!o.topOnly) {
       const pond = R.pond, pad0 = L.spawnPads[0], dz = Math.sign(pad0.z - pond.z) || -1;
       await persp('pond', eyeAt({ x: pond.x + 2, y: pond.y, z: pond.z + dz * 9 }, 2.2), new V3(pond.x, pond.y + 1.0, pond.z), 'the Pond from Alpha\'s side (9 m back)');
       for (const [i, w] of R.weirs[0].entries()) {
         const pw = kc.legs.find((l) => l.team === 0 && l.kind === 'pw' && l.i === i)?.path1, wg = kc.legs.find((l) => l.team === 0 && l.kind === 'wg' && l.i === i)?.path1;
-        const a = along(pw, 12, true), d = along(wg, 12, false), lookW = new V3(w.pos.x, w.pos.y + 1.0, w.pos.z);
-        if (a) await persp(`weir-${i + 1}-approach`, eyeAt(a), lookW, `weir ${i + 1} from the attackers' side (route 1, 12 m back, 1.6 m up) — count ${Kp.weirs[0][i].count}`);
-        if (d) await persp(`weir-${i + 1}-defend`, eyeAt(d), lookW, `weir ${i + 1} from the defenders' side (12 m on toward the Gate)`);
+        const lookW = new V3(w.pos.x, w.pos.y + 1.0, w.pos.z), a = viewFrom(pw, true, lookW), d = viewFrom(wg, false, lookW);
+        if (a) await persp(`weir-${i + 1}-approach`, a, lookW, `weir ${i + 1} from the attackers' side (back along route 1, ${r1(hd(a, w.pos))} m) — count ${Kp.weirs[0][i].count}`);
+        if (d) await persp(`weir-${i + 1}-defend`, d, lookW, `weir ${i + 1} from the defenders' side (on along the route to the Gate, ${r1(hd(d, w.pos))} m)`);
       }
       const gp = R.gates[0].pos, lookG = new V3(gp.x, gp.y + 0.8, gp.z);
       const wg0 = kc.legs.find((l) => l.team === 0 && l.kind === 'wg' && l.i === 0)?.path1;
-      const ga = along(wg0, 12, true);
-      if (ga) await persp('gate-approach', eyeAt(ga), lookG, 'the Dragon Gate from the attackers\' approach (12 m back)');
+      const ga = viewFrom(wg0, true, lookG);
+      if (ga) await persp('gate-approach', ga, lookG, `the Dragon Gate from the attackers' approach (${r1(hd(ga, gp))} m back)`);
       const dk = deckOf(C, 1); let eye = null, bd = Infinity; for (const e of dk.eyes) { const d = hd(e, gp); if (d < bd && losClear(G, e, lookG)) { bd = d; eye = e; } }
       if (eye) await persp('gate-deck', eye, lookG, 'the Dragon Gate from Bravo\'s spawn deck');
       for (const [i, z] of R.zones[1].entries()) { const cx = z.poly.reduce((s2, p) => s2 + p[0], 0) / z.poly.length, czz = z.poly.reduce((s2, p) => s2 + p[1], 0) / z.poly.length, cy = L.groundHeight(cx, czz, (z.y1 ?? 5) + 0.5); const dir = Math.sign(pond.z - czz) || -1; await persp(`zone-${i + 1}`, new V3(cx + 6, (cy > -50 ? cy : 0) + 10, czz + dir * 12), new V3(cx, cy > -50 ? cy : 0, czz), `Bravo's Carp-Free Zone ${i + 1} and its signs`); }

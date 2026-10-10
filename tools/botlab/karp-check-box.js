@@ -53,11 +53,11 @@ export const CASES = [
   { id: 'f2', check: 2, what: 'a wall on Bravo\'s half only (a `single`): Alpha\'s walk 50 % longer, L_A ≠ L_B', layout: (L) => { L.single.push(B(-14, 14, 0, 3, 22.5, 23, { paint: false, roof: true, color: '#a99', tag: 'kcheck-asym' })); } },
   { id: 'f3', check: 3, what: 'the weir at 85 % of the way (count ≈ 15)', def: (d) => { d.weirs = [{ at: [0, 0, 40], yaw: 0 }]; } },
   { id: 'f4', check: 4, what: 'the weir on a 3 m box only a climb reaches', layout: (L) => { L.half.push(B(-12.5, -5.5, 0, 3, 11.5, 17.5, { color: '#cfc7b6', tag: 'kcheck-climbweir' })); }, def: (d) => { d.weirs = [{ at: [-9, 3, 14.5], yaw: 0 }]; } },
-  { id: 'f5', check: 5, what: 'the weir at the end of the dead-end alley (one route in)', def: (d) => { d.weirs = [{ at: [9.85, 0, 13], yaw: 0 }]; } },
+  { id: 'f5', check: 5, what: 'the weir at the end of a 3 m dead-end corridor (one way in, 12 m long)', layout: (L) => { L.half.push(B(-19.3, -19, 0, 3, 30, 44.3, { paint: false, roof: true, tag: 'kcheck-corridor' }), B(-16, -15.7, 0, 3, 30, 44.3, { paint: false, roof: true, tag: 'kcheck-corridor' }), B(-19.3, -15.7, 0, 3, 44, 44.3, { paint: false, roof: true, tag: 'kcheck-corridor' })); }, def: (d) => { d.weirs = [{ at: [-17.5, 0, 41.5], yaw: 0 }]; } },
   { id: 'f6', check: 6, what: 'a third opening in the ring wall, straight in from the south: Pond → Gate ≈ 10 s', layout: (L) => { L.half = L.half.filter((p) => p.tag !== 'kcheck-ring'); for (const [a0, a1] of [[149, 204.5], [215.5, 264.5], [275.5, 324.5], [335.5, 391]]) L.half.push(...ring(a0, a1)); } },
   { id: 'f7', check: 7, what: 'a 1.5 m non-inkable ledge through the ring wall into the Gate\'s ring that only a hop climbs, screened from the spawn deck', phys: true,
     layout: (L) => { L.half = L.half.filter((p) => p.tag !== 'kcheck-ring'); for (const [a0, a1] of [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]) L.half.push(...ring(a0, a1));
-      L.half.push(B(-17.2, -14.2, 0, 1.5, 46.6, 49.4, { paint: false, color: '#b9b2a4', tag: 'kcheck-ledge' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+      L.half.push(B(-17.0, -14.0, 0, 1.5, 46.6, 49.4, { paint: false, color: '#b9b2a4', tag: 'kcheck-ledge' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
   { id: 'f8', check: 8, what: 'the Gate 45° off the pad → Pond line', def: (d) => { d.gate = { at: [12.5, 0, 47.5], yaw: 0 }; } },
   { id: 'f9', check: 9, what: 'a free-zone entrance with no sign', def: (d) => { d.freeZones[0].signs = [[-7.6, 56.8, 180]]; } },
   { id: 'f10', check: 10, what: 'low walls either side of the Pond: the own-half route walks back toward its own base', layout: (L) => { L.half.push(B(-17, 14, 0, 1.0, 2.6, 3.0, { paint: false, roof: true, color: '#b9b2a4', tag: 'kcheck-pondwall' })); } },
@@ -72,6 +72,9 @@ export const CASES = [
   { id: 'x7d', check: 7, what: 'a squid-only gap (0.7 m headroom) through the ring wall into the Gate\'s ring', layout: (L) => { L.half = L.half.filter((p) => p.tag !== 'kcheck-ring'); for (const [a0, a1] of [[149, 204.5], [215.5, 235], [245, 324.5], [335.5, 391]]) L.half.push(...ring(a0, a1)); L.half.push(...ARC(0, 48, 15.5, 0.5, 0.7, 3, 235, 245, 2, { ...WALL, tag: 'kcheck-ring-low' })); } },
   { id: 'x9a', check: 9, what: 'a climb-only 3 m plateau with a zone over half of it', layout: (L) => { L.half.push(B(-19, -16, 0, 3, 30, 38, { color: '#cfc7b6', tag: 'kcheck-plateau' })); }, def: (d) => { d.freeZones.push({ poly: [[-19, 30], [-16, 30], [-16, 34], [-19, 34]], y0: 2.7, y1: 3.3, signs: [[-15.6, 32, 90]] }); } },
   { id: 'x9b', check: 9, what: 'a noRetreat polygon over the spawn deck\'s zone', def: (d) => { d.noRetreat = [{ poly: [[-6, 52], [6, 52], [6, 58], [-6, 58]], y0: -0.5, y1: 3 }]; } },
+  // stage states, generically (karp-check-states.js): a module's karpStates() with its audit query; the wall it raises in
+  // state 'w' stands 2.6 m from the weir — #15 must pass in state 0 and FAIL in state 'w' (that page loaded with its query)
+  { id: 'states', check: 15, allStates: true, what: 'a stage module\'s second state (G.match.stage.karpStates(), its world on ?kcstate=w) puts a wall 2.6 m from the weir', layout: (L) => { L.kcstates = { wall: [-1, 1, 30.6, 31.0, 3] }; } },
   { id: 'x9c', check: 9, what: 'a free zone poking 2 m over the halfway line', def: (d) => { d.freeZones.push({ poly: [[-20, -2], [-16, -2], [-16, 4], [-20, 4]], y0: -0.3, y1: 0.3, signs: [[-15.6, 1, 90]] }); } },
 ];
 
@@ -88,6 +91,9 @@ export async function defineCase(id) {
   const { MAPS } = await import('../../src/config.js');
   const { MAP_LAYOUTS } = await import('../../src/world/maps.js');
   if (!MAPS.find((m) => m.id === 'karpbox')) MAPS.push({ id: 'karpbox', name: 'Karp Box', blurb: '', theme: 'day', times: { day: 'day', dusk: 'sunset' } });
-  MAP_LAYOUTS.karpbox = caseOf(id).L;
+  const { c, L } = caseOf(id);
+  if (L.kcstates) (await import('./karp-check-states.js')).registerKcStates();
+  MAP_LAYOUTS.karpbox = L;
+  void c;
   return true;
 }
