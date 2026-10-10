@@ -1,0 +1,18 @@
+# 12:20:12
+# head 01034566
+--- 12:20:12 regions 1 1
+### ink-regions era 1 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5306,"inked":0.616,"regions":{"circus":{"m2":1496,"share":0.282,"inked":0.63},"base":{"m2":978,"share":0.184,"inked":0.68},"knee":{"m2":835,"share":0.157,"inked":0.6},"swimston":{"m2":541,"share":0.102,"inked":0.85},"knee-far":{"m2":427,"share":0.08,"inked":0.48},"river":{"m2":284,"share":0.054,"inked":0.18},"hoki":{"m2":267,"share":0.05,"inked":0.63},"gpo-quay":{"m2":264,"share":0.05,"inked":0.48},"arcade":{"m2":210,"share":0.04,"inked":0.72},"halo":{"m2":3,"share":0.001,"inked":0.22}}}
+--- 12:20:52 regions 1 2
+### ink-regions era 1 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5306,"inked":0.758,"regions":{"circus":{"m2":1496,"share":0.282,"inked":0.81},"base":{"m2":978,"share":0.184,"inked":0.83},"knee":{"m2":835,"share":0.157,"inked":0.73},"swimston":{"m2":541,"share":0.102,"inked":0.89},"knee-far":{"m2":427,"share":0.08,"inked":0.56},"river":{"m2":284,"share":0.054,"inked":0.33},"hoki":{"m2":267,"share":0.05,"inked":0.82},"gpo-quay":{"m2":264,"share":0.05,"inked":0.79},"arcade":{"m2":210,"share":0.04,"inked":0.76},"halo":{"m2":3,"share":0.001,"inked":0.3}}}
+--- 12:21:27 regions 1 3
+### ink-regions era 1 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5306,"inked":0.663,"regions":{"circus":{"m2":1496,"share":0.282,"inked":0.71},"base":{"m2":978,"share":0.184,"inked":0.77},"knee":{"m2":835,"share":0.157,"inked":0.62},"swimston":{"m2":541,"share":0.102,"inked":0.8},"knee-far":{"m2":427,"share":0.08,"inked":0.42},"river":{"m2":284,"share":0.054,"inked":0.16},"hoki":{"m2":267,"share":0.05,"inked":0.73},"gpo-quay":{"m2":264,"share":0.05,"inked":0.65},"arcade":{"m2":210,"share":0.04,"inked":0.81},"halo":{"m2":3,"share":0.001,"inked":0}}}
+--- 12:22:08 regions 1 4
+### ink-regions era 1 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5306,"inked":0.755,"regions":{"circus":{"m2":1496,"share":0.282,"inked":0.79},"base":{"m2":978,"share":0.184,"inked":0.8},"knee":{"m2":835,"share":0.157,"inked":0.73},"swimston":{"m2":541,"share":0.102,"inked":0.87},"knee-far":{"m2":427,"share":0.08,"inked":0.51},"river":{"m2":284,"share":0.054,"inked":0.49},"hoki":{"m2":267,"share":0.05,"inked":0.81},"gpo-quay":{"m2":264,"share":0.05,"inked":0.81},"arcade":{"m2":210,"share":0.04,"inked":0.78},"halo":{"m2":3,"share":0.001,"inked":0.26}}}
+--- 12:22:45 done
+### r4-era3-zones
+### done
+# end 12:23:12

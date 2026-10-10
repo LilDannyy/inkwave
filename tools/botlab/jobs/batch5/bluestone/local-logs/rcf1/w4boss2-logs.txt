@@ -1,0 +1,9 @@
+### boss  (2026-10-10 12:20)
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":555,"floorY":0,"box":[-34.8,34.8,-14.8,14.8],"cells":{"floor":4534,"wall":723.5,"drop":7929,"pad":253.5}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":-0.46,"at":[-4.25,-11.75]},"balconyN:b":{"pen_m":-0.46,"at":[3.75,11.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":-1.96,"at":[3.25,-13.75]},"verandaE1:b":{"pen_m":-1.96,"at":[-8.25,13.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":352}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":13,"cells4m":5,"trail":[[-13.6,-4.7],[-11.3,-6.7],[-11.3,-6.7],[-11.3,-6.7],[-11.3,-6.7],[-11.1,-6.7],[-8.7,-8.2],[-8.5,-8.2],[-6.2,-9.5],[-5.5,-9.9],[-5.5,-9.9],[-4.5,-10.7]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":5}
+PASS it plays its moves (charges included)  {"played":{"barrage":17,"slam":2,"crablets":2},"stuns":0,"hp":0.39,"dead":false}
+RESULT 6/7
