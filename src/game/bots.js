@@ -1391,9 +1391,19 @@ export class BotBrain {
       if (gh > -Infinity && y <= gh + 0.05) {
         if (SM && SM.wet(x, z, gh, 0.5)) return false;
         // (up onto something: only a top a route can stand on — a roof-flagged stub slides you off into whatever is below)
-        if (gh > y0 + 0.3 && G.nav) { const n = G.nav.nearest(_wv.set(x, gh, z), 0.35, true), q = n >= 0 ? G.nav.nodes[n] : null; if (!q || Math.abs(q.y - gh) > 0.35 || Math.hypot(q.x - x, q.z - z) > 1.5) return false; }
+        if (gh > y0 + 0.3 && G.nav && !this._standable(x, gh, z)) return false;
         return true;
       }
+    }
+    return false;
+  }
+  // [b5-caldera] a nav node (any: rider nodes too) within 1.5 m of (x, z) standing within 0.35 m of y
+  _standable(x, y, z) {
+    const N = G.nav, ix = Math.round((x - N.x0) / N.step), iz = Math.round((z - N.z0) / N.step);
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const jx = ix + dx, jz = iz + dz;
+      if (jx < 0 || jz < 0 || jx >= N.nx || jz >= N.nz) continue;
+      for (const id of N.cells[jz * N.nx + jx]) { const n = N.nodes[id]; if (Math.abs(n.y - y) <= 0.35 && Math.hypot(n.x - x, n.z - z) <= 1.5) return true; }
     }
     return false;
   }
