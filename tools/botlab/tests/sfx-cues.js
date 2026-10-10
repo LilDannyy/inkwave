@@ -134,12 +134,14 @@
     boomerang: (o) => ({ out: 'boomerang_whirr', hover: 'boomerang_whirr', back: 'boomerang_whirr', orbit: 'boomerang_orbit', armed: 'boomerang_whirr' })[o.state],
     glide: () => 'glide_slide',   // [b5-sub-glide] (its slide: no flight)
     bobber: (o) => ({ fly: 'sub_flight' })[o.state],   // [b5-subs] (floating: no loop of its own)
+    sentry: (o) => (o.state === 'watch' || o.state === 'unfold' ? 'sentry_idle' : null),   // [b5-int3] (its idle loop, following it, gone with it)
   };
   // the phases each staged throw goes through (what must sound)
   const PHASES = { bomb: ['throw', 'land', 'boom'], sticky: ['throw', 'land', 'boom'], burst: ['throw', 'boom'], seeker: ['throw', 'land', 'warn', 'boom'], scan: ['throw', 'boom'],
     curtain: ['throw', 'land', 'end'], sprinkler: ['throw', 'land', 'end'], mine: ['throw', 'warn', 'boom'], beacon: ['throw', 'end'], mist: ['throw', 'boom'],
     shaker: ['throw', 'land', 'boom'], waddle: ['throw', 'beep', 'warn', 'boom'], torpedo: ['throw', 'boom'], tracer: ['hit'], boomerang: ['beep', 'boom'],
     glide: ['throw', 'boom'],   // [b5-sub-glide]
+    sentry: ['throw', 'land', 'end'],   // [b5-int3] (set down, unfolded, shot down)
     bobber: ['throw', 'land', 'boom'] };   // [b5-subs] (its 'end', the disarm, below)
   const WARN_MIN = { bomb: 0.6, sticky: 0.6, seeker: 0.6, shaker: 0.6, waddle: 0.6, torpedo: 0.6, mine: 0.4, boomerang: 0.55, glide: 0.6 };   // (mine: its 0.45 s windup; boomerang: its 0.6 s fuse)
   const THROW = { tracer: 'tracer_zap', boomerang: 'boomerang_throw' };
@@ -215,6 +217,9 @@
     // [b5-subs] the Chain Bobber: lobbed, it pops open and floats; a shot of its owner's sets it off a moment later
     bobber: { aim: (T) => lob(T, 0, -3, SUBS.bobber.throwSpeed), secs: 3.4, during: (i, o, T) => { if (o && o.state === 'live' && G.time - o.born > 0.5 && !o._fired) { o._fired = true; SUB_KITS.bobber.trigger(o, T); } } },
   };
+  // [b5-int3] the Scrap Sentry (the sub-sentry review: nothing checked that its idle loop follows it and stops with it): set
+  // down by a foe 5 m off, it stands 2 s, then it's shot down
+  SUB_STAGE.sentry = { at: [0, -5], aim: (T) => { T.yaw = T.aimYaw = Math.PI; }, secs: 3.2, during: (i, o) => { if (i === 130 && o && o.state === 'watch') o.desc.hurt(500, me); } };
   const subRes = {};
   for (const kind of Object.keys(SUB_STAGE)) {
     if (!want(kind, 'subs')) continue;
