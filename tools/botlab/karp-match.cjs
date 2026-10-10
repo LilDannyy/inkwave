@@ -17,8 +17,9 @@ const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
 const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
-const MAP = process.env.MAP || 'karpbox', DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIFF = process.env.DIFF || 'normal';
-const OUT = process.env.OUT || '';
+let MAP = process.env.MAP || 'karpbox', DIFF = process.env.DIFF || 'normal';
+const DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '';
+let OUT = process.env.OUT || '';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, +(process.env.WATCHDOG || 590000));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let claimed = false;
@@ -34,6 +35,13 @@ app.on('browser-window-created', (_, win) => {
     const js = (c) => win.webContents.executeJavaScript(c, true);
     for (let i = 0; i < 120; i++) { if (await js('!!window.__inkwave?.api')) break; await wait(250); }
     await js('window.__inkwave._onPointerUnlock = () => {}; 0');
+    // [b5-karp-bots] PLAN='karpbox:normal:3,halyard:hard:2' (or REPEAT=n): several matches back to back in this one instance
+    // (one slot taken once on a crowded machine); OUT=dir/x.json then writes dir/x-<map>-<diff>-<i>.json per match
+    const PLAN = (process.env.PLAN || `${MAP}:${DIFF}:${process.env.REPEAT || 1}`).split(',').flatMap((q) => { const [mp, df, n] = q.split(':'); return Array.from({ length: +(n || 1) }, (_, i) => ({ mp, df: df || 'normal', i: i + 1 })); });
+    const OUT0 = OUT;
+    for (const job of PLAN) {
+    MAP = job.mp; DIFF = job.df; OUT = PLAN.length > 1 && OUT0 ? OUT0.replace(/\.json$/, '') + `-${MAP}-${DIFF}-${job.i}.json` : OUT0; logs.length = 0;
+    await js('window.__inkwave.debug.unfreeze?.(); 0');
     if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', mode: 'bazookarp', duration: ${DUR}, difficulty: '${DIFF}' })`);
     { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got}`); app.exit(3); return; } }
@@ -77,7 +85,7 @@ app.on('browser-window-created', (_, win) => {
       ];
       const closeCarry = (how) => { if (!cur) return; cur.dur = +(clock() - cur.t0).toFixed(1); cur.m = +(Kp.bestM[cur.team] - cur.best0).toFixed(1); cur.how = cur.how || how; X.carries.push(cur); cur = null; };
       offs.push(on('karp:drop', (e) => { if (e.how !== 'moved') closeCarry(e.how); }), on('karp:reset', (e) => closeCarry(e.why === 'zone' ? 'splat' : e.why)), on('karp:plant', () => closeCarry('plant')), on('karp:end', (e) => { if (cur) closeCarry(e.reason === 'knockout' ? 'knockout' : 'end'); }));
-      const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, holdS = 0; const eps = [], open = new Map();
+      const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, holdS = 0; const roleS = {}; const eps = [], open = new Map();
       let cStuck = 0; const cEps = []; let cHist = [];
       const frameErr = { n: 0, msg: '' };
       const DT = 1 / 60, CH = 15;
@@ -99,6 +107,7 @@ app.on('browser-window-created', (_, win) => {
           // perch — botsKarp's kHoldUntil — or a pod / hedge perch, as match.cjs)
           const holding = (a.bot.kHoldUntil || 0) > window.__G.time || (a.bot.perchUntil || 0) > a.bot.t;
           if (holding && a.alive) holdS += 0.25;
+          if (a.alive && a.bot.kRole) roleS[a.bot.kRole] = (roleS[a.bot.kRole] || 0) + 0.25;   // ([b5-karp-bots] bot-seconds per role)
           const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !(a.carry && a.carry.gun && a.carry.gun.charging) && !holding;
           samples++;
           const span = h.length > 1 ? Math.max(...h.map((p) => Math.hypot(p.x - a.pos.x, p.z - a.pos.z))) : 99;
@@ -145,7 +154,7 @@ app.on('browser-window-created', (_, win) => {
         // (noticed and escaped / caught), the carrier's shots by kind, roles (bot-seconds), keepers on their spot, interceptors on
         // the known carrier, super jumps to the carrier, specials by the karp rules
         routes: KARP_BOT.stats.routes, picks: KARP_BOT.stats.picks, caughtNoticed: (SPECIAL_STATS.bySrc || {}).karp || { caught: 0, evaded: 0 }, shellDanger: (SPECIAL_STATS.bySrc || {}).karpshell || null, fuseDanger: (SPECIAL_STATS.bySrc || {}).karpfuse || null,
-        kShots: { push: KARP_BOT.stats.push, dodge: KARP_BOT.stats.dodges, splash: KARP_BOT.stats.splashes, ink: KARP_BOT.stats.routeInk }, roles: Object.fromEntries(Object.entries(KARP_BOT.stats.roles).map(([k, v]) => [k, Math.round(v)])),
+        kShots: { push: KARP_BOT.stats.push, dodge: KARP_BOT.stats.dodges, splash: KARP_BOT.stats.splashes, ink: KARP_BOT.stats.routeInk }, roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, Math.round(v)])),
         fbAt: KARP_BOT.stats.fbAt || [], keeperT: +KARP_BOT.stats.keeperT.toFixed(0), icptT: +KARP_BOT.stats.icptT.toFixed(0), botJumps: KARP_BOT.stats.jumps, kSpecials: KARP_BOT.stats.specials, ai: KARP_AI.enabled,
       };
     })()`);
@@ -176,6 +185,7 @@ app.on('browser-window-created', (_, win) => {
     const J = { ...r, console: uniq.length, lightmapWarnings: lightmap.length, wallS: +wallS, diff: DIFF, human: HUMAN || null };
     console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, koT: r.koT, counts: r.counts, pops: r.pops, firstPop: r.firstPop, carries: r.carries.length, plants: r.plants.length, blasts: r.blasts, resets: r.resets, ot: r.ot, stuckPct: r.stuckPct, clamped: r.clamped, crushes: r.crushes, console: uniq.length, frameErrors: r.frameErr.n }));
     if (OUT) fs.writeFileSync(OUT, JSON.stringify(J, null, 1));
+    }
     app.quit();
   });
 });

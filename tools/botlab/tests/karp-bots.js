@@ -441,6 +441,7 @@
       fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
       const sc = Kp.shell.center(), r0 = Kp.shell.radius(), foe = B[0], th = A[1];
       // (thrown short from 7 m in front of the shell: it lands before it, its foe straight behind it — the straight way is through)
+      if (th.bot) th.bot.update = () => {};   // (brainless: the test drives its trigger)
       th.setSub(id); put(th, sc.x, sc.z - 7); th.yaw = th.aimYaw = 0; th.aimPitch = -0.35; th.aimPoint.set(sc.x, 0, sc.z - 3.5);
       put(foe, sc.x, sc.z + r0 + 2.4); step(0.05);
       let inside = 0, contact = 0, minFoe = 99, seen = 0;
