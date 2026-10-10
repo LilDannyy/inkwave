@@ -12,7 +12,7 @@ Worktree: /Users/danielosling/Desktop/1/st-b5-caldera, branch b5-stage-caldera. 
 - lava-look (new): the palette pictures and the lit-seam / hue / chroma report lit seams 33–38 % at rest (12 of 15 shots ≥ 35 %), 53 % rising, 26 % falling; every palette's inks louder than the lava (chroma 0.71–0.92 against 0.51–0.56).
 - Regressions: world-build Halyard 5/5 and Caldera 5/5, stage-mods 36/36, net-stagemods 10/10, a Halyard bot match
   (no console errors); check-maps ok for all four Caldera variants.
-- Bot matches at the final code: 8 Turf War and 1 Zone Control at or within one safety change of the final code: a lookout used in every one (9.4–43.4 s in Turf War, 66.3 s in Zone Control); 3 lava deaths in 42 bot-matches of 3:00, 0.07 per bot per 3:00 (target ≤ 0.25); no sea falls.
+- Bot matches: 6 Turf War and 1 Zone Control at or within one safety change of the final code: a lookout used in every one (9.4–43.4 s in Turf War, 66.3 s in Zone Control); 3 lava deaths in 42 bot-matches of 3:00, 0.07 per bot per 3:00 (target ≤ 0.25); no sea falls.
 
 The user's note relayed with this run ("from the top down it looks familiar") reads as aimed at Bluestone against
 Crossroads Market, as the reviewer also read it; Highmark's shape was not re-judged here.
@@ -43,7 +43,7 @@ Crossroads Market, as the reviewer also read it; Highmark's shape was not re-jud
   walks to the climb's foot, goes up as the HIGH pose opens and holds the top, fighting and painting from there; if it
   runs dry it refills on the deck; no hops or rolls up there. A claimant that dies is replaced while ≥ 8 s are left. Its
   route is put back whenever the brain drops it, and is dropped only when the lava shuts it.
-- Proof: **F10** (from the pads, brains on: both claimants up and holding ≥ 3 s, released at the fall warning) (two runs at the final code: claimants up at 49.6 / 50.1 s holding 11.4 / 10.9 s; up at 55.6 / 49.7 s holding 5.1 / 10.3 s);
+- Proof: **F10** (from the pads, brains on, a normal fight: a claim for each team with a long- or mid-range kit, a claimant up and holding, every claim let go at the fall warning; two runs at the final code: claimants up at 49.6 / 50.1 s holding 11.4 / 10.9 s; up at 55.6 / 49.7 s holding 5.1 / 10.3 s);
   bot matches, seconds anyone stood on a lookout at HIGH (organL + organL~), per team:
 
 | match | code | lookout s at HIGH (organL + organL~) | team A / B | long-range kits A / B | lava deaths | stuck % | Slump crossings |
@@ -311,7 +311,7 @@ See §0, issue 3 (the same 18 matches). Earlier engine-round matches: 15, 5 lava
 **Stage checks** (from the engine round, not re-run): spawn-mid 5.95 / 6.27 s; climb-audit 0 bad of 85 at both levels;
 cover-map 99.5 % with the riders.
 
-**Performance**: the minimap's lava step ≤ 0.4–0.7 ms (was 9.4); the proximity field 20–22 ms at load; the two-pose
+**Performance**: the minimap's lava step at most 0.4–0.7 ms (was 9.4); the proximity field 20–22 ms at load; the two-pose
 nav build ~370 ms at load. Engine round: Caldera 93–100 draw calls against Halyard's 184.
 
 **Pictures**
@@ -375,7 +375,7 @@ devices, lookout, lookTeam, lookLong, lookClaims, lookHold, lookLog, mapMs, mapB
 `debugT(t)` and `?lava=low|high|rise|fall`.
 
 **Registry hooks served:** update, seek, dispose, kill, fallCause, superJumpLanding, navEdge, navNode, goalWeight,
-botHold, botAct, wet, under, fizzle, liquidY, noPlace, restMask, danger, sweeps, splatTime, onSplat, drawMap, hud, state.
+beforePath (a lookout claimant's routes keep off the Races and the low ground), botHold, botAct, wet, under, fizzle, liquidY, noPlace, restMask, danger, sweeps, splatTime, onSplat, drawMap, hud, state.
 
 **Events:** `lava:warn`, `lava:move`, `lava:rest`, `lava:hold`, `lava:set`, `lava:rider`, `device:down` (how `lava` /
 `crush`), `shake`; cause `lava`. **Sounds:** lava_rumble, lava_erupt, lava_hiss, lava_drain, lava_sizzle, lava_pop,
