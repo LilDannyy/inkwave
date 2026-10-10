@@ -72,6 +72,10 @@
   R('stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races', eps.every((e) => e.dur < 10) && !eps.some((e) => e.stone && e.dur >= 2),
     { stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(2), longest: longEps.slice(0, 6), atStones: eps.filter((e) => e.stone), atOrgans: eps.filter((e) => e.organ), atCrestStair: eps.filter((e) => e.crest) });
   R('the Slumps crossed (the shelf or a Race) and the Organ lookouts used', true, { crossings, lookout: Object.fromEntries(Object.entries(S.lookout).map(([k, v]) => [k, r1(v)])), burned: S.burned, devices: S.devices, redirects: S.redirects || 0 });
+  // (fix round 1: the DESIGN §3.7 target — a lookout used by a long-range bot at least once a match; seconds on each
+  // team's lookout at HIGH, the long-range kits' share, the claims made and the seconds the claimants held the top)
+  const LT = S.lookTeam || [0, 0], LL = S.lookLong || [0, 0];
+  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)', LT[0] + LT[1] >= 1, { lookTeam: LT.map(r1), lookLong: LL.map(r1), claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0) });
   R('the match', true, { mode: MODE, simT: r1(simT), wallS: r1((performance.now() - t0) / 1000), state: m.state, cov, winner: m.result?.winner ?? null, phaseAtEnd: L.st.phase, yAtEnd: L.y });
   return out;
 })();

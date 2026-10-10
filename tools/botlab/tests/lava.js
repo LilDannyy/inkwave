@@ -140,7 +140,7 @@
   const rows = [];
   const RS = () => Lv.riders, rid = (id) => RS().find((x) => x.r.id === id);
   let carryL = { maxOff: 0, air: 0 }, carryA = { maxOff: 0, air: 0 }, airL = 0, airA = 0;
-  let placedS = false, prevStone = null, stoneV = 0, bad = { both: 0, neither: 0, hops: 0, lake: 0, hex: 0 }, chip = {};
+  let placedS = false, prevStone = null, stoneV = 0, bad = { both: 0, neither: 0, hops: 0, lake: 0, hex: 0, bVis: 0, bCol: 0, bTop: 0 }, chip = {}, bSeen = 0, bGrow = [];
   let shelfGone = null, shelfBack = null;
   for (let i = 0; i < 60 * 58; i++) {
     dbg.step(1000 / 60);
@@ -166,6 +166,12 @@
     if (shelfGone === null && lvl.groundHeight(shelf.x, shelf.z, 5) === -Infinity) shelfGone = { t: r3(t), y: r3(y) };
     if (shelfGone && shelfBack === null && lvl.groundHeight(shelf.x, shelf.z, 5) === 0) shelfBack = { t: r3(t), y: r3(y) };
     if (i % 60 === 0) rows.push([r3(t), r3(y), st.phase, st.warn ? 'w' : '', r3(tA), r3(tB), r3(tL), r3(s1.top), s1.solid ? 'S' : '']);
+    // (fix round 1) Race 3's boulder: never drawn while its stone is not solid; its collider exactly while drawn; the drawn
+    // top on the collider's top
+    { const s3 = rid('race3'), bb = s3.blocks[1], BM = W.look.boulders, vis = !!BM && BM.visible;
+      if (vis && !s3.solid) bad.bVis++;
+      if (bb && bb.solid && !vis) bad.bCol++;
+      if (vis) { bSeen++; const vTop = BM.position.y + BM.scale.y * 1.0, cTop = bb.center.y + bb.half.y; if (Math.abs(vTop - cTop) > 0.01) bad.bTop++; if (BM.scale.y < 0.999 && bGrow.length < 40) bGrow.push([r3(t), r3(BM.scale.y), r3(vTop - y)]); } }
     // the chip at moments
     const el = document.querySelector('.lv-chip'), tx = el ? el.textContent : '';
     for (const [k, t0] of [['warnRise', 27], ['rise', 40], ['high', 50], ['warnFall', 62], ['fall', 72], ['low', 80.5]]) if (!chip[k] && t > t0) chip[k] = { tx, e: r3(st.e), fill: el ? parseFloat(el.querySelector('.lv-tube i').style.height) : null, warn: el?.classList.contains('is-warn') };
@@ -181,6 +187,8 @@
       lo && hi && Math.abs(lo[4] - 1.4) < 1e-3 && Math.abs(lo[5] - 1.8) < 1e-3 && Math.abs(lo[6] - 2.3) < 1e-3 && Math.abs(hi[4] - 2.35) < 1e-3 && Math.abs(hi[5] - 3.5) < 1e-3 && Math.abs(hi[6] - 4.65) < 1e-3 && !bad.hops && !bad.lake && !bad.hex,
       { low: lo && lo.slice(4, 7), high: hi && hi.slice(4, 7), hops: bad.hops, lake: bad.lake, hex: bad.hex });
   }
+  R('C10 Race 3\'s boulder heaves up out of the lava as its stone turns solid and sinks back as it stops: never drawn while the stone is not solid (it stood 0.55 m proud for 1.6 s of every rise and fall), its collider exactly while drawn, the drawn top on the collider\'s',
+    bSeen > 600 && bad.bVis === 0 && bad.bCol === 0 && bad.bTop === 0 && bGrow.length >= 4, { seen: bSeen, vis: bad.bVis, col: bad.bCol, top: bad.bTop, grow: bGrow.slice(0, 12) });
   R('C4 riders carry players: a kid on Organ L and one on Organ A ride the whole rise and fall (never airborne over 0.1 s, never 2 cm inside the column)', dL.alive && dA.alive && carryL.air <= 0.1 + 1e-6 && carryA.air <= 0.1 + 1e-6 && carryL.maxOff <= 0.02 && carryA.maxOff <= 0.02,
     { L: { alive: dL.alive, air: r3(carryL.air), off: r3(carryL.maxOff) }, A: { alive: dA.alive, air: r3(carryA.air), off: r3(carryA.maxOff) } });
   dsOff();
@@ -244,6 +252,36 @@
     R('D3 an Organ deck takes ink (its own paint: you swim and refill in it) and is never turf; the stones carry none', RA.deck && RA.deck.n > 0 && deckTeam === 1 && me.groundTeam === 1 && P.counts[0] === cov0[0] && !rid('race1').deck,
       { deckN: RA.deck?.n, deckTeam, groundTeam: me.groundTeam, counts: [cov0[0], P.counts[0]] });
     P.clear();
+    // (fix round 1) the burn on the furthest stage time reached, never on a clock going back: a follower's clock eases
+    // back (StageClock) or snaps back; the level then goes up again in a fall without any rise. The lava cells of a wall
+    // in the region, by height
+    const wallCells = (y0, y1) => { const v = new THREE.Vector3(), ids = []; for (let i = 0; i < W.cells.ids.length; i++) { if (W.cells.y[i] < y0 || W.cells.y[i] > y1) continue; const k = W.cells.ids[i], f = P._faceOfCell(k); if (!f || !f.wall) continue; P.cellWorld(k, v); if (Math.hypot(v.x - shelf.x, v.z - shelf.z) < 9) ids.push(k); } return ids; };
+    const inkAll = (ids, team) => { const v = new THREE.Vector3(); for (const k of ids) { P.cellWorld(k, v); P.splat(v, 0.35, team, { instant: true, seed: k }); } };
+    const lvAt = (t) => C.lavaY(t, Lv.sched);
+    // a) mid-fall (74: L 0.31), ink the walls from just over the surface to 0.6; the clock goes back 1.5 s (L 0.53: a
+    //    follower's snap) and comes forward again: the ink over L(74) stays
+    setT(74); const yA = Lv.y;
+    const idsA = wallCells(yA + 0.04, 0.6); inkAll(idsA, 0); const nA0 = inked(idsA);
+    Lv.clock.t = 72.5; Lv.seek(72.5, 'clock'); Lv.update(1 / 60, 72.52);
+    Lv.clock.t = 73.4; Lv.update(1 / 60, 73.4);   // (… and eases on, still behind)
+    Lv.clock.t = 74.3; Lv.update(1 / 60, 74.3);
+    const nA1 = inked(idsA);
+    // b) mid-rise (39: L −0.11), the clock goes back to 38.2 (L −0.33) and a splat lands at the waterline then: nothing
+    //    inks under L(39), the furthest time reached
+    P.clear(); setT(39); const yB = Lv.y;
+    Lv.clock.t = 38.2; Lv.update(1 / 60, 38.2);
+    const idsB = wallCells(lvAt(38.2) - 0.02, yB - 0.03); inkAll(idsB, 1); const nB = inked(idsB);
+    Lv.clock.t = 39.1; Lv.update(1 / 60, 39.1);
+    // c) a follower's forward snap from LOW into the middle of the fall (30 → 74: the surface rose to HIGH and is back
+    //    down at 0.31) burns everything the surface passed in the skipped time, up to the HIGH mark, not just to 0.31
+    P.clear(); setT(30);
+    const idsC = wallCells(0.4, 0.75); inkAll(idsC, 0); const nC0 = inked(idsC);
+    Lv.clock.t = 74; Lv.seek(74, 'clock'); Lv.update(1 / 60, 74.02);
+    const nC1 = inked(idsC);
+    R('D4 the burn runs on the furthest stage time reached: a clock going back in a fall burns nothing (the ink over the surface stays), a splat while it is back inks nothing under the line the surface reached, a forward snap over a whole rise burns up to the HIGH mark',
+      idsA.length > 30 && nA0 > idsA.length * 0.6 && nA1 === nA0 && idsB.length > 10 && nB === 0 && idsC.length > 30 && nC0 > idsC.length * 0.6 && nC1 === 0,
+      { a: { yAt74: r3(yA), cells: idsA.length, before: nA0, after: nA1 }, b: { yAt39: r3(yB), cells: idsB.length, inked: nB }, c: { cells: idsC.length, before: nC0, after: nC1 }, tMax: r3(Lv.tMax) });
+    P.clear();
   }
 
   // ================================================================================================ E: devices, queries
@@ -283,6 +321,34 @@
     R('E5 a super jump landing on the shelf as it drowns is moved to the nearest dry node (≤ 12 m); at LOW with no rise near it lands as aimed',
       dry1 && Math.hypot(s1.to.x - shelf.x, s1.to.z - shelf.z) < 12 && s2.to.distanceTo(V(shelf.x, 0, shelf.z)) < 1e-6,
       { moved: [r3(s1.to.x), r3(s1.to.y), r3(s1.to.z)], d: r3(Math.hypot(s1.to.x - shelf.x, s1.to.z - shelf.z)) });
+    // (fix round 1) the riders and the lava: a sprinkler stuck to Organ A's side rides it down on a fall and is crushed as
+    // it passes the socket's rim (it lived on inside the island); ink on the lookout's sides that a fall carries under the
+    // surface is burned, and a splat under the waterline on them inks nothing
+    __G.subs.clear();
+    setT(50); put(me, V(-6.6, 1.22, -6.34)); step(0.2);
+    const RAa = rid('organA'), spk = __G.subs._throw(me, SUBS.sprinkler, V(-7.6, 1.95, -6.34), V(-9, 1.2, 0), false);
+    for (let i = 0; i < 40 && spk.state === 'fly'; i++) step(1 / 60);
+    const stuck = { state: spk.state, onA: !!spk.ride && spk.ride.lavaRider === RAa, y: spk.pos && r3(spk.pos.y), rim: RAa.rim };
+    const downs2 = []; const o6 = on('device:down', (e) => downs2.push([e.how, r3(Lv.clock.t), e.pos && r3(e.pos.y)]));
+    setT(68); put(me, V(-6.6, 1.22, -3.4));
+    for (let i = 0; i < 60 * 14; i++) dbg.step(1000 / 60);   // (the fall: to 82)
+    o6();
+    const RL2 = rid('organL'), sides = RL2.sides.filter(Boolean);
+    const sideInk = (bMax) => sides.reduce((n, s) => n + s.surf.slice(1).reduce((m, f) => { let c = 0; for (let j = 0; j < f.nv; j++) { if (f.b0 + (j + 0.5) * 0.1 >= bMax) break; for (let i = 0; i < f.nu; i++) if (f.grid[j * f.nu + i]) c++; } return m + c; }, 0), 0);
+    // the lookout at HIGH: its waterline 0.35 m over its base; ink its lake-side faces from 0.5 to 1.1 m over the base
+    setT(50); step(0.1);
+    const base = () => RL2.top - orgL.depth, wHigh = Lv.y - base();
+    const P2splat = (c, r, team) => __G.paint.splat(c, r, team, {});
+    for (let h = 0.55; h <= 1.1; h += 0.15) for (let a = 0; a < 6; a++) { const ang = (a * Math.PI) / 3 + Math.PI / 6, rr = orgL.r * 0.866 + 0.25; P2splat(V(orgL.x + Math.cos(ang) * rr, base() + h, orgL.z + Math.sin(ang) * rr), 0.4, 0); }
+    const ink0 = sideInk(1.25);
+    setT(66); for (let i = 0; i < 60 * 16; i++) dbg.step(1000 / 60);   // (the fall: to 82, LOW: the waterline 1.3 m over the base)
+    const wLow = Lv.y - base(), ink1 = sideInk(wLow - 0.05);
+    for (let a = 0; a < 6; a++) { const ang = (a * Math.PI) / 3 + Math.PI / 6, rr = orgL.r * 0.866 + 0.25; P2splat(V(orgL.x + Math.cos(ang) * rr, base() + 0.9, orgL.z + Math.sin(ang) * rr), 0.4, 1); }
+    const ink2 = sideInk(wLow - 0.05);
+    R('E6 the riders and the lava: a sprinkler on Organ A\'s side is crushed as a fall takes it past its socket\'s rim; ink a fall carries under the surface on the lookout\'s sides is burned; a splat under the waterline there inks nothing',
+      stuck.state === 'spray' && stuck.onA && spk.state === 'dead' && downs2.some((d) => d[0] === 'crush') && ink0 > 20 && ink1 === 0 && ink2 === 0 && Math.abs(wHigh - 0.35) < 0.02 && Math.abs(wLow - 1.3) < 0.02,
+      { stuck, after: spk.state, downs: downs2, sideInk: { atHigh: ink0, afterFall: ink1, splatUnder: ink2 }, waterline: [r3(wHigh), r3(wLow)] });
+    __G.paint.clear(); __G.subs.clear();
   }
 
   // ================================================================================================ F: the nav graph
@@ -323,6 +389,18 @@
     R('F5 the Organ climb (island → A → B → L) exists at LOW and at HIGH over the step links', cl.low && cl.high && cl.high.includes('2'), cl);
     const RL = Lv.restMask('low'), RH = Lv.restMask('high'), sN = nav.nearest(shelf, 0.8, true), stN = nav.nodes.find((n) => M.rider[n.id] === W.riders.indexOf(race1))?.id;
     R('F6 Bazookarp\'s restMask: the shelf standable at LOW, not at HIGH; a stone node at HIGH, not at LOW; dry floor always', RL && RH && RL[sN] === 1 && RH[sN] === 0 && RH[stN] === 1 && RL[stN] === 0 && RL[isl] === 1 && RH[isl] === 1, { shelf: [RL[sN], RH[sN]], stone: [RL[stN], RH[stN]], island: [RL[isl], RH[isl]] });
+    // (fix round 1) a floor the lava can never reach is not "low ground": no node at or above HIGH + kill is a lava floor
+    // (the 1.10 m gutter copings were: 20 nodes, a false GET OFF THE LOW GROUND at HIGH, bots fleeing them); and a kid on
+    // a coping at HIGH rest and in a rise warning gets no personal line
+    const H = def.high, K = C.LAVA.kill;
+    const high1 = nav.nodes.filter((n) => nav.valid[n.id] && M.kind[n.id] === 1 && n.y >= H + K - 1e-6).map((n) => [r3(n.x), r3(n.y), r3(n.z)]);
+    const copings = nav.nodes.filter((n) => nav.valid[n.id] && W.inRegion(n.x, n.z) && n.y > 1.0 && n.y < 1.15 && M.kind[n.id] !== 2);
+    const cop = nav.nodes[nav.nearest(V(5.5, 1.1, -22.5), 0.6)];
+    const lines = {};
+    for (const [k, t] of [['high', 50], ['warn', 27], ['rise', 39]]) { setT(t); put(me, V(cop.x, cop.y + 0.02, cop.z)); step(0.2); lines[k] = [Lv._mine(me)?.text || null, me.alive, r3(me.pos.y)]; }
+    R('F9 a floor the lava never reaches is never low ground: no lava-floor node at or above HIGH + kill (the 1.10 m copings are dry, ways out); a kid on a coping gets no personal line at HIGH, in the warning or the rise',
+      !high1.length && copings.length > 10 && copings.every((n) => M.kind[n.id] === 0) && cop && Math.abs(cop.y - 1.1) < 0.03 && Object.values(lines).every((l) => l[0] === null && l[1]),
+      { high1: high1.slice(0, 6), nHigh1: high1.length, copings: copings.length, coping: cop && [r3(cop.x), r3(cop.y), r3(cop.z)], lines });
   }
   // bots: eight on the drowning ledges at the warning walk off before the lava comes (brains on), four on the stones at
   // the fall warning step off before they sink
@@ -368,6 +446,25 @@
     R('F8 bots on the stones at the fall warning step off before they sink (4 of 4: none dies on a stone or the drowning ground)', !deaths.some(drowned), { deaths, alive: crew.slice(0, 4).map((b) => b.alive), trail: deadK >= 0 ? trail[deadK]?.slice(-14) : undefined });
     freezeBots();
   }
+  // (fix round 1) the lookout claim: from the rise each team's best long-range bot goes up its own side's lookout and
+  // holds it until the fall warning; every bot from its pad, brains on, a normal fight
+  {
+    setT(34);
+    for (const b of bots) { put(b, __G.level.spawnPads[b.team].clone().setY(__G.level.spawnPads[b.team].y + 0.05)); b.bot.update = idle.get(b) || b.bot.update; b.bot.path = null; b.bot.goalTimer = 0; b.bot._look = null; }
+    Lv._lp = null; Lv.stats.lookTeam = [0, 0]; Lv.stats.lookLong = [0, 0]; Lv.stats.lookClaims = 0; Lv.stats.lookHold = 0;
+    const kits = bots.map((b) => [b.team, b.weapon?.kind]);
+    let claims = null, upAt = [null, null];
+    for (let i = 0; i < 30 * 27; i++) {
+      dbg.step(1000 / 30);
+      if (!claims && Lv._lp && Lv._lp.some((T) => T && T.claim)) claims = Lv._lp.map((T) => T && T.claim ? [T.claim.a.name, T.claim.a.team, T.claim.a.weapon?.kind, r3(Lv.clock.t)] : null);
+      for (const T of Lv._lp || []) if (T && T.claim && upAt[T.claim.a.team] === null && Lv._onLookout(T.claim.a, T.ri)) upAt[T.claim.a.team] = r3(Lv.clock.t);
+    }
+    const S2 = Lv.stats, released = bots.every((b) => !b.bot._look);
+    R('F10 the lookout claim: each team\'s claimant reaches its own lookout at HIGH and holds it (seconds on each team\'s lookout), and lets go at the fall warning',
+      S2.lookClaims >= 2 && S2.lookTeam[0] >= 3 && S2.lookTeam[1] >= 3 && upAt[0] !== null && upAt[1] !== null && released && Lv.clock.t > 60.5,
+      { claims, upAt, seconds: S2.lookTeam.map(r3), long: S2.lookLong.map(r3), held: r3(S2.lookHold), nClaims: S2.lookClaims, released, t: r3(Lv.clock.t), kits });
+    freezeBots();
+  }
 
   // ================================================================================================ G: HUD, looks
   {
@@ -383,7 +480,9 @@
     // the callouts from the events (a natural warning)
     setT(24.6); for (let i = 0; i < 30; i++) dbg.step(1000 / 60);
     const c2 = [...document.querySelectorAll('.iw-call')].map((e) => e.textContent);
-    R('G2 the callout from the event: "LAVA RISING" / "Off the low ground: 10" (big)', c2.some((t) => /LAVA RISING/.test(t) && /Off the low ground: 10/.test(t)), { calls: c2, before: calls });
+    for (let i = 0; i < 60 * 2; i++) dbg.step(1000 / 60);   // (2 s on: the sub-line counts down with the warning)
+    const c3 = [...document.querySelectorAll('.iw-call')].map((e) => e.textContent);
+    R('G2 the callout from the event: "LAVA RISING" / "Off the low ground: 10" (big), and its number counts down while it shows (8 two seconds on)', c2.some((t) => /LAVA RISING/.test(t) && /Off the low ground: 10/.test(t)) && c3.some((t) => /Off the low ground: 8/.test(t)), { calls: c2, later: c3, before: calls });
     const { envCause } = await import('./src/core/envCauses.js');
     const ec = envCause('lava');
     R('G3 the splat card: "Burned in the lava" / "Knocked into the lava", a lava icon, a deep-red flood (#a3121a)', ec && ec.name === 'Burned in the lava' && ec.knocked === 'Knocked into the lava' && /<svg/.test(ec.icon) && ec.flood === '#a3121a', ec && { name: ec.name, flood: ec.flood });
@@ -398,7 +497,12 @@
     const mm = g.minimap, cv = document.createElement('canvas'); cv.width = mm.w; cv.height = mm.h;
     const hash = (t) => { setT(t); const c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height); Lv.drawMap(c, mm, { x: 0, y: 0 }, mm.s, ['#f00', '#00f'], 1); const d = c.getImageData(0, 0, cv.width, cv.height).data; let h = 0, n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) { n++; h = (h * 31 + d[i - 3] + i) >>> 0; } return { n, h }; };
     const hm = { low: hash(10), mid: hash(39.5), high: hash(50) };
-    R('G5 the minimap: the lava fill spreads over the ledges as it rises (pixel counts LOW < mid-rise < HIGH)', hm.low.n > 0 && hm.mid.n > hm.low.n && hm.high.n > hm.mid.n, hm);
+    // (fix round 1) a level step redraws only the pixels it floods or bares: every 0.1 m of a rise and a fall, timed
+    Lv.stats.mapMs = 0; Lv.stats.mapN = 0;
+    for (let t = 35; t <= 45.01; t += 0.25) hash(t);
+    for (let t = 70; t <= 80.01; t += 0.25) hash(t);
+    const mapT = { stepMaxMs: Lv.stats.mapMs, redraws: Lv.stats.mapN, buildMs: Lv.stats.mapBuildMs };
+    R('G5 the minimap: the lava fill spreads over the ledges as it rises (pixel counts LOW < mid-rise < HIGH); a level step redraws in ≤ 1.5 ms (it re-rastered the map: 9.4 ms)', hm.low.n > 0 && hm.mid.n > hm.low.n && hm.high.n > hm.mid.n && mapT.redraws >= 20 && mapT.stepMaxMs <= 1.5, { ...hm, ...mapT });
     const key = g.levelMat.customProgramCacheKey();
     R('G6 the level shader carries the lava band (the stain line at the high mark, its glow and pulse): program key -lava, the shared uniforms; the prop kit\'s materials carry the stain', /-lava/.test(key) && g.levelMat.userData.uniforms.uLavaS === W.uniforms.uLavaS && !!g.props?.mat?.paint?.userData?.lavaStain, { key });
   }
@@ -408,6 +512,33 @@
     offS();
     const restart = async (mode, extra = {}) => { dbg.unfreeze?.(); await g.api.startMatch({ mapId: 'caldera', duration: extra.duration || 300, mode, ...extra }); for (let i = 0; i < 240; i++) { if (g.match?.state === 'playing') break; await new Promise((r) => setTimeout(r, 100)); } dbg.freeze(); freezeBots(); Lv = g.match.lava; };
     await restart('zones');
+    // (fix round 1) the orange band follows THIS match's inks: a match on a reused world, then every palette
+    const { TEAM_PALETTES, COLORBLIND_PALETTE } = await import('./src/config.js');
+    const HOT = ['#ff8a14', '#ff4150', '#ffb000', '#ff6a00', '#ffd21a'], hot = () => (__G.teamHex || []).some((h) => HOT.includes(String(h).toLowerCase()));
+    const pal = [['restart', W.look.mat.uniforms.uS.value.z, hot(), (__G.teamHex || []).join(' ')]];
+    for (const P0 of [...TEAM_PALETTES, COLORBLIND_PALETTE]) { g._setPalette(P0); step(1 / 60); pal.push([P0.id, W.look.mat.uniforms.uS.value.z, hot()]); }
+    R('H4 the seams\' orange band is dropped exactly when this match\'s inks are orange / red (Tangerine, Cherry, the colour-blind Sun): after a restart on a reused world and for each palette', pal.every((r) => (r[1] === 1) === r[2]) && pal.filter((r) => r[2]).length >= 3, pal);
+    // (fix round 1) the lava chip sits under each mode's own HUD, never over it (DOM boxes), in the warning, the rise, at
+    // HIGH, and with the overtime bar (below, after H1's overtime)
+    g.hud?.setVisible?.(true);
+    const boxes = (sels) => sels.flatMap((q) => [...document.querySelectorAll(q)]).filter((e) => !e.classList.contains('lv-chip')).map((e) => [e.className.split(' ')[0], e.getBoundingClientRect()]).filter(([, r]) => r.width > 2 && r.height > 2);
+    const ov = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    const chipVs = (sels) => { const el = document.querySelector('.lv-chip'), c = el?.getBoundingClientRect(); if (!c || c.width < 2) return { chip: null }; const hit = boxes(sels).filter(([, r]) => ov(c, r) > 1).map(([n, r]) => [n, Math.round(ov(c, r))]); return { chip: [Math.round(c.left), Math.round(c.top), Math.round(c.width), Math.round(c.height)], parent: el.parentElement?.className.split(' ')[0], hit, n: boxes(sels).length }; };
+    const ZSEL = ['.iw-zo__chip', '.iw-zo__shift', '.iw-zo__ot', '.iw-timer__txt', '.iw-zc'], TSEL = ['.iw-tw__track', '.iw-tw__status', '.iw-tw__ot', '.iw-tw__tower', '.iw-timer__txt', '.iw-zc'];
+    const zHud = {};
+    for (const [k, t] of [['warn', 26], ['rise', 38], ['high', 55]]) { setT(t); step(0.3); zHud[k] = chipVs(ZSEL); }
+    // (fix round 1) Zone Control's last ebb (270) lands on its FINAL 30 banner: the EBB callout and the all-clear whistle
+    // wait 3.5 s
+    {
+      const calls = [], wh = [], S0 = g.match.stage, c0 = S0.callout.bind(S0), p0 = __G.audio?.play?.bind(__G.audio);
+      S0.callout = (a, b, c) => { calls.push([a, r3(Lv.clock.t)]); return c0(a, b, c); };
+      if (__G.audio) __G.audio.play = (n, o) => { if (n === 'lava_whistle') wh.push([o?.params?.kind, r3(Lv.clock.t)]); return p0 ? p0(n, o) : null; };
+      let finAt = null; const of = on('zones:active', (e) => { if (e.final && finAt === null) finAt = r3(Lv.clock.t); });
+      setT(264); for (let i = 0; i < 60 * 12; i++) dbg.step(1000 / 60);
+      of(); S0.callout = c0; if (__G.audio && p0) __G.audio.play = p0;
+      const ebb = calls.find((c) => c[0] === 'EBB'), clear = wh.find((w) => w[0] === 'clear');
+      R('H5 Zone Control\'s last ebb (270 s) and its FINAL 30 banner: the EBB callout and the all-clear whistle come 3.5 s after the banner, not with it', finAt !== null && Math.abs(finAt - 270) < 0.3 && ebb && ebb[1] >= finAt + 3 && clear && clear[1] >= finAt + 3, { finAt, ebb, clear, calls, wh });
+    }
     const ev = []; const o4 = ['lava:hold', 'lava:move', 'lava:warn'].map((k) => on(k, (e) => ev.push([k, r3(Lv.clock.t)])));
     setT(118); g.match.zones.overtime = true; step(0.1);
     const ot = Lv.otAt;
@@ -416,6 +547,15 @@
     for (const o of o4) o();
     R('H1 Zone Control: its schedule; overtime holds — a warning not yet at its move is cancelled, nothing moves after, "LAVA HOLDS"', Lv.sched.key === 'zones' && ot !== null && Lv.st.phase === 'low' && ev.some((e) => e[0] === 'lava:hold') && !ev.some((e) => e[0] === 'lava:move'),
       { key: Lv.sched.key, otAt: ot, phase: Lv.st.phase, ev });
+    g.match.zones.overtime = true; step(0.4); zHud.overtime = chipVs(ZSEL); g.match.zones.overtime = false;
+    await restart('tower');
+    g.hud?.setVisible?.(true);
+    const tHud = {};
+    for (const [k, t] of [['warn', 26], ['rise', 38], ['high', 55]]) { setT(t); step(0.3); tHud[k] = chipVs(TSEL); }
+    if (g.match.tower) { g.match.tower.overtime = true; step(0.4); tHud.overtime = chipVs(TSEL); g.match.tower.overtime = false; }
+    const okHud = (o) => Object.values(o).every((x) => x.chip && !x.hit.length && x.n > 0);
+    R('G7 the lava chip hangs under each mode\'s own HUD and never covers it (DOM boxes): Zone Control\'s zone chip, shift line and overtime bar, Tower Command\'s track, tower, status and overtime bar — in the warning, the rise, at HIGH and in overtime',
+      okHud(zHud) && okHud(tHud) && Object.values(zHud).every((x) => x.parent === 'iw-zo') && Object.values(tHud).every((x) => x.parent === 'iw-tw'), { zones: zHud, tower: tHud });
     const ZL = lvl.layout.zones, zs = [...(ZL.center || []), ZL.side].filter(Boolean);
     R('H2 the zones never touch the lava: every zone floor ≥ HIGH + 0.3', zs.length > 0 && zs.every((z) => z.y0 >= def.high + 0.3), zs.map((z) => z.y0));
     await restart('boss');
