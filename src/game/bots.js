@@ -1144,7 +1144,10 @@ export class BotBrain {
     if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && !gOff && (rolls ? !this._rollSafe(a, it.move, w.rollDist) : (!this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0))))) it.jump = false;
     // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
     // land there, steer back the way it came (air control pulls it back over the floor it left)
-    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._climbAim && !a.superJumpState && this._arcWet(a, a.vel.x, a.vel.z)) {
+    // (not in a route's own hop — up the Organ columns the arc meets the next column's face and the model drops it into the
+    // seam: it pulled the lookout claimants back off every hop)
+    if (it.jump && pathHop) this._hopPath = true; else if (a.grounded) this._hopPath = false;
+    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._climbAim && !this._hopPath && !a.superJumpState && this._arcWet(a, a.vel.x, a.vel.z)) {
       const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
       if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
     }
