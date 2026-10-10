@@ -353,9 +353,20 @@ export class LavaWorld {
     }
     for (const id of this._linkEnds || []) if (nav.nodes[id]) nav.nodes[id].wet = 0;
     const { exit, escD } = this._exits(nav, kind);
+    // (fix round 2) the bots' escape target: the nearest node that is inland — dry, every walk neighbour dry, floor all
+    // round it within 1.25 m — so an escape ends a step past the edge, not on it: bots ending their escapes on the same
+    // edge node shoved each other (the match's soft push, no velocity) off the 1.2 m edge back into the lava
+    const inland = new Uint8Array(N);
+    for (const n of nav.nodes) {
+      if (kind[n.id] || !nav.valid[n.id] || n.nb.some((e) => kind[e.to] && e.type !== 'climb')) continue;
+      let ok = true;
+      for (let k = 0; k < 8 && ok; k++) { const a = (k * Math.PI) / 4; if (level.groundHeight(n.x + Math.cos(a) * 1.25, n.z + Math.sin(a) * 1.25, n.y + 0.6) < n.y - 0.6) ok = false; }
+      inland[n.id] = ok ? 1 : 0;
+    }
+    const { exit: safe, escD: safeD } = this._exits(nav, inland, true);
     const reach = new Uint8Array(N); for (let i = 0; i < N; i++) reach[i] = kind[i] ? 1 : 0;
     this.nav = nav;
-    this.navMeta = { kind, rider, pose, top: ptop, shutY, exit, escD, reach, lowTop, highTop, ms: Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0) };
+    this.navMeta = { kind, rider, pose, top: ptop, shutY, exit, escD, safe, safeD, reach, lowTop, highTop, ms: Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0) };
     nav.lavaMeta = this.navMeta;
     return nav;
   }
@@ -429,14 +440,15 @@ export class LavaWorld {
       if (!used.length) { this.navProblems.push({ pose, a: s.a.id || s.a.pt, b: s.b.id || s.b.pt, A: A.length, B: B.length }); console.error('[lava] a step link yields no edge pair', pose ? 'HIGH' : 'LOW', s.a.id || s.a.pt, '→', s.b.id || s.b.pt, A.length, B.length); }
     }
   }
-  // the nearest node every lava-reached node can walk to that the lava never reaches (multi-source Dijkstra, reversed)
-  _exits(nav, kind) {
+  // the nearest node every lava-reached node can walk to that the lava never reaches (multi-source Dijkstra, reversed);
+  // sources = true: the nodes flagged in `kind` are the targets instead (the inland nodes)
+  _exits(nav, kind, sources = false) {
     const N = nav.nodes.length, dist = new Float32Array(N).fill(Infinity), exit = new Int32Array(N).fill(-1);
     const radj = Array.from({ length: N }, () => []);
     for (const n of nav.nodes) for (const e of n.nb) if (e.type !== 'climb') radj[e.to].push([n.id, e.cost]);
     const heap = [], push = (id, d) => { heap.push([d, id]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
     const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = i * 2 + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
-    for (let i = 0; i < N; i++) if (!kind[i] && nav.valid[i]) { dist[i] = 0; exit[i] = i; push(i, 0); }
+    for (let i = 0; i < N; i++) if ((sources ? kind[i] : !kind[i]) && nav.valid[i]) { dist[i] = 0; exit[i] = i; push(i, 0); }
     while (heap.length) {
       const [d, u] = pop();
       if (d > dist[u]) continue;
@@ -521,6 +533,7 @@ export class StageLava {
   update(dt, t) {
     const m = this.m;
     this._wb = null;   // (whose update `wet` reads for: set by botHold inside each bot's own update)
+    this._frame = (this._frame || 0) + 1;   // (noPush's per-frame cache)
     if (!this.placed && (m.state === 'playing' || m.attract || m.practice)) this.placeRiders();
     // overtime: a move already running finishes, then the lava holds; a warning not yet at its move is cancelled
     if (this.otAt === Infinity && (m.zones?.overtime || m.tower?.overtime || m.karp?.overtime || m.bazookarp?.overtime)) {
@@ -784,6 +797,13 @@ export class StageLava {
       if (b._lavaEsc) ahead = 0;
       else if (!this.covers(a.pos.x, a.pos.z, a.pos.y - 0.05, LAVA.goalLook)) ahead = Math.max(ahead, LAVA.goalLook);
     }
+    // (fix round 2) a Pumice stone's top sinks with the lava, so the level's reach misses it: it is wet when the stone
+    // won't be up `ahead` s from now (a duelling bot on the island stepped onto Bravo's Race 7 1.3 s before it sank)
+    if (ahead > 0) for (const R of this.riders) {
+      const r = R.r;
+      if (!r.sink || !R.solid || Math.abs(x - r.x) > 3.2 || Math.abs(z - r.z) > 3.2 || Math.abs(gy - R.top) > 0.2 || !inRider(r, x, z, 0.05)) continue;
+      return !this._stoneUpAt(R, this.clock.t + ahead);
+    }
     return this.covers(x, z, gy, ahead);
   }
   // (bots.js asks this first thing in every bot's update: the lava never holds a bot; it notes whose update this is)
@@ -857,6 +877,17 @@ export class StageLava {
     return true;
   }
   fallCause(a) { return this.W.fallsIn(a.pos.x, a.pos.z) ? 'lava' : null; }
+  // (fix round 2) no soft push within ~1.25 m of open lava (the glow's proximity field at the current level): the
+  // match's push between overlapping actors moves them with no velocity, so no guard sees it — two bots meeting at a
+  // lava lip shoved one in (lava-bots.js trails: an escaper waiting on the edge node, a bot on the Horn Step's tip),
+  // and a player could be body-shoved off a lip the same way. Cached per frame
+  noPush(a) {
+    const c = a._lavaNP;
+    if (c && c.f === this._frame) return c.v;
+    const v = !!a.alive && this.W.proxAt(a.pos.x, a.pos.z, this.y) > 0.02 && a.pos.y < this.y + 3;
+    a._lavaNP = { f: this._frame, v };
+    return v;
+  }
   // a super jump whose landing will be under the lava (or on a stone that won't be there) lands on the nearest node dry
   // at its arrival instead (≤ 12 m), else on the jumper's own pad
   superJumpLanding(a, s) {
@@ -889,7 +920,9 @@ export class StageLava {
     if (!nav || !M) return;
     for (const a of this.m.actors) {
       if (!a.alive || a.remote || a.superJumpState || !this.covers(a.pos.x, a.pos.z, a.pos.y, 0.3)) continue;
-      const s = nav.nearest(a.pos, 1.2, true), e = s >= 0 ? M.exit[s] : -1;
+      // (its floor's node from its feet — on a stone, the stone's — never a node a tier above or below it)
+      const blk = a.ground?.block >= 0 ? G.level?.blocks[a.ground.block] : null, Rs = blk?.lavaRider;
+      const s = Rs && Rs.r?.sink ? this._riderNode(this.riders.indexOf(Rs), a.pos) : this._nodeAt(a.pos, 0.6), e = s >= 0 ? M.exit[s] : -1;
       if (e < 0) continue;
       const n = nav.nodes[e];
       if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) > 12) continue;
@@ -951,8 +984,7 @@ export class StageLava {
       for (const a of this.m.actors) {
         const b = a.bot;
         if (!b || a.remote || !a.alive || a.team !== team || b._lavaEsc || b.tRole === 'ride') continue;
-        const at = nav.nearest(a.pos, 1.2, true);
-        if (at >= 0 && (M.kind[at] === 1 || (M.kind[at] === 2 && this.W.riders[M.rider[at]]?.sink))) continue;   // (not off a stone or a drowning ledge)
+        if (this._foot(a).kind) continue;   // (not off a stone or a drowning ledge: from its feet)
         const k = a.weapon?.kind, rg = typeof b._range === 'function' ? b._range() : 0;
         let s = LOOKOUT_KINDS.has(k) ? (k === 'charger' ? 3 : 2.5) : rg >= 10 ? 1 + rg / 40 : 0;
         if (!s) continue;
@@ -1000,8 +1032,8 @@ export class StageLava {
     const a = b.a, L = b._look, nav = G.nav, t = this.clock.t, M = this.W.navMeta;
     const up = this._onLookout(a, L.ri);
     // (on a stone or a drowning ledge the escape and the brain have it: no claim route from there)
-    const at = up ? -1 : nav.nearest(a.pos, 1.2, true);
-    if (at >= 0 && (M.kind[at] === 1 || (M.kind[at] === 2 && this.W.riders[M.rider[at]]?.sink))) { L.path = null; return; }
+    if (!up && this._foot(a).kind) { L.path = null; return; }
+    void M;
     if (b.mode === 'retreat' || (b.mode === 'refill' && !up)) { L.path = null; L.on = false; return; }   // (its life, its tank first)
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
     // dry on the top: it stays — the brain's refill paints a puddle where it stands and swims in it (the deck takes ink)
@@ -1106,6 +1138,7 @@ export class StageLava {
   navEdge(e, to, metres) {
     const M = this.W.navMeta;
     if (!M || !M.kind[to]) return 0;
+    if (this._escPlan && M.kind[to] === 2) { const R = this.riders[M.rider[to]]; if (R && R.r.sink) return R.solid && this._stoneUpAt(R, this.clock.t + metres * LAVA.sPerM + 0.5) ? 0 : Infinity; }   // (an escape: botAct)
     if (this._pb?._look && (M.kind[to] === 1 || (M.kind[to] === 2 && this.W.riders[M.rider[to]]?.sink))) return Infinity;   // (nor any floor the lava takes)
     const s = this.shut(to, this.clock.t + metres * LAVA.sPerM);
     return s === 2 ? Infinity : s ? LAVA.soft : 0;
@@ -1152,19 +1185,34 @@ export class StageLava {
     b._lavaT = (b._lavaT || 0) - dt;
     if (b._lavaT <= 0) {
       b._lavaT = 0.25;
-      const s = nav.nearest(a.pos, 1.2, true), k = s >= 0 ? M.kind[s] : 0, t = this.clock.t;
+      // (what it stands on, from its own feet: _foot — a bot on dry ground is never sent on an escape)
+      const f = this._foot(a), s = f.node, k = f.kind, t = this.clock.t;
       let need = false;
-      const esc = (M.escD[s] || 0) / LAVA.escape[0] + LAVA.escape[1];
-      if (k === 1) { const left = this._timeTo(M.shutY[s], t, 16); need = left < esc; }
-      else if (k === 2) { const R = this.riders[M.rider[s]]; if (R && R.r.sink) need = this.shut(s, t + 4) === 2 || this.shut(s, t + esc) === 2; }
-      if (need && M.exit[s] >= 0 && M.exit[s] !== s) {
-        if (!b._lavaEsc || b.goal !== M.exit[s] || !b.path) {
-          this._pb = null;   // (an escape is planned without a claimant's rules: its way out may cross the low ground it stands on)
-          const p = nav.path(s, M.exit[s], a.team);
-          if (p) { b.path = p; b.pi = Math.min(1, p.length - 1); b.goal = M.exit[s]; b.bestD = Infinity; b.noProg = 0; b._lavaEsc = true; b.escN = (b.escN || 0) + 1; }
+      const esc = s >= 0 ? (M.escD[s] || 0) / LAVA.escape[0] + LAVA.escape[1] : LAVA.escape[1];
+      if (k === 1) { const left = this._timeTo(a.pos.y - LAVA.navLead, t, 16); need = left < esc; }
+      else if (k === 2) need = !this._stoneUpAt(f.R, t + 4) || !this._stoneUpAt(f.R, t + esc) || (s >= 0 && (this.shut(s, t + 4) === 2 || this.shut(s, t + esc) === 2));
+      // (the target: the nearest inland node — a step past the edge — when it is at most 4 m further than the first dry one)
+      const goal = s < 0 ? -1 : M.safe && M.safe[s] >= 0 && M.safeD[s] <= M.escD[s] + 4 ? M.safe[s] : M.exit[s];
+      if (need && goal >= 0 && goal !== s) {
+        if (!b._lavaEsc || b.goal !== goal || !b.path || b.pi >= b.path.length) {
+          // (an escape is planned without a claimant's rules — its way out may cross the low ground it stands on — and
+          // over any stone still up when it gets there, whatever its pose: a stone carries you until it turns deadly)
+          this._pb = null; this._escPlan = true;
+          const p = nav.path(s, goal, a.team);
+          this._escPlan = false;
+          if (p) { b.path = p; b.pi = Math.min(1, p.length - 1); b.goal = goal; b.bestD = Infinity; b.noProg = 0; b._lavaEsc = true; b._escT = t; b._escDry = 0; b.escN = (b.escN || 0) + 1; }
         }
-      } else if (b._lavaEsc && (k === 0 || !need)) b._lavaEsc = false;
+      } else if (b._lavaEsc && (k === 0 || !need)) {
+        // (on dry feet: it walks on to its inland node — off the edge's lip, where escapers ending on one node shoved each
+        // other back in — unless that is done, more than 4 s or 6 m away)
+        const gn = b.goal >= 0 ? nav.nodes[b.goal] : null, gd = gn ? Math.hypot(gn.x - a.pos.x, gn.z - a.pos.z) : 0;
+        if (k !== 0 || !b.path || !gn || gd < 0.7 || gd > 6 || t - (b._escT ?? t) > 12 || b._escDry > 4) { b._lavaEsc = false; b._escDry = 0; }
+        else b._escDry = (b._escDry || 0) + 0.25;
+      }
       if (b._lavaEsc) { b.repath = Math.max(b.repath || 0, 0.6); b.goalTimer = Math.max(b.goalTimer || 0, 0.6); }
+      // (bots.js runs this hook ahead of a threat's or a canopy's footwork while it says so: on floor the lava takes, on a
+      // stone, or escaping — a bot dodging a Torpedo on a drowning ledge never got its escape)
+      b.stageUrgent = k !== 0 || !!b._lavaEsc;
     }
     // the Organ lookouts: each team's claimant (_lookPlan) goes up its own lookout and holds it until the fall warning
     if (!b._lavaEsc && b._look) this._lookAct(b, dt, it, move, vis);
@@ -1179,6 +1227,9 @@ export class StageLava {
         b._escNx = nx;
         if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
         b._needJump = true;
+        // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
+        // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot)
+        b.guardOff = true;
       } else if (b.path) {
         b._escNx = null;
         const mv = b._steer(dt); if (mv !== move) move.copy(mv);
@@ -1195,6 +1246,65 @@ export class StageLava {
     if (M) for (let i = 0; i < M.kind.length; i++) if (M.kind[i] === 2 && M.pose[i] === 1) { const r = this.W.riders[M.rider[i]]; if (r && !r.sink && r.look?.role === 'lookout') out.push(i); }
     return (this._lookN = out);
   }
+  // ----------------------------------------------------------------------- what an actor stands on (fix round 2)
+  // Read from its own feet, never from the nearest nav node: nav.nearest() hands out the best node in the first grid
+  // ring that has any, which on a dry edge can be the drowning floor 1.2 m below (a bot on the edge was sent on an
+  // escape planned from the floor below, which steered it off the edge into the lava; a kid on dry ground 1.3 m up was
+  // told to get off the low ground), and it hides a sinking stone's node once the stone is 0.3 m off its pose (the
+  // stone's line went out 2.9 s before the stone killed, and a bot that stepped on late was never sent off).
+  //   → { kind: 0 dry | 1 a floor the lava reaches | 2 a sinking stone, node: its nav node (the way out starts there;
+  //       −1: none), R / ri: the stone }
+  // Airborne (a hop out, a jump): what it last stood on, for up to a second.
+  _foot(a) {
+    const M = this.W.navMeta, t = this.clock.t;
+    if (!M) return FOOT_DRY;
+    const memo = a._lavaFoot;
+    if (!a.grounded) return memo && memo.t > t - 1 && memo.t <= t ? memo.f : FOOT_DRY;
+    const blk = a.ground?.block !== undefined && a.ground.block >= 0 ? G.level?.blocks[a.ground.block] : null, R = blk?.lavaRider;
+    let f = FOOT_DRY;
+    if (R && R.r) {
+      // (an Organ rides the lava and is never under it: dry; a stone: until it sinks)
+      if (R.r.sink) { const ri = this.riders.indexOf(R); f = { kind: 2, R, ri, node: this._riderNode(ri, a.pos) }; }
+    } else if (a.pos.y < this.W.high + LAVA.kill - 0.02 && this.W.inRegion(a.pos.x, a.pos.z)) {
+      f = { kind: 1, node: this._nodeAt(a.pos, 0.5) };
+    }
+    a._lavaFoot = { f, t };
+    return f;
+  }
+  // the nearest static node whose height is within `band` of the feet (rings of the nav grid, as nearest() walks them)
+  _nodeAt(pos, band) {
+    const nav = G.nav, M = this.W.navMeta;
+    if (!nav || !M) return -1;
+    const ix = Math.round((pos.x - nav.x0) / nav.step), iz = Math.round((pos.z - nav.z0) / nav.step);
+    let best = -1, bd = Infinity;
+    for (let r = 0; r <= 3; r++) {
+      for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+        const jx = ix + dx, jz = iz + dz;
+        if (jx < 0 || jz < 0 || jx >= nav.nx || jz >= nav.nz) continue;
+        for (const id of nav.cells[jz * nav.nx + jx]) {
+          if ((!nav.valid[id] && !nav.exitable[id]) || M.kind[id] === 2) continue;
+          const n = nav.nodes[id];
+          if (Math.abs(n.y - pos.y) > band) continue;
+          const d = (n.x - pos.x) ** 2 + (n.z - pos.z) ** 2;
+          if (d < bd) { bd = d; best = id; }
+        }
+      }
+      if (best >= 0) return best;
+    }
+    return best;
+  }
+  // a stone's HIGH-pose node nearest to p (the way out starts there whatever the stone's pose now)
+  _riderNode(ri, p) {
+    const M = this.W.navMeta, nav = G.nav;
+    if (!M || !nav || ri < 0) return -1;
+    const C = (this._rnC ||= []);
+    if (!C[ri]) { C[ri] = []; for (let i = 0; i < M.kind.length; i++) if (M.kind[i] === 2 && M.rider[i] === ri && M.pose[i] === 1) C[ri].push(i); }
+    let best = -1, bd = Infinity;
+    for (const id of C[ri]) { const n = nav.nodes[id], d = (n.x - p.x) ** 2 + (n.z - p.z) ** 2; if (d < bd) { bd = d; best = id; } }
+    return best;
+  }
+
   // s until L reaches y from t (looking `horizon` s ahead; Infinity if not)
   _timeTo(y, t, horizon) {
     if (this.yAt(t) >= y) return 0;
@@ -1227,19 +1337,18 @@ export class StageLava {
   _mine(a) {
     const M = this.W.navMeta, nav = G.nav;
     if (!M || !nav || nav !== this.W.nav) return null;
-    const s = nav.nearest(a.pos, 1.2, true);
-    if (s < 0 || !M.kind[s]) return null;
+    // (from the feet: _foot — dry ground never gets the line; a stone keeps it until it sinks)
+    const f = this._foot(a), s = f.node, ex = s >= 0 ? M.exit[s] : -1;
+    if (!f.kind) return null;
     const t = this.clock.t;
-    if (M.kind[s] === 1) {
-      const left = this._timeTo(M.shutY[s], t, 14);
+    if (f.kind === 1) {
+      const left = this._timeTo(a.pos.y - LAVA.navLead, t, 14);
       if (!Number.isFinite(left)) return null;
-      return this._line('GET OFF THE LOW GROUND', a, M.exit[s], left);
+      return this._line('GET OFF THE LOW GROUND', a, ex, left);
     }
-    const R = this.riders[M.rider[s]];
-    if (!R || !R.r.sink) return null;
-    const left = this._stoneLeft(R, t, 16.5);
+    const left = this._stoneLeft(f.R, t, 16.5);
     if (!Number.isFinite(left)) return null;
-    return this._line('THE STONES ARE SINKING', a, M.exit[s], left);
+    return this._line('THE STONES ARE SINKING', a, ex, left);
   }
   _stoneLeft(R, t, h) { for (let dt = 0; dt <= h; dt += 0.25) if (!this._stoneUpAt(R, t + dt)) return dt; return Infinity; }
   _line(text, a, exitId, left) {
@@ -1271,6 +1380,7 @@ export class StageLava {
 }
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
+const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });   // (StageLava._foot: dry ground, an Organ, airborne long enough)
 const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)
 const DEVICE_STATES = new Set(['spray', 'beacon', 'curtain', 'mine', 'stuck', 'run', 'prime']);

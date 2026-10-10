@@ -21,6 +21,7 @@ import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing be
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _wv = new THREE.Vector3();   // [b5-caldera] (_wetHi's probe)
 const _walkHit = new Hit();
 const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
 const _down = new THREE.Vector3(0, -1, 0), _stepHit = new Hit();
@@ -1045,7 +1046,7 @@ export class BotBrain {
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
     if (!thrAim && G.match?.pods) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;
-    if (!thrAim && G.match?.stage) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || null;   // [b5-stagehooks] (escape the lava …)
+    if (G.match?.stage && (!thrAim || this.stageUrgent)) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || thrAim || null;   // [b5-stagehooks] (escape the lava …) [b5-caldera] stageUrgent: a module's escape outranks a threat's footwork
     // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
     // the danger guard's below have the last word) [b5-int2: after the stage module's botAct, which outranks it]
     if (!thrAim && this.sp.on()) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);
@@ -1094,7 +1095,9 @@ export class BotBrain {
     }
 
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
-    if (!this._clMove) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
+    // [b5-caldera] guardOff: a stage module steers it straight at a step up this frame (the lava's hop out): no guard
+    const gOff = !!this.guardOff; this.guardOff = false;
+    if (!this._clMove && !gOff) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
     if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
     // ---------------- smooth the move command: heading slews (no twitch at waypoint switches / strafe flips)
@@ -1111,7 +1114,9 @@ export class BotBrain {
     // edge guard (after the smoothing, which can swing the heading past what _avoidWater checked): never steer off a
     // deck into the sea. Probe the ground a stopping distance ahead; if it's water, slide along the edge (whichever
     // diagonal is safe) or stop.
-    if (this.mvMag > 0.05 && a.grounded && !a.climbing) this._edgeGuard(a, it.move);
+    // [b5-caldera] also with no move asked (momentum), and a frame or two off the ground stepping down a lip (a 0.1 m coping)
+    const gNear = a.grounded || (a.vel.y <= 0.3 && a.pos.y - G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.05) < 0.35);
+    if ((this.mvMag > 0.05 || Math.hypot(a.vel.x, a.vel.z) > 1.0) && gNear && !a.climbing && !gOff) this._edgeGuard(a, it.move);
     // stuck recovery, based on progress toward the current waypoint: hop → skip the waypoint → replan
     const trying = this.path && wantMove && !a.specialActive?.pin && !(CHARGES[w.kind] && (a.weaponRunner.charging || a.weaponRunner.burstT > 0));   // ([b5-zipcheer] pin: a Cheer Orb's lift holds us)
     if (!trying) this.noProg = 0;
@@ -1126,6 +1131,10 @@ export class BotBrain {
     if (this.noProg === 0) this._skipped = false;
     this.stuck = this.noProg;
     if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; this._needJump = false; }
+    // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
+    // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
+    // the causeway into the drowning Casting Floor mid-fight); a route's hop up a step lands on dry ground and passes
+    if (it.jump && a.grounded && !a.climbing && !this._clHop && !gOff && !this._hopSafe(a, it.move)) it.jump = false;
     // displacement watchdog: asking to move for 1.5 s but covering < 0.4 m means something the waypoint logic can't
     // see is holding us (re-plans reset its progress timer, so it can't catch this). Duels are exempt: strafing
     // back and forth is meant to stay put.
@@ -1348,12 +1357,36 @@ export class BotBrain {
     for (let k = 0; k < 8; k++) { const t = (k / 8) * Math.PI * 2; if (this._wet(a.pos.x + Math.cos(t) * r, a.pos.z + Math.sin(t) * r, a.pos.y)) return true; }
     return false;
   }
+  // [b5-caldera] a hop's flight along where it is carried (its velocity, else the move) out to where it lands (~0.9 s at
+  // its speed, ≤ 6.5 m): never over the sea or the lava (a gap of floor that is dry is fine)
+  _hopSafe(a, mv) {
+    const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz), ml = Math.hypot(mv.x, mv.z);
+    let ux, uz, s;
+    if (sp > 1) { ux = vx / sp; uz = vz / sp; s = Math.max(sp, ml * PLAYER.runSpeed); } else if (ml > 0.05) { ux = mv.x / ml; uz = mv.z / ml; s = ml * PLAYER.runSpeed; } else return true;
+    const D = Math.min(6.5, s * 0.9 + 0.5);
+    for (let d = 0.5; d <= D + 1e-6; d += 0.5) if (this._wetHi(a.pos.x + ux * d, a.pos.z + uz * d, a.pos.y)) return false;
+    return true;
+  }
+  // [b5-caldera] _wet with a step or a wall there counting as ground (solid at knee height: the body bumps it, it doesn't
+  // fall) — but not a bridge deck over the lava with open air under it
+  _wetHi(x, z, y) {
+    if (!this._wet(x, z, y)) return false;
+    return !G.level.pointInside(_wv.set(x, y + 0.3, z), 0);
+  }
   // final move command: if the ground a stopping distance ahead is water, slide along the edge or stop
   _edgeGuard(a, mv) {
+    const px = a.pos.x, py = a.pos.y, pz = a.pos.z;
+    // [b5-caldera] momentum first: where the body is carried in the next 0.3 s (+0.3 m) — a slide along a lava lip with
+    // speed toward it went over (lava-bots.js trails) — brake against it
+    const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz);
+    if (sp > 1.0 && this._wetHi(px + vx * 0.3 + (vx / sp) * 0.3, pz + vz * 0.3 + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
+    // [b5-caldera] standing on a lip with the body's middle over the sea or the lava (the foot holds it): back onto the floor
+    if (a.grounded && this._wet(px, pz, py)) {
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (!this._wet(px + cx * 0.45, pz + cz * 0.45, py)) { mv.set(cx * 0.8, 0, cz * 0.8); return; } }
+    }
     const m = Math.hypot(mv.x, mv.z); if (m < 1e-4) return;
     const dx = mv.x / m, dz = mv.z / m;
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.17;
-    const px = a.pos.x, py = a.pos.y, pz = a.pos.z;
     const bad = (ux, uz) => this._wet(px + ux * 0.45, pz + uz * 0.45, py) || this._wet(px + ux * look, pz + uz * look, py);
     if (!bad(dx, dz)) return;
     for (const ang of [0.8, -0.8, 1.45, -1.45]) {
