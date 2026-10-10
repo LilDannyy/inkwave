@@ -357,6 +357,11 @@ guard and the lava's clip judge it at the painter's moment on every screen); the
 ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw). A late joiner of a Practice session
 gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
 `seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
+Bluestone Junction's eras ([b5-eras], src/game/eras.js) send nothing of their own: every jump (the pre-bell, the warning,
+each group's flip at J + r_g / 25, done) is a pure function of that clock on each screen, and a clock snap re-derives
+it at once (`seek`, `era:set`); `R.splatTime` stamps field 15 only from J − 1 to done + 1; each screen shoves, rescues
+and pops (S.crushIn, or the walk of `G.subs.items` until the subs package adds it) its own squidkids and devices only,
+whose existing records carry the result. (The two-client proof, `net-eras.cjs`, belongs to the next phase.)
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the

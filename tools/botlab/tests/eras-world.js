@@ -10,6 +10,8 @@
 // Part 3, nav: the union graph in era e costs the same as a fresh graph built in era e (200 random pairs per era, ±1 %);
 //   a route shut in era 1 and open in era 2; nodes of a later era valid only there; the merge time.
 // Part 4, load: the world build with and without the era engine (loadMs), nav ×3 (ENGINE.md step 4: 4b if > 700 ms).
+// Part 5 (PAGE_ARGS='only=5'), the other stages: halyard, calamari and treehills build with no era world, their level
+//   program key and geometry are today's (no '-eras', no aEra attribute), and no block carries a presence.
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -212,6 +214,18 @@
     await time();
     R('step 4: load measured on the stage: the world build with the era engine and without it (the union, everything solid); nav ×3 under 700 ms (no dirty-region rebuild needed)',
       navE.navBuilds.reduce((a, b) => a + b, 0) < 700, { withEras: withE, without, navBuilds: navE.navBuilds, mergeMs: navE.mergeMs, paintMs: navE.paintMs, meshMs: navE.meshMs, levelMs: navE.levelMs });
+  }
+  // ================================================================================================ part 5 (the other stages)
+  if (only.includes(5)) {
+    const { MAPS } = await import('./src/config.js');
+    for (const id of ['halyard', 'calamari', 'treehills']) {
+      g.worldKey = null;
+      await g._buildWorld(MAPS.find((m) => m.id === id));
+      const key = g.levelMat.customProgramCacheKey(), gk = g.grateMat.customProgramCacheKey();
+      R(`step 13: ${id} builds as before — no era world, the level program key '${key}' (no -eras), no aEra attribute, no presence on any block, the nav an ordinary graph`,
+        !__G.eraWorld && !__G.stageWorld && key === 'inkwave-level-v8' && gk === 'inkwave-level-v8-grate' && !g.levelMesh.geometry.getAttribute('aEra') && __G.level.blocks.every((b) => !b.presence) && !__G.level.presenceAll && !__G.nav.eraValid && __G.nav.edgeMask === 0,
+        { key, gk, layout: __G.level.layout.id });
+    }
   }
   return out;
 })()
