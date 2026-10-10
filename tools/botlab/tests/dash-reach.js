@@ -59,6 +59,12 @@
   const DT = args.dt ? 1 / +args.dt : 1 / 60, EVERY = +(args.step || 1), OFF = +(args.off || 0), CLIMB = args.climb !== '0';
   // (sub-dash.js 'height', 30 run-ups, to 0.01 m: a plain running hop lands on 1.90 m at 1/60, 1.86 m at 1/24)
   const HOP_BEST = Math.abs(DT - 1 / 24) < 1e-9 ? 1.86 : 1.9, BAR = Math.round((HOP_BEST + 0.02) * 100) / 100;
+  // [b5-int3] a swim jump + dash's first landing is judged against a swim jump's own reach, not a running hop's: a plain
+  // swim jump peaks 1.70 m at 1/60 (probe, testbox; a running hop 1.35 m) and the dash never raises the peak (1.70 with it
+  // at every press frame) — it holds it longer, so a ledge as high is reached from further off. SWIM_BAR: that peak + the
+  // same ledge allowance the running hop gets over its peak (HOP_BEST − 1.35) + 0.02. Derived, not measured to 0.01 m as
+  // HOP_BEST was (1/24: the same allowance, unmeasured — the Mac mini's 1/24 pass)
+  const SWIM_BAR = Math.round((1.70 + (HOP_BEST - 1.35) + 0.02) * 100) / 100;
   const air0 = SUBS.dash.airDashDist; if (args.air) SUBS.dash.airDashDist = +args.air;   // ('air=2.5': a what-if air dash length, this run only)
   const AIR = SUBS.dash.airDashDist;
   const L = G.level, nav = G.nav, N = nav.nodes, r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100;
@@ -285,7 +291,11 @@
   const judgeUp = (n, d, kind, r) => {
     if (r.landY == null) return;
     count.judgedUp++;
-    const upL = r.landY - r.y0;
+    const upL = r.landY - r.y0, swimK = typeof kind === 'string' && kind[0] === 's' && kind[1] !== 'j';
+    if (swimK) {   // [b5-int3] (its own bar and its own maximum)
+      if (upL > (count.maxUpSwim ?? -99)) { count.maxUpSwim = r2(upL); count.maxUpSwimAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), startY: r2(r.y0), block: r.landBlock, tag: r.landBlock >= 0 ? bTag(r.landBlock) : null }; }
+      if (upL <= SWIM_BAR) return;
+    }
     if (upL > BAR) {
       // the same running hop from the same start and heading, or a plain hop / walk from any spot reached on foot near the
       // block it first came down on, coming down on that block as high: then it's a top a jump reaches, not the dash's
@@ -457,7 +467,7 @@
   const part = EVERY > 1 ? `every ${EVERY}th edge node from the ${OFF + 1}${['st', 'nd', 'rd'][OFF] || 'th'}` : 'every edge node';
   const perchBlocks = [...new Set(perches.map((q) => q.block))].map((b) => { const Bk = L.blocks[b], Q = perches.filter((q) => q.block === b); return { block: b, tag: bTag(b), top: [r1(Bk.center.x), r2(Bk.center.y + Bk.half.y), r1(Bk.center.z)], by: [...new Set(Q.map((q) => q.move))], from: Q[0].from }; });
   R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${LATE ? ', late in a long fall' : ''}${SWIM ? ', a swim jump' : ''}${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02; ${count.judgedUp} landings judged)`,
-    perches.length === 0 && oob.length === 0 && onRoofs.length === 0 && count.maxUp <= BAR + 1e-6, { count, stillOnARoofAfter3s: onRoofs.slice(0, 6), stillOnARoofReachedOnFoot: roofsOnFoot, perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
+    perches.length === 0 && oob.length === 0 && onRoofs.length === 0 && count.maxUp <= (count.maxUpAt && /swim jump/.test(count.maxUpAt.move) ? SWIM_BAR : BAR) + 1e-6, { swimBar: SWIM_BAR, count, stillOnARoofAfter3s: onRoofs.slice(0, 6), stillOnARoofReachedOnFoot: roofsOnFoot, perchBlocks, perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
   R(`${g.mapDef?.id}: listed for the lead (SPEC D10.6: newly reachable spots are listed, not judged) — tops the nav graph doesn't reach that a dash ends on and no plain walk / hop from within 5 m (or the same climb) does: ${realLeaks.length}; with their block, its tag, the first landing's height over the start (judged in the line above) and where it came to rest (it may run on up a ramp or a stair after landing)`, true,
     { tops: realLeaks.slice(0, 24), topsAKidHopsOnto: hopOn.length });
   const downSeen = new Map(); for (const o of down) { const k = Math.round(o.to[0]) + ',' + Math.round(o.to[2]); if (!downSeen.has(k)) downSeen.set(k, o); }
