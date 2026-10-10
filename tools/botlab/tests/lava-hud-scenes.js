@@ -49,6 +49,19 @@
     window.__hudScenes = S;
     return S.map((s) => ({ name: s.name }));
   }
+  // (fix round 2) steam only on the way down: the same view at HIGH rest, mid-rise, mid-fall and 3 s into the ebb (each
+  // after 4 s of particles), and shots fizzling into the lava at HIGH (ember sparks and dark ash, not white) — PRE_ARGS=fix2
+  if (only.includes('fix2')) {
+    const lk = __G.lavaWorld.look; if (!lk.emb) { lk.nEmb = 600; lk._particles(); }
+    const south = [-19.6, 1.22, -15.1];
+    for (const [nm, t] of [['high-rest', 56], ['rising', 41], ['falling', 75], ['ebb-3s', 83], ['low-rest', 100]]) add('steam-' + nm, () => { L.debugT(t - 4); stand(...south, -24, -5, -0.22); step(4.0); }, 60);
+    add('fizzle-high', () => {
+      L.debugT(54); stand(...south, -22, -9, -0.25); step(0.5);
+      for (let k = 0; k < 6; k++) { L.fizzle(new THREE.Vector3(-22.5 + k * 0.6, L.y, -9.5 + (k % 2) * 0.8), k % 3 ? 'ink' : 'device'); step(0.05); }
+    }, 10);
+    window.__hudScenes = S;
+    return S.map((s) => ({ name: s.name }));
+  }
   add('rise1-warning', () => { L.debugT(24.6); stand(...shelf, ...to); step(0.7); }, 200);          // the warning: bell, callout, red beacons, the rind's pulse
   add('rise2-countdown', () => { L.debugT(31.4); stand(...shelf, ...to); step(0.4); });
   add('rise3-surge', () => { L.debugT(34.8); stand(...shelf, ...to); step(0.5); }, 150);              // the rise starts: SURGE!

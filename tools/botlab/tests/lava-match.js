@@ -20,11 +20,15 @@
   const m = g.match, L = m.lava, W = __G.lavaWorld, nav = __G.nav, M = W.navMeta;
   if (!L) { R('the lava module runs', false); return out; }
   const r1 = (v) => Math.round(v * 10) / 10;
-  const deaths = [], water = [], byCause = {};
+  const deaths = [], water = [], byCause = {}, trails = new Map();
+  const r2 = (v) => Math.round(v * 100) / 100;
   const offs = [on('splatted', (e) => {
     const v = e.victim, c = String(e.cause || '?'); byCause[c] = (byCause[c] || 0) + 1;
     if (!v) return;
     const st = L.st, row = { t: r1(L.clock.t), team: v.team, name: v.name, at: [r1(v.pos.x), r1(v.pos.y), r1(v.pos.z)], phase: st.phase, warned: st.phase !== 'low' || st.warn, by: !!e.attacker, node: (() => { const s = nav.nearest(v.pos, 1.5, true); return s >= 0 ? ['dry', 'ledge', 'rider'][M.kind[s]] : '?'; })() };
+    // (fix round 2: every lava death comes with the bot's trail, its last 1.5 s at 20 Hz — t, x, y, z, grounded, |v|, move,
+    // J S F, mode, footing, escaping, next node)
+    if (c === 'lava' && v.bot) row.trail = (trails.get(v) || []).slice();
     if (c === 'lava') deaths.push(row); else if (c === 'water') water.push(row);
   })];
   // the Slump bays (a bot that enters one and leaves it ≥ 8 m from where it came in crossed it: shelf or Race), the
@@ -37,7 +41,16 @@
   let samples = 0, stuckS = 0, crossings = 0, simT = 0;
   const t0 = performance.now(), end = MODE === 'zones' ? 390 : SECS + 0.5;
   for (let chunk = 0; simT < end && (m.state === 'playing' || simT < 2); chunk++) {
-    for (let k = 0; k < 15; k++) { dbg.step(1000 / 60); simT += 1 / 60; }
+    for (let k = 0; k < 15; k++) {
+      dbg.step(1000 / 60); simT += 1 / 60;
+      if (k % 3 === 0) for (const a of m.actors) {
+        if (!a.bot || !a.alive) continue;
+        const T = trails.get(a) || []; trails.set(a, T);
+        const b = a.bot, it = a.intent, nx = b.path && b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : null, f = a._lavaFoot?.f;
+        T.push([r2(L.clock.t), r2(a.pos.x), r2(a.pos.y), r2(a.pos.z), a.grounded ? 'g' : 'a', r2(Math.hypot(a.vel.x, a.vel.z)), r2(it.move.x), r2(it.move.z), (it.jump ? 'J' : '') + (it.squid ? 'S' : '') + (it.fire ? 'F' : ''), b.mode, f ? f.kind : '-', b._lavaEsc ? 'E' : '', nx ? [r2(nx.x), r2(nx.y), r2(nx.z)] : null]);
+        if (T.length > 30) T.shift();
+      }
+    }
     for (const a of m.actors) {
       if (!a.bot) continue;
       const h = hist.get(a) || []; hist.set(a, h);
@@ -67,7 +80,8 @@
   const warnedNoAttacker = deaths.filter((d) => d.warned && !d.by);
   const longEps = eps.filter((e) => e.dur >= 2).sort((x, y) => y.dur - x.dur);
   R(`${MODE} ${SECS}: lava splats per team (and where), sea splats`, true, { lavaByTeam, deaths, water: water.length, byCause, perBotPer3min: +(deaths.length / nBots / ((simT) / 180)).toFixed(3) });
-  R('no bot drowned by a rise it was warned of (a lava death on drowning ground in an announced surge, not knocked in)', warnedNoAttacker.filter((d) => d.node !== 'dry' || d.at[1] < 0.5).length === 0, { n: warnedNoAttacker.length, list: warnedNoAttacker });
+  // (fix round 2: no 'dry node' exemption — every unforced lava death in an announced surge counts)
+  R('no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)', warnedNoAttacker.length === 0, { n: warnedNoAttacker.length, list: warnedNoAttacker });
   R('no falls into the sea', water.length === 0, water);
   R('stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races', eps.every((e) => e.dur < 10) && !eps.some((e) => e.stone && e.dur >= 2),
     { stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(2), longest: longEps.slice(0, 6), atStones: eps.filter((e) => e.stone), atOrgans: eps.filter((e) => e.organ), atCrestStair: eps.filter((e) => e.crest) });

@@ -40,7 +40,7 @@
     Lv.debugT(t0); for (let i = 0; i < 2; i++) dbg.step(1000 / 60);
     freezeBots();
     for (const b of bots) { const pad = lvl.spawnPads[b.team]; put(b, V(pad.x + (b.bot ? 0 : 0), pad.y + 0.1, pad.z)); b.invuln = 1e6; }
-    put(me, V(0, 40, -45)); me.invuln = 1e6;
+    { const pad = lvl.spawnPads[me.team]; put(me, V(pad.x, pad.y + 0.1, pad.z)); me.invuln = 1e6; }   // (on its pad: a bot super-jumping to a teammate hovering over the chute fell in)
     const crew = crewSpots.map(([b]) => b);
     crewSpots.forEach(([b, p]) => { put(b, p); b.bot.update = idle.get(b); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.bot._lavaEsc = false; b.bot._look = null; b.invuln = 1e6; });
     Lv._lp = null;
