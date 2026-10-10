@@ -154,14 +154,29 @@ export class LavaWorld {
     this._buildProx(level);
   }
   // (fix round 2, ENGINE rule 45) the region fitted to the level it is drawn against: its outline grows outward by up
-  // to 1.0 m into a bank (solid at the high mark, its top ≥ HIGH + 0.3) and up to 1.5 m over open void (no floor above
+  // to 0.75 m into a bank (solid at the high mark, its top ≥ HIGH + 0.3) and up to 1.5 m over open void (no floor above
   // LOW − 0.5), never onto a floor and never past a lip (a falls polygon, within 0.7 m). The hand-drawn polygons met the
   // banks at 0.05–0.4 m under the Spillway Bridges and at the south Slump heads, and left void at the heads' corners
   // where the lake meets the bay (the lava's edge showed over it); grown here, every face that meets the lava lies wholly
   // inside the mask (the rind, the burn, the kill). Both halves alike: the stage is a 180° turn of itself
   _fitMask(level) {
-    const B = this.box, nx = B.nx, nz = B.nz, M = this.mask, H = this.high, LO = this.low, qb = [], p = new THREE.Vector3();
-    const solidAt = (x, z) => { p.set(x, H + 0.05, z); for (const id of level.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = level.blocks[id]; if (b.solid && !b.dynamic && level.pointInBlock(b, p, 0.001)) return true; } return false; };
+    const B = this.box, nx = B.nx, nz = B.nz, M = this.mask, H = this.high, LO = this.low, qb = [], p = new THREE.Vector3(), tp = new THREE.Vector3();
+    // (the layout's own blocks only — never the prop colliders after them, which hang on the dressing and its quality:
+    // every screen in a room must fit the same region; net-lava's late joiner differed by 2,418 lava cells when they counted)
+    const LY = level.layout, nLay = (LY?.single?.length || 0) + 2 * (LY?.half?.length || 0);
+    const solidAt = (x, z) => { p.set(x, H + 0.05, z); for (const id of level.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { if (id >= nLay) continue; const b = level.blocks[id]; if (b.solid && !b.dynamic && level.pointInBlock(b, p, 0.001)) return true; } return false; };
+    const topAt = (x, z, yMax) => {
+      let best = -Infinity;
+      for (const id of level.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) {
+        if (id >= nLay) continue;
+        const b = level.blocks[id], n = b.axes[1];
+        if (!b.solid || b.dynamic || n.y < 0.5) continue;
+        tp.copy(b.center).addScaledVector(n, b.half.y);
+        const y = tp.y - (n.x * (x - tp.x) + n.z * (z - tp.z)) / n.y;
+        if (y <= yMax && y > best && level.pointInBlock(b, p.set(x, y - 0.01, z), 0.001)) best = y;
+      }
+      return best;
+    };
     const nearFalls = (x, z) => this.fallsIn(x, z) || [0, 1, 2, 3, 4, 5, 6, 7].some((q) => this.fallsIn(x + Math.cos(q * 0.785) * 0.7, z + Math.sin(q * 0.785) * 0.7));
     const kind = new Int8Array(nx * nz);   // 0 unknown, 1 bank, 2 open void, -1 neither (a floor, a lip)
     const kindAt = (k) => {
@@ -169,21 +184,28 @@ export class LavaWorld {
       const x = B.x0 + ((k % nx) + 0.5) * RES, z = B.z0 + (Math.floor(k / nx) + 0.5) * RES;
       let v = -1;
       if (nearFalls(x, z)) v = -1;
-      else if (solidAt(x, z)) v = level.groundHeight(x, z, 60) >= H + 0.3 ? 1 : -1;
-      else { const gh = level.groundHeight(x, z, H + 0.05); v = gh === -Infinity || gh < LO - 0.5 ? 2 : -1; }
+      else if (solidAt(x, z)) v = topAt(x, z, 60) >= H + 0.3 ? 1 : -1;
+      else { const gh = topAt(x, z, H + 0.05); v = gh === -Infinity || gh < LO - 0.5 ? 2 : -1; }
       return (kind[k] = v);
     };
+    // (void grows only from the drawn region or from void grown before — never through a bank: growing through the thin
+    // back of the Slump cliff, it ran on over the void outside the arena)
+    const via = new Uint8Array(nx * nz);   // 1 drawn, 2 grown into a bank, 3 grown over void
+    for (let k = 0; k < nx * nz; k++) if (M[k]) via[k] = 1;
     let added = 0;
     for (let step = 1; step <= 6; step++) {
       const grow = [];
       for (let j = 1; j < nz - 1; j++) for (let i = 1; i < nx - 1; i++) {
         const k = j * nx + i;
-        if (M[k] || !(M[k - 1] === 1 || M[k + 1] === 1 || M[k - nx] === 1 || M[k + nx] === 1)) continue;
+        if (M[k]) continue;
+        const nb = [via[k - 1], via[k + 1], via[k - nx], via[k + nx]];
+        if (!nb.some(Boolean)) continue;
         const v = kindAt(k);
-        if (v === 2 || (v === 1 && step <= 4)) grow.push(k);
+        if (v === 1 && step <= 3) grow.push([k, 2]);
+        else if (v === 2 && nb.some((q) => q === 1 || q === 3)) grow.push([k, 3]);
       }
       if (!grow.length) break;
-      for (const k of grow) M[k] = 1;
+      for (const [k, q] of grow) { M[k] = 1; via[k] = q; }
       added += grow.length;
     }
     const data = this.map.image.data;

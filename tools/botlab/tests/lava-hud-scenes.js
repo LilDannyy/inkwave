@@ -54,11 +54,14 @@
   if (only.includes('fix2')) {
     const lk = __G.lavaWorld.look; if (!lk.emb) { lk.nEmb = 600; lk._particles(); }
     const south = [-19.6, 1.22, -15.1];
-    for (const [nm, t] of [['high-rest', 56], ['rising', 41], ['falling', 75], ['ebb-3s', 83], ['low-rest', 100]]) add('steam-' + nm, () => { L.debugT(t - 4); stand(...south, -24, -5, -0.22); step(4.0); }, 60);
+    // (the particles live on the look's own clock, not the stage's: each scene steps long enough for the last one's to die;
+    // LOW rest is 20 s after the ebb)
+    for (const [nm, t, w] of [['high-rest', 56, 6], ['rising', 41, 5]]) add('steam-' + nm, () => { L.debugT(t - w); stand(...south, -24, -5, -0.22); step(w); }, 60);
     add('fizzle-high', () => {
-      L.debugT(54); stand(...south, -22, -9, -0.25); step(0.5);
+      L.debugT(48); stand(...south, -22, -9, -0.25); step(6);
       for (let k = 0; k < 6; k++) { L.fizzle(new THREE.Vector3(-22.5 + k * 0.6, L.y, -9.5 + (k % 2) * 0.8), k % 3 ? 'ink' : 'device'); step(0.05); }
     }, 10);
+    for (const [nm, t, w] of [['falling', 75, 6], ['ebb-3s', 83, 9], ['low-rest', 100, 20]]) add('steam-' + nm, () => { L.debugT(t - w); stand(...south, -24, -5, -0.22); step(w); }, 60);
     window.__hudScenes = S;
     return S.map((s) => ({ name: s.name }));
   }
