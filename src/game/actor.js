@@ -371,10 +371,12 @@ export class Actor {
 
     // ---- integrate + collide (feet + body). [b5-sub-dash] a dash moves in substeps of ≤ 0.2 m (SPEC D1.3), so no wall,
     // curtain, canopy, bubble, shell or spawn barrier is ever passed through at any frame rate
+    const fastN = dashing ? 0 : this._fastN(dt);   // [b5-int3] DECISIONS #22: a Twinfire roll / a Mitts leap in the dash's steps
     if (dashing) this._dashSteps(dt, isSquid, jumped);
+    else if (fastN > 1) this._fastSteps(dt, isSquid, jumped, fastN);
     else this._integrate(dt, isSquid, jumped);
     if (kick) { this.vel.x -= kick.x; this.vel.z -= kick.z; const k = Math.exp(-dt / BAZOOKARP.gun.kickTau); kick.x *= k; kick.z *= k; if (Math.abs(kick.x) + Math.abs(kick.z) < 0.02) kick.set(0, 0, 0); }   // [b5-karp]
-    if (!dashing) {
+    if (!dashing && !(fastN > 1)) {   // (the substep loops ran these in every substep)
       G.subs?.blockActor(this);
       this._spawnBarrier();
     }
@@ -612,6 +614,28 @@ export class Actor {
   // the rest slides on); `jumped` reaches the first only; airTime grows by one frame's 1/60 when it was airborne in every
   // substep (_resolve adds 1/60 a call). From the substep it's off the ground, the air rules: vy clamped to
   // [airVyMin, airVyMax] once, and it counts as the air dash (gravity × airGravMul while falling: _integrate)
+  // [b5-int3] DECISIONS #22: the Twinfire roll and the Mitts leap take the dash's sub-step rule. At a low frame rate one
+  // frame's move (a roll's opening ~20 m/s, a pounce's up to ~20) carried the body more than its radius past a thin wall's
+  // middle, and the push-out finished the crossing on the far side. A frame whose move is over SUBS.dash.substep (0.2 m)
+  // runs in that many even substeps — _integrate, blockActor (curtains, canopies, the shell) and the spawn barrier in each
+  // — with the jump on the first only and airTime grown by one frame's 1/60 once (as _dashSteps). 0 or 1: one plain step.
+  _fastN(dt) {
+    const wr = this.weaponRunner, k = wr.kit;
+    if (!(wr.dodgeT > 0 || wr.dodge || (k && k.mitts && k.leaping))) return 1;
+    return Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (SUBS.dash?.substep || 0.2));
+  }
+  _fastSteps(dt, isSquid, jumped, n) {
+    const air0 = this.airTime;
+    let air = true;
+    for (let i = 0; i < n; i++) {
+      this._integrate(dt / n, isSquid, jumped && i === 0);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+      if (this.grounded) air = false;
+    }
+    if (air) this.airTime = air0 + 1 / 60;
+    this.weaponRunner.fastSteps = n;   // (tests)
+  }
   _dashSteps(dt, isSquid, jumped) {
     const wr = this.weaponRunner, D = SUBS.dash;
     const airRule = () => { if (!this.grounded && !wr.dashAirRule) { wr.dashAirRule = true; wr.airDashUsed = true; this.vel.y = clamp(this.vel.y, D.airVyMin, D.airVyMax); } };
