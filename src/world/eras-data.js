@@ -234,12 +234,13 @@ export function stripCheck(pieces, era, bounds, lim = 25) {
   const R = 0.1, X0 = bounds.minX - 1, Z0 = bounds.minZ - 1, nx = Math.ceil((bounds.maxX - bounds.minX + 2) / R), nz = Math.ceil((bounds.maxZ - bounds.minZ + 2) / R);
   const floor = new Float32Array(nx * nz).fill(-9), obj = new Uint8Array(nx * nz), wall = new Uint8Array(nx * nz);
   for (const p of pieces) {
-    if (!hasEra(p.mask, era) || !p.solid || p.hidden && !p.rail) continue;
+    if (!hasEra(p.mask, era) || !p.solid) continue;
     const [bx0, bx1, bz0, bz1] = bbox(p.poly);
     const i0 = Math.max(0, Math.floor((bx0 - X0) / R)), i1 = Math.min(nx - 1, Math.ceil((bx1 - X0) / R)), j0 = Math.max(0, Math.floor((bz0 - Z0) / R)), j1 = Math.min(nz - 1, Math.ceil((bz1 - Z0) / R));
     let area = 0; for (let i = 0; i < p.poly.length; i++) { const [ax, az] = p.poly[i], [cx, cz] = p.poly[(i + 1) % p.poly.length]; area += ax * cz - cx * az; } area = Math.abs(area) / 2;
     const h = p.y1 - p.y0, base = p.tag.includes('base');
-    const kind = p.rail ? 'wall' : p.roof ? (p.y0 > 3.1 ? null : area < 40 ? 'obj' : 'wall') : p.y1 > 20 ? null : p.k !== 'r' && area < 40 && h >= 0.9 && !base && !TIERS.has(p.tag) ? 'obj' : 'floor';
+    // (a collision-only block — a prop's collider, the era-slot kit's tram — stands in the way like a roofed one)
+    const kind = p.rail ? 'wall' : p.roof || p.hidden ? (p.y0 > 3.1 ? null : area < 40 ? 'obj' : 'wall') : p.y1 > 20 ? null : p.k !== 'r' && area < 40 && h >= 0.9 && !base && !TIERS.has(p.tag) ? 'obj' : 'floor';
     if (!kind) continue;
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const x = X0 + (i + 0.5) * R, z = Z0 + (j + 0.5) * R;

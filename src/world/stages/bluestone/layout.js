@@ -286,7 +286,9 @@ const LEG_PIECES = [
   OB(-28.5, -31.4, 1.2, 2.0, 0.6, 1.8, 0, cover({ tag: 'flower-stall', color: '#6f7a5a' })),
   // Swimston: the tram at its stop on the west track (the era-slot kit: one collider, three looks — a cable tram, a
   // tram, a float-tram), the stop's island and shelter on the west footpath, the kiosks and planters on the kerbs
-  B(-24.2, -21.6, 0, 3.2, -34, -28, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true }),
+  // (the era-slot kit's shared collider: collision only, its looks are the era props in props.js — a cable tram, a tram,
+  //  a float-tram — so exactly one tram shows in each era; its top was a roof and never turf)
+  B(-24.2, -21.6, 0, 3.2, -34, -28, { tag: 'tram', color: K.tram, pattern: PATTERN.metalpanel, roof: true, hidden: true, paint: false }),
   B(-26, -24.6, 0, 0.3, -35, -27, { tag: 'tram-island', color: K.stone, pattern: SURF.bluestone }),
   B(-25.8, -24.8, 0.3, 2.6, -33, -29, { tag: 'tram-shelter', color: K.iron, pattern: PATTERN.metal, roof: true }),
   B(-25.9, -24.7, 0, 1.5, -45, -43, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
