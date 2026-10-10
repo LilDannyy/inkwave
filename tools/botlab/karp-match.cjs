@@ -47,9 +47,11 @@ app.on('browser-window-created', (_, win) => {
       const g = window.__inkwave, m = g.match, Kp = m.karp;
       const { on } = await import('./src/core/ctx.js');
       const { BAZOOKARP } = await import('./src/config.js');
-      const { KARP_BOT } = await import('./src/game/botsKarp.js');
+      const { KARP_BOT, KARP_AI, resetKarpStats } = await import('./src/game/botsKarp.js');
+      const { SPECIAL_STATS, resetSpecialStats } = await import('./src/game/botSpecials.js');
       if (!Kp) return { err: 'no Bazookarp engine (mode ' + m.mode + ')' };
-      for (const k in KARP_BOT.stats) KARP_BOT.stats[k] = 0;
+      resetKarpStats(); resetSpecialStats();   // [b5-karp-bots] (objects too: route shares, roles)
+      KARP_AI.enabled = ${process.env.KARP_AI === '0' ? 'false' : 'true'};   // [b5-karp-bots] KARP_AI=0: WP1's minimal bots (the A/B baseline)
       const KG = window.__G.karpGun; KG.stats = { fired: [0, 0, 0], landed: 0, blasts: 0, hits: 0, splats: 0, kicks: 0 };
       const HUMAN = '${HUMAN}', me = m.local;
       if (HUMAN === 'still' && me) { me.bot = null; me.intent.move.set(0, 0, 0); me.intent.fire = me.intent.squid = me.intent.jump = me.intent.sub = me.intent.special = false; }
@@ -75,7 +77,7 @@ app.on('browser-window-created', (_, win) => {
       ];
       const closeCarry = (how) => { if (!cur) return; cur.dur = +(clock() - cur.t0).toFixed(1); cur.m = +(Kp.bestM[cur.team] - cur.best0).toFixed(1); cur.how = cur.how || how; X.carries.push(cur); cur = null; };
       offs.push(on('karp:drop', (e) => { if (e.how !== 'moved') closeCarry(e.how); }), on('karp:reset', (e) => closeCarry(e.why === 'zone' ? 'splat' : e.why)), on('karp:plant', () => closeCarry('plant')), on('karp:end', (e) => { if (cur) closeCarry(e.reason === 'knockout' ? 'knockout' : 'end'); }));
-      const hist = new Map(); let samples = 0, stuckS = 0, simT = 0; const eps = [], open = new Map();
+      const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, holdS = 0; const eps = [], open = new Map();
       let cStuck = 0; const cEps = []; let cHist = [];
       const frameErr = { n: 0, msg: '' };
       const DT = 1 / 60, CH = 15;
@@ -93,7 +95,11 @@ app.on('browser-window-created', (_, win) => {
           const h = hist.get(a) || []; hist.set(a, h);
           h.push({ t: simT, x: a.pos.x, z: a.pos.z });
           while (h.length && simT - h[0].t > 3) h.shift();
-          const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !(a.carry && a.carry.gun && a.carry.gun.charging);
+          // ([b5-karp-bots] a bot holding a spot on purpose doesn't count: a keeper, a breaker at the ring, the grabber's wait, a
+          // perch — botsKarp's kHoldUntil — or a pod / hedge perch, as match.cjs)
+          const holding = (a.bot.kHoldUntil || 0) > window.__G.time || (a.bot.perchUntil || 0) > a.bot.t;
+          if (holding && a.alive) holdS += 0.25;
+          const wants = a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !(a.carry && a.carry.gun && a.carry.gun.charging) && !holding;
           samples++;
           const span = h.length > 1 ? Math.max(...h.map((p) => Math.hypot(p.x - a.pos.x, p.z - a.pos.z))) : 99;
           const stuck = wants && h.length >= 11 && span < 1.0;
@@ -131,10 +137,16 @@ app.on('browser-window-created', (_, win) => {
         ot: X.ot ? { why: X.ot.why, losing: X.ot.losing, len: +((X.end ? X.end.t : clock()) - X.ot.t).toFixed(1), end: Kp.reason, windows: S.windows } : null,
         fastT: { retreat: +(S.fastT.retreat || 0).toFixed(1), zone: +(S.fastT.zone || 0).toFixed(1) },
         clamped: S.clamped, clampLog: S.clampLog || [], retreatFallback: KARP_BOT.stats.retreatFallback, carrierShots: KARP_BOT.stats.carrierShots, breakT: +KARP_BOT.stats.breakT.toFixed(0),
-        stuckPct: +(100 * stuckS / botS).toFixed(1), eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), carrierStuck: { s: cStuck, eps: cEps.filter((e) => e.dur > 3).slice(0, 6) },
+        stuckPct: +(100 * stuckS / botS).toFixed(1), holdPct: +(100 * holdS / botS).toFixed(1), eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), carrierStuck: { s: cStuck, eps: cEps.filter((e) => e.dur > 3).slice(0, 6) },
         shots: KG.stats, splats: X.splats, fuseSplats: X.fuseSplats, specials: X.specials, jumps: X.jumps, jumpsToCarrier: X.jumpsToCarrier,
         bubbleOnCarrier: X.bubbleOnCarrier.length, koBubble, frameErr, grants: S.grants, refused: S.refused,
-        fieldMs: Kp.field.stats.buildMs, fieldSplit: Kp.field.stats.ms, hops: Kp.field.stats.hops, gaps: Kp.field.stats.gaps, routes: 'n/a (no route hints in WP1 data)', caughtNoticed: 'n/a (WP3 danger areas)',
+        fieldMs: Kp.field.stats.buildMs, fieldSplit: Kp.field.stats.ms, hops: Kp.field.stats.hops, gaps: Kp.field.stats.gaps,
+        // [b5-karp-bots] route choice shares (by route name: a layout hint's, else short / alt), the bots' Carp Shot dangers
+        // (noticed and escaped / caught), the carrier's shots by kind, roles (bot-seconds), keepers on their spot, interceptors on
+        // the known carrier, super jumps to the carrier, specials by the karp rules
+        routes: KARP_BOT.stats.routes, picks: KARP_BOT.stats.picks, caughtNoticed: (SPECIAL_STATS.bySrc || {}).karp || { caught: 0, evaded: 0 }, shellDanger: (SPECIAL_STATS.bySrc || {}).karpshell || null, fuseDanger: (SPECIAL_STATS.bySrc || {}).karpfuse || null,
+        kShots: { push: KARP_BOT.stats.push, dodge: KARP_BOT.stats.dodges, splash: KARP_BOT.stats.splashes, ink: KARP_BOT.stats.routeInk }, roles: Object.fromEntries(Object.entries(KARP_BOT.stats.roles).map(([k, v]) => [k, Math.round(v)])),
+        keeperT: +KARP_BOT.stats.keeperT.toFixed(0), icptT: +KARP_BOT.stats.icptT.toFixed(0), botJumps: KARP_BOT.stats.jumps, kSpecials: KARP_BOT.stats.specials, ai: KARP_AI.enabled,
       };
     })()`);
     const wallS = ((Date.now() - t0) / 1000).toFixed(0);
@@ -146,10 +158,12 @@ app.on('browser-window-created', (_, win) => {
     console.log(`   shell: pops A ${r.pops[0]} B ${r.pops[1]} | first pop ${r.firstPop ?? '-'} s | pops at ${JSON.stringify(r.popT)} | burst splats ${r.burstSplats} | re-formed ${r.reforms} | devices crushed ${r.crushes}`);
     console.log(`   pick-ups A ${r.pickups[0]} B ${r.pickups[1]} | carries ${r.carries.length}: ${r.carries.map((c) => `${W(c.team)}:${c.how}/${c.dur}s/${c.m}m`).join(' ')}`);
     console.log(`   plants ${JSON.stringify(r.plants)} | gates ${JSON.stringify(r.gates)} | Carp Blasts own ${r.blasts.own} enemy ${r.blasts.enemy} | resets ${JSON.stringify(r.resets)} | moved ${r.moves}`);
-    console.log(`   fast fuse (s): retreat ${r.fastT.retreat} zone ${r.fastT.zone} | clamp rejections ${r.clamped} | carrierRetreatFallback ${r.retreatFallback} | carrier stuck ${r.carrierStuck.s} s (> 3 s episodes ${r.carrierStuck.eps.length}) | bots stuck ${r.stuckPct}%`);
+    console.log(`   fast fuse (s): retreat ${r.fastT.retreat} zone ${r.fastT.zone} | clamp rejections ${r.clamped} | carrierRetreatFallback ${r.retreatFallback} | carrier stuck ${r.carrierStuck.s} s (> 3 s episodes ${r.carrierStuck.eps.length}) | bots stuck ${r.stuckPct}% (holding on purpose ${r.holdPct}%)`);
     console.log(`   Carp Shots by tier [splash, burst, big] ${JSON.stringify(r.shots.fired)} landed ${r.shots.landed} blasts ${r.shots.blasts} hits ${r.shots.hits} splats ${r.shots.splats} | carrier shot decisions ${r.carrierShots} | breakers at the shell ${r.breakT} bot-s`);
     console.log(`   specials ${r.specials} | super jumps ${r.jumps} (to the carrier ${r.jumpsToCarrier}) | Bubble Guards on the carrier ${r.bubbleOnCarrier}, a knockout within 8 s of one: ${r.koBubble ? 'yes' : 'no'} | splats ${r.splats} (fuse ${r.fuseSplats}) | grants ${r.grants} refused ${r.refused}`);
-    console.log(`   field: ${r.fieldMs} ms at load ${JSON.stringify(r.fieldSplit)}, hop edges ${r.hops}, gap edges ${r.gaps} | route shares: ${r.routes} | sim ${r.simT} s in ${(r.simMs / 1000).toFixed(0)} s (wall ${wallS} s)`);
+    console.log(`   field: ${r.fieldMs} ms at load ${JSON.stringify(r.fieldSplit)}, hop edges ${r.hops}, gap edges ${r.gaps} | sim ${r.simT} s in ${(r.simMs / 1000).toFixed(0)} s (wall ${wallS} s)`);
+    console.log(`   bots [${r.ai ? 'WP3' : 'WP1 minimal'} ${DIFF}]: route picks ${r.picks} shares ${JSON.stringify(r.routes)} | Carp Shots noticed: escaped ${r.caughtNoticed.evaded} caught ${r.caughtNoticed.caught} | carrier shots ${JSON.stringify(r.kShots)} | keepers on spot ${r.keeperT} s, interceptors on the carrier ${r.icptT} s | jumps to the carrier ${r.botJumps} | karp specials ${r.kSpecials}`);
+    console.log(`   roles (bot-s): ${JSON.stringify(r.roles)} | shell danger ${JSON.stringify(r.shellDanger)} | fuse danger ${JSON.stringify(r.fuseDanger)}`);
     for (const e of r.clampLog) console.log('   clamp ' + JSON.stringify(e));
     for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
     for (const e of r.carrierStuck.eps) console.log('   carrier-stuck ' + JSON.stringify(e));

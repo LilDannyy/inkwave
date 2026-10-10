@@ -64,6 +64,7 @@ import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { SIGHT } from './botSight.js';
 import { surfDanger, surfDodge, surfOwnAim, surfShootAim } from './sp-surf-bots.js';   // Surf N' Turf (sp-surf.js): its rings, our own throw
 import { botShare } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain: bots pass it on
+import { karpDangers } from './botsKarp.js';   // [b5-karp-bots] Bazookarp: Carp Shots, our carrier's last fuse seconds, the shell about to burst
 
 export const SPECIAL_AI = { enabled: true, teams: null };
 // engagements, not frames (heldFire / bubbleHold are seconds); splattedBy: bots splatted per special (Bomb Barrage:
@@ -105,7 +106,7 @@ function D(key, src, team, owner) {
   d.shape = 0; d.x = 0; d.y = 0; d.z = 0; d.dx = 0; d.dz = 1; d.len = 0; d.d3 = false; d.ux = 0; d.uy = 0; d.uz = 1; d.back = 0.4;
   d.r = 1; d.core = 1; d.yLo = -1e9; d.yHi = 1e9; d.vx = 0; d.vz = 0; d.vt = 0; d.tIn = 0; d.tOut = 60; d.lethal = 2;
   d.los = false; d.losY = 0.35; d.vis = 'near'; d.sx = 0; d.sy = 0; d.sz = 0; d.linger = false; d.actor = null;
-  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false; d.turret = false;
+  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false; d.turret = false; d.not = null;   // ([b5-karp-bots] not: the one actor it's no danger to)
   _list.push(d);
   return d;
 }
@@ -342,6 +343,7 @@ export function specialDangers() {
   }
   // ---- [b5-subs] kit subs' own danger areas (the Chain Bobber's armed chains …): SUB_KITS[k].dangers(api)
   for (const k in SUB_KITS) SUB_KITS[k].dangers?.(DANGER_API);
+  if (G.match?.karp) karpDangers(DANGER_API);   // [b5-karp-bots]
   // ---- specials on players (and the untouchable)
   for (const e of G.actors) {
     if (!e.alive || e.superJumpState) continue;
@@ -635,7 +637,7 @@ export class SpecialSense {
     for (const r of this.recs.values()) r.live = false;
     const fresh = _fresh; fresh.length = 0;
     for (const d of _list) {
-      if (d.team === a.team || distTo(d, ex, ez) > 45) continue;
+      if (d.team === a.team || d.not === a || distTo(d, ex, ez) > 45) continue;   // ([b5-karp-bots] not: our carrier's own fuse)
       const r = this.recs.get(d.key);
       if (r) {
         r.live = true; r.d = d;
@@ -691,7 +693,10 @@ export class SpecialSense {
   _gone(r) {
     const d = r.d;
     if (!r.noted || !r.wasIn || d.lethal < 1 || d.imm || d.pop) return;
-    if (!this.a.alive || (this.hitT[d.hit] ?? -9) > r.t0) SPECIAL_STATS.caught++; else SPECIAL_STATS.evaded++;
+    const caught = !this.a.alive || (this.hitT[d.hit] ?? -9) > r.t0;
+    if (caught) SPECIAL_STATS.caught++; else SPECIAL_STATS.evaded++;
+    const by = SPECIAL_STATS.bySrc || (SPECIAL_STATS.bySrc = {}), o = by[d.src] || (by[d.src] = { caught: 0, evaded: 0 });   // [b5-karp-bots] (per source: karp-match's Carp Shots noticed and caught)
+    o[caught ? 'caught' : 'evaded']++;
   }
 
   // holding the objective (a zone guard / watcher, on the zone; a tower rider): a light area (rain) is taken

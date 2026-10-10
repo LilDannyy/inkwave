@@ -505,7 +505,7 @@ export class SubSystem {
     let speed = s.speed;
     if (it.target) {
       const tg = it.target, dx = tg.pos.x - it.pos.x, dz = tg.pos.z - it.pos.z, dist = Math.hypot(dx, dz);
-      let d = Math.atan2(dx, dz) - it.heading; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;
+      let d = shellRound(it.pos, Math.atan2(dx, dz), dist) - it.heading; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;   // [b5-karp-bots] round the Roe Shell
       if (!it.dash && dist < s.commitDist && Math.abs(d) < 0.35) it.dash = true;
       else if (it.dash && (Math.abs(d) > Math.PI / 2 || dist > s.commitDist + 1)) it.dash = false;
       if (!it.dash) {
@@ -1089,4 +1089,21 @@ export class SubSystem {
     if (it.meter) { it.meter.geometry.dispose(); it.meter.material.dispose(); }
     if (it.fx) { it.fx.ring.material.dispose(); it.fx.air.material.dispose(); }
   }
+}
+
+// [b5-karp-bots] a walker's heading round the Roe Shell (Bazookarp): when the straight line to its foe (yaw, dist m) runs
+// through the shell, the nearer of the two tangents past it — it walks round the shell instead of into it (WP1 left it
+// sliding along the shell as a wall). Also kits/waddle.js (its route avoids the shell's nodes)
+export function shellRound(p, yaw, dist) {
+  const S = G.match?.karp?.shell;
+  if (!S || S.state !== 'intact') return yaw;
+  const c = S.center(), R = S.radius() + 0.5;
+  if (Math.abs(p.y + 0.2 - c.y) > R + 0.6) return yaw;
+  const cx = c.x - p.x, cz = c.z - p.z, cl = Math.hypot(cx, cz);
+  if (cl <= R) return Math.atan2(-cx, -cz);   // (inside its reach: straight out)
+  const ux = Math.sin(yaw), uz = Math.cos(yaw), along = cx * ux + cz * uz;
+  if (along <= 0 || along > dist + R || Math.abs(cx * uz - cz * ux) >= R) return yaw;
+  const th = Math.atan2(cx, cz), al = Math.asin(Math.min(1, R / cl));
+  const a1 = th + al, a2 = th - al, df = (q) => Math.abs(Math.atan2(Math.sin(q - yaw), Math.cos(q - yaw)));
+  return df(a1) < df(a2) ? a1 : a2;
 }
