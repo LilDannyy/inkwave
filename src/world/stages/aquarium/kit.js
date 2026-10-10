@@ -6,7 +6,9 @@
 // D = the prop definition table. Imports nothing (THREE comes in through H).
 export function makeKit(D, H) {
   const { THREE, col, shade, mixc, PI, TAU, HP } = H;
-  const NS = (m) => (H.noShadow ? H.noShadow(m) : m);
+  // (small parts ride with their material's shadow-casting bucket: a '~ns' bucket is a draw call of its own, and the
+  // stage is over Halyard's draw calls already — a few more triangles in the shadow pass cost less)
+  const NS = (m) => m;
 
   // ------------------------------------------------------------------------------------------ palette (DESIGN.md §5.4)
   const K = {
