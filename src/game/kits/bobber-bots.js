@@ -108,7 +108,7 @@ function buildChain(a, A, tp, from = a.pos) {
     const x = A.x + px * u + A.dx * v, z = A.z + pz * u + A.dz * v;
     // (clear of the team's other chains: a teammate's by 2.8 m — a small zone's edge holds three guards' webs — its own by
     // 2.4, where they would only tether into one bigger chain)
-    if (items.some((o) => o.team === a.team && (o.state === 'live' || o.state === 'open') && Math.hypot(o.spot.x - x, o.spot.z - z) < (o.owner === a ? 2.4 : 2.8))) continue;
+    if (items.some((o) => o.team === a.team && (o.state === 'live' || o.state === 'open') && Math.hypot(o.spot.x - x, o.spot.z - z) < (o.owner === a ? 2.4 : _relax ? 2.3 : 2.8))) continue;
     const at = okSpot(a, x, z, tp, from, false);
     if (at) C.push({ at, sc: Math.abs(v) + Math.abs(u) * 0.25 + Math.abs(at.y - A.y) * 0.5, bad: false });
   }
@@ -258,9 +258,10 @@ function anchors(b, tp) {
       const gy = G.level.groundHeight(x, zz, Math.max(a.pos.y, c[1]) + 3);
       if (Number.isFinite(gy) && gy > c[1] - 4) C.push({ x, y: gy, z: zz, dx: -ux, dz: -uz, src: 'zedge', tx: c[0], tz: c[2], trip });
     }
-    // (on the zone itself, its foes' half — a small raised zone's edge is all drop: foes taking it stand in the web)
-    for (let i = 0; i < 3; i++) {
-      const th = Math.atan2(ez, ex) + (i - 1) * 0.9, k = I.R * (0.25 + r() * 0.3), x = c[0] + Math.cos(th) * k, zz = c[2] + Math.sin(th) * k;
+    // (on the zone itself, its foes' half — a small raised zone's edge is all drop: foes taking it stand in the web; the
+    // guard's fallback, _relax: all round it)
+    for (let i = 0; i < (_relax ? 8 : 3); i++) {
+      const th = _relax ? (i / 8) * Math.PI * 2 + r() * 0.3 : Math.atan2(ez, ex) + (i - 1) * 0.9, k = I.R * (0.25 + r() * 0.3), x = c[0] + Math.cos(th) * k, zz = c[2] + Math.sin(th) * k;
       const gy = G.level.groundHeight(x, zz, Math.max(a.pos.y, c[1]) + 3);
       if (Number.isFinite(gy) && gy > c[1] - 4) C.push({ x, y: gy, z: zz, dx: -ex, dz: -ez, src: 'zin', tx: c[0], tz: c[2], trip });
     }
@@ -312,7 +313,17 @@ function heatAnchors(b, pads) {
 }
 // a chain to lay now: the first anchor with a layout that stands — from here when it's in reach, else from a stand spot
 // on our side of it (a set-up the bot walks to first) → { A, L, stand } | null
-function planChain(b, tp) { return lobBudget(24, () => planChain0(b, tp)); }
+// [b5-int3] a Zone Control guard whose look found no chain (a small, ledgy raised zone whose edge two teammates' webs
+// already hold — the only=zone misses were a third guard with every anchor failing): once more with its fallback —
+// anchors all round its zone's own ground (not only the foes' half) and a teammate's web kept 2.3 m off, not 2.8 (out of
+// a lone bobber's reach of it, so one blowing still doesn't take the other)
+let _relax = false;
+function planChain(b, tp) {
+  const p = lobBudget(24, () => planChain0(b, tp));
+  if (p || b.zRole !== 'guard' || !zonePlan()) return p;
+  _relax = true;
+  try { const q = lobBudget(16, () => planChain0(b, tp)); if (q) BOBBER_BOT.fallbacks = (BOBBER_BOT.fallbacks || 0) + 1; return q; } finally { _relax = false; }
+}
 function planChain0(b, tp) {
   const a = b.a, C = anchors(b, tp), why = BOBBER_BOT.logOn ? [] : null;
   let n = 0;
