@@ -98,10 +98,12 @@
     const p0 = M1.pos.clone(), ink0 = M1.ink;
     M1._go = { move: V(0, 0, 1), fire: true }; step(0.8); M1._go = null; step(0.05);
     R('place: the owner walks on and fires its weapon (its special holds neither body nor weapon)', M1.pos.distanceTo(p0) > 2 && M1.ink < ink0 - 2 && !!bubble(), { moved: r2(M1.pos.distanceTo(p0)), ink: [r2(ink0), r2(M1.ink)] });
-    // splatted owner: it pops
+    // splatted owner: [b5-sprules] it stands on for the rest of its life (popOnOwnerSplat false; was: it pops)
     reset(); place(me, 0, -10); step(0.1); start(me); step(1);
+    const pops0 = DB.stats.pops;
     me.splat(E1, 'test'); step(0.6);
-    R('place: the owner splatted → it pops (popOnOwnerSplat)', !bubble() && DB.stats.pops >= 2, { pops: DB.stats.pops });
+    const orphan = bubble();
+    R('place: the owner splatted → it stands on by itself (popOnOwnerSplat false: [b5-sprules] the user\'s "survive after the user is splatted")', !!orphan && orphan.orphan && DB.stats.pops === pops0, { live: !!orphan, pops: DB.stats.pops - pops0 });
   }
 
   // ======================================================================================== shots

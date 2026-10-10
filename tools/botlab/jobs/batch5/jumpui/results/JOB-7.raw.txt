@@ -1,0 +1,107 @@
+JOB-7 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 10:07:49
+branch botlab-b5-jumpui, ran at 6fc9a53, exit code 0, wall time 14min
+(a written-up JOB-7.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### round 1 @ 6fc9a53: the whole regress list
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-1280: RESULT 72/72 0 FAIL
+== jump-ui-1: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+== jump-ui-tower: RESULT 75/75 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-boss-1280: RESULT 66/66 0 FAIL
+== jump-ui-boss: RESULT 66/66 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Mega Stamp: no shots into its front, guarded swing after swing (the old code held them only mid-swing); out of the lane in front of it  {"on":{"dead":false,"frontShots":0,"sInFront":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0.6000000000000002,"knockShots":0,"reengaged":0,"bubbleHold":0,"popS
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+### round 3: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+
+## last 15 lines of job.log
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+### round 3: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+
+## summary.txt
+### round 1 @ 6fc9a53: the whole regress list
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-1280: RESULT 72/72 0 FAIL
+== jump-ui-1: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+== jump-ui-tower: RESULT 75/75 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-boss-1280: RESULT 66/66 0 FAIL
+== jump-ui-boss: RESULT 66/66 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Mega Stamp: no shots into its front, guarded swing after swing (the old code held them only mid-swing); out of the lane in front of it  {"on":{"dead":false,"frontShots":0,"sInFront":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0.6000000000000002,"knockShots":0,"reengaged":0,"bubbleHold":0,"popS
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-turf: RESULT 9/9 0 FAIL
+### round 2: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL
+### round 3: jump-ui at 960x600 (every mode) + zones / tower at 1280x720
+== jump-ui-960: RESULT 72/72 0 FAIL
+== jump-ui-zones-960: RESULT 75/75 0 FAIL
+== jump-ui-zones-1280: RESULT 75/75 0 FAIL
+== jump-ui-boss-960: RESULT 66/66 0 FAIL
+== jump-ui-tower-1280: RESULT 75/75 0 FAIL
+== jump-ui-tower-960: RESULT 75/75 0 FAIL

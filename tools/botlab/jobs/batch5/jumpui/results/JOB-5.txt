@@ -1,0 +1,107 @@
+JOB-5 (jumpui) @ 17224bc — verdict: 18 of 20 tests full. jump-ui-960 61/62 (the enemy landing-mark check), failed again on the rerun; bot-specials 18/19 (Bubble Blower), 19/19 on the rerun. Every other test full, sfx-cues included (54/54, run alone); no console errors in any test.
+(the code under test is the same as JOB-4's 25a18d9: git diff 25a18d9 17224bc -- src styles index.html tools/botlab/tests tools/botlab/*.cjs is empty; JOB-4 had jump-ui-960 at 62/62)
+
+## the script's whole output (SLOTS=3 PAR=3 LOG=.botlab/jumpui-j5 tools/botlab/jobs/batch5/jumpui/regress.sh)
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-tower: RESULT 65/65 0 FAIL
+== jump-ui-zones: RESULT 65/65 0 FAIL
+== jump-ui-960: RESULT 61/62 1 FAIL
+FAIL an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true}
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== sub-tweaks: RESULT 29/29 0 FAIL
+== tower-ink: RESULT 11/11 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== map-reveal: RESULT 10/10 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":0,"bubbleHold":0,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0,"knockShots":0,"reengaged":0,"bubbleHold":0.016666666666666666,"popShots":0,"hops":0,"hunted":1,"splattedBy":{}}},"off":{"sInsideAfter09":3.1,"shotsIntoBubble":2,"framesBlocked":2
+== sfx-cues: RESULT 54/54 0 FAIL
+== net-jump-ui-1: RESULT 21/21 0 FAIL
+== net-jump-ui-tower-1: RESULT 7/7 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== net-turf: RESULT 9/9 0 FAIL
+
+## jump-ui-960: 30 lines of its log around the first FAIL (log lines 7–36 of 64)
+PASS the alert counts down (seconds never go up) to ~0 at their touchdown  {"first":2.1,"last":0,"n":125,"landed":true}
+PASS …and is gone once they have landed  []
+PASS a jump called off (the jumper splatted mid-charge): its alert goes  {"had":true,"now":[]}
+PASS world view: the landing mark carries the jumper's name, over the spot  {"mark":[0,0,4],"tag":[480,180.6],"want":[480,230.33]}
+PASS …stacked clear of the name tag of the teammate it lands by  {"tag":[193.04,205.51],"disc":[172.08,189.12],"ally":[214.43,233.6]}
+PASS …with the super-jump glyph and the countdown ring  {"sec":"1.8","ko":11.4}
+PASS minimap: the jumper's name on the landing spot  {"tag":[40.6,63.8],"want":[40.6,63.8]}
+PASS the TAB map opens (the diorama)  {"mapK":1}
+PASS TAB map: the jumper's name on the landing spot  {"tag":[480,267.4],"want":[480,267.36]}
+PASS …the world tags step aside while the map is up (it has its own pins)  {"opacity":"0"}
+PASS the indicator starts at the time the jump really takes (charge + flight, within 0.1 s)  {"predicted":2.11,"took":2.1}
+PASS it counts down every frame (never up), the ring draining toward empty  {"secs":[2.1,0],"ring":[0,99.5],"n":125}
+PASS …shown on the world tag and the minimap the whole way  {"frames":125,"missing":0}
+PASS …reaching ~0 at touchdown  {"last":0}
+PASS the tags go the frame they land  {"world":[],"map":[]}
+FAIL an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true}
+PASS …but no name or seconds for you (the jumper's own team only)  {"w":"","mp":""}
+PASS Ink Jet: the return mark is up from the special's first frame (at the take-off spot)  {"mk":true}
+PASS Ink Jet: …in the world (the user's name, the special's icon) and on the minimap  {"w":[480,178.9],"wWant":[480,230.33],"m":[40.6,63.8],"mWant":[40.6,63.8]}
+PASS Ink Jet: …the tag stands in for the beacon's own icon badge (hidden; its ring and pillar stay)  {"badge":false}
+PASS Ink Jet: the mark stays up through the special and the jump home (every frame, world + minimap)  {"frames":270,"missing":0,"flew":true}
+PASS Ink Jet: its countdown runs down through the special and the flight home, to ~0  {"first":4.3,"last":0}
+PASS Ink Jet: the user lands on it, and the mark is gone that frame  {"land":[0,4],"origin":[0,4],"gone":true}
+PASS Zipline: the return mark is up from the special's first frame (at the take-off spot)  {"mk":true}
+PASS Zipline: …in the world (the user's name, the special's icon) and on the minimap  {"w":[480,180.6],"wWant":[480,230.33],"m":[40.6,63.8],"mWant":[40.6,63.8]}
+PASS Zipline: …the tag stands in for the beacon's own icon badge (hidden; its ring and pillar stay)  {"badge":false}
+PASS Zipline: the mark stays up through the special and the jump home (every frame, world + minimap)  {"frames":270,"missing":0,"flew":true}
+PASS Zipline: its countdown runs down through the special and the flight home, to ~0  {"first":4.3,"last":0}
+PASS Zipline: the user lands on it, and the mark is gone that frame  {"land":[0,4],"origin":[0,4],"gone":true}
+PASS TAB map: the return mark with the user's name, on the spot  {"tag":[435.5,310.7]}
+
+## bot-specials: its log around the first FAIL (the whole log, 21 lines; the long JSON cut at 400 characters)
+PASS Tidal Slam: rollers brawling the jumper get out of its kill ring (3.2 m) before it lands — hard bots nearly all (at most 2 of 9 caught over 3 scenes), normal bots (slower to react) fewer (at most 6 of 9, and no fewer caught than hard ones); the old behaviour loses them all  {"hard":{"caught":0,"scenes":[{"distAtImpact":[4.4,4,5.1],"dead":0,"hops":3},{"distAtImpact":[4.1,3.3,4.3],"dead":0,"h
+PASS Bomb Barrage: a Splat Bomb armed at the feet of chargers mid-charge (slow on their feet: a squid hop out) — on: at most one caught; off: splatted; shooters mid-duel (3 × 3: the old behaviour dodges some by strafing luck) no worse  {"on":{"dead":1,"dmgTotal":183.4,"escapes":17,"evaded":11},"off":{"dead":3,"dmgTotal":359.9},"chargers":{"on":{"dead":1,"dmg":[3.3,"dead",0]},"off":{"dead":3,"dm
+PASS Vortex Strike: chargers in a fight under the ring are out of it when the missile lands — on: none in it (2 scenes); off: many stay (at least 4 of 9 over 3 scenes)  {"on":{"inRing":0,"dead":0,"escapes":3,"evaded":3},"off":{"inRing":8,"perScene":[2,3,3],"dead":0}}
+PASS Vortex Strike: a route past the standing vortex goes round it and the bot never walks in (off: straight through)  {"on":{"nodesInside":0,"framesInside":0},"off":{"nodesInside":10}}
+PASS Howl Box: chargers standing in the beam's line step out of it during the 1.3 s charge — on: none in it (none splatted); off: splatted  {"on":{"inBeam":0,"dead":0,"escapes":2},"off":{"inBeam":2,"dead":2}}
+PASS Cheer Orb: chargers where the orb comes down are clear of its 8.4 m blast when it goes off — on: none splatted; off: splatted  {"on":{"atBlast":[{"d":9.1,"los":true},{"d":9.7,"los":true},{"d":9.5,"los":true}],"dead":0,"escapes":3},"off":{"atBlast":[{"d":4,"los":true},{"d":1.4,"los":true},{"d":4.9,"los":true}],"dead":3}}
+PASS Ink Tempest: chargers under the cloud leave the rain (a light area: nobody in Turf War takes it) — on: under 0.8 s each in it on average (3 scenes); off: a second or more (2 scenes)  {"on":{"sInRainEach":0.46,"scenes":[{"sInRainEach":0.4,"dmg":[0,0,49.8],"escapes":27},{"sInRainEach":0.6,"dmg":[31.7,0,0],"escapes":36},{"sInRainEach":0.5,"dmg":[76.7,0,5.2],"escapes":21}]},"off":{"sInRainEach"
+PASS Twister Zooka, sustained (6 shots a round: 30 rounds off, 30 on for a normal bot, 12 for a hard one): a bot mid-duel with a zooka user 20 m off to one side firing (led) once a second — on: it steps out of the line before each shot, hit less (hard bots least); off: hit nearly every time  {"hitRate":{"off":0.77,"normalOn":0.66,"hardOn":0.43},"off":{"hits":139,"shots":180,"perRound":[6,5,5,5,5
+PASS Twister Zooka: a hard bot walking in on the zooka user sidesteps a twister led at it from ~25 m (on: at most 3 of 10 hit; off: 6+) — a normal bot, slower, dodges fewer  {"hardOn":{"hits":0,"noticed":20},"hardOff":{"hits":10,"noticed":0},"normalOn":{"hits":3,"noticed":9}}
+PASS Kraken (2 rounds): rollers in their own turf don't roll at it — they swim out of its reach (dodging its jumps), no more lost than the old behaviour — then go for it once it's a kid again  {"on":{"dead":1,"sWithin3m":3.9,"shotsAtKraken":0,"shotsAtOther":171,"shotsAfter":204,"reengaged":4,"escapes":4,"evaded":0},"off":{"dead":4,"sWithin3m":3.1,"shotsAtKraken":255,"shotsAtOther":0}}
+PASS Bubble Guard: no shots into the shield and backed out of its reach; back on it straight after it pops (off: shoots the shield)  {"on":{"shotsShielded":0,"distShielded":14.3,"shotsAfter":68,"firstShotAfter":0.3,"st":{"noticed":1,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":4,"guard":0,"backedOff":1,"retargeted":0,"heldFire":1.4999999999999996,"knockShots":0,"reengag
+PASS Bubble Guard at the very edge of the deck: the shove can put it in the sea — judged worth it, so the bot keeps shooting  {"shots":78,"sunk":true,"knockShots":1}
+PASS Crab Rig: out of its gun lane, no shots into the armoured front (off: stands in the lane shooting the hull); from behind it shoots the rider  {"on":{"dead":false,"sInLane":0.3,"frontShots":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":0,"guard":0,"backedOff":0,"retargeted":0,"heldFire":1.8499999999999983,"knockShots":0,"reengaged":0,"bubbleHold":
+PASS Mega Stamp: no shots into its front, guarded swing after swing (the old code held them only mid-swing); out of the lane in front of it  {"on":{"dead":false,"frontShots":0,"sInFront":0,"st":{"noticed":1,"missed":0,"escapes":0,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0.6000000000000002,"knockShots":0,"reengaged":0,"bubbleHold":0,"popS
+FAIL Bubble Blower: out of an enemy bubble's blast while one of theirs can set it off (off: stays in it); no shots into one on the line of fire (a charge is held till the line clears)  {"on":{"bubbles":2,"sInsideAfter09":0,"shotsIntoBubble":0,"framesBlocked":0,"bubbleHold":0,"st":{"noticed":4,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":2,"goalMoved":2,"guard":0,"backedOff":0,"retarg
+PASS Bubble Blower, counter-play: one of theirs ducks out of sight behind a wall right by our team's bubble — the bot shoots the bubble and it goes off on them  {"on":{"bubble":true,"sawItFirst":true,"hidden":true,"popped":true,"e2Hit":156.3,"popShots":1},"off":{"bubble":true,"sawItFirst":true,"hidden":true,"popped":false,"e2Hit":0,"popShots":0}}
+PASS Ink Jet: a hard charger mid-charge gets out of a blast's path and splash seen coming from ~28 m (avg damage on well under off)  {"avgDmgOn":0,"avgDmgOff":91}
+PASS Ink Jet: a jetpacker in reach is taken before a closer foe (floating, in the open); one out of reach doesn't lure the bot out (the foe it can reach, and never under it)  {"framesOnJetpacker":90,"framesOnCloserFoe":0,"hunted":1,"outOfReach":{"framesOnJetpacker":3,"framesOnReachableFoe":147,"closestToUnderIt":15.8}}
+PASS the sight rule: a shield / a slam / a kraken behind a wall, unseen and unheard, is nothing to the bot; heard close by (slam 8 m, kraken 7 m) or on the map (a strike ring behind it): noticed  {"shieldBehindWall":0,"slamFar":0,"slamHeard":1,"krakenFar":0,"krakenHeard":1,"strikeOnMap":1}
+RESULT 18/19
+console errors: none
+
+## the reruns (ONLY="jump-ui-960 bot-specials" PAR=2, same code; holds JOB-4 was running on the other slot)
+== jump-ui-960: RESULT 61/62 1 FAIL
+FAIL an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true}
+== bot-specials: RESULT 19/19 0 FAIL
+  bot-specials: PASSED the second time (Bubble Blower: framesBlocked 240, bubbleHold 4). jump-ui-960: FAILED the second time, the same check.
+
+## notes
+- Bubble Blower: the failing clause is a.bubbleHold > 1. In the failing run the scene never put the bubble on the bot's line
+  of fire (framesBlocked 0, bubbleHold 0), so there was no charge to hold; nothing was shot into a bubble (shotsIntoBubble 0).
+  Across all the logs on this Mac this check has 34 PASS and 2 FAIL (the other FAIL, an older run, had framesBlocked 240 and
+  bubbleHold 0). Here it looks like a scene that sometimes doesn't set itself up, not a bot fault: it passed on the rerun.
+- jump-ui-960 enemy mark: the test's detail only prints {w, mp}, both true, so the failing clause is either the mark itself
+  (markOf(F,'jump') null) or the world tag's position (near2(w.xy, proj(mark + lift)), 2.5 px). To see which, I ran a scratch
+  copy of tools/botlab/tests/jump-ui.js (kept outside the repo, .botlab/sweep/jump-ui-foediag.js) whose only change is a
+  longer detail on that check — 4 runs, all PASS:
+    PASS an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true,"r":true,"wxy":[541,229.7],"want":[541.0407516668708,229.68895804591594],"rpos":[-4,0,10],"fpos":[4,0.02,14],"vw":[960,600]}
+    PASS an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true,"r":true,"wxy":[541,229.7],"want":[541.0407516668708,229.68895804591594],"rpos":[-4,0,10],"fpos":[4,0.02,14],"vw":[960,600]}
+    PASS an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true,"r":true,"wxy":[852.3,361.8],"want":[852.3328056549382,361.7617419844004],"rpos":[-4,0,10],"fpos":[4,0.02,14],"vw":[1512,945]}
+    PASS an enemy's landing mark: ring + icon in the world and on the minimap  {"w":true,"mp":true,"r":true,"wxy":[541,229.7],"want":[541.0139227772795,229.6899949107304],"rpos":[-4,0,10],"fpos":[4,0.02,14],"vw":[960,600]}
+  (960a / 960b: the full test at 960×600; 960foe: PAGE_ARGS=only=foe at 960×600; the last: only=foe at the default size)
+  So it is intermittent: 2 FAIL (both in the regress.sh runs) and 4 PASS on the same code, plus JOB-4's PASS.
+  When it passes the tag sits 0.04 px from the mark, so a fail is most likely the mark missing at that frame, or the
+  tag stacked away from it, not a small rounding miss. Printing r / w.xy / the projected point in the test's detail would
+  show which the next time it fails.

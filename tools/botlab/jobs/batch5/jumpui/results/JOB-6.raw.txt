@@ -1,0 +1,62 @@
+JOB-6 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 07:51:45
+branch botlab-b5-jumpui, ran at d8eb73e, exit code 0, wall time 5min
+(a written-up JOB-6.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### round 1 @ d8eb73e
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-tower: RESULT 65/65 0 FAIL
+== jump-ui-zones: RESULT 65/65 0 FAIL
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 2
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 3
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+
+## last 15 lines of job.log
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 2
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 3
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+
+## summary.txt
+### round 1 @ d8eb73e
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-tower: RESULT 65/65 0 FAIL
+== jump-ui-zones: RESULT 65/65 0 FAIL
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 2
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL
+### round 3
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-1: RESULT 62/62 0 FAIL
+== bot-specials: RESULT 19/19 0 FAIL

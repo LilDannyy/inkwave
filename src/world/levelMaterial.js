@@ -166,6 +166,9 @@ export function createLevelMaterial(paintTexture, atlasSize, muralTexture = null
     uniforms.uMurB = { value: Array.from({ length: MUR }, (_, i) => new THREE.Vector4(...((rows[i] && rows[i].place) || [0, -8, 0, 0]))) };
     uniforms.uMurC = { value: Array.from({ length: MUR }, (_, i) => new THREE.Vector2(...((rows[i] && rows[i].fx) || [0, 0]))) };
   }
+  // [b5-stagehooks] stage-module extensions (stageMods.js, docs/STAGE-MODS.md): shared uniform objects and defines
+  const EXT = opts.ext && opts.ext.length ? opts.ext : null;
+  if (EXT) for (const e of EXT) { if (e.uniforms) Object.assign(uniforms, e.uniforms); if (e.defines) mat.defines = { ...(mat.defines || {}), ...e.defines }; }
   mat.userData.uniforms = uniforms;
   // see-through window: feet height of the local player + whether this draw is multisampled (main.js drives the rest)
   mat.alphaToCoverage = true;
@@ -770,11 +773,33 @@ ${INK_EMISSIVE}`)
       .replace('#include <opaque_fragment>', `${WAVE_FRAGMENT}
 outgoingLight = min(outgoingLight, vec3(5.0));
 #include <opaque_fragment>`);
+    if (EXT) applyLevelExt(sh, EXT);   // [b5-stagehooks]
   };
   if (opts.grate) {
     mat.side = THREE.DoubleSide;
     mat.defines = { ...(mat.defines || {}), GRATE: 1 };
   }
-  mat.customProgramCacheKey = () => 'inkwave-level-v8' + (opts.grate ? '-grate' : '');
+  mat.customProgramCacheKey = () => 'inkwave-level-v8' + (opts.grate ? '-grate' : '') + (EXT ? EXT.map((e) => '-' + e.key).join('') : '');   // [b5-stagehooks]
   return mat;
+}
+
+// [b5-stagehooks] a stage module's chunks into the level shader, each at a fixed slot (docs/STAGE-MODS.md): vertPars /
+// vertMain (vertex: after our varyings / after the world position), fragPars (after our fragment declarations), fragBase
+// (before the wet ink: the bare surface `base`), fragMural (after the mural texel `mc` of mural `mi` is read), fragEmissive
+// (after the ink's emissive), fragFinal (before the clear-ink wave: outgoingLight), aoSample (an expression replacing the
+// baked AO read). Only ever called with extensions: without them the program is today's, byte for byte.
+function applyLevelExt(sh, EXT) {
+  const cat = (k) => EXT.map((e) => e[k] || '').filter(Boolean).join('\n');
+  const put = (src, anchor, text, before = false) => (text ? src.replace(anchor, before ? text + '\n' + anchor : anchor + '\n' + text) : src);
+  let v = sh.vertexShader, f = sh.fragmentShader;
+  v = put(v, 'varying vec3 vWNorm;', cat('vertPars'));
+  v = put(v, 'vWNorm = normalize(mat3(modelMatrix) * objectNormal);', cat('vertMain'));
+  f = put(f, 'float gWake = 0.0;', cat('fragPars'));
+  f = put(f, '  // ---- wet ink (src/world/inkShading.js) ----', cat('fragBase'), true);
+  f = put(f, '    vec4 mc = texture2D(uMural, muv);', cat('fragMural'));
+  f = put(f, INK_EMISSIVE, cat('fragEmissive'));
+  f = put(f, WAVE_FRAGMENT, cat('fragFinal'), true);
+  const ao = EXT.map((e) => e.aoSample).filter(Boolean)[0];
+  if (ao) f = f.replace('texture2D(uLight, vLightUv).r', `(${ao})`);
+  sh.vertexShader = v; sh.fragmentShader = f;
 }

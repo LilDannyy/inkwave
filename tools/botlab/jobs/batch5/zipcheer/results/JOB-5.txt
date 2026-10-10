@@ -1,0 +1,52 @@
+JOB-5 (zipcheer) @ fc4ac0c (fix round 2) — Mac mini b5-runner, 09:45–09:52, exit 0. SUMMARY 26 runs, 2 FAIL lines, bots 10/10.
+
+VERDICT: the rewritten 'bots cheer' check is solid (10 of 10 runs 2/2); the new prompt check failed once in 3 whole
+zipcheer runs, in one of its 12 cases; one unrelated bot-specials check failed once.
+- regress.sh: 13 of 14 tests full (zipcheer 36/36, zipcheer-tower, tower-rules, bot-specials-tower, hud-lead turf + zones,
+  input-swim, track-arrows 24/24, sfx-cues 54/54 and audio-pause 10/10 alone, net-zipcheer 10/10, net-practice, net-turf).
+- bot-specials 18/19: Bubble Guard. The failing part is the device-AI-off baseline (off.shotsShielded 8, the check wants
+  > 20); the on half was right (0 shots into the shield, 14.2 m out of reach, back on it 0.2 s after the pop). This check:
+  2 FAIL / 41 PASS on this Mac; no zipcheer code involved — chance.
+- zipcheer ×3 (the regress run + 2 more): 36/36, 36/36, 35/36. The 35/36 is the new 'prompt: a hint line showing …
+  the cheer prompt stands on top of it' check, in its FIRST case only (this window's size, low ink): over false, the
+  prompt 57 px above the hint (bottom 130 px: neither its hint spot nor its no-hint spot, 79), and the Super Jump note
+  on the prompt (noteGap −37). The other 11 cases in that run were fine (gaps 8–11, notes 11–15), as were all 12 in the
+  other two runs. It looks like the first case being measured before the prompt had settled / overHint had updated
+  (the case does step(0.1) and then only waits in real time), rather than a layout fault — but it is the package's own
+  check, so it's reported, not waved off.
+- the 'bots' part ×10: 2/2 every time (first cheers 0.02–2.45 s, helps 2, arrived 2).
+
+## the failing prompt line in full
+FAIL prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window's size, 960×600's and 1280×720's; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it  {"bad":[{"u":"window","how":"lowink","hint":"Hold SHIFT to swim in your ink and refill","over":false,"gap":57,"prompt":[594,716,918,815],"hintBox":[576,872,936,906],"bottom":130,"note":[592,715,920,753],"noteGap":-37,"ok":false}],"gaps":["window/lowink: gap 57 (hint 34 px high), note -37","window/ready: gap 11 (hint 34 px high), note 15","window/keycap: gap 11 (hint 51 px high), note 15","window/none: bottom 79, note 15","9.6px/lowink: gap 8 (hint 28 px high), note 11","9.6px/ready: gap 8 (hint 28 px high), note 11","9.6px/keycap: gap 8 (hint 41 px high), note 11","9.6px/none: bottom 50, note 11","12.8px/lowink: gap 9 (hint 29 px high), note 12","12.8px/ready: gap 9 (hint 29 px high), note 12","12.8px/keycap: gap 9 (hint 43 px high), note 12","12.8px/none: bottom 67, note 12"]}
+
+## the job's output
+### zipcheer JOB-5 at fc4ac0c
+== zipcheer-tower: RESULT 2/2 0 FAIL
+== tower-rules: RESULT 26/26 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== bot-specials-tower: RESULT 1/1 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== bot-specials: RESULT 18/19 1 FAIL
+FAIL Bubble Guard: no shots into the shield and backed out of its reach; back on it straight after it pops (off: shoots the shield)  {"on":{"shotsShielded":0,"distShielded":14.2,"shotsAfter":46,"firstShotAfter":0.2,"st":{"noticed":1,"missed":0,"escapes":1,"evaded":0,"caught":0,"avoidedPath":1,"goalMoved":3,"guard":0,"backedOff":1,"retargeted":0,"heldFire":1.2833333333333337,"knockShots":0,"reengaged":0,"bubbleHold":0
+== track-arrows: RESULT 24/24 0 FAIL
+== sfx-cues: RESULT 54/54 0 FAIL
+== audio-pause: RESULT 10/10 0 FAIL
+== net-zipcheer: RESULT 10/10 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== net-turf: RESULT 9/9 0 FAIL
+== zipcheer: RESULT 36/36 0 FAIL
+== zipcheer: RESULT 35/36 1 FAIL
+FAIL prompt: a hint line showing (low ink, special ready, one with a keycap) — the cheer prompt stands on top of it (≥ 4 px clear) at this window's size, 960×600's and 1280×720's; no hint, back down at 5.2 u; a "Super Jump cancelled" note over it, not on it  {"bad":[{"u":"window","how":"lowink","hint":"Hold SHIFT to swim in your ink and refill","over":false,"gap":57,"prompt":[594,716,918,815],"hintBox":[576,872
+== bots-3: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.92","Kelp 0.98"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1}
+== bots-2: RESULT 2/2 0 FAIL | {"firstCheerS":["Kelp 0.37","Nori 0.75"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.77}
+== bots-1: RESULT 2/2 0 FAIL | {"firstCheerS":["Wasabi 0.03","Marlo 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-4: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.37","Bubbles 0.5"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.52}
+== bots-6: RESULT 2/2 0 FAIL | {"firstCheerS":["Riptide 0.35","Inky Vee 0.7"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.72}
+== bots-5: RESULT 2/2 0 FAIL | {"firstCheerS":["Moxie 0.05","Riptide 2.13"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.15}
+== bots-7: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.87","Bubbles 0.93"],"helps":2,"arrived":2,"extra":0.24,"steppedS":0.95}
+== bots-9: RESULT 2/2 0 FAIL | {"firstCheerS":["Blotch 0.02","Coral 1.88"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.9}
+== bots-8: RESULT 2/2 0 FAIL | {"firstCheerS":["Squiddo 1.23","Marlo 2.45"],"helps":2,"arrived":2,"extra":0.24,"steppedS":2.47}
+== bots-10: RESULT 2/2 0 FAIL | {"firstCheerS":["Inky Vee 0.63","Bubbles 1.2"],"helps":2,"arrived":2,"extra":0.24,"steppedS":1.22}
+SUMMARY 26 runs, 2 FAIL lines, 10/10 bots runs 2/2

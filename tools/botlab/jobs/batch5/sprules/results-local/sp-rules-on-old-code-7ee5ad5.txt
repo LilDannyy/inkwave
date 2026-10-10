@@ -1,0 +1,24 @@
+FAIL gauge: splatted mid-special, the gauge keeps ½ of what was LEFT of it (the HUD's remaining) — Crab Rig at 0.8 / 0.5 / 0.2 → 0.4 / 0.25 / 0.1 (the old rule: 0.5 every time)  [{"special":"crab 0.8","hud":0.8,"share":0,"kept":0.5,"want":0,"oldRule":0.5},{"special":"crab 0.5","hud":0.5,"share":0,"kept":0.5,"want":0,"oldRule":0.5},{"special":"crab 0.2","hud":0.2,"share":0,"kept":0.5,"want":0,
+FAIL gauge: the same for a Twister Zooka (0.6 left → 0.3) and a held Cheer Orb (its gauge stays full while held → 0.5)  [{"special":"zooka","hud":0.6,"share":0,"kept":0.5,"want":0,"oldRule":0.5},{"special":"booyah (held)","hud":1,"share":0,"kept":0.5,"want":0,"oldRule":0.5}]
+FAIL gauge: a Bubble Blower with one bubble blown of three: ½ × (2/3 × the time left) — the bubble being blown counts as blown (it floats on: let go at the splat)  {"special":"blower (1 of 3 blown)","hud":0.578,"share":0,"kept":0.5,"want":0,"oldRule":0.5}
+FAIL gauge: what carries on after the splat keeps nothing back — a Drainbow (its bubble stands on: its HUD gauge showed 0.76) and an Ink Tempest already thrown → 0  [{"special":"drainbow","hud":0.765,"share":0,"kept":0.5,"want":0,"oldRule":0.5},{"special":"storm (thrown)","hud":1,"share":0,"kept":0.5,"want":0,"oldRule":0.5}]
+FAIL gauge: falling into the sea mid-special (an Ink Jet, a body special) keeps ½ of what was left too (the old code gave 0 here: the special was ended before the splat)  {"hud":0.714,"kept":0,"cause":"water"}
+FAIL gauge: what's kept is still there after the respawn  {"atSplat":0.5,"afterRespawn":0.5}
+PASS gauge: no special running — ½ of what you had, as before (0.6 → 0.3, full → 0.5, 0.25 → 0.125)  {"p6":0.3,"p10":0.5,"p25":0.125}
+FAIL survive: the Whirl Boomerang carries on when its thrower is splatted (was: fizzled) — it whirls home to where they went down (not to their respawn), circles that spot and bursts there  {"before":"hover","states":["fizzle","dead"],"orbitR":0,"burstFromSpot":null,"ownerFromBurst":null}
+FAIL survive: …and it still hurts the foe standing there (its orbit / burst, credited to its thrower)  {"hurt":0}
+PASS survive: the Ink Tempest's cloud forms and rains its whole life after its thrower is splatted, inking and hurting a foe under it  {"cloud":true,"life":6.5,"dmg":100.3,"ink":0.82}
+PASS survive: Surf N' Turf's buoy keeps pulsing after its owner is splatted — all its rings go out (still hitting a foe in their way), then it goes as usual (not popped, not lost)  {"rings":6,"hits":2,"gone":true,"popped":0}
+FAIL survive: the Drainbow stands on after its owner is splatted (was: popped) — still halving shots, still draining a foe inside  {"orphan":false,"shotThrough":40,"drained":0}
+FAIL survive: …the owner back from the respawn gains in it like any teammate (meter, not bubble time); it pops on time (its life, no longer growing)  {"meter":0,"life":[8.5,8.5,8.5],"poppedAt":1.43,"reason":"splat"}
+PASS survive: (unchanged — the user: "only bubble guard not bubble blower") the Bubble Blower's bubbles float on after its owner is splatted as they always did (the one being blown let go) — a teammate's shot still sets one off (hurting a foe), the other pops on its own time  {"before":["free","held"],"after":2,"blown":true,"hurt":140.25,"lifeLeft":8.73}
+PASS survive: a Bubble Guard shared onto a teammate outlives its maker — it keeps its time (runs out when it would have), and a shot still shoves instead of hurting  {"shared":6.18,"afterSplat":5.98,"hp":100,"soaked":1,"shove":0.21,"ranOut":true}
+FAIL chain: the section threw  "TypeError: Cannot read properties of null (reading 'CHAIN_STATS')\n    at <anonymous>:268:19"
+FAIL waddle: the section threw  "TypeError: Cannot read properties of undefined (reading 'gap')\n    at <anonymous>:335:34"
+FAIL mystery: the section threw  "TypeError: Cannot read properties of undefined (reading 'mystery')\n    at <anonymous>:353:44"
+FAIL bots: a bot with the Waddle Bomb Barrage, a foe in front, pops it and throws Waddles  {"used":false,"throws":0,"kinds":[]}
+FAIL bots: …with the Mystery Bomb Barrage, throws several kinds  {"used":false,"throws":0,"kinds":[]}
+FAIL bots: the section threw  "TypeError: Cannot read properties of null (reading 'CHAIN_STATS')\n    at <anonymous>:444:19"
+FAIL list: both appended at the END of SPECIAL_ORDER (online records index into it)  {"tail":["zipcaster","crab","surf","drainbow"]}
+FAIL list: each has its own icon (not the fallback), a name and a blurb, kind barrage  {"len":[0,0]}
+RESULT 5/23

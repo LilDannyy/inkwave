@@ -1,0 +1,55 @@
+JOB-2 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:12:55
+branch botlab-b5-stages, ran at 1dbe049, exit code 0, wall time 4min
+(a written-up JOB-2.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### stages JOB-2 at 1dbe049
+== stage-mods-1: RESULT 27/27 0 FAIL
+== stage-mods-2: RESULT 27/27 0 FAIL
+== stage-mods-3: RESULT 27/27 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== net-stagemods-1: RESULT 10/10 0 FAIL
+== net-stagemods-2: RESULT 10/10 0 FAIL
+== net-stagemods-3: RESULT 10/10 0 FAIL
+== net-stageclock: RESULT 3/3 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+== check-maps: 1
+SUMMARY 12 runs, 0 FAIL lines
+
+## last 15 lines of job.log
+== stage-mods-2: RESULT 27/27 0 FAIL
+== stage-mods-3: RESULT 27/27 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== net-stagemods-1: RESULT 10/10 0 FAIL
+== net-stagemods-2: RESULT 10/10 0 FAIL
+== net-stagemods-3: RESULT 10/10 0 FAIL
+== net-stageclock: RESULT 3/3 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== check-maps: 1
+halyard      96 pieces  1 issue(s)
+   - half[41] ramp is 25.7° (max 24)
+SUMMARY 12 runs, 0 FAIL lines
+
+## fails.txt
+
+## summary.txt
+== stage-mods-1: RESULT 27/27 0 FAIL
+== stage-mods-2: RESULT 27/27 0 FAIL
+== stage-mods-3: RESULT 27/27 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== movers: RESULT 17/17 0 FAIL
+== pods: RESULT 39/39 0 FAIL
+== net-stagemods-1: RESULT 10/10 0 FAIL
+== net-stagemods-2: RESULT 10/10 0 FAIL
+== net-stagemods-3: RESULT 10/10 0 FAIL
+== net-stageclock: RESULT 3/3 0 FAIL
+== net-practice: RESULT 29/29 0 FAIL
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+== check-maps: 1
+halyard      96 pieces  1 issue(s)
+   - half[41] ramp is 25.7° (max 24)

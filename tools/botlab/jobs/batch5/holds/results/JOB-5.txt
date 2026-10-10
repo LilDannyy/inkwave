@@ -1,0 +1,31 @@
+JOB-5 (holds) @ b21bb53 — verdict: everything full (run by the Mac mini's b5-runner, 07:51–07:56, exit 0).
+holds ×3 307/307 each; world-build, hud-lead (turf / zones / tower), input-swim, loadout-picker, net-mock, net-holds a + b
+all full; the three 90 s all-bot matches ran to the end with CONSOLE 0; no '[net] cN uncaught:' line in any log; fails.txt empty.
+
+## the job's output
+### holds JOB-5 at b21bb53
+== holds-1: RESULT 307/307 0 FAIL
+== holds-2: RESULT 307/307 0 FAIL
+== holds-3: RESULT 307/307 0 FAIL
+== world-build: RESULT 5/5 0 FAIL
+== hud-lead-zones: RESULT 14/14 0 FAIL
+== hud-lead: RESULT 22/22 0 FAIL
+== input-swim: RESULT 8/8 0 FAIL
+== hud-lead-tower: RESULT 12/12 0 FAIL
+== loadout-picker: RESULT 23/23 0 FAIL
+== net-mock: RESULT 11/11 0 FAIL
+== net-holds-a: RESULT 7/7 0 FAIL
+== net-holds-b: RESULT 7/7 0 FAIL
+== match-four: 1 result line(s)
+== halyard [turf 90s]: turf 30.8% vs 21.6%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 2/5 350p · roller×2 3/5 668p · blaster×2 8/1 513p · brolly×2 2/5 280p
+CONSOLE 0 unique warning/error line(s)
+== match-four-zones: 1 result line(s)
+== crossmarket [zones]: winner Alpha (time) | final 58 vs 73 (penalty +0/+12.2) | OT no
+   by weapon (players, splats dealt, deaths, avg turf) brolly×2 17/19 1102p · blaster×2 39/20 1687p · roller×2 29/28 1843p · brush×2 14/33 1293p
+CONSOLE 0 unique warning/error line(s)
+== match-default: 1 result line(s)
+== calamari [turf 90s]: turf 26.9% vs 20.5%
+   by weapon (players, splats dealt, deaths, avg turf) brush×2 2/11 443p · charger×1 2/1 387p · twins×1 4/3 930p · bow×1 4/0 915p · bucket×1 1/2 547p · blaster×1 5/2 528p · blade×1 4/3 1030p
+CONSOLE 0 unique warning/error line(s)
+SUMMARY 18 runs, 0 FAIL lines

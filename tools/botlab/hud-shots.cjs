@@ -9,6 +9,7 @@
 const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
+const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 const MAP = process.env.MAP || 'halyard', TIME = process.env.TIME || 'day', MODE = process.env.MODE || 'turf';
 const OUT = process.env.OUT || (process.env.BOTLAB_ROOT || '.') + '/.botlab/hudshots';
 const W = +(process.env.W || 1600), H = +(process.env.H || 900), PLAY = +(process.env.PLAY || 8);
@@ -31,10 +32,12 @@ app.on('browser-window-created', (_, win) => {
     for (let i = 0; i < 120; i++) { if (await js('!!window.__inkwave?.api')) break; await wait(250); }
     await js('window.__inkwave._onPointerUnlock = () => {}; 0');
     fs.mkdirSync(OUT, { recursive: true });
+    if (TEST_MAPS.includes(MAP)) await js(defineTestMap(MAP));   // (a test-only arena: testmaps.cjs)
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', duration: 180, time: '${TIME}', mode: '${MODE}' })`);
     for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     await wait(PLAY * 1000);
     let scenes = [];
+    await js(`window.__preArgs = ${JSON.stringify(process.env.PRE_ARGS || '')}; 0`);   // (PRE_ARGS: which scenes, as in shoot.cjs)
     try { scenes = await js(fs.readFileSync(process.env.SCENES, 'utf8')); } catch (e) { console.log('SCENES ERROR', e.message); }
     const tag = `${MAP}-${MODE}-${TIME}`;
     for (let i = 0; i < scenes.length; i++) {

@@ -6,6 +6,7 @@ import fs from 'node:fs';
 const { MAP_LAYOUTS } = await import(new URL('../src/world/maps.js', import.meta.url));
 const { layoutThumbSVG } = await import(new URL('../src/world/mapThumb.js', import.meta.url));
 const { layoutFor, hasVariant } = await import(new URL('../src/world/variants.js', import.meta.url));
+const { stageDataFor } = await import(new URL('../src/world/stageData.js', import.meta.url));   // [b5-stagehooks] (registered via mapThumb.js)
 const args = process.argv.slice(2);
 const svg = args.includes('--svg');
 const ids0 = args.filter((a) => !a.startsWith('--')).length ? args.filter((a) => !a.startsWith('--')) : Object.keys(MAP_LAYOUTS);
@@ -37,13 +38,15 @@ for (const id of ids) {
   const [base, mode = 'turf'] = id.split('.');
   const L = layoutFor(MAP_LAYOUTS[base], mode), B = L.bounds, out = [];
   const defs = [...L.single.map((d, i) => ({ ...d, _n: `single[${i}]` })), ...L.half.map((d, i) => ({ ...d, _n: `half[${i}]` })), ...L.half.map((d, i) => ({ ...mirror(d), _n: `half[${i}]'` }))];
-  const solids = defs.filter((d) => d.kind !== 'ramp').map((d) => ({ d, s: shape(d) }));
+  const SD = stageDataFor(L), pairOk = (a, b) => SD.some((h) => h.overlapOk && h.overlapOk(a, b));   // [b5-stagehooks]
+  const solids = defs.filter((d) => d.kind !== 'ramp' && (d.kind === 'box' || d.kind === 'obox')).map((d) => ({ d, s: shape(d) }));
   for (const { d, s } of solids) {
     for (const [x, z] of corners(s)) if (x < B.minX - 1e-3 || x > B.maxX + 1e-3 || z < B.minZ - 1e-3 || z > B.maxZ + 1e-3) { out.push(`${d._n} outside bounds`); break; }
     if (s.h[0] <= 0 || s.h[1] <= 0 || s.y1 <= s.y0) out.push(`${d._n} has zero/negative size`);
   }
   for (let i = 0; i < solids.length; i++) for (let j = i + 1; j < solids.length; j++) {
     const a = solids[i], b = solids[j];
+    if (SD.length && pairOk(a.d, b.d)) continue;   // [b5-stagehooks]
     const oy = Math.min(a.s.y1, b.s.y1) - Math.max(a.s.y0, b.s.y0);
     if (oy <= 1e-3) continue;
     const o = overlap2D(a.s, b.s);
@@ -60,6 +63,7 @@ for (const id of ids) {
     const under = solids.filter(({ s }) => Math.abs(s.y1 - y) < 0.01 && overlap2D(s, { c: [x, z], ax: [[1, 0], [0, 1]], h: [0.01, 0.01] }) > 0);
     if (!under.length) out.push(`spawn pad [${x},${y},${z}] is not on a deck top`);
   }
+  for (const h of SD) if (h.check) out.push(...(h.check(L, { id, mode, defs, solids, shape, corners, overlap2D }) || []));   // [b5-stagehooks]
   console.log(`${id.padEnd(12)} ${defs.length} pieces  ${out.length ? out.length + ' issue(s)' : 'ok'}`);
   for (const o of out) console.log('   - ' + o);
   problems += out.length;

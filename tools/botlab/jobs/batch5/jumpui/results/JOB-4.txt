@@ -1,0 +1,15 @@
+JOB-4 (jumpui) @ 25a18d9 — verdict: every jump-ui run passes (turf, zones, tower, boss, 960×600, 1280×720, boss 960×600); sub-tweaks 28/29 then 29/29 (the failing check this time was the windup-blast escape, not JOB-3's sprinkler spread: chance, outside this package). Mac mini, SLOTS=3 PAR=3.
+
+## run 1
+== jump-ui-1: RESULT 62/62 0 FAIL
+== jump-ui-tower: RESULT 65/65 0 FAIL
+== jump-ui-zones: RESULT 65/65 0 FAIL
+== jump-ui-960: RESULT 62/62 0 FAIL
+== jump-ui-1280: RESULT 62/62 0 FAIL
+== jump-ui-boss: RESULT 56/56 0 FAIL
+== sub-tweaks: RESULT 28/29 1 FAIL
+FAIL a hard bot (its specials awareness on) caught in a windup's blast notices it (after its reaction time) and heads out — clear of it at the blast, or turned round and moving out of it — in 2 of 3 rounds for each bomb  {"seeker":[{"esc":{"hit":"seeker","t":0},"d0":1.15,"dEsc":1.15,"dMin":1.15,"dEnd":3.38,"dmg":0},{"esc":{"hit":"seeker","t":0.167},"d0":1.17,"dEsc":1.7,"dMin":1.7,"dEnd":3.22,"dmg":0},{"esc":{"hit":"seeker","t":0.283},"d0":0.49,"dEsc":1.17,"dMin":1.17,"dEnd":2.01,"dmg":54.09}],"waddle":[{"esc":{"hit":"waddle","t":0.167},"d0":0.99,"dEsc":0.27,"dMin":0.2,"dEnd":1.22,"dmg":121
+== jump-ui-boss-960: RESULT 23/23 0 FAIL
+
+## run 2 (sub-tweaks)
+== sub-tweaks: RESULT 29/29 0 FAIL
