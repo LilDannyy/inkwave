@@ -720,7 +720,7 @@ export const BAZOOKARP = {
   // the Roe Shell: a tug-of-war meter ±hp (Alpha +, Bravo −); a burst splats the other team within burstR (with a line)
   shell: {
     r: 1.6, rMax: 2.3, lift: 1.3,          // radius at rest / about to burst; centre above its floor
-    hp: 1000, reformHp: 500,                // net damage to burst: the opening shell / every re-formed one
+    hp: 800, reformHp: 500,                 // net damage to burst: the opening shell / every re-formed one ([b5-karp-bots] 1000 → 800: the bot matches' first pop ran 13–16 s, SPEC §9.1 wants 6–12)
     regen: 200, regenDelay: 1.5,           // drift back toward 0 (/s) after this long with no hits
     reform: 0.8,                            // s to grow back after a drop / plant / reset / move
     hitCap: 220, specialMul: 0.5, contMul: 0.5,

@@ -70,7 +70,7 @@
     const gap = E.find((e) => e.type === 'gap' && e.a[0] > 21 && e.a[0] < 22 && e.b[0] > 24 && e.b[0] < 25);
     R('A2 §3.2: the field has the hop up the lane\'s 1.5 m step and the gap edge across the 2.6 m of air', !!hop && !!gap, { hops: F().stats.hops, gaps: F().stats.gaps, hop, gap, maxGain: F().hopGain(), buildMs: F().stats.buildMs, ms: F().stats.ms });
     R('A3 §3.2 step 4: L_A ≈ L_B (within 2 %)', Math.abs(Kp.L[0] - Kp.L[1]) / Math.max(Kp.L[0], Kp.L[1]) < 0.02, { L: Kp.L });
-    R('A4 S3: the Pond, a shielded Bazookarp at 1000 hp, counts 100 / 100', Kp.phase === 'shielded' && Kp.shell.hp === 1000 && Kp.shell.state === 'intact' && Kp.pos.length() < 0.3 && Kp.count[0] === 100 && Kp.count[1] === 100, { phase: Kp.phase, hp: Kp.shell.hp, pos: Kp.pos.toArray(), count: Kp.count });
+    R(`A4 S3: the Pond, a shielded Bazookarp at its opening toughness (BAZOOKARP.shell.hp ${K.shell.hp}: [b5-karp-bots] tuned from 1000), counts 100 / 100`, Kp.phase === 'shielded' && Kp.shell.hp === K.shell.hp && K.shell.hp > K.shell.reformHp && Kp.shell.state === 'intact' && Kp.pos.length() < 0.3 && Kp.count[0] === 100 && Kp.count[1] === 100, { phase: Kp.phase, hp: Kp.shell.hp, pos: Kp.pos.toArray(), count: Kp.count });
     const st = JSON.stringify(Kp.state());
     R('A5 S41: the coin is nowhere in state() (the HUD never sees it)', !/coin/.test(st) && (Kp.coin === 0 || Kp.coin === 1), { keys: Object.keys(Kp.state()) });
   }

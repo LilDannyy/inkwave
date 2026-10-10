@@ -161,11 +161,12 @@ class KarpPlan {
     if (sit === 'shell') {
       const c = this.restPos();
       // the grabber: the bot nearest the shell, no special running (its own Bubble Guard is fine), hp ≥ 60
-      const ok = ubots.filter((a) => !busy(a) && a.hp >= 60);
-      const g = (ok.length ? ok : ubots).slice().sort((x, y) => hd(x.pos, c) + keep(x, 'grab') - hd(y.pos, c) - keep(y, 'grab'))[0];
-      if (g) set(g, 'grab');
-      const ch = ubots.filter((a) => a !== g && a.weapon.kind === 'charger').sort((x, y) => keep(x, 'perch') - keep(y, 'perch'))[0];
+      // (the perch first — a charger, while there's another bot to grab — then the grabber among the breakers)
+      const ch = ubots.length > 1 ? ubots.filter((a) => a.weapon.kind === 'charger').sort((x, y) => keep(x, 'perch') - keep(y, 'perch'))[0] : null;
       if (ch) set(ch, 'perch');
+      const brk = ubots.filter((a) => a !== ch), ok = brk.filter((a) => !busy(a) && a.hp >= 60);
+      const g = (ok.length ? ok : brk).slice().sort((x, y) => hd(x.pos, c) + keep(x, 'grab') - hd(y.pos, c) - keep(y, 'grab'))[0];
+      if (g) set(g, 'grab');
       let i = 0; for (const a of ubots) if (!out.has(a)) set(a, 'break', i++);
     } else if (sit === 'free') {
       const p = Kp.pos;
@@ -788,6 +789,12 @@ export function karpMove(b, P, dt, move, it) {
     const dx = Kp.pos.x - a.pos.x, dz = Kp.pos.z - a.pos.z, l = Math.hypot(dx, dz);
     if (l < 4 && Math.abs(Kp.pos.y - a.pos.y) < 1.2) { move.set(dx / (l || 1), 0, dz / (l || 1)); it.fire = false; it.squid = P.burstTeam === a.team && l < K.shell.burstPaint + 0.3 && b.groundSeen !== 2; }   // (in through our burst's ink as a squid)
     return;
+  }
+  // the shell phase, still far off (> 18 m) and not in a fight: get there — no painting on the way (firing slows a kid by
+  // a quarter), a squid through our ink (the first pop is mostly the walk in: SPEC §9.1's 6–12 s)
+  if (!esc && sit === 'shell' && (b.kRole === 'break' || b.kRole === 'grab') && !(b.mode === 'fight' && b.seeTimer > 0) && b.mode === 'paint'
+    && hd(a.pos, P.restPos()) > 18 && Math.hypot(move.x, move.z) > 0.3 && G.time - (b.kBreaking || -9) > 0.3) {
+    it.fire = false; if (b.groundSeen === 1 && !b._squidWouldDrop(move)) it.squid = true;
   }
   const S = Kp.shell;
   if (S.state === 'none') return;
