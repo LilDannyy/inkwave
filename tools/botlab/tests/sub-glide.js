@@ -70,8 +70,15 @@
   // the local kid's intent is ours: hold / fire / squid; everyone else stands still (their weapons quiet)
   const ctl = { sub: false, fire: false, squid: false };
   const zero = (a) => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.sub = it.special = false; };
-  const stub = (a) => { if (a.bot) a.bot.update = () => { zero(a); if (a === me) { a.intent.sub = ctl.sub; a.intent.fire = ctl.fire; a.intent.squid = ctl.squid; } }; };
+  const stubs = new Map(), stubOf = (a) => stubs.get(a);
+  const stub = (a) => { if (a.bot) { a.bot.update = () => { zero(a); if (a === me) { a.intent.sub = ctl.sub; a.intent.fire = ctl.fire; a.intent.squid = ctl.squid; } }; stubs.set(a, a.bot.update); } };
   for (const a of m.actors) stub(a);
+  // [b5-int3] the loadouts pinned at the start — the local kid's and the foe's weapon, sub and special were the match's
+  // random ones, and parts left state behind for later ones (the 'reach' / 'lock' parts' Bomb Barrage left
+  // me.specialId = 'barrage'; a bot part freed real brains): one throw in 11 made no stone in a full run. Restored at the end.
+  const pinned = [me, foe, mate].map((a) => ({ a, w: a.weaponId, s: a.subId, sp: a.specialId }));
+  const pin = () => { me.setWeapon('shooter'); me.setSub('glide'); me.setSpecial('sonar'); me.special = 0; foe.setWeapon('shooter'); foe.setSpecial('sonar'); foe.special = 0; mate.setSpecial('sonar'); mate.special = 0; };
+  pin();
   const put = (a, p, yaw = 0) => { a.pos.copy(p); a.pos.y += 0.02; a.vel.set(0, 0, 0); a.yaw = a.aimYaw = yaw; a.aimPitch = 0; if (a.bot) { a.bot.aimYaw = yaw; a.bot.aimPitch = 0; } };
   const HOME = V(-20, 0, 36);
   const parkAll = () => others.forEach((a, i) => put(a, V(-24 + (i % 4) * 2, 0, 38 - Math.floor(i / 4) * 2)));
@@ -109,12 +116,33 @@
   const lastItem = () => K.items[K.items.length - 1];
   const inkAt = (x, z) => { const h = G.physics.raycast(V(x, 1, z), V(0, -1, 0), 3); return h && h.hit ? G.paint.sample(h.face, h.u, h.v) : -1; };
   // hold the sub for `held` s (frames at DT), then let go; returns the stone made (or null) and the release time
-  const throwHeld = (held, opts = {}) => {
+  // ([b5-int3] a throw that makes no stone is a FAIL with the kid's and the kit's state — not a TypeError in the caller that
+  // skips the rest of its part — and the throw is tried once more so the part's other checks still run; the FAIL stays)
+  const kidState = () => ({ alive: me.alive, form: me.form, kidT: r2(me.kidT ?? -1), grounded: me.grounded, ink: r2(me.ink), weapon: me.weaponId, sub: me.sub?.kind, special: me.specialId, specialActive: me.specialActive?.kind || null,
+    wr: { aiming: me.weaponRunner.aimingSub, spent: me.weaponRunner.subSpent, latch: me.weaponRunner.subLatch, glide: !!me.weaponRunner.glide, locked: me.weaponRunner.mainLocked, busy: me.weaponRunner.busy() },
+    items: K.items.map((x) => [x.state, x.why]), sj: !!me.superJumpState, carry: !!me.carry, intentSub: me.intent.sub });
+  // (each frame of a throw that made no stone: the intent's sub, the runner's hold, whether the runner and the brain ran)
+  let wrN = 0, brN = 0, trace = null;
+  { const wr = me.weaponRunner, u0 = wr.update; wr.update = function (...args) { wrN++; if (trace) trace.push(['wr', !!args[1]?.sub, this.aimingSub, !!me._spWeapon]); return u0.apply(this, args); }; }
+  const throwOnce = (held, opts) => {
     ctl.sub = true; const n = Math.max(1, Math.round(held / DT));
-    for (let i = 0; i < n; i++) { if (opts.during) opts.during(i); frame(); }
+    trace = []; const w0 = wrN;
+    for (let i = 0; i < n; i++) { if (opts.during) opts.during(i); const b0 = brN; frame(); trace.push(['f', me.intent.sub, me.weaponRunner.aimingSub, me.form, wrN - w0, !!me.bot, me.bot?.update === stubOf(me)]); }
     const before = K.items.length;
     ctl.sub = false; frame();
-    return { it: K.items.length > before ? lastItem() : null, t: G.time };
+    const T0 = trace; trace = null;
+    return { it: K.items.length > before ? lastItem() : null, t: G.time, trace: T0 };
+  };
+  const throwHeld = (held, opts = {}) => {
+    const st0 = kidState();
+    let r = throwOnce(held, opts);
+    if (!r.it) {
+      R(`a ${held} s throw made no stone (${opts.what || 'a throw'})`, false, { before: st0, after: kidState(), frames: r.trace });
+      step(0.2); me.ink = PLAYER.inkMax;
+      r = throwOnce(held, opts);
+      if (!r.it) throw new Error(`no stone twice (${opts.what || 'a throw'}): ${JSON.stringify(kidState())}`);
+    }
+    return r;
   };
   // slide a stone to its end; returns { blast: { x, z, r, t } | null, end }
   const runOut = (it, s = 4) => { until(() => it.state === 'dead', s); const b = ev('bomb:explode').filter((x) => x.e.kind === 'glide').pop(); return b ? { x: b.e.pos.x, y: b.e.pos.y, z: b.e.pos.z, r: b.e.radius, t: b.t } : null; };
@@ -445,6 +473,31 @@
     if (want('bots')) {
       // a fighting bot (B) and a foe standing 10 m off, in sight
       const B = foes[1] || foes[0], T = mates[1] || mate;
+      // ([b5-int3] B's weapon pinned — a Splattershot here, then a Cutlass and the Mitts below: it was the match's random
+      // one, and a melee kit walked in while cooking, so the check passed or failed by the draw)
+      const bw0 = B.weaponId;
+      const fightRounds = (wid, n) => {
+        const rows = [];
+        for (let round = 0; round < n; round++) {
+          reset();
+          B.setWeapon(wid);
+          put(T, V(0, 0, -10), Math.PI); put(B, V(0, 0, -20), 0);
+          B.setSub('glide'); B.ink = 100;
+          delete B.bot.update; B.bot.bombCd = 0;
+          let it = null, rel = null; const fz0 = GLIDE_STATS.fizzles;
+          step(8, () => { B.ink = Math.max(B.ink, 80); T.pos.set(0, 0.02, -10); T.vel.set(0, 0, 0); if (!it) { it = K.items.find((x) => x.owner === B && x.state !== 'dead'); if (it) rel = r2(Math.hypot(B.pos.x - T.pos.x, B.pos.z - T.pos.z)); } return !it; });
+          stub(B);
+          const b = it ? runOut(it, 4) : null;
+          rows.push({ w: wid, thrown: !!it, cook: it && r2(it.cook), relD: rel, off: b ? r2(Math.hypot(b.x - T.pos.x, b.z - T.pos.z)) : null, fizzled: GLIDE_STATS.fizzles - fz0 });
+        }
+        return rows;
+      };
+      for (const [wid, n] of [['blade', 2], ['mitts', 2]]) {
+        const rr = fightRounds(wid, n);
+        R(`a ${wid === 'blade' ? 'Cutlass' : 'Mitts'} bot's fight throw plants: let go ≥ 5 m from the foe (or early), never a fizzle (${n} rounds) — released at ${rr.map((x) => x.relD).join(' / ')} m`,
+          rr.every((x) => x.thrown && x.relD >= 5 && !x.fizzled), rr);
+      }
+      B.setWeapon('shooter');
       let ok = 0; const rows = [];
       for (let round = 0; round < 3; round++) {
         reset();
@@ -459,10 +512,11 @@
         const off = b ? Math.hypot(b.x - T.pos.x, b.z - T.pos.z) : null;
         const r0 = it && K.items.length >= 0 ? null : null;
         rows.push({ thrown: !!it, cook: it && r2(it.cook), off: off && r2(off), stop: it && [r2(it.p.x), r2(it.p.z)], B: [r2(B.pos.x), r2(B.pos.z)], fights: GLIDE_STATS.botFight, fizzles: GLIDE_STATS.fizzles, rel, start: it && [r2(it.p.x), r2(it.p.z)] });
-        if (off != null && off <= 2) ok++;
+        const relD = rel ? r2(Math.hypot(rel[0] - T.pos.x, rel[1] - T.pos.z)) : null; rows[rows.length - 1].relD = relD;
+        if (off != null && off <= 2 && relD != null && relD >= 6) ok++;   // ([b5-int3] and let go ≥ 6 m out: a point-blank full cook that clonked off the foe's shins stopped ≤ 2 m too)
       }
       B.setSub(B.subId); delete B.bot._glide;
-      R('a fighting bot throws one at a foe 10 m off, cooked so it stops within 2 m of them (3 rounds, ≥ 2)', ok >= 2, rows);
+      R('a fighting bot (a Splattershot) throws one at a foe 10 m off, let go ≥ 6 m out, cooked so it stops within 2 m of them (3 rounds, ≥ 2)', ok >= 2, rows);
       // a foe 2.5 m from the deck's edge (x 28, the sea past it) running at it on a slant (3, 3 m/s, held in place): the
       // led slide passes beside the foe (3 m off) and over the edge, into the sea or blowing in the air over it. The bot's
       // plan and its release check the slide (the guide's prediction): it throws at where the foe stands instead (or not at
@@ -482,7 +536,7 @@
         if (it) { thrownE++; until(() => it.state === 'dead', 4); offDeck = /^sunk/.test(it.why || '') || L.groundHeight(it.p.x, it.p.z, it.p.y + 0.1) === -Infinity; if (offDeck) sunkE++; }
         rowsE.push({ thrown: !!it, why: it && it.why, offDeck, cook: it && r2(it.cook), stop: it && [r2(it.p.x), r2(it.p.y), r2(it.p.z)], retarget: GLIDE_STATS.botRetarget - g0.botRetarget, refused: GLIDE_STATS.botNoSink - g0.botNoSink, relAlt: GLIDE_STATS.botRelAlt - g0.botRelAlt, cancel: GLIDE_STATS.botCancel - g0.botCancel, B: [r2(B.pos.x), r2(B.pos.z)] });
       }
-      B.setSub(B.subId); delete B.bot._glide;
+      B.setSub(B.subId); delete B.bot._glide; B.setWeapon(bw0);   // [b5-int3] (its weapon back)
       R('a fighting bot\'s foe by the deck\'s edge, running at it on a slant: the led slide would leave the deck — the bot throws at where the foe stands instead (or holds off); no stone sinks or blows over the sea (4 rounds: ≥ 2 thrown, 0 off the deck)', thrownE >= 2 && sunkE === 0, { thrown: thrownE, offDeck: sunkE, rows: rowsE });
       // a bot in a predicted stop disc: out of it before the blast (botSpecials' escape: hard, its awareness on), or it
       // shoots the stone (bots.js threats). The thrower goes behind the wall at once (no fight to distract it). A round
@@ -615,7 +669,7 @@
       R('a Bomb Barrage\'s Glide (a stand-in barrage handing it out): a held throw never cooks (R 2.2) and never stops the main weapon', bs && Math.abs(bs.R - 2.2) < 1e-6 && bs.sp && sh3.length >= 8 && Math.max(...gaps3) <= WEAPONS.shooter.fireInterval * 2 + 1e-6,
         { R: bs && bs.R, sp: bs && bs.sp, shots: sh3.length, maxGap: r3(Math.max(...gaps3)), inkUsed: r2(ink3 - me.ink) });
       G.specials.end?.(me, 'test'); me.specialActive = null;
-      me.setWeapon(me.weaponId);
+      me.setWeapon(me.weaponId); pin();   // [b5-int3] (the barrage's specialId and gauge put back)
     }
 
     // ============================================================================================ crushIn (SPEC A5, §0.3)
@@ -894,6 +948,7 @@
     netOff(); park();
     delete G.match.lava; delete G.objTargets;
     for (const a of m.actors) { delete a.bot?.update; if (a.bot) { delete a.bot._glide; delete a.bot._glideNoT; } }
+    for (const q of pinned) { q.a.setWeapon(q.w); q.a.setSub(q.s); q.a.setSpecial(q.sp); }   // [b5-int3]
     G.subs.clear(); P.clear();
   }
   return out;

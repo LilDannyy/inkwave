@@ -1094,6 +1094,14 @@ export class BotBrain {
   _tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim = null, enemyVisible = false) {
     const a = this.a, it = a.intent, w = a.weapon;
     if ((a.weaponRunner.mainLocked || a.weaponRunner.glide) && !this.sp.esc) it.squid = false;   // [b5-sub-glide] cooking a held sub (a Glide Bomb, its grace too): no dive (it would drop the cook) — but out of a danger, yes
+    // [b5-int3] …and a real plant, whatever set the move this frame (fight footwork, a threat, a device, a kit's botAct):
+    // no step toward its target (sidesteps only, at half pace), no hop — the cook is planned from where it stands; a melee
+    // kit walked 9 m in and threw point-blank at full cook (sub-glide 'bots')
+    if ((a.weaponRunner.mainLocked || a.weaponRunner.glide) && !this.sp.esc && this.target?.pos) {
+      const tx = this.target.pos.x - a.pos.x, tz = this.target.pos.z - a.pos.z, tl = Math.hypot(tx, tz);
+      if (tl > 0.1) { const f = (move.x * tx + move.z * tz) / tl; if (f > 0) { move.x -= (tx / tl) * f; move.z -= (tz / tl) * f; } }
+      move.multiplyScalar(0.5); it.jump = false;
+    }
     // throws and placements only happen in humanoid form: stay upright for the press and the release
     if (this._bombAim) { it.sub = true; it.squid = false; this._bombAim = false; this._releaseBomb = true; }
     else if (this._releaseBomb) { it.sub = false; it.squid = false; this._releaseBomb = false; }

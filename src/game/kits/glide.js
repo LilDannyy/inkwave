@@ -43,7 +43,7 @@
 // 'glide:bounce' { pos, kind: 'wall' | 'player' | …, speed, team }, 'bomb:explode' { actor, pos, team, radius, kind: 'glide' },
 // 'device:hit' / 'device:down' (shot down), 'sub:destroyed' { kind: 'glide', pos, team }, 'glide:end' { why, pos, team }.
 import * as THREE from 'three';
-import { G, emit, on, clamp, lerp } from '../../core/ctx.js';
+import { G, emit, on, clamp, lerp, angleDiff } from '../../core/ctx.js';
 import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './registry.js';
 import { Physics, Hit } from '../physics.js';
@@ -962,7 +962,12 @@ function fight(brain, dist) {
   if (!t || !t.alive || !(brain.seeTimer > 0) || dist < 5 || dist > 15 || Math.abs(t.pos.y - a.pos.y) > 1.2 || a.ink < s.inkCost + 5) return false;
   // (mostly 5–11 m, where the cook shortens the fuse and grows the blast; past 11 m it is a near-uncooked 2.2 m blast that
   // a foe has two seconds to step out of: a quarter of the chance)
-  if (Math.random() > 0.03 * (1 + brain.diff.fireDiscipline) * (dist <= 11 ? 1 : 0.25)) return false;
+  // ([b5-int3] and twice as often at a foe committed elsewhere — facing more than ~60° away from us, as a player sees it:
+  // busy with a teammate, it steps out of a slow stone's lane late; the matches had 4 fight throws in 150 s, mostly
+  // uncooked from past 11 m)
+  const away = Math.abs(angleDiff(t.aimYaw ?? t.yaw, Math.atan2(a.pos.x - t.pos.x, a.pos.z - t.pos.z))) > 1.05;
+  if (Math.random() > 0.03 * (1 + brain.diff.fireDiscipline) * (dist <= 11 ? 1 : 0.2) * (away ? 2 : 1)) return false;
+  if (away) GLIDE_STATS.botAway = (GLIDE_STATS.botAway || 0) + 1;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, t.pos.x, t.pos.z) || !brain._fatLos(a.pos.x, a.pos.y - 0.15, a.pos.z, t.pos.x, t.pos.y - 0.15, t.pos.z)) return false;
   // the planned slide must stay on the stage (the guide's prediction, ignoring kids): at the cook that stops it on the
   // foe's led spot; if that goes over an edge / into a liquid, at the cook that stops it where they stand; else no throw
@@ -1067,8 +1072,13 @@ function botHold(a, st, inp, s) {
     if (t && t.alive && t.pos) {
       P.t = t;
       st.aimAt = st.aimAt || { x: 0, z: 0 };
-      const f = fightMark(a, t, s, P.led, st.aimAt), need = clamp(s.fuse - f, 0, s.cookMax);
-      keep = st.cook < need - 1e-6 && st.held < s.cookGrace + s.cookMax;
+      const f = fightMark(a, t, s, P.led, st.aimAt), needNow = clamp(s.fuse - f, 0, s.cookMax);
+      // ([b5-int3] the cook is the plan's — from where it stood when it planned, +0.3 s at most as the foe moves — not one
+      // re-solved upward as it closes in; and a foe inside 4 m gets what's cooked now: a cook chased to full point-blank
+      // clonked off shins or fizzled)
+      if (P.need0 == null) P.need0 = needNow;
+      const need = Math.min(needNow, P.need0 + 0.3), dT = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
+      keep = st.cook < need - 1e-6 && st.held < s.cookGrace + s.cookMax && dT > 4;
     }
   }
   keep = keep && a.alive && a.form === 'kid';
