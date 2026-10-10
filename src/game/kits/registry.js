@@ -25,6 +25,13 @@ import { G } from '../../core/ctx.js';
 //                                        hp, hpMax, live, blocksActors, left, and launched only: pos (foot), halfW (players
 //                                        are held back over ±halfW along the wall), planeOff (the blocking plane sits
 //                                        planeOff along N from pos), speed }
+//   [b5-sub-dash] (tools/botlab/jobs/batch5/subs/SPEC.md §0.5)
+//   blockActor?(actor)                 a kit wall for players: push this actor out of what the kit holds up (subs.js
+//                                      blockActor, right after every actor's move and inside every dash substep; the
+//                                      Brolly: a launched canopy holds enemies back). Idempotent
+//   letGo?(runner, why)                drop whatever holds the body still (the Mitts: a wall cling) — a dash leaving it
+//   dropCharge?(runner) → bool         drop a charge that outlives a dive (the Cutlass cut, the Mitts leap) without its
+//                                      shot: a sub that locks the main weapon (lockMain) starts
 // }
 // SUB_KITS[kind] = {
 //   use(subs, actor, sub)              REQUIRED — the throw / placement on release (SubSystem.use)
@@ -65,6 +72,22 @@ import { G } from '../../core/ctx.js';
 //   smash?(c, r, team, front(pos) → bool)  a Mega Stamp's swing guard at c (reach r) smashes the kit's enemy bombs in front of it
 //   dropOwner?(actor)                  online: a player who left takes this kit's objects with them (netmatch onLeave / _remove)
 //   prompt?(actor) → string | null     a light-tutorial hint for the local player (main.js; richText: [RMB], {RB} …)
+//   [b5-sub-dash] (SPEC §0.5; the Dash Pellet, kits/dash.js)
+//   onPress?: true                     the sub acts on the PRESS (WeaponRunner.trySubPress, run in actor.update before the
+//                                      move), never the release; latched until a real release with the body free (no
+//                                      pipe, super jump or body special). Refused silently in squid form, while carrying,
+//                                      during a Bomb Barrage, or while a special owns the sub button (G.specials.ownsSub:
+//                                      the Zipline, any that replaces the main weapon); WeaponRunner.update skips its sub
+//                                      block for it
+//   blockedWhy?(actor, sub) → string   the reason line under "CAN'T USE" ('sub:cantuse' { reason })
+//   lockMain?(runner) → bool           the sub locks the main weapon now: a charge / stream / wind-up is dropped (runner
+//                                      dropCharge) the frame it starts, fire is masked, runner.mainLocked dims the reticle
+//   blockActor?(actor)                 as MAIN_KITS (the dash: the Roe Shell and enemy bubbles, while dashing)
+//   botAct?(brain, dt, it, move, busy, bossTh?) → { yaw, pitch } | null   the kit's own bot moves, for every bot, last
+//                                      before the think's _tail (turf think; Boss Battle's with bossTh, its telegraphs at
+//                                      the bot). A press: set brain._bombAim (and, the dash, brain.dashDir); an aim
+//                                      returned is held this frame
+//   prompt?(actor, dt) → string | null   a first-time tip for the local player (main.js prompt chain)
 // }
 //
 // Online (src/net/netmatch.js), any kit:

@@ -1543,11 +1543,12 @@ class Game {
     this._hintT += dt;
     let prompt = null;
     const inkF = a.ink / PLAYER.inkMax;
+    const kitTip = m.state === 'playing' && a.alive && !m.attract ? SUB_KITS[a.sub?.kind]?.prompt?.(a, dt) || null : null;   // [b5-sub-dash]
     if (m.state === 'playing' && a.alive) {
       if (m.controller?.mapHeld) prompt = null;   // the map diorama carries its own super-jump hints
       else if (a.superJumpState) prompt = null;
       else if (this._lowInkFlash > 0) { this._lowInkFlash -= dt; prompt = 'Low ink! Hold SHIFT in your ink to refill'; }
-      else if (SUB_KITS[a.sub?.kind]?.prompt?.(a)) prompt = SUB_KITS[a.sub.kind].prompt(a);   // [b5-sub-glide] a kit sub's hint (the Glide Bomb: hold to cook)
+      else if (kitTip) prompt = kitTip;   // [b5-sub-glide] / [b5-sub-dash] the own kit sub's hint (the Glide Bomb: hold to cook; the Dash Pellet's first-time tip; the Chain Bobber's first throw) — [b5-int3] one call a frame
       else if (a.specialReady() && (this._hints.specialT = (this._hints.specialT || 0) + dt) > 2) prompt = `Special ready! Press F`;
       else if (inkF < 0.25 && a.form !== 'squid') prompt = 'Hold SHIFT to swim in your ink and refill';
       else if (m.tower?.homing && m.tower.owner === a.team && (this._hints.homeT = (this._hints.homeT || 0) + dt) < 4) prompt = 'Your tower rolls home by itself on your half — go defend it!';
@@ -1583,7 +1584,8 @@ class Game {
       this.minimap.toCanvas(d.x, d.z, t); d.mx = t.x / this.minimap.w; d.my = t.y / this.minimap.h;
     }
     // [b5-subs] a kit sub's own prompt (the Chain Bobber's: first throw, the teammate cue) — under the low-ink flash
-    if (m.state === 'playing' && a.alive && !(this._lowInkFlash > 0)) for (const k in SUB_KITS) { const kp = SUB_KITS[k].prompt?.(a); if (kp) { prompt = kp; break; } }
+    // ([b5-int3] the other kits only: the own sub's prompt is kitTip above, asked once a frame with dt)
+    if (m.state === 'playing' && a.alive && !(this._lowInkFlash > 0)) for (const k in SUB_KITS) { if (k === a.sub?.kind) continue; const kp = SUB_KITS[k].prompt?.(a); if (kp) { prompt = kp; break; } }
     const stP = m.stage && a.alive ? m.stage.prompt(a) : null;   // [b5-stagehooks] a stage module's prompt (a pipe mouth …)
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
     else if (stP) prompt = stP;   // [b5-stagehooks]

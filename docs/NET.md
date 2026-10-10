@@ -137,7 +137,10 @@ remaining player becomes host and adopts the bots, clock and judge.
 
 **Path.** Positions are a cubic Hermite through the owner's samples using the owner's velocities (C1: no corners at
 tick boundaries); vertical motion never dips through a floor either end stands on. Past the newest sample it
-extrapolates ballistically for at most 180 ms, then holds. A teleport counter (`netTp`, bumped on respawn) makes
+extrapolates ballistically for at most 180 ms, then holds — except past a sample flagged `F.dash` (bit 23, `[b5-sub-dash]`:
+the owner is mid Dash Pellet dash, 29 m/s), which holds at once: 180 ms at that speed is 5 m through whatever is ahead,
+then a snap back, and shots on that screen would be judged against the wrong spot. The dash lasts 0.22 s (about 4
+ticks), so most of it is interpolated between real samples anyway, and the damped correction carries it on. A teleport counter (`netTp`, bumped on respawn) makes
 proxies cut instead of gliding across the map; a respawning squidkid stays hidden until its new life's first sample.
 
 **Corrections.** The only discontinuities are new data rewriting a moment already shown (leaving an extrapolation,
@@ -201,6 +204,16 @@ crushes it (its kit device descriptor says `crushable: false`, which `G.deploy.c
 Roe Shell, lava and era-flip sweeps); a moving floor carries it on every screen alike, and the tower's and every mover's
 sides are walls it bounces off. Tested by `tools/botlab/tests/net-sub-glide.cjs` (`CLIENTS=2`; `NET_ARGS='scene=hostleave'`:
 the host leaves with its bot's stone and its own sliding — both ghosts end at `onLeave` on the guest, no blast).
+**Dash Pellet** (`[b5-sub-dash]`, src/game/kits/dash.js). The owner simulates the dash and records one word per press,
+`['k', nid, 'dash', [0, gid, x, y, z, dx, dz, air]]`: every screen plays the pop, its blast look and sound and the speed
+ribbon at that take-off point (a ghost's blast never hurts and never paints). The motion itself is the owner's actor
+tick (`F.dash` while it runs: never extrapolated, see *Path*); the forward-roll clip is the owner's `['tr', nid, 'roll',
+{x, y, z, dur}]`. The blast's hits are judged on the dasher's screen and applied by each victim's owner (`{k:'hit'}`,
+`weaponId 'dash'`; a Drainbow halves them there, from the take-off point), its devices' damage goes the usual way
+(`G.subs.damageArea` → `{k:'dh'}` for a ghost device), and its paint and the ground streak are the owner's splats.
+Nothing outlives the dash, so a leaving player hands nothing over. The press itself is local: the runner's press latch
+(`trySubPress` / `subLatch`) and the "Can't use" refusals (`'sub:cantuse'` with its `reason`) never cross the wire.
+`tools/botlab/tests/net-sub-dash.cjs` (`CLIENTS=2`).
 Statuses: every screen's ghost subs track / poison the players they touch there too (the timers run out on remote
 players as well); the owner's own word — tracked, poisoned — rides the actor tick's flags (`F.tracked`, `F.poisoned` →
 `a.netStatus`), so the tracked look and the poison bubbles (src/game/statusFx.js) show on every screen while they last.

@@ -126,6 +126,7 @@ export const SUB_CUE = {
   boomerang: { beep: ['boomerang_tick', 0.8], boom: ['boomerang_blast', 1] },
   glide: { throw: ['glide_release', 0.9], boom: ['glide_boom', 1], end: ['glide_pop', 0.9] },   // [b5-sub-glide] (its slide: the glide_slide loop)
   bobber: { throw: ['bobber_throw', 0.9], land: ['bobber_inflate', 0.85], boom: ['bobber_boom', 1], end: ['bobber_disarm', 0.9] },   // [b5-subs] (sfx-bobber.js; its boom: bobber.js per hop level)
+  dash: { throw: ['dash_whoosh', 0.9], boom: ['dash_pop', 1] },   // [b5-sub-dash] the dash's rush of air; the pop it leaves behind (kits/dash.js)
   smash: { end: ['sub_smash', 0.9] },   // a device the Mega Stamp's guard smashed before it went off
   // [b5-subs] the Scrap Sentry (src/audio/sfx-sentry.js): set down (a tin clatter), unfolded (a ratchet and a boing), its
   // lock on someone ("bip-bip"), shot down (a can crumple); its servo hum is a loop (_gather), its rounds' "pft" its own

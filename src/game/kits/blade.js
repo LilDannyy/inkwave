@@ -678,6 +678,8 @@ MAIN_KITS.blade = {
     R.charge = K.charge;
   },
   reset(R) { stopHum(R); },
+  // [b5-sub-dash] a dash (kits/dash.js) drops a held charge without the cut (it keeps through a dive, not a dash)
+  dropCharge(R) { const K = R.kit; if (!K || !K.charging) return false; cancelCharge(R, K); K.held = false; return true; },
   // (a charge doesn't make the runner busy: you can dive with it held — see chargeStore — and swim on)
   busy(R) { const K = R.kit; return !!K && !!K.swing; },
   firingPose(R) { const K = R.kit; return !!K && (K.charging || (!!K.swing && K.swing.t < 0.3)); },

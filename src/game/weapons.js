@@ -67,6 +67,11 @@ export class WeaponRunner {
     this.kit = null;   // kit weapons (kits/*.js) keep their per-runner state here
     this.subSpent = false; this.mainLocked = false;   // [b5-sub-glide] (SPEC §0.5: a held press already used; the sub locks the main weapon)
     MAIN_KITS[this.a?.weapon?.kind]?.reset?.(this);
+    // [b5-sub-dash] an onPress sub (the Dash Pellet, SPEC §0.5 / D1.5): any reset (death, spawn, super jump, a pipe, a
+    // pick-up, a loadout swap) ends a dash at ≤ endSpeed, gives the air dash back, and the button must be let go first
+    if (this.dashT > 0) this.endDash();
+    this.dashT = 0; this.dashAirRule = false; this.airDashUsed = false; this.subLatch = true; this.mainLocked = false;
+    this.dashDir = this.dashDir || new THREE.Vector3();
   }
   onDeath() { this.reset(); }
   // Swim pressed over the weapon (actor.js: the latest press of swim / fire / sub wins): let go of what the weapon is
@@ -84,8 +89,10 @@ export class WeaponRunner {
     if (MAIN_KITS[this.a.weapon?.kind]?.cancel?.(this)) did = true;
     return did;
   }
-  dropCharge() { return this.cancelForSwim(true); }   // [b5-sub-glide] a charge / stream / wind-up let go without firing; the sub stays in hand
-  busy() { return this.charging || this.flick >= 0 || this.burstT > 0 || this.dodgeT > 0 || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.busy?.(this); }
+  // [b5-sub-dash] a sub that locks the main weapon (SPEC §0.5 lockMain) drops a charge / stream / wind-up without a shot
+  // (kit weapons whose charge outlives a swim — the Cutlass's, the Mitts' leap — drop theirs in MAIN_KITS[k].dropCharge)
+  dropCharge() { const did = this.cancelForSwim(true); return !!MAIN_KITS[this.a.weapon?.kind]?.dropCharge?.(this) || did; }
+  busy() { return this.charging || this.flick >= 0 || this.burstT > 0 || this.dodgeT > 0 || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || this.dashT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.busy?.(this); }   // ([b5-sub-dash] dashT: no diving mid-dash)
   firingPose() { return this.firingT > 0 || this.charging || this.flick >= 0 || this.rolling || this.burstT > 0 || this.turret || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.firingPose?.(this); }
   moveSpeed() {
     { const K = MAIN_KITS[this.a.weapon?.kind]; const v = K?.moveSpeed?.(this, this.a.weapon); if (v) return v; }
@@ -134,8 +141,9 @@ export class WeaponRunner {
 
   update(dt, inp) {
     const a = this.a, w = a.weapon;
-    // [b5-sub-glide] the sub first (SPEC §0.5): one held that locks the main weapon (a cooking Glide Bomb) masks the
-    // trigger; the frame the lock starts, a charge / stream / wind-up is dropped without firing (the sub stays in hand)
+    // [b5-sub-glide] the sub first (SPEC §0.5): one held that locks the main weapon (a cooking Glide Bomb; [b5-sub-dash] the
+    // Dash Pellet while dashing) masks the trigger; the frame the lock starts, a charge / stream / wind-up is dropped
+    // without firing (the sub stays in hand)
     const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
     const sub = bar ? bar.bomb : (a.sub || SUB.bomb);
     const SK = SUB_KITS[sub.kind];
@@ -165,6 +173,7 @@ export class WeaponRunner {
     }
     // ---- sub weapon (the actor's own: the Splat Bomb here, everything else via G.subs). Bomb Barrage: its bomb,
     // no ink, as fast as its throw gap allows ([b5-sub-glide] bar / sub / SK: computed at the top)
+    if (SK?.onPress && !bar) { this.aimingSub = false; return; }   // [b5-sub-dash] an onPress sub acts on the press (trySubPress), never here
     // [b5-sub-glide] a held press already used (the Glide's slip threw while the button was still down): no new hold, the
     // release throws nothing; cleared once the button is up
     if (this.subSpent) { this.aimingSub = false; if (!inp.sub && !inp.subReleased) this.subSpent = false; }
@@ -563,6 +572,8 @@ Object.assign(WeaponRunner.prototype, {
   // intent (or a bare move vector). Returns true if a roll started.
   tryDodge(intent) {
     const k = this.a.weapon.kind;
+    // [b5-sub-dash] no roll during a dash (SPEC D1.4): a roll press then is swallowed (true: no roll, and no jump after)
+    if (this.dashT > 0) return (k === 'twins' || k === 'dualies') && !!intent?.move && Math.hypot(intent.move.x, intent.move.z) >= 0.3 && (k === 'twins' ? !!intent.fire : this.firingT > 0 || !!this.a.intent.fire);
     if (k === 'twins') return !!intent && intent.move !== undefined && this._twinDodge(intent);
     if (k === 'dualies') return this._dualDodge(intent && intent.move ? intent.move : intent);
     return false;
@@ -606,6 +617,48 @@ Object.assign(WeaponRunner.prototype, {
   endDodge() {
     this.dodgeT = 0; this.turret = false;
     this.dodge = null; this.lockT = 0;
+    this.endDash();   // [b5-sub-dash] (a special taking the body / the trigger ends a dash too)
+  },
+
+  // ---- [b5-sub-dash] onPress subs (SPEC §0.5) and the Dash Pellet's motion (D1). actor.js calls trySubPress before the
+  // move (so the press frame moves), sets the horizontal velocity from dashVelocity, runs the frame's movement in ≤ 0.2 m
+  // substeps while dashT > 0 and then tickDash. The kit (kits/dash.js use) starts it with startDash.
+  trySubPress(held, pressed) {
+    const a = this.a, sub = a.sub, SK = sub && SUB_KITS[sub.kind];
+    if (!SK?.onPress) return;
+    const free = !a.pipe && !a.superJumpState && !a.specialActive?.body;
+    if (!held) { if (free) this.subLatch = false; return; }        // a real release, with the body free
+    if (!pressed || this.subLatch) return;
+    this.subLatch = true;
+    // (a special that owns the sub button — the Zipline's tether, any that replaces the main weapon — takes the press
+    // silently: G.specials.ownsSub, from the special's first frame; _spWeapon is last frame's word)
+    if (a.form === 'squid' || a._spWeapon || a.carry || a.specialActive?.kind === 'barrage' || (a.specialActive && G.specials?.ownsSub?.(a.specialActive))) return;
+    if (SK.blocked?.(a, sub)) emit('sub:cantuse', { actor: a, kind: sub.kind, reason: SK.blockedWhy?.(a, sub) || '' });
+    else if (a.ink < sub.inkCost) { if (a.isLocal) { G.audio?.play('low_ink'); emit('lowink', { actor: a, need: sub.inkCost }); } }
+    else { a.ink -= sub.inkCost; a.lastFire = 0; G.subs.use(a, sub); }
+  },
+  // a dash of dist m over dur s along (dx, dz): v(u) = v0 (1 − 0.6 u), u 0 → 1 (the Twinfire roll's profile), then
+  // endSpeed; air: the air rules (the vy clamp, low gravity falling) from its first frame
+  startDash(dx, dz, dist, dur, endSpeed, air) {
+    this.dashDir.set(dx, 0, dz); this.dashDur = dur; this.dashT = dur; this.dashV0 = dist / (0.7 * dur); this.dashDist = dist;
+    this.dashEnd = Math.min(endSpeed, 0.4 * this.dashV0); this.dashAirRule = !!air; this.dashAir = !!air;
+  },
+  // this frame's horizontal velocity: the dash's average over [t, t + dt] (exact distance at any frame rate; a frame
+  // that runs past the end carries endSpeed for the rest of it), or null
+  dashVelocity(out, dt = 1 / 60) {
+    if (!(this.dashT > 0)) return null;
+    const D = this.dashDur, v0 = this.dashV0, t0 = D - this.dashT, t1 = t0 + dt;
+    const x = (t) => v0 * (t - 0.3 * t * t / D);
+    const s = t1 <= D ? x(t1) - x(t0) : this.dashDist - x(t0) + this.dashEnd * (t1 - D);
+    return out.copy(this.dashDir).multiplyScalar(s / Math.max(dt, 1e-6));
+  },
+  tickDash(dt) { if (this.dashT > 0) { if (this.dashT - dt > 1e-6) this.dashT -= dt; else this.endDash(); } },
+  // the one way a dash ends (its time up, a reset, a roll's end, a special): the horizontal speed down to endSpeed
+  endDash() {
+    if (!(this.dashT > 0)) return;
+    this.dashT = 0;
+    const v = this.a.vel, s = Math.hypot(v.x, v.z), E = this.dashEnd ?? 7;
+    if (s > E) { v.x *= E / s; v.z *= E / s; }
   },
 
   // brush: hold fire while running to brush a thin fast trail (light contact damage, never a one-hit splat);

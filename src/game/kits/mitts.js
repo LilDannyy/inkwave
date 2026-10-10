@@ -878,6 +878,9 @@ MAIN_KITS.mitts = {
   update,
   jump,
   busy: (r) => !!(r.kit && r.kit.mitts && r.kit.leaping),
+  // [b5-sub-dash] a dash (kits/dash.js, SPEC §0.5 / D1.5): let go of the wall first; a leap charge is dropped, no leap
+  letGo: (r, why) => { if (r.kit && r.kit.mitts) dropCling(r, r.kit, why); },
+  dropCharge: (r) => { const k = r.kit && r.kit.mitts ? r.kit : null; if (!k || !k.charging) return false; cancelCharge(r, k); return true; },
   // leap armour: an incoming leap is otherwise picked off before it lands — mid-air (and on the landing beat) the kid
   // takes W().leapArmor of any damage. Sponge guard: punching with the gloves up (and a beat after), a hit from the
   // front (within guardArc° of the facing) takes W().guardArmor — the sponge soaks part of it (a squish off the gloves).

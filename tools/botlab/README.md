@@ -200,6 +200,15 @@ unaimed fire set off: its weapon, mode, distance and angle off its aim, whether 
 web arm — bots stop at 4): `MAP=halyard MODE=zones PAGE=tools/botlab/tests/bobber-web.js …page.cjs` (also treehills;
 `PAGE_ARGS='n=12,24 layout=lane,zone variant=trigger,clear reps=10'`: lethal area per trigger, splats per 100 ink, the share
 disarmed first, the time to clear one; the Mac mini's `jobs/batch5/sub-bobber/JOB-1.sh` / `JOB-2.sh` run the full set).
+Dash Pellet (`[b5-sub-dash]`, src/game/kits/dash.js — the press, the dash in ≤ 0.2 m substeps, the blast left behind):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-dash.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs`
+(PAGE_ARGS picks sections: press, dir, height, limits, blast, walls, edges, hud, bots); online, `CLIENTS=2 Q0=autopilot
+Q1='autopilot&netlag=150&netjitter=60' NET=tools/botlab/tests/net-sub-dash.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`;
+the stage audit, any stage: `MAP=<id> PAGE=tools/botlab/tests/dash-reach.js WATCHDOG=900000 … page.cjs` (every edge
+node in one run, 1–6 min locally; `dt=24` the same at 1/24 s; `step=N;off=k` a part, every `off` from 0 to N − 1 tiling a
+full audit; `air=<m>` a what-if air dash; `climb=0` leaves out the dashes off a wall climb; Cargo Terminal with
+`DEVSTAGE=1`); in matches, `SUBS='all=dash'` adds a DASH line to match.cjs
+(`DASH_AI=0`: bots never dash).
 
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,

@@ -66,6 +66,7 @@
     ...(K.glide.items || []).map((it) => ['glide', it.state, v4(it.p), r4(it.hp), r4(it.fuse)]),   // [b5-sub-glide]
     ...(K.sentry.items || []).map((it) => ['sentry', it.state, v4(it.pos), r4(it.hp), r4(it.headYaw), r4(it.headPitch), it.target ? 1 : 0]),   // [b5-subs]
     ...(K.bobber?.items || []).map((it) => ['bobber', it.state, v4(it.pos), v4(it.spot), r4(it.hp), it.ten.length]),   // [b5-subs]
+    ...[...(K.dash?._live || [])].map(([a, D]) => ['dash', v4(a.pos), r4(a.weaponRunner.dashT), D.acc != null ? r4(D.acc) : 0]),   // [b5-sub-dash] (the dasher)
   ];
   function snap() {
     rec.push(['f',
@@ -94,6 +95,7 @@
     glide: (it) => it.m.model,   // [b5-sub-glide]
     sentry: (it) => it.m.model,   // [b5-subs]
     bobber: (it) => K.bobber.drawNode(it),   // [b5-subs] (drawn instanced: a stand-in node at its drawn size)
+    dash: (p) => p.m,   // [b5-sub-dash] (the pellet at the take-off point)
   };
   function localSize(node) {
     node.updateWorldMatrix(true, true);
@@ -210,6 +212,12 @@
       rec.push(['hitR', edge((dz) => !!K.bobber.shotProbe(V(p.x - 3, p.y, p.z + dz), V(p.x + 3, p.y, p.z + dz)), 0, 2), 'hitTop', edge((y) => !!K.bobber.shotProbe(V(p.x - 3, y, p.z), V(p.x + 3, y, p.z)), p.y, p.y + 1)]);
       G.subs.blockShot(V(p.x, p.y + 2, p.z), V(p.x, p.y - 0.5, p.z), me.team, 36, me);
       run(60, () => a.state === 'dead' && b.state === 'dead'); run(20);
+    },
+    // [b5-sub-dash] a dash along +x: the pellet popping at the take-off point (a foe just behind it), the dash, its streak
+    dash(o) {
+      put(foe, V(T.x - 0.4, 0, T.z), 0);
+      me.bot.dashDir = { x: 1, z: 0 }; G.subs.use(me, SUBS.dash); o.first(last(K.dash._pellets));
+      run(40);
     },
   };
 

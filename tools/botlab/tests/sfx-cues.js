@@ -236,6 +236,24 @@
       R(`${SUBS[kind].name}: its windup warning (${cue.warn[0]}) plays as it stops to burst, ${D} s before the blast (the enemy's positional)`, wl != null && Math.abs(wl - D) < 0.04 && !!wp.pos, { lead: wl, delay: D });
     }
   }
+  // [b5-sub-dash] an enemy's Dash Pellet (no flight, nothing that lasts): its pop (SUB_CUE.dash.boom, dash_pop) and its rush
+  // of air (SUB_CUE.dash.throw, dash_whoosh; an air dash: dash_air) once each, heard where it took off
+  if (want('dash', 'subs') && SUBS.dash && SUB_KITS.dash && !SUB_KITS.dash.stub) {
+    const res = {};
+    for (const air of [false, true]) {
+      reset([0, -8]);
+      place(E, 0, 3, air ? 3 : 0.05); E.setSub('dash'); E.ink = PLAYER.inkMax; face(E, 6, 3);
+      step(air ? 0.02 : 0.3);   // (on the ground: settled; in the air: still well up)
+      rec.length = 0;
+      const t0 = G.time, from = P3(E.pos);
+      G.subs.use(E, SUBS.dash);
+      step(0.6);
+      const pop = plays(t0, 'dash_pop'), wh = plays(t0, air ? 'dash_air' : 'dash_whoosh');
+      res[air ? 'air' : 'ground'] = { air: !E.grounded || air, pop: pop.length, whoosh: wh.length, popAt: pop[0] ? r2(d3(pop[0].pos, from)) : null, whooshAt: wh[0] ? r2(d3(wh[0].pos, from)) : null };
+    }
+    R('Dash Pellet: an enemy\'s dash pops (dash_pop) and rushes (dash_whoosh; in the air dash_air) once each, heard where it took off',
+      Object.values(res).every((r) => r.pop === 1 && r.whoosh === 1 && r.popAt != null && r.popAt < 0.3 && r.whooshAt != null && r.whooshAt < 0.3), res);
+  }
   // sfx-loud: every thrown sub's flight glides along its arc, in its own voice; the placed ones have no flight
   if (want('glide', 'subs') && Object.keys(subRes).length >= 14) {
     const res = {}, bad = [];

@@ -498,7 +498,7 @@ function inside(d, x, y, z, tau = 0, over = true) {
   return pr < d.r ? d.r - pr + 0.01 : 0;
 }
 // s until d hurts at (x, z) (a projectile's line: when it gets there)
-function tInAt(d, x, z) {
+export function tInAt(d, x, z) {   // ([b5-sub-dash] exported: the dash's escape dodge)
   if (d.speed > 0) return d.delay + Math.max(0, (x - d.x) * d.dx + (z - d.z) * d.dz) / d.speed;
   return d.tIn;
 }

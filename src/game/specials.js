@@ -372,6 +372,10 @@ export class SpecialSystem {
     const f = IMPL[s.kind]?.weapon;
     return f ? !!f.call(this, a, s, dt, inp) : false;
   }
+  // [b5-sub-dash] the special takes the sub button: every one with a weapon() hook does — those that replace the main
+  // weapon (weapon() → true: no sub at all then) and the Zipline (its tether is the sub button). An onPress sub's press
+  // (the Dash Pellet: WeaponRunner.trySubPress) does nothing while one runs, from its first frame on
+  ownsSub(s) { const I = s && IMPL[s.kind]; return !!(I && (I.ownsSub || I.weapon)); }
   end(a, reason = 'time') {
     const s = a.specialActive;
     if (!s || s.ended || s.id === 'slam' || s.id === 'storm') return;

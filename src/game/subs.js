@@ -1053,6 +1053,10 @@ export class SubSystem {
       const vn = a.vel.dot(it.n);
       if (vn * side < 0) a.vel.addScaledVector(it.n, -vn);
     }
+    // [b5-sub-dash] kit walls for players (SPEC §0.5 blockActor): a launched Brolly canopy, and while dashing the Roe
+    // Shell and enemy bubbles — here, so they run in every dash substep too
+    for (const k in SUB_KITS) SUB_KITS[k].blockActor?.(a);
+    for (const k in MAIN_KITS) MAIN_KITS[k].blockActor?.(a);
   }
 
   _destroy(it) {
