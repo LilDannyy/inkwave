@@ -15,3 +15,4 @@ stdout. Heads (by time, 2026-10-10):
   run5        12:20–12:23  w5old: era-1 ink-regions ×4 at round C's head 01034566 (a scratch worktree), the comparison;
                            the era-3 zones pictures at e88f37a3
 node-checks.txt: every Node check at e88f37a3.
+  run6 / w6   12:26–12:28       e88f37a3: Zone Control eras 1, 2, 3 (three more matches: the first six all went to Alpha)
