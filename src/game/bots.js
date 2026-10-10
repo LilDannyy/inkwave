@@ -1061,6 +1061,9 @@ export class BotBrain {
     // step into one, no shots into the untouchable; popping our team's bubble on one of theirs (an aim to hold)
     const spAim = this.sp.act(dt, it, move);
     if (spAim) { wantYaw = spAim.yaw; wantPitch = spAim.pitch; if (!thrAim) thrAim = spAim; }
+    // [b5-subs] kit subs' own bot behaviour (every bot: the Chain Bobber's teammates set its chains off): last, so nothing
+    // after clears what it sets; busy — something above already owns the aim
+    for (const k in SUB_KITS) { const ka = SUB_KITS[k].botAct?.(this, dt, it, move, !!thrAim); if (ka) { wantYaw = ka.yaw; wantPitch = ka.pitch; thrAim = ka; break; } }
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim, enemyVisible);
   }
 

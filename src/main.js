@@ -1582,6 +1582,8 @@ class Game {
       d.sc = clamp(1.12 - dist / 60, 0.56, 1);
       this.minimap.toCanvas(d.x, d.z, t); d.mx = t.x / this.minimap.w; d.my = t.y / this.minimap.h;
     }
+    // [b5-subs] a kit sub's own prompt (the Chain Bobber's: first throw, the teammate cue) — under the low-ink flash
+    if (m.state === 'playing' && a.alive && !(this._lowInkFlash > 0)) for (const k in SUB_KITS) { const kp = SUB_KITS[k].prompt?.(a); if (kp) { prompt = kp; break; } }
     const stP = m.stage && a.alive ? m.stage.prompt(a) : null;   // [b5-stagehooks] a stage module's prompt (a pipe mouth …)
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
     else if (stP) prompt = stP;   // [b5-stagehooks]

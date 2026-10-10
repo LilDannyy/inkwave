@@ -133,12 +133,14 @@
     tracer: (o) => (o.state === 'fly' ? 'tracer_hum' : null),   // (then the trail's hum, fading, at its middle)
     boomerang: (o) => ({ out: 'boomerang_whirr', hover: 'boomerang_whirr', back: 'boomerang_whirr', orbit: 'boomerang_orbit', armed: 'boomerang_whirr' })[o.state],
     glide: () => 'glide_slide',   // [b5-sub-glide] (its slide: no flight)
+    bobber: (o) => ({ fly: 'sub_flight' })[o.state],   // [b5-subs] (floating: no loop of its own)
   };
   // the phases each staged throw goes through (what must sound)
   const PHASES = { bomb: ['throw', 'land', 'boom'], sticky: ['throw', 'land', 'boom'], burst: ['throw', 'boom'], seeker: ['throw', 'land', 'warn', 'boom'], scan: ['throw', 'boom'],
     curtain: ['throw', 'land', 'end'], sprinkler: ['throw', 'land', 'end'], mine: ['throw', 'warn', 'boom'], beacon: ['throw', 'end'], mist: ['throw', 'boom'],
     shaker: ['throw', 'land', 'boom'], waddle: ['throw', 'beep', 'warn', 'boom'], torpedo: ['throw', 'boom'], tracer: ['hit'], boomerang: ['beep', 'boom'],
-    glide: ['throw', 'boom'] };   // [b5-sub-glide]
+    glide: ['throw', 'boom'],   // [b5-sub-glide]
+    bobber: ['throw', 'land', 'boom'] };   // [b5-subs] (its 'end', the disarm, below)
   const WARN_MIN = { bomb: 0.6, sticky: 0.6, seeker: 0.6, shaker: 0.6, waddle: 0.6, torpedo: 0.6, mine: 0.4, boomerang: 0.55, glide: 0.6 };   // (mine: its 0.45 s windup; boomerang: its 0.6 s fuse)
   const THROW = { tracer: 'tracer_zap', boomerang: 'boomerang_throw' };
   const newObj = (kind, before) => {
@@ -210,6 +212,8 @@
     tracer: { at: [0, 8], aim: (T) => aimAt(T, me.pos.x, me.pos.y + 1, me.pos.z), secs: 2.2 },
     boomerang: { at: [0, -2], aim: (T) => aimAt(T, me.pos.x, me.pos.y + 1, me.pos.z), secs: 3.5 },
     glide: { at: [3, 4], aim: (T) => aimAt(T, me.pos.x + 3, me.pos.y + 1, me.pos.z), secs: 3.2 },   // [b5-sub-glide] (slid past you)
+    // [b5-subs] the Chain Bobber: lobbed, it pops open and floats; a shot of its owner's sets it off a moment later
+    bobber: { aim: (T) => lob(T, 0, -3, SUBS.bobber.throwSpeed), secs: 3.4, during: (i, o, T) => { if (o && o.state === 'live' && G.time - o.born > 0.5 && !o._fired) { o._fired = true; SUB_KITS.bobber.trigger(o, T); } } },
   };
   const subRes = {};
   for (const kind of Object.keys(SUB_STAGE)) {
@@ -233,7 +237,7 @@
     }
   }
   // sfx-loud: every thrown sub's flight glides along its arc, in its own voice; the placed ones have no flight
-  if (want('glide', 'subs') && Object.keys(subRes).length >= 13) {
+  if (want('glide', 'subs') && Object.keys(subRes).length >= 14) {
     const res = {}, bad = [];
     for (const k of THROWN_SUBS) {
       const g2 = (subRes[k] && subRes[k].glide) || [], st = g2.map((x) => x.st);
@@ -252,6 +256,28 @@
     for (const k of PLACED_SUBS) if (subRes[k] && subRes[k].glide.length) bad.push([k, 'a placed sub with a flight']);
     R(`every thrown sub's flight changes pitch with its time in the air (a lob: up to +${FLY_UP} st with the climb, the falling whistle to ${FLY_DOWN} st at the landing; the Tracer falls over its range; the Boomerang out and home), each in its own voice; the placed ones (${PLACED_SUBS.join(', ')}) none`,
       !bad.length, { bad, res });
+  }
+  // [b5-subs] a Chain Bobber disarmed by enemy fire: its deflate (bobber_disarm, at it) and no blast; its owner's quiet low
+  // "doo" (2D, theirs only); one that runs its 30 s out: the quiet pip-pop (bobber_expire), no blast
+  if (want('bobber', 'subs')) {
+    reset(); place(E, 0, 3); E.setSub('bobber'); lob(E, 0, -3, SUBS.bobber.throwSpeed); step(0.05);
+    const K = SUB_KITS.bobber, b0 = [...K.items]; G.subs.use(E, SUBS.bobber);
+    const bb = K.items.filter((x) => !b0.includes(x)).pop();
+    step(1.4); rec.length = 0;
+    const t0 = G.time; K.hurt(bb, 36, me); step(0.8);
+    const dis = firstPlay(t0, 'bobber_disarm');
+    const ok1 = !!bb && !!dis && !!dis.pos && !firstPlay(t0, 'bobber_boom') && bb.state === 'dead' && !slotsOf(bb).length;
+    // (the owner's "doo": as its owner's own screen plays it — E standing in as the local owner for the one shot)
+    reset(); place(E, 0, 3); E.setSub('bobber'); lob(E, 0, -3, SUBS.bobber.throwSpeed); step(0.05);
+    const b1 = [...K.items]; G.subs.use(E, SUBS.bobber); const bd = K.items.filter((x) => !b1.includes(x)).pop(); step(1.4); rec.length = 0;
+    const t1 = G.time; E.isLocal = true; try { K.hurt(bd, 36, me); } finally { E.isLocal = false; }
+    step(0.3); const doo = firstPlay(t1, 'bobber_doo');
+    // (expiry: one placed straight down, its life run out)
+    reset(); const be = K.throwFrom(E, new (me.pos.constructor)(0, 0.6, -2), new (me.pos.constructor)(0, -3, 0)); step(0.6);
+    be.born = G.time - SUBS.bobber.life + 0.2; rec.length = 0; const t2 = G.time; step(0.6);
+    const exp = firstPlay(t2, 'bobber_expire');
+    R('Chain Bobber disarmed by a foe\'s shot: its deflate (bobber_disarm) where it is, no blast, nothing left playing; its owner hears a low "doo" (2D); one whose life runs out pops quietly (bobber_expire), no blast',
+      ok1 && !!doo && doo.pos === null && !!exp && !firstPlay(t2, 'bobber_boom'), { disarm: !!dis, at: !!dis?.pos, state: bb?.state, doo: !!doo, dooAt: doo?.pos ?? null, expire: !!exp });
   }
   // a Waddle Bomb shot down: a squeaky deflate (harmless), its loops gone with it
   if (want('waddle', 'subs')) {

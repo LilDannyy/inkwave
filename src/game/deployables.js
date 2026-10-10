@@ -264,12 +264,15 @@ class Deployables {
   _lost(it) {
     it.on = null; it.ride = null;
     if (it.state === 'dead') return;
+    // [b5-int3] a kit ride body that floats (the Chain Bobber) always re-floats itself over whatever is below — its own
+    // [3] record and re-link tell the ghosts (b5-sub-bobber's rule; a sentry has no lost(): it drops / ends below)
+    if (it.lost) { it.lost(); return; }
     const n = it.normal || UP, floor = it.floor || it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || n.y > 0.6;
     const g = floor ? G.physics.raycast(_v.set(it.pos.x, it.pos.y + 0.3, it.pos.z), DOWN, 40, _h, true) : null;
     // ([b5-int2] a floor under a stage module's liquid or in its no-place disc is no floor for it: G.match.stage.under,
     // G.level.noPlace — nothing on a stage without a module)
-    // ([b5-subs] a kit device's ride body: its own lost() (a bobber re-floats) or kill(2) — no event, as wave 1's own)
-    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30 || G.match?.stage?.under(g.point) || G.level.noPlace(g.point, 0.3)) { if (it.lost) it.lost(); else if (it.kill) it.kill(2); else G.subs._destroy(it); return; }
+    // ([b5-subs] a kit device's ride body: kill(2) — no event, as wave 1's own)
+    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30 || G.match?.stage?.under(g.point) || G.level.noPlace(g.point, 0.3)) { if (it.kill) it.kill(2); else G.subs._destroy(it); return; }
     it.pos.copy(g.point); it.mesh.position.copy(it.pos);
     if (it.normal && it.normal.dot(g.normal) < 0.99) { it.normal.copy(g.normal); if (it.state !== 'curtain') it.mesh.quaternion.setFromUnitVectors(UP, g.normal); }
     DEPLOY_STATS.drops++;

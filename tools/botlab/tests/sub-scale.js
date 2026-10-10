@@ -65,6 +65,7 @@
     ...K.boomerang._items.map((it) => ['boomerang', it.state, v4(it.pos)]),
     ...(K.glide.items || []).map((it) => ['glide', it.state, v4(it.p), r4(it.hp), r4(it.fuse)]),   // [b5-sub-glide]
     ...(K.sentry.items || []).map((it) => ['sentry', it.state, v4(it.pos), r4(it.hp), r4(it.headYaw), r4(it.headPitch), it.target ? 1 : 0]),   // [b5-subs]
+    ...(K.bobber?.items || []).map((it) => ['bobber', it.state, v4(it.pos), v4(it.spot), r4(it.hp), it.ten.length]),   // [b5-subs]
   ];
   function snap() {
     rec.push(['f',
@@ -92,6 +93,7 @@
     tracer: (b) => b.head.children[0], boomerang: (it) => it.mesh.userData.spin.children[0],
     glide: (it) => it.m.model,   // [b5-sub-glide]
     sentry: (it) => it.m.model,   // [b5-subs]
+    bobber: (it) => K.bobber.drawNode(it),   // [b5-subs] (drawn instanced: a stand-in node at its drawn size)
   };
   function localSize(node) {
     node.updateWorldMatrix(true, true);
@@ -102,7 +104,7 @@
   const worldBox = (o) => { o.updateWorldMatrix(true, true); return new THREE.Box3().setFromObject(o, true); };
   const objOf = (kind) => {
     if (kind === 'bomb') return last(P.bombs);
-    const L = { shaker: K.shaker.items, waddle: K.waddle.items, torpedo: K.torpedo._list, tracer: K.tracer._bolts, boomerang: K.boomerang._items, glide: K.glide.items, sentry: K.sentry.items }[kind];
+    const L = { shaker: K.shaker.items, waddle: K.waddle.items, torpedo: K.torpedo._list, tracer: K.tracer._bolts, boomerang: K.boomerang._items, glide: K.glide.items, sentry: K.sentry.items, bobber: K.bobber?.items }[kind];
     return L ? last(L) : last(G.subs.items.filter((it) => it.kind === kind));
   };
   const nodeOf = (kind, o) => (scaledNode[kind] || subModel)(o);
@@ -198,6 +200,17 @@
       rec.push(['hitTop', edge((y) => shotAt(it.pos, y), 0.02, 2), 'hitSide', edge((dz) => shotAt(it.pos, 0.3, dz), 0, 2)]);
       run(150);
     },
+    // [b5-subs] Chain Bobbers: two thrown, settled and tethered, the shot hitbox's edge, then the chain set off
+    bobber(o) {
+      put(foe, V(2.2, 0, 6), Math.PI);
+      const a = K.bobber.throwFrom(me, V(S.x, 0.6, S.z), V(0, -3, 0)); o.first(a);
+      const b = K.bobber.throwFrom(me, V(S.x + 3, 0.6, S.z), V(0, -3, 0));
+      run(50, () => a.state === 'live' && b.state === 'live'); run(4); o.rest(a);
+      const p = a.spot;
+      rec.push(['hitR', edge((dz) => !!K.bobber.shotProbe(V(p.x - 3, p.y, p.z + dz), V(p.x + 3, p.y, p.z + dz)), 0, 2), 'hitTop', edge((y) => !!K.bobber.shotProbe(V(p.x - 3, y, p.z), V(p.x + 3, y, p.z)), p.y, p.y + 1)]);
+      G.subs.blockShot(V(p.x, p.y + 2, p.z), V(p.x, p.y - 0.5, p.z), me.team, 36, me);
+      run(60, () => a.state === 'dead' && b.state === 'dead'); run(20);
+    },
   };
 
   const FACTORS = { ...SUB_VIEW_SCALE };
@@ -252,7 +265,7 @@
       R(`${kind}: gameplay identical at ×1 and ×${F} (positions, states, hp, events, hits, paint, drops, statuses, hitboxes)`, diff < 0,
         diff < 0 ? counts(B.trace) : { at: diff, one: ja[diff]?.slice(0, 300), big: jb[diff]?.slice(0, 300) });
       // 3) event radii are the config's
-      const s = SUBS[kind], allowed = new Set([s.radius, s.hitRadius, s.senseRadius, s.width / 2, s.triggerRadius, s.puddleRadius * 0.5, 0, -1].filter((x) => x !== undefined && !Number.isNaN(x)).map(r4));
+      const s = SUBS[kind], allowed = new Set([s.radius, s.hitRadius, s.senseRadius, s.width / 2, s.triggerRadius, s.puddleRadius * 0.5, 0, -1, ...(s.chainRadius || [])].filter((x) => x !== undefined && !Number.isNaN(x)).map(r4));   // ([b5-subs] a chain's blast: its N's radius)
       // (weapon:impact: the tracer's puddles; for the others, where their sprayed / shaken drops land — their own sizes)
       const radii = [...new Set(B.trace.filter((x) => x[0] === 'ev' && (x[1] !== 'weapon:impact' || kind === 'tracer')).map((x) => `${x[1]}:${x[2]}`))];
       const bad = radii.filter((x) => !allowed.has(+x.split(':').pop()));

@@ -33,8 +33,8 @@ const MELEE = { roller: true, brush: true };   // (bots.js MELEE; kit melee weap
 const _list = [];
 // (still standing and still in the world: a clear() — a new match, a test's next scene — drops them without a death)
 // ([b5-subs] a kit device: its descriptor says — d.live; the map keeps descriptors by their obj, so `o` here is d.obj and the
-// descriptor rides along as o.desc)
-const live = (kind, o) => (o && o.desc && o.desc.kit ? o.desc.live : kind === 'surf' ? !o.dead && o.phase === 'live' && !!G.specials?.world.includes(o)
+// descriptor rides along as o.desc (the sentry); a kit object that is its own device says so itself (the bobber: o.kit, o.live))
+const live = (kind, o) => (o && o.desc && o.desc.kit ? o.desc.live : o && o.kit ? !!o.live : kind === 'surf' ? !o.dead && o.phase === 'live' && !!G.specials?.world.includes(o)
   : o.state === (kind === 'sprinkler' ? 'spray' : 'beacon') && !!G.subs?.items.includes(o));
 
 export const DEV_GIVEUP = 8, DEV_FORGET = 12;   // s on one device (in all) before giving up on it; s it's left alone after

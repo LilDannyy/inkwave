@@ -140,6 +140,7 @@ function predict(d, pos, vel, g, maxT) {
   d.px = x; d.py = y; d.pz = z; d.pAt = now + maxT;   // (still in the air at the end: where it'll be)
   return false;
 }
+const DANGER_API = { D, keyOf, disc, see };   // [b5-subs] (what a kit's dangers hook builds its areas with)
 const _barEnd = new WeakMap();
 const _fresh = [];   // [b5-deploy] (_scan: the dangers new to this bot this look)
 const barrage = (a) => !!a && (a.specialActive?.kind === 'barrage' || G.time - (_barEnd.get(a) ?? -99) < 3.5);
@@ -339,6 +340,8 @@ export function specialDangers() {
     d.tIn = 0; d.tOut = Math.max(0, S.life - it.t); d.los = true; d.losY = S.eyeH; d.lethal = 1; d.linger = true; d.vis = 'big'; d.hear = 10; d.turret = true;
     see(d, it.pos.x, it.pos.y + 0.45, it.pos.z);
   }
+  // ---- [b5-subs] kit subs' own danger areas (the Chain Bobber's armed chains …): SUB_KITS[k].dangers(api)
+  for (const k in SUB_KITS) SUB_KITS[k].dangers?.(DANGER_API);
   // ---- specials on players (and the untouchable)
   for (const e of G.actors) {
     if (!e.alive || e.superJumpState) continue;

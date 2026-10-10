@@ -43,6 +43,8 @@ export const SIGHT = {
   lookEvery: 0.3,      // s between looks round a remembered spot
   recheck: 0.1,        // s: the target in sight is re-checked this often between full looks (it ducks out of view)
   frameRays: 24,       // sight lines per frame for all bots together
+  kitRays: 8,          // [b5-subs] … of which the kit subs' bot code (sightRay) may take at most this many a frame ([b5-int3] 8,
+                       // not 6: one Scrap Sentry look takes up to 2 lines a foe, 4 foes — a look over the cap retried every frame forever)
 };
 // what the bots' eyes cost and did (a match's totals; tests / botlab read and reset it)
 export const SIGHT_STATS = { checks: 0, rays: 0, deferred: 0, seen: 0, lost: 0, cleared: 0, expired: 0, located: 0, jumps: 0, hits: 0, sprays: 0, memBombs: 0, hunts: 0 };
@@ -50,14 +52,6 @@ export const SIGHT_STATS = { checks: 0, rays: 0, deferred: 0, seen: 0, lost: 0, 
 const _eye = new THREE.Vector3(), _p = new THREE.Vector3(), _d = new THREE.Vector3(), _h = new Hit();
 let _frameT = -1, _frameRays = 0;
 const ray = (a, b) => { _frameRays++; SIGHT_STATS.rays++; return G.physics.los(a, b); };
-// [b5-subs] one sight line for a kit's eyes (the Scrap Sentry, the subs' botAct) out of the same frame budget as the
-// bots' looks: true / false, or null when this frame's SIGHT.frameRays are spent (try next frame)
-export function sightRay(a, b) {
-  const now = G.time;
-  if (_frameT !== now) { _frameT = now; _frameRays = 0; }
-  if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return null; }
-  return ray(a, b);
-}
 
 // a hit that reveals the shooter: a main weapon (not a sub, a special or a device) — the ink comes from where they are
 const NOT_WEAPON = new Set(['ink', 'water', 'drop', 'sprinkler', 'slam']);
@@ -275,6 +269,19 @@ export class Sight {
   }
 }
 
+// [b5-subs] one sight line a to b from the same per-frame budget as Sight.check (SIGHT.frameRays for every bot together),
+// the kit subs' bot code taking at most SIGHT.kitRays of it a frame (so the bots' own looks are never starved): true /
+// false, or null when its share is spent (try again next frame). A deferral counts where Sight.check's do (subs SPEC
+// §0.5: SIGHT_STATS.deferred) and apart as well (SIGHT_STATS.kitDeferred), as the rays do (rays, kitRays)
+let _kitRays = 0, _kitT = -1;
+export function sightRay(a, b) {
+  const now = G.time;
+  if (_frameT !== now) { _frameT = now; _frameRays = 0; }
+  if (_kitT !== now) { _kitT = now; _kitRays = 0; }
+  if (_frameRays >= SIGHT.frameRays || _kitRays >= SIGHT.kitRays) { SIGHT_STATS.deferred++; SIGHT_STATS.kitDeferred = (SIGHT_STATS.kitDeferred || 0) + 1; return null; }
+  _kitRays++; SIGHT_STATS.kitRays = (SIGHT_STATS.kitRays || 0) + 1;
+  return ray(a, b);
+}
 // What team t knows about foe e: a teammate bot seeing it (freshest first), a located one, or the freshest memory no
 // older than maxAge s. Returns that Known (pos / vel / seen / t) or null. No sight lines: it's the bots' own checks.
 export function teamKnown(t, e, maxAge = SIGHT.keep) {
