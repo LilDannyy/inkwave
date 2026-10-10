@@ -218,10 +218,15 @@ export class KarpGun {
     }
   }
 
+  // [karp-face] this screen adopts actor a (netmatch _adopt: its player left, or the host did): its shots still in the
+  // air or swelling here become ours — they fly on with collisions, land, swell and blow, and record [1] / [2]
+  adopt(a) { for (const s of this.shots) if (s.owner === a && s.ghost && s.phase !== 'done') { s.ghost = false; if (s.phase === 'swell' && !s.land) s.phase = 'fly'; } }
   // ---- online: another screen's records (KIT_GHOSTS.karp)
   ghost(a, d) {
     switch (d[0]) {
-      case 0: { const s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(d[5], d[6], d[7]), d[8], true); s.ghost = true; break; }
+      // ([karp-face] a departed host's queued launch for a bot this screen has just adopted: the shot is ours to fly, land
+      // and blow — its [1] / [2] will never come from its old owner — SPEC §7.6)
+      case 0: { if (this.byGid.has(d[1])) break; const own = !a.remote; const s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(d[5], d[6], d[7]), d[8], !own); s.ghost = !own; break; }
       case 1: {
         const s = this.byGid.get(d[1]);
         if (!s) break;
@@ -231,6 +236,7 @@ export class KarpGun {
       }
       case 2: {
         let s = this.byGid.get(d[1]);
+        if (s && !s.ghost && s.phase === 'done') break;   // ([karp-face] an adopted shot that already blew here)
         if (!s) s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(0, 0, 0), d[5], true);
         if (!s.land) this._land(s, _v.set(d[2], d[3], d[4]), true);
         s.phase = 'done'; s.c = d[5];

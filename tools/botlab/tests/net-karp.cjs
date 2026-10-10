@@ -15,7 +15,14 @@
 //   the same result on both screens · no page errors
 //   CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 //   NET_ARGS: 'map=<id>' (default karpbox)
-module.exports = async ({ clients, R, wait, say, args, open }) => {
+//   [karp-face] NET_ARGS='part=face' (the rest of SPEC §10.2's two-client steps: net-karp-steps.cjs) · 'part=lag' (with
+//   URLQ='netlag=150&netjitter=60': the latency steps) — the migration steps are net-karp-host.cjs's
+module.exports = async (ctx) => {
+  const part = (/(?:^|[;&])part=(\w+)/.exec(ctx.args || '') || [])[1];
+  if (part === 'face' || part === 'lag') return require('./net-karp-steps.cjs')(ctx, part);
+  return base(ctx);
+};
+async function base({ clients, R, wait, say, args, open }) {
   // the mode is hidden (config WIP_MODES) and the kids' brains are stubbed: every client needs ?autopilot&wipmodes
   for (const c of clients.slice(0, 2)) {
     if (/[?&]wipmodes(&|=|$)/.test(c.url || '') && /[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
@@ -209,4 +216,4 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));
-};
+}

@@ -908,6 +908,7 @@ export class NetMatch {
     else if (a.alive) { a.character.setVisible(true); a.character.root.visible = true; }
     a.net.err.set(0, 0, 0); a.net.errV?.set(0, 0, 0);   // a.pos is already where it was drawn (path + offset)
     G.deploy?.adopt(a);   // [b5-deploy] its devices (ghosts here till now) are ours: they can still be shot down and crushed
+    G.karpGun?.adopt?.(a);   // [karp-face] its Carp Shots in the air are ours to land and blow
     this.match?.stage?.adopt(a);   // [b5-stagehooks] (a ride in progress becomes ours)
   }
 
