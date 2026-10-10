@@ -126,6 +126,9 @@ export const SUB_CUE = {
   boomerang: { beep: ['boomerang_tick', 0.8], boom: ['boomerang_blast', 1] },
   glide: { throw: ['glide_release', 0.9], boom: ['glide_boom', 1], end: ['glide_pop', 0.9] },   // [b5-sub-glide] (its slide: the glide_slide loop)
   smash: { end: ['sub_smash', 0.9] },   // a device the Mega Stamp's guard smashed before it went off
+  // [b5-subs] the Scrap Sentry (src/audio/sfx-sentry.js): set down (a tin clatter), unfolded (a ratchet and a boing), its
+  // lock on someone ("bip-bip"), shot down (a can crumple); its servo hum is a loop (_gather), its rounds' "pft" its own
+  sentry: { throw: ['sentry_place', 0.9], land: ['sentry_unfold', 0.8], warn: ['sentry_lock', 1], end: ['sentry_break', 0.9] },
 };
 // a special's start (on top of the shared special_activate); the ones missing here start with their own sound already
 export const SPECIAL_START = { slam: 'slam_leap', storm: 'storm_throw', barrage: 'barrage_start', strike: 'strike_arm', zooka: 'zooka_arm', wail: 'wail_up',
@@ -144,7 +147,7 @@ export const FLIGHT_KIND = { bomb: 'bomb', sticky: 'sticky', burst: 'burst', see
 // thrown (a flight sound) · placed (none: a Lurk Mine / Hop Beacon is set down at your feet)
 export const THROWN_SUBS = ['bomb', 'sticky', 'burst', 'seeker', 'scan', 'curtain', 'sprinkler', 'mist', 'shaker', 'waddle', 'torpedo', 'tracer', 'boomerang',
   'glide'];   // [b5-sub-glide] (no flight voice: it slides; its loop is the slide)
-export const PLACED_SUBS = ['mine', 'beacon'];
+export const PLACED_SUBS = ['mine', 'beacon', 'sentry'];   // ([b5-subs] the Scrap Sentry: set down ahead of your feet)
 
 // ---- the enemy's specials: launch alerts, the "you're in it" alarm (sfx-loud: "a lot of warning special sounds, like
 // if a vortex or cheer bomb is coming"). Where each threat is comes from the bots' danger model (botSpecials.js
@@ -392,6 +395,8 @@ export class Cues {
       this._want(it, 'rattle', 'shaker_rattle', { pos: it.pos, team: it.team, owner: it.owner, sub: true, warn: true, radius: it.sub.radius,
         pitch: gl ? gl.q : 1, glide: gl ? gl.st : null, params: { k: clamp(k, 0, 1), armed: it.armed ? 1 : 0 } });
     }
+    // [b5-subs] the Scrap Sentry: a quiet servo hum with creaks while it stands (heard within ~10 m)
+    for (const it of K.sentry?.items || []) if (it.state === 'watch' || it.state === 'unfold') this._want(it, 'idle', 'sentry_idle', { pos: it.pos, team: it.team, owner: it.owner, sub: true, range: 10, vol: 0.8, params: { busy: it.target ? 1 : 0 } });
     for (const it of K.waddle?.items || []) {
       const o = { pos: it.pos, team: it.team, owner: it.owner, sub: true };
       if (it.state === 'fly') this._fly(it, 'waddle', o, 0.85);

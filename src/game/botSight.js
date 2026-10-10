@@ -50,6 +50,14 @@ export const SIGHT_STATS = { checks: 0, rays: 0, deferred: 0, seen: 0, lost: 0, 
 const _eye = new THREE.Vector3(), _p = new THREE.Vector3(), _d = new THREE.Vector3(), _h = new Hit();
 let _frameT = -1, _frameRays = 0;
 const ray = (a, b) => { _frameRays++; SIGHT_STATS.rays++; return G.physics.los(a, b); };
+// [b5-subs] one sight line for a kit's eyes (the Scrap Sentry, the subs' botAct) out of the same frame budget as the
+// bots' looks: true / false, or null when this frame's SIGHT.frameRays are spent (try next frame)
+export function sightRay(a, b) {
+  const now = G.time;
+  if (_frameT !== now) { _frameT = now; _frameRays = 0; }
+  if (_frameRays >= SIGHT.frameRays) { SIGHT_STATS.deferred++; return null; }
+  return ray(a, b);
+}
 
 // a hit that reveals the shooter: a main weapon (not a sub, a special or a device) — the ink comes from where they are
 const NOT_WEAPON = new Set(['ink', 'water', 'drop', 'sprinkler', 'slam']);

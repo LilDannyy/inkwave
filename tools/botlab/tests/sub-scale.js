@@ -64,6 +64,7 @@
     ...K.tracer._bolts.map((b) => ['tracer', b.state, v4(b.pos), b.bounces]),
     ...K.boomerang._items.map((it) => ['boomerang', it.state, v4(it.pos)]),
     ...(K.glide.items || []).map((it) => ['glide', it.state, v4(it.p), r4(it.hp), r4(it.fuse)]),   // [b5-sub-glide]
+    ...(K.sentry.items || []).map((it) => ['sentry', it.state, v4(it.pos), r4(it.hp), r4(it.headYaw), r4(it.headPitch), it.target ? 1 : 0]),   // [b5-subs]
   ];
   function snap() {
     rec.push(['f',
@@ -90,6 +91,7 @@
     bomb: (b) => b.mesh.children[0], shaker: (it) => it.m.model, waddle: (it) => it.m.model, torpedo: (t) => t.mesh.userData.model,
     tracer: (b) => b.head.children[0], boomerang: (it) => it.mesh.userData.spin.children[0],
     glide: (it) => it.m.model,   // [b5-sub-glide]
+    sentry: (it) => it.m.model,   // [b5-subs]
   };
   function localSize(node) {
     node.updateWorldMatrix(true, true);
@@ -100,7 +102,7 @@
   const worldBox = (o) => { o.updateWorldMatrix(true, true); return new THREE.Box3().setFromObject(o, true); };
   const objOf = (kind) => {
     if (kind === 'bomb') return last(P.bombs);
-    const L = { shaker: K.shaker.items, waddle: K.waddle.items, torpedo: K.torpedo._list, tracer: K.tracer._bolts, boomerang: K.boomerang._items, glide: K.glide.items }[kind];
+    const L = { shaker: K.shaker.items, waddle: K.waddle.items, torpedo: K.torpedo._list, tracer: K.tracer._bolts, boomerang: K.boomerang._items, glide: K.glide.items, sentry: K.sentry.items }[kind];
     return L ? last(L) : last(G.subs.items.filter((it) => it.kind === kind));
   };
   const nodeOf = (kind, o) => (scaledNode[kind] || subModel)(o);
@@ -187,6 +189,15 @@
       rec.push(['hitTop', edge((y) => shotAt(it.p, y), 0.02, 2), 'hitSide', edge((dz) => shotAt(it.p, 0.14, dz), 0, 2)]);
       run(200, () => it.state === 'dead');
     },
+    // [b5-subs] set down ahead, a foe 6 m in front of it: it unfolds, locks and fires (its rounds' hits logged); its
+    // shot capsule (hitR / hitH: config numbers) probed from the side and over the top
+    sentry(o) {
+      put(foe, V(1.2, 0, 6), Math.PI);
+      put(me, S, 0); step(1); G.subs.use(me, SUBS.sentry); put(me, T, 0); const it = objOf('sentry'); o.first(it);
+      run(50); o.rest(it);
+      rec.push(['hitTop', edge((y) => shotAt(it.pos, y), 0.02, 2), 'hitSide', edge((dz) => shotAt(it.pos, 0.3, dz), 0, 2)]);
+      run(150);
+    },
   };
 
   const FACTORS = { ...SUB_VIEW_SCALE };
@@ -255,7 +266,7 @@
         if (kind === 'sticky') {
           const gap = +(14 - bx.max.x).toFixed(4);
           R('sticky: the Cling Charge sits flush on its wall (model within 3 cm of the wall face, none of it inside)', Math.abs(gap) <= 0.03, { wallX: 14, modelMaxX: +bx.max.x.toFixed(4), gap, stuckAt: v4(o.pos) });
-        } else if (kind === 'curtain' || kind === 'sprinkler' || kind === 'beacon' || kind === 'mine' || kind === 'waddle' || kind === 'shaker' || kind === 'bomb' || kind === 'glide') {   // ([b5-sub-glide] glide)
+        } else if (kind === 'curtain' || kind === 'sprinkler' || kind === 'beacon' || kind === 'mine' || kind === 'waddle' || kind === 'shaker' || kind === 'bomb' || kind === 'glide' || kind === 'sentry') {   // ([b5-sub-glide] glide, [b5-subs] sentry)
           R(`${kind}: the drawn model rests on the floor (bottom within 3 cm)`, Math.abs(bx.min.y) <= 0.03, { floorY: 0, modelMinY: +bx.min.y.toFixed(4), modelTopY: +bx.max.y.toFixed(3) });
         }
       }

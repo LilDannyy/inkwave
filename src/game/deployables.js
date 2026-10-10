@@ -41,6 +41,15 @@
 // BOTS: with nothing better to shoot (no foe in sight or on their mind) they shoot enemy beacons, sprinklers and buoys
 // in sight (deployables-bots.js: walking up to one only when free to roam, never into a noticed danger); a Skitter Bomb
 // hunting them is a threat to shoot down (threats → bots.js _threatScan).
+//
+// [b5-subs] KIT DEVICES (batch 5's Scrap Sentry, Chain Bobber; subs SPEC §0.2): a kit lists each live device as a stable
+// descriptor (SUB_KITS[k].devices(out): { kind, kit: true, obj, team, owner, pos, aim, r, h, live, rides, floor, ghost,
+// prefer(brain), hurt(dmg, by), crush(how), flash(), teamFire? }) and a ride body (rideBodies(out): wave 1's own riding
+// fields + kill(why) / lost?()). Every rule here takes them: devices() lists them, struck() flashes them and fires the
+// marker, sweep / standing fire hurt the enemy's (team fire → teamFire), the tower and movers carry / lift / shove /
+// crush their ride bodies, _lost ends or re-floats them. THE ONE DESTROYER, crushIn(shape, how): blocks (the tower's
+// crush(T) — the user's list), sphere (the Bazookarp shell), where / standingOn / liquid (stages) — one 'device:down'
+// per ending, from whoever decides the ending (here, or the kit for its own: shot down, an era flip, a lava sweep).
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
 import { SPECIALS, TOWER } from '../config.js';
@@ -58,8 +67,12 @@ const SHOOT = { spray: 'sprinkler', beacon: 'beacon', run: 'seeker', prime: 'see
 export const DEV_R = { sprinkler: 0.3, beacon: 0.3, seeker: 0.25 };   // m: the hit capsule's radius (subs.js blockShot's 0.3 + 0.04)
 export const ROLL_CD = 0.5;                                          // s between one roller's drum hits on one device
 const LIFT = 0.7;                                                    // m: a moving block's top this far over a device, rising into it, lifts it on (sp-surf.js LIFT)
-const CRUSHED = { spray: true, beacon: true, curtain: true };        // (subs states the tower crushes; the user's list — the buoy too)
+const CRUSHED = { spray: true, beacon: true, curtain: true, kit: true };   // (subs states the tower crushes; the user's list — the buoy too; [b5-subs] kit devices' ride bodies)
 const _tries = [], _B = [null, null], _hs = [0.06, 0.5, 1], _l = [0, 0, 0];
+// [b5-subs] crushIn: what a shape may end (a subs item's state → its vertical body: height, radius; the curtain has its own
+// test), the kit devices of this frame (pooled), their ride bodies (pooled)
+const PLACED = { spray: true, beacon: true, curtain: true, mine: true, stuck: true };
+const _kd = [], _kb = [], _seg = new THREE.Vector3();
 
 // counters (tests / match.cjs / tower-match.cjs)
 export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, lifts: 0, shoves: 0, towerShoves: 0, seekerPops: 0, seekerThrows: 0, adopted: 0, orphans: 0 };
@@ -117,6 +130,8 @@ class Deployables {
   // on this screen, the event the shooter's hit marker hangs on (never for a ghost's shot: muted — that one's owner
   // sees its own)
   struck(dev, dmg, by) {
+    // [b5-subs] a kit device (its descriptor: kits call this from their own hurt): its own flash; the shooter's marker
+    if (dev.kit) { dev.flash(); if (!netMuted() && dmg > 0) { DEPLOY_STATS.hits++; DEPLOY_STATS.dmg += dmg; emit('device:hit', { attacker: by || null, kind: dev.kind, team: dev.team, damage: dmg, obj: dev.obj, pos: dev.aim.clone() }); } return; }
     const kind = dev.kind === 'surf' ? 'surf' : devKind(dev);
     if (!kind) return;
     if (kind !== 'surf') {
@@ -221,7 +236,8 @@ class Deployables {
     it.onRec = false;
     if (it.ghost || !it.gid) return;
     const o = it.on, r = (x) => Math.round(x * 100) / 100, p = [r(it.pos.x), r(it.pos.y), r(it.pos.z)];
-    netRec(it.owner, 'subs', o ? [4, it.gid, ...p, o.b.tag || '#' + o.b.id, r(o.l[0]), r(o.l[1]), r(o.l[2]), r(o.nl[0]), r(o.nl[1]), r(o.nl[2])] : [4, it.gid, ...p]);
+    // ([b5-subs] a kit device's ride body: under its own kind, it.netKind)
+    netRec(it.owner, it.netKind || 'subs', o ? [4, it.gid, ...p, o.b.tag || '#' + o.b.id, r(o.l[0]), r(o.l[1]), r(o.l[2]), r(o.nl[0]), r(o.nl[1]), r(o.nl[2])] : [4, it.gid, ...p]);
   }
   // a ghost: its owner's word [4, gid, x, y, z (, tag, lx, ly, lz, nx, ny, nz)] (subs.js netGhost). Still in flight
   // here: kept until it lands (attach)
@@ -248,11 +264,12 @@ class Deployables {
   _lost(it) {
     it.on = null; it.ride = null;
     if (it.state === 'dead') return;
-    const n = it.normal || UP, floor = it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || n.y > 0.6;
+    const n = it.normal || UP, floor = it.floor || it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || n.y > 0.6;
     const g = floor ? G.physics.raycast(_v.set(it.pos.x, it.pos.y + 0.3, it.pos.z), DOWN, 40, _h, true) : null;
     // ([b5-int2] a floor under a stage module's liquid or in its no-place disc is no floor for it: G.match.stage.under,
     // G.level.noPlace — nothing on a stage without a module)
-    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30 || G.match?.stage?.under(g.point) || G.level.noPlace(g.point, 0.3)) { G.subs._destroy(it); return; }
+    // ([b5-subs] a kit device's ride body: its own lost() (a bobber re-floats) or kill(2) — no event, as wave 1's own)
+    if (!g || !g.hit || g.normal.y < 0.6 || g.point.y < -30 || G.match?.stage?.under(g.point) || G.level.noPlace(g.point, 0.3)) { if (it.lost) it.lost(); else if (it.kill) it.kill(2); else G.subs._destroy(it); return; }
     it.pos.copy(g.point); it.mesh.position.copy(it.pos);
     if (it.normal && it.normal.dot(g.normal) < 0.99) { it.normal.copy(g.normal); if (it.state !== 'curtain') it.mesh.quaternion.setFromUnitVectors(UP, g.normal); }
     DEPLOY_STATS.drops++;
@@ -281,35 +298,93 @@ class Deployables {
   isTowerBlock(b, T = G.match?.tower) { return !!T && !!b && (b === T.block || b === T.pillar); }
   // tower.js update, every frame the tower moved: its body destroys the sprinklers, beacons, curtains and buoys it
   // overlaps — this screen's own (a ghost waits for its owner's word); anything riding it is left alone
+  // ([b5-subs] the tower's own call of the one destroyer: its platform and pillar, the user's list; what rides it is left)
   crush(T) {
-    if (!T || !T.block) return;
+    if (!T || !T.block) return 0;
     const B = _B; B[0] = T.block; B[1] = T.pillar || null;
+    return this.crushIn({ blocks: B, rider: T }, 'crush');
+  }
+  // [b5-subs] THE ONE DESTROYER (subs SPEC §0.3): G.deploy.crushIn(shape, how) → how many it destroyed. Every device of
+  // this screen's own (never a ghost: its owner's end record ends it everywhere) still standing whose body is in `shape`
+  // ends now, each with 'device:down' { how } and one DEPLOY_STATS.crushed step (the one emitter, §0.2), then its own end
+  // (a subs item: the crunch — the lava: a sizzle — and [2, gid, 2]; the buoy: [4, gid, 2]; a kit device: d.crush(how)).
+  //   { blocks: [b, …], rider? }  its body inside any of these blocks (_bodyIn: foot, middle, top; a curtain's sheet);
+  //                               anything riding one of them is left alone. The user's list only — a Twirl Sprinkler, a
+  //                               Hop Beacon, a Drip Curtain, the buoy and every kit device: a Lurk Mine or a Cling
+  //                               Charge in its way is wave 1's to push aside (_pushes; the lead, 2026-10-09)
+  //   { sphere: { c, r } }        its body overlapping the sphere (every placed / stuck device: mines and charges too)
+  //   { where: (pos) => bool }    true at its pos (a subs item: it.pos; the buoy: w.pos; a kit device: d.pos)
+  //   { standingOn: [b | id, …] } its floor is one of these blocks (the one it rides, else the one it was set down on)
+  //   { liquid: depth }           its pos under the liquid there (G.level.liquidY, a stage module's under()) by depth m
+  // how: 'crush' (movers, the tower) · 'shell' (the Bazookarp's re-forming shell) · 'lava' · 'flip' (an era flip) — it
+  // becomes 'device:down'.how. Callers: tower.js (crush(T) above), the stage registry (G.match.stage.crushIn), Bazookarp.
+  crushIn(shape, how = 'crush') {
+    if (!shape) return 0;
+    const L = G.level, B = shape.blocks || null, S = shape.sphere || null, W = typeof shape.where === 'function' ? shape.where : null;
+    const SO = shape.standingOn ? new Set(shape.standingOn.map((x) => (typeof x === 'number' ? x : x?.id))) : null;
+    const LQ = shape.liquid != null && shape.liquid !== false ? (+shape.liquid || 0) : null;
+    if (!B && !S && !W && !SO && LQ == null) return 0;
+    const T = shape.rider || null;
+    const rides = (b) => !!b && ((B && B.includes(b)) || (T && this.isTowerBlock(b, T)));
+    const liq = (p) => p.y < L.liquidY(p.x, p.z) - LQ || !!G.match?.stage?.under(p, LQ);
+    // a vertical body base … base + h, radius r, against the shape (pos: the device's own spot, for where / liquid)
+    const inBody = (pos, base, h, r, floorB) => {
+      if (B) return this._bodyIn(B, base, h, r);
+      if (S) return segPoint(base, h, S.c) < S.r + r;
+      if (W) return !!W(pos);
+      if (SO) return !!floorB && SO.has(floorB.id);
+      return liq(pos);
+    };
+    let n = 0;
     for (const it of G.subs?.items || []) {
-      if (it.ghost || !CRUSHED[it.state] || (it.on && this.isTowerBlock(it.on.b, T))) continue;
       const st = it.state;
-      let hit = false;
-      if (st === 'spray' || st === 'beacon') { const h = devBody(it, _v); hit = this._bodyIn(B, _v, h, DEV_R[devKind(it)]); }
-      else if (st === 'curtain') hit = curtainIn(B, it);
+      if (it.ghost || st === 'dead' || !(B ? CRUSHED[st] : PLACED[st]) || (it.on && rides(it.on.b))) continue;
+      const fb = it.on ? it.on.b : it.face >= 0 ? L.blocks[L.faces[it.face]?.block] : null;
+      let hit;
+      if (st === 'curtain' && (B || S)) hit = B ? curtainIn(B, it) : curtainSphere(it, S.c, S.r);
+      else if (st === 'spray' || st === 'beacon') { const h = devBody(it, _v); hit = inBody(it.pos, _v, h, DEV_R[devKind(it)], fb); }
+      else hit = inBody(it.pos, it.pos, st === 'curtain' ? it.sub.height : 0.2, st === 'stuck' ? 0.25 : 0.3, fb);
       if (!hit) continue;
-      it.endWhy = 2;
-      this.endLook(it, 2);
+      n++;
       bump(DEPLOY_STATS.crushed, it.kind);
-      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how: 'crush' });
+      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how });
+      it.endWhy = 2;
+      if (how === 'lava') { this.sizzle(_c.copy(it.pos).setY(it.pos.y + 0.2), it.team, it.owner); G.subs._destroy(it); }
+      else this.endLook(it, 2);
     }
     for (const w of G.specials?.world || []) {
-      if (w.kind !== 'surf' || w.ghost || w.dead || w.phase !== 'live') continue;
-      if (w.on && this.isTowerBlock(w.on.b, T)) continue;
-      if (!this._bodyIn(B, w.pos, BUOY.hitH, BUOY.hitR * 0.8)) continue;
-      this.crushBuoy(w);
+      if (w.kind !== 'surf' || w.ghost || w.dead || w.phase !== 'live' || (w.on && rides(w.on.b))) continue;
+      if (!inBody(w.pos, w.pos, BUOY.hitH, BUOY.hitR * 0.8, w.on ? w.on.b : null)) continue;
+      n++;
+      this.crushBuoy(w, how);
     }
+    _kd.length = 0;
+    for (const k in SUB_KITS) SUB_KITS[k].devices?.(_kd);
+    for (const d of _kd) {
+      if (d.ghost || !d.live || d.crushable === false || rides(d.rides)) continue;   // ([b5-int3] crushable false: a Glide Bomb, never crushed — SPEC A5)
+      if (!inBody(d.pos, d.pos, d.h, d.r, d.rides || (d.floor >= 0 ? L.blocks[d.floor] : null))) continue;
+      n++;
+      bump(DEPLOY_STATS.crushed, d.kind);
+      emit('device:down', { kind: d.kind, team: d.team, pos: d.pos.clone(), by: null, how });
+      d.crush(how);
+    }
+    _kd.length = 0;
+    return n;
   }
-  crushBuoy(w) {
+  crushBuoy(w, how = 'crush') {
     if (w.gid) netRec(w.owner, 'surf', [4, w.gid, 2]);
     this.crushLook(w);
     if (G.surf?.SURF_STATS) G.surf.SURF_STATS.crushed++;
     w.pop();
     bump(DEPLOY_STATS.crushed, 'surf');
-    emit('device:down', { kind: 'surf', team: w.team, pos: w.pos.clone(), by: null, how: 'crush' });
+    emit('device:down', { kind: 'surf', team: w.team, pos: w.pos.clone(), by: null, how });
+  }
+  // [b5-subs] the look of a device that went in the lava (crushIn how 'lava', a kit's lavaSweep): steam and a hiss
+  sizzle(c, team, owner) {
+    if (!near(c, 50)) return;
+    G.fx?.burst(c, UP, new THREE.Color(0.8, 0.78, 0.76), { count: 12, speed: 2.6, size: 0.1, mist: true });
+    G.fx?.burst(c, UP, G.teamColors[team], { count: 6, speed: 2, size: 0.06 });
+    G.cues?.one('enemy_ink_sizzle', { at: c.clone(), owner, team, kind: 'end', vol: 1.2 });
   }
   // the crunch on a buoy (the owner's, or a ghost on its owner's word: sp-surf.js KIT_GHOSTS.surf [4, gid, 2])
   crushLook(w) { w.crushed = true; this._crunch(_c.copy(w.pos).setY(w.pos.y + 0.5), w.team, w.owner); }
@@ -343,7 +418,15 @@ class Deployables {
     const fx = Math.sin(a.yaw), fz = Math.cos(a.yaw);
     for (const it of G.subs?.items || []) { const k = devKind(it); if (k && swept(a, fx, fz, width, reach, hits, cd, it, it.pos, DEV_R[k])) G.subs._hurt(it, dmg, a); }
     for (const w of G.specials?.world || []) if (w.kind === 'surf' && !w.dead && w.phase === 'live' && swept(a, fx, fz, width, reach, hits, cd, w, w.pos, BUOY.hitR)) w._shot(dmg, a);
-    for (const d of kitDevices()) if (d.live && swept(a, fx, fz, width, reach, hits, cd, d.obj, d.pos, d.r)) d.hurt(dmg, a);   // [b5-sub-glide] kit devices (SPEC §0.2)
+    // [b5-subs] kit devices: an enemy one takes the roll; one of its own team that takes team fire (teamFire) gets that
+    _kd.length = 0;
+    for (const k in SUB_KITS) SUB_KITS[k].devices?.(_kd);
+    for (const d of _kd) {
+      if (!d.live) continue;
+      if (d.team !== a.team) { if (swept(a, fx, fz, width, reach, hits, cd, d.obj, d.pos, d.r)) d.hurt(dmg, a); }
+      else if (d.teamFire && swept(a, fx, fz, width, reach, hits, cd, d.obj, d.pos, d.r, true)) d.teamFire(a);
+    }
+    _kd.length = 0;
   }
 
   // ---------------------------------------------------------------------------------------------- per frame
@@ -351,7 +434,14 @@ class Deployables {
   tick(dt) {
     const items = G.subs?.items || [];
     for (const it of items) if (it.flash > 0 || it._flashOn) this._flashLook(it, dt);
-    if (G.level?.dyn?.length) this._pushes(items);
+    if (G.level?.dyn?.length) {
+      this._pushes(items);
+      // [b5-subs] the kits' devices too, through their ride bodies (lifted, shoved, crushed with nowhere to go)
+      _kb.length = 0;
+      for (const k in SUB_KITS) SUB_KITS[k].rideBodies?.(_kb);
+      if (_kb.length) this._pushes(_kb);
+      _kb.length = 0;
+    }
     if (!G.actors) return;
     this._standing(dt);
   }
@@ -367,7 +457,8 @@ class Deployables {
     const L = G.level, T = G.match?.tower;
     for (const it of items) {
       if (it.pushRec && G.time - it.pushT > 0.2) { it.pushRec = false; if (!it.on) this._onRec(it); }   // (a shove that has settled: the owner's word on where it is now)
-      if (it.on || !(it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || ((it.state === 'spray' || it.state === 'stuck') && it.normal && it.normal.y > 0.6))) continue;
+      if (it.on || !(it.floor || it.state === 'mine' || it.state === 'beacon' || it.state === 'curtain' || ((it.state === 'spray' || it.state === 'stuck') && it.normal && it.normal.y > 0.6))) continue;   // ([b5-subs] it.floor: a kit device's ride body)
+      if (it.state === 'dead') continue;
       const p = it.pos, r = 0.3;
       for (const b of L.dyn) {
         if (b.solid === false) continue;
@@ -415,7 +506,8 @@ class Deployables {
           moved = true; break;
         }
         if (!moved && !it.ghost) {   // nowhere to go: crushed
-          it.endWhy = 2; this.endLook(it, 2);
+          it.endWhy = 2;
+          if (it.kill) it.kill(2); else this.endLook(it, 2);   // ([b5-subs] a kit device's ride body ends itself; the event is ours)
           bump(DEPLOY_STATS.crushed, it.kind);
           emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how: 'crush' });
         }
@@ -459,7 +551,11 @@ class Deployables {
     let n = 0;
     for (const it of G.subs?.items || []) { const k = devKind(it); if (k && !it.ghost) { devMid(it, _c); n = addOwn(n, it, k, it.team, it.pos, _c.x, _c.y, _c.z, DEV_R[k]); } }
     for (const w of W) if (w.kind === 'surf' && !w.ghost && !w.dead && w.phase === 'live') n = addOwn(n, w, 'surf', w.team, w.pos, w.pos.x, w.pos.y + BUOY.hitH * 0.5, w.pos.z, BUOY.hitR);
-    for (const d of kitDevices()) if (!d.ghost && d.live) { const m = d.aim; n = addOwn(n, d, d.kind, d.team, d.pos, m.x, m.y, m.z, d.r); }   // [b5-sub-glide] (SPEC §0.2)
+    // [b5-subs] the kits' own devices (their descriptors: aim = the hit centre)
+    _kd.length = 0;
+    for (const k in SUB_KITS) SUB_KITS[k].devices?.(_kd);
+    for (const d of _kd) if (!d.ghost && d.live) n = addOwn(n, d, d.kind, d.team, d.pos, d.aim.x, d.aim.y, d.aim.z, d.r);
+    _kd.length = 0;
     if (!n) return;
     // the Ink Tempest (weapons.js _updateClouds): under its cloud with nothing between
     const sp = SPECIALS.storm;
@@ -468,10 +564,11 @@ class Deployables {
       const P = c.group.position;
       for (let i = 0; i < n; i++) {
         const d = _own[i];
-        if (d.team === c.team || d.pos.y > P.y) continue;
+        if (d.pos.y > P.y || (d.team === c.team && !d.obj.teamFire)) continue;
         const dx = d.pos.x - P.x, dz = d.pos.z - P.z;
         if (dx * dx + dz * dz > sp.radius * sp.radius) continue;
         if (!G.physics.los(_v.copy(d.mid), _v2.set(d.pos.x, P.y - 0.6, d.pos.z))) continue;
+        if (d.team === c.team) { d.obj.teamFire(c.owner || null); continue; }   // [b5-subs] (a kit device that takes team fire)
         standHit(d, sp.dps * dt, null);
       }
     }
@@ -481,20 +578,21 @@ class Deployables {
         const D = SPECIALS.strike, fade = clamp((w.dur - w.t) / 0.6, 0, 1);
         for (let i = 0; i < n; i++) {
           const d = _own[i];
-          if (d.team === w.team) continue;
+          if (d.team === w.team && !d.obj.teamFire) continue;
           const dh = Math.hypot(w.pos.x - d.pos.x, w.pos.z - d.pos.z);
           if (dh > w.radius + d.r || d.pos.y < w.pos.y - 1.5 || d.pos.y > w.pos.y + 7) continue;
+          if (d.team === w.team) { d.obj.teamFire(w.owner || null); continue; }   // [b5-subs]
           standHit(d, D.dps * dt * fade, null);
         }
       } else if (w.kind === 'speaker' && w.phase === 'blast') {   // the Howl Box's beam (through walls)
         const D = SPECIALS.wail;
         for (let i = 0; i < n; i++) {
           const d = _own[i];
-          if (d.team === w.team) continue;
+          if (d.team === w.team && !d.obj.teamFire) continue;
           _v.copy(d.mid).sub(w.mouth);
           const along = _v.dot(w.dir);
           if (along < -0.5 || along > w.range) continue;
-          if (_v.addScaledVector(w.dir, -along).length() < w.radius + d.r + 0.15) standHit(d, D.dps * dt, null);
+          if (_v.addScaledVector(w.dir, -along).length() < w.radius + d.r + 0.15) { if (d.team === w.team) d.obj.teamFire(w.owner || null); else standHit(d, D.dps * dt, null); }   // [b5-subs] (team fire)
         }
       } else if (w.kind === 'surf' && w.phase === 'live') this._rings(w, n);
     }
@@ -508,7 +606,7 @@ class Deployables {
       const J = R.devs || (R.devs = new Set());
       for (let i = 0; i < n; i++) {
         const d = _own[i];
-        if (d.team === w.team || d.obj === w || J.has(d.obj)) continue;
+        if ((d.team === w.team && !d.obj.teamFire) || d.obj === w || J.has(d.obj)) continue;   // ([b5-subs] team fire: below)
         const dx = d.pos.x - R.c.x, dz = d.pos.z - R.c.z, dist = Math.hypot(dx, dz);
         if (dist - d.r > R.r) continue;
         J.add(d.obj);
@@ -517,6 +615,7 @@ class Deployables {
         if (reach < dist - d.r) continue;
         const g = R.polar.groundAt(th, Math.min(dist, reach));
         if (d.pos.y < g - 1.2 || d.pos.y > g + D.height) continue;
+        if (d.team === w.team) { d.obj.teamFire(w.owner); continue; }   // [b5-subs]
         DEPLOY_STATS.rings++;
         hurtDev(d, D.damage, w.owner);
       }
@@ -537,7 +636,7 @@ class Deployables {
       if (w.kind !== 'surf' || w.dead || w.phase !== 'live') continue;
       out.push({ kind: 'surf', obj: w, team: w.team, owner: w.owner, pos: w.pos, aim: (w._aimV || (w._aimV = new THREE.Vector3())).set(w.pos.x, w.pos.y + 0.6, w.pos.z), r: BUOY.hitR, ghost: !!w.ghost });
     }
-    for (const k in SUB_KITS) SUB_KITS[k].devices?.(out);   // [b5-sub-glide] kit devices: stable descriptors (SPEC §0.2)
+    for (const k in SUB_KITS) SUB_KITS[k].devices?.(out);   // [b5-subs] the kits' devices: their descriptors (subs SPEC §0.2)
     return out;
   }
   // Skitter Bombs hunting players, for the bots' threat system (bots.js _threatScan; the descriptor: kits/registry.js
@@ -568,9 +667,24 @@ function curtainIn(B, it) {
   return false;
 }
 
+// [b5-subs] crushIn's sphere: the distance from c to the vertical segment base … base + h; a curtain's sheet (sampled)
+function segPoint(base, h, c) {
+  const y = clamp(c.y, base.y, base.y + h);
+  return Math.hypot(c.x - base.x, c.y - y, c.z - base.z);
+}
+function curtainSphere(it, c, r) {
+  const s = it.sub, hw = s.width / 2;
+  for (let i = -2; i <= 2; i++) {
+    _seg.copy(it.pos).addScaledVector(it.tan, (i / 2) * hw);
+    if (segPoint(_seg, s.height, c) < r) return true;
+  }
+  return false;
+}
+
 // sweep: is enemy device obj (at p, radius r) in front of runner a's drum / bristles, off its hit cooldown? (marks the hit)
-function swept(a, fx, fz, width, reach, hits, cd, obj, p, r) {
-  if (obj.team === a.team) return false;
+// ([b5-subs] any: its own team's too — a kit device that takes team fire, the Chain Bobber)
+function swept(a, fx, fz, width, reach, hits, cd, obj, p, r, any = false) {
+  if (!any && obj.team === a.team) return false;
   const dx = p.x - a.pos.x, dz = p.z - a.pos.z, dy = p.y - a.pos.y;
   const fwd = dx * fx + dz * fz, lat = Math.abs(dx * fz - dz * fx);
   if (fwd < -0.2 || fwd > reach + r || lat > width / 2 + 0.35 + r || dy < -1.2 || dy > 1.2) return false;
@@ -588,10 +702,7 @@ function addOwn(n, obj, kind, team, pos, mx, my, mz, r) {
   return n + 1;
 }
 // a hit on one of them: a subs device (subs.js _hurt) or the buoy (sp-surf.js _shot)
-function hurtDev(d, dmg, by) { if (d.kind === 'surf') d.obj._shot(dmg, by); else if (d.obj.kit) d.obj.hurt(dmg, by); else G.subs._hurt(d.obj, dmg, by); }   // ([b5-sub-glide] d.obj.kit: a kit device's descriptor)
-// [b5-sub-glide] every kit's device descriptors (SPEC §0.2; a pooled list: rolling and standing fire run every frame)
-const _kd = [];
-function kitDevices() { _kd.length = 0; for (const k in SUB_KITS) SUB_KITS[k].devices?.(_kd); return _kd; }
+function hurtDev(d, dmg, by) { if (d.obj && d.obj.kit) d.obj.hurt(dmg, by); else if (d.kind === 'surf') d.obj._shot(dmg, by); else G.subs._hurt(d.obj, dmg, by); }   // ([b5-subs] a kit device: its descriptor's hurt)
 function standHit(d, dmg, by) { DEPLOY_STATS.standing++; hurtDev(d, dmg, by); }
 
 function seekerThreat(it) {

@@ -271,7 +271,9 @@ export class HUD {
     this.tpops = h('div', { class: 'iw-tpops' });
     // "Can't use": a kit sub refused the throw (sub:cantuse) — a short callout where the sub-aim chip sits
     this.denyIcon = h('span', { class: 'iw-deny__i', html: SUB_ICONS.bomb });
-    this.denyEl = h('div', { class: 'iw-deny' }, h('span', { class: 'iw-deny__b' }, this.denyIcon, h('i', { class: 'iw-deny__no' })), h('b', null, 'CAN’T USE'));
+    // ([b5-subs] a second line under it: the kit's reason ('sub:cantuse'.reason); 'sub:note' reuses the slot, quieter)
+    this.denyTxt = h('b', null, 'CAN’T USE'); this.denyWhy = h('em', { class: 'iw-deny__why' });
+    this.denyEl = h('div', { class: 'iw-deny' }, h('span', { class: 'iw-deny__b' }, this.denyIcon, h('i', { class: 'iw-deny__no' })), h('span', { class: 'iw-deny__t' }, this.denyTxt, this.denyWhy));
     this.xh = h('div', { class: 'iw-xh' }, this.shield, this.ret, this.hitEl, this.killEl, this.tank, this.subChip, this.denyEl, this.tpops);
     this.ddLayer = h('div', { class: 'iw-dds' });
 
@@ -692,7 +694,8 @@ export class HUD {
       on('lowink', ({ actor }) => { if (actor === this._local() && this._live()) { this._tank.empty = 0.45; this._restart(this.tank, 'is-empty'); } }),
       on('special:ready', ({ actor }) => { if (actor === this._local() && this._live()) this._restart(this.sp, 'is-flare'); }),
       on('superjump', ({ actor, phase, to }) => { if (actor === this._local() && phase === 'charge' && this._live()) this._snd('ui_confirm', { volume: 0.6 }); void to; }),
-      on('sub:cantuse', ({ actor, kind }) => { if (actor && actor === this._local() && this._live()) this._cantUse(kind); }),
+      on('sub:cantuse', ({ actor, kind, reason }) => { if (actor && actor === this._local() && this._live()) this._cantUse(kind, reason); }),   // ([b5-subs] reason)
+      on('sub:note', ({ actor, kind, text }) => { if (actor && actor === this._local() && this._live()) this._subNote(kind, text); }),   // [b5-subs] e.g. SENTRY DOWN
       on('zones:control', (e) => this._zControl(e)),
       on('zones:penalty', (e) => this._zPenalty(e)),
       on('zones:active', (e) => this._zActive(e)),
@@ -1889,15 +1892,33 @@ export class HUD {
 
   // a sub refused the throw (sub:cantuse — e.g. a Torpedo or Boomerang already out): a callout where the aim chip was,
   // the badge shakes, a soft deny bonk
-  _cantUse(kind) {
+  _cantUse(kind, reason = '') {
     const now = performance.now();
     if (now - (this._denyT || -1e9) < 140) return;
     this._denyT = now;
     const icon = SUB_ICONS[kind] || SUB_ICONS[(SUB[kind] || {}).kind] || SUB_ICONS.bomb;
     if (this.denyIcon._k !== kind) { this.denyIcon._k = kind; this.denyIcon.innerHTML = icon; }
+    this._denyText('CAN’T USE', reason, false);   // [b5-subs]
     this._restart(this.denyEl, 'is-on');
     this._restart(this.subBadge, 'is-deny');
     this._snd('sub_cantuse', { volume: 0.75 });
+  }
+  // [b5-subs] the slot's words: the big line, the reason under it (hidden when empty), and the quiet note look
+  _denyText(big, why, note) {
+    this.denyTxt.textContent = big;
+    this.denyWhy.textContent = why || '';
+    this.denyEl.classList.toggle('has-why', !!why);
+    this.denyEl.classList.toggle('is-note', !!note);
+  }
+  // [b5-subs] 'sub:note' { actor, kind, text }: a kit's short word in the same slot (the Scrap Sentry's "SENTRY DOWN") —
+  // no red ✕, 70 % opacity, the kind's own sting (SFX[`${kind}_note`], else the soft bonk quieter)
+  _subNote(kind, text) {
+    this._denyT = performance.now();
+    const icon = SUB_ICONS[kind] || SUB_ICONS.bomb;
+    if (this.denyIcon._k !== kind) { this.denyIcon._k = kind; this.denyIcon.innerHTML = icon; }
+    this._denyText(text || '', '', true);
+    this._restart(this.denyEl, 'is-on');
+    if (SFX[`${kind}_note`]) this._snd(`${kind}_note`, { volume: 0.8 }); else this._snd('sub_cantuse', { volume: 0.4 });
   }
 
   // ---------------------------------------------------------------- turf ticker

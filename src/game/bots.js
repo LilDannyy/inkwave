@@ -1004,7 +1004,7 @@ export class BotBrain {
       }
       // travel as a squid through own ink when not painting
       if (!it.fire && this._pathRemaining() > 5 && this.groundSeen === 1) it.squid = true;
-      if (this.bombCd <= 0 && !onT && this._paintSub()) { it.sub = true; this._bombAim = true; }   // (nothing planted on a moving tower)
+      if (this.bombCd <= 0 && (!onT || SUB_KITS[a.sub?.kind]?.bot?.rides) && this._paintSub()) { it.sub = true; this._bombAim = true; }   // (nothing planted on a moving tower — [b5-subs] but a sub that rides it: the Scrap Sentry)
       else if (zp) {
         // Zone Control: lob a bomb onto a patch of their ink on the zone (turn to it, then throw)
         const zb = this._zoneBombAim(zp, dt);
@@ -2505,6 +2505,9 @@ export class BotBrain {
     if (dh > 18 || Math.abs(dy) > 6) return 0;
     if (d.slider) return d.score(a);   // [b5-sub-glide] a Glide Bomb: in its stop disc, or on its lane ahead (kits/glide.js)
     const st = d.state, mine = d.target === a;
+    // [b5-subs] a turret (the Scrap Sentry: it stands and shoots what it sees): 2.0 locked on us within its range, 0.6
+    // within its range, else nothing
+    if (d.turret) { const d3 = Math.hypot(dh, dy); return d3 > d.range ? 0 : d.locked && mine ? 2.0 : 0.6; }
     if (st === 'fly') {
       // still in the air after the throw: a human sees it coming, so it's noticed now (the reaction time runs during its
       // flight) — a walker coming down within its sensing circle of us (it'll lock on), a flyer heading our way
@@ -2571,7 +2574,7 @@ export class BotBrain {
     const inkOk = a.ink > Math.max(2.5, w.inkPerShot || 0, (w.inkFull || 0) * 0.25);
     const canShoot = !moveOnly && d.shootable && this.thrLos && d3 >= lo && d3 <= hi && inkOk;
     // a walker coming at us from just out of reach: stand and let it walk into it (running only buys time)
-    const waitIn = !canShoot && !moveOnly && d.ground && d.shootable && this.thrLos && inkOk && d3 > hi && d3 < hi + 4 && hi - (d.trigger || 1.2) > 2.5;
+    const waitIn = !canShoot && !moveOnly && d.ground && !d.turret && d.shootable && this.thrLos && inkOk && d3 > hi && d3 < hi + 4 && hi - (d.trigger || 1.2) > 2.5;   // ([b5-subs] a turret never walks into reach)
     const mine = d.target === a, ttl = !d.ground && d.state === 'launch' ? d3 / Math.max(2, v.length()) : 9;
     const eta = d.ground ? Math.max(0, dh - (d.trigger || 1.2)) / (d.speed || 4) : ttl;
     // a duel with an enemy player close by outranks a device that isn't about to arrive
@@ -2582,7 +2585,7 @@ export class BotBrain {
       if (score < pd) { if (mine || dh < 4) this._thrDrift(d, move, 0.6); return null; }
     }
     // far off / out of reach and not about to arrive: carry on, edging away from it
-    const urgent = d.slider ? d.urgent(a) : d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';   // ([b5-sub-glide] slider)
+    const urgent = d.slider ? d.urgent(a) : d.turret ? !!(d.locked && mine && d3 < d.range) : d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';   // ([b5-sub-glide] slider; [b5-subs] a turret: locked on us in its reach)
     if (!canShoot && !waitIn && !urgent) { this._thrDrift(d, move, 0.5); return null; }
     const act = canShoot || waitIn ? 'shoot' : 'evade', bit = act === 'shoot' ? 1 : 2;
     if (!(this.thrActs & bit)) { this.thrActs |= bit; THREAT_STATS[act]++; }
@@ -2595,6 +2598,7 @@ export class BotBrain {
       // too late to count on the shot (a charge weapon a little sooner): sidestep its line, still firing if on it
       dodge = !d.ground && d.state === 'launch' && ttl < (CHARGES[kind] ? 0.8 : 0.45);
       if (dodge) this._thrSidestep(d, move, it, ttl < 0.3);
+      else if (d.turret && !melee && kind !== 'charger') { const rx2 = rx / rl, rz2 = rz / rl, sg = this.thrSide || (this.thrSide = Math.random() < 0.5 ? -1 : 1); move.set(-rz2 * sg * 0.8, 0, rx2 * sg * 0.8); if (this.t % 1.6 < dt) this.thrSide = -sg; }   // [b5-subs] a turret: strafe across its line while shooting (it doesn't lead)
       else if (waitIn || (d.ground && kind === 'roller')) move.set(0, 0, 0);                          // (a flick lands a fixed way out)
       else if (d.ground && melee) move.set((rx / rl) * 0.35, 0, (rz / rl) * 0.35);                   // let it walk into the swing
       else if (d.ground && dh < 4.5) move.set(rx / rl, 0, rz / rl);                                  // kite while shooting
@@ -2678,7 +2682,8 @@ export class BotBrain {
       const st = G.paint.regionStats(px, y0, pz, 1.3, this.inkTeam, _stats);
       if (st.n) sc += st.own * 1.5;
       if (wp) { const wx = wp.x - x0, wz = wp.z - z0, wl = Math.hypot(wx, wz) || 1; sc += (0.4 * (wx * sx + wz * sz)) / wl; }
-      if (!d.ground && !G.physics.los(_v.copy(d.pos), _v2.set(px, y0 + 1, pz))) sc += 2;
+      if ((!d.ground || d.turret) && !G.physics.los(_v.set(d.pos.x, d.pos.y + (d.turret ? 0.55 : 0), d.pos.z), _v2.set(px, y0 + 1, pz))) sc += 2;   // ([b5-subs] a turret: from its eye)
+      if (d.turret && Math.hypot(px - d.pos.x, pz - d.pos.z) > d.range) sc += 1.5;   // [b5-subs] (out of its reach)
       sc += Math.random() * 0.3;
       if (sc > bs) { bs = sc; best = yw; }
     }
