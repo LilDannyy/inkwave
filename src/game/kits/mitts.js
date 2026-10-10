@@ -23,7 +23,7 @@ import { G, emit, clamp, lerp } from '../../core/ctx.js';
 import { WEAPONS, PLAYER } from '../../config.js';
 import { Physics, Hit } from '../physics.js';
 import { superEllipsoid } from '../character-geo.js';
-import { MAIN_KITS, netRec } from './registry.js';
+import { MAIN_KITS, SUB_KITS, netRec } from './registry.js';
 import { MELEE } from '../bots.js';
 import './mitts-model.js';
 import './mitts-assets.js';
@@ -691,6 +691,7 @@ function botPlan(a, k, yaw, pitch, dist) {
 // above or below
 function landingOk(a, P) {
   if (P.kind !== 'ground') return false;
+  if (SUB_KITS.bobber?.webHit?.(a.team, P.pos.x, P.pos.y, P.pos.z, W().landRadius)) return false;   // [b5-int3] its smash would set off an own idle Chain Bobber web
   const b = P.block >= 0 ? G.level.blocks[P.block] : null;
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;

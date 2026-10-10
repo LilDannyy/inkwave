@@ -111,7 +111,16 @@
   const st = I.stage?.[me.team] || { x: (c[0] + myPad.x) / 2, y: c[1], z: (c[2] + myPad.z) / 2 };
   // ---- what happens, from the events
   const evs = [];
-  const offs = ['bomb:explode', 'bobber:trigger', 'bobber:disarm', 'hit', 'device:hit', 'sub:end'].map((n) => on(n, (e) => evs.push({ t: G.time, n, e })));
+  // ([b5-int3] every trigger: was a foe in that chain's reach — R(N) of a bobber of it, ±1.6 m in height — as it went? a
+  // teammate setting off the web with nobody in it is the review's bug; one setting it off on a foe is the web working)
+  // (in its reach as the bots' own hold judges it — bobber-bots.js foeInNow: within R(N) of a bobber, ±1.8 m in height)
+  const foeInAt = (e) => { const R0 = K.sizeOf(e.n).R, L = K.items.filter((o) => o.state === 'blow' && o.blast && Math.abs(o.blast.t0 - G.time) < 1e-6 && o.team === e.team); return foes.some((f) => f.alive && L.some((o) => Math.hypot(f.pos.x - o.spot.x, f.pos.z - o.spot.z) < R0 && Math.abs(f.pos.y + 0.7 - o.spot.y) < 1.8)); };
+  // (how it went: the BOBBER_STATS.via key the trigger just counted — 'chain:…' is another chain's blast, a chain reaction)
+  let via0 = {};
+  const viaOf = () => { const V = K.BOBBER_STATS.via || {}; let k = null; for (const x in V) if ((V[x] || 0) > (via0[x] || 0)) k = x; via0 = { ...V }; return k; };
+  let strayN = 0;
+  const strayOf = () => { const L = K.BOBBER_STATS.strays; const x = L.length > strayN ? L[L.length - 1] : null; strayN = L.length; return x; };
+  const offs = ['bomb:explode', 'bobber:trigger', 'bobber:disarm', 'hit', 'device:hit', 'sub:end'].map((n) => on(n, (e) => evs.push({ t: G.time, n, e, foeIn: n === 'bobber:trigger' ? foeInAt(e) : undefined, stray: n === 'bobber:trigger' ? strayOf() : undefined, via: n === 'bobber:trigger' ? viaOf() : undefined })));
   // the lethal core of a blast of radius R (the chain's size by its R): ≥ 100 to a full-health kid
   const coreOf = (Rb) => { let n = 1; for (let k = 1; k <= 8; k++) if (Math.abs(K.sizeOf(k).R - Rb) < 1e-6) n = k; const s = K.sizeOf(n); if (s.dmax < 100) return 0; const kk = Math.sqrt((100 - s.dmin) / (s.dmax - s.dmin)); return 0.8 + (1 - kk) * (s.R - 0.8); };
   const unionArea = (blasts) => {
@@ -188,7 +197,11 @@
     const expired = E.filter((x) => x.n === 'sub:end' && x.e.kind === 'bobber' && x.e.why === 'expired' && x.e.team === me.team).length;
     const devHits = E.filter((x) => x.n === 'device:hit' && x.e.kind === 'bobber' && x.e.team === me.team && x.e.attacker && x.e.attacker.team !== me.team);
     const clearInk = devHits.reduce((s, x) => s + inkPer(x.e.attacker), 0);
-    const by = firstTrig ? (firstTrig.e.by === me ? 'script' : firstTrig.e.by?.team === me.team ? 'mate' : 'blast/other') : null;
+    const by = firstTrig ? (firstTrig.e.by === me ? 'script' : firstTrig.e.by?.team === me.team ? (firstTrig.foeIn ? 'mate on a foe' : 'mate') : 'blast/other') : null;
+    // ([b5-int3] every chain of the web a teammate set off with no foe in its reach — not only the first)
+    // (a chain reaction — 'chain:…', another of its chains' blast — is the first chain's doing, not a decision: listed apart)
+    const mateIdle = trig.filter((x) => x.e.by && x.e.by !== me && x.e.by.team === me.team && !x.foeIn && !String(x.via).startsWith('chain:')).map((x) => ({ t: rel(x), by: x.e.by.name, w: x.e.by.weapon?.kind, sub: x.e.by.sub?.kind, n: x.e.n, via: x.via, stray: x.stray }));
+    const reactions = trig.filter((x) => String(x.via).startsWith('chain:')).length;
     const lastDis = disarms.length ? disarms[disarms.length - 1].t : null;
     const cleared = variant === 'clear' && !trig.length && expired === 0 && disarms.length === layN && layN > 0;
     return {
@@ -197,7 +210,7 @@
       blasts: blasts.length, lethalM2: r2(unionArea(blasts.filter((b) => b.t <= tCut + 1.6))), deaths,
       splatsPer100Ink: layN ? r2((deaths * 100) / (layN * B.inkCost)) : 0,
       disarmedBefore: disBefore, disarmedShare: layN ? r2(disBefore / layN) : 0, expired,
-      clearS: cleared && firstSeen != null ? r2(lastDis - t0 - firstSeen) : null, clearInkFloor: r2(clearInk), clearHits: devHits.length, done,
+      clearS: cleared && firstSeen != null ? r2(lastDis - t0 - firstSeen) : null, clearInkFloor: r2(clearInk), clearHits: devHits.length, done, mateIdle, reactions,
     };
   };
   const cells = [];
@@ -217,6 +230,9 @@
         clearS: mean((w) => w.clearS), cleared: runs.filter((w) => w.clearS != null).length, clearInkFloor: mean((w) => w.clearInkFloor),
         setOffBy: runs.reduce((o, w) => { if (w.trig) o[w.trig.by] = (o[w.trig.by] || 0) + 1; return o; }, {}) };
       cells.push(cell);
+      // [b5-int3] the clear variant (nobody sets the web off on purpose): no chain of it set off by a teammate with no foe in
+      // its reach — bots hold their shots, their sub throws (every kind), their kit weapons' charges and leaps by an idle web
+      if (variant === 'clear') { const mi = runs.flatMap((w) => w.mateIdle); R(`clear ${STAGE} N ${N} ${layout}: no chain of ${runs.length} webs set off by a teammate with no foe in its reach (${mi.length})`, mi.length === 0, mi); }
       R(`cell ${cell.stage} N ${N} ${layout} ${variant}: ${runs.length} webs — lethal ${cell.lethalM2} m² a trigger, ${cell.deaths} splats a web (${cell.splatsPer100Ink} per 100 ink), ${cell.disarmedShareSeen ?? '—'} of a seen web disarmed first (${cell.seenWebs} seen)${variant === 'clear' ? `, cleared ${cell.cleared} of ${runs.length} in ${cell.clearS ?? '—'} s` : ''}`, true, cell);
       // the SPEC's targets, once a cell has enough webs to say (the 24-web's splats per 100 ink against the Splat Bomb's
       // is the lead's comparison: the 'all=bomb' arm of the consolidated balance pass)

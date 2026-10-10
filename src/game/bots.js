@@ -1084,6 +1084,7 @@ export class BotBrain {
     // [b5-sub-dash] the Dash Pellet's dodges, break-offs, gap closes), last, so nothing later in the frame clears what they
     // set; busy — something above already owns the aim; an aim a kit returns is held like a device's (a later kit's wins)
     { const busy = !!thrAim; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; thrAim = r; } } }
+    if (this._bombAim) SUB_KITS.bobber?.holdThrow?.(this, it);   // [b5-int3] a sub throw that would set off an own idle Chain Bobber web: held
     if (carry) { it.sub = false; it.special = false; this._bombAim = false; }   // [b5-karp] the last word: a carrier never throws or starts a special ([b5-int3] after the kits' botAct, and no press _tail would make from _bombAim)
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim, enemyVisible);
   }

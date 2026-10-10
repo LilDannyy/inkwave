@@ -678,6 +678,61 @@
         res.drawDropped = !wr.charging && !mate.intent.fire;
         R('bots: hold-fire — a teammate\'s shot through an own idle bobber is held (Splattershot, Tideline Bow, Brolly, blaster; a bow\'s fan reaches 1.2 m to the side at 9 m); 3 m off a Splattershot\'s line it fires; a bow\'s draw is dropped, not loosed', Object.values(res).every(Boolean), res);
       }
+      // [b5-int3] a teammate bot's sub throw that would go off by an own idle web is held at the press — through the real
+      // brain (bots.js think → the kits' botAct → the hold → _tail's press on _bombAim: the one press every bot throw takes,
+      // a zone ink lob, a tower lob, a fight bomb, a paint sub, a kit sub), for kinds the first hold (6afe6c06: Splat Bomb,
+      // Cling Charge, Pop Pellet, Sprinkler) didn't know: a Waddle Bomb, a Skitter Bomb, a Shaker, a Tracer Bolt, a Whirl
+      // Boomerang; the same throw turned away is pressed. And the kit weapons' paths: a Cutlass's charged cut at the web is
+      // dropped, not loosed (letting go of the trigger loosed it: the matches' 'blast:blade' strays), a Mitts leap won't land
+      // its smash by the web, a Glide Bomb won't stop its blast by it, a Dash Pellet's gap close won't pop by it
+      {
+        const res = {}, held = {};
+        for (const kind of ['bomb', 'waddle', 'seeker', 'shaker', 'tracer', 'boomerang']) {
+          for (const [tag, yaw] of [['at', 0], ['away', Math.PI]]) {
+            reset();
+            for (let i = 0; i < 3; i++) drop(me, 0, 4.5 + i * 3);   // (my web: z 4.5 / 7.5 / 10.5 down the mate's line)
+            settle();
+            put(mate, V(0, 0, 0), yaw); mate.setWeapon('shooter'); mate.setSub(kind); mate.bot.reset(); mate.ink = 100;
+            const up = brain0.get(mate);
+            mate.bot.update = function (dt) { this._bombAim = true; this.bombCd = 0; this.aimYaw = mate.aimYaw = yaw; this.aimPitch = mate.aimPitch = kind === 'tracer' ? -0.05 : 0; return up.call(this, dt); };
+            step(1 / 60);
+            stub(mate);
+            const pressed = !!mate.intent.sub || !!mate.bot._releaseBomb;
+            res[kind + ':' + tag] = tag === 'at' ? !pressed : pressed;
+            held[kind + ':' + tag] = pressed ? 'pressed' : 'held';
+          }
+        }
+        R('bots: a teammate bot\'s sub throw that would go off by an own idle web is held at the press (the real brain, its aim pinned at the web) — Splat Bomb, Waddle Bomb, Skitter Bomb, Shaker, Tracer Bolt, Whirl Boomerang; turned away, each is pressed',
+          Object.values(res).every(Boolean), held);
+        // the Cutlass: a full charge at the web, the trigger let go by the hold — dropped, no cut, no wave
+        reset();
+        drop(me, 0, 3.2); settle();
+        put(mate, V(0, 0, 0), 0); mate.setWeapon('blade'); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobHF = null; mate.bot.aimYaw = 0; mate.bot.aimPitch = 0;
+        step(2 / 60);
+        const wrB = mate.weaponRunner, KB = wrB.kit;
+        let bladeOk = false, bladeInfo = { kit: !!KB };
+        if (KB) {
+          KB.charging = true; KB.held = true; KB.charge = 1; KB.full = true; zero(mate); mate.intent.fire = true;
+          K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+          bladeOk = !KB.charging && !mate.intent.fire;
+          bladeInfo = { charging: KB.charging, fire: mate.intent.fire };
+          const t0 = K.items.filter((it) => it.state === 'live').length;
+          step(0.3);
+          bladeInfo.liveAfter = K.items.filter((it) => it.state === 'live').length; bladeInfo.live0 = t0;
+          bladeOk = bladeOk && bladeInfo.liveAfter === t0;
+        }
+        R('bots: a Cutlass bot\'s charged cut at an own idle web is dropped by its hold-fire (no cut, no wave: the web stands)', bladeOk, bladeInfo);
+        // the kits' own bot paths ask webHit: a blast at the web's middle is refused, one 8 m off isn't; with a foe the team
+        // knows standing in the web, it's fair (the chain goes off on the foe)
+        reset();
+        const W3 = []; for (let i = 0; i < 3; i++) W3.push(drop(me, 0, 4.5 + i * 3)); settle();
+        const onWeb = !!K.webHit(me.team, 0, 0, 7.5, 2.2), offWeb = !!K.webHit(me.team, 8, 0, 7.5, 2.2);
+        put(mate, V(0, 0, 0), 0); put(foe, V(0.5, 0, 8), Math.PI); wake(mate); step(0.6);
+        const withFoe = !!K.webHit(me.team, 0, 0, 7.5, 2.2), seesFoe = !!mate.bot.sight?.sees(foe);
+        stub(mate); parkAll();
+        R('bots: webHit (the Glide\'s release, the Dash Pellet\'s pop, the Mitts\' leap landing ask it) — a blast at an own idle web is refused, 8 m off it isn\'t, with a foe the team sees in the web it isn\'t',
+          onWeb && !offWeb && !withFoe && seesFoe, { onWeb, offWeb, withFoe, seesFoe });
+      }
       // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 — several trials (PAGE_ARGS reps=N,
       // default 5), every one within the time: one lucky run proves nothing about a 0.2 m target
       const REPS = +((/reps=(\d+)/.exec(window.__pageArgs || '') || [])[1] || 5);

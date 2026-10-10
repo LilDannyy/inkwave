@@ -417,6 +417,7 @@ function landing(b, a, yaw, L) {
 }
 // bossTh (the Boss Battle think passes it): the boss's telegraphs at this bot as it reads them (bossHazards threat(), after
 // the bot's reaction time) — a slam, a barrel, a charge lane or a frenzy on it: a dodge along its escape (ax, az)
+export const DASH_WEB = { held: 0 };   // [b5-int3] (tests: dashes held by an own idle web)
 function botAct(b, dt, it, move, busy, bossTh = null) {
   const a = b.a, sub = a.sub;
   const evNew = b.thrEvNew; b.thrEvNew = false;
@@ -451,6 +452,9 @@ function botAct(b, dt, it, move, busy, bossTh = null) {
   let ok = landing(b, a, yaw, L);
   if (!ok && use === 'dashDodge') for (const o of [0.52, -0.52]) if (landing(b, a, yaw + o, L)) { yaw += o; ok = true; break; }
   if (!ok) { if (use !== 'dashClose') st.cd = 0.3; return null; }
+  // [b5-int3] its pop goes off where it stands: by one of its team's idle Chain Bobber webs (no foe the team knows in it)
+  // it would blow the web for nothing — held, short of a dodge (its life first)
+  if (use !== 'dashDodge' && SUB_KITS.bobber?.webHit?.(a.team, a.pos.x, a.pos.y + 0.3, a.pos.z, sub.radius)) { st.cd = 0.5; DASH_WEB.held++; return null; }
   b.dashDir = { x: Math.sin(yaw), z: Math.cos(yaw) };
   b._bombAim = true;   // (_tail presses the sub this frame and lets go the next; trySubPress reads dashDir)
   st.cd = DASH_AI.cd;

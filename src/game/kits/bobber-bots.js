@@ -298,13 +298,13 @@ function heatAnchors(b, pads) {
   const cand = [];
   for (let i = L.length - 1, k = 0; i >= 0 && k < 48; i--, k++) {
     const p = L[i], d = Math.hypot(p.x - a.pos.x, p.z - a.pos.z), pr = progOf(p, pads, a.team);
-    if (d < 3.5 || d > 28 || Math.abs(p.y - a.pos.y) > 3.5 || pr < 0.25 || pr > 0.8) continue;
+    if (d < 3.5 || d > 20 || Math.abs(p.y - a.pos.y) > 3.5 || pr < 0.25 || pr > 0.8) continue;   // ([b5-int3] 28 → 20 m)
     if (Math.hypot(p.x - pads[1 - a.team].x, p.z - pads[1 - a.team].z) < noR) continue;
     let n = 0, vx = 0, vz = 0;
     for (const q of L) if (Math.hypot(q.x - p.x, q.z - p.z) < 4 && Math.abs(q.y - p.y) < 1.5) { const w = 1 - (G.time - q.t) / 24; n += w; vx += q.vx * w; vz += q.vz * w; }
     if (n < 2) continue;
     const vl = Math.hypot(vx, vz), fx = p.x - pads[1 - a.team].x, fz = p.z - pads[1 - a.team].z, fl = Math.hypot(fx, fz) || 1;
-    cand.push({ x: p.x, y: p.y, z: p.z, dx: vl > 0.8 ? vx / vl : fx / fl, dz: vl > 0.8 ? vz / vl : fz / fl, n, src: 'theat', tx: a.pos.x, tz: a.pos.z, trip: 30 });
+    cand.push({ x: p.x, y: p.y, z: p.z, dx: vl > 0.8 ? vx / vl : fx / fl, dz: vl > 0.8 ? vz / vl : fz / fl, n, src: 'theat', tx: a.pos.x, tz: a.pos.z, trip: 16 });   // ([b5-int3] trip 30 → 16: a 30 m walk didn't pay)
   }
   cand.sort((p, q) => q.n - p.n);
   for (const c of cand) { if (out.length >= 3) break; if (!out.some((o) => Math.hypot(o.x - c.x, o.z - c.z) < 5)) out.push(c); }
@@ -384,6 +384,56 @@ function linkNear0(b, P, q, tp) {
   for (const t of T) for (let k = 0; k < 8; k++) { const th = (k * Math.PI) / 4 + 0.3, rr = 3.4 + (k % 2) * 0.7; const at = ok(t.x + Math.cos(th) * rr, t.z + Math.sin(th) * rr); if (at) return at; }
   return null;
 }
+// [b5-int3] (bot.fight) a link that runs one of our team's chains out onto foe t standing just outside its reach: where t
+// will be when it floats (~0.9 s), a chain whose nearest link is within R(N) − 0.3 + 4.4 m of that but not over it; the
+// new link up to 4.4 m from that link toward t (it tethers: linkRange 5, a clear line), landing with t inside the grown
+// chain's reach (R(N + 1) − 0.8, a margin for its step), clear of this bot's own swing / splash → V3 | null
+const _nr2 = [];
+function extendSpot(b, t) {
+  const a = b.a, tp = zonePlan() ? null : towerPlan(), px = t.pos.x + t.vel.x * 0.9, pz = t.pos.z + t.vel.z * 0.9, py = t.pos.y;
+  const minD = MELEE[a.weapon.kind] || MAIN_KITS[a.weapon.kind]?.bot?.melee ? 4.5 : 3.5;
+  const done = new Set();
+  let tries = 0;
+  for (const o of near(px - 8, pz - 8, px + 8, pz + 8, _nr2)) {
+    if (o.team !== a.team || o.state !== 'live' || !o.chain || done.has(o.chain)) continue;
+    const ch = o.chain; done.add(ch);
+    let L = null, dl = Infinity;
+    for (const q of ch.items) { if (q.state !== 'live' || Math.abs(py + 0.7 - q.spot.y) >= 1.6) continue; const d = Math.hypot(px - q.spot.x, pz - q.spot.z); if (d < dl) { dl = d; L = q; } }
+    if (!L) continue;
+    const R0 = sizeOf(ch.n).R - 0.3, R1 = sizeOf(ch.n + 1).R - 0.8;
+    if (dl < R0 || dl > 4.4 + R1) continue;   // (in it already: the scan's shot; too far for one link)
+    const ux = (px - L.spot.x) / dl, uz = (pz - L.spot.z) / dl;
+    for (const k of [Math.min(4.4, dl - 0.4), Math.min(4.4, dl - 1.0), Math.max(dl - R1, 1.0)]) {
+      if (k < 1.0 || dl - k > R1 || ++tries > 3) continue;
+      const x = L.spot.x + ux * k, z = L.spot.z + uz * k;
+      if (Math.hypot(x - a.pos.x, z - a.pos.z) < minD) continue;
+      const at = lobBudget(2, () => okSpot(a, x, z, tp));
+      if (at && Math.abs(at.y + SB().floatH - L.spot.y) < 1.6 && G.physics.los(L.spot, _v.set(at.x, at.y + SB().floatH, at.z))) return at;
+    }
+    if (tries > 3) break;
+  }
+  return null;
+}
+// [b5-int3] the ambush (botAct's hold): how long after its last link, and how far back from the chain's middle
+export const AMBUSH = { time: 12, back: [6, 5, 7, 4.5] };
+// a stand spot on our side of the chain laid at H (H.d: the way foes come there; a guard's: toward its zone's middle),
+// AMBUSH.back m from its middle, on the nav, within ±1.5 m of its height, with a clear line from a squid's eye there to a
+// bobber of the chain → V3 | null
+function ambushSpot(b, H) {
+  const a = b.a, nav = G.nav, zp = zonePlan();
+  let ux = H.dx, uz = H.dz;
+  if (zp && b.zZone >= 0) { const c = zp.Z.zones[b.zZone]?.center; if (c) { const l = Math.hypot(c[0] - H.x, c[2] - H.z); if (l > 0.5) { ux = (c[0] - H.x) / l; uz = (c[2] - H.z) / l; } } }
+  const L = items.filter((o) => o.owner === a && o.state === 'live' && Math.hypot(o.spot.x - H.x, o.spot.z - H.z) < 6);
+  if (!nav || !L.length) return null;
+  for (const k of AMBUSH.back) for (const sw of [0, 0.5, -0.5]) {
+    const th = Math.atan2(ux, uz) + sw, id = nav.nearest(_v.set(H.x + Math.sin(th) * k, H.y + 0.5, H.z + Math.cos(th) * k), 1.5);
+    if (id < 0) continue;
+    const n = nav.nodes[id];
+    if (Math.abs(n.y - H.y) > 1.5 || Math.hypot(n.x - H.x, n.z - H.z) < 3.5) continue;
+    if (L.some((o) => G.physics.los(_v.set(n.x, n.y + 0.5, n.z), o.spot))) return new V3(n.x, n.y, n.z);
+  }
+  return null;
+}
 // the first link of a chain laid now; the rest follow it in a burst (paint → planOf)
 function startChain(b, A, L) {
   blog(b, 'chain', { src: A.src, n: L.length, at: [Math.round(A.x), Math.round(A.z)], d: Math.round(Math.hypot(A.x - b.a.pos.x, A.z - b.a.pos.z) * 10) / 10, ink: Math.round(b.a.ink) });
@@ -420,8 +470,8 @@ export const botKit = {
             // (once its last link has landed and linked: a chain left short of three — a link skipped, one that didn't tether
             // — is grown at once, twice at most; a fight's pair is left be)
             if (!P.fight && (P.grow || 0) < 2) { b._bobGrow = { at: G.time + 1.7, n: (P.grow || 0) + 1, A: P.A, m: G.match }; }
-            // (Turf: it keeps within reach of its chain while it lasts — the foes it waits for come at it through there)
-            if (!zonePlan() && !towerPlan()) { let cx = 0, cz = 0; for (const q of P.pts) { cx += q.x; cz += q.z; } cx /= P.pts.length; cz /= P.pts.length; b._bobHold = { x: cx, y: P.pts[0].y, z: cz, dx: P.A.dx, dz: P.A.dz, until: G.time + 18, m: G.match, t: -9 }; }
+            // [b5-int3] (Turf, and a Zone Control guard: an ambush by its chain for a while — botAct's hold)
+            if (!towerPlan() && (!zonePlan() || b.zRole === 'guard')) { let cx = 0, cz = 0; for (const q of P.pts) { cx += q.x; cz += q.z; } cx /= P.pts.length; cz /= P.pts.length; b._bobHold = { x: cx, y: P.pts[0].y, z: cz, dx: P.A.dx, dz: P.A.dz, until: G.time + AMBUSH.time, m: G.match, t: -9, S: null }; }
           }
           else b.bombCd = 0.45 + Math.random() * 0.3;
           return true;
@@ -467,8 +517,16 @@ export const botKit = {
     const P = planOf(b);
     if (P) {   // (the pair's second)
       if (a.ink < a.sub.inkCost + 2) return false;
-      while (P.i < P.pts.length) { const q = P.pts[P.i++], at = okSpot(a, q.x, q.z, zonePlan() ? null : towerPlan()); if (at) { b._bobberAt = at; BOBBER_BOT.grows++; if (P.i >= P.pts.length) { b._bobPlan = null; b.bombCd = 6 + Math.random() * 4; } else b.bombCd = 0.3 + Math.random() * 0.15; return true; } }
+      while (P.i < P.pts.length) { const q = P.pts[P.i++], at = okSpot(a, q.x, q.z, zonePlan() ? null : towerPlan()); if (at) { b._bobberAt = at; b._bobSnap = !!P.fight; BOBBER_BOT.grows++; if (P.i >= P.pts.length) { b._bobPlan = null; b.bombCd = 6 + Math.random() * 4; } else b.bombCd = 0.3 + Math.random() * 0.15; return true; } }
       b._bobPlan = null; b.bombCd = 3; return false;
+    }
+    // [b5-int3] a link run out onto it: the foe stands just outside one of our team's chains (bots step round an armed
+    // web: the matches had foes within 3 m of a chain's reach 15–20× as long as in it) — one more link between them grows
+    // that chain and its reach over the foe; shot as it floats (snap)
+    if (t && t.alive && dist >= 3.5 && dist <= 12 && a.ink >= a.sub.inkCost + 4 && G.time >= (b._bobExtT || 0)) {
+      b._bobExtT = G.time + 0.3;
+      const S = extendSpot(b, t);
+      if (S) { b._bobberAt = S; b._bobSrc = 'ext'; b._bobSnap = true; b.bombCd = 2.5 + Math.random(); BOBBER_BOT.exts = (BOBBER_BOT.exts || 0) + 1; return true; }
     }
     if (t && t.alive && dist >= 5 && dist <= 11 && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025 && mine(a).length < 12
       && !items.some((o) => o.team === a.team && o.state !== 'dead' && Math.hypot(o.spot.x - t.pos.x, o.spot.z - t.pos.z) < 3.5)) {
@@ -480,7 +538,7 @@ export const botKit = {
       const minD = MELEE[a.weapon.kind] || MAIN_KITS[a.weapon.kind]?.bot?.melee ? 4.5 : 3.5;
       if (A && B && Math.hypot(A.x - a.pos.x, A.z - a.pos.z) >= minD && Math.hypot(B.x - a.pos.x, B.z - a.pos.z) >= minD) {
         b._bobPlan = { pts: [A, B], i: 1, t0: G.time, m: G.match, fight: true, A: { x: cx, y: A.y, z: cz, dx: dx / l, dz: dz / l } };
-        b._bobberAt = A; b._bobSrc = 'pair'; b.bombCd = 0.3 + Math.random() * 0.15; BOBBER_BOT.fightPairs = (BOBBER_BOT.fightPairs || 0) + 1;
+        b._bobberAt = A; b._bobSrc = 'pair'; b._bobSnap = true; b.bombCd = 0.3 + Math.random() * 0.15; BOBBER_BOT.fightPairs = (BOBBER_BOT.fightPairs || 0) + 1;
         return true;
       }
     }
@@ -489,7 +547,7 @@ export const botKit = {
     if ((t.vel.x * dx + t.vel.z * dz) / l < 2) return false;   // (not coming at us)
     const at = okSpot(a, t.pos.x + (dx / l) * 1.6, t.pos.z + (dz / l) * 1.6, zonePlan() ? null : towerPlan());
     if (!at) return false;
-    b._bobberAt = at; b._bobSrc = 'lure'; b.bombCd = 6 + Math.random() * 4; BOBBER_BOT.lures++;
+    b._bobberAt = at; b._bobSrc = 'lure'; b._bobSnap = true; b.bombCd = 6 + Math.random() * 4; BOBBER_BOT.lures++;
     return true;
   },
 };
@@ -593,29 +651,83 @@ function holdFire(b, a) {
   return null;
 }
 
-// [b5-int3] a bot's own sub throw that would go off by one of its team's idle chains — a Splat Bomb, a Cling Charge, a Pop
-// Pellet (their blasts), a Twirl Sprinkler (its drops): any of its team's blasts or drops sets a chain off, so a bot's
-// bomb landing by a teammate's web (a human's too) blew it with no foe in it. It is held, as its shots are. Where it
-// lands: the bomb-arc preview's flight (Projectiles.throwVelocity and the same 60 Hz integrator) with its aim now.
-const THROW_R = { bomb: 'radius', sticky: 'radius', burst: 'radius', sprinkler: 'sprayRadius' };
-const _tv = new V3(), _tp = new V3(), _tq = new V3(), _th = new Hit();
-function throwHits(a) {
-  const bar = a.specialActive?.kind === 'barrage' ? a.specialActive : null, sub = bar ? bar.bomb : a.sub;
-  const key = sub && THROW_R[sub.kind];
-  if (!key || !sub.throwSpeed || !G.projectiles?.throwVelocity) return null;
+// [b5-int3] a blast at (x, y, z) of radius r (a blast's damageArea: within r + hitR of a bobber's centre, no line test)
+// that would set off one of team's idle chains — a live one whose chain has no foe the team knows of in its reach, or one
+// of its bobbers on its way to its spot — → that bobber, or null. Kits ask it for their own bot paths (glide.js: the
+// slide's stop; dash.js: the pop at the start; mitts.js: a leap's landing smash) through SUB_KITS.bobber.webHit.
+const _wp = new V3();
+export function webHit(team, x, y, z, r) {
+  if (!items.length) return null;
+  const R = r + SB().hitR + 0.2;
+  _wp.set(x, y, z);
+  for (const o of near(x - R, z - R, x + R, z + R, _nr)) if (o.team === team && o.state === 'live' && o.chain && o.spot.distanceTo(_wp) < R && idleNow(o, team)) return o;
+  for (const o of pendingOwn(team)) if (posOf(o).distanceTo(_wp) < R && idleNow(o, team)) return o;
+  return null;
+}
+// a bot's own sub throw, about to be pressed (every path that throws: paint subs, zone ink lobs, tower lobs, fight bombs,
+// memory / shield lobs, a Bomb Barrage's bombs, kit subs), that would go off by one of its team's idle chains — any of
+// its team's blasts, drops or shots sets a chain off, so a bot's bomb landing by a teammate's web (a human's too) blew it
+// with no foe in it (the review: 3 of 5 webs blown by teammates). Where it goes off, with its aim now: a lob's landing by
+// the bomb-arc preview's flight (Projectiles.throwVelocity, the same 60 Hz integrator) — a Shaker's hops on along it, a
+// homing sub's blast on the foe the team knows nearest its landing within its sense reach; a Tracer Bolt's line and a
+// Whirl Boomerang's out-run, hover and the burst beside its thrower. The Glide Bomb (its release: glide.js), the Dash
+// Pellet (dash.js) ask webHit themselves; placed subs (mines, beacons, sentries) and the cloud / wall subs go off on
+// nobody or on foes there.
+const LOB_R = { bomb: 'radius', sticky: 'radius', burst: 'radius', sprinkler: 'sprayRadius', shaker: 'radius', seeker: 'radius', waddle: 'radius', torpedo: 'radius' };
+const SENSE = { seeker: 'seekRange', waddle: 'senseRadius', torpedo: 'lockRange' };
+const _tv = new V3(), _tp = new V3(), _tq = new V3(), _th = new Hit(), _td = new V3();
+function lobLand(a, sub) {
   G.projectiles.throwVelocity(a, sub.throwSpeed, _tv);
   _tp.set(a.pos.x, a.pos.y + 1.35, a.pos.z);
-  let land = null;
   for (let i = 0; i < 240 && _tp.y > -30; i++) {
     _tq.copy(_tp); _tv.y -= 24 / 60; _tp.addScaledVector(_tv, 1 / 60);
-    if (G.physics.segment(_tq, _tp, _th).hit) { land = _th.point; break; }
-  }
-  if (!land) return null;
-  const R = (+sub[key] || 2.5) + SB().hitR + 0.2;
-  for (const o of near(land.x - R, land.z - R, land.x + R, land.z + R, _nr)) {
-    if (o.team === a.team && o.state === 'live' && o.chain && o.spot.distanceTo(land) < R && idleNow(o, a.team)) return o;
+    if (G.physics.segment(_tq, _tp, _th).hit) return _th.point;
   }
   return null;
+}
+// along the aim, flat or not, from the eye: samples every metre to `len` or the first wall, each a blast of radius r
+function lineHits(a, len, r, flat) {
+  const cp = flat ? 1 : Math.cos(a.bot?.aimPitch ?? a.aimPitch ?? 0), yaw = a.bot?.aimYaw ?? a.aimYaw;
+  _td.set(Math.sin(yaw) * cp, flat ? 0 : Math.sin(a.bot?.aimPitch ?? 0), Math.cos(yaw) * cp);
+  _tp.set(a.pos.x, a.pos.y + 1.15, a.pos.z);
+  const h = G.physics.raycast(_tp, _td, len, _th, false), L = h.hit ? h.dist ?? _tp.distanceTo(h.point) : len;
+  for (let t = 0.5; t <= L + 0.01; t += 1) { const o = webHit(a.team, _tp.x + _td.x * t, _tp.y + _td.y * t, _tp.z + _td.z * t, r); if (o) return o; }
+  return null;
+}
+function throwHits(a) {
+  const bar = a.specialActive?.kind === 'barrage' ? a.specialActive : null, sub = bar ? bar.bomb : a.sub;
+  if (!sub || !G.projectiles?.throwVelocity) return null;
+  const k = sub.kind, key = LOB_R[k];
+  if (key && sub.throwSpeed) {
+    const land = lobLand(a, sub);
+    if (!land) return null;
+    let cx = land.x, cy = land.y, cz = land.z;
+    const sr = SENSE[k] && +sub[SENSE[k]];
+    if (sr) {   // (a homing sub goes off on the foe the team knows nearest its landing, within its reach — else where it lands)
+      let bd = sr;
+      for (const e of G.actors) { if (e.team === a.team || !e.alive) continue; const kn = teamKnown(a.team, e, 1.0); if (!kn) continue; const d = Math.hypot(kn.pos.x - land.x, kn.pos.z - land.z); if (d < bd) { bd = d; cx = kn.pos.x; cy = kn.pos.y; cz = kn.pos.z; } }
+    }
+    const R = +sub[key] || 2.5;
+    let o = webHit(a.team, cx, cy, cz, R);
+    if (!o && k === 'shaker') {   // (its hops: on along the throw, ~hopSpeed × gap each)
+      const yaw = a.bot?.aimYaw ?? a.aimYaw, hop = (sub.hopSpeed || 4.2) * (sub.gap || 0.42);
+      for (let j = 1; j <= 2 && !o; j++) o = webHit(a.team, cx + Math.sin(yaw) * hop * j, cy, cz + Math.cos(yaw) * hop * j, R);
+    }
+    return o;
+  }
+  if (k === 'tracer') return lineHits(a, sub.range || 32, (sub.trailRadius || 0.42) + (sub.size || 0.16), false);
+  if (k === 'boomerang') return lineHits(a, sub.range || 9, Math.max(sub.contact || 0.3, sub.hoverRadius || 1.35), true) || webHit(a.team, a.pos.x, a.pos.y + 1, a.pos.z, sub.radius || 2.4);
+  return null;
+}
+// (bots.js, after the kits' botAct, before _tail presses on _bombAim) hold the throw: tried again from wherever it is a
+// moment later → true when held
+export function holdThrow(b, it) {
+  const a = b.a;
+  if (!items.length || !a.alive || !throwHits(a)) return false;
+  b._bombAim = false; it.sub = false;
+  if (a.specialActive?.kind === 'barrage') b.barrageCd = Math.max(b.barrageCd || 0, 0.6); else b.bombCd = Math.max(b.bombCd || 0, 1.2);
+  BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1;
+  return true;
 }
 
 // its own live chain still short of four (or none yet)
@@ -673,13 +785,6 @@ export function botAct(b, dt, it, move, busy) {
   const a = b.a;
   if (a.sub?.kind === 'bobber') noteSightings();   // (only when some bot holds the sub: nothing else reads them)
   if (items.length) exposure();
-  // [b5-int3] a sub throw about to be pressed (bots.js _tail presses on _bombAim) that would go off by its team's idle chain:
-  // held, and tried again a moment later from wherever it is then (throwHits)
-  if (b._bombAim && items.length && a.alive && throwHits(a)) {
-    b._bombAim = false; it.sub = false;
-    if (a.specialActive?.kind === 'barrage') b.barrageCd = Math.max(b.barrageCd || 0, 0.6); else b.bombCd = Math.max(b.bombCd || 0, 1.2);
-    BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1;
-  }
   if (!a.alive || a.specialActive || a.superJumpState || a.climbing) { b._bob = null; return null; }
   let S = b._bob;
   // (it blew — done; 0.6 s of shots from the moment its aim settled on it went by, or 1.8 s in all — leave it a moment;
@@ -698,7 +803,9 @@ export function botAct(b, dt, it, move, busy) {
   // step aside after a moment to clear the line)
   // (asked while it would fire, and while what it loosed is still going — a spinner's or a splatling's burst, a draw or a
   // charge, a roller's or a brush's flick winding up — whatever its sub)
-  const wr0 = a.weaponRunner, going = !!wr0 && (wr0.charging || wr0.burstT > 0 || wr0.streaming || wr0.flick >= 0 || wr0.slosh >= 0);
+  // ([b5-int3] a kit weapon's own charge too — the Cutlass's cut, the Mitts' leap: runner.charging stays false for them, and
+  // letting go of the trigger LOOSED the Cutlass's charged cut and wave into the web — dropped instead: dropCharge)
+  const wr0 = a.weaponRunner, going = !!wr0 && (wr0.charging || wr0.burstT > 0 || wr0.streaming || wr0.flick >= 0 || wr0.slosh >= 0 || !!wr0.kit?.charging);
   if (!S && (it.fire || going) && items.length) {
     // (asked every 3 frames a bot, the answer held between: its aim moves little in 0.05 s)
     let o = b._bobHF?.o;
@@ -709,7 +816,7 @@ export function botAct(b, dt, it, move, busy) {
       // burst or a stream stopped, a wind-up undone — as a player swimming out of it would: the bow lets a stalled draw
       // go by itself, a spinner's burst runs on after the release, a flick comes out once wound up)
       it.fire = false;
-      if (going && !wr0.aimingSub) { wr0.cancelForSwim(); BOBBER_BOT.dropped = (BOBBER_BOT.dropped || 0) + 1; }
+      if (going && !wr0.aimingSub) { wr0.dropCharge(); BOBBER_BOT.dropped = (BOBBER_BOT.dropped || 0) + 1; }
       BOBBER_BOT.holds++;
       b._bobHoldT = (b._bobHoldT || 0) + dt;
       if (b.mode === 'fight' && b._bobHoldT > 0.35) { const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd); }
@@ -725,7 +832,7 @@ export function botAct(b, dt, it, move, busy) {
   // were picked from here. Run dry by its last link, bots.js sends it to refill: it refills where it stands — a dive in its
   // ink, or the puddle bots.js paints to swim in when it's on none)
   if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; }
-  if (busy) return null;
+  if (busy) { if (G.time < (b._bobSnapT || 0)) { BOBBER_BOT.snapBusy = (BOBBER_BOT.snapBusy || 0) + 1; const k = b.sp?.esc ? 'esc' : b.thr ? 'thr' : b._climbAim ? 'climb' : b.blockT > 0 ? 'canopy' : 'other'; (BOBBER_BOT.busyWhy || (BOBBER_BOT.busyWhy = {}))[k] = (BOBBER_BOT.busyWhy[k] || 0) + 1; } return null; }
   // laying a chain: hold about where it stands (its links are picked in reach of here) and, short of ink for the next one,
   // a quick dive in its own ink (42 ink/s) — a Zone Control guard with its web to build does the same before it starts
   // (a burst's chain left short of three: its growth, straight away — the links thrown by paint, bombCd waived)
@@ -761,13 +868,33 @@ export function botAct(b, dt, it, move, busy) {
     }
     if (P && !low) { move.multiplyScalar(0.05); b.noProg = 0; }   // (its links were picked from here: it stands while it lays them)
   }
-  // (Turf: after laying a chain it keeps within reach of it while it lasts — a few metres behind it, its own side — so the
-  // foes who come at it come through the chain, and it's there with a line to it; any fight comes first)
+  // [b5-int3] an ambush by its chain (Turf; a Zone Control guard by its zone's web), AMBUSH.time s after its last link:
+  // at a stand spot 5–7 m from the chain on our side of it with a clear line to it, a still squid in our ink — seen from
+  // 2 m (botSight), so for foes who don't know it's there its web isn't armed (bobber discs: armedFor) and they walk in;
+  // its scan sets the chain off on them (it stays under while one only closes on it: 'ready'). On no ink there, a puddle
+  // at its feet first. A fight, a refill, the next chain, or its web gone ends it. (Was: up to 18 s walking back to 5.5 m
+  // from it — on the foes' side, in plain sight: its web armed the whole time, foes in its reach 2 s of 403.)
   const H = b._bobHold;
-  if (H && (G.time > H.until || H.m !== G.match || !items.some((o) => o.owner === a && o.state === 'live' && Math.hypot(o.spot.x - H.x, o.spot.z - H.z) < 6))) b._bobHold = null;
-  else if (H && !S && !fighting && b.mode === 'paint' && G.time - H.t > 1.5 && Math.hypot(a.pos.x - H.x, a.pos.z - H.z) > 9) {
-    H.t = G.time;
-    if (b._pathTo(_v.set(H.x - H.dx * 5.5, H.y, H.z - H.dz * 5.5), 0.6)) { b.goalTimer = 2.5; BOBBER_BOT.holdMoves = (BOBBER_BOT.holdMoves || 0) + 1; }
+  b._bobHid = false;
+  if (H && (G.time > H.until || H.m !== G.match || a.sub?.kind !== 'bobber' || !items.some((o) => o.owner === a && o.state === 'live' && Math.hypot(o.spot.x - H.x, o.spot.z - H.z) < 6))) b._bobHold = null;
+  else if (H && !fighting && b.mode === 'paint' && !P && !T && (!S || S.ready)) {
+    if (!H.S) H.S = ambushSpot(b, H) || 'none';
+    if (H.S === 'none') b._bobHold = null;
+    else {
+      const d = Math.hypot(a.pos.x - H.S.x, a.pos.z - H.S.z);
+      b.goalTimer = Math.max(b.goalTimer, 1.0); b.goalCheckT = Math.max(b.goalCheckT || 0, 0.8); b.zHoldUntil = Math.max(b.zHoldUntil || 0, b.t + 0.5);
+      if (d > 1.3) {
+        if (H.go == null) H.go = G.time;
+        if (G.time - H.go > 6) { b._bobHold = null; BOBBER_BOT.ambushLost = (BOBBER_BOT.ambushLost || 0) + 1; }
+        else if (G.time - H.t > 1.5 || !b.path || b.pi >= b.path.length) { H.t = G.time; if (!b._pathTo(H.S, 0.6)) b._bobHold = null; }
+      } else {
+        move.set(0, 0, 0); b.noProg = 0; it.jump = false;
+        if (!H.at) { H.at = G.time; BOBBER_BOT.ambushes = (BOBBER_BOT.ambushes || 0) + 1; }
+        BOBBER_BOT.ambushS = (BOBBER_BOT.ambushS || 0) + dt;
+        if (b.groundSeen === 1) { it.squid = true; it.fire = false; b._bobHid = true; }
+        else if (!S && a.ink > 15) { it.squid = false; it.fire = true; _aim.yaw = b.aimYaw; _aim.pitch = -1.25; _aim.dist = 1.5; return _aim; }   // (a puddle at its feet to hide in)
+      }
+    }
   }
   // (a fight's pair: its second straight after the first — bots.js asks a fighting bot's sub only with 8 ink to spare)
   if (!S && P?.fight && fighting && b.bombCd <= 0 && a.ink >= a.sub.inkCost + 2 && !b._bombAim && !b._releaseBomb && !a.weaponRunner?.aimingSub
@@ -798,7 +925,7 @@ export function botAct(b, dt, it, move, busy) {
   _aim.pitch = idealPitch + e * 0.6 * (0.7 * settle * wander(b.t * 2.1 + (b.ph2 || 0)) + 1.5 * acq * S.acqK * S.sp);
   _aim.dist = Math.max(1, d3);
   const off = Math.hypot(angleDiff(b.aimYaw, idealYaw), b.aimPitch - idealPitch), tol = Math.max(0.035, Math.atan2(0.2, Math.max(0.5, d3))) * 1.6;
-  it.squid = false; it.sub = false; b._bombAim = false;
+  it.squid = !!(S.ready && b._bobHid); it.sub = false; b._bombAim = false;   // ([b5-int3] an ambusher stays under until a foe is in)
   a.fireFacing = Math.max(a.fireFacing || 0, 0.25);
   const wr = a.weaponRunner;
   // (the trigger once its aim is well inside the bobber — half its own size, hitR, at that distance: the gun's spread
@@ -824,18 +951,40 @@ export function botAct(b, dt, it, move, busy) {
 // a foe in a bobber's reach R (R(N) − 0.3) for a shot now, by where it will be when the blast gets there (about 0.35 s:
 // the shot's flight and the hops): in it and not on its way out fast, or walking into it from just outside
 function inReach(e, o, d, R) {
-  const px = e.pos.x + e.vel.x * 0.35, pz = e.pos.z + e.vel.z * 0.35, dp = Math.hypot(px - o.spot.x, pz - o.spot.z);
+  const px = e.x + e.vx * 0.35, pz = e.z + e.vz * 0.35, dp = Math.hypot(px - o.spot.x, pz - o.spot.z);
   return (d < R && dp < R + 0.3) || (dp < R - 0.2 && d < R + 1.2);
 }
-// (a ready bot, every 0.1 s) a foe it sees in that chain's reach now ('in'), still closing on it ('close'), or neither
-function foeAt(b, ch) {
-  const a = b.a, R = sizeOf(ch.n).R - 0.3;
-  let st = null;
+// [b5-int3] the foes a bot can set a chain off on: those it sees (where they are), and those its team sees or saw a moment
+// ago (teamKnown, ≤ 0.35 s: where they were seen, run on along their heading for the age) — a teammate's sighting is what
+// the team knows, never a wall-hack; the bot still needs its own line to a bobber of the chain → [{ e, x, y, z, vx, vz }]
+const _kf = [], _kfPool = [];
+function knownFoes(b) {
+  const a = b.a;
+  _kf.length = 0;
   for (const e of G.actors) {
-    if (e.team === a.team || !e.alive || !b.sight?.sees(e)) continue;
+    if (e.team === a.team || !e.alive) continue;
+    let x, y, z, vx, vz;
+    if (b.sight?.sees(e)) { x = e.pos.x; y = e.pos.y; z = e.pos.z; vx = e.vel.x; vz = e.vel.z; }
+    else {
+      const k = teamKnown(a.team, e, 0.35);
+      if (!k || k.src === 'jump') continue;
+      const age = clamp(G.time - k.t, 0, 0.35);
+      x = k.pos.x + k.vel.x * age; y = k.pos.y; z = k.pos.z + k.vel.z * age; vx = k.vel.x; vz = k.vel.z;
+    }
+    const f = _kfPool[_kf.length] || (_kfPool[_kf.length] = {});
+    f.e = e; f.x = x; f.y = y; f.z = z; f.vx = vx; f.vz = vz;
+    _kf.push(f);
+  }
+  return _kf;
+}
+// (a ready bot, every 0.1 s) a foe it knows of in that chain's reach now ('in'), still closing on it ('close'), or neither
+function foeAt(b, ch) {
+  const R = sizeOf(ch.n).R - 0.3;
+  let st = null;
+  for (const e of knownFoes(b)) {
     for (const o of ch.items) {
-      if (o.state !== 'live' || Math.abs(e.pos.y + 0.7 - o.spot.y) >= 1.6) continue;
-      const d = Math.hypot(e.pos.x - o.spot.x, e.pos.z - o.spot.z);
+      if (o.state !== 'live' || Math.abs(e.y + 0.7 - o.spot.y) >= 1.6) continue;
+      const d = Math.hypot(e.x - o.spot.x, e.z - o.spot.z);
       if (inReach(e, o, d, R)) return 'in';
       if (d < R + 3.6) st = 'close';
     }
@@ -856,8 +1005,7 @@ function scan(b) {
     const tx = T.pos.x - a.pos.x, tz = T.pos.z - a.pos.z;
     if (Math.abs(angleDiff(b.aimYaw, Math.atan2(tx, tz))) < 0.15 && Math.hypot(tx, tz) < weaponRange(a.weapon) * 0.95) better = T;
   }
-  const foes = [];
-  for (const e of G.actors) if (e.team !== a.team && e.alive && sight.sees(e)) foes.push(e);
+  const foes = knownFoes(b);   // [b5-int3] (what it sees, and what its team saw a moment ago)
   if (!foes.length) { X.noFoe++; return null; }
   const w = a.weapon, melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee);
   const win = melee && b._meleeWindow ? b._meleeWindow(w, { ground: false, state: 'still' }) : [0, weaponRange(w) * 0.95];
@@ -872,21 +1020,26 @@ function scan(b) {
     const R = sizeOf(ch.n).R - 0.3;
     let foeIn = false, tIn = false, close = null, cd = Infinity;
     for (const e of foes) for (const o of ch.items) {
-      if (o.state !== 'live' || Math.abs(e.pos.y + 0.7 - o.spot.y) >= 1.6) continue;
-      const d = Math.hypot(e.pos.x - o.spot.x, e.pos.z - o.spot.z);
-      if (inReach(e, o, d, R)) { foeIn = true; if (e === better) tIn = true; break; }
+      if (o.state !== 'live' || Math.abs(e.y + 0.7 - o.spot.y) >= 1.6) continue;
+      const d = Math.hypot(e.x - o.spot.x, e.z - o.spot.z);
+      if (inReach(e, o, d, R)) { foeIn = true; if (e.e === better) tIn = true; break; }
       if (d < R + 3.2 && d < cd) { cd = d; close = e; }
     }
+    // [b5-int3] one it threw at a foe a moment ago (a fight's pair, a link run out onto a foe by a chain, a lure): shot the
+    // moment that foe is in its reach, even mid-duel and even alone — it was thrown for that shot
+    const snap = ch.items.some((o) => o.snapBy === a && G.time < o.snapT);
     // (a foe closing on a chain of two or more, not yet in it: ready — aimed at the chain, the trigger held — as a player
     // watching one walk at their web would; not while it's in a duel of its own)
     let ready = false;
     if (!foeIn) { if (!close || ch.n < 2 || better || (b.mode === 'fight' && b.seeTimer > 0) || a.lastDamage < 0.8) continue; ready = true; }
-    if (better && !(tIn && ch.n >= 2)) { X.better++; continue; }
+    if (snap && foeIn) X.snapIn = (X.snapIn || 0) + 1;
+    if (better && !(tIn && (ch.n >= 2 || snap))) { X.better++; continue; }
     // a bobber of it in our reach with a line: the nearest first (rays from the shared budget)
     const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez) })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => x.d - y.d);
     // (one sight line a chain a scan: its nearest bobber in reach — the biggest target — unless that one had no line a
     // moment ago, then the next)
     const c = cand.find((q) => !(b._bobNoLos === q.o && G.time - (b._bobNoLosT || 0) < 0.4)) || cand[0];
+    if (snap && foeIn && !c) X.snapNoCand = (X.snapNoCand || 0) + 1;
     if (c && (c.d < bd || (bestReady && !ready))) {
       const r = sightRay(_v.set(ex, ey, ez), c.o.spot);
       if (r === null) { BOBBER_BOT.deferred++; b._bobScanT = 0; return null; }   // (its share of this frame's rays is spent: next frame)
@@ -917,9 +1070,12 @@ function armedFor(ch, team) {
     if (e.team !== chainTeam || !e.alive) continue;
     const k = teamKnown(team, e, 1.5);
     if (!k) continue;
-    for (const o of ch.items) { if (o.state !== 'live') continue; const d = o.spot.distanceTo(k.pos); if (d < bd) { bd = d; bo = o; best = k; } }
+    // [b5-int3] near enough to shoot it: its gun's reach + 2 m (8 … armRange) — the bubble's rule (botSpecials _popper); a
+    // web 18 m from a Splattershot is walked through, as a player would (the review: foes stood in a chain's reach 2 s of 403)
+    const reach = clamp(weaponRange(e.weapon || {}) + 2, 8, S.armRange);
+    for (const o of ch.items) { if (o.state !== 'live') continue; const d = o.spot.distanceTo(k.pos); if (d <= reach && d < bd) { bd = d; bo = o; best = k; } }
   }
-  if (!best || bd > S.armRange) { s.armed = false; return false; }
+  if (!best) { s.armed = false; return false; }
   const r = sightRay(_v.set(best.pos.x, best.pos.y + 1.3, best.pos.z), bo.spot);
   if (r === null) { s.t -= 0.2; return s.armed; }   // (its share of this frame's rays is spent: again next frame)
   s.armed = r;

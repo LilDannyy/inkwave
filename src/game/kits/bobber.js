@@ -54,7 +54,7 @@ import { THROWN, THREAT_STATS } from '../bots.js';
 import { DEPLOY_STATS } from '../deployables.js';
 import { BobberDraw, bobAt, DRAW_STATS } from './bobber-draw.js';
 import { WSCALE, B_EYE, worldGeometry } from './bobber-model.js';
-import { botKit, botAct, botDangers, preferFor, botThrowOk, botLog } from './bobber-bots.js';
+import { botKit, botAct, botDangers, preferFor, botThrowOk, botLog, webHit, holdThrow } from './bobber-bots.js';
 import { hudTick, hudClear, kitPrompt, guideOff, onChainHud, onDisarmHud, onRefusedHud, onThrowHud } from './bobber-hud.js';
 import '../../audio/sfx-bobber.js';
 
@@ -285,7 +285,8 @@ export function lobAim(from, P, team, speed, out = { yaw: 0, pitch: 0, miss: Inf
 }
 const _la = { yaw: 0, pitch: 0, miss: Infinity };
 function use(subs, a, sub) {
-  const P = a.bot?._bobberAt;
+  const P = a.bot?._bobberAt, snap = !!a.bot?._bobSnap;
+  if (a.bot) a.bot._bobSnap = false;
   const pos = a.pos.clone(); pos.y += 1.35;
   if (P) {
     a.bot._bobberAt = null;
@@ -306,6 +307,7 @@ function use(subs, a, sub) {
   const it = spawn(a, sub, pos, vel, false, netId(a) || 9e8 + ++LOCAL_GID);   // (offline: netId is 0 — an id of its own)
   it.src = a.bot ? (P && a.bot._bobSrc) || 'bot' : 'player';   // (the counters' placement source: the bot plan it was laid by)
   if (P) it.planned = new V3(P.x, P.y + sub.floatH, P.z);   // (where a bot's pick will float: its team's bots hold fire into it on the way)
+  if (P && snap) { it.snapBy = a; it.snapT = a.bot._bobSnapT = G.time + 4; }   // [b5-int3] (thrown at a foe: its thrower shoots it the moment that foe is in reach — bobber-bots.js scan)
   rec(a, [0, it.gid, r2(pos.x), r2(pos.y), r2(pos.z), r2(vel.x), r2(vel.y), r2(vel.z)]);
   BOBBER_STATS.thrown++;
   G.cues?.sub(KIND, 'throw', { owner: a, at: a.pos });
@@ -1107,6 +1109,7 @@ const kit = SUB_KITS[KIND] = {
   },
   prompt: (a) => kitPrompt(a),
   botAct,
+  webHit, holdThrow,   // [b5-int3] (bots: a throw / blast that would set off an own idle chain — bots.js, glide.js, dash.js, mitts.js)
   dangers: botDangers,
   bot: botKit,
   items, groups, BOBBER_STATS, resetBobberStats, sizeOf, falloff, liquidTop, spotFor, predictSpot, relink, trigger, hurt, teamFire, finish, shotProbe, near, draw, DRAW_STATS, throwFrom, lampsOf,
