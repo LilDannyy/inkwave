@@ -47,6 +47,10 @@ export class BossNav {
     // Treehills, whose 1.3 m terraces out-cover the meadow the boss belongs on
     if (Number.isFinite(L.layout?.boss?.floorY)) best = L.layout.boss.floorY;
     this.floorY = best;
+    // [b5-caldera] a stage can give the boss headroom (layout.boss.headroom, m over its floor): a piece wholly above it is
+    // overhead, not a wall — Highmark's Surge Gauge tie girders at 4.8 m over the island clear its ~4.5 m shell, and as
+    // walls they cut the island (its home ground) in two
+    const HR = Number.isFinite(L.layout?.boss?.headroom) ? L.layout.boss.headroom : null, HS = HR ? [STRIDE + 0.1, 2.6, 3.8, HR].filter((h) => h <= HR) : [STRIDE + 0.1, 2.6, 3.8, 5.2];
     for (let i = 0; i < N; i++) {
       const [x, z] = this.xz(i);
       // ground under the body: the main floor, or anything low enough to stride over (curbs, benches, planters, crates);
@@ -56,7 +60,7 @@ export class BossNav {
       if (!(g >= best - 0.55)) k = 2;
       else {
         this.floor[i] = g;
-        for (const h of [STRIDE + 0.1, 2.6, 3.8, 5.2]) if (L.pointInside(_p.set(x, best + h, z), 0)) { k = 1; break; }
+        for (const h of HS) if (L.pointInside(_p.set(x, best + h, z), 0)) { k = 1; break; }
       }
       if (k !== 1) this.pads.forEach((pd, t) => { if (Math.hypot(x - pd.x, z - pd.z) < pd.r + PAD_MARGIN[t]) k = 3; });
       this.kind[i] = k;

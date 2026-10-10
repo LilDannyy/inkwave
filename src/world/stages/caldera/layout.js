@@ -456,7 +456,9 @@ const LAYOUT_CALDERA = {
   zones: ZONES,
   tower: TOWER,
   bazookarp: BAZOOKARP,
-  boss: { floorY: 1.2 },
+  // (the lava fix round 2: headroom — the Surge Gauge's tie girders at 6.0 m stand 4.8 m over the island, over the boss's
+  // ~4.5 m shell; counted as walls they cut its home ground in two: 222 m² of half the island and one causeway)
+  boss: { floorY: 1.2, headroom: 4.6 },
   single: SINGLE,
   half: HALF,
   decor: { lamps: [], palms: [], flags: [] },
