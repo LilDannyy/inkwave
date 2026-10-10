@@ -269,9 +269,9 @@ fit reads only the layout's blocks, so every screen in a room fits the same mask
 each screen's own). A squidkid's lava death is judged by its owner; a device's removal by its owner. Splats near the
 region carry the painter's stage time (field 15).
 
-net-lava.cjs (12 / 13 at the final code): Turf War 1:30, the level agrees within 0.03 m over 147 samples; the pinned guest dies by lava at
-33.89 s (the deadly moment 33.8) and the host's feed shows it; its devices are gone on both screens; lava cells 99.98 %
-identical (17 of 74,464, on the waterlines where the test paints); the same result at time-up; Practice's late joiner at
+net-lava.cjs (12 / 13 at the final region code): Turf War 1:30, the level agrees within 0.05 m over 141 samples; the pinned guest dies by lava at
+33.80 s (the deadly moment 33.8) and the host's feed shows it; its devices are gone on both screens; lava cells 99.98 %
+identical (16 of 72,046, 9 of them on the waterlines where the test paints); the same result at time-up; Practice's late joiner at
 HIGH agrees with the host (level, stones) and its whole imported grid equals the host's (0 of 438,753 cells; 0 of 72,046 lava cells); the guest's grid differs from the host's by 1 cell (172 vs 171 inked, on the cliff the test paints across the waterline) — that one cell fails the check; the host leaving mid-rise: the new host's fall at 55 ± 0.4 s,
 the stones deadly at 61.2 ± 0.4 s on both remaining screens.
 
@@ -293,7 +293,9 @@ the stones deadly at 61.2 ± 0.4 s on both remaining screens.
 **lava-bots.js** (new) ledges 0 / 120, stones 1 / 120, edges 5 / 120 at the final code (16 / 108 at its first run this round). **lava-audit.js** 8 / 10 (rule 44: the lead's decision; rule 45: 1 raster point of 284). **net-lava.cjs** 12 / 13 at the final code. **boss-check.js** 5 / 5.
 **lava-perf.js**: the lava update ≤ 1.0 ms in every window (median 0.07–0.14 ms); draw calls 67–109.
 
-**Regressions** (bots.js, bossNav.js and the stage changed): world-build Caldera 5 / 5 and Halyard 5 / 5; stage-mods 36 / 36; bot-sight 13 / 13; deployables 34 / 34; bot-climb (Lockgate) 7 / 7 (5 / 7 before the climb exemption — fixed; 7 / 7 on the pre-round-2 bots.js too); a Halyard Turf War bot match: no sea splats, stuck 0.7 %, no console errors; check-maps (`WIPSTAGES=1`) caldera ok (Halyard's
+**Regressions** (bots.js, bossNav.js and the stage changed; audit, net-lava and these ran before the last four bot-only
+commits — da70682b, b33f84b4, f3169229, 38b430a7, which only narrow the escape's straight run and loosen the new guards —
+and bot-climb, lava.js, lava-bots and the matches ran after): world-build Caldera 5 / 5 and Halyard 5 / 5; stage-mods 36 / 36; bot-sight 13 / 13; deployables 34 / 34; bot-climb (Lockgate) 7 / 7 (5 / 7 before the climb exemption — fixed; 7 / 7 on the pre-round-2 bots.js too); a Halyard Turf War bot match: no sea splats, stuck 0.7 %, no console errors; check-maps (`WIPSTAGES=1`) caldera ok (Halyard's
 one ramp issue predates this branch: the same with my changes stashed).
 
 **Bot matches** (lava-match.js, all bots, the full schedule, the final or near-final code):
@@ -351,8 +353,9 @@ lava-hud-scenes.js.
   leap's real landing falls short of its aim). One step before: a squid surfacing at swim speed off the Spillway ford at
   LOW, a bot walking off the bank by the Spillway Bridge. All are fights at the lava's edge in a stress test that parks
   bots on the edges; the matches had one (knocked) lava death in seven.
-- **net-lava cells** are 99.98 %, not exact (17 of 74,464, at the waterlines where the test paints): unproven, a splat
-  record's 1 cm rounding.
+- **net-lava cells** are 99.98 %, not exact (16 of 72,046, mostly at the waterlines where the test paints), and the
+  guest's whole grid differs by 1 cell, which fails the late-joiner check: unproven, a splat record's 1 cm rounding (the
+  fitted region now puts the whole cliff face the test paints inside the clip).
 - **Lookout use** varies with the kits a team draws (a team of short-range kits has no claimant by design).
 - **Not built:** the stones' chains, the pig beds' glow, the Bellows Vent plume and ash burst, the red under-light at
   HIGH, the far scenery; **not done:** the lightmap bake with the lava.
