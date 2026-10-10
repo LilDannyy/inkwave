@@ -835,7 +835,7 @@ export class Character {
     if (d.glow) g.add(new THREE.Mesh(d.glow, this.mats.glow));
     g.visible = false;
     this.bones.handL.add(g);
-    this.bomb = { group: g, ink, spinInk, kind };
+    this.bomb = { group: g, ink, spinInk, kind, low: d.low || null };   // [b5-sub-glide] low: carried low by its handle (_poseSubAim / _poseThrow)
   }
   setSub(kind) {
     if (this.bomb && this.bomb.kind === kind) return;
@@ -2540,6 +2540,7 @@ export class Character {
 
   // Bomb / storm throw with the free (left) arm: cocked → whip → follow-through (the projectile leaves at t≈0).
   _poseThrow(P, tt) {
+    if (this.bomb?.low) { this._poseRoll(P, tt, this.bomb.low); return; }   // [b5-sub-glide] a low-carried sub is rolled, underhand
     const X = this.PX; X.set(P);
     const w = win(tt, 0, 0.03, 0.4, 0.62);
     const cock = 1 - ease(tt / 0.06), whip = ease(tt / 0.1) * (1 - ease((tt - 0.1) / 0.16)), fol = ease((tt - 0.08) / 0.14);
@@ -2555,9 +2556,28 @@ export class Character {
     poseLerp(P, P, X, w);
   }
 
+  // [b5-sub-glide] a sub carried low by its handle (getSubDef(kind).low = { arm: [upper arm x, y, z, forearm, hand x, y, z],
+  // lean: [spine x, chest y, hips drop], roll: [arm back, arm through, follow-through] }: the Glide Bomb's curling hold,
+  // beside the hip and clear of the leg) and its underhand roll on 'throw' — back, through low along the floor, follow-through
+  _poseLow(X, A, k = 1) {
+    X[IKL] = 0; X[LTW] = 0; X[HANDPL] = 0;
+    X[UARML] = A.arm[0]; X[UARML + 1] = A.arm[1]; X[UARML + 2] = A.arm[2]; X[FARML] = A.arm[3]; X[HANDL] = A.arm[4]; X[HANDL + 1] = A.arm[5]; X[HANDL + 2] = A.arm[6];
+    X[SPINE] += A.lean[0] * k; X[CHEST + 1] += A.lean[1] * k; X[HIPS_P + 1] -= A.lean[2] * k;
+  }
+  _poseRoll(P, tt, A) {
+    const X = this.PX; X.set(P);
+    const w = win(tt, 0, 0.02, 0.4, 0.62), back = 1 - ease(tt / 0.06), thru = ease(tt / 0.13) * (1 - ease((tt - 0.13) / 0.22)), fol = ease((tt - 0.1) / 0.18);
+    this._poseLow(X, A, back + thru);
+    X[UARML] += A.roll[0] * back + A.roll[1] * thru + A.roll[2] * fol * (1 - thru);
+    X[FARML] += 0.25 * thru; X[SPINE] += 0.12 * thru; X[CHEST + 1] -= 0.25 * thru;
+    this._effort = Math.max(this._effort || 0, thru);
+    poseLerp(P, P, X, w);
+  }
+
   // Holding the splat bomb up behind the head (free arm cocked, chest turned), ready to throw.
   _poseSubAim(P, w) {
     const X = this.PX; X.set(P);
+    if (this.bomb?.low) { this._poseLow(X, this.bomb.low); this._effort = Math.max(this._effort || 0, 0.2 * w); poseLerp(P, P, X, w); return; }   // [b5-sub-glide]
     X[IKL] = 0; X[LTW] = 0;
     X[UARML] = -2.55; X[UARML + 2] = 0.48; X[FARML] = -1.85; X[HANDL] = 0.2;
     X[CLAVL + 2] += 0.15; X[CLAVL + 1] -= 0.08;

@@ -124,6 +124,7 @@ export const SUB_CUE = {
   waddle: { throw: ['throw_waddle', 0.9], beep: ['waddle_beep', 0.8], warn: ['waddle_prime', 1], boom: ['waddle_explode', 1], end: ['waddle_pop', 0.9] },
   torpedo: { throw: ['torpedo_throw', 1], boom: ['torpedo_burst', 1] },
   boomerang: { beep: ['boomerang_tick', 0.8], boom: ['boomerang_blast', 1] },
+  glide: { throw: ['glide_release', 0.9], boom: ['glide_boom', 1], end: ['glide_pop', 0.9] },   // [b5-sub-glide] (its slide: the glide_slide loop)
   smash: { end: ['sub_smash', 0.9] },   // a device the Mega Stamp's guard smashed before it went off
 };
 // a special's start (on top of the shared special_activate); the ones missing here start with their own sound already
@@ -141,7 +142,8 @@ export const FLY_UP = 4, FLY_DOWN = -9;
 // the sub_flight voice per thrown kind (the Bomb Barrage's bombs are ordinary ones: theirs)
 export const FLIGHT_KIND = { bomb: 'bomb', sticky: 'sticky', burst: 'burst', seeker: 'seeker', scan: 'scan', curtain: 'curtain', sprinkler: 'sprinkler', mist: 'mist', waddle: 'waddle', storm: 'storm' };
 // thrown (a flight sound) · placed (none: a Lurk Mine / Hop Beacon is set down at your feet)
-export const THROWN_SUBS = ['bomb', 'sticky', 'burst', 'seeker', 'scan', 'curtain', 'sprinkler', 'mist', 'shaker', 'waddle', 'torpedo', 'tracer', 'boomerang'];
+export const THROWN_SUBS = ['bomb', 'sticky', 'burst', 'seeker', 'scan', 'curtain', 'sprinkler', 'mist', 'shaker', 'waddle', 'torpedo', 'tracer', 'boomerang',
+  'glide'];   // [b5-sub-glide] (no flight voice: it slides; its loop is the slide)
 export const PLACED_SUBS = ['mine', 'beacon'];
 
 // ---- the enemy's specials: launch alerts, the "you're in it" alarm (sfx-loud: "a lot of warning special sounds, like
@@ -399,6 +401,13 @@ export class Cues {
         this._want(it, 'walk', 'waddle_walk', { ...o, warn: true, radius: it.sub.radius, target: T, vol: 0.9, pitch: 1 + 0.45 * cl });
         if (me && T === me) this._want(it, 'hunt', 'hunt_alarm', { ...o, warn: true, radius: it.sub.radius, target: T, params: { close: cl } });
       }
+    }
+    // [b5-sub-glide] the Glide Bomb sliding: its rumble and fuse beep (a warning: its blast radius, louder for the enemy's)
+    for (const it of K.glide?.items || []) {
+      if (it.state === 'dead') continue;
+      const k = it.state === 'hold' ? 1 : clamp(1 - it.fuse / it.sub.fuse, 0, 1);
+      this._want(it, 'slide', 'glide_slide', { pos: it.p, team: it.team, owner: it.owner, sub: true, warn: true, radius: it.R,
+        params: { speed: clamp(Math.hypot(it.v.x, it.v.z) / it.sub.speed0, 0, 1), k, air: it.air ? 1 : 0 } });
     }
     for (const t of K.torpedo?._list || []) {
       if (t.state === 'dead') continue;

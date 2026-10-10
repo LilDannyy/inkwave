@@ -91,6 +91,11 @@ longer emitted.
 | `sub:land` / `sub:arm` / `sub:cloud` / `sub:destroyed` | `{ kind, pos, team, radius? }` | subs.js |
 | `sub:charge` | `{ actor, kind: 'shaker', level, max }` — the Shaker Bomb in hand reached a new charge (2, then 3 = max) | kits/shaker.js |
 | `sub:lock` / `sub:end` | `{ kind: 'waddle', pos, team, actor, target }` / `{ kind, why, team, pos }` (why: reached · travel · life · lost · stuck · fuse · popped · sea · fell · cleared) | kits/waddle.js |
+| `sub:charge` (glide) | `{ actor, kind: 'glide', level, max }` — a Glide Bomb's cook in the hand reached a level (1, 2, 3 = full) | kits/glide.js |
+| `sub:use` (glide) | `{ actor, kind: 'glide', cook }` — released (cook: the seconds it was cooked) | kits/glide.js |
+| `glide:bounce` | `{ pos, kind, speed, team, who, ghost, byRec }` — a Glide Bomb bounced (kind: wall · mover · kid · curtain · sentry · shell; who: the kid; byRec: a ghost's clonk played from its owner's `[4]` at the bounce) | kits/glide.js |
+| `glide:slip` / `glide:fizzle` | `{ actor }` — held a second past full cook it slipped out (thrown) / a cook dropped in the hand (no ink) | kits/glide.js |
+| `glide:end` | `{ why, pos, team }` — ended without a blast (why: sunk · popped · smashed) | kits/glide.js |
 | `zones:zone` | `{ zone, owner }` — one zone taken (≥ ZONES.control ink, 70 %, kept over that line for ZONES.flipHold s) or neutralised (owner −1: the other team ≥ ZONES.contest, likewise held); a taken zone is then flooded with the taker's ink | zones.js |
 | `zones:control` | `{ owner, prev, objective }` — the live objective's holder changed (owner −1 = neutral) | zones.js |
 | `zones:contest` | `{ zone, holder, share }` — the other team has inked a held zone to the warning share (ZONES.warn) | zones.js |
@@ -98,5 +103,5 @@ longer emitted.
 | `zones:active` | `{ objective, zones, final, moved }` — rotation (final = the last-30-s centre lock) | zones.js |
 | `zones:overtime` | `{ losing }` | zones.js |
 | `zones:end` | `{ winner, reason, counts }` (reason: knockout · time · comeback · retake · neutralised · overtime-cap) | zones.js |
-| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
-| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes |
+| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf · [b5-sub-glide] glide); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck, kits/glide.js |
+| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb / a Glide Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes, kits/glide.js |

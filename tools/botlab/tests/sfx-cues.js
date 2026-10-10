@@ -132,12 +132,14 @@
     torpedo: () => 'torpedo_whirr',
     tracer: (o) => (o.state === 'fly' ? 'tracer_hum' : null),   // (then the trail's hum, fading, at its middle)
     boomerang: (o) => ({ out: 'boomerang_whirr', hover: 'boomerang_whirr', back: 'boomerang_whirr', orbit: 'boomerang_orbit', armed: 'boomerang_whirr' })[o.state],
+    glide: () => 'glide_slide',   // [b5-sub-glide] (its slide: no flight)
   };
   // the phases each staged throw goes through (what must sound)
   const PHASES = { bomb: ['throw', 'land', 'boom'], sticky: ['throw', 'land', 'boom'], burst: ['throw', 'boom'], seeker: ['throw', 'land', 'warn', 'boom'], scan: ['throw', 'boom'],
     curtain: ['throw', 'land', 'end'], sprinkler: ['throw', 'land', 'end'], mine: ['throw', 'warn', 'boom'], beacon: ['throw', 'end'], mist: ['throw', 'boom'],
-    shaker: ['throw', 'land', 'boom'], waddle: ['throw', 'beep', 'warn', 'boom'], torpedo: ['throw', 'boom'], tracer: ['hit'], boomerang: ['beep', 'boom'] };
-  const WARN_MIN = { bomb: 0.6, sticky: 0.6, seeker: 0.6, shaker: 0.6, waddle: 0.6, torpedo: 0.6, mine: 0.4, boomerang: 0.55 };   // (mine: its 0.45 s windup; boomerang: its 0.6 s fuse)
+    shaker: ['throw', 'land', 'boom'], waddle: ['throw', 'beep', 'warn', 'boom'], torpedo: ['throw', 'boom'], tracer: ['hit'], boomerang: ['beep', 'boom'],
+    glide: ['throw', 'boom'] };   // [b5-sub-glide]
+  const WARN_MIN = { bomb: 0.6, sticky: 0.6, seeker: 0.6, shaker: 0.6, waddle: 0.6, torpedo: 0.6, mine: 0.4, boomerang: 0.55, glide: 0.6 };   // (mine: its 0.45 s windup; boomerang: its 0.6 s fuse)
   const THROW = { tracer: 'tracer_zap', boomerang: 'boomerang_throw' };
   const newObj = (kind, before) => {
     if (kind === 'bomb') return G.projectiles.bombs[G.projectiles.bombs.length - 1];
@@ -207,6 +209,7 @@
     torpedo: { at: [0, 1], aim: (T) => lob(T, 0, -7, SUBS.torpedo.throwSpeed), secs: 4 },
     tracer: { at: [0, 8], aim: (T) => aimAt(T, me.pos.x, me.pos.y + 1, me.pos.z), secs: 2.2 },
     boomerang: { at: [0, -2], aim: (T) => aimAt(T, me.pos.x, me.pos.y + 1, me.pos.z), secs: 3.5 },
+    glide: { at: [3, 4], aim: (T) => aimAt(T, me.pos.x + 3, me.pos.y + 1, me.pos.z), secs: 3.2 },   // [b5-sub-glide] (slid past you)
   };
   const subRes = {};
   for (const kind of Object.keys(SUB_STAGE)) {
@@ -234,6 +237,7 @@
     const res = {}, bad = [];
     for (const k of THROWN_SUBS) {
       const g2 = (subRes[k] && subRes[k].glide) || [], st = g2.map((x) => x.st);
+      if (k === 'glide') { if (st.length) bad.push([k, 'a slider with a flight']); continue; }   // [b5-sub-glide] (it slides: its loop is the slide)
       if (!st.length) { bad.push([k, 'no glide']); continue; }
       const first = st[0], last = st[st.length - 1], top = Math.max(...st), lo = Math.min(...st);
       res[k] = { n: st.length, sound: g2[0].sound, voice: g2[0].kind || null, first: r2(first), top: r2(top), last: r2(last) };

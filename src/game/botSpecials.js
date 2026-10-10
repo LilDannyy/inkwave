@@ -316,6 +316,16 @@ export function specialDangers() {
     d.tIn = Math.max(0, it.fuse); d.tOut = d.tIn + 0.1; d.los = true; d.losY = 0.3;
     see(d, it.pos.x, it.pos.y + 0.3, it.pos.z);
   }
+  // ---- [b5-sub-glide] a sliding Glide Bomb: its blast where it will stop (kits/glide.js dangerOf: re-predicted every 0.2 s
+  // or on a bounce) — seen, or heard rumbling within 8 m
+  for (const it of SUB_KITS.glide?.items || []) {
+    const g = SUB_KITS.glide.math.dangerOf(it); if (!g) continue;
+    const d = D(keyOf(it), it.sp || barrage(it.owner) ? 'barrage' : 'sub', it.team, it.owner);
+    d.hit = 'glide';
+    disc(d, g.x, g.y, g.z, g.R + 0.3, g.core);
+    d.tIn = g.tIn; d.tOut = g.tIn + 0.1; d.lethal = g.lethal; d.los = true; d.losY = 0.3; d.vis = 'big'; d.hear = 8;
+    see(d, it.p.x, it.p.y + 0.14, it.p.z);
+  }
   // ---- specials on players (and the untouchable)
   for (const e of G.actors) {
     if (!e.alive || e.superJumpState) continue;

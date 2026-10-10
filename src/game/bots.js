@@ -899,6 +899,7 @@ export class BotBrain {
         } else if (!enemyVisible && this._spray(dist, range, aimed, inkFrac)) it.fire = true;   // a short spray where it went
         // out of range with own ink underfoot: swim in (fast, hard to hit) instead of walking
         if (!it.fire && !a.weaponRunner.charging && dist > range * 1.15 && this.groundSeen === 1) it.squid = true;
+        if (a.weaponRunner.mainLocked) { move.multiplyScalar(0.35); it.squid = false; }   // [b5-sub-glide] cooking a held sub (its trigger locked): plant for the throw, stay a kid
         if (w.kind === 'dualies') {
           // dodge roll: while firing, roll sideways when hit or when the fight gets close (the runner locks the turret
           // after) — never toward the sea
@@ -1067,6 +1068,7 @@ export class BotBrain {
   // thrAim: a device / canopy the turf code is drawing a bead on; enemyVisible: in a duel (both unset in boss play)
   _tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim = null, enemyVisible = false) {
     const a = this.a, it = a.intent, w = a.weapon;
+    if ((a.weaponRunner.mainLocked || a.weaponRunner.glide) && !this.sp.esc) it.squid = false;   // [b5-sub-glide] cooking a held sub (a Glide Bomb, its grace too): no dive (it would drop the cook) — but out of a danger, yes
     // throws and placements only happen in humanoid form: stay upright for the press and the release
     if (this._bombAim) { it.sub = true; it.squid = false; this._bombAim = false; this._releaseBomb = true; }
     else if (this._releaseBomb) { it.sub = false; it.squid = false; this._releaseBomb = false; }
@@ -2501,6 +2503,7 @@ export class BotBrain {
     const a = this.a, dx = d.pos.x - a.pos.x, dz = d.pos.z - a.pos.z, dh = Math.hypot(dx, dz);
     const dy = d.pos.y + d.aimY - (a.pos.y + 0.8);
     if (dh > 18 || Math.abs(dy) > 6) return 0;
+    if (d.slider) return d.score(a);   // [b5-sub-glide] a Glide Bomb: in its stop disc, or on its lane ahead (kits/glide.js)
     const st = d.state, mine = d.target === a;
     if (st === 'fly') {
       // still in the air after the throw: a human sees it coming, so it's noticed now (the reaction time runs during its
@@ -2579,7 +2582,7 @@ export class BotBrain {
       if (score < pd) { if (mine || dh < 4) this._thrDrift(d, move, 0.6); return null; }
     }
     // far off / out of reach and not about to arrive: carry on, edging away from it
-    const urgent = d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';
+    const urgent = d.slider ? d.urgent(a) : d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';   // ([b5-sub-glide] slider)
     if (!canShoot && !waitIn && !urgent) { this._thrDrift(d, move, 0.5); return null; }
     const act = canShoot || waitIn ? 'shoot' : 'evade', bit = act === 'shoot' ? 1 : 2;
     if (!(this.thrActs & bit)) { this.thrActs |= bit; THREAT_STATS[act]++; }
@@ -2636,6 +2639,7 @@ export class BotBrain {
   _thrEvade(d, dt, move, it, ttl) {
     const a = this.a;
     if (!d.ground && d.state === 'launch' && ttl < 0.55) { this._thrSidestep(d, move, it, ttl < 0.35); return; }
+    if (d.slider) { this._thrSidestep(d, move, it, false); return; }   // [b5-sub-glide] step off a Glide Bomb's line (its stop disc: botSpecials' escape)
     this.thrEvT -= dt;
     if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); }
     move.set(Math.sin(this.thrEvYaw), 0, Math.cos(this.thrEvYaw));
@@ -3273,7 +3277,8 @@ export class BotBrain {
         else it.fire = true;
         this._firing = it.fire;
         this.mode = 'fight';   // (the aim spring's combat stiffness while shooting; reset each frame)
-        if (this.bombCd <= 0 && !T.crab && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }
+        if (this.bombCd <= 0 && !T.crab && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025
+          && (SUB_KITS[a.sub?.kind]?.bot?.boss?.(this, boss) ?? true)) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }   // ([b5-sub-glide] a kit sub may refuse: the Glide throws only a slide that stops by the boss)
       } else if ((w.kind === 'charger' || w.kind === 'splatling' || w.kind === 'spinner' || w.kind === 'bow') && a.weaponRunner.charging && T.los) it.fire = true;   // hold a charge through a blink
       // specials: slam from under its claws, the storm cloud onto it
       if (a.specialReady() && !th.level && !T.crab) {

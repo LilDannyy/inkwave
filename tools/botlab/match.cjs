@@ -82,6 +82,10 @@ app.on('browser-window-created', (_, win) => {
         on('zones:end', (e) => { ev.end = { winner: e.winner, reason: e.reason }; }),
         on('special:use', (e) => { ev.specials++; const U = ev.uses || (ev.uses = [{}, {}]), id = /^barrage/.test(String(e.id)) ? 'barrage' : String(e.id); if (e.actor) U[e.actor.team][id] = (U[e.actor.team][id] || 0) + 1; }),
         on('superjump', (e) => { if (e.phase === 'charge') ev.jumps++; }),
+        // [b5-sub-glide] per sub kind: uses ('sub:use') and its blast / hit damage on enemy players ('hit' with that weaponId)
+        on('sub:use', (e) => { const U = ev.subU || (ev.subU = {}), k = String(e.kind), o = U[k] || (U[k] = { uses: 0, hits: 0, dmg: 0 }); o.uses++; }),
+        on('bomb:throw', (e) => { if (!e.actor) return; const U = ev.subU || (ev.subU = {}), o = U.bomb || (U.bomb = { uses: 0, hits: 0, dmg: 0 }); o.uses++; }),   // (the Splat Bomb: projectiles.throwBomb, no 'sub:use')
+        on('hit', (e) => { const U = ev.subU || (ev.subU = {}), o = U[String(e.weaponId)]; if (o && e.attacker && e.victim && e.attacker.team !== e.victim.team) { o.hits++; o.dmg += e.damage || 0; } }),
         on('special:end', (e) => { if (/^barrage/.test(String(e.id))) (ev.barEnd || (ev.barEnd = new Map())).set(e.actor, simT); }),
         // [b5-zipcheer] how each team's specials ended, by special and reason (a Cheer Orb: 'throw' or cut short by a 'splat' …)
         on('special:end', (e) => { if (!e.actor || e.actor.team > 1) return; const E = ev.ends || (ev.ends = [{}, {}]), o = E[e.actor.team][e.id] || (E[e.actor.team][e.id] = {}); o[e.reason] = (o[e.reason] || 0) + 1; }),
@@ -320,6 +324,7 @@ app.on('browser-window-created', (_, win) => {
         barrage: await (async () => { try { const B = (await import('./src/game/sp-barrage.js')).BARRAGE_STATS, C = (await import('./src/game/sp-bubble.js')).CHAIN_STATS;
           return { throws: { ...B.throws }, draws: B.draws, repeats: B.repeats, chain: { ...C } }; } catch (e) { return null; } })(),
         byCause: ev.byCause || {},
+        subUse: ev.subU || {},   // [b5-sub-glide]
         byWeapon: (() => { const W = ev.byW || {}, out = {}; for (const a of m.actors) { const w = a.weaponId, o = out[w] || (out[w] = { n: 0, splats: 0, deaths: 0, turf: 0 }); o.n++; o.turf += a.stats.turf; }
           for (const w in out) { const o = out[w]; o.splats = (W[w] || {}).splats || 0; o.deaths = (W[w] || {}).deaths || 0; o.turf = Math.round(o.turf / o.n); } return out; })(),
 per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a) => s + a.stats.turf, 0) / n, zt = A.reduce((s, a) => s + (a.stats.zoneTurf || 0), 0) / n, sp = A.reduce((s, a) => s + a.stats.splats, 0) / n;
@@ -377,6 +382,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log('   loadouts ' + equip + (tuned ? ' | TUNE ' + tuned : ''));
     console.log('   by weapon (players, splats dealt, deaths, avg turf) ' + Object.entries(r.byWeapon).map(([w, o]) => `${w}×${o.n} ${o.splats}/${o.deaths} ${o.turf}p`).join(' · '));
     console.log('   splats by cause ' + JSON.stringify(r.byCause));
+    console.log('   SUBUSE (uses, enemy hits, dmg, splats) ' + Object.entries(r.subUse || {}).map(([k, o]) => `${k} ${o.uses}/${o.hits}/${Math.round(o.dmg)}/${(r.byCause || {})[k] || 0}`).join(' · '));   // [b5-sub-glide]
     console.log('   special uses A ' + JSON.stringify(r.spUses[0]) + ' B ' + JSON.stringify(r.spUses[1]) + (r.drainbow && r.drainbow.placed ? ' | drainbow ' + JSON.stringify(r.drainbow) : ''));
     console.log('   special ends A ' + JSON.stringify(r.spEnds[0]) + ' B ' + JSON.stringify(r.spEnds[1]) + (r.zipcheer ? ' | zipcheer ' + JSON.stringify(r.zipcheer) : ''));   // [b5-zipcheer]
     if (r.surf) { const S = r.surf; console.log(`   SURF uses ${S.stats.uses} thrown ${S.stats.throws} anchored ${S.stats.lands} lost ${S.stats.lost} popped ${S.stats.popped} | rings ${S.stats.rings} hits ${S.stats.hits} (marks ${S.stats.marks}, ring splats ${S.stats.kills}) dodged ${S.stats.dodges} | ink ${S.stats.turf} m² in ${S.stats.splats} splats | turf from it A ${S.teams[0].surfTurf} of ${S.teams[0].turf} · B ${S.teams[1].surfTurf} of ${S.teams[1].turf} | assists A ${S.teams[0].assists} B ${S.teams[1].assists} ${JSON.stringify(S.assists)} | bots ${JSON.stringify(S.bots)}`); }
@@ -392,6 +398,9 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     const dep = await js(`(async () => { try { const D = await import('./src/game/deployables.js'), B = await import('./src/game/deployables-bots.js'); return { ...D.DEPLOY_STATS, bot: { ...B.DEV_BOT, on: B.DEV_AI.enabled, n: window.__inkwave.match.actors.filter((a) => a.bot).length } }; } catch (e) { return null; } })()`);
     if (dep) console.log(`   DEPLOY hits ${dep.hits} (${Math.round(dep.dmg)} dmg) | shot down ${JSON.stringify(dep.down)} | crushed ${JSON.stringify(dep.crushed)} | rides ${dep.rides} lifts ${dep.lifts} shoves ${dep.shoves} drops ${dep.drops} | skitter thrown ${dep.seekerThrows} popped ${dep.seekerPops}`
       + ` | bots (device AI ${dep.bot.on ? 'on' : 'off'}): device mode ${(dep.bot.secs / Math.max(1, dep.bot.n)).toFixed(1)} s/bot (walking ${(dep.bot.walkSecs / Math.max(1, dep.bot.n)).toFixed(1)}) | picks ${dep.bot.picks} (beacon ${dep.bot.beacon}, sprinkler ${dep.bot.sprinkler}, buoy ${dep.bot.surf}) re-picks ${dep.bot.repicks} gave up ${dep.bot.gaveUp}`);
+    // [b5-sub-glide] the Glide Bomb: uses, the cook spread, how they ended, bounces, blast hits
+    const gl = await js(`(async () => { try { const K = await import('./src/game/kits/glide.js'); return { ...K.GLIDE_STATS }; } catch (e) { return null; } })()`);
+    if (gl && gl.uses) { r.glide = gl; console.log(`   GLIDE uses ${gl.uses} (cooked ${gl.cooked}, mean cook ${(gl.cookSum / gl.uses).toFixed(2)} s; bots: fight ${gl.botFight} paint ${gl.botPaint} boss ${gl.botBoss || 0}, refused ${gl.bossNo || 0}) | blasts ${gl.blasts} popped ${gl.popped} sunk ${gl.sunk}${gl.sunk ? ` (fight ${gl.sunk_fight || 0} paint ${gl.sunk_paint || 0} boss ${gl.sunk_boss || 0} human ${gl.sunk_human || 0} other ${gl.sunk_other || 0})` : ''} smashed ${gl.smashed} | sink checks: retarget ${gl.botRetarget || 0} refused ${gl.botNoSink || 0} release-alt ${gl.botRelAlt || 0} held off ${gl.botCancel || 0} | slips ${gl.slips} fizzles ${gl.fizzles} | bounces ${gl.bounces} (kids ${gl.kidBounces}) | hits ${gl.hits} (${Math.round(gl.dmg)} dmg)${gl.bossHits ? ` | boss hits ${gl.bossHits} (${Math.round(gl.bossDmg)} dmg)` : ''}`); }
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     r.map = MAP; r.mode = MODE; r.loadouts = equip; r.tune = tuned; r.consoleLines = uniq.length; r.specialAI = spAI; r.spCharge = SPCHARGE;
