@@ -71,7 +71,11 @@ export function fill(P0, o) {
     // ends: reach past a reflex corner to close the wedge against the next coping (none needed where the next edge has
     // no coping: its columns end exactly there), pull back from an acute one (never poke into the lava)
     const coped = (k) => { const q = edges[(k + n) % n]; return q.L && q.L.kind === 'ledge'; };
-    const endAdj = (vi, nb) => { const a = interior(P, vi); if (a > 181) return coped(nb) ? w * Math.tan(((a - 180) * Math.PI) / 360) + 0.06 : 0; if (a < 89) return -w / Math.tan((a * Math.PI) / 180); return 0; };
+    // (lava fix round 2: not where the next edge is a tuck — beyond it stands a higher floor, and the coping's far corner
+    // goes into that neighbour; pulled back, it left the tip as a 0.1–0.4 m finger of bare tuck column beside the lava:
+    // the Horn Step's tip by the north Slump head, which bots walked out on and off)
+    const poked = (k) => { const q = edges[(k + n) % n]; return q.L && q.L.kind === 'poke'; };
+    const endAdj = (vi, nb) => { const a = interior(P, vi); if (a > 181) return coped(nb) ? w * Math.tan(((a - 180) * Math.PI) / 360) + 0.06 : 0; if (a < 89) return poked(nb) ? 0 : -w / Math.tan((a * Math.PI) / 180); return 0; };
     const e0 = endAdj(e.i, e.i - 1), e1 = endAdj((e.i + 1) % n, e.i + 1);
     const len = L + e0 + e1, off = (e1 - e0) / 2;
     if (len < 0.05) continue;
