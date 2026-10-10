@@ -951,6 +951,8 @@ export class StageLava {
       for (const a of this.m.actors) {
         const b = a.bot;
         if (!b || a.remote || !a.alive || a.team !== team || b._lavaEsc || b.tRole === 'ride') continue;
+        const at = nav.nearest(a.pos, 1.2, true);
+        if (at >= 0 && (M.kind[at] === 1 || (M.kind[at] === 2 && this.W.riders[M.rider[at]]?.sink))) continue;   // (not off a stone or a drowning ledge)
         const k = a.weapon?.kind, rg = typeof b._range === 'function' ? b._range() : 0;
         let s = LOOKOUT_KINDS.has(k) ? (k === 'charger' ? 3 : 2.5) : rg >= 10 ? 1 + rg / 40 : 0;
         if (!s) continue;
@@ -995,8 +997,11 @@ export class StageLava {
   // the way, its route is kept against the brain's own goal picks and walked even in a fight (the aim and the trigger
   // stay the brain's); at the foot while the column is still rising it waits
   _lookAct(b, dt, it, move) {
-    const a = b.a, L = b._look, nav = G.nav, t = this.clock.t;
+    const a = b.a, L = b._look, nav = G.nav, t = this.clock.t, M = this.W.navMeta;
     const up = this._onLookout(a, L.ri);
+    // (on a stone or a drowning ledge the escape and the brain have it: no claim route from there)
+    const at = up ? -1 : nav.nearest(a.pos, 1.2, true);
+    if (at >= 0 && (M.kind[at] === 1 || (M.kind[at] === 2 && this.W.riders[M.rider[at]]?.sink))) { L.path = null; return; }
     if (b.mode === 'retreat' || (b.mode === 'refill' && !up)) { L.path = null; L.on = false; return; }   // (its life, its tank first)
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
     // dry on the top: it stays — the brain's refill paints a puddle where it stands and swims in it (the deck takes ink)
@@ -1035,6 +1040,9 @@ export class StageLava {
       if (mv !== move) move.copy(mv);
       if (!b.path) L.path = null;   // (the brain's slip rule dropped it: plan again)
       L.pi = b.pi;
+      // up a column's hop: the trigger off, so the press is a jump (a Twinfire's jump while firing is a dodge roll, and a
+      // claimant with them never got up)
+      if (b.path && b.pi > 0 && b.pi < b.path.length && nav.edgeType(b.path[b.pi - 1], b.path[b.pi]) === 'jump') { const n = nav.nodes[b.path[b.pi]]; if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < 2.4) it.fire = false; }
     } else if (L.goal === L.foot && L.foot >= 0) {
       // at the foot, the column still on its way up: wait there (a one-node route, so the brain doesn't pick a paint goal
       // every frame meanwhile)
@@ -1092,9 +1100,13 @@ export class StageLava {
     this._iv.set(y, iv);
     return iv;
   }
+  // (whose route is being planned: a lookout claimant's never crosses the Pumice Races — the claim's own route off a
+  // stone at HIGH walked one off Race 7 into the lava)
+  beforePath(b) { this._pb = b; }
   navEdge(e, to, metres) {
     const M = this.W.navMeta;
     if (!M || !M.kind[to]) return 0;
+    if (M.kind[to] === 2 && this._pb?._look && this.W.riders[M.rider[to]]?.sink) return Infinity;
     const s = this.shut(to, this.clock.t + metres * LAVA.sPerM);
     return s === 2 ? Infinity : s ? LAVA.soft : 0;
   }
