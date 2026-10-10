@@ -170,7 +170,11 @@ SFX.dash_air = {
 };
 
 // ================================================================================================= looks
-// the speed ribbon: a vertical band of team ink trailing the body's chest line for 0.3 s, fading from its head to its tail
+// the speed ribbon: a band of team ink trailing the body's chest line for 0.3 s, fading from its head to its tail.
+// [b5-int3] turned to face the camera (each point's width across both the trail and the line of sight): a vertical band
+// is seen edge-on from behind a forward or backward dash — the dasher's own camera saw no ribbon at all (the sub-dash
+// review); from above and behind, the trail of a forward dash recedes up the screen and the band now shows across it.
+// The dasher's own camera also gets speed lines at the screen's edges and a short FOV kick (localKick, below)
 const RIB_N = 24, RIB_LIFE = 0.3, RIB_H = 0.27;
 const RIB_VS = `attribute float aK; varying float vK; varying float vV; void main(){ vK = aK; vV = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 const RIB_FS = `uniform vec3 uColor; uniform float uAlpha; varying float vK; varying float vV;
@@ -212,13 +216,21 @@ function ribbonTick(R, dt) {
   while (R.pts.length && R.t - R.pts[0].t > RIB_LIFE) R.pts.shift();
   const n = R.pts.length;
   if (R.end >= 0 && (n < 2 || R.t - R.end > RIB_LIFE)) return false;
-  const pos = R.mesh.geometry.attributes.position, K = R.mesh.geometry.attributes.aK;
+  const pos = R.mesh.geometry.attributes.position, K = R.mesh.geometry.attributes.aK, cam = G.camera?.position;
   for (let i = 0; i < RIB_N; i++) {
     const q = R.pts[Math.min(i, n - 1)] || { x: 0, y: -999, z: 0, t: 0 };
     // (fading with age, and tapering from the body back to a point at the tail)
     const k = n ? clamp(1 - (R.t - q.t) / RIB_LIFE, 0, 1) * (i < n ? 1 : 0) * Math.pow(Math.min(i + 1, n) / n, 0.6) : 0;
     const h = RIB_H * (0.2 + 0.8 * k);
-    pos.setXYZ(i * 2, q.x, q.y - h, q.z); pos.setXYZ(i * 2 + 1, q.x, q.y + h, q.z);
+    // (its width: across the trail's run here and the line of sight to it; straight up when they line up or no camera)
+    let wx = 0, wy = 1, wz = 0;
+    if (cam && n >= 2) {
+      const a0 = R.pts[Math.max(0, Math.min(i, n - 1) - 1)], b0 = R.pts[Math.min(Math.min(i, n - 1) + 1, n - 1)];
+      const tx = b0.x - a0.x, ty = b0.y - a0.y, tz = b0.z - a0.z, vx = q.x - cam.x, vy = q.y - cam.y, vz = q.z - cam.z;
+      const cx = ty * vz - tz * vy, cy = tz * vx - tx * vz, cz = tx * vy - ty * vx, cl = Math.hypot(cx, cy, cz);
+      if (cl > 1e-4 * Math.hypot(tx, ty, tz) * Math.hypot(vx, vy, vz) && cl > 1e-9) { wx = cx / cl; wy = cy / cl; wz = cz / cl; }
+    }
+    pos.setXYZ(i * 2, q.x - wx * h, q.y - wy * h, q.z - wz * h); pos.setXYZ(i * 2 + 1, q.x + wx * h, q.y + wy * h, q.z + wz * h);
     K.setX(i * 2, k); K.setX(i * 2 + 1, k);
   }
   pos.needsUpdate = true; K.needsUpdate = true;
@@ -226,6 +238,61 @@ function ribbonTick(R, dt) {
 }
 function ribbonEnd(R) { G.scene?.remove(R.mesh); R.mesh.visible = false; R.a = null; ribPool.push(R); }
 
+// [b5-int3] the dasher's own camera (the kid the camera follows): speed lines streaking in from the screen's edges and a
+// short FOV kick over the dash's first frames — a forward or backward dash reads from behind, where the ribbon is end-on.
+// The kick: +7° vertical at once, eased back over 0.35 s (cameraRig reads G.dashKick); the lines: a canvas drawn once
+// (white, a touch of team ink, the middle clear), shown 0.3 s, fading as they close in. Nobody else's screen shows them
+const KICK = { fov: 7, attack: 0.04, decay: 0.35, lines: 0.3 };
+let linesEl = null, linesT = -1, linesCol = '';
+function speedLines(col) {
+  if (typeof document === 'undefined') return null;
+  if (!linesEl) {
+    linesEl = document.createElement('canvas');
+    linesEl.className = 'iw-dashlines';
+    linesEl.width = 960; linesEl.height = 540;
+    Object.assign(linesEl.style, { position: 'fixed', inset: '0', width: '100%', height: '100%', pointerEvents: 'none', zIndex: '5', opacity: '0', mixBlendMode: 'screen' });
+    document.body.appendChild(linesEl);
+  }
+  if (linesCol !== col) {
+    linesCol = col;
+    const c = linesEl.getContext('2d'), W = linesEl.width, H = linesEl.height, cx = W / 2, cy = H / 2;
+    c.clearRect(0, 0, W, H);
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 46; i++) {
+      const th = (i / 46) * Math.PI * 2 + rnd() * 0.12, R0 = 0.36 + rnd() * 0.16, R1 = 0.78 + rnd() * 0.3, w = 1.2 + rnd() * 2.6;
+      const ux = Math.cos(th) * W * 0.62, uy = Math.sin(th) * H * 0.62;
+      const g = c.createLinearGradient(cx + ux * R0, cy + uy * R0, cx + ux * R1, cy + uy * R1);
+      const tint = i % 3 === 0 ? col : 'rgba(255,255,255,1)';
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.55, tint); g.addColorStop(1, 'rgba(255,255,255,0.9)');
+      c.strokeStyle = g; c.lineWidth = w; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(cx + ux * R0, cy + uy * R0); c.lineTo(cx + ux * R1, cy + uy * R1); c.stroke();
+    }
+  }
+  return linesEl;
+}
+function localKick(a) {
+  if (!a.isLocal) return;
+  G.dashKick = { a, t0: G.time, fov: KICK.fov, attack: KICK.attack, decay: KICK.decay };
+  const col = '#' + (G.teamColors?.[a.team]?.getHexString?.() || 'ffffff');
+  if (speedLines(col)) linesT = 0;
+  DASH_STATS.kicks = (DASH_STATS.kicks || 0) + 1;
+}
+// (tests) the kick's degrees now for actor a — cameraRig.js applies the same envelope from G.dashKick
+export function dashFov(a) {
+  const k = G.dashKick;
+  if (!k || k.a !== a) return 0;
+  const t = G.time - k.t0;
+  if (t < 0 || t > k.attack + k.decay) return 0;
+  return t < k.attack ? k.fov * (t / k.attack) : k.fov * Math.pow(1 - (t - k.attack) / k.decay, 2);
+}
+function linesTick(dt) {
+  if (linesT < 0 || !linesEl) return;
+  linesT += dt;
+  const u = linesT / KICK.lines;
+  if (u >= 1) { linesEl.style.opacity = '0'; linesT = -1; return; }
+  linesEl.style.opacity = String(0.85 * (1 - u) * (1 - u));
+  linesEl.style.transform = `scale(${(1.12 - 0.12 * u).toFixed(3)})`;
+}
 // the pellet itself, for 0.08 s at the take-off point: it drops out of the fist, swells and bursts
 const pellets = [];
 function pelletAt(a, p, dx, dz) {
@@ -287,6 +354,7 @@ function pop(a, sub, from, dx, dz, air, ghost) {
   lastDash.set(a, G.time);
   if (!ghost) a.character?.trigger?.('roll', { x: dx, y: 0, z: dz, dur: sub.dashTime });   // the Twinfire's forward roll (a ghost's: its ['tr'])
   ribbonFor(a);
+  if (!ghost) localKick(a);   // [b5-int3]
   pelletAt(a, c, dx, dz);
   G.fx?.explosion(_v3.copy(c).setY(c.y + 0.3), col, sub.radius * 0.75);
   G.fx?.burst?.(_v3.copy(c).setY(c.y + 0.15), UP, col, { count: 14, speed: 5.5, size: 0.09 });
@@ -524,10 +592,12 @@ SUB_KITS[KIND] = {
       if (u >= 1) { G.scene?.remove(p.g); pellets.splice(i, 1); continue; }
       p.m.scale.setScalar(p.vs * (1 + 0.6 * u * u));
     }
+    linesTick(dt);   // [b5-int3]
     hud();
   },
   clear() {
     live.clear();
+    G.dashKick = null; linesT = -1; if (linesEl) linesEl.style.opacity = '0';   // [b5-int3]
     for (const R of ribbons) ribbonEnd(R);
     ribbons.length = 0;
     for (const p of pellets) G.scene?.remove(p.g);
@@ -536,7 +606,7 @@ SUB_KITS[KIND] = {
   },
   bot: { fight: () => false, paint: () => false },  // (every bot use lives in botAct)
   // test handles
-  _live: live, _ribbons: ribbons, _marks: marks, _pellets: pellets, why,
+  _live: live, _ribbons: ribbons, _marks: marks, _pellets: pellets, why, dashFov, _lines: () => ({ el: linesEl, t: linesT }),
 };
 // a dasher who went into the sea within 2 s of a dash (bots must never: match.cjs counts it)
 on('splatted', ({ victim, cause }) => { if (victim && cause === 'water' && G.time - (lastDash.get(victim) ?? -99) < 2) DASH_STATS.seaAfter++; });

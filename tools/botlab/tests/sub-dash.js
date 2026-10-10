@@ -401,6 +401,34 @@
       unbox();
     }
 
+    // ================================================================================== [b5-int3] the look from the dasher's own camera
+    // a forward dash seen from behind (the follow camera, whole frames): the ribbon faces the camera — its strip covers real
+    // screen area where the old vertical band (the same points, offsets straight up and down) covers next to none; the
+    // speed lines show and fade; the FOV kicks up and settles back
+    if (run('look')) {
+      unbox(); home(); put(me, 0, 0, -12, 0); W.set(me, {}); step(40);
+      const cam = G.camera, fov0 = cam.fov;
+      W.set(me, { sub: true, move: [0, 1] }); step(1); W.set(me, { move: [0, 1] }); step(6);
+      const Rb = K._ribbons[K._ribbons.length - 1];
+      const area = (vert) => {
+        if (!Rb) return 0;
+        const pa = Rb.mesh.geometry.attributes.position, ka = Rb.mesh.geometry.attributes.aK, n = pa.count / 2, P2 = (i) => { const v = V(pa.getX(i), pa.getY(i), pa.getZ(i)); if (vert) { const j = i & ~1, c = V((pa.getX(j) + pa.getX(j + 1)) / 2, (pa.getY(j) + pa.getY(j + 1)) / 2, (pa.getZ(j) + pa.getZ(j + 1)) / 2), h = v.distanceTo(c); v.set(c.x, c.y + (i & 1 ? h : -h), c.z); } v.project(cam); return [v.x * 480, v.y * 270]; };
+        let A = 0;
+        for (let i = 0; i < n - 1; i++) {
+          if (ka.getX(i * 2) < 0.05 && ka.getX(i * 2 + 2) < 0.05) continue;
+          const q = [P2(i * 2), P2(i * 2 + 1), P2(i * 2 + 3), P2(i * 2 + 2)];
+          let s = 0; for (let k = 0; k < 4; k++) { const [x1, y1] = q[k], [x2, y2] = q[(k + 1) % 4]; s += x1 * y2 - x2 * y1; }
+          A += Math.abs(s) / 2;
+        }
+        return r2(A);
+      };
+      const aNow = area(false), aVert = area(true), fovUp = r2(cam.fov - fov0), kick = r2(DK.dashFov ? DK.dashFov(me) : 0), ln = K._lines ? K._lines() : null, op1 = ln?.el ? +ln.el.style.opacity : 0;
+      W.set(me, {}); step(40);
+      const fovBack = r2(cam.fov - fov0), op2 = ln?.el ? +ln.el.style.opacity : 0;
+      R(`the dasher's own camera, a forward dash: the ribbon faces it (${aNow} px² of strip on a 960×540 view, against ${aVert} for the old vertical band), the speed lines show (opacity ${op1}) and fade (${op2}), the FOV kicks up ${fovUp}° and settles back (${fovBack}°)`,
+        aNow > 400 && aNow > aVert * 4 && op1 > 0.3 && op2 === 0 && fovUp >= 2.5 && Math.abs(fovBack) < 0.3, { aNow, aVert, op1, op2, fovUp, fovBack, kick });
+      W.delete(me);
+    }
     // ================================================================================== 9. walls, curtains, canopies, bubbles, the shell, the spawn barrier — at every frame rate
     if (run('walls')) {
       home();
