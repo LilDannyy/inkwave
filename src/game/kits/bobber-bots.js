@@ -808,7 +808,11 @@ export function botAct(b, dt, it, move, busy) {
   const a = b.a;
   if (a.sub?.kind === 'bobber') noteSightings();   // (only when some bot holds the sub: nothing else reads them)
   if (items.length) exposure();
-  if (!a.alive || a.specialActive || a.superJumpState || a.climbing) { b._bob = null; return null; }
+  if (!a.alive || a.superJumpState) { b._bob = null; return null; }
+  // [b5-int3] during a special: only the hold-fire below (a Zipcaster's shots and blasts, any special's trigger, blew a
+  // teammate's idle web: bobber-web clear) — no chain shots, no laying
+  const spOn = !!a.specialActive || a.climbing;
+  if (spOn) { b._bob = null; if ((it.fire || it.special) && items.length) { const o = holdFire(b, a); if (o) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; } } return null; }
   let S = b._bob;
   // (it blew — done; 0.6 s of shots from the moment its aim settled on it went by, or 1.8 s in all — leave it a moment;
   // ready on a chain a foe was closing on: every 0.1 s, the foe in it now → fire; gone off, or 3 s → stand down)
@@ -840,6 +844,7 @@ export function botAct(b, dt, it, move, busy) {
       // go by itself, a spinner's burst runs on after the release, a flick comes out once wound up)
       it.fire = false;
       if (going && !wr0.aimingSub) { wr0.dropCharge(); BOBBER_BOT.dropped = (BOBBER_BOT.dropped || 0) + 1; }
+      if (wr0?.kit && wr0.kit.queued > 0) wr0.kit.queued = 0;   // ([b5-int3] a Cutlass's buffered tap swings on its own a moment later)
       BOBBER_BOT.holds++;
       b._bobHoldT = (b._bobHoldT || 0) + dt;
       if (b.mode === 'fight' && b._bobHoldT > 0.35) { const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd); }
@@ -1061,10 +1066,9 @@ function scan(b) {
     if (snap && foeIn) X.snapIn = (X.snapIn || 0) + 1;
     if (better && !(tIn && (ch.n >= 2 || snap))) { X.better++; continue; }
     // a bobber of it in our reach with a line: the nearest first (rays from the shared budget)
-    // ([b5-int3] the one nearest the foe first — its blast reaches the foe without waiting on the hops down the chain —
-    // then by distance from here)
-    const fo = foeIn || ready ? (foeIn ? foeNear : close) : null;
-    const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez), f: fo ? Math.hypot(o.spot.x - fo.x, o.spot.z - fo.z) : 0 })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => (x.f - y.f) * 2 + (x.d - y.d) * 0.25);
+    // ([b5-int3] tried: the bobber nearest the foe first, to save the hops — 0.07 s a level — but it is often the farthest
+    // and smallest target: the teammate-trigger trials gave up and were late; the nearest to this bot it stays)
+    const cand = ch.items.filter((o) => o.state === 'live').map((o) => ({ o, d: Math.hypot(o.spot.x - ex, o.spot.y - ey, o.spot.z - ez) })).filter((c) => c.d >= win[0] && c.d <= win[1]).sort((x, y) => x.d - y.d);
     // (one sight line a chain a scan: its nearest bobber in reach — the biggest target — unless that one had no line a
     // moment ago, then the next)
     const c = cand.find((q) => !(b._bobNoLos === q.o && G.time - (b._bobNoLosT || 0) < 0.4)) || cand[0];
