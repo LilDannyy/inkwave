@@ -26,14 +26,18 @@
 // from the centre to the chest and a line of sight; paint 1.8 → 2.8 (+ satellites); enemy devices 40 → 60
 // (G.subs.damageArea); the boss and the Bazookarp's shell take the true numbers (G.boss.splash, G.objTargets.splash).
 // Turf and special charge through the subs' credit rule (a barrage's: turf only).
-// ENDINGS WITHOUT A BLAST (A1.7): sunk (the sea, a stage module's liquid, lava — G.match.lava.under / stage.sink); popped
-// by enemy fire (hp 40: a puff, 'device:hit' / 'device:down' how 'shot'); smashed by an enemy Mega Stamp's guard.
-// ONLINE (A8, docs/NET.md): kit records ['k', nid, 'glide', …] — [5, level] the cook in the hand (1, 2, 3; 0 a fizzle);
-// [0, gid, x, y, z, vx, vz, fuse, R] the release; [4, gid, x, y, z, vx, vz, fuse] the owner's word at every bounce and
-// every 0.25 s; [1, gid, x, y, z] the blast; [2, gid, why] an end without one (0 sank, 1 popped, 2 smashed). Ghosts slide
-// with the same step function, never paint, hurt, blow or pop on their own (a ghost at the end of its fuse holds, pulsing,
-// until the owner's word: 2 s at most). Hits on a ghost go to the owner (netHurt; a Stamp's smash on the 'glideSmash'
-// channel). The owner's screen judges players in the blast; each victim's owner applies it (applyHit, as every bomb).
+// ENDINGS WITHOUT A BLAST (A1.7): sunk (the sea, a stage module's liquid, lava, another stage hazard — asked in that
+// order: G.match.lava.under, G.match.stage.under, then G.level.liquidY; lava hisses through lava.fizzle, a stage hazard
+// through stage.fizzle, a plain liquid plops); popped by enemy fire (hp 40: a puff, 'device:hit' / 'device:down' how
+// 'shot'); smashed by an enemy Mega Stamp's guard.
+// ONLINE (A8, docs/NET.md is the reference): kit records ['k', nid, 'glide', …] — [5, level] the cook in the hand (1, 2,
+// 3; 0 a fizzle); [0, gid, x, y, z, vx, vz, fuse, R] the release; [4, gid, x, y, z, vx, vz, fuse] the owner's word every
+// 0.25 s, and at a bounce [4, gid, x, y, z, vx, vz, fuse, kind, who] (kind 1 wall · 2 mover · 3 kid · 4 curtain · 5 sentry
+// · 6 shell; who: the kid's nid); [1, gid, x, y, z] the blast; [2, gid, 0, hot] sank (hot 1: into lava or a stage hazard —
+// the ghost hisses instead of plopping), [2, gid, 1] popped, [2, gid, 2] smashed. Ghosts slide with the same step
+// function, never paint, hurt, blow or pop on their own (a ghost at the end of its fuse holds, pulsing, until the owner's
+// word: 2 s at most). Hits on a ghost go to the owner (netHurt; a Stamp's smash on the 'glideSmash' channel). The owner's
+// screen judges players in the blast; each victim's owner applies it (applyHit, as every bomb).
 //
 // Events: 'sub:use' { actor, kind, cook }, 'sub:charge' { actor, kind: 'glide', level, max } (cook levels),
 // 'glide:bounce' { pos, kind: 'wall' | 'player' | …, speed, team }, 'bomb:explode' { actor, pos, team, radius, kind: 'glide' },
@@ -993,6 +997,9 @@ function slideSinks(a, yaw, cook, s) {
   const air = startOf(a, _gp, yaw);
   _gv.set(Math.sin(yaw) * s.speed0, 0, Math.cos(yaw) * s.speed0);
   const o = simulate(_gp, _gv, air, fuseOf(cook, s), a.team, null, 99);
+  // [b5-int3] (a bot's slide only) its blast where it stops would set off one of its team's idle Chain Bobber webs (no foe
+  // the team knows in it): as bad as a sunk one — another yaw, or not thrown
+  if (!o.sunk && !o.off && a.bot && SUB_KITS.bobber?.webHit?.(a.team, o.x, o.y, o.z, radiusOf(cook, s))) { GLIDE_STATS.botWeb = (GLIDE_STATS.botWeb || 0) + 1; return 'web'; }
   return o.sunk || o.off;
 }
 function paint(brain) {
