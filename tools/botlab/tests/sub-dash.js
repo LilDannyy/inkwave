@@ -607,9 +607,9 @@
           t.pos.set(5 * Math.sin(ang), 1.0, 5 * Math.cos(ang)); t.vel.set(0, 0, 0); t.hover.copy(t.pos); t.target = B;
           t.state = 'launch'; t.t = 0; t.speed = 5; t.dir.set(-Math.sin(ang), -0.05, -Math.cos(ang)).normalize();
           TOR.threats([]); Object.defineProperty(t.thr, 'shootable', { get: () => false, configurable: true });
-          const e0 = ev.length, d0 = THREAT_STATS.dashDodge, onInk = B.groundTeam === 2;
-          let noticed = -1, thrIn = null;
-          for (let f = 0; f < 210 && t.state !== 'dead'; f++) { step(1); if (noticed < 0 && B.bot.thr === t.thr) { noticed = f; thrIn = r2(B.bot.thrIn); } }
+          const e0 = ev.length, d0 = THREAT_STATS.dashDodge;
+          let noticed = -1, thrIn = null, onInk = null;
+          for (let f = 0; f < 210 && t.state !== 'dead'; f++) { step(1); if (onInk === null) onInk = B.groundTeam === 2; if (noticed < 0 && B.bot.thr === t.thr) { noticed = f; thrIn = r2(B.bot.thrIn); } }
           step(10);
           return { noticed, thrIn, onInk, clear: !since(e0, 'hit', (e) => e.victim === B && e.weaponId === 'torpedo').length, dashed: THREAT_STATS.dashDodge > d0 };
         } finally { Math.random = R0; }
