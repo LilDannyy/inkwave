@@ -742,6 +742,8 @@ function throwHits(a) {
   if (k === 'boomerang') return lineHits(a, sub.range || 9, Math.max(sub.contact || 0.3, sub.hoverRadius || 1.35), true) || webHit(a.team, a.pos.x, a.pos.y + 1, a.pos.z, sub.radius || 2.4);
   return null;
 }
+// (a held sub's release — the Shaker's: shaker.js botHold) would its throw now go off by an idle own web?
+export const webThrow = (a) => !!(items.length && a.alive && throwHits(a));
 // (bots.js, after the kits' botAct, before _tail presses on _bombAim) hold the throw: tried again from wherever it is a
 // moment later → true when held
 export function holdThrow(b, it) {

@@ -245,7 +245,15 @@ function botHold(a, st, inp) {
   }
   const keep = a.alive && a.form === 'kid' && st.level < st.botLevel && G.time - st.t0 < st.botMax;
   if (keep) { inp.sub = true; inp.subReleased = false; }
-  else if (!inp.sub) inp.subReleased = true;       // the brain let go frames ago: throw now
+  else if (!inp.sub) {
+    // [b5-int3] the release with its aim now would go off by one of its team's idle Chain Bobber webs (the press was checked,
+    // but a Shaker is held a second or more and the aim moves): held up to 1.5 s more for a clear aim, then not thrown
+    if (SUB_KITS.bobber?.webThrow?.(a)) {
+      if (G.time - st.t0 < st.botMax + 1.5) { inp.sub = true; inp.subReleased = false; return; }
+      inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; return;
+    }
+    inp.subReleased = true;       // the brain let go frames ago: throw now
+  }
 }
 
 // ---- the can in the fist: rattles harder as it charges (jolts on each clink), its lamps count the charges, the vent fizzes

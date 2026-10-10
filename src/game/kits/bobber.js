@@ -54,7 +54,7 @@ import { THROWN, THREAT_STATS } from '../bots.js';
 import { DEPLOY_STATS } from '../deployables.js';
 import { BobberDraw, bobAt, DRAW_STATS } from './bobber-draw.js';
 import { WSCALE, B_EYE, worldGeometry } from './bobber-model.js';
-import { botKit, botAct, botDangers, preferFor, botThrowOk, botLog, webHit, holdThrow } from './bobber-bots.js';
+import { botKit, botAct, botDangers, preferFor, botThrowOk, botLog, webHit, holdThrow, webThrow } from './bobber-bots.js';
 import { hudTick, hudClear, kitPrompt, guideOff, onChainHud, onDisarmHud, onRefusedHud, onThrowHud } from './bobber-hud.js';
 import '../../audio/sfx-bobber.js';
 
@@ -1109,7 +1109,7 @@ const kit = SUB_KITS[KIND] = {
   },
   prompt: (a) => kitPrompt(a),
   botAct,
-  webHit, holdThrow,   // [b5-int3] (bots: a throw / blast that would set off an own idle chain — bots.js, glide.js, dash.js, mitts.js)
+  webHit, holdThrow, webThrow,   // [b5-int3] (bots: a throw / blast that would set off an own idle chain — bots.js, glide.js, dash.js, mitts.js)
   dangers: botDangers,
   bot: botKit,
   items, groups, BOBBER_STATS, resetBobberStats, sizeOf, falloff, liquidTop, spotFor, predictSpot, relink, trigger, hurt, teamFire, finish, shotProbe, near, draw, DRAW_STATS, throwFrom, lampsOf,
