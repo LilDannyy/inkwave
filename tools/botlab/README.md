@@ -117,6 +117,39 @@ Tower Command:
 - The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `tower-ink.js`.
 
+Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/jobs/batch5/bazookarp/SPEC.md):
+- **The mode is hidden.** It is in no player-facing list, but every harness starts it by name (`MODE=bazookarp`,
+  `api.startMatch`). `WIPMODES=1` boots every harness page with `?wipmodes` (config `SHOW_WIP_MODES`), which lists it
+  everywhere (the mode screen, the stage chip, the lobby picker, `setSettings`); a two-client test opens its clients
+  with `Q0='autopilot&wipmodes'`.
+- **`MAP=karpbox`** is its test stage (tools/botlab/karpbox.js, never shipped): every case the rules need — weirs, the
+  Gate, free zones, a carrierBlock, the thin wall, the hop step and the gap, a pier over water, a mover, a pod plot, a
+  test-only second field state. testmaps.cjs injects it into page.cjs / match.cjs; `KARP_DEF='two'` (or a JSON
+  `LAYOUT.bazookarp`) swaps its data (`'two'`: the two-weir case). Net tests import it into every client themselves.
+- The rules: `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/bazookarp-rules.js tools/botlab/run.sh
+  tools/botlab/page.cjs` (every row of SPEC §2.1 in groups A–L; M: devices and subs at the Roe Shell — the re-form's
+  crush, glancing off it, every damaging sub counted and stopped; `PAGE_ARGS='only=A,B,…'`).
+- The same with `karp-gun.js` (the Carp Shot: charge, ranges, ink, swell, blast radius, damage, kick, enemy ink, a
+  Drip Curtain, its records with a stub net), `karp-loop.js` (a shadow follower engine on LoopWire through a scripted
+  match: after every discrete record it agrees with the host; late snapshots, declined grants) and `karp-two.js` (two
+  scripted humans play a match to a knockout; also `MAP=halyard`), and `karp-shell-dps.js` (the Roe Shell's tuning
+  table: every main, special, barrage and the Tidal Slam against a lone shell, damage counted per second;
+  `PAGE_ARGS='only=shooter,zooka'`).
+- The Carp Field: `DEVSTAGE=1 MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-field.js tools/botlab/run.sh
+  tools/botlab/page.cjs` — karpbox's field cases, then every stage in its Bazookarp build: L, holes, the halfway line,
+  hop / gap edges, checker #2's reading sweep, the load cost per state (the warm rebuild ≤ 60 ms; the build at match start reported and
+  failed only past 90 ms — the SPEC's 60 ms at load needs a quiet machine) (`PAGE_ARGS='only=halyard,…'`).
+- Online: `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
+  tools/botlab/run.sh tools/botlab/netpage.cjs` (the host's view of a guest carrier, ghost landings, victim-judged blasts,
+  kr, kd, kx inside an overtime, the result); the host leaving mid-carry: `CLIENTS=3 Q0=… Q1=… Q2='autopilot&wipmodes'
+  NET_ARGS='part=bots' NET=tools/botlab/tests/net-karp-host.cjs …`, and `CLIENTS=2 … NET_ARGS='part=cargo'` (a humans-only
+  room: the carrier's kid is removed); the shell's crush online: `CLIENTS=2 … NET=tools/botlab/tests/net-karp-crush.cjs`
+  (each screen crushes its own devices, the ghosts end on the owner's word, both screens agree).
+- Bot matches: `MAP=<id> tools/botlab/run.sh tools/botlab/karp-match.cjs` (an all-bot match stepped at 60 Hz: SPEC
+  §10.3's numbers, a `RESULT karp …` line; env `DUR`, `OTMAX`, `DIFF`, `HUMAN=still|carry`, `KARP_DEF`, `OUT=file.json`),
+  and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
+- Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
+
 Stage set pieces:
 - Movers (Calamari County's railcars): `MAP=calamari MODE=turf PAGE=tools/botlab/tests/movers.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `MODE=zones`.

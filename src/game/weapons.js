@@ -1277,6 +1277,7 @@ export class Projectiles {
     if (G.subs) G.subs.damageArea(at, w.splashRadius, w.splashDamage, p.team, p.owner); else G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
     // boss mode: one splash per throw (a direct head hit already counted)
     if (G.boss && direct !== 'boss' && !(p.vol && p.vol.hits.includes(G.boss))) { p.vol?.hits.push(G.boss); G.boss.splash(p.owner, at, w.splashRadius + 0.3, w.splashDamage, w.splashDamage, p.wid || 'slosher'); }
+    if (G.objTargets && direct !== 'karp' && !(p.vol && p.vol.hits.includes(G.objTargets))) { p.vol?.hits.push(G.objTargets); G.objTargets.splash(p.owner, at, w.splashRadius + 0.3, w.splashDamage, w.splashDamage, p.wid || 'slosher', { special: p.sp }); }   // [b5-karp] the Roe Shell
     if (p.owner.isLocal || G.camera.position.distanceToSquared(at) < 26 * 26) {
       G.fx?.burst(at, UP, p.owner.color, { count: 16, speed: 4.2, size: 0.09 });
       G.fx?.ring?.(at, UP, p.owner.color, { radius: w.splashRadius, life: 0.32 });
@@ -1374,6 +1375,11 @@ export class Projectiles {
     if (G.boss) {
       const bh = G.boss.segHit(m, _v2.copy(m).addScaledVector(dir, len), 0.1);
       if (bh && (!victim || bh.dist < victim.d)) { victim = null; len = bh.dist; bossHit = true; G.boss.hit(a, dmg, bh.target, 'charger', bh.point.clone()); }
+    }
+    // [b5-karp] the Roe Shell: the nearer of it and the first player stops the beam
+    if (G.objTargets) {
+      const kh = G.objTargets.segHit(m, _v2.copy(m).addScaledVector(dir, len), 0.1);
+      if (kh && (!victim || kh.dist < victim.d)) { victim = null; len = kh.dist; bossHit = true; G.objTargets.hit(a, dmg, 'charger', kh.point.clone(), { special: !!a.specialActive, target: kh.target }); }
     }
     if (victim) { len = victim.d; this.applyHit(a, victim.e, dmg, 'charger', G.drainbow?.live ? G.drainbow.rayShot(m, dir, victim.d, a.team) : null); }   // [drainbow]
     // paint along the line (projected to the ground)
@@ -1621,6 +1627,7 @@ export class Projectiles {
       this.applyHit(b.owner, e, lerp(s.damageMin, s.damageMax, k * k), 'bomb', b.dbw ? b : null, c);
     }
     G.boss?.splash(b.owner, c, s.radius, s.damageMax, s.damageMin, 'bomb');
+    G.objTargets?.splash(b.owner, c, s.radius, s.damageMax, s.damageMin, 'bomb', { special: b.sp });   // [b5-karp] (a Bomb Barrage's bomb: sp)
   }
 
   _spawnCloud(b) {
@@ -1711,6 +1718,9 @@ export class Projectiles {
       p.pos.addScaledVector(p.vel, dt);
       let dead = false;
       if (G.drainbow?.live && !p.dbw) G.drainbow.pass(p, p.prev, p.pos, p.team);   // [drainbow]
+      // [b5-karp] the Roe Shell stops it before the players behind it: the segment is cut at the shell
+      const kh = G.objTargets ? G.objTargets.segHit(p.prev, p.pos, p.size * 0.6) : null;
+      if (kh) { p.pos.copy(kh.point); this._kh = kh; }
       // actors
       for (const e of G.actors) {
         if (e.team === p.team || !e.alive) continue;
@@ -1752,6 +1762,7 @@ export class Projectiles {
           dead = true;
         }
       }
+      if (!dead && kh) { this._karpImpact(p, kh); dead = true; }   // [b5-karp] (no wall or player in front of it)
       // trail drips
       if (!dead && p.trailEvery) {
         p.trail += p.vel.length() * dt;
@@ -1786,6 +1797,22 @@ export class Projectiles {
     if (p.type !== 'blast') emit('weapon:impact', { pos: at.clone(), normal: _v2.copy(p.vel).normalize().negate().clone(), team: p.team, kind: p.type === 'drop' || p.type === 'slosh' ? 'drop' : 'shot', radius: p.radius * 0.5, victim: null });
     if (p.type === 'blast') this._blastBurst(p, at, 'boss');
     if (p.type === 'slosh' && p.head) this._sloshSplash(p, at, 'boss');
+  }
+
+  // [b5-karp] a blob / drop / blast meeting the Roe Shell (kh from objTargets.segHit): it counts there (ghosts don't)
+  _karpImpact(p, kh) {
+    const at = (this._karpAt || (this._karpAt = new THREE.Vector3())).copy(kh.point), O = G.objTargets;
+    let dmg = p.damage;
+    if (p.type === 'drop') dmg = lerp(p.damage, p.dmgFar, clamp(p.start.distanceTo(at) / 7, 0, 1));
+    if (p.vol) { if (p.vol.hits.includes(O)) dmg = 0; else p.vol.hits.push(O); }
+    if (p.type === 'drop') { const o = p.owner, t = o._flickKarpT ?? -9; if (G.time - t < 0.3) dmg *= 0.12; else o._flickKarpT = G.time; }   // (a flick is one sheet of ink)
+    // (its id: a kit's wid, a special gun's weaponId (jetpack, crab), else its owner's main — a shooter's shot, a blaster's
+    // blast, a roller's flick carry none — so a main's shot fired while its owner's special runs still counts whole)
+    if (dmg > 0) O.hit(p.owner, dmg, p.wid || p.weaponId || p.owner?.weaponId || p.type, at.clone(), { special: p.sp, target: kh.target });
+    G.fx?.burst(at, _v2.copy(p.vel).normalize().negate(), p.owner.color, { count: 4, speed: 3, size: 0.07 });
+    if (p.type !== 'blast') emit('weapon:impact', { pos: at.clone(), normal: _v2.copy(p.vel).normalize().negate().clone(), team: p.team, kind: p.type === 'drop' || p.type === 'slosh' ? 'drop' : 'shot', radius: p.radius * 0.5, victim: null });
+    if (p.type === 'blast') this._blastBurst(p, at, 'karp');
+    if (p.type === 'slosh' && p.head) this._sloshSplash(p, at, 'karp');
   }
 
   _impact(p, hit) {
@@ -1831,6 +1858,7 @@ export class Projectiles {
     // [b5-deploy] the splash reaches enemy devices too (subs.damageArea → special objects: specials.areaHit)
     if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashDamageMin, p.team, p.owner); else G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
     if (direct !== 'boss') G.boss?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, 'blaster');
+    if (direct !== 'karp') G.objTargets?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, p.weaponId || 'blaster', { special: p.sp });   // [b5-karp] (the Ink Jet's shots: a special id)
   }
 
   _updateBombs(dt) {
@@ -1843,6 +1871,14 @@ export class Projectiles {
       if (G.drainbow?.live && !b.dbw) G.drainbow.pass(b, _v, b.pos, b.team);   // [drainbow] (a thrown one, in flight)
       const hit = G.physics.segment(_v, b.pos, _hit);
       // boss mode: bombs glance off HULLBREAKER's shell (they'd otherwise sail through it)
+      if (!hit.hit && G.objTargets && b.kind === 'bomb') {   // [b5-karp] off the Roe Shell (they'd sail through it)
+        const kh = G.objTargets.segHit(_v, b.pos, 0.2), sh = kh && kh.target;
+        if (sh) {
+          _v2.copy(b.pos).sub(sh.center()).normalize(); b.pos.copy(sh.center()).addScaledVector(_v2, sh.radius() + 0.22);
+          const vn = b.vel.dot(_v2); if (vn < 0) b.vel.addScaledVector(_v2, -vn * 1.35);
+          b.vel.multiplyScalar(0.55);
+        }
+      }
       if (!hit.hit && G.boss && b.kind === 'bomb') {
         const bh = G.boss.segHit(_v, b.pos, 0.2), sh = bh && bh.target.pos && bh.target;
         if (sh) {
@@ -1917,6 +1953,7 @@ export class Projectiles {
           if (g.hit && !c.ghost) c.owner.addTurfNoSpecial(G.paint.splat(_v2.copy(g.point).addScaledVector(g.normal, 0.1), 0.45 + Math.random() * 0.35, c.team, { seed: Math.random() }));   // (a special's rain)
         }
         if (!c.ghost) G.boss?.rain(c.owner, c.group.position.x, c.group.position.z, sp.radius * s, sp.dps * dt);
+        if (!c.ghost) G.objTargets?.tick(c.owner, { x: c.group.position.x, z: c.group.position.z, r: sp.radius * s }, sp.dps * dt, 'storm');   // [b5-karp]
         for (const e of G.actors) {
           if (e.team === c.team || !e.alive || e.remote) continue;     // online: each client rains on its own actors
           const dx = e.pos.x - c.group.position.x, dz = e.pos.z - c.group.position.z;

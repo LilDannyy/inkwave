@@ -449,6 +449,17 @@ function tick(dt) {
     predict(p, dt, _v);
     // Boss Battle: pellets into HULLBREAKER / a crablet add up per blast the same way (one hit; the core pass ends
     // the pellet there)
+    if (G.objTargets) {   // [b5-karp] the Roe Shell: one summed hit per blast, as the boss
+      const kh = G.objTargets.segHit(p.pos, _v, p.size);
+      if (kh) {
+        const key = e.blast * 64 + 62;
+        let rec = PEND.get(key);
+        if (!rec) PEND.set(key, (rec = { owner: e.owner, karp: kh.target, point: kh.point.clone(), dmg: 0, n: 0, at: G.time + MERGE }));
+        rec.dmg += pelletDamage(p.start.distanceTo(kh.point)); rec.n++;
+        p._bid = -p._bid;
+        continue;
+      }
+    }
     if (G.boss) {
       const bh = G.boss.segHit(p.pos, _v, p.size);
       if (bh) {
@@ -480,7 +491,8 @@ function tick(dt) {
   for (const [key, rec] of PEND) {
     if (G.time < rec.at - 1e-6) continue;
     PEND.delete(key);
-    if (rec.boss) G.boss?.hit(rec.owner, rec.dmg, rec.boss, 'brolly', rec.point); else PJ.applyHit(rec.owner, rec.victim, rec.dmg, 'brolly');
+    if (rec.karp) G.objTargets?.hit(rec.owner, rec.dmg, 'brolly', rec.point, { target: rec.karp });   // [b5-karp]
+    else if (rec.boss) G.boss?.hit(rec.owner, rec.dmg, rec.boss, 'brolly', rec.point); else PJ.applyHit(rec.owner, rec.victim, rec.dmg, 'brolly');
   }
   snapShields();
   // 3) launched canopies hold enemy players back

@@ -7,8 +7,16 @@
 //             open east of the wall block, 'edge' at the water's edge, 'track' beside the tower track (it waits while the
 //             tower's by), 'ontrack' on it (off in Tower Command). The tower track runs x = −8 from the centre to z = 32
 //             (tools/botlab/tests/pods.js)
-const TEST_MAPS = ['testbox', 'podbox'];
+const TEST_MAPS = ['testbox', 'podbox', 'karpbox'];
+// [b5-karp] karpbox — the Bazookarp test stage (tools/botlab/karpbox.js; KARP_DEF='two' or a JSON LAYOUT.bazookarp
+// swaps its data in)
+function defineKarpbox() {
+  const d = process.env.KARP_DEF || '';
+  const arg = d === 'two' ? 'm.KARPBOX_TWO' : d ? d : 'null';
+  return `(async () => { const m = await import('./tools/botlab/karpbox.js'); return m.defineKarpbox(${arg}); })()`;
+}
 function defineTestMap(MAP) {
+  if (MAP === 'karpbox') return defineKarpbox();
   return `(async () => {
     const { MAPS } = await import('./src/config.js'); const { MAP_LAYOUTS } = await import('./src/world/maps.js');
     const id = '${MAP}';

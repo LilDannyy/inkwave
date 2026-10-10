@@ -711,6 +711,71 @@ export const TOWER = {
   snapHz: 10,                 // online: host snapshots a second
 };
 
+// [b5-karp] Bazookarp (src/game/bazookarp.js): carry the Bazookarp to the enemy's Dragon Gate — the user's Rainmaker with
+// Splatoon 3's checkpoints (tools/botlab/jobs/batch5/bazookarp/SPEC.md, its appendix; DECISIONS.md)
+export const BAZOOKARP = {
+  duration: 300,              // 5:00 + overtime
+  count: 100,                 // 100 at the Pond, 0 at the enemy's Dragon Gate (the Carp Field, karpField.js)
+  snapHz: 10, stateHz: 1,     // online: snapshots / full state a second
+  // the Roe Shell: a tug-of-war meter ±hp (Alpha +, Bravo −); a burst splats the other team within burstR (with a line)
+  shell: {
+    r: 1.6, rMax: 2.3, lift: 1.3,          // radius at rest / about to burst; centre above its floor
+    hp: 1000, reformHp: 500,                // net damage to burst: the opening shell / every re-formed one
+    regen: 200, regenDelay: 1.5,           // drift back toward 0 (/s) after this long with no hits
+    reform: 0.8,                            // s to grow back after a drop / plant / reset / move
+    hitCap: 220, specialMul: 0.5, contMul: 0.5,
+    touch: 20, touchGap: 0.5, touchShove: 6, touchFloor: 1, shoveEdge: 1.2,   // no push toward a > 1.2 m drop
+    burstR: 4.5, burstPaint: 3.5,
+    crackAt: 0.6, warnAt: 0.75,
+  },
+  // picking it up
+  pickR: 1.3, pickBelow: 0.6, pickAbove: 1.8, pickHold: 0.25,
+  claimLockMax: 1.5, claimRetry: 0.3, claimSlack: 0.5,   // online (§7.3)
+  claimAge: 0.4,              // s: a claim's sample age; the window-close grace; the wait for a decline (kx) after a death
+  // the carrier
+  speedMul: 0.8, chargeWalk: 2.4,         // × PLAYER's speeds, never the weapon's
+  fuse: 60, fuseFast: 3, fuseWarn: 10,
+  retreatOn: 8, retreatOff: 3,            // m of progress lost on your own half: ×3 on / back within (off)
+  explodeR: 4.5, explodePaint: 5.0,       // the Carp Blast (its ink is the other team's)
+  // the Carp Shot
+  gun: {
+    tapMin: 0.15, chargeTime: 1.2, cooldown: 0.25,
+    speed: [12.7, 22.4], lob: 25, gravity: 22,  // launch speed at charge 0 → 1; degrees over the aim; m/s²
+    muzzleUp: 1.4, muzzleFwd: 0.5,               // the carp's mouth above the feet / in front of the body
+    landPaint: [0.9, 1.5], swell: 0.45,
+    radius: [1.8, 3.4], dmg: [40, 90], edge: 25,            // partial charges (linear in c)
+    fullRadius: 4.0, fullDmg: 180, fullKillR: 2.4, fullEdge: 55,
+    paintK: 0.85,
+    kick: [2.5, 6.0], kickTau: 0.3, kickAir: 0.6,
+  },
+  // weirs, the Dragon Gate (triggers: radius, and feet within ±trigBand of the floor)
+  weirR: 1.8, gateR: 1.7, trigBand: 0.6, gateRise: 1.4, weirLower: 1.2, resetFly: 1.5,
+  // the Carp Field (§3.2): the reading; the carrier graph's extra edges; the host's continuity clamp (§3.4)
+  field: { n0R: 0.9, n0Dy: 0.5 },
+  hop: { riseMin: 1.25, riseMax: 1.8, flatMax: 1.2, head: 1.6 },   // a kid lands on up to ~1.8 m
+  gap: { flatMin: 1.2, flatMax: 3.0, upMax: 0.6, downMax: 3.4, airBelow: 1.0, walkMin: 6 },
+  // [b5-karp] slack 2.0 (the SPEC's 0.5): the reading itself steps by up to ~1–2 m where the own node changes between
+  // neighbours the nav graph doesn't join (SPEC §3.2's own sweep: 1 m worst, 2.08 m on kelpline) — 0.5 refused those
+  // honest steps (42 in one halyard match, each accepted 3–5 frames later); 2.0 still refuses every jump it exists for
+  // (a remote carrier's 4 m correction, a wall's far side). holeR: two own nodes this close with a clear waist line are
+  // a straight walk — the reading may drop by the graph's detour round a small nav hole at once (bazookarp.js _holeStep)
+  clamp: { vMax: 15.5, slack: 2.0, holeR: 3.0 },   // m/s (swim 9.44 + kick 6.0, rounded up); m; m
+  // the drop spot (§2.7)
+  rest: { clear: 2.3, padR: 9.7, weirR: 2.8, gateR: 2.7, band: 1.6, near: 4, check: 0.5 },
+  // the carrier's HUD fuse (§7.2): snap forward when > fwd s long; give time back at most back s per second
+  fuseSync: { fwd: 0.1, back: 0.2 },
+  gauge: 3,                   // passive special points / s (the user's 3p)
+  // overtime (the user's rules; see §2.1 S38 / S39): strict "less than"; the pick-up window pauses while untouchable
+  otDropWindow: 15, otPlantWindow: 5, otPick: 10, overtimeMax: 300,
+};
+// [b5-karp] battle modes under construction (the stages' `wip` flag, for modes): in no player-facing mode list — the
+// offline mode screen, the stage select's mode chip, the online lobby's mode picker, a room's mode setting, ?autostart's
+// mode — yet the harness still starts one by name (api.startMatch / MODE=bazookarp). The page option ?wipmodes (harness:
+// WIPMODES=1) lists them everywhere for testing. The lead removes a mode from this list when it ships.
+export const WIP_MODES = ['bazookarp'];
+export const SHOW_WIP_MODES = typeof location !== 'undefined' && new URLSearchParams(location.search).has('wipmodes');
+export const modeListed = (id) => !WIP_MODES.includes(id) || SHOW_WIP_MODES;
+
 export const DIFFICULTY = {
   // aimOmega / aimTurn: bot aim spring stiffness (rad/s) and turn-rate cap (rad/s) — see bots.js
   easy:   { id: 'easy',   name: 'Chill',  reaction: 0.55, aimError: 0.11, fireDiscipline: 0.55, awareness: 16, aimOmega: 9,  aimTurn: 7 },
@@ -816,6 +881,7 @@ export const PROGRESSION = {
   // zone counts extra, and a knockout win pays a flat bonus — a typical match lands close to a Turf War's XP
   zones: { turfScale: 0.6, xpPerZoneTurfPoint: 1.0, xpKnockout: 300 },
   tower: { turfScale: 0.6, xpPerRideSecond: 6, xpKnockout: 300 },   // Tower Command: per second riding the tower
+  bazookarp: { turfScale: 0.6, xpPerCarryM: 3, xpPerPop: 60, xpKnockout: 300 },   // [b5-karp] per metre carried, per shell burst
 };
 
 // ---- Settings defaults (persisted in localStorage 'inkwave.settings') ----
@@ -837,7 +903,7 @@ export const DEFAULT_SETTINGS = {
   colorblind: false,
   minimap: true,
   matchLength: 180,
-  lastMode: 'turf',         // battle mode last picked on the stage select: 'turf' | 'zones' | 'tower' | 'boss'
+  lastMode: 'turf',         // battle mode last picked on the stage select: 'turf' | 'zones' | 'tower' | 'boss' ([b5-karp] | 'bazookarp' once listed)
   difficulty: 'normal',
   rumble: 1.0,              // gamepad vibration 0..1 (only while the pad is the last-used device)
   aimAssist: 1.0,           // gamepad aim assist 0..1

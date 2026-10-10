@@ -427,6 +427,9 @@ function update(it, dt) {
       const dn = it.dir.x * n.x + it.dir.z * n.z;
       if (dn < 0 && Math.abs(n.y) < 0.6) { it.dir.x -= 2 * dn * n.x; it.dir.z -= 2 * dn * n.z; it.dir.y = 0; it.dir.normalize(); }
     }
+  } else if (G.objTargets) {   // [b5-karp] off the Roe Shell as off a wall (its hops carry on away from it)
+    const n = G.objTargets.bounce(_v, it.pos, it.vel, RAD, 1.5, 0.62);
+    if (n) { const l = Math.hypot(n.x, n.z), dn = l > 1e-4 ? (it.dir.x * n.x + it.dir.z * n.z) / l : 0; if (dn < 0) { it.dir.x -= 2 * dn * n.x / l; it.dir.z -= 2 * dn * n.z / l; it.dir.y = 0; it.dir.normalize(); } }
   }
   if (!floor) {
     const g = G.physics.raycast(_v2.copy(it.pos), DOWN, RAD, _hit2);
@@ -531,6 +534,7 @@ function blast(it) {
   }
   G.subs?.damageArea(c, s.radius, 40, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'shaker');   // Boss Battle
+  G.objTargets?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'shaker', { special: !!a.specialActive });   // [b5-karp] the Roe Shell
   if (it.left > 0) {
     // the blast kicks it forward and up; the next one goes off `gap` later (usually just after it lands)
     it.vel.set(it.dir.x * s.hopSpeed, s.hopUp, it.dir.z * s.hopSpeed);

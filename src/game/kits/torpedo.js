@@ -341,6 +341,7 @@ function fly(t, h) {
   if (t.ghost) {   // flies the arc; stops where it touches something and waits for its owner's word
     const w = G.physics.segment(t.prev, t.pos, _hit);
     if (w.hit) { t.pos.copy(w.point).addScaledVector(w.normal, 0.14); t.vel.set(0, 0, 0); }
+    else { const kh = G.objTargets?.meet(t.prev, t.pos, 0.14); if (kh) { t.pos.copy(kh.point); t.vel.set(0, 0, 0); } }   // [b5-karp] (the Roe Shell too)
     if (t.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(t.pos, 'torpedo')) fizzle(t);   // [b5-stagehooks]
     return;
   }
@@ -448,6 +449,7 @@ function touchFoe(t) {
 function touchDevice(t) {
   if (G.subs?.blockShot(t.prev, t.pos, t.team, 0)) return true;
   if (G.specials?.shotHit?.(t.prev, t.pos, t.team, 0, t.owner)) return true;
+  { const kh = G.objTargets?.meet(t.prev, t.pos, 0.16); if (kh) { t.pos.copy(kh.point); return true; } }   // [b5-karp] the Roe Shell: a surface (it bursts on it)
   return false;
 }
 // Locked form vs lethal bombs (the Drip Curtain rule): an enemy bomb that touches it goes off right there (and its
@@ -505,6 +507,7 @@ function burst(t, full) {
   }
   G.subs?.damageArea(c, s.radius, 60, t.team, t.owner);   // enemy curtains / devices / bubbles; sets off enemy locked torpedoes ([b5-deploy] by)
   G.boss?.splash(t.owner, c, s.radius, s.damageMax, s.damageMin, 'torpedo');   // Boss Battle
+  G.objTargets?.splash(t.owner, c, s.radius, s.damageMax, s.damageMin, 'torpedo', { special: !!t.sp });   // [b5-karp] the Roe Shell
   if (full) spawnDrops(t, c);
 }
 // shot down (or out of the world): gone without a blast
@@ -586,6 +589,10 @@ function dropStep(d, dt) {
       }
     }
     if (!dead && G.subs?.blockShot(d.prev, d.pos, d.team, d.dmg, d.owner)) dead = true;   // [b5-deploy] (by)
+    if (!dead && G.objTargets) {   // [b5-karp] the Roe Shell stops a droplet; up to its cap a burst counts there, as on a foe
+      const kh = G.objTargets.segHit(d.prev, d.pos, d.size);
+      if (kh) { const k = d.rec.karpN || 0; if (k < d.cap) { d.rec.karpN = k + 1; G.objTargets.hit(d.owner, d.dmg, 'torpedo', kh.point.clone(), { special: !!d.sp, target: kh.target }); } dead = true; }
+    }
     if (!dead) {
       const w = G.physics.segment(d.prev, d.pos, _hit, true);
       if (w.hit) {

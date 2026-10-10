@@ -18,6 +18,7 @@ import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
 import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
 import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
 import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing better to shoot: enemy beacons / sprinklers / buoys
+import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct, karpAim, karpPathArgs, karpPathFallback, karpShellAvoid, KARP_W } from './botsKarp.js';   // [b5-karp]
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
@@ -724,24 +725,29 @@ export class BotBrain {
     // ---------------- Tower Command: the team plan (null in every other mode); a new role re-targets at once
     const tp = zp ? null : towerPlan();
     if (tp) this._towerSync(tp);
+    // [b5-karp] Bazookarp: the team plan (null in every other mode); a carrier's weapon is the stand-in (no kit hook)
+    const kp = zp || tp ? null : karpPlan();
+    if (kp) karpSync(this, kp);
+    const carry = !!a.carry;
     const rider = !!tp && this.tRole === 'ride', onT = !!tp && tp.onTower(a);
 
     // ---------------- mode selection (retreat = break line of sight and heal in own ink when losing a duel)
     const inkFrac = a.ink / PLAYER.inkMax;
     const hpFrac = a.hp / PLAYER.hp;
-    const w = a.weapon;
+    const w = carry ? KARP_W : a.weapon;   // [b5-karp]
+    if (carry && (this.mode === 'retreat' || this.mode === 'refill')) this.mode = 'paint';   // [b5-karp] (a carrier never retreats or refills)
     if (this.mode === 'retreat') {
       this.retreatT -= dt;
       // (a tower rider a few metres from an empty tower takes it rather than backing off)
       const grab = rider && tp.T.riders[0] + tp.T.riders[1] === 0 && Math.hypot(tp.T.pos.x - a.pos.x, tp.T.pos.z - a.pos.z) < 6;
       if (hpFrac > 0.85 || this.retreatT <= 0 || (!this.target && hpFrac > 0.6) || grab) { this.mode = 'paint'; this.path = null; this.goalTimer = 0; }
     } else if (this.target && this.seeTimer > 0 && ((hpFrac < 0.34 && !MELEE[w.kind] && a.lastDamage < 0.8) || hpFrac < 0.2) && Math.random() < 0.6 * dt * 60 * this.diff.fireDiscipline
-      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this) && !rider) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range; tower riders hold on)
+      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this) && !rider && !carry) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range; tower riders hold on) [b5-karp] carry
       this.mode = 'retreat'; this.retreatT = 2.2 + Math.random() * 1.4; this.repath = 0; this._pickRetreat();
     }
     // (a tower rider on it doesn't hop off to refill — it holds its fire while the tank tops up, and keeps it moving)
     const stayDry = rider && onT;
-    if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05) && !stayDry) {
+    if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05) && !stayDry && !carry) {   // [b5-karp] carry
       this.mode = 'refill'; this.refillUntil = 0.85 + Math.random() * 0.1;
     }
     if (this.mode === 'refill' && inkFrac >= this.refillUntil) this.mode = 'paint';
@@ -760,6 +766,12 @@ export class BotBrain {
         if (m === 'paint' && this.mode === 'fight') { this.goalTimer = 0; this.tHoldUntil = 0; }
         this.mode = m;
       }
+    } else if (kp) {   // [b5-karp] the objective first: fights in range, by the objective, or at their carrier
+      if (this.mode !== 'refill' && this.mode !== 'retreat') {
+        const m = this.target && karpEngage(this, kp) ? 'fight' : 'paint';
+        if (m === 'paint' && this.mode === 'fight') this.goalTimer = 0;
+        this.mode = m;
+      }
     } else if (this.mode !== 'refill' && this.mode !== 'retreat') this.mode = this.target ? 'fight' : 'paint';
 
     // ---------------- navigation goal
@@ -767,6 +779,7 @@ export class BotBrain {
     if (this.mode === 'fight' && this.target) {
       if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
       else if (tp && this._towerFightNav(tp)) { /* riders make for the tower; perches / escorts hold their ground */ }
+      else if (kp && karpFightNav(this, kp)) { /* [b5-karp] the carrier keeps walking its route */ }
       else if (this.repath <= 0) this._pathTo(this.tv.pos, 0.6);   // (out of sight: where we think it is)
     } else if (this.mode === 'refill') {
       if (this.repath <= 0 || !this.path) this._pickRefill();
@@ -786,6 +799,7 @@ export class BotBrain {
         if (arrived && this.zHoldDur > 0) { this.zHoldUntil = this.t + this.zHoldDur; this.zHoldDur = 0; }
         if (this.wiggleT <= 0 && (this.goalTimer <= 0 || (arrived && this.t >= (this.zHoldUntil || 0)))) this._pickZoneGoal(zp);
       } else if (tp) this._towerGoal(tp);
+      else if (kp) karpGoal(this, kp);   // [b5-karp]
       else if (this.goalTimer <= 0 || !this.path || this.pi >= this.path.length) this._pickPaintGoal();
     }
 
@@ -805,7 +819,9 @@ export class BotBrain {
     const kAge = this.tk && !enemyVisible ? G.time - this.tk.t : 0;
     let fightDist = 0, idealYaw = 0, idealPitch = 0, aimDist = 6;
 
-    if ((this.mode === 'fight' || this.mode === 'retreat') && this.target) {
+    // [b5-karp] the carrier gate: the Carp Shot is a carrier's only trigger (no main, sub or special; SPEC §8.7)
+    if (carry) { const ka = karpCarrierAct(this, kp, { dt, it, move, enemyVisible }); if (ka) { wantYaw = ka.yaw; wantPitch = ka.pitch; aimDist = ka.dist; } }
+    else if ((this.mode === 'fight' || this.mode === 'retreat') && this.target) {
       const t = this.tv;   // (in sight: the foe; out of sight: our memory of it — see botSight.js)
       const dx = t.pos.x - a.pos.x, dz = t.pos.z - a.pos.z;
       const dist = Math.hypot(dx, dz);
@@ -1037,25 +1053,26 @@ export class BotBrain {
       }
     }
     // ---------------- running specials (and cheering on a teammate's Cheer Orb)
-    this._specialCtl(dt, it, move, fightDist, enemyVisible);
+    if (!carry) this._specialCtl(dt, it, move, fightDist, enemyVisible);   // [b5-karp] (not a carrier)
     // ---------------- enemy Waddles / Torpedoes after us: shoot them down or get out of the way (aim + trigger + move);
     // enemy launched canopies in the way: steer round the nearer edge (or break one we're boxed in by)
-    let thrAim = this._threatCtl(dt, it, move);
-    const canAim = this._canopyCtl(dt, it, move, !thrAim);
+    let thrAim = carry ? null : this._threatCtl(dt, it, move);   // [b5-karp]
+    const canAim = carry ? null : this._canopyCtl(dt, it, move, !thrAim);
     if (!thrAim && canAim) thrAim = canAim;
+    if (!thrAim && kp && !carry && this.mode === 'paint') thrAim = karpAim(this, kp, dt, it) || null;   // [b5-karp] a breaker: the shell
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
-    if (!thrAim && G.match?.pods) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;
+    if (!thrAim && G.match?.pods && !carry) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;   // [b5-karp] carry
     if (!thrAim && G.match?.stage) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || null;   // [b5-stagehooks] (escape the lava …)
     // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
     // the danger guard's below have the last word) [b5-int2: after the stage module's botAct, which outranks it]
-    if (!thrAim && this.sp.on()) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);
+    if (!thrAim && this.sp.on() && !carry) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);   // [b5-karp] carry
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- Tower Command: riders hold the platform's middle, or climb on (ink its wall, swim up); others off it
     const tAim = tp ? this._towerMove(tp, dt, move, it, thrAim, onT) : null;
     // ---------------- wall climb (nav 'climb' edge): ink the wall column up to the top, then swim up it (the tower's
     // wall too: tAim, inking it on the way onto its deck)
-    this._climbAim = this._climb(dt, move, it) || tAim;
+    this._climbAim = carry ? null : this._climb(dt, move, it) || tAim;   // [b5-karp] (a carrier never climbs)
     if (this._climbAim) { wantYaw = this._climbAim.yaw; wantPitch = this._climbAim.pitch; }
     // ---------------- enemy specials (botSpecials.js), after everything else: out of a danger area it's in, never a
     // step into one, no shots into the untouchable; popping our team's bubble on one of theirs (an aim to hold)
@@ -1065,6 +1082,7 @@ export class BotBrain {
     // [b5-sub-dash] the Dash Pellet's dodges, break-offs, gap closes), last, so nothing later in the frame clears what they
     // set; busy — something above already owns the aim; an aim a kit returns is held like a device's (a later kit's wins)
     { const busy = !!thrAim; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; thrAim = r; } } }
+    if (carry) { it.sub = false; it.special = false; this._bombAim = false; }   // [b5-karp] the last word: a carrier never throws or starts a special ([b5-int3] after the kits' botAct, and no press _tail would make from _bombAim)
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim, enemyVisible);
   }
 
@@ -2838,6 +2856,7 @@ export class BotBrain {
   }
 
   _range() {
+    if (this.a.carry) return KARP_W.range;   // [b5-karp]
     const w = this.a.weapon;
     return weaponRange(w) * (CHARGES[w.kind] ? 0.9 : 1);
   }
@@ -2857,7 +2876,7 @@ export class BotBrain {
     for (const [e, k] of S.mem) {
       if (!k.seen) continue;
       const d = e.pos.distanceTo(a.pos);
-      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0) + this.sp.targetBias(e, d);   // (enemy specials: the untouchable last)
+      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0) + this.sp.targetBias(e, d) - (e.carry ? 40 : 0);   // (enemy specials: the untouchable last) [b5-karp] the enemy carrier first
       if (score < bd) { bd = score; best = e; }
     }
     if (best) {
@@ -2951,10 +2970,14 @@ export class BotBrain {
     if (s < 0 || g < 0) { this.path = null; return false; }
     const rule = this._climbRule();
     G.match?.stage?.beforePath(this);   // [b5-stagehooks] (a module's per-bot nav rule: pipe costs …)
-    let p = nav.path(s, g, this.a.team, undefined, rule, null, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
+    // [b5-karp] a carrier plans with its own rules (no climbs, its avoid mask: spawns, own free zones, carrierBlock, the
+    // shell, the retreat mark); everyone else in a Bazookarp match routes round the shell
+    const KA = this.a.carry ? karpPathArgs(this) : null, SA = KA ? null : G.match?.karp ? karpShellAvoid() : null;
+    let p = KA ? nav.path(s, g, this.a.team, undefined, true, KA.avoid, this.sp.cost()) : nav.path(s, g, this.a.team, undefined, rule, SA, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
+    if (!p && KA) { const F = karpPathFallback(this); if (F) p = nav.path(s, g, this.a.team, undefined, true, F.avoid, this.sp.cost()); }   // [b5-karp] (no forward path: a short ×3 beats standing still)
     // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
     // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
-    if (!p && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), null, this.sp.cost());
+    if (!p && !KA && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), SA, this.sp.cost());
     if (!p) { this.path = null; return false; }
     this.path = p; this.pi = Math.min(1, p.length - 1); this.goal = g; this.bestD = Infinity; this.noProg = 0;
     return true;

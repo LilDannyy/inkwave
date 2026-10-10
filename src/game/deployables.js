@@ -72,7 +72,7 @@ const _tries = [], _B = [null, null], _hs = [0.06, 0.5, 1], _l = [0, 0, 0];
 // [b5-subs] crushIn: what a shape may end (a subs item's state → its vertical body: height, radius; the curtain has its own
 // test), the kit devices of this frame (pooled), their ride bodies (pooled)
 const PLACED = { spray: true, beacon: true, curtain: true, mine: true, stuck: true };
-const _kd = [], _kb = [], _seg = new THREE.Vector3();
+const _kd = [], _kb = [];
 
 // counters (tests / match.cjs / tower-match.cjs)
 export const DEPLOY_STATS = { hits: 0, dmg: 0, markers: 0, sweeps: 0, standing: 0, rings: 0, down: {}, crushed: {}, rides: 0, drops: 0, lifts: 0, shoves: 0, towerShoves: 0, seekerPops: 0, seekerThrows: 0, adopted: 0, orphans: 0 };
@@ -675,13 +675,12 @@ function segPoint(base, h, c) {
   const y = clamp(c.y, base.y, base.y + h);
   return Math.hypot(c.x - base.x, c.y - y, c.z - base.z);
 }
+// ([b5-int3] the curtain's sheet exactly — b5-karp's test: the sheet's nearest point to c is pos + tan·u + up·v, |u| ≤
+// width/2, 0 ≤ v ≤ height — in place of five samples along it)
 function curtainSphere(it, c, r) {
-  const s = it.sub, hw = s.width / 2;
-  for (let i = -2; i <= 2; i++) {
-    _seg.copy(it.pos).addScaledVector(it.tan, (i / 2) * hw);
-    if (segPoint(_seg, s.height, c) < r) return true;
-  }
-  return false;
+  const s = it.sub, dx = c.x - it.pos.x, dz = c.z - it.pos.z;
+  const u = clamp(dx * it.tan.x + dz * it.tan.z, -s.width / 2, s.width / 2), v = clamp(c.y - it.pos.y, 0, s.height);
+  return Math.hypot(dx - it.tan.x * u, c.y - it.pos.y - v, dz - it.tan.z * u) < r;
 }
 
 // sweep: is enemy device obj (at p, radius r) in front of runner a's drum / bristles, off its hit cooldown? (marks the hit)
