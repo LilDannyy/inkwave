@@ -27,6 +27,7 @@ import { TOWER, weaponRange } from '../../config.js';
 import { THREAT_STATS, zonePlan, towerPlan } from '../bots.js';
 import { sightRay, teamKnown } from '../botSight.js';
 import { MAIN_KITS } from './registry.js';
+import { Hit } from '../physics.js';   // [b5-int3] (throwHits: where a bot's own sub throw lands)
 import { items, sizeOf, SB, spotFor, predictFrom, near, srcStat, lobAim } from './bobber.js';
 
 const V3 = THREE.Vector3;
@@ -592,6 +593,31 @@ function holdFire(b, a) {
   return null;
 }
 
+// [b5-int3] a bot's own sub throw that would go off by one of its team's idle chains — a Splat Bomb, a Cling Charge, a Pop
+// Pellet (their blasts), a Twirl Sprinkler (its drops): any of its team's blasts or drops sets a chain off, so a bot's
+// bomb landing by a teammate's web (a human's too) blew it with no foe in it. It is held, as its shots are. Where it
+// lands: the bomb-arc preview's flight (Projectiles.throwVelocity and the same 60 Hz integrator) with its aim now.
+const THROW_R = { bomb: 'radius', sticky: 'radius', burst: 'radius', sprinkler: 'sprayRadius' };
+const _tv = new V3(), _tp = new V3(), _tq = new V3(), _th = new Hit();
+function throwHits(a) {
+  const bar = a.specialActive?.kind === 'barrage' ? a.specialActive : null, sub = bar ? bar.bomb : a.sub;
+  const key = sub && THROW_R[sub.kind];
+  if (!key || !sub.throwSpeed || !G.projectiles?.throwVelocity) return null;
+  G.projectiles.throwVelocity(a, sub.throwSpeed, _tv);
+  _tp.set(a.pos.x, a.pos.y + 1.35, a.pos.z);
+  let land = null;
+  for (let i = 0; i < 240 && _tp.y > -30; i++) {
+    _tq.copy(_tp); _tv.y -= 24 / 60; _tp.addScaledVector(_tv, 1 / 60);
+    if (G.physics.segment(_tq, _tp, _th).hit) { land = _th.point; break; }
+  }
+  if (!land) return null;
+  const R = (+sub[key] || 2.5) + SB().hitR + 0.2;
+  for (const o of near(land.x - R, land.z - R, land.x + R, land.z + R, _nr)) {
+    if (o.team === a.team && o.state === 'live' && o.chain && o.spot.distanceTo(land) < R && idleNow(o, a.team)) return o;
+  }
+  return null;
+}
+
 // its own live chain still short of four (or none yet)
 function webToBuild(a) {
   let newest = null;
@@ -647,6 +673,13 @@ export function botAct(b, dt, it, move, busy) {
   const a = b.a;
   if (a.sub?.kind === 'bobber') noteSightings();   // (only when some bot holds the sub: nothing else reads them)
   if (items.length) exposure();
+  // [b5-int3] a sub throw about to be pressed (bots.js _tail presses on _bombAim) that would go off by its team's idle chain:
+  // held, and tried again a moment later from wherever it is then (throwHits)
+  if (b._bombAim && items.length && a.alive && throwHits(a)) {
+    b._bombAim = false; it.sub = false;
+    if (a.specialActive?.kind === 'barrage') b.barrageCd = Math.max(b.barrageCd || 0, 0.6); else b.bombCd = Math.max(b.bombCd || 0, 1.2);
+    BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1;
+  }
   if (!a.alive || a.specialActive || a.superJumpState || a.climbing) { b._bob = null; return null; }
   let S = b._bob;
   // (it blew — done; 0.6 s of shots from the moment its aim settled on it went by, or 1.8 s in all — leave it a moment;
