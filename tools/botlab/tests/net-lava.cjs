@@ -6,11 +6,17 @@
 //    the host's feed shows the cause); the guest's Lurk Mine and Hop Beacon on the shelf are gone on both screens once
 //    the lava covers them; the guest paints across the waterline through the rise and the fall and the lava cells end
 //    identical on both screens; the same result on both
-// 2) Practice on Highmark Foundry (its own loop: rise at 20, HIGH 30–65): a third client joins at HIGH — its level and
-//    its stones agree with the host's within 2 s; the host leaves in the middle of the next rise (110–120) — the new
-//    host carries the clock on and the remaining screens agree through the rest of the rise
+// 2) Practice on Highmark Foundry (its own loop: rise at 20, HIGH 30–65): the host paints across the waterline at LOW
+//    and at HIGH; a third client joins at HIGH — its level and its stones agree with the host's within 2 s, and its lava
+//    cells (the imported grid) equal the host's (ENGINE §6 net step 7)
+// 3) a timed Turf War 1:30 with all three: the host leaves in the middle of the rise (35 s) — the new host's fall starts
+//    at 55 ± 0.4 s on its screen and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens
+//    (net step 6). (fix round 1: the guest in 1) is pinned out of the bots' way until it stands on the shelf, and pinned
+//    there in x / z: an idle guest knocked into the lava at 19.4 s, before the warning, failed a run on a loaded machine)
 module.exports = async ({ clients, R, wait, say, open, close }) => {
   const [A, B] = clients;
+  // (the guest held at a spot in x / z, its height free: the lava still judges its feet; knockback can't move it)
+  const pin = (c, x, z) => c.js(`(() => { window.__pin = ${x === null ? 'null' : `{ x: ${x}, z: ${z} }`}; if (!window.__pinT) window.__pinT = setInterval(() => { const p = window.__pin, me = __G.local; if (!p || !me || !me.alive) return; me.pos.x = p.x; me.pos.z = p.z; me.vel.x = 0; me.vel.z = 0; }, 4); return 1; })()`);
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   const JA = async (c, code) => JSON.parse(await c.js(`(async () => JSON.stringify(await (${code})))()`));   // (an async page expression)
   const st = (c) => J(c, `(() => { const m = __G.match, L = m && m.lava; return L ? { t: +L.clock.t.toFixed(3), y: +L.y.toFixed(4), phase: L.st.phase, stones: L.riders.filter((r) => r.r.sink).map((r) => r.solid ? 1 : 0).join(''), host: !!__G.net.isHost, key: L.sched.key } : null; })()`);
@@ -35,8 +41,10 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
     const put = (x, z) => { me.pos.set(x, 0.02, z); me.vel.set(0, 0, 0); me.grounded = true; me.ink = 100; };
     put(-25.2, -8.19); __G.subs.use(me, SUBS.mine); await new Promise((r) => setTimeout(r, 300));
     put(-24.0, -10.4); __G.subs.use(me, SUBS.beacon); await new Promise((r) => setTimeout(r, 300));
-    me.pos.set(-20, 1.25, -14.5); me.vel.set(0, 0, 0);   // (back on the south Slump head)
+    const pad = __G.level.spawnPads[me.team]; me.pos.set(pad.x, pad.y + 0.05, pad.z); me.vel.set(0, 0, 0);   // (back on its own pad, out of the fights)
     return { t: +__G.match.lava.clock.t.toFixed(2), mine: __G.subs.items.filter((it) => it.owner === me && it.state === 'mine').map((it) => it.gid), beacon: __G.subs.items.filter((it) => it.owner === me && it.state === 'beacon').map((it) => it.gid) }; })()`);
+  const padB = await J(B, `(() => { const p = __G.level.spawnPads[__G.local.team]; return [p.x, p.z]; })()`);
+  await pin(B, padB[0], padB[1]);
   await wait(1500);
   const ghosts0 = await J(A, `__G.subs.items.filter((it) => it.ghost && it.state !== 'dead' && (it.state === 'mine' || it.state === 'beacon')).map((it) => it.gid)`);
   R('the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)', dev.mine.length === 1 && dev.beacon.length === 1 && dev.mine.every((g) => ghosts0.includes(g)) && dev.beacon.every((g) => ghosts0.includes(g)), { dev, ghosts0 });
@@ -49,7 +57,8 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
     if (!a || !b) break;
     const d = Math.abs(a.y - b.y); samples.push([a.t, a.y, b.t, b.y]);
     if (d > worst.d) { worst.d = d; worst.at = [a.t, a.y, b.t, b.y]; }
-    if (!stood && b.t > 26) { stood = true; await B.js(`(__G.local.pos.set(-25.2, 0.05, -8.19), __G.local.vel.set(0, 0, 0), __G.local.invuln = 1e6, 1)`); }
+    if (!stood && b.t > 26) { stood = true; await B.js(`(__G.local.pos.set(-25.2, 0.05, -8.19), __G.local.vel.set(0, 0, 0), __G.local.invuln = 1e6, 1)`); await pin(B, -25.2, -8.19); }
+    if (stood && b.t > 36) await pin(B, null);
     if ((b.t > 28 && b.t < 42) || (b.t > 53 && b.t < 67)) {
       // (0.4 m off the Slump cliff at θ −153 … −157, centred on the surface: half the blob above the waterline)
       painted += await B.js(`(() => { const L = __G.match.lava, V = __G.local.pos.constructor, y = L.y, D = Math.PI / 180; let n = 0;
@@ -70,14 +79,14 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   const cellsB = await J(B, `(() => { const W = __G.lavaWorld, P = __G.paint; let s = ''; for (let i = 0; i < W.cells.ids.length; i++) s += P.grid[W.cells.ids[i]]; return s; })()`);
   let same = 0, inkedA = 0, inkedB = 0; for (let i = 0; i < Math.min(cells.length, cellsB.length); i++) { if (cells[i] === cellsB[i]) same++; if (cells[i] !== '0') inkedA++; if (cellsB[i] !== '0') inkedB++; }
   const ratio = same / Math.max(1, cells.length);
-  R('the lava cells end identical on both screens after splats across the waterline through a rise and a fall (painter\'s stage time, field 15)', cells.length === cellsB.length && ratio >= 0.999 && painted > 30, { n: cells.length, ratio: +ratio.toFixed(5), inked: [inkedA, inkedB], painted });
+  R('the lava cells end identical on both screens after splats across the waterline through a rise and a fall (painter\'s stage time, field 15)', cells.length === cellsB.length && ratio >= 0.999 && painted > 30, { n: cells.length, ratio: +ratio.toFixed(5), differ: cells.length - same, inked: [inkedA, inkedB], painted });
   for (const c of [A, B]) await c.until(`__G.match && __G.match.state === 'results'`, 120000, 500);
   const res = [await J(A, `__G.match.result && __G.match.result.winner`), await J(B, `__G.match.result && __G.match.result.winner`)];
   const fin = await J(A, `(() => { const L = __G.match.lava; return { y: L.y, phase: L.st.phase }; })()`);
   R('time-up at LOW (the final ebb); the same result on both screens', res[0] === res[1] && (res[0] === 0 || res[0] === 1) && fin.phase === 'low', { res, fin });
   for (const c of [A, B]) await c.until(`__G.net.state === 'lobby' && __G.mode === 'menu'`, 40000, 500);
 
-  // ---- 2) Practice: a late joiner at HIGH, a host change in the middle of a rise
+  // ---- 2) Practice: the host paints across the waterline; a late joiner at HIGH (its level, stones and lava cells)
   await A.js(`__G.net.setSettings({ mode: 'practice', map: 'caldera', time: 'day', botCount: 0 }); 1`);
   await B.js(`__G.net.setMe({ ready: true }); 1`).catch(() => 0);
   await A.until(`__G.net.canStart()`, 8000).catch(() => 0);
@@ -85,6 +94,13 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   for (const c of [A, B]) await c.until(`__G.net.state === 'match' && __G.match && __G.match.practice && __G.match.state === 'playing' && !!__G.match.lava`, 120000, 250);
   a = await st(A);
   R('Practice runs its own loop (practice: rise at 20) between the stage\'s own levels', a && a.key === 'practice' && a.y === -0.6, a);
+  // (the host paints the Slump cliff across the waterline at LOW, then again at HIGH: the rise burns the first)
+  const paintCliff = (c) => c.js(`(() => { const L = __G.match.lava, V = __G.local.pos.constructor, y = L.y, D = Math.PI / 180; let n = 0;
+    for (let a = -151; a >= -159; a -= 1) { const r = 31.5 - 3 * (a + 147) / -27 - 0.4; __G.paint.splat(new V(r * Math.cos(a * D), y + 0.1, r * Math.sin(a * D)), 0.75, __G.local.team, {}); n++; } return n; })()`);
+  await A.until(`__G.match.lava.clock.t > 12`, 60000, 250);
+  let pA = await paintCliff(A);
+  await A.until(`__G.match.lava.clock.t > 31`, 60000, 250);
+  pA += await paintCliff(A);
   await A.until(`__G.match.lava.clock.t > 34`, 60000, 500);
   const C = await open(2, '');
   await C.js(`__G.net.join(${JSON.stringify(code)}, 'Latey').then(() => 1)`);
@@ -92,14 +108,37 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   let c = null, skew = [];
   for (let i = 0; i < 10; i++) { await wait(1000); a = await st(A); c = await st(C); skew.push(c ? +(c.y - a.y).toFixed(3) : null); if (c && a.phase === 'high' && Math.abs(c.y - a.y) < 0.1 && c.stones === a.stones) break; }
   R('a late joiner at HIGH: its level and its stones agree with the host\'s (± 0.1 m) once its clock settles', c && a.phase === 'high' && c.phase === 'high' && Math.abs(a.y - 0.8) < 1e-6 && Math.abs(c.y - a.y) < 0.1 && c.stones === a.stones && /^1+$/.test(c.stones), { host: a, joiner: c, skew });
-  // the host leaves in the middle of the second rise (110 – 120)
-  await A.until(`__G.match.lava.clock.t > 113`, 120000, 500);
-  const before = await st(B);
+  await wait(2000);
+  const cellsOf = (cl) => J(cl, `(() => { const W = __G.lavaWorld, P = __G.paint; let s = ''; for (let i = 0; i < W.cells.ids.length; i++) s += P.grid[W.cells.ids[i]]; return s; })()`);
+  const cmp = (x, y) => { let same = 0, inked = [0, 0]; for (let i = 0; i < Math.min(x.length, y.length); i++) { if (x[i] === y[i]) same++; if (x[i] !== '0') inked[0]++; if (y[i] !== '0') inked[1]++; } return { n: x.length, differ: x.length - same, inked }; };
+  const jA = await cellsOf(A), jC = await cellsOf(C), jB = await cellsOf(B);
+  const jc = cmp(jA, jC), jb = cmp(jA, jB);
+  R('…and its lava cells (the imported grid) equal the host\'s, as do the guest\'s (the host painted the Slump cliff across the waterline at LOW and at HIGH; the rise burned the first)', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && jc.inked[0] > 20 && pA >= 18, { joiner: jc, guest: jb, painted: pA });
+  await wait(3200);
+  await A.js(`__inkwave.api.practiceEnd(); 1`);
+  for (const cl of [A, B, C]) await cl.until(`__G.net.state === 'lobby' && __G.mode === 'menu'`, 40000, 500);
+
+  // ---- 3) a timed Turf War 1:30 with three screens; the host leaves mid-rise (35 s)
+  await A.js(`__G.net.setSettings({ mode: 'turf', map: 'caldera', time: 'day', duration: 90, botCount: 3 }); 1`);
+  for (const cl of [B, C]) await cl.js(`__G.net.setMe({ ready: true }); 1`).catch(() => 0);
+  await A.until(`__G.net.canStart()`, 10000).catch(() => 0);
+  await A.js(`__G.net.start()`);
+  for (const cl of [A, B, C]) await cl.until(`__G.net.state === 'match' && __G.match && __G.match.state === 'playing' && !!__G.match.lava`, 150000, 250);
+  const hook = (cl) => cl.js(`(async () => { window.__lv3 = []; const { on } = await import('./src/core/ctx.js'); for (const k of ['lava:move', 'lava:rider', 'lava:rest', 'lava:set']) on(k, (e) => window.__lv3.push([k, +__G.match.lava.clock.t.toFixed(2), e.dir ?? e.up ?? e.level ?? e.why ?? null, !!__G.net.isHost])); return 1; })()`);
+  for (const cl of [B, C]) await hook(cl);
+  await A.until(`__G.match.lava.clock.t > 35`, 120000, 250);
+  const before3 = await st(B);
   await close(0);
   await B.until(`__G.net.isHost && __G.match && __G.match.lava`, 30000, 250).catch(() => {});
-  const after = [];
-  for (let i = 0; i < 16; i++) { await wait(500); const bb = await st(B), cc = await st(C); if (bb && cc) after.push([bb.t, bb.y, bb.phase, cc.t, cc.y, cc.phase, bb.host]); }
-  const agree = after.every((x) => Math.abs(x[1] - x[4]) <= 0.1 && x[1] >= -0.6 - 1e-9 && x[1] <= 0.8 + 1e-9), cont = after.length > 8 && after[0][0] >= before.t - 0.5 && after.some((x) => x[2] === 'high') && after[0][1] > -0.6;
-  R('the host leaves mid-rise: the new host carries the clock on (no jump back), the rise finishes on time, both remaining screens agree (± 0.1 m)', agree && cont && after.every((x) => x[6]), { before, after: after.filter((_, i) => i % 3 === 0) });
+  await B.until(`__G.match.lava.clock.t > 63`, 90000, 500).catch(() => {});
+  const evB = await J(B, `window.__lv3`), evC = await J(C, `window.__lv3`), b3 = await st(B), c3 = await st(C);
+  const fallAt = (ev) => (ev.find((e) => e[0] === 'lava:move' && e[2] === -1) || [])[1] ?? null;
+  const deadAt = (ev) => (ev.find((e) => e[0] === 'lava:rider' && e[2] === false) || [])[1] ?? null;
+  const f = { B: fallAt(evB), C: fallAt(evC) }, d = { B: deadAt(evB), C: deadAt(evC) };
+  R('a timed match: the host leaves mid-rise (35 s) — the new host\'s fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens', b3 && b3.host && f.B !== null && Math.abs(f.B - 55) <= 0.4 && d.B !== null && Math.abs(d.B - 61.21) <= 0.4 && d.C !== null && Math.abs(d.C - 61.21) <= 0.4,
+    { before: before3, fall: f, stonesDeadly: d, after: { B: b3, C: c3 }, sets: evB.filter((e) => e[0] === 'lava:set').slice(0, 4) });
+  for (const cl of [B, C]) await cl.until(`__G.match && __G.match.state === 'results'`, 120000, 500).catch(() => {});
+  const res3 = [await J(B, `__G.match && __G.match.result && __G.match.result.winner`), await J(C, `__G.match && __G.match.result && __G.match.result.winner`)];
+  R('…and both remaining screens show the same result at time-up', res3[0] === res3[1] && (res3[0] === 0 || res3[0] === 1), { res3 });
   say('done');
 };
