@@ -173,8 +173,10 @@ const MID = [
   // side: in the 3000s the hotel stair is a step west off the landing)
   R([KNEE_FLIGHT.x0, 0, KF_Z], [KNEE_FLIGHT.x1, 2.4, KF_Z], KNEE_FLIGHT.z1 - KNEE_FLIGHT.z0, stair({ tag: 'knee-flight', color: K.iron, pattern: PATTERN.treads })),
   ...[[-13.85, -12.65], [-13.85, -15.25], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
-  // (round C fix 2: off the landing, which is now where the knee flight, the balcony and the balcony stair meet (and, in the
-  //  3000s, the hotel stair): on the balcony behind its balustrade, a firing step's cover over the circus)
+  // (round C fix 2: the landing is now where the knee flight, the balcony and the balcony stair meet (and, in the 3000s, the
+  //  hotel stair): its planter stands back against the north balustrade, 1 m clear of the balcony stair's head and of the
+  //  hotel stair's side, the south half of the landing clear; a second on the balcony, a firing step's cover over the circus)
+  B(-12.9, -11.9, 2.4, 3.4, -13.8, -13.0, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-8.6, -7.4, 2.4, 3.4, -17.0, -16.0, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-11, -5, 2.4, 3.4, -16.0, -15.5, rail({ tag: 'balustrade' })),
   B(-5.5, -5, 2.4, 3.3, -18.5, -16.0, rail({ tag: 'balustrade' })),
@@ -313,7 +315,7 @@ const LEG_PIECES = [
   OB(-13, -27, 1.2, 1.2, 0, 1.0, 0, cover({ tag: 'cafe', color: '#7b6f60', eras: '23', eraGroup: 'crates-1' })),
   OB(-11.5, -25, 1.2, 1.2, 0, 1.0, 0, cover({ tag: 'cafe', color: '#7b6f60', eras: '23', eraGroup: 'crates-1' })),
   // the quay: bollards and crates along the river edge, a crane base
-  B(-7.2, -6.2, 0, 1.0, -46, -44.8, cover({ tag: 'bollards' })),
+  B(-7.2, -6.2, 0, 1.0, -47.6, -46.4, cover({ tag: 'bollards' })),   // (round C fix 2: off the widened punt's foot)
   B(-7.4, -6.2, 0, 1.2, -38.6, -36.4, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-7.4, -6.2, 0, 1.0, -27.8, -26.6, cover({ tag: 'bollards' })),
   B(-9.5, -8.3, 0, 1.2, -32.2, -30.6, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),   // (the strip test: against the GPO terrace)
@@ -380,25 +382,48 @@ const KNEE = [
 ];
 
 // ------------------------------------------------------------------------------------------------ the river corner (Alpha's: x > −6, z < −20)
-// the PUNT CROSSING (every era: a chain ferry's pontoons, 3 m, top −0.34) from the quay's south end east, then north to
-// the circus's river edge at 5 o'clock; TODAY the IRON BRIDGE (top −0.2) from the quay by the GPO straight across to the
-// punt's north leg; the 3000s the FLOATING GARDEN in the harbour basin the two enclose (top −0.2). Decks over the water
-// stand on prop columns, bottoms −0.6 (ENGINE rule 36); nothing over the water ever vanishes (rule 28).
-export const PUNT = { x0: -6, x1: 14, zE0: -44, zE1: -41, xN0: 11, zN1: -20, y: -0.34 };
+// the PUNT CROSSING (every era: a chain ferry's pontoons, 5 m, top −0.34) from the quay's south end east to the FERRY
+// LANDING STAGE at the L's corner, then north to the circus's river edge at 5 o'clock; TODAY the IRON BRIDGE (top −0.2)
+// from the quay by the GPO straight across to the punt's north leg; the 3000s the FLOATING GARDEN in the harbour basin
+// the two enclose (top −0.2). Decks over the water stand on prop columns, bottoms −0.6 (ENGINE rule 36); nothing over the
+// water ever vanishes (rule 28).
+// (round C fix 2; the review: the era-1 punt, the corner's only crossing in the 1880s, was the barest floor on the stage,
+//  3 m of pontoon that the bots' nav pays for at every node — nav.js's wet rule, open water within 1.2 m on both sides:
+//  both legs widen on the open-river side to 5 m, so a dry row runs down each leg's middle (2.5 m from the water both
+//  ways), and the corner gets a 7 × 7 m landing stage with the ferryman's box and the crates, looking west along the east
+//  leg to the quay and north along the north leg to the Boathouse's flank; the basin side, the bridge and the garden are
+//  unchanged. The north leg keeps 3.5 m for its last 4 m, where it runs up beside the Boathouse.)
+export const PUNT = { x0: -6, x1: 16, zE0: -46, zE1: -41, xN0: 11, zN1: -20, xTop: 14.5, zTop: -24, y: -0.34 };
+export const LANDING = { x0: 11, x1: 18, z0: -48, z1: -41 };
 export const BRIDGE = { x0: -6, x1: PUNT.xN0, z0: -33, z1: -30, y: -0.2 };
 export const GARDEN = [[-6, PUNT.xN0, PUNT.zE1, BRIDGE.z0], [-6, PUNT.xN0, BRIDGE.z1, -26]];   // the basin's two parts
 const RIVER = [];
 {
   const pnt = (o) => ({ tag: 'punt', color: K.planks, pattern: PATTERN.planks, ...o });
-  RIVER.push(B(PUNT.x0, PUNT.x1, -0.6, PUNT.y, PUNT.zE0, PUNT.zE1, pnt()));
-  RIVER.push(B(PUNT.xN0, PUNT.x1, -0.6, PUNT.y, PUNT.zE1, PUNT.zN1, pnt()));
-  // its rails on the open river side; its cover (mooring posts, a ferryman's box, rope coils)
-  RIVER.push(B(PUNT.x0, PUNT.x1, PUNT.y, PUNT.y + 1, PUNT.zE0, PUNT.zE0 + 0.12, rail({ tag: 'punt-rail' })));
-  RIVER.push(B(PUNT.x1 - 0.12, PUNT.x1, PUNT.y, PUNT.y + 1, PUNT.zE0 + 0.12, PUNT.zN1, rail({ tag: 'punt-rail' })));
-  RIVER.push(B(-0.6, 0.6, PUNT.y, PUNT.y + 1.2, PUNT.zE0 + 0.2, PUNT.zE0 + 1.4, cover({ tag: 'ferry-box', color: '#6f5a46', roof: true })));
-  RIVER.push(B(PUNT.x1 - 1.4, PUNT.x1 - 0.2, PUNT.y, PUNT.y + 1.0, -38.6, -37.4, cover({ tag: 'mooring-post', color: '#5b5048', roof: true })));
-  RIVER.push(B(PUNT.xN0 + 0.2, PUNT.xN0 + 1.4, PUNT.y, PUNT.y + 1.0, -29.6, -28.4, cover({ tag: 'mooring-post', color: '#5b5048', roof: true })));
-  RIVER.push(B(6.4, 7.6, PUNT.y, PUNT.y + 1.0, PUNT.zE1 - 1.4, PUNT.zE1 - 0.2, cover({ tag: 'mooring-post', color: '#5b5048', roof: true })));
+  const L = LANDING;
+  RIVER.push(B(PUNT.x0, L.x0, -0.6, PUNT.y, PUNT.zE0, PUNT.zE1, pnt()));                          // the east leg
+  RIVER.push(B(L.x0, L.x1, -0.6, PUNT.y, L.z0, L.z1, pnt({ tag: 'ferry-landing', color: '#8f7d66' })));   // the landing stage
+  RIVER.push(B(PUNT.xN0, PUNT.x1, -0.6, PUNT.y, L.z1, PUNT.zTop, pnt()));                         // the north leg
+  RIVER.push(B(PUNT.xN0, PUNT.xTop, -0.6, PUNT.y, PUNT.zTop, PUNT.zN1, pnt()));                    //   (beside the Boathouse)
+  // its rails on the open river side (the landing's four outer edges); the north leg's last 4 m run against the
+  // Boathouse's west wall
+  const pr = (x0, x1, z0, z1) => RIVER.push(B(x0, x1, PUNT.y, PUNT.y + 1, z0, z1, rail({ tag: 'punt-rail' })));
+  pr(PUNT.x0, L.x0, PUNT.zE0, PUNT.zE0 + 0.12);
+  pr(L.x0, L.x0 + 0.12, L.z0 + 0.12, PUNT.zE0);
+  pr(L.x0, L.x1, L.z0, L.z0 + 0.12);
+  pr(L.x1 - 0.12, L.x1, L.z0 + 0.12, L.z1);
+  pr(PUNT.x1, L.x1 - 0.12, L.z1 - 0.12, L.z1);
+  pr(PUNT.x1 - 0.12, PUNT.x1, L.z1, PUNT.zTop);
+  // its cover, along the edges so each leg's middle row stays dry for the nav: on the landing the ferryman's box against
+  // the south rail and a crate stack against the east rail; on the legs mooring posts and rope crates on alternate sides
+  // every 6–9 m
+  const post = (x0, x1, z0, z1, tag = 'mooring-post', h = 1.0, color = '#5b5048') => RIVER.push(B(x0, x1, PUNT.y, PUNT.y + h, z0, z1, cover({ tag, color, roof: true })));
+  post(13.4, 15.4, L.z0 + 0.15, L.z0 + 1.95, 'ferry-box', 2.2, '#6f5a46');
+  post(L.x1 - 1.4, L.x1 - 0.15, -44.6, -42.6, 'crates', 1.2, K.crate);
+  post(-0.6, 0.6, PUNT.zE0 + 0.15, PUNT.zE0 + 1.35, 'crates', 1.0, K.crate);
+  post(6.4, 7.6, PUNT.zE1 - 1.4, PUNT.zE1 - 0.2);
+  post(PUNT.x1 - 1.35, PUNT.x1 - 0.15, -36.6, -35.4);
+  post(PUNT.xN0 + 0.2, PUNT.xN0 + 1.4, -29.6, -28.4);
   // the Iron Bridge (today, the 3000s): three spans (≤ 8 m, one group each) and their rails; in the 3000s the garden
   // fills the basin either side of it, reached from the quay and the punt
   const spans = [-6, -0.33, 5.33, PUNT.xN0];
