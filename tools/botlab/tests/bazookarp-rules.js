@@ -808,7 +808,11 @@
       return P;
     };
     const m5 = {}; let m5ok = true;
-    for (const id of SUB_ORDER) {
+    // ([b5-int3] the subs before batch 5's wave 2: the Glide Bomb, Scrap Sentry, Chain Bobber and Dash Pellet meet the shell by
+    // their own rules — a blast where the stone stops, a sentry that can't see through it, a chain that needs a trigger, a
+    // dash held outside it — checked against this real shell by tools/botlab/tests/int3.js 'shell')
+    const M5_SUBS = SUB_ORDER.includes('glide') ? SUB_ORDER.slice(0, SUB_ORDER.indexOf('glide')) : SUB_ORDER;
+    for (const id of M5_SUBS) {
       if (NOHURT[id]) continue;
       // (a clean slate: the last trial's drops, bolts and kit objects still in flight would count here; the Shaker is
       // thrown by the local kid — a bot's hold follows its own plan, botHold — the rest by a parked bot, whose aim

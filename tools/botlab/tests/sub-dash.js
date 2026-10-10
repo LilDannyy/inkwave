@@ -537,10 +537,13 @@
       sim(me, 2, 1 / 60, {}); const v3 = hv(me);
       e0 = ev.length; me.ink = 100;
       sim(me, 3, 1 / 60, (i) => ({ sub: i === 1 }));
-      const carryPress = since(e0, 'sub:dash', (e) => e.actor === me).length + since(e0, 'sub:cantuse', (e) => e.actor === me).length;
+      // ([b5-int3] with the Bazookarp merged, a carrier's press is the Bazookarp's own bonk — actor.js, 'sub:cantuse' kind
+      // 'karp', S20: allowed (one); the dash itself does nothing — no dash, no refusal of its own)
+      const carryPress = since(e0, 'sub:dash', (e) => e.actor === me).length + since(e0, 'sub:cantuse', (e) => e.actor === me && e.kind !== 'karp').length;
+      const karpBonk = since(e0, 'sub:cantuse', (e) => e.actor === me && e.kind === 'karp').length;
       delete me.carry;
-      R('a stand-in Bazookarp pick-up mid-dash (a.carry, reset()): dashT 0 and ≤ 7 m/s that frame, ≤ 4.8 m/s within 0.05 s on the ground (stick let go); a press while carrying does nothing here',
-        mid > 15 && t0 === 0 && v0 <= 7 + 1e-6 && v1 <= 7 && v3 <= 4.8 && carryPress === 0, { mid: r2(mid), dashT: t0, speeds: [r2(v0), r2(v1), r2(v3)], carryPress });
+      R('a stand-in Bazookarp pick-up mid-dash (a.carry, reset()): dashT 0 and ≤ 7 m/s that frame, ≤ 4.8 m/s within 0.05 s on the ground (stick let go); a press while carrying does nothing here (but the Bazookarp\'s own bonk)',
+        mid > 15 && t0 === 0 && v0 <= 7 + 1e-6 && v1 <= 7 && v3 <= 4.8 && carryPress === 0 && karpBonk <= 1, { mid: r2(mid), dashT: t0, speeds: [r2(v0), r2(v1), r2(v3)], carryPress, karpBonk });
       // a stand-in pipe capture (reset()) mid-dash ends it the same way
       put(me, 0, 0, -4, 0);
       sim(me, 4, 1 / 60, (i) => ({ sub: i === 0, move: [1, 0] }));
