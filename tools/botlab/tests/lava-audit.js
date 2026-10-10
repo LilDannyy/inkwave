@@ -34,7 +34,7 @@
   const solidAt = (x, y, z, dyn = false) => { hp.set(x, y, z); for (const id of lvl.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = lvl.blocks[id]; if (b.solid && (dyn || !b.dynamic) && lvl.pointInBlock(b, hp, 0.001)) return b; } return null; };
 
   // ---------------------------------------------------------------------------------------------- rule 14: exits
-  {
+  try {
     let worst = 0, worstAt = null, drops = [], none = [], n = 0;
     for (const nd of nav.nodes) {
       if (!nav.valid[nd.id] || M.kind[nd.id] !== 1) continue;
@@ -50,10 +50,10 @@
     }
     R('rule 14: every drowning floor is ≤ 12 m walking from floor that never drowns (the paper said ≤ 10.0), and the way out never drops below it', n > 300 && !none.length && worst <= 12 && !drops.length,
       { nodes: n, worstM: r2(worst), worstAt, noWay: none.slice(0, 6), drops: drops.slice(0, 6), nDrops: drops.length });
-  }
+  } catch (e) { R('rule 14: exits: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 22: clear sky
-  {
+  try {
     const bad = [];
     for (const r of W.riders) {
       const top1 = r.sink ? H + r.sink.rel[1] : r.top1, bot = (r.sink ? LO + r.sink.rel[0] : r.top0) - r.depth;
@@ -68,10 +68,10 @@
       }
     }
     R('rule 22: clear sky over every rider — nothing static anywhere over its travel or within 2.2 m over its HIGH top (columns sampled every 0.3 m, 0.1 m up)', !bad.length, { bad: bad.slice(0, 10), riders: W.riders.length });
-  }
+  } catch (e) { R('rule 22: clear sky: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 25: the lookout
-  {
+  try {
     setT(50);
     const rows = [];
     for (const r of W.riders.filter((q) => !q.sink && q.look?.role === 'lookout')) {
@@ -101,10 +101,10 @@
     }
     R('rule 25: each lookout — cover ≤ 1.0 m tall along ≤ half its edge, ≥ 2 open sides, ≤ 22 m from both teams\' dry floor at HIGH, its HIGH top ≤ 4.6 m over its climb\'s foot',
       rows.length === 2 && rows.every((x) => x.coverH <= 1.0 + 1e-6 && x.coverShare <= 0.5 && x.open >= 2 && x.dry.every((d) => d <= 22) && x.over !== null && x.over <= 4.6), rows);
-  }
+  } catch (e) { R('rule 25: the lookout: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 38: surface value
-  {
+  try {
     const lum = (c) => { const f = (v) => v; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
     const seen = new Map(), dark = [];
     for (const b of lvl.blocks) {
@@ -121,10 +121,10 @@
     for (const e of seen.values()) if (e.lum < 0.35) dark.push({ hex: e.hex, lum: e.lum, n: e.n, tags: [...e.tags].slice(0, 5) });
     R('rule 38: the surfaces in the region (below HIGH + 0.3) are mid-value rock — sRGB luminance ≥ 0.35 (#5f5f5f or lighter): the stain darkens them to ~0.7×, which is what reads as "the dark glazed floor floods"', !dark.length,
       { dark: dark.sort((a, b) => b.n - a.n).slice(0, 10), colours: [...seen.values()].map((e) => ({ hex: e.hex, lum: e.lum, n: e.n })).sort((a, b) => b.n - a.n).slice(0, 14) });
-  }
+  } catch (e) { R('rule 38: surface value: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 45: the outline
-  {
+  try {
     const B = W.box, nx = B.nx, nz = B.nz, Mk = W.mask, RES = B.res, bad = [], lips = [];
     let n = 0;
     for (let j = 1; j < nz - 1; j += 2) for (let i = 1; i < nx - 1; i += 2) {
@@ -151,17 +151,17 @@
     }
     R('rule 45: the region\'s outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every 2nd outline texel)', n > 500 && !bad.length && lips.length > 0,
       { outline: n, lips: lips.length, bad: bad.slice(0, 12), nBad: bad.length });
-  }
+  } catch (e) { R('rule 45: the outline: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 42: views out
-  {
+  try {
     // a ray meets the level's colliders (physics), the lava surface (its plane inside the region) or a far-scenery mesh
     // (every visible mesh but the level's own, the sky / background shells, particles and big unindexed soups)
     const { Hit } = await import('./src/game/physics.js');
     const hit = new Hit(), rc = new THREE.Raycaster(), scene = __G.scene, skip = new Set([g.levelMesh, g.grateMesh].filter(Boolean));
     rc.far = 3000;
     const targets = [];
-    scene.traverse((o) => { if (!o.visible || skip.has(o) || !(o.isMesh || o.isInstancedMesh) || o.name === 'lava:surface') return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && m.side === THREE.BackSide) return; if (o.geometry && !o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const r = o.geometry?.boundingSphere?.radius || 0, tris = o.geometry ? (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 : 0; if (r * Math.max(o.scale.x, o.scale.y, o.scale.z) > 1500 || tris > 60000) return; targets.push(o); });
+    scene.traverse((o) => { if (!o.visible || skip.has(o) || !(o.isMesh || o.isInstancedMesh) || o.name === 'lava:surface') return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && m.side === THREE.BackSide) return; if (o.geometry && !o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const r = o.geometry?.boundingSphere?.radius || 0, tris = o.geometry ? (o.geometry.index ? o.geometry.index.count : o.geometry.attributes?.position?.count || 0) / 3 : 0; if (!o.geometry?.attributes?.position) return; if (r * Math.max(o.scale.x, o.scale.y, o.scale.z) > 1500 || tris > 60000) return; targets.push(o); });
     const meets = (p, d) => {
       if (__G.physics.raycast(p, d, 600, hit, false).hit) return true;
       if (d.y < 0) { const t = (Lv.y - p.y) / d.y, x = p.x + d.x * t, z = p.z + d.z * t; if (t > 0 && W.inRegion(x, z)) return true; }
@@ -182,10 +182,11 @@
     const total = per.reduce((s, v) => s + v, 0);
     R('rule 42: no view out of the arena shows void — 96 rays below the horizon from each pad and the 24 highest spots on its outer ring all meet the level, the lava or far scenery (env.sea is off: nothing under the backdrop)', total === 0,
       { viewpoints: pts.length, raysMissing: total, of: pts.length * 96, perView: per, eg: voids, sceneryMeshes: targets.length, backdrop: (lvl.layout?.env?.backdrop ? 'layout.env.backdrop' : 'none') });
-  }
+  } catch (e) { R('rule 42: views out: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 44: gaps, jumps
   const jumps = {};
+  try {
   for (const level of ['low', 'high']) {
     setT(level === 'low' ? 10 : 50);
     // edge nodes over lava, and in 16 directions the first floor across (a march in 0.1 m over the region's lava)
@@ -258,8 +259,10 @@
   R('rule 44 (the lead\'s list): lava gaps a swim jump out of your own ink, or a jump plus the Dash Pellet\'s 3.5 m air dash, could cross, where the nav detour saved is over 10 m (informational: these are the design\'s ≥ 4.5 m gaps)', true,
     { low: { swim: jumps.low.swim.slice(0, 10), nSwim: jumps.low.swim.length, dash: jumps.low.dash.slice(0, 10), nDash: jumps.low.dash.length }, high: { swim: jumps.high.swim.slice(0, 10), nSwim: jumps.high.swim.length, dash: jumps.high.dash.slice(0, 10), nDash: jumps.high.dash.length } });
 
+  } catch (e) { R('rule 44: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
+
   // ---------------------------------------------------------------------------------------------- rule 46: grid shift
-  {
+  try {
     const keep = { nav: W.nav, navMeta: W.navMeta, links: W.links, linkEnds: W._linkEnds, gapCuts: W.gapCuts, problems: W.navProblems };
     const B0 = { ...lvl.bounds }, rows = [];
     const climbs = (nv) => {
@@ -289,7 +292,7 @@
     // (buildNav cleared the level's dynamic blocks: the riders back in)
     Lv.placed = false; for (const RR of Lv.riders) RR.blocks = []; Lv.placeRiders();
     R('rule 46: with the nav grid shifted 0.25 m and 0.5 m in x and in z, every step link still yields its edges and the climbs exist (island → A → B → L at LOW and at HIGH on both sides, the Race head → 5 stones → head at HIGH)', rows.every((x) => x.ok), rows);
-  }
+  } catch (e) { R('rule 46: grid shift: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
   void PLAYER;
   return out;
 })();

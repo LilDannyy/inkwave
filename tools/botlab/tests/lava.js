@@ -503,6 +503,22 @@
     for (let t = 70; t <= 80.01; t += 0.25) hash(t);
     const mapT = { stepMaxMs: Lv.stats.mapMs, redraws: Lv.stats.mapN, buildMs: Lv.stats.mapBuildMs };
     R('G5 the minimap: the lava fill spreads over the ledges as it rises (pixel counts LOW < mid-rise < HIGH); a level step redraws in ≤ 1.5 ms (it re-rastered the map: 9.4 ms)', hm.low.n > 0 && hm.mid.n > hm.low.n && hm.high.n > hm.mid.n && mapT.redraws >= 20 && mapT.stepMaxMs <= 1.5, { ...hm, ...mapT });
+    // (fix round 1) the glow's proximity field: the island's lake faces glow at HIGH (within 0.25 m of open lava), its
+    // dry middle (the machine house's foot, 3 m in from the rim) never; the causeway's side over the Casting Floor only
+    // once the floor is under (HIGH), not at LOW
+    {
+      const rim = [];
+      for (const deg of [0, 40, 140, 180, 220, 320]) {
+        const a = (deg * Math.PI) / 180; let d0 = null;
+        for (let d = 3; d < 30 && d0 === null; d += 0.05) if (lvl.groundHeight(Math.cos(a) * d, Math.sin(a) * d, 1.3) < 1.0) d0 = d;
+        if (d0 !== null) rim.push([deg, r3(d0), r3(W.proxAt(Math.cos(a) * (d0 - 0.12), Math.sin(a) * (d0 - 0.12), def.high)), r3(W.proxAt(Math.cos(a) * (d0 - 3), Math.sin(a) * (d0 - 3), def.high))]);
+      }
+      const cw = [];
+      for (const sx of [1, -1]) { let xe = null; for (let x = 0.5; x < 12 && xe === null; x += 0.05) if (lvl.groundHeight(sx * x, -16, 1.3) < 1.0) xe = x; if (xe !== null) cw.push([sx, r3(xe), r3(W.proxAt(sx * (xe - 0.1), -16, def.low)), r3(W.proxAt(sx * (xe - 0.1), -16, def.high)), lvl.groundHeight(sx * (xe + 0.4), -16, 1.0)]); }
+      const house = [r3(W.proxAt(-10.5, 4.6, def.high)), r3(W.proxAt(-10.5, 4.6, def.low))];
+      R('G8 the lava\'s glow is faded by how near open lava a face stands: the island\'s lake faces glow at HIGH, its dry middle and the machine house\'s foot never; the causeway\'s side over the Casting Floor glows only once the floor is under',
+        rim.length >= 5 && rim.every((r) => r[2] >= 0.6 && r[3] === 0) && house.every((v) => v === 0) && cw.some((c) => c[2] < 0.3 && c[3] >= 0.6), { rim: rim.map((r) => ({ deg: r[0], rimAt: r[1], face: r[2], in3m: r[3] })), house, causeway: cw, ms: W.proxMs });
+    }
     const key = g.levelMat.customProgramCacheKey();
     R('G6 the level shader carries the lava band (the stain line at the high mark, its glow and pulse): program key -lava, the shared uniforms; the prop kit\'s materials carry the stain', /-lava/.test(key) && g.levelMat.userData.uniforms.uLavaS === W.uniforms.uLavaS && !!g.props?.mat?.paint?.userData?.lavaStain, { key });
   }

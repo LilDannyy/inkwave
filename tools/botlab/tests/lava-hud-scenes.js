@@ -13,7 +13,7 @@
   const me = m.local;
   const look = (x, z, pitch = -0.12) => { const yw = Math.atan2(x - me.pos.x, z - me.pos.z); me.yaw = yw; if (g.rig) { g.rig.yaw = yw; g.rig.pitch = pitch; } };
   const stand = (x, y, z, lx, lz, pitch) => { if (!me.alive) me.respawn(); me.pos.set(x, y, z); me.vel.set(0, 0, 0); me.invuln = 0; look(lx, lz, pitch); g.rig?.follow?.(me, true); };
-  const info = () => ({ t: +L.clock.t.toFixed(2), y: +L.y.toFixed(3), phase: L.st.phase, chip: document.querySelector('.lv-chip')?.textContent, mine: document.querySelector('.lv-mine.is-on')?.textContent || null, alive: me.alive });
+  const info = () => ({ quality: __G.settings?.quality ?? null, t: +L.clock.t.toFixed(2), y: +L.y.toFixed(3), phase: L.st.phase, chip: document.querySelector('.lv-chip')?.textContent, mine: document.querySelector('.lv-mine.is-on')?.textContent || null, alive: me.alive });
   const S = [];
   const add = (name, set, wait) => S.push({ name, set: async () => { await set(); return info(); }, wait });
   const shelf = [-25.6, 0.02, -9.0], to = [-12, -4];
@@ -35,9 +35,11 @@
   // its bollards and houses), and the inks beside the lava for Tangerine and Cherry (the orange band dropped) —
   // PRE_ARGS=fix1 for these alone
   if (only.includes('fix1')) {
+    // (the harness's shared profile may hold quality 'low', which builds no embers or steam: build them as at 'high')
+    const lk = __G.lavaWorld.look; if (!lk.emb) { lk.nEmb = 600; lk._particles(); }
     const south = [-19.6, 1.22, -15.1];
     for (const [k, t] of [[1, 61.5], [2, 66.0], [3, 72.0], [4, 74.5], [5, 76.0], [6, 78.0]]) add('fall-burst-' + k, () => { L.debugT(t - 3); stand(...south, -24, -5, -0.22); step(3.0); }, 60);
-    for (const [k, t] of [[1, 36.5], [2, 38.5], [3, 41.0]]) add('rise-embers-' + k, () => { L.debugT(t - 2.5); stand(-6.5, 1.22, -16.5, -16, -22, -0.12); step(2.5); }, 60);
+    for (const [k, t] of [[1, 36.5], [2, 38.5], [3, 41.0]]) add('rise-embers-' + k, () => { L.debugT(t - 2.5); stand(1.5, 1.22, -17.5, -14, -21, -0.1); step(2.5); }, 60);
     for (const [k, t] of [[1, 38.6], [2, 38.85], [3, 39.3]]) add('boulder-' + k, () => { L.debugT(t - 0.6); stand(...south, -20.8, -7.1, -0.2); step(0.6); }, 40);
     add('mid-high-glow', () => { L.debugT(55); stand(1.5, 1.22, -17.5, -6, -3, -0.16); step(0.4); }, 60);
     add('mid-low-glow', () => { L.debugT(15); stand(1.5, 1.22, -17.5, -6, -3, -0.16); step(0.4); }, 60);
