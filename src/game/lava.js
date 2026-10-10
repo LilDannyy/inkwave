@@ -131,6 +131,7 @@ export class LavaWorld {
   // ------------------------------------------------------------------------- the level: the floors the lava drowns
   attachLevel(level) {
     this.level = level;
+    this._fitMask(level);
     // every flat, drawn static floor whose whole top lies in the region below HIGH − gone: its collider goes off while
     // the surface is `gone` over it (R._floors)
     this.drown = [];
@@ -151,6 +152,44 @@ export class LavaWorld {
     }
     this.floorY = this.drown.length ? Math.min(...this.drown.map((d) => d.top)) : this.high;   // (the lowest drowning floor)
     this._buildProx(level);
+  }
+  // (fix round 2, ENGINE rule 45) the region fitted to the level it is drawn against: its outline grows outward by up
+  // to 1.0 m into a bank (solid at the high mark, its top ≥ HIGH + 0.3) and up to 1.5 m over open void (no floor above
+  // LOW − 0.5), never onto a floor and never past a lip (a falls polygon, within 0.7 m). The hand-drawn polygons met the
+  // banks at 0.05–0.4 m under the Spillway Bridges and at the south Slump heads, and left void at the heads' corners
+  // where the lake meets the bay (the lava's edge showed over it); grown here, every face that meets the lava lies wholly
+  // inside the mask (the rind, the burn, the kill). Both halves alike: the stage is a 180° turn of itself
+  _fitMask(level) {
+    const B = this.box, nx = B.nx, nz = B.nz, M = this.mask, H = this.high, LO = this.low, qb = [], p = new THREE.Vector3();
+    const solidAt = (x, z) => { p.set(x, H + 0.05, z); for (const id of level.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = level.blocks[id]; if (b.solid && !b.dynamic && level.pointInBlock(b, p, 0.001)) return true; } return false; };
+    const nearFalls = (x, z) => this.fallsIn(x, z) || [0, 1, 2, 3, 4, 5, 6, 7].some((q) => this.fallsIn(x + Math.cos(q * 0.785) * 0.7, z + Math.sin(q * 0.785) * 0.7));
+    const kind = new Int8Array(nx * nz);   // 0 unknown, 1 bank, 2 open void, -1 neither (a floor, a lip)
+    const kindAt = (k) => {
+      if (kind[k]) return kind[k];
+      const x = B.x0 + ((k % nx) + 0.5) * RES, z = B.z0 + (Math.floor(k / nx) + 0.5) * RES;
+      let v = -1;
+      if (nearFalls(x, z)) v = -1;
+      else if (solidAt(x, z)) v = level.groundHeight(x, z, 60) >= H + 0.3 ? 1 : -1;
+      else { const gh = level.groundHeight(x, z, H + 0.05); v = gh === -Infinity || gh < LO - 0.5 ? 2 : -1; }
+      return (kind[k] = v);
+    };
+    let added = 0;
+    for (let step = 1; step <= 6; step++) {
+      const grow = [];
+      for (let j = 1; j < nz - 1; j++) for (let i = 1; i < nx - 1; i++) {
+        const k = j * nx + i;
+        if (M[k] || !(M[k - 1] === 1 || M[k + 1] === 1 || M[k - nx] === 1 || M[k + nx] === 1)) continue;
+        const v = kindAt(k);
+        if (v === 2 || (v === 1 && step <= 4)) grow.push(k);
+      }
+      if (!grow.length) break;
+      for (const k of grow) M[k] = 1;
+      added += grow.length;
+    }
+    const data = this.map.image.data;
+    for (let k = 0; k < nx * nz; k++) data[k * 4] = M[k] * 255;
+    this.map.needsUpdate = true;
+    this.fitAdded = added;
   }
   // how near open lava each texel of the region is, at LOW (G) and at HIGH (B): 1 within 0.25 m of a texel where the
   // surface shows at that level, 0 from 1.25 m on. The level shader fades the lava's glow with it, so the glow lights the
@@ -1044,8 +1083,10 @@ export class StageLava {
       b.perchUntil = b.t + 0.3;   // (holding a spot on purpose: not stuck — the harnesses' stuck rule reads it)
       const here = nav.nearest(a.pos, 1.2, true);
       if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; }
+      // (its duel's footwork at a walk, and only where it and its momentum stay well inside the top: at a run the footwork
+      // carried one off the lookout's lake side as the column rose)
       if (b.mode !== 'fight') move.set(0, 0, 0);
-      else if (!inRider(this.W.riders[L.ri], a.pos.x + move.x * 0.7, a.pos.z + move.z * 0.7, -0.75)) move.set(0, 0, 0);
+      else { move.multiplyScalar(0.5); if (!inRider(this.W.riders[L.ri], a.pos.x + move.x * 0.7 + a.vel.x * 0.35, a.pos.z + move.z * 0.7 + a.vel.z * 0.35, -0.9)) move.set(0, 0, 0); }
       // no hops or dodge rolls up there: a Twinfire roll (jump while firing) carried a claimant off the top into the lava
       // twice in one match (its edge check reads the island 3.45 m below as ground)
       it.squid = false; it.jump = false; b._needJump = false;
@@ -1138,6 +1179,7 @@ export class StageLava {
   navEdge(e, to, metres) {
     const M = this.W.navMeta;
     if (!M || !M.kind[to]) return 0;
+    if (e && e.type === 'climb' && M.kind[to] === 2) return Infinity;   // (fix round 2: never a wall climb up a rider's side — the column moves under the climb)
     if (this._escPlan && M.kind[to] === 2) { const R = this.riders[M.rider[to]]; if (R && R.r.sink) return R.solid && this._stoneUpAt(R, this.clock.t + metres * LAVA.sPerM + 0.5) ? 0 : Infinity; }   // (an escape: botAct)
     if (this._pb?._look && (M.kind[to] === 1 || (M.kind[to] === 2 && this.W.riders[M.rider[to]]?.sink))) return Infinity;   // (nor any floor the lava takes)
     const s = this.shut(to, this.clock.t + metres * LAVA.sPerM);
@@ -1221,7 +1263,10 @@ export class StageLava {
       // brain presses it, on its own cool-down). The brain's steering drops a route whose next node stands that far
       // above it within 1.2 m (its slip rule), so that last metre is steered here, never left to _steer
       const ex = b.goal >= 0 ? nav.nodes[b.goal] : null;
-      const nx = b.path && b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : (b._escNx || ex);
+      let nx = b.path && b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : (b._escNx || ex);
+      // (a next node beyond a hop's reach — the route's waypoint advance skipped the 1.1 m coping before the 1.5 m kerb: the
+      // bot hopped at the kerb until the lava had it — steps back to the node on the way that a hop reaches)
+      if (nx && nx.y - a.pos.y > 1.3 && b.path && b.pi > 0) for (let j = Math.min(b.pi, b.path.length) - 1; j >= Math.max(0, b.pi - 4); j--) { const q = nav.nodes[b.path[j]], dy = q.y - a.pos.y; if (dy > 0.4 && dy <= 1.3 && Math.hypot(q.x - a.pos.x, q.z - a.pos.z) < 2.5) { b.pi = j; nx = q; break; } }
       const dh = nx ? Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) : Infinity;
       if (nx && nx.y - a.pos.y > 0.4 && dh < 2.0) {
         b._escNx = nx;

@@ -1115,7 +1115,7 @@ export class BotBrain {
     // deck into the sea. Probe the ground a stopping distance ahead; if it's water, slide along the edge (whichever
     // diagonal is safe) or stop.
     // [b5-caldera] also with no move asked (momentum), and a frame or two off the ground stepping down a lip (a 0.1 m coping)
-    const gNear = a.grounded || (a.vel.y <= 0.3 && a.pos.y - G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.05) < 0.35);
+    const gNear = a.grounded || (a.vel.y <= 0.8 && a.pos.y - G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.05) < 0.35);   // (a rising Organ, a step-up's tiny hop)
     if ((this.mvMag > 0.05 || Math.hypot(a.vel.x, a.vel.z) > 1.0) && gNear && !a.climbing && !gOff) this._edgeGuard(a, it.move);
     // stuck recovery, based on progress toward the current waypoint: hop → skip the waypoint → replan
     const trying = this.path && wantMove && !a.specialActive?.pin && !(CHARGES[w.kind] && (a.weaponRunner.charging || a.weaponRunner.burstT > 0));   // ([b5-zipcheer] pin: a Cheer Orb's lift holds us)
@@ -1130,11 +1130,27 @@ export class BotBrain {
     }
     if (this.noProg === 0) this._skipped = false;
     this.stuck = this.noProg;
-    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; this._needJump = false; }
+    let pathHop = false;   // [b5-caldera] (a route's own hop up a step: only the arc check below)
+    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; this._needJump = false; pathHop = true; }
     // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
     // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
     // the causeway into the drowning Casting Floor mid-fight); a route's hop up a step lands on dry ground and passes
-    if (it.jump && a.grounded && !a.climbing && !this._clHop && !gOff && !this._hopSafe(a, it.move)) it.jump = false;
+    // — and none at all for a dodge, a stuck hop or a kit's own within 3 m of the sea or the lava: air control bends the
+    // flight, so a predicted landing is only a guess there
+    // (a twins / dualies jump while firing is a dodge roll along the move: a route's hop lets go of the trigger; any other
+    // roll only where its whole slide stays on dry floor)
+    if (it.jump && pathHop && it.fire && w.rollDist) it.fire = false;
+    const rolls = it.jump && it.fire && w.rollDist && !pathHop;
+    if (it.jump && a.grounded && !a.climbing && !this._clHop && !gOff && (rolls ? !this._rollSafe(a, it.move, w.rollDist) : (!this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0))))) it.jump = false;
+    // [b5-caldera] in the air (no hop of its own just now): never steer the flight down onto the sea or the lava — if the
+    // arc as it flies comes down there, steer back the way it came; if only the steering would put it there, hold still
+    if (!a.grounded && !gNear && !a.climbing && !gOff && !a.superJumpState) {
+      if (a.grounded === false && this._arcWet(a, a.vel.x, a.vel.z)) {
+        const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
+        if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
+      } else if (Math.hypot(it.move.x, it.move.z) > 0.05 && this._arcWet(a, a.vel.x + it.move.x * 2.5, a.vel.z + it.move.z * 2.5)) it.move.set(0, 0, 0);
+    }
+    if (a.grounded) (this._lastFoot ||= new THREE.Vector3()).copy(a.pos);
     // displacement watchdog: asking to move for 1.5 s but covering < 0.4 m means something the waypoint logic can't
     // see is holding us (re-plans reset its progress timer, so it can't catch this). Duels are exempt: strafing
     // back and forth is meant to stay put.
@@ -1369,8 +1385,37 @@ export class BotBrain {
       const x = a.pos.x + ux * s * t, z = a.pos.z + uz * s * t, y = y0 + vy0 * t - 0.5 * g * t * t;
       if (vy0 - g * t > 0) continue;   // (still rising)
       const gh = L.groundHeight(x, z, y + 0.3);
-      if (gh > -Infinity && y <= gh + 0.05) return !(SM && SM.wet(x, z, gh, 0.5));
+      if (gh > -Infinity && y <= gh + 0.05) {
+        if (SM && SM.wet(x, z, gh, 0.5)) return false;
+        // (up onto something: only a top a route can stand on — a roof-flagged stub slides you off into whatever is below)
+        if (gh > y0 + 0.3 && G.nav) { const n = G.nav.nearest(_wv.set(x, gh, z), 0.35, true), q = n >= 0 ? G.nav.nodes[n] : null; if (!q || Math.abs(q.y - gh) > 0.35 || Math.hypot(q.x - x, q.z - z) > 1.5) return false; }
+        return true;
+      }
     }
+    return false;
+  }
+  // [b5-caldera] a dodge roll's slide straight along the move for its distance (+0.6 m): dry floor all the way
+  _rollSafe(a, mv, dist) {
+    const ml = Math.hypot(mv.x, mv.z); if (ml < 0.05) return true;
+    const ux = mv.x / ml, uz = mv.z / ml;
+    for (let d = 0.4; d <= dist + 0.6 + 1e-6; d += 0.4) if (this._wetHi(a.pos.x + ux * d, a.pos.z + uz * d, a.pos.y)) return false;
+    return true;
+  }
+  // [b5-caldera] the arc from where the body is now with velocity (vx, vy, vz): does it come down on the sea or the lava
+  // (or on nothing within 1.5 s)?
+  _arcWet(a, vx, vz) {
+    const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = a.vel.y;
+    for (let t = 0.05; t <= 1.5; t += 0.05) {
+      const x = a.pos.x + vx * t, z = a.pos.z + vz * t, y = a.pos.y + vy0 * t - 0.5 * g * t * t;
+      if (vy0 - g * t > 0) continue;
+      const gh = L.groundHeight(x, z, y + 0.3);
+      if (gh > -Infinity && y <= gh + 0.05) return !!(SM && SM.wet(x, z, gh, 0.5));
+    }
+    return true;
+  }
+  // [b5-caldera] the sea or the lava anywhere on rings 1.5 m and r round the actor (16 samples)
+  _nearWetHi(a, r) {
+    for (const d of [1.5, r]) for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4; if (this._wetHi(a.pos.x + Math.cos(t) * d, a.pos.z + Math.sin(t) * d, a.pos.y)) return true; }
     return false;
   }
   // [b5-caldera] _wet with a step or a wall there counting as ground (solid at knee height: the body bumps it, it doesn't
