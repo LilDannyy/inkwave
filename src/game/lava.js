@@ -1009,7 +1009,9 @@ export class StageLava {
       if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; }
       if (b.mode !== 'fight') move.set(0, 0, 0);
       else if (!inRider(this.W.riders[L.ri], a.pos.x + move.x * 0.7, a.pos.z + move.z * 0.7, -0.75)) move.set(0, 0, 0);
-      it.squid = false;
+      // no hops or dodge rolls up there: a Twinfire roll (jump while firing) carried a claimant off the top into the lava
+      // twice in one match (its edge check reads the island 3.45 m below as ground)
+      it.squid = false; it.jump = false; b._needJump = false;
       return;
     }
     L.on = false;
