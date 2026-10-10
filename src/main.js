@@ -42,6 +42,7 @@ import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
 import { TowerFx } from './fx/towerFx.js';
 import { BazookarpFx } from './fx/bazookarpFx.js';   // [b5-karp]
+import { KarpKitFx } from './fx/karpKitFx.js';   // [b5-karp-checker] the NO CARP boards, the carrierBlock shimmer
 import './game/karpGun.js';   // [b5-karp] the Carp Shot (G.karpGun, KIT_GHOSTS.karp)
 import { InkWipeFx } from './fx/inkWipeFx.js';
 import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
@@ -150,6 +151,7 @@ class Game {
     this.zoneMarks = new ZoneMarks(scene);   // Zone Control ground markings: build / clear themselves on 'match:state'
     this.towerFx = new TowerFx(scene);       // Tower Command: the tower, its light pillar, the path glow, checkpoint beacons
     this.karpFx = new BazookarpFx(scene);    // [b5-karp] Bazookarp: the shell, the carp, weirs, Gates (placeholder look)
+    this.karpKitFx = new KarpKitFx(scene);   // [b5-karp-checker] (self-driven: built / cleared on match:state)
     this.inkWipe = new InkWipeFx(scene);     // Practice: the clear-all-ink wave's light, steam and sound (paint.startWipe clears)
     await progress(0.4, 'Filling the harbor…');
     const B = G.level.bounds;
