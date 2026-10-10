@@ -1104,7 +1104,12 @@ export class BotBrain {
     }
     // throws and placements only happen in humanoid form: stay upright for the press and the release
     if (this._bombAim) { it.sub = true; it.squid = false; this._bombAim = false; this._releaseBomb = true; }
-    else if (this._releaseBomb) { it.sub = false; it.squid = false; this._releaseBomb = false; }
+    else if (this._releaseBomb) {
+      it.sub = false; it.squid = false; this._releaseBomb = false;
+      // [b5-int3] the release frame checked again (the press was checked with last frame's aim; a fight's lob turns onto its
+      // target in between): a throw now going off by an own idle Chain Bobber web isn't made
+      if (SUB_KITS.bobber?.webThrow?.(a) && a.weaponRunner.aimingSub) { a.weaponRunner.aimingSub = false; this.bombCd = Math.max(this.bombCd, 1.2); }
+    }
 
     // ---------------- aim: critically-damped spring with a turn-rate cap (flicks accelerate and settle; no twitch)
     const fighting = this.mode === 'fight';
