@@ -1100,13 +1100,13 @@ export class StageLava {
     this._iv.set(y, iv);
     return iv;
   }
-  // (whose route is being planned: a lookout claimant's never crosses the Pumice Races — the claim's own route off a
-  // stone at HIGH walked one off Race 7 into the lava)
+  // (whose route is being planned: a lookout claimant's never crosses the Pumice Races or the low ground — the claim's
+  // own route off a stone at HIGH walked one off Race 7 into the lava)
   beforePath(b) { this._pb = b; }
   navEdge(e, to, metres) {
     const M = this.W.navMeta;
     if (!M || !M.kind[to]) return 0;
-    if (M.kind[to] === 2 && this._pb?._look && this.W.riders[M.rider[to]]?.sink) return Infinity;
+    if (this._pb?._look && (M.kind[to] === 1 || (M.kind[to] === 2 && this.W.riders[M.rider[to]]?.sink))) return Infinity;   // (nor any floor the lava takes)
     const s = this.shut(to, this.clock.t + metres * LAVA.sPerM);
     return s === 2 ? Infinity : s ? LAVA.soft : 0;
   }
@@ -1159,6 +1159,7 @@ export class StageLava {
       else if (k === 2) { const R = this.riders[M.rider[s]]; if (R && R.r.sink) need = this.shut(s, t + 4) === 2 || this.shut(s, t + esc) === 2; }
       if (need && M.exit[s] >= 0 && M.exit[s] !== s) {
         if (!b._lavaEsc || b.goal !== M.exit[s] || !b.path) {
+          this._pb = null;   // (an escape is planned without a claimant's rules: its way out may cross the low ground it stands on)
           const p = nav.path(s, M.exit[s], a.team);
           if (p) { b.path = p; b.pi = Math.min(1, p.length - 1); b.goal = M.exit[s]; b.bestD = Infinity; b.noProg = 0; b._lavaEsc = true; b.escN = (b.escN || 0) + 1; }
         }
