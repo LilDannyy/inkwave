@@ -401,6 +401,27 @@
     R('F9 a floor the lava never reaches is never low ground: no lava-floor node at or above HIGH + kill (the 1.10 m copings are dry, ways out); a kid on a coping gets no personal line at HIGH, in the warning or the rise',
       !high1.length && copings.length > 10 && copings.every((n) => M.kind[n.id] === 0) && cop && Math.abs(cop.y - 1.1) < 0.03 && Object.values(lines).every((l) => l[0] === null && l[1]),
       { high1: high1.slice(0, 6), nHigh1: high1.length, copings: copings.length, coping: cop && [r3(cop.x), r3(cop.y), r3(cop.z)], lines });
+    // (fix round 2) the same on a grid: no personal line anywhere the feet stand at or above HIGH + kill — every dry top
+    // in and round the region on a 0.5 m lattice (a stand-in actor: the line reads only the feet), in the warning, the
+    // rise and at HIGH; and the real kid on the review's six spots on the west bank (1.3 m up: they got the line)
+    const grid = { n: 0, bad: [] };
+    for (const t of [27, 39, 50]) {
+      setT(t);
+      const B = W.box;
+      for (let x = B.x0 - 1.5; x < B.x0 + B.nx * B.res + 1.5; x += 0.5) for (let z = B.z0 - 1.5; z < B.z0 + B.nz * B.res + 1.5; z += 0.5) {
+        const gh = lvl.groundHeight(x, z, 6);
+        if (!(gh >= H + K) || gh > 3.0) continue;
+        grid.n++;
+        const fake = { pos: V(x, gh, z), grounded: true, ground: { block: -1 }, alive: true, isLocal: true };
+        const line = Lv._mine(fake);
+        if (line && grid.bad.length < 12) grid.bad.push([t, r3(x), r3(gh), r3(z), line.text]);
+      }
+    }
+    const spots6 = [[-28.5, 1.3, -6.25], [-28.25, 1.3, -7], [-28, 1.3, -11.5], [-21.5, 1.1, -14], [-20, 1.1, 20], [-19, 1.1, 15]], kid = [];
+    setT(27);
+    for (const [x, y, z] of spots6) { put(me, V(x, y + 0.02, z)); step(0.15); kid.push([x, y, z, Lv._mine(me)?.text || null, me.alive]); }
+    put(me, V(-10, 1.22, -3.2)); step(0.1);
+    R('F9b no personal line anywhere the feet stand at or above HIGH + kill: a 0.5 m grid over the region in the warning, the rise and at HIGH; the kid on the review\'s dry spots (1.1–1.3 m up)', grid.n > 3000 && !grid.bad.length && kid.every((k) => k[3] === null && k[4]), { sampled: grid.n, bad: grid.bad, kid });
   }
   // bots: eight on the drowning ledges at the warning walk off before the lava comes (brains on), four on the stones at
   // the fall warning step off before they sink
@@ -417,13 +438,15 @@
     // rider; a fall off a dry bank into the lake is listed apart)
     const kindAt = (a) => { const s2 = nav.nearest(a.pos, 1.5, true); return s2 >= 0 ? M.kind[s2] : -1; };
     let deaths = []; const o3 = on('splatted', (e) => { if (crew.includes(e.victim)) deaths.push([e.victim.name, e.cause, r3(Lv.clock.t), r3(e.victim.pos.x), r3(e.victim.pos.y), r3(e.victim.pos.z), crew.indexOf(e.victim), kindAt(e.victim)]); });
-    const drowned = (d) => d[1] === 'lava' && (d[7] === 1 || d[7] === 2);
+    // (fix round 2: EVERY lava death of a crew bot counts — the 'dry node' exemption hid deaths off dry edges; the repeated
+    // trials, 20 of each on both halves, are tools/botlab/tests/lava-bots.js)
+    const drowned = (d) => d[1] === 'lava';
     // (each one's trail — t, x, y, z, node kind, escaping, mode, path left — reported for the first one that dies)
     const trail7 = crew.map(() => []);
     for (let i = 0; i < 30 * 20; i++) { dbg.step(1000 / 30); if (i % 8 === 0) crew.forEach((b, k) => { if (b.alive) trail7[k].push([r3(Lv.clock.t), r3(b.pos.x), r3(b.pos.y), r3(b.pos.z), kindAt(b), b.bot._lavaEsc ? 'E' : '', b.bot.mode, b.bot.path ? b.bot.path.length - b.bot.pi : 0]); }); }   // (to t ≈ 44.7: past the drowning)
     const offLedge = crew.filter((b) => b.alive && b.pos.y > 0.5).length;
     const d7 = deaths.find(drowned);
-    R('F7 bots on the drowning ledges at the rise warning are off them before they drown (7 of 7: none dies on the drowning ground; escape routes walked)', !d7 && crew.every((b) => !b.alive || b.pos.y > 0.5),
+    R('F7 bots on the drowning ledges at the rise warning are off them before they drown (7 of 7: no lava death at all; escape routes walked)', !d7 && crew.every((b) => !b.alive || b.pos.y > 0.5),
       { deaths, offLedge, n: crew.length, esc: crew.map((b) => b.bot.escN || 0), trail: d7 ? trail7[d7[6]].slice(-14) : undefined });
     // the stones: four bots on them at HIGH; the fall warning comes at 60, the stones sink at 76.2
     setT(58);
@@ -443,7 +466,7 @@
     o5();
     o3();
     const deadK = deaths.length ? deaths[0][6] : -1;
-    R('F8 bots on the stones at the fall warning step off before they sink (4 of 4: none dies on a stone or the drowning ground)', !deaths.some(drowned), { deaths, alive: crew.slice(0, 4).map((b) => b.alive), trail: deadK >= 0 ? trail[deadK]?.slice(-14) : undefined });
+    R('F8 bots on the stones at the fall warning step off before they sink (4 of 4: no lava death at all, the three parked ones included)', !deaths.some(drowned), { deaths, alive: crew.slice(0, 4).map((b) => b.alive), trail: deadK >= 0 ? trail[deadK]?.slice(-14) : undefined });
     freezeBots();
   }
   // (fix round 1) the lookout claim: from the rise each team's best long-range bot goes up its own side's lookout and
@@ -479,7 +502,25 @@
     const m2 = document.querySelector('.lv-mine')?.textContent || '';
     setT(10); put(me, V(-10, 1.22, -3.2)); step(0.3);
     const m3 = document.querySelector('.lv-mine')?.classList.contains('is-on');
-    R('G1 the local player\'s own line: on a ledge in the warning "GET OFF THE LOW GROUND → n m"; on a stone in the fall warning "THE STONES ARE SINKING"; nothing on dry ground', mon && /GET OFF THE LOW GROUND/.test(mtx) && /\d+ m/.test(mtx) && /THE STONES ARE SINKING/.test(m2) && !m3, { mtx, m2, dry: m3 });
+    // (fix round 2) a kid kept still on race1 and on race7 through the fall: the line holds every 0.5 s from the fall
+    // warning until the stones turn deadly (76.2) — it went out at 73.3 when the stone left its nav pose
+    const hold = {};
+    for (const id of ['race1', 'race7']) {
+      const r = W.riders.find((q) => q.id === id), ri = W.riders.indexOf(r), n = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1);
+      setT(60.2); put(me, V(n.x, rid(id).top + 0.02, n.z)); me.invuln = 0; step(0.3);
+      const miss = [];
+      let k = 0;
+      for (let tt = 61; tt < 76.15; tt += 0.5, k++) {
+        while (Lv.clock.t < tt && me.alive) { me.intent.move.set(0, 0, 0); dbg.step(1000 / 60); }
+        if (!me.alive) break;
+        const el = document.querySelector('.lv-mine'), tx = el?.textContent || '';
+        if (!(el?.classList.contains('is-on') && /THE STONES ARE SINKING/.test(tx))) miss.push([r3(Lv.clock.t), tx, r3(me.pos.y)]);
+      }
+      hold[id] = { samples: k, miss, aliveTo: r3(Lv.clock.t) };
+    }
+    put(me, V(-10, 1.22, -3.2)); step(0.1);
+    const held = Object.values(hold).every((h) => h.samples >= 29 && !h.miss.length);
+    R('G1 the local player\'s own line: on a ledge in the warning "GET OFF THE LOW GROUND → n m"; on a stone "THE STONES ARE SINKING" every 0.5 s from the fall warning to the moment the stones sink (race1, race7); nothing on dry ground', mon && /GET OFF THE LOW GROUND/.test(mtx) && /\d+ m/.test(mtx) && /THE STONES ARE SINKING/.test(m2) && !m3 && held, { mtx, m2, dry: m3, hold });
     // the callouts from the events (a natural warning)
     setT(24.6); for (let i = 0; i < 30; i++) dbg.step(1000 / 60);
     const c2 = [...document.querySelectorAll('.iw-call')].map((e) => e.textContent);

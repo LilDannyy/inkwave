@@ -1357,15 +1357,21 @@ export class BotBrain {
     for (let k = 0; k < 8; k++) { const t = (k / 8) * Math.PI * 2; if (this._wet(a.pos.x + Math.cos(t) * r, a.pos.z + Math.sin(t) * r, a.pos.y)) return true; }
     return false;
   }
-  // [b5-caldera] a hop's flight along where it is carried (its velocity, else the move) out to where it lands (~0.9 s at
-  // its speed, ≤ 6.5 m): never over the sea or the lava (a gap of floor that is dry is fine)
+  // [b5-caldera] a hop's flight, stepped as a ballistic arc (PLAYER.jumpVel, gravity) along where it is carried (its
+  // velocity, else the move at run speed): it lands where the arc first meets a top under it (a step up, the next
+  // column, the floor beyond a gap) — safe unless that is the sea or the lava, or nothing is under it within 1.4 s
   _hopSafe(a, mv) {
     const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz), ml = Math.hypot(mv.x, mv.z);
     let ux, uz, s;
     if (sp > 1) { ux = vx / sp; uz = vz / sp; s = Math.max(sp, ml * PLAYER.runSpeed); } else if (ml > 0.05) { ux = mv.x / ml; uz = mv.z / ml; s = ml * PLAYER.runSpeed; } else return true;
-    const D = Math.min(6.5, s * 0.9 + 0.5);
-    for (let d = 0.5; d <= D + 1e-6; d += 0.5) if (this._wetHi(a.pos.x + ux * d, a.pos.z + uz * d, a.pos.y)) return false;
-    return true;
+    const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = PLAYER.jumpVel, y0 = a.pos.y;
+    for (let t = 0.05; t <= 1.4; t += 0.05) {
+      const x = a.pos.x + ux * s * t, z = a.pos.z + uz * s * t, y = y0 + vy0 * t - 0.5 * g * t * t;
+      if (vy0 - g * t > 0) continue;   // (still rising)
+      const gh = L.groundHeight(x, z, y + 0.3);
+      if (gh > -Infinity && y <= gh + 0.05) return !(SM && SM.wet(x, z, gh, 0.5));
+    }
+    return false;
   }
   // [b5-caldera] _wet with a step or a wall there counting as ground (solid at knee height: the body bumps it, it doesn't
   // fall) — but not a bridge deck over the lava with open air under it
