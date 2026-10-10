@@ -23,7 +23,9 @@ export const LOOK = {
   basalt: '#646870', basaltTop: '#73777e', pumice: '#bdb8ae', pumiceDk: '#8f8a80',
   needle: '#c8202a', beaconRed: '#ff1206', beaconWhite: '#f4f6ff',
 };
-const HOT_INKS = new Set(['#ff8a14', '#ff4150', '#ffb000', '#ff6a00']);   // (orange / red team inks: no orange band in the seams)
+// (orange / red / gold team inks: no orange band in the seams — Tangerine, Cherry, the colour-blind Sun (ENGINE R1))
+const HOT_INKS = new Set(['#ff8a14', '#ff4150', '#ffb000', '#ff6a00', '#ffd21a']);
+const hotInks = (hex) => (hex || []).some((h) => HOT_INKS.has(String(h).toLowerCase()));
 
 export const LAVA_ICON = `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 30 L58 30" stroke="#15121c" stroke-width="7" stroke-linecap="round"/><path d="M6 30 L58 30" stroke="#f4f1ea" stroke-width="3.2" stroke-linecap="round"/><path d="M5 44 C12 36 18 36 24 42 C30 48 36 48 42 41 C47 35 53 35 59 41 L59 56 L5 56 Z" fill="currentColor" stroke="#15121c" stroke-width="4.2" stroke-linejoin="round"/><circle cx="20" cy="18" r="3.4" fill="currentColor" stroke="#15121c" stroke-width="2.6"/><circle cx="34" cy="11" r="2.4" fill="currentColor" stroke="#15121c" stroke-width="2.2"/><circle cx="46" cy="19" r="2.8" fill="currentColor" stroke="#15121c" stroke-width="2.4"/></svg>`;
 
@@ -31,7 +33,9 @@ export const LAVA_ICON = `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M
 const PARS = /* glsl */`
 uniform sampler2D uLavaMap; uniform vec4 uLavaBox; uniform vec4 uLavaS; uniform vec4 uLavaW;
 float gLavaIn = 0.0; float gLavaRind = 0.0;
-float lavaMaskAt(vec2 xz) { vec2 q = (xz - uLavaBox.xy) * uLavaBox.zw; if (q.x <= 0.0 || q.y <= 0.0 || q.x >= 1.0 || q.y >= 1.0) return 0.0; return texture2D(uLavaMap, q).r; }`;
+float lavaMaskAt(vec2 xz) { vec2 q = (xz - uLavaBox.xy) * uLavaBox.zw; if (q.x <= 0.0 || q.y <= 0.0 || q.x >= 1.0 || q.y >= 1.0) return 0.0; return texture2D(uLavaMap, q).r; }
+// (how near open lava: G at LOW, B at HIGH, mixed by uLavaW.w — the glow lights what stands in or over the lava only)
+float lavaProxAt(vec2 xz) { vec2 q = (xz - uLavaBox.xy) * uLavaBox.zw; vec2 p = texture2D(uLavaMap, q).gb; return mix(p.x, p.y, uLavaW.w); }`;
 const BASE = /* glsl */`
   gLavaIn = lavaMaskAt(vWPos.xz);
   if (gLavaIn > 0.01 && vWPos.y < uLavaS.y + 0.1) {
@@ -51,7 +55,7 @@ const EMIS = /* glsl */`
   if (gLavaIn > 0.01) {
     float lL = uLavaS.x, ldy = vWPos.y - lL, lhm = uLavaS.y;
     // (the lava's light lands on the faces that look at it: walls and slopes, hardly on floors above it)
-    float lwall = 1.0 - 0.9 * max(vWNorm.y, 0.0);
+    float lwall = (1.0 - 0.9 * max(vWNorm.y, 0.0)) * lavaProxAt(vWPos.xz);
     float lglow = exp(-max(ldy, 0.0) * 3.2) * step(-0.03, ldy) * lwall;
     float lmv = uLavaW.y;
     // a moving surface: the rise's seething front right at the line; the fall's hot band just above the dropping surface
@@ -63,6 +67,8 @@ const EMIS = /* glsl */`
     totalEmissiveRadiance += (vec3(0.36, 0.04, 0.015) * lglow * (0.75 + 0.25 * uLavaW.z) + vec3(1.0, 0.3, 0.07) * lfront * lwall * 1.3) * gLavaIn * link
       + lwarn * lband * lpulse * 1.1 * gLavaIn;
   }`;
+// the weight of HIGH's proximity field (lava.js _buildProx) at level y: HIGH's once the lowest drowning floor is under
+export const proxMix = (y, floorY) => { const s = Math.max(0, Math.min(1, (y - (floorY - 0.02)) / 0.1)); return s * s * (3 - 2 * s); };
 export function lavaLevelExt(W) {
   return { key: 'lava', uniforms: W.uniforms, defines: { LAVA: 1 }, fragPars: PARS, fragBase: BASE, fragEmissive: EMIS };
 }
@@ -219,9 +225,8 @@ export class LavaLook {
     this.open = Float32Array.from(open);   // open-lava cell centres (embers, steam, flotsam)
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeBoundingSphere();
-    const ink = (G.teamHex || []).map((h) => String(h).toLowerCase());
     this.mat = new THREE.ShaderMaterial({
-      uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uTime: { value: 0 }, uS: { value: new THREE.Vector4(0, 0, ink.some((h) => HOT_INKS.has(h)) ? 1 : 0, 0) },
+      uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uTime: { value: 0 }, uS: { value: new THREE.Vector4(0, 0, hotInks(G.teamHex) ? 1 : 0, 0) },
         uLavaMap: W.uniforms.uLavaMap, uLavaBox: W.uniforms.uLavaBox,
         uCrA: { value: lin(LOOK.crust[0]) }, uCrB: { value: lin(LOOK.crust[1]) }, uS0: { value: lin(LOOK.seam[0]) }, uS1: { value: lin(LOOK.seam[1]) }, uS2: { value: lin(LOOK.seam[2]) }, uS3: { value: lin(LOOK.seam[3]) } },
       vertexShader: SURF_VS, fragmentShader: SURF_FS, fog: true,
@@ -240,14 +245,33 @@ export class LavaLook {
     this.rid = [];
     const basalt = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.84, metalness: 0, flatShading: true });
     const pumice = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, emissive: '#000000' });
+    // before a fall the stones crack and glow: ember-red lines in a net of cracks (the pale stone between stays pale — a
+    // red emissive over the whole pale pumice read bubblegum pink)
+    this._crackU = { value: 0 };
+    pumice.onBeforeCompile = (sh) => {
+      sh.uniforms.uCrack = this._crackU;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vCrW;')
+        .replace('#include <project_vertex>', '#include <project_vertex>\nvCrW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vCrW; uniform float uCrack;
+vec2 crH(vec2 p) { return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453); }
+float crE(vec2 x) { vec2 n = floor(x), f = fract(x); float F1 = 8.0, F2 = 8.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 g = vec2(float(i), float(j)), r = g + crH(n + g) - f; float d = dot(r, r); if (d < F1) { F2 = F1; F1 = d; } else if (d < F2) F2 = d; }
+  return sqrt(F2) - sqrt(F1); }`)
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+if (uCrack > 0.001) { float ce = min(crE(vCrW.xz * 2.3), crE(vec2(vCrW.x + vCrW.z, vCrW.y * 1.6) * 2.3));
+  float cr = 1.0 - smoothstep(0.025, 0.1, ce); totalEmissiveRadiance += vec3(1.0, 0.2, 0.035) * cr * uCrack * 2.6; }`);
+    };
+    pumice.customProgramCacheKey = () => 'lava-pumice-crack';
     this._mats = [basalt, null, pumice];
-    const stoneGeos = [];
+    const stoneGeos = [], boulderGeos = [];
     const place = (g, x, y, z, yaw) => { g.rotateY(yaw); g.translate(x, y, z); return g; };
     W.riders.forEach((r, i) => {
       if (r.sink) {
         const p = r.parts[0];
         stoneGeos.push(place(rockGeo(p.hx * 2 * 0.98, r.depth, p.hz * 2 * 0.98, i * 7.3 + 1), r.x, 0, r.z, r.yaw));
-        for (const q of r.parts) if (!q.body) { const qq = partPose(r, q, 0, {}); stoneGeos.push(place(rockGeo(q.hx * 2, q.y1 - q.y0, q.hz * 2, i * 3.1 + 9), qq.cx, q.y1, qq.cz, qq.yaw)); }
+        // (a stone's boulder: its own mesh, scaled up from the stones' top as it heaves out of the lava — StageLava R.bk)
+        for (const q of r.parts) if (!q.body) { const qq = partPose(r, q, 0, {}); boulderGeos.push(place(rockGeo(q.hx * 2, q.y1 - q.y0, q.hz * 2, i * 3.1 + 9), qq.cx, q.y1, qq.cz, qq.yaw)); }
         this.rid.push({ r, g: null, ink: null });
         return;
       }
@@ -265,6 +289,10 @@ export class LavaLook {
     if (stoneGeos.length) {
       this.stones = new THREE.Mesh(mergeGeos(stoneGeos), pumice); this.stones.name = 'lava:stones'; this.stones.receiveShadow = true; this.stones.visible = false;
       this.root.add(this.stones);
+    }
+    if (boulderGeos.length) {
+      this.boulders = new THREE.Mesh(mergeGeos(boulderGeos), pumice); this.boulders.name = 'lava:boulders'; this.boulders.receiveShadow = true; this.boulders.visible = false;
+      this.root.add(this.boulders);
     }
   }
   // the floats' ink overlays (built once the match runtime has made their paints)
@@ -366,7 +394,9 @@ export class LavaLook {
       return { p, g, n, life: new Float32Array(n), vel: new Float32Array(n * 3), age: new Float32Array(n) };
     };
     this.emb = this.nEmb ? mk(this.nEmb, false, THREE.AdditiveBlending) : null;
-    this.stm = this.nEmb ? mk(Math.round(this.nEmb * 0.6), true, THREE.NormalBlending) : null;
+    this.stm = this.nEmb ? mk(this.nEmb, true, THREE.NormalBlending) : null;
+    // the floors a fall leaves (steam billows off them as they come out): their top rectangles
+    this.dryTops = (this.W.drown || []).map(({ b, top }) => ({ cx: b.center.x, cz: b.center.z, ax: [b.axes[0].x * b.half.x, b.axes[0].z * b.half.x], az: [b.axes[2].x * b.half.z, b.axes[2].z * b.half.z], top }));
   }
   _flotsam() {
     const f = this.W.def.flotsam, open = this.open;
@@ -399,15 +429,19 @@ export class LavaLook {
     const warnT = st.warn && st.next ? 1 - Math.max(0, st.next.inS) / Math.max(1, R.sched.T.warn) : 0;
     this.warn = st.warn ? (st.next.to === 'high' ? 1 : -1) * (0.5 + 0.5 * warnT) : 0;
     U.uLavaS.value.w = this.t;
-    U.uLavaW.value.set(this.warn, this.mv, st.phase === 'high' ? 1 : st.dir > 0 ? 1 : 0, 0);
+    U.uLavaW.value.set(this.warn, this.mv, st.phase === 'high' ? 1 : st.dir > 0 ? 1 : 0, proxMix(st.y, W.floorY ?? W.high));
     this.mat.uniforms.uTime.value = this.t;
     this.mat.uniforms.uS.value.x = this.mv; this.mat.uniforms.uS.value.y = Math.abs(this.warn); this.mat.uniforms.uS.value.w = st.phase === 'high' ? 1 : 0;
+    // the orange band follows THIS match's inks (a reused world kept the palette of the match it was built for; startMatch
+    // builds the world before it picks the palette)
+    const hx = G.teamHex, hk = hx ? hx[0] + '|' + hx[1] : '';
+    if (hk !== this._hk) { this._hk = hk; this.mat.uniforms.uS.value.z = hotInks(hx) ? 1 : 0; }
     // riders
-    let stoneTop = null;
+    let stoneTop = null, boulK = 0;
     R.riders.forEach((Rr, k) => {
       const e = this.rid[k];
       if (!e) return;
-      if (Rr.r.sink) { if (!Rr.parked) stoneTop = Rr.top; return; }
+      if (Rr.r.sink) { if (!Rr.parked) stoneTop = Rr.top; if (Rr.r.parts.length > 1) boulK = Math.max(boulK, Rr.bk || 0); return; }
       if (!e.ink && Rr.deck) this._inkFor(Rr, k);
       e.g.position.y = Rr.top;
       if (e.ink) {
@@ -418,6 +452,7 @@ export class LavaLook {
       }
     });
     if (this.stones) { this.stones.visible = stoneTop !== null; if (stoneTop !== null) this.stones.position.y = stoneTop; }
+    if (this.boulders) { this.boulders.visible = stoneTop !== null && boulK > 0.001; if (this.boulders.visible) { this.boulders.position.y = stoneTop; this.boulders.scale.y = boulK; } }
     // the Organs grind as they move: rubble and dust shed at the columns' feet; the stones crack and glow before a fall
     if (st.dir && (this._rubT = (this._rubT || 0) - dt) <= 0) {
       this._rubT = 0.22;
@@ -427,8 +462,8 @@ export class LavaLook {
         G.fx?.burst(v, new THREE.Vector3(Math.cos(a), 0.6, Math.sin(a)), new THREE.Color('#8d8780'), { count: 5, speed: 2.2, size: 0.09 });
       }
     }
-    const crack = st.warn && st.next.to === 'low' ? 0.5 + 0.5 * Math.sin(this.t * 7) : st.phase === 'fall' ? 0.6 : 0;
-    this._mats[2].emissive.setRGB(0.55 * crack, 0.05 * crack, 0.02 * crack);
+    const crack = st.warn && st.next.to === 'low' ? 0.55 + 0.45 * Math.sin(this.t * 7) : st.phase === 'fall' ? 0.8 : 0;
+    this._crackU.value = crack;
     // the gauge: the needle climbs 5× the lava's own move; the beacons
     if (Math.abs((this._ne ?? -1) - st.e) > 1e-4) { this._ne = st.e; this._setNeedles(st.e); }
     const blink = (hz) => (Math.sin(this.t * Math.PI * 2 * hz) > 0 ? 1 : 0.08);
@@ -469,7 +504,8 @@ export class LavaLook {
           const [x, z] = vent ? [vent[0], vent[2]] : pick(i);
           pos[i * 3] = x + (Math.random() - 0.5) * (vent ? 0.6 : 1); pos[i * 3 + 1] = vent ? Math.max(vent[1], this.y) + 0.05 : this.y + 0.05; pos[i * 3 + 2] = z + (Math.random() - 0.5) * (vent ? 0.6 : 1);
           E.vel[i * 3] = (Math.random() - 0.5) * 0.6; E.vel[i * 3 + 1] = 1.2 + Math.random() * 2.2 * (st.phase === 'rise' ? 1.4 : 1); E.vel[i * 3 + 2] = (Math.random() - 0.5) * 0.6;
-          E.life[i] = 1.2 + Math.random() * 2.2; E.age[i] = 0; sz[i] = 0.05 + Math.random() * 0.07;
+          // (0.12–0.26 m: a few pixels at 10–20 m — at 0.05–0.12 they were a pixel or two and no rise still showed one)
+          E.life[i] = 1.2 + Math.random() * 2.2; E.age[i] = 0; sz[i] = 0.12 + Math.random() * 0.14;
           const h = Math.random(); col[i * 3] = 1.0 * 3; col[i * 3 + 1] = (0.18 + 0.4 * h) * 3; col[i * 3 + 2] = 0.05 * 3;
         }
         const k = E.age[i] / Math.max(0.01, E.life[i]);
@@ -479,25 +515,32 @@ export class LavaLook {
       E.g.attributes.position.needsUpdate = true; E.g.attributes.aA.needsUpdate = true; E.g.attributes.aSize.needsUpdate = true; E.g.attributes.aCol.needsUpdate = true;
       E.p.visible = E.life.some((l) => l > 0);
     }
-    // steam: billowing DOWN off the surfaces a fall leaves (and wisps at the ebb)
+    // steam: billowing DOWN off the surfaces a fall leaves (and wisps at the ebb). Dense, big and opaque enough to read
+    // by day (the review: near-invisible in the fall stills): over the open lava near the camera, and off the drowned
+    // floors as the surface drops below them (their tops 0–0.6 m above it)
     const Sm = this.stm;
     if (Sm) {
-      const rate = st.phase === 'fall' ? 1 : st.warn && st.next.to === 'low' ? 0.3 : st.phase === 'low' ? 0.05 : 0.02;
+      const rate = st.phase === 'fall' ? 2.6 : st.warn && st.next.to === 'low' ? 0.5 : st.phase === 'low' ? 0.05 : 0.02;
       const pos = Sm.g.attributes.position.array, sz = Sm.g.attributes.aSize.array, aa = Sm.g.attributes.aA.array, col = Sm.g.attributes.aCol.array;
+      const wet = st.phase === 'fall' ? this.dryTops.filter((d) => d.top - this.y > -0.05 && d.top - this.y < 0.6 && Math.hypot(d.cx - cx, d.cz - cz) < 50) : null;
       for (let i = 0; i < Sm.n; i++) {
         Sm.age[i] += dt;
         if (Sm.age[i] >= Sm.life[i]) {
           if (Math.random() > rate * dt * 3) { aa[i] = 0; Sm.life[i] = 0; Sm.age[i] = 0; continue; }
-          const [x, z] = pick(i);
-          pos[i * 3] = x + (Math.random() - 0.5) * 2; pos[i * 3 + 1] = this.y + 0.6 + Math.random() * (st.phase === 'fall' ? 1.6 : 0.6); pos[i * 3 + 2] = z + (Math.random() - 0.5) * 2;
-          Sm.vel[i * 3] = (Math.random() - 0.5) * 0.4; Sm.vel[i * 3 + 1] = -(0.25 + Math.random() * 0.45); Sm.vel[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
-          Sm.life[i] = 2 + Math.random() * 2.5; Sm.age[i] = 0; sz[i] = 0.5 + Math.random() * 0.6;
-          const g = 0.82 + Math.random() * 0.12; col[i * 3] = g; col[i * 3 + 1] = g; col[i * 3 + 2] = g * 1.02;
+          let x, z, y0;
+          if (wet && wet.length && Math.random() < 0.55) {
+            const d = wet[(Math.random() * wet.length) | 0], u = Math.random() * 2 - 1, v = Math.random() * 2 - 1;
+            x = d.cx + d.ax[0] * u + d.az[0] * v; z = d.cz + d.ax[1] * u + d.az[1] * v; y0 = d.top + 0.25 + Math.random() * 0.9;
+          } else { [x, z] = pick(i); x += (Math.random() - 0.5) * 2; z += (Math.random() - 0.5) * 2; y0 = this.y + 0.5 + Math.random() * (st.phase === 'fall' ? 1.8 : 0.6); }
+          pos[i * 3] = x; pos[i * 3 + 1] = y0; pos[i * 3 + 2] = z;
+          Sm.vel[i * 3] = (Math.random() - 0.5) * 0.5; Sm.vel[i * 3 + 1] = -(0.3 + Math.random() * 0.5); Sm.vel[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+          Sm.life[i] = 2.2 + Math.random() * 2.6; Sm.age[i] = 0; sz[i] = 1.0 + Math.random() * 1.0;
+          const g = 0.9 + Math.random() * 0.1; col[i * 3] = g; col[i * 3 + 1] = g; col[i * 3 + 2] = g * 1.02;
         }
         const k = Sm.age[i] / Math.max(0.01, Sm.life[i]);
         pos[i * 3] += Sm.vel[i * 3] * dt; pos[i * 3 + 1] = Math.max(this.y + 0.15, pos[i * 3 + 1] + Sm.vel[i * 3 + 1] * dt); pos[i * 3 + 2] += Sm.vel[i * 3 + 2] * dt;
-        sz[i] += dt * 0.35;
-        aa[i] = Sm.life[i] ? Math.sin(Math.PI * k) * 0.32 : 0;
+        sz[i] += dt * 0.6;
+        aa[i] = Sm.life[i] ? Math.sin(Math.PI * k) * 0.55 : 0;
       }
       Sm.g.attributes.position.needsUpdate = true; Sm.g.attributes.aA.needsUpdate = true; Sm.g.attributes.aSize.needsUpdate = true; Sm.g.attributes.aCol.needsUpdate = true;
       Sm.p.visible = Sm.life.some((l) => l > 0);
@@ -539,6 +582,7 @@ export class LavaLook {
     for (const e of this.rid) if (e.ink) { e.g.remove(e.ink.deck); for (const s of e.ink.sides) e.g.remove(s); e.ink.deck.geometry.dispose(); for (const s of e.ink.sides) s.geometry.dispose(); for (const m of e.ink.mats) m.dispose(); e.ink = null; }
     for (const e of this.rid) if (e.g) e.g.position.y = e.r.top0;
     if (this.stones) this.stones.visible = false;
+    if (this.boulders) this.boulders.visible = false;
     this.W.uniforms.uLavaW.value.set(0, 0, 0, 0);
   }
   dispose() {
@@ -586,6 +630,8 @@ const CSS = `
 .lv-chip { position: absolute; left: 50%; top: calc(var(--u, 10px) * 6.9); translate: -50% 0; display: flex; align-items: center; gap: .45em; padding: .28em .75em .28em .35em;
   border-radius: 999px; background: rgba(14, 11, 22, .86); color: #fff; font: 900 calc(var(--u, 10px) * 1.05) / 1 'Rubik', sans-serif; letter-spacing: .08em; white-space: nowrap;
   box-shadow: 0 0 0 2px rgba(255,255,255,.85); pointer-events: none; transition: box-shadow .2s, background .2s; z-index: 3; }
+.lv-chip.is-docked { position: relative; left: auto; top: auto; translate: none; margin-top: calc(var(--u, 10px) * .2); }
+.iw-tw > .lv-chip.is-docked { margin-top: calc(var(--u, 10px) * .8); }   /* (the tower token hangs below the track) */
 .lv-chip svg { width: 1.7em; height: 1.7em; color: #c8102e; }
 .lv-tube { position: relative; width: .7em; height: 2.1em; border-radius: .35em; background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.55); overflow: hidden; }
 .lv-tube i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(#ff4a3a, #a3121a); transition: height .15s linear; }
@@ -604,7 +650,8 @@ const CSS = `
 .lv-mine i { display: inline-block; font-style: normal; font-size: 1.4em; line-height: 1; }
 .lv-mine span { opacity: .85; }`;
 let cssOn = false;
-const fmt = (s) => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const DOCKS = { zones: 'zo', tower: 'tw' };   // the Hud fields holding each mode's objective HUD under the timer
+const fmt =(s) => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 export class LavaHud {
   constructor(R) {
     this.R = R;
@@ -617,7 +664,12 @@ export class LavaHud {
     this.mine = document.createElement('div'); this.mine.className = 'lv-mine';
     this.mine.innerHTML = '<i>➜</i><b></b><span></span>';
     this.mArrow = this.mine.querySelector('i'); this.mText = this.mine.querySelector('b'); this.mDist = this.mine.querySelector('span');
-    host.appendChild(this.el); host.appendChild(this.mine);
+    // a mode with its own objective HUD hanging under the clock (Zone Control's zone chip and shift line, Tower Command's
+    // track and status: hud.js .iw-zo / .iw-tw, a flex column) takes the chip as its last row, so it always sits under
+    // that HUD whatever it shows (overtime bar, shift countdown); Turf War keeps it under the clock
+    const dock = DOCKS[R.m?.mode] ? G.hud?.[DOCKS[R.m.mode]] : null;
+    if (dock && dock.appendChild) { this.el.classList.add('is-docked'); dock.appendChild(this.el); } else host.appendChild(this.el);
+    host.appendChild(this.mine);
     this.last = '';
   }
   update(o, a) {
@@ -665,27 +717,47 @@ export function drawLavaMap(R, c, mm, tc, s, t) {
   if (!mm.hgt) return;
   if (C.key !== key) {
     C.key = key;
+    const t0 = performance.now();
     if (!C.fill || C.fill.width !== w || C.fill.height !== h) { C.fill = document.createElement('canvas'); C.fill.width = w; C.fill.height = h; C.hatch = document.createElement('canvas'); C.hatch.width = w; C.hatch.height = h; C.hk = null; }
-    const fx = C.fill.getContext('2d'), img = fx.createImageData(w, h), D = img.data, H = mm.hgt, y = st.y;
-    for (let py = 0; py < h; py++) {
-      const z = mm._worldZ(py + 0.5);
-      for (let px = 0; px < w; px++) {
-        const x = mm._worldX(px + 0.5);
-        if (!W.inRegion(x, z)) continue;
-        const i = py * w + px, gh = H[i];
-        if (gh > y + 0.05 && gh > -50) continue;
-        const n = (Math.sin(x * 1.7 + z * 0.9) + Math.sin(x * 0.6 - z * 1.9)) * 0.25 + 0.5;
-        D[i * 4] = 120 + 70 * n; D[i * 4 + 1] = 18 + 22 * n; D[i * 4 + 2] = 16; D[i * 4 + 3] = 235;
-      }
-    }
-    fx.putImageData(img, 0, 0);
+    // once per minimap layout (size, flip, base): every region pixel's flood height (the floor under it; void floods at
+    // any level) and its lava colour, sorted by flood height, and the hatch. Then a level step only writes the pixels
+    // whose flood height lies between the old level and the new one (it re-rastered the whole map 14 times a move: up to
+    // 9.4 ms a redraw; ENGINE §4.8 wants ≤ 1 ms)
     const hk = (mm.flip ? 1 : 0) + ':' + w + 'x' + h + ':' + (mm.baseKey ?? '');
+    const H = mm.hgt;
     if (C.hk !== hk) {
       C.hk = hk;
+      const px0 = [], fh = [];
       const hx = C.hatch.getContext('2d'), im2 = hx.createImageData(w, h), E = im2.data;
-      for (let py = 0; py < h; py++) { const z = mm._worldZ(py + 0.5); for (let px = 0; px < w; px++) { const x = mm._worldX(px + 0.5); if (!W.inRegion(x, z)) continue; const i = py * w + px, gh = H[i]; if (gh < -50 || gh >= W.high) continue; if ((px + py) % 6 < 2) { E[i * 4] = 255; E[i * 4 + 1] = 60; E[i * 4 + 2] = 40; E[i * 4 + 3] = 255; } } }
+      C.img = C.fill.getContext('2d').createImageData(w, h);
+      const D = C.img.data;
+      for (let py = 0; py < h; py++) {
+        const z = mm._worldZ(py + 0.5);
+        for (let px = 0; px < w; px++) {
+          const x = mm._worldX(px + 0.5);
+          if (!W.inRegion(x, z)) continue;
+          const i = py * w + px, gh = H[i];
+          const n = (Math.sin(x * 1.7 + z * 0.9) + Math.sin(x * 0.6 - z * 1.9)) * 0.25 + 0.5;
+          D[i * 4] = 120 + 70 * n; D[i * 4 + 1] = 18 + 22 * n; D[i * 4 + 2] = 16; D[i * 4 + 3] = 0;
+          px0.push(i); fh.push(gh > -50 ? gh - 0.05 : -Infinity);
+          if (gh >= -50 && gh < W.high && (px + py) % 6 < 2) { E[i * 4] = 255; E[i * 4 + 1] = 60; E[i * 4 + 2] = 40; E[i * 4 + 3] = 255; }
+        }
+      }
       hx.putImageData(im2, 0, 0);
+      const ord = px0.map((_, k) => k).sort((a, b) => fh[a] - fh[b]);
+      C.px = Int32Array.from(ord.map((k) => px0[k])); C.fh = Float64Array.from(ord.map((k) => fh[k]));
+      C.n = 0;   // (pixels lit: the first C.n of the sorted list)
+      if (R.stats) R.stats.mapBuildMs = Math.max(R.stats.mapBuildMs || 0, +(performance.now() - t0).toFixed(2));
     }
+    const t1 = performance.now();
+    // light or clear the slice between the last level and this one (flood height < y: under the lava)
+    const y = st.y, D = C.img.data, fhA = C.fh, P = C.px;
+    let n = 0; while (n < fhA.length && fhA[n] < y) n++;
+    if (n > C.n) for (let k = C.n; k < n; k++) D[P[k] * 4 + 3] = 235;
+    else for (let k = n; k < C.n; k++) D[P[k] * 4 + 3] = 0;
+    C.n = n;
+    C.fill.getContext('2d').putImageData(C.img, 0, 0);
+    if (R.stats) { R.stats.mapMs = Math.max(R.stats.mapMs || 0, +(performance.now() - t1).toFixed(2)); R.stats.mapN = (R.stats.mapN || 0) + 1; }
   }
   c.drawImage(C.fill, 0, 0);
   const hatchOn = (st.warn && st.next.to === 'high') || st.phase === 'rise';

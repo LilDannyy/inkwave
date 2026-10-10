@@ -28,13 +28,13 @@
 //     siren / whistle (src/audio/sfx-lava.js), embers rising vs steam falling (src/fx/lavaFx.js)
 import * as THREE from 'three';
 import { G, emit, on } from '../core/ctx.js';
-import { PLAYER } from '../config.js';
+import { PLAYER, ZONES } from '../config.js';
 import { registerStageMod, registerCause } from './stageMods.js';
 import { NavGraph } from './nav.js';
 import { inMode } from '../world/variants.js';
 import { BoxPaint } from './towerPaint.js';
 import { LAVA, lavaSchedule, lavaAt, lavaY, lavaMax, crossTime, stoneRel, riderTop, expandLava, partPose, inRider, pointInPoly } from './lavaCore.js';
-import { LavaLook, LavaHud, lavaLevelExt, patchStain, LAVA_ICON, drawLavaMap } from '../fx/lavaFx.js';
+import { LavaLook, LavaHud, lavaLevelExt, patchStain, LAVA_ICON, drawLavaMap, proxMix } from '../fx/lavaFx.js';
 import '../audio/sfx-lava.js';
 
 export { LAVA, lavaSchedule, lavaAt, lavaMax, riderTop };
@@ -51,10 +51,27 @@ function heldFromQuery() {
   return v === 'low' || v === 'high' || v === 'rise' || v === 'fall' ? v : null;
 }
 
-// a BoxPaint that only takes ink on the listed faces ('deck', '+x', '-x', '+z', '-z')
+// a BoxPaint that only takes ink on the listed faces ('deck', '+x', '-x', '+z', '-z'); its sides take none below clipB
+// (m above its base: the waterline) and clearBelow burns them off up to a line
 class MaskPaint extends BoxPaint {
-  constructor(frame, o, faces) { super(frame, o); this.mask = this.surf.map((s) => faces.includes(s.id)); }
-  _paint(s, a, b, rr, team, seed) { if (this.mask[this.surf.indexOf(s)]) super._paint(s, a, b, rr, team, seed); }
+  constructor(frame, o, faces) { super(frame, o); this.mask = this.surf.map((s) => faces.includes(s.id)); this.clipB = -Infinity; }
+  _paint(s, a, b, rr, team, seed) {
+    const k = this.surf.indexOf(s);
+    if (!this.mask[k]) return;
+    super._paint(s, a, b, rr, team, seed);
+    s.clr = -Infinity;   // (fresh ink on it: the next clear draws)
+    if (k > 0 && this.clipB > s.b0) this._clearBelow(s, this.clipB);
+  }
+  clearBelow(bY) { this.surf.forEach((s, k) => { if (k > 0 && this.mask[k] && bY > s.b0) this._clearBelow(s, bY); }); }
+  // a side's cells whose centres lie below bY (its b axis runs up from the base) and its canvas under that line
+  _clearBelow(s, bY) {
+    if ((s.clr ?? -Infinity) >= bY) return;   // (already bare up there: no texture upload)
+    s.clr = bY;
+    const rows = Math.min(s.nv, Math.ceil((bY - s.b0) / 0.1 - 0.5));   // (BoxPaint's 0.1 m cells)
+    for (let j = 0; j < rows; j++) for (let i = 0; i < s.nu; i++) s.grid[j * s.nu + i] = 0;
+    const [rx, ry, rw, rh] = s.rect, sy = rh / (s.b1 - s.b0), y = Math.max(ry, ry + rh - (Math.min(bY, s.b1) - s.b0) * sy);
+    this.ctx.clearRect(rx, y, rw, ry + rh - y); this.dirty = true;
+  }
 }
 
 // ================================================================================================== the world
@@ -132,6 +149,41 @@ export class LavaWorld {
       void ex; void ez;
       if (all) { this.drown.push({ b, top }); b.lavaDrown = true; }
     }
+    this.floorY = this.drown.length ? Math.min(...this.drown.map((d) => d.top)) : this.high;   // (the lowest drowning floor)
+    this._buildProx(level);
+  }
+  // how near open lava each texel of the region is, at LOW (G) and at HIGH (B): 1 within 0.25 m of a texel where the
+  // surface shows at that level, 0 from 1.25 m on. The level shader fades the lava's glow with it, so the glow lights the
+  // faces that stand in or over the lava, not the dry 1.2 tier's bollards and houses on the island (which is inside the
+  // region's filled outline) — the review: "dry mid glows red at HIGH". Open = no solid at the surface and no floor at
+  // or above it (sampled on a 0.5 m lattice), then a chamfer distance in texels
+  _buildProx(level) {
+    const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const B = this.box, nx = B.nx, nz = B.nz, M = this.mask, data = this.map.image.data, qb = [], hp = new THREE.Vector3();
+    const solidAt = (x, y, z) => { hp.set(x, y, z); for (const id of level.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = level.blocks[id]; if (b.solid && !b.dynamic && level.pointInBlock(b, hp, 0.001)) return true; } return false; };
+    for (const [ch, y] of [[1, this.low], [2, this.high]]) {
+      const D = new Float32Array(nx * nz).fill(1e9);
+      for (let j = 0; j < nz; j += 2) for (let i = 0; i < nx; i += 2) {
+        if (!M[j * nx + i] && !(i + 1 < nx && M[j * nx + i + 1]) && !(j + 1 < nz && M[(j + 1) * nx + i])) continue;
+        const x = B.x0 + (i + 1) * RES, z = B.z0 + (j + 1) * RES;
+        if (!this.inRegion(x, z) || solidAt(x, y + 0.02, z) || level.groundHeight(x, z, y + 0.05) >= y - LAVA.gone) continue;
+        for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) if (i + di < nx && j + dj < nz) D[(j + dj) * nx + i + di] = 0;
+      }
+      // two-pass chamfer (1, √2) in texels
+      const S2 = Math.SQRT2;
+      for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const k = j * nx + i; let d = D[k]; if (i > 0) d = Math.min(d, D[k - 1] + 1); if (j > 0) { d = Math.min(d, D[k - nx] + 1); if (i > 0) d = Math.min(d, D[k - nx - 1] + S2); if (i + 1 < nx) d = Math.min(d, D[k - nx + 1] + S2); } D[k] = d; }
+      for (let j = nz - 1; j >= 0; j--) for (let i = nx - 1; i >= 0; i--) { const k = j * nx + i; let d = D[k]; if (i + 1 < nx) d = Math.min(d, D[k + 1] + 1); if (j + 1 < nz) { d = Math.min(d, D[k + nx] + 1); if (i + 1 < nx) d = Math.min(d, D[k + nx + 1] + S2); if (i > 0) d = Math.min(d, D[k + nx - 1] + S2); } D[k] = d; }
+      for (let k = 0; k < nx * nz; k++) data[k * 4 + ch] = Math.round(255 * Math.max(0, Math.min(1, 1 - (D[k] * RES - 0.25) / 1.0)));
+    }
+    this.map.needsUpdate = true;
+    this.proxMs = Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0);
+  }
+  // the glow's proximity at (x, z) for the level at height y (tests): the shader's mix of LOW's and HIGH's
+  proxAt(x, z, y) {
+    const B = this.box, i = Math.floor((x - B.x0) / RES), j = Math.floor((z - B.z0) / RES);
+    if (i < 0 || j < 0 || i >= B.nx || j >= B.nz) return 0;
+    const d = this.map.image.data, k = (j * B.nx + i) * 4, w = proxMix(y, this.floorY);
+    return (d[k + 1] * (1 - w) + d[k + 2] * w) / 255;
   }
 
   // ------------------------------------------------------------------------- paint: the lava faces, the clip, the burn
@@ -295,7 +347,9 @@ export class LavaWorld {
       const ri = meta.rider[n.id] ?? -1;
       rider[n.id] = ri; pose[n.id] = meta.pose[n.id] ?? -1; ptop[n.id] = meta.top[n.id] || 0;
       if (ri >= 0) { kind[n.id] = 2; n.wet = 0; }
-      else if (this.inRegion(n.x, n.z) && n.y - LAVA.navLead < H) { kind[n.id] = 1; shutY[n.id] = n.y - LAVA.navLead; }
+      // a floor the lava can reach: feet on it would splat at some level (y < HIGH + kill); navLead only times its window
+      // (a 1.10 m gutter coping in the region stands 0.15 m over the highest kill line: dry floor, never "low ground")
+      else if (this.inRegion(n.x, n.z) && n.y < H + LAVA.kill) { kind[n.id] = 1; shutY[n.id] = n.y - LAVA.navLead; }
     }
     for (const id of this._linkEnds || []) if (nav.nodes[id]) nav.nodes[id].wet = 0;
     const { exit, escD } = this._exits(nav, kind);
@@ -418,7 +472,12 @@ export class StageLava {
     this.st = lavaAt(0, sched);
     this.y = this.st.y;
     this.prev = { phase: this.st.phase, warn: this.st.warn, at: this.st.next?.at ?? null };
-    this.burnY = this.y;
+    // the burn runs on the furthest stage time this screen has reached (tMax), never on the clock itself: a follower's
+    // clock eases back onto the host's (StageClock.tick: up to ~0.05 s a frame when it ran 1.4 s ahead) and snaps back
+    // by more than 1.5 s under load, and a level that went up because the clock went back is no rise — burning there
+    // cleared ink its painter kept (net-lava on a loaded machine: 194 lava cells differed). burnY is L at tMax.
+    this.tMax = this.clock.t;
+    this.burnY = this.yAt(this.tMax);
     this.sweepT = 0; this.botT = 0; this.mapKey = null; this.tickN = -1;
     this.stats = { deaths: [], byTeam: [0, 0], warned: 0, crossings: 0, burned: 0, sweeps: 0, devices: 0, fizzles: 0, events: [], lookout: {} };
     const W2 = W.navMeta;
@@ -433,7 +492,8 @@ export class StageLava {
     this._unsubs = [
       on('lava:warn', (e) => { if (e.to === 'high') this._call('warnRise', e.inS, true); else this._call('warnFall', Math.round(this._stoneDeadlyIn(e)), true); }),
       on('lava:move', (e) => { if (e.dir > 0) this._call('rise'); }),
-      on('lava:rest', (e) => this._call(e.level === 'high' ? 'high' : 'low')),
+      // (Zone Control's last ebb lands on its FINAL 30 banner: the EBB callout waits 3.5 s rather than talk over it)
+      on('lava:rest', (e) => { if (e.level === 'low' && this._finalNear()) this._deferC = this.clock.t + 3.5; else this._call(e.level === 'high' ? 'high' : 'low'); }),
       on('lava:hold', () => this._call('hold')),
       on('splatted', (e) => this._splatted(e)),
     ];
@@ -472,9 +532,13 @@ export class StageLava {
     this._events(st, t);
     this._riders(t, st, false);
     this._floors();
-    this._burn(false);
-    if ((this.sweepT -= dt) <= 0) { this.sweepT = 0.25; if (st.dir > 0 || this._riderChanged) { this.sweepDevices(); this._riderChanged = false; } }
+    this._burn(t, false);
+    // (any move: a rising surface reaches devices, and a falling one carries the Organs' riders under it or into their
+    // sockets)
+    if ((this.sweepT -= dt) <= 0) { this.sweepT = 0.25; if (st.dir !== 0 || this._riderChanged) { this.sweepDevices(); this._riderChanged = false; } }
+    this._calls(t, st);
     if ((this.botT -= dt) <= 0) { this.botT = st.warn || st.dir ? 0.5 : 1.5; this._replanBots(t); }
+    if (!m.attract && (this.lookT = (this.lookT ?? 0) - dt) <= 0) { this.lookT = 0.5; this._lookPlan(t); }
     this._lookout(dt);
     this.W.setY(this.y, st);
     this.W.look?.update(dt, t, st, this);
@@ -489,8 +553,11 @@ export class StageLava {
     if (this.placed) this._riders(t, st, true);
     this._floors();
     if (this.placed) this.sweepDevices();
-    if (why === 'late') this.burnY = this.y;   // (the imported grid already has no ink under the lava)
-    else this._burn(true);
+    // a late joiner: its imported grid already has no ink under the lava. A test's jump starts a new timeline (everything
+    // under the surface is cleared). A follower's snap burns what the surface passed in the time it skipped (forward),
+    // nothing when its clock went back
+    if (why === 'late') { this.tMax = t; this.burnY = this.y; for (const R of this.riders) if (R.sides) R.sideW = this._sideW(R, t); }
+    else this._burn(t, why === 'debug');
     this.W.setY(this.y, st);
     this.W.look?.update(0, t, st, this);
     emit('lava:set', { y: +this.y.toFixed(3), phase: st.phase, why });
@@ -520,7 +587,7 @@ export class StageLava {
       } else {
         emit('lava:rest', { level: st.phase, y: +st.y.toFixed(3) });
         this._log('rest', t, st.phase);
-        if (st.phase === 'low') { au?.play('lava_whistle', { params: { kind: 'clear' } }); this._drain(false); }
+        if (st.phase === 'low') { if (this._finalNear()) this._deferW = t + 3.5; else au?.play('lava_whistle', { params: { kind: 'clear' } }); this._drain(false); }
         else au?.play('lava_lock');
         this._rumble(0.15);
       }
@@ -533,7 +600,29 @@ export class StageLava {
     if (!row || this.m.attract) return;
     const sub = row[1] ? row[1].replace('{n}', n != null ? String(n) : '') : '';
     this.S.callout(row[0], sub, big);
+    // a counting sub-line ("Off the low ground: 10", "The stones sink in 16") keeps counting while it shows (_calls)
+    const el = row[1] && row[1].includes('{n}') ? G.hud?.callouts?.lastElementChild?.querySelector?.('.iw-call__sub') : null;
+    this._cd = el ? { el, key, tpl: row[1], txt: sub } : null;
   }
+  // per frame: the counting callout's number; the EBB callout and all-clear held back off a mode's final banner
+  _calls(t, st) {
+    const C = this._cd;
+    if (C) {
+      if (!C.el.isConnected) this._cd = null;
+      else {
+        const nx = st.next;
+        let n = null;
+        if (C.key === 'warnRise' && st.warn && nx && nx.to === 'high') n = Math.max(1, Math.ceil(nx.inS));
+        else if (C.key === 'warnFall' && nx && nx.to === 'low') n = Math.max(0, Math.round(this._stoneDeadlyIn({ at: nx.at, dur: nx.dur, inS: nx.inS })));
+        const txt = n === null ? C.txt : C.tpl.replace('{n}', String(n));
+        if (txt !== C.txt) { C.txt = txt; C.el.textContent = txt; }
+      }
+    }
+    if (this._deferC != null && t >= this._deferC) { this._deferC = null; this._call('low'); }
+    if (this._deferW != null && t >= this._deferW) { this._deferW = null; if (!this.m.attract) G.audio?.play('lava_whistle', { params: { kind: 'clear' } }); }
+  }
+  // Zone Control's FINAL 30 (centre only) lands within 2.5 s of now
+  _finalNear() { return !!this.m.zones && Number.isFinite(this.m.duration) && this.m.time > 0 && Math.abs(this.m.time - (ZONES.finalCentre ?? 30)) < 2.5; }
   // s from a fall warning to the moment the stones turn deadly (the ledges dry)
   _stoneDeadlyIn(e) {
     const S = this.sched, k = this.W.riders.find((r) => r.sink)?.sink, at = k ? k.at : this.W.low + 0.45;
@@ -545,6 +634,15 @@ export class StageLava {
   placeRiders() {
     if (this.placed || !G.level) return;
     this.placed = true;
+    // a socketed float's rim (Organs A and B stand in a notch in the island): the static floor round its footprint, read
+    // before the riders are in the level; a device riding its side below that is inside the island (sweepDevices)
+    for (const R of this.riders) {
+      const r = R.r;
+      if (r.sink || r.inLake) continue;
+      let rim = -Infinity;
+      for (let k = 0; k < 12; k++) { const a = (k * Math.PI) / 6, d = (r.shape === 'hex' ? r.r : Math.hypot(r.parts[0].hx, r.parts[0].hz)) + 0.45; rim = Math.max(rim, G.level.groundHeight(r.x + Math.cos(a) * d, r.z + Math.sin(a) * d, r.top1 + 0.5)); }
+      R.rim = rim > -Infinity && rim > r.top0 - r.depth ? rim : null;
+    }
     for (const R of this.riders) {
       R.blocks = R.r.parts.map((p, k) => {
         const b = G.level.addDynamic({ tag: 'lava:' + R.r.id + ':' + k, perch: R.r.kind === 'stone' && p.body, roof: !p.body && p.roof !== false });
@@ -569,11 +667,17 @@ export class StageLava {
         this._riderChanged = true;
       }
       R.top = top; R.solid = solid; R.parked = parked;
+      // a stone's boulder (Race 3's cover) heaves up out of the lava as its stone turns solid and sinks back as it stops
+      // being solid, over its first / last 0.12 m of relative travel (~0.3 s): never a rock in the lava you can't stand
+      // on (it stood 0.55 m proud of the surface, without a collider, for 1.6 s of every rise and fall). The collider
+      // and the mesh (lavaFx: scaled from the stone's top) follow the same factor
+      R.bk = r.sink ? (solid ? Math.min(1, Math.max(0, (R.rel - kill) / BOULDER_GROW)) : 0) : 1;
       if (!R.blocks.length) continue;
       r.parts.forEach((p, k) => {
         const b = R.blocks[k];
-        if (parked) { G.level.moveDynamic(b, _v.set(r.x, -50, r.z), _v2.set(0.1, 0.1, 0.1), 0); b.solid = false; return; }
+        if (parked || (!p.body && R.bk <= 0.001)) { G.level.moveDynamic(b, _v.set(r.x, -50, r.z), _v2.set(0.1, 0.1, 0.1), 0); b.solid = false; return; }
         const q = partPose(r, p, top, _pp);
+        if (!p.body && R.bk < 1) { q.hy *= R.bk; q.cy = top + p.y0 + q.hy; }
         G.level.moveDynamic(b, _v.set(q.cx, q.cy, q.cz), _v2.set(q.hx, q.hy, q.hz), q.yaw);
         b.solid = solid;
         if (snap) b.dp?.set(0, 0, 0);
@@ -602,23 +706,45 @@ export class StageLava {
     const y = this.y;
     for (const d of this.W.drown) { const gone = y > d.top + LAVA.gone; if (d.b.absent !== gone) { d.b.solid = !gone; d.b.absent = gone; } }
   }
-  _burn(force) {
+  // the burn, on the furthest stage time reached (tMax: see the constructor). A step from tMax to a later t burns the
+  // cells whose centres lie in (L(tMax), the highest L over the step]: everything below L(tMax) is already bare (nothing
+  // inks under it: inkClip reads tMax too). A clock that went back burns nothing. force (a test's jump): a new timeline,
+  // every lava cell under the surface cleared
+  _burn(t, force) {
     const W = this.W, P = W.paint, C = W.cells;
-    if (!P || !C) return;
-    const y = this.y;
-    if (y < this.burnY - 0.02) { this.burnY = y; return; }   // (a fall: nothing burns; the pointer follows it down)
-    if (y <= this.burnY + 0.004 && !force) return;
-    // cells whose centres the surface passed since the last burn: the sorted list's slice (burnY, y]
-    const lo = lowerBound(C.y, this.burnY - (force ? 1 : 0)), hi = lowerBound(C.y, y);
-    if (hi > lo) {
-      const sample = [];
-      const n = P.clearCells(C.ids.subarray(lo, hi), sample, 24);
-      this.stats.burned += n;
-      if (n) this.W.look?.steam(sample, P);
-      if (n && G.time - (this._sizT || -9) > 0.12) { this._sizT = G.time; G.audio?.play('lava_sizzle', { volume: 0.5 }); }
+    const t0 = this.tMax;
+    if (!force && !(t > t0)) return;
+    const top = force ? (t > t0 ? Math.max(this.maxOver(t0, t), this.y) : this.y) : this.maxOver(t0, t);
+    this.tMax = force ? t : Math.max(t0, t);
+    const now = this.yAt(this.tMax);
+    this._burnSides(t0, force);
+    if (!force && top <= this.burnY + 0.004) { if (now < this.burnY) this.burnY = now; return; }   // (a fall: the pointer follows the surface down)
+    if (P && C) {
+      // cells whose centres the surface passed: the sorted list's slice (burnY, top]
+      const lo = force ? 0 : lowerBound(C.y, this.burnY), hi = lowerBound(C.y, top);
+      if (hi > lo) {
+        const sample = [];
+        const n = P.clearCells(C.ids.subarray(lo, hi), sample, 24);
+        this.stats.burned += n;
+        if (n) this.W.look?.steam(sample, P);
+        if (n && G.time - (this._sizT || -9) > 0.12) { this._sizT = G.time; G.audio?.play('lava_sizzle', { volume: 0.5 }); }
+      }
+      W.burnAtlas(top);
     }
-    W.burnAtlas(y);
-    this.burnY = y;
+    this.burnY = now;
+  }
+  // the lookout's inkable sides (ink: 'all'): the waterline on them, in the rider's own frame (m above its base), at
+  // stage time t. A fall carries the column down 0.95 m against the lava, so the line climbs its sides (and drops on a
+  // rise): side ink the surface passes is burned like the level's, and no splat inks under it (onSplat)
+  _sideW(R, t) { const st = lavaAt(t, this.sched, this.otAt, this.held), top = riderTop(R.r, st.y, this.sched); return st.y - (top - R.r.depth); }
+  _sideWMax(R, t0, t1) { let w = this._sideW(R, t1); if (t1 > t0) { const n = Math.min(240, Math.ceil((t1 - t0) / 0.25)); for (let i = 0; i < n; i++) w = Math.max(w, this._sideW(R, t0 + ((t1 - t0) * i) / n)); } return w; }
+  _burnSides(t0, force) {
+    for (const R of this.riders) {
+      if (!R.sides) continue;
+      const w = force ? this._sideW(R, this.tMax) : this._sideWMax(R, t0, this.tMax), was = R.sideW ?? -Infinity;
+      if (force || w > was + 0.004) { for (const s of R.sides) s?.clearBelow(w); R.sideW = this._sideW(R, this.tMax); }
+      else { const now = this._sideW(R, this.tMax); if (now < was) R.sideW = now; }
+    }
   }
   // the owner's sweep: every device of this screen's that the lava has reached (or a sinking stone took) is destroyed
   // with a sizzle, no blast, no ink; its owner's end record ends the ghosts everywhere. (Module-private until the subs
@@ -629,10 +755,13 @@ export class StageLava {
     const items = G.subs?.items;
     if (items) for (const it of items) {
       if (it.ghost || !DEVICE_STATES.has(it.state) || !it.pos) continue;
-      if (!this.under(it.pos, -0.05)) continue;
+      // under the lava; or riding a socketed Organ (A, B: in the island's notch) down past its socket's rim — a device
+      // stuck to its side would sink into the 0.15 m seam inside the island and live on there
+      const Rr = it.ride?.lavaRider, how = this.under(it.pos, -0.05) ? 'lava' : Rr && Rr.rim != null && it.pos.y < Rr.rim - 0.03 ? 'crush' : null;
+      if (!how) continue;
       this.fizzle(it.pos, 'device');
       G.subs._destroy(it);
-      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how: 'lava' });
+      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how });
       n++;
     }
     this.stats.devices += n;
@@ -664,7 +793,8 @@ export class StageLava {
   noPlace(p, r = 0) { if (!this.W.inRegion(p.x, p.z)) return false; const T = this.sched.T; return p.y < this.maxOver(this.clock.t, this.clock.t + T.warn + T.rise + 1) + LAVA.kill + 0.05; }
   danger(pos, pad = 0.5) { return this.covers(pos.x, pos.z, pos.y - pad * 0.2, 10); }
   // the height below which ink may not land in the region, for a splat painted at stage time et
-  inkClip(et) { const now = this.clock.t; if (et === undefined || et === null) return this.y; return et < now ? this.maxOver(et, now) : this.yAt(et); }
+  // (now: the furthest stage time reached — the burn's tMax — so a clock easing back never lets ink under the line)
+  inkClip(et) { const now = Math.max(this.clock.t, this.tMax); if (et === undefined || et === null) et = this.clock.t; return et < now ? this.maxOver(et, now) : this.yAt(et); }
   splatTime(c, radius) {
     const B = this.W.box, r3 = radius * 3;
     if (c.y - r3 > this.W.high + 0.1) return undefined;
@@ -677,7 +807,11 @@ export class StageLava {
       if (!R.deck || !R.blocks.length) continue;
       if (Math.abs(c.x - R.r.x) > R.r.r + r + 3 || Math.abs(c.z - R.r.z) > R.r.r + r + 3) continue;
       R.deck.splat(c, r, team, { seed: opts?.seed });
-      if (R.sides) for (const s of R.sides) s?.splat(c, r, team, { seed: opts?.seed });
+      if (R.sides) {
+        // (no ink under the waterline on its sides: the highest the line stood from the painter's time to now, as inkClip)
+        const now = Math.max(this.clock.t, this.tMax), et = opts?.et ?? this.clock.t, clip = this._sideWMax(R, Math.min(et, now), now);
+        for (const s of R.sides) if (s) { s.clipB = clip; s.splat(c, r, team, { seed: opts?.seed }); s.clipB = -Infinity; }
+      }
     }
     if (this.under(c, -0.2) && G.time - (this._splT || -9) > 0.2) { this._splT = G.time; this.fizzle(c, 'ink'); }
   }
@@ -772,14 +906,123 @@ export class StageLava {
     if (this.stats.deaths.length < 200) this.stats.deaths.push({ t: +this.clock.t.toFixed(1), team: v.team, bot: !!v.isBot, x: +v.pos.x.toFixed(1), z: +v.pos.z.toFixed(1), y: +v.pos.y.toFixed(2), phase: st.phase, warn: st.warn, by: !!e.attacker });
   }
   _lookout(dt) {
-    // (stats for the bot targets: seconds a long-range bot stands on an Organ lookout's HIGH pose)
+    // (stats for the bot targets: seconds anyone stands on an Organ at HIGH, per column; and per team on a lookout,
+    // with the long-range kits' share)
     if (!this.placed || this.st.phase !== 'high') return;
+    const S = this.stats;
+    S.lookTeam ||= [0, 0]; S.lookLong ||= [0, 0];
     for (const a of this.m.actors) {
       if (!a.alive || !a.grounded || a.ground?.block === undefined) continue;
       const b = G.level.blocks[a.ground.block];
       if (!b || !b.lavaRider || b.lavaRider.r.kind === 'stone') continue;
       const k = b.lavaRider.r.base;
-      this.stats.lookout[k] = (this.stats.lookout[k] || 0) + dt;
+      S.lookout[k] = (S.lookout[k] || 0) + dt;
+      if (b.lavaRider.r.look?.role === 'lookout' && (a.team === 0 || a.team === 1)) { S.lookTeam[a.team] += dt; if (LOOKOUT_KINDS.has(a.weapon?.kind)) S.lookLong[a.team] += dt; }
+    }
+  }
+
+  // ----------------------------------------------------------------------- the lookout claim (bots)
+  // The user asked for platforms "used as lookouts", and eight + three matches showed goal weights and a chance climb
+  // barely sent a bot up. So at HIGH the lookout is a planned objective: each team's best long-range bot (charger 3,
+  // splatling / spinner / bow 2.5, else a kit with ≥ 10 m of range by its reach) claims its OWN side's lookout from the
+  // moment the column starts up (it walks to the foot of the climb and goes up as the HIGH pose opens) and holds the top
+  // until the fall warning, fighting and painting from there. On this screen's bots only (the host's in a room); a
+  // claimant that dies is replaced while ≥ 8 s of the window are left. Runs every 0.5 s.
+  _lookPlan(t) {
+    const M = this.W.navMeta, nav = G.nav;
+    if (!M || !nav || nav !== this.W.nav || this.m.attract || !this.placed) return;
+    const P = this._lp || (this._lp = this._lookSetup());
+    if (!P) return;
+    const st = this.st, nx = st.next;
+    const active = st.phase === 'rise' || (st.phase === 'high' && !(st.warn && nx && nx.to === 'low'));
+    const left = st.phase === 'high' && nx && nx.to === 'low' ? nx.at - this.sched.T.warn - t : st.phase === 'rise' ? 20 : Infinity;
+    for (let team = 0; team < 2; team++) {
+      const T = P[team];
+      if (!T) continue;
+      const cur = T.claim;
+      if (!active) { if (cur) this._lookRelease(cur); T.claim = null; continue; }
+      if (cur && cur.a.alive && cur._look === T.L && cur.a.bot === cur) continue;
+      if (cur) this._lookRelease(cur);
+      T.claim = null;
+      if (left < 8) continue;
+      let best = null, bs = 0;
+      for (const a of this.m.actors) {
+        const b = a.bot;
+        if (!b || a.remote || !a.alive || a.team !== team || b._lavaEsc || b.tRole === 'ride') continue;
+        const k = a.weapon?.kind, rg = typeof b._range === 'function' ? b._range() : 0;
+        let s = LOOKOUT_KINDS.has(k) ? (k === 'charger' ? 3 : 2.5) : rg >= 10 ? 1 + rg / 40 : 0;
+        if (!s) continue;
+        s -= Math.hypot(a.pos.x - T.x, a.pos.z - T.z) / 60;
+        if (s > bs) { bs = s; best = b; }
+      }
+      if (best) { T.L = { ri: T.ri, ids: T.ids, foot: T.foot, path: null, goal: -1, pi: 0, reT: 0, held: 0 }; best._look = T.L; T.claim = best; this.stats.lookClaims = (this.stats.lookClaims || 0) + 1; }
+    }
+  }
+  _lookSetup() {
+    const M = this.W.navMeta, nav = G.nav, pads = G.level?.spawnPads;
+    if (!M || !pads) return null;
+    const looks = this.W.riders.map((r, i) => [r, i]).filter(([r]) => !r.sink && r.look?.role === 'lookout');
+    if (!looks.length) return null;
+    const out = [null, null];
+    for (let team = 0; team < 2; team++) {
+      const pad = pads[team];
+      if (!pad) continue;
+      looks.sort((p, q) => Math.hypot(p[0].x - pad.x, p[0].z - pad.z) - Math.hypot(q[0].x - pad.x, q[0].z - pad.z));
+      const [r, ri] = looks[0];
+      const ids = this._lookNodes().filter((id) => M.rider[id] === ri);
+      // the foot of its climb: the static end of the step link onto its cluster's first column
+      let foot = -1;
+      for (const s of this.W.steps) { const e = s.a.pt ? s.a : s.b.pt ? s.b : null, o = e === s.a ? s.b : s.a; if (!e || o.rider == null || o.rider < 0) continue; const q = this.W.riders[o.rider]; if (q && !q.sink && Math.hypot(q.x - r.x, q.z - r.z) < 12) { foot = nav.nearest({ x: e.pt[0], y: 1.2, z: e.pt[1] }, 1.2); break; } }
+      if (ids.length) out[team] = { ri, ids, foot, x: r.x, z: r.z, claim: null, L: null };
+    }
+    return out;
+  }
+  _lookRelease(b) {
+    const L = b._look;
+    b._look = null;
+    if (L && b.path && (b.path === L.path || L.on)) { b.path = null; b.goalTimer = 0; b.repath = 0; }
+  }
+  _onLookout(a, ri) { if (!a.grounded || a.ground?.block === undefined) return false; const b = G.level.blocks[a.ground.block]; return !!b && b.lavaRider === this.riders[ri]; }
+  // the claimant's frame (from botAct): up there, it holds (stands to paint, its duel's footwork kept on the deck); on
+  // the way, its route is kept against the brain's own goal picks and walked even in a fight (the aim and the trigger
+  // stay the brain's); at the foot while the column is still rising it waits
+  _lookAct(b, dt, it, move) {
+    const a = b.a, L = b._look, nav = G.nav, t = this.clock.t;
+    if (b.mode === 'refill' || b.mode === 'retreat') { L.path = null; L.on = false; return; }   // (its tank, its life first)
+    b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
+    if (this._onLookout(a, L.ri)) {
+      L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt;
+      const here = nav.nearest(a.pos, 1.2, true);
+      if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; }
+      if (b.mode !== 'fight') move.set(0, 0, 0);
+      else if (!inRider(this.W.riders[L.ri], a.pos.x + move.x * 0.7, a.pos.z + move.z * 0.7, -0.75)) move.set(0, 0, 0);
+      it.squid = false;
+      return;
+    }
+    L.on = false;
+    if (L.path && b.path !== L.path && b.path !== null) { b.path = L.path; b.pi = L.pi; b.goal = L.goal; }   // (the brain replaced it)
+    const atEnd = !L.path || !b.path || b.pi >= b.path.length;
+    if ((atEnd || L.goal === L.foot) && (L.reT -= dt) <= 0) {
+      L.reT = 0.8;
+      // the nearest lookout node open by the time it gets there (A* reads the windows at arrival), else the climb's foot
+      let best = -1, bd = Infinity;
+      for (const id of L.ids) { const n = nav.nodes[id], d = Math.hypot(n.x - a.pos.x, n.z - a.pos.z); if (d < bd) { bd = d; best = id; } }
+      let ok = false;
+      if (best >= 0 && this.shut(best, t + bd * LAVA.sPerM) === 0) { const n = nav.nodes[best]; ok = b._pathTo(_v.set(n.x, n.y, n.z), 0.6) && L.ids.includes(b.goal); }
+      if (!ok && L.foot >= 0 && L.goal !== L.foot) { const n = nav.nodes[L.foot]; ok = b._pathTo(_v.set(n.x, n.y, n.z), 0.4); }
+      if (ok) { L.path = b.path; L.goal = b.goal; L.pi = b.pi; }
+      else if (L.goal === L.foot && L.path) { b.path = L.path; b.pi = L.pi; b.goal = L.goal; }
+    }
+    if (L.path && b.path === L.path && b.pi < b.path.length) {
+      const mv = b._steer(dt);
+      if (mv !== move) move.copy(mv);
+      if (!b.path) L.path = null;   // (the brain's slip rule dropped it: plan again)
+      L.pi = b.pi;
+    } else if (L.goal === L.foot && L.foot >= 0) {
+      // at the foot, the column still on its way up: wait there (a one-node route, so the brain doesn't pick a paint goal
+      // every frame meanwhile)
+      b.path = [L.foot]; b.pi = 0; b.goal = L.foot;
+      if (b.mode !== 'fight') move.set(0, 0, 0);
     }
   }
 
@@ -892,17 +1135,8 @@ export class StageLava {
       } else if (b._lavaEsc && (k === 0 || !need)) b._lavaEsc = false;
       if (b._lavaEsc) { b.repath = Math.max(b.repath || 0, 0.6); b.goalTimer = Math.max(b.goalTimer || 0, 0.6); }
     }
-    // the Organ lookouts: a long-range bot painting (no fight on) near a cluster while it stands at HIGH climbs to the
-    // lookout's top over the step links (its normal paint and fight logic runs from up there); once in a while
-    if (!b._lavaEsc && (b._lookT = (b._lookT || 0) - dt) <= 0) {
-      b._lookT = 2 + Math.random() * 2;
-      const kind = a.weapon?.kind, t = this.clock.t;
-      if (LOOKOUT_KINDS.has(kind) && b.mode === 'paint' && !vis && this.st.phase === 'high' && t - (b._lookAt ?? -99) > 25) {
-        let best = -1, bd = 26;
-        for (const id of this._lookNodes()) { const n = nav.nodes[id], d = Math.hypot(n.x - a.pos.x, n.z - a.pos.z); if (d < bd && this.shut(id, t + 8) === 0) { bd = d; best = id; } }
-        if (best >= 0) { const n = nav.nodes[best]; if (b._pathTo(_v.set(n.x, n.y, n.z), 0.6)) { b._lookAt = t; b.goalTimer = 9; this.stats.lookTrips = (this.stats.lookTrips || 0) + 1; } }
-      }
-    }
+    // the Organ lookouts: each team's claimant (_lookPlan) goes up its own lookout and holds it until the fall warning
+    if (!b._lavaEsc && b._look) this._lookAct(b, dt, it, move, vis);
     if (b._lavaEsc) {
       // up the hop out (a 1.2 m step onto the head, the causeway, the island): straight at it, asking for the jump (the
       // brain presses it, on its own cool-down). The brain's steering drops a route whose next node stands that far
@@ -1006,6 +1240,7 @@ export class StageLava {
 }
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
+const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)
 const DEVICE_STATES = new Set(['spray', 'beacon', 'curtain', 'mine', 'stuck', 'run', 'prime']);
 
