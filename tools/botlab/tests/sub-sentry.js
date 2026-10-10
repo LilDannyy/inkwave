@@ -668,8 +668,11 @@
       put(mate, V(0, 0, -8), 0);
       const b = mate.bot; let went = false;
       for (let i = 0; i < 400 && !went; i++) went = K.bot.fight(b, 9);
-      const bcd = b.bombCd;
-      R(`a fighting bot sets one down (bot.fight: a foe 6–14 m off, not hit for 1 s, 2.5 % a frame; then bombCd ${r2(bcd)} s, 10–14)`, went && bcd >= 10 && bcd <= 14, { went, bombCd: bcd });
+      // ([b5-int3] the decision gives 1.5 s — a decision lost before the release costs only that — and the set-down 10–14)
+      const bcd0 = b.bombCd;
+      G.subs.use(mate, SUBS.sentry);
+      const bcd = b.bombCd, down = K.items.some((x) => x.owner === mate && x.state !== 'dead');
+      R(`a fighting bot sets one down (bot.fight: a foe 6–14 m off, not hit for 1 s, 2.5 % a frame; bombCd ${r2(bcd0)} s at the decision, then ${r2(bcd)} s, 10–14, once it is down)`, went && bcd0 === 1.5 && down && bcd >= 10 && bcd <= 14, { went, bombCd0: bcd0, down, bombCd: bcd });
     }
 
     // ============================================================================================ HUD + guide

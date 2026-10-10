@@ -331,7 +331,7 @@ function use(subs, a, sub) {
   // one each: the older one folds up and pops harmlessly
   for (const o of items) if (o.owner === a && !o.ghost && live(o)) end(o, 'replaced', null);
   const yaw = aimOf(a), p = S.point, n = S.normal;
-  if (a.bot) a.bot._sentryAim = null;
+  if (a.bot) { a.bot._sentryAim = null; if (a.specialActive?.kind !== 'barrage') a.bot.bombCd = 10 + Math.random() * 4; }   // ([b5-int3] the bots' long cooldown from here)
   const it = spawn(a, sub, p, yaw, false, netId(a), S.block);
   netRec(a, KIND, [0, it.gid, r2(p.x), r2(p.y), r2(p.z), r2(n.x), r2(n.y), r2(n.z), r2(yaw)]);
   SENTRY_STATS.uses++;
@@ -935,7 +935,9 @@ function botGo(b, yaws = null) {
     if (findSpot(a, a.sub).ok) { ok = true; break; }
   }
   if (!ok) { b._sentryAim = null; return false; }
-  b.bombCd = 10 + Math.random() * 4;
+  // ([b5-int3] the long cooldown starts when it is set down (use): a decision lost before the release — the press cancelled,
+  // or the spot gone by then on a moving deck — costs 1.5 s, not 10–14: Tower Command riders lost a third to half of theirs)
+  b.bombCd = 1.5;
   SENTRY_STATS.botUses++;
   return true;
 }
