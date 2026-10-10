@@ -933,7 +933,9 @@ export class BotBrain {
         if (enemyVisible) this._shieldFight(t, dist, move, it, dt); else this.blockT = 0;
         // kit weapons with their own fight tactics (bot.tactics, e.g. the Cutlass: flank, pre-charge, swim in, strafe):
         // every fight frame, aimed or not, after the defaults above — may override move, fire, squid and jump
-        if (BK?.tactics) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
+        // ([b5-int3] not while a held sub cooks — a Glide Bomb: the plant above holds; a melee kit's tactics would walk, swim or
+        // leap it in, so the cook went off point-blank or fizzled — the Cutlass, the Mitts)
+        if (BK?.tactics && !(a.weaponRunner.mainLocked || a.weaponRunner.glide)) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
         // out of sight: now and then a sub lobbed where it went (once per loss; turn to it, throw)
         if (!enemyVisible) { const mb = this._memBombAim(dt); if (mb) { wantYaw = mb.yaw; wantPitch = mb.pitch; } }
         // Tower Command: lob a bomb onto their riders (turn to the platform, throw, back to the duel)
