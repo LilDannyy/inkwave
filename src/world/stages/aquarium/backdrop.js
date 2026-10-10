@@ -12,7 +12,7 @@
 // on its crest at x ±4.5, centre 10.8 m, Ø 2.4 brass, double-faced): a needle between ▲ UP and ▼ DOWN and a red 10 s
 // countdown, driven by the pipe engine's tide (G.match.pipes.flow(), a pure function of the stage clock).
 import { G } from '../../../core/ctx.js';
-import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildSwimmers, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill } from './looks.js';
+import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildSwimmers, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill, bubbleQuads, BUBBLE_VS_PARS, BUBBLE_VS_PROJECT, BUBBLE_FS } from './looks.js';
 import { buildFar } from './far.js';
 
 const C30 = Math.cos(Math.PI / 6);
@@ -169,7 +169,10 @@ function frondGeo(T, h, rnd) {
     const c = Math.cos(a), sn = Math.sin(a), L = 0.2 * (0.8 + 0.4 * rnd()), up = 0.3, w = 0.12;
     const ox = c * L, oz = sn * L, px = -sn * w, pz = c * w;
     quad([px, y, pz], [-px, y, -pz], [ox - px * 0.6, y + up, oz - pz * 0.6], [ox + px * 0.6, y + up, oz + pz * 0.6], [-sn, 0.3, c]);
-    quad([ox + px * 0.6, y + up, oz + pz * 0.6], [ox - px * 0.6, y + up, oz - pz * 0.6], [ox * 1.05, y + up + 0.28, oz * 1.05], [ox * 1.05, y + up + 0.28, oz * 1.05], [-sn, 0.3, c]);
+    // a rounded tip (art round 1: the fronds were spiky arrowheads): a fan round its middle, shoulder → shoulder
+    const tip = [[0.6, 0], [0.55, 0.11], [0.36, 0.2], [0, 0.25], [-0.36, 0.2], [-0.55, 0.11], [-0.6, 0]].map(([k, h]) => [ox * (1 + 0.2 * h) + px * k, y + up + h, oz * (1 + 0.2 * h) + pz * k]);
+    const mid = [ox * 1.02, y + up + 0.1, oz * 1.02];
+    for (let t = 0; t < tip.length - 1; t++) { for (const v of [mid, tip[t], tip[t + 1]]) { P.push(...v); N.push(-sn, 0.3, c); } }
   }
   const g = new T.BufferGeometry();
   g.setAttribute('position', new T.BufferAttribute(new Float32Array(P), 3)); g.setAttribute('normal', new T.BufferAttribute(new Float32Array(N), 3));
@@ -215,25 +218,22 @@ function tideDrums(T, kelp, bubbles, uNight = { value: 0 }) {
   };
   km.customProgramCacheKey = () => 'aq-kelp-tide';
   const kmesh = new T.Mesh(kg, km); kmesh.name = 'aq-kelp';
-  // the bubbles: one small octahedron each, carried round the drum's height by uPhase (rising when it grows)
-  const bg = [], bA = [];
-  const bP = [];   // (an octahedron is already non-indexed: no toNonIndexed, which warns)
-  for (const [x, z, r, seed, sp, cur] of bubbles) { const g = new T.OctahedronGeometry(r, 0); g.translate(x, 0, z); bg.push(g); for (let i = 0; i < g.attributes.position.count; i++) { bA.push(seed, sp, cur); bP.push(x, z); } }
-  let m = 0; for (const g of bg) m += g.attributes.position.count;
-  const bp = new Float32Array(m * 3); o = 0; for (const g of bg) { bp.set(g.attributes.position.array, o * 3); o += g.attributes.position.count; }
-  const bgeo = new T.BufferGeometry(); bgeo.setAttribute('position', new T.BufferAttribute(bp, 3)); bgeo.setAttribute('aB', new T.BufferAttribute(new Float32Array(bA), 3)); bgeo.setAttribute('aP', new T.BufferAttribute(new Float32Array(bP), 2));
+  // the bubbles: round camera-facing sprites (looks.js bubbleQuads), carried round the drum's height by uPhase (rising when
+  // it grows); a range of sizes, a little transparent (art round 1: they were white diamond confetti)
+  const bgeo = bubbleQuads(T, bubbles.map(([x, z, r, seed, sp, cur]) => ({ x, z, r: r * 0.85, a: [[seed, sp, cur]] })), [['aB', 3]]);
   bgeo.boundingSphere = new T.Sphere(new T.Vector3(0, 5, 0), 32);
-  const bm = new T.MeshBasicMaterial({ color: '#eefcff', transparent: true, opacity: 0.7, depthWrite: false });
+  const bm = new T.MeshBasicMaterial({ color: '#e6f8fc', transparent: true, opacity: 0.85, depthWrite: false });
+  const bfs = BUBBLE_FS();
   bm.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
-    sh.vertexShader = 'attribute vec3 aB; attribute vec2 aP; uniform float uTime; uniform float uPhase; uniform float uBurst;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+    sh.vertexShader = 'attribute vec3 aB; uniform float uTime; uniform float uPhase; uniform float uBurst;\n' + BUBBLE_VS_PARS + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
   // (the curtain's bubbles exist only in the burst; every bubble swells in it)
-  float bs = (aB.z > 0.5 ? uBurst : 1.0) * (1.0 + 0.6 * uBurst);
-  transformed = vec3(aP.x + (transformed.x - aP.x) * bs, transformed.y * bs, aP.y + (transformed.z - aP.y) * bs);
+  float bubScale = (aB.z > 0.5 ? uBurst : 1.0) * (1.0 + 0.6 * uBurst);
   transformed.y += 0.6 + mod(aB.x * 8.8 + uPhase * aB.y, 8.8);
-  transformed.x += 0.07 * sin(uTime * 3.1 + aB.x * 41.0); transformed.z += 0.07 * cos(uTime * 2.7 + aB.x * 37.0);`);
+  transformed.x += 0.07 * sin(uTime * 3.1 + aB.x * 41.0); transformed.z += 0.07 * cos(uTime * 2.7 + aB.x * 37.0);`).replace('#include <project_vertex>', BUBBLE_VS_PROJECT);
+    sh.fragmentShader = bfs.pars + sh.fragmentShader.replace('#include <color_fragment>', bfs.body);
   };
-  bm.customProgramCacheKey = () => 'aq-bubbles-tide';
+  bm.customProgramCacheKey = () => 'aq-bubbles-tide2';
   const bmesh = new T.Mesh(bgeo, bm); bmesh.name = 'aq-bubbles'; bmesh.renderOrder = 1; bmesh.frustumCulled = false;
   let stream = 1, last = performance.now() / 1000, dirWas = null, burst = 0;
   const animate = (t) => {

@@ -14,6 +14,7 @@ const DEG = Math.PI / 180, PI = Math.PI;
 const C30 = Math.cos(30 * DEG);
 const W = (s, w) => [0.5 * s + C30 * w, -32.5 - C30 * s + 0.5 * w];
 const pol = (a, r) => [r * Math.cos(a * DEG), r * Math.sin(a * DEG)];
+const at0 = ([x, z]) => [x, 0, z];
 
 export function register(D, H) {
   const KIT = makeKit(D, H);
@@ -110,4 +111,10 @@ export const PLACEMENTS = [
   ...tagged('topiary').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 1.0, h: 1.2, plates: [PI * 0.83], label: 'FISH TOPIARY' })),
   ...tagged('ticket-machines').map((d) => ({ type: 'aquarium_ticketcanopy', ...atBox(d) })),
   ...tagged('icecream-cart').map((d) => ({ type: 'aquarium_cartdress', ...atBox(d) })),
+  // ---- the wing's small things, out of the lanes (art round 1: "none of §5.2's queue stanchions, stacked luggage, …")
+  { type: 'aquarium_aboard', pos: [10.65, 0, -47.0], rotY: PI * 0.85, text: 'FLOOR DRY', sub: 'EVERYTHING IS' },
+  { type: 'aquarium_aboard', pos: [-9.4, 0, -30.4], rotY: PI * 0.92, text: 'FEEDINGS', sub: '11:00 · 15:00' },
+  { type: 'aquarium_bench', pos: [3.35, 0, -46.32], rotY: PI, len: 1.8 },
+  { type: 'aquarium_stanchions', pos: at0(W(25.5, -7.85)), rotY: -30 * DEG + PI / 2, len: 2.7, n: 4 },
+  { type: 'aquarium_luggage', pos: at0(W(28.5, 0.35)), rotY: 0.4 },
 ];

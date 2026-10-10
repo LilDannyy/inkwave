@@ -582,6 +582,10 @@ export function registerArch(D, H, KIT, G) {
       for (const z of [-46.25, -38.75]) pbox(B, 'metal', K.brass, 7.85, 0.26, 0.1, 6.35, 6.7, z);
       for (const x of [2.45, 10.25]) pbox(B, 'metal', K.brass, 0.1, 0.26, 7.6, x, 6.7, -42.5);
       for (let x = 3.4; x < 10.0; x += 0.95) pbox(B, NS('metal'), K.brassDk, 0.05, 0.04, 7.4, x, 6.82, -42.5);
+      // the canopy lit from below (its glazing glows warm at dusk over the hall: DESIGN.md §5.7; the floor's pool is
+      // floorart.js's), pendant lamps under its two long frames
+      pbox(B, 'glow', '#fff0d8', 7.5, 0.02, 7.2, 6.35, 6.56, -42.5, { glow: 0.55 });
+      for (const z of [-45.6, -39.4]) for (const x of [4.2, 6.35, 8.5]) { rod(B, 'metal', K.brass, [x, 6.55, z], [x, 6.15, z], 0.012); globe(B, x, 6.0, z, 0.13, { glow: 1.3 }); }
       // TICKET HALL on both fascias (the station clock stands on the booth: on the canopy it sat in the spawn's view of the
       // South Gate's shark window — LEAD-NOTES 2026-10-09 item 2)
       // (the pad side's name hangs on a board under the canopy's edge, not on its fascia: at 6.9 m it lined up with SOUTH

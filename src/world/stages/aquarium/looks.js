@@ -26,9 +26,10 @@ const TAU = Math.PI * 2, HP = Math.PI / 2;
 // segs: [[ax, ay, az, bx, by, bz], …] the tube runs inside the stage's water volumes (≤ 8)
 export function waterMaterial(T, U, segs, perVertex = false) {
   const m = new T.MeshStandardMaterial({ color: perVertex ? '#ffffff' : '#285865', vertexColors: perVertex, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.6, depthWrite: false, side: T.DoubleSide });
-  // (the dusk glow from within: warm white × night × this; the clear water — the Reef Windows, the columns, the pools —
-  // glows a little less (× its density). Measured against a fresh splat at dusk: tests/aquarium-art.js holds it under 60 %)
-  const uGlow = { value: 0.62 };
+  // (the dusk glow from within: warm white × night × this, 2.8× the art pass's first 0.1; the clear water — the Reef Windows,
+  // the columns, the pools — glows a little less. Measured at dusk by scenes/aquarium-glow.js: the glow's own share of a
+  // tank pixel (glow on minus off) ≤ 60 % of the brighter fresh splat beside it, and it stays far less saturated than ink)
+  const uGlow = { value: 0.28 };
   Object.defineProperty(m.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
   const N = Math.min(8, segs.length);
   const uA = { value: Array.from({ length: 8 }, (_, i) => new T.Vector3(...(segs[i] ? segs[i].slice(0, 3) : [0, -99, 0]))) };
@@ -214,8 +215,12 @@ export function buildFish(T, rnd, U) {
   for (let i = 0; i < 18; i++) small.push({ p0: [0, 1.5 + rnd() * 0.55, 0, 2.2 + rnd() * 0.8], p1: [rnd() * 0.9, 0, 0.55, rnd() * 6], p2: [0.05, 1.2, 0.36, 1.2], p3: [1, 0, 0, 0], c: '#c9ccc8' });
   // the Arch Tanks (6 … 9 m over the halls, x ±6, z −31 … −19; the Arch Line crosses at z −27.13 from 6.6 to 8.4): sharks
   // and an eagle ray in the court-side part (z −25.6 … −19.6), seen overhead from the hall and from the court
+  // (art round 1: "sharks overhead", not one silhouette — five blacktips and two rays over each hall: three circling the
+  // court-side part, two cruising to and fro along the wing-side part beyond the Arch Line's tube, at z −29.6)
   for (let i = 0; i < 3; i++) both(sharks, { p0: [0, 7.3 + 0.45 * i, -22.6, 2.4], p1: [i * 2.1, 0, 0.28 + 0.04 * i, i], p2: [0.1, 0.5, 0.75, 0.9], p3: [0, 0, 0, 0] });
+  for (let i = 0; i < 2; i++) both(sharks, { p0: [0, 7.0 + 1.1 * i, -59.6, 30.0], p1: [HP, 0.15, 0.09 + 0.02 * i, i * 2.2], p2: [0.08, 0.45, 0.8, 0.9], p3: [0, 0, 0, 0] });
   both(rays, { p0: [0, 6.55, -22.7, 2.0], p1: [1.0, 0, -0.22, 0], p2: [0.05, 0.6, 0.85, 0], p3: [0, 0, 0, 0] });
+  both(rays, { p0: [0, 8.35, -22.4, 1.4], p1: [3.0, 0, 0.18, 0], p2: [0.06, 0.4, 0.7, 0], p3: [0, 0, 0, 0] });
   for (let i = 0; i < 8; i++) both(small, { p0: [0, 8.65 + rnd() * 0.2, -25.0, 4.4 + rnd() * 1.2], p1: [-HP, 0.9, 0.35 + rnd() * 0.2, rnd() * 6], p2: [0.05, 1.4, 0.3, 1.2], p3: [0, 0, 0, 0], c: '#c3c8c6' });
   // the kelp drums (r 4.35; the Kelp Line's riser at 2.7 m from the centre): garibaldi on small circles round the centre
   for (let i = 0; i < 6; i++) both(small, { p0: [24.6, 1.6 + i * 1.0, 0.4, 0.55 + 0.08 * i], p1: [rnd() * 6, 0, (i % 2 ? -1 : 1) * 0.6, rnd() * 6], p2: [0.15, 0.7, 0.42, 1.4], p3: [0, 0, 0, 0], c: '#d98a4a' });
@@ -272,41 +277,88 @@ float jh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   vec2 c = vec2((r0 - 0.5) * 0.35, (r1 - 0.5) * 0.3);
   float pulse = 0.85 + 0.15 * sin(uFT * 2.0 + r0 * 6.28);
   vec2 d = (cf - c) / vec2(0.28 * pulse, 0.2);
-  float bell = smoothstep(1.0, 0.7, length(d)) * step(-0.15, d.y);
-  float rim = smoothstep(0.75, 0.95, length(d)) * bell;
-  float tent = smoothstep(0.06, 0.0, abs(cf.x - c.x + 0.05 * sin(cf.y * 18.0 + uFT))) * step(cf.y, c.y) * step(c.y - 0.42, cf.y) * 0.6;
-  float j = clamp(bell * 0.55 + rim * 0.6 + tent, 0.0, 1.0) * step(0.25, r0);
-  float glowJ = 0.55 + 0.45 * smoothstep(0.0, 1.0, vJ.y);
-  diffuseColor.rgb = mix(diffuseColor.rgb * (0.92 + 0.08 * glowJ), vec3(1.0, 0.99, 1.0), j * 0.6);
-  vec3 jellyE = (vec3(0.93, 0.9, 0.97) * (0.22 + 0.25 * uNightJ) * glowJ + vec3(1.0, 0.97, 1.0) * j * (0.18 + 0.32 * uNightJ));`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  float bell = smoothstep(1.0, 0.55, length(d)) * step(-0.12, d.y);
+  float rim = smoothstep(0.7, 0.95, length(d)) * smoothstep(1.05, 0.95, length(d)) * step(-0.12, d.y);
+  float tent = smoothstep(0.05, 0.0, abs(cf.x - c.x + 0.05 * sin(cf.y * 18.0 + uFT))) * step(cf.y, c.y) * step(c.y - 0.42, cf.y) * (0.35 + 0.5 * smoothstep(c.y - 0.42, c.y, cf.y));
+  float tent2 = smoothstep(0.04, 0.0, abs(cf.x - c.x - 0.09 + 0.04 * sin(cf.y * 15.0 + uFT * 1.3))) * step(cf.y, c.y) * step(c.y - 0.34, cf.y) * 0.4;
+  float j = clamp(bell * 0.5 + rim * 0.75 + tent + tent2, 0.0, 1.0) * step(0.25, r0);
+  // a deep blue-black interior behind milky glass: the glass milkier toward the column's edges (the eye's grazing angle),
+  // the water lit from the top; the jellies soft translucent bells with trailing tentacles (art round 1: paper lanterns)
+  float fresJ = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 1.6);
+  float glowJ = smoothstep(-0.1, 1.0, vJ.y);
+  vec3 deepJ = vec3(0.025, 0.04, 0.06) * (0.8 + 0.7 * glowJ), milkJ = vec3(0.72, 0.72, 0.8);
+  diffuseColor.rgb = mix(deepJ, milkJ, 0.16 + 0.5 * fresJ);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.94, 0.93, 1.0), j * 0.85);
+  vec3 jellyE = vec3(0.3, 0.27, 0.38) * (0.05 + 0.5 * uNightJ) * glowJ * (1.0 - 0.5 * fresJ) + vec3(0.95, 0.9, 1.0) * j * (0.16 + 0.55 * uNightJ);`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
   totalEmissiveRadiance += jellyE;`);
   };
-  mat.customProgramCacheKey = () => 'aq-jelly';
+  mat.customProgramCacheKey = () => 'aq-jelly2';
   const m = new T.Mesh(geo, mat); m.name = 'aq-jellies'; m.frustumCulled = false;
   return m;
 }
 
+// ------------------------------------------------------------------------------------------------ bubbles
+// Round bubbles: each a camera-facing quad (4 vertices: the centre, a corner, a radius) drawn as a thin bright rim round a
+// clear middle with a highlight, a little transparent; sizes vary (art round 1: "white diamond confetti"). `bubbleQuads`
+// builds the shared geometry; the shader chunks below turn it to face the camera after the caller's motion (`transformed`
+// is the centre) and shade it round. Used by the bubble columns here and the kelp drums' tide (backdrop.js).
+export function bubbleQuads(T, list, attrs) {
+  // list: [{ x, z, r, a: [..per-bubble attribute values..] }], attrs: [[name, size], …] for the per-bubble values
+  const n = list.length, pos = new Float32Array(n * 12), cor = new Float32Array(n * 8), rad = new Float32Array(n * 4), idx = new (n * 4 > 65535 ? Uint32Array : Uint16Array)(n * 6);
+  const ex = attrs.map(([, k]) => new Float32Array(n * 4 * k));
+  const C = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  list.forEach((b, i) => {
+    for (let v = 0; v < 4; v++) {
+      const o = i * 4 + v;
+      pos.set([b.x, 0, b.z], o * 3); cor.set(C[v], o * 2); rad[o] = b.r;
+      attrs.forEach(([, k], j) => ex[j].set(b.a[j], o * k));
+    }
+    idx.set([i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3], i * 6);
+  });
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('aCorner', new T.BufferAttribute(cor, 2)); g.setAttribute('aRad', new T.BufferAttribute(rad, 1));
+  attrs.forEach(([name, k], j) => g.setAttribute(name, new T.BufferAttribute(ex[j], k)));
+  g.setIndex(new T.BufferAttribute(idx, 1));
+  return g;
+}
+export const BUBBLE_VS_PARS = 'attribute vec2 aCorner; attribute float aRad; varying vec2 vBub;\n';
+// (after the caller's begin_vertex code: `transformed` is the bubble's centre, `bubScale` scales its radius)
+export const BUBBLE_VS_PROJECT = `
+  vBub = aCorner;
+  vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
+  mvPosition.xy += aCorner * aRad * bubScale;
+  gl_Position = projectionMatrix * mvPosition;`;
+export const BUBBLE_FS = (base = '#include <color_fragment>') => ({
+  pars: 'varying vec2 vBub;\n',
+  body: `${base}
+  {
+    float r = length(vBub);
+    if (r > 1.0) discard;
+    float rim = smoothstep(0.62, 0.92, r) * (1.0 - smoothstep(0.92, 1.0, r));
+    float hi = 1.0 - smoothstep(0.0, 0.26, length(vBub - vec2(-0.36, 0.38)));
+    diffuseColor.a *= clamp(0.1 + rim * 0.85 + hi * 0.9, 0.0, 1.0);
+    diffuseColor.rgb = mix(diffuseColor.rgb * 0.85, vec3(1.0), clamp(hi + rim * 0.4, 0.0, 1.0));
+  }`,
+});
+
 // ------------------------------------------------------------------------------------------------ the bubble columns
-// cols: [[x, z, r, y0, y1], …]: their water (with the house material), glass, and bubbles streaming up inside
+// cols: [[x, z, r, y0, y1], …]: bubbles streaming up inside (their water and glass: backdrop.js)
 export function buildBubbleCols(T, U, rnd, cols) {
   const list = [];
-  for (const [x, z, r, y0, y1] of cols) for (let i = 0; i < 90; i++) { const a = rnd() * TAU, rr = Math.sqrt(rnd()) * (r - 0.18); list.push([x + Math.cos(a) * rr, z + Math.sin(a) * rr, 0.04 + rnd() * 0.06, rnd(), 0.6 + rnd() * 0.8, y0, y1]); }
-  const pos = [], aB = [], aP = [];
-  for (const [x, z, r, seed, sp, y0, y1] of list) {
-    const g = new T.OctahedronGeometry(r, 0);
-    for (let i = 0; i < g.attributes.position.count; i++) { pos.push(g.attributes.position.getX(i) + x, g.attributes.position.getY(i), g.attributes.position.getZ(i) + z); aB.push(seed, sp, y0, y1 - y0); aP.push(x, z); }
-  }
-  const geo = new T.BufferGeometry();
-  geo.setAttribute('position', new T.BufferAttribute(new Float32Array(pos), 3)); geo.setAttribute('aB', new T.BufferAttribute(new Float32Array(aB), 4)); geo.setAttribute('aP', new T.BufferAttribute(new Float32Array(aP), 2));
+  for (const [x, z, r, y0, y1] of cols) for (let i = 0; i < 90; i++) { const a = rnd() * TAU, rr = Math.sqrt(rnd()) * (r - 0.18), sz = rnd(); list.push({ x: x + Math.cos(a) * rr, z: z + Math.sin(a) * rr, r: 0.025 + sz * sz * 0.07, a: [[rnd(), 0.6 + rnd() * 0.8, y0, y1 - y0]] }); }
+  const geo = bubbleQuads(T, list, [['aB', 4]]);
   geo.boundingSphere = new T.Sphere(new T.Vector3(0, 3, 0), 40);
-  const mat = new T.MeshBasicMaterial({ color: '#eefaff', transparent: true, opacity: 0.75, depthWrite: false });
+  const mat = new T.MeshBasicMaterial({ color: '#e8f6fa', transparent: true, opacity: 0.9, depthWrite: false });
+  const fs = BUBBLE_FS();
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uFT = U.uFT;
-    sh.vertexShader = 'attribute vec4 aB; attribute vec2 aP; uniform float uFT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+    sh.vertexShader = 'attribute vec4 aB; uniform float uFT;\n' + BUBBLE_VS_PARS + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+  float bubScale = 1.0 + 0.5 * clamp((mod(aB.x * 9.0 + uFT * 1.4 * aB.y, aB.w - 0.2)) / aB.w, 0.0, 1.0);   // (they grow as they rise)
   transformed.y += aB.z + 0.1 + mod(aB.x * 9.0 + uFT * 1.4 * aB.y, aB.w - 0.2);
-  transformed.x += 0.06 * sin(uFT * 3.0 + aB.x * 40.0); transformed.z += 0.06 * cos(uFT * 2.6 + aB.x * 33.0);`);
+  transformed.x += 0.06 * sin(uFT * 3.0 + aB.x * 40.0); transformed.z += 0.06 * cos(uFT * 2.6 + aB.x * 33.0);`).replace('#include <project_vertex>', BUBBLE_VS_PROJECT);
+    sh.fragmentShader = fs.pars + sh.fragmentShader.replace('#include <color_fragment>', fs.body);
   };
-  mat.customProgramCacheKey = () => 'aq-colbubbles';
+  mat.customProgramCacheKey = () => 'aq-colbubbles2';
   const m = new T.Mesh(geo, mat); m.name = 'aq-colbubbles'; m.renderOrder = 1; m.frustumCulled = false;
   return m;
 }

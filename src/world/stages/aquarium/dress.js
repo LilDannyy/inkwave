@@ -448,6 +448,55 @@ export function registerDress(D, H, KIT) {
     },
   };
 
+  // the wing's small things out of the lanes (visual only, like every prop here: against walls, beside cover, behind the
+  // queue): A-boards, a bench, queue stanchions with their rope, stacked luggage
+  D.aquarium_aboard = {
+    desc: "a folding A-board sign (o.text, o.sub; local +z its face)",
+    build(B, o) {
+      for (const s of [-1, 1]) {
+        B.push(0, 0, s * 0.16, s > 0 ? 0 : PI);
+        B.box('paint', K.navy, 0.62, 0.86, 0.03, 0, 0.52, 0, { r: 0.015, rx: -0.18 });
+        B.push(0, 0.52, 0.02, 0, -0.18);
+        letters(B, o.text || 'FLOOR DRY', { h: 0.09, y: 0.12, z: 0.0, c: K.cream, flat: true, mat: 'paint', track: 0.12 });
+        if (o.sub) letters(B, o.sub, { h: 0.06, y: -0.04, z: 0.0, c: K.brassLt, flat: true, mat: 'paint', track: 0.1 });
+        B.pop(); B.pop();
+      }
+      for (const s of [-1, 1]) pbox(B, 'metal', K.brass, 0.6, 0.025, 0.02, 0, 0.97, s * 0.02);
+    },
+  };
+  D.aquarium_bench = {
+    desc: 'a Deco teak bench with brass ends (o.len along local x; its back to local −z)',
+    build(B, o) {
+      const L = o.len ?? 1.8;
+      for (const z of [-0.12, 0.0, 0.12]) pbox(B, 'wood', K.teak, L, 0.04, 0.1, 0, 0.44, z);
+      for (const y of [0.62, 0.76]) pbox(B, 'wood', K.teak, L, 0.09, 0.03, 0, y, -0.2, { rx: 0.12 });
+      for (const s of [-1, 1]) { B.add('metal', torG(0.24, 0.035, 6, 16, PI), K.brass, s * (L / 2 - 0.05), 0.24, 0, { ry: HP }); pbox(B, 'metal', K.brass, 0.05, 0.85, 0.05, s * (L / 2 - 0.05), 0.42, -0.2); }
+    },
+  };
+  D.aquarium_stanchions = {
+    desc: 'queue stanchions along local x (o.len, o.n posts) with a red rope between them',
+    build(B, o) {
+      const L = o.len ?? 2.6, n = o.n ?? 4;
+      for (let i = 0; i < n; i++) {
+        const x = -L / 2 + (L * i) / (n - 1);
+        B.add('metal', latheG('stanch', [[0, 0], [0.16, 0], [0.16, 0.03], [0.04, 0.05], [0.025, 0.9], [0.045, 0.94], [0.03, 0.98], [0, 0.98]], 12), K.brassLt, x, 0, 0, {});
+        if (i < n - 1) { const x1 = -L / 2 + (L * (i + 1)) / (n - 1); for (let k = 0; k < 6; k++) { const t0 = k / 6, t1 = (k + 1) / 6, sag = (t) => 0.82 - 0.12 * Math.sin(t * PI); rod(B, 'gloss', K.red, [x + (x1 - x) * t0, sag(t0), 0], [x + (x1 - x) * t1, sag(t1), 0], 0.02, { seg: 6 }); } }
+      }
+    },
+  };
+  D.aquarium_luggage = {
+    desc: 'stacked luggage: two suitcases, a trunk, a hatbox',
+    build(B) {
+      B.box('paint', '#7a5236', 0.9, 0.42, 0.55, 0, 0.21, 0, { r: 0.04 });
+      for (const x of [-0.3, 0.3]) pbox(B, 'metal', K.brassLt, 0.06, 0.44, 0.57, x, 0.21, 0);
+      B.box('paint', '#2f5a63', 0.62, 0.36, 0.42, 0.05, 0.6, 0.02, { r: 0.05, ry: 0.2 });
+      pbox(B, 'paint', '#3b2a1e', 0.2, 0.04, 0.04, 0.05, 0.8, 0.02, { ry: 0.2 });
+      B.box('paint', '#c9a978', 0.5, 0.3, 0.36, -0.05, 0.93, -0.02, { r: 0.05, ry: -0.3 });
+      cyl(B, 'paint', '#d9b6b0', 0.2, 0.22, 0.62, 0.11, 0.42, { seg: 16 });
+      pbox(B, 'paint', K.cream, 0.1, 0.07, 0.01, 0.2, 0.3, 0.28, { rz: 0.4 });
+    },
+  };
+
   // ---------------------------------------------------------------------------------------------------- rails
   // a railing along local x (len, h, rise): white posts, a brass handrail with ball ends, a mid rail; o.lights: a string
   // of warm bulbs sagging between every other post (lit at dusk)

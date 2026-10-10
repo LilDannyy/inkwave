@@ -24,9 +24,23 @@
   const used = new Set(L.blocks.filter((b) => !b.hidden).map((b) => b.pattern));
   R('the stage surfaces (terrazzo, teak, render on slots 67–69) carry the floors and walls', [SURF.terrazzo, SURF.teak, SURF.render].every((s) => used.has(s)), { SURF });
   const mt = g.murals?.userData;
-  R('the stage murals are drawn (ids 4–8: portholes, the glass board, sea salt, feeding deck, hazard)', mt?.stage === 'aquarium' && [4, 5, 6, 7, 8].every((i) => mt.murals[i] && mt.murals[i].rect[2] > 0), { stage: mt?.stage });
+  R('the stage murals are drawn (ids 4–11: portholes, the glass board, sea salt, feeding deck, hazard, the hoppers, the hatches, the ticket machines)', mt?.stage === 'aquarium' && [4, 5, 6, 7, 8, 9, 10, 11].every((i) => mt.murals[i] && mt.murals[i].rect[2] > 0), { stage: mt?.stage });
   const muralFaces = {}; for (const f of L.faces) if (f.mural >= 4) muralFaces[f.mural] = (muralFaces[f.mural] || 0) + 1;
-  R('the murals sit on faces (portholes on the promenades\' court faces, the board, the crates, the riser, the bund)', muralFaces[4] >= 20 && muralFaces[5] >= 2 && muralFaces[6] >= 6 && muralFaces[7] >= 2 && muralFaces[8] >= 2, muralFaces);
+  R('the murals sit on faces (portholes on the promenades\' court faces, the board, the crates, the riser, the bund; the hoppers\' and hatches\' faces toward the deck\'s middle, the ticket machines)', muralFaces[4] >= 20 && muralFaces[5] >= 2 && muralFaces[6] >= 6 && muralFaces[7] >= 2 && muralFaces[8] >= 2 && muralFaces[9] >= 8 && muralFaces[10] >= 8 && muralFaces[11] >= 4, muralFaces);
+  // 3b. the floor art (floorart.js through the pipe engine's levelMaterial hook): in the level program, and the plaza's
+  // compass rose shows (its brass hub against the terrazzo 3 m off it, seen from above)
+  {
+    const key = g.levelMat?.customProgramCacheKey?.() || '';
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const { W } = await import('./src/world/stages/aquarium/geo.js');
+    const [rx, rz] = W(24.9, 2.6);
+    g.rig.cinematic(V([rx + 0.3, 9, rz + 0.3]), V([rx + 0.3, 9, rz + 0.3]), V([rx, 0, rz]), V([rx, 0, rz]), 99, () => {});
+    for (let i = 0; i < 30; i++) g.debug.step(1000 / 60);
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4); gl.readPixels(Math.round((v.x + 1) / 2 * w), Math.round((v.y + 1) / 2 * h), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, a); return [...a.slice(0, 3)]; };
+    const hub = px([rx, 0, rz]), off = px([rx - 3.2, 0, rz + 0.4]);
+    const d = Math.abs(hub[0] - off[0]) + Math.abs(hub[1] - off[1]) + Math.abs(hub[2] - off[2]);
+    R('the floor art is in the level program (key -aqart) and the ferry plaza\'s compass rose shows (its brass hub ≠ the terrazzo 3 m off)', /-aqart/.test(key) && d > 40, { key, hub, off });
+  }
   // 4. the looks in the scene
   const names = new Set(); G.scene.traverse((o) => { if (o.name) names.add(o.name); });
   const want = ['aq-glass', 'aq-water', 'aq-kelp', 'aq-swimmers', 'aq-jellies', 'aq-colbubbles', 'aq-krill', 'aq-bathysphere', 'aq-dome-streak'];

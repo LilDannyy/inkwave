@@ -28,11 +28,12 @@ const TRAILS = [                                              // segments (ax, a
 ];
 // light pools: (x, z, radius, strength)
 const POOLS = [];
-for (const a of [-64, -50, -36, -22]) POOLS.push([...pol(a, 20.8), 3.2, 0.55]);                       // colonnade globes
-for (let i = 0; i < 12; i++) POOLS.push([...pol(-70 + (58 / 12) * (i + 0.5), 23.9), 1.7, 0.35]);    // canopy pendants
+for (const a of [-64, -50, -36, -22]) POOLS.push([...pol(a, 20.8), 3.4, 0.7]);                       // colonnade globes
+for (let i = 0; i < 12; i++) POOLS.push([...pol(-70 + (58 / 12) * (i + 0.5), 23.9), 1.8, 0.45]);    // canopy pendants
 POOLS.push([6.35, -42.5, 4.2, 0.45]);                                                                // Ticket Hall canopy
 POOLS.push([6.5, -17.0, 3.3, 0.5], [-16.25, -2.9, 3.3, 0.5]);                                       // jelly columns
 POOLS.push([0, -21.5, 2.8, 0.35]);                                                                   // the bubble column
+POOLS.push([0, 0, 9.0, 0.22]);                                                                       // the bathysphere's portholes and the winch lantern over the deck
 const N_POOL = 24;
 
 // night: a uniform-like object whose .value is the environment's night factor (the pipe engine passes a getter on it)
@@ -194,7 +195,7 @@ const GLSL_EMIT = /* glsl */`
     }
     // the Great Tank's glow on the court round it, and the Reef Windows' on the arcade floor in front of them
     float rq = length(q), rc = length(vWPos.xz);
-    pool += 0.3 * smoothstep(10.5, 7.6, rc) * step(vWPos.y, 0.6);
+    pool += 0.4 * smoothstep(10.5, 7.6, rc) * step(vWPos.y, 0.6);
     float ba = atan(q.y, q.x) * 57.2958;
     pool += 0.28 * smoothstep(26.5, 30.4, rq) * step(rq, 30.6) * step(-70.0, ba) * step(ba, -2.6) * step(vWPos.y, 0.6);
     totalEmissiveRadiance += diffuseColor.rgb * vec3(1.0, 0.84, 0.62) * min(pool, 0.9) * uAqNight * 1.4;

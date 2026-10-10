@@ -90,6 +90,12 @@ S(B(-7.5, 7.5, TANK.lid, TANK.deck, -1.2, 1.2, { color: K.walk, pattern: PATTERN
 // the brass rim kerb on the four faces with no way up (−22.5, −67.5, −112.5, −157.5): 10 cm proud
 const RIM = [-22.5, -67.5, -112.5, -157.5].map((a) => radBox(a, TANK.a - 0.4, TANK.a, TANK_L, TANK.lid, 2.5, cover(K.brass, { tag: 'deck-rim', paint: false })));
 H(RIM);
+// a brass nosing 8 cm proud at the head of the deck ramp (−45) and the deck stair (−135): the deck's 0.1 m cells met those
+// two diagonal faces in a comb of plank ends (LEAD-REVIEW art round 1); the nosing hides them like the rim kerb does on
+// the faces with no way up (the axis faces' edges are straight: the Feeding Steps and the Glass Walk's ends need none)
+// (10 cm like the rim, 2.64 m long: the rim kerbs reach 8 cm into the neighbouring faces at their inner corners)
+const NOSE = [-45, -135].map((a) => radBox(a, TANK.a - 0.35, TANK.a, 2.64, TANK.lid, 2.5, cover(K.brass, { tag: 'deck-nosing', paint: false })));
+H(NOSE);
 // deck furniture (Alpha's half; turned for Bravo): four hatches inside the zone (1.2 hop-ups), fish-food hoppers and
 // feeding-pole racks on the rim
 const tang = (x, z) => -(bearing(x, z) + 90);                       // O() angle that lays a box's long side tangentially
@@ -282,6 +288,10 @@ PROM.push(radBox(-132, 28.3, 33.2, 2.4, FL, 5.0, roofR(K.render, { tag: 'kelp-st
 // the grand stair (6 wide, 0 → 2.4) and the Penguin Steps (5 wide, 2.4 → 1.2 onto the rock terrace)
 PROM.push(radRamp(-152, 15.6, 0, 21.4, PR.y, 6.0, stair({ tag: 'grand-stair' })));
 PROM.push(radRamp(-120, 34.6, 1.2, 31.0, PR.y, 5.0, stair({ tag: 'penguin-steps' })));
+// the Penguin Steps' granite nosing (8 cm, across the coping's cut): the promenade's teak cells ran out over the steps' top
+// tread in a zigzag (the Arch Line's S. Promenade exit shot; LEAD-REVIEW art round 1) — under it they are hidden
+// (10 cm, bearing −124.9 … −115.65: under the 2.6 coping block at its west end, short of the 2.5 one at its east end)
+PROM.push(radBox(-120.275, 30.7, 31.2, 4.99, FL, 2.5, stone({ tag: 'penguin-nosing', paint: false })));
 // the sea rail (r 31.0 → 31.4; 1.0 tall, on the telescope bay 4.0), cut for the steps and the deep stop
 for (const [a0, a1, y0, n] of [[-171, -151, PR.y, 5], [-151, -139, 3.0, 3], [-139, -134.3, PR.y, 1], [-129.7, -124.6, PR.y, 1], [-115.4, -110.5, PR.y, 1]]) {
   PROM.push(...arcBandIn(C0, 31.0, 31.4, a0, a1, n, y0, y0 + 1.0, railO()));
@@ -443,7 +453,7 @@ H(layer({ key: 'ground', rect: [-36, 36, -78, 0], res: 0.25, cover: groundCover,
   opt: (x, z) => { const [s, w] = toBlade(x, z); return s > SP.front && s < SP.front + 0.8 && Math.abs(w) <= 16; } }));
 H(layer({ key: 'tank-bed', rect: [-7.6, 7.6, -7.6, 0], res: 0.2, inside: TANK_IN, y0: FL, y1: -0.6, o: cover(K.sand, { tag: 'tank-bed', paint: false }) }));
 // the Feeding Deck's lid (2.2–2.4) on the tank, Alpha's half (z ≤ −1.2: the Glass Walk is the middle strip)
-H(layer({ key: 'feeding-deck', rect: [-7.7, 7.7, -7.7, -1.2], res: 0.1, inside: (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.02), cover: new Cover([...RIM], TANK.deck), y0: TANK.lid, y1: TANK.deck, o: teak({ tag: 'feeding-deck' }) }));
+H(layer({ key: 'feeding-deck', rect: [-7.7, 7.7, -7.7, -1.2], res: 0.1, inside: (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.02), cover: new Cover([...RIM, ...NOSE], TANK.deck), y0: TANK.lid, y1: TANK.deck, o: teak({ tag: 'feeding-deck' }) }));
 
 // ============================================================================================================ the modes
 // Zone Control: the Feeding Deck (one 12-gon, r 6.2, 115 m²) and Alpha's Reef Hall (the annular sector α −54 … −26,
@@ -510,11 +520,12 @@ const LAYOUT_AQUARIUM = {
   bazookarp: BAZOOKARP,
   boss: { floorY: 0 },
   intro: { from: [24, 16, 18], lookFrom: [0, 13, 0], toBack: 3.0 },
-  // the stage-select hero shot: high over the sea off Alpha's Penguin Point (south-west), across the promenade and the
-  // court — the Great Tank under Bathysphere No. 1 on its gantry, both kelp drums, the South Gate — to Inkopolis across the
-  // bay, the Deep Dome and its tube on the horizon (DESIGN.md §5.8 framed it from the east; the bay's city stands east, so
-  // the frame turned round to put the city behind the stage)
-  art: { from: [-42, 21, -50], look: [5, 3, -5], fov: 54 },
+  // the stage-select hero shot (art round 1: the South Gate's bare roof was a quarter of the frame): low over the sea off
+  // the west kelp drum, across the Sea Promenade into the court — the feeding gantry and Bathysphere No. 1 framing the
+  // Great Tank and its Glass Walk, the bronze gulper head, the colonnade and REEF HALL, the North Gate — with Inkopolis
+  // across the bay behind (DESIGN.md §5.8 framed it from the east; the bay's city stands east, so the frame looks east).
+  // scenes/aquarium-hero.js stages riders in the Gulper Run and the east Kelp Line for the stage art
+  art: { from: [-27, 13, -16], look: [3, 6.5, 2], fov: 64 },
   // promenade lamps at the sea rail (2), the ferry plaza (2), the Gate Terrace (1): their pools light the floor at dusk
   // (the colonnade's globes, the canopy pendants, the portholes and the neon are the props' own glow)
   decor: { lamps: [[-28.47, -10.36], [-22.16, -20.66], [26.54, -46.27], [-1.78, -61.82], [-9.6, -31.6]], palms: [], flags: [] },
