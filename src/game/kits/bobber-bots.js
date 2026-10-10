@@ -105,7 +105,9 @@ function buildChain(a, A, tp, from = a.pos) {
   const px = -A.dz, pz = A.dx, C = [];
   for (const [u, v] of RING) {
     const x = A.x + px * u + A.dx * v, z = A.z + pz * u + A.dz * v;
-    if (items.some((o) => o.team === a.team && (o.state === 'live' || o.state === 'open') && Math.hypot(o.spot.x - x, o.spot.z - z) < 3.4)) continue;
+    // (clear of the team's other chains: a teammate's by 2.8 m — a small zone's edge holds three guards' webs — its own by
+    // 2.4, where they would only tether into one bigger chain)
+    if (items.some((o) => o.team === a.team && (o.state === 'live' || o.state === 'open') && Math.hypot(o.spot.x - x, o.spot.z - z) < (o.owner === a ? 2.4 : 2.8))) continue;
     const at = okSpot(a, x, z, tp, from, false);
     if (at) C.push({ at, sc: Math.abs(v) + Math.abs(u) * 0.25 + Math.abs(at.y - A.y) * 0.5, bad: false });
   }
@@ -242,13 +244,16 @@ function anchors(b, tp) {
       if (!st) pts = foeRoute(foeTeam, _v.set(c[0], c[1], c[2]));
       else { const nav = G.nav, s0 = nav.nearest(st, 1.2, true), g0 = nav.nearest(_v.set(c[0], c[1], c[2]), 0.8); const P = s0 >= 0 && g0 >= 0 ? nav.path(s0, g0, foeTeam) : null; pts = P ? P.map((id) => nav.nodes[id]) : null; }
       if (!pts || pts.length < 3) continue;
-      const A = entryOf(pts, c[0], c[2], I.R + 0.5, 1.2 + r() * 1.3);
-      if (A && !C.some((q) => Math.hypot(q.x - A.x, q.z - A.z) < 2.5)) C.push({ ...A, src: 'zdoor', tx: c[0], tz: c[2], trip });
+      // (a metre or two outside the edge; and farther out along the same way in, for when that's taken)
+      for (const out of [1.2 + r() * 1.3, 3.2 + r() * 1.5]) {
+        const A = entryOf(pts, c[0], c[2], I.R + 0.5, out);
+        if (A && !C.some((q) => Math.hypot(q.x - A.x, q.z - A.z) < 2.5)) C.push({ ...A, src: 'zdoor', tx: c[0], tz: c[2], trip });
+      }
     }
     // (the zone's edge from the foes' side round to its flanks, across the way in there — a raised zone's edge is often a
     // drop: just inside it too)
-    for (let i = 0; i < 9; i++) {
-      const th = Math.atan2(ez, ex) + (i / 8 - 0.5) * 3.5 + (r() - 0.5) * 0.25, ux = Math.cos(th), uz = Math.sin(th), out = I.R - 1.2 + r() * 2.4, x = c[0] + ux * out, zz = c[2] + uz * out;
+    for (let i = 0; i < 12; i++) {   // (from the foes' side round both flanks to its back: the rest of a crowded edge)
+      const th = Math.atan2(ez, ex) + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.52 + (r() - 0.5) * 0.25, ux = Math.cos(th), uz = Math.sin(th), out = I.R - 1.2 + r() * 2.4, x = c[0] + ux * out, zz = c[2] + uz * out;
       const gy = G.level.groundHeight(x, zz, Math.max(a.pos.y, c[1]) + 3);
       if (Number.isFinite(gy) && gy > c[1] - 4) C.push({ x, y: gy, z: zz, dx: -ux, dz: -uz, src: 'zedge', tx: c[0], tz: c[2], trip });
     }
@@ -311,7 +316,7 @@ function planChain0(b, tp) {
   const a = b.a, C = anchors(b, tp), why = BOBBER_BOT.logOn ? [] : null;
   let n = 0;
   for (const A of C) {
-    if (n >= 6) break;
+    if (n >= 9) break;   // (a crowded or ledgy anchor fails on the cheap tests: the lob checks are what the budget bounds)
     const d = Math.hypot(A.x - a.pos.x, A.z - a.pos.z);
     const lay = (from) => (tp ? layout(a, A, tp, from) : buildChain(a, A, tp, from));
     if (d <= 9.5) { n++; const L = lay(a.pos); if (L) return { A, L, stand: null }; why?.push(A.src + '@' + d.toFixed(1) + ':nolay'); }
