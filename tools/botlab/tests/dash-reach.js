@@ -30,8 +30,10 @@
 // And the height, for EVERY ground dash and jump + dash whatever it comes to rest on (on-foot ground, a roof, a perch,
 // past the line, the sea): where it first comes down after leaving the ground, over the kid's own standing height at
 // the start, must be no higher than a plain running hop ever gets — HOP_BEST, measured by sub-dash.js 'height' to
-// 0.01 m — + 0.02 m (the spec's own ± 0.02 for heights), unless the same running hop without the dash comes down as high
-// (then it's the jump's height, counted as hopAsHigh). (A climb's height is the wall's: the dashes off one aren't judged.)
+// 0.01 m — + 0.02 m (the spec's own ± 0.02 for heights), unless a jump gets there as high without the dash: the same
+// running hop from the same start and heading (hopAsHigh), or a plain hop / walk from a spot reached on foot within 6 m
+// of the block it first came down on, coming down on that block as high (hopAsHighNear: a top a jump reaches, which the
+// dash's flatter arc reached from further off). (A climb's height is the wall's: the dashes off one aren't judged.)
 // Pass: no perch leak, no out-of-bounds leak, no kid stuck on a roof where no plain walk / hop gets stuck, no first
 // landing over the height bar.
 (async () => {
@@ -96,16 +98,16 @@
   // the end of a move: wait out a roof's slide, a fall, the dash (≤ 3 s), and read where it came to rest
   const settle = (st) => {
     for (let k = 0; k < fr(180) && st.ok && (!kid.grounded || onRoof() || kid.weaponRunner.dashT > 0); k++) st.tick({});
-    if (!st.ok) return { dead: true, roofT: st.roofT, landY: st.landY, y0: startY };
+    if (!st.ok) return { dead: true, roofT: st.roofT, landY: st.landY, landBlock: st.landBlock, landAt: st.landAt, y0: startY };
     const gb = kid.grounded && kid.ground ? L.blocks[kid.ground.block] : null;
-    return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT: st.roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY: st.landY, y0: startY };
+    return { pos: kid.pos.clone(), roof: onRoof(), grounded: kid.grounded, roofT: st.roofT, perch: !!(gb && gb.perch), block: gb ? gb.id : -1, landY: st.landY, landBlock: st.landBlock, landAt: st.landAt, y0: startY };
   };
   // the first landing is caught inside the move's substeps (a dash runs 3–7 a frame): a frame that lands on a stair's
   // first step and steps on up it at dash speed comes down where it first touched, not where the frame ended
   const integ0 = kid._integrate; let LH = null;
-  kid._integrate = function (dt, sq, j) { integ0.call(this, dt, sq, j); const s = LH; if (s) { if (!this.grounded) s.wasAir = true; else if (s.wasAir && s.landY === null) s.landY = this.pos.y; } };
+  kid._integrate = function (dt, sq, j) { integ0.call(this, dt, sq, j); const s = LH; if (s) { if (!this.grounded) s.wasAir = true; else if (s.wasAir && s.landY === null) { s.landY = this.pos.y; s.landBlock = this.ground.block; s.landAt = this.pos.clone(); } } };
   const ticker = (mv) => {
-    const st = { ok: true, roofT: null, wasAir: false, landY: null, i: 0 };
+    const st = { ok: true, roofT: null, wasAir: false, landY: null, landBlock: -1, landAt: null, i: 0 };
     LH = st;
     // (landY: where it first comes down after leaving the ground — the height the jump + dash got it to; a dash that
     // carries on along the ground after that, up a ramp or a stair, is a run, judged by where it ends like any walk)
@@ -177,7 +179,7 @@
     return settle(st);
   };
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
-  const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, judgedUp: 0, hopAsHigh: 0, onFoot: 0, roof: 0, roofOnFoot: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
+  const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, judgedUp: 0, hopAsHigh: 0, hopAsHighNear: 0, onFoot: 0, roof: 0, roofOnFoot: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
   const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], perches = [], perchOk = new Map();
   const KINDS = ['g', 4, 18, 30];
   const label = (kind) => (typeof kind === 'string' && kind.startsWith('c') ? kind.slice(2) : kind === 'g' ? 'ground dash' : `air dash at frame ${kind}`);
@@ -211,16 +213,37 @@
   // null when it never left the ground — a floor, a ramp, a stair). Over the bar, the same running hop from the same
   // start and heading (no dash) is asked first: when it comes down as high or higher, that height is the jump's (at 1/24
   // a running jump from a basin floor can step up a kerb in its first frame), not the dash's
+  // the highest a plain running hop or walk first comes down on block b, from the spots reached on foot within 6 m of it (and
+  // under 2.4 m below its top; the highest 80, 16 headings each): once per block
+  const hopBestOn = new Map();
+  const blockHopBest = (b) => {
+    if (hopBestOn.has(b)) return hopBestOn.get(b);
+    const B0 = L.blocks[b]; let best = null;
+    if (B0) {
+      const ns = N.filter((q) => reach[q.id] && B0.aabbMax.y - q.y < 2.4 && Math.max(B0.aabbMin.x - q.x, 0, q.x - B0.aabbMax.x) ** 2 + Math.max(B0.aabbMin.z - q.z, 0, q.z - B0.aabbMax.z) ** 2 < 36).sort((a, c) => c.y - a.y).slice(0, 80);
+      for (const q of ns) for (const dd of DIRS16) for (const k2 of ['h', 'w']) { const h = move(q, dd, k2); if (h && h.landY != null && h.landBlock === b && (!best || h.landY > best.y)) best = { y: h.landY, from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : 'walk' }; }
+    }
+    hopBestOn.set(b, best);
+    return best;
+  };
   let maxUpMove = null;   // (the highest first landing's start and heading: its plain hops are told beside it at the end)
   const judgeUp = (n, d, kind, r) => {
     if (r.landY == null) return;
     count.judgedUp++;
     const upL = r.landY - r.y0;
     if (upL > BAR) {
+      // the same running hop from the same start and heading, or a plain hop / walk from any spot reached on foot near the
+      // block it first came down on, coming down on that block as high: then it's a top a jump reaches, not the dash's
       const h = move(n, d, 'h');
       if (h && h.landY != null && h.landY >= r.landY - 0.02) {
         count.hopAsHigh++;
         if (!count.hopAsHighAt) count.hopAsHighAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), hopLandedAt: r2(h.landY), startY: r2(r.y0) };
+        return;
+      }
+      const hb = r.landBlock >= 0 ? blockHopBest(r.landBlock) : null;
+      if (hb && hb.y >= r.landY - 0.02) {
+        count.hopAsHighNear++;
+        if (!count.hopAsHighNearAt) count.hopAsHighNearAt = { from: [r1(n.x), r2(n.y), r1(n.z)], dir: d.map(r2), move: label(kind), landedAt: r2(r.landY), startY: r2(r.y0), block: r.landBlock, tag: bTag(r.landBlock), plainOnIt: { ...hb, y: r2(hb.y) } };
         return;
       }
     }
