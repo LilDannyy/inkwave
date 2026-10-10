@@ -1268,22 +1268,28 @@ export class StageLava {
       // bot hopped at the kerb until the lava had it — steps back to the node on the way that a hop reaches)
       if (nx && nx.y - a.pos.y > 1.3 && b.path && b.pi > 0) for (let j = Math.min(b.pi, b.path.length) - 1; j >= Math.max(0, b.pi - 4); j--) { const q = nav.nodes[b.path[j]], dy = q.y - a.pos.y; if (dy > 0.4 && dy <= 1.3 && Math.hypot(q.x - a.pos.x, q.z - a.pos.z) < 2.5) { b.pi = j; nx = q; break; } }
       const dh = nx ? Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) : Infinity;
-      if (nx && nx.y - a.pos.y > 0.4 && dh < 2.0) {
+      if (nx && nx.y - a.pos.y > 0.4 && dh < 3.0) {
         b._escNx = nx;
         if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
         // (standing in enemy ink a jump reaches 0.73 m, not the step's 1.2: a roller escaping off the Casting Floor hopped
         // at the causeway's foot until the lava had it — ink the floor at its feet first, then hop)
-        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6) { b._needJump = false; it.fire = true; it.squid = false; b.guardOff = true; return { yaw: Math.atan2(nx.x - a.pos.x, nx.z - a.pos.z), pitch: -1.05, dist: 1.0 }; }
+        // (aimed back down behind it: facing the step, the shots hit its face)
+        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6 && dh < 1.6) { b._needJump = false; it.fire = true; it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
         b._needJump = true;
         // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
-        // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot)
-        b.guardOff = true;
+        // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot —
+        // when the straight line there is floor under its feet all the way, but for the step's own last 0.8 m)
+        let lineOk = true;
+        for (let d = 0.3; d < dh - 0.8 && lineOk; d += 0.3) { const gx = a.pos.x + ((nx.x - a.pos.x) * d) / dh, gz = a.pos.z + ((nx.z - a.pos.z) * d) / dh; if (!(G.level.groundHeight(gx, gz, a.pos.y + 0.5) > a.pos.y - 0.5)) lineOk = false; }
+        if (lineOk) b.guardOff = true;
       } else if (b.path) {
         b._escNx = null;
         const mv = b._steer(dt); if (mv !== move) move.copy(mv);
         if (b.noProg > 0.8) b._needJump = true;
       } else b._lavaT = Math.min(b._lavaT, 0.05);   // (the route was dropped: plan it again now)
       it.squid = false;
+      // (a kit that walks slowly while it fires lets go: a charging charger crept off a sinking stone at 1.8 m/s)
+      if (SLOW_FIRE.has(a.weapon?.kind) && !(a.groundTeam === 2 && b._escNx)) it.fire = false;
     } else b._escNx = null;
     return null;
   }
@@ -1302,12 +1308,12 @@ export class StageLava {
   // stone's line went out 2.9 s before the stone killed, and a bot that stepped on late was never sent off).
   //   → { kind: 0 dry | 1 a floor the lava reaches | 2 a sinking stone, node: its nav node (the way out starts there;
   //       −1: none), R / ri: the stone }
-  // Airborne (a hop out, a jump): what it last stood on, for up to a second.
+  // Airborne (a hop out, a jump): what it last stood on, for up to 2 s.
   _foot(a) {
     const M = this.W.navMeta, t = this.clock.t;
     if (!M) return FOOT_DRY;
     const memo = a._lavaFoot;
-    if (!a.grounded) return memo && memo.t > t - 1 && memo.t <= t ? memo.f : FOOT_DRY;
+    if (!a.grounded) return memo && memo.t > t - 2 && memo.t <= t ? memo.f : FOOT_DRY;   // (2 s: a bot hopping at a step lands for a frame)
     const blk = a.ground?.block !== undefined && a.ground.block >= 0 ? G.level?.blocks[a.ground.block] : null, R = blk?.lavaRider;
     let f = FOOT_DRY;
     if (R && R.r) {
@@ -1428,7 +1434,8 @@ export class StageLava {
 }
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
-const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });   // (StageLava._foot: dry ground, an Organ, airborne long enough)
+const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });
+const SLOW_FIRE = new Set(['charger', 'splatling', 'spinner', 'bow', 'roller']);   // (an escaper of these lets go of the trigger)   // (StageLava._foot: dry ground, an Organ, airborne long enough)
 const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)
 const DEVICE_STATES = new Set(['spray', 'beacon', 'curtain', 'mine', 'stuck', 'run', 'prime']);
