@@ -173,9 +173,10 @@ Dash Pellet (`[b5-sub-dash]`, src/game/kits/dash.js — the press, the dash in �
 `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-dash.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs`
 (PAGE_ARGS picks sections: press, dir, height, limits, blast, walls, edges, hud, bots); online, `CLIENTS=2 Q0=autopilot
 Q1='autopilot&netlag=150&netjitter=60' NET=tools/botlab/tests/net-sub-dash.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`;
-the stage audit, any stage: `MAP=<id> PAGE=tools/botlab/tests/dash-reach.js PAGE_ARGS='step=2;off=0' WATCHDOG=900000 …
-page.cjs` (a full audit: every `off` from 0 to step − 1, each a part; `dt=24` the same at 1/24 s; `air=<m>` a what-if air
-dash; `climb=0` leaves out the dashes off a wall climb); in matches, `SUBS='all=dash'` adds a DASH line to match.cjs
+the stage audit, any stage: `MAP=<id> PAGE=tools/botlab/tests/dash-reach.js WATCHDOG=900000 … page.cjs` (every edge
+node in one run, 1–6 min locally; `dt=24` the same at 1/24 s; `step=N;off=k` a part, every `off` from 0 to N − 1 tiling a
+full audit; `air=<m>` a what-if air dash; `climb=0` leaves out the dashes off a wall climb; Cargo Terminal with
+`DEVSTAGE=1`); in matches, `SUBS='all=dash'` adds a DASH line to match.cjs
 (`DASH_AI=0`: bots never dash).
 
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
