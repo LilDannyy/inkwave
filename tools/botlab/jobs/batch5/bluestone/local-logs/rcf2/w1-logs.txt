@@ -1,0 +1,163 @@
+### boss  (2026-10-10 13:36)
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":555,"floorY":0,"box":[-34.8,34.8,-14.8,14.8],"cells":{"floor":4744.5,"wall":733,"drop":7709,"pad":253.5}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":-0.46,"at":[-4.25,-11.75]},"balconyN:b":{"pen_m":-0.46,"at":[3.75,11.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":-1.96,"at":[3.25,-13.75]},"verandaE1:b":{"pen_m":-1.96,"at":[-8.25,13.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":352}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":39,"cells4m":6,"trail":[[-14.6,-2.9],[-12.9,-5.9],[-15.5,-3.1],[-15.3,-3.2],[-13.1,-4.2],[-9.9,12.2],[-8.9,12.2],[0.6,12.8],[0.6,12.7],[0.6,11.7],[0.5,11.6],[0.5,11.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS it plays its moves (charges included)  {"played":{"barrage":9,"slam":3,"charge":2,"crablets":3,"sweep":2,"frenzy":1},"stuns":2,"hp":0.3,"dead":false}
+RESULT 6/7
+### climb-audit1  (2026-10-10 13:25)
+PASS climb edges barred by a railing  {"climbs":130,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit2  (2026-10-10 13:27)
+PASS climb edges barred by a railing  {"climbs":130,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit3  (2026-10-10 13:29)
+PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+RESULT 1/1
+### cover-map-crossmarket  (2026-10-10 13:10)
+PASS cover map  {"map":"crossmarket","floorCells":4690,"within5m_pct":95.4,"largestOpenRadius_m":12.7,"at":[-0.5,-0.5],"skip":[],"grid":{"x0":-31,"z0":-68,"nx":62,"nz":136,"b64":…}}
+RESULT 1/1
+### cover-map-halyard  (2026-10-10 13:10)
+PASS cover map  {"map":"halyard","floorCells":4252,"within5m_pct":96.4,"largestOpenRadius_m":17,"at":[-15.5,-19.5],"skip":[],"grid":{"x0":-24,"z0":-70,"nx":48,"nz":140,"b64":…}}
+RESULT 1/1
+### cover-map1  (2026-10-10 13:25)
+PASS cover map  {"map":"bluestone","floorCells":5006,"within5m_pct":99.6,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map2  (2026-10-10 13:27)
+PASS cover map  {"map":"bluestone","floorCells":5166,"within5m_pct":99.6,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map3  (2026-10-10 13:29)
+PASS cover map  {"map":"bluestone","floorCells":5688,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### p1  (2026-10-10 13:23)
+### p3  (2026-10-10 13:24)
+### r4-era1-zones  (2026-10-10 13:19)
+### r4-era1  (2026-10-10 13:21)
+### r4-era2  (2026-10-10 13:21)
+### r4-era3-zones  (2026-10-10 13:20)
+### r4-era3  (2026-10-10 13:22)
+### regions1-1  (2026-10-10 13:11)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.705,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.76},"base":{"m2":978,"share":0.178,"inked":0.75},"knee":{"m2":835,"share":0.152,"inked":0.68},"swimston":{"m2":541,"share":0.099,"inked":0.83},"river":{"m2":493,"share":0.09,"inked":0.45},"knee-far":{"m2":416,"share":0.076,"inked":0.66},"hoki":{"m2":267,"share":0.049,"inked":0.72},"gpo-quay":{"m2":265,"share":0.048,"inked":0.62},"arcade":{"m2":210,"share":0.038,"inked":0.69},"halo":{"m2":3,"share":0.001,"inked":0.43}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 77488968799699999985","  -8 56.78987899789897651"," -12 44.5999999974833740."," -16 343598567994344230.."," -20 04469973698443430..."," -24 264688968...5334...."," -28 255687765...41......"," -32 053599777...24......"," -36 466699965...45......"," -40 574689843...54......"," -44 696678457788530....."," -48 799899747481420....."," -52 486998786..........."," -56 178989975..........."," -60 058788862..........."," -64 ..79877............."," -68 ..67646............."," -72 ..23763............."," -76 ...................."," -80 ...................."]
+### regions1-2  (2026-10-10 13:12)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.671,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.8},"base":{"m2":978,"share":0.178,"inked":0.72},"knee":{"m2":835,"share":0.152,"inked":0.61},"swimston":{"m2":541,"share":0.099,"inked":0.78},"river":{"m2":493,"share":0.09,"inked":0.51},"knee-far":{"m2":416,"share":0.076,"inked":0.23},"hoki":{"m2":267,"share":0.049,"inked":0.73},"gpo-quay":{"m2":265,"share":0.048,"inked":0.62},"arcade":{"m2":210,"share":0.038,"inked":0.73},"halo":{"m2":3,"share":0.001,"inked":0.36}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 34136999999889842543","  -8 24.38988998688524100"," -12 35.3998999999941000."," -16 253998679999950000.."," -20 25288783699774000..."," -24 332678557...9400...."," -28 268777478...54......"," -32 565567876...45......"," -36 487678855...35......"," -40 875589754...66......"," -44 388679148877542....."," -48 688888878857400....."," -52 275787578..........."," -56 157879987..........."," -60 045878854..........."," -64 ..75776............."," -68 ..86656............."," -72 ..64665............."," -76 ...................."," -80 ...................."]
+### regions1-3  (2026-10-10 13:12)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.668,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.77},"base":{"m2":978,"share":0.178,"inked":0.7},"knee":{"m2":835,"share":0.152,"inked":0.52},"swimston":{"m2":541,"share":0.099,"inked":0.86},"river":{"m2":493,"share":0.09,"inked":0.62},"knee-far":{"m2":416,"share":0.076,"inked":0.48},"hoki":{"m2":267,"share":0.049,"inked":0.53},"gpo-quay":{"m2":265,"share":0.048,"inked":0.5},"arcade":{"m2":210,"share":0.038,"inked":0.72},"halo":{"m2":3,"share":0.001,"inked":0.2}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 05378967889979984830","  -8 04.47967789698985420"," -12 02.5998998998775330."," -16 232687469999951320.."," -20 23158843488996010..."," -24 031378536...4500...."," -28 443677466...57......"," -32 157688552...38......"," -36 665789746...66......"," -40 045699835...77......"," -44 747698745879850....."," -48 348999976763673....."," -52 067989676..........."," -56 056999784..........."," -60 015888852..........."," -64 ..78887............."," -68 ..77551............."," -72 ..56742............."," -76 ...................."," -80 ...................."]
+### regions1-4  (2026-10-10 13:13)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.72,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.79},"base":{"m2":978,"share":0.178,"inked":0.79},"knee":{"m2":835,"share":0.152,"inked":0.66},"swimston":{"m2":541,"share":0.099,"inked":0.84},"river":{"m2":493,"share":0.09,"inked":0.51},"knee-far":{"m2":416,"share":0.076,"inked":0.59},"hoki":{"m2":267,"share":0.049,"inked":0.6},"gpo-quay":{"m2":265,"share":0.048,"inked":0.73},"arcade":{"m2":210,"share":0.038,"inked":0.75},"halo":{"m2":3,"share":0.001,"inked":0.25}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 87647977999868757966","  -8 44.67898999779777651"," -12 25.4989999987656441."," -16 015899469996442210.."," -20 26689995889533431..."," -24 154669789...4321...."," -28 356778575...02......"," -32 273498786...45......"," -36 356788865...43......"," -40 465669974...54......"," -44 078799889876642....."," -48 359989978868522....."," -52 257989688..........."," -56 068899998..........."," -60 156898964..........."," -64 ..69877............."," -68 ..99856............."," -72 ..68854............."," -76 ...................."," -80 ...................."]
+### regions3-1  (2026-10-10 13:14)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.692,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.86},"base":{"m2":978,"share":0.147,"inked":0.74},"knee":{"m2":859,"share":0.129,"inked":0.55},"river":{"m2":594,"share":0.089,"inked":0.59},"swimston":{"m2":549,"share":0.083,"inked":0.84},"halo":{"m2":468,"share":0.07,"inked":0.42},"knee-far":{"m2":416,"share":0.063,"inked":0.44},"garden":{"m2":379,"share":0.057,"inked":0.7},"gpo-quay":{"m2":302,"share":0.045,"inked":0.78},"hoki":{"m2":267,"share":0.04,"inked":0.68},"arcade":{"m2":210,"share":0.032,"inked":0.65}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 31346868999977875312","  -8 01.77657999768776300"," -12 00.4767688977897451."," -16 111566776677985343.."," -20 03288897655897210..."," -24 032599999...9512...."," -28 13378689855586......"," -32 36358878876786......"," -36 17667887878575......"," -40 68476976757765......"," -44 879699868887643....."," -48 788999987752330....."," -52 246999887..........."," -56 278899997..........."," -60 047688875..........."," -64 ..79768............."," -68 ..66534............."," -72 ..34343............."," -76 ...................."," -80 ...................."]
+### regions3-2  (2026-10-10 13:15)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.581,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.67},"base":{"m2":978,"share":0.147,"inked":0.6},"knee":{"m2":859,"share":0.129,"inked":0.5},"river":{"m2":594,"share":0.089,"inked":0.47},"swimston":{"m2":549,"share":0.083,"inked":0.72},"halo":{"m2":468,"share":0.07,"inked":0.57},"knee-far":{"m2":416,"share":0.063,"inked":0.39},"garden":{"m2":379,"share":0.057,"inked":0.53},"gpo-quay":{"m2":302,"share":0.045,"inked":0.61},"hoki":{"m2":267,"share":0.04,"inked":0.52},"arcade":{"m2":210,"share":0.032,"inked":0.66}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 00344445664366774400","  -8 13.34444356566874100"," -12 01.2645658775877430."," -16 034476677776986324.."," -20 15678854666796421..."," -24 022458796...9504...."," -28 05368378621487......"," -32 14458664544589......"," -36 34357654433387......"," -40 54365863575754......"," -44 268877247744233....."," -48 558789998730000....."," -52 565788888..........."," -56 397876986..........."," -60 035667734..........."," -64 ..58556............."," -68 ..16223............."," -72 ..21233............."," -76 ...................."," -80 ...................."]
+### regions3-3  (2026-10-10 13:16)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.702,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.8},"base":{"m2":978,"share":0.147,"inked":0.64},"knee":{"m2":859,"share":0.129,"inked":0.65},"river":{"m2":594,"share":0.089,"inked":0.52},"swimston":{"m2":549,"share":0.083,"inked":0.85},"halo":{"m2":468,"share":0.07,"inked":0.71},"knee-far":{"m2":416,"share":0.063,"inked":0.56},"garden":{"m2":379,"share":0.057,"inked":0.65},"gpo-quay":{"m2":302,"share":0.045,"inked":0.8},"hoki":{"m2":267,"share":0.04,"inked":0.73},"arcade":{"m2":210,"share":0.032,"inked":0.77}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 02658998657899995931","  -8 00.79878754477985520"," -12 13.4988666676885541."," -16 035799877786986534.."," -20 26479987678787653..."," -24 243779689...9730...."," -28 37787879762658......"," -32 48639998873677......"," -36 75649988764683......"," -40 55767976589751......"," -44 389979569773333....."," -48 169869898851200....."," -52 468999786..........."," -56 368999986..........."," -60 056898853..........."," -64 ..47873............."," -68 ..03221............."," -72 ..22000............."," -76 ...................."," -80 ...................."]
+### regions3-4  (2026-10-10 13:17)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.678,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.7},"base":{"m2":978,"share":0.147,"inked":0.75},"knee":{"m2":859,"share":0.129,"inked":0.65},"river":{"m2":594,"share":0.089,"inked":0.74},"swimston":{"m2":549,"share":0.083,"inked":0.78},"halo":{"m2":468,"share":0.07,"inked":0.43},"knee-far":{"m2":416,"share":0.063,"inked":0.41},"garden":{"m2":379,"share":0.057,"inked":0.77},"gpo-quay":{"m2":302,"share":0.045,"inked":0.72},"hoki":{"m2":267,"share":0.04,"inked":0.63},"arcade":{"m2":210,"share":0.032,"inked":0.72}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 58546766573145755432","  -8 06.36664465456854400"," -12 35.6867567636873431."," -16 038999577567984323.."," -20 02598862576896540..."," -24 021789966...9820...."," -28 47348877463499......"," -32 26575866689889......"," -36 05577885766789......"," -40 26576575779997......"," -44 269789479997862....."," -48 288768999688512....."," -52 066989897..........."," -56 057899987..........."," -60 086876844..........."," -64 ..78789............."," -68 ..77646............."," -72 ..47886............."," -76 ...................."," -80 ...................."]
+### size-budget1  (2026-10-10 13:25)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1038}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4845,"cap":14535,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget2  (2026-10-10 13:27)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1041}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4995,"cap":14985,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget3  (2026-10-10 13:28)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1115}
+PASS paint atlas density  {"ppm":11.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5886,"cap":17658,"capNeeded":[6000,6000]}
+RESULT 3/3
+### spawn-mid1  (2026-10-10 13:24)
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid2  (2026-10-10 13:26)
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid3  (2026-10-10 13:28)
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### stage-audit-tower1  (2026-10-10 13:26)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower2  (2026-10-10 13:28)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower3  (2026-10-10 13:30)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-turf1  (2026-10-10 13:26)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf2  (2026-10-10 13:28)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf3  (2026-10-10 13:30)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### towercheck1  (2026-10-10 13:31)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towercheck2  (2026-10-10 13:33)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towercheck3  (2026-10-10 13:34)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### w1  (2026-10-10 13:23)
+### zones1  (2026-10-10 13:35)
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 90 (penalty +0/+9) | OT no
+   held A 116.8s B 21.3s neutral 117.5s | captures 8 (takeovers 2), control events 15, first capture @35.3s | rotations 4
+   stuck 0.4% | splats 60 (water 0) | specials 13 | super jumps 26 | turf 35.8/21.4 | sim 255.8s in 33s (wall 33s) | {"cpuSimMs":0.71}
+   control log 35.3:A@center 47.6:N@sideB 66.9:B@sideB 88.2:N@sideB 92.1:A@sideB 104:N@center 117.7:A@center 146.3:N@center 157.1:A@center 158.7:N@sideA 172.6:A@sideA 201.4:N@sideA 203.4:A@sideA 212.6:N@center 231.2:A@center
+   best shares per activation center@0-48s A100/B47 | sideB@48-104s A99/B100 | center@104-159s A100/B46 | sideA@159-213s A100/B43 | center@213-256s A100/B38
+   splats by cause {"brolly":6,"mitts":8,"blast":10,"bow":8,"shot":16,"blaster":2,"jetpack":2,"seeker":1,"charger":2,"crab":2,"tracer":1,"blower":1,"drop":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":255.8,"simMs":32538,"state":"finish","stuckPct":0.4,"splats":60,"water":0,"specials":13,"jumps":26,"cov":[35.8,21.4],"teamKD":[{"k":36,"d":24,"sp":2,"by":{"crab":2}},{"k":24,"d":36,"sp":3,"by":{"jetpack":2,"blower":1}}],"spUses":[{"jetpack":1,"blower":2,"strike":2},{"crab":3,"bubbler":3,"barrage":2}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":83,"missed":3,"escapes":27,"evaded":7,"caught":5,"avoidedPath":22,"goalMoved":66,"guard":1,"backedOff":8,"retargeted":14,"heldFire":5.549999999999986,"knockShots":0,"reengaged":9,"bubbleHold":0.49999999999999994,"popShots":1,"hops":0,"hunted":5,"splattedBy":{"jetpack":2,"crab":2,"blower":1}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":11,"byJump":0,"credited":11},"teams":[{"assists":6,"surfTurf":0,"turf":5447},{"assists":5,"surfTurf":0,"turf":3892}]},"byCause":{"brolly":6,"mitts":8,"blast":10,"bow":8,"shot":16,"blaster":2,"jetpack":2,"seeker":1,"charger":2,"crab":2,"tracer":1,"blower":1,"drop":1},"byWeapon":{"blaster":{"n":1,"splats":14,"deaths":5,"turf":1057},"bow":{"n":1,"splats":10,"deaths":1,"turf":1264},"twins":{"n":1,"splats":11,"deaths":8,"turf":1804},"roller":{"n":1,"splats":1,"deaths":10,"turf":1323},"brolly":{"n":1,"splats":6,"deaths":12,"turf":
+### zones3  (2026-10-10 13:36)
+== bluestone [zones]: winner Bravo (neutralised) | final 79 vs 57 (penalty +6.6/+10.3) | OT 1.2s
+   held A 47.3s B 74s neutral 179.8s | captures 10 (takeovers 7), control events 20, first capture @22.7s | rotations 6
+   stuck 0.3% | splats 90 (water 1) | specials 15 | super jumps 50 | turf 26.6/33.9 | sim 301.3s in 36s (wall 36s) | {"cpuSimMs":0.69}
+   control log 22.7:B@center 42.2:N@center 44.8:A@center 56:N@sideB 63.2:B@sideB 84.2:N@sideB 127.2:A@center 143.5:N@sideA 166:A@sideA 172.5:N@sideA 176.9:B@sideA 190.5:N@center 217.8:B@center 228.2:N@center 232.5:A@center 241.6:N@sideB 260.7:B@sideB 270:N@center 286.9:A@center 291.2:N@center
+   best shares per activation center@0-56s A100/B100 | sideB@56-91s A44/B100 | center@92-143s A100/B80 | sideA@144-190s A98/B100 | center@191-241s A100/B100 | sideB@242-270s A26/B100 | center@270-301s A96/B66
+   splats by cause {"blade":25,"drop":6,"mitts":10,"shot":18,"charger":10,"bow":8,"roller":5,"zipcaster":3,"crab":1,"boomerang":1,"water":1,"kraken":1,"bomb":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":301.3,"simMs":36198,"state":"finish","stuckPct":0.3,"splats":90,"water":1,"specials":15,"jumps":50,"cov":[26.6,33.9],"teamKD":[{"k":41,"d":49,"sp":3,"by":{"crab":1,"zipcaster":1,"kraken":1}},{"k":49,"d":41,"sp":2,"by":{"zipcaster":2}}],"spUses":[{"zipcaster":3,"sonar":3,"barrage":1,"storm":2},{"crab":2,"zipcaster":2,"kraken":2}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":87,"missed":0,"escapes":45,"evaded":17,"caught":5,"avoidedPath":20,"goalMoved":43,"guard":3,"backedOff":8,"retargeted":5,"heldFire":7.216666666666646,"knockShots":0,"reengaged":7,"bubbleHold":0,"popShots":0,"hops":0,"hunted":1,"splattedBy":{"zipcaster":3,"crab":1,"kraken":1}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":18,"byJump":0,"credited":18},"teams":[{"assists":7,"surfTurf":0,"turf":6469},{"assists":11,"surfTurf":0,"turf":6930}]},"byCause":{"blade":25,"drop":6,"mitts":10,"shot":18,"charger":10,"bow":8,"roller":5,"zipcaster":3,"crab":1,"boomerang":1,"water":1,"kraken":1,"bomb":1},"byWeapon":{"roller":{"n":2,"splats":12,"deaths":31,"turf":1921},"mitts":{"n":1,"splats":11,"deaths":15,"turf":987},"charger":{"n":1,"splats":10,"deaths":2,"turf":965},"blade":{"n":2,"splats":29,"deaths":29,"turf":2325},"bow":{"n":1,"splats":8,"d

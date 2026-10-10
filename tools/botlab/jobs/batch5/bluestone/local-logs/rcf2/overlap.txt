@@ -1,0 +1,10 @@
+crossmarket vs bluestone: walkable 0.42, footprint 0.47
+crossmarket vs bluestone_fix1: walkable 0.40, footprint 0.45
+crossmarket vs halyard: walkable 0.65, footprint 0.79
+bluestone vs bluestone_fix1: walkable 0.96, footprint 0.97
+bluestone vs halyard: walkable 0.39, footprint 0.43
+bluestone_fix1 vs halyard: walkable 0.38, footprint 0.42
+crossmarket: walkable 5370 m², footprint 6568 m², fill of its bounds 0.71
+bluestone: walkable 5622 m², footprint 6766 m², fill of its bounds 0.47
+bluestone_fix1: walkable 5408 m², footprint 6550 m², fill of its bounds 0.45
+halyard: walkable 5480 m², footprint 5688 m², fill of its bounds 0.76
