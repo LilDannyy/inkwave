@@ -1790,6 +1790,15 @@ one major and three minor items. What changed, all in the knee:
 - The round's logs are committed (`../../bluestone/local-logs/rc/`), §4.2–§4.4 are marked superseded, and the
   Bazookarp Gate's ring entrances are recorded (§8.7).
 
+**Round C fix 2 (2026-10-10).** The fix-1 review passed the shape again and sent the blockout back on three narrow
+points. What changed:
+- **The knee flight is rebuilt at 23.2°** (§8.2): fix 1 had built it at 32.3°, so `check-maps` failed in every build.
+  Its foot stays where it was, 0.45 m off the tower's lane; it now runs 5.6 m east and lands on the balcony's west end,
+  which gives up 1.8 m. `check-maps` prints ok for `bluestone`, `.tower`, `.zones`, `.bazookarp` and `.boss` in eras 1–3.
+- **The punt crossing is 5 m wide, with a ferry landing stage at its corner** (§8.5): in era 1 it was the barest floor
+  on the stage (the bots' ink on it averaged about 23 %).
+- **The Halo was measured again** after the flight change (§8.8): all four era-3 runs read 42 % or more.
+
 ### 8.1 The shape: a dog-leg, a kinked Z
 
 The streets were built shape first: the outline, the river, the station block and the spawn terraces with nothing
@@ -1810,9 +1819,10 @@ cover, heights and mode data go back.
 - **No straight sightline from base to base.** Every line from a kid's eye (1.5 m over the 3.3 m deck) on a 1 m grid
   over one spawn deck to every such eye on the other is blocked by something solid, in every era: 0 of 36,100 lines
   are clear (`rc-sight.mjs`). The hotel closes the Z's throat (see 8.2).
-- **Size.** Walkable floor (`cover-map.js` floorCells) is 4,818 / 4,978 / 5,500 m² in eras 1 / 2 / 3 (round C fix 1;
-  4,826 / 4,986 / 5,508 before it). Era 1 sits between Crossroads' 4,690 m² and 5,500 m². Era 2 is +3.3 %. Era 3 is
-  **+14.2 % over era 1 and +10.5 % over era 2**.
+- **Size.** Walkable floor (`cover-map.js` floorCells) is **5,006 / 5,166 / 5,688 m²** in eras 1 / 2 / 3 (round C fix 2:
+  the wider punt and its landing stage add about 190 m² to every era; fix 1 had 4,818 / 4,978 / 5,500). Era 1 sits
+  between Crossroads' 4,690 m² and 5,500 m². Era 2 is +3.2 %. Era 3 is **+13.6 % over era 1 and +10.1 % over era 2**
+  (the reviews' floor is +10 %, so the punt could not grow much more without adding era-3 floor too).
 
 ### 8.2 Mid, kept as built
 
@@ -1836,15 +1846,28 @@ its planters, the hotel balcony and landing (2.4) and the Boathouse deck (2.4). 
   over Swimston's east footpath sits at x −17 … −14, from 2.6 m to 9 m. The quay runs under the arch into the circus.
   The gallery, the GPO stair and the arch over the arcade are gone.
 - Removed: the cart moved off the booking office, and two kerb planters left the river stair's landing.
-- **The knee flight** (round C fix 1). An iron stair from the knee, where Swimston meets the circus, east up the hotel's
-  north face onto the balcony's west end: x −17.8 (0) … −14 (2.4), z −18.5 … −15.8 (32°), against the cab shelter, in
-  every era. Before it, the balcony and its landing were reached only by the balcony stair from the circus side, so the
-  3000s hotel stair to the Halo meant a U-turn. Now a kid off Swimston walks up the flight, steps onto the cab shelter's
-  top and climbs the hotel stair: on the bots' nav the pad → the Halo's 270° side is **69.1 m (was 81.2)**, and the knee
-  → the balcony is 15.4 m. The balcony planter moved 0.9 m east so the flight's top walks straight onto the landing.
-  The flight closes the gap between the hotel and the cab shelter at ground level (the walk under the balcony is still
-  reached from the quay and from under the landing). Its mirror stands 0.45 m off the tower's lane and 3.3 m from the
-  Bazookarp weir.
+- **The knee flight** (round C fix 1, rebuilt in fix 2). An iron stair from the knee, where Swimston meets the circus,
+  east up the hotel's north face onto the balcony's west end, against the cab shelter, in every era. Before it, the
+  balcony and its landing were reached only by the balcony stair from the circus side, so the 3000s hotel stair to the
+  Halo meant a U-turn.
+  - **As rebuilt in fix 2:** x −17.8 (0) … −12.2 (2.4), z −18.5 … −15.5: 5.6 m of run for its 2.4 m rise, **23.2°**
+    (`check-maps`' limit is 24°; fix 1 built it 3.8 m long at 32.3°, and every build failed). The foot could not move
+    west: the tower's lane on Alpha's half is x −20.75 … −18.25 (the track's mirror at x −19.5), and the foot stands
+    0.45 m off it. So the flight grows east instead, and **the balcony gives up its west 1.8 m** (it now runs x −12.2 …
+    −5). The flight is 3 m wide, the balcony's full depth; the cab shelter's south end moves from z −15.8 to −15.5 to
+    meet it.
+  - **The landing opens off the flight's north side** (x −14 … −12.2 at z −15.5): from the flight's upper half a kid
+    steps up 0–0.7 m onto the landing, and in the 3000s the hotel stair is one step west off the landing. On the bots'
+    nav the route is Swimston → the flight → the landing's south-west corner → the hotel stair: pad → the Halo's 270°
+    side is **69.7 m** (69.1 in fix 1, 81.2 before the flight), and the knee → the balcony 14.6 m (was 15.4).
+  - **What moved for it:** the landing's planter now stands against the landing's north balustrade (x −12.9 … −11.9,
+    z −13.8 … −13.0), 1 m clear of the balcony stair's head and of the hotel stair's side, so the landing's south half is
+    a clear junction; a second planter stands on the balcony behind its balustrade (x −8.6 … −7.4), a firing step's cover
+    over the circus. The kerb planter that stood under the balcony's west end (now inside the flight) is gone, and a
+    balcony post moved 0.15 m north.
+  - The flight closes the ground between the hotel and the cab shelter; the walk under the balcony (x −12.2 … −5) is
+    reached from the quay under the arch and from under the landing. Its mirror stands 0.45 m off the tower's lane and
+    3.2 m from the Bazookarp weir; `rc-weir.py` finds nothing within 3 m.
 
 ### 8.3 The legs (Alpha's; Bravo's is the twin)
 
@@ -1898,9 +1921,26 @@ steps go down to Swimston.
 
 All decks over the water stand on prop columns, with their bottoms at −0.6 (ENGINE rule 36). Nothing over the water
 ever vanishes (rule 28).
-- **The punt crossing (every era).** A chain ferry's pontoons, 3 m wide, top −0.34. It runs from the quay's south end
-  (z −44 … −41) east to x 14, then north to the circus's river edge at 5 o'clock (x 11 … 14). It is railed on the open
-  river side and has a ferryman's box and mooring posts. This is Alpha's away flank in every era.
+- **The punt crossing (every era).** A chain ferry's pontoons, top −0.34. This is Alpha's away flank in every era.
+  - **As widened in round C fix 2: 5 m.** The east leg runs from the quay's south end (x −6, z −46 … −41) east to the
+    landing stage. The north leg runs from the landing north to the circus's river edge at 5 o'clock (x 11 … 16). Its
+    last 4 m (z −24 … −20) are 3.5 m wide (x 11 … 14.5), running up against the Boathouse's west wall. Both legs widened
+    on the open-river side only, so the basin, the Iron Bridge and the garden are unchanged. It was 3 m wide.
+  - **Why 5 m.** The bots' nav makes a path pay for every node with open water (or a wall) within 1.2 m (+2.0) or
+    2.2 m (+0.5) (`nav.js`'s wet rule), and its nodes sit on a 1 m grid at the half metres. At 3 m every node was wet:
+    2 % dry. At 5 m, between edges on whole metres, the middle row of each leg is 2.5 m from the water both ways and
+    dry: **25 % of its nodes are dry in era 1** (`rcf2-punt-wet.mjs`). The A* surcharge for quay → the corner fell from
+    23.5 to 0. The bots' quay → the circus at 5 o'clock now takes the punt (46.8 m); before, it went under the hotel's
+    arch.
+  - **The ferry landing stage** stands at the L's corner: 7 × 7 m (x 11 … 18, z −48 … −41), so it stands 2 m proud of
+    both legs on the river side. On it are **the ferryman's box** (2 × 1.8 m, 2.2 m, `roof`) against its south rail
+    and **a crate stack** (1.2 m) against its east rail. It looks west along the east leg to the quay and north along
+    the north leg to the Boathouse's flank (`r4-era1-landing-to-quay`, `-landing-to-boathouse`).
+  - **Cover** stands along the edges, so each leg's middle row stays dry: rope crates and mooring posts on alternate
+    sides, 6–9 m apart. The north leg's two posts leave 1.85 m between their faces, so no 2 m strip runs the 26 m from
+    the ferryman's box to the circus (the strip test).
+  - **Rails** run along every open-river edge, including the landing's four outer edges.
+  - The quay's bollards moved 1.6 m south, off the widened foot.
 - **The Iron Bridge (today, the 3000s).** It runs from the quay by the GPO (z −33 … −30) straight across to the punt's
   north leg, as three 5.7 m spans with rails and a lamp. It opens a second, shorter crossing in era 2.
 - **The floating garden (the 3000s).** Lawn on pontoons (top −0.2) fills the harbour basin that the quay, the punt
@@ -1916,7 +1956,8 @@ Crossroads' diagonal jetties.
 - **Era 1 (the 1880s)** has three flank routes per team besides Swimston into the knee:
   - Hoki Lane or the arcade → Prow Place → the river walk → the circus's NW (10 o'clock);
   - the quay → under the hotel's arch → the circus's south (6:30);
-  - the punt → the circus's river edge (5 o'clock, the away flank by the Boathouse).
+  - the punt → the circus's river edge (5 o'clock, the away flank by the Boathouse). Since round C fix 2 it is 5 m wide
+    with a landing stage at its corner, and the bots' own quay → 5 o'clock path takes it (§8.5).
   Degrayling Lane is shut by the produce stacks, and the wagon shuts most of Customs Lane by the GPO.
 - **Era 2 (today)** opens Degrayling Lane (Swimston ↔ the quay at mid-leg) and the Iron Bridge (the quay → the punt's
   north leg). That is four flanks.
@@ -1960,7 +2001,9 @@ Crossroads' diagonal jetties.
   it. The free zone is Bravo's spawn deck, signed at both stair heads. **Entrances into the Gate's 15 m ring** (SPEC
   #5, `rc-karp-ring.mjs`, the round-C reviewer's count on the bots' nav, every era): **3 for the attackers**, within
   SPEC's 2–5: the 22 m street front at z 38 … 46, the quay side at x 7 … 8.5, and a one-edge graze at (36.5, 57) on the
-  ring's tangent that the deck cannot see; plus the defenders' own two off their deck.
+  ring's tangent that the deck cannot see; plus the defenders' own two off their deck. (Round C fix 2: the quay's
+  bollards moved off the widened punt's foot, onto the ring's quay side, so that entrance has 24 nav edges instead of
+  30; the count is still 3.)
 - **Boss Battle**: era 2, as before. The circus ring is the arena, with the booking office and the boat shed on its
   river and Boathouse edges, and the two kerb planters under the balcony's north-east corner against its claws. Since
   round C fix 1 its home ground is 555 m² (was 650): the customs docks take the chamfer side of both aprons, where it
@@ -1968,29 +2011,37 @@ Crossroads' diagonal jetties.
 
 ### 8.8 The numbers
 
-(at round C fix 1's head, e88f37a3; LEAD-REPORT.md has every run)
+(at round C fix 2's head, 5aa4b5f7; LEAD-REPORT.md has every run)
 
 | | Era 1 | Era 2 | Era 3 | Halyard | Crossroads |
 |---|---|---|---|---|---|
-| Walkable floor (`cover-map.js` floorCells) | 4,818 | 4,978 (+3.3 %) | 5,500 (+14.2 % on era 1, +10.5 % on era 2) | 4,252 | 4,690 |
-| Within 5 m of cover | 99.6 % | 99.6 % | 99.6 % | 96.4 % | 95.4 % |
+| Walkable floor (`cover-map.js` floorCells) | 5,006 | 5,166 (+3.2 %) | 5,688 (+13.6 % on era 1, +10.1 % on era 2) | 4,252 | 4,690 |
+| Within 5 m of cover | 99.6 % | 99.6 % | 99.5 % | 96.4 % | 95.4 % |
+| Largest open circle | 7 m (the fountain's top, in the side zone) | 7 m | 7 m | 17 m | 12.7 m |
 | Spawn → mid (`spawn-mid.js`, Alpha / Bravo) | 6.13 / 6.46 s | 6.13 / 6.46 s | 6.13 / 6.46 s | | |
 | Deck-to-deck sightlines clear (`rc-sight.mjs`) | 0 of 36,100 | 0 | 0 | | |
 | Strips over 25 m with no free-standing cover (turf build) | 0 | 0 | 0 | | |
-| climb-audit | 146 climbs, 0 barred | 146, 0 | 160, 0 | | |
+| climb-audit | 130 climbs, 0 barred | 130, 0 | 144, 0 | | |
+| `check-maps` (`bluestone`, `.tower`, `.zones`, `.bazookarp`, `.boss`) | ok ×5 | ok ×5 | ok ×5 | | |
 
 Jump 1 changes 4 groups per half (26 blocks) and jump 2 changes 22 (130 blocks); 52 groups, 0 failures; era-only
-blocks 22.4 %. Appear-check reads 0 in every build. On the bots' nav, jump 1 shortens Swimston → the quay at mid-leg
-from 22.4 to 11.7 m (Degrayling Lane) and the quay → the punt's north leg from 49.3 to 20.0 m (the Iron Bridge). Jump 2
-shortens the quay → the punt from 20.1 to 15.5 m (the garden) and puts the Halo 69.1 m from the pad by the knee flight
-and the hotel stair (`rc-routes.mjs`; 81.2 m before the flight).
+blocks 21.9 %. Appear-check reads 0 in every build. On the bots' nav, jump 1 shortens Swimston → the quay at mid-leg
+from 22.4 to 11.7 m (Degrayling Lane) and the quay → the punt's north leg from 43.4 to 20.0 m (the Iron Bridge; 49.3
+before the punt widened). Jump 2 shortens the quay → the punt from 20.1 to 15.5 m (the garden) and puts the Halo 69.7 m
+from the pad by the knee flight, the landing and the hotel stair (`rc-routes.mjs`; 69.1 in fix 1, 81.2 before the flight).
 
-Bots (fix 1's head):
-- **Turf War, era 3:** 71.7 / 62.2 % of turf inked (2 runs).
-- **By region:** era 1, the knee's far apron 38 / 57 / 46 / 46 %; era 3, the Halo 46 / 53 / 66 / 33 %, the floating
-  garden 51 / 58 / 74 / 56 %.
-- **Zone Control:** nine matches over eras 1–3 (four at earlier fix-1 heads with the same zone); Alpha 6, Bravo 3.
-- **Tower Command:** a tower-match in era 3, 74 m, 17 control changes, Alpha by retake.
-- **Boss Battle (era 2):** 6/7 twice and 5/7 once; it roams too little, as on Halyard.
+The outline against Crossroads (`rcf2-overlap.py`: the best overlap over flips and whole-metre shifts, 1 m cells):
+Bluestone era 1 overlaps Crossroads 0.42 on walkable floor and 0.47 on the footprint (0.40 / 0.45 in fix 1); Crossroads
+and Halyard, two band stages, overlap 0.65 / 0.79 by the same measure.
+
+Bots (fix 2's head; 8 ink-regions runs per era):
+- **By region, era 1:** the river crossings (the punt) 45 / 51 / 62 / 51 / 54 / 62 / 52 / 56 %, mean 54 % (fix 1: 21 / 16
+  / 24 / 18 %); the knee's far apron mean 47 % (66 / 23 / 48 / 59 / 31 / 59 / 48 / 44).
+- **By region, era 3:** the Halo 42 / 57 / 71 / 43 / 51 / 24 / 46 / 52 %, mean 48 %; the garden mean 66 %; the river
+  crossings mean 59 %; the knee's far apron mean 38 % (44 / 39 / 56 / 41 / 39 / 28 / 22 / 32).
+- **Turf War, era 1:** 66.7 / 55.3 % of turf inked, stuck 0 % (2 runs).
+- **Zone Control:** era 1 Alpha by knockout, era 3 Bravo (neutralised); stuck 0.4 / 0.3 %, no stuck episode.
+- **Tower Command:** tower-check 73.99 m, 0 holes, clearance clean, both rides a knockout, every era.
+- **Boss Battle (era 2):** 6/7 (it roams too little, as on every stage); home ground 555 m², overhang worst 0.04 m.
 
 The details are in `LEAD-REPORT.md`.
