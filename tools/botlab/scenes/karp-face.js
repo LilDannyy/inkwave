@@ -21,6 +21,16 @@
   const park = () => m.actors.forEach((a, i) => { const p = G.level.spawnPads[a.team]; put(a, V(p.x + ((i % 4) - 1.5) * 1.6, p.y, p.z + (a.team ? 2 : -2) * (p.z > 0 ? 1 : -1)), a.team ? Math.PI : 0); });
   const yawTo = (a, p) => Math.atan2(p.x - a.pos.x, p.z - a.pos.z);
   const fov0 = g.settings.fov;
+  // a camera spot round `look` with a clear view of it: dist m out, h m up, the direction nearest yaw0 that sees it
+  const camAt = (look, dist, h, yaw0 = 0) => {
+    let best = null, bs = -Infinity;
+    for (let k = 0; k < 24; k++) {
+      const a = yaw0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 12), p = V(look.x + Math.sin(a) * dist, look.y + h, look.z + Math.cos(a) * dist);
+      let seen = 0; for (const o of [[0, 0, 0], [0, 0.8, 0], [0.6, 0.3, 0], [-0.6, 0.3, 0]]) if (G.physics.los(p, V(look.x + o[0], look.y + o[1], look.z + o[2]))) seen++;
+      const sc = seen * 10 - k * 0.5; if (sc > bs) { bs = sc; best = p; }
+    }
+    return best;
+  };
   const cine = (from, look, fov = 58) => { g.settings.fov = fov; g.rig.cinematic(from, from, look, look, 99, () => {}); for (let i = 0; i < 2; i++) dbg.step(1000 / 6000); };
   const follow = (a = me) => { g.settings.fov = fov0; g.rig.follow(a, true); g.rig.yaw = a.yaw; g.rig.pitch = -0.2; dbg.step(1000 / 60); if (g.rig.blend) g.rig.blend.active = false; g.rig.follow(a, true); };
   const calm = () => { if (g.hud.zcalls) [...g.hud.zcalls.children].forEach((el) => el.remove()); if (g.hud.karp) g.hud.karp._sayT = -1e9; };
@@ -163,30 +173,30 @@
     paintAround(0, side(P, 3.5), 2.5); paintAround(1, side(P, -3.5), 2.5);
     Kp.shell.m = 0.7 * Kp.shell.hp; Kp.shell.quiet = 0; step(0.3);
     const c = Kp.shell.center();
-    cine(V(c.x + 2.6, c.y + 0.5, c.z - dz * 1.6), V(c.x, c.y - 0.1, c.z), 62);
+    cine(camAt(c, 5.2, 0.9, dz > 0 ? Math.PI * 0.8 : -Math.PI * 0.2), V(c.x, c.y - 0.1, c.z), 55);
   });
   add('look-weir-standing', () => {
     reset();
     const w = W0.pos, f = V(Math.sin(W0.yaw), 0, Math.cos(W0.yaw)), ac = V(Math.cos(W0.yaw), 0, -Math.sin(W0.yaw));
     step(0.4);
-    cine(V(w.x - f.x * 7 + ac.x * 3, w.y + 2.4, w.z - f.z * 7 + ac.z * 3), V(w.x, w.y + 1.3, w.z), 58);
+    const lk = V(w.x, w.y + 1.3, w.z); cine(camAt(lk, 8, 2.2, Math.atan2(-f.x, -f.z) + 0.4), lk, 58); void ac;
   });
   add('look-weir-down', () => {
     reset();
     Kp.lowered[0] = true; Kp.gateUp[0] = true; step(1.6);
-    const w = W0.pos, f = V(Math.sin(W0.yaw), 0, Math.cos(W0.yaw)), ac = V(Math.cos(W0.yaw), 0, -Math.sin(W0.yaw));
-    cine(V(w.x - f.x * 7 + ac.x * 3, w.y + 2.4, w.z - f.z * 7 + ac.z * 3), V(w.x, w.y + 1.3, w.z), 58);
+    const w = W0.pos, f = V(Math.sin(W0.yaw), 0, Math.cos(W0.yaw));
+    const lk = V(w.x, w.y + 1.3, w.z); cine(camAt(lk, 8, 2.2, Math.atan2(-f.x, -f.z) + 0.4), lk, 58);
   });
   add('look-gate-sealed', () => {
     reset(); step(0.2);
     const gp = G0.pos, f = V(Math.sin(G0.yaw), 0, Math.cos(G0.yaw));
-    cine(V(gp.x - f.x * 9 + 3, gp.y + 3.2, gp.z - f.z * 9), V(gp.x, gp.y + 1.8, gp.z), 58);
+    const lk = V(gp.x, gp.y + 1.8, gp.z); cine(camAt(lk, 9.5, 2.0, Math.atan2(-f.x, -f.z) + 0.3), lk, 58);
   });
   add('look-gate-open', () => {
     reset();
     Kp.lowered[0] = true; Kp.gateUp[0] = true; step(1.8);
     const gp = G0.pos, f = V(Math.sin(G0.yaw), 0, Math.cos(G0.yaw));
-    cine(V(gp.x - f.x * 11 + 3, gp.y + 3.4, gp.z - f.z * 11), V(gp.x, gp.y + 3.0, gp.z), 60);
+    const lk = V(gp.x, gp.y + 3.0, gp.z); cine(camAt(lk, 12, 1.0, Math.atan2(-f.x, -f.z) + 0.3), lk, 60);
   });
   add('look-carrier-front', () => {
     reset();
@@ -230,7 +240,7 @@
   add('look-resting', () => {
     reset(); step(0.5);
     const c = Kp.shell.center();
-    cine(V(c.x + 4.5, c.y + 1.4, c.z - dz * 3.6), V(c.x, c.y - 0.3, c.z), 50);
+    cine(camAt(c, 6, 1.2, dz > 0 ? Math.PI * 0.8 : -Math.PI * 0.2), V(c.x, c.y - 0.3, c.z), 50);
   });
   // ================================================================ the menus (over the match)
   const menu = async (id, prep) => { g.menus.show(null); await new Promise((r) => setTimeout(r, 50)); prep?.(); g.menus.show(id); for (let i = 0; i < 40; i++) await new Promise((r) => requestAnimationFrame(r)); await new Promise((r) => setTimeout(r, 900)); };

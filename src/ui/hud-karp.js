@@ -137,7 +137,7 @@ const CSS = `
 .iw-kret.is-full .iw-kret__charge { stroke: var(--self); filter: drop-shadow(0 0 3px var(--self)); }
 .iw-kret__dot { fill: #fff; stroke: #15121c; stroke-width: 1.2; }
 .iw-kret b { position: absolute; left: 50%; top: 100%; translate: -50% -20%; font: 900 calc(var(--u) * 1.15) / 1 'Rubik', sans-serif; color: var(--fc); text-shadow: 0 1px 0 #000, 0 0 3px #000; }
-.iw-kret em { position: absolute; left: 100%; top: 50%; translate: -10% -50%; font: 900 calc(var(--u) * .85) / 1 'Rubik', sans-serif; font-style: normal; color: #fff; background: #ff5a4a;
+.iw-kret em { position: absolute; left: 88%; top: 6%; translate: 0 -50%; font: 900 calc(var(--u) * .85) / 1 'Rubik', sans-serif; font-style: normal; color: #fff; background: #ff5a4a;
   padding: .2em .4em; border-radius: 99px; display: none; }
 .iw-kret.is-fast em { display: block; }
 .iw-kret.is-flash svg { animation: iw-kret-flash .35s ease-out; }

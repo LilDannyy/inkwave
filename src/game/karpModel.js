@@ -48,7 +48,7 @@ function grid(nz, na, z0, z1, pt, keep = null) {
   for (let i = 0; i < nz; i++) for (let j = 0; j < na; j++) {
     if (keep && !keep(i, j)) continue;
     const a = i * W + j, b = a + 1, c = a + W, d = c + 1;
-    idx.push(a, c, b, b, c, d);
+    idx.push(a, b, c, b, d, c);   // (outward: +angle × +z)
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -177,9 +177,9 @@ function buildKarp() {
     tips: part(TIPS, new V3(0, KY, 0), 'lamp', { color: '#1b1e25', emissive: '#ffffff', intensity: 0.3, roughness: 0.3 }),
   };
   for (const k in parts) { fit(parts[k].src); fitP(parts[k].pivot); }
-  const body = fit(P.build()), grip = PG.build();
+  const bodyG = fit(P.build()), grip = PG.build();
   return {
-    kind: 'sp_karp', body: grip ? mergeGeometries([body, grip], false) : body, ink: fit(I.build()),
+    kind: 'sp_karp', body: grip ? mergeGeometries([bodyG, grip], false) : bodyG, ink: fit(I.build()),
     parts,
     muzzle: fitP(new V3(0, ym, zm + 0.03)),
     gripR: GRIP_PISTOL,

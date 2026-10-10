@@ -53,7 +53,7 @@ const SHELL_FS = `
   float cracks(vec3 p){ vec3 i = floor(p), f = fract(p); float d1 = 9.0, d2 = 9.0;
     for (int x = -1; x <= 1; x++) for (int y = -1; y <= 1; y++) for (int z = -1; z <= 1; z++) { vec3 g = vec3(x, y, z), o = vec3(h3(i + g), h3(i + g + 7.1), h3(i + g + 3.7));
       float d = length(g + o - f); if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) d2 = d; }
-    return 1.0 - smoothstep(0.0, 0.06, d2 - d1); }
+    return 1.0 - smoothstep(0.0, 0.035, d2 - d1); }
   void main(){
     vec3 V = normalize(cameraPosition - vW), N = normalize(vN);
     float fr = pow(1.0 - abs(dot(V, N)), 2.2);
@@ -67,10 +67,10 @@ const SHELL_FS = `
     float ink = smoothstep(0.0, 0.22, front) * step(0.02, k);
     vec3 col = mix(vec3(1.0), iri, 0.55);
     col = mix(col, uM >= 0.0 ? uColA : uColB, ink * 0.85);
-    float a = 0.16 + 0.55 * fr + ink * (0.32 + 0.25 * k);
+    float a = 0.08 + 0.55 * fr + ink * (0.26 + 0.22 * k);
     // cracks above 60 %, the white warning flash above 75 %
-    float cr = cracks(dir * 3.2) * smoothstep(0.6, 0.85, k);
-    col = mix(col, vec3(1.0), cr * 0.9); a = max(a, cr * 0.85);
+    float cr = cracks(dir * 3.2) * smoothstep(0.6, 0.85, k) * (0.3 + 0.7 * ink);
+    col = mix(col, vec3(1.0), cr * 0.9); a = max(a, cr * 0.75);
     float warn = uWarn * (0.5 + 0.5 * sin(uTime * 22.0));
     col = mix(col, vec3(1.0), clamp(uFlash * 0.7 + warn * 0.45, 0.0, 1.0)); a = min(1.0, a + uFlash * 0.25 + warn * 0.12);
     // a glossy highlight
