@@ -77,9 +77,12 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   await wait(2500);
   const cells = await J(A, `(() => { const W = __G.lavaWorld, P = __G.paint; let s = ''; for (let i = 0; i < W.cells.ids.length; i++) s += P.grid[W.cells.ids[i]]; return s; })()`);
   const cellsB = await J(B, `(() => { const W = __G.lavaWorld, P = __G.paint; let s = ''; for (let i = 0; i < W.cells.ids.length; i++) s += P.grid[W.cells.ids[i]]; return s; })()`);
-  let same = 0, inkedA = 0, inkedB = 0; for (let i = 0; i < Math.min(cells.length, cellsB.length); i++) { if (cells[i] === cellsB[i]) same++; if (cells[i] !== '0') inkedA++; if (cellsB[i] !== '0') inkedB++; }
+  let same = 0, inkedA = 0, inkedB = 0; const diffIdx = []; for (let i = 0; i < Math.min(cells.length, cellsB.length); i++) { if (cells[i] === cellsB[i]) same++; else if (diffIdx.length < 400) diffIdx.push(i); if (cells[i] !== '0') inkedA++; if (cellsB[i] !== '0') inkedB++; }
   const ratio = same / Math.max(1, cells.length);
-  R('the lava cells end identical on both screens after splats across the waterline through a rise and a fall (painter\'s stage time, field 15)', cells.length === cellsB.length && ratio >= 0.999 && painted > 30, { n: cells.length, ratio: +ratio.toFixed(5), differ: cells.length - same, inked: [inkedA, inkedB], painted });
+  // (where the differing cells are: their heights, and whether a neighbour on the same face agrees — a blob's rim, which
+  // a splat record's 1 cm position rounding moves — or they sit at the waterline, which would be the lava's own doing)
+  const diffWhere = await J(A, `(() => { const W = __G.lavaWorld, P = __G.paint, v = new (__G.local.pos.constructor)(), ids = ${JSON.stringify(diffIdx)}; const ys = ids.map((i) => { P.cellWorld(W.cells.ids[i], v); return +v.y.toFixed(2); }); const band = ys.filter((y) => Math.abs(y - 0.8) < 0.08 || Math.abs(y + 0.6) < 0.08).length; return { n: ys.length, minY: Math.min(...ys), maxY: Math.max(...ys), atWaterlines: band, eg: ys.slice(0, 16) }; })()`);
+  R('the lava cells end identical on both screens after splats across the waterline through a rise and a fall (painter\'s stage time, field 15)', cells.length === cellsB.length && ratio >= 0.999 && painted > 30, { n: cells.length, ratio: +ratio.toFixed(5), differ: cells.length - same, inked: [inkedA, inkedB], painted, diffWhere });
   for (const c of [A, B]) await c.until(`__G.match && __G.match.state === 'results'`, 120000, 500);
   const res = [await J(A, `__G.match.result && __G.match.result.winner`), await J(B, `__G.match.result && __G.match.result.winner`)];
   const fin = await J(A, `(() => { const L = __G.match.lava; return { y: L.y, phase: L.st.phase }; })()`);
@@ -96,7 +99,7 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   R('Practice runs its own loop (practice: rise at 20) between the stage\'s own levels', a && a.key === 'practice' && a.y === -0.6, a);
   // (the host paints the Slump cliff across the waterline at LOW, then again at HIGH: the rise burns the first)
   const paintCliff = (c) => c.js(`(() => { const L = __G.match.lava, V = __G.local.pos.constructor, y = L.y, D = Math.PI / 180; let n = 0;
-    for (let a = -151; a >= -159; a -= 1) { const r = 31.5 - 3 * (a + 147) / -27 - 0.4; __G.paint.splat(new V(r * Math.cos(a * D), y + 0.1, r * Math.sin(a * D)), 0.75, __G.local.team, {}); n++; } return n; })()`);
+    for (let a = -151; a >= -159; a -= 1) { const r = 31.5 - 3 * (a + 147) / -27 - 0.4; for (const dy of [0.1, 0.7]) { __G.paint.splat(new V(r * Math.cos(a * D), y + dy, r * Math.sin(a * D)), 0.75, __G.local.team, {}); n++; } } return n; })()`);
   await A.until(`__G.match.lava.clock.t > 12`, 60000, 250);
   let pA = await paintCliff(A);
   await A.until(`__G.match.lava.clock.t > 31`, 60000, 250);
@@ -113,7 +116,13 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   const cmp = (x, y) => { let same = 0, inked = [0, 0]; for (let i = 0; i < Math.min(x.length, y.length); i++) { if (x[i] === y[i]) same++; if (x[i] !== '0') inked[0]++; if (y[i] !== '0') inked[1]++; } return { n: x.length, differ: x.length - same, inked }; };
   const jA = await cellsOf(A), jC = await cellsOf(C), jB = await cellsOf(B);
   const jc = cmp(jA, jC), jb = cmp(jA, jB);
-  R('…and its lava cells (the imported grid) equal the host\'s, as do the guest\'s (the host painted the Slump cliff across the waterline at LOW and at HIGH; the rise burned the first)', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && jc.inked[0] > 20 && pA >= 18, { joiner: jc, guest: jb, painted: pA });
+  // (at HIGH nearly every lava cell is under the surface — burned, bare — so the whole grid is compared too: the host's
+  // ink on the cliff above the waterline must have come over in the import, its ink from LOW under it must not)
+  const gridOf = (cl) => J(cl, `(() => { const P = __G.paint; let s = ''; for (let i = 0; i < P.grid.length; i++) s += P.grid[i]; return s; })()`);
+  const gA = await gridOf(A), gC = await gridOf(C), gB = await gridOf(B);
+  const gc = cmp(gA, gC), gb = cmp(gA, gB);
+  R('…and its paint (the imported grid) equals the host\'s, lava cells and all, as does the guest\'s (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH)', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && gc.differ === 0 && gb.differ === 0 && gc.inked[0] > 100 && pA >= 18,
+    { lavaCells: { joiner: jc, guest: jb }, grid: { joiner: gc, guest: gb }, painted: pA });
   await wait(3200);
   await A.js(`__inkwave.api.practiceEnd(); 1`);
   for (const cl of [A, B, C]) await cl.until(`__G.net.state === 'lobby' && __G.mode === 'menu'`, 40000, 500);
