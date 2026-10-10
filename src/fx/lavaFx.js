@@ -245,8 +245,9 @@ export class LavaLook {
     this.rid = [];
     const basalt = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.84, metalness: 0, flatShading: true });
     const pumice = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, emissive: '#000000' });
-    // before a fall the stones crack and glow: ember-red lines in a net of cracks (the pale stone between stays pale — a
-    // red emissive over the whole pale pumice read bubblegum pink)
+    // before a fall the stones crack and glow: charred fissures with a crimson-ember glow in them, in a net of cracks (the
+    // pale stone between stays pale — a red emissive over the whole pale pumice read bubblegum pink; a bright glow over
+    // pale stone still read salmon, so the fissure is darkened first)
     this._crackU = { value: 0 };
     pumice.onBeforeCompile = (sh) => {
       sh.uniforms.uCrack = this._crackU;
@@ -258,9 +259,12 @@ vec2 crH(vec2 p) { return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2
 float crE(vec2 x) { vec2 n = floor(x), f = fract(x); float F1 = 8.0, F2 = 8.0;
   for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 g = vec2(float(i), float(j)), r = g + crH(n + g) - f; float d = dot(r, r); if (d < F1) { F2 = F1; F1 = d; } else if (d < F2) F2 = d; }
   return sqrt(F2) - sqrt(F1); }`)
-        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        .replace('#include <color_fragment>', `#include <color_fragment>
+float gCr = 0.0;
 if (uCrack > 0.001) { float ce = min(crE(vCrW.xz * 2.3), crE(vec2(vCrW.x + vCrW.z, vCrW.y * 1.6) * 2.3));
-  float cr = 1.0 - smoothstep(0.025, 0.1, ce); totalEmissiveRadiance += vec3(1.0, 0.2, 0.035) * cr * uCrack * 2.6; }`);
+  gCr = 1.0 - smoothstep(0.03, 0.12, ce); diffuseColor.rgb *= 1.0 - 0.85 * gCr * min(1.0, uCrack * 1.6); }`)
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
     };
     pumice.customProgramCacheKey = () => 'lava-pumice-crack';
     this._mats = [basalt, null, pumice];
