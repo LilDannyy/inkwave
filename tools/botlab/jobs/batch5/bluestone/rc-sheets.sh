@@ -11,7 +11,7 @@ cd "$(dirname "$0")/../../../../.." || exit 1
 mkdir -p "$O" "$W/sheets"
 jpg() { sips -Z ${3:-1400} -s format jpeg -s formatOptions 70 "$1" --out "$2" > /dev/null; [ "$(stat -f %z "$2")" -gt 300000 ] && sips -s format jpeg -s formatOptions 50 "$1" -Z ${3:-1400} --out "$2" > /dev/null; [ "$(stat -f %z "$2")" -gt 300000 ] && sips -s format jpeg -s formatOptions 40 "$1" -Z 1100 --out "$2" > /dev/null; return 0; }
 B=-42,42,-80,80
-COLS=2 python3 $J/rc-sheet.py "$W/sheets/tops.png" "Round C: Bluestone (the Z), Crossroads, Halyard - one scale" 3.2 \
+COLS=2 python3 $J/rc-sheet.py "$W/sheets/tops.png" "Round C fix 2: Bluestone (the Z), Crossroads, Halyard - one scale" 3.2 \
   "$ST/crossmarket-top.webp=Crossroads Market (crossmarket-top.webp)=-31,31,-68,68" \
   "$L/perfH/halyard-day-top.png=Halyard Marina (the bar)=-24,24,-70,70" \
   "$W/r4-era1/bluestone-day-top.png=Bluestone era 1, the 1880s=$B" \
@@ -45,7 +45,7 @@ s.save(f'{W}/sheets/mid-vs.png'); print('mid sheet', s.size)
 PY
 jpg "$W/sheets/mid-vs.png" "$O/r4-mid-vs-crossmarket.jpg" 1600
 # cover maps
-for e in 1 2 3; do python3 tools/botlab/cover-map.py "$L/cover-map$e.log" "$W/sheets/cover$e.png" "Bluestone Junction era $e (round C): distance to cover (cover-map.js)" > /dev/null && jpg "$W/sheets/cover$e.png" "$O/r4-era$e-cover-map.jpg"; done
+for e in 1 2 3; do python3 tools/botlab/cover-map.py "$L/cover-map$e.log" "$W/sheets/cover$e.png" "Bluestone Junction era $e (round C fix 2): distance to cover (cover-map.js)" > /dev/null && jpg "$W/sheets/cover$e.png" "$O/r4-era$e-cover-map.jpg"; done
 python3 tools/botlab/cover-map.py "$L/cover-map-halyard.log" "$W/sheets/coverH.png" "Halyard Marina (the bar)" > /dev/null
 python3 tools/botlab/cover-map.py "$L/cover-map-crossmarket.log" "$W/sheets/coverC.png" "Crossroads Market" > /dev/null
 python3 - "$W/sheets" "$O" <<'PY'
