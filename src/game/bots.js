@@ -1108,7 +1108,9 @@ export class BotBrain {
       it.sub = false; it.squid = false; this._releaseBomb = false;
       // [b5-int3] the release frame checked again (the press was checked with last frame's aim; a fight's lob turns onto its
       // target in between): a throw now going off by an own idle Chain Bobber web isn't made
-      if (SUB_KITS.bobber?.webThrow?.(a) && a.weaponRunner.aimingSub) { a.weaponRunner.aimingSub = false; this.bombCd = Math.max(this.bombCd, 1.2); }
+      // (not a held sub — a Glide Bomb's cook, a Shaker's shake: their kits check their own release)
+      const bsub = a.specialActive?.kind === 'barrage' ? a.specialActive.bomb : a.sub;
+      if (a.weaponRunner.aimingSub && !SUB_KITS[bsub?.kind]?.hold && SUB_KITS.bobber?.webThrow?.(a)) { a.weaponRunner.aimingSub = false; this.bombCd = Math.max(this.bombCd, 1.2); }
     }
 
     // ---------------- aim: critically-damped spring with a turn-rate cap (flicks accelerate and settle; no twitch)
