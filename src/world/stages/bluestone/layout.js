@@ -118,7 +118,7 @@ const SINGLE = [
 
 // the hotel stair (the 3000s): x −16.5 … −14 (against the balcony landing's west edge), from z −15 (2.4) north to
 // z −8.4 (5.2, 23.0°), its top landing on to z −4.5 where it meets the Halo's 270° side
-export const HOTEL_STAIR = { x0: -16.5, x1: -14.0, zFoot: -15.0, yFoot: 2.4, zTop: -8.4, yTop: 5.2, zLand: -4.5, zK0: -15.8, zK1: -10.2 };
+export const HOTEL_STAIR = { x0: -16.5, x1: -14.0, zFoot: -15.0, yFoot: 2.4, zTop: -8.4, yTop: 5.2, zLand: -4.5, zK0: -15.5, zK1: -10.2 };
 const HS_X = (HOTEL_STAIR.x0 + HOTEL_STAIR.x1) / 2;
 // (round C) the Boathouse stair: x 14.6 … 17.1, from the deck's north edge (z −12, 2.4) north to z −5 (5.4, 23.2°), its
 // landing on to z −2.5 over the Halo's 90° side's outer edge; the river stair: z −20 … −17 on the circus's river edge,
@@ -127,9 +127,10 @@ export const BOAT_STAIR = { x0: 14.6, x1: 17.1, zFoot: -12, zTop: -5, zLand: -2.
 const BS_X = (BOAT_STAIR.x0 + BOAT_STAIR.x1) / 2;
 export const RIVER_STAIR = { xFoot: 9.6, xMid: 3.6, xTop: -2.4, xLand: -5.4, z0: -20, z1: -17 };
 const RS_Z = (RIVER_STAIR.z0 + RIVER_STAIR.z1) / 2;
-// (round C fix 1) the knee flight: x −17.8 (0) … −14 (2.4, the balcony's west edge), z −18.5 (the hotel's north face) …
-// −15.8 (the cab shelter's south end)
-export const KNEE_FLIGHT = { x0: -17.8, x1: -14, z0: -18.5, z1: -15.8 };
+// (round C fix 1) the knee flight: from x −17.8 (0, its foot 0.45 m off the tower's lane) east to x −12.2 (2.4, the
+// balcony's west end), z −18.5 (the hotel's north face) … −15.5 (the balcony's depth; the cab shelter's south end):
+// (round C fix 2: 5.6 m of run, 23.2°: check-maps' 24° — it was 3.8 m, 32.3°; the balcony gives up its west 1.8 m)
+export const KNEE_FLIGHT = { x0: -17.8, x1: -12.2, z0: -18.5, z1: -15.5 };
 const KF_Z = (KNEE_FLIGHT.z0 + KNEE_FLIGHT.z1) / 2;
 const AP_OUT = 14.6;
 const MID = [
@@ -161,21 +162,23 @@ const MID = [
   // the Young & Jackfish: H1 (to 9 m) and the prow's corner turret; the balcony over the circus, its landing and stair
   ...bld(-14, -9.5, -22.5, -18.5, 9, { tag: 'hotel', color: K.hotel }, BOT),   // (round C: its east wing arches over the quay, KNEE)
   B(-14, -11.5, 9, 13, -21, -18.5, { tag: 'hotel-turret', hidden: true, roof: true, paint: false }),
-  B(-14, -5, 2.1, 2.4, -18.5, -15.5, { tag: 'balcony', color: K.planks, pattern: PATTERN.planks }),
+  B(KNEE_FLIGHT.x1, -5, 2.1, 2.4, -18.5, -15.5, { tag: 'balcony', color: K.planks, pattern: PATTERN.planks }),   // (round C fix 2: from the knee flight's top)
   B(-14, -11, 2.1, 2.4, -15.5, -12.5, { tag: 'balcony-landing', color: K.planks, pattern: PATTERN.planks }),
   R([-5, 0, -14], [-11, 2.4, -14], 3, stair({ tag: 'balcony-stair', color: K.iron, pattern: PATTERN.treads })),
   // the knee flight (round C fix 1; the review: the Halo's three stairs were each a detour off the main routes): from the
   // knee, where Swimston meets the circus, east up the hotel's north face onto the balcony's west end (2.4), against the
   // cab shelter, so the balcony and, in the 3000s, the hotel stair to the Halo (over the shelter's top) sit on the
-  // Swimston → circus route instead of a U-turn off the balcony stair (32°; its mirror stands 0.45 m off the tower's
-  // lane and 3.3 m from the Bazookarp weir)
+  // Swimston → circus route instead of a U-turn off the balcony stair (its mirror stands 0.45 m off the tower's lane and
+  // 3.2 m from the Bazookarp weir; round C fix 2: 23.2°, its top on the balcony's west end, the landing off its north
+  // side: in the 3000s the hotel stair is a step west off the landing)
   R([KNEE_FLIGHT.x0, 0, KF_Z], [KNEE_FLIGHT.x1, 2.4, KF_Z], KNEE_FLIGHT.z1 - KNEE_FLIGHT.z0, stair({ tag: 'knee-flight', color: K.iron, pattern: PATTERN.treads })),
-  ...[[-13.85, -12.65], [-13.85, -15.4], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
-  B(-12.6, -11.6, 2.4, 3.4, -15.5, -14.7, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),   // (round C fix 1: 0.9 m east, so the knee flight's top walks straight on to the landing)
+  ...[[-13.85, -12.65], [-13.85, -15.25], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
+  // (round C fix 2: off the landing, which is now where the knee flight, the balcony and the balcony stair meet (and, in the
+  //  3000s, the hotel stair): on the balcony behind its balustrade, a firing step's cover over the circus)
+  B(-8.6, -7.4, 2.4, 3.4, -17.0, -16.0, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-11, -5, 2.4, 3.4, -16.0, -15.5, rail({ tag: 'balustrade' })),
   B(-5.5, -5, 2.4, 3.3, -18.5, -16.0, rail({ tag: 'balustrade' })),
   B(-14, -11, 2.4, 3.3, -13.0, -12.5, rail({ tag: 'balustrade' })),
-  B(-13.4, -11.4, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-9, -7, 0, 1.5, -16.4, -15.8, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   B(-14, -13.4, 0, 1.5, -15.4, -13.4, cover({ tag: 'kerb-planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   // (the balcony's north-east corner, against HULLBREAKER's claws: rounds 1–2's boss fix; in the 3000s they stand 3.4 m
