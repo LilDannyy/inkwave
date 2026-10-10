@@ -1463,7 +1463,7 @@ export class BotBrain {
     // [b5-caldera] on a tip (half or more of a 0.55 m ring round it over the sea or the lava — a coping wedge's point):
     // back toward the floor (the dry samples' mean), not along the edge to the point
     { let wn = 0, sx = 0, sz = 0;
-      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (this._wet(px + cx * 0.55, pz + cz * 0.55, py)) wn++; else { sx += cx; sz += cz; } }
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (this._wetHi(px + cx * 0.55, pz + cz * 0.55, py)) wn++; else { sx += cx; sz += cz; } }   // (a column or a wall beside it is no drop: _wetHi)
       const sl = Math.hypot(sx, sz);
       if (wn >= 4 && sl > 0.1) { mv.set((sx / sl) * m, 0, (sz / sl) * m); return; } }
     for (const ang of [0.8, -0.8, 1.45, -1.45]) {
