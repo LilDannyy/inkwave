@@ -123,6 +123,14 @@ export class PipeNet {
   get enter() { return this.X.enter; }
 
   extraColliders() { return pipeColliderDefs(this.layout); }
+  // the stage's own level-shader art (LAYOUT.levelArt: the aquarium's floor inlays, KEEP CLEAR arcs at the mouths, the
+  // Glass Walk, the dusk light pools — src/world/stages/aquarium/floorart.js), handed the ends and the night factor
+  levelMaterial({ grate }) {
+    const fn = this.layout.levelArt;
+    if (typeof fn !== 'function') return null;
+    const night = { get value() { return G.env?.U?.uNight?.value || 0; }, set value(v) { /* the environment's */ } };
+    return fn({ grate, ends: this.X.ends, night });
+  }
   attachLevel(level) {
     this.level = level;
     // the landing / approach floors as built: the floor under each point (the pop region's floor may sit below the mouth's)

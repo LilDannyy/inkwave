@@ -307,6 +307,147 @@ export function registerDress(D, H, KIT) {
     },
   };
 
+  // ---------------------------------------------------------------------------------------------------- the deck's furniture
+  // and the wing's cover (art round 1: "a ring of bare cubes", "mustard / blue-grey / green / pink cubes"). Each dresses an
+  // inkable cover block from OUTSIDE its faces: brass lips at the top edge and corner angles a centimetre or two proud, feet,
+  // handles, wheels, chutes and poles standing off a face; the faces themselves carry the block's pattern and, where a face
+  // is worth it, a mural under the ink (murals.js 9–11). Nothing sits on a top anyone can stand on.
+  // pos = the block's foot centre, rotY = its turn; o.w (local x), o.d (local z), o.h (its height over pos)
+  const lip = (B, w, d, h, c = K.brass, t = 0.035, hh = 0.07) => {
+    for (const s of [-1, 1]) { pbox(B, 'metal', c, w + 2 * t, hh, t, 0, h - hh / 2, s * (d / 2 + t / 2)); pbox(B, 'metal', c, t, hh, d, s * (w / 2 + t / 2), h - hh / 2, 0); }
+  };
+  const corners = (B, w, d, h, c = K.brass, t = 0.014, a = 0.07, y0 = 0) => {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      pbox(B, 'metal', c, a, h - y0, t, sx * (w / 2 - a / 2 + 0.01), y0 + (h - y0) / 2, sz * (d / 2 + t / 2));
+      pbox(B, 'metal', c, t, h - y0, a, sx * (w / 2 + t / 2), y0 + (h - y0) / 2, sz * (d / 2 - a / 2 + 0.01));
+    }
+  };
+  D.aquarium_hopper = {
+    desc: "a fish-food hopper's brass lip, splayed feet, chute and scoop round its 1 × 1 cover block (o.out: the chute's face, local +x)",
+    build(B, o) {
+      const w = o.w ?? 1, d = o.d ?? 1, h = o.h ?? 1.2;
+      lip(B, w, d, h, K.brassLt, 0.035, 0.09);
+      corners(B, w, d, h * 0.52, K.seagreenDk, 0.016, 0.09);
+      // splayed feet at the corners (angle iron, out and down to the deck)
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) strut(B, 'metal', K.seagreenDk, [sx * (w / 2 + 0.01), 0.42, sz * (d / 2 + 0.01)], [sx * (w / 2 + 0.12), 0.0, sz * (d / 2 + 0.12)], 0.06);
+      // the chute on the outward face: a sloped steel spout under a brass-rimmed gate, a scoop on a hook beside it
+      B.push(w / 2, 0, 0, HP);
+      pbox(B, 'metal', K.steel, 0.36, 0.05, 0.34, 0, 0.52, 0.15, { rx: 0.45 });
+      for (const s of [-1, 1]) pbox(B, 'metal', K.steel, 0.03, 0.12, 0.34, s * 0.18, 0.56, 0.15, { rx: 0.45 });
+      pbox(B, 'metal', K.brassLt, 0.42, 0.22, 0.03, 0, 0.72, 0.015);
+      cyl(B, 'metal', K.red, 0.05, 0.06, 0.24, 0.84, 0.05, { rx: HP, seg: 10 });
+      rod(B, 'metal', K.steelDk, [-0.32, 0.95, 0.02], [-0.32, 0.95, 0.09], 0.012);
+      B.add('metal', latheG('scoop', [[0, 0], [0.09, 0], [0.11, 0.12], [0.1, 0.12], [0.08, 0.02], [0, 0.02]], 10), K.steel, -0.32, 0.62, 0.12, { rx: 0.2 });
+      rod(B, 'metal', K.teakDk, [-0.32, 0.76, 0.12], [-0.32, 0.94, 0.08], 0.014);
+      B.pop();
+    },
+  };
+  D.aquarium_hatch = {
+    desc: "a feeding hatch's brass corner angles, top lip, hinge bars and ring pulls round its 2 × 1 cover block (local +z: the deck's middle)",
+    build(B, o) {
+      const w = o.w ?? 2, d = o.d ?? 1, h = o.h ?? 1.2;
+      lip(B, w, d, h, K.brassLt, 0.03, 0.06);
+      corners(B, w, d, h, K.brass, 0.014, 0.08);
+      // hinge bars on the outer long face's top edge, a hasp on the inner face, ring pulls on both
+      for (const x of [-0.6, 0.6]) { B.add('metal', cylGeo(0.035, 0.035, 0.34, 10), K.brass, x, h - 0.05, -d / 2 - 0.045, { rz: HP }); pbox(B, 'metal', K.brassDk, 0.3, 0.16, 0.012, x, h - 0.14, -d / 2 - 0.007); }
+      pbox(B, 'metal', K.brassDk, 0.12, 0.2, 0.014, 0, h - 0.12, d / 2 + 0.008);
+      for (const s of [-1, 1]) { B.push(0, 0, s * (d / 2 + 0.012), s > 0 ? 0 : PI); pbox(B, 'metal', K.brassDk, 0.1, 0.06, 0.012, 0, 0.52, 0); B.add('metal', torG(0.075, 0.014, 6, 16), K.brassLt, 0, 0.44, 0.022, { rx: 0.25 }); B.pop(); }
+    },
+  };
+  D.aquarium_polerack = {
+    desc: "the feeding-pole rack: poles, a net and a boat hook leaning on its outer face (local −z), a hose reel on its end",
+    build(B, o) {
+      const w = o.w ?? 2, d = o.d ?? 0.4, h = o.h ?? 1.0;
+      lip(B, w, d, h, K.brass, 0.03, 0.06);
+      corners(B, w, d, h, K.seagreenDk, 0.014, 0.06);
+      // the rack's rail and its hooks on the outer face
+      pbox(B, 'metal', K.brass, w * 0.9, 0.04, 0.04, 0, h * 0.82, -d / 2 - 0.05);
+      const poles = [[-0.78, 2.0, '#b08a5e', 'wood'], [-0.48, 1.85, K.brass, 'metal'], [-0.18, 2.1, '#a07c52', 'wood'], [0.12, 1.75, '#c09a6a', 'wood'], [0.42, 1.95, '#b08a5e', 'wood'], [0.72, 1.7, K.brass, 'metal']];
+      poles.forEach(([x, L, c, m], i) => {
+        const P = [x, 0.02, -d / 2 - 0.16], Q = [x + 0.12 * (i % 2 ? 1 : -1), L, -d / 2 - 0.05];
+        rod(B, m, c, P, Q, 0.024, { seg: 6 });
+        if (i === 1) { B.add('metal', torG(0.2, 0.014, 4, 18), K.steelDk, Q[0], Q[1] + 0.18, Q[2], { rx: HP * 0.9 }); for (let k = 0; k < 5; k++) rod(B, 'metal', K.rope, [Q[0] + Math.cos(k * 1.26) * 0.18, Q[1] + 0.18, Q[2] + Math.sin(k * 1.26) * 0.05], [Q[0], Q[1] - 0.1, Q[2]], 0.006, { seg: 3 }); }
+        if (i === 4) { rod(B, 'metal', K.steelDk, Q, [Q[0], Q[1] + 0.16, Q[2]], 0.015); rod(B, 'metal', K.steelDk, [Q[0], Q[1] + 0.16, Q[2]], [Q[0] + 0.1, Q[1] + 0.08, Q[2]], 0.013); }
+      });
+      // the hose reel on the +x end: a red drum between two discs with the green hose coiled on it
+      B.push(w / 2 + 0.03, 0, 0, HP);
+      for (const s of [-1, 1]) cyl(B, 'metal', K.redDk, 0.3, 0.02, 0, 0.55, s * 0.09, { rx: HP, seg: 18 });
+      for (let k = 0; k < 4; k++) B.add('gloss', torG(0.19 + k * 0.025, 0.022, 6, 18), '#3f6b4f', 0, 0.55, -0.06 + k * 0.04, {});
+      cyl(B, 'metal', K.steelDk, 0.05, 0.24, 0, 0.55, 0, { rx: HP, seg: 10 });
+      B.pop();
+    },
+  };
+  D.aquarium_turnstile = {
+    desc: "a turnstile's brass posts, stainless top and arms, coin box round its cover block (o.gap: the passage side, ±1 local x)",
+    build(B, o) {
+      const w = o.w ?? 0.6, d = o.d ?? 0.6, h = o.h ?? 1.0, g = o.gap ?? 1;
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) cyl(B, 'metal', K.brassLt, 0.03, h + 0.02, sx * (w / 2 + 0.01), (h + 0.02) / 2, sz * (d / 2 + 0.01), { seg: 8 });
+      pbox(B, 'metal', '#c9cfd2', w + 0.08, 0.035, d + 0.08, 0, h + 0.02, 0);
+      // the hub on the passage side and its three stainless arms (one level across the gap)
+      B.push(g * (w / 2 + 0.03), h * 0.8, 0, 0);
+      cyl(B, 'metal', '#c9cfd2', 0.07, 0.12, 0, 0, 0, { rz: HP, seg: 12 });
+      for (let k = 0; k < 3; k++) { const a = (k * TAU) / 3; rod(B, 'metal', '#d9dee0', [g * 0.05, 0, 0], [g * (0.05 + 0.42 * Math.cos(a)), 0.42 * Math.sin(a), 0], 0.018); }
+      B.pop();
+      // the coin box on the queue side (local −z) with its slot and a brass plate
+      B.push(0, 0, -d / 2 - 0.05, 0);
+      pbox(B, 'metal', K.brass, 0.22, 0.26, 0.1, 0, h * 0.72, 0);
+      pbox(B, NS('paint'), K.ink, 0.1, 0.012, 0.01, 0, h * 0.78, -0.051);
+      B.pop();
+    },
+  };
+  D.aquarium_trolley = {
+    desc: "a luggage trolley round a cover block: wheels, a brass push handle at one end, side rails and luggage straps",
+    build(B, o) {
+      const w = o.w ?? 2, d = o.d ?? 1, h = o.h ?? 1.4, long = w >= d;
+      const L = long ? w : d, S = long ? d : w;
+      B.push(0, 0, 0, long ? 0 : HP);
+      // wheels at the four bottom corners (outside the long faces), the chassis rail
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) { cyl(B, 'rubber', K.rubber, 0.13, 0.06, sx * (L / 2 - 0.22), 0.13, sz * (S / 2 + 0.035), { rx: HP, seg: 14 }); cyl(B, 'metal', K.steel, 0.05, 0.07, sx * (L / 2 - 0.22), 0.13, sz * (S / 2 + 0.04), { rx: HP, seg: 8 }); }
+      for (const sz of [-1, 1]) { pbox(B, 'metal', K.steelDk, L + 0.04, 0.05, 0.03, 0, 0.3, sz * (S / 2 + 0.016)); rod(B, 'metal', K.brass, [-L / 2, h - 0.12, sz * (S / 2 + 0.03)], [L / 2, h - 0.12, sz * (S / 2 + 0.03)], 0.016); }
+      // the push handle at the −x end: a brass U out and up
+      for (const sz of [-1, 1]) rod(B, 'metal', K.brass, [-L / 2 - 0.01, h - 0.15, sz * (S / 2 - 0.08)], [-L / 2 - 0.26, h + 0.22, sz * (S / 2 - 0.08)], 0.02);
+      rod(B, 'metal', K.brassLt, [-L / 2 - 0.26, h + 0.22, -(S / 2 - 0.08)], [-L / 2 - 0.26, h + 0.22, S / 2 - 0.08], 0.022);
+      // luggage straps down the long faces (leather, a brass buckle), a luggage tag
+      for (const x of [-L * 0.22, L * 0.24]) for (const sz of [-1, 1]) { pbox(B, 'paint', '#6b4a2e', 0.07, h - 0.36, 0.012, x, (h + 0.36) / 2, sz * (S / 2 + 0.007)); pbox(B, NS('metal'), K.brassLt, 0.09, 0.06, 0.016, x, h * 0.6, sz * (S / 2 + 0.01)); }
+      pbox(B, 'paint', K.cream, 0.12, 0.08, 0.01, L / 2 - 0.3, h * 0.82, S / 2 + 0.02, { rz: 0.3 });
+      B.pop();
+    },
+  };
+  D.aquarium_planterdress = {
+    desc: "a round planter's granite lip and brass name plates (r = its apothem, h its top)",
+    build(B, o) {
+      const r = o.r ?? 0.9, h = o.h ?? 1.3;
+      B.add('paint', cylGeo(r / Math.cos(PI / 8) + 0.04, r / Math.cos(PI / 8) + 0.06, 0.16, 8, true), K.granite, 0, 0.08, 0, { ry: PI / 8 });
+      for (const a of o.plates || [0]) { B.push(Math.sin(a) * (r + 0.012), 0, Math.cos(a) * (r + 0.012), a); sign(B, o.label || 'FISH TOPIARY', 0, 0.62, { h: 0.06, board: K.brass, c: K.ink, border: false, pad: 0.04, track: 0.1 }); B.pop(); }
+    },
+  };
+  D.aquarium_ticketcanopy = {
+    desc: 'the ticket-machine bank: its Deco canopy on two posts (inside the bank) with TICKETS on both edges and a lamp',
+    build(B, o) {
+      const w = o.w ?? 2.4, d = o.d ?? 0.8, h = o.h ?? 1.5;
+      lip(B, w, d, h, K.brass, 0.03, 0.06);
+      for (const sx of [-1, 1]) { cyl(B, 'metal', K.brass, 0.045, 2.35, sx * (w / 2 + 0.07), 2.35 / 2, 0, { seg: 10 }); B.add('paint', cylGeo(0.1, 0.12, 0.12, 10), K.granite, sx * (w / 2 + 0.07), 0.06, 0, {}); }
+      B.box('paint', K.render, w + 0.5, 0.14, d + 1.0, 0, 2.42, 0, { r: 0.05 });
+      pbox(B, 'gloss', K.faience, w + 0.52, 0.04, d + 1.02, 0, 2.38, 0);
+      for (const s of [-1, 1]) { B.push(0, 0, s * (d / 2 + 0.51), s > 0 ? 0 : PI); letters(B, 'TICKETS', { h: 0.1, y: 2.38, z: 0.005, c: K.navy, flat: true, mat: 'paint', track: 0.14 }); B.pop(); }
+      globe(B, 0, 2.28, 0, 0.09, { glow: 1.3 });
+    },
+  };
+  D.aquarium_cartdress = {
+    desc: "the gelato cart's brass bands, its handle and a GELATO board on the parasol pole (the cart block 1.4 × 1.5, to 1.4)",
+    build(B, o) {
+      const w = o.w ?? 1.4, d = o.d ?? 1.5, h = o.h ?? 1.4;
+      lip(B, w, d, h, K.brassLt, 0.03, 0.07);
+      for (const y of [0.42, 0.5]) for (const s of [-1, 1]) { pbox(B, 'gloss', K.coral, w + 0.04, 0.05, 0.012, 0, y, s * (d / 2 + 0.006)); pbox(B, 'gloss', K.coral, 0.012, 0.05, d + 0.04, s * (w / 2 + 0.006), y, 0); }
+      for (const s of [-1, 1]) rod(B, 'metal', K.brass, [-w / 2 - 0.01, h - 0.2, s * 0.45], [-w / 2 - 0.3, h - 0.1, s * 0.45], 0.018);
+      rod(B, 'metal', K.brassLt, [-w / 2 - 0.3, h - 0.1, -0.45], [-w / 2 - 0.3, h - 0.1, 0.45], 0.02);
+      B.push(0.55, 0, -0.6, -HP);
+      B.box('paint', K.cream, 0.7, 0.24, 0.03, 0, 2.55, 0.03, { r: 0.02 });
+      letters(B, 'GELATO', { h: 0.12, y: 2.49, z: 0.05, c: K.coralDk, flat: true, mat: 'paint', track: 0.14 });
+      B.pop();
+    },
+  };
+
   // ---------------------------------------------------------------------------------------------------- rails
   // a railing along local x (len, h, rise): white posts, a brass handrail with ball ends, a mid rail; o.lights: a string
   // of warm bulbs sagging between every other post (lit at dusk)

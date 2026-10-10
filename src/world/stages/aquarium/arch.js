@@ -52,7 +52,9 @@ export function registerArch(D, H, KIT, G) {
     build(B, o) {
       const label = o.label || 'SOUTH GATE', court = o.court || 'GULPER AQUARIUM';
       // ---- the Arch Tank: its lid, its court and wing fascias, the lintels under its two glass ends
-      pbox(B, 'paint', K.render, 12.9, 0.26, 12.6, 0, 9.13, -25.0);                           // the lid
+      // the lid (its ends 5 cm inside the fascias' faces: at 12.6 m it stood 4 cm proud of them, and the raised letters'
+      // second strokes — the bowls of P and R, the top of the R — sat behind its front face: "GULꟊEK AQUAKIUM")
+      pbox(B, 'paint', K.render, 12.9, 0.26, 12.4, 0, 9.13, -25.0);
       pbox(B, NS('metal'), K.brass, 12.9, 0.06, 0.06, 0, 9.27, -18.76);
       pbox(B, NS('metal'), K.brass, 12.9, 0.06, 0.06, 0, 9.27, -31.24);
       for (const [z, n] of [[-18.9, 1], [-31.1, -1]]) {
@@ -72,16 +74,18 @@ export function registerArch(D, H, KIT, G) {
         letters(B, 'EST.', { h: 0.2, x: 5.75, y: 8.82, c: K.brass, flat: true, mat: 'paint' });
         letters(B, '1936', { h: 0.2, x: 5.75, y: 8.55, c: K.brass, flat: true, mat: 'paint' });
       });
-      // SOUTH GATE over the wing mouth, the two-faced clock above it on the lid
+      // SOUTH GATE over the wing mouth; the two-faced clock on the lid's centre line between the two Tide Gauges (on the
+      // wing edge it sat in front of a gauge from the far pad: 1.6° apart, the clock over the tide's world cue — LEAD-
+      // REVIEW art round 1; here it is ≥ 4° off both gauges from either pad's camera)
       face(B, 0, 0, -31.26, 0, -1, () => {
         letters(B, label, { h: 0.56, y: 8.58, c: K.brassLt, wt: 0.17, track: 0.2, dep: 0.07, lit: true, glow: 1.2 });
       });
       {
-        const y = 10.0, z = -31.1, r = 0.62;
+        const y = 10.06, z = -25.0, r = 0.62;
         cyl(B, 'paint', K.render, r + 0.12, 0.34, 0, y, z, { rx: HP, seg: 28 });
         B.add('metal', torG(r + 0.12, 0.05, 6, 28), K.brass, 0, y, z - 0.17, {});
         B.add('metal', torG(r + 0.12, 0.05, 6, 28), K.brass, 0, y, z + 0.17, {});
-        pbox(B, 'paint', K.render, 0.5, 0.45, 0.3, 0, 9.42, z);
+        pbox(B, 'paint', K.render, 0.5, 0.2, 0.3, 0, 9.36, z);
         for (const s of [-1, 1]) {
           B.add(NS('glow'), cylGeo(r, r, 0.02, 28), K.cream, 0, y, z + s * 0.175, { rx: HP, glow: 0.9 });
           for (let i = 0; i < 12; i++) { const a = (i / 12) * TAU; pbox(B, NS('paint'), K.ink, 0.03, i % 3 ? 0.06 : 0.12, 0.01, Math.sin(a) * r * 0.82, y + Math.cos(a) * r * 0.82, z + s * 0.19, { rz: -a }); }
@@ -132,10 +136,13 @@ export function registerArch(D, H, KIT, G) {
           pbox(B, 'metal', K.brass, 0.08, 0.1, 2.45, x, 0.05, -27.12);
           for (const y of [2.2, 4.3, 6.4]) pbox(B, NS('metal'), K.brass, 0.05, 0.05, 2.3, x, y, -27.12);
         }
-        // the hall walls: a brass handrail and DO NOT TAP THE GLASS plates between the shaft and the court mouth
+        // the hall walls: DO NOT TAP THE GLASS plates between the vault's pilasters (the west wall's 2.7 m bay, z −22.2 …
+        // −24.9; on the east wall, where the Reef Hall door takes that bay, a two-line plate on the 0.9 m between the door
+        // and the pilaster — the plates were cut by a pilaster and hung in the doorway: LEAD-REVIEW art round 1)
         {
           const x = sx * 5.98;
-          face(B, x, 0, -22.6, -sx, 0, () => { sign(B, 'PLEASE DO NOT TAP THE GLASS', 0, 1.7, { h: 0.11, board: K.navy, c: K.cream, border: K.brass, track: 0.1 }); });
+          if (sx < 0) face(B, x, 0, -23.55, -sx, 0, () => { sign(B, 'PLEASE DO NOT TAP THE GLASS', 0, 1.7, { h: 0.11, board: K.navy, c: K.cream, border: K.brass, track: 0.1 }); });
+          else face(B, x, 0, -24.45, -sx, 0, () => { sign(B, 'DO NOT TAP', 0, 1.6, { h: 0.1, w: 0.74, hh: 0.42, board: K.navy, c: K.cream, border: K.brass, track: 0.1, sub: 'THE GLASS', subH: 0.08 }); });
           face(B, x, 0, -29.6, -sx, 0, () => { sign(B, 'BLACKTIP REEF SHARK', 0, 1.55, { h: 0.1, board: K.cream, c: K.navy, border: K.brass, sub: 'CARCHARHINUS MELANOPTERUS', subH: 0.055 }); });
         }
       }
@@ -179,40 +186,151 @@ export function registerArch(D, H, KIT, G) {
       // the winch drum under the cross girder
       cyl(B, 'metal', K.steelDk, 0.42, 1.5, 0, 16.3, 0, { rz: HP, seg: 16 });
       for (const x of [-0.8, 0.8]) pbox(B, 'metal', SD, 0.1, 0.6, 0.9, x, 16.5, 0);
+      // the keepers' kit on each leg's face toward the deck (off the floor: the legs are off-limits): a life ring on its
+      // hook, FEEDING DECK · KEEPERS ONLY, a coiled hose on its bracket, and a stack of feed buckets on the granite base
+      for (const [x, z] of [[5, -11], [-5, -11], [5, 11], [-5, 11]]) {
+        const s = z < 0 ? 1 : -1;
+        face(B, x, 0, z + s * 0.635, 0, s, () => {
+          B.add('gloss', torG(0.3, 0.065, 8, 24), K.white, 0, 1.95, 0.08, {});
+          for (let k = 0; k < 4; k++) B.add('gloss', torG(0.302, 0.068, 8, 6, TAU / 12), K.red, 0, 1.95, 0.08, { rz: (k * TAU) / 4 - TAU / 24 });
+          rod(B, 'metal', K.steelDk, [0, 2.3, 0.0], [0, 2.3, 0.1], 0.02);
+          sign(B, 'FEEDING DECK', 0, 2.55, { h: 0.1, w: 1.0, hh: 0.36, board: K.navy, c: K.cream, border: K.brass, track: 0.12, sub: 'KEEPERS ONLY', subH: 0.07, subC: K.brassLt });
+          pbox(B, 'metal', K.steelDk, 0.06, 0.06, 0.22, -0.32, 1.02, 0.11);
+          for (let k = 0; k < 4; k++) B.add('gloss', torG(0.17 - k * 0.012, 0.022, 6, 18), '#3f6b4f', -0.32, 0.86, 0.12 + k * 0.035, {});
+          for (let k = 0; k < 3; k++) B.add('gloss', latheG('fbucket', [[0, 0], [0.15, 0], [0.19, 0.3], [0.17, 0.3], [0.13, 0.03], [0, 0.03]], 12), [K.seagreen, K.white, K.mustard][k], 0.42, 0.5 + k * 0.1, 0.3, {});
+        });
+      }
     },
   };
 
   // ============================================================================================================ gulper heads
-  // the E head (x 9.5 … 12.7, y 0 … 2.4, z ±1.3; neck x 7.4 … 9.5 to 1.9); its mouth ring centre (12.7, 0.8, 0) r 1.06,
-  // its sign 1.85 × 0.7 over 1.77 … 2.47 on the face x 12.7: everything stays behind that face above y 1.7
+  // The E head fills its collision block (x 9.5 … 12.7, y 0 … 2.4, z ±1.3; `hidden` since art round 1, like every other
+  // stand-in the dressing draws) and the neck's (x 7.4 … 9.5 to 1.9, z ±1.0). The Gulper Run's mouth is the engine's: its
+  // white ring (r 0.885 … 1.055) and dark bore at x 12.73, its sign 0.14 m in front of the face over y 1.78 … 2.47 — the
+  // head stays behind x 12.66 inside r 1.06, and its upper jaw arches over the ring behind the sign.
+  //   skull   a lofted Deco eel skull: widest and highest over the brow (x 10.4: ±1.30, 2.40), tapering to the snout
+  //           (x 12.62: ±1.12, 2.0); patinated bronze, darker toward the floor, verdigris in its stepped crown bands
+  //   jaws    the upper jaw a heavy bronze arch over the ring with needle teeth hanging into the gape; the lower jaw bones
+  //           running from the hinge behind the eyes down to the chin at the floor, teeth standing up along them
+  //   eyes    lit amber eyes in brass bezels set into the cheeks under a brow ridge; gill covers and slits behind them
+  //   crest   a Deco dorsal crest of graduated fins from the crown along the neck
+  //   neck    the eel's body: a ringed bronze tube dipping from the skull into the tank glass
+  const THREE = KIT.THREE;
+  const loftCache = new Map();
+  // a lofted shell (open at the floor): sections [x, hw, top, rc, bot?] in x order; each a rounded rectangle in the y-z
+  // plane (top corners of radius rc); vertex colours from shade(y, x); end caps optional ('front' at the last section)
+  function loft(key, secs, shade, caps = {}) {
+    let g = loftCache.get(key); if (g) return g;
+    const ring = (hw, top, rc, bot) => {
+      const pts = [], nArc = 6;
+      pts.push([-hw, bot]);
+      for (let i = 0; i <= nArc; i++) { const a = Math.PI - (i / nArc) * (Math.PI / 2); pts.push([-hw + rc + Math.cos(a) * rc, top - rc + Math.sin(a) * rc]); }
+      for (let i = 0; i <= nArc; i++) { const a = Math.PI / 2 - (i / nArc) * (Math.PI / 2); pts.push([hw - rc + Math.cos(a) * rc, top - rc + Math.sin(a) * rc]); }
+      pts.push([hw, bot]);
+      return pts;
+    };
+    const P = [], C = [], I = [];
+    const rings = secs.map(([x, hw, top, rc, bot = 0]) => ring(hw, top, rc, bot).map(([z, y]) => [x, y, z]));
+    const m = rings[0].length;
+    for (const r of rings) for (const [x, y, z] of r) { P.push(x, y, z); const c = shade(y, x, z); C.push(c[0], c[1], c[2]); }
+    for (let k = 0; k < rings.length - 1; k++) for (let i = 0; i < m - 1; i++) { const a = k * m + i, b = a + 1, c = a + m, d = c + 1; I.push(a, b, c, b, d, c); }
+    const fan = (k, sign) => {
+      const r = rings[k], o = P.length / 3, cx = r[0][0], cy = (r[0][1] + Math.max(...r.map((q) => q[1]))) / 2;
+      P.push(cx, cy, 0); const c0 = shade(cy, cx, 0); C.push(c0[0], c0[1], c0[2]);
+      for (let i = 0; i < m; i++) { P.push(...r[i]); const c = shade(r[i][1], cx, r[i][2]); C.push(c[0], c[1], c[2]); }
+      for (let i = 0; i < m - 1; i++) { if (sign > 0) I.push(o, o + 1 + i, o + 2 + i); else I.push(o, o + 2 + i, o + 1 + i); }
+      I.push(...(sign > 0 ? [o, o + m, o + 1] : [o, o + 1, o + m]));
+    };
+    if (caps.front) fan(rings.length - 1, 1);
+    if (caps.back) fan(0, -1);
+    g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((P.length / 3) * 2), 2));
+    g.setIndex(I);
+    g.computeVertexNormals();
+    loftCache.set(key, g);
+    return g;
+  }
+  const lin = (hex) => { const c = new THREE.Color(hex); return [c.r, c.g, c.b]; };
+  const BRZ = lin('#a07a46'), BRZ_D = lin('#5e4628'), BRZ_L = lin('#c8a062'), VERD = lin('#6f9a86');
+  const mix3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const bronzeShade = (y, x, z, topY = 2.4) => {
+    const t = Math.max(0, Math.min(1, y / topY));
+    let c = mix3(BRZ_D, BRZ, Math.min(1, t * 1.6));
+    c = mix3(c, BRZ_L, Math.max(0, t - 0.7) * 2.2);
+    return c;
+  };
   D.aquarium_gulper = {
     desc: 'a bronze gulper-eel head round the Gulper Run mouth (world frame, the E head)',
     build(B) {
-      const BZ = K.bronze, BD = K.bronzeDk, BL = K.bronzeLt;
-      // the head's mass: stepped Deco bands round the block (2 cm proud), a brow over the top, a crest fin
-      for (const [x0, x1, c] of [[9.5, 10.3, BD], [10.3, 11.4, BZ], [11.4, 12.66, BL]]) {
-        pbox(B, 'metal', c, x1 - x0, 2.44, 2.64, (x0 + x1) / 2, 1.22, 0);
+      const W1 = '#ffffff';
+      // ---- the skull
+      const SK = [[9.5, 1.2, 2.18, 0.75], [9.85, 1.28, 2.34, 0.8], [10.4, 1.3, 2.4, 0.85], [11.0, 1.29, 2.38, 0.85], [11.6, 1.25, 2.3, 0.8], [12.15, 1.19, 2.18, 0.7], [12.5, 1.14, 2.06, 0.6], [12.64, 1.12, 2.0, 0.58]];
+      B.add('metal', loft('gskull', SK.map(([x, hw, t, rc]) => [x, hw, t, rc, -0.02]), (y, x, z) => bronzeShade(y, x, z), { front: true, back: true }), W1, 0, 0, 0, {});
+      // the crown's stepped Deco bands (a raised ring every 0.6 m over the brow, verdigris in their recess)
+      for (const [x, hw, t, rc] of [[10.05, 1.3, 2.39, 0.82], [10.7, 1.31, 2.41, 0.86], [11.35, 1.28, 2.35, 0.83]]) {
+        B.add('metal', loft('gband' + x, [[x - 0.06, hw + 0.035, t + 0.035, rc + 0.02, 0.3], [x + 0.06, hw + 0.035, t + 0.035, rc + 0.02, 0.3]], (y) => mix3(BRZ_L, VERD, 0.25 + 0.2 * (1 - y / 2.4))), W1, 0, 0, 0, {});
       }
-      B.add('metal', latheG('brow', [[0, -1.55], [1.32, -1.5], [1.38, -0.9], [1.3, 0.2], [0.9, 1.15], [0, 1.45]], 20), BZ, 11.05, 2.4, 0, { rz: HP, sx: 0.55, sy: 1.0, sz: 1.0 });
-      // crest fin along the top: stepped plates
-      for (let i = 0; i < 6; i++) pbox(B, 'metal', BL, 0.42, 0.42 - i * 0.05, 0.08, 9.7 + i * 0.48, 3.08 - i * 0.02, 0, { rz: -0.35 });
-      // lit eyes in brass bezels on both cheeks
+      // a raised spine along the crown and two flanking ribs (the Deco "speed" on the bronze)
+      for (const z of [-0.42, 0, 0.42]) {
+        const h = z === 0 ? 0.07 : 0.045;
+        const tops = SK.map(([x, hw, t, rc]) => [x, t - (Math.abs(z) > 0.01 ? Math.max(0, Math.abs(z) - (hw - rc)) ** 2 / (2 * rc) : 0)]);
+        for (let i = 1; i < tops.length - 1; i++) strut(B, 'metal', K.bronzeLt, [tops[i][0], tops[i][1] + h * 0.4, z], [tops[i + 1][0], tops[i + 1][1] + h * 0.4, z], 0.06, { h });
+      }
+      // ---- the dorsal crest: graduated fins from the crown back along the neck (thin bronze plates, raked back)
+      for (let i = 0; i < 7; i++) {
+        const x = 11.25 - i * 0.48, base = i < 4 ? 2.38 - Math.max(0, (11.0 - x)) * 0.1 : 1.86 - (9.4 - x) * 0.12, h = 0.42 - i * 0.035;
+        B.add('metal', H.extrudeGeo([[-0.22, 0], [0.2, 0], [-0.1, h]], 0.07, 0.012), K.bronzeLt, x, base - 0.04, 0, { ry: HP });
+      }
+      // ---- the upper jaw: a heavy arch over the ring (its front at x 12.74, behind the sign at 12.84), the jaw's side
+      // tips standing 0.4 m proud of the face left and right of the ring, a fang hanging from each; teeth into the gape
+      B.add('metal', torG(1.28, 0.2, 10, 32, PI * 0.92), '#a8814a', 12.62, 0.8, 0, { ry: HP, rz: PI * 0.04, sz: 0.6 });
+      B.add('metal', torG(1.5, 0.06, 6, 30, PI * 0.84), K.brassLt, 12.6, 0.8, 0, { ry: HP, rz: PI * 0.08 });
       for (const s of [-1, 1]) {
-        B.add('metal', torG(0.22, 0.05, 6, 18), K.brassLt, 11.75, 1.95, s * 1.34, {});
-        B.add(NS('glow'), sphG(0.18, 12, 8), '#ffd890', 11.75, 1.95, s * 1.3, { sz: 0.5, glow: 1.6 });
-        // gill slits on the neck
-        for (let i = 0; i < 3; i++) pbox(B, NS('paint'), K.bronzeDk, 0.08, 1.2, 0.05, 8.2 + i * 0.4, 0.95, s * 1.02, { rz: 0.15 });
+        B.add('metal', H.extrudeGeo([[0, 0], [0.5, 0.1], [0.42, 0.62], [0, 1.0]], 0.2, 0.04), '#a8814a', 12.6, 0.95, s * 1.2, { ry: HP });
+        B.add('metal', cylGeo(0.07, 0, 0.42, 6), K.cream, 13.0, 0.78, s * 1.13, { rz: s * 0.08 });
       }
-      // the neck: bronze bands to the tank glass
-      pbox(B, 'metal', BZ, 2.1, 1.92, 2.04, 8.45, 0.96, 0);
-      for (const x of [7.8, 8.6, 9.3]) pbox(B, NS('metal'), BD, 0.12, 1.96, 2.08, x, 0.98, 0);
-      for (let i = 0; i < 4; i++) pbox(B, 'metal', BL, 0.36, 0.3 - i * 0.05, 0.06, 7.7 + i * 0.5, 2.05, 0, { rz: -0.3 });
-      // the jaw: a bronze lip round the mouth ring (its lower two thirds, clear of the sign), needle teeth pointing in
-      B.add('metal', torG(1.2, 0.09, 6, 30, PI * 1.25), BL, 12.74, 0.8, 0, { ry: HP, rz: PI * 0.875 });
-      for (let i = 0; i < 11; i++) {
-        const a = -HP - PI * 0.6 + (i / 10) * PI * 1.2, cz = Math.cos(a), cy = Math.sin(a);
-        if (0.8 + cy * 1.12 < 0.06) continue;
-        B.add(NS('metal'), cylGeo(0, 0.05, 0.22, 5), K.cream, 12.76, 0.8 + cy * 1.12, cz * 1.12, { rx: Math.atan2(-cz, -cy) });
+      for (let i = 0; i < 13; i++) {
+        const a = PI * 0.1 + (i / 12) * PI * 0.8, cz = Math.cos(a), cy = Math.sin(a), r0 = 1.12, len = i % 2 ? 0.17 : 0.24;
+        B.add(NS('metal'), cylGeo(0.035, 0, len, 5), K.cream, 12.77, 0.8 + cy * (r0 - len / 2), cz * (r0 - len / 2), { rx: Math.atan2(cz, cy) });
+      }
+      // ---- the lower jaw: bones from the hinge (behind and under the eye) down to the chin at the floor, a lip along
+      // each, teeth standing up and inward along it
+      for (const s of [-1, 1]) {
+        const P0 = [10.75, 1.3, s * 1.29], P1 = [13.12, 0.16, s * 1.17];
+        strut(B, 'metal', K.bronzeLt, P0, P1, 0.24, { w: 0.13, h: 0.46 });
+        strut(B, 'metal', K.bronzeDk, [P0[0], P0[1] - 0.26, s * 1.31], [P1[0], P1[1] - 0.2, s * 1.19], 0.08, { w: 0.1, h: 0.08 });
+        // the hinge boss
+        B.add('metal', sphG(0.2, 12, 8), K.bronzeLt, P0[0], P0[1], s * 1.3, { sz: 0.6 });
+        for (let i = 0; i < 7; i++) {
+          const t = 0.36 + i * 0.1, x = P0[0] + (P1[0] - P0[0]) * t, y = P0[1] + (P1[1] - P0[1]) * t + 0.2;
+          B.add(NS('metal'), cylGeo(0, 0.032, 0.2, 5), K.cream, x, y + 0.08, s * 1.17, { rx: -s * 0.35 });
+        }
+      }
+      // the chin: the lower jaw's bar across the front at the floor (12 cm: a threshold you step over into the mouth)
+      pbox(B, 'metal', K.bronzeLt, 0.18, 0.12, 2.3, 13.12, 0.06, 0);
+      // ---- the eyes: lit amber in brass bezels, a brow ridge over each; gill covers and slits behind
+      for (const s of [-1, 1]) {
+        const ex = 11.55, ey = 1.55, ez = s * 1.265;
+        B.push(ex, ey, ez, s > 0 ? 0 : PI);
+        B.add('metal', torG(0.27, 0.07, 8, 22), K.brassLt, 0, 0, 0.03, {});
+        B.add('metal', cylGeo(0.27, 0.27, 0.06, 22), K.bronzeDk, 0, 0, 0.0, { rx: HP });
+        B.add(NS('glow'), sphG(0.21, 14, 10), '#ffcf7a', 0, 0, 0.04, { sz: 0.45, glow: 1.7 });
+        B.add(NS('paint'), sphG(0.07, 8, 6), '#2a1e10', 0.02, 0.0, 0.13, { sx: 0.6, sy: 1.5, sz: 0.4 });
+        B.pop();
+        strut(B, 'metal', K.bronzeLt, [11.0, 1.93, s * 1.2], [12.05, 1.83, s * 1.13], 0.12, { w: 0.15, h: 0.1 });
+        // gill cover: a flattened bronze dome on the cheek behind the jaw's hinge; three gill slits on the neck behind it
+        B.add('metal', sphG(0.45, 16, 10, PI / 2), K.bronze, 10.0, 1.0, s * 1.3, { rx: s * HP, sy: 0.2, sz: 1.25 });
+        B.add('metal', torG(0.45, 0.03, 6, 20, PI), K.bronzeLt, 10.0, 1.0, s * 1.31, { rz: -HP, sy: 1.25 });
+        for (let i = 0; i < 3; i++) pbox(B, NS('paint'), K.bronzeDk, 0.05, 0.95 - i * 0.12, 0.03, 9.36 - i * 0.16, 0.95, s * (1.0 + 0.012 - i * 0.012), { rz: 0.1 });
+      }
+      // ---- the neck: a ringed bronze tube dipping from the skull into the tank glass (x 9.52 → 7.42)
+      const NK = [[7.42, 0.86, 1.55, 0.7], [7.9, 0.9, 1.62, 0.72], [8.4, 0.94, 1.72, 0.74], [8.95, 0.98, 1.82, 0.76], [9.52, 1.0, 1.88, 0.76]];
+      B.add('metal', loft('gneck', NK.map(([x, hw, t, rc]) => [x, hw, t, rc, -0.02]), (y, x, z) => bronzeShade(y, x, z, 1.9), {}), W1, 0, 0, 0, {});
+      for (const x of [7.75, 8.2, 8.65, 9.1]) {
+        const k = (x - 7.42) / (9.52 - 7.42), hw = 0.86 + 0.14 * k, t = 1.55 + 0.33 * k;
+        B.add('metal', loft('gnr' + x, [[x - 0.05, hw + 0.03, t + 0.03, 0.74, 0.1], [x + 0.05, hw + 0.03, t + 0.03, 0.74, 0.1]], (y) => mix3(BRZ_D, VERD, 0.35 + 0.25 * (y / 1.9))), W1, 0, 0, 0, {});
       }
     },
   };
@@ -286,9 +404,17 @@ export function registerArch(D, H, KIT, G) {
           rod(B, 'metal', K.brass, [0, 4.4, -1.6], [0, 4.6, -1.6], 0.02);
         });
       }
+      // REEF HALL on a navy Deco board standing on the canopy's edge (without one, the GA stack's letters far behind
+      // showed through the gaps from the colonnade and the court: "REEE HALL" — LEAD-REVIEW art round 1)
       for (const [a, t] of [[-40.4, o.label || 'REEF HALL']]) {
         const [x, z] = pol(a, 25.6);
-        face(B, x, 0, z, -Math.cos(a * DEG), -Math.sin(a * DEG), () => letters(B, t, { h: 0.5, y: 5.44, c: K.brassLt, lit: true, glow: 1.1, track: 0.18 }));
+        face(B, x, 0, z, -Math.cos(a * DEG), -Math.sin(a * DEG), () => {
+          B.box('paint', K.navy, 3.7, 0.78, 0.08, 0, 5.79, -0.06, { r: 0.03 });
+          pbox(B, 'metal', K.brass, 3.76, 0.05, 0.1, 0, 6.19, -0.06);
+          pbox(B, 'metal', K.brass, 3.76, 0.05, 0.1, 0, 5.39, -0.06);
+          for (const sx of [-1, 1]) { pbox(B, 'metal', K.brass, 0.05, 0.84, 0.1, sx * 1.88, 5.79, -0.06); pbox(B, NS('metal'), K.brassDk, 0.08, 0.5, 0.08, sx * 1.4, 5.15, -0.1); }
+          letters(B, t, { h: 0.5, y: 5.53, c: K.brassLt, lit: true, glow: 1.1, track: 0.18 });
+        });
       }
     },
   };
@@ -458,9 +584,18 @@ export function registerArch(D, H, KIT, G) {
       for (let x = 3.4; x < 10.0; x += 0.95) pbox(B, NS('metal'), K.brassDk, 0.05, 0.04, 7.4, x, 6.82, -42.5);
       // TICKET HALL on both fascias (the station clock stands on the booth: on the canopy it sat in the spawn's view of the
       // South Gate's shark window — LEAD-NOTES 2026-10-09 item 2)
+      // (the pad side's name hangs on a board under the canopy's edge, not on its fascia: at 6.9 m it lined up with SOUTH
+      // GATE from the spawn deck and read "SOUTH GATETICKET HALL" — LEAD-REVIEW art round 1. Under the edge it reads
+      // 3–4° below the gatehouse's letters from either pad, with the canopy's edge between them)
       {
         face(B, 6.35, 0, -38.68, 0, 1, () => letters(B, 'TICKET HALL', { h: 0.32, y: 6.86, z: 0, c: K.brassLt, lit: true, glow: 1.0, track: 0.16 }));
-        face(B, 6.35, 0, -46.32, 0, -1, () => letters(B, 'TICKET HALL', { h: 0.32, y: 6.86, z: 0, c: K.brassLt, lit: true, glow: 1.0, track: 0.16 }));
+        // (east of the Tower lane, x 7.45 … 9.2: over the lane it would hang in the tower's 3.72 m headroom)
+        face(B, 8.33, 0, -46.2, 0, -1, () => {
+          for (const x of [-0.7, 0.7]) rod(B, 'metal', K.brass, [x, 6.56, 0.0], [x, 6.12, 0.0], 0.016);
+          B.box('paint', K.navy, 1.74, 0.38, 0.06, 0, 5.94, 0.0, { r: 0.02 });
+          for (const y of [5.75, 6.13]) pbox(B, NS('metal'), K.brass, 1.78, 0.03, 0.08, 0, y, 0.0);
+          letters(B, 'TICKET HALL', { h: 0.2, y: 5.84, z: 0.035, c: K.brassLt, lit: true, glow: 1.0, track: 0.16, flat: true });
+        });
       }
       // the ticket booth (x 8.2 … 10, z −42 … −40, 1.2 → 3.7): Deco kiosk with a curved glass front, TICKETS lit
       {
@@ -486,8 +621,8 @@ export function registerArch(D, H, KIT, G) {
           }
         }
       }
-      // the stair's brass handrails (the stair x 8 … 10, z −36.2 → −39.0: at its two edges, 0.9 m over the treads)
-      for (const x of [8.05, 9.95]) handrail(B, [x, 0.95, -36.25], [x, 2.15, -38.95], { r: 0.03 });
+      // (no stair handrails: a visible rail needs a rail collider, and the stair's sides are open in play — LEAD-REVIEW
+      // art round 1 found the rods floating there with no posts and no collider)
     },
   };
 
@@ -575,9 +710,19 @@ export function registerArch(D, H, KIT, G) {
         for (const dx of [-0.45, 0.45]) pbox(B, 'metal', K.steelDk, 0.1, 2.0, 0.1, x + dx, 1.05, z - 0.75);
         for (const dx of [-0.3, 0.3]) pbox(B, 'metal', K.steelDk, 0.12, 0.05, 1.0, x + dx, 0.35, z - 1.2);
         pbox(B, 'wood', K.wood, 1.0, 0.12, 1.0, x, 0.43, z - 1.25);
-        pbox(B, NS('gloss'), '#9fc3c8', 0.95, 0.75, 0.9, x, 0.87, z - 1.25);
-        pbox(B, NS('gloss'), '#2c5866', 0.9, 0.5, 0.85, x, 0.78, z - 1.25);
-        B.add(NS('paint'), sphG(0.12, 8, 6), K.coral, x + 0.1, 0.85, z - 1.25, { sx: 1.8 });
+        // the fish tank on the pallet: a black-framed glass box, deep water to 3/4 of it, a light lid, two fish and weed
+        // (art round 1: "a pale blue box" — now its frame, waterline and the fish read)
+        {
+          const tx = x, tz = z - 1.25, y0 = 0.49, Wt = 0.94, Ht = 0.78, Dt = 0.88;
+          for (const sx of [-1, 1]) for (const sz of [-1, 1]) pbox(B, 'metal', K.ink, 0.035, Ht, 0.035, tx + sx * Wt / 2, y0 + Ht / 2, tz + sz * Dt / 2);
+          for (const y of [y0 + 0.02, y0 + Ht]) for (const s2 of [-1, 1]) { pbox(B, 'metal', K.ink, Wt, 0.035, 0.035, tx, y, tz + s2 * Dt / 2); pbox(B, 'metal', K.ink, 0.035, 0.035, Dt, tx + s2 * Wt / 2, y, tz); }
+          pbox(B, 'gloss', '#1f4c58', Wt - 0.03, Ht * 0.72, Dt - 0.03, tx, y0 + Ht * 0.36 + 0.02, tz);
+          pbox(B, 'gloss', '#6fa3ad', Wt - 0.03, 0.02, Dt - 0.03, tx, y0 + Ht * 0.72 + 0.03, tz);
+          pbox(B, 'gloss', '#cfe3e6', Wt - 0.03, Ht * 0.26, Dt - 0.03, tx, y0 + Ht * 0.86 + 0.01, tz, { });
+          pbox(B, 'paint', K.cream, Wt + 0.04, 0.04, Dt + 0.04, tx, y0 + Ht + 0.03, tz);
+          for (const [fx, fy, fz, c] of [[0.1, 0.32, 0.47, K.coral], [-0.15, 0.22, 0.46, K.mustard], [-0.05, 0.3, -0.47, K.coral], [0.2, 0.18, -0.46, '#9db0c4']]) { B.add('paint', sphG(0.07, 8, 6), c, tx + fx, y0 + fy, tz + fz, { sx: 1.9, sz: 0.5 }); B.add('paint', cylGeo(0, 0.05, 0.08, 4), c, tx + fx - 0.15, y0 + fy, tz + fz, { rz: HP }); }
+          for (const k of [-0.3, -0.2, 0.28]) rod(B, 'paint', K.kelp, [tx + k, y0 + 0.04, tz + 0.45], [tx + k + 0.03, y0 + 0.4, tz + 0.45], 0.012);
+        }
       }
       // the GA vent stack over the sea behind the middle bay (s 14.5, w 20.6): Deco fins, GA in brass, a cowl
       bl(B, 14.6, 20.7, 0, () => {

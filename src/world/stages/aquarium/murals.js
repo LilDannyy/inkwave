@@ -91,5 +91,75 @@ export function drawMurals(g, R, kit) {
     g.restore();
     out.push({ id: MURAL.hazard, x: X, y: Y, w, h, place: [0, 9.0, 2.9, 0.26], fx: [0.9, 1] });
   }
+  // ---- 9: the fish-food hopper's face (1.0 × 1.2 m, 200 px/m): the bin's riveted panel with FISH FOOD stencilled on it,
+  // the funnel narrowing into its chute below, the shadow between the splayed legs (the block's own sea-green shows round
+  // it); on the hoppers' two faces toward the deck's middle (art round 1: "a teal box with two rivets")
+  {
+    const X = R.x + 1020, Y = R.y + 258, w = 200, h = 240;
+    g.save();
+    const ink = 'rgba(30,44,42,0.9)', dk = 'rgba(38,62,56,0.78)';
+    // the bin's lip and the rivet rows (top band, the seams)
+    g.fillStyle = 'rgba(194,162,108,0.95)'; g.fillRect(X, Y, w, 12);
+    g.fillStyle = dk; g.fillRect(X, Y + 12, w, 3); g.fillRect(X, Y + 118, w, 4);
+    g.fillStyle = 'rgba(28,40,38,0.85)';
+    for (let i = 0; i < 9; i++) { for (const yy of [Y + 22, Y + 112]) { g.beginPath(); g.arc(X + 14 + i * 21.5, yy, 3.2, 0, Math.PI * 2); g.fill(); } }
+    for (let j = 0; j < 4; j++) for (const xx of [X + 8, X + w - 8]) { g.beginPath(); g.arc(xx, Y + 36 + j * 20, 3, 0, Math.PI * 2); g.fill(); }
+    // FISH FOOD
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(236,228,206,0.92)';
+    g.font = font(40); g.fillText('FISH', X + w / 2, Y + 50);
+    g.font = font(38); g.fillText('FOOD', X + w / 2, Y + 88);
+    // the funnel (a darker trapezoid narrowing to the chute), its seam lines, the chute's mouth, the legs and their shadow
+    g.fillStyle = dk; g.beginPath(); g.moveTo(X + 6, Y + 124); g.lineTo(X + w - 6, Y + 124); g.lineTo(X + w / 2 + 26, Y + 196); g.lineTo(X + w / 2 - 26, Y + 196); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(20,32,30,0.8)'; g.lineWidth = 2.5;
+    for (const t of [0.33, 0.66]) { g.beginPath(); g.moveTo(X + 6 + t * (w - 12), Y + 124); g.lineTo(X + w / 2 - 26 + t * 52, Y + 196); g.stroke(); }
+    g.fillStyle = 'rgba(16,22,22,0.92)'; g.fillRect(X + w / 2 - 22, Y + 196, 44, 30);
+    g.fillStyle = 'rgba(194,162,108,0.95)'; g.fillRect(X + w / 2 - 26, Y + 194, 52, 6);
+    g.fillStyle = 'rgba(16,22,22,0.55)'; g.fillRect(X + 18, Y + 200, w - 36, 40);
+    g.fillStyle = ink; g.fillRect(X + 4, Y + 124, 12, 116); g.fillRect(X + w - 16, Y + 124, 12, 116);
+    g.restore();
+    out.push({ id: 9, x: X, y: Y, w, h, place: [0, 1.0, 0, 1.2], fx: [0.5, 1] });
+  }
+  // ---- 10: a feeding hatch's long face (2.0 × 1.2 m, 200 px/m): the raised teak coaming's brass corner straps and its
+  // top's brass hinge bar, a ring pull, FEED HATCH stencilled on it, KEEP SHUT under (the block's teak shows between)
+  {
+    const X = R.x + 1240, Y = R.y + 258, w = 400, h = 240;
+    g.save();
+    const brass = 'rgba(194,162,108,0.96)', bd = 'rgba(120,92,52,0.95)';
+    g.fillStyle = brass; g.fillRect(X, Y, w, 14); g.fillStyle = bd; g.fillRect(X, Y + 14, w, 3);
+    for (const xx of [X, X + w - 22]) { g.fillStyle = brass; g.fillRect(xx, Y, 22, h); g.fillStyle = bd; g.fillRect(xx + (xx === X ? 22 : -3), Y, 3, h); for (let j = 0; j < 5; j++) { g.fillStyle = 'rgba(70,52,28,0.9)'; g.beginPath(); g.arc(xx + 11, Y + 34 + j * 44, 3.4, 0, Math.PI * 2); g.fill(); } }
+    // hinge knuckles along the top
+    for (const xx of [X + 80, X + w - 80]) { g.fillStyle = brass; g.fillRect(xx - 26, Y + 6, 52, 22); g.fillStyle = bd; g.fillRect(xx - 26, Y + 26, 52, 3); }
+    // the ring pull
+    g.strokeStyle = brass; g.lineWidth = 9; g.beginPath(); g.arc(X + w / 2, Y + 178, 26, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = brass; g.fillRect(X + w / 2 - 12, Y + 140, 24, 18);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(40,32,24,0.82)';
+    g.font = font(46); g.fillText('FEED HATCH', X + w / 2, Y + 72);
+    g.font = fontB(24); g.fillText('KEEP SHUT · KEEPERS ONLY', X + w / 2, Y + 114);
+    g.restore();
+    out.push({ id: 10, x: X, y: Y, w, h, place: [0, 2.0, 0, 1.2], fx: [0.5, 1] });
+  }
+  // ---- 11: the ticket-machine bank's faces (2.4 × 1.5 m, 250 px/m): three Deco machines, each a cream cabinet with a
+  // navy screen saying TICKETS, a price card, the coin slot and the ticket tray (the block's grey shows at the plinth)
+  {
+    const X = R.x + 10, Y = R.y + 536, w = 600, h = 375;
+    g.save();
+    for (let i = 0; i < 3; i++) {
+      const x0 = X + i * 200;
+      rr(g, x0 + 8, Y + 6, 184, h - 60, 18); g.fillStyle = 'rgba(236,230,214,0.97)'; g.fill();
+      g.fillStyle = 'rgba(155,179,168,0.95)'; for (const yy of [Y + 238, Y + 250, Y + 262]) g.fillRect(x0 + 8, yy, 184, 6);
+      rr(g, x0 + 30, Y + 30, 140, 80, 10); g.fillStyle = 'rgba(30,44,70,0.97)'; g.fill();
+      g.strokeStyle = 'rgba(194,162,108,1)'; g.lineWidth = 5; rr(g, x0 + 30, Y + 30, 140, 80, 10); g.stroke();
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(255,236,190,1)'; g.font = fontB(30); g.fillText('TICKETS', x0 + 100, Y + 62);
+      g.font = fontB(16); g.fillStyle = 'rgba(200,214,226,1)'; g.fillText('GULPER AQUARIUM', x0 + 100, Y + 92);
+      // the price card, the coin slot, the buttons, the ticket tray
+      g.fillStyle = 'rgba(250,246,236,1)'; g.fillRect(x0 + 36, Y + 124, 128, 62);
+      g.fillStyle = 'rgba(45,58,82,1)'; g.font = fontB(15); g.fillText('ADULT · 3 SHELLS', x0 + 100, Y + 142); g.fillText('CHILD · 1 SHELL', x0 + 100, Y + 166);
+      g.fillStyle = 'rgba(40,40,44,1)'; g.fillRect(x0 + 140, Y + 196, 30, 8);
+      for (let k = 0; k < 3; k++) { g.fillStyle = ['rgba(168,57,47,1)', 'rgba(110,151,138,1)', 'rgba(201,154,60,1)'][k]; g.beginPath(); g.arc(x0 + 48 + k * 26, Y + 206, 9, 0, Math.PI * 2); g.fill(); }
+      rr(g, x0 + 58, Y + 276, 84, 26, 6); g.fillStyle = 'rgba(30,30,34,0.95)'; g.fill();
+    }
+    g.restore();
+    out.push({ id: 11, x: X, y: Y, w, h, place: [0, 2.4, 0, 1.5], fx: [0.4, 1] });
+  }
   return out;
 }

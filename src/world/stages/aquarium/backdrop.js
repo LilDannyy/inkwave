@@ -40,7 +40,9 @@ export function buildBackdrop(kit, data = {}) {
     if (d.kind === 'box') { g = new T.BoxGeometry(d.max[0] - d.min[0], d.max[1] - d.min[1], d.max[2] - d.min[2]); g.translate((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2); }
     else if (d.kind === 'obox') { g = new T.BoxGeometry(d.size[0], d.size[1], d.size[2]); g.rotateY(d.rotY * DEG); g.translate(d.center[0], d.center[1], d.center[2]); }
     else continue;
-    if (d.tag === 'arch-tank') { const w = g.clone(); w.scale(0.98, 0.96, 0.98); put('water', w); }
+    // (the water inside its glass, a few cm in from every face — scaled about the box's own centre: scaled about the
+    // origin it stood 13 cm out through the gatehouse fascias and 24 cm down into the hall, a dark pane over the letters)
+    if (d.tag === 'arch-tank') { const w = g.clone(), c = new T.Vector3((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2); w.translate(-c.x, -c.y, -c.z); w.scale(0.98, 0.96, 0.98); w.translate(c.x, c.y, c.z); put('water', w); }
     put('glass', g);
   }
   // the Great Tank's water (a 16-gon prism inside its glass, down to the sunk sand bed)
@@ -114,7 +116,7 @@ export function buildBackdrop(kit, data = {}) {
     const m = new T.Mesh(g, LOOK[k]); m.name = 'aq-' + k; m.renderOrder = k === 'glass' ? 2 : 1;
     objects.push(m);
   }
-  const tide = tideDrums(T, kelp, bubbles);
+  const tide = tideDrums(T, kelp, bubbles, U.uNight);
   objects.push(...tide.objects);
   const gauges = tideGauges(T, merge);
   objects.push(...gauges.objects);
@@ -179,8 +181,8 @@ function frondGeo(T, h, rnd) {
 // the fronds' tops bow over inward and down, their ripples run down, and the bubbles sink. At the flip the fronds swing
 // over (1.5 s) and the bubbles roar through the drum at four times their pace for 1.5 s (the curtain). Looks only, in the
 // vertex shaders: two meshes, no per-frame upload — the stream and the bubbles' travel are uniforms.
-function tideDrums(T, kelp, bubbles) {
-  const U = { uTime: { value: 0 }, uStream: { value: 1 }, uPhase: { value: 0 }, uBurst: { value: 0 } };
+function tideDrums(T, kelp, bubbles, uNight = { value: 0 }) {
+  const U = { uTime: { value: 0 }, uStream: { value: 1 }, uPhase: { value: 0 }, uBurst: { value: 0 }, uNightK: uNight };
   // the fronds: aK (0 at the root … 1 at the tip), aS (a seed), aA (how far this one may move), aC (its drum's centre)
   let n = 0; for (const f of kelp) n += f.g.attributes.position.count;
   const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), aK = new Float32Array(n), aS = new Float32Array(n), aA = new Float32Array(n), aC = new Float32Array(n * 2);
@@ -198,6 +200,8 @@ function tideDrums(T, kelp, bubbles) {
   const km = new T.MeshStandardMaterial({ color: '#8a8238', roughness: 0.7, metalness: 0.0, side: T.DoubleSide, emissive: '#1d1b08' });
   km.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
+    // (white-lit kelp at dusk: the drum's light from below, DESIGN.md §5.7)
+    sh.fragmentShader = 'uniform float uNightK;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += vec3(0.55, 0.52, 0.34) * uNightK * 0.55;');
     sh.vertexShader = 'attribute float aK; attribute float aS; attribute float aA; attribute vec2 aC; uniform float uTime; uniform float uStream;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
   {
     // the ripple runs up the frond on UP (uStream +1), down it on DOWN (−1); DOWN also bows the top inward and down

@@ -47,6 +47,9 @@ const KIOSKS = tagged('kiosk').map((d) => {
   return { type: 'aquarium_kiosk', ...atObox(d, 2.4, { h: 2.6, kind: a < -135 ? 'souvenir' : 'icecream' }), rotY: d.rotY * DEG + PI };
 });
 const ob = (tag) => tagged(tag)[0];
+// a world-axis box's foot placement (centre, floor, size); a round piece's centre (its spokes share it)
+const atBox = (d, o = {}) => ({ pos: [(d.min[0] + d.max[0]) / 2, d.min[1] < 0 ? 0 : d.min[1], (d.min[2] + d.max[2]) / 2], rotY: 0, w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - Math.max(0, d.min[1]), ...o });
+const boxC = (d) => (d.kind === 'box' ? [(d.min[0] + d.max[0]) / 2, (d.min[2] + d.max[2]) / 2] : [d.center[0], d.center[2]]);
 
 export const PLACEMENTS = [
   ...LAYOUT.half.filter((d) => d.rail).map(railFor),
@@ -97,4 +100,14 @@ export const PLACEMENTS = [
   { type: 'aquarium_column', pos: [0, 0, -21.5], r: 1.31, h: 5.8 },
   { type: 'aquarium_postbox', pos: [-1.0, 0, -39.8] },
   { type: 'aquarium_cart', pos: [-5.5, 0, -39.75] },
+  // ---- the deck's furniture and the wing's cover, dressed from outside their faces (art round 1)
+  ...tagged('hopper').map((d) => ({ type: 'aquarium_hopper', ...atBox(d), rotY: d.min[0] > 0 ? 0 : PI })),
+  ...tagged('hatch').map((d) => ({ type: 'aquarium_hatch', ...atObox(d, d.center[1] - d.size[1] / 2, { h: d.size[1] }) })),
+  ...tagged('pole-rack').map((d) => ({ type: 'aquarium_polerack', ...atObox(d, d.center[1] - d.size[1] / 2, { h: d.size[1] }) })),
+  ...tagged('turnstile').map((d) => ({ type: 'aquarium_turnstile', ...atBox(d), gap: d.min[0] < 8.8 ? 1 : -1 })),
+  ...[...tagged('trolley'), ...tagged('trolleys')].map((d) => (d.kind === 'box' ? { type: 'aquarium_trolley', ...atBox(d) } : { type: 'aquarium_trolley', ...atObox(d, 0, { h: d.size[1] - 2.0 }) })),
+  ...tagged('planter').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 0.9, h: 1.3, plates: [PI * 0.25, PI * 1.25], label: 'SEA HOLLY' })),
+  ...tagged('topiary').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 1.0, h: 1.2, plates: [PI * 0.83], label: 'FISH TOPIARY' })),
+  ...tagged('ticket-machines').map((d) => ({ type: 'aquarium_ticketcanopy', ...atBox(d) })),
+  ...tagged('icecream-cart').map((d) => ({ type: 'aquarium_cartdress', ...atBox(d) })),
 ];

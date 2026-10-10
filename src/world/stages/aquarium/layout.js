@@ -30,6 +30,7 @@ import {
 } from './geo.js';
 import { BAKED } from './baked.js';
 import { SURF } from './surfaces.js';
+import { levelArt } from './floorart.js';
 useBaked(BAKED);
 
 const FL = -2.0;                                    // foundations (the sea is at −1.6)
@@ -40,7 +41,7 @@ const K = {
   granite: '#55595d', glassblock: '#cfe0e0', seagreen: '#6e978a', rock: '#bfc5c7', rockUp: '#cdd2d3', kelp: '#5b5a33',
   coral: '#c99a8a', jelly: '#f2eefa', steel: '#7d8a90', sand: '#cdbb93', window: '#4f7480', crate: '#b59a72',
   kiosk: '#e8dcc4', concrete: '#bdb8ad', bund: '#a9a59b', spawn: '#eae6de', canopy: '#c6d3d1', stone: '#cfc8b8',
-  walk: '#bcd2d2', plant: '#d8d2c6', pump: '#8f9a9c', planter: '#9aa57a',
+  walk: '#bcd2d2', plant: '#d8d2c6', pump: '#8f9a9c', planter: '#9aa57a', planterStone: '#bdb5a3',
 };
 const NOPAINT = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]];
 const floor0 = (o = {}) => ({ color: K.terrazzo, pattern: SURF.terrazzo, ...o });
@@ -92,9 +93,15 @@ H(RIM);
 // deck furniture (Alpha's half; turned for Bravo): four hatches inside the zone (1.2 hop-ups), fish-food hoppers and
 // feeding-pole racks on the rim
 const tang = (x, z) => -(bearing(x, z) + 90);                       // O() angle that lays a box's long side tangentially
-H(O(3.6, -2.52, 2.0, 1.0, TANK.deck, 3.6, tang(3.6, -2.52), cover(K.teak, { tag: 'hatch', pattern: SURF.teak })));
-H(O(-3.6, -2.52, 2.0, 1.0, TANK.deck, 3.6, tang(-3.6, -2.52), cover(K.teak, { tag: 'hatch', pattern: SURF.teak })));
-H(B(5.43, 6.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper', pattern: PATTERN.metalpanel })), B(-6.43, -5.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper', pattern: PATTERN.metalpanel })));
+// (their faces carry murals under the ink — art round 1: the hatches' long faces the coaming's brass straps, hinges, ring
+// pull and FEED HATCH (murals.js 10); the hoppers' two faces toward the deck's middle the riveted bin, FISH FOOD and the
+// funnel (9); props.js adds the brass, the feet, the chute and the poles round them, never on a face that inks)
+const hatchN = (x, z) => { const a = tang(x, z) * DEG; return [r3(Math.sin(a)), 0, r3(Math.cos(a))]; };
+const hatchMural = (x, z) => { const n = hatchN(x, z); return [{ n, id: 10 }, { n: [-n[0], 0, -n[2]], id: 10 }]; };
+H(O(3.6, -2.52, 2.0, 1.0, TANK.deck, 3.6, tang(3.6, -2.52), cover(K.teak, { tag: 'hatch', pattern: SURF.teak, mural: hatchMural(3.6, -2.52) })));
+H(O(-3.6, -2.52, 2.0, 1.0, TANK.deck, 3.6, tang(-3.6, -2.52), cover(K.teak, { tag: 'hatch', pattern: SURF.teak, mural: hatchMural(-3.6, -2.52) })));
+H(B(5.43, 6.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper', pattern: PATTERN.metalpanel, mural: [{ n: [-1, 0, 0], id: 9 }, { n: [0, 0, 1], id: 9 }] })),
+  B(-6.43, -5.43, TANK.deck, 3.6, -3.93, -2.93, cover(K.seagreen, { tag: 'hopper', pattern: PATTERN.metalpanel, mural: [{ n: [1, 0, 0], id: 9 }, { n: [0, 0, 1], id: 9 }] })));
 H(O(3.24, -6.09, 2.0, 0.4, TANK.deck, 3.4, tang(3.24, -6.09), cover(K.seagreen, { tag: 'pole-rack', pattern: PATTERN.metalpanel })));
 // the sand bed in the tank (seen through the glass; the Gulper Run dips to y 0.5 above it)
 const TANK_IN = (x, z) => inNgon(C0, 16, TANK.a, 0, x, z, 0.32);
@@ -110,7 +117,9 @@ for (const [a, t0, t1] of [[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -
 // necks run into the tank glass, 0.5 m below the deck's rim. `camHollow` (the pipe engine's block field): the Gulper Run
 // rides through them, so the ride camera treats them as the hollow run ENGINE.md §3.6 asks for while the rider is in the
 // Great Tank's water (the lens then stays in the tank, never parked inside the bronze)
-H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head', camHollow: true })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck', camHollow: true })));
+// (`hidden` since the art pass's round 1: props.js draws the eel head and its neck over them, like every other stand-in;
+// they stay solid, off-limits and unpainted — they had no paint before either)
+H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head', camHollow: true, hidden: true })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck', camHollow: true, hidden: true })));
 // the Feeding Gantry: four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
 // pads the near legs then hid half the bathysphere), beams at 16.8–17.8, the winch house;
 // Bathysphere No. 1 hangs at 13.05–15.95 (drawn by props.js; this is its off-limits collider)
@@ -298,11 +307,14 @@ const wE = (s) => (s < 10 ? 19.5 : s < 19 ? 18.0 : 16.5);           // the leadi
 H(B(2.0, 10.0, 0, 1.2, -46.0, -39.0, floor0({ tag: 'ticket-hall', color: '#cfc6b4', mural: [{ n: [0, 0, 1], id: 5 }] })));
 H(R([9.0, 0, -36.2], [9.0, 1.2, -39.0], 2.0, stair({ tag: 'ticket-stair' })));
 H(B(7.4, 10.0, 0, 0.6, -47.2, -46.0, stone({ tag: 'queue-step' })));
-H(B(8.2, 10.0, 1.2, 3.7, -42.0, -40.0, roofR(K.kiosk, { tag: 'ticket-booth' })), B(2.6, 3.8, 1.2, 2.4, -40.3, -39.3, cover(K.brass, { tag: 'luggage-scale', pattern: PATTERN.metal })));
+// (the luggage scale 0.55 m south of where the blockout had it, and the turnstiles 0.6 m north: the canopy's columns at
+// (3.0, −39.3) and (9.7, −45.7) stood through them — LEAD-REVIEW art round 1; no column passes through cover now, each
+// clears its column's drawn base by ≥ 9 cm)
+H(B(8.2, 10.0, 1.2, 3.7, -42.0, -40.0, roofR(K.kiosk, { tag: 'ticket-booth' })), B(2.6, 3.8, 1.2, 2.4, -40.85, -39.85, cover(K.brass, { tag: 'luggage-scale', pattern: PATTERN.metal })));
 // (the school-trip coat-peg stand: cover on the hall's west half, clear of the tower's lane by 0.95 m; a hop-up, so
 // walkable like every hop-height top)
 H(B(2.4, 3.8, 1.2, 2.3, -44.8, -44.2, cover(K.teak, { tag: 'coat-pegs', pattern: PATTERN.wood })));
-H(B(8.0, 8.6, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile', pattern: PATTERN.metal })), B(9.2, 9.8, 1.2, 2.2, -45.7, -45.1, cover(K.brass, { tag: 'turnstile', pattern: PATTERN.metal })));
+H(B(8.0, 8.6, 1.2, 2.2, -45.1, -44.5, cover(K.steel, { tag: 'turnstile', pattern: PATTERN.metal })), B(9.2, 9.8, 1.2, 2.2, -45.1, -44.5, cover(K.steel, { tag: 'turnstile', pattern: PATTERN.metal })));
 for (const [x, z] of [[3.0, -39.3], [9.7, -39.3], [3.0, -45.7], [9.7, -45.7]]) H(B(x - 0.25, x + 0.25, 1.2, 6.6, z - 0.25, z + 0.25, roofR(K.brass, { tag: 'canopy-column' })));
 H(B(2.5, 10.2, 6.6, 6.8, -46.2, -38.8, roofR('#c9dcdc', { tag: 'ticket-canopy', pattern: PATTERN.glasstile })));
 // --- the Pump Hall: the back-of-house shed along the blade's leading edge (open on its west side), its back wall in
@@ -330,9 +342,10 @@ H(B(17.05, 18.55, 0, 1.0, -42.0, -40.0, cover(K.pump, { tag: 'pump-set', pattern
 H(B(17.7, 19.3, 0, 1.4, -31.8, -30.2, cover(K.crate, { tag: 'salt-crates', pattern: PATTERN.wood, mural: [{ n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 6 }, { n: [0, 0, -1], id: 6 }] })));
 // --- the Gate Terrace's cross-cover: bollard planters at both ends, the ice-cream cart, the Tubeway post-box column,
 //     the ticket-machine bank in front of the hall's wing mouth (not in Tower Command: the track runs there)
-H(rnd(-8.5, -33.5, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter', pattern: PATTERN.planter })), rnd(11.0, -36.6, 0.9, FL, 1.3, cover(K.planter, { tag: 'planter', pattern: PATTERN.planter })));
-H(B(-6.2, -4.8, 0, 1.4, -40.5, -39.0, cover('#e7b7a8', { tag: 'icecream-cart' })), rnd(-1.0, -39.8, 0.6, FL, 2.4, roofR('#b0473a', { tag: 'post-box', hidden: true })));
-H(B(-0.7, 1.7, 0, 1.5, -35.6, -34.8, cover(K.steel, { tag: 'ticket-machines', notIn: 'tower', pattern: PATTERN.metalpanel })));
+// (the planters in cream stone round their grass beds, the ice-cream cart cream: art round 1 saw green and pink cubes)
+H(rnd(-8.5, -33.5, 0.9, FL, 1.3, cover(K.planterStone, { tag: 'planter', pattern: PATTERN.planter })), rnd(11.0, -36.6, 0.9, FL, 1.3, cover(K.planterStone, { tag: 'planter', pattern: PATTERN.planter })));
+H(B(-6.2, -4.8, 0, 1.4, -40.5, -39.0, cover('#efe4cf', { tag: 'icecream-cart' })), rnd(-1.0, -39.8, 0.6, FL, 2.4, roofR('#b0473a', { tag: 'post-box', hidden: true })));
+H(B(-0.7, 1.7, 0, 1.5, -35.6, -34.8, cover(K.steel, { tag: 'ticket-machines', notIn: 'tower', pattern: PATTERN.metalpanel, mural: [{ n: [0, 0, -1], id: 11 }, { n: [0, 0, 1], id: 11 }] })));
 // --- Penguin Point: the faux-Antarctic rockery along the trailing edge (1.2; the upper rock 2.4 over the plaza), the
 //     keeper's hut, feeding buckets, the ice pile, the basking rock (not in Tower Command), an outcrop, the feeding chute;
 //     the penguin glass in four angled bays (≥ 2.0 m over everything standable within 3 m), the cove behind it
@@ -366,8 +379,8 @@ H(bladeBox(24, 27, -17.0, -8.5, FL, 0.6, stone({ tag: 'queue-terrace' })));
 H(bladeBox(24.5, 26.5, -10.5, -8.5, FL, 3.0, roofR(K.kiosk, { tag: 'ferry-kiosk' })), bladeBox(24.5, 25.7, -8.5, -7.3, FL, 2.2, roofR(K.seagreen, { tag: 'timetable' })));
 H(bladeBox(24.9, 26.1, -12.0, -10.5, FL, 1.5, cover(K.steel, { tag: 'trolleys', pattern: PATTERN.metal })));
 H(B(-2.5, 0.5, 0, 1.2, -58.6, -57.4, cover(K.teak, { tag: 'whale-bench', pattern: PATTERN.wood })));
-H(rnd(...W(27.4, -2.4), 1.0, FL, 1.2, cover(K.planter, { tag: 'topiary', pattern: PATTERN.planter })));
-H(bladeBox(27.6, 28.8, -7.8, -5.8, FL, 1.4, cover(K.crate, { tag: 'trolley-stack', pattern: PATTERN.wood })), bladeBox(28.1, 28.9, 1.2, 3.6, FL, 1.3, cover(K.planter, { tag: 'queue-planter', pattern: PATTERN.planter })));
+H(rnd(...W(27.4, -2.4), 1.0, FL, 1.2, cover(K.planterStone, { tag: 'topiary', pattern: PATTERN.planter })));
+H(bladeBox(27.6, 28.8, -7.8, -5.8, FL, 1.4, cover(K.crate, { tag: 'trolley-stack', pattern: PATTERN.wood })), bladeBox(28.1, 28.9, 1.2, 3.6, FL, 1.3, cover(K.planterStone, { tag: 'queue-planter', pattern: PATTERN.planter })));
 H(B(6.2, 8.2, 0, 1.4, -52.3, -51.3, cover(K.steel, { tag: 'trolley', notIn: 'tower', pattern: PATTERN.metal })));
 // the forklift with a fish tank, parked in front of the Ticket Hall's queue step at the shed's mouth (the tower's track
 // turns here: not in Tower Command)
@@ -422,7 +435,7 @@ const inDrum = (x, z) => { const r = Math.hypot(x, z); return r <= 30.6 || (Math
 const ALL = () => [...SINGLE, ...HALF, ...HALF.map(mir)];
 // (the stand-ins drawn by backdrop.js / props.js — jelly columns, bubble column, Reef Window — are `hidden` now, but they
 // still hide the floor under them as they did when they were drawn: the floor is tiled exactly as the blockout's)
-const STAND_IN = new Set(['jelly', 'bubble-column', 'reef-window', 'lamp-column', 'coral', 'clam', 'helmet', 'lectern', 'post-box', 'buckets', 'feeding-chute', 'outcrop', 'forklift']);
+const STAND_IN = new Set(['jelly', 'bubble-column', 'reef-window', 'lamp-column', 'coral', 'clam', 'helmet', 'lectern', 'post-box', 'buckets', 'feeding-chute', 'outcrop', 'forklift', 'gulper-head', 'gulper-neck']);
 const opaque = (d) => (d.hidden && STAND_IN.has(d.tag) ? { ...d, hidden: false } : d);
 const groundCover = new Cover(ALL().map(opaque), 0);
 H(layer({ key: 'ground', rect: [-36, 36, -78, 0], res: 0.25, cover: groundCover, y0: FL, y1: 0, o: floor0({ tag: 'ground' }), clip: (x, z) => !inNgon(C0, 16, TANK.a, 0, x, z, -0.05),
@@ -493,6 +506,7 @@ const LAYOUT_AQUARIUM = {
   zones: ZONES,
   tower: TOWER,
   pipes: PIPES,
+  levelArt,                // the floor inlays, KEEP CLEAR arcs, the Glass Walk and the dusk light pools (floorart.js; the pipe engine applies it)
   bazookarp: BAZOOKARP,
   boss: { floorY: 0 },
   intro: { from: [24, 16, 18], lookFrom: [0, 13, 0], toBack: 3.0 },
