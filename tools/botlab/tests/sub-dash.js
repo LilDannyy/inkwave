@@ -12,7 +12,7 @@
   const { on } = await import('./src/core/ctx.js');
   const { PlayerController } = await import('./src/game/player.js');
   const DK = await import('./src/game/kits/dash.js');
-  const { THREAT_STATS } = await import('./src/game/bots.js');
+  const { THREAT_STATS, BotBrain } = await import('./src/game/bots.js');
   const { MITTS } = await import('./src/game/kits/mitts.js');
   const { DEPTH } = await import('./src/game/kits/brolly-model.js');
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -186,6 +186,58 @@
           sane && plainBest >= 1.6 && dashBest === 0 && H2.length > 0, { plainBest, plainRunUps: Object.keys(plainAt).filter((k) => k.startsWith(plainBest + '@')), dashClimbs: extra.slice(0, 6), sane });
       }
       unbox(); CB.solid = false; L.moveDynamic(CB, V(1e4, -500, 1e4), V(0.1, 0.1, 0.1), 0);
+      // gentle slopes: an air dash whose body meets a 16° face lands there (the ledge assist, as any landing) and never
+      // rides up it while airborne (round 1's did: its body slid up the face at dash speed, the feet 0.1 m higher in the air
+      // and the landing 0.1–0.25 m over a plain hop's — dash-reach found it on saltpan's pitched shed roof, 2.13 m over the
+      // start, and lockgate's cart ramp, 1.93 m). The two shapes as found: a 1.75 m wall with a roof pitched up 16° from
+      // just behind its edge, run at head-on; and a 16.7° ramp met from its side at 45°. Every run-up × timing at 1/60 and
+      // 1/24, caught in the substeps: with the dash pressed in the air, the feet's highest point before it first comes down
+      // is no higher than a plain running hop's on the same shape (the best of the run-ups, + 0.02)
+      const pitched = (b, cx, cy, cz, hx, hy, hz, th) => {   // an OBB tilted th about z: its x axis rises toward +x
+        L.moveDynamic(b, V(cx, cy, cz), V(hx, hy, hz), 0);
+        const c = Math.cos(th), s = Math.sin(th);
+        b.axes[0].set(c, s, 0); b.axes[1].set(-s, c, 0); b.axes[2].set(0, 0, 1);
+        const ex = c * hx + s * hy, ey = s * hx + c * hy;
+        b.aabbMin.set(cx - ex, cy - ey, cz - hz); b.aabbMax.set(cx + ex, cy + ey, cz + hz);
+      };
+      const TH = 16 * Math.PI / 180, slabAt = (x0, y0, hx, b) => { const hy = 0.15, c = Math.cos(TH), s = Math.sin(TH); pitched(b, x0 + c * hx + s * hy, y0 + s * hx - c * hy, -20, hx, hy, 3, TH); };
+      let LH = null;
+      me._integrate = function (dt, sq, j) {
+        Object.getPrototypeOf(this)._integrate.call(this, dt, sq, j);
+        const s = LH; if (!s || s.down !== null) return;
+        if (wr.dashT > 0 && s.dashAir === null) s.dashAir = !!wr.dashAir;   // (pressed in the air, or on the ground)
+        if (this.grounded) { if (s.air) s.down = this.pos.y; } else { s.air = true; s.maxAir = Math.max(s.maxAir, this.pos.y); }
+      };
+      // from S backed off d0 m along the heading q, running: the jump, then (f ≥ 0) the dash f 60 Hz frames into it
+      const tryIt = (S, q, d0, f, dt) => {
+        const k = (n) => Math.round(n / (60 * dt)), J = Math.max(1, k(2)), fk = f >= 0 ? k(f) : -1;
+        put(me, S[0] - q[0] * d0, 0, S[1] - q[1] * d0, Math.atan2(q[0], q[1])); const y0 = me.pos.y;
+        LH = { air: false, down: null, maxAir: -99, dashAir: null };
+        sim(me, k(70), dt, (i) => ({ jump: i < J, sub: fk >= 0 && i === fk, move: q }));
+        const r = LH; LH = null; return { maxAir: r.maxAir - y0, dashAir: r.dashAir, down: r.down === null ? null : r.down - y0 };
+      };
+      const shapes = [], RU = [0.05, 0.3, 0.6, 1.0, 1.5, 2.0, 2.6, 3.4], Q = Math.SQRT1_2;
+      const SHAPES = [
+        { name: 'a 1.75 m wall, a roof pitched up 16° from just behind its edge (head-on)', S: [3 - 0.38, -20], q: [1, 0],
+          build: () => { box(4, 0.875, -20, 1, 0.875, 3); slabAt(3.3, 1.75, 1.6, box(0, -50, 0, 0.1, 0.1, 0.1)); } },
+        { name: 'a 16.7° ramp met from its side at 45°', S: [0.41, -19.55], q: [Q, Q],
+          build: () => pitched(box(0, -50, 0, 0.1, 0.1, 0.1), 0, -0.15, -15, 3.35, 1.32, 4.48, Math.asin(0.287)) },
+      ];
+      for (const dt of [1 / 60, 1 / 24]) {
+        for (const sh of SHAPES) {
+          unbox(); sh.build();
+          let hopAir = -9, hopDown = -9, dashAir = -9, dashDown = -9, at = null, n = 0;
+          for (const d0 of RU) { const r = tryIt(sh.S, sh.q, d0, -1, dt); hopAir = Math.max(hopAir, r.maxAir); if (r.down !== null) hopDown = Math.max(hopDown, r.down); }
+          for (const d0 of RU) for (let f = 0; f <= 34; f += 2) {
+            const r = tryIt(sh.S, sh.q, d0, f, dt); if (!r.dashAir) continue;
+            n++; if (r.maxAir > dashAir) { dashAir = r.maxAir; at = { runUp: d0, frame: f }; } if (r.down !== null) dashDown = Math.max(dashDown, r.down);
+          }
+          shapes.push({ shape: sh.name, dt: `1/${Math.round(1 / dt)}`, airDashes: n, dashHighestInAir: r3(dashAir), hopHighestInAir: r3(hopAir), at, dashFirstDown: r3(dashDown), hopFirstDown: r3(hopDown) });
+        }
+      }
+      delete me._integrate; unbox();
+      R(`an air dash into a gentle slope lands on it, never rides up it: the feet's highest in the air no higher than a plain hop's on the same shape (+ 0.02) — ${shapes.map((s) => `${s.shape} at ${s.dt}: ${s.dashHighestInAir} m against ${s.hopHighestInAir} (${s.airDashes} air dashes; first comes down ${s.dashFirstDown} m, a hop ${s.hopFirstDown} m)`).join('; ')} (8 run-ups × 18 timings each)`,
+        shapes.length === 4 && shapes.every((s) => s.airDashes >= 60 && s.hopHighestInAir > 1 && s.dashHighestInAir <= s.hopHighestInAir + 0.02), shapes);
     }
 
     // ================================================================================== 4. limits
@@ -523,42 +575,55 @@
       const B = foes[0], E = me;   // B dashes; E (us) is its foe, our brain scripted (we never shoot)
       delete B.bot.update;          // B's own brain
       B.setSub('dash'); B.setWeapon('shooter');
-      const fresh = () => { const b = B.bot; b._wasDead = false; b.thr = null; b.thrCand = null; b._thrMem.clear(); b._dash = null; b.thrAct = null; b.target = null; b.seeTimer = 0; b.sp?.reset?.(); b.path = null; };
+      const fresh = () => { const b = B.bot; b._wasDead = false; b.thr = null; b.thrCand = null; b._thrMem.clear(); b._dash = null; b.thrAct = null; b.target = null; b.seeTimer = 0; b.sp?.reset?.(); b.path = null; b.thrScanT = Math.random() * 0.25; };
       const TOR = SUB_KITS.torpedo;
-      // a Torpedo launched at it from 5 m (5 m/s and speeding up, homing: it lands ~0.7 s later; one it can't shoot down:
-      // dodging is the only answer), the bot facing it, 40 trials each way. The bot notices it by its own threat scan and
-      // reaction time, 0.35–0.65 s after the launch — with < 0.5 s left, the spec's D10.7 case — or too late, or never (the
-      // threat block's business, not the dash's: judged over the trials where it noticed it; the raw rates are told).
-      // The dash arm must come out clear in ≥ 70 % (spec) and ≥ 30 points better than the dash off. (The spec's "≤ 40 %
-      // without" is the baseline's own difficulty, and in this setup it swings run to run with how late the bot happened to
-      // notice: measured 24 % and 54 % over two runs of 40; noticed at the launch, footwork alone clears it 20 / 20. So
-      // the gain is judged, and the dash-off rate told against the 40 %)
-      const torTrial = (dash, i) => {
-        DK.DASH_AI.enabled = dash;
-        put(B, 0, 0, 0, 0); B.ink = 100; fresh();
-        put(E, 0, 0, 8, Math.PI); W.set(E, {});
-        E.setSub('torpedo');
-        const before = new Set(TOR._list);
-        E.aimYaw = Math.PI; E.aimPitch = 0.2; TOR.use(G.subs, E, SUBS.torpedo);
-        const t = TOR._list.find((x) => !before.has(x));
-        const ang = ((i % 20) - 9.5) * 0.06;   // (a spread of approach lines, ±0.57 rad)
-        t.pos.set(5 * Math.sin(ang), 1.0, 5 * Math.cos(ang)); t.vel.set(0, 0, 0); t.hover.copy(t.pos); t.target = B;
-        t.state = 'launch'; t.t = 0; t.speed = 5; t.dir.set(-Math.sin(ang), -0.05, -Math.cos(ang)).normalize();
-        TOR.threats([]); Object.defineProperty(t.thr, 'shootable', { get: () => false, configurable: true });
-        const e0 = ev.length, d0 = THREAT_STATS.dashDodge;
-        let noticed = -1, thrIn = null;
-        for (let f = 0; f < 210 && t.state !== 'dead'; f++) { step(1); if (noticed < 0 && B.bot.thr === t.thr) { noticed = f; thrIn = r2(B.bot.thrIn); } }
-        step(10);
-        return { noticed, thrIn, clear: !since(e0, 'hit', (e) => e.victim === B && e.weaponId === 'torpedo').length, dashed: THREAT_STATS.dashDodge > d0 };
+      // a Torpedo launched at it from 5 m (5 m/s and speeding up, homing; one it can't shoot down: dodging is the only
+      // answer), while it duels us (we can't be splatted, so the duel never ends mid-trial). The spec's D10.7 case is a
+      // threat noticed with < 0.5 s left: the bot notices it by its own threat scan and reaction time. Each trial runs
+      // twice, the dash on and off, on the same seeded random stream (Math.random: the scan phase, the reaction time), each
+      // from a clean slate (no ink, no shots, no devices, a new brain, the match clock topped up: nothing of the last trial
+      // carries over), and is judged over the trials noticed with < 0.5 s left. Judged where the dash is the answer: the
+      // bot standing in our ink (a 5 m disc), where its footwork is the enemy-ink crawl and the dash isn't slowed (D1.5):
+      // the spec's ≥ 70 % clear with the dash against ≤ 40 % without. On clean ground the bot's own sidestep already clears
+      // most late Torpedoes (the homing turns 1.9 rad/s): those numbers are told beside it. (Round 1 measured 24–63 %
+      // without the dash in trials that started in the last trial's Torpedo ink)
+      const seeded = (s) => { let a = s >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+      const R0 = Math.random;
+      const torTrial = (dash, i, inked) => {
+        Math.random = seeded(1000 + i * 7919);
+        try {
+          DK.DASH_AI.enabled = dash;
+          m.time = Math.max(m.time, 600);                         // (bots think only while the match plays)
+          G.paint.clear(); G.fx?.clear?.(); G.projectiles.clear?.(); for (const k in SUB_KITS) SUB_KITS[k].clear?.();
+          B.bot = new BotBrain(B, B.bot.diff?.id || 'normal');
+          put(B, 0, 0, 0, 0); B.ink = 100; fresh();
+          put(E, 0, 0, 8, Math.PI); E.invuln = 99; W.set(E, {});
+          if (inked) for (let x = -5; x <= 5; x += 2) for (let z = -5; z <= 5; z += 2) if (Math.hypot(x, z) <= 5.5) G.paint.splat(V(x, 0.05, z), 1.8, E.team, { instant: true, seed: 0.5 });
+          E.setSub('torpedo');
+          const before = new Set(TOR._list);
+          E.aimYaw = Math.PI; E.aimPitch = 0.2; TOR.use(G.subs, E, SUBS.torpedo);
+          const t = TOR._list.find((x) => !before.has(x));
+          const ang = ((i % 20) - 9.5) * 0.06;   // (a spread of approach lines, ±0.57 rad)
+          t.pos.set(5 * Math.sin(ang), 1.0, 5 * Math.cos(ang)); t.vel.set(0, 0, 0); t.hover.copy(t.pos); t.target = B;
+          t.state = 'launch'; t.t = 0; t.speed = 5; t.dir.set(-Math.sin(ang), -0.05, -Math.cos(ang)).normalize();
+          TOR.threats([]); Object.defineProperty(t.thr, 'shootable', { get: () => false, configurable: true });
+          const e0 = ev.length, d0 = THREAT_STATS.dashDodge, onInk = B.groundTeam === 2;
+          let noticed = -1, thrIn = null;
+          for (let f = 0; f < 210 && t.state !== 'dead'; f++) { step(1); if (noticed < 0 && B.bot.thr === t.thr) { noticed = f; thrIn = r2(B.bot.thrIn); } }
+          step(10);
+          return { noticed, thrIn, onInk, clear: !since(e0, 'hit', (e) => e.victim === B && e.weaponId === 'torpedo').length, dashed: THREAT_STATS.dashDodge > d0 };
+        } finally { Math.random = R0; }
       };
-      const torOn = [], torOff = [];
-      for (let i = 0; i < 40; i++) { torOn.push(torTrial(true, i)); torOff.push(torTrial(false, i)); }
-      DK.DASH_AI.enabled = true;
-      const nOn = torOn.filter((x) => x.noticed >= 0), nOff = torOff.filter((x) => x.noticed >= 0);
-      const pOn = nOn.filter((x) => x.clear).length / Math.max(1, nOn.length), pOff = nOff.filter((x) => x.clear).length / Math.max(1, nOff.length);
-      const dashedOn = nOn.filter((x) => x.dashed).length, rawOn = torOn.filter((x) => x.clear).length, rawOff = torOff.filter((x) => x.clear).length;
-      R(`a bot with a Torpedo launched at it from 5 m, once it has noticed it (< 0.5 s left), dashes it off (once per threat, on any frame it's within 0.6 s, along the threat block's heading) in ${dashedOn} of ${nOn.length} and comes out clear in ${Math.round(pOn * 100)} % (target ≥ 70 %); with the dash off, ${Math.round(pOff * 100)} % of ${nOff.length} (the dash ≥ 30 points better; the spec's figure for this is ≤ 40 %); raw, all 40: ${rawOn} / ${rawOff} clear`,
-        nOn.length >= 15 && nOff.length >= 15 && pOn >= 0.7 && pOn - pOff >= 0.3 && dashedOn >= 0.7 * nOn.length, { on: r2(pOn), off: r2(pOff), noticed: [nOn.length, nOff.length], dashedOn, raw: [rawOn, rawOff], thrInAtNotice: nOn.map((x) => x.thrIn) });
+      const torSet = (n, inked) => {
+        const T = []; for (let i = 0; i < n; i++) T.push({ on: torTrial(true, i, inked), off: torTrial(false, i, inked) });
+        const nt = T.filter((x) => x.on.noticed >= 0 && x.on.thrIn < 0.5);
+        return { n: nt.length, on: r2(nt.filter((x) => x.on.clear).length / Math.max(1, nt.length)), off: r2(nt.filter((x) => x.off.clear).length / Math.max(1, nt.length)), dashed: nt.filter((x) => x.on.dashed).length,
+          saved: nt.filter((x) => x.on.clear && !x.off.clear).length, worse: nt.filter((x) => !x.on.clear && x.off.clear).length, sameNotice: T.filter((x) => x.on.noticed === x.off.noticed).length, onInk: T.every((x) => x.on.onInk === inked), thrIn: nt.map((x) => x.on.thrIn) };
+      };
+      const tI = torSet(40, true), tC = torSet(20, false);
+      E.invuln = 0; G.paint.clear();
+      R(`a bot in our ink with a Torpedo launched at it from 5 m, noticed with < 0.5 s left (${tI.n} of 40 paired trials), dashes it off (once per threat, on any frame it's within 0.6 s, along the threat block's heading) in ${tI.dashed} and comes out clear in ${Math.round(tI.on * 100)} % (target ≥ 70 %); the same trials with the dash off: ${Math.round(tI.off * 100)} % (target ≤ 40 %). On clean ground (told): ${Math.round(tC.on * 100)} % with the dash, ${Math.round(tC.off * 100)} % without (${tC.n} of 20)`,
+        tI.onInk && tI.n >= 15 && tI.on >= 0.7 && tI.off <= 0.4 && tI.dashed >= 0.7 * tI.n, { inOurInk: tI, cleanGround: tC });
       // a Splat Bomb landing at its feet (fuse 0.62 s: noticed, its escape has < 0.5 s): it dashes along its escape heading
       // and comes out clear; with the dash off it can't outrun the blast
       const log = [];
@@ -566,6 +631,7 @@
       K.botAct = function (b, ...rest) { const had = b.dashDir; const r = act0.call(this, b, ...rest); if (!had && b.dashDir && b.a === B) log.push({ esc: b.sp?.esc ? b.sp.esc.yaw : null, yaw: Math.atan2(b.dashDir.x, b.dashDir.z) }); return r; };
       const bombTrial = (dash, i) => {
         DK.DASH_AI.enabled = dash;
+        m.time = Math.max(m.time, 600); G.paint.clear(); G.fx?.clear?.(); G.projectiles.clear?.(); for (const k in SUB_KITS) SUB_KITS[k].clear?.();   // (a clean slate: no ink of the last blast underfoot)
         put(B, 0, 0, 0, i * 0.7); B.ink = 100; fresh();
         put(E, 0, 0, 8, Math.PI); W.set(E, {});
         P.throwBomb(E);
