@@ -1,0 +1,86 @@
+### climb-audit1  (2026-10-10 01:18)
+PASS climb edges barred by a railing  {"climbs":160,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit2  (2026-10-10 01:20)
+PASS climb edges barred by a railing  {"climbs":160,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit3  (2026-10-10 01:22)
+PASS climb edges barred by a railing  {"climbs":182,"bad":[],"n":0}
+RESULT 1/1
+### cover-map1  (2026-10-10 01:18)
+PASS cover map  {"map":"bluestone","floorCells":4822,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map2  (2026-10-10 01:20)
+PASS cover map  {"map":"bluestone","floorCells":4982,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map3  (2026-10-10 01:22)
+PASS cover map  {"map":"bluestone","floorCells":5508,"within5m_pct":99.3,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### size-budget1  (2026-10-10 01:18)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1007}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4719,"cap":14157,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget2  (2026-10-10 01:19)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1015}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4869,"cap":14607,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget3  (2026-10-10 01:21)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1086}
+PASS paint atlas density  {"ppm":11.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5768,"cap":17304,"capNeeded":[6000,6000]}
+RESULT 3/3
+### spawn-mid1  (2026-10-10 01:17)
+PASS spawn to mid  {"t0":{"m":74.3,"s":6.3,"straight":68.5},"t1":{"m":78.7,"s":6.67,"straight":68.5},"spawns":[[-21.5,-65],[21.5,65]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid2  (2026-10-10 01:19)
+PASS spawn to mid  {"t0":{"m":74.3,"s":6.3,"straight":68.5},"t1":{"m":78.7,"s":6.67,"straight":68.5},"spawns":[[-21.5,-65],[21.5,65]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid3  (2026-10-10 01:21)
+PASS spawn to mid  {"t0":{"m":71.8,"s":6.09,"straight":67},"t1":{"m":75.6,"s":6.41,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### stage-audit-tower1  (2026-10-10 01:19)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.3,6.67],"avg":6.48,"straight":68.5}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower2  (2026-10-10 01:21)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-turf1  (2026-10-10 01:18)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.3,6.67],"avg":6.48,"straight":68.5}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf2  (2026-10-10 01:20)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf3  (2026-10-10 01:22)
+### towercheck1  (2026-10-10 01:14)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towercheck2  (2026-10-10 01:15)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towercheck3  (2026-10-10 01:17)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}

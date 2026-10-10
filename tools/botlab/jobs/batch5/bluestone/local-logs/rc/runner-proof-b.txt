@@ -1,0 +1,7 @@
+# head c13c5aca
+### r4-era1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6376,"blocks":534,"solidBlocks":534,"propMeshes":3,"navNodes":4727,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":141,"tris":333754,"cpuRenderMs":2.01,"cpuSimMs":1.92},"coverage":[1.8,3.8]}
+### r4-era2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6876,"blocks":556,"solidBlocks":556,"propMeshes":3,"navNodes":4877,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":136,"tris":330291,"cpuRenderMs":1.94,"cpuSimMs":1.73},"coverage":[1.7,2.6]}
+### r4-era3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6316,"blocks":666,"solidBlocks":666,"propMeshes":3,"navNodes":5768,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":125,"tris":293918,"cpuRenderMs":2.11,"cpuSimMs":2.08},"coverage":[1.3,1.9]}

@@ -1,0 +1,70 @@
+# head bd0fc6aa
+# head bd0fc6aa
+--- 09:54:48 regions 3 1
+### ink-regions era 3 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6458,"inked":0.637,"regions":{"circus":{"m2":1635,"share":0.253,"inked":0.76},"base":{"m2":978,"share":0.151,"inked":0.69},"knee":{"m2":858,"share":0.133,"inked":0.54},"swimston":{"m2":549,"share":0.085,"inked":0.82},"halo":{"m2":468,"share":0.072,"inked":0.48},"knee-far":{"m2":427,"share":0.066,"inked":0.43},"river":{"m2":385,"share":0.06,"inked":0.37},"garden":{"m2":379,"share":0.059,"inked":0.46},"gpo-quay":{"m2":302,"share":0.047,"inked":0.77},"hoki":{"m2":267,"share":0.041,"inked":0.71},"arcade":{"m2":210,"share":0.032,"inked":0.62}}}
+--- 09:55:34 regions 3 2
+### ink-regions era 3 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6458,"inked":0.629,"regions":{"circus":{"m2":1635,"share":0.253,"inked":0.75},"base":{"m2":978,"share":0.151,"inked":0.71},"knee":{"m2":858,"share":0.133,"inked":0.56},"swimston":{"m2":549,"share":0.085,"inked":0.86},"halo":{"m2":468,"share":0.072,"inked":0.45},"knee-far":{"m2":427,"share":0.066,"inked":0.44},"river":{"m2":385,"share":0.06,"inked":0.44},"garden":{"m2":379,"share":0.059,"inked":0.46},"gpo-quay":{"m2":302,"share":0.047,"inked":0.66},"hoki":{"m2":267,"share":0.041,"inked":0.44},"arcade":{"m2":210,"share":0.032,"inked":0.58}}}
+--- 09:57:17 done
+# head bd0fc6aa
+--- 09:57:17 zones 3
+### zones era 3
+== bluestone [zones]: winner Bravo (time) | final 76 vs 47 (penalty +17/+0.1) | OT no
+   held A 35.3s B 157.5s neutral 107s | captures 10 (takeovers 4), control events 20, first capture @17.8s | rotations 5
+   stuck 0.2% | splats 65 (water 0) | specials 15 | super jumps 21 | turf 22.3/31.3 | sim 300s in 76s (wall 77s) | {"cpuSimMs":2.12}
+   splats by cause {"brush":2,"shot":23,"zooka":1,"mitts":9,"blast":12,"jetpack":2,"slam":1,"stamp":2,"drop":6,"crab":2,"brolly":2,"bow":3}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 09:58:53 zones 1
+### zones era 1
+== bluestone [zones]: winner Alpha (time) | final 5 vs 84 (penalty +0/+11.2) | OT no
+   held A 150.3s B 49.8s neutral 99.8s | captures 8 (takeovers 4), control events 15, first capture @23.2s | rotations 7
+   stuck 0.1% | splats 77 (water 0) | specials 13 | super jumps 23 | turf 33.9/19.9 | sim 300s in 92s (wall 93s) | {"cpuSimMs":2.1}
+   splats by cause {"shot":32,"slosh":3,"mitts":23,"boomerang":1,"brush":2,"jetpack":2,"crab":1,"blast":8,"drop":3,"blaster":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 10:00:53 done
+# head bd0fc6aa
+--- 10:00:54 tower-match 3
+### tower-match era 3
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 74 vs 31 (score 74/31) | best push A 24.3m B 50.8m | OT 20.3s | sim 320.3s
+   held A 150s B 158.5s | contested 7s (4×) | neutral 11.5s | control changes 10 (takes 11) | idle→neutral 0
+   checkpoints cleared A 0 B 1 (reached 0/2, refills 0/1) | riders avg while held A 1.3 B 1.15 | mounts 23/31
+   stuck 0.1% | by the tower's side 3.3% of bot-time, stuck there 0.3s (1 episodes) | splats 112 (water 0) | specials 17 (ready 20) | super jumps 50 | turf 22.1/24 | sim 320.3s in 84s (wall 84s) | {"cpuSimMs":0.83}
+   stuck {"t":82,"name":"P1","w":"charger","mode":"refill","role":"perch","pos":[-17,0,4.7],"tower":7.9,"path":true,"dur":1}
+   stuck {"t":38.5,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-18,0,-24.2],"tower":23.8,"path":false,"dur":0.5}
+   stuck {"t":50.8,"name":"P1","w":"charger","mode":"refill","role":"perch","pos":[-16.4,0,-27.1],"tower":19.4,"path":true,"dur":0.5}
+   stuck {"t":252,"name":"P1","w":"charger","mode":"retreat","role":"perch","pos":[-18.8,0,-38.1],"tower":20.1,"path":true,"dur":0.5}
+   stuck {"t":37.5,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-18.2,0,-24.2],"tower":24.2,"path":false,"dur":0.25}
+   stuck {"t":138.8,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-4.6,0,-17.7],"tower":22.3,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"retake","counts":[74,31],"best":[24.3,50.8],"held":[150,158.5],"controlChanges":10,"cpClear":[0,1],"stuckPct":0.1,"console":1,"frameErrors":0,"mounts":[23,31],"ridersAvg":[1.3,1.15],"x":{"climbs":[20,23],"sjRider":15,"kills":112,"killsNear":[50,57],"attempts":143,"boarded":42,"aborted":98,"climbMounts":34,"sjMounts":2,"toBoard":{"med":2.25,"p80":
+--- 10:02:50 done
+### crossmarket mids
+### ink 1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":7097,"blocks":534,"solidBlocks":534,"propMeshes":3,"navNodes":4727,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":13
+### done
+# head bd0fc6aa
+--- 10:03:58 tower-check 2
+### tower-check era 2
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 10:05:43 done
+# head 596ca9ba
+--- 10:05:43 boss
+### boss
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":657,"floorY":0,"box":[-35.3,35.3,-14.8,14.8],"cells":{"floor":4583.5,"wall":674,"drop":7929,"pad":253.5}}
+FAIL overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.27,"pen":{"balconyN:a":{"pen_m":0.27,"at":[-2.25,-12.75]},"balconyN:b":{"pen_m":0.27,"at":[2.25,12.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":{"pen_m":-2.21,"at":[-3.75,-12.75]},"gallery:b":{"pen_m":-2.21,"at":[3.75,12.75]},"verandaE1:a":{"pen_m":-1.96,"at":[3.25,-13.75]},"verandaE1:b":{"pen_m":-1.96,"at":[-8.25,13.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":359}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":24,"cells4m":5,"trail":[[-13.5,-4.2],[-14.5,-5.6],[-17.5,-3.2],[-8.2,-7.5],[-5.7,-9.6],[-5.7,-9.6],[-3.7,-10.3],[-2.7,-10.3],[-2.7,-10.3],[-2.7,-10.3],[-2.7,-10.3],[-2.7,-10.3]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":13,"sweep":1,"charge":1,"slam":2,"crablets":4,"frenzy":1},"stuns":2,"hp":0.28,"dead":false}
+RESULT 5/7
+--- 10:07:16 done
+ALLDONE
