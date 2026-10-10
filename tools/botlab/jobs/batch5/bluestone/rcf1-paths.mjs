@@ -1,7 +1,7 @@
 // Bluestone round C fix 1 (scratch): the paths the bots' nav picks (the real Level, Physics and NavGraph) for the round's
 // changes, with their turning points:   ERA=1|2|3 node --import ./three-hook.mjs rcf1-paths.mjs
 //   pad → the Halo's 270° side (the knee flight and the hotel stair), Swimston's knee → the balcony (the flight), the pad →
-//   the customs dock, Bravo's pad → Alpha's knee side zone (the visitors' way in) and the side zone's entrances (nav
+//   the customs dock, the dock's gangway to the enemy Boathouse deck, Bravo's pad → Alpha's knee side zone (the visitors' way in) and the side zone's entrances (nav
 //   edges from outside into the zone, grouped within 3 m)
 const root = new URL('../../../../../', import.meta.url).pathname;
 const { MAP_LAYOUTS } = await import(root + 'src/world/maps.js');
@@ -23,6 +23,10 @@ out['pad→halo270'] = route([-18, 3.3, -64.5], [-12.8, 5.4, -3]);
 out['swimKnee→balcony'] = route([-20, 0, -24], [-10, 2.4, -17]);
 out['pad→dock'] = route([-18, 3.3, -64.5], [-30.5, 1.2, 8.4]);
 out['circus9→dock'] = route([-14, 0, 0], [-30.5, 1.2, 8.4]);
+// the gangway: the dock → the enemy Boathouse's deck (Bravo's, over the circus's north-west) and Alpha's knee → that deck
+out['dock→enemyDeck'] = route([-30.5, 1.2, 8.4], [-18, 2.4, 20]);
+out['prow→enemyDeck'] = route([-31, 1, -20], [-18, 2.4, 20]);
+out['enemyDeck→dock'] = route([-18, 2.4, 20], [-30.5, 1.2, 8.4], 1);
 out['bravoPad→sideZoneA'] = route([18, 3.3, 64.5], [-26, 0, -19.5], 1);
 out['alphaPad→sideZoneA'] = route([-18, 3.3, -64.5], [-26, 0, -19.5]);
 // (the round-C side zone's centre at the GPO's corner, for comparison)
