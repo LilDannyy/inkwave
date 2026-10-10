@@ -12,6 +12,9 @@
 //   6  SEA SALT 25 kg: a stencil on the Pump Hall's salt crates
 //   7  FEEDING DECK · KEEPERS ONLY: on the Feeding Steps' riser (the hall side), with a wave border
 //   8  a hazard band along the top of the Pump Hall bund's aisle face
+//   9  a fish-food hopper's face: the riveted bin, FISH FOOD, the funnel and its chute (the hoppers' two inner faces)
+//  10  a feed hatch's long face: the coaming's brass straps, hinges, a ring pull, FEED HATCH · KEEPERS ONLY
+//  11  the ticket-machine bank's faces: three Deco machines (TICKETS screen, price card, slot, buttons, tray)
 export const MURAL = { porthole: 4, water: 5, salt: 6, feeding: 7, hazard: 8 };
 
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }

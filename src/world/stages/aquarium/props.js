@@ -111,6 +111,8 @@ export const PLACEMENTS = [
   ...tagged('topiary').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 1.0, h: 1.2, plates: [PI * 0.83], label: 'FISH TOPIARY' })),
   ...tagged('ticket-machines').map((d) => ({ type: 'aquarium_ticketcanopy', ...atBox(d) })),
   ...tagged('icecream-cart').map((d) => ({ type: 'aquarium_cartdress', ...atBox(d) })),
+  ...tagged('luggage-scale').map((d) => ({ type: 'aquarium_scale', ...atBox(d) })),
+  ...tagged('coat-pegs').map((d) => ({ type: 'aquarium_pegs', ...atBox(d) })),
   // ---- the wing's small things, out of the lanes (art round 1: "none of §5.2's queue stanchions, stacked luggage, …")
   { type: 'aquarium_aboard', pos: [10.65, 0, -47.0], rotY: PI * 0.85, text: 'FLOOR DRY', sub: 'EVERYTHING IS' },
   { type: 'aquarium_aboard', pos: [-9.4, 0, -30.4], rotY: PI * 0.92, text: 'FEEDINGS', sub: '11:00 · 15:00' },

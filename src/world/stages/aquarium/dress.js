@@ -13,6 +13,9 @@
 //   cart         the ice-cream cart's wheels and parasol · deckchairs: striped chairs on the stack
 //   rail         a railing: white posts, a brass top rail with ball ends, a mid rail (and string lights over it at dusk)
 //   glassframe   brass frames over the penguin glass bays · cove: the penguins' cove (rocks, ice floes, the pool)
+//   hopper / hatch / polerack   the Feeding Deck's furniture dressed from outside its faces (art round 1)
+//   turnstile / trolley / planterdress / ticketcanopy / cartdress   the wing's cover, likewise
+//   aboard / bench / stanchions / luggage   the wing's small things out of the lanes
 export function registerDress(D, H, KIT) {
   const { K, NS, pbox, cyl, cylGeo, latheG, sphG, torG, strut, rod, letters, sign, porthole, speed, globe, handrail, roundel, HP, PI, TAU } = KIT;
   const blob = new Map();
@@ -448,6 +451,35 @@ export function registerDress(D, H, KIT) {
     },
   };
 
+  D.aquarium_scale = {
+    desc: "the Ticket Hall's luggage scale round its cover block: a brass dial on its hall-side face, the weighing plate's rim",
+    build(B, o) {
+      const w = o.w ?? 1.2, d = o.d ?? 1.0, h = o.h ?? 1.2;
+      lip(B, w, d, h, K.brassDk, 0.03, 0.05);
+      B.push(w / 2 + 0.01, 0, 0, HP);
+      B.add('metal', torG(0.24, 0.035, 6, 24), K.brassLt, 0, h * 0.62, 0.03, {});
+      B.add('glow', cylGeo(0.23, 0.23, 0.02, 24), K.cream, 0, h * 0.62, 0.02, { rx: HP, glow: 0.8 });
+      for (let i = 0; i < 10; i++) { const a = -2.2 + (i / 9) * 4.4; pbox(B, NS('paint'), K.ink, 0.012, 0.04, 0.01, Math.sin(a) * 0.18, h * 0.62 + Math.cos(a) * 0.18, 0.035, { rz: -a }); }
+      pbox(B, NS('paint'), K.red, 0.012, 0.17, 0.01, 0.04, h * 0.62 + 0.06, 0.04, { rz: -0.5 });
+      letters(B, 'LUGGAGE', { h: 0.06, y: h * 0.62 - 0.36, z: 0.012, c: K.ink, flat: true, mat: 'paint' });
+      B.pop();
+    },
+  };
+  D.aquarium_pegs = {
+    desc: "the school-trip coat pegs: brass pegs along both long faces' top edges with coats, satchels and caps hanging",
+    build(B, o) {
+      const w = o.w ?? 1.4, d = o.d ?? 0.6, h = o.h ?? 1.1;
+      lip(B, w, d, h, K.brass, 0.025, 0.05);
+      const cols = ['#c0574a', '#4f6f9c', '#d9b24a', '#5d8a64', '#8a5a9c', '#d98a4a'];
+      for (const s of [-1, 1]) for (let i = 0; i < 5; i++) {
+        const x = -w / 2 + 0.16 + i * ((w - 0.32) / 4), z = s * (d / 2 + 0.02);
+        rod(B, 'metal', K.brassLt, [x, h - 0.12, s * d / 2], [x, h - 0.08, z + s * 0.06], 0.012);
+        const c = cols[(i + (s > 0 ? 0 : 3)) % cols.length];
+        if (i % 2 === 0) B.box('paint', c, 0.2, 0.42, 0.05, x, h - 0.36, z + s * 0.02, { r: 0.03 });
+        else { B.box('paint', c, 0.18, 0.16, 0.08, x, h - 0.26, z + s * 0.04, { r: 0.03 }); rod(B, 'paint', '#3b2a1e', [x - 0.08, h - 0.18, z + s * 0.04], [x, h - 0.1, z + s * 0.06], 0.008); }
+      }
+    },
+  };
   // the wing's small things out of the lanes (visual only, like every prop here: against walls, beside cover, behind the
   // queue): A-boards, a bench, queue stanchions with their rope, stacked luggage
   D.aquarium_aboard = {
