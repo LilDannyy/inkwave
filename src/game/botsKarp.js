@@ -85,14 +85,17 @@ class KarpPlan {
     this.Kp = Kp; this.t = -9; this.dirty = true;
     this.roles = [new Map(), new Map()]; this.sit = ['shell', 'shell']; this.aux = new Map();
     const N = (this.N = G.nav.nodes.length), F = Kp.field;
-    // the carrier's static avoid masks per team: both spawn zones, its own free zones, carrierBlock nodes
+    // the carrier's static avoid masks per team: both spawn zones, its own free zones, carrierBlock nodes (zoneN: its own
+    // free zones alone — a carrier inside one leaves it the shortest way instead of finding no route at all)
+    this.zoneN = [new Uint8Array(N), new Uint8Array(N)];
     this.avoidBase = [0, 1].map((t) => {
       const m = new Uint8Array(N);
       for (let i = 0; i < N; i++) {
         const n = G.nav.nodes[i];
         if (n.zone >= 0 || !F.ok[i]) { m[i] = 1; continue; }
         const p = _v.set(n.x, n.y, n.z);
-        if (F.inFreeZone(t, p) >= 0 || F.inCarrierBlock(p)) m[i] = 1;
+        if (F.inFreeZone(t, p) >= 0) { m[i] = 1; this.zoneN[t][i] = 1; }
+        if (F.inCarrierBlock(p)) m[i] = 1;
       }
       return m;
     });
@@ -124,13 +127,23 @@ class KarpPlan {
       for (const e of G.actors) {
         if (e.team === t || !e.alive) continue;
         const k = teamKnown(t, e, 4);
-        if (k) F.push({ e, pos: k.seen ? e.pos : k.guess, seen: k.seen, t: k.t });
+        if (k) F.push({ e, pos: k.guess, seen: k.seen, t: k.t });   // (its last look's spot: never the live position)
       }
     }
     for (let t = 0; t < 2; t++) this._deal(t);
     // a human carrier's route (a bot carrier picks its own)
     const H = Kp.holder;
     if (H && !isBot(H)) this.pickRoute(H.team, H, 1.5, null);
+  }
+  // the carrier's avoid mask in the field's state now in force: the static one, plus every node the state takes away (an
+  // era's, the lava's: the field reads them as no ground — a route over them would be a wall-walk, or a retreat)
+  avoidFor(t) {
+    const F = this.Kp.field, st = F.state;
+    if (st === 0) return this.avoidBase[t];
+    const C = this._avS || (this._avS = new Map()), key = t + ':' + st;
+    let m = C.get(key);
+    if (!m) { m = new Uint8Array(this.N); const b = this.avoidBase[t], ok = F.states[st].okN; for (let i = 0; i < this.N; i++) m[i] = b[i] || !ok[i] ? 1 : 0; C.set(key, m); }
+    return m;
   }
   roleOf(a) { return this.roles[a.team].get(a) || 'break'; }
   auxOf(a) { return this.aux.get(a) || 0; }
@@ -229,7 +242,7 @@ class KarpPlan {
   // up to 3 candidate routes for team t from node s (SPEC §8.4): the layout's hints when it has any, else per target the
   // shortest no-climb path and the shortest one 2.5 m clear of it (and a third with one target)
   cands(t, s) {
-    const nav = G.nav, base = this.avoidBase[t], out = [], TG = this.targets(t), F = this.Kp.field;
+    const nav = G.nav, base = this.avoidFor(t), out = [], TG = this.targets(t), F = this.Kp.field;
     const hints = this.Kp.def.routes || null;
     for (const T of TG) {
       if (T.node < 0) continue;
@@ -253,7 +266,8 @@ class KarpPlan {
           if (last && ids.length > 1) { ids = ids.concat(last.slice(1)); const R = this._mk(name + (TG.length > 1 ? '-' + T.key : ''), ids, T); if (R.len <= R1.len * 1.8) out.push(R); }
         }
       }
-      out.push(R1);
+      // (the hints are the routes the stage has: the plain shortest one only when none of them leads to this target)
+      if (!hints || !out.some((R) => R.T === T)) out.push(R1);
       if (!hints) {
         const av2 = this._near(base, r1);
         const r2 = nav.path(s, T.node, t, undefined, true, av2);
@@ -398,7 +412,8 @@ class KarpPlan {
     const eye = _v2;
     let any = null;
     const R = Math.max(1.6, this.Kp.shell.radius());
-    for (const da of [0, 0.45, -0.45, 0.9, -0.9, 1.4, -1.4, 2.1, -2.1, Math.PI]) for (const r of [want, want + 1, want - 0.7, want + 2.5, want + 4.5]) {
+    const rs = want < 4.5 ? [want, want + 0.4, want + 0.8] : [want, want + 1, want - 0.7, want + 2.5, want + 4.5];   // (close in: it must stay in reach)
+    for (const da of [0, 0.45, -0.45, 0.9, -0.9, 1.4, -1.4, 2.1, -2.1, Math.PI]) for (const r of rs) {
       if (r < R + PLAYER.radius + 0.3) continue;
       _v.set(c.x + Math.sin(ang + da) * r, c.y + 0.5, c.z + Math.cos(ang + da) * r);
       const id = G.nav.nearest(_v, 1.2);
@@ -517,7 +532,7 @@ export function karpGoal(b, P) {
     if (b.kLast) {
       if (!b.kExp) {
         const s = G.nav.nearest(b.kLast, 1.5), T = P.targets(H.team)[0];
-        b.kExp = s >= 0 && T.node >= 0 ? G.nav.path(s, T.node, H.team, undefined, true, P.avoidBase[H.team]) : null;
+        b.kExp = s >= 0 && T.node >= 0 ? G.nav.path(s, T.node, H.team, undefined, true, P.avoidFor(H.team)) : null;
         b.kExpI = 0;
       }
       if (b.kExp && b.kExp.length > 1) {
@@ -577,8 +592,11 @@ function perchSpot(b, P) {
 function grabWait(b, P) {
   const a = b.a, Kp = P.Kp;
   if (Kp.phase !== 'free' || P.burstT < 0) return 0;
-  const run = Math.max(0, hd(a.pos, Kp.pos) - K.pickR + 0.25) / PLAYER.runSpeed;
-  return P.burstT + K.pickHold + DF(b).grab - run - G.time;
+  // (the run: swimming in through the burst's ink when it was ours — 3.5 m of it round the Bazookarp — else on foot;
+  // + getting up to speed, and a little early rather than late)
+  const d = Math.max(0, hd(a.pos, Kp.pos) - K.pickR + 0.25), swim = P.burstTeam === a.team && d < K.shell.burstPaint;
+  const run = swim ? 0.12 + d / 10 : 0.2 + d / Math.max(3, Math.min(PLAYER.runSpeed, a.weaponRunner.moveSpeed?.() || PLAYER.runSpeed) * 0.92);
+  return P.burstT + K.pickHold + DF(b).grab - run - 0.05 - G.time;
 }
 // in a fight: the carrier keeps walking its route; keepers hold their spot; escorts stay with the carrier; interceptors
 // chase the carrier
@@ -738,6 +756,8 @@ export function karpAim(b, P, dt, it) {
   const c = Kp.shell.center(), d = Math.hypot(c.x - a.pos.x, c.z - a.pos.z), w = a.weapon;
   const melee = meleeOf(a);
   if (d > (melee ? 4.5 : Math.min(b._range() * 1.05, 18))) return null;
+  // (the grabber closing to its 3.0–3.2 m at ≥ 85 % of ours: in position first — a charge weapon walks slowly while it charges)
+  if (b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt && d > KARP_AI.grabR + 0.35) return null;
   _v.set(a.pos.x, a.pos.y + 1.1, a.pos.z);
   if (!G.physics.los(_v, c)) return null;
   const yaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z), pitch = clamp(Math.atan2(c.y - (a.pos.y + 1.1), Math.max(0.5, d)), -0.9, 0.9);
@@ -762,7 +782,7 @@ export function karpMove(b, P, dt, move, it) {
     // the run in: straight at it once its time comes (wait first, standing)
     if (grabWait(b, P) > 0) { move.set(0, 0, 0); it.squid = false; b.kHoldUntil = G.time + 0.3; return; }
     const dx = Kp.pos.x - a.pos.x, dz = Kp.pos.z - a.pos.z, l = Math.hypot(dx, dz);
-    if (l < 4 && Math.abs(Kp.pos.y - a.pos.y) < 1.2) { move.set(dx / (l || 1), 0, dz / (l || 1)); it.squid = false; }
+    if (l < 4 && Math.abs(Kp.pos.y - a.pos.y) < 1.2) { move.set(dx / (l || 1), 0, dz / (l || 1)); it.fire = false; it.squid = P.burstTeam === a.team && l < K.shell.burstPaint + 0.3 && b.groundSeen !== 2; }   // (in through our burst's ink as a squid)
     return;
   }
   const S = Kp.shell;
@@ -772,9 +792,10 @@ export function karpMove(b, P, dt, move, it) {
   if (!esc && sit === 'shell' && Math.abs(a.pos.y - Kp.pos.y) < 1.5) {
     if (b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt && h < 5) {
       // hold 3.0–3.2 m out (the exact ring: the nav spot is up to half a metre off)
-      const e = h - KARP_AI.grabR;
-      if (Math.abs(e) > 0.08 && !(b.mode === 'fight' && b.seeTimer > 0)) move.set(-nx * clamp(e * 2, -1, 1), 0, -nz * clamp(e * 2, -1, 1)); else if (Math.abs(e) <= 0.08) move.set(0, 0, 0);
-    } else if ((b.kRole === 'break' || b.kRole === 'grab') && G.time - (b.kBreaking || -9) < 0.2 && !(b.mode === 'fight' && b.seeTimer > 0) && h > KARP_AI.ring[0] && (!b.path || b.pi >= b.path.length - 1)) {
+      const e = h - KARP_AI.grabR, k = Math.sign(e) * clamp(Math.abs(e) * 1.5, 0.18, 0.75);   // (gently: a run in overshoots into touch range)
+      if (Math.abs(e) > 0.08 && !(b.mode === 'fight' && b.seeTimer > 0)) move.set(-nx * k, 0, -nz * k); else if (Math.abs(e) <= 0.08) move.set(0, 0, 0);
+      b.kHoldUntil = G.time + 0.3; b.moveAcc = 0; b.noProg = 0; it.squid = false;   // (holding on purpose: not the stuck watchdog's business; a kid — a squid in its own splash slid off the ring)
+    } else if ((b.kRole === 'break' || b.kRole === 'grab') && !(b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt) && G.time - (b.kBreaking || -9) < 0.2 && !(b.mode === 'fight' && b.seeTimer > 0) && h > KARP_AI.ring[0] && b.kSpot && hd(a.pos, b.kSpot) < 1.5) {
       // strafe round the ring a little while it shoots
       if ((b.kStrafeT = (b.kStrafeT || 0) - dt) <= 0) { b.kStrafeT = 0.8 + Math.random() * 0.7; b.kStrafe = Math.random() < 0.5 ? -1 : 1; }
       const rr = clamp(((KARP_AI.ring[0] + KARP_AI.ring[1]) / 2 - h) * 0.3, -0.5, 0.5);
@@ -784,10 +805,12 @@ export function karpMove(b, P, dt, move, it) {
   }
   // the shell guard: never a step into touch range (the body's closest point to its centre within r + 0.38 + margin)
   const by = clamp(c.y, a.pos.y + 0.3, a.pos.y + 1.2), d3 = Math.hypot(h, by - c.y), reach = R + PLAYER.radius;
-  if (d3 < reach + 0.7) {
-    const inward = -(move.x * nx + move.z * nz);
-    if (d3 < reach + 0.25) move.set(nx, 0, nz);
-    else if (inward > 0) { move.x += inward * nx; move.z += inward * nz; }
+  if (d3 < reach + 0.6) {
+    const inward = -(move.x * nx + move.z * nz), vin = -(a.vel.x * nx + a.vel.z * nz);
+    if (d3 < reach + 0.15) move.set(nx, 0, nz);
+    else if (inward > 0 && d3 < reach + 0.35) { move.x += inward * nx; move.z += inward * nz; }
+    // (still coming in fast — momentum would carry it into range: lean out)
+    if (d3 < reach + 0.6 && vin > 2) { move.x += nx * 0.6; move.z += nz * 0.6; }
   }
 }
 // the route / approach a lead escort or a keeper inks (paint mode) → { x, y, z, d } | null
@@ -885,14 +908,17 @@ export function karpPathArgs(b) {
   if (!P || !a.carry) return null;
   const now = G.time;
   if (b.kArgs && now - b.kArgsT < 0.5) return b.kArgs;
-  const N = P.N, base = P.avoidBase[a.team], sm = P.shellMask;
+  const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask;
   const avoid = b.kAvoid && b.kAvoid.length === N ? b.kAvoid : (b.kAvoid = new Uint8Array(N));
   const cost = b.kCost && b.kCost.length === N ? b.kCost : (b.kCost = new Float32Array(N));
   const F = P.Kp.field, J = a.carry.j, D = F.D[a.team], L = F.L[a.team];
   const retreat = J && Number.isFinite(J.mark) && J.half === a.team;
-  for (let i = 0; i < N; i++) avoid[i] = base[i] || sm[i] || (retreat && F.nodeHalf(i) === a.team && L - D[i] < J.mark - 6) ? 1 : 0;
+  // (inside its own free zone already: its nodes cost, they don't stop it — out the shortest way)
+  const inZone = F.inFreeZone(a.team, a.pos) >= 0, Z = P.zoneN[a.team];
+  for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(inZone && Z[i])) || sm[i] || (retreat && F.nodeHalf(i) === a.team && L - D[i] < J.mark - 6) ? 1 : 0;
   const C = b.sp.cost();
   if (C) for (let i = 0; i < N; i++) cost[i] = C[i]; else cost.fill(0);
+  if (inZone) for (let i = 0; i < N; i++) if (Z[i]) cost[i] += 6;
   const RT = P.route[a.team];
   if (KARP_AI.enabled && RT && RT.pick) {
     // off the picked route's corridor (2 m round its nodes from the carrier on): + 1.2 a node
@@ -911,16 +937,19 @@ export function karpPathArgs(b) {
   b.kArgs = { avoid, retreat, cost, noClimb: true }; b.kArgsT = now;
   return b.kArgs;
 }
-// the same without the retreat part (no forward path at all: accept a short ×3 rather than stand still). One episode per
-// 3 s counts (carrierRetreatFallback: each re-plan in a dead end is the same episode)
-export function karpPathFallback(b) {
+// the same without the retreat part (no forward path at all: accept a short ×3 rather than stand still); level 2 (still
+// none: its own free zones the only way on) without the zones either, their nodes costly — a ×3 for the zone, never a
+// carrier standing still. One episode per 3 s counts (carrierRetreatFallback: each re-plan in a dead end is the same one)
+export function karpPathFallback(b, level = 1) {
   const a = b.a, P = karpPlan();
   if (!P) return null;
-  const N = P.N, base = P.avoidBase[a.team], sm = P.shellMask, avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
-  for (let i = 0; i < N; i++) avoid[i] = base[i] || sm[i] ? 1 : 0;
+  const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask, Z = P.zoneN[a.team], avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
+  for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(level >= 2 && Z[i])) || sm[i] ? 1 : 0;
   if (!(G.time - (b.kFbT ?? -9) < 3)) KARP_BOT.stats.retreatFallback++;
   b.kFbT = G.time;
-  return { avoid, cost: b.kArgs ? b.kArgs.cost : b.sp.cost(), noClimb: true };
+  let cost = b.kArgs ? b.kArgs.cost : b.sp.cost();
+  if (level >= 2) { const c = b.kFbC && b.kFbC.length === N ? b.kFbC : (b.kFbC = new Float32Array(N)); for (let i = 0; i < N; i++) c[i] = (cost ? cost[i] : 0) + (Z[i] ? 6 : 0); cost = c; }
+  return { avoid, cost, noClimb: true };
 }
 // everyone else in a Bazookarp match: no route through the shell
 export function karpShellAvoid() { const P = karpPlan(); return P && P.shellKey ? P.shellMask : null; }
