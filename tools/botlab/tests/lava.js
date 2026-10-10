@@ -473,16 +473,19 @@
   // holds it until the fall warning; every bot from its pad, brains on, a normal fight
   {
     setT(34);
-    for (const b of bots) { put(b, __G.level.spawnPads[b.team].clone().setY(__G.level.spawnPads[b.team].y + 0.05)); b.bot.update = idle.get(b) || b.bot.update; b.bot.path = null; b.bot.goalTimer = 0; b.bot._look = null; }
+    // (the local player too, when the harness's autopilot gives it a brain: the claim may pick it — frozen, it held a
+    // team's claim and never moved, fix round 2's run 7)
+    const crewF = g.match.actors.filter((a) => a.bot);
+    for (const b of crewF) { put(b, __G.level.spawnPads[b.team].clone().setY(__G.level.spawnPads[b.team].y + 0.05)); b.bot.update = idle.get(b) || b.bot.update; b.bot.path = null; b.bot.goalTimer = 0; b.bot._look = null; }
     Lv._lp = null; Lv.stats.lookTeam = [0, 0]; Lv.stats.lookLong = [0, 0]; Lv.stats.lookClaims = 0; Lv.stats.lookHold = 0;
-    const kits = bots.map((b) => [b.team, b.weapon?.kind]);
+    const kits = crewF.map((b) => [b.team, b.weapon?.kind]);
     let claims = null, upAt = [null, null];
     for (let i = 0; i < 30 * 27; i++) {
       dbg.step(1000 / 30);
       if (!claims && Lv._lp && Lv._lp.some((T) => T && T.claim)) claims = Lv._lp.map((T) => T && T.claim ? [T.claim.a.name, T.claim.a.team, T.claim.a.weapon?.kind, r3(Lv.clock.t)] : null);
       for (const T of Lv._lp || []) if (T && T.claim && upAt[T.claim.a.team] === null && Lv._onLookout(T.claim.a, T.ri)) upAt[T.claim.a.team] = r3(Lv.clock.t);
     }
-    const S2 = Lv.stats, released = bots.every((b) => !b.bot._look);
+    const S2 = Lv.stats, released = crewF.every((b) => !b.bot._look);
     // (a team whose kits are all short-range — rollers, brushes, buckets, brollies — has no claimant by design)
     const claimed = [0, 1].filter((tm) => (S2.lookLog || []).some((l) => l.team === tm && l.t >= 33));
     // (a 27 s fight from the pads: a claimant can die on the way; the per-match numbers are lava-match's business)
