@@ -39,8 +39,9 @@ import { lathe, superEllipsoid, sweep } from '../character-geo.js';
 import { getPlasticMaterial, getInkMaterial } from '../character-mats.js';
 import { Physics, Hit } from '../physics.js';
 import { SUB_ICONS } from '../../ui/ui-icons.js';
-import { sightRay, SIGHT } from '../botSight.js';
+import { sightRay, SIGHT, teamKnown } from '../botSight.js';
 import { immunity } from '../botSpecials.js';
+import { zonePlan } from '../bots.js';   // [b5-int3] (a zone's radius for its guards' placement)
 import { revealedTo } from '../reveal.js';
 import { rayCapsule, DEPLOY_STATS } from '../deployables.js';
 import '../../audio/sfx-sentry.js';
@@ -116,7 +117,9 @@ function hubParts() {
   const pn = new V3(0, 0.12, 1).normalize(), pc = new V3(0.002, 0.084, HUB_R + 0.0028);
   P.add(orient(superEllipsoid(0.0175, 0.0024, 0.016, 0.45, 0.5, 14, 6, (v) => { v.y += 0.0008 * Math.sin(v.x * 300) * Math.cos(v.z * 260); }), pn, pc), PLATE, M.satin);
   const sq = decal(squidShape(0.019), 0.0005);
-  placeXY(sq, new V3(1, 0, 0), new V3(0, 1, -0.12), pc.clone().addScaledVector(pn, 0.0026).add(new V3(0, -0.009, 0)));
+  // ([b5-int3] centred on the plate and lifted clear of its dome — 2.4 mm thick plus a ±0.8 mm dent wobble: it was set 9 mm low
+  // and 2.6 mm off, so its middle sank inside the plate and only a scrap of it showed at the plate's lower-left edge)
+  placeXY(sq, new V3(1, 0, 0), new V3(0, 1, -0.12), pc.clone().addScaledVector(pn, 0.0042));
   I.add(sq);
   screw(P, pc.clone().add(new V3(-0.013, 0.011, 0.0018)), pn, 0.0026, C.metal);
   screw(P, pc.clone().add(new V3(0.014, -0.01, 0.0018)), pn, 0.0021, '#c9a24a');                                 // (a brass one)
@@ -212,34 +215,33 @@ function makeMesh(team, vs) {
 }
 
 // ================================================================================================= icon
-// (the roster style: dark outline, light fills, team colour = currentColor) three splayed bent-rod legs on red crimped
-// caps, the rusty can with its scrap plate, the teal bottle head pointing right with its copper barrel and a grey tape
-// band, the cap lamp in team colour, the coat-hanger loop at its back, a small ink drop leaving the muzzle
+// (the roster's palette, as every other sub tile — dark outline #15121c, the light grey fill, the dark #2b2735, team colour
+// = currentColor, a white highlight — the review: the rust / teal / copper / red glyph was the picker's only multi-
+// coloured one and blurred at HUD size) the same silhouette, filling the badge: three splayed bent-rod legs on dark
+// feet, the can in team colour with its light scrap plate (a dark squid stencil), the light bottle head pointing right
+// with its dark tape band and the dark barrel and muzzle, the team-colour lamp on top
 {
-  const K = '#15121c', DK = '#2b2735';
+  const K = '#15121c', DK = '#2b2735', LT = '#e4e8ef';
   const O = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-  const LEGS = 'M26 45 L17 51 L11 57 M32 46 L32 58 M38 45 L47 51 L53 57';
+  const LEGS = 'M24 46 L15 53 L9 58.5 M32 48 L32 59 M40 46 L49 53 L55 58.5';
   SUB_ICONS[KIND] = `<svg class="iw-ico " viewBox="0 0 64 64" aria-hidden="true">
-    <g fill="none" stroke="${K}" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="${LEGS}"/><path d="M14 13 Q8 9 10 4 Q13 1 15 5"/></g>
-    <g fill="none" stroke="#8f98a6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="${LEGS}"/></g>
-    <path d="M14 13 Q8 9 10 4 Q13 1 15 5" fill="none" stroke="#c3c9d2" stroke-width="2.2" stroke-linecap="round"/>
+    <g fill="none" stroke="${K}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="${LEGS}"/></g>
+    <g fill="none" stroke="${LT}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="${LEGS}"/></g>
     <g ${O}>
-      <path d="M6.5 57.5 Q6.5 54 11 54 Q15.5 54 15.5 57.5 L15.5 59.5 L6.5 59.5 Z" fill="#ff3b30"/>
-      <path d="M27.5 58 Q27.5 54.5 32 54.5 Q36.5 54.5 36.5 58 L36.5 60 L27.5 60 Z" fill="#ff3b30"/>
-      <path d="M48.5 57.5 Q48.5 54 53 54 Q57.5 54 57.5 57.5 L57.5 59.5 L48.5 59.5 Z" fill="#ff3b30"/>
-      <path d="M21 31 L43 31 L43.5 45.5 Q32 48 20.5 45.5 Z" fill="#b4623a"/>
-      <rect x="25.5" y="35" width="13" height="8.5" rx="2" fill="#d9d2c0" stroke-width="2.4"/>
-      <rect x="44" y="18.5" width="12.5" height="6.5" rx="1.4" fill="#c8793e"/>
-      <rect x="55.5" y="17.5" width="3.5" height="8.5" rx="1.2" fill="${DK}" stroke-width="2.2"/>
-      <path d="M11 21 Q11 12 20 12 L36 12 Q44 13 46 18.5 L46 25 Q44 30 36 30 L20 30 Q11 30 11 21 Z" fill="#5fb3a8"/>
-      <rect x="26" y="11" width="5.5" height="20" rx="1.4" fill="#9aa0a6" stroke-width="2.4"/>
-      <circle cx="19.5" cy="7.5" r="3.8" fill="currentColor"/>
+      <path d="M4.5 58.5 Q4.5 55 9 55 Q13.5 55 13.5 58.5 L13.5 61 L4.5 61 Z" fill="${DK}"/>
+      <path d="M27.5 59 Q27.5 55.5 32 55.5 Q36.5 55.5 36.5 59 L36.5 61.5 L27.5 61.5 Z" fill="${DK}"/>
+      <path d="M50.5 58.5 Q50.5 55 55 55 Q59.5 55 59.5 58.5 L59.5 61 L50.5 61 Z" fill="${DK}"/>
+      <path d="M16.5 29.5 L47.5 29.5 L48 47 Q32 50.5 16 47 Z" fill="currentColor"/>
+      <rect x="23.5" y="33.5" width="17" height="10.5" rx="2.2" fill="${LT}" stroke-width="2.4"/>
+      <rect x="44" y="14.5" width="15" height="8.5" rx="1.6" fill="${DK}"/>
+      <rect x="57" y="12.5" width="5" height="12.5" rx="1.4" fill="${DK}" stroke-width="2.4"/>
+      <path d="M5.5 19.5 Q5.5 8.5 16.5 8.5 L36 8.5 Q45 9.5 47.5 15.5 L47.5 23.5 Q45 29.5 36 29.5 L16.5 29.5 Q5.5 29.5 5.5 19.5 Z" fill="${LT}"/>
+      <rect x="25" y="7.5" width="6.5" height="23" rx="1.4" fill="${DK}" stroke-width="2.4"/>
+      <circle cx="14.5" cy="5.5" r="4" fill="currentColor"/>
     </g>
-    <path d="M15 17.5 Q17 14.5 22 14.5" stroke="#fff" stroke-opacity=".6" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-    <path d="M24 39 L24 39" stroke="${DK}" stroke-opacity=".5" stroke-width="2"/>
-    <path d="M29 37.5 Q32 35.5 35 37.5 L34 41.5 L30 41.5 Z" fill="currentColor" opacity=".85"/>
-    <path d="M22 33.5 L23 44 M41.5 33.5 L41 44" stroke="${DK}" stroke-opacity=".35" stroke-width="1.6"/>
-    <path d="M62 16 Q64.5 20.5 62 23 Q59.5 20.5 62 16 Z" fill="currentColor" stroke="${K}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M28.5 37.2 Q32 34.6 35.5 37.2 L34.6 41.2 L32 39.8 L29.4 41.2 Z" fill="${DK}"/>
+    <path d="M10.5 16 Q12.5 12.3 18.5 12.3" stroke="#fff" stroke-opacity=".75" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M20 33 Q19.6 39 20.4 44" stroke="#fff" stroke-opacity=".45" stroke-width="2.4" fill="none" stroke-linecap="round"/>
   </svg>`;
 }
 
@@ -333,6 +335,7 @@ function use(subs, a, sub) {
   const yaw = aimOf(a), p = S.point, n = S.normal;
   if (a.bot) { a.bot._sentryAim = null; if (a.specialActive?.kind !== 'barrage') a.bot.bombCd = 10 + Math.random() * 4; }   // ([b5-int3] the bots' long cooldown from here)
   const it = spawn(a, sub, p, yaw, false, netId(a), S.block);
+  it.src = a.bot ? a.bot._sentrySrc || 'bot' : 'player'; srcOf(it.src).n++;   // [b5-int3] (the counters' placement source)
   netRec(a, KIND, [0, it.gid, r2(p.x), r2(p.y), r2(p.z), r2(n.x), r2(n.y), r2(n.z), r2(yaw)]);
   SENTRY_STATS.uses++;
   G.cues?.sub(KIND, 'throw', { owner: a, at: p, range: 30 });   // sfx-cues: the tin clatter (cues.js SUB_CUE.sentry)
@@ -796,21 +799,28 @@ function fadeLook(it, dt) {
 
 // ================================================================================================= the aim guide
 // While the button is held (local): a translucent sentry where it would go, and a dashed 11 m ring on the floor round it
-// at 30 %: team colour when the spot is good, grey with a small "×" over it when it isn't
+// at 30 %: team colour when the spot is good, grey with a small "×" over it when it isn't. [b5-int3] The ring shows where
+// it will SEE: SEE_N sight lines from its eye height out to its reach (every 0.1 s) — the bright dashed edge and the fill
+// stop at the first wall in each direction (a visibility outline), and the full 11 m ring past a wall is drawn faint
+// (the review: the guide promised 11 m all round; a sentry by a wall sees half of it)
+const SEE_N = 48;
 const RING_GEO = new THREE.PlaneGeometry(2, 2).rotateX(-Math.PI / 2);
 const RING_FS = `
-  uniform vec3 uColor; uniform float uAlpha; uniform float uTime; uniform float uR; varying vec2 vUv;
+  uniform vec3 uColor; uniform float uAlpha; uniform float uTime; uniform float uR; uniform float uSee[${SEE_N}]; varying vec2 vUv;
   void main(){
     float r = length(vUv);
     if (r > 1.01) discard;
-    float w = 0.09 / uR, e = abs(r - 0.985);
+    float ang = atan(vUv.y, vUv.x);
+    float fi = (ang + 3.14159265) / 6.2831853 * ${SEE_N}.0; int i0 = int(floor(fi)) % ${SEE_N}; int i1 = (i0 + 1) % ${SEE_N};
+    float lim = mix(uSee[i0], uSee[i1], fract(fi));
+    float w = 0.09 / uR, e = abs(r - 0.985 * lim), eo = abs(r - 0.985);
     float rim = smoothstep(w, w * 0.4, e);
     float halo = smoothstep(w * 2.6, w * 1.2, e) * (1.0 - rim);   // (a dark edge either side: it reads on any floor, its own ink too)
-    float ang = atan(vUv.y, vUv.x);
+    float far = lim < 0.96 ? smoothstep(w, w * 0.4, eo) * 0.35 : 0.0;   // (its full reach past a wall: faint)
     float dash = step(0.45, fract(ang / 6.2831853 * 64.0 + uTime * 0.25));
-    float fill = 0.12 * smoothstep(0.0, 0.98, r) * step(r, 0.98);
+    float fill = 0.12 * smoothstep(0.0, 0.98, r) * step(r, 0.98 * lim);
     vec3 col = mix(vec3(0.03, 0.025, 0.05), mix(uColor, vec3(1.0), 0.18), rim / max(1e-3, rim + halo));
-    gl_FragColor = vec4(col, (max(rim, halo * 0.75) * dash + fill) * uAlpha);
+    gl_FragColor = vec4(col, (max(max(rim, halo * 0.75), far) * dash + fill) * uAlpha);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }`;
@@ -826,7 +836,7 @@ function guideMesh() {
   const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.38, depthWrite: false });
   const ghostM = new THREE.Mesh(geo, mat); ghostM.renderOrder = 3;
   ghostM.onBeforeRender = (r, sc, c, gg) => { gg.drawRange.count = sc.overrideMaterial ? 0 : Infinity; };
-  const ring = new THREE.Mesh(RING_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uAlpha: { value: 0.3 }, uTime: { value: 0 }, uR: { value: 11 } },
+  const ring = new THREE.Mesh(RING_GEO, new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uAlpha: { value: 0.3 }, uTime: { value: 0 }, uR: { value: 11 }, uSee: { value: new Float32Array(SEE_N).fill(1) } },
     vertexShader: RING_VS, fragmentShader: RING_FS, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }));
   ring.renderOrder = 3; ring.frustumCulled = false;
   ring.onBeforeRender = (r, sc, c, gg) => { gg.drawRange.count = sc.overrideMaterial ? 0 : Infinity; };
@@ -863,11 +873,36 @@ function guideFx(dt) {
     gd.ring.material.uniforms.uColor.value.copy(col); gd.ring.material.uniforms.uR.value = s.range;
     gd.cross.visible = !S.ok; gd.cross.position.set(0, (HEAD_Y + 0.07) * WS * vs, 0);
     gd.ok = S.ok; gd.why = S.why;
+    if ((gd.seeT = (gd.seeT ?? 0) - 1 / 30) <= 0) { gd.seeT = 0.1; seeOutline(p, s, gd.ring.material.uniforms.uSee.value); }   // [b5-int3]
   }
   gd.ring.material.uniforms.uTime.value = G.time;
   gd.root.visible = true;
 }
 const _grey = new THREE.Color(0.62, 0.62, 0.66);
+function foeInArc(it) {
+  const e0 = eyeOf(it, _ae);
+  for (const e of G.actors) {
+    if (e.team === it.team || !e.alive || e.superJumpState) continue;
+    if (Math.hypot(e.pos.x - it.pos.x, e.pos.z - it.pos.z) > it.sub.range || Math.abs(e.pos.y - it.pos.y) > 6) continue;
+    if (G.physics.los(e0, _ac.set(e.pos.x, e.pos.y + 1.0, e.pos.z))) return true;
+  }
+  return false;
+}
+const _ae = new V3(), _ac = new V3();
+// [b5-int3] how far it sees from p in each of SEE_N directions (the ring shader's angle: atan(uv.y, uv.x) with uv.y = −z),
+// as a share of its reach: a level sight line from its eye height to the first wall
+const _sh = new Hit(), _so = new V3(), _sd = new V3();
+export const SEE_STATS = { outlines: 0 };
+function seeOutline(p, s, out) {
+  _so.set(p.x, p.y + s.eyeH, p.z);
+  for (let i = 0; i < SEE_N; i++) {
+    const ang = (i / SEE_N) * TAU - Math.PI;
+    _sd.set(Math.cos(ang), 0, -Math.sin(ang));
+    const h = G.physics.raycast(_so, _sd, s.range, _sh, true);
+    out[i] = h.hit ? clamp(h.dist / s.range, 0.04, 1) : 1;
+  }
+  SEE_STATS.outlines++;
+}
 
 // ================================================================================================= HUD: the life ring
 // While your sentry stands, the sub badge carries a small ring: its 15 s running down (team colour, white while it locks)
@@ -942,42 +977,78 @@ function botGo(b, yaws = null) {
   return true;
 }
 const around = (y0, n = 8) => Array.from({ length: n }, (_, k) => y0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (TAU / n));
+// [b5-int3] where a sentry set down now would see a foe: a foe its team knows of (seen, or seen within 1.5 s — no wall-hack)
+// lo…hi m from the spot 0.9 m ahead toward it, with a clear line from the sentry's eye there to their chest → that yaw, or
+// null. The matches (all on the sentry, 2 Turf + 2 Zone): set down at random on Turf's front line a foe came into its arc
+// 0 % of its life; set down in a fight 5–9 %; the zone's guards almost never placed one (1 in 4 matches)
+const _sv = new V3(), _sw = new V3();
+function seenFoeYaw(b, lo = 3, hi = 10.5) {
+  const a = b.a, eyeY = SUBS.sentry.eyeH;
+  let best = null, bd = Infinity;
+  for (const e of G.actors) {
+    if (e.team === a.team || !e.alive || e.superJumpState) continue;
+    const k = teamKnown(a.team, e, 1.5);
+    if (!k || k.src === 'jump') continue;
+    const d = Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z);
+    if (d < lo + 0.9 || d > hi + 0.9 || Math.abs(k.pos.y - a.pos.y) > 4) continue;
+    const yaw = Math.atan2(k.pos.x - a.pos.x, k.pos.z - a.pos.z);
+    if (!G.physics.los(_sv.set(a.pos.x + Math.sin(yaw) * 0.9, a.pos.y + eyeY, a.pos.z + Math.cos(yaw) * 0.9), _sw.set(k.pos.x, k.pos.y + 1.0, k.pos.z))) continue;
+    if (d < bd) { bd = d; best = yaw; }
+  }
+  return best;
+}
 const BOT = {
   rides: true,   // (set down on the moving tower's deck too: it rides it — bots.js _paintSub's !onT exception)
-  // a known foe 6–14 m off, not hit in the last 1 s: 2.5 % a frame — down 0.9 m ahead toward the fight
+  // a known foe it would see from there 3–10.5 m off (inside its 11 m reach — was 6–14 m, half of them past its reach),
+  // not hit in the last 1 s: 2.5 % a frame — down 0.9 m ahead toward that foe
   fight(b, dist) {
     const a = b.a;
-    if (dist < 6 || dist > 14 || a.lastDamage < 1 || Math.random() > 0.025) return false;
-    return botGo(b, [a.aimYaw, a.aimYaw + 0.6, a.aimYaw - 0.6]);   // (toward the fight)
+    if (dist < 4 || dist > 12 || a.lastDamage < 1 || Math.random() > 0.025) return false;
+    const y = seenFoeYaw(b);
+    if (y == null) return false;
+    b._sentrySrc = 'fight';
+    return botGo(b, [y, y + 0.4, y - 0.4]);   // (toward the foe it will see)
   },
   paint(b) {
     const a = b.a, m = G.match;
     if (!m) return false;
     // Zone Control: a guard within 6 m of its zone's edge, facing the enemy side
     if (m.zones && b.zRole) {
-      if (b.zRole !== 'guard' || Math.random() > 0.015) return false;
+      // ([b5-int3] a guard, or a watcher, on or by its zone (within its radius + 6 m — was: within 6 m of a 'reach' the
+      // zones don't have, so a guard on its zone's middle never placed one): toward a foe it would see from there, else
+      // facing the enemy side once a foe is known within 16 m of the zone's middle — the attack coming in)
+      if ((b.zRole !== 'guard' && b.zRole !== 'watch') || Math.random() > 0.02) return false;
       const z = m.zones.zones?.[b.zZone];
       if (!z) return false;
-      const dz = Math.hypot(a.pos.x - z.center[0], a.pos.z - z.center[2]);
-      if (Math.abs(dz - (z.reach || 5)) > 6) return false;
-      const ep = enemyPad(a.team), fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
-      if ((ep.x - a.pos.x) * fx + (ep.z - a.pos.z) * fz <= 0) return false;
-      const ey = Math.atan2(ep.x - a.pos.x, ep.z - a.pos.z);
-      return botGo(b, [a.aimYaw, ey, ey + 0.5, ey - 0.5]);   // (facing their side)
+      const zp = zonePlan(), Rz = zp?.info?.[b.zZone]?.R ?? 6, dz = Math.hypot(a.pos.x - z.center[0], a.pos.z - z.center[2]);
+      if (dz > Rz + 6) return false;
+      let y = seenFoeYaw(b);
+      if (y == null) {
+        if (!G.actors.some((e) => e.team !== a.team && e.alive && (() => { const k = teamKnown(a.team, e, 1.5); return k && Math.hypot(k.pos.x - z.center[0], k.pos.z - z.center[2]) < 16; })())) return false;
+        const ep = enemyPad(a.team); y = Math.atan2(ep.x - a.pos.x, ep.z - a.pos.z);
+      }
+      b._sentrySrc = 'zone';
+      return botGo(b, [y, y + 0.5, y - 0.5, a.aimYaw]);
     }
     // Tower Command: a rider on the deck, no teammate's sentry on it already
     if (m.tower) {
       const T = m.tower;
       if (b.tRole !== 'ride' || !T.riderList?.includes(a) || Math.random() > 0.02) return false;
       if (items.some((o) => live(o) && o.team === a.team && o.rb.on && o.rb.on.b === T.block)) return false;
+      b._sentrySrc = 'tower';
       return botGo(b, around(Math.atan2(a.pos.x - T.pos.x, a.pos.z - T.pos.z)));   // (out from the pillar: its deck's ring)
     }
-    // Turf War: near the front line (0.4–0.7 of the way to their pad, as _paintSub measures it)
-    if (Math.random() > 0.004) return false;
+    // Turf War (and the modes without a plan of their own): on the contested stretch (0.3–0.75 of the way to their pad, as
+    // _paintSub measures it), toward a foe its team knows it would see from there ([b5-int3] was: anywhere at random
+    // on the front line — no foe ever came into its arc in the matches)
+    if (Math.random() > 0.02) return false;
     const pads = G.level.spawnPads, total = pads[0].distanceTo(pads[1]);
     const progress = 1 - Math.hypot(a.pos.x - pads[1 - a.team].x, a.pos.z - pads[1 - a.team].z) / total;
-    if (progress < 0.4 || progress > 0.7) return false;
-    return botGo(b);
+    if (progress < 0.3 || progress > 0.75) return false;
+    const y = seenFoeYaw(b, 4);
+    if (y == null) return false;
+    b._sentrySrc = 'turf';
+    return botGo(b, [y, y + 0.4, y - 0.4]);
   },
 };
 // a bot hit by its rounds notices that sentry at once (its spot becomes threat memory; it doesn't reveal the owner:
@@ -1044,8 +1115,29 @@ const _bar = { x: 0, y: 0 };
 // counters (tests, tools/botlab/match.cjs's SENTRY line; this screen's own sentries): uses, rounds, their hits / damage /
 // splats, how they ended, seconds standing and locked, hp left at a time-out, foes splatted within its reach while it
 // stood, bots' uses and the foes it made notice it by a hit
-export const SENTRY_STATS = { uses: 0, botUses: 0, shots: 0, hits: 0, dmg: 0, splats: 0, ends: {}, aliveS: 0, lockedS: 0, hpAtTime: 0, timeOuts: 0, deathsNear: 0, noticed: 0 };
+export const SENTRY_STATS = { uses: 0, botUses: 0, shots: 0, hits: 0, dmg: 0, splats: 0, ends: {}, aliveS: 0, lockedS: 0, hpAtTime: 0, timeOuts: 0, deathsNear: 0, noticed: 0,
+  src: {}, arcS: 0 };   // [b5-int3] (src: per placement — the bot's reason, or 'player' — n, s standing, s with a foe in its arc, s locked)
+const srcOf = (k) => SENTRY_STATS.src[k] || (SENTRY_STATS.src[k] = { n: 0, aliveS: 0, arcS: 0, lockedS: 0 });
 export function resetSentryStats() { for (const k in SENTRY_STATS) SENTRY_STATS[k] = typeof SENTRY_STATS[k] === 'object' ? {} : 0; }
+// [b5-int3] a squidkid joining a running Practice session (netmatch 'pj' → 'actor:added' on every screen) never saw the [0]
+// of a sentry already out — an invisible gun that shot them for up to 15 s (the sub-sentry review). Each owner re-records
+// its live sentries — [0] where it stands now, [4] where it rides (deployables _onRec), [5] its hp — 1.5, 4 and 8 s after
+// the join (the joiner's stage may still be building when the first goes out); a screen that already has the ghost
+// ignores a repeated [0] (ghost()), and its [4] / [5] only restate what it has
+const rejoin = [];
+on('actor:added', () => { if (!G.netm || !items.length) return; rejoin.length = 0; for (const d of [1.5, 4, 8]) rejoin.push(G.time + d); });
+function restate() {
+  if (!rejoin.length || G.time < rejoin[0]) return;
+  rejoin.shift();
+  for (const it of items) {
+    if (it.ghost || !live(it) || !it.gid) continue;
+    const n = it.rb.normal || UP;
+    netRec(it.owner, KIND, [0, it.gid, r2(it.pos.x), r2(it.pos.y), r2(it.pos.z), r2(n.x), r2(n.y), r2(n.z), r2(it.headYaw)]);
+    if (it.rb.on) G.deploy?._onRec?.(it.rb);
+    if (it.hp < it.sub.hp) netRec(it.owner, KIND, [5, it.gid, Math.max(0, Math.round(it.hp))]);
+    SENTRY_STATS.restated = (SENTRY_STATS.restated || 0) + 1;
+  }
+}
 SUB_KITS[KIND] = {
   noArc: true,                    // (SUBS.sentry.placed hides the bomb arc too: the kit draws its own guide)
   blocked: (a, sub) => !findSpot(a, sub).ok,
@@ -1062,7 +1154,13 @@ SUB_KITS[KIND] = {
       }
       if (live(it)) {
         it.t += dt; it.age += dt;
-        if (!it.ghost) { SENTRY_STATS.aliveS += dt; if (it.locked && it.target) SENTRY_STATS.lockedS += dt; }
+        if (!it.ghost) {
+          SENTRY_STATS.aliveS += dt; if (it.locked && it.target) SENTRY_STATS.lockedS += dt;
+          // [b5-int3] (the counters) per placement source: standing, locked, and a foe in its arc — any foe within its reach
+          // with a clear line from its eye to their chest, whether it has noticed them or not (every 0.25 s)
+          const so = srcOf(it.src || '-'); so.aliveS += dt; if (it.locked && it.target) so.lockedS += dt;
+          if (it.state === 'watch' && (it.arcT = (it.arcT ?? 0) - dt) <= 0) { it.arcT = 0.25; if (foeInArc(it)) { so.arcS += 0.25; SENTRY_STATS.arcS += 0.25; } }
+        }
         if (it.state === 'unfold' && it.t >= 0.06 && !it.unfoldSnd) { it.unfoldSnd = true; G.cues?.sub(KIND, 'land', { owner: it.owner, team: it.team, at: it.pos }); }
         ghostMute(it, () => step(it, dt));
       }
@@ -1070,6 +1168,7 @@ SUB_KITS[KIND] = {
       if (!live(it)) items.splice(i, 1);
     }
     for (let i = fading.length - 1; i >= 0; i--) if (fadeLook(fading[i], dt)) { dispose(fading[i]); fading.splice(i, 1); }
+    restate();   // [b5-int3] (a late joiner's copy)
     guideFx(dt);
     lifeHud();
   },

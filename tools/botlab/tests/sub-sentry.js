@@ -55,6 +55,7 @@
   const BS = await import('./src/game/botSpecials.js');
   const { on, emit } = await import('./src/core/ctx.js');
   const SEN = await import('./src/game/kits/sentry.js');
+  const { zonePlan } = await import('./src/game/bots.js');   // [b5-int3]
   const G = window.__G, P = G.projectiles, S = G.subs, K = SUB_KITS.sentry, ST = DEP.DEPLOY_STATS, s = SUBS.sentry;
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const ONLY = (/only=([\w,]+)/.exec(window.__pageArgs || '') || [])[1];
@@ -576,7 +577,9 @@
           r0 && Math.abs(r0[2] - it.pos.x) < 0.02 && Math.abs(r0[4] - it.pos.z) < 0.02 && r0[6] === 1 && r3l.some((d) => d[2] === foe.nid) && r6.length >= 2 && r5.some((d) => d[2] === 70), { r0, r3: r3l, r6: r6.length, r5 });
         // a ghost from those records, on this screen: it unfolds there, locks (the tell), flashes its bursts, ends on [2]
         const gid = 778001, p = it.pos;
-        const fx0 = []; const mz0 = G.fx?.muzzle; if (G.fx) G.fx.muzzle = (...a) => { fx0.push(G.time); return mz0?.apply(G.fx, a); };
+        // ([b5-int3] its own replayed bursts only — 'sentry:fire' with ghost: true for this gid; counting every muzzle flash
+        // counted the owner's real sentry firing beside it too: 8 where 3 were needed, with or without [6])
+        const fx0 = []; const offG = on('sentry:fire', (e) => { if (e.ghost && e.obj?.gid === gid) fx0.push(G.time); });
         K.ghost(mate, [0, gid, r2(p.x + 3), r2(p.y), r2(p.z), 0, 1, 0, 0]);
         const gh = K.items.find((x) => x.gid === gid);
         step(0.8);
@@ -590,7 +593,7 @@
         const shotsBefore = sent.filter((x) => x.kind === 'sentry' && x.data[1] === gid).length;
         K.ghost(mate, [2, gid, 1]);
         step(0.05);
-        if (G.fx) G.fx.muzzle = mz0;
+        offG();
         R(`a ghost from the records: set down there (${gh && v2(gh.pos)}), unfolded (${gh && gh.state}), the lock tell on [3] (${lk.length}), ${flashes} muzzle flashes on [6] (3), gone on [2, gid, 1] (shot down: the tin burst); it never records nor fires real rounds`,
           gh && lk.length === 1 && flashes >= 3 && gh.state === 'dead' && gh.why === 'shot' && shotsBefore === 0, { flashes, lock: lk.length, state: gh && gh.state, why: gh && gh.why });
         // dropOwner: a leaver's ghost goes at once, quietly
@@ -624,7 +627,9 @@
       foe.setWeapon('roller'); foe.ink = PLAYER.inkMax;
       // (the owner 14 m behind it, in the roller's sight: the roller comes for them, past the sentry — locked on the way)
       const it2 = plant(me, V(0, 0, -8), 0); put(me, V(0, 0, it2.pos.z - 14), 0);
-      hideFoes(foe); put(foe, V(0, 0, it2.pos.z + 9), Math.PI);
+      // ([b5-int3] inside its 8 m and walking at its owner past it — it started 9 m out walking away, so 'out of range' came
+      // 0.13 s after the lock whatever the threat system did)
+      hideFoes(foe); put(foe, V(0, 0, it2.pos.z + 6.5), Math.PI);
       // (its walk up to an enemy device to roll it — deployables-bots — off for this scene: locked out of its reach,
       // the threat system's evade is what's tested; with it on, a roller walks into its flick window and flicks it)
       DB.DEV_AI.enabled = false;
@@ -667,12 +672,19 @@
       mate.ink = PLAYER.inkMax; mate.lastDamage = 9;
       put(mate, V(0, 0, -8), 0);
       const b = mate.bot; let went = false;
+      // ([b5-int3] only toward a foe its team knows it would see from there: none known — no sentry; one seen 8 m ahead — down)
+      let wentBlind = false;
+      for (let i = 0; i < 400 && !wentBlind; i++) wentBlind = K.bot.fight(b, 9);
+      b._sentryAim = null;
+      put(foe, V(0.5, 0, 1), Math.PI);
+      const kf = b.sight._k(foe); kf.seen = true; kf.pos.copy(foe.pos); kf.vel.set(0, 0, 0); kf.t = G.time; kf.src = 'sight';
       for (let i = 0; i < 400 && !went; i++) went = K.bot.fight(b, 9);
+      R('a fighting bot sets a sentry down only toward a foe its team knows it would see from there (none known: no decision)', !wentBlind && went, { wentBlind, went });
       // ([b5-int3] the decision gives 1.5 s — a decision lost before the release costs only that — and the set-down 10–14)
       const bcd0 = b.bombCd;
       G.subs.use(mate, SUBS.sentry);
       const bcd = b.bombCd, down = K.items.some((x) => x.owner === mate && x.state !== 'dead');
-      R(`a fighting bot sets one down (bot.fight: a foe 6–14 m off, not hit for 1 s, 2.5 % a frame; bombCd ${r2(bcd0)} s at the decision, then ${r2(bcd)} s, 10–14, once it is down)`, went && bcd0 === 1.5 && down && bcd >= 10 && bcd <= 14, { went, bombCd0: bcd0, down, bombCd: bcd });
+      R(`a fighting bot sets one down (bot.fight: a foe 4–12 m off it would see, not hit for 1 s, 2.5 % a frame; bombCd ${r2(bcd0)} s at the decision, then ${r2(bcd)} s, 10–14, once it is down)`, went && bcd0 === 1.5 && down && bcd >= 10 && bcd <= 14, { went, bombCd0: bcd0, down, bombCd: bcd });
     }
 
     // ============================================================================================ HUD + guide
@@ -745,12 +757,16 @@
         step(0.4);
         X.bot.tRole = 'ride';
         const onDeck = !!T.riderList?.includes(X);
+        // ([b5-int3] its live brain — bots.js think → _paintSub on the moving tower (the sentry's !onT exception: rides) →
+        // its press and release through _tail — not the decision called by hand and the press injected: reverting that
+        // exception left the old check green; the deck pinned under it, its role kept a rider, its cooldown 0, nobody near)
         let went = false, n = 0;
-        for (; n < 900 && !went; n++) went = K.bot.paint(X.bot);
-        X._int = (it) => { it.sub = true; }; step(2 / 60); X._int = null; step(3 / 60);
-        hook = null;
+        const hk0 = hook; hook = () => { hk0(); X.bot.tRole = 'ride'; };
+        unstub(X); X.bot.tRole = 'ride'; X.bot.bombCd = 0;
+        for (; n < 480 && !went; n++) { step(1 / 60); went = K.items.some((x) => x.owner === X && x.state !== 'dead'); }
+        stub(X); hook = null;
         const got = K.items.find((x) => x.owner === X && x.state !== 'dead');
-        R(`a Tower Command rider bot on the deck (${onDeck}) decides to set one down (after ${n} frames at 2 %) and does: ${got ? got.rb.on?.b.tag || 'not riding' : 'none'} (bombCd ${r2(X.bot.bombCd)} s after)`, onDeck && went && got && got.rb.on && got.rb.on.b.tag === 'tower' && X.bot.bombCd >= 10, { onDeck, went, n, got: !!got });
+        R(`a Tower Command rider bot on the deck (${onDeck}), its brain live, sets one down within 8 s (after ${n} frames) and it rides: ${got ? got.rb.on?.b.tag || 'not riding' : 'none'} (bombCd ${r2(X.bot.bombCd)} s after)`, onDeck && went && got && got.rb.on && got.rb.on.b.tag === 'tower' && X.bot.bombCd >= 10, { onDeck, went, n, got: !!got });
       }
     }
 
@@ -797,12 +813,16 @@
         hook = () => { put(mate, spot, yw); mate.ink = PLAYER.inkMax; };
         step(0.1);
         b.zRole = 'guard'; b.zZone = zi;
+        // ([b5-int3] a guard sets one down once an attack is coming: a foe its team knows of within 16 m of the zone's middle)
+        put(foe, V(cx + Math.sin(base) * 12, act.center[1], cz + Math.cos(base) * 12), base + Math.PI);
+        const kz = b.sight._k(foe); kz.seen = true; kz.pos.copy(foe.pos); kz.vel.set(0, 0, 0); kz.t = G.time; kz.src = 'sight';
         for (; n < 900 && !went; n++) went = K.bot.paint(b);
         mate._int = (it) => { it.sub = true; }; step(2 / 60); mate._int = null; step(3 / 60);
         hook = null;
         got = K.items.find((x) => x.owner === mate && x.state !== 'dead');
       }
-      const edge = got ? r2(Math.hypot(got.pos.x - cx, got.pos.z - cz) - (act.reach || 0)) : null;
+      const Rz = zonePlan()?.info?.[zi]?.R ?? (act.reach || 0);   // ([b5-int3] the zone's radius: zones have no 'reach')
+      const edge = got ? r2(Math.hypot(got.pos.x - cx, got.pos.z - cz) - Rz) : null;
       const toward = got ? (ep.x - got.pos.x) * Math.sin(got.headYaw) + (ep.z - got.pos.z) * Math.cos(got.headYaw) > 0 : false;
       R(`a Zone Control guard by its held zone's edge decides to set one down (after ${n} frames at 1.5 %) and does: ${got ? `${edge} m from the edge, facing their side (${toward})` : 'none'}`, !!spot && went && got && Math.abs(edge) <= 6.5 && toward, { spot: spot && v2(spot), went, n, edge, toward });
     }

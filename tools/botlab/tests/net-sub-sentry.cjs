@@ -18,7 +18,7 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   }
   const [A, B] = clients;
   const opt = Object.fromEntries((args || '').split(/[;&]/).filter(Boolean).map((kv) => kv.split('=')));
-  const MAP = opt.map || 'saltpan', TOWER_SCENE = opt.scene === 'tower';
+  const MAP = opt.map || 'saltpan', TOWER_SCENE = opt.scene === 'tower', LATE = opt.scene === 'latejoin';
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   const JA = async (c, code) => JSON.parse(await c.js(`(${code}).then((x) => JSON.stringify(x === undefined ? null : x))`));   // (an async expression)
   const code = await A.js(`__G.net.create('Hosty')`);
@@ -72,6 +72,29 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   await wait(800);
   const gB = JSON.parse(await B.js(ghostOn(B, sA.gid)));
   R('B\'s ghost of it stands where A\'s does (the owner\'s [0]) and has unfolded', gB && gB.ghost && gB.state === 'watch' && Math.hypot(gB.pos[0] - sA.pos[0], gB.pos[2] - sA.pos[2]) < 0.02, gB);
+  // [b5-int3] scene=latejoin: a third player (C) joins the running Practice session with A's sentry already out — C never
+  // saw its [0]; A re-records it after the join (sentry.js restate: [0], [4] riding, [5] hp, at 1.5 / 4 / 8 s), so C's
+  // screen builds the ghost where A's stands, with A's hp, instead of an invisible gun shooting it
+  if (LATE) {
+    await A.js(`(async () => { const { SUB_KITS } = await import('./src/game/kits/registry.js'); const it = SUB_KITS.sentry.items.find((x) => x.gid === ${sA.gid}); it.hp = 70; return 1; })()`);
+    const C = await open(2, 'autopilot');
+    await C.js(`__G.net.join(${JSON.stringify(code)}, 'Latey').then(() => 1)`);
+    await C.until(`__G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing' && __G.netm && !__G.netm.inkWait`, 90000, 250);
+    const tJoin = Date.now();
+    const got = await C.until(`import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.items.some((x) => x.gid === ${sA.gid} && x.ghost && x.state !== 'dead'))`, 12000, 100).then(() => true).catch(() => false);
+    const tGot = Date.now() - tJoin;
+    await wait(4500);   // (the 4 s restatement: its hp)
+    const gC = got ? JSON.parse(await C.js(ghostOn(C, sA.gid))) : null;
+    const hpC = got ? await JA(C, `import('./src/game/kits/registry.js').then((K) => { const it = K.SUB_KITS.sentry.items.find((x) => x.gid === ${sA.gid}); return it ? it.hp : null; })`) : null;
+    const rs = await JA(A, `import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.SENTRY_STATS ? K.SUB_KITS.sentry.SENTRY_STATS.restated || 0 : null)`);
+    const gBn = await JA(B, `import('./src/game/kits/registry.js').then((K) => K.SUB_KITS.sentry.items.filter((x) => x.gid === ${sA.gid}).length)`);
+    R(`the late joiner (C) gets a ghost of A's sentry already out (${got ? 'within ' + tGot + ' ms of its match being up' : 'none in 12 s'}), where A's stands, with A's hp (70): the owner's restated [0] / [5] (${rs} restated)`,
+      got && gC && gC.ghost && Math.hypot(gC.pos[0] - sA.pos[0], gC.pos[2] - sA.pos[2]) < 0.05 && hpC === 70, { gC, hpC, rs });
+    R(`B, which already had the ghost, still has exactly one (a repeated [0] is ignored: ${gBn})`, gBn === 1, { gBn });
+    const errs = [...A.log, ...B.log, ...C.log].filter((l) => !/lightmap|WebGL|GPU|net\]|relay|WebSocket/i.test(l));
+    R('no console errors on any screen', !errs.length, errs.slice(0, 5));
+    return;
+  }
   // 2) its sight, lock and bursts (A's screen decides; B's ghost shows them); its rounds on B
   await wait(3200);
   const LA = await J(A, 'window.__sen'), LB = await J(B, 'window.__sen');
