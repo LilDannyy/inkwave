@@ -127,6 +127,10 @@ export const BOAT_STAIR = { x0: 14.6, x1: 17.1, zFoot: -12, zTop: -5, zLand: -2.
 const BS_X = (BOAT_STAIR.x0 + BOAT_STAIR.x1) / 2;
 export const RIVER_STAIR = { xFoot: 9.6, xMid: 3.6, xTop: -2.4, xLand: -5.4, z0: -20, z1: -17 };
 const RS_Z = (RIVER_STAIR.z0 + RIVER_STAIR.z1) / 2;
+// (round C fix 1) the knee flight: x −17.8 (0) … −14 (2.4, the balcony's west edge), z −18.5 (the hotel's north face) …
+// −15.8 (the cab shelter's south end)
+export const KNEE_FLIGHT = { x0: -17.8, x1: -14, z0: -18.5, z1: -15.8 };
+const KF_Z = (KNEE_FLIGHT.z0 + KNEE_FLIGHT.z1) / 2;
 const AP_OUT = 14.6;
 const MID = [
   R([0, 0, -12], [0, 1.3, -8.78], 7, stair({ tag: 'clock-steps' })),
@@ -160,8 +164,14 @@ const MID = [
   B(-14, -5, 2.1, 2.4, -18.5, -15.5, { tag: 'balcony', color: K.planks, pattern: PATTERN.planks }),
   B(-14, -11, 2.1, 2.4, -15.5, -12.5, { tag: 'balcony-landing', color: K.planks, pattern: PATTERN.planks }),
   R([-5, 0, -14], [-11, 2.4, -14], 3, stair({ tag: 'balcony-stair', color: K.iron, pattern: PATTERN.treads })),
+  // the knee flight (round C fix 1; the review: the Halo's three stairs were each a detour off the main routes): from the
+  // knee, where Swimston meets the circus, east up the hotel's north face onto the balcony's west end (2.4), against the
+  // cab shelter, so the balcony and, in the 3000s, the hotel stair to the Halo (over the shelter's top) sit on the
+  // Swimston → circus route instead of a U-turn off the balcony stair (32°; its mirror stands 0.45 m off the tower's
+  // lane and 3.3 m from the Bazookarp weir)
+  R([KNEE_FLIGHT.x0, 0, KF_Z], [KNEE_FLIGHT.x1, 2.4, KF_Z], KNEE_FLIGHT.z1 - KNEE_FLIGHT.z0, stair({ tag: 'knee-flight', color: K.iron, pattern: PATTERN.treads })),
   ...[[-13.85, -12.65], [-13.85, -15.4], [-5.1, -16]].map(([x, z]) => B(x - 0.125, x + 0.125, 0, 2.1, z - 0.125, z + 0.125, { tag: 'balcony-post', color: K.iron, pattern: PATTERN.metal, paint: false })),
-  B(-13.5, -12.5, 2.4, 3.4, -15.5, -14.7, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),
+  B(-12.6, -11.6, 2.4, 3.4, -15.5, -14.7, cover({ tag: 'balcony-planter', color: K.planter, pattern: PATTERN.planter })),   // (round C fix 1: 0.9 m east, so the knee flight's top walks straight on to the landing)
   B(-11, -5, 2.4, 3.4, -16.0, -15.5, rail({ tag: 'balustrade' })),
   B(-5.5, -5, 2.4, 3.3, -18.5, -16.0, rail({ tag: 'balustrade' })),
   B(-14, -11, 2.4, 3.3, -13.0, -12.5, rail({ tag: 'balustrade' })),
