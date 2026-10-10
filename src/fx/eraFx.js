@@ -263,12 +263,12 @@ void main() {
   float body = smoothstep(top, top - 0.35, vH);
   float crest = exp(-pow((vH - top + 0.03) / 0.05, 2.0));
   float foot = exp(-vH * 10.0);
-  float g = texture2D(uGlyph, vec2(ang / 6.2831853 * 6.0, vH * 1.4 - uTime * 0.22)).a;
+  float g = texture2D(uGlyph, vec2(ang / 6.2831853 * 24.0, vH * 3.2 - uTime * 0.3)).a * smoothstep(0.05, 0.25, vH);
   float streak = 0.6 + 0.4 * sin(ang * 70.0 + vH * 12.0 - uTime * 10.0);
   vec3 col = mix(uFoot, uBody, smoothstep(0.0, 0.5, vH));
-  float a = uA * (body * (0.12 + 0.14 * streak + 0.55 * g) + crest * 0.8 + foot * 0.75);
-  a = clamp(a, 0.0, 0.9);
-  gl_FragColor = vec4(mix(col, vec3(1.0, 0.98, 0.92), crest * 0.6 + g * 0.35) * a, a);
+  float a = uA * (body * (0.1 + 0.12 * streak + 0.2 * g) + crest * 0.8 + foot * 0.75);
+  a = clamp(a, 0.0, 0.85);
+  gl_FragColor = vec4(mix(col, vec3(1.0, 0.98, 0.92), crest * 0.6 + g * 0.5) * a, a);
 }`;
 function glyphTexture() {
   if (typeof document === 'undefined') { const t = new THREE.DataTexture(new Uint8Array(4), 1, 1); t.needsUpdate = true; return t; }
