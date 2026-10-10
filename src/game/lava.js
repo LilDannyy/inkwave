@@ -934,8 +934,10 @@ export class StageLava {
     const P = this._lp || (this._lp = this._lookSetup());
     if (!P) return;
     const st = this.st, nx = st.next;
-    const active = st.phase === 'rise' || (st.phase === 'high' && !(st.warn && nx && nx.to === 'low'));
-    const left = st.phase === 'high' && nx && nx.to === 'low' ? nx.at - this.sched.T.warn - t : st.phase === 'rise' ? 20 : Infinity;
+    // (from the rise warning: the claimant walks to the climb's foot while the column is still low, and goes up as its
+    // HIGH pose opens — claimed at the rise itself, chargers from their pads reached the top 18–23 s later)
+    const active = (st.warn && nx && nx.to === 'high') || st.phase === 'rise' || (st.phase === 'high' && !(st.warn && nx && nx.to === 'low'));
+    const left = st.phase === 'high' && nx && nx.to === 'low' ? nx.at - this.sched.T.warn - t : st.phase === 'rise' || st.warn ? 20 : Infinity;
     for (let team = 0; team < 2; team++) {
       const T = P[team];
       if (!T) continue;
@@ -994,9 +996,12 @@ export class StageLava {
   // stay the brain's); at the foot while the column is still rising it waits
   _lookAct(b, dt, it, move) {
     const a = b.a, L = b._look, nav = G.nav, t = this.clock.t;
-    if (b.mode === 'refill' || b.mode === 'retreat') { L.path = null; L.on = false; return; }   // (its tank, its life first)
+    const up = this._onLookout(a, L.ri);
+    if (b.mode === 'retreat' || (b.mode === 'refill' && !up)) { L.path = null; L.on = false; return; }   // (its life, its tank first)
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
-    if (this._onLookout(a, L.ri)) {
+    // dry on the top: it stays — the brain's refill paints a puddle where it stands and swims in it (the deck takes ink)
+    if (up && b.mode === 'refill') { const here = nav.nearest(a.pos, 1.2, true); if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; } L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt; return; }
+    if (up) {
       L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt;
       if (L.log && L.log.up === null) L.log.up = +t.toFixed(1);
       b.perchUntil = b.t + 0.3;   // (holding a spot on purpose: not stuck — the harnesses' stuck rule reads it)
