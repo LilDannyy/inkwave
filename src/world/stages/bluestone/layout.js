@@ -185,7 +185,9 @@ const MID = [
   // the Boathouse: its roof deck is Alpha's raised corner by the river (2.4)
   ...tierBoxes([P.boathouse], 2.4, { tag: 'boathouse', color: '#8a7158', pattern: PATTERN.weatherboard }),
   R([18.6, 0, -6], [18.6, 2.4, -12], 3, stair({ tag: 'boathouse-stair', color: K.wood, pattern: PATTERN.treads })),   // (round C: flush with the boat shed)
-  B(21.35, 21.5, 2.4, 3.4, -24, -12, rail({ tag: 'deck-rail' })),
+  // (round C fix 1: its east rail opens at z −19.4 … −16 for the enemy's dock gangway, the mirror of Alpha's onto Bravo's
+  //  deck: the knee's apron is the deck's back door, KNEE)
+  ...[[-24, -19.4], [-16, -12]].map(([z0, z1]) => B(21.35, 21.5, 2.4, 3.4, z0, z1, rail({ tag: 'deck-rail' }))),
   B(14.5, 21.35, 2.4, 3.3, -24, -23.85, rail({ tag: 'deck-rail' })),
   // ---- the Halo's east way up (round C; the round-B review's third way up, from the Boathouse deck): the 1880s / today
   // BOAT SHED on the ring against the deck's north edge (3.2, roof, not inkable: cover at 4:30); the 3000s, inside its
@@ -355,7 +357,6 @@ const KNEE = [
   B(-36.4, -35.2, 0, 1.0, -9, -7.2, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood })),
   B(-32.6, -30.6, 0, 1.0, -1.6, -0.8, cover({ tag: 'bench', color: '#7d6c5a' })),   // (round C fix 1: off the dock stair's foot)
   B(-29.6, -28.4, 0, 1.2, -1.6, -0.2, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),   // (the strip test: the knee's east–west line)
-  B(-25, -23.6, 0, 1.5, 15.4, 16.8, cover({ tag: 'lamp-plinth', color: '#8b8579' })),
   // ---- the CUSTOMS LOADING DOCK (round C fix 1; the review: the apron behind the Customs House was the emptiest floor
   // on the stage, flat to the water and right under the enemy's Boathouse deck): a 1.2 m bluestone dock along the
   // chamfer's water edge, 14 × 4.2 m, from the west corner to 7 m short of the enemy Boathouse; two stairs down its inner
@@ -368,7 +369,11 @@ const KNEE = [
   OB(...CH(1.6, 1.6), 1.2, 1.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood, roof: true })),
   OB(...CH(5.6, 1.6), 1.2, 2.4, DOCK.y, DOCK.y + 1.2, 45, cover({ tag: 'planter', color: K.planter, pattern: PATTERN.planter, roof: true })),
   OB(...CH(8.6, 0.7), 0.8, 1.6, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'mooring-post', color: '#5b5048', roof: true })),   // (low: a crane's plinth here hid the Boathouse deck from the dock)
-  OB(...CH(12.4, 2.0), 1.4, 2.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood, roof: true })),
+  OB(...CH(12.6, 0.8), 1.4, 2.2, DOCK.y, DOCK.y + 1.0, 45, cover({ tag: 'crates', color: K.crate, pattern: PATTERN.wood, roof: true })),
+  // the GANGWAY: from the dock's north-east end up along the chamfer onto the enemy Boathouse's deck (2.4), through a gap in
+  // its west rail: the apron is that deck's back door from the knee (and, in the 3000s, a way to the Halo by the enemy's
+  // boat stair), so holding the apron holds the flank of the enemy's raised corner (11°; the lamp plinth gives way to it)
+  R(CH3(DOCK.a0 + DOCK.len, 2.1, DOCK.y), CH3(DOCK.a0 + DOCK.len + 6.08, 2.1, 2.4), 2.4, stair({ tag: 'dock-gangway', color: K.planks, pattern: PATTERN.planks, thickness: 2.6 })),
 ];
 
 // ------------------------------------------------------------------------------------------------ the river corner (Alpha's: x > −6, z < −20)
