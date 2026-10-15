@@ -1047,7 +1047,7 @@ export async function carryWalk(team, o = {}) {
       if (h < 0.55 && Math.abs(q.y - a.pos.y) < 1.0) { pi++; best = Infinity; bestT = t; continue; }
       if (h < best - 0.25) { best = h; bestT = t; }
       if (t - bestT > 2.5) {
-        stuck++; res.stuck++; bestT = t; best = Infinity;
+        stuck++; res.stuck++; bestT = t; best = Infinity; if ((res.stuckAt || (res.stuckAt = [])).length < 12) res.stuckAt.push({ at: P3(a.pos), to: P3(q), edge: TYPE_NAME[edgeType(C, path[pi - 1], path[pi])] || '?' });
         const own = F.ownNode(a.pos);
         if (own >= 0 && tgt) { const s = search(C, [own], { noClimb: true, avoid: zm, target: tgt }); if (s.hit >= 0) { path = pathOf(s.prev, s.hit); pi = 1; continue; } }
         pi++;
@@ -1058,7 +1058,7 @@ export async function carryWalk(team, o = {}) {
       let jump = false;
       if ((ty === ET.hop || ty === ET.jump) && q.y - a.pos.y > 0.4 && l < 1.5) jump = true;
       if (ty === ET.gap && a.grounded) { const ax = a.pos.x + (dx / l) * 0.5, az = a.pos.z + (dz / l) * 0.5; if (!(L.groundHeight(ax, az, a.pos.y + 0.3) > a.pos.y - 1.0)) jump = true; }
-      if (!ty && q.y - a.pos.y > 0.45 && l < 1.6) jump = true;
+      if (q.y - a.pos.y > PLAYER.stepUp - 0.05 && l < 1.6) jump = true;   // (any step above a kid's step-up: a stair's riser too)
       a.intent.jump = jump && a.grounded;
       park(); dbg.step(1000 / 60); t += 1 / 60;
     }
@@ -1116,7 +1116,7 @@ export async function carryWalk(team, o = {}) {
       const W = { side: side === team ? 'own' : 'enemy', ran: cands.length > 0, tries: 0 };
       for (const cd of cands.slice(0, 8)) {
         settle();
-        const B = mine.find((a) => a !== A && a.alive) || mine.find((a) => a !== A); alive(B);
+        const B = mine.find((a) => a !== A && a.alive) || mine.find((a) => a !== A) || A; alive(B);   // (a humans-only stage: one kid)
         put(B, nodes[cd.i]); grant(B); step(0.15);
         const n0 = ev.length; let t = 0; W.tries++;
         while (B.alive && t < 4) { B.intent.move.set(cd.dir[0], 0, cd.dir[1]); park(); dbg.step(1000 / 60); t += 1 / 60; }
@@ -1140,7 +1140,7 @@ export async function carryWalk(team, o = {}) {
       const W = { weir: wi + 1, ran: best >= 0 };
       if (best >= 0) {
         settle();
-        const D = mine.find((a) => a !== A && a.alive) || mine[mine.length - 1]; alive(D);
+        const D = mine.find((a) => a !== A && a.alive) || mine[mine.length - 1] || A; alive(D);
         put(D, nodes[best]); grant(D); step(0.1);
         D.splat(null, 'karp-check'); step(0.2); settle();
         const rn = Kp.restNode;
