@@ -127,7 +127,7 @@ app.on('browser-window-created', (_, win) => {
       if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
-        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
+        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
         const want = process.env.CASES ? process.env.CASES.split(',') : null;
         const res = [];
         for (const c of cases.filter((q) => !want || want.includes(q.id))) {
@@ -152,9 +152,11 @@ app.on('browser-window-created', (_, win) => {
           }
           const j = await checkOne('karpbox', sts[0], setup, `self-${c.id}`, { carry: c.id === 'clean' || c.carry, phys: c.id === 'clean' || c.phys, shots: c.id === 'clean' ? true : c.check ? true : false, topOnly: c.id !== 'clean' });
           const failing = j.fails;
-          const pass = c.id === 'clean' ? j.result === 'ok' : failing.includes(c.check);
-          res.push({ ...c, pass, failing });
-          console.log(`SELFTEST ${c.id.padEnd(10)} ${c.id === 'clean' ? 'clean karpbox: every check OK' : `#${c.check} must FAIL (${c.what})`} → ${pass ? 'PASS' : 'FAIL'}${failing.length ? ' (failing: ' + failing.map((n) => '#' + n).join(' ') + ')' : ''}`);
+          // (the target check must FAIL for the fault planted: its text matches the case's `expect`, not a knock-on)
+          const why = c.expect ? new RegExp(c.expect).test(j.checks[c.check]?.text || '') : true;
+          const pass = c.id === 'clean' ? j.result === 'ok' : failing.includes(c.check) && why;
+          res.push({ ...c, pass, failing, why });
+          console.log(`SELFTEST ${c.id.padEnd(10)} ${c.id === 'clean' ? 'clean karpbox: every check OK' : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}`} → ${pass ? 'PASS' : 'FAIL'}${failing.length ? ' (failing: ' + failing.map((n) => '#' + n).join(' ') + ')' : ''}`);
         }
         console.log(`RESULT selftest ${res.filter((r) => r.pass).length}/${res.length}`);
         fs.writeFileSync(path.join(OUT, 'selftest.json'), JSON.stringify(res, null, 1));

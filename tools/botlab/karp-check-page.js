@@ -1251,7 +1251,8 @@ export async function pictures(o = {}) {
       { const [X, Y] = px(R.pond.x, R.pond.z); x.strokeStyle = '#ffd27a'; x.lineWidth = 4; x.beginPath(); x.arc(X, Y, 1.6 * s, 0, 7); x.stroke(); x.setLineDash([6, 5]); x.beginPath(); x.arc(X, Y, K.shell.burstR * s, 0, 7); x.stroke(); x.setLineDash([]); }
       // flags (numbered)
       const flags = []; for (const ck of Object.values(rep.checks)) if (ck.status === 'FAIL' || ck.status === 'WARN') for (const f of ck.flags || []) if (f.at) flags.push({ n: ck.n, ...f });
-      flags.slice(0, 40).forEach((f, i) => { const [X, Y] = px(f.at[0], f.at[2]); x.fillStyle = 'rgba(220,0,0,0.9)'; x.beginPath(); x.arc(X, Y, 11, 0, 7); x.fill(); x.fillStyle = '#fff'; x.font = 'bold 13px sans-serif'; x.textAlign = 'center'; x.fillText(String(i + 1), X, Y + 4.5); });
+      // (each disc sits up-right of its place on a short leader, so what it flags — an entrance arrow, a tick — shows)
+      flags.slice(0, 40).forEach((f, i) => { const [X0, Y0] = px(f.at[0], f.at[2]), X = X0 + 16, Y = Y0 - 16; x.strokeStyle = 'rgba(220,0,0,0.9)'; x.lineWidth = 2; x.beginPath(); x.moveTo(X0, Y0); x.lineTo(X, Y); x.stroke(); x.fillStyle = 'rgba(220,0,0,0.9)'; x.beginPath(); x.arc(X0, Y0, 3, 0, 7); x.fill(); x.beginPath(); x.arc(X, Y, 11, 0, 7); x.fill(); x.fillStyle = '#fff'; x.font = 'bold 13px sans-serif'; x.textAlign = 'center'; x.fillText(String(i + 1), X, Y + 4.5); });
       // the title and the legend
       x.textAlign = 'left'; x.fillStyle = '#111'; x.fillRect(0, H, W, 120);
       const st = rep.checks; const fails = Object.values(st).filter((q) => q.status === 'FAIL').map((q) => '#' + q.n);
