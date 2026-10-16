@@ -188,6 +188,10 @@ const CSS = `
 .iw-kshell.is-under, .iw-ktag.is-under { opacity: 0; }
 /* [karp-face] while a kill call-out (WIPEOUT! …) is live, ours sit under it (at 960×600 the two layers overlapped) */
 .iw-hud.is-karp.has-kcall .iw-zcalls { top: max(33%, calc(var(--jal-b, 0px) + var(--u) * .9), var(--kcb, 0px)); }
+/* [karp-face] the kill call-outs anchor low enough that their upward drift (to −110 % of their height as they fade) stays
+   below the Carp Line's status pill (--kst-b: its bottom) — WIPEOUT!'s ribbon covered FREE — GRAB IT! */
+.iw-hud.is-karp .iw-callouts { top: max(27%, calc(var(--kst-b, 0px) + var(--u) * 6.5 + 4px)); }
+.iw-hud.is-karp.has-jal .iw-callouts { top: max(27%, calc(var(--jal-b, 0px) + var(--u) * 3.7 + 4px), calc(var(--kst-b, 0px) + var(--u) * 6.5 + 4px)); }
 /* the carrier's squad badge */
 .iw-sq.is-karp::after { content: ''; position: absolute; right: -16%; bottom: -10%; width: 52%; height: 52%; border-radius: 50%; pointer-events: none; z-index: 2;
   background: #ffd27a url("data:image/svg+xml;utf8,${encodeURIComponent(KARP_GLYPH.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(/currentColor/g, '#ffffff'))}") center / 86% no-repeat;
@@ -322,6 +326,7 @@ export class KarpHud {
       const er = el.getBoundingClientRect(); this._ox = er.left; this._oy = er.top;
       let r = this.status.getBoundingClientRect(); if (!(r.height > 0)) r = this.line.getBoundingClientRect();
       this._topY = r.height > 0 ? r.bottom - this._oy : 0; this._stL = r.left - this._ox; this._stR = r.right - this._ox; this._topT = 30;
+      const kb = `${Math.round(this._topY)}px`; if (kb !== this._kstB) { this._kstB = kb; el.style.setProperty('--kst-b', kb); }
     }
     this._topT--;
     const calls = this._callRects();
