@@ -158,12 +158,18 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   runs every shipped stage in one go and prints a table (`WIP=1` adds the stages under construction); env `OUT`,
   `KARP_DEF`, `SHOTS=0`, `CARRY=0`, `PHYS=0`, `DEVSTAGE=1` (Cargo), `ERA=` / `LAVA=` / `KSTATE=` (one stage state; a stage
   module offers its states through `G.match.stage.karpStates()`, each with the page query of its audit switch),
-  `PROBE='[x,y,z,x,y,z]'` (one move traced: #16's kid frame by frame, and what it stopped against). The
-  checks live in `tools/botlab/karp-check-page.js`. Self-test: `KARP_SELFTEST=1 tools/botlab/run.sh
+  `PROBE='[x,y,z,x,y,z]'` (one move traced: #16's kid frame by frame, and what it stopped against). #7 also finds the
+  moves no edge holds that #16's kid really makes (rising gaps across air, jumps onto ground off the field, hops / gaps
+  just beyond the rules): a find when worth > 10 m, an entrance (with its own line of sight) when it lands inside a Gate's
+  ring from outside it; an inkable step of ≤ 1.8 m the kid hops counts as a hop, not a climb, in every no-climb search.
+  The flagged places are numbered once — the top-down's discs and its key, the `-flag-<n>` pictures, the console and the
+  JSON's `flags`. The checks live in `tools/botlab/karp-check-page.js`. Self-test: `KARP_SELFTEST=1 tools/botlab/run.sh
   tools/botlab/bazookarp-check.cjs` (karpbox's clean case must pass every check, and each planted fault of
-  `tools/botlab/karp-check-box.js` must FAIL its own check; `CASES=clean,f7,…`). The per-stage builders' brief:
+  `tools/botlab/karp-check-box.js` must FAIL its own check for its own reason, and each `notFail` case must leave its
+  checks unfailed; `CASES=clean,f7,…`). The per-stage builders' brief:
   `tools/botlab/jobs/batch5/karp-stages/BUILDER.md`.
-- **The Bazookarp regression set** — run it (one at a time, locally while the Mac mini is away) after any change to the
+- **The Bazookarp regression set** — run it (one at a time locally, or as a job on the Mac mini's runner when
+  tools/botlab/jobs/batch5/COMMON.md says it is up) after any change to the
   mode, the Carp Field, the kit, the stage data or a stage's layout:
   - `DEVSTAGE=1 MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-field.js tools/botlab/run.sh tools/botlab/page.cjs`
     (the field on karpbox and every stage: L, holes, hop / gap edges, the reading sweep, the load cost; `PAGE_ARGS='only=<id>'`

@@ -13,9 +13,9 @@ The user's bar: "our high level of quality, especially when it comes to map desi
 |---|---|---|
 | 1 | **The data** | `BAZOOKARP_DEFS.<id>` in `src/world/bazookarp-data.js`. It describes **Alpha's attack**: the weirs and the Gate stand on **Bravo's half** (+z), `freeZones` are Bravo's own; the engine mirrors everything for the other team. The Long Stages notes give Alpha's half: **negate x and z** (§9.3 has them converted). The format is the file's header: `start`, `weirs` (1, or 2 on different routes at the same count ±2), `gate`, `freeZones` (each with `signs: [[x, z, yaw°]]` at every entrance), and as needed `noRetreat`, `carrierBlock`, `noRest`, `hopVeto`, `routes`, `waive`. |
 | 2 | **Mode-only pieces and redesigns** | in your stage's own files (`src/world/stages/<id>/layout.js`, `props.js`, its dressing), tagged `onlyIn: 'bazookarp'` / `notIn: 'bazookarp'` (`variants.js`). Never in the kit (`bazookarp-kit.js` builds the weir posts, the Gate and the signs from your data) and never in `layout.half` unfiltered. Fully dressed: cover map ≥ 90 % on the variant, climb-audit clean, the 1.8 m kid-reach rule (a top a kid can't reach is `roof`; a barrier is proved with the physical way-round search). |
-| 3 | **The lightmap variant** | `assets/lightmaps/<id>.bazookarp.{png,json}`, baked once the layout is final (on the Mac mini when it is back; locally only for the final bake), inside `size-budget.js`. |
+| 3 | **The lightmap variant** | `assets/lightmaps/<id>.bazookarp.{png,json}`, baked once the layout is final, inside `size-budget.js`: a `JOB-<n>.sh` for the Mac mini's runner (`../COMMON.md` says whether it is up and how to send one); only when COMMON.md says the Mac mini is down, locally, and only the final bake. |
 | 4 | **The checker clean** | `RESULT <id> ok` from `bazookarp-check.cjs` (below), in **every** stage state for a gimmick stage; its JSON and pictures in `tools/botlab/jobs/batch5/karp-<id>/out/` (`(scratch)` commits). |
-| 5 | **Bot matches** | a `JOB-<n>.sh` for the Mac mini: 16 × `karp-match.cjs` at normal (and 16 at hard where the lead asks), summarised by `karp-agg.py`, inside §9.1's targets. While the Mac mini is away: 2–4 local matches per question, and the JOB file committed for when it returns. |
+| 5 | **Bot matches** | a `JOB-<n>.sh` for the Mac mini's runner (`../COMMON.md`: the protocol, the cap per mode and config): 16 × `karp-match.cjs` at normal (and 16 at hard where the lead asks), summarised by `karp-agg.py`, inside §9.1's targets. Locally only 2–4 matches per question while you iterate; when COMMON.md says the Mac mini is down, commit the JOB file for when it returns. |
 | 6 | **Pictures** (JPEG < 300 KB, looked at before you claim anything) | the checker's set; a player's view from each spawn exit toward its Gate; from the Pond toward each weir; an aerial of each redesigned area, before and after. |
 | 7 | **The note** | `tools/botlab/jobs/batch5/karp-<id>/NOTE.md`, the template in §4 below. |
 | 8 | **Other modes untouched** | the regressions in §3 pass; Turf War, Zone Control and Tower Command build byte-identical; the stage card unchanged. |
@@ -39,19 +39,21 @@ Always run with `BOTLAB_OUT=/Users/danielosling/Desktop/1/inkwave-upstream/.botl
 at a time. One stage takes 1–4 minutes (the physical proof and the two carry walks are most of it).
 
 It prints one line per check — `OK`, `WARN`, `FAIL` or `SKIP` with its numbers — then
-`RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=…`. `<id>-karp.json` holds every number (each check's
-`nums`, its flagged places, the carry walks, the drop coverage). How each check judges is in `../karp-checker/LEAD-REPORT.md`
+`RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=…`, then **the flags**: every flagged place, numbered as the
+red discs on `<id>-karp-top.jpg` and in its key, and as the `<id>-flag-<n>.jpg` pictures (one for every #7 flag, then the
+first `FLAGSHOTS` others). `<id>-karp.json` holds every number (each check's `nums`, `flags` with the same numbers, the
+carry walks, the drop coverage). How each check judges is in `../karp-checker/LEAD-REPORT.md`
 (and SPEC §4.4); in short:
 
 | # | check | what you fix when it FAILs |
 |---|---|---|
-| 1 | data on floor, nothing in a spawn zone or on a roof, kit posts `roof` | move the spot; floor under it |
+| 1 | data on floor, nothing in a spawn zone or on a roof, kit posts `roof`; every kit footing (weir and Gate posts, the plinth, the sill, the signs' feet) rests on floor across its footprint | move the spot; floor under it (a weir by a ledge stands a post in the air: the kit builds the posts at the weir's floor height) |
 | 2 | the field: L_A ≈ L_B (2 %), no holes, the reading sweep | asymmetric `single` pieces; pits with no way out |
 | 3 | weir counts 45–60 (40–55 %), weir → Gate ≥ 25 m and ≥ 45 % of L, two weirs ±2 counts and ≥ 12 m apart, L 55–85 | move the weir; lengthen the base front |
-| 4 | Pond → weir → Gate with no climbs, own zones and carrierBlock off | a ramp or stair |
+| 4 | Pond → weir → Gate with no climbs, own zones and carrierBlock off (an inkable step of ≤ 1.8 m that #16's kid hops counts as a hop, not a climb — here and in #5, #7b, #9 and the walks) | a ramp or stair |
 | 5 | route 2 ≤ 1.6 × route 1 on every leg, 2.5 m apart (6 m free at the ends); two weirs: disjoint routes 1, neither within 4 m of the other weir | a second way in |
 | 6 | Pond → Gate 11.5–18 s walking | L |
-| 7 | (a) 2–5 entrances into the Gate's 15 m ring, each seen from the spawn deck; (b) no climb saving > 20 % from the halfway line; (c) no drop > 2.5 m into the ring; (d) no connection the graph lacks (squid gaps, walls over 5.5 m, drops over 3.4 m, hops 1.8–2.1 m and gaps 3.0–3.8 m a kid really makes) gaining > 10 m | geometry, `onlyIn` walls, `carrierBlock`, or a `waive` the lead accepted |
+| 7 | (a) 2–5 entrances into the Gate's 15 m ring, each seen from the spawn deck — every carrier-graph edge into the ring, and every move #16's kid really makes from outside it to inside (a rising gap, a jump onto ground off the field, a hop or gap beyond the rules), each such move with its own line of sight; (b) no climb saving > 20 % from the halfway line; (c) no drop > 2.5 m into the ring; (d) no connection the graph lacks gaining > 10 m: squid gaps, walls over 5.5 m, drops over 3.4 m, and the moves a kid really makes — hops 1.8–2.1 m, gaps 3.0–3.8 m, **rising gaps** (1.2–3.0 m across air, 0.6–1.8 m up) and **jumps onto ground off the field** (a top no walk reaches) | geometry, `onlyIn` walls, `carrierBlock`, or a `waive` the lead accepted |
 | 8 | the Gate 12–20 m from the pad, ≤ pad + 0.2 m, in the ±40° cone, seen from the deck, not in a zone | move the Gate |
 | 9 | climb-only plateaus wholly inside the owner's zone; zones wholly on their owner's half, a sign within 2 m of every entrance (both ends of one wider than 8 m), never on a weir / the Gate / route 1 / route 2; `noRetreat` ≥ 3 m from plateaus and zones | the zone polygon and its signs (the checker lists each entrance with its crossings) |
 | 10 | no own-half route dips > 6 m in progress | the route, or a `noRetreat` within #9's limits |
@@ -59,7 +61,7 @@ It prints one line per check — `OK`, `WARN`, `FAIL` or `SKIP` with its numbers
 | 12 | the variant differs only by tagged pieces and the kit; its lightmap exists and is fresh | tags; bake |
 | 13 | ≥ 3 ways off the spawn deck; ≥ 2 cover blocks ≥ 1.2 m within 4 m of route 1 deck → Gate | openings, cover |
 | 14 | ≥ 70 % of the Pond's 4.5–10 m ring is floor; the shell seen from ≥ 6 of 8 | clear the centre (`notIn: 'bazookarp'`) |
-| 15 | nothing solid within 3 m of a weir (0.3–3.6 m up, its posts excepted); seen from both approaches and ≥ 3 of 8 | move it off the wall |
+| 15 | nothing solid within 3 m of a weir (0.3–3.6 m up, its posts excepted; measured exactly per block, so a lamp post, a bollard, a rail or a NO CARP sign counts); seen from both approaches and ≥ 3 of 8 | move it off the wall |
 | 16 | every hop / gap edge the field adds is made by a kid with the carrier's jump; the same kid (the carrier's speed, both spawn barriers, carrierBlock) walks every route 1 and route 2 of every leg and through every entrance into each Gate's ring | paste the printed `hopVeto` entries into your data (then the field drops them), or open the move up; a route or entrance it can't walk (the place is printed and drawn: a slot narrower than a body, a lip, a rail the graph's centre ray missed) gets widened, or the piece that fools the graph gets a real wall |
 
 **Waivers.** A #7 or #9 find you can't close goes to the lead with a picture and a reason. Once the lead accepts it, add
