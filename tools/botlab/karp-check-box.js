@@ -201,8 +201,41 @@ export const CASES = [
   { id: 'x9n', check: 9, expect: 'a noRetreat polygon within 3 m of team \\d\'s zone', what: 'a 0.4 m noRetreat strip (x −10.2…−9.8, z 4…26) across an open-floor free zone (x −14…−6, z 11…19)',
     def: (d) => { d.freeZones.push({ poly: [[-14, 11], [-6, 11], [-6, 19], [-14, 19]], y0: -0.3, y1: 0.3, signs: [[-14.4, 10.6, 180], [-5.6, 10.6, 180], [-14.4, 19.4, 0], [-5.6, 19.4, 0]] }); d.noRetreat = [{ poly: [[-10.2, 4], [-9.8, 4], [-9.8, 26], [-10.2, 26]], y0: -0.5, y1: 1.0 }]; } },
   // — the windows' calibration (issue 2): platform pairs over the open sea, the kid's real reach against the probes' windows
-  { id: 'reach', check: null, reach: true, what: 'REACH: platform pairs over the sea, each a near rim a cell short of its rim node and a far platform `air` m on and `dy` up or down: every pair #16\'s kid makes lies inside the probes\' window at its rise, and each window\'s outer edge lies beyond the last made gap with both rim nodes a cell back',
+  { id: 'reach', check: null, reach: 'kid', what: 'REACH: platform pairs over the sea, each a near rim a cell short of its rim node and a far platform `air` m on and `dy` up or down: every pair #16\'s kid makes lies inside the probes\' window at its rise, and each window\'s outer edge lies beyond the last made gap with both rim nodes a cell back',
     layout: (L) => { L.single.push(...reachPieces()); } },
+  // [fix3] review 3: the faults its reviewer planted that passed every check, the swimming carrier's reach, and #8's and
+  // #11's sub-rules no case planted
+  // — #7 (issue 1): a kid vaults a low wall or a railing; a squid slips through a railing (squids pass rails)
+  { id: 'v5', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*vault', phys: true, what: 'V5: the ring wall\'s NW stretch (155–165°) a 1.4 m roof wall: a kid vaults it into the ring instead of walking round by the SW opening',
+    layout: (L) => { reRing(L, [[149, 155], [165, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(...ARC(0, 48, 15.5, 0.5, 0, 1.4, 155, 165, 3, { ...WALL, tag: 'kcheck-lowwall' })); } },
+  { id: 'v5h', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*vault', phys: true, what: 'V5h: the same stretch a 1.7 m roof wall',
+    layout: (L) => { reRing(L, [[149, 155], [165, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(...ARC(0, 48, 15.5, 0.5, 0, 1.7, 155, 165, 3, { ...WALL, tag: 'kcheck-lowwall' })); } },
+  { id: 'rl', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[(?:vault over a low wall or rail|squid gap)(?: \\(swim-jump\\))?\\] not seen from the spawn deck', phys: true, what: 'RL: the ring wall\'s west opening (175–185°) closed by a 1.2 m railing (rail: true, 0.1 m), f7\'s screen inside: a kid hops onto it and down, a squid slips through it',
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(B(-15.55, -15.45, 0, 1.2, 46.4, 49.6, { paint: false, rail: true, color: '#8a7f70', tag: 'kcheck-rail' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  { id: 'rlh', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[squid gap\\] not seen from the spawn deck', what: 'the same opening closed by a 2.6 m railing (beyond any vault or swim-jump), the screen inside: only a squid slips through it',
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(B(-15.55, -15.45, 0, 2.6, 46.4, 49.6, { paint: false, rail: true, color: '#8a7f70', tag: 'kcheck-rail' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  // — #7 (issue 2): a carrier swimming in its own ink reaches a 2.0 m ledge and jumps a 5 m moat; the swimming REACH rows
+  { id: 'h20', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground(?: \\(swim-jump\\))?\\] not seen from the spawn deck', phys: true, what: 'H20: f7 with its ledge 2.0 m high (no ink), f7\'s screen: beyond a kid\'s hop, a carrier swim-jumping from its own ink on the floor outside lands on it',
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(B(-17.0, -14.0, 0, 2.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-ledge' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  { id: 'g5', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longGap', phys: true, what: 'G5: a 5.0 m moat of open water through the ring wall\'s west opening (x −17…−12), inkable floor both sides: beyond a kid\'s jump, a carrier swim-jumping from its own ink clears it',
+    layout: (L) => { floorWithout(L, [-17, -12, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); } },
+  { id: 'reachs', check: null, reach: 'swim', what: 'REACH (swimming): the same platform pairs with inkable near platforms (6 m: the run-up) and the stage widened to x ±44 for the far ones: every pair #16\'s kid or its swimming carrier makes lies inside the swimming windows, and each window\'s edge beyond the last made gap with both rim nodes a cell back',
+    layout: (L) => { L.bounds = { ...L.bounds, minX: -44, maxX: 44 }; L.single.push(...swimReachPieces()); } },
+  // — #8 (issue 4): the Gate too near the pad, too far, above it, and out of the deck's sight
+  { id: 'x8n', check: 8, expect: 'the Gate (?:[0-9]|1[01])(?:\\.\\d)? m from the pad \\(12–20\\)', what: 'the Gate 10 m from the pad (z 50)', def: (d) => { d.gate = { at: [0, 0, 50], yaw: 0 }; } },
+  { id: 'x8f', check: 8, expect: 'the Gate (?:2[1-9]|[3-9]\\d)(?:\\.\\d)? m from the pad \\(12–20\\)', what: 'the Gate 22 m from the pad (z 38)', def: (d) => { d.gate = { at: [0, 0, 38], yaw: 0 }; } },
+  { id: 'x8u', check: 8, expect: 'the Gate [\\d.]+ m above the pad \\(≤ 0\\.2\\)', what: 'the Gate on a 3.4 m dais up a ramp: 1 m above the pad',
+    layout: (L) => { L.half.push(B(-2.5, 2.5, 0, 3.4, 45.5, 50.5, { ...NOINK, tag: 'kcheck-dais' }), RP([0, 0, 37], [0, 3.4, 45.5], 3, { ...NOINK, tag: 'kcheck-ramp' })); }, def: (d) => { d.gate = { at: [0, 3.4, 48], yaw: 0 }; } },
+  { id: 'x8s', check: 8, expect: 'the Gate not seen from the spawn deck', what: 'a 4.6 m screen across the apron (x ±7, z 50.4…50.9) between the spawn deck and the Gate',
+    layout: (L) => { L.half.push(B(-7, 7, 0, 4.6, 50.4, 50.9, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-gatescreen' })); } },
+  // — #11 (issue 4): a fall on the enemy's half that drops the Bazookarp far off, a splat on a narrow walk that rests
+  // there, a zone visit the engine doesn't see
+  { id: 'x11f', check: 11, expect: 'a fall on the enemy half → ', carry: true, what: 'a noRest polygon (x 1…20, z 0…22) round the enemy half\'s water edge nearest the Pond (the channel\'s south end): a carrier falling there is dropped 14 m away',
+    def: (d) => { d.noRest = [{ poly: [[1, 0], [20, 0], [20, 22], [1, 22]], y0: -0.5, y1: 1.5 }]; } },
+  { id: 'x11w', check: 11, expect: 'a splat on the narrow walk by weir 1 rested on narrow floor', carry: true, what: 'open water across the main floor at z 6…20 but a 1 m causeway (x −1…0) on route 1: a splat on it rests on the causeway (no wide floor within reach)',
+    layout: (L) => { floorWithout(L, [-14, -1, 6, 20], [0, 14, 6, 20]); } },
+  { id: 'x11z', check: 11, expect: 'in its own zone the fuse ran ×1', carry: true, what: 'the spawn-deck zone with its eras written as strings ([\'0\']): the checker\'s static checks read it (they compare as strings), the engine compares numbers and never applies it, so a carrier visiting it runs ×1',
+    def: (d) => { d.freeZones[0].eras = ['0']; } },
 ];
 
 // [fix2] the REACH rows: (dy, air) pairs, air the open gap rim to rim along the line, dy the far top's rise over the near
@@ -235,6 +268,30 @@ function reachPieces() {
   for (const r of reachRows()) {
     const nx = [r.edge - r.side * 4.0, r.edge].sort((a, b) => a - b), fx = [r.far, r.far + r.side * Math.min(2.4, 29.95 - Math.abs(r.far))].sort((a, b) => a - b);
     out.push(B(nx[0], nx[1], -1.2, r.yN, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reach' }), B(fx[0], fx[1], -1.2, r.yF, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reach' }));
+  }
+  return out;
+}
+
+// [fix3] review 3: the swimming REACH rows: (dy, air) pairs as REACH_ROWS, for the carrier swimming in its own ink — a near
+// platform 6 m long that takes ink (the run-up), its rim 0.05 m short of the cell centre at x ±27.5 (its rim node a cell
+// back), a far platform 2.4 m long `air` m on; the same slots, past the kid's rows' x (the case builds only these, on a
+// stage widened to x ±44)
+export const SWIM_ROWS = [
+  [2.2, [0.3, 1.0]], [2.1, [0.3, 1.5, 2.5, 3.5]], [2.0, [0.3, 1.5, 2.5, 3.5, 4.5]], [1.8, [3.0, 4.0, 4.8, 5.6]], [1.5, [4.0, 5.0, 5.6, 6.2]],
+  [1.2, [5.0, 5.8, 6.4, 7.0]], [0.6, [6.0, 6.8, 7.4, 8.0]], [0, [6.6, 7.4, 8.0, 8.6]], [-1.2, [7.6, 8.4, 9.0, 9.6]], [-3.4, [8.8, 9.6, 10.4, 11.0]],
+].flatMap(([dy, airs]) => airs.map((air) => ({ dy, air })));
+export function swimRows() {
+  return SWIM_ROWS.map((r, k) => {
+    const [side, z0] = REACH_SLOTS[k], yN = Math.max(0.6, 0.6 - r.dy), yF = yN + r.dy;
+    const edge = side * 27.45, far = edge + side * r.air;
+    return { ...r, side, z0, yN, yF, edge, far, swim: true, near: [side * 26.5, yN, z0 + 0.5], farAt: [far + side * 0.5, yF, z0 + 0.5] };
+  });
+}
+function swimReachPieces() {
+  const out = [];
+  for (const r of swimRows()) {
+    const nx = [r.edge - r.side * 6.0, r.edge].sort((a, b) => a - b), fx = [r.far, r.far + r.side * Math.min(2.4, 43.95 - Math.abs(r.far))].sort((a, b) => a - b);
+    out.push(B(nx[0], nx[1], -1.2, r.yN, r.z0, r.z0 + 2, { color: '#cfc7b6', tag: 'kcheck-reachs' }), B(fx[0], fx[1], -1.2, r.yF, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reachs' }));
   }
   return out;
 }
