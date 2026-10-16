@@ -21,7 +21,7 @@
 // (snapshots by q, discrete records). The network is a KarpWire (karpWire.js): LoopWire offline, NetWire online.
 //
 // Records (host → all, SPEC §7.2): ['s' | 'S', q, t, …] snapshots on the timeline; at once ['p', q, nid] grant ·
-// ['u', q, nid, x, y, z] undone · ['b', q, team, x, y, z, byNid] burst · ['d', q, how, x, y, z] dropped / moved ·
+// ['u', q, nid, x, y, z] undone · ['b', q, team, x, y, z, byNid, tb] burst ([karp-face] tb: its host wire time) · ['d', q, how, x, y, z] dropped / moved ·
 // ['r', q, x, y, z, why] reset flight · ['w', q, team, index] plant · ['x', q, nid, x, y, z, own] Carp Blast ·
 // ['t', q, losing, why] overtime · ['e', q, winner, reason, c0, c1, b0, b1, otT] end ([karp-face] otT: the overtime played).
 //
@@ -105,7 +105,7 @@ export class Bazookarp {
       on('era:warn', () => { this._danger = true; this._recheck(true); }),
       on('lava:warn', ({ to }) => { this.fieldSwitch(this.field.stateOf(to)); }),
     ];
-    this.wire.on('claim', ({ actor, ts, since }) => this._claim(actor, ts, since));
+    this.wire.on('claim', ({ actor, ts, since, run, late }) => this._claim(actor, ts, since, run, late));
     this.wire.on('decline', ({ actor, q }) => this._decline(actor, q));
     this.wire.on('rate', (d) => { if (d.actor === this.holder) { this.remote.rate = d.rate; this.remote.why = d.why; this.remote.half = d.half; this.remote.zone = d.zone; } });
     this.wire.on('foot', (d) => { if (d.actor === this.holder) this.remote.foot = { pos: new V3(d.x, d.y, d.z), half: d.half, zone: d.zone }; });
@@ -143,7 +143,24 @@ export class Bazookarp {
     if (p !== prev) emit('karp:phase', { phase: p, prev });
     // [karp-face] each screen's own "free since" (claims, §7.3); a fresh free phase claims at once — a guest's re-send
     // clock left over from its last claim (up to 0.3 s) held its first claim back: race1 / race2, every other round
-    if (p === 'free' && prev !== 'free') { this.freeT0 = this.clock; this.grantAt = null; this.claimT = 0; }
+    if (p === 'free' && prev !== 'free') { this.freeT0 = this.clock; this.grantAt = null; this.claimT = 0; this.freeRun = this.follower ? this._runIn() : 0; this.freeLate = this.follower ? this._bAge ?? null : null; this._bAge = null; }
+  }
+  // [karp-face] review round 3: a guest's player already running in toward the Bazookarp when it went free on this screen
+  // — 0 (standing, walking away or across) … 1 (at 0.8 × run speed or more) — from its own last ~0.1 s of movement (the
+  // positions: a test's mover or a swim moves it without a.vel). A guest hears of the burst one way after the host; a
+  // racer that had to SEE it first is timed fairly from its own 'free', but one already running kept running through
+  // that delay: at equal real touch times its since was smaller by the one-way delay, and it won (part=racerun, netlag
+  // 80 + jitter 30: guest 12 / 12). Its claim carries this and how late it heard of the burst (the 'b' record's age on
+  // the host's clock, as a snapshot's is read); the host adds run × that delay to its since.
+  _runIn() {
+    const L = G.local, hs = this._lp;
+    if (!L || !L.alive || !hs || !hs.length) return 0;
+    const now = this.clock;
+    let o = null; for (const h of hs) if (now - h.t >= 0.08) o = h;   // (the newest sample at least 0.08 s old)
+    if (!o) return 0;
+    const d1 = Math.hypot(L.pos.x - this.pos.x, L.pos.z - this.pos.z), d0 = Math.hypot(o.x - this.pos.x, o.z - this.pos.z);
+    const vr = (d0 - d1) / Math.max(1e-3, now - o.t);
+    return +clamp(vr / (0.8 * PLAYER.runSpeed), 0, 1).toFixed(2);
   }
   // (q carries on above the last one this screen applied as a follower: a new host's first record — even one made while
   // its leave handling still runs, before onHostChange — is never at or below what the other guests already applied)
@@ -213,7 +230,7 @@ export class Bazookarp {
     this.stats.pops[team]++; this.stats.popT.push(+this.clock.toFixed(2));
     if (this.stats.firstPop == null) this.stats.firstPop = +this.clock.toFixed(2);
     if (by && by.stats) by.stats.karpPops = (by.stats.karpPops || 0) + 1;
-    this._rec(['b', team, r2(this.pos.x), r2(this.pos.y), r2(this.pos.z), by?.nid ?? -1]);
+    this._rec(['b', team, r2(this.pos.x), r2(this.pos.y), r2(this.pos.z), by?.nid ?? -1, Math.round(this.wire.hostNow() * 1000) / 1000]);   // ([karp-face] its host wire time: a guest reads how late it heard of it)
     this._burst(team, c, by);
     // its ink, the bursting team's (the host's splat replicates as paint)
     G.paint?.splat(_v2.copy(this.pos).setY(this.pos.y + 0.3), K.shell.burstPaint, team, { seed: Math.random() });
@@ -264,7 +281,7 @@ export class Bazookarp {
       const v = Math.hypot(a.vel.x, a.vel.z), back = v > 0.5 ? Math.min(0.05, (K.pickR - Math.hypot(a.pos.x - this.pos.x, a.pos.z - this.pos.z)) / v) : 0;
       const since = Math.max(0, this.clock - (this._dt || 0) - this.freeT0 - back);
       if (this.host) { if (!this.claims.some((c) => c.a === a)) this.claims.push({ a, ts: this.wire.now(), since, at: this.clock, p: a.pos.clone() }); }
-      else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since); }
+      else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since, this.freeRun || 0, this.freeLate); }
     }
   }
   // "Can't use" (SPEC §1.1, karp:refuse → the HUD's note): 'special' touching it mid-special (at most once per 2 s),
@@ -277,7 +294,7 @@ export class Bazookarp {
   }
   _noteRefuse(a, why) { this.refuse(a, why); }
   // a guest's claim (the wire): ts is its send time on our clock
-  _claim(a, ts, since) {
+  _claim(a, ts, since, run = 0, late = null) {
     if (this.follower || !a) return;
     if (this.phase !== 'free') {
       if (this.phase !== 'carried' || this.holder !== a) this.wire.toGuest(a.nid, { why: this.phase });
@@ -287,9 +304,14 @@ export class Bazookarp {
       return;
     }
     // ([karp-face] a claim without its own "since" — an older client — counts from its arrival on our clock)
-    const sn = Number.isFinite(since) && since >= 0 ? since : Math.max(0, this.clock - this.freeT0);
+    // ([karp-face] review round 3: a claimant already running in when it went free on its screen gets that much of the
+    // delay it heard of the burst with added — see _runIn; its own measure of that delay, else the one-way estimate; at
+    // most 0.25 s)
+    const dl = Number.isFinite(late) && late >= 0 ? late : this.wire.oneWay?.(a.owner) ?? 0;
+    const cr = Number.isFinite(run) && run > 0 ? Math.min(1, run) * Math.min(0.25, dl) : 0;
+    const sn = (Number.isFinite(since) && since >= 0 ? since : Math.max(0, this.clock - this.freeT0)) + cr;
     const c = this.claims.find((q) => q.a === a);
-    if (c) { c.ts = Math.min(c.ts, ts); c.since = Math.min(c.since, sn); } else this.claims.push({ a, ts, since: sn, at: this.clock, remote: true });
+    if (c) { c.ts = Math.min(c.ts, ts); c.since = Math.min(c.since, sn); c.cr = cr; } else this.claims.push({ a, ts, since: sn, at: this.clock, remote: true, cr });
   }
   // host: grant a claim once the hold is over (§7.3). [karp-face] Not the first claim that exists on this screen: the
   // host's own actors claim on the frame they touch it, a guest's claim lands a round trip after the guest heard of
@@ -317,7 +339,7 @@ export class Bazookarp {
       // (the window's close: only claims sent before it count, for claimAge after it)
       if (W.closeT != null && c.ts > W.closeT) continue;
       const p = this._claimPos(c);
-      seen.push({ nid: a.nid ?? -1, remote: !!c.remote, since: +(c.since ?? 0).toFixed(3), at: +(c.at - this.grant0).toFixed(3), ok: !!p });
+      seen.push({ nid: a.nid ?? -1, remote: !!c.remote, since: +(c.since ?? 0).toFixed(3), at: +(c.at - this.grant0).toFixed(3), ok: !!p, ...(c.cr ? { cr: +c.cr.toFixed(3) } : {}) });
       if (!p) continue;
       const d = Math.hypot(p.x - this.pos.x, p.z - this.pos.z), k = Math.max(K.pickHold, c.since ?? 0);
       if (k < bk - 0.004 || (Math.abs(k - bk) <= 0.004 && d < bd)) { bk = Math.min(bk, k); bd = d; best = c; }
@@ -819,7 +841,7 @@ export class Bazookarp {
         break;
       }
       case 'u': { const a = byNid(e[2]); if (a) { if (this.holder === a || a.carry) this._release(a); if (!a.remote) this.lockT = 0; } this.pos.set(e[3], e[4], e[5]); this.shell.clear(); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }   // ([karp-face] free: no shell)
-      case 'b': { this.pos.set(e[3], e[4], e[5]); this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
+      case 'b': { this.pos.set(e[3], e[4], e[5]); this._bAge = Number.isFinite(e[7]) ? clamp(this.wire.hostNow(this.wire.hostId?.()) - e[7], 0, 0.4) : null; /* [karp-face] how late this screen heard of the burst: _runIn's claims */ this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
       case 'd': { const H = this.holder; if (H) { this.lastCarrier = { team: H.team, how: HOWS[e[2]], left: this.match.time }; this._release(H); } this._reform(_v.set(e[3], e[4], e[5]), -1); emit('karp:drop', { actor: H, team: H ? H.team : -1, pos: _v.clone(), how: HOWS[e[2]] }); break; }
       case 'r': { const H = this.holder; if (H) { const w = WHYS[e[5]]; this.lastCarrier = { team: H.team, how: w === 'zone' || w === 'none' ? 'splat' : w, left: this.match.time }; this._release(H); } this._reset(_v.set(e[2], e[3], e[4]), WHYS[e[5]] || 'none'); break; }
       case 'w': { const H = this.holder; this.lastPlant = { team: e[2], left: this.match.time, win: K.otPick, ot: this.overtime }; this.count[e[2]] = Math.min(this.count[e[2]], this.weirs[e[2]][e[3]]?.count ?? this.count[e[2]]); this._applyPlant(H && H.team === e[2] ? H : null, e[2], e[3]); if (H && H.carry) this._release(H); break; }
@@ -890,6 +912,9 @@ export class Bazookarp {
     }
   }
   _followerTick(dt) {
+    // ([karp-face] this screen's player's last ~0.25 s of positions, for _runIn)
+    const L = G.local, hs = this._lp || (this._lp = []);
+    if (L) { hs.push({ t: this.clock, x: L.pos.x, z: L.pos.z }); while (hs.length > 2 && this.clock - hs[0].t > 0.25) hs.shift(); }
     if (this.overtime) this.overtimeT += dt;
     if (this.phase === 'resetting') {
       this.phaseT -= dt;

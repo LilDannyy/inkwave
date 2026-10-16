@@ -3,7 +3,7 @@
 //                snapshot(rec) the 10 Hz 's' / 1 Hz 'S' snapshot, on the host's event timeline
 //                toGuest(nid, msg)  'kd' (a claim refused while it stays free)
 //                samples(a, since) → a remote carrier's REAL samples played since `since` ([{ t, x, y, z, alive }]), or null
-//   guest side   claim(nid, ts) 'kc' · decline(nid, q) 'kx' · reportRate(nid, rate, why, half, zone) 'kr' ·
+//   guest side   claim(nid, ts, since, run, late) 'kc' · decline(nid, q) 'kx' · reportRate(nid, rate, why, half, zone) 'kr' ·
 //                reportFoot(nid, x, y, z, half, zone) 'kf'  (shell hits ride the guest's tick: objTargets.takeHits → 'kh')
 //   both         on('claim' | 'decline' | 'rate' | 'foot' | 'hits' | 'refused', fn) · now() (the claim clock) · isHost
 // LoopWire: offline — a host whose records go nowhere, except (tests) to a follower engine `delay` s later, and whose
@@ -60,7 +60,7 @@ export class NetWire extends KarpWire {
   snapshot(rec) { super.snapshot(); if (this.nm && G.netm === this.nm && this.nm.isHost) this.nm._rec(['ks', rec]); }
   toGuest(nid, msg) { const a = this.nm?.byNid.get(nid); if (a && a.owner) this.nm.s.tr?.sendTo(a.owner, { k: 'kd', nid, ...msg }); }
   _toHost(d) { const h = this._hostId(); if (h && !this.nm.isHost) this.nm.s.tr?.sendTo(h, d); }
-  claim(nid, ts, since) { super.claim(); this._toHost({ k: 'kc', nid, ts: Math.round(ts * 1000) / 1000, ...(Number.isFinite(since) ? { fs: Math.round(since * 1000) / 1000 } : {}) }); }   // ([karp-face] fs: free since, its own screen)
+  claim(nid, ts, since, run = 0, late = null) { super.claim(); this._toHost({ k: 'kc', nid, ts: Math.round(ts * 1000) / 1000, ...(Number.isFinite(since) ? { fs: Math.round(since * 1000) / 1000 } : {}), ...(run > 0 ? { fr: Math.round(run * 100) / 100, ...(Number.isFinite(late) ? { fl: Math.round(late * 1000) / 1000 } : {}) } : {}) }); }   // ([karp-face] fs: free since, its own screen; fr: already running in then, 0–1; fl: how late it heard of the burst)
   decline(nid, q) { super.decline(); this._toHost({ k: 'kx', nid, q }); }
   reportRate(nid, rate, why, half, zone) { super.reportRate(); this._toHost({ k: 'kr', nid, rate, why, half, zone: zone ? 1 : 0 }); }
   reportFoot(nid, x, y, z, half, zone) { super.reportFoot(); this._toHost({ k: 'kf', nid, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, z: Math.round(z * 100) / 100, half, zone: zone ? 1 : 0 }); }
@@ -73,7 +73,7 @@ export class NetWire extends KarpWire {
     if (a.owner !== from) return;
     const p = this.nm.peers.get(from);
     switch (d.k) {
-      case 'kc': this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0), since: d.fs }); break;
+      case 'kc': this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0), since: d.fs, run: +d.fr || 0, late: Number.isFinite(d.fl) ? d.fl : null }); break;
       case 'kx': this._emit('decline', { actor: a, q: d.q }); break;
       case 'kr': this._emit('rate', { actor: a, rate: d.rate, why: d.why, half: d.half, zone: !!d.zone }); break;
       case 'kf': this._emit('foot', { actor: a, x: d.x, y: d.y, z: d.z, half: d.half, zone: !!d.zone }); break;
