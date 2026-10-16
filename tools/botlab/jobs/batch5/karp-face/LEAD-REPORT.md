@@ -1,172 +1,305 @@
-# Bazookarp WP2 (online and the finished face, key `karp-face`) — lead report
+# Bazookarp WP2 (online and the finished face, key `karp-face`) — lead report, fix round 1
 
 Worktree `/Users/danielosling/Desktop/1/st-b5-karp-face`, branch `b5-karp-face`, base `b5-int3` b55f7472. Nothing pushed.
-The mode stays hidden behind `WIP_MODES` (`?wipmodes` / harness `WIPMODES=1`); its switch is untouched.
+The mode stays hidden behind `WIP_MODES` (`?wipmodes` / harness `WIPMODES=1`); its switch is untouched. Everything ran on
+this Mac under the shared SLOTS=3 lock (load average 60–500 while I worked); the Mac mini was not used (my instructions
+said it is unavailable; `COMMON.md` in the worktree was edited by someone else to say it is back — left uncommitted).
 
-**Takeover.** The first builder was cut off after six commits (2ea9983e … ab84134b: the netcode, the face, docs/NET.md,
-the §10.2 tests) and two untracked tests (net-tower.cjs / net-zones.cjs). I read all of it and kept it: it was sound. My own
-changes are marked **[mine]**, and **[takeover]** marks a piece of the package the first builder had not started; every
-result below was re-run on this head (nothing below is the first builder's claim). No pictures and no report existed.
+## Review round 1 (LEAD-REVIEW.json, verdict REDO): what I did about each issue, and the proof
 
-**Done means: proven.** `net-karp-full.cjs` (new): three real clients (autopilot kids) plus five bots play a real 5:00
-match on halyard; host A leaves mid-carry at 45 s; a guest takes over, the other follows; A is turned away mid-match
-("Match in progress"); the match plays to its end (overtime, `stopped`) with the same result and the same results table
-(names, CARRIED, POPS, splats, deaths) on both remaining screens; both go back to the lobby and A joins again. 11/11, no
-page errors, no relay kicks. Events on the screens: 21 bursts, 21 pick-ups, 20 drops, 1 plant, 1 Gate, overtime, end.
+Every issue was real; I disagree with none. Two diagnoses were incomplete, noted under issues 4 and 7a. "Pre-fix" runs
+swap in base commit a93ec8cc's file(s) for that one run only, and put the fixed ones back afterwards.
 
-## 1. What was built, against SPEC §11 WP2 and the WP1 report's "Left for WP2"
+### 1. BLOCKER: a guest carrier's ring took the previous carry's leftover fuse — fixed (272df36b)
+- `_applySnap` now returns before it touches anything (counts, fuse, rate, overtime clock, window) when the snapshot's
+  `q` is below the last discrete record applied, or once there is a winner. The fuse and rate are read only from a
+  snapshot whose holder is this screen's holder. A follower reads a fresh carrier's fuse forward from the grant
+  (`_fz` at grant = 60 s now), never from an older snapshot's.
+- Proof: new `net-karp NET_ARGS=part=snap`. It runs the reviewer's repro as checks:
+  - 17: the host's fuse is left at 7 s (once at 0, a Carp Blast's), then B grabs. B's own ring must start at 60 and
+    stay within 1 s of the host's for 1.5 s, in 5 grabs.
+  - 17b: another screen's view of a fresh carrier's fuse (B's marker over A) never shows the leftover, in 5 grabs.
+  - Fixed: **5/5**. Every ring minimum was 58.3–58.6 against the host's 58.4–58.8; B's view of A's fuse ≥ 58.9.
+  - Pre-fix (snapold): **2/5**. B's ring sat at 5.3 s in 4 grabs and at 0 after the blast, while the host had 58.4;
+    B's view of A's fuse was 6.5 in 3 of 5 grabs.
 
-### Netcode (SPEC §7) — `NetWire` (src/game/karpWire.js) + the engine's net surface (src/game/bazookarp.js)
-| item | where / how | proof |
+### 2. MAJOR: a knockout's count went back up on the guests — fixed (same change)
+- Proof: `part=snap` 18. A's kid plants Alpha's weir, grabs again and walks into Bravo's Gate. B's counts are sampled
+  every 8 ms for 2.3 s after `karp:end`.
+  - Fixed: 269 samples, all `[0, 100]`; the badge reads 0.
+  - Pre-fix: the count was 2 from 61 ms after the end, and the badge read `['100', '2']`.
+
+### 3. MAJOR: world tags over the timer and the call-outs; the meter tag repeating the status pill — fixed (8853f091, f95ab463)
+- Weir and Gate tags never ride up into the top bar. They are clamped below the Carp Line's status pill, as the meter
+  tag already was.
+- They fade (`is-under`, 0.15 s) where they would sit on a live call-out: the kill call-out's box, or ours with its
+  ribbon and 4 px round it.
+- The meter tag is not drawn where it would sit right under the status pill, which already says
+  `SHELL · 66% OURS`. Lower on the screen it is drawn as before.
+- Proof: `hud-karp.js` I1–I3, **pass at 1920×1080, 960×600 and 1512×945**. Each check records the raw projection that
+  would have put the tag in the wrong place, so it fails without the fix:
+  - I1: the GATE tag's own point projects at y 91 against the pill's bottom at 99 (960×600); the tag is drawn from 103.
+  - I2: a weir tag on the ray through a live call-out's middle is `is-under`, and is back once the call-out is gone.
+  - I3: the meter tag is null where its point is at 96 under the pill's 99, and drawn at 465.
+- Pictures:
+  - `1080-` and `600-halyard-day-hud-gate`: GATE sits under `YOU CARRY · 20 s`, clear of the timer.
+  - `-hud-shell`: the meter tag is gone under the pill.
+  - `-hud-ot`: no `45` on OVERTIME!.
+  - `-hud-start`: re-taken with a HUD frame after the call-out. The scene's frozen clock had held the tags; the first
+    re-take still showed the `45` on SHELL.
+
+### 4. MAJOR: grab races went to the host's actors — fixed; it took four changes, and part of step 5's tilt was the stage
+The reviewer's fix is built: a common time base and a short wait for claims still in flight. Measuring it turned up
+two more causes, and showed that some of step 5's tilt was geometry.
+
+1. **The order (272df36b).** Every claim carries `since`: how long after the Bazookarp went free on the claimant's own
+   screen it touched it (a guest's `kc` gains `fs`). The host grants the smallest `since`. A touch inside the 0.25 s
+   hold counts as the hold's end, so SPEC §7.3's nearest-wins stays for those. Equal `since` → the nearest.
+2. **The wait (4e794721).** Once a claim is in, the host holds the grant open for claims in flight. The wait is the
+   relay round trip (its own plus the guest's lobby ping), plus that peer's playback delay (jitter and tick spacing),
+   plus a frame. It applies only for guests that haven't claimed yet but stand within `pickR + 6 m` at their newest
+   sample, and is at most 0.3 s. With nobody remote near, the grant is at once (offline, lone grabs).
+   - A remote claimant is valid at its newest sample or any it sent in the last 0.4 s (SPEC's wording; the code only
+     read the newest).
+   - When an S39b window's grace runs out with a grant held open, it is decided then.
+   - race1, round-trip wait only: every decision held one claim. B's equally quick claims landed after the 0.083 s
+     wait.
+3. **A claim held back (dc561e2f).** A guest's 0.3 s re-send clock carried over from its previous claim, so the round
+   after a guest carried, its first claim waited up to 0.3 s.
+   - race1/race2: the guest never claimed in every other round. This was already in WP1's code and was part of the
+     10/0.
+   - A fresh free phase now claims at once.
+4. **The touch time (6c772a14).** The engine runs before the actors move, so its clock is a frame ahead of the
+   positions it reads. A touch is now timed at the positions' time, less the overshoot past `pickR` at the toucher's
+   speed. Without that, a 20 fps page touched a frame "late".
+
+Then the measurement itself:
+- **karpbox's Pond is not symmetric.** From its +x side a racer touches it 0.063 s later (sim time) than from −x. Step 5
+  always put the host's bot on +x and the guest on −x.
+- With the fixes, the −x side won every race whoever stood there:
+  - guest on −x: race4, race5, racekid2/3 **16/16** each; at 60 fps on both pages (racekid4fps60) 16/16, and
+    race6fps60 15/16;
+  - host bot on −x (raceswap1): **12/12**.
+- Even from the faster side, the guest lost 10 of 10 under the old code (the review's run).
+- Step 5 and `part=race` / `racekid` now alternate the sides and report wins by side.
+  - race7: **bot 8 / guest 8**; the −x side won all 16.
+  - racekid5 (the host's own player against the guest, alternating): **8 / 8**.
+  - face3 (step 5, 10 rounds, final code): **bot 5 / guest 5**.
+  - Each time the −x side won every round, and the guest's claim was in at every decision where it was second.
+
+The rule itself, free of the run's physics: `part=racefair` (7f648c96).
+- A host bot and B each step onto the Bazookarp 0.30 s / 0.36 s after it went free on their own screens. The host's
+  racer goes first in even rounds, B's in odd ones. The earlier one must win.
+- Fixed: **12/12**. When the bot was first, the host waited 0.12–0.13 s, B's later claim was in, and B correctly lost.
+- Pre-fix (racefairold): **7/12**. B, first by 0.06 s, won 1 of its 6 rounds.
+
+TELL THE USER / the lead: this changes SPEC §7.3's tie rule from "nearest wins" to "first to touch on its own screen
+wins, nearest on a tie". A host grab can wait up to 0.3 s when a guest is within about 7 m.
+
+### 5. MINOR: the burst call-out on the kill call-out at 960×600 — fixed (8853f091, 6260b919, f16ce210, 2ac4b9b5)
+- A burst's WIPEOUT! and SHELL BURST! come in the same frame. Ours now waits out the kill call-out's pop-in (0.38 s)
+  and sits under it: `has-kcall` pushes `.iw-zcalls` below its box, re-read each frame because the jump alerts' row
+  moves it.
+- The new pictures showed two more overlaps, both fixed:
+  - The stock exit drifts a call-out up by 60 % of its height. WIPEOUT!'s ribbon rode onto `FREE — GRAB IT!`, and our
+    call-out drifted into WIPEOUT!'s sub line. In this mode both now leave with a short lift (−14 %).
+  - The kill call-outs anchor no higher than the status pill's bottom plus that lift.
+- Proof:
+  - hud-karp I4: ours appears 0.40–0.46 s after the kill call-out and wholly below it, including its sub line. At
+    960×600: kill 127–197, ours 201–247. At 1920×1080: kill 235–361, ours 372–451.
+  - hud-karp I6: the kill call-out, sampled through its life, never rises onto the pill. Minimum top 121 vs pill 99 at
+    960×600; 223 vs 198 at 1920×1080.
+  - 1080 hud-burst was re-taken on the burst frame: the scene bursts in `set()`. The old one caught the frame before.
+    The pictures show WIPEOUT! above SHELL BURST!, both readable, and the pill clear.
+
+### 6. MINOR: the carrier's fuse too small in its last seconds — fixed (8853f091)
+- Under 10 s the reticle's seconds turn into big red Titan digits (3.3 u: 32 px at 960×600, 63 px at 1080) that beat
+  each second, with a bolder ring.
+- Proof:
+  - hud-karp I5: 31.7 px at 8.5 s against 11 px at 30 s (960×600).
+  - Pictures `1080-` and `600-halyard-day-hud-fuse-low` show a large red `3` under the ring.
+
+### 7. Smaller open points
+- **a. Fuse ring under lag — fixed (272df36b).**
+  - The review's numbers had the ring LONG: it showed 0.2–0.6 s *more* than the host had, growing.
+  - Cause: snapshots were aged by the match clock. On a guest that clock trails the host's by the one-way delay, and is
+    only corrected outside a ±0.2 s dead band.
+  - Snapshots are now stamped with the host's wire clock (its tick clock). A follower reads their age as
+    `now − peer.off + oneWay` (`NetWire.hostNow`): the peer offset netmatch already keeps, plus half its own relay
+    round trip and half the host's lobby ping.
+  - Proof: new check lag 9c under netlag 150 + jitter 60. B − host over 8 pairs: **mean −0.26 s**, steady between −0.20
+    and −0.30. The ring is now slightly *short* (safe), by the ×3 change's own trip (the host hears `kr` one way
+    late), which is SPEC's expected ~0.25. 9b still holds: worst rise 0, 0 s at the blast.
+- **b. A sub thrown by hand during your own non-barrage special counted × 0.5 — fixed (a58841de).**
+  - In `objTargets.isSpecial` a sub's `sp` flag now counts only while its owner's special is a barrage, or with none
+    running within 6 s of a barrage throw. Its last bombs go off after it ends; the `barrage:throw` event is recorded
+    per actor.
+  - Proof: rules M6, real throws. Plain 106; during a Bubble Guard 106 (it was × 0.5); a Bomb Barrage's 53.
+  - Rules B4 (a synthetic `sp` bomb) now explodes with its thrower's barrage running; rulesB 16/16.
+- **c. Step 1's per-guest message rate — added (aad2cdd5).**
+  - net-karp 1b: B fires at the shell for 5 s while its transport's sends are counted.
+  - **Peak 22 in any 1 s, mean 20.7/s** (ticks and pings; `kh` adds none). base 21/21.
+- **d. Menus at 960×600 — fixed (dc552d52).**
+  - How to Play: the Bazookarp cards are tighter on a short window (smaller art), and the Overtime note uses a short
+    wording there.
+  - Five-card row: the NEW! badge stays inside the gap, and the Boss card's PUBLIC BETA sits under its kicker.
+  - Proof: karp-menus H2 / M3 at 960×600 **14/14**. Pre-fix (menus600old) **12/14**: the notes ran to y 628 under the
+    key bar at 548, and the Bazookarp card's glare covered both badges.
+  - Pictures `600-halyard-day-menu-rules` / `-menu-mode` and the 1080 pair.
+
+### 8. Halyard's Pond, and sunset pictures that looked like day — fixed in this branch
+- **Halyard (2a2addb5).** The ferry's wheelhouse dressing (`ferry_bridge`: windows, doors, funnel collider, mast) is no
+  longer built in Bazookarp, as its wheelhouse block already wasn't. This is a one-line `notIn` in
+  `props-marina-vessels.js`, in WP4b's area.
+  - `1080-halyard-day-look-resting` / `-shell-3m`: the shell stands on a clean cabin roof.
+- **Sunset.** The "sunset" set was day because `TIME=sunset` isn't a stage time: `mapTheme` falls back to the stage's
+  own look. The halyard set from round 0 was halyard's day.
+  - Re-taken on lockgate with `TIME=dusk`: `1080-lockgate-sunset-*`, 14 pictures (the HUD, carrier, shell, weirs,
+    Gate, wake, TAB map). It now reads as evening.
+  - Dropped the two shot pictures there: the scene's camera sat right behind the Carp Shot on lockgate.
+  - The Gate pair has a dark parapet across the bottom half; those cameras were tuned on halyard.
+  - The 16 mislabelled `1080-halyard-sunset-*` were removed.
+
+## 1. What WP2 built (SPEC §11 WP2), with this round's changes folded in
+
+### Netcode (SPEC §7): `NetWire` (src/game/karpWire.js) and the engine's net surface (src/game/bazookarp.js)
+| item | how | proof |
 |---|---|---|
-| discrete records with `q`, sent at once (`bk`) | WP1's, kept; `_rec` now takes `max(q, lastQ) + 1`, so a new host's first record (even one made while its leave handling still runs) is never at or below what the other guests applied | host-bots 6/6, host-plant 4/4 |
-| snapshots `s` 10 Hz / `S` 1 Hz on the timeline (`ks`); late snapshots skipped by `q` | WP1's; **[mine]** stamped with the **match clock** (time played + overtime, which netmatch keeps in step on every screen) instead of the engine's own clock — that starts when each screen built its match, seconds apart, and the HUD fuse rule read a snapshot's age off it | hud-karp D, lag 9b 8/8 |
-| claims with `ts`, the 0.25 s hold, the newest-sample check, `kd` | WP1's, re-proven | face 3 / 4 / 5, lag 3 |
-| `kx` / `u` (a declined grant) | WP1's | lag 15b |
-| the window's grace (claims stamped before an S39b close) | WP1's; **[mine]** test 15c now really delivers the claim to the engine 0.3 s *after* the close (it used to arrive before it) | lag 15c |
-| `kh` on the 20 Hz tick | WP1's | base 1 / lag 1 (relay peak per socket 26–44 msgs/s, the host's included; no rate kicks) |
+| discrete records with `q`, sent at once (`bk`) | `_rec` takes `max(q, lastQ) + 1` (a new host never reuses a q) | host-bots, host-plant |
+| snapshots `s` 10 Hz / `S` 1 Hz (`ks`) | a snapshot older than the last discrete record, or after the end, changes nothing (round 1); stamped with the host's wire clock, aged through `NetWire.hostNow(sender)` (round 1; `'ks'` hands netmatch's sender) | snap 17 / 17b / 18, lag 9c |
+| claims with `ts` and `fs`, the hold, the race | first to touch on its own screen wins after a wait for claims in flight (round 1, issue 4); newest sample or any in the last 0.4 s | racefair 12/12, race7, face 3 / 4 / 5 |
+| `kd`, `kx` / `u`, the window's grace | WP1's; a grant held open is decided when the grace runs out; a follower's `u` clears its shell copy | base 7 / 8, lag 15b / 15c |
+| `kh` on the 20 Hz tick | WP1's | base 1 / 1b (B's own sends: peak 22/s) |
 | `kr` / `kf` | WP1's; re-sent to a new host | lag 9 |
-| `onSamples` from `_sample` (real samples only, never the drawn path) | first builder (netmatch `_sample` → `karp.onSamples`; queue scored in order by `_carried`) | face 6c / 6d (thin-wall stall, 0 clamps) |
-| Carp Shot blasts judged on each victim's screen, `[3]` hit marker | WP1's; **[mine]** a ghost launch `[0]` now emits `karp:shot` on every screen — other players' Carp Shots made no launch sound (the whomp) anywhere but on the shooter's screen | net-karp 5c / **5d**, face 7 / 7b |
-| the fuse hold before a remote carrier's Carp Blast (`NetWire.holdFor` ≤ 0.3 s; a death record that plays meanwhile wins) | first builder | face 11, lag 9b |
-| the fuse display rule on the carrier's screen (jumps forward at once, gives back ≤ 0.2 s/s) | WP1's rule, **[mine]** on the match clock | hud-karp D1/D2, lag 9b: worst rise 0, 0 at the blast |
-| a remote carrier's fuse on followers | **[mine]** read forward from the newest snapshot by the match clock (≤ 0.6 s): the marker, the Carp Line and the pause strip no longer lag a playback delay (net-karp-host bots failed "fuse within 0.5 s" at 0.7 s before this) | host-bots 6/6 |
-| `onLeave`'s order with the narrowed flush of `'tw'` / `'z'` / `'ks'` | first builder (netmatch.js onLeave) | net-tower 5/5, net-zones 5/5, host-plant |
-| the `'k'` case for adopted actors' queued Carp Shots; `KarpGun.adopt` | first builder | host-shot 3/3 |
-| `lastCarrier` / `lastPlant` (and the window, lastHit, the carrier's kr/kf, the reset start) in `S` | first builder (`S` indices 29 … 35) | host-plant 13b |
-| `onHostChange`, disconnects (bots adopt / humans-only drop) | WP1 + first builder | host-bots, host-cargo 4/4, host-guestleave 2/2 |
-| results packing `karpM` / `karpPops` | WP1's | face 16, lag 16, full 5 / 5c |
-| latency steps (`netlag=150&netjitter=60`) | first builder's part=lag | lag 8/8 (three runs) |
-| late join | matches lock the room: a returning player is turned away mid-match and joins once the room is back in the lobby | full 4 / 6 |
+| `onSamples` from `_sample` | real samples only, scored in order | face 6c / 6d |
+| Carp Shot blasts on victims' screens, `[3]`; `karp:shot` for a ghost launch | WP1 + round 0 | base 5–5d, face 7 / 7b |
+| the fuse hold before a remote carrier's Carp Blast | ≤ 0.3 s, a death record that plays first wins | face 11, lag 9b |
+| the carrier's ring (§7.2) | jumps forward at once, gives back ≤ 0.2 s/s; now on the wire clock | hud-karp D, lag 9b / 9c |
+| a remote carrier's fuse on followers | read forward ≤ 0.6 s from the newest snapshot of THAT carrier, from the grant on | snap 17b, host-bots |
+| `onLeave`'s order, the narrowed flush, the `'k'` case, `onHostChange`, disconnects | round 0 | host-bots / plant / shot / cargo / guestleave, net-tower, net-zones |
+| results `karpM` / `karpPops`; late join (the locked room) | round 0 | face 16, full |
 
-### The finished HUD (§6.1–6.5, src/ui/hud-karp.js) — first builder's, kept; mine marked
-The count badges and the Carp Line (weirs as diamonds at their counts, grey once lowered; best notches; padlocks / open
-Gates; the carp marker by the field wearing the fuse; overtime's gold frame and draining window); the status pill; the
-over-head marker with its edge pin (hidden from the enemy while the carrier swims); the reticle's fuse and charge rings
-for the carrier; DON'T RETREAT! / CARP-FREE ZONE! the same frame; the shell's meter tag; weir / Gate tags; the squad
-badge; the carp on the special orb; prompts; call-outs replacing each other; "Can't use" notes; the minimap and TAB map
-layer. **[mine]**: the status pill says `SHELL · 66% OURS / THEIRS` (the pause strip's and the tag's words); the meter tag
-never rides up into the top bar (a raised Pond put it over the Carp Line); the Carp Line's carp holds still while an
-enemy carrier swims hidden (it was a position leak against S31); on the TAB map the carrier's jump bubble wears the carp
-(the bubble covered the map's carp icon) and the weirs / Gates / halfway dots are 1.3× bigger. **[takeover]** hud-lead
-mode `karp` (§5.4 / §6.1) **did not exist**: built — the leader is `winning()` (lower count, equal counts by who got
-there first, nobody at 100 / 100 so the coin stays hidden); the trailing team shrinks while the leader carries on its
-half, held as it was while that carrier is hidden from the viewer's team.
+### The finished HUD (§6.1–6.5, src/ui/hud-karp.js)
+Unchanged from round 0, apart from this round's fixes:
+- world tags clear of the top bar and of live call-outs;
+- the meter tag not under the status pill;
+- our call-outs after, and under, a kill call-out;
+- the short exit lift for both kinds of call-out in this mode;
+- the big last-10-s digits.
 
-### Menus (§6.6, DECISIONS #10) — first builder's, kept; mine marked
-Rules cards with art, the two notes, tips, the pause strip (both counts, `<TEAM> CARRYING · n s`, SHELL / FREE / BACK TO
-THE POND, weir pips), results (CARRY IT HOME, CARRIED / POPS, XP from `PROGRESSION.bazookarp`), the lobby icon, the
-stage filter. **[mine]**: the mode screen with five cards overflowed (the four-card row is 114 % of the width with a
-fifth card): an `is-five` row, Bazookarp's koi-coral card with the carp as its hero, smaller chips / titles so they stay
-in the card at 960×600; the online lobby's stage card tags a placeholder stage PREVIEW under `?wipstages` (only the stage
-select did); the offline stand-in's rooms keep session.js's stage filter; the rules texts as short as Tower Command's and
-the cards a touch more compact, with four mode tabs; the results header's CARRIED / POPS no longer run together.
+Round 0 built the count badges, the Carp Line, the status pill, the over-head marker and its edge pin, the reticle
+rings, DON'T RETREAT! / CARP-FREE ZONE!, the meter tag, the weir and Gate tags, the squad badge, the carp on the
+special orb, prompts and call-outs, "Can't use" notes, the minimap / TAB layer, and hud-lead mode `karp`.
 
-### Looks (§6.7) and the model — first builder's, kept; mine marked
-The iridescent Roe Shell with the leading ink swirling in, cracks, the warning flash; the resting carp; weirs' curtains
-and carp caps that drain and sink; the Dragon Gate's arch and light column; hatched free zones and NO CARP boards; the
-carrierBlock shimmer; the wake glow; shot swell rings, blasts and the Big Burst's water-spout; the reset comet; the arc
-preview. `sp_karp` (karpModel.js): a koi with kohaku patches in team ink, six fishing floats down its back, coral lips
-round the muzzle that glows with the charge, barbels, a flapping tail, on the Zooka pose. **[mine]**: the weir caps sit on
-their posts (they floated: the engine's weir floor is the sill's top, the kit's posts start under it); the carp's eyes a
-third bigger (they read as its face at play distance).
+### Menus (§6.6, DECISIONS #10), looks (§6.7), the `sp_karp` model, sound (§6.8)
+As round 0, plus this round's 960×600 fixes (How to Play's short-window layout, the five-card badges) and halyard's
+bridge dressing gone in this mode.
 
-### Sound (§6.8) — first builder's 17 cues and their director (src/audio/sfx-karp.js), kept; **[mine]** `karp_hiss`
-The last 3 s of any carrier's fuse hiss on the carrier: positional for its teammates (SPEC §6.7's "warning to step
-away" had a look but no sound), 2D for the carrier.
+## 2. Decisions where the request left a gap (the lead tells the user)
+- **The race (round 1).** First to touch on its own screen wins, nearest on a tie (SPEC §7.3: nearest). The host waits
+  up to 0.3 s for claims in flight when a guest is within about 7 m.
+- **The ring's time base (round 1).** The host's wire clock through the peer offset plus a one-way estimate built from
+  relay pings, instead of SPEC §7.2's "match clock". The ring now runs slightly short (≤ 0.3 s) instead of long.
+- **A sub's × 0.5 (round 1).** A sub item counts as a special's only while its owner's barrage runs, or within 6 s of
+  a barrage throw.
+- **Halyard's bridge dressing (round 1).** Not built in Bazookarp (WP4b's file; one line).
+- **Call-outs in this mode (round 1).** They leave with a short lift instead of the stock 60 % drift, and ours waits
+  0.38 s behind a kill call-out that pops in the same frame.
+- **Round 0's choices stand:**
+  - a follower reads a remote carrier's fuse forward at most 0.6 s;
+  - no marker over your own head (your fuse rides your reticle);
+  - the Carp Line's carp holds still while an enemy carrier swims hidden;
+  - everyone near hears the last-3-s hiss.
 
-## 2. Decisions where the request left a gap
-- Snapshot time base = the match clock (SPEC §7.2 says "its own match clock (synced …)"; the code used the engine clock).
-- A follower reads a remote carrier's fuse forward at most 0.6 s past its newest snapshot.
-- The over-head marker is not drawn over your own head; your fuse rides your reticle (first builder; SPEC §6.2 lists the
-  reticle ring for the carrier). WP1's rules test L3 still expected the old placeholder (a marker over your own head,
-  "WE CARRY"): updated to the finished face, as was L5 ("the carp" = the resting one or the held `sp_karp`).
-- The Carp Line's carp freezes while an enemy carrier is hidden (S31's spirit; SPEC §6.1 is silent).
-- The hiss is heard by everyone near (teammates are the point; enemies hearing a carrier's last 3 s is fair warning too).
+## 3. Online and bots
+- **Records.** The only new field on the wire is `fs` on `kc`. Snapshot `t` is now the host's wire clock; its meaning
+  changed, its format did not.
+- **Who judges what.** As SPEC §7.1, except the race order above.
+- **Bots.** No bot code touched (WP3's). Offline the race change only matters when two of the host's own actors touch
+  within the same window: the earlier toucher now wins instead of the nearest.
+- docs/NET.md has the protocol: late snapshots, the race, the wire clock, the tests.
 
-## 3. Online, and bots
-Records added by WP2: none on the wire beyond SPEC §7 (`S` gained indices 29 … 35, first builder). Who judges what is
-SPEC §7.1 unchanged. Bots: no bot code touched (WP3's). **For the lead — the grab race is biased toward the host's own
-actors:** SPEC §7.3 grants "the nearest of the valid claims", judging a remote claimant at its newest sample, which is a
-tick plus a trip old; a host bot is judged where it is now and starts running one trip earlier. face step 5 (a host bot
-and guest B, each 3 m from the burst, 10 bursts): bot 9 / guest 1 and bot 8 / guest 2 in the two clean runs (2 / 4 / 4
-none in a run broken by load). The 0.25 s hold doesn't help at 3 m (it ends before either arrives). A fix would compare
-claims at a common time (backdate the host's actors by the claimant's age, or order by `ts + off` inside a short
-window): a rules change, so not made. TELL THE USER if they race the host's bots often.
-
-## 4. Tests (all local, this Mac; load average 80–640 throughout; the Mac mini was unavailable per my instructions)
-Every result is from this head's code for what it exercises: the last changes (menus / CSS only) were followed by fresh
-karp-menus (12/12 both ways) and hud-karp (27/27) runs. Net tests with `Q0..Q2='autopilot&wipmodes'`.
+## 4. Tests (all on this Mac; net tests `Q0..Q2='autopilot&wipmodes'`). Final code = HEAD 6cbd0a15 unless noted
 | test | result | notes |
 |---|---|---|
-| `net-karp-full.cjs` (CLIENTS=3, real 5:00 match, host leaves mid-carry) | **11/11** | done-means; WATCHDOG=2400000 (a 5:00 match with three rendering clients runs slower than the wall under load) |
-| `net-karp.cjs` base (WP1's 19 + 5d) | **20/20** | 5d new: A hears B's launches |
-| `net-karp.cjs part=face` (§10.2 2–11, 16) | **16/16** | earlier runs on this load flaked 14/16, 14/16, 15/16 on wall-clock timing in the test (runs, swims, charges, A judged before B's [2] reached it, a count read mid-move): all moved to the sim clock / settled reads; none was a code fault |
-| `net-karp.cjs part=lag` (netlag 150 + jitter 60) | **8/8** ×3 | last run after the match-clock change; 9b: worst rise 0, 0 s at the blast; 15c: claim reaches the engine 0.3 s after the close, granted |
-| `net-karp-host` bots / plant / shot / cargo / guestleave | **6/6, 4/4, 3/3, 4/4, 2/2** | bots was 5/6 (other guest's fuse 0.7 s off) before the follower fuse fix |
-| `net-tower.cjs` / `net-zones.cjs` (CLIENTS=3) | **5/5** / **5/5** | net-zones was 3/5 with the first builder's test (forced Zone Control's owner without ink, the host's sampling undid it); one net-tower run timed out starting the match at load ≈ 600 and passed on re-run |
-| `net-practice.cjs` / `net-turf.cjs` (onLeave's change elsewhere) | **29/29** / **9/9** | |
-| `hud-karp.js` | **27/27** | C2 fixed (testbox's raised spawn deck); D on the match clock; G3 the hiss |
-| `hud-lead.js` MODE=bazookarp / turf / zones / tower | **13/13** / 22/22 / 14/14 / 12/12 | Bazookarp section new |
-| `karp-menus.js` (new) | **12/12** `?wipmodes`, **12/12** + `?wipstages`, **4/4** hidden | |
-| `sfx-cues.js` (alone) | **58/58** | |
-| `bazookarp-rules.js` | 115/117 → L **14/14** | L3 / L5 checked WP1's placeholder face; updated to the finished one (§2) |
-| `karp-loop` / `karp-two` / `karp-gun` / `karp-shell-dps` / `int3` | **6/6, 6/6, 12/12, 36/36, 10/10** | |
-| `loadout-picker` / `wip-stages` (± `?wipstages`) / `net-lobbykit` | **23/23** / **22/22, 22/22** / **16/16** | |
+| `net-karp part=snap` (new: 17, 17b, 18, 16) | **5/5** (snap2, final); pre-fix **2/5** | issues 1, 2 |
+| `net-karp` base (21 checks, with 1b) | **21/21** (base2, final) | 1b: B's own sends peak 22 in any 1 s, 19.3/s mean |
+| `net-karp part=face` (2–11, 16; step 5 alternating) | **16/16** (face3, final) | step 5: bot 5 / guest 5 |
+| `net-karp part=lag` (netlag 150 + jitter 60, with 9c) | **9/9** (lag2, final) | 9c mean −0.26 s (8 pairs −0.20…−0.30); 9b worst rise 0, 0 s at the blast |
+| `net-karp part=racefair` (new) | **12/12**; pre-fix **7/12** | issue 4's rule |
+| `net-karp part=race` / `racekid` (16 rounds, alternating) | race7 **8/8**, racekid5 **8/8** | the −x side won every round, whoever stood there |
+| `net-karp part=raceswap` / fixed sides (diagnosis) | host bot from −x 12/12; guest from −x 16/16 (×5, at 30 and 60 fps) | karpbox's Pond geometry |
+| `net-karp-host part=bots` / `part=plant` | **6/6** / **4/4** | new host, the race and late snapshots |
+| `net-karp-full.cjs` (3 clients, a real 5:00 match, the host leaves mid-match) | **11/11** (full1, final) | 22 bursts / 22 pick-ups / 34 Carp Shots on both remaining screens; the same result and results table; A turned away mid-match, rejoins in the lobby; relay peak 30/s, no kicks |
+| `hud-karp.js` (I1–I6 new) | **33/33** at 960×600 (final HUD code), **33/33** at 1920×1080, 32/32 at 1512×945 | |
+| `karp-menus.js` (H2, M3 new) | **14/14** at 960×600 and at the default size; pre-fix at 960×600 **12/14** | |
+| `bazookarp-rules.js` | **118/118** (rules2, final) | M6 new, B4 updated |
+| `karp-loop.js` (offline follower, late snapshots) | **6/6** | |
 
-Measured: grab share (face 5, host bot vs guest at 3 m, 10 bursts) bot 9 / guest 1, bot 8 / guest 2. Relay peak 26–44
-msgs/s per socket, no rate kicks, no drops. Bot matches / balance: none (no number, rule or bot changed; balance sets are
-the lead's consolidated pass).
+**Round 0 results that still stand.** This round didn't touch their code: `net-karp-host` shot 3/3, cargo 4/4,
+guestleave 2/2; `net-tower` 5/5, `net-zones` 5/5; `net-practice` 29/29, `net-turf` 9/9; `hud-lead` bazookarp / turf /
+zones / tower 13/13, 22/22, 14/14, 12/12; `sfx-cues` (alone) 58/58; `karp-two` 6/6, `karp-gun` 12/12,
+`karp-shell-dps` 36/36, `int3` 10/10; `loadout-picker` 23/23; `wip-stages` 22/22 (± `?wipstages`); `net-lobbykit`
+16/16.
 
-**Pictures** (`tools/botlab/jobs/batch5/karp-face/out/`, 80 JPEGs, all < 300 KB, looked at): `1080-halyard-day-hud-*`
-(start, shell, burst, free, carry, retreat, zone, foe, foe-pin, ally, weir, gate, ot, fuse-low) and the same 14 as
-`600-halyard-day-hud-*` (960×600); `*-map-tab`, `*-map-mini`; `*-menu-mode / rules / pause / results / setup / lobby` at
-both sizes; `1080-wipstages-halyard-day-menu-setup / lobby` (PREVIEW); looks `1080-halyard-day-look-*` (shell-3m,
-resting, weir-standing, weir-down, gate-sealed, gate-open, carrier-front, carrier-side, shot-flight, shot-swell,
-shot-blast, wake); `1080-halyard-sunset-*` (12: HUD, TAB map and the looks); `1080-lockgate-day-*` (resting, shell-3m,
-carrier-side, hud-shell, hud-zone); `1080-karpbox-day-look-carrierblock`. Scenes: `tools/botlab/scenes/karp-face.js`.
+Not re-run: `net-karp-crush`, `audio-pause`, `stage-audit` / `size-budget`.
 
-## 5. Commits and the shared files touched
-Code (oldest first): 2ea9983e online · 7b6a20be face · 248e31e6 model/looks fix · 1fa78a18 tests · e9a0e0bc NET.md ·
-ab84134b test (first builder); bb7c0403 hud-karp C2 · 50dbba58 net-karp-full · 7d02101f net-karp steps on the sim clock
-· 942a1e7b menus + karp-menus · 549f1051 hud-lead · a8aff64a docs · 686d9c4f online fixes · b556e043 face from the
-pictures · 9f6a1b3d tests (net-tower / zones, rules L, face 6c) · 175362b6 menus nudge. Scratch: d6ba9e3c, b4e3d517,
-83c84c29 (pictures), and this report.
+## 5. Pictures (`tools/botlab/jobs/batch5/karp-face/out/`, JPEG < 300 KB, all looked at)
+- **Re-taken this round, halyard day:**
+  - at 1080 and 960×600: `hud-start`, `hud-shell`, `hud-burst`, `hud-weir`, `hud-gate`, `hud-ot`, `hud-fuse-low`,
+    `menu-mode`, `menu-rules`;
+  - at 1080 only: `look-resting`, `look-shell-3m`.
+- **Evening:** `1080-lockgate-sunset-*` (TIME=dusk; 14: hud-foe, hud-retreat, hud-sunset-carry, map-tab and ten
+  looks). The shot pair was dropped (the camera sat behind the shot). The Gate pair has a dark parapet across the
+  bottom: the scene's cameras were tuned on halyard.
+- **Removed:** the 16 `1080-halyard-sunset-*`, which were halyard's day.
+- **The rest are round 0's:** the other HUD states, maps, menus, looks, `1080-lockgate-day-*` and
+  `1080-karpbox-day-look-carrierblock`.
 
-Shared files (all hook-ins tagged `[karp-face]`):
-- `src/net/netmatch.js`: `_sample` hands a remote holder's played samples to `karp.onSamples`; the `'k'` case plays a
-  `karp` record from a non-owner sender for a now-local actor; `onLeave`'s order (narrowed flush of `'tw'` / `'z'` /
-  `'ks'`, follower off before remove / adopt); `_adopt` calls `G.karpGun.adopt`.
-- `src/net/session.js` / `src/net/mock.js`: the Bazookarp stage filter (`roomStages`, `setSettings`).
-- `src/ui/menus.js`: rules cards / notes / tips, `BATTLE_MODES`, the stage select's filter and PREVIEW, the lobby's stage
-  list and PREVIEW, the lobby's mode icon, the pause strip, results (CARRY IT HOME, CARRIED / POPS), the five-card row,
-  How to Play's four tabs. `styles/ui.css`: one appended block (+ two pill positions).
-- `src/ui/hud-lead.js`: mode `karp`. `src/game/minimap.js`: `drawKarpMap` under / over. `src/main.js`: the results route
-  (one line). `src/game/character.js` (`ANIM_OF.sp_karp`), `src/game/character-weapons.js` (`GEO_KIT` exports
-  `pistolGrip`, `GRIP_PISTOL`). `tools/botlab/hud-shots.cjs` (`URLQ`).
-- Own modules: `bazookarp.js`, `karpWire.js`, `karpGun.js`, `karpShell.js`, `karpModel.js` (new), `bazookarpFx.js`,
-  `hud-karp.js`, `src/audio/sfx-karp.js` (new), `src/world/karpStages.js` (new). Docs: `docs/NET.md`,
-  `tools/botlab/README.md`.
+## 6. Commits (this round, oldest first) and the shared files touched
+- **Code:**
+  - 272df36b: late snapshots, the wire clock, the race order and wait;
+  - 8853f091: HUD tags, call-outs, the last-10-s digits;
+  - dc552d52: menus at 960×600;
+  - a58841de: a sub's × 0.5;
+  - aad2cdd5: NET.md, net-karp 1b / 9c;
+  - 2a2addb5: halyard's bridge dressing, the burst scene;
+  - 6260b919: our call-out after a kill call-out;
+  - c3457171: the grant decision log, `part=race`;
+  - 4e794721: the wait adds the playback delay;
+  - dc561e2f: a fresh free phase claims at once;
+  - 2a0cea97: rules B4, step 5 centred;
+  - d6573e6f: `part=racekid`, `u` clears the shell;
+  - baa8da65 / f16ce210 / 2ac4b9b5: the call-outs' anchor and exit lift;
+  - 6c772a14: the touch timing;
+  - 9a4ed977: frame rates in step 5;
+  - 0d2440b0: NET.md;
+  - f95ab463: tags clear of the ribbons;
+  - 8a9ec01d: scenes, a HUD frame after call-outs;
+  - 7f648c96: `part=racefair`;
+  - 64cdeb77 / 47e399d6: `raceswap`, sides alternating;
+  - 3d7e7dca: scenes, TIME=dusk;
+  - 6cbd0a15: face step 11's bot.
+- **Scratch:** 5eead489 (pictures) and this report.
 
-## 6. Unfinished, flaky, uncertain
-- **Grab races favour the host's actors** (§3): measured, reported, not changed (a rules change for the lead).
-- **Halyard's Pond** (WP4b's layout, not this package): the Roe Shell on the ferry's cabin roof encloses the funnel and
-  the wheelhouse railing box, and the resting carp sits half inside the funnel (`1080-halyard-day-look-resting`,
-  `-shell-3m`); the data's comment says the wheelhouse is cleared for this mode — it is not in this build. Lockgate's
-  Pond reads well (`1080-lockgate-day-look-resting`).
-- **The kit and the engine disagree on a weir's floor** for three-element `at` (`[x, y, z]`): `bazookarp-kit.js` puts the
-  posts at `y` itself, the engine finds the floor at `y + 0.5` down (the sill's top, 0.12 on halyard), which is what the
-  LAYOUT format says. The looks now read the post tops; the kit is WP0 / WP4a's to fix.
-- **960×600 How to Play**: the four Bazookarp cards fit, the overtime note is partly below the window. Everything else
-  fits at 960×600 (pictures).
-- Halyard's sunset is the stage's own dusk look and is close to its day.
-- The hiss and the other cues are proven by events and handles (the runs are muted); nobody has listened to `karp_hiss`.
-- Not run: `net-karp-crush`, `audio-pause`, `stage-audit` / `size-budget`, `tower-rules` / `tower-ink` / the zones page
-  tests (their code is untouched: the shared changes are netmatch's — covered by net-practice / turf / tower / zones /
-  the karp net tests — and menus / hud-lead, covered above).
-- `tools/botlab/jobs/batch5/COMMON.md` in this worktree was edited by someone else mid-run (it now says the Mac mini is
-  back). My instructions said it was unavailable and to push nothing, so I ran everything here and left that edit
-  uncommitted for its author.
-- No bot matches: no balance-affecting change; WP3 owns the bots (the full match's play — 21 pops, 1 plant, most carries
-  short — is the minimal bots'). The machine's load (80–640) made every run slow; flakes found were test timing, fixed
-  and re-run, except the one net-tower start time-out noted above.
+Shared files this round, all hook-ins tagged `[karp-face]`:
+- `src/net/netmatch.js`: one line, `'ks'` passes `from`.
+- `src/config.js`: `claimWait`, `claimNear`.
+- `src/game/objTargets.js` (WP1's module): `isSpecial` with the attacker, and the `barrage:throw` listener.
+- `src/world/props-marina-vessels.js`: `ferry_bridge` `notIn`.
+- `src/ui/menus.js`: the Overtime note's short span.
+- `styles/ui.css`: the short-window How to Play rules and the five-card badges.
+- Own modules: `bazookarp.js`, `karpWire.js`, `karpShell.js`, `hud-karp.js`.
+- Tests: `net-karp.cjs`, `net-karp-steps.cjs`, `hud-karp.js`, `karp-menus.js`, `bazookarp-rules.js`,
+  `scenes/karp-face.js`.
+- Docs: `docs/NET.md`.
+
+## 7. Unfinished, flaky, uncertain
+- **The race in real play.** It is decided by each screen's own simulation. Whatever slows one side's run, a stage's
+  geometry or (slightly) a much lower frame rate, now decides it, as it would offline.
+- **The one-way estimate.** It is built from relay pings, and the guests' pings are updated only in the lobby. On a
+  connection whose latency changes a lot mid-match, the ring's correction and the race's wait use stale numbers. Both
+  fail safe: the ring short, the wait capped at 0.3 s.
+- **Halyard's bridge-dressing change is in WP4b's file.** The integrator should keep it if WP4b moves the Pond.
+- **Nobody has listened to `karp_hiss`** (as round 0).
+- **This Mac was heavily loaded.** Every result above is from a single run unless several are listed.
