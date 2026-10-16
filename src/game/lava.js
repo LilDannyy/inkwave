@@ -1183,7 +1183,21 @@ export class StageLava {
       // (fix round 3: and the hop asked for from there once the walk to the column's edge stalls — the brain's own jump
       // trigger waits for 1.6 m, and a claimant landing on A's far side stood 2.1 m from B's node, B's face in its way:
       // lava.js F10, one run in three; the hop's flight is checked as every route hop near the lava, bots.js _hopLands)
-      if (b.path && b.pi > 0 && b.pi < b.path.length && nav.edgeType(b.path[b.pi - 1], b.path[b.pi]) === 'jump') { const n = nav.nodes[b.path[b.pi]]; if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < 2.4) { it.fire = false; if (a.grounded && b.noProg > 0.3 && n.y - a.pos.y > 0.4) b._needJump = true; } }
+      // (and on enemy ink a jump reaches 0.73 m, short of the next column's 1.15 m: the hop's flight falls back, bots.js
+      // refuses it, and with its trigger off the claimant stood at the face — 20 s on organ B~ in a Zone Control match. It
+      // inks the deck at its feet first, as an escaper does at a step: aimed down behind it, 1.5 s per column at most)
+      if (b.path && b.pi > 0 && b.pi < b.path.length && nav.edgeType(b.path[b.pi - 1], b.path[b.pi]) === 'jump') {
+        const n = nav.nodes[b.path[b.pi]];
+        if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < 2.4) {
+          it.fire = false;
+          if (b._inkFor !== n) { b._inkFor = n; b._inkT = 0; }
+          if (a.grounded && a.groundTeam === 2 && n.y - a.pos.y > 0.6 && (b._inkT += dt) < 1.5 && (a.ink ?? 100) > 8) {
+            b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.noProg = 0; b.perchUntil = b.t + 0.3;
+            return { yaw: Math.atan2(a.pos.x - n.x, a.pos.z - n.z), pitch: -1.1, dist: 0.8 };
+          }
+          if (a.grounded && b.noProg > 0.3 && n.y - a.pos.y > 0.4) b._needJump = true;
+        }
+      }
     } else if (L.goal === L.foot && L.foot >= 0) {
       // at the foot, the column still on its way up: wait there (a one-node route, so the brain doesn't pick a paint goal
       // every frame meanwhile)
@@ -1339,7 +1353,7 @@ export class StageLava {
       b.stageUrgent = k !== 0 || !!b._lavaEsc;
     }
     // the Organ lookouts: each team's claimant (_lookPlan) goes up its own lookout and holds it until the fall warning
-    if (!b._lavaEsc && b._look) this._lookAct(b, dt, it, move, vis);
+    if (!b._lavaEsc && b._look) { const r = this._lookAct(b, dt, it, move, vis); if (r) return r; }   // (fix round 3: its aim while it inks its feet)
     if (b._lavaEsc) {
       // up the hop out (a 1.2 m step onto the head, the causeway, the island): straight at it, asking for the jump (the
       // brain presses it, on its own cool-down). The brain's steering drops a route whose next node stands that far
@@ -1365,7 +1379,7 @@ export class StageLava {
         // in and out of enemy ink every few frames, the count restarted each time, and it stood there inking until the lava
         // had it: lava-bots ledges)
         if (b._inkFor !== nx) { b._inkFor = nx; b._inkT = 0; }
-        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = true; it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
+        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
         b._needJump = true;
         // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
         // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot —
@@ -1523,6 +1537,10 @@ export class StageLava {
 }
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
+// (fix round 3) the trigger while a bot inks the floor at its feet (an escaper at a step, a claimant at a column): a charge
+// kit (charger, bow, spinner) lets go of a charge worth a shot, so the shot leaves while it is aimed down — held, it went
+// off only once the aim had moved on, and the deck stayed the other team's
+const inkTrigger = (a) => { const wr = a.weaponRunner; return !(wr && wr.charging && (wr.charge || 0) >= 0.35); };
 const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });
 const SLOW_FIRE = new Set(['charger', 'splatling', 'spinner', 'bow', 'roller']);   // (an escaper of these lets go of the trigger)   // (StageLava._foot: dry ground, an Organ, airborne long enough)
 const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
