@@ -31,11 +31,11 @@
 //   tIn 0.3 (a bot inside steps out); at most 48 discs in all (those nearest a bot of the other team).
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../../core/ctx.js';
-import { TOWER, SPECIALS, weaponRange } from '../../config.js';
+import { TOWER, SPECIALS, PLAYER, weaponRange } from '../../config.js';
 import { THREAT_STATS, zonePlan, towerPlan } from '../bots.js';
 import { sightRay, teamKnown } from '../botSight.js';
-import { MAIN_KITS } from './registry.js';
-import { Hit } from '../physics.js';   // [b5-int3] (throwHits: where a bot's own sub throw lands)
+import { MAIN_KITS, SUB_KITS } from './registry.js';
+import { Hit, Physics } from '../physics.js';   // [b5-int3] (throwHits: where a bot's own sub throw lands)
 import { items, sizeOf, SB, spotFor, predictFrom, near, srcStat, lobAim } from './bobber.js';
 
 const V3 = THREE.Vector3;
@@ -827,18 +827,29 @@ export function webHit(team, x, y, z, r) {
 // its team's blasts, drops or shots sets a chain off, so a bot's bomb landing by a teammate's web (a human's too) blew it
 // with no foe in it (the review: 3 of 5 webs blown by teammates). Where it goes off, with its aim now: a lob's landing by
 // the bomb-arc preview's flight (Projectiles.throwVelocity, the same 60 Hz integrator) — a Shaker's hops on along it, a
-// homing sub's blast on the foe the team knows nearest its landing within its sense reach; a Tracer Bolt's line and a
-// Whirl Boomerang's out-run, hover and the burst beside its thrower. The Glide Bomb (its release: glide.js), the Dash
+// homing sub's blast on the foe the team knows nearest its landing within its sense reach, a Pop Pellet's on the first
+// foe the team knows its flight meets; a Tracer Bolt's line and a Whirl Boomerang's out-run, hover and the burst beside
+// its thrower where it stands (and while it is out, the thrower walks off its team's idle web: burstClear). The Glide Bomb (its release: glide.js), the Dash
 // Pellet (dash.js) ask webHit themselves; placed subs (mines, beacons, sentries) and the cloud / wall subs go off on
 // nobody or on foes there.
 const LOB_R = { bomb: 'radius', sticky: 'radius', burst: 'radius', sprinkler: 'sprayRadius', shaker: 'radius', seeker: 'radius', waddle: 'radius', torpedo: 'radius' };
 const SENSE = { seeker: 'seekRange', waddle: 'senseRadius', torpedo: 'lockRange' };
 const _tv = new V3(), _tp = new V3(), _tq = new V3(), _th = new Hit(), _td = new V3();
+// ([b5-int3] a Pop Pellet pops on the first foe its flight meets — subs.js _fly: within PLAYER.radius + 0.12 of a body —
+// so its blast is there, not where it would land: a foe the team knows, where the team knows it, within 1 s; bobber-web
+// clear: a teammate's pellet went off ~1.6 m from it, by a human's web, its fight foe 7 m on)
+const _pr = { dist: 0, t: 0 };
 function lobLand(a, sub) {
   G.projectiles.throwVelocity(a, sub.throwSpeed, _tv);
   _tp.set(a.pos.x, a.pos.y + 1.35, a.pos.z);
+  let foes = null;
+  if (sub.kind === 'burst') for (const e of G.actors) { if (e.team === a.team || !e.alive) continue; const k = teamKnown(a.team, e, 1.0); if (k) (foes ||= []).push(k.pos); }
   for (let i = 0; i < 240 && _tp.y > -30; i++) {
     _tq.copy(_tp); _tv.y -= 24 / 60; _tp.addScaledVector(_tv, 1 / 60);
+    if (foes) for (const fp of foes) {
+      Physics.segmentCapsuleDist(_tq, _tp, fp, PLAYER.radius + 0.1, PLAYER.height, _pr);
+      if (_pr.dist < PLAYER.radius + 0.12) return _tp.lerpVectors(_tq, _tp, _pr.t);
+    }
     if (G.physics.segment(_tq, _tp, _th).hit) return _th.point;
   }
   return null;
@@ -904,6 +915,19 @@ export function holdThrow(b, it) {
   if (a.specialActive?.kind === 'barrage') b.barrageCd = Math.max(b.barrageCd || 0, 0.6); else b.bombCd = Math.max(b.bombCd || 0, 1.2);
   BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1;
   return true;
+}
+
+function burstClear(a, move) {
+  const L = SUB_KITS.boomerang?._items;
+  if (!L || !L.length) return;
+  let bm = null;
+  for (const x of L) if (x.owner === a && !x.ghost && !x.home && (x.state === 'hover' || x.state === 'back' || x.state === 'orbit')) { bm = x; break; }
+  if (!bm) return;
+  const s = bm.sub, o = webHit(a.team, a.pos.x, a.pos.y + 1, a.pos.z, (s.radius || 2.4) + (s.orbitRadius || 1.5) + 0.5);
+  if (!o) return;
+  const p = posOf(o), dx = a.pos.x - p.x, dz = a.pos.z - p.z, d = Math.hypot(dx, dz) || 1;
+  move.set(dx / d, 0, dz / d);
+  BOBBER_BOT.burstAway = (BOBBER_BOT.burstAway || 0) + 1;
 }
 
 // its own live chain still short of four (or none yet)
@@ -1020,6 +1044,11 @@ export function botAct(b, dt, it, move, busy) {
       if (b.mode === 'fight' && b._bobHoldT > 0.35) { const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd); }
     } else { b._bobHoldT = 0; b._bobHoldSd = 0; }
   }
+  // [b5-int3] its own Whirl Boomerang hovering or whirling back to burst beside it (SUBS.boomerang: the orbit 1.5 m round
+  // it, the 2.4 m burst at the orbit's end, 4–5 s after the throw) — it walks off its team's idle web meanwhile: the
+  // throw's check sees where it stood at the press, the burst goes off wherever it stands then (bobber-web clear: a
+  // teammate's return burst blew a human's web)
+  if (items.length) burstClear(a, move);
   // (nor a special started right by them: a Splashdown, a Bomb Barrage, an Inkjet's first shots go off around it — it
   // waits until it has moved off its team's idle chain)
   if (it.special && !a.specialActive && items.length) {

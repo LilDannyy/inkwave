@@ -733,6 +733,60 @@
         R('bots: webHit (the Glide\'s release, the Dash Pellet\'s pop, the Mitts\' leap landing ask it) — a blast at an own idle web is refused, 8 m off it isn\'t, with a foe the team sees in the web it isn\'t',
           onWeb && !offWeb && !withFoe && seesFoe, { onWeb, offWeb, withFoe, seesFoe });
       }
+      // [b5-int3] the two blasts the press check placed wrong (bobber-web clear, zone layout): a Pop Pellet pops on the first
+      // foe its flight meets, not where it would land — with a foe the team sees a step in front of the thrower (outside
+      // the web's reach) and a lone bobber of mine a step behind, the throw is held; with that foe off to the side it is
+      // pressed. And a Whirl Boomerang bursts beside its thrower 4–5 s after the throw: while its own is out, a bot standing
+      // by its team's idle web steps off it (botAct's move points away: the nearest bobber further after a metre of it);
+      // 8 m off the web it is left alone; with its brain live (no fire, no sub) the web stands through the burst
+      {
+        const keep = (a) => { const up = brain0.get(a); a.bot.update = function (dt) { const r = up.call(this, dt); const it = a.intent; it.fire = it.sub = it.special = false; return r; }; };
+        const popAt = (fx, fz) => {
+          reset();
+          drop(me, 0, -1.0); settle();
+          put(mate, V(0, 0, 0), 0); mate.setWeapon('shooter'); mate.setSub('burst'); mate.bot.reset(); mate.ink = 100;
+          put(foe, V(fx, 0, fz), Math.PI);
+          keep(mate); step(0.5, () => { mate.intent.move.set(0, 0, 0); });
+          const seen = !!mate.bot.sight?.sees(foe);
+          stub(mate); zero(mate); put(mate, V(0, 0, 0), 0); mate.aimPitch = mate.bot.aimPitch = -0.28;
+          const held = !!K.webThrow(mate), lone = live().length;
+          parkAll();
+          return { seen, held, lone };
+        };
+        const inPath = popAt(0, 1.3), aside = popAt(3.5, 3);
+        R('bots: a Pop Pellet pops on the first foe its flight meets — a foe the team sees 1.3 m in front of the thrower (outside the web\'s reach), a lone own bobber 1 m behind it: the throw is held; that foe off its line (3.5 m to the side, 3 m on): pressed',
+          inPath.seen && inPath.held && inPath.lone === 1 && aside.seen && !aside.held, { inPath, aside });
+        reset();
+        for (let i = 0; i < 3; i++) drop(me, 0, 4.5 + i * 3); settle();
+        const web = () => live().filter((x) => x.owner === me);
+        const nearest = (x, z) => Math.min(...web().map((o) => Math.hypot(o.spot.x - x, o.spot.z - z)));
+        put(mate, V(2.0, 0, 7.5), Math.PI / 2); mate.setWeapon('shooter'); mate.setSub('boomerang'); mate.bot.reset(); mate.ink = 100;
+        S.use(mate, mate.sub);
+        step(0.9);
+        const BK = SUB_KITS.boomerang, bm = BK?._items?.find((x) => x.owner === mate && x.state !== 'dead');
+        const b0 = BOBBER_BOT.burstAway || 0, mv = new THREE.Vector3();
+        zero(mate); put(mate, V(2.0, 0, 7.5), Math.PI / 2);
+        K.botAct(mate.bot, DT, mate.intent, mv, false);
+        const d0 = nearest(2.0, 7.5), d1 = mv.lengthSq() > 0 ? nearest(2.0 + mv.x / mv.length(), 7.5 + mv.z / mv.length()) : d0;
+        const mv2 = new THREE.Vector3(); put(mate, V(10, 0, 7.5), Math.PI / 2);
+        K.botAct(mate.bot, DT, mate.intent, mv2, false);
+        const boom = { state: bm?.state, mv: v3(mv), d0: r2(d0), d1: r2(d1), counted: (BOBBER_BOT.burstAway || 0) - b0, offMv: v3(mv2) };
+        // the whole burst, the brain live (no fire, no sub): the web stands
+        reset();
+        for (let i = 0; i < 3; i++) drop(me, 0, 4.5 + i * 3); settle();
+        put(mate, V(2.0, 0, 7.5), Math.PI / 2); mate.setWeapon('shooter'); mate.setSub('boomerang'); mate.bot.reset(); mate.ink = 100;
+        S.use(mate, mate.sub);
+        keep(mate);
+        let burst = false;
+        const off0 = on('bomb:explode', (e) => { if (e.actor === mate) burst = true; });
+        step(7, () => !burst);
+        off0();
+        step(0.5);
+        stub(mate);
+        boom.live = { burst, webLeft: web().length, trig: ev('bobber:trigger').length, mateAt: v3(mate.pos), nearestAtEnd: r2(nearest(mate.pos.x, mate.pos.z)) };
+        R('bots: a bot whose Whirl Boomerang is out steps off its team\'s idle web (the burst goes off beside it) — 2 m from the web it moves away, 10 m off it doesn\'t; with its brain live the web stands through the burst',
+          boom.state && d1 > d0 + 0.5 && boom.counted >= 1 && mv2.lengthSq() === 0 && boom.live.burst && boom.live.webLeft === 3 && boom.live.trig === 0, boom);
+      }
       // [b5-int3] the snap: a fighting bot throws a lone one onto the feet of a foe facing away from it (busy elsewhere) and
       // sets it off on that foe as it floats; a foe facing it — a duel — gets none (the duel probe: snaps there lost it)
       {
