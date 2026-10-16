@@ -24,7 +24,10 @@
 //  8 guide: its end ring within 0.3 m of where the real stone stops, 6 throws with 0–2 bounces; grey without the ink
 //  9 bots: a fighting bot throws at a foe 10 m off, its stop within 2 m of the foe's (led) spot; a foe by the deck's edge
 //    running at it: the led slide would leave the deck — the bot throws at where they stand (or holds off), no stone sinks
-//    or blows over the sea; a bot in a predicted stop disc is clear of R at the blast (or popped it) with no damage
+//    or blows over the sea; a bot in a predicted stop disc is clear of R at the blast (or popped it) with no damage;
+//    [b5-int3] those foes face away (busy elsewhere): the plan's chance at a foe facing the bot (a duel) is under a tenth
+//    of that at one facing away; a cooking bot hit hard drops the cook unthrown; a hold cut short under half its plan's
+//    cook is let go unthrown
 // 11 stubs: a stand-in lava (surface 0.5 m over x > 10): it sinks there, no blast; caldera's case (G.level.liquidY and
 //    G.match.lava over the same half): one hiss, no water plop; a module liquid alone: a plop, no hiss; a stand-in Roe
 //    Shell (r 1.6): it bounces off it like a wall (39° ± 3°) and its blast calls the shell's splash once with 180 / 35 and
@@ -486,14 +489,14 @@
         for (let round = 0; round < n; round++) {
           reset();
           B.setWeapon(wid);
-          put(T, V(0, 0, -10), Math.PI); put(B, V(0, 0, -20), 0);
+          put(T, V(0, 0, -10), 0); put(B, V(0, 0, -20), 0);   // ([b5-int3] T faces away from B — busy elsewhere: a Glide bot's fight throw is at a committed foe)
           B.setSub('glide'); B.ink = 100;
           delete B.bot.update; B.bot.bombCd = 0;
-          let it = null, rel = null; const fz0 = GLIDE_STATS.fizzles;
+          let it = null, rel = null; const fz0 = GLIDE_STATS.fizzles, ab0 = GLIDE_STATS.botAbort || 0, dr0 = GLIDE_STATS.botDrop || 0;
           step(8, () => { B.ink = Math.max(B.ink, 80); T.pos.set(0, 0.02, -10); T.vel.set(0, 0, 0); if (!it) { it = K.items.find((x) => x.owner === B && x.state !== 'dead'); if (it) rel = r2(Math.hypot(B.pos.x - T.pos.x, B.pos.z - T.pos.z)); } return !it; });
           stub(B);
           const b = it ? runOut(it, 4) : null;
-          rows.push({ w: wid, thrown: !!it, cook: it && r2(it.cook), relD: rel, off: b ? r2(Math.hypot(b.x - T.pos.x, b.z - T.pos.z)) : null, fizzled: GLIDE_STATS.fizzles - fz0 });
+          rows.push({ w: wid, thrown: !!it, cook: it && r2(it.cook), relD: rel, off: b ? r2(Math.hypot(b.x - T.pos.x, b.z - T.pos.z)) : null, fizzled: GLIDE_STATS.fizzles - fz0, aborts: (GLIDE_STATS.botAbort || 0) - ab0, drops: (GLIDE_STATS.botDrop || 0) - dr0, B: [r2(B.pos.x), r2(B.pos.z)], form: B.form });
         }
         return rows;
       };
@@ -506,7 +509,7 @@
       let ok = 0; const rows = [];
       for (let round = 0; round < 3; round++) {
         reset();
-        put(T, V(0, 0, -10), Math.PI); put(B, V(0, 0, -20), 0);
+        put(T, V(0, 0, -10), 0); put(B, V(0, 0, -20), 0);   // ([b5-int3] T facing away: committed elsewhere)
         B.setSub('glide'); B.ink = 100;
         delete B.bot.update;   // its own brain (it sees T 10 m off, straight ahead)
         B.bot.bombCd = 0;
@@ -521,7 +524,7 @@
         if (off != null && off <= 2 && relD != null && relD >= 6) ok++;   // ([b5-int3] and let go ≥ 6 m out: a point-blank full cook that clonked off the foe's shins stopped ≤ 2 m too)
       }
       B.setSub(B.subId); delete B.bot._glide;
-      R('a fighting bot (a Splattershot) throws one at a foe 10 m off, let go ≥ 6 m out, cooked so it stops within 2 m of them (3 rounds, ≥ 2)', ok >= 2, rows);
+      R('a fighting bot (a Splattershot) throws one at a foe 10 m off busy elsewhere (facing away), let go ≥ 6 m out, cooked so it stops within 2 m of them (3 rounds, ≥ 2)', ok >= 2, rows);
       // a foe 2.5 m from the deck's edge (x 28, the sea past it) running at it on a slant (3, 3 m/s, held in place): the
       // led slide passes beside the foe (3 m off) and over the edge, into the sea or blowing in the air over it. The bot's
       // plan and its release check the slide (the guide's prediction): it throws at where the foe stands instead (or not at
@@ -530,7 +533,7 @@
       for (let round = 0; round < 4; round++) {
         reset();
         const zE = 12 + round - 1.5;   // (north of the testbox wall's end, z 8: open deck between them)
-        put(T, V(25.5, 0, zE), -Math.PI / 2); put(B, V(15.5, 0, zE), Math.PI / 2);
+        put(T, V(25.5, 0, zE), Math.PI / 2); put(B, V(15.5, 0, zE), Math.PI / 2);   // ([b5-int3] T facing away from B: committed elsewhere)
         B.setSub('glide'); B.ink = 100;
         delete B.bot.update; B.bot.bombCd = 0;
         const g0 = { ...GLIDE_STATS };
@@ -543,6 +546,52 @@
       }
       B.setSub(B.subId); delete B.bot._glide; B.setWeapon(bw0);   // [b5-int3] (its weapon back)
       R('a fighting bot\'s foe by the deck\'s edge, running at it on a slant: the led slide would leave the deck — the bot throws at where the foe stands instead (or holds off); no stone sinks or blows over the sea (4 rounds: ≥ 2 thrown, 0 off the deck)', thrownE >= 2 && sunkE === 0, { thrown: thrownE, offDeck: sunkE, rows: rowsE });
+      // [b5-int3] the fight throw is at a foe committed elsewhere (probes/duel-glide.js: 31 hits in 59 throws at a foe
+      // duelling a teammate, 0–1 in 9–14 in a 1-v-1 with the foe facing the bot): the plan's own chance, asked 3000 times
+      // each with the foe 8 m off facing away from the bot, then facing it (standing: a planted foe facing us is duelling us)
+      {
+        reset();
+        put(T, V(0, 0, -12), 0); put(B, V(0, 0, -20), 0); B.setSub('glide'); B.ink = 100;
+        const tryN = (yawT) => {
+          put(T, V(0, 0, -12), yawT); let n = 0;
+          for (let i = 0; i < 3000; i++) { B.bot.target = T; B.bot.seeTimer = 1; B.ink = 100; B.bot._glide = null; if (K.bot.fight(B.bot, 8)) n++; }
+          B.bot._glide = null; B.bot.bombCd = 0;
+          return n;
+        };
+        const nAway = tryN(0), nFace = tryN(Math.PI);
+        B.setSub(B.subId);
+        R(`a bot plans a fight throw at a foe 8 m off facing away (busy elsewhere) ${nAway} times in 3000 asks, at one facing it (a duel) ${nFace} — under a tenth as often`, nAway >= 60 && nFace * 10 <= nAway, { nAway, nFace });
+      }
+      // [b5-int3] a cooking bot hit hard (50 hp, just hit, ≥ 0.4 s of cook to go) lets the cook go unthrown — a fizzle, no
+      // stone, its gun back; and a hold cut short under half its plan's cook (the foe 25 m off mid-cook: no cook reaches) is
+      // let go unthrown, not sent on 12–15 m uncooked
+      {
+        const trial = (what) => {
+          reset();
+          B.setWeapon('shooter'); put(T, V(0, 0, -10), 0); put(B, V(0, 0, -20), 0); B.setSub('glide'); B.ink = 100;
+          delete B.bot.update; B.bot.bombCd = 0;
+          const f0 = GLIDE_STATS.fizzles, a0 = GLIDE_STATS.botAbort || 0, d0 = GLIDE_STATS.botDrop || 0;
+          let cooking = false, done = false, cookAt = null, stone = null, after = 0;
+          step(6, () => {
+            T.pos.set(T.pos.x, 0.02, T.pos.z); T.vel.set(0, 0, 0); B.ink = Math.max(B.ink, 80);
+            const st = B.weaponRunner.glide;
+            if (!cooking && st?.plan?.mode === 'fight' && st.cook > 0.12) {
+              cooking = true; cookAt = r2(st.cook);
+              if (what === 'hit') { B.hp = 50; B.lastDamage = 0; } else T.pos.set(0, 0.02, 5);
+            }
+            if (!stone) stone = K.items.find((x) => x.owner === B && x.state !== 'dead') || null;
+            if (cooking && !B.weaponRunner.glide && !done) done = true;
+            if (what === 'hit' && cooking && !done) { B.hp = Math.min(B.hp, 50); }
+            if (done && ++after > 45) return false;   // (0.75 s on: a stone let go at the hold's end is out by then)
+          });
+          stub(B);
+          return { cooking, cookAt, ended: done, thrown: !!stone, stoneCook: stone && r2(stone.cook), fizzles: GLIDE_STATS.fizzles - f0, aborts: (GLIDE_STATS.botAbort || 0) - a0, drops: (GLIDE_STATS.botDrop || 0) - d0 };
+        };
+        const tHit = trial('hit'), tFar = trial('far');
+        R(`a cooking bot hit hard (50 hp, ${tHit.cookAt} s cooked of ~1.2) drops the cook unthrown (${tHit.fizzles} fizzle, ${tHit.thrown ? 'a stone thrown' : 'no stone'}); a hold cut short under half its plan (the foe 25 m off at ${tFar.cookAt} s cooked) is let go unthrown (${tFar.thrown ? 'a stone at ' + tFar.stoneCook + ' s' : 'no stone'})`,
+          tHit.cooking && tHit.ended && !tHit.thrown && tHit.aborts >= 1 && tFar.cooking && tFar.ended && !tFar.thrown && tFar.drops >= 1, { tHit, tFar });
+        B.setSub(B.subId); delete B.bot._glide; B.setWeapon(bw0);
+      }
       // a bot in a predicted stop disc: out of it before the blast (botSpecials' escape: hard, its awareness on), or it
       // shoots the stone (bots.js threats). The thrower goes behind the wall at once (no fight to distract it). A round
       // counts when the bot stands in the blast; a good one (SPEC A10.9): it took no damage from it, and it was clear of

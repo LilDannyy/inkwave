@@ -48,6 +48,7 @@ import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './registry.js';
 import { Physics, Hit } from '../physics.js';
 import { DEPLOY_STATS } from '../deployables.js';
+import { teamKnown } from '../botSight.js';   // [b5-int3] (a bot's paint throw: no foe the team knows near)
 import { makeMesh, disposeMesh, setLamps, litFor, LAMPS, GRIP, LAMP_GEO, lampAt, lampMats, SUB_SCALE } from './glide-model.js';
 import { Guide, CookBar, makeGlow } from './glide-guide.js';
 import { GRIP_HOLE_L } from '../character-weapons.js';
@@ -75,7 +76,7 @@ export const GLIDE_STATS = { uses: 0, cookSum: 0, cooked: 0, slips: 0, fizzles: 
   // the bots' sink checks: a fight plan that fell back to the foe's own spot (its led slide sank) / refused (both sank); a
   // release that took its fallback yaw / didn't throw (every yaw sank); stones sunk by who threw them
   botRetarget: 0, botNoSink: 0, botRelAlt: 0, botCancel: 0, sunk_fight: 0, sunk_paint: 0, sunk_boss: 0, sunk_human: 0, sunk_other: 0 };
-export function resetGlideStats() { for (const k in GLIDE_STATS) GLIDE_STATS[k] = 0; }
+export function resetGlideStats() { for (const k in GLIDE_STATS) GLIDE_STATS[k] = Array.isArray(GLIDE_STATS[k]) ? [] : 0; }
 
 // ================================================================================================= the numbers
 export const cookOf = (held, s = S()) => clamp(held - s.cookGrace, 0, s.cookMax);
@@ -383,8 +384,11 @@ function use(subs, a, sub) {
   const fuse = fuseOf(cook, s), R = radiusOf(cook, s);
   const it = spawn(a, s, p, v, air, fuse, R, cook, false, netId(a));
   it.mode = mode;
+  // [b5-int3] (match.cjs: a bot's fight throw, where its foe was at the release and at the blast — GLIDE_STATS.fightLog)
+  if (mode === 'fight' && st?.plan?.t) { const t = st.plan.t; it.fT = t; it.fRel = { d: r2(Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z)), cook: r2(cook), R: r2(R), fuse: r2(fuse), tv: r2(Math.hypot(t.vel?.x || 0, t.vel?.z || 0)), w: a.weapon?.kind }; }
   netRec(a, KIND, [0, it.gid, r2(p.x), r2(p.y), r2(p.z), r2(v.x), r2(v.z), r2(fuse), r2(R)]);
   GLIDE_STATS.uses++; GLIDE_STATS.cookSum += cook; if (cook > 0) GLIDE_STATS.cooked++;
+  GLIDE_STATS['uses_' + mode] = (GLIDE_STATS['uses_' + mode] || 0) + 1;   // [b5-int3] (match.cjs: fight / paint / other throws made)
   if (a.isLocal && !a.bot && cook <= 0 && !bar) tapNote();
   G.cues?.sub(KIND, 'throw', { owner: a, at: a.pos, pitch: 1.05 - 0.12 * share(cook, s) });   // sfx-cues: its release thock
   emit('sub:use', { actor: a, kind: KIND, cook });
@@ -556,6 +560,10 @@ function blast(it) {
   if (loc && loc.alive) { const d = loc.pos.distanceTo(c); if (d < 14) G.input?.rumble?.(clamp(1 - d / 14, 0, 1) * 0.6, clamp(1 - d / 14, 0, 1) * 0.5, 160); }
   if (it.ghost) return;
   GLIDE_STATS.blasts++;
+  if (it.fRel) {   // [b5-int3] (the fight throw's log: its foe's distance from the blast, any foe's, a hit)
+    const L = GLIDE_STATS.fightLog || (GLIDE_STATS.fightLog = []);
+    if (L.length < 80) { let nf = 99; for (const e of G.actors) if (e.team !== team && e.alive) nf = Math.min(nf, Math.hypot(e.pos.x - c.x, e.pos.z - c.z)); L.push({ ...it.fRel, dT: it.fT?.alive ? r2(Math.hypot(it.fT.pos.x - c.x, it.fT.pos.z - c.z)) : -1, nf: r2(nf), Rb: r2(R) }); }
+  }
   // damage: k = 1 − clamp((d − 0.8) / (R − 0.8)), lerp(min, max, k²), from the centre to the chest, with a line of sight
   _b.copy(c); _b.y += 0.3;
   for (const e of G.actors) {
@@ -565,6 +573,7 @@ function blast(it) {
     if (d > R || !G.physics.los(_b, _a)) continue;
     const k = 1 - clamp((d - 0.8) / (R - 0.8), 0, 1), dmg = lerp(s.damageMin, s.damageMax, k * k);
     GLIDE_STATS.hits++; GLIDE_STATS.dmg += dmg;
+    if (it.mode) GLIDE_STATS['hits_' + it.mode] = (GLIDE_STATS['hits_' + it.mode] || 0) + 1;   // [b5-int3] (match.cjs: whose throws hit)
     G.projectiles.applyHit(a, e, dmg, KIND, it.dbw ? it : null, c);   // ([drainbow] the shot through a bubble: halved)
   }
   G.subs?.damageArea(c, R, it.devDmg, team, a);              // enemy devices 40 → 60 ([b5-deploy] by: the hit marker)
@@ -973,17 +982,45 @@ export function dangerOf(it) {
 }
 // Using it (SPEC A7). fight: a foe in sight 5–15 m off on our level with a clear floor line → the cook that stops it on
 // them, led (planned in hold: botHold); paint: an uncooked lane down a stretch that's under 40 % ours
+// [b5-int3] the bots' Glide is a fight sub first (the lead, 2026-10-16: all-Glide bots made 76 fight throws to 513 paint
+// throws in 8 Zone Control matches — 1 enemy hit in 545 glides — and 76 to 234 in Turf War, 0.02 hits a use against the
+// Splat Bomb's 0.06 / 0.03): a fight throw at a foe 5–11 m off twice as likely as before, again twice at a foe committed —
+// facing away from us (busy with a teammate) or planted (under 1.5 m/s: charging, firing from a spot), and the nearer the
+// likelier (below); a paint throw a seventh as likely, only with ink to spare for a fight after it (inkCost + 25) and never with
+// a foe the team knows within 24 m (it keeps the stone for them), at 0.12 % a frame. Knobs for the balance pass.
+// By distance: a stone let go at 5–7 m stops on its foe within ~0.6–0.8 s of the release at a near-full cook (R ≈ 3.1 m) —
+// out of reach of a foe's step after a bot's reaction; at 9–11 m it takes 1.2–1.5 s, time to walk out of even a cooked
+// blast: weights 1 to 7 m, 0.5 to 9, 0.25 to 11, 0.08 past
+// The foe's spot is led by half its velocity × the fuse left (lead): a bot's foe strafes, and full lead put the stops 3–4 m
+// off foes walking 2 m/s (the fight log, halyard Zone Control: 7 fight throws, released 6.7–11 m out, foes 3.4–9 m from the
+// blasts).
+// The probe (jobs/batch5/int3/probes/duel-glide.js, testbox, real brains, 60 rounds each): a foe duelling a teammate 4–5 m
+// off, the Glide bot 6–10 m to the side — its fight throws hit 31 of 59 (12 splats); in a 1-v-1 with the foe facing it, 0–1
+// of 9–14 (the cook locks its gun for up to 1.95 s while the foe shoots it; the foe sees the stone coming and steps off).
+// So a fight throw is at a foe committed elsewhere — facing more than ~60° away (duel: a twentieth of the chance at one
+// facing us; a planted foe facing us is duelling us, not committed: plantedC 0), out to 11 m (maxD; past it the fuse
+// gives a foe two seconds), and a cooking bot hit hard (under 55 hp, ≥ 0.4 s of cook to go) drops the cook to fight back
+// (abort); a hold cut short under half its plan's cook is let go unthrown, not sent on past the foe uncooked (drop).
+// Knobs for the balance pass (calm: no fight throw within that many s of being hit; off).
+export const GLIDE_BOT = { fight: 0.06, near: 7, mid: 9, far: 11, wMid: 0.5, wFar: 0.25, wOut: 0.08, committed: 2, slow: 1.5, fast: 4.5, lead: 0.5, paint: 0.0012, paintInk: 25, paintFoe: 24,
+  duel: 0.05, plantedC: 0, calm: 0, abort: 1, minD: 5, maxD: 11, drop: 1 };
 function fight(brain, dist) {
   const a = brain.a, t = brain.target, s = a.sub?.kind === KIND ? a.sub : S();
-  if (!t || !t.alive || !(brain.seeTimer > 0) || dist < 5 || dist > 15 || Math.abs(t.pos.y - a.pos.y) > 1.2 || a.ink < s.inkCost + 5) return false;
-  // (mostly 5–11 m, where the cook shortens the fuse and grows the blast; past 11 m it is a near-uncooked 2.2 m blast that
-  // a foe has two seconds to step out of: a quarter of the chance)
-  // ([b5-int3] and twice as often at a foe committed elsewhere — facing more than ~60° away from us, as a player sees it:
-  // busy with a teammate, it steps out of a slow stone's lane late; the matches had 4 fight throws in 150 s, mostly
-  // uncooked from past 11 m)
+  if (!t || !t.alive || !(brain.seeTimer > 0) || dist < GLIDE_BOT.minD || dist > GLIDE_BOT.maxD || Math.abs(t.pos.y - a.pos.y) > 1.2 || a.ink < s.inkCost + 5) return false;
+  if (GLIDE_BOT.calm && a.lastDamage < GLIDE_BOT.calm) return false;
+  // (mostly 5–9 m, where the cook shortens the fuse and grows the blast; [b5-int3] out to 11 m, maxD — past it a
+  // near-uncooked 2.2 m blast a foe has two seconds to step out of)
+  // ([b5-int3] at a foe committed — facing more than ~60° away from us, as a player sees it: busy with a teammate, it
+  // steps out of a slow stone's lane late — twice the chance; at one facing us (duelling us) a twentieth: GLIDE_BOT.duel)
   const away = Math.abs(angleDiff(t.aimYaw ?? t.yaw, Math.atan2(a.pos.x - t.pos.x, a.pos.z - t.pos.z))) > 1.05;
-  if (Math.random() > 0.03 * (1 + brain.diff.fireDiscipline) * (dist <= 11 ? 1 : 0.2) * (away ? 2 : 1)) return false;
+  const tv = Math.hypot(t.vel?.x || 0, t.vel?.z || 0), planted = tv < GLIDE_BOT.slow, committed = away || (planted && !!GLIDE_BOT.plantedC);
+  // ([b5-int3] not at a foe running or swimming past — over 4.5 m/s it is long gone from where the stone stops: the fight
+  // log's uncooked stones sent 8–9 m ahead of foes at 6–10 m/s)
+  if (tv > GLIDE_BOT.fast) return false;
+  const B = GLIDE_BOT, wd = dist <= B.near ? 1 : dist <= B.mid ? B.wMid : dist <= B.far ? B.wFar : B.wOut;
+  if (Math.random() > B.fight * (1 + brain.diff.fireDiscipline) * wd * (committed ? B.committed : B.duel)) return false;
   if (away) GLIDE_STATS.botAway = (GLIDE_STATS.botAway || 0) + 1;
+  if (planted && !away) GLIDE_STATS.botPlanted = (GLIDE_STATS.botPlanted || 0) + 1;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, t.pos.x, t.pos.z) || !brain._fatLos(a.pos.x, a.pos.y - 0.15, a.pos.z, t.pos.x, t.pos.y - 0.15, t.pos.z)) return false;
   // the planned slide must stay on the stage (the guide's prediction, ignoring kids): at the cook that stops it on the
   // foe's led spot; if that goes over an edge / into a liquid, at the cook that stops it where they stand; else no throw
@@ -1003,7 +1040,7 @@ function fight(brain, dist) {
 function fightMark(a, t, s, led, out) {
   startOf(a, _gp);
   let f = fuseFor(Math.hypot(t.pos.x - _gp.x, t.pos.z - _gp.z), s), ax = t.pos.x, az = t.pos.z;
-  if (led) for (let i = 0; i < 2; i++) { const lead = Math.min(2, f); ax = t.pos.x + t.vel.x * lead; az = t.pos.z + t.vel.z * lead; f = fuseFor(Math.hypot(ax - _gp.x, az - _gp.z), s); }
+  if (led) for (let i = 0; i < 2; i++) { const lead = Math.min(2, f) * GLIDE_BOT.lead; ax = t.pos.x + t.vel.x * lead; az = t.pos.z + t.vel.z * lead; f = fuseFor(Math.hypot(ax - _gp.x, az - _gp.z), s); }   // ([b5-int3] GLIDE_BOT.lead)
   out.x = ax; out.z = az;
   return f;
 }
@@ -1025,7 +1062,9 @@ function slideSinks(a, yaw, cook, s) {
 }
 function paint(brain) {
   const a = brain.a, s = a.sub?.kind === KIND ? a.sub : S();
-  if (Math.random() > 0.008 || a.ink < s.inkCost + 8) return false;
+  if (Math.random() > GLIDE_BOT.paint || a.ink < s.inkCost + GLIDE_BOT.paintInk) return false;   // ([b5-int3] was 0.008, inkCost + 8)
+  // ([b5-int3] a foe the team knows near: the stone is kept for them)
+  for (const e of G.actors) { if (e.team === a.team || !e.alive) continue; const k = teamKnown(a.team, e, 2.0); if (k && Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z) < GLIDE_BOT.paintFoe) { GLIDE_STATS.botPaintKept = (GLIDE_STATS.botPaintKept || 0) + 1; return false; } }
   const fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
   let own = 0, n = 0;
   for (const d of [2, 6, 10]) {
@@ -1095,6 +1134,7 @@ function botHold(a, st, inp, s) {
       if (P.need0 == null) P.need0 = needNow;
       const need = Math.min(needNow, P.need0 + 0.3), dT = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
       keep = st.cook < need - 1e-6 && st.held < s.cookGrace + s.cookMax && dT > 4;
+      if (keep && GLIDE_BOT.abort && a.lastDamage < 0.2 && a.hp < 55 && need - st.cook > 0.4) { GLIDE_STATS.botAbort = (GLIDE_STATS.botAbort || 0) + 1; inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; endHold(a, true); return; }
     }
   }
   keep = keep && a.alive && a.form === 'kid';
@@ -1110,6 +1150,16 @@ function botHold(a, st, inp, s) {
 function botRelease(a, st, inp, s) {
   const P = st.plan, Y = _ry;
   Y.length = 0;
+  // ([b5-int3] a fight hold cut short — the bot dived or turned away, its foe gone or out of reach — with under half the
+  // plan's cook: let go of it unthrown (no ink; a fizzle if it had cooked) rather than send a near-uncooked stone 12–15 m
+  // on past its foe — the matches' fight log: 0–0.3 s cooks let go 6–10 m out, foes 9–15 m from the blasts. A foe come
+  // inside 4.5 m still gets what's cooked: botHold's rule, and a melee bot's plant)
+  const dT = P.t?.alive ? Math.hypot(P.t.pos.x - a.pos.x, P.t.pos.z - a.pos.z) : 99;
+  if (GLIDE_BOT.drop && P.mode === 'fight' && dT > 4.5 && st.cook < 0.5 * (P.need0 ?? 1.2)) {
+    GLIDE_STATS.botDrop = (GLIDE_STATS.botDrop || 0) + 1;
+    inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; endHold(a, true);
+    return;
+  }
   if (P.mode === 'fight') {
     if (st.aimAt && P.t?.alive) Y.push(Math.atan2(st.aimAt.x - a.pos.x, st.aimAt.z - a.pos.z));
     if (P.t?.alive) Y.push(Math.atan2(P.t.pos.x - a.pos.x, P.t.pos.z - a.pos.z));
@@ -1120,6 +1170,10 @@ function botRelease(a, st, inp, s) {
   } else if (P.yaw != null) Y.push(P.yaw);
   Y.push(a.aimYaw);
   for (const y of Y) if (!slideSinks(a, y, st.cook, s)) { st.relYaw = y; if (y !== Y[0]) GLIDE_STATS.botRelAlt++; return; }
+  // ([b5-int3] every way sinks with this cook: cook on — a longer cook is a shorter slide — while there's cook left; only at
+  // full cook is it held off: a cooked fight stone let go short of its plan's cook (a foe inside 4 m) or after a strafe
+  // went off the dock, and the bot dropped it — 6 of 22 fight plans in two halyard / saltpan Turf matches)
+  if (P.mode !== 'boss' && st.cook < s.cookMax - 0.05 && st.held < s.cookGrace + s.cookMax - 0.05) { inp.sub = true; inp.subReleased = false; GLIDE_STATS.botCookOn = (GLIDE_STATS.botCookOn || 0) + 1; return; }
   GLIDE_STATS.botCancel++;
   inp.sub = false; inp.subReleased = false;
   a.weaponRunner.aimingSub = false;
