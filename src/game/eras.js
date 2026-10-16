@@ -42,7 +42,10 @@ import { eraLevelExt, eraMaterial, eraDepthMaterial, patchSetClip, EraFx, EraHud
 import '../audio/sfx-eras.js';
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _c = new THREE.Color();
+const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _c = new THREE.Color(), _UP = new THREE.Vector3(0, 1, 0);
+// the devices a flip pops when their piece goes (DESIGN §3.7: sprinkler, beacon, Drip Curtain, Lurk Mine, Cling Charge —
+// placed or stuck; a running / winding-up Skitter Bomb and the clouds follow the ground or the air as before)
+const RESTING = new Set(['stuck', 'spray', 'curtain', 'mine', 'beacon']);
 const DEG = Math.PI / 180;
 
 // the presence fields (docs/STAGE-MODS.md "Level"): a def or a prop collider carrying `eras` / `eraGroup`
@@ -603,6 +606,9 @@ export class StageEras {
     const list = this.jumps(t);
     // every group to its era at this moment (a pure function of the clock): the front flips each when it reaches r_g
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
+    // for 2.5 s after a piece went: a remote rider's Zipline tether on it ends (its owner's late record can re-hang it)
+    const RO = this._recentOff;
+    if (RO && RO.length) { while (RO.length && (t - RO[0].t > 2.5 || RO[0].t > t + 0.5)) RO.shift(); for (const f of RO) this._zips(f.ids, true); }
     // events whose time passed this frame (a clock snap goes through seek instead)
     if (t > this.lastT && t - this.lastT < 1.0) this._events(this.lastT, t, list);
     this.lastT = t;
@@ -924,6 +930,7 @@ export class StageEras {
     if (!on.length && !off.length) return;
     W._flipCells(g);
     this._devices(off, on);
+    if (off.length) { this._zips(off); (this._recentOff || (this._recentOff = [])).push({ t, ids: off }); }
     this._flipStats(on, off);
     (this._recentFlips || (this._recentFlips = [])).push({ t, ids: [...on, ...off] });
     while (this._recentFlips.length && t - this._recentFlips[0].t > 2.5) this._recentFlips.shift();
@@ -935,19 +942,56 @@ export class StageEras {
     if (this._popT === undefined || t - this._popT > 0.08) { this._popT = t; this._snd('era_pop', { pos: _q.set(g.cx, 2, g.cz).clone(), volume: 0.7 }); }
     emit('era:flip', { group: g.key, on, off, r: g.rg });
   }
-  // this screen's own devices on a block that went (stuck to its faces) or inside one that came: the one destroyer
+  // this screen's own devices on a block that went or inside one that came (H17; the subs SPEC §0.3 / §0.6 leaves the subs
+  // items to this walk, and the kits' devices to their own era:flip listeners). "On a block that went": stuck to one of
+  // its faces, or resting on it / stuck to it with no face to say so (final review, issue 1: a Drip Curtain has no face,
+  // and a gate's walls and roof are paint: false) — a point 5 cm into the surface it sits on (−normal; a curtain:
+  // straight down) lies in a block that went and in nothing still solid. Each ends as the subs SPEC's era-flip ending:
+  // [2, gid, 2] crushed (endWhy 2: the crunch on every screen — a ghost Lurk Mine or Cling Charge never blasts), one
+  // 'device:down' { how: 'flip' }
   _devices(off, on) {
-    const L = this.W.level, S = this.S, B = L.blocks;
-    const offSet = off.length ? new Set(off) : null;
-    S.crushIn({ blocks: on, gone: off, where: (p) => on.some((id) => L.pointInBlock(B[id], p, 0.15)) }, 'flip');
-    if (G.deploy && typeof G.deploy.crushIn === 'function') return;   // (the subs package's destroyer took them)
+    const L = this.W.level, B = L.blocks;
+    // the one destroyer (subs SPEC §0.3: block objects), once the deploy code has one: what came takes every device kind
+    // inside it, the buoy and the kits' devices too (a device ends once: the walk below skips the dead). 0 until then
+    if (on.length) this.S.crushIn({ blocks: on.map((id) => B[id]) }, 'flip');
     const subs = G.subs;
     if (!subs || !subs.items) return;
+    const offSet = off.length ? new Set(off) : null;
     for (const it of [...subs.items]) {
       if (it.ghost || it.state === 'dead') continue;
       const stuck = offSet && it.face >= 0 && L.faces[it.face] && offSet.has(L.faces[it.face].block);
       const inside = on.length && it.pos && on.some((id) => L.pointInBlock(B[id], it.pos, 0.15));
-      if (stuck || inside) { subs._destroy(it); this.stats.devices++; }
+      let rest = false;
+      if (offSet && !stuck && !inside && it.pos && RESTING.has(it.state)) {
+        _p.copy(it.pos).addScaledVector(it.state !== 'curtain' && it.normal ? it.normal : _UP, -0.05);
+        rest = off.some((id) => L.pointInBlock(B[id], _p, 0.02)) && !L.pointInside(_p, 0.02);
+      }
+      if (!(stuck || inside || rest)) continue;
+      it.endWhy = 2;
+      if (G.deploy && typeof G.deploy.endLook === 'function') G.deploy.endLook(it, 2); else subs._destroy(it);
+      if (it.state !== 'dead') subs._destroy(it);
+      emit('device:down', { kind: it.kind, team: it.team, pos: it.pos.clone(), by: null, how: 'flip' });
+      this.stats.devices++;
+      if (rest) this.stats.devicesRest = (this.stats.devicesRest || 0) + 1;
+    }
+  }
+  // DESIGN §3.7 (final review, issue 3): a Zipline anchored to a piece that went ends at once — its rider, zipping there
+  // or clinging to it, drops where they are (no impact: the zip never arrived). Every screen does it for every rider at
+  // its own flip: its own riders' bodies (the owner moves them), a remote rider's tether (a ghost: no record needed, the
+  // owner's screen ends the zip at its own flip). `ghostsOnly`: the per-frame pass for 2.5 s after a flip (update) — a
+  // ghost's late 'zi' record (the owner's zip landed just before ITS flip) would hang the tether on the gone piece again
+  _zips(offIds, ghostsOnly = false) {
+    const L = this.W.level, B = L.blocks;
+    for (const a of this.m.actors) {
+      const s = a.specialActive;
+      if (!s || s.kind !== 'zipcaster' || !a.alive || (ghostsOnly && !s.ghost && !a.remote)) continue;
+      const anc = s.zip ? s.zip.anchor : s.hang > 0 ? s.anchor : null;
+      if (!anc || !offIds.some((id) => !B[id].solid && L.pointInBlock(B[id], anc, 0.12))) continue;
+      const was = s.zip ? 'zip' : 'hang';
+      s.zip = null; s.hang = 0; s.faceYaw = null;
+      if (!s.ghost && !a.remote) { s.body = false; a.grounded = false; if (a.vel) a.vel.set(0, Math.min(0, a.vel.y), 0); }
+      (this.stats.zipEnds || (this.stats.zipEnds = [])).push({ who: a.name, was, t: +this.tNow.toFixed(2), ghost: !!s.ghost || !!a.remote });
+      if (this.stats.zipEnds.length > 20) this.stats.zipEnds.shift();
     }
   }
   // the top of block b at (x, z), or null off it

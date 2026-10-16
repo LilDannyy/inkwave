@@ -11,7 +11,11 @@
 // shove   a kid forced into an appearing piece is shoved out with its body fitting (straight up onto it; else round it /
 //         the nearest node), stats.eraShoves counts it
 // rescue  a kid on a piece that vanishes over water is rescued to a valid node, never splatted
-// device  a sprinkler on a vanishing piece is destroyed (S.crushIn, then the module's walk of G.subs.items)
+// device  a sprinkler on a vanishing piece is destroyed (S.crushIn, then the module's walk of G.subs.items); a Drip Curtain
+//         resting on a vanishing roof (no face: the Degrayling crates at jump 1, the goods wagon at jump 2) is popped at
+//         its flip, not left standing in the air, and one on the street beside the crates stays (final review, issue 1)
+// zip     a Zipline rider clinging to the crates' wall drops when they vanish, and one zipping to them as they flip
+//         stops where they are and falls, never reaching the anchor in the air (DESIGN §3.7; final review, issue 3)
 // guard   a splat on a changing piece within 0.5 s of its flip claims nothing; after the guard it inks
 // fx      the warning's holograms and wire beads, Tartar's ring and pickup, the curtain riding the front, the synthesized
 //         sounds (era_bell, era_ring, era_kiosk, era_pickup, era_swell, era_front, era_pop)
@@ -31,7 +35,7 @@
   const { SUBS, PLAYER } = await import('./src/config.js');
   const { SFX } = await import('./src/audio/audio.js');
   const { Hit } = await import('./src/game/physics.js');
-  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,guard,fx,frames,sky,modes').split(',');
+  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,zip,guard,fx,frames,sky,modes').split(',');
   const dbg = g.debug;
   dbg.freeze();
   const calm = () => { for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; } } };
@@ -245,6 +249,73 @@
     R('step 8: a sprinkler on a vanishing piece (the Halo in the rewind) is destroyed at its flip (S.crushIn; until G.deploy.crushIn exists, the module\'s walk of G.subs.items)',
       st0 === 'spray' && onFace && it.state === 'dead' && E.stats.devices > d0, { before: st0, onFace, after: it.state, crushIn: typeof __G.deploy?.crushIn });
     tAt(J.doneAt + 1.2);
+    // final review, issue 1: Drip Curtains resting on vanishing roofs (a curtain has no face; a roof top has none to
+    // paint): thrown through the game's own subs._throw onto the crates' roof (2.8 m, jump 1) and the goods wagon's
+    // (jump 2) — each is popped at its piece's flip; a control curtain on Swimston beside the crates (shared street) stays
+    const rows = [];
+    for (const [tg, from, to] of [['crates-stack', 1, 2], ['goods-wagon', 2, 3]]) {
+      E.debugJump(from, { instant: true }); step(0.3);
+      const b = blk(tg), top = b.aabbMax.y, V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+      const cur = __G.subs._throw(a, SUBS.curtain, V3(b.center.x, top + 1.2, b.center.z), V3(0, -3, 0), false);
+      const ctl = tg === 'crates-stack' ? __G.subs._throw(a, SUBS.curtain, V3(b.aabbMin.x - 2.9, 1.2, b.center.z), V3(0, -3, 0), false) : null;
+      step(1.0);
+      const landed = { curtain: [cur.state, +cur.pos.y.toFixed(2)], control: ctl ? [ctl.state, +ctl.pos.y.toFixed(2)] : null };
+      const J2 = E.debugJump(to, { inS: 1.0 }), F = flipAt(b, J2), d1 = E.stats.devices, r1 = E.stats.devicesRest || 0;
+      tAt(F - 0.05); const before = cur.state;
+      tAt(F + 0.1);
+      const hit = __G.physics.raycast(V3(cur.pos.x, cur.pos.y + 0.2, cur.pos.z), V3(0, -1, 0), 10);
+      rows.push({ tag: tg, jump: `${from}>${to}`, top: +top.toFixed(2), landed, beforeFlip: before, after: cur.state, floorBelow: hit.hit ? +hit.point.y.toFixed(2) : null,
+        control: ctl ? ctl.state : null, solid: b.solid, popped: E.stats.devices - d1, poppedResting: (E.stats.devicesRest || 0) - r1 });
+      tAt(J2.doneAt + 0.3);
+      for (const it of [cur, ctl]) if (it && it.state !== 'dead') __G.subs._destroy(it);
+      step(0.1);
+    }
+    R('step 8 (final review, issue 1): a Drip Curtain resting on a vanishing roof — the Degrayling crates at jump 1, the goods wagon at jump 2 — is popped at its flip, not left standing in the air; a curtain on the street beside the crates stays',
+      rows.length === 2 && rows.every((r) => r.landed.curtain[0] === 'curtain' && Math.abs(r.landed.curtain[1] - r.top) < 0.1 && r.beforeFlip === 'curtain' && r.after === 'dead' && !r.solid && r.poppedResting >= 1)
+        && rows[0].landed.control?.[0] === 'curtain' && rows[0].landed.control[1] < 0.2 && rows[0].control === 'curtain', rows);
+    E.debugJump(1, { instant: true }); step(0.1);
+  }
+
+  // ------------------------------------------------------------------------------------------- zip (final review, issue 3)
+  if (parts.includes('zip')) {
+    const z = g.match.actors.find((x) => x.bot && !x.remote && x.alive), cr = blk('crates-stack'), SP = __G.specials;
+    const startZ = () => { z.specialId = 'zipcaster'; z.special = z.specialCost(); z._startSpecial(); return z.specialActive; };
+    const aim = (p) => { const dx = p.x - z.pos.x, dz = p.z - z.pos.z; z.yaw = z.aimYaw = Math.atan2(dx, dz); z.aimPitch = Math.atan2(p.y - (z.pos.y + 1.2), Math.hypot(dx, dz)); z.aimPoint.copy(p); };
+    const press = () => { z.intent.sub = true; dbg.step(1000 / 60); z.intent.sub = false; };
+    const rows = [];
+    for (const mode of ['hang', 'zip']) {
+      E.debugJump(1, { instant: true }); step(0.2);
+      calm();
+      // (clinging: 0.8 m in from the crates' north end, clear of the kerb planter by their west face, so the drop is straight
+      //  down; zipping: along their middle, from Swimston's carriageway)
+      const back = mode === 'hang' ? 5 : 15, zz = mode === 'hang' ? cr.aabbMax.z - 0.8 : cr.center.z;
+      put(z, cr.aabbMin.x - back, 0.02, zz); z.grounded = true; z.form = 'kid'; step(0.1);
+      const s = startZ();
+      const J = E.debugJump(2, { inS: 1.2 }), F = flipAt(cr, J);
+      // clinging: latched 1 s before the flip (a 1.4 s hang outlasts it); zipping: fired 0.15 s before (a 15 m zip at 33 m/s
+      // is 0.45 s long, so it is in flight at the flip)
+      tAt(F - (mode === 'hang' ? 1.0 : 0.15));
+      aim(new THREE.Vector3(cr.aabbMin.x, 2.3, zz)); press();
+      const zipTo = s.zip ? s.zip.to.clone() : null;
+      tAt(F - 0.03);
+      const atFlip = { zip: !!s.zip, hang: +s.hang.toFixed(2), y: +z.pos.y.toFixed(2), x: +z.pos.x.toFixed(2), z: +z.pos.z.toFixed(2) };
+      tAt(F + 0.05);
+      const after = { zip: !!s.zip, hang: s.hang, y: +z.pos.y.toFixed(2), x: +z.pos.x.toFixed(2), solid: cr.solid };
+      tAt(F + 1.2);
+      const landed = { y: +z.pos.y.toFixed(2), grounded: !!z.grounded, floor: L.groundHeight(z.pos.x, z.pos.z, z.pos.y + 0.5), toX: zipTo ? +zipTo.x.toFixed(2) : null, x: +z.pos.x.toFixed(2), z: +z.pos.z.toFixed(2) };
+      // (a remote rider's tether: its owner's late 'zi' record re-hangs it on the gone crates within 2.5 s of their flip —
+      //  the per-frame pass takes it down again; played here on this rider's own special marked a ghost for two frames)
+      let reHang = null;
+      if (mode === 'hang') { s.ghost = true; s.hang = s.def.hang; s.anchor = new THREE.Vector3(cr.aabbMin.x, 2.3, zz); dbg.step(1000 / 60); dbg.step(1000 / 60); reHang = { hang: s.hang, at: +(E.S.clock.t - F).toFixed(2) }; s.ghost = false; s.hang = 0; }
+      rows.push({ mode, atFlip, after, landed, reHang, zipEnds: (E.stats.zipEnds || []).slice(-2) });
+      z.pos.copy(s.origin); SP.end(z, 'test'); z.specialActive = null; z.superJumpState = null;
+      tAt(J.doneAt + 0.3);
+    }
+    const [h, zp] = rows;
+    R('step 8 (final review, issue 3): a Zipline rider clinging to the Degrayling crates drops where they hang when the crates vanish (no more hang: straight down to the street), and one zipping to them as they flip stops there and falls, never reaching the anchor in the air (DESIGN §3.7); a ghost tether re-hung on the gone crates by a late record is taken down the next frame',
+      h.atFlip.hang > 0 && h.atFlip.y > 0.8 && h.after.hang === 0 && !h.after.solid && h.landed.y < 0.15 && h.landed.grounded && Math.hypot(h.landed.x - h.atFlip.x, h.landed.z - h.atFlip.z) < 0.6 && h.reHang && h.reHang.hang === 0
+        && zp.atFlip.zip && !zp.after.zip && zp.after.hang === 0 && zp.landed.grounded && Math.abs(zp.landed.y - zp.landed.floor) < 0.15 && zp.landed.y <= zp.atFlip.y + 0.05 && zp.landed.toX !== null && zp.landed.x < zp.landed.toX - 1.0,
+      rows);
   }
 
   // ------------------------------------------------------------------------------------------- guard
