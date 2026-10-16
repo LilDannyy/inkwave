@@ -418,6 +418,48 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     R(`5f. the race's rule: the claimant that touched it first on its own screen wins, host bot or guest alike (each steps on 0.30 s / 0.36 s after it went free on its own screen; ${N} rounds, alternating)`, right >= N - 1, { right, N, rows });
   }
 
+  // [karp-face] review round 2: running starts. A host bot and B both RUN in from 7 m, setting off at the same moment of
+  // the host's clock (B reads it as NetWire.hostNow: its peer offset plus the one-way delay), 6 m/s, moved by each page
+  // on its own clock (no frame-rate or weapon-speed difference); the host bursts it 0.45 s after they set off (both
+  // still well outside the shell, so neither is held up by its shove). They reach it at the same real moment; the race
+  // orders claims by `since` on each claimant's own screen, and B learned of the burst one way late — so B's since is
+  // smaller by about that one-way delay. Reported (no threshold): the winners by side, each round's touch gap on the
+  // host's clock and its since gap. Run it with URLQ netlag to see the bias the reviewer predicted.
+  if (part === 'racerun') {
+    await zeroB(); await put(A, 0, 0, -14);
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    const N = +(process.env.RACE_N || 12), rows = [], wins = { bot: 0, guest: 0, none: 0 };
+    const mover = (clk, nid) => `((x0, y0, z0, dir, T, kx, kz) => { const a = ${nid != null ? `__G.match.actors.find((o) => o.nid === ${nid})` : '__G.match.local'}, K = __G.match.karp; window.__touch = null;
+      const id = setInterval(() => { const now = ${clk}, t = now - T; const d = Math.max(0, Math.min(t * 6, 6.7)); a.pos.set(x0 + dir * d, a.pos.y, z0); a.vel.set(0, 0, 0); a.intent.move.set(0, 0, 0);
+        if (window.__touch == null && K.phase === 'free' && Math.hypot(a.pos.x - K.pos.x, a.pos.z - K.pos.z) <= 1.3) window.__touch = now;
+        if (t > 2.5) clearInterval(id); }, 4); return 1; })`;
+    for (let k = 0; k < N; k++) {
+      const sg = k % 2 === 1 ? -1 : 1;   // (the host bot on +x in even rounds, on −x in odd ones)
+      await toPond();
+      const kp = (await info(A)).pos;
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp[0]} + ${7 * sg}, 0, ${kp[2]}); b.vel.set(0, 0, 0); b.intent.move.set(0, 0, 0); return 1; })()`);
+      await put(B, kp[0] - 7 * sg, 0, kp[2]);
+      await wait(300);
+      const T = await J(A, `+(performance.now() / 1000 + 1.2).toFixed(4)`);
+      await A.js(`${mover('performance.now() / 1000', bot)}(${kp[0]} + ${7 * sg}, 0, ${kp[2]}, ${-sg}, ${T})`);
+      await B.js(`${mover('__G.match.karp.wire.hostNow()', null)}(${kp[0]} - ${7 * sg}, 0, ${kp[2]}, ${sg}, ${T})`);
+      await A.js(`(() => { setTimeout(() => { const K = __G.match.karp; K.shell.add(1, 3000, __G.match.actors.find((o) => o.nid === ${bNid})); }, Math.max(0, (${T} + 0.45 - performance.now() / 1000) * 1000)); return 1; })()`);
+      await A.until(`!!__G.match.karp.holder`, 8000, 30).catch(() => {});
+      await wait(900);
+      const h = (await info(A)).holder;
+      if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
+      const tA = await J(A, `window.__touch`), tB = await J(B, `window.__touch`), oneWay = await J(B, `+__G.match.karp.wire.oneWay(__G.match.karp.wire.hostId()).toFixed(3)`);
+      const g = await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since]) } : null; })()`);
+      const sB = g && g.c.find((c) => c[0] === 'B'), sH = g && g.c.find((c) => c[0] === 'bot');
+      rows.push({ hostSide: sg > 0 ? '+x' : '-x', won: h === bot ? 'bot' : h === bNid ? 'B' : String(h), touchGap: tA != null && tB != null ? +(tB - tA).toFixed(3) : null, sinceGap: sB && sH ? +(sB[1] - sH[1]).toFixed(3) : null, oneWay, wait: g && g.wait });
+      await wait(300);
+    }
+    await toPond();
+    const avg = (k) => { const v = rows.map((r) => r[k]).filter((x) => x != null); return v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(3) : null; };
+    R(`5r. running starts (reported): a host bot and B run in from 7 m, setting off at the same moment of the host's clock; ${N} rounds, sides alternating`, wins.bot + wins.guest >= N - 2,
+      { wins, meanTouchGap: avg('touchGap'), meanSinceGap: avg('sinceGap'), rows });
+  }
+
   if (part === 'raceswap') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, true); await toPond(); }   // (the host's racer always on −x)
   if (part === 'raceside') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, false); await toPond(); }   // (the host's racer always on +x)
 
@@ -511,7 +553,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   await wait(800);
   const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
   const ea = await end(A), eb = await end(B);
-  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'raceswap' || part === 'raceside' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
+  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'racerun' || part === 'raceswap' || part === 'raceside' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));

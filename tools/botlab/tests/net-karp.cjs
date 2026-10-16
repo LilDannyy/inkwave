@@ -19,7 +19,7 @@
 //   URLQ='netlag=150&netjitter=60': the latency steps) — the migration steps are net-karp-host.cjs's
 module.exports = async (ctx) => {
   const part = (/(?:^|[;&])part=(\w+)/.exec(ctx.args || '') || [])[1];
-  if (part === 'face' || part === 'lag' || part === 'snap' || part === 'race' || part === 'racekid' || part === 'racefair' || part === 'raceswap' || part === 'raceside') return require('./net-karp-steps.cjs')(ctx, part);
+  if (part === 'face' || part === 'lag' || part === 'snap' || part === 'race' || part === 'racekid' || part === 'racefair' || part === 'racerun' || part === 'raceswap' || part === 'raceside') return require('./net-karp-steps.cjs')(ctx, part);
   return base(ctx);
 };
 async function base({ clients, R, wait, say, args, open }) {
