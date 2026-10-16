@@ -83,6 +83,41 @@
     const share = diff(on, off), noise = diff(off, off2);
     R('the sharks, the ray, the turtle and the silver school show in the Great Tank from its viewing step (swimmers on vs off: ≥ 1.5 % of the tank\'s pixels change, over the frame-to-frame noise)', share - noise >= 0.015, { changedShare: +share.toFixed(4), noise: +noise.toFixed(4) });
   }
+  // 6. art round 2 (LEAD-REVIEW art round 2)
+  {
+    const meshVerts = (pred, fn) => { G.scene.traverse((o) => { if (o.isMesh && pred(o)) { const P = o.geometry.attributes.position, e = o.matrixWorld.elements; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i); fn(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]); } } }); };
+    // (a) the glass panes stand clear of the walls and lids they met (the shark tunnel's hatched staircase and streaks
+    // were the Arch Tank's glass z-fighting the pylon walls at x ±6 and the lid's underside at 9.0)
+    // (a box's corners: the Arch Tank's top corners, above the riser shafts' glazing that tops out at 8.4)
+    let gx = 0, gy = 0; meshVerts((o) => o.name === 'aq-glass', (x, y, z) => { if (Math.abs(z) > 18.9 && Math.abs(z) < 31.1 && y > 8.5 && y < 9.2 && Math.abs(x) < 6.2) { gx = Math.max(gx, Math.abs(x)); gy = Math.max(gy, y); } });
+    R('the Arch Tanks\' glass is drawn inside its collider, off the hall\'s pylon walls (|x| < 6) and the lid (y < 9.0): no coplanar faces to z-fight', gx > 5.9 && gx < 5.995 && gy > 8.9 && gy < 8.995, { maxX: +gx.toFixed(3), maxY: +gy.toFixed(3) });
+    // (b) the gulper heads' jaws stay at their face: nothing of the dressing stands on the mouth's approach (it reached
+    // x 13.2 at the floor: the chin bar and the jaw bones' ends)
+    let jx = 0; meshVerts((o) => /^props:/.test(o.name), (x, y, z) => { if (Math.abs(z) < 1.6 && y < 2.7 && Math.abs(x) > 12 && Math.abs(x) < 14.5) jx = Math.max(jx, Math.abs(x)); });
+    R('nothing of a gulper head stands more than 0.2 m in front of its collider\'s face (x 12.7): the jaws are off the mouth\'s approach', jx > 12.6 && jx <= 12.9, { maxX: +jx.toFixed(3) });
+    // (c) the wing's small dressing is solid: the benches, the A-boards and the luggage are hidden off-limits blocks, the
+    // ferry queue's rope a rail (it was drawn with no collider: players ran through it)
+    const tagged = (t) => L.blocks.filter((b) => b.tag === t);
+    const solid = ['bench', 'aboard', 'luggage'].map((t) => [t, tagged(t)]), rope = tagged('queue-rope');
+    R('the bench, the A-boards and the luggage stand on hidden, solid, off-limits blocks; the queue rope is a rail', solid.every(([t, l]) => l.length >= 2 && l.every((b) => b.hidden && b.solid && b.roof)) && rope.length === 2 && rope.every((b) => b.rail),
+      { counts: Object.fromEntries(solid.map(([t, l]) => [t, l.length])), rope: rope.length });
+    // (d) the deck stair's flanks are dressed (floorart.js): a porthole into the tank reads dark blue-green against the white
+    // render beside it (the bare stonestep flank was one flat grey)
+    {
+      const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+      const ax = [-Math.SQRT1_2, -Math.SQRT1_2], pr = [Math.SQRT1_2, -Math.SQRT1_2], at = (t, y, l) => [t * ax[0] + l * pr[0], y, t * ax[1] + l * pr[1]];
+      const cam = at(9.2, 1.1, -5.5), look = at(9.2, 0.8, -2.0);
+      g.rig.cinematic(V(cam), V(cam), V(look), V(look), 99, () => {});
+      for (let i = 0; i < 20; i++) g.debug.step(1000 / 60);
+      const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4); gl.readPixels(Math.round((v.x + 1) / 2 * w), Math.round((v.y + 1) / 2 * h), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, a); return [...a.slice(0, 3)]; };
+      // (the porthole's water, clear of its jelly and fish; the render under the speed lines beside it)
+      const port = px(at(8.38, 0.76, -2.0)), wall = px(at(10.0, 0.4, -2.0)), lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+      R('the deck stair\'s flank is dressed: a porthole reads dark blue-green against the render beside it', lum(port) < 0.75 * lum(wall) && port[1] > 2 * port[0] && port[2] > 2 * port[0], { port, wall });
+    }
+    // (e) the moon-jelly columns are the traced shader (art round 2), not the printed one
+    let jm = null; G.scene.traverse((o) => { if (o.name === 'aq-jellies') jm = o.material; });
+    R('the moon-jelly columns trace their inside (aq-jelly3)', jm && jm.customProgramCacheKey?.() === 'aq-jelly3', { key: jm?.customProgramCacheKey?.() });
+  }
   let bathy = null; G.scene.traverse((o) => { if (o.name === 'aq-bathysphere') bathy = o; });
   // 5. Feeding Time at 1:00 left: looks only
   const plays = []; const play0 = G.audio?.play?.bind(G.audio);
