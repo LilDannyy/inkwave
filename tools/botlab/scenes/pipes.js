@@ -1,0 +1,254 @@
+// Pictures of the Tubeway (src/game/pipes.js) on Gulper Aquarium, through hud-shots.cjs (the HUD on where it matters):
+//   MAP=aquarium SCENES=tools/botlab/scenes/pipes.js PRE_ARGS=<set> OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
+// sets: rider (a Kelp Line ride UP as the rider sees it: 6 frames) · bystander (an enemy rider through the Great Tank as a
+// player on the court sees it: 4 frames) · bystander-kelp (an enemy riding the Kelp Line UP, from the court and from
+// the North Promenade's deck: 4 frames each; the deck's are out/engine/bystander-*.jpg) · mouths (a two-way and a one-way mouth, its OUT end, a lit exit) · tide (the
+// warning in the HUD and in the world; the kelp drum UP, DOWN and at the flip) · map (the corner map with the network, a rider and its lit exit) · spawn (the
+// spawn's play camera, both teams, and Alpha's with a teammate riding the Express)
+(() => {
+  const g = window.__inkwave, set = String(window.__preArgs || 'rider');
+  const dbg = g.debug, M = () => g.match, P = () => g.match.pipes;
+  const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
+  let THREE = null;
+  const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
+  const me = () => M().local;
+  const freeze = () => { dbg.freeze(); for (const a of M().actors) { if (a.bot) a.bot.update = () => {}; a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; if (a.specialActive) __G.specials?.end?.(a, 'shots'); a.pipeCd = 0; } };
+  const leg = (id) => P().legs.find((l) => l.id === id);
+  const put = (a, x, y, z, yaw) => { a.pos.set(x, y, z); a.vel.set(0, 0, 0); if (yaw !== undefined) { a.yaw = yaw; a.aimYaw = yaw; } };
+  // (out of the way: on a spawn deck — Bravo's by default — never the sea)
+  const away = (a, k, team = 1) => { const pad = __G.level.spawnPads[team]; put(a, pad.x + ((k % 4) - 1.5) * 1.7, pad.y, pad.z + (k < 4 ? -1.6 : 1.6)); };
+  const cine = (from, look, fov = 62) => { g.settings.fov = fov; g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); step(1 / 60); };
+  const follow = () => { g.settings.fov = window.__fov0 ?? g.settings.fov; g.rig.follow(me(), true); };
+  const hud = (on) => { g.hud?.setVisible(on); };
+  const facing = (a, e) => Math.atan2(-e.out[0], -e.out[2]);
+  const scenes = [];
+  // (everyone alive and at full health first: a player splatted during the warm-up play would leave the splat screen's
+  // camera and desaturation over every picture)
+  const init = async () => {
+    THREE = await import('three'); if (window.__fov0 === undefined) window.__fov0 = g.settings.fov; freeze();
+    for (const a of M().actors) { if (!a.alive) a.respawn(); a.hp = 100; }
+    step(1.6); for (const a of M().actors) { a.invuln = 0; a.hp = 100; }
+  };
+  const S = (name, fn, wait) => scenes.push({ name, set: async () => { if (!THREE) await init(); return fn(); }, wait });
+  if (set === 'rider') {
+    // a Kelp Line ride UP from Alpha's Reef Hall (the low stop in the E drum's foot) to Bravo's promenade
+    let e;
+    S('ride-1-at-the-mouth', () => {
+      const a = me(); e = leg('kelp').ends[0];
+      for (const [k, o] of M().actors.entries()) if (o !== a) away(o, k);
+      put(a, e.approach[0] + e.out[0] * 1.6, e.approach[1], e.approach[2] + e.out[2] * 1.6, facing(a, e));
+      follow(); hud(true); g.rig.yaw = facing(a, e); g.rig.pitch = -0.12;
+      for (let i = 0; i < 24; i++) { a.intent.move.set(-e.out[0] * 0.35, 0, -e.out[2] * 0.35); dbg.step(1000 / 60); }
+      a.intent.move.set(0, 0, 0); step(0.2);
+      return { prompt: P().prompt(a) };
+    });
+    S('ride-2-suck', () => { const a = me(); for (let i = 0; i < 60 && !a.pipe; i++) { a.intent.move.set(-e.out[0], 0, -e.out[2]); dbg.step(1000 / 60); } a.intent.move.set(0, 0, 0); step(0.12); return { phase: a.pipe?.phase }; });
+    S('ride-3-up-the-kelp-drum', () => { step(0.32); const a = me(); return { phase: a.pipe?.phase, u: a.pipe?.u, y: a.pos.y, water: P().camInWater }; });
+    S('ride-4-over-their-promenade', () => { step(0.55); const a = me(), W = __G.pipes, c = __G.camera.position; return { u: a.pipe?.u, y: a.pos.y, mode: P().rideCam.st?.mode, cam: c.toArray().map((v) => +v.toFixed(2)), uw: W.looks.uwOn, uwK: +W.looks.uwK.toFixed(2), vol: !!W.looks.rideVol }; });
+    S('ride-5-turning-to-the-exit', () => { const a = me(); const L = leg('kelp').len; for (let i = 0; i < 90 && a.pipe && a.pipe.phase === 'ride' && (L - a.pipe.u) / a.pipe.v > 0.3; i++) dbg.step(1000 / 60);
+      const c = __G.camera.position; return { left: a.pipe && (L - a.pipe.u) / a.pipe.v, pos: a.pos.toArray().map((v) => +v.toFixed(2)), cam: c.toArray().map((v) => +v.toFixed(2)), form: a.anim.form, chip: !!document.querySelector('.iw-pp-ride.is-on'), boom: +g.rig.curDist.toFixed(2) }; });
+    S('ride-6-pop', () => { const a = me(); for (let i = 0; i < 40 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.22); return { phase: a.pipe?.phase, y: a.pos.y }; });
+  }
+  if (set === 'bystander') {
+    // a player on the court's west side watches an enemy ride the Gulper Run east → west under the Glass Walk
+    let bot;
+    const go = (t) => () => { const a = bot; for (let i = 0; i < 300 && a.pipe && P()._T(a.pipe) < t; i++) dbg.step(1000 / 60); return { phase: a.pipe?.phase, s: a.pipe?.s, lit: P().lit.map((L) => L.n) }; };
+    S('bystander-1-exit-lit', () => {
+      const a = me();
+      bot = M().actors.find((o) => o.team !== a.team && o.bot);
+      for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
+      const gl = leg('gulper');
+      // (on the court's SW side, looking past the west gulper head into the Great Tank)
+      const yaw = Math.atan2(-12.7 + 21, 0 - 7.2);   // (from the court's NW side: the west jaws' face ahead, the landing between, the tank beyond)
+      put(a, -21, 0, 7.2, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = -0.12; step(0.4);
+      const eE = gl.ends[0]; put(bot, eE.approach[0], eE.approach[1], eE.approach[2]); step(0.1);
+      P().debugRide(bot, 'gulper', 0);
+      return go(0.45)();
+    });
+    S('bystander-2-under-the-glass-walk', go(0.95));
+    S('bystander-3-chime', go(1.35));
+    S('bystander-4-pop', () => { const a = bot; for (let i = 0; i < 120 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.18); return { phase: a.pipe?.phase, pos: a.pos.toArray().map((v) => +v.toFixed(2)) }; });
+  }
+  if (set === 'bystander-kelp') {
+    // a player watches an enemy ride the Kelp Line UP: out of the E drum, along the North Promenade at 9 m, down to the
+    // promenade — the glow and its trail in the open-air run, the lit exit, the pop. Two vantage points (court, deck).
+    const VP = [['court', [11, 0, 5], [23, 8.5, 12]], ['deck', [15.5, 2.4, 17.5], [25, 8, 2]]];
+    for (const [tag, at, look] of VP) {
+      let bot;
+      const go = (t) => () => { const a = bot; for (let i = 0; i < 300 && a.pipe && P()._T(a.pipe) < t; i++) dbg.step(1000 / 60); return { phase: a.pipe?.phase, s: a.pipe?.s, u: a.pipe?.u, lit: P().lit.map((L) => L.n) }; };
+      S(`bystander-kelp-${tag}-1`, () => {
+        const a = me();
+        bot = M().actors.find((o) => o.team !== a.team && o.bot);
+        for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
+        const ni = __G.nav.nearest({ x: at[0], y: at[1] + 0.3, z: at[2] }, 3), n = __G.nav.nodes[ni] || { x: at[0], y: at[1], z: at[2] };
+        const yaw = Math.atan2(look[0] - n.x, look[2] - n.z), pitch = Math.atan2(look[1] - n.y - 1.6, Math.hypot(look[0] - n.x, look[2] - n.z));
+        put(a, n.x, n.y, n.z, yaw); follow(); hud(true); g.rig.yaw = yaw; g.rig.pitch = Math.min(0.5, pitch * 0.8); step(0.4);
+        const e = leg('kelp').ends[0]; bot.pipeCd = 0; put(bot, e.approach[0], e.approach[1], e.approach[2]); step(0.1);
+        P().debugRide(bot, 'kelp', 0);
+        return { at: [n.x, n.y, n.z], ...go(0.7)() };
+      });
+      S(`bystander-kelp-${tag}-2`, go(1.05));
+      S(`bystander-kelp-${tag}-3`, go(1.45));
+      S(`bystander-kelp-${tag}-4`, () => { const a = bot; for (let i = 0; i < 120 && a.pipe && a.pipe.phase !== 'pop'; i++) dbg.step(1000 / 60); step(0.18); return { phase: a.pipe?.phase, pos: a.pos.toArray().map((v) => +v.toFixed(2)) }; });
+    }
+  }
+  if (set === 'mouths') {
+    S('mouth-two-way-arch', () => { hud(false); for (const [k, o] of M().actors.entries()) away(o, k); const e = leg('arch').ends[0]; cine([e.pos[0] + e.out[0] * 5.5 + 1.2, 2.1, e.pos[2] + e.out[2] * 5.5 + 1.6], [e.pos[0], 1.3, e.pos[2]]); step(0.3); return 1; });
+    S('mouth-one-way-in-express', () => { const e = leg('express').ends[0]; cine([e.pos[0] + e.out[0] * 5.0 - 1.5, 2.2, e.pos[2] + e.out[2] * 5.0 + 1.0], [e.pos[0], 1.2, e.pos[2]]); step(0.3); return 1; });
+    S('mouth-one-way-out-express', () => { const e = leg('express').ends[1]; cine([e.pos[0] + e.out[0] * 5.0 + 1.5, 3.2, e.pos[2] + e.out[2] * 5.0], [e.pos[0], 2.2, e.pos[2]]); step(0.3); return 1; });
+    S('mouth-two-way-lit-by-a-rider', () => {
+      const bot = M().actors.find((o) => o !== me() && o.team !== me().team), e = leg('arch').ends[1];
+      const a0 = leg('arch').ends[0]; put(bot, a0.approach[0], a0.approach[1], a0.approach[2]); step(0.05); P().debugRide(bot, 'arch', 0); step(0.9);
+      cine([e.pos[0] + e.out[0] * 5.0 - 1.2, 3.9, e.pos[2] + e.out[2] * 5.0 + 0.8], [e.pos[0], 3.4, e.pos[2]]); return { lit: P().lit[e.i].n };
+    });
+  }
+  if (set === 'tide') {
+    // the E kelp drum from the court beside it: UP (the fronds tall, their ripples running up, bubbles rising), then the
+    // same view after the flip (DOWN: the tops bowed over inward, ripples running down, bubbles sinking) and at the flip
+    // itself (the bubble curtain)
+    const drum = () => { hud(false); cine([14.0, 2.8, -9.3], [25, 5.0, 0], 72); };
+    S('tide-kelp-up', () => {
+      for (const [k, o] of M().actors.entries()) if (o !== me()) away(o, k);
+      M().time = M().duration - 60; P().S.clock.t = 60; dbg.step(1000 / 60);
+      drum(); step(2.0); return { flow: P().flow() };
+    });
+    S('tide-warning-hud', () => {
+      const a = me(), e = leg('kelp').ends[0];
+      for (const [k, o] of M().actors.entries()) if (o !== a) away(o, k);
+      M().time = M().duration - 82.6; P().S.clock.t = 82.6; dbg.step(1000 / 60);
+      put(a, e.approach[0] + e.out[0] * 3.2 - 0.6, e.approach[1], e.approach[2] + e.out[2] * 3.2, facing(a, e)); follow(); hud(true); g.rig.yaw = facing(a, e); g.rig.pitch = -0.08;
+      step(1.0); return { flow: P().flow(), line: document.querySelector('.iw-pp-line.is-on')?.textContent };
+    });
+    S('tide-warning-world-gauges', () => {
+      hud(false); cine([7.5, 10.4, -15.0], [4.5, 10.6, -25.0], 42);
+      step(0.4); return { flow: P().flow() };
+    });
+    S('tide-flip-world', () => {
+      for (let i = 0; i < 600 && P().flow().dir === 'ab'; i++) dbg.step(1000 / 60);
+      step(0.5); return { flow: P().flow() };
+    });
+    S('tide-flip-hud', () => {
+      const a = me(), e = leg('kelp').ends[0];
+      for (let i = 0; i < 90 && P().flow().phase !== 'run'; i++) dbg.step(1000 / 60);
+      follow(); hud(true); g.rig.yaw = facing(a, e); step(0.6);
+      return { flow: P().flow(), line: document.querySelector('.iw-pp-line.is-on')?.textContent };
+    });
+    S('tide-kelp-down', () => { drum(); step(2.5); return { flow: P().flow() }; });
+    S('tide-kelp-flip-curtain', () => {
+      // (back to just before the 90 s flip, then on to 0.35 s after it: the curtain roars through the drum as it turns)
+      M().time = M().duration - 89.2; P().S.clock.t = 89.2; P().seek?.(89.2); dbg.step(1000 / 60);
+      drum();
+      for (let i = 0; i < 120 && P().flow().dir === 'ab'; i++) dbg.step(1000 / 60);
+      step(0.35); return { flow: P().flow() };
+    });
+  }
+  if (set === 'map') {
+    S('map-rider-and-lit-exit', () => {
+      const a = me(), bot = M().actors.find((o) => o.bot && o.team !== a.team);
+      for (const [k, o] of M().actors.entries()) if (o !== a && o !== bot) away(o, k);
+      const e = leg('express~').ends[0]; put(bot, e.approach[0], e.approach[1], e.approach[2]); step(0.05);
+      P().debugRide(bot, 'express~', 0); step(1.3);
+      follow(); hud(true); step(0.1);
+      return { rider: bot.pipe?.phase, revealed: true };
+    });
+    // the same map at four times the size, laid over the screen (the corner map is ~ 110 px wide): the network, the
+    // enemy rider's dot on the Express, its lit exit's ring, the Kelp Lines' arrows
+    S('map-enlarged', () => {
+      const mm = g.minimap; mm._compose(0);
+      const c = document.createElement('canvas'), k = Math.min((innerHeight - 40) / mm.h, (innerWidth - 40) / mm.w);
+      c.width = Math.round(mm.w * k); c.height = Math.round(mm.h * k);
+      const x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.drawImage(mm.canvas, 0, 0, c.width, c.height);
+      c.id = 'aq-mapbig'; Object.assign(c.style, { position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999, borderRadius: '18px', boxShadow: '0 0 0 4px #15121c, 0 0 40px rgba(0,0,0,.6)', background: '#123' });
+      document.body.appendChild(c);
+      return { w: c.width, h: c.height };
+    });
+  }
+  if (set === 'spawn') {
+    S('spawn-play-camera-alpha', () => {
+      const a = me();
+      for (const [k, o] of M().actors.entries()) if (o !== a) away(o, k);
+      const pad = __G.level.spawnPads[a.team];
+      put(a, pad.x, pad.y, pad.z, Math.atan2(-pad.x, -pad.z)); hud(false); follow(); g.rig.yaw = Math.atan2(-pad.x, -pad.z); g.rig.pitch = -0.13;
+      step(1.2);
+      const c = __G.camera; window.__spawnCam = { p: c.position.toArray(), d: c.getWorldDirection(new THREE.Vector3()).toArray() };
+      return window.__spawnCam;
+    });
+    S('spawn-play-camera-alpha-express-rider', () => {
+      const a = me(), mate = M().actors.find((o) => o !== a && o.team === a.team), lg = leg(a.team === 0 ? 'express' : 'express~');
+      const e = lg.ends[0]; put(mate, e.approach[0], e.approach[1], e.approach[2]); step(0.05);
+      P().debugRide(mate, lg.id, 0); for (let i = 0; i < 200 && mate.pipe && mate.pipe.u < 33; i++) dbg.step(1000 / 60);
+      return { u: mate.pipe?.u };
+    });
+    S('spawn-play-camera-bravo', () => {
+      const c = window.__spawnCam, p = c.p, d = c.d;
+      for (const [k, o] of M().actors.entries()) if (o !== me()) away(o, k, 0);
+      step(2.5);
+      cine([-p[0], p[1], -p[2]], [-p[0] - d[0] * 20, p[1] + d[1] * 20, -p[2] - d[2] * 20], window.__fov0);
+      step(0.2);
+      return 1;
+    });
+  }
+  if (set === 'ridecam') {
+    // the ride camera (src/game/pipesCam.js) on every kind of leg, as the rider sees it: the Gulper Run, an Arch Line, a
+    // Kelp Line UP and the Express, each from the walk-in to the landing (start, middle, the exit shot, the pop, after)
+    const RIDES = [
+      ['gulper', 0, [['1-suck', 'suck', 0.12], ['2-into-the-tank', 'u', 9.5], ['3-mid-tank', 'u', 14], ['4-exit-shot', 'u', 23.5], ['5-pop', 'pop', 0.12], ['6-landed', 'land', 0.25]]],
+      ['arch', 0, [['1-suck', 'suck', 0.12], ['2-up-the-shaft', 'u', 6.0], ['3-arch-tank', 'u', 14], ['4-exit-shot', 'u', 26.5], ['5-pop', 'pop', 0.12], ['6-landed', 'land', 0.25]]],
+      ['kelp', 0, [['1-up-the-drum', 'u', 7.0], ['2-out-of-the-drum', 'u', 13.5], ['3-over-their-promenade', 'u', 25], ['4-exit-shot', 'u', 39.5], ['5-pop', 'pop', 0.12]]],
+      ['express', 0, [['1-up-the-riser', 'u', 9.5], ['2-over-the-wing', 'u', 30], ['3-exit-shot', 'u', 57], ['4-pop', 'pop', 0.12]]],
+    ];
+    for (const [id, k, marks] of RIDES) {
+      let popAt = -1, landAt = -1;
+      for (const [tag, kind, at] of marks) {
+        S(`ridecam-${id}-${tag}`, () => {
+          const a = me(), lg = leg(id), e = lg.ends[k];
+          if (tag === marks[0][0]) {
+            for (const [kk, o] of M().actors.entries()) if (o !== a) away(o, kk);
+            if (a.pipe) P()._abort(a, 'scene'); P().rideCam.reset(); step(0.1);
+            P().refused.clear(); a.pipeCd = 0; P().myRides = 0;
+            put(a, e.approach[0] + e.out[0] * 0.6, e.approach[1], e.approach[2] + e.out[2] * 0.6, facing(a, e));
+            follow(); hud(true); g.rig.yaw = facing(a, e); g.rig.pitch = -0.12; step(0.5);
+            for (let i = 0; i < 90 && !a.pipe; i++) { a.intent.move.set(-e.out[0], 0, -e.out[2]); dbg.step(1000 / 60); }
+            a.intent.move.set(0, 0, 0); popAt = -1; landAt = -1;
+          }
+          const t0 = performance.now();
+          for (let i = 0; i < 400; i++) {
+            const p = a.pipe;
+            if (p && p.phase === 'pop' && popAt < 0) popAt = i;
+            if (!p && landAt < 0) landAt = i;
+            if (kind === 'suck' && p && p.phase === 'suck' && P()._T(p) >= at) break;
+            if (kind === 'u' && (!p || p.phase === 'pop' || (p.phase === 'ride' && (p.u || 0) >= at))) break;
+            if (kind === 'pop' && p && p.phase === 'pop' && (p.popT || 0) >= at) break;
+            if (kind === 'land' && !p) { step(at); break; }
+            dbg.step(1000 / 60);
+          }
+          const st = P().rideCam.st, c = __G.camera.position;
+          return { mode: st?.mode, phase: a.pipe?.phase, u: +(a.pipe?.u ?? 0).toFixed(2), cam: c.toArray().map((v) => +v.toFixed(2)), rider: a.pos.toArray().map((v) => +v.toFixed(2)), ms: Math.round(performance.now() - t0) };
+        });
+      }
+    }
+  }
+  if (set === 'glowprobe') {
+    // the frames tests/pipes-audit.js's glow part reads its pixels from (a team-1 bot mid-ride, the camera held still)
+    const PROBES = [
+      ['glowprobe-1-tank-from-court', 'gulper', 12.5, [0, 1.6, -12.5], [0, 0.5, 0], false],
+      ['glowprobe-2-glass-walk-through-enemy-ink', 'gulper', 12.5, [0, 4.0, -6.5], [0, 2.4, 0], true],
+      ['glowprobe-3-express-from-the-terrace', 'express~', 30, [-1, 1.6, 31], [-5, 8, 37], false],
+    ];
+    for (const [name, id, u, from, look, ink] of PROBES) S(name, () => {
+      const a = me(), bot = M().actors.find((o) => o.team === 1 && o.bot);
+      for (const [k, o] of M().actors.entries()) if (o !== bot) away(o, k, 0);
+      for (const o of M().actors) { o.pipeCd = 0; if (o.pipe) P()._abort(o, 'shots'); }
+      if (ink) for (let x = -8; x <= 8; x += 0.8) for (let z = -2; z <= 2; z += 0.8) __G.paint.splat(new THREE.Vector3(x, 2.5, z), 1.0, 0, { seed: 0.5 });
+      hud(false); cine(from, look, window.__fov0);
+      const e = leg(id).ends[0]; put(bot, e.approach[0], e.approach[1], e.approach[2]); step(0.1);
+      P().debugRide(bot, id, 0);
+      for (let i = 0; i < 400 && bot.pipe && !(bot.pipe.phase === 'ride' && bot.pipe.u >= u); i++) dbg.step(1000 / 60);
+      const v = new THREE.Vector3(bot.pos.x, bot.pos.y + 0.3, bot.pos.z).project(__G.camera);
+      void a;
+      return { px: [Math.round((v.x + 1) / 2 * innerWidth), Math.round((1 - v.y) / 2 * innerHeight)], pos: bot.pos.toArray().map((x) => +x.toFixed(2)) };
+    });
+  }
+  window.__hudScenes = scenes;
+  return scenes.map((s) => ({ name: s.name, wait: s.wait }));
+})()
