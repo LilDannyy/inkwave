@@ -4,6 +4,7 @@
 //             ring outside the 4.5 m burst, the grabber running in)
 //   weir    — an Alpha bot carrier walking up to its weir (0, 1.2, 28) with its lead / flank / anchor round it; Bravo off
 //   keeper  — Bravo carries on Alpha's half with Alpha's Gate risen: Alpha's keeper on its hold spot in front of that Gate
+//   match   — a real match (MAP=halyard …): nobody placed; frozen 0.2 s after the first burst
 //   wake    — an Alpha interceptor's eyes: Bravo's carrier swimming hidden in its ink 15 m off (no marker: only its wake)
 (async () => {
   const g = window.__inkwave, m = g.match, G = window.__G, dbg = g.debug, scene = window.__preArgs || 'burst';
@@ -53,6 +54,16 @@
     step(9, () => { c.hp = PLAYER.hp; c.invuln = 99; c.pos.set(4, 0, -18); });
     out.team = roles().filter((r) => r[0] === 'A');
     out.gate = Kp.gates[1].pos.toArray().map((v) => +v.toFixed(1));
+  } else if (scene === 'match') {
+    // (a real match on its own stage — halyard, say: nobody placed, everyone from their spawns; frozen 0.2 s after the first
+    // burst: the breakers round the ring, the grabber on the Bazookarp)
+    let burst = null; const off = on('karp:burst', (e) => { burst = e; });
+    step(40, () => { if (burst) return false; });
+    off();
+    step(0.2);
+    out.burst = burst && { team: burst.team, t: +G.time.toFixed(1) };
+    out.dist = m.actors.filter((a) => a.alive).map((a) => [a.team ? 'B' : 'A', a.weaponId, karpPlan().roleOf(a), +Math.hypot(a.pos.x - Kp.pos.x, a.pos.z - Kp.pos.z).toFixed(1)]);
+    out.holder = Kp.holder ? [Kp.holder.team ? 'B' : 'A', Kp.holder.name] : null;
   } else if (scene === 'wake') {
     const c = B[0], w = A[0];
     for (const a of m.actors) idle(a);
