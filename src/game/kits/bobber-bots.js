@@ -40,7 +40,7 @@ export const BOBBER_BOT = { setups: 0, grows: 0, lures: 0, scans: 0, engaged: 0,
 const blog = (b, ev, o) => { if (BOBBER_BOT.logOn && BOBBER_BOT.log.length < 400) BOBBER_BOT.log.push({ t: Math.round(G.time * 100) / 100, who: b.a.name, ev, ...o }); };
 BOBBER_BOT.log = [];
 export const botLog = (a, ev, o) => { if (BOBBER_BOT.logOn && a?.bot) blog(a.bot, ev, o); };
-export function resetBobberBot() { for (const k in BOBBER_BOT) { const v = BOBBER_BOT[k]; if (v && typeof v === 'object') { for (const j in v) v[j] = 0; } else BOBBER_BOT[k] = 0; } THREAT_STATS.chainShots = 0; THREAT_STATS.chainWasted = 0; }
+export function resetBobberBot() { for (const k in BOBBER_BOT) { const v = BOBBER_BOT[k]; if (Array.isArray(v)) v.length = 0; else if (v && typeof v === 'object') { for (const j in v) v[j] = 0; } else BOBBER_BOT[k] = 0; } THREAT_STATS.chainShots = 0; THREAT_STATS.chainWasted = 0; }
 THREAT_STATS.chainShots = THREAT_STATS.chainShots || 0; THREAT_STATS.chainWasted = THREAT_STATS.chainWasted || 0;
 
 // ---- prefer(brain): wave 1's pick multiplier for this bot (§0.2)
@@ -432,6 +432,82 @@ function extendSpot(b, t) {
   }
   return null;
 }
+// [b5-int3] the snap (bot.fight): its foe 4–9.5 m off (and inside the bot's own reach − 0.8 m), ink for it + `ink`, a
+// `p` chance a look (one look every 0.35 s), `cd` s before its next sub (base + up to the second); only a foe moving
+// slower than `slow` m/s or facing more than `away` rad off us (not one strafing a duel with us), and only by a weapon
+// whose shot gets there within `arrive` s; `wait`: how long after it floats the bot watches for its foe to be in reach
+// (fighting on meanwhile); `lead`: the share of the foe's run carried on to where it will be (bots strafe and turn back
+// every 0.6–1.8 s); `short`: m short of it toward us
+export const TURF_WEB = { p: 0.012, ink: 80 };   // [b5-int3] (paint: a new Turf web's chance a frame — was 0.02 — and the ink it waits for — was 72)
+export const SNAP = { min: 4.0, max: 9.5, ink: 20, p: 0.35, cd: [4, 2], wait: 0.6, lead: 0.4, short: 0.5, arrive: 0.3, slow: 2.5, away: 1.05, preAim: 0.3, calm: 0.6 };
+// where to float it: the foe's feet in (the lob's flight + the 0.35 s it takes to open), `short` m toward us — clear of
+// our own swing / splash, a floor that stands, the lob landing there → V3 | null
+function snapSpot(b, t) {
+  const a = b.a, tp = zonePlan() ? null : towerPlan(), dx0 = t.pos.x - a.pos.x, dz0 = t.pos.z - a.pos.z, d0 = Math.hypot(dx0, dz0) || 1;
+  const T = d0 / 9 + SB().deployTime, px = t.pos.x + t.vel.x * T * SNAP.lead, pz = t.pos.z + t.vel.z * T * SNAP.lead;
+  const dx = px - a.pos.x, dz = pz - a.pos.z, l = Math.hypot(dx, dz) || 1;
+  const minD = MELEE[a.weapon.kind] || MAIN_KITS[a.weapon.kind]?.bot?.melee ? 4.5 : 3.5;
+  for (const k of [SNAP.short, SNAP.short + 0.7, 0]) {
+    const x = px - (dx / l) * k, z = pz - (dz / l) * k;
+    if (Math.hypot(x - a.pos.x, z - a.pos.z) < minD) continue;
+    const at = lobBudget(2, () => okSpot(a, x, z, tp));
+    if (at && Math.abs(at.y - t.pos.y) < 1.2) return at;
+  }
+  return null;
+}
+// [b5-int3] the snap's own shot (botAct): while it opens, aimed at where it floats (the trigger off; a charger charging);
+// floated, fired the moment a foe it knows of stands in its chain's reach (R(N) − 0.15: they haven't noticed it yet), for
+// SNAP.wait s at most → an aim, or null (gone, blown, given up: back to the duel)
+function snapOf(b) {
+  const SN = b._bobSnapIt;
+  if (!SN) return null;
+  const st = SN.state;
+  if (SN.owner !== b.a || !b.a.alive || (st !== 'fly' && st !== 'open' && st !== 'live') || G.time > SN.snapT || (st === 'live' && G.time - SN.born > SNAP.wait)) {
+    if (st === 'live') { BOBBER_BOT.snapLeft = (BOBBER_BOT.snapLeft || 0) + 1; snapLog(b, SN, 'left'); }
+    b._bobSnapIt = null; return null;
+  }
+  return SN;
+}
+const snapLog = (b, SN, ev, o) => { const L = BOBBER_BOT.snapLog || (BOBBER_BOT.snapLog = []); if (L.length < 300) L.push({ t: Math.round(G.time * 10) / 10, ev, w: b.a.weapon.kind, src: SN.src, ...o }); };
+// (in flight: about how long until it lands where it was aimed)
+function snapEta(SN) {
+  const P = SN.planned, hv = Math.hypot(SN.vel.x, SN.vel.z);
+  return P && hv > 0.5 ? Math.hypot(P.x - SN.pos.x, P.z - SN.pos.z) / hv : 9;
+}
+const ONE_SHOT = { blaster: true, bow: true, slosher: true, bucket: true, charger: true };   // (one shot a press: the trigger within half the bobber's size)
+// (the log) the nearest foe it knows of to the chain's live bobbers, in m (99: none)
+function nearFoe(b, SN) {
+  const L = SN.chain ? SN.chain.items : [SN];
+  let bd = 99;
+  for (const e of knownFoes(b)) for (const o of L) if (o.state === 'live') bd = Math.min(bd, Math.hypot(e.x - o.spot.x, e.z - o.spot.z));
+  return bd;
+}
+function snapFoe(b, SN, tArr) { return foeInAt(b, SN.chain ? SN.chain.items : [SN], SN.chain ? SN.chain.n : 1, tArr, 0.15); }
+// [b5-int3] a foe it knows of where the shot finds it: within R(N) − m of a live bobber of L (±1.6 m in height) where it
+// will be t s from now (its run carried on) → that distance, or −1
+function foeInAt(b, L, n, t, m) {
+  const R = sizeOf(n).R - m;
+  let bd = -1;
+  for (const e of knownFoes(b)) {
+    const x = e.x + e.vx * t, z = e.z + e.vz * t;
+    for (const o of L) {
+      if (o.state !== 'live' || Math.abs(e.y + 0.7 - o.spot.y) >= 1.6) continue;
+      const d = Math.hypot(x - o.spot.x, z - o.spot.z);
+      if (d < R && (bd < 0 || d < bd)) bd = d;
+    }
+  }
+  return bd;
+}
+// [b5-int3] how long its shot takes to reach a bobber d m off (its projectile's speed; a lob's wind-up and arc; a beam: 0)
+export function arrivalT(w, d) {
+  const k = w.kind;
+  if (k === 'charger') return 0.02;
+  if (k === 'bucket' || k === 'slosher') return (w.windup || 0.12) + d / 12;
+  if (k === 'roller' || k === 'brush') return (w.flickWindup || 0.2) + d / 16;
+  if (k === 'bow') return 0.05 + d / (w.speedRing ? big(w.speedRing) : 45);
+  if (k === 'spinner') return d / ((w.speedMin + w.speedMax) / 2 || 30);
+  return d / (w.projSpeed || 30);
+}
 // [b5-int3] the ambush (botAct's hold): how long after its last link, and how far back from the chain's middle
 export const AMBUSH = { time: 12, back: [6, 5, 7, 4.5] };
 // a stand spot on our side of the chain laid at H (H.d: the way foes come there; a guard's: toward its zone's middle),
@@ -455,7 +531,7 @@ function ambushSpot(b, H) {
 // the first link of a chain laid now; the rest follow it in a burst (paint → planOf)
 function startChain(b, A, L) {
   blog(b, 'chain', { src: A.src, n: L.length, at: [Math.round(A.x), Math.round(A.z)], d: Math.round(Math.hypot(A.x - b.a.pos.x, A.z - b.a.pos.z) * 10) / 10, ink: Math.round(b.a.ink) });
-  b._bobPlan = { pts: L, i: 1, t0: G.time, m: G.match, A, from: b.a.pos.clone() }; b._bobSrc = A.src || 'mode';
+  b._bobPlan = { pts: L, i: 1, t0: G.time, m: G.match, A, from: b.a.pos.clone() }; b._bobSrc = A.src || 'mode'; b._bobSnap = false;
   b._bobberAt = L[0];
   b.bombCd = 0.45 + Math.random() * 0.3;
   BOBBER_BOT.setups++;
@@ -482,7 +558,7 @@ export const botKit = {
         if (at && !T0.some((t) => Math.hypot(t.x - at.x, t.z - at.z) <= 4.6 && Math.abs(t.y - at.y) < 2.2 && G.physics.los(_v.set(t.x, t.y + 1.0, t.z), _v2.set(at.x, at.y + 1.0, at.z)))) { at = null; _noWhy = 'untethered'; }
         if (!at) { const why = _noWhy; at = linkNear(b, P, q, tp); blog(b, at ? 'moved' : 'skip', { i: P.i - 1, d: Math.round(Math.hypot(q.x - a.pos.x, q.z - a.pos.z) * 10) / 10, why, moved: P.from ? Math.round(P.from.distanceTo(a.pos) * 10) / 10 : -1 }); }
         if (at) {
-          b._bobberAt = at; BOBBER_BOT.grows++; (P.thrown || (P.thrown = [P.pts[0]])).push(at);
+          b._bobberAt = at; b._bobSnap = false; BOBBER_BOT.grows++; (P.thrown || (P.thrown = [P.pts[0]])).push(at);
           if (P.i >= P.pts.length) {
             b._bobPlan = null; b.bombCd = 10 + Math.random() * 6; BOBBER_BOT.bursts = (BOBBER_BOT.bursts || 0) + 1;
             // (once its last link has landed and linked: a chain left short of three — a link skipped, one that didn't tether
@@ -514,7 +590,11 @@ export const botKit = {
       BOBBER_BOT.tripsDone = (BOBBER_BOT.tripsDone || 0) + 1;
       return startChain(b, T.A, L);
     }
-    if (a.ink < 72) { W.ink++; return false; }
+    // [b5-int3] Turf: a standing web far less often, and only on a full tank — in the matches Turf's webs had a foe in reach
+    // 0.1–0.3 % of their chain-seconds and cost most of the bobbers thrown; the ink goes to the snaps (fight) instead
+    const turf = !zonePlan() && !tp;
+    if (a.ink < (turf ? TURF_WEB.ink : 72)) { W.ink++; return false; }
+    if (turf && Math.random() > TURF_WEB.p / 0.02) return false;
     // (a bot with a dozen of its own out already doesn't start another chain: past the hidden guard each throw would only
     // retire its oldest — its web is big enough, and every throw, relink and fizzle costs the frame)
     if (mine(a).length >= 12) { W.many = (W.many || 0) + 1; return false; }
@@ -548,6 +628,20 @@ export const botKit = {
       b._bobExtT = G.time + 0.3;
       const S = extendSpot(b, t);
       if (S) { b._bobberAt = S; b._bobSrc = 'ext'; b._bobSnap = true; b.bombCd = 2.5 + Math.random(); BOBBER_BOT.exts = (BOBBER_BOT.exts || 0) + 1; return true; }
+    }
+    // [b5-int3] a snap: one lone bobber thrown to float on the foe's feet (where it will be when it opens, ~0.9 s on), aimed at
+    // while it opens and shot the moment it floats with the foe still in its reach — the foe's bots notice a web 0.3–0.5 s
+    // after it floats and step out of it, so a shot that only starts turning then (the scan's) found them gone: pairs and
+    // lures had 0 s of foe time in reach in four matches, aimed triggers were most of the waste
+    if (t && t.alive && reach && dist >= SNAP.min && dist <= Math.min(SNAP.max, reach - 0.8) && a.ink >= a.sub.inkCost + SNAP.ink && G.time >= (b._bobSnapGate || 0)
+      && !b._bobSnapIt && Math.random() < SNAP.p) {
+      b._bobSnapGate = G.time + 0.35;
+      // (not one dancing with us — strafing a duel at a run, it is gone from any spot in the second the bobber takes; one
+      // standing, walking or busy with someone else, its face turned away from us, stays near it: the duel probe — a
+      // strafing Splattershot — had the snapper lose 10 duels to 23, against 22 / 21 without the sub)
+      const fv = Math.hypot(t.vel.x, t.vel.z), away = Math.abs(angleDiff(t.aimYaw ?? t.yaw, Math.atan2(a.pos.x - t.pos.x, a.pos.z - t.pos.z))) > SNAP.away;
+      const S = arrivalT(a.weapon, dist) <= SNAP.arrive && (fv < SNAP.slow || away) ? snapSpot(b, t) : null;
+      if (S) { snapLog(b, { src: 'snap' }, 'throw', { d: Math.round(dist * 10) / 10, fv: Math.round(Math.hypot(t.vel.x, t.vel.z) * 10) / 10, tw: t.weapon?.kind, tm: t.bot?.mode }); b._bobberAt = S; b._bobSrc = 'snap'; b._bobSnap = true; b.bombCd = SNAP.cd[0] + Math.random() * SNAP.cd[1]; BOBBER_BOT.snaps = (BOBBER_BOT.snaps || 0) + 1; return true; }
     }
     if (t && t.alive && reach && dist >= 5 && dist <= Math.min(11, reach - 0.5) && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025 && mine(a).length < 12
       && !items.some((o) => o.team === a.team && o.state !== 'dead' && Math.hypot(o.spot.x - t.pos.x, o.spot.z - t.pos.z) < 3.5)) {
@@ -587,12 +681,14 @@ function foeIn(ch, team) {
   c[k] = G.time;
   return (c[k + 1] = foeInNow(ch, team));
 }
+// ([b5-int3] well inside it — R(N) − 0.35, ±1.6 m: a shot through a chain whose foe stood at its rim set it off for a
+// glancing 25–35 or nothing — the matches' wasted 'blast:blaster' and fight strays — and the bobber ate the shot)
 function foeInNow(ch, team) {
-  const R = sizeOf(ch.n).R;
+  const R = sizeOf(ch.n).R - 0.35;
   for (const e of G.actors) {
     if (e.team === team || !e.alive) continue;
     const k = teamKnown(team, e, 1.0); if (!k) continue;
-    for (const o of ch.items) if (o.state === 'live' && Math.hypot(k.pos.x - o.spot.x, k.pos.z - o.spot.z) < R && Math.abs(k.pos.y + 0.7 - o.spot.y) < 1.8) return true;
+    for (const o of ch.items) if (o.state === 'live' && Math.hypot(k.pos.x - o.spot.x, k.pos.z - o.spot.z) < R && Math.abs(k.pos.y + 0.7 - o.spot.y) < 1.6) return true;
   }
   return false;
 }
@@ -608,8 +704,8 @@ const posOf = (o) => (o.state === 'fly' ? o.planned : o.spot);
 function idleNow(o, team) {
   if (o.state === 'live') return !!o.chain && !foeIn(o.chain, team);
   // (one on its way: idle unless a foe the team knows of stands within a lone one's reach of where it will float)
-  const p = posOf(o), R = sizeOf(1).R;
-  for (const e of G.actors) { if (e.team === team || !e.alive) continue; const k = teamKnown(team, e, 1.0); if (k && Math.hypot(k.pos.x - p.x, k.pos.z - p.z) < R && Math.abs(k.pos.y + 0.7 - p.y) < 1.8) return false; }
+  const p = posOf(o), R = sizeOf(1).R - 0.35;
+  for (const e of G.actors) { if (e.team === team || !e.alive) continue; const k = teamKnown(team, e, 1.0); if (k && Math.hypot(k.pos.x - p.x, k.pos.z - p.z) < R && Math.abs(k.pos.y + 0.7 - p.y) < 1.6) return false; }
   return true;
 }
 // what a weapon's shot covers besides its line (config numbers, a per-draw [ring, full] pair read as its larger): the
@@ -824,6 +920,13 @@ export function botAct(b, dt, it, move, busy) {
     if (st === 'in') { S.ready = false; S.t0 = G.time; S.fire0 = null; S.acqK = null; BOBBER_BOT.readyFired = (BOBBER_BOT.readyFired || 0) + 1; THREAT_STATS.chainShots++; }
     else if (!st || G.time - S.t0 > 3) { b._bobSkip = S.it.chain; b._bobSkipT = G.time + 0.5; S = b._bob = null; }
   }
+  // [b5-int3] engaged: the foe it fires for still where the shot will find it (every 0.1 s) — else it stops (an aimed shot on
+  // a chain whose foe stepped out was most of the waste: a charger's charge, a turn, a spinner's spin-up outlast the foe)
+  if (S && !S.ready && S.it.state === 'live' && G.time - (S.chk || 0) >= 0.1) {
+    S.chk = G.time;
+    const it0 = S.it, L = it0.chain ? it0.chain.items : [it0], d3 = Math.hypot(it0.spot.x - a.pos.x, it0.spot.y - a.pos.y - 1.1, it0.spot.z - a.pos.z);
+    if (foeInAt(b, L, it0.chain?.n || 1, arrivalT(a.weapon, d3), 0.2) < 0) { BOBBER_BOT.foeGone = (BOBBER_BOT.foeGone || 0) + 1; b._bobSkip = it0.chain; b._bobSkipT = G.time + 0.4; S = b._bob = null; if (a.weaponRunner?.charging) a.weaponRunner.dropCharge?.(); }
+  }
   if (S && S.it && (S.it.state !== 'live' || (!S.ready && ((S.fire0 != null && G.time - S.fire0 > 0.6) || G.time - S.t0 > 1.8)))) {
     if (S.it.state === 'live') { BOBBER_BOT.gaveUp++; b._bobSkip = S.it.chain; b._bobSkipT = G.time + 1.5; }
     S = b._bob = null;
@@ -863,6 +966,8 @@ export function botAct(b, dt, it, move, busy) {
   // ink, or the puddle bots.js paints to swim in when it's on none)
   if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; }
   if (busy) { if (G.time < (b._bobSnapT || 0)) { BOBBER_BOT.snapBusy = (BOBBER_BOT.snapBusy || 0) + 1; const k = b.sp?.esc ? 'esc' : b.thr ? 'thr' : b._climbAim ? 'climb' : b.blockT > 0 ? 'canopy' : 'other'; (BOBBER_BOT.busyWhy || (BOBBER_BOT.busyWhy = {}))[k] = (BOBBER_BOT.busyWhy[k] || 0) + 1; } return null; }
+  // [b5-int3] a snap of its own on its way: aimed at where it floats once it opens, shot the moment its foe is in it
+  if (!S && a.sub?.kind === 'bobber' && b._bobSnapIt) { const SN = snapOf(b); if (SN && (SN.state === 'live' || preAimOk(b, SN))) { const r = snapAim(b, SN, it, move); if (r) return r; } }
   // laying a chain: hold about where it stands (its links are picked in reach of here) and, short of ink for the next one,
   // a quick dive in its own ink (42 ink/s) — a Zone Control guard with its web to build does the same before it starts
   // (a burst's chain left short of three: its growth, straight away — the links thrown by paint, bombCd waived)
@@ -976,6 +1081,58 @@ export function botAct(b, dt, it, move, busy) {
   // (far off, it closes in a little while it lines up — only when it was walking anyway: its route keeps it off edges)
   if (!melee && dh > 9 && move.lengthSq() > 0.01) move.set(dx / dh, 0, dz / dh).multiplyScalar(0.5); else move.multiplyScalar(0.3);
   b.noProg = 0;   // (standing to line up a shot isn't being stuck: no unstick hop — a hop throws the aim and the spread out)
+  return _aim;
+}
+// [b5-int3] the snap's shot (see snapOf): once it floats, the moment a foe it knows of is where the shot would find it in
+// the chain's reach (R(N) − 0.15: it hasn't noticed the web yet), the bot turns from its duel to the bobber (the scan's
+// aim model: the acquisition error and the slow wander, from that moment) and fires once its aim is on it; until then
+// it fights on (null) — no aim or trigger taken from its duel for a bobber with nobody by it
+// (on its way: aimed at where it will float for its last SNAP.preAim s — but only while nothing shoots this bot: a snap is
+// thrown at a foe busy elsewhere, and one that turns on us is fought, not ignored for a bobber)
+function preAimOk(b, SN) {
+  if (b.a.lastDamage < SNAP.calm) return false;
+  if (SN.state === 'open') return true;
+  return SN.state === 'fly' && !!SN.planned && snapEta(SN) < SNAP.preAim;
+}
+function snapAim(b, SN, it, move) {
+  const a = b.a, w = a.weapon, kind = w.kind, wr = a.weaponRunner;
+  let Q = b._bobSnapQ;
+  if (!Q || Q.it !== SN) { Q = b._bobSnapQ = { it: SN, t0: -1, acqK: null, sy: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.5), sp: (Math.random() - 0.5) * 1.2, fired: false }; snapLog(b, SN, 'live', { near: Math.round(nearFoe(b, SN) * 10) / 10 }); }
+  const live = SN.state === 'live', p = live || SN.state === 'open' ? SN.spot : SN.planned, ex = a.pos.x, ey = a.pos.y + 1.1, ez = a.pos.z;
+  const dx = p.x - ex, dy = p.y - ey, dz = p.z - ez, dh = Math.hypot(dx, dz), d3 = Math.hypot(dh, dy);
+  const fd = live ? snapFoe(b, SN, arrivalT(w, d3)) : -1;
+  if (Q.t0 < 0) {
+    if (live && fd < 0 && !Q.pre) return null;
+    Q.t0 = G.time; Q.pre = !live; BOBBER_BOT.snapAims = (BOBBER_BOT.snapAims || 0) + 1;
+    if (live) snapLog(b, SN, 'in', { fd: Math.round(fd * 10) / 10, age: Math.round((G.time - SN.born) * 100) / 100 });
+  }
+  if (live && Q.pre && !Q.liveT) { Q.liveT = G.time; snapLog(b, SN, 'live2', { fd: Math.round(fd * 10) / 10 }); }
+  const idealYaw = Math.atan2(dx, dz), idealPitch = Math.atan2(dy, Math.max(0.5, dh));
+  if (Q.acqK == null) Q.acqK = clamp((Math.abs(angleDiff(b.aimYaw, idealYaw)) + Math.abs(b.aimPitch - idealPitch)) / 0.35, 0.15, 1);
+  const e = (b.diff.aimError ?? 0.05) * 0.7, acq = Math.exp(-(G.time - Q.t0) / Math.max(0.12, (b.diff.reaction ?? 0.3) * 0.9)), settle = 0.35 + 0.65 * acq;
+  _aim.yaw = idealYaw + e * (0.7 * settle * wander(b.t * 1.7 + (b.ph1 || 0)) + 2.2 * acq * Q.acqK * Q.sy);
+  _aim.pitch = idealPitch + e * 0.6 * (0.7 * settle * wander(b.t * 2.1 + (b.ph2 || 0)) + 1.5 * acq * Q.acqK * Q.sp);
+  _aim.dist = Math.max(1, d3);
+  const off = Math.hypot(angleDiff(b.aimYaw, idealYaw), b.aimPitch - idealPitch), tol = Math.max(0.035, Math.atan2(0.2, Math.max(0.5, d3))) * 1.6;
+  const tf = Math.max(0.008, 0.55 * Math.atan2(SB().hitR, Math.max(0.5, d3)));
+  it.sub = false; b._bombAim = false; it.squid = false; it.jump = false;
+  a.fireFacing = Math.max(a.fireFacing || 0, 0.25);
+  // (an automatic gun fires once the aim is within the bobber's own size at that distance — its spread and the next shots do
+  // the rest; one shot a press — a blaster, a bow, a lob — within half of it; a charge — a charger, a spinner, a splatling,
+  // a bow's draw — built up if it isn't already, loosed once on it)
+  const ftol = ONE_SHOT[kind] ? tf : tol, KB = MAIN_KITS[kind]?.bot, on = fd >= 0;
+  if (CHARGES[kind] || KB?.charges) {
+    const rel = kind === 'charger' ? 0.12 : kind === 'spinner' ? 0.3 : kind === 'splatling' ? 0.35 : (w.ring1 ?? 0.4) + 0.06;
+    it.fire = wr.burstT > 0 || wr.streaming ? false : wr.charging ? !(on && off < ftol && (wr.charge ?? 1) >= rel) : (on || !live) && off < tol * 4 && !(wr.cooldown > 0);
+  } else it.fire = on && (b._devTrigger ? b._devTrigger(d3, off < ftol, off < tol * 4, 0, weaponRange(w) + 1) : off < ftol);
+  if (it.fire && !KB?.charges && !CHARGES[kind] && (wr.bloom ?? 0) > 0.05) it.fire = false;
+  if (it.fire && !a.grounded && !((CHARGES[kind] || KB?.charges) && wr.charging)) it.fire = false;
+  if (it.fire && on && !Q.fired) { Q.fired = true; BOBBER_BOT.snapShots = (BOBBER_BOT.snapShots || 0) + 1; snapLog(b, SN, 'fire', { fd: Math.round(fd * 10) / 10, dt: Math.round((G.time - Q.t0) * 100) / 100 }); }
+  // (floated with nobody in its reach: back to the duel at once, unless it was aimed at on its way — then held on it for
+  // SNAP.wait, its foe stepping in; snapOf drops it after)
+  if (live && !on && (!Q.pre || a.lastDamage < SNAP.calm) && !(wr.charging && (CHARGES[kind] || KB?.charges))) { Q.t0 = -1; Q.acqK = null; Q.pre = false; return null; }
+  move.multiplyScalar(0.6);
+  b.noProg = 0;
   return _aim;
 }
 // a foe in a bobber's reach R (R(N) − 0.3) for a shot now, by where it will be when the blast gets there (about 0.35 s:
@@ -1158,6 +1315,7 @@ export function botDangers(api) {
     d.yLo = o.spot.y - R - 1.2; d.yHi = o.spot.y + R;
     d.hit = 'bobber'; d.lethal = (o.chain?.n || 1) >= 3 ? 2 : 1; d.linger = true; d.vis = 'near';
     d.tIn = 0.3; d.tOut = Math.max(0.1, S.life - (G.time - o.born)); d.los = true; d.losY = o.hover;
+    if (S.dangerHear > 0) { d.vis = 'big'; d.hear = S.dangerHear; }   // [b5-int3] (the A/B knob: a silent float is noticed close by, or seen in front)
     api.see(d, o.spot.x, o.spot.y, o.spot.z);
     n++;
   }

@@ -493,6 +493,7 @@ export const SUBS = {
     // has a line to one of the chain (C7)
     sagTime: 0.4, particleCap: 400, drawDist: 60, dangerCap: 48, armRange: 20,
     dangerCore: 0,   // [b5-subs] (fix round 1, an A/B knob for the lead, off: 1 = foes' bots treat an armed chain's lethal core, not R + 0.3, as its danger)
+    dangerHear: 0,   // [b5-int3] (an A/B knob for the lead, off: m — foes' bots notice an armed chain within this, else only in front of them with a clear line; 0 = within 5 m whatever way they face, as a beeping bomb)
   },
   dash: {
     id: 'dash', name: 'Dash Pellet', kind: 'dash', blurb: 'Pops under your feet and blasts you a few metres the way you\'re steering, on the ground or in the air. Its blast hits anyone you leave behind.',

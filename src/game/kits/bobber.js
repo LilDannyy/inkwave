@@ -307,7 +307,7 @@ function use(subs, a, sub) {
   const it = spawn(a, sub, pos, vel, false, netId(a) || 9e8 + ++LOCAL_GID);   // (offline: netId is 0 — an id of its own)
   it.src = a.bot ? (P && a.bot._bobSrc) || 'bot' : 'player';   // (the counters' placement source: the bot plan it was laid by)
   if (P) it.planned = new V3(P.x, P.y + sub.floatH, P.z);   // (where a bot's pick will float: its team's bots hold fire into it on the way)
-  if (P && snap) { it.snapBy = a; it.snapT = a.bot._bobSnapT = G.time + 4; }   // [b5-int3] (thrown at a foe: its thrower shoots it the moment that foe is in reach — bobber-bots.js scan)
+  if (P && snap) { it.snapBy = a; it.snapT = a.bot._bobSnapT = G.time + 4; a.bot._bobSnapIt = it; }   // [b5-int3] (thrown at a foe: its thrower shoots it the moment that foe is in reach — bobber-bots.js scan; pre-aimed while it opens: snapAim)
   rec(a, [0, it.gid, r2(pos.x), r2(pos.y), r2(pos.z), r2(vel.x), r2(vel.y), r2(vel.z)]);
   BOBBER_STATS.thrown++;
   G.cues?.sub(KIND, 'throw', { owner: a, at: a.pos });
@@ -569,7 +569,7 @@ export function trigger(it, by, how = 'shot') {
   // (what set it off: 'chain' — another chain's blast — apart from the other blasts)
   const k = `${how === 'blast' && _chainBlast ? 'chain' : how}:${by?.specialActive ? 'sp-' + (by.specialActive.kind || by.specialActive.id || '?') : by?.weapon?.kind || '-'}${by?.bot?._bob ? '(aimed)' : ''}`;
   BOBBER_STATS.via[k] = (BOBBER_STATS.via[k] || 0) + 1;
-  g.src = it.chain?.items?.[0]?.src || it.src || '-'; srcStat(g.src).trig++;
+  g.src = it.chain?.items?.[0]?.src || it.src || '-'; srcStat(g.src).trig++; g.via = k;   // ([b5-int3] g.via: the waste by what set it off, viaW)
   if (by?.bot && !by.bot._bob && !_chainBlast && BOBBER_STATS.strays.length < 60) { try { strayNote(it, by, k); } catch (e) { /* a counter: never the chain */ } }
   schedule(g);
   return g;
@@ -728,7 +728,7 @@ function hitVictim(g, e, dmg, c) {
 }
 function chainDone(g) {
   if (!g.ghost) {
-    if (g.caught.size) { BOBBER_STATS.hitTriggers++; if (g.src) srcStat(g.src).caught++; } else { BOBBER_STATS.wasted++; THREAT_STATS.chainWasted = (THREAT_STATS.chainWasted || 0) + 1; }
+    if (g.caught.size) { BOBBER_STATS.hitTriggers++; if (g.src) srcStat(g.src).caught++; } else { BOBBER_STATS.wasted++; THREAT_STATS.chainWasted = (THREAT_STATS.chainWasted || 0) + 1; if (g.via) { const W = BOBBER_STATS.viaW || (BOBBER_STATS.viaW = {}); W[g.via] = (W[g.via] || 0) + 1; } }
     relink(g.owner);
   } else applyTethers(g.owner);
   tethersDirty = true;
