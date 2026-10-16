@@ -1,0 +1,19 @@
+[net] relay ws://127.0.0.1:60776
+[net] 2 clients up in 22.0 s
+PASS both screens run the module (G.stageWorld, match.stage, the dummy)  {"a":true,"b":true}
+PASS the stage clock agrees on both screens (Practice: the host's stage clock rides its ticks), ± 0.4 s  {"a":3.967,"b":3.965}
+PASS a pure function of the clock agrees: the moving collider's top (± 0.15 m) and the edge window  {"a":[1.752,true],"b":[1.753,true]}
+PASS the host's module records reach the guest (S.rec → netEvent)  {"n":3}
+PASS a splat in the module's region replays with its painter's stage time (field 15 → opts.et)  {"et":4.26,"painter":4.2649355625929175}
+PASS a module's actor flag (F.stage) reaches the other screen's carryRemote, on and off  {"on":true,"after":[]}
+PASS a late joiner restores the module's state from the snapshot (n) and its clock (± 0.6 s once settled), with seek('late')  {"host":[3,20.874],"joiner":[3,20.405,["late","clock"]],"skew":[-0.47]}
+PASS …and follows the host's records after that  {"n":4}
+PASS the new host is told (hostChanged(true)) and is no longer a follower  {"b":{"n":4,"t":21.582,"top":1.499,"open":true,"seeks":[],"carried":[],"lastEt":null,"hostChanges":[true],"follower":false,"host":true,"nids":[[1,true],[2,false]]}}
+PASS the new host's records reach the remaining guest; their clocks still agree (± 0.4 s)  {"ok":true,"n":5,"want":5}
+[net] done
+RESULT 10/10
+c0 console: none
+c1 console: none
+c2 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":24,"maxMsg":786}
+outside requests refused: none

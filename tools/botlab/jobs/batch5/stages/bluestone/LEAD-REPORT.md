@@ -1,287 +1,363 @@
-# Bluestone Junction — engine phase, first half: the era engine's world and the jump (LEAD-REPORT, after review fix round 1)
+# Bluestone Junction — engine phase, second half: everything around the jump (LEAD-REPORT)
 
-Branch `b5-stage-bluestone`, worktree `st-b5-bluestone`. The engine phase's first half (ENGINE.md §6 steps 1–5 and 7–9)
-is built through the stage-module registry; the independent review of it (LEAD-REVIEW.json, verdict REDO on narrow
-points: 1 major, 4 minor, 1 for the next round) is answered in §0 below. Everything ran on this Mac (the task says the
-Mac mini is unavailable; COMMON.md in the worktree now says it is back — not used, see §7), one Electron instance at a
-time under the shared SLOTS=3 lock, with load averages of 220–390 throughout. Logs of this round:
-`tools/botlab/jobs/batch5/bluestone/local-logs/review-fix1/`.
+Branch `b5-stage-bluestone`, worktree `st-b5-bluestone`, on top of the first half (d99607dd; its report is
+`git show d99607dd:tools/botlab/jobs/batch5/stages/bluestone/LEAD-REPORT.md`). Built: ENGINE.md §6 steps 10–13, 12b, 12c
+and 6, all through the stage-module registry, hook-ins tagged `[b5-eras]`. Before that, the second engine review's five
+issues (LEAD-REVIEW.json, "redo on narrow points") were fixed. Everything ran on this Mac. The task says the Mac mini is
+unavailable; COMMON.md in the worktree (uncommitted, not mine) says it is back. I did not use it (§7). One Electron of mine
+ran at a time under the shared SLOTS=3 lock, at load averages of 9–220. Logs: `tools/botlab/jobs/batch5/bluestone/local-logs/engine2/`
+(`final/` holds the runs at the final code, `regress/`, `matches/`).
 
-## 0. Review fix round 1 (2026-10-16): each issue, what was done, the proof
+## 0. Review 2's issues (fixed first)
+1. **(major) First-use shader compiles in the first warning.** Fixed in `EraWorld._precompile`, which now also covers the
+   kiosks' bell sprites (drawn at opacity 0), two one-box hologram stand-ins (EraFx, 40 m under the stage), the backdrop's
+   era sets, the wires, and **the paint atlas's clearing quad** (`paint.clearFaces`' program). That last one was the
+   real ~80 ms hitch: the warning clears the appearing pieces' faces and compiled it there. EraHud also lays both callout
+   kinds out once at set-up. Proof is eras-jump 'first' on a fresh page, on the real schedule. Before: programs went
+   150 → 151 at J − 10 and the warning frame's era update took 86.5 ms (`jump-1.log`). After: no program compiled from
+   J − 20 to done + 1.5, and the warning frame took 6.4–6.9 ms (`final/eras-jump-2.log`, `jump-first-2.log`).
+2. **GTAO off present pieces for the whole warning.** The gate is now per mesh. In the warning only the meshes whose mask
+   lacks the era in force sit out; during the jump all of them do, as before. eras-look checks it two ways:
+   - a unit check: present mesh drawRange Infinity, coming-era mesh 0;
+   - a pixel check in jump 1's warning: the goods wagon renders identically with and without the gate on the present
+     meshes (max diff 0, GTAO on). Before the fix the review measured 77,982 px off.
+3. **EraHud laid itself out every frame.** The band is now placed in `say()`. It is placed again only when a gameplay
+   callout, a Zone Control callout or **a HUD banner** comes or goes (a MutationObserver), or when the chip changes state.
+   Reads come before writes, and the bar's width is written only when it changes. eras-hud measured 4 layouts over a
+   997-frame jump; before, it was one per frame. A gameplay callout that arrives after an era callout still pushes the
+   band down.
+4. **ENGINE rules 8–9 were unchecked.** `eras-data.js capacityRules` now checks them, asserted on the live union in
+   eras-world part 4: 12,312 m² paintable, 11.3 % era-only, 1,142 lightmap rows. eras-static plants one violation of each
+   (12/12).
+5. **Pictures.**
+   - One continuous jump on the real 3:00 schedule, with one palette.
+   - The bell glyph's size on screen is capped at ~6 % of the view's height up close.
+   - The rewind picture is gone: the rescue pictures are named by their moment.
 
-**The previous fixer's uncommitted work** (cut off on 2026-10-10 on top of 8768f720: eraFx.js, eras.js, eras-data.js,
-eras-hud.js, eras-jump.js). Read in full and kept, with these changes: the minimap rebuild got a set-up path for the
-time-of-day drop and builds one base per frame in its fallback (it built every missing base in one frame); the Bazookarp
-weir rule measured 3 m from the weir's trigger disc (r 1.8), which made check-maps fail on the cab shelter at 2.70 m — it
-now measures from the weir's centre as the Bazookarp SPEC does (below); the era callouts sat at 18.5 % of the HUD and
-covered the chip and the clock (seen in the pictures) — replaced by placement in the callout slot (fix 5); its
-monotonic-clock test had a timing bug (it read the crates before their flip; fixed); its theme test used a time key the
-offline API does not have ('sunset': 'dusk'). Nothing of it was reverted.
+## 1. What was built, against the user's words
+The user: "a full map effect plays that simulates going forward to the current time, which changes how the map looks
+and opens up new routes … 3000s … adds new areas"; Tartar "an old telephone".
 
-### Issue 1 (major): a Bravo viewer's minimap rebuilt a base (~105 ms) at every done — FIXED
-- **Cause** (as the review found): `Minimap.setViewerTeam` and a time-of-day change drop every cached era base; the next
-  done's `setBase` built one in its frame.
-- **Fix** (`src/game/eras.js`, no shared file): `attachMinimap` wraps the minimap instance's `setViewerTeam`, so a side
-  flip (it comes while a match loads, the screen faded) rebuilds the other two eras' bases at once; `_syncTheme` (in the
-  StageEras constructor, i.e. at match set-up) lets the minimap take a new time of day there (`mm.update(0)`) and builds
-  the bases, so a world kept for a match at another time never meets the drop in its intro; as a last resort
-  `StageEras.update` rebuilds a missing base one per frame, never during a jump. `W.stats.baseBuilds` logs every raster
-  built (`{ e, ms, why, t }`). docs/STAGE-MODS.md's minimap note says so.
-- **Proof** (eras-jump, jump-final.log / jump-2.log):
-  - 'frames', a viewer flipped to Bravo mid-match: the 2 bases rebuilt at the flip (`1:side 106 ms`, `3:side 97 ms`),
-    none missing at J, **no base built between J and done + 1**; a mid-match time-of-day change: rebuilt one per frame
-    before the jump, none built from J to done + 1.
-  - 'modes', the real load path: a Practice match on the kept world at dusk after one at day — the minimap took the new
-    theme and 2 bases were built during set-up (`2:theme 86 ms @0`, `3:theme 84 ms @0`), none missing or built once
-    playing.
-  - Before the fix the review's probe measured a 105 ms build and a 117 ms frame at done for Bravo; the new checks call
-    `W._basesMissing` / `baseBuilds`, which HEAD did not have, so the "without" run is the review's.
-  - Frame times (the 50 ms cap) are reported in a separate timing check: see §4 — they pass when the machine is quiet
-    enough (15.3 ms max in one run) and fail on single spikes under load (baseline frames without a jump reach 480 ms
-    here).
+**Bots (H16, H16b; `eras.js`, `match.cjs`, `tower-match.cjs`, `tests/eras-bots.js`).**
+- **The danger layer** (first half) runs from the warning to done. It now has a control run (`E.noDanger`). Four bots whose
+  every paint goal is on the Halo stand on it when the rewind is warned. With the layer, none is on it at its flip; without
+  it, all four are.
+- **Replans at done** are counted. A route over a vanished piece is dropped; a street route is kept.
+- **Fresh nodes ×2** as paint goals for 30 s after done (first half). New this phase: each bot's time to first stand on the
+  new era's ground is recorded per done (`botReport().visits`).
+- **H16b, pre-position: built, but it only waits when waiting pays.** From J − 8 (looked at again until J − 0.5), a
+  paint-mode bot within 14 m of a gate that opens takes the coming era's route through it (`nav.path` with that era's edge
+  mask) and waits 3–6 m short of the gate, outside the danger layer, until the gate's own flip. It does so only when the
+  route through the gate gets there no later than the detour, give or take a 1.5 s rush allowance. On the Z the gates save
+  only a few metres: Degrayling Lane against the GPO terrace's hop is ~10 m against ~14 m. So a bot waits only in the last
+  second or so before a flip. Test results:
+  - just before the flip, the bot waits and goes through: it arrives at J + 3.29, against J + 3.43 for the control's
+    detour;
+  - at J − 8 it does not wait;
+  - in the 7 bot matches it fired once.
+- **Perches: no new code.** The Halo's and the balconies' nodes are valid in their eras, and chargers already score high
+  ground (`clamp(y, 0, 5) × 1.6`, so the Halo gets the full +8). Bots were on the Halo for 2.75 bot-s in a 26 s era-3
+  window (eras-bots live), and a picture shows one standing there.
+- **Statistics** (`StageEras.stats.bots`, `botReport()`, printed by match.cjs and tower-match.cjs as `ERAS` lines):
+  - at each flip: own squidkids on a vanishing top, and inside an appearing piece;
+  - bot-seconds inside an appearing piece's box before its flip (4 Hz);
+  - splats no weapon dealt: counted as the jump's within 4 m of a block that flipped in the last 2 s, the others apart;
+  - replans and pre-positions.
 
-### Issue 2 (minor): a follower's clock easing back re-fired events and flipped groups back — FIXED
-- **Fix** (`eras.js`): the runtime follows a high-water mark of the stage clock (`_tHigh`; `tNow` for every query), so
-  between seeks the world never runs backwards; each (jump, event) fires once (`_fired`); `seek()` (a real snap > 1 s,
-  a late joiner) resets both and re-derives the world at the new time as before.
-- **Proof**: eras-jump 'sched' pushes the match clock 0.9 s back just after the warning and again just after the
-  crates' flip (the stage clock walks back 0.244 s each time): **one era:warn, one era:jump, one era:done, 8 flips (each
-  group once), TIME JUMP said once, the crates never solid again**. The same test on HEAD's eras.js
-  (jump-sched-without.log): 2 warns, TIME JUMP twice, the crates flip back and forth (12 flips).
+**Online (H11; `tests/net-eras.cjs`, docs/NET.md).** There is nothing new on the wire.
+- **New: a follower's clock snapping forward across a done still fires that done once** (`era:done { snapped: true }`).
+  It brings the fresh weight, the pulse, and the callout if the done is ≤ 2 s old. Bazookarp's field switches on that event,
+  so a stalled screen must not skip it. A late join and a test seek do not fire it.
+- net-eras covers, with two clients and a third for the late join:
+  - the flip skew;
+  - solid flags and the nav era after each done;
+  - a device on a vanishing piece;
+  - the Iron Bridge's cells through its guard window;
+  - the results;
+  - a host change between the jumps;
+  - Practice's clock;
+  - a late joiner in era 3;
+  - the rewind on all three screens.
+- Bluestone is a stage under construction, so the room lists it only with `?wipstages` (`URLQ=wipstages`).
 
-### Issue 3 (minor): check-maps T2 lacked the objective, water and reach rules — FIXED
-- **Fix** (`src/world/eras-data.js`, run by check-maps on the turf, tower, bazookarp, boss and zones builds):
-  `objectiveCheck` — rule 14 (12 m of a spawn pad, never on its deck), 15 (2 m of every zone outline at any height),
-  16 (1 m of the tower's swept platform ±1.25 m and its 3.72 m headroom), 17 (3 m of the Pond, a weir and the Gate),
-  36 (no era-only waterline deck slab), 37 (R_max ≤ 85); `railCheck` (a river rail ends on land or on another rail);
-  `turfRules` (11–13), asserted on the live paint grid in eras-world part 2.
-- **The weir, where the review and the previous fixer differed**: the review measured 4.5 m from the weir's centre; the
-  previous fixer measured from its 1.8 m trigger disc (2.70 m: a failure). The Bazookarp SPEC §4.3 defines the weir's
-  room as "3 m of clear room round each one (the weir's own posts stand at 2.7 m and are excepted)", i.e. from its
-  centre, so the review's reading is the SPEC's; the Gate is measured from its 3.4 m plinth's edge, the Pond from its
-  start. **The review is right; the stage passes.**
-- **Proof**: check-maps: bluestone ok; nearest era piece — a pad 15.92 m, a zone 3.5 m, a weir 4.5 m, the tower's swept
-  volume 1.38 m (the Halo over its headroom), the reach 84.53 m; 16 / 28 / 20 river rails checked per era. The only
-  failure in the repo is still halyard's 25.7° ramp (not this branch). **`tools/botlab/tests/eras-static.mjs`** (Node,
-  11/11): the stage passes, and each check fails on one planted violation — a crate 10 m from the pad (14), a box 1.5 m
-  from the side zone 4 m up (15), one across the tower track (16), one 2 m from the weir (17), a waterline slab (36), a box
-  86 m out (37), a river rail cut 1.5 m short (`punt-rail` half[275]), turf numbers out of range (11, 12 both ways, 13).
-  eras-world part 2: turf **5,495 / 5,642 / 6,644 m²** (era 2 +2.7 %, era 3 +17.8 %), 0 m² vanishing in either jump.
+**Every mode (`tests/eras-modes.js`, tower-check).**
+- **Zone Control:** each zone's cells are identical (the same ids, all live) before and after each jump on the real
+  5:00 schedule.
+- **Overtime:** 40 s of stage clock past regulation with no event and no flip.
+- **Boss Battle:** in era 2, with no event in 60 s. BossNav's ring is 352 m². An era-3 BossNav built for the record has a
+  ring of 0 m², so a change of `fixed` fails the test.
+- **Practice's rewind:** a kid on the floating garden is rescued to the quay; a kid on the Halo drops alive to the circus.
+- **The menu backdrop (attract):** a jump every 40 s through the rewind, with no chip, callout or era sound.
+- **tower-check ERA=1/2/3:** 73.99 m both sides, 0 holes, clearance clean, both rides a knockout, in every era.
 
-### Issue 4 (minor): the GPO's era-2 tower / era-3 spire hid the dome from the spawn — FIXED
-- **Fix** (`stages/bluestone/props.js`): nothing stands on the GPO's roof in any era (DESIGN §8.3: the dome is exactly
-  behind it from the spawn deck); its glass tower and spire stand on the tram shed beside the spawn deck (−9, −68), out
-  of the spawn → dome line. Measuring showed the hotel's era-3 spire also cut the dome's rim (80.5 % open), so the hotel's
-  extension and spire moved 2.7 m west to rise straight behind its turret (DESIGN §5.2's "behind the turret"). DESIGN §8.3
-  notes the rule.
-- **Proof**: **eras-look part 3** casts rays from each spawn eye (pad + 1.7 m) to 103 points on the dome's near side and
-  its lantern and asks that ≥ 90 % of those the shared city leaves open stay open past each era's meshes. Before: era 1
-  100 %, **era 2 8 % / 7 %, era 3 3.4 % / 3.5 %** (look3-before.log: the GPO's tower and spire); GPO pair moved only: era 3
-  80.5 % (the hotel spire); now **97/97 open in every era from both spawns**. Pictures `era2-spawn.jpg`, `era3-spawn.jpg`:
-  the dome and lantern in full view (looked at).
+**Bazookarp (H21, 12b; the karp module is not merged).** On the era side:
+- `StageEras.karpStates()` returns `[{ key: 1…3, nodeOk(id) }]`, each era's valid nodes. The registry forwards it as
+  `G.match.stage.karpStates()` (stageMods.js, [b5-eras]), the name the karp engine already calls (b5-karp
+  `bazookarp.js _stageStates`).
+- `restMask(era)`: a node valid in the era in force and every later one.
+- `danger(pos, 0)` covers the drop spot.
+- `LAYOUT.bazookarp.statesAdvance = true` (karpField ANDs each state's rests with the later states').
+- The karp engine itself switches its field on `era:done`.
 
-### Issue 5 (minor): the era callouts were drawn on the viewer's team-ink ribbon and cleared gameplay callouts — FIXED
-- **Fix** (`src/fx/eraFx.js`, `eras.js` `_say`): `EraHud.say` draws TIME JUMP, the era banner, NEW ROUTES OPEN / NEW
-  AREAS! and Tartar's line as the module's own DOM in the HUD — the chip's white-gold `#f4e9c8` on a dark band (the big
-  banner `#fff6dc` on a dark gradient), the HUD's sounds — replacing only the era's previous callout. `_place` puts the
-  band in the HUD's callout slot (27 %) and moves it down past the chip, a gameplay callout (checked every frame while
-  one shows) and Zone Control's callouts; its own pop animation fades in place (the HUD's slides up as it fades, which
-  carried the big banner over the chip and the clock).
-- **Proof**: eras-hud 8/8 at 1280 × 720 (hud5.log): colours (white-gold on dark, far from the run's team inks: cyan /
-  red there; the pictures show the same band under lime / magenta, yellow / purple and pink / green palettes), the
-  module's own `er-call` animation, none routed through `HUD._callout`, a gameplay callout kept on screen; alone at 27 %
-  clear of the chip; the 3000s banner [148, 241] px clear of the chip [88, 116]; under a gameplay callout at 37.8 %. Pictures:
-  `jump-swimston-J-10.jpg` (the chip's countdown fully readable over TIME JUMP), `jump2-circus-J+0.6.jpg` (the banner clear
-  of the chip and clock), `jump-swimston-done+1.jpg`, `zones-warn-callouts.jpg` (Zone Control: SPLATTED BY and TIME JUMP
-  together, neither covering the other).
-- **Seen, not mine to change here:** in Zone Control the chip docks under the zones HUD, where the HUD's own callouts
-  (a splat, WIPEOUT) appear: a gameplay callout covers the docked chip for its 2.4 s (zones-warn-callouts.jpg). That is
-  the docking chosen in the first half against the HUD's callout slot; moving the docked chip is a HUD decision for the
-  lead.
+`tests/eras-karp.js` part A drives a stand-in built and fed exactly as karpField builds and feeds its own (5/5):
+- one build at load, then switches at each done;
+- a carrier on ground opened before done has no own node, so it keeps its last value;
+- the drop spot never picks a danger node: in a rewind's warning the nearest rest to the Halo is a Halo node, and the
+  drop goes to the ground;
+- never a node a later era removes: 0 bad rests in 4,808 / 4,892 / 5,844;
+- Q19: a Halo drop in era 3 stays on the Halo.
 
-### Issue 6 (next round, not blocking): stale minimap ink in the pictures; look polish
-- **The tool** (`eras-shots.cjs`): the minimap ink layer is redrawn in full before composing (`mm._band = 0;
-  mm.update(0.2, true)`); minimap-era1/2/3 and the warning pictures re-shot — only this match's ink shows.
-- **Mirrored numerals: FIXED** (`eraFx.js`): the glyph strip runs against the angle on the curtain's front faces and
-  with it on its back faces (`gl_FrontFacing`). The review's pictures were taken from outside the front (it comes toward
-  you), where they read mirrored; now VII, IX, XII read correctly (jump-swimston-J+1.5, jump2-circus-J+0.6).
-- **The Swimston camera** (tool): raised to (−20.5, 3.2, −51.5), over the news kiosk.
-- **Left for the art pass, as the review allows:** jump 2's own hexagonal-shard curtain (still pearl with the brass
-  glyphs), a softer dissolve than the 20 cm blocks, wires under the beads.
+Part B runs the same checks on the real KarpField when a bazookarp match builds `match.karp`; here it reports SKIP.
+**Part B is written against the karp API as read in st-b5-karp at fcd3a028, but it has never run.**
 
-### Re-run after the fixes (all local)
-eras-world 20/20 (parts 1–5), eras-look 10/10, eras-hud 8/8, eras-jump 17/19 (the two failures are the frame-time caps
-under load, §4), eras-static 11/11, check-maps (bluestone ok), the full picture set (29 + 1, 0 console errors), and
-three bot matches through the jumps (§3). Not re-run: stage-mods, world-build, ink-wipe, movers, pods (no shared file
-or other stage was touched this round).
+**Integration finding:** karpField builds its carrier graph from `nav.valid` at match start, which is era 1's set. It must
+read `nav.anyValid`, or the era-3 states lack the Halo and the floating garden. That is one line in the karp package.
 
-## 1. What was built, step by step (the user: "a full map effect plays that simulates going forward to the current time,
-which changes how the map looks and opens up new routes … then … 3000s … adds new areas"; Tartar "an old telephone")
+**The EraFx dressing (12c).**
+- **Pre-bell (J − 20):** one distant ring (`era_bell`) that also shows: Tartar gives a single shake and the kiosks' bells
+  flash. The clock rows start counting down (centre hands gold), and the chip shows "TODAY in 20".
+- **The warning:**
+  - the holograms are up within 0.6 s, where before they ramped over 5.5 s and were invisible at the callout;
+  - the wire beads now run along faint drawn wires (new, `colors.appear`) out from the dome.
+- **Mural era masks:** `stages/bluestone/murals.js` draws, from nothing:
+  - 4, the circus hour ring (all eras);
+  - 6, the café mural (eras 2–3);
+  - 7, Hoki Lane's street art on the viaduct (eras 2–3: squids, fish-folk, a giant telephone, HOKI LANE);
+  - 8, the tram stop markings (era 2);
+  - 9, the ghost sign CABLE TRAMS 3d · FLOUNDERS ST (era 1);
+  - 11, the 3000s' light seams with FLOOD LEVEL 3026 (era 3).
 
-**Step 1, the data and the Level.** `era.js`: `ERA_DEFAULT` is the union; `?era=n` (PAGEQ='era=2') no longer filters
-the layout — the engine starts in era n and never jumps. `src/game/eras.js` registers the `eras` / `eraGroup` block
-fields (presence: era 1 = 1, 2 = 2, 3 = 4, shared 0; `presenceAll` 7), so face hiding, grounded bottoms and bevels ask
-only blocks present in every era of the face's block. Groups are keyed `eraGroup + :a/:b` by the side of the block's
-centre; r_g = distance from Tartar (0, 0) to the centre of the members' union AABB. Every vertex carries
-`aEra = (mask, r_g)` (registry `geomAttrs`). On the Z as built: **52 groups**; jump 1 changes **4 / 4 groups per half,
-26 blocks**; jump 2 **22 / 22, 130 blocks**; era-only blocks **21.9 %**; 156 era blocks of 712; **R_max 84.5 m + 2 →
-done = J + 3.96 s** (the Z's numbers replace ENGINE's X numbers). `src/world/eras-data.js` (three-free) gives
-check-maps T2: overlaps only between pieces that share an era; `bluestone#1/#2/#3` (568 / 590 / 700 pieces); rules 3–7;
-the appear check (19–20, 19b as restated) and the vanish check (27) in the turf build and the tower / bazookarp / boss /
-zones variants; the 2 m strip test per era (0 strips over 25 m in each era); **and since fix round 1** the objective
-rules 14–17, 36, 37, the river rails' ends and the turf rules 11–13 (§0, issue 3), each shown failing on a planted
-violation by `eras-static.mjs`.
+  The front paints each one in or out as it passes (picture `mural-hoki-J+2.05`).
+- **`eras.colors` on every highlight:**
+  - the warning's film tint is now derived from `colors.vanish`'s hue;
+  - the HUD chip's and callouts' CSS, the bell glyph and the curtain's body take the layout's colours.
+- **The time-lapse** (first half) is now tested: the sun swings 45.7°, the clouds race 20×, exposure and the grade are
+  held, and the look settles at done. **The env map** is rebuilt once at done + 0.7.
 
-**Step 2, paint.** Per cell `cellPres` = its face's eras minus the eras of any block burying its sample point; per group
-its own faces' cells and the cells it buries, re-tested at its flip against the blocks as they stand (mid-jump the city
-is part one era, part the next); `apply(e)` recounts in one pass. Turf: **87,974 / 90,362 / 106,486 cells**, **5,495 /
-5,642 / 6,644 m²** in eras 1 / 2 / 3. A splat on an absent or guarded block claims nothing (the registry's block gate,
-`inkOk(b, et)` with the painter's time). Appearing pieces are cleared (grid + atlas) at the warning; vanished pieces'
-faces are zeroed at done + 1 s; shared ground keeps its ink.
+**The bake (T1).**
+- `tools/botlab/run.sh tools/botlab/bake.cjs bluestone` took 193.9 s locally: states 1, 2, 3 of 3, hash 22885, 1,142 of
+  2,048 rows, an RGB PNG (688 KB, committed). stage-audit with PAGEQ era=1/2/3 says "lightmap applied" 3/3 in each.
+- eras-bake.js (3/3) probes the lightmap:
 
-**Step 3, nav.** Three `NavGraph`s (one per era's solidity) merged into one union graph: nodes by (cell, height ±0.15),
-edges keyed (from, to, type, cost) with `e.em`; per-era `valid` / `exitable` / `validIds` / wet / overWater columns;
-`nav.edgeMask` = the era in force; `edge()` honours the mask. **5,952 nodes** (valid 4,808 / 4,958 / 5,844), 36,602
-edges; merge **6.6–26 ms**. Union path costs equal fresh per-era graphs on 200 random pairs per era: **worst 0 %**.
-Degrayling Lane: Swimston → the quay at mid-leg **21.96 → 13.16** from era 2. The Halo's nodes valid only in era 3.
+  | Probe | R | G | B |
+  |---|---|---|---|
+  | Beside Degrayling's era-1 crates | 175 | 217 | 217 |
+  | Under them | 166 | 213 | 213 |
+  | Shared ground on the forecourt | 253 | 253 | 253 |
 
-**Step 4, load.** Nav ×3 **599–700 ms** in the first half's loads (this round: 671 ms judged, the lower of two builds;
-builds 193–262 ms each), merge 7–26 ms, paint masks 28–53 ms, era meshes 5–21 ms. World build 950–1,560 ms with the
-engine, 380–1,940 without on this loaded Mac. Match loadMs 7,238 / 7,489 ms (first half), 8,130 ms this round at load
-~380. Under 700 ms nav, so no dirty-region rebuild (4b) was built; it is the lever if the Mac mini's numbers say
-otherwise.
+- World keys on this branch: `bluestone`, `bluestone.tower` and **`bluestone.boss`** (the poster column is
+  `notIn: 'boss'`). There is no `bluestone.bazookarp` until the karp kit's `onlyIn` pieces land. Each key bakes three
+  passes (`W.bakePasses()` lives on the world).
 
-**Step 5, looks.** One level mesh per era mask present (1, 3, 4, 6), built while every block is solid, shown only in
-its eras (both eras' during a jump; the coming era's from the warning, collapsed). The level-shader extension
-(`src/fx/eraFx.js`): each fragment's era (shared ground by its side of the front, a piece by its own flip); the era
-tint and the re-skins (granite → asphalt → pavers, planks → glasstile) on the bare surface; the mural masks
-(`uMurEra`); the AO channel of that era; the 0.3 s dissolve; the sepia flicker on what will go; the 4 s white-gold
-pulse on what is new; the front's white-gold line with minute ticks. Era meshes and era prop buckets cast shadows
-through depth materials that collapse absent pieces and sit out the GTAO pass while both eras are up. **No ghosts**
-(pixel-identical, max diff 0, at rest and mid-jump after the flip). Draw calls from the spawn camera on high: **96 / 99 /
-97** in eras 1 / 2 / 3 and **115** mid-jump (budget 334 / 390).
+**Performance** (REPORTs and probes; Halyard measured on the same machine at the same time; all on high).
 
-**Step 7, props and backdrop.** Era props are tagged buckets (`bucketTag 'e' + mask`, an era material clone and depth
-material): the era-slot kit's tram (one tram type visible per era over one shared collider), lamps in the kerb
-planters, today's glass towers and the 3000s' spires on three roofs — **since fix round 1: the Customs House, the
-hotel (straight behind its turret) and the tram shed beside the spawn deck; nothing on the GPO** (the dome stays in
-sight from both spawns in every era) — and the 3000s' light lattice over the dome; ≤ 4 materials per era mask. One
-skyline per era (`backdrop.js` sets 1–3) swapped by the horizon run. Tartar is three animated parts.
+| | Draw calls | Triangles | cpuRender | loadMs (lower of two) |
+|---|---|---|---|---|
+| Halyard | 330 / 400 | 3.37 / 3.52 M | 6.6–6.7 ms | 8,443 ms |
+| Bluestone era 1 | 268–288 | 0.75–0.78 M | 4.0–6.9 ms (eras 1–3) | 7,542 ms |
+| Bluestone era 2 | 280–339 | 0.80–0.85 M | | 8,075 ms |
+| Bluestone era 3 | 262–280 | 0.64–0.87 M | | 9,455 ms |
+| Jump 1 → 2 | 329–338 | 0.72–0.76 M | | |
+| Jump 2 → 3 | 294–326 | 0.74–0.76 M | | |
 
-**Step 8, the runtime (StageEras).** The schedule is a pure function of the host stage clock: Turf War 3:00 jumps at
-60 / 120 s, 1:30 at 30 / 60, the five-minute modes (and Bazookarp) at 100 / 200 (never in overtime), Boss Battle fixed
-in era 2, Practice every 60 s with the rewind 3 → 1, the menu backdrop every 40 s, `?era=n` held. **Since fix round 1
-the runtime never runs backwards between seeks** (`_tHigh`, each event once). Events: pre-bell (J − 20), warn (J − 10:
-Tartar's ring + the two nearest kiosks, "TIME JUMP / 1880s → TODAY in 10", holograms of every appearing block, the wire
-beads, appearing faces cleared, the bots' danger layer), rings at J − 5, −3, −2, the pickup at J − 1, J (the swell, a
-0.25 shake, the curtain of clock light riding the front with Roman numerals — reading the right way since fix round 1
-— and gears, brass in jump 1, pearl in jump 2 and the rewind; the time-lapse sky), each group's flip at J + r_g / 25,
-done (nav era, danger layer released, bots replan, the minimap's cached base swapped, "NEW ROUTES OPEN" / "NEW AREAS!" /
-"BACK TO THE 1880s", fresh nodes ×2 as paint goals for 30 s), the look settled at done + 0.7, the vanished faces zeroed
-at done + 1. Shove, rescue (over water, or on a roof with nothing walkable within 3.4 m below), devices destroyed
-(`S.crushIn`, then the module's walk of `G.subs.items`). Sounds synthesized in `src/audio/sfx-eras.js`.
+- Draw calls come from the spawn camera, characters included. The static scene with characters hidden is 96 / 99 / 97
+  calls, 115 mid-jump (eras-look).
+- The machine was loaded and Halyard itself took 8.4–9.8 s, so Bluestone loads no slower than Halyard. ENGINE §7 risk 1's
+  remedies are not needed. Nav ×3 took 624–699 ms.
+- Render per frame, three alternated 3 s runs each:
+  - at rest: 5.2–5.4 ms median;
+  - jump 1 → 2: 5.7–7.9 ms;
+  - jump 2 → 3: 5.0–5.9 ms.
 
-**Step 9, HUD and maps.** The era chip under the clock (docked under Zone Control's / Tower Command's HUD): the three
-names with the current one lit, a bar to the next jump, "TODAY in 20" from the pre-bell, the big countdown 10 … 1 with
-Tartar's ringing phone glyph, "TIME JUMP!" during the jump. **The era callouts are the module's own since fix round 1**
-(white-gold on dark, in the callout slot, never covering or clearing a gameplay callout, the chip or the clock). The
-minimap's base per era (three rasters, rebuilt whenever the minimap drops them — a side flip, a time of day — never at
-done) and the outlines from the warning to done. The thumbnail: era 1 as usual, the 78 later pieces dashed. Colours:
-only `eras.colors` (#f4e9c8 / #a9a49a) and white light.
+  The REPORT's 12 ms for jump 2 → 3 did not repeat; it was the EMA catching a stall.
+- The 50 ms frame check over jump 1: max 12.4 / 40.5 ms (two runs).
+- Paint density on high: 27.6 ppm on the 4,096 atlas (Halyard 27.6). Lightmap 1,142 rows (Halyard 740).
 
-**Names.** Flounders Street Station everywhere (LEAD-NOTES item 4).
-
-## 2. Decisions where the contract left a gap
-1. **The tram block became collision-only** (`hidden: true, paint: false`): the era-slot kit as DESIGN §2.10 describes
-   it. The only data change to the frozen blockout.
-2. **`nav.validIds` is per era** (a union list would send bots to the Halo in era 1).
-3. **The rescue / shove fallback picks only a node whose floor stands now.**
-4. **The coming era's meshes are drawn collapsed from the warning** and every era program is compiled at load.
-5. **The look settles without `setTheme`** (risk 10): uniforms + one PMREM rebuild at done + 0.7.
-6. **The guard is per block.**
-7. **Kiosks:** the two nearest the camera ring aloud.
-8. **Callout texts** for the rewind ("THE CLOCK RUNS BACK", "Back to the beginning. Again.") are mine.
-9. **Lamps stand in the kerb planters.**
-10. *(fix round 1)* **The runtime holds the world at its high-water mark** while a follower's clock eases back (it may
-    stand still for up to the size of the correction, never re-run); a real snap (> 1 s) still re-derives the world at
-    the new time through `seek`.
-11. *(fix round 1)* **Rule 17 is measured as the Bazookarp SPEC measures its clearances**: a weir from its centre, the
-    Gate from its plinth's edge, the Pond from its start.
-12. *(fix round 1)* **Rooftop superstructures**: the GPO carries none in any era (its pair is on the tram shed); the
-    hotel's pair rises straight behind its turret. Look-only props, no colliders: play is unchanged.
-13. *(fix round 1)* **The era callouts' place**: the HUD's callout slot, moved down past whatever is there, fading in
-    place.
+## 2. Decisions where the request left a gap
+1. **H16b waits only when waiting pays** (arrival through the gate no later than the detour + 1.5 s), and it walks at the
+   gate group's own flip, not at done. A literal "hold at J − 8" would idle a bot 12 s to save 4 m on this stage.
+2. **Perches:** no new weight. The union graph plus chargers' existing high-ground score cover them. The Halo is risk 16
+   (dominance), so I did not add a pull toward it.
+3. **"Every bot … within 20 s (median)"** is judged as the median over the bots. A bot that never reaches new ground
+   counts as never.
+4. **The pre-bell shows its ring** (Tartar's shake, the kiosks' bells) as well as playing it: the task's "Tartar's phone
+   and the kiosks ring".
+5. **Holograms at full strength 0.6 s into the warning.** The sepia flicker still ramps.
+6. **Wires are drawn under the pulses** (FX, in the warning). The real overhead wires are the art pass's.
+7. **The era band clears the HUD's banners.** In a 3:00 Turf War "1 minute left!" and jump 2's "3000s" come on the same
+   frame.
+8. **A snapped done fires its event** (H11, above).
+9. **Murals on the Z's faces** (DESIGN §5.4 is updated): the viaduct is Hoki Lane's west wall here, so the street art
+   goes on it. 5 and 10 are left to the art pass.
+10. **The bake is committed** (one key) so the stage audits apply it. The art phase re-bakes all keys.
+11. **`statesAdvance: true`** in the Bazookarp data (era states only advance in a match).
 
 ## 3. Online and bots
-Nothing new on the wire: the state is a pure function of the stage clock on every screen, a clock snap calls `seek`
-(`era:set`); `R.splatTime` stamps field 15 only from J − 1 to done + 1; each screen shoves / rescues / pops its own
-(docs/NET.md). Fix round 1 makes a follower's world monotonic between snaps (issue 2) and keeps each screen's own
-minimap free at done whichever side it views from (issue 1); still no two-client test (net-eras.cjs is step 11). Bots:
-the danger layer from the warning, replans at done, fresh nodes ×2 for 30 s.
-**Bot matches this round (local, after every fix, through both jumps):**
+- **Online:** no records were added. The state is a pure function of the host's stage clock.
+  - **Splats:** field 15 (the painter's time) runs from J − 1 to done + 1, and every screen judges the guard at that time.
+  - **Own actors:** each screen shoves, rescues and pops its own squidkids and devices.
+  - **Followers:** a follower snaps to the host's clock (`seek('clock')`), and a snap past a done fires that done.
+  - **Late joiner:** applies the host's era on its first tick (`seek('late')`).
+  - **Host change:** the new host's clock simply runs on.
 
-| Match | Result | Stuck | Water splats | Console |
-|---|---|---|---|---|
-| Turf War 3:00 #1 | 32.7 / 28.0 % | 0 % | 0 | "no lightmap" only |
-| Turf War 3:00 #2 | 39.5 / 25.6 % | 0 % | 0 | "no lightmap" only |
-| Zone Control | Bravo by time, 67 vs 17 | 0.4 % | 0 | "no lightmap" only |
+  docs/NET.md says so.
+- **Bots (local; the stage set's average from the Mac mini's sp-fixes / drainbow JOBs: Turf War 0.10 %, Zone Control 0.37 %):**
 
-(First half: 40.2 / 20.4 % and 35.2 / 31.1 %, stuck 0.1 / 0 %. The review's: 35.7 / 35.4, 34.5 / 30.3, Zone Control
-Alpha by time.) No balance sets (the lead's consolidated pass).
+| Match | Result | Stuck | Era shoves | Splats by a jump | Era-3 visits (median) |
+|---|---|---|---|---|---|
+| Turf War 3:00 #1 | 33.2 / 34.0 % | 0 % | 0 | 0 | 8.8 s |
+| Turf War 3:00 #2 | 38.6 / 28.4 % | 0.1 % | 0 | 0 (one water fall on the punt 2.5 s after the last flip, 13 m from it: not counted) | 18.7 s |
+| Turf War 3:00 #3 | 24.6 / 43.2 % | 0.1 % | 0 | 0 | 17.1 s |
+| Zone Control #1 | Alpha by time 68–72 | 0.5 % | 0 | 0 | 18.4 s |
+| Zone Control #2 | Alpha by knockout | 0.1 % | 0 | 0 (1 other) | 19.8 s |
+| Tower Command #1 | Alpha by time 35–73 | 0.1 % | 0 | 0 | 11.5 s |
+| Tower Command #2 | Bravo by time 100–31 | 0.1 % | 0 | 0 | — (2 of 8; the riders keep to the tower) |
 
-## 4. Tests (local, final code; logs in `local-logs/engine/` (first half) and `local-logs/review-fix1/`)
-- `eras-world.js` **20/20** (parts 1–5; new: the turf rules 11–13 on the live grid).
-- `eras-look.js` **10/10** (new part 3: the dome from both spawns in every era).
-- `eras-hud.js` **8/8** (the era callouts: colours, own DOM and animation, placement against the chip and a gameplay
-  callout, at 1280 × 720).
-- `eras-static.mjs` (new, Node) **11/11**.
-- `eras-jump.js` **19 checks** (new: the clock pushed back; Bravo and time-of-day base drops; the kept-world load at
-  another time of day). Final full run **17/19**: every behaviour check passes; the two frame-time caps failed at load
-  average ~370 — the main frames check 190 ms max (one frame; p95 25.9, median 4.4) against a no-jump baseline whose own
-  frames reach 485 ms, and the new Bravo / time-of-day timing check 88 / 265 ms max. In the run before (jump-2.log) the
-  main frames check **passed at 15.3 ms max** (era update ≤ 1.4 ms) and the new timing check failed only on single
-  spikes (138 / 113 ms, second-worst 21 / 20 ms; baseline 480 ms). No base raster is built in any jump in any run.
-  Flaky here; a quiet machine is needed to judge the 50 ms cap.
-- check-maps: every stage ok except halyard's half[41] ramp 25.7° (not this branch).
-- First half, not re-run this round (nothing they cover changed): stage-mods 36/36, world-build 5/5, ink-wipe 8/8,
-  movers 17/17, pods 39/39, stage-audit halyard / calamari / treehills 3/3 each.
+  - At every flip of all seven matches, 0 bots were on a vanishing top and 0 were inside an appearing piece.
+  - Bot-seconds in an appearing box before its flip: ≤ 0.27.
+  - Pre-position fired once.
+  - eras-bots live (1:30): 0 / 0 / 0, era-3 median 3.65 s, stuck 0 %.
 
-## 5. Pictures (`out/engine/`, JPEG 94–131 KB; all re-shot this round and looked at)
-`era{1,2,3}-spawn` (the dome in view in every era), `-circus`, `-top`; `jump-swimston-J-10` (TIME JUMP under the chip,
-countdown readable), `jump-phone-J+0`, `jump-swimston-J+1.5` (numerals read correctly), `-J+3`, `-done+1` (NEW ROUTES
-OPEN); `jump2-circus-J-5`, `-J+0.6` (the 3000s banner clear of the chip and clock), `-done+1`;
-`vanish-halo-inked-before`, `vanish-halo-after-flip`; `appear-bridge-before`, `appear-bridge-after`;
-`minimap-era{1,2,3}` and `minimap-warn-jump1/2` (fresh ink only); `gtao-probe-era1/2`; new `zones-warn-callouts` (Zone
-Control: the docked chip, a gameplay callout and TIME JUMP).
+## 4. Tests (local, at the final code unless marked)
 
-## 6. Commits; files
-First half: 2b0dd6c1, f00a30c2, aed8aff2, 81f88b12, 67444e02, eb52adff, c0977466, 2c3cef62, 4d70601a; scratch 06569ead,
-729fc6d9, c536e29c, d5afd821, 8768f720.
-Fix round 1: **9ab92b10** (check-maps T2 rules + eras-static.mjs), **cb5123ee** (the GPO's superstructures moved;
-eras-look part 3), **6aa69669** (minimap bases; monotonic runtime; STAGE-MODS note), **678596cf** (the era callouts),
-**5cc9d2cc** (the curtain's numerals), **7a645bd4** (the callouts fade in place), **aa77a2c3** (eras-world turf rules);
-scratch **48a942cf** (pictures, eras-shots.cjs) and the commit carrying this report, DESIGN.md §8.3's note and the logs.
-Files this round: `src/game/eras.js`, `src/fx/eraFx.js`, `src/world/eras-data.js`, `src/world/stages/bluestone/props.js`,
-`tools/botlab/tests/eras-{world,look,jump,hud}.js`, new `tools/botlab/tests/eras-static.mjs`, `docs/STAGE-MODS.md` (the
-minimap note). **No shared engine file was edited** (minimap.js, main.js, hud.js, level.js … untouched; the minimap's
-`setViewerTeam` is wrapped on the instance by the module and restored at dispose).
+| Test | Result |
+|---|---|
+| eras-jump | **21/22**: every behaviour check passes, including 'first', 'sky', the snapped done and the 50 ms frame check over jump 1 (max 40.5 ms). The failure is the review-fix-1 *timing* check on the Bravo / time-of-day jumps: single 84 / 65 ms spikes, against a no-jump baseline of 521 ms. It is flaky on a shared machine; its deterministic half (no base raster built from J to done + 1) passes. |
+| eras-bots | 5/5 |
+| eras-hud | 10/10 |
+| eras-look | 12/12 |
+| eras-modes | 6/6 |
+| eras-karp | 5/5 (B: SKIP) |
+| eras-world | 21/21 |
+| eras-bake | 3/3 |
+| eras-static | 12/12 |
+| net-eras | **12/12** (run 3). Flip skew 0.118 s (jump 1) / 0.035 s (jump 2); clock skew 0.07–0.09 s. Run 2 showed 0.63 s: the harness's own 20 ms polling had held the guest's frames back; the test now waits in the page. |
+| tower-check ERA=1/2/3 | clean |
+| stage-audit PAGEQ era=1/2/3 | 3/3 each |
+| check-maps | bluestone ok in all three eras (0 strips). The repo's only failure is still halyard's 25.7° ramp, which is not this branch. |
+
+Regressions (`regress/`):
+
+| Test | Result |
+|---|---|
+| world-build | 5/5 |
+| ink-wipe | 8/8 |
+| movers | 17/17 |
+| pods | 39/39 |
+| treehills-pods | 14/14 |
+| stage-audit halyard / calamari / treehills | 3/3 each |
+| stage-mods | 36/36 |
+| net-stagemods | 10/10 |
+| net-practice (CLIENTS=2 Q0=autopilot Q1=autopilot APP_CSP=1) | 29/29 |
+| net-stageclock | 3/3 |
+| net-turf | 9/9 |
+
+Halyard, calamari and treehills keep the program key `inkwave-level-v8` (eras-world part 5).
+
+**Pictures** (`out/engine/`, 45–155 KB each, all looked at):
+- `prebell-phone`
+- `jump1-knee-{J-10,J+1.5,done+1}`, `jump1-quay-{J-10,J+1.5,done+1}`
+- `pulses-warn`
+- `mural-hoki-{era1,J+2.05,era2}`, `mural-seams-era3`
+- `timelapse-sky-J+{0.1,1.0,2.0,3.0}`
+- `jump2-quay-{J-10,J+2,done+1}`
+- `minimap-era{1,2,3}`, `minimap-era1-warn`, `tabmap-era{1,2,3}`
+- `bot-on-halo`
+- `rescue-garden-{before,after}`
+- `lightmap-probe`: R / G / B of the street face under the crates.
+
+## 5. Commits; files
+**Commits:**
+- **Module and test commits:** 5aa9068b, 59789c95, 0cd06847, 82b103ac, 3f91bc2b, 1cd31873, c2c676ce, 1d60e8f4,
+  cd62e353, a764f6fe, 1cd5e1d7 (the bake), 268c007c.
+- **Scratch commits:** cc6aa6ea, 74dc1672, 513a7533 (pictures), and the commit carrying this report, its logs and the
+  probe picture.
+
+**Shared files, for the integrator (each change small and tagged):**
+- `src/game/stageMods.js`: `karpStates` in R_HOOKS plus one query method [b5-eras].
+- `tools/botlab/match.cjs` and `tools/botlab/tower-match.cjs`: `RESULT_JSON.eras` and the ERAS lines [b5-eras].
+- `docs/NET.md`: the eras paragraph.
+- `docs/STAGE-MODS.md`: the `karpStates` row, H16b, the H21 integration note.
+
+**Module and stage files:**
+- `src/game/eras.js`, `src/fx/eraFx.js`, `src/world/eras-data.js`;
+- `src/world/stages/bluestone/{layout.js, murals.js}`: mural fields and `statesAdvance`, **no geometry change**;
+- `assets/lightmaps/bluestone.{png,json}`.
+
+**New tests:** `tools/botlab/tests/eras-{bots,modes,karp,bake}.js`, `net-eras.cjs`.
+
+## 6. What the art phase must know
+- **The module's API.**
+  - The world `G.eraWorld` (EraWorld):
+    - `names`, `uniforms` (`uEra`, `uEraW`, `uEraTint`, `uEraRemap`, `uMurEra`, `uEraColA`, `uEraColV`, `uEraT`,
+      `uEraFar`), `groups`, `meshes`, `propMeshes`, `fx`, `stats`;
+    - build hooks: `prop`, `colliders`, `attachLevel`, `attachPaint`, `levelMaterial`, `levelFilter`, `afterMeshes`,
+      `buildNav`, `attachMinimap`, `mapBlock`, `attachEnv`, `ready`;
+    - `apply(e)`, `looks`, `inkOk(b, et)`, `present`, `now`, `bakePasses()`, `bakeMode`, `dispose`.
+  - The runtime `G.match.eras` (StageEras):
+    - state: `sched`, `era`, `phase`, `next`, `front`, `fresh`;
+    - queries: `eraAt(r, t)` / `eraAtPoint`, `eraInForce`, `jumps`, `present`, `inkOk`, `near`, `splatTime`,
+      `dangerAt(pos, pad)` / `danger`, `outlines()`, `restMask(era)`, `karpStates()`;
+    - hooks: `goalWeight(id)`, `botAct`, `drawMap`;
+    - per frame and clock: `update`, `seek(t, why)`;
+    - tests and audits: `state()`, `botReport()`, `debugJump(to, { inS, instant })`, `dispose`.
+  - Events: `era:prebell / warn / ring / jump / flip { group, on, off, r } / done { era, snapped? } / set`.
+  - Audit switch: `?era=n`.
+  - Test switches: `E.noDanger`, `E.noPrepos`.
+- **Era meshes.** One level mesh per mask, `level:era<m>` (+ grate twins):
+
+  | Mask | Eras | Pieces |
+  |---|---|---|
+  | 1 | 1 only | the Degrayling crates |
+  | 3 | 1–2 | the cab-shelter top, the boat shed, the ferry booking office (2 halves), the goods wagon |
+  | 4 | 3 only | the Halo (16 sides, 36 rails, 12 planters), the hotel / boat / river stairs, their landings and glass, the bike dock, the floating garden (12 tiles, 10 planters) |
+  | 6 | 2–3 | the Iron Bridge (6 spans, 12 rails, the lamp), the café tables |
+
+  The tram block is a shared hidden collider; its three looks are props.
+- **Prop buckets** are `props:<material>@e<mask>` (metal / wood / glow @e1, rubber / gloss / metal / glow @e2,
+  rubber / glow / gloss @e4). Era props:
+  - cable tram / tram / float-tram;
+  - gas lamp / street light / light mast ×10 each;
+  - glass towers ×6 (era 2), spires ×6 and the light lattice (era 3).
+
+  Rule 40 allows ≤ 5 materials per mask and **static merged parts only**.
+- **Material tags:**
+  - the level program key ends in `-eras`;
+  - era prop materials have the cache key `…|era-aTag`;
+  - shadows use `era-depth-aEra` / `era-depth-aTag`;
+  - the backdrop's era sets have `|eraset`;
+  - `aEra` = (mask, r_g) on every level vertex; `aTag` on the era props.
+- **Highlight colours:**
+  - `eras.colors.appear #f4e9c8`: holograms, wires, beads, the outlines' dashes, the done pulse, the front line, the
+    bell glyph, the HUD chip and callouts;
+  - `eras.colors.vanish #a9a49a`: the hatching, the warning's film tint (its hue);
+  - the curtain's foot: brass `#c79a4e` in jump 1, pearl `#e9ecf2` in jump 2 and the rewind;
+  - never a team ink.
+- **Sound cues** (`src/audio/sfx-eras.js`): `era_bell` (pre-bell), `era_ring` (long / short), `era_kiosk`,
+  `era_pickup`, `era_swell`, `era_front` (a loop riding the front), `era_pop`. `era_strike` is registered but unused:
+  the striker clock has no prop yet.
+- **Bake passes.** `W.bakePasses()` is `[apply(1), apply(2), apply(3)]` into R / G / B; the JSON says `channels: 3`.
+  - Keys: `bluestone`, `bluestone.tower`, `bluestone.boss`, and `bluestone.bazookarp` once the karp kit adds its pieces.
+  - Re-bake after any collider change (`run.sh bake.cjs bluestone bluestone.tower bluestone.boss`).
+- **Left to the art pass:**
+  - jump 2's hexagonal-shard curtain;
+  - a softer dissolve than the 20 cm blocks;
+  - real overhead wires;
+  - murals 5 and 10;
+  - the striker clock's prop;
+  - era ambiences;
+  - the GPO clock;
+  - the curtain's brass foot against Tangerine ink (it is transient, but worth a look).
 
 ## 7. Unfinished, flaky or uncertain
-- **The 50 ms frame caps** in eras-jump (the first half's and the new Bravo / time-of-day one) fail on this machine at
-  load 220–390 and pass when it is quieter; the deterministic part (no raster built from J to done + 1) passes in every
-  run. They need a quiet machine. COMMON.md in this worktree (uncommitted, not mine) says the Mac mini is back since
-  2026-10-16; my task said it was unavailable, so nothing was sent to it — a JOB with `PAGE_ARGS='only=frames'` ×3 is
-  the natural first job there.
-- **The fallback rebuild** (a time of day changed mid-match, which no game path does today) costs one frame of ~0.1–0.2 s
-  per base outside a jump. The load paths (side flip, kept world) pay at set-up, behind the faded screen.
-- **Zone Control / Tower Command:** the docked chip sits where the HUD's own callouts appear; a splat callout covers it
-  for 2.4 s (§0 issue 5). A HUD decision for the lead.
-- **The minimap base rasters on a fresh world** are built by the update fallback in the match's 'init' state (one per
-  frame) when the minimap's own idle build has not happened before the era world's idle prebuild — at load, not in play.
-- **Not in this phase:** step 6 (`W.bakePasses()` implemented, never baked), 10 (eras-bots.js, sweeps, H16b), 11
-  (net-eras.cjs: two clients, late join, host change — would also exercise fix 2 online), 12 (eras-modes.js; Bazookarp
-  H21 against a stub), 12c (no stage murals yet for `uMurEra`).
-- **Art pass:** jump 2's hexagonal-shard curtain, a softer dissolve, wires under the beads, the GPO clock on its
-  parapet; the striker clock's `era_strike` has no prop yet; era ambiences and the end-of-match cosmetic (§3.10).
-- The roof rescue is tested only by a direct call (no garden-on-roof on the Z). `stats.eraShoves` is not in match.cjs's
-  RESULT_JSON.
+- **The review-fix-1 frame timing check** (Bravo / time-of-day jumps, 50 ms cap) fails on single spikes on this shared
+  machine. Its no-jump baseline itself spikes to 521 ms. It needs a quiet machine: `JOB-6.sh` (committed, for the record:
+  frames and 'first' ×3, the perf REPORTs, net-eras) is the job for the Mac mini.
+- **COMMON.md (uncommitted in this worktree) says the Mac mini is back.** My task said unavailable, so nothing was sent
+  and nothing was pushed.
+- **Bazookarp part B has never run** (no karp module here). The karpField `nav.anyValid` integration line is for the
+  karp package.
+- **Era-3 visits in Tower Command:** 2 of 8 bots in one match. Objective roles keep bots off the new ground; the fresh
+  weight only applies to paint goals.
+- **The lightmap is baked for this geometry.** Any collider change makes it stale (the loader warns and skips it).
+- **No balance sets were run** (the lead's consolidated pass); the Halo-dominance check is still risk 16.

@@ -1,0 +1,5 @@
+PRE {"stage":"bluestone","quality":"high","era":1,"phase":"jump","jump":{"from":1,"to":2,"front":37.5,"wallMs":737,"phase":"jump"},"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":false,"perf":{"calls":338,"tris":717542,"cpuRenderMs":5.27,"cpuSimMs":2.18},"stats":{"navMs":725,"navBuilds":[249,216,237],"mergeMs":23.1,"paintMs":47.60000002384186,"meshMs":12.100000023841858,"compileMs":1252,"compiled":7,"bases":["1:swap 322","2:init 227","3:init 172"]}}
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/bs2/shots/bluestone-day-spawnA.png
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":15409,"blocks":712,"solidBlocks":590,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":337,"tris":714758,"cpuRenderMs":5.25,"cpuSimMs":2.26},"coverage":[4.9,6.3]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON

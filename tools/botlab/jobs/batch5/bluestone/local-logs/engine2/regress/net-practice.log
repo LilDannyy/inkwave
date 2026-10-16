@@ -1,0 +1,41 @@
+[net] relay ws://127.0.0.1:60783
+[net] 2 clients up in 16.4 s
+[net] room 355ZL
+PASS guest sees the host's settings (practice · tidewater · golden · 2 bots · easy)  {"mode":"practice","map":"tidewater","time":"golden","botCount":2,"bots":true,"difficulty":"easy","host":false}
+PASS random stage / time reach the guest
+PASS an older client's "dusk" is sunset
+PASS humans-only stage: bot count forced to 0  {"bc":0,"bots":false}
+PASS …and the host's 2 come back on the next stage
+[net] practice up in 4.7 s
+PASS both in Practice on the same stage  {"a":["saltpan","golden"],"b":["saltpan","golden"]}
+PASS no clock (practice: the HUD shows no time; the match never runs out)
+PASS roster: 2 players + the 2 bots, the same on both screens  [[0,"Hosty",0,"shooter",false,"TF9X"],[1,"Tako",0,"roller",true,"TF9X"],[2,"Guesty",1,"shooter",false,"BX7X"],[3,"Coral",1,"brolly",true,"TF9X"]]
+PASS the relay room stays open during Practice (joiners welcome)  {"locked":false}
+PASS host sees the guest move, guest sees the host move  {"p0":[[2.99,66.68,true],[-1.0432233422198418,-65.30056495802505,true]],"p1":[[6.762125143239736,53.36587795136953,true],[-9.336785053668125,-58.432081738445774,true]]}
+PASS host sees the guest's new loadout (roller · waddle · strike)  ["roller","waddle","strike",null]
+PASS …and the guest has it in its own hands  ["roller","waddle","strike"]
+[net] ink before [ 7666, 7671 ]
+PASS host can clear the ink; a guest can't
+PASS both end with zero ink  {"before":[7666,7671],"after":[[0,[0,0]],[0,[0,0]]]}
+PASS the wave animation ran on both (look + steam)  {"fxA":{"waves":1,"puffs":530,"t":2.9248666666666696},"fxB":{"waves":1,"puffs":425,"t":2.774966666666665}}
+[net] baseline (no wave) {"diff":33,"inked":[5981,5980],"counts":[[2435,2248],[2427,2253]],"waves":[1,1]}
+PASS painting through a wave: both screens end with the same turf (about as few differing cells as painting without one)  {"wave":{"diff":18,"inked":[3048,3044],"counts":[[1799,482],[1794,482]],"waves":[2,2]},"baseline":{"diff":33,"inked":[5981,5980],"counts":[[2435,2248],[2427,2253]],"waves":[1,1]}}
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+PASS …same roster and the guest's loadout kept  {"roster":[[0,"Hosty",0,"shooter",false,"TF9X"],[1,"Tako",0,"roller",true,"TF9X"],[2,"Guesty",1,"roller",false,"BX7X"],[3,"Coral",1,"brolly",true,"TF9X"]],"loB":"roller"}
+PASS …and they see each other moving there  {"q1":[[-5.710063503065548,59.66,true],[5.53386924409352,-55.02472651923036,true]],"q2":[[0.13668708649914624,52.13564868798913,true],[5.47001976160606,-46.61103911580244,true]]}
+PASS the late joiner drops into the session on the same stage  {"c":["craters",5],"a":5}
+PASS …on the side with fewer players  {"humansByTeam":[0,1,0]}
+PASS …and gets the host's turf (the snapshot; ≤ 1 % of inked cells differ)  {"inkIn":10372,"ok":true,"diff3":22,"inked":[26169,26160]}
+PASS a guest leaves (LEAVE ROOM): back on the online hub, gone from everyone's session
+PASS …and can drop back in  {"n":5}
+PASS host migration: the guest is the host now, with the host's controls  {"b":true,"info":true}
+PASS …the old host is gone, its bots carry on under the new host  [[1,"Tako",0,"roller",true,"BX7X"],[2,"Guesty",1,"roller",false,"BX7X"],[3,"Coral",1,"brolly",true,"BX7X"],[5,"Latey",0,"shooter",false,"TFQV"]]
+PASS …and can clear the ink
+PASS swap to a humans-only stage: the bots are dropped on every screen  {"b":[[2,"Guesty",1,"roller",false,"BX7X"],[5,"Latey",0,"shooter",false,"TFQV"]],"c":2}
+PASS End Practice: both back in the lobby (the room stays)  {"live":null,"n":2,"screen":"lobby"}
+RESULT 29/29
+c0 console: none
+c1 console: none
+c2 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":26,"maxMsg":13295}
+outside requests refused: none

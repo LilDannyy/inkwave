@@ -1,0 +1,4 @@
+PRE {"stage":"halyard","perf":{"calls":400,"tris":3523360,"cpuRenderMs":6.7,"cpuSimMs":11.2},"ppm":12.9,"atlas":2048,"quality":"high"}
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/bs2/shots/halyard-day-spawnA.png
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":8443,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":398,"tris":3510432,"cpuRenderMs":6.62,"cpuSimMs":10.35},"coverage":[3.9,5.8]}
+CONSOLE 0 unique warning/error line(s)

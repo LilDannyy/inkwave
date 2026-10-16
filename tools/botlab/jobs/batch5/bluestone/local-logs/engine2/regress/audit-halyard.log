@@ -1,0 +1,5 @@
+PASS lightmap applied (baked for this build, not stale)  {"id":"halyard","mode":"turf","rows":740}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.02,6.41],"avg":6.21,"straight":66}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 3/3
+console errors: none

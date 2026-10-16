@@ -172,7 +172,9 @@ app.on('browser-window-created', (_, win) => {
         if (!f) return 'no face';
         const c0 = document.createElement('canvas'); c0.width = img.width; c0.height = img.height; const x0 = c0.getContext('2d'); x0.drawImage(img, 0, 0);
         const ppm = f.light.ppm, pad = f.light.pad, w = Math.ceil(f.su * ppm) + pad * 2, h = Math.ceil(f.sv * ppm) + pad * 2;
-        const d = x0.getImageData(f.light.x, f.light.y, w, h).data;
+        // (the atlas is stored flipped: atlas row y is image row S − 1 − y)
+        const S = img.height, d0 = x0.getImageData(f.light.x, S - (f.light.y + h), w, h).data, d = new Uint8ClampedArray(d0.length);
+        for (let yy = 0; yy < h; yy++) d.set(d0.subarray((h - 1 - yy) * w * 4, (h - yy) * w * 4), yy * w * 4);
         const S = Math.max(2, Math.floor(560 / w)), c = document.createElement('canvas'); c.width = w * S * 3 + 40; c.height = h * S + 60; const x = c.getContext('2d');
         x.fillStyle = '#20242c'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#f4e9c8'; x.font = '18px sans-serif';
         ['R: era 1 (crates there)', 'G: era 2 (crates gone)', 'B: era 3'].forEach((t, k) => { x.fillText(t, 10 + k * (w * S + 20), 22);

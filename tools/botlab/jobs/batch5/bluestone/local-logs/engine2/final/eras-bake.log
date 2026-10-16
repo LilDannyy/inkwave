@@ -1,0 +1,5 @@
+PASS T1: the bake is one RGB lightmap of the union world — its JSON says channels 3, its hash is this build's (the lightmap applies)  {"meta":{"id":"bluestone","hash":"22885","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3},"hash":"22885","lightSize":2048,"rows":1142}
+PASS T1: the channel probe — the street beside and under Degrayling Lane's era-1 crates is darker in R (era 1: the crates stand there) than in G (TODAY: gone); shared ground far from any era piece reads alike in R, G and B  {"beside":{"n":188,"rgb":[175.4,216.6,216.6]},"under":{"n":360,"rgb":[166,212.9,212.9]},"far":{"at":[-22,1,-56.5],"rgb":[253,253,253]}}
+PASS T1: the level shader reads the AO channel of the fragment's era (dot of the RGB lightmap with the era's one-hot)  {}
+RESULT 3/3
+console errors: none
