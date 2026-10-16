@@ -317,6 +317,7 @@ export async function runChecks(o = {}) {
       weirs[t].forEach((w, i) => {
         const rr = F.fieldAt(t, w.pos, undefined, C.state), Dw = rr ? rr.d : Infinity, cnt = Kp.weirs[t][i].count;
         const pw = legs.find((l) => l.team === t && l.kind === 'pw' && l.i === i)?.rt, wg = legs.find((l) => l.team === t && l.kind === 'wg' && l.i === i)?.rt;
+        if (!fin(Dw)) { row.weirs.push({ i, count: cnt, noReading: true }); bad.push(`team ${t} weir ${i + 1}: no field reading there (no carrier-graph node under it, #4)`); return; }
         const pct = (Lt - Dw) / Lt;
         row.weirs.push({ i, count: cnt, pct: r1(pct * 100), along: r1(Lt - Dw), toGate: r1(Dw), walkFromPond: r1(pw?.l1), walkToGate: r1(wg?.l1) });
         if (!(cnt >= 100 * (1 - CK.weirPct[1]) - 1e-9 && cnt <= 100 * (1 - CK.weirPct[0]) + 1e-9)) bad.push(`team ${t} weir ${i + 1} at count ${cnt} (${r1(pct * 100)} %: band 45–60)`);
@@ -354,7 +355,8 @@ export async function runChecks(o = {}) {
     const bad = [], rows = [], fl = [];
     for (const lg of legs) {
       if (lg.kind === 'pg') continue;
-      const r = lg.rt; if (!r.r1) continue;
+      const r = lg.rt;
+      if (!r.r1) { bad.push(`team ${lg.team}: ${lg.name}: no route at all (#4)`); continue; }
       rows.push({ team: lg.team, leg: lg.name, r1: r1(r.l1), r2: r.r2 ? r1(r.l2) : null, ratio: r.r2 ? r2(r.ratio) : null, r3: r.r3 ? r1(r.l3) : null });
       if (!r.r2) { bad.push(`team ${lg.team}: ${lg.name}: no second route`); const w = lg.kind === 'pw' ? weirs[lg.team][lg.i].pos : nodes[r.r1[Math.floor(r.r1.length / 2)]]; fl.push({ at: P3(w), what: `${lg.name}: one route only` }); }
       else if (r.ratio > CK.route2) bad.push(`team ${lg.team}: ${lg.name}: route 2 ${r1(r.l2)} m = ${r2(r.ratio)} × route 1 (≤ 1.6)`);
@@ -830,7 +832,8 @@ export async function runChecks(o = {}) {
       let seen = 0; for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2, x = p.x + Math.sin(a) * 7, z = p.z + Math.cos(a) * 7, f = L.groundHeight(x, z, p.y + 2.5), y = (f > p.y - 4 ? f : p.y) + 1.5; if (losClear(G, new V3(x, y, z), c)) seen++; }
       rows.push({ team: t, i, solid: [...found.values()], attackers: sA, defenders: sD, seen });
       if (found.size) { bad.push(`team ${t} weir ${i + 1}: solid within 3 m: ${[...new Set(found.values())].join(', ')}`); fl.push({ at: P3(p), what: `15: solid within 3 m of the weir` }); }
-      if (!sA || !sD) bad.push(`team ${t} weir ${i + 1}: not seen from the ${!sA ? 'attackers\'' : 'defenders\''} approach`);
+      if (!pw || !wg) bad.push(`team ${t} weir ${i + 1}: no route ${!pw ? 'from the Pond' : 'on to the Gate'} to look along (#4)`);
+      else if (!sA || !sD) bad.push(`team ${t} weir ${i + 1}: not seen from the ${!sA ? 'attackers\'' : 'defenders\''} approach`);
       if (seen < CK.weirSeen) bad.push(`team ${t} weir ${i + 1}: seen from ${seen}/8 directions (≥ 3)`);
     });
     chk(15, 'Weir room', bad.length ? 'FAIL' : 'OK', bad.length ? bad.join('; ') : rows.map((r) => `t${r.team} weir ${r.i + 1}: clear, both approaches see it, ${r.seen}/8`).join(' | '), { rows }, fl);
@@ -851,6 +854,8 @@ export async function runChecks(o = {}) {
       }
     }
     const veto = fails.map((r) => { const a = nodes[r.from], b = nodes[r.to]; return [r2(a.x), r2(a.y), r2(a.z), r2(b.x), r2(b.y), r2(b.z)]; });
+    // (the not-made by kind: hops, gaps up or level, gaps down — a gap down past a thin rail or a balustrade is the usual one)
+    const byKind = { hop: 0, gapLevel: 0, gapDown: 0 }; for (const r of fails) { if (r.kind === 'hop') byKind.hop++; else if (nodes[r.to].y < nodes[r.from].y - K.gap.upMax) byKind.gapDown++; else byKind.gapLevel++; }
     // the made candidates beyond the rules go to #7d with their gain
     for (const r of made) { const g2 = gainOf(C, r.from, r.to); if (g2 > CK.gain && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: r.kind === 'high hop' ? 'highHop' : 'longGap', a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: fin(g2) ? r1(g2) : 'off-field', warnOnly: !fin(g2) }); }
     const offMade = res ? res.list.filter((r) => r.kind === 'off hop' && r.ok) : [];
@@ -869,11 +874,11 @@ export async function runChecks(o = {}) {
     }
     for (const r of fails.slice(0, 8)) fl.push({ at: P3(nodes[r.from]), what: `16: a ${r.kind} edge no kid makes`, look: nodes[r.to] });
     draw.extra = extra.map((e) => { const r = res?.list.find((x) => x.from === e.from && x.to === e.to && !x.beyond); return { a: [r1(e.a[0]), r1(e.a[2])], b: [r1(e.b[0]), r1(e.b[2])], type: e.type, ok: r ? r.ok : null }; });
-    draw.beyond = made.map((r) => ({ a: [r1(nodes[r.from].x), r1(nodes[r.from].z)], b: [r1(nodes[r.to].x), r1(nodes[r.to].z)] }));
+    draw.beyond = made.map((r) => { const g2 = gainOf(C, r.from, r.to); return { a: [r1(nodes[r.from].x), r1(nodes[r.from].z)], b: [r1(nodes[r.to].x), r1(nodes[r.to].z)], find: !fin(g2) || g2 > CK.gain }; });
     const ran = !!res;
     chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length ? 'FAIL' : 'OK',
-      !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s` : ''),
-      { tried: tests.length, failed: fails.length, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
+      !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s` : ''),
+      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
   }
   tm('16');
   // ----------------------------------------------------------------------------------------------- #7 finished (with #16's made candidates)
@@ -926,7 +931,7 @@ const polyPolyDist = (a, b) => Math.min(...a.map((p) => polyDist(b, p[0], p[1]))
 // 1.5 m and 3 m before the low end facing the far end; it runs and presses jump at each of 5 distances before the edge
 // (a move down is first tried running off, no jump); success = grounded on the far node's floor inside 2 s: within 0.5 m
 // of it, or on that floor within 3 m with a clear waist line to it (it landed past the node: the last steps are a walk).
-function proveEdges(C, list, o = {}) {
+export function proveEdges(C, list, o = {}) {
   const t0 = performance.now(), { m, nodes, L, G } = C;
   const kid = m.actors.find((a) => a.bot && a.team === 0) || m.actors.find((a) => a.bot) || m.actors[0];
   const it = kid.intent, dt = 1 / 60;
@@ -951,6 +956,7 @@ function proveEdges(C, list, o = {}) {
       if (!jumped && jumpAt != null && along <= jumpAt && kid.grounded) jumped = 1;
       it.jump = jumped > 0 && jumped <= 4; if (jumped) jumped++;
       kid.update(dt);
+      if (o.trace && o.trace.length < 4000) o.trace.push([trials, f, r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z), kid.grounded ? 1 : 0, it.jump ? 1 : 0, kid.alive ? 1 : 0]);
       if (!kid.alive) break;
       // made: grounded on the far node's floor — within 0.5 m of it, or on that floor within 3 m with a clear waist line
       // to it (a run-off or a jump that lands past the node is on its floor: a carrier walks the last steps)
@@ -1238,8 +1244,12 @@ export async function pictures(o = {}) {
         x.lineWidth = 3; x.strokeStyle = /^Pond/.test(rt.leg) ? '#3ff' : '#ffd23f'; x.stroke(); x.setLineDash([]);
       }
       // hop / gap edges as short ticks (green made, red not made, grey untried); made beyond the rules: magenta
-      for (const e of draw.extra || []) { const [X1, Y1] = px(e.a[0], e.a[1]), [X2, Y2] = px(e.b[0], e.b[1]); x.strokeStyle = e.ok === false ? '#ff2020' : e.ok ? '#3f3' : '#999'; x.lineWidth = e.ok === false ? 4 : 2.5; x.beginPath(); x.moveTo(X1, Y1); x.lineTo(X2, Y2); x.stroke(); }
-      for (const e of draw.beyond || []) { const [X1, Y1] = px(e.a[0], e.a[1]), [X2, Y2] = px(e.b[0], e.b[1]); x.strokeStyle = '#f0f'; x.lineWidth = 4; x.beginPath(); x.moveTo(X1, Y1); x.lineTo(X2, Y2); x.stroke(); }
+      // (made ones thin, the not-made on top and thick; made beyond the rules faint, the #7d finds among them thick)
+      const tick = (e, style, w) => { const [X1, Y1] = px(e.a[0], e.a[1]), [X2, Y2] = px(e.b[0], e.b[1]); x.strokeStyle = style; x.lineWidth = w; x.beginPath(); x.moveTo(X1, Y1); x.lineTo(X2, Y2); x.stroke(); };
+      for (const e of draw.beyond || []) if (!e.find) tick(e, 'rgba(255,0,255,0.35)', 1.5);
+      for (const e of draw.extra || []) if (e.ok !== false) tick(e, e.ok ? 'rgba(60,255,60,0.85)' : '#999', 1.6);
+      for (const e of draw.beyond || []) if (e.find) tick(e, '#f0f', 4);
+      for (const e of draw.extra || []) if (e.ok === false) tick(e, '#ff2020', 4);
       // the Gates (trigger, 15 m ring) and their entrances (arrows), the weirs (diamonds), the Pond
       for (const en of draw.entrances || []) {
         const [GX, GY] = px(en.g[0], en.g[2]);
@@ -1261,7 +1271,7 @@ export async function pictures(o = {}) {
       x.font = '15px sans-serif'; x.fillStyle = '#ddd';
       x.fillText('Alpha attacks left → right. Shade: Alpha\'s count (darker = nearer its Gate), dots every 10 counts; white dots: the halfway line. Cyan / yellow: Alpha\'s routes Pond → weir / weir → Gate (dashed: route 2).', 16, H + 56);
       x.fillText('Diamonds: weirs · discs: Dragon Gates (dashed 15 m ring; arrows: entrances, red = unseen from the deck) · hatched: Carp-Free Zones (signs ⊘; green ring = signed entrance, red X = unsigned) · yellow dashed: noRetreat · red: carrierBlock', 16, H + 78);
-      x.fillText(`Ticks: hop / gap edges (green made by a kid, red not: hopVeto) · magenta: made beyond the rules (#7d) · purple: plateaus (red: FAIL) · numbered: flags (${flags.length}) — ${flags.slice(0, 6).map((f, i) => `${i + 1}: ${f.what}`).join(' · ').slice(0, 150)}`, 16, H + 100);
+      x.fillText(`Ticks: hop / gap edges (green made by a kid, red not: hopVeto) · magenta: made beyond the rules (bold: a #7d find, > 10 m) · purple: plateaus (red: FAIL) · numbered: flags (${flags.length}) — ${flags.slice(0, 6).map((f, i) => `${i + 1}: ${f.what}`).join(' · ').slice(0, 150)}`, 16, H + 100);
       shots.push({ name: `${rep.id}${rep.states.length > 1 ? '-s' + rep.key : ''}-karp-top.jpg`, url: jpeg(c) });
       rep._flags = flags;
     }
@@ -1278,13 +1288,13 @@ export async function pictures(o = {}) {
     // a view point back along a route: the farthest node 6–14 m back with a clear line to the target (else 8 m back, raised)
     const viewFrom = (path, fromEnd, look) => {
       if (!path?.length) return null;
-      const seq = fromEnd ? [...path].reverse() : path; let acc = 0, best = null, at8 = null;
+      const seq = fromEnd ? [...path].reverse() : path; let acc = 0, best = null, bestWide = null, at8 = null;
       for (let k = 1; k < seq.length; k++) {
         acc += d3(nodes[seq[k - 1]], nodes[seq[k]]); if (acc < 6) continue; if (acc > 14) break;
         const n = nodes[seq[k]], e = eyeAt(n); if (!at8 && acc >= 8) at8 = e;
-        if (losClear(G, e, look)) best = e;
+        if (losClear(G, e, look)) { best = e; if (F.wide[seq[k]]) bestWide = e; }   // (open floor first: not pressed to a wall)
       }
-      if (best) return best;
+      if (bestWide || best) return bestWide || best;
       const e = at8 || eyeAt(nodes[seq[Math.min(seq.length - 1, 6)]]); e.y += 3; return e;
     };
     const along = (path, metres, fromEnd) => { if (!path?.length) return null; const seq = fromEnd ? [...path].reverse() : path; let acc = 0; for (let k = 1; k < seq.length; k++) { acc += d3(nodes[seq[k - 1]], nodes[seq[k]]); if (acc >= metres) return nodes[seq[k]]; } return nodes[seq[seq.length - 1]]; };
@@ -1349,4 +1359,24 @@ export async function kitPictures() {
     if (cb) { const cx = cb.poly.reduce((a, p) => a + p[0], 0) / cb.poly.length, cz = cb.poly.reduce((a, p) => a + p[1], 0) / cb.poly.length, y = L.groundHeight(cx, cz, (cb.y1 ?? 1) + 0.5); await shot('carrierblock', new V3(cx + 6, (y > -50 ? y : 0) + 3.2, cz - 7), new V3(cx, (y > -50 ? y : 0) + 0.9, cz), 'a carrierBlock: the shimmer and the NO CARP glyph (carriers are pushed out, others pass)'); }
   } finally { G.scene.fog = fog; for (const a of m.actors) a.character.root.visible = true; }
   return shots;
+}
+
+// ================================================================================================= one move, traced
+// PROBE='[x, y, z, x, y, z]' (bazookarp-check.cjs): #16's kid on the one pair of nodes nearest those two points, with
+// every frame of every trial ([trial, frame, x, y, z, grounded, jump, alive]) — why a move is or isn't made
+export function probeEdge(a, b, o = {}) {
+  const C = ctx(o.state || 0), { nodes, N } = C;
+  const nearest = (p) => { let best = -1, bd = Infinity; for (let i = 0; i < N; i++) { const n = nodes[i]; const d = Math.hypot(n.x - p[0], n.y - p[1], n.z - p[2]); if (d < bd) { bd = d; best = i; } } return best; };
+  const from = nearest(a), to = nearest(b), dy = nodes[to].y - nodes[from].y, flat = hd(nodes[from], nodes[to]);
+  const kind = dy >= K.hop.riseMin - 0.05 && flat <= K.hop.flatMax + 0.05 ? 'hop' : 'gap';
+  const trace = [];
+  const res = proveEdges(C, [{ kind, from, to }], { trace });
+  // what each trial ended against: the solid blocks (level pieces and prop colliders) within 1 m of where it stopped
+  const ends = new Map(); for (const f of trace) ends.set(f[0], f);
+  const L = C.L, blocks = [];
+  for (const f of ends.values()) for (const id of L.queryBlocks(f[2] - 1, f[4] - 1, f[2] + 1, f[4] + 1, [])) {
+    const b = L.blocks[id]; if (!b.solid || blocks.some((q) => q.id === id) || b.aabbMax.y < f[3] - 0.5 || b.aabbMin.y > f[3] + 2) continue;
+    blocks.push({ id, tag: b.tag || (b.hidden ? 'prop collider' : 'block'), min: P3(b.aabbMin), max: P3(b.aabbMax), roof: !!b.roof, hidden: !!b.hidden, dynamic: !!b.dynamic, trial: f[0] });
+  }
+  return { from: P3(nodes[from]), to: P3(nodes[to]), kind, valid: [!!C.okN[from], !!C.okN[to]], made: res.list[0]?.ok, trials: res.trials, trace, blocks };
 }

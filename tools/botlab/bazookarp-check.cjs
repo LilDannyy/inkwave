@@ -15,6 +15,8 @@
 //        with the module's audit switch (?era= / ?lava=, or the state's own `query`). Without one: every state in turn.
 //        CASES=clean,f1,…  (self-test) some cases   FLAGSHOTS=n  pictures of the first n flagged places (default 8)
 //        KITSHOTS=1  the kit up close too (a weir and a post, the Gate, a NO CARP sign, a carrierBlock's shimmer)
+//        PROBE='[x, y, z, x, y, z]'  one move traced instead (#16's kid on the node pair nearest those points, every frame
+//        of every trial): why a listed hopVeto edge or #7d candidate is or isn't made
 // Prints one line per check (OK / WARN / FAIL / SKIP with numbers), then
 //   RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=…
 // and writes <id>-karp.json (every number) and the pictures (JPEG < 300 KB) to OUT.
@@ -124,7 +126,16 @@ app.on('browser-window-created', (_, win) => {
     // ------------------------------------------------------------------------------------------- the stages
     const table = [];
     try {
-      if (SELF) {
+      if (process.env.PROBE) {
+        // one move, traced (#16's kid on the pair of nodes nearest PROBE's two points): why it is or isn't made
+        const id = IDS[0], setup = stageSetup(id), pr = JSON.parse(process.env.PROBE);
+        await boot(stateQuery(id, null)); await start(id, setup);
+        const r = await js(`${mod}.then((m) => m.probeEdge(${JSON.stringify(pr.slice(0, 3))}, ${JSON.stringify(pr.slice(3, 6))}))`);
+        console.log(`PROBE ${id} ${r.kind} ${JSON.stringify(r.from)} → ${JSON.stringify(r.to)} (carrier-graph nodes: ${r.valid}) → ${r.made ? 'MADE' : 'NOT MADE'} in ${r.trials} trial(s)`);
+        let last = -1; for (const f of r.trace) { if (f[0] !== last) { console.log(`  trial ${f[0]}`); last = f[0]; } if (f[1] % 6 === 0 || f[5] !== 1) console.log(`    f${String(f[1]).padStart(3)} (${f[2]}, ${f[3]}, ${f[4]}) ${f[5] ? 'ground' : 'air'}${f[6] ? ' JUMP' : ''}${f[7] ? '' : ' DEAD'}`); }
+        for (const b of r.blocks) console.log(`  near where trial ${b.trial} stopped: ${b.tag} ${JSON.stringify(b.min)}–${JSON.stringify(b.max)}${b.roof ? ' roof' : ''}${b.hidden ? ' (prop collider)' : ''}${b.dynamic ? ' dynamic' : ''}`);
+        fs.writeFileSync(path.join(OUT, `${id}-probe.json`), JSON.stringify(r, null, 1));
+      } else if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
         const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
@@ -189,7 +200,7 @@ app.on('browser-window-created', (_, win) => {
             if (r.err) { console.log(`| ${r.id} | error: ${r.err} |`); continue; }
             const c = r.j.checks, n16 = c[16]?.nums || {}, n7 = c[7]?.nums || {};
             const finds = (n7.d || []).length, ents = (n7.teams || []).map((t) => t.entrances.length).join('/');
-            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${finds}${finds ? ': ' + (n7.d || []).slice(0, 3).map((f) => `${f.probe} ${f.gain}`).join(', ') : ''} | ${ents} | ${r.s} |`);
+            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${finds}${finds ? ': ' + (n7.d || []).slice(0, 3).map((f) => `${f.probe} ${f.gain}`).join(', ') : ''} | ${ents} | ${r.s} |`);
           }
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }
