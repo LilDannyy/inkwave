@@ -49,6 +49,16 @@ function cleanPieces() {
   for (const [x0, x1] of [[-8, -7], [-5, -1], [1, 5], [7, 8]]) add.push(B(x0, x1, 2.4, 3.4, 56, 56.3, { paint: false, roof: true, color: '#c4bba9', tag: 'kcheck-parapet' }));
   // two crates on the apron
   for (const x of [-3, 3]) add.push(B(x - 0.6, x + 0.6, 0, 1.4, 51.4, 52.6, { paint: false, roof: true, color: '#b48a5a', pattern: 6, tag: 'kcheck-apron' }));
+  // [fix2] review 2: the clean box was clean only inside the old 3.0 / 3.8 m windows. #16's kid jumps karpbox's 3 m channel
+  // (x 14…17) with its rim nodes 4 m apart (the field's gaps stop at 3.0 m node to node), gaining up to 14 m round by the
+  // pier, and off weir B's deck (the two-weir data's, unused here) gains 15.9 m on a field that reads its north ramp 12 m
+  // long. Weir B's deck is taken out; karpbox itself (the rules tests' stage) is unchanged.
+  // [fix3] review 3: the channel is closed by a 2.6 m rail on its west edge from the alley's wall to the pier (z 20.4…36:
+  // beyond a kid's 1.8 m and a carrier's swim-jump, ~2.0 m), and the pier is widened into a bridge over the channel's
+  // north end (z 36…44), so nothing pinches the SE opening's mouth: fix round 2's second rail stretch (z 38…44, 2 m) stood
+  // in it and left the ring's SE way in under nav's 0.92 m, so the clean box FAILed #5 and x7h lost its field
+  L.half = L.half.filter((d) => !isBox(d, [7, 2.3, 26], [11, 2.5, 30]) && !(d.kind === 'ramp' && (same(d.high, [9, 2.5, 26]) || same(d.high, [9, 2.5, 30]))) && !isBox(d, [14, -1.2, 36], [17, 0, 38]));
+  add.push(B(13.7, 14, 0, 2.6, 20.4, 36, { paint: false, roof: true, color: '#8a7f70', tag: 'kcheck-channelrail' }), B(14, 17, -1.2, 0, 36, 44, { color: '#b89a74', pattern: 2, tag: 'kcheck-bridge' }));
   L.half.push(...add);
   return L;
 }
@@ -176,7 +186,10 @@ export const CASES = [
     layout: (L) => { floorWithout(L, [-17, -14.4, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]);
       L.half.push(B(-14.4, -12.4, 0, 0.8, 46.6, 49.4, { ...NOINK, tag: 'kcheck-landing' }), RP([-8.4, 0, 48], [-12.4, 0.8, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), B(-14.6, -5, 0, 3.6, 50.0, 50.5, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
   // — #7 (issue 3): P4, a squid climb over 5.5 m onto ground off the field, then a 6 m drop into the ring behind a screen
-  { id: 'x7p4', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[squid climb onto off-field ground\\] not seen from the spawn deck',
+  // ([fix3] review 3: its real reasons — the 6 m drop off the tower's top into the ring (#7c) and the squid climb up its
+  // face (#7d tallWall, 10.1 m). It is no #7a entrance of its own: climbing 6 m and walking over the top to the drop
+  // (~7.6 m) saves under 3 m on the field's way in by the SW opening, so D33 reads it as another way to that entrance)
+  { id: 'x7p4', check: 7, expect: '\\(c\\) \\d+ drop\\(s\\) > 2\\.5 m into a Gate\'s ring: .*\\(drop off off-field ground \\(a squid climb up\\)\\).*\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*tallWall',
     what: 'P4: a 6 m inkable tower through the ring wall (its top off the field: nav climbs stop at 5.5 m), a screen inside: squid up its face, over the wall, drop 6 m into the ring',
     layout: (L) => { L.half.push(B(-19.5, -13.5, 0, 6.0, 44.0, 46.6, { color: '#cfc7b6', tag: 'kcheck-tower' }), B(-11.5, -11, 0, 3.6, 43.5, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
   // — #15 / #1 (issue 4): Wc, the weir on the mover's track (its second stop moved to (18.5, 26)): the parked car stands
@@ -197,9 +210,9 @@ export const CASES = [
 // cell (0.95 m) back from the edge — and a far platform 2.4 m long, both 2 m wide, over the open sea east and west of the
 // box (single pieces: the slots avoid every piece of the box and its mirror)
 export const REACH_ROWS = [
-  [2.0, [0.2, 0.5, 0.8]], [1.8, [0.3, 0.7, 1.1, 1.5]], [1.5, [0.6, 1.0, 1.4, 1.8, 2.2]], [1.2, [1.4, 1.8, 2.2, 2.6, 3.0, 3.4]],
-  [0.9, [2.0, 2.4, 2.8, 3.2, 3.6]], [0.6, [2.4, 2.8, 3.2, 3.6, 4.0]], [0, [2.8, 3.2, 3.6, 4.0, 4.4, 4.8]], [-0.6, [3.2, 3.6, 4.0, 4.4, 4.8]],
-  [-1.2, [3.4, 3.8, 4.2, 4.6, 5.0, 5.4]], [-2.2, [3.8, 4.2, 4.6, 5.0, 5.4]], [-3.4, [4.2, 4.6, 5.0, 5.4, 5.8]],
+  [2.0, [0.2, 0.5]], [1.9, [0.3, 1.0, 1.7, 2.4]], [1.8, [0.3, 0.9, 1.5, 2.1, 2.7]], [1.5, [1.4, 2.2, 2.6, 3.0, 3.4]], [1.2, [2.2, 2.6, 3.0, 3.4, 3.8]],
+  [0.9, [2.4, 2.8, 3.2, 3.6, 4.0]], [0.6, [2.8, 3.2, 3.6, 4.0, 4.4]], [0, [3.2, 3.6, 4.0, 4.4, 4.8]], [-0.6, [3.6, 4.0, 4.4, 4.8, 5.2]],
+  [-1.2, [3.8, 4.2, 4.6, 5.0, 5.4]], [-2.2, [4.2, 4.6, 5.0, 5.4, 5.8]], [-3.4, [4.6, 5.0, 5.4, 5.8, 6.2]],
 ].flatMap(([dy, airs]) => airs.map((air) => ({ dy, air })));
 // the slots: [side (+1 east, −1 west), z0] — 2 m wide rows 3 m apart where the box (and its mirror) has nothing at x ±20…30
 const REACH_SLOTS = [
@@ -220,7 +233,7 @@ export function reachRows() {
 function reachPieces() {
   const out = [];
   for (const r of reachRows()) {
-    const nx = [r.edge - r.side * 4.0, r.edge].sort((a, b) => a - b), fx = [r.far, r.far + r.side * 2.4].sort((a, b) => a - b);
+    const nx = [r.edge - r.side * 4.0, r.edge].sort((a, b) => a - b), fx = [r.far, r.far + r.side * Math.min(2.4, 29.95 - Math.abs(r.far))].sort((a, b) => a - b);
     out.push(B(nx[0], nx[1], -1.2, r.yN, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reach' }), B(fx[0], fx[1], -1.2, r.yF, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reach' }));
   }
   return out;
