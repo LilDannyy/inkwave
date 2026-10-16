@@ -744,7 +744,7 @@
         const popAt = (fx, fz) => {
           reset();
           drop(me, 0, -1.0); settle();
-          put(mate, V(0, 0, 0), 0); mate.setWeapon('shooter'); mate.setSub('burst'); mate.bot.reset(); mate.ink = 100;
+          put(mate, V(0, 0, 0), Math.atan2(fx, fz)); mate.setWeapon('shooter'); mate.setSub('burst'); mate.bot.reset(); mate.ink = 100;   // (facing the foe while it looks)
           put(foe, V(fx, 0, fz), Math.PI);
           keep(mate); step(0.5, () => { mate.intent.move.set(0, 0, 0); });
           const seen = !!mate.bot.sight?.sees(foe);
