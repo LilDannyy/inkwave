@@ -85,3 +85,35 @@ if (set === 'E') {
     console.log(`  MEAN (n ${R.length}): uses ${f1(U / R.length)}/match | hits per use ${f2(H / Math.max(1, U))} | splats per use ${f2(S / Math.max(1, U))} | ink per splat ${S ? Math.round((U * COST[sub]) / S) : '-'}${ex}`);
   }
 }
+// ---- JOB-6 (the lead's follow-ups): A2 = set A at n 16 with the count at 60 / 120 / 180 s and the knockout time;
+// C2 = a mixed lobby, random weapons with one roller per team (slots 0 and 4): the rollers' turf vs the lobby's mean,
+// splats, and their share of alive time spent rolling
+if (set === 'A2') {
+  for (const code of groups(0)) {
+    const L = ok.filter((x) => x.k[0] === code);
+    console.log(`A2 ${code}: map | winner (reason, KO at) | counts A-B at 60 / 120 / 180 s | final | margin | lead changes | first take | contested % | err`);
+    const R = L.map((x) => { const r = x.r, c = r.countAt || {}, g = (t) => (c[t] ? c[t][0] + '-' + c[t][1] : 'end'), m = Math.abs(r.counts[0] - r.counts[1]);
+      const lead60 = c[60] ? (c[60][0] < c[60][1] ? 0 : c[60][1] < c[60][0] ? 1 : -1) : -1, ko = r.reason === 'knockout';
+      console.log(`  ${P(x.k[1] + '-' + x.k[2], 13)} ${P('AB'[r.winner] || '-', 2)}(${P(r.reason + (ko ? ' ' + f1(r.simT) + 's' : ''), 17)}) ${P(g(60), 8)} ${P(g(120), 8)} ${P(g(180), 8)} ${P(r.counts.join('-'), 7)} ${P(m, 4)} ${P(r.leadChanges, 3)} ${P(r.firstCapture ?? '-', 6)} ${P(f1((100 * r.contestedS) / r.simT), 5)} ${err(r)}`);
+      const gap = (t) => (c[t] ? Math.abs(c[t][0] - c[t][1]) : NaN);
+      return { m, ko, koT: ko ? r.simT : NaN, lc: r.leadChanges, fc: r.firstCapture, c: (100 * r.contestedS) / r.simT, g60: gap(60), g120: gap(120), g180: gap(180), lead60, won60: lead60 >= 0 ? (lead60 === r.winner ? 1 : 0) : NaN }; });
+    const kos = R.filter((x) => x.ko);
+    console.log(`  MEAN (n ${R.length}): knockouts ${kos.length}/${R.length} (at ${kos.map((x) => f1(x.koT)).join(', ') || '-'} s) | margin ${f1(mean(R.map((x) => x.m)))} | count gap at 60 s ${f1(mean(R.map((x) => x.g60)))}, 120 s ${f1(mean(R.map((x) => x.g120)))}, 180 s ${f1(mean(R.map((x) => x.g180)))} (matches still on) | the 60 s leader won ${R.filter((x) => x.won60 === 1).length}/${R.filter((x) => Number.isFinite(x.won60)).length} | lead changes ${f2(mean(R.map((x) => x.lc)))} | first take ${f1(mean(R.map((x) => x.fc)))} s | contested ${f1(mean(R.map((x) => x.c)))} %`);
+  }
+}
+if (set === 'C2') {
+  const M = {};
+  for (const code of groups(0)) {
+    const L = ok.filter((x) => x.k[0] === code);
+    console.log(`C2 ${code}: map | lobby turf p/bot | roller A (slot 0): turf, ×lobby, splats/deaths, rolling % | roller B (slot 4): same | other rollers | err`);
+    const R = [];
+    for (const x of L) { const r = x.r, lob = r.per.turf, rs = r.rollers || [];
+      const one = (i) => { const o = rs.find((q) => q.i === i); if (!o) return { s: '-', v: null }; const k = o.turf / Math.max(1, lob), rp = (100 * o.rollS) / Math.max(1, o.aliveS);
+        R.push({ k, rp, sp: o.splats, d: o.deaths, lsp: r.per.splats }); return { s: `${o.turf} ×${f2(k)} ${o.splats}/${o.deaths} ${f1(rp)}%` }; };
+      const a = one(0), b = one(4), extra = rs.filter((q) => q.i !== 0 && q.i !== 4).length;
+      console.log(`  ${P(x.k[1] + '-' + x.k[2], 13)} ${P(lob, 6)} ${P(a.s, 26)} ${P(b.s, 26)} ${P(extra, 2)} ${err(r)}`); }
+    M[code] = { k: mean(R.map((x) => x.k)), rp: mean(R.map((x) => x.rp)), sp: mean(R.map((x) => x.sp)), d: mean(R.map((x) => x.d)), lsp: mean(R.map((x) => x.lsp)), n: R.length };
+    console.log(`  MEAN (${R.length} rollers): turf ×${f2(M[code].k)} the lobby's mean | splats ${f2(M[code].sp)} (lobby ${f2(M[code].lsp)} per bot) | deaths ${f2(M[code].d)} | rolling ${f1(M[code].rp)} % of alive time`);
+  }
+  if (M.base && M.head) console.log(`  head vs base: roller turf ×lobby ${f2(M.base.k)} → ${f2(M.head.k)}; rolling ${f1(M.base.rp)} % → ${f1(M.head.rp)} %; roller splats ${f2(M.base.sp)} → ${f2(M.head.sp)}`);
+}
