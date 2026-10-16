@@ -49,3 +49,27 @@ re-bake, nothing on a walkable top, nothing that touches play.
 5. **Performance** is accepted as level with Halyard (cpuRender within noise, draw calls 5–10 % over in the same
    render mode). Add nothing that costs a draw call per instance: the new reef, rays and panels batch like the fish.
 After this round the stage waits for integration (the wave 2 base, a Bazookarp layout, the wip flag off at the end).
+
+## After review 5 (2026-10-16 evening): the LAST art round, and how it ends the eye-level hunt
+
+Reviews 3, 4 and 5 each found new bare pieces because each walked new places. That stops now: this round is ONE
+complete eye-level sweep by the builder, then one review that repeats the sweep. If it fails again the stage waits.
+
+1. **The complete sweep, first.** From `layout.js` list every structure on Alpha's half (the mirror follows): every
+   cover block, plinth, dais, rock, pile, wall face, stair flank and nosing, hut, set, tank base and sign. Shoot each
+   at 1.7 m from the floor a player walks past, day and dusk, as one contact sheet per area (`r5-sweep-<area>.jpg`),
+   and mark on the sheet what is bare. Dress everything marked in the same pass, in the language the earlier rounds
+   set (shader faces under the ink; props within 8.5 cm of a face and below walkable tops; no collider, no layout
+   change except item 3). The review's list is the minimum: Penguin Point's terrace faces and tops, the upper rock,
+   the basking rock, the ice pile (as the review specifies, with the PENGUIN POINT plaque), the Pump Hall's pump sets,
+   the touch-pool dais and step, the Ticket Hall's plaza plinth face.
+2. **Nits:** the Lookout portholes' dusk glow goes warm like the rest; the topiary's spokes blend into the bed.
+3. **The grand stair's head (the lead's call): add the granite nosing block** across the head, as `penguin-nosing`
+   does (radBox, about 8 cm proud, `paint: false`), on both halves, then re-bake aquarium and aquarium.tower (locally
+   or on the Mac mini, your choice) and re-run check-maps, climb-audit, stage-audit, cover-map; prove the sawtooth is
+   gone from court-promwall, stairtopB and stairfoot-up.
+4. **The stage art cards** are re-made last, from the same hero camera and scene, after everything above.
+5. **Exit camping** is not this round's: the lead has sent the Mac mini the pipes on / off set.
+6. **Triangles** +6–12 % over Halyard with level draw calls and render time: accepted by the lead.
+7. **The boss** off its planned cells by ≤ 1.5 m in the ring's necks: accepted as fight variance; the home ground on
+   Bravo's ferry plaza stands.
