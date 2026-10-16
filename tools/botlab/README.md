@@ -229,6 +229,11 @@ long foes stood in a chain's reach), then `match.cjs`'s BOBBER-SRC (per placemen
 `zdoor` / `zedge` / `zin` Zone Control, `troute` / `theat` Turf, `tower`, a fight's `pair`, a `lure` — its chain-seconds, foe
 seconds within 3 m of its reach and in it, chains set off and those that caught a foe) and BOBBER-STRAYS (each chain a bot's
 unaimed fire set off: its weapon, mode, distance and angle off its aim, whether its hold-fire check had said hold).
+[b5-int3] `match.cjs` also prints BOBBER-WASTE (the chains set off with no foe caught, by what set them off), BOBBER-AIMED
+(how each bot's aimed chain shot ended: blewMine / blewOther / foeGone / missed / noAim / readyOff) and the snaps on
+BOBBER-SCAN (thrown, aimed at, fired, left); `SNAPLOG=1` adds BOBBER-SNAPLOG / BOBBER-SCANLOG (each snap's and aimed shot's
+events). `TUNE='bobber.dangerHear=2.5'`: the lead's A/B knob — foes' bots notice an armed web within 2.5 m, else only in
+front of them with a line (off: within 5 m whatever way they face).
 `BOBBER_BOT.logOn = true` keeps a log of the bots' set-up decisions (`only=zone` prints it for a guard that falls short). A human's big web (SPEC C11's
 web arm — bots stop at 4): `MAP=halyard MODE=zones PAGE=tools/botlab/tests/bobber-web.js …page.cjs` (also treehills;
 `PAGE_ARGS='n=12,24 layout=lane,zone variant=trigger,clear reps=10'`: lethal area per trigger, splats per 100 ink, the share
