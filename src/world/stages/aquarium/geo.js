@@ -274,3 +274,24 @@ export const PLANTERS = {
     { s: [34, 36], w: [-11.5, -9.5], y0: 3.38, top: 4.5 },
   ],
 };
+
+// ---------------------------------------------------------------------------------------------------- fix round 5 dressing
+// (the complete eye-level sweep; dressing and shaders only: the blocks are layout.js's, unchanged.) Their numbers again,
+// for floorart.js (faces and tops under the ink) and the props on their edges. Alpha's half; the twins are turned 180°.
+// Penguin Point: the rock terrace's three blade boxes and the upper rock ([s0, s1, w0, w1, top]; feet at the floor), the
+// basking rock and the ice pile (world boxes [x0, x1, z0, z1], their tops; the basking rock straddles the terrace's
+// plaza edge, the ice pile stands on it), the PENGUIN POINT plaque on the upper rock's plaza face (+w)
+export const PENGUIN = {
+  rocks: [[-16, -3, -17.0, -10, 1.2], [-3, 10, -17.8, -10, 1.2], [10, 13, -17.0, -10, 1.2]],
+  upper: [13, 21, -17.0, -12, 2.4],
+  basking: { b: [-8.2, -7.0, -40.5, -39.3], top: 2.2 },
+  ice: { b: [-7.7, -6.3, -49.2, -47.8], top: 2.2, foot: 1.2 },
+  plaque: { s: 16.6, w: -12, y: 1.5 },
+};
+// the Pump Hall's two pump sets (layout.js 'pump-set': a world box and a blade box against the bund), tops 1.0
+export const PUMPS = { box: [17.05, 18.55, -42.0, -40.0], blade: { s: [18.7, 20.2], w: [11.0, 13.0] }, top: 1.0 };
+// the touch pool's dais (1.0) and its step (0.5) on the court side (layout.js 'touch-dais', 'touch-step'): world boxes
+export const DAIS = { b: [-12, -6, -16.0, -12.6], top: 1.0, step: [-12, -6, -12.6, -11.8], stepTop: 0.5 };
+// the Ticket Hall's block (layout.js 'ticket-hall', 1.2): its plaza (south), west and east faces (the north one carries the
+// ALL WATER IS BEHIND GLASS board, murals.js 5)
+export const TICKET = { b: [2.0, 10.0, -46.0, -39.0], top: 1.2 };
