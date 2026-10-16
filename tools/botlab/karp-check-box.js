@@ -36,6 +36,11 @@ const floorWithout = (L, ...holes) => {
   }
 };
 const ring = (a0, a1, o = {}) => ARC(0, 48, 15.5, 0.5, 0, 3, a0, a1, Math.max(2, Math.round((a1 - a0) / 5)), { ...WALL, ...o });
+// [fix4] review 4: the ring wall with its west opening (175–185°) between 3.6 m stretches (149–175°, 185–204.5°: taller than
+// any vault's 1.0 + 2.25 m), the rest as the clean box; and x7rq's screen inside the opening (north of it, hiding a way in
+// from the deck)
+const reRingT = (L) => { L.half = L.half.filter((p) => p.tag !== 'kcheck-ring'); for (const [a0, a1] of [[149, 175], [185, 204.5]]) L.half.push(...ARC(0, 48, 15.5, 0.5, 0, 3.6, a0, a1, Math.max(2, Math.round((a1 - a0) / 5)), { ...WALL })); for (const [a0, a1] of [[215.5, 324.5], [335.5, 391]]) L.half.push(...ring(a0, a1)); };
+const SCREEN = () => B(-15.2, -5, 0, 3.6, 50.0, 50.5, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' });
 // the ring wall's stretches (degrees: 0 = +x, 90 = +z): openings at 204.5–215.5 (SW) and 324.5–335.5 (SE)
 const RING = [[149, 204.5], [215.5, 324.5], [335.5, 391]];
 function cleanPieces() {
@@ -237,9 +242,54 @@ export const CASES = [
     layout: (L) => { floorWithout(L, [-14, -1, 6, 20], [0, 14, 6, 20]); } },
   // ([fix3b] the reason as it really reads: the deck lies behind the carrier's mark, so it runs ×3 there by the retreat
   // rule; the walk FAILs because the engine never set the zone flag, whatever the rate)
-  { id: 'x11z', check: 11, expect: 'in its own zone the fuse ran ×\\d \\((?!zone\\))', carry: true, what: 'the spawn-deck zone with its eras written as strings ([\'0\']): the checker\'s static checks read it (they compare as strings), the engine compares numbers and never applies it, so a carrier visiting it gets no zone ×3 (only the retreat rule\'s, the deck lying behind its mark)',
+  // ([fix4] review 4: the static checks now read eras as the engine does — strictly — so this zone is absent for them too and
+  // the zone visit has none to walk; the fault is caught where it is written, by #1: an eras entry matching no state's key)
+  { id: 'x11z', check: 1, expect: 'free zone 1\'s eras entry "0" matches no field state', what: 'the spawn-deck zone with its eras written as strings ([\'0\']): the engine compares strictly and never applies it (review 3 caught it only by #11\'s zone visit)',
     def: (d) => { d.freeZones[0].eras = ['0']; } },
+  // — review 4, issue 4: a second zone with a mistyped era key (the first one fine), and eras on a volume the engine ignores
+  { id: 'x1e', check: 1, expect: 'free zone 2\'s eras entry "1" matches no field state', what: 'a second free zone (the apron\'s east crate corner, Bravo\'s own) with eras [\'1\'] on a box whose states are keyed 0 and 1 (numbers): it never exists in the game, and #9 would read it',
+    def: (d) => { d.freeZones.push({ poly: [[4, 50], [8, 50], [8, 54], [4, 54]], y0: -0.3, y1: 0.3, signs: [], eras: ['1'] }); } },
+  { id: 'x1v', check: 1, expect: 'carrierBlock 2 carries eras \\[1\\], which the engine ignores', what: 'a carrierBlock with eras [1]: the engine honours eras on free zones only, so it stands in every state',
+    def: (d) => { d.carrierBlock = [...d.carrierBlock, { poly: [[8, 8], [10, 8], [10, 10], [8, 10]], y0: -0.3, y1: 0.5, eras: [1] }]; } },
+  // — review 4, issue 1: a step whose face misses the 1 m grid (nav's floor node ≥ 0.46 m from a face, its jumps and drops
+  // orthogonal only): the ring wall's west opening (175–185°) between 3.6 m stretches (taller than a vault's 1.0 + 2.25 m,
+  // so the vault probe can't catch the ledge by accident, as it did with the 3 m walls), screened from the deck
+  { id: 'L1t', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck', phys: true, what: 'L1t: a 1.0 m no-ink ledge on the field (x −15.4…−13, its face 0.1 m past a cell centre: floor node 2 m from its top node, no edge) into the ring, a ramp down from it inside, screened',
+    layout: (L) => { reRingT(L); L.half.push(B(-15.4, -13.0, 0, 1.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-ledge' }), RP([-9.4, 0, 48], [-13.0, 1.0, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), SCREEN()); } },
+  { id: 'L2t', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck', phys: true, what: 'L2t: L1t at 0.8 m',
+    layout: (L) => { reRingT(L); L.half.push(B(-15.4, -13.0, 0, 0.8, 46.6, 49.4, { ...NOINK, tag: 'kcheck-ledge' }), RP([-9.4, 0, 48], [-13.0, 0.8, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), SCREEN()); } },
+  { id: 'L3t', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck', phys: true, what: 'L3t: a 1.0 m walkway outside the ring (up a ramp) through the opening, its end 0.1 m past a cell centre: a kid steps 1.0 m down off it into the ring',
+    layout: (L) => { reRingT(L); L.half.push(B(-20, -14.6, 0, 1.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-walkway' }), RP([-18, 0, 40.6], [-18, 1.0, 46.6], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), SCREEN()); } },
+  { id: 'L1tc', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[jump\\] not seen from the spawn deck', phys: true, what: 'the control: L1t with its face on the grid (x −15.0): nav\'s own jump edge, a plain entrance',
+    layout: (L) => { reRingT(L); L.half.push(B(-15.0, -13.0, 0, 1.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-ledge' }), RP([-9.4, 0, 48], [-13.0, 1.0, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), SCREEN()); } },
+  // — review 4, issue 2: a squid culvert longer than lowGap's 3 m into the ring
+  { id: 'T4', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[squid gap(?: \\(swim-jump\\))?\\] not seen from the spawn deck', phys: true, what: 'T4: a 1.0 m-high squid culvert 3.5 m long (x −18.75…−15.25, sealed sides) through the ring wall\'s west opening, screened inside: a squid slips into the ring, a kid can\'t; the nodes either side stand 5 m apart',
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(B(-18.75, -15.25, 1.0, 3.0, 46.6, 49.4, { ...WALL, tag: 'kcheck-culvert' }), B(-18.75, -15.25, 0, 3.0, 46.1, 46.6, { ...WALL, tag: 'kcheck-culvert' }), B(-18.75, -15.25, 0, 3.0, 49.4, 49.9, { ...WALL, tag: 'kcheck-culvert' }), SCREEN()); } },
+  // — review 4, issue 3: KARP_SWIM, and one waiver for a whole flag group (g5's 5 m moat: only the swim-jump clears it)
+  { id: 'g5w', check: null, notFail: [7], notFailText: [[7, 'WARN \\(KARP_SWIM=warn\\) made only by the swimming carrier: [1-9]\\d* #7d find']], swim: 'warn', phys: true, what: 'G5 with KARP_SWIM=warn: its swim-jump finds are a WARN, not a FAIL',
+    layout: (L) => { floorWithout(L, [-17, -12, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); } },
+  { id: 'g5o', check: null, notFail: [7], notFailText: [[16, 'the swimming carrier not modelled \\(KARP_SWIM=off']], swim: 'off', phys: true, what: 'G5 with KARP_SWIM=off: the kid alone, who can\'t clear 5 m',
+    layout: (L) => { floorWithout(L, [-17, -12, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); } },
+  { id: 'x7w', check: null, notFail: [7], notFailText: [[7, '[1-9]\\d* waived \\(\\d+ flag group']], phys: true, what: 'G5 with one waiver (probe longGap, at one find\'s takeoff on the moat\'s far bank): every find of its flag group is waived, not only those within 2 m',
+    layout: (L) => { floorWithout(L, [-17, -12, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); }, def: (d) => { d.waive = [{ check: '7d', at: [-19.5, 53.5], probe: 'longGap', why: 'self-test: one entry, its whole flag group' }]; } },
+  // — review 4, issue 5: #2's hole and reading sweep, #12's stale and fresh lightmap
+  { id: 'x2h', check: 2, expect: 'holes [1-9]', what: 'a hole: a 3.2 m platform north of the alley (up a ramp) a kid drops off over the alley\'s 3 m wall, and a carrierBlock over the alley\'s mouth, its only way out: reached from the Pond, no walk on to a Gate',
+    layout: (L) => { L.half.push(B(8, 12, 0, 3.2, 20.4, 23, { ...NOINK, tag: 'kcheck-holeplat' }), RP([10, 0, 31], [10, 3.2, 23], 4, { ...NOINK, tag: 'kcheck-holeramp' })); },
+    def: (d) => { d.carrierBlock = [...d.carrierBlock, { poly: [[5.7, 0.5], [14, 0.5], [14, 5], [5.7, 5]], y0: -0.3, y1: 0.5 }]; } },
+  { id: 'x2s', check: 2, expect: '[1-9]\\d* > 2\\.5 m \\(worst', after: 'sweepFault', what: 'a reading fault planted in the field (sweepFault: between the alley\'s nodes fieldAt reads 4 m low; at the nodes exact) — the sweep\'s FAIL branch',
+  },
+  { id: 'x12s', check: 12, expect: 'its lightmap is stale \\(the build differs from the bake: hash stale0 baked', unplaced: true, lightmap: 'data:application/json,' + encodeURIComponent(JSON.stringify({ hash: 'stale0', ppm: 5, size: 1024 })), what: 'a fixture lightmap with a wrong hash in place of the stage\'s own (karpbox judged as baked)' },
+  { id: 'x12f', check: null, notFail: [12], notFailText: [[12, 'lightmap karpbox\\.bazookarp fresh']], lightmap: 'data:application/json,' + encodeURIComponent(JSON.stringify({ hash: '@level', ppm: 5, size: 1024 })), what: 'the same fixture with the build\'s own hash: fresh' },
 ];
+
+// [fix4] review 4, x2s: a reading fault the data can't plant — between the alley's nodes (x 7…12, z 8…16, Bravo's half)
+// the field's fieldAt reads 4 m low, at the nodes themselves exact (cell centres: x, z = k + 0.5): #2's sweep must FAIL
+export function sweepFault() {
+  const F = window.__inkwave.match.karp.field, f0 = F.fieldAt;
+  const off = (v) => Math.abs(v - 0.5 - Math.round(v - 0.5)) > 0.05;
+  F.fieldAt = function (t, p, ...rest) { const r = f0.call(this, t, p, ...rest); return r && p.x > 7 && p.x < 12 && p.z > 8 && p.z < 16 && (off(p.x) || off(p.z)) ? { ...r, d: r.d - 4 } : r; };
+  return 1;
+}
 
 // [fix2] the REACH rows: (dy, air) pairs, air the open gap rim to rim along the line, dy the far top's rise over the near
 // one. Each row is a near platform (top ≥ 0.6 m) whose rim stands 0.05 m short of the next cell centre — its rim node a
