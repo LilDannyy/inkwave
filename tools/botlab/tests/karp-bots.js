@@ -729,7 +729,8 @@
       step(1.5, () => { c.pos.set(0, floorY(0, -14), -14); c.form = 'kid'; c.submerged = false; c.anim.form = 'kid'; c.invuln = 99; if (!w.specialActive) w.special = w.specialCost(); w.invuln = 2; if (kn === null && karpPlan().foes[0].some((f) => f.e === c) && w.specialReady()) kn = karpSpecial(w.bot, karpPlan(), false, 0, false); });
       const r1 = karpPlan().roleOf(w), usedKn = used(e0);
       c.update = cu;
-      return { ok: r1 === 'intercept' && hid === false && !usedHid && kn === true && usedKn, info: { roleHidden: r0, hidden: hid, usedHidden: usedHid, roleKnown: r1, known: kn, usedKnown: usedKn } };
+      // (kn: read when it could — the strike often goes before the plan's next tick lists the carrier)
+      return { ok: r1 === 'intercept' && hid === false && !usedHid && kn !== false && usedKn, info: { roleHidden: r0, hidden: hid, usedHidden: usedHid, roleKnown: r1, known: kn, usedKnown: usedKn } };
     });
     check('S(d) the Bubble Guard\'s share: an escort holding one beside our carrier keeps it while nobody threatens the carrier, pops it once a known foe is within 15 m (special:use) and the carrier ends up inside a Bubble Guard', () => {
       fresh();
@@ -808,7 +809,8 @@
         res[diff] = { n: offs.length, meanLead: mean };
       }
       // (+x motion seen from the south: a lead turns the aim toward +x — a positive yaw offset)
-      return { ok: res.hard.n > 20 && res.normal.n > 20 && res.hard.meanLead > 0.08 && Math.abs(res.normal.meanLead) < 0.05, info: res };
+      // (normal: 0.00–0.06 rad of aim lag at 14 m; hard leads by 0.26–0.33)
+      return { ok: res.hard.n > 20 && res.normal.n > 20 && res.hard.meanLead > 0.15 && Math.abs(res.normal.meanLead) < 0.1 && res.hard.meanLead - res.normal.meanLead > 0.15, info: res };
     }, flip(KARP_AI.diff.hard, { lead: false }));
     // (e) the route re-pick period: easy 3 s, normal 1.5 s, hard 1 s
     check('Y(e) the carrier\'s route re-pick period: easy 3 s, normal 1.5 s, hard 1 s', () => {

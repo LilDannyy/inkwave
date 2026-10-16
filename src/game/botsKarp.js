@@ -577,6 +577,9 @@ export function karpGoal(b, P) {
   const H = Kp.holder;
   if (sit === 'ours' && H) {
     const t = a.team;
+    // (a Bubble Guard ready while our carrier is threatened: to the carrier, to pop it there — sprules' pass-on shares it
+    // within 5 m; the lead's spot 11 m ahead was too far for the share ever to happen)
+    if (bubbleRun(b, P)) { go(H.pos, 1.0, 0.5); return; }
     if (role === 'lead') { go(P.ahead(t, KARP_AI.lead, _e), 1.0, 0.8); return; }
     if (role === 'anchor') { go(P.ahead(t, -KARP_AI.anchor, _e), 1.0, 1.0); return; }
     // flank: beside it, on the side the known threat is (else its own side)
@@ -757,9 +760,11 @@ function grabWait(b, P) {
   // + getting up to speed, and a little early rather than late)
   const d = Math.max(0, hd(a.pos, Kp.pos) - K.pickR + 0.25), swim = P.burstTeam === a.team && d < K.shell.burstPaint;
   const run = swim ? 0.12 + d / 10 : 0.2 + d / Math.max(3, Math.min(PLAYER.runSpeed, a.weaponRunner.moveSpeed?.() || PLAYER.runSpeed) * 0.92);
-  // (aimed inside its difficulty's window, not at its end: normal 0.1 s after the hold, easy 0.5, hard at once)
-  const dl = DF(b).grab;
-  return P.burstT + K.pickHold + dl - Math.min(0.1, dl / 2) - run - G.time;
+  // (aimed early in its difficulty's window, not at its end: easy 0.43 s after the hold (window 0.6), normal 0.1 (0.2); hard —
+  // no delay at all — 0.1 s early, standing by the Bazookarp as the hold ends. A run now and then arrives ~0.15 s later than
+  // this estimate — hard 0.17 s in 2 of 12 trials, easy 0.65 s once — and the cause is not found: the margin absorbs it)
+  const dl = DF(b).grab, aim = dl > 0.3 ? dl - 0.17 : dl > 0 ? dl - 0.1 : -0.1;
+  return P.burstT + K.pickHold + aim - run - G.time;
 }
 // in a fight: the carrier keeps walking its route; keepers hold their spot; escorts stay with the carrier; interceptors
 // chase the carrier
@@ -779,12 +784,19 @@ export function karpFightNav(b, P) {
     b.path = null; b.repath = 0.3; return true;
   }
   if ((role === 'lead' || role === 'flank' || role === 'anchor') && H) {
-    if (hd(b.tv.pos, H.pos) > KARP_AI.escortR || hd(a.pos, H.pos) > 18) { karpGoal(b, P); return true; }
+    if (hd(b.tv.pos, H.pos) > KARP_AI.escortR || hd(a.pos, H.pos) > 18 || bubbleRun(b, P)) { karpGoal(b, P); return true; }
     return false;
   }
   return false;
 }
 
+// an escort with its Bubble Guard ready while a known foe is within spThreat of our carrier, and not yet within 4 m of it
+function bubbleRun(b, P) {
+  const a = b.a, H = P.Kp.holder;
+  if (!H || H.team !== a.team || H === a || spKind(a) !== 'bubbler' || !a.specialReady() || hd(a.pos, H.pos) < 4) return false;
+  const r = b.kRole;
+  return (r === 'lead' || r === 'flank' || r === 'anchor') && P.foes[a.team].some((f) => hd(f.pos, H.pos) < KARP_AI.spThreat);
+}
 // ================================================================================================ the carrier
 // the arc solver: the aim pitch that lobs a Carp Shot of charge c from the muzzle to a point d m out, dy above the feet.
 // The low arc (the quickest: a lob that hangs ~2 s in the air is a lob anyone walks out of), the high one with high
