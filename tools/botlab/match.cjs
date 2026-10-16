@@ -334,6 +334,10 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / Math.max(1, samples * 0.25)).toFixed(0)])),
         // sprout pods (src/game/pods.js): hedges grown per team, bot-seconds perched on tops / in cover, exits, detours, holds
         pods: m.pods ? { ...m.pods.state().stats, perched: +(m.pods.stats.perched || 0).toFixed(1) } : null,
+        // [b5-eras] Bluestone's era jumps (src/game/eras.js botReport): shoves (expected 0), bots on a vanishing top / in
+        // an appearing piece at its flip, loitering in an appearing box, splats no weapon dealt near a jump, replans,
+        // pre-positions, and per done every bot's time to first stand on the new era's ground
+        eras: m.eras && m.eras.botReport ? m.eras.botReport() : undefined,
         track: trk ? trk.done() : undefined,
         // Boss Battle: HULLBREAKER's HP left and the squad's damage to it by weapon
         boss: m.boss ? { hpFrac: +(m.boss.hp / Math.max(1, m.boss.maxHp)).toFixed(3), maxHp: Math.round(m.boss.maxHp), dead: !!m.boss.dead, phase: m.boss.phase,
@@ -372,6 +376,8 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     console.log(`   roles (% of bot-time) ${JSON.stringify(r.roles)} | holding on purpose ${r.holdPct}%`);
     console.log(`   per bot: turf ${r.per.turf}p, on-zone ink ${r.per.zoneTurf}p, splats ${r.per.splats} → XP beyond the win/lose base ≈ ${r.per.xpVar}`);
     if (r.pods) console.log(`   sprout pods: ${JSON.stringify(r.pods)}`);
+    if (r.eras) { const E = r.eras; console.log(`   ERAS shoves ${E.eraShoves} rescues ${E.rescues} flips ${E.flips} | at a flip: on a vanishing top ${E.onVanish}, inside an appearing piece ${E.inAppear} | in an appearing box before its flip ${E.loiterS} bot-s | env splats near a jump ${E.envSplats} | replans at done ${E.replans} | pre-positioned ${E.prepos} (held ${E.preposHeld}) | era ${E.era}`);   // [b5-eras]
+      for (const v of E.visits) console.log(`   ERAS ${v.jump} done @${v.doneAt}s: ${v.visited}/${v.bots} bots on new ground within 30 s (${v.within20} within 20 s), median ${v.median ?? '-'} s | ${JSON.stringify(v.times)}`); }
     console.log(`   stuck ${r.stuckPct}% | splats ${r.splats} (water ${r.water}) | specials ${r.specials} | super jumps ${r.jumps} | turf ${r.cov.join('/')} | sim ${r.simT}s in ${(r.simMs / 1000).toFixed(0)}s (wall ${wallS}s) | ${JSON.stringify(perf)}`);
     if (MODE === 'zones') { console.log('   penalties ' + JSON.stringify(r.penalties)); console.log('   control log ' + r.log); console.log('   best shares per activation ' + r.windows); console.log('   reachable cells ' + r.reach); }
     console.log('   loadouts ' + equip + (tuned ? ' | TUNE ' + tuned : ''));

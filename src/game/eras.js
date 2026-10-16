@@ -31,7 +31,7 @@
 // kiosk at J − 10 with holograms of what appears, sepia flicker on what goes, the minimap's outlines and the bots'
 // danger layer, the HUD's countdown J − 10 … J − 1, the pickup at J − 1, the front, the done callout.
 import * as THREE from 'three';
-import { G, emit } from '../core/ctx.js';
+import { G, emit, on } from '../core/ctx.js';
 import { PLAYER } from '../config.js';
 import { registerStageMod } from './stageMods.js';
 import { Level } from '../world/level.js';
@@ -498,7 +498,13 @@ export class StageEras {
     W.run = this;
     this.sched = eraSchedule(W.E, { mode: m.mode, duration: m.duration, practice: m.practice, attract: m.attract, audit: W.audit });
     this.over = null;   // debugJump's schedule (tests and audits only)
-    this.stats = { eraShoves: 0, rescues: 0, flips: 0, devices: 0, frameMax: 0, flipLog: [] };
+    this.stats = { eraShoves: 0, rescues: 0, flips: 0, devices: 0, frameMax: 0, flipLog: [],
+      // the bots through the jumps (H16; botReport() sums them for the botlab's match.cjs): at each flip, own squidkids
+      // standing on a top that went / inside a piece that came; bot-seconds inside an appearing piece's box from the
+      // warning to its flip (4 Hz); splats from the warning to done + 2 s that no weapon dealt (water, a fall); bots
+      // replanned at done; pre-positioned (H16b); per done, each bot's time to first stand on ground new in that era
+      bots: { onVanish: 0, inAppear: 0, onVanishWho: [], loiterS: 0, loiterWho: {}, envSplats: 0, envSplatWho: [], replans: 0, prepos: 0, preposHeld: 0, visits: [] } };
+    this._splatOff = on('splatted', (e) => this._onSplat(e));
     this._jcache = new Map(); this._cyc = null;
     this.phase = 'idle'; this.cur = null; this.fresh = null; this._freshUntil = -1; this._pulseAt = -99;
     this.lastT = S.clock.t;
@@ -597,6 +603,7 @@ export class StageEras {
     if (t > this.lastT && t - this.lastT < 1.0) this._events(this.lastT, t, list);
     this.lastT = t;
     this._view(t, list);
+    if (this.cur || this._visit) this._botTick(t, this.cur);
     // a minimap base still missing (a drop the load did not see: the time of day changed mid-match) is rebuilt outside a
     // jump, one per frame (~0.1 s each): from J to done only cached bases are swapped
     if (this.phase !== 'jump' && W._basesMissing()) W._ensureBases(this.m.state === 'playing' ? this.phase : this.m.state, 1);
@@ -622,7 +629,7 @@ export class StageEras {
     for (const j of list) {
       if (j.at - this.W.prebell > t1) break;
       const J = this._info(j), D = this.W.doneOff;
-      const ev = [[J.prebellAt, 'prebell'], [J.warnAt, 'warn'], [J.at - 5, 'ring'], [J.at - 3, 'short'], [J.at - 2, 'short'], [J.at - 1, 'pickup'], [J.at, 'jump'], [J.at + D, 'done'], [J.at + D + 0.7, 'env'], [J.at + D + 1, 'clear']];
+      const ev = [[J.prebellAt, 'prebell'], [J.warnAt, 'warn'], [J.at - 8, 'prepos'], [J.at - 6, 'prepos'], [J.at - 4, 'prepos'], [J.at - 3, 'prepos'], [J.at - 2, 'prepos'], [J.at - 1.5, 'prepos'], [J.at - 1, 'prepos'], [J.at - 0.5, 'prepos'], [J.at - 5, 'ring'], [J.at - 3, 'short'], [J.at - 2, 'short'], [J.at - 1, 'pickup'], [J.at, 'jump'], [J.at + D, 'done'], [J.at + D + 0.7, 'env'], [J.at + D + 1, 'clear']];
       for (const [at, name] of ev) {
         if (!(t0 < at && at <= t1)) continue;
         const key = `${J.from}>${J.to}@${J.at}:${name}:${at}`;   // (each (jump, event) once: 'short' fires at two times)
@@ -656,6 +663,7 @@ export class StageEras {
         this._ring(J, 'warn');
         this._warnState(J);
         break;
+      case 'prepos': this._prepos(J); break;
       case 'ring': this._ring(J, 2); break;
       case 'short': this._ring(J, 'short'); break;
       case 'pickup': {
@@ -678,9 +686,10 @@ export class StageEras {
         W.jumping = false;
         W._setNavEra(J.to);
         this._release();
-        this._replan(J.to);
+        this.stats.bots.replans += this._replan(J.to);
         W._mapEra(J.to);
         this.fresh = J.fresh; this._freshUntil = t + 30; this._pulseAt = t;
+        this._visitStart(J, t);
         const rewind = J.to < J.from;
         this._say(rewind ? `BACK TO THE ${N[J.to - 1]}` : J.to === 2 ? 'NEW ROUTES OPEN' : 'NEW AREAS!', N[J.to - 1], false);
         if (this._fz) { this._fz.stop(0.3); this._fz = null; }
@@ -711,7 +720,8 @@ export class StageEras {
     if (J.appearFaces.length && W.paint) W.paint.clearFaces(J.appearFaces);
     W.fx?.setJump(J);
     // the danger layer: routes pay to enter a piece about to change, goals skip it; bots standing on one leave
-    const L = navClaim('eras');
+    // (this.noDanger: the control run of tests/eras-bots.js only)
+    const L = this.noDanger ? null : navClaim('eras');
     if (L) {
       for (const o of J.outlines) for (const id of navNodesInBox(o.x, o.z, o.yaw, o.hx, o.hz, 0.6, o.y0 - 1.0, o.y1 + 0.3)) L[id] = 1;
       navCommit(this.m.actors);
@@ -724,15 +734,154 @@ export class StageEras {
     }
   }
   _release() { if (this._layer) { navRelease('eras'); this._layer = null; } }
-  // bots whose route runs an edge gone in the new era plan again
+  // bots whose route runs an edge gone in the new era plan again (returns how many)
   _replan(e) {
     const nav = G.nav;
+    let n = 0;
     for (const a of this.m.actors) {
       const b = a.bot;
       if (!b || !b.path) continue;
-      if (e === null) { b.path = null; b.repath = 0; continue; }
-      for (let i = Math.max(1, b.pi | 0); i < b.path.length; i++) if (!nav.edge(b.path[i - 1], b.path[i])) { b.path = null; b.repath = 0; break; }
+      if (e === null) { b.path = null; b.repath = 0; n++; continue; }
+      for (let i = Math.max(1, b.pi | 0); i < b.path.length; i++) if (!nav.edge(b.path[i - 1], b.path[i])) { b.path = null; b.repath = 0; n++; break; }
     }
+    return n;
+  }
+
+  // ---------------------------------------------------------------- bots (H16, H16b), from what every player sees
+  // H16b (optional; ENGINE §4.3, DESIGN §3.9): pre-position. From J − 8 (looked at again at J − 6 … J − 1) of a jump that
+  // OPENS ground (a gate vanishes), an own bot in paint mode (no foe, no Zone Control / Tower Command role) within 14 m of
+  // the gate whose route to its goal in the coming era (nav.path with that era's edge mask) runs through ground that only
+  // exists after the jump, takes that route and waits 3–6 m short of the gate, outside the danger layer — but only when
+  // going through is no slower than the detour it would walk now, give or take the rush (RUSH s: the first through the
+  // opening gets its blank turf): arrival through the gate = max(now + walk to the hold, the gate group's flip) + the rest
+  // of the new route, against now + the old route, at run speed. It walks on at the gate's own flip (the piece is gone:
+  // collision first, the nav catches up at done, and the done's replan keeps the route: every edge of it is the new era's).
+  // It uses only the schedule and the outlines the HUD and the minimap show everyone. On the Z the gates save a few metres
+  // (Degrayling Lane over the GPO terrace's hop), so a bot waits only in the last second or so before the flip.
+  _prepos(J) {
+    const nav = G.nav;
+    if (!nav?.eraValid || !J.vanish.length || this.m.attract || this.noPrepos) return;   // (noPrepos: the tests' control run)
+    const W = this.W, Vf = nav.eraValid[J.from - 1], tb = eraBit(J.to), N = nav.nodes, v = PLAYER.runSpeed, now = this.tNow, RUSH = 1.5;
+    const len = (p, a = 0, b = p.length - 1) => { let d = 0; for (let i = a + 1; i <= b; i++) { const u = N[p[i - 1]], q = N[p[i]]; d += Math.hypot(u.x - q.x, u.z - q.z, u.y - q.y); } return d; };
+    const L = W.level;
+    for (const a of this.m.actors) {
+      const b = a.bot;
+      if (!b || a.remote || !a.alive || b._eraHold || b.mode !== 'paint' || b.target || b.zRole || b.tRole || !b.path || !(b.goal >= 0)) continue;
+      const s = nav.nearest(a.pos, 1.2, true);
+      if (s < 0) continue;
+      const em = nav.edgeMask, bl = nav.blocked;
+      let nxt = null;
+      nav.edgeMask = tb; nav.blocked = null;
+      try { nxt = nav.path(s, b.goal, a.team); } finally { nav.edgeMask = em; nav.blocked = bl; }
+      if (!nxt) continue;
+      const gi = nxt.findIndex((id) => !Vf[id]);   // the first node that only exists after the jump: the gate
+      if (gi < 1) continue;
+      const gn = N[nxt[gi]];
+      if (Math.hypot(a.pos.x - gn.x, a.pos.z - gn.z) > 14) continue;   // (only a bot already by the gate waits for it)
+      let hi = -1;
+      for (let k = gi - 1; k >= 0; k--) {
+        const n = N[nxt[k]], d = Math.hypot(n.x - gn.x, n.z - gn.z);
+        if (d > 6) break;
+        if (d >= 3 && !(this._layer && this._layer[nxt[k]])) { hi = k; break; }
+      }
+      if (hi < 0) continue;
+      // the gate's group: the vanishing block whose footprint holds the gate node (its flip opens the way)
+      let flip = J.at + W.doneOff;
+      for (const id of J.vanish) { const bk = L.blocks[id]; if (gn.x > bk.aabbMin.x - 0.7 && gn.x < bk.aabbMax.x + 0.7 && gn.z > bk.aabbMin.z - 0.7 && gn.z < bk.aabbMax.z + 0.7) { flip = Math.min(flip, J.at + W.groups[bk.eraG].rg / W.speed); } }
+      const cur = nav.path(s, b.goal, a.team);
+      const tDetour = cur ? len(cur) / v : Infinity, tGate = Math.max(len(nxt, 0, hi) / v, flip + 0.1 - now) + len(nxt, hi) / v;
+      if (tGate > tDetour + RUSH) continue;
+      b.path = nxt; b.pi = Math.min(1, nxt.length - 1); b.bestD = Infinity; b.noProg = 0;
+      b._eraHold = { path: nxt, hold: nxt[hi], hi, until: flip + 0.1, at: J.at, gate: nxt[gi], tGate: +tGate.toFixed(2), tDetour: +tDetour.toFixed(2) };
+      this.stats.bots.prepos++;
+    }
+  }
+  // (the registry's bot hook, each frame for each bot: a pre-positioned bot walks its new route to the hold spot and waits
+  //  there, the next waypoint held at the hold spot; a foe, a new goal, death or the gate's flip ends the wait)
+  botAct(b, dt, it, move) {
+    const H = b._eraHold;
+    if (!H) return null;
+    if (this.tNow >= H.until || b.path !== H.path || b.target || b.mode !== 'paint' || !b.a.alive) { b._eraHold = null; return null; }
+    b.goalTimer = Math.max(b.goalTimer, 0.5);
+    const a = b.a, n = G.nav.nodes[H.hold];
+    if ((b.pi | 0) >= H.hi && Math.hypot(a.pos.x - n.x, a.pos.z - n.z) < 1.3) {
+      if (b.pi > H.hi) b.pi = H.hi;
+      move.set(0, 0, 0); b.perchUntil = b.t + 0.3; b.wiggleT = 0; b.noProg = 0; b.dispT = 0; b.moveAcc = 0; b._needJump = false; b.snap?.copy?.(a.pos);
+      if (!H.held) this.stats.bots.preposHeld++;
+      H.held = (H.held || 0) + dt;
+    }
+    return null;
+  }
+  // the bot statistics at a flip: own squidkids on a top that just went, or inside a piece that just came
+  _flipStats(on, off) {
+    const L = this.W.level, B = L.blocks, S = this.stats.bots;
+    for (const a of this.m.actors) {
+      if (a.remote || !a.alive) continue;
+      for (const id of off) {
+        const b = B[id], top = this._topOf(b, a.pos.x, a.pos.z);
+        if (top !== null && Math.abs(a.pos.y - top) < 0.35) { S.onVanish++; S.onVanishWho.push({ who: a.name, bot: !!a.bot, tag: b.tag, t: +this.tNow.toFixed(2) }); break; }
+      }
+      for (const id of on) if (this._bodyIn(a, B[id])) { S.inAppear++; break; }
+    }
+    if (S.onVanishWho.length > 40) S.onVanishWho.shift();
+  }
+  // 4 Hz from the warning to done: bot-seconds inside an appearing piece's box before its flip (what the danger layer
+  // should keep at ~0); and after each done, every own bot's first step onto ground new in that era
+  _botTick(t, J) {
+    if (this._botT !== undefined && t - this._botT < 0.25) return;
+    const dtS = this._botT === undefined ? 0.25 : Math.min(0.5, t - this._botT);
+    this._botT = t;
+    const S = this.stats.bots, L = this.W.level, nav = G.nav;
+    if (J && t >= J.warnAt && t < J.at + this.W.doneOff) {
+      for (const a of this.m.actors) {
+        if (!a.bot || a.remote || !a.alive) continue;
+        for (const o of J.outlines) {
+          if (!o.appear) continue;
+          const b = L.blocks[o.id];
+          if (t >= J.at + this.W.groups[b.eraG].rg / this.W.speed) continue;   // (after its flip it is simply there)
+          if (a.pos.y < b.aabbMin.y - 1.4 || a.pos.y > b.aabbMax.y + 0.1) continue;
+          const dx = a.pos.x - o.x, dz = a.pos.z - o.z, c = Math.cos(o.yaw), sn = Math.sin(o.yaw);
+          if (Math.abs(dx * c - dz * sn) <= o.hx && Math.abs(dx * sn + dz * c) <= o.hz) { S.loiterS += dtS; S.loiterWho[a.name] = +((S.loiterWho[a.name] || 0) + dtS).toFixed(2); break; }
+        }
+      }
+    }
+    const V = this._visit;
+    if (V && t <= V.doneAt + 30 && nav) {
+      for (const a of this.m.actors) {
+        if (!a.bot || a.remote || !a.alive || V.t[a.name] !== undefined) continue;
+        const id = nav.nearest(a.pos, 1.2, true);
+        if (id >= 0 && V.fresh[id]) V.t[a.name] = +(t - V.doneAt).toFixed(2);
+      }
+    } else if (V) this._visit = null;
+  }
+  _visitStart(J, t) {
+    if (!J.fresh) return;
+    const V = { jump: `${J.from}>${J.to}`, doneAt: +t.toFixed(2), fresh: J.fresh, t: {}, bots: this.m.actors.filter((a) => a.bot && !a.remote).map((a) => a.name) };
+    this._visit = V;
+    this.stats.bots.visits.push(V);
+    if (this.stats.bots.visits.length > 12) this.stats.bots.visits.shift();
+  }
+  // a splat no weapon dealt (the sea, a fall) from a warning to its done + 2 s: what a jump could have caused
+  _onSplat(e) {
+    const v = e?.victim;
+    if (!v || v.remote || e.remote || !this.m.actors.includes(v)) return;
+    const t = this.tNow, A = this.activeAt(t);
+    if (!A || t < A.at - this.W.warn || t > A.at + this.W.doneOff + 2) return;
+    if (e.attacker || !(e.cause === 'water' || e.cause === 'fall' || e.cause === 'void' || !e.cause)) return;
+    this.stats.bots.envSplats++;
+    this.stats.bots.envSplatWho.push({ who: v.name, bot: !!v.bot, cause: e.cause, t: +t.toFixed(2), at: [+v.pos.x.toFixed(1), +v.pos.y.toFixed(1), +v.pos.z.toFixed(1)] });
+  }
+  // the botlab's summary (match.cjs prints it): shoves (expected 0), the flip counts, the loiter time, the splats a jump
+  // could have caused, the replans, the pre-positions, and per done the bots' times to new ground (median)
+  botReport() {
+    const S = this.stats.bots;
+    const visits = S.visits.map((V) => {
+      const ts = V.bots.map((n) => V.t[n]).filter((x) => x !== undefined).sort((a, b) => a - b);
+      const med = V.bots.length ? (() => { const all = V.bots.map((n) => V.t[n] ?? Infinity).sort((a, b) => a - b); return all[Math.floor((all.length - 1) / 2)]; })() : null;
+      return { jump: V.jump, doneAt: V.doneAt, bots: V.bots.length, visited: ts.length, within20: ts.filter((x) => x <= 20).length, median: med === Infinity ? null : med, times: ts };
+    });
+    return { eraShoves: this.stats.eraShoves, rescues: this.stats.rescues, flips: this.stats.flips, onVanish: S.onVanish, onVanishWho: S.onVanishWho.slice(-6), inAppear: S.inAppear, loiterS: +S.loiterS.toFixed(2), loiterWho: S.loiterWho,
+      envSplats: S.envSplats, envSplatWho: S.envSplatWho.slice(-6), replans: S.replans, prepos: S.prepos, preposHeld: S.preposHeld, visits, era: this.era };
   }
 
   // one group to era e (at its flip): blocks, cells, devices, shoves, rescues, the event
@@ -741,6 +890,7 @@ export class StageEras {
     if (!on.length && !off.length) return;
     W._flipCells(g);
     this._devices(off, on);
+    this._flipStats(on, off);
     if (on.length) this._shove(on);
     if (off.length) this._rescue(off);
     this.stats.flips++;
@@ -1001,6 +1151,8 @@ export class StageEras {
 
   dispose() {
     this._release();
+    this._splatOff?.(); this._splatOff = null;
+    for (const a of this.m.actors) if (a.bot) a.bot._eraHold = null;
     if (this._fz) { this._fz.stop(0.1); this._fz = null; }
     if (this._envBase) this._envRestore();
     this.chip?.dispose(); this.chip = null;
