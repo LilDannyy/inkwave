@@ -110,9 +110,11 @@ export const PLACEMENTS = [
   ...tagged('turnstile').map((d) => ({ type: 'aquarium_turnstile', ...atBox(d), gap: d.min[0] < 8.8 ? 1 : -1 })),
   ...[...tagged('trolley'), ...tagged('trolleys')].map((d) => (d.kind === 'box' ? { type: 'aquarium_trolley', ...atBox(d) } : { type: 'aquarium_trolley', ...atObox(d, 0, { h: d.size[1] - 2.0 }) })),
   ...tagged('planter').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 0.9, h: 1.3, plates: [PI * 0.25, PI * 1.25], label: 'SEA HOLLY' })),
-  ...tagged('topiary').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 1.0, h: 1.2, plates: [PI * 0.83], label: 'FISH TOPIARY' })),
+  // (fix round 4: the plate on a face — at 0.83π it stood across the octagon's −45° face, half sunk in it, its other end
+  // 10 cm proud)
+  ...tagged('topiary').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 1.0, h: 1.2, plates: [PI * 0.75], label: 'FISH TOPIARY' })),
   // (fix round 4: the planters' trailing planting and brass plates; floorart.js draws their faces and beds under the ink)
-  ...PLANTERS.oct.map((p, i) => ({ type: 'aquarium_planterdeco', kind: 'oct', pos: [p.c[0], 0, p.c[1]], r: p.r, top: p.top, seed: 3 + i, skip: p.fish ? [] : [1, 5] })),
+  ...PLANTERS.oct.map((p, i) => ({ type: 'aquarium_planterdeco', kind: 'oct', pos: [p.c[0], 0, p.c[1]], r: p.r, top: p.top, seed: 3 + i, skip: p.fish ? [7] : [1, 5] })),   // (not over the plates)
   ...PLANTERS.box.map((b, i) => {
     const [x, z] = W((b.s[0] + b.s[1]) / 2, (b.w[0] + b.w[1]) / 2), deck = b.y0 > 1;
     // (local x along w, local +z toward the gate: −s; a deck planter's plates face the pad and mid, the queue planter's

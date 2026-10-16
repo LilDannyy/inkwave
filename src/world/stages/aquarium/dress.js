@@ -27,7 +27,7 @@ export function registerDress(D, H, KIT) {
   // of smooth sines, read as a rectangle painted to look like rock). (holes: [x0, x1, y0, y1] rectangles kept flat, 8 mm
   // out, behind what is mounted there — windows, portholes, a sign — the relief easing up to them over 10 cm)
   const rockSkinG = (w, h, seed, holes = []) => tpl(`rskin4|${w}|${h}|${seed}|${JSON.stringify(holes)}`, () => {
-    const nx = Math.max(4, Math.round(w / 0.075)), ny = Math.max(3, Math.round(h / 0.065)), g = new THREE.PlaneGeometry(w, h, nx, ny);
+    const nx = Math.max(4, Math.round(w / 0.085)), ny = Math.max(3, Math.round(h / 0.075)), g = new THREE.PlaneGeometry(w, h, nx, ny);
     g.translate(0, h / 2, 0);
     const P = g.attributes.position, c = new Float32Array(P.count * 3), s0 = seed * 1.37;
     const hh = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7 + s0 * 17.3) * 43758.5453; return v - Math.floor(v); };
@@ -81,7 +81,8 @@ export function registerDress(D, H, KIT) {
   // diagonal than across) centred inside the block, so it stands at most `out` proud of either face yet wraps the corner;
   // a crevice part-way up splits it into two stones, the upper one domed `rise` over the block's top `top`
   const cornerRockG = (rho, top, rise, out, seed) => tpl(`crock|${rho}|${top}|${rise}|${out}|${seed}`, () => {
-    const NS = 18, ys = [], c = 1.05 * rho - out, s0 = seed * 2.17, split = 0.42 + 0.12 * Math.sin(s0);
+    // (c: its reach out of a face is rho × 1.035 (the profile's swell) × 1.045 (the lumps) − c = out)
+    const NS = 14, ys = [], c = 1.085 * rho - out, s0 = seed * 2.17, split = 0.42 + 0.12 * Math.sin(s0);
     for (let j = 0; j <= 12; j++) ys.push((top * j) / 12);
     for (let j = 1; j <= 5; j++) ys.push(top + rise * Math.sin((j / 6) * HP));
     const sq = (f) => Math.pow(Math.pow(Math.abs(Math.cos(f)), 5) + Math.pow(Math.abs(Math.sin(f)), 5), -0.2);
