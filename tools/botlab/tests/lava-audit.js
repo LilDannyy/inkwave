@@ -130,7 +130,8 @@
     const B = W.box, nx = B.nx, nz = B.nz, Mk = W.mask, RES = B.res, bad = [], lips = [];
     let minIn = Infinity;
     let n = 0;
-    for (let j = 1; j < nz - 1; j += 2) for (let i = 1; i < nx - 1; i += 2) {
+    // (fix round 3: every outline texel — every 2nd one in x and z sampled one half's texels and not their twins)
+    for (let j = 1; j < nz - 1; j++) for (let i = 1; i < nx - 1; i++) {
       const k = j * nx + i;
       if (!Mk[k]) continue;
       let ox = 0, oz = 0;
@@ -155,7 +156,7 @@
     }
     // (fix round 3: one fitted half turned 180° — the whole mask is its own 180° twin)
     let asym = 0; for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) if (Mk[j * nx + i] !== Mk[(nz - 1 - j) * nx + (nx - 1 - i)]) asym++;
-    R('rule 45: the region\'s outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every 2nd outline texel); one fitted half, turned 180° (the mask is its own twin)', n > 250 && !bad.length && lips.length > 0 && asym === 0 && W.fitTwin,
+    R('rule 45: the region\'s outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every outline texel); one fitted half, turned 180° (the mask is its own twin)', n > 1000 && !bad.length && lips.length > 0 && asym === 0 && W.fitTwin,
       { outline: n, lips: lips.length, minInsetM: r2(minIn), bad: bad.slice(0, 12), nBad: bad.length, asymTexels: asym, fitTwin: !!W.fitTwin, twinChanged: W.fitTwinChanged, fitAdded: W.fitAdded });
   } catch (e) { R('rule 45: the outline: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
@@ -262,7 +263,7 @@
     const pressAt = [8, 18, 30];
     for (const c of pick) {
       const run = tryJump(c, false);
-      if (run && run.crossed) runX.push({ from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), edge: r2(c.edge), far: r2(c.far), gap: r2(c.gap), landed: run.at, along: run.along, on: run.on });
+      if (run && run.crossed) runX.push({ from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), edge: r2(c.edge), far: r2(c.far), gap: r2(c.gap), landed: run.at, along: run.along, on: run.on, _c: c });
       const sw = tryJump(c, true);
       if (sw && sw.crossed) swimX.push({ ...c, how: 'swim', landed: sw.at });
       // (only where a dash could reach: the plain jump got within 4.5 m of the far floor — the air dash adds 3.5)
@@ -276,7 +277,9 @@
     // the nav detour each of them saves (the lead's list: connections the nav graph lacks, gain > 10 m)
     const detour = (c) => { const m = nav.nearest(V(c.x + c.dx * (c.far + 0.4), c.gy, c.z + c.dz * (c.far + 0.4)), 0.6, true); if (m < 0) return null; const p = nav.path(c.id, m, 0); if (!p) return Infinity; let L = 0; for (let i = 1; i < p.length; i++) { const a = nav.nodes[p[i - 1]], b = nav.nodes[p[i]]; L += Math.hypot(b.x - a.x, b.z - a.z); } return L - (c.far + 0.4); };
     const list = (arr) => arr.map((c) => ({ from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), gap: r2(c.gap), edgeAt: [r2(c.x + c.dx * c.edge), r2(c.z + c.dz * c.edge)], farAt: [r2(c.x + c.dx * c.far), r2(c.z + c.dz * c.far)], landed: c.landed, how: c.how, gain: r2(detour(c)) })).sort((a, b) => b.gain - a.gain);
-    jumps[level] = { edgesChecked: cands.length, tried: pick.length, gaps, runCross: runX, swim: list(swimX), dash: list(dashX) };
+    // (fix round 3: the running jumps with the detour they save too — most cross a corner of two floors joined by land)
+    const runL = runX.map(({ _c, ...r }) => ({ ...r, gain: r2(detour(_c)) }));
+    jumps[level] = { edgesChecked: cands.length, tried: pick.length, gaps, runCross: runL, swim: list(swimX), dash: list(dashX) };
   }
   // (fix round 3, the lead's decision) the gate: a plain running jump crosses no lava gap; a swim jump or a jump + the Dash
   // Pellet's air dash is a skill route only where it saves at most 20 m against the dry way round (DESIGN §3.5 lists them)
