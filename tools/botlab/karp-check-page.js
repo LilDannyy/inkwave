@@ -1764,6 +1764,51 @@ export async function kitPictures() {
   return shots;
 }
 
+// ================================================================================================= the kid's reach
+// [fix2] review 2: the widest node pair (flat) any probe — or a field edge — holds for a move rising dy, onto ground on the
+// field or off it. reachCalib checks the kid's real jumps against it
+export function probeWin(dy, onField) {
+  if (onField) {
+    if (dy > CK.hopHigh[1]) return 0;
+    if (dy > CK.hopHigh[0]) return 1.2;                       // high hops: orthogonal neighbours
+    if (dy > K.gap.upMax) return K.gap.flatMax;               // rising gaps (and the field's hops, ≤ 1.2)
+    if (dy >= -K.gap.downMax) return CK.gapLong[1];           // long gaps (the field's gaps to 3.0)
+    return 2.0;                                               // long drops: two cells
+  }
+  if (dy > K.hop.riseMax) return 0;
+  if (dy >= -K.gap.downMax) return CK.gapLong[1];             // jumps onto off-field ground across air (off hops ≤ 1.2)
+  return 0;
+}
+// KARP_SELFTEST case 'reach' (karp-check-box.js reachRows): each row a near platform's rim node and a far platform's
+// node, `air` m of open sea rim to rim between, the far top `dy` up or down. #16's kid tries each (as a candidate beyond
+// the rules); the pair's node flat is set against probeWin at its rise, on the field and off it. PASS: every made pair
+// lies inside both windows, and at every rise the windows' outer edge lies beyond the last made gap with both rim nodes a
+// cell back (its air + 2 × 0.95 m: the worst the 1 m grid can do)
+export function reachCalib(rows) {
+  const C = ctx(0), { nav, nodes } = C;
+  const nodeAt = (p) => { let best = -1, bd = Infinity; near(C, { x: p[0], y: p[1], z: p[2] }, 1.2, (id, n) => { if (Math.abs(n.y - p[1]) > 0.25) return; const d = Math.hypot(n.x - p[0], n.z - p[2]); if (d < bd) { bd = d; best = id; } }); return best; };
+  const out = [];
+  for (const r of rows) {
+    const a = nodeAt(r.near), b = nodeAt(r.farAt);
+    if (a < 0 || b < 0) { out.push({ ...r, err: `no node ${a < 0 ? 'on the near rim' : 'on the far platform'}` }); continue; }
+    const kind = r.dy > K.gap.upMax ? 'rise gap' : 'long gap';
+    const res = proveEdges(C, [{ kind, from: a, to: b, beyond: true }]);
+    const flat = hd(nodes[a], nodes[b]), dy = nodes[b].y - nodes[a].y;
+    out.push({ dy: r.dy, air: r.air, made: !!res.list[0]?.ok, how: res.list[0]?.how ?? null, flat: r2(flat), dyN: r2(dy), from: P3(nodes[a]), to: P3(nodes[b]),
+      winOn: probeWin(dy, true), winOff: probeWin(dy, false) });
+  }
+  void nav;
+  const byDy = new Map(); for (const q of out) { if (q.err) continue; if (!byDy.has(q.dy)) byDy.set(q.dy, []); byDy.get(q.dy).push(q); }
+  const rowsDy = [...byDy.entries()].sort((p, q) => q[0] - p[0]).map(([dy, list]) => {
+    const made = list.filter((q) => q.made), lastAir = made.length ? Math.max(...made.map((q) => q.air)) : null, firstNot = list.filter((q) => !q.made && (lastAir == null || q.air > lastAir)).map((q) => q.air).sort((p, q) => p - q)[0] ?? null;
+    const worst = lastAir == null ? null : r2(lastAir + 2 * 0.95), win = Math.min(list[0].winOn, list[0].winOff);
+    const inside = made.every((q) => q.flat <= q.winOn + 1e-6 && q.flat <= q.winOff + 1e-6);
+    return { dy, made: made.length, of: list.length, lastAir, firstNot, worstFlat: worst, winOn: list[0].winOn, winOff: list[0].winOff, inside, edgeOk: worst == null || worst <= win + 1e-6 };
+  });
+  const pass = out.every((q) => !q.err) && rowsDy.every((q) => q.inside && q.edgeOk);
+  return { pass, rows: out, byDy: rowsDy };
+}
+
 // ================================================================================================= one move, traced
 // PROBE='[x, y, z, x, y, z]' (bazookarp-check.cjs): #16's kid on the one pair of nodes nearest those two points, with
 // every frame of every trial ([trial, frame, x, y, z, grounded, jump, alive]) — why a move is or isn't made

@@ -159,7 +159,72 @@ export const CASES = [
   // — #4 / #9 must NOT fail: an inkable 1.5 m step a kid hops is no climb
   { id: 'w4', check: null, notFail: [4, 9], phys: true, expect16: 'climbs of ≤ 1\\.8 m tried as hops: [1-9]\\d* of', what: 'W4: the weir\'s platform a 1.5 m inkable box, its ramps gone (nav gives it climb edges; a kid hops it)',
     layout: (L) => { L.half = L.half.filter((d) => !isBox(d, [-4, 0, 26], [4, 1.2, 30]) && !(d.kind === 'ramp' && (same(d.high, [0, 1.2, 26]) || same(d.high, [0, 1.2, 30])))); L.half.push(B(-4, 4, 0, 1.5, 26, 30, { tag: 'kcheck-box' })); }, def: (d) => { d.weirs = [{ at: [0, 1.5, 28], yaw: 0 }]; } },
+  // [fix2] review 2: the faults its reviewer planted that passed every check, and the windows' calibration
+  // — #7 (issue 1): f7's ledge with its faces off the 1 m grid. nav keeps a floor node ≥ 0.46 m from a face, so where a
+  // face falls just past a cell centre the floor node and the top node stand two cells apart (or diagonal): the hop
+  // onto the off-field top must still be seen. x0 −17.0 is f7 itself; −17.4 is the reviewer's P1a; and a 45°-turned one
+  ...[-17.2, -17.4, -17.6, -17.8].map((x0) => ({ id: `x7m${String(Math.round(-x0 * 10) % 10)}`, check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck', phys: true,
+    what: `f7's ledge from x ${x0}: ${x0 > -17.46 ? `the cell centre at x −17.5 is ${(Math.round((x0 + 17.5) * 100) / 100).toFixed(1)} m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart` : 'its west face clear of the cell centres (the floor node and the top node one cell apart: the aligned control)'}`,
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(B(x0, -14.0, 0, 1.5, 46.6, 49.4, { ...NOINK, tag: 'kcheck-ledge' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } })),
+  { id: 'x7m45', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck', phys: true,
+    what: 'f7\'s ledge turned 45° (a 3.6 m square, 1.5 m, no ink, its diamond filling the ring wall\'s west opening): every floor node and top node beside a face are diagonal, none orthogonal',
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push({ kind: 'obox', center: [-15.5, 0.75, 48], size: [3.6, 1.5, 3.6], rotY: 45, ...NOINK, pattern: 3, tag: 'kcheck-ledge' }, B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  // — #7 (issue 2): P2, a rising gap longer than the old 3.0 m window — a 2.6 m moat in front of a 0.8 m landing inside the
+  // ring (on the field: a ramp down from it to the Gate), screened; the nodes 4.0 m apart
+  { id: 'x7p2', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[rising gap\\] not seen from the spawn deck', phys: true,
+    what: 'P2: a 2.6 m moat in front of a 0.8 m landing inside the ring (a ramp down to the Gate), screened: a running jump 0.8 m up, nodes 4.0 m apart',
+    layout: (L) => { floorWithout(L, [-17, -14.4, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]);
+      L.half.push(B(-14.4, -12.4, 0, 0.8, 46.6, 49.4, { ...NOINK, tag: 'kcheck-landing' }), RP([-8.4, 0, 48], [-12.4, 0.8, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), B(-14.6, -5, 0, 3.6, 50.0, 50.5, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  // — #7 (issue 3): P4, a squid climb over 5.5 m onto ground off the field, then a 6 m drop into the ring behind a screen
+  { id: 'x7p4', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[squid climb onto off-field ground\\] not seen from the spawn deck',
+    what: 'P4: a 6 m inkable tower through the ring wall (its top off the field: nav climbs stop at 5.5 m), a screen inside: squid up its face, over the wall, drop 6 m into the ring',
+    layout: (L) => { L.half.push(B(-19.5, -13.5, 0, 6.0, 44.0, 46.6, { color: '#cfc7b6', tag: 'kcheck-tower' }), B(-11.5, -11, 0, 3.6, 43.5, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  // — #15 / #1 (issue 4): Wc, the weir on the mover's track (its second stop moved to (18.5, 26)): the parked car stands
+  // over the weir's centre and drives through a post
+  { id: 'x15m', check: 15, expect: 'a mover sweeps within 3 m: kcar', also: [[1, 'in a mover\'s path']], what: 'Wc: the weir on the east strip where the car parks (its stop moved to (18.5, 26))',
+    layout: (L) => { L.movers.cars[0].stops = [[18.5, 10], [18.5, 26]]; }, def: (d) => { d.weirs = [{ at: [18.5, 0, 26], yaw: 90 }]; } },
+  // — #9 (issue 5): a noRetreat strip across a free zone on flat floor, no vertex of either inside the other (each 3.8 m
+  // or more from the other's vertices: the old vertex-only distance read 3.8 m, over the 3 m limit)
+  { id: 'x9n', check: 9, expect: 'a noRetreat polygon within 3 m of team \\d\'s zone', what: 'a 0.4 m noRetreat strip (x −10.2…−9.8, z 4…26) across an open-floor free zone (x −14…−6, z 11…19)',
+    def: (d) => { d.freeZones.push({ poly: [[-14, 11], [-6, 11], [-6, 19], [-14, 19]], y0: -0.3, y1: 0.3, signs: [[-14.4, 10.6, 180], [-5.6, 10.6, 180], [-14.4, 19.4, 0], [-5.6, 19.4, 0]] }); d.noRetreat = [{ poly: [[-10.2, 4], [-9.8, 4], [-9.8, 26], [-10.2, 26]], y0: -0.5, y1: 1.0 }]; } },
+  // — the windows' calibration (issue 2): platform pairs over the open sea, the kid's real reach against the probes' windows
+  { id: 'reach', check: null, reach: true, what: 'REACH: platform pairs over the sea, each a near rim a cell short of its rim node and a far platform `air` m on and `dy` up or down: every pair #16\'s kid makes lies inside the probes\' window at its rise, and each window\'s outer edge lies beyond the last made gap with both rim nodes a cell back',
+    layout: (L) => { L.single.push(...reachPieces()); } },
 ];
+
+// [fix2] the REACH rows: (dy, air) pairs, air the open gap rim to rim along the line, dy the far top's rise over the near
+// one. Each row is a near platform (top ≥ 0.6 m) whose rim stands 0.05 m short of the next cell centre — its rim node a
+// cell (0.95 m) back from the edge — and a far platform 2.4 m long, both 2 m wide, over the open sea east and west of the
+// box (single pieces: the slots avoid every piece of the box and its mirror)
+export const REACH_ROWS = [
+  [2.0, [0.2, 0.5, 0.8]], [1.8, [0.3, 0.7, 1.1, 1.5]], [1.5, [0.6, 1.0, 1.4, 1.8, 2.2]], [1.2, [1.4, 1.8, 2.2, 2.6, 3.0, 3.4]],
+  [0.9, [2.0, 2.4, 2.8, 3.2, 3.6]], [0.6, [2.4, 2.8, 3.2, 3.6, 4.0]], [0, [2.8, 3.2, 3.6, 4.0, 4.4, 4.8]], [-0.6, [3.2, 3.6, 4.0, 4.4, 4.8]],
+  [-1.2, [3.4, 3.8, 4.2, 4.6, 5.0, 5.4]], [-2.2, [3.8, 4.2, 4.6, 5.0, 5.4]], [-3.4, [4.2, 4.6, 5.0, 5.4, 5.8]],
+].flatMap(([dy, airs]) => airs.map((air) => ({ dy, air })));
+// the slots: [side (+1 east, −1 west), z0] — 2 m wide rows 3 m apart where the box (and its mirror) has nothing at x ±20…30
+const REACH_SLOTS = [
+  ...Array.from({ length: 21 }, (_, k) => [1, -55 + 3 * k]),      // east, Alpha's half (the main floor's mirror ends at x 20) on to z 7
+  ...Array.from({ length: 11 }, (_, k) => [1, 24 + 3 * k]),       // east, Bravo's half past the mover and the GAP
+  ...Array.from({ length: 9 }, (_, k) => [-1, 30 + 3 * k]),       // west, Bravo's half past the flank lane
+  [-1, 0], [-1, 3],
+  ...Array.from({ length: 11 }, (_, k) => [-1, -55 + 3 * k]),     // west, Alpha's half short of the GAP's mirror
+  [-1, -6], [-1, -3],
+];
+export function reachRows() {
+  return REACH_ROWS.map((r, k) => {
+    const [side, z0] = REACH_SLOTS[k], yN = Math.max(0.6, 0.6 - r.dy), yF = yN + r.dy;
+    const edge = side * 21.45, far = edge + side * r.air;   // (the near rim 0.05 m short of the cell centre at ±21.5)
+    return { ...r, side, z0, yN, yF, edge, far, near: [side * 20.5, yN, z0 + 0.5], farAt: [far + side * 0.5, yF, z0 + 0.5] };
+  });
+}
+function reachPieces() {
+  const out = [];
+  for (const r of reachRows()) {
+    const nx = [r.edge - r.side * 4.0, r.edge].sort((a, b) => a - b), fx = [r.far, r.far + r.side * 2.4].sort((a, b) => a - b);
+    out.push(B(nx[0], nx[1], -1.2, r.yN, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reach' }), B(fx[0], fx[1], -1.2, r.yF, r.z0, r.z0 + 2, { ...NOINK, tag: 'kcheck-reach' }));
+  }
+  return out;
+}
 
 export function caseOf(id) {
   const c = CASES.find((q) => q.id === id) || CASES[0];

@@ -158,7 +158,7 @@ app.on('browser-window-created', (_, win) => {
       } else if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
-        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
+        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, also: c.also || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates, reach: !!c.reach })))`);
         const want = process.env.CASES ? process.env.CASES.split(',') : null;
         const res = [];
         for (const c of cases.filter((q) => !want || want.includes(q.id))) {
@@ -166,6 +166,16 @@ app.on('browser-window-created', (_, win) => {
           const setup = `${box}.then((m) => m.defineCase('${c.id}'))`;
           await start('karpbox', setup);
           const sts = await listStates();
+          if (c.reach) {
+            // [fix2] the windows' calibration: #16's kid on every REACH row, set against the probes' windows (reachCalib)
+            const r = await js(`${box}.then((b) => b.reachRows()).then((rows) => ${mod}.then((m) => m.reachCalib(rows)))`);
+            for (const q of r.byDy) console.log(`  REACH dy ${String(q.dy).padStart(4)}: made ${q.made}/${q.of}, last made air ${q.lastAir ?? '–'} m (first not made beyond it ${q.firstNot ?? '–'}), worst-aligned node flat ${q.worstFlat ?? '–'} m vs the windows ${q.winOn} (field) / ${q.winOff} (off-field) → ${q.inside && q.edgeOk ? 'inside' : q.inside ? 'BEYOND THE WINDOW (worst alignment)' : 'MADE OUTSIDE THE WINDOW'}`);
+            for (const q of r.rows) if (q.err || (q.made && (q.flat > q.winOn || q.flat > q.winOff))) console.log(`    ${q.err ? 'ERROR ' + q.err : 'outside'}: dy ${q.dy} air ${q.air} ${JSON.stringify(q.from)} → ${JSON.stringify(q.to)} flat ${q.flat}${q.how ? ' (' + q.how + ')' : ''}`);
+            res.push({ ...c, pass: r.pass, reachRows: r.rows, byDy: r.byDy });
+            fs.writeFileSync(path.join(OUT, 'self-reach.json'), JSON.stringify(r, null, 1));
+            console.log(`SELFTEST ${c.id.padEnd(10)} every made jump inside the probes' windows, each window's edge beyond the last made gap (worst grid alignment) → ${r.pass ? 'PASS' : 'FAIL'}`);
+            continue;
+          }
           if (c.allStates) {
             // every state the module offers (karpbox's own test state 1 comes first in the field's list), each world from
             // its query: #15 passes in the state as built and FAILs in the module's state 'w'
@@ -187,9 +197,13 @@ app.on('browser-window-created', (_, win) => {
           // a notFail case proves a false FAIL gone: none of those checks may fail, and #16's text may be asked to match)
           const why = c.expect ? new RegExp(c.expect).test(j.checks[c.check]?.text || '') : true;
           const why16 = c.expect16 ? new RegExp(c.expect16).test(j.checks[16]?.text || '') : true;
-          const pass = c.id === 'clean' ? j.result === 'ok' : c.check == null ? (c.notFail || []).every((n) => !failing.includes(n)) && why16 : failing.includes(c.check) && why;
-          res.push({ ...c, pass, failing, why, why16 });
-          const what = c.id === 'clean' ? 'clean karpbox: every check OK' : c.check == null ? `${(c.notFail || []).map((n) => '#' + n).join(' ')} must NOT fail (${c.what})${c.expect16 ? (why16 ? ', #16 as expected' : ', #16 NOT as expected: /' + c.expect16 + '/') : ''}` : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}`;
+          // [fix2] (also: more checks that must FAIL for their own reason; flagged: the target check's FAIL has a place on
+          // the pictures — a numbered flag — as every FAIL with a place must)
+          const alsoOk = (c.also || []).every(([n, re]) => failing.includes(n) && new RegExp(re).test(j.checks[n]?.text || ''));
+          const flagged = c.check == null || (j.flags || []).some((f) => f.check === c.check);
+          const pass = c.id === 'clean' ? j.result === 'ok' : c.check == null ? (c.notFail || []).every((n) => !failing.includes(n)) && why16 : failing.includes(c.check) && why && alsoOk && flagged;
+          res.push({ ...c, pass, failing, why, why16, alsoOk, flagged });
+          const what = c.id === 'clean' ? 'clean karpbox: every check OK' : c.check == null ? `${(c.notFail || []).map((n) => '#' + n).join(' ')} must NOT fail (${c.what})${c.expect16 ? (why16 ? ', #16 as expected' : ', #16 NOT as expected: /' + c.expect16 + '/') : ''}` : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}${c.also ? (alsoOk ? `, and ${c.also.map(([n]) => '#' + n).join(' ')} for theirs` : `, NOT ${c.also.map(([n, re]) => `#${n} /${re}/`).join(' ')}`) : ''}${flagged ? '' : ', but its FAIL has NO FLAG (no place on the pictures)'}`;
           console.log(`SELFTEST ${c.id.padEnd(10)} ${what} → ${pass ? 'PASS' : 'FAIL'}${failing.length ? ' (failing: ' + failing.map((n) => '#' + n).join(' ') + ')' : ''}`);
         }
         console.log(`RESULT selftest ${res.filter((r) => r.pass).length}/${res.length}`);
