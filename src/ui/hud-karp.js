@@ -589,10 +589,16 @@ export class KarpHud {
     if (kc) out.push({ l: this._kcR.l - 4, r: this._kcR.r + 4, t: this._kcR.t - 4, b: this._kcR.b + 4 });
     // (each with its ribbon — it reaches past the text's box — and a few px round it: a weir's 45 sat on the ribbon's edge)
     // ([karp-face] review round 2: and the centre banner — OVERTIME! with its instruction: a weir's 45 sat on the word)
+    // ([karp-face] review round 3: with its word and our instruction under it as drawn — rotated, the word reaches past
+    // the banner's own box: the marker sat on OVERTIME!'s top edge, outside it)
     if (H.bannerLayer) for (const b of H.bannerLayer.children) {
       if (b.dataset.g !== 'center') continue;
-      const r = b.getBoundingClientRect(); if (!(r.width > 0)) continue;
-      out.push({ l: r.left - 4 - (this._ox || 0), r: r.right + 4 - (this._ox || 0), t: r.top - 4 - (this._oy || 0), b: r.bottom + 4 - (this._oy || 0) });
+      let l = Infinity, r = -Infinity, t = Infinity, bb = -Infinity;
+      for (const e of [b, b.querySelector('.iw-bn__text'), b.querySelector('.iw-kbn-sub')]) {
+        const q = e && e.getBoundingClientRect(); if (!q || !(q.width > 0)) continue;
+        l = Math.min(l, q.left); r = Math.max(r, q.right); t = Math.min(t, q.top); bb = Math.max(bb, q.bottom);
+      }
+      if (r > l) out.push({ l: l - 4 - (this._ox || 0), r: r + 4 - (this._ox || 0), t: t - 4 - (this._oy || 0), b: bb + 4 - (this._oy || 0) });
     }
     if (H.zcalls) for (const z of H.zcalls.children) {
       const r = z.getBoundingClientRect(); if (!(r.width > 0)) continue;
