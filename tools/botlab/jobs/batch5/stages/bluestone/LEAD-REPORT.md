@@ -264,7 +264,8 @@ Halyard, calamari and treehills keep the program key `inkwave-level-v8` (eras-wo
 - `minimap-era{1,2,3}`, `minimap-era1-warn`, `tabmap-era{1,2,3}`
 - `bot-on-halo`
 - `rescue-garden-{before,after}`
-- `lightmap-probe`: R / G / B of the street face under the crates.
+- `lightmap-probe` (`probe-lightmap.js`): R / G / B of the street face under the crates. R is at the floor value under
+  them; G and B are light, with the café tables' contact AO.
 
 ## 5. Commits; files
 **Commits:**
