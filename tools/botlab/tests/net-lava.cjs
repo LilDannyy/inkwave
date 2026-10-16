@@ -74,16 +74,19 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   const devAfter = { host: await J(A, `__G.subs.items.filter((it) => it.state !== 'dead' && (it.state === 'mine' || it.state === 'beacon')).map((it) => it.gid)`), guest: await J(B, `__G.subs.items.filter((it) => it.owner === __G.local && it.state !== 'dead' && (it.state === 'mine' || it.state === 'beacon')).map((it) => it.gid)`) };
   const gone = [...dev.mine, ...dev.beacon].every((g) => !devAfter.host.includes(g) && !devAfter.guest.includes(g));
   R('…its devices the lava covered are gone on both screens (the owner\'s sweep and its end records)', gone, { devAfter });
-  await wait(2500);
-  const cells = await J(A, `(() => { const W = __G.lavaWorld, P = __G.paint; let s = ''; for (let i = 0; i < W.cells.ids.length; i++) s += P.grid[W.cells.ids[i]]; return s; })()`);
-  const cellsB = await J(B, `(() => { const W = __G.lavaWorld, P = __G.paint; let s = ''; for (let i = 0; i < W.cells.ids.length; i++) s += P.grid[W.cells.ids[i]]; return s; })()`);
-  let same = 0, inkedA = 0, inkedB = 0; const diffIdx = []; for (let i = 0; i < Math.min(cells.length, cellsB.length); i++) { if (cells[i] === cellsB[i]) same++; else if (diffIdx.length < 400) diffIdx.push(i); if (cells[i] !== '0') inkedA++; if (cellsB[i] !== '0') inkedB++; }
-  const ratio = same / Math.max(1, cells.length);
-  // (where the differing cells are: their heights, and whether a neighbour on the same face agrees — a blob's rim, which
-  // a splat record's 1 cm position rounding moves — or they sit at the waterline, which would be the lava's own doing)
-  const diffWhere = await J(A, `(() => { const W = __G.lavaWorld, P = __G.paint, v = new (__G.local.pos.constructor)(), ids = ${JSON.stringify(diffIdx)}; const ys = ids.map((i) => { P.cellWorld(W.cells.ids[i], v); return +v.y.toFixed(2); }); const band = ys.filter((y) => Math.abs(y - 0.8) < 0.08 || Math.abs(y + 0.6) < 0.08).length; return { n: ys.length, minY: Math.min(...ys), maxY: Math.max(...ys), atWaterlines: band, eg: ys.slice(0, 16) }; })()`);
-  R('the lava cells end identical on both screens after splats across the waterline through a rise and a fall (painter\'s stage time, field 15)', cells.length === cellsB.length && ratio >= 0.999 && painted > 30, { n: cells.length, ratio: +ratio.toFixed(5), differ: cells.length - same, inked: [inkedA, inkedB], painted, diffWhere });
+  // (fix round 3, the lead's decision: the grids are compared at the results screen — nothing in flight — and the lava
+  // cells are judged against the same run's other cells: the netcode's own 1 cm splat rounding moves a blob's rim on
+  // both, the lava may add no mismatch of its own; mid-match, 4 bots still painting left 144 lava cells differing)
   for (const c of [A, B]) await c.until(`__G.match && __G.match.state === 'results'`, 120000, 500);
+  await wait(1500);
+  const split = (cl) => J(cl, `(() => { const W = __G.lavaWorld, P = __G.paint, lava = new Uint8Array(P.grid.length); for (const k of W.cells.ids) lava[k] = 1; let a = '', b = ''; for (let i = 0; i < P.grid.length; i++) { if (lava[i]) a += P.grid[i]; else if (P.grid[i] !== 255) b += P.grid[i]; } return [a, b]; })()`);
+  const [cells, others] = await split(A), [cellsB, othersB] = await split(B);
+  const diffOf = (x, y) => { let same = 0, inA = 0, inB = 0; const idx = []; for (let i = 0; i < Math.min(x.length, y.length); i++) { if (x[i] === y[i]) same++; else if (idx.length < 400) idx.push(i); if (x[i] !== '0') inA++; if (y[i] !== '0') inB++; } return { n: x.length, nB: y.length, differ: x.length - same, ratio: same / Math.max(1, x.length), inked: [inA, inB], idx }; };
+  const dl = diffOf(cells, cellsB), dO = diffOf(others, othersB);
+  // (where the differing lava cells are: their heights — at the waterlines would be the lava's own doing)
+  const diffWhere = await J(A, `(() => { const W = __G.lavaWorld, P = __G.paint, v = new (__G.local.pos.constructor)(), ids = ${JSON.stringify(dl.idx)}; const ys = ids.map((i) => { P.cellWorld(W.cells.ids[i], v); return +v.y.toFixed(2); }); const band = ys.filter((y) => Math.abs(y - 0.8) < 0.08 || Math.abs(y + 0.6) < 0.08).length; return { n: ys.length, minY: ys.length ? Math.min(...ys) : null, maxY: ys.length ? Math.max(...ys) : null, atWaterlines: band, eg: ys.slice(0, 16) }; })()`);
+  R('at the results screen the lava cells agree between the two screens at least as well as the same run\'s other cells do (splats across the waterline through a rise and a fall: the painter\'s stage time, field 15)', dl.n === dl.nB && dO.n === dO.nB && dl.ratio >= dO.ratio && dl.ratio >= 0.998 && painted > 30,
+    { lava: { n: dl.n, differ: dl.differ, ratio: +dl.ratio.toFixed(5), inked: dl.inked }, other: { n: dO.n, differ: dO.differ, ratio: +dO.ratio.toFixed(5), inked: dO.inked }, painted, diffWhere });
   const res = [await J(A, `__G.match.result && __G.match.result.winner`), await J(B, `__G.match.result && __G.match.result.winner`)];
   const fin = await J(A, `(() => { const L = __G.match.lava; return { y: L.y, phase: L.st.phase }; })()`);
   R('time-up at LOW (the final ebb); the same result on both screens', res[0] === res[1] && (res[0] === 0 || res[0] === 1) && fin.phase === 'low', { res, fin });

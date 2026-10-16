@@ -26,6 +26,8 @@
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const r2 = (v) => Math.round(v * 100) / 100;
   const F = Kp.field, N = nav.nodes.length, sHigh = F.stateOf('high'), sLow = F.stateOf('low');
+  // (the mode's own timetable: Bazookarp's is Zone Control's — rises at 35 / 125 / 215, falls at 80 / 170 / 260)
+  const MV = Lv.sched.moves, TW = Lv.sched.T.warn, wRise = MV[0].t0 - TW, wFall = MV[1].t0 - TW, deadly = MV[0].t0 + 3.8;
 
   // K1
   const SS = m.stage.karpStates(), keys = F.states.map((s) => s.key);
@@ -67,12 +69,12 @@
   const sw = [], offs = [on('karp:field', (e) => sw.push([r2(Lv.clock.t), e.state])), on('karp:drop', (e) => drops2.push([r2(Lv.clock.t), e.how, r2(e.pos.x), r2(e.pos.y), r2(e.pos.z)]))];
   const drops2 = [];
   const D0 = F.states.map((s) => s.D[0]), R0 = F.states.map((s) => s.restOk);
-  setT(24.6); step(0.8); const atRise = F.state;
-  setT(59.6); step(0.8); const atFall = F.state;
-  const swRise = sw.find((x) => x[1] === sHigh), swFall = sw.find((x) => x[1] === sLow && x[0] > 50);
-  R('K4 the field switches at lava:warn — to HIGH at the rise warning (25 s), to LOW at the fall warning (60 s) — and is never rebuilt (the same arrays)',
-    atRise === sHigh && atFall === sLow && swRise && swRise[0] >= 25 && swRise[0] < 25.1 && swFall && swFall[0] >= 60 && swFall[0] < 60.1 && F.states.every((s, i) => s.D[0] === D0[i] && s.restOk === R0[i]),
-    { switches: sw, atRise, atFall });
+  setT(wRise - 0.4); step(0.8); const atRise = F.state;
+  setT(wFall - 0.4); step(0.8); const atFall = F.state;
+  const swRise = sw.find((x) => x[1] === sHigh), swFall = sw.find((x) => x[1] === sLow && x[0] > wRise + 1);
+  R(`K4 the field switches at lava:warn — to HIGH at the rise warning (${wRise} s), to LOW at the fall warning (${wFall} s) — and is never rebuilt (the same arrays)`,
+    atRise === sHigh && atFall === sLow && swRise && swRise[0] >= wRise && swRise[0] < wRise + 0.1 && swFall && swFall[0] >= wFall && swFall[0] < wFall + 0.1 && F.states.every((s, i) => s.D[0] === D0[i] && s.restOk === R0[i]),
+    { switches: sw, atRise, atFall, warnings: [wRise, wFall] });
 
   // K5: rest the Bazookarp on a Casting Floor / shelf node at LOW (state low), then the rise's warning
   setT(18); step(0.2);
@@ -84,22 +86,22 @@
     Kp._reform(V(n.x, n.y, n.z), ledge); step(2.0);
     const stayed = Kp.restNode === ledge;
     drops2.length = 0;
-    setT(24.6); step(0.8);
+    setT(wRise - 0.4); step(0.8);
     const mv = drops2.find((d) => d[1] === 'moved'), now = Kp.restNode;
-    k5 = { ledge: [r2(n.x), r2(n.y), r2(n.z)], stayedAtLow: stayed, moved: mv || null, restNow: now, kindNow: now >= 0 ? M.kind[now] : null, phase: Kp.phase };
+    k5 = { ledge: [r2(n.x), r2(n.y), r2(n.z)], stayedAtLow: stayed, moved: mv || null, restNow: now, kindNow: now >= 0 ? M.kind[now] : null, phase: Kp.phase, leadS: mv ? r2(deadly - mv[0]) : null };
     R('K5 a Bazookarp resting on a ledge at LOW stays there until the rise\'s warning, then is moved to dry ground at once (13.8 s before the ledge turns deadly)',
-      stayed && !!mv && mv[0] >= 25 && mv[0] < 25.1 && now >= 0 && now !== ledge && M.kind[now] === 0, k5);
+      stayed && !!mv && mv[0] >= wRise && mv[0] < wRise + 0.1 && now >= 0 && now !== ledge && M.kind[now] === 0, k5);
   } else R('K5 a Bazookarp resting on a ledge at LOW … moved at the warning', false, k5);
 
   // K6: the local player carrying, still on Alpha's shelf (its own half) across the rise's warning
   const me = m.local, shelf = V(-25.2, 0.02, -8.19);
-  setT(22); step(0.1);
+  setT(wRise - 3); step(0.1);
   Kp._reform(Kp.R.pond.clone(), -1); step(0.1);
   if (!me.alive) me.respawn();
   me.superJumpState = null; me.pos.copy(shelf); me.vel.set(0, 0, 0); me.invuln = 1e6;
   Kp.phase = 'free'; Kp._applyGrant(me); step(0.3);
   const rates = [], lines = [];
-  for (let t = 22.4; t < 27; t += 0.1) { me.pos.x = shelf.x; me.pos.z = shelf.z; me.vel.set(0, 0, 0); step(0.1); rates.push(Kp.rate); const mm = Lv._mine(me); if (Lv.st.warn) lines.push(mm ? mm.text : null); }
+  for (let t = wRise - 2.6; t < wRise + 2; t += 0.1) { me.pos.x = shelf.x; me.pos.z = shelf.z; me.vel.set(0, 0, 0); step(0.1); rates.push(Kp.rate); const mm = Lv._mine(me); if (Lv.st.warn) lines.push(mm ? mm.text : null); }
   const carrying = Kp.holder === me;
   Kp._release(me);
   R('K6 a carrier on the drowning Slump shelf gets the warning like anyone (GET OFF THE LOW GROUND all through the warning), and standing still on its own half across the switch never gets the fuse\'s ×3',
@@ -110,14 +112,14 @@
   const bot = m.actors.find((a) => a.bot && a.team === 0);
   let k7 = null;
   if (bot) {
-    setT(24.0); step(0.1);
+    setT(wRise - 1); step(0.1);
     Kp._reform(Kp.R.pond.clone(), -1); step(0.1);
     if (!bot.alive) bot.respawn();
     bot.superJumpState = null; bot.pos.set(shelf.x + 0.5, 0.02, shelf.z + 0.5); bot.vel.set(0, 0, 0); bot.invuln = 1e6;
     Kp.phase = 'free'; Kp._applyGrant(bot);
     bot.bot.update = bot.bot._upd; bot.bot.path = null; bot.bot.repath = 0; bot.bot.goalTimer = 0;
     const deaths = []; const o = on('splatted', (e) => { if (e.victim === bot) deaths.push([r2(Lv.clock.t), e.cause]); });
-    step(15.5);   // → 39.6: the ledges are deadly from 38.8
+    step(deadly + 0.8 - Lv.clock.t);   // → 0.8 s after the ledges turn deadly
     o();
     const f = Lv._foot(bot);
     k7 = { alive: bot.alive, at: [r2(bot.pos.x), r2(bot.pos.y), r2(bot.pos.z)], foot: f.kind, deaths, escapes: bot.bot.escN || 0, carrying: Kp.holder === bot };

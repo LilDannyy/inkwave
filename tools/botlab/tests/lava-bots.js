@@ -56,7 +56,11 @@
         const it = b.intent, bb = b.bot, nx = bb.path && bb.pi < bb.path.length ? nav.nodes[bb.path[bb.pi]] : null, f = b._lavaFoot?.f;
         let near = 9; for (const o of g.match.actors) if (o !== b && o.alive) near = Math.min(near, Math.hypot(o.pos.x - b.pos.x, o.pos.z - b.pos.z) + (Math.abs(o.pos.y - b.pos.y) > 1.2 ? 9 : 0));
         if (bb._lavaEsc) escAt[k] = Lv.clock.t;
-        const T = trail[k]; T.push([r2(Lv.clock.t), r2(b.pos.x), r2(b.pos.y), r2(b.pos.z), b.grounded ? 'g' : 'a', r2(Math.hypot(b.vel.x, b.vel.z)), r2(it.move.x), r2(it.move.z), (it.jump ? 'J' : '') + (it.squid ? 'S' : '') + (it.fire ? 'F' : ''), bb.mode, f ? f.kind : '-', bb._lavaEsc ? 'E' : '', nx ? [r2(nx.x), r2(nx.y), r2(nx.z)] : null, r2(near)]);
+        const wr = b.weaponRunner, gb = b.ground?.block >= 0 ? lvl.blocks[b.ground.block] : null;
+        let dev = ''; for (const d of __G.subs?.items || []) if (d.pos && d.state !== 'dead' && Math.hypot(d.pos.x - b.pos.x, d.pos.z - b.pos.z) < 1.5) dev += d.kind + ':' + d.state + ' ';
+        const T = trail[k]; T.push([r2(Lv.clock.t), r2(b.pos.x), r2(b.pos.y), r2(b.pos.z), b.grounded ? 'g' : 'a', r2(Math.hypot(b.vel.x, b.vel.z)), r2(it.move.x), r2(it.move.z), (it.jump ? 'J' : '') + (it.squid ? 'S' : '') + (it.fire ? 'F' : ''), bb.mode, f ? f.kind : '-', bb._lavaEsc ? 'E' : '', nx ? [r2(nx.x), r2(nx.y), r2(nx.z)] : null, r2(near),
+          [r2(b.vel.x), r2(b.vel.z)], bb._mvStage || null, gb ? (gb.tag || '#' + gb.id) + (gb.roof ? '/roof' : '') + (gb.rail ? '/rail' : '') + (gb.dynamic ? '/dyn' : '') : null, (b.sub?.kind || '') + (wr?.mainLocked ? '/L' : '') + (wr?.glide ? '/G' : '') + (wr?.aimingSub ? '/A' : '') + (b.specialActive ? '/sp:' + b.specialActive.kind : '') + (bb.guardOff ? '/gOff' : ''), dev || null]);
+        bb._mvStage = null;
         if (T.length > 2 * HZ) T.shift();
         if (i % Math.round(HZ / 2) === 0) coarse[k].push([r2(Lv.clock.t), r2(b.pos.x), r2(b.pos.y), r2(b.pos.z), bb.mode, f ? f.kind : '-', bb._lavaEsc ? 'E' : '', bb.goal >= 0 && nav.nodes[bb.goal] ? [r2(nav.nodes[bb.goal].x), r2(nav.nodes[bb.goal].y), r2(nav.nodes[bb.goal].z)] : null]);
       });
@@ -66,6 +70,9 @@
     return { deaths: deaths.filter((d) => d.cause === 'lava'), other: deaths.filter((d) => d.cause !== 'lava').map((d) => [d.who, d.cause, d.t]), alive: crew.filter((b) => b.alive).length, esc: crew.map((b) => b.bot.escN || 0) };
   };
   const jit = (p, r) => V(p.x + (Math.random() - 0.5) * r, p.y, p.z + (Math.random() - 0.5) * r);
+  // (fix round 3: the trail also keeps the move the stage's botAct left, the velocity, the floor's tag and the bot's sub
+  // state, and any device within 1.5 m — what overrode an escape's move, what pushed a body over a lip)
+  { const orig = Lv.botAct; Lv.botAct = function (b, dt, it, move, vis) { const r = orig.call(this, b, dt, it, move, vis); b._mvStage = [Math.round(move.x * 100) / 100, Math.round(move.z * 100) / 100]; return r; }; }
   const gate = { botTrials: 0, esc: 0, fight: 0, list: [] };
   const report = (name, res, n) => {
     const all = res.flatMap((r, i) => r.deaths.map((d) => ({ trial: i, ...d })));
