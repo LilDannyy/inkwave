@@ -787,6 +787,38 @@
         R('bots: a bot whose Whirl Boomerang is out steps off its team\'s idle web (the burst goes off beside it) — 2 m from the web it moves away, 10 m off it doesn\'t; with its brain live the web stands through the burst',
           boom.state && d1 > d0 + 0.5 && boom.counted >= 1 && mv2.lengthSq() === 0 && boom.live.burst && boom.live.webLeft === 3 && boom.live.trig === 0, boom);
       }
+      // [b5-int3] three more paths bobber-web clear found blowing a web: a bucket's volley thrown down off a ledge (it lands
+      // on the floor below, 7 m out — the hold's capsule was cut at the bot's own floor), a Cutlass's charged wave (flatter
+      // than the aim, from hip height: on past where the aim meets the floor), a Kraken's jump attack (its 2.3 m blast where
+      // it lands) — each held by an own idle web, each let go turned away from it
+      {
+        const res = {};
+        const holdOf = (wid, at, yaw, pitch, prep) => {
+          reset();
+          drop(me, 6.5, 0); drop(me, 6.5, 3.5); settle();
+          put(mate, at, yaw); mate.setWeapon(wid); mate.bot.reset(); mate.bot._bob = null; mate.bot._bobHF = null; mate.bot.aimYaw = mate.aimYaw = yaw; mate.bot.aimPitch = mate.aimPitch = pitch;
+          step(2 / 60); put(mate, at, yaw); mate.bot.aimYaw = mate.aimYaw = yaw; mate.bot.aimPitch = mate.aimPitch = pitch;
+          const cp = Math.cos(pitch); mate.aimPoint.set(at.x + Math.sin(yaw) * cp * 6, Math.max(at.y, at.y + 1.1 + Math.sin(pitch) * 6), at.z + Math.cos(yaw) * cp * 6);
+          zero(mate); prep?.(); mate.intent.fire = true;
+          K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+          const held = !mate.intent.fire;
+          if (mate.specialActive) mate.specialActive = null;
+          const kb = mate.weaponRunner?.kit; if (kb) { kb.charging = false; kb.held = false; kb.charge = 0; kb.full = false; }
+          return held;
+        };
+        const top = V(14.5, 4.0, 1.5);
+        res.bucketAt = holdOf('bucket', top, -Math.PI / 2, -0.5);
+        res.bucketAway = !holdOf('bucket', top, Math.PI / 2, -0.5);
+        const bladePrep = () => { const KB = mate.weaponRunner?.kit; if (KB) { KB.charging = true; KB.held = true; KB.charge = 1; KB.full = true; } };
+        res.waveAt = holdOf('blade', top, -Math.PI / 2, -0.45, bladePrep);
+        res.waveAway = !holdOf('blade', top, Math.PI / 2, -0.45, bladePrep);
+        const kraken = () => { mate.specialActive = { id: 'kraken', kind: 'kraken', t: 0 }; mate.grounded = true; mate.vel.set(0, 0, 0); };
+        res.krakenAt = holdOf('shooter', V(10.5, 0, 1.5), -Math.PI / 2, 0.6, kraken);
+        res.krakenAway = !holdOf('shooter', V(10.5, 0, 1.5), Math.PI / 2, 0.6, kraken);
+        parkAll();
+        R('bots: from the top of a 4 m wall, a bucket\'s volley and a Cutlass\'s charged wave aimed down at a web 8 m out on the floor below; a Kraken\'s jump attack 4 m from it — each held; turned away, each goes',
+          Object.values(res).every(Boolean), res);
+      }
       // [b5-int3] the snap: a fighting bot throws a lone one onto the feet of a foe facing away from it (busy elsewhere) and
       // sets it off on that foe as it floats; a foe facing it — a duel — gets none (the duel probe: snaps there lost it)
       {

@@ -789,7 +789,9 @@ function holdFire(b, a) {
   // (the foe it's fighting plus a miss's carry — but a shot that lodges or bursts at the end of its flight, an arrow or a
   // blaster's blob, goes off wherever a miss ends: its whole reach)
   if (b.mode === 'fight' && b.target && !ws.bursts) L = Math.min(L, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z) + 2.5 + sr);
-  if (_d.y < -0.05) L = Math.min(L, (1.15 + 0.15) / -_d.y + sr);
+  // ([b5-int3] aimed down, the shot ends where the aim meets the stage — off a ledge that is the floor below, not the bot's
+  // own floor 1.3 m under its eye: a bucket bot painting down off a ledge blew a web 7 m out and 2.6 m below it)
+  if (_d.y < -0.05) { const gh = G.physics.raycast(_a, _d, L, _hh); L = Math.min(L, (gh.hit ? gh.dist : L) + sr); }
   // (as wide as the gun's spread now, its pellets' or arrows' fan, the side-by-side arrows' gap)
   const spr = Math.tan((((a.weaponRunner?.spread || 0) + ws.cone) * Math.PI) / 180), W = pad + sr + ws.gap + spr * L;
   const ex = _a.x + _d.x * L, ez = _a.z + _d.z * L;
@@ -806,6 +808,59 @@ function holdFire(b, a) {
     if (along(o) && idleNow(o, a.team)) return o;
   }
   for (const o of P) if (along(o) && idleNow(o, a.team)) return o;
+  // ([b5-int3] a bucket's volley is lobbed onto the aim point and falls on past it: its lead blob's arc)
+  if (w.kind === 'bucket' && w.lob != null) return arcHits(a, w, pad);
+  // ([b5-int3] a Cutlass's charged cut sends its wave flatter than the aim and from hip height, on to its full range or
+  // the stage: blade.js spawnWave's own path)
+  if (w.waveRange && a.weaponRunner?.kit?.charging) return waveHits(a, b, w, pad);
+  return null;
+}
+// [b5-int3] the Cutlass's ink wave (blade.js spawnWave): pitch × 0.4 under 0.3 rad (else clamped to −0.45…0.35), from
+// 0.55 m ahead at waveHeight × 0.52, waveRange m or to the stage; a slab waveWidth wide and waveHeight tall — an idle
+// own bobber in it → that bobber (bobber-web clear: a Cutlass bot's wave, cut aiming down a slope, blew a web 8.5 m out)
+function waveHits(a, b, w, pad) {
+  const pt = b.aimPitch, pitch = Math.abs(pt) < 0.3 ? pt * 0.4 : clamp(pt, -0.45, 0.35), cp = Math.cos(pitch), yaw = b.aimYaw;
+  _ad.set(Math.sin(yaw) * cp, Math.sin(pitch), Math.cos(yaw) * cp);
+  _am.set(a.pos.x + Math.sin(yaw) * 0.55, a.pos.y + w.waveHeight * 0.52, a.pos.z + Math.cos(yaw) * 0.55);
+  const gh = G.physics.raycast(_am, _ad, w.waveRange, _hh), L = gh.hit ? gh.dist : w.waveRange;
+  const hw = w.waveWidth * 0.5 + pad + (w.waveEndRadius || 0), hh = w.waveHeight * 0.55 + pad;
+  const ex = _am.x + _ad.x * L, ez = _am.z + _ad.z * L, M = hw + 1;
+  const hit = (o) => {
+    const p = posOf(o), t = clamp((p.x - _am.x) * _ad.x + (p.y - _am.y) * _ad.y + (p.z - _am.z) * _ad.z, 0, L);
+    const qx = _am.x + _ad.x * t, qy = _am.y + _ad.y * t, qz = _am.z + _ad.z * t;
+    return Math.hypot(p.x - qx, p.z - qz) < hw && Math.abs(p.y - qy) < hh;
+  };
+  for (const o of near(Math.min(_am.x, ex) - M, Math.min(_am.z, ez) - M, Math.max(_am.x, ex) + M, Math.max(_am.z, ez) + M, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && hit(o) && idleNow(o, a.team)) return o;
+  for (const o of pendingOwn(a.team)) if (hit(o) && idleNow(o, a.team)) return o;
+  return null;
+}
+// [b5-int3] the Bilge Bucket's volley (weapons.js fireSlosh): from the muzzle toward the aim point, lifted by its lob,
+// bent by the lob solver (_lobAim) to pass through the aim point when in reach, on under gravity and drag until it meets
+// the stage — an idle own bobber within a blob (impactRadius) of its path or of where it lands → that bobber
+const _hh = new Hit(), _am = new V3(), _ad = new V3(), _ap = new V3(), _aq = new V3(), _av = new V3(), _arcC = [];
+function arcHits(a, w, pad) {
+  if (!G.projectiles?._lobAim) return null;
+  _am.set(a.pos.x, a.pos.y + 1.05, a.pos.z);
+  _ad.copy(a.aimPoint).sub(_am);
+  const d0 = _ad.length();
+  if (d0 < 2.0) _ad.set(Math.sin(a.aimYaw) * Math.cos(a.aimPitch), Math.sin(a.aimPitch), Math.cos(a.aimYaw) * Math.cos(a.aimPitch)); else _ad.multiplyScalar(1 / d0);
+  const hd0 = Math.hypot(_ad.x, _ad.z) || 1, p0 = Math.atan2(_ad.y, hd0) + w.lob;
+  _ad.set((_ad.x / hd0) * Math.cos(p0), Math.sin(p0), (_ad.z / hd0) * Math.cos(p0));
+  G.projectiles._lobAim(_am, _ad, a.aimPoint, w.throwSpeed, w.gravity, w.drag, w.reach);
+  // (its team's idle bobbers anywhere it can reach: a box round the throw)
+  const R = (w.reach || 9.5) + 4, r = (w.impactRadius || 1) + pad;
+  _arcC.length = 0;
+  for (const o of near(a.pos.x - R, a.pos.z - R, a.pos.x + R, a.pos.z + R, _nr)) if (o.team === a.team && o.state === 'live' && o.chain) _arcC.push(o);
+  for (const o of pendingOwn(a.team)) _arcC.push(o);
+  if (!_arcC.length) return null;
+  _ap.copy(_am); _av.copy(_ad).multiplyScalar(w.throwSpeed);
+  for (let i = 0; i < 150 && _ap.y > -30; i++) {
+    _aq.copy(_ap); _av.y -= w.gravity / 60; _av.multiplyScalar(1 - (w.drag || 0) / 60); _ap.addScaledVector(_av, 1 / 60);
+    const hit = G.physics.segment(_aq, _ap, _hh).hit;
+    if (hit) _ap.copy(_hh.point);
+    for (const o of _arcC) if (posOf(o).distanceTo(_ap) < r && idleNow(o, a.team)) return o;
+    if (hit) return null;
+  }
   return null;
 }
 
@@ -904,6 +959,16 @@ function crabHits(a) {
   }
   return null;
 }
+// [b5-int3] a Kraken's jump attack (specials.js kraken weapon/tick): from the ground a hop of attackVel up with
+// attackFwd × 0.5 forward on its run, landing ~2 attackVel / g later; in the air a dive straight down — its blast
+// (radius) where it lands
+function krakenHits(a) {
+  const d = SPECIALS.kraken;
+  if (!d) return null;
+  const T = a.grounded ? (2 * (d.attackVel || 8.5)) / 25 : 0.25, f = a.grounded ? (d.attackFwd || 6.5) * 0.5 : 0;
+  const x = a.pos.x + (a.vel.x + Math.sin(a.aimYaw) * f) * T, z = a.pos.z + (a.vel.z + Math.cos(a.aimYaw) * f) * T;
+  return webHit(a.team, x, a.pos.y + 0.4, z, (d.radius || 2.3) + 0.5);
+}
 // (a held sub's release — the Shaker's: shaker.js botHold) would its throw now go off by an idle own web?
 export const webThrow = (a) => !!(items.length && a.alive && throwHits(a));
 // (bots.js, after the kits' botAct, before _tail presses on _bombAim) hold the throw: tried again from wherever it is a
@@ -994,6 +1059,8 @@ export function botAct(b, dt, it, move, busy) {
     if ((it.fire || it.special) && items.length) { const o = holdFire(b, a); if (o) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; } }
     // ([b5-int3] a Crab Rig's cannon — its sub press — lobs a shell that blows 3 m round where it lands: held while that is by
     // one of its team's idle webs — bobber-web clear: a teammate's crab shells blew a human's webs)
+    // ([b5-int3] a Kraken's jump attack — its fire — blows 2.3 m round where it lands: held while that is by an own idle web)
+    if (it.fire && items.length && a.specialActive?.id === 'kraken' && krakenHits(a)) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; }
     if (it.sub && items.length && a.specialActive?.id === 'crab' && crabHits(a)) { it.sub = false; BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1; BOBBER_BOT.crabHolds = (BOBBER_BOT.crabHolds || 0) + 1; }
     return null;
   }
@@ -1052,7 +1119,9 @@ export function botAct(b, dt, it, move, busy) {
   // (nor a special started right by them: a Splashdown, a Bomb Barrage, an Inkjet's first shots go off around it — it
   // waits until it has moved off its team's idle chain)
   if (it.special && !a.specialActive && items.length) {
-    for (const o of near(a.pos.x - 5, a.pos.z - 5, a.pos.x + 5, a.pos.z + 5, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - a.pos.x, o.spot.z - a.pos.z) < 5 && !foeIn(o.chain, a.team)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; break; }
+    // ([b5-int3] 5 m, or a Tidal Slam's own 5.2 m blast and the 1.4 m it drifts while it rises)
+    const spR = a.specialId === 'slam' ? (SPECIALS.slam?.radius || 5.2) + 1.6 : 5;
+    for (const o of near(a.pos.x - spR, a.pos.z - spR, a.pos.x + spR, a.pos.z + spR, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - a.pos.x, o.spot.z - a.pos.z) < spR && !foeIn(o.chain, a.team)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; break; }
   }
   const P = a.sub?.kind === 'bobber' ? planOf(b) : null, fighting = !!(b.target && b.seeTimer > 0);
   // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links
