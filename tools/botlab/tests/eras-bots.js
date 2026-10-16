@@ -97,7 +97,7 @@
         if (b._eraHold) hold = b._eraHold;
         if (E.S.clock.t < F && box(p)) inBox++;
         if (b._eraHold?.held && !held) held = { t, at: [+p.x.toFixed(1), +p.z.toFixed(1)], dCrates: +(crate.aabbMin.x - p.x).toFixed(1) };
-        if (inLaneAt === null && E.S.clock.t >= F && box(p)) inLaneAt = t;
+        if (inLaneAt === null && !arrive && E.S.clock.t >= F && box(p)) inLaneAt = t;   // (on its way: not where it wanders once there)
         if (!arrive && Math.hypot(p.x - goalP.x, p.z - goalP.z) < 1.6) arrive = t;
         if (tr.length < 400) tr.push([t, +p.x.toFixed(1), +p.z.toFixed(1)]);
       }
