@@ -1,275 +1,239 @@
-# Gulper Aquarium, art phase: report after fix round 4
+# Gulper Aquarium, art phase: report after fix round 5 (the last art round)
 
-Worktree `/Users/danielosling/Desktop/1/st-b5-aquarium`, branch `b5-stage-aquarium`. The round started at b87b4256 (code
-1efc3dab) and answers review 4 (`LEAD-REVIEW.json`, verdict redo: one major, two minors). The code head is **32b6c316**,
-the pictures a13b357c.
+Worktree `/Users/danielosling/Desktop/1/st-b5-aquarium`, branch `b5-stage-aquarium`. The round started at 9c0dd38b
+(code 32b6c316) and answers review 5 (`LEAD-REVIEW.json`, verdict redo) under LEAD-NOTES "After review 5". The code head
+is **aec8c0e1**, the stage art cards 938a2458, the pictures beb4cb23 and 0ada5d71.
 
 How it ran:
 - Everything ran locally, one Electron at a time under the shared SLOTS=3 lock (`BOTLAB_OUT` in inkwave-upstream),
-  WATCHDOG=900000 on the page tests. The Mac mini was not needed. The machine's load average was 10–30.
-- This round is dressing and shaders only, as the review asks: **no collider, no layout.js line, no face moved, no
-  re-bake, nothing on a walkable top.** `check-maps` counts the same pieces and both lightmaps still apply (1557 / 1553
-  rows, not stale).
-- `wip` is still on. The uncommitted "Mac mini is back" edit to `tools/botlab/jobs/batch5/COMMON.md` and the untracked
-  `LEAD-REVIEW.json` / `LEAD-REVIEWS-ALL.json` are not mine; I left them alone.
+  WATCHDOG=900000 on the page tests. The load average was 15–540 during the round.
+- The lightmap bake also ran locally (the lead allowed "locally or on the Mac mini"). Nothing was pushed and no Mac mini
+  job was sent.
+- `wip` is still on. The uncommitted edits to `COMMON.md` and `LEAD-NOTES.md` and the untracked `LEAD-REVIEW*.json` are
+  not mine; I left them alone. LEAD-NOTES gained a "Mac mini pipes on / off set" section during the round. I did not act
+  on its Zone Control bot item: it says that belongs to a bots round after this one.
+- Every picture was taken with a scratch copy of `shoot.cjs` (`scratchpad/aqr5/tools/shoot2.cjs`, round 4's). It waits
+  for each stepped frame's paint, so no picture holds a stale frame, and its PRE script turns the bots' brains off.
+- Before pictures come from a clean `git archive` copy of 9c0dd38b. After pictures come from the working tree.
 
-## 0. Fix round 4: each issue, what I did, and the proof
+## 0. The sweep, area by area: what was bare, what it is now
 
-All pictures are in `tools/botlab/jobs/batch5/stages/aquarium/out/art/`, each a JPEG under 300 KB:
-- `r4-pair-*` puts the round's starting head (left, b87b4256) and the result (right) side by side, from the same camera;
-- `r4-*` is the result at full size; `r4-before-*` the start, for the cameras the review names;
-- `-B` / `B` names are Bravo's twin, `dusk-` the dusk set; `r4-ink-*` the ink proof (below).
+**How the sweep was done.**
+- I listed every structure of Alpha's half from `layout.js` (a script dumps every tag with its bounds; the twins follow).
+- Each one was shot at 1.7 m over the floor a player walks past it from, day | dusk side by side: 99 views in 9 areas.
+- Each view is marked BARE (red frame) or ok on its row of the contact sheet.
+- Before: `out/art/r5-sweep-<area>[-n].jpg`. After: `out/art/r5-sweep-after-<area>[-n].jpg`, the same 99 views.
+- **40 views were BARE before; 0 are after.**
+- Everything marked was dressed in one pass. The review's list was the minimum; the sweep found more.
+- Before / after pairs: `r5-pair[-dusk]-<view>.jpg`, plus `-B` for Bravo's twin of every BARE view.
 
-I looked at every one. **One thing about the pictures first.** Under this machine's load, `shoot.cjs` wrote the
-*previous* shot's frame under the next shot's name (it waits a fixed 1.5 s for the frozen game's next paint): my first
-after-set had five byte-identical files under different names. Every picture of this round was taken with a scratch copy
-(`scratchpad/aqfix4/tools/shoot2.cjs`) that steps the frozen game and waits for that frame's paint, twice, per shot; no
-two files of a set are identical and none logged as stale. The before pictures were taken the same way from a clean
-copy of b87b4256 (`git archive`), not from the working tree. `tools/botlab/shoot.cjs` itself is shared and unchanged;
-the fix is worth porting (section 10).
+| Area | Bare before (the sweep's marks) | Now |
+|---|---|---|
+| **mid** (17 views, 7 bare) | The touch pool's **dais and step**: maroon slabs (review). The **helmet bed**: a plain bronze box. The four **viewing steps** round the Great Tank: cream slabs. | Dais and step: coral-cream cast stone in courses over a granite plinth with a brass line (two speed lines on the dais), flags on top with a brass strip at the edge, an **EXHIBIT · PLEASE KEEP OFF THE ROCKS** plate on each end. Helmet bed: cast stone round a bed of sea-worn pebbles, a DIVING HELMET · STANDARD DRESS · 1934 plate. Viewing steps: polished black-granite risers under a brass nosing, stone treads, a PLEASE DO NOT TAP THE GLASS plate on each riser (DESIGN §5.5 item 8). |
+| **gate** (12, 2) | The **shark-viewing bench**: a teak block. The Gate Terrace's west view: Penguin Point behind it. | The bench has teak slats between brass end posts, brass Deco ends and a SHARK WATCH plate. Penguin Point: below. |
+| **reef** (10, 1) | The Service Gate view: the pump sets. | Pump sets: below. Everything else in the Reef Hall read as dressed. |
+| **prom** (14, 6) | The **grand stair's flanks** (bare grey) and its **head's sawtooth** (review). The **deckchair stack**: a coral box. The W drum's **Kelp Balcony** face: a dark teak slab. The **Penguin Steps' flanks**: grey triangles. | Stair flanks (the grand stair, the Penguin Steps): white render in the deck stair's language, with a granite skirting and brass line, three faience speed lines down the rake, a brass string-course (props) and a lit porthole into the Jelly Gallery near the grand stair's head. The head has a **granite nosing** (layout, re-bake: §1). Deckchairs: eight folded chairs in layers, teak rails under muted striped canvas, the top chair's sling. Kelp Balcony: a raised deck face in the Lookouts' language (render, skirting, speed lines, a teak fascia over a brass nosing). |
+| **penguin** (13, 11) | Review 5's major: the **rock terrace's** faces and top, the **upper rock's** faces and top, the **basking rock**, the **ice pile**. Also the **keeper's hut's** three blank sides. | §1 (Penguin Point). The hut has a four-pane window with sea-green shutters on each side, and the PENGUIN FEEDS board and a hose reel on its back. |
+| **ticket** (8, 6) | The Ticket Hall's **plaza** (review), **west** and **east** faces: plain render. **Its stair's flank.** The **queue step**. | Faces: the render family (granite skirting, brass line, three faience speed lines). A **FERRY TO INKOPOLIS · SAILINGS EVERY 20 MINUTES** plate over the plaza bench and a TICKET HALL plate on the west face. Stair: a render flank with a string-course. Queue step: cast stone over granite. |
+| **pump** (7, 4) | Both **pump sets** (review): blue-grey boxes. | Painted machinery: a granite foot, a hazard band, a bolted sea-green bedplate, the motor's drum along each long face (cooling ribs, bolted flanges, a brass nameplate), a flanged end with a bolt circle and hub on the short faces, checker-plate covers. Props: a flanged pipe stub on each free end, a red handwheel and a pressure gauge on the aisle side. |
+| **plaza** (10, 1) | The **queue terrace's** face: a plain step. | Cast stone over a granite plinth. The rest (kiosks, trolleys, forklift, the Express stop, round 4's planters) read as dressed. |
+| **deck** (8, 2) | The Fin Pavilion's **flank wall beside each stair**: a bare 3.4 m wall, found during the sweep. | A raised deck face in the Lookouts' language, with a lit porthole into the foyer. |
 
-### 1. Major: the Sea Promenade Lookouts and telescope bays (both halves)
+## 1. LEAD-NOTES after review 5, item by item
 
-**Diagnosis.** The Lookout (layout `radBox(−141.5, r 21.4 → 24.4, 3.6 wide, top 3.6)`) and the telescope bay
-(`radBox(−145, r 27.6 → 31.0, 6.4 wide, top 3.0)`) are teak blocks. The teak surface draws its walls as render
-(`surfaces.js`: teak `onWall: 69`) tinted with the block's teak brown, and their speed lines fall at 0.62–0.90 m and
-4.62 m over the foundations (−2.0), so the 1.2 m and 0.6 m faces above the promenade had none: one near-black brown
-slab. **They are inkable cover** (no `noPaint`), so dressing them with props a few cm proud would hide the ink on them.
-I drew them **under the ink** in the level shader instead, as round 2 did for the deck stair's flanks.
+### Item 1: the complete sweep, then Penguin Point and the review's list (one pass)
 
-**What I built** (`floorart.js`, from `geo.js` `LOOKOUT` / `TBAY`; both halves through the shader's Alpha frame):
-- **The Lookout's sea face and both sides:** a raised Streamline deck — white render over a black-granite skirting
-  (16 cm) with a brass line; three faience speed lines wrapping all three faces; the teak deck's own rounded edge (the
-  level's 13 cm bevel) as a fascia board over a brass nosing strip; two portholes into the Jelly Gallery on the sea face
-  and one on each side (a moon jelly and a fish, lit from within at dusk like the stair flanks').
-- **A LOOKOUT plate** on the sea face between its portholes (navy enamel, brass letters; a prop 6 cm proud, the only
-  prop on these faces).
-- **The court face under SEA PROMENADE** (the balustrade block, r 21.4 → 21.8, top 4.5): a porthole of the balustrades'
-  size (Ø 0.6 + ring), three speed lines under the letters running round its sides and its back over the Lookout's deck
-  (with a skirting at that foot), the shadow under its cap; props: **render pilasters** at both ends and a **render
-  coping cap** under the brass handrail, the balustrades' own pieces (2.5 cm proud, the cap on its off-limits top).
-- **The telescope bay's 0.6 m riser:** a granite kerb with a brass line, a render riser with one speed line, the teak
-  edge over a brass nosing strip.
-- **The bevels** (30°–75° off the vertical, which neither the top nor the wall branch drew) as the teak edge.
+**Penguin Point** (review 5's major, both halves).
+- **How it is drawn.** All of it is inkable cover, so it is drawn in the level shader under the ink, as round 4 drew
+  the Lookouts.
+- **Where.** In `floorart.js`, from `geo.js` `PENGUIN`, through the shader's Alpha frame.
+- **The relief.** It goes through the level's own normal path (`gTexN`, as the texture library's relief does), so it
+  lights like real relief and flattens under ink.
 
-**Proof** (the review's cameras, both halves, day and dusk):
-
-| View | Pictures |
+| Piece | What it is now |
 |---|---|
-| lookoutN (−23.0, 4.1, −9.0) → (−17.9, 3.0, −14.3) | `r4-pair-lookoutN`, `r4-pair-lookoutN-B`, `r4-pair-dusk-lookoutN`, `r4-pair-dusk-lookoutN-B` |
-| lookoutS (−11.8, 4.1, −19.6) → (−17.9, 3.0, −14.3) | `r4-pair-lookoutS`, `r4-pair-lookoutS-B`, `r4-pair-dusk-lookoutS` |
-| prom-along (−24.5, 4.1, −4.5) → (−10.6, 4.0, −22.7) | `r4-pair-prom-along`, `r4-pair-prom-along-B`, `r4-pair-dusk-prom-along` |
-| the grand stair's foot looking up at SEA PROMENADE | `r4-pair-stairfoot-up`, `r4-pair-stairfoot-up-B`, `r4-pair-dusk-stairfoot-up` |
-| the Lookout's side from 3 m, its sea face (LOOKOUT plate), standing on it | `r4-pair-lookout-close(-B)`, `r4-pair-lookout-sea(-B)`, `r4-pair-lookout-top(-B)` |
-| the telescope bay's riser | `r4-pair-bay-side`, `r4-pair-bay-side-B`, `r4-pair-dusk-bay-side` |
+| The rock terrace's 1.2 m faces and the upper rock's 2.4 m faces | Cast faux-Antarctic rockwork in DESIGN §5.4's penguin rock (#8d8a84 … #bfc5c7): rounded stones in wandering courses, dark crevices, ledges lit and undersides shaded. A granite foot. A snow lip with icicles along every top edge. A few guano streaks and lichen spots. |
+| The upper rock's plaza face | The **PENGUIN POINT** plaque (a prop, 4 cm proud): a navy board in a stepped brass frame, the name, FEEDS 11:00 · 15:00, an emperor penguin in enamel. |
+| The tops | Pale rock slabs with wandering cracks, snow drifted toward the glass and into the cracks, guano splashes, and four trails of penguin footprints to the glass. The rounded edges are snow. |
+| The basking rock | A rounded boulder: big weathered stones, its faces turning away toward their corners and over its top, strata, lichen. Props: a boulder pair wrapping each corner (7.8 cm out at most, below its 2.2 m top) and four low lumps at its foot. |
+| The ice pile | Stacked ice blocks: blue-white, deeper blue toward each block's middle, frosted edges, dark seams, a fracture and bubbles, pillowed relief. Its top is frosted blocks. |
 
-- **Under the ink:** `r4-ink-lookout-close`, `r4-ink-lookoutN`, `r4-ink-lookout-sea`, `r4-ink-bay-side` — both teams'
-  ink splatted on the faces (a PRE scene, `scratchpad/aqfix4/tools/inkproof.js`) covers the art.
-- **The art test** (section 8, below): the sea face reads render [192, 175, 151] over a skirting [32, 33, 39] (Alpha,
-  sunlit) and [55, 69, 87] over [1, 12, 26] (Bravo, shaded); at b87b4256 it read [119, 90, 58] over [115, 87, 54], one
-  slab. Ink splatted on it moves the pixel by 205 / 244 (of 765). The bay's riser reads render over its kerb (it read one slab).
-- No prop of the promenade builder stands more than 8.2 cm out of the Lookout or the bay, or on their walkable tops (the
-  8.2 cm is round 2's coping joint pilaster at the Lookout's corner).
+**The rest of the review's list:** the pump sets, the dais and step, and the Ticket Hall's plaza face, as in §0.
 
-### 2. Minor: the planters in front of both spawns
+Proof (both halves, day and dusk):
 
-**Diagnosis.** The fish topiary (`rnd()`: four spokes stepping down 9 cm each), the queue-barrier planter and the
-spawn decks' two planters are also **inkable** cover, drawn with the mapkit's planter pattern (a grass rectangle per top
-face inside a 0.24 m rim — hence the topiary's "two green rectangles split by a seam" — and the block's colour on the
-faces: the deck planters' `#9aa57a` made them green boxes). The topiary's existing FISH TOPIARY plate (round 1) stood at
-0.83π, across its −45° face: half sunk into it, its other end 9.5 cm proud (the new art test caught it).
-
-**What I built** (the faces and tops in `floorart.js`, from `geo.js` `PLANTERS`; the props in `dress.js`
-`aquarium_planterdeco`; both halves). I gave the Gate Terrace's two bollard planters (the same `rnd()` pieces, plates
-SEA HOLLY) the same treatment, so the stage's planters match:
-- **Faces:** cast cream stone in ashlar courses over a black-granite plinth with a brass line; two faience speed lines
-  round the body; a smooth, lighter **coping band** whose upper part is the block's own rounded edge (the level bevels it
-  5–13 cm) with a groove and its shadow under it — the "moulded coping" without a prop over the ink.
-- **Tops:** one planted bed across all of a round planter's stepped spokes (world-space, so no seam), inside a cast-stone
-  rim: sea holly — two layers of glaucous leaves in clumps over dark soil and steel-blue thistle heads in their ruffs; the
-  spokes' risers inside the bed are drawn as the planting's side. **The fish topiary's bed is clipped into a box-hedge
-  fish** (a darker, rounded clipped fish with a forked tail, fins, a gill line and an eye) on its top step: the plate is
-  true. The bevels between tops and faces are drawn as the coping.
-- **Props** (`aquarium_planterdeco`): cascades of trailing leaves spilling over the coping and down every face (three
-  strands a spot, 1–3 spots a face; every leaf within 5.8 cm of its face and under the walkable top), a sea-holly head
-  in a ruff on every other spot; brass plates — SEA HOLLY on the deck planters' faces toward the pad and toward mid,
-  SEA HOLLY and FERRY QUEUE on the queue-barrier planter. The topiary's plate moved square onto its −45° face.
-
-**Proof:**
-
-| View | Pictures |
+| | Pictures |
 |---|---|
-| topiary / topiaryB (cams2.json) | `r4-pair-topiary`, `r4-pair-topiaryB`, `r4-pair-dusk-topiary` |
-| topiaryUp (the bed and its fish from above) | `r4-pair-topiaryUp` |
-| queuePlanter / queuePlanterB | `r4-pair-queuePlanter`, `r4-pair-queuePlanterB` |
-| plazaWide / plazaWideB | `r4-pair-plazaWide`, `r4-pair-plazaWideB`, `r4-pair-dusk-plazaWide` |
-| the spawn deck's planters close | `r4-pair-deckplanter`, `r4-pair-deckplanterB`, `r4-pair-deckplanterL`, `r4-pair-dusk-deckplanter` |
-| the play camera (Alpha's pad) | `r4-pair-play`, `r4-pair-dusk-play` |
-| from behind each pad toward its gate (both halves) | `r4-pair-spawnview`, `r4-pair-spawnviewB`, dusk the same |
+| Review 5's cameras | `r5-pair-rv-penguin-face(-B)`, `-rv-upperrock(-B)`, `-rv-basking(-B)`, `-rv-icepile(-B)`, `-rv-gate-terraceW`, `-rv-penguin-terrace(-B)`, `-rv-pumpset(-B)`, `-rv-court-pool-E`, `-rv-tp-prom`, `-rv-ticket-front(-B)`, with dusk pairs `r5-pair-dusk-rv-*` |
+| The sweep's views | `r5-pair-penguin-face`, `-penguin-faceN`, `-upperrock(-S, -N)`, `-upper-top`, `-penguin-terrace`, `-basking`, `-icepile`, `-hut(-2)`, `-pumpset(2)`, `-pump-aisle`, `-pump-south`, `-pool-E`, `-dais-N/-S/-W`, `-ticket-front/-S/-W/-E`, all with `-B` and `dusk` |
+| Ink over the art | `r5-ink-*`: both teams' ink splatted on the rockwork, the terrace top, the ice pile, a pump set, the dais, the Ticket Hall, the grand stair's flank and the deckchairs, day and dusk, both halves. The ink covers the art. |
+| Other modes | `r5-modes-tower-*`, `r5-modes-zones-*`: the Tower Command and Zone Control builds draw the new art, with 0 console warnings. |
 
-- **Under the ink:** `r4-ink-topiary`, `r4-ink-topiaryUp`, `r4-ink-queuePlanter`, `r4-ink-deckplanter`.
-- **The art test:** the deck planters read cast stone over a dark plinth and not green, both halves (at b87b4256: green
-  over green, [29, 58, 37] over [18, 45, 27]); every prop of these builders within 6.4 cm of a planter's face, nothing on
-  a top.
-- **The play camera from Bravo's pad:** `shoot.cjs`'s `play` follows the local player, who is Alpha's. For Bravo I used a
-  fixed camera from behind its pad (`spawnviewB`, and its Alpha twin `spawnview`), which has the deck planter in frame.
+### Item 2: the nits
 
-### 3. Minor: the touch pools' rockery
+| Nit | What I did | Measured |
+|---|---|---|
+| **The Lookout portholes' dusk glow** | At dusk the glow is now warm white: the porthole picture's own luminance, lit warm. Before, it was the picture's blue-green times the lamp. The stair flanks', the Lookouts' and every new porthole share the term. | Brightest half of the glass at dusk: hue 177–189 and saturation 0.24–0.28 before; hue 32 and saturation 0.31 after (lookoutN, and the deck stair's against the grand stair's). `r5-pair-dusk-lookoutN`, `r5-pair-dusk-deckstair-E`. |
+| **The topiary's spokes** | The spokes' risers inside the bed and their rounded edges are now drawn as the bed's own planting at its tone. Before, they were dark soil under a darker leaf and a flat dark green: straight cuts across the bed. | `r5-pair-topiaryUp`. From above, the steps now read as one bed with soft shadow lines, not dark cuts. A faint line remains where the 9 cm steps meet. |
 
-**What I built** (`dress.js` `aquarium_touchpool`, both halves; the pool block is off-limits, so props are right here):
-- **The skin is cast rockwork:** courses of rounded stones (a jittered running bond, about 0.42 × 0.28 m) domed up to
-  7.8 cm proud, deep dark crevices between them, the stones' tops lit as ledges and their undersides shaded, easing flat
-  round the windows, portholes and sign; trimmed to its face (round 3's ran 3.5 cm past the corners).
-- **The corners:** a rounded boulder pair wraps each vertical corner over both faces — a squircle column centred inside
-  the block (reaching 1.23× further along the diagonal than across, so it covers the corner while standing at most
-  7.8 cm out of either face), split by a crevice, domed 0.22–0.25 m over the rim. The four thin fins are gone.
-- **The rim:** ten heavier boulders, three on each long face and two on each end, each placed by its own measured reach
-  to stand 7.8 cm proud, their tops 0.27–0.29 m over the rim (round 3: 0.12–0.15).
-- **The low chips** (ten flat boulders on the faces) are dropped. The handrails stop short of the corner boulders.
+### Item 3: the grand stair's granite nosing (the lead's call) and the re-bake
 
-**Proof:**
+**The block** (`layout.js`, both halves): `radBox(−152, r 20.95 → 21.5, 5.99 wide, top 2.485)`, stone, `paint: false`.
 
-| View | Pictures |
+| Number | Why |
 |---|---|
-| court-pool-E / court-poolB-W (the ends from the court floor) | `r4-pair-court-pool-E`, `r4-pair-court-poolB-W`, dusk the same |
-| the lead's NE-eye camera and its Alpha twin (0.5 m from the end) | `r4-pair-court-NE-eye`, `r4-pair-court-SW-eye`, `r4-pair-dusk-court-NE-eye` |
-| tp-arch / tpB-arch | `r4-pair-tp-arch`, `r4-pair-tpB-arch`, `r4-pair-dusk-tp-arch` |
-| the deck stair's foot, the promenade's foot, the arch face, from above, at child height | `r4-pair-tp-stair(-B)`, `r4-pair-tp-prom(-B)`, `r4-pair-tp-south`, `r4-pair-tp-top`, `r4-pair-tp-child` |
-| the corners close (fov 50) | `r4-pair-tp-corner-SE`, `r4-pair-tp-corner-NE`, `r4-pair-tpB-corner` |
+| r 20.95 | The promenade cells' corners reach r 20.96 in the stair's mouth. |
+| 5.99 wide | It fits between the balustrade and the coping and touches neither: their inner corners stand at ±3.0 off the axis and their sides diverge from it. |
+| Top 2.485 (8.5 cm proud) | It stays ≥ 8 cm off the cells' and the ramp's 2.4, check-maps' z-fight rule. |
+| 0.27 m lip over the ramp at r 20.95 | Under `PLAYER.stepUp` (0.35). climb-audit is unchanged. |
 
-- **The art test:** every corner, both halves, has rock 7.2–8.3 cm out of both faces and rising 0.22–0.25 m over the
-  rim; the rim's rocks rise 0.27–0.29 m over it on all eight sides (at b87b4256: 0.12–0.15, and two corners rose 0.09);
-  the farthest dressing vertex is still within 8.5 cm of the block (0.084, the rail's ball end).
-- **Two things I fixed on the way,** both caught in my own pictures and tests: a thin vertical line down each corner
-  boulder (the polygon's chord between two vertices cut the squircle's corner and the block's corner showed; a column of
-  vertices now runs down the diagonal itself, and the crevice is cut everywhere but over the corner), and the boulders
-  reaching 8.6 cm (the profile's swell and the lumps together; the art test's 8.5 cm guard).
-- **What is left:** at 0.5 m (the NE-eye camera) a corner boulder fills the frame as one smooth, mottled rock: the
-  stage's props are untextured, so close up it is a big soft boulder, not a detailed one. In the fov-50 corner
-  close-ups the boulders' self-shadows show as angular patches (the shadow map's resolution); at play distance they
-  read as mottling.
+**What it does.** The cells under the nosing now merge, so check-maps counts 1774 / 1766 pieces (were 1776 / 1768).
+The grand stair's flank art ends under it.
 
-### 4. Re-run (what this round could have broken)
+**Re-bakes:**
+- `baked.js` (bake-tiles.mjs: the promenade and ground layers changed).
+- The AO lightmaps (`bake.cjs`, locally):
+
+| Lightmap | Hash | Rows | Time |
+|---|---|---|---|
+| aquarium | 5938d1d0 | 1554 / 2048 | 91.7 s |
+| aquarium.tower | d2b73cc2 | 1552 / 2048 | 166.9 s |
+
+**Re-runs** (§2): check-maps ok / ok; climb-audit 144 / 0; stage-audit turf 3/3 and tower 4/4, both "lightmap applied",
+not stale; cover-map unchanged.
+
+**The sawtooth is gone** (pictures):
+- `r5-pair-rv-court-promwall`, `r5-pair-rv-stairtopB`, `r5-pair-rv-stairfoot-up(-B)`, by day and at dusk;
+- also `r5-pair-stairtop` (from the promenade), `r5-pair-promwall`, `r5-pair-dusk-lookoutN`.
+
+### Item 4: the stage art cards (last)
+
+**How they were made.** `assets/stages/aquarium-{day,dusk}{,-sm}.webp` were re-made after everything above:
+- the same hero camera (`layout.art`) and scene as round 2 (`scenes/aquarium-hero.js`: tangerine-cobalt, a Bravo rider
+  up the W drum's Kelp Line, an Alpha rider on its run over the promenade);
+- 3840 × 2160 on the re-baked lightmaps, then `cwebp -q 86` at 1920 × 1080 and 480 × 270.
+
+**What changed in frame.** The old card's round-2 touch pool and dark Lookout are gone; the rockery, the dressed Lookout,
+the helmet bed and the deckchairs show.
+
+**Pictures:**
+- `r5-card-day`, `r5-card-dusk`: the new cards;
+- `r5-card-pair-day/-dusk`: the old card left, the new right;
+- `r5-card-crops`: both riders read as squids in their glows and GULPER AQUARIUM is clear, by day and at dusk.
+
+### Items 5–7
+
+| Item | Status |
+|---|---|
+| 5. Exit camping | Not this round's (the lead's Mac mini set). This round's one Turf War match reads 2.9× (below). |
+| 6. Triangles | Accepted before this round; this round's addition is in §2. |
+| 7. The boss | Accepted; not re-run (no nav, collider or boss input changed except the nosing, which is far from the boss's ground). |
+
+## 2. Re-runs at the code head
 
 | Check | Result |
 |---|---|
-| `node build/check-maps.mjs aquarium aquarium.tower` | ok / ok, 1776 / 1768 pieces (unchanged) |
-| tests/aquarium-art.js | **28/28** at the code head (the 22 old checks and section 8's 6); 162 programs link, glError 0, no console errors |
-| the same section 8 at b87b4256 (scratch copy with the round's numbers inlined) | 23/28: the Lookouts, the bays, the deck planters, the stand-off (the topiary's sunk plate) and the rockery fail there; the ink check is a guard and passes on a plain face too |
+| `node build/check-maps.mjs aquarium aquarium.tower` | ok / ok, **1774 / 1766** pieces (the nosing's cells merged; were 1776 / 1768) |
+| tests/aquarium-art.js | **36/36**: the 28 earlier checks and section 9's 8. 136 programs link, glError 0. |
+| Section 9 at 9c0dd38b (a copy of the head with only geo.js's new numbers added) | **29/36**: 7 of the 8 new checks fail there (rockwork, the terrace top, the ice / pumps, the dressed faces, the deckchairs, this round's props, the nosing). The ink check is a guard and passes on a plain face too. |
+| stage-audit turf | **3/3**: lightmap applied (aquarium, 1554 rows, not stale); spawn → mid 6.53 / 6.75 s (unchanged); no climb barred |
+| stage-audit tower | **4/4**: lightmap applied (1552 rows, not stale); 155 m, 100 s to the goal |
 | climb-audit | 144 climbs, 0 barred (unchanged) |
-| stage-audit turf | 3/3: lightmap applied (1557 rows, not stale); spawn → mid 6.53 / 6.75 s |
-| stage-audit tower | 4/4: 1553 rows, 155 m, 100 s to the goal |
-| Tower Command, Zone Control and Boss Battle builds | load and draw the new art; 0 console warnings or errors in each |
-| dusk | the Lookouts' portholes glow like the stair flanks' (accepted in round 2); nothing else new lights up |
+| cover-map | 98 %, largest open circle 12.2 m at (7.5, −67.5) (unchanged) |
+| tests/pipes.js | **91/92**. See the next row. |
+| The failing pipes check: "cam: the rider is in view on ≥ 90 %" | The Gulper Run reads 0.868 in both directions (seen 92, landing 33, hidden 17, unseen 19). **It reads exactly the same at 9c0dd38b** (`only=cam` run on the clean copy: 0.868, the same frame counts), so it predates this round. The unseen frames are frame 0 of the suck, frames 32–38 of the entry ride (in frame, sight line blocked) and the last 11 frames after landing. Round 4 did not run pipes.js; I have not traced which earlier round moved it. |
+| Turf War ×1, 180 s, PAGEQ=pipestats | Turf 32.2 / 37.2. Stuck 0.1 % (longest 0.75 s). Splats 38. Rides 14 (0.58 per bot-minute). giveUps 0, longest push at a mouth 0.68 s. High-ground arrivals by pipe 20 % (6/30, inside 10–35 %). Camping 0.154 per landing against a base of 0.0528, so 2.9×: 2 deaths of 13 landings, at arch~:B and kelp~:A; the lead's cooldown step is due at integration. The only console lines are the 7 pipestats lines. |
+| shoot.cjs REPORT (at load) | See the next table. |
 
-Not re-run, because nothing they measure changed (no collider, no layout, no nav, no pipe, no net code): cover-map, the
-boss check, pipes / pipes-audit / net-pipes, tower-check and tower-match, bot matches, balance sets, the dusk glow probe.
+| shoot.cjs at load | calls | tris | cpuRender | loadMs |
+|---|---|---|---|---|
+| Aquarium, day | 110 | 1.10 M | 2.73 ms | 7.0 s |
+| Halyard, day | 169 | 1.49 M | 2.28 ms | 7.7 s |
+| Aquarium, dusk | 107 | 1.09 M | 2.66 ms | 7.7 s |
+| Halyard, dusk | 151 | 1.44 M | 2.26 ms | 7.8 s |
 
-**Performance.** No draw call added: every new prop rides an existing material bucket (`propMeshes` 6 before and after),
-the rest is the level shader (a few position tests per wall / top fragment, the leaf pattern only on planter tops).
-Triangles, counted exactly with a headless build of the stage's whole dressing
-(`scratchpad/aqfix4/tools/proptris.js`, both halves):
+- Each stage's REPORT is from its own load camera, so it only compares like with like loosely. cpuRender varied ±20 %
+  on this shared machine.
+- `propMeshes` is 6, as before: **no draw call added.** Everything new is in the level shader or rides an existing prop
+  material bucket.
 
-| | b87b4256 | now | Δ |
+**Triangles.** Counted with a headless build of every placement, before and after:
+
+| Props, both halves | 9c0dd38b | now | Δ |
 |---|---|---|---|
-| all props | 394,770 | 414,034 | +19,264 (+4.9 %) |
-| touch pools | 23,288 | 30,584 | +7,296 |
-| planters (the new builder) | 0 | 11,140 | +11,140 |
-| the promenade builder (LOOKOUT plate, pilasters, cap) | 16,516 | 17,344 | +828 |
+| all | 414,034 | 463,078 | **+49,044 (+11.8 % of the props)** |
+| the plates (14 per half; mostly their letters) | 0 | 29,104 | +29,104 |
+| the keeper's hut (windows, shutters, board, reel) | 3,196 | 7,628 | +4,432 |
+| the basking rock's lumps | 0 | 5,920 | |
+| the pumps' pipework | 0 | 4,840 | |
+| the PENGUIN POINT plaque | 0 | 4,364 | |
+| the stairs' string-courses | 0 | 384 | |
 
-That is about 1.2 % of a high-mode frame (1.5–1.6 M). I trimmed it once (the skin's grid from 7.5 to 8.5 cm, the corner
-columns from 18 to 16 sides, the in-pool rocks to icosahedron detail 1). The rest of the planters' cost is mostly the
-plates' letters. The lead's call; the triangles were already 6–12 % over Halyard's (round 3).
+That is about 3 % of a high-mode frame (1.5–1.6 M), on top of the accepted +6–12 % over Halyard. If the lead wants it
+back, the cheapest lever is the eight viewing-step plates, about 8 k triangles; I left them in.
 
-## 5. What I built, against the user's words ("Halyard is the bar", "every structure is something")
+## 3. Decisions where the notes left a gap
 
-The whole stage, rounds 1–4, lives in `src/world/stages/aquarium/`: `kit.js`, `arch.js`, `dress.js`, `looks.js`,
-`far.js`, `floorart.js`, `props.js`, `surfaces.js`, `murals.js`, `backdrop.js`, `layout.js`, `geo.js`, `baked.js`,
-`tubeway.js`. There is one hook in the package's own engine module (`src/game/pipes.js` `levelMaterial`), from round 1.
+1. **Pieces the review did not list were dressed** where the sweep marked them: the viewing steps, the helmet bed, the
+   shark bench, the deckchairs, the Kelp Balconies, the stairs' flanks, the Ticket Hall's west / east faces and its stair,
+   the queue step and terrace, the hut's sides, the pavilion's flank walls. The notes say "dress everything marked".
+2. **Everything on inkable cover is drawn under the ink** (round 4's rule). Props stand only where something has to be
+   proud of a face: plates, the plaque, the basking rock's lumps, the pumps' stubs and wheel, the string-courses, and the
+   hut's windows (the hut is off-limits).
+3. **The basking rock is a boulder "read" on a square block.** The shader turns its faces' normals away toward the corners
+   and over its top, and corner boulders stand 7.8 cm proud. Its outline from the side is still a rounded square pillar
+   2.2 m tall, not a free-form rock; changing that needs a collider change, which the notes forbid. No sunning-penguin
+   silhouette (optional in the review).
+4. **The ice pile's "translucency"** is a tint (deeper blue toward each block's middle, bubbles and a fracture inside), not
+   real see-through: it is a solid inkable block.
+5. **The pump sets' detail is painted** (drum, flanges, nameplate in the shader). A modelled drum would sit over inkable
+   faces. Only the stubs, handwheel and gauge are props.
+6. **The grand stair's nosing** is the review's first option (a block, like penguin-nosing), not clipping the cells. It is
+   0.5 m deep (r 20.95 → 21.5), so its court edge sits where the cells ran out.
+7. **The deck ramp also got the stairs' string-course** for consistency, though the sweep marked its timber skirting ok.
+8. **The Kelp Balcony's** dressed faces are its outer face and its segments' sides, as the promenade sees them.
 
-Round 4 turns the last bare pieces the review found at eye level into something:
-- **The Lookouts** are raised Streamline decks over the Jelly Gallery, the **telescope bays** render risers on granite
-  kerbs, the **SEA PROMENADE face** one of the balustrades;
-- **the planters** are Deco planters of sea holly, the fish topiary has its fish;
-- **the touch pools** are rockeries of cast stones and boulders round their brass-framed windows.
+## 4. Online and bots
 
-Everything from rounds 1–3 stands as their reports described it: the gatehouses, the gantry and Bathysphere No. 1, the
-gulper heads, the Great Tank, the dressed deck-stair flanks, the Reef Hall and its lit reef, the kelp drums, the
-promenades with their closed balustrade joints, the Ticket Hall, the Pump Hall, Penguin Point, the piers, the Fin
-Pavilion's fascia; the water and the swimmers in one draw call (eagle rays, white-bellied blacktips), the traced jelly
-columns, the kelp with bladders; the surfaces (67–69), murals 4–11, the floor art; the dusk set (the Deep Dome tube dim);
-the stage art (accepted in review 3).
+- **Nothing that crosses the wire changed.** No record, rule or pipe changed. The one level block added (the nosing) is in
+  the layout every client builds. The new art is built from geo.js numbers and placements on every screen.
+- **Bots** see the nosing as a 0.27 m lip at the stair's head, under stepUp. Nav and climb-audit are unchanged, spawn →
+  mid is unchanged, and the match ran with stuck 0.1 %.
+- **Not touched:** LEAD-NOTES' new Zone Control bot item (bots wedged at the Great Tank's rim, pipes on). Its notes put it
+  in a bots round after this one.
 
-## 6. Decisions where the request left a gap
-
-1. **The Lookouts', bays' and planters' faces are drawn under the ink, not dressed with props.** They are inkable cover;
-   props a few cm proud would hide the ink on them (and on the walls squids swim up). The review's "within about 8 cm"
-   props are kept to what has to stand off a face: the LOOKOUT and planter plates, the balustrade's pilasters and cap
-   (the balustrades' own), and the trailing leaves. The ink proof pictures and the art test show the ink covers the art.
-2. **The "brass nosing at the deck edge" is painted, not a bar.** The Lookout's and bay's top edges are the level's 13 cm
-   rounded bevel: a bar at the edge would float in front of the curve. The teak edge is drawn over a brass strip.
-3. **The planters' "moulded coping band" is the block's own rounded edge plus a painted band and groove,** for the same
-   reason as 1.
-4. **The fish topiary keeps its name:** its bed is clipped into a fish (under the ink, as floorart does), the review's
-   first option. A fish standing above the walkable top would hide players without blocking shots.
-5. **The Gate Terrace's two bollard planters got the same dressing,** though the review did not list them: they are the
-   same `rnd()` pieces and would otherwise be the last plain ones.
-6. **Bravo's play camera** is a fixed camera from behind its pad (section 2).
-7. **The touch pools' rim boulders rise to 0.29 m over the rim** (round 3: 0.15), as the review's "more mass above the
-   off-limits top" asks. They sit on the off-limits top in lumps with gaps; a player on the dais behind the pool shows
-   over them, one on the court floor is hidden by the 2.0 m block anyway.
-
-## 7. Online and bots
-
-- No record, wire format, rule or collider changed. Everything new is built from the layout on every screen (the shader
-  from `geo.js`'s numbers, the props from the placements), so every client draws the same.
-- Bots and the boss see the same stage: no nav input changed.
-
-## 8. Tests
-
-As section 4. The new checks, `tests/aquarium-art.js` section 8:
-- **The Lookouts' sea faces are dressed** (render over a granite skirting, faience speed lines), both halves.
-- **Ink splatted on a Lookout's face shows over its dressing** (the art is under the ink).
-- **The telescope bays' risers are dressed** (render over a granite kerb), both halves.
-- **The spawn decks' planters are dressed and not green** (cast stone over a granite plinth), both halves.
-- **The props of the promenade and planter builders** (a headless build of those placements alone, both halves) stand
-  within 8.5 cm of the Lookout's, the bay's and every planter's faces, and nothing stands on their walkable tops.
-- **The touch pools' rockery wraps every corner** (≥ 4 cm out of both faces, ≥ 0.15 m over the rim) **and rises ≥ 0.2 m
-  over the rim on every side**, both halves.
-
-## 9. Commits and files
-
-**Round 4 commits:**
+## 5. Commits and files
 
 | Commit | What |
 |---|---|
-| 9aa59606 | The Lookouts, their court faces, the telescope bays and the planters' faces and beds in the level shader (floorart.js, geo.js numbers); the LOOKOUT plate, the balustrade's pilasters and cap (arch.js) |
-| 7cdb9dbf | The planters' trailing planting and plates (dress.js, props.js); the touch pools' rockwork skin, corner boulders and rim boulders |
-| a45f96d2 | The corner boulders held to 7.8 cm; lighter skin and columns; the topiary's plate square on its face |
-| 87d5ec63 | Tests: aquarium-art.js section 8 |
-| 32b6c316 | The corner boulders' vertex column on the diagonal (no thin line down the corner) |
-| a13b357c | (scratch) pictures |
+| cd0e9bf0, 0ada5d71 | (scratch) The before sweep sheets `r5-sweep-*` (99 views, 40 BARE; the second adds two views found during the sweep). |
+| 1398523c | The sweep's bare pieces drawn under the ink (`floorart.js`, `geo.js` numbers), and both nits. |
+| 4182e840 | The props (`dress.js`: plate, PENGUIN POINT plaque, basking lumps, pump pipework, rake trim, the hut's windows; `props.js` placements). |
+| b471f9d4 | The grand stair's granite nosing (`layout.js`), `baked.js`, both AO lightmaps re-baked. |
+| aec8c0e1 | `tests/aquarium-art.js` section 9. Its message says 10 checks; it is 8. |
+| 938a2458 | The stage art cards. |
+| beb4cb23 | (scratch) The pictures. |
 
-- This report is committed as (scratch).
-- **Shared files touched:** none. Everything is in `src/world/stages/aquarium/` (`floorart.js`, `geo.js`, `arch.js`,
-  `dress.js`, `props.js`) and `tools/botlab/tests/aquarium-art.js`.
-- **For the integrator:** `assets/stages/manifest.json` still has no aquarium entry; the game doesn't read it.
+**Files, for the integrator.**
+- **Shared files touched: none.** Everything is in `src/world/stages/aquarium/` (`floorart.js`, `geo.js`, `layout.js`,
+  `baked.js`, `dress.js`, `props.js`), `assets/lightmaps/aquarium{,.tower}.{png,json}`,
+  `assets/stages/aquarium-*.webp` and `tools/botlab/tests/aquarium-art.js`.
+- `assets/stages/manifest.json` still has no aquarium entry; the game doesn't read it.
 
-## 10. Unfinished, uncertain, worth knowing
+## 6. Unfinished, uncertain, worth knowing
 
-- **Triangles +19.3 k** (props, both halves; about 1.2 % of a frame), on top of round 3's 6–12 % over
-  Halyard. No draw call added. The lead's call.
-- **`tools/botlab/shoot.cjs` writes stale frames under load** (section 0). Pictures in earlier rounds taken on a busy
-  machine may carry a neighbour's frame under their name (review 4's "cameras that landed inside geometry" may be this).
-  My scratch copy's two-step wait is a small change to port into the shared tool; I did not touch it.
-- **The stage art card** (accepted in review 3) still shows the old Lookout at its left edge as a dark block. Not re-made: it was accepted and the review did not ask. One `shoot.cjs` + `cwebp`
-  run if the lead wants it.
-- **The grand stair's top tread:** the promenade's teak cells zigzag over it (`r4-pair-stairfoot-up`, bottom left), the
-  defect round 1 fixed on the Penguin Steps with a granite nosing block. That needs a layout block and a re-bake, which
-  this round forbids; not in the review.
-- **The corner boulders close up** are smooth soft rocks, and the shadow map draws angular patches on them (section 3).
-- **The planters' trailing leaves and plates** are the only things over the ink on those faces: a few leaves and a plate
-  per face hide the ink under them.
-- **Kept from earlier rounds:** the bathysphere's plaque is blank; there is no Gulper rider in the stage art; the boss
-  check's "home ground is the Ocean Court" (the lead's call) and, in some runs, "stays on its home ground" (fight
-  variance, round 3); camping 2.05× the base rate in round 3's one match (the Mac mini's larger sample is still owed).
+- **tests/pipes.js 91/92**: the Gulper Run's ride camera keeps the rider in view on 86.8 % of frames (bar 90 %). It is
+  identical at the round's starting head, so it predates this round, but someone should own it before merge.
+- **Triangles +49 k** (props, about 3 % of a frame, mostly the plates' letters). No draw call added. The lead's call.
+- **Camping 2.9×** in this round's one match (single-match noise; the lead's 2.5 → 3.5 s cooldown is due at integration).
+- **The basking rock's outline** stays square (decision 3).
+- **The topiary's steps** still show a faint line where the 9 cm steps meet, now inside one bed.
+- **Not re-run:** the boss check, tower-check / tower-match, net tests and the dusk glow probe. Nothing they measure
+  changed beyond the nosing.
+- **The ink-proof camera on the pavilion's flank wall** missed its splat (the splat point fell inside the block). The
+  rockwork, dais, Ticket Hall, stair flanks, pump sets, ice pile and deckchairs show the ink over the art, and section 9
+  checks it on the rockwork by pixel.
+- **`tools/botlab/shoot.cjs`** still writes stale frames under load. Round 4's two-step wait is in the scratch copy; the
+  shared tool is unchanged.
+- Kept from earlier rounds: the bathysphere's plaque is blank; the boss check's "home ground is the Ocean Court" (the
+  lead's call).
