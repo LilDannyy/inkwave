@@ -3,7 +3,7 @@
 //                snapshot(rec) the 10 Hz 's' / 1 Hz 'S' snapshot, on the host's event timeline
 //                toGuest(nid, msg)  'kd' (a claim refused while it stays free)
 //                samples(a, since) → a remote carrier's REAL samples played since `since` ([{ t, x, y, z, alive }]), or null
-//   guest side   claim(nid, ts, since, run, late) 'kc' · decline(nid, q) 'kx' · reportRate(nid, rate, why, half, zone) 'kr' ·
+//   guest side   claim(nid, ts, since, run, late) 'kc' (fs / fr / fl / fo) · decline(nid, q) 'kx' · reportRate(nid, rate, why, half, zone) 'kr' ·
 //                reportFoot(nid, x, y, z, half, zone) 'kf'  (shell hits ride the guest's tick: objTargets.takeHits → 'kh')
 //   both         on('claim' | 'decline' | 'rate' | 'foot' | 'hits' | 'refused', fn) · now() (the claim clock) · isHost
 // LoopWire: offline — a host whose records go nowhere, except (tests) to a follower engine `delay` s later, and whose
@@ -23,6 +23,9 @@ export class KarpWire {
   hostNow() { return this.now(); }
   // [karp-face] review round 2: the host's id (a clock read from it stays that host's clock after a migration)
   hostId() { return null; }
+  // [karp-face] review round 3: the floor offset to a peer (s) — receive − send at its fastest: the two clocks'
+  // difference plus the fastest one-way trip from it — or null (offline, not known yet)
+  off() { return null; }
   record() { this.log.rec++; }
   snapshot() { this.log.snap++; }
   toGuest() {}
@@ -60,7 +63,15 @@ export class NetWire extends KarpWire {
   snapshot(rec) { super.snapshot(); if (this.nm && G.netm === this.nm && this.nm.isHost) this.nm._rec(['ks', rec]); }
   toGuest(nid, msg) { const a = this.nm?.byNid.get(nid); if (a && a.owner) this.nm.s.tr?.sendTo(a.owner, { k: 'kd', nid, ...msg }); }
   _toHost(d) { const h = this._hostId(); if (h && !this.nm.isHost) this.nm.s.tr?.sendTo(h, d); }
-  claim(nid, ts, since, run = 0, late = null) { super.claim(); this._toHost({ k: 'kc', nid, ts: Math.round(ts * 1000) / 1000, ...(Number.isFinite(since) ? { fs: Math.round(since * 1000) / 1000 } : {}), ...(run > 0 ? { fr: Math.round(run * 100) / 100, ...(Number.isFinite(late) ? { fl: Math.round(late * 1000) / 1000 } : {}) } : {}) }); }   // ([karp-face] fs: free since, its own screen; fr: already running in then, 0–1; fl: how late it heard of the burst)
+  // ([karp-face] fs: free since, its own screen; fr: already running in then, 0–1; fl: how late its 'free' moment was after
+  // the burst on the host's clock read through ITS floor offset (fo) — the host adds half of fo + its own floor offset to
+  // this guest (the two fastest one-way trips), which fl leaves out)
+  claim(nid, ts, since, run = 0, late = null) {
+    super.claim();
+    const fo = this.off(this._hostId());
+    this._toHost({ k: 'kc', nid, ts: Math.round(ts * 1000) / 1000, ...(Number.isFinite(since) ? { fs: Math.round(since * 1000) / 1000 } : {}),
+      ...(run > 0 ? { fr: Math.round(run * 100) / 100, ...(Number.isFinite(late) ? { fl: Math.round(late * 1000) / 1000 } : {}), ...(Number.isFinite(late) && fo != null ? { fo: Math.round(fo * 1000) / 1000 } : {}) } : {}) });
+  }
   decline(nid, q) { super.decline(); this._toHost({ k: 'kx', nid, q }); }
   reportRate(nid, rate, why, half, zone) { super.reportRate(); this._toHost({ k: 'kr', nid, rate, why, half, zone: zone ? 1 : 0 }); }
   reportFoot(nid, x, y, z, half, zone) { super.reportFoot(); this._toHost({ k: 'kf', nid, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, z: Math.round(z * 100) / 100, half, zone: zone ? 1 : 0 }); }
@@ -73,7 +84,15 @@ export class NetWire extends KarpWire {
     if (a.owner !== from) return;
     const p = this.nm.peers.get(from);
     switch (d.k) {
-      case 'kc': this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0), since: d.fs, run: +d.fr || 0, late: Number.isFinite(d.fl) ? d.fl : null }); break;
+      case 'kc': {
+        // ([karp-face] review round 3: how late its 'free' moment was on our clock — fl is on its floor read of our clock,
+        // which leaves out the fastest one-way trip to it; half of the two floor offsets' sum is that trip, both ways
+        // being alike. A claim without fo: its fl as it stands)
+        let late = Number.isFinite(d.fl) ? d.fl : null;
+        if (late != null && Number.isFinite(d.fo) && p && p.init) late += Math.max(0, Math.min(0.3, (p.off + d.fo) / 2));
+        this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0), since: d.fs, run: +d.fr || 0, late });
+        break;
+      }
       case 'kx': this._emit('decline', { actor: a, q: d.q }); break;
       case 'kr': this._emit('rate', { actor: a, rate: d.rate, why: d.why, half: d.half, zone: !!d.zone }); break;
       case 'kf': this._emit('foot', { actor: a, x: d.x, y: d.y, z: d.z, half: d.half, zone: !!d.zone }); break;
@@ -91,6 +110,7 @@ export class NetWire extends KarpWire {
   // host its own; on a guest the sender's tick clock through that peer's offset (netmatch's floor of receive − send: the
   // clocks' difference plus the fastest one-way trip) plus the one-way delay — half this screen's round trip to the
   // relay plus half the sender's (the lobby's ping)
+  off(id) { const p = id ? this.nm?.peers.get(id) : null; return p && p.init ? p.off : null; }
   hostNow(from) {
     const nm = this.nm;
     if (!nm || (nm.isHost && !from)) return this.now();

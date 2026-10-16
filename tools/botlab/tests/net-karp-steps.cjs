@@ -440,24 +440,56 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp[0]} + ${7 * sg}, 0, ${kp[2]}); b.vel.set(0, 0, 0); b.intent.move.set(0, 0, 0); return 1; })()`);
       await put(B, kp[0] - 7 * sg, 0, kp[2]);
       await wait(300);
-      const T = await J(A, `+(performance.now() / 1000 + 1.2).toFixed(4)`);
-      await A.js(`${mover('performance.now() / 1000', bot)}(${kp[0]} + ${7 * sg}, 0, ${kp[2]}, ${-sg}, ${T})`);
-      await B.js(`${mover('__G.match.karp.wire.hostNow()', null)}(${kp[0]} - ${7 * sg}, 0, ${kp[2]}, ${sg}, ${T})`);
-      await A.js(`(() => { setTimeout(() => { const K = __G.match.karp; K.shell.add(1, 3000, __G.match.actors.find((o) => o.nid === ${bNid})); }, Math.max(0, (${T} + 0.45 - performance.now() / 1000) * 1000)); return 1; })()`);
+      // ([karp-face] review round 3, 2nd fixer: both pages on the MACHINE's clock — timeOrigin + now() is one clock for every
+      // page here — not B on its own estimate of the host's: that estimate is what the claims are judged by, and B set off
+      // and timed its touch on it, so a bias in it hid in the touch gap: the race looked a dead heat when B was ahead)
+      const T = await J(A, `+((performance.timeOrigin + performance.now()) / 1000 + 1.2).toFixed(4)`);
+      await A.js(`${mover('(performance.timeOrigin + performance.now()) / 1000', bot)}(${kp[0]} + ${7 * sg}, 0, ${kp[2]}, ${-sg}, ${T})`);
+      await B.js(`${mover('(performance.timeOrigin + performance.now()) / 1000', null)}(${kp[0]} - ${7 * sg}, 0, ${kp[2]}, ${sg}, ${T})`);
+      await A.js(`(() => { setTimeout(() => { const K = __G.match.karp; K.shell.add(1, 3000, __G.match.actors.find((o) => o.nid === ${bNid})); }, Math.max(0, (${T} + 0.45 - (performance.timeOrigin + performance.now()) / 1000) * 1000)); return 1; })()`);
       await A.until(`!!__G.match.karp.holder`, 8000, 30).catch(() => {});
       await wait(900);
       const h = (await info(A)).holder;
       if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
       const tA = await J(A, `window.__touch`), tB = await J(B, `window.__touch`), oneWay = await J(B, `+__G.match.karp.wire.oneWay(__G.match.karp.wire.hostId()).toFixed(3)`);
-      const g = await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since]) } : null; })()`);
+      const g = await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.cr ?? 0]) } : null; })()`);
       const sB = g && g.c.find((c) => c[0] === 'B'), sH = g && g.c.find((c) => c[0] === 'bot');
-      rows.push({ hostSide: sg > 0 ? '+x' : '-x', won: h === bot ? 'bot' : h === bNid ? 'B' : String(h), touchGap: tA != null && tB != null ? +(tB - tA).toFixed(3) : null, sinceGap: sB && sH ? +(sB[1] - sH[1]).toFixed(3) : null, oneWay, wait: g && g.wait });
+      // (touchGap: B's touch − the bot's on the machine's clock, > 0: the bot first; sinceGap: the same as the host judged it;
+      // cr: what the host added to B's since for its running start)
+      // (the two ways of reading B's lateness, side by side on the same round: 'new' — B's floor read at its frame plus half
+      // the two floor offsets, what the host now adds — and 'old' — hostNow at the record's arrival, the one-way estimate
+      // added, ≥ 0 — what it added before; and none at all)
+      const kb = await J(B, `(() => { const S = __G.match.karp.stats; return { kc: (S.kcLog || []).slice(-1)[0] || null, b: (S.bLog || []).slice(-1)[0] || null }; })()`);
+      const offA = await J(A, `(() => { const w = __G.match.karp.wire, b = __G.match.actors.find((o) => o.nid === ${bNid}); return w.off ? w.off(b && b.owner) : null; })()`);
+      let alt = null;
+      // (B's own since: the host's — the smallest of its re-sent claims, 0.3 s apart — less what it added; kcLog's last
+      // entry is the last re-send)
+      if (kb.kc && kb.b && sH && sB) {
+        const cl = (v, a, b) => Math.max(a, Math.min(b, v)), run = kb.kc.run || 0;
+        const lateNew = kb.kc.late != null && kb.kc.fo != null && offA != null ? kb.kc.late + cl((offA + kb.kc.fo) / 2, 0, 0.3) : null;
+        const lateOld = kb.b.off != null && kb.b.oneWay != null ? cl(kb.b.arr - kb.b.off + kb.b.oneWay - kb.b.tb, 0, 0.4) : null;
+        const g0 = sB[1] - sB[2] - sH[1];
+        alt = { raw: +g0.toFixed(3), new: +(sB[1] - sH[1]).toFixed(3), old: lateOld != null ? +(g0 + run * Math.min(0.25, lateOld)).toFixed(3) : null, run, lateNew: lateNew != null ? +lateNew.toFixed(3) : null, lateOld: lateOld != null ? +lateOld.toFixed(3) : null };
+      }
+      rows.push({ hostSide: sg > 0 ? '+x' : '-x', won: h === bot ? 'bot' : h === bNid ? 'B' : String(h), touchGap: tA != null && tB != null ? +(tB - tA).toFixed(3) : null, sinceGap: sB && sH ? +(sB[1] - sH[1]).toFixed(3) : null, cr: sB ? sB[2] : null, alt, oneWay, wait: g && g.wait });
       await wait(300);
     }
     await toPond();
     const avg = (k) => { const v = rows.map((r) => r[k]).filter((x) => x != null); return v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(3) : null; };
-    R(`5r. running starts (reported): a host bot and B run in from 7 m, setting off at the same moment of the host's clock; ${N} rounds, sides alternating`, wins.bot + wins.guest >= N - 2,
-      { wins, meanTouchGap: avg('touchGap'), meanSinceGap: avg('sinceGap'), rows });
+    // (the judging's own error: sinceGap − touchGap; > 0 favours the host's bot. And the order it got wrong: a gap of
+    // ≥ 15 ms one way decided the other way — a closer one is a dead heat, either may win it)
+    const err = rows.filter((r) => r.touchGap != null && r.sinceGap != null).map((r) => +(r.sinceGap - r.touchGap).toFixed(3)).sort((a, b) => a - b);
+    const wrong = rows.filter((r) => r.touchGap != null && Math.abs(r.touchGap) >= 0.015 && (r.touchGap > 0 ? r.won === 'B' : r.won === 'bot')).length;
+    // (each reading's error against the machine's clock, on the same rounds: median and mean |error|)
+    const errOf = (k) => {
+      const R = rows.filter((r) => r.alt && r.alt[k] != null && r.touchGap != null && Math.abs(r.touchGap) < 0.3), v = R.map((r) => r.alt[k] - r.touchGap).sort((a, b) => a - b);
+      const ties = R.filter((r) => Math.abs(r.touchGap) < 0.015), wrongK = R.filter((r) => Math.abs(r.touchGap) >= 0.015 && (r.touchGap > 0) !== (r.alt[k] > 0)).length;
+      return v.length ? { n: v.length, median: +v[v.length >> 1].toFixed(3), meanAbs: +(v.reduce((a, b) => a + Math.abs(b), 0) / v.length).toFixed(3), wrong: wrongK, deadHeats: { bot: ties.filter((r) => r.alt[k] > 0).length, B: ties.filter((r) => r.alt[k] <= 0).length } } : null;
+    };
+    const readings = { raw: errOf('raw'), new: errOf('new'), old: errOf('old') };
+    const skew = await J(B, `+((performance.timeOrigin + performance.now()) - Date.now()).toFixed(1)`) - await J(A, `+((performance.timeOrigin + performance.now()) - Date.now()).toFixed(1)`);
+    R(`5r. running starts (reported): a host bot and B run in from 7 m, setting off at the same moment of the machine's clock; ${N} rounds, sides alternating`, wins.bot + wins.guest >= N - 2,
+      { wins, wrong, readings, meanTouchGap: avg('touchGap'), meanSinceGap: avg('sinceGap'), errMedian: err.length ? err[err.length >> 1] : null, err, clockSkewMs: +skew.toFixed(1), rows });
   }
 
   if (part === 'raceswap') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, true); await toPond(); }   // (the host's racer always on −x)

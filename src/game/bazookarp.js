@@ -169,7 +169,7 @@ export class Bazookarp {
   // ================================================================== per frame (Match.update, before the actors move)
   update(dt) {
     if (this.winner != null) return;
-    this.clock += dt; this._dt = dt;
+    this.clock += dt; this._dt = dt; this._wn = this.wire.now();   // ([karp-face] review round 3: the wire's time at this clock — a follower's 'free' moment on it)
     const own = this._ownActors();
     // ---- every screen: its own players
     this.shell.update(dt, own, this.host);
@@ -281,7 +281,10 @@ export class Bazookarp {
       const v = Math.hypot(a.vel.x, a.vel.z), back = v > 0.5 ? Math.min(0.05, (K.pickR - Math.hypot(a.pos.x - this.pos.x, a.pos.z - this.pos.z)) / v) : 0;
       const since = Math.max(0, this.clock - (this._dt || 0) - this.freeT0 - back);
       if (this.host) { if (!this.claims.some((c) => c.a === a)) this.claims.push({ a, ts: this.wire.now(), since, at: this.clock, p: a.pos.clone() }); }
-      else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since, this.freeRun || 0, this.freeLate); }
+      else if (a === G.local && (this.claimT -= 1 / 60) <= 0) {
+        this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since, this.freeRun || 0, this.freeLate);
+        const kl = this.stats.kcLog || (this.stats.kcLog = []); kl.push({ at: +this.clock.toFixed(3), since: +since.toFixed(3), run: this.freeRun || 0, late: this.freeLate, fo: this.wire.off?.(this.wire.hostId?.()) ?? null }); if (kl.length > 8) kl.shift();   // ([karp-face] tests)
+      }
     }
   }
   // "Can't use" (SPEC §1.1, karp:refuse → the HUD's note): 'special' touching it mid-special (at most once per 2 s),
@@ -307,9 +310,11 @@ export class Bazookarp {
     // ([karp-face] review round 3: a claimant already running in when it went free on its screen gets that much of the
     // delay it heard of the burst with added — see _runIn; its own measure of that delay, else the one-way estimate; at
     // most 0.25 s)
-    const dl = Number.isFinite(late) && late >= 0 ? late : this.wire.oneWay?.(a.owner) ?? 0;
-    const cr = Number.isFinite(run) && run > 0 ? Math.min(1, run) * Math.min(0.25, dl) : 0;
-    const sn = (Number.isFinite(since) && since >= 0 ? since : Math.max(0, this.clock - this.freeT0)) + cr;
+    // (review round 3: the delay may be a little below 0 — the guest's frame began before the burst on our clock — and
+    // is then taken off: its since counts from that frame)
+    const dl = Number.isFinite(late) ? late : this.wire.oneWay?.(a.owner) ?? 0;
+    const cr = Number.isFinite(run) && run > 0 ? Math.min(1, run) * clamp(dl, -0.1, 0.25) : 0;
+    const sn = Math.max(0, (Number.isFinite(since) && since >= 0 ? since : Math.max(0, this.clock - this.freeT0)) + cr);
     const c = this.claims.find((q) => q.a === a);
     if (c) { c.ts = Math.min(c.ts, ts); c.since = Math.min(c.since, sn); c.cr = cr; } else this.claims.push({ a, ts, since: sn, at: this.clock, remote: true, cr });
   }
@@ -841,7 +846,20 @@ export class Bazookarp {
         break;
       }
       case 'u': { const a = byNid(e[2]); if (a) { if (this.holder === a || a.carry) this._release(a); if (!a.remote) this.lockT = 0; } this.pos.set(e[3], e[4], e[5]); this.shell.clear(); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }   // ([karp-face] free: no shell)
-      case 'b': { this.pos.set(e[3], e[4], e[5]); this._bAge = Number.isFinite(e[7]) ? clamp(this.wire.hostNow(this.wire.hostId?.()) - e[7], 0, 0.4) : null; /* [karp-face] how late this screen heard of the burst: _runIn's claims */ this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
+      case 'b': {
+        this.pos.set(e[3], e[4], e[5]);
+        // ([karp-face] how late this screen's 'free' moment is after the burst on the host's clock, for _runIn's claims.
+        // Review round 3: read at the frame that moment belongs to (freeT0 is this frame's clock; a 'bk' lands between
+        // frames — up to a frame later), on the floor of the clock offset (receive − send at its fastest: the fastest
+        // one-way trip is left in — the host adds it back from both floors). hostNow's one-way estimate, from relay
+        // round trips that carry each page's event-loop wait, ran 10–100 ms high on a loaded machine: a running guest
+        // lost every dead heat (racerun without lag: host bot 12 / 12))
+        const o = this.wire.off?.(this.wire.hostId?.());
+        this._bAge = Number.isFinite(e[7]) && o != null ? clamp((this._wn ?? this.wire.now()) - o - e[7], -0.1, 0.4) : null;
+        // (what this screen saw of it, for tests: the burst's host time, the frame's and the arrival's wire times, the floor
+        // offset and the one-way estimate then)
+        const bl = this.stats.bLog || (this.stats.bLog = []); bl.push({ tb: e[7], wn: this._wn ?? null, arr: this.wire.now(), off: o, oneWay: this.wire.oneWay?.(this.wire.hostId?.()) ?? null }); if (bl.length > 8) bl.shift();
+        this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
       case 'd': { const H = this.holder; if (H) { this.lastCarrier = { team: H.team, how: HOWS[e[2]], left: this.match.time }; this._release(H); } this._reform(_v.set(e[3], e[4], e[5]), -1); emit('karp:drop', { actor: H, team: H ? H.team : -1, pos: _v.clone(), how: HOWS[e[2]] }); break; }
       case 'r': { const H = this.holder; if (H) { const w = WHYS[e[5]]; this.lastCarrier = { team: H.team, how: w === 'zone' || w === 'none' ? 'splat' : w, left: this.match.time }; this._release(H); } this._reset(_v.set(e[2], e[3], e[4]), WHYS[e[5]] || 'none'); break; }
       case 'w': { const H = this.holder; this.lastPlant = { team: e[2], left: this.match.time, win: K.otPick, ot: this.overtime }; this.count[e[2]] = Math.min(this.count[e[2]], this.weirs[e[2]][e[3]]?.count ?? this.count[e[2]]); this._applyPlant(H && H.team === e[2] ? H : null, e[2], e[3]); if (H && H.carry) this._release(H); break; }
