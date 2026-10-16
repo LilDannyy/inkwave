@@ -63,7 +63,13 @@
       if (wants && h.length >= 11 && span < 1.0) {
         stuckS += 0.25;
         if (!open.has(a)) { const ep = { t: r1(simT), name: a.name, pos: [r1(a.pos.x), +a.pos.y.toFixed(2), r1(a.pos.z)], mode: a.bot.mode, dur: 0.25, stone: near(a.pos.x, a.pos.z, stones, 2), organ: near(a.pos.x, a.pos.z, organs, 2), crest: Math.hypot(Math.abs(a.pos.x) - 23.5, Math.abs(a.pos.z) - 38.7) < 2 && a.pos.x * a.pos.z > 0, lava: L.st.phase }; open.set(a, ep); eps.push(ep); }
-        else open.get(a).dur += 0.25;
+        else {
+          const ep = open.get(a); ep.dur += 0.25;
+          // (fix round 4: an episode that reaches 4 s records what the bot is doing then — its mode, tank, the floor's ink
+          // under it and its paintability, its route, its aim — to find what holds it)
+          if (ep.dur === 4) { const b = a.bot, gb = a.ground?.block >= 0 ? __G.level.blocks[a.ground.block] : null, gn = b.goal >= 0 ? nav.nodes[b.goal] : null, nx = b.path && b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : null;
+            ep.why = { mode: b.mode, ink: r2(a.ink), groundTeam: a.groundTeam, seen: b.groundSeen, floor: gb ? (gb.tag || '#' + gb.id) + (gb.paint === false ? '/noPaint' : '') + (gb.roof ? '/roof' : '') + (gb.rail ? '/rail' : '') : null, goal: gn ? [r1(gn.x), r1(gn.y), r1(gn.z)] : null, next: nx ? [r1(nx.x), r1(nx.y), r1(nx.z)] : null, left: b.path ? b.path.length - b.pi : 0, noProg: r2(b.noProg), inkStep: b.inkStepOk ? [r1(b.inkStepP.x), r1(b.inkStepP.z)] : null, fire: !!a.intent.fire, squid: !!a.intent.squid, pitch: r2(b.aimPitch), move: [r2(a.intent.move.x), r2(a.intent.move.z)], target: b.target?.name || null, look: !!b._look, esc: !!b._lavaEsc, trail: (trails.get(a) || []).slice(-8) }; }
+        }
       } else open.delete(a);
       // Slump crossings
       const b = a.alive ? inBay(a.pos.x, a.pos.z) : -1, was = bayIn.get(a);
