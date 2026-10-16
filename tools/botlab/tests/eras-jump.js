@@ -48,23 +48,28 @@
   if (parts.includes('first')) {
     // the load-time compile pass (EraWorld.ready → the idle callback → _precompile) has run
     for (let i = 0; i < 80 && !(W.stats.precompiled >= 1); i++) await new Promise((r) => setTimeout(r, 100));
-    const m = g.match, Rn = __G.renderer, prog = () => Rn.info.programs?.length || 0;
+    const m = g.match, Rn = __G.renderer, prog = () => Rn.info.programs?.length || 0, G = __G;
     m.time = m.duration - 39; step(0.1);   // (the host clock to 39 s played: J − 21 of jump 1)
     const upd = E.update.bind(E); let um = 0;
     E.update = (dt, t) => { const a0 = performance.now(); upd(dt, t); um = performance.now() - a0; };
+    // (what the warning frame spends its time on, and the programs compiled by name)
+    const parts2 = {}, timed = (o, k, label) => { const f = o[k].bind(o); o[k] = (...a) => { const t0 = performance.now(); try { return f(...a); } finally { parts2[label] = +((parts2[label] || 0) + performance.now() - t0).toFixed(2); } }; return () => { o[k] = f; }; };
+    const undo = [timed(E, '_say', 'say'), timed(E, '_ring', 'ring'), timed(E, '_warnState', 'warnState'), timed(W.paint, 'clearFaces', 'clearFaces'), timed(W.fx, 'setJump', 'setJump'), timed(E, '_view', 'view'), timed(G.audio || { play() {} }, 'play', 'audio')];
+    const names0 = new Set((Rn.info.programs || []).map((q) => q.name + '#' + q.id));
     const p0 = prog(), rows = [];
     let warnFrame = null, maxProg = p0, prevPhase = E.phase;
     while (E.S.clock.t < 60 + W.doneOff + 1.5) {
       dbg.step(1000 / 60);
       const p = prog(), ph = E.phase;
       if (p > maxProg) { maxProg = p; rows.push([+(E.S.clock.t - 60).toFixed(2), ph, p - p0]); }
-      if (ph === 'warn' && prevPhase !== 'warn' && !warnFrame) warnFrame = { t: +(E.S.clock.t - 60).toFixed(2), updateMs: +um.toFixed(2) };
+      if (ph === 'warn' && prevPhase !== 'warn' && !warnFrame) warnFrame = { t: +(E.S.clock.t - 60).toFixed(2), updateMs: +um.toFixed(2), parts: { ...parts2 } };
       prevPhase = ph;
     }
-    E.update = upd;
+    E.update = upd; undo.forEach((f) => f());
+    const newProgs = (Rn.info.programs || []).filter((q) => !names0.has(q.name + '#' + q.id)).map((q) => q.name || q.cacheKey?.slice(0, 60));
     R('step 8 (review 2, issue 1): the page\'s first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells\' sprites and the holograms too) and the warning frame\'s era update is under 10 ms',
       W.stats.precompiled >= 1 && maxProg === p0 && !!warnFrame && warnFrame.updateMs < 10 && E.era === 2,
-      { precompiled: W.stats.precompiled, compiledAtLoad: W.stats.compiled, compileMs: W.stats.compileMs, programs: [p0, maxProg], grew: rows.slice(0, 8), warnFrame });
+      { precompiled: W.stats.precompiled, compiledAtLoad: W.stats.compiled, compileMs: W.stats.compileMs, programs: [p0, maxProg], grew: rows.slice(0, 8), newPrograms: newProgs, warnFrame });
     E.debugJump(1, { instant: true }); E.over = null;   // (back on the real schedule: 'sched' moves the clock back to 49 s)
   }
 

@@ -436,6 +436,10 @@ export class EraWorld {
     try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
     ms.forEach((m, i) => { m.visible = was[i]; });
     sprites.forEach((o, i) => { o.material.opacity = op[i]; });
+    // the paint atlas's clearing quad (paint.clearFaces: first used at the warning, when the appearing pieces are cleared):
+    // its program compiled now, on one face of a piece absent in the era shown (blank: it can take no ink here)
+    const P = this.paint, B = this.level?.blocks;
+    if (P && B && this.faceOf) for (const id of this.eraIds) { if (hasEra(B[id].presence, this.era || 1)) continue; const fs = this.faceOf.get(id); if (fs && fs.length) { P.clearFaces([fs[0]]); break; } }
     this.stats.compileMs = Math.round(now() - t); this.stats.compiled = (r.info?.programs?.length || 0) - p0; this.stats.precompiled = (this.stats.precompiled || 0) + 1;
   }
   // ---------------------------------------------------------------- switches
