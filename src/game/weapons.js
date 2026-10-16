@@ -1730,8 +1730,12 @@ export class Projectiles {
         // generous hitbox: the whole visible body plus the blob's own radius
         if (_res.dist < hr * 0.95 + p.size) {
           if (p.volley && p.volley.hit.has(e)) continue;   // bucket: this throw already landed on them: pass through
-          if (p.volley) p.volley.hit.add(e);
           _v.copy(p.prev).lerp(p.pos, _res.t);
+          // [b5-int3] a device or a kit's shot-catcher nearer along this frame's run than the player takes the round first (a
+          // Chain Bobber with a foe a metre behind it: the round hit the foe — the actors are tested before blockShot — and
+          // the web never went off; as the Roe Shell's cut above)
+          if (G.subs && G.subs.blockShot(p.prev, _v, p.team, p.damage || 10, p.owner)) { dead = true; break; }
+          if (p.volley) p.volley.hit.add(e);
           let dmg = p.damage;
           if (p.type === 'drop') dmg = lerp(p.damage, p.dmgFar, clamp(p.start.distanceTo(_v) / 7, 0, 1));
           // bucket: full damage at any range, less only when the target stands below the thrower
