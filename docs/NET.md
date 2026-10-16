@@ -569,6 +569,16 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
 - **a carrier who disconnects.** On a stage with bots the host adopts the squidkid (`_adopt`): `a.carry` stays, the
   bot's brain carries on, the fuse keeps burning at the host's own judgement (mark unset, read afresh). On a humans-only
   stage the squidkid is removed: a splat at its last real sample (`left`).
+- **late join (`[karp-face]`).** A Bazookarp match locks the room like every match (`tr.lock(!practice)`): a player who
+  drops and asks back in mid-match is turned away (`Match in progress`) and can join again once the room is back in the
+  lobby. The 1 Hz `S` is what a new host rebuilds from, and would be what a late joiner needs if that ever changes.
+- **results (`[b5-karp]`).** The end record `e` carries the exact counts and best metres; the results message's
+  per-player `st` rows add `karpM` (metres of progress gained carrying) and `karpPops` (shells burst) at indices 7 and 8,
+  so every screen's results table (CARRIED, POPS) and its XP (`PROGRESSION.bazookarp`) read the host's numbers.
+- **the lobby (`[karp-face]`, DECISIONS #10).** In this mode a room's stage list (`roomStages('bazookarp')`, the host's
+  `setSettings`, Random's pool; the offline stand-in alike) holds only the stages with a Bazookarp layout
+  (`src/world/karpStages.js`); with `?wipstages` every stage is offered and the lobby's stage card tags the ones still on
+  placeholder data PREVIEW. A room switched to Bazookarp on a stage without one moves to the first that has one.
 - Tested by `NET=tools/botlab/tests/net-karp.cjs` (`CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes'`, through
   `tools/botlab/netpage.cjs`): the base part (19 checks: the host's view of a guest carrier, ghost landings, the
   victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result), `NET_ARGS='part=face'` (SPEC
@@ -577,7 +587,13 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   plant, the fuse on the own half) and `NET_ARGS='part=lag' URLQ='netlag=150&netjitter=60'` (hits, a grab, retreat, the
   fuse ring under ×3, a declined grant, the window's close); and `tools/botlab/tests/net-karp-host.cjs` (`CLIENTS=3`:
   `part=bots` the host leaves mid-carry, `part=plant` a plant in the old host's last 0.1 s, `part=shot` a Big Burst in the
-  air at the migration; `CLIENTS=2`: `part=cargo` a humans-only room, `part=guestleave` a carrying guest disconnects).
+  air at the migration; `CLIENTS=2`: `part=cargo` a humans-only room, `part=guestleave` a carrying guest disconnects);
+  and the package's whole-match proof, `tools/botlab/tests/net-karp-full.cjs` (`CLIENTS=3`, nothing staged: three
+  autopilot clients and bots play a real 5:00 match on halyard, the host leaves mid-match, a guest takes over, the old
+  host is turned away mid-match, the match plays to its end with the same result and results table on both remaining
+  screens, back to the lobby, the old host joins again). The narrowed flush's regression for the other modes:
+  `tools/botlab/tests/net-tower.cjs` and `net-zones.cjs` (`CLIENTS=3`: the host flips control and leaves 60 ms later; both
+  remaining screens agree on the owner, the new host runs the rules, the same result).
 
 **Relay (server/).** One Durable Object per room code: membership, host election, join refusal (unknown / full /
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime
