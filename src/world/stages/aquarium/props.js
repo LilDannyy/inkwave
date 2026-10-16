@@ -9,7 +9,7 @@ import { LAYOUT } from './layout.js';
 import { makeKit } from './kit.js';
 import { registerArch } from './arch.js';
 import { registerDress } from './dress.js';
-import { PLANTERS } from './geo.js';
+import { PLANTERS, PENGUIN, PUMPS, DAIS, TICKET } from './geo.js';
 
 const DEG = Math.PI / 180, PI = Math.PI;
 const C30 = Math.cos(30 * DEG);
@@ -134,4 +134,27 @@ export const PLACEMENTS = [
   // glass, the luggage turned square to the blade against the queue planter)
   { type: 'aquarium_stanchions', pos: [W(25.6, -16.3)[0], 0.6, W(25.6, -16.3)[1]], rotY: PI / 3, len: 2.7, n: 4 },
   { type: 'aquarium_luggage', pos: at0(W(28.5, 0.35)), rotY: -30 * DEG },
+  // ---- fix round 5 (the complete eye-level sweep; floorart.js draws the faces and tops under the ink): the PENGUIN POINT
+  //      plaque on the upper rock's plaza face, the basking rock's lumps, the pump sets' pipework, plates on the touch pool's
+  //      dais, the Ticket Hall's plaza and west faces, the helmet bed, the viewing steps and the shark bench, the stairs'
+  //      brass string-courses
+  { type: 'aquarium_penguinplaque', pos: at0(W(PENGUIN.plaque.s, PENGUIN.plaque.w)), rotY: PI / 3, y: PENGUIN.plaque.y - 0.31 },
+  { type: 'aquarium_baskinglumps', pos: [(PENGUIN.basking.b[0] + PENGUIN.basking.b[1]) / 2, 0, (PENGUIN.basking.b[2] + PENGUIN.basking.b[3]) / 2], w: 1.2, d: 1.2, h: PENGUIN.basking.top,
+    foot: [[70, 2, 0.15, 0.4, 0.28, 0.12], [71, 1, 0.25, 0.38, 0.25, 0.12], [72, -2, 0.05, 0.42, 0.26, 1.32], [73, -1, -0.1, 0.4, 0.24, 1.32]] },
+  { type: 'aquarium_pumpdress', pos: [(PUMPS.box[0] + PUMPS.box[1]) / 2, 0, (PUMPS.box[2] + PUMPS.box[3]) / 2], rotY: -PI / 2, len: 2.0, wid: 1.5, aisle: 1 },
+  { type: 'aquarium_pumpdress', pos: at0(W((PUMPS.blade.s[0] + PUMPS.blade.s[1]) / 2, (PUMPS.blade.w[0] + PUMPS.blade.w[1]) / 2)), rotY: -30 * DEG, len: 2.0, wid: 1.5, aisle: 1, ends: [-1] },
+  { type: 'aquarium_plate', pos: [DAIS.b[1], 0, (DAIS.b[2] + DAIS.b[3]) / 2], rotY: PI / 2, y: 0.36, w: 1.45, h: 0.36, lines: [['EXHIBIT', 0.1, '#dcc18c'], ['PLEASE KEEP OFF THE ROCKS', 0.062]] },
+  { type: 'aquarium_plate', pos: [DAIS.b[0], 0, (DAIS.b[2] + DAIS.b[3]) / 2], rotY: -PI / 2, y: 0.36, w: 1.45, h: 0.36, lines: [['EXHIBIT', 0.1, '#dcc18c'], ['PLEASE KEEP OFF THE ROCKS', 0.062]] },
+  { type: 'aquarium_plate', pos: [3.35, 0, TICKET.b[2]], rotY: PI, y: 0.83, w: 1.62, h: 0.27, lines: [['FERRY TO INKOPOLIS', 0.085, '#dcc18c'], ['SAILINGS EVERY 20 MINUTES', 0.05]] },
+  { type: 'aquarium_plate', pos: [TICKET.b[0], 0, -42.5], rotY: -PI / 2, y: 0.8, w: 1.5, h: 0.3, lines: [['TICKET HALL', 0.1, '#dcc18c'], ['FERRIES · TUBEWAY · EXHIBITS', 0.05]] },
+  { type: 'aquarium_plate', pos: [11.3, 0, -6.0], rotY: -PI / 2, y: 0.3, w: 1.5, h: 0.3, lines: [['DIVING HELMET', 0.1, '#dcc18c'], ['STANDARD DRESS · 1934', 0.055]] },
+  { type: 'aquarium_plate', pos: [4.2, 0, -29.7], rotY: 0, y: 0.6, w: 0.72, h: 0.15, lines: [['SHARK WATCH', 0.07, '#dcc18c']] },
+  ...[[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -0.79, 0.79], [-157.5, -1.3, 0.79]].map(([a, t0, t1]) => {
+    const n = [Math.cos(a * DEG), Math.sin(a * DEG)], tt = [-n[1], n[0]], tm = (t0 + t1) / 2;
+    return { type: 'aquarium_plate', pos: [n[0] * 9.0 + tt[0] * tm, 0, n[1] * 9.0 + tt[1] * tm], rotY: Math.atan2(n[0], n[1]), y: 0.12, w: 1.25, h: 0.11, lines: [['PLEASE DO NOT TAP THE GLASS', 0.045]] };
+  }),
+  { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-152, 15.6)].map(([x, z]) => [x, 0, z])[0]], high: [...[pol(-152, 21.4)].map(([x, z]) => [x, 2.4, z])[0]], w: 6.0, t1: 5.35 },
+  { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-120, 34.6)].map(([x, z]) => [x, 1.2, z])[0]], high: [...[pol(-120, 31.0)].map(([x, z]) => [x, 2.4, z])[0]], w: 5.0, t1: 3.35 },
+  { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [9.0, 0, -36.2], high: [9.0, 1.2, -39.0], w: 2.0, t1: 2.75 },
+  { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-45, 13.5)].map(([x, z]) => [x, 0, z])[0]], high: [...[pol(-45, 7.2)].map(([x, z]) => [x, 2.4, z])[0]], w: 4.0, t1: 5.95 },
 ];

@@ -192,6 +192,27 @@ export function registerDress(D, H, KIT) {
       B.pop();
       B.box('paint', K.graniteLt, 2.5, 0.2, 2.5, 0, hb + 0.1, 0, { r: 0.05 });
       B.box('paint', K.render, 1.7, 0.55, 1.7, 0, hb + 0.47, 0, { r: 0.1 });
+      // (fix round 5: its other three sides were blank — a four-pane window with sea-green shutters folded back on each side,
+      // and on its back the keepers' feeding board and a hose reel; all within 6 cm of the walls)
+      for (const sx of [-1, 1]) {
+        B.push(sx * 1.03, 0, 0, sx * HP);
+        pbox(B, 'gloss', '#2c3f48', 0.62, 0.52, 0.012, 0, 1.36, 0.006);
+        for (const yy of [1.1, 1.36, 1.62]) pbox(B, NS('paint'), K.navy, 0.68, 0.04, 0.03, 0, yy, 0.015);
+        for (const xx of [-0.32, 0, 0.32]) pbox(B, NS('paint'), K.navy, 0.04, 0.56, 0.03, xx, 1.36, 0.015);
+        pbox(B, 'metal', K.brass, 0.8, 0.035, 0.06, 0, 1.065, 0.03);
+        for (const xs of [-1, 1]) {
+          pbox(B, 'paint', K.seagreenDk, 0.3, 0.58, 0.022, xs * 0.53, 1.36, 0.012);
+          for (let k = 0; k < 6; k++) pbox(B, NS('paint'), K.seagreen, 0.26, 0.02, 0.03, xs * 0.53, 1.13 + k * 0.09, 0.016);
+        }
+        B.pop();
+      }
+      B.push(0, 0, -1.03, PI);
+      sign(B, 'PENGUIN FEEDS', -0.35, 1.25, { h: 0.075, board: K.cream, c: K.navy, border: K.brass, w: 0.72, hh: 0.42, sub: '11:00 · 15:00', subH: 0.06, subC: K.ink, pad: 0.05 });
+      cyl(B, 'paint', K.red, 0.18, 0.05, 0.5, 0.62, 0.03, { rx: HP, seg: 18 });
+      B.add('paint', torG(0.15, 0.022, 6, 20), '#2f6b4f', 0.5, 0.62, 0.05, {});
+      B.add('paint', torG(0.11, 0.02, 6, 18), '#2f6b4f', 0.5, 0.62, 0.05, {});
+      B.add('metal', sphG(0.025, 8, 6), K.brass, 0.5, 0.62, 0.065, {});
+      B.pop();
       // PENGUIN POINT on its roof, both ways
       for (const sg of [0, 1]) { B.push(0, 0, 0, sg * PI); B.push(0, 0, 0.86, 0); letters(B, 'PENGUIN POINT', { h: 0.17, y: hb + 0.27, z: 0.0, c: K.navy, wt: 0.2, flat: true, mat: 'paint' }); B.pop(); B.pop(); }
     },
@@ -786,6 +807,113 @@ export function registerDress(D, H, KIT) {
       B.box('paint', '#c9a978', 0.5, 0.3, 0.36, -0.05, 0.93, -0.02, { r: 0.05, ry: -0.3 });
       cyl(B, 'paint', '#d9b6b0', 0.2, 0.22, 0.62, 0.11, 0.42, { seg: 16 });
       pbox(B, 'paint', K.cream, 0.1, 0.07, 0.01, 0.2, 0.3, 0.28, { rz: 0.4 });
+    },
+  };
+
+  // ---------------------------------------------------------------------------------------------------- fix round 5
+  // (the complete eye-level sweep.) The faces and tops are drawn under the ink (floorart.js); here only what must stand off
+  // them, within 8.5 cm of a face and below its walkable top: plates, the PENGUIN POINT plaque, the basking rock's lumps,
+  // the pump sets' pipe stubs and handwheels, the stairs' brass string-courses, the keeper's hut's windows (its block is
+  // off-limits: wrapped like round 1's hut).
+  // an enamel plate on a face (local +z out of it; pos its foot centre): a navy board in a brass frame and one to three
+  // lines of letters [text, height, colour] (4.5 cm proud at most)
+  D.aquarium_plate = {
+    desc: 'an enamel plate on a face (local +z out of it): navy board, brass frame, lines of letters',
+    build(B, o) {
+      const w = o.w ?? 1.2, h = o.h ?? 0.3, y = o.y ?? 0;
+      B.box('paint', o.board ?? K.navy, w, h, 0.022, 0, y + h / 2, 0.011, { r: 0.008 });
+      for (const yy of [y, y + h]) pbox(B, NS('metal'), K.brass, w + 0.03, 0.022, 0.032, 0, yy, 0.016);
+      for (const xx of [-w / 2, w / 2]) pbox(B, NS('metal'), K.brass, 0.022, h + 0.02, 0.032, xx, y + h / 2, 0.016);
+      const L = o.lines || [], tot = L.reduce((a, l, i) => a + l[1] + (i ? l[1] * 0.45 : 0), 0);
+      let cur = y + h / 2 + tot / 2;
+      L.forEach(([t, lh, c], i) => { if (i) cur -= L[i - 1][1] * 0.45; cur -= lh; letters(B, t, { h: lh, y: cur, z: 0.023, c: c ?? K.cream, flat: true, mat: 'paint', wt: 0.18, track: 0.1 }); });
+    },
+  };
+  // the PENGUIN POINT plaque on the upper rock's plaza face (local +z out of it; pos its foot centre): a Deco plaque — a navy
+  // board with a stepped brass frame, the name in brass, a line under it, an emperor penguin in enamel at its left
+  D.aquarium_penguinplaque = {
+    desc: 'the PENGUIN POINT plaque (local +z out of the face): navy board, stepped brass frame, the name, a penguin',
+    build(B, o) {
+      const w = 1.9, h = 0.62, y = o.y ?? 1.2;
+      B.box('paint', K.navy, w, h, 0.024, 0, y + h / 2, 0.012, { r: 0.02 });
+      for (const [d, t] of [[0.0, 0.03], [0.045, 0.012]]) {
+        for (const yy of [y - d, y + h + d]) pbox(B, NS('metal'), d ? K.brassDk : K.brass, w + 0.04 + 2 * d, t, 0.034 - d * 0.3, 0, yy, 0.017);
+        for (const xx of [-w / 2 - d, w / 2 + d]) pbox(B, NS('metal'), d ? K.brassDk : K.brass, t, h + 0.04 + 2 * d, 0.034 - d * 0.3, xx, y + h / 2, 0.017);
+      }
+      letters(B, 'PENGUIN POINT', { h: 0.13, x: 0.2, y: y + 0.34, z: 0.025, c: K.brassLt, flat: true, mat: 'paint', wt: 0.2, track: 0.12 });
+      pbox(B, NS('metal'), K.brass, 1.2, 0.012, 0.01, 0.2, y + 0.28, 0.026);
+      letters(B, 'FEEDS 11:00 · 15:00', { h: 0.075, x: 0.2, y: y + 0.13, z: 0.025, c: K.cream, flat: true, mat: 'paint', wt: 0.18, track: 0.1 });
+      // the penguin (enamel, 3 cm proud): black back and head, white front, a yellow-orange ear patch and beak, feet
+      const px = -0.7, py = y + 0.08;
+      B.add('paint', sphG(0.1, 14, 10), K.ink, px, py + 0.2, 0.02, { sx: 1.05, sy: 1.95, sz: 0.12 });
+      B.add('paint', sphG(0.075, 14, 10), K.white, px + 0.012, py + 0.18, 0.026, { sx: 0.95, sy: 2.0, sz: 0.1 });
+      B.add('paint', sphG(0.062, 12, 8), K.ink, px - 0.004, py + 0.43, 0.022, { sx: 1, sy: 1.05, sz: 0.13 });
+      B.add('paint', sphG(0.022, 8, 6), K.mustard, px + 0.03, py + 0.39, 0.03, { sx: 1.2, sy: 0.8, sz: 0.25 });
+      B.add('paint', cylGeo(0.0, 0.016, 0.07, 6), K.mustard, px + 0.085, py + 0.43, 0.026, { rz: -HP * 1.1 });
+      for (const fx of [-0.03, 0.03]) pbox(B, NS('paint'), K.ink, 0.05, 0.016, 0.01, px + fx, py + 0.01, 0.026);
+    },
+  };
+  // the basking rock's lumps (fix round 5; pos its foot centre, the world box w × d): a rounded boulder pair wrapping each
+  // vertical corner (the touch pools' corner rock, smaller: 7.8 cm out of either face, its dome below the walkable top)
+  // and a few low lumps along its foot, so it reads round, not as a square pillar
+  D.aquarium_baskinglumps = {
+    desc: "the basking rock's corner lumps and foot lumps (world box w × d, top h)",
+    build(B, o) {
+      const w = o.w ?? 1.2, d = o.d ?? 1.2, h = o.h ?? 2.2, OUT = 0.078, C = ['#b8b3aa', '#a7a29a', '#c3c0b8', '#9c978f'];
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz], k) => {
+        const ry = sx > 0 ? (sz > 0 ? 0 : HP) : (sz > 0 ? -HP : PI);
+        B.add('paint', cornerRockG(0.17, h - 0.32, 0.18 + 0.03 * (k % 2), OUT, 21 + k), C[k], (sx * w) / 2, 0, (sz * d) / 2, { ry });
+      });
+      // low lumps along the foot (on the floor side and on the terrace side), each placed by its own reach
+      for (const [seed, f, t, len, ht, y] of o.foot || []) {
+        const r = reachOf(seed), dep = 0.2;
+        if (Math.abs(f) === 1) B.add('paint', blobG(seed), C[seed % 4], t, y, f * (d / 2 + OUT - dep * (f > 0 ? r.z : r.nz)), { sx: len, sy: ht, sz: dep });
+        else B.add('paint', blobG(seed), C[seed % 4], (Math.sign(f) * w) / 2 + Math.sign(f) * (OUT - dep * (f > 0 ? r.x : r.nx)), y, t, { sx: dep, sy: ht, sz: len });
+      }
+    },
+  };
+  // a pump set's pipework (fix round 5; pos the casing's foot centre, local x along its drum (len), z across it (wid)): a
+  // flanged pipe stub on each end at the drum's axis, a red handwheel and a pressure gauge on its aisle side (o.aisle ±1)
+  D.aquarium_pumpdress = {
+    desc: "a pump set's pipe stubs, handwheel and gauge (local x along its drum)",
+    build(B, o) {
+      const L = o.len ?? 2.0, Wd = o.wid ?? 1.5, ay = 0.63, s = o.aisle ?? 1;
+      for (const e of o.ends || [-1, 1]) {
+        B.push(e * L / 2, 0, 0, e * HP);   // (local +z out of the end face)
+        cyl(B, 'metal', K.steelDk, 0.2, 0.024, 0, ay, 0.012, { rx: HP, seg: 18 });
+        cyl(B, 'metal', '#5f7f75', 0.12, 0.05, 0, ay, 0.045, { rx: HP, seg: 14 });
+        cyl(B, 'metal', K.steelDk, 0.15, 0.016, 0, ay, 0.068, { rx: HP, seg: 16 });
+        for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU; B.add(NS('metal'), sphG(0.016, 6, 4, HP), K.rivet, Math.cos(a) * 0.17, ay + Math.sin(a) * 0.17, 0.024, { rx: HP }); }
+        B.pop();
+      }
+      B.push(0, 0, s * Wd / 2, s > 0 ? 0 : PI);
+      { const x = -L / 2 + 0.36, yy = 0.52;
+        cyl(B, 'metal', K.steelDk, 0.025, 0.04, x, yy, 0.02, { rx: HP, seg: 8 });
+        B.add('metal', torG(0.11, 0.014, 6, 18), K.red, x, yy, 0.05, {});
+        for (let k = 0; k < 3; k++) pbox(B, NS('metal'), K.red, 0.016, 0.21, 0.012, x, yy, 0.05, { rz: (k * PI) / 3 });
+        B.add('metal', torG(0.065, 0.012, 6, 16), K.brass, L / 2 - 0.3, 0.82, 0.025, {});
+        B.add(NS('glow'), cylGeo(0.058, 0.058, 0.01, 14), K.cream, L / 2 - 0.3, 0.82, 0.02, { rx: HP, glow: 0.6 });
+        pbox(B, NS('paint'), K.red, 0.008, 0.05, 0.004, L / 2 - 0.3 + 0.012, 0.832, 0.027, { rz: -0.6 }); }
+      B.pop();
+    },
+  };
+  // a stair's brass string-courses (fix round 5: the grand stair, the Penguin Steps, the Ticket Hall's stair, the deck ramp),
+  // as round 2's on the deck stair: a brass bar 3.4 cm proud along each flank's raked edge (world frame; o.low / o.high the
+  // ramp's ends [x, y, z], o.w its width, o.t0 / o.t1 how much of the run from the low end it covers)
+  D.aquarium_raketrim = {
+    desc: "a stair's brass string-courses along its flanks' raked edges (world frame)",
+    build(B, o) {
+      const [lx, ly, lz] = o.low, [hx, hy, hz] = o.high, run = Math.hypot(hx - lx, hz - lz), u = [(hx - lx) / run, (hz - lz) / run], p = [-u[1], u[0]];
+      const rake = Math.atan2(hy - ly, run), t0 = o.t0 ?? 0.05, t1 = o.t1 ?? run - 0.05, tm = (t0 + t1) / 2, L = (t1 - t0) / Math.cos(rake);
+      const ys = (t) => ly + ((hy - ly) * t) / run;
+      for (const sg of o.sides || [1, -1]) {
+        const n = [sg * p[0], sg * p[1]], hw = o.w / 2 + 0.017, x = lx + u[0] * tm + n[0] * hw, z = lz + u[1] * tm + n[1] * hw;
+        const lxDir = [n[1], -n[0]], rz = (u[0] * lxDir[0] + u[1] * lxDir[1]) > 0 ? rake : -rake;
+        B.push(x, 0, z, Math.atan2(n[0], n[1]));
+        pbox(B, 'metal', K.brass, L, 0.065, 0.034, 0, ys(tm) - 0.0535, 0, { rz });
+        pbox(B, NS('metal'), K.brassDk, L, 0.012, 0.04, 0, ys(tm) - 0.0535 - 0.034 / Math.cos(rake), 0.002, { rz });
+        B.pop();
+      }
     },
   };
 
