@@ -10,8 +10,11 @@
 //   gate:      { at, yaw }   in front of Bravo's spawn or a level below
 //   freeZones: [{ poly: [[x, z] …], y0, y1, signs: [[x, z, yaw°]], eras }]   wholly on Bravo's half; a sign at every entrance
 //   optional:  noRetreat, carrierBlock, noRest ([{ poly, y0, y1 }]), hopVeto ([[x, y, z, x, y, z]]), routes ({ name: [[x, z] …] }),
-//              shellHp (a per-stage override, balance only), waive ([{ check: '7d', at: [x, z], why }]: a checker find the
-//              lead accepted in the stage note — bazookarp-check.cjs reports a find of that check within 2 m as waived)
+//              shellHp (a per-stage override, balance only), waive ([{ check: '7d', at: [x, z], why, probe?, r? }]: a checker
+//              find the lead accepted in the stage note — bazookarp-check.cjs reports a find of that check (of that probe)
+//              within max(2, r) m as waived, and for #7d every find of its numbered flag with it [b5-karp-checker fix4])
+//              (eras on a zone are matched strictly against the stage's state keys, as karpField does; the engine ignores
+//              eras on noRetreat / carrierBlock / noRest, and the checker FAILs them there)
 // A stage with no entry plays on a placeholder (karpField.js placeholderKarp): Pond at the centre, the Gate on the nav
 // route toward Bravo's pad, one weir half way, a free zone round each spawn deck.
 //
