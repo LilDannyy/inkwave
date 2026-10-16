@@ -22,7 +22,8 @@
 //               booth, the TICKET HALL letters, the feeding-times board
 //   pumpHall    the back wall's pilasters, pipe runs and valve wall, the sawtooth glazing, the truss, the sand filters,
 //               the forklift with its fish tank, the GA vent stack over the sea
-//   finTower    the entrance pavilion's fin with vertical neon AQUARIUM, its sea facade (doors, portholes, letters)
+//   finTower    the entrance pavilion's fin with vertical neon AQUARIUM, its sea facade (doors, portholes, letters), and
+//               (fix round 3) the spawn deck's plaza fascia: skirting, pilasters, frieze, portholes, roundels
 //   stops       the Express's brass stops (IN and OUT), dressed round their mouths
 export function registerArch(D, H, KIT, G) {
   const { K, NS, pbox, cyl, cylGeo, latheG, sphG, torG, strut, rod, letters, lettersV, sign, porthole, speed, globe, handrail, roundel, rivets, HP, PI, TAU } = KIT;
@@ -838,6 +839,25 @@ export function registerArch(D, H, KIT, G) {
           for (let y = 4.0; y < 16; y += 2.4) porthole(B, 0, y, 0.3, { lit: true });
           B.pop();
         }
+      });
+      // the spawn deck's glass-block fascia toward the plaza (s 31, w −13 … 13, to 3.38; fix round 3: at eye level from the
+      // plaza it read as a bare tiled block): a black-granite skirting with a brass line, render pilasters dividing it into
+      // six bays (three faience speed lines wrapping each one's head), a render frieze with speed lines under the deck's
+      // edge (its top 6 cm under the walkable deck), lit portholes into the foyer in the outer bays and an enamel FIN
+      // PAVILION roundel in the two middle ones. All of it 4–8 cm proud of the face, nothing on the deck
+      bl(B, 31, 0, 0, () => {
+        const L = 26.0, top = 3.32;
+        pbox(B, 'paint', K.granite, L + 0.06, 0.36, 0.04, 0, 0.18, 0.02);
+        pbox(B, NS('metal'), K.brass, L + 0.06, 0.025, 0.05, 0, 0.372, 0.025);
+        pbox(B, 'paint', K.render, L + 0.06, top - 2.98, 0.045, 0, (2.98 + top) / 2, 0.0225);
+        speed(B, -L / 2 - 0.03, L / 2 + 0.03, 3.05, { n: 3, gap: 0.085, t: 0.04, d: 0.055 });
+        for (const w of [-12.74, -8.67, -4.33, 0, 4.33, 8.67, 12.74]) {
+          pbox(B, 'paint', K.render, 0.48, 2.62, 0.05, w, 0.36 + 1.31, 0.025);
+          for (const dx of [-0.1, 0.1]) pbox(B, NS('paint'), K.renderSh, 0.03, 2.1, 0.054, w + dx, 1.5, 0.027);
+          for (const y of [2.6, 2.7, 2.8]) pbox(B, NS('gloss'), K.faience, 0.52, 0.045, 0.065, w, y, 0.0325);
+        }
+        for (const w of [-10.72, -6.5, 6.5, 10.72]) for (const dx of [-0.75, 0.75]) porthole(B, w + dx, 1.75, 0.34, { lit: true });
+        for (const w of [-2.17, 2.17]) roundel(B, w, 1.75, 0.62, ['FIN', 'PAVILION'], { h: 0.2 });
       });
       // the pavilion's sea face under the deck's back curve: portholes, the entrance doors to the pier, the name
       const back = (w) => 41 + 2 * (1 - (w / 16) ** 2);
