@@ -1,0 +1,127 @@
+JOB-6 raw results — automatic, by the Mac mini's b5-runner, 2026-10-17 06:10:58
+branch botlab-b5-bluestone, ran at 986f1af9, exit code 0, wall time 14min
+(a written-up JOB-6.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+RESULT done
+
+## last 15 lines of job.log
+RESULT done
+
+## net-clock-lag.txt
+PASS guest: the match clock never goes up from one frame to the next (it gives time back by running slow)  {"frames":5392,"ups":0,"upMax":0,"upSteps":[]}
+PASS guest: the HUD timer never shows a second again (each next second is lower)  {"shown":91,"back":[],"first":[["1:30",1792177746177],["1:29",1792177746976],["1:28",1792177747876]],"lastShown":["0:11","0:10","0:09","0:08","0:07","0:06","0:05","0:04","0:03","0:02","0:01","0:00"]}
+PASS both: the final countdown fires 10 … 1, each second once and in order — on the guest even after a host tick right after its 6 says it is 0.3 s ahead (its clock not stepped up)  {"guest":[10,9,8,7,6,5,4,3,2,1],"host":[10,9,8,7,6,5,4,3,2,1],"inject":{"before":5.9894,"after":5.9894,"slew":0.3},"skew":[0.005,0.006,0.006,0.007,0.006,0.039,0.039,0.04,0.039,0.041]}
+PASS guest: its clock is the host's at the same wall time (median < 0.15 s, p90 < 0.25 s)  {"samples":5080,"median":0.008,"p90":0.01,"max":0.094,"meanSigned":0.003,"ticks":166,"stepsForward":8,"fwdMax":-0.0853,"slewTicks":2,"slewMax":0.3003,"resyncs":0,"lostToStalls":{"host":0,"guest":0}}
+RESULT 4/4
+
+## net-eras-lag.txt
+PASS turf: a 1:30 Turf War on bluestone runs the eras on both screens (jumps at 30 and 60 s)  {"sched":[{"from":1,"to":2,"at":30},{"from":2,"to":3,"at":60}]}
+PASS turf (netlag 150 / jitter 50): every group flips on both screens within 0.4 s (wall clock) of each other, through both jumps  {"groups":52,"maxSkew_s":0.033,"perJump":[{"groups":8,"max_s":0.032,"median_s":0.03},{"groups":44,"max_s":0.033,"median_s":0.016}],"clockSkew_s":[0.023,0.023,0.023,0.023,0.023,0.023,0.023,0.04],"worst":[["stair-s3:a@2",33],["stair-s3:b@2",33],["stair-s1:a@2",33],["stai
+PASS turf (netlag 150 / jitter 50): the follower's stage clock is the host's at the same wall time — within 0.15 s (median) and 0.25 s (90th percentile) over 26 s after jump 1 (the trip to the relay added back, final review issue 4)  {"clockSkew":{"n":1560,"median":0.027,"p90":0.038,"max":0.079,"signedMedian":0.027,"series":[[35,0.04],[36,0.04],[37,0.04],[38,0.04],[39,0.04],[40,0.04],[41,0.04],[
+PASS turf: after each done both screens agree on solid for every era block and on the nav's era (edgeMask)  {"after":[[{"t":35.57,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2},{"t":35.54,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2}],[{"t":65.64,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3},{"t":65.61,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3}]],"donesB":[[2,33.975],[3,63.
+PASS turf (precondition): the guest's sprinkler stuck on the Degrayling crates' wall and its Drip Curtain on their roof both stand on both screens before the flip (the host has their ghosts)  {"devB":{"state":"spray","onCrates":true,"gid":300001,"pos":[-14.51,1.16,-24.2]},"ghostBefore":1,"curB":{"state":"curtain","pos":[-12.18,2.8,-27],"hp":158,"t":29.51},"curGhostBefore":1}
+PASS turf: that sprinkler and that curtain are gone on both screens after the crates' flip (the owner pops them, the end record [2, gid, 2] ends the ghosts)  {"sprinkler":["dead",0],"curtain":["dead",0]}
+PASS turf: the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window; field 15 carries the painter's stage time) leave its cells equal on both screens  {"shots":17,"span":[-0.39,0.58],"cells":368,"inked":86,"differ":0,"differPerTry":[0]}
+PASS turf: both results screens show the host's counts (the 3000s' turf, the same winner)  {"res":[{"cov":[0.2075,0.1185],"w":0},{"cov":[0.2075,0.1185],"w":0}]}
+RESULT 8/8
+
+## net-eras.txt
+PASS turf: a 1:30 Turf War on bluestone runs the eras on both screens (jumps at 30 and 60 s)  {"sched":[{"from":1,"to":2,"at":30},{"from":2,"to":3,"at":60}]}
+PASS turf: every group flips on both screens within 0.4 s (wall clock) of each other, through both jumps  {"groups":52,"maxSkew_s":0.025,"perJump":[{"groups":8,"max_s":0.025,"median_s":0.009},{"groups":44,"max_s":0.01,"median_s":0.007}],"clockSkew_s":[-0.018,-0.018,-0.001,-0.001,-0.001,-0.001,-0.001,-0.001],"worst":[["bridge-1:a@1",-25],["bridge-1:b@1",-25],["stair-s3:a@2",10],["stair-s3:b@2",10]]
+PASS turf: the follower's stage clock is the host's at the same wall time — within 0.15 s (median) and 0.25 s (90th percentile) over 26 s after jump 1 (the trip to the relay added back, final review issue 4)  {"clockSkew":{"n":1560,"median":0.008,"p90":0.009,"max":0.022,"signedMedian":0.005,"series":[[35,-0.01],[36,0.01],[37,0.01],[38,0.01],[39,0.01],[40,0.01],[41,0.01],[42,0.01],[43,0.01],[44,0
+PASS turf: after each done both screens agree on solid for every era block and on the nav's era (edgeMask)  {"after":[[{"t":35.52,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2},{"t":35.53,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2}],[{"t":65.6,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3},{"t":65.6,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3}]],"donesB":[[2,33.966],[3,63.96
+PASS turf (precondition): the guest's sprinkler stuck on the Degrayling crates' wall and its Drip Curtain on their roof both stand on both screens before the flip (the host has their ghosts)  {"devB":{"state":"spray","onCrates":true,"gid":300001,"pos":[-14.51,1.16,-24.2]},"ghostBefore":1,"curB":{"state":"curtain","pos":[-12.18,2.8,-27],"hp":158,"t":29.57},"curGhostBefore":1}
+PASS turf: that sprinkler and that curtain are gone on both screens after the crates' flip (the owner pops them, the end record [2, gid, 2] ends the ghosts)  {"sprinkler":["dead",0],"curtain":["dead",0]}
+PASS turf: the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window; field 15 carries the painter's stage time) leave its cells equal on both screens  {"shots":17,"span":[-0.4,0.57],"cells":368,"inked":91,"differ":0,"differPerTry":[0]}
+PASS turf: both results screens show the host's counts (the 3000s' turf, the same winner)  {"res":[{"cov":[0.1825,0.125],"w":0},{"cov":[0.1825,0.125],"w":0}]}
+PASS host: after the host leaves (after jump 1), the new host runs jump 2 on time — its match clock at 60 ± 0.4 s when its era:jump fires — and the 3000s arrive  {"jump2":{"n":"era:jump","wall":1792177515392,"t":60.016,"mc":60.016},"after":{"host":true,"follower":false,"era":3,"state":"playing"}}
+PASS host: … and the match finishes on the new host's screen
+PASS practice: online Practice runs the eras from the host's stage clock (its ticks carry it: no movers or pods here) — the clocks agree within 0.4 s, both in the 1880s  {"s0":[{"t":3.1,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":3.1,"era":1,"navEra":1,"turf":87974,"phase":"idle"}]}
+PASS practice: the host moved to the 3000s; the guest follows within 2 s (its clock snaps to the host's: seek('clock')), turf totals equal  {"follow_s":0.41,"s1":[{"t":125.31,"era":3,"navEra":3,"turf":106486,"phase":"idle"},{"t":125.27,"era":3,"navEra":3,"turf":106486,"phase":"idle"}]}
+PASS practice: a late joiner in the 3000s — its era is 3 within 2 s of its first host tick, its importGrid takes the host's turf (the same inked live cells), its turfTotal equals the host's  {"era3After_s":0,"joinToTick_s":1.7,"joiner":{"t":135.68,"era":3,"navEra":3,"turf":106486,"phase":"idle"},"host":{"t":135.71,"era":3,"navEra":3,"turf":106486,"phase":"idle"},"inked":[{"inked":1062,"counts":[
+PASS practice: the rewind at 180 s takes all three screens back to the 1880s (nav era 1, the same turf total)  {"s3":[{"t":186.07,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":186.07,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":186.04,"era":1,"navEra":1,"turf":87974,"phase":"idle"}]}
+RESULT 14/14
+
+## perf.txt
+### perf-era1-1.log
+PRE {"stage":"bluestone","quality":"high","era":1,"phase":"idle","jump":null,"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":315,"tris":670599,"cpuRenderMs":2.88,"cpuSimMs":2.19},"stats":{"navMs":432,"navBuilds":[139,133,152],"mergeMs":8.4,"paintMs":26.69999999552965,"meshMs":7.600000001490116,"compileMs":21,"compiled":8,"bases":["1:swap 87","2:ini
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6236,"blocks":712,"solidBlocks":568,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":348,"tris":695781,"cpuRenderMs":2.92,"cpuSimMs":2.14},"coverage":[4.6,3.1]}
+### perf-era1-2.log
+PRE {"stage":"bluestone","quality":"high","era":1,"phase":"idle","jump":null,"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":320,"tris":761124,"cpuRenderMs":2.6,"cpuSimMs":1.88},"stats":{"navMs":431,"navBuilds":[139,131,152],"mergeMs":10,"paintMs":28.799999997019768,"meshMs":6.5,"compileMs":21,"compiled":8,"bases":["1:swap 86","2:init 75","3:init 5
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6102,"blocks":712,"solidBlocks":568,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":320,"tris":761098,"cpuRenderMs":2.6,"cpuSimMs":1.86},"coverage":[3,3.7]}
+### perf-era2-1.log
+PRE {"stage":"bluestone","quality":"high","era":2,"phase":"idle","jump":null,"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":344,"tris":799473,"cpuRenderMs":3.11,"cpuSimMs":2.18},"stats":{"navMs":444,"navBuilds":[142,142,151],"mergeMs":9.2,"paintMs":30.80000000447035,"meshMs":7,"compileMs":12,"compiled":7,"bases":["2:swap 86","1:init 62","3:init 70
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6148,"blocks":712,"solidBlocks":590,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":342,"tris":798809,"cpuRenderMs":3.08,"cpuSimMs":2.17},"coverage":[4,3.9]}
+### perf-era2-2.log
+PRE {"stage":"bluestone","quality":"high","era":2,"phase":"idle","jump":null,"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":320,"tris":676833,"cpuRenderMs":2.62,"cpuSimMs":2.11},"stats":{"navMs":430,"navBuilds":[139,132,151],"mergeMs":8.6,"paintMs":21.5,"meshMs":7.399999998509884,"compileMs":16,"compiled":7,"bases":["2:swap 85","1:init 62","3:side
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6206,"blocks":712,"solidBlocks":590,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":321,"tris":676173,"cpuRenderMs":2.63,"cpuSimMs":2.07},"coverage":[1.8,3]}
+### perf-era3-1.log
+PRE {"stage":"bluestone","quality":"high","era":3,"phase":"idle","jump":null,"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":367,"tris":836131,"cpuRenderMs":2.96,"cpuSimMs":2.19},"stats":{"navMs":422,"navBuilds":[139,127,146],"mergeMs":10.2,"paintMs":31.19999999552965,"meshMs":6.699999995529652,"compileMs":12,"compiled":6,"bases":["3:swap 89","1:in
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6117,"blocks":712,"solidBlocks":700,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":360,"tris":839131,"cpuRenderMs":2.94,"cpuSimMs":2.15},"coverage":[2.9,2.6]}
+### perf-era3-2.log
+PRE {"stage":"bluestone","quality":"high","era":3,"phase":"idle","jump":null,"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":298,"tris":666862,"cpuRenderMs":2.64,"cpuSimMs":1.78},"stats":{"navMs":440,"navBuilds":[143,137,150],"mergeMs":9.4,"paintMs":29.700000002980232,"meshMs":6.699999995529652,"compileMs":11,"compiled":6,"bases":["3:swap 88","1:in
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6043,"blocks":712,"solidBlocks":700,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":298,"tris":665014,"cpuRenderMs":2.67,"cpuSimMs":1.74},"coverage":[1.9,2.7]}
+### perf-halyard-1.log
+PRE {"stage":"halyard","perf":{"calls":372,"tris":3397026,"cpuRenderMs":3.4,"cpuSimMs":5.22},"ppm":12.9,"atlas":2048,"quality":"high"}
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6256,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":373,"tris":3397002,"cpuRenderMs":3.37,"cpuSimMs":5.02},"coverage":[3.3,4.5]}
+### perf-halyard-2.log
+PRE {"stage":"halyard","perf":{"calls":431,"tris":3498443,"cpuRenderMs":3.84,"cpuSimMs":5.23},"ppm":12.9,"atlas":2048,"quality":"high"}
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6373,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":432,"tris":3489843,"cpuRenderMs":3.85,"cpuSimMs":5.03},"coverage":[6.1,4]}
+### perf-jump12-1.log
+PRE {"stage":"bluestone","quality":"high","era":1,"phase":"jump","jump":{"from":1,"to":2,"front":37.5,"wallMs":474,"phase":"jump"},"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":322,"tris":668680,"cpuRenderMs":4.66,"cpuSimMs":1.29},"stats":{"navMs":431,"navBuilds":[142,131,150],"mergeMs":8.5,"paintMs":26.5,"meshMs":7.5,"compileMs":26,"compiled":8,
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6132,"blocks":712,"solidBlocks":590,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":321,"tris":668672,"cpuRenderMs":4.63,"cpuSimMs":1.3},"coverage":[3.4,4.5]}
+### perf-jump12-2.log
+PRE {"stage":"bluestone","quality":"high","era":1,"phase":"jump","jump":{"from":1,"to":2,"front":37.5,"wallMs":460,"phase":"jump"},"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":324,"tris":859604,"cpuRenderMs":3.97,"cpuSimMs":1.41},"stats":{"navMs":437,"navBuilds":[138,138,152],"mergeMs":8.8,"paintMs":30.69999999552965,"meshMs":6.600000001490116,"
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6045,"blocks":712,"solidBlocks":590,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":294,"tris":737862,"cpuRenderMs":3.99,"cpuSimMs":1.42},"coverage":[4.5,5.7]}
+### perf-jump23-1.log
+PRE {"stage":"bluestone","quality":"high","era":2,"phase":"jump","jump":{"from":2,"to":3,"front":37.5,"wallMs":775,"phase":"jump"},"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":338,"tris":693937,"cpuRenderMs":5.61,"cpuSimMs":1.38},"stats":{"navMs":434,"navBuilds":[140,132,152],"mergeMs":9.2,"paintMs":27.399999998509884,"meshMs":6.600000001490116,
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6236,"blocks":712,"solidBlocks":700,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":337,"tris":693915,"cpuRenderMs":5.44,"cpuSimMs":1.36},"coverage":[3.5,4.8]}
+### perf-jump23-2.log
+PRE {"stage":"bluestone","quality":"high","era":2,"phase":"jump","jump":{"from":2,"to":3,"front":37.5,"wallMs":812,"phase":"jump"},"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":true,"perf":{"calls":329,"tris":666800,"cpuRenderMs":5.56,"cpuSimMs":1.32},"stats":{"navMs":441,"navBuilds":[143,138,151],"mergeMs":9.6,"paintMs":22.5,"meshMs":7.0999999940395355,"compileMs":2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6178,"blocks":712,"solidBlocks":700,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":328,"tris":663112,"cpuRenderMs":5.45,"cpuSimMs":1.32},"coverage":[3.7,3.8]}
+
+## probe-gpu.txt
+PASS issue 7: fresh nodes per jump against the sampler (28 draws from validIds)  [{"jump":"1>2","validIds":4958,"fresh":150,"share":3.03,"pDrawAtLeastOneOf28":57.7},{"jump":"2>3","validIds":5844,"fresh":952,"share":16.29,"pDrawAtLeastOneOf28":99.3}]
+PASS the GPU timer extension  {"ext":true,"renderer":"WebKit WebGL","version":"WebGL 2.0 (OpenGL ES 3.0 Chromium)","size":[1134,708],"quality":"low"}
+PASS base: 240 frames, no jump  {"disjoint":false,"frames":240,"wallMedian":1.9,"wallMax":4,"gpuMedian":7.54,"gpuMax":19.51,"worstWall":[[null,4,6.5,0,"idle"],[null,3.9,4.67,0,"idle"],[null,3.9,7.92,0,"idle"],[null,3.5,6.97,0.1,"idle"],[null,3.5,7.64,0,"idle"]],"worstGpu":[[null,3,19.51,0,"idle"],[null,2.3,18.15,0,"idle"],[null,2.3,17.47,0,"idle"],[null,1.8,16.67,0,"idle"],[null,1.9,16.05,0,"idle"
+PASS pmrem: env._rebuildEnvMap() alone (size 256, GGX 256 samples), then the next frame  {"disjoint":false,"rows":[[0,0.3,9.07,0,"pmrem"],[null,3.2,6.24,0,"after"],[1,0.3,14.15,0,"pmrem"],[null,2.2,10.2,0,"after"],[2,0.2,16.6,0,"pmrem"],[null,2.6,17,0,"after"],[3,0.1,21.12,0,"pmrem"],[null,2.2,10.98,0,"after"],[4,0.3,26.41,0,"pmrem"],[null,2.3,18.58,0,"after"]]}
+PASS jump1: 1 → 2, J − 0.5 … done + 1.5 [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"disjoint":false,"doneAt":3.96,"frames":358,"wallMedian":1.8,"wallMax":9.4,"gpuMedian":15.17,"gpuMax":30.51,"worstWall":[[4.27,9.4,21.11,0,"idle"],[3.97,8.5,21.7,1.6,"idle"],[4.35,6.4,7.37,0,"idle"],[0,5,18.36,2.8,"jump"],[4.95,4.8,12.89,0,"idle"]],"worstGpu":[[3.37,2.1,30.51,0,"jump"],[3.33,2
+PASS theme: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2.2,"wallMax":283.5,"gpuMedian":6.29,"gpuMax":19.6,"worstWall":[[0,283.5,19.6,1,"jump"],[-0.35,77.9,5.81,0,"warn"],[4.28,39.3,3.95,0.1,"idle"],[0.83,19.4,6.68,0,"jump"],[3.97,12.7,8.18,1.6,"idle"]],"worstGpu":[[0,283.5,19.6,1,"jump"],
+PASS theme-noCurtain: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme-noCurtain","theme":"sunset","disjoint":false,"frames":358,"wallMedian":1.9,"wallMax":241.3,"gpuMedian":16.64,"gpuMax":33.23,"worstWall":[[-0.02,241.3,16.24,0.1,"warn"],[4.28,35.2,21.13,0.1,"idle"],[0.83,21.1,14.5,0.1,"jump"],[1.33,17.2,26.48,0.1,"jump"],[3.97,12.9,14.98,0.9,"idle"]],"
+PASS theme-noHolo: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme-noHolo","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2,"wallMax":155,"gpuMedian":6.28,"gpuMax":18.09,"worstWall":[[0,155,7.53,0.8,"jump"],[4.28,35.2,3.74,0,"idle"],[0.82,20.5,6.75,0,"jump"],[1.33,15.5,10.62,0,"jump"],[3.97,11.8,8.63,1,"idle"]],"worstGpu":[[4.33,2.3,18.09,0
+PASS theme-noEnv: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme-noEnv","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2,"wallMax":220.9,"gpuMedian":6.31,"gpuMax":17.2,"worstWall":[[0,220.9,13.68,0.8,"jump"],[4.28,34.1,9.23,0,"idle"],[0.83,21.8,5.28,0,"jump"],[1.33,16.6,5.47,0,"jump"],[5.28,13.9,4.54,0,"idle"]],"worstGpu":[[-0.03,1.2,17.2,
+RESULT 9/9
+
+## timinga.txt
+### first a
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":8,"compileMs":20,"programs":[124,124],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":5.3,
+RESULT 1/1
+### frames a
+PASS step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":4.5,"p95":3.2},"baselineInking":[[256.4,84],[4.4,86],[4.2,92],[4.2,90]],"frames":358,"worst":[[35.4,1.47,"jump",0,0,4.6],[15,1.82,"jump",0,0,0],[9.6,1.15,"jump",0,1.3,0],[9.3,4.38,"idle",0,0,0]],"baseMs":[93,0,0],"compileMs":21,"max":35.4,"p95
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 64 ms","3:side 56 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2.1,"worst":[[10.4,0.02,2.1,5,3.3,0,0,0],[9.1,3.97,1,0.9,7.2,0,0,2],[7.2,4.32
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[10.4,0.02,2.1,5,3.3,0,0,0],[9.1,3.97,1,0.9,7.2,0,0,2],[7.2,4.32,0,6.8,0.4,0,0,0]]],["theme",[[15.7,4.32,0,15.3,0.4,0,0,0],[11.8,3.97,0.9,1.1,9.8,0,0,2],[6.4,0.02,0.2,4.2,2,0,0,0]]]],"baselineNoJumpMax":4.5}
+RESULT 4/4
+
+## timingb.txt
+### first b
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":8,"compileMs":28,"programs":[125,125],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":3.7,
+RESULT 1/1
+### frames b
+PASS step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":5.1,"p95":3.5},"baselineInking":[[206.5,106],[5,110],[4.4,112],[4.1,111]],"frames":358,"worst":[[32,1.52,"jump",0,0,6.6],[14,1.83,"jump",0,0,0],[10.7,1.87,"jump",0,0,5.7],[10.1,5.03,"idle",0,0.1,5.2]],"baseMs":[96,0,0],"compileMs":21,"max":32,
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 63 ms","3:side 54 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2,"worst":[[10.5,0.02,2,4.3,4.2,0,0,0],[8.9,3.97,0.9,1.1,6.9,0,0,2],[6.5,0.03
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[10.5,0.02,2,4.3,4.2,0,0,0],[8.9,3.97,0.9,1.1,6.9,0,0,2],[6.5,0.03,0.9,2,3.6,0,0,0]]],["theme",[[15.7,4.35,0.1,15.3,0.3,0,0,0],[11.9,3.97,0.9,1.1,9.9,0,0,2],[7.2,0.02,0.4,4.7,2.1,0,0,0]]]],"baselineNoJumpMax":5.1}
+RESULT 4/4
+
+## timingc.txt
+### first c
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":8,"compileMs":34,"programs":[127,127],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":3.6,
+RESULT 1/1
+### frames c
+PASS step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":155.8,"p95":3.5},"baselineInking":[[163.5,152],[4,201],[3.9,191],[3.7,91]],"frames":358,"worst":[[32.1,1.45,"jump",0,0,0],[13.4,1.82,"jump",0,0.1,5.8],[12.1,1.75,"jump",0,0.1,0],[10.8,4.98,"idle",0,0,-28.5]],"baseMs":[86,0,0],"compileMs":21,"m
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 62 ms","3:side 52 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2.2,"worst":[[10.2,3.97,1.2,1.8,7.2,0,0,2],[9.8,0.02,2.2,4,3.6,0,0,0],[6.6,0.
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[10.2,3.97,1.2,1.8,7.2,0,0,2],[9.8,0.02,2.2,4,3.6,0,0,0],[6.6,0.53,2,1.8,2.8,0,0,0]]],["theme",[[15.2,4.28,0,14.7,0.5,0,0,0],[12.7,3.97,1,1.9,9.8,0,0,2],[6.3,0.02,0.2,3.9,2.2,0,0,0]]]],"baselineNoJumpMax":155.8}
+RESULT 4/4
