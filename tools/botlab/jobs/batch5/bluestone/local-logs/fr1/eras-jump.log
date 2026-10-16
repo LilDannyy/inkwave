@@ -1,0 +1,2 @@
+[5953:1016/214146.946305:ERROR:ui/gl/angle_platform_impl.cc:48] mtl_command_buffer.mm:690 (onCommandBufferCompleted): Completed MTLCommandBuffer failed, and error is Caused GPU Hang Error (00000003:kIOGPUCommandBufferCallbackErrorHang)
+WATCHDOG

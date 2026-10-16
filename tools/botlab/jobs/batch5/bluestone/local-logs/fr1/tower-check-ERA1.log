@@ -1,0 +1,20 @@
+HARNESS ERA=1: every game page loads with ?era=1
+ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+     run      s=     0  [0,1.3,0] → [9.9,1.3,0]  9.9 m
+     run      s=   9.9  [9.9,1.3,0] → [9.99,1.3,0]  0.09 m
+     DROP     s=  9.99  [9.99,1.3,0] → [9.99,0,0]  -1.3 m
+     run      s= 11.29  [9.99,0,0] → [19.5,0,0]  9.51 m
+     run      s=  20.8  [19.5,0,0] → [19.5,0,48.7]  48.7 m
+     incline  s=  69.5  [19.5,0,48.7] → [19.5,1,51.3]  2.6 m 21°
+     run      s= 72.29  [19.5,1,51.3] → [19.5,1,53]  1.7 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+   checkpoints [{"team":0,"index":0,"d":28.8,"dur":10,"at":[19.5,0,8]},{"team":0,"index":1,"d":50.8,"dur":10,"at":[19.5,0,30]},{"team":1,"index":0,"d":28.8,"dur":10,"at":[-19.5,0,-8]},{"team":1,"index":1,"d":50.8,"dur":10,"at":[-19.5,0,-30]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/bsfix5/logs/tcE1): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s21.png, bluestone-03-checkpoint1-s29.png, bluestone-04-checkpoint2-s51.png, bluestone-05-goal-s74.png
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}

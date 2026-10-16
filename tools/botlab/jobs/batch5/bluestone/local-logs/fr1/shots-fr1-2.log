@@ -1,0 +1,5 @@
+shot fr1-jump1-lane-done+0.5 118239 {"era":2,"phase":"idle","from":1,"to":2,"t":64.483,"next":{"from":2,"to":3,"at":120,"inS":55.5166666666576},"front":-1,"flips":8,"navEra":2,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":64.48}
+shot fr1-minimap-done+0.5 101911
+shot fr1-jump2-wagon-done+0.5 99080 {"era":3,"phase":"idle","from":2,"to":3,"t":124.483,"next":null,"front":-1,"flips":52,"navEra":3,"turfTotal":106486,"eraShoves":0,"rescues":0,"devices":0,"mc":124.48}
+shot fr1-minimap-era3-done+0.5 107505
+CONSOLE 0 error line(s)
