@@ -11,7 +11,7 @@
 // shove   a kid forced into an appearing piece is shoved out with its body fitting (straight up onto it; else round it /
 //         the nearest node), stats.eraShoves counts it
 // rescue  a kid on a piece that vanishes over water is rescued to a valid node, never splatted
-// device  a sprinkler on a vanishing piece is destroyed (S.crushIn, then the module's walk of G.subs.items); a Drip Curtain
+// device  a sprinkler on a vanishing piece is destroyed (the module's walk of G.subs.items, after S.crushIn); a Drip Curtain
 //         resting on a vanishing roof (no face: the Degrayling crates at jump 1, the goods wagon at jump 2) is popped at
 //         its flip, not left standing in the air, and one on the street beside the crates stays (final review, issue 1)
 // zip     a Zipline rider clinging to the crates' wall drops when they vanish, and one zipping to them as they flip
@@ -246,7 +246,7 @@
     const st0 = it.state, onFace = it.face >= 0 ? L.faces[it.face].block === halo.id : null;
     const J = E.debugJump(1, { inS: 0 }), d0 = E.stats.devices;
     tAt(flipAt(halo, J) + 0.1);
-    R('step 8: a sprinkler on a vanishing piece (the Halo in the rewind) is destroyed at its flip (S.crushIn; until G.deploy.crushIn exists, the module\'s walk of G.subs.items)',
+    R('step 8: a sprinkler on a vanishing piece (the Halo in the rewind) is destroyed at its flip (the module\'s walk of G.subs.items, which the subs SPEC leaves to it; S.crushIn first for the kits\' devices once G.deploy.crushIn exists)',
       st0 === 'spray' && onFace && it.state === 'dead' && E.stats.devices > d0, { before: st0, onFace, after: it.state, crushIn: typeof __G.deploy?.crushIn });
     tAt(J.doneAt + 1.2);
     // final review, issue 1: Drip Curtains resting on vanishing roofs (a curtain has no face; a roof top has none to
@@ -378,14 +378,28 @@
       // theme). Each drop is rebuilt before the jump — the flip inside setViewerTeam, the theme by the next era update —
       // so between J and done + 1 no base raster is built (W.stats.baseBuilds) and no frame passes 50 ms
       const mm = g.minimap, th0 = g.theme, rows = [];
+      // (each frame split (final review, issue 5): the era update — the module's own work — the render, and the rest of the
+      //  frame (the sim, the HUD), so a spike on a loaded machine shows whose it is)
+      const Rr = g.R, rend0 = Rr.render.bind(Rr), upd0 = E.update.bind(E);
+      let fu = 0, fren = 0;
       const jumpRun = (label, prep) => {
         const b0 = W.stats.baseBuilds.length, info = prep();
         const before = W.stats.baseBuilds.slice(b0), missing = W._basesMissing();
         const to = E.era === 3 ? 1 : E.era + 1, Jx = E.debugJump(to, { inS: 0 }), b1 = W.stats.baseBuilds.length, fr = [];
-        while (E.S.clock.t < Jx.doneAt + 1.0) { const t0 = performance.now(); dbg.step(1000 / 60); fr.push([+(performance.now() - t0).toFixed(1), +(E.S.clock.t - Jx.at).toFixed(2)]); }
+        Rr.render = (...a) => { const r0 = performance.now(); try { return rend0(...a); } finally { fren += performance.now() - r0; } };
+        E.update = (dt, t) => { const u0 = performance.now(); try { return upd0(dt, t); } finally { fu += performance.now() - u0; } };
+        let uMax = 0;
+        while (E.S.clock.t < Jx.doneAt + 1.0) {
+          fu = 0; fren = 0;
+          const t0 = performance.now(); dbg.step(1000 / 60); const ms = performance.now() - t0;
+          if (fu > uMax) uMax = fu;
+          // [total, J + s, era update, render, the rest]
+          fr.push([+ms.toFixed(1), +(E.S.clock.t - Jx.at).toFixed(2), +fu.toFixed(2), +fren.toFixed(1), +(ms - fu - fren).toFixed(1)]);
+        }
+        Rr.render = rend0; E.update = upd0;
         const during = W.stats.baseBuilds.slice(b1);
         fr.sort((a, b) => b[0] - a[0]);
-        rows.push({ label, ...info, rebuiltBefore: before.map((x) => `${x.e}:${x.why} ${x.ms} ms`), missingAtJ: missing, jump: `${Jx.from}>${Jx.to}`, buildsJtoDone1: during, worst: fr.slice(0, 3) });
+        rows.push({ label, ...info, rebuiltBefore: before.map((x) => `${x.e}:${x.why} ${x.ms} ms`), missingAtJ: missing, jump: `${Jx.from}>${Jx.to}`, buildsJtoDone1: during, worst: fr.slice(0, 3), eraUpdateMaxMs: +uMax.toFixed(2), frames: fr.length });
       };
       jumpRun('bravo', () => { mm.setViewerTeam(1); return { flip: mm.flip, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
       jumpRun('theme', () => { mm.setViewerTeam(0); step(0.1); g.theme = th0 === 'sunset' ? 'golden' : 'sunset'; __G.env.setTheme?.(g.theme); step(4 / 60); return { theme: g.theme, mmTheme: mm._theme, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
@@ -393,6 +407,10 @@
       R('step 8 (review fix 1): a viewer on Bravo (the minimap\'s side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1',
         rows.length === 2 && rows.every((r) => !r.missingAtJ && r.cached === '123' && r.buildsJtoDone1.length === 0) && rows[0].flip === true && rows[0].rebuiltBefore.length === 2 && rows[1].rebuiltBefore.length >= 2,
         rows);
+      // (the module's own share of those frames, deterministic enough for a shared machine: its update in every frame of the
+      //  two jumps, J to done + 1, stays under 10 ms — the warning frame's budget of 'first')
+      R('step 8 (final review, issue 5): … and the era update itself (the module\'s whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render\'s or the machine\'s, split per frame [total, J + s, era update, render, the rest]',
+        rows.length === 2 && rows.every((r) => r.eraUpdateMaxMs < 10 && r.frames > 200), rows.map((r) => ({ label: r.label, jump: r.jump, eraUpdateMaxMs: r.eraUpdateMaxMs, worst: r.worst })));
       // (the frame time of those two jumps: a timing, judged like the frames check above — flaky on a loaded machine)
       R('step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms', rows.length === 2 && rows.every((r) => r.worst[0][0] < 50),
         { worst: rows.map((r) => [r.label, r.worst]), baselineNoJumpMax: +base[base.length - 1].toFixed(1) });
