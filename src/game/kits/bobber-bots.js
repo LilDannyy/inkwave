@@ -31,7 +31,8 @@
 //   tIn 0.3 (a bot inside steps out); at most 48 discs in all (those nearest a bot of the other team).
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../../core/ctx.js';
-import { TOWER, SPECIALS, PLAYER, weaponRange } from '../../config.js';
+import { TOWER, SPECIALS, PLAYER, SUBS, weaponRange } from '../../config.js';
+const SUBS_BOMB = () => SUBS.bomb || {};
 import { THREAT_STATS, zonePlan, towerPlan } from '../bots.js';
 import { sightRay, teamKnown } from '../botSight.js';
 import { MAIN_KITS, SUB_KITS } from './registry.js';
@@ -853,13 +854,17 @@ function arcHits(a, w, pad) {
   for (const o of near(a.pos.x - R, a.pos.z - R, a.pos.x + R, a.pos.z + R, _nr)) if (o.team === a.team && o.state === 'live' && o.chain) _arcC.push(o);
   for (const o of pendingOwn(a.team)) _arcC.push(o);
   if (!_arcC.length) return null;
-  _ap.copy(_am); _av.copy(_ad).multiplyScalar(w.throwSpeed);
-  for (let i = 0; i < 150 && _ap.y > -30; i++) {
-    _aq.copy(_ap); _av.y -= w.gravity / 60; _av.multiplyScalar(1 - (w.drag || 0) / 60); _ap.addScaledVector(_av, 1 / 60);
-    const hit = G.physics.segment(_aq, _ap, _hh).hit;
-    if (hit) _ap.copy(_hh.point);
-    for (const o of _arcC) if (posOf(o).distanceTo(_ap) < r && idleNow(o, a.team)) return o;
-    if (hit) return null;
+  // (the lead blob and the volley's slower ones: each blob of five 7.5 % slower than the one before, the same heading —
+  // they fall short of the aim point)
+  for (const k of [1, 0.85, 0.7]) {
+    _ap.copy(_am); _av.copy(_ad).multiplyScalar(w.throwSpeed * k);
+    for (let i = 0; i < 150 && _ap.y > -30; i++) {
+      _aq.copy(_ap); _av.y -= w.gravity / 60; _av.multiplyScalar(1 - (w.drag || 0) / 60); _ap.addScaledVector(_av, 1 / 60);
+      const hit = G.physics.segment(_aq, _ap, _hh).hit;
+      if (hit) _ap.copy(_hh.point);
+      for (const o of _arcC) if (posOf(o).distanceTo(_ap) < r && idleNow(o, a.team)) return o;
+      if (hit) break;
+    }
   }
   return null;
 }
@@ -909,6 +914,26 @@ function lobLand(a, sub) {
   }
   return null;
 }
+// [b5-int3] a Splat Bomb from its first floor hit (lobLand left _tv as its velocity there): weapons.js _updateBombs —
+// gravity 24, off a floor 0.35 of the speed into it back and × 0.45, off a wall × 0.6, armed at the first floor hit and
+// blown SUB.bomb.fuse s later → where it is then
+const _br = new V3(), _bq = new V3(), _bv = new V3();
+function bombRest(land) {
+  if (!land) return null;
+  _br.copy(land).addScaledVector(_th.normal, 0.21); _bv.copy(_tv);
+  { const vn = _bv.dot(_th.normal); _bv.addScaledVector(_th.normal, -vn * 1.35).multiplyScalar(_th.normal.y > 0.6 ? 0.45 : 0.6); }
+  let fuse = _th.normal.y > 0.6 ? (SUBS_BOMB().fuse || 0.95) : -1;
+  for (let i = 0; i < 300 && _br.y > -30; i++) {
+    _bq.copy(_br); _bv.y -= 24 / 60; _br.addScaledVector(_bv, 1 / 60);
+    if (G.physics.segment(_bq, _br, _th).hit) {
+      _br.copy(_th.point).addScaledVector(_th.normal, 0.21);
+      const vn = _bv.dot(_th.normal); _bv.addScaledVector(_th.normal, -vn * 1.35).multiplyScalar(_th.normal.y > 0.6 ? 0.45 : 0.6);
+      if (_th.normal.y > 0.6 && fuse < 0) fuse = SUBS_BOMB().fuse || 0.95;
+    }
+    if (fuse >= 0 && (fuse -= 1 / 60) <= 0) return _br;
+  }
+  return _br;
+}
 // along the aim, flat or not, from the eye: samples every metre to `len` or the first wall, each a blast of radius r
 function lineHits(a, len, r, flat) {
   const cp = flat ? 1 : Math.cos(a.bot?.aimPitch ?? a.aimPitch ?? 0), yaw = a.bot?.aimYaw ?? a.aimYaw;
@@ -931,6 +956,9 @@ function throwHits(a) {
       let bd = sr;
       for (const e of G.actors) { if (e.team === a.team || !e.alive) continue; const kn = teamKnown(a.team, e, 1.0); if (!kn) continue; const d = Math.hypot(kn.pos.x - land.x, kn.pos.z - land.z); if (d < bd) { bd = d; cx = kn.pos.x; cy = kn.pos.y; cz = kn.pos.z; } }
     }
+    // ([b5-int3] a Splat Bomb bounces on and rolls for its fuse: it blows where that ends — bombRest; a Splat Bomb
+    // Barrage's bomb landed by its thrower's target and rolled 2 m on into a web)
+    if (k === 'bomb' && !sr) { const rs = bombRest(land); if (rs) { cx = rs.x; cy = rs.y; cz = rs.z; } }
     const R = +sub[key] || 2.5;
     let o = webHit(a.team, cx, cy, cz, R);
     if (!o && k === 'shaker') {   // (its hops: on along the throw, ~hopSpeed × gap each)
@@ -966,8 +994,34 @@ function krakenHits(a) {
   const d = SPECIALS.kraken;
   if (!d) return null;
   const T = a.grounded ? (2 * (d.attackVel || 8.5)) / 25 : 0.25, f = a.grounded ? (d.attackFwd || 6.5) * 0.5 : 0;
-  const x = a.pos.x + (a.vel.x + Math.sin(a.aimYaw) * f) * T, z = a.pos.z + (a.vel.z + Math.cos(a.aimYaw) * f) * T;
-  return webHit(a.team, x, a.pos.y + 0.4, z, (d.radius || 2.3) + 0.5);
+  // (the run from here to the foreseen landing: the air run can end anywhere on it)
+  for (const k of [1, 0.66, 0.33]) {
+    const x = a.pos.x + (a.vel.x + Math.sin(a.aimYaw) * f) * T * k, z = a.pos.z + (a.vel.z + Math.cos(a.aimYaw) * f) * T * k;
+    const o = webHit(a.team, x, a.pos.y + 0.4, z, (d.radius || 2.3) + 0.5);
+    if (o) return o;
+  }
+  return null;
+}
+// [b5-int3] a Zipcaster's zip (specials.js zipcaster fire / body): from 1.2 m up toward the aim point, latched where that
+// meets the stage within range (a miss: no zip), ending a body's width off it; a foe the team knows within a body of the
+// line stops it there — the impact blast (impactRadius) at that end
+const _zf = new V3(), _zd = new V3();
+function zipHits(a) {
+  const d = SPECIALS.zipcaster;
+  if (!d) return null;
+  _zf.set(a.pos.x, a.pos.y + 1.2, a.pos.z); _zd.copy(a.aimPoint).sub(_zf);
+  const L0 = _zd.length(); if (L0 < 0.1) return null; _zd.multiplyScalar(1 / L0);
+  const g = G.physics.raycast(_zf, _zd, d.range || 21, _hh, true);
+  if (!g.hit) return null;
+  const R = (d.impactRadius || 2.4) + 0.5, L = g.dist ?? _zf.distanceTo(g.point);
+  for (const e of G.actors) {
+    if (e.team === a.team || !e.alive) continue;
+    const k = teamKnown(a.team, e, 1.0); if (!k) continue;
+    const t = (k.pos.x - _zf.x) * _zd.x + (k.pos.z - _zf.z) * _zd.z;
+    if (t < 0 || t > L) continue;
+    if (Math.hypot(_zf.x + _zd.x * t - k.pos.x, _zf.z + _zd.z * t - k.pos.z) < PLAYER.radius * 2 + 0.5) return webHit(a.team, k.pos.x, k.pos.y + 0.7, k.pos.z, R);
+  }
+  return webHit(a.team, g.point.x, g.point.y, g.point.z, R);
 }
 // (a held sub's release — the Shaker's: shaker.js botHold) would its throw now go off by an idle own web?
 export const webThrow = (a) => !!(items.length && a.alive && throwHits(a));
@@ -1061,6 +1115,15 @@ export function botAct(b, dt, it, move, busy) {
     // one of its team's idle webs — bobber-web clear: a teammate's crab shells blew a human's webs)
     // ([b5-int3] a Kraken's jump attack — its fire — blows 2.3 m round where it lands: held while that is by an own idle web)
     if (it.fire && items.length && a.specialActive?.id === 'kraken' && krakenHits(a)) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; }
+    // (… and once its attack is in the air — the bot steers the kraken on the way down — it steers off the web: the
+    // attack lands where the air run ends, 1–2 m from where the press foresaw)
+    if (items.length && a.specialActive?.id === 'kraken' && a.specialActive.attack && !a.grounded) {
+      const o = webHit(a.team, a.pos.x + a.vel.x * 0.3, a.pos.y + 0.4, a.pos.z + a.vel.z * 0.3, (SPECIALS.kraken?.radius || 2.3) + 0.8);
+      if (o) { const op = posOf(o), dx = a.pos.x - op.x, dz = a.pos.z - op.z, d = Math.hypot(dx, dz) || 1; move.set(dx / d, 0, dz / d); BOBBER_BOT.krakenSteer = (BOBBER_BOT.krakenSteer || 0) + 1; }
+    }
+    // ([b5-int3] a Zipcaster's zip — its sub press — ends in a 2.4 m body blast where it latches, or on a foe met on the
+    // way: held while that is by an own idle web)
+    if (it.sub && items.length && a.specialActive?.id === 'zipcaster' && zipHits(a)) { it.sub = false; BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1; BOBBER_BOT.zipHolds = (BOBBER_BOT.zipHolds || 0) + 1; }
     if (it.sub && items.length && a.specialActive?.id === 'crab' && crabHits(a)) { it.sub = false; BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1; BOBBER_BOT.crabHolds = (BOBBER_BOT.crabHolds || 0) + 1; }
     return null;
   }
