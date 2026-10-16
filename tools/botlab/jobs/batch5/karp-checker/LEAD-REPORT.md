@@ -53,9 +53,10 @@ air), and so was a misaligned step down.
 - Candidates: carrier-graph node pairs up to two cells apart, diagonals included, **0.3–1.8 m up or 0.3–3.4 m down**,
   with no carrier-graph edge between them, not joined by 6 m of walking, floor under the whole line at one end's height
   or the other (a step, not a gap), and the hop rule's waist and head tests (down: the waist line at the top, the head
-  across, nothing over the landing). Tried when they can matter (D33), the two best of each takeoff, one per 1 m.
+  across, nothing over the landing). Every one that can matter (D33) is tried (73dcbda8; at first two a takeoff).
 - #16 tries each, timed off the face (up: where the floor first stands half the rise, ≤ 0.3 m, above the low end; down:
-  where it first falls that far), a step down first as a run-off, then the five jump timings; the swimming carrier when
+  where it first falls that far), a step down first as a run-off, then jumps 0.2–2.0 m before the face (645c1baa: 1.7
+  and 2.0 added to the five timings); the swimming carrier when
   the kid fails and the floor takes ink.
 - A made one is a #7d find (`step`, cause **field rule**) or, from outside a Gate's ring to inside it, a #7a entrance
   with its own sight line ("step off the nav grid").
@@ -66,7 +67,7 @@ air), and so was a misaligned step down.
 |---|---|---|---|
 | L1t | a 1.0 m no-ink ledge, face at x −15.4, into the ring between 3.6 m wall stretches, screened | FAILING none | **FAIL #7**: "(a) team 0: an entrance at (−14.5, 47.5) [step off the nav grid] not seen from the spawn deck" (and team 1's mirror); "(d) 12 … step [field rule] [16.5,0,−49.5]→[14.5,1,−48.5] 12.4 m …" |
 | L2t | the same at 0.8 m | FAILING none | **FAIL #7**, the same two unseen step entrances |
-| L3t | a 1.0 m walkway's end 0.1 m past a cell centre: a 1.0 m step down into the ring | FAILING none | **FAIL #7**: "(a) … (−13.5, 46.5) [step off the nav grid] not seen …"; "(d) 8 … step [field rule] [15.5,1,−48.5]→[13.5,0,−49.5] 14.8 m" |
+| L3t | a 1.0 m walkway's end 0.1 m past a cell centre: a 1.0 m step down into the ring | FAILING none | **FAIL #7**: "(a) … (−13.5, 46.5) [step off the nav grid] not seen …"; "(d) 8 … step [field rule] [15.5,1,−48.5]→[13.5,0,−49.5] 14.8 m" (20 on the final checker, every candidate tried) |
 | L1tc | the control, the face on the grid (x −15.0) | FAIL #7 [jump] | FAIL #7 [jump], unchanged |
 
 The clean box has 0 step candidates that can matter (#16: "0 steps off the grid"), and every other case keeps its
@@ -141,7 +142,8 @@ I cannot take the lead's D34 / D33 decisions, so the checker now carries them as
 - **One waiver covers a whole numbered flag**: `waive: [{ check: '7d', at, why, probe?, r? }]` waives every find of the
   flag group (one probe and cause within one 3 m cluster) that has a find within max(2, r) m of the spot, of that probe
   if named. The RESULT line counts the waived finds.
-- **The top-down** draws only each flag's own move bold; the rest of its group is thin, so the fans no longer swamp it.
+- **The top-down** draws only each flag's own move bold and the rest of its group medium, so each flag's move stands out
+  (the canal's fan is still dense: §6).
 
 **Proof:**
 
@@ -392,7 +394,7 @@ Pictures (`out/`):
 - `kit-weir.jpg`, `kit-weir-post.jpg`, `kit-gate.jpg`, `kit-sign.jpg`, and `kit-carrierblock.jpg` (**[r1]** re-taken:
   no cream squares) on karpbox;
 - `halyard-kit-*.jpg` and `lockgate-kit-*.jpg` on the real stages;
-- **[r4]** all re-taken on the final kit as `karpbox-kit-*.jpg`, `halyard-kit-*.jpg`, `lockgate-kit-*.jpg`, with
+- **[r4]** all re-taken on the final kit (`kit-*.jpg` on karpbox, `halyard-kit-*.jpg`, `lockgate-kit-*.jpg`), with
   bazookarpFx's looks hidden (the kit only; captions say so). A stage on placeholder data has no kit and gets none.
 
 The kit pieces read as dressed stone and wood in the game's chunky style, and every perchable top is `roof` with no ink.
@@ -951,7 +953,7 @@ it back, as the swim trials do; the plinth is two static pieces built the same o
 - `src/world/bazookarp-data.js`: the `waive` field documented in its header (**[r4]** `probe`, `r`, the flag group; eras).
 - `src/fx/karpKitFx.js` (new; **[r1]** one line in `drawNoCarp`; **[r4]** the glyph's place on its edge).
 - `docs/STAGE-MODS.md`: the `karpStates` row, and T4 served.
-- `tools/botlab/README.md`: the checker, PROBE and the regression set (**[r1]**; **[r3]** the swimming carrier, vaults, squid gaps through rails, the measured ceiling).
+- `tools/botlab/README.md`: the checker, PROBE and the regression set (**[r1]**; **[r3]** the swimming carrier, vaults, squid gaps through rails, the measured ceiling; **[r4]** steps, squid tubes, KARP_SWIM, causes, group waivers).
 - New files:
   - `tools/botlab/bazookarp-check.cjs`, `karp-check-page.js`, `karp-check-box.js` and `karp-check-states.js`;
   - `tools/botlab/jobs/batch5/karp-stages/BUILDER.md`.
@@ -1009,8 +1011,8 @@ it back, as the swim trials do; the plinth is two static pieces built the same o
   builder.
 - **The gimmick stages have no states yet on this base.** The generic state path is proved only with the test module
   and karpbox's test state.
-- **A `-flag-<n>` camera can stand behind an occluder.** `lockgate-flag-18.jpg` looks through the bridge's arch, so the
-  move's "from" end is drawn over brickwork. The arrow, ends and caption are right; the scene is not readable. The
+- **A `-flag-<n>` camera can stand behind an occluder.** Review 3 saw it on lockgate (the flag numbers changed since):
+  a camera behind the bridge's arch, the move's "from" end drawn over brickwork. The arrow, ends and caption are right; the scene is not readable. The
   camera does not search for a clear view.
 - **The kit's look was judged from pictures only, with no lightmap.** **[r4]** The plinth and the glyphs are changed
   (§0, issue 6); WP2 owns the moving parts.
