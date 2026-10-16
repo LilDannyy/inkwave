@@ -504,10 +504,10 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   it used to keep its counts, fuse and overtime clock, which reset a new carrier's ring to the last carry's leftover and
   put a knockout's 0 back up). A snapshot's fuse and rate are read only when its holder is this screen's holder. The
   start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
-- **guest → host.** `{ k: 'kc', nid, ts, fs, fr, fl }` a pick-up claim (`fs`, `[karp-face]`: seconds after the
-  Bazookarp went free on the guest's own screen that it touched it; `fr` / `fl`, review round 3, only when `fr` > 0: how
-  much its player was already running in toward it at that moment, 0–1, and how late it heard of the burst — see the
-  race below; re-sent every 0.3 s while touching; its kit locked until an answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
+- **guest → host.** `{ k: 'kc', nid, ts, fs, fr, fl, fo }` a pick-up claim (`fs`, `[karp-face]`: seconds after the
+  Bazookarp went free on the guest's own screen that it touched it; `fr` / `fl` / `fo`, review round 3, only when `fr` >
+  0: how much its player was already running in toward it at that moment, 0–1, how late that moment was after the burst
+  on the host's clock as the guest reads it, and the guest's floor offset to the host — see the race below; re-sent every 0.3 s while touching; its kit locked until an answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
   half, zone }` the carrier's own judgement of its fuse rate / half / free zone (on change, ≤ 1 per tick), `{ k: 'kf',
   nid, x, y, z, half, zone }` its last footing (≤ 5/s; a half or zone change at once), and **`kh`, a field on the guest's
   ordinary 20 Hz tick** (`msg.kh = [nid, dmg, …]`): its shell hits since the last tick, summed, already × 0.5 / capped
@@ -548,12 +548,19 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   clock). Ordering by the host's clock instead would hand that delay to the host for every standing start. **Review
   round 3: the running start's credit.** On a guest, the moment it goes free, the engine reads its own player's last
   ~0.1 s of movement toward the Bazookarp (`_runIn`: positions, not `a.vel` — a swim or a test's mover moves it without
-  one) as `fr`, 0 (standing, walking away or across) … 1 (at 0.8 × run speed or more), and the burst record's age on the
-  host's clock (`wire.hostNow(host) − tb`, as a snapshot's age is read) as `fl`; both ride its claim. The host adds
-  `fr × fl` (no `fl` — the free phase came from a `u` or a snapshot — its own one-way estimate `NetWire.oneWay`; at most
-  0.25 s) to that claim's `since` (`grantLog` shows it as `cr`). A racer standing at the shell (`fr` 0) is timed from
-  its own "free" as before; one already running in is timed as if it had heard of the burst when the host's actors did.
-  The numbers are in the karp-face report (`part=racerun` / `racefair`, with and without lag).
+  one) as `fr`, 0 (standing, walking away or across) … 1 (at 0.8 × run speed or more), and how late that moment was
+  after the burst on the host's clock as `fl`: `'b'` carries its host wire time `tb`, and `fl` = (the wire time of the
+  frame the guest's `freeT0` belongs to — a `bk` lands between frames) − its floor offset to the host − `tb`. The floor
+  offset (`peer.off`, receive − send at its fastest) is the two clocks' difference plus the fastest one-way trip, so `fl`
+  leaves that trip out; the claim carries the guest's floor offset as `fo`, and the host adds back half of `fo` + its
+  own floor offset to this guest (the two fastest one-way trips, both ways alike; 0–0.3 s). The host adds `fr × late`
+  (−0.1 … 0.25 s; no `fl` — the free phase came from a `u` or a snapshot — its own one-way estimate `NetWire.oneWay`)
+  to that claim's `since` (`grantLog` shows it as `cr`). A racer standing at the shell (`fr` 0) is timed from its own
+  "free" as before; one already running in is timed from the host's burst, as the host's actors are. (The first cut
+  read `fl` as `hostNow(host) − tb` at the record's arrival: hostNow adds the one-way estimate built from relay round
+  trips, which carry each page's event-loop wait, and ran 10–100 ms high on a loaded machine — a running guest lost
+  every dead heat. A guest's own stats keep `bLog` / `kcLog`, what it saw of each burst and sent in each claim, for the
+  tests.) The numbers are in the karp-face report (`part=racerun` / `racefair`, with and without lag).
 - **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
   shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
   inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
