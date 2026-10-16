@@ -124,8 +124,12 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   const gridOf = (cl) => J(cl, `(() => { const P = __G.paint; let s = ''; for (let i = 0; i < P.grid.length; i++) s += P.grid[i]; return s; })()`);
   const gA = await gridOf(A), gC = await gridOf(C), gB = await gridOf(B);
   const gc = cmp(gA, gC), gb = cmp(gA, gB);
-  R('…and its paint (the imported grid) equals the host\'s, lava cells and all, as does the guest\'s (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH)', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && gc.differ === 0 && gb.differ === 0 && gc.inked[0] > 100 && pA >= 18,
-    { lavaCells: { joiner: jc, guest: jb }, grid: { joiner: gc, guest: gb }, painted: pA });
+  // (fix round 4, review 4: the live guest's grid is judged on the lava cells — exact — as the results-screen check is; its
+  // other cells replay the host's splat records at the netcode's 1 cm rounding, a blob's rim cell apart now and then (1 and
+  // 3 cells of 438,753 in two of the last three runs, none a lava cell): reported, not the lava's. The joiner's grid is
+  // the host's imported: exact, whole)
+  R('…and its paint (the imported grid) equals the host\'s, lava cells and all; the live guest\'s lava cells equal the host\'s too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH)', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && gc.differ === 0 && gc.inked[0] > 100 && pA >= 18,
+    { lavaCells: { joiner: jc, guest: jb }, grid: { joiner: gc, guest: gb }, guestOtherCellsDiffer: gb.differ, painted: pA });
   await wait(3200);
   await A.js(`__inkwave.api.practiceEnd(); 1`);
   for (const cl of [A, B, C]) await cl.until(`__G.net.state === 'lobby' && __G.mode === 'menu'`, 40000, 500);
