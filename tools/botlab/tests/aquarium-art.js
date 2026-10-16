@@ -4,7 +4,10 @@
 // left: the bathysphere bobs, the bell rings, the krill drift, the Great Tank's sharks wheel faster — and nothing a player
 // can touch changes (the clock, every actor's hp and position, the turf). Fix round 3 (section 7): the touch pools'
 // dressing keeps to the pool block, the reef and the pools' water are one mesh, the rays are eagle rays, the Deep Dome's tube
-// is unlit, the Fin Pavilion's fascia is dressed off the deck.
+// is unlit, the Fin Pavilion's fascia is dressed off the deck. Fix round 4 (section 8): the Lookouts and telescope bays are
+// drawn under the ink (render, skirting, speed lines, portholes) and the ink still shows on them, their props and the
+// planters' stand within 8.5 cm of their faces and off their walkable tops, the planters' faces are cream stone, the touch
+// pools' rockery breaks their outline at every corner and along the rim.
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -167,6 +170,114 @@
       }
     });
     R('the Fin Pavilion\'s plaza fascia is dressed within 8.5 cm of its face and below the spawn deck\'s top', nf > 1000 && out <= 0.085 && top < 3.36, { verts: nf, proud: +out.toFixed(3), top: +top.toFixed(3) });
+  }
+  // 8. fix round 4 (LEAD-REVIEW art round 4): dressing and shaders only
+  {
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const { LOOKOUT: LK, TBAY: TB, PLANTERS: PL, TOUCH: TP, W: Wb } = await import('./src/world/stages/aquarium/geo.js');
+    const DEG = Math.PI / 180, dir = (a) => [Math.cos(a * DEG), Math.sin(a * DEG)], C30 = Math.cos(30 * DEG);
+    const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
+    const shot = (from, look, n = 24) => { g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
+    g.debug.freeze?.();
+    const tw = (p, s) => [s * p[0], p[1], s * p[2]];   // (Alpha's point turned onto Bravo's twin)
+    // (a) the Lookout's sea face, both halves: white render over a black-granite skirting with faience speed lines (it was
+    // one dark brown slab); then team ink splatted on it still shows (the art is under the ink)
+    const [dL0, dL1] = dir(LK.a), pL = [-dL1, dL0], atL = (u, v, y) => [dL0 * u + pL[0] * v, y, dL1 * u + pL[1] * v];
+    const look = [], inked = [];
+    for (const s of [1, -1]) {
+      G.paint.clear?.();
+      shot(tw(atL(LK.r1 + 2.6, 0.3, 3.0), s), tw(atL(LK.r1, 0.3, 2.95), s));
+      const body = px(tw(atL(LK.r1, 0.55, 2.72), s)), skirt = px(tw(atL(LK.r1, 0.55, 2.47), s)), line = px(tw(atL(LK.r1, 0.55, 3.13), s));
+      look.push({ body, skirt, line });
+      G.paint.splat(V(tw(atL(LK.r1 + 0.05, 0.55, 2.72), s)), 0.45, 0, { instant: true });
+      for (let i = 0; i < 6; i++) g.debug.step(1000 / 60);
+      const ink = px(tw(atL(LK.r1, 0.55, 2.72), s));
+      inked.push({ ink, moved: Math.abs(ink[0] - body[0]) + Math.abs(ink[1] - body[1]) + Math.abs(ink[2] - body[2]) });
+    }
+    G.paint.clear?.();
+    R('the Lookouts\' sea faces are dressed (both halves): white render over a black-granite skirting, faience speed lines', look.every((c) => lum(c.body) > lum(c.skirt) + 40 && lum(c.body) > 2.5 * lum(c.skirt) && c.line[1] > c.line[0] + 6), look);
+    R('ink splatted on a Lookout\'s face shows over its dressing (the art is under the ink)', inked.every((c) => c.moved > 90), inked);
+    // (b) the telescope bay's riser, both halves: render over a granite kerb (it was one dark brown slab)
+    const [dB0, dB1] = dir(TB.a), pB = [-dB1, dB0], atB = (u, v, y) => [dB0 * u + pB[0] * v, y, dB1 * u + pB[1] * v];
+    const bay = [];
+    for (const s of [1, -1]) {
+      shot(tw(atB(TB.r0 - 2.2, 2.3, 3.3), s), tw(atB(TB.r0, 2.3, 2.7), s));
+      bay.push({ riser: px(tw(atB(TB.r0, 2.3, 2.63), s)), kerb: px(tw(atB(TB.r0, 2.3, 2.46), s)) });
+    }
+    R('the telescope bays\' risers are dressed (both halves): render over a granite kerb', bay.every((c) => lum(c.riser) > lum(c.kerb) + 40), bay);
+    // (c) the deck planters' faces are cream cast stone (they were green boxes): red over blue, red at least green
+    const dp = [];
+    for (const s of [1, -1]) {
+      // (its face toward mid, 0.6 m off its plate, between the speed lines and the coping)
+      const b = PL.box[1], wm = (b.w[0] + b.w[1]) / 2, [fx, fz] = Wb(b.s[0], wm + 0.6), [cx, cz] = Wb(b.s[0] - 3, wm + 0.6);
+      shot(tw([cx, b.y0 + 1.0, cz], s), tw([fx, b.y0 + 0.6, fz], s));
+      dp.push({ body: px(tw([fx, b.y0 + 0.78, fz], s)), plinth: px(tw([fx, b.y0 + 0.06, fz], s)) });
+    }
+    R('the spawn decks\' planters are dressed, not green boxes (both halves): cast stone over a granite plinth, not green', dp.every((c) => lum(c.body) > lum(c.plinth) + 35 && c.body[1] - Math.max(c.body[0], c.body[2]) < 5), dp);
+    // (d) the props this round adds stand within 8.5 cm of the faces they dress and off the walkable tops: the Lookout (its
+    // deck 3.6), the telescope bay (3.0), every planter (its top)
+    const meshVerts = (pred, fn) => { G.scene.traverse((o) => { if (o.isMesh && pred(o)) { const P = o.geometry.attributes.position, e = o.matrixWorld.elements; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i); fn(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]); } } }); };
+    // (the props of these builders alone, both halves: a headless kit keeps every part's geometry and placement)
+    const { PropKit: PK } = await import('./src/world/props.js'), { dressingFor: DF } = await import('./src/world/dressing.js');
+    const kit4 = new PK(null, { headless: true });
+    for (const it of DF('aquarium')) if (['aquarium_promenade', 'aquarium_planterdeco', 'aquarium_planterdress'].includes(it.type)) kit4.add(it.type, it);
+    const ownVerts = (fn) => { const v = new G.camera.position.constructor(); for (const parts of kit4._buckets.values()) for (const p of parts) { const P = p.g.attributes.position; for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(p.m); fn(v.x, v.y, v.z); } } };
+    const st = { lookOut: 0, lookOn: 0, bayOut: 0, bayOn: 0, plOut: 0, plOn: 0, n: 0, atL: null, atB: null, atP: null, atBon: null };
+    ownVerts((x, y, z) => {
+      for (const s of [1, -1]) {
+        const X = s * x, Z = s * z;
+        // the Lookout: outside its footprint by up to 0.15 m (its faces' dressing), or over its walkable deck
+        { const u = X * dL0 + Z * dL1, v = X * pL[0] + Z * pL[1];
+          // (beyond its court face's corners: the promenade coping's own joint pilasters, round 2)
+          if (y > LK.floor + 0.01 && y < LK.top && u > LK.r0 - 0.15 && u < LK.r1 + 0.15 && Math.abs(v) < LK.half + 0.15 && !(u < LK.r0 && Math.abs(v) > LK.half)) {
+            const d = Math.hypot(Math.max(LK.r0 - u, 0, u - LK.r1), Math.max(Math.abs(v) - LK.half, 0));
+            if (d > 0) { if (d > st.lookOut) st.atL = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2)]; st.lookOut = Math.max(st.lookOut, d); st.n++; }
+          }
+          if (u > LK.rb + 0.02 && u < LK.r1 && Math.abs(v) < LK.half && y > LK.top - 0.003 && y < LK.top + 0.8) st.lookOn++; }
+        // the telescope bay (its coin telescopes stand on it at r 30.2, and the souvenir kiosk on its inner edge: left out)
+        { const u = X * dB0 + Z * dB1, v = X * pB[0] + Z * pB[1];
+          if (Math.abs(v) > TB.kiosk + 0.03 && y > LK.floor + 0.01 && y < TB.top && u > TB.r0 - 0.15 && u < TB.r1 + 0.15 && Math.abs(v) < TB.half + 0.15) {
+            const d = Math.hypot(Math.max(TB.r0 - u, 0, u - TB.r1), Math.max(Math.abs(v) - TB.half, 0));
+            if (d > 0) { if (d > st.bayOut) st.atB = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2)]; st.bayOut = Math.max(st.bayOut, d); st.n++; }
+          }
+          if (u > TB.r0 + 0.02 && u < 29.8 && Math.abs(v) > TB.kiosk + 0.03 && Math.abs(v) < TB.half && y > TB.top - 0.003 && y < TB.top + 0.8) { st.bayOn++; st.atBon = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2)]; } }
+        // the planters
+        for (const o of PL.oct) {
+          const px0 = X - o.c[0], pz0 = Z - o.c[1], m = Math.max(Math.abs(px0), Math.abs(pz0), Math.SQRT1_2 * Math.max(Math.abs(px0 + pz0), Math.abs(px0 - pz0)));
+          if (y < o.top && m > o.r && m < o.r + 0.15) { if (m - o.r > st.plOut) st.atP = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2)]; st.plOut = Math.max(st.plOut, m - o.r); st.n++; }
+          if (m < o.r - 0.02 && y > o.top - 0.27 - 0.003 && y < o.top + 0.8) { const k = [Math.abs(px0), Math.SQRT1_2 * Math.abs(px0 + pz0), Math.abs(pz0), Math.SQRT1_2 * Math.abs(px0 - pz0)]; let t = -9; for (let j = 0; j < 4; j++) if (k[(j + 2) % 4] <= o.r * Math.tan(Math.PI / 8) + 1e-3) t = Math.max(t, o.top - 0.09 * j); if (y > t - 0.003) st.plOn++; }
+        }
+        for (const b of PL.box) {
+          const dz = Z + 32.5, bs = 0.5 * X - C30 * dz, bw = C30 * X + 0.5 * dz;
+          const d = Math.hypot(Math.max(b.s[0] - bs, 0, bs - b.s[1]), Math.max(b.w[0] - bw, 0, bw - b.w[1]));
+          if (y > b.y0 + 0.01 && y < b.top && d > 0 && d < 0.15) { if (d > st.plOut) st.atP = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2)]; st.plOut = Math.max(st.plOut, d); st.n++; }
+          if (d === 0 && y > b.top - 0.003 && y < b.top + 0.8) st.plOn++;
+        }
+      }
+    });
+    R('the Lookouts\', the telescope bays\' and the planters\' dressing stands within 8.5 cm of their faces and nothing on their walkable tops',
+      st.n > 300 && st.lookOut <= 0.085 && st.bayOut <= 0.085 && st.plOut <= 0.085 && st.lookOn === 0 && st.bayOn === 0 && st.plOn === 0,
+      { verts: st.n, lookout: +st.lookOut.toFixed(3), bay: +st.bayOut.toFixed(3), planters: +st.plOut.toFixed(3), onTops: [st.lookOn, st.bayOn, st.plOn], at: [st.atL, st.atB, st.atP, st.atBon] });
+    // (e) the touch pools' rockery breaks the pool's outline (it read as a painted box with thin fins at the corners): at
+    // each corner, both halves, rock stands ≥ 4 cm out of both faces within 0.25 m of the corner and rises ≥ 0.15 m over the
+    // rim; the rim's rocks rise ≥ 0.2 m over it along each long face and each end
+    const [px_, py_, pz_] = TP.pos, hw = TP.w / 2, hd = TP.d / 2, top = py_ + TP.h;
+    const corner = {}, rimUp = {};
+    meshVerts((o) => /^props:/.test(o.name), (x, y, z) => {
+      for (const s of [1, -1]) {
+        const lx = s * x - px_, lz = s * z - pz_;
+        if (Math.abs(lx) > hw + 0.09 || Math.abs(lz) > hd + 0.09 || y < py_) continue;
+        const cx = Math.sign(lx), cz = Math.sign(lz), key = `${s}${cx}${cz}`;
+        const ox = Math.abs(lx) - hw, oz = Math.abs(lz) - hd;
+        if (ox > -0.25 && oz > -0.25) { const c = corner[key] || (corner[key] = { outX: 0, outZ: 0, up: 0 }); if (oz < 0.0) c.outX = Math.max(c.outX, ox); if (ox < 0.0) c.outZ = Math.max(c.outZ, oz); c.up = Math.max(c.up, y - top); }
+        if (y > top) { const side = Math.abs(lz) > hd - 0.3 && Math.abs(lx) < hw - 0.6 ? `${s}z${cz}` : Math.abs(lx) > hw - 0.3 && Math.abs(lz) < hd - 0.6 ? `${s}x${cx}` : null; if (side) rimUp[side] = Math.max(rimUp[side] || 0, y - top); }
+      }
+    });
+    const cs = Object.values(corner), rs = Object.values(rimUp);
+    R('the touch pools\' rockery wraps every corner (≥ 4 cm out of both faces, rising ≥ 0.15 m over the rim) and rises ≥ 0.2 m over the rim on every side, both halves',
+      cs.length === 8 && cs.every((c) => c.outX >= 0.04 && c.outZ >= 0.04 && c.up >= 0.15) && rs.length === 8 && rs.every((u) => u >= 0.2),
+      { corners: Object.fromEntries(Object.entries(corner).map(([k, c]) => [k, [+c.outX.toFixed(3), +c.outZ.toFixed(3), +c.up.toFixed(2)]])), rim: Object.fromEntries(Object.entries(rimUp).map(([k, u]) => [k, +u.toFixed(2)])) });
   }
   let bathy = null; G.scene.traverse((o) => { if (o.name === 'aq-bathysphere') bathy = o; });
   // 5. Feeding Time at 1:00 left: looks only
