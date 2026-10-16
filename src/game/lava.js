@@ -191,21 +191,27 @@ export class LavaWorld {
     // (void grows only from the drawn region or from void grown before — never through a bank: growing through the thin
     // back of the Slump cliff, it ran on over the void outside the arena)
     const via = new Uint8Array(nx * nz);   // 1 drawn, 2 grown into a bank, 3 grown over void
+    // (fix round 3, rule 45) a bank texel's depth counts from the bank's face, not from the drawn outline: where the outline
+    // first grew over void to reach a bank, the old 3-step cap left it 0.2 m into the Rim Ridge's face
+    const bd = new Uint8Array(nx * nz);
     for (let k = 0; k < nx * nz; k++) if (M[k]) via[k] = 1;
     let added = 0;
-    for (let step = 1; step <= 6; step++) {
+    for (let step = 1; step <= 9; step++) {
       const grow = [];
       for (let j = 1; j < nz - 1; j++) for (let i = 1; i < nx - 1; i++) {
         const k = j * nx + i;
         if (M[k]) continue;
-        const nb = [via[k - 1], via[k + 1], via[k - nx], via[k + nx]];
+        const ns = [k - 1, k + 1, k - nx, k + nx], nb = ns.map((q) => via[q]);
         if (!nb.some(Boolean)) continue;
         const v = kindAt(k);
-        if (v === 1 && step <= 3) grow.push([k, 2]);
-        else if (v === 2 && nb.some((q) => q === 1 || q === 3)) grow.push([k, 3]);
+        if (v === 1) {
+          // (depth 1 beside the region or grown void; else one more than the shallowest bank texel beside it)
+          let d = 99; for (let q = 0; q < 4; q++) { const t = nb[q]; if (t === 1 || t === 3) d = 1; else if (t === 2) d = Math.min(d, bd[ns[q]] + 1); }
+          if (d <= 3) grow.push([k, 2, d]);
+        } else if (v === 2 && step <= 6 && nb.some((q) => q === 1 || q === 3)) grow.push([k, 3, 0]);
       }
       if (!grow.length) break;
-      for (const [k, q] of grow) { M[k] = 1; via[k] = q; }
+      for (const [k, q, d] of grow) { M[k] = 1; via[k] = q; bd[k] = d; }
       added += grow.length;
     }
     // (fix round 3, rule 45) both halves share one fit: Bravo's half (z > 0; on z = 0, x > 0) turned 180° onto Alpha's.
@@ -1174,7 +1180,10 @@ export class StageLava {
       L.pi = b.pi;
       // up a column's hop: the trigger off, so the press is a jump (a Twinfire's jump while firing is a dodge roll, and a
       // claimant with them never got up)
-      if (b.path && b.pi > 0 && b.pi < b.path.length && nav.edgeType(b.path[b.pi - 1], b.path[b.pi]) === 'jump') { const n = nav.nodes[b.path[b.pi]]; if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < 2.4) it.fire = false; }
+      // (fix round 3: and the hop asked for from there once the walk to the column's edge stalls — the brain's own jump
+      // trigger waits for 1.6 m, and a claimant landing on A's far side stood 2.1 m from B's node, B's face in its way:
+      // lava.js F10, one run in three; the hop's flight is checked as every route hop near the lava, bots.js _hopLands)
+      if (b.path && b.pi > 0 && b.pi < b.path.length && nav.edgeType(b.path[b.pi - 1], b.path[b.pi]) === 'jump') { const n = nav.nodes[b.path[b.pi]]; if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < 2.4) { it.fire = false; if (a.grounded && b.noProg > 0.3 && n.y - a.pos.y > 0.4) b._needJump = true; } }
     } else if (L.goal === L.foot && L.foot >= 0) {
       // at the foot, the column still on its way up: wait there (a one-node route, so the brain doesn't pick a paint goal
       // every frame meanwhile)

@@ -365,6 +365,18 @@ add(noBoss([stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack
 { const [x, z] = G.sp(G.S0, -2.4, -1.4); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
 { const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house' }))); }
 
+// (the lava fix round 3, ENGINE rule 44 — the lead's decision: no plain running jump across the lava, and no swim or Dash
+// Pellet jump across it that saves more than 20 m) a works-green railing (1.0 m, rail) along the south bay's shore, from the
+// south head's tip face round the Lakefront quay to the causeway's foot, and along the causeway's lake side from its foot to
+// the island: the running jumps across the bay's corners (the Lakefront and the Moorings to the south head, the island and
+// the lookout down onto the causeway) and the swim jump from the south head onto the lookout (45 m saved) are no longer
+// made over them. Nothing walks over this shore: the bay is lake at LOW and lava at HIGH, the Race leaves from the tip face
+{ const P0 = [G.TIP_S[1], ...G.sarcF(G.RSF, -132, G.angOf(-G.CW, G.CAUSE_Z) + 0.01)];
+  // (0.1 m in from the shore, on the copings: the floor is on the right of travel)
+  const R0 = P0.map((p, i) => { const a = P0[Math.max(0, i - 1)], b = P0[Math.min(P0.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1; return [G.r3(p[0] + (dz / L) * 0.1), G.r3(p[1] - (dx / L) * 0.1)]; });
+  for (let i = 0; i + 1 < R0.length; i++) add(railSeg(R0[i], R0[i + 1], 1.2, i % 2 ? 1.09 : 1.0));   // (tops 9 cm apart where two meet: check-maps)
+  add(railSeg([-G.CW + 0.12, G.r3(G.CAUSE_Z + 0.3)], [-G.CW + 0.12, -11.6], 1.2)); }
+
 // ---------------------------------------------------------------------------------------- the Casting Floor (0, LOW only)
 add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
 
