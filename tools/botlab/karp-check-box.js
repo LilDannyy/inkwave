@@ -18,7 +18,23 @@ import { KARPBOX_DEF, karpboxLayout } from './karpbox.js';
 import { ARC } from '../../src/world/mapkit.js';
 
 const B = (x0, x1, y0, y1, z0, z1, o = {}) => ({ kind: 'box', min: [x0, y0, z0], max: [x1, y1, z1], color: '#d8d2c4', pattern: 3, ...o });
+const RP = (low, high, width, o = {}) => ({ kind: 'ramp', low, high, width, thickness: 0.4, color: '#c8c2b4', pattern: 3, ...o });
+const NOINK = { paint: false, color: '#b9b2a4' };
 const WALL = { paint: false, roof: true, color: '#b3aa9a', tag: 'kcheck-ring' };
+const same = (p, q) => JSON.stringify(p) === JSON.stringify(q);
+const isBox = (d, mn, mx) => d.kind === 'box' && same(d.min, mn) && same(d.max, mx);
+// the ring wall rebuilt with other openings (each case that needs one: stretches in degrees)
+const reRing = (L, list) => { L.half = L.half.filter((p) => p.tag !== 'kcheck-ring'); for (const [a0, a1] of list) L.half.push(...ring(a0, a1)); };
+// the main floor (x −20…14, z 0…56) replaced by pieces that leave out the given [x0, x1, z0, z1] rectangles (moats, pits)
+const floorWithout = (L, ...holes) => {
+  L.half = L.half.filter((d) => !isBox(d, [-20, -1.2, 0], [14, 0, 56]));
+  const xs = [...new Set([-20, 14, ...holes.flatMap((h) => [h[0], h[1]])])].sort((a, b) => a - b), zs = [...new Set([0, 56, ...holes.flatMap((h) => [h[2], h[3]])])].sort((a, b) => a - b);
+  for (let i = 0; i + 1 < zs.length; i++) for (let j = 0; j + 1 < xs.length; j++) {
+    const cx = (xs[j] + xs[j + 1]) / 2, cz = (zs[i] + zs[i + 1]) / 2;
+    if (holes.some((h) => cx > h[0] && cx < h[1] && cz > h[2] && cz < h[3])) continue;
+    L.half.push(B(xs[j], xs[j + 1], -1.2, 0, zs[i], zs[i + 1]));
+  }
+};
 const ring = (a0, a1, o = {}) => ARC(0, 48, 15.5, 0.5, 0, 3, a0, a1, Math.max(2, Math.round((a1 - a0) / 5)), { ...WALL, ...o });
 // the ring wall's stretches (degrees: 0 = +x, 90 = +z): openings at 204.5–215.5 (SW) and 324.5–335.5 (SE)
 const RING = [[149, 204.5], [215.5, 324.5], [335.5, 391]];
@@ -47,7 +63,9 @@ const cleanDef = () => ({
 });
 
 // each case: { id, check, what, expect, layout(L), def(d) } — layout / def edit the clean ones (one fault each); expect: a
-// pattern the target check's text must match, so the case fails for the fault it plants and not a knock-on of it
+// pattern the target check's text must match, so the case fails for the fault it plants and not a knock-on of it;
+// notFail: checks that must NOT fail (a case that proves a false FAIL gone: then `check` is null); phys / carry: the
+// case needs #16's kid / the carry walk
 export const CASES = [
   { id: 'clean', check: null, what: 'the clean box' },
   { id: 'f1', check: 1, expect: 'sign at .* in team \\d\'s spawn zone', what: 'a NO CARP sign standing in the spawn zone', def: (d) => { d.freeZones[0].signs.push([2.0, 58, 180]); } },
@@ -80,6 +98,67 @@ export const CASES = [
   // state 'w' stands 2.6 m from the weir — #15 must pass in state 0 and FAIL in state 'w' (that page loaded with its query)
   { id: 'states', check: 15, allStates: true, what: 'a stage module\'s second state (G.match.stage.karpStates(), its world on ?kcstate=w) puts a wall 2.6 m from the weir', layout: (L) => { L.kcstates = { wall: [-1, 1, 30.6, 31.0, 3] }; } },
   { id: 'x9c', check: 9, expect: 'node\\(s\\) not on its owner\'s half', what: 'a free zone poking 2 m over the halfway line', def: (d) => { d.freeZones.push({ poly: [[-20, -2], [-16, -2], [-16, 4], [-20, 4]], y0: -0.3, y1: 0.3, signs: [[-15.6, 1, 90]] }); } },
+  // [fix1] review 1: the faults its reviewer planted that passed (or failed by accident), and one case per sub-rule of a
+  // check that had none
+  // — #7a / #7d: moves across air no edge holds (rising gaps; jumps onto ground off the field)
+  { id: 'x7r', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[(rising gap|jump onto off-field ground)\\] not seen from the spawn deck', phys: true,
+    what: 'H2p: f7\'s ledge replaced by a 2.0 m moat and a 1.0 m landing just inside the ring (off the field), behind f7\'s screen: a running jump 1 m up across the moat',
+    layout: (L) => { floorWithout(L, [-17, -15, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]);
+      L.half.push(B(-15.0, -13.0, 0, 1.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-landing' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  { id: 'x7rb', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[(rising gap|jump onto off-field ground)\\] not seen from the spawn deck', phys: true,
+    what: 'H2bp: the same with a 1.3 m moat and a 1.5 m landing (a hop over a gap onto ground off the field)',
+    layout: (L) => { floorWithout(L, [-16.3, -15, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]);
+      L.half.push(B(-15.0, -13.0, 0, 1.5, 46.6, 49.4, { ...NOINK, tag: 'kcheck-landing' }), B(-12.5, -12, 0, 3.6, 44, 56, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  { id: 'x7rq', check: 7, expect: '\\(a\\) team \\d: an entrance at .*\\[rising gap\\] not seen from the spawn deck', phys: true,
+    what: 'H2q: the 2.0 m moat and 1.0 m landing on the field (a ramp down from it into the ring), screened north of it: a rising gap into the ring',
+    layout: (L) => { floorWithout(L, [-17, -15, 45.6, 50.4]); reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]);
+      L.half.push(B(-15.0, -13.0, 0, 1.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-landing' }), RP([-9.4, 0, 48], [-13, 1.0, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' }), B(-15.2, -5, 0, 3.6, 50.0, 50.5, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-screen' })); } },
+  // — #7a: the entrance count
+  { id: 'x7a', check: 7, expect: '\\(a\\) team \\d: (?:[6-9]|\\d{2}) entrances into its Gate\'s 15 m ring \\(2–5\\)', what: 'two more openings in the ring wall on the deck side (west): six entrances',
+    layout: (L) => { reRing(L, [[149, 160], [168, 186], [194, 204.5], [215.5, 324.5], [335.5, 391]]); } },
+  // — #7c: a drop into the ring
+  { id: 'x7c', check: 7, expect: '\\(c\\) \\d+ drop\\(s\\) > 2\\.5 m into a Gate\'s ring', what: 'a 3 m deck outside a west opening in the ring wall, up a ramp: its edge drops 3 m into the ring',
+    layout: (L) => { reRing(L, [[149, 175], [185, 204.5], [215.5, 324.5], [335.5, 391]]); L.half.push(B(-20, -15.4, 0, 3.0, 46.6, 49.4, { ...NOINK, tag: 'kcheck-dropdeck' }), RP([-18.5, 0, 38], [-18.5, 3.0, 46.6], 2.4, { ...NOINK, tag: 'kcheck-ramp' })); } },
+  // — #7d's other probes (each find > 10 m of field)
+  { id: 'x7t', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*tallWall', what: 'a 5.8 m inkable platform up a long ramp: its far wall a squid climbs (nav stops at 5.5 m)',
+    layout: (L) => { L.half.push(B(-20, -16, 0, 5.8, 38, 44, { color: '#cfc7b6', tag: 'kcheck-tower' }), RP([-18, 0, 26.5], [-18, 5.8, 38], 4, { ...NOINK, tag: 'kcheck-ramp' })); } },
+  { id: 'x7l', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longDrop', what: 'a 4 m platform up a long ramp: its far edge drops 4 m (nav stops at 3.4)',
+    layout: (L) => { L.half.push(B(-20, -16, 0, 4.0, 38, 44, { ...NOINK, tag: 'kcheck-tower' }), RP([-18, 0, 28.5], [-18, 4.0, 38], 4, { ...NOINK, tag: 'kcheck-ramp' })); } },
+  { id: 'x7h', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*highHop', phys: true,
+    what: 'a 1.83 m ledge (no ink) in a west opening of the ring wall, a ramp down from it into the ring, the SW opening closed: a kid hops onto it from outside (just beyond the hop rule) instead of walking round to the SE opening',
+    layout: (L) => { reRing(L, [[149, 175], [185, 324.5], [335.5, 391]]); L.half.push(B(-17.0, -14.0, 0, 1.83, 46.6, 49.4, { ...NOINK, tag: 'kcheck-ledge' }), RP([-9.4, 0, 48], [-14, 1.83, 48], 2.8, { ...NOINK, tag: 'kcheck-ramp' })); } },
+  { id: 'x7g', check: 7, expect: '\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longGap', phys: true, what: 'the GAP\'s far platform moved 1 m on and 0.5 m down: 3.6 m of air (just beyond the gap rule), the long way round 14 m more',
+    layout: (L) => { L.half = L.half.filter((d) => !isBox(d, [24.2, -1.2, 12], [26.2, 1, 16]) && !isBox(d, [24.2, -1.2, 16], [26.2, 0.5, 19])); L.half.push(B(24.2, 26.2, -1.2, 0.5, 17, 19, { ...NOINK, tag: 'kcheck-gap2' })); } },
+  // — #3: weir → Gate
+  { id: 'x3', check: 3, expect: 'weir 1 → Gate [\\d.]+ m \\(≥ 25 m', what: 'the weir past its platform, 13 m from the ring', def: (d) => { d.weirs = [{ at: [0, 0, 36.5], yaw: 0 }]; } },
+  // — #5: route 2 too long
+  { id: 'x5b', check: 5, expect: 'Pond → weir 1: route 2 [\\d.]+ m = [\\d.]+ × route 1 \\(≤ 1\\.6\\)', what: 'a wall across the deck at z 15 with a 3 m gap on route 1: route 2 goes round by the flank lane',
+    layout: (L) => { L.half.push(B(-14, -1.5, 0, 3, 15, 15.4, { paint: false, roof: true, color: '#a99', tag: 'kcheck-barrier' }), B(1.5, 14, 0, 3, 15, 15.4, { paint: false, roof: true, color: '#a99', tag: 'kcheck-barrier' })); } },
+  // — #9: what a zone may not touch; a wide entrance
+  { id: 'x9d', check: 9, expect: 'zone \\d+ touches .*weir', what: 'a free zone over the weir\'s platform', def: (d) => { d.freeZones.push({ poly: [[-3, 26.5], [3, 26.5], [3, 29.5], [-3, 29.5]], y0: 0.9, y1: 1.5, signs: [[-3.4, 26.4, 180], [3.4, 26.4, 180], [-3.4, 29.6, 0], [3.4, 29.6, 0]] }); } },
+  { id: 'x9e', check: 9, expect: 'touches \\d+ route 1 / route 2 node', what: 'a free zone on the floor across the Pond → weir routes', def: (d) => { d.freeZones.push({ poly: [[-4, 10], [4, 10], [4, 13], [-4, 13]], y0: -0.3, y1: 0.3, signs: [[-4.4, 9.6, 180], [4.4, 9.6, 180], [-4.4, 13.4, 0], [4.4, 13.4, 0]] }); } },
+  { id: 'x9f', check: 9, expect: 'a [\\d.]+ m entrance at .* needs a sign within 2 m of each end', what: 'an open-floor zone (6 × 8 m) signed at one corner only: one wide entrance, an end unsigned',
+    def: (d) => { d.freeZones.push({ poly: [[-13, 11], [-7, 11], [-7, 19], [-13, 19]], y0: -0.3, y1: 0.3, signs: [[-13.4, 10.6, 180]] }); } },
+  { id: 'x9g', check: 9, expect: 'touches .*Gate', what: 'a free zone over the Gate', def: (d) => { d.freeZones.push({ poly: [[-2.5, 46], [2.5, 46], [2.5, 50], [-2.5, 50]], y0: -0.3, y1: 0.3, signs: [[-2.9, 45.6, 180], [2.9, 45.6, 180], [-2.9, 50.4, 0], [2.9, 50.4, 0]] }); } },
+  // — #13: ways off the deck
+  { id: 'x13', check: 13, expect: 'spawn deck: [0-2] way\\(s\\) off \\(≥ 3\\)', what: 'two of the parapet\'s three openings closed',
+    layout: (L) => { L.half.push(B(-7, -5, 2.4, 3.4, 56, 56.3, { paint: false, roof: true, color: '#c4bba9', tag: 'kcheck-parapet' }), B(-1, 1, 2.4, 3.4, 56, 56.3, { paint: false, roof: true, color: '#c4bba9', tag: 'kcheck-parapet' })); } },
+  // — #14: floor round the Pond
+  { id: 'x14', check: 14, expect: '^ring 4\\.5–10 m (?:[0-9]|[1-6][0-9])(?:\\.\\d)? % floor', what: 'the floor east of the Pond cut away (open water x 3…14, z 0…10; mirrored)', layout: (L) => { floorWithout(L, [3, 14, 0, 10]); } },
+  // — #15: exact room (a thin post), an approach that can't see the weir
+  { id: 'x15t', check: 15, expect: 'solid within 3 m: kcheck-lamp', what: 'T1: a 0.2 m lamp post 2.2 m from the weir\'s centre, on its platform', layout: (L) => { L.half.push(B(1.9, 2.1, 1.2, 4.2, 28.9, 29.1, { paint: false, roof: true, color: '#6f6a63', tag: 'kcheck-lamp' })); } },
+  { id: 'x15a', check: 15, expect: 'not seen from the (?:attackers\'|defenders\') approach', what: 'the weir in the alley behind a chicane of two baffles: 8 m back along route 1 the baffle hides it',
+    layout: (L) => { L.half.push(B(6, 11.6, 0, 3, 9, 9.3, { paint: false, roof: true, color: '#a99', tag: 'kcheck-baffle' }), B(8.1, 13.7, 0, 3, 12, 12.3, { paint: false, roof: true, color: '#a99', tag: 'kcheck-baffle' })); }, def: (d) => { d.weirs = [{ at: [9.85, 0, 16.8], yaw: 0 }]; } },
+  // — #1: a kit post off its ledge
+  { id: 'x1', check: 1, expect: 'kit piece\\(s\\) not resting on floor: karp-weir-base', what: 'W5: the weir 2 m off its platform\'s centre line: its east post stands past the platform\'s edge', def: (d) => { d.weirs = [{ at: [2, 1.2, 28], yaw: 0 }]; } },
+  // — #11: a carry that sticks; the retreat flag
+  { id: 'x11', check: 11, expect: 'stuck episode\\(s\\)|the carry picked', carry: true, what: 'f16w\'s fence with its 0.5 m slot on route 1: the scripted carrier sticks at it',
+    layout: (L) => { L.half.push(B(-4, 0.25, 0, 2.5, 13.96, 14.04, { paint: false, roof: true, color: '#8a7f70', tag: 'kcheck-fence' }), B(0.75, 4, 0, 2.5, 13.96, 14.04, { paint: false, roof: true, color: '#8a7f70', tag: 'kcheck-fence' })); } },
+  { id: 'x11r', check: 11, expect: 'team \\d: retreat ×3 on at null m', carry: true, what: 'a noRetreat polygon over each whole half: the retreat walk\'s ×3 never comes on',
+    def: (d) => { d.noRetreat = [{ poly: [[-20, 0.5], [20, 0.5], [20, 66], [-20, 66]], y0: -2, y1: 5 }]; } },
+  // — #4 / #9 must NOT fail: an inkable 1.5 m step a kid hops is no climb
+  { id: 'w4', check: null, notFail: [4, 9], phys: true, expect16: 'climbs of ≤ 1\\.8 m tried as hops: [1-9]\\d* of', what: 'W4: the weir\'s platform a 1.5 m inkable box, its ramps gone (nav gives it climb edges; a kid hops it)',
+    layout: (L) => { L.half = L.half.filter((d) => !isBox(d, [-4, 0, 26], [4, 1.2, 30]) && !(d.kind === 'ramp' && (same(d.high, [0, 1.2, 26]) || same(d.high, [0, 1.2, 30])))); L.half.push(B(-4, 4, 0, 1.5, 26, 30, { tag: 'kcheck-box' })); }, def: (d) => { d.weirs = [{ at: [0, 1.5, 28], yaw: 0 }]; } },
 ];
 
 export function caseOf(id) {
