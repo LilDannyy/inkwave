@@ -246,7 +246,7 @@ export function registerObservatory(D, H, T) {
       B.box('metal', K.steel, W + 0.34, 0.06, 0.2, 0, Hh + 0.19, 0, { r: 0.02 });
       for (const z of [-Dd / 2 + 0.2, Dd / 2 - 0.2]) {
         seg(B, 'metal', K.steelDk, [W / 2, Hh - 0.05, z], [W / 2 + 3.4, Hh - 0.05, z], 0.1, 0.12, {});
-        for (const x of [W / 2 + 1.7, W / 2 + 3.3]) { pbox(B, 'metal', K.steelDk, 0.12, Hh - 0.1, 0.12, x, (Hh - 0.1) / 2, z); colC(B, x, 0, z, 0.16, Hh, 0.16); }
+        for (const x of [W / 2 + 1.7, W / 2 + 3.3]) { pbox(B, 'metal', K.steelDk, 0.12, Hh - 0.1, 0.12, x, (Hh - 0.1) / 2, z); colC(B, x, 0, z, 0.16, Hh, 0.16, ROOF); }   // [b5-int3] (off-limits: a rail post's 0.16 m top, level with the hut's roof, held a kid after a swim jump + air dash — dash-reach.js)
         for (const x of [-W / 2 + 0.4, W / 2 - 0.4]) B.cyl('metal', K.black, 0.07, 0.05, x, Hh - 0.02, z + (z > 0 ? 0.04 : -0.04), { rx: HP, seg: 10 });
       }
       seg(B, 'metal', K.steelDk, [W / 2 + 3.3, Hh - 0.4, -Dd / 2 + 0.2], [W / 2 + 3.3, Hh - 0.4, Dd / 2 - 0.2], 0.08, 0.08, {});

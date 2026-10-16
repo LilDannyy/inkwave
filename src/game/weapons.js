@@ -34,6 +34,10 @@ export const POD_HINT = { charger: 4.5, flick: 7.5, drop: 1.6 };
 // trigger('shoot', HAND_*) arg for dual wield (character.js reads .hand; valueOf keeps numeric readers at 1)
 const HAND_R = Object.freeze({ hand: 0, valueOf() { return 1; } }), HAND_L = Object.freeze({ hand: 1, valueOf() { return 1; } });
 
+// [b5-sub-glide] the runner's input with the trigger masked (a sub that locks the main weapon): one reused object
+const _lockInp = { fire: false, firePressed: false, sub: false, subReleased: false };
+function lockedInp(inp) { Object.assign(_lockInp, inp); _lockInp.fire = false; _lockInp.firePressed = false; return _lockInp; }
+
 // ---------------------------------------------------------------------------------------------- per-actor runner
 export class WeaponRunner {
   constructor(actor) {
@@ -61,24 +65,34 @@ export class WeaponRunner {
     this.slosh = -1; this.streaming = false; this.burstDur = 0; this.burstFrac = 0;
     this.spinLoop?.stop(0.08); this.spinLoop = null;
     this.kit = null;   // kit weapons (kits/*.js) keep their per-runner state here
+    this.subSpent = false; this.mainLocked = false;   // [b5-sub-glide] (SPEC §0.5: a held press already used; the sub locks the main weapon)
     MAIN_KITS[this.a?.weapon?.kind]?.reset?.(this);
+    // [b5-sub-dash] an onPress sub (the Dash Pellet, SPEC §0.5 / D1.5): any reset (death, spawn, super jump, a pipe, a
+    // pick-up, a loadout swap) ends a dash at ≤ endSpeed, gives the air dash back, and the button must be let go first
+    if (this.dashT > 0) this.endDash();
+    this.dashT = 0; this.dashAirRule = false; this.airDashUsed = false; this.subLatch = true; this.mainLocked = false;
+    this.dashDir = this.dashDir || new THREE.Vector3();
   }
   onDeath() { this.reset(); }
   // Swim pressed over the weapon (actor.js: the latest press of swim / fire / sub wins): let go of what the weapon is
   // doing — a charge (no shot, no ink spent), a splatling / spinner stream, a flick / swing / slosh wind-up, the sub held
   // ready to throw (not thrown). Dodge rolls and the post-roll turret keep the body (brief, committed moves); kit weapons
   // cancel their own through MAIN_KITS[kind].cancel?(runner). True when anything was dropped.
-  cancelForSwim() {
+  // ([b5-sub-glide] keepSub: drop the weapon's own business only, not the sub held ready — dropCharge, SPEC §0.5)
+  cancelForSwim(keepSub = false) {
     let did = false;
     if (this.charging) { this.charging = false; this.charge = 0; this.chargeT = 0; this.chargeLoop?.stop(0.05); this.chargeLoop = null; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }   // (a splatling's charge hum is its spinLoop)
     if (this.streaming || this.burstT > 0) { this.streaming = false; this.burstT = 0; this.burstPower = 0; this.spinLoop?.stop(0.08); this.spinLoop = null; did = true; }
     if (this.flick >= 0) { this.flick = -1; did = true; }
     if (this.slosh >= 0) { this.slosh = -1; did = true; }
-    if (this.aimingSub) { this.aimingSub = false; did = true; }
+    if (this.aimingSub && !keepSub) { this.aimingSub = false; did = true; }
     if (MAIN_KITS[this.a.weapon?.kind]?.cancel?.(this)) did = true;
     return did;
   }
-  busy() { return this.charging || this.flick >= 0 || this.burstT > 0 || this.dodgeT > 0 || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.busy?.(this); }
+  // [b5-sub-dash] a sub that locks the main weapon (SPEC §0.5 lockMain) drops a charge / stream / wind-up without a shot
+  // (kit weapons whose charge outlives a swim — the Cutlass's, the Mitts' leap — drop theirs in MAIN_KITS[k].dropCharge)
+  dropCharge() { const did = this.cancelForSwim(true); return !!MAIN_KITS[this.a.weapon?.kind]?.dropCharge?.(this) || did; }
+  busy() { return this.charging || this.flick >= 0 || this.burstT > 0 || this.dodgeT > 0 || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || this.dashT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.busy?.(this); }   // ([b5-sub-dash] dashT: no diving mid-dash)
   firingPose() { return this.firingT > 0 || this.charging || this.flick >= 0 || this.rolling || this.burstT > 0 || this.turret || this.slosh >= 0 || this.streaming || !!this.dodge || this.lockT > 0 || !!MAIN_KITS[this.a.weapon?.kind]?.firingPose?.(this); }
   moveSpeed() {
     { const K = MAIN_KITS[this.a.weapon?.kind]; const v = K?.moveSpeed?.(this, this.a.weapon); if (v) return v; }
@@ -127,6 +141,16 @@ export class WeaponRunner {
 
   update(dt, inp) {
     const a = this.a, w = a.weapon;
+    // [b5-sub-glide] the sub first (SPEC §0.5): one held that locks the main weapon (a cooking Glide Bomb; [b5-sub-dash] the
+    // Dash Pellet while dashing) masks the trigger; the frame the lock starts, a charge / stream / wind-up is dropped
+    // without firing (the sub stays in hand)
+    const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
+    const sub = bar ? bar.bomb : (a.sub || SUB.bomb);
+    const SK = SUB_KITS[sub.kind];
+    const locked = !!SK?.lockMain?.(this);
+    if (locked && !this.mainLocked) this.dropCharge();
+    this.mainLocked = locked;
+    if (locked) inp = lockedInp(inp);
     this.cooldown -= dt; this.emptyCd -= dt; this.rumbleT -= dt;
     this.firingT = Math.max(0, this.firingT - dt);
     this.flickRecover = Math.max(0, this.flickRecover - dt);
@@ -148,12 +172,13 @@ export class WeaponRunner {
       default: MAIN_KITS[w.kind]?.update(this, dt, inp, w);   // kit weapons (kits/*.js)
     }
     // ---- sub weapon (the actor's own: the Splat Bomb here, everything else via G.subs). Bomb Barrage: its bomb,
-    // no ink, as fast as its throw gap allows
-    const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
-    const sub = bar ? bar.bomb : (a.sub || SUB.bomb);
-    const SK = SUB_KITS[sub.kind];
+    // no ink, as fast as its throw gap allows ([b5-sub-glide] bar / sub / SK: computed at the top)
+    if (SK?.onPress && !bar) { this.aimingSub = false; return; }   // [b5-sub-dash] an onPress sub acts on the press (trySubPress), never here
+    // [b5-sub-glide] a held press already used (the Glide's slip threw while the button was still down): no new hold, the
+    // release throws nothing; cleared once the button is up
+    if (this.subSpent) { this.aimingSub = false; if (!inp.sub && !inp.subReleased) this.subSpent = false; }
     if (this.aimingSub && SK?.hold) SK.hold(this, dt, inp, sub);   // charge-up subs
-    if (inp.sub && !this.aimingSub) {
+    if (inp.sub && !this.aimingSub && !this.subSpent) {
       this.aimingSub = true;
       if (!bar && a.ink < sub.inkCost && a.isLocal) { G.audio?.play('low_ink'); emit('lowink', { actor: a, need: sub.inkCost }); }
     }
@@ -162,7 +187,7 @@ export class WeaponRunner {
       this.aimingSub = false;
       // "Can't use": a kit sub that only allows one out at a time (or similar) refuses the throw, ink untouched
       const refused = !!SK?.blocked?.(a, sub);
-      if (refused) emit('sub:cantuse', { actor: a, kind: sub.kind });
+      if (refused) emit('sub:cantuse', { actor: a, kind: sub.kind, reason: SK.blockedWhy?.(a, sub) || '' });   // [b5-subs] (the reason line)
       const ok = !refused && (bar ? G.time >= (bar.nextThrow || 0) : a.ink >= sub.inkCost);
       if (ok) {
         if (bar) bar.nextThrow = G.time + (bar.gap ?? bar.def.gap); else a.ink -= sub.inkCost;   // ([b5-sprules] gap: the bomb's own — sp-barrage.js)
@@ -547,6 +572,8 @@ Object.assign(WeaponRunner.prototype, {
   // intent (or a bare move vector). Returns true if a roll started.
   tryDodge(intent) {
     const k = this.a.weapon.kind;
+    // [b5-sub-dash] no roll during a dash (SPEC D1.4): a roll press then is swallowed (true: no roll, and no jump after)
+    if (this.dashT > 0) return (k === 'twins' || k === 'dualies') && !!intent?.move && Math.hypot(intent.move.x, intent.move.z) >= 0.3 && (k === 'twins' ? !!intent.fire : this.firingT > 0 || !!this.a.intent.fire);
     if (k === 'twins') return !!intent && intent.move !== undefined && this._twinDodge(intent);
     if (k === 'dualies') return this._dualDodge(intent && intent.move ? intent.move : intent);
     return false;
@@ -590,6 +617,48 @@ Object.assign(WeaponRunner.prototype, {
   endDodge() {
     this.dodgeT = 0; this.turret = false;
     this.dodge = null; this.lockT = 0;
+    this.endDash();   // [b5-sub-dash] (a special taking the body / the trigger ends a dash too)
+  },
+
+  // ---- [b5-sub-dash] onPress subs (SPEC §0.5) and the Dash Pellet's motion (D1). actor.js calls trySubPress before the
+  // move (so the press frame moves), sets the horizontal velocity from dashVelocity, runs the frame's movement in ≤ 0.2 m
+  // substeps while dashT > 0 and then tickDash. The kit (kits/dash.js use) starts it with startDash.
+  trySubPress(held, pressed) {
+    const a = this.a, sub = a.sub, SK = sub && SUB_KITS[sub.kind];
+    if (!SK?.onPress) return;
+    const free = !a.pipe && !a.superJumpState && !a.specialActive?.body;
+    if (!held) { if (free) this.subLatch = false; return; }        // a real release, with the body free
+    if (!pressed || this.subLatch) return;
+    this.subLatch = true;
+    // (a special that owns the sub button — the Zipline's tether, any that replaces the main weapon — takes the press
+    // silently: G.specials.ownsSub, from the special's first frame; _spWeapon is last frame's word)
+    if (a.form === 'squid' || a._spWeapon || a.carry || a.specialActive?.kind === 'barrage' || (a.specialActive && G.specials?.ownsSub?.(a.specialActive))) return;
+    if (SK.blocked?.(a, sub)) emit('sub:cantuse', { actor: a, kind: sub.kind, reason: SK.blockedWhy?.(a, sub) || '' });
+    else if (a.ink < sub.inkCost) { if (a.isLocal) { G.audio?.play('low_ink'); emit('lowink', { actor: a, need: sub.inkCost }); } }
+    else { a.ink -= sub.inkCost; a.lastFire = 0; G.subs.use(a, sub); }
+  },
+  // a dash of dist m over dur s along (dx, dz): v(u) = v0 (1 − 0.6 u), u 0 → 1 (the Twinfire roll's profile), then
+  // endSpeed; air: the air rules (the vy clamp, low gravity falling) from its first frame
+  startDash(dx, dz, dist, dur, endSpeed, air) {
+    this.dashDir.set(dx, 0, dz); this.dashDur = dur; this.dashT = dur; this.dashV0 = dist / (0.7 * dur); this.dashDist = dist;
+    this.dashEnd = Math.min(endSpeed, 0.4 * this.dashV0); this.dashAirRule = !!air; this.dashAir = !!air;
+  },
+  // this frame's horizontal velocity: the dash's average over [t, t + dt] (exact distance at any frame rate; a frame
+  // that runs past the end carries endSpeed for the rest of it), or null
+  dashVelocity(out, dt = 1 / 60) {
+    if (!(this.dashT > 0)) return null;
+    const D = this.dashDur, v0 = this.dashV0, t0 = D - this.dashT, t1 = t0 + dt;
+    const x = (t) => v0 * (t - 0.3 * t * t / D);
+    const s = t1 <= D ? x(t1) - x(t0) : this.dashDist - x(t0) + this.dashEnd * (t1 - D);
+    return out.copy(this.dashDir).multiplyScalar(s / Math.max(dt, 1e-6));
+  },
+  tickDash(dt) { if (this.dashT > 0) { if (this.dashT - dt > 1e-6) this.dashT -= dt; else this.endDash(); } },
+  // the one way a dash ends (its time up, a reset, a roll's end, a special): the horizontal speed down to endSpeed
+  endDash() {
+    if (!(this.dashT > 0)) return;
+    this.dashT = 0;
+    const v = this.a.vel, s = Math.hypot(v.x, v.z), E = this.dashEnd ?? 7;
+    if (s > E) { v.x *= E / s; v.z *= E / s; }
   },
 
   // brush: hold fire while running to brush a thin fast trail (light contact damage, never a one-hit splat);
@@ -1208,6 +1277,7 @@ export class Projectiles {
     if (G.subs) G.subs.damageArea(at, w.splashRadius, w.splashDamage, p.team, p.owner); else G.specials?.areaHit(at, w.splashRadius, w.splashDamage, p.team, p.owner);
     // boss mode: one splash per throw (a direct head hit already counted)
     if (G.boss && direct !== 'boss' && !(p.vol && p.vol.hits.includes(G.boss))) { p.vol?.hits.push(G.boss); G.boss.splash(p.owner, at, w.splashRadius + 0.3, w.splashDamage, w.splashDamage, p.wid || 'slosher'); }
+    if (G.objTargets && direct !== 'karp' && !(p.vol && p.vol.hits.includes(G.objTargets))) { p.vol?.hits.push(G.objTargets); G.objTargets.splash(p.owner, at, w.splashRadius + 0.3, w.splashDamage, w.splashDamage, p.wid || 'slosher', { special: p.sp }); }   // [b5-karp] the Roe Shell
     if (p.owner.isLocal || G.camera.position.distanceToSquared(at) < 26 * 26) {
       G.fx?.burst(at, UP, p.owner.color, { count: 16, speed: 4.2, size: 0.09 });
       G.fx?.ring?.(at, UP, p.owner.color, { radius: w.splashRadius, life: 0.32 });
@@ -1305,6 +1375,11 @@ export class Projectiles {
     if (G.boss) {
       const bh = G.boss.segHit(m, _v2.copy(m).addScaledVector(dir, len), 0.1);
       if (bh && (!victim || bh.dist < victim.d)) { victim = null; len = bh.dist; bossHit = true; G.boss.hit(a, dmg, bh.target, 'charger', bh.point.clone()); }
+    }
+    // [b5-karp] the Roe Shell: the nearer of it and the first player stops the beam
+    if (G.objTargets) {
+      const kh = G.objTargets.segHit(m, _v2.copy(m).addScaledVector(dir, len), 0.1);
+      if (kh && (!victim || kh.dist < victim.d)) { victim = null; len = kh.dist; bossHit = true; G.objTargets.hit(a, dmg, 'charger', kh.point.clone(), { special: !!a.specialActive, target: kh.target }); }
     }
     if (victim) { len = victim.d; this.applyHit(a, victim.e, dmg, 'charger', G.drainbow?.live ? G.drainbow.rayShot(m, dir, victim.d, a.team) : null); }   // [drainbow]
     // paint along the line (projected to the ground)
@@ -1552,6 +1627,7 @@ export class Projectiles {
       this.applyHit(b.owner, e, lerp(s.damageMin, s.damageMax, k * k), 'bomb', b.dbw ? b : null, c);
     }
     G.boss?.splash(b.owner, c, s.radius, s.damageMax, s.damageMin, 'bomb');
+    G.objTargets?.splash(b.owner, c, s.radius, s.damageMax, s.damageMin, 'bomb', { special: b.sp });   // [b5-karp] (a Bomb Barrage's bomb: sp)
   }
 
   _spawnCloud(b) {
@@ -1642,6 +1718,9 @@ export class Projectiles {
       p.pos.addScaledVector(p.vel, dt);
       let dead = false;
       if (G.drainbow?.live && !p.dbw) G.drainbow.pass(p, p.prev, p.pos, p.team);   // [drainbow]
+      // [b5-karp] the Roe Shell stops it before the players behind it: the segment is cut at the shell
+      const kh = G.objTargets ? G.objTargets.segHit(p.prev, p.pos, p.size * 0.6) : null;
+      if (kh) { p.pos.copy(kh.point); this._kh = kh; }
       // actors
       for (const e of G.actors) {
         if (e.team === p.team || !e.alive) continue;
@@ -1651,8 +1730,12 @@ export class Projectiles {
         // generous hitbox: the whole visible body plus the blob's own radius
         if (_res.dist < hr * 0.95 + p.size) {
           if (p.volley && p.volley.hit.has(e)) continue;   // bucket: this throw already landed on them: pass through
-          if (p.volley) p.volley.hit.add(e);
           _v.copy(p.prev).lerp(p.pos, _res.t);
+          // [b5-int3] a device or a kit's shot-catcher nearer along this frame's run than the player takes the round first (a
+          // Chain Bobber with a foe a metre behind it: the round hit the foe — the actors are tested before blockShot — and
+          // the web never went off; as the Roe Shell's cut above)
+          if (G.subs && G.subs.blockShot(p.prev, _v, p.team, p.damage || 10, p.owner)) { dead = true; break; }
+          if (p.volley) p.volley.hit.add(e);
           let dmg = p.damage;
           if (p.type === 'drop') dmg = lerp(p.damage, p.dmgFar, clamp(p.start.distanceTo(_v) / 7, 0, 1));
           // bucket: full damage at any range, less only when the target stands below the thrower
@@ -1683,6 +1766,7 @@ export class Projectiles {
           dead = true;
         }
       }
+      if (!dead && kh) { this._karpImpact(p, kh); dead = true; }   // [b5-karp] (no wall or player in front of it)
       // trail drips
       if (!dead && p.trailEvery) {
         p.trail += p.vel.length() * dt;
@@ -1717,6 +1801,22 @@ export class Projectiles {
     if (p.type !== 'blast') emit('weapon:impact', { pos: at.clone(), normal: _v2.copy(p.vel).normalize().negate().clone(), team: p.team, kind: p.type === 'drop' || p.type === 'slosh' ? 'drop' : 'shot', radius: p.radius * 0.5, victim: null });
     if (p.type === 'blast') this._blastBurst(p, at, 'boss');
     if (p.type === 'slosh' && p.head) this._sloshSplash(p, at, 'boss');
+  }
+
+  // [b5-karp] a blob / drop / blast meeting the Roe Shell (kh from objTargets.segHit): it counts there (ghosts don't)
+  _karpImpact(p, kh) {
+    const at = (this._karpAt || (this._karpAt = new THREE.Vector3())).copy(kh.point), O = G.objTargets;
+    let dmg = p.damage;
+    if (p.type === 'drop') dmg = lerp(p.damage, p.dmgFar, clamp(p.start.distanceTo(at) / 7, 0, 1));
+    if (p.vol) { if (p.vol.hits.includes(O)) dmg = 0; else p.vol.hits.push(O); }
+    if (p.type === 'drop') { const o = p.owner, t = o._flickKarpT ?? -9; if (G.time - t < 0.3) dmg *= 0.12; else o._flickKarpT = G.time; }   // (a flick is one sheet of ink)
+    // (its id: a kit's wid, a special gun's weaponId (jetpack, crab), else its owner's main — a shooter's shot, a blaster's
+    // blast, a roller's flick carry none — so a main's shot fired while its owner's special runs still counts whole)
+    if (dmg > 0) O.hit(p.owner, dmg, p.wid || p.weaponId || p.owner?.weaponId || p.type, at.clone(), { special: p.sp, target: kh.target });
+    G.fx?.burst(at, _v2.copy(p.vel).normalize().negate(), p.owner.color, { count: 4, speed: 3, size: 0.07 });
+    if (p.type !== 'blast') emit('weapon:impact', { pos: at.clone(), normal: _v2.copy(p.vel).normalize().negate().clone(), team: p.team, kind: p.type === 'drop' || p.type === 'slosh' ? 'drop' : 'shot', radius: p.radius * 0.5, victim: null });
+    if (p.type === 'blast') this._blastBurst(p, at, 'karp');
+    if (p.type === 'slosh' && p.head) this._sloshSplash(p, at, 'karp');
   }
 
   _impact(p, hit) {
@@ -1762,6 +1862,7 @@ export class Projectiles {
     // [b5-deploy] the splash reaches enemy devices too (subs.damageArea → special objects: specials.areaHit)
     if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashDamageMin, p.team, p.owner); else G.specials?.areaHit(c, w.splashRadius, w.splashDamageMin, p.team, p.owner);
     if (direct !== 'boss') G.boss?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, 'blaster');
+    if (direct !== 'karp') G.objTargets?.splash(p.owner, c, w.splashRadius, w.splashDamageMax, w.splashDamageMin, p.weaponId || 'blaster', { special: p.sp });   // [b5-karp] (the Ink Jet's shots: a special id)
   }
 
   _updateBombs(dt) {
@@ -1774,6 +1875,14 @@ export class Projectiles {
       if (G.drainbow?.live && !b.dbw) G.drainbow.pass(b, _v, b.pos, b.team);   // [drainbow] (a thrown one, in flight)
       const hit = G.physics.segment(_v, b.pos, _hit);
       // boss mode: bombs glance off HULLBREAKER's shell (they'd otherwise sail through it)
+      if (!hit.hit && G.objTargets && b.kind === 'bomb') {   // [b5-karp] off the Roe Shell (they'd sail through it)
+        const kh = G.objTargets.segHit(_v, b.pos, 0.2), sh = kh && kh.target;
+        if (sh) {
+          _v2.copy(b.pos).sub(sh.center()).normalize(); b.pos.copy(sh.center()).addScaledVector(_v2, sh.radius() + 0.22);
+          const vn = b.vel.dot(_v2); if (vn < 0) b.vel.addScaledVector(_v2, -vn * 1.35);
+          b.vel.multiplyScalar(0.55);
+        }
+      }
       if (!hit.hit && G.boss && b.kind === 'bomb') {
         const bh = G.boss.segHit(_v, b.pos, 0.2), sh = bh && bh.target.pos && bh.target;
         if (sh) {
@@ -1848,6 +1957,7 @@ export class Projectiles {
           if (g.hit && !c.ghost) c.owner.addTurfNoSpecial(G.paint.splat(_v2.copy(g.point).addScaledVector(g.normal, 0.1), 0.45 + Math.random() * 0.35, c.team, { seed: Math.random() }));   // (a special's rain)
         }
         if (!c.ghost) G.boss?.rain(c.owner, c.group.position.x, c.group.position.z, sp.radius * s, sp.dps * dt);
+        if (!c.ghost) G.objTargets?.tick(c.owner, { x: c.group.position.x, z: c.group.position.z, r: sp.radius * s }, sp.dps * dt, 'storm');   // [b5-karp]
         for (const e of G.actors) {
           if (e.team === c.team || !e.alive || e.remote) continue;     // online: each client rains on its own actors
           const dx = e.pos.x - c.group.position.x, dz = e.pos.z - c.group.position.z;

@@ -23,7 +23,7 @@ import { G, emit, clamp, lerp } from '../../core/ctx.js';
 import { WEAPONS, PLAYER } from '../../config.js';
 import { Physics, Hit } from '../physics.js';
 import { superEllipsoid } from '../character-geo.js';
-import { MAIN_KITS, netRec } from './registry.js';
+import { MAIN_KITS, SUB_KITS, netRec } from './registry.js';
 import { MELEE } from '../bots.js';
 import './mitts-model.js';
 import './mitts-assets.js';
@@ -170,6 +170,7 @@ function burstFist(f, at, direct, normal) {
   }
   if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashMin, f.team, o); else G.specials?.areaHit?.(c, w.splashRadius, w.splashMin, f.team, o);   // [b5-deploy] enemy devices too
   if (direct !== 'boss') G.boss?.splash(o, c, w.splashRadius, w.splashMax, w.splashMin, 'mitts');   // Boss Battle
+  if (direct !== 'karp') G.objTargets?.splash(o, c, w.splashRadius, w.splashMax, w.splashMin, 'mitts');   // [b5-karp] the Roe Shell
   burstFx(f, o, c, direct, normal, w);
 }
 function burstFx(f, o, c, direct, normal, w) {
@@ -220,6 +221,10 @@ function stepFist(f, i, w, dt) {
     if (!dead && G.boss) {
       const bh = G.boss.segHit(f.prev, f.pos, hr0);
       if (bh) { const at = bh.point.clone(); G.boss.hit(f.owner, w.punchDamage, bh.target, 'mitts', at); burstFist(f, at, 'boss', null); dead = true; }
+    }
+    if (!dead && G.objTargets) {   // [b5-karp] the Roe Shell
+      const kh = G.objTargets.segHit(f.prev, f.pos, hr0);
+      if (kh) { const at = kh.point.clone(); if (!f.ghost) G.objTargets.hit(f.owner, w.punchDamage, 'mitts', at, { target: kh.target }); burstFist(f, at, 'karp', null); dead = true; }
     }
     // enemy curtains / devices / special objects catch it (and it bursts there) — a ghost's blow costs them nothing
     const fd = f.ghost ? 0 : w.punchDamage;
@@ -455,6 +460,7 @@ function landSplash(a, at, n) {
   }
   if (G.subs) G.subs.damageArea(c, w.landRadius, w.landDamageMin, a.team, a); else G.specials?.areaHit?.(c, w.landRadius, w.landDamageMin, a.team, a);   // [b5-deploy] enemy devices too
   G.boss?.splash(a, c, w.landRadius, w.landDamageMax, w.landDamageMin, 'mitts');   // Boss Battle
+  G.objTargets?.splash(a, c, w.landRadius, w.landDamageMax, w.landDamageMin, 'mitts');   // [b5-karp]
   landFx(a, at, n, c);
   netRec(a, 'mitts', [1, r2(at.x), r2(at.y), r2(at.z), r2(n.x), r2(n.y), r2(n.z)]);
   emit('mitts:land', { actor: a, pos: c.clone(), normal: n.clone(), radius: w.landRadius });
@@ -685,6 +691,7 @@ function botPlan(a, k, yaw, pitch, dist) {
 // above or below
 function landingOk(a, P) {
   if (P.kind !== 'ground') return false;
+  if (SUB_KITS.bobber?.webHit?.(a.team, P.pos.x, P.pos.y, P.pos.z, W().landRadius)) return false;   // [b5-int3] its smash would set off an own idle Chain Bobber web
   const b = P.block >= 0 ? G.level.blocks[P.block] : null;
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;
@@ -703,7 +710,7 @@ function botLeap(r, k, c, yaw, pitch, kind = 'ground') {
 // at release: does the leap still come down where the bot planned (it may have been nudged while crouching)?
 function botReleaseOk(a, k) {
   predictLeap(a.pos, leapVelocity(a, k, k.charge, _bv), _bp, null);
-  return k.botKind === 'wall' ? _bp.kind === 'wall' : landingOk(a, _bp);
+  return k.botKind === 'wall' ? _bp.kind === 'wall' && !SUB_KITS.bobber?.webHit?.(a.team, _bp.pos.x, _bp.pos.y, _bp.pos.z, W().landRadius) : landingOk(a, _bp);   // ([b5-int3] a wall landing smashes too)
 }
 // a wall near the fight worth sticking to: probe round the bot at chest and head height
 function botFindWall(a, target) {
@@ -878,6 +885,9 @@ MAIN_KITS.mitts = {
   update,
   jump,
   busy: (r) => !!(r.kit && r.kit.mitts && r.kit.leaping),
+  // [b5-sub-dash] a dash (kits/dash.js, SPEC §0.5 / D1.5): let go of the wall first; a leap charge is dropped, no leap
+  letGo: (r, why) => { if (r.kit && r.kit.mitts) dropCling(r, r.kit, why); },
+  dropCharge: (r) => { const k = r.kit && r.kit.mitts ? r.kit : null; if (!k || !k.charging) return false; cancelCharge(r, k); return true; },
   // leap armour: an incoming leap is otherwise picked off before it lands — mid-air (and on the landing beat) the kid
   // takes W().leapArmor of any damage. Sponge guard: punching with the gloves up (and a beat after), a hit from the
   // front (within guardArc° of the facing) takes W().guardArmor — the sponge soaks part of it (a squish off the gloves).

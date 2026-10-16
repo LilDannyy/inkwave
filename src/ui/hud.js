@@ -41,6 +41,7 @@ import { LeadHud } from './hud-lead.js';
 import { BarrageHud } from './hud-barrage.js';   // [b5-sprules] the Mystery Bomb Barrage's NEXT card
 import { CheerHud } from './hud-cheer.js';   // [b5-zipcheer] the Cheer Orb's cheer prompt + gauge wisps
 import { JumpHud } from './hud-jumps.js';   // [b5-jumpui] super-jump alerts + landing / return tags
+import { KarpHud, KARP_GLYPH, KARP_CAUSES } from './hud-karp.js';   // [b5-karp] Bazookarp's placeholder HUD (+ its splat causes)
 import { installBossAudio } from '../audio/bossAudio.js';
 import { bossEmblem, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 
@@ -96,6 +97,7 @@ export function splatCause(cause, attacker) {
   const c = typeof cause === 'string' ? cause : null;
   if (c && ENV_CAUSES[c]) return { kind: 'env', id: c, name: attacker ? 'Knocked into the sea' : ENV_CAUSES[c], tag: '', icon: SEA_ICON };
   { const ec = envCause(c); if (ec) return { kind: 'env', id: c, name: attacker ? ec.knocked || ec.name : ec.name, tag: '', icon: ec.icon || SEA_ICON }; }   // [b5-stagehooks]
+  { const kc = c && Object.hasOwn(KARP_CAUSES, c) ? KARP_CAUSES[c] : null; if (kc) return { kind: kc.kind, id: c, name: kc.name, tag: kc.tag, icon: kc.icon }; }   // [b5-karp] Carp Shot / shell burst / Carp Blast
   if (c && SUB[c]) return { kind: 'sub', id: c, name: SUB[c].name || c, tag: 'SUB', icon: SUB_ICONS[SUB[c].kind] || SUB_ICONS[c] || SUB_ICONS.bomb };
   if (c && SPECIALS[c]) return { kind: 'special', id: c, name: SPECIALS[c].name || c, tag: 'SPECIAL', icon: specialIcon(c) };
   const w = (attacker && attacker.weaponId) || (c && WEAPONS[c] ? c : null);
@@ -271,7 +273,9 @@ export class HUD {
     this.tpops = h('div', { class: 'iw-tpops' });
     // "Can't use": a kit sub refused the throw (sub:cantuse) — a short callout where the sub-aim chip sits
     this.denyIcon = h('span', { class: 'iw-deny__i', html: SUB_ICONS.bomb });
-    this.denyEl = h('div', { class: 'iw-deny' }, h('span', { class: 'iw-deny__b' }, this.denyIcon, h('i', { class: 'iw-deny__no' })), h('b', null, 'CAN’T USE'));
+    // ([b5-subs] a second line under it: the kit's reason ('sub:cantuse'.reason); 'sub:note' reuses the slot, quieter)
+    this.denyTxt = h('b', null, 'CAN’T USE'); this.denyWhy = h('em', { class: 'iw-deny__why' });
+    this.denyEl = h('div', { class: 'iw-deny' }, h('span', { class: 'iw-deny__b' }, this.denyIcon, h('i', { class: 'iw-deny__no' })), h('span', { class: 'iw-deny__t' }, this.denyTxt, this.denyWhy));
     this.xh = h('div', { class: 'iw-xh' }, this.shield, this.ret, this.hitEl, this.killEl, this.tank, this.subChip, this.denyEl, this.tpops);
     this.ddLayer = h('div', { class: 'iw-dds' });
 
@@ -418,6 +422,7 @@ export class HUD {
     this.barrage.update(dt, f);   // [b5-sprules]
     this.cheer.update(dt, f);   // [b5-zipcheer]
     this.jumps.update(dt, f);   // [b5-jumpui]
+    (this.karp || (this.karp = new KarpHud(this))).update(dt, f.karp);   // [b5-karp] (made once the top bar exists)
     this.boss.update(dt);
   }
 
@@ -564,6 +569,7 @@ export class HUD {
   judge(opts = {}) {
     if (opts && opts.mode === 'zones') return this._judgeZones(opts);
     if (opts && opts.mode === 'tower') return this._judgeZones({ ...opts, penalty: [0, 0], icon: TOWER_ICON });   // (the same count reveal)
+    if (opts && opts.mode === 'bazookarp') return this._judgeZones({ ...opts, penalty: [0, 0], icon: KARP_GLYPH });   // [b5-karp]
     return this._judgeTurf(opts);
   }
 
@@ -692,7 +698,8 @@ export class HUD {
       on('lowink', ({ actor }) => { if (actor === this._local() && this._live()) { this._tank.empty = 0.45; this._restart(this.tank, 'is-empty'); } }),
       on('special:ready', ({ actor }) => { if (actor === this._local() && this._live()) this._restart(this.sp, 'is-flare'); }),
       on('superjump', ({ actor, phase, to }) => { if (actor === this._local() && phase === 'charge' && this._live()) this._snd('ui_confirm', { volume: 0.6 }); void to; }),
-      on('sub:cantuse', ({ actor, kind }) => { if (actor && actor === this._local() && this._live()) this._cantUse(kind); }),
+      on('sub:cantuse', ({ actor, kind, reason }) => { if (actor && actor === this._local() && this._live()) this._cantUse(kind, reason); }),   // ([b5-subs] reason)
+      on('sub:note', ({ actor, kind, text }) => { if (actor && actor === this._local() && this._live()) this._subNote(kind, text); }),   // [b5-subs] e.g. SENTRY DOWN
       on('zones:control', (e) => this._zControl(e)),
       on('zones:penalty', (e) => this._zPenalty(e)),
       on('zones:active', (e) => this._zActive(e)),
@@ -973,7 +980,7 @@ export class HUD {
   // objective (CENTRE / YOUR SIDE / ENEMY SIDE, relative to the viewer), colours each of its zones by holder and shows
   // each zone's live ink share (the ticks = the ZONES.control share needed to take it); then the rotation hint or the OVERTIME badge.
   _zMe() { const a = this._local(); return a && (a.team === 0 || a.team === 1) ? a.team : 0; }
-  _zLive() { return this._live() && !!(this.lab || (G.match && (G.match.zones || G.match.tower))); }   // (Tower Command shares the banners)
+  _zLive() { return this._live() && !!(this.lab || (G.match && (G.match.zones || G.match.tower || G.match.karp))); }   // [b5-karp]   // (Tower Command shares the banners)
   _zHex(t) { return t === 0 || t === 1 ? toHex(G.teamHex?.[t], t ? '#2f5bff' : '#ff8a14') : '#ffffff'; }
   _zLabel(id, me) { return id === 'center' ? ZONE_LABEL.center : (id === 'sideA' ? 0 : 1) === me ? ZONE_LABEL.home : ZONE_LABEL.away; }
 
@@ -1463,9 +1470,9 @@ export class HUD {
         const p = ps[i];
         const el = icons[i];
         const k = `sq${t}${i}`;
-        if (!p) { if (L[k] !== 'none') { L[k] = 'none'; el.classList.add('is-empty'); } continue; }
+        if (!p) { if (L[k] !== 'none') { L[k] = 'none'; el.classList.add('is-empty'); el.classList.remove('is-karp'); } continue; }   // [b5-karp] (a carrier who left: no ring on its empty slot)
         const w = p.weapon || (this._actorFor(t, i) || {}).weaponId || 'shooter';
-        const key = `${p.alive ? 1 : 0}|${p.alive ? 0 : Math.ceil(p.respawn || 0)}|${p.specialReady ? 1 : 0}|${p.isSelf ? 1 : 0}|${w}`;
+        const key = `${p.alive ? 1 : 0}|${p.alive ? 0 : Math.ceil(p.respawn || 0)}|${p.specialReady ? 1 : 0}|${p.isSelf ? 1 : 0}|${w}|${p.carrier ? 1 : 0}`;   // [b5-karp] carrier
         if (L[k] === key) continue;
         const prev = L[k];
         L[k] = key;
@@ -1476,6 +1483,7 @@ export class HUD {
         el.classList.toggle('is-dead', !p.alive);
         el.classList.toggle('is-ready', !!p.specialReady && !!p.alive);
         el.classList.toggle('is-self', !!p.isSelf);
+        el.classList.toggle('is-karp', !!p.carrier);   // [b5-karp] the carrier's badge (S35)
         el.querySelector('.iw-sq__n').textContent = p.alive ? '' : String(Math.max(0, Math.ceil(p.respawn || 0)) || '');
         if (wasAlive && !p.alive) {
           el.animate([{ transform: 'scale(1.4) rotate(-14deg)' }, { transform: 'scale(.92) rotate(4deg)', offset: 0.5 }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.34,1.6,.64,1)' });
@@ -1708,6 +1716,8 @@ export class HUD {
     const tr = !!f.tracked, po = !!f.poisoned;
     if (tr !== L.stTr) { L.stTr = tr; this.statusEl.classList.toggle('show-tracked', tr); }
     if (po !== L.stPo) { L.stPo = po; this.statusEl.classList.toggle('show-poison', po); this.poisonVig.classList.toggle('is-on', po); }
+    const lk = !!f.mainLocked;   // [b5-sub-glide] a held sub locks the main weapon (a cooking Glide Bomb): the reticle dims
+    if (lk !== L.mLock) { L.mLock = lk; this.ret.classList.toggle('is-locked', lk); }
     const aim = !!(a && a.alive && a.weaponRunner && a.weaponRunner.aimingSub) || !!f.subAim;
     if (aim !== L.aim) { L.aim = aim; this.subChip.classList.toggle('is-on', aim); if (aim) this._snd('ui_toggle', { volume: 0.35 }); }
     if (aim) {
@@ -1887,15 +1897,33 @@ export class HUD {
 
   // a sub refused the throw (sub:cantuse — e.g. a Torpedo or Boomerang already out): a callout where the aim chip was,
   // the badge shakes, a soft deny bonk
-  _cantUse(kind) {
+  _cantUse(kind, reason = '') {
     const now = performance.now();
     if (now - (this._denyT || -1e9) < 140) return;
     this._denyT = now;
     const icon = SUB_ICONS[kind] || SUB_ICONS[(SUB[kind] || {}).kind] || SUB_ICONS.bomb;
     if (this.denyIcon._k !== kind) { this.denyIcon._k = kind; this.denyIcon.innerHTML = icon; }
+    this._denyText('CAN’T USE', reason, false);   // [b5-subs]
     this._restart(this.denyEl, 'is-on');
     this._restart(this.subBadge, 'is-deny');
     this._snd('sub_cantuse', { volume: 0.75 });
+  }
+  // [b5-subs] the slot's words: the big line, the reason under it (hidden when empty), and the quiet note look
+  _denyText(big, why, note) {
+    this.denyTxt.textContent = big;
+    this.denyWhy.textContent = why || '';
+    this.denyEl.classList.toggle('has-why', !!why);
+    this.denyEl.classList.toggle('is-note', !!note);
+  }
+  // [b5-subs] 'sub:note' { actor, kind, text }: a kit's short word in the same slot (the Scrap Sentry's "SENTRY DOWN") —
+  // no red ✕, 70 % opacity, the kind's own sting (SFX[`${kind}_note`], else the soft bonk quieter)
+  _subNote(kind, text) {
+    this._denyT = performance.now();
+    const icon = SUB_ICONS[kind] || SUB_ICONS.bomb;
+    if (this.denyIcon._k !== kind) { this.denyIcon._k = kind; this.denyIcon.innerHTML = icon; }
+    this._denyText(text || '', '', true);
+    this._restart(this.denyEl, 'is-on');
+    if (SFX[`${kind}_note`]) this._snd(`${kind}_note`, { volume: 0.8 }); else this._snd('sub_cantuse', { volume: 0.4 });
   }
 
   // ---------------------------------------------------------------- turf ticker

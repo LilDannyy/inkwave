@@ -317,11 +317,13 @@ export const PLACEMENTS = [
   { type: 'treehills_solar', pos: [31.7, T2, -5.9], rotY: HP, w: 2.8 },
   { type: 'treehills_hives', pos: [29.6, T2, 18.9], rotY: 0, n: 2 },
   { type: 'treehills_ferns', pos: [20.3, T2, 8.0], r: 0.5, seed: 3 }, { type: 'treehills_ferns', pos: [20.2, T2, 13.1], r: 0.55, seed: 6 },
-  rail([inset([31.5, -10], [28, -6]), inset([33, -7.402], [28, -6]), inset([33, -4], [28, -6])], T2),
-  rail([inset([33, 14], [28, 16]), inset([31, 17.464], [28, 16]), inset([31, 20], [28, 16])], T2),
+  // ([b5-int3] the tier edges' railings are off-limits on top: an air dash on the T3 tier stood a kid on its edge railing,
+  // 4.95 m up — dash-reach.js at 1/24)
+  rail([inset([31.5, -10], [28, -6]), inset([33, -7.402], [28, -6]), inset([33, -4], [28, -6])], T2, { offTop: true }),
+  rail([inset([33, 14], [28, 16]), inset([31, 17.464], [28, 16]), inset([31, 20], [28, 16])], T2, { offTop: true }),
   // ---- the crown (T3): the turbine in its clearing, the hut, the weather mast, a bench over the meadow
   { type: 'treehills_turbine', pos: [TURBINE.x, T3, TURBINE.z], rotY: -HP, hub: TURBINE.hub },
-  rail([inset([33, -4], [30, 5]), inset([35.5, 0.33], [30, 5]), inset([35.5, 9.67], [30, 5]), inset([33, 14], [30, 5])], T3),
+  rail([inset([33, -4], [30, 5]), inset([35.5, 0.33], [30, 5]), inset([35.5, 9.67], [30, 5]), inset([33, 14], [30, 5])], T3, { offTop: true }),
   { type: 'treehills_bench', pos: [27.3, T3, 4.6], rotY: -HP },
   { type: 'treehills_lamp', pos: [30.1, T3, 9.2], rotY: 0 },
   { type: 'treehills_weather', pos: [31.3, T3, -1.0], rotY: 0.3 },

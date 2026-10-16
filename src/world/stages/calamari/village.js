@@ -214,7 +214,7 @@ export function registerVillage(D, H, KIT) {
       B.sph(NS('glow'), K.lit, 0.09, 0, h - 0.42, arm, { ws: 8, hs: 6, glow: 2.2 });
       snowCap(B, 0, h - 0.2, arm, 0.46, 0.46, 0.08);
       snowCap(B, 0, h, 0, 0.18, 0.18, 0.06);
-      colBox(B, 0, 0, 0, 0.2, h, 0.2);
+      colBox(B, 0, 0, 0, 0.2, h, 0.2, ROOF);   // [b5-int3] (off-limits: its 0.2 m top held a kid — a swim jump + air dash off the 4.3 m terrace, dash-reach.js)
     },
   };
 

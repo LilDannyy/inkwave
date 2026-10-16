@@ -17,6 +17,7 @@ import {
   DEFAULT_SETTINGS, TEAM_PALETTES, COLORBLIND_PALETTE, PROGRESSION, BOT_NAMES, TEAM_NAMES, ZONES, TOWER,
   mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, roomTime, roomBotPlan,
   mapListed,   // [b5-stages]
+  BAZOOKARP, modeListed,   // [b5-karp]
 } from '../config.js';
 import * as LOOK from '../game/character-style.js';
 import { G } from '../core/ctx.js';
@@ -114,15 +115,19 @@ const TIPS = [
 const ZONE_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 21 V12 Q8 8 12 8 H21 M43 8 H52 Q56 8 56 12 V21 M56 43 V52 Q56 56 52 56 H43 M21 56 H12 Q8 56 8 52 V43" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="19" y="19" width="26" height="26" rx="5" fill="currentColor"/></svg>';
 // Tower Command (src/game/tower.js): the tower — a platform on a track under a beacon
 const TOWER_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round"><ellipse cx="32" cy="31" rx="16" ry="4.6" stroke-width="4.6"/><ellipse cx="32" cy="19.5" rx="11.5" ry="3.4" stroke-width="4"/><ellipse cx="32" cy="9.5" rx="7" ry="2.3" stroke-width="3.4"/></g><rect x="9" y="39" width="46" height="7" rx="2.5" fill="currentColor"/><path d="M13 48 H51 L47 58 H17 Z" fill="currentColor"/></svg>';
+// [b5-karp] the carp (a fish in profile)
+const KARP_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32 Q22 14 42 20 Q52 24 58 32 Q52 40 42 44 Q22 50 8 32 Z" fill="currentColor"/><path d="M8 32 L2 22 M8 32 L2 42" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>';
 const MODE_INFO = {
   turf: { id: 'turf', label: 'TURF WAR', name: 'Turf War', icon: GLYPHS.drop, text: 'Ink the most ground before the clock runs out.' },
   zones: { id: 'zones', label: 'ZONE CONTROL', name: 'Zone Control', icon: ZONE_GLYPH, text: 'Hold the live zone to count down from 100 — first to 0 wins.' },
   tower: { id: 'tower', label: 'TOWER COMMAND', name: 'Tower Command', icon: TOWER_GLYPH, text: 'Ride the tower into their base — furthest push wins, reach their goal to knock out.' },
   boss: { id: 'boss', label: 'BOSS BATTLE', name: 'Boss Battle', icon: BOSS_GLYPH, text: `Your squad of 8 against ${BOSS_NAME}.` },
+  // [b5-karp] Bazookarp — a wip mode (config WIP_MODES): offered only with ?wipmodes until the lead lists it
+  bazookarp: { id: 'bazookarp', label: 'BAZOOKARP', name: 'Bazookarp', icon: KARP_GLYPH, text: 'Burst the shell, grab the Bazookarp and carry it into their base — reach their Dragon Gate to knock out.' },
   // (online rooms only: no clock, no score — the room plays on the host's stage until the host ends it)
   practice: { id: 'practice', label: 'PRACTICE', name: 'Practice', icon: GLYPHS.infinity, text: 'No clock, no score: swap loadouts, clear the ink, change stage — play on together.' },
 };
-const modeOf = (m) => (m === 'zones' || m === 'tower' || m === 'boss' ? m : 'turf');
+const modeOf = (m) => (m === 'zones' || m === 'tower' || m === 'boss' || (m === 'bazookarp' && modeListed(m)) ? m : 'turf');   // [b5-karp]
 // a room's mode (the lobby): the four match modes and Practice
 const roomModeOf = (m) => (m === 'practice' ? 'practice' : modeOf(m));
 // a room's time of day: the look itself (config roomTime — 'dusk' from older clients is sunset)
@@ -134,8 +139,8 @@ const ROOM_TIME_INFO = {
 };
 const RANDOM_STAGE = { id: 'random', name: 'Random stage' };
 // the modes with a fixed 5:00 + overtime length (the length is locked on the stage select and in the lobby)
-const fixedLen = (m) => m === 'zones' || m === 'tower';
-const fixedDur = (m) => (m === 'tower' ? TOWER.duration : ZONES.duration) || 300;
+const fixedLen = (m) => m === 'zones' || m === 'tower' || m === 'bazookarp';   // [b5-karp]
+const fixedDur = (m) => (m === 'tower' ? TOWER.duration : m === 'bazookarp' ? BAZOOKARP.duration : ZONES.duration) || 300;
 // the battle modes (Turf War / Zone Control / Tower Command) — the rules cards, the in-match strip and the results use these
 const BATTLE_MODES = [MODE_INFO.turf, MODE_INFO.zones, MODE_INFO.tower];
 const ZK = '#15121c';
@@ -1097,6 +1102,10 @@ export class Menus {
         blurb: `Everyone's one squad against ${BOSS_NAME}, a giant crab in a rusted container. Sink it before time runs out!`,
         chips: [[GLYPHS.users, 'SQUAD OF 8'], [GLYPHS.clock, durLabel(bossLen)], [BOSS_GLYPH, '1 BOSS']] },
     ];
+    // [b5-karp] the fifth card, only while the mode is listed (?wipmodes until it ships)
+    if (modeListed('bazookarp')) MODES.push({ id: 'bazookarp', name: 'BAZOOKARP', kicker: 'RANKED RULES', img: stageArt('lockgate', 'day'), badge: 'NEW!',
+      blurb: 'Burst the Roe Shell, grab the Bazookarp and carry it to their Dragon Gate — land it on a weir first!',
+      chips: [[GLYPHS.users, '4 V 4'], [GLYPHS.clock, `${Math.round((BAZOOKARP.duration || 300) / 60)}:00 + OT`], [KARP_GLYPH, 'CARRY IT HOME']] });
     let picking = false;
     const pick = (id, c) => {
       if (picking) return;
@@ -3555,7 +3564,7 @@ export class Menus {
     const bossMode = () => lob.mode === 'boss';   // Boss Battle: one squad (team 0) vs HULLBREAKER (the session carries lobby.mode)
     const lobMode = () => roomModeOf(lob.mode);   // turf | zones | tower | boss | practice
     const practiceMode = () => lob.mode === 'practice';
-    const LOB_MODES = ['turf', 'zones', 'tower', 'boss', 'practice'];
+    const LOB_MODES = ['turf', 'zones', 'tower', 'boss', ...(modeListed('bazookarp') ? ['bazookarp'] : []), 'practice'];   // [b5-karp] (wip: ?wipmodes)
     const plan = () => roomBotPlan(lob);          // the bots this room will get as it stands (how many, which side)
     const S = { launching: null, pendingTeam: null, teamPref: 'auto', emoteCd: 0, lastLobby: null, alive: true, copied: 0, subs: [], age: 0, joins: [], leaves: [], batchT: 0 };
 

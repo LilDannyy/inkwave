@@ -117,6 +117,39 @@ Tower Command:
 - The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `tower-ink.js`.
 
+Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/jobs/batch5/bazookarp/SPEC.md):
+- **The mode is hidden.** It is in no player-facing list, but every harness starts it by name (`MODE=bazookarp`,
+  `api.startMatch`). `WIPMODES=1` boots every harness page with `?wipmodes` (config `SHOW_WIP_MODES`), which lists it
+  everywhere (the mode screen, the stage chip, the lobby picker, `setSettings`); a two-client test opens its clients
+  with `Q0='autopilot&wipmodes'`.
+- **`MAP=karpbox`** is its test stage (tools/botlab/karpbox.js, never shipped): every case the rules need — weirs, the
+  Gate, free zones, a carrierBlock, the thin wall, the hop step and the gap, a pier over water, a mover, a pod plot, a
+  test-only second field state. testmaps.cjs injects it into page.cjs / match.cjs; `KARP_DEF='two'` (or a JSON
+  `LAYOUT.bazookarp`) swaps its data (`'two'`: the two-weir case). Net tests import it into every client themselves.
+- The rules: `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/bazookarp-rules.js tools/botlab/run.sh
+  tools/botlab/page.cjs` (every row of SPEC §2.1 in groups A–L; M: devices and subs at the Roe Shell — the re-form's
+  crush, glancing off it, every damaging sub counted and stopped; `PAGE_ARGS='only=A,B,…'`).
+- The same with `karp-gun.js` (the Carp Shot: charge, ranges, ink, swell, blast radius, damage, kick, enemy ink, a
+  Drip Curtain, its records with a stub net), `karp-loop.js` (a shadow follower engine on LoopWire through a scripted
+  match: after every discrete record it agrees with the host; late snapshots, declined grants) and `karp-two.js` (two
+  scripted humans play a match to a knockout; also `MAP=halyard`), and `karp-shell-dps.js` (the Roe Shell's tuning
+  table: every main, special, barrage and the Tidal Slam against a lone shell, damage counted per second;
+  `PAGE_ARGS='only=shooter,zooka'`).
+- The Carp Field: `DEVSTAGE=1 MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-field.js tools/botlab/run.sh
+  tools/botlab/page.cjs` — karpbox's field cases, then every stage in its Bazookarp build: L, holes, the halfway line,
+  hop / gap edges, checker #2's reading sweep, the load cost per state (the warm rebuild ≤ 60 ms; the build at match start reported and
+  failed only past 90 ms — the SPEC's 60 ms at load needs a quiet machine) (`PAGE_ARGS='only=halyard,…'`).
+- Online: `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
+  tools/botlab/run.sh tools/botlab/netpage.cjs` (the host's view of a guest carrier, ghost landings, victim-judged blasts,
+  kr, kd, kx inside an overtime, the result); the host leaving mid-carry: `CLIENTS=3 Q0=… Q1=… Q2='autopilot&wipmodes'
+  NET_ARGS='part=bots' NET=tools/botlab/tests/net-karp-host.cjs …`, and `CLIENTS=2 … NET_ARGS='part=cargo'` (a humans-only
+  room: the carrier's kid is removed); the shell's crush online: `CLIENTS=2 … NET=tools/botlab/tests/net-karp-crush.cjs`
+  (each screen crushes its own devices, the ghosts end on the owner's word, both screens agree).
+- Bot matches: `MAP=<id> tools/botlab/run.sh tools/botlab/karp-match.cjs` (an all-bot match stepped at 60 Hz: SPEC
+  §10.3's numbers, a `RESULT karp …` line; env `DUR`, `OTMAX`, `DIFF`, `HUMAN=still|carry`, `KARP_DEF`, `OUT=file.json`),
+  and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
+- Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
+
 Stage set pieces:
 - Movers (Calamari County's railcars): `MAP=calamari MODE=turf PAGE=tools/botlab/tests/movers.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `MODE=zones`.
@@ -161,6 +194,70 @@ on players — src/game/statusFx.js, online through the actor tick's flags):
 (`PAGE_ARGS='only=bow,wail,sprinkler,tracer,poison'`); on any other stage it checks the Howl Box at that stage's
 own ledges (`MAP=halyard` / `MAP=calamari`: 'wailmap'). Its pictures: `tools/botlab/scenes/sub-tweaks2.js` through
 shoot.cjs (`PRE=…/sub-tweaks2.js PRE_ARGS=<scene>`, see its header).
+
+Batch 5's four subs, scaffold (`[b5-subscaf]`: the Glide Bomb, Scrap Sentry, Chain Bobber and Dash Pellet registered end to
+end — SUBS, SUB_ORDER, SUB_VIEW_SCALE, placeholder models and icons, stub kits in src/game/kits/<id>.js that refuse with
+"Can't use" until each builder lands its sub):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-scaffold.js tools/botlab/run.sh tools/botlab/page.cjs` (the web of ids
+for every SUB_ORDER id; each stub in hand, refused; bots on stubs) and, online, `CLIENTS=2 Q0=autopilot Q1=autopilot
+NET=tools/botlab/tests/net-subscaf.cjs tools/botlab/run.sh tools/botlab/netpage.cjs` (stub ids through the lobby into a match).
+
+The Glide Bomb (`[b5-sub-glide]`, src/game/kits/glide.js; batch 5 subs SPEC §A: the stone that slides straight along the
+floor inking a lane, bounces off walls and kids, blows when its fuse runs out; hold to cook it — shorter, bigger, the main
+weapon locked meanwhile, slipping out a second past full cook):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-glide.js tools/botlab/run.sh tools/botlab/page.cjs`
+(`PAGE_ARGS='only=reach,lane,bounce,ledge,blast,shot,fizzle,guide,bots,stubs,lock,crush,boss,start,perf,more'`; `crush`
+uses the real `G.deploy.crushIn` once the sentry / bobber branches are merged, a copy of its kit loop before) and,
+online, `CLIENTS=2 Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-glide.cjs tools/botlab/run.sh
+tools/botlab/netpage.cjs` (`NET_ARGS='scene=hostleave'`: the host leaves with its stones out). Its pictures:
+`tools/botlab/jobs/batch5/sub-glide/scenes.js` through hud-shots.cjs. match.cjs prints a `GLIDE` line (uses, cooks, the
+bots' fight / paint / boss throws, endings — the sunk ones by thrower —, the bots' stay-on-the-stage checks, bounces, hits,
+boss hits) when anyone threw one (`SUBS='all=glide'`), and a
+`SUBUSE` line for every sub kind thrown (uses / enemy hits / damage / splats: the Glide against the Splat Bomb).
+
+The Chain Bobber (`[b5-subs]`, src/game/kits/bobber*.js; SPEC §C): `MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-bobber.js
+tools/botlab/run.sh tools/botlab/page.cjs` (C10: deploy heights over floors, walls, ceilings, the sea, a stand-in shell and
+rising lava; tethers; the trigger and its hops; the damage table to N = 8; disarming; life and the hidden guard; movers,
+crushIn, era flips; Drainbow, Bubble Guard, the Stamp; the net records; the teammate cue; bots; the drawing, HUD and aim
+guide — `PAGE_ARGS='only=deploy,tether,…'`), and its mode runs: `MODE=tower … PAGE_ARGS='only=tower'`, `MAP=podbox …
+'only=pod'`, `MAP=halyard MODE=zones … 'only=zone'`, `MAP=podbox MODE=boss … 'only=boss'`. Online: `CLIENTS=2
+Q0=autopilot Q1=autopilot NET=tools/botlab/tests/net-sub-bobber.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`. Its budget
+(192 live, three 8-chains, a live 4 v 4 with 24 a bot): `MAP=testbox PAGE=tools/botlab/tests/perf-bobbers.js …page.cjs`.
+`match.cjs` and `tower-match.cjs` print a BOBBER line when any were thrown (`SUBS='all=bobber'`: chains set off, N at the
+trigger and its median, wasted %, what set each off — `chain:` another chain's blast, `(aimed)` a bot's shot at it — how
+long foes stood in a chain's reach), then `match.cjs`'s BOBBER-SRC (per placement source — the bot plan that laid the chain:
+`zdoor` / `zedge` / `zin` Zone Control, `troute` / `theat` Turf, `tower`, a fight's `pair`, a `lure` — its chain-seconds, foe
+seconds within 3 m of its reach and in it, chains set off and those that caught a foe) and BOBBER-STRAYS (each chain a bot's
+unaimed fire set off: its weapon, mode, distance and angle off its aim, whether its hold-fire check had said hold).
+[b5-int3] `match.cjs` also prints BOBBER-WASTE (the chains set off with no foe caught, by what set them off), BOBBER-AIMED
+(how each bot's aimed chain shot ended: blewMine / blewOther / foeGone / missed / noAim / readyOff) and the snaps on
+BOBBER-SCAN (thrown, aimed at, fired, left); `SNAPLOG=1` adds BOBBER-SNAPLOG / BOBBER-SCANLOG (each snap's and aimed shot's
+events). `TUNE='bobber.dangerHear=2.5'`: the lead's A/B knob — foes' bots notice an armed web within 2.5 m, else only in
+front of them with a line (off: within 5 m whatever way they face).
+`BOBBER_BOT.logOn = true` keeps a log of the bots' set-up decisions (`only=zone` prints it for a guard that falls short). A human's big web (SPEC C11's
+web arm — bots stop at 4): `MAP=halyard MODE=zones PAGE=tools/botlab/tests/bobber-web.js …page.cjs` (also treehills;
+`PAGE_ARGS='n=12,24 layout=lane,zone variant=trigger,clear reps=10'`: lethal area per trigger, splats per 100 ink, the share
+disarmed first, the time to clear one; the Mac mini's `jobs/batch5/sub-bobber/JOB-1.sh` / `JOB-2.sh` run the full set).
+Dash Pellet (`[b5-sub-dash]`, src/game/kits/dash.js — the press, the dash in ≤ 0.2 m substeps, the blast left behind):
+`MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-dash.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs`
+(PAGE_ARGS picks sections: press, dir, height, limits, blast, walls, edges, hud, bots); online, `CLIENTS=2 Q0=autopilot
+Q1='autopilot&netlag=150&netjitter=60' NET=tools/botlab/tests/net-sub-dash.cjs tools/botlab/run.sh tools/botlab/netpage.cjs`;
+the stage audit, any stage: `MAP=<id> PAGE=tools/botlab/tests/dash-reach.js WATCHDOG=900000 … page.cjs` (every edge
+node in one run, 1–6 min locally; `dt=24` the same at 1/24 s; `step=N;off=k` a part, every `off` from 0 to N − 1 tiling a
+full audit; `air=<m>` a what-if air dash; `climb=0` leaves out the dashes off a wall climb; Cargo Terminal with
+`DEVSTAGE=1`); in matches, `SUBS='all=dash'` adds a DASH line to match.cjs
+(`DASH_AI=0`: bots never dash).
+
+Batch 5 wave 2's integration (`[b5-int3]`: the four subs and the Bazookarp engine together): `MAP=karpbox MODE=bazookarp
+PAGE=tools/botlab/tests/int3.js tools/botlab/run.sh tools/botlab/page.cjs` (each sub against the real Roe Shell — the
+Glide's bounce and blast, the dash held outside it, a bobber deployed outside it and one splash a chain, a sentry blind
+through it; the re-form's crushIn ending a sentry and bobbers but never a Glide or a curtain 3 m off; the carrier's bonk,
+a dash ending at the pick-up, a cook fizzling, devices working on), `MAP=testbox MODE=tower` (the tower crushing a sentry
+and bobbers on its track, riding ones on its deck), `MAP=testbox MODE=turf` (a dash into an enemy Drip Curtain; a bot's
+bomb press held off a human's idle chain; DECISIONS #22, a Twinfire roll and a Mitts leap into a 0.10 m wall at 60 / 24
+fps) and `MAP=calamari MODE=turf PAGE_ARGS='only=rail'` (a bobber riding a railcar, a sentry refused on its roof and never
+left inside it); `PAGE_ARGS='only=shell,reform,carrier,tower,curtain,throwhold,thinwall,rail'`. `karp-match.cjs` takes
+`SUBS=` as tower-match.cjs does.
 
 Tideline Bow ink (2026-10-02, bow-paint: the three arrows parallel 0.4 m apart at full draw and 8° fans below it, the
 falling-spray droplets staggered into one unbroken band, the landing patches, the draw at a third of the speed in the air,

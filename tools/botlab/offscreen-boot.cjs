@@ -23,12 +23,12 @@ electron.app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 // Cargo Terminal) boots offline for page tests, shots, tower checks, bakes and stage art (a solo walk: never with bots)
 // WIPSTAGES=1: every game page loads with ?wipstages (config SHOW_WIP), so the stages under construction (config wip)
 // are listed in every stage picker like the shipped ones. (MAP=<id> loads a wip stage without it: by id.)
-const DEVSTAGE = process.env.DEVSTAGE === '1', WIPSTAGES = process.env.WIPSTAGES === '1';
+const DEVSTAGE = process.env.DEVSTAGE === '1', WIPSTAGES = process.env.WIPSTAGES === '1', WIPMODES = process.env.WIPMODES === '1';   // [b5-karp] WIPMODES: ?wipmodes (config WIP_MODES listed everywhere)
 const addFlag = (u, on, flag) => (on && typeof u === 'string' && u.startsWith('app://inkwave/index.html') && !new RegExp(`[?&]${flag}\\b`).test(u)
   ? u.replace(/^([^#]*?)(\?[^#]*)?(#.*)?$/, (_, p, q, h) => `${p}${q ? q + '&' : '?'}${flag}${h || ''}`) : u);
 // PAGEQ='era=2' / 'lava=high' …: every game page loads with that query too (a stage module's audit switch) [b5-stagehooks]
 const PAGEQ = process.env.PAGEQ || '';
-const devURL = (u) => addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), !!PAGEQ, PAGEQ);
+const devURL = (u) => addFlag(addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), WIPMODES, 'wipmodes'), !!PAGEQ, PAGEQ);
 class OffscreenBW extends electron.BrowserWindow {
   constructor(opts = {}) {
     super({ ...opts, show: false, fullscreen: false, width: 1512, height: 945, webPreferences: { ...(opts.webPreferences || {}), offscreen: true } });

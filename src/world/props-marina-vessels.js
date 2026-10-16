@@ -2235,7 +2235,7 @@ export function registerMarinaVessels(D, H) {
       });
       // the locked gate is a rail collider (a kid on the quay can't walk through it; shots / ink / squids pass)
       const Wg = (o.width ?? 1.3) / 2 + 0.13;
-      B.col(0.27, 0, -Wg, 0.37, 2.15, Wg, { rail: true });
+      B.col(0.27, 0, -Wg, 0.37, 2.15, Wg, { rail: true, roof: true });   // [b5-int3] (off-limits on top: a dash off the boathouse's wall climb stood a kid on it — dash-reach.js)
     },
   };
 

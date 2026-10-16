@@ -1,0 +1,33 @@
+# The Glide Bomb against the sentry / bobber branches' real G.deploy.crushIn (fix round 1, 2026-10-09; local, never committed)
+# Each run: this branch with src/game/deployables.js taken from b5-sub-sentry (d5d06e0) or b5-sub-bobber (cb158b5),
+#   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-glide.js PAGE_ARGS='only=crush' (the test uses G.deploy.crushIn when it exists)
+# T1: sentry crushIn verbatim, the Glide as reviewed (209f28c): the bug (a stone riding a moving deck is smashed; a pillar ends one)
+# T2: sentry crushIn + the one line below, the Glide now: all pass
+# T3: sentry crushIn verbatim, the Glide now: the deck passes (rides = the deck), but a pillar / the shell / lava still emit
+#     'device:down' (7 + 2 false events; the stone lives: crush is a no-op) — the line is needed
+# T4: bobber crushIn + the one line, the Glide now: all pass
+#
+# The line for the integrator (deployables.js crushIn, the kit-descriptor loop), tagged [b5-sub-glide]:
+#   sentry: if (d.ghost || !d.live || d.crushable === false || rides(d.rides)) continue;
+#   bobber: if (d.ghost || !d.live || d.crushable === false) continue;
+
+== T1-sentry-oldglide done
+FAIL a stone at rest on a deck moving at 2 m/s, the real G.deploy.crushIn every frame it moves: it rides the deck (descriptor rides / floor = the deck), is never ended, blows at its fuse  {"real":true,"crushed":1,"rideOk":true,"ridesDeck":false,"why":"smashed","x":0,"deckX":2}
+FAIL a pillar (2 m/s) driven into a stone on the floor, crushIn every frame: knocked on ahead of it (a mover's side is a wall), never ended  {"crushed":1,"state":"dead","vz":0,"z":-20,"pillarFront":-19.5}
+FAIL the re-forming shell's sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)  {"crushed":0,"state":"dead"}
+RESULT 0/3
+== T2-sentry-line done
+PASS a stone at rest on a deck moving at 2 m/s, the real G.deploy.crushIn every frame it moves: it rides the deck (descriptor rides / floor = the deck), is never ended, blows at its fuse  {"real":true,"crushed":0,"rideOk":true,"ridesDeck":true,"why":"blast","x":3.2,"deckX":3.2}
+PASS a pillar (2 m/s) driven into a stone on the floor, crushIn every frame: knocked on ahead of it (a mover's side is a wall), never ended  {"crushed":0,"state":"slide","vz":2.52,"z":-19.01,"pillarFront":-19.5}
+PASS the re-forming shell's sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)  {"crushed":0,"state":"slide"}
+RESULT 3/3
+== T3-sentry-noline done
+PASS a stone at rest on a deck moving at 2 m/s, the real G.deploy.crushIn every frame it moves: it rides the deck (descriptor rides / floor = the deck), is never ended, blows at its fuse  {"real":true,"crushed":0,"rideOk":true,"ridesDeck":true,"why":"blast","x":3.2,"deckX":3.2}
+FAIL a pillar (2 m/s) driven into a stone on the floor, crushIn every frame: knocked on ahead of it (a mover's side is a wall), never ended  {"crushed":7,"state":"slide","vz":2.52,"z":-19.01,"pillarFront":-19.5}
+FAIL the re-forming shell's sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)  {"crushed":2,"state":"slide"}
+RESULT 1/3
+== T4-bobber-line done
+PASS a stone at rest on a deck moving at 2 m/s, the real G.deploy.crushIn every frame it moves: it rides the deck (descriptor rides / floor = the deck), is never ended, blows at its fuse  {"real":true,"crushed":0,"rideOk":true,"ridesDeck":true,"why":"blast","x":3.2,"deckX":3.2}
+PASS a pillar (2 m/s) driven into a stone on the floor, crushIn every frame: knocked on ahead of it (a mover's side is a wall), never ended  {"crushed":0,"state":"slide","vz":2.52,"z":-19.01,"pillarFront":-19.5}
+PASS the re-forming shell's sphere and a lava sweep (crushIn) over a stone: nothing (it bounces off a solid shell, sinks in lava on its own)  {"crushed":0,"state":"slide"}
+RESULT 3/3

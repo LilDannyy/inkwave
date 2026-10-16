@@ -6,7 +6,7 @@
 // together. In the match NetMatch (netmatch.js) does the replication.
 import { G, emit } from '../core/ctx.js';
 import { MAPS, WEAPONS, WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MATCH, ZONES, TOWER, BOT_NAMES, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock,
-  ROOM_TIMES, roomTime, roomBotPlan, mapListed, listedMaps } from '../config.js';
+  ROOM_TIMES, roomTime, roomBotPlan, mapListed, listedMaps, BAZOOKARP, modeListed } from '../config.js';   // [b5-karp] BAZOOKARP, modeListed
 import { randomStyle } from '../game/character-style.js';
 import { Transport } from './transport.js';
 import { NetMatch } from './netmatch.js';
@@ -19,7 +19,7 @@ const TEAM = 4;
 const subOf = (id) => (SUBS[id] ? id : null), specialOf = (id) => (SPECIALS[id] ? id : null);
 // lobby modes: the four match modes, and Practice (no clock, no judge: the room plays on the host's stage until the
 // host ends it — docs/NET.md)
-export const ROOM_MODES = ['turf', 'zones', 'tower', 'boss', 'practice'];
+export const ROOM_MODES = ['turf', 'zones', 'tower', 'boss', 'practice', 'bazookarp'];   // [b5-karp] (append-only)
 const modeOk = (m) => (ROOM_MODES.includes(m) ? m : 'turf');
 // the stages a mode can use (Boss Battle: never a noBoss stage; never a wip one — config wip, ?wipstages aside [b5-stages])
 export const roomStages = (mode) => (mode === 'boss' ? listedMaps().filter((m) => mapBossOk(m.id)) : listedMaps());
@@ -258,7 +258,7 @@ export class NetSession {
     if (s.duration) l.duration = Math.max(60, Math.min(600, +s.duration | 0));
     if (s.difficulty && ['easy', 'normal', 'hard'].includes(s.difficulty)) l.difficulty = s.difficulty;
     if (Number.isInteger(s.palette) && s.palette >= 0 && s.palette < TEAM_PALETTES.length) l.palette = s.palette;
-    if (ROOM_MODES.includes(s.mode)) l.mode = s.mode;
+    if (ROOM_MODES.includes(s.mode) && modeListed(s.mode)) l.mode = s.mode;   // [b5-karp] (a wip mode only with ?wipmodes)
     // bots: a count for the mode's kind (matches fill by default, Practice starts empty); `bots: true | false` from an
     // older client = fill / none
     const kind = l.mode === 'practice' ? 'practice' : 'match';
@@ -337,8 +337,9 @@ export class NetSession {
     }
     // (Zone Control and Tower Command always run their own 5:00 + overtime, as offline; Practice is a turf stage with no
     // clock — cfg.practice — and gen 0, its first stage)
-    const mode = boss ? 'boss' : l.mode === 'zones' || l.mode === 'tower' ? l.mode : 'turf';
-    const cfg = { k: 'start', roster, map, time, duration: mode === 'zones' ? ZONES.duration : mode === 'tower' ? TOWER.duration : l.duration, difficulty: l.difficulty, palette: l.palette, mode, host: this.myId, id: Math.random().toString(36).slice(2, 8) };
+    const mode = boss ? 'boss' : l.mode === 'zones' || l.mode === 'tower' || l.mode === 'bazookarp' ? l.mode : 'turf';   // [b5-karp] bazookarp
+    const cfg = { k: 'start', roster, map, time, duration: mode === 'zones' ? ZONES.duration : mode === 'tower' ? TOWER.duration : mode === 'bazookarp' ? BAZOOKARP.duration : l.duration, difficulty: l.difficulty, palette: l.palette, mode, host: this.myId, id: Math.random().toString(36).slice(2, 8) };
+    if (mode === 'bazookarp') cfg.karpCoin = Math.random() < 0.5 ? 0 : 1;   // [b5-karp] the hidden coin (never on the HUD)
     if (practice) { cfg.practice = 1; cfg.gen = 0; }
     this.tr.lock(!practice);   // (a match turns joiners away; a Practice session lets them drop in)
     this.tr.broadcast(cfg);

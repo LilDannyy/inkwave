@@ -137,7 +137,10 @@ remaining player becomes host and adopts the bots, clock and judge.
 
 **Path.** Positions are a cubic Hermite through the owner's samples using the owner's velocities (C1: no corners at
 tick boundaries); vertical motion never dips through a floor either end stands on. Past the newest sample it
-extrapolates ballistically for at most 180 ms, then holds. A teleport counter (`netTp`, bumped on respawn) makes
+extrapolates ballistically for at most 180 ms, then holds — except past a sample flagged `F.dash` (bit 23, `[b5-sub-dash]`:
+the owner is mid Dash Pellet dash, 29 m/s), which holds at once: 180 ms at that speed is 5 m through whatever is ahead,
+then a snap back, and shots on that screen would be judged against the wrong spot. The dash lasts 0.22 s (about 4
+ticks), so most of it is interpolated between real samples anyway, and the damped correction carries it on. A teleport counter (`netTp`, bumped on respawn) makes
 proxies cut instead of gliding across the map; a respawning squidkid stays hidden until its new life's first sample.
 
 **Corrections.** The only discontinuities are new data rewriting a moment already shown (leaving an extrapolation,
@@ -167,6 +170,50 @@ never trigger themselves), a Hop Beacon's jumps left, a Drip Curtain's ink after
 super jump onto a remote player's beacon goes to its owner through the same device-hit channel (`beaconUse`). The
 Waddle's windup is its `[5, gid, x, y, z]`.
 A kit's pose state (a Mitts leap, a held Brolly canopy) rides the actor tick (`netState` / `netApply`).
+`[b5-sub-glide]` A device hit names its attacker: `{k:'dh', kind, id, d, a}` (`a`: the shooter's nid, when known — the
+kit's `netHurt(id, dmg, by)` gets that actor on the owner's screen, or null; older senders leave it out). A player who
+leaves takes their kit objects with them: `onLeave` (before the squidkid is re-owned, on every screen) and `_remove`
+call `SUB_KITS[k].dropOwner(actor)` for each of their squidkids (bots included), which ends their objects there quietly
+(no blast, no paint, no `'device:down'`).
+
+**Glide Bomb** (`src/game/kits/glide.js`, kit kind `glide`). The owner simulates; records `['k', nid, 'glide', …]`:
+- `[5, level]` — the cook in the hand reached a level (1 / 2 / 3 at cook 0.6 / 1.2 / 1.8 s, i.e. held 0.75 / 1.35 /
+  1.95 s); `[5, 0]` when a cook in the hand fizzles (splatted, dived, any interrupted hold). Other screens show the
+  held stone's lamps (8 / 5 / 3 / 1), the team glow round the fist and the fuse sizzle (within 12 m) at that level; the
+  actor tick's `subAim` flag ends it (level 0 when it drops). No new tick bits.
+- `[0, gid, x, y, z, vx, vz, fuse, R]` — released: where it was set down, its slide velocity, the fuse left and the blast
+  radius (the cook is decided). Every screen slides its copy with the same step function at a fixed 1/60 s step through
+  an accumulator (≤ 6 steps a frame), so the frame rate never changes where it goes.
+- `[4, gid, x, y, z, vx, vz, fuse]` — the owner's word every 0.25 s (the players it bounces off differ per screen): a
+  ghost eases onto it (`k = 1 − e^(−14 dt)`; snaps beyond 3 m) and takes its velocity and fuse. At a bounce the record
+  also carries the bounce: `[4, …, fuse, kind, who]` (kind 1 wall · 2 mover · 3 kid · 4 curtain · 5 sentry · 6 shell; who:
+  the kid's nid, for a kid bounce). A ghost that hasn't bounced by itself within 0.15 s plays the clonk and sparks from
+  it (the record can turn it a step before it would have touched — so the kid it bounced off still sees and hears it);
+  one that has, doesn't (never twice).
+- `[1, gid, x, y, z]` — the blast (the look there; paint and damage are the owner's).
+- `[2, gid, why, hot]` — an end without a blast: why 0 sank, 1 popped (shot down), 2 smashed (a Mega Stamp's guard); for a
+  sink, hot 1 when it went into lava or another stage hazard (`G.match.lava.under` / `G.match.stage.under`, asked before
+  `G.level.liquidY`, which on caldera answers the lava's surface too): the ghost hisses (`lava.fizzle` / `stage.fizzle`)
+  instead of plopping.
+A ghost never paints, hurts, blows or pops by itself: at the end of its fuse it holds, pulsing, until the owner's word
+(2 s at most). Enemy fire on a ghost goes to the owner (`netHurt(owner, 'glide', gid, dmg, by)`; while `netMuted()` — a
+ghost's shot or blast being replayed — it only flashes). A Mega Stamp's guard that smashes a ghost on the stamper's
+screen ends it there at once and tells the owner on the `glideSmash` channel. Players in the blast are judged on the
+owner's screen and applied by each victim's owner (`applyHit`, as every bomb). It is a bomb, not a device: nothing
+crushes it (its kit device descriptor says `crushable: false`, which `G.deploy.crushIn` skips — the tower, the re-forming
+Roe Shell, lava and era-flip sweeps); a moving floor carries it on every screen alike, and the tower's and every mover's
+sides are walls it bounces off. Tested by `tools/botlab/tests/net-sub-glide.cjs` (`CLIENTS=2`; `NET_ARGS='scene=hostleave'`:
+the host leaves with its bot's stone and its own sliding — both ghosts end at `onLeave` on the guest, no blast).
+**Dash Pellet** (`[b5-sub-dash]`, src/game/kits/dash.js). The owner simulates the dash and records one word per press,
+`['k', nid, 'dash', [0, gid, x, y, z, dx, dz, air]]`: every screen plays the pop, its blast look and sound and the speed
+ribbon at that take-off point (a ghost's blast never hurts and never paints). The motion itself is the owner's actor
+tick (`F.dash` while it runs: never extrapolated, see *Path*); the forward-roll clip is the owner's `['tr', nid, 'roll',
+{x, y, z, dur}]`. The blast's hits are judged on the dasher's screen and applied by each victim's owner (`{k:'hit'}`,
+`weaponId 'dash'`; a Drainbow halves them there, from the take-off point), its devices' damage goes the usual way
+(`G.subs.damageArea` → `{k:'dh'}` for a ghost device), and its paint and the ground streak are the owner's splats.
+Nothing outlives the dash, so a leaving player hands nothing over. The press itself is local: the runner's press latch
+(`trySubPress` / `subLatch`) and the "Can't use" refusals (`'sub:cantuse'` with its `reason`) never cross the wire.
+`tools/botlab/tests/net-sub-dash.cjs` (`CLIENTS=2`).
 Statuses: every screen's ghost subs track / poison the players they touch there too (the timers run out on remote
 players as well); the owner's own word — tracked, poisoned — rides the actor tick's flags (`F.tracked`, `F.poisoned` →
 `a.netStatus`), so the tracked look and the poison bubbles (src/game/statusFx.js) show on every screen while they last.
@@ -267,6 +314,88 @@ it lands). A mine is tripped by its owner's screen wherever the block has taken 
 as before). Old clients ignore `[4, …]` (no sub kind at `d[2]`). Tested by `tools/botlab/tests/net-deploy.cjs`
 (`CLIENTS=2`; `NET_ARGS='scene=tower'`: the deck, the crush, the mine on the deck) and `tests/deployables.js`.
 
+**The Scrap Sentry** (batch 5, `[b5-subs]`; src/game/kits/sentry.js, kit kind `sentry`). **Its owner simulates it**: the
+spot rules, its eyes (the bots' sight rules: botSight's shared ray budget, against the positions the owner's screen
+shows), the lock and the bursts all run on the owner's screen only (the host for its bots); its rounds are the owner's
+ordinary projectiles (`recProj`: every other screen flies them as ghosts that never paint or hurt), so **a hit on a
+player is judged on the owner's screen and applied by the victim's owner** (`{k:'hit'}`, weaponId `'sentry'`), its ink
+replicates as the owner's splats. The records (`['k', nid, 'sentry', …]`): `[0, gid, x, y, z, nx, ny, nz, yaw]` set down
+(the ghost unfolds there, riding the block under it if that moves); `[4, gid, x, y, z (, tag, lx, ly, lz, nx, ny, nz)]`
+wave 1's word on where it sits on a moving block or back on still ground (the ghost hands it to `G.deploy.netOn`, so it
+rides its own screen's copy of the tower / railcar / pod at the owner's spot); `[3, gid, nid | -1]` locked onto / lost
+(the ghost turns its head to that player as its screen shows them and plays the tell: the white lamp, "bip-bip", the
+aim line); `[6, gid, yaw, pitch]` a burst starts (the ghost plays its three flashes and pfts, 0.11 s apart; the rounds
+arrive by themselves); `[5, gid, hp]` its hp after hits (the damaged look everywhere); `[2, gid, why]` gone — 0 timed
+out, 1 shot down, 2 crushed (the tower, a mover, the Bazookarp shell, an era flip, the lava), 3 folded (its owner
+splatted, replaced, carried within `spawnBarrier + 4` m of the enemy pad). A ghost never decides an ending (a fallback:
+`life + 3 s` with no record). **Hits on it**: a shot / beam / blast / roll on a ghost goes to its owner as
+`{k:'dh', kind:'sentry', id, d, a}` — `a` (new, `[b5-subs]`, every kit device: `registry.js netHurt(…, by)` →
+`sendDevHit(…, by)`) is the attacker's nid, so the owner's `'device:down'.by` names the guest who shot it down; old
+senders send no `a` (null). A ghost shot, ghost blast or ghost roll replayed on a screen (`netMuted()`) only flashes a
+real sentry there, never hurts it. The tower, movers, standing fire and `G.deploy.crushIn` act on each screen's own
+sentries only (the owner's `[2, gid, 2]` ends the ghosts). **A player who leaves takes it with them**: `netmatch.js
+onLeave` (before the leaver's squidkid is handed to the host) and `_remove` call every kit's `dropOwner(actor)`, so every
+screen ends that player's sentry ghosts at once, quietly (no `'device:down'`) — unlike wave 1's subs devices, which the
+host adopts. **A Practice late joiner** (`[b5-int3]`) never saw the `[0]` of a sentry already out (the late-join path
+copies the turf and the stage modules, no devices), so every owner **restates** its live sentries after a join: on
+`'actor:added'` (the host's `pj`, on every screen) it re-records `[0]` (where it stands now), `[4]` (where it rides,
+`G.deploy._onRec`) and `[5]` (its hp, when hurt) 1.5, 4, 8, 15, 25 and 40 s later — the joiner's stage takes seconds to
+tens of seconds to build and what arrives before it listens is lost; a screen that already has the ghost ignores a
+repeated `[0]`. (Wave 1's devices and the Chain Bobber still have the gap: a joiner sees them only once their owner
+records them again — a known limit.) Tested by `tools/botlab/tests/net-sub-sentry.cjs` (`CLIENTS=2 Q0=autopilot
+Q1=autopilot`; `NET_ARGS='scene=tower'`: the deck ride, the ghost at the owner's spot of the deck; `NET_ARGS='scene=latejoin'`:
+a third client joins with A's sentry out and builds its ghost at A's spot with A's hp).
+
+**The one destroyer** (`[b5-subs]`, subs SPEC §0.3). `G.deploy.crushIn(shape, how)` ends every device of this screen's own
+whose body is in the shape — `{ blocks, rider }` (the tower's call: the user's list — sprinkler, beacon, curtain, buoy,
+the kits' devices; a Lurk Mine or a floor Cling Charge is pushed aside instead), `{ sphere: { c, r } }` (the Bazookarp's
+re-forming shell), `{ where: (pos) => bool }`, `{ standingOn: [blocks] }`, `{ liquid: depth }` — with one
+`'device:down'` { how } each; each device's owner's own end record ends its ghosts (subs `[2, gid, 2]`, the buoy
+`[4, gid, 2]`, the sentry `[2, gid, 2]`). Ghosts are never touched: every screen runs it on its own devices.
+
+**Chain Bobber** (batch 5, `[b5-subs]`: src/game/kits/bobber.js, kit kind `bobber`; tools/botlab/jobs/batch5/subs/SPEC.md
+§C, §0.4). **The owner simulates and decides** every bobber of theirs: where it floats, its tethers, when a chain goes,
+which bobber hits the boss / the Bazookarp shell, when one is disarmed, crushed or expires. Its records (`['k', nid,
+'bobber', …]`, rounded numbers):
+- `[0, gid, x, y, z, vx, vy, vz]` thrown — every screen flies a copy (the flight steps at exactly 1/60 s on every screen,
+  the arc preview's own integrator);
+- `[3, gid, x, y, z, hover]` settled (its float spot, rounded to 0.01 m on the owner's screen too, so every screen holds
+  the same spot; `hover` its height over its floor or the liquid) — again when it re-floats (its floor went: a parked
+  block, an era flip), when a ghost eases there over 0.3 s; the lava's rise and fall each screen follows itself (a pure
+  function of the synced clock);
+- `[4, gid, x, y, z (, tag, lx, ly, lz, nx, ny, nz)]` wave 1's ride word for its foot (the moving block it rides, or still
+  ground after a shove), under the kit's own kind (`deployables.js _onRec` writes `it.netKind`); the ghost's ride body
+  takes it through `G.deploy.netOn`;
+- `[5, gidA1, gidB1, gidA2, gidB2, …]` the owner's whole tether list, sent whenever it changes; every other screen draws
+  exactly that list (its chains — and so the lamps' N — are that list's connected groups). **Ghosts never link**;
+- `[1, gid0, N, by, gid, hop, gid, hop, …]` a chain set off: its size at the trigger, the trigger's nid (`-1` none), the
+  blow order as hop levels (gid0 is level 0). Every screen plays the sparks and blasts at its own 0.07 s hops from the
+  moment it hears it;
+- `[2, gid, why]` gone without a blast: 0 expired (or the hidden guard retired it), 1 disarmed (every screen sags it and
+  pops it 0.4 s later), 2 crushed (the tower, a mover, the shell, an era flip, lava, a block through it), 3 refused (too
+  near the enemy pad, a no-place disc);
+- `[6, gid0, dmg, killed]` **from the victim's screen, on the victim** (`['k', victimNid, 'bobber', …]`): a chain caught
+  that player there — the owner's hit marker and its CHAIN ×N callout's tick.
+
+**Damage to players is judged where the victim is owned** (as Surf N' Turf's rings and the vortex): each screen replays
+the chain from `[1]` and applies each blast to the players it owns only (its own squidkid; the host its bots), at their
+true positions, with its own one-explosion-a-victim ledger (a victim caught by several blasts of one chain takes only the
+strongest: each later blast adds its excess), the Drainbow halving from the bobber, the triggering teammate's assist
+window opened on the victim (`G.assists.noteDamage(victim, by)`); the splat and its assist are that screen's, forwarded as
+usual. The owner's screen alone paints the chain's ink (replicated as usual), hurts devices (`G.subs.damageArea`: a ghost
+device's hit goes to its owner), sets off its team's other chains in reach, and makes the one body blast on the boss
+(`boss.splash(…, { body: true })` — the rest `{ body: false }`, crablets only) and the one `G.objTargets.splash` on the
+shell. **Hits on a ghost bobber go to its owner**: enemy fire as a device hit (`{k:'dh', kind:'bobber', id, d, a}`), team
+fire on its own channel (`{k:'dh', kind:'bobberPop', id, d: 1, a}` — positive, so `registry.netHurt` sends it; at most
+one a quarter second a bobber; the ghost flashes "struck" meanwhile). `a` is the shooter's nid (new: `sendDevHit(…, by)`
+adds it, the `'dh'` case hands `byNid.get(a)` to the kit's `netHurt` as `by`; old senders send none: `null`) — the
+owner credits the trigger with it. **Ghost fire never touches a real bobber**: a ghost round, blast or chain replayed on
+the owner's screen (`netMuted()`) is absorbed with a flash and does nothing else (the shooter's screen sent the hit). **A
+player who leaves takes their bobbers with them**: `netmatch.js onLeave` calls `SUB_KITS[k].dropOwner(a)` for every
+squidkid of the leaver before anyone takes it over (and `_remove` does the same), so no inert ghost soaks shots for
+someone gone. A ghost whose owner's end never came goes 3 s past its life. Tested by
+`tools/botlab/tests/net-sub-bobber.cjs` (`CLIENTS=2 Q0=autopilot Q1=autopilot`) and `tests/sub-bobber.js` ('net').
+
 **What outlives its owner** (batch 5, `[b5-sprules]`). A remote splat (`NetMatch._remoteSplat`) emits `'splatted'` with
 `remote: true` on every other screen, after the owner's own records that went before it (a special's end `[1, 'splat']`
 is recorded inside `actor.splat()`, ahead of the forwarded event). The Whirl Boomerang's ghost no longer fizzles on it:
@@ -362,6 +491,63 @@ gets the modules' snapshot in its start config (`stage`) and restores it when it
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
 tower onto the host's position (dead-reckoned between snapshots); each client carries its own players standing on it
 and fills its own players' gauges. The start config carries `mode: 'tower'` and its fixed 5:00.
+
+**Bazookarp** ([b5-karp], a wip mode: `config WIP_MODES`, rooms take it only with `?wipmodes`). The host runs the rules
+(src/game/bazookarp.js) and talks to the wire only through a `KarpWire` (src/game/karpWire.js `NetWire`); WP2
+(karp-face) completes the netcode on this shape (tools/botlab/jobs/batch5/bazookarp/SPEC.md §7). Today:
+- **host → all.** Discrete records sent **at once** as `{ k: 'bk', e }` (not on the timeline: a burst, a grant or a drop
+  reaches a guest one trip after it happens), each with `q`, the host's sequence number: `['p', q, nid]` grant ·
+  `['u', q, nid, x, y, z]` a grant undone · `['b', q, team, x, y, z, byNid]` burst · `['d', q, how, x, y, z]` dropped /
+  moved · `['r', q, x, y, z, why]` reset flight · `['w', q, team, index]` plant · `['x', q, nid, x, y, z, own]` Carp Blast ·
+  `['t', q, losing, why]` overtime · `['e', q, winner, reason, c0, c1, b0, b1]` end. Snapshots on the host's **timeline**
+  as `['ks', …]` events: `'s'` 10× a second (phase, position, holder, meter, fuse, rate, counts, overtime, the window)
+  and `'S'` once a second (plus best metres, reach times, weirs lowered, `touched`, the field state …). A follower applies
+  a snapshot's phase / holder / position only when its `q` is at least the last discrete record's (a late snapshot never
+  undoes a newer grant or drop). The start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
+- **guest → host.** `{ k: 'kc', nid, ts }` a pick-up claim (re-sent every 0.3 s while touching; its kit locked until an
+  answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
+  half, zone }` the carrier's own judgement of its fuse rate / half / free zone (on change, ≤ 1 per tick), `{ k: 'kf',
+  nid, x, y, z, half, zone }` its last footing (≤ 5/s; a half or zone change at once), and **`kh`, a field on the guest's
+  ordinary 20 Hz tick** (`msg.kh = [nid, dmg, …]`): its shell hits since the last tick, summed, already × 0.5 / capped
+  (src/game/objTargets.js `takeHits`; the host's `karp.netHits`). Host → one guest: `{ k: 'kd', nid }` a refused claim.
+- **who judges what.** The shooter's screen decides a hit on the shell, the host applies it; the burst's and the Carp
+  Blast's splats are each victim's owner's (its own players in the radius, from the record's centre); a Carp Shot's
+  blast is judged on each **victim's** screen when the shooter's kit record `[2, gid, x, y, z, c]` plays there (not
+  through `applyHit`, which drops a remote attacker; the victim's owner records `[3, gid, dmg]` on the victim so the
+  shooter gets its hit marker); the carrier's own screen judges its retreat, half, free zone and last footing (`kr` /
+  `kf`); the host scores a remote carrier only from the real samples it sent (`NetWire.samples`, never its drawn
+  position), through the continuity clamp; pick-ups are the host's, from claims checked against the claimant's newest
+  sample. Carp Shots are the owner's kit records `['k', nid, 'karp', [0 | 1 | 2 | 3, gid, …]]` (`KIT_GHOSTS.karp`).
+- **declines, refusals, the grant's samples.** A guest whose own player is dead when its grant (`p`) plays answers
+  `kx` and takes nothing; the host restores its pre-grant state (`touched`, the last carrier, overtime and its window,
+  the spot) and records `u`; a host-side death record for that player inside 1.5 s of the grant waits 0.4 s for the
+  `kx` first, so a declined grant is never a carrier's loss (S39c). `kd` reaches the guest's engine (its claim lock
+  ends). A remote carrier is scored only from samples after the one its claim was judged on (never its samples from
+  before the pick-up). Remote claimants are measured where their newest sample is (nearest wins, host bots included).
+- **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
+  shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
+  inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
+  the Surf N' Turf buoy); the owner's existing end records — subs `[2, gid, 2]`, the buoy `[4, gid, 2]` — end the
+  ghosts everywhere with the crunch, so a ghost is never crushed by a screen that doesn't own it. Thrown and walking
+  subs glance off / stop on each screen's own copy of the standing shell (ghosts too: the owner's records still decide
+  how each ends); the Whirl Boomerang's owner records where it stopped on the shell, `['k', nid, 'boomerang', [4, gid,
+  x, y, z]]` (a ghost still flying out snaps there and hovers). Tested by `tools/botlab/tests/net-karp-crush.cjs`.
+- **host migration (built here: the new host takes over the rules).** `netmatch.onLeave` calls
+  `match.karp.onHostChange(isHost)` once `match.follower` is false: the new host's records carry on from the old host's
+  `q` (the other guests drop anything at or below the last `q` they applied), a holder that is gone (a humans-only
+  stage removed it while this screen was still a follower) or dead is lost as `left` at its last real sample, an adopted
+  carrier (a stage with bots) keeps carrying with its own screen's judgement read afresh, the clamp's baseline resets,
+  the window carries on (followers keep `otWin.open` from snapshots), and a full `S` goes out at once. A carrying guest
+  re-sends `kr` / `kf` to the new host. **Left for WP2:** §7.6's narrowed flush of the departed host's queued `'ks'`
+  and the reordered `onLeave` (today's order works because `onHostChange` handles the removed holder), the `'k'` case
+  for an adopted actor's queued Carp Shots, `lastCarrier` / `lastPlant` in `S` (a new host's S38 decision at time-up
+  uses what its follower saw), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag,
+  the latency steps (`netlag`), three-client rooms beyond the migration test, the results' per-player columns on screen.
+- Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
+  tools/botlab/run.sh tools/botlab/netpage.cjs` (19 checks: the host's view of a guest carrier, ghost landings, the
+  victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result) and
+  `tools/botlab/tests/net-karp-host.cjs` (`CLIENTS=3 NET_ARGS='part=bots'`: the host leaves mid-carry; `CLIENTS=2
+  NET_ARGS='part=cargo'`: a humans-only room).
 
 **Relay (server/).** One Durable Object per room code: membership, host election, join refusal (unknown / full /
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime

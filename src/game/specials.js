@@ -18,7 +18,7 @@ import { getWeaponDef } from './character-weapons.js';
 import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
 import { rumble } from './actor.js';
 import { SPECIAL_ICONS } from '../ui/ui-icons.js';
-import { KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';
+import { KIT_GHOSTS, SUB_KITS, netRec, netId, netHurt, netMuted, ghostMute } from './kits/registry.js';   // ([b5-sub-glide] SUB_KITS: the Stamp's smash)
 import { teamKnown } from './botSight.js';
 import { joinChain, shareShield, shieldNet, chainPrompt } from './sp-bubble.js';   // [b5-sprules] the Bubble Guard chain
 
@@ -84,6 +84,7 @@ function blast(owner, team, c, radius, dmgMax, dmgMin, weaponId, killRadius = 0)
   }
   G.subs?.damageArea(c, radius, 60, team, owner);   // [b5-deploy] (by: the hit marker)
   G.boss?.splash(owner, c, radius, dmgMax, dmgMin, weaponId);   // Boss Battle
+  G.objTargets?.splash(owner, c, radius, dmgMax, dmgMin, weaponId, { special: true });   // [b5-karp] the Roe Shell (× 0.5: a special)
 }
 // continuous damage (tornado, sound beam): no per-frame hit events, only the splat
 // (online: each client applies it to its own players — from a ghost's tornado / speaker too, as the Ink Tempest does)
@@ -372,6 +373,10 @@ export class SpecialSystem {
     const f = IMPL[s.kind]?.weapon;
     return f ? !!f.call(this, a, s, dt, inp) : false;
   }
+  // [b5-sub-dash] the special takes the sub button: every one with a weapon() hook does — those that replace the main
+  // weapon (weapon() → true: no sub at all then) and the Zipline (its tether is the sub button). An onPress sub's press
+  // (the Dash Pellet: WeaponRunner.trySubPress) does nothing while one runs, from its first frame on
+  ownsSub(s) { const I = s && IMPL[s.kind]; return !!(I && (I.ownsSub || I.weapon)); }
   end(a, reason = 'time') {
     const s = a.specialActive;
     if (!s || s.ended || s.id === 'slam' || s.id === 'storm') return;
@@ -879,6 +884,7 @@ class Tornado {
       tickDamage(this.owner, e, d.dps * dt * fade, 'strike');
       if (dh > 0.3) { e.vel.x += (dx / dh) * d.pull * dt; e.vel.z += (dz / dh) * d.pull * dt; }
     }
+    G.objTargets?.tick(this.owner, { x: this.pos.x, z: this.pos.z, r: this.radius }, d.dps * dt * fade, 'strike', { special: true });   // [b5-karp]
     this.loop?.set?.({ volume: 0.8 * fade, pitch: 1 + 0.2 * grow });
     return this.t < this.dur;
   }
@@ -911,6 +917,7 @@ class Twister {
     if (hit.hit) { this._burst(hit.point, hit.normal); return false; }
     if (G.subs && G.subs.blockShot(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }   // [b5-deploy] (by)
     if (this.sys.shotHit(this.prev, this.pos, this.team, 120, this.owner)) { this._burst(this.pos, UP); return false; }
+    { const kh = G.objTargets?.segHit(this.prev, this.pos, d.radius); if (kh) { const at = kh.point.clone(); G.objTargets.hit(this.owner, d.damage, 'zooka', at, { special: true, target: kh.target }); this._burst(at, UP); return false; } }   // [b5-karp] the Roe Shell
     if (G.drainbow?.live && !this.dbw) G.drainbow.pass(this, this.prev, this.pos, this.team);   // [drainbow] (once a twister)
     // players inside the column
     for (const e of G.actors) {
@@ -1020,6 +1027,15 @@ class Speaker {
         if (along < -0.5 || along > this.range) continue;
         const off = _v.addScaledVector(this.dir, -along).length();
         if (off < this.radius + 0.45) tickDamage(this.owner, e, d.dps * dt, 'wail');
+      }
+      if (G.objTargets) {   // [b5-karp] the Roe Shell in the beam
+        for (const t of G.objTargets.targets) {
+          if (!t.hittable()) continue;
+          _v.copy(t.center()).sub(this.mouth);
+          const along = _v.dot(this.dir);
+          if (along < -0.5 || along > this.range) continue;
+          if (_v.addScaledVector(this.dir, -along).length() < this.radius + t.radius()) G.objTargets.tick(this.owner, { c: t.center(), r: 0 }, d.dps * dt, 'wail', { special: true });
+        }
       }
       if (near(this.mouth, 40) && Math.random() < dt * 30) G.fx?.ring(_v.copy(this.mouth).addScaledVector(this.dir, 1 + Math.random() * 6), this.dir, this.owner.color, { radius: this.radius * 1.3, life: 0.3, snap: false });
       if (this.t >= d.blast) { this.phase = 'fade'; this.t = 0; this.loop?.stop?.(0.3); this.loop = null; }
@@ -1742,6 +1758,8 @@ const IMPL = {
         if (it.pos.distanceTo(_v.copy(a.pos).setY(ay)) > d.bombClearR || !stampFront(a, s, it.pos, d.deflectArc)) continue;
         G.subs._destroy(it);
       }
+      // [b5-sub-glide] kit bombs in front (the Glide Bomb: SUB_KITS[k].smash, SPEC §0.5)
+      for (const k in SUB_KITS) SUB_KITS[k].smash?.(_v.copy(a.pos).setY(ay), d.bombClearR, a.team, (p) => stampFront(a, s, p, d.deflectArc));
     },
     slam(a, s, radius, reach) {
       const f = stampFwd(s);
@@ -1761,6 +1779,7 @@ const IMPL = {
         G.projectiles.applyHit(a, e, s.def.damage, 'stamp');
       }
       G.subs?.damageArea(at, radius, 80, a.team, a);   // [b5-deploy] (by)
+      G.objTargets?.splash(a, _v2.copy(at).setY(at.y + 0.5), radius, s.def.damage, s.def.damage, 'stamp', { special: true });   // [b5-karp]
     },
     end(a) { this._restoreWeapon(a); },
   },
@@ -1916,6 +1935,7 @@ const IMPL = {
         G.projectiles.applyHit(a, e, hitDirect ? d.impactDirect : d.impactSplash, 'zipcaster');
       }
       G.subs?.damageArea(c, d.impactRadius, d.impactSplash, a.team, a);   // [b5-deploy] (by)
+      G.objTargets?.splash(a, c, d.impactRadius, d.impactDirect, d.impactSplash, 'zipcaster', { special: true });   // [b5-karp]
       const g = groundBelow(c, 3);
       paint(a, (g || c).clone().setY((g || c).y + 0.2), d.impactRadius * 0.75, a.team);
       G.fx?.explosion(c, a.color, d.impactRadius);

@@ -330,8 +330,8 @@ export class StageRun {
   // the volumes a module's moving pieces cover over their whole travel ({ x, z, hx, hz, yaw, y0, y1 } boxes pushed into
   // out): Bazookarp's rest flags, like movers.js sweepRect(car) for the railcars
   sweeps(out = []) { for (const R of this.h.sweeps) R.sweeps(out); return out; }
-  // the one device destroyer (subs SPEC §0.3: G.deploy.crushIn(shape, how)). Until the deploy package's crushIn lands on
-  // this branch it is a no-op that returns 0 — the call sites are final.
+  // the one device destroyer (subs SPEC §0.3: G.deploy.crushIn(shape, how) — [b5-subs] built in deployables.js; 0 on a
+  // checkout without it). The call sites are final.
   crushIn(shape, how) { const D = G.deploy; return D && typeof D.crushIn === 'function' ? D.crushIn(shape, how) : 0; }
 
   // ---- warnings on the HUD (every screen from its own clock / events; not on the menu backdrop)
