@@ -90,9 +90,12 @@ function geoFrom(T, parts) {
 }
 const tx = (g, x, y, z, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { g.scale(sx, sy, sz); g.rotateX(rx); g.rotateY(ry); g.rotateZ(rz); g.translate(x, y, z); return g; };
 function sharkGeo(T) {
-  const belly = (x, y) => (y < -0.02 ? 1.55 : 1);
+  // (a blacktip's back is grey and its belly white: seen from the shark tunnel's floor the belly is what shows — fix
+  // round 3 checked them from below with the eagle rays; the body is white, darkened up its flanks to the grey back)
+  const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const belly = (x, y) => 1 - 0.78 * ss(-0.09, 0.05, y);
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 10, 7), 0, 0, 0, 0, 0, 0, 0.42, 0.42, 2.1), c: '#7d878c', tail: true, shade: belly },
+    { g: tx(new T.SphereGeometry(0.5, 10, 7), 0, 0, 0, 0, 0, 0, 0.42, 0.42, 2.1), c: '#e2e6e8', tail: true, shade: belly },
     { g: tx(new T.ConeGeometry(0.22, 0.75, 6), 0, 0.38, 0.05, -0.5, 0, 0, 0.25, 1, 1.4), c: '#6b757a', tail: true },
     { g: tx(new T.ConeGeometry(0.2, 0.9, 6), 0, 0.12, -1.38, -1.2, 0, 0, 0.18, 1, 1.2), c: '#3a3f42', tail: true },
     { g: tx(new T.ConeGeometry(0.16, 0.6, 6), 0, -0.18, -1.3, -2.1, 0, 0, 0.18, 1, 1), c: '#3a3f42', tail: true },
@@ -100,10 +103,45 @@ function sharkGeo(T) {
     { g: tx(new T.ConeGeometry(0.14, 0.62, 5), -0.3, -0.1, 0.25, 0, 0, 2.0, 1, 1, 0.5), c: '#5c6569', tail: true },
   ]);
 }
+// a spotted eagle ray (fix round 3: the rays read as dark frying pans from the tunnel floor — a flattened sphere with a stick
+// tail): a kite of a body whose wings sweep back to pointed tips (span ≈ 2 × the body's length), the leading edge convex,
+// the trailing edge falcate; a short duck-bill head lobe before the wings; a thin tapering whip of a tail. The back is a dark
+// slate, a little lighter toward the wingtips, the belly white (what the tunnel sees overhead). Every wing vertex keeps its flex (aW.y = |x|)
+function eagleWing(T, top) {
+  // the right half's outline (x across, z forward), the snout's root to the tail root; the left half mirrors it. Star-shaped
+  // round the origin, so every ring is the outline scaled (no fold-over); the wingtip is a vertex (it stays a point)
+  const half = [[0, 0.4], [0.12, 0.39], [0.32, 0.29], [0.56, 0.13], [0.8, -0.04], [1.0, -0.2], [0.86, -0.25], [0.64, -0.245], [0.42, -0.27], [0.24, -0.34], [0.1, -0.42], [0, -0.44]];
+  const poly = [...half, ...half.slice(1, -1).reverse().map(([x, z]) => [-x, z])];
+  const ring = [];
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length], n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.16));
+    for (let k = 0; k < n; k++) ring.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]);
+  }
+  const NA = ring.length, NR = 3, P = [], idx = [];
+  P.push(0, top ? 0.075 : -0.05, 0);
+  for (let r = 1; r <= NR; r++) for (let a = 0; a < NA; a++) {
+    const t = r / NR, h = (top ? 0.075 : -0.05) * (1 - Math.pow(t, 1.6)) + (top ? 0.004 : -0.004);
+    P.push(ring[a][0] * t, h, ring[a][1] * t);
+  }
+  for (let a = 0; a < NA; a++) { const a2 = (a + 1) % NA; idx.push(0, 1 + a2, 1 + a); }
+  for (let r = 1; r < NR; r++) for (let a = 0; a < NA; a++) {
+    const a2 = (a + 1) % NA, i0 = 1 + (r - 1) * NA + a, i1 = 1 + (r - 1) * NA + a2, j0 = 1 + r * NA + a, j1 = 1 + r * NA + a2;
+    idx.push(i0, i1, j1, i0, j1, j0);
+  }
+  // (as listed the triangles face down: the belly keeps them, the back turns them over — the material culls back faces)
+  if (top) for (let i = 0; i < idx.length; i += 3) { const k = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = k; }
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
 function rayGeo(T) {
   return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 10, 5), 0, 0, 0, 0, Math.PI / 4, 0, 1.4, 0.16, 1.4), c: '#4d4a45', wing: true, shade: (x, y) => (y < 0 ? 1.9 : 1) },
-    { g: tx(new T.CylinderGeometry(0.02, 0.05, 1.6, 5), 0, 0, -1.2, HP, 0, 0), c: '#3a3733', tail: true },
+    { g: eagleWing(T, true), c: '#3b3c40', wing: true, shade: (x, y, z) => 1 + 0.5 * Math.min(1, Math.hypot(x, z)) },
+    { g: eagleWing(T, false), c: '#ebe8e1', wing: true, shade: (x, y, z) => 0.82 + 0.18 * (1 - Math.min(1, Math.hypot(x, z * 1.4))) },
+    // the duck-bill head lobe before the wings (white under, slate over)
+    { g: tx(new T.SphereGeometry(0.5, 8, 5), 0, -0.005, 0.5, 0, 0, 0, 0.24, 0.12, 0.3), c: '#ebe8e1', shade: (x, y) => (y > 0.004 ? 0.085 : 1) },
+    // the whip: a thin four-sided taper back from the tail root, 2.4 × the body's length
+    { g: tx(new T.ConeGeometry(0.022, 1.9, 4), 0, 0, -1.3, -HP, 0, 0), c: '#2f3033', tail: true },
   ]);
 }
 function turtleGeo(T) {
