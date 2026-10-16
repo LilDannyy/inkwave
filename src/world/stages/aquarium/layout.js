@@ -293,6 +293,13 @@ PROM.push(radRamp(-120, 34.6, 1.2, 31.0, PR.y, 5.0, stair({ tag: 'penguin-steps'
 // tread in a zigzag (the Arch Line's S. Promenade exit shot; LEAD-REVIEW art round 1) — under it they are hidden
 // (10 cm, bearing −124.9 … −115.65: under the 2.6 coping block at its west end, short of the 2.5 one at its east end)
 PROM.push(radBox(-120.275, 30.7, 31.2, 4.99, FL, 2.5, stone({ tag: 'penguin-nosing', paint: false })));
+// the grand stair's granite nosing (fix round 5, the lead's call after review 5): the promenade's teak cells ran out over the
+// stair's top tread in a sawtooth against the sky (court-promwall, stairtopB, stairfoot-up), the defect round 1 fixed on the
+// Penguin Steps the same way — across the stair's mouth from r 20.95 (the cells' corners reach 20.96 there) to 21.5,
+// 5.99 wide (between the balustrade and the coping, touching neither: their inner corners stand at ±3.0 and their sides
+// diverge from the stair's axis), 8.5 cm proud of the promenade (2.485: ≥ 8 cm off the cells and the ramp at 2.4; the
+// 0.27 m lip over the ramp at r 20.95 is under PLAYER.stepUp, 0.35)
+PROM.push(radBox(-152, 20.95, 21.5, 5.99, FL, 2.485, stone({ tag: 'stair-nosing', paint: false })));
 // the sea rail (r 31.0 → 31.4; 1.0 tall, on the telescope bay 4.0), cut for the steps and the deep stop
 for (const [a0, a1, y0, n] of [[-171, -151, PR.y, 5], [-151, -139, 3.0, 3], [-139, -134.3, PR.y, 1], [-129.7, -124.6, PR.y, 1], [-115.4, -110.5, PR.y, 1]]) {
   PROM.push(...arcBandIn(C0, 31.0, 31.4, a0, a1, n, y0, y0 + 1.0, railO()));

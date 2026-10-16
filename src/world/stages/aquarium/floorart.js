@@ -810,8 +810,8 @@ const R5_BEVELS = `if (y > 0.3 && y < 2.45) {
 const ST = 'vec3(0.70, 0.64, 0.52)';       // (the planters' cast cream stone)
 const VSTEP = [[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -0.79, 0.79], [-157.5, -1.3, 0.79]];   // the viewing steps: [bearing, t0, t1], d 7.5 → 9.0, top 0.4
 const dirS = (a) => `vec2(${f4(Math.cos((a * Math.PI) / 180))}, ${f4(Math.sin((a * Math.PI) / 180))})`;
-const ramp = (a, r0, y0, r1, y1, hw, yb, key, port) => {   // a stair's flank: radial ramp on bearing a, low end r0 (y0) → high end r1 (y1)
-  const run = Math.abs(r1 - r0), cosA = run / Math.hypot(run, y1 - y0), lo = Math.min(r0, r1), hi = Math.max(r0, r1);
+const ramp = (a, r0, y0, r1, y1, hw, yb, key, port, cut) => {   // a stair's flank: radial ramp on bearing a, low end r0 (y0) → high end r1 (y1)
+  const run = Math.abs(r1 - r0), cosA = run / Math.hypot(run, y1 - y0), lo = Math.min(r0, r1), hi = cut ?? Math.max(r0, r1);
   return `{ // ${key}
         vec2 ax = ${dirS(a)}, pr = vec2(-ax.y, ax.x);
         float tr = dot(q, ax), l = dot(q, pr);
@@ -828,7 +828,7 @@ const R5B_FACES = `{
       float sg = vWPos.z > 0.0 ? -1.0 : 1.0, t5, hl5, r5r = 0.0, r5m = 0.0;
       vec2 td5;
       bool r5 = false;
-      ${ramp(-152, 15.6, 0, 21.4, 2.4, 3.0, 0.0, 'the grand stair (radRamp(−152, r 15.6 → 21.4, 0 → 2.4, 6 wide)): a porthole into the Jelly Gallery near its head', [20.3, 0.95, 0.26])}
+      ${ramp(-152, 15.6, 0, 21.4, 2.4, 3.0, 0.0, 'the grand stair (radRamp(−152, r 15.6 → 21.4, 0 → 2.4, 6 wide)): a porthole into the Jelly Gallery near its head (its flanks end under the nosing at r 20.95)', [20.3, 0.95, 0.26], 20.96)}
       ${ramp(-120, 34.6, 1.2, 31.0, 2.4, 2.5, 1.2, 'the Penguin Steps (radRamp(−120, r 34.6 → 31.0, 1.2 → 2.4, 5 wide)) over the rock terrace')}
       // the Ticket Hall's stair (x 8 … 10, z −36.2 → −39, 0 → 1.2)
       if (!r5 && abs(abs(q.x - 9.0) - 1.0) < 0.04 && abs(nq.x) > 0.95 && q.y < -36.1 && q.y > -39.0 && y < 1.25) {
