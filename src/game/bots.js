@@ -1197,8 +1197,11 @@ export class BotBrain {
     if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && !gOff) {
       let bad;
       if (rolls) bad = !this._rollSafe(a, it.move, w.rollDist) || !this._hopSafe(a, it.move) || this._nearWetHi(a, 3.0);
+      // (fix round 3: near the lava a route's hop is judged by the flight it will fly, steered at its node — the ballistic
+      // arc along the velocity refused a lookout claimant's hop onto the next column whenever it still drifted the other
+      // way, and with the climb's hop flag no longer left set, chargers and bows stopped getting up)
+      else if (pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5)) bad = !this._hopLands(a, G.nav.nodes[this.path[this.pi]]);
       else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
-      if (!bad && pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5) && !this._hopLands(a, G.nav.nodes[this.path[this.pi]])) bad = true;
       if (bad) it.jump = false;
     }
     // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
