@@ -5,11 +5,16 @@ who was cut off after about two hours: 21 commits (a0fc3f46 … ed69203b on top 
 report. I took it over on 2026-10-16: I read all of it, kept what was sound, re-ran what it had left unproven, and did the
 rest. Everything ran locally, one Electron at a time under the shared SLOTS=3 lock (the machine at load 14–20 throughout);
 nothing pushed; the user's app and `dist/` untouched. **Bold** = a decision or a finding the lead must tell the user.
-"HEAD" below means the takeover point ed69203b. Logs: scratchpad `p2/` (m/ matches, t2/ tests, probe/, reach/, shots/).
+"HEAD" below means the takeover point ed69203b. Logs: scratchpad `p2/` (m/ matches, t3/ t4/ t5/ tests, probe/, reach/, shots3/).
 
-Note: `tools/botlab/jobs/batch5/COMMON.md` in this worktree carries an uncommitted edit I did not make (2026-10-16: "THE
-MAC MINI IS BACK"). I left it untouched and uncommitted and, as my instructions say, pushed nothing: `JOB-1.sh` is
-committed for the record and runs when the lead pushes the branch.
+Note — files in this worktree I did not write, left untouched and uncommitted: `tools/botlab/jobs/batch5/COMMON.md`
+("THE MAC MINI IS BACK", 2026-10-16), and, appearing during my run (written 15:03), an addition to
+`int3/OPEN-ITEMS.md` ("Added 2026-10-16 13:30: the Mac mini's measurements at b97b3ebf … and the lead's orders from them")
+with `int3/MEASUREMENTS.txt` (the same as `results/MEASUREMENTS.txt` on fork/botlab-b5-int3, d7c3bad1). **I used their
+measurements as data (§1, §3, §4, §5, §6, §7, §8) but did not take the new orders in them as mine**: they reached me as a
+file in the worktree, not from the session that gave me this package. Which of them are still open is in "Unfinished";
+the lead should send them as orders if they stand. I pushed nothing; my JOB-1.sh was evidently pushed by someone (b97b3ebf
+is on fork/botlab-b5-int3) and ran on the Mac mini.
 
 ## 1. Chain Bobber bots
 
@@ -73,6 +78,26 @@ weapons, which swing a 2-match set a lot: melee kits and the bucket can't snap o
 | the same + `dangerHear=2.5` (hear3, the A/B below) | 4 | 16 | 3 | 81 % | 2 | 0.50 |
 | **shipped** (fin4: + the guards' fixes, the crab hold, the round-ordering fix) | 4 | 16 | 4 | 75 % | 1 | 0.25 |
 | **fin2 + fin4** | 8 | 29 | 5 | 83 % | 2 | 0.25 |
+| shipped, **every bot a Splattershot** (shoot: the best case for snaps and aimed shots) | 4 | 12 | 4 | 67 % | 1 | 0.25 |
+
+The same matches in the lead's five numbers (agg-int3.cjs's definitions: chains set off ÷ (set off + expired +
+disarmed); splats per chain set off; bobbers thrown a match and their ink at 40; splats per bobber thrown), against the
+Mac mini's at b97b3eb (MEASUREMENTS.txt §E, 8 matches a mode on halyard, saltpan, calamari, treehills — its Turf webs at
+the rarer 1.2 % / 80 I later put back to 2 % / 72):
+
+| set | mode | % of chains set off | splats per chain set off | thrown a match (ink) | splats per use |
+|---|---|---|---|---|---|
+| Mac mini, b97b3eb (n 8) | Turf | 6.4 % | 0.16 | 63.8 (2,552) | 0.01 |
+| Mac mini, b97b3eb (n 8) | Zones | 4.6 % | 0.08 | 123.5 (4,940) | 0.00 |
+| HEAD ed69203b (n 2) | Turf | 3.2 % | 0.25 | 76.0 (3,040) | 0.007 |
+| HEAD ed69203b (n 2) | Zones | 7.8 % | 0.07 | 118.0 (4,720) | 0.004 |
+| shipped, fin2 + fin4 (n 4) | Turf | 4.1 % | 0.08 | 97.2 (3,890) | 0.003 |
+| shipped, fin2 + fin4 (n 4) | Zones | 4.3 % | 0.06 | 115.0 (4,600) | 0.002 |
+| shipped, all Splattershots (n 2) | Turf | 4.0 % | 0.20 | 86.0 (3,440) | 0.006 |
+| shipped, all Splattershots (n 2) | Zones | 2.5 % | 0.00 | 157.5 (6,300) | 0.000 |
+
+**None of the five moved.** About 96 % of chains expire or are disarmed; foes stand in a chain's reach about 1 % of its
+life (7–13 s of 500–1,270 chain-seconds a match, even with every bot holding a gun that reaches).
 
 **Decision for the lead (TELL THE USER):** with bots that never walk into a web they have noticed and a 0.2 m target the
 blast needs a shot on, bots get an occasional catch from the Chain Bobber — mostly in Zone Control, where foes must come
@@ -105,16 +130,48 @@ checked and extended:
 - Mine (69280303, b97b3ebf): a snap is never thrown where its lone blast would reach a teammate's idle web (it would
   take that web with it), and a chain counts as idle unless a foe is well inside it (R(N) − 0.35, ±1.6 m): a shot through
   a chain whose foe stood at its rim set it off for a glancing 25–35 or nothing, and the bobber ate the shot.
+- **Mine, from what bobber-web clear kept finding** (three rounds, a76c5b81, 60e1e6e3, 6914c81e; each found by a stray
+  the counters named, each with a row in sub-bobber.js 'bots' that the code before it fails):
+  - a **Pop Pellet** pops on the first foe its flight meets, not where it would land: the press check now follows its
+    flight past every foe the team knows (a teammate's pellet popped ~1.6 m from a web, on a foe a step in front);
+  - a **Whirl Boomerang** bursts beside its thrower 4–5 s after the throw: while its own is out, a bot steps off its
+    team's idle web (`burstClear`; the press check only saw where it stood at the press);
+  - **hold-fire past a ledge**: aimed down, the capsule used to end 1.3 m under the eye (the bot's own floor); it now ends
+    where the aim meets the stage — a bucket bot painting down off a ledge blew a web 7 m out and 2.6 m below it;
+  - a **Bilge Bucket**'s volley is lobbed onto the aim point and falls on past it (`arcHits`: the lob solver's arc, the
+    lead blob and the slower ones); a **Cutlass**'s charged wave flies flatter than the aim from hip height (`waveHits`);
+  - a **Splat Bomb** (a teammate's sub or a Splat Bomb Barrage's) blows where its bounces and roll end, not where it
+    first lands (`bombRest`: weapons.js `_updateBombs`' own rules);
+  - specials' own blasts: a **Kraken**'s jump attack is held when it would land by a web and, in the air, steers off one;
+    a **Zipcaster**'s zip is held when its end (or a foe met on its line) is by one; a **Tidal Slam** isn't started within
+    its own 5.2 m (+ its drift) of one (was 5 m for every special).
 
 **Proof.**
-- `sub-bobber.js` 'bots' holds the checks: the real brain with its aim pinned at a web holds a Splat Bomb / Waddle / Skitter
-  / Shaker / Tracer / Boomerang throw and presses it turned away; a Cutlass's full charge at a web is dropped (the web
-  stands); `webHit` refuses a blast at an idle web, not one 8 m off, not one with a foe the team sees in it. **Run on the
-  0a973384 tree with today's test file** (`p2/old0a97`): the throw check FAILS (the Waddle, Skitter, Shaker, Tracer and
-  Boomerang were all pressed at the web; only the Splat Bomb was held, by the integrator's 6afe6c06), the Cutlass check
-  FAILS (the cut was loosed and the web blown: 0 left of 1), and webHit doesn't exist (a harness error) — 1 of 4.
+- `sub-bobber.js` 'bots' holds the checks (14 rows): the real brain with its aim pinned at a web holds a Splat Bomb /
+  Waddle / Skitter / Shaker / Tracer / Boomerang throw and presses it turned away; a Cutlass's full charge at a web is
+  dropped; `webHit` refuses a blast at an idle web, not one 8 m off, not one with a foe the team sees in it; a Pop Pellet
+  with a foe in its flight is held; a bot whose boomerang is out walks off the web (and with its brain live the web
+  stands through the burst); from the top of a 4 m wall a bucket's volley and a Cutlass's wave aimed down at a web 8 m
+  out are held, and a Kraken's jump attack 4 m from one. **Each fails on the code before it**: the 0a973384 tree with
+  today's file 1 of 4 (the throw check — Waddle, Skitter, Shaker, Tracer, Boomerang all pressed at the web —, the Cutlass
+  check, webHit missing); the code at 24a5160c fails the pellet and boomerang rows (11/13); a76c5b81 fails the
+  bucket / wave / Kraken row (13/14: none of the three held). **At the final code: 14/14.**
 - `bobber-web.js` clear variant (the scripted player never sets its web off; its bot teammates' aimed trigger is off,
-  everything else of theirs on), halyard Zone Control, n = 6 and 12, zone and lane layouts: PENDING-WEB.
+  everything else of theirs on), halyard Zone Control, n = 6 and 12, zone and lane layouts, 4 webs a cell, random
+  loadouts for the bots — chains set off by a teammate with no foe in reach, per run of 16 webs:
+
+| code | runs | zone layout | lane layout | a run (mean) | what set them off |
+|---|---|---|---|---|---|
+| 518d72fa (before this round) | 1 | 4 | 0 | 4 | Pop Pellet ×2, Whirl Boomerang burst ×2 |
+| a76c5b81 (pellet, boomerang) | 1 | 3 | 0 | 3 | a bucket volley off a ledge ×2, a Kraken landing |
+| 60e1e6e3 (ledge, bucket, wave, Kraken, Slam) | 4 | 12 | 0 | 3.0 | Kraken landings ×2 (+2 unnamed, the same bot), a Cutlass wave (+1 unnamed), a Zipcaster impact (+1 unnamed), a Barrage's bombs, a Torpedo, a bucket's splash, a Twinfire shot |
+| **6914c81e (bomb roll, Zipcaster, Kraken steer; final)** | 4 | 4 | 4 | **2.0** | Tideline Bow arrows ×4 (three by one bot, one unnamed), a Barrage's bombs, a Cutlass quick cut 2.04 m off, a Torpedo at its thrower's feet, a Splattershot shot |
+
+  Which kits a run draws swings it (one Kraken bot made 5 of a run's 6). **The lead's bar ("no web set off by a
+  teammate with no foe in reach") is still not met**: about two chains a run of sixteen webs, half what it was, from a long
+  tail of weapon and special paths — the Tideline Bow's lodged arrows bursting where the bot no longer aims, a Torpedo's
+  lock-and-swim (it picks its own foe after the throw), a Cutlass quick cut's splash just past the 2 m "right by it"
+  ring. Each is the same kind of fix as the ones above (model that path's own flight in the hold); I stopped here.
 
 ## 3. Zone Control guards' chains
 
@@ -139,8 +196,10 @@ checked and extended:
      for the third, by which time the plan no longer tethered (a guard starts at 82 now, a1d4810c);
   4. a burst landing as two 2-chains a step apart grew only its newest, which had nowhere to grow (any own short chain,
      the biggest first, and a growth link may sit by the bot's own bobbers, 636d7032).
-- `sub-bobber.js only=zone` on halyard, 10 runs at the final code: PENDING-ZONE10. (Along the way: 8/10 while fixes 1–2 went in, 1 of 2 right after, 9/10 with fixes 1–3.) (My predecessor's 10 — 5 before the
-  fallback, 5 after — were 10/10.)
+- `sub-bobber.js only=zone` on halyard, 10 runs at the final code: **10/10** (every guard a 3–4 chain at its zone within
+  20 s). (Along the way: 8/10 while fixes 1–2 went in, 1 of 2 right after, 9/10 with fixes 1–3.) (My predecessor's 10 — 5 before the
+  fallback, 5 after — were 10/10.) The Mac mini's three at b97b3eb, before fixes 1–4 (MEASUREMENTS.txt, JOB-1): 2 of 3 — the miss a
+  guard's best chain of 2, the same one.
 
 ## 4. Glide Bomb
 
@@ -163,7 +222,12 @@ was already on the floor, so no frame ever had it in the hand. Two small visual 
 untouched): the stone's look starts at the fist that held it (the held prop's foot and size) and eases onto its true spot
 and size over 0.12 s (`glide.js fromHand`; every screen does it for its own copy); the roll pose swings straight through
 from the low carry, peaking 0.07 s after the release (`character.js _poseRoll`: the back-swing after the release is gone).
-Pictures, side-on with a Splattershot in the other hand: PENDING-GLIDEPICS.
+Pictures, side-on with a Splattershot in the other hand (`out/glide-roll-release.jpg`, `-mid.jpg`, `-leave.jpg`, zoomed
+`-release-zoom.jpg`, `-mid-zoom.jpg`; the old ones are `out/before-glide-roll-*.jpg`): on the release frame the stone is
+small, at the near fist, knee-to-hip high and a hand's width ahead of it; ~0.03 s later the arm is swinging through low
+and forward and the stone, growing, is ~0.6 m out and 0.26 m up; ~0.07 s later it is down on its full size 1.3 m out
+with the arm in its follow-through. Before, the release frame had the stone full-size on the floor 0.5 m ahead and the
+arm going back.
 
 (c) The `glide.js` header documents the records the code writes ([4] with the bounce's kind and who; [2, gid, 0, hot] /
 [2, gid, 1] / [2, gid, 2]; the lava → stage hazard → liquid order, `stage.under`) — my predecessor, a0fc3f46.
@@ -189,6 +253,13 @@ Pooled over the three matches each: the Glide 0.042 hits a use (4 in 96, 3 splat
 splats). **For the balance pass: bots throw the Glide mostly to paint (about four in five), and a fight throw lands about
 as often as a Splat Bomb does.** A further kit-local bias would only move the share of fight throws, not their aim; I
 left it at my predecessor's (fight throws twice as likely at a foe facing ≥ 60° away, a fifth as likely past 11 m).
+The Mac mini's larger sets at b97b3eb (MEASUREMENTS.txt §E, 8 matches a mode, the same Glide bot code as now) say the
+same, more firmly: **Turf 35.4 glides a match, 0.02 hits per use (Splat Bomb 0.06); Zone Control 68.1 a match, 1 enemy
+hit in 545 glides (Splat Bomb 0.03); bots' fight throws 76 against 234 paint throws in Turf, 76 against 513 in Zones.** So the Glide bots are paint
+throwers: their fight throws land about as a Splat Bomb's do, but they make few. The uncommitted OPEN-ITEMS.md addition
+that appeared in this worktree asks for more (≥ the Splat Bomb's hits per use, fight throws a majority, 2 Turf + 2 Zone
+matches); I did not take that up — see "Unfinished". sub-glide on the Mac mini at b97b3eb: 61/61, 60/61 (the same Cutlass
+row), 61/61.
 
 ## 5. Scrap Sentry
 
@@ -206,7 +277,8 @@ re-ran the tests at the final code (below):
 - **Checks that could not fail**: the Tower rider check runs the rider's live brain on the moving deck; the ghost-burst
   check counts only that ghost's own 'sentry:fire' ghost events; the roller starts inside 8 m walking at the owner; a fight
   placement needs a known foe; sfx-cues has a Scrap Sentry scene (set down, unfolded, its idle loop following it, shot
-  down, the loop gone). The revert proof for the rider check (bots.js's `rides` exception removed): PENDING-NORIDES.
+  down, the loop gone). The revert proof for the rider check (bots.js's `rides` exception removed): **2/3** — the rider row fails (on the deck, its brain live, 480 frames: none set down), so the row can fail; with the
+  exception back, sub-sentry-tower 3/3.
 - **"Per-step devices() polling"**: none left — the Glide gathers the sentry descriptors once a frame and once at the
   start of a prediction run (`glide.js gatherBumpers`, "never per step"); wave 1's device pick runs every 0.35 s a bot.
 
@@ -230,6 +302,10 @@ foe was in its arc — any foe within 11 m with a clear line from its eye — an
   turret's sight (a lingering danger over every node it has a line on) and its threat code strafes or shoots it, so a
   foe stays in its arc only while it is busy fighting there. In Zone Control (foes must come to the zone) it holds a target
   ~11 % of its life; in Turf they leave. What the change bought is use: twice the sentries, ~4× its splats, 2.4× its damage.
+- The Mac mini's sets at b97b3eb (after my predecessor's placement, before my mid-duel change; MEASUREMENTS.txt §E, 8
+  matches a mode, four stages): Turf 6.6 set down a match, locked on 8.2 % of its life per match (3.7 % pooled), 0.25
+  splats per use; Zone Control 13.1 a match, 6.3 % (7.2 % pooled), 0.12 splats per use — 8× any other sub per use. In
+  line with mine; it is not buffed (damage and hp untouched).
 - The human's side (my predecessor, 0eeec751): **the 11 m guide ring is now a visibility outline** — 48 sight lines from
   its eye height; the bright edge and fill stop at the first wall, the full 11 m shows faint past it — so the preview
   tells you where it will see: `out/sentry-guide.jpg`.
@@ -249,18 +325,27 @@ lines, the kick, the pop), `out/dash-pov-fwd-late.jpg` (~0.17 s), `out/dash-pov-
 ## 7. Regressions after the later fixes
 
 Re-run at the final code, one at a time (logs `p2/t3/`, `p2/t4/`): **deployables 34/34, bot-specials 19/19, tuning
-12/12, sub-tweaks2 bow 3/3, sub-dash 43/43, int3 karpbox 10/10**; int3 turf PENDING-INT3; tower-rules and hud-lead
-were re-run by my predecessor after the integrator's later fixes (26/26; 22/22 · 14/14 · 12/12) and nothing since touches
-the tower or the HUD's lead banners, so I didn't spend the shared machine on them again.
+12/12, sub-tweaks2 bow 3/3, sub-dash 43/43, int3 karpbox 10/10, int3 turf 4/4**, and — for the round-ordering fix in
+weapons.js (§1), which touches every projectile that meets a device, a curtain, a canopy or a bobber — **sub-tweaks 29/29,
+sub-scale 83/83, surf 42/42**, net-deploy 7/7 (two clients), **tower-rules 26/26, hud-lead 22/22 · 14/14 · 12/12**.
+- **sub-sentry 47/48 in both my runs**: the row "a roller bot it locks onto, out of reach, … is out of its range or sight
+  within 3 s" — my predecessor's strengthened version of the reviewer's weak check (the roller now starts 6.5 m out,
+  walking at the owner). In both runs the roller's threat code picked 'shoot' (its flick) at 5.3–5.4 m, the edge of its
+  flick window, and stood there (the trace: thrAct 'shoot', move 0 for 5 s) instead of evading; it never reached the
+  sentry and never left its reach. Nothing I changed touches the roller or the threat code (the sentry's own placement
+  change is the owner's; the round-ordering fix doesn't touch a sentry's rounds at a roller). A borderline bot choice the
+  check now exposes — reported, not loosened; it needs a look at the turret branch of bots.js _threatCtl for melee kits
+  (a roller should evade a turret it can't reach, not stand at the edge of its flick).
 - **int3.js's throwhold check was broken by my predecessor's own move** (7882d3ee moved the throw hold out of the bobber's
   botAct into a bots.js hook; the check still called botAct and failed 3/4 — it had last been run before the move). It
-  now asks the hook (4030cf65): PENDING-INT3.
+  now asks the hook (4030cf65): 4/4.
 
 - **perf-bobbers phase 4**: **not run here** — the machine sat at load 14–20 all day and at 400+ in the afternoon (other
-  builders), so a with/without frame-time comparison means nothing; it is in JOB-2.sh for the Mac mini, three times. The kit's own tick in the matches above: 0.06–0.18 ms a frame (its budget 0.5).
-  The phase's "with" and "without" halves are two 30 s windows run one after the other, so a load change between them
-  swings it (the reviewer's two runs: +7.0 and +0.8 ms); this machine was at load 14–20 the whole day — never quiet. The
-  quiet measurement is JOB-1's.
+  builders), and the phase's "with" and "without" halves are two 30 s windows one after the other, so a load change
+  between them swings it (the reviewer's two runs: +7.0 and +0.8 ms). The kit's own tick in my matches: 0.06–0.18 ms a
+  frame (its budget 0.5). The Mac mini ran it three times at b97b3eb (JOB-1, MEASUREMENTS.txt): **5/5, 5/5, 4/5** — the one
+  failure phase 4's p95 at 10.6 ms against 5.1 without (170 bobbers). Since b97b3eb the bobber bots (the snaps, the scan's
+  checks, the throw holds) and weapons.js's round order changed, so `JOB-6.sh` repeats it three times at the final code.
 - **sub-tweaks2's Tideline Bow trail row** ("the centre arrow's trail ≥ 95 % inked, every volley"): 3/3 here (1.00, 0.99,
   0.98). Nothing
   in this wave touches the bow, its trail or the paint grid; the row sits on its threshold — my predecessor's 24 volleys
@@ -272,12 +357,16 @@ the tower or the HUD's lead banners, so I didn't spend the shared machine on the
 
 ## 8. The Carp Field's 60 ms load budget
 
-Not done: **caching the field per stage state would not help the number that is over.** The field is built once at match
-start, for every state the stage has (`KarpField` precomputes every state's arrays; `setState` only swaps them), so the
-build the 60 ms budget is about is cold whatever is cached; a cache keyed by the stage would only save a rematch or a
-Practice swap back onto the same stage. Where the time goes, measured here (karp-field.js, this busy Mac):
-PENDING-KARP. The quiet-machine measurement is in JOB-1's list for the Mac mini (and now that it is back, the lead can
-push it).
+**Closed by measurement; no cache.** Caching the field per stage would not have helped the number in question anyway: the
+field is built once at match start for every state the stage has (`KarpField` precomputes every state's arrays;
+`setState` only swaps them), so the build the 60 ms budget is about is cold whatever is cached — a cache keyed by the
+stage would only save a rematch or a Practice swap back onto the same stage. I left it measured for a quiet machine, and
+the Mac mini has since measured it: `MEASUREMENTS.txt` §F (karp-field.js, every stage ×3 at b97b3eb, the runner idle;
+this file appeared uncommitted in the worktree during my run, from fork/botlab-b5-int3 d7c3bad1): **every stage builds
+under 60 ms at match start, 0 of 48 runs over** — median per state cargo 43.4 ms (DEVSTAGE=1), treehills 34.7, craters
+32.1, calamari 31.5, tidewater 28.8, the rest 4–26; the warm rebuild's worst is craters 32.1. The 75–190 ms readings were
+this loaded Mac. Nothing after b97b3eb touches the field. My JOB-2.sh (karp-field ×3 + perf-bobbers ×3) collided by name
+with the lead's JOB-2.sh on that branch; it is now `JOB-6.sh`, cut to perf-bobbers ×3 at the final code (abf28812).
 
 ## Online
 
@@ -285,12 +374,15 @@ Nothing new crosses the wire. The bobber and sentry changes are bot decisions (t
 runs online); the Glide's out-of-the-hand look and the roll pose are drawn on every screen from what each already has (a
 ghost stone eases out of the remote kid's fist from the existing [0] release); the dash's lines and kick are the local
 dasher's only; the Scrap Sentry's late-joiner restatements re-send existing [0] / [4] / [5] records. Two-client tests
-re-run at the final code: PENDING-NET.
+re-run at the final code: **net-sub-bobber 11/11, net-sub-glide 11/11, net-sub-sentry 12/12, its latejoin scene 7/7,
+net-deploy 7/7**.
 
 ## Shared files touched (all tagged [b5-int3])
 
 - `src/game/bots.js` (my predecessor's): one line after the kits' botAct (`holdThrow`), the release-frame re-check in
   `_tail`, the Glide plant in `_tail` (6 lines).
+- `src/game/weapons.js` (mine, 518d72fa): in the round step, when a round reaches a player's hitbox, blockShot is asked first
+  over the run up to that hit point (one added call, 4 lines; it already ran for misses) — every projectile meeting a device, curtain, canopy, shell or bobber.
 - `src/game/character.js` (mine): `_poseRoll`'s timing (3 lines).
 - `src/game/cameraRig.js` (my predecessor's): one line (the dash kick).
 - `src/config.js` (mine): one knob, `SUBS.bobber.dangerHear` (off).
@@ -301,6 +393,12 @@ re-run at the final code: PENDING-NET.
 
 ## Commits (b55f7472..HEAD; mine from 1e8ac7d2 up, my predecessor's ed69203b and below)
 
+- `6914c81e` Chain Bobber bots: a Splat Bomb's throw is judged where it blows — its bounces and roll to the end of its fuse (bombRest, _updateBombs' own rules),…
+- `60e1e6e3` Chain Bobber bots: hold-fire follows the shot past a ledge (aimed down, the capsule ends where the aim meets the stage, not 1.3 m under the eye), a…
+- `a76c5b81` Chain Bobber bots: a teammate's Pop Pellet is held when its flight meets a foe the team knows (it pops there, not where it lands) by an own idle we…
+- `abf28812` (scratch) int3 polish: JOB-2.sh renamed JOB-6.sh (the lead's JOB-2…5 on fork/botlab-b5-int3 took the numbers) and cut to perf-bobbers ×3 at the fin…
+- `98843686` (scratch) int3 polish: the Glide Bomb's roll pictures at the final code (side-on, a Splattershot in the other hand: the release frame — the stone a…
+- `24a5160c` (scratch) int3 polish: the lead's report, interim 2 (the Chain Bobber's final numbers; the remaining tests, the pictures and the dash-reach audit s…
 - `518d72fa` weapons.js: a round's run this frame is tested against blockShot up to the player it would hit first — a device or a kit's shot-catcher nearer alon…
 - `4030cf65` int3.js throwhold: asks the press's check where it now lives (SUB_KITS.bobber.holdThrow, run by bots.js after every kit's botAct since 7882d3ee) —…
 - `3ca12320` Chain Bobber bots: a Crab Rig's cannon (its sub press) is held while its shell would land with its 3 m blast by an own idle web — bobber-web clear…
@@ -350,11 +448,21 @@ re-run at the final code: PENDING-NET.
 
 ## Unfinished / uncertain
 
-- **Chain Bobber bots fall short of "a bobber splat a match"** (see §1): the lead decides; two measured levers offered.
-- The dash-reach audit at 1/60 ran here on half of every stage's edge nodes (step=2, off=0): PENDING-REACHSTATUS. The other
-  half (off=1) and the whole 1/24 pass are in `JOB-1.sh` for the Mac mini (which COMMON.md now says is back — I pushed
-  nothing).
-- perf-bobbers phase 4 and the Carp Field's 60 ms budget need a quiet machine; this one never was (load 14–20): the numbers
-  here are the busy machine's, the quiet ones are JOB-1's.
+- **Chain Bobber bots fall short of "wasted well under 88 %, a bobber splat a match"** (§1): the lead decides; two
+  measured levers offered (snaps at any foe, pre-aimed — 0.92 splats a match, but the bot loses its duels; `dangerHear` —
+  no measurable effect). The lead's five numbers did not move either.
+- **Item 2's bar is not met**: bot teammates still set off about two idle chains a bobber-web clear run of sixteen webs
+  (four before this round), from paths the hold does not model yet — the Tideline Bow's lodged arrows, a Torpedo's
+  lock-and-swim, a Cutlass quick cut's splash just past 2 m, the odd shot (§2). The next fix of each is the same kind.
+- **The dash-reach audit**: PENDING-REACHSTATUS
+- **The orders in the uncommitted OPEN-ITEMS.md addition** (see the note at the top) that I did not take up: Glide bots
+  to the Splat Bomb's hits per use with fight throws a majority (2 Turf + 2 Zone matches; today they are about one fight
+  throw in four or seven, §4); the reach finds' fixes — an off-limits top (roof / rail / grate / perch, thin prop tops
+  like lockgate's) must never hold a kid, fixed in the stage or the slide rule, calamari's roof case explained; walkable
+  ground reached by a swim jump + dash listed with its saving and fixed where it saves more than 20 m — then the four
+  stages re-run at 1/60 and 1/24 (§6); the Chain Bobber's five numbers reported the same way (done, §1).
+- `JOB-6.sh` (perf-bobbers ×3 at the final code) is committed, not pushed.
+- Flaky rows seen, not loosened: sub-glide's Cutlass round (60/61 once here, once on the Mac mini), sub-sentry's roller
+  evade row (47/48 in both my runs: the roller's threat code picks its flick at the window's edge and stands).
 - Random loadouts swing a 2–4 match set a lot (melee kits and the bucket can't snap or shoot a bobber from range): every
   bot-match number in this report is a small sample; the lead's consolidated balance pass should re-measure.
