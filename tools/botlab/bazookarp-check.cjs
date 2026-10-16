@@ -16,7 +16,8 @@
 //        CASES=clean,f1,…  (self-test) some cases   FLAGSHOTS=n  pictures of the first n flagged places (default 8)
 //        KITSHOTS=1  the kit up close too (a weir and a post, the Gate, a NO CARP sign, a carrierBlock's shimmer)
 //        PROBE='[x, y, z, x, y, z]'  one move traced instead (#16's kid on the node pair nearest those points, every frame
-//        of every trial): why a listed hopVeto edge or #7d candidate is or isn't made
+//        of every trial): why a listed hopVeto edge or #7d candidate is or isn't made; PROBE='walk:<text>' one of #16's
+//        walks (the one whose name holds <text>) again, every frame, with its path
 // Prints one line per check (OK / WARN / FAIL / SKIP with numbers), then
 //   RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=…
 // and writes <id>-karp.json (every number) and the pictures (JPEG < 300 KB) to OUT.
@@ -128,8 +129,22 @@ app.on('browser-window-created', (_, win) => {
     try {
       if (process.env.PROBE) {
         // one move, traced (#16's kid on the pair of nodes nearest PROBE's two points): why it is or isn't made
-        const id = IDS[0], setup = stageSetup(id), pr = JSON.parse(process.env.PROBE);
+        const id = IDS[0], setup = stageSetup(id);
         await boot(stateQuery(id, null)); await start(id, setup);
+        if (process.env.PROBE.startsWith('walk:')) {
+          // one of #16's walks again, traced (the checks run first: they build the walks)
+          await js(`${mod}.then((m) => m.runChecks({ state: 0, phys: true }))`);
+          const r = await js(`${mod}.then((m) => m.traceWalk(${JSON.stringify(process.env.PROBE.slice(5))}))`);
+          if (r.err) console.log('PROBE ' + r.err);
+          else {
+            console.log(`PROBE ${id} walk "${r.what}" → ${r.result.ok ? 'WALKED' : 'NOT WALKED'} ${JSON.stringify(r.result.fail || {})}`);
+            console.log('  path: ' + r.path.map((q) => `${q[0]}:(${q[1]}, ${q[2]}, ${q[3]})${q[4] ? ' ' + q[4] : ''}`).join(' '));
+            for (const f of r.trace) if (Math.round(f[0] * 60) % 6 === 0 || !f[5] || f[6]) console.log(`    t ${f[0]} → #${f[1]} (${f[2]}, ${f[3]}, ${f[4]}) ${f[5] ? 'ground' : 'air'}${f[6] ? ' JUMP' : ''} [${f[7]}]`);
+          }
+          fs.writeFileSync(path.join(OUT, `${id}-probe-walk.json`), JSON.stringify(r, null, 1));
+          throw Object.assign(new Error('probe done'), { quiet: true });
+        }
+        const pr = JSON.parse(process.env.PROBE);
         const r = await js(`${mod}.then((m) => m.probeEdge(${JSON.stringify(pr.slice(0, 3))}, ${JSON.stringify(pr.slice(3, 6))}))`);
         console.log(`PROBE ${id} ${r.kind} ${JSON.stringify(r.from)} → ${JSON.stringify(r.to)} (carrier-graph nodes: ${r.valid}) → ${r.made ? 'MADE' : 'NOT MADE'} in ${r.trials} trial(s)`);
         let last = -1; for (const f of r.trace) { if (f[0] !== last) { console.log(`  trial ${f[0]}`); last = f[0]; } if (f[1] % 6 === 0 || f[5] !== 1) console.log(`    f${String(f[1]).padStart(3)} (${f[2]}, ${f[3]}, ${f[4]}) ${f[5] ? 'ground' : 'air'}${f[6] ? ' JUMP' : ''}${f[7] ? '' : ' DEAD'}`); }
@@ -205,7 +220,7 @@ app.on('browser-window-created', (_, win) => {
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }
       }
-    } catch (e) { console.log('HARNESS ERROR', e.message, e.stack); }
+    } catch (e) { if (!e.quiet) console.log('HARNESS ERROR', e.message, e.stack); }
     console.log('console errors:', errs.length ? [...new Set(errs)].slice(0, 6).join(' || ') : 'none');
     app.quit();
   });

@@ -879,6 +879,7 @@ export async function runChecks(o = {}) {
         }
       }
       walkRes = walkProof(C, walks, madeSet);
+      window.__karpWalks = { walks, made: [...madeSet] };   // (PROBE='walk:…' traces one again)
     }
     const walkBad = walkRes ? walkRes.list.filter((w) => !w.ok && !w.mover) : [];
     const offMade = res ? res.list.filter((r) => r.kind === 'off hop' && r.ok) : [];
@@ -902,7 +903,7 @@ export async function runChecks(o = {}) {
     draw.beyond = made.map((r) => { const g2 = gainOf(C, r.from, r.to); return { a: [r1(nodes[r.from].x), r1(nodes[r.from].z)], b: [r1(nodes[r.to].x), r1(nodes[r.to].z)], find: !fin(g2) || g2 > CK.gain }; });
     const ran = !!res;
     const wl = walkRes?.list || [], wR = wl.filter((w) => !w.entrance), wE = wl.filter((w) => w.entrance), wOk = (l) => l.filter((w) => w.ok).length;
-    const walkTxt = walkRes ? `; walks with the carrier's rules: routes ${wOk(wR)}/${wR.length}, entrances ${wOk(wE)}/${wE.length}${walkRes.proved ? ` (${walkRes.proved} hops / gaps on the way taken by their trials)` : ''}${wl.some((w) => w.mover) ? `, ${wl.filter((w) => w.mover).length} blocked by a parked mover (not judged)` : ''}${walkBad.length ? ` — NOT WALKED: ${walkBad.slice(0, 4).map((w) => `${w.what}${w.fail ? ` (stuck at ${JSON.stringify(w.fail.at)} on a ${w.fail.edge} edge${w.fail.dead ? ', fell' : ''})` : ` (${w.why})`}`).join('; ')}${walkBad.length > 4 ? ` … ${walkBad.length}` : ''}` : ''}` : '';
+    const walkTxt = walkRes ? `; walks with the carrier's rules: routes ${wOk(wR)}/${wR.length}, entrances ${wOk(wE)}/${wE.length}${walkRes.proved ? ` (${walkRes.proved} hops / gaps / jumps on the way taken by their trials)` : ''}${wl.some((w) => w.mover) ? `, ${wl.filter((w) => w.mover).length} blocked by a parked mover (not judged)` : ''}${walkBad.length ? ` — NOT WALKED: ${walkBad.slice(0, 4).map((w) => `${w.what}${w.fail ? ` (stuck at ${JSON.stringify(w.fail.at)} on a ${w.fail.edge} edge${w.fail.dead ? ', fell' : ''})` : ` (${w.why})`}`).join('; ')}${walkBad.length > 4 ? ` … ${walkBad.length}` : ''}` : ''}` : '';
     chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length ? 'FAIL' : 'OK',
       !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s` : ''),
       { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
@@ -1027,7 +1028,7 @@ export function proveEdges(C, list, o = {}) {
 // A hop or gap edge it doesn't make on the way is decided by that edge's own trials (made: it is set down on the far
 // node and walks on; counted). The walk fails when the kid makes no progress for 2.5 s, falls off or runs out of time
 // (twice the path's length at 4.8 m/s + 8 s); stuck against a dynamic block (a parked mover) it is reported, not judged.
-function walkProof(C, walks, made) {
+function walkProof(C, walks, made, o = {}) {
   const t0 = performance.now(), { m, nodes, L, G } = C, dt = 1 / 60, V = new V3();
   const out = []; let proved = 0;
   const carry = (a) => ({ since: 0, sp: a.special, gun: null, kick: new V3(), j: { mark: NaN, ret: false, half: -1, zone: false, rate: 1, why: null, foot: null, sent: null, sentFoot: null, sentFootT: 0 }, startBest: 0, probe: true });
@@ -1043,14 +1044,23 @@ function walkProof(C, walks, made) {
     while (pi < p.length) {
       if (t > maxS) { fail = { at: P3(kid.pos), node: P3(nodes[p[pi]]), edge: TYPE_NAME[edgeType(C, p[pi - 1], p[pi])] || '?', timeout: true }; break; }
       // at the next node (or one a few steps on: an overshoot, a run down a stair) → on
+      // (or the kid's own node — the field's reading rule — is one of the next 8: a jump that cleared a one-cell top and
+      // landed on the floor past it is further along, as a carrier would be)
       let adv = -1;
-      if (kid.grounded) for (let k = pi; k < Math.min(p.length, pi + 4); k++) { const r = nodes[p[k]]; if (hd(kid.pos, r) < 0.6 && Math.abs(r.y - kid.pos.y) < 0.8) { adv = k; break; } }
+      if (kid.grounded) {
+        for (let k = pi; k < Math.min(p.length, pi + 4); k++) { const r = nodes[p[k]]; if (hd(kid.pos, r) < 0.6 && Math.abs(r.y - kid.pos.y) < 0.8) { adv = k; break; } }
+        if (adv < 0) { const own = C.F.ownNode(kid.pos); if (own >= 0) for (let k = pi; k < Math.min(p.length, pi + 8); k++) if (p[k] === own) { adv = k; break; } }
+      }
       if (adv >= 0) { pi = adv + 1; best = Infinity; bestT = t; continue; }
       const q = nodes[p[pi]], qa = nodes[p[pi - 1]], ty = edgeType(C, p[pi - 1], p[pi]), h = hd(kid.pos, q);
       if (h < best - 0.25) { best = h; bestT = t; }
       const fell = !kid.alive || kid.pos.y < Math.min(q.y, qa.y) - 4;
       if (fell || t - bestT > 2.5) {
-        if ((ty === ET.hop || ty === ET.gap) && made.has(p[pi - 1] + ':' + p[pi])) { set(q, nodes[p[Math.min(pi + 1, p.length - 1)]]); mine++; proved++; pi++; best = Infinity; bestT = t; continue; }
+        // a hop or gap edge: its trial above decides; a nav jump edge (0.5–1.25 m up) gets the same five-timing trial
+        // here, once (a small top the walking kid's one timing overshoots)
+        const key = p[pi - 1] + ':' + p[pi];
+        if (ty === ET.jump && !made.has(key) && !(o.tried || (o.tried = new Set())).has(key)) { o.tried.add(key); if (proveEdges(C, [{ kind: 'jump', from: p[pi - 1], to: p[pi] }]).list[0]?.ok) made.add(key); }
+        if ((ty === ET.hop || ty === ET.gap || ty === ET.jump) && made.has(key)) { set(q, nodes[p[Math.min(pi + 1, p.length - 1)]]); mine++; proved++; pi++; best = Infinity; bestT = t; continue; }
         if (!fell && nearMover(kid.pos)) mover = true;
         fail = { at: P3(kid.pos), node: P3(q), edge: TYPE_NAME[ty] || '?', dead: fell };
         break;
@@ -1063,6 +1073,7 @@ function walkProof(C, walks, made) {
       if (jump && kid.grounded) jumpT = t;
       it.jump = jump && kid.grounded;
       kid.update(dt); t += dt;
+      if (o.trace && o.trace.length < 6000) o.trace.push([r2(t), pi, r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z), kid.grounded ? 1 : 0, it.jump ? 1 : 0, ty]);
     }
     it.move.set(0, 0, 0); it.jump = false;
     out.push({ team: w.team, what: w.what, entrance: !!w.entrance, ok: !fail, mover: !!fail && mover, len: r1(len), t: r1(t), proved: mine, fail, nodes: p.length });
@@ -1459,4 +1470,14 @@ export function probeEdge(a, b, o = {}) {
     blocks.push({ id, tag: b.tag || (b.hidden ? 'prop collider' : 'block'), min: P3(b.aabbMin), max: P3(b.aabbMax), roof: !!b.roof, hidden: !!b.hidden, dynamic: !!b.dynamic, trial: f[0] });
   }
   return { from: P3(nodes[from]), to: P3(nodes[to]), kind, valid: [!!C.okN[from], !!C.okN[to]], made: res.list[0]?.ok, trials: res.trials, trace, blocks };
+}
+
+// PROBE='walk:<text>' (bazookarp-check.cjs, after the checks have run): #16's walk whose name holds <text>, again, with
+// every frame ([t, next path index, x, y, z, grounded, jump, edge type]) and its path's nodes
+export function traceWalk(text, o = {}) {
+  const C = ctx(o.state || 0), W = window.__karpWalks;
+  const w = W && W.walks.find((q) => q.what.includes(text));
+  if (!w) return { err: `no walk named like "${text}": ${(W?.walks || []).map((q) => q.what).join(' | ')}` };
+  const trace = [], res = walkProof(C, [w], new Set(W.made), { trace });
+  return { what: w.what, path: (w.path || []).map((id, i) => [i, ...P3(C.nodes[id]), i ? TYPE_NAME[edgeType(C, w.path[i - 1], id)] || '?' : '']), result: res.list[0], trace };
 }
