@@ -625,6 +625,10 @@ const CSS = `
 .er-chip.is-warn { background: rgba(58, 48, 30, .94); box-shadow: 0 0 0 2px #f4e9c8, 0 0 18px 4px rgba(244, 233, 200, .5); animation: er-pulse .5s ease-in-out infinite alternate; }
 .er-chip.is-warn .er-count { display: inline-block; } .er-chip.is-warn svg { animation: er-ring .12s linear infinite alternate; }
 .er-chip.is-jump { background: rgba(244, 233, 200, .95); color: #2a2418; } .er-chip.is-jump .er-names b.is-on { color: #2a2418; text-shadow: none; } .er-chip.is-jump svg { color: #2a2418; }
+/* (final review 2, issue 3: the jump's chip is white-gold, so everything on it goes dark — "TIME JUMP!" was white-gold on
+   white-gold, a ghost for the whole jump) */
+.er-chip.is-jump .er-next { color: #2a2418; opacity: 1; } .er-chip.is-jump .er-names b { color: rgba(42, 36, 24, .55); } .er-chip.is-jump .er-names i { color: rgba(42, 36, 24, .45); }
+.er-chip.is-jump .er-bar { background: rgba(42, 36, 24, .22); } .er-chip.is-jump .er-bar i { background: linear-gradient(90deg, #7a6c52, #2a2418); }
 @keyframes er-pulse { from { scale: 1; } to { scale: 1.07; } }
 @keyframes er-ring { from { rotate: -12deg; } to { rotate: 12deg; } }
 /* the era's callouts (TIME JUMP, the era banner, NEW ROUTES OPEN, Tartar's line): the chip's colours, in the HUD's

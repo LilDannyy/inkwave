@@ -49,11 +49,25 @@
   for (let s = 10; s >= 1; s--) { tAt(J.at - s + 0.5); counts.push([s, txt('.er-count'), chip.classList.contains('is-warn')]); }
   tAt(J.at + 0.3);
   const atJump = { phase: E.phase, chipJump: chip.classList.contains('is-jump') };
+  // (final review 2, issue 3) the jump's label on the white-gold chip: its colour against the chip's (WCAG contrast; the
+  // label was white-gold on white-gold, 1.0 : 1) — and the bar's fill against its track
+  const rgb = (c) => (/rgba?\(([^)]+)\)/.exec(c)?.[1] || '0,0,0').split(',').map((v) => +v.trim());
+  const lum = (c) => { const [r, g2, b] = rgb(c).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g2 + 0.0722 * b; };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return +((Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05)).toFixed(2); };
+  // (the chip's background eases over 0.2 s of wall time, which a stepped test does not wait for: read it with the
+  //  transition off — its settled value — then put the transition back)
+  const tr0 = chip.style.transition; chip.style.transition = 'none';
+  const nxEl = chip.querySelector('.er-next'), cs = getComputedStyle(nxEl), chipBg = getComputedStyle(chip).backgroundColor;
+  const fillImg = getComputedStyle(chip.querySelector('.er-bar i')).backgroundImage, fillEnd = (fillImg.match(/rgba?\([^)]+\)/g) || []).pop() || 'rgb(0,0,0)';
+  const jumpLabel = { text: nxEl.textContent, color: cs.color, opacity: +cs.opacity, chip: chipBg, contrast: contrast(cs.color, chipBg), barFillEnd: fillEnd, barContrast: contrast(fillEnd, chipBg) };
+  chip.style.transition = tr0;
   tAt(J.doneAt + 0.4);
   const afterDone = lit();
   R('step 9: from the pre-bell the chip says "TODAY in 20" in small type; in the warning the big countdown J − 10 … J − 1 (10, 9 … 1) with Tartar\'s phone ringing; the bar runs to the next jump',
     /^TODAY in (20|19)$/.test(small) && !countAtPre && counts.every(([s, c, w]) => c === String(s) && w) && atJump.chipJump && afterDone === 'TODAY' && bar0 !== '',
     { small, counts, atJump, afterDone, bar0 });
+  R('step 9 (final review 2, issue 3): through the jump the chip\'s "TIME JUMP!" reads — dark on the white-gold chip (contrast ≥ 4.5 : 1, fully opaque), the bar\'s fill dark too',
+    atJump.chipJump && jumpLabel.text === 'TIME JUMP!' && jumpLabel.contrast >= 4.5 && jumpLabel.opacity === 1 && jumpLabel.barContrast >= 3, jumpLabel);
   const has = (re) => calls.some((c) => re.test(c.k));
   R('step 9: the callouts: "TIME JUMP" with "1880s → TODAY in 10" at the warning, Tartar\'s line at the pickup, the era\'s name ("TODAY", big) at the jump, "NEW ROUTES OPEN" at done',
     has(/^TIME JUMP\|1880s → TODAY in 10\|false$/) && has(/\|COMMANDER TARTAR\|/) && has(/^TODAY\|TIME JUMP\|true$/) && has(/^NEW ROUTES OPEN\|TODAY\|false$/), calls);
