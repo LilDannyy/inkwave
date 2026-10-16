@@ -1,20 +1,23 @@
-# Wave 2 polish on b5-int3: the lead's report (2026-10-16)
+# Wave 2 polish on b5-int3: the lead's report (2026-10-16, final — continuation 1)
 
-Worktree `/Users/danielosling/Desktop/1/st-b5-int3`, branch `b5-int3`. This package was started on 2026-10-10 by a builder
-who was cut off after about two hours: 21 commits (a0fc3f46 … ed69203b on top of 0a973384) and an uncommitted draft of this
-report. I took it over on 2026-10-16: I read all of it, kept what was sound, re-ran what it had left unproven, and did the
-rest. Everything ran locally, one Electron at a time under the shared SLOTS=3 lock (the machine at load 14–20 throughout);
-nothing pushed; the user's app and `dist/` untouched. **Bold** = a decision or a finding the lead must tell the user.
-"HEAD" below means the takeover point ed69203b. Logs: scratchpad `p2/` (m/ matches, t3/ t4/ t5/ tests, probe/, reach/, shots3/).
+Worktree `/Users/danielosling/Desktop/1/st-b5-int3`, branch `b5-int3`. Four hands so far: a builder started the package on
+2026-10-10 (21 commits, a0fc3f46 … ed69203b on 0a973384); I took it over on 2026-10-16 morning and wrote this report up to
+b5d8c3a8 (18:36); a continuation took my "Unfinished" list and the lead's orders from 18:36 to 22:05 (d80bf8e7 …
+12825814, 10 commits, plus an uncommitted Glide change and a queue of runs still going) and ran out of context before
+reporting; I (continuation 1) took it over at 22:28, kept all of it (each commit has its own check and its revert proof),
+finished the Glide work (f80de6dd …), let its queue run on and added to it, and re-ran the package's tests at the end.
+Everything ran locally, one Electron at a time under the shared SLOTS=3 lock (the machine at load 400–540 tonight: a
+180 s match took 2–25 min depending on the lock); nothing pushed; the user's app and `dist/` untouched. **Bold** = a
+decision or a finding the lead must tell the user. Sections marked **[evening]** are the continuations' work.
+Logs: scratchpad `p2/` (morning), `p3/` `p4/` (evening: `p4/qlog.txt` is the run list with every result line; m/
+matches, reach/, fin/, t1/, web/, gp/ probes).
 
-Note — files in this worktree I did not write, left untouched and uncommitted: `tools/botlab/jobs/batch5/COMMON.md`
-("THE MAC MINI IS BACK", 2026-10-16), and, appearing during my run (written 15:03), an addition to
-`int3/OPEN-ITEMS.md` ("Added 2026-10-16 13:30: the Mac mini's measurements at b97b3ebf … and the lead's orders from them")
-with `int3/MEASUREMENTS.txt` (the same as `results/MEASUREMENTS.txt` on fork/botlab-b5-int3, d7c3bad1). **I used their
-measurements as data (§1, §3, §4, §5, §6, §7, §8) but did not take the new orders in them as mine**: they reached me as a
-file in the worktree, not from the session that gave me this package. Which of them are still open is in "Unfinished";
-the lead should send them as orders if they stand. I pushed nothing; my JOB-1.sh was evidently pushed by someone (b97b3ebf
-is on fork/botlab-b5-int3) and ran on the Mac mini.
+Note — files in this worktree none of us wrote, left untouched and uncommitted: `tools/botlab/jobs/batch5/COMMON.md`
+("THE MAC MINI IS BACK", 2026-10-16) and the addition to `int3/OPEN-ITEMS.md` ("Added 2026-10-16 13:30: the Mac mini's
+measurements at b97b3ebf … and the lead's orders from them", with `int3/MEASUREMENTS.txt`). The morning report used
+their measurements as data but did not take the orders; the brief for this continuation names OPEN-ITEMS.md as the work
+list, so **the orders in that addition were taken up in the evening (§4e, §6c) and are reported against the lead's own
+numbers.** The brief also says the Mac mini is unavailable, so everything here ran on this Mac.
 
 ## 1. Chain Bobber bots
 
@@ -112,6 +115,11 @@ to the zone — and area denial everywhere. Two levers that are not "kit-local t
    2 splats against 1, foes in a chain's reach 44.6 s against 49.3 — **no measurable effect**: the foes' guard still keeps
    them out of a web they notice that close. Left off.
 
+**[evening] At the final code** (after item 2's last two rounds, which only add holds; halyard, Turf 180 s + Zone Control
+300 s — the saltpan pair was cut for the shared lock's queue; `p4/m/bobf-*`): 12 chains set off, 2 caught a foe, **83 %
+wasted, 1 bobber splat (0.5 a match)** — where the shipped set was. The lead's five: Turf 5.2 % of chains set off, 0.00
+splats per chain set off, 104 thrown (4,160 ink), 0 splats per use; Zone Control 7.4 %, 0.12, 130 (5,200 ink), 0.008.
+
 ## 2. Bot teammates and a human's webs
 
 What stops a bot teammate from blowing a web (a human's or anyone's) with no foe in it — my predecessor's work, which I
@@ -176,6 +184,33 @@ checked and extended:
   lock-and-swim (it picks its own foe after the throw), a Cutlass quick cut's splash just past the 2 m "right by it"
   ring. Each is the same kind of fix as the ones above (model that path's own flight in the hold); I stopped here.
 
+**[evening] Two more rounds on the long tail** (250538a9, 06bf3c1a; each found by a stray the counters named, each
+with a row in `sub-bobber.js` 'bots' that the tree before it fails — 14/15 and 15/16 — and 16/16 at the final code):
+- 250538a9: a **Shaker**'s drips from the hand out (`trailHits`); a homing sub's chase to the foe it will catch — a
+  Waddle, a Torpedo, a Seeker are held while an own idle web is within its blast + 3 m of that foe or + 1 m of its way
+  there (no foe known: its sense circle); a **Vortex Strike**'s spot moved off a web; an **Ink Tempest**'s drifting cloud
+  (`stormHits`); a **Howl Box**'s line through a web (set down a moment later); a draw / charge let go on a cached
+  hold-fire answer (asked fresh on the loosing frame); a **Cutlass** quick cut's 66° crescent in the cone.
+- 06bf3c1a: a painting shot flies to the brain's aim point 6 m out, never under the bot's feet (bots.js `a.aimPoint`) —
+  shallower than its pitch: a blaster bot painting at −0.28 / −0.49 blew webs 7–8 m out; a bursting shot that meets the
+  stage within 1.6 m (a wall right ahead) goes off there, its splash round the bot; riding an **Ink Jet** the trigger is
+  the jet's 34 m blasts, not the main weapon; a Vortex Strike's spot is checked every frame it aims; a special pressed
+  on a wall climb is held as on the ground. bobber-web.js clear no longer counts a web the script itself laid into a
+  teammate's standing vortex / cloud / beam (set off within 0.5 s: the script's fault, not the bot's).
+
+| code | runs | chains set off by a teammate, no foe in reach, per run of 16 webs | what set them off |
+|---|---|---|---|
+| 250538a9 (clear-a, -b) | 2 | 4, 8 (6.0) | blaster painting shots ×5, Shakers, a Brolly's shaker |
+| mid-round (clear-c, -d) | 2 | 2, 3 | an Ink Jet ride, a Vortex Strike; a Tidal Slam, a Mitts burst, a shooter sweep at a pending web |
+| **final** (clear-f, -g, -h; -e ran as the round's last edits went in) | 3 (+1) | **2, 3, 4 (3.0)** (-e: 0) | a Twinfire's blast while riding an Ink Jet 10 m above, a Twinfire's paint blast 2.6 m off, a Cutlass shot 2.75 m off in a fight, a Zipcaster's zip end, a Drainbow, a roller's paint sweep 2.1 m off, Mitts fist bursts painting ×2 (one bot), a blaster's paint blast 9 m out and 2.8 m below |
+
+**The bar ("no web set off by a teammate with no foe in reach") is still not met** at the final code: about three chains a
+run of sixteen webs in the last three runs (the morning's final: 2.0 in four) — which loadouts a run draws swings it more
+than the rounds do (one Mitts bot made two of clear-h's four).
+Each remaining one is a path of its own (a special's end blast, a melee shot already in flight when the hold looks,
+a teammate's blast from far above), the same kind of fix as the dozen before; I did not start another round — see
+"Unfinished".
+
 ## 3. Zone Control guards' chains
 
 - **The third guard's fallback** (my predecessor, 6d00381c): when a guard's look finds no chain (a small, ledgy raised zone
@@ -203,6 +238,13 @@ checked and extended:
   20 s). Three more at the very final code (after item 2's last rounds): 3/3. (Along the way: 8/10 while fixes 1–2 went in, 1 of 2 right after, 9/10 with fixes 1–3.) (My predecessor's 10 — 5 before the
   fallback, 5 after — were 10/10.) The Mac mini's three at b97b3eb, before fixes 1–4 (MEASUREMENTS.txt, JOB-1): 2 of 3 — the miss a
   guard's best chain of 2, the same one.
+
+- **[evening] At the final code:** `sub-bobber.js only=zone` on halyard **8/10** — the two misses a guard left with a
+  2-chain (its third link never thrown in the 20 s, or thrown and not landed in the chain) and one with 1. Against it, 8/8
+  on the code without the evening's second round (the morning's bobber files 2/2, 250538a9's 3/3, the final files with
+  06bf3c1a's painting aim-point hunk taken out 3/3). 8/10 against 8/8 is not a difference those runs can show (Fisher
+  p ≈ 0.3), and the morning's own sets ran 8/10 and 9/10 on the way to its 10/10 + 3/3; **but the lead should know the
+  paint aim-point hold (more holds near own webs) is the suspect if guards miss more in the balance pass.** Not loosened.
 
 ## 4. Glide Bomb
 
@@ -261,8 +303,66 @@ same, more firmly: **Turf 35.4 glides a match, 0.02 hits per use (Splat Bomb 0.0
 hit in 545 glides (Splat Bomb 0.03); bots' fight throws 76 against 234 paint throws in Turf, 76 against 513 in Zones.** So the Glide bots are paint
 throwers: their fight throws land about as a Splat Bomb's do, but they make few. The uncommitted OPEN-ITEMS.md addition
 that appeared in this worktree asks for more (≥ the Splat Bomb's hits per use, fight throws a majority, 2 Turf + 2 Zone
-matches); I did not take that up — see "Unfinished". sub-glide on the Mac mini at b97b3eb: 61/61, 60/61 (the same Cutlass
+matches); the morning did not take that up — the evening did, (e) below. sub-glide on the Mac mini at b97b3eb: 61/61, 60/61 (the same Cutlass
 row), 61/61.
+
+(e) **[evening] The lead's order: Glide bots toward fights — fight throws a majority, hits per use at least the Splat
+Bomb's, 2 Turf + 2 Zone matches.** Three steps, each with its rows in `sub-glide.js` 'bots' that the tree before fails:
+1. ba6f268e (the continuation): a fight throw goes at a foe *committed elsewhere* — facing more than ~60° away from the bot
+   (twice the chance; at a foe facing it, a duel, a twentieth: `GLIDE_BOT.duel`), 5–11 m, not over 4.5 m/s, led by half
+   its velocity; a cooking bot hit hard (under 55 hp, ≥ 0.4 s of cook to go) drops the cook to fight back (`abort`); a
+   hold cut short under half its plan's cook with the foe out of 4.5 m is let go unthrown (`drop`); paint throws a
+   seventh as likely (0.008 → 0.0012 a frame) and never with a foe the team knows within 24 m. (8/8; the tree before 6/8.)
+2. f80de6dd (mine — the continuation's uncommitted draft, finished and tested): a bot whose own foe duels it throws at
+   **another foe it sees committed elsewhere** (facing away, or aiming within 25° at one of its teammates within 12 m:
+   `others`, `mateAim`), and a painting bot looks for one every 0.2 s and makes that a fight throw (`scan`); the drop
+   rule spares a hold that ended **on the cook its foe needs now** (a foe stepping back from 7 to 10 m mid-cook needs
+   less, the hold ended on it, and the rule threw the stone away: 11 of 26 fight plans were dropped in six matches, 10
+   thrown); paint throws 0.0004. Rows: the other-foe plan 325 times in 3000 asks (0 at its duel), painting 344, the knob
+   off 0 and 0; the step-back throw let go at 0.48 s cook, not dropped. **10/10; the tree before 7/10** (both new rows, and
+   one Mitts round — a bot's choice, the kind of round the Cutlass row has).
+3. 50057f5d (mine): paint throws at a quarter in Zone Control (`paintZones` 0.25 × `paint` 0.0004) — at 0.0004 its guards
+   still made four paint throws a match to one fight throw; at 0.0001 everywhere (gl6) halyard's and saltpan's Turf bots
+   threw no Glide at all in 180 s, so Turf keeps 0.0004. The step-back row now judges where the stone stops (≤ 2.5 m from
+   the foe) rather than a fixed cook (the cook it needs depends on where the bot stands at the release): 65/65 full run.
+
+The probe (`probes/duel-glide.js`, testbox, real brains, 60 rounds of 8 s): *side* — the Glide bot 6–10 m off a foe
+duelling its teammate — 33 throws, 19 hits (0.58 a throw) at step 1, **38 throws, 28 hits (0.74), 18 splats** with
+`others` (measured before step 2's drop fix); *duel* (a 1-v-1, the foe facing it) — 1 throw at step 1, none with `others` (no cost in the duel).
+
+Matches (all on one sub, bots at normal, DIAG; halyard, saltpan, calamari, treehills; Turf 180 s, Zone Control 300 s;
+`p4/m/`, `p4/bin/gagg.py`, `gdet.py`):
+
+| set | mode | matches | uses a match | fight throws | enemy hits | hits a use | splats |
+|---|---|---|---|---|---|---|---|
+| Mac mini, b97b3eb | Turf / Zones | 8 / 8 | 35.4 / 68.1 | 76 of 310 / 76 of 589 | — | 0.02 / 0.002 | — |
+| step 1 (gl3; halyard, saltpan) | Turf | 2 | 5.5 | 2 of 11 (18 %) | 1 | 0.091 | 1 |
+| step 1 (gl3) | Zones | 2 | 9.0 | 2 of 18 (11 %) | 0 | 0 | 0 |
+| step 1 + `others` (gl4) | Turf | 4 | 6.2 | 3 of 25 (12 %) | 0 | 0 | 0 |
+| step 1 + `others` (gl4) | Zones | 3 | 8.7 | 8 of 26 (31 %) | 2 | 0.077 | 1 |
+| step 2 (gl5, f80de6dd) | Turf | 4 | 3.8 | **9 of 15 (60 %)** | 1 | **0.067** | 1 |
+| step 2 (gl5) | Zones | 4 | 5.0 | 4 of 20 (20 %) | 0 | 0 | 0 |
+| paint 0.0001 everywhere (gl6) | Turf | 3 | 1.3 (0, 0, 4) | 4 of 4 | 0 | 0 | 0 |
+| paint 0.0001 everywhere (gl6) | Zones | 3 | 4.0 | **10 of 12 (83 %)** | 1 | **0.083** | 1 |
+| **final (50057f5d) = gl5's Turf + gl6's Zones** | Turf / Zones | 4 / 3 | 3.8 / 4.0 | **60 % / 83 %** | 1 / 1 | **0.067 / 0.083** | 1 / 1 |
+| **Splat Bomb, the same stages (bomb3)** | Turf | 4 | 26.8 | — | 5 | **0.047** | 4 |
+| **Splat Bomb (bomb3)** | Zones | 4 | 64.5 | — | 9 | **0.035** | 5 |
+
+**By the lead's two numbers the final code passes in both modes** — fight throws a majority (60 % Turf, 83 % Zone
+Control) and hits per use at or over the Splat Bomb's in the same set (0.067 against 0.047 in Turf; 0.083 against 0.035,
+0.033 on the same three stages, in Zone Control) — **but on one enemy hit each**: with 15 and 12 uses those rates are
+one hit either way from 0 or double. The code each mode ran is the code that ships (the Turf path at 0.0004 is gl5's, the
+Zone Control path at 0.0001 is gl6's); the two halves were measured in separate sets because the split came out of them.
+The halyard + saltpan subset alone (the lead's "2 Turf + 2 Zone"): Zone Control 6 uses, fight 4, 1 hit (0.17) — passes;
+Turf 7 uses, fight 3 (43 %), 0 hits — **fails**; the four-stage Turf set passes only through calamari's and treehills'.
+
+What limits it, measured: a fight plan needs a foe committed elsewhere 5–11 m off on the bot's level, slower than 4.5 m/s,
+and a dry, clear floor lane to it (`_dryLine`, `_fatLos` at shin height) — in the matches about three in four foes that
+pass the chance fail the lane (107 passed, 29 planned in gl5); of the plans, a third end unthrown (the foe ran out of
+the slide's reach or died, or the bot had to escape a danger, 7 drops and 3 aborts of 29). Thrown, a fight stone hits
+about one time in seven in matches (4 of 28 over gl3–gl5; 0.58–0.74 in the staged probe), a paint stone never (0 of 87).
+**Tell the user: with the lead's bias the bots throw the Glide 2–4 times a match instead of 35–68 — a fight sub for them,
+no longer a paint sub.** The knobs are `GLIDE_BOT.paint` (paint rate) and `fight` / `committed` for the balance pass.
 
 ## 5. Scrap Sentry
 
@@ -312,6 +412,20 @@ foe was in its arc — any foe within 11 m with a clear line from its eye — an
 - The human's side (my predecessor, 0eeec751): **the 11 m guide ring is now a visibility outline** — 48 sight lines from
   its eye height; the bright edge and fill stop at the first wall, the full 11 m shows faint past it — so the preview
   tells you where it will see: `out/sentry-guide.jpg`.
+
+- **[evening] The roller row's flake, fixed at its cause (721aa2f6, bots.js `_meleeWindow`):** a roller's flick window at a
+  turret is 5.9–7.2 m — the Scrap Sentry is 0.72 m tall and takes the flick 6–7 m out at its −0.3 aim; from 5.0–5.5 m (a
+  mine's window, which a turret used) the flick flew over it, and a roller locked on stood there flicking and missing
+  (the 47/48 above). sub-sentry.js's roller row is split in two: locked on 4 m off (too close for its flick) it evades
+  within 3 s — out of range or sight, or backs into its reach and flicks it down — and locked on 6.5 m off it flicks it
+  down within 2 s. only=bots 9/9; the tree before fails both rows (7/9).
+- **[evening] The two roller rows were still flaky, by the roller's own coin** (my e416c158): its threat code picks the flick
+  or an evade by chance, and my two full runs each had one trial go the other *valid* way — in reach (6.5 m) it walked out
+  of range instead of flicking; too close (4 m) it rolled the sentry down 0.06 s after the lock, before any evade. Each row
+  now takes up to three trials and one must do its response, and a new row holds *every* trial to ending it within 3 s of
+  the lock — down, or out of its range or sight — the fault the rows were written for (a roller standing locked on,
+  flicking over it, for 5 s). **Full run 50/50, only=bots 10/10; with the old roller window (bots.js before 721aa2f6) 8/10**
+  — the new row and the reach row fail (three trials, never flicked down).
 
 ## 6. Dash Pellet
 
@@ -368,6 +482,68 @@ its details):
 Nothing here was fixed: the brief was to run the audit and report every find. The four stages are the same four on
 both machines.
 
+(c) **[evening] The finds, acted on by the lead's rule** ((a) an off-limits top — roof, rail, grate, perch, a thin prop
+top — never holds a kid, fixed in the stage or the slide rule; (b) walkable ground reached by a swim jump + dash is an
+accepted skill route when it saves ≤ 20 m and bypasses no spawn barrier or mode-only wall, listed with its saving, fixed
+where it saves more). Five commits by the continuation; I checked each against its proof and re-ran the audit:
+- **The root cause of all four finds over the bar was one push** (d80bf8e7, physics.js `collideBody`): a body found
+  *inside* a block was put out through its nearest face — for a swim jump's squid turned kid by the dash press under a
+  thin slab or into a rail, its top. Lockgate's loading-bay canopy (2.71 m), crossmarket's veranda rail and veranda
+  (2.42 / 2.6 m), tidewater's sea-wall rail and colonnade walk (2.30 / 2.7 m) were all that push. Now a body inside a
+  block is never put out through its top when that top stands more than a step over its feet (now and the frame
+  before, which actor.js `_resolve` passes); its other faces still do (down, or out the side). One shared-file change of
+  14 lines; everything that moves a body runs through it, so the regressions below include movers, pods, the Surf, the
+  tower and the climb tests.
+- **The roof slide** (c8ee9f73, 12825814, actor.js `_roofSlide` / `_roofExitDist` / `_roofExit`): the kid is pushed off
+  by the block's nearest edge (a pitched top: downhill) unless that way doesn't get off within 8 m (a wall, another roof
+  block running on) and another way does — then that one; blocked a moment, the next way off, else a quarter turn as
+  before; "off" means no part of the footprint is over an off-limits top (a gap narrower than the feet is no way off),
+  and on a flat top a way that gets off over 0.3 m sooner than the nearest edge wins. Calamari's 2 m wide "hill-wall"
+  top (the morning's find 4) slid its nearest edge onto the next roof block, into the hill, a quarter turn into a
+  building, then 16 m along the wall — still on it after 3 s; now off in 0.25 s. Crossmarket's balconettes 0.75 m apart
+  ping-ponged a kid off one onto the next for 3 s; now off their open front in 0.4 s. The roof's way off is looked for
+  once a slide (≤ 8 directions × ≤ 27 steps of ray casts) and again only when blocked.
+- **Thin tops made off-limits** (colliders only, nothing drawn): lockgate's boatshed door leaf (0.12 m, 0.15 m over the bay
+  canopy); nantai's sluice-gantry columns (0.24 m at 3.8 m — the morning's "two posts") and its roll-off rail posts (0.16 m,
+  level with the hut roof); calamari's street lamps (0.2 m poles, 4.2 m); tidewater's closed pier gates (a 2.3 m rail);
+  crossmarket's balconettes (rails that are roofs, 3.55 m: a swim jump + air dash off the spawn terrace stood a kid on
+  one) — all `ROOF` / `{ rail, roof }`.
+- **dash-reach.js** (04e57e26, 12825814) judges the two rules: (a) a rail or a thin top (a prop collider under 0.3 m
+  across) a dash comes to rest on is a leak unless a plain walk / hop / swim jump from a spot reached on foot within 6 m
+  (or the same climb) gets onto it too — and it tries aimed starts between the nav nodes (a rail is a narrow window for a
+  hop's landing), reporting every held block (`thinBlocks`); (b) a swim jump + dash over its bar that comes to rest on
+  ground reached on foot is listed as a skill route with its saving (the nav graph's walk for the kid's team, minus the
+  dash's run) — a FAIL past 20 m or with no way there on foot; one ending in the sea / lava is listed apart.
+  `sub-dash.js` 'reach' holds the finds as checks (74e06ba6: the slab and press frame, a 3 m fall onto a 0.12 m slab at
+  1/24 still lands, the roof-strip slide off within 1 s, the balconettes) — the tree before fails 2 of 4.
+
+Re-runs, every edge node of each stage (`p3/reach/`, `p4/reach/`; maxima = the highest first landing over its start —
+a ground dash / jump + dash, bar 1.92 m at 1/60 and 1.88 at 1/24; a swim jump + dash, bar 2.27, a landing over it passing
+only where a plain swim jump near that block gets as high):
+
+| stage | 1/60 | 1/24 | maxima 1/60 (dash · swim + dash) | maxima 1/24 | listed tops (D10.6) | rule (b) routes |
+|---|---|---|---|---|---|---|
+| tidewater | **4/4** (final code) | **4/4** (before 3360b4e2) | 1.92 · 2.30 (the morning's 2.30 into the sea is gone; this one is from the water onto the colonnade stair, which a plain swim jump lands on as high) | 1.87 · 2.29 | 11 | none |
+| crossmarket | **4/4** (final code) | 3/4 → **4/4** (final code, 3360b4e2) | 1.86 · 2.15 (was 2.42) | 1.86 · 2.15 | 0 | none |
+| lockgate | **4/4** (final code) | **4/4** (before 3360b4e2) | 1.90 · 2.29 (was 2.71) | 1.84 · 2.25 | 10 / 7 | none |
+| calamari | **4/4** (final code) | **4/4** (final code) | 1.90 · 2.36 | 1.85 · 2.21 | 4 / 2 | none |
+| nantai (touched) | **4/4** (before 3360b4e2) | **4/4** (final code) | 1.90 · 2.22 | 1.85 · 2.25 | 6 | none |
+
+**Crossmarket at 1/24 found one more thing, fixed** (3360b4e2, mine): seven dashes left a kid on a balconette after 3 s —
+at 1/24 s a frame a kid sliding off the end of one crossed the 0.43 m where neither balconette holds its feet in three
+frames, dropped 2 cm and the next one's end caught it, back and forth (`p5/probe/rc24-balc.log`: the trace). The way off
+the slide picks must now stay clear of off-limits tops for 0.6 m past the edge too (the kid is still sliding as it
+drops), so it takes their open front. The three cases replayed at 1/24 end in the street; `sub-dash.js` 'reach' has the
+row (a row of rail-top roofs 0.75 m apart: down in the street in 0.46 s at 1/24, 0.37 s at 1/60; the tree before: never at
+1/24), 5/5. Crossmarket then 4/4 at 1/24 and at 1/60. The runs marked "before 3360b4e2" ran on the slide before that
+look-ahead, which only makes a way off stricter.
+
+**Rule (b) has nothing to list on these stages:** no swim jump + dash comes to rest on ground over its bar, so no skill
+route, nothing for the stage to answer for. **Not run again after the evening's changes:** the other eight stages
+(halyard, kelpline, saltpan, terraces, craters, spirhalite, treehills, cargo — 3/3 each in the morning's full audit); the
+push rule and the slide only take reach away (no body is put up through a top; a slide only picks its way off), so they
+were left for the lead's next full pass.
+
 ## 7. Regressions after the later fixes
 
 Re-run here after the later fixes, one at a time (logs `p2/t3/` at 3ca12320, `p2/t4/` at 518d72fa): **deployables 34/34, bot-specials 19/19, tuning
@@ -403,6 +579,31 @@ sub-scale 83/83, surf 42/42**, net-deploy 7/7 (two clients), **tower-rules 26/26
 - **tuning's roller row** (39 % vs > 40 %): 77 % here (the bot rolled 77 % of 10 s, 77 % of that faster than walking); it
   passed twice for my predecessor too. A random-walk row near its bar once; not reproduced.
 
+**[evening] The package's tests at the final code** (e416c158; one at a time, `p4/fin/`; the shared-file changes since
+the morning — physics.js, actor.js's slide, bots.js's roller window — are why movers, pods, the Surf, the tower, the climb
+and the stage audits are in it):
+
+| test | map | result | note |
+|---|---|---|---|
+| sub-glide | testbox | **65/65** | first run 64/65: the new step-back row's fixed cook range, made a stop distance (50057f5d) |
+| sub-dash | testbox | **47/47** | after 3360b4e2 (the balconette row); 46/46 before it |
+| sub-sentry | testbox | **50/50**, only=bots **10/10** | first two runs 48/49 each, one roller row each: the rows now take up to three trials (e416c158) |
+| sub-bobber | testbox | **84/84** | |
+| sub-bobber only=zone | halyard | **8/10** | §3: two guards left short; 8/8 without the evening's second round |
+| int3 | testbox | **4/4** | |
+| deployables · bot-specials | testbox | **34/34 · 19/19** | |
+| movers · pods | calamari · podbox | **17/17 · 39/39** | physics.js's push rule |
+| surf-movers · treehills-pods | podbox (tower) · treehills | **11/11 · 14/14** | the push rule under rides and gates |
+| bot-climb · input-swim · tuning | lockgate · testbox · testbox | **7/7 · 8/8 · 12/12** | climbs, swim jumps, the roller row |
+| surf · tower-rules | testbox | **42/42 · 26/26** | the Surf's ride, the tower's deck |
+| stage-audit | calamari, crossmarket, tidewater, nantai, lockgate | **3/3 each** | the collider flags |
+| dash-reach | five stages, 1/60 and 1/24 | **4/4 each** (§6c) | crossmarket 1/24 3/4 before 3360b4e2 |
+| net-sub-glide · net-sub-bobber | two clients | **11/11 · 11/11** | |
+| bobber-web clear | halyard | §2 (the item-2 rows) | |
+
+All of these ran on the final game code (the last source change, 3360b4e2, came before every one of them except sub-glide,
+the first sub-dash and three of the reach runs, as marked).
+
 ## 8. The Carp Field's 60 ms load budget
 
 **Closed by measurement; no cache.** Caching the field per stage would not have helped the number in question anyway: the
@@ -427,6 +628,12 @@ net-deploy 7/7**.
 Item 2's last rounds (a76c5b81 … 6914c81e) are host-side bot decisions only — which throw, shot or special press a bot
 makes, and a step — with no record added or changed, so I did not re-run the two-client tests after them.
 
+**[evening]** Still nothing new on the wire. The push rule (physics.js) and the roof slide (actor.js) are in the body
+physics each player runs for itself (and the host for its bots); remote players are ghosts replayed from the records they
+already send, so every screen sees the owner's result. The stage changes are collider flags every screen builds the same
+way. The Glide's, the bobber's and the roller's changes are bot decisions (the host's bots). Two-client tests at the
+final code: **net-sub-glide 11/11, net-sub-bobber 11/11**.
+
 ## Shared files touched (all tagged [b5-int3])
 
 - `src/game/bots.js` (my predecessor's): one line after the kits' botAct (`holdThrow`), the release-frame re-check in
@@ -438,11 +645,37 @@ makes, and a step — with no record added or changed, so I did not re-run the t
 - `src/config.js` (mine): one knob, `SUBS.bobber.dangerHear` (off).
 - Kit files: `kits/bobber-bots.js` (most of it), `bobber.js` (the snap item, the waste counter), `glide.js`, `sentry.js`,
   `dash.js`, `mitts.js`, `shaker.js`. Docs: `docs/NET.md` (sentry late joiner), `tools/botlab/README.md` (the counters).
+- **[evening]** `src/game/physics.js` (d80bf8e7): `collideBody` takes the feet's height the frame before (`fromY`, a new
+  last parameter) and never pushes a body out through a block's top more than a step over its feet; a helper `_faceY`
+  (14 lines). `src/game/actor.js` (c8ee9f73, 12825814, 3360b4e2): `_roofSlide`'s choice of way off and two helpers `_roofExitDist`
+  / `_roofExit` (~60 lines — the one bigger hook-in; it replaces nothing, only picks the slide's direction), and
+  `_resolve` passes `prevY`. `src/game/bots.js` (721aa2f6): `_meleeWindow`'s roller window at a turret (1 line).
+  Stages (collider flags only): `calamari/village.js`, `crossmarket/kit.js`, `lockgate/props.js`, `nantai/crossings.js`,
+  `nantai/obs.js`, `tidewater/props.js`. Kits: `bobber-bots.js`, `bobber.js`, `glide.js`.
 - Tooling: `tools/botlab/match.cjs` (BOBBER-SCAN / -WASTE / -AIMED / -SNAPLOG, SENTRY-SRC). Tests: sub-bobber.js,
   bobber-web.js, sub-glide.js, sub-sentry.js, net-sub-sentry.cjs, sub-dash.js, dash-reach.js, sfx-cues.js.
 
-## Commits (b55f7472..HEAD; mine from 1e8ac7d2 up, my predecessor's ed69203b and below)
+## Commits (b55f7472..HEAD, newest first)
 
+- **[evening, continuation 1 — mine]**
+- (this commit) (scratch) int3 polish: the lead's report, final (continuation 1)
+- `e416c158` sub-sentry.js: the roller rows survive the roller's own coin (up to three trials; every trial ends it within 3 s)
+- `3360b4e2` actor.js roof slide: a way off stays clear of off-limits tops for the next 0.6 m (crossmarket's balconettes at 1/24); sub-dash 'reach' row
+- `50057f5d` Glide Bomb bots: paint throws at a quarter in Zone Control (paintZones 0.25, paint 0.0004); the step-back row judges where the stone stops
+- `f80de6dd` Glide Bomb bots: more of their throws are fight throws — at another foe it sees committed elsewhere while its own duels it, a painting bot's scan, the drop rule spares a hold on the cook the foe needs now, paint 0.0004
+- **[evening, continuation 0]**
+- `12825814` Off-limits tops never hold a kid, the rest of the audit's finds (calamari's lamps, tidewater's pier gates, nantai's rail posts, crossmarket's balconettes; the slide footprint-aware; dash-reach rule (a) aimed starts)
+- `06bf3c1a` Chain Bobber bots: teammates' fire judged by the way it really goes (aim point, a burst on a wall ahead, the Ink Jet's blasts, a Vortex Strike re-checked, a special on a climb)
+- `d1f076e8` (scratch) int3 polish: the Glide Bomb probe (probes/duel-glide.js)
+- `ba6f268e` Glide Bomb bots: a fight throw is at a foe committed elsewhere; abort, drop; paint a seventh as likely
+- `250538a9` Chain Bobber bots: the long tail of teammates' strays (Shaker drips, homing subs, Vortex Strike, Ink Tempest, Howl Box, cached answers, the quick cut)
+- `721aa2f6` bots.js: a roller's flick window at a turret is 5.9–7.2 m
+- `04e57e26` dash-reach.js: the lead's rules (a) and (b)
+- `74e06ba6` sub-dash.js 'reach': the stage audit's finds as checks
+- `c8ee9f73` Off-limits tops never hold a kid: the roof slide goes off by the way that gets off soonest; lockgate's door leaf, nantai's gantry columns are roofs
+- `d80bf8e7` physics.js: a body found inside a block is never put out through its top more than a step over its feet
+- `b5d8c3a8` (scratch) int3 polish: the lead's report (the morning's final)
+- **[morning]**
 - `1d9df811` sub-bobber.js: the Pop Pellet check's thrower faces its foe while it looks (in a full run the brain had turned off the side foe and never saw it: 8…
 - `1b09e42c` (scratch) int3 polish: the lead's report, interim 3 (item 2's three rounds and their runs, the lead's five Chain Bobber numbers, the Mac mini's mea…
 - `6914c81e` Chain Bobber bots: a Splat Bomb's throw is judged where it blows — its bounces and roll to the end of its fuse (bombRest, _updateBombs' own rules),…
@@ -500,25 +733,26 @@ makes, and a step — with no record added or changed, so I did not re-run the t
 
 ## Unfinished / uncertain
 
-- **Chain Bobber bots fall short of "wasted well under 88 %, a bobber splat a match"** (§1): the lead decides; two
-  measured levers offered (snaps at any foe, pre-aimed — 0.92 splats a match, but the bot loses its duels; `dangerHear` —
-  no measurable effect). The lead's five numbers did not move either.
-- **Item 2's bar is not met**: bot teammates still set off about two idle chains a bobber-web clear run of sixteen webs
-  (four before this round), from paths the hold does not model yet — the Tideline Bow's lodged arrows, a Torpedo's
-  lock-and-swim, a Cutlass quick cut's splash just past 2 m, the odd shot (§2). The next fix of each is the same kind.
-- **The dash-reach audit is run, not acted on**: 1/60 in full (my half here, the other on the Mac mini) and 1/24 (Mac
-  mini) — tidewater, crossmarket, lockgate and calamari each fail one row on both machines (§6: a 2.30 m landing that
-  ends in the sea; a 2.42 m rail landing; a kid held 4.15 m up on lockgate's 0.1 m panel top; a calamari "hill-wall" top
-  that holds a kid). The stage or slide-rule fixes are the lead's call (the uncommitted OPEN-ITEMS.md addition sets a
-  rule for them).
-- **The orders in the uncommitted OPEN-ITEMS.md addition** (see the note at the top) that I did not take up: Glide bots
-  to the Splat Bomb's hits per use with fight throws a majority (2 Turf + 2 Zone matches; today they are about one fight
-  throw in four or seven, §4); the reach finds' fixes — an off-limits top (roof / rail / grate / perch, thin prop tops
-  like lockgate's) must never hold a kid, fixed in the stage or the slide rule, calamari's roof case explained; walkable
-  ground reached by a swim jump + dash listed with its saving and fixed where it saves more than 20 m — then the four
-  stages re-run at 1/60 and 1/24 (§6); the Chain Bobber's five numbers reported the same way (done, §1).
-- `JOB-6.sh` (perf-bobbers ×3 at the final code) is committed, not pushed.
-- Flaky rows seen, not loosened: sub-glide's Cutlass round (60/61 once here, once on the Mac mini), sub-sentry's roller
-  evade row (47/48 in both my runs: the roller's threat code picks its flick at the window's edge and stands).
-- Random loadouts swing a 2–4 match set a lot (melee kits and the bucket can't snap or shoot a bobber from range): every
-  bot-match number in this report is a small sample; the lead's consolidated balance pass should re-measure.
+- **Chain Bobber bots fall short of "wasted well under 88 %, a bobber splat a match"** (§1) — unchanged since the morning:
+  the lead decides; the two measured levers are in §1 (snaps at any foe, pre-aimed: 0.92 splats a match but the bot loses
+  its duels; `dangerHear`: no measurable effect). At the final code (2 matches): 83 % wasted, 0.5 splats a match.
+- **Item 2's bar ("no web set off by a teammate with no foe in reach") is not met** (§2): 2, 3 and 4 chains set off a
+  run of sixteen webs in the three runs at the final code. Two more rounds went in this evening; what is left is a long tail of single paths (a special's end blast — the Zipcaster's, a Tideline
+  Bow's Drainbow —, a Cutlass shot already in flight when the hold looks, a teammate's blast from 10 m above). Each is the
+  same kind of fix as the dozen before it; I stopped there rather than start a third round tonight.
+- **Zone Control guards: `only=zone` 8/10 at the final code** (§3; 8/8 without the evening's second bobber round — not a
+  significant difference, but its painting aim-point hold is the suspect if guards miss more in the balance pass).
+- **The Glide's order is met on one hit each** (§4e): fight throws 60 % / 83 % and 0.067 / 0.083 hits a use against the
+  Splat Bomb's 0.047 / 0.035, but 15 and 12 uses; the lead's own 2 + 2 subset (halyard, saltpan) fails in Turf (fight 3 of
+  7, no hit). And the price: **bots throw the Glide 2–4 times a match** (was 35–68) — tell the user; the balance pass
+  should re-measure with more matches (`GLIDE_BOT.paint`, `paintZones`, `fight`, `committed` are the knobs).
+- **The dash-reach audit was re-run on the five stages it touched, not on the other eight** (§6c; the evening's physics and
+  slide changes only take reach away). Tidewater and lockgate at 1/24 and nantai at 1/60 ran on the slide before 3360b4e2's
+  look-ahead (the other seven of the ten runs at the final code).
+- **Not re-run at the final code** (no change of mine or the evening's touches them, or only bot decisions): net-deploy,
+  net-sub-sentry (and its latejoin scene), hud-lead, sub-scale, sub-tweaks / sub-tweaks2, perf-bobbers (load-sensitive:
+  `JOB-6.sh` is committed for the Mac mini, not pushed), karp-field. The last perf-bobbers numbers are the Mac mini's at
+  b97b3eb (5/5, 5/5, 4/5).
+- The uncommitted `COMMON.md` and `OPEN-ITEMS.md` edits and `MEASUREMENTS.txt` in this worktree are not ours; left as found.
+- Random loadouts swing a 2–4 match set a lot (melee kits and the bucket can't snap or shoot a bobber from range; the
+  Glide's fight throws need an open floor lane): every bot-match number here is a small sample.
