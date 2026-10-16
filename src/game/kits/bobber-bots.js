@@ -78,9 +78,23 @@ const mine = (a) => items.filter((it) => it.owner === a && !it.ghost && it.state
 const _spot = { x: 0, y: 0, z: 0, hover: 0, base: 0, block: -1, refused: false, kind: '' };
 // a spot to throw one at, on the floor at (x, z): ok to stand a bobber on? → { x, y, z } or null. `from`: where the bot
 // will throw from (where it stands, or the stand spot of a set-up it walks to first)
-const NO = BOBBER_BOT.no = { floor: 0, reach: 0, refused: 0, track: 0, line: 0, lob: 0 };
+const NO = BOBBER_BOT.no = { floor: 0, reach: 0, refused: 0, track: 0, line: 0, lob: 0, zone: 0 };
 let _noWhy = '';
+// [b5-int3] a Zone Control bot's web is laid at its zone: every link it plans for it (a chain, a growth, a moved link)
+// within the zone's reach + 5.5 m of its centre — a door anchor up to 4.7 m outside the edge with links spread 4.6 m
+// round it put a guard's whole 3-chain 12–15 m out on halyard's side zone, off the way foes come into the zone (the
+// only=zone miss: 'best chain 1' with a 3-chain at the far door). Set while the chain planner runs (botKit.paint, a
+// growth); a fight's pair is laid at the foe's feet wherever that is
+let _zl = null;
+function zoneLim(b) {
+  const zp = zonePlan();
+  if (!zp || b.zZone == null || b.zZone < 0 || !zp.isActive(b.zZone)) return null;
+  const z = zp.Z.zones[b.zZone], I = zp.info[b.zZone];
+  return z?.center && I ? { x: z.center[0], z: z.center[2], r: I.R + 5.5 } : null;
+}
+const atZone = (b, fn) => { const k = _zl; _zl = zoneLim(b); try { return fn(); } finally { _zl = k; } };
 function okSpot(a, x, z, tower, from = a.pos, lob = true) {
+  if (_zl && Math.hypot(x - _zl.x, z - _zl.z) > _zl.r) { NO.zone++; _noWhy = 'zone'; return null; }
   const gy = G.level.groundHeight(x, z, from.y + 3);
   if (gy === -Infinity || gy < from.y - 3.2) { NO.floor++; _noWhy = 'floor'; return null; }
   const d = Math.hypot(x - from.x, z - from.z);
@@ -136,8 +150,10 @@ function buildChain(a, A, tp, from = a.pos) {
 const _la = { yaw: 0, pitch: 0, miss: Infinity };
 // [b5-int3] two links' float spots tether within linkRange 5.0 m — in 3-D: within 4.6 m across and 2.2 m apart in height
 // they can be 5.1 m apart (a guard's links on a ledgy raised zone landed on two levels and never tethered: a 2-chain, the
-// only=zone miss); 4.7 leaves a lob's landing error room
-const LINK3 = 4.7;
+// only=zone miss); 4.7 leaves a lob's landing error room. [b5-int3] 4.4: a guard's throws land 0.1–0.7 m off their spots
+// (its lob's own miss), and two links planned ~4.6 m apart came down 5.3 m apart — past the tether, two lone bobbers
+// (only=zone, a guard left short); 0.6 m of room, each link still 2.4 m from the rest
+const LINK3 = 4.4;
 // how far (x, z) is from the tower track's centre line (its metre points)
 function trackDist(P, x, z) {
   let best = Infinity;
@@ -575,8 +591,8 @@ function startChain(b, A, L) {
   BOBBER_BOT.setups++;
   return true;
 }
-export const botKit = {
-  paint(b) {
+// (bot.paint's chain planner: botKit.paint, at its zone in Zone Control)
+function paintChain(b) {
     const a = b.a, W = BOBBER_BOT.why;
     if (b._bobRollT === G.time) return false;   // (one roll a frame: bots.js _paintSub and botAct both ask)
     b._bobRollT = G.time;
@@ -645,7 +661,9 @@ export const botKit = {
     if (pl.stand) blog(b, 'trip', { src: pl.A.src, d: Math.round(Math.hypot(pl.stand.x - a.pos.x, pl.stand.z - a.pos.z) * 10) / 10 });
     if (pl.stand) { b._bobTrip = { S: pl.stand, A: pl.A, t0: G.time, m: G.match, zone: zonePlan() ? b.zZone : null, pt: -9 }; BOBBER_BOT.trips = (BOBBER_BOT.trips || 0) + 1; return false; }
     return startChain(b, pl.A, pl.L);
-  },
+}
+export const botKit = {
+  paint(b) { return atZone(b, () => paintChain(b)); },
   // in a fight: a pair laid across the foe's feet (where it will be in a moment), shot as soon as they tether with it still
   // in their reach (scan: the target standing in a chain of two is the better shot — and the fight's own shots at it
   // pass through them); else, rarely, a lone one just in front of a foe chasing us, for a teammate to shoot
@@ -1156,6 +1174,8 @@ function burstClear(a, move) {
   BOBBER_BOT.burstAway = (BOBBER_BOT.burstAway || 0) + 1;
 }
 
+// the longest of its own live chains (a lone bobber 1; none 0)
+function bestOwn(a) { let n = 0; for (const it of items) if (it.owner === a && !it.ghost && it.state === 'live') n = Math.max(n, it.chain?.n || 1); return n; }
 // its own live chain still short of four (or none yet)
 function webToBuild(a) {
   let newest = null;
@@ -1331,8 +1351,12 @@ export function botAct(b, dt, it, move, busy) {
   const Gr = b._bobGrow;
   if (Gr && G.time >= Gr.at && !P && !fighting) {
     b._bobGrow = null;
-    const pts = Gr.m === G.match && a.sub?.kind === 'bobber' && a.alive ? growPlan(b, zonePlan() ? null : towerPlan()) : null;
+    const pts = Gr.m === G.match && a.sub?.kind === 'bobber' && a.alive ? atZone(b, () => growPlan(b, zonePlan() ? null : towerPlan())) : null;
     if (pts) { b._bobPlan = { pts, i: 0, t0: G.time, m: G.match, A: Gr.A, grow: Gr.n }; b.bombCd = 0; BOBBER_BOT.growPlans = (BOBBER_BOT.growPlans || 0) + 1; }
+    // [b5-int3] a Zone Control guard whose web came out short of three and can't be grown from where it is now (it stepped
+    // off a raised zone; no spot round its links stands): a fresh chain soon, not after the burst's 10–16 s rest — the
+    // only=zone misses were guards left with a 2-chain and two lone bobbers, standing out that rest
+    else if (b.zRole === 'guard' && zonePlan() && Gr.m === G.match && a.alive && bestOwn(a) < 3) { b.bombCd = Math.min(b.bombCd, 1.5 + Math.random()); BOBBER_BOT.regrows = (BOBBER_BOT.regrows || 0) + 1; }
     blog(b, 'grow', { pts: pts ? pts.length : 0, n: Gr.n });
   }
   // (a set-up under way: on to its stand spot — the goal logic held off meanwhile, so it doesn't pick another)

@@ -8,6 +8,7 @@
 //                                                          never settle one within 3.25 m of the track)
 //   MAP=podbox MODE=turf    … PAGE_ARGS='only=pod'        (a Treehills pod: rides its plant, lifted by a growing hedge)
 //   MAP=halyard MODE=zones  … PAGE_ARGS='only=zone'       (a guard bot sets up a 3–4 chain at its zone)
+//   … PAGE_ARGS='only=zone;zdbg'                         (the same; a short guard's log has every guard's state every 0.5 s)
 //   MAP=<a boss stage> MODE=boss … PAGE_ARGS='only=boss'  (HULLBREAKER: one body blast a chain, crablets every blast)
 // Staged on testbox (a flat deck, top y 0; a 4 m wall x 14…15, z ±8, and its mirror at x −15…−14); everyone parked far
 // off with their brains stubbed unless a scene wakes one; damage to players is real but nobody's hp runs out (set high).
@@ -1172,6 +1173,7 @@
       try {
         step(20, () => {
           const zi = zp.Z.active.zones[0].id, c = zp.Z.zones[zi].center, Rz = zp.info[zi].R;
+          if (/zdbg/.test(window.__pageArgs || "") && Math.round((G.time - tg) * 60) % 30 === 0) for (const a of bots) { const b = a.bot, P = b._bobPlan; BOBBER_BOT.log.push({ t: G.time, who: a.name, ev: 'st', ink: Math.round(a.ink), m: b.mode, P: P ? P.i + '/' + P.pts.length : 0, cd: Math.round(b.bombCd * 10) / 10, f: a.intent.fire ? 1 : 0, sq: a.form === 'squid' ? 1 : 0, sub: a.submerged ? 1 : 0, gs: b.groundSeen, gt: a.groundTeam, ld: Math.round(a.lastDamage * 10) / 10, zr: b.zRole, pos: [Math.round(a.pos.x * 10) / 10, Math.round(a.pos.y * 10) / 10, Math.round(a.pos.z * 10) / 10], dz: Math.round(Math.hypot(a.pos.x - c[0], a.pos.z - c[2]) * 10) / 10, R: Math.round(Rz * 10) / 10, grow: b._bobGrow ? 1 : 0, hold: b._bobHold ? 1 : 0, trip: b._bobTrip ? 1 : 0 }); }
           for (const a of bots) {
             if (a.bot.zRole === 'guard') atZone.set(a, (atZone.get(a) || 0) + 1 / 60);
             for (const x of K.items) if (x.owner === a && x.state === 'live' && Math.hypot(x.spot.x - c[0], x.spot.z - c[2]) < Rz + 6) bestOf.set(a, Math.max(bestOf.get(a) || 0, x.chain?.n || 1));
@@ -1183,6 +1185,45 @@
       const short = bots.filter((a) => (bestOf.get(a) || 0) < 3).map((a) => ({ who: a.name, log: BOBBER_BOT.log.filter((e) => e.who === a.name).map((e) => ({ ...e, t: r2(e.t - tg) })) }));
       R(`zone: every guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard (${bots.length} guards from ${r2(guardsAt)} s, best chains ${bests.join(', ')})`,
         guardsAt < 75 && bots.length === 3 && bests.every((n) => n >= 3), { guardsAt: r2(guardsAt), best: bests, guardS: bots.map((a) => r2(atZone.get(a) || 0)), short, BOBBER_BOT: { ...BOBBER_BOT, log: undefined } });
+      // [b5-int3] a guard's chain is planned at its zone: from nav spots 1–4 m outside its edge on the foes' side (where a door
+      // anchor 3–5 m out is the nearest), every link of every plan within the zone's reach + 6 m of its centre — the bar
+      // above (a guard's 3-chain at the far door lay 12–15 m out on halyard's side zone: 'best chain 1')
+      if (zp && bots.length) {
+        const zi = zp.Z.active.zones[0].id, zz = zp.Z.zones[zi], c = zz.center, Rz = zp.info[zi].R, [ex, ez] = zp.enemyDir(zz, team), g = bots[0], b = g.bot;
+        const spots = G.nav.nodes.filter((n) => { const dx = n.x - c[0], dz = n.z - c[2], d = Math.hypot(dx, dz); return d > Rz + 1 && d < Rz + 4 && (dx * ex + dz * ez) / d > 0.3 && Math.abs(n.y - c[1]) < 3; });
+        const off = [], plans = { direct: 0, trip: 0, none: 0 };
+        const roll = () => { for (let k = 0; k < 80; k++) { b._bobRollT = -1; g.lastDamage = 99; K.bot.paint(b); if (b._bobPlan || b._bobTrip) return; } };
+        for (let k = 0; k < 30 && spots.length; k++) {
+          S.clear(); const n = spots[(k * 7919) % spots.length];
+          b.zRole = 'guard'; b.zZone = zi; b.mode = 'paint'; put(g, V(n.x, n.y, n.z)); g.ink = 100; b._bobPlan = null; b._bobTrip = null; b._bobGrow = null; b._bobNoSpotT = 0;
+          roll();
+          if (b._bobTrip) { const T = b._bobTrip; put(g, T.S); g.ink = 100; b._bobRollT = -1; g.lastDamage = 99; K.bot.paint(b); plans.trip++; } else if (b._bobPlan) plans.direct++; else plans.none++;
+          for (const q of b._bobPlan?.pts || []) { const d = Math.hypot(q.x - c[0], q.z - c[2]); if (d > Rz + 6) off.push({ at: [r2(q.x), r2(q.y), r2(q.z)], d: r2(d), src: b._bobPlan.A?.src }); }
+          b._bobPlan = null; b._bobTrip = null;
+        }
+        S.clear();
+        R(`zone: a guard's chain plans from 1–4 m outside its zone's edge on the foes' side keep every link within the zone's reach + 6 m (${plans.direct + plans.trip} plans from ${spots.length ? 30 : 0} spots, ${off.length} links out)`,
+          spots.length > 0 && plans.direct + plans.trip >= 10 && off.length === 0, { R: r2(Rz), plans, off: off.slice(0, 12) });
+      }
+      // [b5-int3] a guard whose web came out short of three, with nowhere to grow it from where it stands (25–40 m off it here,
+      // past its throw): a fresh chain soon — its rest cut to ≤ 2.5 s — not the burst's 10–16 s; one whose web made three
+      // keeps its rest
+      if (zp && bots.length) {
+        const zi = zp.Z.active.zones[0].id, c = zp.Z.zones[zi].center, g = bots[0], b = g.bot, res = {};
+        const far = G.nav.nodes.find((n) => { const d = Math.hypot(n.x - c[0], n.z - c[2]); return d > 25 && d < 40; });
+        for (const [tag, pts] of [['short', [[-1.2, 0], [1.2, 0]]], ['made', [[-1.2, -1.2], [1.2, -1.2], [-1.2, 1.2], [1.2, 1.2]]]]) {
+          S.clear(); b.zRole = 'guard'; b.zZone = zi; b.mode = 'paint'; b._bobPlan = null; b._bobTrip = null; b._bob = null; b._bobHold = null; b.target = null;
+          for (const [dx, dz] of pts) { const x = c[0] + dx, z = c[2] + dz; drop(g, x, z, G.level.groundHeight(x, z, c[1] + 4) + 0.6); }
+          settle(1.2);
+          if (far) put(g, V(far.x, far.y, far.z));
+          g.ink = 100; zero(g); b.bombCd = 12; b._bobGrow = { at: G.time - 0.01, n: 1, A: null, m: G.match };
+          K.botAct(b, DT, g.intent, V(0, 0, 0), false);
+          const best = Math.max(0, ...K.items.filter((o) => o.owner === g && o.state === 'live').map((o) => o.chain?.n || 1));
+          res[tag] = { best, cd: r2(b.bombCd), ok: tag === 'short' ? best === 2 && b.bombCd <= 2.5 : best >= 3 && b.bombCd > 10 };
+        }
+        S.clear();
+        R(`zone: a guard left with a 2-chain it can't grow from where it stands starts its next chain within 2.5 s, not after the burst's 10–16 s rest; one whose web made three keeps its rest`, !!far && res.short.ok && res.made.ok, res);
+      }
     }
 
     // ============================================================================================ MODE=boss: HULLBREAKER
