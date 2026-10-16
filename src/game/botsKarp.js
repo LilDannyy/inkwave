@@ -63,6 +63,7 @@ const V3 = THREE.Vector3;
 const _v = new V3(), _v2 = new V3(), _v3 = new V3(), _sc = new V3(), _e = new V3(), _q = new V3();
 const _plans = new WeakMap();
 const MELEE = new Set(['roller', 'brush', 'blade', 'mitts']);
+const EDGE8 = [[0.7, 0], [-0.7, 0], [0, 0.7], [0, -0.7], [0.5, 0.5], [-0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]];
 const SHELL_SP = new Set(['barrage', 'booyah', 'strike']);   // bomb-type specials breakers throw at the shell (§8.6)
 const hd = (p, q) => Math.hypot(p.x - q.x, p.z - q.z);
 const DF = (b) => KARP_AI.diff[b && b.diff && b.diff.id] || KARP_AI.diff.normal;
@@ -85,33 +86,8 @@ class KarpPlan {
     this.Kp = Kp; this.t = -9; this.dirty = true;
     this.roles = [new Map(), new Map()]; this.sit = ['shell', 'shell']; this.aux = new Map();
     const N = (this.N = G.nav.nodes.length), F = Kp.field;
-    // the carrier's static avoid masks per team: both spawn zones, its own free zones, carrierBlock nodes (zoneN: its own
-    // free zones alone — a carrier inside one leaves it the shortest way instead of finding no route at all)
-    this.zoneN = [new Uint8Array(N), new Uint8Array(N)];
-    this.avoidBase = [0, 1].map((t) => {
-      const m = new Uint8Array(N);
-      for (let i = 0; i < N; i++) {
-        const n = G.nav.nodes[i];
-        if (n.zone >= 0 || !F.ok[i]) { m[i] = 1; continue; }
-        const p = _v.set(n.x, n.y, n.z);
-        if (F.inFreeZone(t, p) >= 0) { m[i] = 1; this.zoneN[t][i] = 1; }
-        if (F.inCarrierBlock(p)) m[i] = 1;
-      }
-      return m;
-    });
     // (shellMask: the shell's radius now + 0.6 m — the melee breakers' and anyone's already close; shellWide: its full swell,
     // rMax + 0.6 m — everyone else: a big hit swells it 0.5 m in a frame onto a bot walking past just outside its reach)
-    // (zoneEdge: nodes just outside its own free zone, within 0.7 m of it — a carrier's route costs there, so a corner is
-    // rounded a node further out: the body cuts a waypoint by up to 0.6 m)
-    this.zoneEdge = [0, 1].map((t) => {
-      const m = new Uint8Array(N), Z = this.zoneN[t], q = _v2;
-      for (let i = 0; i < N; i++) {
-        if (Z[i] || this.avoidBase[t][i]) continue;
-        const n = G.nav.nodes[i];
-        for (const [dx, dz] of [[0.7, 0], [-0.7, 0], [0, 0.7], [0, -0.7], [0.5, 0.5], [-0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]]) if (F.inFreeZone(t, q.set(n.x + dx, n.y, n.z + dz)) >= 0) { m[i] = 1; break; }
-      }
-      return m;
-    });
     this.shellMask = new Uint8Array(N); this.shellWide = new Uint8Array(N); this.shellKey = '';
     this.route = [null, null];      // per team: { cands, pick, i (the carrier's index on it), t, from, key }
     this.foes = [[], []];           // per team: the foes it knows of ({ e, pos, seen, t }) — teamKnown, no wall-hacks
@@ -149,16 +125,37 @@ class KarpPlan {
     const H = Kp.holder;
     if (H && !isBot(H)) this.pickRoute(H.team, H, 1.5, null);
   }
-  // the carrier's avoid mask in the field's state now in force: the static one, plus every node the state takes away (an
-  // era's, the lava's: the field reads them as no ground — a route over them would be a wall-walk, or a retreat)
-  avoidFor(t) {
-    const F = this.Kp.field, st = F.state;
-    if (st === 0) return this.avoidBase[t];
-    const C = this._avS || (this._avS = new Map()), key = t + ':' + st;
-    let m = C.get(key);
-    if (!m) { m = new Uint8Array(this.N); const b = this.avoidBase[t], ok = F.states[st].okN; for (let i = 0; i < this.N; i++) m[i] = b[i] || !ok[i] ? 1 : 0; C.set(key, m); }
-    return m;
+  // team t's carrier masks in the field's state now in force (built once per state: a free zone may stand in some eras
+  // only) → { avoid, zone, edge }:
+  //   avoid  both spawn zones, its own free zones, carrierBlock nodes, and every node the state takes away (an era's, the
+  //          lava's: the field reads them as no ground — a route over them would be a wall-walk, or a retreat)
+  //   zone   its own free zones alone (a carrier inside one leaves it the shortest way instead of finding no route at all)
+  //   edge   nodes just outside one, within 0.7 m (a carrier's route costs there, so a corner is rounded a node further
+  //          out: the body cuts a waypoint by up to 0.6 m)
+  masks(t) {
+    const F = this.Kp.field, st = F.state, C = this._mks || (this._mks = new Map()), key = t + ':' + st;
+    let M = C.get(key);
+    if (M) return M;
+    const N = this.N, nav = G.nav, avoid = new Uint8Array(N), zone = new Uint8Array(N), edge = new Uint8Array(N), ok = st ? F.states[st].okN : null, p = _v;
+    for (let i = 0; i < N; i++) {
+      const n = nav.nodes[i];
+      if (n.zone >= 0 || !F.ok[i] || (ok && !ok[i])) { avoid[i] = 1; continue; }
+      p.set(n.x, n.y, n.z);
+      if (F.inFreeZone(t, p) >= 0) { avoid[i] = 1; zone[i] = 1; }
+      if (F.inCarrierBlock(p)) avoid[i] = 1;
+    }
+    // (the edge: only round the zones' boxes — 8 probes a node there)
+    const box = F.R.zones[t].filter((z) => F._zoneOn(z)).map((z) => { let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity; for (const [x, zz] of z.poly) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, zz); z1 = Math.max(z1, zz); } return [x0 - 1, x1 + 1, z0 - 1, z1 + 1]; });
+    if (box.length) for (let i = 0; i < N; i++) {
+      if (avoid[i]) continue;
+      const n = nav.nodes[i];
+      if (!box.some((b) => n.x >= b[0] && n.x <= b[1] && n.z >= b[2] && n.z <= b[3])) continue;
+      for (const [dx, dz] of EDGE8) if (F.inFreeZone(t, p.set(n.x + dx, n.y, n.z + dz)) >= 0) { edge[i] = 1; break; }
+    }
+    M = { avoid, zone, edge }; C.set(key, M);
+    return M;
   }
+  avoidFor(t) { return this.masks(t).avoid; }
   roleOf(a) { return this.roles[a.team].get(a) || 'break'; }
   auxOf(a) { return this.aux.get(a) || 0; }
   restPos() { return this.Kp.phase === 'resetting' ? this.Kp.R.pond : this.Kp.pos; }
@@ -968,12 +965,12 @@ export function karpPathArgs(b) {
   const F = P.Kp.field, J = a.carry.j, D = F.D[a.team], L = F.L[a.team];
   const retreat = J && Number.isFinite(J.mark) && J.half === a.team;
   // (inside its own free zone already: its nodes cost, they don't stop it — out the shortest way)
-  const inZone = F.inFreeZone(a.team, a.pos) >= 0, Z = P.zoneN[a.team];
+  const inZone = F.inFreeZone(a.team, a.pos) >= 0, MK = P.masks(a.team), Z = MK.zone;
   for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(inZone && Z[i])) || sm[i] || (retreat && F.nodeHalf(i) === a.team && L - D[i] < J.mark - 6) ? 1 : 0;
   const C = b.sp.cost();
   if (C) for (let i = 0; i < N; i++) cost[i] = C[i]; else cost.fill(0);
   if (inZone) for (let i = 0; i < N; i++) if (Z[i]) cost[i] += 6;
-  { const E = P.zoneEdge[a.team]; for (let i = 0; i < N; i++) if (E[i]) cost[i] += 1.5; }
+  { const E = MK.edge; for (let i = 0; i < N; i++) if (E[i]) cost[i] += 1.5; }
   const RT = P.route[a.team];
   if (KARP_AI.enabled && RT && RT.pick) {
     // off the picked route's corridor (2 m round its nodes from the carrier on): + 1.2 a node
@@ -998,7 +995,7 @@ export function karpPathArgs(b) {
 export function karpPathFallback(b, level = 1) {
   const a = b.a, P = karpPlan();
   if (!P) return null;
-  const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask, Z = P.zoneN[a.team], avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
+  const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask, Z = P.masks(a.team).zone, avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
   for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(level >= 2 && Z[i])) || sm[i] ? 1 : 0;
   if (!(G.time - (b.kFbT ?? -9) < 3)) { KARP_BOT.stats.retreatFallback++; const L = Array.isArray(KARP_BOT.stats.fbAt) ? KARP_BOT.stats.fbAt : (KARP_BOT.stats.fbAt = []); if (L.length < 6) L.push([+a.pos.x.toFixed(1), +a.pos.y.toFixed(1), +a.pos.z.toFixed(1), level]); }   // (where: a stage builder's flag)
   b.kFbT = G.time;
@@ -1019,10 +1016,12 @@ export function karpSteerOk(b, x0, y0, z0, x1, z1) {
   return true;
 }
 // everyone else in a Bazookarp match: no route through the shell — nor, for a bot with no business that close (not a melee
-// breaker, not already inside it), within its full swell (b: the bot; none: a walker — the full swell)
-export function karpShellAvoid(b = null) {
+// breaker, not already inside it), within its full swell (b: the bot; none: a walker — the full swell; narrow: the shell
+// itself, when the full swell leaves no way round: _pathTo's retry)
+export function karpShellAvoid(b = null, narrow = false) {
   const P = karpPlan();
   if (!P || !P.shellKey) return null;
+  if (narrow) return P.shellMask;
   if (!b || !KARP_AI.enabled) return KARP_AI.enabled ? P.shellWide : P.shellMask;
   const a = b.a, c = P.Kp.shell.center();
   return meleeOf(a) || Math.hypot(a.pos.x - c.x, a.pos.z - c.z) < K.shell.rMax + 0.9 ? P.shellMask : P.shellWide;

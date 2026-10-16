@@ -2984,6 +2984,7 @@ export class BotBrain {
     // shell, the retreat mark); everyone else in a Bazookarp match routes round the shell
     const KA = this.a.carry ? karpPathArgs(this) : null, SA = KA ? null : G.match?.karp ? karpShellAvoid(this) : null;
     let p = KA ? nav.path(s, g, this.a.team, undefined, true, KA.avoid, KA.cost) : nav.path(s, g, this.a.team, undefined, rule, SA, this.sp.cost());   // (… and round those areas; climbs: _climbRule) [b5-karp-bots] KA.cost: dangers + its route's corridor
+    if (!p && SA && SA !== karpShellAvoid(this, true)) p = nav.path(s, g, this.a.team, undefined, rule, karpShellAvoid(this, true), this.sp.cost());   // [b5-karp-bots] (no way round the full swell — a narrow bridge: round the shell itself)
     if (!p && KA) { const F = karpPathFallback(this); if (F) p = nav.path(s, g, this.a.team, undefined, true, F.avoid, F.cost); if (!p) { const F2 = karpPathFallback(this, 2); if (F2) p = nav.path(s, g, this.a.team, undefined, true, F2.avoid, F2.cost); } }   // [b5-karp] (no forward path: a short ×3 beats standing still) [b5-karp-bots] level 2: through its own free zone
     // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
     // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
