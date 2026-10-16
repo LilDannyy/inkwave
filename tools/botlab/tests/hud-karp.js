@@ -329,12 +329,16 @@
     const rows = [];
     dbg.unfreeze();
     const tw0 = performance.now(), sounds0 = H.karp.cues.played.length;
+    let a04 = null;
     emit2('karp:overtime', { losing: me.team, why: 'dropped' });
     while (performance.now() - tw0 < 7000) {
       await wait(40);
       const ms = Math.round(performance.now() - tw0), row = { ms };
       const bn = H.bannerLayer.querySelector('.iw-bn--ot'), bt = bn?.querySelector('.iw-bn__text'), bsub = bn?.querySelector('.iw-kbn-sub');
       const bo = bt ? eff(bt) : 0, bBox = bt ? box(bt) : null, sBox = bsub ? box(bsub) : null;
+      // (the banner's first frame on the page's clock — its CSS animations' start: on a loaded page the first frame after
+      // the emit came ~0.3 s late, and J4 read 'readable at 516 ms' for a banner that had been up 0.2 s; review round 3)
+      if (bn && a04 == null) { const st = bn.getAnimations({ subtree: true }).map((an) => an.startTime).filter((v) => v != null); if (st.length) a04 = Math.min(...st); }
       const tags = [...H.karp.tags.children].filter((e) => e.classList.contains('is-on') && !e.classList.contains('is-under') && eff(e) > 0.3).map((e) => box(e.firstChild));
       row.banner = bn ? +bo.toFixed(2) : null;
       row.inBanner = !!bsub && bsub.textContent.includes(want4) && eff(bsub) >= 0.6 && !tags.some((t) => cover(sBox, t) > 0.05);
@@ -348,12 +352,13 @@
     }
     dbg.freeze();
     const dur = (k) => rows.reduce((s, r, i) => s + (r[k] ? (i ? r.ms - rows[i - 1].ms : r.ms) : 0), 0);
+    const lag4 = a04 != null ? Math.max(0, Math.round(a04 - tw0)) : 0;   // (the banner's first frame after the emit)
     const first = rows.find((r) => r.inBanner || r.inCall), readMs = rows.reduce((s, r, i) => s + ((r.inBanner || r.inCall) ? (i ? r.ms - rows[i - 1].ms : r.ms) : 0), 0);
     const underVis = rows.filter((r) => r.call != null && r.call >= 0.3 && r.under);
     const snd = H.karp.cues.played.length >= sounds0;   // (the stock banner's own sound is hud._snd('zone_overtime'): unchanged code)
-    R('J4. OVERTIME! with the stock banner left in (real time): the instruction is readable within 0.5 s and for ≥ 3 s of the first 7 s — under the banner\'s word, then in our call-out (≥ 1 s), which never comes up under the opaque banner',
-      live4 && Kp.winner == null && !!first && first.ms <= 500 && readMs >= 3000 && dur('inBanner') >= 900 && dur('inCall') >= 1000 && underVis.length === 0 && rows.some((r) => r.banner != null),
-      { live: live4, winner: Kp.winner, first: first && first.ms, readMs, inBanner: dur('inBanner'), inCall: dur('inCall'), underVis: underVis.slice(0, 3), snd, fps: g.fps, rows: rows.filter((r, i) => i % 6 === 0) });
+    R('J4. OVERTIME! with the stock banner left in (real time): the instruction is readable within 0.5 s of the banner\'s first frame and for ≥ 3 s of the first 7 s — under the banner\'s word, then in our call-out (≥ 1 s), which never comes up under the opaque banner',
+      live4 && Kp.winner == null && !!first && first.ms - lag4 <= 500 && readMs >= 3000 && dur('inBanner') >= 900 && dur('inCall') >= 1000 && underVis.length === 0 && rows.some((r) => r.banner != null),
+      { live: live4, winner: Kp.winner, first: first && first.ms, bannerFrame: lag4, readMs, inBanner: dur('inBanner'), inCall: dur('inCall'), underVis: underVis.slice(0, 3), snd, fps: g.fps, rows: rows.filter((r, i) => i % 6 === 0) });
     Kp.overtime = false; Kp.otLosing = -1; Kp.otWin = { left: 10, open: false, closeT: null, grace: 0 }; Kp.count = [100, 100]; G.music?.setOvertime?.(false); clearAll(); step(0.1);
     // J5. the wait is counted in play time: a kill call-out made 0.6 s of play ago — with no frame painted since, as in
     // the stepped rules test (its CSS clock still at 0) — doesn't hold ours back; one made this frame holds it ~0.38 s
