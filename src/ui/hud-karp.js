@@ -289,7 +289,7 @@ export class KarpHud {
         this._hold = Math.max(this._hold, OT_BANNER);
         this._say('OVERTIME!', { team: losing, sub, icon: KARP_GLYPH });
       }),
-      on('karp:end', ({ reason }) => this.hud._zEnd?.({ reason })),
+      on('karp:end', ({ reason }) => { this._pend = null; this._hold = 0; this.hud._zEnd?.({ reason }); }),
       on('karp:full', ({ actor }) => { if (actor === G.match?.local) this.hud._restart?.(this.ret, 'is-flash'); }),
       on('match:state', ({ state, match }) => {
         if (state === 'intro' || state === 'playing') this._gateCall = false;
@@ -344,7 +344,7 @@ export class KarpHud {
     const kc = this.hud.callouts?.querySelector('.iw-call') || null;
     if (kc !== this._kcSeen) { this._kcSeen = kc; this._kcAge = 0; } else this._kcAge += dt;
     if (this._hold > 0) this._hold = Math.max(0, this._hold - dt);
-    if (this._pend && this._hold <= 0) { const p = this._pend; this._pend = null; this._say(p.text, p.opts); }
+    if (this._pend && this._hold <= 0) { const p = this._pend; this._pend = null; if (this.hud._zLive?.() && G.match?.karp?.winner == null) this._say(p.text, p.opts); }   // (never after the end)
     if (on !== this.on) { this.on = on; el.classList.toggle('is-karp', on); if (on) { this.hud._L.zc0 = this.hud._L.zc1 = null; this._weirKey = null; } }
     if (this._noT > 0 && (this._noT -= dt) <= 0) { this.no.classList.remove('is-on'); this.show.no = null; }
     this.cues.update(dt, f);
