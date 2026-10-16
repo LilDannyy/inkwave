@@ -710,7 +710,7 @@ function botLeap(r, k, c, yaw, pitch, kind = 'ground') {
 // at release: does the leap still come down where the bot planned (it may have been nudged while crouching)?
 function botReleaseOk(a, k) {
   predictLeap(a.pos, leapVelocity(a, k, k.charge, _bv), _bp, null);
-  return k.botKind === 'wall' ? _bp.kind === 'wall' : landingOk(a, _bp);
+  return k.botKind === 'wall' ? _bp.kind === 'wall' && !SUB_KITS.bobber?.webHit?.(a.team, _bp.pos.x, _bp.pos.y, _bp.pos.z, W().landRadius) : landingOk(a, _bp);   // ([b5-int3] a wall landing smashes too)
 }
 // a wall near the fight worth sticking to: probe round the bot at chest and head height
 function botFindWall(a, target) {
