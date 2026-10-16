@@ -23,6 +23,7 @@ import { PATTERN, B, R as R0, O, OCT } from '../../mapkit.js';
 import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { ERA, eraFilter } from './era.js';
+import { MURAL } from './murals.js';
 import { BOT, TIER_Y, coverRects, bars, junctionPatches, tierBoxes, symOutline, rectPoly } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------ frames
@@ -98,7 +99,7 @@ const groundPieces = [
   ...bars(OUTLINE, { only: (i) => i < NCH && kerbAt(i) !== undefined, level: kerbAt, opts: ground({ tag: 'kerb', color: '#535a63' }) }),
   ...junctionPatches(OUTLINE, { barred: (i) => kerbAt(i) !== undefined, level: kerbAt, opts: ground({ tag: 'kerb', color: '#535a63' }) }).filter((d) => d.center[2] < 0),
   ...tierBoxes(TER.rects, 1.0, ground({ tag: 'terrace', color: K.blueT })),
-  ...tierBoxes([P.carriage], 0, { tag: 'carriageway', color: K.granite, pattern: SURF.granite }),
+  ...tierBoxes([P.carriage], 0, { tag: 'carriageway', color: K.granite, pattern: SURF.granite, mural: [{ n: [0, 1, 0], id: MURAL.tramStop }] }),
 ];
 
 // ------------------------------------------------------------------------------------------------ mid: the station (kept as built in round B)
@@ -106,7 +107,7 @@ const DEG = Math.PI / 180;
 const polar = (r, bearing) => [+(r * Math.sin(bearing * DEG)).toFixed(4), +(r * Math.cos(bearing * DEG)).toFixed(4)];
 const SINGLE = [
   // the circus floor (one slab: the hour-ring mural's face) and the concourse (the booking-hall floor, 1.3)
-  B(-20, 20, BOT, 0, -20, 20, ground({ tag: 'circus', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]] })),
+  B(-20, 20, BOT, 0, -20, 20, ground({ tag: 'circus', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]], mural: [{ n: [0, 1, 0], id: MURAL.hourRing }] })),
   ...OCT(0, 0, 9.5, 0, 1.3, sand({ tag: 'concourse' })),
   // the dome: the drum on the columns (drawn), the dome and the lantern as collision only: their look is the
   // bluestone_dome prop
@@ -160,7 +161,7 @@ const MID = [
   B(HOTEL_STAIR.x0, HOTEL_STAIR.x1, HOTEL_STAIR.yTop - 0.4, HOTEL_STAIR.yTop, HOTEL_STAIR.zTop, HOTEL_STAIR.zLand, { tag: 'hotel-stair-landing', color: K.glass, pattern: PATTERN.glasstile, eras: '3', eraGroup: 'pylon-w', noPaint: [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0]] }),
   B(HOTEL_STAIR.x0, HOTEL_STAIR.x0 + 0.12, HOTEL_STAIR.yTop, HOTEL_STAIR.yTop + 1, HOTEL_STAIR.zTop, HOTEL_STAIR.zLand, rail({ tag: 'hotel-stair-glass', eras: '3', eraGroup: 'pylon-w' })),
   // the Young & Jackfish: H1 (to 9 m) and the prow's corner turret; the balcony over the circus, its landing and stair
-  ...bld(-14, -9.5, -22.5, -18.5, 9, { tag: 'hotel', color: K.hotel }, BOT),   // (round C: its east wing arches over the quay, KNEE)
+  ...bld(-14, -9.5, -22.5, -18.5, 9, { tag: 'hotel', color: K.hotel }, BOT).map((d) => (d.min[1] === TIER_Y ? { ...d, mural: [{ n: [0, 0, -1], id: MURAL.cafe }] } : d)),   // (round C: its east wing arches over the quay, KNEE; the café mural on its lane wall)
   B(-14, -11.5, 9, 13, -21, -18.5, { tag: 'hotel-turret', hidden: true, roof: true, paint: false }),
   B(KNEE_FLIGHT.x1, -5, 2.1, 2.4, -18.5, -15.5, { tag: 'balcony', color: K.planks, pattern: PATTERN.planks }),   // (round C fix 2: from the knee flight's top)
   B(-14, -11, 2.1, 2.4, -15.5, -12.5, { tag: 'balcony-landing', color: K.planks, pattern: PATTERN.planks }),
@@ -266,7 +267,7 @@ const haloPieces = [];
 const VIA = 4.1;
 const LEG_PIECES = [
   // the railway viaduct (4.1, roof, not inkable: the leg's outer wall over the river)
-  B(-37, -36.5, BOT, VIA, -50, -14, { tag: 'viaduct', color: K.wall, pattern: SURF.bluestone, roof: true, paint: false }),
+  B(-37, -36.5, BOT, VIA, -50, -14, { tag: 'viaduct', color: K.wall, pattern: SURF.bluestone, roof: true, paint: false, mural: [{ n: [1, 0, 0], id: MURAL.hoki }] }),   // (Hoki Lane's street art: eras 2–3)
   ...[-40, -28, -16].map((z) => B(-37.2, -36.2, BOT, VIA + 0.3, z - 0.5, z + 0.5, { tag: 'viaduct-pier', color: K.wall, pattern: SURF.bluestone, roof: true, paint: false })),
   // Hoki Lane's cover (street art on the viaduct; bins, crates and planters on alternate sides, 1.0–1.2 m)
   B(-36.4, -35.2, 0, 1.2, -45, -43.4, cover({ tag: 'bins', color: '#56605a' })),
@@ -279,7 +280,7 @@ const LEG_PIECES = [
   ...bld(-31, -30.5, -29.5, -28, 6, { tag: 'arcade-wall', color: K.gpo }, BOT),
   ...[[-38.5, -35], [-33, -29.5]].flatMap(([z0, z1]) => [B(-31, -30.5, BOT, 3, z0, z1, rail({ tag: 'arcade-grille', color: '#2f3a35' })),
     B(-31, -30.5, 3, 6, z0, z1, { tag: 'arcade-wall', color: K.gpo, pattern: PATTERN.render, roof: true, paint: false })]),
-  ...bld(-26.5, -26, -42, -28, 6, { tag: 'arcade-wall', color: K.gpo }, BOT),
+  ...bld(-26.5, -26, -42, -28, 6, { tag: 'arcade-wall', color: K.gpo }, BOT).map((d) => (d.min[1] === 3 ? { ...d, mural: [{ n: [1, 0, 0], id: MURAL.seams }] } : d)),   // (the 3000s' light seams)
   ...tierBoxes([P.arcade], 0.6, ground({ tag: 'arcade-floor', color: '#8d8679', pattern: PATTERN.tiles })),
   B(-31, -26, 6, 6.3, -42, -28, { tag: 'arcade-roof', color: '#9fb1b5', pattern: PATTERN.glasstile, roof: true, paint: false }),
   OB(-28.5, -39.2, 1.2, 1.6, 0.6, 1.8, 0, cover({ tag: 'arcade-kiosk', color: '#5c6b62' })),
@@ -305,7 +306,7 @@ const LEG_PIECES = [
   // down to Swimston and its piers, the hop down to the quay on its east face
   // (6 m, no clock tower: in the Z the dome stands off Swimston's axis, 10–22° right of it from the spawn deck, exactly
   //  behind the GPO's corner; a tower there hid it. The art pass puts the GPO's clock on its parapet, under the dome's line)
-  ...bld(P.gpoB[0], P.gpoB[1], P.gpoB[2], P.gpoB[3], 6, { tag: 'gpo', color: K.gpo }, BOT),
+  ...bld(P.gpoB[0], P.gpoB[1], P.gpoB[2], P.gpoB[3], 6, { tag: 'gpo', color: K.gpo }, BOT).map((d) => (d.min[1] === 3 ? { ...d, mural: [{ n: [0, 0, 1], id: MURAL.ghostSign }] } : d)),   // (the 1880s ghost sign)
   ...tierBoxes([P.gpo], 1.2, sand({ tag: 'gpo-terrace' })),
   R([-16, 0, -35.5], [-13, 1.2, -35.5], 9, stair({ tag: 'gpo-steps' })),
   B(-13, -12.2, 1.2, 3.2, -41.5, -40.7, { tag: 'gpo-pier', color: '#bdb196', pattern: PATTERN.render, roof: true }),
