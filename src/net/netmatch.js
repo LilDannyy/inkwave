@@ -758,7 +758,8 @@ export class NetMatch {
     // forward; a little ahead (the trip's jitter, a stall here), it gives the time back by running slow (match.js
     // clockSlew, 0.5–0.9×); only a resync over 1.5 s ahead (a stalled host) steps it back
     const want = time - lead, err = want - m.time;   // (> 0: this screen is ahead — less time left here than on the host)
-    if (state === 'playing' && m.state === 'playing') {
+    // (time ≤ 0: the host's clock has run out — overtime holds it at 0; taking the trip off would push this one below 0)
+    if (state === 'playing' && m.state === 'playing' && time > 0) {
       if (err < -0.05) { m.time += err * 0.5; m.clockSlew = 0; }
       else if (err > 1.5) { m.time = want; m.clockSlew = 0; }
       else m.clockSlew = err > 0.05 ? err : 0;
