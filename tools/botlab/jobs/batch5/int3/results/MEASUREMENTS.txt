@@ -1,0 +1,261 @@
+int3 measurements on the Mac mini, 2026-10-16 (the helper). Code b97b3eb; base 7759085 for A and C. Bots normal, DIAG on,
+8 matches per config. Per-match tables below; the raw runner files are JOB-1…5.raw.txt next to this one.
+Every one of the 144 matches wrote a result; console lines / frame errors: 0 / 0 in all of them.
+
+== A. Zone Control forgiveness (random loadouts; halyard, saltpan, crossmarket, lockgate ×2 each on BOTH codes —
+   calamari and treehills don't exist at 7759085). Counts count down: the lower count leads; margin = |A − B|.
+A base: map | winner (reason) | final counts | margin | lead changes | first take s | contested % | OT | err
+  crossmarket-1 A (time       ) 53 vs 55  2    1   21.4   3.1   no     0/0
+  crossmarket-2 A (time       ) 58 vs 92  34   1   39     1.8   no     0/0
+  halyard-1     B (time       ) 100 vs 51 49   0   53.6   1.8   no     0/0
+  halyard-2     B (time       ) 67 vs 43  24   2   47.4   2.7   no     0/0
+  lockgate-1    B (time       ) 95 vs 39  56   1   17.8   3.0   no     0/0
+  lockgate-2    B (knockout   ) 100 vs 0  100  0   12.1   1.5   no     0/0
+  saltpan-1     A (time       ) 81 vs 82  1    2   72.2   9.2   no     0/0
+  saltpan-2     A (time       ) 80 vs 100 20   0   80.8   1.4   no     0/0
+  MEAN (n 8): margin 35.8 | lead changes 0.88 | first take 43.0 s | contested 3.1 % | knockouts 1/8 | overtime 0/8
+A head: map | winner (reason) | final counts | margin | lead changes | first take s | contested % | OT | err
+  crossmarket-1 A (time       ) 72 vs 77  5    1   23.4   2.2   no     0/0
+  crossmarket-2 B (knockout   ) 77 vs 0   77   1   22.1   5.3   no     0/0
+  halyard-1     B (time       ) 66 vs 27  39   0   31.8   12.4  no     0/0
+  halyard-2     B (neutralised) 68 vs 66  2    2   26.9   8.1   28.5s  0/0
+  lockgate-1    A (knockout   ) 0 vs 100  100  0   29.7   2.9   no     0/0
+  lockgate-2    B (knockout   ) 100 vs 0  100  0   17.5   0.0   no     0/0
+  saltpan-1     A (time       ) 7 vs 80   73   0   55.2   4.4   no     0/0
+  saltpan-2     B (time       ) 93 vs 65  28   0   55.3   5.8   no     0/0
+  MEAN (n 8): margin 53.0 | lead changes 0.50 | first take 32.7 s | contested 5.1 % | knockouts 3/8 | overtime 1/8
+
+== B. Cheer Orb in Zone Control at b97b3eb (SPECIALS=team<side>=booyah, the other team random; halyard, saltpan,
+   calamari, treehills, each side once).
+B: map / forced side | winner (reason) | counts forced vs other | forced won | K/D forced vs other | orbs used | splats by the orb (forced) | Cheer Orb stats | err
+  calamari t0   A (time       ) 47 vs 74  yes  42/30 vs 30/42  12  0   orbs 12 lifted 11 cheers 59 gains 55 (396.0 pts) held 1 | 0/0
+  calamari t1   B (time       ) 28 vs 76  yes  47/19 vs 19/47  12  1   orbs 12 lifted 12 cheers 54 gains 52 (378.1 pts) held 1 | 0/0
+  halyard t0    B (time       ) 93 vs 55  no   39/49 vs 48/39  6   1   orbs 6 lifted 6 cheers 17 gains 12 (86.4 pts) held 2 | 0/0
+  halyard t1    B (time       ) 59 vs 92  yes  44/31 vs 29/46  3   1   orbs 3 lifted 3 cheers 14 gains 14 (106.0 pts) held 0 | 0/0
+  saltpan t0    B (time       ) 100 vs 71 no   34/46 vs 46/34  11  2   orbs 11 lifted 11 cheers 50 gains 47 (332.6 pts) held 5 | 0/0
+  saltpan t1    A (time       ) 75 vs 61  no   25/49 vs 49/25  2   2   orbs 2 lifted 2 cheers 11 gains 11 (77.6 pts) held 0 | 0/0
+  treehills t0  B (retake     ) 42 vs 31  no   25/41 vs 41/25  8   1   orbs 8 lifted 8 cheers 43 gains 36 (250.7 pts) held 0 | 0/0
+  treehills t1  A (time       ) 72 vs 38  no   42/40 vs 40/42  6   0   orbs 6 lifted 5 cheers 23 gains 18 (128.7 pts) held 0 | 0/0
+  MEAN (n 8): the Cheer Orb team won 3/8 | count lead (other − forced; + = forced ahead) -2.2 | K/D forced 1.12 vs other 1.11 | orbs used 7.5/match, splats by them 1.00/match
+
+== C. All rollers, Turf War 3:00, base vs head (halyard, saltpan, crossmarket, lockgate ×2).
+C base: map | turf % A / B | per bot: turf p, splats | all splats | roller (×8) turf p | err
+  crossmarket-1 49.4 / 27.1  1457  9.1   73   1457  0/0
+  crossmarket-2 31.1 / 42.7  1312  9.3   74   1312  0/0
+  halyard-1     42.9 / 42.1  1118  5.6   47   1118  0/0
+  halyard-2     31.7 / 51.5  1063  5.6   45   1063  0/0
+  lockgate-1    35.1 / 48.2  1257  7     56   1257  0/0
+  lockgate-2    47.7 / 37.9  1296  4.1   33   1296  0/0
+  saltpan-1     35.8 / 35.5  1249  6.4   51   1249  0/0
+  saltpan-2     40.1 / 34.7  1181  8     64   1181  0/0
+  MEAN (n 8): turf per bot 1241.6 p | splats per bot 6.89 | inked total 79.2 % | splats 55.4/match
+C head: map | turf % A / B | per bot: turf p, splats | all splats | roller (×8) turf p | err
+  crossmarket-1 32.4 / 45.4  1445  7.4   59   1445  0/0
+  crossmarket-2 44.2 / 33.1  1328  7.3   58   1328  0/0
+  halyard-1     39.6 / 42.2  1145  6.1   50   1145  0/0
+  halyard-2     47.3 / 35.3  1206  4.5   36   1206  0/0
+  lockgate-1    37.6 / 40.5  1191  6.1   50   1191  0/0
+  lockgate-2    39.7 / 38.9  1195  6.1   49   1195  0/0
+  saltpan-1     35 / 37.2    1411  5     40   1411  0/0
+  saltpan-2     34 / 36.6    1152  6.9   55   1152  0/0
+  MEAN (n 8): turf per bot 1259.1 p | splats per bot 6.17 | inked total 77.4 % | splats 49.6/match
+  head / base: turf per bot ×1.01, splats per bot ×0.90, inked total ×0.98
+   (all 8 players on rollers: both teams gain together and the map fills — inked total ~78 % on both codes — so this
+   mirror can't show a per-roller turf edge the way a mixed lobby would)
+
+== D. Barrages, Turf War 3:00 (SPECIALS=all=…; halyard, saltpan, calamari, treehills ×2). 'splats by barrages' = the
+   barrage's bombs during it or within 3.5 s after; deaths during it = special:end with reason 'splat'; turf per use
+   has no counter in match.cjs — the inked total ÷ uses is a rough stand-in.
+D barrage: map | uses | splats by barrages | per use | turf % A+B | deaths during it | throws by kind | err
+  calamari-1    9    1    0.11  76.0   3   {"bomb":81} | 0/0
+  calamari-2    5    0    0.00  66.4   0   {"bomb":63} | 0/0
+  halyard-1     4    0    0.00  73.0   1   {"bomb":41} | 0/0
+  halyard-2     3    0    0.00  72.0   0   {"bomb":40} | 0/0
+  saltpan-1     6    0    0.00  68.3   2   {"bomb":62} | 0/0
+  saltpan-2     3    0    0.00  57.8   1   {"bomb":36} | 0/0
+  treehills-1   4    1    0.25  62.8   3   {"bomb":21} | 0/0
+  treehills-2   4    0    0.00  63.9   1   {"bomb":38} | 0/0
+  MEAN (n 8): uses 4.8/match | splats per use 0.05 | inked 67.5 % (A+B; ÷ uses: 14.22 %/use, rough) | deaths during the special 0.29/use
+D barrage_mystery: map | uses | splats by barrages | per use | turf % A+B | deaths during it | throws by kind | err
+  calamari-1    7    1    0.14  70.2   1   {"seeker":12,"mist":11,"burst":13,"waddle":14,"sticky":12,"bomb":10} | 0/0
+  calamari-2    5    0    0.00  64.8   0   {"waddle":8,"sticky":9,"seeker":8,"burst":8,"bomb":10,"mist":8} | 0/0
+  halyard-1     3    0    0.00  72.7   1   {"bomb":4,"waddle":5,"sticky":3,"seeker":4,"mist":5,"burst":3} | 0/0
+  halyard-2     2    0    0.00  66.8   0   {"mist":3,"burst":3,"waddle":3,"sticky":3,"bomb":4,"seeker":3} | 0/0
+  saltpan-1     6    1    0.17  71.7   1   {"waddle":11,"mist":10,"burst":7,"sticky":10,"bomb":8,"seeker":10} | 0/0
+  saltpan-2     8    0    0.00  63.8   3   {"waddle":9,"bomb":8,"sticky":6,"burst":7,"mist":10,"seeker":6} | 0/0
+  treehills-1   8    1    0.13  72.5   2   {"sticky":12,"seeker":12,"bomb":11,"burst":9,"mist":11,"waddle":8} | 0/0
+  treehills-2   5    0    0.00  67.5   0   {"mist":6,"seeker":8,"burst":6,"waddle":6,"sticky":7,"bomb":7} | 0/0
+  MEAN (n 8): uses 5.5/match | splats per use 0.07 | inked 68.8 % (A+B; ÷ uses: 12.50 %/use, rough) | deaths during the special 0.18/use
+D barrage_waddle: map | uses | splats by barrages | per use | turf % A+B | deaths during it | throws by kind | err
+  calamari-1    3    0    0.00  58.4   0   {"waddle":28} | 0/0
+  calamari-2    11   1    0.09  72.0   1   {"waddle":87} | 0/0
+  halyard-1     1    0    0.00  72.9   0   {"waddle":8} | 0/0
+  halyard-2     2    0    0.00  75.3   1   {"waddle":14} | 0/0
+  saltpan-1     7    0    0.00  65.1   0   {"waddle":54} | 0/0
+  saltpan-2     7    0    0.00  67.7   4   {"waddle":41} | 0/0
+  treehills-1   2    0    0.00  56.7   0   {"waddle":17} | 0/0
+  treehills-2   4    0    0.00  67.1   0   {"waddle":35} | 0/0
+  MEAN (n 8): uses 4.6/match | splats per use 0.03 | inked 66.9 % (A+B; ÷ uses: 14.46 %/use, rough) | deaths during the special 0.16/use
+
+== E. The subs, Turf War 3:00 (SUBS=all=…; same four stages ×2). Ink per splat with the config costs at b97b3eb:
+   bomb 70, glide 65, sentry 65, bobber 40, dash 55. Sentry lock-on pooled over all its life: 3.7 % (per-match mean 8.2 %).
+E turf bobber: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    38   0    0   0.00  0.00  -      chains set off 2 / expired 17 / disarmed 7 (caught a foe 0, wasted 2) | splats per chain set off 0.00 | 0/0
+  calamari-2    71   2    1   0.03  0.01  2840   chains set off 5 / expired 24 / disarmed 15 (caught a foe 2, wasted 3) | splats per chain set off 0.20 | 0/0
+  halyard-1     71   0    0   0.00  0.00  -      chains set off 1 / expired 55 / disarmed 4 (caught a foe 0, wasted 1) | splats per chain set off 0.00 | 0/0
+  halyard-2     63   2    1   0.03  0.02  2520   chains set off 3 / expired 44 / disarmed 5 (caught a foe 2, wasted 1) | splats per chain set off 0.33 | 0/0
+  saltpan-1     76   2    1   0.03  0.01  3040   chains set off 5 / expired 31 / disarmed 16 (caught a foe 2, wasted 3) | splats per chain set off 0.20 | 0/0
+  saltpan-2     70   1    1   0.01  0.01  2800   chains set off 3 / expired 47 / disarmed 6 (caught a foe 1, wasted 2) | splats per chain set off 0.33 | 0/0
+  treehills-1   52   0    0   0.00  0.00  -      chains set off 3 / expired 31 / disarmed 6 (caught a foe 0, wasted 3) | splats per chain set off 0.00 | 0/0
+  treehills-2   69   2    0   0.03  0.00  -      chains set off 3 / expired 42 / disarmed 13 (caught a foe 2, wasted 1) | splats per chain set off 0.00 | 0/0
+  MEAN (n 8): uses 63.8/match | hits per use 0.02 | splats per use 0.01 | ink per splat 5100 | chains set off 25 / expired 291 / disarmed 72 (6.4 % set off) | splats per chain set off 0.16
+E turf bomb: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    24   2    1   0.08  0.04  1680    | 0/0
+  calamari-2    25   1    1   0.04  0.04  1750    | 0/0
+  halyard-1     20   2    1   0.10  0.05  1400    | 0/0
+  halyard-2     35   1    1   0.03  0.03  2450    | 0/0
+  saltpan-1     30   1    0   0.03  0.00  -       | 0/0
+  saltpan-2     28   1    0   0.04  0.00  -       | 0/0
+  treehills-1   28   1    0   0.04  0.00  -       | 0/0
+  treehills-2   32   4    3   0.13  0.09  747     | 0/0
+  MEAN (n 8): uses 27.8/match | hits per use 0.06 | splats per use 0.03 | ink per splat 2220
+E turf dash: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    20   2    1   0.10  0.05  1100   dashes 20 (ground 16, air 4) | bots' reasons {"dodge":2,"breakOff":10,"close":7,"rush":1} | sea deaths soon after 0 | streak splats 112 | 0/0
+  calamari-2    14   1    0   0.07  0.00  -      dashes 14 (ground 12, air 2) | bots' reasons {"dodge":0,"breakOff":5,"close":6,"rush":3} | sea deaths soon after 0 | streak splats 85 | 0/0
+  halyard-1     9    0    0   0.00  0.00  -      dashes 9 (ground 8, air 1) | bots' reasons {"dodge":6,"breakOff":0,"close":2,"rush":1} | sea deaths soon after 0 | streak splats 56 | 0/0
+  halyard-2     8    1    0   0.13  0.00  -      dashes 8 (ground 6, air 2) | bots' reasons {"dodge":4,"breakOff":2,"close":2,"rush":0} | sea deaths soon after 0 | streak splats 42 | 0/0
+  saltpan-1     26   4    1   0.15  0.04  1430   dashes 26 (ground 17, air 9) | bots' reasons {"dodge":5,"breakOff":9,"close":12,"rush":0} | sea deaths soon after 0 | streak splats 99 | 0/0
+  saltpan-2     6    0    0   0.00  0.00  -      dashes 6 (ground 6, air 0) | bots' reasons {"dodge":1,"breakOff":0,"close":3,"rush":2} | sea deaths soon after 0 | streak splats 41 | 0/0
+  treehills-1   18   2    1   0.11  0.06  990    dashes 18 (ground 14, air 4) | bots' reasons {"dodge":2,"breakOff":9,"close":7,"rush":0} | sea deaths soon after 0 | streak splats 107 | 0/0
+  treehills-2   10   0    0   0.00  0.00  -      dashes 10 (ground 5, air 5) | bots' reasons {"dodge":3,"breakOff":1,"close":6,"rush":0} | sea deaths soon after 0 | streak splats 45 | 0/0
+  MEAN (n 8): uses 13.9/match | hits per use 0.09 | splats per use 0.03 | ink per splat 2035 | dodges 23 (2.88/match) | sea deaths soon after a dash 0
+E turf glide: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    38   1    1   0.03  0.03  2470   blasts 38 hits 1 | cooked 7 | popped 0 sunk 0 smashed 0 bounces 75 | 0/0
+  calamari-2    44   1    1   0.02  0.02  2860   blasts 43 hits 1 | cooked 8 | popped 1 sunk 0 smashed 0 bounces 58 | 0/0
+  halyard-1     28   0    0   0.00  0.00  -      blasts 28 hits 0 | cooked 2 | popped 0 sunk 0 smashed 0 bounces 31 | 0/0
+  halyard-2     37   1    1   0.03  0.03  2405   blasts 35 hits 1 | cooked 8 | popped 1 sunk 0 smashed 0 bounces 46 | 0/0
+  saltpan-1     32   2    1   0.06  0.03  2080   blasts 32 hits 2 | cooked 6 | popped 0 sunk 0 smashed 0 bounces 50 | 0/0
+  saltpan-2     35   1    0   0.03  0.00  -      blasts 34 hits 1 | cooked 6 | popped 1 sunk 0 smashed 0 bounces 47 | 0/0
+  treehills-1   31   1    1   0.03  0.03  2015   blasts 31 hits 1 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 48 | 0/0
+  treehills-2   38   0    0   0.00  0.00  -      blasts 38 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 70 | 0/0
+  MEAN (n 8): uses 35.4/match | hits per use 0.02 | splats per use 0.02 | ink per splat 3679
+E turf sentry: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    5    12   3   2.40  0.60  108    rounds 29 hits 12 | locked on 14.2 % of its life (6.0 / 42.2 s) | ends {"shot":1,"time":2,"owner":2} | 0/0
+  calamari-2    10   4    2   0.40  0.20  325    rounds 13 hits 4 | locked on 2.8 % of its life (2.7 / 94.9 s) | ends {"owner":6,"time":4} | 0/0
+  halyard-1     5    0    0   0.00  0.00  -      rounds 0 hits 0 | locked on 0.0 % of its life (0.0 / 41.7 s) | ends {"owner":2,"time":1} | 0/0
+  halyard-2     2    0    0   0.00  0.00  -      rounds 4 hits 0 | locked on 37.0 % of its life (0.7 / 2.0 s) | ends {"owner":2} | 0/0
+  saltpan-1     6    7    4   1.17  0.67  98     rounds 15 hits 7 | locked on 3.4 % of its life (2.0 / 57.8 s) | ends {"owner":3,"time":3} | 0/0
+  saltpan-2     8    0    0   0.00  0.00  -      rounds 4 hits 0 | locked on 0.6 % of its life (0.5 / 77.3 s) | ends {"owner":3,"time":4} | 0/0
+  treehills-1   8    9    4   1.13  0.50  130    rounds 11 hits 9 | locked on 3.0 % of its life (2.4 / 80.4 s) | ends {"owner":4,"time":3} | 0/0
+  treehills-2   9    3    0   0.33  0.00  -      rounds 12 hits 3 | locked on 4.3 % of its life (3.8 / 88.1 s) | ends {"owner":5,"time":4} | 0/0
+  MEAN (n 8): uses 6.6/match | hits per use 0.66 | splats per use 0.25 | ink per splat 265 | locked on 8.2 % of its life
+
+== E. The subs, Zone Control (same). Sentry lock-on pooled: 7.2 %. Glide Bomb: bots' fight throws 76 / paint throws
+   513 in these 8 matches (turf: 76 / 234) — 1 enemy hit from 545 glides.
+E zones bobber: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    137  1    0   0.01  0.00  -      chains set off 6 / expired 81 / disarmed 28 (caught a foe 1, wasted 5) | splats per chain set off 0.00 | 0/0
+  calamari-2    144  1    0   0.01  0.00  -      chains set off 4 / expired 90 / disarmed 22 (caught a foe 1, wasted 3) | splats per chain set off 0.00 | 0/0
+  halyard-1     118  3    1   0.03  0.01  4720   chains set off 6 / expired 77 / disarmed 18 (caught a foe 3, wasted 3) | splats per chain set off 0.17 | 0/0
+  halyard-2     101  5    1   0.05  0.01  4040   chains set off 9 / expired 54 / disarmed 17 (caught a foe 4, wasted 5) | splats per chain set off 0.11 | 0/0
+  saltpan-1     131  0    0   0.00  0.00  -      chains set off 3 / expired 79 / disarmed 37 (caught a foe 0, wasted 3) | splats per chain set off 0.00 | 0/0
+  saltpan-2     111  0    0   0.00  0.00  -      chains set off 0 / expired 64 / disarmed 37 (caught a foe 0, wasted 0) | splats per chain set off 0.00 | 0/0
+  treehills-1   132  1    1   0.01  0.01  5280   chains set off 7 / expired 88 / disarmed 20 (caught a foe 1, wasted 6) | splats per chain set off 0.14 | 0/0
+  treehills-2   114  1    0   0.01  0.00  -      chains set off 4 / expired 59 / disarmed 36 (caught a foe 1, wasted 3) | splats per chain set off 0.00 | 0/0
+  MEAN (n 8): uses 123.5/match | hits per use 0.01 | splats per use 0.00 | ink per splat 13173 | chains set off 39 / expired 592 / disarmed 215 (4.6 % set off) | splats per chain set off 0.08
+E zones bomb: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    63   1    0   0.02  0.00  -       | 0/0
+  calamari-2    80   0    0   0.00  0.00  -       | 0/0
+  halyard-1     58   0    0   0.00  0.00  -       | 0/0
+  halyard-2     59   2    1   0.03  0.02  4130    | 0/0
+  saltpan-1     55   2    1   0.04  0.02  3850    | 0/0
+  saltpan-2     69   3    2   0.04  0.03  2415    | 0/0
+  treehills-1   68   4    1   0.06  0.01  4760    | 0/0
+  treehills-2   45   1    1   0.02  0.02  3150    | 0/0
+  MEAN (n 8): uses 62.1/match | hits per use 0.03 | splats per use 0.01 | ink per splat 5798
+E zones dash: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    28   1    0   0.04  0.00  -      dashes 28 (ground 24, air 4) | bots' reasons {"dodge":6,"breakOff":8,"close":13,"rush":1} | sea deaths soon after 0 | streak splats 161 | 0/0
+  calamari-2    23   1    0   0.04  0.00  -      dashes 23 (ground 13, air 10) | bots' reasons {"dodge":8,"breakOff":10,"close":5,"rush":0} | sea deaths soon after 0 | streak splats 99 | 0/0
+  halyard-1     32   6    2   0.19  0.06  880    dashes 32 (ground 29, air 3) | bots' reasons {"dodge":4,"breakOff":12,"close":14,"rush":2} | sea deaths soon after 0 | streak splats 210 | 0/0
+  halyard-2     16   2    1   0.13  0.06  880    dashes 16 (ground 11, air 5) | bots' reasons {"dodge":3,"breakOff":10,"close":3,"rush":0} | sea deaths soon after 0 | streak splats 80 | 0/0
+  saltpan-1     36   3    0   0.08  0.00  -      dashes 36 (ground 15, air 21) | bots' reasons {"dodge":9,"breakOff":13,"close":14,"rush":0} | sea deaths soon after 0 | streak splats 107 | 0/0
+  saltpan-2     28   2    0   0.07  0.00  -      dashes 28 (ground 17, air 11) | bots' reasons {"dodge":8,"breakOff":7,"close":13,"rush":0} | sea deaths soon after 0 | streak splats 114 | 0/0
+  treehills-1   33   4    0   0.12  0.00  -      dashes 33 (ground 22, air 11) | bots' reasons {"dodge":4,"breakOff":17,"close":12,"rush":0} | sea deaths soon after 0 | streak splats 149 | 0/0
+  treehills-2   13   0    0   0.00  0.00  -      dashes 13 (ground 13, air 0) | bots' reasons {"dodge":5,"breakOff":2,"close":5,"rush":1} | sea deaths soon after 0 | streak splats 71 | 0/0
+  MEAN (n 8): uses 26.1/match | hits per use 0.09 | splats per use 0.01 | ink per splat 3832 | dodges 47 (5.88/match) | sea deaths soon after a dash 0
+E zones glide: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    75   0    0   0.00  0.00  -      blasts 75 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 128 | 0/0
+  calamari-2    84   0    0   0.00  0.00  -      blasts 83 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 125 | 0/0
+  halyard-1     54   0    0   0.00  0.00  -      blasts 54 hits 0 | cooked 6 | popped 0 sunk 0 smashed 0 bounces 80 | 0/0
+  halyard-2     46   0    0   0.00  0.00  -      blasts 46 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 57 | 0/0
+  saltpan-1     71   1    0   0.01  0.00  -      blasts 69 hits 1 | cooked 10 | popped 2 sunk 0 smashed 0 bounces 129 | 0/0
+  saltpan-2     66   0    0   0.00  0.00  -      blasts 65 hits 0 | cooked 9 | popped 1 sunk 0 smashed 0 bounces 120 | 0/0
+  treehills-1   67   0    0   0.00  0.00  -      blasts 67 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 103 | 0/0
+  treehills-2   82   0    0   0.00  0.00  -      blasts 82 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 133 | 0/0
+  MEAN (n 8): uses 68.1/match | hits per use 0.00 | splats per use 0.00 | ink per splat -
+E zones sentry: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    20   11   3   0.55  0.15  433    rounds 68 hits 11 | locked on 9.9 % of its life (18.3 / 185.2 s) | ends {"replaced":2,"shot":4,"time":7,"owner":6} | 0/0
+  calamari-2    11   8    1   0.73  0.09  715    rounds 29 hits 8 | locked on 3.9 % of its life (5.3 / 137.1 s) | ends {"owner":5,"time":6} | 0/0
+  halyard-1     3    0    0   0.00  0.00  -      rounds 3 hits 0 | locked on 1.7 % of its life (0.4 / 24.4 s) | ends {"time":1,"owner":2} | 0/0
+  halyard-2     10   4    0   0.40  0.00  -      rounds 12 hits 4 | locked on 2.5 % of its life (2.3 / 89.8 s) | ends {"owner":5,"shot":1,"time":4} | 0/0
+  saltpan-1     17   18   4   1.06  0.24  276    rounds 64 hits 18 | locked on 9.9 % of its life (14.8 / 149.2 s) | ends {"shot":2,"time":4,"owner":8,"replaced":1} | 0/0
+  saltpan-2     14   13   3   0.93  0.21  303    rounds 67 hits 13 | locked on 12.1 % of its life (15.9 / 131.2 s) | ends {"time":6,"shot":2,"owner":5,"replaced":1} | 0/0
+  treehills-1   12   4    0   0.33  0.00  -      rounds 22 hits 4 | locked on 3.9 % of its life (5.2 / 135.3 s) | ends {"time":8,"owner":3,"shot":1} | 0/0
+  treehills-2   18   19   2   1.06  0.11  585    rounds 46 hits 19 | locked on 6.5 % of its life (11.3 / 173.0 s) | ends {"shot":2,"owner":6,"time":9} | 0/0
+  MEAN (n 8): uses 13.1/match | hits per use 0.73 | splats per use 0.12 | ink per splat 525 | locked on 6.3 % of its life
+
+== F. Carp Field load cost per state (karp-field.js all-stages sweep ×3 at b97b3eb, one at a time, the runner idle;
+   1-min load average 5.3 / 3.0 / 3.5 before the runs). Cargo needs DEVSTAGE=1: rerun alone ×3 afterwards (load ~3.7).
+F: stage | states | warm rebuild ms/state (runs 1, 2, 3; median) | match-start build ms/state (runs 1, 2, 3; median) | over 60 at start
+  tidewater    1   19.2, 16.7, 16.9     16.9   29.6, 25, 28.8       28.8   0/3
+  kelpline     1   22.6, 22.1, 22.2     22.2   25.8, 25.6, 22.7     25.6   0/3
+  halyard      1   11.7, 11.1, 12       11.7   18.2, 18.2, 22.5     18.2   0/3
+  saltpan      1   19.4, 18.8, 18.3     18.8   19.7, 21.4, 18.9     19.7   0/3
+  crossmarket  1   17.2, 17.5, 18       17.5   20, 19.5, 19.3       19.5   0/3
+  lockgate     1   16.8, 16.6, 17.2     16.8   16.8, 17.1, 17.2     17.1   0/3
+  terraces     1   21.3, 21.2, 21.3     21.3   21.7, 21.3, 21.8     21.7   0/3
+  nantai       1   19.3, 19.3, 19.7     19.3   21.4, 19.6, 19.2     19.6   0/3
+  craters      1   32.1, 32.3, 31.7     32.1   32.6, 31.9, 32.1     32.1   0/3
+  calamari     1   20.7, 21.4, 21.4     21.4   29.6, 31.5, 32       31.5   0/3
+  spirhalite   1   19.7, 20.4, 19.8     19.8   19.5, 19.7, 23       19.7   0/3
+  treehills    1   28.5, 28.9, 31       28.9   34.7, 34.4, 37       34.7   0/3
+  bluestone    1   4.6, 4.5, 4.8        4.6    6.7, 7, 8            7      0/3
+  aquarium     1   4.2, 4.2, 5.7        4.2    5.2, 4.4, 4.3        4.4    0/3
+  caldera      1   3.8, 4.5, 3.9        3.9    4.5, 3.9, 4.9        4.5    0/3
+  cargo        1   26.7, 24.7, 31.9     26.7   41.8, 44.4, 43.4     43.4   0/3   (DEVSTAGE=1, only=cargo)
+
+== JOB-1 (the dash-reach audit + repeats), for reference
+== reach tidewater 1/24: RESULT 2/3
+== reach tidewater 1/60 (step=2;off=1): RESULT 2/3
+== reach kelpline 1/24: RESULT 3/3
+== reach kelpline 1/60 (step=2;off=1): RESULT 3/3
+== reach halyard 1/24: RESULT 3/3
+== reach halyard 1/60 (step=2;off=1): RESULT 3/3
+== reach saltpan 1/24: RESULT 3/3
+== reach saltpan 1/60 (step=2;off=1): RESULT 3/3
+== reach crossmarket 1/24: RESULT 2/3
+== reach crossmarket 1/60 (step=2;off=1): RESULT 2/3
+== reach lockgate 1/24: RESULT 2/3
+== reach lockgate 1/60 (step=2;off=1): RESULT 2/3
+== reach terraces 1/24: RESULT 3/3
+== reach terraces 1/60 (step=2;off=1): RESULT 3/3
+== reach nantai 1/24: RESULT 3/3
+== reach nantai 1/60 (step=2;off=1): RESULT 3/3
+== reach craters 1/24: RESULT 3/3
+== reach craters 1/60 (step=2;off=1): RESULT 3/3
+== reach calamari 1/24: RESULT 3/3
+== reach calamari 1/60 (step=2;off=1): RESULT 2/3
+== reach spirhalite 1/24: RESULT 3/3
+== reach spirhalite 1/60 (step=2;off=1): RESULT 3/3
+== reach treehills 1/24: RESULT 3/3
+== reach treehills 1/60 (step=2;off=1): RESULT 3/3
+== reach cargo 1/24: RESULT 3/3
+== reach cargo 1/60 (step=2;off=1): RESULT 3/3
+== sub-glide #1: RESULT 61/61
+== sub-bobber only=zone #1: RESULT 0/1
+== perf-bobbers #1: RESULT 5/5
+== sub-glide #2: RESULT 60/61
+== sub-bobber only=zone #2: RESULT 1/1
+== perf-bobbers #2: RESULT 5/5
+== sub-glide #3: RESULT 61/61
+== sub-bobber only=zone #3: RESULT 1/1
+== perf-bobbers #3: RESULT 4/5
