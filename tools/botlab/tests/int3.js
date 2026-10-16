@@ -333,7 +333,7 @@
       aim(M, 0, best.p);
       const h0 = BOBBER_BOT.throwHolds || 0, b0 = P.bombs.length;
       M.bot._bombAim = true; M.intent.sub = false;
-      KB.botAct(M.bot, DT, M.intent, V(0, 0, 0), false);
+      KB.holdThrow(M.bot, M.intent);   // ([b5-int3] the press's check: bots.js asks it after every kit's botAct — it moved there from the bobber's botAct, 7882d3ee)
       const held = !M.bot._bombAim;
       // (let the brain's own press go through if it wasn't held: _tail presses on _bombAim, releases next frame)
       if (!held) { M.bot._bombAim = false; M.intent.sub = true; step(1 / 60); M.intent.sub = false; step(1 / 60); }
