@@ -289,7 +289,7 @@ export class Bazookarp {
     const tick = 1 / 20 + 1 / 60;
     if (!force && this.wire.newest && this.clock < this.grant0 + K.claimWait + tick && this.claims.some((c) => c.remote && this.clock - c.at < tick && !this._claimPos(c))) { this.grantAt = this.clock + 1 / 60; return; }
     this.grantAt = null;
-    const W = this.otWin;
+    const W = this.otWin, seen = [];
     let best = null, bk = Infinity, bd = Infinity;
     for (const c of this.claims) {
       const a = c.a;
@@ -297,16 +297,19 @@ export class Bazookarp {
       // (the window's close: only claims sent before it count, for claimAge after it)
       if (W.closeT != null && c.ts > W.closeT) continue;
       const p = this._claimPos(c);
+      seen.push({ nid: a.nid ?? -1, remote: !!c.remote, since: +(c.since ?? 0).toFixed(3), at: +(c.at - this.grant0).toFixed(3), ok: !!p });
       if (!p) continue;
       const d = Math.hypot(p.x - this.pos.x, p.z - this.pos.z), k = Math.max(K.pickHold, c.since ?? 0);
       if (k < bk - 0.004 || (Math.abs(k - bk) <= 0.004 && d < bd)) { bk = Math.min(bk, k); bd = d; best = c; }
     }
+    // ([karp-face] the last 40 decisions, for the tests: who claimed, how long after it went free on its own screen,
+    // when its claim was in relative to the first, valid or not; the wait and the winner)
+    const GL = this.stats.grantLog || (this.stats.grantLog = []);
+    GL.push({ t: +this.clock.toFixed(2), wait: +(this.clock - this.grant0).toFixed(3), won: best ? best.a.nid ?? -1 : null, claims: seen });
+    if (GL.length > 40) GL.shift();
     for (const c of this.claims) if (c !== best && c.remote) { this.wire.toGuest(c.a.nid, { why: 'refused' }); this.stats.refused++; }
     this.claims.length = 0;
     if (!best) return;
-    this.stats.grantLog = this.stats.grantLog || [];
-    this.stats.grantLog.push({ nid: best.a.nid ?? -1, remote: !!best.remote, since: +(best.since ?? 0).toFixed(3) });
-    if (this.stats.grantLog.length > 40) this.stats.grantLog.shift();
     this.preGrant = { touched: this.touched, lastCarrier: this.lastCarrier, overtime: this.overtime, otWin: { ...this.otWin }, pos: this.pos.clone(), restNode: this.restNode, q: this.q + 1 };
     this.stats.grants++;
     this._rec(['p', best.a.nid ?? -1]);

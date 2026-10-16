@@ -74,6 +74,30 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   const bHud = () => J(B, `(() => { const s = __inkwave.hud && __inkwave.hud.karp && __inkwave.hud.karp.state(); return s ? { status: s.status, bottom: s.bottom, reticle: s.reticle, line: s.line } : null; })()`);
   await wait(1500);
 
+  // ---- 5. grab share: N bursts, a Bravo host bot and B each 3 m from it, both running in on hearing the burst
+  const grabShare = async (N = 10) => {
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
+    for (let k = 0; k < N; k++) {
+      await toPond();
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(3, 0, 0); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = -Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
+      await put(B, -3, 0, 0, Math.PI / 2);
+      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(-1, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.intent.move.set(1, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await wait(250);
+      await burst(1);
+      await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
+      const h = (await info(A)).holder;
+      if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
+      // ([karp-face] the host's decision: each claim's since — after it went free on its own screen — and when it was in)
+      dec.push(await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, won: g.won, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.at, c.ok ? 1 : 0]) } : null; })()`));
+      await wait(300);
+    }
+    const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
+    R(`5. grab share over ${N} bursts, a host bot vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, dec });
+
+  };
+
   if (part === 'face') {
     // ---- 2. Bravo bursts it: A's own kid, 3 m from it, is splatted on A's screen; B's screen agrees
     await put(A, 0, 0, -3); await put(B, 0, 0, 12);
@@ -115,24 +139,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     R('4. B swims through the spot at full speed without stopping: the host grants B\'s claim (its newest sample), the same on both screens', r4a.holder === bNid && r4b.holder === bNid, { host: r4a.holder, guest: r4b.holder, claims: r4b.rec.claim, sw });
     await zeroB();
 
-    // ---- 5. grab share: 10 bursts, a Bravo host bot and B each 3 m from it, both running in on hearing the burst
-    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
-    const wins = { bot: 0, guest: 0, none: 0 };
-    for (let k = 0; k < 10; k++) {
-      await toPond();
-      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(3, 0, 0); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = -Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
-      await put(B, -3, 0, 0, Math.PI / 2);
-      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(-1, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
-      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.intent.move.set(1, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
-      await wait(250);
-      await burst(1);
-      await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
-      const h = (await info(A)).holder;
-      if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
-      await wait(300);
-    }
-    const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
-    R('5. grab share over 10 bursts, a host bot vs guest B at equal distance (reported; no threshold)', wins.bot + wins.guest >= 8, { wins, wpn });
+    await grabShare(10);
 
     // ---- 6. B carries: × 0.8 on B's screen, no super jump, B's own Bubble Guard gone on both screens, counts agree
     await toPond();
@@ -361,6 +368,8 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     R('lag 15c. B\'s claim, sent 0.2 s before the S39b window closed and reaching the engine 0.3 s after the close, is still granted: overtime goes on',
       !!cl && cl.at != null && cl.at - cl.closeT >= 0.25 && c15a.holder === bNid && c15b.holder === bNid && c15a.winner == null && c15a.overtime, { host: { holder: c15a.holder, winner: c15a.winner, reason: c15a.reason, ot: c15a.overtime }, guest: c15b.holder, closed: cl });
   }
+
+  if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); }   // ([karp-face] the grab share alone)
 
   if (part === 'snap') {
     // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a
