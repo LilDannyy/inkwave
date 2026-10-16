@@ -599,7 +599,7 @@ export async function runChecks(o = {}) {
           const q = nodes[j], rise = q.y - n.y;
           if (!C.okN[j] || rise <= CK.hopHigh[0] || rise > CK.hopHigh[1] || hd(n, q) > 1.2 || n.nb.some((e) => e.to === j)) continue;
           if (nav._blocked(n, q, q.y) || !ray(n.x, n.y + 0.3, n.z, n.x, q.y + 1.6, n.z) || !ray(n.x, q.y + 1.0, n.z, q.x, q.y + 1.0, q.z)) continue;
-          cand.high.push({ kind: 'high hop', from: i, to: j, gain: gainOf(C, i, j) });
+          cand.high.push({ kind: 'high hop', from: i, to: j, gain: gainDir(C, i, j) });
         }
       }
     }
@@ -654,7 +654,7 @@ export async function runChecks(o = {}) {
           if (!openAir(n, q, flat, dy) || nav._blocked(n, q, Math.max(n.y, q.y))) return;
           if (dy < -K.gap.upMax && !nav._openAbove(q, n.y)) return;   // (not down through the deck it leaves)
           if (walkSet(C, i, 6).has(j)) return;
-          cand.long.push({ kind: 'long gap', from: i, to: j, gain: gainOf(C, i, j) });
+          cand.long.push({ kind: 'long gap', from: i, to: j, gain: gainDir(C, i, j) });
         });
       }
       // [fix1] rising gaps: rim node pairs 1.2–3.0 m apart (flat), the far one 0.6–1.8 m up, open air between, the waist
@@ -1005,9 +1005,12 @@ export async function runChecks(o = {}) {
     const veto = fails.map((r) => { const a = nodes[r.from], b = nodes[r.to]; return [r2(a.x), r2(a.y), r2(a.z), r2(b.x), r2(b.y), r2(b.z)]; });
     // (the not-made by kind: hops, gaps up or level, gaps down — a gap down past a thin rail or a balustrade is the usual one)
     const byKind = { hop: 0, gapLevel: 0, gapDown: 0 }; for (const r of fails) { if (r.kind === 'hop') byKind.hop++; else if (nodes[r.to].y < nodes[r.from].y - K.gap.upMax) byKind.gapDown++; else byKind.gapLevel++; }
-    // the made candidates beyond the rules go to #7d with their gain (a rising gap's in its own direction, gainDir)
+    // the made candidates beyond the rules go to #7d with their gain — [fix1] in the move's own direction (gainDir): #16
+    // proves each one way, from → to, and a move that lands further from both Gates is no shortcut (H2q's 'long gap'
+    // back out of the ring, 14.8 m the wrong way, was a find only by |ΔD|). The static probes keep |ΔD| (SPEC's "differs":
+    // a squid gap goes both ways; a tall wall's top is read through the drop off it, which longDrop measures signed)
     const probeOf = { 'high hop': 'highHop', 'long gap': 'longGap', 'rise gap': 'riseGap' };
-    const gainR = (r) => (r.kind === 'rise gap' ? gainDir(C, r.from, r.to) : gainOf(C, r.from, r.to));
+    const gainR = (r) => gainDir(C, r.from, r.to);
     for (const r of made) { const g2 = gainR(r); if (g2 > CK.gain && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: probeOf[r.kind], a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: fin(g2) ? r1(g2) : 'off-field', warnOnly: !fin(g2), phys: true }); }
     // [fix1] every move the kid makes from outside a Gate's 15 m ring to inside it is an entrance (#7a) with its own line
     // of sight (to where it lands): the made high hops, long gaps and rising gaps here, the moves onto off-field ground
