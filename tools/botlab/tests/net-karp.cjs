@@ -38,7 +38,7 @@ async function base({ clients, R, wait, say, args, open }) {
   const code = await A.js(`__G.net.create('Hosty')`);
   await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: ${JSON.stringify(MAP)}, time: 'day', botCount: 2, difficulty: 'easy' }); 1`);
   const mode = await J(A, `__G.net.lobby.mode`);
-  R('a room takes the hidden mode with ?wipmodes', mode === 'bazookarp', { mode });
+  R('a room takes the listed Bazookarp mode', mode === 'bazookarp', { mode });
   await B.js(`__G.net.join(${JSON.stringify(code)}, 'Guesty').then(() => 1)`);
   await A.until(`__G.net.lobby.players.length === 2`, 15000);
   const teams = await J(A, `__G.net.lobby.players.map((p) => p.team)`);

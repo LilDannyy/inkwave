@@ -11,7 +11,7 @@ export const PIPES = {
   mirror: true,                  // every leg gets its 180° twin (id + '~'), except `single: true` legs
   enter: 'any',                  // 'any' (kid or squid) | 'squid' (a kid bumps the mouth like a wall)
   speed: 18,                     // m/s, the default for every leg (12–24)
-  cooldown: 2.5,                 // s (1.5–4)
+  cooldown: 3.5,                 // s after touchdown; lead's camping fix from the Aquarium match set
   modes: {                       // per match mode; omitted = every leg as listed
     bazookarp: { shut: [], carp: [] },   // nothing shut (no end within 15 m of a Gate); carriers refused on every leg
     boss: 'open',                // 'open' | 'off' (every leg shut, still drawn and solid)

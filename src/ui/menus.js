@@ -128,8 +128,8 @@ const MODE_INFO = {
   zones: { id: 'zones', label: 'ZONE CONTROL', name: 'Zone Control', icon: ZONE_GLYPH, text: 'Hold the live zone to count down from 100 — first to 0 wins.' },
   tower: { id: 'tower', label: 'TOWER COMMAND', name: 'Tower Command', icon: TOWER_GLYPH, text: 'Ride the tower into their base — furthest push wins, reach their goal to knock out.' },
   boss: { id: 'boss', label: 'BOSS BATTLE', name: 'Boss Battle', icon: BOSS_GLYPH, text: `Your squad of 8 against ${BOSS_NAME}.` },
-  // [b5-karp] Bazookarp — a wip mode (config WIP_MODES): offered only with ?wipmodes until the lead lists it
-  bazookarp: { id: 'bazookarp', label: 'BAZOOKARP', name: 'Bazookarp', icon: KARP_GLYPH, text: 'Burst the shell, grab the Bazookarp and carry it into their base — reach their Dragon Gate to knock out.' },
+  // [b5-karp] Bazookarp — its mode picker entry is guarded by modeListed for future unplayable modes
+  bazookarp: { id: 'bazookarp', label: 'BAZOOKARP', name: 'Bazookarp', icon: KARP_GLYPH, text: 'Burst the shell, grab the Bazookarp and carry it into their base — reach their Dragon Gate to knock out.', beta: true },
   // (online rooms only: no clock, no score — the room plays on the host's stage until the host ends it)
   practice: { id: 'practice', label: 'PRACTICE', name: 'Practice', icon: GLYPHS.infinity, text: 'No clock, no score: swap loadouts, clear the ink, change stage — play on together.' },
 };
@@ -1155,8 +1155,8 @@ export class Menus {
         blurb: `Everyone's one squad against ${BOSS_NAME}, a giant crab in a rusted container. Sink it before time runs out!`,
         chips: [[GLYPHS.users, 'SQUAD OF 8'], [GLYPHS.clock, durLabel(bossLen)], [BOSS_GLYPH, '1 BOSS']] },
     ];
-    // [b5-karp] the fifth card, only while the mode is listed (?wipmodes until it ships)
-    if (modeListed('bazookarp')) MODES.push({ id: 'bazookarp', name: 'BAZOOKARP', kicker: 'RANKED RULES', img: stageArt('lockgate', 'day'), badge: 'NEW!',
+    // [b5-karp] the fifth card, while the mode is listed
+    if (modeListed('bazookarp')) MODES.push({ id: 'bazookarp', name: 'BAZOOKARP', kicker: 'RANKED RULES', img: stageArt('lockgate', 'day'), badge: 'NEW!', beta: true,
       blurb: 'Burst the Roe Shell, grab the Bazookarp and carry it to their Dragon Gate — land it on a weir first!',
       chips: [[GLYPHS.users, '4 V 4'], [GLYPHS.clock, `${Math.round((BAZOOKARP.duration || 300) / 60)}:00 + OT`], [KARP_GLYPH, 'CARRY IT HOME']] });
     let picking = false;
@@ -1398,6 +1398,7 @@ export class Menus {
         h('span', { class: 'iw-ticket__ink', html: splatSVG({ seed: 60 + i * 5, cls: 'iw-fa', r: 58, arms: 9, drops: 5 }) }),
         h('span', { class: 'iw-ticket__num' }, String(i + 1).padStart(2, '0')),
         h('span', { class: 'iw-ticket__name' }, m.name),
+        m.beta ? h('span', { class: 'iw-beta iw-beta--sm iw-ticket__beta' }, 'PUBLIC BETA') : null,   // [b5-int4]
         st.mode === 'bazookarp' && karpPreview(m.id) ? h('span', { class: 'iw-ticket__preview' }, 'PREVIEW') : null,   // [karp-face]
         badge,
         h('span', { class: 'iw-ticket__check', html: GLYPHS.check }));
@@ -3688,7 +3689,9 @@ export class Menus {
     const stTime = h('span', { class: 'iw-lstage__time' }, h('i', { class: 'is-sun', html: GLYPHS.sun }), h('i', { class: 'is-golden', html: GLYPHS.golden }), h('i', { class: 'is-moon', html: GLYPHS.sunset }), h('i', { class: 'is-random', html: GLYPHS.dice }));
     const stArrows = h('span', { class: 'iw-lstage__arrows' }, h('i', { class: 'is-l', html: GLYPHS.back }), h('i', { class: 'is-r', html: GLYPHS.next }));
     const stPrev = h('span', { class: 'iw-lstage__preview', hidden: true }, 'PREVIEW');   // [karp-face] a stage on placeholder Bazookarp data (?wipstages only, DECISIONS #10)
-    const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, h('span', { class: 'iw-lstage__tape' }, stName), stTime, stArrows, stPrev);
+    const stBeta = h('span', { class: 'iw-beta iw-beta--sm iw-lstage__beta', hidden: true }, 'PUBLIC BETA');
+    const stTape = h('span', { class: 'iw-lstage__tape' }, stName, stBeta);
+    const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, stTape, stTime, stArrows, stPrev);
     stArrows.children[0].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(-1); });
     stArrows.children[1].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(1); });
     // TIME: day · golden hour · sunset · random (the host rolls one at the start)
@@ -3864,6 +3867,7 @@ export class Menus {
       const list = stageList(), k = list.findIndex((x) => x.id === m.id);
       stNum.innerHTML = rnd ? `STAGE <b>??</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>` : `STAGE <b>${String(Math.max(1, k)).padStart(2, '0')}</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>`;
       stPrev.hidden = !(lobMode() === 'bazookarp' && !rnd && karpPreview(m.id));   // [karp-face]
+      stBeta.hidden = rnd || !m.beta;
       if (m.id === shownMap && time === shownTime) return;
       const first = shownMap === null;
       shownMap = m.id; shownTime = time;
@@ -4231,6 +4235,7 @@ export class Menus {
         modeName.textContent = MODE_INFO[md].label;
         modeIco.innerHTML = bm ? BOSS_GLYPH : md === 'bazookarp' ? KARP_GLYPH : md === 'tower' ? TOWER_GLYPH : zm ? ZONE_GLYPH : GLYPHS.flag;   // [karp-face]
         el.classList.toggle('is-bossmode', bm);
+        el.classList.toggle('is-betamode', !!MODE_INFO[md]?.beta);   // [b5-int4]
         el.classList.toggle('is-zonemode', zm);   // (the fixed-length modes: Zone Control, Tower Command)
         el.classList.toggle('is-towermode', md === 'tower');
         el.classList.toggle('is-practicemode', md === 'practice');
@@ -5050,7 +5055,7 @@ export class Menus {
       h('div', { class: 'iw-res__splat', html: splatSVG({ seed: win ? 9 : 14, cls: 'iw-fta', r: 60, arms: 10, drops: 4 }) }),
       titleEl,
       h('div', { class: 'iw-res__metarow' }, h('div', { class: 'iw-res__meta' }, h('i', { html: GLYPHS.map }), `${d.mapName || MODE_INFO[resMode].name} · ${MODE_INFO[resMode].name}`), tags,
-        boss ? h('span', { class: 'iw-beta iw-res__beta' }, 'PUBLIC BETA') : null),
+        (boss || MAPS.some((m) => m.beta && m.name === d.mapName) || MODE_INFO[resMode]?.beta) ? h('span', { class: 'iw-beta iw-res__beta' }, 'PUBLIC BETA') : null),
       medalRow);
 
     // ---- coverage bar (JS-driven growth so the numbers + sound land together)

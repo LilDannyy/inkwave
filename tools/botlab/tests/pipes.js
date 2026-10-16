@@ -255,7 +255,7 @@
     };
     const lv = popRun('gulper', 0);
     R('pop: a level pop with no input lands at the landing point, 3.1–3.7 m from the mouth (the real actor: ≈ 3.46 m; ENGINE.md §1.3 estimated 3.1), straight out', lv.landed && lv.d >= 3.1 && lv.d <= 3.7 && Math.abs(lv.turn) < 4 && Math.abs(lv.d - (D.PIPE.landOut)) < 0.25, lv);
-    R('pop: touchdown starts the 2.5 s cooldown, no hard-landing recovery; no fire until touchdown', Math.abs(lv.cd - 2.5) < 0.05 && lv.hardLand === 0 && !lv.firedDuring, { cd: lv.cd, hardLand: lv.hardLand, fired: lv.firedDuring });
+    R('pop: touchdown starts the 3.5 s cooldown, no hard-landing recovery; no fire until touchdown', Math.abs(lv.cd - 3.5) < 0.05 && lv.hardLand === 0 && !lv.firedDuring, { cd: lv.cd, hardLand: lv.hardLand, fired: lv.firedDuring });
     // the touchdown splat: the rider's ink at the landing (turf, no special charge)
     const own = __G.paint.regionStats(lv.land.x, lv.land.y, lv.land.z, 0.6, A.team);
     R('pop: touchdown paints a 1.2 m splat of the rider\'s ink', own.own > 0 && own.own >= own.enemy, own);
@@ -604,6 +604,9 @@
 
   // ============================================================================================ the ride camera
   if (part('cam')) try {
+    const { DEFAULT_SETTINGS } = await import('./src/config.js');
+    g.settings.fov = DEFAULT_SETTINGS.fov; g.settings.quality = DEFAULT_SETTINGS.quality;
+    g.R.applySettings(g.settings);
     W = __G.pipes; M = g.match; P = M.pipes;
     const A5 = M.local;
     if (A5) {

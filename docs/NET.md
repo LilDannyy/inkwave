@@ -573,7 +573,8 @@ overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (t
 tower onto the host's position (dead-reckoned between snapshots); each client carries its own players standing on it
 and fills its own players' gauges. The start config carries `mode: 'tower'` and its fixed 5:00.
 
-**Bazookarp** ([b5-karp], a wip mode: `config WIP_MODES`, rooms take it only with `?wipmodes`). The host runs the rules
+**Bazookarp** ([b5-karp], public beta: visible in mode pickers and available to rooms). The three playable beta stages
+are also available in every room mode's stage list and Random pool, with a PUBLIC BETA badge in the lobby. The host runs the rules
 (src/game/bazookarp.js) and talks to the wire only through a `KarpWire` (src/game/karpWire.js `NetWire`;
 tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
 - **host → all.** Discrete records sent **at once** as `{ k: 'bk', e }` (not on the timeline: a burst, a grant or a drop

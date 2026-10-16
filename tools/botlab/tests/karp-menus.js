@@ -13,7 +13,7 @@
 //       ▶ through its stage list: the same stages as the stage select, PREVIEW on the placeholder ones (?wipstages)
 //   [karp-face] review round 1 (run it at W=960 H=600 too): H2 the four cards and both notes are wholly on screen, clear of
 //     the key bar; M3 the Boss card's NEW! badge and PUBLIC BETA tag aren't covered by the next card
-//   without ?wipmodes: no BAZOOKARP card, rules tab or lobby mode (a room refuses the mode)
+//   Bazookarp is always listed and its mode card / lobby mode identify PUBLIC BETA
 //   WIPMODES=1 MAP=halyard MODE=bazookarp PAGE=tools/botlab/tests/karp-menus.js tools/botlab/run.sh tools/botlab/page.cjs
 //   (and the same with WIPSTAGES=1 too, and with neither)
 (async () => {
@@ -90,10 +90,10 @@
     M.show('mode'); await until(() => M.current === 'mode' && qa('.iw-mode').length >= 4, 6000); await wait(900);
     const cards = qa('.iw-mode'), kc = q('.iw-mode--bazookarp');
     if (listed) {
-      const info = kc && { name: txt(kc.querySelector('.iw-mode__tape')), kicker: txt(kc.querySelector('.iw-mode__kicker')), badge: txt(kc.querySelector('.iw-mode__new')), img: kc.querySelector('.iw-mode__img')?.getAttribute('src') || '', carp: !!kc.querySelector('.iw-mode__zone svg'), chips: qa('.iw-mode--bazookarp .iw-chip').map(txt) };
+      const info = kc && { name: txt(kc.querySelector('.iw-mode__tape')), kicker: txt(kc.querySelector('.iw-mode__kicker')), badge: txt(kc.querySelector('.iw-mode__new')), beta: txt(kc.querySelector('.iw-mode__beta')), img: kc.querySelector('.iw-mode__img')?.getAttribute('src') || '', carp: !!kc.querySelector('.iw-mode__zone svg'), chips: qa('.iw-mode--bazookarp .iw-chip').map(txt) };
       const W = innerWidth, H = innerHeight, fit = cards.every((c) => { const r = c.getBoundingClientRect(); return r.left >= -2 && r.right <= W + 2 && r.bottom <= H + 2; });
-      R(`${tag}M1. the mode screen's fifth card: BAZOOKARP · RANKED RULES · NEW! · Lockgate's art · the carp · 4 V 4 / 5:00 + OT / CARRY IT HOME`,
-        cards.length === 5 && !!info && info.name === 'BAZOOKARP' && info.kicker === 'RANKED RULES' && info.badge === 'NEW!' && /lockgate/.test(info.img) && info.carp && JSON.stringify(info.chips) === JSON.stringify(['4 V 4', '5:00 + OT', 'CARRY IT HOME']), info);
+      R(`${tag}M1. the mode screen's fifth card: BAZOOKARP · PUBLIC BETA · RANKED RULES · NEW! · Lockgate's art · the carp · 4 V 4 / 5:00 + OT / CARRY IT HOME`,
+        cards.length === 5 && !!info && info.name === 'BAZOOKARP' && info.kicker === 'RANKED RULES' && info.badge === 'NEW!' && info.beta === 'PUBLIC BETA' && /lockgate/.test(info.img) && info.carp && JSON.stringify(info.chips) === JSON.stringify(['4 V 4', '5:00 + OT', 'CARRY IT HOME']), info);
       R(`${tag}M2. all five cards fit the screen (${innerWidth}×${innerHeight})`, fit, cards.map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.bottom)]; }));
       // M3 [karp-face]: the Boss card's badge and beta tag are on top where they are drawn (the Bazookarp card next to it
       // covered both at 960×600) — the topmost element at points along their middle is inside the Boss card
@@ -138,21 +138,23 @@
       const lobStage = () => q('.iw-lstage:not(.iw-swap__stage)');
       await until(() => M.current === 'lobby' && lobStage() && txt(lobStage().querySelector('.iw-lstage__name')), 10000); await wait(800);
       const modeTxt = txt(q('.iw-lob__modename')), modeIco = q('.iw-lset--mode b')?.innerHTML || '', lock = txt(q('.iw-lset--len')) || txt(M.el);
-      R(`${tag}L1. the lobby: BAZOOKARP with the carp icon, the length locked at 5:00`, mock.lobby.mode === 'bazookarp' && modeTxt === 'BAZOOKARP' && /M8 16 Q14 8.4 23 9.4/.test(modeIco) && /5:00/.test(lock || ''), { mode: mock.lobby.mode, modeTxt, lock: /5:00/.test(lock || '') });
+      R(`${tag}L1. the lobby: BAZOOKARP with the carp icon, PUBLIC BETA and the length locked at 5:00`, mock.lobby.mode === 'bazookarp' && modeTxt === 'BAZOOKARP' && /M8 16 Q14 8.4 23 9.4/.test(modeIco) && !!q('.iw-lobby.is-betamode .iw-lob__beta') && /5:00/.test(lock || ''), { mode: mock.lobby.mode, modeTxt, lock: /5:00/.test(lock || '') });
       const seen = new Map();
       const want = (show ? listedMaps() : listedMaps().filter((s) => karpLayoutReady(s.id)));
       for (let i = 0; i < want.length + 3; i++) {
         const name = txt(lobStage().querySelector('.iw-lstage__name')), pv = lobStage().querySelector('.iw-lstage__preview');
-        seen.set(name, !!(pv && !pv.hidden));
+        const bb = lobStage().querySelector('.iw-lstage__beta');
+        seen.set(name, { preview: !!(pv && !pv.hidden), beta: !!(bb && !bb.hidden && txt(bb) === 'PUBLIC BETA') });
         lobStage().querySelector('.iw-lstage__arrows .is-r').dispatchEvent(new MouseEvent('click', { bubbles: true }));
         await wait(220);
       }
       const names = [...seen.keys()].filter((n) => n !== 'RANDOM STAGE');
       const nameOf = (id) => MAPS.find((s) => s.id === id).name;
       const okNames = JSON.stringify([...names].sort()) === JSON.stringify(want.map((s) => s.name).sort());
-      const okPrev = names.every((n) => seen.get(n) === (show && !ready.map(nameOf).includes(n)));
-      R(`${tag}L2. ▶ through the lobby's stage list: ${show ? 'every stage, PREVIEW on the placeholder ones' : 'only the stages with a Bazookarp layout'}; the room's own list agrees`,
-        okNames && okPrev && JSON.stringify(roomStages('bazookarp').map((s) => s.id).sort()) === JSON.stringify(want.map((s) => s.id).sort()), { seen: Object.fromEntries(seen), want: want.map((s) => s.id) });
+      const okPrev = names.every((n) => seen.get(n).preview === (show && !ready.map(nameOf).includes(n)));
+      const okBeta = names.every((n) => seen.get(n).beta === !!MAPS.find((s) => s.name === n)?.beta);
+      R(`${tag}L2. ▶ through the lobby's stage list: ${show ? 'every stage, PREVIEW on the placeholder ones' : 'only the stages with a Bazookarp layout'}, PUBLIC BETA on beta stages; room list agrees`,
+        okNames && okPrev && okBeta && JSON.stringify(roomStages('bazookarp').map((s) => s.id).sort()) === JSON.stringify(want.map((s) => s.id).sort()), { seen: Object.fromEntries(seen), want: want.map((s) => s.id) });
       // a room on a stage with no layout, switched to Bazookarp, moves to one that has it (without ?wipstages)
       mock.setSettings({ mode: 'turf' }); mock.setSettings({ map: 'kelpline' }); mock.setSettings({ mode: 'bazookarp' });
       R(`${tag}L3. a room switched to Bazookarp on a stage without a layout ${show ? 'stays (PREVIEW)' : 'moves to one with a layout'}`, show ? mock.lobby.map === 'kelpline' : karpLayoutReady(mock.lobby.map), { map: mock.lobby.map });

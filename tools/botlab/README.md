@@ -52,11 +52,11 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
 - **Online-only stages** (config `onlineOnly`, Cargo Terminal): `DEVSTAGE=1` boots every harness page with `?devstage`
   (src/main.js `DEV_STAGE`), so page tests, shots, tower checks, bakes and stage art run there offline (a solo walk: the
   stage is `noBots`, so no bot matches).
-- **Stages under construction** (config `wip`: Bluestone Junction, Gulper Aquarium, Highmark Foundry until the lead
-  removes the flag): every harness loads one by id as usual (`MAP=bluestone …`); players never see one in a stage
-  list. `WIPSTAGES=1` boots every harness page with `?wipstages` (config `SHOW_WIP`), which lists them everywhere. The
-  check: `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
-  with `WIPSTAGES=1` (then every picker must list them).
+- **Playable beta stages** (config `beta`: Bluestone Junction, Gulper Aquarium, Highmark Foundry): listed in every
+  player picker with a PUBLIC BETA badge. `wip` remains the flag for stages that cannot be played. The checks are
+  `MAP=bluestone PAGE=tools/botlab/tests/beta-content.js tools/botlab/run.sh tools/botlab/page.cjs` and
+  `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs` (with and without
+  `WIPSTAGES=1`).
 - **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
   reads its own switch from `location.search`: `?era=`, `?lava=` …). `ERA=1|2|3` is the same as `PAGEQ='era=n'`
   (Bluestone's era audit); any other `ERA` (`all`, a typo) or one that disagrees with `PAGEQ`'s era stops the harness at
@@ -122,7 +122,7 @@ Tower Command:
 - The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `tower-ink.js`.
 
-Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/jobs/batch5/bazookarp/SPEC.md):
+Bazookarp (batch 5, a public beta mode; the design is tools/botlab/jobs/batch5/bazookarp/SPEC.md):
 - **The mode is hidden.** It is in no player-facing list, but every harness starts it by name (`MODE=bazookarp`,
   `api.startMatch`). `WIPMODES=1` boots every harness page with `?wipmodes` (config `SHOW_WIP_MODES`), which lists it
   everywhere (the mode screen, the stage chip, the lobby picker, `setSettings`); a two-client test opens its clients

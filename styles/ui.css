@@ -2805,6 +2805,7 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-mode__beta { position: absolute; left: calc(var(--u) * 7.4); top: calc(var(--u) * 1.45); rotate: 2deg; }
 .iw-lob__beta { position: absolute; z-index: 5; right: calc(var(--u) * .5); top: calc(100% + var(--u) * 1.15); display: none; rotate: 3deg; }
 .iw-lobby.is-bossmode .iw-lob__beta { display: inline-flex; animation: iw-pop .4s var(--spring2); }
+.iw-lobby.is-betamode .iw-lob__beta { display: inline-flex; animation: iw-pop .4s var(--spring2); }
 .iw-res__beta { rotate: 2deg; }
 
 /* =====================================================================================
@@ -3230,8 +3231,10 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-kpip.is-low { color: #6b6f7a !important; }
 .iw-ticket__preview { position: absolute; right: calc(var(--u) * 3); top: calc(var(--u) * .4); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
   font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; transform: rotate(4deg); }
+.iw-ticket__beta { position: absolute; left: calc(var(--u) * .6); top: calc(var(--u) * .55); z-index: 4; font-size: max(8px, calc(var(--u) * .45)); }
 .iw-lstage__preview { position: absolute; right: calc(var(--u) * .7); top: calc(var(--u) * .7); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
   font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; }
+.iw-lstage__beta { position: relative; display: inline-flex; margin-left: calc(var(--u) * .45); vertical-align: .12em; font-size: max(8px, calc(var(--u) * .45)); rotate: 2deg; }
 /* [karp-face] the mode screen with Bazookarp listed: five cards in the row (narrower again), and its koi-coral card */
 .iw-modesel__row.is-five { gap: calc(var(--u) * 1.1); }
 .iw-modesel__row.is-five .iw-mode { width: calc(var(--u) * 17.2); height: calc(var(--u) * 36.4); }
