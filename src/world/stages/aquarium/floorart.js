@@ -18,11 +18,23 @@
 //               skirting with a brass line, three faience speed lines running down the rake under the brass string-course
 //               (props.js, aquarium_stringcourse), and two brass-ringed portholes into the tank stepping down with it (a
 //               moon jelly and a fish in each, lit from within at dusk). Under the ink, like a mural
+//   lookout     (fix round 4) the Sea Promenade's Lookout and telescope bay (LEAD-REVIEW art round 4: bare dark-teak slabs at
+//               eye level on the high flank): the Lookout's outer and side faces a raised Streamline deck — white render over
+//               a black-granite skirting with a brass line, three faience speed lines, a teak fascia board under the brass
+//               nosing (props), two lit portholes into the Jelly Gallery on its sea face and one on each side; its court
+//               balustrade under SEA PROMENADE given the balustrades' porthole and speed lines (its pilasters and coping
+//               cap: props); the telescope bay's 0.6 m riser a granite kerb, a render riser with one speed line, a teak board
+//   planters    (fix round 4) the planters (the fish topiary, the queue-barrier planter, the spawn decks' planters, the Gate
+//               Terrace's bollard planters; LEAD-REVIEW art round 4: undressed cubes in front of both spawns): cast cream
+//               stone in courses over a granite plinth, two faience speed lines, the coping's shadow (the coping, the
+//               trailing planting and the plates: props); the tops one planted bed of sea holly inside a stone rim across
+//               the round planters' stepped spokes (their risers drawn as the planting's side), the fish topiary's clipped
+//               into a box-hedge fish. All of it on inkable faces, so all of it under the ink
 //   pools       dusk light on the floors under the colonnade's globes, the canopy pendants, the Ticket Hall's canopy,
 //               round the lit jelly columns, the Great Tank and the Reef Windows (warm white, times the surface's own
 //               colour: ink in a pool is lit in its own colour, never washed out)
 // Imports nothing (layout.js stays importable in Node); the uniforms are plain objects, their arrays flat Float32Arrays.
-import { W, pol } from './geo.js';
+import { W, pol, C30, LOOKOUT, TBAY, PLANTERS } from './geo.js';
 
 // Alpha's half (the shader turns the fragment into Alpha's frame: (x, z) → (−x, −z) on Bravo's half)
 const ROSE = [...W(24.9, 2.6), 2.3];                        // centre (x, z), radius: the ferry plaza's open floor
@@ -109,7 +121,225 @@ vec3 aqPort(vec2 p, float R, float aa, vec3 under, out float glass, out float ri
   c = mix(c, BR * 0.35, bolt * ring);
   return c;
 }
+// ---- fix round 4: planting and the planters' and Lookouts' faces
+vec2 aqH22(vec2 p) { return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453); }
+// overlapping leaves, one per cell (an ellipse at a random turn, lit across its width, a midrib), dark soil between them;
+// sc the leaf's size in metres. Returns the leaf colour, writes the cover (0 soil … 1 leaf)
+vec3 aqLeaves(vec2 p, float sc, vec3 cA, vec3 cB, out float cov) {
+  vec2 g = p / sc, i = floor(g), f = fract(g);
+  float bd = 9.0; vec3 bk = vec3(0.0);
+  for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+    vec2 o = vec2(float(x), float(y)), h = aqH22(i + o), c = f - o - 0.2 - 0.6 * h;
+    float a = h.x * 6.2832, cs = cos(a), sn = sin(a);
+    vec2 r = vec2(cs * c.x + sn * c.y, -sn * c.x + cs * c.y);
+    float d = length(r / vec2(0.8, 0.38));
+    if (d < bd) { bd = d; bk = vec3(h, r.y / 0.38); }
+  }
+  cov = 1.0 - smoothstep(0.78, 1.0, bd);
+  vec3 c = mix(cA, cB, bk.y) * (0.78 + 0.42 * bk.x);
+  c *= 0.8 + 0.32 * clamp(0.5 + 0.5 * bk.z, 0.0, 1.0);
+  c *= 1.0 - 0.28 * bd * bd;
+  c += vec3(0.035, 0.045, 0.03) * (1.0 - smoothstep(0.0, 0.18, abs(bk.z))) * step(bd, 0.72);
+  return c;
+}
+// sea-holly heads: a steel-blue thistle cone in a ruff of spiny silver-blue bracts, in half the cells (sc apart)
+float aqHolly(vec2 p, float sc, out vec3 col) {
+  vec2 g = p / sc, i = floor(g), f = fract(g) - 0.5, h = aqH22(i + 7.3);
+  vec2 d = f - (h - 0.5) * 0.35; float r = length(d), a = atan(d.y, d.x);
+  float ruff = 1.0 - smoothstep(0.0, 0.035, r - (0.17 + 0.13 * pow(abs(cos(a * 3.5 + h.y * 6.0)), 3.0)));
+  float cone = 1.0 - smoothstep(0.0, 0.035, r - 0.095);
+  col = mix(vec3(0.33, 0.41, 0.52) * (0.8 + 0.3 * (1.0 - r * 3.0)), vec3(0.15, 0.19, 0.45) * (0.75 + 0.45 * aqH22(floor(d * 46.0) + i).x), cone);
+  return max(ruff, cone) * step(h.x, 0.5);
+}
+// the fish topiary's clipped fish (metres, nose along +x): a body, a forked tail, dorsal and ventral fins (signed: < 0 in)
+float aqFishSD(vec2 p) {
+  float body = (length((p - vec2(0.1, 0.0)) / vec2(0.56, 0.26)) - 1.0) * 0.26;
+  float tail = max(aqTri(p, vec2(-0.36, 0.0), vec2(-0.78, 0.27), vec2(-0.78, -0.27)), -aqTri(p, vec2(-0.6, 0.0), vec2(-0.82, 0.13), vec2(-0.82, -0.13)));
+  float fd = (length((p - vec2(0.0, 0.2)) / vec2(0.22, 0.12)) - 1.0) * 0.12, fv = (length((p - vec2(-0.02, -0.2)) / vec2(0.14, 0.09)) - 1.0) * 0.09;
+  return min(min(body, tail), min(fd, fv));
+}
+// a planted bed seen from above: sea holly — two layers of glaucous leaves in clumps over dark soil, steel-blue thistle
+// heads — inside the cast-stone rim (e: metres in from the outline; rim: the rim's width, its rounded coping included);
+// pf (with fish > 0.5): the topiary's own frame, its bed clipped into a box-hedge fish
+vec3 aqBed(vec2 p, float e, float rim, float aa, float fish, vec2 pf) {
+  float cov0, cov1;
+  vec3 c = aqLeaves(p + 0.37, 0.07, vec3(0.07, 0.15, 0.06), vec3(0.14, 0.25, 0.11), cov0);
+  c = mix(vec3(0.04, 0.045, 0.025), c, cov0);
+  vec3 l1 = aqLeaves(p, 0.042, vec3(0.16, 0.30, 0.15), vec3(0.32, 0.46, 0.30), cov1);
+  c = mix(c, l1, cov1 * 0.92);
+  float clump = aqH22(floor(p / 0.23)).x * 0.5 + 0.5 * sin(p.x * 13.0 + 2.0 * sin(p.y * 9.0)) * sin(p.y * 11.0);
+  c *= 0.82 + 0.3 * clump;
+  vec3 hc; float hh = aqHolly(p, 0.16, hc); c = mix(c, hc, hh * 0.9);
+  if (fish > 0.5) {
+    float sd = aqFishSD(pf), hedge = aqFill(sd, aa), hcov;
+    vec3 hcol = aqLeaves(p, 0.018, vec3(0.04, 0.10, 0.03), vec3(0.09, 0.19, 0.06), hcov);
+    hcol = mix(vec3(0.015, 0.035, 0.012), hcol, 0.6 + 0.4 * hcov) * (0.7 + 0.55 * smoothstep(0.0, -0.1, sd));   // clipped round: lighter on its crown
+    c *= 1.0 - 0.6 * aqFill(abs(sd) - 0.022, aa) * (1.0 - hedge);               // the clipped edge's shadow in the bed
+    c = mix(c, hcol, hedge);
+    c *= 1.0 - 0.4 * aqFill(abs(length((pf - vec2(0.5, 0.0)) / vec2(1.0, 1.25)) - 0.25) - 0.012, aa) * step(pf.x, 0.38) * hedge;   // the gill
+    c *= 1.0 - 0.3 * aqFill(abs(sd + 0.05) - 0.008, aa) * step(pf.x, -0.3) * hedge;                                                 // the tail's clipped line
+    c = mix(c, vec3(0.025, 0.025, 0.03), aqFill(length(pf - vec2(0.45, 0.07)) - 0.034, aa) * hedge);                             // its eye
+    c = mix(c, vec3(0.62, 0.64, 0.62), aqFill(length(pf - vec2(0.462, 0.082)) - 0.01, aa) * hedge);
+  }
+  vec3 ST = vec3(0.70, 0.64, 0.52) * 1.06 * (0.96 + 0.04 * sin(p.x * 23.0 + p.y * 17.0));
+  c *= 1.0 - 0.5 * (1.0 - smoothstep(rim, rim + 0.07, e));                    // the rim's shadow on the planting
+  return mix(c, ST, aqFill(e - rim, aa));
+}
+// a Deco planter's face: cast cream stone in courses over a black-granite plinth with a brass line, two faience speed
+// lines round the body, a smooth coping band from cope under the top (its upper part the block's own rounded edge:
+// level.js bevels it) with a groove under it; h over its foot, H its height, t along it (props.js: the trailing
+// planting over the coping, the plates)
+vec3 aqPlanterFace(float t, float h, float H, float cope, float aa, float big, float fine, out float rough, out float metal) {
+  vec3 ST = vec3(0.70, 0.64, 0.52) * (0.93 + 0.08 * big + 0.05 * (fine - 0.5));
+  vec3 GRAN = vec3(0.045, 0.048, 0.052), FAI = vec3(0.33, 0.45, 0.39), BRASS = vec3(0.56, 0.38, 0.15);
+  vec3 c = ST;
+  float hc = h - 0.13, row = floor(hc / 0.42), yc = H - cope;
+  float jy = abs(fract(hc / 0.42 + 0.5) - 0.5) * 0.42, jx = abs(fract((t + 0.3 * mod(row, 2.0)) / 0.6 + 0.5) - 0.5) * 0.6;
+  c *= 1.0 - 0.16 * aqFill(min(jy, jx) - 0.004, aa) * step(0.0, hc) * step(h, yc - 0.03);
+  c = mix(c, GRAN * 1.6, aqFill(h - 0.12, aa));
+  float br = aqFill(abs(h - 0.126) - 0.006, aa);
+  float y1 = min(H * 0.46, yc - 0.2), l = min(abs(h - y1), abs(h - y1 - 0.075));
+  float band = aqFill(l - 0.021, aa);
+  c = mix(c, FAI, band);
+  // the coping: smoother, lighter stone; under it a groove and its shadow
+  c *= 1.0 - 0.3 * smoothstep(yc - 0.12, yc - 0.01, h) * step(h, yc);
+  c *= 1.0 - 0.55 * aqFill(abs(h - yc) - 0.008, aa);
+  c = mix(c, ST * 1.1 * (1.0 + 0.03 * (fine - 0.5)), aqFill(yc + 0.008 - h, aa));
+  c = mix(c, BRASS, br);
+  rough = mix(mix(0.82, 0.25, band), 0.3, br);
+  rough = mix(rough, 0.6, aqFill(yc - h, aa));
+  metal = 0.65 * br;
+  return c;
+}
 `;
+
+// ---- fix round 4: the GLSL for the Lookouts, the telescope bays and the planters, from geo.js's numbers (Alpha's frame)
+const f4 = (v) => (+v).toFixed(4);
+const DIRV = (a) => [Math.cos((a * Math.PI) / 180), Math.sin((a * Math.PI) / 180)];
+const CB = f4(C30);
+// level.js rounds every exposed edge of a block (bevel = min(max(0.04, min(0.13, 0.14 h)), 0.45 h), h its smallest
+// half-size, its foot at the foundations' −2.0): the planters' coping is that bullnose and a band under it
+const BEV = (h) => Math.min(Math.max(0.04, Math.min(0.13, 0.14 * h)), 0.45 * h);
+const bevOct = (o) => BEV(Math.min(o.r * Math.tan(Math.PI / 8), (o.top + 2) / 2));
+const bevBox = (b) => BEV(Math.min((b.s[1] - b.s[0]) / 2, (b.w[1] - b.w[0]) / 2, (b.top + 2) / 2));
+// the planters' beds (tops): the round ones inside their octagon of apothem r over every spoke's top, the boxes in the
+// blade frame
+const PLANTER_TOPS = [
+  ...PLANTERS.oct.map((o) => `{
+      vec2 p = q - vec2(${f4(o.c[0])}, ${f4(o.c[1])}); float m = max(max(abs(p.x), abs(p.y)), max(abs(p.x + p.y), abs(p.x - p.y)) * 0.70711);
+      if (m < ${f4(o.r + 0.004)} && y > ${f4(o.top - 0.3)} && y < ${f4(o.top + 0.02)}) { base = aqBed(wp, ${f4(o.r)} - m, ${f4(bevOct(o) + 0.04)}, aa, ${o.fish ? '1.0' : '0.0'}, p); gBaseRough = 0.9; gTexStr *= 0.1; gTexORM.b = 0.0; }
+    }`),
+  ...PLANTERS.box.map((b) => `if (abs(y - ${f4(b.top)}) < 0.02) {
+      vec2 sw = vec2(0.5 * q.x - ${CB} * (q.y + 32.5), ${CB} * q.x + 0.5 * (q.y + 32.5));
+      float e = min(min(sw.x - ${f4(b.s[0])}, ${f4(b.s[1])} - sw.x), min(sw.y - ${f4(b.w[0])}, ${f4(b.w[1])} - sw.y));
+      if (e > -0.004) { base = aqBed(wp, e, ${f4(bevBox(b) + 0.04)}, aa, 0.0, vec2(0.0)); gBaseRough = 0.9; gTexStr *= 0.1; gTexORM.b = 0.0; }
+    }`),
+].join('\n    ');
+// the planters' faces: the outer faces cast stone (aqPlanterFace), the round ones' inner risers the planting's side
+const PLANTER_FACES = [
+  ...PLANTERS.oct.map((o) => `{
+      vec2 p = q - vec2(${f4(o.c[0])}, ${f4(o.c[1])}); float m = max(max(abs(p.x), abs(p.y)), max(abs(p.x + p.y), abs(p.x - p.y)) * 0.70711);
+      if (m < ${f4(o.r + 0.01)} && y < ${f4(o.top + 0.01)}) {
+        float t = dot(p, vec2(-nq.y, nq.x)), aa = max(fwidth(t) + fwidth(y), 0.003), r0, m0;
+        if (m > ${f4(o.r - 0.012)}) {
+          float k = mod(floor(atan(nq.y, nq.x) / 0.7854 + 0.5), 4.0);    // (each spoke's ends its own height: 9 cm down a spoke)
+          base = aqPlanterFace(t, y, ${f4(o.top)} - 0.09 * k, ${f4(Math.max(0.11, bevOct(o) + 0.04))}, aa, big, fine, r0, m0); gBaseRough = r0; gTexORM.b = m0; gTexStr *= 0.15;
+        } else if (y > ${f4(o.top - 0.3)}) {
+          float cov; vec3 lf = aqLeaves(vec2(t, y), 0.05, vec3(0.12, 0.24, 0.11), vec3(0.24, 0.38, 0.22), cov);
+          base = mix(mix(vec3(0.03, 0.026, 0.02), lf * 0.72, cov), vec3(0.63, 0.58, 0.47), aqFill(${f4(o.r - bevOct(o) - 0.04)} - m, aa));
+          gBaseRough = 0.9; gTexStr *= 0.1; gTexORM.b = 0.0;
+        }
+      }
+    }`),
+  ...PLANTERS.box.map((b) => `if (y > ${f4(b.y0 - 0.01)} && y < ${f4(b.top + 0.01)}) {
+      vec2 sw = vec2(0.5 * q.x - ${CB} * (q.y + 32.5), ${CB} * q.x + 0.5 * (q.y + 32.5)), nb = vec2(0.5 * nq.x - ${CB} * nq.y, ${CB} * nq.x + 0.5 * nq.y);
+      float e = min(min(sw.x - ${f4(b.s[0])}, ${f4(b.s[1])} - sw.x), min(sw.y - ${f4(b.w[0])}, ${f4(b.w[1])} - sw.y));
+      if (abs(e) < 0.012) {
+        float t = abs(nb.x) > 0.7 ? sw.y : sw.x, aa = max(fwidth(t) + fwidth(y), 0.003), r0, m0;
+        base = aqPlanterFace(t, y - ${f4(b.y0)}, ${f4(b.top - b.y0)}, ${f4(Math.max(0.11, bevBox(b) + 0.04))}, aa, big, fine, r0, m0); gBaseRough = r0; gTexORM.b = m0; gTexStr *= 0.15;
+      }
+    }`),
+].join('\n    ');
+// the rounded edges between a top and its faces (level.js's bevels, 30°–75° off the vertical: neither branch above
+// draws them): the planters' as their stone coping (or the planting's side inside a round planter's bed), the Lookout's
+// and the bay's as their teak deck's edge, the balustrade's as render
+const BEVELS = [
+  ...PLANTERS.oct.map((o) => `{
+      vec2 p = q - vec2(${f4(o.c[0])}, ${f4(o.c[1])}); float m = max(max(abs(p.x), abs(p.y)), max(abs(p.x + p.y), abs(p.x - p.y)) * 0.70711);
+      if (m < ${f4(o.r + 0.01)} && y > ${f4(o.top - 0.42)} && y < ${f4(o.top + 0.01)}) base = m > ${f4(o.r - bevOct(o) - 0.04)} ? STb : vec3(0.06, 0.11, 0.05);
+    }`),
+  ...PLANTERS.box.map((b) => `if (y > ${f4(b.top - 0.2)} && y < ${f4(b.top + 0.01)}) {
+      vec2 sw = vec2(0.5 * q.x - ${CB} * (q.y + 32.5), ${CB} * q.x + 0.5 * (q.y + 32.5));
+      if (min(min(sw.x - ${f4(b.s[0])}, ${f4(b.s[1])} - sw.x), min(sw.y - ${f4(b.w[0])}, ${f4(b.w[1])} - sw.y)) > -0.01) base = STb;
+    }`),
+].join('\n    ');
+const [dLx, dLz] = DIRV(LOOKOUT.a), [dBx, dBz] = DIRV(TBAY.a), Lk = LOOKOUT, Tb = TBAY;
+const LOOKOUT_BEVELS = `if (y > ${f4(Tb.top - 0.16)} && y < ${f4(Lk.bal + 0.01)}) {
+      float uL = dot(q, vec2(${f4(dLx)}, ${f4(dLz)})), vL = dot(q, vec2(${f4(-dLz)}, ${f4(dLx)})), uB = dot(q, vec2(${f4(dBx)}, ${f4(dBz)})), vB = dot(q, vec2(${f4(-dBz)}, ${f4(dBx)}));
+      vec3 TEAK = vec3(0.30, 0.20, 0.12) * (0.85 + 0.2 * fine);
+      if (abs(vL) < ${f4(Lk.half + 0.01)} && uL > ${f4(Lk.r0 - 0.01)} && uL < ${f4(Lk.r1 + 0.01)}) {
+        if (uL < ${f4(Lk.rb + 0.01)} && y > ${f4(Lk.bal - 0.16)}) base = vec3(0.84, 0.79, 0.70) * 0.86;
+        else if (y > ${f4(Lk.top - 0.16)} && y < ${f4(Lk.top + 0.01)}) base = TEAK;
+      } else if (abs(vB) < ${f4(Tb.half + 0.01)} && uB > ${f4(Tb.r0 - 0.01)} && uB < ${f4(Tb.r1 + 0.01)} && y < ${f4(Tb.top + 0.01)}) base = TEAK;
+    }`;
+const LOOKOUT_FACES = `if (y > ${f4(Lk.floor - 0.02)} && y < ${f4(Lk.bal + 0.06)}) {
+      vec2 dL = vec2(${f4(dLx)}, ${f4(dLz)}), pL = vec2(${f4(-dLz)}, ${f4(dLx)}), dB = vec2(${f4(dBx)}, ${f4(dBz)}), pB = vec2(${f4(-dBz)}, ${f4(dBx)});
+      float uL = dot(q, dL), vL = dot(q, pL), uB = dot(q, dB), vB = dot(q, pB), nd = dot(nq, dL), np = dot(nq, pL);
+      // which face: 1 the Lookout's sea face, 2 its sides, 3 its balustrade's court face, 4 the balustrade over the Lookout's
+      // deck (its back and its sides above 3.6), 5 the telescope bay's riser (t: along the face)
+      float fc = 0.0, t = 0.0;
+      if (abs(vL) < ${f4(Lk.half + 0.03)} && uL > ${f4(Lk.r0 - 0.03)} && uL < ${f4(Lk.r1 + 0.03)}) {
+        if (abs(uL - ${f4(Lk.r1)}) < 0.045 && nd > 0.6 && y < ${f4(Lk.top + 0.01)}) { fc = 1.0; t = vL; }
+        else if (abs(abs(vL) - ${f4(Lk.half)}) < 0.045 && abs(np) > 0.6) { if (y < ${f4(Lk.top)}) { fc = 2.0; t = uL; } else if (uL < ${f4(Lk.rb + 0.01)}) { fc = 4.0; t = uL; } }
+        else if (abs(uL - ${f4(Lk.r0)}) < 0.045 && nd < -0.6) { fc = 3.0; t = vL; }
+        else if (abs(uL - ${f4(Lk.rb)}) < 0.045 && nd > 0.6 && y > ${f4(Lk.top - 0.01)}) { fc = 4.0; t = vL; }
+      }
+      if (fc < 0.5 && abs(vB) < ${f4(Tb.half + 0.03)} && uB > ${f4(Tb.r0 - 0.03)} && uB < ${f4(Tb.r1 + 0.03)} && y < ${f4(Tb.top + 0.01)}) {
+        float ndB = dot(nq, dB), npB = dot(nq, pB);
+        if ((abs(uB - ${f4(Tb.r0)}) < 0.045 && ndB < -0.6) || (abs(uB - ${f4(Tb.r1)}) < 0.045 && ndB > 0.6)) { fc = 5.0; t = vB; }
+        else if (abs(abs(vB) - ${f4(Tb.half)}) < 0.045 && abs(npB) > 0.6) { fc = 5.0; t = uB; }
+      }
+      if (fc > 0.5) {
+        float aa = max(fwidth(t) + fwidth(y), 0.003), bay = step(4.5, fc), lk = step(fc, 2.5), bal = 1.0 - bay - lk;
+        vec3 GRAN = vec3(0.045, 0.048, 0.052), BRASS = vec3(0.56, 0.38, 0.15), FAI = vec3(0.33, 0.45, 0.39);
+        vec3 REN = vec3(0.84, 0.79, 0.70) * 0.86 * (1.0 + 0.05 * (big - 0.5) + 0.03 * (fine - 0.5));
+        vec3 c = REN;
+        // the skirting: black granite (16 cm; the bay's kerb 15; the balustrade's foot on the Lookout's deck 12), a brass line
+        float yb = fc > 3.5 && fc < 4.5 ? ${f4(Lk.top)} : ${f4(Lk.floor)}, hk = bay > 0.5 ? 0.15 : (fc > 3.5 ? 0.12 : 0.16);
+        c = mix(c, GRAN * 1.5, aqFill(y - yb - hk, aa));
+        float sk = aqFill(abs(y - yb - hk - 0.007) - 0.007, aa);
+        // faience speed lines: three round the Lookout's sea and side faces, three round its balustrade under SEA PROMENADE,
+        // one along the bay's riser
+        float l0 = lk > 0.5 ? 3.13 : (bay > 0.5 ? 2.72 : 3.74), dl = abs(y - l0);
+        if (bay < 0.5) dl = min(dl, min(abs(y - l0 - 0.1), abs(y - l0 - 0.2)));
+        float band = aqFill(dl - 0.026, aa), grout = aqFill(abs(dl - 0.026) - 0.004, aa);
+        c = mix(c, FAI, band); c *= 1.0 - 0.22 * grout;
+        // the deck's edge: a teak fascia board under the brass nosing (props), its shadow line; the balustrade's top: the
+        // shadow under its coping cap (props)
+        float board = 0.0;
+        if (bal < 0.5) {
+          float yt = lk > 0.5 ? ${f4(Lk.top)} : ${f4(Tb.top)}, bt = lk > 0.5 ? 0.14 : 0.1;
+          board = aqFill(yt - bt - y, aa);
+          vec3 TEAK = vec3(0.30, 0.20, 0.12) * (0.82 + 0.25 * fine) * (0.92 + 0.08 * sin(t * 9.0 + 2.0 * sin(t * 2.3)));
+          c = mix(c * (1.0 - 0.35 * aqFill(abs(y - yt + bt + 0.03) - 0.01, aa)), TEAK, board);
+          float nose = aqFill(abs(y - yt + bt + 0.008) - 0.013, aa);      // a brass nosing strip along the board's foot
+          c = mix(c, BRASS * (1.05 + 0.15 * smoothstep(0.0, 0.013, y - yt + bt + 0.008)), nose); sk = max(sk, nose);
+        } else c *= 1.0 - 0.28 * smoothstep(${f4(Lk.bal - 0.16)}, ${f4(Lk.bal)}, y);
+        // portholes into the Jelly Gallery, lit at dusk: two on the Lookout's sea face, one on each side, one of the
+        // balustrades' size on the court face
+        float gW = 0.0, rW = 0.0;
+        if (fc < 1.5) c = aqPort(vec2(abs(t) - 0.95, y - 2.86), 0.17, aa, c, gW, rW);
+        else if (fc < 2.5) c = aqPort(vec2(t - ${f4((Lk.rb + Lk.r1) / 2)}, y - 2.86), 0.17, aa, c, gW, rW);
+        else if (fc < 3.5) c = aqPort(vec2(t, y - 3.06), 0.3, aa, c, gW, rW);
+        c = mix(c, BRASS, sk);
+        base = c;
+        gBaseRough = mix(mix(mix(0.85, 0.25, band), 0.3, max(rW, sk)), 0.12, gW);
+        gBaseRough = mix(gBaseRough, 0.55, board);
+        gAqWin = vec3(0.95, 0.88, 0.8) * gW;
+        gTexStr *= 0.12;
+        gTexORM.b = 0.65 * max(rW, sk);
+      }
+    }`;
 
 const GLSL_BASE = /* glsl */`
   // ---- Gulper Aquarium: floor art under the ink (src/world/stages/aquarium/floorart.js)
@@ -196,6 +426,11 @@ const GLSL_BASE = /* glsl */`
         gAqGlow = vec3(1.0, 0.86, 0.62) * (0.5 + 0.5 * bevel) * (1.0 - clamp(strip, 0.0, 1.0)) * (1.0 - 0.45 * tube) * 0.32;
       }
     }
+    // -- fix round 4: the planters' beds (sea holly in dark soil inside a cast-stone rim, across the round planters'
+    // stepped spokes; the fish topiary's clipped into a box-hedge fish)
+    if (y > 0.88 && y < 4.53) {
+    ${PLANTER_TOPS}
+    }
     // -- KEEP CLEAR in front of every Tubeway mouth, on its own floor
     for (int i = 0; i < 16; i++) {
       if (i >= uAqEndN) break;
@@ -213,10 +448,11 @@ const GLSL_BASE = /* glsl */`
       base = mix(base, GRAN * 1.4, bandK * 0.9);
       base = mix(base, BRASS, max(bandK * stripe * 0.9, edge));
     }
-  } else if (abs(vWNorm.y) < 0.3 && vWPos.y < 2.45) {
+  } else if (abs(vWNorm.y) < 0.3) {
+    vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz, nq = vWPos.z > 0.0 ? -vWNorm.xz : vWNorm.xz;
+    if (vWPos.y < 2.45) {
     // ---- the deck stair's flanks (layout.js radRamp(−135, 13.5 → 7.2, 0 → 2.4, 4.0 wide) and its twin at +45): its side
     // faces stand at ±2.0 m off the stair's axis; t runs out along the axis (7.5 at the tank's glass … 13.5 at the foot)
-    vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz, nq = vWPos.z > 0.0 ? -vWNorm.xz : vWNorm.xz;
     vec2 ax = vec2(-0.70711), pr = vec2(0.70711, -0.70711);
     float t = dot(q, ax), l = dot(q, pr);
     if (abs(abs(l) - 2.0) < 0.04 && abs(dot(nq, pr)) > 0.95 && t > 7.0 && t < 14.2) {
@@ -248,6 +484,23 @@ const GLSL_BASE = /* glsl */`
       // (the stonestep's own relief and metal off the face: smooth trowelled render, brass where the brass is)
       gTexStr *= 0.12;
       gTexORM.b = 0.65 * max(ringW, sk);
+    }
+    }
+    float y = vWPos.y;
+    // ---- fix round 4: the Sea Promenade's Lookout, its court balustrade and the telescope bay (both halves)
+    ${LOOKOUT_FACES}
+    // ---- fix round 4: the planters' faces
+    if (y < 1.32 || (y > 3.36 && y < 4.52)) {
+    ${PLANTER_FACES}
+    }
+  } else if (vWNorm.y > 0.0) {
+    // ---- fix round 4: the rounded edges of the Lookouts', the bays' and the planters' tops (level.js's bevels)
+    vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz;
+    float y = vWPos.y;
+    vec3 STb = vec3(0.70, 0.64, 0.52) * 1.06;
+    ${LOOKOUT_BEVELS}
+    if (y < 1.32 || (y > 4.28 && y < 4.52)) {
+    ${BEVELS}
     }
   }
 `;

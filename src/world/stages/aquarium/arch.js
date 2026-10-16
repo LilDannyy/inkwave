@@ -25,6 +25,8 @@
 //   finTower    the entrance pavilion's fin with vertical neon AQUARIUM, its sea facade (doors, portholes, letters), and
 //               (fix round 3) the spawn deck's plaza fascia: skirting, pilasters, frieze, portholes, roundels
 //   stops       the Express's brass stops (IN and OUT), dressed round their mouths
+import { LOOKOUT } from './geo.js';
+
 export function registerArch(D, H, KIT, G) {
   const { K, NS, pbox, cyl, cylGeo, latheG, sphG, torG, strut, rod, letters, lettersV, sign, porthole, speed, globe, handrail, roundel, rivets, HP, PI, TAU } = KIT;
   const DEG = Math.PI / 180;
@@ -583,6 +585,20 @@ export function registerArch(D, H, KIT, G) {
       }
       // the Lookout's SEA PROMENADE letters on its balustrade, facing the court
       { const a = -141.5, [x, z] = pol(a, 21.38); face(B, x, 0, z, -Math.cos(a * DEG), -Math.sin(a * DEG), () => letters(B, o.label || 'SEA PROMENADE', { h: 0.2, y: 4.18, z: 0.01, c: K.brassDk, flat: true, mat: 'paint', track: 0.16 })); }
+      // (fix round 4) the Lookout (layout.js radBox(−141.5, r 21.4 → 24.4, 3.6 wide, top 3.6)): its faces are drawn under the
+      // ink (floorart.js: render, skirting, speed lines, portholes, the teak deck edge with its brass nosing); here a LOOKOUT
+      // plate on its sea face, and its court balustrade (r 21.4 → 21.8, top 4.5) given the balustrades' render pilasters
+      // at its ends and a render coping cap under the brass handrail
+      {
+        const a = LOOKOUT.a, dL = [Math.cos(a * DEG), Math.sin(a * DEG)], pL = [-dL[1], dL[0]];
+        const at = (u, v) => [dL[0] * u + pL[0] * v, dL[1] * u + pL[1] * v];
+        { const [x, z] = at(LOOKOUT.r1 + 0.002, 0); face(B, x, 0, z, dL[0], dL[1], () => sign(B, 'LOOKOUT', 0, 2.79, { h: 0.1, board: K.navy, c: K.brassLt, pad: 0.07, track: 0.14 })); }
+        for (const sv of [-1, 1]) {
+          const [x, z] = at(LOOKOUT.r0, sv * (LOOKOUT.half - 0.11));
+          face(B, x, 0, z, -dL[0], -dL[1], () => pbox(B, 'paint', K.render, 0.14, LOOKOUT.bal - 2.4, 0.05, 0, (2.4 + LOOKOUT.bal) / 2, 0));
+        }
+        { const [x, z] = at((LOOKOUT.r0 + LOOKOUT.rb) / 2, 0); face(B, x, 0, z, dL[0], dL[1], () => pbox(B, 'paint', K.render, 2 * LOOKOUT.half + 0.06, 0.04, LOOKOUT.rb - LOOKOUT.r0 + 0.06, 0, LOOKOUT.bal + 0.02, 0)); }
+      }
       // three coin telescopes on the telescope bay (3.0), at the sea rail
       for (const da of [-3.6, 0, 3.6]) {
         const a = -145 + da, [x, z] = pol(a, 30.2);

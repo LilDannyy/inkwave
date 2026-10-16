@@ -251,3 +251,26 @@ export const TOUCH = {
   ],
   port: { r: 0.24, y: 0.45 },
 };
+
+// ---------------------------------------------------------------------------------------------------- fix round 4 dressing
+// (dressing and shaders only: the blocks are layout.js's, unchanged; these repeat their numbers for floorart.js, which
+// draws on their faces under the ink, and for the props on their edges.) Alpha's half; the twins are turned 180°.
+// The Sea Promenade's Lookout (radBox(−141.5, r 21.4 → 24.4, 3.6 wide, top 3.6) with its court balustrade (r 21.4 →
+// 21.8, top 4.5)) and the telescope bay (radBox(−145, r 27.6 → 31.0, 6.4 wide, top 3.0)); the promenade is at 2.4
+export const LOOKOUT = { a: -141.5, r0: 21.4, r1: 24.4, rb: 21.8, half: 1.8, top: 3.6, bal: 4.5, floor: 2.4 };
+export const TBAY = { a: -145, r0: 27.6, r1: 31.0, half: 3.2, top: 3.0, kiosk: 1.28 };
+// the planters dressed as Deco planters (cast cream stone, a granite plinth, faience speed lines, a moulded coping,
+// planted with sea holly; the fish topiary's bed clipped into a fish): the round ones are layout.js rnd() pieces — four
+// spokes (0°, 45°, 90°, 135°) of apothem r whose tops step down 9 cm each from `top` — the others blade boxes
+export const PLANTERS = {
+  oct: [
+    { c: W(27.4, -2.4), r: 1.0, top: 1.2, fish: true },        // the fish topiary on the ferry plaza
+    { c: [-8.5, -33.5], r: 0.9, top: 1.3 },                      // the Gate Terrace's two bollard planters
+    { c: [11.0, -36.6], r: 0.9, top: 1.3 },
+  ],
+  box: [
+    { s: [28.1, 28.9], w: [1.2, 3.6], y0: 0, top: 1.3 },        // the queue-barrier planter
+    { s: [34, 36], w: [9.5, 11.5], y0: 3.38, top: 4.5 },        // the spawn deck's two planters
+    { s: [34, 36], w: [-11.5, -9.5], y0: 3.38, top: 4.5 },
+  ],
+};
