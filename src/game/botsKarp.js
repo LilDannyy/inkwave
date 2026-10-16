@@ -479,14 +479,20 @@ export function karpGoal(b, P) {
   // metric leaves it out, as match.cjs does a zone guard
   if (b.kSpot && hd(a.pos, b.kSpot) < 1.5 && (!b.path || b.pi >= b.path.length)) b.kHoldUntil = now + 0.3;
   // (due: its time is up, or the route ran out short of the spot — standing on it is no reason to re-plan)
-  const due = now >= (b.kGoalAt || 0) || (!b.path && (!b.kSpot || hd(a.pos, b.kSpot) > 1.2));
+  // (no route last time: not again for 0.6 s)
+  const due = now >= (b.kGoalAt || 0) || (!b.path && now >= (b.kNoPathT || 0) && (!b.kSpot || hd(a.pos, b.kSpot) > 1.2));
   const go = (p, maxUp = 1.0, every = 1.5) => {
     // (a fresh route when due, or the spot moved > 2.5 m from where the route goes)
     const g = b.path && b.goal >= 0 ? G.nav.nodes[b.goal] : null;
     if (!due && g && hd(g, p) < 2.5) return;
     b.kGoalAt = now + every; b.kSpot = b.kSpot || new V3(); b.kSpot.copy(p);
     if (hd(a.pos, p) < 0.8 && Math.abs(a.pos.y - p.y) < 1) { b.path = null; return; }
-    b._pathTo(p, maxUp);
+    if (b._pathTo(p, maxUp)) return;
+    // no way there (a spot inside the shell's mask, a ledge it can't reach from here): the nearest point on the way, 3 then
+    // 6 m short of it toward us; none — a pause before the next try (it stood still re-planning every frame: 11 s once)
+    const dx = a.pos.x - p.x, dz = a.pos.z - p.z, l = Math.hypot(dx, dz);
+    for (const k of [3, 6]) if (l > k + 0.5 && b._pathTo(_gq.set(p.x + (dx / l) * k, p.y, p.z + (dz / l) * k), 1.5)) { b.kSpot.copy(_gq); return; }
+    b.kNoPathT = now + 0.6; KARP_BOT.stats.noPath = (KARP_BOT.stats.noPath || 0) + 1;
   };
   const sit = P.sit[a.team];
   if (sit === 'shell') {
@@ -526,7 +532,7 @@ export function karpGoal(b, P) {
       if (s) { go(s, 1.0, 2); if (hd(a.pos, s) < 2) KARP_BOT.stats.keeperT += 1 / 60; }
       return;
     }
-    if (role === 'perch') { const n = perchSpot(b, P); if (n) go(n, 1.0, 3); return; }
+    if (role === 'perch') { const n = perchSpot(b, P), o = n ? null : P.defendObj(a.team); if (n) go(n, 1.0, 3); else if (o) go(o.pos, 1.0, 2); return; }   // (no perch with a line: by our objective)
     // intercept: at the carrier while it's known (from outside its Splash range; hard: from two sides), else its last
     // known spot, then along the route it's expected to take
     const k = P.foes[a.team].find((f) => f.e === H);
@@ -570,7 +576,7 @@ function shellKey(b, P, role) {
 function shellSpot(b, P, role) {
   const a = b.a, t = a.team, our = P.side(t), their = -our, df = DF(b), R = P.Kp.shell.radius() || K.shell.r;
   const danger = df.danger != null && their >= df.danger;
-  if (role === 'perch') return perchSpot(b, P);
+  if (role === 'perch') return perchSpot(b, P) || P.breakSpot(a, 7, P.auxOf(a));   // (no high ground with a line on it: the ring)
   let want, slot = P.auxOf(a);
   if (role === 'grab' && our >= KARP_AI.grabAt) { want = KARP_AI.grabR; slot = 1.5; }
   else if (meleeOf(a)) want = their >= KARP_AI.meleeOut || danger ? 7 : Math.max(2.5, Math.max(R, K.shell.r + (K.shell.rMax - K.shell.r) * Math.min(1, Math.abs(our) + 0.15) ** 2) + PLAYER.radius + 0.5) + 0.3;   // (r a little ahead of the meter: it swells)
@@ -608,7 +614,9 @@ function grabWait(b, P) {
   // + getting up to speed, and a little early rather than late)
   const d = Math.max(0, hd(a.pos, Kp.pos) - K.pickR + 0.25), swim = P.burstTeam === a.team && d < K.shell.burstPaint;
   const run = swim ? 0.12 + d / 10 : 0.2 + d / Math.max(3, Math.min(PLAYER.runSpeed, a.weaponRunner.moveSpeed?.() || PLAYER.runSpeed) * 0.92);
-  return P.burstT + K.pickHold + DF(b).grab - run - 0.05 - G.time;
+  // (aimed inside its difficulty's window, not at its end: normal 0.1 s after the hold, easy 0.5, hard at once)
+  const dl = DF(b).grab;
+  return P.burstT + K.pickHold + dl - Math.min(0.1, dl / 2) - run - G.time;
 }
 // in a fight: the carrier keeps walking its route; keepers hold their spot; escorts stay with the carrier; interceptors
 // chase the carrier
@@ -644,7 +652,7 @@ function lobPitch(c, d, dy, high = false) {
   if (lo !== null) return high ? hi : lo;
   return be < 2.5 ? best : null;
 }
-const _cg = new V3();
+const _cg = new V3(), _gq = new V3();
 // would a Carp Shot of charge c aimed along yaw kick a off a drop (> 0.9 m) or into the water? (the kick's reach: its speed ×
 // its decay, on the ground; less in the air)
 function kickSafe(a, yaw, c) {
@@ -831,7 +839,8 @@ export function karpMove(b, P, dt, move, it) {
     // the run in: straight at it once its time comes (wait first, standing)
     if (grabWait(b, P) > 0) { move.set(0, 0, 0); it.squid = false; b.kHoldUntil = G.time + 0.3; return; }
     const dx = Kp.pos.x - a.pos.x, dz = Kp.pos.z - a.pos.z, l = Math.hypot(dx, dz);
-    if (l < 4 && Math.abs(Kp.pos.y - a.pos.y) < 1.2) { move.set(dx / (l || 1), 0, dz / (l || 1)); it.fire = false; it.squid = P.burstTeam === a.team && l < K.shell.burstPaint + 0.3 && b.groundSeen !== 2; }   // (in through our burst's ink as a squid)
+    // (in through our burst's ink as a squid — it painted all of it ours a moment ago: not the last look's reading of the ground)
+    if (l < 4 && Math.abs(Kp.pos.y - a.pos.y) < 1.2) { move.set(dx / (l || 1), 0, dz / (l || 1)); it.fire = false; it.squid = P.burstTeam === a.team && l < K.shell.burstPaint + 0.3 && (b.groundSeen !== 2 || G.time - P.burstT < 1); }
     return;
   }
   // the shell phase, still far off (> 18 m) and not in a fight: get there — no painting on the way (firing slows a kid by
