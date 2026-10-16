@@ -1211,18 +1211,28 @@
       if (zp && bots.length) {
         const zi = zp.Z.active.zones[0].id, c = zp.Z.zones[zi].center, g = bots[0], b = g.bot, res = {};
         const far = G.nav.nodes.find((n) => { const d = Math.hypot(n.x - c[0], n.z - c[2]); return d > 25 && d < 40; });
-        for (const [tag, pts] of [['short', [[-1.2, 0], [1.2, 0]]], ['made', [[-1.2, -1.2], [1.2, -1.2], [-1.2, 1.2], [1.2, 1.2]]]]) {
+        // (laid on one level of open floor at the zone — near its centre, clear of its props: every float spot in line of
+        // the others, so they tether)
+        const PAT = [['short', [[-1.2, 0], [1.2, 0]]], ['made', [[-1.2, -1.2], [1.2, -1.2], [-1.2, 1.2], [1.2, 1.2]]]];
+        const flat = (bx, bz) => PAT.every(([, P]) => {
+          const q = P.map(([dx, dz]) => V(bx + dx, G.level.groundHeight(bx + dx, bz + dz, c[1] + 4), bz + dz));
+          if (q.some((p) => !Number.isFinite(p.y) || Math.abs(p.y - q[0].y) > 0.2)) return false;
+          for (let i = 0; i < q.length; i++) for (let j = i + 1; j < q.length; j++) if (!G.physics.los(V(q[i].x, q[i].y + 1, q[i].z), V(q[j].x, q[j].y + 1, q[j].z))) return false;
+          return true;
+        });
+        const base = [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [2, 2], [-2, -2], [2, -2], [-2, 2], [3, 0], [-3, 0], [0, 3], [0, -3]].map(([ox, oz]) => [c[0] + ox, c[2] + oz]).find(([bx, bz]) => flat(bx, bz));
+        for (const [tag, pts] of base ? PAT : []) {
           S.clear(); b.zRole = 'guard'; b.zZone = zi; b.mode = 'paint'; b._bobPlan = null; b._bobTrip = null; b._bob = null; b._bobHold = null; b.target = null;
-          for (const [dx, dz] of pts) { const x = c[0] + dx, z = c[2] + dz; drop(g, x, z, G.level.groundHeight(x, z, c[1] + 4) + 0.6); }
+          for (const [dx, dz] of pts) { const x = base[0] + dx, z = base[1] + dz; drop(g, x, z, G.level.groundHeight(x, z, c[1] + 4) + 0.6); }
           settle(1.2);
           if (far) put(g, V(far.x, far.y, far.z));
           g.ink = 100; zero(g); b.bombCd = 12; b._bobGrow = { at: G.time - 0.01, n: 1, A: null, m: G.match };
           K.botAct(b, DT, g.intent, V(0, 0, 0), false);
           const best = Math.max(0, ...K.items.filter((o) => o.owner === g && o.state === 'live').map((o) => o.chain?.n || 1));
-          res[tag] = { best, cd: r2(b.bombCd), ok: tag === 'short' ? best === 2 && b.bombCd <= 2.5 : best >= 3 && b.bombCd > 10 };
+          res[tag] = { best, cd: r2(b.bombCd), ok: tag === 'short' ? best === 2 && b.bombCd <= 2.5 : best >= 3 && b.bombCd > 10, at: [r2(base[0]), r2(c[1]), r2(base[1])], its: K.items.filter((o) => o.owner === g).map((o) => [o.state, r2(o.spot?.x), r2(o.spot?.y), r2(o.spot?.z), o.chain?.n || 0]) };
         }
         S.clear();
-        R(`zone: a guard left with a 2-chain it can't grow from where it stands starts its next chain within 2.5 s, not after the burst's 10–16 s rest; one whose web made three keeps its rest`, !!far && res.short.ok && res.made.ok, res);
+        R(`zone: a guard left with a 2-chain it can't grow from where it stands starts its next chain within 2.5 s, not after the burst's 10–16 s rest; one whose web made three keeps its rest`, !!far && !!base && res.short?.ok && res.made?.ok, res);
       }
     }
 
