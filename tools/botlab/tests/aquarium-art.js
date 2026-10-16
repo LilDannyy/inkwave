@@ -2,7 +2,9 @@
 // stand-ins it draws are hidden off-limits blocks with no paint, the stage surfaces and murals are the stage's, the
 // glass / water / fish / jellies / penguins / bathysphere are in the scene, and Feeding Time (looks only) runs at 1:00
 // left: the bathysphere bobs, the bell rings, the krill drift, the Great Tank's sharks wheel faster — and nothing a player
-// can touch changes (the clock, every actor's hp and position, the turf).
+// can touch changes (the clock, every actor's hp and position, the turf). Fix round 3 (section 7): the touch pools'
+// dressing keeps to the pool block, the reef and the pools' water are one mesh, the rays are eagle rays, the Deep Dome's tube
+// is unlit, the Fin Pavilion's fascia is dressed off the deck.
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -57,7 +59,7 @@
     const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
     // the Great Tank from its south viewing step at eye height, then the Arch Tank overhead from the hall, the penguin cove
     // and a Reef Window: every looks program compiles in these views
-    const views = [[[0.6, 1.5, -11.5], [0, 1.3, 0]], [[0.5, 1.6, -29], [0, 7.6, -22.5]], [[-6.2, 3.0, -43.5], [-14.8, 0.6, -46.8]], [[18, 1.6, -9], [24.5, 1.8, -20.8]]];
+    const views = [[[0.6, 1.5, -11.5], [0, 1.3, 0]], [[0.5, 1.6, -29], [0, 7.6, -22.5]], [[-6.2, 3.0, -43.5], [-14.8, 0.6, -46.8]], [[18, 1.6, -9], [24.5, 1.8, -20.8]], [[-10, 1.7, -9.2], [-9, 1.3, -14.3]]];
     while (gl.getError() !== gl.NO_ERROR) { /* clear */ }
     for (const [from, look] of views) { g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < 3; i++) g.debug.step(1000 / 60); }
     const err = gl.getError();
@@ -117,6 +119,53 @@
     // (e) the moon-jelly columns are the traced shader (art round 2), not the printed one
     let jm = null; G.scene.traverse((o) => { if (o.name === 'aq-jellies') jm = o.material; });
     R('the moon-jelly columns trace their inside (aq-jelly3)', jm && jm.customProgramCacheKey?.() === 'aq-jelly3', { key: jm?.customProgramCacheKey?.() });
+  }
+  // 7. fix round 3 (LEAD-NOTES 2026-10-16): dressing and shaders only
+  {
+    const meshVerts = (pred, fn) => { G.scene.traverse((o) => { if (o.isMesh && pred(o)) { const P = o.geometry.attributes.position, e = o.matrixWorld.elements; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i); fn(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14], o, i); } } }); };
+    // (a) the touch pools' dressing (rockery skin, boulders, panels, handrail, sign) keeps within 8.5 cm of the pool
+    // block's faces or over its top: nothing reaches out over the walkable dais (both halves)
+    let far = 0, nOn = 0, at = null;
+    meshVerts((o) => /^props:/.test(o.name), (x, y, z, o) => {
+      for (const s of [1, -1]) {
+        const px = s * x, pz = s * z;   // (the twin turned onto Alpha's pool)
+        if (px < -12.0 || px > -6.0 || pz < -16.0 || pz > -12.6 || y < 0.98 || y > 2.4) continue;
+        const dx = Math.max(-11.5 - px, 0, px + 6.5), dz = Math.max(-15.6 - pz, 0, pz + 13.0), d = Math.hypot(dx, dz);
+        nOn++; if (d > far) { far = d; at = [+x.toFixed(2), +y.toFixed(2), +z.toFixed(2), o.name]; }
+      }
+    });
+    R('the touch pools\' dressing stands within 8.5 cm of the pool block or over it: nothing out on the dais', nOn > 2000 && far <= 0.085, { verts: nOn, farthest: +far.toFixed(3), at });
+    // (b) the Reef Windows' reef and the touch pools' panels: one mesh (one draw call) for both halves — the reef lit (kind
+    // 0), the panels' water traced (kind 1: eight panels and four portholes), the lid lamps (kind 2) — with its own glow
+    let ex = null; G.scene.traverse((o) => { if (o.name === 'aq-exhibits') ex = o; });
+    const kinds = [0, 0, 0]; let reefN = 0;
+    if (ex) { const E = ex.geometry.attributes.aEx.array, P = ex.geometry.attributes.position.array; for (let i = 0, v = 0; i < E.length; i += 4, v++) { kinds[Math.round(E[i])]++; if (E[i] === 0 && Math.hypot(P[v * 3], P[v * 3 + 2]) > 30.5) reefN++; } }
+    R('the reef and the touch pools\' water are one mesh, both halves: a reef in both windows, eight panels and four portholes traced, the lid lamps, its own glow', !!ex && ex.material.customProgramCacheKey?.() === 'aq-exhibits1' && kinds[1] === 2 * (4 * 6 + 2 * 60) && kinds[2] > 0 && reefN > 50000 && typeof ex.material.userData.glow === 'number',
+      { kinds, reefVerts: reefN, tris: ex ? ex.geometry.attributes.position.count / 3 : 0 });
+    // (c) the rays are eagle rays: their span about twice their body's length, a pale belly (seen from the tunnel floor)
+    let sw = null; G.scene.traverse((o) => { if (o.name === 'aq-swimmers') sw = o; });
+    let x0 = 9, x1 = -9, z0 = 9, z1 = -9, belly = 0, nb = 0;
+    if (sw) { const A = sw.geometry.attributes, P = A.position, C = A.color, N = A.normal, V = A.aV; for (let i = 0; i < P.count; i++) { if (Math.round(V.getW(i)) !== 1 || V.getY(i) === 0) continue; x0 = Math.min(x0, P.getX(i)); x1 = Math.max(x1, P.getX(i)); z0 = Math.min(z0, P.getZ(i)); z1 = Math.max(z1, P.getZ(i)); if (N.getY(i) < -0.5) { belly += 0.2126 * C.getX(i) + 0.7152 * C.getY(i) + 0.0722 * C.getZ(i); nb++; } } }
+    const span = x1 - x0, body = z1 - z0;
+    R('the rays are eagle rays: the wings span about twice the body\'s length, pointed tips, a pale belly', span > 1.7 * body && span < 2.6 * body && nb > 20 && belly / nb > 0.55, { span: +span.toFixed(2), body: +body.toFixed(2), belly: +(belly / Math.max(1, nb)).toFixed(2) });
+    // (d) the Deep Dome's tube is unlit glass (it read as a white bar at dusk); small lamps on its collars light it
+    const { SCENERY_KIT } = await import('./src/world/environment.js'), THREE = await import('three');
+    const { buildFar } = await import('./src/world/stages/aquarium/far.js');
+    const C30 = Math.cos(Math.PI / 6), far0 = buildFar({ ...SCENERY_KIT, THREE }, { W: (s, w) => [0.5 * s + C30 * w, -32.5 - C30 * s + 0.5 * w] });
+    let tubeGlow = -1, lamps = 0;
+    for (const gg of far0.static) { gg.computeBoundingBox(); const b = gg.boundingBox, gl0 = Math.max(...gg.attributes.glow.array); if (b.max.x - b.min.x > 150 && b.max.y - b.min.y < 12) tubeGlow = Math.max(tubeGlow, gl0); else if (b.max.x - b.min.x < 0.3 && b.min.y > 3 && gl0 > 0.3) lamps++; }
+    R('the Deep Dome\'s tube is unlit glass, with a small lamp on each of its nine collars', tubeGlow === 0 && lamps === 9, { tubeGlow, lamps });
+    // (e) the Fin Pavilion's plaza fascia is dressed (pilasters, frieze, skirting, portholes, roundels) from 4–8 cm in front of
+    // its face, nothing on the spawn deck's walkable top (3.38)
+    let nf = 0, out = 0, top = 0;
+    meshVerts((o) => /^props:/.test(o.name), (x, y, z) => {
+      for (const s of [1, -1]) {
+        const X = s * x, Z = s * z, dz = Z + 32.5, bs = 0.5 * X - C30 * dz, bw = C30 * X + 0.5 * dz;
+        if (bs < 30.85 || bs > 31.0 || Math.abs(bw) > 13.05 || y < -0.1) continue;
+        nf++; out = Math.max(out, 31.0 - bs); top = Math.max(top, y);
+      }
+    });
+    R('the Fin Pavilion\'s plaza fascia is dressed within 8.5 cm of its face and below the spawn deck\'s top', nf > 1000 && out <= 0.085 && top < 3.36, { verts: nf, proud: +out.toFixed(3), top: +top.toFixed(3) });
   }
   let bathy = null; G.scene.traverse((o) => { if (o.name === 'aq-bathysphere') bathy = o; });
   // 5. Feeding Time at 1:00 left: looks only

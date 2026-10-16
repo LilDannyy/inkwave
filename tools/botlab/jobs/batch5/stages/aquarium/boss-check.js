@@ -19,6 +19,10 @@
   dbg.freeze();
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
   let wet = 0, samples = 0, still = 0, maxStill = 0, lastP = b.pos.clone(), path = 0, stuns = 0, bx0 = 1e9, bx1 = -1e9, bz0 = 1e9, bz1 = -1e9, offPlan = 0;
+  // the boss's trail (fix round 3: "read the boss's trail"): every sample [x, z, on its planned cells 1/0, the move it is
+  // playing (s slam, w sweep, c charge, b barrage, - none), the distance to the nearest planned cell], and who it targets
+  const trail = [], tgt = new Map();
+  const nearPlan = (x, z) => { if (nav.isPlan(x, z)) return 0; let d = 99; for (const i of nav.planIds) { const [px, pz] = nav.xz(i); d = Math.min(d, Math.hypot(px - x, pz - z)); } return +d.toFixed(1); };
   const { on } = await import('./src/core/ctx.js');
   const un = on('boss:stun', () => stuns++);
   for (let t = 0; t < 150 && !b.dead && m.state === 'playing'; t += 0.5) {
@@ -27,6 +31,8 @@
     const k = nav.kindAt(b.pos.x, b.pos.z);
     if (k === 2 || b.pos.y < -1.2) wet++;
     if (!nav.isPlan(b.pos.x, b.pos.z)) offPlan++;
+    trail.push([+b.pos.x.toFixed(1), +b.pos.z.toFixed(1), nav.isPlan(b.pos.x, b.pos.z) ? 1 : 0, b.move ? ({ slam: 's', sweep: 'w', charge: 'c', barrage: 'b' }[b.move.id] || 'o') : '-', nearPlan(b.pos.x, b.pos.z)]);
+    { const a = m.actors?.find?.((q) => q.nid === b.target || q.id === b.target); if (a) { const k = `${a.team}:${Math.round(a.pos.x / 4) * 4},${Math.round(a.pos.z / 4) * 4}`; tgt.set(k, (tgt.get(k) || 0) + 1); } }
     const d = b.pos.distanceTo(lastP); path += d;
     if (d < 0.05 && !b.move) { still += 0.5; maxStill = Math.max(maxStill, still); } else still = 0;
     lastP.copy(b.pos);
@@ -36,7 +42,11 @@
   R('never over water / off the deck', wet === 0, { wet, samples });
   R('it moves about while it fights (walks ≥ 10 m over the fight; it closes on its targets rather than patrolling)', path >= 10, { path: +path.toFixed(1), x: [+bx0.toFixed(1), +bx1.toFixed(1)], z: [+bz0.toFixed(1), +bz1.toFixed(1)] });
   R('never stands idle for long (≤ 8 s without a move)', maxStill <= 8, { maxStill });
-  R('stays on its home ground (≤ 10 % of samples off the planned cells)', offPlan / samples <= 0.1, { offPlan, samples });
+  const off = trail.filter((t) => !t[2]), moveOff = {}; for (const t of off) moveOff[t[3]] = (moveOff[t[3]] || 0) + 1;
+  const dOff = off.map((t) => t[4]).sort((a, c) => a - c);
+  R('stays on its home ground (≤ 10 % of samples off the planned cells)', offPlan / samples <= 0.1, { offPlan, samples, offByMove: moveOff,
+    offDistMedian: dOff.length ? dOff[dOff.length >> 1] : 0, offDistMax: dOff.length ? dOff[dOff.length - 1] : 0,
+    targets: [...tgt.entries()].sort((a, c) => c[1] - a[1]).slice(0, 8), trail, plan: { x0: nav.x0, z0: nav.z0, nx: nav.nx, step: nav.step, ids: nav.planIds } });
   R('the fight goes on (the boss acts: charges / stuns happen or it is hurt)', b.hp < b.maxHp || stuns > 0, { hp: Math.round(b.hp), maxHp: Math.round(b.maxHp), stuns, dead: b.dead, phase: b.phase });
   return out;
 })()
