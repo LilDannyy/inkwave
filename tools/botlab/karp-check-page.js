@@ -1117,7 +1117,7 @@ export async function runChecks(o = {}) {
     // of one probe within 3 m of each other are one place
     for (const gq of groups(d.map((f) => ({ x: f.a[0], y: f.a[1], z: f.a[2], f })), CK.entGroup).flatMap((gr) => { const by = new Map(); for (const p of gr.pts) { const k = p.f.probe + (p.f.warnOnly ? '?' : ''); if (!by.has(k)) by.set(k, []); by.get(k).push(p.f); } return [...by.values()]; })) {
       const f0 = gq.reduce((a, b) => (fin(+b.gain) && (!fin(+a.gain) || +b.gain > +a.gain) ? b : a), gq[0]), gs = gq.map((f) => +f.gain).filter(fin);
-      fl.push({ at: f0.a, what: `7d ${f0.probe}${gq.length > 1 ? ` ×${gq.length}` : ''}: ${f0.warnOnly ? 'to off-field ground' : `gain ${gs.length > 1 ? `${Math.min(...gs)}–${Math.max(...gs)}` : f0.gain} m`}`, look: { x: f0.b[0], y: f0.b[1], z: f0.b[2] } });
+      fl.push({ at: f0.a, what: `7d ${f0.probe}${gq.length > 1 ? ` ×${gq.length}` : ''}: ${f0.warnOnly ? 'to off-field ground' : `gain ${gs.length > 1 && Math.min(...gs) !== Math.max(...gs) ? `${Math.min(...gs)}–${Math.max(...gs)}` : f0.gain} m`}`, look: { x: f0.b[0], y: f0.b[1], z: f0.b[2] } });
     }
     const warnTxt = soft.length ? `WARN (d) ${soft.length} to ground off the field (a hiding place for #9): ${soft.slice(0, 3).map((f) => `${f.probe} ${JSON.stringify(f.b)}`).join(', ')}` : '';
     nums.drops = out._7drops.length; nums.climbShortcuts = out._7climbs.length; nums.d = d.map((f) => ({ probe: f.probe, a: f.a, b: f.b, gain: f.gain, phys: !!f.phys }));
@@ -1549,7 +1549,15 @@ export async function pictures(o = {}) {
   const r = G.renderer, cv = r.domElement, size0 = r.getSize(new THREE.Vector2()), pr0 = r.getPixelRatio();
   const img = (url) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.src = url; });
   const render = async (cam, W, H) => { r.setPixelRatio(1); r.setSize(W, H, false); r.render(G.scene, cam); const url = cv.toDataURL('image/png'); r.setPixelRatio(pr0); r.setSize(size0.x, size0.y, false); return img(url); };
-  const jpeg = (c) => { for (const q of [0.84, 0.76, 0.68, 0.6, 0.5, 0.42]) { const u = c.toDataURL('image/jpeg', q); if (u.length * 0.75 < 290000) return u; } return c.toDataURL('image/jpeg', 0.35); };
+  // (under 290 KB: lower quality first, then — a tall top-down with a long flag key — a smaller picture)
+  const jpeg = (c0) => {
+    let c = c0;
+    for (let k = 0; k < 5; k++) {
+      for (const q of [0.84, 0.76, 0.68, 0.6, 0.52]) { const u = c.toDataURL('image/jpeg', q); if (u.length * 0.75 < 290000) return u; }
+      const d = document.createElement('canvas'); d.width = Math.round(c.width * 0.85); d.height = Math.round(c.height * 0.85); d.getContext('2d').drawImage(c, 0, 0, d.width, d.height); c = d;
+    }
+    return c.toDataURL('image/jpeg', 0.45);
+  };
   const col = (t, a = 1) => { const c = new THREE.Color(G.teamColors?.[t] || (t ? '#2f5bff' : '#ff8a14')); return `rgba(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${a})`; };
   // (the stage's bounds, padded to hold both Gates' 15 m rings: a Gate by the stage's edge had its ring clipped)
   const B = { ...L.bounds }; for (const gg of R.gates) { B.minX = Math.min(B.minX, gg.pos.x - CK.ring - 1); B.maxX = Math.max(B.maxX, gg.pos.x + CK.ring + 1); B.minZ = Math.min(B.minZ, gg.pos.z - CK.ring - 1); B.maxZ = Math.max(B.maxZ, gg.pos.z + CK.ring + 1); }
