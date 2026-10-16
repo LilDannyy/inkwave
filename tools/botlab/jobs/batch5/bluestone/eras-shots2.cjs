@@ -17,12 +17,12 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const want = (n) => !ONLY.length || ONLY.some((o) => n.startsWith(o));
 
 const CAM = {
-  knee: { from: [-24, 2.6, -37], look: [-6, 3.2, -15], fov: 70 },            // Swimston at Degrayling Lane, toward the knee and the dome
+  knee: { from: [-18, 2.4, -41], look: [-10, 2.2, -24], fov: 70 },           // Swimston by the GPO steps, toward Degrayling Lane's crates and the hotel
   quay: { from: [-8.5, 2.4, -47], look: [5, 0.2, -30], fov: 66 },            // the quay's south end, over the basin to the bridge site
   hoki: { from: [-32.8, 1.75, -26.5], look: [-36.5, 1.7, -39], fov: 64 },    // Hoki Lane, the viaduct's wall
-  phone: { from: [-5.2, 3.0, -13.6], look: [0, 6.6, -2], fov: 50 },          // Tartar under the dome over Alpha's clock row
-  pulses: { from: [-30, 13, -52], look: [-8, 5, -12], fov: 62 },             // high over the leg: the wires from the dome outward
-  sky: { from: [-15, 1.7, -17], look: [8, 15, 6], fov: 74 },                 // the circus's edge, up at the sky over the dome
+  phone: { from: [1.0, 2.6, -13.5], look: [0, 6.8, 0], fov: 52 },           // Tartar under the dome, Alpha's clock row in front (between two columns)
+  pulses: { from: [-36, 18, -60], look: [-6, 4, -12], fov: 62 },             // high over the leg: the wires from the dome outward
+  sky: { from: [8, 3.4, 13], look: [-14, 9, -10], fov: 74 },                 // Bravo's side of the ring, over the hotel at the sky (shadows on the ring)
   halo: { from: [-21, 7.2, -21], look: [-8, 5.0, -8], fov: 56 },             // the Halo's south-west side from the knee
   rescue: { from: [-8.6, 2.8, -44.5], look: [2.5, -0.2, -36.5], fov: 62 },   // the quay over the floating garden
   probe: { from: [-18.25, 7.5, -36], look: [-12.25, 0.4, -26], fov: 55 },    // the era-1 crates from above
@@ -106,12 +106,19 @@ app.on('browser-window-created', (_, win) => {
     await minimap('minimap-era1-warn');
     await at(54.2);
     await shot('pulses-warn', CAM.pulses, { hud: true });
+    await at(60.1);
+    await shot('timelapse-sky-J+0.1', CAM.sky);
+    await at(61.0);
+    await shot('timelapse-sky-J+1.0', CAM.sky);
     await at(61.5);
     await shot('jump1-knee-J+1.5', CAM.knee, { hud: true });
     await shot('jump1-quay-J+1.5', CAM.quay, { hud: true });
-    await shot('timelapse-sky-J+1.5', CAM.sky);
+    await at(62.0);
+    await shot('timelapse-sky-J+2.0', CAM.sky);
     await at(62.05);
     await shot('mural-hoki-J+2.05', CAM.hoki);
+    await at(63.0);
+    await shot('timelapse-sky-J+3.0', CAM.sky);
     const done1 = await js(`(() => { ${pre} return 60 + W.doneOff; })()`);
     await at(done1 + 1.0);
     await shot('jump1-knee-done+1', CAM.knee, { hud: true });
@@ -126,7 +133,7 @@ app.on('browser-window-created', (_, win) => {
     await shot('jump2-quay-J+2', CAM.quay, { hud: true });
     await at(120 + done1 - 60 + 1.0);
     await shot('jump2-quay-done+1', CAM.quay, { hud: true });
-    await shot('mural-seams-era3', { from: [-21.5, 2.4, -26], look: [-26, 4.4, -36], fov: 58 });
+    await shot('mural-seams-era3', { from: [-23.4, 3.4, -45.5], look: [-26, 4.4, -37.5], fov: 56 });
     await minimap('minimap-era3');
     await tabmap('tabmap-era3');
     // a bot standing on the Halo (its perch in the 3000s)
@@ -157,7 +164,7 @@ app.on('browser-window-created', (_, win) => {
     // ============================================================================ the lightmap probe (needs the bake)
     if (want('lightmap-probe')) {
       await start({ mapId: 'bluestone', duration: 180, time: 'day', mode: 'turf' });
-      const url = await js(`(() => { const g = window.__inkwave, L = __G.level, lm = g.levelMat.uniforms?.uLight?.value; const img = lm && lm.image;
+      const url = await js(`(() => { const g = window.__inkwave, L = __G.level, lm = g.levelMat?.userData?.uniforms?.uLight?.value; const img = lm && lm.image;
         if (!img) return null;
         const cr = L.blocks.find((b) => b.tag === 'crates-stack' && b.center.z < 0);
         // the street face under / beside the crates: the top face of the block that holds the crates' foot
