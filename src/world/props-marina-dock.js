@@ -639,7 +639,7 @@ export function registerMarinaDock(D, H) {
       B.box('paint', K.white, 0.36, 0.5, 0.01, 0.25, 1.55, -Dd / 2 + 0.08, { r: 0.01 });
       B.decal('pst9', 0.32, 0.46, 0.25, 1.55, -Dd / 2 + 0.086);
       B.col(-W / 2, 0, -Dd / 2, W / 2, 2.2, 0.35);                     // walls, pump-out unit, standpipe: solid cover
-      B.col(-W / 2, 0, 0.35, W / 2, 2.2, Dd / 2, { rail: true });       // open front behind the barrier rail + chain gate
+      B.col(-W / 2, 0, 0.35, W / 2, 2.2, Dd / 2, { rail: true, roof: true });   // open front behind the barrier rail + chain gate ([b5-int3] and off-limits on top: an air dash from the 2.9–3.5 m ledge beside it stood a kid on it — dash-reach.js)
     },
   };
 
@@ -1731,8 +1731,10 @@ export function registerMarinaDock(D, H) {
       // railing colliders hug the very edge (≥ 0.04 outboard of the level's face-visibility samples, so the block's top
       // face is never culled and the baked lightmap stays valid)
       const e0 = S / 2 - 0.04, e1 = S / 2 + 0.02;
-      B.col(-e1, top, e0, e1, top + 1.05, e1, { rail: true }); B.col(-e1, top, -e1, e1, top + 1.05, -e0, { rail: true });   // gallery rails
-      B.col(e0, top, -e1, e1, top + 1.05, e1, { rail: true }); B.col(-e1, top, -e1, -e0, top + 1.05, e1, { rail: true });
+      // ([b5-int3] gallery rails off-limits on top: a swim jump + air dash stood a kid on one, 3.45 m up — dash-reach.js)
+      const GR = { rail: true, roof: true };
+      B.col(-e1, top, e0, e1, top + 1.05, e1, GR); B.col(-e1, top, -e1, e1, top + 1.05, -e0, GR);   // gallery rails
+      B.col(e0, top, -e1, e1, top + 1.05, e1, GR); B.col(-e1, top, -e1, -e0, top + 1.05, e1, GR);
     },
   };
 

@@ -671,6 +671,12 @@
       };
       const bal24 = balcTrial(1 / 24), bal60 = balcTrial(1 / 60);
       R(`a kid on the end of one of a row of rail-top roofs 0.75 m apart (crossmarket's balconettes) is down in the street within 1 s — at 1/24 s a frame ${bal24.downT} s, at 1/60 ${bal60.downT} s`, bal24.downT != null && bal24.downT <= 1.0 && bal60.downT != null && bal60.downT <= 1.0, { bal24, bal60 });
+      // [b5-int3] a prop's post top is off-limits (props.js: a collider under 0.3 m across both ways, 1.5 m tall or more —
+      // halyard's 2.3 m pontoon-sign posts, kelpline's 4.1 m posts held a kid after a dash); a short post, a rail post and a
+      // wall-like one aren't
+      { const xf = g.props?._xfCols?.bind(g.props), cs = [[-0.06, 0, -0.06, 0.06, 2.3, 0.06], [-0.1, 0, -0.1, 0.1, 4.1, 0.1], [-0.06, 0, -0.06, 0.06, 1.0, 0.06], [-0.05, 0, -0.05, 0.05, 2.2, 0.05, 2], [-0.06, 0, -0.85, 0.06, 2.2, 0.85]];
+        const bx = xf ? xf(cs, [3, 0, 4], Math.PI / 2, 1) : [], fl = bx.map((b) => !!b.roof);
+        R('a prop collider post (under 0.3 m across both ways, ≥ 1.5 m tall: a 2.3 m sign post, a 4.1 m pole) is an off-limits top; a 1.0 m post, a rail post and a 1.7 m-long panel are not', !!xf && fl.join() === 'true,true,false,false,false', { roof: fl }); }
     }
     if (run('bots')) {
       home();
