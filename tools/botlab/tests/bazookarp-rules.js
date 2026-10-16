@@ -9,7 +9,7 @@
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const { BAZOOKARP: K, PLAYER, SPECIALS, SUB } = await import('./src/config.js');
-  const { on } = await import('./src/core/ctx.js');
+  const { on, emit } = await import('./src/core/ctx.js');
   const { Bazookarp } = await import('./src/game/bazookarp.js');
   const { LoopWire } = await import('./src/game/karpWire.js');
   const { KARPBOX_DEF, KARPBOX_TWO } = await import('./tools/botlab/karpbox.js');
@@ -855,6 +855,27 @@
       m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits, booms: booms.slice(0, 4), hurts: hurts.slice(0, 6), hpMin: +hpMin.toFixed(1), inkHurt: +inkPeak.toFixed(1) };
     }
     R('M5 §2.2: every damaging sub (bomb, Cling Charge, Pop Pellet, Shaker, Skitter, Waddle, Torpedo, Tracer Bolt, Whirl Boomerang, sprinkler, Lurk Mine) counts into a lone shell, is never inside it, and never hurts a kid 0.9 m behind it (a walker may go round it)', m5ok && Object.keys(m5).length === 11, m5);
+    // M6 [karp-face] (the WP1 report's open item): a Splat Bomb thrown by hand while its thrower's own Bubble Guard runs
+    // counts whole into the shell (it counted × 0.5: a sub item's sp flag — set whenever its owner's special runs — can't
+    // tell a hand throw from a barrage's bomb); a Bomb Barrage's bomb still counts half; the same throw with no special
+    const m6 = {};
+    for (const how of ['plain', 'bubbler', 'barrage']) {
+      G.projectiles.clear(); G.subs.clear(); G.specials.clear();
+      fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
+      const t6 = A[1], sc6 = Kp.shell.center();
+      t6.setSub('bomb');
+      put(t6, sc6.x, sc6.z - 2.6); t6.yaw = t6.aimYaw = 0; t6.aimPitch = 0; step(0.05);
+      if (how !== 'plain') G.specials.start(t6, how);
+      const sp6 = t6.specialActive ? t6.specialActive.kind : null, n0 = Kp.shell.stats.counted[0];
+      G.projectiles.throwBomb(t6);
+      if (how === 'barrage') emit('barrage:throw', { actor: t6, special: t6.specialActive, kind: 'bomb' });
+      const flag = !!(G.projectiles.bombs || []).find((b) => b.owner === t6)?.sp;
+      for (let i = 0; i < 240; i++) dbg.step(1000 / 60);
+      m6[how] = { sp: sp6, flag, counted: Math.round(Kp.shell.stats.counted[0] - n0) };
+      if (t6.specialActive) G.specials.end(t6, 'test');
+    }
+    R('M6: a Splat Bomb thrown by hand during its thrower\'s own Bubble Guard counts whole into the shell (as with no special); a Bomb Barrage\'s bomb counts half',
+      m6.plain.counted > 0 && m6.bubbler.sp === 'bubbler' && m6.bubbler.flag && Math.abs(m6.bubbler.counted - m6.plain.counted) <= 1 && m6.barrage.sp === 'barrage' && Math.abs(m6.barrage.counted - m6.plain.counted * K.shell.specialMul) <= 1, m6);
     offD();
   }
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }

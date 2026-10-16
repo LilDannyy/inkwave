@@ -18,8 +18,11 @@
 // Who decides: the shooter's screen (ghost shots never hit: a remote attacker is ignored). Offline and on the host a
 // counted hit applies at once; a guest sums its hits per attacker and sends them on its next tick (`kh`, takeHits()).
 import * as THREE from 'three';
-import { G, clamp } from '../core/ctx.js';
-import { SPECIALS, WEAPONS, BAZOOKARP as K } from '../config.js';
+import { G, clamp, on } from '../core/ctx.js';
+import { SPECIALS, WEAPONS, SUBS, BAZOOKARP as K } from '../config.js';
+
+// [karp-face] each actor's last barrage throw (weapons.js emits it): a barrage's bomb can go off after its barrage ended
+on('barrage:throw', ({ actor }) => { if (actor) actor._karpBarT = G.time; });
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3();
 const _seg = { t: 0, point: new THREE.Vector3(), dist: 0, target: null };
@@ -38,7 +41,16 @@ export class ObjTargets {
   // a special's damage: by its id, or by the sp flag of what it threw / fired (a Bomb Barrage's bombs) — but never a main
   // weapon's own shot, which carries the flag whenever its owner's special runs (a Bubble Guard, a Drainbow, a Sonar:
   // the main keeps firing, and its shots counted half into the shell — karp-shell-dps found it)
-  isSpecial(wid, o) { return !!(wid && SPECIALS[wid]) || !!(o && o.special && !(wid && WEAPONS[wid])); }
+  // [karp-face] (the WP1 report's open item) a SUB's item carries the flag whenever its owner's special ran as it was
+  // thrown — but only a barrage's bombs are the special's: a Splat Bomb thrown by hand during a Bubble Guard counts
+  // whole. A sub's flag counts while its owner's special is a barrage, or with none running, within 6 s of a barrage
+  // throw (its last bombs go off after it ends)
+  isSpecial(wid, o, a) {
+    if (wid && SPECIALS[wid]) return true;
+    if (!(o && o.special) || (wid && WEAPONS[wid])) return false;
+    if (a && wid && SUBS[wid]) { const s = a.specialActive; return s ? s.kind === 'barrage' : (G.time ?? 0) - (a._karpBarT ?? -1e9) < 6; }
+    return true;
+  }
 
   // the nearest target along a → b (within pad of its surface)
   segHit(a, b, pad = 0) {
@@ -57,7 +69,7 @@ export class ObjTargets {
     const t = (o && o.target) || this._at(point);
     if (!t || !t.hittable()) return;
     this.log.hits++;
-    this._count(t, attacker, t.hitFilter(dmg, wid, o), point);
+    this._count(t, attacker, t.hitFilter(dmg, wid, o, attacker), point);
   }
   splash(attacker, c, R, dmgMax, dmgMin, wid, o) {
     if (!attacker || attacker.remote) return;
@@ -72,7 +84,7 @@ export class ObjTargets {
       _v2.add(sc);
       if (!G.physics.los(_v.copy(c).setY(c.y + 0.3), _v2)) continue;
       this.log.splash++;
-      this._count(t, attacker, t.hitFilter(dmgMax + (dmgMin - dmgMax) * clamp(d / Math.max(0.01, R), 0, 1), wid, o), null);
+      this._count(t, attacker, t.hitFilter(dmgMax + (dmgMin - dmgMax) * clamp(d / Math.max(0.01, R), 0, 1), wid, o, attacker), null);
     }
   }
   // continuous damage: dmg this frame (already × dt) while it overlaps the shell, × contMul; summed and flushed 0.3 s

@@ -68,8 +68,8 @@ export class KarpShell {
     if (Math.abs(this.m) >= this.hpMax - 1e-6) this.engine.onBurst(this.m > 0 ? 0 : 1, this.lastHit[this.m > 0 ? 0 : 1]);
   }
   // what a hit counts for: × 0.5 for a special (by its weapon id, or o.special: a barrage's bombs), at most 220
-  hitFilter(dmg, wid, o) {
-    const sp = G.objTargets ? G.objTargets.isSpecial(wid, o) : false;
+  hitFilter(dmg, wid, o, attacker) {
+    const sp = G.objTargets ? G.objTargets.isSpecial(wid, o, attacker) : false;
     return Math.min(S.hitCap, dmg * (sp ? S.specialMul : 1));
   }
   flash(attacker, amount) {
