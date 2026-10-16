@@ -617,12 +617,14 @@
     const orb0 = g.hud.spIcon?.innerHTML || '', badge0 = badges();
     carry(me, 0, -20); step(0.1); me.intent.move.set(0, 0, 1); step(0.5); idle(me); step(0.1);
     const h1 = hud(), f1 = Kp.hud.fuseShown, orb1 = g.hud.spIcon?.innerHTML || '', badge1 = badges();
-    Kp.fuse = 9.3; step(0.1); const h2 = hud(), red = !!g.hud.karp?.mk?.classList.contains('is-red');
+    // ([karp-face] the finished HUD: on the carrier's OWN screen the fuse rides the reticle — the over-head marker is for
+    // everyone else, hud-karp.js B1–B4 — and the status line says YOU CARRY)
+    Kp.fuse = Kp.hud.fuseShown = 9.3; step(0.1); const h2 = hud(), red = !!g.hud.karp?.ret?.classList.contains('is-red');
     put(me, 0, -28); Kp.base = null; step(0.2); const h3 = hud(), r3 = Kp.rate;
-    R('L3 S9, S29, S35: the marker over the carrier shows the fuse\'s whole seconds; red under 10 s; ×3 when fast; the carp on the carrier\'s special orb and the badge on its squad icon',
-      !!h1?.marker && Math.abs(h1.marker.secs - Math.ceil(f1)) <= 1 && h1.marker.secs >= 58 && !!h2?.marker && h2.marker.secs <= 10 && red && r3 === 3 && !!h3?.marker?.fast
-        && /WE CARRY · \d+ s ×3/.test(h3.status) && /DON'T RETREAT/.test(h3.bottom?.[0] || '') && !orb0.includes(CARP) && orb1.includes(CARP) && badge0 === 0 && badge1 === 1,
-      { m1: h1?.marker && { secs: h1.marker.secs, fuse: f1 }, m2: h2?.marker && { secs: h2.marker.secs, red }, m3: h3?.marker && { secs: h3.marker.secs, fast: h3.marker.fast }, status: h3?.status, bottom: h3?.bottom?.[0], rate: r3, orb: [orb0.includes(CARP), orb1.includes(CARP)], badge: [badge0, badge1], doc: document.querySelectorAll('.iw-sq.is-karp').length });
+    R('L3 S9, S29, S35: the carrier\'s fuse in whole seconds (on its own screen: round its reticle); red under 10 s; ×3 when fast; the carp on the carrier\'s special orb and the badge on its squad icon',
+      !!h1?.reticle && Math.abs(h1.reticle.secs - Math.ceil(f1)) <= 1 && h1.reticle.secs >= 58 && !!h2?.reticle && h2.reticle.secs <= 10 && red && r3 === 3 && !!h3?.reticle?.fast
+        && /YOU CARRY · \d+ s ×3/.test(h3.status) && /DON'T RETREAT/.test(h3.bottom?.[0] || '') && !orb0.includes(CARP) && orb1.includes(CARP) && badge0 === 0 && badge1 === 1,
+      { r1: h1?.reticle && { secs: h1.reticle.secs, fuse: f1 }, r2: h2?.reticle && { secs: h2.reticle.secs, red }, r3: h3?.reticle && { secs: h3.reticle.secs, fast: h3.reticle.fast }, status: h3?.status, bottom: h3?.bottom?.[0], rate: r3, orb: [orb0.includes(CARP), orb1.includes(CARP)], badge: [badge0, badge1], doc: document.querySelectorAll('.iw-sq.is-karp').length });
     // §1.1, DECISIONS.md: in its own Carp-Free Zone the carrier's bottom line is "CARP-FREE ZONE!" (the lead's name)
     fresh(); look(); carry(me, 13, -43); step(0.3); const hz = hud();
     R('L3b S12: in its own Carp-Free Zone the carrier\'s screen shows CARP-FREE ZONE! with its sub-line (DECISIONS.md\'s name)', Kp.rate === 3 && hz?.bottom?.[0] === 'CARP-FREE ZONE!' && /3× — get out/.test(hz.bottom[1] || ''), { rate: Kp.rate, bottom: hz?.bottom });
@@ -649,9 +651,11 @@
     const dry = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker };
     for (let k = 0; k < 6; k++) G.paint.splat(V(9.5 + (k % 3 - 1) * 1.2, 0.2, 12 + (k < 3 ? -0.8 : 0.8)), 1.6, 1, { seed: k });
     step(0.3);
-    const swim = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: FX().carp.visible, pillar: FX().pillar.visible, wake: FX().wake.visible };
+    // ([karp-face] "the carp": the resting one (bazookarpFx) or the held sp_karp on the carrier's kid — a squid holds none)
+    const carpSeen = (a) => FX().carp.visible || (a.form === 'kid' && a.character?.weaponKind === 'sp_karp' && a.character.root.visible !== false);
+    const swim = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: carpSeen(b), pillar: FX().pillar.visible, wake: FX().wake.visible };
     b.intent.squid = false; step(0.3);
-    const up = { reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: FX().carp.visible, wake: FX().wake.visible };
+    const up = { reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: carpSeen(b), wake: FX().wake.visible };
     // … its own team still sees it swim (an Alpha carrier in Alpha ink: the marker on Alpha's screen)
     fresh(); look(); put(me, -3, -12); for (let k = 0; k < 3; k++) G.paint.splat(V(-1 + k * 1.2, 0.2, -20), 1.6, 0, { seed: k }); carry(A[1], 0, -20); A[1].intent.squid = true; step(0.4);
     const own = { sub: A[1].submerged, marker: !!hud()?.marker };

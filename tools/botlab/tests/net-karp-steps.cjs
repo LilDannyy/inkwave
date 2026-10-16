@@ -159,8 +159,10 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     const runK = await B.js(`(async () => { const { PLAYER } = await import('./src/config.js'); return PLAYER.runSpeed * 0.8; })()`);
     // (B stands still now: the guest's count comes from the host's snapshots, one trip plus the playback delay behind)
     await wait(900);
-    { const hc = (await info(A)).count[1]; await B.until(`__G.match.karp.count[1] === ${hc}`, 3000, 100).catch(() => {}); }
-    const c6a = await info(A), c6h = await bHud(), c6b = await info(B);
+    // (and the host's own reading of B's last samples settles a playback delay after B stops: compare once both agree, ≤ 6 s)
+    let c6a = await info(A), c6b = await info(B);
+    for (let k = 0; k < 12 && c6b.count[1] !== c6a.count[1]; k++) { await wait(500); c6a = await info(A); c6b = await info(B); }
+    const c6h = await bHud();
     R('6b. … B runs at PLAYER.runSpeed × 0.8 on its own screen (measured over 1.2 s)', Math.abs(speed - runK) < 0.45, { speed: r2(speed), want: r2(runK) });
     R('6c. … the host\'s count falls as B carries and B\'s HUD shows the same count', c6a.count[1] < 100 && c6b.count[1] === c6a.count[1] && JSON.stringify(c6h.line ? c6h.line : null) !== 'null', { host: c6a.count, guest: c6b.count, hud: c6h && c6h.status });
 
