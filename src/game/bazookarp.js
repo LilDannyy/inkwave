@@ -101,7 +101,7 @@ export class Bazookarp {
       on('actor:removed', ({ actor }) => { if (actor === this.holder && !this.follower) this._lose(actor, 'left'); }),
       on('era:done', ({ era }) => { this._danger = false; this.fieldSwitch(this.field.stateOf(era)); }),
       on('era:warn', () => { this._danger = true; this._recheck(true); }),
-      on('lava:warn', ({ to }) => { this.fieldSwitch(this.field.stateOf(to)); }),
+      on('lava:warn', ({ to }) => { this._liq = true; this.fieldSwitch(this.field.stateOf(to)); }),   // [b5-caldera] fix round 4: _liq (_dynOk)
     ];
     this.wire.on('claim', ({ actor, ts }) => this._claim(actor, ts));
     this.wire.on('decline', ({ actor, q }) => this._decline(actor, q));
@@ -572,7 +572,10 @@ export class Bazookarp {
   _dynOk(id) {
     const n = G.nav.nodes[id];
     for (let t = 0; t < 2; t++) if (!this.lowered[t]) for (const w of this.weirs[t]) if (Math.hypot(n.x - w.pos.x, n.z - w.pos.z) < K.rest.weirR && Math.abs(n.y - w.pos.y) < K.rest.band) return false;
-    if (this._danger && this.match.stage?.danger?.(n, 0)) return false;
+    // [b5-caldera] fix round 4: on a liquid stage (from its first lava:warn) the stage's danger counts at all times — the
+    // lava's is a floor it covers within 10 s: the field turns LOW at the fall warning (SPEC §5.5) while the lava holds
+    // HIGH for 10 s more and the ledges dry 16.2 s after it (review 4: drops onto drowned ledges from 70 to 86 s)
+    if ((this._danger || this._liq) && this.match.stage?.danger?.(n, 0)) return false;
     return true;
   }
   // the resting re-check (every 0.5 s, and at once on a state warning): covered / taken away / excluded → moved

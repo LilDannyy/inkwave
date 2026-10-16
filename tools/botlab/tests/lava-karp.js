@@ -5,6 +5,7 @@
 //   K2 rest flags: no rest spot on a rider (a stone, an Organ) at either level, none on lava-reachable floor at HIGH
 //   K3 the drop spot from lava-reachable ground at HIGH (a carrier splatted on a drowned ledge, one fallen in the lake)
 //      lands on dry floor of that half
+//   K3b (fix round 4) from the fall warning until the ledges dry, no drop spot on ground the lava covers now
 //   K4 the field switches at lava:warn (to the level the coming move ends at), both ways, and is never rebuilt
 //   K5 a Bazookarp resting on a ledge at LOW stays there until the rise's warning, then is moved to dry ground at once
 //      (13.8 s before the ledge turns deadly)
@@ -75,6 +76,39 @@
   R(`K4 the field switches at lava:warn — to HIGH at the rise warning (${wRise} s), to LOW at the fall warning (${wFall} s) — and is never rebuilt (the same arrays)`,
     atRise === sHigh && atFall === sLow && swRise && swRise[0] >= wRise && swRise[0] < wRise + 0.1 && swFall && swFall[0] >= wFall && swFall[0] < wFall + 0.1 && F.states.every((s, i) => s.D[0] === D0[i] && s.restOk === R0[i]),
     { switches: sw, atRise, atFall, warnings: [wRise, wFall] });
+
+  // K3b (fix round 4, review 4 issue 3): from the fall warning (the field LOW from then on) until the ledges dry (16.2 s
+  // after it), the drop spot from ledge-level origins (30 ledge nodes, 30 dry nodes within 4 m of one) is never on ground
+  // the lava covers now; and a real drop (_dropAt) 1 s into the fall warning from the dry spot by Alpha's shelf
+  {
+    setT(wRise - 0.4); step(0.8); setT(wFall - 0.4); step(0.8);
+    const near = []; for (let i = 0; i < N; i++) { if (!nav.valid[i] || M.kind[i] !== 0) continue; const n = nav.nodes[i]; if (ledges.some((j) => Math.hypot(nav.nodes[j].x - n.x, nav.nodes[j].z - n.z) < 4)) near.push(i); }
+    const pk = (L) => L.filter((_, k) => k % Math.max(1, Math.floor(L.length / 30)) === 0).slice(0, 30);
+    const origins = [...pk(ledges), ...pk(near)], rows3 = [];
+    let spot = -1, sd = 1e9; for (const i of near) { const n = nav.nodes[i]; if (n.y < 1.0 || n.y > 1.5) continue; const d = Math.hypot(n.x + 22, n.z + 6); if (d < sd) { sd = d; spot = i; } }
+    let real = null;
+    for (const t of [wFall + 0.5, wFall + 1, wFall + 4, wFall + 9, MV[1].t0 + 3, MV[1].t0 + 5.5]) {
+      step(Math.max(0, t - Lv.clock.t));
+      let tried = 0, covered = 0, none = 0; const eg = [];
+      for (const id of origins) {
+        const n = nav.nodes[id], d = F.dropSpot(V(n.x, n.y, n.z), F.states[F.state].halfOf[id], (q) => Kp._dynOk(q));
+        tried++;
+        if (d < 0) { none++; continue; }
+        const dn = nav.nodes[d];
+        if (Lv.covers(dn.x, dn.z, dn.y + 0.02)) { covered++; if (eg.length < 4) eg.push([r2(n.x), r2(n.y), r2(n.z), '→', r2(dn.x), r2(dn.y), r2(dn.z)]); }
+      }
+      rows3.push({ t: r2(Lv.clock.t), lavaY: r2(Lv.y), state: F.state === sLow ? 'low' : F.state === sHigh ? 'high' : F.state, tried, covered, none, eg });
+      if (!real && spot >= 0 && t >= wFall + 1) {
+        const n = nav.nodes[spot];
+        Kp._reform(Kp.R.pond.clone(), -1); step(0.05);
+        Kp._dropAt(V(n.x, n.y, n.z), F.states[F.state].halfOf[spot], 'splat'); step(0.5);
+        const rp = Kp.pos;
+        real = { t: r2(Lv.clock.t), restNode: Kp.restNode, kind: Kp.restNode >= 0 ? M.kind[Kp.restNode] : null, pos: [r2(rp.x), r2(rp.y), r2(rp.z)], covered: Lv.covers(rp.x, rp.z, rp.y + 0.02), phase: Kp.phase };
+      }
+    }
+    R('K3b from the fall warning (the field LOW) until the ledges dry, no drop spot on ground the lava covers now: 60 ledge-level origins at 6 times (the lava HIGH 10 s more, then falling); a real drop 1 s into the warning lands dry',
+      rows3.every((r) => r.covered === 0) && rows3[0].state === 'low' && !!real && !real.covered, { rows: rows3, real });
+  }
 
   // K5: rest the Bazookarp on a Casting Floor / shelf node at LOW (state low), then the rise's warning
   setT(18); step(0.2);
