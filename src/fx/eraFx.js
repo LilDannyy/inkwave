@@ -557,7 +557,9 @@ const CSS = `
    Control's callouts), so neither covers the other */
 .er-calls { position: absolute; left: 50%; top: 27%; width: 0; height: 0; pointer-events: none; z-index: 3; transition: top .18s ease-out; }
 .er-call { position: absolute; left: 0; top: 0; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: .35em; isolation: isolate; white-space: nowrap;
-  padding: .35em 1.3em .45em; animation: iw-call 2.4s forwards; }
+  padding: .35em 1.3em .45em; animation: er-call 2.4s forwards; }
+/* (the HUD's callout pop, but it fades where it stands: the HUD's own slides up as it goes, over the era chip) */
+@keyframes er-call { 0% { opacity: 0; scale: 2.2; } 10% { opacity: 1; scale: .9; } 16% { scale: 1.05; } 22% { scale: 1; } 80% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .96; } }
 .er-call__ribbon { position: absolute; z-index: -1; inset: 0; border-radius: 999px; background: rgba(24, 21, 17, .9);
   box-shadow: 0 0 0 2px rgba(244, 233, 200, .85), 0 0 22px 3px rgba(244, 233, 200, .35); }
 .er-call__txt { font-size: calc(var(--u, 10px) * 2.6); color: #f4e9c8; text-shadow: 0 0 .35em rgba(244, 233, 200, .55); letter-spacing: .04em; }

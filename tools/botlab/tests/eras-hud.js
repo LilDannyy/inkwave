@@ -28,7 +28,7 @@
     say(text, sub, big);
     const el = document.querySelector('.er-call');
     calls.push({ k: `${el?.querySelector('.er-call__txt')?.textContent}|${el?.querySelector('.er-call__sub')?.textContent || ''}|${!!el?.classList.contains('is-big')}`, t: +E.S.clock.t.toFixed(2) });
-    if (el && look.length < 6) { const rb = getComputedStyle(el.querySelector('.er-call__ribbon')), tx = getComputedStyle(el.querySelector('.er-call__txt')); look.push({ text, ribbon: rb.backgroundColor, ribbonImg: rb.backgroundImage.slice(0, 60), shadow: rb.boxShadow.slice(0, 40), color: tx.color, inHud: !!el.closest('.iw-hud') }); }
+    if (el && look.length < 6) { const rb = getComputedStyle(el.querySelector('.er-call__ribbon')), tx = getComputedStyle(el.querySelector('.er-call__txt')); look.push({ text, anim: getComputedStyle(el).animationName, ribbon: rb.backgroundColor, ribbonImg: rb.backgroundImage.slice(0, 60), shadow: rb.boxShadow.slice(0, 40), color: tx.color, inHud: !!el.closest('.iw-hud') }); }
   };
   const tAt = (t) => step(Math.max(0, t - E.S.clock.t));
 
@@ -55,7 +55,17 @@
   const has = (re) => calls.some((c) => re.test(c.k));
   R('step 9: the callouts: "TIME JUMP" with "1880s → TODAY in 10" at the warning, Tartar\'s line at the pickup, the era\'s name ("TODAY", big) at the jump, "NEW ROUTES OPEN" at done',
     has(/^TIME JUMP\|1880s → TODAY in 10\|false$/) && has(/\|COMMANDER TARTAR\|/) && has(/^TODAY\|TIME JUMP\|true$/) && has(/^NEW ROUTES OPEN\|TODAY\|false$/), calls);
+  // (layout boxes, vertical: the chip's rect; a callout centred on its container's top, its own height — the entry
+  //  scale of the CSS animation left out; the band's move is a 0.18 s CSS transition, so measured after real time)
+  const host = __G.hud.el, Hh = host.getBoundingClientRect().height;
+  const boxOf = (sel) => { const el = document.querySelector(sel); if (!el) return null; const r = el.parentElement.getBoundingClientRect(); return [r.top - el.offsetHeight / 2, r.top + el.offsetHeight / 2]; };
+  const chipBox = () => { const r = chip.getBoundingClientRect(); return [r.top, r.bottom]; };
+  const apart = (a, b) => !a || !b || a[1] <= b[0] + 0.5 || b[1] <= a[0] + 0.5;
+  const pct = (b) => b && +((((b[0] + b[1]) / 2 - host.getBoundingClientRect().top) / Hh) * 100).toFixed(1);
+  const settle = () => new Promise((r) => setTimeout(r, 450));
   const J2 = E.debugJump(3, { inS: 0.2 });
+  tAt(J2.at + 0.05); await settle();
+  const bigBox = { era: boxOf('.er-call.is-big'), chip: chipBox(), text: document.querySelector('.er-call.is-big')?.textContent, top: document.querySelector('.er-calls')?.style.top };
   tAt(J2.doneAt + 0.4);
   R('step 9: and at jump 2: "3000s" at the jump, "NEW AREAS!" at done', has(/^3000s\|TIME JUMP\|true$/) && has(/^NEW AREAS!\|3000s\|false$/) && lit() === '3000s', calls.slice(-4));
   // the callouts' colours: white-gold on dark like the chip (LEAD-NOTES: never a team ink), and a gameplay callout on
@@ -66,19 +76,12 @@
     const far = (a, b) => !a || !b || Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) > 90;
     const near = (a, b) => a && Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 40;
     // text: white-gold #f4e9c8 (the big banner #fff6dc); band: dark (the big one a dark gradient over its dark colour)
-    const okLook = look.length >= 4 && look.every((l) => l.inHud && (near(hex(l.color), [0xf4, 0xe9, 0xc8]) || near(hex(l.color), [0xff, 0xf6, 0xdc])))
+    const okLook = look.length >= 4 && look.every((l) => l.inHud && l.anim === 'er-call' && (near(hex(l.color), [0xf4, 0xe9, 0xc8]) || near(hex(l.color), [0xff, 0xf6, 0xdc])))
       && look.every((l) => { const rb = hex(l.ribbon); return rb && rb[0] < 70 && rb[1] < 60 && rb[2] < 50 && team.every((t) => far(rb, t)) && team.every((t) => far(hex(l.color), t)); });
-    // (layout boxes, vertical: the chip's rect; a callout centred on its container's top, its own height — the entry
-    //  scale of the CSS animation left out)
-    const host = __G.hud.el, Hh = host.getBoundingClientRect().height;
-    const boxOf = (sel) => { const el = document.querySelector(sel); if (!el) return null; const r = el.parentElement.getBoundingClientRect(); return [r.top - el.offsetHeight / 2, r.top + el.offsetHeight / 2]; };
-    const chipBox = () => { const r = chip.getBoundingClientRect(); return [r.top, r.bottom]; };
-    const apart = (a, b) => !a || !b || a[1] <= b[0] + 0.5 || b[1] <= a[0] + 0.5;
-    const pct = (b) => b && +((((b[0] + b[1]) / 2 - host.getBoundingClientRect().top) / Hh) * 100).toFixed(1);
-    // an era callout alone sits in the HUD's callout slot (27 %), clear of the chip
-    const settle = () => new Promise((r) => setTimeout(r, 450));   // (the band's move is a 0.18 s CSS transition: real time)
+    // an era callout alone sits in the HUD's callout slot (27 %), or just under the chip where the chip reaches into it
     E.debugJump(1, { inS: 10.05 }); step(0.2); await settle();
-    const alone = boxOf('.er-call'), aloneOk = !!alone && Math.abs(pct(alone) - 27) < 0.6 && apart(alone, chipBox());
+    const alone = boxOf('.er-call'), cb = chipBox(), aloneOk = !!alone && apart(alone, cb) && (Math.abs(pct(alone) - 27) < 0.6 || alone[0] - cb[1] < Hh * 0.012 + 2);
+    const bigOk = !!bigBox.era && apart(bigBox.era, bigBox.chip);
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
     co('SPLATTED!', 'a gameplay callout', false);
     const game = document.querySelector('.iw-call');
@@ -86,9 +89,9 @@
     const kept = !!game && game.isConnected && !!document.querySelector('.er-call');
     const both = { era: boxOf('.er-call'), game: boxOf('.iw-call'), chip: chipBox() };
     const bothOk = !!both.era && !!both.game && apart(both.era, both.game) && apart(both.era, both.chip) && both.era[0] >= both.game[1];
-    R('step 9 (review fix 5): the era callouts are the module\'s own (white-gold text on a dark band, like the chip; not the HUD\'s team-ink ribbon, not routed through HUD._callout); alone one sits in the HUD\'s callout slot, clear of the chip; with a gameplay callout on screen it leaves it there and moves below it, covering neither it nor the chip',
-      okLook && kept && aloneOk && bothOk && hudCalls.filter((t) => t !== 'SPLATTED!').length === 0,
-      { look, team, kept, hudCalls, alone: { pct: pct(alone), box: alone && alone.map(Math.round), chip: chipBox().map(Math.round) }, both: { eraPct: pct(both.era), gamePct: pct(both.game), era: both.era?.map(Math.round), game: both.game?.map(Math.round), chip: both.chip.map(Math.round) } });
+    R('step 9 (review fix 5): the era callouts are the module\'s own (white-gold text on a dark band, like the chip; not the HUD\'s team-ink ribbon, not routed through HUD._callout); alone one sits in the HUD\'s callout slot, clear of the chip (the big era banner too); with a gameplay callout on screen it leaves it there and moves below it, covering neither it nor the chip',
+      okLook && kept && aloneOk && bigOk && bothOk && hudCalls.filter((t) => t !== 'SPLATTED!').length === 0,
+      { look, team, kept, hudCalls, hostH: Math.round(Hh), big: { pct: pct(bigBox.era), era: bigBox.era?.map(Math.round), chip: bigBox.chip.map(Math.round), text: bigBox.text, top: bigBox.top }, alone: { pct: pct(alone), box: alone && alone.map(Math.round), chip: chipBox().map(Math.round) }, both: { eraPct: pct(both.era), gamePct: pct(both.game), era: both.era?.map(Math.round), game: both.game?.map(Math.round), chip: both.chip.map(Math.round) } });
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
   }
 
