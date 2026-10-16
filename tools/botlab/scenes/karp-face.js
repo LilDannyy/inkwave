@@ -173,6 +173,22 @@
   const otGo = () => { step(0.05); g.hud.countLayer?.replaceChildren(); };   // (time's up: the engine's timeUp() → overtime; the last-ten count's digit cleared, as the stepped clock left it fresh)
   add('hud-ot', otStage, otGo, 600);
   add('hud-ot-after', otStage, () => { otGo(); setTimeout(() => dbg.step(2050), 2000); }, 2900);
+  // ([karp-face] review round 3: overtime with its carrier in view, on both teams' screens — the defenders look at the
+  // carrier, whose marker sat on the banner's word and then on our call-out's instruction. hud-ot-foe*: a Bravo carrier
+  // holds it at time-up while Alpha leads (S38 'held'), we are Alpha: 'Stop them — 10 s to hold!'. hud-ot-ally*: an Alpha
+  // teammate holds it with Alpha behind: 'Carry it past their count!'. 0.6 s in (the banner) and 2.9 s in (our call-out))
+  const otCarrier = (ally) => () => {
+    reset(); m.time = 9;
+    Kp.count = ally ? [63, 41] : [41, 63]; Kp.reachT = ally ? [90, 120] : [120, 90]; Kp.touched = true;
+    const c = ally ? A[0] : B[0];
+    put(c, spot(P.x + 0.8, ally ? P.z + dz * 6 : P.z - dz * 4, P.y), ally ? (dz > 0 ? 0 : Math.PI) : (dz > 0 ? Math.PI : 0)); grab(c); step(0.1); Kp.fuse = 37.4;
+    put(me, clearSpot(P.x - 0.6, ally ? P.z - dz * 7 : P.z - dz * 17, null, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); me.yaw = me.aimYaw = yawTo(me, c.pos);
+    step(0.05); follow(); m.time = 0.05; dbg.step(1000 / 60); calm();
+  };
+  add('hud-ot-foe', otCarrier(false), otGo, 600);
+  add('hud-ot-foe-after', otCarrier(false), () => { otGo(); setTimeout(() => dbg.step(2050), 2000); }, 2900);
+  add('hud-ot-ally', otCarrier(true), otGo, 600);
+  add('hud-ot-ally-after', otCarrier(true), () => { otGo(); setTimeout(() => dbg.step(2050), 2000); }, 2900);
   add('hud-fuse-low', () => {
     reset(); m.time = 120;
     put(me, clearSpot(P.x, P.z + dz * 12, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
