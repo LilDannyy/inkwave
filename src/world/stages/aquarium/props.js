@@ -60,6 +60,7 @@ export const PLACEMENTS = [
   { type: 'aquarium_gatehouse', pos: [0, 0, 0], rotY: PI, label: 'NORTH GATE', mirror: false },
   { type: 'aquarium_gantry', pos: [0, 0, 0], mirror: false },
   { type: 'aquarium_tankframe', pos: [0, 0, 0], mirror: false },
+  { type: 'aquarium_stairtrim', pos: [0, 0, 0] },
   { type: 'aquarium_gulper', pos: [0, 0, 0] },
   { type: 'aquarium_canopy', pos: [0, 0, 0] },
   { type: 'aquarium_reefwindow', pos: [0, 0, 0], moray: true },

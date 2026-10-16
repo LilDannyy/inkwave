@@ -13,6 +13,11 @@
 //               border; at dusk lit warm from below (under the ink: the ink still wins)
 //   deck rim    a brass wave inlay round the Feeding Deck inside its rim, and one along the gatehouse's foot on the Gate
 //               Terrace
+//   stair flank the deck stair's two side faces (bearing −135 and its twin), a 2.4 m-high triangle each beside the Great
+//               Tank's glass (LEAD-REVIEW art round 2: bare grey stonestep in mid): white render over a black-granite
+//               skirting with a brass line, three faience speed lines running down the rake under the brass string-course
+//               (props.js, aquarium_stringcourse), and two brass-ringed portholes into the tank stepping down with it (a
+//               moon jelly and a fish in each, lit from within at dusk). Under the ink, like a mural
 //   pools       dusk light on the floors under the colonnade's globes, the canopy pendants, the Ticket Hall's canopy,
 //               round the lit jelly columns, the Great Tank and the Reef Windows (warm white, times the surface's own
 //               colour: ink in a pool is lit in its own colour, never washed out)
@@ -63,6 +68,7 @@ uniform int uAqEndN;
 uniform vec4 uAqPool[24];
 uniform int uAqPoolN;
 vec3 gAqGlow = vec3(0.0);     // (fragBase → fragEmissive: the Glass Walk's under-glow)
+vec3 gAqWin = vec3(0.0);      // (fragBase → fragEmissive: the stair flanks' portholes)
 float gAqTop = 0.0;
 vec2 aqR2(vec2 p, float a) { float c = cos(a), s = sin(a); return vec2(c * p.x - s * p.y, s * p.x + c * p.y); }
 float aqSeg(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
@@ -75,6 +81,34 @@ float aqTri(vec2 p, vec2 a, vec2 b, vec2 c) {
   return -sqrt(d.x) * sign(d.y);
 }
 float aqFill(float d, float aa) { return 1.0 - smoothstep(-aa, aa, d); }
+// a porthole on the deck stair's flank: p in metres from its centre (along the rake's run, up), R the glass's radius;
+// returns the colour and writes its coverage (glass 0…1, brass ring) for the roughness and the dusk glow
+vec3 aqPort(vec2 p, float R, float aa, vec3 under, out float glass, out float ring) {
+  float r = length(p);
+  glass = aqFill(r - R, aa);
+  ring = aqFill(abs(r - R - 0.026) - 0.026, aa);
+  vec3 BR = vec3(0.56, 0.38, 0.15);
+  // the water: deep blue-green, lighter toward its top, a shaft of light, a moon jelly and a small fish
+  vec2 u = p / R;
+  vec3 w = mix(vec3(0.008, 0.03, 0.045), vec3(0.06, 0.16, 0.19), smoothstep(-1.0, 0.9, u.y));
+  w += vec3(0.05, 0.08, 0.08) * smoothstep(0.25, 0.0, abs(u.x + 0.35 * u.y - 0.1)) * smoothstep(-0.6, 1.0, u.y);
+  vec2 jb = (u - vec2(-0.18, 0.2)) / vec2(0.34, 0.24);
+  float bell = aqFill((length(jb) - 1.0) * 0.1, aa) * smoothstep(-0.55, 0.05, jb.y);
+  float tent = 0.0;
+  for (int k = 0; k < 3; k++) { float x = -0.3 + 0.12 * float(k); tent = max(tent, aqFill(abs(u.x - x - 0.04 * sin(u.y * 14.0 + float(k))) - 0.012, aa) * step(u.y, 0.12) * step(-0.45, u.y) * smoothstep(-0.45, 0.1, u.y)); }
+  w = mix(w, vec3(0.62, 0.62, 0.7), max(bell * 0.75, tent * 0.45));
+  vec2 fb = (u - vec2(0.38, -0.36)) / vec2(0.2, 0.08);
+  float fish = max(aqFill((length(fb) - 1.0) * 0.06, aa), aqFill(aqTri(u - vec2(0.38, -0.36), vec2(-0.16, 0.0), vec2(-0.3, 0.08), vec2(-0.3, -0.08)), aa));
+  w = mix(w, vec3(0.02, 0.05, 0.06), fish * 0.85);
+  // the glass's highlight
+  w += vec3(0.12) * aqFill(abs(length(u - vec2(0.12, -0.12)) - 0.78) - 0.035, aa) * step(0.0, -u.x + u.y * 0.2) * step(0.2, u.y);
+  vec3 c = mix(under, w, glass);
+  // the brass ring and its eight bolts
+  float ang = atan(p.y, p.x), bolt = aqFill(length(vec2(fract(ang / 0.7854 + 0.5) - 0.5, 0.0) * 0.7854 * (R + 0.026) + vec2(0.0, r - R - 0.026)) - 0.011, aa);
+  c = mix(c, BR, ring);
+  c = mix(c, BR * 0.35, bolt * ring);
+  return c;
+}
 `;
 
 const GLSL_BASE = /* glsl */`
@@ -179,10 +213,48 @@ const GLSL_BASE = /* glsl */`
       base = mix(base, GRAN * 1.4, bandK * 0.9);
       base = mix(base, BRASS, max(bandK * stripe * 0.9, edge));
     }
+  } else if (abs(vWNorm.y) < 0.3 && vWPos.y < 2.45) {
+    // ---- the deck stair's flanks (layout.js radRamp(−135, 13.5 → 7.2, 0 → 2.4, 4.0 wide) and its twin at +45): its side
+    // faces stand at ±2.0 m off the stair's axis; t runs out along the axis (7.5 at the tank's glass … 13.5 at the foot)
+    vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz, nq = vWPos.z > 0.0 ? -vWNorm.xz : vWNorm.xz;
+    vec2 ax = vec2(-0.70711), pr = vec2(0.70711, -0.70711);
+    float t = dot(q, ax), l = dot(q, pr);
+    if (abs(abs(l) - 2.0) < 0.04 && abs(dot(nq, pr)) > 0.95 && t > 7.0 && t < 14.2) {
+      float y = vWPos.y, aa = max(fwidth(t) + fwidth(y), 0.003);
+      float ys = clamp(2.4 * (13.5 - t) / 6.3, 0.0, 2.4), d = (ys - y) * 0.9345;   // (d: metres in from the rake, square to it)
+      vec3 GRAN = vec3(0.045, 0.048, 0.052), BRASS = vec3(0.56, 0.38, 0.15);
+      vec3 REN = vec3(0.84, 0.79, 0.70) * 0.86 * (1.0 + 0.05 * (big - 0.5) + 0.03 * (fine - 0.5));
+      vec3 FAI = vec3(0.33, 0.45, 0.39) * (0.96 + 0.05 * fine);
+      vec3 c = REN;
+      // the shadow line under the string-course, then three faience speed lines down the rake (6 cm, 8 cm apart)
+      c *= 1.0 - 0.18 * aqFill(abs(d - 0.1) - 0.02, aa);
+      float dl = min(abs(d - 0.3), min(abs(d - 0.44), abs(d - 0.58)));
+      float band = aqFill(dl - 0.03, aa), grout = aqFill(abs(dl - 0.03) - 0.005, aa);
+      c = mix(c, FAI, band);
+      c *= 1.0 - 0.22 * grout;
+      // the skirting: black granite to 0.15 m, a brass line on it
+      c = mix(c, GRAN * 1.5, aqFill(y - 0.15, aa));
+      float sk = aqFill(abs(y - 0.157) - 0.008, aa);
+      c = mix(c, BRASS, sk);
+      // two portholes into the tank, stepping down the rake
+      float g1, r1, g2, r2;
+      c = aqPort(vec2(t - 8.3, y - 0.92), 0.32, aa, c, g1, r1);
+      c = aqPort(vec2(t - 9.4, y - 0.55), 0.26, aa, c, g2, r2);
+      base = c;
+      float glassW = max(g1, g2), ringW = max(r1, r2);
+      gBaseRough = mix(mix(0.85, 0.25, band), 0.3, max(ringW, sk));
+      gBaseRough = mix(gBaseRough, 0.12, glassW);
+      gAqWin = vec3(0.95, 0.88, 0.8) * glassW;
+      // (the stonestep's own relief and metal off the face: smooth trowelled render, brass where the brass is)
+      gTexStr *= 0.12;
+      gTexORM.b = 0.65 * max(ringW, sk);
+    }
   }
 `;
 
 const GLSL_EMIT = /* glsl */`
+  // ---- Gulper Aquarium: the stair flanks' portholes, lit from within (a little by day, more at dusk)
+  totalEmissiveRadiance += gAqWin * diffuseColor.rgb * (0.35 + 1.6 * uAqNight) * (1.0 - gInk);
   // ---- Gulper Aquarium: dusk light pools and the Glass Walk's under-glow (floorart.js)
   if (uAqNight > 0.01 && gAqTop > 0.5) {
     vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz;

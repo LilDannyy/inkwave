@@ -203,6 +203,27 @@ export function registerArch(D, H, KIT, G) {
     },
   };
 
+  // ============================================================================================================ deck stair trim
+  // the deck stair's two flanks (layout.js radRamp(−135, 13.5 → 7.2, 0 → 2.4, 4.0 wide); the twin turns it to +45): a
+  // brass string-course 3.4 cm proud along each flank's raked top edge, from the tank's glass (t 7.48 along the stair's
+  // axis) to where it meets the court floor (t 13.27); floorart.js draws the render, the speed lines under it, the
+  // skirting and the portholes on the face itself (under the ink). Visual only (LEAD-REVIEW art round 2: the flanks were
+  // bare grey slabs in mid)
+  D.aquarium_stairtrim = {
+    desc: "the deck stair's flank string-courses (world frame, Alpha's stair; the twin is Bravo's)",
+    build(B) {
+      const ax = [-Math.SQRT1_2, -Math.SQRT1_2], pr = [Math.SQRT1_2, -Math.SQRT1_2], rake = Math.atan2(2.4, 6.3);
+      const t0 = 7.48, t1 = 13.27, tm = (t0 + t1) / 2, ys = (t) => (2.4 * (13.5 - t)) / 6.3, L = (t1 - t0) / Math.cos(rake);
+      for (const sg of [1, -1]) {
+        const l = sg * 2.017, x = tm * ax[0] + l * pr[0], z = tm * ax[1] + l * pr[1];
+        face(B, x, 0, z, sg * pr[0], sg * pr[1], () => {
+          pbox(B, 'metal', K.brass, L, 0.065, 0.034, 0, ys(tm) - 0.0535, 0, { rz: -sg * rake });
+          pbox(B, NS('metal'), K.brassDk, L, 0.012, 0.04, 0, ys(tm) - 0.0535 - 0.034 / Math.cos(rake), 0.002, { rz: -sg * rake });
+        });
+      }
+    },
+  };
+
   // ============================================================================================================ gulper heads
   // The E head fills its collision block (x 9.5 … 12.7, y 0 … 2.4, z ±1.3; `hidden` since art round 1, like every other
   // stand-in the dressing draws) and the neck's (x 7.4 … 9.5 to 1.9, z ±1.0). The Gulper Run's mouth is the engine's: its
@@ -404,6 +425,22 @@ export function registerArch(D, H, KIT, G) {
           rod(B, 'metal', K.brass, [0, 4.4, -1.6], [0, 4.6, -1.6], 0.02);
         });
       }
+      // its glazing seen from above (the hero shot and the Lookouts look down on it; its block is glass tile since art
+      // round 2): brass glazing bars running out across it every half segment, a brass curb round its court edge
+      // (the block's segments alternate their tops 5.3 / 5.4, layout.js arcBand: each bar sits on its own segment's top)
+      const topOf = (i) => (Math.min(n - 1, Math.max(0, i)) % 2 ? 5.4 : 5.3);
+      for (let i = 0; i <= 2 * n; i++) {
+        const a = a0 + (da * i) / 2, [x, z] = pol(a, 28.0), y = i % 2 ? topOf((i - 1) / 2) : Math.max(topOf(i / 2 - 1), topOf(i / 2));
+        B.push(x, y + 0.02, z, -a * DEG + HP);
+        pbox(B, NS('metal'), i % 2 ? K.brassDk : K.brass, 0.06, 0.05, 5.0, 0, 0, 0);
+        B.pop();
+      }
+      for (let i = 0; i < n; i++) {
+        const a = a0 + da * (i + 0.5), [x, z] = pol(a, 25.58);
+        B.push(x, topOf(i) + 0.04, z, -a * DEG + HP);
+        pbox(B, 'metal', K.brass, 2 * 25.6 * Math.sin(h) + 0.04, 0.08, 0.14, 0, 0, 0);
+        B.pop();
+      }
       // REEF HALL on a navy Deco board standing on the canopy's edge (without one, the GA stack's letters far behind
       // showed through the gaps from the colonnade and the court: "REEE HALL" — LEAD-REVIEW art round 1)
       for (const [a, t] of [[-40.4, o.label || 'REEF HALL']]) {
@@ -536,6 +573,34 @@ export function registerArch(D, H, KIT, G) {
         const P = pol(a0, r), Q = pol(a1, r), n = Math.max(1, Math.round(Math.abs(a1 - a0) / 3.5));
         for (let i = 0; i < n; i++) { const A = pol(a0 + ((a1 - a0) * i) / n, r), C = pol(a0 + ((a1 - a0) * (i + 1)) / n, r); handrail(B, [A[0], y + 0.05, A[1]], [C[0], y + 0.05, C[1]], { balls: i === 0 || i === n - 1 ? true : false, r: 0.035 }); }
         void P; void Q;
+      }
+      // the court-edge balustrades' joints (layout.js arcBandIn r 21 → 21.4: the segments meet at their court-side corners,
+      // so the promenade face had a 3 cm V-notch at every joint with light through it — LEAD-REVIEW art round 2): a render
+      // pilaster 3–4 cm proud over each joint on the promenade face, and over the tall sections a render coping cap the
+      // brass handrail sits on (the caps overlap at the joints, their tops alternating 4 mm)
+      {
+        const gap = Math.asin(3 / 21) / DEG, SECT = [[-163.6, -152 - gap, 3.3, 1], [-152 + gap, -133, 2.5, 3], [-133, -117, 3.3, 4], [-117, -110, 2.5, 2]];
+        const joints = [];
+        SECT.forEach(([a0, a1, top, n], si) => {
+          for (let i = 1; i < n; i++) joints.push([a0 + ((a1 - a0) * i) / n, top]);
+          const nx = SECT[si + 1];
+          if (nx && Math.abs(nx[0] - a1) < 0.01) joints.push([a1, Math.min(top, nx[2])]);
+          if (top > 3) {
+            const da = (a1 - a0) / n, h = (Math.abs(da) * DEG) / 2, dIn = 21 * Math.cos(h), L = 2 * 21.44 * Math.sin(h) + 0.06;
+            for (let i = 0; i < n; i++) {
+              const am = a0 + da * (i + 0.5), [x, z] = pol(am, (dIn - 0.03 + 21.44) / 2);
+              B.push(x, 0, z, -am * DEG + HP);
+              pbox(B, 'paint', K.render, L, 0.04 + (i % 2) * 0.004, 21.44 - dIn + 0.03, 0, 3.32 + (i % 2) * 0.002, 0);
+              B.pop();
+            }
+          }
+        });
+        for (const [a, top] of joints) {
+          const [x, z] = pol(a, 21.415);
+          face(B, x, 0, z, Math.cos(a * DEG), Math.sin(a * DEG), () => {
+            pbox(B, 'paint', K.render, 0.14, top - 2.4, 0.05, 0, (2.4 + top) / 2, 0);
+          });
+        }
       }
       // the Lookout's SEA PROMENADE letters on its balustrade, facing the court
       { const a = -141.5, [x, z] = pol(a, 21.38); face(B, x, 0, z, -Math.cos(a * DEG), -Math.sin(a * DEG), () => letters(B, o.label || 'SEA PROMENADE', { h: 0.2, y: 4.18, z: 0.01, c: K.brassDk, flat: true, mat: 'paint', track: 0.16 })); }

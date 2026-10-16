@@ -204,7 +204,7 @@ H(B(3.0, 5.4, 0, 0.9, -30.3, -29.7, cover(K.teak, { tag: 'shark-bench', pattern:
 for (const [a0, a1, n] of [[-70, -60.5, 3], [-53.5, -46.5, 2], [-39.5, -32.5, 2], [-25.5, -18.5, 2]]) H(arcBand(C0, 20.0, 21.6, a0, a1, n, FL, [0.45, 0.55], stone({ tag: 'plinth' })));
 for (const [a0, a1] of [[-60.5, -53.5], [-46.5, -39.5], [-32.5, -25.5]]) H(arcBand(C0, 20.0, 21.6, a0, a1, 1, FL, 0.22, stone({ tag: 'plinth-step' })));
 for (const a of [-64, -50, -36, -22]) H(radBox(a, 20.35, 21.25, 0.9, FL, 5.3, roofR(K.brass, { tag: 'lamp-column', hidden: true })));
-H(arcBand(C0, 25.5, 30.5, -70, -12, 12, 4.6, [5.3, 5.4], roofR(K.canopy, { tag: 'canopy' })));
+H(arcBand(C0, 25.5, 30.5, -70, -12, 12, 4.6, [5.3, 5.4], roofR('#c3d6d6', { tag: 'canopy', pattern: PATTERN.glasstile })));   // (glazed: art round 2 — from above it was a bare grey slab across the hero shot)
 // the Service Gate's opening (bearings): α −67 … −58, 4° nearer the hall than DESIGN.md's −63 … −54, so the Pump Hall
 // aisle runs straight into it (fix round 1: the left flank sets spawn → mid, and it jogged east here)
 const SG = [-67, -58];
