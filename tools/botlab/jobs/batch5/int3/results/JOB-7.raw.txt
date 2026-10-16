@@ -1,0 +1,134 @@
+JOB-7 raw results — automatic, by the Mac mini's b5-runner, 2026-10-16 15:51:57
+branch botlab-b5-int3, ran at b553a04, exit code 0, wall time 12min
+(a written-up JOB-7.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### A3-base-halyard-2: == halyard [zones]: winner Bravo (time) | final 98 vs 53 (penalty +2.7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-halyard-1: == halyard [zones]: winner Bravo (time) | final 100 vs 59 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-halyard-1: == halyard [zones]: winner Alpha (time) | final 66 vs 79 (penalty +14/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-halyard-3: == halyard [zones]: winner Alpha (time) | final 6 vs 86 (penalty +0/+12) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-halyard-2: == halyard [zones]: winner Bravo (time) | final 93 vs 56 (penalty +0/+35) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-halyard-3: == halyard [zones]: winner Bravo (time) | final 95 vs 40 (penalty +3/+20) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-halyard-4: == halyard [zones]: winner Alpha (time) | final 4 vs 100 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-saltpan-1: == saltpan [zones]: winner Bravo (time) | final 92 vs 56 (penalty +8/+27) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-halyard-4: == halyard [zones]: winner Bravo (time) | final 92 vs 44 (penalty +7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-saltpan-2: == saltpan [zones]: winner Bravo (knockout) | final 85 vs 0 (penalty +11/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-saltpan-1: == saltpan [zones]: winner Alpha (time) | final 81 vs 87 (penalty +0/+11) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-saltpan-2: == saltpan [zones]: winner Bravo (time) | final 100 vs 97 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-saltpan-3: == saltpan [zones]: winner Alpha (time) | final 78 vs 100 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-saltpan-4: == saltpan [zones]: winner Alpha (time) | final 89 vs 89 (penalty +0/+7.6) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-saltpan-3: == saltpan [zones]: winner Bravo (time) | final 84 vs 83 (penalty +8/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-crossmarket-1: == crossmarket [zones]: winner Bravo (time) | final 92 vs 49 (penalty +7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-saltpan-4: == saltpan [zones]: winner Bravo (time) | final 82 vs 74 (penalty +13/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-crossmarket-1: == crossmarket [zones]: winner Bravo (time) | final 89 vs 8 (penalty +8.8/+4.3) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-crossmarket-2: == crossmarket [zones]: winner Bravo (time) | final 100 vs 27 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-crossmarket-2: == crossmarket [zones]: winner Bravo (time) | final 68 vs 56 (penalty +17/+15.6) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-crossmarket-3: == crossmarket [zones]: winner Alpha (time) | final 70 vs 94 (penalty +0.8/+5.1) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-crossmarket-3: == crossmarket [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-crossmarket-4: == crossmarket [zones]: winner Alpha (time) | final 62 vs 83 (penalty +9/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-lockgate-1: == lockgate [zones]: winner Bravo (time) | final 84 vs 49 (penalty +13/+19.2) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-crossmarket-4: == crossmarket [zones]: winner Alpha (time) | final 38 vs 94 (penalty +0/+6) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-lockgate-1: == lockgate [zones]: winner Alpha (knockout) | final 0 vs 92 (penalty +0/+7) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-lockgate-2: == lockgate [zones]: winner Bravo (time) | final 84 vs 76 (penalty +11/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-lockgate-2: == lockgate [zones]: winner Alpha (time) | final 51 vs 74 (penalty +12.9/+21) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-lockgate-3: == lockgate [zones]: winner Alpha (time) | final 49 vs 90 (penalty +0/+5) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-lockgate-3: == lockgate [zones]: winner Bravo (time) | final 42 vs 42 (penalty +45/+30.4) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-base-lockgate-4: == lockgate [zones]: winner Alpha (time) | final 36 vs 89 (penalty +23.1/+9) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A3-head-lockgate-4: == lockgate [zones]: winner Bravo (time) | final 83 vs 28 (penalty +13/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+## set A3
+SUMMARY 32 of 32 matches wrote a result
+
+## last 15 lines of job.log
+  halyard-3     B (time             ) 95-40   55   0         8 (6)    2 / 1 / 0   13.2  0/0
+  halyard-4     B (time             ) 92-44   48   0         8 (2)    3 / 0 / 0   17.5  0/0
+  lockgate-1    A (knockout 266.8s  ) 0-92    92   0         6 (2)    2 / 0 / 0   9.5   0/0
+  lockgate-2    A (time             ) 51-74   23   0         6 (2)    3 / 1 / 0   29.5  0/0
+  lockgate-3    B (time             ) 42-42   0    0         8 (2)    0 / 2 / 1   45.0  0/0
+  lockgate-4    B (time             ) 83-28   55   2 @188.8  6 (2)    2 / 1 / 0   13.0  0/0
+  saltpan-1     A (time             ) 81-87   6    1 @294.3  3 (1)    0 / 1 / 0   11.0  0/0
+  saltpan-2     B (time             ) 100-97  3    0         1 (0)    0 / 0 / 0   -     0/0
+  saltpan-3     B (time             ) 84-83   1    2 @292.8  5 (2)    0 / 3 / 0   8.0   0/0
+  saltpan-4     B (time             ) 82-74   8    2 @293.0  6 (4)    1 / 1 / 2   7.8   0/0
+  gap |A − B| at each 30 s mark (matches still on): 30s 2.9 (n 16) · 60s 11.6 (n 16) · 90s 16.8 (n 16) · 120s 20.0 (n 16) · 150s 26.7 (n 16) · 180s 24.4 (n 15) · 210s 25.1 (n 15) · 240s 29.5 (n 15) · 270s 26.4 (n 14)
+  MEAN (n 16): knockouts 2/16 | margin 36.9 | last lead change at 232.4 s (6 matches had one; 10 never changed leader)
+    takes 103 (39 off the other team) | after 180 s: 44 takes — by the leader 24, the trailer 17, level 3; off the other team after 180 s: leader 7, trailer 9
+    penalty per take off the other team 17.33 (all takes: 6.56) | by the taker's role: leader took 8.58 per take (12), trailer 21.58 (24)
+SUMMARY 32 of 32 matches wrote a result
+
+## A3.txt
+A3 base: map | winner (reason, KO at) | final | margin | lead changes, last at | takes (off the other team) | after 180 s: by leader / trailer / level | penalty per take off the other team | err
+  crossmarket-1 B (time             ) 92-49   43   0         8 (2)    3 / 0 / 0   23.0  0/0
+  crossmarket-2 B (time             ) 100-27  73   0         5 (0)    2 / 0 / 0   -     0/0
+  crossmarket-3 A (time             ) 70-94   24   0         8 (4)    2 / 1 / 0   10.5  0/0
+  crossmarket-4 A (time             ) 62-83   21   3 @143.0  6 (4)    0 / 2 / 0   6.0   0/0
+  halyard-1     B (time             ) 100-59  41   0         3 (0)    1 / 0 / 0   -     0/0
+  halyard-2     B (time             ) 98-53   45   1 @123.5  7 (3)    2 / 1 / 0   2.3   0/0
+  halyard-3     A (time             ) 6-86    80   0         9 (2)    4 / 0 / 0   17.0  0/0
+  halyard-4     A (time             ) 4-100   96   0         8 (0)    3 / 0 / 0   -     0/0
+  lockgate-1    B (time             ) 84-49   35   0         7 (4)    1 / 1 / 0   17.5  0/0
+  lockgate-2    B (time             ) 84-76   8    1 @292.5  5 (3)    0 / 1 / 0   12.0  0/0
+  lockgate-3    A (time             ) 49-90   41   2 @122.0  6 (4)    2 / 0 / 0   5.5   0/0
+  lockgate-4    A (time             ) 36-89   53   0         4 (2)    1 / 0 / 0   29.0  0/0
+  saltpan-1     B (time             ) 92-56   36   0         4 (2)    1 / 1 / 0   21.0  0/0
+  saltpan-2     B (knockout 265.0s  ) 85-0    85   2 @88.3   8 (4)    3 / 0 / 0   6.5   0/0
+  saltpan-3     A (time             ) 78-100  22   0         4 (0)    3 / 0 / 0   -     0/0
+  saltpan-4     A (time             ) 89-89   0    0         4 (3)    0 / 0 / 0   6.7   0/0
+  gap |A − B| at each 30 s mark (matches still on): 30s 1.8 (n 16) · 60s 12.1 (n 16) · 90s 15.4 (n 16) · 120s 18.3 (n 16) · 150s 26.8 (n 16) · 180s 30.6 (n 16) · 210s 33.1 (n 16) · 240s 38.2 (n 16) · 270s 37.8 (n 15)
+  MEAN (n 16): knockouts 1/16 | margin 43.9 | last lead change at 153.9 s (5 matches had one; 11 never changed leader)
+    takes 96 (37 off the other team) | after 180 s: 35 takes — by the leader 28, the trailer 7, level 0; off the other team after 180 s: leader 7, trailer 5
+    penalty per take off the other team 11.54 (all takes: 4.45) | by the taker's role: leader took 7.46 per take (13), trailer 13.75 (24)
+A3 head: map | winner (reason, KO at) | final | margin | lead changes, last at | takes (off the other team) | after 180 s: by leader / trailer / level | penalty per take off the other team | err
+  crossmarket-1 B (time             ) 89-8    81   0         9 (4)    3 / 1 / 0   24.0  0/0
+  crossmarket-2 B (time             ) 68-56   12   1 @120.5  11 (5)   4 / 1 / 0   18.6  0/0
+  crossmarket-3 A (knockout 161.0s  ) 0-100   100  0         5 (0)    0 / 0 / 0   -     0/0
+  crossmarket-4 A (time             ) 38-94   56   0         8 (2)    3 / 0 / 0   22.5  0/0
+  halyard-1     A (time             ) 66-79   13   1 @205.0  9 (4)    0 / 4 / 0   10.3  0/0
+  halyard-2     B (time             ) 93-56   37   0         4 (1)    1 / 1 / 0   35.0  0/0
+  halyard-3     B (time             ) 95-40   55   0         8 (6)    2 / 1 / 0   13.2  0/0
+  halyard-4     B (time             ) 92-44   48   0         8 (2)    3 / 0 / 0   17.5  0/0
+  lockgate-1    A (knockout 266.8s  ) 0-92    92   0         6 (2)    2 / 0 / 0   9.5   0/0
+  lockgate-2    A (time             ) 51-74   23   0         6 (2)    3 / 1 / 0   29.5  0/0
+  lockgate-3    B (time             ) 42-42   0    0         8 (2)    0 / 2 / 1   45.0  0/0
+  lockgate-4    B (time             ) 83-28   55   2 @188.8  6 (2)    2 / 1 / 0   13.0  0/0
+  saltpan-1     A (time             ) 81-87   6    1 @294.3  3 (1)    0 / 1 / 0   11.0  0/0
+  saltpan-2     B (time             ) 100-97  3    0         1 (0)    0 / 0 / 0   -     0/0
+  saltpan-3     B (time             ) 84-83   1    2 @292.8  5 (2)    0 / 3 / 0   8.0   0/0
+  saltpan-4     B (time             ) 82-74   8    2 @293.0  6 (4)    1 / 1 / 2   7.8   0/0
+  gap |A − B| at each 30 s mark (matches still on): 30s 2.9 (n 16) · 60s 11.6 (n 16) · 90s 16.8 (n 16) · 120s 20.0 (n 16) · 150s 26.7 (n 16) · 180s 24.4 (n 15) · 210s 25.1 (n 15) · 240s 29.5 (n 15) · 270s 26.4 (n 14)
+  MEAN (n 16): knockouts 2/16 | margin 36.9 | last lead change at 232.4 s (6 matches had one; 10 never changed leader)
+    takes 103 (39 off the other team) | after 180 s: 44 takes — by the leader 24, the trailer 17, level 3; off the other team after 180 s: leader 7, trailer 9
+    penalty per take off the other team 17.33 (all takes: 6.56) | by the taker's role: leader took 8.58 per take (12), trailer 21.58 (24)
+
+## lines.txt
+A3-base-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=halyard MODE=zones
+A3-head-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=halyard MODE=zones
+A3-base-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=halyard MODE=zones
+A3-head-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=halyard MODE=zones
+A3-base-halyard-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=halyard MODE=zones
+A3-head-halyard-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=halyard MODE=zones
+A3-base-halyard-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=halyard MODE=zones
+A3-head-halyard-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=halyard MODE=zones
+A3-base-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=saltpan MODE=zones
+A3-head-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=saltpan MODE=zones
+A3-base-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=saltpan MODE=zones
+A3-head-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=saltpan MODE=zones
+A3-base-saltpan-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=saltpan MODE=zones
+A3-head-saltpan-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=saltpan MODE=zones
+A3-base-saltpan-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=saltpan MODE=zones
+A3-head-saltpan-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=saltpan MODE=zones
+A3-base-crossmarket-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=crossmarket MODE=zones
+A3-head-crossmarket-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=crossmarket MODE=zones
+A3-base-crossmarket-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=crossmarket MODE=zones
+A3-head-crossmarket-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=crossmarket MODE=zones
+A3-base-crossmarket-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=crossmarket MODE=zones
+A3-head-crossmarket-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=crossmarket MODE=zones
+A3-base-crossmarket-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=crossmarket MODE=zones
+A3-head-crossmarket-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=crossmarket MODE=zones
+A3-base-lockgate-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=lockgate MODE=zones
+A3-head-lockgate-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=lockgate MODE=zones
+A3-base-lockgate-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=lockgate MODE=zones
+A3-head-lockgate-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=lockgate MODE=zones
+A3-base-lockgate-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=lockgate MODE=zones
+A3-head-lockgate-3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=lockgate MODE=zones
+A3-base-lockgate-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/base MAP=lockgate MODE=zones
+A3-head-lockgate-4 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-7-1016-1539/head MAP=lockgate MODE=zones
