@@ -7,6 +7,7 @@ import { mapTheme, roomTheme,
   DEFAULT_SETTINGS, QUALITY, TEAM_PALETTES, COLORBLIND_PALETTE, TEAM_NAMES, WEAPONS, WEAPON_ORDER, WEAPON_SUCCESSOR, ZONES, TOWER, SUB, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER,
   MAPS, DIFFICULTY, PLAYER, PROGRESSION, VERSION, MATCH, OFFLINE_MAPS, mapOfflineOk, mapNoBots, mapBossOk,
   mapListed,   // [b5-stages]
+  BAZOOKARP, modeListed,   // [b5-karp]
 } from './config.js';
 import { Level } from './world/level.js';
 import { MAP_LAYOUTS } from './world/maps.js';
@@ -19,6 +20,7 @@ import { layoutThumbSVG } from './world/mapThumb.js';
 import { dressingFor } from './world/dressing.js';
 import { inMode, layoutFor, variantKey } from './world/variants.js';
 import './game/kits/index.js';   // kit weapons + subs register themselves (game/kits/registry.js)
+import { SUB_KITS } from './game/kits/registry.js';   // [b5-sub-glide] (a kit sub's own hint: prompt)
 import { Physics, Hit } from './game/physics.js';
 import { NavGraph } from './game/nav.js';
 import { Projectiles } from './game/weapons.js';
@@ -39,6 +41,8 @@ import { revealedTo } from './game/reveal.js';
 import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
 import { TowerFx } from './fx/towerFx.js';
+import { BazookarpFx } from './fx/bazookarpFx.js';   // [b5-karp]
+import './game/karpGun.js';   // [b5-karp] the Carp Shot (G.karpGun, KIT_GHOSTS.karp)
 import { InkWipeFx } from './fx/inkWipeFx.js';
 import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
 import { BOSS_MODE } from './boss/bossMode.js';
@@ -145,6 +149,7 @@ class Game {
     await this._buildWorld(map);
     this.zoneMarks = new ZoneMarks(scene);   // Zone Control ground markings: build / clear themselves on 'match:state'
     this.towerFx = new TowerFx(scene);       // Tower Command: the tower, its light pillar, the path glow, checkpoint beacons
+    this.karpFx = new BazookarpFx(scene);    // [b5-karp] Bazookarp: the shell, the carp, weirs, Gates (placeholder look)
     this.inkWipe = new InkWipeFx(scene);     // Practice: the clear-all-ink wave's light, steam and sound (paint.startWipe clears)
     await progress(0.4, 'Filling the harbor…');
     const B = G.level.bounds;
@@ -214,7 +219,7 @@ class Game {
     requestAnimationFrame((t) => this._loop(t));
     if (params.has('autostart')) {
       const pm = params.get('mode');
-      this.api.startMatch({ mapId: map.id, difficulty: params.get('difficulty') || this.settings.difficulty, duration: +params.get('autostart') || undefined, mode: ['boss', 'zones', 'tower'].includes(pm) ? pm : 'turf' });
+      this.api.startMatch({ mapId: map.id, difficulty: params.get('difficulty') || this.settings.difficulty, duration: +params.get('autostart') || undefined, mode: ['boss', 'zones', 'tower'].includes(pm) || (pm === 'bazookarp' && modeListed(pm)) ? pm : 'turf' });   // [b5-karp] (a wip mode: ?wipmodes)
     }
     this.bootMs = Math.round(performance.now() - t0);
     window.__inkwave = this; // debug/audit hook
@@ -272,6 +277,7 @@ class Game {
   async _buildWorldNow(map, scene, layoutId, mode = 'turf', worldKey = layoutId) {
     this.zoneMarks?.clear();   // zone markings belong to the old stage's faces
     this.towerFx?.clear();
+    this.karpFx?.clear();   // [b5-karp]
     this.inkWipe?.clear(this);   // (its uniforms live on the old stage's material)
     if (this.levelMesh) { scene.remove(this.levelMesh, this.grateMesh); this.levelMesh.geometry.dispose(); this.grateMesh?.geometry.dispose(); this.levelMat.dispose(); this.grateMat?.dispose(); }
     if (this.decor) { scene.remove(this.decor.group); }
@@ -582,8 +588,9 @@ class Game {
         G.audio?.duck?.(0.45, 2.2);
         // the card shows what did it (hud.js splatCause): the attacker's main weapon, or the sub / special / the sea
         const ec = envCause(cause);   // [b5-stagehooks] a stage module's cause (the lava) reads like the sea
-        const by = attacker ? attacker.name : cause === 'water' || ec ? null : 'enemy ink';
-        this.hud?.showSplatted({ by, byColor: attacker ? G.teamHex[attacker.team] : ec?.byColor || '#6fd0ff', respawn: PLAYER.respawnTime, attacker: attacker || null, cause });
+        const kf = cause === 'karp-fuse';   // [b5-karp] the Carp Blast: nobody did it (its ink is the other team's)
+        const by = attacker ? attacker.name : cause === 'water' || ec || kf ? null : 'enemy ink';
+        this.hud?.showSplatted({ by, byColor: attacker ? G.teamHex[attacker.team] : kf ? G.teamHex[victim.enemyTeam] : ec?.byColor || '#6fd0ff', respawn: PLAYER.respawnTime, attacker: attacker || null, cause });
         this.rig.mode = 'spectate';
         this.rig.spectate = { actor: attacker && attacker.alive ? attacker : null, pos: victim.pos.clone(), from: victim.pos.clone() };
         this.rig.lookAt.copy(victim.pos);
@@ -735,9 +742,9 @@ class Game {
       time: o.mapId === 'sunset' ? 'dusk' : (o.time || this.time || 'day'),
       difficulty: o.difficulty || this.settings.difficulty,
       // Zone Control / Tower Command / Boss Battle from the stage select's MODE; practice is always turf
-      mode: o.practice ? 'turf' : ['zones', 'tower', 'boss'].includes(o.mode) ? o.mode : 'turf',
+      mode: o.practice ? 'turf' : ['zones', 'tower', 'boss', 'bazookarp'].includes(o.mode) ? o.mode : 'turf',   // [b5-karp] (by name: the harness; the menus offer it only once listed)
     };
-    opts.duration = opts.mode === 'zones' ? (o.duration || ZONES.duration) : opts.mode === 'tower' ? (o.duration || TOWER.duration) : opts.mode === 'boss' ? (o.duration || BOSS_MODE.duration)
+    opts.duration = opts.mode === 'zones' ? (o.duration || ZONES.duration) : opts.mode === 'tower' ? (o.duration || TOWER.duration) : opts.mode === 'bazookarp' ? (o.duration || BAZOOKARP.duration) : opts.mode === 'boss' ? (o.duration || BOSS_MODE.duration)   // [b5-karp]
       : Math.min(MATCH.maxDuration, o.duration || this.settings.matchLength || MATCH.defaultDuration);
     if (!practice) this.lastMatchOpts = opts;
     const tok = (this._startTok = (this._startTok || 0) + 1);   // (a later start / quit while this one builds wins)
@@ -938,6 +945,7 @@ class Game {
     const m = (this.match = G.match = new Match({
       attract: false, duration: cfg.duration, difficulty: cfg.difficulty, mode: cfg.mode, practice: !!cfg.practice, CharacterClass: this.CharacterClass, rig: this.rig, input: this.input,
       roster: cfg.roster, myId: G.net.myId, host: G.net.isHost, autopilot: params.has('autopilot'),
+      karpCoin: cfg.karpCoin,   // [b5-karp] the host's hidden coin
     }));
     m.setup();
     await this._warmCharacters(m);   // before 'ready': nobody starts until every shader a squidkid can use is compiled
@@ -1182,7 +1190,14 @@ class Game {
       const R = m.result;
       tr = { counts: [...R.counts], best: [...R.best], len: [...R.len], winner: R.winner, reason: R.reason || 'time', overtime: !!R.overtime, overtimeT: m.tower.overtimeT };
     }
-    const judgeP = tr
+    // [b5-karp] Bazookarp: the counts (100 → 0 at the enemy Gate), how far each got, winner and how it was won
+    let kr = null;
+    if (m.mode === 'bazookarp' && m.karp && m.result.mode === 'bazookarp') {
+      const R = m.result;
+      kr = { counts: [...R.counts], best: [...R.best], len: [...R.len], winner: R.winner, reason: R.reason || 'time', overtime: !!R.overtime, coin: R.coin };
+    }
+    const judgeP = kr ? this.hud?.judge({ mode: 'bazookarp', colors: [G.teamHex[0], G.teamHex[1]], names: this.palette.names || TEAM_NAMES, counts: kr.counts, winner: kr.winner, reason: kr.reason, overtime: kr.overtime })
+      : tr
       ? this.hud?.judge({ mode: 'tower', colors: [G.teamHex[0], G.teamHex[1]], names: this.palette.names || TEAM_NAMES, counts: tr.counts, best: tr.best, len: tr.len, winner: tr.winner, reason: tr.reason, overtime: tr.overtime })
       : zr
       ? this.hud?.judge({ mode: 'zones', colors: [G.teamHex[0], G.teamHex[1]], names: this.palette.names || TEAM_NAMES, counts: zr.counts, penalty: zr.penalty, winner: zr.winner, reason: zr.reason, overtime: zr.overtime, percents: [cov[0] * 100, cov[1] * 100] })
@@ -1215,17 +1230,25 @@ class Game {
         ['TOWER RIDE', Math.round(ride * TX.xpPerRideSecond)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['ASSISTS', assistXp], ['KNOCKOUT', won && tr.reason === 'knockout' ? TX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
       gained = xpParts.reduce((a, [, v]) => a + v, 0);
     }
+    if (kr) {   // [b5-karp] less per point of turf (a 5 min match), per metre carried, per shell burst, a knockout bonus
+      const KX = PROGRESSION.bazookarp || { turfScale: 0.6, xpPerCarryM: 3, xpPerPop: 60, xpKnockout: 300 };
+      xpParts = [[won ? 'WIN BONUS' : 'MATCH', won ? PROGRESSION.xpWin : PROGRESSION.xpLose], ['TURF', Math.round(turf * PROGRESSION.xpPerTurfPoint * KX.turfScale)],
+        ['CARRIED', Math.round((local.stats.karpM || 0) * KX.xpPerCarryM)], ['SHELL POPS', Math.round((local.stats.karpPops || 0) * KX.xpPerPop)], ['SPLATS', Math.round(local.stats.splats * PROGRESSION.xpPerSplat)], ['ASSISTS', assistXp],
+        ['KNOCKOUT', won && kr.reason === 'knockout' ? KX.xpKnockout : 0]].filter(([, v], i) => i < 2 || v > 0);
+      gained = xpParts.reduce((a, [, v]) => a + v, 0);
+    }
     const before = { level: p.level, xp: p.xp, toNext: PROGRESSION.xpForLevel(p.level) };
     p.xp += gained; p.matches++; if (won) p.wins++; p.totalTurf += turf;
     while (p.xp >= PROGRESSION.xpForLevel(p.level)) { p.xp -= PROGRESSION.xpForLevel(p.level); p.level++; }
     saveJSON('inkwave.profile', p);
     const data = {
       win: won, percents: [cov[0] * 100, cov[1] * 100], colors: [G.teamHex[0], G.teamHex[1]], teamNames: this.palette.names || TEAM_NAMES,
-      players: m.actors.map((a) => ({ name: a.name, team: a.team, weapon: a.weaponId, turf: Math.round(a.stats.turf), splats: a.stats.splats, assists: a.stats.assists || 0, deaths: a.stats.deaths, isSelf: a.isLocal, bot: !!a.isBot, ...(zr ? { zoneTurf: Math.round(a.stats.zoneTurf || 0) } : {}), ...(tr ? { towerRide: Math.round(a.stats.towerRide || 0) } : {}) })),
+      players: m.actors.map((a) => ({ name: a.name, team: a.team, weapon: a.weaponId, turf: Math.round(a.stats.turf), splats: a.stats.splats, assists: a.stats.assists || 0, deaths: a.stats.deaths, isSelf: a.isLocal, bot: !!a.isBot, ...(zr ? { zoneTurf: Math.round(a.stats.zoneTurf || 0) } : {}), ...(tr ? { towerRide: Math.round(a.stats.towerRide || 0) } : {}), ...(kr ? { karpM: Math.round(a.stats.karpM || 0), karpPops: a.stats.karpPops || 0 } : {}) })),   // [b5-karp]
       xp: { gained, levelBefore: before.level, levelAfter: p.level, xpBefore: before.xp, xpAfter: p.xp, xpToNextBefore: before.toNext, xpToNextAfter: PROGRESSION.xpForLevel(p.level), ...(xpParts ? { parts: xpParts } : {}) },
       mapName: this.mapDef.name,
       ...(zr ? { mode: 'zones', zones: zr } : {}),
       ...(tr ? { mode: 'tower', tower: tr } : {}),
+      ...(kr ? { mode: 'tower', tower: { ...kr, karp: true } } : {}),   // [b5-karp] (the placeholder results: Tower Command's layout)
     };
     // your team on the podium
     const team = m.actors.filter((a) => a.team === myTeam);
@@ -1325,7 +1348,7 @@ class Game {
       m.updateController(dt);
       const sub = dt > 1 / 45 ? 2 : 1; // substep physics on slow frames
       for (let i = 0; i < sub; i++) m.update(dt / sub);
-      if (!m.paused) { G.projectiles.update(dt); G.subs.update(dt); G.specials.update(dt); this.towerFx?.update(dt); }
+      if (!m.paused) { G.projectiles.update(dt); G.subs.update(dt); G.specials.update(dt); this.towerFx?.update(dt); if (m.karp) { G.karpGun?.tick(dt); m.karp.lateUpdate(); this.karpFx?.update(dt); } }   // [b5-karp] (the carrier's gauge guard after the specials too)
       if (m.attract) this._updateAttract(dt);
       else if (m.state === 'playing' && m.local?.alive && this.rig.mode !== 'follow' && this.rig.mode !== 'path') this.rig.follow(m.local, true);
     }
@@ -1542,13 +1565,16 @@ class Game {
     this._hintT += dt;
     let prompt = null;
     const inkF = a.ink / PLAYER.inkMax;
+    const kitTip = m.state === 'playing' && a.alive && !m.attract ? SUB_KITS[a.sub?.kind]?.prompt?.(a, dt) || null : null;   // [b5-sub-dash]
     if (m.state === 'playing' && a.alive) {
       if (m.controller?.mapHeld) prompt = null;   // the map diorama carries its own super-jump hints
       else if (a.superJumpState) prompt = null;
       else if (this._lowInkFlash > 0) { this._lowInkFlash -= dt; prompt = 'Low ink! Hold SHIFT in your ink to refill'; }
+      else if (kitTip) prompt = kitTip;   // [b5-sub-glide] / [b5-sub-dash] the own kit sub's hint (the Glide Bomb: hold to cook; the Dash Pellet's first-time tip; the Chain Bobber's first throw) — [b5-int3] one call a frame
       else if (a.specialReady() && (this._hints.specialT = (this._hints.specialT || 0) + dt) > 2) prompt = `Special ready! Press F`;
       else if (inkF < 0.25 && a.form !== 'squid') prompt = 'Hold SHIFT to swim in your ink and refill';
       else if (m.tower?.homing && m.tower.owner === a.team && (this._hints.homeT = (this._hints.homeT || 0) + dt) < 4) prompt = 'Your tower rolls home by itself on your half — go defend it!';
+      else if (m.karp && (prompt = m.karp.prompt(a))) { /* [b5-karp] the Bazookarp's tutorial line */ }
       else if (m.duration - m.time < 8 && !this._hints.shot) prompt = m.zones ? 'Ink the zone and hold it to count down!' : m.tower ? 'Ink the tower\'s side, swim up onto it and ride it into enemy territory!' : 'Paint the ground — most turf wins!';
       if (!a.specialReady()) this._hints.specialT = 0;
       if (a.intent.fire) this._hints.shot = true;
@@ -1580,6 +1606,9 @@ class Game {
       d.sc = clamp(1.12 - dist / 60, 0.56, 1);
       this.minimap.toCanvas(d.x, d.z, t); d.mx = t.x / this.minimap.w; d.my = t.y / this.minimap.h;
     }
+    // [b5-subs] a kit sub's own prompt (the Chain Bobber's: first throw, the teammate cue) — under the low-ink flash
+    // ([b5-int3] the other kits only: the own sub's prompt is kitTip above, asked once a frame with dt)
+    if (m.state === 'playing' && a.alive && !(this._lowInkFlash > 0)) for (const k in SUB_KITS) { if (k === a.sub?.kind) continue; const kp = SUB_KITS[k].prompt?.(a); if (kp) { prompt = kp; break; } }
     const stP = m.stage && a.alive ? m.stage.prompt(a) : null;   // [b5-stagehooks] a stage module's prompt (a pipe mouth …)
     if (a.specialActive && m.state === 'playing' && a.alive) prompt = G.specials.prompt(a) || prompt;
     else if (stP) prompt = stP;   // [b5-stagehooks]
@@ -1590,9 +1619,9 @@ class Game {
       teams: a.team === 1 ? m.teamSummary().reverse() : m.teamSummary(),   // HUD: [your team, theirs]
       ink: a.ink / PLAYER.inkMax, inkLow: a.ink < 18 || (this._lowInkFlash > 0), subCost: a.specialActive?.kind === 'barrage' ? 0 : (a.sub || SUB.bomb).inkCost / PLAYER.inkMax, subKind: (a.specialActive?.kind === 'barrage' ? a.specialActive.bomb : a.sub || SUB.bomb).kind,
       poisoned: a.status.poison > 0, tracked: a.status.track > 0,
-      special: a.specialActive ? G.specials.remaining(a) : a.specialFrac(), specialReady: a.specialReady(), specialActive: !!a.specialActive, specialId: a.specialId,
+      special: a.specialActive ? G.specials.remaining(a) : a.specialFrac(), specialReady: a.specialReady(), specialActive: !!a.specialActive, specialId: a.carry ? 'karp' : a.specialId,   // [b5-karp] (the carp on the gauge)
       hp: a.hp / PLAYER.hp,
-      weapon: a.weaponId, charge: a.weaponRunner.charge,
+      weapon: a.weaponId, charge: a.weaponRunner.charge, mainLocked: !!a.weaponRunner.mainLocked,   // ([b5-sub-glide] the reticle dims)
       twin: w.kind === 'twins' ? { planted: !!a.weaponRunner.turret, rolls: a.weaponRunner.rollsLeft() } : null,
       crosshair: { spread, onTarget: m.controller?.onTarget ? 'enemy' : null, inRange: m.controller ? m.controller.inRange !== false : true },
       // corner minimap follows the setting; the TAB map (needed for super jumps) is always available
@@ -1608,6 +1637,7 @@ class Game {
       zones: m.zones ? { ...m.zones.state(), viewer: a.team } : undefined,
       // Tower Command: position / control / riders / checkpoints / scores (HUD meter, tower pointer, banners)
       tower: m.tower ? { ...m.tower.state(), viewer: a.team, onTower: !!(m.tower.riderList && m.tower.riderList.includes(a)) } : undefined,
+      karp: m.karp ? { ...m.karp.state(), viewer: a.team, carrying: m.karp.holder === a } : undefined,   // [b5-karp]
       stage: m.stage ? m.stage.hud(a) : undefined,   // [b5-stagehooks] { <module key>: its own HUD state, noReticle }
     };
     this.hud.update(dt, frame);

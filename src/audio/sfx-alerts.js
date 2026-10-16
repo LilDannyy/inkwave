@@ -45,6 +45,7 @@ export const FLIGHT = {
   sprinkler: { w: 'triangle', f: 940, spin: 22, nb: 2400, nq: 2.5, wob: 60, tone: 0.26, air: 0.35, x: 'zing' },
   mist: { w: 'sine', f: 680, spin: 5, nb: 800, nq: 0.9, wob: 30, tone: 0.18, air: 0.55, x: 'bubble' },
   waddle: { w: 'triangle', f: 1040, spin: 8, nb: 1200, nq: 1.5, wob: 45, tone: 0.28, air: 0.38, x: 'squeak' },
+  bobber: { w: 'sine', f: 1460, spin: 6, nb: 1700, nq: 1.4, wob: 35, tone: 0.24, air: 0.32, x: 'bubble' },   // [b5-subs] a light, airy float
   storm: { w: 'sine', f: 300, spin: 2, nb: 230, nq: 0.8, wob: 20, tone: 0.16, air: 0.9, x: 'rumble' },
 };
 // ---- the "you're in it" alarm's voices (f / f2: a two-tone, wave, r0 → r1: pulses a second from calm to frantic,

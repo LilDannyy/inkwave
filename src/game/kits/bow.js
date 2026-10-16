@@ -220,6 +220,7 @@ function burst(p) {
   }
   G.subs?.damageArea(c, p.br, p.be, p.team, owner);   // [b5-deploy] (by)
   G.boss?.splash(owner, c, p.br, p.bd, p.be, W.id);   // Boss Battle
+  G.objTargets?.splash(owner, c, p.br, p.bd, p.be, W.id, { special: !!p.sp });   // [b5-karp] the Roe Shell
   burstFx(p, c, col, owner);
 }
 function burstFx(p, c, col, owner) {
@@ -276,6 +277,15 @@ function stepArrow(p, i, dt) {
     }
   }
   // Boss Battle: HULLBREAKER's hit spheres / its crablets take the direct hit (a lodging arrow sticks there and bursts)
+  if (!p.noHit && G.objTargets) {   // [b5-karp] the Roe Shell stops it
+    const kh = G.objTargets.segHit(p.prev, p.pos, ARROW_R);
+    if (kh) {
+      const at = kh.point.clone();
+      G.objTargets.hit(p.owner, p.dmg, W.id, at, { target: kh.target });
+      kill(i);
+      return;
+    }
+  }
   if (!p.noHit && G.boss) {
     const bh = G.boss.segHit(p.prev, p.pos, ARROW_R);
     if (bh) {

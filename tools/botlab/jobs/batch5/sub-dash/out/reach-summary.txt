@@ -1,0 +1,341 @@
+# dash-reach audit (tools/botlab/tests/dash-reach.js at 3ba9c86), local, 2026-10-10, air dash 3.5 m:
+# EVERY edge node of every shipped stage (Cargo Terminal booted offline with DEVSTAGE=1), each stage in one run at 1/60
+# and one at 1/24, with the dashes off a wall climb. Per stage and step: the pass line (perch / out-of-bounds / stuck-on-a-
+# roof leaks, the highest first landing of every ground dash and jump + dash against the bar, with the plain running hop
+# from the same start beside it), then the lead's list: tops the nav graph doesn't reach that a dash ends on and no
+# plain walk / hop from within 5 m (or the same climb) does, by block (highest first)
+
+calamari 1/24: PASS | 5967 of 5967 edge nodes (1 part(s), 99 s) | sims 200916 (off a wall climb 9972; walls 1713, climbed 7910, never-inkable 622) | first landing over its start, highest of 142539: 1.85 m (bar 1.88; over the bar but a plain hop as high: the same one 2, onto the same block from nearby 0) {"from": [-4.5, 1, -3], "dir": [-1, 0], "move": "air dash at frame 30", "landedAt": 2.85, "startY": 1, "restedAt": [-13, 1, -3], "block": 1, "tag": "island", "plainHopSameHeading": 1.85, "plainHopBestOf16": 1.85}
+   perches 0 (also by a plain walk / hop 4597) | out of bounds 0 (also on foot 0) | roof touched 1324 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 8274 | listed tops 2 | off the graph 7023 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 50 (1 block(s), tops 0.9-0.9 m, at [14.6, -60.1]): {"from": [8.5, 3.4, -60], "dir": [1, 0], "move": "running hop", "onto": 592}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 58 (1 block(s), tops 3.55-3.55 m, at [-6.4, -56.4]): {"from": [-7.5, 4.3, -59], "dir": [0, 1], "move": "walk", "onto": 602}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 56 (1 block(s), tops 3.45-3.45 m, at [-6.3, -51.3]): {"from": [-7.5, 2.6, -55], "dir": [0, 1], "move": "running hop", "onto": 600}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 52 (1 block(s), tops 3.45-3.45 m, at [-21, -51.3]): {"from": [-22.5, 2.6, -55], "dir": [0, 1], "move": "running hop", "onto": 596}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 54 (1 block(s), tops 3.45-3.45 m, at [-15.6, -51.3]): {"from": [-17.5, 2.6, -55], "dir": [0, 1], "move": "running hop", "onto": 598}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 60 (1 block(s), tops 3.45-3.45 m, at [-24, -55.9]): {"from": [-24.5, 3.45, -56], "dir": [0.92, 0.38], "move": "walk", "onto": 620}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 46 (1 block(s), tops 0.95-0.95 m, at [-16.5, -50.4]): {"from": [-18.5, 2.6, -51], "dir": [0.92, 0.38], "move": "walk", "onto": 558}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 44 (1 block(s), tops 0.9-0.9 m, at [15.3, -47.6]): {"from": [15.5, 0.9, -48], "dir": [0, 1], "move": "walk", "onto": 514}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 24 (1 block(s), tops 0.9-0.9 m, at [-19.1, -44.2]): {"from": [-18.5, 0.9, -46], "dir": [0, 1], "move": "walk", "onto": 460}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 36 (1 block(s), tops 1.75-1.75 m, at [-15.6, -45.7]): {"from": [-18.5, 0.9, -46], "dir": [0.92, 0.38], "move": "running hop", "onto": 492}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 40 (1 block(s), tops 0.9-0.9 m, at [-7, -45.2]): {"from": [-1.5, 2.55, -43], "dir": [-0.92, -0.38], "move": "running hop", "onto": 504}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 42 (1 block(s), tops 0.9-0.9 m, at [7.2, -45.4]): {"from": [2.5, 2.25, -43], "dir": [0.92, -0.38], "move": "running hop", "onto": 508}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 32 (1 block(s), tops 3.05-3.05 m, at [-27, -42.4]): {"from": [-26.5, 3.65, -48], "dir": [0, 1], "move": "running hop", "onto": 480}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 26 (1 block(s), tops 0.9-0.9 m, at [-23.8, -50.4]): {"from": [-26.5, 3.65, -48], "dir": [0.71, -0.71], "move": "walk", "onto": 464}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 48 (1 block(s), tops 0.9-0.9 m, at [-7, -50.4]): {"from": [-9.5, 2.6, -51], "dir": [0.92, 0.38], "move": "walk", "onto": 560}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 34 (1 block(s), tops 3.45-3.45 m, at [-30, -43.2]): {"from": [-30.5, 3.6, -41], "dir": [0.38, -0.92], "move": "walk", "onto": 484}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 28 (1 block(s), tops 1.75-1.75 m, at [-30.4, -31.3]): {"from": [-26.5, 2.8, -34], "dir": [-0.92, 0.38], "move": "running hop", "onto": 468}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 30 (1 block(s), tops 1.75-1.75 m, at [-26.8, -31.3]): {"from": [-26.5, 2.8, -34], "dir": [0, 1], "move": "running hop", "onto": 470}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 38 (1 block(s), tops 0.9-0.9 m, at [-6.3, -32.3]): {"from": [-4.5, 1.3, -37], "dir": [-0.38, 0.92], "move": "running hop", "onto": 500}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 22 (1 block(s), tops 2.2-2.2 m, at [-26.4, -26.6]): {"from": [-26.5, 2.2, -27], "dir": [0, 1], "move": "walk", "onto": 404}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 10 (1 block(s), tops 1-1 m, at [3.5, -23.8]): {"from": [2.5, 1, -24], "dir": [0, 1], "move": "walk", "onto": 368}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 18 (1 block(s), tops 0.95-0.95 m, at [-18.5, -24.4]): {"from": [-18.7, 0.95, -25], "dir": [0, 1], "move": "walk", "onto": 392}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 12 (1 block(s), tops 0.95-0.95 m, at [-8.3, -23.4]): {"from": [-8.5, 0.95, -24], "dir": [0, 1], "move": "walk", "onto": 376}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 8 (1 block(s), tops 0.7-0.7 m, at [-3.9, -21.3]): {"from": [-8.5, 0.95, -24], "dir": [0.92, 0.38], "move": "running hop", "onto": 364}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 20 (1 block(s), tops 2.15-2.15 m, at [-30.6, -19.3]): {"from": [-30.5, 2.15, -20], "dir": [0, 1], "move": "walk", "onto": 400}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 14 (1 block(s), tops 0.9-0.9 m, at [8.6, -19.2]): {"from": [8.5, 0.9, -20], "dir": [0, 1], "move": "walk", "onto": 378}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 6 (1 block(s), tops 0.9-0.9 m, at [10.6, -13.3]): {"from": [4.5, 4.3, -12], "dir": [0.92, -0.38], "move": "running hop", "onto": 356}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 16 (1 block(s), tops 0.9-0.9 m, at [-18.3, -13.4]): {"from": [-13.5, 2.09, -11], "dir": [-0.92, -0.38], "move": "running hop", "onto": 390}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 4 (1 block(s), tops 0.9-0.9 m, at [-12.4, -13.2]): {"from": [-7.5, 4.3, -12], "dir": [-0.92, -0.38], "move": "running hop", "onto": 354}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 2 (1 block(s), tops 0.9-0.9 m, at [22, -10.2]): {"from": [21.5, 0.9, -10], "dir": [0.92, 0.38], "move": "walk", "onto": 326}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 1 (1 block(s), tops 0.95-0.95 m, at [-28.2, 0]): {"from": [-22.5, 1.2, 0], "dir": [-1, 0], "move": "running hop", "onto": 325}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 0 (1 block(s), tops 0.95-0.95 m, at [28.2, 0]): {"from": [29.5, 1.2, -2], "dir": [0, 1], "move": "walk", "onto": 324}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 5 (1 block(s), tops 0.9-0.9 m, at [12.4, 13.2]): {"from": [7.5, 4.3, 10], "dir": [0.71, 0.71], "move": "running hop", "onto": 355}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 3 (1 block(s), tops 0.9-0.9 m, at [-22, 10.2]): {"from": [-22.5, 0.9, 10], "dir": [0.71, 0.71], "move": "walk", "onto": 327}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 7 (1 block(s), tops 0.9-0.9 m, at [-10.6, 13.3]): {"from": [-7.5, 4.3, 10], "dir": [-0.71, 0.71], "move": "running hop", "onto": 357}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 17 (1 block(s), tops 0.9-0.9 m, at [18.3, 13.4]): {"from": [13.5, 2.09, 11], "dir": [0.92, 0.38], "move": "running hop", "onto": 391}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 15 (1 block(s), tops 0.9-0.9 m, at [-8.6, 19.2]): {"from": [-8.5, 0.9, 19], "dir": [0, 1], "move": "walk", "onto": 379}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 9 (1 block(s), tops 0.7-0.7 m, at [3.9, 21.3]): {"from": [8.5, 0.95, 23], "dir": [-0.92, -0.38], "move": "running hop", "onto": 366}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 13 (1 block(s), tops 0.95-0.95 m, at [8.3, 23.4]): {"from": [8.5, 0.95, 23], "dir": [0, 1], "move": "walk", "onto": 377}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 21 (1 block(s), tops 2.15-2.15 m, at [30.6, 19.3]): {"from": [30.5, 2.15, 18], "dir": [0, 1], "move": "walk", "onto": 401}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 11 (1 block(s), tops 1-1 m, at [-3.5, 23.8]): {"from": [-4.5, 1, 24], "dir": [0.92, 0.38], "move": "walk", "onto": 369}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 19 (1 block(s), tops 0.95-0.95 m, at [18.5, 24.4]): {"from": [18.8, 0.95, 24], "dir": [0, 1], "move": "walk", "onto": 393}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 23 (1 block(s), tops 2.2-2.2 m, at [26.4, 26.6]): {"from": [26.5, 2.2, 26], "dir": [0, 1], "move": "walk", "onto": 405}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 31 (1 block(s), tops 1.75-1.75 m, at [26.8, 31.3]): {"from": [26.5, 2.8, 34], "dir": [0.38, -0.92], "move": "walk", "onto": 471}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 29 (1 block(s), tops 1.75-1.75 m, at [30.4, 31.3]): {"from": [26.5, 2.8, 34], "dir": [0.92, -0.38], "move": "running hop", "onto": 469}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 39 (1 block(s), tops 0.9-0.9 m, at [6.3, 32.3]): {"from": [2.5, 1.3, 34], "dir": [0.92, -0.38], "move": "running hop", "onto": 501}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 33 (1 block(s), tops 3.05-3.05 m, at [27, 42.4]): {"from": [26.5, 3.65, 47], "dir": [0, -1], "move": "running hop", "onto": 481}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 35 (1 block(s), tops 3.45-3.45 m, at [30, 43.2]): {"from": [30.5, 3.6, 40], "dir": [0.92, 0.38], "move": "running hop", "onto": 485}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 43 (1 block(s), tops 0.9-0.9 m, at [-7.2, 45.4]): {"from": [-2.5, 2.25, 43], "dir": [-0.92, 0.38], "move": "running hop", "onto": 509}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 41 (1 block(s), tops 0.9-0.9 m, at [7, 45.2]): {"from": [2.5, 2.55, 42], "dir": [0.71, 0.71], "move": "running hop", "onto": 505}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 25 (1 block(s), tops 0.9-0.9 m, at [19.1, 44.2]): {"from": [18.5, 0.9, 42], "dir": [0, 1], "move": "walk", "onto": 461}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 45 (1 block(s), tops 0.9-0.9 m, at [-15.3, 47.6]): {"from": [-15.5, 0.9, 47], "dir": [0, 1], "move": "walk", "onto": 515}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 37 (1 block(s), tops 1.75-1.75 m, at [15.6, 45.8]): {"from": [12.5, 0.9, 42], "dir": [0.38, 0.92], "move": "running hop", "onto": 493}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 49 (1 block(s), tops 0.9-0.9 m, at [7, 50.4]): {"from": [3.5, 2.6, 51], "dir": [0.92, -0.38], "move": "walk", "onto": 561}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 27 (1 block(s), tops 0.9-0.9 m, at [23.8, 50.4]): {"from": [26.5, 3.65, 47], "dir": [-0.71, 0.71], "move": "running hop", "onto": 465}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 47 (1 block(s), tops 0.95-0.95 m, at [16.5, 50.4]): {"from": [18.5, 2.6, 51], "dir": [-0.92, -0.38], "move": "walk", "onto": 559}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 53 (1 block(s), tops 3.45-3.45 m, at [21, 51.3]): {"from": [25.5, 2.6, 50], "dir": [-0.92, 0.38], "move": "running hop", "onto": 597}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 57 (1 block(s), tops 3.45-3.45 m, at [6.3, 51.3]): {"from": [2.5, 2.6, 51], "dir": [1, 0], "move": "running hop", "onto": 601}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 55 (1 block(s), tops 3.45-3.45 m, at [15.6, 51.3]): {"from": [18.5, 2.6, 51], "dir": [-1, 0], "move": "running hop", "onto": 599}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 61 (1 block(s), tops 3.45-3.45 m, at [24, 55.9]): {"from": [23.5, 3.45, 56], "dir": [0.92, 0.38], "move": "walk", "onto": 621}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 59 (1 block(s), tops 3.55-3.55 m, at [6.4, 56.4]): {"from": [7.5, 4.3, 59], "dir": [0, -1], "move": "walk", "onto": 603}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 51 (1 block(s), tops 0.9-0.9 m, at [-14.6, 60.1]): {"from": [-8.5, 3.4, 59], "dir": [-0.71, -0.71], "move": "running hop", "onto": 593}
+   top: block 316 (prop collider 4.7×2×2.1 no-ink) [-26.8, 2, 13.6] up 2 (first landing 2) from [-31.5, 0, 9] dash off a wall climb (top), off, along back
+   top: block 314 (prop collider 4.7×2×2.1 no-ink) [27.3, 2, -13.5] up 1.1 (first landing 1.1) from [22.5, 0.9, -10] air dash at frame 30
+
+calamari 1/60: PASS | 5967 of 5967 edge nodes (1 part(s), 172 s) | sims 200946 (off a wall climb 10002; walls 1713, climbed 7895, never-inkable 617) | first landing over its start, highest of 142637: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 20, onto the same block from nearby 2) {"from": [22.5, 0, 36], "dir": [0, -1], "move": "air dash at frame 30", "landedAt": 1.9, "startY": 0, "restedAt": [23.3, 0, 35], "block": 115, "tag": "road", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 4659) | out of bounds 0 (also on foot 0) | roof touched 1574 (still on one after 3 s 0; also by a plain walk / hop 2) | sea 8101 | listed tops 2 | off the graph 6786 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 50 (1 block(s), tops 0.9-0.9 m, at [14.6, -60.1]): {"from": [8.5, 3.4, -62], "dir": [0.92, 0.38], "move": "running hop", "onto": 592}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 58 (1 block(s), tops 3.55-3.55 m, at [-6.4, -56.4]): {"from": [-7.5, 4.3, -59], "dir": [0, 1], "move": "walk", "onto": 602}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 56 (1 block(s), tops 3.45-3.45 m, at [-6.3, -51.3]): {"from": [-8.5, 2.6, -55], "dir": [0.38, 0.92], "move": "running hop", "onto": 600}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 52 (1 block(s), tops 3.45-3.45 m, at [-21, -51.3]): {"from": [-22.5, 2.6, -55], "dir": [0, 1], "move": "running hop", "onto": 596}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 54 (1 block(s), tops 3.45-3.45 m, at [-15.6, -51.3]): {"from": [-17.5, 2.6, -55], "dir": [0, 1], "move": "running hop", "onto": 598}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 60 (1 block(s), tops 3.45-3.45 m, at [-24, -55.9]): {"from": [-24.5, 3.45, -56], "dir": [0.92, 0.38], "move": "walk", "onto": 620}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 46 (1 block(s), tops 0.95-0.95 m, at [-16.5, -50.4]): {"from": [-22.5, 2.6, -52], "dir": [0.92, 0.38], "move": "running hop", "onto": 558}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 48 (1 block(s), tops 0.9-0.9 m, at [-7, -50.4]): {"from": [-3.5, 2.6, -52], "dir": [-0.92, 0.38], "move": "running hop", "onto": 560}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 44 (1 block(s), tops 0.9-0.9 m, at [15.3, -47.6]): {"from": [15.5, 0.9, -48], "dir": [0, 1], "move": "walk", "onto": 514}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 26 (1 block(s), tops 0.9-0.9 m, at [-23.8, -50.4]): {"from": [-26.5, 3.65, -48], "dir": [0.71, -0.71], "move": "walk", "onto": 464}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 36 (1 block(s), tops 1.75-1.75 m, at [-15.6, -45.7]): {"from": [-18.5, 0.9, -46], "dir": [0.92, 0.38], "move": "running hop", "onto": 492}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 40 (1 block(s), tops 0.9-0.9 m, at [-7, -45.2]): {"from": [-1.5, 2.55, -43], "dir": [-0.92, -0.38], "move": "running hop", "onto": 504}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 42 (1 block(s), tops 0.9-0.9 m, at [7.2, -45.4]): {"from": [2.5, 2.25, -43], "dir": [0.92, -0.38], "move": "running hop", "onto": 508}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 24 (1 block(s), tops 0.9-0.9 m, at [-19.1, -44.2]): {"from": [-18.5, 0.9, -46], "dir": [0, 1], "move": "walk", "onto": 460}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 32 (1 block(s), tops 3.05-3.05 m, at [-27, -42.4]): {"from": [-26.5, 3.65, -48], "dir": [0, 1], "move": "running hop", "onto": 480}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 34 (1 block(s), tops 3.45-3.45 m, at [-30, -43.2]): {"from": [-30.5, 3.6, -41], "dir": [0.38, -0.92], "move": "walk", "onto": 484}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 28 (1 block(s), tops 1.75-1.75 m, at [-30.4, -31.3]): {"from": [-26.5, 2.8, -34], "dir": [-0.92, 0.38], "move": "running hop", "onto": 468}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 30 (1 block(s), tops 1.75-1.75 m, at [-26.8, -31.3]): {"from": [-26.5, 2.8, -34], "dir": [0, 1], "move": "running hop", "onto": 470}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 38 (1 block(s), tops 0.9-0.9 m, at [-6.3, -32.3]): {"from": [-4.5, 1.3, -37], "dir": [-0.38, 0.92], "move": "running hop", "onto": 500}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 22 (1 block(s), tops 2.2-2.2 m, at [-26.4, -26.6]): {"from": [-26.5, 2.2, -27], "dir": [0, 1], "move": "walk", "onto": 404}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 12 (1 block(s), tops 0.95-0.95 m, at [-8.3, -23.4]): {"from": [-8.5, 0.95, -24], "dir": [0, 1], "move": "walk", "onto": 376}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 10 (1 block(s), tops 1-1 m, at [3.5, -23.8]): {"from": [2.5, 1, -24], "dir": [0.38, 0.92], "move": "walk", "onto": 368}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 18 (1 block(s), tops 0.95-0.95 m, at [-18.5, -24.4]): {"from": [-18.7, 0.95, -25], "dir": [0, 1], "move": "walk", "onto": 392}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 8 (1 block(s), tops 0.7-0.7 m, at [-3.9, -21.3]): {"from": [-8.5, 0.95, -24], "dir": [0.92, 0.38], "move": "running hop", "onto": 364}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 20 (1 block(s), tops 2.15-2.15 m, at [-30.6, -19.3]): {"from": [-30.5, 2.15, -20], "dir": [0, 1], "move": "walk", "onto": 400}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 14 (1 block(s), tops 0.9-0.9 m, at [8.6, -19.2]): {"from": [8.5, 0.9, -20], "dir": [0, 1], "move": "walk", "onto": 378}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 6 (1 block(s), tops 0.9-0.9 m, at [10.6, -13.3]): {"from": [4.5, 4.3, -12], "dir": [0.92, -0.38], "move": "running hop", "onto": 356}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 16 (1 block(s), tops 0.9-0.9 m, at [-18.3, -13.4]): {"from": [-13.5, 2.09, -11], "dir": [-0.92, -0.38], "move": "running hop", "onto": 390}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 4 (1 block(s), tops 0.9-0.9 m, at [-12.4, -13.2]): {"from": [-7.5, 4.3, -12], "dir": [-0.92, -0.38], "move": "running hop", "onto": 354}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 2 (1 block(s), tops 0.9-0.9 m, at [22, -10.2]): {"from": [21.5, 0.9, -10], "dir": [0.92, 0.38], "move": "walk", "onto": 326}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 1 (1 block(s), tops 0.95-0.95 m, at [-28.2, 0]): {"from": [-22.5, 1.2, 0], "dir": [-1, 0], "move": "running hop", "onto": 325}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 0 (1 block(s), tops 0.95-0.95 m, at [28.2, 0]): {"from": [29.5, 1.2, -2], "dir": [0, 1], "move": "walk", "onto": 324}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 3 (1 block(s), tops 0.9-0.9 m, at [-22, 10.2]): {"from": [-22.5, 0.9, 10], "dir": [0.92, 0.38], "move": "walk", "onto": 327}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 5 (1 block(s), tops 0.9-0.9 m, at [12.4, 13.2]): {"from": [7.5, 4.3, 10], "dir": [0.71, 0.71], "move": "running hop", "onto": 355}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 7 (1 block(s), tops 0.9-0.9 m, at [-10.6, 13.3]): {"from": [-7.5, 4.3, 10], "dir": [-0.71, 0.71], "move": "running hop", "onto": 357}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 17 (1 block(s), tops 0.9-0.9 m, at [18.3, 13.4]): {"from": [13.5, 2.09, 11], "dir": [0.92, 0.38], "move": "running hop", "onto": 391}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 15 (1 block(s), tops 0.9-0.9 m, at [-8.6, 19.2]): {"from": [-8.5, 0.9, 19], "dir": [0, 1], "move": "walk", "onto": 379}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 9 (1 block(s), tops 0.7-0.7 m, at [3.9, 21.3]): {"from": [8.5, 0.95, 23], "dir": [-0.92, -0.38], "move": "running hop", "onto": 366}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 13 (1 block(s), tops 0.95-0.95 m, at [8.3, 23.4]): {"from": [8.5, 0.95, 23], "dir": [0, 1], "move": "walk", "onto": 377}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 21 (1 block(s), tops 2.15-2.15 m, at [30.6, 19.3]): {"from": [30.5, 2.15, 18], "dir": [0, 1], "move": "walk", "onto": 401}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 11 (1 block(s), tops 1-1 m, at [-3.5, 23.8]): {"from": [-4.5, 1, 24], "dir": [0.92, 0.38], "move": "walk", "onto": 369}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 19 (1 block(s), tops 0.95-0.95 m, at [18.5, 24.4]): {"from": [18.8, 0.95, 24], "dir": [0, 1], "move": "walk", "onto": 393}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 23 (1 block(s), tops 2.2-2.2 m, at [26.4, 26.6]): {"from": [26.5, 2.2, 26], "dir": [0, 1], "move": "walk", "onto": 405}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 31 (1 block(s), tops 1.75-1.75 m, at [26.8, 31.3]): {"from": [26.5, 2.8, 34], "dir": [0.38, -0.92], "move": "walk", "onto": 471}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 29 (1 block(s), tops 1.75-1.75 m, at [30.4, 31.3]): {"from": [26.5, 2.8, 34], "dir": [0.92, -0.38], "move": "running hop", "onto": 469}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 39 (1 block(s), tops 0.9-0.9 m, at [6.3, 32.3]): {"from": [2.5, 1.3, 34], "dir": [0.92, -0.38], "move": "running hop", "onto": 501}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 33 (1 block(s), tops 3.05-3.05 m, at [27, 42.4]): {"from": [26.5, 3.65, 47], "dir": [0, -1], "move": "running hop", "onto": 481}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 35 (1 block(s), tops 3.45-3.45 m, at [30, 43.2]): {"from": [30.5, 3.6, 40], "dir": [0.92, 0.38], "move": "running hop", "onto": 485}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 43 (1 block(s), tops 0.9-0.9 m, at [-7.2, 45.4]): {"from": [-2.5, 2.25, 43], "dir": [-0.92, 0.38], "move": "running hop", "onto": 509}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 41 (1 block(s), tops 0.9-0.9 m, at [7, 45.2]): {"from": [2.5, 2.55, 42], "dir": [0.71, 0.71], "move": "running hop", "onto": 505}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 25 (1 block(s), tops 0.9-0.9 m, at [19.1, 44.2]): {"from": [18.5, 0.9, 42], "dir": [0, 1], "move": "walk", "onto": 461}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 45 (1 block(s), tops 0.9-0.9 m, at [-15.3, 47.6]): {"from": [-15.5, 0.9, 47], "dir": [0, 1], "move": "walk", "onto": 515}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 37 (1 block(s), tops 1.75-1.75 m, at [15.6, 45.8]): {"from": [12.5, 0.9, 42], "dir": [0.38, 0.92], "move": "running hop", "onto": 493}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 49 (1 block(s), tops 0.9-0.9 m, at [7, 50.4]): {"from": [3.5, 2.6, 51], "dir": [0.92, -0.38], "move": "walk", "onto": 561}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 27 (1 block(s), tops 0.9-0.9 m, at [23.8, 50.4]): {"from": [26.5, 3.65, 47], "dir": [-0.71, 0.71], "move": "running hop", "onto": 465}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 47 (1 block(s), tops 0.95-0.95 m, at [16.5, 50.4]): {"from": [18.5, 2.6, 51], "dir": [-0.92, -0.38], "move": "walk", "onto": 559}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 53 (1 block(s), tops 3.45-3.45 m, at [21, 51.3]): {"from": [25.5, 2.6, 50], "dir": [-0.92, 0.38], "move": "running hop", "onto": 597}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 57 (1 block(s), tops 3.45-3.45 m, at [6.3, 51.3]): {"from": [2.5, 2.6, 51], "dir": [1, 0], "move": "running hop", "onto": 601}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 55 (1 block(s), tops 3.45-3.45 m, at [15.6, 51.3]): {"from": [18.5, 2.6, 51], "dir": [-1, 0], "move": "running hop", "onto": 599}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 61 (1 block(s), tops 3.45-3.45 m, at [24, 55.9]): {"from": [23.5, 3.45, 56], "dir": [0.92, 0.38], "move": "walk", "onto": 621}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 59 (1 block(s), tops 3.55-3.55 m, at [6.4, 56.4]): {"from": [7.5, 4.3, 59], "dir": [0, -1], "move": "walk", "onto": 603}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 51 (1 block(s), tops 0.9-0.9 m, at [-14.6, 60.1]): {"from": [-8.5, 3.4, 58], "dir": [-0.92, -0.38], "move": "running hop", "onto": 593}
+   still on a roof after 3 s, a roof a kid gets onto on foot (its slide: the stage's): {"from": [-28.5, 2.6, -53], "dir": [0, -1], "move": "dash off a wall climb (top), along", "to": [-32, 5, -41.2], "up": 2.4, "block": 47, "tag": "hill-wall", "onFootBy": {"from": [-30.5, 3.6, -41], "dir": [-0.38, -0.92], "move": "running hop"}}
+   still on a roof after 3 s, a roof a kid gets onto on foot (its slide: the stage's): {"from": [28.5, 2.6, 53], "dir": [0, 1], "move": "dash off a wall climb (top), along", "to": [32, 5, 41.2], "up": 2.4, "block": 129, "tag": "hill-wall", "onFootBy": {"from": [30.5, 3.6, 41], "dir": [0.38, 0.92], "move": "running hop"}}
+   top: block 316 (prop collider 4.7×2×2.1 no-ink) [-26.8, 2, 13.6] up 2 (first landing 2) from [-31.5, 0, 9] dash off a wall climb (top), off, along back
+   top: block 314 (prop collider 4.7×2×2.1 no-ink) [26.8, 2, -13.7] up 1.75 (first landing 1.75) from [28.5, 0.25, -17] air dash at frame 18
+
+cargo 1/24: PASS | 5497 of 5497 edge nodes (1 part(s), 105 s) | sims 187559 (off a wall climb 11655; walls 2324, climbed 8620, never-inkable 1230) | first landing over its start, highest of 129668: 1.87 m (bar 1.88; over the bar but a plain hop as high: the same one 12, onto the same block from nearby 0) {"from": [-20.5, 0, -50.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 1.87, "startY": 0, "restedAt": [-20.9, 2.09, -45.7], "block": 109, "tag": "stair", "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 246) | out of bounds 0 (also on foot 0) | roof touched 2513 (still on one after 3 s 0; also by a plain walk / hop 4) | sea 12837 | listed tops 5 | off the graph 9764 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 21 (1 block(s), tops 2.92-2.92 m, at [-31.4, -9.7]): {"from": [-29.5, 5.2, -16.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 617}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 17 (43 block(s), tops 2.57-8.14 m, at [-9.9, -9.6]): {"from": [-13.5, 2.6, -8.5], "dir": [1, 0], "move": "running hop", "onto": 521}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 18 (43 block(s), tops 2.57-8.14 m, at [9.9, 9.6]): {"from": [11.5, 2.6, 4.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 566}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 24 (1 block(s), tops 2.92-2.92 m, at [31.4, 9.7]): {"from": [27.5, 5.2, 12.5], "dir": [1, 0], "move": "running hop", "onto": 630}
+   still on a roof after 3 s, a roof a kid gets onto on foot (its slide: the stage's): {"from": [38.5, 2.6, 55.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [21.2, 4.8, 71.4], "up": 2.2, "block": 156, "tag": "backwall", "onFootBy": {"from": [38.5, 2.6, 55.5], "dir": [1, 0], "move": "running hop"}}
+   top: block 89 (trailer) [-13.4, 3.95, -22.1] up 2.12 (first landing 1.77) from [-9.5, 1.83, -26.5] air dash at frame 30
+   top: block 644 (prop collider 2×1.3×5.8 no-ink) [8.1, 1.95, -21.7] up 1.95 (first landing 1.95) from [7.5, 0, -18.5] dash off a wall climb (top), off, along back
+   top: block 511 (prop collider 2.2×0.6×1.7 no-ink) [-8.6, 1.9, -18.3] up 1.9 (first landing 1.9) from [-9.5, 0, -22.5] dash off a wall climb (top), off, along back
+   top: block 641 (prop collider 2.4×2.6×0.3 no-ink) [5.4, 2.6, -24.6] up 1.4 (first landing 1.4) from [1.5, 1.2, -28.5] air dash at frame 18
+   top: block 605 (prop collider 0.6×1.4×8.4 no-ink) [-34.4, 1.35, -9.8] up 1.35 (first landing 1.35) from [-37.5, 0, -13.5] air dash at frame 18
+
+cargo 1/60: PASS | 5497 of 5497 edge nodes (1 part(s), 198 s) | sims 187734 (off a wall climb 11830; walls 2324, climbed 8677, never-inkable 1205) | first landing over its start, highest of 129661: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [9.5, 0, 14.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 1.9, "startY": 0, "restedAt": [8.7, 0, 22.2], "block": 144, "tag": "lane", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 266) | out of bounds 0 (also on foot 0) | roof touched 2743 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 12666 | listed tops 6 | off the graph 9666 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 21 (1 block(s), tops 2.92-2.92 m, at [-31.4, -9.7]): {"from": [-29.5, 5.2, -16.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 617}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 17 (43 block(s), tops 2.57-8.14 m, at [-9.9, -9.6]): {"from": [-14.5, 2.6, -9.5], "dir": [1, 0], "move": "running hop", "onto": 517}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 18 (43 block(s), tops 2.57-8.14 m, at [9.9, 9.6]): {"from": [11.5, 2.6, 5.5], "dir": [-0.71, 0.71], "move": "running hop", "onto": 568}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 24 (1 block(s), tops 2.92-2.92 m, at [31.4, 9.7]): {"from": [27.5, 5.2, 12.5], "dir": [1, 0], "move": "running hop", "onto": 630}
+   top: block 644 (prop collider 2×1.3×5.8 no-ink) [9.5, 1.95, -21.3] up 1.95 (first landing 1.95) from [7.5, 0, -18.5] dash off a wall climb (top), straight off
+   top: block 511 (prop collider 2.2×0.6×1.7 no-ink) [-8.7, 1.9, -18.4] up 1.9 (first landing 1.9) from [-9.5, 0, -22.5] dash off a wall climb (top), off, along back
+   top: block 669 (prop collider 2.1×1.6×3.7 no-ink) [-18.7, 1.6, -59.7] up 1.6 (first landing 1.6) from [-22.5, 0, -63.5] air dash at frame 18
+   top: block 89 (trailer) [-12.3, 3.95, -21.7] up 1.54 (first landing 1.54) from [-8.5, 2.41, -25.5] air dash at frame 18
+   top: block 641 (prop collider 2.4×2.6×0.3 no-ink) [5.3, 2.6, -24.7] up 1.4 (first landing 1.4) from [1.5, 1.2, -28.5] air dash at frame 18
+   top: block 605 (prop collider 0.6×1.4×8.4 no-ink) [-34.3, 1.35, -9.7] up 1.35 (first landing 1.35) from [-37.5, 0, -13.5] air dash at frame 18
+
+craters 1/24: PASS | 6258 of 6258 edge nodes (1 part(s), 106 s) | sims 204021 (off a wall climb 3765; walls 739, climbed 3085, never-inkable 220) | first landing over its start, highest of 144753: 1.81 m (bar 1.88; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [28.5, -0.6, -35.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 1.21, "startY": -0.6, "restedAt": [28.5, 0, -27], "block": 38, "tag": "downs", "plainHopSameHeading": 1.81, "plainHopBestOf16": 1.81}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 1215 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 20349 | listed tops 0 | off the graph 9350 landings
+
+craters 1/60: PASS | 6258 of 6258 edge nodes (1 part(s), 182 s) | sims 204021 (off a wall climb 3765; walls 739, climbed 3040, never-inkable 220) | first landing over its start, highest of 144946: 1.87 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-8.5, 0, -45.5], "dir": [0, -1], "move": "air dash at frame 30", "landedAt": 1.87, "startY": 0, "restedAt": [-8.5, -1.02, -54.8], "block": 380, "tag": "undercliff", "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 1541 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 20027 | listed tops 0 | off the graph 9600 landings
+
+crossmarket 1/24: PASS | 4490 of 4490 edge nodes (1 part(s), 74 s) | sims 158917 (off a wall climb 15237; walls 2441, climbed 11590, never-inkable 957) | first landing over its start, highest of 107101: 1.86 m (bar 1.88; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-4.5, 0, -12.5], "dir": [-0.71, -0.71], "move": "air dash at frame 30", "landedAt": 2.01, "startY": 0.15, "restedAt": [-8.7, 0, -17.4], "block": 5, "tag": "streets", "plainHopSameHeading": 1.86, "plainHopBestOf16": 1.86}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 1396 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 5338 | listed tops 0 | off the graph 8391 landings
+
+crossmarket 1/60: PASS | 4490 of 4490 edge nodes (1 part(s), 146 s) | sims 158953 (off a wall climb 15273; walls 2441, climbed 11596, never-inkable 953) | first landing over its start, highest of 107098: 1.86 m (bar 1.92; over the bar but a plain hop as high: the same one 1, onto the same block from nearby 0) {"from": [-5.5, 0, -12.5], "dir": [0.71, -0.71], "move": "air dash at frame 30", "landedAt": 2.01, "startY": 0.15, "restedAt": [-0.6, 1, -17.9], "block": 481, "tag": "prop collider 1.4\u00d71\u00d73.1 no-ink", "plainHopSameHeading": 1.86, "plainHopBestOf16": 1.86}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 1994 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 4938 | listed tops 0 | off the graph 8527 landings
+
+halyard 1/24: PASS | 4036 of 4036 edge nodes (1 part(s), 62 s) | sims 134314 (off a wall climb 5162; walls 793, climbed 4395, never-inkable 222) | first landing over its start, highest of 78262: 1.87 m (bar 1.88; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [20.5, 0, -10.5], "dir": [1, 0], "move": "air dash at frame 30", "landedAt": 1.87, "startY": 0, "restedAt": "the sea", "block": -1, "tag": null, "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 434 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 32244 | listed tops 9 | off the graph 8250 landings
+   top: block 164 (prop collider 1.6×1.9×3.7 no-ink) [23.9, 1.87, -12.7] up 1.87 (first landing 1.87) from [21.5, 0, -15.5] dash off a wall climb (top), off, along
+   top: block 165 (prop collider 1.6×1.9×3.7 no-ink) [-23.9, 1.87, 11.7] up 1.87 (first landing 1.87) from [-21.5, 0, 14.5] dash off a wall climb (top), off, along
+   top: block 140 (prop collider 1×1.8×3.1 no-ink) [23.5, 1.75, -69] up 1.75 (first landing 1.75) from [23.5, 0, -64.5] air dash at frame 30
+   top: block 509 (prop collider 3×1.5×3.8 no-ink) [21.5, 1.5, -33] up 1.5 (first landing 1.5) from [21.5, 0, -38.5] air dash at frame 18
+   top: block 347 (prop collider 3×1.5×3.8 no-ink) [22.5, 1.5, -28.8] up 1.5 (first landing 1.5) from [22.5, 0, -36.5] air dash at frame 30
+   top: block 232 (prop collider 1.3×2.2×1.6 no-ink) [-22.9, 2.2, -19.4] up 1.5 (first landing 1.5) from [-17.5, 0.7, -19.5] air dash at frame 18
+   top: block 234 (prop collider 1.3×2.2×1.6 no-ink) [23, 2.2, 18.5] up 1.5 (first landing 1.5) from [17.5, 0.7, 18.5] air dash at frame 18
+   top: block 348 (prop collider 3×1.5×3.8 no-ink) [-22.5, 1.5, 28] up 1.5 (first landing 1.5) from [-22.5, 0, 22.5] air dash at frame 18
+   top: block 493 (prop collider 2.3×1.2×6.6 no-ink) [16.5, 2.03, -53] up 1.15 (first landing 1.15) from [16.5, 0.88, -47.5] air dash at frame 18
+
+halyard 1/60: PASS | 4036 of 4036 edge nodes (1 part(s), 132 s) | sims 134293 (off a wall climb 5141; walls 793, climbed 4200, never-inkable 226) | first landing over its start, highest of 78473: 1.87 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [22.5, 0, -15.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 1.87, "startY": 0, "restedAt": [22.5, 0, -6], "block": 27, "tag": "yard-strip", "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 594 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 31636 | listed tops 12 | off the graph 8462 landings
+   top: block 164 (prop collider 1.6×1.9×3.7 no-ink) [23.4, 1.87, -11] up 1.87 (first landing 1.87) from [21.5, 0, -13.5] dash off a wall climb (top), off, along
+   top: block 165 (prop collider 1.6×1.9×3.7 no-ink) [-23.4, 1.87, 12] up 1.87 (first landing 1.87) from [-21.5, 0, 14.5] dash off a wall climb (top), off, along
+   top: block 140 (prop collider 1×1.8×3.1 no-ink) [23.5, 1.75, -69] up 1.75 (first landing 1.75) from [23.5, 0, -64.5] air dash at frame 18
+   top: block 509 (prop collider 3×1.5×3.8 no-ink) [21.5, 1.5, -33.1] up 1.5 (first landing 1.5) from [21.5, 0, -38.5] air dash at frame 18
+   top: block 347 (prop collider 3×1.5×3.8 no-ink) [22.5, 1.5, -28.9] up 1.5 (first landing 1.5) from [22.5, 0, -36.5] air dash at frame 30
+   top: block 233 (prop collider 0.6×2.2×1.6 rail no-ink) [-22.3, 2.2, -19.1] up 1.5 (first landing 1.5) from [-17.5, 0.7, -19.5] air dash at frame 18
+   top: block 232 (prop collider 1.3×2.2×1.6 no-ink) [-22.9, 2.2, -18.5] up 1.5 (first landing 1.5) from [-17.5, 0.7, -18.5] air dash at frame 18
+   top: block 235 (prop collider 0.6×2.2×1.6 rail no-ink) [21.8, 2.2, 19] up 1.5 (first landing 1.5) from [17.5, 0.7, 14.5] air dash at frame 18
+   top: block 348 (prop collider 3×1.5×3.8 no-ink) [-22.5, 1.5, 27.9] up 1.5 (first landing 1.5) from [-22.5, 0, 22.5] air dash at frame 18
+   top: block 510 (prop collider 3×1.5×3.8 no-ink) [-22.3, 1.5, 33.3] up 1.5 (first landing 1.5) from [-18.5, 0, 29.5] air dash at frame 18
+   top: block 493 (prop collider 2.3×1.2×6.6 no-ink) [16.5, 2.03, -53.1] up 1.15 (first landing 1.15) from [16.5, 0.88, -47.5] air dash at frame 18
+   top: block 498 (prop collider 2.3×1.2×6.6 no-ink) [-16.5, 2.03, 53.1] up 1.15 (first landing 1.15) from [-16.5, 0.88, 45.5] air dash at frame 30
+
+kelpline 1/24: PASS | 5497 of 5497 edge nodes (1 part(s), 104 s) | sims 187546 (off a wall climb 11642; walls 2324, climbed 8626, never-inkable 1232) | first landing over its start, highest of 129668: 1.87 m (bar 1.88; over the bar but a plain hop as high: the same one 12, onto the same block from nearby 0) {"from": [-20.5, 0, -50.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 1.87, "startY": 0, "restedAt": [-20.9, 2.09, -45.7], "block": 109, "tag": "stair", "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 246) | out of bounds 0 (also on foot 0) | roof touched 2513 (still on one after 3 s 0; also by a plain walk / hop 4) | sea 12837 | listed tops 5 | off the graph 9761 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 21 (1 block(s), tops 2.92-2.92 m, at [-31.4, -9.7]): {"from": [-29.5, 5.2, -16.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 617}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 17 (43 block(s), tops 2.57-8.14 m, at [-9.9, -9.6]): {"from": [-13.5, 2.6, -8.5], "dir": [1, 0], "move": "running hop", "onto": 521}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 18 (43 block(s), tops 2.57-8.14 m, at [9.9, 9.6]): {"from": [11.5, 2.6, 4.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 566}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 24 (1 block(s), tops 2.92-2.92 m, at [31.4, 9.7]): {"from": [27.5, 5.2, 12.5], "dir": [1, 0], "move": "running hop", "onto": 630}
+   still on a roof after 3 s, a roof a kid gets onto on foot (its slide: the stage's): {"from": [38.5, 2.6, 55.5], "dir": [1, 0], "move": "air dash at frame 18", "to": [21.2, 4.8, 71.4], "up": 2.2, "block": 156, "tag": "backwall", "onFootBy": {"from": [38.5, 2.6, 55.5], "dir": [1, 0], "move": "running hop"}}
+   top: block 89 (trailer) [-13.4, 3.95, -22.1] up 2.12 (first landing 1.77) from [-9.5, 1.83, -26.5] air dash at frame 30
+   top: block 644 (prop collider 2×1.3×5.8 no-ink) [8.1, 1.95, -21.7] up 1.95 (first landing 1.95) from [7.5, 0, -18.5] dash off a wall climb (top), off, along back
+   top: block 511 (prop collider 2.2×0.6×1.7 no-ink) [-8.6, 1.9, -18.3] up 1.9 (first landing 1.9) from [-9.5, 0, -22.5] dash off a wall climb (top), off, along back
+   top: block 641 (prop collider 2.4×2.6×0.3 no-ink) [5.4, 2.6, -24.6] up 1.4 (first landing 1.4) from [1.5, 1.2, -28.5] air dash at frame 18
+   top: block 605 (prop collider 0.6×1.4×8.4 no-ink) [-34.4, 1.35, -9.8] up 1.35 (first landing 1.35) from [-37.5, 0, -13.5] air dash at frame 18
+
+kelpline 1/60: PASS | 5497 of 5497 edge nodes (1 part(s), 186 s) | sims 187752 (off a wall climb 11848; walls 2324, climbed 8676, never-inkable 1203) | first landing over its start, highest of 129661: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [9.5, 0, 14.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 1.9, "startY": 0, "restedAt": [8.7, 0, 22.2], "block": 144, "tag": "lane", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 266) | out of bounds 0 (also on foot 0) | roof touched 2744 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 12666 | listed tops 6 | off the graph 9668 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 21 (1 block(s), tops 2.92-2.92 m, at [-31.4, -9.7]): {"from": [-29.5, 5.2, -16.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 617}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 17 (43 block(s), tops 2.57-8.14 m, at [-9.9, -9.6]): {"from": [-14.5, 2.6, -9.5], "dir": [1, 0], "move": "running hop", "onto": 517}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 18 (43 block(s), tops 2.57-8.14 m, at [9.9, 9.6]): {"from": [11.5, 2.6, 5.5], "dir": [-0.71, 0.71], "move": "running hop", "onto": 568}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 24 (1 block(s), tops 2.92-2.92 m, at [31.4, 9.7]): {"from": [27.5, 5.2, 12.5], "dir": [1, 0], "move": "running hop", "onto": 630}
+   top: block 644 (prop collider 2×1.3×5.8 no-ink) [9.5, 1.95, -21.3] up 1.95 (first landing 1.95) from [7.5, 0, -18.5] dash off a wall climb (top), straight off
+   top: block 511 (prop collider 2.2×0.6×1.7 no-ink) [-8.7, 1.9, -18.4] up 1.9 (first landing 1.9) from [-9.5, 0, -22.5] dash off a wall climb (top), off, along back
+   top: block 669 (prop collider 2.1×1.6×3.7 no-ink) [-18.7, 1.6, -59.7] up 1.6 (first landing 1.6) from [-22.5, 0, -63.5] air dash at frame 18
+   top: block 89 (trailer) [-12.3, 3.95, -21.7] up 1.54 (first landing 1.54) from [-8.5, 2.41, -25.5] air dash at frame 18
+   top: block 641 (prop collider 2.4×2.6×0.3 no-ink) [5.3, 2.6, -24.7] up 1.4 (first landing 1.4) from [1.5, 1.2, -28.5] air dash at frame 18
+   top: block 605 (prop collider 0.6×1.4×8.4 no-ink) [-34.3, 1.35, -9.7] up 1.35 (first landing 1.35) from [-37.5, 0, -13.5] air dash at frame 18
+
+lockgate 1/24: PASS | 4657 of 4657 edge nodes (1 part(s), 82 s) | sims 162838 (off a wall climb 13814; walls 1848, climbed 10270, never-inkable 409) | first landing over its start, highest of 113423: 1.84 m (bar 1.88; over the bar but a plain hop as high: the same one 18, onto the same block from nearby 4) {"from": [13.5, 0.56, 18.5], "dir": [1, 0], "move": "air dash at frame 30", "landedAt": 2.4, "startY": 0.56, "restedAt": [21.7, 1.3, 18.5], "block": 5, "tag": "lockside-n", "plainHopSameHeading": 1.84, "plainHopBestOf16": 1.84}
+   perches 0 (also by a plain walk / hop 251) | out of bounds 0 (also on foot 0) | roof touched 2226 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 4628 | listed tops 4 | off the graph 8614 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 0 (12 block(s), tops 3.93-4.23 m, at [9.6, -6.3]): {"from": [-0.5, 3.3, -0.5], "dir": [0.38, 0.92], "move": "running hop", "onto": 123}
+   top: block 610 (prop collider 1.8×1.7×5.4 no-ink) [21.1, 1.67, -43.6] up 1.67 (first landing 1.67) from [17.5, 0, -47.5] air dash at frame 18
+   top: block 612 (prop collider 1.2×2.2×2.6 no-ink) [20.4, 2.15, -49.6] up 1.09 (first landing 1.09) from [16.5, 1.06, -53.5] air dash at frame 18
+   top: block 613 (prop collider 1.2×2.2×2.6 no-ink) [-20.4, 2.15, 48.6] up 1.09 (first landing 1.09) from [-16.5, 1.06, 52.5] air dash at frame 18
+   top: block 611 (prop collider 1.8×1.7×5.4 no-ink) [-20.5, 1.67, 43] up 0.59 (first landing 0.59) from [-20.5, 1.08, 36.5] air dash at frame 18
+
+lockgate 1/60: PASS | 4657 of 4657 edge nodes (1 part(s), 148 s) | sims 162862 (off a wall climb 13838; walls 1848, climbed 10495, never-inkable 408) | first landing over its start, highest of 113433: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-2.5, 2.4, 63.5], "dir": [-0.71, -0.71], "move": "air dash at frame 30", "landedAt": 4.3, "startY": 2.4, "restedAt": [1.2, 2.4, 63.6], "block": 143, "tag": "spawn", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 238) | out of bounds 0 (also on foot 0) | roof touched 2517 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 4561 | listed tops 6 | off the graph 8389 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 0 (12 block(s), tops 3.93-4.23 m, at [9.6, -6.3]): {"from": [-0.5, 3.3, -0.5], "dir": [0.38, 0.92], "move": "running hop", "onto": 123}
+   top: block 610 (prop collider 1.8×1.7×5.4 no-ink) [20.3, 1.67, -43.7] up 1.67 (first landing 1.67) from [16.5, 0, -47.5] air dash at frame 18
+   top: block 590 (prop collider 1.2×2.2×2.6 no-ink) [-3.3, 2.15, -44.3] up 1.27 (first landing 1.27) from [0.5, 0.88, -40.5] air dash at frame 18
+   top: block 591 (prop collider 1.2×2.2×2.6 no-ink) [3.3, 2.15, 41.7] up 1.27 (first landing 1.27) from [-0.5, 0.88, 45.5] air dash at frame 18
+   top: block 612 (prop collider 1.2×2.2×2.6 no-ink) [20.5, 2.15, -49.5] up 1.09 (first landing 1.09) from [16.5, 1.06, -53.5] air dash at frame 18
+   top: block 613 (prop collider 1.2×2.2×2.6 no-ink) [-20.5, 2.15, 49.5] up 1.09 (first landing 1.09) from [-16.5, 1.06, 53.5] air dash at frame 18
+   top: block 611 (prop collider 1.8×1.7×5.4 no-ink) [-20.5, 1.67, 43.1] up 0.59 (first landing 0.59) from [-20.5, 1.08, 36.5] air dash at frame 30
+
+nantai 1/24: PASS | 5456 of 5456 edge nodes (1 part(s), 88 s) | sims 179380 (off a wall climb 4788; walls 820, climbed 4260, never-inkable 208) | first landing over its start, highest of 123078: 1.85 m (bar 1.88; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-12.5, 1.3, -28.5], "dir": [1, 0], "move": "air dash at frame 30", "landedAt": 3.15, "startY": 1.3, "restedAt": [-4.8, 2.6, -28.5], "block": 234, "tag": "west-terrace", "plainHopSameHeading": 1.85, "plainHopBestOf16": 1.85}
+   perches 0 (also by a plain walk / hop 552) | out of bounds 0 (also on foot 0) | roof touched 456 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 19817 | listed tops 4 | off the graph 5262 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 2 (1 block(s), tops 3.55-3.55 m, at [-1.2, -39.6]): {"from": [-2.5, 3.55, -39.5], "dir": [1, 0], "move": "walk", "onto": 291}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 3 (1 block(s), tops 3.55-3.55 m, at [7.3, -39.6]): {"from": [8.5, 3.8, -41.5], "dir": [0, 1], "move": "walk", "onto": 292}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 0 (3 block(s), tops 1.7-1.7 m, at [-3.2, -11.8]): {"from": [-4.5, 1.5, -20.5], "dir": [0.38, 0.92], "move": "running hop", "onto": 264}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 1 (3 block(s), tops 1.7-1.7 m, at [3.2, -11.8]): {"from": [4.5, 1.3, -20.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 267}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 4 (3 block(s), tops 1.7-1.7 m, at [3.2, 11.8]): {"from": [4.5, 1.5, 20.5], "dir": [-0.38, -0.92], "move": "running hop", "onto": 563}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 5 (3 block(s), tops 1.7-1.7 m, at [-3.2, 11.8]): {"from": [-4.5, 1.3, 20.5], "dir": [0.38, -0.92], "move": "running hop", "onto": 566}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 6 (1 block(s), tops 3.55-3.55 m, at [1.3, 39.6]): {"from": [-0.5, 3.55, 39.5], "dir": [0.92, 0.38], "move": "walk", "onto": 590}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 7 (1 block(s), tops 3.55-3.55 m, at [-7.2, 39.6]): {"from": [-7.5, 3.8, 40.5], "dir": [0.92, -0.38], "move": "walk", "onto": 591}
+   top: block 747 (prop collider 0.2×3×0.2 no-ink) [-20.7, 3.8, -10.8] up 1.2 (first landing 1.1) from [-20.5, 2.6, -18.5] air dash at frame 30
+   top: block 751 (prop collider 0.2×3×0.2 no-ink) [20.5, 3.8, 10.8] up 1.2 (first landing 1.2) from [20.5, 2.6, 15.5] air dash at frame 18
+   top: block 974 (prop collider 1×1.3×1 no-ink) [0.6, 3.21, -30.4] up 0.61 (first landing 0.61) from [-4.5, 2.6, -35.5] air dash at frame 30
+   top: block 976 (prop collider 1×1.3×1 no-ink) [-0.9, 3.21, 29.9] up 0.61 (first landing 0.61) from [3.5, 2.6, 25.5] air dash at frame 18
+
+nantai 1/60: PASS | 5456 of 5456 edge nodes (1 part(s), 167 s) | sims 179381 (off a wall climb 4789; walls 820, climbed 4170, never-inkable 209) | first landing over its start, highest of 123239: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-20.5, 2.6, -52.5], "dir": [0, 1], "move": "air dash at frame 30", "landedAt": 4.5, "startY": 2.6, "restedAt": [-20.7, 2.6, -43.6], "block": 194, "tag": "ridge", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 600) | out of bounds 0 (also on foot 0) | roof touched 489 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 19488 | listed tops 4 | off the graph 5330 landings
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 2 (1 block(s), tops 3.55-3.55 m, at [-1.2, -39.6]): {"from": [-2.5, 3.55, -39.5], "dir": [1, 0], "move": "walk", "onto": 291}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 3 (1 block(s), tops 3.55-3.55 m, at [7.3, -39.6]): {"from": [7.5, 3.8, -41.5], "dir": [0, 1], "move": "walk", "onto": 292}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 0 (3 block(s), tops 1.7-1.7 m, at [-3.2, -11.8]): {"from": [-4.5, 1.5, -20.5], "dir": [0.38, 0.92], "move": "running hop", "onto": 264}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 1 (3 block(s), tops 1.7-1.7 m, at [3.2, -11.8]): {"from": [4.5, 1.3, -20.5], "dir": [-0.38, 0.92], "move": "running hop", "onto": 267}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 5 (3 block(s), tops 1.7-1.7 m, at [-3.2, 11.8]): {"from": [-4.5, 1.3, 20.5], "dir": [0.38, -0.92], "move": "running hop", "onto": 566}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 4 (3 block(s), tops 1.7-1.7 m, at [3.2, 11.8]): {"from": [4.5, 1.5, 20.5], "dir": [-0.38, -0.92], "move": "running hop", "onto": 563}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 6 (1 block(s), tops 3.55-3.55 m, at [1.3, 39.6]): {"from": [-0.5, 3.55, 39.5], "dir": [0.92, 0.38], "move": "walk", "onto": 590}
+   perch piece a dash lands on that a plain walk / hop gets onto too: piece 7 (1 block(s), tops 3.55-3.55 m, at [-7.2, 39.6]): {"from": [-7.5, 3.8, 40.5], "dir": [0.92, -0.38], "move": "walk", "onto": 591}
+   top: block 974 (prop collider 1×1.3×1 no-ink) [0.5, 3.21, -30.5] up 1.59 (first landing 1.59) from [0.5, 1.62, -36.5] air dash at frame 18
+   top: block 747 (prop collider 0.2×3×0.2 no-ink) [-20.7, 3.8, -10.8] up 1.2 (first landing 1.1) from [-20.5, 2.6, -18.5] air dash at frame 30
+   top: block 751 (prop collider 0.2×3×0.2 no-ink) [20.5, 3.8, 10.8] up 1.2 (first landing 1.2) from [20.5, 2.6, 15.5] air dash at frame 18
+   top: block 976 (prop collider 1×1.3×1 no-ink) [-1, 3.21, 30] up 0.61 (first landing 0.61) from [3.5, 2.6, 25.5] air dash at frame 18
+
+saltpan 1/24: PASS | 6134 of 6134 edge nodes (1 part(s), 99 s) | sims 202707 (off a wall climb 6419; walls 1487, climbed 4135, never-inkable 789) | first landing over its start, highest of 141195: 1.83 m (bar 1.88; over the bar but a plain hop as high: the same one 72, onto the same block from nearby 13) {"from": [-15.5, 0.36, 26.5], "dir": [-0.71, -0.71], "move": "air dash at frame 30", "landedAt": 2.19, "startY": 0.36, "restedAt": [-19.7, 1.47, 21.2], "block": 110, "tag": "heap-tarp", "plainHopSameHeading": 1.83, "plainHopBestOf16": 1.83}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 2) | roof touched 2886 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 16571 | listed tops 2 | off the graph 6558 landings
+   top: block 110 (heap-tarp) [-20.7, 1.07, 22.6] up 1.07 (first landing 1.17) from [-21.5, 0, 26.5] air dash at frame 18
+   top: block 37 (heap-tarp) [21.5, 0.82, -22.5] up 0.82 (first landing 0.82) from [21.5, 0, -28.5] air dash at frame 18
+
+saltpan 1/60: PASS | 6134 of 6134 edge nodes (1 part(s), 188 s) | sims 202791 (off a wall climb 6503; walls 1487, climbed 4245, never-inkable 778) | first landing over its start, highest of 140608: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [20.5, 1.1, 17.5], "dir": [0, 1], "move": "air dash at frame 18", "landedAt": 3.2, "startY": 1.3, "restedAt": [20.5, 4.17, 21.4], "block": 103, "tag": "shed-roof", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 3399 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 16191 | listed tops 2 | off the graph 6475 landings
+   top: block 110 (heap-tarp) [-20.7, 1.17, 22.6] up 1.17 (first landing 1.17) from [-21.5, 0, 26.5] air dash at frame 18
+   top: block 37 (heap-tarp) [21.5, 0.82, -22.4] up 0.82 (first landing 0.82) from [21.5, 0, -28.5] air dash at frame 18
+
+spirhalite 1/24: PASS | 4514 of 4514 edge nodes (1 part(s), 77 s) | sims 146014 (off a wall climb 1566; walls 519, climbed 981, never-inkable 326) | first landing over its start, highest of 89879: 1.87 m (bar 1.88; over the bar but a plain hop as high: the same one 10, onto the same block from nearby 0) {"from": [-11.5, 0, -63.5], "dir": [-0.71, 0.71], "move": "air dash at frame 30", "landedAt": 1.87, "startY": 0, "restedAt": [-17.3, 2.35, -57.8], "block": 860, "tag": "prop collider 0.1\u00d72.4\u00d70.1 no-ink", "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 778 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 31474 | listed tops 0 | off the graph 8600 landings
+
+spirhalite 1/60: PASS | 4514 of 4514 edge nodes (1 part(s), 119 s) | sims 146014 (off a wall climb 1566; walls 519, climbed 926, never-inkable 326) | first landing over its start, highest of 89715: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-6.5, 1.3, 60.5], "dir": [-0.71, -0.71], "move": "air dash at frame 30", "landedAt": 3.2, "startY": 1.3, "restedAt": [-9.7, 3.2, 55.9], "block": 678, "tag": "helipad", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 976 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 30708 | listed tops 0 | off the graph 8876 landings
+
+terraces 1/24: PASS | 4082 of 4082 edge nodes (1 part(s), 86 s) | sims 134513 (off a wall climb 3889; walls 915, climbed 2710, never-inkable 504) | first landing over its start, highest of 99525: 1.84 m (bar 1.88; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-4.5, 1.76, -16.5], "dir": [1, 0], "move": "air dash at frame 30", "landedAt": 3.6, "startY": 1.76, "restedAt": [0.2, 3.6, -16.4], "block": 267, "tag": "ceramiche", "plainHopSameHeading": 1.84, "plainHopBestOf16": 1.84}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 2984 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 6726 | listed tops 2 | off the graph 10261 landings
+   top: block 564 (caffe-stair) [13.2, 3.46, 14.5] up 2.71 (first landing 1.5) from [17.5, 0.75, 15.5] air dash at frame 30
+   top: block 272 (caffe-stair) [-13.8, 3.24, -14.8] up 1.87 (first landing 0.83) from [-18.5, 1.37, -19.5] air dash at frame 30
+
+terraces 1/60: PASS | 4082 of 4082 edge nodes (1 part(s), 143 s) | sims 134563 (off a wall climb 3939; walls 915, climbed 2725, never-inkable 494) | first landing over its start, highest of 99212: 1.85 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [5.5, 1.53, 15.5], "dir": [-0.71, 0.71], "move": "air dash at frame 30", "landedAt": 3.38, "startY": 1.53, "restedAt": [0.9, 3.35, 19.9], "block": 565, "tag": "ceramiche-stair", "plainHopSameHeading": 1.85, "plainHopBestOf16": 1.85}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 3450 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 6665 | listed tops 2 | off the graph 10307 landings
+   top: block 564 (caffe-stair) [13.2, 3.46, 14.5] up 2.68 (first landing 1.47) from [18.5, 0.78, 15.5] air dash at frame 30
+   top: block 272 (caffe-stair) [-14.8, 3.02, -14.6] up 1.82 (first landing 1.03) from [-15.5, 1.2, -20.5] air dash at frame 30
+
+tidewater 1/24: PASS | 4610 of 4610 edge nodes (1 part(s), 105 s) | sims 154193 (off a wall climb 6673; walls 1425, climbed 3720, never-inkable 683) | first landing over its start, highest of 110856: 1.87 m (bar 1.88; over the bar but a plain hop as high: the same one 9, onto the same block from nearby 0) {"from": [-8.5, -0.2, -26.7], "dir": [-1, 0], "move": "air dash at frame 30", "landedAt": 1.67, "startY": -0.2, "restedAt": [-15.2, 1.67, -26.7], "block": 941, "tag": "prop collider 1.1\u00d71.4\u00d71.1 no-ink", "plainHopSameHeading": 1.87, "plainHopBestOf16": 1.87}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 2169 (still on one after 3 s 0; also by a plain walk / hop 2) | sea 2792 | listed tops 9 | off the graph 10695 landings
+   still on a roof after 3 s, a roof a kid gets onto on foot (its slide: the stage's): {"from": [16.5, -0.2, -1.7], "dir": [0, -1], "move": "air dash at frame 18", "to": [16.5, 0.73, -7.7], "up": 0.93, "block": 748, "tag": "prop collider 0.3\u00d70.9\u00d70.3 roof no-ink", "onFootBy": {"from": [14.5, -0.2, -9.7], "dir": [0.71, 0.71], "move": "running hop"}}
+   top: block 689 (prop collider 3.8×0.9×3.8 no-ink) [-8.5, 1.41, -43.2] up 1.61 (first landing 1.61) from [-8.5, -0.2, -48.7] air dash at frame 18
+   top: block 690 (prop collider 3.8×0.9×3.8 no-ink) [8.5, 1.41, 43.8] up 1.61 (first landing 1.61) from [8.5, -0.2, 38.3] air dash at frame 18
+   top: block 1022 (prop collider 0.8×1.9×0.8 no-ink) [-10.5, 1.72, 34] up 1.47 (first landing 1.42) from [-10.5, 0.25, 28.3] air dash at frame 18
+   top: block 1020 (prop collider 0.8×1.9×0.8 no-ink) [8.6, 1.72, 35.2] up 1.47 (first landing 1.47) from [12.5, 0.25, 31.3] air dash at frame 18
+   top: block 1021 (prop collider 0.8×1.9×0.8 no-ink) [10.2, 1.72, -34.7] up 1.02 (first landing 1.02) from [4.5, 0.7, -34.7] air dash at frame 18
+   top: block 985 (prop collider 0.8×1.9×0.8 no-ink) [-14.7, 1.72, -17.9] up 1.02 (first landing 1.02) from [-10.5, 0.7, -13.7] air dash at frame 18
+   top: block 986 (prop collider 0.8×1.9×0.8 no-ink) [14.5, 1.72, 18] up 1.02 (first landing 1.02) from [14.5, 0.7, 12.3] air dash at frame 18
+   top: block 988 (prop collider 0.8×1.9×0.8 no-ink) [8.5, 1.72, 18.3] up 1.02 (first landing 1.02) from [12.5, 0.7, 14.3] air dash at frame 18
+   top: block 987 (prop collider 0.8×1.9×0.8 no-ink) [-8.2, 1.72, -19] up 0.52 (first landing 0.52) from [-3.5, 1.2, -23.7] air dash at frame 18
+
+tidewater 1/60: PASS | 4610 of 4610 edge nodes (1 part(s), 146 s) | sims 154060 (off a wall climb 6540; walls 1425, climbed 4745, never-inkable 695) | first landing over its start, highest of 110630: 1.92 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-4.5, -0.2, 36.3], "dir": [0.71, 0.71], "move": "air dash at frame 30", "landedAt": 1.72, "startY": -0.2, "restedAt": [0.5, 0.8, 41.4], "block": 387, "tag": "bandstand", "plainHopSameHeading": 1.92, "plainHopBestOf16": 1.92}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 2606 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 2866 | listed tops 9 | off the graph 10557 landings
+   top: block 985 (prop collider 0.8×1.9×0.8 no-ink) [-14.3, 1.72, -18.7] up 1.72 (first landing 1.72) from [-19.5, 0, -18.7] air dash at frame 18
+   top: block 689 (prop collider 3.8×0.9×3.8 no-ink) [-8.5, 1.41, -43.3] up 1.61 (first landing 1.61) from [-8.5, -0.2, -48.7] air dash at frame 18
+   top: block 690 (prop collider 3.8×0.9×3.8 no-ink) [8.5, 1.41, 43.7] up 1.61 (first landing 1.61) from [8.5, -0.2, 38.3] air dash at frame 18
+   top: block 1022 (prop collider 0.8×1.9×0.8 no-ink) [-10.5, 1.72, 34] up 1.47 (first landing 1.42) from [-10.5, 0.25, 28.3] air dash at frame 18
+   top: block 1020 (prop collider 0.8×1.9×0.8 no-ink) [8.7, 1.72, 35.1] up 1.47 (first landing 1.47) from [12.5, 0.25, 31.3] air dash at frame 18
+   top: block 1021 (prop collider 0.8×1.9×0.8 no-ink) [10.4, 1.72, -34.7] up 1.02 (first landing 1.02) from [4.5, 0.7, -34.7] air dash at frame 18
+   top: block 986 (prop collider 0.8×1.9×0.8 no-ink) [14.5, 1.72, 18.2] up 1.02 (first landing 1.02) from [14.5, 0.7, 12.3] air dash at frame 18
+   top: block 988 (prop collider 0.8×1.9×0.8 no-ink) [8.3, 1.72, 18.5] up 1.02 (first landing 1.02) from [12.5, 0.7, 14.3] air dash at frame 18
+   top: block 987 (prop collider 0.8×1.9×0.8 no-ink) [-8.2, 1.72, -19] up 0.52 (first landing 0.52) from [-3.5, 1.2, -23.7] air dash at frame 18
+
+treehills 1/24: PASS | 5385 of 5385 edge nodes (1 part(s), 104 s) | sims 176426 (off a wall climb 4106; walls 1398, climbed 2275, never-inkable 1001) | first landing over its start, highest of 126089: 1.82 m (bar 1.88; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [19, 1.3, -30.5], "dir": [-0.71, 0.71], "move": "air dash at frame 30", "landedAt": 3.2, "startY": 1.38, "restedAt": [12.9, 1.3, -26.1], "block": 114, "tag": "nursery", "plainHopSameHeading": 1.82, "plainHopBestOf16": 1.82}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 7655 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 11583 | listed tops 0 | off the graph 7638 landings
+
+treehills 1/60: PASS | 5385 of 5385 edge nodes (1 part(s), 173 s) | sims 176459 (off a wall climb 4139; walls 1398, climbed 2200, never-inkable 994) | first landing over its start, highest of 126188: 1.9 m (bar 1.92; over the bar but a plain hop as high: the same one 0, onto the same block from nearby 0) {"from": [-14, 1.3, -55.5], "dir": [1, 0], "move": "air dash at frame 30", "landedAt": 3.2, "startY": 1.3, "restedAt": [-13, 1.3, -55.5], "block": 125, "tag": "apron", "plainHopSameHeading": 1.9, "plainHopBestOf16": 1.9}
+   perches 0 (also by a plain walk / hop 0) | out of bounds 0 (also on foot 0) | roof touched 8267 (still on one after 3 s 0; also by a plain walk / hop 0) | sea 11487 | listed tops 2 | off the graph 7335 landings
+   top: block 1502 (prop collider 1.4×1.9×0.6 no-ink) [16.2, 3.2, -33.7] up 0.95 (first landing 0.95) from [12, 2.25, -29.5] air dash at frame 18
+   top: block 1503 (prop collider 1.4×1.9×0.6 no-ink) [-16.2, 3.2, 33.7] up 0.95 (first landing 0.95) from [-12, 2.25, 29.5] air dash at frame 18
+

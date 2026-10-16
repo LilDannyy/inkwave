@@ -25,14 +25,16 @@ import { MAIN_KITS } from './kits/registry.js';
 
 // picks: devices taken on (a device once); repicks: going back to one it was on before; secs: seconds in device mode
 // (all bots); fired: frames with the trigger down for one; gaveUp: left alone after DEV_GIVEUP s on it
-export const DEV_BOT = { picks: 0, repicks: 0, beacon: 0, sprinkler: 0, surf: 0, frames: 0, secs: 0, walkSecs: 0, blockedSecs: 0, fired: 0, gaveUp: 0 };
+export const DEV_BOT = { picks: 0, repicks: 0, beacon: 0, sprinkler: 0, surf: 0, sentry: 0, bobber: 0, frames: 0, secs: 0, walkSecs: 0, blockedSecs: 0, fired: 0, gaveUp: 0 };   // ([b5-subs] sentry, bobber: the kits' devices)
 export const DEV_AI = { enabled: true };   // (match harnesses switch it off for an A/B: match.cjs / tower-match.cjs DEV_AI=0)
 export function resetDevBot() { for (const k in DEV_BOT) DEV_BOT[k] = 0; }
 const PREFER = { beacon: 0.8, surf: 0.85, sprinkler: 1 };   // (its distance × this: the pick)
 const MELEE = { roller: true, brush: true };   // (bots.js MELEE; kit melee weapons say so themselves: bot.melee)
 const _list = [];
 // (still standing and still in the world: a clear() — a new match, a test's next scene — drops them without a death)
-const live = (kind, o) => (kind === 'surf' ? !o.dead && o.phase === 'live' && !!G.specials?.world.includes(o)
+// ([b5-subs] a kit device: its descriptor says — d.live; the map keeps descriptors by their obj, so `o` here is d.obj and the
+// descriptor rides along as o.desc (the sentry); a kit object that is its own device says so itself (the bobber: o.kit, o.live))
+const live = (kind, o) => (o && o.desc && o.desc.kit ? o.desc.live : o && o.kit ? !!o.live : kind === 'surf' ? !o.dead && o.phase === 'live' && !!G.specials?.world.includes(o)
   : o.state === (kind === 'sprinkler' ? 'spray' : 'beacon') && !!G.subs?.items.includes(o));
 
 export const DEV_GIVEUP = 8, DEV_FORGET = 12;   // s on one device (in all) before giving up on it; s it's left alone after
@@ -69,10 +71,11 @@ export function devShootAim(sense, dt, it, move, tp = null, onT = false, zp = nu
     let bs = Infinity;
     _list.length = 0;
     for (const x of D.devices(_list)) {
-      if (x.team === a.team || !PREFER[x.kind] || (mem.get(x.obj)?.skip ?? 0) > G.time) continue;
+      const pref = x.kit ? x.prefer(b) : PREFER[x.kind];   // [b5-subs] a kit device's pick multiplier, for this bot
+      if (x.team === a.team || !pref || (x.kit && !x.live) || (mem.get(x.obj)?.skip ?? 0) > G.time) continue;
       const dd = Math.hypot(x.aim.x - ex, x.aim.z - ez), dy = x.aim.y - ey;
       if (dd > (free(x) ? reach : win[1]) || Math.abs(dy) > 4) continue;
-      const s = dd * PREFER[x.kind];
+      const s = dd * pref;
       if (s >= bs || !G.physics.los(sense._e || (sense._e = x.aim.clone()).set(ex, ey, ez), x.aim)) continue;
       bs = s; d = x;
     }
@@ -90,8 +93,8 @@ export function devShootAim(sense, dt, it, move, tp = null, onT = false, zp = nu
   // (its time on it, summed over every time it came back to it)
   if ((rec.busy += dt) > DEV_GIVEUP) { rec.skip = G.time + DEV_FORGET; rec.busy = 0; drop(sense); DEV_BOT.gaveUp++; return null; }
   // (its middle now: it may ride the tower)
-  const o = d.obj, n = o.normal, hh = d.kind === 'surf' ? 0 : o.mesh.userData.hitH * 0.5;
-  const px = d.kind === 'surf' ? o.pos.x : o.pos.x + (n ? n.x : 0) * hh, py = d.kind === 'surf' ? o.pos.y + 0.6 : o.pos.y + (n ? n.y : 1) * hh, pz = d.kind === 'surf' ? o.pos.z : o.pos.z + (n ? n.z : 0) * hh;
+  const o = d.obj, n = o.normal, hh = d.kit || d.kind === 'surf' ? 0 : o.mesh.userData.hitH * 0.5;
+  const px = d.kit ? d.aim.x : d.kind === 'surf' ? o.pos.x : o.pos.x + (n ? n.x : 0) * hh, py = d.kit ? d.aim.y : d.kind === 'surf' ? o.pos.y + 0.6 : o.pos.y + (n ? n.y : 1) * hh, pz = d.kit ? d.aim.z : d.kind === 'surf' ? o.pos.z : o.pos.z + (n ? n.z : 0) * hh;   // ([b5-subs] a kit device: its aim)
   const dx = px - a.pos.x, dy = py - (a.pos.y + 1.1), dz = pz - a.pos.z, dh = Math.hypot(dx, dz), d3 = Math.hypot(dh, dy);
   const roam = free(d);
   if (!roam && dh > win[1]) { drop(sense); return null; }   // (tied to a task, and it's out of reach from here: leave it)

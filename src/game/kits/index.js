@@ -8,3 +8,8 @@ import './waddle.js';
 import './torpedo.js';
 import './tracer.js';
 import './boomerang.js';
+// [b5-subscaf] batch 5's four subs (stubs until their builders land them)
+import './glide.js';
+import './sentry.js';
+import './bobber.js';
+import './dash.js';

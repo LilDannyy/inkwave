@@ -13,7 +13,7 @@
 //  · jump buffer + coyote time, apex hang, hard-landing recovery, fire buffer across form changes
 import * as THREE from 'three';
 import { G, emit, clamp, damp, angleDiff, smoothstep } from '../core/ctx.js';
-import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER } from '../config.js';
+import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER, BAZOOKARP } from '../config.js';
 import { makeContacts, Hit, GroundHit, WALKABLE } from './physics.js';
 import { WeaponRunner } from './weapons.js';
 import { MAIN_KITS } from './kits/registry.js';
@@ -31,6 +31,7 @@ export function rumble(actor, strong, weak, ms) {
 }
 
 const _dodgeV = new THREE.Vector3();
+const _dashV = new THREE.Vector3();   // [b5-sub-dash]
 export class Actor {
   constructor({ team, name, weapon = 'shooter', sub = null, special = null, isLocal = false, isBot = false, style = { hair: 0, skin: 0 }, slot = 0, CharacterClass }) {
     this.team = team; this.name = name; this.isLocal = isLocal; this.isBot = isBot; this.slot = slot;
@@ -112,6 +113,7 @@ export class Actor {
     this._evSub = false; this._evEnemy = false; this._evClimb = false; this._evForm = 'kid';
     if (this.status) { this.status.track = 0; this.status.poison = 0; this.status.reveal = 0; this.status.shield = 0; }
     this._jumpBeacon = null;
+    this.carry = null;   // [b5-karp] carrying the Bazookarp: { since, sp, gun, kick, j } (set and cleared by bazookarp.js)
     this.weaponRunner?.reset();
     G.match?.stage?.actorReset(this);   // [b5-stagehooks] (a stage module's own per-actor state: a pipe ride, its cooldown)
   }
@@ -131,7 +133,7 @@ export class Actor {
 
   specialCost() { return this.weapon.specialCost; }
   specialFrac() { return clamp(this.special / this.specialCost(), 0, 1); }
-  specialReady() { return this.special >= this.specialCost() && !this.specialActive; }
+  specialReady() { return this.special >= this.specialCost() && !this.specialActive && !this.carry && !(this.isLocal && G.match?.karp?.lockT > 0); }   // [b5-karp] no special while carrying (or while a pick-up claim is out)
 
   addTurf(area) {
     if (area <= 0) return;
@@ -267,6 +269,7 @@ export class Actor {
     const firePressed = intent.fire && !prev.fire;
     const jumpPressed = intent.jump && !prev.jump;
     const subReleased = !intent.sub && prev.sub;
+    const subPressed = intent.sub && !prev.sub;   // [b5-sub-dash] (onPress subs: trySubPress below)
     const specialPressed = intent.special && !prev.special;
     if (intent.squid && !prev.squid) this._squidPressT = G.time;
     if (firePressed) this._firePressT = G.time;
@@ -277,7 +280,8 @@ export class Actor {
     this.lastDamage += dt; this.lastFire += dt; this.landT += dt; this.kidT += dt;
     this.hurtFlash = Math.max(0, this.hurtFlash - dt * 0.6);
     this.inkWarnCd -= dt;
-    this.jumpBuffer = jumpPressed ? P.jumpBuffer : Math.max(0, this.jumpBuffer - dt);
+    const wr = this.weaponRunner, dashing0 = wr.dashT > 0 && this.grounded;   // [b5-sub-dash] a jump pressed mid ground dash waits for its end
+    this.jumpBuffer = jumpPressed ? P.jumpBuffer : dashing0 ? this.jumpBuffer : Math.max(0, this.jumpBuffer - dt);
     this.fireBuffer = firePressed ? P.fireBuffer : Math.max(0, this.fireBuffer - dt);
     this.hardLand = Math.max(0, this.hardLand - dt / P.hardLandTime);
 
@@ -288,8 +292,10 @@ export class Actor {
     // ---- super jump / specials in progress own the body
     if (this.superJumpState) { this._updateSuperJump(dt); this._finishFrame(dt); return; }
     const spx = this.specialActive;
-    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
+    if (spx && spx.body) { if (wr.dashT > 0) wr.endDash();   // [b5-sub-dash] a body phase ends a dash (never paused, then resumed)
+      this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
     if (specialPressed && this.specialReady()) { this._startSpecial(); this._finishFrame(dt); return; }
+    if (this.carry && (specialPressed || (intent.sub && this._subPressT === G.time))) emit('sub:cantuse', { actor: this, kind: 'karp' });   // [b5-karp] "Can't use your kit while carrying"
 
     // ---- form: squid while the swim button is held. Swim + fire / sub held together → the most recent press wins, so
     // diving mid-spray and popping out of the ink to shoot or throw both work instantly (the pop-out shot is buffered,
@@ -324,6 +330,8 @@ export class Actor {
     if (!this.climbing) this._horizontal(dt, isSquid, onEnemy);
     const dv = this.weaponRunner.dodgeVelocity(_dodgeV);
     if (dv) { this.vel.x = dv.x; this.vel.z = dv.z; }
+    const kick = this.carry && this.carry.kick && (this.carry.kick.x || this.carry.kick.z) ? this.carry.kick : null;   // [b5-karp] the Carp Shot's knockback, after the movement model
+    if (kick) { this.vel.x += kick.x; this.vel.z += kick.z; }
 
     // ---- dodge roll (twin pistols / dualies): jump pressed while firing and moving rolls instead of jumping. The
     // runner's tryDodge dispatches by weapon kind (it spends the ink, triggers the character's roll, emits the FX events)
@@ -332,18 +340,24 @@ export class Actor {
     // as big, so every cost and every "enough ink?" check comes to inkMul of what it was (here and round the weapon below)
     const inkMul = spx?.def?.inkUse || 1;
     if (inkMul !== 1) this.ink /= inkMul;
-    if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
+    // [b5-sub-dash] an onPress sub (the Dash Pellet, SPEC §0.5): the press acts here, before the move, so the press frame
+    // already moves; while a dash runs it owns the horizontal velocity (enemy ink never slows it)
+    wr.trySubPress(intent.sub, subPressed);
+    { const dsv = wr.dashVelocity(_dashV, dt); if (dsv) { this.vel.x = dsv.x; this.vel.z = dsv.z; } }
+    const dashing = wr.dashT > 0;
+    if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && !this.carry && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;   // [b5-karp] (no roll while carrying)
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
-    if (this.jumpBuffer > 0 && !isSquid && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
+    if (this.jumpBuffer > 0 && !isSquid && !dashing && !this.carry && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;   // [b5-karp] (no Mitts leap while carrying)
     if (inkMul !== 1) this.ink *= inkMul;
 
     // ---- jump (buffered, with coyote time). An off-limits top (a roof) is no ground to jump from: you slide off it, and
     // no coyote jump carries off its edge either (perches, railings and swim-jumps are ground as usual)
-    const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && !!G.level.blocks[this.ground.block]?.roof;
-    this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof ? 0 : this.coyote - dt;
+    // ([b5-sub-dash] none during a dash, and no coyote jump off a dash: it never gains height)
+    const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && this.isRoofFor(G.level.blocks[this.ground.block]);   // [b5-karp] isRoofFor
+    this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof || (dashing && !this.grounded) ? 0 : this.coyote - dt;
     let jumped = false;
-    if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing) {
+    if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing && !dashing) {
       let jv = this.submerged ? P.swimJumpVel : P.jumpVel;
       if (onEnemy) jv *= 0.72;
       this.vel.y = jv;
@@ -355,10 +369,18 @@ export class Actor {
       emit('actor:jump', { actor: this, surface: this.groundTeam, swim: this.submerged });
     }
 
-    // ---- integrate + collide (feet + body)
-    this._integrate(dt, isSquid, jumped);
-    G.subs?.blockActor(this);
-    this._spawnBarrier();
+    // ---- integrate + collide (feet + body). [b5-sub-dash] a dash moves in substeps of ≤ 0.2 m (SPEC D1.3), so no wall,
+    // curtain, canopy, bubble, shell or spawn barrier is ever passed through at any frame rate
+    const fastN = dashing ? 0 : this._fastN(dt);   // [b5-int3] DECISIONS #22: a Twinfire roll / a Mitts leap in the dash's steps
+    if (dashing) this._dashSteps(dt, isSquid, jumped);
+    else if (fastN > 1) this._fastSteps(dt, isSquid, jumped, fastN);
+    else this._integrate(dt, isSquid, jumped);
+    if (kick) { this.vel.x -= kick.x; this.vel.z -= kick.z; const k = Math.exp(-dt / BAZOOKARP.gun.kickTau); kick.x *= k; kick.z *= k; if (Math.abs(kick.x) + Math.abs(kick.z) < 0.02) kick.set(0, 0, 0); }   // [b5-karp]
+    if (!dashing && !(fastN > 1)) {   // (the substep loops ran these in every substep)
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+    }
+    if (wr.dashT <= 0 && (this.grounded || this.climbing)) wr.airDashUsed = false;   // [b5-sub-dash] the air dash comes back on landing / a climb
 
     // ---- ink / hp
     if (onEnemy) {
@@ -403,6 +425,7 @@ export class Actor {
     if (inkMul !== 1) this.ink /= inkMul;   // [b5-zipcheer] (see above)
     // specials that replace the main weapon (zooka, stamp, blower, crab …) take the trigger; others may take the sub
     this._spWeapon = !!(spx && G.specials.weapon(this, spx, dt, winp));
+    if (this.carry) this._spWeapon = !!G.karpGun?.update(this, dt, winp) || true;   // [b5-karp] the trigger drives the Carp Shot; no main, no sub
     if (!this._spWeapon) this.weaponRunner.update(dt, winp);
     else if (this.weaponRunner.dodgeT > 0 || this.weaponRunner.dodge) this.weaponRunner.endDodge();   // (never a roll frozen mid-slide)
     if (inkMul !== 1) this.ink *= inkMul;
@@ -475,7 +498,7 @@ export class Actor {
     if (!this.grounded) {
       let target, accel, decel;
       if (isSquid) { target = Math.max(P.squidDrySpeed, sp); accel = P.squidAirAccel; decel = P.squidAirDecel; }
-      else { target = Math.max(this.specialActive?.speed ?? this.weaponRunner.moveSpeed(), P.airMinSpeed); accel = P.airAccel; decel = P.airDecel; }
+      else { target = Math.max(this.carry ? P.runSpeed * BAZOOKARP.speedMul : this.specialActive?.speed ?? this.weaponRunner.moveSpeed(), P.airMinSpeed); accel = P.airAccel; decel = P.airDecel; }   // [b5-karp] (a carrier: PLAYER's speed × 0.8, never the weapon's)
       const tvx = mh > 0.01 ? (mv.x / mh) * target * mag : 0, tvz = mh > 0.01 ? (mv.z / mh) * target * mag : 0;
       const dvx = tvx - vx, dvz = tvz - vz, dl = Math.hypot(dvx, dvz);
       const rate = (mh > 0.01 ? accel : decel) * dt;
@@ -489,13 +512,14 @@ export class Actor {
     } else if (isSquid) {
       vt = P.squidDrySpeed; A = P.squidAccel; aIn = 0.6; inKnee = 1; outKnee = 0.3; D = P.squidDecel; dMin = 0.5; dKnee = 2; W = P.squidTurn;
     } else {
-      vt = this.weaponRunner.moveSpeed(); A = P.runAccel; aIn = P.runAccelIn; inKnee = P.runInKnee; outKnee = P.runOutKnee;
+      vt = this.carry ? (G.karpGun?.charging(this) ? BAZOOKARP.chargeWalk : P.runSpeed * BAZOOKARP.speedMul) : this.weaponRunner.moveSpeed(); A = P.runAccel; aIn = P.runAccelIn; inKnee = P.runInKnee; outKnee = P.runOutKnee;   // [b5-karp]
       D = P.runDecel; dMin = P.runDecelMin; dKnee = P.runDecelKnee; W = P.turnRate;
       if (this.hardLand > 0) vt *= 1 - (1 - P.hardLandSlow) * this.hardLand;
     }
     const spx = this.specialActive;
     if (spx && spx.speed != null) { vt = spx.speed; if (spx.accel) { A = spx.accel; aIn = 1; D = Math.max(D, spx.accel); } }
-    if (onEnemy) { vt = Math.min(vt, P.enemyInkSpeed); A = Math.min(A, P.enemyInkAccel); D = Math.max(P.enemyInkDecel, 0); }
+    if (this.carry && isSquid) vt *= BAZOOKARP.speedMul;   // [b5-karp] swimming / squid on dry ground × 0.8
+    if (onEnemy) { vt = Math.min(vt, P.enemyInkSpeed * (this.carry ? BAZOOKARP.speedMul : 1)); A = Math.min(A, P.enemyInkAccel); D = Math.max(P.enemyInkDecel, 0); }
     if (this.status.poison > 0) vt *= SUBS.mist.slow;
     if (this.status.reveal > 0) vt *= SPECIALS.sonar.slow;
     if (mh < 0.01) {
@@ -565,7 +589,7 @@ export class Actor {
     }
     // off-limits tops (roofs, crane tops …): nobody can stand there — you slide off
     const rb = wasGrounded && this.ground.hit && this.ground.block >= 0 ? G.level.blocks[this.ground.block] : null;
-    if (rb && rb.roof) this._roofSlide(rb, dt); else if (this.roofT) { this.roofT = 0; this.roofDir = null; }
+    if (rb && this.isRoofFor(rb)) this._roofSlide(rb, dt); else if (this.roofT) { this.roofT = 0; this.roofDir = null; }   // [b5-karp] isRoofFor
     // balancing on a railing: the feet settle onto its line (unless you're stepping off it)
     if (rb && rb.rail && !isSquid) this._railCentre(rb, dt);
     if (wasGrounded) {
@@ -576,11 +600,78 @@ export class Actor {
       let g = P.gravity;
       if (this.vel.y < 0) g *= P.fallGravityMul;
       if (Math.abs(this.vel.y) < P.apexBand) g *= P.apexGravityMul;
+      { const wr = this.weaponRunner; if (this.vel.y < 0 && wr.dashT > 0 && wr.dashAirRule) g *= wr.dashGrav ?? 1; }   // [b5-sub-dash] an air dash flattens the fall (never the rise: no height gain)
       this.vel.y = Math.max(-P.maxFall, this.vel.y - g * dt);
     }
     const prevY = this.pos.y;
     this.pos.addScaledVector(this.vel, dt);
     this._resolve(isSquid, prevY, wasGrounded);
+  }
+
+  // [b5-sub-dash] a dash's frame (SPEC D1.3): `_integrate → blockActor → _spawnBarrier` in n = ceil(|v_h| dt / substep)
+  // substeps of ≤ 0.2 m — less than the body's radius, a curtain's half-width or a canopy's band, so the body is always
+  // pushed back out the side it came from. The velocity is set once, before them (a wall met removes what goes into it,
+  // the rest slides on); `jumped` reaches the first only; airTime grows by one frame's 1/60 when it was airborne in every
+  // substep (_resolve adds 1/60 a call). From the substep it's off the ground, the air rules: vy clamped to
+  // [airVyMin, airVyMax] once, and it counts as the air dash (gravity × airGravMul while falling: _integrate)
+  // [b5-int3] DECISIONS #22: the Twinfire roll and the Mitts leap take the dash's sub-step rule. At a low frame rate one
+  // frame's move (a roll's opening ~20 m/s, a pounce's up to ~20) carried the body more than its radius past a thin wall's
+  // middle, and the push-out finished the crossing on the far side. A frame whose move is over SUBS.dash.substep (0.2 m)
+  // runs in that many even substeps — _integrate, blockActor (curtains, canopies, the shell) and the spawn barrier in each
+  // — with the jump on the first only and airTime grown by one frame's 1/60 once (as _dashSteps). 0 or 1: one plain step.
+  _fastN(dt) {
+    const wr = this.weaponRunner, k = wr.kit;
+    if (!(wr.dodgeT > 0 || wr.dodge || (k && k.mitts && k.leaping))) return 1;
+    return Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (SUBS.dash?.substep || 0.2));
+  }
+  _fastSteps(dt, isSquid, jumped, n) {
+    const air0 = this.airTime;
+    let air = true;
+    for (let i = 0; i < n; i++) {
+      this._integrate(dt / n, isSquid, jumped && i === 0);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+      if (this.grounded) air = false;
+    }
+    if (air) this.airTime = air0 + 1 / 60;
+    this.weaponRunner.fastSteps = n;   // (tests)
+  }
+  _dashSteps(dt, isSquid, jumped) {
+    const wr = this.weaponRunner, D = SUBS.dash;
+    const airRule = () => { if (!this.grounded && !wr.dashAirRule) { wr.dashAirRule = true; wr.airDashUsed = true; this.vel.y = clamp(this.vel.y, D.airVyMin, D.airVyMax); } };
+    const n = Math.max(1, Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (D.substep || 0.2)));
+    const air0 = this.airTime;
+    let air = true;
+    this._dashFlat = true;   // (no height from collisions either: pressed into a ledge's corner at 29 m/s, the body's push-out
+                             // along the corner's normal would walk it up over the top a little every substep)
+    for (let i = 0; i < n; i++) {
+      airRule();
+      this._integrate(dt / n, isSquid, jumped && i === 0);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+      if (this.grounded) air = false;
+    }
+    this._dashFlat = false;
+    airRule();
+    if (air) this.airTime = air0 + 1 / 60;
+    wr.dashSteps = n;   // (tests)
+    wr.tickDash(dt);
+  }
+  // [b5-sub-dash] an airborne dash substep whose body was pushed UP by a floor-like face (collideBody: a slope gentler than
+  // ~17°, or a top's face; steeper ones push it sideways under _dashFlat): it lands on what's under its feet, within the
+  // ledge assist as any landing, instead of riding up the face while still airborne. At dash speed that ride raised the
+  // feet 0.1–0.25 m over a plain hop's reach before the assist landed them (dash-reach.js: lockgate's cart ramp, 1.93 m
+  // over the start; saltpan's pitched shed roof, 2.13 m; a plain hop from the same spots 1.79 / 1.90). False (no ground
+  // under the feet in reach): the push stands, as before.
+  _dashLand(isSquid, prevY, y0, gh) {
+    const P = PLAYER, top = Math.max(prevY, y0);
+    G.physics.groundProbe(this.pos.x, y0, this.pos.z, (top - y0) + P.ledgeAssist, 0.02, P.footRadius, gh, isSquid);
+    if (!isSquid) this._railFeet(gh, y0 - 0.02, top + P.ledgeAssist);
+    if (!gh.hit || gh.y < y0 - 0.02 || gh.y > top + P.ledgeAssist + 1e-3) return false;
+    const pop = gh.y - prevY;
+    this.pos.y = gh.y;
+    if (pop > 0.035) this.smoothY -= pop;
+    return true;
   }
 
   // Standing on a roof block: pushed toward its nearest edge (a pitched top: downhill), picking up speed until you drop
@@ -614,7 +705,8 @@ export class Actor {
     const P = PLAYER;
     const lift = isSquid ? P.squidBodyLift : P.stepUp;
     const height = isSquid ? P.squidHeight : P.height;
-    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick, isSquid);
+    const y0 = this.pos.y;
+    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick || this._dashFlat, isSquid);   // [b5-sub-dash] (a dash: walls push it out sideways only, never up over a ledge's corner)
     if (c.ceiling && this.vel.y > 0) this.vel.y = 0;
     if (c.wall) {
       const n = c.wallNormal;
@@ -635,6 +727,8 @@ export class Actor {
         // discontinuities (curbs, steps up / down) are eased visually; slope following and ramp creases stay exact
         if (Math.abs(dy) > 0.06) this.smoothY -= dy;
       }
+    } else if (this._dashFlat && c.ground && this.pos.y > y0 + 1e-4 && this._dashLand(isSquid, prevY, y0, gh)) {
+      grounded = true;   // [b5-sub-dash] an airborne dash's body met a gentle slope or a top: it lands (_dashLand)
     } else if (this.vel.y <= 0.5) {
       // landing: probe from the highest point this frame passed through (never tunnels), with ledge assist
       const top = Math.max(prevY, this.pos.y);
@@ -712,8 +806,14 @@ export class Actor {
     }
   }
 
+  // [b5-karp] an off-limits top for this actor: a roof, or (carrying the Bazookarp) a Treehills hedge (SPEC §2.9)
+  isRoofFor(b) { return !!b && (!!b.roof || (!!this.carry && !!b.tag && b.tag.startsWith('plant:'))); }
+
   _spawnBarrier() {
-    const pad = G.level.spawnPads[this.enemyTeam];
+    if (this.carry) { this._padBarrier(G.level.spawnPads[this.team]); G.match?.karp?.field.pushOutBlock(this); }   // [b5-karp] a carrier enters neither spawn, nor a carrierBlock
+    this._padBarrier(G.level.spawnPads[this.enemyTeam]);
+  }
+  _padBarrier(pad) {
     const R = G.level.spawnBarrier;
     const dx = this.pos.x - pad.x, dz = this.pos.z - pad.z;
     const d = Math.hypot(dx, dz);
@@ -766,7 +866,7 @@ export class Actor {
     const capped = hu.hit && Math.abs(hu.normal.y) < 0.5 && !this._wallInk(hu);
     // climb speed eases in (no instant 0 → 7.5 m/s snap), cling when the stick is neutral, and eases toward the
     // ledge-pop speed as the top comes into reach (so the pop never yanks the squid's vertical speed)
-    let want = capped ? 0 : P.climbSpeed * clamp(into, 0, 1) * mag;
+    let want = capped ? 0 : P.climbSpeed * (this.carry ? BAZOOKARP.speedMul : 1) * clamp(into, 0, 1) * mag;   // [b5-karp]
     if (!hu.hit && want > 0) want = Math.min(want, Math.sqrt(2 * P.gravity * P.apexGravityMul * (P.ledgePopClear + 0.3)));
     const a = P.climbAccel * dt * (want > this.climbV ? 1 : 1.6);
     this.climbV = this.climbV < want ? Math.min(want, this.climbV + a) : Math.max(want, this.climbV - a);
@@ -775,8 +875,9 @@ export class Actor {
     const n = h.normal;
     const side = _v2.set(mv.x, 0, mv.z);
     side.addScaledVector(n, -side.dot(n));
-    this.vel.x = side.x * P.climbSideSpeed - n.x * 1.2;
-    this.vel.z = side.z * P.climbSideSpeed - n.z * 1.2;
+    const css = P.climbSideSpeed * (this.carry ? BAZOOKARP.speedMul : 1);   // [b5-karp]
+    this.vel.x = side.x * css - n.x * 1.2;
+    this.vel.z = side.z * css - n.z * 1.2;
     this.anim.wallNormal.copy(n);
   }
 
@@ -822,7 +923,7 @@ export class Actor {
     }
     return this.pos;
   }
-  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing() && !(G.match.stage && !G.match.stage.canSuperJump(this)); }   // [b5-stagehooks] (not mid-pipe)   // ([drainbow] free: a special that leaves you be)
+  canSuperJump() { return this.alive && !this.carry && !(this.isLocal && G.match?.karp?.lockT > 0) && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing() && !(G.match.stage && !G.match.stage.canSuperJump(this)); }   // [b5-stagehooks] (not mid-pipe)   // ([drainbow] free: a special that leaves you be)
 
   // Launch toward an ally (or a fixed point). Charge in place as a glowing squid, then arc through the sky.
   // opts.instant: skip the ~0.75 s crouch charge and launch on the next frame; opts.home: an Ink Jet / Zipline jump
@@ -998,6 +1099,7 @@ export class Actor {
       if (G.physics.los(_v2.copy(c).setY(c.y + 0.8), _v)) G.projectiles.applyHit(this, a, dmg, 'slam');
     }
     G.subs?.damageArea(_v.copy(c).setY(c.y + 0.5), sp.radius, 60, this.team, this);   // [b5-deploy] enemy devices (and special objects) in the slam
+    G.objTargets?.splash(this, _v.copy(c).setY(c.y + 0.5), sp.radius, sp.damageMax, sp.damageMin, 'slam');   // [b5-karp] the Roe Shell (a special: × 0.5)
   }
 
   addTurfNoSpecial(area) { if (area > 0) { this.stats.turf += area; emit('turf', { actor: this, area }); } }

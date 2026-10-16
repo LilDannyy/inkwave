@@ -165,6 +165,26 @@ module.exports = async (ctx) => {
   await A.js(`__G.net.setSettings({ mode: 'turf', botCount: 0 }); 1`);
   await hostSees('Guesty', 'p.ready', 6000);
 
+  // ---------------------------------------------------------------- 7b. [b5-int3] batch 5's subs online: the guest picks the last
+  // sub in SUB_ORDER (← from the weapon's own wraps round to it: the Dash Pellet), the host the one before it (← ←: the Chain
+  // Bobber); each room and nameplate shows the other's; the match (8) starts with them in hand on both screens
+  const [SL, SL2, SLN] = JSON.parse(await B.js(`(async () => { const { SUB_ORDER, SUBS } = await import('./src/config.js'); const n = SUB_ORDER.length; return JSON.stringify([SUB_ORDER[n - 1], SUB_ORDER[n - 2], SUBS[SUB_ORDER[n - 1]].name]); })()`));
+  await focus(B, 'sub'); await key(B, 'Enter', 60); await pickerOpen(B);
+  const sb7 = await focusId(B); await key(B, 'ArrowLeft'); const fb7 = await focusId(B);
+  await key(B, 'Enter', 200); await pickerGone(B); await wait(400);
+  const kb7 = kitOf(await chips(B), 'sub');
+  await hostSees('Guesty', `p.sub === ${JSON.stringify(SL)} && kit === ${JSON.stringify(SL + '|' + LAST)}`);
+  const hb7 = await onHost('Guesty');
+  R(`guest: SUB, ← from the weapon's own wraps to the last sub (${SLN}), Enter — its chip shows it; the host's room and nameplate have it; still ready`,
+    sb7 === 'kp-sub-own' && fb7 === `kp-sub-${SL}` && kb7.id === SL && !kb7.own && hb7.sub === SL && hb7.plate === `${SL}|${LAST}` && hb7.ready, { SL, sb7, fb7, kb7, hb7 });
+  await focus(A, 'sub'); await key(A, 'Enter', 60); await pickerOpen(A);
+  const sa7 = await focusId(A); await key(A, 'ArrowLeft'); await key(A, 'ArrowLeft'); const fa7 = await focusId(A);
+  await key(A, 'Enter', 200); await pickerGone(A);
+  await B.until(`(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(hostName)}); return p && p.sub === ${JSON.stringify(SL2)}; })()`, 8000).catch(() => null);
+  const ha7 = await J(B, `(() => { const p = __G.net.lobby.players.find((q) => q.name === ${JSON.stringify(hostName)}) || {}; const pl = [...document.querySelectorAll('.iw-plate')].find((e) => (e.querySelector('.iw-plate__name') || {}).textContent === ${JSON.stringify(hostName)}); return { sub: p.sub ?? null, plate: pl ? (pl.querySelector('.iw-plate__kit') || { dataset: {} }).dataset.kit || null : null }; })()`);
+  R(`host: SUB, ← ← the sub before it (${SL2}) — the guest's room and nameplate show it`, sa7 === 'kp-sub-own' && fa7 === `kp-sub-${SL2}` && ha7.sub === SL2 && ha7.plate === `${SL2}|slam`, { SL2, sa7, fa7, ha7 });
+  await hostSees('Guesty', 'p.ready', 6000);
+
   // ---------------------------------------------------------------- 8. the match: the guest's kit in its hands on both screens
   const ready = await A.js(`__G.net.canStart()`);
   const t0 = Date.now();
@@ -175,8 +195,8 @@ module.exports = async (ctx) => {
   const actorOf = (c, owner) => J(c, `(() => { const a = __G.match.actors.find((x) => x.owner === ${JSON.stringify(owner)} && !x.isBot); return a ? [a.weaponId, a.subId, a.specialId] : null; })()`);
   const onA = await actorOf(A, idB), onB = await J(B, `[__G.match.local.weaponId, __G.match.local.subId, __G.match.local.specialId]`);
   const hostOnB = await actorOf(B, idA);
-  R(`turf match (the guest stayed ready, so the host could start): the guest holds the roller, its own Cling Charge and ${LN} — on the host's screen and its own`,
-    ready && JSON.stringify(onA) === JSON.stringify(['roller', 'sticky', LAST]) && JSON.stringify(onB) === JSON.stringify(['roller', 'sticky', LAST]), { ready, onA, onB });
-  R('…and the host\'s Tidal Slam reached the guest\'s screen', hostOnB && hostOnB[2] === 'slam', { hostOnB });
+  R(`turf match (the guest stayed ready, so the host could start): the guest holds the roller, the ${SLN} ([b5-int3]: picked in 7b) and ${LN} — on the host's screen and its own`,
+    ready && JSON.stringify(onA) === JSON.stringify(['roller', SL, LAST]) && JSON.stringify(onB) === JSON.stringify(['roller', SL, LAST]), { ready, onA, onB });
+  R(`…and the host's ${SL2} and Tidal Slam reached the guest's screen`, hostOnB && hostOnB[1] === SL2 && hostOnB[2] === 'slam', { hostOnB });
   for (const c of [A, B]) await c.js(`__inkwave.api.setLoadout({ weapon: 'shooter', sub: null, special: null }); 1`);   // (as found)
 };

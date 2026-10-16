@@ -47,6 +47,7 @@ const F = {
   tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks;
                                           // two teams, so tracked = by the other one: the ring's colour and who gets lines)
   stage: 4194304,                         // [b5-stagehooks] a stage module holds this squidkid (a pipe ride: aquarium's F.pipe)
+  dash: 8388608,                          // [b5-sub-dash] mid Dash Pellet dash (29 m/s): never extrapolated (_pathAt)
 };
 // events forwarded from owners (actor-bearing payloads; vectors/actors are packed)
 const FORWARD = ['actor:jump', 'superjump', 'superjump:land', 'special:use', 'special:slam', 'weapon:dodge', 'weapon:fire', 'splatted', 'respawn'];
@@ -194,9 +195,11 @@ export class NetMatch {
   }
 
   // a ghost device (a remote player's sprinkler, curtain, waddle …) took a hit here: its owner's copy takes it
-  sendDevHit(owner, kind, id, dmg) {
+  sendDevHit(owner, kind, id, dmg, by = null) {
     if (!owner || !owner.remote || owner.owner === undefined) return;
-    this.s.tr?.sendTo(owner.owner, { k: 'dh', kind, id, d: r2(dmg) });
+    const m = { k: 'dh', kind, id, d: r2(dmg) };
+    if (by && by.nid !== undefined) m.a = by.nid;   // [b5-subs] who fired it (the owner's 'device:down'.by)
+    this.s.tr?.sendTo(owner.owner, m);
   }
 
   // hits land on the victim's owner right away (not on the playback timeline: health must be current)
@@ -234,6 +237,7 @@ export class NetMatch {
     const msg = { k: 't', ts: r3(now()), a };
     if (this.gen) msg.g = this.gen;
     if (this.out.length) { msg.e = this.out; this.out = []; }
+    if (!this.isHost && this.match?.karp) { const kh = G.objTargets?.takeHits(); if (kh) msg.kh = kh; }   // [b5-karp] shell hits ride the tick
     const boss = this.match?.boss;
     if (this.isHost && boss && boss.sim) { this.bossN = (this.bossN || 0) + 1; msg.B = boss.pack(this.bossN % 10 === 0); }
     if (this.isHost && this.match) {
@@ -256,10 +260,15 @@ export class NetMatch {
       case 'hit': this._hit(d); break;
       case 'dh': {   // a hit on one of our devices, made on another player's screen
         const K = d.kind === 'subs' ? G.subs : SUB_KITS[d.kind] || MAIN_KITS[d.kind] || KIT_GHOSTS[d.kind];
-        try { K?.netHurt?.(d.id, d.d); } catch (err) { console.warn('[inkwave] device hit', d.kind, err); }
+        try { K?.netHurt?.(d.id, d.d, d.a !== undefined ? this.byNid.get(d.a) || null : null); } catch (err) { console.warn('[inkwave] device hit', d.kind, err); }   // ([b5-subs] the attacker)
         break;
       }
       case 'bhit': if (this.isHost) this.match?.boss?.remoteHit(d); break;
+      // [b5-karp] Bazookarp: the host's discrete records (sent at once); a guest's claim / decline / rate / footing; a
+      // refused claim (to one guest)
+      case 'bk': if (from === this.s.hostId) this.match?.karp?.netEvent(d.e); break;
+      case 'kc': case 'kx': case 'kr': case 'kf': if (this.isHost) this.match?.karp?.wire.message?.(from, d); break;
+      case 'kd': if (from === this.s.hostId) this.match?.karp?.wire.message?.(from, d); break;
       case 'st': if (from === this.s.hostId) this._hostState(d); break;
       case 'res': if (from === this.s.hostId) this._result(d); break;
       case 'end': if (from === this.s.hostId) G.game?.netMatchEnd?.(); break;
@@ -313,6 +322,7 @@ export class NetMatch {
     // events → the sender's queue (played on its timeline)
     if (d.e) for (const e of d.e) p.events.push(e);
     if (d.c && from === this.s.hostId) this._hostClock(d.c);
+    if (d.kh && this.isHost && this.match?.karp) this.match.karp.netHits(d.kh);   // [b5-karp] a guest's shell hits (summed, filtered)
     // the boss: the host's snapshot, on the host's playback timeline
     const boss = this.match?.boss;
     if (d.B && from === this.s.hostId && boss && !boss.sim) {
@@ -350,9 +360,10 @@ export class NetMatch {
     if (s1) { copySample(t >= s1.t ? s1 : s0, S); return 1; }      // teleport between these two: hold, then snap
     const last = buf[buf.length - 1];
     if (t < last.t) { copySample(s0, S); return 3; }
-    // buffer ran dry: a short ballistic extrapolation along the last velocity, then hold
+    // buffer ran dry: a short ballistic extrapolation along the last velocity, then hold ([b5-sub-dash] past a dashing
+    // sample: hold at once — 0.18 s at 29 m/s is 5 m through whatever is ahead; the next sample carries it on)
     copySample(last, S);
-    const e = Math.min(t - last.t, 0.18);
+    const e = last.f & F.dash ? 0 : Math.min(t - last.t, 0.18);
     if (e > 0) {
       S.x += last.vx * e; S.z += last.vz * e;
       if (!(last.f & F.grounded)) { S.y += last.vy * e - 0.25 * PLAYER.gravity * e * e; S.vy = last.vy - 0.5 * PLAYER.gravity * e; }
@@ -567,6 +578,7 @@ export class NetMatch {
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
+      case 'ks': this.match?.karp?.netEvent(e[2], true); break;   // [b5-karp] the host's snapshots (its timeline)
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
       case 'sm': this.match?.stage?.netEvent(e[2], e[3], from); break;   // [b5-stagehooks] a stage module's record
       case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
@@ -747,17 +759,19 @@ export class NetMatch {
     if (!this.isHost) return;
     this._sendNow({ k: 'res', cov: result.coverage, win: result.winner, mode: result.mode, bo: result.boss,
       ...(result.mode === 'zones' ? { zc: result.counts, zp: result.penalty, zr: result.reason, zo: result.overtime ? 1 : 0, zl: result.log } : {}),
-      ...(result.mode === 'tower' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),
-      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0]) });
+      ...(result.mode === 'tower' || result.mode === 'bazookarp' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),   // [b5-karp]
+      ...(result.coin !== undefined ? { kco: result.coin } : {}),
+      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]) });   // [b5-karp] karpM, karpPops
   }
   _result(d) {
     const m = this.match;
     if (!m || this.isHost) return;
-    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; } }
+    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists, karpM, karpPops] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; if (karpM !== undefined) { a.stats.karpM = karpM; a.stats.karpPops = karpPops; } } }   // [b5-karp]
     if (d.mode !== 'boss') m.time = 0;   // (a boss win stops the clock where it was)
     m.result = d.mode === 'boss' ? { mode: 'boss', coverage: d.cov, winner: d.win, boss: d.bo }
       : d.mode === 'zones' ? { mode: 'zones', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, penalty: d.zp, overtime: !!d.zo, log: d.zl || [] }
         : d.mode === 'tower' ? { mode: 'tower', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo }
+        : d.mode === 'bazookarp' ? { mode: 'bazookarp', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo, ...(d.kco !== undefined ? { coin: d.kco } : {}) }   // [b5-karp]
         : { coverage: d.cov, winner: d.win };
     m.setState('judge');
   }
@@ -769,6 +783,8 @@ export class NetMatch {
   onLeave(id, hostChanged) {
     if (!this.match) return;
     const drop = mapNoBots(this.cfg.map);
+    // [b5-subs] the leaver's kit devices went with their client: every screen ends its copies now, before re-owning
+    for (const a of this.byNid.values()) if (a.owner === id) for (const k in SUB_KITS) { try { SUB_KITS[k].dropOwner?.(a); } catch (err) { console.warn('[inkwave] dropOwner', k, err); } }
     for (const a of [...this.byNid.values()]) {
       if (a.owner !== id) continue;
       // (Practice: a player who leaves is gone — nobody plays on in their place; the host's bots move to the new host)
@@ -778,12 +794,14 @@ export class NetMatch {
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
     }
     if (hostChanged && this.isHost) { this.match.follower = false; this.clockT = 0; }
+    if (hostChanged) this.match.karp?.onHostChange(this.isHost);   // [b5-karp] the new host runs the rules; a carrying guest re-reports
     if (hostChanged) this.match.stage?.hostChanged(this.isHost);   // [b5-stagehooks]
     // the boss moves with the host: the new host adopts it from what it was showing; everyone else glides onto its path
     if (hostChanged && this.match.boss) { if (this.isHost) this.match.boss.adopt(); else this.match.boss.handoff(); }
   }
 
   _remove(a) {
+    for (const k in SUB_KITS) { try { SUB_KITS[k].dropOwner?.(a); } catch (err) { console.warn('[inkwave] dropOwner', k, err); } }   // [b5-subs]
     this.byNid.delete(a.nid);
     this._stopLoops(a);
     this.match.removeActor(a);
@@ -919,6 +937,7 @@ function packActor(a) {
   if (a.onEnemy) f |= F.enemy;
   { const sb = statusBits(a); if (sb & NET_TRACKED) f |= F.tracked; if (sb & NET_POISONED) f |= F.poisoned; }
   if (G.match?.stage?.netFlag(a)) f |= F.stage;   // [b5-stagehooks]
+  if (wr.dashT > 0) f |= F.dash;                   // [b5-sub-dash]
   // the visual position (the owner's step smoothing included) — that's what the owner sees
   const y = a.pos.y + (a.smoothY || 0);
   const n = a.climbing ? a.wallN : null;
@@ -949,6 +968,9 @@ function hermite(a, b, t, o) {
   o.t = t;
   o.x = h00 * a.x + h10 * d * a.vx + h01 * b.x + h11 * d * b.vx;
   o.z = h00 * a.z + h10 * d * a.vz + h01 * b.z + h11 * d * b.vz;
+  // [b5-sub-dash] a dash is a straight line at 29 m/s that stops dead on a wall: a Hermite from a dashing sample to a
+  // stopped one bulges past the stop (up to ~0.1 m): straight between them instead
+  if ((a.f | b.f) & F.dash) { o.x = a.x + (b.x - a.x) * u; o.z = a.z + (b.z - a.z) * u; }
   // vertical: Hermite in the air, but never through a floor both ends are standing on (landing velocities jump)
   let y = h00 * a.y + h10 * d * a.vy + h01 * b.y + h11 * d * b.vy;
   if ((a.f & F.grounded) || (b.f & F.grounded)) y = Math.min(Math.max(a.y, b.y) + 0.02, Math.max(Math.min(a.y, b.y) - 0.02, y));
