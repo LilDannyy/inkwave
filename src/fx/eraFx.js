@@ -263,7 +263,10 @@ void main() {
   float body = smoothstep(top, top - 0.35, vH);
   float crest = exp(-pow((vH - top + 0.03) / 0.05, 2.0));
   float foot = exp(-vH * 10.0);
-  float g = texture2D(uGlyph, vec2(ang / 6.2831853 * 24.0, vH * 3.2 - uTime * 0.3)).a * smoothstep(0.05, 0.25, vH);
+  // (the numerals read left to right from either side: seen from outside the front — it comes toward you — the strip
+  //  runs against the angle, from inside — it has passed you — with it)
+  float u = ang / 6.2831853 * 24.0 * (gl_FrontFacing ? -1.0 : 1.0);
+  float g = texture2D(uGlyph, vec2(u, vH * 3.2 - uTime * 0.3)).a * smoothstep(0.05, 0.25, vH);
   float streak = 0.6 + 0.4 * sin(ang * 70.0 + vH * 12.0 - uTime * 10.0);
   vec3 col = mix(uFoot, uBody, smoothstep(0.0, 0.5, vH));
   float a = uA * (body * (0.1 + 0.12 * streak + 0.2 * g) + crest * 0.8 + foot * 0.75);
