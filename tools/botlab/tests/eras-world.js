@@ -107,6 +107,25 @@
     for (const e of [1, 2, 3]) { E.debugJump(e, { instant: true }); const b = brute(); per.push({ e, turf: P.turfTotal, brute: b.tt, counts: [...P.counts], bc: b.c }); }
     R('step 2: per era, turfTotal and counts equal a brute-force recount (every turf cell of a present face, not buried by a present block)',
       per.every((x) => x.turf === x.brute && x.counts[0] === x.bc[0] && x.counts[1] === x.bc[1]) && per[0].turf !== per[2].turf, per);
+    // the turf rules (ENGINE §5 rules 11–13; D.turfRules, which eras-static.mjs shows failing on planted numbers) on the
+    // live grid: each era's turf area (P.turfArea after apply) and the turf live in a jump's era before and gone after
+    {
+      const area = [];
+      for (const e of [1, 2, 3]) { E.debugJump(e, { instant: true }); area.push(P.turfArea); }
+      const gone = { '1>2': 0, '2>3': 0 }, cellA = [0, 0, 0];
+      for (let k = 0; k < W.cellPres.length; k++) {
+        if (!W.cellTurf[k]) continue;
+        const pr = W.cellPres[k], a = W.cellArea[k];
+        for (const e of [1, 2, 3]) if (pr & (1 << (e - 1))) cellA[e - 1] += a;
+        if (pr & 1 && !(pr & 2)) gone['1>2'] += a;
+        if (pr & 2 && !(pr & 4)) gone['2>3'] += a;
+      }
+      const probs = D.turfRules(area, gone), pc = (x) => +(x * 100).toFixed(1);
+      R('step 2 (review fix 3): the turf rules hold on the live grid — era 2 within ±10 % of era 1 (rule 11), era 3 ≥ era 2 and ≤ 1.25 × era 2 (12), the turf vanishing in one jump ≤ 8 % of that era\'s (13)',
+        probs.length === 0 && area.every((a, i) => Math.abs(a - cellA[i]) < 1), { areaM2: area.map((a) => Math.round(a)), era2vs1: pc(area[1] / area[0] - 1) + ' %', era3vs2: pc(area[2] / area[1] - 1) + ' %',
+          goneM2: Object.fromEntries(Object.entries(gone).map(([k, v]) => [k, Math.round(v)])), gonePct: [pc(gone['1>2'] / area[0]) + ' %', pc(gone['2>3'] / area[1]) + ' %'], probs });
+      E.debugJump(1, { instant: true });
+    }
     // mid-jump (some groups flipped, some not): the incremental bookkeeping still equals the recount
     E.debugJump(2, { instant: true });
     const n0 = E.stats.flips, j = E.debugJump(3, { inS: 0 });
