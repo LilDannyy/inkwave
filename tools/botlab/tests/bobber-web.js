@@ -40,6 +40,8 @@
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const arg = (k, d) => (new RegExp(k + '=([\\w,.]+)').exec(window.__pageArgs || '') || [])[1] || d;
   const NS = arg('n', '12,24').split(',').map(Number), LAYOUTS = arg('layout', 'lane,zone').split(','), VARIANTS = arg('variant', 'trigger,clear').split(','), REPS = +arg('reps', '10');
+  // ([b5-int3] 'trace=1': a stray's note carries the bot's last 1.5 s as botAct saw it — its intent, weapon, aim)
+  if (arg('trace', '0') === '1') { const BB = await import('./src/game/kits/bobber-bots.js'); BB.BOBBER_BOT.traceOn = true; }
   const V = (x, y, z) => new THREE.Vector3(x, y, z), r2 = (x) => Math.round(x * 100) / 100;
   const DT = 1 / 60;
   let hook = null;
@@ -135,7 +137,7 @@
   const inkPer = (a) => { const w = a?.weapon || {}; return w.inkPerShot ?? WEAPONS[w.id]?.inkPerShot ?? 1; };
   // one web
   const web = (N, layout, variant) => {
-    S.clear(); P.clear(); G.paint.clear?.(); K.resetBobberStats();
+    S.clear(); P.clear(); G.paint.clear?.(); K.resetBobberStats(); strayN = 0;   // ([b5-int3] strayN: the strays list starts again with the stats)
     for (const a of m.actors) { a.respawn(); a.ink = 100; }
     me.pos.set(st.x, st.y + 0.05, st.z); me.vel.set(0, 0, 0); me.yaw = me.aimYaw = Math.atan2(c[0] - st.x, c[2] - st.z);
     const spots = layout === 'lane' ? lane(N) : grid(N);

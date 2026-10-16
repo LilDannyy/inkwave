@@ -758,7 +758,7 @@ function wSpec(w) {
     const K = MAIN_KITS[w.kind], sr = Math.max(big(w.splashRadius), big(w.burstRadius), big(w.waveWidth), big(w.impactRadius), K ? 1.4 : 0);
     // ([b5-int3] a kit weapon's shot with a splash — the Mitts' fist — goes off wherever a miss ends too: its whole reach,
     // not the foe's distance — the matches' 'blast:mitts' strays were fists past their target)
-    o = { sr, cone: Math.max(big(w.fanTap), big(w.fanRing), big(w.spreadDeg), big(w.spreadGround), big(w.swipeSpreadDeg) / 2), gap: big(w.fanGap), bursts: !!(w.burstRadius || w.fuseFull || w.kind === 'blaster' || (K && w.splashRadius)) };
+    o = { sr, cone: Math.max(big(w.fanTap), big(w.fanRing), big(w.spreadDeg), big(w.spreadGround), big(w.swipeSpreadDeg) / 2, big(w.tapSpreadDeg) / 2), gap: big(w.fanGap), bursts: !!(w.burstRadius || w.fuseFull || w.kind === 'blaster' || (K && w.splashRadius)) };   // ([b5-int3] tapSpreadDeg: the Cutlass's quick-cut crescent, 66°)
     _ws.set(w, o);
   }
   return o;
@@ -914,6 +914,25 @@ function lobLand(a, sub) {
   }
   return null;
 }
+// [b5-int3] the Shaker's flight (the bomb-arc preview's integrator, as lobLand) and the ink it drips down from it: an idle
+// own bobber within the drips' spread of a point of it, at most 2.5 m under it
+const _fv = new V3(), _fp = new V3(), _fq = new V3();
+function trailHits(a, sub) {
+  G.projectiles.throwVelocity(a, sub.throwSpeed, _fv);
+  _fp.set(a.pos.x, a.pos.y + 1.35, a.pos.z);
+  const r = (sub.trailRadius || 0.3) + SB().hitR + 0.35;
+  for (let i = 0; i < 240 && _fp.y > -30; i++) {
+    _fq.copy(_fp); _fv.y -= 24 / 60; _fp.addScaledVector(_fv, 1 / 60);
+    if (G.physics.segment(_fq, _fp, _th).hit) return null;
+    if (i % 2) continue;
+    for (const o of near(_fp.x - r, _fp.z - r, _fp.x + r, _fp.z + r, _nr)) {
+      if (o.team !== a.team || o.state !== 'live' || !o.chain) continue;
+      const q = o.spot;
+      if (Math.hypot(q.x - _fp.x, q.z - _fp.z) < r && q.y < _fp.y + 0.3 && q.y > _fp.y - 2.5 && idleNow(o, a.team)) return o;
+    }
+  }
+  return null;
+}
 // [b5-int3] a Splat Bomb from its first floor hit (lobLand left _tv as its velocity there): weapons.js _updateBombs —
 // gravity 24, off a floor 0.35 of the speed into it back and × 0.45, off a wall × 0.6, armed at the first floor hit and
 // blown SUB.bomb.fuse s later → where it is then
@@ -961,6 +980,18 @@ function throwHits(a) {
     if (k === 'bomb' && !sr) { const rs = bombRest(land); if (rs) { cx = rs.x; cy = rs.y; cz = rs.z; } }
     const R = +sub[key] || 2.5;
     let o = webHit(a.team, cx, cy, cz, R);
+    // ([b5-int3] a homing sub — a Waddle, a Torpedo, a Seeker — goes after its foe for seconds and blows where it catches
+    // them: held while an own idle web is within its blast + 3 m of that foe (where the chase can take it), or within its
+    // blast + 1 m of its way there from the landing — bobber-web clear: a Torpedo and a Waddle Barrage's waddles blew
+    // a human's webs with their foes outside the web)
+    if (!o && sr && (cx !== land.x || cz !== land.z)) {
+      o = webHit(a.team, cx, cy, cz, R + 3);
+      const L = Math.hypot(cx - land.x, cz - land.z);
+      for (let t = 0; t < L && !o; t += 1.5) o = webHit(a.team, land.x + ((cx - land.x) * t) / L, land.y + ((cy - land.y) * t) / L, land.z + ((cz - land.z) * t) / L, R + 1);
+    } else if (!o && sr) o = webHit(a.team, cx, cy, cz, R + Math.min(4.5, sr * 0.6));   // (no foe known by it yet: one that walks into its sense circle later is chased from where it lands — a Waddle Barrage's waddles blew a web 7–9 m behind their thrower)
+    // ([b5-int3] a Shaker drips ink as it flies — weapons.js drops, own-team fire like any shot: an own idle bobber under its
+    // flight, from the hand out, takes them — bobber-web clear: a teammate under a human's web let go of one through it)
+    if (!o && k === 'shaker') o = trailHits(a, sub);
     if (!o && k === 'shaker') {   // (its hops: on along the throw, ~hopSpeed × gap each)
       const yaw = a.bot?.aimYaw ?? a.aimYaw, hop = (sub.hopSpeed || 4.2) * (sub.gap || 0.42);
       for (let j = 1; j <= 2 && !o; j++) o = webHit(a.team, cx + Math.sin(yaw) * hop * j, cy, cz + Math.cos(yaw) * hop * j, R);
@@ -1036,6 +1067,50 @@ export function holdThrow(b, it) {
   return true;
 }
 
+// [b5-int3] the Ink Tempest (weapons.js throwStorm / _updateClouds): thrown at 16 m/s like a bomb, its cloud forms where
+// that lob first meets the stage or after 1.1 s, then drifts 1.1 m/s along the throw for its 6.5 s, raining 3.4 m round
+const _sv = new V3(), _sp = new V3(), _sq = new V3();
+function stormHits(a) {
+  const d = SPECIALS.storm;
+  if (!d || !G.projectiles?.throwVelocity) return null;
+  G.projectiles.throwVelocity(a, d.throwSpeed || 16, _sv);
+  _sp.set(a.pos.x, a.pos.y + 1.45, a.pos.z);
+  for (let i = 0; i < 66; i++) { _sq.copy(_sp); _sv.y -= 24 / 60; _sp.addScaledVector(_sv, 1 / 60); if (G.physics.segment(_sq, _sp, _th).hit) { _sp.copy(_th.point); break; } }
+  const hx = Math.sin(a.aimYaw), hz = Math.cos(a.aimYaw), drift = (d.driftSpeed || 1.1) * (d.duration || 6.5), R = (d.radius || 3.4) + 0.5;
+  for (let t = 0; t <= drift + 0.01; t += 1.5) {
+    // (the rain falls on what's under the cloud: a web on any floor below it)
+    const x = _sp.x + hx * t, z = _sp.z + hz * t;
+    for (const o of near(x - R, z - R, x + R, z + R, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - x, o.spot.z - z) < R && o.spot.y < _sp.y + 3 && idleNow(o, a.team)) return o;
+  }
+  return null;
+}
+function specialAim(a) {
+  const s = a.specialActive;
+  if (!s) return;
+  if (s.id === 'strike' && s.aiming && s.target && !s._webMoved) {
+    const R = (SPECIALS.strike?.radius || 5.5) + 0.5;
+    for (let k = 0; k < 4; k++) {
+      const o = webHit(a.team, s.target.x, s.target.y || a.pos.y, s.target.z, R);
+      if (!o) break;
+      const p = posOf(o); let dx = s.target.x - p.x, dz = s.target.z - p.z, l = Math.hypot(dx, dz);
+      if (l < 0.1) { dx = s.target.x - a.pos.x; dz = s.target.z - a.pos.z; l = Math.hypot(dx, dz) || 1; }
+      s.target.x = p.x + (dx / l) * (R + SB().hitR + 0.6); s.target.z = p.z + (dz / l) * (R + SB().hitR + 0.6);
+      BOBBER_BOT.strikeMoves = (BOBBER_BOT.strikeMoves || 0) + 1;
+    }
+    s._webMoved = true;
+  }
+  if (s.id === 'wail' && s.autoT != null && s.t >= s.autoT - 1 / 30 && s.t < (s.def?.holdTime ?? 6) - 0.5) {
+    const d = SPECIALS.wail, p = clamp(a.aimPitch, -0.3, 0.3), cp = Math.cos(p), fx = Math.sin(a.aimYaw) * cp, fy = Math.sin(p), fz = Math.cos(a.aimYaw) * cp;
+    const R = (d.radius || 1.5) + SB().hitR + 0.4, L = d.range || 72;
+    for (const o of items) {
+      if (o.team !== a.team || (o.state !== 'live' && o.state !== 'open' && o.state !== 'fly')) continue;
+      const q = posOf(o), rx = q.x - a.pos.x, ry = q.y - a.pos.y - 1.1, rz = q.z - a.pos.z, t = rx * fx + ry * fy + rz * fz;
+      if (t < -0.5 || t > L) continue;
+      if (Math.hypot(rx - fx * t, ry - fy * t, rz - fz * t) < R && idleNow(o, a.team)) { s.autoT += 0.25; BOBBER_BOT.wailHolds = (BOBBER_BOT.wailHolds || 0) + 1; break; }
+    }
+  }
+}
+
 function burstClear(a, move) {
   const L = SUB_KITS.boomerang?._items;
   if (!L || !L.length) return;
@@ -1098,10 +1173,23 @@ function exposure() {
   }
   BOBBER_BOT.foeInS = (BOBBER_BOT.foeInS || 0) + any * 0.25; BOBBER_BOT.foeInSeenS = (BOBBER_BOT.foeInSeenS || 0) + seen * 0.25; BOBBER_BOT.chainS = (BOBBER_BOT.chainS || 0) + chains * 0.25;
 }
+// [b5-int3] (tests: BOBBER_BOT.traceOn) a bot's last 90 frames as botAct saw them — its intent, its weapon's state, its aim —
+// handed to a stray's note (bobber.js strayNote) when its fire sets off an idle web of its team's
+const r2t = (x) => Math.round(x * 100) / 100;
+function trace(b, a, it, busy) {
+  const L = b._bobTr || (b._bobTr = []), wr = a.weaponRunner;
+  if (L.length >= 90) L.shift();
+  const T = { t: r2t(G.time), m: b.mode, f: it.fire ? 1 : 0, s: it.sub ? 1 : 0, sp: it.special ? 1 : 0, busy: busy ? 1 : 0, hf: -1,
+    ch: wr ? (wr.charging ? r2t(wr.charge) : wr.kit?.charging ? 'k' : 0) : 0, lf: r2t(a.lastFire ?? -1), ft: r2t(wr?.firingT || 0),
+    y: r2t(b.aimYaw), p: r2t(b.aimPitch), pos: [r2t(a.pos.x), r2t(a.pos.y), r2t(a.pos.z)], spA: a.specialActive ? (a.specialActive.kind || a.specialActive.id || '?') : '', sq: a.form === 'squid' ? 1 : 0 };
+  L.push(T);
+  return T;
+}
 // ---- setting them off: botAct (bots.js, just before _tail; busy: a threat / canopy / pod / escape owns the aim)
 const _aim = { yaw: 0, pitch: 0, dist: 6 };
 export function botAct(b, dt, it, move, busy) {
   const a = b.a;
+  const TR = BOBBER_BOT.traceOn && items.length ? trace(b, a, it, busy) : null;   // ([b5-int3] tests: the last 1.5 s a bot, for a stray)
   if (a.sub?.kind === 'bobber') noteSightings();   // (only when some bot holds the sub: nothing else reads them)
   if (items.length) exposure();
   if (!a.alive || a.superJumpState) { b._bob = null; return null; }
@@ -1125,6 +1213,10 @@ export function botAct(b, dt, it, move, busy) {
     // way: held while that is by an own idle web)
     if (it.sub && items.length && a.specialActive?.id === 'zipcaster' && zipHits(a)) { it.sub = false; BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1; BOBBER_BOT.zipHolds = (BOBBER_BOT.zipHolds || 0) + 1; }
     if (it.sub && items.length && a.specialActive?.id === 'crab' && crabHits(a)) { it.sub = false; BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1; BOBBER_BOT.crabHolds = (BOBBER_BOT.crabHolds || 0) + 1; }
+    // ([b5-int3] a Vortex Strike's spot (picked at its start, launched a moment later): its 5.5 m vortex isn't put over an own
+    // idle web — moved off it; a Howl Box's line (it fires along the aim it's set down with, 72 m through walls): set down
+    // a moment later while that line runs through an own idle web — bobber-web clear: a teammate's vortex blew a web)
+    if (items.length) specialAim(a);
     return null;
   }
   let S = b._bob;
@@ -1160,8 +1252,12 @@ export function botAct(b, dt, it, move, busy) {
   if (!S && (it.fire || going) && items.length) {
     // (asked every 3 frames a bot, the answer held between: its aim moves little in 0.05 s)
     let o = b._bobHF?.o;
-    if (!b._bobHF || G.time - b._bobHF.t >= 0.05 || G.time < b._bobHF.t) { o = holdFire(b, a); b._bobHF = { t: G.time, o }; }
+    // ([b5-int3] and fresh on the frame it looses — a press, or the let-go of a draw / charge / wind-up: what goes then goes
+    // along the aim now, which may have swung since the last ask — bobber-web clear: a bow bot's draw loosed into a web)
+    const looses = (it.fire && !b._bobFire0) || (going && !it.fire);
+    if (looses || !b._bobHF || G.time - b._bobHF.t >= 0.05 || G.time < b._bobHF.t) { o = holdFire(b, a); b._bobHF = { t: G.time, o }; }
     if (o && o.state !== 'live' && o.state !== 'open' && o.state !== 'fly') o = null;
+    if (TR) TR.hf = o ? 1 : 0;
     if (o) {
       // (no shot: and what it had going is let go of without loosing it — a charge or a draw dropped (no shot, no ink), a
       // burst or a stream stopped, a wind-up undone — as a player swimming out of it would: the bow lets a stalled draw
@@ -1174,6 +1270,7 @@ export function botAct(b, dt, it, move, busy) {
       if (b.mode === 'fight' && b._bobHoldT > 0.35) { const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd); }
     } else { b._bobHoldT = 0; b._bobHoldSd = 0; }
   }
+  b._bobFire0 = !!it.fire;   // ([b5-int3] a press next frame: asked fresh)
   // [b5-int3] its own Whirl Boomerang hovering or whirling back to burst beside it (SUBS.boomerang: the orbit 1.5 m round
   // it, the 2.4 m burst at the orbit's end, 4–5 s after the throw) — it walks off its team's idle web meanwhile: the
   // throw's check sees where it stood at the press, the burst goes off wherever it stands then (bobber-web clear: a
@@ -1185,6 +1282,9 @@ export function botAct(b, dt, it, move, busy) {
     // ([b5-int3] 5 m, or a Tidal Slam's own 5.2 m blast and the 1.4 m it drifts while it rises)
     const spR = a.specialId === 'slam' ? (SPECIALS.slam?.radius || 5.2) + 1.6 : 5;
     for (const o of near(a.pos.x - spR, a.pos.z - spR, a.pos.x + spR, a.pos.z + spR, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - a.pos.x, o.spot.z - a.pos.z) < spR && !foeIn(o.chain, a.team)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; break; }
+    // ([b5-int3] an Ink Tempest's cloud — thrown on the press, it rains 3.4 m round for 6.5 s drifting on 7 m along its
+    // throw: held while that strip is over an own idle web)
+    if (it.special && a.specialId === 'storm' && stormHits(a)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; BOBBER_BOT.stormHolds = (BOBBER_BOT.stormHolds || 0) + 1; }
   }
   const P = a.sub?.kind === 'bobber' ? planOf(b) : null, fighting = !!(b.target && b.seeTimer > 0);
   // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links

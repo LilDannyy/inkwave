@@ -101,6 +101,8 @@
     evs.length = 0; sent.length = 0;
   };
   const live = () => K.items.filter((it) => it.state === 'live');
+  // ([b5-int3] a's real brain 0.5 s, its trigger, sub and special held off and its feet still: it sees f, the team knows it)
+  const keepLook = (a, f) => { const up = brain0.get(a); a.bot.update = function (dt) { const r = up.call(this, dt); const it = a.intent; it.fire = it.sub = it.special = false; it.move.set(0, 0, 0); return r; }; step(0.5); };
   // a bobber dropped from just over (x, y0, z) (or thrown: vel) — settled after ~0.5 s
   const drop = (owner, x, z, y0 = 0.6, vel = V(0, -3, 0)) => K.throwFrom(owner, V(x, y0, z), vel);
   const settle = (s = 0.5) => step(s);
@@ -927,6 +929,66 @@
       hook = null; stub(foe);
       R(`bots: at most ${B.dangerCap} bobber discs in all — a web of ${live().length} with ${BOBBER_BOT.cands} armed candidates, more than the cap: ${L3.length} discs`, BOBBER_BOT.cands > B.dangerCap && L3.length === B.dangerCap,
         { discs: L3.length, cands: BOBBER_BOT.cands, live: live().length, armedChains: BOBBER_BOT.armed });
+      // [b5-int3] the long tail bobber-web clear kept finding (its strays traced: BOBBER_BOT.traceOn) — each held by its own
+      // path's prediction, each with a case beside it that isn't held
+      {
+        const res = {}, info = {};
+        const mateAt = (yaw, wid = 'shooter', sub = 'shaker') => { put(mate, V(0, 0, 0), yaw); mate.setWeapon(wid); mate.setSub(sub); mate.bot.reset(); mate.ink = 100; mate.bot._bob = null; mate.bot._bobHF = null; mate.bot.aimYaw = mate.aimYaw = yaw; mate.bot.aimPitch = mate.aimPitch = 0; zero(mate); };
+        // a Shaker drips ink as it flies, from the hand out: thrown away from a web it stands under (a lone bobber 0.4 m in
+        // front of it), it is held; standing 4 m from that bobber, the same throw is pressed
+        for (const [tag, x0, z0] of [['under', 0, 0.4], ['clear', 4, 0]]) { reset(); drop(me, x0, z0); settle(); mateAt(Math.PI, 'shooter', 'shaker'); mate.aimPitch = mate.bot.aimPitch = 0.2; res['shaker:' + tag] = !!K.webThrow(mate) === (tag === 'under'); }
+        // a Waddle goes after its foe and blows where it catches them: a foe the team sees 4.5 m from a lone own bobber (out of
+        // a Waddle's own 3.0 m blast of it) and 6.3 m from where the throw lands is held; that foe 14 m off, it is pressed
+        for (const [tag, fz] of [['near', 4.5], ['far', 14]]) {
+          reset(); drop(me, 6, 0); settle();
+          mateAt(Math.atan2(6, fz), 'shooter', 'waddle'); put(foe, V(6, 0, fz), Math.PI);   // (facing the foe while it looks)
+          keepLook(mate, foe); const seen = !!mate.bot.sight?.sees(foe);
+          stub(mate); zero(mate); mate.bot.aimYaw = mate.aimYaw = Math.atan2(0, 1); mate.aimPitch = mate.bot.aimPitch = 0.1;
+          const held = !!K.webThrow(mate);
+          res['waddle:' + tag] = seen && held === (tag === 'near'); info['waddle:' + tag] = { seen, held };
+          parkAll();
+        }
+        // a Vortex Strike's spot on a web is moved off it (its 5.5 m vortex clear of the bobber); one 14 m from it stays
+        for (const [tag, tx] of [['on', 0], ['off', 14]]) {
+          reset(); const o = drop(me, 0, 9); settle(); mateAt(0);
+          const sp = { id: 'strike', kind: 'strike', aiming: true, target: V(tx, 0, 9), t: 0.2 };
+          mate.specialActive = sp; K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false); mate.specialActive = null;
+          const dd = Math.hypot(sp.target.x - o.spot.x, sp.target.z - o.spot.z);
+          res['strike:' + tag] = tag === 'on' ? dd > (SPECIALS.strike.radius + B.hitR) : Math.abs(sp.target.x - tx) < 1e-6; info['strike:' + tag] = r2(dd);
+        }
+        // an Ink Tempest thrown at a web (its cloud rains 3.4 m round, drifting on along the throw) is held at the press;
+        // thrown away from it, pressed
+        for (const [tag, yaw] of [['at', 0], ['away', Math.PI]]) {
+          reset(); drop(me, 0, 15); drop(me, 0, 18.5); drop(me, 0, 22); settle(); mateAt(yaw, 'charger', 'bomb');   // (its cloud forms ~16 m out, 1.1 s into the lob)
+          const sid0 = mate.specialId; mate.specialId = 'storm'; mate.aimPitch = mate.bot.aimPitch = 0.25;
+          zero(mate); mate.intent.special = true;
+          K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+          res['storm:' + tag] = (!mate.intent.special) === (tag === 'at'); mate.specialId = sid0;
+        }
+        // a Howl Box set down with its line through a web is set down a moment later (its auto time moved on); its line
+        // turned off the web, it goes when it was due
+        for (const [tag, yaw] of [['at', 0], ['away', Math.PI / 2]]) {
+          reset(); drop(me, 0, 15); settle(); mateAt(yaw);
+          const sp = { id: 'wail', kind: 'wail', autoT: 0.5, t: 0.49, def: SPECIALS.wail };
+          mate.specialActive = sp; K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false); mate.specialActive = null;
+          res['wail:' + tag] = (sp.autoT > 0.5) === (tag === 'at');
+        }
+        // a draw let go on the frame its hold-fire answer was still the last frame's (cached, 'no web'): asked fresh, and
+        // the web on the line now drops the draw instead of loosing it
+        { reset(); drop(me, 0, 9); settle(); mateAt(0, 'bow');
+          const wr = mate.weaponRunner; wr.charging = true; wr.charge = 0.7; mate.bot._bobHF = { t: G.time, o: null };
+          zero(mate); mate.intent.fire = false;
+          K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+          res.looseFresh = !wr.charging; wr.charging = false; }
+        // a Cutlass's quick cut throws a 66° crescent: a web 6 m out 25° off its aim is held, one 70° off it isn't
+        for (const [tag, deg] of [['in', 25], ['out', 70]]) {
+          reset(); const a = deg * Math.PI / 180; drop(me, Math.sin(a) * 6, Math.cos(a) * 6); settle(); mateAt(0, 'blade');
+          zero(mate); mate.intent.fire = true; K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+          res['crescent:' + tag] = (!mate.intent.fire) === (tag === 'in');
+        }
+        parkAll();
+        R('bots: the long tail — a Shaker\'s drips from the hand, a Waddle\'s chase to a foe by the web, a Vortex Strike\'s spot on it, an Ink Tempest\'s cloud, a Howl Box\'s line, a draw let go on a cached answer, a Cutlass\'s 66° crescent: each held (or moved, or put off) by an own idle web, each beside a case that goes', Object.values(res).every(Boolean), { res, info });
+      }
     }
 
     // ============================================================================================ drawing, HUD, guide
