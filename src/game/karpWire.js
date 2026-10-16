@@ -98,10 +98,12 @@ export class NetWire extends KarpWire {
     const mine = this.nm?.s?.tr?.rtt || 0, pl = this.nm?.s?.lobby?.players?.find((q) => q.id === id), theirs = pl && pl.ping > 0 ? pl.ping : mine;
     return Math.min(0.4, (mine + theirs) / 2000);
   }
-  // [karp-face] the host ↔ an actor's owner round trip through the relay (s): both relay round trips (ours, its lobby ping)
+  // [karp-face] how long after the host's own actor touches it a guest's claim from an equally quick touch can still be
+  // on its way (s): the round trip through the relay (both relay round trips: ours, its lobby ping) plus that peer's
+  // playback delay (its tick spacing and how late its packets run: the jitter, and the tick its samples ride)
   rttTo(a) {
-    const mine = this.nm?.s?.tr?.rtt || 0, pl = this.nm?.s?.lobby?.players?.find((q) => q.id === a?.owner);
-    return ((pl && pl.ping > 0 ? pl.ping : Math.max(mine, 40)) + mine) / 1000;
+    const mine = this.nm?.s?.tr?.rtt || 0, pl = this.nm?.s?.lobby?.players?.find((q) => q.id === a?.owner), p = this.nm?.peers.get(a?.owner);
+    return ((pl && pl.ping > 0 ? pl.ping : Math.max(mine, 40)) + mine) / 1000 + (p && p.init ? p.delay : 0.1);
   }
   // the newest sample a remote claimant sent (§7.3: claims are judged where it really is, not where we draw it)
   newest(a) { const b = a?.net?.buf; return b && b.length ? b[b.length - 1] : null; }

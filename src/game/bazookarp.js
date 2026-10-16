@@ -265,7 +265,13 @@ export class Bazookarp {
   // a guest's claim (the wire): ts is its send time on our clock
   _claim(a, ts, since) {
     if (this.follower || !a) return;
-    if (this.phase !== 'free') { if (this.phase !== 'carried' || this.holder !== a) this.wire.toGuest(a.nid, { why: this.phase }); return; }
+    if (this.phase !== 'free') {
+      if (this.phase !== 'carried' || this.holder !== a) this.wire.toGuest(a.nid, { why: this.phase });
+      // ([karp-face] a claim that lands after a grant: logged with the decision it missed, for the tests)
+      const g = this.stats.grantLog?.[this.stats.grantLog.length - 1];
+      if (g && this.holder !== a && this.clock - g.t < 1 && (g.late || (g.late = [])).length < 4) g.late.push({ nid: a.nid ?? -1, since: Number.isFinite(since) ? +since.toFixed(3) : null, after: +(this.clock - g.t).toFixed(3) });
+      return;
+    }
     // ([karp-face] a claim without its own "since" — an older client — counts from its arrival on our clock)
     const sn = Number.isFinite(since) && since >= 0 ? since : Math.max(0, this.clock - this.freeT0);
     const c = this.claims.find((q) => q.a === a);
@@ -305,7 +311,7 @@ export class Bazookarp {
     // ([karp-face] the last 40 decisions, for the tests: who claimed, how long after it went free on its own screen,
     // when its claim was in relative to the first, valid or not; the wait and the winner)
     const GL = this.stats.grantLog || (this.stats.grantLog = []);
-    GL.push({ t: +this.clock.toFixed(2), wait: +(this.clock - this.grant0).toFixed(3), won: best ? best.a.nid ?? -1 : null, claims: seen });
+    GL.push({ t: this.clock, wait: +(this.clock - this.grant0).toFixed(3), won: best ? best.a.nid ?? -1 : null, claims: seen });
     if (GL.length > 40) GL.shift();
     for (const c of this.claims) if (c !== best && c.remote) { this.wire.toGuest(c.a.nid, { why: 'refused' }); this.stats.refused++; }
     this.claims.length = 0;
@@ -337,8 +343,8 @@ export class Bazookarp {
     }
     return null;
   }
-  // [karp-face] how long the host holds a grant open for claims still in flight: the round trip (plus a tick for its
-  // samples) to each guest that hasn't claimed yet but whose player could have touched it as early — alive, and at its
+  // [karp-face] how long the host holds a grant open for claims still in flight: the round trip plus that peer's
+  // playback delay (NetWire.rttTo) to each guest that hasn't claimed yet but whose player could have touched it as early — alive, and at its
   // newest sample within reach of a run (claimNear m past pickR) — at most claimWait; a remote claim not yet valid at
   // its samples waits a tick for them
   _claimWait() {
@@ -347,7 +353,7 @@ export class Bazookarp {
       if (!a.remote || !a.alive || this.claims.some((c) => c.a === a)) continue;
       const s = this.wire.newest?.(a);
       if (!s || Math.hypot(s.x - this.pos.x, s.z - this.pos.z) > K.pickR + K.claimNear) continue;
-      w = Math.max(w, (this.wire.rttTo?.(a) ?? 0) + 1 / 20 + 1 / 60);
+      w = Math.max(w, (this.wire.rttTo?.(a) ?? 0) + 1 / 60);
     }
     if (this.wire.newest && this.claims.some((c) => c.remote && !this._claimPos(c))) w = Math.max(w, 1 / 20 + 1 / 60);
     return Math.min(K.claimWait, w);

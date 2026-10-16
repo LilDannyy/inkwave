@@ -526,8 +526,9 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   hears of the burst a trip late and its claim lands a trip later still: a host bot won 10 of 10 at equal distance).
   Now every claim carries `since` — how long after it went free **on the claimant's own screen** it touched it (`fs`;
   the host's actors' from the host's) — and once a claim is in, the host holds the grant open for claims in flight:
-  `NetWire.rttTo` (its relay round trip plus the guest's lobby ping) plus a tick, for each guest that hasn't claimed but
-  whose newest sample is within `pickR + claimNear` (6 m), at most `claimWait` (0.25 s); none near → at once (offline,
+  `NetWire.rttTo` (its relay round trip plus the guest's lobby ping, plus that peer's playback delay: its tick spacing
+  and jitter) plus a frame, for each guest that hasn't claimed but whose newest sample is within `pickR + claimNear`
+  (6 m), at most `claimWait` (0.3 s); none near → at once (offline,
   lone grabs). Then the valid claim with the smallest `since` wins (a touch inside the 0.25 s hold counts as the hold's
   end), equal → the nearest (SPEC §7.3). When an S39b window's grace runs out with a grant still held open, it is
   decided then. Measured: net-karp face 5.

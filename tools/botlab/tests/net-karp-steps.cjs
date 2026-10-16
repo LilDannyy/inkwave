@@ -90,7 +90,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       const h = (await info(A)).holder;
       if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
       // ([karp-face] the host's decision: each claim's since — after it went free on its own screen — and when it was in)
-      dec.push(await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, won: g.won, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.at, c.ok ? 1 : 0]) } : null; })()`));
+      dec.push(await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, won: g.won, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.at, c.ok ? 1 : 0]), late: (g.late || []).map((l) => [l.since, l.after]) } : null; })()`));
       await wait(300);
     }
     const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
