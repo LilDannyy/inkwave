@@ -10,8 +10,8 @@
 //     live bobber (to grow the chain), never past a 4-chain; then 1.5–3 s between links and 10–16 s once a chain is done.
 //     The throw lands where it picked (use() turns the lob onto the spot, as the Waddle's does onto its foe).
 //   fight — rarely (0.5 % a frame): a lone one just in front of a foe chasing it, for a teammate to shoot. [b5-int3] And
-//     a snap (SNAP): a lone one thrown to float on a foe's feet, aimed at for its last 0.3 s of flight — when that foe
-//     faces away from us (busy with someone else, painting, charging elsewhere) and
+//     a snap (SNAP): a lone one thrown to float on the feet of a foe that isn't duelling us (facing away — busy with
+//     someone else, painting, charging elsewhere), aimed at for its last 0.3 s of flight while
 //     nothing hits this bot, and shot the moment it floats with that foe where the shot will find it in its reach — the
 //     foes' bots notice a floated web 0.3–0.5 s after it opens and step out; a link run out onto a foe standing just
 //     outside a team web (extendSpot); a fight's pair. Turf's standing webs: TURF_WEB (a knob, as built).
@@ -441,8 +441,8 @@ function extendSpot(b, t) {
   return null;
 }
 // [b5-int3] the snap (bot.fight): its foe 4–9.5 m off (and inside the bot's own reach − 0.8 m), ink for it + `ink`, a
-// `p` chance a look (one look every 0.35 s), `cd` s before its next sub (base + up to the second); aimed at on its way
-// in only at a foe facing more than `away` rad off us (preAimOk); only by a weapon
+// `p` chance a look (one look every 0.35 s), `cd` s before its next sub (base + up to the second); only a foe facing
+// more than `away` rad off us (not one duelling us), and only by a weapon
 // whose shot gets there within `arrive` s; `wait`: how long after it floats the bot watches for its foe to be in reach
 // (fighting on meanwhile); `lead`: the share of the foe's run carried on to where it will be (bots strafe and turn back
 // every 0.6–1.8 s); `short`: m short of it toward us
@@ -658,8 +658,13 @@ export const botKit = {
     if (t && t.alive && reach && dist >= SNAP.min && dist <= Math.min(SNAP.max, reach - 0.8) && a.ink >= a.sub.inkCost + SNAP.ink && G.time >= (b._bobSnapGate || 0)
       && !b._bobSnapIt && Math.random() < SNAP.p) {
       b._bobSnapGate = G.time + 0.35;
-      const S = arrivalT(a.weapon, dist) <= SNAP.arrive ? snapSpot(b, t) : null;
-      if (S) { b._bobSnapTgt = t; snapLog(b, { src: 'snap' }, 'throw', { d: Math.round(dist * 10) / 10, fv: Math.round(Math.hypot(t.vel.x, t.vel.z) * 10) / 10, tw: t.weapon?.kind, tm: t.bot?.mode }); b._bobberAt = S; b._bobSrc = 'snap'; b._bobSnap = true; b.bombCd = SNAP.cd[0] + Math.random() * SNAP.cd[1]; BOBBER_BOT.snaps = (BOBBER_BOT.snaps || 0) + 1; return true; }
+      // (not one duelling us — it strafes off any spot in the second the bobber takes, and the snapper's look away to aim at
+      // the bobber loses it the duel: the duel probe, a Splattershot each, had the snapper lose 10 duels to 23 and, gated on
+      // a slow foe, 17 to 29, against 22 to 21 without the sub — only one facing away from us: busy with a teammate,
+      // painting, charging elsewhere)
+      const away = Math.abs(angleDiff(t.aimYaw ?? t.yaw, Math.atan2(a.pos.x - t.pos.x, a.pos.z - t.pos.z))) > SNAP.away;
+      const S = arrivalT(a.weapon, dist) <= SNAP.arrive && away ? snapSpot(b, t) : null;
+      if (S) { snapLog(b, { src: 'snap' }, 'throw', { d: Math.round(dist * 10) / 10, fv: Math.round(Math.hypot(t.vel.x, t.vel.z) * 10) / 10, tw: t.weapon?.kind, tm: t.bot?.mode }); b._bobberAt = S; b._bobSrc = 'snap'; b._bobSnap = true; b.bombCd = SNAP.cd[0] + Math.random() * SNAP.cd[1]; BOBBER_BOT.snaps = (BOBBER_BOT.snaps || 0) + 1; return true; }
     }
     if (t && t.alive && reach && dist >= 5 && dist <= Math.min(11, reach - 0.5) && a.ink >= 82 && a.hp >= 50 && Math.random() < 0.025 && mine(a).length < 12
       && !items.some((o) => o.team === a.team && o.state !== 'dead' && Math.hypot(o.spot.x - t.pos.x, o.spot.z - t.pos.z) < 3.5)) {
@@ -1112,16 +1117,8 @@ export function botAct(b, dt, it, move, busy) {
 // it fights on (null) — no aim or trigger taken from its duel for a bobber with nobody by it
 // (on its way: aimed at where it will float for its last SNAP.preAim s — but only while nothing shoots this bot: a snap is
 // thrown at a foe busy elsewhere, and one that turns on us is fought, not ignored for a bobber)
-// ([b5-int3] and only while its foe faces away from us: a foe duelling us strafes off the spot, and the bot's look away
-// from it loses the duel — the duel probe, a Splattershot each: pre-aimed at any foe the snapper lost 10 duels to 23,
-// only when nothing had hit it for 0.6 s still 17 to 29, against 22 to 21 without the sub; thrown at a foe duelling us
-// it is only shot if that foe stands in it as it floats, the bot's aim flicking from the foe to the bobber beside it)
-function facesAway(b) {
-  const t = b._bobSnapTgt, a = b.a;
-  return !!t && t.alive && Math.abs(angleDiff(t.aimYaw ?? t.yaw, Math.atan2(a.pos.x - t.pos.x, a.pos.z - t.pos.z))) > SNAP.away;
-}
 function preAimOk(b, SN) {
-  if (SN.src !== 'snap' || b.a.lastDamage < SNAP.calm || !facesAway(b)) return false;
+  if (SN.src !== 'snap' || b.a.lastDamage < SNAP.calm) return false;
   if (SN.state === 'open') return true;
   return SN.state === 'fly' && !!SN.planned && snapEta(SN) < SNAP.preAim;
 }
