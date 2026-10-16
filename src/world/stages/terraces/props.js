@@ -72,7 +72,7 @@ export function register(D, H) {
   const colBox = (B, x, y, z, w, h, d, roof = false) => B.col(x - w / 2, y, z - d / 2, x + w / 2, y + h, z + d / 2, roof ? ROOF : undefined);
   const ROOF = { roof: true };
   // railings, balustrades, handrails: kids can't pass, shots / ink / squids / sight lines go through, nobody stands on top
-  const RAIL = { rail: true };
+  const RAIL = { rail: true }, RAIL_ROOF = { rail: true, roof: true };   // [b5-int3] RAIL_ROOF: a rail whose top is off-limits (dash-reach.js)
   const det = (B) => (B.k.qf >= 1 ? 2 : 1);
   // compose another type inside this one (its colliders re-mapped from its own frame into ours)
   function sub(B, type, x, y, z, ry, opts = {}) {
@@ -624,7 +624,7 @@ export function register(D, H) {
         B.box('paint', sc, 0.3, Hh + 0.06, 0.38, px, (Hh + 0.06) / 2, 0, { r: 0.03 });
         if ((p === 0 || p === L) && o.finials !== false) B.lathe('paint', sc, [[0, 0], [0.1, 0], [0.1, 0.04], [0.05, 0.08], [0.1, 0.18], [0.02, 0.3], [0, 0.31]], px, Hh + 0.06, 0, { seg: 10 });
       }
-      B.col(0, 0, -0.17, L, Hh, 0.17, RAIL);
+      B.col(0, 0, -0.17, L, Hh, 0.17, o.offTop ? RAIL_ROOF : RAIL);   // ([b5-int3] o.offTop: the sea rim's — an air dash down off the 4.8 m terrace stood a kid on one by the water, where no walk gets)
     },
   };
   // wrought-iron handrail beside stairs / along drops (non-colliding): posts + rail + scroll bars; runs along +X, slope
@@ -640,7 +640,7 @@ export function register(D, H) {
       for (let i = 0; i <= n; i++) { const x = (i * L) / n; pbox(B, 'metal', ic, 0.03, Hh, 0.03, x, yAt(x) + Hh / 2, 0); }
       for (let x = 0.15; x < L - 0.1; x += 0.28) B.cyl(NS('metal'), ic, 0.007, Hh - 0.28, x, yAt(x) + 0.25 + (Hh - 0.28) / 2, 0, { seg: 4 });
       const ns = rise ? Math.max(1, Math.ceil(L / 2.2)) : 1;
-      for (let i = 0; i < ns; i++) { const xa = (i * L) / ns, xb = ((i + 1) * L) / ns; B.col(xa - (i ? 0 : 0.02), Math.min(yAt(xa), yAt(xb)) - 0.05, -0.06, xb + (i < ns - 1 ? 0 : 0.02), Math.max(yAt(xa), yAt(xb)) + Hh + 0.03, 0.06, RAIL); }
+      for (let i = 0; i < ns; i++) { const xa = (i * L) / ns, xb = ((i + 1) * L) / ns; B.col(xa - (i ? 0 : 0.02), Math.min(yAt(xa), yAt(xb)) - 0.05, -0.06, xb + (i < ns - 1 ? 0 : 0.02), Math.max(yAt(xa), yAt(xb)) + Hh + 0.03, 0.06, RAIL_ROOF); }   // [b5-int3] (off-limits on top: a swim jump + air dash stood a kid on a stair's handrail, 4.6 m up — dash-reach.js)
     },
   };
   // terrace edge cap: limestone coping slabs along a slab edge (flush, 4 cm), with a drip shadow line (non-colliding)
@@ -1981,7 +1981,7 @@ function rimsOf(L) {
 }
 const RIM0 = rimsOf(0);
 // belvedere balustrades along the whole sea edge (on the coping, 0.18 m in from the face)
-const seaBalustrades = RIM0.map((r) => ({ type: 'terraces_balustrade', pos: [r.start[0] - r.nx * 0.18, r.y, r.start[1] - r.nz * 0.18], rotY: rotX(r.ux, r.uz), length: r.len, piers: r.len > 2.2, finials: false }));
+const seaBalustrades = RIM0.map((r) => ({ type: 'terraces_balustrade', offTop: true, pos: [r.start[0] - r.nx * 0.18, r.y, r.start[1] - r.nz * 0.18], rotY: rotX(r.ux, r.uz), length: r.len, piers: r.len > 2.2, finials: false }));
 // sea cliffs under the edge (outside the arena)
 const seaCliffs = RIM0.map((r, i) => ({ type: 'terraces_cliff', pos: [r.start[0], 0, r.start[1]], rotY: rotX(r.ux, r.uz), length: r.len, top0: 0, top1: 0, seed: 3 + i }));
 // ivy / caper cascades on every third terrace wall (levels 1–3)
