@@ -863,8 +863,17 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
 ### 4.5 Boss Battle: yes
 
 - Lava **held at LOW** (`schedule.boss: 'low'`): ledges dry, the Race sunk, the Organs at their LOW pose.
-- `boss: { floorY: 1.2 }`. HULLBREAKER's home ground is the 1.2 tier: the island, both causeways, both Lakefronts and
-  south heads: about 1,300 m² connected (the check needs ≥ 150). The ledges are 1.2 m below it (drops: it never walks
+- `boss: { floorY: 1.2, headroom: 4.6 }`. HULLBREAKER's home ground is the 1.2 tier: the island, both causeways, both Lakefronts and
+  south heads: about 1,300 m² connected (the check needs ≥ 150).
+- **Boss Battle's own variant (the lava engine's fix round 3, the lead's decision: "800 connected beats 1,300 in necks").**
+  The boss needs 2.9 m from any wall and 1.8 m from any drop; built as the other modes, the Surge Gauge's four piers and the
+  island's dressing cut its ground into 463 m² (the island in pieces and the causeways). In Boss Battle (`notIn: 'boss'`)
+  there is no Surge Gauge (piers, tie girders, works, its two lava boards and the prop), none of the island's stacks,
+  stumps, plinths, gauge deck, machine house and valve chest, and none of the Lakefronts' and Moorings' dressing in the
+  boss's clearance ring (tide board, mooring bollards, ladle cradle, capstan, chain bollard, stone crate, the bridge's slag
+  pot): its ground is one 910 m² piece — the island, both causeways and a wedge of each Lakefront at the causeway's foot
+  (`out/fix3/fix3-boss-homeground-before-after.jpg`). Every other mode is built exactly as before. The art phase may give
+  Boss Battle a landmark of its own outside the clearance ring (the gauge's place is the boss's floor). The ledges are 1.2 m below it (drops: it never walks
   them); the lake is void (a drop). Its charges stop on the piers, the ladle cars, the drums (stun windows).
 - The engine adds the rider parts before `BossNav` builds (ENGINE H21), so the Organ columns are walls to it.
 - Verify with a copy of `tools/botlab/jobs/stretch/boss-check.js`: home ground, roams > 50 m, never idle ≥ 12 s, moves
