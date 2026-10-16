@@ -12,6 +12,9 @@
 //   F the shell's meter tag; weir / Gate tags
 //   G the cues (sfx-karp.js) on their events; the map layer draws (both layers) without error
 //   H the results screen: every reason in SPEC §1.1's words, CARRIED / POPS columns, the carp in the centre label
+//   I (review round 1) the GATE tag never rides up into the top bar; a weir tag on a live call-out fades out of its way;
+//     the meter tag isn't drawn right under the status pill that already says the same; our call-out sits under a live
+//     kill call-out (WIPEOUT!); the carrier's last 10 s in big beating digits — run it at W=960 H=600 too
 //   MAP=testbox MODE=bazookarp PAGE=tools/botlab/tests/hud-karp.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, Kp = m.karp, H = g.hud;
@@ -102,8 +105,8 @@
   // ---- D. the fuse display rule (a follower's screen, stub snapshots)
   put(me, spot(P.x, P.z + dz * 1, P.y)); grab(me); step(0.05);
   m.follower = true;
-  // (snapshots are stamped with the match clock — time played — which netmatch keeps in step on every screen)
-  const tb = () => Kp._tb();
+  // (snapshots are stamped with the host's wire clock; offline the wire's clock is the engine's: age 0 here)
+  const tb = () => Kp.wire.hostNow();
   Kp.hud.fuseShown = 40; m.time = m.duration - 100;
   Kp._fuseSync(38, 1, tb());   // the host is 2 s ahead: jump now
   const jump = Kp.hud.fuseShown;
@@ -160,6 +163,72 @@
     Kp.fuse = 40; step(0.1); const after = !!H.karp.cues.loops.hiss;
     A0.loop = lp0; release(); step(0.1);
     R('G3. the hiss: a teammate carrier\'s last 3 s starts a positional karp_hiss on it, and it stops when the fuse is no longer in its last 3 s', !before && during && !after && loops.length === 1 && loops[0].pos, { before, during, after, loops }); }
+
+  // ---- I. [karp-face] review round 1: the world tags, the call-outs' layers, the carrier's last 10 s
+  {
+    const wait = (ms) => new Promise((q) => setTimeout(q, ms));
+    const er = () => H.el.getBoundingClientRect();
+    const topY = () => H.karp.status.getBoundingClientRect().bottom - er().top;
+    const clearCalls = () => { if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); H.callouts?.querySelectorAll('.iw-call').forEach((e) => e.remove()); H.karp._sayT = -1e9; };
+    clearCalls(); release(); step(0.1);
+    // I1. our Gate up, the carrier 9 m before it: tilt the camera until the GATE tag's own point projects above the
+    // status pill's bottom (in the top bar, where the timer is); the tag is drawn below it
+    Kp.lowered[me.team] = true; Kp.gateUp[me.team] = true; step(0.1);
+    const gp = G0.pos; put(me, spot(gp.x, gp.z - dz * 9, gp.y)); me.yaw = me.aimYaw = Math.atan2(gp.x - me.pos.x, gp.z - me.pos.z); grab(me); follow();
+    let raw = null, box = null; const tried = [];
+    for (let k = 0; k < 30 && !raw; k++) {
+      g.rig.pitch = 0.5 - k * 0.05; step(2 / 60); H.karp._topT = 0; step(1 / 60);
+      const p = H.karp._proj(gp.x, gp.y + 6.4, gp.z), ty = topY();
+      tried.push(p ? +p.y.toFixed(0) : null);
+      if (p && !p.behind && p.y > 4 && p.y < ty - 4 && p.x > 0 && p.x < p.W) { raw = { y: +p.y.toFixed(1), top: +ty.toFixed(1), pitch: +g.rig.pitch.toFixed(2) }; box = (S().tagBoxes || []).find((b) => b.text === 'GATE') || null; }
+    }
+    R('I1. the GATE tag never rides up into the top bar: where its own point projects above the status pill\'s bottom, the tag is drawn below it', !!raw && !!box && box.t >= raw.top - 0.5, { raw, box, tried: raw ? undefined : tried });
+    release(); Kp.lowered = [false, false]; Kp.gateUp = [false, false]; follow(); step(0.1);
+    // I2. a call-out on screen; a weir tag whose point sits on the ray through the call-out's middle
+    H.karp._say('BURST THE ROE SHELL!', { sub: 'Then carry the Bazookarp to their Dragon Gate' });
+    await wait(900);
+    const zr = H.zcalls.firstElementChild.getBoundingClientRect(), e0 = er(), cam = G.rig?.gameCam || G.camera;
+    const nd = V(((zr.left + zr.right) / 2 - e0.left) / e0.width * 2 - 1, -(((zr.top + zr.bottom) / 2 - e0.top) / e0.height * 2 - 1), 0.5).unproject(cam);
+    const wpt = cam.position.clone().addScaledVector(nd.sub(cam.position).normalize(), 12);
+    const tw = [{ key: 'w0', pos: [wpt.x, wpt.y, wpt.z], y: 0, text: '45', gate: false }];
+    H.karp._tags(tw, H.karp._callRects()); const onCall = { ...(S().tagBoxes || [])[0], cls: H.karp._tagEls[0].classList.contains('is-under') };
+    clearCalls(); H.karp._tags(tw, H.karp._callRects()); const offCall = { ...(S().tagBoxes || [])[0], cls: H.karp._tagEls[0].classList.contains('is-under') };
+    R('I2. a weir tag that would sit on a live call-out fades out of its way, and is back once the call-out is gone', onCall.under && onCall.cls && offCall.under === false && !offCall.cls, { onCall, offCall });
+    step(1 / 60);
+    // I3. the meter tag where it would sit right under the status pill (the shell high in the middle): not drawn; lower
+    // down: drawn
+    put(me, spot(P.x, P.z - dz * 7, P.y)); facePond(me); Kp.shell.m = 0.4 * Kp.shell.hp * (me.team === 0 ? 1 : -1); follow();
+    let tuck = null, low = null; const tr3 = [];
+    for (let k = 0; k < 40 && (!tuck || !low); k++) {
+      g.rig.pitch = 0.6 - k * 0.04; step(2 / 60); H.karp._topT = 0; step(1 / 60);
+      const c = Kp.shell.c, p = H.karp._proj(c.x, c.y + Kp.shell.radius() + 0.55, c.z), sr = H.karp.status.getBoundingClientRect(), o = er();
+      if (!p || p.behind) continue;
+      const lim = topY();
+      tr3.push(+p.y.toFixed(0));
+      const x0 = sr.left - o.left, x1 = sr.right - o.left;
+      if (!tuck && p.y > 2 && p.y < lim - 2 && p.x > x0 && p.x < x1) tuck = { y: +p.y.toFixed(1), lim: +lim.toFixed(1), shown: S().shell };
+      if (!low && p.y > topY() + 120 && p.y < p.H - 60) low = { y: +p.y.toFixed(1), shown: S().shell };
+    }
+    R('I3. the meter tag isn\'t drawn right under the status pill (which already says SHELL · 40% OURS); lower on the screen it is', !!tuck && tuck.shown == null && !!low && !!low.shown, { tuck, low, tried: tuck && low ? undefined : tr3 });
+    Kp.shell.m = 0; g.rig.pitch = -0.15;
+    // I4. a kill call-out (WIPEOUT!) and ours at once: ours sits wholly under it
+    clearCalls();
+    H._callout('WIPEOUT!', 'The whole team is splatted', true);
+    H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null });
+    step(1 / 60); await wait(700); step(1 / 60); await wait(450);
+    const kcEl = H.callouts.querySelector('.iw-call'), zcEl = H.zcalls.firstElementChild;
+    const kr = kcEl && kcEl.getBoundingClientRect(), zr4 = zcEl && zcEl.getBoundingClientRect();
+    const subR = kcEl && kcEl.querySelector('.iw-call__sub')?.getBoundingClientRect();
+    R('I4. a kill call-out (WIPEOUT!) and our SHELL BURST! at once: ours sits wholly below it (its sub line too)', !!kr && !!zr4 && zr4.top >= Math.max(kr.bottom, subR ? subR.bottom : 0) - 1, { kill: kr && { t: Math.round(kr.top), b: Math.round(kr.bottom) }, sub: subR && Math.round(subR.bottom), ours: zr4 && { t: Math.round(zr4.top), b: Math.round(zr4.bottom) }, size: [innerWidth, innerHeight] });
+    clearCalls(); step(1 / 60);
+    // I5. the carrier's own fuse: 30 s small; 8.5 s big, beating
+    put(me, spot(P.x, P.z + dz * 2, P.y)); grab(me); follow();
+    Kp.fuse = Kp.hud.fuseShown = 30; step(2 / 60); const bEl = H.karp.ret.querySelector('b'), f30 = parseFloat(getComputedStyle(bEl).fontSize);
+    Kp.fuse = Kp.hud.fuseShown = 8.5; step(2 / 60); const f8 = parseFloat(getComputedStyle(bEl).fontSize), beat = H.karp.ret.classList.contains('is-beat'), red = H.karp.ret.classList.contains('is-red');
+    const u5 = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
+    R('I5. the carrier\'s last 10 s: the reticle\'s seconds in big digits (≥ 3 u, nearly 3× the usual) that beat each second', red && beat && bEl.textContent === '9' && f8 >= 2.6 * f30 && f8 >= 3 * u5 - 0.5, { f30, f8, u: +u5.toFixed(2), beat, red, txt: bEl.textContent });
+    release(); step(0.1);
+  }
 
   // ---- H. the results screen
   const reasons = ['knockout', 'time', 'untouched', 'comeback', 'retake', 'no-pickup', 'stopped', 'overtime-cap'];

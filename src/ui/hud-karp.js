@@ -147,6 +147,12 @@ const CSS = `
   padding: .2em .4em; border-radius: 99px; display: none; }
 .iw-kret.is-fast em { display: block; }
 .iw-kret.is-flash svg { animation: iw-kret-flash .35s ease-out; }
+/* [karp-face] the last 10 s: big beating digits under the ring (the small number read as 8 px at 960×600) and a bolder ring */
+.iw-kret.is-red b { font: 400 calc(var(--u) * 3.3) / 1 'Titan One', 'Rubik', sans-serif; -webkit-text-stroke: .13em #15121c; paint-order: stroke fill; text-shadow: 0 .06em 0 rgba(0,0,0,.45); translate: -50% 4%; }
+.iw-kret.is-red .iw-kret__fuse { stroke-width: 5; }
+.iw-kret.is-red .iw-kret__track { stroke-width: 6.5; }
+.iw-kret.is-beat b { animation: iw-kret-beat .42s cubic-bezier(.34,1.8,.64,1); }
+@keyframes iw-kret-beat { 0% { scale: 1.45; } }
 @keyframes iw-kret-flash { 0% { scale: 1.25; filter: drop-shadow(0 0 8px #fff); } }
 /* the bottom line */
 .iw-kbot { position: absolute; left: 50%; bottom: calc(var(--u) * 11.5); translate: -50% 0; display: none; align-items: center; gap: calc(var(--u) * .9); pointer-events: none; }
@@ -177,6 +183,11 @@ const CSS = `
 .iw-ktag__pill { position: absolute; left: 0; top: 0; translate: -50% -100%; padding: .22em .55em; border-radius: 99px; background: var(--self); color: #fff;
   font: 400 calc(var(--u) * 1.05) / 1 'Titan One', 'Rubik', sans-serif; -webkit-text-stroke: .12em #15121c; paint-order: stroke fill; box-shadow: 0 0 0 2px #15121c; white-space: nowrap; }
 .iw-ktag.is-gate .iw-ktag__pill { animation: iw-kl-gate 1s ease-in-out infinite; }
+/* [karp-face] a world tag that would sit on a live call-out fades out of its way */
+.iw-kshell, .iw-ktag { transition: opacity .15s; }
+.iw-kshell.is-under, .iw-ktag.is-under { opacity: 0; }
+/* [karp-face] while a kill call-out (WIPEOUT! …) is live, ours sit under it (at 960×600 the two layers overlapped) */
+.iw-hud.is-karp.has-kcall .iw-zcalls { top: max(33%, calc(var(--jal-b, 0px) + var(--u) * .9), var(--kcb, 0px)); }
 /* the carrier's squad badge */
 .iw-sq.is-karp::after { content: ''; position: absolute; right: -16%; bottom: -10%; width: 52%; height: 52%; border-radius: 50%; pointer-events: none; z-index: 2;
   background: #ffd27a url("data:image/svg+xml;utf8,${encodeURIComponent(KARP_GLYPH.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(/currentColor/g, '#ffffff'))}") center / 86% no-repeat;
@@ -302,6 +313,14 @@ export class KarpHud {
     }
     this._line(f, me, them);
     this._beacons();
+    // ---- [karp-face] what world tags keep clear of: the top bar (down to the status pill's bottom) and live call-outs
+    if (!(this._topT > 0)) {
+      const er = el.getBoundingClientRect(); this._ox = er.left; this._oy = er.top;
+      let r = this.status.getBoundingClientRect(); if (!(r.height > 0)) r = this.line.getBoundingClientRect();
+      this._topY = r.height > 0 ? r.bottom - this._oy : 0; this._stL = r.left - this._ox; this._stR = r.right - this._ox; this._topT = 30;
+    }
+    this._topT--;
+    const calls = this._callRects();
     // ---- the status pill
     const tn = (t) => (t === me ? 'OURS' : 'THEIRS');   // (the pause strip's and the meter tag's words)
     let st = '', fast = false;
@@ -352,7 +371,8 @@ export class KarpHud {
       const fs = Math.max(0, f.fuseShown), secs = Math.ceil(fs), g = local.carry?.gun, c = g && (g.charging || g.tap) ? g.c : 0;
       this._fuseEl.style.strokeDashoffset = (this._C1 * (1 - Math.min(1, fs / K.fuse))).toFixed(2);
       this._chEl.style.strokeDashoffset = (this._C2 * (1 - c)).toFixed(2);
-      const b = this.ret.querySelector('b'); if (b.textContent !== String(secs)) b.textContent = String(secs);
+      const b = this.ret.querySelector('b');
+      if (b.textContent !== String(secs)) { b.textContent = String(secs); if (secs <= 10) this.hud._restart?.(this.ret, 'is-beat'); }
       this.ret.classList.toggle('is-red', secs <= 10);
       this.ret.classList.toggle('is-fast', f.rate > 1);
       this.ret.classList.toggle('is-full', c >= 1);
@@ -372,20 +392,23 @@ export class KarpHud {
       const cam = G.rig?.gameCam || G.camera, cp = cam?.position;
       const d = cp ? Math.hypot(cp.x - f.shellC[0], cp.y - f.shellC[1], cp.z - f.shellC[2]) : 99;
       const p = d <= 45 ? this._proj(f.shellC[0], f.shellC[1] + f.shellR + 0.55, f.shellC[2]) : null;
-      if (p && !p.behind && p.x > 0 && p.x < p.W && p.y > 0 && p.y < p.H) {
-        // (never up in the top bar: below the Carp Line's status pill — a raised Pond put it over the line)
-        if (!(this._topT > 0)) { let r = this.status.getBoundingClientRect(); if (!(r.height > 0)) r = this.line.getBoundingClientRect(); this._topY = r.height > 0 ? r.bottom : 0; this._topT = 30; }
-        this._topT--;
-        const u = Math.min(p.W / 100, (p.H * 1.7778) / 100);
-        if (this._topY > 0) p.y = Math.max(p.y, this._topY + 2.9 * u);
+      const u = p ? Math.min(p.W / 100, (p.H * 1.7778) / 100) : 0, sc = Math.max(0.6, Math.min(1.15, 22 / Math.max(1, d))), hw = 3.4 * u * sc;
+      // (never up in the top bar: below the Carp Line's status pill — a raised Pond put it over the line; [karp-face]
+      // and not at all where it would sit right under that pill, which already says the same: SHELL · 66% OURS)
+      const lim = this._topY > 0 ? this._topY + 2.9 * u * sc : 0;
+      const tucked = !!p && p.y < lim && p.x + hw > this._stL && p.x - hw < this._stR;
+      if (p && !tucked && !p.behind && p.x > 0 && p.x < p.W && p.y > 0 && p.y < p.H) {
+        if (lim) p.y = Math.max(p.y, lim);
         const k = f.hp > 0 ? f.meter / f.hp : 0, mine = me === 0 ? k : -k;   // > 0: your team's way
-        const m = 0.5 + 0.5 * Math.max(-1, Math.min(1, mine)), sc = Math.max(0.6, Math.min(1.15, 22 / Math.max(1, d)));
+        const m = 0.5 + 0.5 * Math.max(-1, Math.min(1, mine));
         this.shellTag.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) scale(${sc.toFixed(3)})`;
         this.shellTag.style.setProperty('--m', m.toFixed(3));
         const lbl = Math.abs(k) < 0.005 ? 'ROE SHELL' : `${Math.round(Math.abs(k) * 100)}% ${mine > 0 ? 'OURS' : 'THEIRS'}`;
         const ls = this.shellTag.firstChild.lastChild; if (ls.textContent !== lbl) ls.textContent = lbl;
         this.shellTag.classList.toggle('is-warn', Math.abs(k) >= 0.75);
-        sh = { m: +m.toFixed(3), label: lbl };
+        const under = this._hits(calls, p.x - hw, p.x + hw, p.y - 2.9 * u * sc, p.y);
+        this.shellTag.classList.toggle('is-under', under);
+        sh = { m: +m.toFixed(3), label: lbl, x: +p.x.toFixed(1), y: +p.y.toFixed(1), under };
       }
     }
     this.shellTag.classList.toggle('is-on', !!sh);
@@ -396,7 +419,7 @@ export class KarpHud {
       for (const w of f.weirs[me] || []) if (!w.lowered) want.push({ key: `w${w.index}`, pos: w.pos, y: 3.1, text: String(w.count), gate: false });
       const g = f.gates[me]; if (g && g.up) want.push({ key: 'g', pos: g.pos, y: 6.4, text: 'GATE', gate: true });
     }
-    this._tags(want, me);
+    this._tags(want, calls);
     // ---- THEY'RE AT THE GATE! (their carrier ≤ 15 from our open Gate), once per carry
     if (f.holder && f.holderTeam === them && f.gates[them]?.up && f.count[them] <= 15) { if (!this._gateCall) { this._gateCall = true; this._call(them, null, null, "THEY'RE AT THE GATE!", 'DEFEND IT!'); } }
     else if (!f.holder) this._gateCall = false;
@@ -465,7 +488,27 @@ export class KarpHud {
       if (el.classList.contains('is-karp') !== on) el.classList.toggle('is-karp', on);
     }
   }
-  _tags(want, me) {
+  // [karp-face] the live call-outs' boxes (hud px): the kill call-out's measured once when it appears (its scale
+  // animation aside it stands still) — and while it is live ours sit under it (has-kcall, --kcb); ours each frame
+  _callRects() {
+    const H = this.hud, out = [], kc = H.callouts?.querySelector('.iw-call') || null;
+    if (kc !== this._kc) {
+      this._kc = kc;
+      if (kc) {
+        const a = H.callouts.getBoundingClientRect(), x = a.left - (this._ox || 0), y = a.top - (this._oy || 0), hh = kc.offsetHeight / 2, hw = kc.offsetWidth / 2;
+        const u = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
+        this._kcR = { l: x - hw, r: x + hw, t: y - hh, b: y + hh };
+        H.el.style.setProperty('--kcb', `${Math.round(y + hh + 0.6 * u)}px`);
+      }
+      H.el.classList.toggle('has-kcall', !!kc);
+    }
+    if (kc) out.push(this._kcR);
+    if (H.zcalls) for (const z of H.zcalls.children) { const r = z.getBoundingClientRect(); if (r.width > 0) out.push({ l: r.left - (this._ox || 0), r: r.right - (this._ox || 0), t: r.top - (this._oy || 0), b: r.bottom - (this._oy || 0) }); }
+    this.show.calls = out.length;
+    return out;
+  }
+  _hits(rs, l, r, t, b) { for (const q of rs) if (r > q.l && l < q.r && b > q.t && t < q.b) return true; return false; }
+  _tags(want, calls = []) {
     const box = this.tags;
     const els = this._tagEls;
     while (els.length < want.length) { const e = h('div', { class: 'iw-ktag' }, h('span', { class: 'iw-ktag__pill' })); box.appendChild(e); els.push(e); }
@@ -478,13 +521,22 @@ export class KarpHud {
       if (!on) return;
       const cam = G.rig?.gameCam || G.camera, cp = cam.position, d = Math.hypot(cp.x - w.pos[0], cp.y - w.pos[1], cp.z - w.pos[2]);
       const sc = Math.max(0.55, Math.min(1.1, 26 / Math.max(1, d)));
-      e.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) scale(${sc.toFixed(3)})`;
       e.classList.toggle('is-gate', w.gate);
-      if (e.firstChild.textContent !== w.text) e.firstChild.textContent = w.text;
+      if (e.firstChild.textContent !== w.text) { e.firstChild.textContent = w.text; e._w = 0; }
+      if (!e._w) { e._w = e.firstChild.offsetWidth || 40; e._h = e.firstChild.offsetHeight || 20; }
+      // ([karp-face] never up in the top bar — the GATE tag covered the match timer as you carried it in; and out of
+      // the way of a live call-out: a weir's 45 sat on BURST THE ROE SHELL! and OVERTIME! at 960×600)
+      const hw = (e._w * sc) / 2, hh = e._h * sc;
+      let y = p.y;
+      if (this._topY > 0) y = Math.max(y, this._topY + 4 + hh);
+      const under = this._hits(calls, p.x - hw, p.x + hw, y - hh, y);
+      e.classList.toggle('is-under', under);
+      e.style.transform = `translate(${p.x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${sc.toFixed(3)})`;
       shown.push(w.text);
+      (this.show.tagBoxes || (this.show.tagBoxes = []))[shown.length - 1] = { text: w.text, l: +(p.x - hw).toFixed(1), r: +(p.x + hw).toFixed(1), t: +(y - hh).toFixed(1), b: +y.toFixed(1), under };
     });
     this.show.tags = shown;
-    void me;
+    if (this.show.tagBoxes) this.show.tagBoxes.length = shown.length;
   }
   state() { return { on: this.on, ...this.show, cues: this.cues.played.slice(-12) }; }
   dispose() { this._unsubs.forEach((u) => u()); this.cues.dispose(); for (const e of [this.line, this.mk, this.ret, this.bot, this.no, this.shellTag, this.tags]) e.remove(); }
