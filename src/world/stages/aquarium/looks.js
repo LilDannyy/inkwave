@@ -26,10 +26,13 @@ const TAU = Math.PI * 2, HP = Math.PI / 2;
 // segs: [[ax, ay, az, bx, by, bz], …] the tube runs inside the stage's water volumes (≤ 8)
 export function waterMaterial(T, U, segs, perVertex = false) {
   const m = new T.MeshStandardMaterial({ color: perVertex ? '#ffffff' : '#285865', vertexColors: perVertex, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.6, depthWrite: false, side: T.DoubleSide });
-  // (the dusk glow from within: warm white × night × this, 2.8× the art pass's first 0.1; the clear water — the Reef Windows,
-  // the columns, the pools — glows a little less. Measured at dusk by scenes/aquarium-glow.js: the glow's own share of a
-  // tank pixel (glow on minus off) ≤ 60 % of the brighter fresh splat beside it, and it stays far less saturated than ink)
-  const uGlow = { value: 0.28 };
+  // (the dusk glow from within: warm white × night × this; the clear water — the Reef Windows, the columns, the pools —
+  // glows a little less. Measured at dusk by scenes/aquarium-glow.js PRE_ARGS=pal, every team palette, the fish and
+  // bubbles out of the sample points: the glow's own share of a Great Tank pixel (glow on minus off) ≤ 60 % of the
+  // brighter fresh splat beside it in all five palettes — tangerine-cobalt is the tightest — and it stays far less
+  // saturated than ink. Art round 2: 0.15, not round 1's 0.28: with a steady probe 0.28 measured 0.92 of tangerine's splat
+  // (round 1's 0.45 was another palette with a shark in a sample point))
+  const uGlow = { value: 0.15 };
   Object.defineProperty(m.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
   const N = Math.min(8, segs.length);
   const uA = { value: Array.from({ length: 8 }, (_, i) => new T.Vector3(...(segs[i] ? segs[i].slice(0, 3) : [0, -99, 0]))) };
@@ -336,7 +339,7 @@ vec2 jHit(vec2 pp, vec2 d2, float rr) {   // the ray's two crossings of a cylind
   }
   float fresJ = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 2.0);
   diffuseColor.rgb = mix(vec3(0.012, 0.016, 0.022), vec3(0.62, 0.64, 0.7), 0.04 + 0.4 * fresJ);
-  vec3 jellyE = jIn * mix(vec3(1.0), vec3(1.0, 0.94, 1.08), uNightJ) * (0.9 + 0.45 * uNightJ) * (1.0 - 0.6 * fresJ);`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  vec3 jellyE = jIn * mix(vec3(1.0), vec3(1.0, 0.94, 1.08), uNightJ) * (0.9 + 0.15 * uNightJ) * (1.0 - 0.6 * fresJ);`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
   totalEmissiveRadiance += jellyE;`);
   };
   mat.customProgramCacheKey = () => 'aq-jelly3';

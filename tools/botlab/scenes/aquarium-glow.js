@@ -8,6 +8,13 @@
   const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
   g.debug.freeze?.();
   for (const a of g.match.actors) { a.character.setVisible(false); a.character.root.visible = false; }
+  // (a steady measure, art round 2: the stage art's palette, and the fish and bubbles out of the sample points — a shark
+  // passing a glow point swung the share run to run)
+  // PRE_ARGS 'pal' measures every team palette in turn (one table row each), a view's name prefix measures only it
+  const { TEAM_PALETTES } = await import('./src/config.js');
+  G.scene.traverse((o) => { if (/^aq-(swimmers|bubbles|colbubbles|krill)$/.test(o.name)) o.visible = false; });
+  const allPal = String(window.__preArgs || '') === 'pal';
+  if (!allPal) { const pal = TEAM_PALETTES.find((p) => p.id === 'tangerine-cobalt'); if (pal) g._setPalette(pal); }
   G.paint.clear?.();
   const lum = (c) => { const L = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * L(c[0] / 255) + 0.7152 * L(c[1] / 255) + 0.0722 * L(c[2] / 255); };
   const read = (p) => {
@@ -24,7 +31,9 @@
     ['reef window', [15.0, 1.9, -6.0], [25.0, 1.4, -19.0], [[25.0, 2.1, -19.0], [26.9, 1.6, -16.0], [23.0, 1.9, -21.4]], [[19.0, -12.0, 0], [20.6, -9.6, 1]]],
     ['bubble column', [4.0, 2.4, -12.5], [0, 2.0, -20.0], [[0.3, 2.2, -20.3], [-0.4, 3.2, -20.35]], [[1.5, -15.6, 0], [-1.5, -15.6, 1]]],
   ];
-  const out = [], only = String(window.__preArgs || '');
+  const out = [], only = allPal ? '' : String(window.__preArgs || '');
+  for (const pal of allPal ? TEAM_PALETTES : [null]) {
+  if (pal) g._setPalette(pal);
   for (const [name, from, look, pts, splats] of shots) {
     if (only && !name.startsWith(only)) continue;
     G.paint.clear?.();
@@ -42,8 +51,9 @@
     const scr = (p) => { const v = V(p).project(G.camera); return [Math.round((v.x + 1) / 2 * 1600), Math.round((1 - v.y) / 2 * 900)]; };
     const gl0 = Math.max(...glow.map(lum)), inkL = ink.map(lum);
     const hsl = (c) => { const o = {}; new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255).getHSL(o); return o; };
-    out.push({ name, glowMax: +gl0.toFixed(4), glowShare: +share.toFixed(4), ink: inkL.map((v) => +v.toFixed(4)), glowShareToInk: inkL.map((v) => +(share / v).toFixed(3)), ratioToDimmerInk: +(gl0 / Math.min(...inkL)).toFixed(3),
+    out.push({ name, palette: pal?.id, glowMax: +gl0.toFixed(4), glowShare: +share.toFixed(4), ink: inkL.map((v) => +v.toFixed(4)), glowShareToInk: inkL.map((v) => +(share / v).toFixed(3)), ratioToDimmerInk: +(gl0 / Math.min(...inkL)).toFixed(3),
       glowHue: glow.map((c) => Math.round(hsl(c).h * 360)), glowSat: glow.map((c) => +hsl(c).s.toFixed(2)), glowRGB: glow.map((c) => c.map(Math.round)), inkRGB: ink.map((c) => c.map(Math.round)), glowPx: pts.map(scr), inkPx: splats.map(([x, z]) => scr([x, 0.03, z])) });
+  }
   }
   if (!only) G.paint.clear?.();
   return { night: G.env?.U?.uNight?.value, shots: out };

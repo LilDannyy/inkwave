@@ -157,7 +157,7 @@ export function registerArch(D, H, KIT, G) {
   D.aquarium_gantry = {
     desc: 'the feeding gantry over the Great Tank (single, world frame)',
     build(B) {
-      const SG = '#4a6d6a', SD = '#36524f';   // (the gantry's own darker, bluer sea-green: layout.js K.gantry)
+      const SG = '#2c4f5c', SD = '#213b44';   // (the gantry's own dark, bluer sea-green: layout.js K.gantry)
       for (const [x, z] of [[5, -11], [-5, -11], [5, 11], [-5, 11]]) {
         B.box('paint', K.granite, 1.7, 0.5, 1.7, x, 0.25, z, { r: 0.04 });
         pbox(B, 'paint', K.graniteLt, 1.5, 0.08, 1.5, x, 0.54, z);

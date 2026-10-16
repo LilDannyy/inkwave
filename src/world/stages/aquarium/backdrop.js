@@ -146,6 +146,8 @@ export function buildBackdrop(kit, data = {}) {
   const animate = (t) => {
     const dt = last === null ? 0 : Math.min(0.1, Math.max(0, t - last)); last = t;
     const nowS = t, f = feed(nowS), night = U.uNight.value || 0;
+    // (the tank glass reflects less of the bright sunset sky at dusk: it hazed the tanks pale over their glow — art round 2)
+    LOOK.glass.envMapIntensity = 1.6 * (1 - 0.6 * night); LOOK.glass.opacity = 0.2 * (1 - 0.35 * night);
     U.uFT.value += dt; U.uFT2.value += dt * (1 + 1.8 * f.wheel); U.uKrill.value = f.krill; krill.visible = f.krill > 0.001;
     bathy.set(0.5 * f.bob, night);
     gauges.animate(t); tide.animate(t); far.animate(nowS, night);
@@ -234,8 +236,9 @@ function tideDrums(T, kelp, bubbles, uNight = { value: 0 }) {
   const km = new T.MeshStandardMaterial({ color: '#8a8238', vertexColors: true, roughness: 0.62, metalness: 0.0, side: T.DoubleSide, emissive: '#1d1b08' });
   km.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
-    // (white-lit kelp at dusk: the drum's light from below, DESIGN.md §5.7)
-    sh.fragmentShader = 'uniform float uNightK;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += vec3(0.55, 0.52, 0.34) * uNightK * 0.55;');
+    // (white-lit kelp at dusk: the drum's light from below, DESIGN.md §5.7; stronger since art round 2 — with the glass's
+    // sunset haze gone the drums read as lit tanks of gold kelp, not pale water; the gold tips brightest)
+    sh.fragmentShader = 'uniform float uNightK;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += vec3(0.55, 0.52, 0.34) * uNightK * 0.95 * vColor.g;');
     sh.vertexShader = 'attribute float aK; attribute float aS; attribute float aA; attribute vec2 aC; uniform float uTime; uniform float uStream;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
   {
     // the ripple runs up the frond on UP (uStream +1), down it on DOWN (−1); DOWN also bows the top inward and down

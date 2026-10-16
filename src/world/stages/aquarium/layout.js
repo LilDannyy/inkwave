@@ -38,7 +38,7 @@ const C0 = [0, 0], EK = [25, 0], WK = [-25, 0];      // the court's centre, the 
 // blockout palette (DESIGN.md §5.4's colours, so the pictures already read as this place)
 const K = {
   terrazzo: '#d6cfc0', teak: '#8f7a63', render: '#ece6da', faience: '#9bb3a8', brass: '#b89a66', bronze: '#8a6a3c',
-  granite: '#55595d', glassblock: '#cfe0e0', seagreen: '#6e978a', gantry: '#4a6d6a', rock: '#bfc5c7', rockUp: '#cdd2d3', kelp: '#5b5a33',
+  granite: '#55595d', glassblock: '#cfe0e0', seagreen: '#6e978a', gantry: '#2c4f5c', rock: '#bfc5c7', rockUp: '#cdd2d3', kelp: '#5b5a33',
   coral: '#c99a8a', jelly: '#f2eefa', steel: '#7d8a90', sand: '#cdbb93', window: '#4f7480', crate: '#b59a72',
   kiosk: '#e8dcc4', concrete: '#bdb8ad', bund: '#a9a59b', spawn: '#eae6de', canopy: '#c6d3d1', stone: '#cfc8b8',
   walk: '#bcd2d2', plant: '#d8d2c6', pump: '#8f9a9c', planter: '#9aa57a', planterStone: '#bdb5a3',
@@ -126,8 +126,8 @@ for (const [a, t0, t1] of [[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -
 // (`hidden` since the art pass's round 1: props.js draws the eel head and its neck over them, like every other stand-in;
 // they stay solid, off-limits and unpainted — they had no paint before either)
 H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head', camHollow: true, hidden: true })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck', camHollow: true, hidden: true })));
-// the Feeding Gantry (a darker, bluer sea-green than the trims, K.gantry: at sunset #6e978a's sun faces went olive and
-// mustard and the crane outshouted the stage — LEAD-REVIEW art round 2): four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
+// the Feeding Gantry (a deep petrol sea-green, K.gantry #2c4f5c: at sunset #6e978a's sun faces went olive and mustard
+// and the crane outshouted the stage; in the orange light this one stays a dark grey-teal — LEAD-REVIEW art round 2): four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
 // pads the near legs then hid half the bathysphere), beams at 16.8–17.8, the winch house;
 // Bathysphere No. 1 hangs at 13.05–15.95 (drawn by props.js; this is its off-limits collider)
 H(B(4.4, 5.6, 0, 16.8, -11.6, -10.4, roofR(K.gantry, { tag: 'gantry-leg', pattern: PATTERN.metalpanel })), B(-5.6, -4.4, 0, 16.8, -11.6, -10.4, roofR(K.gantry, { tag: 'gantry-leg', pattern: PATTERN.metalpanel })));
