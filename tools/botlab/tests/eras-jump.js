@@ -64,6 +64,35 @@
       e0 === 1 && w && Math.abs(w[1] - 50) < 0.05 && dn && Math.abs(dn[1] - (60 + W.doneOff)) < 0.05 && E.era === 2 && W.navEra === 2,
       { before: [e0, p0], calls, after: E.state() });
     E.debugJump(1, { instant: true });
+    // the clock easing BACK (an online follower after a stalled host packet: StageClock t += dt + d·min(1, 3dt) walks back
+    // for a few frames when the host's clock arrives > 1/3 s behind): 0.9 s more time on the match clock just after the
+    // warning, and again just after the crates' flip — every event fires once and no group flips back
+    {
+      E.over = null;
+      const CTX = await import('./src/core/ctx.js'), ev = [], said = [], say = E._say.bind(E);
+      const offs = ['era:warn', 'era:jump', 'era:done', 'era:flip'].map((n) => CTX.on(n, (d) => ev.push([n, +E.S.clock.t.toFixed(3), d?.group, d?.on?.length || 0, d?.off?.length || 0])));
+      E._say = (t, s, b) => { said.push([t, +E.S.clock.t.toFixed(2)]); say(t, s, b); };
+      m.time = m.duration - 49.5; step(0.2);
+      const fl0 = E.stats.flipLog.length;
+      tAt(50.05);
+      const tA = E.S.clock.t; m.time += 0.9; const tr = [];
+      for (let i = 0; i < 40; i++) { step(1 / 60); tr.push(E.S.clock.t); }
+      // (the stage clock now runs 0.9 s behind the old track and converges on it: run on to the crates' flip by the
+      //  runtime's own time, not the raw clock)
+      const crate = blk('crates-stack'), Fc = 60 + W.groups[crate.eraG].rg / W.speed;
+      for (let k = 0; (E.tNow ?? E.S.clock.t) < Fc + 0.05 && k < 2400; k++) step(1 / 60);
+      const tB = E.S.clock.t, solidB = crate.solid; m.time += 0.9; const tr2 = []; let reSolid = false;
+      for (let i = 0; i < 40; i++) { step(1 / 60); tr2.push(E.S.clock.t); if (crate.solid) reSolid = true; }
+      tAt(60 + W.doneOff + 1.5);
+      offs.forEach((f) => f?.()); E._say = say;
+      const n = (k) => ev.filter((x) => x[0] === k).length, flips = ev.filter((x) => x[0] === 'era:flip'), log = E.stats.flipLog.slice(fl0);
+      const back = [+(tA - Math.min(...tr)).toFixed(3), +(tB - Math.min(...tr2)).toFixed(3)];
+      R('step 8: the runtime never runs backwards — the match clock pushed 0.9 s back just after the warning and again just after the crates\' flip (the stage clock walks back for a few frames): one era:warn, one era:jump, one era:done, the 8 groups flip once each (none flips back), "TIME JUMP" said once',
+        back[0] > 0.1 && back[1] > 0.1 && n('era:warn') === 1 && n('era:jump') === 1 && n('era:done') === 1 && flips.length === 8 && new Set(flips.map((x) => x[2])).size === 8 && log.length === 8 && log.every((x) => x.era === 2)
+          && !solidB && !reSolid && said.filter((x) => x[0] === 'TIME JUMP').length === 1 && E.era === 2,
+        { clockWentBack: back, warns: n('era:warn'), jumps: n('era:jump'), dones: n('era:done'), flips: flips.map((x) => `${x[2]} @${x[1]}`), crateSolidAfterFlip: solidB, crateBackSolid: reSolid, tB: +tB.toFixed(3), Fc: +Fc.toFixed(3), said });
+      E.debugJump(1, { instant: true });
+    }
   }
 
   // ------------------------------------------------------------------------------------------- flip
@@ -222,6 +251,31 @@
     }
     if (parts.includes('frames')) R('step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())', ft[ft.length - 1] < 50,
       { baselineNoJump: { max: +base[base.length - 1].toFixed(1), p95: +base[Math.floor(base.length * 0.95)].toFixed(1) }, baselineInking: base2.slice(0, 4).map((x) => [+x[0].toFixed(1), x[1]]), frames: ft.length, worst: top.sort((a, b) => b[0] - a[0]).slice(0, 4), baseMs: W.stats.baseMs.slice(-6), compileMs: W.stats.compileMs, max: +ft[ft.length - 1].toFixed(1), p95: +ft[Math.floor(ft.length * 0.95)].toFixed(1), median: +ft[ft.length >> 1].toFixed(1), setThemeMs: W.stats.setThemeMs, envFinalMs: W.stats.envFinalMs, eraUpdateMaxMs: +Math.max(...top.map((x) => x[4])).toFixed(2) });
+    if (parts.includes('frames')) {
+      // the same seen by a viewer whose minimap lost its cached era bases: an online player on Bravo (the side flip:
+      // main.js calls setViewerTeam(1) while the match loads) and a world kept for a match at another time of day (the
+      // theme). Each drop is rebuilt before the jump — the flip inside setViewerTeam, the theme by the next era update —
+      // so between J and done + 1 no base raster is built (W.stats.baseBuilds) and no frame passes 50 ms
+      const mm = g.minimap, th0 = g.theme, rows = [];
+      const jumpRun = (label, prep) => {
+        const b0 = W.stats.baseBuilds.length, info = prep();
+        const before = W.stats.baseBuilds.slice(b0), missing = W._basesMissing();
+        const to = E.era === 3 ? 1 : E.era + 1, Jx = E.debugJump(to, { inS: 0 }), b1 = W.stats.baseBuilds.length, fr = [];
+        while (E.S.clock.t < Jx.doneAt + 1.0) { const t0 = performance.now(); dbg.step(1000 / 60); fr.push([+(performance.now() - t0).toFixed(1), +(E.S.clock.t - Jx.at).toFixed(2)]); }
+        const during = W.stats.baseBuilds.slice(b1);
+        fr.sort((a, b) => b[0] - a[0]);
+        rows.push({ label, ...info, rebuiltBefore: before.map((x) => `${x.e}:${x.why} ${x.ms} ms`), missingAtJ: missing, jump: `${Jx.from}>${Jx.to}`, buildsJtoDone1: during, worst: fr.slice(0, 3) });
+      };
+      jumpRun('bravo', () => { mm.setViewerTeam(1); return { flip: mm.flip, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
+      jumpRun('theme', () => { mm.setViewerTeam(0); step(0.1); g.theme = th0 === 'sunset' ? 'golden' : 'sunset'; __G.env.setTheme?.(g.theme); step(4 / 60); return { theme: g.theme, mmTheme: mm._theme, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
+      g.theme = th0; __G.env.setTheme?.(th0); step(0.1);
+      R('step 8 (review fix 1): a viewer on Bravo (the minimap\'s side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1',
+        rows.length === 2 && rows.every((r) => !r.missingAtJ && r.cached === '123' && r.buildsJtoDone1.length === 0) && rows[0].flip === true && rows[0].rebuiltBefore.length === 2 && rows[1].rebuiltBefore.length >= 2,
+        rows);
+      // (the frame time of those two jumps: a timing, judged like the frames check above — flaky on a loaded machine)
+      R('step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms', rows.length === 2 && rows.every((r) => r.worst[0][0] < 50),
+        { worst: rows.map((r) => [r.label, r.worst]), baselineNoJumpMax: +base[base.length - 1].toFixed(1) });
+    }
   }
 
   // ------------------------------------------------------------------------------------------- modes (last: new matches)
@@ -244,6 +298,22 @@
     const p1 = E.era;
     E.S.clock.t = 179; E.seek(179, 'test'); tAt(184.5);
     R('step 8: Practice starts in era 1 and cycles: era 2 after the jump at 60 s … and back to the 1880s (the rewind) after 180 s', p0 === 1 && p1 === 2 && E.era === 1 && E.sched.cycle === 60, { p0, p1, p2: E.era });
+    // review fix 1, the load path: a match on the world kept from the last one, at another time of day — the minimap's
+    // theme drop and the era bases' rebuild happen while the match is set up (behind the faded screen), none once it plays
+    {
+      const mm0 = g.minimap, th0 = g.theme, time = /sunset|dusk/.test(String(th0)) ? 'day' : 'dusk', mmTheme0 = mm0._theme;   // (offline times: day / dusk)
+      const b0 = W.stats.baseBuilds.length;
+      dbg.unfreeze?.();
+      await g.api.startMatch({ mapId: 'bluestone', practice: true, time });
+      await waitPlaying(); dbg.freeze(); calm();
+      W = __G.eraWorld; E = g.match.eras;
+      const atLoad = W.stats.baseBuilds.slice(b0).map((x) => `${x.e}:${x.why} ${x.ms} ms @${x.t}`), missing0 = W._basesMissing(), b1 = W.stats.baseBuilds.length;
+      step(1.0);
+      const after = W.stats.baseBuilds.slice(b1);
+      R('step 8 (review fix 1): a match on the kept world at another time of day — the minimap takes the new theme and the other eras\' bases are rebuilt during the set-up, so none is missing or built once the match plays',
+        g.minimap === mm0 && g.theme !== th0 && mmTheme0 && mm0._theme === g.theme && atLoad.filter((x) => /:theme /.test(x)).length === 2 && !missing0 && after.length === 0,
+        { theme: [th0, g.theme], mmTheme: [mmTheme0, mm0._theme], keptWorld: g.minimap === mm0, atLoad, missingAtPlay: missing0, builtWhilePlaying: after });
+    }
   }
   return out;
 })()

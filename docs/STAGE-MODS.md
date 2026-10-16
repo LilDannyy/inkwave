@@ -242,7 +242,10 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
   test above). Key the first base yourself (`setBase(1, p1)` in `W.ready`); build the others in idle time
   (`setBase(2, p2); setBase(3, p3); setBase(1)`: ~0.1–0.3 s each), then swap at done (free). The viewer's side flip
   rebuilds the current base with the default test (keep `mapBlock` true to the live state: `!b.absent`) and drops the
-  cached ones, which the next `setBase` of their key rebuilds.
+  cached ones, which the next `setBase` of their key rebuilds, in that frame; so does a time-of-day change (`update`).
+  A module whose swaps must stay free rebuilds them when they drop: eras rebuilds at the side flip (it wraps the
+  instance's `setViewerTeam`; the flip comes while a match loads), takes a new theme at match set-up (`mm.update(0)`,
+  then the bases), and as a last resort rebuilds one per frame outside a jump (`W.stats.baseBuilds` logs each).
 - Live layer: `R.drawMap(c, mm, tc, s, hex, t, me)` every frame, after the zones / tower / devices, before the
   specials (the corner map, and the expanded map while aiming a strike).
 - The TAB map is the diorama (`ui/diorama.js`): the live scene from overhead, so the module's world looks show there as

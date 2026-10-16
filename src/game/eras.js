@@ -79,7 +79,9 @@ export class EraWorld {
     };
     this.era = 0; this.navEra = 0; this.envEra = 1; this.jumping = false;
     this.run = null; this.meshes = []; this.propMeshes = []; this.fx = null; this.mm = null; this.nav = null;
-    this.stats = { navMs: 0, mergeMs: 0, navBuilds: [], paintMs: 0, meshMs: 0, levelMs: 0, baseMs: [] };
+    // baseMs: every minimap base switch (a cached swap is ~0 ms); baseBuilds: the switches that had to BUILD a raster
+    // ({ e, ms, why, t }: t = the stage time, null outside a match) — a build between J and done + 1 is the hitch
+    this.stats = { navMs: 0, mergeMs: 0, navBuilds: [], paintMs: 0, meshMs: 0, levelMs: 0, baseMs: [], baseBuilds: [] };
     // era meshes sit out the GTAO override pass (it draws them without the collapse) while both eras' meshes are up
     this._aoGate = (r, s, c, g) => { g.drawRange.count = s.overrideMaterial && (this.jumping || this.warming) ? 0 : Infinity; };
     this.warming = false;
@@ -321,25 +323,67 @@ export class EraWorld {
     this.navEra = e;
   }
 
-  attachMinimap(mm) { this.mm = mm; }
+  attachMinimap(mm) {
+    this.mm = mm;
+    // The minimap drops every cached era base when the viewer's side flips (minimap.js setViewerTeam: they were drawn for
+    // the other side) or the time of day changes. Built lazily, the next done would pay a whole raster (~0.1 s) in one
+    // frame. A side flip comes only while a match loads (main.js, the screen faded out), so the other eras' bases are
+    // rebuilt right there; StageEras.update rebuilds any still missing (the theme's drop) before the next jump.
+    if (mm && typeof mm.setViewerTeam === 'function' && !Object.prototype.hasOwnProperty.call(mm, 'setViewerTeam')) {
+      const own = mm.setViewerTeam;
+      mm.setViewerTeam = (team) => { own.call(mm, team); if (G.eraWorld === this && this.mm === mm) this._ensureBases('side'); };
+    }
+  }
   mapBlock(b) { return !b.absent; }
   _present(e) { const bit = eraBit(e); return (b) => !b.dynamic && (b.presence ? (b.presence & bit) !== 0 : b.solid); }
-  _mapEra(e) {
+  _hasBase(e) { const mm = this.mm; return !!mm && ((mm._bases && mm._bases.has(e)) || (mm.baseKey === e && mm._built)); }
+  _mapEra(e, why = 'swap') {
     const mm = this.mm;
     if (!mm || !mm.setBase) return;
-    const t = now(); mm.setBase(e, this._present(e)); this.stats.baseMs.push(Math.round(now() - t));
+    const built = !this._hasBase(e), t = now();
+    mm.setBase(e, this._present(e));
+    const ms = Math.round(now() - t);
+    this.stats.baseMs.push(ms);
+    if (built) this._logBuild(e, ms, why);
   }
-  // the other eras' minimap bases, built in idle time while the world rests (setBase caches them; done swaps for free)
-  _prebuildBases() {
+  _logBuild(e, ms, why) { const R = this.run; this.stats.baseBuilds.push({ e, ms, why, t: R ? +R.tNow.toFixed(3) : null }); if (this.stats.baseBuilds.length > 400) this.stats.baseBuilds.shift(); }
+  // is an era's base missing from the minimap's cache (dropped by a side flip or a theme change)?
+  _basesMissing() {
+    const mm = this.mm;
+    if (!mm || !mm.setBase || !this.paint || !mm._built || mm.baseKey === undefined) return false;
+    for (const e of [1, 2, 3]) if (!this._hasBase(e)) return true;
+    return false;
+  }
+  // build the era bases the cache lacks now (at most `max` of them; the one on show stays: the minimap drew it for this
+  // side and theme), each with that era's dead cells; setBase caches them, so the done's swap is free. Returns how many
+  // it built.
+  _ensureBases(why = 'idle', max = 3) {
     const mm = this.mm, P = this.paint;
-    if (!mm || !P || !mm.setBase) return;
-    const cur = this.era;
+    if (!mm || !P || !mm.setBase || !mm._built) return 0;
+    const cur = mm.baseKey ?? this.era;
+    let n = 0;
     for (const e of [1, 2, 3]) {
-      if (e === cur || (mm._bases && mm._bases.has(e))) continue;
-      const save = P.dead; P.dead = this._deadFor(e);
+      if (n >= max) break;
+      if (e === cur || this._hasBase(e)) continue;
+      const t = now(), save = P.dead; P.dead = this._deadFor(e);
       try { mm.setBase(e, this._present(e)); } finally { P.dead = save; }
+      this._logBuild(e, Math.round(now() - t), why);
+      n++;
     }
-    mm.setBase(cur, this._present(cur));
+    if (n) mm.setBase(cur, this._present(cur));   // back to the base on show (cached by the first switch away)
+    return n;
+  }
+  // the other eras' minimap bases, built in idle time after the world build (ready)
+  _prebuildBases() { return this._ensureBases('load'); }
+  // A match set up on a world kept from the last one, at another time of day: the minimap would drop its cached bases in
+  // the match's first HUD frame (minimap.js update: a theme other than the one it drew) and the next frames would rebuild
+  // them during the intro. Let it take the new theme now, while the match is set up behind the faded screen, and build
+  // the bases here.
+  _syncTheme() {
+    const mm = this.mm, th = G.game?.theme || G.game?.mapDef?.theme || 'day';
+    if (!mm || typeof mm.update !== 'function' || !mm._theme || mm._theme === th) return 0;
+    mm.update(0);
+    return this._ensureBases('theme');
   }
 
   attachEnv(env) {
@@ -427,6 +471,7 @@ export class EraWorld {
   bakeMode(on) { if (!on) this.apply(this.audit || 1, { why: 'bake' }); }
 
   dispose() {
+    if (this.mm && Object.prototype.hasOwnProperty.call(this.mm, 'setViewerTeam')) delete this.mm.setViewerTeam;
     for (const m of this.meshes) { this.scene?.remove(m); m.geometry.dispose(); }
     this.meshes = []; this.propMeshes = [];
     this.fx?.dispose(); this.fx = null;
@@ -447,16 +492,24 @@ export class StageEras {
     this._jcache = new Map(); this._cyc = null;
     this.phase = 'idle'; this.cur = null; this.fresh = null; this._freshUntil = -1; this._pulseAt = -99;
     this.lastT = S.clock.t;
+    // The runtime never runs backwards between seeks. A follower's stage clock eases toward the host's (stageKit
+    // StageClock: t += dt + d·min(1, 3dt)), so a host packet more than 1/3 s behind (a stall, then a burst) walks it back
+    // for a few frames: flips and events follow the high-water mark _tHigh, and each (jump, event) fires once (_fired).
+    // A real snap (> 1 s) goes through seek(), which re-derives everything at the new time and resets both.
+    this._tHigh = S.clock.t; this._fired = new Map();
     // the starting era, before Zone Control / Tower Command / Boss Battle are built (BossNav sees era 2)
     const st = this.sched.start;
     if (W.era !== st || W.groups.some((g) => g.era !== st)) W.apply(st, { why: 'start', theme: true });
     else { W._setNavEra(st); W.looks(st, st, -1, 0, 0); }
+    if (!m.attract) W._syncTheme();
     this.chip = m.attract ? null : new EraHud(this);   // (not `hud`: R.hud is a registry hook name)
     emit('era:set', { era: st, instant: true, why: 'start' });
   }
   get plan() { return this.over || this.sched; }
-  get era() { return this.eraInForce(this.S.clock.t); }
-  get front() { const J = this.cur; return J && this.phase === 'jump' ? (this.S.clock.t - J.at) * this.W.speed : -1; }
+  // the runtime's time: the stage clock, never below what the world already shows (see _tHigh)
+  get tNow() { const t = this.S.clock.t; return t > this._tHigh ? t : this._tHigh; }
+  get era() { return this.eraInForce(this.tNow); }
+  get front() { const J = this.cur; return J && this.phase === 'jump' ? (this.tNow - J.at) * this.W.speed : -1; }
 
   // ---------------------------------------------------------------- the clock (pure functions of t)
   jumps(t) {
@@ -499,11 +552,11 @@ export class StageEras {
     return e;
   }
   eraInForce(t, list = this.jumps(t)) { let e = this.plan.start; for (const j of list) { if (t >= j.at + this.W.doneOff) e = j.to; else break; } return e; }
-  eraAtPoint(x, z) { return this.eraAt(Math.hypot(x, z), this.S.clock.t); }
+  eraAtPoint(x, z) { return this.eraAt(Math.hypot(x, z), this.tNow); }
   // the jump whose pre-bell … clear window holds t
   activeAt(t, list = this.jumps(t)) { for (const j of list) { if (t >= j.at - this.W.prebell && t < j.at + this.W.doneOff + 1) return j; if (j.at - this.W.prebell > t) break; } return null; }
   nextAt(t, list = this.jumps(t)) { for (const j of list) if (t < j.at + this.W.doneOff) return j; return null; }
-  get next() { const t = this.S.clock.t, j = this.nextAt(t); return j ? { from: j.from, to: j.to, at: j.at, inS: Math.max(0, j.at - t) } : null; }
+  get next() { const t = this.tNow, j = this.nextAt(t); return j ? { from: j.from, to: j.to, at: j.at, inS: Math.max(0, j.at - t) } : null; }
   present(b, t) { const g = this.W.groups[b.eraG]; return !g || hasEra(b.presence, this.eraAt(g.rg, t)); }
   // the ink guard (exact across screens: the painter's own clock rides a replayed splat, opts.et)
   inkOk(b, et) {
@@ -522,8 +575,11 @@ export class StageEras {
   splatTime(c, r) { const t = this.S.clock.t; return this.near(t) ? +t.toFixed(3) : undefined; }
 
   // ---------------------------------------------------------------- per frame
-  update(dt, t) {
+  update(dt, clockT) {
     const W = this.W, f0 = now();
+    // (a clock easing back a little holds the world where it is: monotonic between seeks)
+    const t = clockT > this._tHigh ? clockT : this._tHigh;
+    this._tHigh = t;
     const list = this.jumps(t);
     // every group to its era at this moment (a pure function of the clock): the front flips each when it reaches r_g
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
@@ -531,11 +587,16 @@ export class StageEras {
     if (t > this.lastT && t - this.lastT < 1.0) this._events(this.lastT, t, list);
     this.lastT = t;
     this._view(t, list);
+    // a minimap base still missing (a drop the load did not see: the time of day changed mid-match) is rebuilt outside a
+    // jump, one per frame (~0.1 s each): from J to done only cached bases are swapped
+    if (this.phase !== 'jump' && W._basesMissing()) W._ensureBases(this.m.state === 'playing' ? this.phase : this.m.state, 1);
     const ms = now() - f0;
     if (ms > this.stats.frameMax) this.stats.frameMax = ms;
   }
   seek(t, why = 'clock') {
     const W = this.W, list = this.jumps(t);
+    this._tHigh = t;
+    for (const [k, at] of this._fired) if (at > t) this._fired.delete(k);   // (what lies ahead again may fire again)
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
     const e = this.eraInForce(t, list);
     const A = this.activeAt(t, list);
@@ -552,8 +613,15 @@ export class StageEras {
       if (j.at - this.W.prebell > t1) break;
       const J = this._info(j), D = this.W.doneOff;
       const ev = [[J.prebellAt, 'prebell'], [J.warnAt, 'warn'], [J.at - 5, 'ring'], [J.at - 3, 'short'], [J.at - 2, 'short'], [J.at - 1, 'pickup'], [J.at, 'jump'], [J.at + D, 'done'], [J.at + D + 0.7, 'env'], [J.at + D + 1, 'clear']];
-      for (const [at, name] of ev) if (t0 < at && at <= t1) this._fire(name, J, t1);
+      for (const [at, name] of ev) {
+        if (!(t0 < at && at <= t1)) continue;
+        const key = `${J.from}>${J.to}@${J.at}:${name}:${at}`;   // (each (jump, event) once: 'short' fires at two times)
+        if (this._fired.has(key)) continue;
+        this._fired.set(key, at);
+        this._fire(name, J, t1);
+      }
     }
+    if (this._fired.size > 200) for (const [k, at] of this._fired) if (at < t1 - 300) this._fired.delete(k);
   }
   _say(text, sub, big) { this.S.callout(text, sub, big); }
   _snd(name, o = {}) { if (!this.m.attract) G.audio?.play?.(name, o); }
@@ -611,7 +679,7 @@ export class StageEras {
     }
   }
   _ring(J, n) {
-    this._ringAt = this.S.clock.t; this._ringLen = n === 'short' ? 0.4 : 1.6;
+    this._ringAt = this.tNow; this._ringLen = n === 'short' ? 0.4 : 1.6;
     emit('era:ring', { n, pos: [0, 6.6, 0] });
     this._snd('era_ring', { pos: new THREE.Vector3(0, 6.6, 0), volume: 1, n: n === 'short' ? 'short' : 'long' });
     // (the two kiosks nearest the camera ring aloud; the rest are too far to hear over Tartar)
@@ -878,7 +946,7 @@ export class StageEras {
   // ---------------------------------------------------------------- queries
   // on / in a piece that changes in the coming or running jump (from the warning to done)
   dangerAt(pos, pad = 0.5) {
-    const t = this.S.clock.t, A = this.activeAt(t);
+    const t = this.tNow, A = this.activeAt(t);
     if (!A || t < A.at - this.W.warn || t >= A.at + this.W.doneOff) return false;
     const J = this._info(A), L = this.W.level;
     for (const o of J.outlines) {
@@ -891,21 +959,21 @@ export class StageEras {
   }
   danger(pos, pad) { return this.dangerAt(pos, pad); }
   // the changing pieces' outlines (the minimap), from the warning to done
-  outlines() { const t = this.S.clock.t, J = this.cur; return J && t >= J.warnAt && t < J.at + this.W.doneOff ? J.outlines : []; }
+  outlines() { const t = this.tNow, J = this.cur; return J && t >= J.warnAt && t < J.at + this.W.doneOff ? J.outlines : []; }
   // per-era rest flags for Bazookarp (a node valid in the era in force and every later era of the match)
   restMask(state) { const nav = this.W.nav; if (!nav?.eraValid) return null; const e = state || this.era, out = new Uint8Array(nav.nodes.length); for (let i = 0; i < out.length; i++) { let ok = 1; for (let k = e; k <= 3; k++) if (!nav.eraValid[k - 1][i]) ok = 0; out[i] = ok; } return out; }
   goalWeight(id) { return this.fresh && this.fresh[id] ? 2 : 1; }
   drawMap(c, mm, tc, s, hex, t) { drawEraMap(this, c, mm, t); }
 
   state() {
-    const t = this.S.clock.t, nx = this.next, J = this.cur;
+    const t = this.tNow, nx = this.next, J = this.cur;
     return { era: this.era, phase: this.phase, from: J ? J.from : null, to: J ? J.to : null, t: +t.toFixed(3), next: nx, front: +this.front.toFixed(2),
       flips: this.stats.flips, navEra: this.W.navEra, turfTotal: this.W.paint?.turfTotal, eraShoves: this.stats.eraShoves, rescues: this.stats.rescues, devices: this.stats.devices };
   }
   // tests and audits only: a jump to `to` starting inS seconds from now (the warning and the pre-bell run if inS allows),
   // or the world put in `to` at once (instant)
   debugJump(to, { inS = 0, instant = false } = {}) {
-    const t = this.S.clock.t, from = this.era;
+    const t = this.tNow, from = this.era;
     if (instant) { this.over = { start: to, jumps: [] }; this.seek(t, 'debug'); return null; }
     const j = { from, to, at: +(t + inS).toFixed(4) };
     this.over = { start: from, jumps: [j] };
