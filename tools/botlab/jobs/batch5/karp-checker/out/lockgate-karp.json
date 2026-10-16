@@ -669,7 +669,7 @@
      "noExit": 0
     },
     "vault": {
-     "cand": 66,
+     "cand": 68,
      "tried": 18
     },
     "window": {
@@ -29134,37 +29134,37 @@
       },
       "events": [
        {
-        "t": 0,
+        "t": 0.1,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 5.9,
+        "t": 6,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 9.8,
+        "t": 9.9,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 9.8,
+        "t": 9.9,
         "k": "rate",
         "team": 0,
         "how": "zone"
        },
        {
-        "t": 10.1,
+        "t": 10.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 10.1,
+        "t": 10.2,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -29182,31 +29182,31 @@
         "how": ""
        },
        {
-        "t": 18.6,
+        "t": 18.7,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 18.6,
+        "t": 18.7,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 22.9,
+        "t": 23,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 22.9,
+        "t": 23,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 24.8,
+        "t": 24.9,
         "k": "rate",
         "team": 0,
         "how": "retreat"
@@ -29224,25 +29224,25 @@
         "how": ""
        },
        {
-        "t": 31.4,
+        "t": 31.5,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 31.4,
+        "t": 31.5,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 35.7,
+        "t": 35.8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 35.7,
+        "t": 35.8,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -29265,13 +29265,13 @@
         "how": ""
        },
        {
-        "t": 43.4,
+        "t": 43.5,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 43.4,
+        "t": 43.5,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -29307,19 +29307,19 @@
         "how": ""
        },
        {
-        "t": 54.5,
+        "t": 54.6,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 56.2,
+        "t": 56.3,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 56.2,
+        "t": 56.3,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -29395,7 +29395,7 @@
         ]
        },
        {
-        "t": 68.2,
+        "t": 68.3,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -29419,7 +29419,7 @@
         "how": ""
        },
        {
-        "t": 81.7,
+        "t": 81.8,
         "k": "end",
         "how": "knockout"
        }
@@ -29556,13 +29556,13 @@
       },
       "events": [
        {
-        "t": 0,
+        "t": 0.1,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 5.7,
+        "t": 5.8,
         "k": "rate",
         "team": 1,
         "how": "retreat"
@@ -29574,7 +29574,7 @@
         "how": "×1 "
        },
        {
-        "t": 9.2,
+        "t": 9.3,
         "k": "rate",
         "team": 1,
         "how": "zone"
@@ -29592,31 +29592,31 @@
         "how": ""
        },
        {
-        "t": 13.7,
+        "t": 13.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 13.7,
+        "t": 13.8,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 18,
+        "t": 18.1,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 18,
+        "t": 18.1,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 19.9,
+        "t": 20,
         "k": "rate",
         "team": 1,
         "how": "retreat"
@@ -29634,25 +29634,25 @@
         "how": ""
        },
        {
-        "t": 26.5,
+        "t": 26.6,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 26.5,
+        "t": 26.6,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 30.8,
+        "t": 30.9,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 30.8,
+        "t": 30.9,
         "k": "pickup",
         "team": 1,
         "how": ""
@@ -29670,48 +29670,48 @@
         "how": ""
        },
        {
-        "t": 35.7,
+        "t": 35.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 35.7,
+        "t": 35.8,
         "k": "reset",
         "how": "fall"
        },
        {
-        "t": 38.1,
+        "t": 38.2,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 40.3,
+        "t": 40.4,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 42.3,
+        "t": 42.4,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 42.3,
+        "t": 42.4,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 46.6,
+        "t": 46.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 46.6,
+        "t": 46.7,
         "k": "pickup",
         "team": 1,
         "how": ""
@@ -29723,43 +29723,43 @@
         "how": "retreat"
        },
        {
-        "t": 50.9,
+        "t": 51,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 50.9,
+        "t": 51,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 55.1,
+        "t": 55.2,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 55.1,
+        "t": 55.2,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 58,
+        "t": 58.1,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 59.4,
+        "t": 59.5,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 59.4,
+        "t": 59.5,
         "k": "pickup",
         "team": 1,
         "how": ""
@@ -29771,25 +29771,25 @@
         "how": "retreat"
        },
        {
-        "t": 63.7,
+        "t": 63.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 63.7,
+        "t": 63.8,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 64.7,
+        "t": 64.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 64.7,
+        "t": 64.8,
         "k": "drop",
         "team": 1,
         "how": "fall",
@@ -29800,19 +29800,19 @@
         ]
        },
        {
-        "t": 65.5,
+        "t": 65.6,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 65.6,
+        "t": 65.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 65.6,
+        "t": 65.7,
         "k": "drop",
         "team": 1,
         "how": "splat",
@@ -29823,19 +29823,19 @@
         ]
        },
        {
-        "t": 67.6,
+        "t": 67.7,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 73.4,
+        "t": 73.5,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 73.4,
+        "t": 73.5,
         "k": "plant",
         "team": 1,
         "how": ""
@@ -29847,7 +29847,7 @@
         "how": ""
        },
        {
-        "t": 81,
+        "t": 81.1,
         "k": "end",
         "how": "knockout"
        }
@@ -30126,7 +30126,7 @@
    "n": 16,
    "name": "The hop and gap edges, proved physically",
    "status": "FAIL",
-   "text": "492 added edges tried (66 hops, 426 gaps): 482 made, 10 not (0 hops, 0 gaps up / level, 10 gaps down) → hopVeto [[-4.5,3.05,-23.5,-4.5,0,-26.5],[-3.5,3.05,-23.5,-3.5,0,-26.5],[-3.5,3.05,-23.5,-0.5,0,-23.5],[3.5,3.05,23.5,0.5,0,23.5],[3.5,3.05,23.5,3.5,0,26.5],[4.5,3.05,23.5,4.5,0,26.5]] … 10; 2070 moves beyond the rules worth trying (> 10 m or into a ring; 28 high hops, 1850 long gaps, 174 rising gaps, 18 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 1666 made (26 / 1543 / 85 / 12: to #7d, and #7a when into a ring); 14 moves onto off-field ground worth trying (0 hops of 605 from up to two cells out, 14 jumps across air): 4 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 2507 takeoffs whose floor takes ink): 1660 made that the kid didn't (3 added edges, 1653 beyond the rules, 4 onto off-field ground), 11090 swim trials; climbs of ≤ 1.8 m tried as hops: 90 of 94 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 8/8 · 45377 trials, 80 s; walks 0 s; climb hops 275 trials",
+   "text": "492 added edges tried (66 hops, 426 gaps): 482 made, 10 not (0 hops, 0 gaps up / level, 10 gaps down) → hopVeto [[-4.5,3.05,-23.5,-4.5,0,-26.5],[-3.5,3.05,-23.5,-3.5,0,-26.5],[-3.5,3.05,-23.5,-0.5,0,-23.5],[3.5,3.05,23.5,0.5,0,23.5],[3.5,3.05,23.5,3.5,0,26.5],[4.5,3.05,23.5,4.5,0,26.5]] … 10; 2070 moves beyond the rules worth trying (> 10 m or into a ring; 28 high hops, 1850 long gaps, 174 rising gaps, 18 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 1666 made (26 / 1543 / 85 / 12: to #7d, and #7a when into a ring); 14 moves onto off-field ground worth trying (0 hops of 605 from up to two cells out, 14 jumps across air): 4 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 2507 takeoffs whose floor takes ink): 1660 made that the kid didn't (3 added edges, 1653 beyond the rules, 4 onto off-field ground), 11090 swim trials; climbs of ≤ 1.8 m tried as hops: 90 of 94 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 8/8 · 45377 trials, 72 s; walks 0 s; climb hops 275 trials",
    "nums": {
     "tried": 492,
     "failed": 10,
@@ -30232,7 +30232,7 @@
      "made": 1543
     },
     "vault": {
-     "cand": 66,
+     "cand": 68,
      "tried": 18,
      "made": 12
     },
@@ -30320,7 +30320,7 @@
      }
     ],
     "trials": 45377,
-    "ms": 79694,
+    "ms": 71940,
     "climbHops": {
      "tried": 94,
      "made": 90,
@@ -114562,25 +114562,25 @@
  },
  "ms": {
   "1": 2,
-  "2": 355,
-  "6": 1076,
-  "8": 1653,
-  "9": 1691,
-  "10": 1697,
-  "15": 1763,
-  "16": 81716,
-  "climbHops": 1059,
-  "routes": 1076,
-  "7d-low": 1168,
-  "7d": 1652,
-  "total": 81812
+  "2": 328,
+  "6": 932,
+  "8": 1440,
+  "9": 1475,
+  "10": 1480,
+  "15": 1535,
+  "16": 73672,
+  "climbHops": 917,
+  "routes": 931,
+  "7d-low": 1012,
+  "7d": 1439,
+  "total": 73737
  },
  "_climbHops": {
   "tried": 94,
   "made": 90,
   "proved": true,
   "trials": 275,
-  "ms": 700,
+  "ms": 586,
   "notMade": [
    [
     1.5,
@@ -115972,37 +115972,37 @@
    },
    "events": [
     {
-     "t": 0,
+     "t": 0.1,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 5.9,
+     "t": 6,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 9.8,
+     "t": 9.9,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 9.8,
+     "t": 9.9,
      "k": "rate",
      "team": 0,
      "how": "zone"
     },
     {
-     "t": 10.1,
+     "t": 10.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 10.1,
+     "t": 10.2,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -116020,31 +116020,31 @@
      "how": ""
     },
     {
-     "t": 18.6,
+     "t": 18.7,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 18.6,
+     "t": 18.7,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 22.9,
+     "t": 23,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 22.9,
+     "t": 23,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 24.8,
+     "t": 24.9,
      "k": "rate",
      "team": 0,
      "how": "retreat"
@@ -116062,25 +116062,25 @@
      "how": ""
     },
     {
-     "t": 31.4,
+     "t": 31.5,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 31.4,
+     "t": 31.5,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 35.7,
+     "t": 35.8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 35.7,
+     "t": 35.8,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -116103,13 +116103,13 @@
      "how": ""
     },
     {
-     "t": 43.4,
+     "t": 43.5,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 43.4,
+     "t": 43.5,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -116145,19 +116145,19 @@
      "how": ""
     },
     {
-     "t": 54.5,
+     "t": 54.6,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 56.2,
+     "t": 56.3,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 56.2,
+     "t": 56.3,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -116233,7 +116233,7 @@
      ]
     },
     {
-     "t": 68.2,
+     "t": 68.3,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -116257,7 +116257,7 @@
      "how": ""
     },
     {
-     "t": 81.7,
+     "t": 81.8,
      "k": "end",
      "how": "knockout"
     }
@@ -116394,13 +116394,13 @@
    },
    "events": [
     {
-     "t": 0,
+     "t": 0.1,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 5.7,
+     "t": 5.8,
      "k": "rate",
      "team": 1,
      "how": "retreat"
@@ -116412,7 +116412,7 @@
      "how": "×1 "
     },
     {
-     "t": 9.2,
+     "t": 9.3,
      "k": "rate",
      "team": 1,
      "how": "zone"
@@ -116430,31 +116430,31 @@
      "how": ""
     },
     {
-     "t": 13.7,
+     "t": 13.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 13.7,
+     "t": 13.8,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 18,
+     "t": 18.1,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 18,
+     "t": 18.1,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 19.9,
+     "t": 20,
      "k": "rate",
      "team": 1,
      "how": "retreat"
@@ -116472,25 +116472,25 @@
      "how": ""
     },
     {
-     "t": 26.5,
+     "t": 26.6,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 26.5,
+     "t": 26.6,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 30.8,
+     "t": 30.9,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 30.8,
+     "t": 30.9,
      "k": "pickup",
      "team": 1,
      "how": ""
@@ -116508,48 +116508,48 @@
      "how": ""
     },
     {
-     "t": 35.7,
+     "t": 35.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 35.7,
+     "t": 35.8,
      "k": "reset",
      "how": "fall"
     },
     {
-     "t": 38.1,
+     "t": 38.2,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 40.3,
+     "t": 40.4,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 42.3,
+     "t": 42.4,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 42.3,
+     "t": 42.4,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 46.6,
+     "t": 46.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 46.6,
+     "t": 46.7,
      "k": "pickup",
      "team": 1,
      "how": ""
@@ -116561,43 +116561,43 @@
      "how": "retreat"
     },
     {
-     "t": 50.9,
+     "t": 51,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 50.9,
+     "t": 51,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 55.1,
+     "t": 55.2,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 55.1,
+     "t": 55.2,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 58,
+     "t": 58.1,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 59.4,
+     "t": 59.5,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 59.4,
+     "t": 59.5,
      "k": "pickup",
      "team": 1,
      "how": ""
@@ -116609,25 +116609,25 @@
      "how": "retreat"
     },
     {
-     "t": 63.7,
+     "t": 63.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 63.7,
+     "t": 63.8,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 64.7,
+     "t": 64.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 64.7,
+     "t": 64.8,
      "k": "drop",
      "team": 1,
      "how": "fall",
@@ -116638,19 +116638,19 @@
      ]
     },
     {
-     "t": 65.5,
+     "t": 65.6,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 65.6,
+     "t": 65.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 65.6,
+     "t": 65.7,
      "k": "drop",
      "team": 1,
      "how": "splat",
@@ -116661,19 +116661,19 @@
      ]
     },
     {
-     "t": 67.6,
+     "t": 67.7,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 73.4,
+     "t": 73.5,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 73.4,
+     "t": 73.5,
      "k": "plant",
      "team": 1,
      "how": ""
@@ -116685,7 +116685,7 @@
      "how": ""
     },
     {
-     "t": 81,
+     "t": 81.1,
      "k": "end",
      "how": "knockout"
     }

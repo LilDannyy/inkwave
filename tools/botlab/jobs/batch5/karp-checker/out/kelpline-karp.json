@@ -29561,66 +29561,66 @@
       },
       "events": [
        {
-        "t": 0.2,
+        "t": 0,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 5,
+        "t": 4.8,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 8.1,
+        "t": 8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 8.1,
+        "t": 8,
         "k": "rate",
         "team": 0,
         "how": "zone"
        },
        {
-        "t": 8.4,
+        "t": 8.3,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 8.4,
+        "t": 8.3,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 9.2,
+        "t": 9.1,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 9.2,
+        "t": 9.1,
         "k": "reset",
         "how": "fall"
        },
        {
-        "t": 11.6,
+        "t": 11.5,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 12.4,
+        "t": 12.3,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 12.4,
+        "t": 12.3,
         "k": "drop",
         "team": 0,
         "how": "fall",
@@ -29631,19 +29631,19 @@
         ]
        },
        {
-        "t": 13.2,
+        "t": 13.1,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 13.3,
+        "t": 13.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 13.3,
+        "t": 13.2,
         "k": "drop",
         "team": 0,
         "how": "splat",
@@ -29654,31 +29654,31 @@
         ]
        },
        {
-        "t": 15.3,
+        "t": 15.1,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 20.5,
+        "t": 20.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 20.5,
+        "t": 20.4,
         "k": "plant",
         "team": 0,
         "how": ""
        },
        {
-        "t": 22,
+        "t": 21.8,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 27.3,
+        "t": 27.1,
         "k": "end",
         "how": "knockout"
        }
@@ -29815,7 +29815,7 @@
       },
       "events": [
        {
-        "t": 0,
+        "t": 0.1,
         "k": "pickup",
         "team": 1,
         "how": ""
@@ -29827,54 +29827,54 @@
         "how": "retreat"
        },
        {
-        "t": 7.7,
+        "t": 7.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 7.7,
+        "t": 7.8,
         "k": "rate",
         "team": 1,
         "how": "zone"
        },
        {
-        "t": 8,
+        "t": 8.1,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 8,
+        "t": 8.1,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 8.8,
+        "t": 8.9,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 8.8,
+        "t": 8.9,
         "k": "reset",
         "how": "fall"
        },
        {
-        "t": 11.2,
+        "t": 11.3,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 12,
+        "t": 12.1,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 12,
+        "t": 12.1,
         "k": "drop",
         "team": 1,
         "how": "fall",
@@ -29885,19 +29885,19 @@
         ]
        },
        {
-        "t": 12.8,
+        "t": 12.9,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 12.9,
+        "t": 13,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 12.9,
+        "t": 13,
         "k": "drop",
         "team": 1,
         "how": "splat",
@@ -29932,7 +29932,7 @@
         "how": ""
        },
        {
-        "t": 26.5,
+        "t": 26.6,
         "k": "end",
         "how": "knockout"
        }
@@ -30278,7 +30278,7 @@
    "n": 16,
    "name": "The hop and gap edges, proved physically",
    "status": "FAIL",
-   "text": "1714 added edges tried (40 hops, 1674 gaps): 1708 made, 6 not (0 hops, 2 gaps up / level, 4 gaps down) → hopVeto [[-39.5,1.3,-19.5,-42.5,0.77,-19.5],[-19.5,1.2,8.5,-22.5,0,8.5],[-19.5,1.2,8.5,-21.5,0,8.5],[-19.5,1.2,8.5,-21.5,0,9.5],[-18.5,1.2,9.5,-21.5,0,9.5],[39.5,1.3,19.5,42.5,0.77,19.5]]; 2127 moves beyond the rules worth trying (> 10 m or into a ring; 9 high hops, 2016 long gaps, 77 rising gaps, 25 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 2052 made (9 / 1941 / 77 / 25: to #7d, and #7a when into a ring); 508 moves onto off-field ground worth trying (25 hops of 529 from up to two cells out, 483 jumps across air): 494 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 4227 takeoffs whose floor takes ink): 1061 made that the kid didn't (1 added edges, 813 beyond the rules, 247 onto off-field ground), 3473 swim trials; climbs of ≤ 1.8 m tried as hops: 52 of 52 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 6/6 · 27313 trials, 57 s; walks 0 s; climb hops 75 trials",
+   "text": "1714 added edges tried (40 hops, 1674 gaps): 1708 made, 6 not (0 hops, 2 gaps up / level, 4 gaps down) → hopVeto [[-39.5,1.3,-19.5,-42.5,0.77,-19.5],[-19.5,1.2,8.5,-22.5,0,8.5],[-19.5,1.2,8.5,-21.5,0,8.5],[-19.5,1.2,8.5,-21.5,0,9.5],[-18.5,1.2,9.5,-21.5,0,9.5],[39.5,1.3,19.5,42.5,0.77,19.5]]; 2127 moves beyond the rules worth trying (> 10 m or into a ring; 9 high hops, 2016 long gaps, 77 rising gaps, 25 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 2052 made (9 / 1941 / 77 / 25: to #7d, and #7a when into a ring); 508 moves onto off-field ground worth trying (25 hops of 529 from up to two cells out, 483 jumps across air): 494 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 4227 takeoffs whose floor takes ink): 1061 made that the kid didn't (1 added edges, 813 beyond the rules, 247 onto off-field ground), 3473 swim trials; climbs of ≤ 1.8 m tried as hops: 52 of 52 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 6/6 · 27313 trials, 54 s; walks 0 s; climb hops 75 trials",
    "nums": {
     "tried": 1714,
     "failed": 6,
@@ -37790,7 +37790,7 @@
      }
     ],
     "trials": 27313,
-    "ms": 57313,
+    "ms": 54202,
     "climbHops": {
      "tried": 52,
      "made": 52,
@@ -162681,26 +162681,26 @@
   ]
  },
  "ms": {
-  "1": 3,
-  "2": 459,
-  "6": 811,
-  "8": 1566,
-  "9": 1609,
-  "10": 1614,
-  "15": 1725,
-  "16": 59533,
-  "climbHops": 786,
-  "routes": 807,
-  "7d-low": 912,
-  "7d": 1566,
-  "total": 59754
+  "1": 1,
+  "2": 473,
+  "6": 661,
+  "8": 1396,
+  "9": 1438,
+  "10": 1442,
+  "15": 1539,
+  "16": 55913,
+  "climbHops": 644,
+  "routes": 660,
+  "7d-low": 756,
+  "7d": 1396,
+  "total": 56097
  },
  "_climbHops": {
   "tried": 52,
   "made": 52,
   "proved": true,
   "trials": 75,
-  "ms": 313,
+  "ms": 168,
   "notMade": [],
   "madeAt": [
    [
@@ -165381,66 +165381,66 @@
    },
    "events": [
     {
-     "t": 0.2,
+     "t": 0,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 5,
+     "t": 4.8,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 8.1,
+     "t": 8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 8.1,
+     "t": 8,
      "k": "rate",
      "team": 0,
      "how": "zone"
     },
     {
-     "t": 8.4,
+     "t": 8.3,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 8.4,
+     "t": 8.3,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 9.2,
+     "t": 9.1,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 9.2,
+     "t": 9.1,
      "k": "reset",
      "how": "fall"
     },
     {
-     "t": 11.6,
+     "t": 11.5,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 12.4,
+     "t": 12.3,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 12.4,
+     "t": 12.3,
      "k": "drop",
      "team": 0,
      "how": "fall",
@@ -165451,19 +165451,19 @@
      ]
     },
     {
-     "t": 13.2,
+     "t": 13.1,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 13.3,
+     "t": 13.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 13.3,
+     "t": 13.2,
      "k": "drop",
      "team": 0,
      "how": "splat",
@@ -165474,31 +165474,31 @@
      ]
     },
     {
-     "t": 15.3,
+     "t": 15.1,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 20.5,
+     "t": 20.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 20.5,
+     "t": 20.4,
      "k": "plant",
      "team": 0,
      "how": ""
     },
     {
-     "t": 22,
+     "t": 21.8,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 27.3,
+     "t": 27.1,
      "k": "end",
      "how": "knockout"
     }
@@ -165635,7 +165635,7 @@
    },
    "events": [
     {
-     "t": 0,
+     "t": 0.1,
      "k": "pickup",
      "team": 1,
      "how": ""
@@ -165647,54 +165647,54 @@
      "how": "retreat"
     },
     {
-     "t": 7.7,
+     "t": 7.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 7.7,
+     "t": 7.8,
      "k": "rate",
      "team": 1,
      "how": "zone"
     },
     {
-     "t": 8,
+     "t": 8.1,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 8,
+     "t": 8.1,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 8.8,
+     "t": 8.9,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 8.8,
+     "t": 8.9,
      "k": "reset",
      "how": "fall"
     },
     {
-     "t": 11.2,
+     "t": 11.3,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 12,
+     "t": 12.1,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 12,
+     "t": 12.1,
      "k": "drop",
      "team": 1,
      "how": "fall",
@@ -165705,19 +165705,19 @@
      ]
     },
     {
-     "t": 12.8,
+     "t": 12.9,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 12.9,
+     "t": 13,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 12.9,
+     "t": 13,
      "k": "drop",
      "team": 1,
      "how": "splat",
@@ -165752,7 +165752,7 @@
      "how": ""
     },
     {
-     "t": 26.5,
+     "t": 26.6,
      "k": "end",
      "how": "knockout"
     }

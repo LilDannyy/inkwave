@@ -377,7 +377,7 @@
      "noExit": 0
     },
     "vault": {
-     "cand": 137,
+     "cand": 142,
      "tried": 27
     },
     "window": {
@@ -9044,7 +9044,7 @@
      {
       "probe": "vault",
       "a": [
-       6.5,
+       5.5,
        0.25,
        -23.5
       ],
@@ -9053,7 +9053,7 @@
        -0.09,
        -25.05
       ],
-      "gain": 14.5,
+      "gain": 15.5,
       "phys": true,
       "by": "kid"
      },
@@ -9102,6 +9102,22 @@
        -31.5
       ],
       "gain": 13.2,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -5.5,
+       0.25,
+       23.5
+      ],
+      "b": [
+       -3.5,
+       -0.09,
+       24.95
+      ],
+      "gain": 13,
       "phys": true,
       "by": "kid"
      },
@@ -9184,22 +9200,6 @@
       "gain": 12.2,
       "phys": true,
       "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -6.5,
-       0.25,
-       23.5
-      ],
-      "b": [
-       -3.5,
-       -0.09,
-       24.95
-      ],
-      "gain": 12,
-      "phys": true,
-      "by": "kid"
      },
      {
       "probe": "vault",
@@ -9686,11 +9686,11 @@
     },
     {
      "at": [
-      6.5,
+      5.5,
       0.25,
       -23.5
      ],
-     "what": "7d vault: gain 14.5 m",
+     "what": "7d vault: gain 15.5 m",
      "look": {
       "x": 3.5,
       "y": -0.09,
@@ -9698,7 +9698,7 @@
      },
      "move": [
       [
-       6.5,
+       5.5,
        0.25,
        -23.5
       ],
@@ -9786,11 +9786,11 @@
     },
     {
      "at": [
-      -6.5,
+      -5.5,
       0.25,
       23.5
      ],
-     "what": "7d vault: gain 12 m",
+     "what": "7d vault: gain 13 m",
      "look": {
       "x": -3.5,
       "y": -0.09,
@@ -9798,7 +9798,7 @@
      },
      "move": [
       [
-       -6.5,
+       -5.5,
        0.25,
        23.5
       ],
@@ -11675,7 +11675,7 @@
         },
         "repicked": true,
         "knockout": true,
-        "tGate": 8.1,
+        "tGate": 8.8,
         "w2": {
          "at": [
           -20.43,
@@ -11684,7 +11684,7 @@
          ],
          "ok": true,
          "end": true,
-         "t": 8.1,
+         "t": 8.9,
          "stuck": 0
         },
         "clamped": 0,
@@ -11745,18 +11745,18 @@
         "how": ""
        },
        {
-        "t": 13.3,
+        "t": 13.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 13.3,
+        "t": 13.4,
         "k": "reset",
         "how": "fall"
        },
        {
-        "t": 15.7,
+        "t": 15.8,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -11820,13 +11820,13 @@
         "how": ""
        },
        {
-        "t": 31.4,
+        "t": 31.5,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 31.4,
+        "t": 31.5,
         "k": "plant",
         "team": 0,
         "how": ""
@@ -11838,7 +11838,7 @@
         "how": ""
        },
        {
-        "t": 41,
+        "t": 41.7,
         "k": "end",
         "how": "knockout"
        }
@@ -11939,30 +11939,30 @@
        "main": {
         "picked": true,
         "plant": true,
-        "tWeir": 8.4,
+        "tWeir": 8.3,
         "w1": {
          "at": [
-          12.62,
+          12.63,
           0,
-          -24.27
+          -24.26
          ],
          "ok": true,
          "end": true,
-         "t": 8.2,
+         "t": 8.1,
          "stuck": 0
         },
         "repicked": true,
         "knockout": true,
-        "tGate": 8.6,
+        "tGate": 8.1,
         "w2": {
          "at": [
-          20.43,
+          20.4,
           1.3,
-          -58.32
+          -58.3
          ],
          "ok": true,
          "end": true,
-         "t": 8.6,
+         "t": 8.1,
          "stuck": 0
         },
         "clamped": 0,
@@ -12098,13 +12098,13 @@
         "how": ""
        },
        {
-        "t": 31.7,
+        "t": 31.6,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 31.7,
+        "t": 31.6,
         "k": "plant",
         "team": 1,
         "how": ""
@@ -12116,7 +12116,7 @@
         "how": ""
        },
        {
-        "t": 41.7,
+        "t": 41.1,
         "k": "end",
         "how": "knockout"
        }
@@ -12384,7 +12384,7 @@
    "n": 16,
    "name": "The hop and gap edges, proved physically",
    "status": "OK",
-   "text": "706 added edges tried (84 hops, 622 gaps): 706 made, 0 not; 746 moves beyond the rules worth trying (> 10 m or into a ring; 70 high hops, 451 long gaps, 198 rising gaps, 27 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 574 made (47 / 337 / 166 / 24: to #7d, and #7a when into a ring); 6 moves onto off-field ground worth trying (6 hops of 326 from up to two cells out, 0 jumps across air): 4 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 1386 takeoffs whose floor takes ink): 273 made that the kid didn't (0 added edges, 273 beyond the rules, 0 onto off-field ground), 3803 swim trials; climbs of ≤ 1.8 m tried as hops: 284 of 284 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 2/2 · 12841 trials, 28 s; walks 0 s; climb hops 436 trials",
+   "text": "706 added edges tried (84 hops, 622 gaps): 706 made, 0 not; 746 moves beyond the rules worth trying (> 10 m or into a ring; 70 high hops, 451 long gaps, 198 rising gaps, 27 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 574 made (47 / 337 / 166 / 24: to #7d, and #7a when into a ring); 6 moves onto off-field ground worth trying (6 hops of 326 from up to two cells out, 0 jumps across air): 4 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 1386 takeoffs whose floor takes ink): 273 made that the kid didn't (0 added edges, 273 beyond the rules, 0 onto off-field ground), 3803 swim trials; climbs of ≤ 1.8 m tried as hops: 284 of 284 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 2/2 · 12841 trials, 31 s; walks 0 s; climb hops 436 trials",
    "nums": {
     "tried": 706,
     "failed": 0,
@@ -12409,7 +12409,7 @@
      "made": 337
     },
     "vault": {
-     "cand": 137,
+     "cand": 142,
      "tried": 27,
      "made": 24
     },
@@ -12497,7 +12497,7 @@
      }
     ],
     "trials": 12841,
-    "ms": 27510,
+    "ms": 31307,
     "climbHops": {
      "tried": 284,
      "made": 284,
@@ -21538,7 +21538,7 @@
      {
       "kind": "vault",
       "a": [
-       6.5,
+       5.5,
        0.25,
        -23.5
       ],
@@ -21547,7 +21547,7 @@
        -0.09,
        -25.05
       ],
-      "gain": 14.5,
+      "gain": 15.5,
       "how": "jump 0.2 m before the rim",
       "by": "kid"
      },
@@ -21596,6 +21596,22 @@
        -31.5
       ],
       "gain": 13.2,
+      "how": "jump 0.2 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -5.5,
+       0.25,
+       23.5
+      ],
+      "b": [
+       -3.5,
+       -0.09,
+       24.95
+      ],
+      "gain": 13,
       "how": "jump 0.2 m before the rim",
       "by": "kid"
      },
@@ -21678,22 +21694,6 @@
       "gain": 12.2,
       "how": "swim-jump jump 0.5 m before the rim",
       "by": "swim"
-     },
-     {
-      "kind": "vault",
-      "a": [
-       -6.5,
-       0.25,
-       23.5
-      ],
-      "b": [
-       -3.5,
-       -0.09,
-       24.95
-      ],
-      "gain": 12,
-      "how": "jump 0.2 m before the rim",
-      "by": "kid"
      },
      {
       "kind": "vault",
@@ -64895,7 +64895,7 @@
    },
    {
     "a": [
-     6.5,
+     5.5,
      -23.5
     ],
     "b": [
@@ -64934,6 +64934,17 @@
     "b": [
      -20.5,
      -31.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -5.5,
+     23.5
+    ],
+    "b": [
+     -3.5,
+     25
     ],
     "find": true
    },
@@ -64989,17 +65000,6 @@
     "b": [
      -13.5,
      51.5
-    ],
-    "find": true
-   },
-   {
-    "a": [
-     -6.5,
-     23.5
-    ],
-    "b": [
-     -3.5,
-     25
     ],
     "find": true
    },
@@ -67047,25 +67047,25 @@
  },
  "ms": {
   "1": 2,
-  "2": 352,
-  "6": 1200,
-  "8": 1656,
-  "9": 1690,
-  "10": 1696,
-  "15": 2173,
-  "16": 30161,
-  "climbHops": 1183,
-  "routes": 1200,
-  "7d-low": 1279,
-  "7d": 1655,
-  "total": 30180
+  "2": 463,
+  "6": 2245,
+  "8": 2997,
+  "9": 3084,
+  "10": 3094,
+  "15": 3587,
+  "16": 35184,
+  "climbHops": 2193,
+  "routes": 2244,
+  "7d-low": 2397,
+  "7d": 2996,
+  "total": 35205
  },
  "_climbHops": {
   "tried": 284,
   "made": 284,
   "proved": true,
   "trials": 436,
-  "ms": 826,
+  "ms": 1723,
   "notMade": [],
   "madeAt": [
    [
@@ -67563,11 +67563,11 @@
    "i": 16,
    "check": 7,
    "at": [
-    6.5,
+    5.5,
     0.3,
     -23.5
    ],
-   "what": "7d vault: gain 14.5 m",
+   "what": "7d vault: gain 15.5 m",
    "look": [
     3.5,
     -0.1,
@@ -67575,7 +67575,7 @@
    ],
    "move": [
     [
-     6.5,
+     5.5,
      0.3,
      -23.5
     ],
@@ -67671,11 +67671,11 @@
    "i": 20,
    "check": 7,
    "at": [
-    -6.5,
+    -5.5,
     0.3,
     23.5
    ],
-   "what": "7d vault: gain 12 m",
+   "what": "7d vault: gain 13 m",
    "look": [
     -3.5,
     -0.1,
@@ -67683,7 +67683,7 @@
    ],
    "move": [
     [
-     -6.5,
+     -5.5,
      0.3,
      23.5
     ],
@@ -68571,7 +68571,7 @@
      },
      "repicked": true,
      "knockout": true,
-     "tGate": 8.1,
+     "tGate": 8.8,
      "w2": {
       "at": [
        -20.43,
@@ -68580,7 +68580,7 @@
       ],
       "ok": true,
       "end": true,
-      "t": 8.1,
+      "t": 8.9,
       "stuck": 0
      },
      "clamped": 0,
@@ -68641,18 +68641,18 @@
      "how": ""
     },
     {
-     "t": 13.3,
+     "t": 13.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 13.3,
+     "t": 13.4,
      "k": "reset",
      "how": "fall"
     },
     {
-     "t": 15.7,
+     "t": 15.8,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -68716,13 +68716,13 @@
      "how": ""
     },
     {
-     "t": 31.4,
+     "t": 31.5,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 31.4,
+     "t": 31.5,
      "k": "plant",
      "team": 0,
      "how": ""
@@ -68734,7 +68734,7 @@
      "how": ""
     },
     {
-     "t": 41,
+     "t": 41.7,
      "k": "end",
      "how": "knockout"
     }
@@ -68835,30 +68835,30 @@
     "main": {
      "picked": true,
      "plant": true,
-     "tWeir": 8.4,
+     "tWeir": 8.3,
      "w1": {
       "at": [
-       12.62,
+       12.63,
        0,
-       -24.27
+       -24.26
       ],
       "ok": true,
       "end": true,
-      "t": 8.2,
+      "t": 8.1,
       "stuck": 0
      },
      "repicked": true,
      "knockout": true,
-     "tGate": 8.6,
+     "tGate": 8.1,
      "w2": {
       "at": [
-       20.43,
+       20.4,
        1.3,
-       -58.32
+       -58.3
       ],
       "ok": true,
       "end": true,
-      "t": 8.6,
+      "t": 8.1,
       "stuck": 0
      },
      "clamped": 0,
@@ -68994,13 +68994,13 @@
      "how": ""
     },
     {
-     "t": 31.7,
+     "t": 31.6,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 31.7,
+     "t": 31.6,
      "k": "plant",
      "team": 1,
      "how": ""
@@ -69012,7 +69012,7 @@
      "how": ""
     },
     {
-     "t": 41.7,
+     "t": 41.1,
      "k": "end",
      "how": "knockout"
     }

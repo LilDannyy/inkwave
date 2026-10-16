@@ -17,7 +17,7 @@
    57.02,
    55.45
   ],
-  "s": 154,
+  "s": 111,
   "c2": {
    "LA": 57.02,
    "LB": 55.45,
@@ -122,7 +122,7 @@
     "made": 1620
    },
    "vault": {
-    "cand": 462,
+    "cand": 465,
     "tried": 66,
     "made": 66
    },
@@ -148,7 +148,7 @@
    "offMadeN": 69,
    "coyote": 53,
    "trials": 16334,
-   "ms": 47011,
+   "ms": 33592,
    "climbHops": {
     "tried": 11,
     "made": 11,
@@ -428,7 +428,7 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 462,
+    "cand": 465,
     "tried": 66
    },
    "window": {
@@ -436,6 +436,18 @@
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 0,
+    "long": 1672
+   },
+   "finds": {
+    "lowGap": 84,
+    "tallWall": 0,
+    "longDrop": 13,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 416,
    "climbShortcuts": 0
@@ -459,7 +471,7 @@
    51.96,
    51.95
   ],
-  "s": 103,
+  "s": 88,
   "c2": {
    "LA": 51.96,
    "LB": 51.95,
@@ -596,7 +608,7 @@
    "offMadeN": 494,
    "coyote": 151,
    "trials": 27313,
-   "ms": 57313,
+   "ms": 54202,
    "climbHops": {
     "tried": 52,
     "made": 52,
@@ -917,6 +929,18 @@
     "kid": 10.6,
     "swim": 19
    },
+   "cand": {
+    "high": 9,
+    "long": 2016
+   },
+   "finds": {
+    "lowGap": 10,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 2
+   },
    "drops": 1457,
    "climbShortcuts": 0
   }
@@ -940,7 +964,7 @@
    54.8,
    54.68
   ],
-  "s": 133,
+  "s": 121,
   "c2": {
    "LA": 54.8,
    "LB": 54.68,
@@ -1070,7 +1094,7 @@
    "offMadeN": 688,
    "coyote": 188,
    "trials": 44274,
-   "ms": 76823,
+   "ms": 77942,
    "climbHops": {
     "tried": 24,
     "made": 24,
@@ -1221,6 +1245,18 @@
     "kid": 10.6,
     "swim": 19
    },
+   "cand": {
+    "high": 0,
+    "long": 1753
+   },
+   "finds": {
+    "lowGap": 16,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
+   },
    "drops": 40,
    "climbShortcuts": 0
   }
@@ -1242,7 +1278,7 @@
    83.48,
    81.06
   ],
-  "s": 104,
+  "s": 71,
   "c2": {
    "LA": 83.48,
    "LB": 81.06,
@@ -1352,7 +1388,7 @@
    "coyote": 10,
    "offMade": [],
    "trials": 2056,
-   "ms": 5626,
+   "ms": 3671,
    "climbHops": {
     "tried": 58,
     "made": 58,
@@ -1811,6 +1847,18 @@
     "kid": 10.6,
     "swim": 19
    },
+   "cand": {
+    "high": 2,
+    "long": 53
+   },
+   "finds": {
+    "lowGap": 47,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
+   },
    "drops": 12,
    "climbShortcuts": 0
   }
@@ -1834,7 +1882,7 @@
    65.13,
    65.4
   ],
-  "s": 80,
+  "s": 77,
   "c2": {
    "LA": 65.13,
    "LB": 65.4,
@@ -1938,7 +1986,7 @@
     "made": 409
    },
    "vault": {
-    "cand": 274,
+    "cand": 288,
     "tried": 38,
     "made": 38
    },
@@ -1964,8 +2012,8 @@
    "offMadeN": 0,
    "coyote": 4,
    "offMade": [],
-   "trials": 3700,
-   "ms": 10112,
+   "trials": 3698,
+   "ms": 10075,
    "climbHops": {
     "tried": 0,
     "made": 0,
@@ -2488,7 +2536,7 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 274,
+    "cand": 288,
     "tried": 38
    },
    "window": {
@@ -2496,6 +2544,18 @@
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 15,
+    "long": 416
+   },
+   "finds": {
+    "lowGap": 0,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 140,
    "climbShortcuts": 0
@@ -2518,7 +2578,7 @@
    58.03,
    57.9
   ],
-  "s": 161,
+  "s": 131,
   "c2": {
    "LA": 58.03,
    "LB": 57.9,
@@ -2639,7 +2699,7 @@
     "made": 1543
    },
    "vault": {
-    "cand": 66,
+    "cand": 68,
     "tried": 18,
     "made": 12
    },
@@ -2727,7 +2787,7 @@
     }
    ],
    "trials": 45377,
-   "ms": 79694,
+   "ms": 71940,
    "climbHops": {
     "tried": 94,
     "made": 90,
@@ -3096,7 +3156,7 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 66,
+    "cand": 68,
     "tried": 18
    },
    "window": {
@@ -3104,6 +3164,18 @@
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 28,
+    "long": 1850
+   },
+   "finds": {
+    "lowGap": 4,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 22,
    "climbShortcuts": 0
@@ -3127,7 +3199,7 @@
    66.01,
    61.2
   ],
-  "s": 140,
+  "s": 84,
   "c2": {
    "LA": 66.01,
    "LB": 61.2,
@@ -3223,8 +3295,8 @@
      47.25
     ]
    ],
-   "beyond": 1028,
-   "beyondMade": 868,
+   "beyond": 1032,
+   "beyondMade": 872,
    "rise": {
     "tried": 871,
     "made": 742
@@ -3238,12 +3310,12 @@
     "made": 100
    },
    "vault": {
-    "cand": 104,
-    "tried": 29,
-    "made": 26
+    "cand": 125,
+    "tried": 33,
+    "made": 30
    },
    "swim": {
-    "takeoffs": 1695,
+    "takeoffs": 1697,
     "made": 91,
     "edges": 0,
     "beyond": 89,
@@ -3415,8 +3487,8 @@
      "by": "kid"
     }
    ],
-   "trials": 9486,
-   "ms": 23307,
+   "trials": 9500,
+   "ms": 19509,
    "climbHops": {
     "tried": 410,
     "made": 408,
@@ -3575,14 +3647,26 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 104,
-    "tried": 29
+    "cand": 125,
+    "tried": 33
    },
    "window": {
     "cells": 19,
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 0,
+    "long": 128
+   },
+   "finds": {
+    "lowGap": 11,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 9,
    "climbShortcuts": 0
@@ -3603,7 +3687,7 @@
    72.85,
    72.99
   ],
-  "s": 282,
+  "s": 215,
   "c2": {
    "LA": 72.85,
    "LB": 72.99,
@@ -3760,7 +3844,7 @@
     }
    ],
    "trials": 107952,
-   "ms": 232824,
+   "ms": 174788,
    "climbHops": {
     "tried": 371,
     "made": 371,
@@ -4177,6 +4261,18 @@
     "kid": 10.6,
     "swim": 19
    },
+   "cand": {
+    "high": 0,
+    "long": 5211
+   },
+   "finds": {
+    "lowGap": 18,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
+   },
    "drops": 28,
    "climbShortcuts": 0
   }
@@ -4244,8 +4340,8 @@
     "gapLevel": 2,
     "gapDown": 106
    },
-   "beyond": 578,
-   "beyondMade": 511,
+   "beyond": 580,
+   "beyondMade": 513,
    "rise": {
     "tried": 409,
     "made": 392
@@ -4259,17 +4355,17 @@
     "made": 99
    },
    "vault": {
-    "cand": 121,
-    "tried": 17,
-    "made": 16
+    "cand": 133,
+    "tried": 19,
+    "made": 18
    },
    "swim": {
-    "takeoffs": 2119,
-    "made": 237,
+    "takeoffs": 2121,
+    "made": 239,
     "edges": 38,
-    "beyond": 198,
+    "beyond": 200,
     "off": 1,
-    "trials": 3179
+    "trials": 3187
    },
    "lowGap": {
     "pairs": 217,
@@ -4556,8 +4652,8 @@
      "by": "kid"
     }
    ],
-   "trials": 11315,
-   "ms": 28092,
+   "trials": 11333,
+   "ms": 21705,
    "climbHops": {
     "tried": 226,
     "made": 226,
@@ -4981,14 +5077,26 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 121,
-    "tried": 17
+    "cand": 133,
+    "tried": 19
    },
    "window": {
     "cells": 19,
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 18,
+    "long": 134
+   },
+   "finds": {
+    "lowGap": 40,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 225,
    "climbShortcuts": 0
@@ -5010,7 +5118,7 @@
    64.82,
    64.82
   ],
-  "s": 109,
+  "s": 96,
   "c2": {
    "LA": 64.82,
    "LB": 64.82,
@@ -5052,8 +5160,8 @@
      9
     ]
    ],
-   "beyond": 530,
-   "beyondMade": 477,
+   "beyond": 532,
+   "beyondMade": 479,
    "rise": {
     "tried": 218,
     "made": 165
@@ -5067,12 +5175,12 @@
     "made": 301
    },
    "vault": {
-    "cand": 21,
-    "tried": 9,
-    "made": 9
+    "cand": 24,
+    "tried": 11,
+    "made": 11
    },
    "swim": {
-    "takeoffs": 824,
+    "takeoffs": 826,
     "made": 265,
     "edges": 0,
     "beyond": 265,
@@ -5092,8 +5200,8 @@
    },
    "offMadeN": 31,
    "coyote": 24,
-   "trials": 8227,
-   "ms": 13388,
+   "trials": 8230,
+   "ms": 19604,
    "climbHops": {
     "tried": 138,
     "made": 138,
@@ -5621,14 +5729,26 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 21,
-    "tried": 9
+    "cand": 24,
+    "tried": 11
    },
    "window": {
     "cells": 19,
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 2,
+    "long": 301
+   },
+   "finds": {
+    "lowGap": 4,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 52,
    "climbShortcuts": 0
@@ -5651,7 +5771,7 @@
    80.25,
    79.54
   ],
-  "s": 85,
+  "s": 80,
   "c2": {
    "LA": 80.25,
    "LB": 79.54,
@@ -5706,7 +5826,7 @@
     "made": 337
    },
    "vault": {
-    "cand": 137,
+    "cand": 142,
     "tried": 27,
     "made": 24
    },
@@ -5794,7 +5914,7 @@
     }
    ],
    "trials": 12841,
-   "ms": 27510,
+   "ms": 31307,
    "climbHops": {
     "tried": 284,
     "made": 284,
@@ -6158,7 +6278,7 @@
     "noExit": 0
    },
    "vault": {
-    "cand": 137,
+    "cand": 142,
     "tried": 27
    },
    "window": {
@@ -6166,6 +6286,18 @@
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 70,
+    "long": 451
+   },
+   "finds": {
+    "lowGap": 16,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
    },
    "drops": 14,
    "climbShortcuts": 0
@@ -6188,7 +6320,7 @@
    70.93,
    70.48
   ],
-  "s": 73,
+  "s": 61,
   "c2": {
    "LA": 70.93,
    "LB": 70.48,
@@ -6288,7 +6420,7 @@
    "coyote": 10,
    "offMade": [],
    "trials": 3553,
-   "ms": 12986,
+   "ms": 11172,
    "climbHops": {
     "tried": 91,
     "made": 91,
@@ -6769,6 +6901,18 @@
     "kid": 10.6,
     "swim": 19
    },
+   "cand": {
+    "high": 0,
+    "long": 113
+   },
+   "finds": {
+    "lowGap": 16,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 0
+   },
    "drops": 24,
    "climbShortcuts": 0
   }
@@ -6791,7 +6935,7 @@
    51.96,
    51.95
   ],
-  "s": 98,
+  "s": 95,
   "c2": {
    "LA": 51.96,
    "LB": 51.95,
@@ -6928,7 +7072,7 @@
    "offMadeN": 494,
    "coyote": 151,
    "trials": 27313,
-   "ms": 64693,
+   "ms": 62815,
    "climbHops": {
     "tried": 52,
     "made": 52,
@@ -7248,6 +7392,18 @@
     "m": 19,
     "kid": 10.6,
     "swim": 19
+   },
+   "cand": {
+    "high": 9,
+    "long": 2016
+   },
+   "finds": {
+    "lowGap": 10,
+    "tallWall": 0,
+    "longDrop": 0,
+    "highHop": 0,
+    "longGap": 0,
+    "climbOff": 2
    },
    "drops": 1457,
    "climbShortcuts": 0
