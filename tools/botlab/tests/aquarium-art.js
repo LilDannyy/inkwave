@@ -136,11 +136,12 @@
     });
     R('the touch pools\' dressing stands within 8.5 cm of the pool block or over it: nothing out on the dais', nOn > 2000 && far <= 0.085, { verts: nOn, farthest: +far.toFixed(3), at });
     // (b) the Reef Windows' reef and the touch pools' panels: one mesh (one draw call) for both halves — the reef lit (kind
-    // 0), the panels' water traced (kind 1: eight panels and four portholes), the lid lamps (kind 2) — with its own glow
+    // 0), the panels' water traced (kind 1: eight panels and four portholes), the lid lamps (kind 2), the clownfish circling
+    // their anemones (kind 3) — with its own glow
     let ex = null; G.scene.traverse((o) => { if (o.name === 'aq-exhibits') ex = o; });
-    const kinds = [0, 0, 0]; let reefN = 0;
+    const kinds = [0, 0, 0, 0]; let reefN = 0;
     if (ex) { const E = ex.geometry.attributes.aEx.array, P = ex.geometry.attributes.position.array; for (let i = 0, v = 0; i < E.length; i += 4, v++) { kinds[Math.round(E[i])]++; if (E[i] === 0 && Math.hypot(P[v * 3], P[v * 3 + 2]) > 30.5) reefN++; } }
-    R('the reef and the touch pools\' water are one mesh, both halves: a reef in both windows, eight panels and four portholes traced, the lid lamps, its own glow', !!ex && ex.material.customProgramCacheKey?.() === 'aq-exhibits1' && kinds[1] === 2 * (4 * 6 + 2 * 60) && kinds[2] > 0 && reefN > 50000 && typeof ex.material.userData.glow === 'number',
+    R('the reef and the touch pools\' water are one mesh, both halves: a reef in both windows, its clownfish, eight panels and four portholes traced, the lid lamps, its own glow', !!ex && ex.material.customProgramCacheKey?.() === 'aq-exhibits2' && kinds[1] === 2 * (4 * 6 + 2 * 60) && kinds[2] > 0 && kinds[3] > 1000 && reefN > 50000 && typeof ex.material.userData.glow === 'number',
       { kinds, reefVerts: reefN, tris: ex ? ex.geometry.attributes.position.count / 3 : 0 });
     // (c) the rays are eagle rays: their span about twice their body's length, a pale belly (seen from the tunnel floor)
     let sw = null; G.scene.traverse((o) => { if (o.name === 'aq-swimmers') sw = o; });

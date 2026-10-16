@@ -114,10 +114,10 @@ function eagleWing(T, top) {
   const poly = [...half, ...half.slice(1, -1).reverse().map(([x, z]) => [-x, z])];
   const ring = [];
   for (let i = 0; i < poly.length; i++) {
-    const a = poly[i], b = poly[(i + 1) % poly.length], n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.16));
+    const a = poly[i], b = poly[(i + 1) % poly.length], n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / 0.24));
     for (let k = 0; k < n; k++) ring.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n]);
   }
-  const NA = ring.length, NR = 3, P = [], idx = [];
+  const NA = ring.length, NR = 2, P = [], idx = [];
   P.push(0, top ? 0.075 : -0.05, 0);
   for (let r = 1; r <= NR; r++) for (let a = 0; a < NA; a++) {
     const t = r / NR, h = (top ? 0.075 : -0.05) * (1 - Math.pow(t, 1.6)) + (top ? 0.004 : -0.004);
@@ -139,7 +139,7 @@ function rayGeo(T) {
     { g: eagleWing(T, true), c: '#3b3c40', wing: true, shade: (x, y, z) => 1 + 0.5 * Math.min(1, Math.hypot(x, z)) },
     { g: eagleWing(T, false), c: '#ebe8e1', wing: true, shade: (x, y, z) => 0.82 + 0.18 * (1 - Math.min(1, Math.hypot(x, z * 1.4))) },
     // the duck-bill head lobe before the wings (white under, slate over)
-    { g: tx(new T.SphereGeometry(0.5, 8, 5), 0, -0.005, 0.5, 0, 0, 0, 0.24, 0.12, 0.3), c: '#ebe8e1', shade: (x, y) => (y > 0.004 ? 0.085 : 1) },
+    { g: tx(new T.SphereGeometry(0.5, 6, 4), 0, -0.005, 0.5, 0, 0, 0, 0.24, 0.12, 0.3), c: '#ebe8e1', shade: (x, y) => (y > 0.004 ? 0.085 : 1) },
     // the whip: a thin four-sided taper back from the tail root, 2.4 × the body's length
     { g: tx(new T.ConeGeometry(0.022, 1.9, 4), 0, 0, -1.3, -HP, 0, 0), c: '#2f3033', tail: true },
   ]);
@@ -155,14 +155,6 @@ function smallFishGeo(T) {
   return geoFrom(T, [
     { g: tx(new T.SphereGeometry(0.5, 7, 5), 0, 0, 0, 0, 0, 0, 0.16, 0.34, 0.5), c: '#ffffff', tail: true, shade: (x, y) => (y < -0.05 ? 1.15 : 0.92) },
     { g: tx(new T.ConeGeometry(0.12, 0.2, 4), 0, 0, -0.32, -HP, 0, 0, 0.3, 1, 1.4), c: '#ffffff', tail: true },
-  ]);
-}
-// a clownfish (fix round 3, the Reef Windows' anemones): orange, two white bands round it, an orange tail
-function clownGeo(T) {
-  return geoFrom(T, [
-    { g: tx(new T.SphereGeometry(0.5, 8, 6), 0, 0, 0, 0, 0, 0, 0.18, 0.36, 0.5), c: '#e2742c', tail: true, shade: (x, y) => (y < -0.06 ? 1.15 : 0.95) },
-    ...[[0.1, 0.84], [-0.1, 0.84]].map(([z, k]) => ({ g: tx(new T.CylinderGeometry(0.5, 0.5, 0.06, 10, 1, true), 0, 0, z, HP, 0, 0, 0.2 * k * 1.12, 1, 0.38 * k * 1.12), c: '#f4f1ea', tail: true })),
-    { g: tx(new T.ConeGeometry(0.12, 0.2, 4), 0, 0, -0.32, -HP, 0, 0, 0.3, 1, 1.4), c: '#d8682a', tail: true },
   ]);
 }
 function penguinGeo(T) {
@@ -280,20 +272,19 @@ export function buildFish(T, rnd, U) {
     const a = (-55 + rnd() * 50) * Math.PI / 180, amp = (4 + rnd() * 6) * Math.PI / 180;
     both(small, { p0: [0, 1.1 + rnd() * 1.9, 0, 30.9 + rnd() * 1.0], p1: [a, amp, 0.12 + rnd() * 0.12, rnd() * 6], p2: [0.08, 0.8, 0.3 + rnd() * 0.18, 1.3], p3: [0, 0, 0, 0], c: reefC[i % reefC.length] });
   }
-  // (fix round 3: a fuller reef — more reef fish on their own seed, so every earlier swimmer keeps its path, and two or
-  // three clownfish hovering in each of the reef's anemones)
-  const r2 = mulberry(5150), clowns = [];
-  for (let i = 0; i < 18; i++) {
+  // (fix round 3: a fuller reef — ten more reef fish per window on their own seed, so every earlier swimmer keeps its path;
+  // every swimmer runs every kind's vertices, so the count stays modest; the clownfish in the reef's anemones are the
+  // exhibits' own (buildExhibits): a kind here would add its vertices to every swimmer)
+  const r2 = mulberry(5150);
+  for (let i = 0; i < 10; i++) {
     const a = (-56 + r2() * 52) * Math.PI / 180, amp = (3 + r2() * 5) * Math.PI / 180;
     both(small, { p0: [0, 0.9 + r2() * 2.2, 0, 30.8 + r2() * 1.1], p1: [a, amp, 0.1 + r2() * 0.14, r2() * 6], p2: [0.06, 0.9, 0.26 + r2() * 0.2, 1.3], p3: [0, 0, 0, 0], c: reefC[(i + 3) % reefC.length] });
   }
-  for (const an of reefPlan().anemones) for (let k = 0; k < (an.n || 2); k++) both(clowns, { p0: [an.x, an.y + 0.06 + 0.07 * k, an.z, 0.1 + 0.06 * k], p1: [r2() * 6.28, 0, (k % 2 ? -1 : 1) * (0.7 + 0.4 * r2()), r2() * 6], p2: [0.03, 1.6, 0.36, 1.5], p3: [0, 0, 0.25, 0] });
   return [
     { geo: sharkGeo(T), list: sharks, wing: 1.8 },
     { geo: rayGeo(T), list: rays, wing: 1.8 },
     { geo: turtleGeo(T), list: turtles, wing: 1.8 },
     { geo: smallFishGeo(T), list: small, wing: 1.8 },
-    { geo: clownGeo(T), list: clowns, wing: 1.8 },
   ];
 }
 // every swimmer (the fish and the penguins) in one mesh
@@ -588,7 +579,8 @@ export function buildKrill(T, U, rnd) {
 // within": its glow is userData.glow, which the glow probe switches off to measure it); the touch pools' panels traced in
 // the shader — the eye ray runs into a box of clear water behind the acrylic: sand with sea stars, urchins and anemones on
 // it, rock walls, the bright rippling surface overhead, the water between thickening with distance — and the creatures
-// pressed to each panel's glass, real geometry lit like the reef. Kinds (aEx.x): 0 lit, 1 traced, 2 self-lit (the lid lamp).
+// pressed to each panel's glass, real geometry lit like the reef. Kinds (aEx.x): 0 lit, 1 traced, 2 self-lit (the lid lamp),
+// 3 a clownfish (lit, circling its anemone in the vertex shader).
 // The reef: DESIGN.md §5.1 / §5.4 — staghorn, sea fans, table and brain corals, sponges, anemones with clownfish, rock, on
 // the near half of the sand (r 30.75 … 31.3) with rock, fans and staghorn behind, in the half-saturated coral palette; the
 // moray in its pipe and the octopus in its den (from arch.js: they were lit like the hall outside, grey through the water)
@@ -662,6 +654,8 @@ class ExB {
     for (let i = from; i < n; i += 3) { this.p.push(-this.p[i], this.p[i + 1], -this.p[i + 2]); this.n.push(-this.n[i], this.n[i + 1], -this.n[i + 2]); }
     const nc = this.c.length; for (let i = from; i < nc; i++) this.c.push(this.c[i]);
     for (let i = (from / 3) * 4; i < (n / 3) * 4; i++) { this.e.push(this.e[i]); this.e2.push(this.e2[i]); }
+    // (a clownfish's orbit centre turns with it)
+    for (let i = (n / 3) * 4; i < this.e.length; i += 4) if (this.e[i] > 2.5) { this.e2[i] = -this.e2[i]; this.e2[i + 1] = -this.e2[i + 1]; }
   }
   geo() {
     const T = this.T, g = new T.BufferGeometry();
@@ -709,7 +703,7 @@ function staghorn(T, X, m, seed, c, s) {
 // a sea fan (a gorgonian): a flat fan of lace in the local x-y plane, facing the glass — a solid web with a wavy rim, darker
 // veins branching up through it and a mottled pale lace between them (both faces); its stalk
 function seaFan(T, X, m, seed, c, s) {
-  const rnd = mulberry(seed), base = lin(T, c), H = 0.75 * s, Wd = 0.55 * s, NA = 14, NR = 6, P = [], Cc = [];
+  const rnd = mulberry(seed), base = lin(T, c), H = 0.75 * s, Wd = 0.55 * s, NA = 10, NR = 4, P = [], Cc = [];
   const ph = rnd() * 6.28, rim = (u) => 1 + 0.07 * Math.sin(u * 9 + ph) + 0.05 * Math.sin(u * 23 + ph * 2);
   const at = (u, t) => { const a = (u - 0.5) * 1.95, R = t * rim(u); return [Math.sin(a) * Wd * R, 0.06 * s + H * R * Math.cos(a * 0.55)]; };
   const vein = (u, t) => { const k = Math.abs(Math.sin((u * (5 + 4 * t)) * Math.PI + Math.sin(t * 5 + ph))); return k < 0.18 ? 0.62 : 1.0 + 0.12 * Math.sin(u * 61 + t * 43 + ph); };
@@ -751,7 +745,7 @@ function reefPiece(T, X, it) {
     case 'rock': X.add(rockG(T, it.seed, 1), X.M(0, it.h * 0.22, 0, it.seed, 0.62 * s, it.h * 0.8, 0.44 * s).premultiply(m), rock(it.seed, it.c)); break;
     case 'brain': {
       const r = 0.24 * s, b = lin(T, it.k === 'brain' ? (it.seed % 2 ? '#c4b48a' : '#c9ab86') : it.c);
-      X.add(new T.SphereGeometry(r, 18, 9, 0, Math.PI * 2, 0, Math.PI / 2), X.M(0, -0.02, 0, 0, 1, 0.72, 1).premultiply(m), (lp) => mul(b, 0.8 + 0.22 * Math.sin(lp.x * 46 + Math.sin(lp.z * 38) * 2.2 + lp.y * 20)));
+      X.add(new T.SphereGeometry(r, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2), X.M(0, -0.02, 0, 0, 1, 0.72, 1).premultiply(m), (lp) => mul(b, 0.8 + 0.22 * Math.sin(lp.x * 46 + Math.sin(lp.z * 38) * 2.2 + lp.y * 20)));
       break;
     }
     case 'table': {
@@ -845,6 +839,18 @@ export function buildExhibits(T, U, TOUCH) {
     X.ex = [0, REEF.lid, 0, 0];
   }
   for (const it of reefPlan().items) reefPiece(T, X, it);
+  // the clownfish: two or three hovering in each anemone, circling it in the vertex shader (kind 3: aEx2 = the orbit's
+  // centre, its rate, its phase), orange with two white bands
+  { const rnd = mulberry(5151), orange = lin(T, '#e2742c'), white = lin(T, '#f4f1ea'), tailC = lin(T, '#d8682a');
+    for (const an of reefPlan().anemones) for (let k = 0; k < (an.n || 2); k++) {
+      const R = 0.1 + 0.06 * k, w = (k % 2 ? -1 : 1) * (0.7 + 0.4 * rnd()), ph = rnd() * 6.28, y = an.y + 0.06 + 0.07 * k, sc = 0.36;
+      X.ex = [3, REEF.lid, 0, 0]; X.ex2 = [an.x, an.z, w, ph];
+      const f = X.M(an.x + R, y, an.z, w > 0 ? 0 : Math.PI, sc);
+      X.add(new T.SphereGeometry(0.5, 6, 4).scale(0.18, 0.36, 0.5), f, (lp) => mul(orange, lp.y < -0.06 ? 1.15 : 0.95));
+      for (const z of [0.1, -0.1]) X.add(new T.CylinderGeometry(0.5, 0.5, 0.06, 8, 1, true).rotateX(Math.PI / 2).scale(0.2 * 0.94, 0.38 * 0.94, 1).translate(0, 0, z), f, white);
+      X.add(new T.ConeGeometry(0.12, 0.2, 4).rotateX(-Math.PI / 2).scale(0.3, 1, 1.4).translate(0, 0, -0.32), f, tailC);
+    }
+    X.ex = [0, REEF.lid, 0, 0]; X.ex2 = [0, 0, 0, 0]; }
   X.twin(0);
   // ---- the touch pools' panels: the traced plane in each window (kind 1), what is pressed to the glass (kind 0, lit by
   // the pool's own light: its top at 2.0)
@@ -877,8 +883,15 @@ export function buildExhibits(T, U, TOUCH) {
   Object.defineProperty(mat.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uNightE = U.uNight; sh.uniforms.uGlowE = uGlow; sh.uniforms.uTE = U.uFT;
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 aEx; attribute vec4 aEx2; varying vec3 vWE; varying vec3 vNE; varying vec4 vEx; varying vec4 vEx2;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWE = (modelMatrix * vec4(transformed, 1.0)).xyz; vNE = normalize(mat3(modelMatrix) * normal); vEx = aEx; vEx2 = aEx2;');
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 aEx; attribute vec4 aEx2; uniform float uTE; varying vec3 vWE; varying vec3 vNE; varying vec4 vEx; varying vec4 vEx2;')
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+  vec3 nrmE = normal;
+  if (aEx.x > 2.5) {   // a clownfish circling its anemone
+    float a = aEx2.z * uTE + aEx2.w, cs = cos(a), sn = sin(a); vec2 d = transformed.xz - aEx2.xy;
+    transformed.xz = aEx2.xy + vec2(cs * d.x - sn * d.y, sn * d.x + cs * d.y); transformed.y += 0.025 * sin(uTE * 1.7 + aEx2.w * 3.0);
+    nrmE.xz = vec2(cs * nrmE.x - sn * nrmE.z, sn * nrmE.x + cs * nrmE.z);
+  }
+  vWE = (modelMatrix * vec4(transformed, 1.0)).xyz; vNE = normalize(mat3(modelMatrix) * nrmE); vEx = aEx; vEx2 = aEx2;`);
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
 varying vec3 vWE; varying vec3 vNE; varying vec4 vEx; varying vec4 vEx2; uniform float uNightE; uniform float uGlowE; uniform float uTE;
 float eH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -891,9 +904,9 @@ float eCaus(vec2 p, float t) {   // a soft web of caustic light, 0 … 1
   {
     vec3 nE = normalize(vNE);
     vec3 warm = mix(vec3(1.0), vec3(1.0, 0.92, 0.8), uNightE);
-    if (vEx.x > 1.5) {          // the lid lamp
+    if (vEx.x > 1.5 && vEx.x < 2.5) {   // the lid lamp
       diffuseColor.rgb *= mix(0.8, 1.0, uNightE) * mix(1.0, uGlowE, uNightE);
-    } else if (vEx.x > 0.5) {   // a touch pool's water, traced behind its panel
+    } else if (vEx.x > 0.5 && vEx.x < 1.5) {   // a touch pool's water, traced behind its panel
       vec3 rt = normalize(cross(vec3(0.0, 1.0, 0.0), nE)), rd = normalize(vWE - cameraPosition);
       vec3 dd = vec3(dot(rd, rt), rd.y, dot(rd, nE));
       vec2 p0 = vEx.zw; float D = vEx.y, vF = vEx2.x, vS = vEx2.y, hx = vEx2.z, sd = vEx2.w;
@@ -930,7 +943,7 @@ float eCaus(vec2 p, float t) {   // a soft web of caustic light, 0 … 1
       float fr = pow(1.0 - abs(dd.z), 4.0), hl = smoothstep(0.07, 0.0, abs(fract((p0.x + p0.y * 0.8) * 0.9 + 0.3) - 0.5));
       col = mix(col, vec3(0.5, 0.56, 0.6) * mix(1.0, 0.35, uNightE), clamp(0.35 * fr + 0.06 * hl, 0.0, 0.5));
       diffuseColor.rgb = col;
-    } else {                    // lit from the lid
+    } else {                    // lit from the lid (the reef, the pressed creatures, the clownfish)
       float up = max(nE.y, 0.0), dep = clamp((vEx.y - vWE.y) / 2.8, 0.0, 1.0);
       float cs = mix(1.0, 0.88 + 0.24 * eCaus(vWE.xz * 1.7, uTE), up);
       float Ld = (0.5 + 0.6 * up * (1.0 - 0.45 * dep) + 0.22 * (1.0 - dep) + 0.06 * max(-nE.y, 0.0)) * cs;
@@ -939,7 +952,7 @@ float eCaus(vec2 p, float t) {   // a soft web of caustic light, 0 … 1
     }
   }`);
   };
-  mat.customProgramCacheKey = () => 'aq-exhibits1';
+  mat.customProgramCacheKey = () => 'aq-exhibits2';
   const mesh = new T.Mesh(X.geo(), mat);
   mesh.name = 'aq-exhibits'; mesh.castShadow = false; mesh.receiveShadow = false;
   return mesh;
