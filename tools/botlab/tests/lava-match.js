@@ -99,7 +99,11 @@
   const LT = S.lookTeam || [0, 0], LL = S.lookLong || [0, 0];
   // (fix round 3: the check tests what its name says — ≥ 1 s on a lookout at HIGH by a long-range kit, lookLong; it read
   // lookTeam, any kit, and passed a match with lookLong [0, 0])
-  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)', LL[0] + LL[1] >= 1, { lookTeam: LT.map(r1), lookLong: LL.map(r1), claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0), log: S.lookLog || [] });
+  // (fix round 4: in a match with no long-range kit at all — the lookout's kinds, lava.js LOOKOUT_KINDS — there is nobody to
+  // test: the check says so and passes; a Zone Control match of twins / shooters / brollies / blades held both lookouts
+  // 47 / 67 s with mid-range claimants and failed it)
+  const LONG = new Set(['charger', 'splatling', 'spinner', 'bow']), longKits = m.actors.filter((a) => a.bot && LONG.has(a.weapon?.kind)).map((a) => [a.team, a.weapon.kind]);
+  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)', LL[0] + LL[1] >= 1 || !longKits.length, { lookTeam: LT.map(r1), lookLong: LL.map(r1), longKits, applies: longKits.length > 0, claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0), log: S.lookLog || [] });
   R('the match', true, { mode: MODE, simT: r1(simT), wallS: r1((performance.now() - t0) / 1000), state: m.state, cov, winner: m.result?.winner ?? null, phaseAtEnd: L.st.phase, yAtEnd: L.y });
   return out;
 })();
