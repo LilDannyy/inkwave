@@ -79,8 +79,8 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
     210 → 178 s (zones are taken and held sooner), captures 6.1 → 6.6, lead changes 0.47 → 0.65, first takes unchanged,
     disputed time unchanged (4.0 vs 3.9 %: an earlier "more contested" reading was an artefact of each code's own warn
     line). A late run-away seen in one 16-match sample reversed in the next; the margin difference is within noise
-    (35.0 ± 4.1 vs 42.1 ± 5.4), and a trailer's late take now costs the leader a bigger penalty (21.6 vs 13.8), the
-    opposite of a snowball. Only knockouts 7/40 vs 2/40 remain lopsided (p ≈ 0.15): watch them in the consolidated
+    (35.0 ± 4.1 vs 42.1 ± 5.4); the penalty a trailer's late take hands the leader is bigger (21.6 vs 13.8), which
+    means the leader gets further in each stint before it is taken back and pays for it in proportion. Only knockouts 7/40 vs 2/40 remain lopsided (p ≈ 0.15): watch them in the consolidated
     pass with a larger n; no change to the penalty or the flip hold.
 30. **Scrap Sentry: no buff.** 0.25 (Turf) / 0.12 (Zones) splats per use, 8× any other sub, while locked on only
     3.7 / 7.2 % of its life; bot placement is being improved in the polish, its numbers are not.
