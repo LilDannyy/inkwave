@@ -154,7 +154,7 @@
     Kp.count = [41, 63]; Kp.reachT = [120, 90]; Kp.touched = true; Kp.lastCarrier = { team: 0, how: 'splat', left: 6 };
     put(me, clearSpot(P.x - 1, P.z + dz * 9, null, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI);
     B.forEach((b, i) => put(b, spot(P.x + (i - 1.5) * 3, P.z + dz * 7, P.y)));
-    step(0.05); step(3.2); follow(); calm();
+    step(0.05); step(3.2); follow(); calm(); g.hud.countLayer?.replaceChildren();   // ([karp-face] the last-ten count's "1": the stepped clock made it fresh; in play it has faded by then)
     g.hud.karp._say('OVERTIME!', { team: 0, sub: 'Stop them — 10 s to hold!', icon: (await import('./src/ui/hud-karp.js')).KARP_GLYPH });
   });
   add('hud-fuse-low', () => {

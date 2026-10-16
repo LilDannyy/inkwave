@@ -151,7 +151,7 @@ export class Bazookarp {
   // ================================================================== per frame (Match.update, before the actors move)
   update(dt) {
     if (this.winner != null) return;
-    this.clock += dt;
+    this.clock += dt; this._dt = dt;
     const own = this._ownActors();
     // ---- every screen: its own players
     this.shell.update(dt, own, this.host);
@@ -257,8 +257,11 @@ export class Bazookarp {
       if (!this.canPick(a)) continue;
       // [karp-face] each claim carries how long after it went free ON THE CLAIMANT'S OWN SCREEN it was touched (since):
       // the host orders claims by it, so a guest who heard of the burst one trip late, and whose claim arrives a trip
-      // later still, races the host's own actors fairly (§7.3; the review measured a host bot winning 10 / 10)
-      const since = Math.max(0, this.clock - this.freeT0);
+      // later still, races the host's own actors fairly (§7.3; the review measured a host bot winning 10 / 10). Timed
+      // where the positions are — the end of the last frame (this runs before the actors move: the clock is a frame on)
+      // — less the overshoot past pickR at its speed: a screen at 20 fps no longer touches a frame later than one at 60
+      const v = Math.hypot(a.vel.x, a.vel.z), back = v > 0.5 ? Math.min(0.05, (K.pickR - Math.hypot(a.pos.x - this.pos.x, a.pos.z - this.pos.z)) / v) : 0;
+      const since = Math.max(0, this.clock - (this._dt || 0) - this.freeT0 - back);
       if (this.host) { if (!this.claims.some((c) => c.a === a)) this.claims.push({ a, ts: this.wire.now(), since, at: this.clock, p: a.pos.clone() }); }
       else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since); }
     }
