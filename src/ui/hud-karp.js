@@ -513,8 +513,14 @@ export class KarpHud {
       this._kcR = { l: x - hw, r: x + hw, t: y - hh, b: y + hh };
       if (b !== this._kcb) { this._kcb = b; H.el.style.setProperty('--kcb', `${b}px`); }
     }
-    if (kc) out.push(this._kcR);
-    if (H.zcalls) for (const z of H.zcalls.children) { const r = z.getBoundingClientRect(); if (r.width > 0) out.push({ l: r.left - (this._ox || 0), r: r.right - (this._ox || 0), t: r.top - (this._oy || 0), b: r.bottom - (this._oy || 0) }); }
+    if (kc) out.push({ l: this._kcR.l - 4, r: this._kcR.r + 4, t: this._kcR.t - 4, b: this._kcR.b + 4 });
+    // (each with its ribbon — it reaches past the text's box — and a few px round it: a weir's 45 sat on the ribbon's edge)
+    if (H.zcalls) for (const z of H.zcalls.children) {
+      const r = z.getBoundingClientRect(); if (!(r.width > 0)) continue;
+      const rb = z.querySelector('.iw-zcall__ribbon')?.getBoundingClientRect(), pad = 4;
+      const l = Math.min(r.left, rb ? rb.left : r.left), rr = Math.max(r.right, rb ? rb.right : r.right), t = Math.min(r.top, rb ? rb.top : r.top), b = Math.max(r.bottom, rb ? rb.bottom : r.bottom);
+      out.push({ l: l - pad - (this._ox || 0), r: rr + pad - (this._ox || 0), t: t - pad - (this._oy || 0), b: b + pad - (this._oy || 0) });
+    }
     this.show.calls = out.length;
     return out;
   }
