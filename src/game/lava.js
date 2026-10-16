@@ -1361,8 +1361,11 @@ export class StageLava {
         // at the causeway's foot until the lava had it — ink the floor at its feet first, then hop)
         // (aimed back down behind it: facing the step, the shots hit its face)
         // (for 1.5 s at most, and not with an empty tank: then it hops as it can)
-        if (!(a.groundTeam === 2 && nx.y - a.pos.y > 0.6 && dh < 1.6)) b._inkT = 0;
-        else if ((b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = true; it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
+        // (fix round 3: the 1.5 s counts per step, never reset while the ink under it flickers — a brush's swipes left its feet
+        // in and out of enemy ink every few frames, the count restarted each time, and it stood there inking until the lava
+        // had it: lava-bots ledges)
+        if (b._inkFor !== nx) { b._inkFor = nx; b._inkT = 0; }
+        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = true; it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
         b._needJump = true;
         // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
         // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot —

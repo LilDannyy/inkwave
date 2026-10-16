@@ -69,7 +69,8 @@
     freezeBots();
     return { deaths: deaths.filter((d) => d.cause === 'lava'), other: deaths.filter((d) => d.cause !== 'lava').map((d) => [d.who, d.cause, d.t]), alive: crew.filter((b) => b.alive).length, esc: crew.map((b) => b.bot.escN || 0) };
   };
-  const jit = (p, r) => V(p.x + (Math.random() - 0.5) * r, p.y, p.z + (Math.random() - 0.5) * r);
+  // (fix round 3: a jittered spot stays on its floor — one jittered over the lake's edge fell in at the trial's start)
+  const jit = (p, r) => { for (let k = 0; k < 8; k++) { const q = V(p.x + (Math.random() - 0.5) * r, p.y, p.z + (Math.random() - 0.5) * r), gy = lvl.groundHeight(q.x, q.z, p.y + 0.5); if (Math.abs(gy - (p.y - 0.02)) < 0.15 && lvl.groundHeight(q.x + 0.3, q.z, p.y + 0.5) > p.y - 0.4 && lvl.groundHeight(q.x - 0.3, q.z, p.y + 0.5) > p.y - 0.4 && lvl.groundHeight(q.x, q.z + 0.3, p.y + 0.5) > p.y - 0.4 && lvl.groundHeight(q.x, q.z - 0.3, p.y + 0.5) > p.y - 0.4) return q; } return V(p.x, p.y, p.z); };
   // (fix round 3: the trail also keeps the move the stage's botAct left, the velocity, the floor's tag and the bot's sub
   // state, and any device within 1.5 m — what overrode an escape's move, what pushed a body over a lip)
   { const orig = Lv.botAct; Lv.botAct = function (b, dt, it, move, vis) { const r = orig.call(this, b, dt, it, move, vis); b._mvStage = [Math.round(move.x * 100) / 100, Math.round(move.z * 100) / 100]; return r; }; }
