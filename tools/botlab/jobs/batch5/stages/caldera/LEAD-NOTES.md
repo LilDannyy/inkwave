@@ -35,3 +35,35 @@ closes what is left, in this order. Everything else in review 3's list stands as
    check); Slump crossing counts go to the balance pass.
 7. **The pictures**: regenerate the `eng-*` set at the final head with the same scenes, plus a lavafall side view at
    LOW and HIGH and the Organ Pipes from the island at LOW and HIGH. The Organ Pipes' plain look is the art phase's.
+
+## After review 5 (2026-10-17): the lead's decisions; the next round waits for the weekly usage reset (Friday 06:00)
+
+Six of seven gates passed (no escape deaths in 720 trials, 0 lava deaths in 4 matches, the merge with karpStates,
+the boss 5 in a row, rule 45, the tests, the pictures). Two things remain, and the round-3 rule-44 decision was wrong
+on the facts (88–100 running places, not three; a swim jump reaches 8.65 m; squids pass rails). The next round is ONE
+fix + ONE review, on exactly this list:
+
+1. **Rule 44, decided again: option 1 of DESIGN §3.5.** Swim jumps and dash jumps over the lava are accepted as
+   skill movement (own ink on the take-off, a squid at speed, over open lava: the risk is the price), and a Bazookarp
+   carrier cannot make them. Plain running jumps are judged by the 20 m skill-route bar: no running jump may save more
+   than 20 m. Today the largest saves 19.26 m (the East Pool deck-stair corner, (±13.5, 1.1, ∓6.5) → the island's deck
+   stair): **add margin** by pulling back or kerbing that corner (and (±14.5, 1.4, ∓5.5)) so the largest running
+   saving is under 15 m. Rewrite lava-audit's two rule-44 gates to this (running ≤ 20 m: a gate; swim / dash: listed,
+   no gate), write the decision into DESIGN §3.5, and hand `out/fix4/rule44-crossings.json` to the Bazookarp checker
+   (#16) through the stage's `karpStates` / hopVeto data so the carrier field never relies on a jump.
+2. **Rule 21, the notches beside race1, race5 and race6 (both halves): a real fairness bug, fix it.** Close each
+   0.7–2.4 m gap to a seam of ≤ 0.25 m (move the coping or the Lakefront out to the stone, or the stone in) or open
+   it to ≥ 2.5 m of lava; keep the step links; re-run lava-audit rules 21 / 44 / 45 / 46, lava-nav, check-maps, the
+   reviewer's probe-notch5b (walk and swim off every stone toward the static top: 0 deaths), lava-bots.js once, and
+   2 Zone Control matches.
+3. **The boss:** the gate is met; one more small step: make the west Lakefront wedge tip near (−15.3, −26.2) and its
+   twin unreachable as a BossNav goal or anchor (a clearance test on the cell or a stage-side mask); then 5 passes in
+   a row, not 10.
+4. **lava.js F10** (the lookout claim, 1 fail in 2): give the foot wait its own time-out from the moment the Organ is
+   climbable, and capture the claimant's trail when it fails; 3 runs clean.
+5. **The lavafall:** blend the curtain rows' seam (the rectangular band); the void below the deck stays on the far
+   scenery list for the art phase, but add the Spillway-bridge and Horn-Step viewpoints to lava-audit rule 42 so the
+   backdrop gap is checked from where a player stands.
+6. **Tests and docs:** net-lava bounds the live guest's non-lava cells again (ratio ≥ 0.999); lava-match's match
+   table says when the lookout check passed for want of a long-range kit; STAGE-MODS.md gets the `b.hopCheck` row.
+The Organ Pipes' plain look and the lavafall's far scenery are the art phase's (also after the reset).
