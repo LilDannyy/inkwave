@@ -271,7 +271,7 @@
    "n": 6,
    "name": "Carry times",
    "status": "OK",
-   "text": "team 0: Pond → Gate 83.5 m = 17.4 s walking (11.5–18), 8.8 s swimming; via weir 1: 8.5 + 8.4 s | team 1: Pond → Gate 81.1 m = 16.9 s walking (11.5–18), 8.6 s swimming; via weir 1: 8.8 + 8.4 s",
+   "text": "team 0: Pond → Gate 83.5 m = 17.4 s walking (11.5–18), NaN s swimming; via weir 1: 8.5 + 8.4 s | team 1: Pond → Gate 81.1 m = 16.9 s walking (11.5–18), NaN s swimming; via weir 1: 8.8 + 8.4 s",
    "nums": {
     "rows": [
      {
@@ -279,12 +279,12 @@
       "shortest": 83.5,
       "field": 83.5,
       "walk": 17.4,
-      "swim": 8.8,
+      "swim": null,
       "via": [
        {
         "i": 0,
         "walk": 16.9,
-        "swim": 8.6,
+        "swim": null,
         "legs": [
          8.5,
          8.4
@@ -297,12 +297,12 @@
       "shortest": 79.6,
       "field": 81.1,
       "walk": 16.9,
-      "swim": 8.6,
+      "swim": null,
       "via": [
        {
         "i": 0,
         "walk": 17.2,
-        "swim": 8.7,
+        "swim": null,
         "legs": [
          8.8,
          8.4
@@ -318,7 +318,7 @@
    "n": 7,
    "name": "No shortcut into a base",
    "status": "FAIL",
-   "text": "(c) 12 drop(s) > 2.5 m into a Gate's ring: t0 3.2 m at (-5.5, 64.5), t0 3.2 m at (-6.5, 65.5), t0 3.2 m at (-5.5, 65.5), t0 3.2 m at (-5.5, 64.5); (d) 100 connection(s) the graph lacks gaining > 10 m: lowGap [3.5,2.4,-64.5]→[1.5,2.4,-62.5] 13.7 m, lowGap [3.5,2.4,-64.5]→[2.5,2.4,-62.5] 12.7 m, lowGap [3.5,2.4,-64.5]→[3.5,2.4,-62.5] 11.7 m, lowGap [2.5,2.4,-63.5]→[1.5,2.4,-62.5] 12.4 m, lowGap [2.5,2.4,-63.5]→[2.5,2.4,-62.5] 11.8 m … (by probe: lowGap 47, longGap 24, riseGap 8, vault 21)",
+   "text": "(c) 12 drop(s) > 2.5 m into a Gate's ring: t0 3.2 m at (-5.5, 64.5), t0 3.2 m at (-6.5, 65.5), t0 3.2 m at (-5.5, 65.5), t0 3.2 m at (-5.5, 64.5); (d) 156 connection(s) the graph lacks gaining > 10 m: lowGap [layout] [3.5,2.4,-64.5]→[1.5,2.4,-62.5] 13.7 m, lowGap [layout] [3.5,2.4,-64.5]→[2.5,2.4,-62.5] 12.7 m, lowGap [layout] [3.5,2.4,-64.5]→[3.5,2.4,-62.5] 11.7 m, lowGap [layout] [2.5,2.4,-63.5]→[1.5,2.4,-62.5] 12.4 m, lowGap [layout] [2.5,2.4,-63.5]→[2.5,2.4,-62.5] 11.8 m … (by probe: lowGap 47, riseGap 8, vault 21, squidTube 56, longGap 24); by cause: layout 103, field rule 8, swim-jump 45",
    "nums": {
     "teams": [
      {
@@ -326,12 +326,12 @@
       "entrances": [
        {
         "c": [
-         -2.2,
-         0.6,
-         56.5
+         -1.9,
+         0.7,
+         56.7
         ],
         "w": 29.4,
-        "n": 103,
+        "n": 106,
         "types": [
          "walk",
          "drop",
@@ -345,7 +345,7 @@
          "walk",
          "drop"
         ],
-        "moves": 6,
+        "moves": 9,
         "physUnseen": [],
         "from": [
          -9.5,
@@ -406,12 +406,12 @@
       "entrances": [
        {
         "c": [
-         2.2,
-         0.6,
-         -56.5
+         1.9,
+         0.7,
+         -56.7
         ],
         "w": 29.4,
-        "n": 103,
+        "n": 107,
         "types": [
          "walk",
          "drop",
@@ -425,7 +425,7 @@
          "walk",
          "drop"
         ],
-        "moves": 6,
+        "moves": 10,
         "physUnseen": [],
         "from": [
          -8.5,
@@ -510,6 +510,14 @@
      "cand": 192,
      "tried": 25
     },
+    "step": {
+     "cand": 0,
+     "tried": 0
+    },
+    "tube": {
+     "cand": 438,
+     "tried": 63
+    },
     "window": {
      "cells": 19,
      "m": 19,
@@ -528,6 +536,19 @@
      "longGap": 0,
      "climbOff": 0
     },
+    "cause": {
+     "layout": 103,
+     "field": 8,
+     "swim": 45,
+     "waived": 0,
+     "waivedGroups": 0,
+     "swimMode": "fail"
+    },
+    "swimWarn": {
+     "finds": 0,
+     "ents": 0,
+     "drops": 0
+    },
     "drops": 12,
     "climbShortcuts": 0,
     "d": [
@@ -545,7 +566,9 @@
       ],
       "gain": 13.7,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -561,7 +584,9 @@
       ],
       "gain": 12.7,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -577,7 +602,9 @@
       ],
       "gain": 11.7,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -593,7 +620,9 @@
       ],
       "gain": 12.4,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -609,7 +638,9 @@
       ],
       "gain": 11.8,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -625,7 +656,9 @@
       ],
       "gain": 10.9,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -641,7 +674,9 @@
       ],
       "gain": 12.7,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -657,7 +692,9 @@
       ],
       "gain": 11.7,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -673,7 +710,9 @@
       ],
       "gain": 10.7,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -689,7 +728,9 @@
       ],
       "gain": 12.3,
       "phys": false,
-      "by": null
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "lowGap",
@@ -705,967 +746,9 @@
       ],
       "gain": 11.3,
       "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       8.5,
-       -1.2,
-       -4.5
-      ],
-      "b": [
-       8.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       9.5,
-       -1.2,
-       -4.5
-      ],
-      "b": [
-       9.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       7.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       7.5,
-       -1.2,
-       -0.5
-      ],
-      "gain": 10.6,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       8.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       6.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 10.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       8.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       7.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 10.6,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       8.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       8.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 10.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       8.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       8.5,
-       -1.2,
-       -0.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       9.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       7.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 11.6,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       9.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       8.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       9.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       9.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 10.8,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       9.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       9.5,
-       -1.2,
-       -0.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       10.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       8.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       10.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       9.5,
-       -1.2,
-       -1.5
-      ],
-      "gain": 10.8,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       10.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       10.5,
-       -1.2,
-       -0.5
-      ],
-      "gain": 10.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -10.5,
-       -1.2,
-       0.5
-      ],
-      "b": [
-       -10.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -9.5,
-       -1.2,
-       0.5
-      ],
-      "b": [
-       -9.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -8.5,
-       -1.2,
-       0.5
-      ],
-      "b": [
-       -8.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -7.5,
-       -1.2,
-       0.5
-      ],
-      "b": [
-       -7.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.6,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -9.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -10.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.8,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -9.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -9.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.8,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -9.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -9.5,
-       -1.2,
-       4.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -8.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -10.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -8.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -9.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -8.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -8.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -8.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -8.5,
-       -1.2,
-       4.5
-      ],
-      "gain": 11.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -7.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -9.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 11.6,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -7.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -8.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.6,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -6.5,
-       -1.2,
-       1.5
-      ],
-      "b": [
-       -8.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 10.2,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -3.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -4.75,
-       2.4,
-       63.5
-      ],
-      "gain": 11.3,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -3.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -3.5,
-       2.4,
-       63.5
-      ],
-      "gain": 10.7,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -3.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -2.5,
-       2.4,
-       63.5
-      ],
-      "gain": 10.3,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -2.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -4.75,
-       2.4,
-       63.5
-      ],
-      "gain": 12.3,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -2.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -3.5,
-       2.4,
-       63.5
-      ],
-      "gain": 11.7,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -2.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -2.5,
-       2.4,
-       63.5
-      ],
-      "gain": 11.3,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -1.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -3.5,
-       2.4,
-       63.5
-      ],
-      "gain": 12.7,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "lowGap",
-      "a": [
-       -1.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -2.5,
-       2.4,
-       63.5
-      ],
-      "gain": 12.3,
-      "phys": false,
-      "by": null
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -6.5,
-       2.4,
-       -68.5
-      ],
-      "b": [
-       0.5,
-       2.01,
-       -61.5
-      ],
-      "gain": 24.2,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -6.5,
-       2.4,
-       -68.5
-      ],
-      "b": [
-       0.5,
-       1.61,
-       -60.5
-      ],
-      "gain": 25.2,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -7.5,
-       2.4,
-       -64.5
-      ],
-      "b": [
-       3.5,
-       0,
-       -61.5
-      ],
-      "gain": 24.8,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -6.5,
-       2.4,
-       -62.5
-      ],
-      "b": [
-       5.5,
-       0,
-       -62.5
-      ],
-      "gain": 19,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -5.5,
-       2.2,
-       -62.5
-      ],
-      "b": [
-       5.5,
-       0,
-       -62.5
-      ],
-      "gain": 19.9,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -5.5,
-       2.4,
-       -62.5
-      ],
-      "b": [
-       5.5,
-       0,
-       -62.5
-      ],
-      "gain": 18.4,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -5.5,
-       2.4,
-       -62.5
-      ],
-      "b": [
-       3.5,
-       0,
-       -60.5
-      ],
-      "gain": 15.6,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -4.5,
-       2.01,
-       -61.5
-      ],
-      "b": [
-       3.5,
-       2.4,
-       -65.5
-      ],
-      "gain": 26.1,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -4.5,
-       2.01,
-       -61.5
-      ],
-      "b": [
-       4.75,
-       2.4,
-       -64.5
-      ],
-      "gain": 26.1,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       4.5,
-       2.01,
-       61.5
-      ],
-      "b": [
-       -4.75,
-       2.4,
-       64.5
-      ],
-      "gain": 26.1,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       4.5,
-       2.01,
-       61.5
-      ],
-      "b": [
-       -3.5,
-       2.4,
-       65.5
-      ],
-      "gain": 26.1,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       5.5,
-       2.2,
-       62.5
-      ],
-      "b": [
-       -5.5,
-       0,
-       62.5
-      ],
-      "gain": 19.9,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       5.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -3.5,
-       0,
-       60.5
-      ],
-      "gain": 15.6,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       5.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -5.5,
-       0,
-       62.5
-      ],
-      "gain": 18.4,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       6.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -5.5,
-       0,
-       62.5
-      ],
-      "gain": 19,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       7.5,
-       2.4,
-       64.5
-      ],
-      "b": [
-       -1.25,
-       0,
-       59.5
-      ],
-      "gain": 21.3,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       7.5,
-       2.4,
-       64.5
-      ],
-      "b": [
-       -3.5,
-       0,
-       61.5
-      ],
-      "gain": 24.8,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -2.5,
-       2.4,
-       68.5
-      ],
-      "b": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "gain": 15.4,
-      "phys": true,
-      "by": "kid"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       6.5,
-       2.4,
-       68.5
-      ],
-      "b": [
-       0.5,
-       1.22,
-       59.5
-      ],
-      "gain": 19,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       6.5,
-       2.4,
-       68.5
-      ],
-      "b": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "gain": 18,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       6.5,
-       2.4,
-       68.5
-      ],
-      "b": [
-       -1.5,
-       0,
-       61.5
-      ],
-      "gain": 27.8,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       7.5,
-       2.4,
-       68.5
-      ],
-      "b": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "gain": 17,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -8.95,
-       2.4,
-       -65.5
-      ],
-      "b": [
-       0.5,
-       1.61,
-       -60.5
-      ],
-      "gain": 20.4,
-      "phys": true,
-      "by": "kid"
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       8.95,
-       2.4,
-       65.5
-      ],
-      "b": [
-       -1.25,
-       0,
-       59.5
-      ],
-      "gain": 21.4,
-      "phys": true,
-      "by": "swim"
+      "by": null,
+      "cause": "layout",
+      "warn": false
      },
      {
       "probe": "riseGap",
@@ -1681,7 +764,9 @@
       ],
       "gain": 19,
       "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "riseGap",
@@ -1697,7 +782,9 @@
       ],
       "gain": 20,
       "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "riseGap",
@@ -1713,87 +800,9 @@
       ],
       "gain": 17.9,
       "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "riseGap",
-      "a": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "b": [
-       -3.5,
-       2.4,
-       62.5
-      ],
-      "gain": 11.1,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "riseGap",
-      "a": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "b": [
-       -4.5,
-       3.15,
-       66.5
-      ],
-      "gain": 26.2,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "riseGap",
-      "a": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "b": [
-       -3.5,
-       3.15,
-       66.5
-      ],
-      "gain": 25.2,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "riseGap",
-      "a": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "b": [
-       -2.5,
-       2.4,
-       68.5
-      ],
-      "gain": 24.3,
-      "phys": true,
-      "by": "kid"
-     },
-     {
-      "probe": "riseGap",
-      "a": [
-       -8.25,
-       -1.2,
-       -6.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       -0.5
-      ],
-      "gain": 14.2,
-      "phys": true,
-      "by": "kid"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -1809,23 +818,9 @@
       ],
       "gain": 13.7,
       "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -1.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -3.5,
-       2.4,
-       64.5
-      ],
-      "gain": 13.7,
-      "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -1841,23 +836,9 @@
       ],
       "gain": 13.3,
       "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -3.5,
-       2.4,
-       62.5
-      ],
-      "b": [
-       -4.75,
-       2.4,
-       65.5
-      ],
-      "gain": 13.3,
-      "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -1873,7 +854,9 @@
       ],
       "gain": 12.4,
       "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -1889,39 +872,9 @@
       ],
       "gain": 12.3,
       "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -5.5,
-       0,
-       65.5
-      ],
-      "b": [
-       -7.5,
-       1.46,
-       66.25
-      ],
-      "gain": 12.3,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -3.5,
-       2.4,
-       64.5
-      ],
-      "b": [
-       -2.5,
-       0,
-       61.5
-      ],
-      "gain": 12,
-      "phys": true,
-      "by": "kid"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -1937,7 +890,9 @@
       ],
       "gain": 11.6,
       "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -1953,71 +908,9 @@
       ],
       "gain": 11.4,
       "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       3.5,
-       2.4,
-       -64.5
-      ],
-      "b": [
-       3.5,
-       0,
-       -61.5
-      ],
-      "gain": 11,
-      "phys": true,
-      "by": "kid"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       8.5,
-       -1.2,
-       -4.5
-      ],
-      "b": [
-       7.5,
-       0.08,
-       -1.5
-      ],
-      "gain": 11,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -9.5,
-       -1.2,
-       3.5
-      ],
-      "b": [
-       -7.5,
-       0.08,
-       1.5
-      ],
-      "gain": 11,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -4.75,
-       2.4,
-       63.5
-      ],
-      "b": [
-       -1.5,
-       2.2,
-       62.5
-      ],
-      "gain": 10.8,
-      "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -2033,71 +926,9 @@
       ],
       "gain": 10.7,
       "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -7.5,
-       0,
-       64.5
-      ],
-      "b": [
-       -7.5,
-       1.46,
-       67.5
-      ],
-      "gain": 10.7,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       10.5,
-       -1.2,
-       -3.5
-      ],
-      "b": [
-       8.5,
-       0.08,
-       -1.5
-      ],
-      "gain": 10.6,
-      "phys": true,
-      "by": "swim"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       -0.5,
-       1.61,
-       -60.5
-      ],
-      "b": [
-       2.5,
-       0,
-       -60.5
-      ],
-      "gain": 10.4,
-      "phys": true,
-      "by": "kid"
-     },
-     {
-      "probe": "vault",
-      "a": [
-       0.5,
-       1.61,
-       60.5
-      ],
-      "b": [
-       -2.5,
-       0,
-       60.5
-      ],
-      "gain": 10.4,
-      "phys": true,
-      "by": "kid"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -2113,7 +944,1755 @@
       ],
       "gain": 10,
       "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -61.5
+      ],
+      "gain": 11,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -0.5,
+       1.61,
+       -60.5
+      ],
+      "b": [
+       2.5,
+       0,
+       -60.5
+      ],
+      "gain": 10.4,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       2.5,
+       2.4,
+       -68.5
+      ],
+      "gain": 15.2,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -65.5
+      ],
+      "gain": 14.4,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "gain": 13.3,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.4,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       8.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       8.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       9.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 10.6,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       6.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 10.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 10.6,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 10.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 11.6,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 10.8,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 10.8,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       10.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 10.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       8.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       7.5,
+       0.08,
+       -1.5
+      ],
+      "gain": 11,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       0.08,
+       -1.5
+      ],
+      "gain": 10.6,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       6.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 17,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 16,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       4.5
+      ],
+      "gain": 15.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 15,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       10.5,
+       -1.2,
+       -7.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 15,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 14.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -6.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 14.4,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 14,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       8.5,
+       -1.2,
+       -7.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13.9,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       2.5
+      ],
+      "gain": 13.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -7.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13.5,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 12.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 12.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       6.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       2.5
+      ],
+      "gain": 12.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 12.2,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 11.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 11.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       6.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 10.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 10.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -10.5,
+       -1.2,
+       0.5
+      ],
+      "b": [
+       -10.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -9.5,
+       -1.2,
+       0.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -8.5,
+       -1.2,
+       0.5
+      ],
+      "b": [
+       -8.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.6,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -9.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -10.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.8,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -9.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.8,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -9.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       4.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -8.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -10.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -8.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -8.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -8.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -8.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -8.5,
+       -1.2,
+       4.5
+      ],
+      "gain": 11.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -7.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 11.6,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -7.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -8.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.6,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -6.5,
+       -1.2,
+       1.5
+      ],
+      "b": [
+       -8.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 10.2,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       0.08,
+       1.5
+      ],
+      "gain": 11,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -6.5,
+       -1.2,
+       -3.5
+      ],
+      "gain": 17,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       5.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 16,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -4.5
+      ],
+      "gain": 15.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       4.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 15,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -10.5,
+       -1.2,
+       7.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 15,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -11.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -2.5
+      ],
+      "gain": 14.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 14.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       6.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 14.4,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       5.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 14,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -8.5,
+       -1.2,
+       7.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13.9,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -2.5
+      ],
+      "gain": 13.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       7.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13.5,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       4.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       5.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -11.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 12.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 12.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -6.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       -2.5
+      ],
+      "gain": 12.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -10.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -10.5,
+       -0.94,
+       5.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 11.1,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -8.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 10.6,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "gain": 11.3,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       63.5
+      ],
+      "gain": 10.7,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       63.5
+      ],
+      "gain": 10.3,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -2.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "gain": 12.3,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -2.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       63.5
+      ],
+      "gain": 11.7,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -2.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       63.5
+      ],
+      "gain": 11.3,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       63.5
+      ],
+      "gain": 12.7,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       63.5
+      ],
+      "gain": 12.3,
+      "phys": false,
+      "by": null,
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "gain": 11.1,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -4.5,
+       3.15,
+       66.5
+      ],
+      "gain": 26.2,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -3.5,
+       3.15,
+       66.5
+      ],
+      "gain": 25.2,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "gain": 24.3,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       64.5
+      ],
+      "gain": 13.7,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       65.5
+      ],
+      "gain": 13.3,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -5.5,
+       0,
+       65.5
+      ],
+      "b": [
+       -7.5,
+       1.46,
+       66.25
+      ],
+      "gain": 12.3,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "b": [
+       -1.5,
+       2.2,
+       62.5
+      ],
+      "gain": 10.8,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -7.5,
+       0,
+       64.5
+      ],
+      "b": [
+       -7.5,
+       1.46,
+       67.5
+      ],
+      "gain": 10.7,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
      },
      {
       "probe": "vault",
@@ -2129,7 +2708,657 @@
       ],
       "gain": 10,
       "phys": true,
-      "by": "swim"
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -3.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -2.5,
+       0,
+       61.5
+      ],
+      "gain": 12,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "vault",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -2.5,
+       0,
+       60.5
+      ],
+      "gain": 10.4,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "gain": 15.2,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       65.5
+      ],
+      "gain": 14.4,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "gain": 13.3,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "b": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "gain": 10.7,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      "gain": 24.2,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "gain": 25.2,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -7.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -61.5
+      ],
+      "gain": 24.8,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -6.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -5.5,
+       2.2,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 19.9,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 18.4,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -60.5
+      ],
+      "gain": 15.6,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -4.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -65.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -4.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -64.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -8.95,
+       2.4,
+       -65.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "gain": 20.4,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 13.8,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       -7.5,
+       2.92,
+       -66.5
+      ],
+      "b": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.3,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       4.5,
+       2.01,
+       61.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       64.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       4.5,
+       2.01,
+       61.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       65.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       5.5,
+       2.2,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 19.9,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       0,
+       60.5
+      ],
+      "gain": 15.6,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 18.4,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       7.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -1.25,
+       0,
+       59.5
+      ],
+      "gain": 21.3,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       7.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -3.5,
+       0,
+       61.5
+      ],
+      "gain": 24.8,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.22,
+       59.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 18,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       -1.5,
+       0,
+       61.5
+      ],
+      "gain": 27.8,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       7.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 17,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       8.95,
+       2.4,
+       65.5
+      ],
+      "b": [
+       -1.25,
+       0,
+       59.5
+      ],
+      "gain": 21.4,
+      "phys": true,
+      "by": "swim",
+      "cause": "swim",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "gain": 13.8,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       7.5,
+       2.92,
+       66.5
+      ],
+      "b": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "gain": 11.3,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 15.4,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       -8.25,
+       -1.2,
+       -6.5
+      ],
+      "b": [
+       -13.5,
+       0,
+       -0.5
+      ],
+      "gain": 14.2,
+      "phys": true,
+      "by": "kid",
+      "cause": "field",
+      "warn": false
+     },
+     {
+      "probe": "squidTube",
+      "a": [
+       2.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.4,
+      "phys": true,
+      "by": "squid",
+      "cause": "layout",
+      "warn": false
      }
     ]
    },
@@ -2220,7 +3449,7 @@
       2.4,
       -64.5
      ],
-     "what": "7d lowGap ×11: gain 10.7–13.7 m",
+     "what": "7d lowGap [layout] ×11: gain 10.7–13.7 m",
      "look": {
       "x": 1.5,
       "y": 2.4,
@@ -2245,7 +3474,7 @@
       2.01,
       -61.5
      ],
-     "what": "7d riseGap (swim-jump) ×3: gain 17.9–20 m",
+     "what": "7d riseGap (swim-jump) [swim-jump] ×3: gain 17.9–20 m",
      "look": {
       "x": 4.5,
       "y": 3.15,
@@ -2270,7 +3499,7 @@
       2.4,
       -62.5
      ],
-     "what": "7d vault (swim-jump) ×10: gain 10–13.7 m",
+     "what": "7d vault (swim-jump) [swim-jump] ×8: gain 10–13.7 m",
      "look": {
       "x": 3.5,
       "y": 2.4,
@@ -2291,11 +3520,61 @@
     },
     {
      "at": [
+      3.5,
+      2.4,
+      -64.5
+     ],
+     "what": "7d vault [field rule] ×2: gain 10.4–11 m",
+     "look": {
+      "x": 3.5,
+      "y": 0,
+      "z": -61.5
+     },
+     "move": [
+      [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      [
+       3.5,
+       0,
+       -61.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      1.5,
+      2.4,
+      -62.5
+     ],
+     "what": "7d squidTube [layout] ×4: gain 11.4–15.2 m",
+     "look": {
+      "x": 2.5,
+      "y": 2.4,
+      "z": -68.5
+     },
+     "move": [
+      [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      [
+       2.5,
+       2.4,
+       -68.5
+      ]
+     ]
+    },
+    {
+     "at": [
       9.5,
       -1.2,
       -3.5
      ],
-     "what": "7d lowGap ×14: gain 10.2–11.6 m",
+     "what": "7d lowGap [layout] ×14: gain 10.2–11.6 m",
      "look": {
       "x": 7.5,
       "y": -1.2,
@@ -2320,7 +3599,7 @@
       -1.2,
       -4.5
      ],
-     "what": "7d vault (swim-jump) ×2: gain 10.6–11 m",
+     "what": "7d vault (swim-jump) [swim-jump] ×2: gain 10.6–11 m",
      "look": {
       "x": 7.5,
       "y": 0.08,
@@ -2341,11 +3620,36 @@
     },
     {
      "at": [
+      9.5,
+      -1.2,
+      -3.5
+     ],
+     "what": "7d squidTube [layout] ×21: gain 10.6–17 m",
+     "look": {
+      "x": 6.5,
+      "y": -1.2,
+      "z": 3.5
+     },
+     "move": [
+      [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      [
+       6.5,
+       -1.2,
+       3.5
+      ]
+     ]
+    },
+    {
+     "at": [
       -7.5,
       -1.2,
       1.5
      ],
-     "what": "7d lowGap ×14: gain 10.2–11.6 m",
+     "what": "7d lowGap [layout] ×14: gain 10.2–11.6 m",
      "look": {
       "x": -9.5,
       "y": -1.2,
@@ -2370,7 +3674,7 @@
       -1.2,
       3.5
      ],
-     "what": "7d vault (swim-jump): gain 11 m",
+     "what": "7d vault (swim-jump) [swim-jump]: gain 11 m",
      "look": {
       "x": -7.5,
       "y": 0.08,
@@ -2391,11 +3695,36 @@
     },
     {
      "at": [
+      -9.5,
+      -1.2,
+      3.5
+     ],
+     "what": "7d squidTube [layout] ×22: gain 10.6–17 m",
+     "look": {
+      "x": -6.5,
+      "y": -1.2,
+      "z": -3.5
+     },
+     "move": [
+      [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      [
+       -6.5,
+       -1.2,
+       -3.5
+      ]
+     ]
+    },
+    {
+     "at": [
       -1.5,
       2.4,
       62.5
      ],
-     "what": "7d lowGap ×8: gain 10.3–12.7 m",
+     "what": "7d lowGap [layout] ×8: gain 10.3–12.7 m",
      "look": {
       "x": -3.5,
       "y": 2.4,
@@ -2420,7 +3749,7 @@
       1.61,
       60.5
      ],
-     "what": "7d riseGap (swim-jump) ×4: gain 11.1–26.2 m",
+     "what": "7d riseGap (swim-jump) [swim-jump] ×3: gain 11.1–26.2 m",
      "look": {
       "x": -4.5,
       "y": 3.15,
@@ -2441,11 +3770,36 @@
     },
     {
      "at": [
+      0.5,
+      1.61,
+      60.5
+     ],
+     "what": "7d riseGap [field rule]: gain 24.3 m",
+     "look": {
+      "x": -2.5,
+      "y": 2.4,
+      "z": 68.5
+     },
+     "move": [
+      [
+       0.5,
+       1.61,
+       60.5
+      ],
+      [
+       -2.5,
+       2.4,
+       68.5
+      ]
+     ]
+    },
+    {
+     "at": [
       -1.5,
       2.4,
       62.5
      ],
-     "what": "7d vault (swim-jump) ×8: gain 10–13.7 m",
+     "what": "7d vault (swim-jump) [swim-jump] ×6: gain 10–13.7 m",
      "look": {
       "x": -3.5,
       "y": 2.4,
@@ -2466,26 +3820,51 @@
     },
     {
      "at": [
-      -6.5,
+      -3.5,
       2.4,
-      -68.5
+      64.5
      ],
-     "what": "7d longGap (swim-jump) ×2: gain 24.2–25.2 m",
+     "what": "7d vault [field rule] ×2: gain 10.4–12 m",
      "look": {
-      "x": 0.5,
-      "y": 1.61,
-      "z": -60.5
+      "x": -2.5,
+      "y": 0,
+      "z": 61.5
      },
      "move": [
       [
-       -6.5,
+       -3.5,
        2.4,
-       -68.5
+       64.5
       ],
       [
-       0.5,
-       1.61,
-       -60.5
+       -2.5,
+       0,
+       61.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -1.5,
+      2.4,
+      62.5
+     ],
+     "what": "7d squidTube [layout] ×4: gain 10.7–15.2 m",
+     "look": {
+      "x": -2.5,
+      "y": 2.4,
+      "z": 68.5
+     },
+     "move": [
+      [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      [
+       -2.5,
+       2.4,
+       68.5
       ]
      ]
     },
@@ -2495,7 +3874,7 @@
       2.01,
       -61.5
      ],
-     "what": "7d longGap (swim-jump) ×8: gain 15.6–26.1 m",
+     "what": "7d longGap (swim-jump) [swim-jump] ×9: gain 15.6–26.1 m",
      "look": {
       "x": 3.5,
       "y": 2.4,
@@ -2516,51 +3895,51 @@
     },
     {
      "at": [
-      4.5,
-      2.01,
-      61.5
+      -8.95,
+      2.4,
+      -65.5
      ],
-     "what": "7d longGap (swim-jump) ×9: gain 15.6–26.1 m",
+     "what": "7d longGap [field rule]: gain 20.4 m",
      "look": {
-      "x": -4.75,
-      "y": 2.4,
-      "z": 64.5
+      "x": 0.5,
+      "y": 1.61,
+      "z": -60.5
      },
      "move": [
       [
-       4.5,
-       2.01,
-       61.5
+       -8.95,
+       2.4,
+       -65.5
       ],
       [
-       -4.75,
-       2.4,
-       64.5
+       0.5,
+       1.61,
+       -60.5
       ]
      ]
     },
     {
      "at": [
-      -2.5,
+      -6.5,
       2.4,
-      68.5
+      -68.5
      ],
-     "what": "7d longGap: gain 15.4 m",
+     "what": "7d squidTube [layout] ×2: gain 11.3–13.8 m",
      "look": {
-      "x": 0.5,
-      "y": 1.61,
-      "z": 60.5
+      "x": -5.5,
+      "y": 2.4,
+      "z": -62.5
      },
      "move": [
       [
-       -2.5,
+       -6.5,
        2.4,
-       68.5
+       -68.5
       ],
       [
-       0.5,
-       1.61,
-       60.5
+       -5.5,
+       2.4,
+       -62.5
       ]
      ]
     },
@@ -2570,7 +3949,7 @@
       2.4,
       68.5
      ],
-     "what": "7d longGap (swim-jump) ×4: gain 17–27.8 m",
+     "what": "7d longGap (swim-jump) [swim-jump] ×13: gain 15.6–27.8 m",
      "look": {
       "x": -1.5,
       "y": 0,
@@ -2591,11 +3970,61 @@
     },
     {
      "at": [
+      6.5,
+      2.4,
+      68.5
+     ],
+     "what": "7d squidTube [layout] ×2: gain 11.3–13.8 m",
+     "look": {
+      "x": 5.5,
+      "y": 2.4,
+      "z": 62.5
+     },
+     "move": [
+      [
+       6.5,
+       2.4,
+       68.5
+      ],
+      [
+       5.5,
+       2.4,
+       62.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -2.5,
+      2.4,
+      68.5
+     ],
+     "what": "7d longGap [field rule]: gain 15.4 m",
+     "look": {
+      "x": 0.5,
+      "y": 1.61,
+      "z": 60.5
+     },
+     "move": [
+      [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      [
+       0.5,
+       1.61,
+       60.5
+      ]
+     ]
+    },
+    {
+     "at": [
       -8.25,
       -1.2,
       -6.5
      ],
-     "what": "7d riseGap: gain 14.2 m",
+     "what": "7d riseGap [field rule]: gain 14.2 m",
      "look": {
       "x": -13.5,
       "y": 0,
@@ -2611,6 +4040,31 @@
        -13.5,
        0,
        -0.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      2.5,
+      2.4,
+      -68.5
+     ],
+     "what": "7d squidTube [layout]: gain 12.4 m",
+     "look": {
+      "x": 1.5,
+      "y": 2.4,
+      "z": -62.5
+     },
+     "move": [
+      [
+       2.5,
+       2.4,
+       -68.5
+      ],
+      [
+       1.5,
+       2.4,
+       -62.5
       ]
      ]
     }
@@ -3938,13 +5392,13 @@
         "how": ""
        },
        {
-        "t": 23.7,
+        "t": 23.6,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 23.7,
+        "t": 23.6,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -3974,13 +5428,13 @@
         "how": ""
        },
        {
-        "t": 36.5,
+        "t": 36.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 36.5,
+        "t": 36.4,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -4010,13 +5464,13 @@
         "how": ""
        },
        {
-        "t": 49.3,
+        "t": 49.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 49.3,
+        "t": 49.2,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -4046,13 +5500,13 @@
         "how": ""
        },
        {
-        "t": 62.1,
+        "t": 62,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 62.1,
+        "t": 62,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -4082,13 +5536,13 @@
         "how": ""
        },
        {
-        "t": 74.9,
+        "t": 74.8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 74.9,
+        "t": 74.8,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -4135,7 +5589,7 @@
         ]
        },
        {
-        "t": 86.8,
+        "t": 86.7,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -4255,7 +5709,7 @@
         "tGate": 8.7,
         "w2": {
          "at": [
-          7.31,
+          7.3,
           1.88,
           -67.22
          ],
@@ -4816,7 +6270,7 @@
    "n": 16,
    "name": "The hop and gap edges, proved physically",
    "status": "OK",
-   "text": "277 added edges tried (91 hops, 186 gaps): 277 made, 0 not; 89 moves beyond the rules worth trying (> 10 m or into a ring; 2 high hops, 53 long gaps, 9 rising gaps, 25 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 65 made (0 / 34 / 8 / 23: to #7d, and #7a when into a ring); 0 moves onto off-field ground worth trying (0 hops of 397 from up to two cells out, 0 jumps across air): 0 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 287 takeoffs whose floor takes ink): 70 made that the kid didn't (16 added edges, 54 beyond the rules, 0 onto off-field ground), 493 swim trials; climbs of ≤ 1.8 m tried as hops: 58 of 58 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 4/4 · 2056 trials, 4 s; walks 0 s; climb hops 89 trials",
+   "text": "277 added edges tried (91 hops, 186 gaps): 277 made, 0 not; 152 moves beyond the rules worth trying (> 10 m or into a ring; 2 high hops, 53 long gaps, 9 rising gaps, 25 vaults, 0 steps off the grid, 63 squid tubes, out to 10.6 m from dry floor and 19 m from floor that takes ink): 128 made (0 / 34 / 8 / 23 / 0 / 63: to #7d, and #7a when into a ring); 0 moves onto off-field ground worth trying (0 hops of 397 from up to two cells out, 0 jumps across air): 0 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 347 takeoffs whose floor takes ink): 70 made that the kid didn't (16 added edges, 54 beyond the rules, 0 onto off-field ground), 493 swim trials; climbs of ≤ 1.8 m tried as hops: 58 of 58 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 4/4 · 2119 trials, 4 s; walks 0 s; climb hops 89 trials",
    "nums": {
     "tried": 277,
     "failed": 0,
@@ -4826,8 +6280,8 @@
      "gapDown": 0
     },
     "hopVeto": [],
-    "beyond": 89,
-    "beyondMade": 65,
+    "beyond": 152,
+    "beyondMade": 128,
     "rise": {
      "tried": 9,
      "made": 8
@@ -4845,8 +6299,20 @@
      "tried": 25,
      "made": 23
     },
+    "step": {
+     "cand": 0,
+     "tried": 0,
+     "made": 0
+    },
+    "tube": {
+     "cand": 438,
+     "tried": 63,
+     "made": 63,
+     "squidTrials": 63
+    },
+    "swimMode": "fail",
     "swim": {
-     "takeoffs": 287,
+     "takeoffs": 347,
      "made": 70,
      "edges": 16,
      "beyond": 54,
@@ -4867,8 +6333,8 @@
     "offMadeN": 0,
     "coyote": 10,
     "offMade": [],
-    "trials": 2056,
-    "ms": 3671,
+    "trials": 2119,
+    "ms": 4221,
     "climbHops": {
      "tried": 58,
      "made": 58,
@@ -6169,6 +7635,1014 @@
       "gain": 7.9,
       "how": "swim-jump jump 0.2 m before the rim",
       "by": "swim"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -6.5,
+       -1.2,
+       -3.5
+      ],
+      "gain": 17,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       6.5,
+       -1.2,
+       3.5
+      ],
+      "gain": 17,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 16,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       5.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 16,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -4.5
+      ],
+      "gain": 15.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       4.5
+      ],
+      "gain": 15.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       2.5,
+       2.4,
+       -68.5
+      ],
+      "gain": 15.2,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "gain": 15.2,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 15,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       4.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 15,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       10.5,
+       -1.2,
+       -7.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 15,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -10.5,
+       -1.2,
+       7.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 15,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 14.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -11.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -2.5
+      ],
+      "gain": 14.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 14.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -6.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 14.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       6.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 14.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -65.5
+      ],
+      "gain": 14.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       65.5
+      ],
+      "gain": 14.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 14,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       5.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 14,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       8.5,
+       -1.2,
+       -7.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13.9,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -8.5,
+       -1.2,
+       7.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13.9,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 13.8,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "gain": 13.8,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       2.5
+      ],
+      "gain": 13.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -2.5
+      ],
+      "gain": 13.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -7.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13.5,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       7.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13.5,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "gain": 13.3,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "gain": 13.3,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       4.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 13,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       5.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 13,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 12.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -11.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 12.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 12.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 12.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       6.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       2.5
+      ],
+      "gain": 12.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -6.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       -2.5
+      ],
+      "gain": 12.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       2.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       9.5,
+       -1.2,
+       -5.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       -1.5
+      ],
+      "gain": 12.2,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 11.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -10.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       7.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       4.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 11.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -7.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -4.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 11.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -9.5,
+       0.55,
+       -52.5
+      ],
+      "b": [
+       -3.5,
+       0.43,
+       -57.5
+      ],
+      "gain": 11.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -7.5,
+       2.92,
+       -66.5
+      ],
+      "b": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.3,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       7.5,
+       2.92,
+       66.5
+      ],
+      "b": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "gain": 11.3,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -10.5,
+       -0.94,
+       5.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       1.5
+      ],
+      "gain": 11.1,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "b": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "gain": 10.7,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       6.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       7.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 10.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       8.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       9.5,
+       -1.2,
+       0.5
+      ],
+      "gain": 10.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -8.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -9.5,
+       -1.2,
+       -0.5
+      ],
+      "gain": 10.6,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -8.95,
+       2.4,
+       -65.5
+      ],
+      "b": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 8.9,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       8.95,
+       2.4,
+       65.5
+      ],
+      "b": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "gain": 8.9,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -8.95,
+       2.4,
+       -65.5
+      ],
+      "b": [
+       -7.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 7.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       8.95,
+       2.4,
+       65.5
+      ],
+      "b": [
+       7.5,
+       2.4,
+       62.5
+      ],
+      "gain": 7.4,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       -8.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 7.3,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
+     },
+     {
+      "kind": "squid tube",
+      "a": [
+       8.5,
+       2.4,
+       63.5
+      ],
+      "b": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "gain": 7.3,
+      "how": "a squid crawling it on dry floor",
+      "by": "squid"
      }
     ]
    },
@@ -42555,12 +45029,12 @@
     "ents": [
      {
       "c": [
-       -2.2,
-       0.6,
-       56.5
+       -1.9,
+       0.7,
+       56.7
       ],
       "w": 29.4,
-      "n": 103,
+      "n": 106,
       "types": [
        "walk",
        "drop",
@@ -42574,7 +45048,7 @@
        "walk",
        "drop"
       ],
-      "moves": 6,
+      "moves": 9,
       "physUnseen": [],
       "from": [
        -9.5,
@@ -42640,12 +45114,12 @@
     "ents": [
      {
       "c": [
-       2.2,
-       0.6,
-       -56.5
+       1.9,
+       0.7,
+       -56.7
       ],
       "w": 29.4,
-      "n": 103,
+      "n": 107,
       "types": [
        "walk",
        "drop",
@@ -42659,7 +45133,7 @@
        "walk",
        "drop"
       ],
-      "moves": 6,
+      "moves": 10,
       "physUnseen": [],
       "from": [
        -8.5,
@@ -48889,7 +51363,8 @@
      0.5,
      -61.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -48900,7 +51375,8 @@
      0.5,
      -60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -48922,7 +51398,8 @@
      3.5,
      -61.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -48966,7 +51443,8 @@
      5.5,
      -62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -48977,7 +51455,8 @@
      5.5,
      -62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -48988,7 +51467,8 @@
      5.5,
      -62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -48999,7 +51479,8 @@
      3.5,
      -60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49010,7 +51491,8 @@
      3.5,
      -65.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49021,7 +51503,8 @@
      4.8,
      -64.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49032,7 +51515,8 @@
      -4.7,
      64.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49043,7 +51527,8 @@
      -3.5,
      65.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49054,7 +51539,8 @@
      -5.5,
      62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49065,7 +51551,8 @@
      -3.5,
      60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49076,7 +51563,8 @@
      -5.5,
      62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49087,7 +51575,8 @@
      -5.5,
      62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49131,7 +51620,8 @@
      -1.2,
      59.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49142,7 +51632,8 @@
      -3.5,
      61.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49175,7 +51666,8 @@
      0.5,
      60.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49186,7 +51678,8 @@
      0.5,
      59.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49197,7 +51690,8 @@
      0.5,
      60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49208,7 +51702,8 @@
      -1.5,
      61.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49219,7 +51714,8 @@
      0.5,
      60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49230,7 +51726,8 @@
      0.5,
      -60.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49241,7 +51738,8 @@
      -1.2,
      59.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49263,7 +51761,8 @@
      3.5,
      -66.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49274,7 +51773,8 @@
      4.5,
      -66.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49285,7 +51785,8 @@
      3.5,
      -66.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49296,7 +51797,8 @@
      -3.5,
      62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49307,7 +51809,8 @@
      -4.5,
      66.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49318,7 +51821,8 @@
      -3.5,
      66.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49329,7 +51833,8 @@
      -2.5,
      68.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49340,7 +51845,8 @@
      -13.5,
      -0.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49351,7 +51857,8 @@
      3.5,
      -64.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49362,7 +51869,8 @@
      -3.5,
      64.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49373,7 +51881,8 @@
      4.8,
      -65.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49384,7 +51893,8 @@
      -4.7,
      65.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49395,7 +51905,8 @@
      1.5,
      -62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49406,7 +51917,8 @@
      7.5,
      -67.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49417,7 +51929,8 @@
      -7.5,
      66.3
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49428,7 +51941,8 @@
      -2.5,
      61.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49439,7 +51953,8 @@
      8.5,
      -66.2
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49450,7 +51965,8 @@
      1.5,
      -62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49461,7 +51977,8 @@
      3.5,
      -61.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49472,7 +51989,8 @@
      7.5,
      -1.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49483,7 +52001,8 @@
      -7.5,
      1.5
     ],
-    "find": true
+    "find": true,
+    "rep": true
    },
    {
     "a": [
@@ -49494,7 +52013,8 @@
      -1.5,
      62.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49505,7 +52025,8 @@
      7.5,
      -67.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49516,7 +52037,8 @@
      -7.5,
      67.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49527,7 +52049,8 @@
      8.5,
      -1.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49538,7 +52061,8 @@
      2.5,
      -60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49549,7 +52073,8 @@
      -2.5,
      60.5
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49560,7 +52085,8 @@
      8.5,
      -66.2
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49571,7 +52097,8 @@
      -8.5,
      66.3
     ],
-    "find": true
+    "find": true,
+    "rep": false
    },
    {
     "a": [
@@ -49591,6 +52118,755 @@
     ],
     "b": [
      6.5,
+     62.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -9.5,
+     3.5
+    ],
+    "b": [
+     -6.5,
+     -3.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     9.5,
+     -3.5
+    ],
+    "b": [
+     6.5,
+     3.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     9.5,
+     -5.5
+    ],
+    "b": [
+     7.5,
+     1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     5.5
+    ],
+    "b": [
+     -7.5,
+     -1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -7.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     -4.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     7.5,
+     -3.5
+    ],
+    "b": [
+     7.5,
+     4.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     1.5,
+     -62.5
+    ],
+    "b": [
+     2.5,
+     -68.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     -1.5,
+     62.5
+    ],
+    "b": [
+     -2.5,
+     68.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     9.5,
+     -4.5
+    ],
+    "b": [
+     4.5,
+     1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     4.5
+    ],
+    "b": [
+     -4.5,
+     -1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     10.5,
+     -7.5
+    ],
+    "b": [
+     7.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -10.5,
+     7.5
+    ],
+    "b": [
+     -7.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     10.5,
+     -3.5
+    ],
+    "b": [
+     7.5,
+     1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -11.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     -2.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     -1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     9.5,
+     -6.5
+    ],
+    "b": [
+     4.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     6.5
+    ],
+    "b": [
+     -4.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     1.5,
+     -62.5
+    ],
+    "b": [
+     3.5,
+     -65.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -1.5,
+     62.5
+    ],
+    "b": [
+     -3.5,
+     65.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     9.5,
+     -5.5
+    ],
+    "b": [
+     7.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     5.5
+    ],
+    "b": [
+     -7.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     8.5,
+     -7.5
+    ],
+    "b": [
+     7.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -8.5,
+     7.5
+    ],
+    "b": [
+     -7.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -6.5,
+     -68.5
+    ],
+    "b": [
+     -5.5,
+     -62.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     6.5,
+     68.5
+    ],
+    "b": [
+     5.5,
+     62.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     7.5,
+     -3.5
+    ],
+    "b": [
+     7.5,
+     2.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -7.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     -2.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     9.5,
+     -7.5
+    ],
+    "b": [
+     9.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     7.5
+    ],
+    "b": [
+     -9.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     1.5,
+     -62.5
+    ],
+    "b": [
+     4.8,
+     -63.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -1.5,
+     62.5
+    ],
+    "b": [
+     -4.7,
+     63.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     9.5,
+     -4.5
+    ],
+    "b": [
+     4.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     4.5
+    ],
+    "b": [
+     -4.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     9.5,
+     -5.5
+    ],
+    "b": [
+     9.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     5.5
+    ],
+    "b": [
+     -9.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     10.5,
+     -3.5
+    ],
+    "b": [
+     7.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -11.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     8.5,
+     -3.5
+    ],
+    "b": [
+     7.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     6.5,
+     -3.5
+    ],
+    "b": [
+     4.5,
+     2.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -6.5,
+     3.5
+    ],
+    "b": [
+     -4.5,
+     -2.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     2.5,
+     -68.5
+    ],
+    "b": [
+     1.5,
+     -62.5
+    ],
+    "find": true,
+    "rep": true
+   },
+   {
+    "a": [
+     9.5,
+     -5.5
+    ],
+    "b": [
+     9.5,
+     -1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     10.5,
+     -3.5
+    ],
+    "b": [
+     9.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -10.5,
+     3.5
+    ],
+    "b": [
+     -9.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -7.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     7.5,
+     -3.5
+    ],
+    "b": [
+     4.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -7.5,
+     3.5
+    ],
+    "b": [
+     -4.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -9.5,
+     -52.5
+    ],
+    "b": [
+     -3.5,
+     -57.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     4.8,
+     -63.5
+    ],
+    "b": [
+     1.5,
+     -62.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -7.5,
+     -66.5
+    ],
+    "b": [
+     -5.5,
+     -62.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     7.5,
+     66.5
+    ],
+    "b": [
+     5.5,
+     62.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -10.5,
+     5.5
+    ],
+    "b": [
+     -9.5,
+     1.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -4.7,
+     63.5
+    ],
+    "b": [
+     -1.5,
+     62.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     6.5,
+     -3.5
+    ],
+    "b": [
+     7.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     8.5,
+     -3.5
+    ],
+    "b": [
+     9.5,
+     0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -8.5,
+     3.5
+    ],
+    "b": [
+     -9.5,
+     -0.5
+    ],
+    "find": true,
+    "rep": false
+   },
+   {
+    "a": [
+     -8.9,
+     -65.5
+    ],
+    "b": [
+     -5.5,
+     -62.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     9,
+     65.5
+    ],
+    "b": [
+     5.5,
+     62.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -8.9,
+     -65.5
+    ],
+    "b": [
+     -7.5,
+     -62.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     9,
+     65.5
+    ],
+    "b": [
+     7.5,
+     62.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -8.5,
+     -63.5
+    ],
+    "b": [
+     -5.5,
+     -62.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     8.5,
+     63.5
+    ],
+    "b": [
+     5.5,
      62.5
     ],
     "find": false
@@ -50889,25 +54165,26 @@
  },
  "ms": {
   "1": 1,
-  "2": 422,
-  "6": 599,
-  "8": 1193,
-  "9": 1233,
-  "10": 1237,
-  "15": 1270,
-  "16": 5094,
-  "climbHops": 573,
-  "routes": 595,
-  "7d-low": 703,
-  "7d": 1192,
-  "total": 5096
+  "2": 439,
+  "6": 669,
+  "8": 1373,
+  "9": 1415,
+  "10": 1419,
+  "15": 1457,
+  "16": 5846,
+  "climbHops": 643,
+  "routes": 668,
+  "7d-low": 777,
+  "7d": 1372,
+  "total": 5850
  },
+ "swim": "fail",
  "_climbHops": {
   "tried": 58,
   "made": 58,
   "proved": true,
   "trials": 89,
-  "ms": 147,
+  "ms": 200,
   "notMade": [],
   "madeAt": [
    [
@@ -51182,7 +54459,7 @@
     2.4,
     -64.5
    ],
-   "what": "7d lowGap ×11: gain 10.7–13.7 m",
+   "what": "7d lowGap [layout] ×11: gain 10.7–13.7 m",
    "look": [
     1.5,
     2.4,
@@ -51209,7 +54486,7 @@
     2,
     -61.5
    ],
-   "what": "7d riseGap (swim-jump) ×3: gain 17.9–20 m",
+   "what": "7d riseGap (swim-jump) [swim-jump] ×3: gain 17.9–20 m",
    "look": [
     4.5,
     3.2,
@@ -51236,7 +54513,7 @@
     2.4,
     -62.5
    ],
-   "what": "7d vault (swim-jump) ×10: gain 10–13.7 m",
+   "what": "7d vault (swim-jump) [swim-jump] ×8: gain 10–13.7 m",
    "look": [
     3.5,
     2.4,
@@ -51259,11 +54536,65 @@
    "i": 10,
    "check": 7,
    "at": [
+    3.5,
+    2.4,
+    -64.5
+   ],
+   "what": "7d vault [field rule] ×2: gain 10.4–11 m",
+   "look": [
+    3.5,
+    0,
+    -61.5
+   ],
+   "move": [
+    [
+     3.5,
+     2.4,
+     -64.5
+    ],
+    [
+     3.5,
+     0,
+     -61.5
+    ]
+   ]
+  },
+  {
+   "i": 11,
+   "check": 7,
+   "at": [
+    1.5,
+    2.4,
+    -62.5
+   ],
+   "what": "7d squidTube [layout] ×4: gain 11.4–15.2 m",
+   "look": [
+    2.5,
+    2.4,
+    -68.5
+   ],
+   "move": [
+    [
+     1.5,
+     2.4,
+     -62.5
+    ],
+    [
+     2.5,
+     2.4,
+     -68.5
+    ]
+   ]
+  },
+  {
+   "i": 12,
+   "check": 7,
+   "at": [
     9.5,
     -1.2,
     -3.5
    ],
-   "what": "7d lowGap ×14: gain 10.2–11.6 m",
+   "what": "7d lowGap [layout] ×14: gain 10.2–11.6 m",
    "look": [
     7.5,
     -1.2,
@@ -51283,14 +54614,14 @@
    ]
   },
   {
-   "i": 11,
+   "i": 13,
    "check": 7,
    "at": [
     8.5,
     -1.2,
     -4.5
    ],
-   "what": "7d vault (swim-jump) ×2: gain 10.6–11 m",
+   "what": "7d vault (swim-jump) [swim-jump] ×2: gain 10.6–11 m",
    "look": [
     7.5,
     0.1,
@@ -51310,14 +54641,41 @@
    ]
   },
   {
-   "i": 12,
+   "i": 14,
+   "check": 7,
+   "at": [
+    9.5,
+    -1.2,
+    -3.5
+   ],
+   "what": "7d squidTube [layout] ×21: gain 10.6–17 m",
+   "look": [
+    6.5,
+    -1.2,
+    3.5
+   ],
+   "move": [
+    [
+     9.5,
+     -1.2,
+     -3.5
+    ],
+    [
+     6.5,
+     -1.2,
+     3.5
+    ]
+   ]
+  },
+  {
+   "i": 15,
    "check": 7,
    "at": [
     -7.5,
     -1.2,
     1.5
    ],
-   "what": "7d lowGap ×14: gain 10.2–11.6 m",
+   "what": "7d lowGap [layout] ×14: gain 10.2–11.6 m",
    "look": [
     -9.5,
     -1.2,
@@ -51337,14 +54695,14 @@
    ]
   },
   {
-   "i": 13,
+   "i": 16,
    "check": 7,
    "at": [
     -9.5,
     -1.2,
     3.5
    ],
-   "what": "7d vault (swim-jump): gain 11 m",
+   "what": "7d vault (swim-jump) [swim-jump]: gain 11 m",
    "look": [
     -7.5,
     0.1,
@@ -51364,14 +54722,41 @@
    ]
   },
   {
-   "i": 14,
+   "i": 17,
+   "check": 7,
+   "at": [
+    -9.5,
+    -1.2,
+    3.5
+   ],
+   "what": "7d squidTube [layout] ×22: gain 10.6–17 m",
+   "look": [
+    -6.5,
+    -1.2,
+    -3.5
+   ],
+   "move": [
+    [
+     -9.5,
+     -1.2,
+     3.5
+    ],
+    [
+     -6.5,
+     -1.2,
+     -3.5
+    ]
+   ]
+  },
+  {
+   "i": 18,
    "check": 7,
    "at": [
     -1.5,
     2.4,
     62.5
    ],
-   "what": "7d lowGap ×8: gain 10.3–12.7 m",
+   "what": "7d lowGap [layout] ×8: gain 10.3–12.7 m",
    "look": [
     -3.5,
     2.4,
@@ -51391,14 +54776,14 @@
    ]
   },
   {
-   "i": 15,
+   "i": 19,
    "check": 7,
    "at": [
     0.5,
     1.6,
     60.5
    ],
-   "what": "7d riseGap (swim-jump) ×4: gain 11.1–26.2 m",
+   "what": "7d riseGap (swim-jump) [swim-jump] ×3: gain 11.1–26.2 m",
    "look": [
     -4.5,
     3.2,
@@ -51418,14 +54803,41 @@
    ]
   },
   {
-   "i": 16,
+   "i": 20,
+   "check": 7,
+   "at": [
+    0.5,
+    1.6,
+    60.5
+   ],
+   "what": "7d riseGap [field rule]: gain 24.3 m",
+   "look": [
+    -2.5,
+    2.4,
+    68.5
+   ],
+   "move": [
+    [
+     0.5,
+     1.6,
+     60.5
+    ],
+    [
+     -2.5,
+     2.4,
+     68.5
+    ]
+   ]
+  },
+  {
+   "i": 21,
    "check": 7,
    "at": [
     -1.5,
     2.4,
     62.5
    ],
-   "what": "7d vault (swim-jump) ×8: gain 10–13.7 m",
+   "what": "7d vault (swim-jump) [swim-jump] ×6: gain 10–13.7 m",
    "look": [
     -3.5,
     2.4,
@@ -51445,41 +54857,68 @@
    ]
   },
   {
-   "i": 17,
+   "i": 22,
    "check": 7,
    "at": [
-    -6.5,
+    -3.5,
     2.4,
-    -68.5
+    64.5
    ],
-   "what": "7d longGap (swim-jump) ×2: gain 24.2–25.2 m",
+   "what": "7d vault [field rule] ×2: gain 10.4–12 m",
    "look": [
-    0.5,
-    1.6,
-    -60.5
+    -2.5,
+    0,
+    61.5
    ],
    "move": [
     [
-     -6.5,
+     -3.5,
      2.4,
-     -68.5
+     64.5
     ],
     [
-     0.5,
-     1.6,
-     -60.5
+     -2.5,
+     0,
+     61.5
     ]
    ]
   },
   {
-   "i": 18,
+   "i": 23,
+   "check": 7,
+   "at": [
+    -1.5,
+    2.4,
+    62.5
+   ],
+   "what": "7d squidTube [layout] ×4: gain 10.7–15.2 m",
+   "look": [
+    -2.5,
+    2.4,
+    68.5
+   ],
+   "move": [
+    [
+     -1.5,
+     2.4,
+     62.5
+    ],
+    [
+     -2.5,
+     2.4,
+     68.5
+    ]
+   ]
+  },
+  {
+   "i": 24,
    "check": 7,
    "at": [
     -4.5,
     2,
     -61.5
    ],
-   "what": "7d longGap (swim-jump) ×8: gain 15.6–26.1 m",
+   "what": "7d longGap (swim-jump) [swim-jump] ×9: gain 15.6–26.1 m",
    "look": [
     3.5,
     2.4,
@@ -51499,68 +54938,68 @@
    ]
   },
   {
-   "i": 19,
+   "i": 25,
    "check": 7,
    "at": [
-    4.5,
-    2,
-    61.5
-   ],
-   "what": "7d longGap (swim-jump) ×9: gain 15.6–26.1 m",
-   "look": [
-    -4.7,
+    -8.9,
     2.4,
-    64.5
+    -65.5
    ],
-   "move": [
-    [
-     4.5,
-     2,
-     61.5
-    ],
-    [
-     -4.7,
-     2.4,
-     64.5
-    ]
-   ]
-  },
-  {
-   "i": 20,
-   "check": 7,
-   "at": [
-    -2.5,
-    2.4,
-    68.5
-   ],
-   "what": "7d longGap: gain 15.4 m",
+   "what": "7d longGap [field rule]: gain 20.4 m",
    "look": [
     0.5,
     1.6,
-    60.5
+    -60.5
    ],
    "move": [
     [
-     -2.5,
+     -8.9,
      2.4,
-     68.5
+     -65.5
     ],
     [
      0.5,
      1.6,
-     60.5
+     -60.5
     ]
    ]
   },
   {
-   "i": 21,
+   "i": 26,
+   "check": 7,
+   "at": [
+    -6.5,
+    2.4,
+    -68.5
+   ],
+   "what": "7d squidTube [layout] ×2: gain 11.3–13.8 m",
+   "look": [
+    -5.5,
+    2.4,
+    -62.5
+   ],
+   "move": [
+    [
+     -6.5,
+     2.4,
+     -68.5
+    ],
+    [
+     -5.5,
+     2.4,
+     -62.5
+    ]
+   ]
+  },
+  {
+   "i": 27,
    "check": 7,
    "at": [
     6.5,
     2.4,
     68.5
    ],
-   "what": "7d longGap (swim-jump) ×4: gain 17–27.8 m",
+   "what": "7d longGap (swim-jump) [swim-jump] ×13: gain 15.6–27.8 m",
    "look": [
     -1.5,
     0,
@@ -51580,14 +55019,68 @@
    ]
   },
   {
-   "i": 22,
+   "i": 28,
+   "check": 7,
+   "at": [
+    6.5,
+    2.4,
+    68.5
+   ],
+   "what": "7d squidTube [layout] ×2: gain 11.3–13.8 m",
+   "look": [
+    5.5,
+    2.4,
+    62.5
+   ],
+   "move": [
+    [
+     6.5,
+     2.4,
+     68.5
+    ],
+    [
+     5.5,
+     2.4,
+     62.5
+    ]
+   ]
+  },
+  {
+   "i": 29,
+   "check": 7,
+   "at": [
+    -2.5,
+    2.4,
+    68.5
+   ],
+   "what": "7d longGap [field rule]: gain 15.4 m",
+   "look": [
+    0.5,
+    1.6,
+    60.5
+   ],
+   "move": [
+    [
+     -2.5,
+     2.4,
+     68.5
+    ],
+    [
+     0.5,
+     1.6,
+     60.5
+    ]
+   ]
+  },
+  {
+   "i": 30,
    "check": 7,
    "at": [
     -8.2,
     -1.2,
     -6.5
    ],
-   "what": "7d riseGap: gain 14.2 m",
+   "what": "7d riseGap [field rule]: gain 14.2 m",
    "look": [
     -13.5,
     0,
@@ -51607,7 +55100,34 @@
    ]
   },
   {
-   "i": 23,
+   "i": 31,
+   "check": 7,
+   "at": [
+    2.5,
+    2.4,
+    -68.5
+   ],
+   "what": "7d squidTube [layout]: gain 12.4 m",
+   "look": [
+    1.5,
+    2.4,
+    -62.5
+   ],
+   "move": [
+    [
+     2.5,
+     2.4,
+     -68.5
+    ],
+    [
+     1.5,
+     2.4,
+     -62.5
+    ]
+   ]
+  },
+  {
+   "i": 32,
    "check": 8,
    "at": [
     -6.5,
@@ -51619,7 +55139,7 @@
    "move": null
   },
   {
-   "i": 24,
+   "i": 33,
    "check": 8,
    "at": [
     6.5,
@@ -51631,7 +55151,7 @@
    "move": null
   },
   {
-   "i": 25,
+   "i": 34,
    "check": 9,
    "at": [
     -2,
@@ -51643,7 +55163,7 @@
    "move": null
   },
   {
-   "i": 26,
+   "i": 35,
    "check": 9,
    "at": [
     2,
@@ -51655,7 +55175,7 @@
    "move": null
   },
   {
-   "i": 27,
+   "i": 36,
    "check": 11,
    "at": [
     8.7,
@@ -51668,7 +55188,7 @@
    "also": 1
   },
   {
-   "i": 28,
+   "i": 37,
    "check": 11,
    "at": [
     -7.8,
@@ -51681,7 +55201,7 @@
    "also": 1
   },
   {
-   "i": 29,
+   "i": 38,
    "check": 13,
    "at": [
     -2,
@@ -51693,7 +55213,7 @@
    "move": null
   },
   {
-   "i": 30,
+   "i": 39,
    "check": 13,
    "at": [
     2,
@@ -51705,7 +55225,7 @@
    "move": null
   },
   {
-   "i": 31,
+   "i": 40,
    "check": 15,
    "at": [
     -13.5,
@@ -51717,7 +55237,7 @@
    "move": null
   },
   {
-   "i": 32,
+   "i": 41,
    "check": 15,
    "at": [
     13.5,
@@ -51915,13 +55435,13 @@
      "how": ""
     },
     {
-     "t": 23.7,
+     "t": 23.6,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 23.7,
+     "t": 23.6,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -51951,13 +55471,13 @@
      "how": ""
     },
     {
-     "t": 36.5,
+     "t": 36.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 36.5,
+     "t": 36.4,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -51987,13 +55507,13 @@
      "how": ""
     },
     {
-     "t": 49.3,
+     "t": 49.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 49.3,
+     "t": 49.2,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -52023,13 +55543,13 @@
      "how": ""
     },
     {
-     "t": 62.1,
+     "t": 62,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 62.1,
+     "t": 62,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -52059,13 +55579,13 @@
      "how": ""
     },
     {
-     "t": 74.9,
+     "t": 74.8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 74.9,
+     "t": 74.8,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -52112,7 +55632,7 @@
      ]
     },
     {
-     "t": 86.8,
+     "t": 86.7,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -52232,7 +55752,7 @@
      "tGate": 8.7,
      "w2": {
       "at": [
-       7.31,
+       7.3,
        1.88,
        -67.22
       ],

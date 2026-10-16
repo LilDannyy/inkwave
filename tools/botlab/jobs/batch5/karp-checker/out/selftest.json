@@ -11,12 +11,18 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [],
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f1",
@@ -30,6 +36,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    1
@@ -37,13 +48,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f2",
   "check": 2,
-  "what": "a wall on Bravo's half only (a `single`): Alpha's walk 50 % longer, L_A \u2260 L_B",
-  "expect": "\\(\u0394 (?:[3-9]|[1-9]\\d)(?:\\.\\d)? %\\)",
+  "what": "a wall on Bravo's half only (a `single`): Alpha's walk 50 % longer, L_A ≠ L_B",
+  "expect": "\\(Δ (?:[3-9]|[1-9]\\d)(?:\\.\\d)? %\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -51,6 +63,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    2,
@@ -59,13 +76,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f3",
   "check": 3,
-  "what": "the weir at 85 % of the way (count \u2248 15)",
-  "expect": "weir 1 at count \\d+ \\([\\d.]+ %: band 45\u201360\\)",
+  "what": "the weir at 85 % of the way (count ≈ 15)",
+  "expect": "weir 1 at count \\d+ \\([\\d.]+ %: band 45–60\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -73,6 +91,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -81,13 +104,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f4",
   "check": 4,
   "what": "the weir on a 3 m box only a climb reaches",
-  "expect": "Pond \u2192 weir 1 has no climb-free carrier route",
+  "expect": "Pond → weir 1 has no climb-free carrier route",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -95,6 +119,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -106,13 +135,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f5",
   "check": 5,
   "what": "the weir at the end of a 3 m dead-end corridor (one way in, 12 m long)",
-  "expect": "Pond \u2192 weir 1: no second route",
+  "expect": "Pond → weir 1: no second route",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -120,6 +150,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    1,
@@ -130,13 +165,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f6",
   "check": 6,
-  "what": "a third opening in the ring wall, straight in from the south: Pond \u2192 Gate \u2248 10 s",
-  "expect": "= [0-9](?:\\.\\d)? s walking \\(11\\.5\u201318\\)",
+  "what": "a third opening in the ring wall, straight in from the south: Pond → Gate ≈ 10 s",
+  "expect": "= [0-9](?:\\.\\d)? s walking \\(11\\.5–18\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -144,6 +180,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -152,7 +193,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f7",
@@ -166,6 +208,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -173,13 +220,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f8",
   "check": 8,
-  "what": "the Gate 45\u00b0 off the pad \u2192 Pond line",
-  "expect": "\u00b0 off the pad \u2192 Pond line \\(\u00b140\u00b0\\)",
+  "what": "the Gate 45° off the pad → Pond line",
+  "expect": "° off the pad → Pond line \\(±40°\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -187,6 +235,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -197,7 +250,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f9",
@@ -211,6 +265,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -218,7 +277,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f10",
@@ -232,6 +292,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    10
@@ -239,7 +304,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f11",
@@ -253,6 +319,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    11
@@ -260,7 +331,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f12",
@@ -274,6 +346,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    12
@@ -281,7 +358,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f13",
@@ -295,6 +373,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    13
@@ -302,7 +385,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f14",
@@ -316,6 +400,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    14
@@ -323,7 +412,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f15",
@@ -337,6 +427,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    15
@@ -344,13 +439,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f16",
   "check": 16,
   "what": "an awning over the flank lane's 1.5 m step: the field adds the hop, no kid makes it",
-  "expect": "\\d+ made, [1-9]\\d* not \\([1-9]\\d* hops, \\d+ gaps up / level, \\d+ gaps down\\) \u2192 hopVeto",
+  "expect": "\\d+ made, [1-9]\\d* not \\([1-9]\\d* hops, \\d+ gaps up / level, \\d+ gaps down\\) → hopVeto",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -358,6 +454,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    16
@@ -365,13 +466,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "f16w",
   "check": 16,
-  "what": "a 2.5 m thin fence across the Pond \u2192 weir approach with a 0.5 m slot on route 1's line: the graph walks through the slot (its centre ray passes), no carrier's 0.76 m body fits",
-  "expect": "NOT WALKED: team \\d Pond \u2192 weir 1, route 1",
+  "what": "a 2.5 m thin fence across the Pond → weir approach with a 0.5 m slot on route 1's line: the graph walks through the slot (its centre ray passes), no carrier's 0.76 m body fits",
+  "expect": "NOT WALKED: team \\d Pond → weir 1, route 1",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -379,6 +481,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    16
@@ -386,13 +493,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x5",
   "check": 5,
   "what": "two weirs 8 m apart",
-  "expect": "the weirs 8 m apart \\(\u2265 12\\)",
+  "expect": "the weirs 8 m apart \\(≥ 12\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -400,6 +508,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -409,7 +522,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7b",
@@ -423,6 +537,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -435,7 +554,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7d",
@@ -449,6 +569,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -456,7 +581,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9a",
@@ -470,6 +596,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -477,7 +608,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9b",
@@ -491,6 +623,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -498,7 +635,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "states",
@@ -512,6 +650,11 @@
   "carry": false,
   "allStates": true,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "runs": [
    {
@@ -556,6 +699,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -563,7 +711,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7r",
@@ -577,6 +726,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -584,7 +738,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7rb",
@@ -598,6 +753,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -605,7 +765,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7rq",
@@ -619,6 +780,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -626,13 +792,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7a",
   "check": 7,
   "what": "two more openings in the ring wall on the deck side (west): six entrances",
-  "expect": "\\(a\\) team \\d: (?:[6-9]|\\d{2}) entrances into its Gate's 15 m ring \\(2\u20135\\)",
+  "expect": "\\(a\\) team \\d: (?:[6-9]|\\d{2}) entrances into its Gate's 15 m ring \\(2–5\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -640,6 +807,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -647,7 +819,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7c",
@@ -661,6 +834,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -668,7 +846,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7t",
@@ -682,6 +861,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -689,7 +873,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7l",
@@ -703,6 +888,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -710,7 +900,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7h",
@@ -724,6 +915,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    5,
@@ -732,7 +928,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7g",
@@ -746,6 +943,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -753,13 +955,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x3",
   "check": 3,
   "what": "the weir past its platform, 13 m from the ring",
-  "expect": "weir 1 \u2192 Gate [\\d.]+ m \\(\u2265 25 m",
+  "expect": "weir 1 → Gate [\\d.]+ m \\(≥ 25 m",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -767,6 +970,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -775,13 +983,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x5b",
   "check": 5,
   "what": "a wall across the deck at z 15 with a 3 m gap on route 1: route 2 goes round by the flank lane",
-  "expect": "Pond \u2192 weir 1: route 2 [\\d.]+ m = [\\d.]+ \u00d7 route 1 \\(\u2264 1\\.6\\)",
+  "expect": "Pond → weir 1: route 2 [\\d.]+ m = [\\d.]+ × route 1 \\(≤ 1\\.6\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -789,6 +998,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    5
@@ -796,7 +1010,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9d",
@@ -810,6 +1025,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9,
@@ -818,12 +1038,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9e",
   "check": 9,
-  "what": "a free zone on the floor across the Pond \u2192 weir routes",
+  "what": "a free zone on the floor across the Pond → weir routes",
   "expect": "touches \\d+ route 1 / route 2 node",
   "notFail": null,
   "expect16": null,
@@ -832,6 +1053,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -839,12 +1065,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9f",
   "check": 9,
-  "what": "an open-floor zone (6 \u00d7 8 m) signed at one corner only: one wide entrance, an end unsigned",
+  "what": "an open-floor zone (6 × 8 m) signed at one corner only: one wide entrance, an end unsigned",
   "expect": "a [\\d.]+ m entrance at .* needs a sign within 2 m of each end",
   "notFail": null,
   "expect16": null,
@@ -853,6 +1080,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -860,7 +1092,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9g",
@@ -874,6 +1107,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    8,
@@ -882,13 +1120,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x13",
   "check": 13,
   "what": "two of the parapet's three openings closed",
-  "expect": "spawn deck: [0-2] way\\(s\\) off \\(\u2265 3\\)",
+  "expect": "spawn deck: [0-2] way\\(s\\) off \\(≥ 3\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -896,6 +1135,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    13
@@ -903,13 +1147,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x14",
   "check": 14,
-  "what": "the floor east of the Pond cut away (open water x 3\u202614, z 0\u202610; mirrored)",
-  "expect": "^ring 4\\.5\u201310 m (?:[0-9]|[1-6][0-9])(?:\\.\\d)? % floor",
+  "what": "the floor east of the Pond cut away (open water x 3…14, z 0…10; mirrored)",
+  "expect": "^ring 4\\.5–10 m (?:[0-9]|[1-6][0-9])(?:\\.\\d)? % floor",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -917,6 +1162,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    14
@@ -924,7 +1174,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x15t",
@@ -938,6 +1189,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    15
@@ -945,7 +1201,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x15a",
@@ -959,6 +1216,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    3,
@@ -968,7 +1230,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x1",
@@ -982,6 +1245,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    1
@@ -989,7 +1257,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x11",
@@ -1003,6 +1272,11 @@
   "carry": true,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    11
@@ -1010,13 +1284,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x11r",
   "check": 11,
-  "what": "a noRetreat polygon over each whole half: the retreat walk's \u00d73 never comes on",
-  "expect": "team \\d: retreat \u00d73 on at null m",
+  "what": "a noRetreat polygon over each whole half: the retreat walk's ×3 never comes on",
+  "expect": "team \\d: retreat ×3 on at null m",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -1024,6 +1299,11 @@
   "carry": true,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9,
@@ -1032,7 +1312,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "w4",
@@ -1043,23 +1324,29 @@
    4,
    9
   ],
-  "expect16": "climbs of \u2264 1\\.8 m tried as hops: [1-9]\\d* of",
+  "expect16": "climbs of ≤ 1\\.8 m tried as hops: [1-9]\\d* of",
   "also": null,
   "phys": true,
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [],
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7m2",
   "check": 7,
-  "what": "f7's ledge from x -17.2: the cell centre at x \u221217.5 is 0.3 m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart",
+  "what": "f7's ledge from x -17.2: the cell centre at x −17.5 is 0.3 m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart",
   "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
   "notFail": null,
   "expect16": null,
@@ -1068,6 +1355,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1075,12 +1367,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7m4",
   "check": 7,
-  "what": "f7's ledge from x -17.4: the cell centre at x \u221217.5 is 0.1 m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart",
+  "what": "f7's ledge from x -17.4: the cell centre at x −17.5 is 0.1 m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart",
   "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
   "notFail": null,
   "expect16": null,
@@ -1089,6 +1382,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1096,7 +1394,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7m6",
@@ -1110,6 +1409,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1117,7 +1421,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7m8",
@@ -1131,6 +1436,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1138,12 +1448,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7m45",
   "check": 7,
-  "what": "f7's ledge turned 45\u00b0 (a 3.6 m square, 1.5 m, no ink, its diamond filling the ring wall's west opening): every floor node and top node beside a face are diagonal, none orthogonal",
+  "what": "f7's ledge turned 45° (a 3.6 m square, 1.5 m, no ink, its diamond filling the ring wall's west opening): every floor node and top node beside a face are diagonal, none orthogonal",
   "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
   "notFail": null,
   "expect16": null,
@@ -1152,6 +1463,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1159,7 +1475,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7p2",
@@ -1173,6 +1490,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1180,7 +1502,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x7p4",
@@ -1194,6 +1517,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -1201,7 +1529,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x15m",
@@ -1220,6 +1549,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    1,
@@ -1229,12 +1563,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x9n",
   "check": 9,
-  "what": "a 0.4 m noRetreat strip (x \u221210.2\u2026\u22129.8, z 4\u202626) across an open-floor free zone (x \u221214\u2026\u22126, z 11\u202619)",
+  "what": "a 0.4 m noRetreat strip (x −10.2…−9.8, z 4…26) across an open-floor free zone (x −14…−6, z 11…19)",
   "expect": "a noRetreat polygon within 3 m of team \\d's zone",
   "notFail": null,
   "expect16": null,
@@ -1243,6 +1578,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    9
@@ -1250,7 +1590,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "reach",
@@ -1264,6 +1605,11 @@
   "carry": false,
   "allStates": false,
   "reach": "kid",
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "reachRows": [
    {
@@ -2673,7 +3019,7 @@
  {
   "id": "v5",
   "check": 7,
-  "what": "V5: the ring wall's NW stretch (155\u2013165\u00b0) a 1.4 m roof wall: a kid vaults it into the ring instead of walking round by the SW opening",
+  "what": "V5: the ring wall's NW stretch (155–165°) a 1.4 m roof wall: a kid vaults it into the ring instead of walking round by the SW opening",
   "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*vault",
   "notFail": null,
   "expect16": null,
@@ -2682,6 +3028,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -2689,7 +3040,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "v5h",
@@ -2703,6 +3055,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -2710,12 +3067,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "rl",
   "check": 7,
-  "what": "RL: the ring wall's west opening (175\u2013185\u00b0) closed by a 1.2 m railing (rail: true, 0.1 m), f7's screen inside: a kid hops onto it and down, a squid slips through it",
+  "what": "RL: the ring wall's west opening (175–185°) closed by a 1.2 m railing (rail: true, 0.1 m), f7's screen inside: a kid hops onto it and down, a squid slips through it",
   "expect": "\\(a\\) team \\d: an entrance at .*\\[(?:vault over a low wall or rail|squid gap)(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
   "notFail": null,
   "expect16": null,
@@ -2724,6 +3082,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -2731,7 +3094,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "rlh",
@@ -2745,6 +3109,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -2752,7 +3121,8 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "h20",
@@ -2766,6 +3136,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -2773,12 +3148,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "g5",
   "check": 7,
-  "what": "G5: a 5.0 m moat of open water through the ring wall's west opening (x \u221217\u2026\u221212), inkable floor both sides: beyond a kid's jump, a carrier swim-jumping from its own ink clears it",
+  "what": "G5: a 5.0 m moat of open water through the ring wall's west opening (x −17…−12), inkable floor both sides: beyond a kid's jump, a carrier swim-jumping from its own ink clears it",
   "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longGap",
   "notFail": null,
   "expect16": null,
@@ -2787,6 +3163,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7
@@ -2794,12 +3175,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "reachs",
   "check": null,
-  "what": "REACH (swimming): the same platform pairs with inkable near platforms (6 m: the run-up) and the stage widened to x \u00b144 for the far ones: every pair #16's kid or its swimming carrier makes lies inside the swimming windows, and each window's edge beyond the last made gap with both rim nodes a cell back",
+  "what": "REACH (swimming): the same platform pairs with inkable near platforms (6 m: the run-up) and the stage widened to x ±44 for the far ones: every pair #16's kid or its swimming carrier makes lies inside the swimming windows, and each window's edge beyond the last made gap with both rim nodes a cell back",
   "expect": null,
   "notFail": null,
   "expect16": null,
@@ -2808,6 +3190,11 @@
   "carry": false,
   "allStates": false,
   "reach": "swim",
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "reachRows": [
    {
@@ -4130,7 +4517,7 @@
   "id": "x8n",
   "check": 8,
   "what": "the Gate 10 m from the pad (z 50)",
-  "expect": "the Gate (?:[0-9]|1[01])(?:\\.\\d)? m from the pad \\(12\u201320\\)",
+  "expect": "the Gate (?:[0-9]|1[01])(?:\\.\\d)? m from the pad \\(12–20\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -4138,6 +4525,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    8
@@ -4145,13 +4537,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x8f",
   "check": 8,
   "what": "the Gate 22 m from the pad (z 38)",
-  "expect": "the Gate (?:2[1-9]|[3-9]\\d)(?:\\.\\d)? m from the pad \\(12\u201320\\)",
+  "expect": "the Gate (?:2[1-9]|[3-9]\\d)(?:\\.\\d)? m from the pad \\(12–20\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -4159,6 +4552,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    7,
@@ -4167,13 +4565,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x8u",
   "check": 8,
   "what": "the Gate on a 3.4 m dais up a ramp: 1 m above the pad",
-  "expect": "the Gate [\\d.]+ m above the pad \\(\u2264 0\\.2\\)",
+  "expect": "the Gate [\\d.]+ m above the pad \\(≤ 0\\.2\\)",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -4181,6 +4580,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    1,
@@ -4191,12 +4595,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x8s",
   "check": 8,
-  "what": "a 4.6 m screen across the apron (x \u00b17, z 50.4\u202650.9) between the spawn deck and the Gate",
+  "what": "a 4.6 m screen across the apron (x ±7, z 50.4…50.9) between the spawn deck and the Gate",
   "expect": "the Gate not seen from the spawn deck",
   "notFail": null,
   "expect16": null,
@@ -4205,6 +4610,11 @@
   "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    8
@@ -4212,13 +4622,14 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x11f",
   "check": 11,
-  "what": "a noRest polygon (x 1\u202627, z 0\u202622: the main floor's east side, the channel's south end, the east strip, the GAP) round the enemy half's water edge nearest the Pond: a carrier falling there is dropped \u2265 13.5 m away (12 m the rule)",
-  "expect": "a fall on the enemy half \u2192 ",
+  "what": "a noRest polygon (x 1…27, z 0…22: the main floor's east side, the channel's south end, the east strip, the GAP) round the enemy half's water edge nearest the Pond: a carrier falling there is dropped ≥ 13.5 m away (12 m the rule)",
+  "expect": "a fall on the enemy half → ",
   "notFail": null,
   "expect16": null,
   "also": null,
@@ -4226,6 +4637,11 @@
   "carry": true,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    11
@@ -4233,12 +4649,13 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x11w",
   "check": 11,
-  "what": "open water across the main floor at z 6\u202620 but a 1 m causeway (x \u22121\u20260) on route 1: a splat on it rests on the causeway (no wide floor within reach)",
+  "what": "open water across the main floor at z 6…20 but a 1 m causeway (x −1…0) on route 1: a splat on it rests on the causeway (no wide floor within reach)",
   "expect": "a splat on the narrow walk by weir 1 rested on narrow floor",
   "notFail": null,
   "expect16": null,
@@ -4247,6 +4664,11 @@
   "carry": true,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
    5,
@@ -4256,27 +4678,433 @@
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
  },
  {
   "id": "x11z",
-  "check": 11,
-  "what": "the spawn-deck zone with its eras written as strings (['0']): the checker's static checks read it (they compare as strings), the engine compares numbers and never applies it, so a carrier visiting it gets no zone \u00d73 (only the retreat rule's, the deck lying behind its mark)",
-  "expect": "in its own zone the fuse ran \u00d7\\d \\((?!zone\\))",
+  "check": 1,
+  "what": "the spawn-deck zone with its eras written as strings (['0']): the engine compares strictly and never applies it (review 3 caught it only by #11's zone visit)",
+  "expect": "free zone 1's eras entry \"0\" matches no field state",
   "notFail": null,
   "expect16": null,
   "also": null,
   "phys": false,
-  "carry": true,
+  "carry": false,
   "allStates": false,
   "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
   "pass": true,
   "failing": [
-   11
+   1,
+   9
   ],
   "why": true,
   "why16": true,
   "alsoOk": true,
-  "flagged": true
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x1e",
+  "check": 1,
+  "what": "a second free zone (the apron's east crate corner, Bravo's own) with eras ['1'] on a box whose states are keyed 0 and 1 (numbers): it never exists in the game, and #9 would read it",
+  "expect": "free zone 2's eras entry \"1\" matches no field state",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x1v",
+  "check": 1,
+  "what": "a carrierBlock with eras [1]: the engine honours eras on free zones only, so it stands in every state",
+  "expect": "carrierBlock 2 carries eras \\[1\\], which the engine ignores",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L1t",
+  "check": 7,
+  "what": "L1t: a 1.0 m no-ink ledge on the field (x −15.4…−13, its face 0.1 m past a cell centre: floor node 2 m from its top node, no edge) into the ring, a ramp down from it inside, screened",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L2t",
+  "check": 7,
+  "what": "L2t: L1t at 0.8 m",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L3t",
+  "check": 7,
+  "what": "L3t: a 1.0 m walkway outside the ring (up a ramp) through the opening, its end 0.1 m past a cell centre: a kid steps 1.0 m down off it into the ring",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L1tc",
+  "check": 7,
+  "what": "the control: L1t with its face on the grid (x −15.0): nav's own jump edge, a plain entrance",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[jump\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "T4",
+  "check": 7,
+  "what": "T4: a 1.0 m-high squid culvert 3.5 m long (x −18.75…−15.25, sealed sides) through the ring wall's west opening, screened inside: a squid slips into the ring, a kid can't; the nodes either side stand 5 m apart",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[squid gap(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "g5w",
+  "check": null,
+  "what": "G5 with KARP_SWIM=warn: its swim-jump finds are a WARN, not a FAIL",
+  "expect": null,
+  "notFail": [
+   7
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": "warn",
+  "unplaced": false,
+  "notFailText": [
+   [
+    7,
+    "WARN \\(KARP_SWIM=warn\\) made only by the swimming carrier: [1-9]\\d* #7d find"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "g5o",
+  "check": null,
+  "what": "G5 with KARP_SWIM=off: the kid alone, who can't clear 5 m",
+  "expect": null,
+  "notFail": [
+   7
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": "off",
+  "unplaced": false,
+  "notFailText": [
+   [
+    16,
+    "the swimming carrier not modelled \\(KARP_SWIM=off"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7w",
+  "check": null,
+  "what": "G5 with one waiver (probe longGap, at one find's takeoff on the moat's far bank): every find of its flag group is waived, not only those within 2 m",
+  "expect": null,
+  "notFail": [
+   7
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": [
+   [
+    7,
+    "[1-9]\\d* waived \\(\\d+ flag group"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x2h",
+  "check": 2,
+  "what": "a hole: a 3.2 m platform north of the alley (up a ramp) a kid drops off over the alley's 3 m wall, and a carrierBlock over the alley's mouth, its only way out: reached from the Pond, no walk on to a Gate",
+  "expect": "holes [1-9]",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   2
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x2s",
+  "check": 2,
+  "what": "a reading fault planted in the field (sweepFault: between the alley's nodes fieldAt reads 4 m low; at the nodes exact) — the sweep's FAIL branch",
+  "expect": "[1-9]\\d* > 2\\.5 m \\(worst",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": "sweepFault",
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   2
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x12s",
+  "check": 12,
+  "what": "a fixture lightmap with a wrong hash in place of the stage's own (karpbox judged as baked)",
+  "expect": "its lightmap is stale \\(the build differs from the bake: hash stale0 baked",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": "data:application/json,%7B%22hash%22%3A%22stale0%22%2C%22ppm%22%3A5%2C%22size%22%3A1024%7D",
+  "after": null,
+  "swim": null,
+  "unplaced": true,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   12
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x12f",
+  "check": null,
+  "what": "the same fixture with the build's own hash: fresh",
+  "expect": null,
+  "notFail": [
+   12
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": "data:application/json,%7B%22hash%22%3A%22%40level%22%2C%22ppm%22%3A5%2C%22size%22%3A1024%7D",
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": [
+   [
+    12,
+    "lightmap karpbox\\.bazookarp fresh"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
  }
 ]

@@ -17,7 +17,7 @@
    57.02,
    55.45
   ],
-  "s": 111,
+  "s": 110,
   "c2": {
    "LA": 57.02,
    "LB": 55.45,
@@ -107,8 +107,8 @@
      30.3
     ]
    ],
-   "beyond": 1741,
-   "beyondMade": 1689,
+   "beyond": 1811,
+   "beyondMade": 1759,
    "rise": {
     "tried": 3,
     "made": 3
@@ -126,8 +126,20 @@
     "tried": 66,
     "made": 66
    },
+   "step": {
+    "cand": 30,
+    "tried": 30,
+    "made": 30
+   },
+   "tube": {
+    "cand": 165,
+    "tried": 40,
+    "made": 40,
+    "squidTrials": 40
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 1766,
+    "takeoffs": 1829,
     "made": 614,
     "edges": 2,
     "beyond": 579,
@@ -147,8 +159,8 @@
    },
    "offMadeN": 69,
    "coyote": 53,
-   "trials": 16334,
-   "ms": 33592,
+   "trials": 16404,
+   "ms": 38307,
    "climbHops": {
     "tried": 11,
     "made": 11,
@@ -246,152 +258,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-13.2, 42.8) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 32.1,
-     "t": 6.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (9.6, 31.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 31.9,
-     "t": 6.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (14, 44.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 29.3,
-     "t": 5.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-4.2, 56.6) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.2,
-     "t": 5.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (4.2, 56.6) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28,
-     "t": 4.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-3.8, -57) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 17.3,
-     "t": 4.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 15
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (3.8, -57) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.7,
-     "t": 5.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-11, -52.6) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 24.5,
-     "t": 4.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (13.5, -43.5) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 24.9,
-     "t": 3.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-14.3, -41.5) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.3,
-     "t": 4.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-8, -30.2) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28,
-     "t": 5.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (8, -30.2) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.5,
-     "t": 5.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    }
-   ],
    "walkRoutes": [
     0,
     0
@@ -431,6 +297,14 @@
     "cand": 465,
     "tried": 66
    },
+   "step": {
+    "cand": 30,
+    "tried": 30
+   },
+   "tube": {
+    "cand": 165,
+    "tried": 40
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -449,9 +323,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 129,
+    "field": 1132,
+    "swim": 554,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 416,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 1841
+  },
+  "from": "all2"
  },
  {
   "id": "kelpline",
@@ -471,7 +360,7 @@
    51.96,
    51.95
   ],
-  "s": 88,
+  "s": 95,
   "c2": {
    "LA": 51.96,
    "LB": 51.95,
@@ -567,8 +456,8 @@
      19.5
     ]
    ],
-   "beyond": 2127,
-   "beyondMade": 2052,
+   "beyond": 2167,
+   "beyondMade": 2092,
    "rise": {
     "tried": 77,
     "made": 77
@@ -586,8 +475,20 @@
     "tried": 25,
     "made": 25
    },
+   "step": {
+    "cand": 19,
+    "tried": 19,
+    "made": 19
+   },
+   "tube": {
+    "cand": 63,
+    "tried": 21,
+    "made": 21,
+    "squidTrials": 21
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 4227,
+    "takeoffs": 4267,
     "made": 1061,
     "edges": 1,
     "beyond": 813,
@@ -607,8 +508,8 @@
    },
    "offMadeN": 494,
    "coyote": 151,
-   "trials": 27313,
-   "ms": 54202,
+   "trials": 27353,
+   "ms": 58730,
    "climbHops": {
     "tried": 52,
     "made": 52,
@@ -714,176 +615,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.2,
-     "t": 4.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 19
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.8,
-     "t": 7.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.7,
-     "t": 4.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36,
-     "t": 7.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.2,
-     "t": 4.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 19
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.8,
-     "t": 7.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.7,
-     "t": 4.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36,
-     "t": 7.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (21.2, 26.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 32.1,
-     "t": 5.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (12.8, 42.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 41.6,
-     "t": 6.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 36
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (33.8, 48.3) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.1,
-     "t": 3.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-33.8, -48.3) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.6,
-     "t": 4.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 23
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-13, -43.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25,
-     "t": 4.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 21
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-21.2, -26.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 34.9,
-     "t": 5.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -923,6 +654,14 @@
     "cand": 97,
     "tried": 25
    },
+   "step": {
+    "cand": 19,
+    "tried": 19
+   },
+   "tube": {
+    "cand": 63,
+    "tried": 21
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -941,9 +680,24 @@
     "longGap": 0,
     "climbOff": 2
    },
+   "cause": {
+    "layout": 269,
+    "field": 562,
+    "swim": 531,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 1457,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 1362
+  },
+  "from": "all2"
  },
  {
   "id": "halyard",
@@ -964,13 +718,13 @@
    54.8,
    54.68
   ],
-  "s": 121,
+  "s": 119,
   "c2": {
    "LA": 54.8,
    "LB": 54.68,
    "Ldiff": 0.23,
    "holes": 0,
-   "reach": 3942,
+   "reach": 3938,
    "hops": 16,
    "gaps": 530,
    "maxGain": 25.06,
@@ -1053,8 +807,8 @@
      17.5
     ]
    ],
-   "beyond": 2135,
-   "beyondMade": 1683,
+   "beyond": 2124,
+   "beyondMade": 1677,
    "rise": {
     "tried": 379,
     "made": 181
@@ -1064,21 +818,33 @@
     "made": 0
    },
    "long": {
-    "tried": 1753,
-    "made": 1499
+    "tried": 1742,
+    "made": 1493
    },
    "vault": {
     "cand": 7,
     "tried": 3,
     "made": 3
    },
+   "step": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0,
+    "squidTrials": 0
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 2906,
-    "made": 1394,
+    "takeoffs": 2895,
+    "made": 1388,
     "edges": 6,
-    "beyond": 1236,
+    "beyond": 1230,
     "off": 152,
-    "trials": 10263
+    "trials": 10167
    },
    "lowGap": {
     "pairs": 83,
@@ -1093,8 +859,8 @@
    },
    "offMadeN": 688,
    "coyote": 188,
-   "trials": 44274,
-   "ms": 77942,
+   "trials": 44002,
+   "ms": 72467,
    "climbHops": {
     "tried": 24,
     "made": 24,
@@ -1219,7 +985,7 @@
     "tried": 0
    },
    "long": {
-    "tried": 1753
+    "tried": 1742
    },
    "rise": {
     "tried": 379
@@ -1239,6 +1005,14 @@
     "cand": 7,
     "tried": 3
    },
+   "step": {
+    "cand": 0,
+    "tried": 0
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -1247,7 +1021,7 @@
    },
    "cand": {
     "high": 0,
-    "long": 1753
+    "long": 1742
    },
    "finds": {
     "lowGap": 16,
@@ -1257,9 +1031,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 536,
+    "field": 340,
+    "swim": 1115,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 40,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 2007
+  },
+  "from": "all2"
  },
  {
   "id": "saltpan",
@@ -1278,7 +1067,7 @@
    83.48,
    81.06
   ],
-  "s": 71,
+  "s": 88,
   "c2": {
    "LA": 83.48,
    "LB": 81.06,
@@ -1346,8 +1135,8 @@
     "gapDown": 0
    },
    "hopVeto": [],
-   "beyond": 89,
-   "beyondMade": 65,
+   "beyond": 152,
+   "beyondMade": 128,
    "rise": {
     "tried": 9,
     "made": 8
@@ -1365,8 +1154,20 @@
     "tried": 25,
     "made": 23
    },
+   "step": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0
+   },
+   "tube": {
+    "cand": 438,
+    "tried": 63,
+    "made": 63,
+    "squidTrials": 63
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 287,
+    "takeoffs": 347,
     "made": 70,
     "edges": 16,
     "beyond": 54,
@@ -1386,9 +1187,8 @@
    },
    "offMadeN": 0,
    "coyote": 10,
-   "offMade": [],
-   "trials": 2056,
-   "ms": 3671,
+   "trials": 2119,
+   "ms": 4221,
    "climbHops": {
     "tried": 58,
     "made": 58,
@@ -1494,152 +1294,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 40.9,
-     "t": 8.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 36
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 41.7,
-     "t": 8.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 40
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 40.1,
-     "t": 8.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 39
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 47.4,
-     "t": 9.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 42
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 42.3,
-     "t": 8.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 38
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 46,
-     "t": 9.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 38
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 40.1,
-     "t": 8.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 39
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 47.4,
-     "t": 9.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 42
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-2.7, 56.2) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 31.5,
-     "t": 6.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-21, 64.5) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 24.9,
-     "t": 4.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (2.7, -56.2) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 45.7,
-     "t": 9.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 39
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (21, -64.5) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 24.5,
-     "t": 3.4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -1651,168 +1305,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -2.2,
-        0.6,
-        56.5
-       ],
-       "w": 29.4,
-       "n": 103,
-       "types": [
-        "walk",
-        "drop",
-        "squid gap",
-        "long gap",
-        "vault over a low wall or rail"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 6,
-       "physUnseen": [],
-       "from": [
-        -9.5,
-        0.6,
-        50.5
-       ]
-      },
-      {
-       "c": [
-        -21,
-        0,
-        64.5
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -21.5,
-        0,
-        64.5
-       ]
-      },
-      {
-       "c": [
-        -0.8,
-        0.5,
-        59
-       ],
-       "w": 3.6,
-       "n": 6,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 6,
-       "physUnseen": [],
-       "from": [
-        8.5,
-        2.2,
-        62.5
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        2.2,
-        0.6,
-        -56.5
-       ],
-       "w": 29.4,
-       "n": 103,
-       "types": [
-        "walk",
-        "drop",
-        "squid gap",
-        "long gap",
-        "vault over a low wall or rail"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 6,
-       "physUnseen": [],
-       "from": [
-        -8.5,
-        2.4,
-        -68.5
-       ]
-      },
-      {
-       "c": [
-        21,
-        0,
-        -64.5
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        21.5,
-        0,
-        -64.5
-       ]
-      },
-      {
-       "c": [
-        1.3,
-        0.4,
-        -58.5
-       ],
-       "w": 3.2,
-       "n": 4,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 4,
-       "physUnseen": [],
-       "from": [
-        -8.5,
-        2.2,
-        -62.5
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 389,
     "ring": 8
@@ -1841,6 +1333,14 @@
     "cand": 192,
     "tried": 25
    },
+   "step": {
+    "cand": 0,
+    "tried": 0
+   },
+   "tube": {
+    "cand": 438,
+    "tried": 63
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -1859,9 +1359,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 103,
+    "field": 8,
+    "swim": 45,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 12,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 156
+  },
+  "from": "all2"
  },
  {
   "id": "crossmarket",
@@ -1882,7 +1397,7 @@
    65.13,
    65.4
   ],
-  "s": 77,
+  "s": 83,
   "c2": {
    "LA": 65.13,
    "LB": 65.4,
@@ -1971,8 +1486,8 @@
      26.5
     ]
    ],
-   "beyond": 511,
-   "beyondMade": 498,
+   "beyond": 521,
+   "beyondMade": 502,
    "rise": {
     "tried": 42,
     "made": 36
@@ -1990,13 +1505,26 @@
     "tried": 38,
     "made": 38
    },
+   "step": {
+    "cand": 4,
+    "tried": 4,
+    "made": 4
+   },
+   "tube": {
+    "cand": 12,
+    "tried": 12,
+    "retried": 6,
+    "made": 0,
+    "squidTrials": 24
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 560,
+    "takeoffs": 572,
     "made": 139,
     "edges": 0,
     "beyond": 139,
     "off": 0,
-    "trials": 424
+    "trials": 436
    },
    "lowGap": {
     "pairs": 190,
@@ -2011,9 +1539,8 @@
    },
    "offMadeN": 0,
    "coyote": 4,
-   "offMade": [],
-   "trials": 3698,
-   "ms": 10075,
+   "trials": 3732,
+   "ms": 9085,
    "climbHops": {
     "tried": 0,
     "made": 0,
@@ -2022,176 +1549,6 @@
     "madeAt": [],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 32,
-     "t": 6.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 37.1,
-     "t": 7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 30.1,
-     "t": 6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 32,
-     "t": 6.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 37.1,
-     "t": 7.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 30.1,
-     "t": 6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-16.9, 50.8) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 24.7,
-     "t": 4.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-1.5, 47.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.9,
-     "t": 4.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (2.3, 48.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 27.7,
-     "t": 5.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 27
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (6.9, 60.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 29.3,
-     "t": 4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-6.9, -60.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 50.5,
-     "t": 9.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 48
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (16.9, -50.8) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 47.3,
-     "t": 8.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 42
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-2.3, -48.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 27.5,
-     "t": 5.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (1.5, -47.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.9,
-     "t": 4.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    }
-   ],
    "walkRoutes": [
     6,
     6
@@ -2203,314 +1560,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -16.9,
-        0,
-        50.8
-       ],
-       "w": 20.9,
-       "n": 66,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -8.5,
-        0,
-        44.5
-       ]
-      },
-      {
-       "c": [
-        -1.5,
-        1.2,
-        47.1
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -1.5,
-        1.2,
-        46.5
-       ]
-      },
-      {
-       "c": [
-        1.4,
-        0,
-        51.1
-       ],
-       "w": 6.5,
-       "n": 56,
-       "types": [
-        "walk",
-        "drop",
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 50,
-       "physUnseen": [],
-       "from": [
-        2.5,
-        0,
-        48.5
-       ]
-      },
-      {
-       "c": [
-        5.2,
-        0.8,
-        56.5
-       ],
-       "w": 14.2,
-       "n": 114,
-       "types": [
-        "walk",
-        "squid gap",
-        "high hop",
-        "long gap",
-        "rising gap",
-        "vault over a low wall or rail"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 78,
-       "physUnseen": [],
-       "from": [
-        5.5,
-        0,
-        52.5
-       ]
-      },
-      {
-       "c": [
-        -6.5,
-        0.3,
-        54.3
-       ],
-       "w": 2,
-       "n": 6,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 6,
-       "physUnseen": [],
-       "from": [
-        -0.5,
-        1.2,
-        45.5
-       ]
-      },
-      {
-       "c": [
-        1.5,
-        2.4,
-        59.5
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 1,
-       "physUnseen": [],
-       "from": [
-        6.5,
-        2.6,
-        66.5
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        -4.1,
-        0.6,
-        -55.2
-       ],
-       "w": 17.7,
-       "n": 156,
-       "types": [
-        "walk",
-        "squid gap",
-        "high hop",
-        "long gap",
-        "rising gap",
-        "vault over a low wall or rail"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 120,
-       "physUnseen": [],
-       "from": [
-        -6.5,
-        2.6,
-        -66.5
-       ]
-      },
-      {
-       "c": [
-        16.9,
-        0,
-        -50.8
-       ],
-       "w": 20.9,
-       "n": 66,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        22.5,
-        0,
-        -59.5
-       ]
-      },
-      {
-       "c": [
-        -2.1,
-        0.1,
-        -49.2
-       ],
-       "w": 2,
-       "n": 14,
-       "types": [
-        "walk",
-        "drop",
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 8,
-       "physUnseen": [],
-       "from": [
-        -3.5,
-        0,
-        -49.5
-       ]
-      },
-      {
-       "c": [
-        1.5,
-        1.2,
-        -47.1
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        1.5,
-        1.2,
-        -46.5
-       ]
-      },
-      {
-       "c": [
-        -1.5,
-        2.4,
-        -59.5
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 1,
-       "physUnseen": [],
-       "from": [
-        -6.5,
-        2.6,
-        -66.5
-       ]
-      },
-      {
-       "c": [
-        6.5,
-        0.3,
-        -54.3
-       ],
-       "w": 2,
-       "n": 6,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 6,
-       "physUnseen": [],
-       "from": [
-        1.5,
-        1.2,
-        -46.5
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 190,
     "ring": 2
@@ -2539,6 +1588,14 @@
     "cand": 288,
     "tried": 38
    },
+   "step": {
+    "cand": 4,
+    "tried": 4
+   },
+   "tube": {
+    "cand": 12,
+    "tried": 6
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -2557,9 +1614,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 0,
+    "field": 251,
+    "swim": 123,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 140,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 374
+  },
+  "from": "all3"
  },
  {
   "id": "lockgate",
@@ -2578,13 +1650,13 @@
    58.03,
    57.9
   ],
-  "s": 131,
+  "s": 143,
   "c2": {
    "LA": 58.03,
    "LB": 57.9,
    "Ldiff": 0.22,
    "holes": 0,
-   "reach": 4609,
+   "reach": 4602,
    "hops": 66,
    "gaps": 426,
    "maxGain": 20.77,
@@ -2703,6 +1775,18 @@
     "tried": 18,
     "made": 12
    },
+   "step": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0,
+    "squidTrials": 0
+   },
+   "swimMode": "fail",
    "swim": {
     "takeoffs": 2507,
     "made": 1660,
@@ -2724,70 +1808,8 @@
    },
    "offMadeN": 4,
    "coyote": 126,
-   "offMade": [
-    {
-     "kind": "off gap",
-     "a": [
-      -11.5,
-      1.3,
-      -39.5
-     ],
-     "top": [
-      -3.5,
-      2.15,
-      -42.5
-     ],
-     "exits": 22,
-     "by": "swim"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      11.5,
-      1.3,
-      39.5
-     ],
-     "top": [
-      3.5,
-      2.15,
-      42.5
-     ],
-     "exits": 22,
-     "by": "swim"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -10.25,
-      1.3,
-      -40.5
-     ],
-     "top": [
-      -3.5,
-      2.15,
-      -42.5
-     ],
-     "exits": 22,
-     "by": "swim"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      10.25,
-      1.3,
-      40.5
-     ],
-     "top": [
-      3.5,
-      2.15,
-      42.5
-     ],
-     "exits": 22,
-     "by": "swim"
-    }
-   ],
    "trials": 45377,
-   "ms": 71940,
+   "ms": 74512,
    "climbHops": {
     "tried": 94,
     "made": 90,
@@ -2926,200 +1948,6 @@
      ]
     ]
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 27.5,
-     "t": 5.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 21
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 70.1,
-     "t": 13.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 57
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 27.2,
-     "t": 5.4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 27
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 30.7,
-     "t": 5.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 27
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 27.5,
-     "t": 5.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 21
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 70.1,
-     "t": 13.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 57
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 27.2,
-     "t": 5.4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 27
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 30.7,
-     "t": 5.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 27
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (8.4, 42.8) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.5,
-     "t": 4.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 23
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-14.4, 55.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 23.8,
-     "t": 4.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-10.3, 63.3) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 33.6,
-     "t": 5.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (7.3, 65) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.1,
-     "t": 3.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-7.3, -65) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 26.3,
-     "t": 5.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (10.3, -63.3) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 34.7,
-     "t": 5.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (14.4, -55.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.8,
-     "t": 4.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-8.3, -42.7) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 24.1,
-     "t": 5.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -3159,6 +1987,14 @@
     "cand": 68,
     "tried": 18
    },
+   "step": {
+    "cand": 0,
+    "tried": 0
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -3177,9 +2013,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 4,
+    "field": 5,
+    "swim": 1641,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 22,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 1650
+  },
+  "from": "all2"
  },
  {
   "id": "terraces",
@@ -3199,7 +2050,7 @@
    66.01,
    61.2
   ],
-  "s": 84,
+  "s": 104,
   "c2": {
    "LA": 66.01,
    "LB": 61.2,
@@ -3295,8 +2146,8 @@
      47.25
     ]
    ],
-   "beyond": 1032,
-   "beyondMade": 872,
+   "beyond": 1090,
+   "beyondMade": 930,
    "rise": {
     "tried": 871,
     "made": 742
@@ -3314,13 +2165,26 @@
     "tried": 33,
     "made": 30
    },
+   "step": {
+    "cand": 45,
+    "tried": 45,
+    "made": 45
+   },
+   "tube": {
+    "cand": 37,
+    "tried": 13,
+    "retried": 0,
+    "made": 13,
+    "squidTrials": 13
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 1697,
-    "made": 91,
+    "takeoffs": 1744,
+    "made": 93,
     "edges": 0,
-    "beyond": 89,
+    "beyond": 91,
     "off": 2,
-    "trials": 3077
+    "trials": 3081
    },
    "lowGap": {
     "pairs": 186,
@@ -3335,160 +2199,8 @@
    },
    "offMadeN": 10,
    "coyote": 26,
-   "offMade": [
-    {
-     "kind": "off hop",
-     "a": [
-      -11.5,
-      2.4,
-      -16.5
-     ],
-     "top": [
-      -10.5,
-      3.6,
-      -15.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      -11.5,
-      2.4,
-      -16.5
-     ],
-     "top": [
-      -9.5,
-      3.6,
-      -15.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      11.5,
-      2.4,
-      16.5
-     ],
-     "top": [
-      10.5,
-      3.6,
-      15.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      11.5,
-      2.4,
-      16.5
-     ],
-     "top": [
-      9.5,
-      3.6,
-      15.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -11.5,
-      2.4,
-      -16.5
-     ],
-     "top": [
-      -9.5,
-      3.6,
-      -14.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -11.5,
-      2.4,
-      -16.5
-     ],
-     "top": [
-      -8.5,
-      3.6,
-      -14.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -19.5,
-      -0.1,
-      -1.5
-     ],
-     "top": [
-      -19.5,
-      0.96,
-      -9.75
-     ],
-     "exits": 2,
-     "by": "swim"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      19.5,
-      -0.1,
-      1.5
-     ],
-     "top": [
-      19.5,
-      0.96,
-      9.75
-     ],
-     "exits": 3,
-     "by": "swim"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      11.5,
-      2.4,
-      16.5
-     ],
-     "top": [
-      8.5,
-      3.6,
-      14.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      11.5,
-      2.4,
-      16.5
-     ],
-     "top": [
-      9.5,
-      3.6,
-      14.5
-     ],
-     "exits": 13,
-     "by": "kid"
-    }
-   ],
-   "trials": 9500,
-   "ms": 19509,
+   "trials": 9622,
+   "ms": 19153,
    "climbHops": {
     "tried": 410,
     "made": 408,
@@ -3650,6 +2362,14 @@
     "cand": 125,
     "tried": 33
    },
+   "step": {
+    "cand": 45,
+    "tried": 45
+   },
+   "tube": {
+    "cand": 37,
+    "tried": 13
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -3668,9 +2388,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 29,
+    "field": 682,
+    "swim": 88,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 9,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 799
+  },
+  "from": "all3"
  },
  {
   "id": "nantai",
@@ -3687,7 +2422,7 @@
    72.85,
    72.99
   ],
-  "s": 215,
+  "s": 226,
   "c2": {
    "LA": 72.85,
    "LB": 72.99,
@@ -3741,8 +2476,8 @@
     "gapDown": 0
    },
    "hopVeto": [],
-   "beyond": 5438,
-   "beyondMade": 4524,
+   "beyond": 5468,
+   "beyondMade": 4554,
    "rise": {
     "tried": 206,
     "made": 130
@@ -3760,8 +2495,20 @@
     "tried": 21,
     "made": 21
    },
+   "step": {
+    "cand": 30,
+    "tried": 30,
+    "made": 30
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0,
+    "squidTrials": 0
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 5746,
+    "takeoffs": 5770,
     "made": 4232,
     "edges": 2,
     "beyond": 4228,
@@ -3781,70 +2528,8 @@
    },
    "offMadeN": 4,
    "coyote": 547,
-   "offMade": [
-    {
-     "kind": "off hop",
-     "a": [
-      -17.5,
-      2.6,
-      -66.5
-     ],
-     "top": [
-      -19.5,
-      4.5,
-      -65.5
-     ],
-     "exits": 20,
-     "by": "swim"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      17.5,
-      2.6,
-      66.5
-     ],
-     "top": [
-      19.5,
-      4.5,
-      65.5
-     ],
-     "exits": 20,
-     "by": "swim"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      -18.25,
-      3.35,
-      -66.5
-     ],
-     "top": [
-      -19.5,
-      4.5,
-      -65.5
-     ],
-     "exits": 20,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      18.25,
-      3.35,
-      66.5
-     ],
-     "top": [
-      19.5,
-      4.5,
-      65.5
-     ],
-     "exits": 20,
-     "by": "kid"
-    }
-   ],
-   "trials": 107952,
-   "ms": 174788,
+   "trials": 107994,
+   "ms": 191077,
    "climbHops": {
     "tried": 371,
     "made": 371,
@@ -3950,152 +2635,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 34.8,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 34
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39.5,
-     "t": 7.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 37
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36.3,
-     "t": 6.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39.3,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 34.8,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 34
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39.5,
-     "t": 7.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 37
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36.3,
-     "t": 6.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39.3,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-3.7, 55.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 29,
-     "t": 5.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 25
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-23.1, 63.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 29.1,
-     "t": 4.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (3.7, -55.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 39,
-     "t": 7.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (23.1, -63.9) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 33.1,
-     "t": 6.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 27
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -4107,126 +2646,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -3.7,
-        2.1,
-        55.9
-       ],
-       "w": 30,
-       "n": 118,
-       "types": [
-        "drop",
-        "walk",
-        "gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "drop",
-        "walk",
-        "gap"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -8.5,
-        2.6,
-        48.5
-       ]
-      },
-      {
-       "c": [
-        -23.1,
-        0.4,
-        63.9
-       ],
-       "w": 5,
-       "n": 13,
-       "types": [
-        "walk",
-        "jump"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "jump"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -23.5,
-        0.3,
-        61.5
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        3.7,
-        2.1,
-        -55.9
-       ],
-       "w": 30,
-       "n": 118,
-       "types": [
-        "walk",
-        "drop",
-        "gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop",
-        "gap"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -6.5,
-        3.8,
-        -68.5
-       ]
-      },
-      {
-       "c": [
-        23.1,
-        0.4,
-        -63.9
-       ],
-       "w": 5,
-       "n": 13,
-       "types": [
-        "walk",
-        "jump"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "jump"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        23.5,
-        0.3,
-        -66.5
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 106,
     "ring": 0
@@ -4255,6 +2674,14 @@
     "cand": 97,
     "tried": 21
    },
+   "step": {
+    "cand": 30,
+    "tried": 30
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -4273,9 +2700,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 20,
+    "field": 326,
+    "swim": 4230,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 28,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 4576
+  },
+  "from": "all2"
  },
  {
   "id": "craters",
@@ -4294,7 +2736,7 @@
    69.39,
    69.26
   ],
-  "s": 66,
+  "s": 62,
   "c2": {
    "LA": 69.39,
    "LB": 69.26,
@@ -4340,8 +2782,890 @@
     "gapLevel": 2,
     "gapDown": 106
    },
-   "beyond": 580,
-   "beyondMade": 513,
+   "hopVeto": [
+    [
+     -8.5,
+     3,
+     -63.5,
+     -11.25,
+     0.25,
+     -63.5
+    ],
+    [
+     8.5,
+     3,
+     -63.5,
+     11.25,
+     0.25,
+     -63.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -62.5,
+     -11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -62.5,
+     -11.25,
+     0.25,
+     -61.5
+    ],
+    [
+     -8.5,
+     3,
+     -62.5,
+     -11.25,
+     0.25,
+     -63.5
+    ],
+    [
+     -8.5,
+     3,
+     -62.5,
+     -11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     -8.5,
+     3,
+     -62.5,
+     -11.25,
+     0.25,
+     -61.5
+    ],
+    [
+     8.5,
+     2.8,
+     -62.5,
+     11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     8.5,
+     2.8,
+     -62.5,
+     11.25,
+     0.25,
+     -61.5
+    ],
+    [
+     8.5,
+     3,
+     -62.5,
+     11.25,
+     0.25,
+     -63.5
+    ],
+    [
+     8.5,
+     3,
+     -62.5,
+     11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     8.5,
+     3,
+     -62.5,
+     11.25,
+     0.25,
+     -61.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -61.5,
+     -11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -61.5,
+     -11.25,
+     0.25,
+     -61.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -61.5,
+     -11.25,
+     0.25,
+     -60.5
+    ],
+    [
+     -8.5,
+     3,
+     -61.5,
+     -11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     -8.5,
+     3,
+     -61.5,
+     -11.25,
+     0.25,
+     -61.5
+    ],
+    [
+     -8.5,
+     3,
+     -61.5,
+     -11.25,
+     0.25,
+     -60.5
+    ],
+    [
+     8.5,
+     2.8,
+     -61.5,
+     11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     8.5,
+     2.8,
+     -61.5,
+     11.25,
+     0.25,
+     -60.5
+    ],
+    [
+     8.5,
+     3,
+     -61.5,
+     11.25,
+     0.25,
+     -62.5
+    ],
+    [
+     8.5,
+     3,
+     -61.5,
+     11.25,
+     0.25,
+     -60.5
+    ],
+    [
+     -9.5,
+     1.02,
+     -60.5,
+     -8.5,
+     2.8,
+     -60.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -60.5,
+     -11.25,
+     0.25,
+     -60.5
+    ],
+    [
+     -8.5,
+     2.8,
+     -60.5,
+     -10.5,
+     1.02,
+     -60.5
+    ],
+    [
+     -8.5,
+     3,
+     -60.5,
+     -11.25,
+     0.25,
+     -60.5
+    ],
+    [
+     -8.5,
+     3,
+     -60.5,
+     -10.5,
+     1.02,
+     -60.5
+    ],
+    [
+     8.5,
+     2.8,
+     -60.5,
+     10.5,
+     1.02,
+     -60.5
+    ],
+    [
+     8.5,
+     3,
+     -60.5,
+     10.5,
+     1.02,
+     -60.5
+    ],
+    [
+     -7.5,
+     3.95,
+     -59.5,
+     -10.5,
+     0.58,
+     -59.5
+    ],
+    [
+     -14.5,
+     1.16,
+     -50.5,
+     -16.5,
+     0,
+     -51.5
+    ],
+    [
+     21.5,
+     2.4,
+     -44.5,
+     21.5,
+     0,
+     -47.5
+    ],
+    [
+     25.5,
+     0.59,
+     -33.5,
+     25.5,
+     -1,
+     -35.5
+    ],
+    [
+     21.5,
+     1.05,
+     -32.5,
+     21.5,
+     0,
+     -34.5
+    ],
+    [
+     28.5,
+     1.21,
+     -32.5,
+     30.5,
+     0,
+     -30.5
+    ],
+    [
+     29.5,
+     1.21,
+     -32.5,
+     30.5,
+     0,
+     -30.5
+    ],
+    [
+     1.5,
+     0.3,
+     -20.5,
+     4.5,
+     0.4,
+     -20.5
+    ],
+    [
+     26.5,
+     0.23,
+     -16.5,
+     26.5,
+     -1,
+     -13.5
+    ],
+    [
+     -28.5,
+     0.23,
+     -12.5,
+     -28.5,
+     -1,
+     -9.5
+    ],
+    [
+     -28.5,
+     0.64,
+     -11.5,
+     -28.5,
+     -1,
+     -9.5
+    ],
+    [
+     -28.5,
+     0.64,
+     -7.5,
+     -28.5,
+     -1,
+     -9.5
+    ],
+    [
+     -3.5,
+     1.25,
+     -7.5,
+     -2.5,
+     -0.21,
+     -6.5
+    ],
+    [
+     3.5,
+     1.25,
+     -7.5,
+     1.5,
+     0,
+     -7.5
+    ],
+    [
+     -28.5,
+     0.23,
+     -6.5,
+     -28.5,
+     -1,
+     -9.5
+    ],
+    [
+     28.5,
+     0.23,
+     6.5,
+     28.5,
+     -1,
+     9.5
+    ],
+    [
+     -3.5,
+     1.25,
+     7.5,
+     -1.5,
+     0,
+     7.5
+    ],
+    [
+     3.5,
+     1.25,
+     7.5,
+     2.5,
+     -0.21,
+     6.5
+    ],
+    [
+     28.5,
+     0.64,
+     7.5,
+     28.5,
+     -1,
+     9.5
+    ],
+    [
+     28.5,
+     0.64,
+     11.5,
+     28.5,
+     -1,
+     9.5
+    ],
+    [
+     28.5,
+     0.23,
+     12.5,
+     28.5,
+     -1,
+     9.5
+    ],
+    [
+     -26.5,
+     0.23,
+     16.5,
+     -26.5,
+     -1,
+     13.5
+    ],
+    [
+     -1.5,
+     0.3,
+     20.5,
+     -4.5,
+     0.4,
+     20.5
+    ],
+    [
+     -29.5,
+     1.21,
+     32.5,
+     -30.5,
+     0,
+     30.5
+    ],
+    [
+     -28.5,
+     1.21,
+     32.5,
+     -30.5,
+     0,
+     30.5
+    ],
+    [
+     -21.5,
+     1.05,
+     32.5,
+     -21.5,
+     0,
+     34.5
+    ],
+    [
+     -25.5,
+     0.59,
+     33.5,
+     -25.5,
+     -1,
+     35.5
+    ],
+    [
+     -21.5,
+     2.4,
+     44.5,
+     -21.5,
+     0,
+     47.5
+    ],
+    [
+     14.5,
+     1.16,
+     50.5,
+     16.5,
+     0,
+     51.5
+    ],
+    [
+     -7.5,
+     3.95,
+     59.5,
+     -10.5,
+     0.58,
+     59.5
+    ],
+    [
+     -8.5,
+     2.8,
+     60.5,
+     -10.5,
+     1.02,
+     60.5
+    ],
+    [
+     -8.5,
+     3,
+     60.5,
+     -10.5,
+     1.02,
+     60.5
+    ],
+    [
+     8.5,
+     2.8,
+     60.5,
+     10.5,
+     1.02,
+     60.5
+    ],
+    [
+     8.5,
+     2.8,
+     60.5,
+     11.25,
+     0.25,
+     60.5
+    ],
+    [
+     8.5,
+     3,
+     60.5,
+     10.5,
+     1.02,
+     60.5
+    ],
+    [
+     8.5,
+     3,
+     60.5,
+     11.25,
+     0.25,
+     60.5
+    ],
+    [
+     9.5,
+     1.02,
+     60.5,
+     8.5,
+     2.8,
+     60.5
+    ],
+    [
+     -8.5,
+     2.8,
+     61.5,
+     -11.25,
+     0.25,
+     60.5
+    ],
+    [
+     -8.5,
+     2.8,
+     61.5,
+     -11.25,
+     0.25,
+     62.5
+    ],
+    [
+     -8.5,
+     3,
+     61.5,
+     -11.25,
+     0.25,
+     60.5
+    ],
+    [
+     -8.5,
+     3,
+     61.5,
+     -11.25,
+     0.25,
+     62.5
+    ],
+    [
+     8.5,
+     2.8,
+     61.5,
+     11.25,
+     0.25,
+     60.5
+    ],
+    [
+     8.5,
+     2.8,
+     61.5,
+     11.25,
+     0.25,
+     61.5
+    ],
+    [
+     8.5,
+     2.8,
+     61.5,
+     11.25,
+     0.25,
+     62.5
+    ],
+    [
+     8.5,
+     3,
+     61.5,
+     11.25,
+     0.25,
+     60.5
+    ],
+    [
+     8.5,
+     3,
+     61.5,
+     11.25,
+     0.25,
+     61.5
+    ],
+    [
+     8.5,
+     3,
+     61.5,
+     11.25,
+     0.25,
+     62.5
+    ],
+    [
+     -8.5,
+     2.8,
+     62.5,
+     -11.25,
+     0.25,
+     61.5
+    ],
+    [
+     -8.5,
+     2.8,
+     62.5,
+     -11.25,
+     0.25,
+     62.5
+    ],
+    [
+     -8.5,
+     3,
+     62.5,
+     -11.25,
+     0.25,
+     61.5
+    ],
+    [
+     -8.5,
+     3,
+     62.5,
+     -11.25,
+     0.25,
+     62.5
+    ],
+    [
+     -8.5,
+     3,
+     62.5,
+     -11.25,
+     0.25,
+     63.5
+    ],
+    [
+     8.5,
+     2.8,
+     62.5,
+     11.25,
+     0.25,
+     61.5
+    ],
+    [
+     8.5,
+     2.8,
+     62.5,
+     11.25,
+     0.25,
+     62.5
+    ],
+    [
+     8.5,
+     3,
+     62.5,
+     11.25,
+     0.25,
+     61.5
+    ],
+    [
+     8.5,
+     3,
+     62.5,
+     11.25,
+     0.25,
+     62.5
+    ],
+    [
+     8.5,
+     3,
+     62.5,
+     11.25,
+     0.25,
+     63.5
+    ],
+    [
+     -8.5,
+     3,
+     63.5,
+     -11.25,
+     0.25,
+     63.5
+    ],
+    [
+     8.5,
+     3,
+     63.5,
+     11.25,
+     0.25,
+     63.5
+    ],
+    [
+     11.75,
+     0.59,
+     -21.5,
+     11.5,
+     -1,
+     -19.5
+    ],
+    [
+     11.75,
+     0.59,
+     -21.5,
+     12.5,
+     -1,
+     -19.5
+    ],
+    [
+     11.75,
+     0.59,
+     -17.5,
+     11.5,
+     -1,
+     -19.5
+    ],
+    [
+     11.75,
+     0.59,
+     -17.5,
+     12.5,
+     -1,
+     -19.5
+    ],
+    [
+     25.75,
+     0.64,
+     -15.5,
+     25.5,
+     -1,
+     -13.5
+    ],
+    [
+     25.75,
+     0.64,
+     -15.5,
+     26.5,
+     -1,
+     -13.5
+    ],
+    [
+     26.75,
+     0.64,
+     -15.5,
+     26.5,
+     -1,
+     -13.5
+    ],
+    [
+     25.75,
+     0.64,
+     -11.5,
+     25.5,
+     -1,
+     -13.5
+    ],
+    [
+     26.75,
+     0.64,
+     -11.5,
+     25.5,
+     -1,
+     -13.5
+    ],
+    [
+     26.75,
+     0.64,
+     -11.5,
+     26.5,
+     -1,
+     -13.5
+    ],
+    [
+     -26.25,
+     0.64,
+     11.5,
+     -26.5,
+     -1,
+     13.5
+    ],
+    [
+     -26.25,
+     0.64,
+     11.5,
+     -25.5,
+     -1,
+     13.5
+    ],
+    [
+     -25.25,
+     0.64,
+     11.5,
+     -26.5,
+     -1,
+     13.5
+    ],
+    [
+     -25.25,
+     0.64,
+     11.5,
+     -25.5,
+     -1,
+     13.5
+    ],
+    [
+     -26.25,
+     0.64,
+     15.5,
+     -26.5,
+     -1,
+     13.5
+    ],
+    [
+     -26.25,
+     0.64,
+     15.5,
+     -25.5,
+     -1,
+     13.5
+    ],
+    [
+     -25.25,
+     0.64,
+     15.5,
+     -26.5,
+     -1,
+     13.5
+    ],
+    [
+     -25.25,
+     0.64,
+     15.5,
+     -25.5,
+     -1,
+     13.5
+    ],
+    [
+     -12.25,
+     0.59,
+     17.5,
+     -12.5,
+     -1,
+     19.5
+    ],
+    [
+     -12.25,
+     0.59,
+     17.5,
+     -11.5,
+     -1,
+     19.5
+    ],
+    [
+     -12.25,
+     0.59,
+     21.5,
+     -12.5,
+     -1,
+     19.5
+    ],
+    [
+     -12.25,
+     0.59,
+     21.5,
+     -11.5,
+     -1,
+     19.5
+    ]
+   ],
+   "beyond": 648,
+   "beyondMade": 597,
    "rise": {
     "tried": 409,
     "made": 392
@@ -4359,13 +3683,26 @@
     "tried": 19,
     "made": 18
    },
+   "step": {
+    "cand": 38,
+    "tried": 38,
+    "made": 24
+   },
+   "tube": {
+    "cand": 179,
+    "tried": 80,
+    "retried": 50,
+    "made": 60,
+    "squidTrials": 100
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 2121,
-    "made": 239,
+    "takeoffs": 2239,
+    "made": 259,
     "edges": 38,
-    "beyond": 200,
+    "beyond": 220,
     "off": 1,
-    "trials": 3187
+    "trials": 3539
    },
    "lowGap": {
     "pairs": 217,
@@ -4380,280 +3717,8 @@
    },
    "offMadeN": 18,
    "coyote": 73,
-   "offMade": [
-    {
-     "kind": "off hop",
-     "a": [
-      -14.5,
-      -1.1,
-      -54.5
-     ],
-     "top": [
-      -13.5,
-      0.25,
-      -52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      -13.5,
-      -1.1,
-      -54.5
-     ],
-     "top": [
-      -13.5,
-      0.25,
-      -52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      18.5,
-      0,
-      -23.5
-     ],
-     "top": [
-      19.5,
-      1.05,
-      -21.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      19.5,
-      0,
-      -23.5
-     ],
-     "top": [
-      19.5,
-      1.05,
-      -21.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      -19.5,
-      0,
-      23.5
-     ],
-     "top": [
-      -19.5,
-      1.05,
-      21.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      -18.5,
-      0,
-      23.5
-     ],
-     "top": [
-      -19.5,
-      1.05,
-      21.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      13.5,
-      -1.1,
-      53.5
-     ],
-     "top": [
-      13.5,
-      0.25,
-      52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      13.5,
-      -1.1,
-      53.5
-     ],
-     "top": [
-      14.5,
-      0.33,
-      52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      13.5,
-      -1.1,
-      54.5
-     ],
-     "top": [
-      13.5,
-      0.25,
-      52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      13.5,
-      -1.1,
-      54.5
-     ],
-     "top": [
-      14.5,
-      0.33,
-      52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      14.5,
-      -1.1,
-      54.5
-     ],
-     "top": [
-      13.5,
-      0.25,
-      52.5
-     ],
-     "exits": 16,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      1.5,
-      2.56,
-      -57.5
-     ],
-     "top": [
-      7.5,
-      3.95,
-      -59.5
-     ],
-     "exits": 24,
-     "by": "swim"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      1.5,
-      2.12,
-      -56.5
-     ],
-     "top": [
-      8.5,
-      3,
-      -58.5
-     ],
-     "exits": 18,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      1.5,
-      1.68,
-      -55.5
-     ],
-     "top": [
-      8.5,
-      2.8,
-      -58.5
-     ],
-     "exits": 18,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      1.5,
-      1.68,
-      -55.5
-     ],
-     "top": [
-      8.5,
-      3,
-      -58.5
-     ],
-     "exits": 18,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -1.5,
-      1.68,
-      55.5
-     ],
-     "top": [
-      -8.5,
-      2.8,
-      58.5
-     ],
-     "exits": 18,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -1.5,
-      1.68,
-      55.5
-     ],
-     "top": [
-      -8.5,
-      3,
-      58.5
-     ],
-     "exits": 18,
-     "by": "kid"
-    },
-    {
-     "kind": "off gap",
-     "a": [
-      -1.5,
-      2.12,
-      56.5
-     ],
-     "top": [
-      -8.5,
-      3,
-      58.5
-     ],
-     "exits": 18,
-     "by": "kid"
-    }
-   ],
-   "trials": 11333,
-   "ms": 21705,
+   "trials": 12129,
+   "ms": 19865,
    "climbHops": {
     "tried": 226,
     "made": 226,
@@ -4759,128 +3824,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 33.1,
-     "t": 6.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 46.6,
-     "t": 9.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 38
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 33.2,
-     "t": 6.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 40.5,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 35
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 33.1,
-     "t": 6.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 46.6,
-     "t": 9.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 38
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 33.2,
-     "t": 6.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 40.5,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 35
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-4.3, 52.8) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.8,
-     "t": 5.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (4.3, -52.8) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 46.8,
-     "t": 11.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 37
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -4892,166 +3835,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -4.8,
-        0.6,
-        53
-       ],
-       "w": 29.7,
-       "n": 117,
-       "types": [
-        "walk",
-        "drop",
-        "gap",
-        "long gap",
-        "rising gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop",
-        "gap"
-       ],
-       "moves": 17,
-       "physUnseen": [],
-       "from": [
-        -13.5,
-        -1,
-        47.5
-       ]
-      },
-      {
-       "c": [
-        -9.5,
-        -1.1,
-        54.3
-       ],
-       "w": 3.2,
-       "n": 5,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 5,
-       "physUnseen": [],
-       "from": [
-        -9.5,
-        0.95,
-        45.5
-       ]
-      },
-      {
-       "c": [
-        -3.5,
-        0,
-        54.4
-       ],
-       "w": 5,
-       "n": 11,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 11,
-       "physUnseen": [],
-       "from": [
-        6.5,
-        2.8,
-        58.5
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        4.2,
-        0.7,
-        -53.2
-       ],
-       "w": 29.7,
-       "n": 115,
-       "types": [
-        "walk",
-        "drop",
-        "gap",
-        "long gap",
-        "rising gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop",
-        "gap"
-       ],
-       "moves": 15,
-       "physUnseen": [],
-       "from": [
-        -6.5,
-        3,
-        -64.5
-       ]
-      },
-      {
-       "c": [
-        3.5,
-        0,
-        -53.8
-       ],
-       "w": 4.1,
-       "n": 15,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 15,
-       "physUnseen": [],
-       "from": [
-        -6.5,
-        3,
-        -60.5
-       ]
-      },
-      {
-       "c": [
-        11.5,
-        -1.1,
-        -54
-       ],
-       "w": 7.1,
-       "n": 10,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 10,
-       "physUnseen": [],
-       "from": [
-        -1.5,
-        1.32,
-        -48.5
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 217,
     "ring": 0
@@ -5080,6 +3863,14 @@
     "cand": 133,
     "tried": 19
    },
+   "step": {
+    "cand": 38,
+    "tried": 38
+   },
+   "tube": {
+    "cand": 179,
+    "tried": 30
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -5098,9 +3889,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 121,
+    "field": 298,
+    "swim": 171,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 225,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 590
+  },
+  "from": "all3"
  },
  {
   "id": "calamari",
@@ -5118,7 +3924,7 @@
    64.82,
    64.82
   ],
-  "s": 96,
+  "s": 87,
   "c2": {
    "LA": 64.82,
    "LB": 64.82,
@@ -5160,8 +3966,8 @@
      9
     ]
    ],
-   "beyond": 532,
-   "beyondMade": 479,
+   "beyond": 562,
+   "beyondMade": 509,
    "rise": {
     "tried": 218,
     "made": 165
@@ -5179,8 +3985,20 @@
     "tried": 11,
     "made": 11
    },
+   "step": {
+    "cand": 30,
+    "tried": 30,
+    "made": 30
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0,
+    "made": 0,
+    "squidTrials": 0
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 826,
+    "takeoffs": 834,
     "made": 265,
     "edges": 0,
     "beyond": 265,
@@ -5200,8 +4018,8 @@
    },
    "offMadeN": 31,
    "coyote": 24,
-   "trials": 8230,
-   "ms": 19604,
+   "trials": 8280,
+   "ms": 14647,
    "climbHops": {
     "tried": 138,
     "made": 138,
@@ -5318,392 +4136,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -3.7,
-        0.2,
-        45.2
-       ],
-       "w": 17.7,
-       "n": 61,
-       "types": [
-        "walk",
-        "drop",
-        "vault over a low wall or rail",
-        "hop over off-field ground"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 10,
-       "physUnseen": [],
-       "from": [
-        -8.5,
-        0,
-        42
-       ]
-      },
-      {
-       "c": [
-        -14.7,
-        0.2,
-        45
-       ],
-       "w": 2.1,
-       "n": 6,
-       "types": [
-        "walk",
-        "hop over off-field ground"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 1,
-       "physUnseen": [],
-       "from": [
-        -15.5,
-        -0.1,
-        44
-       ]
-      },
-      {
-       "c": [
-        -20,
-        0.5,
-        49.4
-       ],
-       "w": 2.2,
-       "n": 7,
-       "types": [
-        "walk",
-        "drop"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -20.5,
-        0.5,
-        48
-       ]
-      },
-      {
-       "c": [
-        6,
-        2.6,
-        54.1
-       ],
-       "w": 3.9,
-       "n": 18,
-       "types": [
-        "walk",
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 11,
-       "physUnseen": [],
-       "from": [
-        7.5,
-        2.6,
-        53
-       ]
-      },
-      {
-       "c": [
-        6.8,
-        3.5,
-        62
-       ],
-       "w": 7.3,
-       "n": 20,
-       "types": [
-        "walk",
-        "drop"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        8.5,
-        3.4,
-        58
-       ]
-      },
-      {
-       "c": [
-        -21.6,
-        0,
-        62.2
-       ],
-       "w": 7.3,
-       "n": 19,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -22.5,
-        0,
-        59
-       ]
-      },
-      {
-       "c": [
-        3.5,
-        2.6,
-        54
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 1,
-       "physUnseen": [],
-       "from": [
-        13.5,
-        2.6,
-        52
-       ]
-      },
-      {
-       "c": [
-        1.5,
-        3.1,
-        57
-       ],
-       "w": 0,
-       "n": 3,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 3,
-       "physUnseen": [],
-       "from": [
-        8.5,
-        3.4,
-        64
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        21.6,
-        0,
-        -62.2
-       ],
-       "w": 7.3,
-       "n": 19,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        20.5,
-        0,
-        -66
-       ]
-      },
-      {
-       "c": [
-        -6.8,
-        3.5,
-        -61.9
-       ],
-       "w": 7.3,
-       "n": 20,
-       "types": [
-        "walk",
-        "drop"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -6.5,
-        3.4,
-        -65
-       ]
-      },
-      {
-       "c": [
-        -5.8,
-        2.6,
-        -54.1
-       ],
-       "w": 3.9,
-       "n": 19,
-       "types": [
-        "walk",
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 12,
-       "physUnseen": [],
-       "from": [
-        -7.5,
-        2.6,
-        -55
-       ]
-      },
-      {
-       "c": [
-        2.5,
-        0.2,
-        -45.2
-       ],
-       "w": 17.7,
-       "n": 53,
-       "types": [
-        "walk",
-        "drop",
-        "vault over a low wall or rail",
-        "hop over off-field ground"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "drop"
-       ],
-       "moves": 2,
-       "physUnseen": [],
-       "from": [
-        -5.5,
-        0,
-        -50
-       ]
-      },
-      {
-       "c": [
-        20,
-        0.5,
-        -49.4
-       ],
-       "w": 2.2,
-       "n": 7,
-       "types": [
-        "drop",
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "drop",
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        20.5,
-        0.5,
-        -50
-       ]
-      },
-      {
-       "c": [
-        13.8,
-        0.3,
-        -45.9
-       ],
-       "w": 4.9,
-       "n": 13,
-       "types": [
-        "walk",
-        "hop over off-field ground"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 8,
-       "physUnseen": [],
-       "from": [
-        15.5,
-        -0.1,
-        -45
-       ]
-      },
-      {
-       "c": [
-        -1.5,
-        3.1,
-        -57
-       ],
-       "w": 0,
-       "n": 3,
-       "types": [
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 3,
-       "physUnseen": [],
-       "from": [
-        -7.5,
-        3.4,
-        -65
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 83,
     "ring": 0
@@ -5732,6 +4164,14 @@
     "cand": 24,
     "tried": 11
    },
+   "step": {
+    "cand": 30,
+    "tried": 30
+   },
+   "tube": {
+    "cand": 0,
+    "tried": 0
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -5750,9 +4190,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 20,
+    "field": 212,
+    "swim": 263,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 52,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 495
+  },
+  "from": "all2"
  },
  {
   "id": "spirhalite",
@@ -5771,7 +4226,7 @@
    80.25,
    79.54
   ],
-  "s": 80,
+  "s": 69,
   "c2": {
    "LA": 80.25,
    "LB": 79.54,
@@ -5811,8 +4266,8 @@
     "gapDown": 0
    },
    "hopVeto": [],
-   "beyond": 746,
-   "beyondMade": 574,
+   "beyond": 773,
+   "beyondMade": 601,
    "rise": {
     "tried": 198,
     "made": 166
@@ -5830,13 +4285,25 @@
     "tried": 27,
     "made": 24
    },
+   "step": {
+    "cand": 14,
+    "tried": 14,
+    "made": 14
+   },
+   "tube": {
+    "cand": 57,
+    "tried": 13,
+    "made": 13,
+    "squidTrials": 13
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 1386,
-    "made": 273,
+    "takeoffs": 1411,
+    "made": 275,
     "edges": 0,
-    "beyond": 273,
+    "beyond": 275,
     "off": 0,
-    "trials": 3803
+    "trials": 3805
    },
    "lowGap": {
     "pairs": 149,
@@ -5851,70 +4318,8 @@
    },
    "offMadeN": 4,
    "coyote": 96,
-   "offMade": [
-    {
-     "kind": "off hop",
-     "a": [
-      -20.5,
-      0,
-      -28.5
-     ],
-     "top": [
-      -20.5,
-      1.6,
-      -29.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      -20.5,
-      0,
-      -27.5
-     ],
-     "top": [
-      -20.5,
-      1.6,
-      -29.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      20.5,
-      0,
-      27.5
-     ],
-     "top": [
-      20.5,
-      1.6,
-      29.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    },
-    {
-     "kind": "off hop",
-     "a": [
-      20.5,
-      0,
-      28.5
-     ],
-     "top": [
-      20.5,
-      1.6,
-      29.5
-     ],
-     "exits": 12,
-     "by": "kid"
-    }
-   ],
-   "trials": 12841,
-   "ms": 31307,
+   "trials": 12888,
+   "ms": 26476,
    "climbHops": {
     "tried": 284,
     "made": 284,
@@ -6020,128 +4425,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.5,
-     "t": 7.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 39
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.6,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 36
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 35
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 127.5,
-     "t": 25.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 120
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.5,
-     "t": 7.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 39
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.6,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 36
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39,
-     "t": 7.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 35
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 126.9,
-     "t": 25.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 112
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-11.8, 51.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.5,
-     "t": 4.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (11.8, -51.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.4,
-     "t": 6.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 24
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -6153,106 +4436,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -12.2,
-        1.1,
-        51.2
-       ],
-       "w": 25.4,
-       "n": 102,
-       "types": [
-        "walk",
-        "hop",
-        "climb",
-        "squid gap",
-        "high hop",
-        "long gap",
-        "rising gap",
-        "vault over a low wall or rail"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "hop",
-        "climb"
-       ],
-       "moves": 25,
-       "physUnseen": [],
-       "from": [
-        -22.5,
-        0.27,
-        44.5
-       ]
-      },
-      {
-       "c": [
-        -12.5,
-        3.2,
-        52.5
-       ],
-       "w": 0,
-       "n": 1,
-       "types": [
-        "high hop"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [],
-       "moves": 1,
-       "physUnseen": [],
-       "from": [
-        -9.5,
-        1.3,
-        49.5
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        12.2,
-        1.2,
-        -51.2
-       ],
-       "w": 25.4,
-       "n": 103,
-       "types": [
-        "walk",
-        "climb",
-        "hop",
-        "squid gap",
-        "high hop",
-        "long gap",
-        "rising gap",
-        "vault over a low wall or rail"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "climb",
-        "hop"
-       ],
-       "moves": 26,
-       "physUnseen": [],
-       "from": [
-        6.5,
-        -0.09,
-        -65.5
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 149,
     "ring": 10
@@ -6281,6 +4464,14 @@
     "cand": 142,
     "tried": 27
    },
+   "step": {
+    "cand": 14,
+    "tried": 14
+   },
+   "tube": {
+    "cand": 57,
+    "tried": 13
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -6299,9 +4490,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 58,
+    "field": 257,
+    "swim": 263,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 14,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 578
+  },
+  "from": "all2"
  },
  {
   "id": "treehills",
@@ -6320,7 +4526,7 @@
    70.93,
    70.48
   ],
-  "s": 61,
+  "s": 60,
   "c2": {
    "LA": 70.93,
    "LB": 70.48,
@@ -6378,8 +4584,8 @@
      -4.5
     ]
    ],
-   "beyond": 327,
-   "beyondMade": 296,
+   "beyond": 352,
+   "beyondMade": 321,
    "rise": {
     "tried": 206,
     "made": 178
@@ -6397,8 +4603,20 @@
     "tried": 8,
     "made": 6
    },
+   "step": {
+    "cand": 22,
+    "tried": 22,
+    "made": 22
+   },
+   "tube": {
+    "cand": 5,
+    "tried": 3,
+    "made": 3,
+    "squidTrials": 3
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 678,
+    "takeoffs": 703,
     "made": 67,
     "edges": 0,
     "beyond": 67,
@@ -6418,9 +4636,8 @@
    },
    "offMadeN": 0,
    "coyote": 10,
-   "offMade": [],
-   "trials": 3553,
-   "ms": 11172,
+   "trials": 3580,
+   "ms": 12351,
    "climbHops": {
     "tried": 91,
     "made": 91,
@@ -6526,176 +4743,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 32,
-     "t": 6.4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 35.6,
-     "t": 6.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36.2,
-     "t": 6.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39.3,
-     "t": 8.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 35
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 32,
-     "t": 6.4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 35.6,
-     "t": 6.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 33
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36.2,
-     "t": 6.8,
-     "proved": 0,
-     "fail": null,
-     "nodes": 32
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 39.3,
-     "t": 8.2,
-     "proved": 0,
-     "fail": null,
-     "nodes": 35
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (-7.8, 48.6) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 31.1,
-     "t": 6.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (4, 53) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 27.2,
-     "t": 4.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 23
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (6.6, 64.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 30.4,
-     "t": 3.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 25
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-6.6, -64.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 33.8,
-     "t": 5.4,
-     "proved": 0,
-     "fail": null,
-     "nodes": 28
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-4, -53) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 27.2,
-     "t": 4.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 23
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (7.8, -48.6) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.4,
-     "t": 5.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 25
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -6707,166 +4754,6 @@
    "walkFailed": 0
   },
   "c7": {
-   "teams": [
-    {
-     "team": 0,
-     "entrances": [
-      {
-       "c": [
-        -8.1,
-        1.3,
-        48.7
-       ],
-       "w": 18,
-       "n": 60,
-       "types": [
-        "walk",
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 2,
-       "physUnseen": [],
-       "from": [
-        -9,
-        1.3,
-        46.5
-       ]
-      },
-      {
-       "c": [
-        4,
-        1.3,
-        53
-       ],
-       "w": 1.4,
-       "n": 5,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        4,
-        1.3,
-        52.5
-       ]
-      },
-      {
-       "c": [
-        6.6,
-        3.8,
-        64.4
-       ],
-       "w": 8,
-       "n": 19,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        7,
-        1.3,
-        59.5
-       ]
-      }
-     ]
-    },
-    {
-     "team": 1,
-     "entrances": [
-      {
-       "c": [
-        -6.6,
-        3.8,
-        -64.1
-       ],
-       "w": 8,
-       "n": 20,
-       "types": [
-        "walk",
-        "climb"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk",
-        "climb"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -7,
-        3.9,
-        -67.5
-       ]
-      },
-      {
-       "c": [
-        -4,
-        1.3,
-        -53
-       ],
-       "w": 1.4,
-       "n": 5,
-       "types": [
-        "walk"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 0,
-       "physUnseen": [],
-       "from": [
-        -5,
-        1.3,
-        -53.5
-       ]
-      },
-      {
-       "c": [
-        8.1,
-        1.3,
-        -48.7
-       ],
-       "w": 18,
-       "n": 60,
-       "types": [
-        "walk",
-        "long gap"
-       ],
-       "seen": true,
-       "plainSeen": true,
-       "plainTypes": [
-        "walk"
-       ],
-       "moves": 2,
-       "physUnseen": [],
-       "from": [
-        -1,
-        1.3,
-        -49.5
-       ]
-      }
-     ]
-    }
-   ],
    "lowGap": {
     "pairs": 129,
     "ring": 0
@@ -6895,6 +4782,14 @@
     "cand": 23,
     "tried": 8
    },
+   "step": {
+    "cand": 22,
+    "tried": 22
+   },
+   "tube": {
+    "cand": 5,
+    "tried": 3
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -6913,9 +4808,24 @@
     "longGap": 0,
     "climbOff": 0
    },
+   "cause": {
+    "layout": 19,
+    "field": 251,
+    "swim": 67,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 24,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 337
+  },
+  "from": "all2"
  },
  {
   "id": "cargo",
@@ -6935,7 +4845,7 @@
    51.96,
    51.95
   ],
-  "s": 95,
+  "s": 86,
   "c2": {
    "LA": 51.96,
    "LB": 51.95,
@@ -7031,8 +4941,8 @@
      19.5
     ]
    ],
-   "beyond": 2127,
-   "beyondMade": 2052,
+   "beyond": 2167,
+   "beyondMade": 2092,
    "rise": {
     "tried": 77,
     "made": 77
@@ -7050,8 +4960,20 @@
     "tried": 25,
     "made": 25
    },
+   "step": {
+    "cand": 19,
+    "tried": 19,
+    "made": 19
+   },
+   "tube": {
+    "cand": 63,
+    "tried": 21,
+    "made": 21,
+    "squidTrials": 21
+   },
+   "swimMode": "fail",
    "swim": {
-    "takeoffs": 4227,
+    "takeoffs": 4267,
     "made": 1061,
     "edges": 1,
     "beyond": 813,
@@ -7071,8 +4993,8 @@
    },
    "offMadeN": 494,
    "coyote": 151,
-   "trials": 27313,
-   "ms": 62815,
+   "trials": 27353,
+   "ms": 58049,
    "climbHops": {
     "tried": 52,
     "made": 52,
@@ -7178,176 +5100,6 @@
     ],
     "notMade": []
    },
-   "walks": [
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.2,
-     "t": 4.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 19
-    },
-    {
-     "team": 0,
-     "what": "team 0 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.8,
-     "t": 7.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.7,
-     "t": 4.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 0,
-     "what": "team 0 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36,
-     "t": 7.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.2,
-     "t": 4.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 19
-    },
-    {
-     "team": 1,
-     "what": "team 1 Pond \u2192 weir 1, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 38.8,
-     "t": 7.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 1",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 24.7,
-     "t": 4.6,
-     "proved": 0,
-     "fail": null,
-     "nodes": 22
-    },
-    {
-     "team": 1,
-     "what": "team 1 weir 1 \u2192 Gate, route 2",
-     "entrance": false,
-     "ok": true,
-     "mover": false,
-     "len": 36,
-     "t": 7.1,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (21.2, 26.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 32.1,
-     "t": 5.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 29
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (12.8, 42.4) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 41.6,
-     "t": 6.5,
-     "proved": 0,
-     "fail": null,
-     "nodes": 36
-    },
-    {
-     "team": 0,
-     "what": "team 0 through the entrance at (33.8, 48.3) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 28.1,
-     "t": 3.7,
-     "proved": 0,
-     "fail": null,
-     "nodes": 26
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-33.8, -48.3) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25.6,
-     "t": 4.3,
-     "proved": 0,
-     "fail": null,
-     "nodes": 23
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-13, -43.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 25,
-     "t": 4.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 21
-    },
-    {
-     "team": 1,
-     "what": "team 1 through the entrance at (-21.2, -26.1) into its Gate's ring",
-     "entrance": true,
-     "ok": true,
-     "mover": false,
-     "len": 34.9,
-     "t": 5.9,
-     "proved": 0,
-     "fail": null,
-     "nodes": 31
-    }
-   ],
    "walkRoutes": [
     8,
     8
@@ -7387,6 +5139,14 @@
     "cand": 97,
     "tried": 25
    },
+   "step": {
+    "cand": 19,
+    "tried": 19
+   },
+   "tube": {
+    "cand": 63,
+    "tried": 21
+   },
    "window": {
     "cells": 19,
     "m": 19,
@@ -7405,8 +5165,23 @@
     "longGap": 0,
     "climbOff": 2
    },
+   "cause": {
+    "layout": 269,
+    "field": 562,
+    "swim": 531,
+    "waived": 0,
+    "waivedGroups": 0,
+    "swimMode": "fail"
+   },
+   "swimWarn": {
+    "finds": 0,
+    "ents": 0,
+    "drops": 0
+   },
    "drops": 1457,
-   "climbShortcuts": 0
-  }
+   "climbShortcuts": 0,
+   "finds7d": 1362
+  },
+  "from": "all2"
  }
 ]
