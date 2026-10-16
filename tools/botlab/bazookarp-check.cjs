@@ -83,11 +83,6 @@ app.on('browser-window-created', (_, win) => {
       const rep = await js(`${mod}.then((m) => m.runChecks(${JSON.stringify(o)}))`);
       const drop = await js(`${mod}.then((m) => m.dropCoverage(${JSON.stringify(o)}))`);
       const dropFlags = drop.bad.slice(0, 4).map((b) => ({ n: 11, at: b.at, what: `11: ${b.what}` }));
-      const shots = [];
-      if (SHOTS && opts.shots !== false) {
-        const list = await js(`${mod}.then((m) => m.pictures({ state: ${st.i}, flagShots: ${+(process.env.FLAGSHOTS ?? 8)}, topOnly: ${!!opts.topOnly}, extraFlags: ${JSON.stringify(dropFlags)} }))`);
-        for (const s of list) { const name = (tag ? tag + '-' : '') + s.name; fs.writeFileSync(path.join(OUT, name), Buffer.from(s.url.split(',')[1], 'base64')); shots.push(name); }
-      }
       const carry = [];
       if (CARRY && opts.carry !== false) for (const t of [0, 1]) { await start(id, setup); carry.push(await js(`${mod}.then((m) => m.carryWalk(${t}, ${JSON.stringify(o)}))`)); }
       // #11: the carry walk and the drop coverage
@@ -106,11 +101,30 @@ app.on('browser-window-created', (_, win) => {
         for (const f of W.falls || []) if (f.ran && !f.ok) bad.push(`team ${c.team}: a fall on the ${f.side} half → ${f.event}${f.side === 'enemy' ? ` rest ${JSON.stringify(f.rest)} (${f.dist} m)` : ''}`);
         for (const n of W.narrow || []) if (n.ran && !n.ok) bad.push(`team ${c.team}: a splat on the narrow walk by weir ${n.weir} rested on ${n.wide === false ? 'narrow' : 'no'} floor`);
       }
+      // ([fix2] every FAIL with a place has a flag: where the carry stopped, where each failing walk ran)
+      for (const c of carry) {
+        const W = c.walks || {}, fl11 = (at, what) => { if (at) c11.flags.push({ n: 11, at, what: `11: team ${c.team}'s ${what}` }); };
+        if (W.main && !W.main.ok) fl11(W.main.w2?.at || W.main.w1?.at || null, `carry stopped (${W.main.why || (W.main.plant ? 'no knockout' : 'no plant')})`);
+        if (W.retreat?.ran && !W.retreat.ok) fl11(W.retreat.at, `retreat walk: ×3 on at ${W.retreat.on} / off at ${W.retreat.off} m`);
+        if (W.zone?.ran && !W.zone.ok) fl11(W.zone.at, `zone visit ran ×${W.zone.rate}`);
+        for (const f of W.falls || []) if (f.ran && !f.ok) fl11(f.at, `fall on the ${f.side} half → ${f.event}`);
+        for (const n of W.narrow || []) if (n.ran && !n.ok) fl11(n.at, `narrow-walk splat rested on ${n.wide === false ? 'narrow' : 'no'} floor`);
+      }
       const ran = carry.length > 0;
       c11.status = bad.length ? 'FAIL' : ran ? 'OK' : 'SKIP';
       c11.text = bad.length ? bad.join('; ') : (ran ? carry.map((c) => `team ${c.team}: knockout (weir ${c.walks.main.tWeir} s + Gate ${c.walks.main.tGate} s), stuck 0, retreat on ${c.walks.retreat?.on ?? '–'} / off ${c.walks.retreat?.off ?? '–'} m, zone ${c.walks.zone?.ran ? '×' + c.walks.zone.rate : 'n/a'}, falls ${(c.walks.falls || []).map((f) => (f.ran ? `${f.side} → ${f.event}` : `${f.side} n/a`)).join(', ')}, narrow → ${(c.walks.narrow || []).map((n) => (n.ran ? (n.wide ? 'wide' : 'narrow') : 'n/a')).join('/')}`).join(' | ') + ` · ` : 'CARRY=0: the walk not run (a RESULT ok needs it) · ') + `drop coverage ${drop.samples} splats ok (worst ${drop.worst} m)`;
       c11.nums = { drop, carry };
       rep.checks[11] = c11;
+      // ([fix2] the pictures come after #11, so its flags — the drop coverage's, where a carry stopped, where a walk
+      // failed — are numbered with the rest on the top-down and its key; the carry walks inked a fresh match, so the
+      // pictures get a fresh one too. The page's own report takes #11 for its title and numbering)
+      await js(`(() => { const kc = window.__karpCheck; kc.out.checks[11] = ${JSON.stringify({ n: 11, name: NAMES[11], status: c11.status, text: c11.text, flags: c11.flags })}; return 1; })()`);
+      const shots = [];
+      if (SHOTS && opts.shots !== false) {
+        if (carry.length) await start(id, setup);
+        const list = await js(`${mod}.then((m) => m.pictures({ state: ${st.i}, flagShots: ${+(process.env.FLAGSHOTS ?? 8)}, topOnly: ${!!opts.topOnly} }))`);
+        for (const s of list) { const name = (tag ? tag + '-' : '') + s.name; fs.writeFileSync(path.join(OUT, name), Buffer.from(s.url.split(',')[1], 'base64')); shots.push(name); }
+      }
       // print
       const all = Object.values(rep.checks).sort((a, b) => a.n - b.n);
       console.log(`== ${id}${rep.states.length > 1 ? ` state ${rep.key}` : ''}${rep.placeholder ? ' (PLACEHOLDER data)' : ''}${tag ? ' [' + tag + ']' : ''}`);
@@ -123,7 +137,7 @@ app.on('browser-window-created', (_, win) => {
       console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${rep.checks[16]?.nums?.walkRoutes ? ` walks=${rep.checks[16].nums.walkRoutes.join('/')}+${rep.checks[16].nums.walkEntrances.join('/')}` : ''}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
       if (shots.length) console.log(`  pictures (${OUT}): ${shots.join(', ')}`);
       // the flags, numbered as on the top-down (its discs and key) and in the -flag-<n> pictures; #11's carry places last
-      const flags = await js(`${mod}.then((m) => m.numberFlags(window.__karpCheck.out.checks, ${JSON.stringify(c11.flags)}))`);
+      const flags = await js(`${mod}.then((m) => m.numberFlags(window.__karpCheck.out.checks))`);
       if (flags.length) { console.log(`  flags (${flags.length}):`); for (const fg of flags) console.log(`    ${String(fg.i).padStart(3)} #${String(fg.check).padEnd(2)} (${fg.at.join(', ')})${fg.also ? ` +${fg.also}` : ''}: ${fg.what}`); }
       const json = { ...rep, flags, carry, drop, shots, result: ok ? 'ok' : 'fail', fails, skips };
       fs.writeFileSync(path.join(OUT, `${tag ? tag + '-' : ''}${id}${rep.states.length > 1 ? '-s' + rep.key : ''}-karp.json`), JSON.stringify(json, null, 1));
@@ -231,13 +245,13 @@ app.on('browser-window-created', (_, win) => {
         }
         if (table.length > 1) {
           console.log('\n== all stages');
-          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: candidates / tried / made | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |');
+          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: tried / made | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |');
           console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
           for (const r of table) {
             if (r.err) { console.log(`| ${r.id} | error: ${r.err} |`); continue; }
             const c = r.j.checks, n16 = c[16]?.nums || {}, n7 = c[7]?.nums || {};
             const finds = (n7.d || []).length, ents = (n7.teams || []).map((t) => t.entrances.length).join('/');
-            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.cand} / ${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${ents} | ${r.s} |`);
+            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${ents} | ${r.s} |`);
           }
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }
