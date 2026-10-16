@@ -364,18 +364,28 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
       // (the first row reaches 0.4 m back over the lava: it covers the surface grid's cells that overhang the lip)
       const rows = [[-0.4, 0.03, 0], [0, 0.02, 0.02], [0.45, -0.22, 0.12], [0.95, -1.1, 0.32], [1.35, -c.drop * 0.5, 0.65], [1.7, -c.drop, 1]];
       let run = 0, total = 0; for (let i = 0; i + 1 < L.length; i++) total += Math.hypot(L[i + 1][0] - L[i][0], L[i + 1][1] - L[i][1]);
+      // each segment's pour side, then (fix round 4, review 4: on the curved lip each panel poured square to its own
+      // segment and the panels splayed apart — slits of sky between them in eng-lavafall-*) the pour direction at a
+      // shared vertex is its two segments' mean, eased along each segment: one continuous curtain
+      const segs = [];
       for (let i = 0; i + 1 < L.length; i++) {
         const a = L[i], b = L[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
         if (len < 0.05) continue;
         let nx = -dz / len, nz = dx / len;
         const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2, inP = this.W.inRegion(mx + nx * 0.6, mz + nz * 0.6), inM = this.W.inRegion(mx - nx * 0.6, mz - nz * 0.6);
         if (inP && !inM) { nx = -nx; nz = -nz; } else if (inP === inM && nx * mx + nz * mz < 0) { nx = -nx; nz = -nz; }   // (else: away from the lake's middle)
+        segs.push({ a, b, dx, dz, len, nx, nz, i });
+      }
+      const vtx = (p, q) => { if (!p || !q || p.i + 1 !== q.i || p.nx * q.nx + p.nz * q.nz < 0.2) return null; const x = p.nx + q.nx, z = p.nz + q.nz, l = Math.hypot(x, z); return [x / l, z / l]; };
+      for (let k = 0; k < segs.length; k++) {
+        const { a, dx, dz, len, nx, nz } = segs[k];
+        const nA = vtx(segs[k - 1], segs[k]) || [nx, nz], nB = vtx(segs[k], segs[k + 1]) || [nx, nz];
         const cols = Math.max(1, Math.ceil(len / 1.5)), base = pos.length / 3;
         for (let ri = 0; ri < rows.length; ri++) for (let ci = 0; ci <= cols; ci++) {
-          const u = ci / cols, [o, y, v] = rows[ri];
-          pos.push(a[0] + dx * u + nx * o, y, a[1] + dz * u + nz * o); uv.push((run + len * u) / Math.max(1, total) * Math.max(1, total / 6), v);
+          const u = ci / cols, [o, y, v] = rows[ri], ux = nA[0] + (nB[0] - nA[0]) * u, uz = nA[1] + (nB[1] - nA[1]) * u, ul = Math.hypot(ux, uz) || 1;
+          pos.push(a[0] + dx * u + (ux / ul) * o, y, a[1] + dz * u + (uz / ul) * o); uv.push((run + len * u) / Math.max(1, total) * Math.max(1, total / 6), v);
         }
-        for (let ri = 0; ri + 1 < rows.length; ri++) for (let ci = 0; ci < cols; ci++) { const k = base + ri * (cols + 1) + ci, k2 = k + cols + 1; idx.push(k, k2, k + 1, k + 1, k2, k2 + 1); }
+        for (let ri = 0; ri + 1 < rows.length; ri++) for (let ci = 0; ci < cols; ci++) { const k2 = base + ri * (cols + 1) + ci, k3 = k2 + cols + 1; idx.push(k2, k3, k2 + 1, k2 + 1, k3, k3 + 1); }
         run += len;
       }
       if (!idx.length) continue;

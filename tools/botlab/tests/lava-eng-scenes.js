@@ -3,6 +3,7 @@
 // default list, named eng-*). Fix round 3: the set regenerated at the final head, plus a side view of the lavafall at LOW
 // and HIGH and the Organ Pipes from the island at LOW and HIGH.
 //   MAP=caldera MODE=turf PLAY=4 SCENES=tools/botlab/tests/lava-eng-scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
+//   (PRE_ARGS='only=lavafall': those scenes only)
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, L = m.lava;
   const THREE = await import('three');
@@ -73,6 +74,8 @@
   H('eng-minimap-high', () => { L.debugT(50); stand(-10, 1.22, -3.2, 0, -20, -0.15); step(0.4); });
   H('eng-hud-warning-fall', () => { L.debugT(59.6); stand(-10, 1.22, -3.2, 0, 0, 0.05); step(0.6); }, 200);
   H('eng-minimap-low', () => { L.debugT(90); stand(-10, 1.22, -3.2, 0, -20, -0.15); step(0.4); });
+  // (fix round 4: PRE_ARGS 'only=<a>,<b>' keeps the scenes whose name holds one of them, e.g. only=lavafall)
+  { const o = /(?:^|[;&])only=([^;&]+)/.exec(String(window.__preArgs || '')); if (o) { const keys = o[1].split(','); for (let i = S.length - 1; i >= 0; i--) if (!keys.some((k) => S[i].name.includes(k))) S.splice(i, 1); } }
   window.__hudScenes = S;
   return S.map((s) => ({ name: s.name }));
 })();
