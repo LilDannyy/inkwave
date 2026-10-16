@@ -1159,7 +1159,8 @@ function snapAim(b, SN, it, move) {
     const rel = kind === 'charger' ? 0.12 : kind === 'spinner' ? 0.3 : kind === 'splatling' ? 0.35 : (w.ring1 ?? 0.4) + 0.06;
     it.fire = wr.burstT > 0 || wr.streaming ? false : wr.charging ? !(on && off < ftol && (wr.charge ?? 1) >= rel) : (on || !live) && off < tol * 4 && !(wr.cooldown > 0);
   } else it.fire = on && (b._devTrigger ? b._devTrigger(d3, off < ftol, off < tol * 4, 0, weaponRange(w) + 1) : off < ftol);
-  if (it.fire && !KB?.charges && !CHARGES[kind] && (wr.bloom ?? 0) > 0.05) it.fire = false;
+  // (no tap here, unlike the scan's: the foe steps out of a floated web within ~0.5 s of noticing it, so every shot of the
+  // stream counts — the first's narrow spread, then the next ones', at a 0.2 m target)
   if (it.fire && !a.grounded && !((CHARGES[kind] || KB?.charges) && wr.charging)) it.fire = false;
   if (it.fire && on && !Q.fired) { Q.fired = true; BOBBER_BOT.snapShots = (BOBBER_BOT.snapShots || 0) + 1; snapLog(b, SN, 'fire', { fd: Math.round(fd * 10) / 10, dt: Math.round((G.time - Q.t0) * 100) / 100 }); }
   // (floated with nobody in its reach: back to the duel at once, unless it was aimed at on its way — then held on it for

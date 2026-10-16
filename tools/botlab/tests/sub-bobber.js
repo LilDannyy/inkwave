@@ -754,9 +754,11 @@
           // (its brain from here, its legs held — as the trials below; the foe stands where it was, facing the same way)
           { const up = brain0.get(mate); mate.bot.update = function (dt) { const r = up.call(this, dt); mate.intent.move.set(0, 0, 0); mate.intent.jump = false; return r; }; }
           const hit0 = ev('hit').filter((x) => x.e.victim === foe).length;
-          step(2.5, () => { put(foe, V(0, 0, 7), facingAway ? 0 : Math.PI); if (!SN || !['fly', 'open', 'live'].includes(SN.state)) return false; });
-          stub(mate);
-          return { snap, thrown: !!SN, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0,
+          let shots = 0; const offF = on('weapon:fire', (e) => { if (e.actor === mate && SN?.state === 'live') shots++; });
+          let fireF = 0;
+          step(2.5, () => { put(foe, V(0, 0, 7), facingAway ? 0 : Math.PI); if (SN?.state === 'live' && mate.intent.fire) fireF++; if (!SN || !['fly', 'open', 'live'].includes(SN.state)) return false; });
+          stub(mate); offF();
+          return { snap, thrown: !!SN, shotsLive: shots, fireFrames: fireF, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0,
             dbg: { mode: mate.bot.mode, sees: !!mate.bot.sight?.sees(foe), hp: mate.hp, ld: r2(mate.lastDamage), ink: r2(mate.ink), snapLog: (BOBBER_BOT.snapLog || []).slice(-6), scanWhy: BOBBER_BOT.scanWhy, holds: BOBBER_BOT.holds, fired: BOBBER_BOT.fired, snapShots: BOBBER_BOT.snapShots, aimYaw: r2(mate.bot.aimYaw), wep: mate.weapon.kind } };
         };
         const away = snapTrial(true), face = snapTrial(false);
