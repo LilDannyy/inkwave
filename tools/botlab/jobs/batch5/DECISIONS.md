@@ -75,11 +75,13 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
 28. **Roller: kept.** `rollSpeed` 6.5 against `runSpeed` 6.0 (was 4.4) is the user's "slightly faster than walking". In
     a mixed lobby the roller's turf rises from ×1.04 to ×1.17 of the lobby mean while it rolls less of its time (34.6 →
     27.5 %). TELL THE USER: a real turf gain for rollers follows from their words.
-29. **Zone Control forgiveness: kept, with a late-game question open.** Against the pre-batch base (n = 24 per code):
-    contested time 2.3 → 4.5 %, lead changes 0.42 → 0.71, first takes unchanged (the early game is what the user asked
-    for); but the final margin 29 → 45.5 and knockouts 1/24 → 5/24, opening after 180 s. A 30 s timeline + per-flip log
-    is being measured; then one small step on the penalty or the flip hold if the leader's late retakes drive it, else
-    nothing.
+29. **Zone Control forgiveness: kept, closed.** Pooled n = 40 per code against the pre-batch base: neutral time
+    210 → 178 s (zones are taken and held sooner), captures 6.1 → 6.6, lead changes 0.47 → 0.65, first takes unchanged,
+    disputed time unchanged (4.0 vs 3.9 %: an earlier "more contested" reading was an artefact of each code's own warn
+    line). A late run-away seen in one 16-match sample reversed in the next; the margin difference is within noise
+    (35.0 ± 4.1 vs 42.1 ± 5.4), and a trailer's late take now costs the leader a bigger penalty (21.6 vs 13.8), the
+    opposite of a snowball. Only knockouts 7/40 vs 2/40 remain lopsided (p ≈ 0.15): watch them in the consolidated
+    pass with a larger n; no change to the penalty or the flip hold.
 30. **Scrap Sentry: no buff.** 0.25 (Turf) / 0.12 (Zones) splats per use, 8× any other sub, while locked on only
     3.7 / 7.2 % of its life; bot placement is being improved in the polish, its numbers are not.
 31. **Glide Bomb bots: a fight bias is required** (1 enemy hit in 545 glides in Zone Control; three paint throws per
