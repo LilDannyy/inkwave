@@ -874,9 +874,10 @@ export class Actor {
   isRoofFor(b) { return !!b && (!!b.roof || (!!this.carry && !!b.tag && b.tag.startsWith('plant:'))); }
 
   _spawnBarrier() {
-    if (this.carry) { this._padBarrier(G.level.spawnPads[this.team]); G.match?.karp?.field.pushOutBlock(this); }   // [b5-karp] a carrier enters neither spawn, nor a carrierBlock
+    if (this.carry) { const k = this._padBarrier(G.level.spawnPads[this.team]) | this._padBarrier(G.level.spawnPads[this.enemyTeam]); if (k && this.isLocal) G.match?.karp?.refuse?.(this, 'spawn'); G.match?.karp?.field.pushOutBlock(this); return; }   // [b5-karp] a carrier enters neither spawn, nor a carrierBlock ([karp-face] "You can't take it into a spawn")
     this._padBarrier(G.level.spawnPads[this.enemyTeam]);
   }
+  // (true when it pushed)
   _padBarrier(pad) {
     const R = G.level.spawnBarrier;
     const dx = this.pos.x - pad.x, dz = this.pos.z - pad.z;
@@ -886,7 +887,9 @@ export class Actor {
       this.pos.x += dx * k; this.pos.z += dz * k;
       const vn = (this.vel.x * dx + this.vel.z * dz) / Math.max(d, 0.01);
       if (vn < 0) { this.vel.x -= (dx / d) * vn * 1.6; this.vel.z -= (dz / d) * vn * 1.6; }
+      return true;
     }
+    return false;
   }
 
   // ------------------------------------------------------------------ wall climb

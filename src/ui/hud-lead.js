@@ -20,6 +20,10 @@
 //     team behind shrinks while the leader holds the live objective, and is back to normal as soon as it contests it
 //     (inks ≥ ZONES.warn of a held zone, the zones:contest line, with its re-arm hysteresis) or the objective isn't the
 //     leader's.
+//   • Bazookarp ([karp-face]): the lead is the engine's winning() — the lower count, equal counts split by who reached
+//     it first; 100 / 100 = nobody (the hidden coin never shows). The team behind shrinks while the leader holds the
+//     Bazookarp on the trailing team's half (by the Carp Field); while that carrier swims hidden from this screen's team
+//     the size stays as it was (it would give away where it is).
 // Nothing flickers: every change needs to hold for a moment (LEAD.hold) and the turf thresholds have hysteresis. The
 // sting plays once per real lead change (a team that dips to level and comes back doesn't sting again).
 //
@@ -106,14 +110,15 @@ export class LeadHud {
     if (m !== this.m) this._reset(m);
     this.t += dt;
     const mode = !m || m.practice || m.attract || m.mode === 'boss' || hud.boss?.on || hud._practice ? null
-      : f.tower ? 'tower' : f.zones ? 'zones' : m.mode === 'turf' ? 'turf' : null;
+      : f.tower ? 'tower' : f.zones ? 'zones' : f.karp ? 'karp' : m.mode === 'turf' ? 'turf' : null;   // [karp-face] karp
     if (mode !== this.mode) { this._reset(m); this.mode = mode; }
-    const v = f.tower ? f.tower.viewer : f.zones ? f.zones.viewer : null;
+    const v = f.tower ? f.tower.viewer : f.zones ? f.zones.viewer : f.karp ? f.karp.viewer : null;
     this.me = v === 0 || v === 1 ? v : hud._zMe();
     if (mode && m.state === 'playing') {
       if (mode === 'turf') this._turf(dt);
       else if (mode === 'tower' && f.tower.winner == null) this._tower(f.tower, dt);
       else if (mode === 'zones' && f.zones.winner == null) this._zones(f.zones, dt);
+      else if (mode === 'karp' && f.karp.winner == null) this._karp(f.karp, dt);   // [karp-face]
     }
     this._show();
   }
@@ -168,6 +173,20 @@ export class LeadHud {
     if (L >= 0) for (const q of z.zones || []) if (q.owner === L) con = Math.max(con, (q.share && q.share[tr]) || 0);
     this.zCon = this.zCon ? con >= WARN - 0.08 : con >= WARN;   // (zones.js _contest's warn / re-arm lines)
     this.shrink.feed(L >= 0 && z.owner === L && !this.zCon, dt, LEAD.hold.size);
+  }
+
+  // [karp-face] Bazookarp: the leader as bazookarp.js winning() has it (no leader at 100 / 100); the trailer shrinks while
+  // the leader carries it on the trailer's half — held as it was while that carrier is hidden from this screen's team
+  _karp(k, dt) {
+    const c = k.count || [100, 100], rt = k.reachT || [0, 0];
+    this._lead(c[0] !== c[1] ? (c[0] < c[1] ? 0 : 1) : c[0] >= 100 ? -1 : rt[0] <= rt[1] ? 0 : 1, dt);
+    const L = this.leader.v, tr = 1 - L, H = k.holder, F = G.match?.karp?.field;
+    let pushed = false;
+    if (L >= 0 && H && H.team === L && k.pos) {
+      if (H.hidden && this.me !== L) pushed = this.shrink.v;
+      else { const half = F ? F.halfAt({ x: k.pos[0], y: k.pos[1], z: k.pos[2] }) : -1; pushed = half < 0 ? this.shrink.v : half === tr; }
+    }
+    this.shrink.feed(pushed, dt, LEAD.hold.size);
   }
 
   // a team took the lead: the callout ("WE TOOK / LOST THE LEAD!", in the new leader's ink) + the sting (rising for us,

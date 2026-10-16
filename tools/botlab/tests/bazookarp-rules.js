@@ -9,7 +9,7 @@
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const { BAZOOKARP: K, PLAYER, SPECIALS, SUB } = await import('./src/config.js');
-  const { on } = await import('./src/core/ctx.js');
+  const { on, emit } = await import('./src/core/ctx.js');
   const { Bazookarp } = await import('./src/game/bazookarp.js');
   const { LoopWire } = await import('./src/game/karpWire.js');
   const { KARPBOX_DEF, KARPBOX_TWO } = await import('./tools/botlab/karpbox.js');
@@ -87,8 +87,12 @@
     Kp.shell.m = 0; const c = Kp.shell.center();
     G.projectiles._explodeBomb({ pos: V(c.x, c.y, c.z - 1.6), team: 0, owner: a0, sp: false, kind: 'bomb' });
     const bomb = Kp.shell.meter;
+    // ([karp-face] a barrage's bomb: its thrower's Bomb Barrage running — a sub's sp flag alone, thrown by hand during
+    // some other special, counts whole now: M6)
+    G.specials.start(a0, 'barrage');
     Kp.shell.m = 0; G.projectiles._explodeBomb({ pos: V(c.x, c.y, c.z - 1.6), team: 0, owner: a0, sp: true, kind: 'bomb' });
     const bar = Kp.shell.meter;
+    G.specials.end(a0, 'test');
     R('B3 §2.2: a Splat Bomb at the surface counts its player damage (180), not the device number (60)', Math.abs(bomb - SUB.bomb.damageMax) < 1, { bomb, max: SUB.bomb.damageMax });
     R('B4 §2.2: a Bomb Barrage\'s bomb (its sp flag) counts × 0.5', Math.abs(bar - SUB.bomb.damageMax * 0.5) < 1, { bar });
     Kp.shell.m = 0; O.hit(a0, 500, 'charger'); const cap = Kp.shell.meter;
@@ -443,6 +447,10 @@
     fresh(KARPBOX_DEF, { time: 30 }); Kp.count = [60, 100]; Kp.reachT = [5, 0]; carry(c, 0, 10); m.time = 10; c.splat(L, 'weapon'); m.time = 0.02; step(0.1);
     step(1.0); Kp.shell.add(0, 600, A[1]); put(A[1], Kp.pos.x, Kp.pos.z); step(0.4);
     R('G5 S39a: the winning team picks it up in overtime → it wins (retake)', Kp.winner === 0 && Kp.reason === 'retake', { winner: Kp.winner, reason: Kp.reason });
+    // ([karp-face] review round 3, 2nd fixer: the end record's overtime played is the one this screen keeps — an end
+    // decided inside the frame used to get one more frame of overtime added after its 'e' went out: G10e below)
+    const eRec = () => { const e = (Kp.wire.out || []).filter((r) => r[0] === 'e').pop(); return e ? e[8] : null; };
+    const g5e = { reason: Kp.reason, rec: eRec(), kept: Kp.overtimeT };
     // S39b: the 10 s window — paused while re-forming / resetting, then the losing team didn't grab it → no-pickup
     fresh(KARPBOX_DEF, { time: 30 }); Kp.count = [60, 100]; Kp.reachT = [5, 0]; carry(c, 0, 10); m.time = 10; c.splat(L, 'weapon'); m.time = 0.02; step(0.1);
     const w0 = Kp.otWin.left; step(0.7); const w1 = Kp.otWin.left; step(9.0); const w2 = Kp.otWin.left, during = Kp.winner; step(1.6);
@@ -464,6 +472,8 @@
     Kp.count[1] = 80; step(0.05); const eq = Kp.winner;
     const g10 = []; L.intent.move.set(0, 0, -1); for (let i = 0; i < 132; i++) { dbg.step(1000 / 60); if (i % 15 === 0) g10.push([+L.pos.x.toFixed(2), +L.pos.z.toFixed(2), +L.pos.y.toFixed(2), L.alive, Kp.holder === L, Kp.count[1], Kp.stats.clamped]); } idle(L);
     R('G10 S39d: the losing team carried past the winning team\'s count wins (comeback); an equal count isn\'t enough', eq == null && Kp.winner === 1 && Kp.reason === 'comeback', { eq, winner: Kp.winner, reason: Kp.reason, count: Kp.count, g10, ot: Kp.overtime, losing: Kp.otLosing });
+    const g10e = { reason: Kp.reason, rec: eRec(), kept: Kp.overtimeT };
+    R('G10e the end record carries the overtime played this screen keeps, for an end decided inside the frame (retake, comeback)', g5e.rec != null && g5e.rec === g5e.kept && g10e.rec != null && g10e.rec === g10e.kept, { g5e, g10e });
     fresh(KARPBOX_DEF, { time: 1 }); Kp.count = [60, 100]; carry(L, 0, -10); m.time = 0.02; step(0.1); Kp.overtimeT = K.overtimeMax - 0.05; Kp.fuse = 99; step(0.2);
     R('G11: the 300 s safety cap → the winning team (overtime-cap)', Kp.winner === 0 && Kp.reason === 'overtime-cap', { winner: Kp.winner, reason: Kp.reason });
     fresh(KARPBOX_DEF, { time: 1, coin: 1 }); m.time = 0.02; step(0.1);
@@ -617,12 +627,14 @@
     const orb0 = g.hud.spIcon?.innerHTML || '', badge0 = badges();
     carry(me, 0, -20); step(0.1); me.intent.move.set(0, 0, 1); step(0.5); idle(me); step(0.1);
     const h1 = hud(), f1 = Kp.hud.fuseShown, orb1 = g.hud.spIcon?.innerHTML || '', badge1 = badges();
-    Kp.fuse = 9.3; step(0.1); const h2 = hud(), red = !!g.hud.karp?.mk?.classList.contains('is-red');
+    // ([karp-face] the finished HUD: on the carrier's OWN screen the fuse rides the reticle — the over-head marker is for
+    // everyone else, hud-karp.js B1–B4 — and the status line says YOU CARRY)
+    Kp.fuse = Kp.hud.fuseShown = 9.3; step(0.1); const h2 = hud(), red = !!g.hud.karp?.ret?.classList.contains('is-red');
     put(me, 0, -28); Kp.base = null; step(0.2); const h3 = hud(), r3 = Kp.rate;
-    R('L3 S9, S29, S35: the marker over the carrier shows the fuse\'s whole seconds; red under 10 s; ×3 when fast; the carp on the carrier\'s special orb and the badge on its squad icon',
-      !!h1?.marker && Math.abs(h1.marker.secs - Math.ceil(f1)) <= 1 && h1.marker.secs >= 58 && !!h2?.marker && h2.marker.secs <= 10 && red && r3 === 3 && !!h3?.marker?.fast
-        && /WE CARRY · \d+ s ×3/.test(h3.status) && /DON'T RETREAT/.test(h3.bottom?.[0] || '') && !orb0.includes(CARP) && orb1.includes(CARP) && badge0 === 0 && badge1 === 1,
-      { m1: h1?.marker && { secs: h1.marker.secs, fuse: f1 }, m2: h2?.marker && { secs: h2.marker.secs, red }, m3: h3?.marker && { secs: h3.marker.secs, fast: h3.marker.fast }, status: h3?.status, bottom: h3?.bottom?.[0], rate: r3, orb: [orb0.includes(CARP), orb1.includes(CARP)], badge: [badge0, badge1], doc: document.querySelectorAll('.iw-sq.is-karp').length });
+    R('L3 S9, S29, S35: the carrier\'s fuse in whole seconds (on its own screen: round its reticle); red under 10 s; ×3 when fast; the carp on the carrier\'s special orb and the badge on its squad icon',
+      !!h1?.reticle && Math.abs(h1.reticle.secs - Math.ceil(f1)) <= 1 && h1.reticle.secs >= 58 && !!h2?.reticle && h2.reticle.secs <= 10 && red && r3 === 3 && !!h3?.reticle?.fast
+        && /YOU CARRY · \d+ s ×3/.test(h3.status) && /DON'T RETREAT/.test(h3.bottom?.[0] || '') && !orb0.includes(CARP) && orb1.includes(CARP) && badge0 === 0 && badge1 === 1,
+      { r1: h1?.reticle && { secs: h1.reticle.secs, fuse: f1 }, r2: h2?.reticle && { secs: h2.reticle.secs, red }, r3: h3?.reticle && { secs: h3.reticle.secs, fast: h3.reticle.fast }, status: h3?.status, bottom: h3?.bottom?.[0], rate: r3, orb: [orb0.includes(CARP), orb1.includes(CARP)], badge: [badge0, badge1], doc: document.querySelectorAll('.iw-sq.is-karp').length });
     // §1.1, DECISIONS.md: in its own Carp-Free Zone the carrier's bottom line is "CARP-FREE ZONE!" (the lead's name)
     fresh(); look(); carry(me, 13, -43); step(0.3); const hz = hud();
     R('L3b S12: in its own Carp-Free Zone the carrier\'s screen shows CARP-FREE ZONE! with its sub-line (DECISIONS.md\'s name)', Kp.rate === 3 && hz?.bottom?.[0] === 'CARP-FREE ZONE!' && /3× — get out/.test(hz.bottom[1] || ''), { rate: Kp.rate, bottom: hz?.bottom });
@@ -649,9 +661,11 @@
     const dry = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker };
     for (let k = 0; k < 6; k++) G.paint.splat(V(9.5 + (k % 3 - 1) * 1.2, 0.2, 12 + (k < 3 ? -0.8 : 0.8)), 1.6, 1, { seed: k });
     step(0.3);
-    const swim = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: FX().carp.visible, pillar: FX().pillar.visible, wake: FX().wake.visible };
+    // ([karp-face] "the carp": the resting one (bazookarpFx) or the held sp_karp on the carrier's kid — a squid holds none)
+    const carpSeen = (a) => FX().carp.visible || (a.form === 'kid' && a.character?.weaponKind === 'sp_karp' && a.character.root.visible !== false);
+    const swim = { sub: b.submerged, reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: carpSeen(b), pillar: FX().pillar.visible, wake: FX().wake.visible };
     b.intent.squid = false; step(0.3);
-    const up = { reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: FX().carp.visible, wake: FX().wake.visible };
+    const up = { reveal: revealedTo(b, 0), marker: !!hud()?.marker, carp: carpSeen(b), wake: FX().wake.visible };
     // … its own team still sees it swim (an Alpha carrier in Alpha ink: the marker on Alpha's screen)
     fresh(); look(); put(me, -3, -12); for (let k = 0; k < 3; k++) G.paint.splat(V(-1 + k * 1.2, 0.2, -20), 1.6, 0, { seed: k }); carry(A[1], 0, -20); A[1].intent.squid = true; step(0.4);
     const own = { sub: A[1].submerged, marker: !!hud()?.marker };
@@ -851,6 +865,27 @@
       m5[id] = { ok, counted, inside: inn, foeHp: +foe.hp.toFixed(1), alive: foe.alive, hits: Kp.shell.stats.hits, booms: booms.slice(0, 4), hurts: hurts.slice(0, 6), hpMin: +hpMin.toFixed(1), inkHurt: +inkPeak.toFixed(1) };
     }
     R('M5 §2.2: every damaging sub (bomb, Cling Charge, Pop Pellet, Shaker, Skitter, Waddle, Torpedo, Tracer Bolt, Whirl Boomerang, sprinkler, Lurk Mine) counts into a lone shell, is never inside it, and never hurts a kid 0.9 m behind it (a walker may go round it)', m5ok && Object.keys(m5).length === 11, m5);
+    // M6 [karp-face] (the WP1 report's open item): a Splat Bomb thrown by hand while its thrower's own Bubble Guard runs
+    // counts whole into the shell (it counted × 0.5: a sub item's sp flag — set whenever its owner's special runs — can't
+    // tell a hand throw from a barrage's bomb); a Bomb Barrage's bomb still counts half; the same throw with no special
+    const m6 = {};
+    for (const how of ['plain', 'bubbler', 'barrage']) {
+      G.projectiles.clear(); G.subs.clear(); G.specials.clear();
+      fresh(); Kp.shell.hpMax = 1e9; Kp.shell.m = 0;
+      const t6 = A[1], sc6 = Kp.shell.center();
+      t6.setSub('bomb');
+      put(t6, sc6.x, sc6.z - 2.6); t6.yaw = t6.aimYaw = 0; t6.aimPitch = 0; step(0.05);
+      if (how !== 'plain') G.specials.start(t6, how);
+      const sp6 = t6.specialActive ? t6.specialActive.kind : null, n0 = Kp.shell.stats.counted[0];
+      G.projectiles.throwBomb(t6);
+      if (how === 'barrage') emit('barrage:throw', { actor: t6, special: t6.specialActive, kind: 'bomb' });
+      const flag = !!(G.projectiles.bombs || []).find((b) => b.owner === t6)?.sp;
+      for (let i = 0; i < 240; i++) dbg.step(1000 / 60);
+      m6[how] = { sp: sp6, flag, counted: Math.round(Kp.shell.stats.counted[0] - n0) };
+      if (t6.specialActive) G.specials.end(t6, 'test');
+    }
+    R('M6: a Splat Bomb thrown by hand during its thrower\'s own Bubble Guard counts whole into the shell (as with no special); a Bomb Barrage\'s bomb counts half',
+      m6.plain.counted > 0 && m6.bubbler.sp === 'bubbler' && m6.bubbler.flag && Math.abs(m6.bubbler.counted - m6.plain.counted) <= 1 && m6.barrage.sp === 'barrage' && Math.abs(m6.barrage.counted - m6.plain.counted * K.shell.specialMul) <= 1, m6);
     offD();
   }
   } catch (e) { R('HARNESS: the test threw', false, { err: String(e && e.stack || e).slice(0, 600) }); }

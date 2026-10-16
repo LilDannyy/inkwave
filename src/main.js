@@ -1250,7 +1250,7 @@ class Game {
       mapName: this.mapDef.name,
       ...(zr ? { mode: 'zones', zones: zr } : {}),
       ...(tr ? { mode: 'tower', tower: tr } : {}),
-      ...(kr ? { mode: 'tower', tower: { ...kr, karp: true } } : {}),   // [b5-karp] (the placeholder results: Tower Command's layout)
+      ...(kr ? { mode: 'bazookarp', karp: { ...kr, overtimeT: m.karp.overtimeT } } : {}),   // [b5-karp] [karp-face] (menus.js: its own results — CARRY IT HOME, CARRIED / POPS)
     };
     // your team on the podium
     const team = m.actors.filter((a) => a.team === myTeam);

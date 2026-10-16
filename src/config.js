@@ -733,6 +733,7 @@ export const BAZOOKARP = {
   pickR: 1.3, pickBelow: 0.6, pickAbove: 1.8, pickHold: 0.25,
   claimLockMax: 1.5, claimRetry: 0.3, claimSlack: 0.5,   // online (§7.3)
   claimAge: 0.4,              // s: a claim's sample age; the window-close grace; the wait for a decline (kx) after a death
+  claimWait: 0.3, claimNear: 6,   // [karp-face] the host's longest wait for claims in flight; m: a guest this far past pickR can't have touched it as early
   // the carrier
   speedMul: 0.8, chargeWalk: 2.4,         // × PLAYER's speeds, never the weapon's
   fuse: 60, fuseFast: 3, fuseWarn: 10,

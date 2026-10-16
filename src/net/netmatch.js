@@ -376,6 +376,11 @@ export class NetMatch {
     const peer = this._peer(a.owner);
     const tr = peer.tr;
     if (!buf.length || tr === undefined) return;
+    // [karp-face] the host scores a remote Bazookarp carrier from the REAL samples it sent, as they play (prevTr < t ≤ tr,
+    // SPEC §3.4) — never from the drawn path below
+    const K = this.isHost && this.match?.karp;
+    if (K && K.holder === a) { const p0 = n.trK ?? -Infinity, ss = []; for (const s of buf) if (s.t > p0 && s.t <= tr) ss.push({ t: s.t, x: s.x, y: s.y, z: s.z, alive: !!(s.f & F.alive) }); n.trK = tr; if (ss.length) K.onSamples(a, ss); }
+    else n.trK = tr;
     // drop history older than what we might still need (last frame's moment must stay covered)
     while (buf.length > 2 && buf[1].t < tr - 0.25) buf.shift();
     const S = n.cur || (n.cur = blankSample());
@@ -570,7 +575,9 @@ export class NetMatch {
       case 'k': {
         const a = this.byNid.get(e[2]);
         const K = MAIN_KITS[e[3]] || SUB_KITS[e[3]] || KIT_GHOSTS[e[3]];
-        if (!a || !a.remote || !K || !K.ghost) break;
+        // [karp-face] a Carp Shot record from a peer that no longer owns its actor (a departed host's queued shot for a
+        // bot this client just adopted) is still played: its blast must judge this screen's own players (SPEC §7.6)
+        if (!a || !K || !K.ghost || (!a.remote && !(e[3] === 'karp' && from !== this.myId))) break;
         this.mute++;
         try { K.ghost(a, e[4]); } catch (err) { console.warn('[inkwave] kit ghost', e[3], err); } finally { this.mute--; }
         break;
@@ -578,7 +585,7 @@ export class NetMatch {
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
-      case 'ks': this.match?.karp?.netEvent(e[2], true); break;   // [b5-karp] the host's snapshots (its timeline)
+      case 'ks': this.match?.karp?.netEvent(e[2], true, from); break;   // [b5-karp] the host's snapshots (its timeline; [karp-face] its sender: their age)
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
       case 'sm': this.match?.stage?.netEvent(e[2], e[3], from); break;   // [b5-stagehooks] a stage module's record
       case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
@@ -783,6 +790,22 @@ export class NetMatch {
   onLeave(id, hostChanged) {
     if (!this.match) return;
     const drop = mapNoBots(this.cfg.map);
+    // [karp-face] a host change, on every client, in this order (SPEC §7.6): 1. the departed host's queued RULE records
+    // only — 'tw' (Tower Command), 'z' (Zone Control), 'ks' (Bazookarp snapshots) — play now, in order, and leave its
+    // queue (every client got the same stream before the leave notice: the relay keeps order), so no screen disagrees
+    // about a phase or a plant in its last moments; everything else (paint, kit ghosts — a Carp Shot in the air —
+    // special ghosts, forwarded events) stays queued on its clock as before. 2. the new host stops being a follower
+    // BEFORE the leaver's squidkids are removed or adopted, so its rules engines handle them (a removed carrier →
+    // 'left'). 3. remove / adopt. 4. the engines take over (onHostChange).
+    if (hostChanged) {
+      const P = this.peers.get(id);
+      if (P && P.events.length) {
+        const keep = [];
+        for (const e of P.events) { if (e[1] === 'tw' || e[1] === 'z' || e[1] === 'ks') { try { this._play(id, e); } catch (err) { console.warn('[net] flush', e[1], err); } } else keep.push(e); }
+        P.events = keep;
+      }
+      if (this.isHost) { this.match.follower = false; this.clockT = 0; }
+    }
     // [b5-subs] the leaver's kit devices went with their client: every screen ends its copies now, before re-owning
     for (const a of this.byNid.values()) if (a.owner === id) for (const k in SUB_KITS) { try { SUB_KITS[k].dropOwner?.(a); } catch (err) { console.warn('[inkwave] dropOwner', k, err); } }
     for (const a of [...this.byNid.values()]) {
@@ -790,10 +813,9 @@ export class NetMatch {
       // (Practice: a player who leaves is gone — nobody plays on in their place; the host's bots move to the new host)
       if (drop || (this.practice && !a.isBot)) { this._remove(a); continue; }
       a.owner = this.s.hostId;
-      if (a.owner === this.myId) this._adopt(a);
+      if (a.owner === this.myId) this._adopt(a, this.peers.get(id)?.events);   // [karp-face] (its owner's queued records: KarpGun.adopt)
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
     }
-    if (hostChanged && this.isHost) { this.match.follower = false; this.clockT = 0; }
     if (hostChanged) this.match.karp?.onHostChange(this.isHost);   // [b5-karp] the new host runs the rules; a carrying guest re-reports
     if (hostChanged) this.match.stage?.hostChanged(this.isHost);   // [b5-stagehooks]
     // the boss moves with the host: the new host adopts it from what it was showing; everyone else glides onto its path
@@ -870,7 +892,7 @@ export class NetMatch {
     this.inkWait = 0;
   }
 
-  _adopt(a) {
+  _adopt(a, queued = null) {
     // continue from exactly where it was drawn — no pop
     a.remote = false;
     this._stopLoops(a);
@@ -886,6 +908,7 @@ export class NetMatch {
     else if (a.alive) { a.character.setVisible(true); a.character.root.visible = true; }
     a.net.err.set(0, 0, 0); a.net.errV?.set(0, 0, 0);   // a.pos is already where it was drawn (path + offset)
     G.deploy?.adopt(a);   // [b5-deploy] its devices (ghosts here till now) are ours: they can still be shot down and crushed
+    G.karpGun?.adopt?.(a, queued);   // [karp-face] its Carp Shots in the air are ours to land and blow (not one whose blast is still queued)
     this.match?.stage?.adopt(a);   // [b5-stagehooks] (a ride in progress becomes ours)
   }
 

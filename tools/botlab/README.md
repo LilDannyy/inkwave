@@ -188,6 +188,22 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   - the other modes unchanged: `node build/check-maps.mjs` (every stage, and `<id>.bazookarp` for a stage with data) and
     `node tools/botlab/karp-layout-diff.mjs <base tree>` (Turf War / Zone Control / Tower Command / Boss Battle builds and
     the stage cards byte-identical).
+- Online, the rest of SPEC §10.2 ([karp-face]): `NET_ARGS='part=face'` (steps 2–11, 16) and `NET_ARGS='part=lag'
+  URLQ='netlag=150&netjitter=60'` (hits, a grab, retreat, the fuse ring under ×3, a declined grant, the window's close)
+  through net-karp.cjs; net-karp-host.cjs `part=plant` / `part=shot` (`CLIENTS=3`: a plant / a Big Burst in the old
+  host's last 0.1 s) and `part=guestleave` (`CLIENTS=2`); the whole thing: `CLIENTS=3 Q0='autopilot&wipmodes'
+  Q1='autopilot&wipmodes' Q2='autopilot&wipmodes' WATCHDOG=2400000 NET=tools/botlab/tests/net-karp-full.cjs` — a real
+  5:00 match on halyard, autopilot kids and bots, the host leaving mid-match, played to the end on the other two screens
+  (the same result and results table), back to the lobby. The narrowed flush's regressions for the other modes:
+  `CLIENTS=3 Q0=autopilot Q1=autopilot Q2=autopilot NET=tools/botlab/tests/net-tower.cjs` (and `net-zones.cjs`).
+- The finished face: `MAP=testbox MODE=bazookarp PAGE=tools/botlab/tests/hud-karp.js` (the HUD, §6.1–6.5, the cues),
+  `hud-lead.js` with `MODE=bazookarp`, and `WIPMODES=1 MAP=halyard MODE=bazookarp PAGE=tools/botlab/tests/karp-menus.js`
+  (the pause strip, How to Play, the mode card, the stage select's and the lobby's stage lists — with `WIPSTAGES=1`
+  every stage, the placeholder ones tagged PREVIEW; without `WIPMODES` the mode hidden).
+- Pictures: tools/botlab/scenes/karp.js (WP1's) and tools/botlab/scenes/karp-face.js (every HUD state, the looks, the maps,
+  the menus: `MAP=halyard MODE=bazookarp TIME=day PLAY=2 URLQ=wipmodes SCENES=tools/botlab/scenes/karp-face.js OUT=/dir
+  tools/botlab/run.sh tools/botlab/hud-shots.cjs`, `W=960 H=600` for the small window, `PRE_ARGS='only=…'`) through
+  hud-shots.cjs.
 
 Stage set pieces:
 - Movers (Calamari County's railcars): `MAP=calamari MODE=turf PAGE=tools/botlab/tests/movers.js tools/botlab/run.sh

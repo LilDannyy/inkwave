@@ -493,19 +493,28 @@ tower onto the host's position (dead-reckoned between snapshots); each client ca
 and fills its own players' gauges. The start config carries `mode: 'tower'` and its fixed 5:00.
 
 **Bazookarp** ([b5-karp], a wip mode: `config WIP_MODES`, rooms take it only with `?wipmodes`). The host runs the rules
-(src/game/bazookarp.js) and talks to the wire only through a `KarpWire` (src/game/karpWire.js `NetWire`); WP2
-(karp-face) completes the netcode on this shape (tools/botlab/jobs/batch5/bazookarp/SPEC.md §7). Today:
+(src/game/bazookarp.js) and talks to the wire only through a `KarpWire` (src/game/karpWire.js `NetWire`;
+tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
 - **host → all.** Discrete records sent **at once** as `{ k: 'bk', e }` (not on the timeline: a burst, a grant or a drop
   reaches a guest one trip after it happens), each with `q`, the host's sequence number: `['p', q, nid]` grant ·
-  `['u', q, nid, x, y, z]` a grant undone · `['b', q, team, x, y, z, byNid]` burst · `['d', q, how, x, y, z]` dropped /
-  moved · `['r', q, x, y, z, why]` reset flight · `['w', q, team, index]` plant · `['x', q, nid, x, y, z, own]` Carp Blast ·
-  `['t', q, losing, why]` overtime · `['e', q, winner, reason, c0, c1, b0, b1]` end. Snapshots on the host's **timeline**
+  `['u', q, nid, x, y, z]` a grant undone · `['b', q, team, x, y, z, byNid, tb]` burst (`tb`, review round 3: its host
+  wire time) · `['d', q, how, x, y, z]` dropped / moved · `['r', q, x, y, z, why]` reset flight · `['w', q, team, index]`
+  plant · `['x', q, nid, x, y, z, own]` Carp Blast · `['t', q, losing, why]` overtime · `['e', q, winner, reason, c0, c1,
+  b0, b1, otT]` end (`otT`, review round 3: the overtime played, to 0.01 s — the host keeps the same rounded number, and
+  followers take it: their own overtime clock trails the host's by the playback delay, and the results round it up to
+  whole seconds, so an overtime that ended just past a whole second read `OVERTIME +0:04` on the host and `+0:03` on a
+  guest; net-karp `part=ottag`). Snapshots on the host's **timeline**
   as `['ks', …]` events: `'s'` 10× a second (phase, position, holder, meter, fuse, rate, counts, overtime, the window)
   and `'S'` once a second (plus best metres, reach times, weirs lowered, `touched`, the field state …). A follower applies
-  a snapshot's phase / holder / position only when its `q` is at least the last discrete record's (a late snapshot never
-  undoes a newer grant or drop). The start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
-- **guest → host.** `{ k: 'kc', nid, ts }` a pick-up claim (re-sent every 0.3 s while touching; its kit locked until an
-  answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
+  a snapshot **at all** only when its `q` is at least the last discrete record's and nobody has won yet (`[karp-face]`
+  review round 1: a snapshot the host took before a grant, a drop or the end plays after that record on the timeline —
+  it used to keep its counts, fuse and overtime clock, which reset a new carrier's ring to the last carry's leftover and
+  put a knockout's 0 back up). A snapshot's fuse and rate are read only when its holder is this screen's holder. The
+  start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
+- **guest → host.** `{ k: 'kc', nid, ts, fs, fr, fl, fo }` a pick-up claim (`fs`, `[karp-face]`: seconds after the
+  Bazookarp went free on the guest's own screen that it touched it; `fr` / `fl` / `fo`, review round 3, only when `fr` >
+  0: how much its player was already running in toward it at that moment, 0–1, how late that moment was after the burst
+  on the host's clock as the guest reads it, and the guest's floor offset to the host — see the race below; re-sent every 0.3 s while touching; its kit locked until an answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
   half, zone }` the carrier's own judgement of its fuse rate / half / free zone (on change, ≤ 1 per tick), `{ k: 'kf',
   nid, x, y, z, half, zone }` its last footing (≤ 5/s; a half or zone change at once), and **`kh`, a field on the guest's
   ordinary 20 Hz tick** (`msg.kh = [nid, dmg, …]`): its shell hits since the last tick, summed, already × 0.5 / capped
@@ -523,7 +532,42 @@ and fills its own players' gauges. The start config carries `mode: 'tower'` and 
   the spot) and records `u`; a host-side death record for that player inside 1.5 s of the grant waits 0.4 s for the
   `kx` first, so a declined grant is never a carrier's loss (S39c). `kd` reaches the guest's engine (its claim lock
   ends). A remote carrier is scored only from samples after the one its claim was judged on (never its samples from
-  before the pick-up). Remote claimants are measured where their newest sample is (nearest wins, host bots included).
+  before the pick-up). Remote claimants are measured where their newest sample is, or any sample they sent in the last
+  0.4 s; the host's own actors where they are or where they touched it.
+- **the race (`[karp-face]`, review round 1).** First-come on the host gave its own bots every near-even grab (a guest
+  hears of the burst a trip late and its claim lands a trip later still: a host bot won 10 of 10 at equal distance).
+  Now every claim carries `since` — how long after it went free **on the claimant's own screen** it touched it (`fs`;
+  the host's actors' from the host's) — and once a claim is in, the host holds the grant open for claims in flight:
+  `NetWire.rttTo` (its relay round trip plus the guest's lobby ping, plus that peer's playback delay: its tick spacing
+  and jitter) plus a frame, for each guest that hasn't claimed but whose newest sample is within `pickR + claimNear`
+  (6 m), at most `claimWait` (0.3 s); none near → at once (offline,
+  lone grabs). Then the valid claim with the smallest `since` wins (a touch inside the 0.25 s hold counts as the hold's
+  end), equal → the nearest (SPEC §7.3). When an S39b window's grace runs out with a grant still held open, it is
+  decided then. A touch is timed where the positions are (the end of the last frame: the engine runs before the actors
+  move), less the overshoot past `pickR` at the toucher's speed; a fresh free phase lets a guest claim at once (its
+  re-send clock from its last claim used to hold it back up to 0.3 s). The host keeps its last 40 decisions in
+  `karp.stats.grantLog`. Measured: net-karp `part=race` / `part=racekid` (a host bot / the host's own player against
+  the guest, 16 rounds each). **The bias that is left (review round 2):** `since` starts at each screen's own "free"
+  moment, which on a guest is one way after the host's. A racer who has to SEE the burst before it moves (standing at
+  the shell: the common case) is timed fairly; a guest already running in when it bursts — and not held up by its own
+  copy of the shell — keeps running through that one-way delay, so at equal real touch times its `since` is smaller by
+  the one-way delay and it wins (`part=racerun`: both run in from 7 m, setting off at the same moment of the host's
+  clock). Ordering by the host's clock instead would hand that delay to the host for every standing start. **Review
+  round 3: the running start's credit.** On a guest, the moment it goes free, the engine reads its own player's last
+  ~0.1 s of movement toward the Bazookarp (`_runIn`: positions, not `a.vel` — a swim or a test's mover moves it without
+  one) as `fr`, 0 (standing, walking away or across) … 1 (at 0.8 × run speed or more), and how late that moment was
+  after the burst on the host's clock as `fl`: `'b'` carries its host wire time `tb`, and `fl` = (the wire time of the
+  frame the guest's `freeT0` belongs to — a `bk` lands between frames) − its floor offset to the host − `tb`. The floor
+  offset (`peer.off`, receive − send at its fastest) is the two clocks' difference plus the fastest one-way trip, so `fl`
+  leaves that trip out; the claim carries the guest's floor offset as `fo`, and the host adds back half of `fo` + its
+  own floor offset to this guest (the two fastest one-way trips, both ways alike; 0–0.3 s). The host adds `fr × late`
+  (−0.1 … 0.25 s; no `fl` — the free phase came from a `u` or a snapshot — its own one-way estimate `NetWire.oneWay`)
+  to that claim's `since` (`grantLog` shows it as `cr`). A racer standing at the shell (`fr` 0) is timed from its own
+  "free" as before; one already running in is timed from the host's burst, as the host's actors are. (The first cut
+  read `fl` as `hostNow(host) − tb` at the record's arrival: hostNow adds the one-way estimate built from relay round
+  trips, which carry each page's event-loop wait, and ran 10–100 ms high on a loaded machine — a running guest lost
+  every dead heat. A guest's own stats keep `bLog` / `kcLog`, what it saw of each burst and sent in each claim, for the
+  tests.) The numbers are in the karp-face report (`part=racerun` / `racefair`, with and without lag).
 - **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
   shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
   inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
@@ -532,22 +576,99 @@ and fills its own players' gauges. The start config carries `mode: 'tower'` and 
   subs glance off / stop on each screen's own copy of the standing shell (ghosts too: the owner's records still decide
   how each ends); the Whirl Boomerang's owner records where it stopped on the shell, `['k', nid, 'boomerang', [4, gid,
   x, y, z]]` (a ghost still flying out snaps there and hovers). Tested by `tools/botlab/tests/net-karp-crush.cjs`.
-- **host migration (built here: the new host takes over the rules).** `netmatch.onLeave` calls
-  `match.karp.onHostChange(isHost)` once `match.follower` is false: the new host's records carry on from the old host's
-  `q` (the other guests drop anything at or below the last `q` they applied), a holder that is gone (a humans-only
-  stage removed it while this screen was still a follower) or dead is lost as `left` at its last real sample, an adopted
-  carrier (a stage with bots) keeps carrying with its own screen's judgement read afresh, the clamp's baseline resets,
-  the window carries on (followers keep `otWin.open` from snapshots), and a full `S` goes out at once. A carrying guest
-  re-sends `kr` / `kf` to the new host. **Left for WP2:** §7.6's narrowed flush of the departed host's queued `'ks'`
-  and the reordered `onLeave` (today's order works because `onHostChange` handles the removed holder), the `'k'` case
-  for an adopted actor's queued Carp Shots, `lastCarrier` / `lastPlant` in `S` (a new host's S38 decision at time-up
-  uses what its follower saw), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag,
-  the latency steps (`netlag`), three-client rooms beyond the migration test, the results' per-player columns on screen.
-- Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
-  tools/botlab/run.sh tools/botlab/netpage.cjs` (19 checks: the host's view of a guest carrier, ghost landings, the
-  victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result) and
-  `tools/botlab/tests/net-karp-host.cjs` (`CLIENTS=3 NET_ARGS='part=bots'`: the host leaves mid-carry; `CLIENTS=2
-  NET_ARGS='part=cargo'`: a humans-only room).
+- **a remote carrier's samples (`[karp-face]`).** On the host, `_sample` hands the engine every buffered sample of the
+  holder that has just played (`prevTr < t ≤ tr`, with its alive flag): `match.karp.onSamples(a, samples)`; the engine
+  scores them in order (field reading, the continuity clamp, plant and Gate triggers) and never reads the drawn path.
+  When the carrier changes hands (a guest's carrier adopted by the host as a bot) the clamp's baseline starts afresh.
+- **the fuse and a remote carrier (`[karp-face]`).** The host burns the fuse at the carrier's newest `kr` rate. When it
+  reaches 0 for a remote carrier, the host waits that peer's playback delay (`NetWire.holdFor`, at most 0.3 s) before it
+  records `x`: a death record of the carrier that plays meanwhile wins (the splat / fall row of SPEC §2.6, no Carp Blast).
+  The host's own carriers blow at once.
+- **the carrier's HUD fuse (`[karp-face]`).** The carrier's own screen runs `hud.fuseShown` at the rate it judges itself;
+  each snapshot gives `hostNow = s.fuse − s.rate × (wire.hostNow(sender) − s.t)`: shown > hostNow + 0.1 → it jumps to
+  hostNow at once (less time); shown < hostNow − 0.1 → it gives time back by at most 0.2 s per second
+  (`BAZOOKARP.fuseSync`). It never visibly rewinds under ×3 (net-karp lag 9b, netlag 150 + jitter 60). A snapshot's `t`
+  is the host's **wire clock** (its tick clock, `performance.now`), and a follower reads the host's clock now as
+  `now − peer.off + oneWay` (`NetWire.hostNow`: the sender's peer offset — the floor of receive − send — plus the one-way
+  delay, half its own relay round trip plus half the host's lobby ping). Review round 1: the match clock it used before
+  is only kept within 0.2 s on a guest and trails the host's by the one-way delay, so at ×3 the ring ran 0.4–0.6 s long
+  under netlag 150. Other screens read a remote carrier's fuse forward the same way (≤ 0.6 s), from the grant on.
+- **`S`, the full state (`[karp-face]`).** Besides the snapshot it carries best metres, reach times, weirs lowered,
+  `touched`, `otLosing`, `phaseT`, the shell's hp, the field state, the resting node, overtime and — new, indices 29 … 35 —
+  the last carrier `[team, how, left]` and the last plant `[team, left, window, inOvertime]` (a new host's S38 decision
+  at time-up), the overtime window `[left, open, grace]`, the burst's credit (`lastHit` per team, nids), the remote
+  carrier's own word `[half, zone, rate, why]` (its `kr`) and last footing `[x, y, z, half, zone]` (its `kf`), the reset
+  flight's start. Followers also keep the last carrier / last plant from the discrete records themselves (`d`, `r`, `x`,
+  `w`), so a new host has them even between two `S`.
+- **host migration.** `netmatch.onLeave(id, hostChanged)` now runs in this order on every client (`[karp-face]`, SPEC
+  §7.6): 1. **the narrowed flush** — only the departed host's queued *rule* records (`'tw'` Tower Command, `'z'` Zone
+  Control, `'ks'` Bazookarp snapshots) play at once, in order, and leave its queue (every client received the same stream
+  before the leave notice: the relay keeps order); everything else (paint, kit ghost records — a Carp Shot in the air —
+  special ghosts, forwarded events) stays queued and plays out on that peer's clock as before (the departed peer stays in
+  `peers`). This also fixes, for Tower Command and Zone Control, screens disagreeing about a control or checkpoint record
+  in the old host's last 100–300 ms (net-tower / the zones net test re-run); 2. the new host sets `match.follower = false`
+  **before** the leaver's squidkids are removed or adopted, so its rules engines handle them (a removed carrier on a
+  humans-only stage → `left` at once); 3. remove / adopt; 4. `match.karp.onHostChange(isHost)`: the new host's records
+  carry on above the last `q` it applied (`_rec` itself takes `max(q, lastQ) + 1`, so even a record made during step 3
+  is never dropped by the other guests), shell hits it had batched for the old host count, a holder that is gone or dead
+  is lost as `left` at its last real sample (its half / zone from the last `S`'s `kr`), an adopted carrier keeps carrying
+  with its own screen's judgement read afresh, the clamp resets, the timers (re-form, reset flight, the hold, the window,
+  the fuse) carry on from the last `S` plus the records since, and a full `S` goes out at once. (Review round 2: a
+  follower holds its last snapshot's fuse, overtime clock and window RAW — it reads a remote carrier's fuse forward each
+  frame, and the narrowed flush has just played the newest raw — so the new host reads them forward to now on the old
+  host's clock, `wire.hostNow(oldHost) − t`, at most 0.6 s; a carrier on the new host's own screen never gets back time
+  its ring has shown spent: `min(read forward, fuseShown)`. They used to step UP by the snapshot's age × the rate: +0.34 s
+  under netlag 100, a carrier who became the host rewound its own ring 0.2 s. `karp.stats.takeover` logs what it took;
+  net-karp-host `part=bots` and `part=ring;who=1|2`.) A carrying guest re-sends
+  `kr` / `kf` to the new host; claimants re-send their claims every 0.3 s.
+- **the `'k'` case and adopted actors (`[karp-face]`).** A `karp` kit record is played even when its actor is now local,
+  as long as its sender is not this client (a departed host's queued Carp Shot for a bot this client just adopted), so
+  the blast still judges this screen's own players. An adopted actor's shots in the air (`KarpGun.adopt`, from
+  `netmatch._adopt`) — and a launch record that plays for it after the adoption — are the new owner's: its screen flies
+  them on with collisions, lands them, swells them and blows them, and records `[1]` / `[2]` under the same `gid`, which
+  the other screens' ghosts (launched from the old owner's `[0]`) take. So an old-host bot's Big Burst fired 0.1 s before
+  the host leaves still swells 0.45 s and splats on every screen (net-karp-host `part=shot`). **Review round 3:**
+  `KarpGun.adopt(a, queued)` gets the departed peer's queue (netmatch passes `peers.get(id).events`): a shot whose `[2]`
+  is still queued there is NOT taken — its queued `[1]` / `[2]` land and blow it on the adopter as on every other screen
+  (the adopter blowing it too, when its swell ended before the queued `[2]` played, put a second `[2]` on the wire and the
+  third screens judged the blast twice: 1 leave round in 5); one whose `[1]` is queued but not its `[2]` waits for that
+  landing and is then the adopter's to blow; only a shot with neither queued is flown on from where it is. Every screen
+  judges a gid at most once (`blown`). A Carp Shot's gid is its shooter's own count, `nid × 1e5 + n` (`a._kseq`), which
+  every screen learns from the launches it plays and an adopter carries on past every launch it has seen or that is
+  queued (+8): netmatch's per-client `netId` count restarted on a new host, whose first shots for an adopted bot reused
+  the old host's gids (a launch whose gid a screen still held for its 2 s was dropped there). net-karp-host `part=dbl`
+  (3 clients; the old host's queued `[2]` held back 0.25 s on the others: the race every time).
+- **a carrier who disconnects.** On a stage with bots the host adopts the squidkid (`_adopt`): `a.carry` stays, the
+  bot's brain carries on, the fuse keeps burning at the host's own judgement (mark unset, read afresh). On a humans-only
+  stage the squidkid is removed: a splat at its last real sample (`left`).
+- **late join (`[karp-face]`).** A Bazookarp match locks the room like every match (`tr.lock(!practice)`): a player who
+  drops and asks back in mid-match is turned away (`Match in progress`) and can join again once the room is back in the
+  lobby. The 1 Hz `S` is what a new host rebuilds from, and would be what a late joiner needs if that ever changes.
+- **results (`[b5-karp]`).** The end record `e` carries the exact counts and best metres; the results message's
+  per-player `st` rows add `karpM` (metres of progress gained carrying) and `karpPops` (shells burst) at indices 7 and 8,
+  so every screen's results table (CARRIED, POPS) and its XP (`PROGRESSION.bazookarp`) read the host's numbers.
+- **the lobby (`[karp-face]`, DECISIONS #10).** In this mode a room's stage list (`roomStages('bazookarp')`, the host's
+  `setSettings`, Random's pool; the offline stand-in alike) holds only the stages with a Bazookarp layout
+  (`src/world/karpStages.js`); with `?wipstages` every stage is offered and the lobby's stage card tags the ones still on
+  placeholder data PREVIEW. A room switched to Bazookarp on a stage without one moves to the first that has one.
+- Tested by `NET=tools/botlab/tests/net-karp.cjs` (`CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes'`, through
+  `tools/botlab/netpage.cjs`): the base part (21 checks: the host's view of a guest carrier, a guest's own message rate
+  while it fires at the shell, ghost landings, the victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39
+  overtime, the same result), `NET_ARGS='part=snap'` (late snapshots after a grant and after the end: a new carrier's
+  ring and another screen's view of its fuse start at 60 after a carry that left 7 s or a Carp Blast's 0; a knockout's
+  counts stay put on the guest), `NET_ARGS='part=face'` (SPEC
+  §10.2 steps 2–11 and 16: the burst on its victims' screens, races, a swim-through grant, the grab share, the carrier's
+  rules on its own screen, the thin-wall stall with frozen ticks, the step-out, the guest's gauge and sting, a two-weir
+  plant, the fuse on the own half) and `NET_ARGS='part=lag' URLQ='netlag=150&netjitter=60'` (hits, a grab, retreat, the
+  fuse ring under ×3, a declined grant, the window's close); and `tools/botlab/tests/net-karp-host.cjs` (`CLIENTS=3`:
+  `part=bots` the host leaves mid-carry, `part=plant` a plant in the old host's last 0.1 s, `part=shot` a Big Burst in the
+  air at the migration, `part=dbl` a Big Burst that blew as its host left, judged once everywhere; `CLIENTS=2`: `part=cargo` a humans-only room, `part=guestleave` a carrying guest disconnects);
+  and the package's whole-match proof, `tools/botlab/tests/net-karp-full.cjs` (`CLIENTS=3`, nothing staged: three
+  autopilot clients and bots play a real 5:00 match on halyard, the host leaves mid-match, a guest takes over, the old
+  host is turned away mid-match, the match plays to its end with the same result and results table on both remaining
+  screens, back to the lobby, the old host joins again). The narrowed flush's regression for the other modes:
+  `tools/botlab/tests/net-tower.cjs` and `net-zones.cjs` (`CLIENTS=3`: the host flips control and leaves 60 ms later; both
+  remaining screens agree on the owner, the new host runs the rules, the same result).
 
 **Relay (server/).** One Durable Object per room code: membership, host election, join refusal (unknown / full /
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime

@@ -28,6 +28,7 @@ import {
 } from './menu-art.js';
 import { bossSilhouette, bossEmblem, BOSS_GLYPH, BOSS_NAME, BOSS_EPITHET } from './boss-art.js';
 import { WhatsNew } from './news.js';
+import { karpStageListed, karpPreview } from '../world/karpStages.js';   // [karp-face] DECISIONS #10
 import { relayInfo, serverChoice, parseServerLink, pingRelay, isDesktopApp, NO_LINK, REFUSED } from '../net/transport.js';
 
 const SCREENS = ['loading', 'title', 'main', 'mode', 'loadout', 'setup', 'locker', 'settings', 'padsetup', 'howto', 'credits', 'pause', 'results', 'online', 'lobby'];
@@ -110,13 +111,18 @@ const TIPS = [
   'Tower Command: checkpoints stop the tower until it clears them. Lose it for 5 s and the checkpoint fills back up.',
   'Tower Command: both teams on the tower stops it dead. Clear them off to keep it rolling.',
   'Tower Command: take the tower back on your own half and it rolls home to the middle even with nobody on — hop off and defend it.',
+  // [karp-face] (only while the mode is listed: ?wipmodes until it ships)
+  ...(modeListed('bazookarp') ? ['Bazookarp: fire the carp backwards to kick yourself through enemy ink.',
+    'Bazookarp: swim in your ink with it and their map loses you — but the wake glow still shows.',
+    'Bazookarp: a fully charged Carp Shot splats — but it swells for a moment first. Step out of the ring!',
+    'Bazookarp: land it on a weir to open their Dragon Gate. Walking past the weir earns nothing.'] : []),
 ];
 // Battle modes offered on the stage select (Zone Control: see src/game/zones.js)
 const ZONE_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 21 V12 Q8 8 12 8 H21 M43 8 H52 Q56 8 56 12 V21 M56 43 V52 Q56 56 52 56 H43 M21 56 H12 Q8 56 8 52 V43" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="19" y="19" width="26" height="26" rx="5" fill="currentColor"/></svg>';
 // Tower Command (src/game/tower.js): the tower — a platform on a track under a beacon
 const TOWER_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round"><ellipse cx="32" cy="31" rx="16" ry="4.6" stroke-width="4.6"/><ellipse cx="32" cy="19.5" rx="11.5" ry="3.4" stroke-width="4"/><ellipse cx="32" cy="9.5" rx="7" ry="2.3" stroke-width="3.4"/></g><rect x="9" y="39" width="46" height="7" rx="2.5" fill="currentColor"/><path d="M13 48 H51 L47 58 H17 Z" fill="currentColor"/></svg>';
 // [b5-karp] the carp (a fish in profile)
-const KARP_GLYPH = '<svg class="iw-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32 Q22 14 42 20 Q52 24 58 32 Q52 40 42 44 Q22 50 8 32 Z" fill="currentColor"/><path d="M8 32 L2 22 M8 32 L2 42" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>';
+const KARP_GLYPH = '<svg class="iw-ico" viewBox="0 0 32 32" aria-hidden="true"><path d="M10 16 L1.5 7.5 Q4.2 16 1.5 24.5 Z M12.5 10.8 Q16.5 3.8 22.5 8.6 Z" fill="currentColor"/><path fill-rule="evenodd" d="M8 16 Q14 8.4 23 9.4 Q29.4 10.8 30.5 16 Q29.4 21.2 23 22.6 Q14 23.6 8 16 Z M25.6 12.4 a1.8 1.8 0 1 0 0.01 0 Z" fill="currentColor"/></svg>';   // [karp-face] (hud-karp.js's carp)
 const MODE_INFO = {
   turf: { id: 'turf', label: 'TURF WAR', name: 'Turf War', icon: GLYPHS.drop, text: 'Ink the most ground before the clock runs out.' },
   zones: { id: 'zones', label: 'ZONE CONTROL', name: 'Zone Control', icon: ZONE_GLYPH, text: 'Hold the live zone to count down from 100 — first to 0 wins.' },
@@ -142,7 +148,7 @@ const RANDOM_STAGE = { id: 'random', name: 'Random stage' };
 const fixedLen = (m) => m === 'zones' || m === 'tower' || m === 'bazookarp';   // [b5-karp]
 const fixedDur = (m) => (m === 'tower' ? TOWER.duration : m === 'bazookarp' ? BAZOOKARP.duration : ZONES.duration) || 300;
 // the battle modes (Turf War / Zone Control / Tower Command) — the rules cards, the in-match strip and the results use these
-const BATTLE_MODES = [MODE_INFO.turf, MODE_INFO.zones, MODE_INFO.tower];
+const BATTLE_MODES = [MODE_INFO.turf, MODE_INFO.zones, MODE_INFO.tower, ...(modeListed('bazookarp') ? [MODE_INFO.bazookarp] : [])];   // [karp-face] (the wip mode once listed)
 const ZK = '#15121c';
 const zNum = (x, y, n, size = 16) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="'Titan One', sans-serif" font-size="${size}" fill="#fff" stroke="${ZK}" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">${n}</text>`;
 const zPill = (x, y, w, hgt, cls, n, size) => `<g transform="translate(${x} ${y})"><rect width="${w}" height="${hgt}" rx="${hgt / 2.6}" fill="${ZK}"/><rect x="2.5" y="2.5" width="${w - 5}" height="${hgt - 5}" rx="${hgt / 3.2}" class="${cls}"/>${zNum(w / 2, hgt * 0.72, n, size)}</g>`;
@@ -216,6 +222,53 @@ const TOWER_RULE_ART = {
     <path d="M100 48 a10 10 0 1 0 -4 8" stroke="${ZK}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M100 48 a10 10 0 1 0 -4 8" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
     ${twPill(76, 60, 36, '5s', ZK, 10)}
   </svg>`,
+};
+// [karp-face] Bazookarp rule cards (SPEC §6.6): the Roe Shell bursting, the carrier and its Carp Shot, the weir and
+// the Dragon Gate, the fuse — in the Tower Command cards' style
+const kCarp = (x, y, k, cls) => `<g transform="translate(${x} ${y}) scale(${k}) translate(-16 -16)"><path d="M10 16 L1.5 7.5 Q4.2 16 1.5 24.5 Z" ${twPaint(cls)} stroke="${ZK}" stroke-width="2.2" stroke-linejoin="round"/><path d="M12.5 10.8 Q16.5 3.8 22.5 8.6 Z" ${twPaint(cls)} stroke="${ZK}" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 16 Q14 8.4 23 9.4 Q29.4 10.8 30.5 16 Q29.4 21.2 23 22.6 Q14 23.6 8 16 Z" ${twPaint(cls)} stroke="${ZK}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="25.6" cy="14.2" r="1.8" fill="${ZK}"/></g>`;
+const kKid = (x, y, cls, flip = false) => `<g transform="translate(${x} ${y}) scale(${flip ? -1 : 1} 1)"><circle cx="0" cy="-17" r="5.4" ${twPaint(cls)} stroke="${ZK}" stroke-width="2.2"/><path d="M-5 -11 Q0 -13 5 -11 L6 0 L-6 0 Z" ${twPaint(cls)} stroke="${ZK}" stroke-width="2.2" stroke-linejoin="round"/></g>`;
+const KARP_RULE_ART = {
+  burst: `<svg viewBox="0 0 120 80" aria-hidden="true">${ZONE_FLOOR}
+    <circle cx="60" cy="40" r="31" fill="none" stroke="${ZK}" stroke-width="2" stroke-dasharray="4 3"/>
+    <circle cx="60" cy="40" r="17" fill="#fff" fill-opacity=".72" stroke="${ZK}" stroke-width="2.6"/>
+    <path d="M44 40 A16 16 0 0 1 58 24.2 Q52 32 57 40 Q52 48 58 55.8 A16 16 0 0 1 44 40 Z" class="iw-fa" opacity=".9"/>
+    <path d="M62 27 L66 33 L63 38 L69 43 M70 30 L66 33" stroke="${ZK}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    ${kCarp(61, 41, 0.62, '#ffd54a')}
+    ${kKid(89, 56, 'iw-fb', true)}<path d="M83 34 L95 46 M95 34 L83 46" stroke="#ff4d6a" stroke-width="4" stroke-linecap="round"/>
+    ${kKid(22, 62, 'iw-fa')}
+    ${twPill(4, 4, 46, 'BURST!', '#ffd54a', 10, ZK)}
+  </svg>`,
+  carry: `<svg viewBox="0 0 120 80" aria-hidden="true">${ZONE_FLOOR}
+    ${kKid(26, 58, 'iw-fa')}${kCarp(29, 37, 0.7, 'iw-fa')}
+    <path d="M38 34 Q66 2 94 52" fill="none" stroke="#fff" stroke-width="3.2" stroke-dasharray="1 5.5" stroke-linecap="round"/>
+    <ellipse cx="96" cy="56" rx="17" ry="8" class="iw-fa" opacity=".45" stroke="${ZK}" stroke-width="2"/><circle cx="96" cy="54" r="5.5" class="iw-fa" stroke="${ZK}" stroke-width="2.2"/>
+    ${twPill(4, 4, 34, '−20%', ZK, 10)}${twPill(74, 4, 42, 'SPLAT!', '#ffd54a', 10, ZK)}
+  </svg>`,
+  weir: `<svg viewBox="0 0 120 80" aria-hidden="true">${TW_TRACK}${twLit(9, 58, 'iw-fa')}
+    <g transform="translate(60 0)"><rect x="-9" y="28" width="5" height="28" rx="1.5" fill="#9d978c" stroke="${ZK}" stroke-width="2"/><rect x="4" y="28" width="5" height="28" rx="1.5" fill="#9d978c" stroke="${ZK}" stroke-width="2"/>
+      <rect x="-4" y="31" width="8" height="24" class="iw-fa" opacity=".7"/><path d="M-3 33 V53 M0 31 V55 M3 33 V53" stroke="#fff" stroke-width="1" opacity=".7"/></g>
+    ${kCarp(44, 47, 0.62, 'iw-fa')}
+    <g transform="translate(104 0)"><rect x="-13" y="14" width="26" height="44" rx="3" class="iw-fa" opacity=".28"/><path d="M-12 40 A12 12 0 0 1 12 40" fill="none" class="iw-fa" stroke="${ZK}" stroke-width="2.4"/><circle cx="0" cy="60" r="8.5" fill="#fff" stroke="${ZK}" stroke-width="2.4"/><circle cx="0" cy="60" r="4" class="iw-fa" stroke="${ZK}" stroke-width="1.6"/></g>
+    ${twPill(6, 6, 54, 'LAND IT!', '#ffd54a', 10, ZK)}
+  </svg>`,
+  fuse: `<svg viewBox="0 0 120 80" aria-hidden="true">${ZONE_FLOOR}
+    ${kKid(66, 60, 'iw-fa')}${kCarp(69, 39, 0.7, 'iw-fa')}
+    <g transform="translate(52 6)"><rect width="32" height="17" rx="8.5" fill="${ZK}"/><text x="16" y="12.6" text-anchor="middle" font-family="'Titan One', sans-serif" font-size="10" fill="#fff">60s</text></g>
+    <path d="M60 50 H26 M33 43 L25 50 L33 57" stroke="${ZK}" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 50 H26 M33 43 L25 50 L33 57" stroke="#ff4d6a" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    ${twPill(6, 6, 30, '×3', '#ff4d6a', 11)}
+  </svg>`,
+};
+// … and a Bazookarp match (SPEC §1.1's results reasons)
+const KARP_REASON = {
+  knockout: ['KNOCKOUT!', 'Knocked out'],
+  time: ["Time's up", "Time's up"],
+  untouched: ['Nobody touched it — the coin was yours', 'Nobody touched it — the coin went their way'],
+  comeback: ['Carried past them in overtime!', 'Overtaken in overtime'],
+  retake: ['Took it back in overtime', 'Lost it in overtime'],
+  'no-pickup': ['Held them off in overtime', 'Too slow to grab it in overtime'],
+  stopped: ['Stopped their carrier in overtime', 'Carrier splatted in overtime'],
+  'overtime-cap': ['Won at the overtime limit', 'Lost at the overtime limit'],
 };
 // how a Zone Control match was decided, in plain words (winner's view / loser's view)
 const ZONE_REASON = {
@@ -1126,9 +1179,9 @@ export class Menus {
         ? h('span', { class: 'iw-mode__hero is-boss', html: bossSilhouette() })
         : h('span', { class: 'iw-mode__hero is-turf' },
           h('i', { class: 'iw-mode__squid is-a', html: SQUID }),
-          m.id === 'zones' || m.id === 'tower' ? h('i', { class: 'iw-mode__zone', html: m.id === 'tower' ? TOWER_GLYPH : ZONE_GLYPH }) : h('b', { class: 'iw-mode__vs iw-display' }, 'VS'),
+          m.id === 'zones' || m.id === 'tower' || m.id === 'bazookarp' ? h('i', { class: 'iw-mode__zone', html: m.id === 'bazookarp' ? KARP_GLYPH : m.id === 'tower' ? TOWER_GLYPH : ZONE_GLYPH }) : h('b', { class: 'iw-mode__vs iw-display' }, 'VS'),   // [karp-face] (the carp)
           h('i', { class: 'iw-mode__squid is-b', html: SQUID }));
-      const c = h('button', { class: `iw-mode iw-mode--${m.id} iw-in iw-in--pop`, style: { '--tilt': `${(MODES.length > 3 ? [-1.4, 0.8, -0.6, 1.4] : [-1.4, 0.6, 1.4])[i] ?? 0}deg` } },
+      const c = h('button', { class: `iw-mode iw-mode--${m.id} iw-in iw-in--pop`, style: { '--tilt': `${(MODES.length > 3 ? [-1.4, 0.8, -0.6, 1.4, -0.9] : [-1.4, 0.6, 1.4])[i] ?? 0}deg` } },   // [karp-face] (a fifth tilt)
         h('span', { class: 'iw-mode__art' }, img, h('i', { class: 'iw-mode__tint' }),
           h('span', { class: 'iw-mode__splat', html: splatSVG({ seed: 51 + i * 9, fill: 'var(--mc)', r: 58, arms: 9, drops: 5 }) }),
           hero, h('i', { class: 'iw-mode__glare' })),
@@ -1159,7 +1212,7 @@ export class Menus {
     const el = h('div', { class: 'iw-screen iw-modesel' },
       bg, h('div', { class: 'iw-ss__scrim' }),
       this._header('PLAY', { sub: 'Choose a mode · you and the bots' }),
-      h('div', { class: 'iw-modesel__row' + (cards.length > 3 ? ' is-three is-four' : cards.length > 2 ? ' is-three' : '') }, cards),
+      h('div', { class: 'iw-modesel__row' + (cards.length > 4 ? ' is-three is-four is-five' : cards.length > 3 ? ' is-three is-four' : cards.length > 2 ? ' is-three' : '') }, cards),   // [karp-face] (five: Bazookarp listed)
       this._prompts([[['←', '→'], 'DPad', 'Mode'], ['Enter', 'A', 'Select'], ['Esc', 'B', 'Back']]));
     el.dataset.mode = cur;
     setBg(cur);
@@ -1198,11 +1251,13 @@ export class Menus {
 
   _scr_setup() {
     const s = this._settings();
-    const maps = this._pickMaps().filter((m) => !m.onlineOnly);   // (online-only stages live in the online lobby's picker; wip ones in none)
-    const diffs = this._diffs();
-    const byId = (id) => maps.find((m) => m.id === id);
     const st = this._setup || (this._setup = { times: {} });
     st.mode = modeOf(st.mode || s.lastMode);   // picked on the mode screen (Play › mode), else the last one played
+    // (online-only stages live in the online lobby's picker; wip ones in none; [karp-face] Bazookarp: only stages with a
+    // Bazookarp layout — the rest show tagged PREVIEW under ?wipstages, DECISIONS #10)
+    const maps = this._pickMaps().filter((m) => !m.onlineOnly && (st.mode !== 'bazookarp' || karpStageListed(m.id)));
+    const diffs = this._diffs();
+    const byId = (id) => maps.find((m) => m.id === id);
     const boss = st.mode === 'boss';
     const durations = boss ? BOSS_DURATIONS : (MATCH.durations || [90, 180]);
     const diffText = (v) => (boss ? BOSS_DIFF_INFO[v] : DIFF_INFO[v]?.text) || '';
@@ -1343,6 +1398,7 @@ export class Menus {
         h('span', { class: 'iw-ticket__ink', html: splatSVG({ seed: 60 + i * 5, cls: 'iw-fa', r: 58, arms: 9, drops: 5 }) }),
         h('span', { class: 'iw-ticket__num' }, String(i + 1).padStart(2, '0')),
         h('span', { class: 'iw-ticket__name' }, m.name),
+        st.mode === 'bazookarp' && karpPreview(m.id) ? h('span', { class: 'iw-ticket__preview' }, 'PREVIEW') : null,   // [karp-face]
         badge,
         h('span', { class: 'iw-ticket__check', html: GLYPHS.check }));
       c._mid = m.id;
@@ -2839,8 +2895,19 @@ export class Menus {
       ['goal', 'Push it home', 'Your count drops the further you push into their half. Reach their goal for a knockout — otherwise the furthest push wins.'],
       ['contest', 'Both on it? It stops', 'With both teams aboard the tower won’t move. Leave it empty for 5 s and it goes neutral and rolls back to the middle — on your own half, yours rolls home by itself meanwhile.'],
     ];
+    // [karp-face] Bazookarp (SPEC §6.6's four cards and two notes)
+    const karpRules = [   // (as short as Tower Command's, so the four cards and the notes fit the screen)
+      ['burst', 'Burst the shell', 'Shoot the Roe Shell in the middle. When your team\u2019s ink bursts it, any foe close by is splatted. Touching it stings.'],
+      ['carry', 'Carry it', 'Run into it to grab it: you\u2019re 20% slower and can\u2019t super jump, enter a spawn or use your kit — but it lobs huge ink bombs. Fully charged, they splat.'],
+      ['weir', 'Take the weir', 'Your count drops as you carry it toward their base, but not past their weir until you land it on one. That opens their Dragon Gate: carry it in to knock out.'],
+      ['fuse', 'Mind the fuse', 'You have 60 s. Retreating on your half or standing in your own Carp-Free Zone burns it 3× as fast. Blow up or fall off on your half — or go down in your zone — and it\u2019s back to the middle.'],
+    ];
+    const karpNotes = () => h('div', { class: 'iw-howto__notes iw-in iw-in--up' },
+      h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.bolt }), h('span', null, h('b', null, 'Specials charge'), ' while the other team holds it, and for the team behind while nobody does.')),
+      h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.clock }), h('span', null, h('b', null, 'Overtime:'), h('span', { class: 'iw-hnote__long' }, ' if the team behind holds it at time-up, or the team ahead just lost it in the last 15 s, or the team behind just landed a weir in the last 5 s, play goes on. Grab it within 10 s and carry it past their count.'),
+        h('span', { class: 'iw-hnote__short' }, ' if the team behind holds it at time-up (or just lost it, or just took a weir), play goes on: grab it within 10 s, carry it past their count.'))));   // ([karp-face] the short one on a short window: 960×600)
     const card = ([art, title, text], i, mode) => h('div', { class: 'iw-rule iw-in iw-in--pop', style: { '--tilt': `${[-1.2, 1, 0.8, -1][i]}deg` } },
-      h('div', { class: 'iw-rule__art' + (mode !== 'turf' ? ' is-zone' : ''), html: (mode === 'tower' ? TOWER_RULE_ART : mode === 'zones' ? ZONE_RULE_ART : RULE_ART)[art] }),
+      h('div', { class: 'iw-rule__art' + (mode !== 'turf' ? ' is-zone' : ''), html: (mode === 'bazookarp' ? KARP_RULE_ART : mode === 'tower' ? TOWER_RULE_ART : mode === 'zones' ? ZONE_RULE_ART : RULE_ART)[art] }),
       h('div', { class: 'iw-rule__num' }, String(i + 1)),
       h('div', { class: 'iw-rule__title' }, title),
       h('p', { class: 'iw-rule__text' }, text));
@@ -2850,7 +2917,7 @@ export class Menus {
     const towerNotes = () => h('div', { class: 'iw-howto__notes iw-in iw-in--up' },
       h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.bolt }), h('span', null, h('b', null, 'Specials charge fast'), ' while your team holds the tower — and for the team behind while it sits neutral.')),
       h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.clock }), h('span', null, h('b', null, 'Overtime:'), ' at time up, the team behind plays on while it holds the tower — until it takes the lead or loses the tower.')));
-    const RULESETS = { turf: [rules, null], zones: [zoneRules, zoneNotes], tower: [towerRules, towerNotes] };
+    const RULESETS = { turf: [rules, null], zones: [zoneRules, zoneNotes], tower: [towerRules, towerNotes], ...(modeListed('bazookarp') ? { bazookarp: [karpRules, karpNotes] } : {}) };   // [karp-face]
     const m0 = G.match && !G.match.attract && !G.match.practice ? G.match.mode : this._settings().lastMode;
     let rulesMode = RULESETS[m0] ? m0 : 'turf';   // (the rules cards cover the three battle modes)
     const rulesEl = h('div', { class: 'iw-howto__rules' });
@@ -2858,13 +2925,14 @@ export class Menus {
     const renderRules = (anim) => {
       const [list, notes] = RULESETS[rulesMode];
       rulesEl.replaceChildren(...list.map((r, i) => card(r, i, rulesMode)));
+      rulesEl.classList.toggle('is-karp', rulesMode === 'bazookarp');   // [karp-face] (its longer cards, a touch more compact)
       notesSlot.replaceChildren(...(notes ? [notes()] : []));
       if (headSub) headSub.textContent = `${MODE_INFO[rulesMode].name} in 30 seconds`;
       if (anim) restartAnim(rulesEl, 'is-swap');
     };
     const rOpts = BATTLE_MODES.map((mi) => [mi.id, h('span', { class: 'iw-segico' }, h('i', { html: mi.icon }), mi.label)]);
     const rSeg = this._seg(rOpts, rulesMode, (v) => { rulesMode = RULESETS[v] ? v : 'turf'; renderRules(true); });
-    const rulesRow = h('div', { class: 'iw-ctl-switch iw-howto__modes iw-in' }, rSeg.el);
+    const rulesRow = h('div', { class: 'iw-ctl-switch iw-howto__modes iw-in' + (BATTLE_MODES.length > 3 ? ' is-four' : '') }, rSeg.el);   // [karp-face] (four tabs once Bazookarp is listed)
     this._bind(rulesRow, { id: 'rules', type: 'row', adjust: rSeg.adjust, accept: rSeg.cycle });
     let headSub = null;
     let mode = this._input;
@@ -3619,7 +3687,8 @@ export class Menus {
     const stNum = h('span', { class: 'iw-lstage__num' });
     const stTime = h('span', { class: 'iw-lstage__time' }, h('i', { class: 'is-sun', html: GLYPHS.sun }), h('i', { class: 'is-golden', html: GLYPHS.golden }), h('i', { class: 'is-moon', html: GLYPHS.sunset }), h('i', { class: 'is-random', html: GLYPHS.dice }));
     const stArrows = h('span', { class: 'iw-lstage__arrows' }, h('i', { class: 'is-l', html: GLYPHS.back }), h('i', { class: 'is-r', html: GLYPHS.next }));
-    const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, h('span', { class: 'iw-lstage__tape' }, stName), stTime, stArrows);
+    const stPrev = h('span', { class: 'iw-lstage__preview', hidden: true }, 'PREVIEW');   // [karp-face] a stage on placeholder Bazookarp data (?wipstages only, DECISIONS #10)
+    const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, h('span', { class: 'iw-lstage__tape' }, stName), stTime, stArrows, stPrev);
     stArrows.children[0].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(-1); });
     stArrows.children[1].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(1); });
     // TIME: day · golden hour · sunset · random (the host rolls one at the start)
@@ -3761,7 +3830,7 @@ export class Menus {
     // the stages this room's mode can use: Boss Battle never lists a noBoss stage
     // (RANDOM first: the host rolls a stage from the mode's list at the start)
     const listed = this._pickMaps();   // [b5-stages] (a wip stage is never listed — though a ?wipstages host's room can be on one)
-    const stageList = () => [RANDOM_STAGE, ...(bossMode() ? listed.filter((m) => mapBossOk(m.id)) : listed)];
+    const stageList = () => [RANDOM_STAGE, ...(bossMode() ? listed.filter((m) => mapBossOk(m.id)) : lobMode() === 'bazookarp' ? listed.filter((m) => karpStageListed(m.id)) : listed)];   // [karp-face]
     const setMap = (d) => {
       if (!isHost()) { this._bump(stage, 'left'); this._sfx('ui_error', 0.15); return; }
       const list = stageList();
@@ -3794,6 +3863,7 @@ export class Menus {
       // (the count follows the mode's stage list, so it refreshes on a mode switch too)
       const list = stageList(), k = list.findIndex((x) => x.id === m.id);
       stNum.innerHTML = rnd ? `STAGE <b>??</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>` : `STAGE <b>${String(Math.max(1, k)).padStart(2, '0')}</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>`;
+      stPrev.hidden = !(lobMode() === 'bazookarp' && !rnd && karpPreview(m.id));   // [karp-face]
       if (m.id === shownMap && time === shownTime) return;
       const first = shownMap === null;
       shownMap = m.id; shownTime = time;
@@ -4159,7 +4229,7 @@ export class Menus {
         const first = rMode._shown === undefined;
         rMode._shown = md;
         modeName.textContent = MODE_INFO[md].label;
-        modeIco.innerHTML = bm ? BOSS_GLYPH : md === 'tower' ? TOWER_GLYPH : zm ? ZONE_GLYPH : GLYPHS.flag;
+        modeIco.innerHTML = bm ? BOSS_GLYPH : md === 'bazookarp' ? KARP_GLYPH : md === 'tower' ? TOWER_GLYPH : zm ? ZONE_GLYPH : GLYPHS.flag;   // [karp-face]
         el.classList.toggle('is-bossmode', bm);
         el.classList.toggle('is-zonemode', zm);   // (the fixed-length modes: Zone Control, Tower Command)
         el.classList.toggle('is-towermode', md === 'tower');
@@ -4560,8 +4630,14 @@ export class Menus {
           tower = { count: t.count.map((c) => Math.max(0, Math.ceil(c - 1e-6))), penalty: [0, 0], owner: t.owner, contested: !!t.contested, returning: !!t.returning, homing: !!t.homing,
             riders: t.riders, next: t.next, emptyT: t.emptyT, overtime: !!t.overtime, overtimeT: t.overtimeT };
         }
+        let karp = null;   // [karp-face] Bazookarp: both counts, who carries (and the fuse), the shell, the weirs
+        if (m.mode === 'bazookarp' && m.karp && m.karp.state) {
+          const k = m.karp.state();
+          karp = { count: k.count, penalty: [0, 0], owner: k.holder ? k.holder.team : -1, phase: k.phase, fuse: k.holder && k.holder.nid === m.local?.nid ? k.fuseShown : k.fuse, rate: k.rate,
+            meter: k.meter, hp: k.hp, weirs: k.weirs.map((l) => l.map((w) => !!w.lowered)), overtime: !!k.overtime, overtimeT: k.overtimeT, window: k.window };
+        }
         return {
-          live: true, time: Math.max(0, +m.time || 0), duration: Math.max(1, +m.duration || 180), mode: modeOf(m.mode), zones, tower,
+          live: true, time: Math.max(0, +m.time || 0), duration: Math.max(1, +m.duration || 180), mode: modeOf(m.mode), zones, tower, karp,
           map: (game.mapDef && game.mapDef.name) || '', difficulty: m.opts && m.opts.difficulty,
           colors: [toHex(hex[0] || a), toHex(hex[1] || b)],
           names: (game.palette && game.palette.names) || this._accentNames(),
@@ -4593,6 +4669,7 @@ export class Menus {
     const snap = this._matchSnapshot();
     const zoneMode = snap.mode === 'zones' && !!snap.zones;
     const towerMode = snap.mode === 'tower' && !!snap.tower;
+    const karpMode = snap.mode === 'bazookarp' && !!snap.karp;   // [karp-face]
     // online the match keeps running underneath this menu, and quitting leaves the room
     const online = !!(G.netm || (G.net && G.net.state === 'match'));
     const items = [
@@ -4602,7 +4679,7 @@ export class Menus {
       { id: 'quit', label: online ? 'LEAVE ROOM' : 'QUIT MATCH', icon: online ? GLYPHS.exit : GLYPHS.close, cls: 'iw-btn--menu iw-btn--danger', accept: () => this._openModal({
         title: online ? 'LEAVE ROOM?' : 'QUIT MATCH?', danger: true,
         text: online ? 'You’ll leave the match and the room — a bot takes over your squidkid for the team.'
-          : zoneMode || towerMode ? `You will leave this ${MODE_INFO[snap.mode].name} match and head back to the lobby. It will not count.` : 'You will leave this Turf War and head back to the lobby. Your turf will not count.',
+          : zoneMode || towerMode || karpMode ? `You will leave this ${MODE_INFO[snap.mode].name} match and head back to the lobby. It will not count.` : 'You will leave this Turf War and head back to the lobby. Your turf will not count.',
         buttons: [
           { label: 'KEEP PLAYING', accept: () => this._closeModal(), sound: null },
           { label: 'QUIT', cls: 'iw-btn--danger', sound: 'ui_confirm', accept: () => {
@@ -4626,7 +4703,7 @@ export class Menus {
     // Zone Control: both teams' countdowns (+ penalty), who holds the live objective, overtime
     // Tower Command: the same strip: both teams' counts, who's riding the tower and what it's doing
     let zoneStrip = null, zoneRefresh = null;
-    if (zoneMode || towerMode) {
+    if (zoneMode || towerMode || karpMode) {
       const side = (t) => {
         const num = h('b', { class: 'iw-pzone__num' }), pen = h('span', { class: 'iw-pzone__pen' });
         const el = h('div', { class: `iw-pzone__team iw-pzone__team--${t ? 'b' : 'a'}` },
@@ -4636,18 +4713,24 @@ export class Menus {
       };
       const za = side(0), zb = side(1);
       const objName = h('b'), objState = h('span', { class: 'iw-pzone__state' });
-      const obj = h('div', { class: 'iw-pzone__obj' }, h('i', { class: 'iw-pzone__ico', html: towerMode ? TOWER_GLYPH : ZONE_GLYPH }), objName, objState);
+      const obj = h('div', { class: 'iw-pzone__obj' }, h('i', { class: 'iw-pzone__ico', html: karpMode ? KARP_GLYPH : towerMode ? TOWER_GLYPH : ZONE_GLYPH }), objName, objState);
       zoneStrip = h('div', { class: 'iw-pzone' }, za.el, obj, zb.el);
       zoneRefresh = (z) => {
         for (const [t, x] of [[0, za], [1, zb]]) {
           x.num.textContent = String(z.count[t]);
-          x.pen.textContent = z.penalty[t] > 0 ? `+${z.penalty[t]}` : '';
-          x.el.classList.toggle('has-pen', z.penalty[t] > 0);
+          if (karpMode) { const sig = (z.weirs[t] || []).map((lo) => (lo ? 1 : 0)).join(''); if (x.pen._k !== sig) { x.pen._k = sig; x.pen.innerHTML = (z.weirs[t] || []).map((lo) => `<i class="iw-kpip${lo ? ' is-low' : ''}"></i>`).join(''); } }   // [karp-face] the weirs as pips
+          else x.pen.textContent = z.penalty[t] > 0 ? `+${z.penalty[t]}` : '';
+          x.el.classList.toggle('has-pen', karpMode ? (z.weirs[t] || []).length > 0 : z.penalty[t] > 0);
           x.el.classList.toggle('is-ahead', z.count[t] < z.count[1 - t]);   // the count is the score (not + penalty)
           x.el.classList.toggle('is-holding', z.owner === t);
         }
         const names = snap.names, tn = (t) => (names[t] || TEAM_NAMES[t]).toUpperCase();
-        if (towerMode) {
+        if (karpMode) {   // [karp-face] ALPHA CARRYING · 37 s · SHELL · 62% THEIRS · FREE · BACK TO THE POND
+          const k = z.hp > 0 ? z.meter / z.hp : 0, lead = k > 0.004 ? 0 : k < -0.004 ? 1 : -1, me = selfP.team;
+          objName.textContent = z.owner >= 0 ? `${tn(z.owner)} CARRYING` : z.phase === 'free' ? 'FREE' : z.phase === 'resetting' ? 'BACK TO THE POND' : 'SHELL';
+          objState.textContent = z.owner >= 0 ? `${Math.max(0, Math.ceil(z.fuse))} s${z.rate > 1 ? ' ×3' : ''}` : z.phase === 'shielded' ? (lead < 0 ? 'UNTOUCHED' : `${Math.round(Math.abs(k) * 100)}% ${lead === me ? 'OURS' : 'THEIRS'}`)
+            : z.phase === 'reforming' ? 'RE-FORMING' : z.phase === 'free' ? 'GRAB IT!' : z.phase === 'resetting' ? 'FLYING HOME' : '';
+        } else if (towerMode) {
           objName.textContent = z.contested ? 'CONTESTED' : z.owner >= 0 ? `${tn(z.owner)} RIDING` : 'TOWER';
           objState.textContent = z.contested ? 'BOTH TEAMS ABOARD' : z.owner < 0 ? (z.returning ? 'ROLLING BACK' : 'NEUTRAL')
             : z.next && z.next.at ? `CHECKPOINT · ${Math.max(0, Math.ceil(z.next.left - 1e-6))}` : z.riders[z.owner] > 0 ? `${z.riders[z.owner]} ABOARD` : z.homing ? 'ROLLING HOME' : 'EMPTY';
@@ -4689,8 +4772,8 @@ export class Menus {
     const matchPanel = this._panel('iw-pmatch iw-panel--flat iw-in iw-in--right',
       h('div', { class: 'iw-pmatch__top' },
         h('div', { class: 'iw-pmatch__info' },
-          h('div', { class: 'iw-pmatch__mode' }, h('span', { class: 'iw-pmatch__tag' }, MODE_INFO[towerMode ? 'tower' : zoneMode ? 'zones' : 'turf'].label), diff ? h('span', { class: 'iw-pmatch__diff' }, h('i', { html: GLYPHS.bot }), `${diff.name} bots`) : null),
-          h('div', { class: 'iw-pmatch__map' }, h('i', { html: GLYPHS.map }), snap.map || MODE_INFO[towerMode ? 'tower' : zoneMode ? 'zones' : 'turf'].name)),
+          h('div', { class: 'iw-pmatch__mode' }, h('span', { class: 'iw-pmatch__tag' }, MODE_INFO[karpMode ? 'bazookarp' : towerMode ? 'tower' : zoneMode ? 'zones' : 'turf'].label), diff ? h('span', { class: 'iw-pmatch__diff' }, h('i', { html: GLYPHS.bot }), `${diff.name} bots`) : null),
+          h('div', { class: 'iw-pmatch__map' }, h('i', { html: GLYPHS.map }), snap.map || MODE_INFO[karpMode ? 'bazookarp' : towerMode ? 'tower' : zoneMode ? 'zones' : 'turf'].name)),
         clock),
       zoneStrip, you, teams, ctlWrap);
     colorVars(matchPanel, 'ta', snap.colors[0]);
@@ -4699,7 +4782,7 @@ export class Menus {
 
     const refresh = (s) => {
       const tLeft = s.time, frac = clamp(tLeft / s.duration);
-      const obj = zoneMode ? s.zones : towerMode ? s.tower : null;
+      const obj = zoneMode ? s.zones : towerMode ? s.tower : karpMode ? s.karp : null;
       const ot = !!(obj && obj.overtime);
       clockNum.textContent = ot ? 'OT' : fmtTime(tLeft);
       clockLbl.textContent = ot ? 'OVERTIME' : 'LEFT';
@@ -4940,13 +5023,14 @@ export class Menus {
     const reduced = prefersReducedMotion();
     // Zone Control: final countdowns + how it was decided (the coverage-margin tags are a Turf War thing)
     // Tower Command: the same race to 0 — each team's count is how far it still had to push (no penalties)
+    const kd = d.mode === 'bazookarp' && d.karp ? d.karp : null;   // [karp-face] Bazookarp: the same race to 0, carried home
     const td = d.mode === 'tower' && d.tower ? d.tower : null;
-    const zd = td ? { ...td, penalty: [0, 0] } : d.mode === 'zones' && d.zones ? d.zones : null;
-    const resMode = boss ? 'boss' : td ? 'tower' : zd ? 'zones' : 'turf';
+    const zd = kd ? { ...kd, penalty: [0, 0] } : td ? { ...td, penalty: [0, 0] } : d.mode === 'zones' && d.zones ? d.zones : null;
+    const resMode = boss ? 'boss' : kd ? 'bazookarp' : td ? 'tower' : zd ? 'zones' : 'turf';
     if (zd) {
-      const REASON = td ? TOWER_REASON : ZONE_REASON;
+      const REASON = kd ? KARP_REASON : td ? TOWER_REASON : ZONE_REASON;
       const why = REASON[zd.reason] || REASON.time;
-      const icon = zd.reason === 'knockout' ? 'star' : zd.reason === 'time' ? 'stopwatch' : zd.reason === 'comeback' || zd.reason === 'sudden-death' ? 'wave' : 'shield';
+      const icon = zd.reason === 'knockout' ? 'star' : zd.reason === 'time' || zd.reason === 'untouched' ? 'stopwatch' : zd.reason === 'comeback' || zd.reason === 'sudden-death' ? 'wave' : 'shield';
       awards.match = [{ id: 'zreason', icon, label: why[win ? 0 : 1].toUpperCase(), value: '' }];
       if (zd.overtime) awards.match.push({ id: 'zot', icon: 'stopwatch', label: 'OVERTIME', value: zd.overtimeT > 0 ? `+${fmtTime(zd.overtimeT)}` : '' });
     }
@@ -4987,7 +5071,7 @@ export class Menus {
     // the final count, then the penalty stamps on
     let zc = null;
     if (zd) {
-      const ZC = (td ? TOWER.count : ZONES.count) || 100, W = zd.winner === 1 ? 1 : 0;
+      const ZC = (kd ? BAZOOKARP.count : td ? TOWER.count : ZONES.count) || 100, W = zd.winner === 1 ? 1 : 0;
       const cnt = zd.counts.map((c) => Math.max(0, Math.ceil(c - 1e-6))), pen = zd.penalty;
       const done = (t) => clamp((ZC - cnt[t]) / ZC) * 0.5, penW = (t) => clamp(Math.min(pen[t], cnt[t]) / ZC) * 0.5;
       const pens = [0, 1].map((t) => h('em', { class: 'iw-zres__pen' + (pen[t] > 0 ? '' : ' is-none') }, `+${pen[t]}`));
@@ -5000,7 +5084,7 @@ export class Menus {
       cover = h('div', { class: 'iw-res__cover iw-res__cover--zones iw-in' + (W === 0 ? ' is-a' : ' is-b') },
         h('div', { class: 'iw-cover__names' },
           h('span', { class: 'ta' + (W === 0 ? ' is-win' : '') }, W === 0 ? crownA : null, names[0] || 'Alpha', numA, pens[0]),
-          h('span', { class: 'iw-zres__mid' }, h('i', { html: td ? TOWER_GLYPH : ZONE_GLYPH }), td ? 'PUSH TO THE GOAL' : 'COUNT TO ZERO'),
+          h('span', { class: 'iw-zres__mid' }, h('i', { html: kd ? KARP_GLYPH : td ? TOWER_GLYPH : ZONE_GLYPH }), kd ? 'CARRY IT HOME' : td ? 'PUSH TO THE GOAL' : 'COUNT TO ZERO'),
           h('span', { class: 'tb' + (W === 1 ? ' is-win' : '') }, pens[1], numB, names[1] || 'Bravo', W === 1 ? crownB : null)),
         coverBar);
     }
@@ -5039,10 +5123,12 @@ export class Menus {
       const rows = players.filter((p) => p.team === team);
       const best = Math.max(...rows.map((p) => p.turf || 0), 1);
       const isWin = team === winTeam;
-      return h('div', { class: `iw-ttable iw-ttable--${team ? 'b' : 'a'} ${isWin ? 'is-win' : 'is-lose'}` },
+      return h('div', { class: `iw-ttable iw-ttable--${team ? 'b' : 'a'} ${isWin ? 'is-win' : 'is-lose'}${kd ? ' iw-ttable--karp' : ''}` },
         h('div', { class: 'iw-ttable__head iw-in' },
           h('span', { class: 'iw-ttable__team' }, h('i', { class: 'iw-ttable__dot' }), names[team] || TEAM_NAMES[team], isWin ? h('em', { class: 'iw-ttable__win' }, h('i', { html: GLYPHS.crown }), 'WIN') : null),
           h('span', { class: 'iw-ttable__col', title: 'Turf inked' }, h('i', { html: GLYPHS.drop }), 'TURF'),
+          kd ? h('span', { class: 'iw-ttable__col', title: 'Metres of progress gained carrying the Bazookarp' }, h('i', { html: KARP_GLYPH }), 'CARRIED') : null,   // [karp-face]
+          kd ? h('span', { class: 'iw-ttable__col', title: 'Roe Shells burst' }, 'POPS') : null,
           h('span', { class: 'iw-ttable__col', title: 'Splats (+ assists)' }, h('i', { html: SPLAT_ICON })),
           h('span', { class: 'iw-ttable__col', title: 'Times splatted' }, h('i', { html: DEATH_ICON }))),
         rows.map((p, ri) => {
@@ -5052,14 +5138,16 @@ export class Menus {
           const nSplat = h('span', { class: 'iw-prow__n is-wait' + (p.assists ? ' has-as' : ''), title: p.assists ? `${p.splats || 0} splats, ${p.assists} assist${p.assists === 1 ? '' : 's'}` : null },
             String(p.splats || 0), p.assists ? h('small', { class: 'iw-prow__as' }, '+' + p.assists) : null);
           const nDeath = h('span', { class: 'iw-prow__n is-wait' }, String(p.deaths || 0));
+          const nCarry = kd ? h('span', { class: 'iw-prow__n iw-prow__sm is-wait' }, String(Math.round(p.karpM || 0)), h('small', null, 'm')) : null;   // [karp-face]
+          const nPops = kd ? h('span', { class: 'iw-prow__n is-wait' }, String(p.karpPops || 0)) : null;
           const badges = h('span', { class: 'iw-prow__aw' });
           const isMvp = p._aw.some((a) => a.id === 'mvp');
           const row = h('div', { class: 'iw-prow iw-in iw-in--left' + (p.isSelf ? ' is-self' : '') + (isMvp ? ' is-mvp' : '') },
             h('span', { class: 'iw-prow__w', html: weaponIcon((this._weapons()[p.weapon] || {}).kind || p.weapon) }),
             h('span', { class: 'iw-prow__name' }, h('span', { class: 'iw-prow__nm' }, p.name), p.isSelf ? h('em', null, 'YOU') : null, badges),
             h('span', { class: 'iw-prow__turf' }, turfBar, turfNum, h('small', null, 'p')),
-            nSplat, nDeath);
-          rowFx.push({ row, turfNum, turfBar, nSplat, nDeath, badges, turf: p.turf || 0, rel: (p.turf || 0) / best, aws: p._aw.slice(0, 3), start: 0.8 + ri * 0.13, shown: -1, done: false });
+            nCarry, nPops, nSplat, nDeath);
+          rowFx.push({ row, turfNum, turfBar, nSplat, nDeath, ...(kd ? { waits: [nCarry, nPops, nSplat, nDeath] } : {}), badges, turf: p.turf || 0, rel: (p.turf || 0) / best, aws: p._aw.slice(0, 3), start: 0.8 + ri * 0.13, shown: -1, done: false });
           return row;
         }));
     };
