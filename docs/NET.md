@@ -495,10 +495,14 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   `['t', q, losing, why]` overtime · `['e', q, winner, reason, c0, c1, b0, b1]` end. Snapshots on the host's **timeline**
   as `['ks', …]` events: `'s'` 10× a second (phase, position, holder, meter, fuse, rate, counts, overtime, the window)
   and `'S'` once a second (plus best metres, reach times, weirs lowered, `touched`, the field state …). A follower applies
-  a snapshot's phase / holder / position only when its `q` is at least the last discrete record's (a late snapshot never
-  undoes a newer grant or drop). The start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
-- **guest → host.** `{ k: 'kc', nid, ts }` a pick-up claim (re-sent every 0.3 s while touching; its kit locked until an
-  answer, at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
+  a snapshot **at all** only when its `q` is at least the last discrete record's and nobody has won yet (`[karp-face]`
+  review round 1: a snapshot the host took before a grant, a drop or the end plays after that record on the timeline —
+  it used to keep its counts, fuse and overtime clock, which reset a new carrier's ring to the last carry's leftover and
+  put a knockout's 0 back up). A snapshot's fuse and rate are read only when its holder is this screen's holder. The
+  start config carries `mode: 'bazookarp'`, its fixed 5:00 and the hidden `karpCoin`.
+- **guest → host.** `{ k: 'kc', nid, ts, fs }` a pick-up claim (`fs`, `[karp-face]`: seconds after the Bazookarp went
+  free on the guest's own screen that it touched it; re-sent every 0.3 s while touching; its kit locked until an answer,
+  at most 1.5 s), `{ k: 'kx', nid, q }` a grant declined (its player died first), `{ k: 'kr', nid, rate, why,
   half, zone }` the carrier's own judgement of its fuse rate / half / free zone (on change, ≤ 1 per tick), `{ k: 'kf',
   nid, x, y, z, half, zone }` its last footing (≤ 5/s; a half or zone change at once), and **`kh`, a field on the guest's
   ordinary 20 Hz tick** (`msg.kh = [nid, dmg, …]`): its shell hits since the last tick, summed, already × 0.5 / capped
@@ -516,7 +520,17 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   the spot) and records `u`; a host-side death record for that player inside 1.5 s of the grant waits 0.4 s for the
   `kx` first, so a declined grant is never a carrier's loss (S39c). `kd` reaches the guest's engine (its claim lock
   ends). A remote carrier is scored only from samples after the one its claim was judged on (never its samples from
-  before the pick-up). Remote claimants are measured where their newest sample is (nearest wins, host bots included).
+  before the pick-up). Remote claimants are measured where their newest sample is, or any sample they sent in the last
+  0.4 s; the host's own actors where they are or where they touched it.
+- **the race (`[karp-face]`, review round 1).** First-come on the host gave its own bots every near-even grab (a guest
+  hears of the burst a trip late and its claim lands a trip later still: a host bot won 10 of 10 at equal distance).
+  Now every claim carries `since` — how long after it went free **on the claimant's own screen** it touched it (`fs`;
+  the host's actors' from the host's) — and once a claim is in, the host holds the grant open for claims in flight:
+  `NetWire.rttTo` (its relay round trip plus the guest's lobby ping) plus a tick, for each guest that hasn't claimed but
+  whose newest sample is within `pickR + claimNear` (6 m), at most `claimWait` (0.25 s); none near → at once (offline,
+  lone grabs). Then the valid claim with the smallest `since` wins (a touch inside the 0.25 s hold counts as the hold's
+  end), equal → the nearest (SPEC §7.3). When an S39b window's grace runs out with a grant still held open, it is
+  decided then. Measured: net-karp face 5.
 - **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
   shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
   inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
@@ -534,9 +548,14 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   records `x`: a death record of the carrier that plays meanwhile wins (the splat / fall row of SPEC §2.6, no Carp Blast).
   The host's own carriers blow at once.
 - **the carrier's HUD fuse (`[karp-face]`).** The carrier's own screen runs `hud.fuseShown` at the rate it judges itself;
-  each snapshot gives `hostNow = s.fuse − s.rate × (its clock − s.t)`: shown > hostNow + 0.1 → it jumps to hostNow at once
-  (less time); shown < hostNow − 0.1 → it gives time back by at most 0.2 s per second (`BAZOOKARP.fuseSync`). It never
-  visibly rewinds under ×3 (net-karp lag 9b, netlag 150 + jitter 60).
+  each snapshot gives `hostNow = s.fuse − s.rate × (wire.hostNow(sender) − s.t)`: shown > hostNow + 0.1 → it jumps to
+  hostNow at once (less time); shown < hostNow − 0.1 → it gives time back by at most 0.2 s per second
+  (`BAZOOKARP.fuseSync`). It never visibly rewinds under ×3 (net-karp lag 9b, netlag 150 + jitter 60). A snapshot's `t`
+  is the host's **wire clock** (its tick clock, `performance.now`), and a follower reads the host's clock now as
+  `now − peer.off + oneWay` (`NetWire.hostNow`: the sender's peer offset — the floor of receive − send — plus the one-way
+  delay, half its own relay round trip plus half the host's lobby ping). Review round 1: the match clock it used before
+  is only kept within 0.2 s on a guest and trails the host's by the one-way delay, so at ×3 the ring ran 0.4–0.6 s long
+  under netlag 150. Other screens read a remote carrier's fuse forward the same way (≤ 0.6 s), from the grant on.
 - **`S`, the full state (`[karp-face]`).** Besides the snapshot it carries best metres, reach times, weirs lowered,
   `touched`, `otLosing`, `phaseT`, the shell's hp, the field state, the resting node, overtime and — new, indices 29 … 35 —
   the last carrier `[team, how, left]` and the last plant `[team, left, window, inOvertime]` (a new host's S38 decision
@@ -580,8 +599,11 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   (`src/world/karpStages.js`); with `?wipstages` every stage is offered and the lobby's stage card tags the ones still on
   placeholder data PREVIEW. A room switched to Bazookarp on a stage without one moves to the first that has one.
 - Tested by `NET=tools/botlab/tests/net-karp.cjs` (`CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes'`, through
-  `tools/botlab/netpage.cjs`): the base part (19 checks: the host's view of a guest carrier, ghost landings, the
-  victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result), `NET_ARGS='part=face'` (SPEC
+  `tools/botlab/netpage.cjs`): the base part (21 checks: the host's view of a guest carrier, a guest's own message rate
+  while it fires at the shell, ghost landings, the victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39
+  overtime, the same result), `NET_ARGS='part=snap'` (late snapshots after a grant and after the end: a new carrier's
+  ring and another screen's view of its fuse start at 60 after a carry that left 7 s or a Carp Blast's 0; a knockout's
+  counts stay put on the guest), `NET_ARGS='part=face'` (SPEC
   §10.2 steps 2–11 and 16: the burst on its victims' screens, races, a swim-through grant, the grab share, the carrier's
   rules on its own screen, the thin-wall stall with frozen ticks, the step-out, the guest's gauge and sting, a two-weir
   plant, the fuse on the own half) and `NET_ARGS='part=lag' URLQ='netlag=150&netjitter=60'` (hits, a grab, retreat, the

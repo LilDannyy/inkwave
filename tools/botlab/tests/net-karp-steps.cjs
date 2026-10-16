@@ -299,6 +299,18 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     await A.until(`__G.match.karp.remote.rate === 3`, 3000, 30).catch(() => {});
     const l9a = await info(A);
     R('lag 9. B retreats on its own half: DON\'T RETREAT! on B\'s screen the moment its own judgement says ×3; the host\'s rate follows (kr)', /DON'T RETREAT/.test(hud9?.bottom?.[0] || '') && l9a.remote.rate === 3 && l9a.remote.why === 'retreat', { hud: hud9 && hud9.bottom, host: l9a.remote });
+    // ---- 9c. [karp-face] review round 1: B's ring against the host's fuse while B carries at ×3 (8 pairs, the host read
+    // just before and just after B; reported B − host). The ring ran 0.4–0.6 s long here when snapshots were aged by the
+    // match clock (a guest's trails the host's by the one-way delay, inside a 0.2 s dead band)
+    await wait(1500);
+    const pairs = [];
+    for (let k = 0; k < 8; k++) {
+      const h = await J(A, `+__G.match.karp.fuse.toFixed(3)`), gB = await J(B, `+__G.match.karp.hud.fuseShown.toFixed(3)`), h2 = await J(A, `+__G.match.karp.fuse.toFixed(3)`);
+      pairs.push([+(gB - (h + h2) / 2).toFixed(2), +((h - h2) / 2).toFixed(2)]);
+      await wait(250);
+    }
+    const gaps = pairs.map((q) => q[0]), mean9 = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    R('lag 9c. while B carries at ×3, B\'s ring stays with the host\'s fuse: mean |B − host| ≤ 0.3 s, none past 0.6 s (8 pairs; ± the read skew)', Math.abs(mean9) <= 0.3 && gaps.every((q) => Math.abs(q) <= 0.6), { mean: +mean9.toFixed(2), pairs });
     // the host lets the fuse run down to the blast (B stays retreated, ×3)
     await A.js(`(() => { const K = __G.match.karp; K.fuse = Math.min(K.fuse, 4.5); window.__xF = null; return 1; })()`);
     await B.js(`(() => { const K = __G.match.karp, ne = K.netEvent.bind(K); window.__xF = null; K.netEvent = (e, s) => { if (Array.isArray(e) && e[0] === 'x' && window.__xF == null) window.__xF = +K.hud.fuseShown.toFixed(3); return ne(e, s); }; return 1; })()`);

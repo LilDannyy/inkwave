@@ -63,15 +63,24 @@ async function base({ clients, R, wait, say, args, open }) {
   const look = await J(B, `(() => { const F = __G.karpFx; return { shell: !!(F && F.shell && F.shell.visible), carp: !!(F && F.carp && F.carp.visible), at: F && F.shell ? F.shell.position.toArray().map((x) => +x.toFixed(2)) : null }; })()`);
   R('the guest sees the Bazookarp and the Roe Shell at the Pond (engine and look)', ib.phase === 'shielded' && ib.shell === 'intact' && look.shell && look.carp && Math.hypot(look.at[0], look.at[2]) < 0.5, { ib: { phase: ib.phase, shell: ib.shell }, look });
 
-  // ---- 1. B (Bravo) shoots the shell from 6 m: the host's meter goes Bravo's way (its hits ride B's tick as kh)
+  // ---- 1. B (Bravo) shoots the shell from 6 m for 5 s: the host's meter goes Bravo's way (its hits ride B's tick as kh);
+  // [karp-face] and B's OWN sends are counted (every message its transport puts on the socket, pings included): ≤ 30 in
+  // any 1 s (SPEC §10.2 step 1; the relay's per-socket peak alone didn't say whose). The host's shell can't burst meanwhile
   await put(B, 0, 0, 6);
+  await A.js(`(() => { __G.match.karp.shell.hpMax = 1e9; return 1; })()`);
   await wait(400);
+  await B.js(`(() => { const tr = __G.netm.s.tr; window.__sent = []; if (!tr.__raw0) { tr.__raw0 = tr._raw.bind(tr); tr._raw = (s) => { if (window.__sent) window.__sent.push([performance.now(), s.slice(0, 2)]); return tr.__raw0(s); }; } return 1; })()`);
   await B.js(`(() => { const a = __G.match.local, c = __G.match.karp.shell.center(); a.aimYaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z); a.yaw = a.aimYaw; a.aimPitch = Math.atan2(c.y - (a.pos.y + 1.2), 6); a.intent.fire = true; window.__karpAim = setInterval(() => { a.aimYaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z); a.yaw = a.aimYaw; a.ink = 100; }, 50); return 1; })()`);
-  await wait(2200);
-  await B.js(`(() => { clearInterval(window.__karpAim); __G.match.local.intent.fire = false; return 1; })()`);
+  await wait(5000);
+  const sent = await J(B, `(() => { clearInterval(window.__karpAim); __G.match.local.intent.fire = false; const s = window.__sent; window.__sent = null; return { t: s.map((q) => Math.round(q[0])), k: s.map((q) => q[1]), weapon: __G.match.local.weaponId }; })()`);
+  await A.js(`(() => { const S = __G.match.karp.shell; S.hpMax = 1000; S.m = Math.max(-600, Math.min(600, S.m)); return 1; })()`);
   await wait(400);
   let ha = await info(A), hb = await info(B);
   R('1. B\'s shots on the shell move the HOST\'s meter (summed on B\'s tick: kh); B\'s meter follows the host\'s', ha.meter < -40 && Math.abs(hb.meter - ha.meter) < 120, { host: ha.meter, guest: hb.meter });
+  let peak1 = 0;
+  for (let i = 0; i < sent.t.length; i++) { let n = 0; for (let j = i; j < sent.t.length && sent.t[j] - sent.t[i] < 1000; j++) n++; peak1 = Math.max(peak1, n); }
+  const span1 = sent.t.length > 1 ? (sent.t[sent.t.length - 1] - sent.t[0]) / 1000 : 0;
+  R('1b. while B fires at the shell for 5 s, B itself sends ≤ 30 messages in any 1 s (expected ~20: its ticks; kh adds none)', sent.t.length > 40 && peak1 <= 30, { peak1s: peak1, total: sent.t.length, perSec: +(sent.t.length / Math.max(1e-3, span1)).toFixed(1), kinds: [...new Set(sent.k)], weapon: sent.weapon });
 
   // ---- 2. the host bursts it (Alpha), its kid walks in: 'b' and 'p' reach B at once; the host's carrier scores on both
   await put(B, 0, 0, 8);
