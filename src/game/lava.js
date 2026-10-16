@@ -917,6 +917,14 @@ export class StageLava {
     }
     return (this[key] = out);
   }
+  // Bazookarp (SPEC §5.5; fix round 3, b5-int3's karpField): the Carp Field's two lava states, LOW and HIGH, from
+  // restMask — [{ key: 'low' | 'high', nodeOk(id) }]. The field is built with them at the mode's load and switches to
+  // field.stateOf(to) at every lava:warn { to } (bazookarp.js), so from a warning on it reads the coming rest level
+  karpStates() {
+    const lo = this.restMask('low'), hi = this.restMask('high');
+    if (!lo || !hi) return [];
+    return [{ key: 'low', nodeOk: (id) => lo[id] === 1 }, { key: 'high', nodeOk: (id) => hi[id] === 1 }];
+  }
   get reach() { return this.W.navMeta?.reach || null; }
   closedNow(id) { return this.shut(id, this.clock.t) > 0; }
   // the volumes the riders sweep over their whole travel (Bazookarp's rest flags)
@@ -1255,6 +1263,16 @@ export class StageLava {
       const esc = s >= 0 ? (M.escD[s] || 0) / LAVA.escape[0] + LAVA.escape[1] : LAVA.escape[1];
       if (k === 1) { const left = this._timeTo(a.pos.y - LAVA.navLead, t, 16); need = left < esc; }
       else if (k === 2) need = !this._stoneUpAt(f.R, t + 4) || !this._stoneUpAt(f.R, t + esc) || (s >= 0 && (this.shut(s, t + 4) === 2 || this.shut(s, t + esc) === 2));
+      // (fix round 3) a duel on a stone that holds the bot still for 0.75 s (its dodge hops are refused beside the lava, its
+      // strafe by the stone's edges): it steps along the Race to the head instead — the escape's walk, while it shoots
+      // (lava-match "stuck … at the Pumice Races": 2–2.5 s on a stone at HIGH and in the fall warning)
+      if (k === 2 && !need && b._stoneStep && b._lavaEsc) need = true;   // (on its way: off the stones)
+      else if (k === 2 && !need && b.mode === 'fight') {
+        const H = b._stoneHold && Math.hypot(a.pos.x - b._stoneHold.x, a.pos.z - b._stoneHold.z) < 0.8 ? b._stoneHold : (b._stoneHold = { x: a.pos.x, z: a.pos.z, t: 0 });
+        H.t += 0.25;
+        if (H.t >= 0.75) { need = true; b._stoneStep = true; this.stats.stoneSteps = (this.stats.stoneSteps || 0) + 1; }
+      }
+      if (k !== 2) { b._stoneHold = null; b._stoneStep = false; }
       // (the target: the nearest inland node — a step past the edge — when it is at most 4 m further than the first dry one)
       const goal = s < 0 ? -1 : M.safe && M.safe[s] >= 0 && M.safeD[s] <= M.escD[s] + 4 ? M.safe[s] : M.exit[s];
       if (need && goal >= 0 && goal !== s) {

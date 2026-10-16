@@ -44,8 +44,10 @@
     const crew = crewSpots.map(([b]) => b);
     crewSpots.forEach(([b, p]) => { put(b, p); b.bot.update = idle.get(b); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.bot._lavaEsc = false; b.bot._look = null; b.invuln = 1e6; });
     Lv._lp = null;
-    const deaths = [], trail = crew.map(() => []), coarse = crew.map(() => []);
-    const off = on('splatted', (e) => { const k = crew.indexOf(e.victim); if (k >= 0) deaths.push({ who: e.victim.name, kit: e.victim.weapon?.kind || e.victim.weapon?.id, cause: e.cause, by: !!e.attacker, t: r2(Lv.clock.t), at: [r2(e.victim.pos.x), r2(e.victim.pos.y), r2(e.victim.pos.z)], start: crewSpots[k][1].toArray().map(r2), coarse: coarse[k].slice(), trail: trail[k].slice(-Math.round(1.6 * HZ)) }); });
+    const deaths = [], trail = crew.map(() => []), coarse = crew.map(() => []), escAt = crew.map(() => -9);
+    // (fix round 3, the lead's gate: a death during an escape — escaping within its last 1 s — is unfair and fails at once;
+    // the others are fight deaths, ≤ 1 per 360 bot-trials over the whole run)
+    const off = on('splatted', (e) => { const k = crew.indexOf(e.victim); if (k >= 0) deaths.push({ who: e.victim.name, kit: e.victim.weapon?.kind || e.victim.weapon?.id, cause: e.cause, by: !!e.attacker, t: r2(Lv.clock.t), esc: Lv.clock.t - escAt[k] < 1.0, mode: e.victim.bot?.mode, at: [r2(e.victim.pos.x), r2(e.victim.pos.y), r2(e.victim.pos.z)], start: crewSpots[k][1].toArray().map(r2), coarse: coarse[k].slice(), trail: trail[k].slice(-Math.round(1.6 * HZ)) }); });
     const n = Math.round(secs * HZ);
     for (let i = 0; i < n; i++) {
       dbg.step(1000 / HZ);
@@ -53,6 +55,7 @@
         if (!b.alive) return;
         const it = b.intent, bb = b.bot, nx = bb.path && bb.pi < bb.path.length ? nav.nodes[bb.path[bb.pi]] : null, f = b._lavaFoot?.f;
         let near = 9; for (const o of g.match.actors) if (o !== b && o.alive) near = Math.min(near, Math.hypot(o.pos.x - b.pos.x, o.pos.z - b.pos.z) + (Math.abs(o.pos.y - b.pos.y) > 1.2 ? 9 : 0));
+        if (bb._lavaEsc) escAt[k] = Lv.clock.t;
         const T = trail[k]; T.push([r2(Lv.clock.t), r2(b.pos.x), r2(b.pos.y), r2(b.pos.z), b.grounded ? 'g' : 'a', r2(Math.hypot(b.vel.x, b.vel.z)), r2(it.move.x), r2(it.move.z), (it.jump ? 'J' : '') + (it.squid ? 'S' : '') + (it.fire ? 'F' : ''), bb.mode, f ? f.kind : '-', bb._lavaEsc ? 'E' : '', nx ? [r2(nx.x), r2(nx.y), r2(nx.z)] : null, r2(near)]);
         if (T.length > 2 * HZ) T.shift();
         if (i % Math.round(HZ / 2) === 0) coarse[k].push([r2(Lv.clock.t), r2(b.pos.x), r2(b.pos.y), r2(b.pos.z), bb.mode, f ? f.kind : '-', bb._lavaEsc ? 'E' : '', bb.goal >= 0 && nav.nodes[bb.goal] ? [r2(nav.nodes[bb.goal].x), r2(nav.nodes[bb.goal].y), r2(nav.nodes[bb.goal].z)] : null]);
@@ -63,10 +66,14 @@
     return { deaths: deaths.filter((d) => d.cause === 'lava'), other: deaths.filter((d) => d.cause !== 'lava').map((d) => [d.who, d.cause, d.t]), alive: crew.filter((b) => b.alive).length, esc: crew.map((b) => b.bot.escN || 0) };
   };
   const jit = (p, r) => V(p.x + (Math.random() - 0.5) * r, p.y, p.z + (Math.random() - 0.5) * r);
+  const gate = { botTrials: 0, esc: 0, fight: 0, list: [] };
   const report = (name, res, n) => {
     const all = res.flatMap((r, i) => r.deaths.map((d) => ({ trial: i, ...d })));
-    R(`${name}: ${res.length} trials × ${n} bots — no crew bot dies in the lava (every death counted)`, all.length === 0,
-      { lavaDeaths: all.length, botTrials: res.length * n, alive: res.map((r) => r.alive), other: res.flatMap((r) => r.other), escapes: res.reduce((s, r) => s + r.esc.reduce((a, b) => a + b, 0), 0), deaths: all.slice(0, 4) });
+    const esc = all.filter((d) => d.esc);
+    gate.botTrials += res.length * n; gate.esc += esc.length; gate.fight += all.length - esc.length;
+    gate.list.push(...all.map((d) => [name.split(' ')[0], d.trial, d.who, d.kit, d.mode, d.esc ? 'escape' : 'fight', d.t, d.at]));
+    R(`${name}: ${res.length} trials × ${n} bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)`, esc.length === 0,
+      { lavaDeaths: all.length, escapeDeaths: esc.length, fightDeaths: all.length - esc.length, botTrials: res.length * n, alive: res.map((r) => r.alive), other: res.flatMap((r) => r.other), escapes: res.reduce((s, r) => s + r.esc.reduce((a, b) => a + b, 0), 0), deaths: all.slice(0, 4) });
   };
   const t0 = performance.now(), times = {};
 
@@ -135,6 +142,8 @@
     report('edges (dry 1.2 m edges over the Casting Floor, the Spillway, the heads: a rise, then a fall)', res, 6);
     times.edges = r2((performance.now() - t2) / 1000);
   }
+  // (the lead's gate, fix round 3: 0 deaths during an escape and at most 1 fight death per 360 bot-trials in total)
+  if (gate.botTrials) R(`the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (${gate.botTrials} here)`, gate.esc === 0 && gate.fight <= Math.max(1, Math.floor(gate.botTrials / 360)), gate);
   R('timing (wall s per scenario)', true, { times, trials: TRIALS, hz: HZ, total: r2((performance.now() - t0) / 1000) });
   return out;
 })();
