@@ -2736,7 +2736,7 @@ export class BotBrain {
   _meleeWindow(w, d) {
     switch (w.kind) {
       // (ground, aimed low: the flick comes down 5–6.6 m out ~0.6 s after the press — a walker is ~2.3 m closer by then)
-      case 'roller': return !d.ground ? [1.5, 6] : d.state === 'walk' ? [7.3, 9] : [5, 6.6];
+      case 'roller': return !d.ground ? [1.5, 6] : d.state === 'walk' ? [7.3, 9] : d.turret ? [5.9, 7.2] : [5, 6.6];   // [b5-int3] (a turret — the Scrap Sentry, 0.72 m tall — takes the flick 6–7 m out at its −0.3 aim: from 5.0–5.5 m it flew over it; a roller stood there flicking and missing, locked on)
       case 'brush': return !d.ground ? [0.8, 4.5] : d.state === 'walk' ? [99, 99] : [0.8, 2.8];   // (a walker inside 2.8 m is too close to call: run)
       case 'blade': return d.ground ? [0, 4] : [0, 5.5];
       default: return [0, weaponRange(w) * 0.95];

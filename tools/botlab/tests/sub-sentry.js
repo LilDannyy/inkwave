@@ -36,8 +36,8 @@
 //    (wave 1's _pushes: one 'device:down'); its block taken away: no floor below → it ends with no event;
 //  - net: the owner's records ([0] set down, [3] lock, [6] burst, [5] hp, [2] end) and a ghost built from them unfolds,
 //    locks, flashes its bursts and ends on the owner's word; dropOwner ends a leaver's ghost at once, quietly;
-//  - bots: a Spritzer bot it locks onto shoots it down; a roller bot it locks onto, out of reach, leaves its range or
-//    sight within 3 s; a bot with nothing better picks an idle enemy sentry (DEV_BOT.sentry); a fighting bot sets one
+//  - bots: a Spritzer bot it locks onto shoots it down; a roller bot it locks onto too close for its flick evades (out of
+//    its range or sight, or backed into its reach and flicked it down) within 3 s, one in its flick's reach flicks it down; a bot with nothing better picks an idle enemy sentry (DEV_BOT.sentry); a fighting bot sets one
 //    down; it's a turret threat and a route-only danger (botSpecials: no escape from it);
 //  - hud: holding the sub shows the guide (the ghost and the 11 m ring; team colour when good, grey + × when not); the
 //    life ring on the badge runs down; the minimap draws it;
@@ -622,26 +622,43 @@
       const dn = since(e0, 'device:down')[0];
       R(`a Spritzer bot it locks onto shoots it down (${downT && lockT ? r2(downT - lockT) + ' s after the lock' : 'not'}; the threat system: a turret locked on it)`, it.state === 'dead' && dn && dn.by === foe, { lockT, downT, by: dn && dn.by && dn.by.nid });
       foe.setWeapon(weapons0.get(foe));
-      // a roller bot it locks onto, out of reach: leaves its range or sight within 3 s
-      reset();
-      foe.setWeapon('roller'); foe.ink = PLAYER.inkMax;
-      // (the owner 14 m behind it, in the roller's sight: the roller comes for them, past the sentry — locked on the way)
-      const it2 = plant(me, V(0, 0, -8), 0); put(me, V(0, 0, it2.pos.z - 14), 0);
-      // ([b5-int3] inside its 8 m and walking at its owner past it — it started 9 m out walking away, so 'out of range' came
-      // 0.13 s after the lock whatever the threat system did)
-      hideFoes(foe); put(foe, V(0, 0, it2.pos.z + 6.5), Math.PI);
-      // (its walk up to an enemy device to roll it — deployables-bots — off for this scene: locked out of its reach,
-      // the threat system's evade is what's tested; with it on, a roller walks into its flick window and flicks it)
-      DB.DEV_AI.enabled = false;
-      unstub(foe);
-      let lock2 = null, outT = null;
-      const e1 = evs.length, trace = [];
-      const eye = () => V(it2.pos.x, it2.pos.y + s.eyeH, it2.pos.z);
-      let evaded = false;
-      step(6, (i) => { foe.hp = PLAYER.hp; me.hp = PLAYER.hp; if (lock2 != null && foe.bot.thrAct === 'evade' && foe.bot.thr?.obj === it2) evaded = true; if (i % 15 === 0) trace.push([r2(G.time), foe.bot.mode, foe.bot.thrAct, !!foe.bot.thr, r2(Math.hypot(foe.pos.x - it2.pos.x, foe.pos.z - it2.pos.z)), r2(foe.intent.move.x), r2(foe.intent.move.z)]); if (lock2 == null && since(e1, 'sentry:lock').length) lock2 = G.time; if (lock2 != null && outT == null) { const d = Math.hypot(foe.pos.x - it2.pos.x, foe.pos.z - it2.pos.z); if (d > s.range + 0.3 || !G.physics.los(eye(), V(foe.pos.x, foe.pos.y + 1, foe.pos.z))) { outT = G.time; return false; } } });
-      stub(foe); DB.DEV_AI.enabled = true;
-      R(`a roller bot it locks onto, out of reach (coming for its owner past it): evades (the threat system: ${evaded}) and is out of its range or sight ${outT && lock2 ? r2(outT - lock2) + ' s' : 'never'} after the lock (within 3 s)`, lock2 != null && outT != null && outT - lock2 <= 3 && evaded, { lock2, outT, evaded, at: v2(foe.pos), trace });
-      foe.setWeapon(weapons0.get(foe));
+      // a roller bot it locks onto, out of its flick's reach — too close: a roller's flick at it (aimed low, −0.3) comes down
+      // 6–7 m out and flies over a sentry nearer — evades: within 3 s it is out of its range or sight, or it has backed into
+      // its reach and flicked it down ([b5-int3] the roller stood 5.3 m off flicking over it, locked on, for 5 s: its window
+      // for a turret was a mine's 5–6.6 m; and the row's old start, 6.5 m, was inside its reach)
+      // and one in its flick's reach (6.5 m, standing there until the lock) flicks it down within 2 s
+      const rollerTrial = (d0, still = false) => {
+        reset();
+        foe.setWeapon('roller'); foe.ink = PLAYER.inkMax;
+        // (the owner 14 m behind it, in the roller's sight: the roller comes for them, past the sentry — locked on the way)
+        const it2 = plant(me, V(0, 0, -8), 0); put(me, V(0, 0, it2.pos.z - 14), 0);
+        hideFoes(foe); put(foe, V(0, 0, it2.pos.z + d0), Math.PI);
+        // (its walk up to an enemy device to roll it — deployables-bots — off for this scene: the threat system is tested)
+        DB.DEV_AI.enabled = false;
+        if (!still) unstub(foe);   // (still: it stands where it was put until the sentry locks on it, then its brain runs)
+        let lock2 = null, outT = null, downT = null;
+        const e1 = evs.length, trace = [];
+        const eye = () => V(it2.pos.x, it2.pos.y + s.eyeH, it2.pos.z);
+        let evaded = false;
+        step(6, (i) => {
+          foe.hp = PLAYER.hp; me.hp = PLAYER.hp;
+          if (lock2 != null && foe.bot.thrAct === 'evade' && foe.bot.thr?.obj === it2) evaded = true;
+          if (i % 15 === 0) trace.push([r2(G.time), foe.bot.mode, foe.bot.thrAct, !!foe.bot.thr, r2(Math.hypot(foe.pos.x - it2.pos.x, foe.pos.z - it2.pos.z)), r2(foe.intent.move.x), r2(foe.intent.move.z), r2(it2.hp)]);
+          if (lock2 == null && since(e1, 'sentry:lock').length) { lock2 = G.time; if (still) unstub(foe); }
+          if (it2.state === 'dead') { downT = G.time; return false; }
+          if (lock2 != null && outT == null) { const d = Math.hypot(foe.pos.x - it2.pos.x, foe.pos.z - it2.pos.z); if (d > s.range + 0.3 || !G.physics.los(eye(), V(foe.pos.x, foe.pos.y + 1, foe.pos.z))) { outT = G.time; return false; } }
+        });
+        const dn = since(e1, 'device:down')[0];
+        stub(foe); DB.DEV_AI.enabled = true;
+        foe.setWeapon(weapons0.get(foe));
+        return { lock2: lock2 && r2(lock2), outT: outT && r2(outT), downT: downT && r2(downT), byRoller: !!(dn && dn.by === foe), evaded, at: v2(foe.pos), trace };
+      };
+      const rNear = rollerTrial(4.0), rReach = rollerTrial(6.5, true);
+      const tN = rNear.outT ?? (rNear.byRoller ? rNear.downT : null);
+      R(`a roller bot it locks onto 4 m off — too close for its flick, which comes down 6–7 m out: evades (${rNear.evaded}) and ${rNear.outT ? 'is out of its range or sight' : rNear.byRoller ? 'backs into its reach and flicks it down' : 'neither'} ${tN && rNear.lock2 ? r2(tN - rNear.lock2) + ' s' : ''} after the lock (within 3 s)`,
+        rNear.lock2 != null && tN != null && tN - rNear.lock2 <= 3 && rNear.evaded, rNear);
+      R(`a roller bot it locks onto 6.5 m off — in its flick's reach: flicks it down ${rReach.byRoller && rReach.lock2 ? r2(rReach.downT - rReach.lock2) + ' s after the lock' : 'never'} (within 2 s)`,
+        rReach.lock2 != null && rReach.byRoller && rReach.downT - rReach.lock2 <= 2, rReach);
       // with nothing better to shoot: a bot picks an idle enemy sentry (deployables-bots.js: DEV_BOT.sentry)
       reset();
       foe.setWeapon('shooter'); foe.ink = PLAYER.inkMax;
