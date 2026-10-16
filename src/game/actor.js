@@ -22,7 +22,7 @@ import { sjFlightDur } from './jumpMarks.js';   // [b5-jumpui] the flight time t
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _fwd = new THREE.Vector3();
 const DOWN = new THREE.Vector3(0, -1, 0);
 const TAU = Math.PI * 2;
-const _rxO = new THREE.Vector3(), _rxD = new THREE.Vector3(), _rxH = new Hit();   // [b5-int3] (_roofExitDist)
+const _rxO = new THREE.Vector3(), _rxD = new THREE.Vector3(), _rxH = new Hit(), _rxA = new THREE.Vector3();   // [b5-int3] (_roofExitDist, _roofSlide)
 const _ZERO_MOVE = Object.freeze(new THREE.Vector3());   // move input while planted after a dualies dodge roll
 
 // Local-player gamepad rumble (subtle, scaled by settings.rumble, no-op without a pad).
@@ -694,40 +694,54 @@ export class Actor {
         const s = (b.half.x - Math.abs(lx) < b.half.z - Math.abs(lz)) ? [ax, Math.sign(lx) || 1] : [az, Math.sign(lz) || 1];
         this.roofDir.set(s[0].x * s[1], 0, s[0].z * s[1]);
       }
-      if (this._roofExitDist(this.roofDir.x, this.roofDir.z) === Infinity) this._roofExit(b, null, this.roofDir);   // [b5-int3]
+      // [b5-int3] that way, unless it doesn't get off within 8 m and another does — or, on a flat top, another gets off over
+      // 0.3 m sooner (a row of off-limits tops a footprint apart: crossmarket's balconettes 0.75 m apart slid a kid off the
+      // end of one onto the next and back, the way off their open front 0.3 m away)
+      const e0 = this._roofExitDist(this.roofDir.x, this.roofDir.z);
+      if (e0 === Infinity) this._roofExit(b, null, this.roofDir);
+      else if (n.y >= 0.995 && this._roofExit(b, null, _rxA) < e0 - 0.3) this.roofDir.copy(_rxA);
     }
     const d = this.roofDir;
     this.roofT = (this.roofT || 0) + dt;
     const moved = (this.pos.x - this.roofP.x) * d.x + (this.pos.z - this.roofP.z) * d.z;
     this.roofP.copy(this.pos);
     this.roofStall = this.roofT > 0.1 && moved < 0.3 * dt ? this.roofStall + dt : 0;
-    if (this.roofStall > 0.25) { if (!this._roofExit(b, d, d)) d.set(-d.z, 0, d.x); this.roofStall = 0; }   // [b5-int3] (the next way off)
+    if (this.roofStall > 0.25) { if (this._roofExit(b, d, d) === Infinity) d.set(-d.z, 0, d.x); this.roofStall = 0; }   // [b5-int3] (the next way off)
     const want = Math.min(9, 3 + 14 * this.roofT);
     const along = this.vel.x * d.x + this.vel.z * d.z;
     if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
   }
 
-  // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step whose floor is
-  // a drop (over 0.6 m down, or none) or a top that isn't off-limits for it — Infinity when a wall (knee or chest high)
-  // shuts that way first, or none within 8 m
+  // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step where no part
+  // of its footprint is over an off-limits top (a drop — over 0.6 m down, or none — or a top that isn't off-limits for it)
+  // — Infinity when a wall (knee or chest high) shuts that way first, or none within 8 m
   _roofExitDist(dx, dz, maxD = 8) {
+    const FOOT = PLAYER.footRadius;   // [b5-int3]
     const y = this.pos.y, O = _rxO, D = _rxD, H = _rxH, L = G.level;
     let px = this.pos.x, pz = this.pos.z;
     D.set(dx, 0, dz);
     for (let s = 0.3; s <= maxD + 1e-6; s += 0.3) {
       for (const h of [0.5, 1.1]) if (G.physics.raycast(O.set(px, y + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return Infinity;
       px += dx * 0.3; pz += dz * 0.3;
+      // (off when no part of the feet is over an off-limits top: the centre and the footprint's four points — a kid's feet
+      // are held by any top the footprint covers, so a gap narrower than it is no way off: crossmarket's row of balconettes
+      // 0.75 m apart sent a kid sliding off one onto the next and back for 3 s)
       D.set(0, -1, 0);
-      const g = G.physics.raycast(O.set(px, y + 0.3, pz), D, 8, H);
+      let still = false;
+      for (let k = 0; k < 5 && !still; k++) {
+        const ox = k === 1 ? FOOT : k === 2 ? -FOOT : 0, oz = k === 3 ? FOOT : k === 4 ? -FOOT : 0;
+        const g = G.physics.raycast(O.set(px + ox, y + 0.3, pz + oz), D, 8, H);
+        if (!g.hit || H.point.y < y - 0.6) continue;
+        const gb = L.blocks[H.block];
+        if (gb && this.isRoofFor(gb)) still = true;
+      }
       D.set(dx, 0, dz);
-      if (!g.hit || H.point.y < y - 0.6) return s;
-      const gb = L.blocks[H.block];
-      if (!gb || !this.isRoofFor(gb)) return s;
+      if (!still) return s;
     }
     return Infinity;
   }
   // the way off that gets there soonest, of the block's four sides and four corners (not `not`, the way just blocked) →
-  // into `out`, true; false when none does within 8 m
+  // into `out`, its distance; Infinity when none does within 8 m (out untouched)
   _roofExit(b, not, out) {
     const ax = b.axes[0], az = b.axes[2];
     let best = Infinity, bx = 0, bz = 0;
@@ -737,9 +751,9 @@ export class Actor {
       const e = this._roofExitDist(dx, dz);
       if (e < best - 1e-6) { best = e; bx = dx; bz = dz; }
     }
-    if (best === Infinity) return false;
+    if (best === Infinity) return Infinity;
     out.set(bx, 0, bz);
-    return true;
+    return best;
   }
 
   // Body (walls/ceilings) then feet (ground stick / landing). `stick` = we were grounded and did not jump.

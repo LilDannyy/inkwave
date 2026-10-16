@@ -51,7 +51,8 @@
 // [b5-int3] the lead's rules for the finds (OPEN-ITEMS.md, 2026-10-16):
 //   (a) an off-limits top never holds a kid: besides a roof stuck after 3 s and a perch, a RAIL or a THIN top (a hidden
 //       prop collider under 0.3 m across: a door leaf's edge, a post) a dash comes to rest on is a LEAK unless a plain
-//       walk / hop / swim jump from a spot reached on foot within 6 m (or the same climb) gets onto that block too
+//       walk / hop / swim jump from a spot reached on foot within 6 m (or the same climb) gets onto that block too (from
+//       the nav nodes, then aimed starts between them: a rail is a narrow window for a hop's landing)
 //   (b) a swim jump + dash whose first landing is over its bar but that comes to rest on walkable ground a kid reaches on
 //       foot is a skill route, accepted when it saves ≤ 20 m against the normal way there — the nav graph's walk from the
 //       start, for the kid's own team (never through the enemy spawn: none = a FAIL); listed with its saving, a FAIL past
@@ -244,7 +245,7 @@
   const B = L.bounds, inB = (p) => p.x >= B.minX - 0.5 && p.x <= B.maxX + 0.5 && p.z >= B.minZ - 0.5 && p.z <= B.maxZ + 0.5;
   const count = { sims: 0, climbSims: 0, walls: 0, noClimb: 0, climbed: 0, oobOnFoot: 0, maxUp: -99, judgedUp: 0, hopAsHigh: 0, hopAsHighNear: 0, onFoot: 0, roof: 0, roofOnFoot: 0, roofTouch: 0, perch: 0, perchOnFoot: 0, sea: 0, air: 0, stranded: 0, strandedBaseline: 0, strandedDown: 0, offGraph: 0, oob: 0 };
   const leaks = [], offs = [], strandedOk = [], oob = [], down = [], roofs = [], onRoofs = [], roofsOnFoot = [], roofReach = new Map(), perches = [], perchOk = new Map();
-  const thins = [], thinOk = new Map(), skillOk = [], skillOver = [], skillSea = [];   // [b5-int3] (the lead's rules a, b)
+  const thins = [], thinOk = new Map(), thinBy = new Map(), skillOk = [], skillOver = [], skillSea = [];   // [b5-int3] (the lead's rules a, b; thinBy: every block held, its count and first move)
   const KINDS = ['g', 4, 18, 30];
   const SWIM = args.swim !== '0', LATE = args.late !== '0';
   const SWIM_KINDS = ['s18', 's30', 's38', 's46', 's56'], LATE_KINDS = [36, 42, 48, 54, 60, 66];   // [b5-int3]
@@ -393,7 +394,7 @@
         thinOk.set(r.block, by);
         if (!by && plainHere((q) => q.block === r.block)) by = { move: 'the same climb' };
         if (by) count.thinOnFoot = (count.thinOnFoot || 0) + 1;
-        else { count.thin = (count.thin || 0) + 1; if (thins.length < 40) thins.push(what); }
+        else { count.thin = (count.thin || 0) + 1; if (thins.length < 40) thins.push(what); const tb2 = thinBy.get(r.block); if (tb2) tb2.n++; else thinBy.set(r.block, { block: r.block, tag: what.tag, top: r2(L.blocks[r.block].aabbMax.y), n: 1, first: what }); }
         return;
       } }
     const id = nodeAt(p);
@@ -421,8 +422,27 @@
     const B0 = L.blocks[b], top = B0.aabbMax.y, dist = (q) => Math.hypot(Math.max(B0.aabbMin.x - q.x, 0, q.x - B0.aabbMax.x), Math.max(B0.aabbMin.z - q.z, 0, q.z - B0.aabbMax.z));
     const ns = N.filter((q) => reach[q.id] && top - q.y < 2.4 && top - q.y > -0.5 && dist(q) < 6).sort((a, c) => dist(a) - dist(c)).slice(0, 30);
     for (const q of ns) for (const dd of DIRS16) for (const k2 of ['h', 'w', 'sj']) { const qq = move(q, dd, k2); if (qq && qq.block === b) return { from: [r1(q.x), r2(q.y), r1(q.z)], dir: dd.map(r2), move: k2 === 'h' ? 'running hop' : k2 === 'sj' ? 'plain swim jump' : 'walk' }; }
+    // [b5-int3] the nodes are a 1 m grid and a hop lands a fixed way out: aimed starts between them too — from each of the 12
+    // nearest, straight at the block's nearest point (and ±0.3 rad), set back or on along that heading by up to 1.25 m in
+    // 0.25 m steps where the ground there is still a spot reached on foot at the same height (a rail 0.1–0.5 m wide is a
+    // narrow window for a running hop's landing)
+    const P0 = V(0, 0, 0);
+    for (const q of ns.slice(0, 12)) {
+      const cx = clamp1(q.x, B0.aabbMin.x, B0.aabbMax.x), cz = clamp1(q.z, B0.aabbMin.z, B0.aabbMax.z), h0 = Math.atan2(cx - q.x, cz - q.z);
+      for (const dh of [0, -0.3, 0.3]) {
+        const dd = [Math.sin(h0 + dh), Math.cos(h0 + dh)];
+        for (let o = -1.25; o <= 1.25 + 1e-9; o += 0.25) {
+          const sx = q.x + dd[0] * o, sz = q.z + dd[1] * o, gy = L.groundHeight(sx, sz, q.y + 0.6);
+          if (gy === -Infinity || Math.abs(gy - q.y) > 0.3) continue;
+          const id = nodeAt(P0.set(sx, gy, sz)); if (id < 0 || !reach[id]) continue;
+          const sp = { id: q.id, x: sx, y: gy, z: sz };
+          for (const k2 of ['h', 'sj', 'w']) { const qq = move(sp, dd, k2); if (qq && qq.block === b) return { from: [r2(sx), r2(gy), r2(sz)], dir: dd.map(r2), move: (k2 === 'h' ? 'running hop' : k2 === 'sj' ? 'plain swim jump' : 'walk') + ' (an aimed start)' }; }
+        }
+      }
+    }
     return null;
   }
+  function clamp1(x, a, c) { return x < a ? a : x > c ? c : x; }
   // the normal way from start n to node id: the nav graph's walk for the kid's team (its length, m), against the dash
   // move's own run (start → where it came to rest, across), and the difference — null when the graph has no way there
   function savingTo(n, id, p) {
@@ -519,7 +539,7 @@
   R(`${g.mapDef?.id}: dt 1/${Math.round(1 / DT)}, ${part} (${use.length} of ${starts.length}; ${N.length} nodes); air dash ${AIR} m${args.air ? ' (what-if)' : ''}: no dash (ground, off a ledge, a running jump's rise / apex / fall${LATE ? ', late in a long fall' : ''}${SWIM ? ', a swim jump' : ''}${CLIMB ? ', off a wall climb' : ''}; 8 headings) comes to rest on a perch piece, a rail or a thin top (< 0.3 m), out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes down more than ${BAR} m over its start (a plain hop's best ${HOP_BEST} m + 0.02; a swim jump's ${SWIM_BAR} m — over it but at rest on ground reached on foot: a skill route, saving ≤ 20 m; ${count.judgedUp} landings judged)`,
     perches.length === 0 && oob.length === 0 && onRoofs.length === 0 && thins.length === 0 && skillOver.length === 0 && count.maxUp <= (count.maxUpAt && /swim jump/.test(count.maxUpAt.move) ? SWIM_BAR : BAR) + 1e-6, { swimBar: SWIM_BAR, count, stillOnARoofAfter3s: onRoofs.slice(0, 6), stillOnARoofReachedOnFoot: roofsOnFoot, perchBlocks,
     // ([b5-int3] the lead's rules: a rail / thin top a dash rests on that no plain move gets onto; skill routes saving > 20 m)
-    thinTopsHeld: thins.slice(0, 8), skillRoutesOver20m: skillOver.slice(0, 8), perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
+    thinTopsHeld: thins.slice(0, 8), thinBlocks: [...thinBy.values()], skillRoutesOver20m: skillOver.slice(0, 8), perchPiecesOnFoot: [...perchOk].filter(([, v]) => v).map(([pc, v]) => { const bs = PB.filter((b) => piece.get(b.id) === pc); return { piece: pc, blocks: bs.length, tops: [r2(Math.min(...bs.map(ptop))), r2(Math.max(...bs.map(ptop)))], at: [r1(bs[0].center.x), r1(bs[0].center.z)], by: v }; }), perches: perches.slice(0, 4), oob: oob.slice(0, 8), roofsTouched: [...roofSeen.values()].slice(0, 6), ms, tm, prog });
   R(`${g.mapDef?.id}: listed for the lead (SPEC D10.6: newly reachable spots are listed, not judged) — tops the nav graph doesn't reach that a dash ends on and no plain walk / hop from within 5 m (or the same climb) does: ${realLeaks.length}; with their block, its tag, the first landing's height over the start (judged in the line above) and where it came to rest (it may run on up a ramp or a stair after landing)`, true,
     { tops: realLeaks.slice(0, 24), topsAKidHopsOnto: hopOn.length });
   // [b5-int3] the lead's rule (b): every swim jump + dash over its bar that came to rest on ground reached on foot, with its
