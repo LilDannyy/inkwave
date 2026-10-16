@@ -1239,6 +1239,10 @@ export class StageLava {
     const M = this.W.navMeta;
     if (!M || !M.kind[to]) return 0;
     if (e && e.type === 'climb' && M.kind[to] === 2) return Infinity;   // (fix round 2: never a wall climb up a rider's side — the column moves under the climb)
+    // (fix round 3) an escape never plans a wall climb: inking a wall and swimming up it takes seconds, longer still in enemy
+    // ink — a roller escaping the Casting Floor took the climb onto a 1.5 m kerb and the lava had it at the wall. The way
+    // out the exits were found by is climb-free (_exits), so one always exists
+    if (this._escPlan && e && e.type === 'climb') return Infinity;
     if (this._escPlan && M.kind[to] === 2) { const R = this.riders[M.rider[to]]; if (R && R.r.sink) return R.solid && this._stoneUpAt(R, this.clock.t + metres * LAVA.sPerM + 0.5) ? 0 : Infinity; }   // (an escape: botAct)
     if (this._pb?._look && (M.kind[to] === 1 || (M.kind[to] === 2 && this.W.riders[M.rider[to]]?.sink))) return Infinity;   // (nor any floor the lava takes)
     const s = this.shut(to, this.clock.t + metres * LAVA.sPerM);
