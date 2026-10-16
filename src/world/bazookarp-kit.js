@@ -42,11 +42,13 @@ export function layoutFloor(layout, x, z, yMax = 30) {
 
 // a turned box: centre (cx, cz), w × d footprint (local x across, local z along), from y0 to y1
 const ob = (cx, cz, w, d, y0, y1, yaw, o) => ({ kind: 'obox', center: [cx, (y0 + y1) / 2, cz], size: [w, y1 - y0, d], rotY: yaw, pattern: P_STONE, ...o });
-// a dressed post: footing, shaft, (band), capital — every part roof and ink-free; tagged <tag>-base / -shaft / -band / -cap
+// a dressed post: footing, shaft, (band), capital — every part roof and ink-free; the shaft carries the post's own tag
+// (one `karp-weir` / `karp-gatepost` piece per post, as the first kit had: tests count posts by it), the rest
+// <tag>-base / -band / -cap
 function post(out, cx, cz, y, yaw, tag, s) {
   const R = { roof: true, paint: false };
   out.push(ob(cx, cz, s.foot, s.foot, y - 0.05, y + s.footH, yaw, { ...R, color: STONE_D, tag: `${tag}-base` }));
-  out.push(ob(cx, cz, s.w, s.w, y + s.footH, y + s.h - s.capH, yaw, { ...R, color: STONE, tag: `${tag}-shaft` }));
+  out.push(ob(cx, cz, s.w, s.w, y + s.footH, y + s.h - s.capH, yaw, { ...R, color: STONE, tag }));
   if (s.band) out.push(ob(cx, cz, s.w + 0.06, s.w + 0.06, y + s.band[0], y + s.band[1], yaw, { ...R, color: s.bandColor || STONE_D, pattern: 0, tag: `${tag}-band` }));
   out.push(ob(cx, cz, s.cap, s.cap, y + s.h - s.capH, y + s.h, yaw, { ...R, color: STONE_L, tag: `${tag}-cap` }));
 }
@@ -81,7 +83,7 @@ export function karpKitPieces(def, layout) {
   for (const z of def.freeZones || []) for (const s of z.signs || []) {
     const y = layoutFloor(layout, s[0], s[1], (z.y1 ?? 5) + 0.5), yawD = s[2] ?? 0, R = { roof: true, paint: false };
     out.push(ob(s[0], s[1], 0.3, 0.3, y - 0.05, y + 0.12, yawD, { ...R, color: STONE_D, tag: 'karp-sign-foot' }));
-    out.push(ob(s[0], s[1], 0.15, 0.15, y + 0.12, y + 1.42, yawD, { ...R, color: SIGN, pattern: P_WOOD, tag: 'karp-sign-post' }));
+    out.push(ob(s[0], s[1], 0.15, 0.15, y + 0.12, y + 1.42, yawD, { ...R, color: SIGN, pattern: P_WOOD, tag: 'karp-sign' }));   // (one `karp-sign` per sign)
     out.push(ob(s[0], s[1], 0.75, 0.07, y + 1.4, y + 1.9, yawD, { ...R, color: BOARD, pattern: 0, tag: 'karp-sign-board' }));
   }
   return out;
