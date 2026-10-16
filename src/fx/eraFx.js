@@ -548,7 +548,21 @@ const CSS = `
 .er-chip.is-warn .er-count { display: inline-block; } .er-chip.is-warn svg { animation: er-ring .12s linear infinite alternate; }
 .er-chip.is-jump { background: rgba(244, 233, 200, .95); color: #2a2418; } .er-chip.is-jump .er-names b.is-on { color: #2a2418; text-shadow: none; } .er-chip.is-jump svg { color: #2a2418; }
 @keyframes er-pulse { from { scale: 1; } to { scale: 1.07; } }
-@keyframes er-ring { from { rotate: -12deg; } to { rotate: 12deg; } }`;
+@keyframes er-ring { from { rotate: -12deg; } to { rotate: 12deg; } }
+/* the era's callouts (TIME JUMP, the era banner, NEW ROUTES OPEN, Tartar's line): the chip's colours, in the HUD's
+   callout slot (27 %) and moved down past whatever is there (EraHud._place: the chip, a gameplay callout, Zone
+   Control's callouts), so neither covers the other */
+.er-calls { position: absolute; left: 50%; top: 27%; width: 0; height: 0; pointer-events: none; z-index: 3; transition: top .18s ease-out; }
+.er-call { position: absolute; left: 0; top: 0; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: .35em; isolation: isolate; white-space: nowrap;
+  padding: .35em 1.3em .45em; animation: iw-call 2.4s forwards; }
+.er-call__ribbon { position: absolute; z-index: -1; inset: 0; border-radius: 999px; background: rgba(24, 21, 17, .9);
+  box-shadow: 0 0 0 2px rgba(244, 233, 200, .85), 0 0 22px 3px rgba(244, 233, 200, .35); }
+.er-call__txt { font-size: calc(var(--u, 10px) * 2.6); color: #f4e9c8; text-shadow: 0 0 .35em rgba(244, 233, 200, .55); letter-spacing: .04em; }
+.er-call__sub { font: 800 calc(var(--u, 10px) * 1.0) / 1 'Rubik', sans-serif; letter-spacing: .1em; color: #cfc6b0; }
+.er-call.is-big { padding: .3em 1.6em .5em; }
+.er-call.is-big .er-call__ribbon { background-color: rgba(30, 25, 18, .94); background-image: linear-gradient(180deg, rgba(58, 48, 30, .95), rgba(24, 21, 17, .92)); box-shadow: 0 0 0 3px #f4e9c8, 0 0 30px 6px rgba(244, 233, 200, .45); }
+.er-call.is-big .er-call__txt { font-size: calc(var(--u, 10px) * 4.0); color: #fff6dc; }
+.iw-hud.is-mapopen .er-calls, body.iw-dio-on .er-calls { opacity: 0; transition: opacity .15s; }`;
 let cssOn = false;
 const DOCKS = { zones: 'zo', tower: 'tw' };
 export class EraHud {
@@ -563,7 +577,44 @@ export class EraHud {
     this.names = [...this.el.querySelectorAll('.er-names b')]; this.bar = this.el.querySelector('.er-bar i'); this.next = this.el.querySelector('.er-next'); this.count = this.el.querySelector('.er-count');
     const dock = DOCKS[R.m?.mode] ? G.hud?.[DOCKS[R.m.mode]] : null;
     if (dock && dock.appendChild) { this.el.classList.add('is-docked'); dock.appendChild(this.el); } else host.appendChild(this.el);
+    this.calls = document.createElement('div'); this.calls.className = 'er-calls';
+    host.appendChild(this.calls);
     this.last = '';
+  }
+  // an era callout: replaces the era's previous one only (the HUD's own callouts are left alone), the HUD's sounds
+  say(text, sub, big = false) {
+    if (!this.calls) return null;
+    this.calls.querySelectorAll('.er-call').forEach((c) => c.remove());
+    const el = document.createElement('div'); el.className = 'er-call' + (big ? ' is-big' : '');
+    const rb = document.createElement('span'); rb.className = 'er-call__ribbon';
+    const tx = document.createElement('span'); tx.className = 'er-call__txt iw-display'; tx.textContent = text;
+    el.append(rb, tx);
+    if (sub) { const s = document.createElement('small'); s.className = 'er-call__sub'; s.textContent = sub; el.append(s); }
+    el.addEventListener('animationend', (e) => { if (e.target === el) el.remove(); });
+    setTimeout(() => el.remove(), 3200);
+    this.calls.appendChild(el);
+    this._place();
+    G.hud?._snd?.(big ? 'special_ready' : 'ui_confirm', { volume: big ? 0.7 : 0.55 });
+    return el;
+  }
+  // the band's place while an era callout shows: the HUD's callout slot (27 % of the HUD), moved down past what is
+  // there — the chip (docked under Zone Control's / Tower Command's HUD it sits lower), a gameplay callout (it may come
+  // later: checked every frame), Zone Control's callouts. Layout boxes, so the callouts' entry scale does not count.
+  _place() {
+    const c = this.calls, call = c?.lastElementChild, host = c?.parentElement;
+    if (!call || !host) return;
+    const H = host.getBoundingClientRect();
+    if (!H.height) return;
+    const h = call.offsetHeight, gap = H.height * 0.012;
+    let top = H.top + H.height * 0.27 - h / 2;
+    const clear = (y0, y1) => { if (y1 > y0 && y0 < top + h + gap && y1 + gap > top) top = y1 + gap; };
+    if (this.el) { const r = this.el.getBoundingClientRect(); clear(r.top, r.bottom); }
+    const HC = G.hud?.callouts;
+    if (HC) { const r = HC.getBoundingClientRect(); for (const el of HC.children) clear(r.top - el.offsetHeight / 2, r.top + el.offsetHeight / 2); }
+    const ZC = host.querySelector('.iw-zcalls');
+    if (ZC) { const r = ZC.getBoundingClientRect(); for (const el of ZC.children) clear(r.top + el.offsetTop, r.top + el.offsetTop + el.offsetHeight); }
+    const pct = (((top + h / 2 - H.top) / H.height) * 100).toFixed(2) + '%';
+    if (c.style.top !== pct) c.style.top = pct;
   }
   // o = { era, phase, next: { from, to, at, inS } | null, prog (0..1 toward the next jump) }
   update(o) {
@@ -582,9 +633,10 @@ export class EraHud {
       this.el.classList.toggle('is-final', !nx && o.phase !== 'jump');
     }
     this.bar.style.width = ((o.prog || 0) * 100).toFixed(1) + '%';
+    if (this.calls?.firstElementChild) this._place();
   }
   get text() { return this.el ? this.el.textContent : ''; }
-  dispose() { this.el?.remove(); this.el = null; }
+  dispose() { this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
 }
 
 // --------------------------------------------------------------------------------------------- the minimap (H14)

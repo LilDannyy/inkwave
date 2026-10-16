@@ -623,7 +623,9 @@ export class StageEras {
     }
     if (this._fired.size > 200) for (const [k, at] of this._fired) if (at < t1 - 300) this._fired.delete(k);
   }
-  _say(text, sub, big) { this.S.callout(text, sub, big); }
+  // the era's callouts: the module's own (EraHud.say: white-gold on dark, a both-teams event, never the viewer's team-ink
+  // ribbon of the HUD's callouts, and never clearing a gameplay callout already on screen)
+  _say(text, sub, big) { this.chip?.say(text, sub, big); }
   _snd(name, o = {}) { if (!this.m.attract) G.audio?.play?.(name, o); }
   _fire(name, J, t) {
     const W = this.W, N = W.names, T = new THREE.Vector3(0, 6.6, 0);
