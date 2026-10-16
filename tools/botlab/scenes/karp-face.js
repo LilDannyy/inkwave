@@ -56,6 +56,9 @@
     if (g.karpFx) { for (const w of g.karpFx.weirs || []) w.low = -1; for (const q of g.karpFx.gates || []) q.up = -1; }
     G.karpGun.clear(); G.projectiles.clear(); G.subs.clear(); G.specials.clear(); G.paint.clear();
     Kp.pos.copy(P); Kp.restNode = -1; Kp.shell.form(P, 1000, 0); Kp._setPhase('shielded'); Kp.shell.m = 0;
+    // ([karp-face] review round 3: and the HUD's "Can't use" note — its 1.6 s run on the HUD's play time, which the
+    // scenes hardly step: hud-nospawn's 'You can't take it into a spawn' was still up in map-mini, with nobody carrying)
+    const KH = g.hud.karp; if (KH) { KH._noT = 0; KH.no.classList.remove('is-on'); KH.show.no = null; }
     park(); calm();
   };
   const grab = (a) => { Kp.shell.clear(); Kp.pos.copy(a.pos); Kp._setPhase('free', 0); Kp.claims.length = 0; Kp._applyGrant(a); };
