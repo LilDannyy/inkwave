@@ -780,6 +780,10 @@ export class Bazookarp {
     }
   }
   _overtime(dt) {
+    // ([karp-face] review round 3, 2nd fixer: not once it has ended — an end decided earlier in this frame (a retake in
+    // _grant, a comeback or knockout in _carried) got one more frame of overtime after its 'e' had gone out: the new
+    // host's results said 1.64, the other guest's 1.62 (net-karp-full))
+    if (this.winner != null) return;
     this.overtimeT += dt;
     const L = this.otLosing, W = 1 - L;
     if (this.count[L] < this.count[W]) return this._end(L, 'comeback');

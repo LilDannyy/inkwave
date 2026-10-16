@@ -447,6 +447,10 @@
     fresh(KARPBOX_DEF, { time: 30 }); Kp.count = [60, 100]; Kp.reachT = [5, 0]; carry(c, 0, 10); m.time = 10; c.splat(L, 'weapon'); m.time = 0.02; step(0.1);
     step(1.0); Kp.shell.add(0, 600, A[1]); put(A[1], Kp.pos.x, Kp.pos.z); step(0.4);
     R('G5 S39a: the winning team picks it up in overtime → it wins (retake)', Kp.winner === 0 && Kp.reason === 'retake', { winner: Kp.winner, reason: Kp.reason });
+    // ([karp-face] review round 3, 2nd fixer: the end record's overtime played is the one this screen keeps — an end
+    // decided inside the frame used to get one more frame of overtime added after its 'e' went out: G10e below)
+    const eRec = () => { const e = (Kp.wire.out || []).filter((r) => r[0] === 'e').pop(); return e ? e[8] : null; };
+    const g5e = { reason: Kp.reason, rec: eRec(), kept: Kp.overtimeT };
     // S39b: the 10 s window — paused while re-forming / resetting, then the losing team didn't grab it → no-pickup
     fresh(KARPBOX_DEF, { time: 30 }); Kp.count = [60, 100]; Kp.reachT = [5, 0]; carry(c, 0, 10); m.time = 10; c.splat(L, 'weapon'); m.time = 0.02; step(0.1);
     const w0 = Kp.otWin.left; step(0.7); const w1 = Kp.otWin.left; step(9.0); const w2 = Kp.otWin.left, during = Kp.winner; step(1.6);
@@ -468,6 +472,8 @@
     Kp.count[1] = 80; step(0.05); const eq = Kp.winner;
     const g10 = []; L.intent.move.set(0, 0, -1); for (let i = 0; i < 132; i++) { dbg.step(1000 / 60); if (i % 15 === 0) g10.push([+L.pos.x.toFixed(2), +L.pos.z.toFixed(2), +L.pos.y.toFixed(2), L.alive, Kp.holder === L, Kp.count[1], Kp.stats.clamped]); } idle(L);
     R('G10 S39d: the losing team carried past the winning team\'s count wins (comeback); an equal count isn\'t enough', eq == null && Kp.winner === 1 && Kp.reason === 'comeback', { eq, winner: Kp.winner, reason: Kp.reason, count: Kp.count, g10, ot: Kp.overtime, losing: Kp.otLosing });
+    const g10e = { reason: Kp.reason, rec: eRec(), kept: Kp.overtimeT };
+    R('G10e the end record carries the overtime played this screen keeps, for an end decided inside the frame (retake, comeback)', g5e.rec != null && g5e.rec === g5e.kept && g10e.rec != null && g10e.rec === g10e.kept, { g5e, g10e });
     fresh(KARPBOX_DEF, { time: 1 }); Kp.count = [60, 100]; carry(L, 0, -10); m.time = 0.02; step(0.1); Kp.overtimeT = K.overtimeMax - 0.05; Kp.fuse = 99; step(0.2);
     R('G11: the 300 s safety cap → the winning team (overtime-cap)', Kp.winner === 0 && Kp.reason === 'overtime-cap', { winner: Kp.winner, reason: Kp.reason });
     fresh(KARPBOX_DEF, { time: 1, coin: 1 }); m.time = 0.02; step(0.1);
