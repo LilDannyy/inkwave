@@ -898,7 +898,8 @@ export async function runChecks(o = {}) {
     // diagonals included, 0.3–1.8 m up or 0.3–3.4 m down, no carrier-graph edge between them, not joined by 6 m of walking,
     // floor under the whole line at the one end's height or the other's (a step, not a gap), the hop rule's waist and head
     // tests (down: the waist line at the top, the head across, nothing hanging over the landing); tried when they can
-    // matter, the two best of each takeoff and one per 1 m of the same place. A made one is a #7d find (step) or, from
+    // matter, every one (they are few: 12–45 a stage; a cap of two a takeoff hid review 4's terraces pair behind two
+    // the kid didn't make). A made one is a #7d find (step) or, from
     // outside a Gate's ring to inside it, a #7a entrance with its own sight line
     nums.step = { cand: 0, tried: 0 };
     {
@@ -919,10 +920,7 @@ export async function runChecks(o = {}) {
           const l = byFrom.get(i) || []; l.push({ kind: 'step', from: i, to: j, gain: gainDir(C, i, j) }); byFrom.set(i, l);
         });
       }
-      const kept = [];
-      for (const l of byFrom.values()) for (const c of l.sort((p2, q2) => q2.gain - p2.gain).slice(0, 2)) kept.push(c);
-      kept.sort((p2, q2) => q2.gain - p2.gain);
-      for (const c of kept) { const a = nodes[c.from], b = nodes[c.to]; if (cand.step.some((v) => hd(nodes[v.from], a) < 1.0 && hd(nodes[v.to], b) < 1.0)) continue; cand.step.push(c); nums.step.tried++; }
+      for (const l of byFrom.values()) for (const c of l) { cand.step.push(c); nums.step.tried++; }
     }
     // ----- squid tubes ([fix4] review 4): lowGap stops at 3 m, but a squid crawls a low passage of any length — a culvert,
     // the crawlspace under a deck or a veranda, a deep gap under a thick wall — and nav keeps no node where a kid's head
