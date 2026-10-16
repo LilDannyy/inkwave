@@ -653,12 +653,22 @@
         foe.setWeapon(weapons0.get(foe));
         return { lock2: lock2 && r2(lock2), outT: outT && r2(outT), downT: downT && r2(downT), byRoller: !!(dn && dn.by === foe), evaded, at: v2(foe.pos), trace };
       };
-      const rNear = rollerTrial(4.0), rReach = rollerTrial(6.5, true);
+      // ([b5-int3] the roller's threat code picks the flick or an evade by chance — two full runs each had one trial go the
+      // other valid way (in reach it walked out of range; too close it rolled the sentry down before any evade): up to three
+      // trials each, one must do the row's response, and every trial must end it — down, or out of its range or sight — within
+      // 3 s of the lock (the fault: a roller standing locked on, flicking over it, for 5 s)
+      const tries = (d0, still, ok) => { const all = []; for (let k = 0; k < 3; k++) { const r = rollerTrial(d0, still); all.push(r); if (ok(r)) break; } return all; };
+      const endsIt = (r) => r.lock2 != null && ((r.downT != null && r.downT - r.lock2 <= 3) || (r.outT != null && r.outT - r.lock2 <= 3));
+      const nearOk = (r) => { const t = r.outT ?? (r.byRoller ? r.downT : null); return r.lock2 != null && t != null && t - r.lock2 <= 3 && (r.evaded || r.byRoller); };
+      const reachOk = (r) => r.lock2 != null && r.byRoller && r.downT - r.lock2 <= 2;
+      const nearAll = tries(4.0, false, nearOk), reachAll = tries(6.5, true, reachOk);
+      const rNear = nearAll.find(nearOk) || nearAll[nearAll.length - 1], rReach = reachAll.find(reachOk) || reachAll[reachAll.length - 1];
+      R(`every roller trial ends it within 3 s of the lock — down, or out of its range or sight (${nearAll.length + reachAll.length} trials: none stands locked on flicking over it)`, [...nearAll, ...reachAll].every(endsIt), { near: nearAll.map((r) => ({ lock2: r.lock2, outT: r.outT, downT: r.downT, byRoller: r.byRoller, evaded: r.evaded })), reach: reachAll.map((r) => ({ lock2: r.lock2, outT: r.outT, downT: r.downT, byRoller: r.byRoller, evaded: r.evaded })) });
       const tN = rNear.outT ?? (rNear.byRoller ? rNear.downT : null);
-      R(`a roller bot it locks onto 4 m off — too close for its flick, which comes down 6–7 m out: evades (${rNear.evaded}) and ${rNear.outT ? 'is out of its range or sight' : rNear.byRoller ? 'backs into its reach and flicks it down' : 'neither'} ${tN && rNear.lock2 ? r2(tN - rNear.lock2) + ' s' : ''} after the lock (within 3 s)`,
-        rNear.lock2 != null && tN != null && tN - rNear.lock2 <= 3 && rNear.evaded, rNear);
+      R(`a roller bot it locks onto 4 m off — too close for its flick, which comes down 6–7 m out: evades (${rNear.evaded}) and ${rNear.outT ? 'is out of its range or sight' : rNear.byRoller ? 'takes it down itself (backed into its reach, or rolling)' : 'neither'} ${tN && rNear.lock2 ? r2(tN - rNear.lock2) + ' s' : ''} after the lock (within 3 s)`,
+        nearOk(rNear), { ...rNear, trials: nearAll.length });   // ([b5-int3] or took it down itself: a full run's roller was rolling as the lock came and rolled it down 0.06 s later — no evade needed; the fault this row guards, standing locked on and flicking over it, takes neither)
       R(`a roller bot it locks onto 6.5 m off — in its flick's reach: flicks it down ${rReach.byRoller && rReach.lock2 ? r2(rReach.downT - rReach.lock2) + ' s after the lock' : 'never'} (within 2 s)`,
-        rReach.lock2 != null && rReach.byRoller && rReach.downT - rReach.lock2 <= 2, rReach);
+        reachOk(rReach), { ...rReach, trials: reachAll.length });
       // with nothing better to shoot: a bot picks an idle enemy sentry (deployables-bots.js: DEV_BOT.sentry)
       reset();
       foe.setWeapon('shooter'); foe.ink = PLAYER.inkMax;
