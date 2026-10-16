@@ -1166,6 +1166,13 @@ function botHold(a, st, inp, s) {
   // when the brain lets go, its release unchecked)
   if (!st.plan) { const g = b._glide; b._glide = null; st.plan = { mode: g?.mode || 'manual', t: g?.t || null, cook: g?.cook || 0, yaw: g?.yaw ?? null, led: g?.led ?? true }; }
   const P = st.plan;
+  // A planned bot cook must never pin the bot in place indefinitely. Normal
+  // plans release sooner; this cap is the failsafe for a stale target/slide.
+  if (st.held >= 1.5) {
+    GLIDE_STATS.botTimeout = (GLIDE_STATS.botTimeout || 0) + 1;
+    inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; endHold(a, true);
+    return;
+  }
   let keep = false;
   // Boss Battle: hold to the planned cook — let go at once (throwing what's cooked) when one of the boss's telegraphs
   // is on us (a cooking kid can't dive under its beam)
@@ -1226,7 +1233,7 @@ function botRelease(a, st, inp, s) {
   // ([b5-int3] every way sinks with this cook: cook on — a longer cook is a shorter slide — while there's cook left; only at
   // full cook is it held off: a cooked fight stone let go short of its plan's cook (a foe inside 4 m) or after a strafe
   // went off the dock, and the bot dropped it — 6 of 22 fight plans in two halyard / saltpan Turf matches)
-  if (P.mode !== 'boss' && st.cook < s.cookMax - 0.05 && st.held < s.cookGrace + s.cookMax - 0.05) { inp.sub = true; inp.subReleased = false; GLIDE_STATS.botCookOn = (GLIDE_STATS.botCookOn || 0) + 1; return; }
+  if (P.mode !== 'boss' && st.held < 1.5 && st.cook < s.cookMax - 0.05 && st.held < s.cookGrace + s.cookMax - 0.05) { inp.sub = true; inp.subReleased = false; GLIDE_STATS.botCookOn = (GLIDE_STATS.botCookOn || 0) + 1; return; }
   GLIDE_STATS.botCancel++;
   inp.sub = false; inp.subReleased = false;
   a.weaponRunner.aimingSub = false;
