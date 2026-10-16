@@ -170,6 +170,14 @@ export class Bazookarp {
   update(dt) {
     if (this.winner != null) return;
     this.clock += dt; this._dt = dt; this._wn = this.wire.now();   // ([karp-face] review round 3: the wire's time at this clock — a follower's 'free' moment on it)
+    // Start the carrier field in the stage state that is already live. State 0
+    // is the union/as-built graph; it must not make a disappearing era node
+    // readable before the first era:done event arrives.
+    if (!this._fieldSynced) {
+      const key = this.match.eras?.era || this.match.lava?.st?.phase;
+      if (key) { this.fieldSwitch(this.field.stateOf(key)); this._fieldSynced = true; }
+      else if (!this.match.eras && !this.match.lava) this._fieldSynced = true;
+    }
     const own = this._ownActors();
     // ---- every screen: its own players
     this.shell.update(dt, own, this.host);
