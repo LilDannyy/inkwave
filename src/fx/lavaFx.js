@@ -647,6 +647,7 @@ const CSS = `
   box-shadow: 0 0 0 2px rgba(255,255,255,.85); pointer-events: none; transition: box-shadow .2s, background .2s; z-index: 3; }
 .lv-chip.is-docked { position: relative; left: auto; top: auto; translate: none; margin-top: calc(var(--u, 10px) * .2); }
 .iw-tw > .lv-chip.is-docked { margin-top: calc(var(--u, 10px) * .8); }   /* (the tower token hangs below the track) */
+.iw-hud.is-karp .lv-chip:not(.is-docked) { top: calc(var(--u, 10px) * 8.5); }   /* (fix round 3: Bazookarp — under its status line, .iw-kst, until hud.karpDock exists) */
 .lv-chip svg { width: 1.7em; height: 1.7em; color: #c8102e; }
 .lv-tube { position: relative; width: .7em; height: 2.1em; border-radius: .35em; background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.55); overflow: hidden; }
 .lv-tube i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(#ff4a3a, #a3121a); transition: height .15s linear; }
