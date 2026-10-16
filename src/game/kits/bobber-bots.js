@@ -9,12 +9,21 @@
 //     crushed); Turf: on the front line (its progress 0.45–0.65), a few metres ahead — the next one 3–5 m from its newest
 //     live bobber (to grow the chain), never past a 4-chain; then 1.5–3 s between links and 10–16 s once a chain is done.
 //     The throw lands where it picked (use() turns the lob onto the spot, as the Waddle's does onto its foe).
-//   fight — rarely (0.5 % a frame): a lone one just in front of a foe chasing it, for a teammate to shoot.
+//   fight — rarely (0.5 % a frame): a lone one just in front of a foe chasing it, for a teammate to shoot. [b5-int3] And
+//     a snap (SNAP): a lone one thrown to float on the feet of a foe that isn't strafing a duel with us (slower than
+//     2.5 m/s, or facing away — busy with someone else, painting, charging), aimed at for its last 0.3 s of flight while
+//     nothing hits this bot, and shot the moment it floats with that foe where the shot will find it in its reach — the
+//     foes' bots notice a floated web 0.3–0.5 s after it opens and step out; a link run out onto a foe standing just
+//     outside a team web (extendSpot); a fight's pair. Turf's standing webs are rarer (TURF_WEB): they had a foe in reach
+//     0.1–1 % of their chain-seconds.
 // SETTING THEM OFF (botAct, every bot, on its team's bobbers — the trigger): scanned every 0.1 s (staggered), nothing
 //   else owning the aim (busy): a foe it sees within R(N) − 0.3 m of a bobber of a chain (±1.6 m in height), a line to a
 //   bobber of that chain within its reach, and no better shot under way (its own target not in its sights) → it turns to
 //   that bobber (the usual aim error × 0.7) and fires until the chain blows or 0.6 s pass. THREAT_STATS.chainShots /
-//   chainWasted (a chain that blew with no foe in reach) count them.
+//   chainWasted (a chain that blew with no foe in reach) count them. [b5-int3] A foe its team saw a moment ago counts
+//   (teamKnown ≤ 0.35 s, no wall-hack: the bot still needs its own line to a bobber); while it lines up, every 0.1 s, the
+//   foe must still be where its shot will find it (arrivalT: the weapon's flight) or walking in — else it stops (and
+//   drops a charge). An automatic gun fires once its aim is within the bobber's size (one shot a press: within half).
 // FACING ENEMY BOBBERS: wave 1's device shooting (deployables-bots.js) lists them, picked by distance × prefer(bot):
 //   0.7 within 4 m of this bot's route ahead (its path through the next 3 nodes) or within R(N) of where it stands, 1.0
 //   otherwise. specialDangers (botSpecials.js, the kit's `dangers` hook): every ARMED enemy chain — one its team's bots
@@ -451,8 +460,18 @@ function snapSpot(b, t) {
     const x = px - (dx / l) * k, z = pz - (dz / l) * k;
     if (Math.hypot(x - a.pos.x, z - a.pos.z) < minD) continue;
     const at = lobBudget(2, () => okSpot(a, x, z, tp));
-    if (at && Math.abs(at.y - t.pos.y) < 1.2) return at;
+    // (and its blast — a lone one's, R 1.8 — reaches no teammate's idle web: set off with nobody in that web, it would
+    // take it with it; its own bobbers it would only tether to)
+    if (at && Math.abs(at.y - t.pos.y) < 1.2 && !webHitOthers(a, at.x, at.y + SB().floatH, at.z, sizeOf(1).R)) return at;
   }
+  return null;
+}
+// [b5-int3] webHit for a bot's own bobber: an idle chain of its team's within r (+ a bobber's size) of (x, y, z) that isn't
+// this bot's own → that bobber, or null
+function webHitOthers(a, x, y, z, r) {
+  const R = r + SB().hitR + 0.2;
+  _wp.set(x, y, z);
+  for (const o of near(x - R, z - R, x + R, z + R, _nr)) if (o.team === a.team && o.owner !== a && o.state === 'live' && o.chain && o.spot.distanceTo(_wp) < R && idleNow(o, a.team)) return o;
   return null;
 }
 // [b5-int3] the snap's own shot (botAct): while it opens, aimed at where it floats (the trigger off; a charger charging);
@@ -468,6 +487,8 @@ function snapOf(b) {
   }
   return SN;
 }
+// [b5-int3] (counters) each aimed chain shot's end: why, how long, its weapon, the distance, the frames it fired
+const scanEnd = (b, S, why) => { const L = BOBBER_BOT.scanLog || (BOBBER_BOT.scanLog = []); const W = BOBBER_BOT.scanWhy || (BOBBER_BOT.scanWhy = {}); W[why] = (W[why] || 0) + 1; if (L.length < 300 && !S.ready0) L.push({ t: Math.round(G.time * 10) / 10, why, w: b.a.weapon.kind, d: Math.round((S.d0 || 0) * 10) / 10, dt: Math.round((G.time - S.t0) * 100) / 100, fr: S.fr || 0, set: S.fire0 != null ? 1 : 0, n: S.it.chain?.n || 1 }); };
 const snapLog = (b, SN, ev, o) => { const L = BOBBER_BOT.snapLog || (BOBBER_BOT.snapLog = []); if (L.length < 300) L.push({ t: Math.round(G.time * 10) / 10, ev, w: b.a.weapon.kind, src: SN.src, ...o }); };
 // (in flight: about how long until it lands where it was aimed)
 function snapEta(SN) {
@@ -918,17 +939,20 @@ export function botAct(b, dt, it, move, busy) {
     S.chk = G.time;
     const st = foeAt(b, S.it.chain);
     if (st === 'in') { S.ready = false; S.t0 = G.time; S.fire0 = null; S.acqK = null; BOBBER_BOT.readyFired = (BOBBER_BOT.readyFired || 0) + 1; THREAT_STATS.chainShots++; }
-    else if (!st || G.time - S.t0 > 3) { b._bobSkip = S.it.chain; b._bobSkipT = G.time + 0.5; S = b._bob = null; }
+    else if (!st || G.time - S.t0 > 3) { S.ready0 = true; scanEnd(b, S, 'readyOff'); b._bobSkip = S.it.chain; b._bobSkipT = G.time + 0.5; S = b._bob = null; }
   }
   // [b5-int3] engaged: the foe it fires for still where the shot will find it (every 0.1 s) — else it stops (an aimed shot on
   // a chain whose foe stepped out was most of the waste: a charger's charge, a turn, a spinner's spin-up outlast the foe)
   if (S && !S.ready && S.it.state === 'live' && G.time - (S.chk || 0) >= 0.1) {
     S.chk = G.time;
     const it0 = S.it, L = it0.chain ? it0.chain.items : [it0], d3 = Math.hypot(it0.spot.x - a.pos.x, it0.spot.y - a.pos.y - 1.1, it0.spot.z - a.pos.z);
-    if (foeInAt(b, L, it0.chain?.n || 1, arrivalT(a.weapon, d3), 0.2) < 0) { BOBBER_BOT.foeGone = (BOBBER_BOT.foeGone || 0) + 1; b._bobSkip = it0.chain; b._bobSkipT = G.time + 0.4; S = b._bob = null; if (a.weaponRunner?.charging) a.weaponRunner.dropCharge?.(); }
+    const tA = arrivalT(a.weapon, d3), n0 = it0.chain?.n || 1;
+    // (out where the shot finds it, and not walking in either)
+    if (foeInAt(b, L, n0, tA, 0.2) < 0 && foeInAt(b, L, n0, tA + 0.3, 0.35) < 0) { BOBBER_BOT.foeGone = (BOBBER_BOT.foeGone || 0) + 1; scanEnd(b, S, 'foeGone'); b._bobSkip = it0.chain; b._bobSkipT = G.time + 0.4; S = b._bob = null; if (a.weaponRunner?.charging) a.weaponRunner.dropCharge?.(); }
   }
   if (S && S.it && (S.it.state !== 'live' || (!S.ready && ((S.fire0 != null && G.time - S.fire0 > 0.6) || G.time - S.t0 > 1.8)))) {
-    if (S.it.state === 'live') { BOBBER_BOT.gaveUp++; b._bobSkip = S.it.chain; b._bobSkipT = G.time + 1.5; }
+    if (S.it.state === 'live') { BOBBER_BOT.gaveUp++; scanEnd(b, S, S.fire0 != null ? 'missed' : 'noAim'); b._bobSkip = S.it.chain; b._bobSkipT = G.time + 1.5; }
+    else if (!S.ready) scanEnd(b, S, S.it.blast?.by === a ? 'blewMine' : 'blewOther');
     S = b._bob = null;
   }
   // (every bot, whatever its sub: its shot is about to go through one of its team's idle bobbers — hold it; in a duel,
@@ -1044,7 +1068,7 @@ export function botAct(b, dt, it, move, busy) {
     b._bobScanT = 0.1;
     S = scan(b);
     if (!S) return null;
-    b._bob = S; BOBBER_BOT.engaged++; if (!S.ready) THREAT_STATS.chainShots++;
+    b._bob = S; S.chk = G.time; S.d0 = Math.hypot(S.it.spot.x - a.pos.x, S.it.spot.y - a.pos.y - 1.1, S.it.spot.z - a.pos.z); BOBBER_BOT.engaged++; if (!S.ready) THREAT_STATS.chainShots++;
   }
   // turn to it (the usual aim error × 0.7 — its slow wander settling as it holds still on a still target) and fire by the
   // weapon's own trigger
@@ -1068,7 +1092,9 @@ export function botAct(b, dt, it, move, busy) {
   const tf = Math.max(0.008, 0.55 * Math.atan2(SB().hitR, Math.max(0.5, d3)));
   if (S.ready) it.fire = !!(CHARGES[kind] && wr.charging);   // (ready: the trigger held — a charge kept up)
   else if (kind === 'charger') it.fire = wr.charging ? !(off < tol && wr.charge >= 0.12) : off < tol * 4 && !(wr.cooldown > 0);
-  else it.fire = b._devTrigger ? b._devTrigger(d3, off < tf, off < tol * 4, S.lo, S.hi) : off < tf;
+  // ([b5-int3] an automatic gun within the bobber's own size at that distance — its spread and the shots after do the rest;
+  // one shot a press within half of it: waiting on half its size for every gun, the aim rarely settled before the foe left)
+  else { const ftol = ONE_SHOT[kind] ? tf : tol; it.fire = b._devTrigger ? b._devTrigger(d3, off < ftol, off < tol * 4, S.lo, S.hi) : off < ftol; }
   // (a small target: a steady-trigger gun taps — lets its spread settle back to the first shot's between shots, as a
   // player would; it costs no rate: a Spritzer's bloom is back under 0.05 before its next shot is due)
   if (it.fire && !melee && !(MAIN_KITS[kind]?.bot?.charges) && kind !== 'charger' && (wr.bloom ?? 0) > 0.05) it.fire = false;
@@ -1077,7 +1103,7 @@ export function botAct(b, dt, it, move, busy) {
   // (feet planted: no hop while it lines up, and nothing loosed in the air — a jump throws the aim and doubles the spread)
   it.jump = false;
   if (it.fire && !a.grounded && !melee && !(CHARGES[kind] && wr.charging)) it.fire = false;
-  if (it.fire) BOBBER_BOT.fired++;
+  if (it.fire) { BOBBER_BOT.fired++; S.fr = (S.fr || 0) + 1; }
   // (far off, it closes in a little while it lines up — only when it was walking anyway: its route keeps it off edges)
   if (!melee && dh > 9 && move.lengthSq() > 0.01) move.set(dx / dh, 0, dz / dh).multiplyScalar(0.5); else move.multiplyScalar(0.3);
   b.noProg = 0;   // (standing to line up a shot isn't being stuck: no unstick hop — a hop throws the aim and the spread out)
