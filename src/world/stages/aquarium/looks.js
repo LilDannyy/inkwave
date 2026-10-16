@@ -157,6 +157,14 @@ function smallFishGeo(T) {
     { g: tx(new T.ConeGeometry(0.12, 0.2, 4), 0, 0, -0.32, -HP, 0, 0, 0.3, 1, 1.4), c: '#ffffff', tail: true },
   ]);
 }
+// a clownfish (fix round 3, the Reef Windows' anemones): orange, two white bands round it, an orange tail
+function clownGeo(T) {
+  return geoFrom(T, [
+    { g: tx(new T.SphereGeometry(0.5, 8, 6), 0, 0, 0, 0, 0, 0, 0.18, 0.36, 0.5), c: '#e2742c', tail: true, shade: (x, y) => (y < -0.06 ? 1.15 : 0.95) },
+    ...[[0.1, 0.84], [-0.1, 0.84]].map(([z, k]) => ({ g: tx(new T.CylinderGeometry(0.5, 0.5, 0.06, 10, 1, true), 0, 0, z, HP, 0, 0, 0.2 * k * 1.12, 1, 0.38 * k * 1.12), c: '#f4f1ea', tail: true })),
+    { g: tx(new T.ConeGeometry(0.12, 0.2, 4), 0, 0, -0.32, -HP, 0, 0, 0.3, 1, 1.4), c: '#d8682a', tail: true },
+  ]);
+}
 function penguinGeo(T) {
   return geoFrom(T, [
     { g: tx(new T.SphereGeometry(0.5, 9, 7), 0, 0.42, 0, 0, 0, 0, 0.42, 0.8, 0.4), c: '#24262b' },
@@ -272,11 +280,20 @@ export function buildFish(T, rnd, U) {
     const a = (-55 + rnd() * 50) * Math.PI / 180, amp = (4 + rnd() * 6) * Math.PI / 180;
     both(small, { p0: [0, 1.1 + rnd() * 1.9, 0, 30.9 + rnd() * 1.0], p1: [a, amp, 0.12 + rnd() * 0.12, rnd() * 6], p2: [0.08, 0.8, 0.3 + rnd() * 0.18, 1.3], p3: [0, 0, 0, 0], c: reefC[i % reefC.length] });
   }
+  // (fix round 3: a fuller reef — more reef fish on their own seed, so every earlier swimmer keeps its path, and two or
+  // three clownfish hovering in each of the reef's anemones)
+  const r2 = mulberry(5150), clowns = [];
+  for (let i = 0; i < 18; i++) {
+    const a = (-56 + r2() * 52) * Math.PI / 180, amp = (3 + r2() * 5) * Math.PI / 180;
+    both(small, { p0: [0, 0.9 + r2() * 2.2, 0, 30.8 + r2() * 1.1], p1: [a, amp, 0.1 + r2() * 0.14, r2() * 6], p2: [0.06, 0.9, 0.26 + r2() * 0.2, 1.3], p3: [0, 0, 0, 0], c: reefC[(i + 3) % reefC.length] });
+  }
+  for (const an of reefPlan().anemones) for (let k = 0; k < (an.n || 2); k++) both(clowns, { p0: [an.x, an.y + 0.06 + 0.07 * k, an.z, 0.1 + 0.06 * k], p1: [r2() * 6.28, 0, (k % 2 ? -1 : 1) * (0.7 + 0.4 * r2()), r2() * 6], p2: [0.03, 1.6, 0.36, 1.5], p3: [0, 0, 0.25, 0] });
   return [
     { geo: sharkGeo(T), list: sharks, wing: 1.8 },
     { geo: rayGeo(T), list: rays, wing: 1.8 },
     { geo: turtleGeo(T), list: turtles, wing: 1.8 },
     { geo: smallFishGeo(T), list: small, wing: 1.8 },
+    { geo: clownGeo(T), list: clowns, wing: 1.8 },
   ];
 }
 // every swimmer (the fish and the penguins) in one mesh
@@ -562,4 +579,368 @@ export function buildKrill(T, U, rnd) {
   mat.customProgramCacheKey = () => 'aq-krill';
   const m = new T.Mesh(geo, mat); m.name = 'aq-krill'; m.renderOrder = 1; m.frustumCulled = false;
   return m;
+}
+
+// ------------------------------------------------------------------------------------------------ exhibits
+// (fix round 3) The Reef Windows' reef and what the touch pools' viewing panels look into, in ONE mesh for both halves (one
+// draw call, like the fish): an unlit material whose light is its own — the reef lit from the window's lid (brightest near
+// the top, on what faces up, a soft caustic play on it), by day and, warm-white, at dusk ("every tank glows softly from
+// within": its glow is userData.glow, which the glow probe switches off to measure it); the touch pools' panels traced in
+// the shader — the eye ray runs into a box of clear water behind the acrylic: sand with sea stars, urchins and anemones on
+// it, rock walls, the bright rippling surface overhead, the water between thickening with distance — and the creatures
+// pressed to each panel's glass, real geometry lit like the reef. Kinds (aEx.x): 0 lit, 1 traced, 2 self-lit (the lid lamp).
+// The reef: DESIGN.md §5.1 / §5.4 — staghorn, sea fans, table and brain corals, sponges, anemones with clownfish, rock, on
+// the near half of the sand (r 30.75 … 31.3) with rock, fans and staghorn behind, in the half-saturated coral palette; the
+// moray in its pipe and the octopus in its den (from arch.js: they were lit like the hall outside, grey through the water)
+function mulberry(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const REEF = { glass: 30.47, back: 32.2, sand: 0.64, lid: 3.38, runs: [[-70, -67], [-58, -2.6]], moray: -31, den: -47 };
+// (DESIGN.md §5.4's half-saturated coral family, a little warmer than its swatch: the water's veil greys it further)
+const CORAL = ['#d08f7c', '#e0b08f', '#e3a9a0', '#b496b8', '#cf9f6a', '#93b38c', '#c57466', '#dcc08a', '#a28fc4'];
+// the reef's pieces (Alpha's window; the twin turns them): { k: kind, a: bearing, r, s: size, seed, c: colour }
+let REEF_PLAN = null;
+export function reefPlan() {
+  if (REEF_PLAN) return REEF_PLAN;
+  const rnd = mulberry(9157), items = [], anemones = [];
+  const near = (a, w) => Math.abs(a - REEF.moray) < w || Math.abs(a - REEF.den) < w;
+  const pol = (a, r) => [r * Math.cos(a * Math.PI / 180), r * Math.sin(a * Math.PI / 180)];
+  for (const [a0, a1] of REEF.runs) {
+    // the back row: rock heaps against the back wall (to 1.6 m), each crowned with a tall sea fan, a staghorn thicket or
+    // tube sponges, and a tall fan or staghorn between them — the reef rises most of the way up the window behind
+    for (let a = a0 + 0.8; a < a1 - 0.5; a += 2.0 + rnd() * 0.8) {
+      if (near(a, 1.3)) continue;
+      const s = 1.0 + rnd() * 0.6;
+      items.push({ k: 'rock', a, r: 31.85 + rnd() * 0.12, s, h: 0.75 + rnd() * 0.75, seed: 1 + Math.floor(rnd() * 97), c: rnd() < 0.5 ? '#8a7d70' : '#7b7368' });
+      const top = ['fan', 'stag', 'fan', 'sponge', 'stag', 'fan'][Math.floor(rnd() * 6)];
+      items.push({ k: top, a: a + (rnd() - 0.5) * 1.0, r: 31.7 + rnd() * 0.15, s: (top === 'fan' ? 1.5 : 1.25) + rnd() * 0.5, seed: Math.floor(rnd() * 1e4), c: CORAL[Math.floor(rnd() * CORAL.length)], y: 0.35 + rnd() * 0.45 });
+      if (a + 1.1 < a1 - 0.5 && !near(a + 1.1, 1.3)) items.push({ k: rnd() < 0.55 ? 'fan' : 'stag', a: a + 1.0 + rnd() * 0.3, r: 31.95 + rnd() * 0.1, s: 1.4 + rnd() * 0.5, seed: Math.floor(rnd() * 1e4), c: CORAL[Math.floor(rnd() * CORAL.length)] });
+    }
+    // the middle row (r 31.3 … 31.55): staghorn, table and brain corals, sponges on low rock
+    const MR = ['stag', 'table', 'brain', 'sponge', 'stag', 'rock'];
+    for (let a = a0 + 1.3; a < a1 - 0.5; a += 1.7 + rnd() * 0.9) {
+      if (near(a, 1.4)) continue;
+      const kind = MR[Math.floor(rnd() * MR.length)];
+      items.push({ k: kind, a, r: 31.3 + rnd() * 0.25, s: 1.1 + rnd() * 0.5, h: 0.4 + rnd() * 0.3, seed: Math.floor(rnd() * 1e4), c: kind === 'rock' ? '#857a6e' : CORAL[Math.floor(rnd() * CORAL.length)], y: kind === 'rock' ? 0 : 0.05 + rnd() * 0.15 });
+    }
+    // the front row: on the near half of the sand
+    const FR = ['brain', 'anemone', 'table', 'stag', 'sponge', 'brain', 'rock', 'anemone', 'stag', 'table', 'fan', 'anemone'];
+    let k = Math.floor(rnd() * FR.length);
+    for (let a = a0 + 0.6; a < a1 - 0.4; a += 1.15 + rnd() * 0.7) {
+      if (near(a, 1.6)) continue;
+      const kind = FR[k++ % FR.length], r = 30.78 + rnd() * 0.45, s = 0.95 + rnd() * 0.5;
+      const it = { k: kind, a, r, s, seed: Math.floor(rnd() * 1e4), c: CORAL[Math.floor(rnd() * CORAL.length)], h: 0.3 + rnd() * 0.25 };
+      if (kind === 'anemone') { it.c = rnd() < 0.6 ? '#d9a3a6' : '#b8c49a'; const [x, z] = pol(a, r); anemones.push({ x, y: REEF.sand + 0.12 * s * 1.25, z, n: 2 + (rnd() < 0.4 ? 1 : 0) }); }
+      items.push(it);
+    }
+  }
+  items.push({ k: 'moray', a: REEF.moray, r: 31.4 }, { k: 'den', a: REEF.den, r: 31.5 });
+  REEF_PLAN = { items, anemones };
+  return REEF_PLAN;
+}
+
+// a builder of non-indexed triangles with a colour and the two exhibit attributes per vertex
+class ExB {
+  constructor(T) { this.T = T; this.p = []; this.n = []; this.c = []; this.e = []; this.e2 = []; this.ex = [0, REEF.lid, 0, 0]; this.ex2 = [0, 0, 0, 0]; this.m = new T.Matrix4(); }
+  M(x, y, z, ry = 0, sx = 1, sy = sx, sz = sx, rx = 0, rz = 0) { const T = this.T; return new T.Matrix4().compose(new T.Vector3(x, y, z), new T.Quaternion().setFromEuler(new T.Euler(rx, ry, rz, 'YXZ')), new T.Vector3(sx, sy, sz)); }
+  // g through matrix m (after the frame this.m); col: a hex or fn(local position, local normal) → [r, g, b] (linear)
+  add(g, m, col) {
+    const T = this.T, G = g.index ? g.toNonIndexed() : g;
+    if (!G.attributes.normal) G.computeVertexNormals();
+    const W = new T.Matrix4().multiplyMatrices(this.m, m), nm = new T.Matrix3().getNormalMatrix(W);
+    const P = G.attributes.position, N = G.attributes.normal, v = new T.Vector3(), nv = new T.Vector3(), lp = new T.Vector3(), ln = new T.Vector3();
+    const C = typeof col === 'function' ? null : Array.isArray(col) ? col : (() => { const k = new T.Color(col); return [k.r, k.g, k.b]; })();
+    for (let i = 0; i < P.count; i++) {
+      lp.fromBufferAttribute(P, i); ln.fromBufferAttribute(N, i);
+      v.copy(lp).applyMatrix4(W); nv.copy(ln).applyMatrix3(nm).normalize();
+      this.p.push(v.x, v.y, v.z); this.n.push(nv.x, nv.y, nv.z);
+      const c = C || col(lp, ln);
+      this.c.push(c[0], c[1], c[2]); this.e.push(...this.ex); this.e2.push(...this.ex2);
+    }
+  }
+  // the same triangles turned 180° about Y (the twin's half)
+  twin(from = 0) {
+    const n = this.p.length;
+    for (let i = from; i < n; i += 3) { this.p.push(-this.p[i], this.p[i + 1], -this.p[i + 2]); this.n.push(-this.n[i], this.n[i + 1], -this.n[i + 2]); }
+    const nc = this.c.length; for (let i = from; i < nc; i++) this.c.push(this.c[i]);
+    for (let i = (from / 3) * 4; i < (n / 3) * 4; i++) { this.e.push(this.e[i]); this.e2.push(this.e2[i]); }
+  }
+  geo() {
+    const T = this.T, g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(this.p, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(this.n, 3));
+    g.setAttribute('color', new T.Float32BufferAttribute(this.c, 3)); g.setAttribute('aEx', new T.Float32BufferAttribute(this.e, 4)); g.setAttribute('aEx2', new T.Float32BufferAttribute(this.e2, 4));
+    g.computeBoundingSphere();
+    return g;
+  }
+}
+const lin = (T, hex) => { const c = new T.Color(hex); return [c.r, c.g, c.b]; };
+const mul = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
+const mixL = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+// a lumpy rock (an icosahedron pushed about by a few sines; faceted), radius 1 before scaling
+function rockG(T, seed, det = 1) {
+  const g = new T.IcosahedronGeometry(1, det), P = g.attributes.position, s = seed * 1.713;   // (a polyhedron is non-indexed already)
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+    let k = 1 + 0.18 * Math.sin(x * 3.1 + s) * Math.sin(y * 2.7 + s * 1.3) * Math.sin(z * 3.3 + s * 0.7) + 0.08 * Math.sin(x * 6.3 + z * 5.1 + s * 2.1);
+    if (y < -0.2) k *= 1 - (-0.2 - y) * 0.4;
+    P.setXYZ(i, x * k, y * k, z * k);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+// a branching coral (staghorn): rods from P along dir, three levels, the tips paler
+function staghorn(T, X, m, seed, c, s) {
+  const rnd = mulberry(seed), base = lin(T, c), tip = mixL(base, [0.95, 0.9, 0.85], 0.55), up = new T.Vector3(0, 1, 0);
+  const branch = (P, dir, len, rad, lvl) => {
+    const Q = P.clone().addScaledVector(dir, len);
+    const g = new T.CylinderGeometry(lvl >= 2 ? rad * 0.35 : rad * 0.7, rad, len, 4, 1, lvl < 2);
+    g.translate(0, len / 2, 0);
+    const q = new T.Quaternion().setFromUnitVectors(up, dir), mm = new T.Matrix4().compose(P, q, new T.Vector3(1, 1, 1));
+    X.add(g, new T.Matrix4().multiplyMatrices(m, mm), (lp) => mixL(base, tip, Math.min(1, (lp.y / len) * 0.5 + lvl * 0.3)));
+    if (lvl >= 2) return;
+    const n = 2 + (rnd() < 0.3 ? 1 : 0);
+    for (let k = 0; k < n; k++) {
+      const a = rnd() * Math.PI * 2, tilt = 0.35 + rnd() * 0.45;
+      const d = new T.Vector3(Math.cos(a) * Math.sin(tilt), Math.cos(tilt), Math.sin(a) * Math.sin(tilt)).lerp(dir, 0.35).normalize();
+      branch(Q, d, len * (0.62 + rnd() * 0.2), rad * 0.7, lvl + 1);
+    }
+  };
+  const n0 = 3;
+  for (let k = 0; k < n0; k++) { const a = (k / n0) * Math.PI * 2 + rnd(), tl = 0.15 + rnd() * 0.35; branch(new T.Vector3(Math.cos(a) * 0.06, 0, Math.sin(a) * 0.06), new T.Vector3(Math.cos(a) * Math.sin(tl), Math.cos(tl), Math.sin(a) * Math.sin(tl)), 0.26 * s, 0.035 * s, 0); }
+}
+// a sea fan (a gorgonian): a flat fan of lace in the local x-y plane, facing the glass — a solid web with a wavy rim, darker
+// veins branching up through it and a mottled pale lace between them (both faces); its stalk
+function seaFan(T, X, m, seed, c, s) {
+  const rnd = mulberry(seed), base = lin(T, c), H = 0.75 * s, Wd = 0.55 * s, NA = 14, NR = 6, P = [], Cc = [];
+  const ph = rnd() * 6.28, rim = (u) => 1 + 0.07 * Math.sin(u * 9 + ph) + 0.05 * Math.sin(u * 23 + ph * 2);
+  const at = (u, t) => { const a = (u - 0.5) * 1.95, R = t * rim(u); return [Math.sin(a) * Wd * R, 0.06 * s + H * R * Math.cos(a * 0.55)]; };
+  const vein = (u, t) => { const k = Math.abs(Math.sin((u * (5 + 4 * t)) * Math.PI + Math.sin(t * 5 + ph))); return k < 0.18 ? 0.62 : 1.0 + 0.12 * Math.sin(u * 61 + t * 43 + ph); };
+  for (let i = 0; i < NA; i++) for (let j = 0; j < NR; j++) {
+    const u0 = i / NA, u1 = (i + 1) / NA, t0 = j / NR, t1 = (j + 1) / NR, q = [[u0, t0], [u1, t0], [u1, t1], [u0, t1]];
+    for (const z of [0.004, -0.004]) for (const k of (z > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2])) { const [u, t] = q[k], [x, y] = at(u, t); P.push(x, y, z); Cc.push(...mul(base, vein(u, t) * (0.78 + 0.3 * t))); }
+  }
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.computeVertexNormals();
+  let ci = 0; X.add(g, m, () => { const v = [Cc[ci], Cc[ci + 1], Cc[ci + 2]]; ci += 3; return v; });
+  X.add(new T.CylinderGeometry(0.02 * s, 0.035 * s, 0.1 * s, 5, 1, true), X.M(0, 0.05 * s, 0).premultiply(m), mul(base, 0.6));
+}
+// an anemone: a short column, its oral disc, a crown of tentacles leaning out, pale tips
+function anemone(T, X, m, seed, c, s) {
+  const rnd = mulberry(seed), base = lin(T, c), tip = mixL(base, [0.95, 0.92, 0.86], 0.6), r = 0.09 * s;
+  X.add(new T.CylinderGeometry(r * 0.85, r, 0.1 * s, 10, 1, true).translate(0, 0.05 * s, 0), m, mul(base, 0.8));
+  X.add(new T.CircleGeometry(r * 0.85, 10).rotateX(-Math.PI / 2).translate(0, 0.1 * s, 0), m, mul(base, 0.6));
+  const n = 18;
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2 + rnd() * 0.2, tilt = 0.35 + 0.55 * (k % 2) + rnd() * 0.2, L = (0.13 + rnd() * 0.07) * s;
+    const g = new T.ConeGeometry(0.016 * s, L, 4, 1, true).translate(0, L / 2, 0);
+    g.rotateZ(-tilt); g.rotateY(-a); g.translate(Math.cos(a) * r * 0.7, 0.1 * s, Math.sin(a) * r * 0.7);
+    X.add(g, m, (lp) => mixL(base, tip, Math.min(1, Math.max(0, (lp.y - 0.1 * s) / (L * 0.8)))));
+  }
+}
+// what each piece of the plan looks like (frame: its foot on the sand, local +z toward the glass)
+function reefPiece(T, X, it) {
+  const a = it.a * Math.PI / 180, x = it.r * Math.cos(a), z = it.r * Math.sin(a), ry = Math.atan2(-Math.cos(a), -Math.sin(a));
+  const s = it.s || 1, y0 = REEF.sand - 0.02 + (it.y || 0), m = X.M(x, y0, z, ry);
+  // live rock: grey-brown, darker low, crusted with coralline pinks, lilacs and ochres in patches, a little weed on top
+  const CRUST = ['#c98a8a', '#a98fb4', '#c9a26c', '#9fae86'].map((h) => lin(T, h));
+  const rock = (sd, c) => (lp) => {
+    const b = lin(T, c), t = Math.max(0, Math.min(1, (lp.y + 1) / 2)); let col = mul(b, 0.72 + 0.45 * t);
+    const n = Math.sin(lp.x * 5.3 + sd) * Math.sin(lp.y * 4.1 - sd * 0.7) * Math.sin(lp.z * 4.7 + sd * 1.9);
+    if (n > 0.12) col = mixL(col, CRUST[(Math.floor(sd + lp.x * 2 + lp.z * 3) % 4 + 4) % 4], Math.min(0.75, (n - 0.12) * 3.2));
+    if (lp.y > 0.5) col = mixL(col, lin(T, '#7f8a5a'), 0.3 * Math.min(1, (lp.y - 0.5) * 2));
+    return col;
+  };
+  switch (it.k) {
+    case 'rock': X.add(rockG(T, it.seed, 1), X.M(0, it.h * 0.22, 0, it.seed, 0.62 * s, it.h * 0.8, 0.44 * s).premultiply(m), rock(it.seed, it.c)); break;
+    case 'brain': {
+      const r = 0.24 * s, b = lin(T, it.k === 'brain' ? (it.seed % 2 ? '#c4b48a' : '#c9ab86') : it.c);
+      X.add(new T.SphereGeometry(r, 18, 9, 0, Math.PI * 2, 0, Math.PI / 2), X.M(0, -0.02, 0, 0, 1, 0.72, 1).premultiply(m), (lp) => mul(b, 0.8 + 0.22 * Math.sin(lp.x * 46 + Math.sin(lp.z * 38) * 2.2 + lp.y * 20)));
+      break;
+    }
+    case 'table': {
+      const h = (0.25 + 0.2 * ((it.seed % 7) / 7)) * s, r = 0.3 * s, b = lin(T, it.c);
+      X.add(new T.CylinderGeometry(0.04 * s, 0.07 * s, h, 6, 1, true), X.M(0, h / 2, 0).premultiply(m), mul(b, 0.7));
+      X.add(new T.CylinderGeometry(r, r * 0.85, 0.05 * s, 14), X.M(0, h, 0, 0, 1, 1, 1, 0.08, -0.06).premultiply(m), (lp, ln) => mul(b, ln.y > 0.5 ? 1.0 : 0.6));
+      break;
+    }
+    case 'stag': staghorn(T, X, m, it.seed, it.c, s * 1.1); break;
+    case 'fan': seaFan(T, X, m, it.seed, it.c, s); break;
+    case 'anemone': anemone(T, X, m, it.seed, it.c, s * 1.25); X.add(rockG(T, it.seed, 0), X.M(0, -0.04, -0.05, 0, 0.2 * s, 0.08, 0.16 * s).premultiply(m), rock(it.seed, '#7b7368')); break;
+    case 'sponge': {
+      const b = lin(T, it.c), rnd = mulberry(it.seed);
+      for (let k = 0; k < 3; k++) {
+        const h = (0.22 + rnd() * 0.25) * s, r = (0.05 + rnd() * 0.03) * s, ox = (k - 1) * 0.1 * s, oz = (rnd() - 0.5) * 0.12;
+        X.add(new T.CylinderGeometry(r, r * 0.8, h, 9, 1, true), X.M(ox, h / 2, oz, 0, 1, 1, 1, (rnd() - 0.5) * 0.3, (rnd() - 0.5) * 0.3).premultiply(m), mul(b, 0.9));
+        X.add(new T.CircleGeometry(r * 0.92, 9).rotateX(-Math.PI / 2), X.M(ox, h - 0.005, oz).premultiply(m), mul(b, 0.25));
+      }
+      break;
+    }
+    case 'moray': {   // the moray's pipe (a terracotta drain on the sand), its head out of it
+      X.add(new T.CylinderGeometry(0.22, 0.22, 1.0, 12, 1, true), X.M(0, 0.25, 0, 0, 1, 1, 1, 0, Math.PI / 2).premultiply(m), lin(T, '#9c6a4c'));
+      X.add(new T.CircleGeometry(0.2, 12).rotateY(Math.PI / 2), X.M(0.5, 0.25, 0).premultiply(m), lin(T, '#1c1612'));
+      X.add(new T.SphereGeometry(0.17, 10, 8), X.M(0.55, 0.27, 0.02, 0, 1.5, 1, 1).premultiply(m), lin(T, '#6b6a3a'));
+      X.add(new T.SphereGeometry(0.03, 6, 4), X.M(0.66, 0.33, 0.13).premultiply(m), lin(T, '#e8e2c0'));
+      break;
+    }
+    case 'den': {     // the octopus's den: a rock with a dark mouth, the octopus peering out
+      X.add(rockG(T, 77, 1), X.M(0, 0.2, -0.1, 0, 1.0, 0.75, 0.6).premultiply(m), rock(77, '#6e6760'));
+      X.add(new T.SphereGeometry(0.3, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), X.M(0, 0.14, 0.4, 0, 1, 0.35, 0.85, Math.PI / 2).premultiply(m), lin(T, '#24201e'));
+      X.add(new T.SphereGeometry(0.16, 10, 8), X.M(0.05, 0.18, 0.48).premultiply(m), lin(T, '#b46e4e'));
+      for (const sx of [-1, 1]) X.add(new T.SphereGeometry(0.035, 6, 4), X.M(0.05 + sx * 0.07, 0.23, 0.6).premultiply(m), lin(T, '#e7d9a7'));
+      break;
+    }
+    default: break;
+  }
+}
+// the pool's creatures pressed to a panel's glass (frame: the panel's window centre on the face, +z out; sizes in metres)
+function pressed(T, X, kind, u, v) {
+  const m = X.M(u, v, 0);
+  if (kind === 'star') {
+    const P = [], R = 0.12, r = 0.04, d = 0.016;
+    const pt = (k) => { const a = (k / 10) * Math.PI * 2 + 0.3, rr = k % 2 ? r : R; return [Math.cos(a) * rr, Math.sin(a) * rr]; };
+    for (let k = 0; k < 10; k++) { const A = pt(k), Bq = pt(k + 1); P.push(0, 0, d, A[0], A[1], d * 0.4, Bq[0], Bq[1], d * 0.4); }
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.computeVertexNormals();
+    X.add(g, m, (lp) => mul(lin(T, '#d0703f'), 0.85 + 0.25 * (1 - Math.hypot(lp.x, lp.y) / R)));
+    for (let k = 0; k < 5; k++) { const a = (k / 5) * Math.PI * 2 + 0.3; X.add(new T.SphereGeometry(0.012, 5, 3), X.M(u + Math.cos(a) * 0.06, v + Math.sin(a) * 0.06, d * 0.8), lin(T, '#f0c08a')); }
+  } else if (kind === 'urchin') {
+    const b = lin(T, '#3c2b45');
+    X.add(new T.SphereGeometry(0.075, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), X.M(u, v, 0, 0, 1, 0.25, 1, Math.PI / 2), b);
+    const rnd = mulberry(311);
+    for (let k = 0; k < 22; k++) {
+      const a = rnd() * Math.PI * 2, e = rnd() * 1.1, L = 0.05 + rnd() * 0.04, dir = [Math.cos(a) * Math.cos(e), Math.sin(a) * Math.cos(e), Math.sin(e) * 0.12];
+      const g = new T.ConeGeometry(0.007, L, 3, 1, true).translate(0, L / 2, 0), q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(...dir).normalize());
+      X.add(g, new T.Matrix4().compose(new T.Vector3(u + dir[0] * 0.06, v + dir[1] * 0.06, 0.012), q, new T.Vector3(1, 1, 1)), mul(b, 1.3));
+    }
+  } else if (kind === 'anemone') {
+    const b = lin(T, '#d39aa3'), tip = lin(T, '#f3dcd2');
+    X.add(new T.CircleGeometry(0.06, 12), X.M(u, v, 0.006), mul(b, 0.75));
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2, L = 0.08 + 0.03 * (k % 3);
+      const g = new T.ConeGeometry(0.012, L, 4, 1, true).translate(0, L / 2, 0);
+      const q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(Math.cos(a), Math.sin(a), 0.1).normalize());
+      X.add(g, new T.Matrix4().compose(new T.Vector3(u + Math.cos(a) * 0.04, v + Math.sin(a) * 0.04, 0.012), q, new T.Vector3(1, 0.55, 1)), (lp) => mixL(b, tip, Math.min(1, lp.y / L)));
+    }
+  }
+}
+export function buildExhibits(T, U, TOUCH) {
+  const X = new ExB(T);
+  // ---- the reef (Alpha's window, then the twin)
+  const deg = Math.PI / 180;
+  for (const [a0, a1] of REEF.runs) {
+    const n = Math.max(2, Math.round(a1 - a0)), sand = lin(T, '#cdbb93'), deep = lin(T, '#223f47'), deepTop = lin(T, '#4a777d');
+    // the sand: a strip from the glass to the back wall, gently rippled
+    const P = [], C = [];
+    const sp = (a, r) => { const y = REEF.sand + 0.012 * Math.sin(a * 2.3 + r * 9) + 0.02 * (r - REEF.glass); return [r * Math.cos(a * deg), y, r * Math.sin(a * deg)]; };
+    const rs = [REEF.glass + 0.05, 31.0, 31.6, REEF.back];
+    for (let i = 0; i < n; i++) for (let j = 0; j < rs.length - 1; j++) {
+      const A = a0 + ((a1 - a0) * i) / n, Bq = a0 + ((a1 - a0) * (i + 1)) / n, q = [sp(A, rs[j]), sp(Bq, rs[j]), sp(Bq, rs[j + 1]), sp(A, rs[j + 1])];
+      for (const k of [0, 1, 2, 0, 2, 3]) { P.push(...q[k]); const w = 0.85 + 0.15 * Math.sin(q[k][0] * 7.1 + q[k][2] * 5.3); C.push(...mul(sand, w)); }
+    }
+    { const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(P, 3)); g.computeVertexNormals(); let ci = 0; X.add(g, new T.Matrix4(), () => { const c = [C[ci], C[ci + 1], C[ci + 2]]; ci += 3; return c; }); }
+    // the back wall: dark reef rock, lighter toward the lid (a painted deep: lit by the lid like the rest)
+    { const g = new T.CylinderGeometry(REEF.back, REEF.back, REEF.lid - REEF.sand + 0.05, n, 4, true, Math.PI / 2 - a1 * deg, (a1 - a0) * deg); g.translate(0, (REEF.lid + REEF.sand) / 2, 0);
+      const gi = g.toNonIndexed(), Pp = gi.attributes.position; const idx = []; for (let i = 0; i < Pp.count; i += 3) idx.push(i, i + 2, i + 1);
+      const g2 = new T.BufferGeometry(); const arr = []; for (const i of idx) arr.push(Pp.getX(i), Pp.getY(i), Pp.getZ(i)); g2.setAttribute('position', new T.Float32BufferAttribute(arr, 3)); g2.computeVertexNormals();
+      X.add(g2, new T.Matrix4(), (lp) => { const t = (lp.y - REEF.sand) / (REEF.lid - REEF.sand), w = 0.8 + 0.25 * Math.sin(lp.x * 3.1 + lp.y * 4.3) * Math.sin(lp.z * 2.7 - lp.y * 2.1); return mul(mixL(deep, deepTop, t * t), w); }); }
+    // the lid lamp: a warm strip under the lid behind the glass (self-lit)
+    X.ex = [2, REEF.lid, 0, 0];
+    { const g = new T.CylinderGeometry(30.66, 30.66, 0.05, n, 1, true, Math.PI / 2 - a1 * deg, (a1 - a0) * deg); const gi = g.toNonIndexed(), Pp = gi.attributes.position, arr = []; for (let i = 0; i < Pp.count; i += 3) for (const k of [0, 2, 1]) arr.push(Pp.getX(i + k), Pp.getY(i + k), Pp.getZ(i + k)); const g2 = new T.BufferGeometry(); g2.setAttribute('position', new T.Float32BufferAttribute(arr, 3)); g2.computeVertexNormals(); X.add(g2, X.M(0, REEF.lid - 0.06, 0), lin(T, '#fff1d6')); }
+    X.ex = [0, REEF.lid, 0, 0];
+  }
+  for (const it of reefPlan().items) reefPiece(T, X, it);
+  X.twin(0);
+  // ---- the touch pools' panels: the traced plane in each window (kind 1), what is pressed to the glass (kind 0, lit by
+  // the pool's own light: its top at 2.0)
+  const from = X.p.length;
+  const { pos: [px, py, pz], d, w, win, panels, port } = TOUCH, hd = d / 2, hw = w / 2;
+  for (const [s, cx, list] of panels) {
+    X.m = X.M(px + cx, py, pz + s * hd, s > 0 ? 0 : Math.PI);
+    X.ex = [1, d - 0.4, 0, 0]; X.ex2 = [-0.12, 0.78, 1.25, (cx + 3) * (s + 2)];
+    // (u, v on the plane: across from the window's centre, up from its foot — set per vertex below)
+    const g = new T.PlaneGeometry(win.w, win.h).translate(0, win.y0 + win.h / 2, 0.038);
+    const start = X.e.length;
+    X.add(g, new T.Matrix4(), [1, 1, 1]);
+    { const G = g.toNonIndexed(), Pp = G.attributes.position; for (let k = 0; k < Pp.count; k++) { X.e[start + k * 4 + 2] = Pp.getX(k); X.e[start + k * 4 + 3] = Pp.getY(k) - win.y0; } }
+    X.ex = [0, 2.0, 0, 0]; X.ex2 = [0, 0, 0, 0];
+    X.m = X.M(px + cx, py, pz + s * hd, s > 0 ? 0 : Math.PI).multiply(X.M(0, 0, 0.042));
+    for (const [kind, u, v] of list) pressed(T, X, kind, u, win.y0 + v);
+  }
+  for (const s of [-1, 1]) {
+    X.m = X.M(px + s * hw, py, pz, s * Math.PI / 2);
+    X.ex = [1, w - 0.4, 0, 0]; X.ex2 = [-0.14 - (port.y - port.r - win.y0) * 0, port.r * 2 + 0.22, 0.95, 11 + s];
+    const g = new T.CircleGeometry(port.r, 20).translate(0, port.y, 0.038), start = X.e.length;
+    X.add(g, new T.Matrix4(), [1, 1, 1]);
+    const G = g.toNonIndexed(), Pp = G.attributes.position; for (let k = 0; k < Pp.count; k++) { X.e[start + k * 4 + 2] = Pp.getX(k); X.e[start + k * 4 + 3] = Pp.getY(k) - (port.y - port.r); }
+  }
+  X.m = new T.Matrix4(); X.ex = [0, REEF.lid, 0, 0]; X.ex2 = [0, 0, 0, 0];
+  X.twin(from);
+  // ---- the material
+  const uGlow = { value: 1 };
+  const mat = new T.MeshBasicMaterial({ vertexColors: true });
+  Object.defineProperty(mat.userData, 'glow', { set: (v) => { uGlow.value = v; }, get: () => uGlow.value });
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uNightE = U.uNight; sh.uniforms.uGlowE = uGlow; sh.uniforms.uTE = U.uFT;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec4 aEx; attribute vec4 aEx2; varying vec3 vWE; varying vec3 vNE; varying vec4 vEx; varying vec4 vEx2;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWE = (modelMatrix * vec4(transformed, 1.0)).xyz; vNE = normalize(mat3(modelMatrix) * normal); vEx = aEx; vEx2 = aEx2;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vWE; varying vec3 vNE; varying vec4 vEx; varying vec4 vEx2; uniform float uNightE; uniform float uGlowE; uniform float uTE;
+float eH(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float eN(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(eH(i), eH(i + vec2(1.0, 0.0)), f.x), mix(eH(i + vec2(0.0, 1.0)), eH(i + vec2(1.0, 1.0)), f.x), f.y); }
+float eCaus(vec2 p, float t) {   // a soft web of caustic light, 0 … 1
+  vec2 q = p + 0.3 * vec2(sin(t * 0.7 + p.y * 1.3), cos(t * 0.6 + p.x * 1.1));
+  float c = sin(q.x * 3.1 + t * 0.9) * sin(q.y * 2.7 - t * 0.8) + 0.5 * sin((q.x - q.y) * 2.2 + t * 1.3);
+  return clamp(0.5 + 0.4 * c, 0.0, 1.0);
+}`).replace('#include <color_fragment>', `#include <color_fragment>
+  {
+    vec3 nE = normalize(vNE);
+    vec3 warm = mix(vec3(1.0), vec3(1.0, 0.92, 0.8), uNightE);
+    if (vEx.x > 1.5) {          // the lid lamp
+      diffuseColor.rgb *= mix(0.8, 1.0, uNightE) * mix(1.0, uGlowE, uNightE);
+    } else if (vEx.x > 0.5) {   // a touch pool's water, traced behind its panel
+      vec3 rt = normalize(cross(vec3(0.0, 1.0, 0.0), nE)), rd = normalize(vWE - cameraPosition);
+      vec3 dd = vec3(dot(rd, rt), rd.y, dot(rd, nE));
+      vec2 p0 = vEx.zw; float D = vEx.y, vF = vEx2.x, vS = vEx2.y, hx = vEx2.z, sd = vEx2.w;
+      float t = 99.0; int face = 0;
+      if (dd.z < -1e-4) t = -D / dd.z;
+      if (dd.y < -1e-4) { float tt = (vF - p0.y) / dd.y; if (tt < t) { t = tt; face = 1; } }
+      if (dd.y > 1e-4) { float tt = (vS - p0.y) / dd.y; if (tt < t) { t = tt; face = 2; } }
+      if (abs(dd.x) > 1e-4) { float tt = (sign(dd.x) * hx - p0.x) / dd.x; if (tt < t) { t = tt; face = 3; } }
+      vec3 h = vec3(p0, 0.0) + dd * t;
+      float hy = clamp((h.y - vF) / (vS - vF), 0.0, 1.0);
+      vec3 col;
+      if (face == 1) {          // the sand, pebbles, and here and there a sea star, an urchin or an anemone
+        vec2 q = vec2(h.x, -h.z);
+        col = vec3(0.6, 0.52, 0.37) * (0.82 + 0.25 * eN(q * 9.0 + sd));
+        col = mix(col, vec3(0.3, 0.28, 0.26), smoothstep(0.74, 0.8, eN(q * 5.0 + 3.1 + sd)));
+        vec2 g = floor(q / 0.55), f = fract(q / 0.55) - 0.5; float r0 = eH(g + sd), r1 = eH(g + 3.3 + sd);
+        vec2 o = f - (vec2(r0, r1) - 0.5) * 0.4; float l = length(o);
+        if (r0 < 0.3) { float an = atan(o.y, o.x) + r1 * 6.28, arm = 0.05 + 0.15 * pow(abs(cos(an * 2.5)), 3.0); col = mix(col, vec3(0.72, 0.3, 0.17), smoothstep(arm + 0.012, arm - 0.012, l)); }
+        else if (r0 < 0.45) col = mix(col, vec3(0.13, 0.08, 0.17), smoothstep(0.13, 0.1, l + 0.02 * sin(atan(o.y, o.x) * 18.0)));
+        else if (r0 < 0.62) col = mix(col, mix(vec3(0.72, 0.42, 0.48), vec3(0.95, 0.86, 0.8), smoothstep(0.03, 0.12, l)) * (0.82 + 0.18 * sin(atan(o.y, o.x) * 14.0)), smoothstep(0.14, 0.11, l));
+        col *= 0.82 + 0.4 * eCaus(q * 3.0 + sd, uTE);
+      } else if (face == 2) {   // the surface seen from under the water: bright, rippling
+        col = vec3(0.6, 0.78, 0.78) * (0.72 + 0.32 * eN(h.xz * 6.0 + vec2(uTE * 0.6, sd)));
+      } else {                  // the pool's rock walls, weed low down
+        vec2 q = face == 0 ? h.xy : h.zy;
+        col = vec3(0.37, 0.35, 0.32) * (0.62 + 0.55 * (eN(q * 4.0 + sd) * 0.6 + eN(q * 11.0 - sd) * 0.4));
+        col = mix(col, vec3(0.28, 0.38, 0.2), 0.4 * smoothstep(0.55, 0.8, eN(q * 6.0 + 9.0)) * (1.0 - hy));
+        col *= 0.85 + 0.25 * eCaus(q * 2.5 + sd, uTE) * hy;
+      }
+      col = mix(col, vec3(0.07, 0.15, 0.16), (1.0 - exp(-t * 0.85)) * 0.8);
+      col *= (0.7 + 0.4 * hy) * mix(1.0, 0.85 * uGlowE, uNightE) * warm;
+      // the acrylic: a faint sheen at a glancing look and a soft diagonal highlight (its own: the house glass mirrored the
+      // bright sky over the water)
+      float fr = pow(1.0 - abs(dd.z), 4.0), hl = smoothstep(0.07, 0.0, abs(fract((p0.x + p0.y * 0.8) * 0.9 + 0.3) - 0.5));
+      col = mix(col, vec3(0.5, 0.56, 0.6) * mix(1.0, 0.35, uNightE), clamp(0.35 * fr + 0.06 * hl, 0.0, 0.5));
+      diffuseColor.rgb = col;
+    } else {                    // lit from the lid
+      float up = max(nE.y, 0.0), dep = clamp((vEx.y - vWE.y) / 2.8, 0.0, 1.0);
+      float cs = mix(1.0, 0.88 + 0.24 * eCaus(vWE.xz * 1.7, uTE), up);
+      float Ld = (0.5 + 0.6 * up * (1.0 - 0.45 * dep) + 0.22 * (1.0 - dep) + 0.06 * max(-nE.y, 0.0)) * cs;
+      float Ln = (0.36 + 0.95 * up * (1.0 - 0.4 * dep) + 0.26 * (1.0 - dep)) * cs * uGlowE;
+      diffuseColor.rgb *= mix(Ld, Ln, uNightE) * warm;
+    }
+  }`);
+  };
+  mat.customProgramCacheKey = () => 'aq-exhibits1';
+  const mesh = new T.Mesh(X.geo(), mat);
+  mesh.name = 'aq-exhibits'; mesh.castShadow = false; mesh.receiveShadow = false;
+  return mesh;
 }

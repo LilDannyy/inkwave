@@ -234,3 +234,20 @@ export function inNgon(c, n, a, a0, x, z, inset = 0) {
   for (let k = 0; k < n; k++) { const t = (a0 + (360 / n) * k) * DEG; if ((x - c[0]) * Math.cos(t) + (z - c[1]) * Math.sin(t) > a - inset) return false; }
   return true;
 }
+
+// ---------------------------------------------------------------------------------------------------- the touch pools' panels
+// (fix round 3, dressing only: dress.js frames them, looks.js draws what is seen through them.) Alpha's pool block
+// (layout.js 'touch-pool': x −11.5 … −6.5, z −15.6 … −13.0, y 1.0 … 2.0) in its own frame: origin the block's foot centre
+// (−9.0, 1.0, −14.3), local x along it, local +z its court face (north; the twin turns it). Viewing panels on the long
+// faces (cx along x, the window w × h from y0), a porthole in each end; every part of them stands within 8 cm of a face
+export const TOUCH = {
+  pos: [-9.0, 1.0, -14.3], w: 5.0, d: 2.6, h: 1.0,
+  win: { w: 1.33, h: 0.48, y0: 0.14 }, frame: { w: 1.45, h: 0.6 },
+  // [face (+1 the court face, −1 the arch face), window centre along x, what is pressed to its glass: [kind, u, v] with u
+  // across the window from its centre and v up from its foot — every face shows a sea star, an urchin and an anemone]
+  panels: [
+    [1, -1.55, [['star', -0.32, 0.27], ['anemone', 0.38, 0.1]]], [1, 1.55, [['urchin', 0.22, 0.12], ['star', -0.4, 0.33]]],
+    [-1, -1.25, [['anemone', -0.28, 0.1], ['urchin', 0.36, 0.3]]], [-1, 1.25, [['star', 0.1, 0.24]]],
+  ],
+  port: { r: 0.24, y: 0.45 },
+};

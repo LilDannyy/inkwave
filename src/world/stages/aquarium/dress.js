@@ -16,8 +16,28 @@
 //   hopper / hatch / polerack   the Feeding Deck's furniture dressed from outside its faces (art round 1)
 //   turnstile / trolley / planterdress / ticketcanopy / cartdress   the wing's cover, likewise
 //   aboard / bench / stanchions / luggage   the wing's small things out of the lanes
+import { TOUCH } from './geo.js';
+
 export function registerDress(D, H, KIT) {
-  const { K, NS, pbox, cyl, cylGeo, latheG, sphG, torG, strut, rod, letters, sign, porthole, speed, globe, handrail, roundel, HP, PI, TAU } = KIT;
+  const { K, NS, pbox, cyl, cylGeo, latheG, sphG, torG, strut, rod, letters, sign, porthole, speed, globe, handrail, roundel, HP, PI, TAU, tpl, THREE } = KIT;
+  // a faux-rock skin: a plane (w × h, facing +z, its foot at y 0) pushed out 0.5 … 4 cm by a few sines and mottled light and
+  // dark (its colours multiply the part's), so a block's face reads as cast rock, not a slab (the touch pools, fix round 3)
+  // (holes: [x0, x1, y0, y1] rectangles kept flat, 8 mm out, behind what is mounted there: windows, a sign)
+  const rockSkinG = (w, h, seed, holes = []) => tpl(`rskin|${w}|${h}|${seed}|${JSON.stringify(holes)}`, () => {
+    const nx = Math.max(4, Math.round(w / 0.18)), ny = Math.max(3, Math.round(h / 0.16)), g = new THREE.PlaneGeometry(w, h, nx, ny);
+    g.translate(0, h / 2, 0);
+    const P = g.attributes.position, c = new Float32Array(P.count * 3), s = seed * 1.37;
+    const n = (x, y) => Math.sin(x * 4.1 + s) * Math.sin(y * 5.3 - s * 0.7) + 0.6 * Math.sin(x * 9.7 - y * 3.1 + s * 2.3) * Math.sin(y * 8.9 + x * 1.7) + 0.35 * Math.sin(x * 17.0 + y * 13.0 + s);
+    for (let i = 0; i < P.count; i++) {
+      const x = P.getX(i), y = P.getY(i), edge = Math.abs(x) > w / 2 - 0.01 || y < 0.01 || y > h - 0.01;
+      const v = n(x, y), flat = holes.some(([x0, x1, y0, y1]) => x > x0 && x < x1 && y > y0 && y < y1);
+      P.setZ(i, edge || flat ? 0.008 : Math.max(0.008, 0.02 + 0.012 * v));
+      const k = 0.94 + 0.2 * v + 0.06 * Math.sin(x * 23.0 + y * 19.0);
+      c.set([k, k * 0.985, k * 0.96], i * 3);
+    }
+    g.computeVertexNormals(); g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+    return g;
+  });
   const blob = new Map();
   const blobG = (seed) => { let g = blob.get(seed); if (!g) { g = H.blobGeo(1, 2, seed, 0.16); blob.set(seed, g); } return g; };
 
@@ -246,13 +266,89 @@ export function registerDress(D, H, KIT) {
       B.pop();
     },
   };
+  // the touch pool (fix round 3: from the court floor it read as a plain 2 m dark-slate box — the rim's top stands over eye
+  // height, so nothing in the pool showed): a 1930s touch pool dressed from outside its block, every part within 8 cm of
+  // its faces or on its off-limits top edge, nothing on the dais (TOUCH, geo.js):
+  //   · a faux-rock skin over every face (square corners overlapping round the block's corners: the block's sharp corner
+  //     poked through the round-cornered rim boxes in a comb of z-fighting) and a rockery of 14 boulders in penguin-rock
+  //     and granite tones round it, the ones on the rim breaking its top line by up to ±0.15 m
+  //   · two brass-framed acrylic viewing panels at child height on each long face and a porthole in each end, the pool's
+  //     water seen through them (looks.js traces it, with a sea star, an urchin and an anemone pressed to each face's glass)
+  //   · a brass handrail along the rim on brackets, ball ends at the corners
+  //   · TOUCH POOL · TWO FINGERS, PLEASE on a navy board in a brass frame between the court face's panels (0.15 m letters)
   D.aquarium_touchpool = {
-    desc: 'the touch pool on its dais (pos = the dais top, 1.0; the pool block 5.0 × 2.6 to 2.0)',
+    desc: 'the touch pool on its dais (pos = the dais top, 1.0; the pool block 5.0 × 2.6 to 2.0): rockery, panels, rail, sign',
     build(B) {
-      const w = 5.06, d = 2.66;
-      for (const s of [-1, 1]) { B.box('paint', K.rockDk, w, 1.02, 0.22, 0, 0.51, s * (d / 2 - 0.08), { r: 0.06 }); B.box('paint', K.rockDk, 0.22, 1.02, d, s * (w / 2 - 0.08), 0.51, 0, { r: 0.06 }); }
-      pbox(B, NS('metal'), K.brass, w + 0.04, 0.05, 0.08, 0, 1.03, d / 2 - 0.02);
-      pbox(B, NS('metal'), K.brass, w + 0.04, 0.05, 0.08, 0, 1.03, -d / 2 + 0.02);
+      const { w: BW, d: BD, h: BH, win, frame, panels, port } = TOUCH, hw = BW / 2, hd = BD / 2;
+      const SKIN = '#aaa49a';
+      // the skin: cast faux rock over every face, the long faces' running past the corners over the ends' (square corners,
+      // so the block's corner never shows through)
+      // (flat behind the windows, the portholes and the sign: [x0, x1, y0, y1] in each skin's own frame — the arch face's is
+      // turned, so its x runs the other way)
+      const fy0 = win.y0 + win.h / 2 - frame.h / 2 - 0.03, fy1 = win.y0 + win.h / 2 + frame.h / 2 + 0.03;
+      for (const s of [-1, 1]) {
+        const holes = panels.filter((p) => p[0] === s).map(([, cx]) => [s * cx - frame.w / 2 - 0.03, s * cx + frame.w / 2 + 0.03, fy0, fy1]);
+        if (s > 0) holes.push([-0.76, 0.76, 0.03, 0.8]);
+        B.add('paint', rockSkinG(+(BW + 0.07).toFixed(3), BH + 0.004, 3 + s, holes.map((h) => h.map((v) => +v.toFixed(3)))), SKIN, 0, -0.002, s * hd, { ry: s > 0 ? 0 : PI });
+        B.add('paint', rockSkinG(+(BD + 0.07).toFixed(3), BH + 0.002, 7 + s, [[-port.r - 0.07, port.r + 0.07, port.y - port.r - 0.07, port.y + port.r + 0.07].map((v) => +v.toFixed(3))]), SKIN, s * hw, -0.001, 0, { ry: s * HP });
+      }
+      // the rockery: [x, y, z, sx, sy, sz, seed, colour] in the pool's frame (a blob's radius is 1, its noise ±0.2): pale
+      // warm penguin-rock and granite greys
+      const ROCK = ['#bdb7ad', '#a8a298', '#c6c2ba', '#9b958c', '#b0aaa0'];
+      const rocks = [];
+      // four corner boulders, from the dais to over the rim
+      for (const [sx, sz, k] of [[-1, -1, 0], [1, -1, 1], [1, 1, 2], [-1, 1, 3]]) rocks.push([sx * (hw - 0.11), 0.5 + 0.06 * k, sz * (hd - 0.11), 0.16, 0.6 + 0.06 * (k % 2), 0.16, 40 + k, ROCK[k % 4]]);
+      // along the rim of each long face, three long ones (over the panels and the sign) — their tops from 0.86 to 1.15
+      for (const s of [-1, 1]) {
+        const xs = s > 0 ? [-1.5, 0.05, 1.55] : [-1.3, 0, 1.2];
+        xs.forEach((x, k) => rocks.push([x, 0.93 - 0.025 * k, s * (hd - 0.06), 0.78 - 0.08 * k, 0.19 + 0.03 * ((k + (s > 0 ? 0 : 1)) % 2), 0.11, 50 + k + (s > 0 ? 0 : 5), ROCK[(k + (s > 0 ? 1 : 3)) % 5]]));
+      }
+      // each end: one over the rim, one either side of the porthole low down
+      for (const s of [-1, 1]) {
+        rocks.push([s * (hw - 0.06), 0.97, 0.15 * s, 0.11, 0.17, 0.72, 60 + (s > 0 ? 1 : 0), ROCK[s > 0 ? 4 : 1]]);
+        for (const t of [-1, 1]) rocks.push([s * (hw - 0.07), 0.28, t * 0.7, 0.11, 0.26, 0.32, 65 + t + (s > 0 ? 3 : 0), ROCK[(t + 2 + s) % 5]]);
+      }
+      // two low ones on the arch face between its panels
+      rocks.push([0.05, 0.28, -(hd - 0.08), 0.34, 0.28, 0.13, 63, ROCK[0]], [-0.12, 0.6, -(hd - 0.07), 0.26, 0.2, 0.11, 64, ROCK[2]]);
+      // (laid along their faces: a turn would swing a long boulder out over the dais — each blob's own seed varies them)
+      for (const [x, y, z, sx, sy, sz, sd, c] of rocks) B.add('paint', blobG(sd), c, x, y, z, { sx, sy, sz, ry: sx === sz ? sd * 0.7 : 0 });
+      // the viewing panels: a brass frame round the acrylic (the glass and what is behind it: backdrop.js / looks.js), a sill
+      // under it, four bolts
+      for (const [s, cx] of panels) {
+        B.push(cx, 0, s * hd, s > 0 ? 0 : PI);
+        const fy = win.y0 + win.h / 2, fw = frame.w, fh = frame.h, bar = (fw - win.w) / 2;
+        pbox(B, 'metal', K.brass, fw, bar, 0.03, 0, fy + fh / 2 - bar / 2, 0.06);
+        pbox(B, 'metal', K.brass, fw, bar, 0.03, 0, fy - fh / 2 + bar / 2, 0.06);
+        for (const sx of [-1, 1]) pbox(B, 'metal', K.brass, bar, fh - 2 * bar, 0.03, sx * (fw / 2 - bar / 2), fy, 0.06);
+        pbox(B, NS('metal'), K.brassLt, fw + 0.04, 0.025, 0.07, 0, fy - fh / 2 - 0.012, 0.045);   // (the sill)
+        for (const sx of [-1, 1]) for (const sy of [-1, 1]) B.add(NS('metal'), sphG(0.016, 6, 4, HP), K.brassDk, sx * (fw / 2 - bar / 2), fy + sy * (fh / 2 - bar / 2), 0.068, { rx: HP });
+        B.pop();
+      }
+      // the end portholes
+      for (const s of [-1, 1]) {
+        B.push(s * hw, 0, 0, s * HP);
+        B.add('metal', torG(port.r + 0.03, 0.028, 8, 26), K.brass, 0, port.y, 0.05, {});
+        for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU; B.add(NS('metal'), sphG(0.014, 6, 4, HP), K.brassDk, Math.cos(a) * (port.r + 0.03), port.y + Math.sin(a) * (port.r + 0.03), 0.064, { rx: HP }); }
+        B.pop();
+      }
+      // the handrail along the rim (6 cm out, at 0.86), brackets every metre; the court face's rail breaks round the sign
+      const RY = 0.86, RO = 0.058;
+      const rail = (P, Q, n) => { handrail(B, P, Q, { r: 0.018, ball: 0.026 }); for (let k = 0; k <= n; k++) { const t = n ? k / n : 0.5, x = P[0] + (Q[0] - P[0]) * t, z = P[2] + (Q[2] - P[2]) * t, nx = Math.abs(x) > hw ? Math.sign(x) : 0, nz = Math.abs(z) > hd ? Math.sign(z) : 0; strut(B, NS('metal'), K.brassDk, [x - nx * RO, RY, z - nz * RO], [x, RY, z], 0.025); } };
+      rail([-hw + 0.25, RY, -(hd + RO)], [hw - 0.25, RY, -(hd + RO)], 4);
+      rail([-hw + 0.25, RY, hd + RO], [-0.82, RY, hd + RO], 1);
+      rail([0.82, RY, hd + RO], [hw - 0.25, RY, hd + RO], 1);
+      for (const s of [-1, 1]) rail([s * (hw + RO), RY, -hd + 0.25], [s * (hw + RO), RY, hd - 0.25], 2);
+      // the sign: TOUCH POOL · TWO FINGERS, PLEASE on three lines, navy in a brass frame
+      B.push(0, 0, hd + 0.035, 0);
+      { const sw = 1.42, sh = 0.7, sy = 0.06 + sh / 2;
+        B.box('paint', K.navy, sw, sh, 0.03, 0, sy, 0.0, { r: 0.012 });
+        for (const yy of [sy - sh / 2, sy + sh / 2]) pbox(B, NS('metal'), K.brass, sw + 0.05, 0.035, 0.04, 0, yy, 0.005);
+        for (const xx of [-sw / 2, sw / 2]) pbox(B, NS('metal'), K.brass, 0.035, sh + 0.02, 0.04, xx, sy, 0.005);
+        letters(B, 'TOUCH POOL', { h: 0.17, y: sy + 0.13, z: 0.016, c: K.brassLt, flat: true, mat: 'paint', wt: 0.18, track: 0.1 });
+        pbox(B, NS('metal'), K.brass, 1.0, 0.012, 0.01, 0, sy + 0.09, 0.016);
+        letters(B, 'TWO FINGERS,', { h: 0.15, y: sy - 0.09, z: 0.016, c: K.cream, flat: true, mat: 'paint', wt: 0.18, track: 0.1 });
+        letters(B, 'PLEASE', { h: 0.15, y: sy - 0.29, z: 0.016, c: K.cream, flat: true, mat: 'paint', wt: 0.18, track: 0.1 }); }
+      B.pop();
       // in the pool: rocks, starfish, urchins, anemones just under the water (the water: backdrop.js)
       for (let i = 0; i < 8; i++) {
         const x = -2.0 + i * 0.58, z = ((i * 37) % 7) / 7 - 0.5;
@@ -260,7 +356,6 @@ export function registerDress(D, H, KIT) {
         if (i % 2) for (let k = 0; k < 5; k++) pbox(B, NS('paint'), '#c96a4a', 0.18, 0.025, 0.05, x + 0.15 + Math.cos((k * TAU) / 5) * 0.08, 1.015, z * 1.4 + 0.2 - Math.sin((k * TAU) / 5) * 0.08, { ry: (k * TAU) / 5 });
         else B.add(NS('paint'), sphG(0.08, 8, 6), '#4b3b56', x + 0.2, 1.02, z * 1.4 - 0.25, {});
       }
-      B.push(0, 0, d / 2 + 0.01, 0); sign(B, 'TOUCH POOL · TWO FINGERS, PLEASE', 0, 0.4, { h: 0.075, board: K.cream, c: K.navy, border: K.brass, pad: 0.05, track: 0.1 }); B.pop();
     },
   };
   // the moon-jelly columns (Ø 3.0 blocks to 4.2) and the bubble column (Ø 2.4 to 5.8): brass base and cap only

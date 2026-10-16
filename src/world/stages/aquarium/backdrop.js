@@ -12,7 +12,9 @@
 // on its crest at x ±4.5, centre 10.8 m, Ø 2.4 brass, double-faced): a needle between ▲ UP and ▼ DOWN and a red 10 s
 // countdown, driven by the pipe engine's tide (G.match.pipes.flow(), a pure function of the stage clock).
 import { G } from '../../../core/ctx.js';
-import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildSwimmers, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill, bubbleQuads, BUBBLE_VS_PARS, BUBBLE_VS_PROJECT, BUBBLE_FS } from './looks.js';
+import { waterMaterial, glassMaterial, buildFish, buildPenguins, buildSwimmers, buildJellies, buildBubbleCols, buildBathysphere, feedingTime, buildKrill, buildExhibits, bubbleQuads, BUBBLE_VS_PARS, BUBBLE_VS_PROJECT, BUBBLE_FS } from './looks.js';
+import { TOUCH } from './geo.js';   // (the touch pools' panels: their acrylic is the traced plane's own sheen, looks.js — the house
+                                     // glass reflected the sky at child height and washed the water out)
 import { buildFar } from './far.js';
 
 const C30 = Math.cos(Math.PI / 6);
@@ -132,6 +134,7 @@ export function buildBackdrop(kit, data = {}) {
   objects.push(buildBubbleCols(T, U, rnd, [[0, -21.5, 1.2, 0.4, 5.6], [0, 21.5, 1.2, 0.4, 5.6]]));
   const spots = [[-12, -19.0, 0.3], [-9, -19.6, 0.3], [-5.5, -20.6, 0.3], [-1, -21.2, 0.3], [2.5, -19.4, 0.3], [9.5, -21.5, 0.3], [12.5, -19.2, 0.3], [15.5, -21.0, 0.3], [19, -19.4, 0.3], [23, -20.5, 0.3], [27, -19.0, 0.3]];
   objects.push(buildSwimmers(T, U, [...fishKinds, buildPenguins(T, rnd, U, W, spots, POOL)]));   // (every fish and penguin: one draw call)
+  objects.push(buildExhibits(T, U, TOUCH));   // (the Reef Windows' reef and the touch pools' panels, both halves: one draw call)
   const krill = buildKrill(T, U, rnd); krill.visible = false;   // (drawn only in Feeding Time)
   objects.push(krill);
   const bathy = buildBathysphere(T);

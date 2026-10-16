@@ -464,8 +464,8 @@ export function registerArch(D, H, KIT, G) {
   // ============================================================================================================ Reef Window
   // The 40 m curved window r 30.5 → 32.5 (its block is collision-only): the granite base under the glass (0 → 0.6), the
   // render band over it (3.4 → 5.0, under the canopy), brass mullions at every segment joint, the outer wall on the sea
-  // side (r 32.3 → 32.5, −2 → 5.0); inside on the tank's floor (0.6) rocks, coral heads, the moray's pipe, the octopus's
-  // den with its sign. (Glass, water and the reef fish: backdrop.js)
+  // side (r 32.3 → 32.5, −2 → 5.0), the den's and the window's signs on the sill. (The reef: looks.js buildExhibits;
+  // glass, water and the reef fish: backdrop.js)
   D.aquarium_reefwindow = {
     desc: "the Reef Window's frame and reef (world frame, Alpha)",
     build(B, o) {
@@ -477,40 +477,14 @@ export function registerArch(D, H, KIT, G) {
         arcBand(B, 'gloss', K.faience, 30.4, 30.47, a0, a1, 3.48, 3.56, K.faience, n);
         arcBand(B, NS('metal'), K.brass, 30.4, 30.48, a0, a1, 0.58, 0.66, K.brass, n);
         arcBand(B, NS('metal'), K.brass, 30.4, 30.48, a0, a1, 3.34, 3.42, K.brass, n);
-        // the sand floor of the tank and its back wall's painted deep (dark, behind the reef)
-        arcBand(B, 'paint', K.sand, 30.55, 32.3, a0, a1, 0.55, 0.64, K.sand, n);
-        arcBand(B, 'paint', '#1d3a44', 32.22, 32.3, a0, a1, 0.6, 3.4, '#1d3a44', n);
+        // (the sand, the back wall and the reef — rock, corals, fans, sponges, anemones, the moray and the octopus — are
+        // looks.js buildExhibits since fix round 3: lit from the window's lid, glowing at dusk, one draw call for both halves)
         const da = (a1 - a0) / n;
         for (let i = 0; i <= n; i++) {
           const a = a0 + da * i, [x, z] = pol(a, 30.44);
           face(B, x, 0, z, -Math.cos(a * DEG), -Math.sin(a * DEG), () => pbox(B, 'metal', K.brass, 0.12, 2.8, 0.1, 0, 2.0, 0));
         }
-        // the reef inside: rocks and coral heads along the back, every segment a little different
-        for (let i = 0; i < n; i++) {
-          const a = a0 + da * (i + 0.5), rr = 31.6;
-          for (let k = 0; k < 3; k++) {
-            const ak = a + da * (k - 1) * 0.3, rk = rr + ((i + k) % 3) * 0.2 - 0.1, [x, z] = pol(ak, rk), s = 0.35 + ((i * 7 + k * 3) % 5) * 0.08;
-            B.add('paint', tpl2('rr' + ((i + k) % 4), () => (H.blobGeo ? H.blobGeo(1, 2, 31 + ((i + k) % 4)) : sphG(1))), k === 1 ? '#8c7f73' : '#77706a', x, 0.6, z, { sx: s * 1.4, sy: s * (1 + (k % 2)), sz: s, ry: i + k });
-            const cc = [K.coral, '#c4a07c', '#a79bb8', '#d9b9a0', '#9fb39a'][(i + k) % 5];
-            for (let j = 0; j < 4; j++) B.add('paint', cylGeo(0.02, 0.05, 0.45 + 0.1 * (j % 3), 5), cc, x + Math.cos(j * 1.7) * 0.18, 0.6 + s * 1.2 + 0.15, z + Math.sin(j * 1.7) * 0.18, { rz: Math.cos(j * 2.3) * 0.5, rx: Math.sin(j * 1.9) * 0.5 });
-            if ((i + k) % 3 === 0) B.add('paint', sphG(0.22, 10, 6), '#c4b48a', x + 0.3, 0.75, z, { sy: 0.7 });   // a brain coral
-          }
-        }
         if (o.moray && a0 < -50) {
-          // the moray's pipe (a terracotta drain on the sand) with its head out, and the octopus's den
-          const [x, z] = pol(-31, 31.4);
-          face(B, x, 0, z, -Math.cos(-31 * DEG), -Math.sin(-31 * DEG), () => {
-            B.add('paint', cylGeo(0.22, 0.22, 1.0, 12, true), '#9c6a4c', 0, 0.85, 0, { rz: HP });
-            B.add('paint', sphG(0.17, 10, 8), '#6b6a3a', 0.55, 0.85, 0.02, { sx: 1.5 });
-            B.add(NS('paint'), sphG(0.03, 6, 4), '#e8e2c0', 0.66, 0.92, 0.13, {});
-          });
-          const [x2, z2] = pol(-47, 31.5);
-          face(B, x2, 0, z2, -Math.cos(-47 * DEG), -Math.sin(-47 * DEG), () => {
-            B.add('paint', tpl2('den', () => (H.blobGeo ? H.blobGeo(1, 2, 77) : sphG(1))), '#6e6760', 0, 0.6, -0.1, { sx: 1.0, sy: 0.75, sz: 0.6 });
-            B.add('paint', sphG(0.3, 8, 6, PI / 2), '#24201e', 0, 0.62, 0.42, { sy: 0.9 });
-            B.add('paint', sphG(0.16, 10, 8), '#b46e4e', 0.05, 0.78, 0.48, {});
-            for (const s of [-1, 1]) B.add(NS('paint'), sphG(0.035, 6, 4), '#e7d9a7', 0.05 + s * 0.07, 0.83, 0.6, {});
-          });
           // the den's plate on the glass sill: PLEASE DO NOT DISTURB: SHY
           const [x3, z3] = pol(-47, 30.38);
           face(B, x3, 0, z3, -Math.cos(-47 * DEG), -Math.sin(-47 * DEG), () => sign(B, 'PLEASE DO NOT DISTURB: SHY', 0, 0.68, { h: 0.075, board: K.cream, c: K.navy, border: K.brass, pad: 0.06, track: 0.1 }));
