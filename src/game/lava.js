@@ -1087,7 +1087,7 @@ export class StageLava {
       let best = null, bs = 0;
       for (const a of this.m.actors) {
         const b = a.bot;
-        if (!b || a.remote || !a.alive || a.team !== team || b._lavaEsc || b.tRole === 'ride') continue;
+        if (!b || a.remote || !a.alive || a.team !== team || b._lavaEsc || b.tRole === 'ride' || b._lookBan > t) continue;   // (fix round 4: _lookBan, a claim it stalled on)
         if (this._foot(a).kind) continue;   // (not off a stone or a drowning ledge: from its feet)
         const k = a.weapon?.kind, rg = typeof b._range === 'function' ? b._range() : 0;
         let s = LOOKOUT_KINDS.has(k) ? (k === 'charger' ? 3 : 2.5) : rg >= 10 ? 1 + rg / 40 : 0;
@@ -1158,6 +1158,13 @@ export class StageLava {
       return;
     }
     L.on = false;
+    // (fix round 4: a claimant that makes no 0.6 m in 5 s on its way up — not waiting at the climb's foot — lets the claim go
+    // and is passed over for 15 s: a bow at Organ A~'s foot on enemy ink its shots never covered, its hop refused, stood
+    // there 10.75 s in a Zone Control match; another claimant takes it)
+    { const S = L.stall || (L.stall = { x: a.pos.x, z: a.pos.z, t, last: t });
+      if (L.goal === L.foot || Math.hypot(a.pos.x - S.x, a.pos.z - S.z) > 0.6 || t - S.last > 0.5) { S.x = a.pos.x; S.z = a.pos.z; S.t = t; }
+      S.last = t;
+      if (t - S.t > 5) { b._lookBan = t + 15; this.stats.lookStalls = (this.stats.lookStalls || 0) + 1; if (L.log && !L.log.end) { L.log.end = 'stalled'; L.log.at = +t.toFixed(1); L.log.held = +L.held.toFixed(1); } this._lookRelease(b); for (const T of this._lp || []) if (T && T.claim === b) T.claim = null; return; } }
     // (the brain replaced or dropped it — a goal pick, a zone guard holding its ground: put it back; a route the lava
     // shuts is dropped by _replanBots, one the body can't follow by _steer's slip rule below)
     if (L.path && b.path !== L.path) { b.path = L.path; b.pi = L.pi; b.goal = L.goal; }
@@ -1202,7 +1209,7 @@ export class StageLava {
         const lineOk = dh < 3.5 && this._lineFloor(a, n.x, n.z, dh, 1.1);
         if ((dh < 2.4 || lineOk) && ny - a.pos.y > 0.4) {
           it.fire = false;
-          const r = this._stepUp(b, n, ny, dh, lineOk, dt, it, move);
+          const r = this._stepUp(b, n, ny, dh, lineOk, dt, it, move, true);
           b.hopCheck = true;
           if (r) return r;
         }
@@ -1399,7 +1406,7 @@ export class StageLava {
   // the hop asked for. Used by an escape (the hop out onto the head, the causeway, the island) and a lookout claimant's
   // column hop (fix round 4: the claimant asked only once its walk had stalled 0.3 s — never while a bow drew — and stood at
   // the column). → the aim to hold while it inks its feet, else null
-  _stepUp(b, nx, ny, dh, lineOk, dt, it, move) {
+  _stepUp(b, nx, ny, dh, lineOk, dt, it, move, cycle = false) {
     const a = b.a;
     if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
     // (standing in enemy ink a jump reaches 0.73 m, not the step's 1.2: a roller escaping off the Casting Floor hopped
@@ -1410,7 +1417,9 @@ export class StageLava {
     // in and out of enemy ink every few frames, the count restarted each time, and it stood there inking until the lava
     // had it: lava-bots ledges)
     if (b._inkFor !== nx) { b._inkFor = nx; b._inkT = 0; }
-    if (a.grounded && a.groundTeam === 2 && ny - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; b.noProg = 0; b.perchUntil = b.t + 0.3; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
+    // (cycle — a lookout claimant, no lava at its heels: 1.5 s of inking in every 2.5 s while its feet stay on enemy ink — the
+    // second 1.5 s never came, and a bow whose shots missed its feet stood at a column's foot 10.75 s, Zone Control)
+    if (a.grounded && a.groundTeam === 2 && ny - a.pos.y > 0.6 && dh < 1.6 && (cycle ? (b._inkT = (b._inkT || 0) + dt) % 2.5 : (b._inkT = (b._inkT || 0) + dt)) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; b.noProg = 0; b.perchUntil = b.t + 0.3; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
     // (fix round 4: pressed against the step's face at a slant, actor.js keeps the run speed along the face — a charger
     // run into the island's face off Race 7 at ~40° slid along it at 5.7 m/s and off the stone's end into the lava,
     // lava-bots edges — so against that face its hop goes straight across it, to the top 1 m in (a route node can sit
