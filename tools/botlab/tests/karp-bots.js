@@ -19,6 +19,8 @@
 //   N  a respawned bot super jumps to our carrier ≥ 35 m off; defenders stay home
 //   O  a fuse that can't make it: over the halfway line first
 //   P  walkers (Skitter, Waddle) go round the shell to a foe behind it
+//   W  no wall-hack in the defending plan: a hidden enemy carrier's live spot never moves the defended weir, the perch's look,
+//      the interceptor choice or a fight's pull — only what the team saw (its pick-up, a look) does
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = window.__G;
   const { BAZOOKARP: K, PLAYER } = await import('./src/config.js');
@@ -27,8 +29,9 @@
   const { LoopWire } = await import('./src/game/karpWire.js');
   const { KARPBOX_DEF, KARPBOX_TWO } = await import('./tools/botlab/karpbox.js');
   const { KARP_GUN, radiusOf, speedOf } = await import('./src/game/karpGun.js');
-  const { KARP_BOT, KARP_AI, karpPlan, resetKarpStats } = await import('./src/game/botsKarp.js');
-  const { SIGHT } = await import('./src/game/botSight.js');
+  const { KARP_BOT, KARP_AI, karpPlan, resetKarpStats, karpEngage } = await import('./src/game/botsKarp.js');
+  const karpPerchLook = (await import('./src/game/botsKarp.js')).karpPerchLook || null;   // (absent before fix round 1)
+  const { SIGHT, teamKnown } = await import('./src/game/botSight.js');
   const { specialDangers } = await import('./src/game/botSpecials.js');
   const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const THREE = await import('three');
@@ -367,10 +370,17 @@
     // (c) 23 m in the open: beyond the wake's 20 m
     w.bot.reset(); squid(-6, 35);
     const wake23 = watch(1.2, 0);
+    // (c2) 18 m in the open: a normal bot (awareness 21 m) notices the wake; an easy one (16 m) does not — the wake never
+    // reaches past what the bot sees of a kid in the open
+    w.bot.reset(); squid(-6, 30);
+    const wake18 = watch(1.2, 0);
+    w.bot.setDifficulty('easy'); w.bot.reset(); squid(-6, 30);
+    const easy18 = watch(1.2, 0);
+    w.bot.setDifficulty('normal');
     // (d) the same 15 m swim by a teammate who is NOT carrying: not noticed (only the carrier has the glow)
     Kp._release(c); w.bot.reset(); squid(-6, 27);
     const plain15 = watch(1.2, 0);
-    R('J(a) the wake: a hidden carrier is noticed at 15 m in the open (≤ 20 m), not at 23 m, not behind a wall; a non-carrier swimmer at 15 m is not', !wallSeen && !wallMem && wake15 && !wake23 && !plain15, { wallSeen, wallMem, wake15, wake23, plain15, karpWakeR: SIGHT.karpWakeR });
+    R('J(a) the wake: a hidden carrier is noticed at 15 m in the open (≤ 20 m), not at 23 m, not behind a wall; a non-carrier swimmer at 15 m is not; at 18 m a normal bot notices it, an easy one (awareness 16 m) does not', !wallSeen && !wallMem && wake15 && !wake23 && !plain15 && wake18 && !easy18, { wallSeen, wallMem, wake15, wake23, plain15, wake18, easy18, karpWakeR: SIGHT.karpWakeR });
     // (e) the interceptor's goal never follows the hidden carrier through a wall: seen in kid form at P0, it dives and swims
     // behind the wall to P1 — the interceptor heads for P0 / its expected route, never P1
     c.update = cu;
@@ -425,6 +435,12 @@
     step(1.4, () => { c.hp = PLAYER.hp; c.pos.set(0, 0, -6); c.vel.set(0, 0, 0); Kp.fuse = Math.max(Kp.fuse, 1.8); maxD = Math.max(maxD, hd(mate.pos, c.pos)); });
     const cIgn = !c.bot || !c.bot.sp.recs || ![...c.bot.sp.recs.values()].some((r) => r.d.src === 'karpfuse');
     R('L our carrier\'s last 3 s of fuse: a 5.5 m danger for its teammates (team-tagged so its own team reacts), never for the carrier itself; a teammate 3 m off gets out to ≥ 5.5 m', !!fz && fz.team === 1 && fz.not === c && maxD >= 5.5 && cIgn, { fz: fz && { team: fz.team, r: fz.r, not: fz.not === c }, mateStart: hd(pm, c.pos), mateMax: maxD });
+    // (b) a remote (guest) carrier online: the host runs its fuse at the rate the guest's judgement sent — the danger stands
+    // for the host's bots too (a moment's flag; the clock nudged so the danger list is rebuilt)
+    Kp.fuse = 2.5; c.remote = true; G.time += 1e-4;
+    const fzR = specialDangers().find((d) => d.src === 'karpfuse');
+    c.remote = false; G.time -= 1e-4;
+    R('L(b) a remote (guest) carrier in its last 3 s of fuse is a danger to the host\'s bots on its team too', !!fzR && fzR.team === 1 && fzR.not === c, { remote: !!fzR, tIn: fzR?.tIn });
   }
   // ============================================================================ M. the layout's route hints
   if (want('M')) {
@@ -512,6 +528,61 @@
       res[id] = { inside, contactFrames: contact, walkFrames: seen, closestToFoe: +minFoe.toFixed(2) };
     }
     R('P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, pressed against it under a quarter of the walk) and reach the foe', Object.values(res).every((r) => r.walkFrames > 20 && r.inside === 0 && r.contactFrames <= r.walkFrames * 0.25 && r.closestToFoe < 1.6), res);
+  }
+  // ============================================================================ W. no wall-hack in the defending plan
+  if (want('W')) {
+    // Bravo's two weirs on Alpha's half: w10 (0, 1.2, −28) and w11 (−9, 2.5, −28). Two hiding places, out of sight of both:
+    // the alley (−10, −12: nearer w11) and the flank lane behind its wall (17, −10: nearer w10)
+    const WEST = [-10, -12], EAST = [17, -10];
+    const c = B[0];
+    const squid = (x, z) => { c.pos.set(x, floorY(x, z), z); c.vel.set(0, 0, 0); c.form = 'squid'; c.submerged = true; c.grounded = true; c.groundTeam = 1; c.anim.form = 'swim'; c.hp = PLAYER.hp; c.invuln = 99; };
+    const kid = (x, z) => { c.pos.set(x, floorY(x, z), z); c.vel.set(0, 0, 0); c.form = 'kid'; c.submerged = false; c.anim.form = 'kid'; c.hp = PLAYER.hp; c.invuln = 99; };
+    // (a) the plan alone (Alpha asleep: no look at all), easy (one interceptor: the choice is by where the carrier is believed
+    // to be): the carrier picked up in the alley, then hidden there and in the lane
+    fresh(KARPBOX_TWO);
+    for (const a of A) { a.setWeapon(['shooter', 'shooter', 'blaster', 'roller'][a.slot % 4]); a.bot.setDifficulty('easy'); }
+    [[-12, -2], [15, -4], [-2, -31], [0, -50]].forEach(([x, z], i) => put(A[i], x, z));
+    put(c, ...WEST); step(1 / 60); grant(c);
+    const cu = c.update; c.update = () => { c.anim.time = G.time; };
+    const pb = A[3].bot, foeAt = V(EAST[0] + 5, 0, EAST[1] + 6);   // (a foe 8 m from the lane spot, 33 m from the alley)
+    const read = ([x, z]) => {
+      squid(x, z); step(0.1, () => squid(x, z));
+      const P = karpPlan(); P.roles[0] = new Map(); P.dirty = true; P.tick();
+      const look = karpPerchLook ? karpPerchLook(pb, P) : null;
+      const r0 = pb.kRole, tv0 = pb.tv; pb.kRole = 'perch'; pb.tv = { pos: foeAt };
+      const eng = karpEngage(pb, P); pb.kRole = r0; pb.tv = tv0;
+      return { at: [x, z], known: !!teamKnown(0, c, 99), defends: P.defendObj(0)?.key, look: look ? [+look.x.toFixed(1), +look.z.toFixed(1)] : null, icpt: A.filter((a) => P.roleOf(a) === 'intercept').map((a) => a.name).join(','), engage: eng };
+    };
+    const rw = read(WEST), re = read(EAST);
+    const same = rw.defends === re.defends && rw.icpt === re.icpt && rw.engage === re.engage && !!rw.look && !!re.look && Math.hypot(rw.look[0] - re.look[0], rw.look[1] - re.look[1]) < 0.5;
+    R('W(a) the plan, Alpha never having seen the hidden carrier: moving it from the alley (its pick-up) to the lane changes neither the defended weir, nor the perch\'s look, nor the interceptor, nor whether a perch takes a fight 8 m from it', !rw.known && !re.known && same && re.defends === 'w11' && re.engage === false, { west: rw, east: re });
+    c.update = cu;
+    // (b) end to end, Alpha awake (normal): seen once (its pick-up, or a look in kid form), then hidden at the other place —
+    // the keeper and the plan stay with what was seen. Frames once any Alpha bot really knows the live spot don't count
+    const e2e = (pick, show, hide) => {
+      fresh(KARPBOX_TWO);
+      for (const a of A) { a.setWeapon(['shooter', 'charger', 'blaster', 'roller'][a.slot % 4]); wake(a, 'normal'); }
+      put(c, ...pick); step(1 / 60); grant(c);
+      const cu2 = c.update; c.update = () => { c.anim.time = G.time; };
+      if (show) step(1.5, () => kid(...show));   // (in kid form: its marker shows through walls — a look)
+      const keys = {}; let free = 0, legit = null; const W0 = Kp.weirs[1][0].pos, W1 = Kp.weirs[1][1].pos;
+      step(8, (i) => {
+        squid(...hide); for (const a of A) a.hp = PLAYER.hp;
+        const k = teamKnown(0, c, 99);
+        if (k && hd(k.guess, c.pos) < 4) { if (legit === null) legit = i; return; }
+        if (legit !== null) return;
+        free++; const key = karpPlan().defendObj(0)?.key; keys[key] = (keys[key] || 0) + 1;
+      });
+      // (whose hold spot each keeper is going to: one of w10's or w11's)
+      const P = karpPlan(), kp = A.filter((a) => a.alive && P.roleOf(a) === 'keeper');
+      const L0 = P.keepSpots({ key: 'w10', pos: W0 }, 0).spots, L1 = P.keepSpots({ key: 'w11', pos: W1 }, 0).spots;
+      const spotOf = (b) => (!b.kSpot ? null : L1.some((q) => hd(q, b.kSpot) < 1) ? 'w11' : L0.some((q) => hd(q, b.kSpot) < 1) ? 'w10' : '?');
+      c.update = cu2;
+      return { pick, show, hide, unknownFrames: free, knownFromFrame: legit, keys, keeperSpots: kp.map((a) => spotOf(a.bot)), keeperToW10: kp.map((a) => +hd(a.pos, W0).toFixed(1)), keeperToW11: kp.map((a) => +hd(a.pos, W1).toFixed(1)) };
+    };
+    const b1 = e2e(WEST, null, EAST), b2 = e2e([0, 0], WEST, EAST);
+    const okB = (r, key) => r.unknownFrames > 240 && Object.keys(r.keys).length === 1 && r.keys[key] > 0 && (r.knownFromFrame !== null || (r.keeperSpots.length > 0 && r.keeperSpots.every((q) => q === key)));
+    R('W(b) end to end: a carrier picked up in the alley (b1), or seen there in kid form (b2), then hidden in the lane: Alpha\'s keeper holds the alley\'s weir (w11) all along — its live spot behind the wall never moves it', okB(b1, 'w11') && okB(b2, 'w11'), { b1, b2 });
   }
   } catch (e) { R('HARNESS ' + e.message, false, String(e.stack).slice(0, 600)); }
   offs.forEach((f) => f());

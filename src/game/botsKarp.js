@@ -92,11 +92,14 @@ class KarpPlan {
     this.route = [null, null];      // per team: { cands, pick, i (the carrier's index on it), t, from, key }
     this.foes = [[], []];           // per team: the foes it knows of ({ e, pos, seen, t }) — teamKnown, no wall-hacks
     this.burstT = -9; this.burstTeam = -1;
+    // per team: what it knows of where the ENEMY carrier is ({ pos, t, H } | null) — the last look's spot of any of its bots
+    // (teamKnown's k.guess), else where it was picked up (the Bazookarp lay in plain view); never its live position
+    this.carSeen = [null, null]; this.carExp = [null, null]; this.defKey = [null, null];
     this.keepC = new Map();         // objective key → hold spots
     this._tmp = new Uint8Array(N);
     const dirty = () => { this.dirty = true; };
     Kp.unsubs.push(on('karp:burst', (e) => { this.burstT = G.time; this.burstTeam = e.team; this.dirty = true; }),
-      on('karp:pickup', () => { this.dirty = true; this.route = [null, null]; }), on('karp:drop', dirty), on('karp:reset', dirty),
+      on('karp:pickup', (e) => { this.dirty = true; this.route = [null, null]; if (e && e.actor && e.team >= 0) this._carPick(1 - e.team, e.actor, Kp.pos); }), on('karp:drop', dirty), on('karp:reset', dirty),
       on('karp:plant', () => { this.dirty = true; this.route = [null, null]; }), on('karp:phase', dirty), on('karp:field', () => { this.dirty = true; this.route = [null, null]; }));
   }
   tick() {
@@ -119,6 +122,13 @@ class KarpPlan {
         const k = teamKnown(t, e, 4);
         if (k) F.push({ e, pos: k.guess, seen: k.seen, t: k.t });   // (its last look's spot: never the live position)
       }
+      // the enemy carrier: the newest look any of us had at it (else where it was picked up, kept from the pick-up)
+      const H0 = Kp.holder;
+      if (H0 && H0.team !== t) {
+        if (!this.carSeen[t] || this.carSeen[t].H !== H0) this._carPick(t, H0, Kp.preGrant ? Kp.preGrant.pos : null);
+        const k = F.find((f) => f.e === H0), S = this.carSeen[t];
+        if (k && S && k.t >= S.t) { S.pos.copy(k.pos); S.t = k.t; S.seen = !!k.seen; }
+      } else this.carSeen[t] = null;
     }
     for (let t = 0; t < 2; t++) this._deal(t);
     // a human carrier's route (a bot carrier picks its own)
@@ -162,6 +172,39 @@ class KarpPlan {
   shellC() { const Kp = this.Kp; if (Kp.shell.state !== 'none') return Kp.shell.center(); const p = this.restPos(); return _sc.set(p.x, p.y + K.shell.lift, p.z); }
   // team t's share of the meter (−1 … 1: positive = on t's side)
   side(t) { const S = this.Kp.shell; if (S.state === 'none') return 0; const m = S.meter / (S.hp || 1); return t === 0 ? m : -m; }
+  // the enemy carrier H was picked up at p (public: the Bazookarp lay in plain view) → team t's first knowledge of it
+  _carPick(t, H, p) { this.carSeen[t] = p ? { pos: new V3(p.x, p.y, p.z), t: G.time, H, seen: false } : null; this.carExp[t] = null; }
+  // where team t believes the Bazookarp is: the resting / free spot (public), or — the other team carrying it — the last
+  // spot its bots saw the carrier (or its pick-up); null when it knows of none. Never the carrier's live position
+  karpAt(t) {
+    const H = this.Kp.holder;
+    if (!H || H.team === t) return this.restPos();
+    const S = this.carSeen[t];
+    return S ? S.pos : null;
+  }
+  // team t's expected route for the enemy carrier (SPEC §8.5: "the route the plan expects it to take"): from its last known
+  // spot to the nearest of the enemy's targets, on the enemy carrier's own masks → node ids | null (cached per sighting)
+  expRoute(t) {
+    const S = this.carSeen[t], H = this.Kp.holder;
+    if (!S || !H || H.team === t) return null;
+    const E = this.carExp[t];
+    if (E && E.t === S.t && E.H === H && E.x === S.pos.x && E.z === S.pos.z) return E.ids;
+    const e = 1 - t, s = G.nav.nearest(S.pos, 1.5);
+    let best = null;
+    if (s >= 0) for (const T of this.targets(e)) { if (T.node < 0) continue; const p = G.nav.path(s, T.node, e, undefined, true, this.avoidFor(e)); if (p && (!best || p.length < best.length)) best = p; }
+    this.carExp[t] = { t: S.t, H, x: S.pos.x, z: S.pos.z, ids: best };
+    return best;
+  }
+  // a point m metres along team t's expected route for the enemy carrier (its last known spot when there's none) → out | null
+  expAhead(t, m, out) {
+    const S = this.carSeen[t]; if (!S) return null;
+    const ids = this.expRoute(t), nav = G.nav;
+    if (!ids || ids.length < 2) return out.copy(S.pos);
+    let acc = 0, j = 0;
+    while (j < ids.length - 1 && acc < m) { const a = nav.nodes[ids[j]], b = nav.nodes[ids[j + 1]]; acc += Math.hypot(a.x - b.x, a.z - b.z); j++; }
+    const q = nav.nodes[ids[j]];
+    return out.set(q.x, q.y, q.z);
+  }
 
   _deal(t) {
     const Kp = this.Kp, H = Kp.holder, prev = this.roles[t], out = new Map();
@@ -205,7 +248,7 @@ class KarpPlan {
       const df = DF(ubots[0]?.bot), obj = this.defendObj(t), kH = this.foes[t].find((f) => f.e === H);
       const near = !!kH && ((Kp.gateUp[H.team] && Kp.field.fieldAt(H.team, kH.pos)?.d < 25) || (!Kp.lowered[H.team] && Kp.count[H.team] - Kp.capCount(H.team) <= 10));
       let nk = near ? 2 : 1, ni = df.icpt;
-      const kp = obj ? obj.pos : G.level.spawnPads[t], cp = kH ? kH.pos : this.restPos();
+      const kp = obj ? obj.pos : G.level.spawnPads[t], cp = kH ? kH.pos : this.karpAt(t) || kp;   // (the carrier unknown: its last known spot, else our objective)
       // (humans: the role nearest them — a keeper near our objective, an interceptor near the carrier)
       for (const h of humans) { if (hd(h.pos, kp) < hd(h.pos, cp) && nk > 0) nk--; else if (ni > 0) ni--; }
       const rest = ubots.slice();
@@ -371,8 +414,13 @@ class KarpPlan {
     if (Kp.lowered[e] || !Kp.weirs[e].length) return { key: 'g' + e, pos: Kp.gates[e].pos };
     const W = Kp.weirs[e];
     if (W.length === 1) return { key: 'w' + e + '0', pos: W[0].pos };
-    const k = H && this.foes[t].find((f) => f.e === H), at = k ? k.pos : this.restPos();
-    const w = W.slice().sort((x, y) => hd(x.pos, at) + Math.abs(x.pos.y - at.y) - hd(y.pos, at) - Math.abs(y.pos.y - at.y))[0];
+    // (the carrier known: where we know it is; unknown: its last known spot — or the pick-up; knowing nothing at all: the
+    // weir we held before, else the first)
+    const k = H && H.team === e && this.foes[t].find((f) => f.e === H), at = k ? k.pos : this.karpAt(t);
+    let w = null;
+    if (at) w = W.slice().sort((x, y) => hd(x.pos, at) + Math.abs(x.pos.y - at.y) - hd(y.pos, at) - Math.abs(y.pos.y - at.y))[0];
+    else w = W.find((q) => 'w' + e + q.index === this.defKey[t]) || W[0];
+    this.defKey[t] = 'w' + e + w.index;
     return { key: 'w' + e + w.index, pos: w.pos };
   }
   // the keepers' hold spots in front of an objective (SPEC §8.5): nav nodes 4–9 m out on the attackers' approach (their
@@ -467,7 +515,9 @@ export function karpEngage(b, P) {
     case 'keeper': { const s = b.kSpot; return d < rng * 1.15 || (!!s && hd(t.pos, s) < 10); }
     case 'lead': case 'flank': case 'anchor': return !!H && (hd(t.pos, H.pos) < KARP_AI.escortR || d < rng * 1.1);
   }
-  return d < rng * 1.1 || hd(t.pos, P.restPos()) < 12;
+  // (by the Bazookarp as we know it: the enemy carrier's last known spot, never its live one)
+  const at = P.karpAt(a.team);
+  return d < rng * 1.1 || (!!at && hd(t.pos, at) < 12);
 }
 
 // the navigation goal (paint mode), by role
@@ -535,9 +585,12 @@ export function karpGoal(b, P) {
     if (role === 'perch') { const n = perchSpot(b, P), o = n ? null : P.defendObj(a.team); if (n) go(n, 1.0, 3); else if (o) go(o.pos, 1.0, 2); return; }   // (no perch with a line: by our objective)
     // intercept: at the carrier while it's known (from outside its Splash range; hard: from two sides), else its last
     // known spot, then along the route it's expected to take
-    const k = P.foes[a.team].find((f) => f.e === H);
+    const k = P.foes[a.team].find((f) => f.e === H), S = P.carSeen[a.team];
+    // (what the team knows: a newer look by a teammate, or the pick-up spot, replaces this bot's own; a new carrier, a fresh start)
+    if (b.kLastH !== H) { b.kLastH = H; b.kLast = null; b.kLastT = -1; b.kExp = null; }
+    if (S && S.t > b.kLastT + 1e-6) { b.kLast = (b.kLast || new V3()).copy(S.pos); b.kLastT = S.t; b.kExp = null; }
     if (k && (k.seen || G.time - k.t < 1.5)) {
-      b.kLast = (b.kLast || new V3()).copy(k.pos); b.kExp = null;
+      b.kLast = (b.kLast || new V3()).copy(k.pos); b.kLastT = k.t; b.kExp = null;
       const dx = a.pos.x - k.pos.x, dz = a.pos.z - k.pos.z, l = Math.hypot(dx, dz) || 1, df = DF(b);
       let ang = Math.atan2(dx, dz);
       if (df.sides) ang += P.auxOf(a) * 0.9;
@@ -548,11 +601,7 @@ export function karpGoal(b, P) {
       return;
     }
     if (b.kLast) {
-      if (!b.kExp) {
-        const s = G.nav.nearest(b.kLast, 1.5), T = P.targets(H.team)[0];
-        b.kExp = s >= 0 && T.node >= 0 ? G.nav.path(s, T.node, H.team, undefined, true, P.avoidFor(H.team)) : null;
-        b.kExpI = 0;
-      }
+      if (!b.kExp) { b.kExp = P.expRoute(a.team); b.kExpI = 0; }   // (from the team's last known spot: this bot's kLast)
       if (b.kExp && b.kExp.length > 1) {
         // walk the expected route forward from the last known spot, 8 m at a time
         const q = G.nav.nodes[b.kExp[Math.min(b.kExp.length - 1, b.kExpI)]];
@@ -564,7 +613,7 @@ export function karpGoal(b, P) {
       return;
     }
     const obj = P.defendObj(a.team);
-    go(obj ? obj.pos : P.restPos(), 1.0, 2);
+    if (obj) go(obj.pos, 1.0, 2);
   }
 }
 // what a breaker's spot depends on (a change re-picks it at once)
@@ -585,12 +634,22 @@ function shellSpot(b, P, role) {
   if (role === 'grab' && slot !== 1.5) slot = 1.5 + (meleeOf(a) ? 0 : 1);
   return P.breakSpot(a, want, slot);
 }
+// what a perch watches: the shell (shell phase); the enemy carrier while we know where it is, else 10 m along the route we
+// expect it to take from its last known spot (SPEC §8.5) — never its live position nor its own route → V3 | null
+export function karpPerchLook(b, P) {
+  const a = b.a, H = P.Kp.holder;
+  if (!H) return P.shellC();
+  if (H.team === a.team) return P.ahead(H.team, 10, _e);
+  const k = P.foes[a.team].find((f) => f.e === H);
+  if (k) return k.pos;
+  return P.expAhead(a.team, 10, _e) || P.defendObj(a.team)?.pos || null;
+}
 // a perch: high ground with a line over the shell (shell phase) or the enemy carrier / its route (they carry)
 function perchSpot(b, P) {
   const a = b.a, now = G.time;
   if (b.kPerch && now < b.kPerchT) return b.kPerch;
-  const H = P.Kp.holder, k = H && H.team !== a.team ? P.foes[a.team].find((f) => f.e === H) : null;
-  const at = k ? k.pos : H ? P.ahead(H.team, 10, _e) : P.shellC();
+  const at = karpPerchLook(b, P);
+  if (!at) return b.kPerch || null;
   const nav = G.nav;
   let best = null, bs = -Infinity;
   for (let i = 0; i < 40; i++) {
@@ -1125,11 +1184,12 @@ export function karpDangers(A) {
       A.see(d, s.land.x, s.land.y + 0.4, s.land.z);
     }
   }
-  const H = Kp.holder;
-  if (H && H.alive && !H.remote && Kp.fuse / Math.max(1, Kp.rate) <= KARP_AI.fuseDanger) {
+  // (a remote — guest — carrier too: the host runs its fuse, at the rate the guest's own judgement sent; bots live on the host)
+  const H = Kp.holder, rate = H && H.remote ? Kp.remote?.rate || 1 : Kp.rate;
+  if (H && H.alive && (!H.remote || Kp.host) && Kp.fuse / Math.max(1, rate) <= KARP_AI.fuseDanger) {
     const d = A.D(A.keyOf(H, 7), 'karpfuse', 1 - H.team, null);
     A.disc(d, H.pos.x, H.pos.y, H.pos.z, K.explodeR + 1, K.explodeR);
-    d.vx = H.vel.x; d.vz = H.vel.z; d.vt = 0.4; d.tIn = Math.max(0, Kp.fuse / Math.max(1, Kp.rate)); d.tOut = d.tIn + 0.1; d.lethal = 2;
+    d.vx = H.vel.x; d.vz = H.vel.z; d.vt = 0.4; d.tIn = Math.max(0, Kp.fuse / Math.max(1, rate)); d.tOut = d.tIn + 0.1; d.lethal = 2;
     d.los = true; d.losY = 0.8; d.vis = 'big'; d.hear = 10; d.actor = H; d.not = H; d.hit = 'karp-fuse';
     A.see(d, H.pos.x, H.pos.y + 1.2, H.pos.z);
   }

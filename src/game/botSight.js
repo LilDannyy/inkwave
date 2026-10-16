@@ -225,7 +225,7 @@ export class Sight {
       else { reach = Math.max(SIGHT.stillR, Math.min(SIGHT.swimR, (hs - SIGHT.stillSpeed) * SIGHT.swimK)); notice = reach > SIGHT.stillR ? SIGHT.swimNotice : 0; }
       reach = Math.min(reach, range);
       // [b5-karp-bots] the Bazookarp carrier swimming hidden: its wake glow shows, in place of a swimmer's ripples
-      if (e.carry && G.match?.karp?.holder === e) { reach = Math.max(reach, SIGHT.karpWakeR); if (!was) notice = SIGHT.swimNotice; }
+      if (e.carry && G.match?.karp?.holder === e) { reach = Math.max(reach, Math.min(SIGHT.karpWakeR, range)); if (!was) notice = SIGHT.swimNotice; }   // (never past the bot's own awareness: easy 16 m)
     }
     if (d > reach) { this.glim.delete(e); return false; }
     if (!located && d > nearR && hd > 0.3 && (dx * fx + dz * fz) / hd < cone) { this.glim.delete(e); return false; }
