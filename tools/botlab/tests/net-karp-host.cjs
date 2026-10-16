@@ -19,7 +19,7 @@
 //   [karp-face] review round 2: 'part=ring;who=1|2' (CLIENTS=3): a guest carries when host A leaves (who=1: B, the new
 //     host; who=2: C, still a guest) — neither the new host's fuse nor the carrier's ring steps up across the takeover;
 //     part=bots checks the new host's fuse for the adopted carrier the same way. Run them under URLQ netlag 100 + jitter 40.
-//   [karp-face] review round 3: 'part=dbl' (CLIENTS=3; 'hold=0.25' by default): an old-host bot carrier's Big Burst blows
+//   [karp-face] review round 3: 'part=dbl' (CLIENTS=3; 'hold=0.6' by default): an old-host bot carrier's Big Burst blows
 //     3.85 m from B's and C's kids (a non-lethal hit) and host A leaves the moment it blew on A's own screen, its [2] still
 //     queued on the others' timelines. The remaining screens hold A's queued [2] back by 'hold' s (playback jitter: the
 //     race the reviewer saw in 1 of 5 rounds — the new host's adopted copy finishing its swell first and recording a
@@ -223,7 +223,7 @@ async function more({ cs, A, J, info, R, wait, say, close, part, aNid, opt = {} 
     const en = await end(N), eo = await end(O);
     R('13c. the match finishes under the new host, the same result on both screens', !!en && JSON.stringify(en) === JSON.stringify(eo), { en, eo });
   } else if (part === 'dbl') {
-    const hold = opt.hold != null ? +opt.hold : 0.25;
+    const hold = opt.hold != null ? +opt.hold : 0.6;   // (0.25 s was not always enough: the leave notice can come after the held [2] has played)
     // the bots the new host adopts stand still; every remaining screen counts its judgements per gid (KarpGun._judge), the
     // karp damage its own kid takes, and the Carp Shot records it sends ([d0, gid]); A's queued blast [2] is held back
     for (const c of rest) await c.js(`(async () => { const m = await import('./src/game/bots.js'); m.BotBrain.prototype.update = function () {}; return 1; })()`);

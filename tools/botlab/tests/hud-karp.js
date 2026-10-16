@@ -381,54 +381,52 @@
     put(me, spot(P.x, P.z - dz * 12, P.y)); facePond(me);
     put(foe, spot(P.x, P.z, P.y)); grab(foe); step(0.1); follow();
     const u = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
-    // K1. tilt the camera down until the marker's own point projects up in the top bar (above the status pill's bottom)
-    let raw1 = null, mk1 = null; const tr1 = [];
-    for (let k = 0; k < 70 && !raw1; k++) {
-      g.rig.pitch = -0.2 - k * 0.02;   // (a lower pitch: the camera looks down, the point rises on the screen) step(2 / 60); H.karp._topT = 0; step(1 / 60);
+    // K1. raise the carrier (a raised Pond, a bridge) until its marker's own point projects up in the top bar, above the
+    // status pill's bottom (one frame at a time)
+    let raw1 = null, mk1 = null; const tr1 = [], y1 = foe.pos.y;
+    for (let k = 0; k < 60 && !raw1; k++) {
+      foe.pos.y = y1 + k * 0.35; foe.vel.set(0, 0, 0); H.karp._topT = 0; dbg.step(1000 / 60);
       const p = H.karp._proj(foe.pos.x, foe.pos.y + 2.4, foe.pos.z), ty = topY();
       tr1.push(p ? +p.y.toFixed(0) : null);
-      if (p && !p.behind && p.y > 6 && p.y < ty - 6 && p.x > 60 && p.x < p.W - 60) { raw1 = { y: +p.y.toFixed(1), top: +ty.toFixed(1), pitch: +g.rig.pitch.toFixed(3) }; mk1 = S().marker; }
+      if (p && !p.behind && p.y > 6 && p.y < ty - 6 && p.x > 60 && p.x < p.W - 60) { raw1 = { y: +p.y.toFixed(1), top: +ty.toFixed(1), lift: +(k * 0.35).toFixed(2) }; mk1 = S().marker; }
     }
+    foe.pos.y = y1; foe.vel.set(0, 0, 0); step(2 / 60);
     R('K1. a carrier whose marker would sit up in the top bar (a raised Pond seen from below): pinned under the status pill — its pill and its arrow below the bar, the distance shown — never over the Carp Line',
       !!raw1 && !!mk1 && !!mk1.box && !mk1.onScreen && mk1.box.t >= raw1.top - 0.5 && mk1.y - 3 * u >= raw1.top - 1 && mk1.dist > 0, { raw: raw1, marker: mk1, u: +u.toFixed(2), tried: raw1 ? undefined : tr1 });
-    // K2. a live OVERTIME! call-out with its instruction; tilt until the marker sits on the sub line: it fades out (and is
-    // back once the call-out is gone)
+    // K2. a live OVERTIME! call-out with its instruction: the carrier stands where its marker sits on the sub line (12 m
+    // out along the ray through it, one frame): the marker fades out, and is back once the call-out is gone
+    // (the fade is a 0.15 s transition on the page's own frames — at 12 fps under load a fixed wait read it barely begun:
+    // the opacity is polled until it settles, at most 1.5 s)
+    const settle = async (want) => { for (let i = 0; i < 30 && (want ? opMk() < 0.95 : opMk() > 0.05); i++) await wait(50); return opMk(); };
+    const placeOn = (rc) => {
+      const e0 = er(), cam = G.rig?.gameCam || G.camera, ph = H.karp._mkH > 0 ? H.karp._mkH : 2.5 * u;
+      const nd = V(((rc.l + rc.r) / 2) / e0.width * 2 - 1, -((((rc.t + rc.b) / 2) + ph / 2) / e0.height * 2 - 1), 0.5).unproject(cam);
+      const w = cam.position.clone().addScaledVector(nd.sub(cam.position).normalize(), 12);
+      foe.pos.set(w.x, w.y - 2.4, w.z); foe.vel.set(0, 0, 0); dbg.step(1000 / 60);
+      return S().marker;
+    };
+    const home = foe.pos.clone();
     g.rig.pitch = -0.15; step(2 / 60); H.karp._topT = 0; step(1 / 60);
     H._zCall('OVERTIME!', { team: foe.team, sub: 'Stop them — 10 s to hold!', icon: null });
-    await wait(450);
-    let hit2 = null; const tr2 = [];
-    for (let k = 0; k < 70 && !hit2; k++) {
-      g.rig.pitch = -0.45 + k * 0.015; step(2 / 60);
-      const z = H.zcalls.firstElementChild, sub = z?.querySelector('.iw-zcall__sub'), mk = S().marker;
-      if (!z || !sub || !mk) { tr2.push(null); continue; }
-      const sb = rel(sub.getBoundingClientRect());
-      tr2.push(mk.y);
-      const mb2 = mk.box || { l: mk.x - 25, r: mk.x + 25, t: mk.y - 25, b: mk.y };   // (the old marker reported no box: its pill, roughly)
-      if (mk.onScreen && ov(mb2, sb) > 0) hit2 = { mk, sub: sb, cls: H.karp.mk.classList.contains('is-under') };
-    }
-    await wait(260);
-    const op2 = opMk();
-    if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); step(2 / 60); await wait(260); step(1 / 60);
-    const back2 = { under: S().marker?.under, op: opMk() };
+    await wait(650);   // (its pop-in over: the box at its resting size)
+    const sub2 = H.zcalls.firstElementChild?.querySelector('.iw-zcall__sub'), sb2 = sub2 ? rel(sub2.getBoundingClientRect()) : null;
+    const mk2 = sb2 ? placeOn(sb2) : null, cls2 = H.karp.mk.classList.contains('is-under');
+    const hit2 = !!mk2 && !!sb2 && mk2.onScreen && ov(mk2.box || { l: mk2.x - 25, r: mk2.x + 25, t: mk2.y - 25, b: mk2.y }, sb2) > 0;
+    const op2 = await settle(false);
+    if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); dbg.step(1000 / 60); foe.pos.copy(home); foe.vel.set(0, 0, 0); dbg.step(1000 / 60);
+    const back2 = { under: S().marker?.under, op: await settle(true) };
     R('K2. a marker that would sit on a live call-out\'s instruction (OVERTIME! / Stop them — 10 s to hold!) fades out of its way, and is back once the call-out is gone',
-      !!hit2 && hit2.mk.under && hit2.cls && op2 < 0.05 && back2.under === false && back2.op > 0.95, { hit: hit2, opacity: op2, back: back2, tried: hit2 ? undefined : tr2 });
-    // K3. the stock OVERTIME! centre banner: the same
+      hit2 && mk2.under && cls2 && op2 < 0.05 && back2.under === false && back2.op > 0.95, { marker: mk2, sub: sb2, cls: cls2, opacity: op2, back: back2 });
+    // K3. the stock OVERTIME! centre banner: the marker on its word
     clearAll(); g.rig.pitch = -0.15; step(2 / 60);
     H._zBanner('OVERTIME!');
-    await wait(300);
-    let hit3 = null; const tr3 = [];
-    for (let k = 0; k < 70 && !hit3; k++) {
-      g.rig.pitch = -0.45 + k * 0.015; step(2 / 60);
-      const bt = H.bannerLayer.querySelector('.iw-bn[data-g="center"] .iw-bn__text'), mk = S().marker;
-      if (!bt || !mk) { tr3.push(null); continue; }
-      const bb = rel(bt.getBoundingClientRect());
-      tr3.push(mk.y);
-      const mb3 = mk.box || { l: mk.x - 25, r: mk.x + 25, t: mk.y - 25, b: mk.y };
-      if (mk.onScreen && ov(mb3, bb) > 0) hit3 = { mk, word: bb, cls: H.karp.mk.classList.contains('is-under') };
-    }
-    await wait(260);
-    const op3 = opMk();
-    R('K3. … and off the stock OVERTIME! centre banner\'s word', !!hit3 && hit3.mk.under && hit3.cls && op3 < 0.05, { hit: hit3, opacity: op3, tried: hit3 ? undefined : tr3 });
+    await wait(700);
+    const bt3 = H.bannerLayer.querySelector('.iw-bn[data-g="center"] .iw-bn__text'), bb3 = bt3 ? rel(bt3.getBoundingClientRect()) : null;
+    const mk3 = bb3 ? placeOn(bb3) : null, cls3 = H.karp.mk.classList.contains('is-under');
+    const hit3 = !!mk3 && !!bb3 && mk3.onScreen && ov(mk3.box || { l: mk3.x - 25, r: mk3.x + 25, t: mk3.y - 25, b: mk3.y }, bb3) > 0;
+    const op3 = await settle(false);
+    foe.pos.copy(home); foe.vel.set(0, 0, 0);
+    R('K3. … and off the stock OVERTIME! centre banner\'s word', hit3 && mk3.under && cls3 && op3 < 0.05, { marker: mk3, word: bb3, cls: cls3, opacity: op3 });
     clearAll(); g.rig.pitch = -0.15; release(); step(0.1);
     // K4. a grant undone (the host's 'u': its claimant had died): the pick-up call-out goes and a small FREE — GRAB IT!
     // says so — the call-out said somebody had it while the status pill said FREE
