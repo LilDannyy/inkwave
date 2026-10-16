@@ -535,7 +535,13 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   move), less the overshoot past `pickR` at the toucher's speed; a fresh free phase lets a guest claim at once (its
   re-send clock from its last claim used to hold it back up to 0.3 s). The host keeps its last 40 decisions in
   `karp.stats.grantLog`. Measured: net-karp `part=race` / `part=racekid` (a host bot / the host's own player against
-  the guest, 16 rounds each).
+  the guest, 16 rounds each). **The bias that is left (review round 2):** `since` starts at each screen's own "free"
+  moment, which on a guest is one way after the host's. A racer who has to SEE the burst before it moves (standing at
+  the shell: the common case) is timed fairly; a guest already running in when it bursts — and not held up by its own
+  copy of the shell — keeps running through that one-way delay, so at equal real touch times its `since` is smaller by
+  the one-way delay and it wins (`part=racerun`: both run in from 7 m, setting off at the same moment of the host's
+  clock). Ordering by the host's clock instead would hand that delay to the host for every standing start. The lead's
+  call; the numbers are in the karp-face report.
 - **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
   shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
   inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
@@ -581,7 +587,13 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   is never dropped by the other guests), shell hits it had batched for the old host count, a holder that is gone or dead
   is lost as `left` at its last real sample (its half / zone from the last `S`'s `kr`), an adopted carrier keeps carrying
   with its own screen's judgement read afresh, the clamp resets, the timers (re-form, reset flight, the hold, the window,
-  the fuse) carry on from the last `S` plus the records since, and a full `S` goes out at once. A carrying guest re-sends
+  the fuse) carry on from the last `S` plus the records since, and a full `S` goes out at once. (Review round 2: a
+  follower holds its last snapshot's fuse, overtime clock and window RAW — it reads a remote carrier's fuse forward each
+  frame, and the narrowed flush has just played the newest raw — so the new host reads them forward to now on the old
+  host's clock, `wire.hostNow(oldHost) − t`, at most 0.6 s; a carrier on the new host's own screen never gets back time
+  its ring has shown spent: `min(read forward, fuseShown)`. They used to step UP by the snapshot's age × the rate: +0.34 s
+  under netlag 100, a carrier who became the host rewound its own ring 0.2 s. `karp.stats.takeover` logs what it took;
+  net-karp-host `part=bots` and `part=ring;who=1|2`.) A carrying guest re-sends
   `kr` / `kf` to the new host; claimants re-send their claims every 0.3 s.
 - **the `'k'` case and adopted actors (`[karp-face]`).** A `karp` kit record is played even when its actor is now local,
   as long as its sender is not this client (a departed host's queued Carp Shot for a bot this client just adopted), so
