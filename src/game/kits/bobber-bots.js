@@ -31,7 +31,7 @@
 //   tIn 0.3 (a bot inside steps out); at most 48 discs in all (those nearest a bot of the other team).
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../../core/ctx.js';
-import { TOWER, weaponRange } from '../../config.js';
+import { TOWER, SPECIALS, weaponRange } from '../../config.js';
 import { THREAT_STATS, zonePlan, towerPlan } from '../bots.js';
 import { sightRay, teamKnown } from '../botSight.js';
 import { MAIN_KITS } from './registry.js';
@@ -877,6 +877,22 @@ function throwHits(a) {
   if (k === 'boomerang') return lineHits(a, sub.range || 9, Math.max(sub.contact || 0.3, sub.hoverRadius || 1.35), true) || webHit(a.team, a.pos.x, a.pos.y + 1, a.pos.z, sub.radius || 2.4);
   return null;
 }
+// [b5-int3] a Crab Rig's cannon shell (specials.js crab: from its cannon muzzle along the hull, pitched up 0.45 rad on the
+// aim, 17 m/s, gravity 20) — where it lands, its 3 m blast: by an idle own web?
+const _cm = new V3(), _cv = new V3(), _cq = new V3();
+function crabHits(a) {
+  const s = a.specialActive, d = SPECIALS.crab;
+  if (!s || !d) return null;
+  const mz = s.cannonMuzzle || _cq.set(0.5, 1.1, -0.2), c = Math.cos(s.hull ?? a.yaw), sn = Math.sin(s.hull ?? a.yaw);
+  _cm.set(a.pos.x + mz.x * c + mz.z * sn, a.pos.y + mz.y, a.pos.z - mz.x * sn + mz.z * c);
+  const lp = clamp(a.aimPitch + 0.45, 0.1, 1.0), h = s.hull ?? a.yaw;
+  _cv.set(Math.sin(h) * Math.cos(lp), Math.sin(lp), Math.cos(h) * Math.cos(lp)).multiplyScalar(d.cannonSpeed || 17);
+  for (let i = 0; i < 240 && _cm.y > -30; i++) {
+    _tq.copy(_cm); _cv.y -= 20 / 60; _cm.addScaledVector(_cv, 1 / 60);
+    if (G.physics.segment(_tq, _cm, _th).hit) { const p = _th.point; return webHit(a.team, p.x, p.y, p.z, d.cannonRadius || 3); }
+  }
+  return null;
+}
 // (a held sub's release — the Shaker's: shaker.js botHold) would its throw now go off by an idle own web?
 export const webThrow = (a) => !!(items.length && a.alive && throwHits(a));
 // (bots.js, after the kits' botAct, before _tail presses on _bombAim) hold the throw: tried again from wherever it is a
@@ -949,7 +965,14 @@ export function botAct(b, dt, it, move, busy) {
   // [b5-int3] during a special: only the hold-fire below (a Zipcaster's shots and blasts, any special's trigger, blew a
   // teammate's idle web: bobber-web clear) — no chain shots, no laying
   const spOn = !!a.specialActive || a.climbing;
-  if (spOn) { b._bob = null; if ((it.fire || it.special) && items.length) { const o = holdFire(b, a); if (o) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; } } return null; }
+  if (spOn) {
+    b._bob = null;
+    if ((it.fire || it.special) && items.length) { const o = holdFire(b, a); if (o) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; } }
+    // ([b5-int3] a Crab Rig's cannon — its sub press — lobs a shell that blows 3 m round where it lands: held while that is by
+    // one of its team's idle webs — bobber-web clear: a teammate's crab shells blew a human's webs)
+    if (it.sub && items.length && a.specialActive?.id === 'crab' && crabHits(a)) { it.sub = false; BOBBER_BOT.throwHolds = (BOBBER_BOT.throwHolds || 0) + 1; BOBBER_BOT.crabHolds = (BOBBER_BOT.crabHolds || 0) + 1; }
+    return null;
+  }
   let S = b._bob;
   // (it blew — done; 0.6 s of shots from the moment its aim settled on it went by, or 1.8 s in all — leave it a moment;
   // ready on a chain a foe was closing on: every 0.1 s, the foe in it now → fire; gone off, or 3 s → stand down)
