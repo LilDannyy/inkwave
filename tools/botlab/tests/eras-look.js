@@ -11,12 +11,14 @@
 //   run, clipped by its radius; the new one alone after it).
 // Part 3: the landmark from the base: the dome and its lantern stay in sight from both spawn decks in every era (no era
 //   superstructure on the spawn → dome line, DESIGN §8.3).
+// Part 4 (12c): the murals' era masks — Hoki Lane's street art (7) absent in era 1, present from era 2; the ghost sign (9)
+//   the other way; the 3000s' light seams (11) only in era 3 (pixel probes on their walls).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const THREE = await import('three');
   const D = await import('./src/world/eras-data.js');
-  const only = (/only=([\d,]+)/.exec(String(window.__pageArgs || ''))?.[1] || '1,2,3').split(',').map(Number);
+  const only = (/only=([\d,]+)/.exec(String(window.__pageArgs || ''))?.[1] || '1,2,3,4').split(',').map(Number);
   const dbg = g.debug;
   dbg.freeze();
   for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = false; } a.character.root.visible = false; a.character.setVisible?.(false); }
@@ -212,6 +214,35 @@
     R('look (review fix 4): the dome and its lantern stay in sight from both spawn decks in every era — of the rays the shared city leaves open, ≥ 90 % are open past each era\'s superstructures (DESIGN §8.3: no tower on the spawn → dome line)',
       base.every((b) => b.length >= 40) && per.every((x) => x.frac.every((f) => f >= 0.9)),
       { eyes: eyes.map((v) => v.toArray().map((x) => +x.toFixed(1))), samples: rays.map((r) => r.length), openPastShared: base.map((b) => b.length), shared: shared.length, sharedBlockers: [...sharedBy.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6), per, ms: Math.round(performance.now() - t0) });
+  }
+  // ================================================================================================ part 4 (12c: the murals)
+  // The stage murals carry era masks (H8b: uMurEra, tested per fragment against the fragment's own era). Per era, the frame
+  // with the masks as built against the same frame with that one mural switched off (its uMurEra set to 0): the
+  // difference is the mural showing. Hoki Lane's street art (7, eras 2–3) shows from TODAY, not in the 1880s; the ghost
+  // sign (9, era 1) only in the 1880s; the 3000s' light seams (11) only in the 3000s
+  if (only.includes(4)) {
+    for (const a of g.match.actors) { a.character.root.visible = false; a.character.setVisible?.(false); }
+    __G.paint.clear();
+    const mur = W.uniforms.uMurEra.value;
+    const shows = (id, camA, box) => {
+      const v = {};
+      for (const e of [1, 2, 3]) {
+        E.debugJump(e, { instant: true }); step(0.2); cam(...camA); step(0.1); dbg.step(1000 / 60);
+        const A = grab(), keep = mur[id]; mur[id] = 0; const B = grab(); mur[id] = keep;
+        v[e] = diff(A, B, box).mean;
+      }
+      return v;
+    };
+    const hoki = shows(7, [[-32.8, 1.75, -26.5], [-36.5, 1.7, -39], 64], [0.15, 0.25, 0.85, 0.8]);
+    const ghost = shows(9, [[-12.75, 4.6, -33.5], [-12.75, 4.5, -42], 60], [0.15, 0.15, 0.85, 0.7]);
+    const seams = shows(11, [[-21.5, 2.4, -26], [-26, 4.4, -36], 58], [0.1, 0.1, 0.9, 0.7]);
+    const tex = g.murals?.userData?.murals || [];
+    const on = (v, e) => v[e] > 0.5, off = (v, e) => v[e] < 0.05;   // (off is exactly 0: the mural switched off changes nothing)
+    R('12c: the murals\' era masks — Hoki Lane\'s street art (7) shows from TODAY on (not in the 1880s), the ghost sign (9) only in the 1880s, the 3000s\' light seams (11) only in the 3000s; the atlas holds the stage\'s murals 4, 6, 7, 8, 9, 11',
+      off(hoki, 1) && on(hoki, 2) && on(hoki, 3) && on(ghost, 1) && off(ghost, 2) && off(ghost, 3) && off(seams, 1) && off(seams, 2) && on(seams, 3)
+        && mur[7] === 6 && mur[9] === 1 && mur[11] === 4 && [4, 6, 7, 8, 9, 11].every((i) => tex[i] && tex[i].rect && tex[i].rect[1] > 0),
+      { meanDiffPerEra: { hoki, ghost, seams }, uMurEra: mur, atlas: [4, 6, 7, 8, 9, 11].map((i) => (tex[i] ? tex[i].rect.map((x) => +x.toFixed(3)) : null)) });
+    E.debugJump(1, { instant: true });
   }
   return out;
 })()

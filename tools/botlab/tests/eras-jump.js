@@ -16,6 +16,8 @@
 // fx      the warning's holograms and wire beads, Tartar's ring and pickup, the curtain riding the front, the synthesized
 //         sounds (era_bell, era_ring, era_kiosk, era_pickup, era_swell, era_front, era_pop)
 // frames  no frame over 50 ms during a jump (performance.now() round each simulated, rendered frame)
+// sky     12c: the time-lapse from J to done (the sun swings, the clouds race, exposure and the grade held) and the new
+//         era's look settling at done (the env map rebuilt once)
 // modes   a Boss Battle starts in era 2 and never jumps; Practice starts in era 1 and cycles 1 → 2 → 3 → 1
 // first   (review 2, issue 1; first on a fresh page: PAGE_ARGS='only=first' or the default order) the page's first jump on
 //         the real schedule compiles no shader program from J − 20 to done + 1.5 (renderer.info.programs never grows:
@@ -29,7 +31,7 @@
   const { SUBS, PLAYER } = await import('./src/config.js');
   const { SFX } = await import('./src/audio/audio.js');
   const { Hit } = await import('./src/game/physics.js');
-  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,guard,fx,frames,modes').split(',');
+  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,guard,fx,frames,sky,modes').split(',');
   const dbg = g.debug;
   dbg.freeze();
   const calm = () => { for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; } } };
@@ -309,6 +311,32 @@
       R('step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms', rows.length === 2 && rows.every((r) => r.worst[0][0] < 50),
         { worst: rows.map((r) => [r.label, r.worst]), baselineNoJumpMax: +base[base.length - 1].toFixed(1) });
     }
+  }
+
+  // ------------------------------------------------------------------------------------------- sky (12c: the time-lapse)
+  // from J to done the sun swings (up to timelapse.sunSwing°) and the clouds race (× cloudRate), the sky blending to the new
+  // era's look; exposure and the grade are never touched; at done + 0.7 the new era's look settles and the env map is
+  // rebuilt once (the scene's environment is a new PMREM texture)
+  if (parts.includes('sky')) {
+    E.debugJump(1, { instant: true }); step(0.3);
+    const env = __G.env, U = env.U, Rn = __G.renderer, TL = W.E.timelapse;
+    const sun0 = U.uSunDir.value.clone(), cloud0 = U.uCloudParams.value.z, exp0 = Rn.toneMappingExposure, grade0 = env.grade, envMap0 = __G.scene.environment, hz0 = U.uHorizon.value.getHexString();
+    const J = E.debugJump(2, { inS: 0.05 });
+    const rows = [];
+    let maxAng = 0, maxCloud = cloud0, exposureKept = true, gradeKept = true;
+    while (E.S.clock.t < J.doneAt + 1.2) {
+      step(1 / 15);
+      const ang = Math.acos(Math.max(-1, Math.min(1, U.uSunDir.value.dot(sun0)))) * 180 / Math.PI;
+      if (E.phase === 'jump') { maxAng = Math.max(maxAng, ang); maxCloud = Math.max(maxCloud, U.uCloudParams.value.z); }
+      if (Rn.toneMappingExposure !== exp0) exposureKept = false;
+      if (env.grade !== grade0) gradeKept = false;
+      if (rows.length < 12 && Math.round((E.S.clock.t - J.at) * 15) % 8 === 0) rows.push([+(E.S.clock.t - J.at).toFixed(2), E.phase, +ang.toFixed(1), +(U.uCloudParams.value.z / Math.max(1e-6, cloud0)).toFixed(1)]);
+    }
+    const sunEnd = Math.acos(Math.max(-1, Math.min(1, U.uSunDir.value.dot(sun0)))) * 180 / Math.PI, envMap1 = __G.scene.environment;
+    R('12c: the time-lapse from J to done — the sun swings (≥ 30° at its widest), the clouds race (≥ 5×), exposure and the grade held; at done the new era\'s look settles (the sun back within 5°, the clouds at their rate) and the env map is rebuilt once',
+      maxAng >= 30 && maxCloud >= cloud0 * 5 && exposureKept && gradeKept && sunEnd < 5 && Math.abs(U.uCloudParams.value.z - cloud0) < 1e-6 && envMap1 && envMap1 !== envMap0 && W.stats.envFinalMs !== undefined,
+      { timelapse: TL, maxSunAngle: +maxAng.toFixed(1), maxCloudRate: +(maxCloud / Math.max(1e-6, cloud0)).toFixed(1), exposureKept, gradeKept, sunEnd: +sunEnd.toFixed(1), horizon: [hz0, U.uHorizon.value.getHexString()], envMapNew: envMap1 !== envMap0, envFinalMs: W.stats.envFinalMs, rows });
+    E.debugJump(1, { instant: true });
   }
 
   // ------------------------------------------------------------------------------------------- modes (last: new matches)

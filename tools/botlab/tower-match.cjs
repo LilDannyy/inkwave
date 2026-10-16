@@ -294,6 +294,7 @@ app.on('browser-window-created', (_, win) => {
         simT: +simT.toFixed(1), simMs: Math.round(simMs), state: m.state, stuckPct: +(100 * stuckS / botS).toFixed(1),
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, ready: ev.ready, jumps: ev.jumps,
         cov: __G.paint.coverage().map((c) => +(c * 100).toFixed(1)),
+        eras: m.eras && m.eras.botReport ? m.eras.botReport() : undefined,   // [b5-eras] Bluestone's jumps (src/game/eras.js botReport)
         frameErr, eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), sideEps: sideEps.sort((a, b) => b.dur - a.dur).slice(0, 6),
         sidePct: +(100 * sideS / botS).toFixed(1), sideStuckS: +sideStuckS.toFixed(1), sideStuckN: sideEps.length,
         holdPct: +(100 * holdS / botS).toFixed(1), ridePct: +(100 * rideS / botS).toFixed(1),
@@ -356,6 +357,8 @@ app.on('browser-window-created', (_, win) => {
     console.log(`   teams: A [${r.teams[0]}] | B [${r.teams[1]}] | ride s by kind ${JSON.stringify(r.rideByKind)}`);
     console.log(`   roles (% of bot-time) ${JSON.stringify(r.roles)} | riding ${r.ridePct}% | holding on purpose ${r.holdPct}%`);
     console.log(`   stuck ${r.stuckPct}% | by the tower's side ${r.sidePct}% of bot-time, stuck there ${r.sideStuckS}s (${r.sideStuckN} episodes) | splats ${r.splats} (water ${r.water}) | specials ${r.specials} (ready ${r.ready}) | super jumps ${r.jumps} | turf ${r.cov.join('/')} | sim ${r.simT}s in ${(r.simMs / 1000).toFixed(0)}s (wall ${wallS}s) | ${JSON.stringify(perf)}`);
+    if (r.eras) { const E = r.eras; console.log(`   ERAS shoves ${E.eraShoves} rescues ${E.rescues} flips ${E.flips} | at a flip: on a vanishing top ${E.onVanish}, inside an appearing piece ${E.inAppear} | in an appearing box before its flip ${E.loiterS} bot-s | env splats near a jump ${E.envSplats} | replans at done ${E.replans} | pre-positioned ${E.prepos} (held ${E.preposHeld}) | era ${E.era}`);   // [b5-eras]
+      for (const v of E.visits) console.log(`   ERAS ${v.jump} done @${v.doneAt}s: ${v.visited}/${v.bots} bots on new ground within 30 s (${v.within20} within 20 s), median ${v.median ?? '-'} s | ${JSON.stringify(v.times)}`); }
     console.log('   control log ' + r.log);
     console.log('   checkpoint log ' + r.cplog);
     console.log('   X ' + JSON.stringify(r.x));
